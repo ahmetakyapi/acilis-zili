@@ -47,8 +47,14 @@ const STAGGER_CAP = 12;
 export function PositionsTable({ rows }: { rows: PositionRow[] }) {
   const { labels: L, locale, hidden, fresh, openEdit, remove, setExisting } = useWorkbench();
 
+  /* SÖKÜLÜNCE BOŞALT (28 Eylül denetimi). Liste yalnızca tablo varken
+     yazılıyordu; portföy boşalınca (içe aktarmayı "Geri Al", son satırı
+     silmek) tablo sökülüyor ve içe aktarma SON listeyle çalışıyordu: aynı
+     ekstre yeniden yüklendiğinde her lot "Zaten Ekli" görünüyor, tavan
+     hesabı da eski sayıyla yapılıyordu. */
   useEffect(() => {
     setExisting(rows.map((row) => ({ symbol: row.symbol, quantity: row.quantity, costUsd: row.costUsd, boughtAt: row.boughtAt })));
+    return () => setExisting([]);
   }, [rows, setExisting]);
 
   const usd = (value: number | null, signed = false) =>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "motion/react";
 import {
+  Calculator,
   ChartLineUp,
   Coins,
   DownloadSimple,
@@ -33,8 +34,8 @@ import {
   lotResult,
   matchFifo,
   progressiveTax,
-  TAX_YEAR_LIST,
-  TAX_YEARS,
+  taxYearList,
+  type TaxYearRules,
   toCsv,
   US_WITHHOLDING,
   yearTotals,
@@ -45,11 +46,12 @@ import {
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import { cn, directionOf, directionText, formatPrice, isValidSymbol } from "@/lib/utils";
-import { DividendMeter, Flow, Rolling, VerdictBadge, type FlowStep, type Verdict } from "./TaxResult";
+import { BracketTable, DividendMeter, Flow, ResultPreview, Rolling, TaxRange, VerdictBadge, type FlowStep, type Verdict } from "./TaxResult";
 import type { ImportPayload } from "./StatementImport";
 import { PANEL_TITLE, type DividendRow, type TradeRow } from "./tax-ui";
 import styles from "./Tax.module.css";
 import { DatePicker } from "@/components/ui/DatePicker";
+import { useMotionPreference } from "@/components/motion/useMotionPreference";
 
 /* EKSTREDEN AKTARIM AYRI BİR PARÇA. Önizleme, ayrıştırıcılar ve (PDF'te)
    pdf.js ancak okuyucu bir dosya seçtiğinde iniyor; sayfanın ilk JS'inde
@@ -134,6 +136,7 @@ export function TaxCalculator({
   locale,
   indexAuto,
   today,
+  years,
 }: {
   labels: TaxLabels;
   locale: Locale;
@@ -141,9 +144,16 @@ export function TaxCalculator({
   indexAuto: boolean;
   /** İstanbul'un bugünü — tarih alanlarının üst sınırı. */
   today: string;
+  /**
+   * Vergi yılları: koddakiler + GİB'den otomatik okunan yeniler
+   * (lib/tax-data.ts → getTaxYears). Sunucu çözüyor, prop olarak geliyor.
+   */
+  years: Record<number, TaxYearRules>;
 }) {
+  const yearList = taxYearList(years);
+  const reduced = useMotionPreference();
   const [tab, setTab] = useState<Tab>("sale");
-  const [year, setYear] = useState<number>(TAX_YEAR_LIST[0]);
+  const [year, setYear] = useState<number>(yearList[0]);
   const [yearNote, setYearNote] = useState<number | null>(null);
   const [rateDay, setRateDay] = useState<"same" | "previous">("same");
   const [advanced, setAdvanced] = useState(false);
@@ -184,6 +194,22 @@ export function TaxCalculator({
       ? /* Gruplamasız: "1.845 olarak okundu" yine aynı belirsizliği taşırdı. */
         labels.readAs.replace("{value}", formatDecimalInput(value, locale))
       : null;
+  };
+
+  /* ---- Satır içi doğrulama ----
+     Eskiden okunamayan bir alan SESSİZCE hesaptan düşüyordu: "12,5a"
+     yazan okuyucu sonucun neden gelmediğini göremiyordu. Hata alanın
+     altında, alan boşken hiç konuşmuyor. Kural hesabın kuralıyla aynı
+     (`parsedTrades`, `parsedDividends`): yalnızca neyin düştüğünü söylüyor. */
+  const symbolError = (raw: string) =>
+    raw.trim() && !isValidSymbol(raw.trim().toUpperCase()) ? labels.symbolInvalid : undefined;
+  const numberError = (raw: string, rule: "positive" | "nonNegative") => {
+    if (!raw.trim()) return undefined;
+    const value = num(raw);
+    if (value === null) return labels.notNumber;
+    if (rule === "positive" && value <= 0) return labels.notPositive;
+    if (rule === "nonNegative" && value < 0) return labels.notNegative;
+    return undefined;
   };
 
   /* ---- Portföyden aktarım: bir kez oku, sonra SİL ---- */
@@ -432,7 +458,7 @@ export function TaxCalculator({
   );
 
   /* ---- Sonuç ---- */
-  const rules = TAX_YEARS[year];
+  const rules = years[year];
   const results = useMemo(
     () =>
       yearLots.map((lot) => {
@@ -454,6 +480,11 @@ export function TaxCalculator({
   const taxable = Math.max(0, totals.gainTl);
   const taxLow = progressiveTax(taxable, rules.brackets);
   const taxHigh = (taxable * topRate) / 100;
+
+  /* Kazancın düştüğü dilim — tarifenin kendi satırı, yeni bir hesap değil:
+     alt uç (`progressiveTax`) bu dilimde bitiyor. */
+  const bracketRate =
+    rules.brackets.find((bracket) => bracket.upTo === null || taxable <= bracket.upTo)?.ratePct ?? topRate;
 
   const dividendResults = parsedDividends.map((d) =>
     dividendResult(d, rates[rateDateOf(d.date)]?.buying ?? null),
@@ -486,7 +517,7 @@ export function TaxCalculator({
   /** Satış günü başka bir vergi yılındaysa yıl onu izler ve bunu söyler. */
   const followSellYear = (date: string) => {
     const sellYear = Number(date.slice(0, 4));
-    if (isIsoDate(date) && TAX_YEARS[sellYear] && sellYear !== year) {
+    if (isIsoDate(date) && years[sellYear] && sellYear !== year) {
       setYear(sellYear);
       setThresholdInput(null);
       setYearNote(sellYear);
@@ -517,7 +548,7 @@ export function TaxCalculator({
     setDividends((prev) => prev.map((row) => (row.id === id ? { ...row, ...patch } : row)));
     if (patch.date) {
       const dividendYear = Number(patch.date.slice(0, 4));
-      if (TAX_YEARS[dividendYear] && dividendYear !== year) {
+      if (years[dividendYear] && dividendYear !== year) {
         setYear(dividendYear);
         setThresholdInput(null);
         setYearNote(dividendYear);
@@ -547,11 +578,11 @@ export function TaxCalculator({
         ...payload.dividends.map((row) => ({ ...row, id: nextId("d") })),
       ]);
     }
-    const years = [
+    const importedYears = [
       ...payload.trades.filter((t) => t.side === "sell").map((t) => Number(t.date.slice(0, 4))),
       ...(payload.trades.some((t) => t.side === "sell") ? [] : payload.dividends.map((d) => Number(d.date.slice(0, 4)))),
-    ].filter((y) => TAX_YEARS[y]);
-    const target = years.length > 0 ? Math.max(...years) : null;
+    ].filter((y) => years[y]);
+    const target = importedYears.length > 0 ? Math.max(...importedYears) : null;
     if (target !== null && target !== year) {
       setYear(target);
       setThresholdInput(null);
@@ -659,6 +690,22 @@ export function TaxCalculator({
     indexPending: indexMode === "auto" && indexMonths.some((month) => autoIndex[month] === undefined),
     usd,
   });
+  /* Hesabın dayanağı: kullanılan kurlar ve kur günü. Tek lotta kurun
+     kendisi ve bülten günü; birden fazlasında "Her Lot Kendi Kuruyla"
+     (lot lot kurlar CSV'de ve lot dökümünde). */
+  const rateDayText = rateDay === "same" ? labels.rateDaySame : labels.rateDayPrevious;
+  const bulletinOf = (date: string) => formatIsoDate(rates[rateDateOf(date)]?.bulletinDate ?? rateDateOf(date), locale);
+  const singleLot = complete.length === 1 ? complete[0] : null;
+  const saleBasis: BasisItem[] = singleLot
+    ? [
+        { name: labels.buyRate, value: formatLira(singleLot.buyRate, locale, RATE_DIGITS), note: bulletinOf(singleLot.buyDate) },
+        { name: labels.sellRate, value: formatLira(singleLot.sellRate, locale, RATE_DIGITS), note: bulletinOf(singleLot.sellDate) },
+        { name: labels.rateDayLabel, value: rateDayText },
+      ]
+    : [
+        { name: labels.basisRate, value: labels.flowManyRates },
+        { name: labels.rateDayLabel, value: rateDayText },
+      ];
   const simpleSellBeforeBuy =
     simple && buyRow && sellRow && isIsoDate(buyRow.date) && isIsoDate(sellRow.date) && sellRow.date < buyRow.date;
 
@@ -670,6 +717,18 @@ export function TaxCalculator({
       .replace("{total}", formatLira(dividendGrossTl, locale))
       .replace("{year}", String(year))
       .replace("{limit}", formatLira(threshold, locale, 0));
+
+  const singleDividend = dividendDone.length === 1 ? dividendDone[0] : null;
+  const dividendBasis: BasisItem[] = singleDividend
+    ? [
+        { name: labels.basisRate, value: formatLira(singleDividend.rate, locale, RATE_DIGITS), note: bulletinOf(singleDividend.date) },
+        { name: labels.withholding, value: percentText(singleDividend.withholdingPct, locale) },
+        { name: labels.rateDayLabel, value: rateDayText },
+      ]
+    : [
+        { name: labels.basisRate, value: labels.flowManyRates },
+        { name: labels.rateDayLabel, value: rateDayText },
+      ];
 
   const manualIndexFields = indexMode === "manual" && indexMonths.length > 0 && (
     <div className="flex flex-col gap-3">
@@ -697,38 +756,21 @@ export function TaxCalculator({
   return (
     <section id="satis" className={cn("panel overflow-hidden", styles.calc)} aria-labelledby="vergi-hesap">
       <span id="temettu" className={styles.anchor} aria-hidden />
-      <div className={styles.panelHead}>
-        <h2 id="vergi-hesap" className={PANEL_TITLE}>
+      {/* BAŞLIK SATIRI: ad, hesap türü, vergi yılı (28 Eylül, ikinci tur).
+          Hesap türü bir dönem başlığın altında tam genişlikte, 48 piksel
+          yüksekliğinde mavi dolgulu bir anahtardı; sayfanın en ağır nesnesi
+          bir seçimdi ve sonuçtan önce göze giriyordu. Şimdi yıl anahtarıyla
+          aynı dilde bir segment: çukur ray, seçili parça panel zemininde
+          kayıyor. Genişte üçü tek hatta; telefonda ad ile yıl üstte, tür
+          altta tam genişlikte (iki parça, başparmak hedefi 44). */}
+      <div className={styles.calcHead}>
+        <h2 id="vergi-hesap" className={cn(PANEL_TITLE, styles.calcTitle)}>
           {labels.calcTitle}
         </h2>
-        <div className="flex items-center gap-2.5">
-          <span className="text-xs font-semibold text-body" id="vergi-yil">
-            {labels.yearLabel}
-          </span>
-          <span role="group" aria-labelledby="vergi-yil" className={styles.segment}>
-            {TAX_YEAR_LIST.map((y) => (
-              <button
-                key={y}
-                type="button"
-                aria-pressed={year === y}
-                onClick={() => {
-                  setYear(y);
-                  setThresholdInput(null);
-                  setYearNote(null);
-                }}
-              >
-                {y}
-              </button>
-            ))}
-          </span>
-        </div>
-      </div>
-
-      <div className="px-4 pb-5 pt-4 sm:px-7">
         <div
           role="tablist"
           aria-label={labels.modeLabel}
-          className={styles.tabs}
+          className={cn(styles.segment, styles.tabs)}
           onKeyDown={(event) => {
             if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
             event.preventDefault();
@@ -747,21 +789,40 @@ export function TaxCalculator({
               aria-controls={`vergi-panel-${value}`}
               tabIndex={tab === value ? 0 : -1}
               onClick={() => setTab(value)}
-              className={styles.tab}
+              className={styles.segItem}
             >
               {tab === value && (
                 <motion.span
                   layoutId="vergi-sekme-hap"
-                  className={styles.tabPill}
-                  transition={{ type: "spring", stiffness: 420, damping: 36 }}
+                  className={styles.segThumb}
+                  transition={reduced ? { duration: 0 } : THUMB_TRANSITION}
                 />
               )}
-              {value === "sale" ? <ChartLineUp size={18} weight="duotone" aria-hidden /> : <Coins size={18} weight="duotone" aria-hidden />}
-              <span>{value === "sale" ? labels.tabSale : labels.tabDividend}</span>
+              <span className={styles.segText}>
+                {value === "sale" ? <ChartLineUp size={16} weight="duotone" aria-hidden /> : <Coins size={16} weight="duotone" aria-hidden />}
+                {value === "sale" ? labels.tabSale : labels.tabDividend}
+              </span>
             </button>
           ))}
         </div>
+        <div className={styles.yearControl}>
+          <span className={styles.yearLabel} id="vergi-yil">
+            {labels.yearLabel}
+          </span>
+          <Segmented
+            labelledBy="vergi-yil"
+            value={year}
+            options={yearList.map((y) => ({ value: y, label: String(y) }))}
+            onChange={(y) => {
+              setYear(y);
+              setThresholdInput(null);
+              setYearNote(null);
+            }}
+          />
+        </div>
+      </div>
 
+      <div className={styles.importBar}>
         <input
           ref={fileInput}
           type="file"
@@ -816,14 +877,15 @@ export function TaxCalculator({
         >
           <div className={styles.form}>
             <div className={styles.modeSwitch}>
-              <span className={styles.segment} role="group" aria-label={labels.advancedOn}>
-                <button type="button" aria-pressed={simple} disabled={!canSimple} onClick={() => setAdvanced(false)} className="disabled:opacity-50">
-                  {labels.advancedOff}
-                </button>
-                <button type="button" aria-pressed={!simple} onClick={() => setAdvanced(true)}>
-                  {labels.advancedOn}
-                </button>
-              </span>
+              <Segmented
+                label={labels.advancedOn}
+                value={simple ? "simple" : "many"}
+                options={[
+                  { value: "simple", label: labels.advancedOff, disabled: !canSimple },
+                  { value: "many", label: labels.advancedOn },
+                ]}
+                onChange={(mode) => setAdvanced(mode === "many")}
+              />
             </div>
             {imported > 0 && (
               <p role="status" className="mb-4 text-small text-primary-ink">
@@ -842,8 +904,9 @@ export function TaxCalculator({
                   <span className={styles.node} aria-hidden>1</span>
                   <h3 className={styles.stepTitle}>{labels.stepBuy}</h3>
                   <div className={styles.fields}>
-                    <Field label={labels.symbol}>
+                    <Field label={labels.symbol} error={symbolError(buyRow?.symbol ?? "")}>
                       <input
+                        aria-invalid={!!symbolError(buyRow?.symbol ?? "") || undefined}
                         value={buyRow?.symbol ?? ""}
                         maxLength={10}
                         autoCapitalize="characters"
@@ -853,8 +916,9 @@ export function TaxCalculator({
                         className={cn(styles.input, styles.upper)}
                       />
                     </Field>
-                    <Field label={labels.quantity} hint={readAs(buyRow?.quantity ?? "")}>
+                    <Field label={labels.quantity} hint={readAs(buyRow?.quantity ?? "")} error={numberError(buyRow?.quantity ?? "", "positive")}>
                       <input
+                        aria-invalid={!!numberError(buyRow?.quantity ?? "", "positive") || undefined}
                         inputMode="decimal"
                         autoComplete="off"
                         value={buyRow?.quantity ?? ""}
@@ -871,8 +935,9 @@ export function TaxCalculator({
                         locale={locale}
                       />
                     </Field>
-                    <Field label={labels.priceUsd} hint={readAs(buyRow?.price ?? "")}>
+                    <Field label={labels.priceUsd} hint={readAs(buyRow?.price ?? "")} error={numberError(buyRow?.price ?? "", "nonNegative")}>
                       <input
+                        aria-invalid={!!numberError(buyRow?.price ?? "", "nonNegative") || undefined}
                         inputMode="decimal"
                         autoComplete="off"
                         value={buyRow?.price ?? ""}
@@ -898,8 +963,9 @@ export function TaxCalculator({
                         locale={locale}
                       />
                     </Field>
-                    <Field label={labels.priceUsd} hint={readAs(sellRow?.price ?? "")}>
+                    <Field label={labels.priceUsd} hint={readAs(sellRow?.price ?? "")} error={numberError(sellRow?.price ?? "", "nonNegative")}>
                       <input
+                        aria-invalid={!!numberError(sellRow?.price ?? "", "nonNegative") || undefined}
                         inputMode="decimal"
                         autoComplete="off"
                         value={sellRow?.price ?? ""}
@@ -907,8 +973,9 @@ export function TaxCalculator({
                         className={styles.input}
                       />
                     </Field>
-                    <Field label={labels.sellQuantity} hint={readAs(sellRow?.quantity ?? "")}>
+                    <Field label={labels.sellQuantity} hint={readAs(sellRow?.quantity ?? "")} error={numberError(sellRow?.quantity ?? "", "positive")}>
                       <input
+                        aria-invalid={!!numberError(sellRow?.quantity ?? "", "positive") || undefined}
                         inputMode="decimal"
                         autoComplete="off"
                         value={sellRow?.quantity ?? ""}
@@ -924,8 +991,9 @@ export function TaxCalculator({
                       {labels.commissionToggle}
                     </summary>
                     <div className={cn(styles.fields, "mt-1")}>
-                      <Field label={labels.buyCommission} hint={readAs(buyRow?.commission ?? "")}>
+                      <Field label={labels.buyCommission} hint={readAs(buyRow?.commission ?? "")} error={numberError(buyRow?.commission ?? "", "nonNegative")}>
                         <input
+                          aria-invalid={!!numberError(buyRow?.commission ?? "", "nonNegative") || undefined}
                           inputMode="decimal"
                           autoComplete="off"
                           value={buyRow?.commission ?? ""}
@@ -933,8 +1001,9 @@ export function TaxCalculator({
                           className={styles.input}
                         />
                       </Field>
-                      <Field label={labels.sellCommission} hint={readAs(sellRow?.commission ?? "")}>
+                      <Field label={labels.sellCommission} hint={readAs(sellRow?.commission ?? "")} error={numberError(sellRow?.commission ?? "", "nonNegative")}>
                         <input
+                          aria-invalid={!!numberError(sellRow?.commission ?? "", "nonNegative") || undefined}
                           inputMode="decimal"
                           autoComplete="off"
                           value={sellRow?.commission ?? ""}
@@ -964,18 +1033,15 @@ export function TaxCalculator({
                     {trades.map((row, index) => (
                       <li key={row.id} className={styles.row}>
                         <div className={styles.rowHead}>
-                          <span className={styles.segment} role="group" aria-label={labels.side}>
-                            {(["buy", "sell"] as const).map((side) => (
-                              <button
-                                key={side}
-                                type="button"
-                                aria-pressed={row.side === side}
-                                onClick={() => updateTrade(row.id, { side })}
-                              >
-                                {side === "buy" ? labels.sideBuy : labels.sideSell}
-                              </button>
-                            ))}
-                          </span>
+                          <Segmented
+                            label={labels.side}
+                            value={row.side}
+                            options={[
+                              { value: "buy", label: labels.sideBuy },
+                              { value: "sell", label: labels.sideSell },
+                            ]}
+                            onChange={(side) => updateTrade(row.id, { side })}
+                          />
                           <button
                             type="button"
                             onClick={() => removeTrade(row.id)}
@@ -985,8 +1051,9 @@ export function TaxCalculator({
                             <Trash size={16} weight="duotone" aria-hidden />
                           </button>
                         </div>
-                        <Field label={labels.symbol}>
+                        <Field label={labels.symbol} error={symbolError(row.symbol)}>
                           <input
+                            aria-invalid={!!symbolError(row.symbol) || undefined}
                             value={row.symbol}
                             maxLength={10}
                             autoCapitalize="characters"
@@ -1008,8 +1075,9 @@ export function TaxCalculator({
                             locale={locale}
                           />
                         </Field>
-                        <Field label={labels.quantity} hint={readAs(row.quantity)}>
+                        <Field label={labels.quantity} hint={readAs(row.quantity)} error={numberError(row.quantity, "positive")}>
                           <input
+                            aria-invalid={!!numberError(row.quantity, "positive") || undefined}
                             inputMode="decimal"
                             autoComplete="off"
                             value={row.quantity}
@@ -1017,8 +1085,9 @@ export function TaxCalculator({
                             className={styles.input}
                           />
                         </Field>
-                        <Field label={labels.priceUsd} hint={readAs(row.price)}>
+                        <Field label={labels.priceUsd} hint={readAs(row.price)} error={numberError(row.price, "nonNegative")}>
                           <input
+                            aria-invalid={!!numberError(row.price, "nonNegative") || undefined}
                             inputMode="decimal"
                             autoComplete="off"
                             value={row.price}
@@ -1026,8 +1095,9 @@ export function TaxCalculator({
                             className={styles.input}
                           />
                         </Field>
-                        <Field label={labels.commissionUsd} hint={readAs(row.commission)}>
+                        <Field label={labels.commissionUsd} hint={readAs(row.commission)} error={numberError(row.commission, "nonNegative")}>
                           <input
+                            aria-invalid={!!numberError(row.commission, "nonNegative") || undefined}
                             inputMode="decimal"
                             autoComplete="off"
                             value={row.commission}
@@ -1069,7 +1139,7 @@ export function TaxCalculator({
               </h3>
               <div aria-live="polite">
                 {saleVerdict === "wait" ? (
-                  <p className={styles.verdictBody}>{labels.resultEmptySale}</p>
+                  <EmptyLead text={labels.resultEmptySale} />
                 ) : (
                   <>
                     <VerdictBadge verdict={saleVerdict} text={saleVerdict === "yes" ? labels.verdictYes : labels.verdictNo} />
@@ -1078,44 +1148,94 @@ export function TaxCalculator({
                 )}
               </div>
 
-              <div>
-                <p className={styles.figureLabel}>{totals.gainTl < 0 ? labels.netLoss : labels.netGain}</p>
-                {saleReady ? (
-                  <Rolling
-                    value={totals.gainTl}
-                    format={liraSigned}
-                    className={cn(styles.big, directionText(directionOf(totals.gainTl)))}
-                  />
-                ) : (
-                  <span className={cn(styles.big, "text-muted")}>{formatLira(null, locale)}</span>
-                )}
-              </div>
+              {/* BOŞKEN İSKELET, DOLUNCA SAYI. Eskiden boş kart "Net Kazanç —",
+                  "Tahmini Vergi —" ve dört "—" satırlık bir şelaleydi: okuyucu
+                  bozuk bir ekrana bakıyordu. Şimdi gelecek sonucun soluk bir
+                  önizlemesi duruyor; sayı yok, yalnızca yerleri. */}
+              {saleReady ? (
+                <div key="sale-ready" className={styles.filled}>
+                  <div>
+                    <p className={styles.figureLabel}>{totals.gainTl < 0 ? labels.netLoss : labels.netGain}</p>
+                    <Rolling
+                      value={totals.gainTl}
+                      format={liraSigned}
+                      className={cn(styles.big, directionText(directionOf(totals.gainTl)))}
+                    />
+                  </div>
 
-              <div className={styles.figures}>
-                <div>
-                  <p className={styles.figureLabel}>{labels.estTax}</p>
-                  <p className={cn(styles.mid, "mt-1")}>
-                    {saleReady ? (
-                      <>
-                        <Rolling value={taxLow} format={lira} />
-                        {taxHigh > taxLow && (
-                          <>
-                            <span className={styles.between}>{labels.estTaxBetween}</span>
-                            <Rolling value={taxHigh} format={lira} />
-                          </>
-                        )}
-                      </>
-                    ) : (
-                      <span className="text-muted">{formatLira(null, locale)}</span>
+                  <div className={styles.figures} data-cols={taxable > 0 ? "2" : undefined}>
+                    <div>
+                      <p className={styles.figureLabel}>{labels.taxBase}</p>
+                      <p className={cn(styles.mid, "mt-1")}>
+                        <Rolling value={taxable} format={lira} />
+                      </p>
+                      <p className={styles.figureHint}>{labels.taxBaseHint}</p>
+                    </div>
+                    {taxable > 0 && (
+                      <div>
+                        <p className={styles.figureLabel}>{labels.bracket}</p>
+                        <p className={cn(styles.mid, "mt-1")}>{percentText(bracketRate, locale)}</p>
+                        <p className={styles.figureHint}>{labels.bracketHint.replace("{year}", String(year))}</p>
+                      </div>
                     )}
-                  </p>
-                  <p className={styles.figureHint}>
-                    {labels.estTaxHint.replace("{year}", String(year)).replace("{top}", String(topRate))}
-                  </p>
-                </div>
-              </div>
+                  </div>
 
-              <Flow title={labels.flowTitle} steps={flowSteps} />
+                  <div className={styles.taxBlock}>
+                    <p className={styles.figureLabel}>{labels.estTax}</p>
+                    <p className={cn(styles.mid, "mt-1")}>
+                      <Rolling value={taxLow} format={lira} />
+                      {taxHigh > taxLow && (
+                        <>
+                          <span className={styles.between}>{labels.estTaxBetween}</span>
+                          <Rolling value={taxHigh} format={lira} />
+                        </>
+                      )}
+                    </p>
+                    {taxHigh > 0 && (
+                      <TaxRange
+                        low={taxLow}
+                        high={taxHigh}
+                        lowLabel={labels.rangeLow}
+                        highLabel={labels.rangeHigh.replace("{top}", String(topRate))}
+                        ariaLabel={labels.rangeLabel.replace("{low}", lira(taxLow)).replace("{high}", lira(taxHigh))}
+                      />
+                    )}
+                    <p className={styles.figureHint}>
+                      {labels.estTaxHint.replace("{year}", String(year)).replace("{top}", String(topRate))}
+                    </p>
+                  </div>
+
+                  {taxable > 0 && (
+                    <BracketTable
+                      title={labels.bracketTableTitle.replace("{year}", String(year))}
+                      hint={labels.bracketTableHint}
+                      brackets={rules.brackets}
+                      base={taxable}
+                      /* Eşikler ve dilim vergileri tam lira; kuruş tabloyu
+                         kalabalıklaştırıyordu ("190.000,00 ₺"). */
+                      formatMoney={(value) => formatLira(Math.round(value), locale, 0)}
+                      formatRate={(rate) => percentText(rate, locale)}
+                      yoursLabel={labels.bracketYours}
+                      overLabel={labels.bracketOver}
+                      sliceLabel={labels.bracketSlice}
+                      rangeLabel={labels.bracketRange}
+                      rateLabel={labels.bracketRate}
+                    />
+                  )}
+
+                  <Basis title={labels.basisTitle} items={saleBasis} />
+
+                  <Flow title={labels.flowTitle} steps={flowSteps} />
+                </div>
+              ) : (
+                <ResultPreview
+                  rows={[
+                    { name: labels.netGain, size: "big" },
+                    { name: labels.taxBase, size: "mid" },
+                    { name: labels.estTax, size: "range" },
+                  ]}
+                />
+              )}
 
               {!simple && results.length > 0 && (
                 <details className={cn(styles.disclosure, styles.lots)}>
@@ -1183,8 +1303,9 @@ export function TaxCalculator({
                       )}
                     </div>
                     <div className={styles.fields}>
-                      <Field label={labels.symbol}>
+                      <Field label={labels.symbol} error={symbolError(row.symbol)}>
                         <input
+                          aria-invalid={!!symbolError(row.symbol) || undefined}
                           value={row.symbol}
                           maxLength={10}
                           autoCapitalize="characters"
@@ -1194,8 +1315,9 @@ export function TaxCalculator({
                           className={cn(styles.input, styles.upper)}
                         />
                       </Field>
-                      <Field label={labels.grossUsd} hint={readAs(row.gross)}>
+                      <Field label={labels.grossUsd} hint={readAs(row.gross)} error={numberError(row.gross, "nonNegative")}>
                         <input
+                          aria-invalid={!!numberError(row.gross, "nonNegative") || undefined}
                           inputMode="decimal"
                           autoComplete="off"
                           value={row.gross}
@@ -1216,22 +1338,20 @@ export function TaxCalculator({
                         <span className={styles.label} id={`${row.id}-w8`}>
                           {labels.w8Label}
                         </span>
-                        <span className={cn(styles.segment, "w-fit")} role="group" aria-labelledby={`${row.id}-w8`}>
-                          {(row.statementPct === null ? (["w8ben", "none"] as const) : (["statement", "w8ben", "none"] as const)).map((option) => (
-                            <button
-                              key={option}
-                              type="button"
-                              aria-pressed={row.withholding === option}
-                              onClick={() => updateDividend(row.id, { withholding: option })}
-                            >
-                              {option === "w8ben"
+                        <Segmented
+                          labelledBy={`${row.id}-w8`}
+                          value={row.withholding}
+                          options={(row.statementPct === null ? (["w8ben", "none"] as const) : (["statement", "w8ben", "none"] as const)).map((option) => ({
+                            value: option,
+                            label:
+                              option === "w8ben"
                                 ? labels.w8Yes
                                 : option === "none"
                                   ? labels.w8No
-                                  : labels.w8Statement.replace("{pct}", formatPct(row.statementPct ?? 0, locale))}
-                            </button>
-                          ))}
-                        </span>
+                                  : labels.w8Statement.replace("{pct}", formatPct(row.statementPct ?? 0, locale)),
+                          }))}
+                          onChange={(option) => updateDividend(row.id, { withholding: option })}
+                        />
                       </div>
                     </div>
                     {rateChip(row.date)}
@@ -1256,7 +1376,9 @@ export function TaxCalculator({
                   className={cn(styles.input, "max-w-60")}
                 />
                 <span className={styles.help}>
-                  {labels.thresholdSource.replace("{source}", rules.source[locale === "tr" ? "tr" : "en"])}
+                  {rules.thresholdCarriedFrom
+                    ? labels.thresholdCarried.replace("{year}", String(year)).replace("{from}", String(rules.thresholdCarriedFrom))
+                    : labels.thresholdSource.replace("{source}", rules.source[locale === "tr" ? "tr" : "en"])}
                 </span>
               </label>
             </Settings>
@@ -1267,7 +1389,7 @@ export function TaxCalculator({
               <h3 className="sr-only">{labels.resultLabel}</h3>
               <div aria-live="polite">
                 {dividendVerdict === "wait" ? (
-                  <p className={styles.verdictBody}>{labels.resultEmptyDividend}</p>
+                  <EmptyLead text={labels.resultEmptyDividend} />
                 ) : (
                   <>
                     <VerdictBadge verdict={dividendVerdict} text={dividendVerdict === "yes" ? labels.verdictYes : labels.verdictNo} />
@@ -1278,34 +1400,48 @@ export function TaxCalculator({
                 )}
               </div>
 
-              <div>
-                <p className={styles.figureLabel}>{labels.totalGrossTl}</p>
-                {dividendReady ? (
-                  <Rolling value={dividendGrossTl} format={lira} className={cn(styles.big, "text-strong")} />
-                ) : (
-                  <span className={cn(styles.big, "text-muted")}>{formatLira(null, locale)}</span>
-                )}
-                <DividendMeter
-                  total={dividendReady ? dividendGrossTl : 0}
-                  limit={threshold}
-                  leftLabel={formatLira(0, locale, 0)}
-                  rightLabel={labels.meterLimit.replace("{limit}", formatLira(threshold, locale, 0))}
-                />
-              </div>
+              {dividendReady ? (
+                <div key="dividend-ready" className={styles.filled}>
+                  <div>
+                    <p className={styles.figureLabel}>{labels.totalGrossTl}</p>
+                    <Rolling value={dividendGrossTl} format={lira} className={cn(styles.big, "text-strong")} />
+                    <DividendMeter
+                      total={dividendGrossTl}
+                      limit={threshold}
+                      leftLabel={formatLira(0, locale, 0)}
+                      rightLabel={labels.meterLimit.replace("{limit}", formatLira(threshold, locale, 0))}
+                    />
+                  </div>
 
-              <div className={styles.figures}>
-                <div>
-                  <p className={styles.figureLabel}>{labels.withheldTl}</p>
-                  <p className={cn(styles.mid, "mt-1")}>
-                    {dividendReady ? (
-                      <Rolling value={dividendWithheldTl} format={lira} />
-                    ) : (
-                      <span className="text-muted">{formatLira(null, locale)}</span>
-                    )}
-                  </p>
-                  <p className={styles.figureHint}>{labels.withheldHint}</p>
+                  <div className={styles.figures}>
+                    <div>
+                      <p className={styles.figureLabel}>{labels.withheldTl}</p>
+                      <p className={cn(styles.mid, "mt-1")}>
+                        <Rolling value={dividendWithheldTl} format={lira} />
+                      </p>
+                      <p className={styles.figureHint}>{labels.withheldHint}</p>
+                    </div>
+                  </div>
+
+                  <Basis title={labels.basisTitle} items={dividendBasis} />
                 </div>
-              </div>
+              ) : (
+                <div className="flex flex-col gap-5">
+                  <ResultPreview
+                    rows={[
+                      { name: labels.totalGrossTl, size: "big" },
+                      { name: labels.withheldTl, size: "mid" },
+                    ]}
+                  />
+                  {/* Sınır boşken de gerçek bir bilgi: çentik yılın sınırında. */}
+                  <DividendMeter
+                    total={0}
+                    limit={threshold}
+                    leftLabel={formatLira(0, locale, 0)}
+                    rightLabel={labels.meterLimit.replace("{limit}", formatLira(threshold, locale, 0))}
+                  />
+                </div>
+              )}
 
               {dividendDone.length > 1 && (
                 <ul className="flex flex-col gap-2 border-t border-line-soft pt-4 text-small">
@@ -1380,6 +1516,9 @@ function ImportDrop({
         if (files.length > 0) onFiles(files);
       }}
     >
+      {/* Düğme bütün alanı kaplıyor (`::after`), gizlilik künyesi onun
+          üstünde ama tıklamayı geçiriyor: okuyucu şeridin neresine basarsa
+          bassın dosya seçici açılıyor. */}
       <button type="button" onClick={onPick} className={styles.dropButton}>
         <span className={styles.dropIcon} aria-hidden>
           <FileArrowUp size={22} weight="duotone" />
@@ -1390,10 +1529,113 @@ function ImportDrop({
         </span>
       </button>
       <p className={styles.privacy}>
-        <LockSimple size={14} weight="bold" aria-hidden />
+        <LockSimple size={14} weight="duotone" aria-hidden />
         {L.privacy}
       </p>
     </div>
+  );
+}
+
+/** "%20" (TR) · "20%" (EN). */
+function percentText(value: number, locale: Locale): string {
+  const text = formatPct(value, locale);
+  return locale === "tr" ? `%${text}` : `${text}%`;
+}
+
+type BasisItem = { name: string; value: string; note?: string };
+
+/**
+ * HESABIN DAYANAĞI — sonucun hangi sayılara dayandığı, künye olarak.
+ * Kur eskiden yalnızca formdaki çiplerde duruyordu; sonuç kartına bakan
+ * okuyucu sayının hangi kurla bulunduğunu formun yukarısında arıyordu.
+ */
+function Basis({ title, items }: { title: string; items: BasisItem[] }) {
+  return (
+    <section className={styles.basis}>
+      <h4 className={styles.basisTitle}>{title}</h4>
+      <dl className={styles.basisList}>
+        {items.map((item) => (
+          <div key={item.name}>
+            <dt>{item.name}</dt>
+            <dd>
+              <span className="numeral">{item.value}</span>
+              {item.note && <span className={styles.basisNote}>{item.note}</span>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+/** Sonuç boşken tek cümlelik yönlendirme; ikon formun ne işe yaradığını söylüyor. */
+function EmptyLead({ text }: { text: string }) {
+  return (
+    <p className={styles.emptyLead}>
+      <span className={styles.emptyIcon} aria-hidden>
+        <Calculator size={20} weight="duotone" />
+      </span>
+      {text}
+    </p>
+  );
+}
+
+/** Segmentin kayan parçası: marka eğrisi, portföy penceresiyle aynı süre. */
+const THUMB_TRANSITION = { duration: 0.3, ease: [0.22, 1, 0.36, 1] } as const;
+
+type SegmentOption<T extends string | number> = { value: T; label: React.ReactNode; disabled?: boolean };
+
+/**
+ * SAYFANIN TEK SEÇİM DENETİMİ — yıl, hesap türü dışındaki bütün ikili
+ * seçimler (tek/çoklu işlem, alış/satış, W-8BEN, kur günü).
+ *
+ * Eskiden her biri seçili parçası mavi dolgulu bir hap idi; bir ekranda
+ * beş mavi hap, birincil eylem gibi okunuyor ve gerçek eylemle (beyan
+ * rozeti) yarışıyordu. Şimdi portföy penceresinin segment dili: çukur ray,
+ * seçili parça panel zemininde ve kayarak geçiyor (`layoutId`, örnek başına
+ * `useId` ile tekil). Anlamı `aria-pressed` taşıyor, rengi değil. Hareketi
+ * azaltan okuyucuda parça yerine atlar.
+ */
+function Segmented<T extends string | number>({
+  value,
+  options,
+  onChange,
+  label,
+  labelledBy,
+}: {
+  value: T;
+  options: readonly SegmentOption<T>[];
+  onChange: (value: T) => void;
+  label?: string;
+  labelledBy?: string;
+}) {
+  const id = useId();
+  const reduced = useMotionPreference();
+  return (
+    <span role="group" aria-label={label} aria-labelledby={labelledBy} className={styles.segment}>
+      {options.map((option) => {
+        const on = option.value === value;
+        return (
+          <button
+            key={String(option.value)}
+            type="button"
+            aria-pressed={on}
+            disabled={option.disabled}
+            onClick={() => onChange(option.value)}
+            className={styles.segItem}
+          >
+            {on && (
+              <motion.span
+                layoutId={`${id}-thumb`}
+                className={styles.segThumb}
+                transition={reduced ? { duration: 0 } : THUMB_TRANSITION}
+              />
+            )}
+            <span className={styles.segText}>{option.label}</span>
+          </button>
+        );
+      })}
+    </span>
   );
 }
 
@@ -1419,8 +1661,14 @@ function Field({
     <label className={styles.field}>
       <span className={styles.label}>{label}</span>
       {children}
-      {hint && <span className={styles.help} role="status">{hint}</span>}
-      {error && <span className={cn(styles.help, styles.warn)}>{error}</span>}
+      {error ? (
+        <span className={styles.fieldError}>
+          <WarningCircle size={14} weight="fill" aria-hidden />
+          {error}
+        </span>
+      ) : (
+        hint && <span className={styles.help} role="status">{hint}</span>
+      )}
     </label>
   );
 }
@@ -1454,13 +1702,15 @@ function Settings({
           <span className={styles.label} id="vergi-kur-gunu">
             {labels.rateDayLabel}
           </span>
-          <span role="group" aria-labelledby="vergi-kur-gunu" className={cn(styles.segment, "w-fit")}>
-            {(["same", "previous"] as const).map((option) => (
-              <button key={option} type="button" aria-pressed={rateDay === option} onClick={() => setRateDay(option)}>
-                {option === "same" ? labels.rateDaySame : labels.rateDayPrevious}
-              </button>
-            ))}
-          </span>
+          <Segmented
+            labelledBy="vergi-kur-gunu"
+            value={rateDay}
+            options={[
+              { value: "same", label: labels.rateDaySame },
+              { value: "previous", label: labels.rateDayPrevious },
+            ]}
+            onChange={setRateDay}
+          />
           <span className={styles.help}>{labels.rateDayHint}</span>
         </div>
         {indexMode && (
@@ -1504,12 +1754,16 @@ function Notes({
           </button>
         </p>
       )}
-      <div className={cn(styles.actions, "pt-1")}>
-        <button type="button" onClick={onCsv} disabled={csvDisabled} className={buttonClass({ variant: "ghost", size: "sm" })}>
-          <DownloadSimple size={14} weight="bold" aria-hidden />
-          {labels.exportCsv}
-        </button>
-      </div>
+      {/* Döküm yokken düğme hiç yok: soluk, basılamayan bir düğme boş
+          kartta bir hata gibi duruyordu. */}
+      {!csvDisabled && (
+        <div className={cn(styles.actions, "pt-1")}>
+          <button type="button" onClick={onCsv} className={buttonClass({ variant: "ghost", size: "sm" })}>
+            <DownloadSimple size={14} weight="bold" aria-hidden />
+            {labels.exportCsv}
+          </button>
+        </div>
+      )}
       {/* DANIŞMANLIK NOTU GÖRÜNÜR AMA BAĞIRMIYOR. Eski ekranda sayfanın
           ilk paneliydi ve başlığın hemen altında, okuyucunun ilk gördüğü
           şey bir uyarıydı. Şimdi sonucun dibinde, sonuçla birlikte

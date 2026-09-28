@@ -897,7 +897,7 @@ Bölgenin tepesinden stopa risk: 100 − 92 = **8**.
 
 İkisi de plana aykırı değildir; fark riskin nasıl ölçüldüğündedir.
 
-- **Tek seferde:** Bölgenin herhangi bir yerinden bir kerede alınır. Risk en kötü hâliyle, bölgenin tepesinden stopa kadar hesaplanır.
+- **Tek Seferde:** Bölgenin herhangi bir yerinden bir kerede alınır. Risk en kötü hâliyle, bölgenin tepesinden stopa kadar hesaplanır.
 - **Kademeli:** Alım bölgeye yayılır (bir kısmı üst uçta, kalanı alt uca doğru). Ortalama maliyet düşer, stopa uzaklık kısalır. Bedeli şudur: fiyat alt uca inmeden dönerse pozisyon yarım kalır.
 
 ::: ornek Aynı Plan, İki Uygulama
@@ -917,8 +917,8 @@ Pozisyon taşınır, stop vazgeçme noktası olarak izlenir. Hedefler tek bir sa
 
 TUT iki farklı durumu anlatır: göstergeler birbirini tutmuyordur ya da trend sağlamdır ama fiyat alım bölgesinden uzaktır. İkisinde de ortak cevap aynıdır: yeni alım için acele yok, satış için de gerekçe yok.
 
-- **Pozisyonun yoksa:** Bölge verilmişse fiyatın oraya gelmesi ve teyit beklenir: bölgede tutunan bir kapanış, ortalamanın üstünde hacim. Bölge yoksa listelenen destek ve dirençler izlenir.
-- **Pozisyonun varsa:** TUT satmak demek değildir. Stop verilmişse o seviye, verilmemişse en yakın destek izlenir. Aşağı kırılırsa görüş SAT'a dönebilir.
+- **Pozisyonun Yoksa:** Bölge verilmişse fiyatın oraya gelmesi ve teyit beklenir: bölgede tutunan bir kapanış, ortalamanın üstünde hacim. Bölge yoksa listelenen destek ve dirençler izlenir.
+- **Pozisyonun Varsa:** TUT satmak demek değildir. Stop verilmişse o seviye, verilmemişse en yakın destek izlenir. Aşağı kırılırsa görüş SAT'a dönebilir.
 
 ::: dikkat Eklemek İçin AL'ı Beklemek
 Zayıflayan bir hissede "ucuzladı" diye pozisyonu büyütmek, yanlış fikre daha çok para koymak olabilir. Var olan pozisyona eklemek için görüşün AL'a dönmesini beklemek, eklemeyi fiyata değil grafiğin toparlanmasına bağlar.
@@ -928,8 +928,8 @@ Zayıflayan bir hissede "ucuzladı" diye pozisyonu büyütmek, yanlış fikre da
 
 SAT görüşünde alım bölgesi ve stop yayımlanmaz; çünkü plan bir alım planı değildir. Hedef diye listelenen seviyeler, fiyatın tepki verirse takılabileceği **dirençlerdir.**
 
-- **Pozisyonun yoksa:** Yeni alım yapılmaz. SAT bir açığa satış önerisi de değildir. Alım için görüşün TUT'a ya da AL'a dönmesi, yani fiyatın ortalamaları geri alması beklenir.
-- **Pozisyonun varsa:** SAT, "hepsini hemen sat" demek değildir. Plan, fiyatın dirençlere yükseldiği tepkileri pozisyonu azaltma fırsatı olarak görür. Çıkış da kademeli olabilir: ilk dirençte bir kısmı, sonrakinde kalanı.
+- **Pozisyonun Yoksa:** Yeni alım yapılmaz. SAT bir açığa satış önerisi de değildir. Alım için görüşün TUT'a ya da AL'a dönmesi, yani fiyatın ortalamaları geri alması beklenir.
+- **Pozisyonun Varsa:** SAT, "hepsini hemen sat" demek değildir. Plan, fiyatın dirençlere yükseldiği tepkileri pozisyonu azaltma fırsatı olarak görür. Çıkış da kademeli olabilir: ilk dirençte bir kısmı, sonrakinde kalanı.
 
 ::: dikkat Tepki Gelmezse
 Plan bir destek seviyesi de verir. O destek kırılırsa düşüş sürer; o durumda tepki beklemek riski büyütür. Kademeli çıkış bir fırsatı kullanmanın yolu, düşüşü görmezden gelmenin değil.
@@ -1496,9 +1496,9 @@ Karşılaştırma dolar değeriyle değil ADETLE yapılır. Fiyatı yüzde 30 y�
 
 ::: dikkat Dört Kör Nokta
 **Gecikme:** Bildirim çeyrek bitiminden 45 gün sonraya kadar verilebilir. 30 Haziran'daki portföyü Ağustos ortasında görürsün; yönetici o arada her şeyi satmış olabilir.
-**Açığa satış:** Kısa pozisyonlar bildirilmez. Bir fon bir hisseyi alıp başka bir hisseyi açığa satarak korunuyorsa sen yalnızca alım tarafını görürsün.
-**Nakit ve tahvil:** Portföyün ne kadarının nakitte beklediği görünmez.
-**Yurt dışı hisseler:** Yalnızca ABD'de işlem gören menkul kıymetler listelenir.
+**Açığa Satış:** Kısa pozisyonlar bildirilmez. Bir fon bir hisseyi alıp başka bir hisseyi açığa satarak korunuyorsa sen yalnızca alım tarafını görürsün.
+**Nakit ve Tahvil:** Portföyün ne kadarının nakitte beklediği görünmez.
+**Yurt Dışı Hisseler:** Yalnızca ABD'de işlem gören menkul kıymetler listelenir.
 :::
 
 ## Opsiyon Satırları Yanıltabilir
@@ -1519,7 +1519,7 @@ Karşılaştırma dolar değeriyle değil ADETLE yapılır. Fiyatı yüzde 30 y�
 
 ABD Kongre üyeleri ve eşleri, 1.000 doları aşan hisse işlemlerini STOCK Yasası gereği 45 gün içinde bildirmek zorundadır. Bu bildirimler 13F'ten iki noktada ayrılır:
 
-| | 13F | Kongre Bildirimi |
+| Ölçüt | 13F | Kongre Bildirimi |
 |---|---|---|
 | Kapsam | Çeyrek sonundaki portföy | Tek tek işlemler |
 | Tutar | Kesin değer | Aralık ($1.000.001 - $5.000.000 gibi) |

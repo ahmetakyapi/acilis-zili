@@ -33,6 +33,8 @@ import { refreshSymbolMetrics } from "@/lib/symbol-metrics";
 import { purgeOldErrors } from "@/lib/error-log";
 import { syncInvestors } from "@/lib/investor-sync";
 import { syncArk } from "@/lib/ark-sync";
+import { syncTaxTariffs } from "@/lib/tax-tariff-sync";
+import { TAX_TARIFFS_TAG } from "@/lib/tax-data";
 import { INVESTORS_TAG } from "@/lib/investor-data";
 
 /**
@@ -106,6 +108,9 @@ const BUDGET_MS = 100_000;
  * Tavanı küçük tutmak diğer adımların payını koruyor.
  */
 const INVESTOR_BUDGET_MS = 15_000;
+/** ARK adımının tavanı — altı küçük CSV normalde iki-üç saniye; gerekçe
+    `syncArk` üzerinde. */
+const ARK_BUDGET_MS = 15_000;
 const INVESTOR_MAX_FILINGS = 6;
 const INVESTOR_FIGI_REQUESTS = 4;
 
@@ -225,11 +230,22 @@ export async function GET(request: Request) {
      Altı küçük CSV, anahtarsız; dosya tarihi zaten yazılıysa yazım yok.
      13F adımından ayrı `try`: biri düşerse öteki yine koşuyor. */
   try {
-    const result = await syncArk();
+    const result = await syncArk({ deadline: Date.now() + ARK_BUDGET_MS });
     if (result.changed) revalidateTag(INVESTORS_TAG, { expire: 0 });
     report.ark = result.summary;
   } catch (error) {
     report.ark = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+
+  /* ---- 0d. Gelir vergisi tarifesi (GİB) ----
+     Tek küçük JSON; PDF yalnızca yeni bir yıl belirince (yılda bir) iner ve
+     sağlamasından geçmezse yazılmaz. Gerekçe lib/tax-tariff-sync.ts. */
+  try {
+    const result = await syncTaxTariffs();
+    if (result.changed) revalidateTag(TAX_TARIFFS_TAG, { expire: 0 });
+    report.taxTariffs = result.summary;
+  } catch (error) {
+    report.taxTariffs = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
 
   /* ---- 1. Bilanço takvimi (bugün → +30 gün) ----

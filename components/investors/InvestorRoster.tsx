@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import type { Dictionary } from "@/lib/i18n";
 import type { Overview } from "@/lib/investor-data";
-import { INVESTORS, investorBySlug, investorFirm } from "@/lib/investors";
+import { INVESTORS, investorFirm } from "@/lib/investors";
 import { formatMoneyCompact, formatPercentPlain } from "@/lib/utils";
 import { Portrait } from "./Portrait";
 import styles from "./Investors.module.css";
@@ -13,8 +13,13 @@ const STRIP_NAMED = 5;
 const INLINE_SHARE = 8;
 /** Adı da sığdıran pay: %10'luk dilim 1440'ta ~125 piksel ve ad "Phil…" diye kesiliyordu. */
 const INLINE_NAME_SHARE = 20;
-/** Şeridin iki ucundaki bu genişlikte (yüzde) bilgi kartı kenara yaslanıyor. */
-const EDGE_SHARE = 16;
+/**
+ * Dilimin ortası şeridin bu kadar ucundaysa (yüzde) bilgi kartı kenara
+ * yaslanıyor. 16'ydı; 390'da ilk dilim (%60) ortalı açılıyor ve kart
+ * ekranın solundan 12 piksel taşıyordu (28 Eylül denetimi). 35'te ilk ve
+ * son dilimlerin kartı her genişlikte kenardan açılıyor.
+ */
+const EDGE_SHARE = 35;
 
 /**
  * Dizin kapağının görseli (28 Eylül) — portre mozaiğinin yerine.
@@ -29,8 +34,10 @@ const EDGE_SHARE = 16;
  *      Kapanan fon (Burry) ve Kongre üyesi toplamın dışında, kahramandaki
  *      sayıyla aynı tanım (`trackedValue`). En büyük beşi adıyla, kalanı
  *      tek "Diğer" satırında.
- *   2. KADRO — kişi başına kompakt bir satır: küçük portre, ad, kuruluş ve
- *      portföy değeri. Fotoğraf kişiyi tanıtıyor, ekranı taşımıyor.
+ *   2. KADRO KALKTI (28 Eylül, sahibinin isteği). Kişi başına portreli
+ *      satırlardan oluşan ızgara "insan portresi galerisi" gibi okunuyordu
+ *      ve aşağıdaki yatırımcı kartlarını tekrar ediyordu. Kapak artık
+ *      yalnızca şerit; sayfa doğrudan kartlarla devam ediyor.
  *
  * Şerit girişi `clip-path` ile soldan açılıyor (opaklık yok, LCP
  * beklemiyor); hareketi azaltan okuyucu son kareyi görüyor.
@@ -45,8 +52,13 @@ export function InvestorRoster({
   t: Dictionary["investors"];
 }) {
   const valueOf = new Map<string, number>();
+  /* KAPAKTAKİ TOPLAMLA AYNI KÜME (28 Eylül denetimi): `trackedValue` yalnızca
+     en son çeyreği bildiren ve kapanmamış fonları sayıyor. Şerit her fonun
+     son dosyasını topluyordu; bildirim sezonunda bir fon yeni çeyreği,
+     öteki eskisini taşırken iki sayı ayrışırdı. */
+  const period = overview?.movers.period ?? null;
   for (const card of overview?.cards ?? []) {
-    if (card.kind === "13f") valueOf.set(card.slug, card.longValue);
+    if (card.kind === "13f" && card.period === period) valueOf.set(card.slug, card.longValue);
   }
   const segments = INVESTORS.filter((investor) => investor.kind === "13f" && investor.status !== "closed")
     .map((investor) => ({ investor, value: valueOf.get(investor.slug) ?? 0 }))
@@ -70,7 +82,7 @@ export function InvestorRoster({
               yalnızca kartla okunuyor. Kartın hizası dilimin şeritteki
               yerinden: baştaki sola, sondaki sağa yaslanıyor ki panelin
               kenarından taşmasın. */}
-          <div className={styles.capitalBar} aria-label={t.capitalAria}>
+          <div className={styles.capitalBar} role="group" aria-label={t.capitalAria}>
             {(() => {
               let before = 0;
               return segments.map((segment, index) => {
@@ -135,32 +147,6 @@ export function InvestorRoster({
         </figure>
       )}
 
-      <ul className={styles.rosterList} aria-label={t.investorsCount.replace("{count}", String(INVESTORS.length))}>
-        {INVESTORS.map((listed, index) => {
-          const investor = investorBySlug(listed.slug) ?? listed;
-          const value = valueOf.get(investor.slug);
-          return (
-            <li key={investor.slug} style={{ "--i": index } as CSSProperties}>
-              <Link href={`/yatirimcilar/${investor.slug}`} prefetch={false} className={styles.rosterItem}>
-                <Portrait investor={investor} size="sm" priority={index < 4} />
-                <span className={styles.rosterId}>
-                  <b lang="en">{investor.name}</b>
-                  <small>{investorFirm(investor, locale)}</small>
-                </span>
-                <span className={styles.rosterValue}>
-                  {investor.kind === "congress" ? (
-                    <em data-tone="info">{t.congressBadge}</em>
-                  ) : investor.status === "closed" ? (
-                    <em data-tone="closed">{t.fundClosed}</em>
-                  ) : value !== undefined ? (
-                    <b className="numeral">{formatMoneyCompact(value, locale)}</b>
-                  ) : null}
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
     </div>
   );
 }

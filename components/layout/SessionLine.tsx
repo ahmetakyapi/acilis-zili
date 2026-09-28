@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { MarketSession } from "@/lib/market-hours";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +33,10 @@ const DAY = 24 * HOUR;
 function remaining(ms: number, l: SessionLineLabels): { n: number; unit: string }[] {
   const days = Math.floor(ms / DAY);
   const hours = Math.floor((ms % DAY) / HOUR);
-  const minutes = Math.min(59, Math.max(1, Math.ceil((ms % HOUR) / MINUTE)));
+  /* AŞAĞI YUVARLAMA (28 Eylül denetimi): yukarı yuvarlanınca 2 sa 0 dk 20 sn
+     "2 sa 1 dk" oluyordu; saat hanesi aşağı, dakika yukarı sayıyordu. Son
+     dakikada "1 dk" kalıyor, sıfır basılmıyor. */
+  const minutes = ms < MINUTE ? 1 : Math.floor((ms % HOUR) / MINUTE);
   if (days > 0) return [{ n: days, unit: l.d }, { n: hours, unit: l.h }];
   if (hours > 0) return [{ n: hours, unit: l.h }, { n: minutes, unit: l.m }];
   return [{ n: minutes, unit: l.m }];
@@ -46,8 +50,7 @@ function remaining(ms: number, l: SessionLineLabels): { n: number; unit: string 
  * okuyucu bunu hiç göremiyordu. Başlıkta sekmelere yer yok (1280'de 24
  * piksel pay, `nav-items.ts`), alt şeridin payı da ölçülü (1024'te 36
  * piksel, `MarketTicker.tsx`); satır bu yüzden marka adının ALTINDA ve
- * genişliği yerleşime sayılmıyor (`w-0 min-w-full`, sağa taşabilir):
- * sekmelerin ölçülmüş yeri kıpırdamıyor.
+ * onunla ortak eksende ortalı (genişlik ve ölçüm globals.css'te).
  *
  * Durumu nokta rengi söylüyor (açık yeşil, uzatılmış seans pirinç, kapalı
  * gri); metin yalnızca sayılan zili ve kalan süreyi yazıyor. Tam durum
@@ -55,9 +58,9 @@ function remaining(ms: number, l: SessionLineLabels): { n: number; unit: string 
  *
  * DÜZEN KATMANINDA, YANİ GEZİNMEDE YENİDEN ÇİZİLMİYOR. Sunucu bir kez
  * hedef zili veriyor, istemci dakikada bir sayıyor. Hedef geçince sonraki
- * zili istemci bilemez (tatil takvimi sunucuda): satır durumu yazıp süreyi
- * bırakıyor ("Piyasa Açık" gibi), bir sonraki tam yüklemede yeni hedef
- * geliyor. Uydurma bir geri sayım basılmıyor.
+ * zili istemci bilemez (tatil takvimi sunucuda): satır o an durumu yazıyor
+ * ve `router.refresh()` ile sunucudan yeni hedefi istiyor (aşağıda).
+ * Uydurma bir geri sayım basılmıyor.
  */
 export function SessionLine({
   data,
@@ -68,7 +71,9 @@ export function SessionLine({
   labels: SessionLineLabels;
   className?: string;
 }) {
+  const router = useRouter();
   const [now, setNow] = useState(data.nowMs);
+  const refreshedFor = useRef<string | null>(null);
   useEffect(() => {
     let timer = 0;
     const tick = () => {
@@ -81,6 +86,17 @@ export function SessionLine({
 
   const target = new Date(data.targetIso).getTime();
   const passed = now >= target;
+
+  /* ZİL GEÇİNCE SUNUCUDAN YENİ HEDEF (28 Eylül denetimi). Satır düzen
+     katmanında ve istemci gezinmesinde yeniden çizilmiyor; hedef geçince
+     "Piyasa Açık"ta donup kapanıştan sonra da öyle kalıyordu. Geçiş anında
+     bir kez `router.refresh()`: düzen sunucuda yeniden çözülüyor ve bir
+     sonraki zil (tatil takvimiyle) geliyor. Aynı hedef için tek istek. */
+  useEffect(() => {
+    if (!passed || refreshedFor.current === data.targetIso) return;
+    refreshedFor.current = data.targetIso;
+    router.refresh();
+  }, [passed, data.targetIso, router]);
   /* Hedef geçtiyse durum tersine döndü: açıktı → kapandı, kapalıydı → açıldı. */
   const open = passed ? data.session !== "regular" : data.session === "regular";
   const extended = !passed && (data.session === "pre-market" || data.session === "after-hours");

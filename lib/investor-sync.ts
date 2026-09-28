@@ -92,9 +92,20 @@ async function storeFiling(investor: Investor, ref: SecFilingRef, report: Report
   }
   const { cover, holdings, valueTotal, valueScaled } = parsed.data;
   const amendment = ref.form === "13F-HR/A" ? (cover.amendment ?? "unknown") : null;
-  const [row] = await db
+  /* TEK İŞLEM (28 Eylül denetimi). Kayıt önce yazılıp pozisyonlar 500'lük
+     paketlerle ardından ekleniyordu; hata `catch`te kaydı siliyordu ama
+     süreç arada ÖLÜRSE (dağıtımda yeniden başlatma, zaman aşımı) kayıt
+     yarım pozisyonla kalıyor, erişim numarası "biliniyor" sayıldığı için
+     bir daha çekilmiyordu — portföy kalıcı olarak eksik. Artık kimlik
+     burada üretiliyor ve kayıt ile bütün paketler tek `db.batch` isteğinde
+     (Neon HTTP'de tek işlem) yazılıyor: ya hepsi ya hiçbiri. Aynı dosyayı
+     o arada başka bir koşum yazdıysa kayıt eklenmiyor, pozisyonlar yabancı
+     anahtara takılıyor ve işlem bütünüyle geri alınıyor. */
+  const id = crypto.randomUUID();
+  const filing = db
     .insert(investorFilings)
     .values({
+      id,
       investor: investor.slug,
       cik: ref.cik,
       accession: ref.accession,
@@ -106,21 +117,14 @@ async function storeFiling(investor: Investor, ref: SecFilingRef, report: Report
       entryCount: holdings.length,
       valueScaled,
     })
-    .onConflictDoNothing()
-    .returning({ id: investorFilings.id });
-  if (!row) return;
-  try {
-    for (let i = 0; i < holdings.length; i += HOLDING_BATCH) {
-      await db.insert(investorHoldings).values(
-        holdings.slice(i, i + HOLDING_BATCH).map((holding) => ({ filingId: row.id, ...holding })),
-      );
-    }
-  } catch (error) {
-    /* Yarım yazılmış dosya kalmasın: satırlar düşerse kaydı da sil, ertesi
-       koşum baştan dener (satırlar ON DELETE CASCADE ile gider). */
-    await db.delete(investorFilings).where(eq(investorFilings.id, row.id));
-    throw error;
+    .onConflictDoNothing();
+  const batches = [];
+  for (let i = 0; i < holdings.length; i += HOLDING_BATCH) {
+    batches.push(
+      db.insert(investorHoldings).values(holdings.slice(i, i + HOLDING_BATCH).map((holding) => ({ filingId: id, ...holding }))),
+    );
   }
+  await db.batch([filing, ...batches]);
   report.filings += 1;
   log(
     `${investor.slug} ${ref.period} ${ref.form}${amendment ? ` (${amendment})` : ""} · ${holdings.length} pozisyon` +
@@ -258,15 +262,24 @@ async function syncCongress(options: SyncOptions, report: Report, log: (m: strin
           report.failed.push(`${investor.slug} PTR ${filing.docId}: ${parsed.message}`);
           continue;
         }
-        await db
+        /* Bildirim ve işlemleri TEK İŞLEMDE (28 Eylül denetimi): bildirim
+           önce yazılıp işlemler ardından eklendiğinde arada ölen süreç
+           işlemsiz bir bildirim bırakıyordu ve `seen` onu bir daha
+           çektirmiyordu. Gerekçe `storeFiling` üzerinde. */
+        const head = db
           .insert(congressFilings)
           .values({ docId: filing.docId, member: investor.slug, filedAt: filing.filedAt, tradeCount: parsed.data.length })
           .onConflictDoNothing();
         if (parsed.data.length > 0) {
-          await db
-            .insert(congressTrades)
-            .values(parsed.data.map((trade) => ({ docId: filing.docId, member: investor.slug, ...trade })))
-            .onConflictDoNothing();
+          await db.batch([
+            head,
+            db
+              .insert(congressTrades)
+              .values(parsed.data.map((trade) => ({ docId: filing.docId, member: investor.slug, ...trade })))
+              .onConflictDoNothing(),
+          ]);
+        } else {
+          await head;
         }
         report.ptrs += 1;
         report.trades += parsed.data.length;

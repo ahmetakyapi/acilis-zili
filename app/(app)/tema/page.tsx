@@ -207,11 +207,19 @@ async function LiveGallery({ locale, t }: { locale: Locale; t: Dictionary }) {
   return (
     <>
       <ThemeGallery board={board} locale={locale} t={t} />
-      {/* Kart kaydı yalnızca GÖRÜNEN logolar için (kart başına en çok
-          `MOSAIC_MAX`); fiyat galerinin kendi paketinden. */}
+      {/* Kart kaydı yalnızca GÖRÜNEN logolar için; fiyat galerinin kendi
+          paketinden. Görünen sayı `LogoGroup`un kuralıyla: tam bir fazla
+          üye varsa "+1" yerine o üyenin logosu basılıyor, yani dokuz
+          üyeli temada dokuz logo. Kayıt `MOSAIC_MAX`ta kesildiğinde
+          dokuzuncu logo (Uzay'da KTOS) kart açmıyordu (28 Eylül denetimi). */}
       <CompanyCards
-        symbols={board.cards.flatMap((card) => card.members.slice(0, MOSAIC_MAX).map((member) => member.symbol))}
+        symbols={board.cards.flatMap((card) =>
+          card.members
+            .slice(0, card.members.length === MOSAIC_MAX + 1 ? MOSAIC_MAX + 1 : MOSAIC_MAX)
+            .map((member) => member.symbol),
+        )}
         quotes={quotesResult.ok ? quotesResult.data : null}
+        stale={quotesResult.ok && Boolean(quotesResult.stale)}
         names={names}
         status={status}
       />

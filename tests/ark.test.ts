@@ -78,3 +78,16 @@ test("fonlar birleşiyor; fonlar arası aktarım net sıfırsa düşüyor", () =
   assert.deepEqual(a?.funds, ["ARKK", "ARKW"]);
   assert.equal(day.trades.find((trade) => trade.cusip === "B"), undefined);
 });
+
+test("bir günde dosyası eksik fon sahte alım ya da satış üretmiyor", () => {
+  const arkw = ["P", "Q", "R", "S", "T"].map((cusip) => holding(cusip, 500, "ARKW"));
+  // ARKW 29 Eylül dosyasında yok (istek düştü): ne "tamamen sattı" ne de ertesi gün "yeni aldı".
+  const dropped = arkDay("2026-09-28", "2026-09-29", [...BASE, ...arkw], BASE);
+  assert.equal(dropped.trades.length, 0);
+  const back = arkDay("2026-09-29", "2026-09-30", BASE, [...BASE, ...arkw]);
+  assert.equal(back.trades.length, 0);
+  // İki günde de olan fonun gerçek işlemi yine görünüyor.
+  const real = arkDay("2026-09-28", "2026-09-29", [...BASE, ...arkw], BASE.map((row) => (row.cusip === "A" ? holding("A", 1500) : row)));
+  assert.equal(real.trades.length, 1);
+  assert.equal(real.trades[0].direction, "buy");
+});

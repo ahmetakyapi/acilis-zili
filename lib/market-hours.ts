@@ -498,6 +498,27 @@ export function quoteBasis(
 }
 
 /**
+ * Bir fiyat künyesinin EKRANDAKİ adı — `quoteBasis`in üstüne iki soru daha
+ * (28 Eylül denetimi, şirket kartı):
+ *   - Seans kapandıysa (16:00 ET sonrası, hafta sonu, tatil) son seansın
+ *     olağan saat işlemi hâlâ `session`; yüzde o seansı anlatıyor ama değer
+ *     artık "Seans İçi" değil, seansın kapanışı → `sessionClose`.
+ *   - Paket bugüne ait ama yaşlıysa (`QuoteResult.stale`, bkz. `packCurrent`)
+ *     "şimdi" iddiası düşüyor → `lastPrice` (/teknik'in `livePriceLabel`ı ile
+ *     aynı ad). Önceki seansı anlatan `lastClose` yaştan bağımsız kalıyor.
+ * Yön rengi yalnızca `session`, `sessionClose`, `pre-market`, `after-hours`
+ * için: `lastPrice` ve `lastClose` "bugün, şimdi" diyemiyor.
+ */
+export type DisplayBasis = QuoteBasis | "sessionClose" | "lastPrice";
+
+export function displayBasis(basis: QuoteBasis, stale: boolean, status: MarketStatus): DisplayBasis {
+  if (basis === "lastClose") return "lastClose";
+  if (stale) return "lastPrice";
+  if (basis === "session" && status.session !== "regular") return "sessionClose";
+  return basis;
+}
+
+/**
  * Şu anda beslemeden SEANSA AİT veri beklenir mi?
  *
  * Gecikme düşülmüş an hâlâ seans gününün ön seans açılışından önceyse cevap

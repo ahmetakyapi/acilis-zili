@@ -283,7 +283,11 @@ async function Briefs({
             {/* SİTENİN TAKVİMİ (26 Eylül): tarayıcının yerel penceresi yerine
                 `DatePicker`; seçim formu kendiliğinden gönderiyor, "Git"
                 düğmesine gerek kalmadı. */}
+            {/* `key`: seçici `defaultValue`yu yalnızca kurulurken okuyor;
+                "Temizle" istemci gezinmesinde bileşen yeniden kurulmadığı
+                için eski tarih alanda kalıyordu (28 Eylül denetimi). */}
             <DatePicker
+              key={tarih ?? ""}
               name="tarih"
               defaultValue={tarih ?? undefined}
               min={aralik.first ?? undefined}

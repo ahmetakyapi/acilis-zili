@@ -27,7 +27,7 @@ import styles from "./depth.module.css";
  *
  * KÜNYE, CÜMLE DEĞİL (28 Eylül). Panel Gündem bölümünün başında tam
  * genişlikte tek bir cümle bloğuydu ve 1860 piksellik bir kutunun yarısında
- * iki satır metin duruyordu. Artık derinlik ızgarasında, temettünün yanında;
+ * iki satır metin duruyordu. Artık ilk ekranın hemen altında, tam genişlikte (page.tsx);
  * bildiklerimiz ikonlu bir künye ızgarası (endeks, sektör, alt sektör,
  * sonraki bilanço, aynı alt sektör) ve alt sektörün en büyük beş şirketinin
  * logo şeridi. Cümleler arama motoru ve ekran okuyucu için duruyor, künyenin

@@ -45,7 +45,7 @@ export function MoreSymbols({
 }: {
   entries: readonly MoreSymbolEntry[];
   /** Şirket kartı — sayfanın kendi paketi (kartın yüzdesi karttakiyle aynı). */
-  cards: { quotes: Record<string, Quote> | null; names: Record<string, SymbolMeta>; status: MarketStatus };
+  cards: { quotes: Record<string, Quote> | null; stale: boolean; names: Record<string, SymbolMeta>; status: MarketStatus };
   locale: Locale;
   t: Dictionary;
 }) {

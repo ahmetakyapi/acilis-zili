@@ -4,6 +4,7 @@ import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import { TaxCalculator } from "@/components/tax/TaxCalculator";
+import { getTaxYears } from "@/lib/tax-data";
 import { PANEL_TITLE } from "@/components/tax/tax-ui";
 import { TaxFiling, TaxPaths } from "@/components/tax/TaxFiling";
 import taxStyles from "@/components/tax/Tax.module.css";
@@ -68,6 +69,9 @@ export default async function TaxPage() {
     [L.sources.irs, "https://www.irs.gov/instructions/i1042s"],
   ];
 
+  /* Vergi yılları: koddakiler + GİB'den otomatik okunan yeniler. */
+  const years = await getTaxYears();
+
   return (
     <MotionExperience className={polish.page}>
       <ScrollProgress />
@@ -78,9 +82,9 @@ export default async function TaxPage() {
         visual={<TaxPaths labels={L} />}
       />
 
-      <TaxCalculator labels={L} locale={locale} indexAuto={isEvdsConfigured()} today={today} />
+      <TaxCalculator labels={L} locale={locale} indexAuto={isEvdsConfigured()} today={today} years={years} />
 
-      <TaxFiling labels={L} locale={locale} today={today} />
+      <TaxFiling labels={L} locale={locale} today={today} years={years} />
 
       {/* METİN AÇILIR SATIRLARDA. Eski sayfada beş paragraf art arda
           açıktı ve hesaplayıcının altında bir metin duvarı gibi duruyordu;

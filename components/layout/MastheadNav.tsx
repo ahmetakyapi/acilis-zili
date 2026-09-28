@@ -112,9 +112,22 @@ export function MastheadNav({
     const onPointerDown = (event: PointerEvent) => {
       if (event.target instanceof Node && !moreRef.current?.contains(event.target)) setOpenedAt(null);
     };
+    /* ESCAPE BELGEDE (28 Eylül denetimi). Tuş yalnızca düğmede ve panelde
+       dinleniyordu: fareyle açılıp odağın başka yerde kaldığı durumda
+       (Safari düğmeye tıklayınca odak vermiyor) Escape paneli kapatmıyordu.
+       Odak panelin içindeyse düğmeye dönüyor, değilse yerinde kalıyor. */
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      const inside = moreRef.current?.contains(document.activeElement) ?? false;
+      close(inside);
+    };
     document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, [open]);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, close]);
 
   const rowLinks = () => [...(panelRef.current?.querySelectorAll<HTMLAnchorElement>("a") ?? [])];
 
@@ -231,6 +244,12 @@ export function MastheadNav({
             <motion.div
               ref={panelRef}
               id="masthead-more"
+              /* ODAK PANELDE KALIR (28 Eylül denetimi). Paneldeki boş bir
+                 yere (grup başlığı, dolgu) tıklanınca düğme odağı kaybediyor,
+                 `relatedTarget` null geliyor ve `onBlur` paneli kapatıyordu.
+                 `tabIndex={-1}` paneli odaklanabilir yapıyor (Tab sırasına
+                 girmeden): tıklama odağı panele veriyor, `contains` doğru. */
+              tabIndex={-1}
               initial={{ opacity: 0, y: -4, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.97 }}
@@ -238,7 +257,7 @@ export function MastheadNav({
               style={{ transformOrigin: alignEnd ? "top right" : "top left" }}
               onKeyDown={onPanelKeyDown}
               className={cn(
-                "masthead-dropdown absolute top-[calc(100%+0.75rem)] z-40 w-[38rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-overlay-surface p-2 shadow-(--shadow-overlay)",
+                "masthead-dropdown absolute outline-none top-[calc(100%+0.75rem)] z-40 w-[38rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-overlay-surface p-2 shadow-(--shadow-overlay)",
                 alignEnd
                   ? "right-[calc(var(--masthead-tab-px)-1rem)]"
                   : "left-[calc(var(--masthead-tab-px)-1rem)]",

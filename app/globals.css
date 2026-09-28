@@ -2479,13 +2479,16 @@ html.ink-splash-out .ink-splash-layer {
 }
 
 /* ---- Markanın altındaki seans satırı (SessionLine, 28 Eylül) ----
-   Genişliği yerleşime sayılmıyor (`width:0; min-width:100%`): metin marka
-   adından uzunsa sağa taşıyor ama şeridin ölçülmüş yerini kıpırdatmıyor.
+   Satır kendi genişliğinde ve marka adıyla birlikte ORTALI (sahibinin
+   isteği: iki satır farklı yerde bitmesin). Bir dönem genişliği yerleşime
+   sayılmıyordu (`width:0`), şerit hiç kıpırdamasın diye; ortalamak için
+   gerçek genişlik şart ve marka bloğu ~15 piksel büyüyor — şeridin
+   sığması 1024/1280 TR/EN'de yeniden ölçüldü (AppShell).
    Nokta marka adının ilk harfiyle aynı sol hatta; sayılar koyu ve eşit
    genişlikli, birimler bir kademe küçük ve soluk (geri sayımın `sa dk`
    kararıyla aynı dil). */
 .session-line {
-  display: flex; width: 0; min-width: 100%; align-items: center; gap: 6px;
+  display: flex; width: max-content; align-items: center; gap: 6px;
   overflow: visible; white-space: nowrap; line-height: 14px;
 }
 .session-dot { position: relative; width: 6px; height: 6px; flex: none; border-radius: 999px; background: var(--text-muted); }

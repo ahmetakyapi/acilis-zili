@@ -274,13 +274,18 @@ export default async function TodayPage() {
         items={[
           { id: "gunun-akisi", label: t.today.navFlow },
           /* Bant akışın hemen altına taşındı (28 Eylül); çubuk sayfanın
-             sırasını izliyor, yoksa okuyucu atlarken geri dönüyordu. */
-          { id: "sektor-ve-tema", label: t.today.navThemes },
+             sırasını izliyor, yoksa okuyucu atlarken geri dönüyordu.
+             TELEFONDA SIRA FARKLI: 1024'ün altında bant Hareketler'in
+             ardına iniyor (TodayExperience.module.css, `texture` order:4),
+             yani Gündem ve Dünya'nın ALTINDA. Çubuk orada da sayfayı
+             izlesin diye aynı `order` sınıfları (28 Eylül denetimi; 390'da
+             ölçüldü: bant 2728, Gündem 1094, Dünya 1762). */
+          { id: "sektor-ve-tema", label: t.today.navThemes, className: styles.navNarrowThemes },
           { id: "gundem", label: t.today.navBrief },
           { id: "dunya-piyasalari", label: t.today.navMarkets },
-          { id: "mercek-seckisi", label: t.today.navStories },
-          { id: "bugun-bilanco", label: t.today.navEarnings },
-          { id: "haber-akisi", label: t.today.navNews },
+          { id: "mercek-seckisi", label: t.today.navStories, className: styles.navNarrowLater },
+          { id: "bugun-bilanco", label: t.today.navEarnings, className: styles.navNarrowLater },
+          { id: "haber-akisi", label: t.today.navNews, className: styles.navNarrowLater },
         ]}
         trail={
           <span className={styles.miniCount}>

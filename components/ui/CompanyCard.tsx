@@ -90,13 +90,24 @@ export type CompanyCardLabels = { sector: string; marketCap: string; price: stri
 
 /* ---- Kayıt defteri (modül düzeyi) ---- */
 
-const registry = new Map<string, CompanyCardRecord>();
+/* ANAHTAR BAŞINA YIĞIN (28 Eylül denetimi). Defter anahtar başına tek kayıt
+   tutuyordu: A ve B aynı anahtarı yazdığında B söküldüğünde (Suspense
+   yeniden çizimi, koşullu panel) "kayıt hâlâ benimki mi" sorusu doğru
+   çıkıyor ve anahtar siliniyordu — A ekranda olduğu hâlde kartı açılmıyordu.
+   Artık her yazar yığına ekliyor, sökülen yalnızca kendi kaydını çıkarıyor,
+   okuma en son yazılanı alıyor. */
+const registry = new Map<string, CompanyCardRecord[]>();
+
+function latest(key: string): CompanyCardRecord | null {
+  const stack = registry.get(key);
+  return stack && stack.length > 0 ? stack[stack.length - 1] : null;
+}
 
 function lookup(key: string): CompanyCardRecord | null {
-  const direct = registry.get(key);
+  const direct = latest(key);
   if (direct) return direct;
   const colon = key.indexOf(":");
-  return colon === -1 ? null : (registry.get(key.slice(colon + 1)) ?? null);
+  return colon === -1 ? null : latest(key.slice(colon + 1));
 }
 
 /**
@@ -108,11 +119,15 @@ export function CompanyCardData({ cards, set }: { cards: CompanyCardRecord[]; se
   useEffect(() => {
     const written = cards.map((card) => {
       const key = cardKey(card.symbol, set);
-      registry.set(key, card);
+      registry.set(key, [...(registry.get(key) ?? []), card]);
       return [key, card] as const;
     });
     return () => {
-      for (const [key, card] of written) if (registry.get(key) === card) registry.delete(key);
+      for (const [key, card] of written) {
+        const rest = (registry.get(key) ?? []).filter((entry) => entry !== card);
+        if (rest.length > 0) registry.set(key, rest);
+        else registry.delete(key);
+      }
     };
   }, [cards, set]);
   return null;
@@ -264,6 +279,14 @@ export function CompanyCardHost({ labels }: { labels: CompanyCardLabels }) {
       if (!carrier) return;
       const next = event.relatedTarget;
       if (next instanceof Node && carrier.contains(next)) return;
+      /* KLAVYE KARTI İMLEÇLE KAPANMAZ (28 Eylül denetimi): odakla açılmış
+         kart, imleç sayfadaki ilgisiz bir logonun üstünden geçip çıkınca
+         kapanıyordu. Yalnızca bekleyen imleç açılışı iptal ediliyor. */
+      const current = openRef.current;
+      if (current && current.x === null && current.anchor !== carrier && !current.anchor.contains(carrier)) {
+        cancel();
+        return;
+      }
       /* Bir iç öğeden (logo) dıştakine (satır bağlantısı, o da kartlı)
          geçiş: kapanıp açılmasın, `over` yeni sahibi zaten seçiyor. */
       close();
@@ -403,7 +426,12 @@ export function CompanyCardHost({ labels }: { labels: CompanyCardLabels }) {
 }
 
 function CompanyCardView({ card, labels }: { card: CompanyCardRecord; labels: CompanyCardLabels }) {
-  const facts = card.sector !== undefined || card.cap !== undefined || card.price !== undefined || !!card.facts?.length;
+  /* DÜZEN (28 Eylül, "bir tık daha güzel"): kimlik → fiyat → künye. Kart
+     dört eşit satırlık bir tabloydu; uzun sektör adı ("Bilgi Teknolojileri ·
+     Yarı İletkenler") sağa yaslı iki satıra kırılıyor, fiyat da künyelerle
+     aynı ağırlıkta kalıyordu. Sektör artık kimliğin altında soluk tek satır,
+     fiyat kendi tonlu alanında büyük ve değişim yön renginde bir hap. */
+  const facts = card.cap !== undefined || !!card.facts?.length;
   return (
     <div className={styles.body}>
       <div className={styles.head}>
@@ -414,15 +442,32 @@ function CompanyCardView({ card, labels }: { card: CompanyCardRecord; labels: Co
         </span>
         {card.badge && <span className={cn(styles.pill, card.badge.tone)}>{card.badge.text}</span>}
       </div>
+      {card.sector !== undefined && (
+        <p className={styles.sector}>
+          <span className="sr-only">{labels.sector}: </span>
+          {card.sector}
+        </p>
+      )}
+
+      {card.price !== undefined && (
+        <div className={styles.quote}>
+          <span className={styles.quoteMain}>
+            {/* Künye fiyatın üstünde: değişim bu seansı anlatmıyorsa
+                ("Son Kapanış", "Açılış Öncesi") adıyla söylüyor. */}
+            <small>{card.basis ?? labels.price}</small>
+            <b className="numeral">{card.price}</b>
+          </span>
+          {card.pct !== undefined && (
+            <span className={styles.move} data-dir={card.dir}>
+              <em className="numeral">{card.pct}</em>
+              {card.amount !== undefined && <small className="numeral">{card.amount}</small>}
+            </span>
+          )}
+        </div>
+      )}
 
       {facts && (
         <dl className={styles.facts}>
-          {card.sector !== undefined && (
-            <div>
-              <dt>{labels.sector}</dt>
-              <dd>{card.sector}</dd>
-            </div>
-          )}
           {card.cap !== undefined && (
             <div>
               <dt>{labels.marketCap}</dt>
@@ -435,22 +480,6 @@ function CompanyCardView({ card, labels }: { card: CompanyCardRecord; labels: Co
               <dd className="numeral">{value}</dd>
             </div>
           ))}
-          {card.price !== undefined && (
-            <div>
-              {/* Künye fiyatın hemen yanında: değişim bu seansı anlatmıyorsa
-                  ("Son Kapanış", "Açılış Öncesi") adıyla söylüyor. */}
-              <dt>{card.basis ?? labels.price}</dt>
-              <dd className={styles.price}>
-                <b className="numeral">{card.price}</b>
-                {card.pct !== undefined && (
-                  <span className={styles.move} data-dir={card.dir}>
-                    <em className="numeral">{card.pct}</em>
-                    {card.amount !== undefined && <em className="numeral">{card.amount}</em>}
-                  </span>
-                )}
-              </dd>
-            </div>
-          )}
         </dl>
       )}
 

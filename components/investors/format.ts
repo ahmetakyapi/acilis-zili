@@ -108,6 +108,20 @@ export function ownerLabel(owner: string | null, t: T): string {
   return owner ?? t.ownerSelf;
 }
 
+/**
+ * " · " ile ayrılmış bir kalıbı doldurur; değeri BOŞ olan yer tutucunun
+ * parçası düşüyor (28 Eylül denetimi). Bildirimde adet ya da kullanım
+ * fiyatı yoksa satır "… Kullanıldı ·  Hisse · Kullanım " diye boş
+ * parçalar basıyordu.
+ */
+export function fillParts(template: string, values: Record<string, string>): string {
+  return template
+    .split(" · ")
+    .filter((part) => [...part.matchAll(/\{(\w+)\}/g)].every(([, key]) => (values[key] ?? "") !== ""))
+    .map((part) => part.replace(/\{(\w+)\}/g, (_, key: string) => values[key] ?? ""))
+    .join(" · ");
+}
+
 /** Açıklama satırının dile göre hâli; tanınmayan kalıp olduğu gibi. */
 export function tradeDetailText(detail: TradeDetail | null, locale: string, t: T): { text: string; original: boolean } | null {
   if (!detail) return null;
@@ -122,20 +136,22 @@ export function tradeDetailText(detail: TradeDetail | null, locale: string, t: T
       };
     case "options":
       return {
-        text: t.detailOptions
-          .replace("{contracts}", count(detail.contracts))
-          .replace("{right}", right(detail.right))
-          .replace("{strike}", money(detail.strike))
-          .replace("{expiry}", detail.expiry ? formatEtDateMedium(detail.expiry, locale) : ""),
+        text: fillParts(t.detailOptions, {
+          contracts: count(detail.contracts),
+          right: right(detail.right),
+          strike: money(detail.strike),
+          expiry: detail.expiry ? formatEtDateMedium(detail.expiry, locale) : "",
+        }),
         original: false,
       };
     case "exercise":
       return {
-        text: t.detailExercise
-          .replace("{contracts}", count(detail.contracts))
-          .replace("{right}", right(detail.right))
-          .replace("{shares}", detail.shares === null ? "" : count(detail.shares))
-          .replace("{strike}", money(detail.strike)),
+        text: fillParts(t.detailExercise, {
+          contracts: count(detail.contracts),
+          right: right(detail.right),
+          shares: detail.shares === null ? "" : count(detail.shares),
+          strike: money(detail.strike),
+        }),
         original: false,
       };
     default:

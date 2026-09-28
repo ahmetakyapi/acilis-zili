@@ -22,10 +22,20 @@
   height: 1.1em;
 }
 
+/* PENCERE NEFES ALIYOR (28 Eylül). Pencere tam 1.1em ve taşanı kesiyordu;
+   kalın puntoda rakamın üst ve alt ucu bazı tarayıcıların yazı ölçüsünde
+   pencereye sığmıyor ve sayı "kırpılmış" görünüyordu (SNDK, sahibinin
+   ekran görüntüsü). Pencere üstte ve altta 0.12em daha açık, aynı pay
+   negatif kenar boşluğuyla geri alınıyor: satır yüksekliği ve yerleşim
+   değişmiyor, yalnızca görünür alan büyüyor. Şerit de aynı payla aşağı
+   kayıyor ki rakam yine tam ortada dursun. */
 .window {
   position: relative;
   display: inline-block;
   height: 1.1em;
+  padding-block: 0.12em;
+  margin-block: -0.12em;
+  box-sizing: content-box;
   overflow: hidden;
   overflow: clip;
 }
@@ -38,7 +48,7 @@
    yolu; sıfırdan başlayan bir sayı da bir tur dönerek geliyor. */
 .strip {
   position: absolute;
-  inset: 0 -0.2em auto;
+  inset: 0.12em -0.2em auto;
   display: flex;
   flex-direction: column;
   align-items: center;

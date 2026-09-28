@@ -613,6 +613,7 @@ async function CompaniesTable({
         <CompanyCards
           symbols={rows.map((row) => row.symbol)}
           quotes={quotesResult.ok ? quotes : null}
+          stale={quotesResult.ok && Boolean(quotesResult.stale)}
           status={status}
         />
         {query && <div className={companyStyles.results}>

@@ -1092,10 +1092,14 @@ const tr = {
     /* Profil kartının tek büyük okuması piyasa değeri; künye neyle
        hesaplandığını söylüyor (lib/data.ts → liveMarketCap). */
     capLiveNote: "Canlı Fiyatla Hesaplandı",
-    capRank: "Dizindeki Sırası",
-    capRankOf: "{n} Şirket İçinde",
+    capRank: "Piyasa Değeri Sırası",
+    capRankOf: "Takip Edilen {n} Şirket İçinde",
     capLeader: "En Büyük: {symbol} · {value}",
-    capLeaderSelf: "Dizinin En Büyüğü",
+    /* "S&P 500'deki", "Nasdaq 100'deki": iki endeksin sayısı da aynı eki
+       alıyor (beş yüz-de, yüz-de); yeni bir endeks eklenirse eki denetle. */
+    capRankOfIndex: "{index}'deki {n} Şirket İçinde",
+    capLeaderSelfIndex: "{index}'ün En Büyüğü",
+    capLeaderSelf: "Takip Edilenlerin En Büyüğü",
     nextReportRow: "Sıradaki Bilanço",
     experienceFundamentals: "Değerleme ve Beklentiler",
     experienceFundamentalsHint: "Fiyatın ötesinde: şirketin finansal yapısı ve analistlerin bakışı.",
@@ -2354,6 +2358,13 @@ const tr = {
     insiderColPrice: "Fiyat",
     insiderColValue: "Tutar",
     insiderDerivative: "Türev",
+    /* Kişinin görevi — Form 4'ün bildirim sahibi bayraklarından. Unvanın
+       kendisi lib/insider-people.ts'teki parça sözlüğüyle çevriliyor. */
+    insiderRoleDirector: "Yönetim Kurulu Üyesi",
+    insiderRoleTenPercent: "%10 Hissedar",
+    insiderRoleOfficer: "Üst Yönetici",
+    insiderRolesNote:
+      "İsmin altındaki görev, kişinin son Form 4 dosyasındaki beyanından okunur; dosya okunamadığında satır yalnızca isimle kalır. Sözlükte karşılığı olmayan unvanlar dosyadaki hâliyle, İngilizce yazılır.",
     insiderMore: "{n} İşlem Daha",
     insiderCodes: {
       P: "Açık Piyasa Alım",
@@ -2648,6 +2659,28 @@ const tr = {
       w8No: "Hayır · %30",
       w8Statement: "Ekstre · %{pct}",
       readAs: "{value} olarak okundu; ondalık için virgül kullan.",
+      symbolInvalid: "Sembol harfle başlar; yalnızca harf, nokta ve tire içerir.",
+      notNumber: "Sayı olarak okunamadı.",
+      notPositive: "Sıfırdan büyük bir sayı yaz.",
+      notNegative: "Eksi bir tutar olamaz.",
+      taxBase: "Matrah",
+      taxBaseHint: "Vergiye esas kazanç; net zararda sıfır.",
+      bracketTableTitle: "{year} Gelir Vergisi Tarifesi",
+      bracketTableHint:
+        "Vergi dilim dilim hesaplanır: her oran yalnızca o dilime düşen kısma uygulanır. İşaretli satır, bu kazanç tek gelirinse matrahının düştüğü dilim.",
+      bracketYours: "Senin Matrahın",
+      bracketOver: "{amount} Üstü",
+      bracketSlice: "Bu Dilimden",
+      bracketRange: "Gelir Aralığı",
+      bracketRate: "Oran",
+      thresholdCarried: "{year} beyan sınırı henüz yayımlanmadı; {from} sınırı kullanılıyor, değiştirebilirsin.",
+      bracket: "Dilim",
+      bracketHint: "{year} tarifesinde, bu kazanç tek gelirse.",
+      rangeLow: "Alt Uç",
+      rangeHigh: "Üst Uç · %{top}",
+      rangeLabel: "Tahmini vergi aralığı: alt uç {low}, üst uç {high}",
+      basisTitle: "Hesabın Dayanağı",
+      basisRate: "TCMB Alış Kuru",
       import: {
         open: "Ekstreden Aktar",
         formats: "Midas PDF · IBKR CSV ya da PDF",
@@ -2900,9 +2933,9 @@ const tr = {
         suggestLast: "Son Fiyat, 15 Dakika Gecikmeli",
         suggestUse: "Kullan",
         suggestNone: "Bu gün için kapanış fiyatı yok; fiyatı kendin yaz.",
-        perShareIs: "Hisse başı {price}",
+        perShareIs: "Hisse Başı {price}",
         summaryCost: "Maliyet",
-        summaryFx: "{date} kuru {rate} ₺",
+        summaryFx: "{date} Kuru {rate} ₺",
         summaryFxMissing: "Alış günü kuru alınamadı; TL maliyet tabloda boş kalır.",
         noteToggle: "Not Ekle",
         noteLabel: "Not",
@@ -3093,6 +3126,7 @@ const tr = {
     marketCap: "Piyasa Değeri",
     price: "Fiyat",
     session: "Seans İçi",
+    sessionClose: "Seans Kapanışı",
     preMarket: "Açılış Öncesi",
     afterHours: "Kapanış Sonrası",
     lastClose: "Son Kapanış",
@@ -3210,7 +3244,10 @@ const tr = {
     colChange: "Değişim",
     tableRest: "Kalan {count} Pozisyonu Göster",
     principal: "Anapara",
-    splitNote: "{ratio}'e 1 Bölünmeye Göre",
+    /* "{ratio}'e" eki sayıya göre değişiyor ("10'a", "2'ye"); oran iki
+       nokta ile yazılıyor, ek gerekmiyor. Ters bölünme ayrı kalıp. */
+    splitNote: "{ratio}:1 Bölünmeye Göre",
+    reverseSplitNote: "1:{ratio} Ters Bölünmeye Göre",
     optionsTitle: "Opsiyonlar",
     optionsNote: "Opsiyon satırındaki değer ödenen prim değil, opsiyonun kapsadığı dayanak hisselerin çeyrek sonu değeridir. Bu satırlar hisse portföyüne ve ağırlıklara katılmaz.",
     colType: "Tür",

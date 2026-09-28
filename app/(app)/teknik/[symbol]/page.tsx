@@ -141,7 +141,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
     changePct: (quotes.ok ? quotes.data[other]?.changePct : null) ?? null,
   }));
 
-  const moreCards = { quotes: quotes.ok ? quotes.data : null, names: meta, status };
+  const moreCards = { quotes: quotes.ok ? quotes.data : null, stale: quotes.ok && Boolean(quotes.stale), names: meta, status };
 
   const breadcrumb = (
     <nav aria-label={t.common.breadcrumb} className="flex flex-wrap items-center gap-2 text-small text-muted">

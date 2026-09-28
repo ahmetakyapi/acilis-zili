@@ -5,16 +5,14 @@ import {
   useEffect,
   useId,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
-  type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
-import { CalendarBlank, CaretLeft, CaretRight, X } from "@phosphor-icons/react";
+import { CalendarBlank, CaretDown, CaretLeft, CaretRight, X } from "@phosphor-icons/react";
+import { DayPicker, type CustomComponents, type Matcher } from "react-day-picker";
+import { enUS, tr } from "react-day-picker/locale";
 import { useLocaleHref } from "@/components/layout/useLocaleHref";
 import {
-  addIsoDays,
-  addIsoMonths,
   clampIso,
   datePattern,
   formatDateInput,
@@ -23,7 +21,6 @@ import {
   nextDateDraft,
   parseDateInput,
   utcToIso,
-  weekdayMon,
   type DateLocale,
 } from "@/lib/date-input";
 import { datePickerEn, datePickerTr } from "@/lib/i18n/dictionaries/date-picker";
@@ -44,9 +41,10 @@ import styles from "./DatePicker.module.css";
  *     Rakam yazana ayraç kendiliğinden gelir; alan bırakılınca ya da Enter'a
  *     basılınca metin çözülür (`lib/date-input.ts`). Okunamayan ya da
  *     aralık dışı metin DEĞERİ DEĞİŞTİRMEZ ve altında nedenini söyler.
- *   - SEÇMEK: sağdaki düğme (ya da alanda Alt+↓) takvimi açar. Ay adına
- *     basınca ay/yıl ızgarası gelir: yıllar önceki bir ekstre tarihine
- *     yüz kez "önceki ay"a basmadan iniliyor.
+ *   - SEÇMEK: sağdaki düğme (ya da alanda Alt+↓) takvimi açar. Başlıkta ay
+ *     ve yıl İKİ AYRI LİSTE: yıllar önceki bir ekstre tarihine yüz kez
+ *     "önceki ay"a basmadan iniliyor. Listeler yerli `<select>`, yani
+ *     telefonda işletim sisteminin kendi çarkı açılıyor.
  *   Değer her zaman ISO "YYYY-AA-GG"; `name` verilirse gizli bir alanla
  *   forma gidiyor, yani gönderilen form alanı değişmedi.
  *
@@ -60,10 +58,14 @@ import styles from "./DatePicker.module.css";
  * TELEFONDA ALT ÇEKMECE (< 640 piksel): pencere ekranın dibine yapışan tam
  * genişlikte bir levha, günler 44 piksel dokunma hedefi, arkası karartılmış.
  *
- * KLAVYE (WAI-ARIA tarih seçici kalıbı): oklar gün/hafta, PageUp/PageDown
- * ay, Shift+PageUp/PageDown yıl, Home/End hafta başı/sonu, Enter/Boşluk
- * seçer, Escape kapatır ve odağı alana geri verir. Ay/yıl ızgarasında oklar
- * hücre gezer, Escape günlere döner.
+ * TAKVİMİN GÖVDESİ `react-day-picker` (28 Eylül, ikinci yazım). Elle yazılmış
+ * ilk ızgara çalışıyordu ama sahibi görünüşünü "çok kötü" buldu: ay/yıl
+ * değiştirmek ayrı bir ızgaraya geçmek demekti, gün hücreleri düz kutulardı.
+ * Kütüphane klavyeyi (WAI-ARIA tarih seçici kalıbı: oklar gün/hafta,
+ * PageUp/PageDown ay, Shift ile yıl, Home/End hafta başı/sonu), ay kaymasını
+ * ve Türkçe ekran okuyucu etiketlerini veriyor; görünüşün tamamı bu modülün
+ * CSS'i (kütüphanenin stil dosyası YÜKLENMİYOR). Alan, konum, çekmece ve
+ * değer sözleşmesi kütüphaneden bağımsız, önceki sürümle aynı.
  *
  * Hareketi azaltan okuyucuda açılış ve ay kayması yok; renk değişimi kalıyor.
  */
@@ -97,25 +99,106 @@ type Props = {
   onValidityChange?: (valid: boolean) => void;
 };
 
-type View = "days" | "months" | "years";
-
-/** Yıl ızgarasının bir sayfası: 4 sütun × 5 satır. */
-const YEAR_PAGE = 20;
-const YEAR_COLS = 4;
-const MONTH_COLS = 3;
-const WEEK = 7;
-/** Izgaranın sabit hafta sayısı: satır sayısı aya göre değişmesin, pencere zıplamasın. */
-const GRID_DAYS = 42;
 /** Alan ile pencere arası ve pencerenin ekran kenarından payı. */
 const GAP = 8;
 const EDGE = 12;
 const SHEET_QUERY = "(max-width: 639px)";
-/** Başlık satırı için bilinen bir pazartesi. */
-const A_MONDAY = "2024-01-01";
+/** Sınır verilmemiş alanda ay/yıl listesinin kapsadığı yıl: geriye ve ileriye. */
+const YEARS_BACK = 40;
+const YEARS_AHEAD = 10;
 
 const todayIso = () => {
   const now = new Date();
   return utcToIso(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 12));
+};
+
+/* Takvim YEREL saatli `Date` ile çalışıyor, site ISO gün dizesiyle. Dönüşüm
+   yerel bileşenlerden: UTC'ye çevirmek UTC'nin batısındaki saat diliminde
+   seçilen günü bir gün geriye kaydırırdı. */
+const isoToDate = (iso: string) => new Date(Number(iso.slice(0, 4)), Number(iso.slice(5, 7)) - 1, Number(iso.slice(8, 10)));
+const dateToIso = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+const monthOf = (iso: string) => isoToDate(`${iso.slice(0, 7)}-01`);
+
+/** Kütüphanenin sınıf adları yerine modülün sınıfları; varsayılan stil hiç yüklenmiyor. */
+const CALENDAR_CLASSES = {
+  root: styles.calendar,
+  months: styles.months,
+  month: styles.month,
+  month_caption: styles.caption,
+  caption_label: styles.captionLabel,
+  dropdowns: styles.dropdowns,
+  dropdown_root: styles.dropdownRoot,
+  dropdown: styles.dropdown,
+  months_dropdown: styles.monthsDropdown,
+  years_dropdown: styles.yearsDropdown,
+  nav: styles.navGroup,
+  button_previous: styles.nav,
+  button_next: styles.nav,
+  chevron: styles.chevron,
+  month_grid: styles.grid,
+  weekdays: styles.week,
+  weekday: styles.weekdayHead,
+  weeks: styles.weeks,
+  week: styles.week,
+  day: styles.cell,
+  day_button: styles.day,
+  selected: styles.selected,
+  today: styles.today,
+  outside: styles.outside,
+  disabled: styles.disabled,
+  hidden: styles.hidden,
+  focused: styles.focused,
+  weeks_before_enter: styles.weeksBeforeEnter,
+  weeks_before_exit: styles.weeksBeforeExit,
+  weeks_after_enter: styles.weeksAfterEnter,
+  weeks_after_exit: styles.weeksAfterExit,
+  caption_after_enter: styles.captionAfterEnter,
+  caption_after_exit: styles.captionAfterExit,
+  caption_before_enter: styles.captionBeforeEnter,
+  caption_before_exit: styles.captionBeforeExit,
+};
+
+/* IZGARA `div`, `table` DEĞİL: seçici ekstre önizlemesinin tablo hücresinin
+   İÇİNDE açılıyor ve oradaki `.preview thead th` / `tbody > tr` kuralları
+   (yapışkan başlık, satır animasyonu, çizgi ve dolgu) takvimin hücrelerine
+   iniyordu (28 Eylül, ilk sürümde ekran görüntüsünde yakalandı). Roller
+   kütüphanenin verdiği gibi kalıyor; yalnızca etiketler değişiyor. */
+const CALENDAR_PARTS: Partial<CustomComponents> = {
+  MonthGrid: ({ className, children, ...props }) => (
+    <div className={className} role="grid" aria-label={props["aria-label"]} aria-multiselectable={props["aria-multiselectable"]}>
+      {children}
+    </div>
+  ),
+  Weekdays: ({ className, children }) => (
+    <div className={className} role="row" aria-hidden>
+      {children}
+    </div>
+  ),
+  Weekday: ({ className, children, ...props }) => (
+    <div className={className} role="columnheader" aria-label={props["aria-label"]}>
+      {children}
+    </div>
+  ),
+  Weeks: ({ className, children }) => (
+    <div className={className} role="rowgroup">
+      {children}
+    </div>
+  ),
+  Week: ({ className, children }) => (
+    <div className={className} role="row">
+      {children}
+    </div>
+  ),
+  Day: ({ className, style, children, ...props }) => (
+    <div className={className} style={style} role="gridcell" aria-selected={props["aria-selected"]} data-day={props["data-day" as keyof typeof props] as string}>
+      {children}
+    </div>
+  ),
+  Chevron: ({ orientation, className }) => {
+    const Icon = orientation === "left" ? CaretLeft : orientation === "right" ? CaretRight : CaretDown;
+    return <Icon weight="bold" size={orientation === "down" ? 11 : 14} className={className} aria-hidden />;
+  },
 };
 
 const supportsPopover = () =>
@@ -158,14 +241,14 @@ export function DatePicker({
     [onValidityChange],
   );
   const [open, setOpen] = useState(false);
-  const [view, setView] = useState<View>("days");
-  const [focus, setFocus] = useState(() => (valid ? current : todayIso()));
-  const [dir, setDir] = useState<"prev" | "next" | null>(null);
+  const [month, setMonth] = useState(() => monthOf(valid ? current : todayIso()));
   const [sheet, setSheet] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const hiddenRef = useRef<HTMLInputElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   /* Seçimden sonra odak alana dönüyor ve odaklanma metni yeniliyor; o anda
@@ -179,16 +262,32 @@ export function DatePicker({
      biçimi. Dışarıdan gelen değer (denetimli alan, form sıfırlama) böylece
      yazılanı ezmeden görünüyor. */
   const formatted = valid ? formatDateInput(current, locale) : "";
-  const shown = editing ? draft : formatted;
+  /* HATALI METİN ALANDA KALIR (28 Eylül denetimi). Alan bırakılınca
+     `editing` düşüyor ve alan eski değerin biçimine dönüyordu: yazılan
+     kayboluyor, altında "Tarih okunamadı" yazıyor, okuyucu eski tarihin
+     geçerli olduğunu sanıyordu (tablo hücresinde hata yalnızca `title`da). */
+  const shown = editing || error ? draft : formatted;
 
   const inRange = useCallback((iso: string) => (!min || iso >= min) && (!max || iso <= max), [min, max]);
   const today = todayIso();
-  const fmt = useCallback(
-    (iso: string, opts: Intl.DateTimeFormatOptions) =>
-      new Intl.DateTimeFormat(intl, { ...opts, timeZone: "UTC" }).format(isoToUtc(iso)),
-    [intl],
-  );
+  const fmt = (iso: string, opts: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat(intl, { ...opts, timeZone: "UTC" }).format(isoToUtc(iso));
+  const thisYear = Number(today.slice(0, 4));
+  const startMonth = min ? monthOf(min) : new Date(thisYear - YEARS_BACK, 0, 1);
+  const endMonth = max ? monthOf(max) : new Date(thisYear + YEARS_AHEAD, 11, 1);
+  const disabledDays: Matcher[] = [
+    ...(min ? [{ before: isoToDate(min) }] : []),
+    ...(max ? [{ after: isoToDate(max) }] : []),
+  ];
   const longDate = (iso: string) => fmt(iso, { day: "numeric", month: "long", year: "numeric", weekday: "long" });
+
+  /* ODAK DÖNÜŞÜ. Masaüstünde alana; telefonun alt çekmecesinde TAKVİM
+     DÜĞMESİNE (28 Eylül denetimi): dokunuşla seçilen günün ardından metin
+     alanına verilen odak `inputMode="numeric"` klavyesini açıyor ve alanı
+     düzenleme kipine sokuyordu. */
+  const returnFocus = useCallback(() => {
+    (sheet ? toggleRef : inputRef).current?.focus({ preventScroll: true });
+  }, [sheet]);
 
   /* ---- Değer yazma ---- */
   const commit = useCallback(
@@ -202,14 +301,14 @@ export function DatePicker({
       setError(null);
       if (close) {
         setOpen(false);
-        inputRef.current?.focus({ preventScroll: true });
+        returnFocus();
       }
       if (submit) {
         /* Gizli alanın değeri React çizimiyle iniyor; gönderim bir kare sonra. */
         requestAnimationFrame(() => hiddenRef.current?.form?.requestSubmit());
       }
     },
-    [autoSubmit, controlled, inRange, locale, onChange, setError],
+    [autoSubmit, controlled, inRange, locale, onChange, returnFocus, setError],
   );
 
   /** Yazılan metni çöz. Dönüş: değer yazıldı mı. */
@@ -246,17 +345,19 @@ export function DatePicker({
   const openPicker = useCallback(() => {
     const typed = parseDateInput(shown, locale);
     const start = typed ?? (valid ? current : today);
-    setFocus(clampIso(start, min, max));
-    setView("days");
-    setDir(null);
+    setMonth(monthOf(clampIso(start, min, max)));
+    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     setSheet(window.matchMedia(SHEET_QUERY).matches);
     setOpen(true);
   }, [current, shown, locale, max, min, today, valid]);
 
-  const closePicker = useCallback((restoreFocus = true) => {
-    setOpen(false);
-    if (restoreFocus) inputRef.current?.focus({ preventScroll: true });
-  }, []);
+  const closePicker = useCallback(
+    (restoreFocus = true) => {
+      setOpen(false);
+      if (restoreFocus) returnFocus();
+    },
+    [returnFocus],
+  );
 
   /* Üst katmana çıkar / indir. */
   useLayoutEffect(() => {
@@ -289,9 +390,25 @@ export function DatePicker({
     popup.style.setProperty("--dp-left", `${Math.round(left)}px`);
   }, []);
 
+  /* AÇILIŞTA ALTA YER AÇ. Pencere alanın altına az farkla sığmıyorsa (alanı
+     ekranın ortasına getiren okuyucuda 900 piksel yükseklikte 19 piksel)
+     yukarı çevrilip başlığın üstüne biniyordu; oysa sayfayı o kadar kaydırmak
+     hem daha az şey örtüyor hem göz alanın altında kalıyor. Eksik pencerenin
+     yarısından büyükse ya da sayfa o kadar kayamıyorsa çevirme yine devrede.
+     Yalnızca AÇILIŞTA: açıkken kaydıran okuyucunun sayfası geri çekilmez. */
   useLayoutEffect(() => {
-    if (open) place();
-  }, [open, view, place]);
+    if (!open) return;
+    const popup = popupRef.current;
+    const field = fieldRef.current;
+    if (popup && field && supportsPopover() && !window.matchMedia(SHEET_QUERY).matches) {
+      const deficit = field.getBoundingClientRect().bottom + GAP + popup.offsetHeight - (window.innerHeight - EDGE);
+      const room = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
+      if (deficit > 0 && deficit < popup.offsetHeight / 2 && room >= deficit) {
+        window.scrollBy({ top: Math.ceil(deficit), behavior: "instant" });
+      }
+    }
+    place();
+  }, [open, place]);
 
   useEffect(() => {
     if (!open) return;
@@ -319,107 +436,6 @@ export function DatePicker({
       media.removeEventListener("change", onMedia);
     };
   }, [open, place, closePicker]);
-
-  /* Odak: açılınca odaklı güne / seçili aya / yıla. */
-  useEffect(() => {
-    if (!open) return;
-    const selector =
-      view === "days" ? `[data-day="${focus}"]` : view === "months" ? `[data-month="${focus.slice(0, 7)}"]` : `[data-year="${focus.slice(0, 4)}"]`;
-    popupRef.current?.querySelector<HTMLButtonElement>(selector)?.focus({ preventScroll: true });
-  }, [open, view, focus]);
-
-  /* ---- Günler ---- */
-  const monthStart = `${focus.slice(0, 7)}-01`;
-  const days = useMemo(() => {
-    const start = addIsoDays(monthStart, -weekdayMon(monthStart));
-    return Array.from({ length: GRID_DAYS }, (_, i) => addIsoDays(start, i));
-  }, [monthStart]);
-  const weekdays = useMemo(
-    () =>
-      Array.from({ length: WEEK }, (_, i) => {
-        const iso = addIsoDays(A_MONDAY, i);
-        return { short: fmt(iso, { weekday: "short" }), long: fmt(iso, { weekday: "long" }) };
-      }),
-    [fmt],
-  );
-  const monthLabel = fmt(monthStart, { month: "long", year: "numeric" });
-
-  const moveFocus = (next: string) => {
-    const target = clampIso(next, min, max);
-    if (target.slice(0, 7) !== focus.slice(0, 7)) setDir(target < focus ? "prev" : "next");
-    setFocus(target);
-  };
-
-  const minMonth = min?.slice(0, 7);
-  const maxMonth = max?.slice(0, 7);
-  const canPrevMonth = !minMonth || addIsoMonths(monthStart, -1).slice(0, 7) >= minMonth;
-  const canNextMonth = !maxMonth || addIsoMonths(monthStart, 1).slice(0, 7) <= maxMonth;
-
-  /* ---- Yıllar ve aylar ---- */
-  const focusYear = Number(focus.slice(0, 4));
-  const maxYear = max ? Number(max.slice(0, 4)) : Number.POSITIVE_INFINITY;
-  const minYear = min ? Number(min.slice(0, 4)) : Number.NEGATIVE_INFINITY;
-  /* Sayfa, üst sınır yılı son satırda olacak biçimde hizalanıyor: "gelecek
-     yok" alanında ızgaranın yarısı soluk yıllarla dolmasın. */
-  const anchorYear = Number.isFinite(maxYear) ? maxYear : Number(today.slice(0, 4)) + YEAR_PAGE / 2;
-  const pageStart = anchorYear - YEAR_PAGE + 1 - Math.max(0, Math.ceil((anchorYear - YEAR_PAGE + 1 - focusYear) / YEAR_PAGE)) * YEAR_PAGE;
-  const years = Array.from({ length: YEAR_PAGE }, (_, i) => pageStart + i);
-  const withYear = (year: number) => clampIso(`${year}${focus.slice(4)}`.replace(/-02-29$/, "-02-28"), min, max);
-  const withMonth = (month: number) => {
-    const target = `${focus.slice(0, 4)}-${String(month).padStart(2, "0")}-01`;
-    const last = new Date(Date.UTC(focusYear, month, 0, 12)).getUTCDate();
-    return clampIso(`${target.slice(0, 8)}${String(Math.min(Number(focus.slice(8)), last)).padStart(2, "0")}`, min, max);
-  };
-  const monthNames = useMemo(
-    () => Array.from({ length: 12 }, (_, i) => fmt(`2024-${String(i + 1).padStart(2, "0")}-15`, { month: "short" })),
-    [fmt],
-  );
-  const monthDisabled = (month: number) => {
-    const key = `${focus.slice(0, 4)}-${String(month).padStart(2, "0")}`;
-    return (minMonth !== undefined && key < minMonth) || (maxMonth !== undefined && key > maxMonth);
-  };
-
-  function onPopupKey(event: ReactKeyboardEvent) {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      event.stopPropagation();
-      if (view !== "days") setView("days");
-      else closePicker();
-      return;
-    }
-    if (view === "days") {
-      const wd = weekdayMon(focus);
-      const moves: Record<string, () => string> = {
-        ArrowLeft: () => addIsoDays(focus, -1),
-        ArrowRight: () => addIsoDays(focus, 1),
-        ArrowUp: () => addIsoDays(focus, -WEEK),
-        ArrowDown: () => addIsoDays(focus, WEEK),
-        PageUp: () => addIsoMonths(focus, event.shiftKey ? -12 : -1),
-        PageDown: () => addIsoMonths(focus, event.shiftKey ? 12 : 1),
-        Home: () => addIsoDays(focus, -wd),
-        End: () => addIsoDays(focus, WEEK - 1 - wd),
-      };
-      const target = event.target as HTMLElement;
-      if (moves[event.key] && target.dataset.day) {
-        event.preventDefault();
-        moveFocus(moves[event.key]());
-      }
-      return;
-    }
-    const target = event.target as HTMLElement;
-    const cols = view === "years" ? YEAR_COLS : MONTH_COLS;
-    const step: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -cols, ArrowDown: cols };
-    if (step[event.key] === undefined) return;
-    if (view === "years" && target.dataset.year) {
-      event.preventDefault();
-      const year = Math.min(Math.max(focusYear + step[event.key], minYear), maxYear);
-      setFocus(withYear(year));
-    } else if (view === "months" && target.dataset.month) {
-      event.preventDefault();
-      const month = Number(focus.slice(5, 7)) + step[event.key];
-      if (month >= 1 && month <= 12 && !monthDisabled(month)) setFocus(withMonth(month));
-    }
-  }
 
   const invalid = aria["aria-invalid"] || error !== null;
   const weekday = valid && size === "field" ? fmt(current, { weekday: "short" }) : null;
@@ -462,7 +478,8 @@ export function DatePicker({
             commitDraft();
           }}
           onFocus={() => {
-            if (!editing) setDraft(committedText.current ?? formatted);
+            /* Hatalı metin varsa üstüne yazılmıyor: okuyucu düzeltmeye döndü. */
+            if (!editing && !error) setDraft(committedText.current ?? formatted);
             committedText.current = null;
             setEditing(true);
           }}
@@ -485,6 +502,7 @@ export function DatePicker({
         />
         {weekday && !editing && <span className={styles.weekday} aria-hidden>{weekday}</span>}
         <button
+          ref={toggleRef}
           type="button"
           className={styles.toggle}
           aria-label={valid ? `${L.openCalendar}, ${L.selected}: ${longDate(current)}` : L.openCalendar}
@@ -514,7 +532,14 @@ export function DatePicker({
           className={styles.popup}
           data-sheet={sheet || undefined}
           data-fallback={!supportsPopover() || undefined}
-          onKeyDown={onPopupKey}
+          onKeyDown={(event) => {
+            /* Oklar, PageUp/PageDown (Shift ile yıl), Home/End takvimin
+               kendisinde; burada yalnızca kapatma. */
+            if (event.key !== "Escape") return;
+            event.preventDefault();
+            event.stopPropagation();
+            closePicker();
+          }}
           onPointerDown={(event) => {
             /* Çekmecenin karartmasına basmak kapatır: karartmaya basışın
                hedefi pencerenin kendisi, nokta ise kutunun dışında. */
@@ -534,153 +559,42 @@ export function DatePicker({
             </div>
           )}
 
-          <div className={styles.head}>
-            <button
-              type="button"
-              className={styles.nav}
-              aria-label={view === "years" ? L.prevYears : view === "months" ? String(focusYear - 1) : L.prevMonth}
-              disabled={view === "days" ? !canPrevMonth : view === "years" ? pageStart <= minYear : focusYear - 1 < minYear}
-              onClick={() => {
-                if (view === "days") moveFocus(addIsoMonths(focus, -1));
-                else if (view === "months") setFocus(withYear(focusYear - 1));
-                else setFocus(withYear(Math.max(minYear, focusYear - YEAR_PAGE)));
-              }}
-            >
-              <CaretLeft weight="bold" size={14} aria-hidden />
-            </button>
-            <button
-              type="button"
-              className={styles.title}
-              aria-label={view === "days" ? `${monthLabel}, ${L.chooseMonthYear}` : L.backToDays}
-              aria-live="polite"
-              onClick={() => setView(view === "days" ? "years" : "days")}
-            >
-              <span key={`${view}${view === "days" ? monthStart : focusYear}`} className={styles.titleText} data-dir={dir ?? undefined}>
-                {view === "days" ? monthLabel : view === "months" ? focusYear : `${years[0]} - ${years[years.length - 1]}`}
-              </span>
-              <CaretRight weight="bold" size={11} aria-hidden className={styles.titleCaret} data-open={view !== "days" || undefined} />
-            </button>
-            <button
-              type="button"
-              className={styles.nav}
-              aria-label={view === "years" ? L.nextYears : view === "months" ? String(focusYear + 1) : L.nextMonth}
-              disabled={view === "days" ? !canNextMonth : view === "years" ? pageStart + YEAR_PAGE > maxYear : focusYear + 1 > maxYear}
-              onClick={() => {
-                if (view === "days") moveFocus(addIsoMonths(focus, 1));
-                else if (view === "months") setFocus(withYear(focusYear + 1));
-                else setFocus(withYear(Math.min(maxYear, focusYear + YEAR_PAGE)));
-              }}
-            >
-              <CaretRight weight="bold" size={14} aria-hidden />
-            </button>
-          </div>
-
-          {view === "days" && (
-            /* `div` IZGARA, `table` DEĞİL: seçici ekstre önizlemesinin
-               tablo hücresinin İÇİNDE açılıyor ve oradaki `.preview th/td`
-               kuralları takvimin hücrelerine çizgi, zemin ve dolgu basıyordu
-               (28 Eylül, ekran görüntüsünde yakalandı). Roller aynı. */
-            <div role="grid" aria-label={monthLabel} className={styles.grid} key={monthStart} data-dir={dir ?? undefined}>
-              <div role="row" className={styles.week}>
-                {weekdays.map((day) => (
-                  <span key={day.long} role="columnheader" aria-label={day.long} className={styles.weekdayHead}>
-                    {day.short}
-                  </span>
-                ))}
-              </div>
-              {Array.from({ length: GRID_DAYS / WEEK }, (_, row) => (
-                <div role="row" key={row} className={styles.week}>
-                  {days.slice(row * WEEK, row * WEEK + WEEK).map((iso) => {
-                    const outside = iso.slice(0, 7) !== monthStart.slice(0, 7);
-                    const disabled = !inRange(iso);
-                    const selected = iso === current;
-                    return (
-                      <span key={iso} role="gridcell" aria-selected={selected} className={styles.cell}>
-                        <button
-                          type="button"
-                          data-day={iso}
-                          tabIndex={iso === focus ? 0 : -1}
-                          disabled={disabled}
-                          aria-label={longDate(iso)}
-                          aria-current={iso === today ? "date" : undefined}
-                          aria-pressed={selected}
-                          data-outside={outside || undefined}
-                          data-weekend={weekdayMon(iso) >= 5 || undefined}
-                          className={cn("numeral", styles.day)}
-                          onClick={() => commit(iso)}
-                        >
-                          {Number(iso.slice(8))}
-                        </button>
-                      </span>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {view === "years" && (
-            <div role="grid" aria-label={L.chooseMonthYear} className={styles.pickGrid} data-cols={YEAR_COLS}>
-              {Array.from({ length: YEAR_PAGE / YEAR_COLS }, (_, row) => (
-                <div role="row" key={row} className={styles.pickRow}>
-                  {years.slice(row * YEAR_COLS, row * YEAR_COLS + YEAR_COLS).map((year) => (
-                    <span role="gridcell" key={year} aria-selected={valid && Number(current.slice(0, 4)) === year}>
-                      <button
-                        type="button"
-                        data-year={year}
-                        tabIndex={year === focusYear ? 0 : -1}
-                        disabled={year < minYear || year > maxYear}
-                        aria-current={year === Number(today.slice(0, 4)) ? "date" : undefined}
-                        data-selected={(valid && Number(current.slice(0, 4)) === year) || undefined}
-                        className={cn("numeral", styles.pick)}
-                        onClick={() => {
-                          setFocus(withYear(year));
-                          setView("months");
-                        }}
-                      >
-                        {year}
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {view === "months" && (
-            <div role="grid" aria-label={String(focusYear)} className={styles.pickGrid} data-cols={MONTH_COLS}>
-              {Array.from({ length: 12 / MONTH_COLS }, (_, row) => (
-                <div role="row" key={row} className={styles.pickRow}>
-                  {monthNames.slice(row * MONTH_COLS, row * MONTH_COLS + MONTH_COLS).map((label, i) => {
-                    const month = row * MONTH_COLS + i + 1;
-                    const key = `${focus.slice(0, 4)}-${String(month).padStart(2, "0")}`;
-                    return (
-                      <span role="gridcell" key={key} aria-selected={valid && current.startsWith(key)}>
-                        <button
-                          type="button"
-                          data-month={key}
-                          tabIndex={key === focus.slice(0, 7) ? 0 : -1}
-                          disabled={monthDisabled(month)}
-                          aria-current={today.startsWith(key) ? "date" : undefined}
-                          data-selected={(valid && current.startsWith(key)) || undefined}
-                          className={styles.pick}
-                          onClick={() => {
-                            setFocus(withMonth(month));
-                            setDir(null);
-                            setView("days");
-                          }}
-                        >
-                          {label}
-                        </button>
-                      </span>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          )}
+          <DayPicker
+            mode="single"
+            required={false}
+            autoFocus
+            locale={locale === "tr" ? tr : enUS}
+            weekStartsOn={1}
+            showOutsideDays
+            fixedWeeks
+            animate={!reducedMotion}
+            captionLayout="dropdown"
+            navLayout="after"
+            month={month}
+            onMonthChange={setMonth}
+            startMonth={startMonth}
+            endMonth={endMonth}
+            selected={valid ? isoToDate(current) : undefined}
+            onSelect={(date) => {
+              if (date) commit(dateToIso(date));
+            }}
+            disabled={disabledDays}
+            modifiers={{ weekend: { dayOfWeek: [0, 6] } }}
+            classNames={CALENDAR_CLASSES}
+            modifiersClassNames={{ weekend: styles.weekend }}
+            formatters={{
+              formatWeekdayName: (date) => new Intl.DateTimeFormat(intl, { weekday: "short" }).format(date),
+              formatMonthDropdown: (date) => new Intl.DateTimeFormat(intl, { month: "long" }).format(date),
+            }}
+            components={CALENDAR_PARTS}
+          />
 
           <div className={styles.foot}>
+            {!sheet && (
+              <p className={cn("numeral", styles.footValue)} data-empty={!valid || undefined}>
+                {valid ? longDate(current) : L.empty}
+              </p>
+            )}
             <button type="button" className={styles.footAction} disabled={!inRange(today)} onClick={() => commit(today)}>
               {L.today}
             </button>

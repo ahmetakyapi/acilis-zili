@@ -90,6 +90,21 @@ export function useWorkbench(): WorkbenchContext {
   return value;
 }
 
+/**
+ * Sunucu eylemi FIRLATIRSA da sonuç dönsün (28 Eylül denetimi). Yalnızca
+ * `result.status` okunuyordu; ağ koptuğunda ya da dağıtımdan sonra eski
+ * sekmede ("Failed to find Server Action") eylem fırlatıyor, silinen satır
+ * `hidden`da kalıp ekrandan kayboluyor ama silinmemiş oluyordu ve geçiş
+ * içindeki hata sayfayı hata ekranına düşürüyordu.
+ */
+async function settle<T extends { status: string }>(run: () => Promise<T>): Promise<T | { status: "error" }> {
+  try {
+    return await run();
+  } catch {
+    return { status: "error" };
+  }
+}
+
 /** Bildirimin ekranda kalma süresi — "Geri Al" okunup basılabilsin. */
 const TOAST_MS = 6500;
 /** Yeni satırın vurgusu. */
@@ -147,7 +162,7 @@ export function PortfolioWorkbench({
     (position: ComposerPosition) => {
       setHidden((prev) => new Set(prev).add(position.id));
       startTransition(async () => {
-        const result = await deletePositionAction(position.id);
+        const result = await settle(() => deletePositionAction(position.id));
         if (result.status !== "saved") {
           setHidden((prev) => {
             const next = new Set(prev);
@@ -163,14 +178,16 @@ export function PortfolioWorkbench({
             label: labels.undo,
             run: () => {
               startTransition(async () => {
-                const restored = await restorePositionAction({
-                  id: position.id,
-                  symbol: position.symbol,
-                  quantity: position.quantity,
-                  costUsd: position.costUsd,
-                  boughtAt: position.boughtAt,
-                  note: position.note,
-                });
+                const restored = await settle(() =>
+                  restorePositionAction({
+                    id: position.id,
+                    symbol: position.symbol,
+                    quantity: position.quantity,
+                    costUsd: position.costUsd,
+                    boughtAt: position.boughtAt,
+                    note: position.note,
+                  }),
+                );
                 setHidden((prev) => {
                   const next = new Set(prev);
                   next.delete(position.id);
@@ -266,7 +283,7 @@ export function PortfolioWorkbench({
                   label: labels.undo,
                   run: () => {
                     startTransition(async () => {
-                      const result = await removePositionsAction(ids);
+                      const result = await settle(() => removePositionsAction(ids));
                       notify(
                         result.status === "saved"
                           ? { message: labels.toastImportUndone }

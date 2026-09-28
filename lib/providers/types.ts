@@ -37,7 +37,8 @@ export type DataSource =
   | "sec"
   | "openfigi"
   | "house"
-  | "ark";
+  | "ark"
+  | "gib";
 
 export type FailReason =
   | "missing-key"

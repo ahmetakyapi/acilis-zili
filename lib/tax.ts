@@ -72,6 +72,12 @@ export type TaxYearRules = {
   filingYear: number;
   /** Tarife ve sınırın kaynağı — ekranda sınırın yanında, dile göre. */
   source: { tr: string; en: string };
+  /**
+   * Tarife GİB'den otomatik okunduysa (bkz. `withFetchedTariffs`) ve o yılın
+   * temettü sınırı henüz koda girmediyse: sınırı taşınan yıl. Ekran bunu
+   * adıyla söylüyor; sınır zaten okuyucu tarafından değiştirilebilir.
+   */
+  thresholdCarriedFrom?: number;
 };
 
 /**
@@ -118,6 +124,55 @@ export const TAX_YEARS: Record<number, TaxYearRules> = {
 export const TAX_YEAR_LIST = Object.keys(TAX_YEARS)
   .map(Number)
   .sort((a, b) => b - a);
+
+/**
+ * Koddaki yıllar + GİB'den otomatik okunan yeni yıllar (28 Eylül).
+ *
+ * Yeni yılın tarifesi yayımlanınca günlük cron GİB portalından PDF'i okuyup
+ * sağlamasını yapıyor ve saklıyor (lib/tax-tariff-sync.ts). KODDA OLAN YIL
+ * EZİLMEZ: elle doğrulanmış kaynak kazanır, GİB'deki fark cron raporuna
+ * düşer. Kodda olmayan yıl eklenir; temettü sınırı tarifeyle yayımlanmadığı
+ * için (Menkul Sermaye İradı Rehberi'nde, aylar sonra çıkıyor) en yakın
+ * önceki yılınki taşınıyor ve `thresholdCarriedFrom` ile işaretleniyor.
+ */
+export function withFetchedTariffs(
+  base: Record<number, TaxYearRules>,
+  fetched: readonly { year: number; brackets: TaxBracket[] }[],
+): Record<number, TaxYearRules> {
+  const merged: Record<number, TaxYearRules> = { ...base };
+  for (const entry of [...fetched].sort((a, b) => a.year - b.year)) {
+    if (merged[entry.year] || entry.brackets.length === 0) continue;
+    const previous = Object.values(merged)
+      .filter((rules) => rules.year < entry.year)
+      .sort((a, b) => b.year - a.year)[0];
+    if (!previous) continue;
+    merged[entry.year] = {
+      year: entry.year,
+      brackets: entry.brackets,
+      dividendThreshold: previous.dividendThreshold,
+      thresholdCarriedFrom: previous.thresholdCarriedFrom ?? previous.year,
+      filingYear: entry.year + 1,
+      source: {
+        tr: `GİB Gelir Vergisi Tarifesi ${entry.year} (otomatik okundu)`,
+        en: `Revenue Administration Income Tax Tariff ${entry.year} (read automatically)`,
+      },
+    };
+  }
+  return merged;
+}
+
+/** Yıl listesi, yeniden eskiye. */
+export function taxYearList(years: Record<number, TaxYearRules>): number[] {
+  return Object.keys(years)
+    .map(Number)
+    .sort((a, b) => b - a);
+}
+
+/** Matrahın düştüğü dilimin sırası (0'dan). */
+export function bracketIndexOf(base: number, brackets: readonly TaxBracket[]): number {
+  const index = brackets.findIndex((bracket) => bracket.upTo === null || base <= bracket.upTo);
+  return index === -1 ? brackets.length - 1 : index;
+}
 
 /** Tarife üzerinden vergi — yalnızca bu gelir varsa. */
 export function progressiveTax(base: number, brackets: readonly TaxBracket[]): number {

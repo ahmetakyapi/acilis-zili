@@ -55,6 +55,9 @@ const SUGGEST_LIMIT = 60;
 /** Makul üst sınırlar: bir milyar adet, on milyon dolarlık hisse fiyatı. */
 const MAX_QUANTITY = 1_000_000_000;
 const MAX_PRICE_USD = 10_000_000;
+/** Sütunların saklayabildiği en küçük değer: adet `numeric(20,8)`, fiyat `numeric(20,6)`. */
+const MIN_QUANTITY = 1e-8;
+const MIN_PRICE_USD = 1e-6;
 const MAX_NOTE = 120;
 const DAY_MS = 86_400_000;
 /** Öneri için sorulan gün ile son kapanış arasındaki en uzun boşluk: dört
@@ -75,8 +78,11 @@ const PositionInput = z.object({
     .trim()
     .transform((raw) => raw.toUpperCase())
     .refine((value) => isValidSymbol(value)),
-  quantity: decimal.pipe(z.number().positive().max(MAX_QUANTITY)),
-  costUsd: decimal.pipe(z.number().positive().max(MAX_PRICE_USD)),
+  /* ALT SINIR SÜTUNUN ÖLÇEĞİ (28 Eylül denetimi). `positive()` 0,000000001
+     adedi geçiriyordu; `numeric(20,8)` onu 0'a yuvarlıyor ve tabloda sıfır
+     adetlik satır oluşuyordu. Fiyat da `numeric(20,6)`. */
+  quantity: decimal.pipe(z.number().min(MIN_QUANTITY).max(MAX_QUANTITY)),
+  costUsd: decimal.pipe(z.number().min(MIN_PRICE_USD).max(MAX_PRICE_USD)),
   boughtAt: z.string().refine((value) => isIsoDate(value)),
   note: z.string().trim().max(MAX_NOTE).optional(),
 });

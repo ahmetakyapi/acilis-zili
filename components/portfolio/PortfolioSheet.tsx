@@ -49,6 +49,15 @@ export function PortfolioSheet({
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
+    /* Kapanış animasyonu sürerken (CLOSE_MS) yeniden açılırsa diyalog hâlâ
+       açık: eski koşul (`open && !dialog.open`) hiçbir dala girmiyor,
+       `data-closing` kalıyor ve levha ekran dışında görünmez dururken
+       modal sayfayı kilitliyordu (28 Eylül denetimi). Zamanlayıcıyı
+       efektin temizliği zaten iptal ediyor; işaret burada siliniyor. */
+    if (open && dialog.open) {
+      delete dialog.dataset.closing;
+      return;
+    }
     if (open && !dialog.open) {
       delete dialog.dataset.closing;
       dialog.showModal();

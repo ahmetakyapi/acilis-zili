@@ -136,6 +136,18 @@
   white-space: nowrap;
 }
 @media (min-width: 1100px) { .estimateValue { display: block; } }
+/* ZARAR BEKLENTİSİ (28 Eylül denetimi). Negatif değerde kutu sıfırdan
+   AŞAĞI çiziliyor; tepe çizgisi ve değer etiketi kutunun üst kenarına
+   bağlı olduğu için beklenen değeri değil sıfır hattını gösteriyordu.
+   Negatifte "tepe" kutunun alt kenarı: çizgi, etiket ve açık kenar yer
+   değiştiriyor. */
+.estimate[data-neg] {
+  border-top: 1.5px dashed var(--estimate-edge);
+  border-bottom: 0;
+  border-radius: 3px 3px 0 0;
+}
+.estimate[data-neg]::before { top: auto; bottom: -1px; }
+.estimate[data-neg] .estimateValue { top: auto; bottom: -8px; }
 /* Gerçekleşen: çerçevenin içinde, daha dar ve dolu; yön renginde. */
 .actual {
   position: absolute;

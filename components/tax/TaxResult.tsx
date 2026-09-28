@@ -168,7 +168,151 @@ export function DividendMeter({
 
 const METER_HEADROOM = 1.15;
 
+/**
+ * TAHMİNİ VERGİ ARALIĞI — iki uç, tek ölçekte.
+ *
+ * Ölçek üst uç: çubuğun sonu en kötü durum. Dolu kısım alt uca kadar
+ * (kazanç tek gelirse ödenecek en az vergi), soluk kısım alt uçtan üst uca
+ * (başka gelir arttıkça verginin kayabileceği aralık). Sayılar `lib/tax.ts`in
+ * verdiği iki sayı; çubuk yeni bir tahmin eklemiyor, iki ucu uzunluk olarak
+ * gösteriyor. İz yok, yalnızca taban çizgisi (şelaleyle aynı dil).
+ */
+export function TaxRange({
+  low,
+  high,
+  lowLabel,
+  highLabel,
+  ariaLabel,
+}: {
+  low: number;
+  high: number;
+  lowLabel: string;
+  highLabel: string;
+  ariaLabel: string;
+}) {
+  const scale = high > 0 ? high : 1;
+  const sure = clamp01(low / scale);
+  return (
+    <div role="img" aria-label={ariaLabel} className={styles.range}>
+      <div className={styles.rangeTrack}>
+        <span className={styles.bar} data-tone="proceeds" style={{ "--from": 0, "--span": sure } as React.CSSProperties} />
+        <span
+          className={styles.bar}
+          data-tone="spread"
+          style={{ "--from": sure, "--span": clamp01(1 - sure) } as React.CSSProperties}
+        />
+      </div>
+      <div className={styles.rangeKey} aria-hidden>
+        <span>
+          <i data-tone="proceeds" />
+          {lowLabel}
+        </span>
+        <span>
+          <i data-tone="spread" />
+          {highLabel}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+type PreviewRow = { name: string; size: "big" | "mid" | "range" };
+
+/**
+ * SONUCUN ÖNİZLEMESİ — boş kartın yerine, gelecek sonucun iskeleti.
+ * Etiketler gerçek (okuyucu neyi göreceğini okuyor), sayıların yerinde
+ * soluk bloklar. Sayı uydurulmuyor; ekran okuyucuya kapalı, çünkü üstteki
+ * yönlendirme cümlesi aynı şeyi söylüyor.
+ */
+export function ResultPreview({ rows }: { rows: PreviewRow[] }) {
+  return (
+    <div className={styles.ghost} aria-hidden>
+      {rows.map((row, index) => (
+        <div key={row.name} className={styles.ghostRow} data-size={row.size} style={{ "--i": index } as React.CSSProperties}>
+          <span className={styles.figureLabel}>{row.name}</span>
+          <span className={styles.ghostBlock} />
+          {row.size === "range" && <span className={styles.ghostRange} />}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function clamp01(value: number): number {
   if (!Number.isFinite(value)) return 0;
   return Math.min(1, Math.max(0, value));
+}
+
+/**
+ * Gelir vergisi tarifesi — matrahın düştüğü dilim işaretli (28 Eylül).
+ *
+ * "Dilim %15" tek başına tarifenin geri kalanını söylemiyordu: okuyucu
+ * kazancı artsa hangi orana geçeceğini, verginin dilim dilim nasıl
+ * biriktiğini göremiyordu. Her satırda aralık, oran ve o dilimden ödenen
+ * vergi; satırların toplamı alt uç vergiye (`progressiveTax`) eşit. Tarife
+ * koddan ya da GİB'den otomatik okunmuş hâliyle geliyor (lib/tax-data.ts).
+ */
+export function BracketTable({
+  title,
+  hint,
+  brackets,
+  base,
+  formatMoney,
+  formatRate,
+  yoursLabel,
+  overLabel,
+  sliceLabel,
+  rangeLabel,
+  rateLabel,
+}: {
+  title: string;
+  hint: string;
+  brackets: readonly { upTo: number | null; ratePct: number }[];
+  base: number;
+  formatMoney: (value: number) => string;
+  formatRate: (value: number) => string;
+  yoursLabel: string;
+  /** "{amount} Üstü" */
+  overLabel: string;
+  sliceLabel: string;
+  rangeLabel: string;
+  rateLabel: string;
+}) {
+  const rows = brackets.map((bracket, index) => {
+    /* Alt sınır bir önceki dilimin üst sınırı (ilk dilimde sıfır). */
+    const lower = index === 0 ? 0 : (brackets[index - 1].upTo ?? 0);
+    const upper = bracket.upTo;
+    const slice = base > lower ? Math.min(base, upper ?? Infinity) - lower : 0;
+    const current = base > lower && (upper === null || base <= upper);
+    return { index, lower, upper, rate: bracket.ratePct, tax: (slice * bracket.ratePct) / 100, current, reached: slice > 0 };
+  });
+  return (
+    <div className={styles.brackets}>
+      <p className={styles.figureLabel}>{title}</p>
+      <table className={styles.bracketTable}>
+        <thead>
+          <tr>
+            <th scope="col">{rangeLabel}</th>
+            <th scope="col">{rateLabel}</th>
+            <th scope="col">{sliceLabel}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.index} data-current={row.current || undefined} data-reached={row.reached || undefined}>
+              <th scope="row" className="numeral">
+                {row.upper === null
+                  ? overLabel.replace("{amount}", formatMoney(row.lower))
+                  : `${formatMoney(row.lower)} – ${formatMoney(row.upper)}`}
+                {row.current && <span className={styles.bracketYours}>{yoursLabel}</span>}
+              </th>
+              <td className="numeral">{formatRate(row.rate)}</td>
+              <td className="numeral">{row.reached ? formatMoney(row.tax) : "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className={styles.figureHint}>{hint}</p>
+    </div>
+  );
 }

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
@@ -11,6 +12,7 @@ import {
   SegmentItem,
 } from "@/components/ui/primitives";
 import { AnalysisTable } from "@/components/earnings/AnalysisTable";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import { EarningsCalendar } from "@/components/earnings/EarningsCalendar";
 import { EarningsTabs } from "@/components/earnings/EarningsTabs";
 import {
@@ -214,10 +216,19 @@ export default async function WatchedEarningsPage(
                 />
               </Panel>
             ) : (
-              <AnalysisTable
-                rows={analysisRows}
-                labels={analysisTableLabels(t)}
-              />
+              <>
+                <AnalysisTable
+                  rows={analysisRows}
+                  labels={analysisTableLabels(t)}
+                />
+                {/* Tablo her satırda `data-cc` basıyor; kaydı Analizler
+                    sekmesi bırakıyordu, bu sekme bırakmıyordu ve aynı tablo
+                    burada kart açmıyordu (28 Eylül denetimi). Kotasyonu kart
+                    kendisi soruyor, akışla iniyor. */}
+                <Suspense fallback={null}>
+                  <CompanyCards symbols={analysisRows.map((row) => row.symbol)} />
+                </Suspense>
+              </>
             )}
           </section>
 

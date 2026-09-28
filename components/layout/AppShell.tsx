@@ -244,7 +244,10 @@ export function AppShell({
                 ad 19 → 22 piksel. Başlık 69 piksel; 44'lük karo üst ve altta
                 12,5'er piksel nefes bırakıyor. */}
             <BellMark size={44} />
-            <span className="flex flex-col gap-1">
+            {/* İKİ SATIR ORTAK EKSENDE (28 Eylül, sahibinin isteği): seans
+                satırı marka adından birkaç piksel uzun ve ikisi farklı yerde
+                bitiyordu; ikisi de ortalı, sütunun genişliği uzun olanın. */}
+            <span className="flex flex-col items-center gap-1">
               <BrandWord name={labels.brandName} className="text-[1.375rem] leading-none" />
               {sessionLine}
             </span>
@@ -294,7 +297,7 @@ export function AppShell({
 
               Marka rengini bell işareti taşıyor (o bir SVG, maskeye ihtiyacı
               yok); yazı düz accent mürekkeple aynı kimliği veriyor. */}
-          <span className="flex flex-col gap-0.5">
+          <span className="flex flex-col items-center gap-0.5">
             <BrandWord name={labels.brandName} className="text-lead leading-none" />
             {sessionLine}
           </span>

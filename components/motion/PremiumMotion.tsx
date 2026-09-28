@@ -165,7 +165,10 @@ export function ScrollProgress({ className }: { className?: string }) {
   );
 }
 
-type SectionItem = { id: string; label: string };
+/** `className`: öğeye özgü sınıf — sayfanın bölüm sırası ekran genişliğine
+    göre değişiyorsa (ana sayfa, telefonda CSS `order`) çubuk da aynı
+    `order` ile dizilebilsin. */
+type SectionItem = { id: string; label: string; className?: string };
 
 /** Bağlantıya tıklanınca çubuk bu süre boyunca gizlenmez (düzgün kaydırma). */
 const NAV_JUMP_HOLD_MS = 900;
@@ -276,13 +279,23 @@ export function SectionNav({
         top + nav.getBoundingClientRect().height + 24,
         trackAtNav ? 0 : window.innerHeight * 0.3,
       )));
+      /* KONUMA GÖRE, LİSTE SIRASINA GÖRE DEĞİL (28 Eylül denetimi). Etkin
+         bölüm "okuma çizgisini geçenlerin sonuncusu" diye listenin sırasından
+         seçiliyordu; ana sayfada bölümlerin sırası telefonda CSS `order` ile
+         değişiyor ve Sektörler bandı okunurken çubukta Dünya etkin kalıyordu.
+         Geçilenlerin EN AŞAĞIDAKİ, sayfanın dibi de en aşağıdaki bölüm. */
+      const lowest = (list: HTMLElement[]) =>
+        list.reduce<HTMLElement | undefined>(
+          (low, section) => (!low || section.getBoundingClientRect().top > low.getBoundingClientRect().top ? section : low),
+          undefined,
+        );
       const updateActive = () => {
         const passed = sections.filter((section) => section.getBoundingClientRect().top <= readingLine + 2);
-        const last = sections.at(-1)!;
+        const last = lowest(sections)!;
         const atBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 3;
         const current = atBottom && last.getBoundingClientRect().top < window.innerHeight
           ? last
-          : passed.at(-1) ?? sections[0];
+          : lowest(passed) ?? sections[0];
         setActiveId((previous) => {
           // Side-by-side sections share a top edge. Keep the selected member
           // of that row instead of immediately switching to its neighbour.
@@ -488,7 +501,7 @@ export function SectionNav({
             <a
               key={item.id}
               href={`#${item.id}`}
-              className={styles.navLink}
+              className={classes(styles.navLink, item.className)}
               aria-current={active ? "location" : undefined}
               onClick={() => {
                 holdUntil.current = performance.now() + NAV_JUMP_HOLD_MS;

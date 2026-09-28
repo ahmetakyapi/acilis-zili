@@ -433,6 +433,26 @@ export default async function StockPage(
         </div>
       </div>
 
+      {/* ŞİRKET ÖZETİ İLK EKRANIN HEMEN ALTINDA (28 Eylül, sahibinin
+          isteği). Önce Gündem bölümünün başındaydı, sonra Değerleme'nin
+          derinlik ızgarasında temettünün yanına geçti; ikisinde de sayfanın
+          ortasında kalıyordu ve şirketi tanıtan blok sayfanın 2.000.
+          pikselinden sonra okunuyordu. Artık grafik ve profilin hemen
+          ardında, tam genişlikte: künye beş sütun (endeks, sektör, alt
+          sektör, sonraki bilanço, aynı alt sektör). Yerel okumalar,
+          sağlayıcıya gitmiyor. */}
+      <Suspense fallback={<Skeleton className="h-[180px] w-full rounded-[20px]" />}>
+        <StockSummary symbol={symbol} locale={locale} t={t} />
+      </Suspense>
+
+      {/* ÜNLÜ YATIRIMCILAR ŞİRKET ÖZETİNİN HEMEN ALTINDA (28 Eylül). Panel
+          sayfanın en dibinde, Gündem'de içeriden işlemlerin altındaydı ve
+          sahibi onu hiç görmediği için "bu hisseyi tutan ünlü yatırımcıları
+          da gösterelim" diye istedi. Şimdi şirketi tanıtan bloğun ardında:
+          kim tutuyor, bu çeyrek ne yaptı. Veri ön okumada; tutan yoksa hiçbir
+          şey basılmıyor ve yer ayrılmıyor. */}
+      {famousInvestors && <InvestorsPanel data={famousInvestors} locale={locale} t={t} />}
+
       {/* Bölüm menüsü ilk ekranı bölmez; özetin ardından doğal akışta gelir
           ve kaydırınca üstte kalır. 1280×720 ölçümünde eski menü/boşluk
           grafiğin önünde 80px harcıyordu. */}
@@ -553,7 +573,10 @@ export default async function StockPage(
           taşıyor). */}
       <div className={depth.grid}>
         {indexMemberOf(symbol)?.sector && (
-          <Suspense fallback={<Skeleton className="h-[360px] w-full rounded-[20px]" />}>
+          /* YEDEK YOK (28 Eylül denetimi): skor kartı sektör ölçüleri
+             yetmediğinde hiç basılmıyor (`null`); 360 piksellik iskelet
+             önden basılıp panel gelmeyince sayfa zıplıyordu. */
+          <Suspense fallback={null}>
             <ScorecardPanel symbol={symbol} locale={locale} t={t} />
           </Suspense>
         )}
@@ -567,13 +590,6 @@ export default async function StockPage(
         )}
         <Suspense fallback={<Skeleton className="h-[300px] w-full rounded-[20px]" />}>
           <DividendPanel symbol={symbol} locale={locale} />
-        </Suspense>
-        {/* ŞİRKET ÖZETİ TEMETTÜNÜN YANINDA (28 Eylül). Gündem bölümünün
-            başında tam genişlikte iki satırlık bir metin bloğuydu; burada
-            ızgaranın boş kalan yuvasını dolduruyor. Tek kalırsa tam
-            genişliğe yayılıyor (depth.module.css). Yerel okumalar. */}
-        <Suspense fallback={<Skeleton className="h-[300px] w-full rounded-[20px]" />}>
-          <StockSummary symbol={symbol} locale={locale} t={t} />
         </Suspense>
       </div>
 
@@ -617,7 +633,17 @@ export default async function StockPage(
 
       <section id="stock-context" className={styles.chapter}>
         <ChapterHeading title={t.stock.chapterContext} />
-      {/* MERCEK EN SONDA, GEÇMİŞ BİLANÇOLARIN DA ALTINDA. Sıralama kodun
+      {/* İÇERİDEN İŞLEMLER GÜNDEM'İN BAŞINDA, MERCEK'İN ÜSTÜNDE (28 Eylül,
+          sahibinin isteği). Önce benzer şirketlerin altındaydı; sıra artık
+          "şirketi kim tutuyor, kim alıp satıyor" (Ünlü Yatırımcılar özetin
+          altında, İçeriden İşlemler burada) → Mercek → Aynı Sektörden
+          Şirketler → Haberler. Yönetimin davranışı bir olayın anlatısından
+          önce okunuyor. */}
+      <Suspense fallback={<Skeleton className="h-[460px] w-full rounded-[20px]" />}>
+        <InsiderPanel symbol={symbol} locale={locale} t={t} />
+      </Suspense>
+
+      {/* MERCEK GEÇMİŞ BİLANÇOLARIN ALTINDA, İÇERİDEN İŞLEMLERİN ARDINDA. Sıralama kodun
           kendi gerekçesini takip ediyor: analiz bir çeyreğin okunmuş hâli,
           geçmiş bilançolar o çeyreklerin tablosu — ikisi aynı malzeme ve
           yan yana durmalı. Mercek ise bir olayın anlatısı, yani bir adım
@@ -653,16 +679,6 @@ export default async function StockPage(
         <PeersCard symbol={symbol} locale={locale} t={t} />
       </Suspense>
 
-      {/* İÇERİDEN İŞLEMLER benzer şirketlerden sonra, haberden önce:
-          ikisi de "şirketin çevresinde ne oluyor" sorusu, biri piyasanın
-          öteki yönetimin davranışı. */}
-      <Suspense fallback={<Skeleton className="h-[460px] w-full rounded-[20px]" />}>
-        <InsiderPanel symbol={symbol} locale={locale} t={t} />
-      </Suspense>
-
-      {/* ÜNLÜ YATIRIMCILAR içeriden işlemlerin altında: ikisi de "bu hisseyi
-          kim alıp satıyor" sorusu. Veri ön okumada; yoksa hiçbir şey. */}
-      {famousInvestors && <InvestorsPanel data={famousInvestors} locale={locale} t={t} />}
 
       {/* Haberler en altta — mobilde de masaüstünde de son durak */}
       <Reveal>

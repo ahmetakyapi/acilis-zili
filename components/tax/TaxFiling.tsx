@@ -13,7 +13,7 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { Panel } from "@/components/ui/primitives";
 import { dayNumber, formatIsoDate } from "@/lib/fx";
 import type { Locale } from "@/lib/i18n/config";
-import { TAX_YEAR_LIST, TAX_YEARS } from "@/lib/tax";
+import { taxYearList, type TaxYearRules } from "@/lib/tax";
 import type { TaxLabels } from "./TaxCalculator";
 import { PANEL_TITLE } from "./tax-ui";
 import styles from "./Tax.module.css";
@@ -75,9 +75,10 @@ const NODE_AT = [0, 2, 3, 4, 5].map((unit) => unit / TIMELINE_UNITS);
  * geçmemiş en eski vergi yılı. 28 Eylül 2026'da 2025 gelirinin ikinci
  * taksidi (31 Temmuz 2026) geçti, yani ekran 2026 gelirini gösteriyor.
  */
-function currentTaxYear(today: string): number {
-  const ascending = [...TAX_YEAR_LIST].sort((a, b) => a - b);
-  return ascending.find((year) => `${TAX_YEARS[year].filingYear}-07-31` >= today) ?? TAX_YEAR_LIST[0];
+function currentTaxYear(today: string, years: Record<number, TaxYearRules>): number {
+  const list = taxYearList(years);
+  const ascending = [...list].sort((a, b) => a - b);
+  return ascending.find((year) => `${years[year].filingYear}-07-31` >= today) ?? list[0];
 }
 
 /**
@@ -117,10 +118,20 @@ function dayMonth(date: string, locale: Locale): string {
  * 1042-S 15 Mart — hepsi sayfanın önceki metninden ve kaynaklarından
  * (lib/tax.ts başı, [IRS] ve [MSİ]). Yıl vergi kurallarından geliyor.
  */
-export function TaxFiling({ labels, locale, today }: { labels: TaxLabels; locale: Locale; today: string }) {
+export function TaxFiling({
+  labels,
+  locale,
+  today,
+  years,
+}: {
+  labels: TaxLabels;
+  locale: Locale;
+  today: string;
+  years: Record<number, TaxYearRules>;
+}) {
   const F = labels.filing;
-  const year = currentTaxYear(today);
-  const filing = TAX_YEARS[year].filingYear;
+  const year = currentTaxYear(today, years);
+  const filing = years[year].filingYear;
   const fill = (text: string) => text.replace("{year}", String(year)).replace("{filing}", String(filing));
 
   const miles = [

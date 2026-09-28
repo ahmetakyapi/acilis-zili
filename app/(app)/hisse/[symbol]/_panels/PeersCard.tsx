@@ -150,6 +150,7 @@ export async function PeersCard({
       <CompanyCards
         symbols={top.map((peer) => peer.symbol)}
         quotes={result.ok ? quotes : null}
+        stale={result.ok && Boolean(result.stale)}
         names={meta}
         status={status}
       />

@@ -356,6 +356,10 @@
      duruyordu (390, ölçüldü); sahibi yukarı istedi. "Bugün hangi isim
      taşıdı"nın hemen ardından "hangi sektör ve tema" okunuyor. */
   .dashboard [data-home-section="texture"] { order:4; }
+  /* Bölüm çubuğu aynı sırayı izliyor (page.tsx → SectionNav): bant
+     Dünya'nın ardında, sonrakiler bandın ardında. */
+  .navNarrowThemes { order:1; }
+  .navNarrowLater { order:2; }
   .dashboard [data-home-section="news"] { order:16; }
   .dashboard [data-home-section="sources"] { order:17; }
   /* GİRİŞ YAPMAMIŞ OKUYUCUNUN FAVORİLERİ BİLANÇOLARIN ARDINDA (24 Eylül).

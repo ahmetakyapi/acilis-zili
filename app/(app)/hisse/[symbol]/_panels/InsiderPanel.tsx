@@ -5,6 +5,8 @@ import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getStatus } from "@/lib/data";
 import { getQuote } from "@/lib/providers";
 import { getInsiderSentiment, getInsiderTransactions } from "@/lib/providers/finnhub-depth";
+import { getInsiderRoles } from "@/lib/providers/sec-form4";
+import { displayInsiderName, roleLine, type InsiderRoleLabels } from "@/lib/insider-people";
 import {
   groupInsiderRows,
   isInsiderCode,
@@ -97,6 +99,19 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
 
   const people = (n: number) => plural(n, d.insiderPersonOne, d.insiderPersonMany).replace("{n}", String(n));
   const shown = trades.slice(0, INSIDER_ROWS);
+  /* Görev SEC'in kendi dosyasından (Finnhub satırı taşımıyor); düşerse boş
+     eşleme ve satırlar yalnızca isimle kalır. Gerekçe lib/insider-people.ts. */
+  const roles = await getInsiderRoles(symbol, shown);
+  const roleLabels: InsiderRoleLabels = {
+    director: d.insiderRoleDirector,
+    tenPercent: d.insiderRoleTenPercent,
+    officer: d.insiderRoleOfficer,
+  };
+  const roleOf = (name: string): string | null => {
+    const owner = roles.get(name);
+    return owner ? roleLine(owner, locale, roleLabels) : null;
+  };
+  const hasRoles = shown.some((trade) => roleOf(trade.name) !== null);
 
   return (
     <Panel className={styles.panel}>
@@ -180,7 +195,7 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
               </thead>
               <tbody>
                 {shown.map((trade) => (
-                  <InsiderRow key={trade.key} trade={trade} locale={locale} t={t} />
+                  <InsiderRow key={trade.key} trade={trade} role={roleOf(trade.name)} locale={locale} t={t} />
                 ))}
               </tbody>
             </table>
@@ -193,6 +208,7 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
         )}
 
         <p className={styles.note}>{d.insiderNote}</p>
+        {hasRoles && <p className={styles.note}>{d.insiderRolesNote}</p>}
         {dropped > 0 && (
           <p className={styles.note}>{d.insiderPriceDropped.replace("{n}", String(dropped))}</p>
         )}
@@ -210,12 +226,29 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
   );
 }
 
-function InsiderRow({ trade, locale, t }: { trade: InsiderTrade; locale: Locale; t: Dictionary }) {
+function InsiderRow({
+  trade,
+  role,
+  locale,
+  t,
+}: {
+  trade: InsiderTrade;
+  role: string | null;
+  locale: Locale;
+  t: Dictionary;
+}) {
   const open = !trade.derivative && isOpenMarket(trade.code);
+  const name = displayInsiderName(trade.name);
   return (
     <tr>
+      {/* Özgün SEC adı `title`da: okunuş için sıra çevrilmiş olabilir. */}
       <td>
-        <span className={styles.nameCell} title={trade.name}>{trade.name}</span>
+        <span className={styles.nameCell} title={trade.name}>{name}</span>
+        {role && (
+          <span className={styles.roleCell} title={role}>
+            {role}
+          </span>
+        )}
       </td>
       <td className="numeral text-body">{formatEtDateMedium(trade.date, locale)}</td>
       <td className={open ? "font-semibold text-strong" : "text-muted"}>

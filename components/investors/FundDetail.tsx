@@ -403,7 +403,14 @@ function PositionsTable({
             )}
           </span>
           {position.split && (
-            <small className={styles.cellNote}>{t.splitNote.replace("{ratio}", String(position.split))}</small>
+            <small className={styles.cellNote}>
+              {/* TERS BÖLÜNME (28 Eylül denetimi): `detectSplit` ters
+                  bölünmede 1/k veriyor ve metin "0.3333333333333333-for-1"
+                  basıyordu. Oran her zaman tam sayı olarak yazılıyor. */}
+              {position.split >= 1
+                ? t.splitNote.replace("{ratio}", String(position.split))
+                : t.reverseSplitNote.replace("{ratio}", String(Math.round(1 / position.split)))}
+            </small>
           )}
         </td>
       )}

@@ -45,12 +45,39 @@
    bağlantısı aynı panele iniyor, sekmeyi tıklama seçiyor (TaxCalculator). */
 .anchor { position:relative; display:block; height:0; scroll-margin-top:calc(var(--app-bar-h) + 12px); }
 
-.tabs { display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; border-radius:999px; background:var(--surface-elevated); }
-.tab { position:relative; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px; border-radius:999px; font-size:15px; font-weight:600; color:var(--text-body); transition:color .25s; }
-.tab[aria-selected="true"] { color:var(--on-primary); }
-.tabPill { position:absolute; inset:0; border-radius:999px; background:var(--primary); z-index:0; }
-.tab > :not(.tabPill) { position:relative; z-index:1; }
-@media (hover:hover) and (pointer:fine) { .tab[aria-selected="false"]:hover { color:var(--text-strong); } }
+/* Başlık satırı (gerekçe TaxCalculator'da): telefonda ad + yıl üstte, hesap
+   türü altta tam genişlikte; 900 pikselden itibaren üçü tek hatta. Eşik
+   ölçüldü: 768'de ad 190, iki sekme 262, etiketli yıl 196 piksel ve panel
+   iç genişliği 712 — sığıyor ama iki parça arası 16 pikselde sıkışıyordu. */
+.calcHead { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"title year" "tabs tabs"; align-items:center; gap:16px; padding:20px 16px 0; }
+.calcTitle { grid-area:title; }
+.tabs { grid-area:tabs; display:grid; grid-template-columns:1fr 1fr; }
+.yearControl { grid-area:year; display:flex; align-items:center; gap:10px; }
+.yearLabel { display:none; font-size:12px; font-weight:600; color:var(--text-muted); }
+@media (min-width:640px) { .calcHead { padding:24px 28px 0; } .yearLabel { display:inline; } }
+@media (min-width:900px) {
+  .calcHead { grid-template-columns:auto auto minmax(0,1fr) auto; grid-template-areas:"title tabs . year"; column-gap:24px; }
+  .tabs { display:inline-flex; }
+}
+
+/* SEGMENT — sayfanın tek seçim dili (yıl, hesap türü, tek/çoklu, alış/satış,
+   W-8BEN, kur günü). Portföy penceresinin segmentiyle aynı aile: çukur ray,
+   seçili parça panel zemininde, kenarı ince çizgi. Mavi dolgu yok; mavi bu
+   sayfada eylem ("Beyan Etmen Gerekiyor") ve bağlantı. */
+.segment { display:inline-flex; width:fit-content; max-width:100%; gap:2px; padding:3px; border-radius:12px; background:var(--surface-sunken); box-shadow:inset 0 0 0 1px var(--line-soft); }
+.segItem { position:relative; display:inline-flex; align-items:center; justify-content:center; min-width:0; min-height:38px; padding:0 14px; border-radius:9px; font-size:13px; font-weight:600; white-space:nowrap; color:var(--text-muted); cursor:pointer; transition:color .2s; }
+.segItem[aria-pressed="true"], .segItem[aria-selected="true"] { color:var(--text-strong); }
+.segItem:disabled { opacity:.45; cursor:not-allowed; }
+.segItem:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
+.segThumb { position:absolute; inset:0; border-radius:9px; background:var(--panel-fixed); box-shadow:inset 0 0 0 1px var(--line); }
+.segText { position:relative; display:inline-flex; align-items:center; gap:7px; }
+.segItem[aria-selected="true"] svg { color:var(--primary-ink); }
+@media (hover:hover) and (pointer:fine) {
+  .segItem:not(:disabled):not([aria-pressed="true"]):not([aria-selected="true"]):hover { color:var(--text-strong); }
+}
+/* Hesap türü biraz daha iri: ekranın iki ana yolundan hangisindesin sorusu. */
+.tabs .segItem { min-height:40px; padding:0 18px; font-size:14px; }
+@media (max-width:639px) { .segItem, .tabs .segItem { min-height:44px; } .segment { width:100%; } .segment > .segItem { flex:1 1 0; } .yearControl .segment { width:auto; } }
 
 .body { display:grid; gap:0; border-top:1px solid var(--line-soft); }
 @media (min-width:1024px) {
@@ -58,28 +85,46 @@
   .result { border-left:1px solid var(--line-soft); }
   .resultInner { position:sticky; top:calc(var(--app-bar-h) + 16px); }
 }
-.form { min-width:0; padding:22px 20px 24px; }
-@media (min-width:640px) { .form { padding:26px 28px 28px; } }
+.form { min-width:0; padding:24px 16px 26px; }
+@media (min-width:640px) { .form { padding:28px 28px 30px; } }
+.importBar { padding:18px 16px 22px; }
+@media (min-width:640px) { .importBar { padding:20px 28px 24px; } }
 
 /* Adım rayı: her adımın solunda bir düğüm ve aşağı inen çizgi. Düğüm adım
    tamamlanınca dolar; okuyucu nerede olduğunu okumadan görüyor. */
 .steps { display:flex; flex-direction:column; margin:0; padding:0; list-style:none; }
-.step { position:relative; padding:0 0 26px 42px; }
+.step { position:relative; padding:0 0 30px 42px; }
 .step:last-child { padding-bottom:0; }
 .step::before { content:""; position:absolute; left:13px; top:30px; bottom:4px; width:2px; border-radius:2px; background:var(--line); }
 .step:last-child::before { display:none; }
 .step[data-done="true"]::before { background:var(--primary-faint); }
-.node { position:absolute; left:0; top:0; display:grid; place-items:center; width:28px; height:28px; border-radius:999px; border:2px solid var(--line-strong); background:var(--panel-fixed); color:var(--text-muted); font-size:12px; font-weight:700; transition:background-color .3s, border-color .3s, color .3s; }
+.node { position:absolute; left:0; top:0; display:grid; place-items:center; width:28px; height:28px; border-radius:999px; border:1.5px solid var(--line-strong); background:var(--panel-fixed); color:var(--text-body); font-size:12px; font-weight:700; transition:background-color .3s, border-color .3s, color .3s; }
 .step[data-done="true"] .node { border-color:var(--primary); background:var(--primary); color:var(--on-primary); }
-.stepTitle { margin:2px 0 14px; font-size:17px; font-weight:650; line-height:1.3; letter-spacing:-.01em; color:var(--text-strong); }
+.stepTitle { margin:2px 0 16px; font-size:17px; font-weight:650; line-height:1.3; letter-spacing:-.01em; color:var(--text-strong); }
 
-.fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 12px; }
-.field { display:flex; min-width:0; flex-direction:column; gap:6px; }
-.label { font-size:12px; font-weight:600; line-height:1.3; color:var(--text-body); }
-.help { font-size:11px; line-height:1.45; color:var(--text-muted); }
-.input { height:46px; width:100%; min-width:0; border:1px solid var(--line); border-radius:var(--radius-md); background:var(--surface-elevated); padding:0 12px; font-size:15px; color:var(--text-strong); outline:none; transition:border-color .2s, background-color .2s; }
-.input:focus { border-color:var(--line-focus); background:var(--panel-fixed); }
+/* ALANLAR — portföy penceresinin ailesi: 46 piksel, `--radius-md`, etiket
+   üstte 13 punto, hata altta. Tek fark zemin: gri dolgulu dört-altı alan
+   yan yana formu bir kutu yığınına çeviriyordu; alan panelin kendi
+   zemininde (`--panel-fixed`), sınırını çizgi veriyor. Tarih seçici aynı
+   zemini `--surface-elevated` üzerinden okuyor; bileşenin kendi dosyasına
+   dokunmadan burada yerel olarak yeniden tanımlanıyor. */
+.fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px 14px; --surface-elevated:var(--panel-fixed); }
+.row { --surface-elevated:var(--panel-fixed); }
+/* Telefonda tek sütun (ölçüldü, 390): adım rayından sonra iki alan 143'er
+   piksel kalıyor, tarih seçicinin tabanı ise 176 (11rem). Tarih alanı
+   komşusuna taşıyor, takvim düğmesi fiyatın ilk rakamının üstüne biniyordu;
+   "Hisse Başı Fiyat (USD)" etiketi de iki satıra kırılıp alanı itiyordu. */
+@media (max-width:519px) { .fields { grid-template-columns:minmax(0,1fr); } }
+.field { display:flex; min-width:0; flex-direction:column; gap:7px; }
+.label { font-size:13px; font-weight:600; line-height:1.3; color:var(--text-body); }
+.help { font-size:12px; line-height:1.45; color:var(--text-muted); }
+.fieldError { display:flex; align-items:flex-start; gap:5px; font-size:12px; font-weight:500; line-height:1.4; color:var(--down); animation:chip-in 280ms var(--ease-brand) both; }
+.fieldError svg { flex-shrink:0; margin-top:1px; }
+.input { height:46px; width:100%; min-width:0; border:1px solid var(--line-strong); border-radius:var(--radius-md); background:var(--panel-fixed); padding:0 12px; font-size:16px; color:var(--text-strong); outline:none; transition:border-color .2s, box-shadow .2s; }
+@media (hover:hover) and (pointer:fine) { .input:hover { border-color:var(--text-muted); } }
+.input:focus { border-color:var(--line-focus); box-shadow:0 0 0 3px var(--primary-tint); }
 .input[aria-invalid="true"] { border-color:var(--down); }
+.input[aria-invalid="true"]:focus { box-shadow:0 0 0 3px var(--down-wash); }
 .upper { text-transform:uppercase; }
 /* W-8BEN seçimi telefonda iki alanın yarısına sığmıyordu ("Evet · %20"
    üç satıra kırılıyordu, 390'da ölçüldü); kendi satırında tam genişlik. */
@@ -109,7 +154,12 @@
 .row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; padding:16px 0; border-top:1px solid var(--line-soft); animation:chip-in 380ms var(--ease-brand) both; }
 .row:first-child { border-top:0; padding-top:0; }
 .rowChip { grid-column:1 / -1; margin-top:-4px; }
-@media (min-width:640px) { .row { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+/* Üç sütun kabın genişliğine bağlı, ekranınkine değil (ölçüldü, 1024):
+   form kolonu 480 piksel, üç sütunda hücre 143 ve tarih seçicinin tabanı
+   176 (11rem); tarih alanı "Adet"in üstüne biniyordu. 560 piksellik kapta
+   hücre 178, tarih sığıyor. */
+.rows { container-type:inline-size; }
+@container (min-width:560px) { .row { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 .rowHead { grid-column:1 / -1; display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .rowTag { display:inline-flex; align-items:center; min-height:26px; padding:0 10px; border-radius:999px; font-size:12px; font-weight:700; }
 .rowTag[data-side="buy"] { background:var(--primary-tint); color:var(--primary-ink); }
@@ -117,10 +167,6 @@
 .remove { display:inline-grid; place-items:center; width:44px; height:44px; margin:-8px -10px -8px 0; border-radius:999px; color:var(--text-muted); transition:background-color .2s, color .2s; }
 @media (hover:hover) and (pointer:fine) { .remove:hover { background:var(--down-wash); color:var(--down); } }
 
-.segment { display:inline-flex; gap:2px; padding:3px; border-radius:999px; background:var(--surface-elevated); }
-.segment button { white-space:nowrap; min-height:40px; padding:0 14px; border-radius:999px; font-size:13px; font-weight:600; color:var(--text-body); transition:background-color .2s, color .2s; }
-.segment button[aria-pressed="true"] { background:var(--primary); color:var(--on-primary); }
-@media (max-width:639px) { .segment button { min-height:44px; } }
 
 .addRow { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
 
@@ -132,19 +178,29 @@
    şeridin yerini alıyor ve iki sütunun ÜSTÜNDE tam genişlikte duruyor:
    yedi sütunlu tablo, formun yarım genişliğine sığmazdı. */
 
-.drop { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 16px; margin-top:14px; padding:8px 16px 8px 8px; border:1px dashed var(--line-strong); border-radius:16px; transition:border-color .25s, background-color .25s; }
-.drop[data-over] { border-color:var(--primary); border-style:solid; background:var(--primary-tint); }
-.dropButton { display:flex; align-items:center; gap:14px; min-height:56px; min-width:0; padding-right:8px; text-align:left; border-radius:12px; }
-.dropIcon { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; border-radius:12px; background:var(--primary-tint); color:var(--primary-ink); transition:transform .35s var(--ease-brand), background-color .25s; }
+/* Bırakma alanı (28 Eylül, ikinci tur). Kesikli çerçeve kaldırıldı: sayfanın
+   geri kalanında hiçbir kutu kesikli değil ve şerit bir "yer tutucu" gibi
+   duruyordu. Şimdi çukur tonda bir şerit; bütün şerit düğme (`::after`).
+   Dosya üstüne gelince çerçeve 2 piksel mavi ve zemin mavi tonda: ışıma yok,
+   yalnızca ton. */
+.drop { position:relative; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 16px; padding:12px 18px 12px 12px; border-radius:16px; background:var(--surface-sunken); box-shadow:inset 0 0 0 1px var(--line-soft); transition:background-color .25s, box-shadow .25s; }
+.drop[data-over] { background:var(--primary-tint); box-shadow:inset 0 0 0 2px var(--primary); }
+.dropButton { display:flex; align-items:center; gap:14px; min-width:0; text-align:left; }
+.dropButton::after { content:""; position:absolute; inset:0; border-radius:16px; }
+.dropButton:focus-visible { outline:none; }
+.dropButton:focus-visible::after { outline:2px solid var(--line-focus); outline-offset:2px; }
+.dropIcon { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; border-radius:12px; background:var(--panel-fixed); box-shadow:inset 0 0 0 1px var(--line-soft); color:var(--primary-ink); transition:transform .35s var(--ease-brand), background-color .25s; }
 .drop[data-over] .dropIcon { transform:translateY(-3px) scale(1.06); background:var(--primary-wash); }
 .dropTitle { display:block; font-size:15px; font-weight:650; line-height:1.25; letter-spacing:-.01em; color:var(--text-strong); }
-.dropHint { display:block; margin-top:2px; font-size:12px; line-height:1.4; color:var(--text-muted); }
+.dropHint { display:block; margin-top:3px; font-size:12px; line-height:1.4; color:var(--text-muted); }
 @media (hover:hover) and (pointer:fine) {
-  .drop:hover { border-color:var(--primary-faint); }
-  .dropButton:hover .dropIcon { transform:translateY(-2px); }
+  .drop:hover { background:var(--primary-tint); }
+  .drop:hover .dropIcon { transform:translateY(-2px); }
 }
-.privacy { display:inline-flex; align-items:center; gap:6px; margin:0; padding-left:8px; font-size:12px; font-weight:600; line-height:1.4; color:var(--text-body); }
-.privacy svg { flex-shrink:0; color:var(--primary-ink); }
+/* Gizlilik künyesi şeridin üstünde ama tıklamayı düğmeye geçiriyor. Telefonda
+   ikinci satıra iniyor ve metnin sol hattından başlıyor (44 ikon + 14 ara). */
+.privacy { position:relative; pointer-events:none; display:inline-flex; align-items:center; gap:6px; margin:0; padding-left:58px; font-size:12px; font-weight:600; line-height:1.4; color:var(--text-body); }
+@media (min-width:640px) { .privacy { padding-left:0; } }
 
 .import { margin-top:14px; padding:20px 16px; border-radius:18px; background:var(--surface-sunken); animation:chip-in 420ms var(--ease-brand) both; }
 @media (min-width:640px) { .import { padding:24px; } }
@@ -239,7 +295,7 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .skipped code { min-width:0; font-family:var(--font-mono); font-size:11px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; color:var(--text-body); }
 .skipped[open] > summary svg { transform:rotate(180deg); }
 .reviewFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding-top:16px; border-top:1px solid var(--line-soft); }
-.reviewFoot .privacy { padding-left:0; }
+.reviewFoot .privacy { padding-left:0; pointer-events:auto; }
 
 /* ---------- Sonuç ---------- */
 
@@ -254,13 +310,49 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 @keyframes verdict-in { from { opacity:0; transform:scale(.9); } }
 .verdictBody { margin-top:10px; max-width:46ch; font-size:13px; line-height:1.6; color:var(--text-body); }
 
+/* Boş sonuç: tek cümle ve gelecek sonucun iskeleti. İskelet DURAĞAN: parıltı
+   "yükleniyor" demek olurdu, burada beklenen bir şey yok, okuyucunun girdisi
+   bekleniyor. Bloklar sayıların gerçek boyunda (büyük sayı 44, orta 24). */
+.emptyLead { display:flex; align-items:center; gap:12px; margin:0; max-width:44ch; font-size:14px; font-weight:500; line-height:1.5; color:var(--text-body); }
+.emptyIcon { display:grid; place-items:center; flex-shrink:0; width:40px; height:40px; border-radius:12px; background:var(--panel-fixed); box-shadow:inset 0 0 0 1px var(--line-soft); color:var(--primary-ink); }
+.ghost { display:flex; flex-direction:column; gap:20px; }
+.ghostRow { display:flex; flex-direction:column; gap:10px; }
+.ghostRow + .ghostRow { padding-top:20px; border-top:1px solid var(--line-soft); }
+.ghostBlock { display:block; height:24px; width:38%; border-radius:8px; background:var(--line); opacity:.8; }
+.ghostRow[data-size="big"] .ghostBlock { height:44px; width:64%; border-radius:10px; }
+.ghostRow[data-size="range"] .ghostBlock { width:56%; }
+.ghostRange { display:block; height:12px; width:100%; border-radius:4px; background:var(--line-soft); }
+
+/* Dolu sonuç: iskeletin yerine bir kez girer. Sayı değişimleri `Rolling`de. */
+.filled { display:flex; flex-direction:column; gap:22px; animation:result-in 520ms var(--ease-brand) both; }
+@keyframes result-in { from { opacity:0; transform:translateY(8px); } }
+
 .figureLabel { font-size:12px; font-weight:600; color:var(--text-muted); }
-.big { display:block; margin-top:4px; font-size:clamp(36px, 9vw, 52px); font-weight:650; line-height:1; letter-spacing:-.045em; white-space:nowrap; }
+.big { display:block; margin-top:6px; font-size:clamp(36px, 9vw, 52px); font-weight:650; line-height:1; letter-spacing:-.045em; white-space:nowrap; }
 .mid { font-size:clamp(20px, 4.6vw, 24px); font-weight:650; line-height:1.15; letter-spacing:-.025em; color:var(--text-strong); white-space:nowrap; }
 .between { margin:0 .35em; font-size:14px; font-weight:500; letter-spacing:0; color:var(--text-muted); }
 .figures { display:grid; gap:18px; padding-top:20px; border-top:1px solid var(--line-soft); }
 @media (min-width:480px) { .figures[data-cols="2"] { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 .figureHint { margin-top:6px; font-size:12px; line-height:1.55; color:var(--text-muted); }
+.taxBlock { padding-top:20px; border-top:1px solid var(--line-soft); }
+
+/* Vergi aralığı: dolu kısım alt uç, soluk kısım alt uçtan üst uca. */
+.range { margin-top:14px; }
+.rangeTrack { position:relative; height:12px; }
+.rangeTrack::before { content:""; position:absolute; left:0; right:0; top:50%; height:1px; background:var(--line); }
+.rangeKey { display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 12px; margin-top:8px; font-size:11px; font-weight:600; color:var(--text-muted); }
+.rangeKey span { display:inline-flex; align-items:center; gap:6px; }
+.rangeKey i { display:inline-block; width:12px; height:6px; border-radius:2px; }
+.rangeKey i[data-tone="proceeds"] { background:var(--primary); }
+.rangeKey i[data-tone="spread"], .bar[data-tone="spread"] { background:var(--primary-wash); box-shadow:inset 0 0 0 1px var(--primary-faint); }
+
+/* Hesabın dayanağı: künye ızgarası. Değer üstte, bülten günü altında. */
+.basis { padding-top:18px; border-top:1px solid var(--line-soft); }
+.basisTitle { margin:0 0 12px; font-size:14px; font-weight:700; color:var(--text-strong); }
+.basisList { display:grid; grid-template-columns:repeat(auto-fit, minmax(128px, 1fr)); gap:14px 20px; margin:0; }
+.basisList dt { font-size:12px; font-weight:600; color:var(--text-muted); }
+.basisList dd { display:flex; flex-direction:column; gap:2px; margin:3px 0 0; font-size:14px; font-weight:650; color:var(--text-strong); }
+.basisNote { font-size:11px; font-weight:500; color:var(--text-muted); }
 
 /* Şelale: dört çubuk aynı TL ölçeğinde. Çubuk tam genişlikte bir öğe;
    konumu ve boyu yalnızca `transform` ile verilir, yani değer değişince
@@ -291,6 +383,8 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .notes { display:flex; flex-direction:column; gap:8px; padding-top:18px; border-top:1px solid var(--line-soft); font-size:12px; line-height:1.55; color:var(--text-muted); }
 .warn { color:var(--down); }
 .advice { display:flex; gap:10px; align-items:flex-start; }
+/* Üstünde künye ya da düğme yoksa (boş sonuç) notların kendi çizgisi yeter. */
+.notes > .advice:first-child { border-top:0; padding-top:0; }
 .advice strong { display:block; color:var(--text-strong); font-weight:650; }
 .actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
 
@@ -362,7 +456,42 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
   .import, .importLoading, .tally dd, .months li, .preview tbody > tr, .progress[data-indeterminate="true"] > span { animation:none; }
   .progress > span, .dropIcon, .cell { transition:none; }
   .drop[data-over] .dropIcon { transform:none; }
+  .filled, .fieldError { animation:none; }
+  .segItem, .input, .drop { transition:none; }
+  .drop:hover .dropIcon { transform:none; }
   .paths > li, .chip, .chip[data-state="loading"], .row, .verdict, .disclosure > :not(summary), .faq details > p, .faq details > ul { animation:none; }
   .bar, .meterTick, .meterLimit, .pathArrow, .path, .disclosure > summary svg, .faq summary svg { transition:none; }
   .path:active { scale:none; }
+}
+
+/* ---- Gelir vergisi tarifesi (BracketTable, 28 Eylül) ----
+   Tarifenin tamamı; matrahın düştüğü satır ton farkıyla ve solunda ince bir
+   işaretle, ulaşılmış dilimler koyu, ulaşılmamışlar soluk. Kutu yok: sonuç
+   alanının hairline ritmi. */
+.brackets { display:grid; gap:8px; padding-top:18px; margin-top:18px; border-top:1px solid var(--line-soft); }
+.bracketTable { width:100%; border-collapse:separate; border-spacing:0; font-size:13.5px; }
+.bracketTable thead th { padding:0 10px 6px; text-align:right; font-size:11.5px; font-weight:600; color:var(--text-muted); }
+.bracketTable thead th:first-child { padding-left:12px; text-align:left; }
+.bracketTable tbody th, .bracketTable tbody td { padding:9px 10px; border-top:1px solid var(--line-soft); text-align:right; color:var(--text-muted); white-space:nowrap; }
+.bracketTable tbody th { padding-left:12px; text-align:left; font-weight:600; }
+.bracketTable tbody tr[data-reached] th, .bracketTable tbody tr[data-reached] td { color:var(--text-strong); }
+.bracketTable tbody tr[data-current] > * { background:var(--primary-tint); }
+.bracketTable tbody tr[data-current] th { box-shadow:inset 3px 0 var(--primary); border-radius:8px 0 0 8px; }
+.bracketTable tbody tr[data-current] td:last-child { border-radius:0 8px 8px 0; }
+.bracketTable tbody tr[data-current] td:nth-child(2) { color:var(--primary-ink); font-weight:700; }
+.bracketYours {
+  display:inline-block; margin-left:8px; padding:1px 7px; border-radius:999px;
+  background:var(--primary-wash); color:var(--primary-ink); font-size:10.5px; font-weight:700; vertical-align:1px;
+}
+/* DAR EKRANDA SABİT SÜTUNLAR (320'de ölçüldü: "Bu Dilimden" sütunu kabın
+   dışına taşıp kesiliyordu). Aralık sütunu iki satıra sarabiliyor, sayılar
+   bölünmüyor; oran dar, dilim vergisi sağda tam okunuyor. */
+@media (max-width: 519px) {
+  .bracketTable { table-layout:fixed; font-size:12.5px; }
+  .bracketTable thead th:nth-child(1) { width:50%; }
+  .bracketTable thead th:nth-child(2) { width:17%; }
+  .bracketTable thead th:nth-child(3) { width:33%; white-space:normal; }
+  .bracketTable tbody th, .bracketTable tbody td { padding:8px 6px; }
+  .bracketTable tbody th { white-space:normal; line-height:1.35; }
+  .bracketYours { display:block; width:max-content; margin:4px 0 0; }
 }

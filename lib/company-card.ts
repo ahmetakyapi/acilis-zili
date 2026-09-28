@@ -6,7 +6,7 @@ import { companySector } from "@/lib/company-sector";
 import { liveMarketCap, type SymbolMeta } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { logoSrc } from "@/lib/logos";
-import { quoteBasis, type MarketStatus } from "@/lib/market-hours";
+import { displayBasis, quoteBasis, type MarketStatus } from "@/lib/market-hours";
 import type { Quote } from "@/lib/providers/types";
 import { industryLabel } from "@/lib/sectors";
 import { formatMoneyCompact, formatPercent, formatPrice, SIGN_GAP } from "@/lib/utils";
@@ -35,6 +35,8 @@ export type CompanyCardContext = {
   names: Record<string, SymbolMeta>;
   /** Sayfanın KENDİ kotasyon paketi; null ise kartta fiyat yok. */
   quotes: Record<string, Quote> | null;
+  /** Paket bugüne ait ama YAŞLI (`QuoteResult.stale`, bkz. `packCurrent`). */
+  stale: boolean;
   status: MarketStatus;
   locale: Locale;
   t: Dictionary;
@@ -58,7 +60,7 @@ export function companyCardRecord(
   ctx: CompanyCardContext,
   extra: CompanyCardExtra = {},
 ): CompanyCardRecord {
-  const { names, quotes, status, locale, t } = ctx;
+  const { names, quotes, stale, status, locale, t } = ctx;
   const meta = names[symbol];
   const quote = quotes?.[symbol];
   const card: CompanyCardRecord = { symbol };
@@ -105,15 +107,23 @@ export function companyCardRecord(
     card.price = formatPrice(quote.price, locale, { currency: true });
     if (quote.changePct !== null) card.pct = formatPercent(quote.changePct, locale);
     if (quote.change !== null) card.amount = signedMoney(quote.change, locale);
+    /* KÜNYE "ŞİMDİ"Yİ DE KANITLIYOR (28 Eylül denetimi): seans kapandıktan
+       sonra "Seans İçi" yerine "Seans Kapanışı", yaşlı pakette "Son Fiyat"
+       ve yön rengi yok — gerekçe `displayBasis` üzerinde. */
+    const shown = displayBasis(basis, stale, status);
     card.basis =
-      basis === "session"
+      shown === "session"
         ? t.companyCard.session
-        : basis === "pre-market"
-          ? t.companyCard.preMarket
-          : basis === "after-hours"
-            ? t.companyCard.afterHours
-            : t.companyCard.lastClose;
-    tone(quote.changePct, basis !== "lastClose");
+        : shown === "sessionClose"
+          ? t.companyCard.sessionClose
+          : shown === "pre-market"
+            ? t.companyCard.preMarket
+            : shown === "after-hours"
+              ? t.companyCard.afterHours
+              : shown === "lastPrice"
+                ? t.market.lastPrice
+                : t.companyCard.lastClose;
+    tone(quote.changePct, shown !== "lastClose" && shown !== "lastPrice");
   }
 
   if (extra.badge) card.badge = extra.badge;

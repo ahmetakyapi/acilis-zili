@@ -44,6 +44,7 @@ export async function CompanyCards({
   symbols,
   quotes,
   names,
+  stale,
   status,
   set,
   extras,
@@ -52,6 +53,9 @@ export async function CompanyCards({
   /** Sayfanın paketi; `undefined` → kendisi sorar, `null` → fiyatsız. */
   quotes?: Record<string, Quote> | null;
   names?: Record<string, SymbolMeta>;
+  /** Verilen paket yaşlı mı (`QuoteResult.stale`); kendi sorduğunda
+      sonucun kendisinden okunuyor. */
+  stale?: boolean;
   status?: MarketStatus;
   /** Aynı sembolün bu yüzeye özgü kartı (bkz. `cardKey`). */
   set?: string;
@@ -67,9 +71,13 @@ export async function CompanyCards({
   ]);
   const [meta, pack] = await Promise.all([
     names ? Promise.resolve(names) : getSymbolNames(unique),
-    quotes !== undefined ? Promise.resolve(quotes) : getQuotes(unique, marketStatus).then((result) => (result.ok ? result.data : null)),
+    quotes !== undefined
+      ? Promise.resolve({ data: quotes, stale: stale ?? false })
+      : getQuotes(unique, marketStatus).then((result) =>
+          result.ok ? { data: result.data, stale: Boolean(result.stale) } : { data: null, stale: false },
+        ),
   ]);
-  const ctx = { names: meta, quotes: pack, status: marketStatus, locale, t };
+  const ctx = { names: meta, quotes: pack.data, stale: pack.stale, status: marketStatus, locale, t };
   const extra = typeof extras === "function" ? extras(t) : extras;
   const cards = unique.map((symbol) => companyCardRecord(symbol, ctx, extra?.[symbol]));
   return <CompanyCardData cards={cards} set={set} />;

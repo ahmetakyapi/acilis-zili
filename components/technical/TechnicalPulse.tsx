@@ -333,6 +333,7 @@ export function TechnicalPulse({
       <CompanyCards
         symbols={Object.keys(cardExtras)}
         quotes={pack?.ok ? pack.data : null}
+        stale={pack?.ok === true && Boolean(pack.stale)}
         names={meta}
         status={quotes?.status}
         set={CARD_SET}

@@ -6,7 +6,7 @@ import { PriceRail } from "@/components/ui/PriceRail";
 import { getStatus, getCompanies, getSymbolNames, liveMarketCap, getNextReport } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { getCompanyProfile, getQuote } from "@/lib/providers";
-import { indexMemberOf, primaryOnly } from "@/db/seed/indices";
+import { NDX_MEMBERS, SPX_MEMBERS, indexMemberOf, primaryOnly } from "@/db/seed/indices";
 import { subIndustryName } from "@/db/seed/sub-industries";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { describeSymbol } from "@/db/seed/descriptions";
@@ -78,16 +78,27 @@ export async function ProfileCard({
   const listed = primaryOnly(directory).filter(
     (row) => row.marketCap !== null && row.marketCap > 0,
   );
+  /* SIRA BİR ENDEKSTE (28 Eylül). "Dizindeki Sırası · 998 Şirket İçinde"
+     okuyucunun tanıdığı bir liste değildi — sitenin kendi takip dizini.
+     Şirket S&P 500'deyse sıra S&P 500 içinde, değilse Nasdaq 100 içinde,
+     ikisinde de değilse takip edilen şirketler içinde; etiket hangisi
+     olduğunu adıyla söylüyor. Sıra yine piyasa değerine göre. */
+  const rankPool = SPX_MEMBERS.some((m) => m.symbol === symbol)
+    ? { name: "S&P 500", symbols: new Set(SPX_MEMBERS.map((m) => m.symbol)) }
+    : NDX_MEMBERS.some((m) => m.symbol === symbol)
+      ? { name: "Nasdaq 100", symbols: new Set(NDX_MEMBERS.map((m) => m.symbol)) }
+      : null;
+  const pool = rankPool ? listed.filter((row) => rankPool.symbols.has(row.symbol)) : listed;
   const rankInfo = (() => {
-    if (marketCap === null || !listed.some((row) => row.symbol === symbol)) return null;
-    const others = listed.filter((row) => row.symbol !== symbol);
+    if (marketCap === null || !pool.some((row) => row.symbol === symbol)) return null;
+    const others = pool.filter((row) => row.symbol !== symbol);
     const rank = 1 + others.filter((row) => (row.marketCap as number) > marketCap).length;
     const leader = others.reduce<(typeof others)[number] | null>(
       (best, row) => (best === null || (row.marketCap as number) > (best.marketCap as number) ? row : best),
       null,
     );
     const leaderCap = leader ? Math.max(leader.marketCap as number, marketCap) : marketCap;
-    return { rank, total: listed.length, leader: rank === 1 ? null : leader, share: marketCap / leaderCap };
+    return { rank, total: pool.length, leader: rank === 1 ? null : leader, share: marketCap / leaderCap };
   })();
   const about = await describeSymbol(symbol, locale);
   const websiteHref = safeExternalUrl(profile.weburl);
@@ -236,7 +247,12 @@ export async function ProfileCard({
               <dt>{t.stock.capRank}</dt>
               <dd className={cn("numeral", styles.profileRankValue)}>
                 {rankInfo.rank.toLocaleString(locale)}.
-                <span>{t.stock.capRankOf.replace("{n}", rankInfo.total.toLocaleString(locale))}</span>
+                <span>
+                  {(rankPool ? t.stock.capRankOfIndex.replace("{index}", rankPool.name) : t.stock.capRankOf).replace(
+                    "{n}",
+                    rankInfo.total.toLocaleString(locale),
+                  )}
+                </span>
               </dd>
               {/* Ölçek: en büyük şirkete oran — bir büyüklük, yargı değil
                   (CLAUDE.md "Karşılaştırılan her büyüklük bir de ÇİZGİ"). */}
@@ -248,7 +264,9 @@ export async function ProfileCard({
                   ? t.stock.capLeader
                       .replace("{symbol}", rankInfo.leader.symbol)
                       .replace("{value}", formatMoneyCompact(rankInfo.leader.marketCap, locale))
-                  : t.stock.capLeaderSelf}
+                  : rankPool
+                    ? t.stock.capLeaderSelfIndex.replace("{index}", rankPool.name)
+                    : t.stock.capLeaderSelf}
               </dd>
             </dl>
           )}

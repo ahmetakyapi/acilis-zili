@@ -422,3 +422,16 @@ test("roster: unique slugs, 13F investors carry CIKs, Burry is closed", () => {
   assert.equal(investorInitials("Stanley Druckenmiller"), "SD");
   assert.equal(investorInitials("Li Lu"), "LL");
 });
+
+test("fillParts: değeri boş yer tutucunun parçası düşüyor", async () => {
+  const { fillParts } = await import("../components/investors/format");
+  const tpl = "{contracts} Kontrat {right} Kullanıldı · {shares} Hisse · Kullanım {strike}";
+  assert.equal(
+    fillParts(tpl, { contracts: "20", right: "Alım", shares: "", strike: "" }),
+    "20 Kontrat Alım Kullanıldı",
+  );
+  assert.equal(
+    fillParts(tpl, { contracts: "20", right: "Alım", shares: "2.000", strike: "$50" }),
+    "20 Kontrat Alım Kullanıldı · 2.000 Hisse · Kullanım $50",
+  );
+});

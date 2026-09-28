@@ -632,13 +632,14 @@ async function IndexDetail({
     ...losers,
   ];
   const carded = new Set(cardRows.map((row) => row.member.symbol));
-  const cardContext = { quotes, names: meta, status, facts: cardFacts };
+  const cardContext = { quotes, stale: Boolean(stale), names: meta, status, facts: cardFacts };
 
   return (
     <>
       <CompanyCards
         symbols={[...carded]}
         quotes={quotes}
+        stale={Boolean(stale)}
         names={meta}
         status={status}
         extras={Object.fromEntries(cardRows.map((row) => [row.member.symbol, cardFacts(row)]))}
@@ -1155,6 +1156,7 @@ function MembersTable({
   /** Şirket kartı: sayfanın paketi ve üstte zaten kaydı basılmış semboller. */
   cards: {
     quotes: Record<string, Quote>;
+    stale: boolean;
     names: Record<string, SymbolMeta>;
     status: MarketStatus;
     facts: (row: Row) => CompanyCardExtra;
@@ -1228,6 +1230,7 @@ function MembersTable({
       <CompanyCards
         symbols={fresh.map((row) => row.member.symbol)}
         quotes={cards.quotes}
+        stale={cards.stale}
         names={cards.names}
         status={cards.status}
         extras={Object.fromEntries(fresh.map((row) => [row.member.symbol, cards.facts(row)]))}

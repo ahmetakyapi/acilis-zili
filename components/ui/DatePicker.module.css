@@ -39,50 +39,64 @@
   /* Üst katmanda (Popover API) konum `--dp-*`ten; tarayıcının popover
      varsayılanları (ortalama, kenar boşluğu, kenarlık) sıfırlanıyor. */
   position:fixed; inset:auto; top:var(--dp-top, 0); left:var(--dp-left, 0); margin:0;
-  width:318px; max-width:calc(100vw - 24px); padding:14px; overflow:visible;
+  width:336px; max-width:calc(100vw - 24px); padding:14px 14px 12px; overflow:visible;
   border:1px solid var(--line); border-radius:16px; background:var(--overlay-surface); color:var(--text-strong);
   box-shadow:var(--shadow-overlay);
 }
 .popup::backdrop { background:transparent; }
 .popup[data-fallback] { position:absolute; top:calc(100% + 8px); left:0; z-index:40; }
 
-.head { display:grid; grid-template-columns:36px minmax(0, 1fr) 36px; align-items:center; gap:6px; margin-bottom:8px; }
-.nav { display:grid; place-items:center; width:36px; height:36px; border-radius:10px; color:var(--primary-ink); cursor:pointer; transition:background-color .2s; }
-.nav:hover:not(:disabled) { background:var(--primary-tint); }
-.nav:disabled { color:var(--text-muted); opacity:.35; cursor:default; }
-.nav:focus-visible, .title:focus-visible, .day:focus-visible, .pick:focus-visible, .footAction:focus-visible, .footQuiet:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
+/* ---- Takvim (react-day-picker; sınıflar DatePicker.tsx → CALENDAR_CLASSES) ---- */
+.calendar { position:relative; --dp-day:40px; }
+.months, .month { position:relative; }
 
-.title { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:36px; min-width:0; padding:0 10px; border-radius:10px; font-size:var(--text-read); font-weight:700; letter-spacing:-.01em; color:var(--text-strong); cursor:pointer; transition:background-color .2s; }
-.title:hover { background:var(--surface-sunken); }
-.titleText { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-.titleCaret { color:var(--text-muted); transform:rotate(90deg); transition:transform .25s var(--ease-brand); }
-.titleCaret[data-open] { transform:rotate(-90deg); }
+/* Başlık: solda ay ve yıl listeleri, sağda iki ok. Sekme sırası görünen
+   sırayla aynı (`navLayout="after"`). */
+.caption { display:flex; align-items:center; min-height:40px; margin-bottom:10px; padding-right:80px; }
+.dropdowns { display:inline-flex; align-items:center; gap:4px; min-width:0; }
+.dropdownRoot { position:relative; display:inline-flex; align-items:center; }
+/* Yerli liste görünmez ve etiketin üstünde: tıklama ve klavye listeye
+   gidiyor, görünen şey etiket. Telefonda işletim sisteminin çarkı açılıyor. */
+.dropdown { position:absolute; inset:0; z-index:2; width:100%; margin:0; padding:0; border:0; opacity:0; appearance:none; font:inherit; cursor:pointer; }
+.captionLabel { display:inline-flex; align-items:center; gap:6px; height:36px; padding:0 10px; border-radius:10px; font-size:var(--text-read); font-weight:700; letter-spacing:-.01em; white-space:nowrap; color:var(--text-strong); transition:background-color .2s, color .2s; }
+.dropdownRoot:hover .captionLabel { background:var(--surface-sunken); }
+.dropdown:focus-visible + .captionLabel { outline:2px solid var(--line-focus); outline-offset:1px; }
+.dropdownRoot .chevron { color:var(--text-muted); }
 
+.navGroup { position:absolute; top:2px; right:0; z-index:3; display:flex; gap:4px; }
+.nav { display:grid; place-items:center; width:36px; height:36px; border-radius:10px; color:var(--primary-ink); cursor:pointer; transition:background-color .2s, opacity .2s; }
+.nav:hover:not([aria-disabled="true"]) { background:var(--primary-tint); }
+.nav[aria-disabled="true"] { color:var(--text-muted); opacity:.35; cursor:default; }
+.chevron { display:block; }
+
+/* Izgara `div` ile (gerekçe DatePicker.tsx → CALENDAR_PARTS). */
 .grid { display:flex; flex-direction:column; gap:2px; }
+/* Altı hafta her ayda yer tutar. `fixedWeeks` açık ama üst sınırın
+   ötesindeki hafta (vergi alanında "bugün"den sonrası) GİZLİ ve kütüphane
+   tamamen gizli satırı hiç basmıyor: pencere Eylül'de 374, Ağustos'ta 414
+   piksel oluyordu ve uzayınca alanın altına sığmayıp yukarı sıçrıyordu
+   (28 Eylül, ölçüldü). */
+.weeks { display:flex; flex-direction:column; gap:2px; min-height:calc(6 * var(--dp-day) + 5 * 2px); }
 .week { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:2px; }
-.weekdayHead { padding:4px 0 6px; font-size:11px; font-weight:600; color:var(--text-muted); text-align:center; }
-.cell { display:block; min-width:0; }
-.day { display:grid; place-items:center; width:100%; aspect-ratio:1; border-radius:10px; font-size:13px; font-weight:600; color:var(--text-strong); cursor:pointer; transition:background-color .15s, color .15s; }
-.day[data-weekend] { color:var(--text-body); font-weight:500; }
-.day[data-outside] { color:var(--text-muted); font-weight:400; opacity:.7; }
+.weekdayHead { padding:2px 0 8px; font-size:11px; font-weight:600; letter-spacing:.02em; color:var(--text-muted); text-align:center; }
+.cell { position:relative; display:block; min-width:0; }
+.day { position:relative; display:grid; place-items:center; width:100%; height:var(--dp-day); border-radius:12px; font-size:14px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--text-strong); cursor:pointer; transition:background-color .15s, color .15s; }
+.weekend .day { color:var(--text-body); font-weight:500; }
+.outside .day { color:var(--text-muted); font-weight:400; opacity:.55; }
 .day:hover:not(:disabled) { background:var(--primary-tint); color:var(--primary-ink); }
-.day[aria-current="date"] { box-shadow:inset 0 0 0 1.5px var(--primary-faint); color:var(--primary-ink); }
-.day[aria-pressed="true"] { background:var(--primary); color:var(--on-primary); box-shadow:none; opacity:1; }
-.day:disabled { color:var(--text-muted); opacity:.3; cursor:default; }
+/* Bugün: çerçeve değil, rakamın altında bir nokta. Çerçeve seçili günle
+   yarışıyordu; ikisi yan yana durunca hangisinin seçili olduğu okunmuyordu. */
+.today .day { color:var(--primary-ink); font-weight:700; }
+.today .day::after { content:""; position:absolute; bottom:6px; left:50%; width:4px; height:4px; margin-left:-2px; border-radius:99px; background:currentColor; }
+.selected .day, .selected .day:hover:not(:disabled) { background:var(--primary); color:var(--on-primary); font-weight:700; opacity:1; }
+.disabled .day, .day:disabled { color:var(--text-muted); opacity:.3; cursor:default; }
+.hidden { visibility:hidden; }
+.day:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; z-index:1; }
 
-.pickGrid { display:flex; flex-direction:column; gap:4px; padding:2px 0; }
-.pickRow { display:grid; gap:4px; }
-.pickGrid[data-cols="4"] .pickRow { grid-template-columns:repeat(4, minmax(0, 1fr)); }
-.pickGrid[data-cols="3"] .pickRow { grid-template-columns:repeat(3, minmax(0, 1fr)); }
-.pickRow > span { display:block; }
-.pick { width:100%; min-height:44px; border-radius:10px; font-size:14px; font-weight:600; color:var(--text-strong); cursor:pointer; transition:background-color .15s, color .15s; }
-.pickGrid[data-cols="3"] .pick { min-height:52px; }
-.pick:hover:not(:disabled) { background:var(--primary-tint); color:var(--primary-ink); }
-.pick[aria-current="date"] { box-shadow:inset 0 0 0 1.5px var(--primary-faint); }
-.pick[data-selected] { background:var(--primary); color:var(--on-primary); box-shadow:none; }
-.pick:disabled { color:var(--text-muted); opacity:.3; cursor:default; }
-
-.foot { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px; padding-top:10px; border-top:1px solid var(--line-soft); }
+.foot { display:flex; align-items:center; gap:4px; margin-top:10px; padding-top:10px; border-top:1px solid var(--line-soft); }
+.footValue { flex:1 1 auto; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; padding-left:4px; font-size:var(--text-small); font-weight:600; color:var(--text-body); }
+.footValue[data-empty] { color:var(--text-muted); font-weight:500; }
+.popup[data-sheet] .foot { justify-content:space-between; }
 .footAction, .footQuiet { min-height:36px; padding:0 12px; border-radius:9px; font-size:var(--text-small); font-weight:600; cursor:pointer; transition:background-color .2s, color .2s; }
 .footAction { color:var(--primary-ink); }
 .footAction:hover:not(:disabled) { background:var(--primary-tint); }
@@ -103,7 +117,9 @@
 .sheetValue { grid-column:2; text-align:center; font-size:var(--text-small); font-weight:600; color:var(--text-body); }
 .popup[data-sheet] .sheetHead .nav { grid-column:3; grid-row:2; }
 .popup[data-sheet] .sheetValue { grid-row:2; }
-.popup[data-sheet] .day { font-size:15px; min-height:44px; aspect-ratio:auto; height:44px; }
+.popup[data-sheet] .calendar { --dp-day:46px; }
+.popup[data-sheet] .day { font-size:16px; }
+.popup[data-sheet] .captionLabel { font-size:17px; }
 .popup[data-sheet] .foot .footAction, .popup[data-sheet] .foot .footQuiet { min-height:44px; }
 
 /* ---- Hareket ---- */
@@ -111,17 +127,24 @@
   .popup { animation:dp-in 220ms var(--ease-brand) both; transform-origin:top left; }
   .popup[data-sheet] { animation:dp-sheet 320ms var(--ease-brand) both; }
   .popup[data-sheet]::backdrop { animation:dp-fade 240ms var(--ease-brand) both; }
-  .grid, .pickGrid { animation:dp-swap 240ms var(--ease-brand) both; }
-  .grid[data-dir="next"], .titleText[data-dir="next"] { animation:dp-next 260ms var(--ease-brand) both; }
-  .grid[data-dir="prev"], .titleText[data-dir="prev"] { animation:dp-prev 260ms var(--ease-brand) both; }
+  /* Ay kayması: kütüphane eski ayın bir kopyasını üstte tutup iki haftalar
+     bloğuna bu sınıfları veriyor; konumlamayı kendisi yapıyor. */
+  .weeksBeforeEnter { animation:dp-from-left 280ms var(--ease-brand) both; }
+  .weeksAfterEnter { animation:dp-from-right 280ms var(--ease-brand) both; }
+  .weeksBeforeExit { animation:dp-to-right 280ms var(--ease-brand) both; }
+  .weeksAfterExit { animation:dp-to-left 280ms var(--ease-brand) both; }
+  .captionBeforeEnter, .captionAfterEnter { animation:dp-fade 280ms var(--ease-brand) both; }
+  .captionBeforeExit, .captionAfterExit { animation:dp-fade-out 280ms var(--ease-brand) both; }
 }
 @keyframes dp-in { from { opacity:0; transform:translateY(-6px) scale(.97); } }
 @keyframes dp-sheet { from { transform:translateY(100%); } }
 @keyframes dp-fade { from { opacity:0; } }
-@keyframes dp-swap { from { opacity:0; transform:scale(.98); } }
-@keyframes dp-next { from { opacity:0; transform:translateX(14px); } }
-@keyframes dp-prev { from { opacity:0; transform:translateX(-14px); } }
+@keyframes dp-fade-out { to { opacity:0; } }
+@keyframes dp-from-left { from { opacity:0; transform:translateX(-24%); } }
+@keyframes dp-from-right { from { opacity:0; transform:translateX(24%); } }
+@keyframes dp-to-left { to { opacity:0; transform:translateX(-24%); } }
+@keyframes dp-to-right { to { opacity:0; transform:translateX(24%); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .field, .toggle, .day, .pick, .nav, .title, .titleCaret { transition:none; }
+  .field, .toggle, .day, .nav, .captionLabel { transition:none; }
 }

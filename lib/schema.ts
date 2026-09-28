@@ -1078,6 +1078,24 @@ export const arkHoldings = pgTable(
   ],
 );
 
+/**
+ * GİB'den otomatik okunan gelir vergisi tarifeleri (28 Eylül).
+ *
+ * Günlük cron GİB portalının tarife listesine bakıyor; yeni bir yıl
+ * belirince PDF'i okuyup SAĞLAMASINI yapıyor (lib/providers/gib-tariff.ts)
+ * ve buraya yazıyor. Sağlamadan geçmeyen tarife yazılmıyor. Koddaki elle
+ * doğrulanmış yıllar (lib/tax.ts → TAX_YEARS) her zaman önce gelir; bu tablo
+ * yalnızca kodda olmayan yılları doldurur. Tablo yokken okuyan kod sessizce
+ * yalnızca koddaki yıllarla çalışır.
+ */
+export const taxTariffs = pgTable("tax_tariffs", {
+  year: integer("year").primaryKey(),
+  /** [{ upTo: number | null, ratePct: number }] — ücret dışı tarife. */
+  brackets: jsonb("brackets").notNull(),
+  sourceUrl: text("source_url").notNull(),
+  fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 /* ==========================================================================
    Uygulama hataları — kendi barındırdığımız hata günlüğü
    ========================================================================== */

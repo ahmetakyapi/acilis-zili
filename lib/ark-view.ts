@@ -119,7 +119,15 @@ export function arkDay(
   prev: readonly ArkHolding[],
   curr: readonly ArkHolding[],
 ): ArkDay {
-  const funds = new Set([...prev, ...curr].map((row) => row.fund));
+  /* YALNIZCA İKİ GÜNDE DE OLAN FON (28 Eylül denetimi). Küme iki günün
+     BİRLEŞİMİYDİ: cron 06:30 ET'de koşarken bir fonun dosyası henüz
+     yenilenmemiş ya da isteği düşmüşse o tarihte fonun hiç satırı olmuyor,
+     `fundTrades(prev, [])` fonun BÜTÜN pozisyonlarını "tamamen sattı",
+     ertesi gün de "yeni aldı" diye basıyordu (iki gün, 35-45 sahte işlem).
+     Bir günde eksik olan fon o farkta yok sayılıyor: eksik veri işlem
+     değildir. */
+  const inPrev = new Set(prev.map((row) => row.fund));
+  const funds = new Set(curr.map((row) => row.fund).filter((fund) => inPrev.has(fund)));
   const byCusip = new Map<string, FundTrade[]>();
   for (const fund of funds) {
     const trades = fundTrades(

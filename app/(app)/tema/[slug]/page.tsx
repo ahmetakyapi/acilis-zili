@@ -278,6 +278,7 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
       <CompanyCards
         symbols={[...rows.map((row) => row.symbol), ...otherSymbols]}
         quotes={quotesResult.ok ? quotes : null}
+        stale={quotesResult.ok && Boolean(quotesResult.stale)}
         names={names}
         status={status}
         extras={Object.fromEntries(

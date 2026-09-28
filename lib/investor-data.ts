@@ -529,9 +529,17 @@ const loadStockInvestors = unstable_cache(
         } else if (before) {
           const shape = cur[0];
           const split = detectSplit({ ...shape, ...before }, { ...shape, ...now });
-          const change = now.amount / (before.amount * (split ?? 1)) - 1;
-          move = Math.abs(change) < UNCHANGED_EPSILON ? "unchanged" : change > 0 ? "increased" : "decreased";
-          changePct = change * 100;
+          /* SIFIR TABAN (28 Eylül denetimi): `parseInfoTable` 0 adetli satırı
+             kabul ediyor; önceki adet 0 iken oran sonsuzdu ve panel
+             "Infinity%" basıyordu. `diffPeriods` ile aynı koruma. */
+          const base = before.amount * (split ?? 1);
+          if (base > 0) {
+            const change = now.amount / base - 1;
+            move = Math.abs(change) < UNCHANGED_EPSILON ? "unchanged" : change > 0 ? "increased" : "decreased";
+            changePct = change * 100;
+          } else {
+            move = "new";
+          }
         }
         holders.push({
           slug: investor.slug,

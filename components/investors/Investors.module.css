@@ -164,30 +164,9 @@ a.capitalItem:hover .capitalName { color:var(--primary-ink); }
 }
 @keyframes capital-draw { from { clip-path:inset(-80px 100% -8px 0 round 12px); } to { clip-path:inset(-80px 0 -8px 0 round 12px); } }
 
-.rosterList { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:2px 18px; min-width:0; }
-.rosterItem {
-  display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:12px;
-  min-width:0; padding:9px 10px; margin-inline:-10px; border-radius:14px; transition:background .2s;
-}
-.rosterId { display:flex; min-width:0; flex-direction:column; }
-.rosterId b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14px; font-weight:650; color:var(--text-strong); }
-.rosterId small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
-.rosterValue b { font-size:14px; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
-.rosterValue em {
-  padding:2px 8px; border-radius:999px; font-size:11px; font-style:normal; font-weight:650; white-space:nowrap;
-  background:var(--primary-wash); color:var(--primary-ink);
-}
-.rosterValue em[data-tone="closed"] { background:var(--brass-wash, var(--surface-sunken)); color:var(--brass, var(--text-muted)); }
 @media(hover:hover) and (pointer:fine) {
-  .rosterItem:hover { background:var(--primary-tint); }
-  .rosterItem:hover .portraitImg, .card:hover .portraitImg { filter:none; transform:scale(1.06); }
-  .rosterItem:hover .rosterId b { color:var(--primary-ink); }
   .card:hover .initials { background:color-mix(in oklab, var(--primary) 16%, var(--surface-sunken)); }
-  .rosterItem:hover .emblemIcon, .card:hover .emblemIcon { transform:scale(1.08) rotate(-4deg); }
 }
-.rosterItem:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
-@media(max-width:1099px) { .rosterList { grid-template-columns:repeat(3, minmax(0,1fr)); } }
-@media(max-width:819px) { .rosterList { grid-template-columns:repeat(2, minmax(0,1fr)); } }
 @media(max-width:639px) {
   .hero { padding:22px 18px 20px; border-radius:20px; gap:20px; }
   .roster { gap:20px; padding-top:18px; }
@@ -196,29 +175,13 @@ a.capitalItem:hover .capitalName { color:var(--primary-ink); }
   .capitalItem { display:flex; width:100%; font-size:12px; }
   .capitalItem > .portrait { display:none; }
   .capitalName { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .rosterList { gap:0 12px; }
-  .rosterItem { grid-template-columns:auto minmax(0,1fr); gap:10px; padding:8px 6px; margin-inline:-6px; }
-  .rosterValue { grid-column:2; margin-top:-8px; }
-  .rosterValue b { font-size:12.5px; }
-  .rosterId b { font-size:13px; }
-  .rosterId small { display:none; }
 }
-/* 400'ÜN ALTINDA TEK SÜTUN. İki sütunda 320'de adlar ya kesiliyordu
-   ("Warren B…") ya da kelime ortasından bölünüyordu ("Druckenmi-ller");
-   tek sütunda satır masaüstündeki gibi: portre, ad ve kuruluş, sağda
-   değer. Açıklama da tek sütun. */
+/* 400'ün altında şeridin açıklaması tek sütun: iki sütunda 320'de adlar
+   kesiliyordu. */
 @media(max-width:399px) {
   .capitalLegend { grid-template-columns:minmax(0,1fr); gap:6px; }
-  .rosterList { grid-template-columns:minmax(0,1fr); }
-  .rosterItem { grid-template-columns:auto minmax(0,1fr) auto; }
-  .rosterValue { grid-column:auto; margin-top:0; }
-  .rosterId small { display:block; }
 }
-/* Giriş: yalnızca DÖNÜŞÜM, opaklık yok — kadro ilk ekranın öğesi. */
-@media(prefers-reduced-motion:no-preference) {
-  .rosterList > li { animation:roster-in .6s var(--ease-brand) backwards; animation-delay:calc(var(--i, 0) * 28ms + 260ms); }
-}
-@keyframes roster-in { from { transform:translate3d(0, 10px, 0); } }
+
 
 /* ---- Bölüm başlığı ------------------------------------------------------ */
 
@@ -522,10 +485,8 @@ a.company:hover b { color:var(--primary-ink); }
 
 @media(prefers-reduced-motion:reduce) {
   .portraitImg, .card, .cardArrow, .moverRow, .moveRow, .tickerRow { transition:none; }
-  .rosterItem:hover .portraitImg, .card:hover .portraitImg { transform:none; }
-  .emblemIcon, .rosterItem, .capitalSegment, .capitalTip { transition:none; }
+  .emblemIcon, .capitalSegment, .capitalTip { transition:none; }
   .capitalSegment:is(:hover, :focus-visible) { transform:none; }
-  .rosterItem:hover .emblemIcon, .card:hover .emblemIcon { transform:none; }
 }
 
 /* ---- Hisse sayfası paneli ----------------------------------------------- */

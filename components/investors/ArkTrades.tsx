@@ -93,7 +93,15 @@ export async function ArkTrades({ activity, locale, t }: { activity: ArkActivity
                   .join(", ");
               return (
                 <li key={day.to} className={styles.arkEarlierRow}>
-                  <span className="numeral">{date(day.to)}</span>
+                  {/* İŞLEM GÜNÜ, DOSYA GÜNÜ DEĞİL (28 Eylül denetimi). ARK'ın
+                      dosyası sabah yayımlanıyor ve bir önceki kapanışı
+                      taşıyor (28 Eylül tarihli dosya 28 Eylül 11:31 ET'de
+                      tabloda vardı); `note` da farkın "bir önceki işlem
+                      günündeki" işlemleri gösterdiğini söylüyor. Satır
+                      `day.to` basınca cumanın işlemi pazartesi diye
+                      okunuyordu. İşlemler `from` dosyasının kapanışından
+                      sonra, yani `from` gününün seansında yapıldı. */}
+                  <span className="numeral">{date(day.from)}</span>
                   <span className="numeral">
                     {day.trades.length === 0
                       ? ta.noTrades

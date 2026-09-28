@@ -226,6 +226,7 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
           <CompanyCards
             symbols={[top, bottom].flatMap((c) => c?.members.slice(0, EXTREME_LOGOS + 1).map((m) => m.symbol) ?? [])}
             quotes={quotesResult.ok ? quotesResult.data : null}
+            stale={quotesResult.ok && Boolean(quotesResult.stale)}
             names={names}
             status={status}
           />

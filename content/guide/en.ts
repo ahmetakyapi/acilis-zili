@@ -874,8 +874,8 @@ Reward to the first target: 112 − 100 = **12**. Ratio 1 : 1.5.
 
 Neither breaks the plan; the difference is how the risk is measured.
 
-- **At once:** Buy anywhere in the zone in one go. The risk is taken at its worst, from the top of the zone to the stop.
-- **In steps:** Spread the purchase across the zone (part at the top, the rest toward the bottom). The average cost falls and the distance to the stop shrinks. The price: if price turns before reaching the bottom, the position stays half-built.
+- **At Once:** Buy anywhere in the zone in one go. The risk is taken at its worst, from the top of the zone to the stop.
+- **In Steps:** Spread the purchase across the zone (part at the top, the rest toward the bottom). The average cost falls and the distance to the stop shrinks. The price: if price turns before reaching the bottom, the position stays half-built.
 
 ::: ornek One Plan, Two Executions
 Capital of $10,000, at most 1% risk per idea: $100.
@@ -894,8 +894,8 @@ The position is held and the stop is watched as the point of giving up. Targets 
 
 HOLD covers two situations: the indicators disagree, or the trend is sound but price is far from the entry zone. The answer is the same in both: no rush to buy, no reason to sell.
 
-- **If you don't own it:** If a zone is given, wait for price to reach it and for confirmation: a close that holds in the zone, above-average volume. Without a zone, watch the listed supports and resistances.
-- **If you own it:** HOLD does not mean sell. Watch the stop if one is given, otherwise the nearest support. A break lower can turn the view to SELL.
+- **If You Don't Own It:** If a zone is given, wait for price to reach it and for confirmation: a close that holds in the zone, above-average volume. Without a zone, watch the listed supports and resistances.
+- **If You Own It:** HOLD does not mean sell. Watch the stop if one is given, otherwise the nearest support. A break lower can turn the view to SELL.
 
 ::: dikkat Waiting for BUY Before Adding
 Growing a position in a weakening stock because "it got cheaper" can mean putting more money into a wrong idea. Waiting for the view to turn to BUY before adding ties the decision to the chart recovering, not to the price.
@@ -905,8 +905,8 @@ Growing a position in a weakening stock because "it got cheaper" can mean puttin
 
 A SELL view publishes no entry zone and no stop, because the plan is not a buying plan. The levels listed as targets are the **resistances** where a rally could stall.
 
-- **If you don't own it:** No new purchase. SELL is not a call to short either. Buying waits for the view to turn to HOLD or BUY, that is, for price to reclaim the averages.
-- **If you own it:** SELL does not mean "sell everything now". The plan sees rallies into resistance as a chance to reduce the position. Exiting can be staged: part at the first resistance, the rest at the next.
+- **If You Don't Own It:** No new purchase. SELL is not a call to short either. Buying waits for the view to turn to HOLD or BUY, that is, for price to reclaim the averages.
+- **If You Own It:** SELL does not mean "sell everything now". The plan sees rallies into resistance as a chance to reduce the position. Exiting can be staged: part at the first resistance, the rest at the next.
 
 ::: dikkat If No Rally Comes
 The plan also gives a support level. If that support breaks, the decline continues, and waiting for a rally then adds risk. A staged exit is a way to use an opportunity, not a way to ignore a decline.
@@ -1473,9 +1473,9 @@ The comparison uses SHARE COUNTS, not dollar values. If a stock rises 30%, its v
 
 ::: dikkat Four Blind Spots
 **Delay:** The filing can come up to 45 days after quarter end. You see the June 30 portfolio in mid-August; the manager may have sold everything in between.
-**Short selling:** Short positions are not reported. If a fund hedges one stock by shorting another, you only see the long side.
-**Cash and bonds:** How much of the portfolio sits in cash is invisible.
-**Foreign shares:** Only securities traded in the US are listed.
+**Short Selling:** Short positions are not reported. If a fund hedges one stock by shorting another, you only see the long side.
+**Cash and Bonds:** How much of the portfolio sits in cash is invisible.
+**Foreign Shares:** Only securities traded in the US are listed.
 :::
 
 ## Option Lines Can Mislead
@@ -1496,7 +1496,7 @@ A 13F is a source of ideas, not a buy signal. Trying to understand why an invest
 
 Members of the US Congress and their spouses must report stock trades above $1,000 within 45 days under the STOCK Act. These reports differ from a 13F in two ways:
 
-| | 13F | Congressional Report |
+| Criterion | 13F | Congressional Report |
 |---|---|---|
 | Scope | Portfolio at quarter end | Individual trades |
 | Amount | Exact value | Range (e.g. $1,000,001 - $5,000,000) |

@@ -68,6 +68,8 @@ export type InsiderTrade = {
   value: number | null;
   /** Kaç Form 4 satırı birleşti. */
   parts: number;
+  /** Form 4'ün dosya numarası (accession) — kişinin görevi bu dosyadan okunuyor. */
+  filing: string | null;
   /** Fiyat hisse fiyatıyla tutmadığı için düşürüldü (`sanitizeTradePrices`). */
   priceDropped?: boolean;
 };
@@ -79,7 +81,17 @@ export type InsiderTrade = {
 export function groupInsiderRows(rows: readonly RawInsiderRow[]): InsiderTrade[] {
   const groups = new Map<
     string,
-    { name: string; date: string; code: string; derivative: boolean; shares: number; pricedShares: number; pricedValue: number; parts: number }
+    {
+      name: string;
+      filing: string | null;
+      date: string;
+      code: string;
+      derivative: boolean;
+      shares: number;
+      pricedShares: number;
+      pricedValue: number;
+      parts: number;
+    }
   >();
   for (const row of rows) {
     const date = row.transactionDate ?? row.filingDate;
@@ -89,6 +101,7 @@ export function groupInsiderRows(rows: readonly RawInsiderRow[]): InsiderTrade[]
     const key = [row.id ?? "", row.name, date, code, derivative ? "d" : "s"].join("|");
     const held = groups.get(key) ?? {
       name: row.name,
+      filing: row.id,
       date,
       code,
       derivative,
@@ -122,6 +135,7 @@ export function groupInsiderRows(rows: readonly RawInsiderRow[]): InsiderTrade[]
         price,
         value: price !== null ? Math.abs(g.shares) * price : null,
         parts: g.parts,
+        filing: g.filing,
       };
     })
     .filter((trade) => trade.shares !== 0)

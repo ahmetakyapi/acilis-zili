@@ -184,14 +184,23 @@ export function PortfolioImport({
     if (toAdd.length === 0 || pending.length > 0 || overLimit) return;
     setSaving(true);
     setSaveError(null);
-    const result = await importPositionsAction(
-      toAdd.map((lot) => ({
-        symbol: lot.symbol,
-        quantity: Number(lot.quantity.toFixed(QTY_DECIMALS)),
-        costUsd: Number(lot.costUsd.toFixed(COST_DECIMALS)),
-        boughtAt: lot.date,
-      })),
-    );
+    /* Eylem fırlatırsa (ağ, dağıtım sonrası eski sekme) düğme sonsuza dek
+       "Ekleniyor" kalıyordu; hata sonucu olarak okunuyor (28 Eylül denetimi). */
+    let result: Awaited<ReturnType<typeof importPositionsAction>>;
+    try {
+      result = await importPositionsAction(
+        toAdd.map((lot) => ({
+          symbol: lot.symbol,
+          quantity: Number(lot.quantity.toFixed(QTY_DECIMALS)),
+          costUsd: Number(lot.costUsd.toFixed(COST_DECIMALS)),
+          boughtAt: lot.date,
+        })),
+      );
+    } catch {
+      setSaving(false);
+      setSaveError(labels.errors.failed);
+      return;
+    }
     setSaving(false);
     if (result.status === "saved" && result.ids) {
       onImported(result.ids);
