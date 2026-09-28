@@ -3,7 +3,7 @@
  *
  * Aracı kurum ekstresi (Midas PDF, IBKR CSV ya da PDF) TAMAMEN tarayıcıda
  * okunur; bu klasördeki hiçbir şey ağa ya da depoya dokunmuyor. PDF'ten
- * metin çıkarma ayrı ve istemciye özgü (`components/tax/pdf-text.ts`);
+ * metin çıkarma ayrı ve istemciye özgü (`lib/tax-import/pdf-text.ts`, index.ts onu dışa AKTARMIYOR: Worker kurduğu için yalnızca istemci dinamik `import()` ile çekiyor);
  * buradaki fonksiyonlar yalnızca METİN alıyor, yani PDF kurmadan sınanıyor
  * (tests/tax-import.test.ts).
  *

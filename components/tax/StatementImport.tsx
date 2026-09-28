@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowCounterClockwise, CaretDown, CheckCircle, LockSimple } from "@phosphor-icons/react";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { buttonClass } from "@/components/ui/primitives";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import { useMotionPreference } from "@/components/motion/useMotionPreference";
@@ -20,7 +21,7 @@ import {
 } from "@/lib/tax-import";
 import type { Locale } from "@/lib/i18n/config";
 import { cn, isValidSymbol } from "@/lib/utils";
-import { PdfPasswordError, pdfLines } from "./pdf-text";
+import { PdfPasswordError, pdfLines } from "@/lib/tax-import/pdf-text";
 import type { TaxLabels } from "./TaxCalculator";
 import type { DividendRow, TradeRow } from "./tax-ui";
 import styles from "./Tax.module.css";
@@ -30,7 +31,7 @@ import styles from "./Tax.module.css";
  *
  * Bu modül (ayrıştırıcılarla birlikte) sayfanın ilk JS'inde DEĞİL:
  * hesaplayıcı onu okuyucu bir dosya seçtiğinde `next/dynamic` ile yüklüyor,
- * pdf.js'yi de PDF seçildiğinde `pdf-text.ts` çekiyor. Ölçüm TaxCalculator
+ * pdf.js'yi de PDF seçildiğinde `lib/tax-import/pdf-text.ts` çekiyor. Ölçüm TaxCalculator
  * başındaki notta.
  *
  * GİZLİLİK. Dosya `File` nesnesi olarak bellekte okunuyor; hiçbir `fetch`
@@ -651,15 +652,15 @@ function TradeTable({
                     </select>
                   </td>
                   <td>
-                    <input
-                      type="date"
+                    <DatePicker
+                      size="cell"
+                      locale={locale}
                       value={row.date}
                       min={TCMB_MIN_DATE}
                       max={today}
                       aria-label={labels.date}
                       aria-invalid={flags.includes("noDate") || flags.includes("dateRange") || undefined}
-                      onChange={(event) => edit(row.key, { date: event.target.value })}
-                      className={styles.cell}
+                      onChange={(date) => edit(row.key, { date })}
                     />
                   </td>
                   <td>
@@ -748,14 +749,14 @@ function DividendTable({
                     </span>
                   </th>
                   <td>
-                    <input
-                      type="date"
+                    <DatePicker
+                      size="cell"
+                      locale={locale}
                       value={row.date}
                       min={TCMB_MIN_DATE}
                       max={today}
                       aria-label={labels.paymentDate}
-                      onChange={(event) => edit(row.key, { date: event.target.value })}
-                      className={styles.cell}
+                      onChange={(date) => edit(row.key, { date })}
                     />
                   </td>
                   <td>

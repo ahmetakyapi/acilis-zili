@@ -10,6 +10,7 @@ import { RollingFigure } from "@/components/themes/RollingFigure";
 import styles from "@/components/themes/Themes.module.css";
 import { LogoGroup, SpreadStrip } from "@/components/themes/ThemeVisuals";
 import { ThemeRanking } from "@/components/themes/ThemeRanking";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import { DataStamp } from "@/components/ui/primitives";
 import { themeDek, themeTitle } from "@/content/themes";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
@@ -202,10 +203,18 @@ function HeroSummary({ summary, locale, t }: { summary: HeroSummaryData | null; 
 }
 
 async function LiveGallery({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const { board, quotesResult } = await loadThemeBoard();
+  const { board, quotesResult, names, status } = await loadThemeBoard();
   return (
     <>
       <ThemeGallery board={board} locale={locale} t={t} />
+      {/* Kart kaydı yalnızca GÖRÜNEN logolar için (kart başına en çok
+          `MOSAIC_MAX`); fiyat galerinin kendi paketinden. */}
+      <CompanyCards
+        symbols={board.cards.flatMap((card) => card.members.slice(0, MOSAIC_MAX).map((member) => member.symbol))}
+        quotes={quotesResult.ok ? quotesResult.data : null}
+        names={names}
+        status={status}
+      />
       {quotesResult.ok ? (
         <DataStamp
           labels={t.data}
@@ -299,6 +308,7 @@ function ThemeGallery({ board, locale, t }: { board: ThemeBoard; locale: Locale;
                   variant="mosaic"
                   max={wide ? MOSAIC_MAX : NARROW_MOSAIC_MAX}
                   placeholder={katilim ? (wide ? MOSAIC_MAX : Math.min(NARROW_MOSAIC_MAX, KATILIM_MAX)) : 0}
+                  card
                 />
               </div>
 

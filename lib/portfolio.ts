@@ -112,9 +112,20 @@ export function portfolioTotals(
     valueTl: tlComplete ? valueTl : null,
     costTl: tlComplete ? costTl : null,
     pnlTl,
-    fxEffectTl: pnlTl !== null && todayRate ? pnlTl - pnlUsd * todayRate : null,
+    fxEffectTl: pnlTl !== null && todayRate ? toKurus(pnlTl - pnlUsd * todayRate) : null,
     partial: partial || !tlComplete,
   };
+}
+
+/**
+ * Kuruşa yuvarlama. Kurun katkısı iki büyük sayının FARKI ve bugün alınan
+ * bir pozisyonda (alış kuru = bugünün kuru) sıfır olmalı; kayan nokta onu
+ * −0,000000001 bırakıyordu ve şerit kırmızı "−0,00 ₺" basıyordu (28 Eylül,
+ * ekran görüntüsünde yakalandı). Yuvarlanan −0 yön hesabında "düz" sayılır.
+ */
+const KURUS = 100;
+function toKurus(value: number): number {
+  return Math.round(value * KURUS) / KURUS;
 }
 
 /** Sektör ağırlıkları — güncel dolar değerine göre, büyükten küçüğe. */

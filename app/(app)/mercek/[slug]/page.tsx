@@ -24,6 +24,7 @@ import {
 } from "@/components/article/ArticleBody";
 import { articleAutoLinker } from "@/lib/autolink-data";
 import { ShareButton } from "@/components/article/ShareButton";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import { LogoTile } from "@/components/ui/primitives";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import {
@@ -102,6 +103,7 @@ async function StorySymbols({ symbols }: { symbols: string[] }) {
             key={symbol}
             href={`/hisse/${symbol}`}
             className={detail.symbolChip}
+            data-cc={symbol}
           >
             {/* LOGOSU OLMAYAN SEMBOL (fon, endeks) harf kutusu yerine bir
                 piyasa ikonu alıyor (26 Eylül): "SP", "US" gibi iki soluk
@@ -353,6 +355,15 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
         )}
 
         {hasCompanies && <StorySymbols symbols={symbols} />}
+        {/* Şirket kartı — kapaktaki çipler ve gövdenin sonundaki şirket
+            listesi. Kartın künyesi fiyatın hangi seansı anlattığını adıyla
+            söylüyor; listenin "Olaydan Bugüne" ölçüsüyle karışmıyor.
+            Kotasyonu kart kendisi soruyor, akışla iniyor. */}
+        {hasCompanies && (
+          <Suspense fallback={null}>
+            <CompanyCards symbols={symbols} />
+          </Suspense>
+        )}
       </div>
       {figure && <ScrollStage className={detail.coverFigure}>
         <StoryFigure block={figure} className={detail.figure} locale={story.locale} />

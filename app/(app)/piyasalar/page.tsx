@@ -6,13 +6,14 @@ import { Suspense, type ReactNode } from "react";
 import { SectionMasthead } from "@/components/motion/SectionMasthead";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/markets/MarketExperience.module.css";
-import { HeatmapGrid } from "@/components/markets/HeatmapGrid";
 import { CommodityBoard, SectorPerformance, parseSectorSort } from "@/components/markets/EtfBoards";
 import { SentimentPulse } from "@/components/markets/SentimentPulse";
 import boardStyles from "@/components/markets/MarketBoards.module.css";
 import { ScaleBar } from "@/components/markets/CompareScale";
 import { GuideHint } from "@/components/article/GuideHint";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { CompanyCards } from "@/components/ui/CompanyCards";
+import type { CompanyCardExtra } from "@/lib/company-card";
 import {
   ChangePill,
   DataStamp,
@@ -33,7 +34,7 @@ import {
   primaryOnly,
   type IndexMember,
 } from "@/db/seed/indices";
-import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
+import { getStatus, getSymbolNames, liveMarketCap, type SymbolMeta } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
 import type { MarketStatus } from "@/lib/market-hours";
@@ -43,6 +44,7 @@ import {
   directionOf,
   directionText,
   SIGN_GAP,
+  formatCompact,
   formatEtDateMedium,
   formatMoneyCompact,
   formatPercent,
@@ -607,8 +609,40 @@ async function IndexDetail({
 
   const share = withChange.length > 0 ? (advancing / withChange.length) * 100 : 0;
 
+  /* ŞİRKET KARTI (components/ui/CompanyCard). Isı haritasının hücreleri
+     kendi kartlarını sunucuda taşıyordu (30 hücre × tam kart işaretlemesi,
+     `HeatmapGrid` konum ve Escape sarmalı); artık hücre, hareket satırı ve
+     tablo satırı yalnızca `data-cc` taşıyor ve sitenin ortak kartını
+     açıyor. Eski kartın hacim ve gün aralığı satırları kartın ek satırı.
+     Kayıt YALNIZCA GÖRÜNEN satırlar için: harita + hareketler burada,
+     tablonun görünen dilimi `MembersTable`da (S&P 500'ün beş yüz üyesine
+     kayıt basmak sayfayı büyütürdü). Kotasyon sayfanın paketi. */
+  const cardFacts = (row: Row): CompanyCardExtra => {
+    const quote = row.quote;
+    const facts: [string, string][] = [];
+    if (quote?.volume !== null && quote?.volume !== undefined) facts.push([t.market.volume, formatCompact(quote.volume, locale)]);
+    if (quote && quote.low !== null && quote.high !== null) {
+      facts.push([t.markets.heatDayRange, `${formatPrice(quote.low, locale)} – ${formatPrice(quote.high, locale, { currency: true })}`]);
+    }
+    return facts.length > 0 ? { facts } : {};
+  };
+  const cardRows = [
+    ...[...withChange].sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0)).slice(0, HEAT_MAX),
+    ...gainers,
+    ...losers,
+  ];
+  const carded = new Set(cardRows.map((row) => row.member.symbol));
+  const cardContext = { quotes, names: meta, status, facts: cardFacts };
+
   return (
     <>
+      <CompanyCards
+        symbols={[...carded]}
+        quotes={quotes}
+        names={meta}
+        status={status}
+        extras={Object.fromEntries(cardRows.map((row) => [row.member.symbol, cardFacts(row)]))}
+      />
       <IndexTabs
         tab={tab}
         locale={locale}
@@ -693,6 +727,7 @@ async function IndexDetail({
         showContribution={divisor !== null}
         locale={locale}
         t={t}
+        cards={{ ...cardContext, skip: carded }}
       />
 
       {source && (
@@ -814,8 +849,9 @@ function IndexToolbar({ total, memberCount, heat, locale, t, children }: {
             "anlamsız" bulundu: hangi karenin hangi şirket olduğu okunmuyordu.
             Artık piyasa değerine göre ilk 30 şirket (`HEAT_MAX`), her karede
             logo ve günlük yüzde; renk karonun zemini, koyuluk hareketin
-            büyüklüğü. Üzerine gelince künye kartı açılıyor. Kareler artık
-            klavyeyle de gezilebiliyor: 30 durak kabul edilebilir. */}
+            büyüklüğü. Üzerine gelince sitenin ortak şirket kartı açılıyor
+            (28 Eylül). Kareler klavyeyle de gezilebiliyor: 30 durak kabul
+            edilebilir. */}
         {heat.length > 0 && (
           <div className={styles.heat}>
             <div className={styles.heatHead}>
@@ -831,7 +867,7 @@ function IndexToolbar({ total, memberCount, heat, locale, t, children }: {
                 <span className={styles.heatLegendHint}>{t.markets.heatScaleSteps}</span>
               </div>
             </div>
-            <HeatmapGrid className={styles.heatGrid}>
+            <div className={styles.heatGrid} data-motion-stagger>
               {[...heat]
                 .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
                 .slice(0, HEAT_MAX)
@@ -840,52 +876,24 @@ function IndexToolbar({ total, memberCount, heat, locale, t, children }: {
                   const magnitude = Math.abs(change);
                   const level = magnitude === 0 ? 0 : magnitude < 0.5 ? 1 : magnitude < 1.5 ? 2 : magnitude < 3 ? 3 : 4;
                   const tone = change > 0 ? "up" : change < 0 ? "down" : "flat";
-                  const quote = row.quote!;
-                  const rangePosition = quote.low !== null && quote.high !== null && quote.high > quote.low
-                    && quote.price >= quote.low && quote.price <= quote.high
-                    ? ((quote.price - quote.low) / (quote.high - quote.low)) * 100 : null;
                   return (
                     <Link
                       key={row.member.symbol}
                       href={`/hisse/${row.member.symbol}`}
                       prefetch={false}
                       className={styles.heatCell}
-                      data-heat-cell
+                      data-cc={row.member.symbol}
                       aria-label={`${row.member.symbol} · ${row.member.name} · ${formatPercent(change, locale)}`}
-                      aria-describedby={`heat-detail-${row.member.symbol}`}
                       data-heat-tone={tone}
                       data-heat-level={level}
                     >
                       <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="md" className={styles.heatLogo} />
                       <span className={styles.heatSymbol}>{row.member.symbol}</span>
                       <span className={cn("numeral", styles.heatPct)}>{formatPercent(change, locale)}</span>
-                      {/* Künye sunucuda çizilir. HeatmapGrid yalnızca konum yönünü
-                          ve Escape ile kapatmayı yönetir; 30 ayrı istemci kartı yok.
-                          Ekran okuyucu ayrıntıları aria-describedby ile alır. */}
-                      <span id={`heat-detail-${row.member.symbol}`} data-heat-card aria-hidden className={styles.heatCard}>
-                        <span className={styles.heatCardHead}>
-                          <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="sm" />
-                          <span className="min-w-0">
-                            <b className="numeral">{row.member.symbol}</b>
-                            <small>{row.member.name}</small>
-                          </span>
-                        </span>
-                        <span className={styles.heatCardRow}>
-                          <span className="numeral">{formatPrice(row.quote!.price, locale, { currency: true })}</span>
-                          <ChangePill changePct={change} locale={locale} />
-                        </span>
-                        <span className={styles.heatCardMetrics}>
-                          {row.marketCap !== null && <span><span>{t.market.marketCap}</span><b className="numeral">{formatMoneyCompact(row.marketCap, locale)}</b></span>}
-                          {row.quote!.volume !== null && <span><span>{t.market.volume}</span><b className="numeral">{new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", { notation: "compact", maximumFractionDigits: 1 }).format(row.quote!.volume)}</b></span>}
-                          {row.quote!.low !== null && row.quote!.high !== null && <span className={styles.heatCardRange}><span>{t.markets.heatDayRange}</span><b className="numeral">{formatPrice(row.quote!.low, locale)} – {formatPrice(row.quote!.high, locale)} $</b></span>}
-                        </span>
-                        {rangePosition !== null && <span className={styles.heatRangeTrack} aria-hidden="true"><i style={{ left: `${rangePosition}%` }} /></span>}
-                        <span className={styles.heatCardFoot}>{t.markets.heatOpenCompany} <span aria-hidden>↗</span></span>
-                      </span>
                     </Link>
                   );
                 })}
-            </HeatmapGrid>
+            </div>
           </div>
         )}
       </div>
@@ -1006,6 +1014,7 @@ function MoverPanel({
                 href={`/hisse/${row.member.symbol}`}
                 prefetch={false}
                 className={styles.moverLink}
+                data-cc={row.member.symbol}
               >
                 <div className={styles.moverIdentity}>
                   <span className={styles.moverRank} aria-hidden>{String(index + 1).padStart(2, "0")}</span>
@@ -1132,6 +1141,7 @@ function MembersTable({
   showContribution,
   locale,
   t,
+  cards,
 }: {
   tab: TabKey;
   rows: Row[];
@@ -1142,6 +1152,14 @@ function MembersTable({
   showContribution: boolean;
   locale: Locale;
   t: Dictionary;
+  /** Şirket kartı: sayfanın paketi ve üstte zaten kaydı basılmış semboller. */
+  cards: {
+    quotes: Record<string, Quote>;
+    names: Record<string, SymbolMeta>;
+    status: MarketStatus;
+    facts: (row: Row) => CompanyCardExtra;
+    skip: ReadonlySet<string>;
+  };
 }) {
   if (rows.length === 0) {
     return (
@@ -1203,8 +1221,17 @@ function MembersTable({
   const hasMore = ordered.length > sorted.length;
   const moreHref = `/piyasalar?endeks=${tab}&sirala=${sort}&yon=${dir}&adet=${limit + PAGE_STEP}`;
 
+  const fresh = sorted.filter((row) => !cards.skip.has(row.member.symbol));
+
   return (
     <Panel id="market-members" className={styles.members}>
+      <CompanyCards
+        symbols={fresh.map((row) => row.member.symbol)}
+        quotes={cards.quotes}
+        names={cards.names}
+        status={cards.status}
+        extras={Object.fromEntries(fresh.map((row) => [row.member.symbol, cards.facts(row)]))}
+      />
       {/* Sayaç başlıkta: tablo kırpılıyor ve okuyucu tıklamadan önce
           listenin ne kadarını gördüğünü bilmeli. Aynı kalıp ana sayfadaki
           bilanço panelinde ve /mercek arşivinde de var. */}
@@ -1306,6 +1333,7 @@ function MembersTable({
                          Dolgu onu satır yüksekliğine yayar, negatif margin
                          de tabloyu olduğu yerde tutar. */
                       className="-my-2 flex min-w-0 items-center gap-2.5 py-2"
+                      data-cc={row.member.symbol}
                     >
                       <LogoTile
                         symbol={row.member.symbol}

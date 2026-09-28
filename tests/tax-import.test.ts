@@ -11,7 +11,7 @@ import {
   parseGenericLines,
   splitCsvLine,
 } from "../lib/tax-import";
-import { groupLines } from "../components/tax/pdf-text";
+import { groupLines } from "../lib/tax-import/pdf-text";
 import { formatDecimalInput, isAmbiguous, parseDecimalInput } from "../lib/decimal-input";
 
 /**

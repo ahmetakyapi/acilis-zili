@@ -112,7 +112,7 @@ function FundBody({
           return (
             <li key={top.cusip} className={styles.mosaicItem} style={{ "--seg": index } as CSSProperties}>
               {top.ticker ? (
-                <LogoTile symbol={top.ticker} logoUrl={meta?.logoUrl} size="sm" />
+                <LogoTile symbol={top.ticker} logoUrl={meta?.logoUrl} size="sm" card={Boolean(meta)} />
               ) : (
                 <span className={styles.noLogo} aria-hidden />
               )}
@@ -173,7 +173,7 @@ function CongressBody({
             <li key={`${trade.docId}-${trade.rowNo}`} className={styles.tradeRow}>
               <span className={cn("numeral", styles.tradeDate)}>{formatEtDateCompact(trade.txDate, locale)}</span>
               {trade.ticker ? (
-                <LogoTile symbol={trade.ticker} logoUrl={meta?.logoUrl} size="xs" />
+                <LogoTile symbol={trade.ticker} logoUrl={meta?.logoUrl} size="xs" card={Boolean(meta)} />
               ) : (
                 <span className={styles.noLogoXs} aria-hidden />
               )}

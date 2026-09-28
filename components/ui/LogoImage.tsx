@@ -34,12 +34,15 @@ export function LogoImage({
   boxClass,
   fallback,
   morph,
+  card,
 }: {
   src: string;
   px: number;
   boxClass: string;
   /** Kartla sayfa arası uçuşun anahtarı (components/motion/Morph). */
   morph?: string;
+  /** Şirket kartının anahtarı (`data-cc`, components/ui/CompanyCard.tsx). */
+  card?: string;
   /** Görsel düşerse çizilecek harf karosu — sunucuda üretiliyor. */
   fallback: React.ReactNode;
 }) {
@@ -53,7 +56,7 @@ export function LogoImage({
   return (
     /* Zemin BEYAZ: logoların çoğu şeffaf PNG ve koyu mürekkeple çizilmiş —
        koyu temada zeminsiz bırakılırsa görünmüyorlar. */
-    <span className={boxClass} data-morph={morph}>
+    <span className={boxClass} data-morph={morph} data-cc={card}>
       <Image
         ref={watch}
         onError={() => setBroken(true)}

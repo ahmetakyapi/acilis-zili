@@ -128,5 +128,7 @@ export const loadThemeBoard = cache(async function loadThemeBoard() {
     laggard: ranked.length > 1 ? ranked[ranked.length - 1].theme.slug : null,
     phase: comparable.length > 0 ? themePhase(scaleBasis, status.session) : null,
   };
-  return { board, scaleBasis, comparable, quotesResult };
+  /* `names` ve `status` şirket kartının kaydı için (components/ui/CompanyCards):
+     kart aynı paketten okusun, ikinci bir tur açılmasın. */
+  return { board, scaleBasis, comparable, quotesResult, names, status };
 });

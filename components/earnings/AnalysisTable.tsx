@@ -284,6 +284,9 @@ export function AnalysisTable({
                     prefetch={false}
                     aria-label={row.linkLabel}
                     className="absolute inset-0 z-10 rounded-(--radius-sm)"
+                    /* Şirket kartı (components/ui/CompanyCard); kaydı
+                       sayfa bırakıyor. */
+                    data-cc={row.symbol}
                   />
                   {/* Logo + sembol tek hücrede: tablo satırı yalnızca sayı
                       dizisiyken hepsi birbirinin aynıydı, logo satırı bir

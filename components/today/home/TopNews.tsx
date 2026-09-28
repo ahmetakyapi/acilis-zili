@@ -148,13 +148,59 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
     fill.push(item);
   }
 
+  /* MANŞETSİZ GÜNDE İKİ SÜTUN ÜÇ SATIRA TAMAMLANIYOR (28 Eylül). Kaynak
+     sınırı listeyi dörde indirdiğinde ve hiçbir haberin kendi görseli
+     yoksa manşet kartı basılmıyor, bant 2 × 2 dört satırda kalıyordu:
+     1440'ta sayfanın kapanış bölümü 266 piksel, başlığı ve kıl çizgisiyle
+     birlikte içeriğinden büyük (ölçüldü). Tamamlama geniş havuzdan, çift
+     sayıya varacak kadar; listedeki en eski satırdan daha eski oldukları
+     için sona eklenmek kronolojiyi bozmuyor.
+
+     BURADA KAYNAK SINIRI GEÇERLİ — manşetin yedeklerinden farkı bu. İlk
+     denemede manşetin yedek listesi (`fill`, kaynak sınırsız) kullanıldı
+     ve iki satır da Yahoo'nun "Global Market Report 2026" basın
+     bültenleriydi: manşetin yanını dolduran bir devam satırı için kabul
+     edilebilir, ama burada satırlar seçkinin kendisi gibi aynı ızgarada
+     duruyor. Sınıra uyan aday yoksa bant dört satırda kalıyor.
+     Telefonda tek sütun ve sayfa zaten ~10.200 piksel; orada basılmıyor
+     (`pairFill`, CSS). Üç haberli düzen (`three`) kendi satırını
+     dolduruyor, ona dokunulmuyor. */
+  const pairWanted =
+    !leadCandidate && baseRows.length >= 2 && baseRows.length !== 3 ? TOP_NEWS_COUNT - baseRows.length : 0;
+  const pairCandidates: typeof pool = [];
+  if (pairWanted > 0) {
+    const sourceCount = new Map<string, number>();
+    const symbolCount = new Map<string, number>();
+    for (const item of items) {
+      sourceCount.set(item.source ?? "", (sourceCount.get(item.source ?? "") ?? 0) + 1);
+      const symbol = item.symbols?.[0] ?? "";
+      if (symbol) symbolCount.set(symbol, (symbolCount.get(symbol) ?? 0) + 1);
+    }
+    const headlines = new Set(items.map((item) => item.headline.trim().toLocaleLowerCase("en-US")));
+    for (const item of [...wide].sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())) {
+      if (pairCandidates.length >= pairWanted) break;
+      if (shownIds.has(item.id) || item.publishedAt.getTime() >= oldestShown) continue;
+      const headline = item.headline.trim().toLocaleLowerCase("en-US");
+      const source = item.source ?? "";
+      const symbol = item.symbols?.[0] ?? "";
+      if (headlines.has(headline)) continue;
+      if (source && (sourceCount.get(source) ?? 0) >= TOP_NEWS_PER_SOURCE) continue;
+      if (symbol && (symbolCount.get(symbol) ?? 0) >= TOP_NEWS_PER_SYMBOL) continue;
+      headlines.add(headline);
+      sourceCount.set(source, (sourceCount.get(source) ?? 0) + 1);
+      if (symbol) symbolCount.set(symbol, (symbolCount.get(symbol) ?? 0) + 1);
+      pairCandidates.push(item);
+    }
+  }
+  const pairFill = pairCandidates.slice(0, pairCandidates.length - ((pairCandidates.length + baseRows.length) % 2));
+
   /* Görseli olmayan haber, künye kutusunda sembol yazan gri bir kutuyla
      duruyordu. Sıradaki en iyi görsel şirketin kendi logosu: haberin konusunu
      gösteriyor ve zaten elimizde. */
   const logos = await getSymbolNames([
     ...new Set(
       [
-        ...[...items, ...fill].map((item) => item.symbols?.[0]),
+        ...[...items, ...fill, ...pairFill].map((item) => item.symbols?.[0]),
         /* Manşetin künyesindeki şirket çipleri: ilk üç sembolün hepsi. */
         ...(leadCandidate?.symbols ?? []).slice(0, LEAD_CHIPS),
       ].filter((s): s is string => Boolean(s)),
@@ -306,9 +352,10 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
         className={cn(styles.list, !lead && (rows.length === 3 ? styles.three : styles.pair))}
       >
       {[
-        ...rows.map((item) => ({ item, extra: false })),
-        ...extras.map((item) => ({ item, extra: true })),
-      ].map(({ item, extra }) => {
+        ...rows.map((item) => ({ item, extra: false, wideOnly: false })),
+        ...pairFill.map((item) => ({ item, extra: false, wideOnly: true })),
+        ...extras.map((item) => ({ item, extra: true, wideOnly: false })),
+      ].map(({ item, extra, wideOnly }) => {
         const logo = logoFor(item);
         return (
           <li
@@ -316,7 +363,7 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
             /* Yedek satır: tarayıcı sığdığını ölçerse açıyor (NewsFill). */
             hidden={extra || undefined}
             data-news-fill={extra || undefined}
-            className={styles.rowItem}
+            className={cn(styles.rowItem, wideOnly && styles.pairFill)}
           >
             <Link href={`/haberler/${item.id}`} prefetch={false} className={styles.row}>
               <span lang={langOf(item)} className={styles.rowHeadline}>

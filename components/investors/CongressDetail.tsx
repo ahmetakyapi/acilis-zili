@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
 import type { SymbolMeta } from "@/lib/data";
 import type { Dictionary } from "@/lib/i18n";
@@ -128,7 +130,7 @@ export function CongressBody({
             return (
               <li key={row.ticker ?? row.asset} className="min-w-0">
                 {row.ticker && meta ? (
-                  <Link href={`/hisse/${row.ticker}`} prefetch={false} className={styles.tickerRow}>
+                  <Link href={`/hisse/${row.ticker}`} prefetch={false} className={styles.tickerRow} data-cc={row.ticker}>
                     {body}
                   </Link>
                 ) : (
@@ -144,6 +146,12 @@ export function CongressBody({
         <PanelHeader title={t.tradesTitle} meta={t.tradesCount.replace("{count}", String(detail.trades.length))} />
         <TradeTable trades={detail.trades} known={known} locale={locale} t={t} />
       </Panel>
+
+      {/* Şirket kartı — sembolü tabloda bilinen satırlar; kotasyonu kart
+          kendisi soruyor, akışla iniyor. */}
+      <Suspense fallback={null}>
+        <CompanyCards symbols={rows.flatMap((row) => (row.ticker && known[row.ticker] ? [row.ticker] : []))} names={known} />
+      </Suspense>
     </>
   );
 }
@@ -195,7 +203,7 @@ export function TradeTable({
                 <td className="numeral whitespace-nowrap">{formatEtDateMedium(trade.txDate, locale)}</td>
                 <th scope="row" className={styles.companyCell}>
                   {trade.ticker && meta ? (
-                    <Link href={`/hisse/${trade.ticker}`} prefetch={false} className={styles.company}>
+                    <Link href={`/hisse/${trade.ticker}`} prefetch={false} className={styles.company} data-cc={trade.ticker}>
                       {company}
                     </Link>
                   ) : (

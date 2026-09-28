@@ -2,12 +2,12 @@ import type { CSSProperties } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile } from "@/components/ui/primitives";
 import themeStyles from "@/components/themes/Themes.module.css";
-import { TreemapStage, type PeekData } from "@/components/themes/TreemapStage";
+import { TreemapStage } from "@/components/themes/TreemapStage";
 import type { Dictionary } from "@/lib/i18n";
 import type { PositionView } from "@/lib/investor-view";
 import { splitSmall, squarify } from "@/lib/theme-view";
 import { cn, formatMoneyCompact, formatPercent } from "@/lib/utils";
-import { formatShares, formatWeight, moveHeat, moveLabel, moveTone } from "./format";
+import { formatWeight, moveHeat, moveLabel } from "./format";
 import styles from "./Investors.module.css";
 
 /**
@@ -21,11 +21,13 @@ import styles from "./Investors.module.css";
  * alanın hangi sayıdan geldiğini söylüyor.
  *
  * Yerleşim ve gruplama tema haritasının saf hesapları (`squarify`,
- * `splitSmall`); iki yerleşim (geniş ve telefon), künye kartı ve giriş
- * koreografisi `TreemapStage`ten. Künye kartı `/hisse/{sembol}`e gidiyor;
- * o yüzden yalnızca SEMBOLÜ BİLİNEN ve sitede sayfası olan karo kart
- * taşıyor. Sembolü bilinmeyen pozisyon (tahvil, yurt dışı hisse) yine
- * alanıyla çiziliyor ama bağlantısız, adıyla.
+ * `splitSmall`); iki yerleşim (geniş ve telefon) ve giriş koreografisi
+ * `TreemapStage`ten. Üzerine gelince sitenin ortak şirket kartı açılıyor
+ * (components/ui/CompanyCard.tsx; portföydeki pay ve çeyreğin hareketi
+ * kartın ek satırları, kaydı `FundBody` bırakıyor). Yalnızca SEMBOLÜ
+ * BİLİNEN ve sitede sayfası olan karo kart taşıyor. Sembolü bilinmeyen
+ * pozisyon (tahvil, yurt dışı hisse) yine alanıyla çiziliyor ama
+ * bağlantısız, adıyla.
  */
 
 /** Geniş yerleşimin oranı — Investors.module.css → `.mapBody .map` ile aynı
@@ -44,7 +46,6 @@ const REACH = {
   foot: { w: 234, h: 132 },
 } as const;
 const GROUP_LOGOS = 4;
-const CARD_EDGE = { start: 32, end: 68 } as const;
 /** Haritada en fazla kaç karo — Bridgewater bin pozisyon taşıyor. Karonun
     yazdığı pay yine PORTFÖYDEKİ pay; harita en büyükleri gösteriyor. */
 export const MAP_MAX = 60;
@@ -64,10 +65,7 @@ export function InvestorTreemap({
   const label = (position: MapPosition) => position.ticker ?? position.issuer;
 
   return (
-    <TreemapStage
-      className={themeStyles.stage}
-      labels={{ cap: t.sharesLabel, share: t.share, open: t.openStock }}
-    >
+    <TreemapStage className={themeStyles.stage}>
       {LAYOUTS.map((layout) => {
         const weights = shown.map((position) => position.value);
         const minShare = (layout.min.w * layout.min.h) / (layout.box.w * layout.box.h);
@@ -82,7 +80,6 @@ export function InvestorTreemap({
           <div key={layout.key} className={themeStyles.mapLayout} data-layout={layout.key}>
             <div className={cn(themeStyles.map, styles.map)}>
               {rects.map((rect, rank) => {
-                const center = rect.x + rect.w / 2;
                 const place = {
                   left: `${rect.x}%`,
                   top: `${rect.y}%`,
@@ -110,7 +107,13 @@ export function InvestorTreemap({
                             .filter((member) => member.ticker)
                             .slice(0, GROUP_LOGOS)
                             .map((member) => (
-                              <LogoTile key={member.cusip} symbol={member.ticker!} logoUrl={member.logoUrl} size="xs" />
+                              <LogoTile
+                                key={member.cusip}
+                                symbol={member.ticker!}
+                                logoUrl={member.logoUrl}
+                                size="xs"
+                                card={member.linkable}
+                              />
                             ))}
                         </span>
                         <span className={themeStyles.groupLabel}>{text}</span>
@@ -161,16 +164,6 @@ export function InvestorTreemap({
                     </span>
                   );
                 }
-                const peek: PeekData = {
-                  symbol: position.ticker,
-                  name: position.issuer,
-                  price: formatMoneyCompact(position.value, locale),
-                  pct: move,
-                  tone: moveTone(position.move),
-                  cap: formatShares(position.amount, locale),
-                  share: weight,
-                  note: "",
-                };
                 return (
                   <Link
                     key={position.cusip}
@@ -178,8 +171,7 @@ export function InvestorTreemap({
                     prefetch={false}
                     className={themeStyles.tile}
                     style={place}
-                    data-card-x={center < CARD_EDGE.start ? "start" : center > CARD_EDGE.end ? "end" : "center"}
-                    data-peek={JSON.stringify(peek)}
+                    data-cc={position.ticker}
                     aria-label={aria}
                   >
                     {face}
@@ -219,7 +211,12 @@ export function InvestorTreemap({
                     return (
                       <li key={position.cusip} className="min-w-0">
                         {position.linkable && position.ticker ? (
-                          <Link href={`/hisse/${position.ticker}`} prefetch={false} className={themeStyles.rosterItem}>
+                          <Link
+                            href={`/hisse/${position.ticker}`}
+                            prefetch={false}
+                            className={themeStyles.rosterItem}
+                            data-cc={position.ticker}
+                          >
                             {body}
                           </Link>
                         ) : (

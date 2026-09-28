@@ -442,87 +442,121 @@
   }
 }
 
-/* ---- Pozisyon ekleme paneli ----
-   `<details>`: JavaScript kapalıyken de açılıp kapanıyor ve adres
-   çapasıyla (`#pozisyon-ekle`) açılıyor. Açılış yüksekliği
-   `interpolate-size` ile yumuşak; desteklemeyen tarayıcıda anında açılır. */
-.addPanel {
-  interpolate-size: allow-keywords;
-  scroll-margin-top: calc(var(--app-bar-h) + 1.5rem);
-}
-
-.addPanel::details-content {
-  block-size: 0;
-  overflow: clip;
-  transition:
-    block-size 0.45s var(--ease-brand),
-    content-visibility 0.45s allow-discrete;
-}
-
-.addPanel[open]::details-content {
-  block-size: auto;
-}
-
-.addBody {
-  scroll-margin-top: calc(var(--app-bar-h) + 6rem);
-}
-
-.addSummary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  cursor: pointer;
-  list-style: none;
-}
-
-.addSummary::-webkit-details-marker {
-  display: none;
-}
-
-.addToggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  margin-right: 1rem;
-  border-radius: 999px;
-  background: var(--primary-tint);
-  color: var(--primary);
-  transition:
-    transform 0.4s var(--ease-brand),
-    background-color 0.25s var(--ease-brand);
-}
-
-@media (min-width: 640px) {
-  .addToggle {
-    margin-right: 1.25rem;
-  }
-}
-
-.addSummary:hover .addToggle {
-  background: var(--primary-wash);
-}
-
-.addPanel[open] .addToggle {
-  transform: rotate(45deg);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .addPanel::details-content,
-  .addToggle {
-    transition: none;
-  }
-}
-
 /* ---- Pozisyon satırları ---- */
-.rows > tr {
+.rows > tr > * {
   transition: background-color 0.2s var(--ease-brand);
 }
 
+/* Opak ton: yapışık hücreler altlarındaki kaydırılan sütunları örtmek
+   zorunda, yarı saydam `--primary-tint` onları gösterirdi. */
+.rows {
+  --row-tint: color-mix(in oklab, var(--primary) 9%, var(--panel-fixed));
+}
+
 @media (hover: hover) {
-  .rows > tr:hover {
-    background: var(--primary-tint);
+  .rows > tr:hover > * {
+    background-color: var(--row-tint);
+  }
+}
+
+/* Giriş: satırlar ilk yüklemede kademeli, sonradan eklenen satır tek başına
+   kayarak gelir (CSS animasyonu eklenen her öğede yeniden oynuyor; çıkış
+   Motion'da). Az önce eklenen ya da düzeltilen satır bir an vurgulanır. */
+@media (prefers-reduced-motion: no-preference) {
+  .rows > tr {
+    animation: row-in 0.5s var(--ease-brand) both;
+    animation-delay: calc(var(--i, 0) * 40ms);
+  }
+
+  /* Vurgu HÜCRELERDE, satırda değil: yapışık sembol ve eylem hücreleri
+     kendi opak zeminini taşıyor ve satırın zeminini örtüyordu. */
+  .rows > tr[data-fresh] > * {
+    animation: row-fresh 2.2s var(--ease-brand) 0.2s both;
+  }
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes row-fresh {
+  0%,
+  35% {
+    background-color: var(--row-tint);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rows > tr[data-fresh] > * {
+    background-color: var(--row-tint);
+  }
+}
+
+/* ---- Satır eylemleri: sağda yapışık, telefonda da başparmağın altında ---- */
+.actionsCell {
+  text-align: right;
+}
+
+/* Yapışkanlık yalnızca tablo TAŞARKEN: 980 piksellik taban genişlik panelin
+   iç genişliğini ~1100 piksel altında aşıyor. Geniş ekranda yapışık hücrenin
+   opak zemini koyu temada ayrı bir ton bloğu gibi duruyordu (ölçüldü, 1440). */
+@media (max-width: 1099px) {
+  .actionsCell {
+    position: sticky;
+    right: 0;
+    z-index: 10;
+    background: var(--panel-fixed);
+  }
+}
+
+.rowActions {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.rowAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.2s var(--ease-brand),
+    color 0.2s var(--ease-brand);
+}
+
+.rowAction:hover {
+  background: var(--primary-tint);
+  color: var(--primary-ink);
+}
+
+.rowActionDanger:hover {
+  background: var(--down-wash);
+  color: var(--down);
+}
+
+.rowAction:focus-visible {
+  outline: 2px solid var(--line-focus);
+  outline-offset: -2px;
+}
+
+/* Telefonda tek düğme: düzelt. Silme düzeltme penceresinin içinde; iki
+   düğme yapışık sütunu 100 piksele çıkarıp veriye 140 piksel bırakıyordu. */
+@media (max-width: 639px) {
+  .rowActionDanger {
+    display: none;
+  }
+}
+
+@media (min-width: 640px) {
+  .rowAction {
+    width: 2.25rem;
+    height: 2.25rem;
   }
 }

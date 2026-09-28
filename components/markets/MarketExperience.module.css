@@ -195,9 +195,10 @@
 
 /* ---- Isı haritası, 30 şirket ve künye kartı (26 Eylül) ----
    Sabit 10 sütun (telefonda 6): üç endekste de aynı ızgara. Karede logo ve
-   günlük yüzde; üzerine gelince ya da odaklanınca karenin üstünde künye
-   kartı açılıyor. Kart panelin dışına taşabilsin diye panel artık
-   kırpmıyor; alt künye bandı köşesini kendisi yuvarlıyor. */
+   günlük yüzde; üzerine gelince ya da odaklanınca sitenin ortak şirket
+   kartı açılıyor (28 Eylül; components/ui/CompanyCard). Hücre başına
+   sunucuda çizilen kart ve konum/Escape sarmalı (`HeatmapGrid`) kalktı.
+   Panel kırpmıyor; alt künye bandı köşesini kendisi yuvarlıyor. */
 .breadth { overflow:visible; }
 .breadthStamp { border-radius:0 0 20px 20px; }
 .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(10, minmax(0, 1fr)); gap:6px; margin-top:14px; }
@@ -207,29 +208,12 @@
 .heatPct { font-size:11.5px; font-weight:600; line-height:1.2; letter-spacing:-.01em; color:var(--text-strong); }
 .heatCell:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 
-.heatCard { position:absolute; bottom:calc(100% + 8px); left:50%; z-index:20; display:flex; flex-direction:column; gap:8px; width:220px; padding:12px; border:1px solid var(--line); border-radius:14px; background:var(--overlay-surface); box-shadow:var(--shadow-overlay); text-align:left; opacity:0; pointer-events:none; transform:translate(-50%, 4px) scale(.97); transition:opacity .16s, transform .2s var(--ease-brand); }
-.heatGrid > :nth-child(10n + 1) .heatCard { left:0; transform:translate(0, 4px) scale(.97); }
-.heatGrid > :nth-child(10n) .heatCard { left:auto; right:0; transform:translate(0, 4px) scale(.97); }
-.heatCardHead { display:flex; align-items:center; gap:9px; min-width:0; }
-.heatCardHead b { display:block; font-size:14px; color:var(--text-strong); }
-.heatCardHead small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-body); }
-.heatCardRow { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:17px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
-.heatCardFoot { padding-top:8px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-body); }
-.heatCardFoot b { color:var(--text-strong); }
 .heatCell:is(:hover, :focus-visible) { z-index:5; }
-.heatCell:is(:hover, :focus-visible) .heatCard { opacity:1; transform:translate(-50%, 0) scale(1); }
-/* Künye okunurken imleç karodan karta geçebilsin; 8px aralığı görünmez
-   köprü kapatır. Köprü yalnızca açık kartta etkindir. */
-.heatCard::after { content:""; position:absolute; inset:100% 0 auto; height:10px; }
-.heatCell:is(:hover, :focus-visible) .heatCard { pointer-events:auto; }
-.heatGrid > :nth-child(10n + 1):is(:hover, :focus-visible) .heatCard,
-.heatGrid > :nth-child(10n):is(:hover, :focus-visible) .heatCard { transform:translate(0, 0) scale(1); }
 @media(hover:hover) and (pointer:fine) { .heatCell:hover { scale:1.06; box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); } }
 @media(max-width:639px) {
  .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(5, minmax(0, 1fr)); }
- .heatCard { display:none; }
 }
-@media(prefers-reduced-motion:reduce) { .heatCell, .heatCard { transition:none; } .heatCell:hover { scale:none; } }
+@media(prefers-reduced-motion:reduce) { .heatCell { transition:none; } .heatCell:hover { scale:none; } }
 
 /* 27 Eylül: 1440/1280'de eski harita 405px, hareket listeleri y=979.
    Endeks kimliği seçicinin üstündeki boşluğa taşındı. Harita tüm paneli
@@ -270,29 +254,12 @@
 :is(.heatCell,.heatSwatches > i)[data-heat-level="4"][data-heat-tone="up"] { background:var(--heat-deep-up); }
 :is(.heatCell,.heatSwatches > i)[data-heat-level="4"][data-heat-tone="down"] { background:var(--heat-deep-down); }
 
-.heatCard { width:264px; color:var(--text-body); visibility:hidden; }
-.heatCell:is(:hover,:focus-visible) .heatCard { visibility:visible; }
-.heatGrid > .heatCell .heatCard { left:50%; right:auto; transform:translate(-50%,4px) scale(.97); }
-.heatGrid > .heatCell:is(:hover,:focus-visible) .heatCard { transform:translate(-50%,0) scale(1); }
-.heatGrid > .heatCell:is(:nth-child(15n + 1),:nth-child(15n + 2)) .heatCard { left:0; transform:translate(0,4px) scale(.97); }
-.heatGrid > .heatCell:is(:nth-child(15n),:nth-child(15n - 1)) .heatCard { left:auto; right:0; transform:translate(0,4px) scale(.97); }
-.heatGrid > .heatCell:is(:is(:nth-child(15n + 1),:nth-child(15n + 2)),:is(:nth-child(15n),:nth-child(15n - 1))):is(:hover,:focus-visible) .heatCard { transform:translate(0,0) scale(1); }
-.heatCardMetrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 12px; padding-top:10px; border-top:1px solid var(--line-soft); font-size:11px; }
-.heatCardMetrics > span { display:flex; min-width:0; flex-direction:column; gap:3px; }
-.heatCardMetrics b { color:var(--text-strong); font-size:13px; font-weight:650; }
-.heatCardMetrics > .heatCardRange { grid-column:1/-1; flex-direction:row; justify-content:space-between; }
-.heatCardFoot { display:flex; align-items:center; justify-content:space-between; color:var(--primary-ink); font-size:11px; }
 .heatCoverage { color:var(--text-muted); font-size:10.5px; line-height:1.5; }
 .heatEmpty { padding:0 20px 16px; color:var(--text-body); }
 .breadthStamp { padding:8px 20px; }
 @media(max-width:1199px) {
   .toolbarIdentity .breadthQuote { flex-basis:100%; }
   .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(10,minmax(0,1fr)); }
-  .heatGrid > .heatCell.heatCell .heatCard { left:50%; right:auto; transform:translate(-50%,4px) scale(.97); }
-  .heatGrid > .heatCell.heatCell:is(:hover,:focus-visible) .heatCard { transform:translate(-50%,0) scale(1); }
-  .heatGrid > .heatCell:is(:nth-child(10n + 1),:nth-child(10n + 2)) .heatCard { left:0; transform:translate(0,4px) scale(.97); }
-  .heatGrid > .heatCell:is(:nth-child(10n),:nth-child(10n - 1)) .heatCard { left:auto; right:0; transform:translate(0,4px) scale(.97); }
-  .heatGrid > .heatCell:is(:is(:nth-child(10n + 1),:nth-child(10n + 2)),:is(:nth-child(10n),:nth-child(10n - 1))):is(:hover,:focus-visible) .heatCard { transform:translate(0,0) scale(1); }
 }
 @media(max-width:767px) {
   .toolbarLayout { grid-template-columns:minmax(0,1fr); gap:12px; }
@@ -483,14 +450,6 @@
 }
 @media(max-width:359px) { .price { font-size:22px; } }
 @media(prefers-reduced-motion:reduce) { .indexCard::before,.indexProxy svg { transition:none; } .indexLink:hover .indexProxy svg { transform:none; } }
-
-.heatCardHead small { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; white-space:normal; line-height:1.4; }
-.heatCardRow { font-size:21px; }
-.heatRangeTrack { position:relative; display:block; height:4px; margin:0 4px 3px; border-radius:3px; background:var(--line); }
-.heatRangeTrack > i { position:absolute; top:50%; width:9px; height:9px; border:2px solid var(--overlay-surface); border-radius:50%; background:var(--primary); transform:translate(-50%,-50%); box-shadow:0 0 0 1px var(--primary); }
-.heatCell[data-heat-dismissed] .heatCard { visibility:hidden; opacity:0; pointer-events:none; }
-.heatCell[data-heat-side="below"] .heatCard { top:calc(100% + 8px); bottom:auto; }
-.heatCell[data-heat-side="below"] .heatCard::after { top:auto; bottom:100%; }
 
 /* Kapanış fiyatı ile canlı seans birbirine karışmasın; birim ortak künyede. */
 .indexContext { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; }

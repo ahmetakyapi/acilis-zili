@@ -3,6 +3,7 @@ import { Suspense, cache } from "react";
 import { auth } from "@/auth";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { AppShell, type ShellLabels } from "@/components/layout/AppShell";
+import { CompanyCardHost } from "@/components/ui/CompanyCard";
 import { SearchCommand } from "@/components/layout/SearchCommand";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { TickerFeed } from "@/components/layout/TickerFeed";
@@ -177,6 +178,15 @@ export default async function AppLayout({
       >
         {/* Sayfa ölçümü — çerezsiz, kimliksiz, hiçbir şey çizmez. */}
         <ViewBeacon locale={locale} />
+        {/* Şirket kartının TEK sunucusu: sayfalar yalnızca veriyi
+            (`CompanyCards`) ve logolar `data-cc` özniteliğini taşıyor. */}
+        <CompanyCardHost
+          labels={{
+            sector: t.companyCard.sector,
+            marketCap: t.companyCard.marketCap,
+            price: t.companyCard.price,
+          }}
+        />
         {children}
       </AppShell>
     </MotionProvider>

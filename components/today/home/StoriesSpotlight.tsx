@@ -62,7 +62,10 @@ export async function StoriesSpotlight({
      Manşetin kadrosu en çok dört logo, satırlar ilk iki sembolün logosunu
      taşıyor. Adlar ve adresler tek sorguda: manşet ve satırların
      sembolleri birleşik bir listeyle soruluyor. */
-  const leadSymbols = (lead.symbols ?? []).slice(0, STORY_CAST_MAX);
+  /* Tek artan sembol "+1" çipi değil, kendisi: çip bir karo kadar yer
+     kaplıyor (44 piksel), beşinci karo kadroyu büyütmüyor (28 Eylül). */
+  const leadCount = lead.symbols?.length ?? 0;
+  const leadSymbols = (lead.symbols ?? []).slice(0, leadCount === STORY_CAST_MAX + 1 ? leadCount : STORY_CAST_MAX);
   const castMeta = await getSymbolNames([
     ...leadSymbols,
     ...rest.flatMap((story) => (story.symbols ?? []).slice(0, 2)),
@@ -203,7 +206,14 @@ export async function StoriesSpotlight({
       </Link>
 
       {rest.length > 0 && (
-        <ul className="border-t border-primary-faint bg-surface-solid" data-motion-stagger>
+        /* TELEFONDA İKİ SATIR (28 Eylül). Blok 390'da 1.119, 360'ta 1.134
+           piksel ölçüldü; manşet ve eğri kalıyor, üçüncü arşiv satırı
+           telefonda (≤767) gizleniyor (`.storyArchive`). Kalanlara giden
+           yol listenin DİBİNDE, yalnızca telefonda: başlıktaki "Tümünü
+           Gör" iki ekran yukarıda kalıyor. Masaüstünde DOM ve görünüm
+           aynı; blok ana kolonda ve kolon dengesi ondan etkilenmiyor
+           (FillColumn yalnızca ≥1024'te çalışıyor, ölçüldü). */
+        <ul className={`${styles.storyArchive} border-t border-primary-faint bg-surface-solid`} data-motion-stagger>
           {rest.map((story, index) => (
             <li
               key={story.slug}
@@ -252,6 +262,16 @@ export async function StoriesSpotlight({
             </li>
           ))}
         </ul>
+      )}
+      {rest.length > 2 && (
+        <Link
+          href={withLocale("/mercek", locale)}
+          prefetch={false}
+          className={styles.storyAllLink}
+        >
+          {t.today.allStories}
+          <ArrowRight weight="bold" size={13} aria-hidden />
+        </Link>
       )}
     </section>
   );
@@ -323,7 +343,8 @@ export function SpotlightSkeleton() {
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="flex items-center gap-3 border-t border-line-soft px-4 py-3.5 first:border-t-0 sm:px-5"
+            /* Telefonda gerçek blokla aynı: iki satır. */
+            className={`flex items-center gap-3 border-t border-line-soft px-4 py-3.5 first:border-t-0 sm:px-5 ${i === 2 ? "max-md:hidden" : ""}`}
           >
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               <Skeleton className="h-3 w-4/5" />

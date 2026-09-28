@@ -65,7 +65,7 @@ export function ThemeStats({
       <p className={cn("numeral", styles.metricValue, "text-muted")}>{NO_VALUE}</p>
     ) : (
       <>
-        <Link href={`/hisse/${row.symbol}`} prefetch={false} className={styles.member}>
+        <Link href={`/hisse/${row.symbol}`} prefetch={false} className={styles.member} data-cc={row.symbol}>
           <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="md" />
           <span className={styles.memberText}>
             <b className="numeral">{row.symbol}</b>

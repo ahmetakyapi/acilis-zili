@@ -5,6 +5,7 @@ import { RollingFigure } from "@/components/themes/RollingFigure";
 import { ThemeRanking } from "@/components/themes/ThemeRanking";
 import { SpreadStrip } from "@/components/themes/ThemeVisuals";
 import themeStyles from "@/components/themes/Themes.module.css";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import { DataStamp, LogoTile, PanelLink, Skeleton } from "@/components/ui/primitives";
 import { themeTitle } from "@/content/themes";
 import { getStatus } from "@/lib/data";
@@ -158,10 +159,24 @@ export function SectorRibbonSkeleton({ t }: { t: Dictionary }) {
    Temalar
    ========================================================================== */
 
-/** Uç kartındaki logo sayısı: tek satır, 26 piksellik karolar. */
-const EXTREME_LOGOS = 8;
-/** Telefonda kalan logo sayısı (MarketTexture.module.css, ≤639). */
-const EXTREME_LOGOS_NARROW = 4;
+/* UÇ KARTININ LOGOLARI BİR KADEME BÜYÜDÜ (28 Eylül, sahibinin isteği):
+   `sm` (26) → `md` (32), "+N" çipi de 32. Logo başına 36 piksel (karo +
+   4 boşluk), çip ~32. Satırın sığacağı yer ölçüldü (başsız Chrome, kart
+   içi eksi rakam ve 14'lük aralık, zayıf tema kartı — rakamı daha geniş):
+   - 1440: 418, 1280: 373, 1024: 284 → altı logo + çip = 248. Yedi logo
+     284 eder ve 1024'te sıfır pay bırakır; rakam "−10,25 %" gibi
+     uzadığında taşardı.
+   - 768: 175, 900: 241 → üç logo + çip = 140.
+   - 390: satır kartın iç genişliği, 147 → üç logo + çip = 140; dört 176.
+   - 640–767: 119–131 piksel kalıyordu, üç logo bile sığmıyor; bu aralık
+     telefon düzenine geçti (rakam başlığın altında, CSS notu).
+   Ölçüm aynı zamanda eski bir hatayı gösterdi: 26 piksellik sekiz logo
+   640–900 arasında 14–147 piksel TAŞIYOR ve "+N" çipi `overflow:hidden`
+   altında görünmüyordu. */
+/** Geniş ekranda (≥1024) uç kartındaki logo sayısı. */
+const EXTREME_LOGOS = 6;
+/** 1024'ün altında kalan logo sayısı (MarketTexture.module.css). */
+const EXTREME_LOGOS_NARROW = 3;
 
 /**
  * Temaların günü: solda `/tema`nın kapağındaki sıralamanın AYNISI
@@ -177,7 +192,7 @@ const EXTREME_LOGOS_NARROW = 4;
  * anlatmıyor, ekran da boş kalmıyor.
  */
 export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const [{ board, scaleBasis, comparable, quotesResult }, sectorQuotes] = await Promise.all([
+  const [{ board, scaleBasis, comparable, quotesResult, names, status }, sectorQuotes] = await Promise.all([
     loadThemeBoard(),
     getStatus().then(loadBoardQuotes),
   ]);
@@ -206,6 +221,14 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
       ranking={<ThemeRanking cards={board.cards} basis={scaleBasis} phase={board.phase} locale={locale} t={t} heading="h4" />}
       extremes={
         <>
+          {/* Logoların üzerine gelince açılan şirket kartı (components/ui/
+              CompanyCards) — bandın kendi kotasyon paketiyle, ek istek yok. */}
+          <CompanyCards
+            symbols={[top, bottom].flatMap((c) => c?.members.slice(0, EXTREME_LOGOS + 1).map((m) => m.symbol) ?? [])}
+            quotes={quotesResult.ok ? quotesResult.data : null}
+            names={names}
+            status={status}
+          />
           <ExtremeCard
             card={top}
             label={
@@ -307,7 +330,13 @@ function ExtremeCard({
       </div>
     );
   }
-  const members = card.members.slice(0, EXTREME_LOGOS);
+  /* TEK ARTAN ÜYE ÇİP DEĞİL LOGO (28 Eylül): "+1" çipi bir logo kadar yer
+     (32 piksel) kaplıyor; yedinci logo satırı büyütmüyor, çip yerine
+     üyenin kendisi görünüyor. */
+  const members = card.members.slice(
+    0,
+    card.members.length === EXTREME_LOGOS + 1 ? EXTREME_LOGOS + 1 : EXTREME_LOGOS,
+  );
   const rest = card.members.length - members.length;
   const tone = session ? directionOf(card.median) : null;
   return (
@@ -327,10 +356,10 @@ function ExtremeCard({
           <span aria-hidden className={styles.extremeLogos}>
             {members.map((member, i) => (
               <span key={member.symbol} className={styles.extremeLogo} style={{ "--i": i } as CSSProperties}>
-                <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="sm" />
+                <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="md" card />
               </span>
             ))}
-            {/* "+N" ekranda GÖRÜNMEYEN üye sayısı: telefonda dört logo
+            {/* "+N" ekranda GÖRÜNMEYEN üye sayısı: 1024'ün altında üç logo
                 kalıyor ve orada aynı sayı yanlış olurdu, iki rozet var. */}
             {rest > 0 && <span className={styles.extremeRest} data-at="wide">+{rest}</span>}
             {card.members.length > EXTREME_LOGOS_NARROW && (

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
@@ -22,6 +23,7 @@ import {
 import { ArrowDown, ArrowUpRight, Star } from "@phosphor-icons/react/dist/ssr";
 import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { AnalysisTable } from "@/components/earnings/AnalysisTable";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import { EarningsTabs } from "@/components/earnings/EarningsTabs";
 import { FillList } from "@/components/earnings/FillList";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
@@ -346,6 +348,7 @@ export default async function AnalysesPage(
                         data-fill={spare || undefined}
                         /* `hidden`ı FillList React dışında değiştiriyor (bkz. ana sayfa). */
                         suppressHydrationWarning
+                        data-cc={row.symbol}
                       >
                         <LogoTile
                           symbol={row.symbol}
@@ -378,6 +381,14 @@ export default async function AnalysesPage(
               durumuna döndürüp yeniden ölçer (istemci gezinmesi sayfayı
               yeniden bağlamıyor). */}
           <FillList key={`${sort}|${filter ?? ""}`} />
+          {/* Şirket kartı — öne çıkan kart, haftanın ve yaklaşanların
+              satırları, analiz tablosu. Kotasyonu kart kendisi soruyor,
+              akışla iniyor (bu sayfa fiyat göstermiyor). */}
+          <Suspense fallback={null}>
+            <CompanyCards
+              symbols={[...rows.map((row) => row.symbol), ...thisWeek.map((row) => row.symbol), ...upcoming.map((row) => row.symbol)]}
+            />
+          </Suspense>
 
           {/* Bütün denetimler tablonun üstünde tek bir yerde: filtre çipleri
               sayfa başlığının içinde duruyordu ve on bir çip başlığı ikinci
@@ -555,6 +566,7 @@ export default async function AnalysesPage(
                         prefetch={false}
                         aria-label={row.symbol}
                         className="absolute inset-0"
+                        data-cc={row.symbol}
                       />
                       {/* TARİH KAROSU. Tarih satırın metnine gömülüydü
                           ("20 Eki · Kap. Sonrası") ve liste tarihe göre
@@ -755,6 +767,7 @@ function FeaturedAnalysis({
               href={analysisHref(row.symbol, row.period)}
               prefetch={false}
               className={analysisStyles.featureLink}
+              data-cc={row.symbol}
               aria-label={t.analysis.openAnalysisAria.replace(
                 "{company}",
                 row.company,

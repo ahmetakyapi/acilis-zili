@@ -2,6 +2,7 @@ import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
 import { Suspense } from "react";
 import { CompanyLeaders } from "@/components/companies/CompanyLeaders";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import { CompanySearch } from "@/components/companies/CompanySearch";
 import companyStyles from "@/components/companies/CompanyDirectory.module.css";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
@@ -316,7 +317,17 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
     <MotionExperience className={styles.page}>
       <ScrollProgress />
       <DirectoryHeader className={companyStyles.hero} eyebrow={t.directory.companiesEyebrow} title={t.companies.title} description={t.companies.subtitle}
-        visual={<CompanyLeaders leaders={leaders} labels={t.directory} locale={locale} />}>
+        visual={
+          <>
+            <CompanyLeaders leaders={leaders} labels={t.directory} locale={locale} />
+            {/* Liderlerin şirket kartı ayrı bir anahtarla (`set`): tablo
+                satırı aynı sembolü kendi paketiyle kaydediyor. Kotasyonu
+                kart kendisi soruyor, akışla iniyor. */}
+            <Suspense fallback={null}>
+              <CompanyCards symbols={leaders.map((item) => item.symbol)} set="leaders" />
+            </Suspense>
+          </>
+        }>
 
         {/* KAPSAM VE ARAMA AYNI SATIRDA. İkisi alt alta iki bant halindeydi
             ve arama kendi etiket satırıyla birlikte 90 pikselden fazla yer
@@ -598,6 +609,12 @@ async function CompaniesTable({
   return (
     <>
       <Panel className={styles.tablePanel}>
+        {/* Şirket kartı — görünen satırlar, sayfanın paketiyle. */}
+        <CompanyCards
+          symbols={rows.map((row) => row.symbol)}
+          quotes={quotesResult.ok ? quotes : null}
+          status={status}
+        />
         {query && <div className={companyStyles.results}>
           {/* SIRA ÖNEMLİ: sayı önce basılır. Aranan metnin kendisi bir yer
               tutucu olabilir — "{n}" yazıp arayan biri, önce {query} yazılsaydı
@@ -757,6 +774,7 @@ async function CompaniesTable({
                              kadardı (34px) ve hücre dolgusunun bir kısmı
                              tıklanabilir değildi. */
                           className="flex min-h-11 items-center gap-2 sm:min-h-0 sm:gap-2.5"
+                          data-cc={company.symbol}
                         >
                           <LogoTile
                             symbol={company.symbol}

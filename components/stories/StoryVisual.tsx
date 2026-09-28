@@ -38,6 +38,10 @@ export type CastMember = {
 /**
  * Logo karosu — çerçevesiz, kutuyu tümüyle dolduran görsel.
  * Logo yoksa sembolün kendisi accent dolgulu bir karoya oturur.
+ *
+ * `data-cc`: sitenin ortak şirket kartı (components/ui/CompanyCard). Karo
+ * yalnızca özniteliği taşıyor; kaydı sayfa bırakıyorsa kart açılıyor
+ * (/mercek listesi bırakıyor), bırakmıyorsa hiçbir şey olmuyor.
  */
 function LogoTile({
   symbol,
@@ -54,6 +58,7 @@ function LogoTile({
     return (
       <span
         aria-hidden
+        data-cc={symbol}
         className="numeral flex shrink-0 items-center justify-center bg-primary-wash font-bold text-primary-ink"
         style={{
           width: size,
@@ -68,6 +73,7 @@ function LogoTile({
   }
   return (
     <span
+      data-cc={symbol}
       className="block shrink-0 overflow-hidden bg-white"
       style={{ width: size, height: size, borderRadius: radius }}
     >
@@ -105,7 +111,11 @@ export function StoryBrands({
   max?: number;
   labels: Dictionary["stories"];
 }) {
-  const shown = cast.slice(0, max);
+  /* "+1" YERİNE LOGO (28 Eylül): yazıda tek bir şirket artıyorsa çip onun
+     logosuna dönüşüyor — çip 34 piksellik bir karo, logo aynı yeri alıyor
+     ve şerit büyümüyor. Çağıran kadroyu bunun için `max + 1` uzunlukta
+     veriyor; "+N" yalnızca N ≥ 2 iken. */
+  const shown = cast.slice(0, total === max + 1 ? max + 1 : max);
   if (shown.length === 0) return null;
   const rest = total - shown.length;
   const lead = shown[0];

@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { CalendarBlank } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { GuideHint } from "@/components/article/GuideHint";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import { Panel, LogoTile } from "@/components/ui/primitives";
 import type { UpcomingRow } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -76,6 +78,9 @@ export function ReportClosing({
                     prefetch={false}
                     aria-label={peer.symbol}
                     className="absolute inset-0"
+                    /* Şirket kartı: satırı kaplayan bağlantı imlecin altındaki
+                       öğe, kart onda açılıyor. */
+                    data-cc={peer.symbol}
                   />
                   {/* Logo, satırı bir sembol listesi olmaktan çıkarıp
                       sayfanın geri kalanıyla aynı dile sokuyor (mercek
@@ -100,6 +105,9 @@ export function ReportClosing({
                 </div>
               ))}
             </div>
+            <Suspense fallback={null}>
+              <CompanyCards symbols={peers.map((peer) => peer.symbol)} />
+            </Suspense>
           </Panel>
         )}
 

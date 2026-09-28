@@ -1,9 +1,11 @@
 import { ChartLineUp } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import visuals from "@/components/motion/DirectoryVisuals.module.css";
+import { cardKey } from "@/lib/company-card-key";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import { LogoTile } from "@/components/ui/primitives";
-import { verdictLabel, verdictOf, verdictTextClass, type VerdictKey } from "@/lib/analysis";
-import { companySector } from "@/lib/company-sector";
+import { verdictLabel, verdictOf, verdictPillClass, verdictTextClass, type VerdictKey } from "@/lib/analysis";
+import type { CompanyCardExtra } from "@/lib/company-card";
 import type { SymbolMeta } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { MarketStatus } from "@/lib/market-hours";
@@ -11,12 +13,13 @@ import type { ProviderResult, Quote } from "@/lib/providers/types";
 import { editionTime, livePriceLabel, slotLabel, stanceChangeLabel, technicalHref } from "@/lib/technical";
 import type { TechnicalBoardEntry } from "@/lib/technical-data";
 import { cn, formatEtDateCompact } from "@/lib/utils";
-import { CompanyBalloon } from "./CompanyBalloon";
 import { changeToneClass } from "./TechnicalCard";
-import { PulseCompanyLink } from "./PulseCompanyLink";
 import styles from "./Technical.module.css";
 
 const VERDICTS: readonly VerdictKey[] = ["buy", "hold", "sell"];
+/** Dağılımın kart anahtarı: görüş hapı ve yayın damgası taşıyan kart,
+    aynı sayfadaki düz şirket kartından ayrı (`cardKey`). */
+const CARD_SET = "pulse";
 
 /** Görüş süzgecinin radyo kimliği — başlıktaki satırlar `for` ile ona bağlanır. */
 export function stanceFilterId(verdict: VerdictKey | "all"): string {
@@ -98,37 +101,56 @@ export function TechnicalPulse({
       : [];
   });
 
-  /* Balonun ortak kurgusu — yayımlanmış ve bekleyen logolar aynı balonu
-     açıyor, yalnızca hap, yedek fiyat ve alt künye ayrı. Canlı fiyat
-     varsa o (etiketi `livePriceLabel`dan: "Şu An" / "Son Fiyat"), yoksa
-     fotoğraftaki fiyat "Analiz Anında" etiketiyle. */
-  const balloon = (
+  /* KARTIN ORTAK KURGUSU — yayımlanmış ve bekleyen logolar aynı şirket
+     kartını açıyor (components/ui/CompanyCard.tsx), yalnızca hap, yedek
+     fiyat ve alt künye ayrı. Canlı fiyat varsa o (etiketi
+     `livePriceLabel`dan: "Şu An" / "Son Fiyat"), yoksa fotoğraftaki fiyat
+     "Analiz Anında" etiketiyle.
+
+     EYLEM DÜĞMESİ YOK, Trend/RSI çipleri de yok: bağlantı logonun kendisi,
+     çipleri hemen alttaki kartlar zaten taşıyor. */
+  const pack = quotes?.pack;
+  const cardExtra = (
     symbol: string,
     verdict: VerdictKey | "pending",
     fallback: { price: number | null; changePct: number | null; foot: string },
-  ) => {
-    const company = meta[symbol];
-    const pack = quotes?.pack;
+  ): CompanyCardExtra => {
     const quote = pack?.ok ? pack.data[symbol] : undefined;
     const liveLabel = quotes && quote ? livePriceLabel(quote, quotes.pack, quotes.status, t) : null;
-    return (
-      <CompanyBalloon
-        symbol={symbol}
-        name={company?.name ?? null}
-        logoUrl={company?.logoUrl ?? null}
-        verdict={verdict}
-        sector={companySector(symbol, company?.industry, locale)}
-        marketCap={company?.marketCap ?? null}
-        currency={company?.currency ?? null}
-        price={quote && liveLabel ? quote.price : fallback.price}
-        changePct={quote && liveLabel ? quote.changePct : fallback.changePct}
-        priceLabel={liveLabel ?? t.technical.atAnalysis}
-        foot={fallback.foot}
-        locale={locale}
-        t={t}
-      />
-    );
+    return {
+      badge: {
+        text: verdict === "pending" ? t.technical.pendingLabel : verdictLabel(verdict, t),
+        tone: verdict === "pending" ? "bg-surface-sunken text-muted" : verdictPillClass(verdict),
+      },
+      price:
+        quote && liveLabel
+          ? {
+              value: quote.price,
+              changePct: quote.changePct,
+              change: quote.change,
+              basis: liveLabel,
+              live: liveLabel === t.technical.now,
+            }
+          : { value: fallback.price, changePct: fallback.changePct, basis: t.technical.atAnalysis },
+      foot: fallback.foot,
+    };
   };
+  const cardExtras: Record<string, CompanyCardExtra> = Object.fromEntries([
+    ...groups.flatMap((group) =>
+      group.rows.map(({ row }) => [
+        row.symbol,
+        cardExtra(row.symbol, group.verdict, {
+          price: row.snapshot.price,
+          changePct: row.snapshot.changePct,
+          foot: `${formatEtDateCompact(row.sessionDate, locale)} · ${slotLabel(row.slot, t)} · ${editionTime(row.sessionDate, row.slot, locale)}`,
+        }),
+      ]),
+    ),
+    ...pending.map((symbol) => [
+      symbol,
+      cardExtra(symbol, "pending", { price: null, changePct: null, foot: t.technical.pulseAwaiting }),
+    ]),
+  ]);
 
   return (
     <section
@@ -241,19 +263,16 @@ export function TechnicalPulse({
                 {group.rows.map(({ row }) => {
                   const company = meta[row.symbol];
                   return (
-                    <PulseCompanyLink
+                    <Link
                       key={row.symbol}
                       href={technicalHref(row.symbol)}
+                      prefetch={false}
                       className={styles.pulseLogo}
-                      label={`${row.symbol} · ${company?.name ?? row.symbol} · ${verdictLabel(group.verdict, t)}`}
-                      summary={balloon(row.symbol, group.verdict, {
-                        price: row.snapshot.price,
-                        changePct: row.snapshot.changePct,
-                        foot: `${formatEtDateCompact(row.sessionDate, locale)} · ${slotLabel(row.slot, t)} · ${editionTime(row.sessionDate, row.slot, locale)}`,
-                      })}
+                      aria-label={`${row.symbol} · ${company?.name ?? row.symbol} · ${verdictLabel(group.verdict, t)}`}
+                      data-cc={cardKey(row.symbol, CARD_SET)}
                     >
                       <LogoTile symbol={row.symbol} logoUrl={company?.logoUrl ?? null} size={filterable ? "md" : "sm"} />
-                    </PulseCompanyLink>
+                    </Link>
                   );
                 })}
               </div>
@@ -272,19 +291,16 @@ export function TechnicalPulse({
                   `title=` kalktı: özel balonun yanında tarayıcının kendi
                   ipucu da açılıp ikisi üst üste biniyordu. */}
               {pending.map((symbol) => (
-                <PulseCompanyLink
+                <Link
                   key={symbol}
                   href={technicalHref(symbol)}
+                  prefetch={false}
                   className={cn(styles.pulseLogo, styles.pulseLogoPending)}
-                  label={`${symbol} · ${meta[symbol]?.name ?? symbol} · ${t.technical.pendingLabel}`}
-                  summary={balloon(symbol, "pending", {
-                    price: null,
-                    changePct: null,
-                    foot: t.technical.pulseAwaiting,
-                  })}
+                  aria-label={`${symbol} · ${meta[symbol]?.name ?? symbol} · ${t.technical.pendingLabel}`}
+                  data-cc={cardKey(symbol, CARD_SET)}
                 >
                   <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl ?? null} size={filterable ? "md" : "sm"} />
-                </PulseCompanyLink>
+                </Link>
               ))}
             </div>
           </div>
@@ -305,7 +321,7 @@ export function TechnicalPulse({
                   ekran okuyucuya duruyor. Yerel `title=` ipucu 22 Eylül'de
                   kalktı — dağılımın özel balonuyla aynı ekranda ikinci,
                   biçimsiz bir ipucu dili açıyordu. */}
-              <LogoTile symbol={change.symbol} logoUrl={meta[change.symbol]?.logoUrl ?? null} size="xs" />
+              <LogoTile symbol={change.symbol} logoUrl={meta[change.symbol]?.logoUrl ?? null} size="xs" card={cardKey(change.symbol, CARD_SET)} />
               {change.symbol}
               <span className={changeToneClass(change.verdict)}>{change.label}</span>
               <span className="sr-only">{change.full}</span>
@@ -313,6 +329,15 @@ export function TechnicalPulse({
           ))}
         </div>
       )}
+      {/* Kartların verisi — fiyat SAYFANIN paketinden (`quotes`), yeni tur yok. */}
+      <CompanyCards
+        symbols={Object.keys(cardExtras)}
+        quotes={pack?.ok ? pack.data : null}
+        names={meta}
+        status={quotes?.status}
+        set={CARD_SET}
+        extras={cardExtras}
+      />
     </section>
   );
 }

@@ -1,4 +1,7 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { Suspense } from "react";
+import { cardKey } from "@/lib/company-card-key";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
 import type { ArkActivity } from "@/lib/ark-data";
 import type { ArkTrade } from "@/lib/ark-view";
@@ -10,6 +13,9 @@ import styles from "./Investors.module.css";
 
 /** Son günün her tarafında gösterilen satır; fazlası "+N Daha". */
 const SIDE_ROWS = 8;
+/** Kart anahtarı: aynı sayfada `FundBody`nin kaydı aynı sembole portföy
+    satırları ekliyor; ARK'ın günlük işlem satırı onları taşımıyor. */
+const CARD_SET = "ark";
 /** Önceki günlerin satırında taraf başına sembol. */
 const EARLIER_TICKERS = 3;
 
@@ -105,6 +111,18 @@ export async function ArkTrades({ activity, locale, t }: { activity: ArkActivity
       )}
       <p className={styles.note}>{ta.note}</p>
       <p className={styles.note}>{ta.noteValue}</p>
+      <Suspense fallback={null}>
+        <CompanyCards
+          symbols={(["buy", "sell"] as const).flatMap((direction) =>
+            (latest?.trades ?? [])
+              .filter((trade) => trade.direction === direction && known[trade.ticker])
+              .slice(0, SIDE_ROWS)
+              .map((trade) => trade.ticker),
+          )}
+          names={known}
+          set={CARD_SET}
+        />
+      </Suspense>
     </Panel>
   );
 }
@@ -142,7 +160,7 @@ function TradeRow({
     </>
   );
   return meta ? (
-    <Link href={`/hisse/${trade.ticker}`} prefetch={false} className={styles.moveRow}>
+    <Link href={`/hisse/${trade.ticker}`} prefetch={false} className={styles.moveRow} data-cc={cardKey(trade.ticker, CARD_SET)}>
       {body}
     </Link>
   ) : (

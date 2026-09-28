@@ -141,6 +141,8 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
     changePct: (quotes.ok ? quotes.data[other]?.changePct : null) ?? null,
   }));
 
+  const moreCards = { quotes: quotes.ok ? quotes.data : null, names: meta, status };
+
   const breadcrumb = (
     <nav aria-label={t.common.breadcrumb} className="flex flex-wrap items-center gap-2 text-small text-muted">
       <Link href="/teknik" className="tap-44 -my-2 inline-flex min-h-8 items-center py-2 hover:text-primary">
@@ -171,7 +173,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
         {/* Çıkış kartları BURADA DA duruyor — hatta asıl burada: boş durum
             okuyucuya "bu hissede yayın yok" diyor ve tek başına bıraksa
             sayfanın sonu geri tuşu olurdu. */}
-        <MoreSymbols entries={moreEntries} locale={locale} t={t} />
+        <MoreSymbols entries={moreEntries} cards={moreCards} locale={locale} t={t} />
       </MotionExperience>
     );
   }
@@ -601,7 +603,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
 
       {/* Sayfanın son bloğu: okuyucunun bir sonraki durağı. Dipnot bunun
           ALTINDA kalıyor — yöntem ve uyarı metni bir çıkış değil, künye. */}
-      <MoreSymbols entries={moreEntries} locale={locale} t={t} />
+      <MoreSymbols entries={moreEntries} cards={moreCards} locale={locale} t={t} />
 
       <div className={styles.footNote}>
         <p>{t.technical.method}</p>

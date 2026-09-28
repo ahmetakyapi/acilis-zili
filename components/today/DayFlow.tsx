@@ -36,6 +36,18 @@ function Status({ event, nowMs, labels }: { event: Pick<FlowEvent, "status" | "s
   </span>;
 }
 
+/* SAATİ BELİRSİZ OLAYIN KÜNYESİ SEBEBİ SÖYLER (28 Eylül). Künye
+   "olayın kendi künyesi varsa o öncelikli" kuralıyla basılıyordu; ama
+   bilançonun künyesi saat penceresi yoksa yalnızca "Bilanço"
+   (`lib/day-flow-data.ts`) ve sütunda tire duruyor. Sonuç: 28 Eylül'de NKE
+   satırı "01 / –  · Planlandı Bilanço" okunuyordu, tirenin ne demek
+   olduğu ekranın hiçbir yerinde yazmıyordu (yalnızca `aria-label`da). Saat
+   yoksa sebep künyenin sonuna ekleniyor: "Bilanço · Saat Belirtilmedi". */
+function FlowNote({ event, labels }: { event: Pick<FlowEvent, "detail" | "timeEt">; labels: Props["labels"] }) {
+  if (!event.detail) return event.timeEt ? null : <em>{labels.timeUnknown}</em>;
+  return <em>{event.timeEt ? event.detail : `${event.detail} · ${labels.timeUnknown}`}</em>;
+}
+
 export function DayFlow({ initial, locale, labels, railLabels, heading }: Props) {
   const [snapshot, setSnapshot] = useState(initial);
   const [nowMs, setNowMs] = useState(() => new Date(initial.asOf).getTime());
@@ -244,7 +256,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
                 )}
                 {!event.detail && <span className="sr-only">{event.kind === "earnings" ? labels.earnings : labels.economic}</span>}
                 <Status event={event} nowMs={nowMs} labels={labels} />
-                {event.detail ? <em>{event.detail}</em> : !event.timeEt && <em>{labels.timeUnknown}</em>}
+                <FlowNote event={event} labels={labels} />
               </span>
             </span>
             {value ? <span className={styles.compactValue}><small>{valueLabel}</small><b className="numeral">{value}</b></span> : <span aria-hidden="true" />}
@@ -300,9 +312,9 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
                   yüzden orada gizli etiket şart. */}
               {!event.detail && <span className="sr-only">{event.kind === "earnings" ? labels.earnings : labels.economic}</span>}
               <Status event={event} nowMs={nowMs} labels={labels} />
-              {/* Sütundan düşen "Saat Belirtilmedi" künyeye burada iniyor;
-                  olayın kendi künyesi varsa o öncelikli. */}
-              {event.detail ? <em>{event.detail}</em> : !event.timeEt && <em>{labels.timeUnknown}</em>}
+              {/* Sütundan düşen "Saat Belirtilmedi" künyeye burada iniyor
+                  (`FlowNote`). */}
+              <FlowNote event={event} labels={labels} />
             </span>
           </span>
           <span className={styles.cardBottom}>{event.actual && <b className="numeral">{event.actual}</b>}<ArrowRight size={16} /></span>

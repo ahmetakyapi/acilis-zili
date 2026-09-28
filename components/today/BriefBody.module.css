@@ -18,3 +18,8 @@
 .beat::before { content:""; position:absolute; z-index:1; left:3px; top:8px; width:8px; height:8px; border-radius:999px; background:var(--primary-wash); box-shadow:inset 0 0 0 2px var(--primary); }
 .beat::after { content:""; position:absolute; left:6.5px; top:16px; bottom:-10px; width:1px; background:var(--primary-faint); }
 .beat:last-child::after { display:none; }
+
+/* Telefon kesmesinin son açık satırı: ardındaki kardeşler telefonda gizli,
+   yani `:last-child` değil ve ray bir sonraki (görünmeyen) paragrafa doğru
+   10 piksel sarkıyordu. Ray orada bitiyor (gerekçe BriefBody). */
+@media (max-width:767px) { .phoneLast.beat::after { display:none; } }

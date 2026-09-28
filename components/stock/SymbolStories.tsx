@@ -74,7 +74,9 @@ export async function SymbolStories({
      ediyor. */
   const kadroOf = (story: StoryIndexRow): CastMember[] =>
     [symbol, ...(story.symbols ?? []).filter((item) => item !== symbol)]
-      .slice(0, 4)
+      /* Beş: tam beş şirketli yazıda şerit "+1" yerine beşinci logoyu
+         çiziyor (StoryBrands); daha uzun kadroda şerit yine dördü basar. */
+      .slice(0, 5)
       .map((item) => ({
         symbol: item,
         name: meta[item]?.name ?? null,

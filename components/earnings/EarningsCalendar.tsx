@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import styles from "./EarningsCalendar.module.css";
 import {
   TimingChip,
@@ -180,8 +182,19 @@ export function EarningsCalendar({
     byDay.set(row.reportDate, list);
   }
 
+  /* ŞİRKET KARTI — yalnızca logosu çizilen hero ve orta kartlar; "Ayrıca
+     Açıklayanlar" satırı yalnızca sembol yazıyor. Tek kayıt, tek kotasyon
+     turu (gün başına ayrı tur açılmasın); akışla iniyor. */
+  const carded = [...byDay.values()].flatMap((dayRows) => {
+    const { heroes, mid } = dayTiers(dayRows, meta);
+    return [...heroes, ...mid].map((row) => row.symbol);
+  });
+
   return (
     <>
+      <Suspense fallback={null}>
+        <CompanyCards symbols={carded} names={meta} />
+      </Suspense>
       {[...byDay.entries()].map(([date, dayRows]) => (
         <DaySection
           key={date}
@@ -199,25 +212,12 @@ export function EarningsCalendar({
   );
 }
 
-function DaySection({
-  date,
-  today,
-  rows,
-  meta,
-  watchSet,
-  badges,
-  locale,
-  t,
-}: {
-  date: string;
-  today: string;
-  rows: EarningsRow[];
-  meta: Record<string, SymbolMeta>;
-  watchSet: Set<string>;
-  badges: Record<string, AnalysisBadgeData>;
-  locale: Locale;
-  t: Dictionary;
-}) {
+/**
+ * Günün üç katmanı: hero satırları, orta kartlar ve kalanlar. Takvimin
+ * kendisi ve şirket kartı kaydı (yalnızca logosu çizilen hero ve orta
+ * kartlar) aynı hesabı okuyor.
+ */
+function dayTiers(rows: EarningsRow[], meta: Record<string, SymbolMeta>) {
   /* Adla seçilmiş şirketler görünür katmanı piyasa değerine bakmadan hak
      eder. Üç katmanın tamamı `marketCap`e göre diziliyordu ve bu ölçü bu
      ekranda yanlış cevap veriyordu: CRWV'nin çeyreği aynı gün açıklayan pek
@@ -254,6 +254,29 @@ function DaySection({
   ].slice(0, MID_COUNT);
   const midSet = new Set(mid.map((row) => row.symbol));
 
+  return { heroes, mid, heroSet, midSet };
+}
+
+function DaySection({
+  date,
+  today,
+  rows,
+  meta,
+  watchSet,
+  badges,
+  locale,
+  t,
+}: {
+  date: string;
+  today: string;
+  rows: EarningsRow[];
+  meta: Record<string, SymbolMeta>;
+  watchSet: Set<string>;
+  badges: Record<string, AnalysisBadgeData>;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const { heroes, mid, heroSet, midSet } = dayTiers(rows, meta);
   const rest = rows.filter(
     (row) => !heroSet.has(row.symbol) && !midSet.has(row.symbol),
   );
@@ -363,6 +386,7 @@ function DaySection({
                 prefetch={false}
                 aria-label={`${row.symbol} ${m?.name ?? ""}`}
                 className="absolute inset-0 rounded-lg"
+                data-cc={row.symbol}
               />
               <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                 {/* Hero logosu bir basamak büyük (56px): katman farkı
@@ -526,6 +550,7 @@ function DaySection({
                   prefetch={false}
                   aria-label={`${row.symbol} ${m?.name ?? ""}`}
                   className="absolute inset-0 rounded-lg"
+                  data-cc={row.symbol}
                 />
                 <div className={styles.miniIdentity}>
                   {/* Mini kart logosu da bir basamak büyük (44px). Izgara

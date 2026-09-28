@@ -108,6 +108,8 @@ export async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }
             moreLabel={t.common.showAll}
             lessLabel={t.common.less}
             openLines={acikSatir}
+            /* Telefonda ikinci, kısa kesme — gerekçe ve ölçüm BriefBody. */
+            phonePreview
           />
         )
       }
@@ -116,6 +118,8 @@ export async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }
           <BriefBody
             size="card-wide"
             openLines={acikSatir}
+            /* Telefonda ikinci, kısa kesme — gerekçe ve ölçüm BriefBody. */
+            phonePreview
             markdown={weekly.bodyMd}
             moreLabel={t.common.showAll}
             lessLabel={t.common.less}

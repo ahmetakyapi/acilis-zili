@@ -12,6 +12,7 @@ import { ThemeTable } from "@/components/themes/ThemeTable";
 import { ThemeTreemap } from "@/components/themes/ThemeTreemap";
 import styles from "@/components/themes/Themes.module.css";
 import { HeatLegend, LogoGroup } from "@/components/themes/ThemeVisuals";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import {
   ButtonLink,
   DataStamp,
@@ -47,7 +48,15 @@ import {
   themeUniverse,
   type ThemeRow,
 } from "@/lib/themes-data";
-import { cn, directionOf, directionText, formatPercent, formatPrice, NO_VALUE } from "@/lib/utils";
+import {
+  cn,
+  directionOf,
+  directionText,
+  formatPercent,
+  formatPercentPlain,
+  formatPrice,
+  NO_VALUE,
+} from "@/lib/utils";
 
 /**
  * Tematik liste — "yapay zekâ hisseleri hangileri, bugün ne yaptılar".
@@ -125,7 +134,7 @@ const loadTheme = cache(async function loadTheme(slug: string) {
         }
       : null;
   const phase = moves ? themePhase(moves.basis, status.session) : null;
-  return { theme, rows, moves, phase, benchmark, quotesResult };
+  return { theme, rows, moves, phase, benchmark, quotesResult, quotes, names, status };
 });
 
 export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
@@ -168,7 +177,7 @@ export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
               <LiveCluster slug={theme.slug} />
             </Suspense>
           ) : (
-            <LogoGroup members={staticMembers} variant="cluster" size="lg" max={CLUSTER_MAX} />
+            <LogoGroup members={staticMembers} variant="cluster" size="lg" max={CLUSTER_MAX} card />
           )
         }
       >
@@ -231,7 +240,7 @@ export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
 
 async function LiveCluster({ slug }: { slug: string }) {
   const { rows } = await loadTheme(slug);
-  return <LogoGroup members={rows} variant="cluster" size="lg" max={CLUSTER_MAX} />;
+  return <LogoGroup members={rows} variant="cluster" size="lg" max={CLUSTER_MAX} card />;
 }
 
 async function LiveStamp({ slug, locale, t }: { slug: string; locale: Locale; t: Dictionary }) {
@@ -249,13 +258,41 @@ async function LiveStamp({ slug, locale, t }: { slug: string; locale: Locale; t:
 }
 
 async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t: Dictionary }) {
-  const { rows, moves, phase, benchmark, quotesResult } = await loadTheme(slug);
+  const { rows, moves, phase, benchmark, quotesResult, quotes, names, status } = await loadTheme(slug);
 
   /* İlk dört, piyasa değerine göre — karşılaştırma ekranının sembol sınırı. */
   const compareSet = rows.slice(0, MAX_COMPARE_SYMBOLS).map((row) => row.symbol);
 
+  /* ŞİRKET KARTI — sayfanın bütün üye logoları ve karoları (kapak kümesi,
+     harita, liste, tablo, en güçlü/zayıf) aynı kaydı açıyor; kart haritanın
+     künye kartının yerini aldı ve onun "Temadaki Payı" satırını taşıyor.
+     Diğer temalar satırındaki yığınların logoları da burada: aynı paket
+     (`themeUniverse`), yeni tur yok. */
+  const sizedTotal = rows.reduce((sum, row) => sum + (row.marketCap ?? 0), 0);
+  const otherSymbols = THEMES.filter((entry) => entry.slug !== slug && entry.symbols !== "katilim").flatMap(
+    (entry) => (entry.symbols as readonly string[]).slice(0, OTHER_STACK_MAX),
+  );
+
   return (
     <>
+      <CompanyCards
+        symbols={[...rows.map((row) => row.symbol), ...otherSymbols]}
+        quotes={quotesResult.ok ? quotes : null}
+        names={names}
+        status={status}
+        extras={Object.fromEntries(
+          rows
+            .filter((row) => row.marketCap !== null && row.marketCap > 0 && sizedTotal > 0)
+            .map((row) => [
+              row.symbol,
+              {
+                facts: [
+                  [t.themes.mapShare, formatPercentPlain((row.marketCap! / sizedTotal) * 100, locale)] as [string, string],
+                ],
+              },
+            ]),
+        )}
+      />
       {/* Panel kırpmıyor: karoların künye kartı haritanın dışına taşabiliyor. */}
       <Panel className={styles.mapPanel}>
         <PanelHeader
@@ -280,7 +317,6 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
                   smallTitle: t.themes.mapSmallTitle,
                   share: t.themes.mapShare,
                   cap: t.themes.colCap,
-                  open: t.themes.mapOpen,
                 }}
               />
             </div>
@@ -523,6 +559,7 @@ function OtherThemes({ current, locale, t }: { current: string; locale: Locale; 
                 size="sm"
                 max={OTHER_STACK_MAX}
                 className={styles.otherStack}
+                card
               />
               <span className={styles.otherText}>
                 <b>{themeTitle(theme, locale)}</b>

@@ -189,7 +189,7 @@ function CompaniesView({
               : null;
           return (
             <li key={row.symbol}>
-              <Link href={`/hisse/${row.symbol}`} className={styles.companyRow}>
+              <Link href={`/hisse/${row.symbol}`} className={styles.companyRow} data-cc={row.symbol}>
                 <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
                 <span className={styles.companyName}>
                   <span className="numeral">{row.symbol}</span>

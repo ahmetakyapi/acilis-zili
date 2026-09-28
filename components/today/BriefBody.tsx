@@ -1,4 +1,4 @@
-import { briefPreviewCut, headingOf } from "@/lib/brief";
+import { briefPhoneCut, briefPreviewCut, headingOf } from "@/lib/brief";
 import { cn } from "@/lib/utils";
 import styles from "./BriefBody.module.css";
 
@@ -66,10 +66,23 @@ function BriefLines({
   lines,
   startNumber,
   size,
+  phoneHideFrom,
+  phoneOnlyBefore = 0,
+  allowLede = startNumber === 1,
 }: {
   lines: string[];
   startNumber: number;
   size: BriefSize;
+  /** Bu sıradan itibaren satırlar telefonda (≤767) gizli — kesmenin
+      açıkta kalan yarısı. */
+  phoneHideFrom?: number;
+  /** Bu sıradan ÖNCEKİ satırlar yalnızca telefonda — katlamanın başına
+      eklenen, telefonda açıktan düşen satırlar. */
+  phoneOnlyBefore?: number;
+  /** Giriş stili basılabilir mi. Varsayılan eski kural (numara 1'den
+      başlıyorsa); katlama telefon önekiyle çizilirken masaüstündeki
+      değer açıkça veriliyor. */
+  allowLede?: boolean;
 }) {
   /* Madde numaraları render sırasında sayaç artırmadan, önceden türetilir.
      Her bölüm başlığında sayaç sıfırlanır: "Bu Hafta"nın ilk maddesi
@@ -136,7 +149,23 @@ function BriefLines({
      bildirimi). Uzunluk bilerek (kısa günde sol kolonu dengeliyor, bkz.
      page.tsx → BriefCard), o yüzden değişen sunum: ilk paragraf giriş,
      sonrakiler bir zaman rayının üstünde (`styles.beat`). */
-  const ledeAt = lines.findIndex((line) => !headingOf(line) && !line.trim().startsWith("- "));
+  /* Giriş aranırken telefona özgü önek sayılmıyor: masaüstünde katlamanın
+     ilk satırı neyse (giriş stili dahil) öyle kalmalı. Önek satırları hiçbir
+     zaman giriş değil — giriş telefonda da açıkta. */
+  const ledeOffset = lines.slice(phoneOnlyBefore).findIndex((line) => !headingOf(line) && !line.trim().startsWith("- "));
+  const ledeAt = ledeOffset < 0 ? -1 : ledeOffset + phoneOnlyBefore;
+  /* Telefon kesmesinin iki yüzü (28 Eylül, gerekçe `BriefBody`): açıkta
+     kalan kısmın kuyruğu telefonda gizli, katlamanın öneki yalnızca
+     telefonda. `display:none` ekran okuyucudan da gizliyor; her genişlikte
+     her satır bir kez okunur. */
+  const phoneClass = (index: number) =>
+    phoneHideFrom !== undefined && index >= phoneHideFrom
+      ? "max-md:hidden"
+      : index < phoneOnlyBefore
+        ? "md:hidden"
+        : phoneHideFrom !== undefined && index === phoneHideFrom - 1
+          ? styles.phoneLast
+          : undefined;
 
   return (
     <div
@@ -154,6 +183,7 @@ function BriefLines({
             <h3
               key={index}
               className={cn(
+                phoneClass(index),
                 "display-ink display-ink-tight w-fit font-bold tracking-[-0.02em] text-strong",
                 // İlk başlık üstten boşluk almaz; sonrakiler bölümleri ayırır.
                 index > 0 && (size === "page" ? "mt-3" : "mt-1.5"),
@@ -169,7 +199,7 @@ function BriefLines({
 
         if (trimmed.startsWith("- ")) {
           return (
-            <p key={index} className={cn("flex gap-2.5 text-body", text)}>
+            <p key={index} className={cn(phoneClass(index), "flex gap-2.5 text-body", text)}>
               <span className="numeral shrink-0 font-bold text-primary">
                 {String(bulletNumberOf.get(index) ?? startNumber).padStart(2, "0")}
               </span>
@@ -177,22 +207,23 @@ function BriefLines({
             </p>
           );
         }
-        if (index === ledeAt && startNumber === 1) {
+        if (index === ledeAt && allowLede) {
           return (
             <p
               key={index}
-              className={
+              className={cn(
+                phoneClass(index),
                 size === "page"
                   ? "text-[1.3125rem] font-medium leading-[1.5] tracking-[-0.01em] text-strong max-sm:text-[1.1875rem]"
-                  : "text-[1.0625rem] font-medium leading-[27px] tracking-[-0.01em] text-strong"
-              }
+                  : "text-[1.0625rem] font-medium leading-[27px] tracking-[-0.01em] text-strong",
+              )}
             >
               {renderInline(trimmed, String(index))}
             </p>
           );
         }
         return (
-          <p key={index} className={cn("text-body", text, size !== "page" && styles.beat)}>
+          <p key={index} className={cn(phoneClass(index), "text-body", text, size !== "page" && styles.beat)}>
             {renderInline(trimmed, String(index))}
           </p>
         );
@@ -237,6 +268,7 @@ export function BriefBody({
   collapsible = true,
   size = "card",
   openLines = OPEN_LINES,
+  phonePreview = false,
 }: {
   markdown: string;
   /** `collapsible` iken katlanmış bölümün açma etiketi. */
@@ -248,6 +280,8 @@ export function BriefBody({
   /** Katlanmadan önce açık kalan satır sayısı. Ana sayfa bunu kolonların
       dengesine göre yükseltiyor — gerekçe `app/(app)/page.tsx` → BriefCard. */
   openLines?: number;
+  /** Telefonda (≤767) daha kısa ikinci bir önizleme — ana sayfa kartı. */
+  phonePreview?: boolean;
 }) {
   const lines = markdown.split("\n").filter((line) => line.trim());
 
@@ -264,11 +298,30 @@ export function BriefBody({
      kazandırmıyor — üstelik "arkada çok şey var" diye yanlış bir izlenim
      bırakıyor. Kural iki bülten türüne de aynı işliyor. */
   const cut = briefPreviewCut(lines, openLines);
+  /* TELEFONDA İKİNCİ KESME (28 Eylül). Masaüstü önizlemesi en az 900
+     karakter; telefonun dar sütununda kart 390'da 1.058, 360'ta 1.080
+     piksel ölçüldü ve sayfanın en uzun bloğuydu. Telefon kesmesi giriş +
+     bir not (`briefPhoneCut`, kuralları ve gerçek 40 bültendeki ölçüm
+     lib/brief.ts'te). Aradaki satırlar İKİ KEZ basılıyor: açıkta
+     `max-md:hidden`, katlamanın başında `md:hidden`. Böylece:
+       - masaüstünde DOM ve görünüm önceki gibi (gizli önek yer tutmuyor),
+       - telefonda "Tümünü Gör" kesmenin tam devamını açıyor,
+       - `<details>` yerli kaldığı için JavaScript kapalıyken de çalışıyor.
+     Masaüstünde katlama yoksa (kısa bülten) ama telefonda varsa katlama
+     yalnızca telefonda basılıyor (`md:hidden`). */
+  const phoneCut = phonePreview ? briefPhoneCut(lines, cut) : cut;
+  const phoneSplit = phoneCut < cut;
+  const foldFrom = phoneSplit ? phoneCut : cut;
 
   return (
     <>
-      <BriefLines lines={lines.slice(0, cut)} startNumber={1} size={size} />
-      {cut < lines.length && (
+      <BriefLines
+        lines={lines.slice(0, cut)}
+        startNumber={1}
+        size={size}
+        phoneHideFrom={phoneSplit ? phoneCut : undefined}
+      />
+      {foldFrom < lines.length && (
         /* Katlanan kısmın numarası, açıkta kalan kısmın SON BAŞLIĞINDAN
            sonraki madde sayısından devam eder; başlık yoksa baştan sayar. */
         /* `<details>` KALIYOR, istemci durumu değil: katlama JS gelmeden de
@@ -276,7 +329,7 @@ export function BriefBody({
            tetikleyicinin görünümü — okla önlenmiş bir metin satırıydı,
            sayfanın en uzun metninin altında fark edilmiyordu. Artık kendi
            kenarlığı olan bir denetim ve açıkken kapanma yolunu da veriyor. */
-        <details className={`group/brief ${styles.disclosure}`}>
+        <details className={cn(`group/brief ${styles.disclosure}`, cut >= lines.length && "md:hidden")}>
           <summary className={styles.toggle}>
             <span
               aria-hidden
@@ -288,9 +341,11 @@ export function BriefBody({
             <span className="hidden group-open/brief:inline">{lessLabel}</span>
           </summary>
           <BriefLines
-            lines={lines.slice(cut)}
-            startNumber={bulletsSinceLastHeading(lines.slice(0, cut)) + 1}
+            lines={lines.slice(foldFrom)}
+            startNumber={bulletsSinceLastHeading(lines.slice(0, foldFrom)) + 1}
             size={size}
+            phoneOnlyBefore={cut - foldFrom}
+            allowLede={bulletsSinceLastHeading(lines.slice(0, cut)) === 0}
           />
         </details>
       )}

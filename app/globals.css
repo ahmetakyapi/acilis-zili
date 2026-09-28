@@ -2480,16 +2480,28 @@ html.ink-splash-out .ink-splash-layer {
 
 /* ---- Markanın altındaki seans satırı (SessionLine, 28 Eylül) ----
    Genişliği yerleşime sayılmıyor (`width:0; min-width:100%`): metin marka
-   adından uzunsa sağa taşıyor ama şeridin ölçülmüş yerini kıpırdatmıyor. */
+   adından uzunsa sağa taşıyor ama şeridin ölçülmüş yerini kıpırdatmıyor.
+   Nokta marka adının ilk harfiyle aynı sol hatta; sayılar koyu ve eşit
+   genişlikli, birimler bir kademe küçük ve soluk (geri sayımın `sa dk`
+   kararıyla aynı dil). */
 .session-line {
   display: flex; width: 0; min-width: 100%; align-items: center; gap: 6px;
-  overflow: visible; white-space: nowrap;
-  font-size: 11px; font-weight: 600; line-height: 14px; letter-spacing: 0; color: var(--text-muted);
+  overflow: visible; white-space: nowrap; line-height: 14px;
 }
-.session-dot { width: 7px; height: 7px; flex: none; border-radius: 999px; background: var(--text-muted); }
-.session-line[data-tone="open"] .session-dot { background: var(--up); box-shadow: 0 0 0 3px var(--up-wash); }
+.session-dot { position: relative; width: 6px; height: 6px; flex: none; border-radius: 999px; background: var(--text-muted); }
+.session-line[data-tone="open"] .session-dot { background: var(--up); }
 .session-line[data-tone="extended"] .session-dot { background: var(--brass); }
+.session-text { display: inline-flex; align-items: baseline; gap: 4px; font-size: 11.5px; }
+.session-lead, .session-state { font-weight: 600; color: var(--text-muted); }
+.session-line[data-tone="open"] .session-state { color: var(--up); }
+.session-part { display: inline-flex; align-items: baseline; gap: 1px; }
+.session-part b { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.01em; color: var(--text-strong); }
+.session-part small { font-size: 10px; font-weight: 600; color: var(--text-muted); }
+/* Canlı seansın nabzı noktanın ETRAFINDA, nokta kendisi sabit. */
 @media (prefers-reduced-motion: no-preference) {
-  .session-line[data-tone="open"] .session-dot { animation: session-pulse 2.4s var(--ease-brand) infinite; }
+  .session-line[data-tone="open"] .session-dot::after {
+    content: ""; position: absolute; inset: -3px; border-radius: 999px;
+    background: var(--up); opacity: .35; animation: session-pulse 2.4s var(--ease-brand) infinite;
+  }
 }
-@keyframes session-pulse { 50% { box-shadow: 0 0 0 5px transparent; } }
+@keyframes session-pulse { from { transform: scale(.6); opacity: .45; } to { transform: scale(1.6); opacity: 0; } }

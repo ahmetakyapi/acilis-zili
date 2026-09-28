@@ -1,7 +1,9 @@
-import type { CSSProperties } from "react";
+import { Suspense, type CSSProperties } from "react";
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
+import type { CompanyCardExtra } from "@/lib/company-card";
 import type { SymbolMeta } from "@/lib/data";
 import type { Dictionary } from "@/lib/i18n";
 import type { FundDetail as FundDetailData } from "@/lib/investor-data";
@@ -104,6 +106,46 @@ export function FundBody({
   const positions = detail.diff.positions.map(decorate);
   const closed = investor.status === "closed";
 
+  /* ŞİRKET KARTI — haritanın karoları, hareket listeleri ve tablonun açık
+     satırları aynı kaydı açıyor: şirketin kendisi (ad, sektör, piyasa
+     değeri, fiyat) + bu portföydeki payı ve çeyreğin hareketi. Kayıt
+     YALNIZCA GÖRÜNEN pozisyonlar için: Bridgewater bin pozisyon taşıyor ve
+     açılır bölümdeki satırların hepsine kayıt basmak sayfayı büyütürdü
+     (bkz. CompanyCards ölçümü). Kotasyon bu sayfada başka yerde sorulmuyor;
+     kart kendisi soruyor ve akışla iniyor, ilk bayt beklemiyor. */
+  const visible = new Set<string>();
+  const addVisible = (ticker: string | null, linkable: boolean) => {
+    if (ticker && linkable) visible.add(ticker);
+  };
+  positions.filter((position) => position.value > 0).slice(0, MAP_MAX).forEach((p) => addVisible(p.ticker, p.linkable));
+  positions.slice(0, TABLE_ROWS).forEach((p) => addVisible(p.ticker, p.linkable));
+  (["new", "increased", "decreased"] as const).forEach((move) =>
+    moveItems(positions, move).slice(0, GROUP_ROWS).forEach((item) => addVisible(item.ticker, item.linkable)),
+  );
+  const sold = soldItemsOf(detail, known);
+  sold.slice(0, GROUP_ROWS).forEach((item) => addVisible(item.ticker, item.linkable));
+  const cardFacts = (dict: Dictionary): Record<string, CompanyCardExtra> => {
+    const facts: Record<string, CompanyCardExtra> = {};
+    for (const position of positions) {
+      if (!position.ticker || !visible.has(position.ticker) || facts[position.ticker]) continue;
+      const move =
+        position.changePct !== null && position.move !== "unchanged"
+          ? `${moveLabel(position.move, t)} ${formatPercent(position.changePct, locale, 0)}`
+          : moveLabel(position.move, t);
+      facts[position.ticker] = {
+        facts: [
+          [dict.companyCard.portfolioShare, formatWeight(position.weight, locale)],
+          ...(detail.diff.compared ? [[dict.companyCard.quarterMove, move] as [string, string]] : []),
+        ],
+      };
+    }
+    for (const item of sold) {
+      if (!item.ticker || !visible.has(item.ticker) || facts[item.ticker]) continue;
+      facts[item.ticker] = { facts: [[dict.companyCard.quarterMove, t.moveSoldOut]] };
+    }
+    return facts;
+  };
+
   return (
     <>
       <Panel className={styles.mapPanel}>
@@ -126,6 +168,10 @@ export function FundBody({
       )}
 
       {detail.history.length > 1 && <HistoryPanel history={detail.history} locale={locale} t={t} />}
+
+      <Suspense fallback={null}>
+        <CompanyCards symbols={[...visible]} names={known} extras={cardFacts} />
+      </Suspense>
     </>
   );
 }
@@ -163,6 +209,39 @@ type GroupItem = {
   logoUrl: string | null;
 };
 
+/** Bir hareket grubunun satırları, sütunun sırasıyla (kart kaydı da aynı
+    sırayı kullanıyor: görünen ilk `GROUP_ROWS`). */
+function moveItems(positions: MapPosition[], move: Move): GroupItem[] {
+  return positions
+    .filter((position) => position.move === move)
+    .sort((a, b) => (move === "new" ? b.value - a.value : Math.abs(b.changePct ?? 0) * b.value - Math.abs(a.changePct ?? 0) * a.value))
+    .map<GroupItem>((position) => ({
+      cusip: position.cusip,
+      ticker: position.ticker,
+      issuer: position.issuer,
+      value: position.value,
+      changePct: position.changePct,
+      linkable: position.linkable,
+      logoUrl: position.logoUrl,
+    }));
+}
+
+function soldItemsOf(detail: FundDetailData, known: Record<string, SymbolMeta>): GroupItem[] {
+  return detail.diff.sold.map<GroupItem>((sold: SoldView) => {
+    const ticker = detail.tickers[sold.cusip] ?? null;
+    const meta = ticker ? known[ticker] : undefined;
+    return {
+      cusip: sold.cusip,
+      ticker,
+      issuer: meta?.name ?? sold.issuer,
+      value: sold.prevValue,
+      changePct: -100,
+      linkable: Boolean(meta),
+      logoUrl: meta?.logoUrl ?? null,
+    };
+  });
+}
+
 function MovesPanel({
   detail,
   positions,
@@ -178,32 +257,8 @@ function MovesPanel({
   locale: string;
   t: Labels;
 }) {
-  const pick = (move: Move) =>
-    positions
-      .filter((position) => position.move === move)
-      .sort((a, b) => (move === "new" ? b.value - a.value : Math.abs(b.changePct ?? 0) * b.value - Math.abs(a.changePct ?? 0) * a.value))
-      .map<GroupItem>((position) => ({
-        cusip: position.cusip,
-        ticker: position.ticker,
-        issuer: position.issuer,
-        value: position.value,
-        changePct: position.changePct,
-        linkable: position.linkable,
-        logoUrl: position.logoUrl,
-      }));
-  const soldItems = detail.diff.sold.map<GroupItem>((sold: SoldView) => {
-    const ticker = detail.tickers[sold.cusip] ?? null;
-    const meta = ticker ? known[ticker] : undefined;
-    return {
-      cusip: sold.cusip,
-      ticker,
-      issuer: meta?.name ?? sold.issuer,
-      value: sold.prevValue,
-      changePct: -100,
-      linkable: Boolean(meta),
-      logoUrl: meta?.logoUrl ?? null,
-    };
-  });
+  const pick = (move: Move) => moveItems(positions, move);
+  const soldItems = soldItemsOf(detail, known);
   const groups = [
     { key: "new", title: t.moveNew, tone: "up", items: pick("new") },
     { key: "increased", title: t.moveIncreased, tone: "up", items: pick("increased") },
@@ -258,7 +313,7 @@ function MovesPanel({
                     return (
                       <li key={item.cusip} className="min-w-0">
                         {item.linkable && item.ticker ? (
-                          <Link href={`/hisse/${item.ticker}`} prefetch={false} className={styles.moveRow}>
+                          <Link href={`/hisse/${item.ticker}`} prefetch={false} className={styles.moveRow} data-cc={item.ticker}>
                             {body}
                           </Link>
                         ) : (
@@ -317,7 +372,7 @@ function PositionsTable({
       <td className={cn("numeral", styles.colRank)}>{index + 1}</td>
       <th scope="row" className={styles.companyCell}>
         {position.linkable && position.ticker ? (
-          <Link href={`/hisse/${position.ticker}`} prefetch={false} className={styles.company}>
+          <Link href={`/hisse/${position.ticker}`} prefetch={false} className={styles.company} data-cc={position.ticker}>
             <CompanyInner position={position} />
           </Link>
         ) : (

@@ -13,6 +13,13 @@ import styles from "./Themes.module.css";
 
 export type LogoMember = { symbol: string; logoUrl: string | null };
 
+/** Telefonda mozaikte görünen logo sayısı — Themes.module.css →
+    `.mosaic > :nth-child(n+8)` ile aynı sayı. */
+const NARROW_MOSAIC_VISIBLE = 7;
+/** Kümede bir satıra sığabilecek karo sayıları — Themes.module.css →
+    `.clusterBox` kapsayıcı sorgularının kapsadığı aralık. */
+const CLUSTER_FIT = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14] as const;
+
 /**
  * Logo yığını ya da mozaiği. Yığın dar kartta, mozaik geniş kartta: aynı
  * bilgi, kartın genişliğine göre iki ayrı ritim (dizinde kartlar tek tip
@@ -28,6 +35,7 @@ export function LogoGroup({
   size = "md",
   placeholder = 0,
   className,
+  card = false,
 }: {
   members: readonly LogoMember[];
   max: number;
@@ -35,14 +43,44 @@ export function LogoGroup({
   size?: LogoTileSize;
   placeholder?: number;
   className?: string;
+  /** Her logo kendi şirket kartını açar (components/ui/CompanyCard.tsx);
+      kaydı sayfa bırakıyor. `+N` karosu kart açmıyor. */
+  card?: boolean;
 }) {
-  const shown = members.slice(0, max);
+  /* "+1" YERİNE LOGO (28 Eylül, sahibinin isteği: "+1 yazacağına yer varken
+     ekle, göster"). Tek bir üye artıyorsa çip onun logosuna dönüşüyor: çip
+     her varyantta bir logo karosuyla AYNI yeri kaplıyor (küme 44×44, mozaik
+     32×32, yığında `min-width` karo boyu ve "+1" o genişliğe sığıyor), yani
+     logo gösterilince hiçbir düzen büyümüyor. "+N" yalnızca N ≥ 2 iken.
+     Ölçüm: /tema/yari-iletkenler kapağı 21 üye — bkz. `.cluster` yorumu. */
+  const extraFits = members.length === max + 1;
+  const shown = members.slice(0, extraFits ? max + 1 : max);
   const rest = members.length - shown.length;
+  /* Telefonda mozaik tek sıraya iniyor ve yedinci logodan sonrasını CSS
+     gizliyor (`.mosaic > :nth-child(n+8)`): orada gizlenen logo için yer
+     YOK, çip kalmalı ve saydığı sayı telefonda görünmeyenler olmalı. */
+  const narrowRest = variant === "mosaic" ? members.length - NARROW_MOSAIC_VISIBLE : 0;
   const variantClass =
     variant === "stack" ? styles.stack : variant === "mosaic" ? styles.mosaic : styles.cluster;
 
-  return (
-    <span aria-hidden className={cn(variantClass, className)} data-size={size}>
+  /* KÜMEDE DENGELİ SATIRLAR. Küme ortalı bir `flex-wrap` ve satıra kaç
+     karo sığacağını kabın genişliği belirliyor; 21 karo 1440'ta 10 + 10 + 1
+     diziliyordu, son satırda tek başına bir karo. Satır sayısı AYNI kalmak
+     şartıyla sütun sayısı eşitleniyor (21 → 7 + 7 + 7): her olası
+     "sığan sütun" sayısı m için dengeli sütun `--cm` hesaplanıyor, kabın
+     genişliğine göre doğru olanı CSS kapsayıcı sorgusu seçiyor. Satır
+     sayısı değişmediği için kümenin ve kapağın boyu değişmiyor (ölçüm
+     Themes.module.css → `.clusterBox`). */
+  const items = members.length === 0 ? placeholder : shown.length + (rest > 0 ? 1 : 0);
+  const balance =
+    variant === "cluster" && items > 0
+      ? (Object.fromEntries(
+          CLUSTER_FIT.map((fit) => [`--c${fit}`, String(Math.ceil(items / Math.ceil(items / fit)))]),
+        ) as CSSProperties)
+      : undefined;
+
+  const group = (
+    <span aria-hidden className={cn(variantClass, className)} data-size={size} style={balance}>
       {members.length === 0
         ? Array.from({ length: placeholder }, (_, i) => (
             <span key={i} className={styles.logoSlot} style={{ "--i": i } as CSSProperties}>
@@ -51,16 +89,34 @@ export function LogoGroup({
           ))
         : shown.map((member, i) => (
             <span key={member.symbol} className={styles.logoSlot} style={{ "--i": i } as CSSProperties}>
-              <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size={size} />
+              <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size={size} card={card} />
             </span>
           ))}
-      {rest > 0 && (
+      {rest > 0 ? (
         <span className={cn(styles.logoSlot, styles.logoRest)} style={{ "--i": shown.length } as CSSProperties}>
-          +{rest}
+          {narrowRest > 0 && narrowRest !== rest ? (
+            <>
+              <span data-at="wide">+{rest}</span>
+              <span data-at="narrow">+{narrowRest}</span>
+            </>
+          ) : (
+            `+${rest}`
+          )}
         </span>
+      ) : (
+        narrowRest > 0 && (
+          <span
+            className={cn(styles.logoSlot, styles.logoRest)}
+            data-only="narrow"
+            style={{ "--i": shown.length } as CSSProperties}
+          >
+            +{narrowRest}
+          </span>
+        )
       )}
     </span>
   );
+  return variant === "cluster" ? <span className={styles.clusterBox}>{group}</span> : group;
 }
 
 export type SpreadPoint = { symbol: string; change: number };

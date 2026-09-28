@@ -90,3 +90,43 @@ export function briefPreviewCut(lines: string[], minimumLines = 4): number {
   }
   return lines.length;
 }
+
+/** Telefon önizlemesinin hedef uzunluğu (okunur karakter). Ölçüm ve
+ *  gerekçe `briefPhoneCut` üstünde. */
+export const BRIEF_PHONE_PREVIEW_CHARS = 400;
+
+/**
+ * Telefonun ikinci kesme noktası (28 Eylül). Masaüstü önizlemesi en az 900
+ * karakter okutuyor (`briefPreviewCut`); telefonun 310 piksellik
+ * sütununda bu, 390'da 1.058, 360'ta 1.080 piksellik bir kart demekti ve
+ * sayfanın en uzun bloğuydu. Telefonda önizleme giriş paragrafı ve onu
+ * izleyen ilk not kadar: günün ana mesajı (başlık ve giriş) her zaman
+ * açıkta, gerisi aynı "Tümünü Gör" katlamasının içinde.
+ *
+ * KESME HER ZAMAN SATIR SINIRINDA: bültende her satır tam bir paragraf ya
+ * da madde, yani yarım cümle kalmıyor. Üç ek kural:
+ *   - Giriş paragrafı (başlık olmayan ilk satır) ve bir satır daha kalır.
+ *   - Başlık ilk paragrafından, ":" ile biten giriş ibaresi ardındaki
+ *     listeden ve tablo satırları birbirinden ayrılmaz.
+ *   - Maddeler ARASINDA kesilebilir (her madde bütün kalır); telefonda
+ *     listenin tamamını açıkta tutmak kesmeyi anlamsızlaştırırdı.
+ * Sonuç masaüstü kesmesinden erken değilse `desktopCut` döner: telefon
+ * masaüstünden UZUN bir önizleme göstermez, kesme de eklenmez.
+ */
+export function briefPhoneCut(lines: string[], desktopCut: number, budget = BRIEF_PHONE_PREVIEW_CHARS): number {
+  const textLength = (line: string) => line.replace(/^\s*(?:##\s+|-\s+)/, "").replace(/\*\*/g, "").trim().length;
+  const isTable = (line: string | undefined) => Boolean(line?.trim().startsWith("|"));
+  const lede = lines.findIndex((line) => !headingOf(line) && !line.trim().startsWith("- ") && !isTable(line));
+  if (lede < 0) return desktopCut;
+  let length = 0;
+  for (let index = 0; index < Math.min(desktopCut, lines.length); index++) {
+    length += textLength(lines[index]);
+    if (index < lede + 1 || length < budget) continue;
+    const line = lines[index].trim();
+    if (headingOf(line)) continue;
+    if (line.endsWith(":")) continue;
+    if (isTable(line) && isTable(lines[index + 1])) continue;
+    return Math.min(index + 1, desktopCut);
+  }
+  return desktopCut;
+}

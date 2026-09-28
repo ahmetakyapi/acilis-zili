@@ -78,6 +78,11 @@
         ],
         "createdAt": "2026-09-28T06:56:24.763Z",
         "reason": "Claude: 24/26 Eylül commit'lerinden kalma mevcut rapor vurguları (özet girişi dahil); 28 Eylül oturumunda eklenmedi"
+      },
+      {
+        "rule": "layout-transition",
+        "value": "transition:margin .32s, translate .32s",
+        "createdAt": "2026-09-28T14:45:29.979Z"
       }
     ]
   }

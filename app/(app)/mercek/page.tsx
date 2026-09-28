@@ -9,6 +9,7 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { StoryCard } from "@/components/stories/StoryCard";
 import { StoryCast, type CastMember } from "@/components/stories/StoryVisual";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import {
   EmptyState,
   FilterChip,
@@ -299,7 +300,9 @@ async function StoryBoard({
      sayfa en çok 600 yazı basıyor ve semboller tekilleştiriliyor, yani
      sonuç sembol evreninden (~800 satır) büyük olamaz. */
   const shownSymbols = [
-    ...new Set(rows.flatMap((story) => (story.symbols ?? []).slice(0, 4))),
+    /* Beşinci sembol yalnızca yazıda TAM beş şirket varken çiziliyor
+       ("+1" yerine logo, StoryBrands); adı ve logosu için burada. */
+    ...new Set(rows.flatMap((story) => (story.symbols ?? []).slice(0, 5))),
   ];
 
   const status = await getStatus();
@@ -367,6 +370,20 @@ async function StoryBoard({
             />
           )}
 
+          {/* Şirket kartı — kadro logoları (manşette üç, kartlarda dört).
+              Kotasyonu kart kendisi soruyor, akışla iniyor. */}
+          <Suspense fallback={null}>
+            <CompanyCards
+              symbols={[
+                ...(lead?.symbols ?? []).slice(0, 3),
+                ...rows.slice(1).flatMap((story) =>
+                  (story.symbols ?? []).slice(0, (story.symbols ?? []).length === 5 ? 5 : 4),
+                ),
+              ]}
+              names={meta}
+            />
+          </Suspense>
+
           {rows.length > 1 && (
             <div className="flex flex-col gap-3">
               <h2 className={styles.archiveHeading}>
@@ -378,7 +395,7 @@ async function StoryBoard({
                     key={story.slug}
                     className={styles.archiveCard}
                     story={story}
-                    cast={castOf(story, 4)}
+                    cast={castOf(story, 5)}
                     locale={locale}
                     t={t}
                   />

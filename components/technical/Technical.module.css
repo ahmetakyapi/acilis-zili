@@ -71,7 +71,7 @@
 .pulseStancePending b { color:var(--text-muted); }
 /* Logosu soluk: sembol takipte ama henüz söyleyecek bir şeyi yok. */
 .pulseLogoPending { opacity:.5; filter:grayscale(1); }
-.pulseLogoPending:is(:hover, [data-open]) { opacity:1; filter:none; }
+.pulseLogoPending:is(:hover, [data-card-open]) { opacity:1; filter:none; }
 .pulseLogos { display:flex; flex-wrap:wrap; gap:6px; min-width:0; }
 .pulseLogo { display:inline-flex; border-radius:10px; transition-property:background-color, box-shadow, opacity, filter; transition-duration:var(--default-transition-duration); transition-timing-function:var(--ease-brand); }
 /* MOBİLDE DOKUNMA ALANI 40. Künye 26×26 çiziliyor ve parmakla ıskalanıyordu.
@@ -93,7 +93,7 @@
 /* BALONUN SAHİBİ İŞARETLİ. Balon ekran kenarına kırpıldığında logonun tam
    üstünde durmayabiliyor; açık balonun logosu yıkanmış bir zemin ve iki
    piksellik soluk bir halka alıyor, hangi logoya ait olduğu okunuyor. */
-.pulseLogo[data-open] { background:var(--primary-wash); box-shadow:0 0 0 2px var(--primary-faint); }
+.pulseLogo[data-card-open] { background:var(--primary-wash); box-shadow:0 0 0 2px var(--primary-faint); }
 .pulseChanges { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-muted); }
 .pulseChange { display:inline-flex; align-items:center; gap:6px; padding:3px 9px 3px 4px; border:1px solid var(--line); border-radius:999px; font-size:12px; font-weight:600; color:var(--text-strong); }
 .pulseChange:hover { border-color:var(--primary-faint); }
@@ -1704,8 +1704,9 @@
  .analysisGrid { grid-template-columns:minmax(0,1.04fr) minmax(0,1fr); grid-template-areas:"map reading" "notes notes"; }
 }
 
-/* Kimlik balonu kartlardan dağılım logolarına taşındı (22 Eylül);
-   kuralları `CompanyBalloon.module.css`te. */
+/* Kimlik balonu kartlardan dağılım logolarına taşındı (22 Eylül); 28
+   Eylül'den beri sitenin ortak şirket kartı, kuralları
+   `components/ui/CompanyCard.module.css`te. */
 
 /* Eksenin iki ucu — kapsanan fiyat aralığı. Cetvel orantılı çiziliyor ama
    hangi aralığı kapsadığını söylemiyordu; sayı `priceMapLayout`tan geliyor,
@@ -1738,7 +1739,7 @@
    iç kenar: açık hâlin (`[data-open]`, yıkanmış zemin + dış halka) bir
    kademe altı, karonun ölçüsü değişmiyor. */
 .pulse[data-variant="panel"] .pulseLogo:hover { box-shadow:inset 0 0 0 1px var(--primary-faint); }
-.pulse[data-variant="panel"] .pulseLogo[data-open] { background:var(--primary-wash); box-shadow:0 0 0 2px var(--primary-faint); }
+.pulse[data-variant="panel"] .pulseLogo[data-card-open] { background:var(--primary-wash); box-shadow:0 0 0 2px var(--primary-faint); }
 /* DOKUNMA ALANI KARODAN BÜYÜK, KARO BÜYÜMEDEN. Görünen karo 36 piksel
    kalıyor; telefonda ve dokunmatikte görünmez bir kat dört piksel dışa
    taşıyor ve hedef 44 piksele çıkıyor. Bir dönem üç piksel (42) idi ve

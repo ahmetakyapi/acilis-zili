@@ -29,7 +29,7 @@ export function EarningsRadar({ rows, meta, locale, t }: { rows: EarningsRow[]; 
     <Link className={styles.radarLead} href={`#earnings-day-${lead.reportDate}`}>
       <div className={styles.radarTop}>
         <div className={styles.radarIdentity}>
-          <LogoTile symbol={lead.symbol} logoUrl={company?.logoUrl} className={styles.radarLogo} />
+          <LogoTile symbol={lead.symbol} logoUrl={company?.logoUrl} className={styles.radarLogo} card />
           <div><strong>{lead.symbol}</strong><span>{company?.name ?? lead.symbol}</span></div>
         </div>
         <time className={styles.radarDate} dateTime={lead.reportDate} aria-label={formatEtDateLong(lead.reportDate, locale)}>
@@ -44,7 +44,7 @@ export function EarningsRadar({ rows, meta, locale, t }: { rows: EarningsRow[]; 
     </Link>
     </SpotlightCard>
     {featured.length > 1 && <div className={styles.radarFollowing} data-motion-stagger>{featured.slice(1).map(row => <Link key={row.symbol} href={`#earnings-day-${row.reportDate}`}>
-      <LogoTile symbol={row.symbol} logoUrl={meta[row.symbol]?.logoUrl} size="sm" />
+      <LogoTile symbol={row.symbol} logoUrl={meta[row.symbol]?.logoUrl} size="sm" card />
       <div><strong>{row.symbol}</strong><time dateTime={row.reportDate} title={formatEtDateLong(row.reportDate, locale)}>{formatEtDateCompact(row.reportDate, locale)}</time></div>
       <ArrowUpRight size={14} aria-hidden />
       <span className={styles.radarFollowingSession}>{timingOf(row.hour, t).label}</span>

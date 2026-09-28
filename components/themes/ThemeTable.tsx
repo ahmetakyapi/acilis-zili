@@ -176,6 +176,9 @@ export function ThemeTable({
       href={`/hisse/${row.symbol}`}
       prefetch={false}
       className="flex min-w-0 items-center gap-2.5 py-0.5 transition-colors hover:text-primary"
+      /* Şirket kartı (components/ui/CompanyCard.tsx); ölçüt ETF'inin kaydı
+         yok, onda kart açılmıyor. */
+      data-cc={row.symbol}
     >
       <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
       <span className="min-w-0">

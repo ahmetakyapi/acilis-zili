@@ -28,14 +28,14 @@ const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
-/** "5 sa 48 dk" · "2 g 4 sa" · "12 dk" — saniye yok, satır dakikada bir değişiyor. */
-function remaining(ms: number, l: SessionLineLabels): string {
+/** Kalan süre parçaları: [5 sa, 48 dk] · [2 g, 4 sa] · [12 dk] — saniye yok. */
+function remaining(ms: number, l: SessionLineLabels): { n: number; unit: string }[] {
   const days = Math.floor(ms / DAY);
   const hours = Math.floor((ms % DAY) / HOUR);
-  const minutes = Math.max(1, Math.ceil((ms % HOUR) / MINUTE));
-  if (days > 0) return `${days} ${l.d} ${hours} ${l.h}`;
-  if (hours > 0) return `${hours} ${l.h} ${Math.min(minutes, 59)} ${l.m}`;
-  return `${minutes} ${l.m}`;
+  const minutes = Math.min(59, Math.max(1, Math.ceil((ms % HOUR) / MINUTE)));
+  if (days > 0) return [{ n: days, unit: l.d }, { n: hours, unit: l.h }];
+  if (hours > 0) return [{ n: hours, unit: l.h }, { n: minutes, unit: l.m }];
+  return [{ n: minutes, unit: l.m }];
 }
 
 /**
@@ -92,14 +92,31 @@ export function SessionLine({
         ? labels.preMarket
         : labels.afterHours
       : labels.closed;
-  const count = passed ? null : `${data.session === "regular" ? labels.toClose : labels.toOpen} ${remaining(target - now, labels)}`;
+  const parts = passed ? null : remaining(target - now, labels);
+  const lead = data.session === "regular" ? labels.toClose : labels.toOpen;
+  const spoken = parts ? `${lead} ${parts.map((part) => `${part.n} ${part.unit}`).join(" ")}` : null;
 
+  /* OKUMA SIRASI (28 Eylül): sayılar koyu ve eşit genişlikli, birimler ve
+     "Kapanışa" soluk — süre bir bakışta okunuyor; ilk hâlde bütün satır aynı
+     soluk tondaydı ve marka adının altında bir dipnot gibi duruyordu. */
   return (
-    <span className={cn("session-line", className)} data-tone={tone} title={count ? `${state} · ${count}` : state}>
+    <span className={cn("session-line", className)} data-tone={tone} title={spoken ? `${state} · ${spoken}` : state}>
       <i aria-hidden className="session-dot" />
-      <span className="sr-only">{state}: </span>
-      <span className="numeral" aria-hidden={count ? undefined : true}>
-        {count ?? state}
+      <span className="sr-only">{spoken ? `${state}: ${spoken}` : state}</span>
+      <span aria-hidden className="session-text">
+        {parts ? (
+          <>
+            <span className="session-lead">{lead}</span>
+            {parts.map((part) => (
+              <span key={part.unit} className="session-part">
+                <b className="numeral">{part.n}</b>
+                <small>{part.unit}</small>
+              </span>
+            ))}
+          </>
+        ) : (
+          <span className="session-state">{state}</span>
+        )}
       </span>
     </span>
   );

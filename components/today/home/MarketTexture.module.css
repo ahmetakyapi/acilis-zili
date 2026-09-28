@@ -88,10 +88,17 @@
 .extremeLogo { display:inline-flex; flex-shrink:0; transition:transform .4s; transition-delay:calc(var(--i) * 22ms); }
 @media (hover:hover) { .extreme:hover .extremeLogo { transform:translateY(-2px); } }
 .extremeRest[data-at="narrow"] { display:none; }
+/* Çip logo karosuyla aynı boyda ve köşede (`md`: 32, `rounded-md`);
+   ölçüm ve logo sayıları MarketTexture.tsx → `EXTREME_LOGOS`. */
 .extremeRest {
   display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
-  height:26px; min-width:26px; padding:0 5px; border-radius:var(--radius-sm);
-  background:var(--premium-surface); color:var(--text-body); font-size:10.5px; font-weight:700;
+  height:32px; min-width:32px; padding:0 6px; border-radius:var(--radius-md);
+  background:var(--premium-surface); color:var(--text-body); font-size:var(--text-tiny); font-weight:700;
+}
+/* 1024'ün altında üç logo ve dar rozet (tablet ve telefon). */
+@media (max-width:1023px) {
+  .extremeLogo:nth-child(n+4), .extremeRest[data-at="wide"] { display:none; }
+  .extremeRest[data-at="narrow"] { display:inline-flex; }
 }
 
 @media (max-width:767px) {
@@ -100,12 +107,19 @@
 }
 /* TELEFONDA UÇLAR YAN YANA VE KISA. Alt alta iki 184 piksellik kart bandı
    390'da 1239 piksele çıkarıyordu (ölçüldü). Uçlar zaten sıralamanın ilk
-   ve son satırı; telefonda yalnızca adları, rakamları ve dört logo kalıyor,
-   dağılım şeridi dizinin kartında. */
+   ve son satırı; telefonda yalnızca adları, rakamları ve üç logo kalıyor,
+   dağılım şeridi dizinin kartında.
+   767'YE KADAR (28 Eylül). Logolar 32 piksele büyüyünce 640–767 arasında
+   rakamın yanında logo satırına 119–131 piksel kalıyordu (ölçüldü), üç
+   logo ve çip 140 istiyor. Bu aralıkta rakam başlığın altına iniyor ve
+   satır kartın tam iç genişliğini alıyor. Karolar (`.tile`) 640 eşiğinde
+   kalıyor; orada şerit altı sütun. */
 @media (max-width:639px) {
   .tile { height:70px; padding:8px 9px; }
   .tileSkeleton { height:70px; }
   .tilePct { font-size:15px; }
+}
+@media (max-width:767px) {
   .extremes { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
   .extreme, .extremeSkeleton { height:148px; }
   .extreme { gap:8px; padding:12px 12px 12px; }
@@ -113,8 +127,21 @@
   .extremeMain { flex-direction:column; align-items:flex-start; gap:8px; }
   .extremeTitle { width:auto; white-space:normal; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:15px; line-height:1.25; }
   .extremeFigure { font-size:26px; }
-  .extremeLogo:nth-child(n+5), .extremeRest[data-at="wide"] { display:none; }
-  .extremeRest[data-at="narrow"] { display:inline-flex; }
+}
+
+/* TELEFONDA KART BOYU TABAN, SABİT DEĞİL (28 Eylül). 148 piksel sabitti
+   ve 640'ın altında içerik ona sığmıyordu: etiket ("Günün En Güçlü
+   Teması") okun yanında iki satıra, tema adı da iki satıra kırılınca kart
+   360–430'da 184, 320'de 202 piksel istiyor (ölçüldü); rakam kartın
+   dışına, damganın üstüne taşıyordu. Bu logolar büyümeden önce de böyleydi
+   (26 piksellik logolarla 178). Artık 184 taban ve içerik uzarsa kart
+   uzuyor; iki kart ızgarada yan yana, kısa olan uzuna geriliyor. Yedek
+   aynı taban: 320'deki 18 piksellik fark yalnızca üç satırlık etikette.
+   Bu blok ≤767 bloğunun ARDINDA durmak zorunda; öncesinde kalırsa oradaki
+   148 kazanıyor. */
+@media (max-width:639px) {
+  .extreme { height:auto; min-height:184px; }
+  .extremeSkeleton { height:184px; }
 }
 
 @media (prefers-reduced-motion:reduce) {

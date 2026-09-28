@@ -1,6 +1,7 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { LogoTile } from "@/components/ui/primitives";
+import { cardKey } from "@/lib/company-card-key";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
 import { formatMoneyCompact } from "@/lib/utils";
@@ -32,7 +33,11 @@ export function CompanyLeaders({ leaders, labels, locale }: {
     <ol className={styles.choices} data-motion-stagger>
       {visible.map((item, index) => <li key={item.symbol}>
         <Link href={withLocale(`/hisse/${item.symbol}`, locale)} prefetch={false}
-          className={styles.company} data-first={index === 0 || undefined} aria-label={`${item.name} (${item.symbol})${item.marketCap !== null ? ` · ${formatMoneyCompact(item.marketCap, locale)}` : ""}`} title={item.name}>
+          className={styles.company} data-first={index === 0 || undefined} aria-label={`${item.name} (${item.symbol})${item.marketCap !== null ? ` · ${formatMoneyCompact(item.marketCap, locale)}` : ""}`}
+          /* Şirket kartı (components/ui/CompanyCard); yerel `title=` ipucu
+             kalktı — kartın yanında tarayıcının kendi ipucu da açılıp ikisi
+             üst üste biniyordu (/teknik'te 22 Eylül'de aynı karar). */
+          data-cc={cardKey(item.symbol, "leaders")}>
           <span className={styles.rank} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
           <ArrowUpRight className={styles.open} size={12} aria-hidden="true" />
           <span className={styles.logo}><LogoTile symbol={item.symbol} logoUrl={item.logoUrl} className="size-10" /></span>

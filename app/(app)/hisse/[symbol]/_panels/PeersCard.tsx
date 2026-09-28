@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import styles from "../stock.module.css";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import { ChangePill, EmptyValue, Panel, PanelHeader, PanelLink } from "@/components/ui/primitives";
 import { ScaleBar } from "@/components/markets/CompareScale";
 import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
@@ -134,7 +135,7 @@ export async function PeersCard({
                   {body}
                 </div>
               ) : (
-                <Link href={`/hisse/${row.symbol}`} className={styles.peerRow}>
+                <Link href={`/hisse/${row.symbol}`} className={styles.peerRow} data-cc={row.symbol}>
                   {body}
                 </Link>
               )}
@@ -142,6 +143,16 @@ export async function PeersCard({
           );
         })}
       </ol>
+      {/* ŞİRKET KARTI — bu listenin satırları VE Şirket Özeti'ndeki logo
+          şeridi (StockSummary: aynı sıralamanın ilk beşi, yani bu sekizin
+          alt kümesi). Kayıt burada çünkü paket burada: kart satırın
+          yanındaki fiyatla aynı sayıyı yazıyor, ikinci bir tur yok. */}
+      <CompanyCards
+        symbols={top.map((peer) => peer.symbol)}
+        quotes={result.ok ? quotes : null}
+        names={meta}
+        status={status}
+      />
     </Panel>
   );
 }

@@ -49,6 +49,7 @@ import { DividendMeter, Flow, Rolling, VerdictBadge, type FlowStep, type Verdict
 import type { ImportPayload } from "./StatementImport";
 import { PANEL_TITLE, type DividendRow, type TradeRow } from "./tax-ui";
 import styles from "./Tax.module.css";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 /* EKSTREDEN AKTARIM AYRI BİR PARÇA. Önizleme, ayrıştırıcılar ve (PDF'te)
    pdf.js ancak okuyucu bir dosya seçtiğinde iniyor; sayfanın ilk JS'inde
@@ -862,13 +863,12 @@ export function TaxCalculator({
                       />
                     </Field>
                     <Field label={labels.buyDate}>
-                      <input
-                        type="date"
+                      <DatePicker
                         value={buyRow?.date ?? ""}
                         min={TCMB_MIN_DATE}
                         max={today}
-                        onChange={(event) => editSimple("buy", { date: event.target.value })}
-                        className={styles.input}
+                        onChange={(value) => editSimple("buy", { date: value })}
+                        locale={locale}
                       />
                     </Field>
                     <Field label={labels.priceUsd} hint={readAs(buyRow?.price ?? "")}>
@@ -889,14 +889,13 @@ export function TaxCalculator({
                   <h3 className={styles.stepTitle}>{labels.stepSell}</h3>
                   <div className={styles.fields}>
                     <Field label={labels.sellDate} error={simpleSellBeforeBuy ? labels.sellBeforeBuy : undefined}>
-                      <input
-                        type="date"
+                      <DatePicker
                         value={sellRow?.date ?? ""}
                         min={buyRow?.date && isIsoDate(buyRow.date) ? buyRow.date : TCMB_MIN_DATE}
                         max={today}
                         aria-invalid={simpleSellBeforeBuy || undefined}
-                        onChange={(event) => editSimple("sell", { date: event.target.value })}
-                        className={styles.input}
+                        onChange={(value) => editSimple("sell", { date: value })}
+                        locale={locale}
                       />
                     </Field>
                     <Field label={labels.priceUsd} hint={readAs(sellRow?.price ?? "")}>
@@ -998,16 +997,15 @@ export function TaxCalculator({
                           />
                         </Field>
                         <Field label={labels.date}>
-                          <input
-                            type="date"
+                          <DatePicker
                             value={row.date}
                             min={TCMB_MIN_DATE}
                             max={today}
-                            onChange={(event) => {
-                              updateTrade(row.id, { date: event.target.value });
-                              if (row.side === "sell") followSellYear(event.target.value);
+                            onChange={(value) => {
+                              updateTrade(row.id, { date: value });
+                              if (row.side === "sell") followSellYear(value);
                             }}
-                            className={styles.input}
+                            locale={locale}
                           />
                         </Field>
                         <Field label={labels.quantity} hint={readAs(row.quantity)}>
@@ -1206,13 +1204,12 @@ export function TaxCalculator({
                         />
                       </Field>
                       <Field label={labels.paymentDate}>
-                        <input
-                          type="date"
+                        <DatePicker
                           value={row.date}
                           min={TCMB_MIN_DATE}
                           max={today}
-                          onChange={(event) => updateDividend(row.id, { date: event.target.value })}
-                          className={styles.input}
+                          onChange={(value) => updateDividend(row.id, { date: value })}
+                          locale={locale}
                         />
                       </Field>
                       <div className={cn(styles.field, styles.fieldWide)}>

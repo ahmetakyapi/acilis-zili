@@ -147,15 +147,26 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
                 {names[row.symbol]?.name ?? ""}
               </span>
             </span>
+            {/* BİLİNMEYEN SAAT ROZET DEĞİL, KÜNYE (28 Eylül). 28 Eylül'de beş
+                satırın dördü aynı gri "Saat Belirsiz" rozetini taşıyordu ve
+                panelde göze ilk çarpan şey bilginin YOKLUĞUYDU; tek gerçek
+                bilgi (CCL "Açılış Öncesi") rozet kalabalığında
+                kayboluyordu. Rozet bir sınıflama taşıdığında kalıyor;
+                saat yoksa aynı sütunda, aynı hizada soluk bir künye.
+                Sütun genişliği değişmiyor, hat korunuyor. */}
             {badge ? (
               <AnalysisBadge badge={badge} t={t} size="sm" className="w-full justify-center" />
-            ) : (
+            ) : row.hour && hourLabel[row.hour] ? (
               <TimingChip
                 className="w-full justify-center"
                 tone={row.hour === "bmo" ? "pre" : row.hour === "amc" ? "post" : "neutral"}
               >
-                {row.hour ? (hourLabel[row.hour] ?? t.earnings.timeUnknown) : t.earnings.timeUnknown}
+                {hourLabel[row.hour]}
               </TimingChip>
+            ) : (
+              <span className="text-center text-tiny font-semibold text-muted">
+                {t.earnings.timeUnknown}
+              </span>
             )}
             {row.epsEstimate !== null ? (
               <span className="hidden text-right sm:block">

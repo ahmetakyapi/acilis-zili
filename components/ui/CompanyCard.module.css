@@ -1,5 +1,5 @@
-/* ---- Şirket balonu (dağılım logoları) ----
-   Gerekçesi `CompanyBalloon.tsx` ve `PulseCompanyLink.tsx` üzerinde.
+/* ---- Şirket kartı (sitedeki bütün şirket logoları ve karoları) ----
+   Gerekçesi `CompanyCard.tsx` üzerinde.
 
    BİR KATMAN, KART DEĞİL. Yüzey masthead açılır menüsüyle aynı katman
    tokenlarını kullanıyor (`--overlay-surface` + `--shadow-overlay`):
@@ -17,16 +17,14 @@
    açıkken logoya gelince: 1440'ta menü 818-1122 x 81-447, SPCX balonu
    1054-1350 x 239-447; 1280'de menü 736-1040, balon 894-1190; 1024'te
    menü 688-992, MU balonu 516-812 x 262-470; üçünde de kesişimin
-   ortasında en üstteki eleman balondu). 25'te balon şeridin ve bölüm
+   ortasında en üstteki eleman balondu). 25'te kart şeridin ve bölüm
    gezinmesinin üstünde, başlığın ve içindeki her şeyin (Daha Fazla,
-   hesap menüsü) altında: aynı üç senaryoda kesişimin ortasında artık
-   menü duruyor. Başlığın üstüne çıkması hiç gerekmiyor; konum zaten
-   başlığın ve alt çubuğun ARASINDAKİ bantta hesaplanıyor (`safeBand`). */
-.balloon {
+   hesap menüsü) altında. Başlığın üstüne çıkması hiç gerekmiyor; konum
+   zaten başlığın ve alt çubuğun ARASINDAKİ bantta hesaplanıyor
+   (`safeBand`). */
+.card {
   position:fixed; z-index:25; top:0; left:0;
-  /* 296 → 260 (23 Eylül, sahibinin isteği: "bir tık daha küçük"). Balon
-     208 piksel yüksekliğindeydi; daha dar yüzey, sm logo ve bir kademe
-     küçük punto ile ~176. İçerik aynı, yalnızca ölçü. */
+  /* 296 → 260 (23 Eylül, sahibinin isteği: "bir tık daha küçük"). */
   width:min(260px, calc(100vw - 24px));
   padding:12px 14px;
   border:1px solid var(--line);
@@ -34,7 +32,7 @@
   background:var(--overlay-surface);
   box-shadow:var(--shadow-overlay);
   color:var(--text-body);
-  /* Bir okuma, hedef değil: imleç balonun üstünden geçerken altındaki
+  /* Bir okuma, hedef değil: imleç kartın üstünden geçerken altındaki
      komşu logo çalışmaya devam ediyor. Eski ipucu imleci tutuyordu ve
      aşağı açıldığında beş-yedi komşu logoyu örtüyordu (ölçüldü, MU açıkken
      /teknik 1440'ta NVDA, AMD, INTC, TSLA, ONDS elementFromPoint'te
@@ -42,21 +40,20 @@
   pointer-events:none;
 }
 /* YERİ YAZILMADAN GÖRÜNMÜYOR. Konum ve `data-side` boyamadan önce
-   `useLayoutEffect`te yazılıyor; o efekt erken dönerse (bağlantı ya da
-   düğüm yok) balon sol üst köşede, başlığın üstünde kalırdı. Yan yazılana
-   kadar gizli: yanıp sönme de yok. */
-.balloon:not([data-side]) { visibility:hidden; }
-/* GİRİŞ, AYRILDIĞI YERDEN. Alta açılan balon logodan aşağı, üste açılan
+   `useLayoutEffect`te yazılıyor; yan yazılana kadar gizli: sol üst
+   köşede bir kare yanıp sönmüyor. */
+.card:not([data-side]), .card[data-away] { visibility:hidden; }
+/* GİRİŞ, AYRILDIĞI YERDEN. Alta açılan kart öğeden aşağı, üste açılan
    yukarı dört piksel kayarak geliyor. Süre ve eğri sitenin ortak geçiş
    ritmi (`--default-transition-duration`, `--ease-brand`); ayrı bir süre
-   yazılmıyor. Logodan logoya geçişte (`data-swap`) giriş hiç oynamıyor:
+   yazılmıyor. Öğeden öğeye geçişte (`data-swap`) giriş hiç oynamıyor:
    okuma yerinde değişiyor, her logoda yeniden solup gelmiyor. */
-.balloon[data-side="below"] { animation:balloon-below var(--default-transition-duration) var(--ease-brand); }
-.balloon[data-side="above"] { animation:balloon-above var(--default-transition-duration) var(--ease-brand); }
-.balloon[data-swap] { animation:none; }
-@keyframes balloon-below { from { opacity:0; translate:0 -4px; } }
-@keyframes balloon-above { from { opacity:0; translate:0 4px; } }
-@media (prefers-reduced-motion:reduce) { .balloon[data-side] { animation:none; } }
+.card[data-side="below"] { animation:company-card-below var(--default-transition-duration) var(--ease-brand); }
+.card[data-side="above"] { animation:company-card-above var(--default-transition-duration) var(--ease-brand); }
+.card[data-swap] { animation:none; }
+@keyframes company-card-below { from { opacity:0; translate:0 -4px; } }
+@keyframes company-card-above { from { opacity:0; translate:0 4px; } }
+@media (prefers-reduced-motion:reduce) { .card[data-side] { animation:none; } }
 
 .body { display:flex; flex-direction:column; gap:10px; }
 .head { display:flex; align-items:center; gap:10px; }
@@ -71,7 +68,7 @@
 .pill { flex:none; padding:3px 8px; border-radius:var(--radius-sm); font-size:11px; font-weight:650; }
 
 /* Künye sütunu en uzun künyeye göre ("Piyasa Değeri"), değerler sağa
-   yaslı: üç satırın sayıları aynı dikey hatta biter. */
+   yaslı: satırların sayıları aynı dikey hatta biter. */
 .facts {
   display:grid; grid-template-columns:auto minmax(0,1fr); align-items:baseline; gap:6px 12px;
   padding-top:9px; border-top:1px solid var(--line-soft);
@@ -79,8 +76,13 @@
 .facts > div { display:contents; }
 .facts dt { font-size:11px; font-weight:600; color:var(--text-muted); }
 .facts dd { min-width:0; text-align:right; font-size:12px; font-weight:600; color:var(--text-strong); overflow-wrap:anywhere; }
-.price { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:flex-end; gap:2px 7px; }
+.price { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
 .price b { font-size:15px; font-weight:650; letter-spacing:-.025em; }
-.price em { font-style:normal; font-size:12px; font-weight:550; }
+/* Yüzde ve tutar tek satırda; renk YALNIZCA işaretten ve yalnızca bu
+   seansı anlatan değişimde (`data-dir` yoksa nötr). */
+.move { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:0 7px; color:var(--text-muted); }
+.move[data-dir="up"] { color:var(--up); }
+.move[data-dir="down"] { color:var(--down); }
+.move em { font-style:normal; font-size:12px; font-weight:600; }
 
 .foot { padding-top:8px; border-top:1px solid var(--line-soft); font-size:10.5px; font-weight:600; line-height:1.45; color:var(--text-muted); }

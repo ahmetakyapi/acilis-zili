@@ -7,7 +7,7 @@ import { heatOf, splitSmall, squarify, type HeatTone } from "@/lib/theme-view";
 import type { ThemeRow } from "@/lib/themes-data";
 import { cn, formatMoneyCompact, formatPercent, formatPercentPlain, formatPrice, NO_VALUE } from "@/lib/utils";
 import styles from "./Themes.module.css";
-import { TreemapStage, type PeekData } from "./TreemapStage";
+import { TreemapStage } from "./TreemapStage";
 
 /**
  * Temanın kare haritası — her üye piyasa değeriyle orantılı bir karo,
@@ -30,16 +30,14 @@ import { TreemapStage, type PeekData } from "./TreemapStage";
  *   2. Sembolü bile sığmayacak kadar küçük üyeler tek bir "Diğer N"
  *      karosunda, alanı toplam piyasa değerleri kadar; haritanın altında
  *      her biri adıyla listeleniyor (gerekçe `splitSmall`).
- * Üzerine gelince, odaklanınca ya da parmakla dokununca karonun künye
- * kartı açılıyor: ad, son fiyat, günlük değişim, piyasa değeri, temadaki
- * payı. Kart tek ve paylaşılan (`TreemapStage`, gerekçe orada); karo
- * künyesini `data-peek`te taşıyor.
+ * Üzerine gelince ya da klavyeyle odaklanınca sitenin ortak şirket kartı
+ * açılıyor (components/ui/CompanyCard.tsx): logo, ad, sektör, piyasa
+ * değeri, temadaki payı, fiyat ve günlük değişim. Karo yalnızca `data-cc`
+ * taşıyor; kaydı tema sayfası sembol başına bir kez bırakıyor.
  *
  * `HeatmapGrid` DEĞERLENDİRİLDİ, KULLANILMADI. O sarmal `/piyasalar`ın eşit
- * karolu ızgarası için yazılmış: kartların açılma yönü `nth-child` sütun
- * sayısına bağlı. Burada karolar mutlak konumlu ve boyları farklı; kartın
- * yatay yönü karonun haritadaki yerinden sunucuda hesaplanıyor. Ortak olan
- * RENK FORMÜLÜ ve eşikler (`heatOf`, globals.css → `--heat-*`).
+ * karolu ızgarası için yazılmış. Ortak olan RENK FORMÜLÜ ve eşikler
+ * (`heatOf`, globals.css → `--heat-*`) ve 28 Eylül'den beri kart.
  *
  * YÖN RENGİ YALNIZCA BU SEANSTA (Veri dürüstlüğü 4). Medyana girmeyen ya da
  * son kapanışı anlatan karo nötr tonda: yeşil ve kırmızı "bugün" der.
@@ -82,9 +80,6 @@ const REACH = {
 
 /** Grup karosunda gösterilen logo sayısı. */
 const GROUP_LOGOS = 4;
-/** Künye kartının yatay yönü: karonun ortası kabın bu yüzdelerinin
-    dışındaysa kart karonun kenarına yaslanır, taşmaz. */
-const CARD_EDGE = { start: 32, end: 68 } as const;
 
 type Labels = {
   unsized: string;
@@ -93,7 +88,6 @@ type Labels = {
   smallTitle: string;
   share: string;
   cap: string;
-  open: string;
 };
 
 type Tone = { tone: HeatTone; level: 0 | 1 | 2 | 3 | 4 };
@@ -130,7 +124,7 @@ export function ThemeTreemap({
   const pctOf = (row: ThemeRow) => (row.changePct === null ? NO_VALUE : formatPercent(row.changePct, locale));
 
   return (
-    <TreemapStage className={styles.stage} labels={{ cap: labels.cap, share: labels.share, open: labels.open }}>
+    <TreemapStage className={styles.stage}>
       {LAYOUTS.map((layout) => {
         const weights = sized.map(({ row }) => row.marketCap!);
         const minShare = (layout.min.w * layout.min.h) / (layout.box.w * layout.box.h);
@@ -147,7 +141,6 @@ export function ThemeTreemap({
           <div key={layout.key} className={styles.mapLayout} data-layout={layout.key}>
             <div className={styles.map}>
               {rects.map((rect, rank) => {
-                const center = rect.x + rect.w / 2;
                 const place = {
                   left: `${rect.x}%`,
                   top: `${rect.y}%`,
@@ -157,7 +150,6 @@ export function ThemeTreemap({
                 } as CSSProperties;
                 const reach = (step: { w: number; h: number }) =>
                   (rect.w / 100) * layout.max.w >= step.w && (rect.h / 100) * layout.max.h >= step.h;
-                const cardX = center < CARD_EDGE.start ? "start" : center > CARD_EDGE.end ? "end" : "center";
 
                 if (rect.index >= kept.length) {
                   const members = grouped.map((i) => sized[i].row);
@@ -173,7 +165,7 @@ export function ThemeTreemap({
                       <span className={styles.tileFace}>
                         <span className={styles.groupLogos} aria-hidden>
                           {members.slice(0, GROUP_LOGOS).map((row) => (
-                            <LogoTile key={row.symbol} symbol={row.symbol} logoUrl={row.logoUrl} size="xs" />
+                            <LogoTile key={row.symbol} symbol={row.symbol} logoUrl={row.logoUrl} size="xs" card />
                           ))}
                         </span>
                         <span className={styles.groupLabel}>{label}</span>
@@ -193,16 +185,6 @@ export function ThemeTreemap({
                 const share = formatPercentPlain((row.marketCap! / sizedTotal) * 100, locale);
                 const cap = formatMoneyCompact(row.marketCap, locale);
                 const price = formatPrice(row.price, locale, { currency: true });
-                const peek: PeekData = {
-                  symbol: row.symbol,
-                  name: row.name ?? row.symbol,
-                  price,
-                  pct,
-                  tone: muted || row.changePct === null ? "flat" : row.changePct > 0 ? "up" : row.changePct < 0 ? "down" : "flat",
-                  cap,
-                  share,
-                  note: lastClose ? labels.lastClose : "",
-                };
                 return (
                   <Link
                     key={row.symbol}
@@ -210,8 +192,7 @@ export function ThemeTreemap({
                     prefetch={false}
                     className={styles.tile}
                     style={place}
-                    data-card-x={cardX}
-                    data-peek={JSON.stringify(peek)}
+                    data-cc={row.symbol}
                     aria-label={[
                       row.symbol,
                       row.name ?? row.symbol,
@@ -295,7 +276,7 @@ function Roster({
       <ul className={styles.rosterList}>
         {items.map(({ row, heat, muted, pct }) => (
           <li key={row.symbol} className="min-w-0">
-            <Link href={`/hisse/${row.symbol}`} prefetch={false} className={styles.rosterItem}>
+            <Link href={`/hisse/${row.symbol}`} prefetch={false} className={styles.rosterItem} data-cc={row.symbol}>
               <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
               <span className={styles.rosterText}>
                 <b className="numeral">{row.symbol}</b>

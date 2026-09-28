@@ -170,7 +170,15 @@ export async function StockSummary({ symbol, locale, t }: { symbol: string; loca
       meta: (
         <span className={styles.summaryPeers}>
           {topPeers.map((peer) => (
-            <Link key={peer.symbol} href={`/hisse/${peer.symbol}`} prefetch={false} aria-label={peerMeta[peer.symbol]?.name ?? peer.symbol}>
+            <Link
+              key={peer.symbol}
+              href={`/hisse/${peer.symbol}`}
+              prefetch={false}
+              aria-label={peerMeta[peer.symbol]?.name ?? peer.symbol}
+              /* Şirket kartı; kaydı Benzer Şirketler paneli bırakıyor
+                 (PeersCard — ilk sekizin paketi, bu beşi kapsıyor). */
+              data-cc={peer.symbol}
+            >
               <LogoTile symbol={peer.symbol} logoUrl={peerMeta[peer.symbol]?.logoUrl ?? null} size="sm" />
             </Link>
           ))}

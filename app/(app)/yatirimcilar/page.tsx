@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { GuideHint } from "@/components/article/GuideHint";
 import { InvestorCard } from "@/components/investors/InvestorCard";
 import { MoversBoard } from "@/components/investors/MoversBoard";
@@ -7,6 +8,7 @@ import styles from "@/components/investors/Investors.module.css";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import { DataStamp, EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
 import { RollingFigure } from "@/components/ui/RollingFigure";
 import { getSymbolNames } from "@/lib/data";
@@ -101,6 +103,13 @@ export default async function InvestorsPage() {
       {overview ? (
         <>
           <MoversBoard movers={overview.movers} known={known} locale={locale} t={ti} />
+          {/* Şirket kartı: mozaik logoları, kongre işlemleri ve hareket
+              satırları. Yalnızca sembolü tabloda bilinenler; kotasyonu kart
+              kendisi soruyor, akışla iniyor (sayfanın geri kalanı fiyat
+              göstermiyor, yan yana ikinci bir yüzde yok). */}
+          <Suspense fallback={null}>
+            <CompanyCards symbols={tickers.filter((ticker) => known[ticker])} names={known} />
+          </Suspense>
 
           <section className={styles.cardsSection} aria-labelledby="investors-cards">
             <h2 id="investors-cards" className={styles.sectionTitle}>

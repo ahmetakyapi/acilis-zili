@@ -1,7 +1,11 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { CompanyCards } from "@/components/ui/CompanyCards";
 import { LogoTile } from "@/components/ui/primitives";
 import { verdictLabel, verdictPillClass, type VerdictKey } from "@/lib/analysis";
+import type { SymbolMeta } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
+import type { MarketStatus } from "@/lib/market-hours";
+import type { Quote } from "@/lib/providers/types";
 import { technicalHref } from "@/lib/technical";
 import { cn, directionOf, directionText, formatPercent } from "@/lib/utils";
 import styles from "./Technical.module.css";
@@ -35,10 +39,13 @@ export type MoreSymbolEntry = {
  */
 export function MoreSymbols({
   entries,
+  cards,
   locale,
   t,
 }: {
   entries: readonly MoreSymbolEntry[];
+  /** Şirket kartı — sayfanın kendi paketi (kartın yüzdesi karttakiyle aynı). */
+  cards: { quotes: Record<string, Quote> | null; names: Record<string, SymbolMeta>; status: MarketStatus };
   locale: Locale;
   t: Dictionary;
 }) {
@@ -52,6 +59,7 @@ export function MoreSymbols({
           {t.technical.allStocks} ↗
         </Link>
       </div>
+      <CompanyCards symbols={entries.map((entry) => entry.symbol)} {...cards} />
       <ul className={styles.moreGrid}>
         {entries.map((entry) => (
           <li key={entry.symbol}>
@@ -59,6 +67,7 @@ export function MoreSymbols({
               href={technicalHref(entry.symbol)}
               prefetch={false}
               className={styles.moreCard}
+              data-cc={entry.symbol}
             >
               <span className={styles.moreHead}>
                 <LogoTile symbol={entry.symbol} logoUrl={entry.logoUrl} size="md" />

@@ -16,7 +16,8 @@ import { industryLabel, sectorLabel } from "@/lib/sectors";
  * 71 KB'lık bir tablo: bu fonksiyonu bir istemci modülü içe aktarırsa
  * tablonun tamamı tarayıcı paketine iner. Kilit bunu derlemede kırıyor,
  * sessizce büyümesine izin vermiyor. İstemci bileşeni sektörü prop olarak
- * almalı (bkz. `CompanyBalloon` — sunucuda çiziliyor).
+ * almalı (bkz. `lib/company-card.ts` — şirket kartının kaydı sunucuda
+ * hazırlanıyor, sektör istemciye yalnızca dize olarak iniyor).
  */
 export function companySector(
   symbol: string,

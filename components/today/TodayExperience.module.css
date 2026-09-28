@@ -80,8 +80,13 @@
    84 piksel (başlık 32 ve 26 puntoyken). Görünüm genişliğine bağlı punto
    1024'te tabana (26) iniyordu, oysa kolon orada 422 piksel ve başlık tek
    satırın yarısını kullanıyordu. Punto: 1440 → 36 (tavan), 1024 → 34,
-   768 → 26, telefon → 26 (taban). */
-.headline { max-width:25ch; font-size:clamp(26px,8cqi,36px); font-weight:550; line-height:1.12; letter-spacing:-.045em; color:var(--text-strong); text-wrap:balance; }
+   768 → 26, telefon → 26 (taban).
+   KAHRAMAN BÜYÜDÜ (26 Eylül, sahibinin isteği: "Açılış Ziline Kalan biraz
+   daha büyüsün, altındaki boşluk fazla"). Kolon sağdaki endeks ızgarasının
+   boyuna gerildiği için artan hava başlık ile rakamın arasına düşüyordu.
+   Boşluk esnetilmiyor, doldurulur: başlık 36 → 46 tavan, rakam 92 → 108
+   tavan (Countdown.module.css). */
+.headline { max-width:22ch; font-size:clamp(28px,10cqi,46px); font-weight:550; line-height:1.12; letter-spacing:-.045em; color:var(--text-strong); text-wrap:balance; }
 .countdown { min-width:0; }
 /* ARTIK RAKAMIN İKİ YANINA BÖLÜNÜYOR (22 Eylül, ikinci ölçüm).
    Blok dipte dururken kolonun artığı tek bir banda, başlık ile rakamın
@@ -92,7 +97,12 @@
    ve rakam satırı `margin-block:auto` ile artığın ORTASINDA: hava başlığın
    altına ve künyenin üstüne eşit bölünüyor. Alt sınırlar dolgu olarak
    duruyor (18 ve künyenin 22'si), yani dar kolonda hiçbir şey sıkışmıyor. */
-.countdownBlock { align-self:stretch; display:flex; flex-direction:column; min-width:0; padding-top:18px; }
+/* Üst dolgu 10 (26 Eylül, kahraman büyüyünce 18'den). Telefondaki 14 ayrı
+   bir kuraldı ve 26 Eylül'de sona eklenen blok onu da eziyordu; 24 Eylül
+   birleştirmesinin kuralına göre (her seçici bir kırılımda bir kez) ölü
+   kural silindi, değer her genişlikte 10 (28 Eylül; önce/sonra hesaplanmış
+   stiller altı genişlikte karşılaştırıldı, fark yok). */
+.countdownBlock { align-self:stretch; display:flex; flex-direction:column; min-width:0; padding-top:10px; }
 .countdownBlock .countdown { margin-block:auto; }
 /* Ölçüm (22 Eylül, TR, başsız Chrome, `.tmp-sep22b-home-hero-after.mjs`):
    - 1440 / 1280: kahraman 436 (değişmedi). Rozet 199 = "Endeksler" 199
@@ -211,14 +221,21 @@
    degrade ayrım değil kalabalıktı; tonu bloktan açık, çerçevesi ince. */
 .storyFigure { background:var(--surface-solid); }
 /* The three secondary stories were title-only ~40px rows. Each now includes
-   its existing dek, with a small separate date/symbol column on desktop. */
-.storyRow { display:grid; grid-template-columns:40px minmax(0,1fr) auto; align-items:start; gap:14px 24px; padding:17px 26px; border-left:2px solid transparent; transition:background .2s; }
+   its existing dek, with a small separate date/symbol column on desktop.
+   MERCEK ARŞİV SATIRLARI (26 Eylül, "bir tık daha görsel, dikeyde az
+   uzasın"). Satır 17 piksel dolguyla sıkışık duruyordu ve logo 32
+   piksellik bir işaretti. Dolgu 22'ye, logo 40'a çıktı; başlık bir kademe
+   büyüdü. Üzerine gelince satırın solunda mavi bir hat açılıyor ve logo
+   kalkıyor. */
+.storyRow { position:relative; display:grid; grid-template-columns:48px minmax(0,1fr) auto; align-items:start; gap:14px 22px; padding:22px 26px; border-left:2px solid transparent; transition:background .2s; }
+.storyRow::before { content:""; position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:0 3px 3px 0; background:var(--primary); transform:scaleY(0); transition:transform .28s var(--ease-brand); }
+.storyRow:hover::before { transform:scaleY(1); }
 .storyRow:hover { background:var(--primary-tint); border-left-color:var(--primary-faint); }
 .storyRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-3px; }
 .storyNumber { padding-top:3px; color:var(--primary); font-size:var(--text-tiny); font-weight:600; letter-spacing:.04em; }
 .storyRowCopy { min-width:0; }
-.storyRowCopy h4 { color:var(--text-strong); font-size:var(--text-read); line-height:1.45; font-weight:600; letter-spacing:-.015em; overflow-wrap:anywhere; }
-.storyRowCopy p { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; margin-top:6px; color:var(--text-body); font-size:var(--text-base); line-height:1.6; }
+.storyRowCopy h4 { color:var(--text-strong); font-size:var(--text-lead); line-height:1.4; font-weight:600; letter-spacing:-.015em; overflow-wrap:anywhere; }
+.storyRowCopy p { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; margin-top:7px; color:var(--text-body); font-size:var(--text-base); line-height:1.6; }
 /* ---- Mercek bloğunun logoları (26 Eylül) ----
    Kadro: karolar 12 piksel üst üste biniyor, aralarındaki ince halka
    bloğun kendi yüzeyi (gölge değil, ton — CLAUDE.md). Üzerine gelince
@@ -235,11 +252,15 @@
 }
 /* Satırın logosu numaranın yerinde; ikinci sembol köşesine binen küçük
    karo. Satıra gelince logo hafifçe kalkıyor, ok ile aynı anda. */
-.storyRowLogo { position:relative; width:32px; height:32px; margin-top:1px; transition:translate .25s; }
-.storyRowLogoSecond { position:absolute; right:-7px; bottom:-6px; box-shadow:0 0 0 2px var(--surface-solid); }
+.storyRowLogo { position:relative; width:40px; height:40px; margin-top:1px; transition:translate .25s; }
+.storyRowLogo > :first-child { width:40px !important; height:40px !important; border-radius:11px !important; }
+.storyRowLogoSecond { position:absolute; right:-8px; bottom:-7px; box-shadow:0 0 0 2px var(--surface-solid); }
 .storyRow:hover .storyRowLogo { translate:0 -2px; }
 .storyRowMeta { display:flex; align-items:center; gap:12px; padding-top:2px; color:var(--text-muted); font-size:var(--text-tiny); }
 .storyRowMeta svg { flex-shrink:0; color:var(--primary-ink); transition:transform .2s; }
+/* Arşivin telefondaki dip bağlantısı; masaüstünde yok (gerekçe
+   StoriesSpotlight). Dokunma hedefi 44. */
+.storyAllLink { display:none; }
 .storyRow:hover .storyRowMeta svg { transform:translate(2px,-2px); }
 
 /* ---- Son analizler ---- */
@@ -388,7 +409,6 @@
   .heroTopline { flex-wrap:wrap; gap:6px 10px; align-items:center; padding-bottom:12px; }
 
   .heroMain { gap:16px; padding-top:14px; }
-  .countdownBlock { padding-top:14px; }
   .indexDeck { padding:12px 0 0; }
   .indexHeading { margin-bottom:8px; }
   .indexQuote { gap:2px 5px; margin-top:6px; }
@@ -409,10 +429,13 @@
   .storySpotlight h3 { font-size:25px; line-height:1.2; text-wrap:pretty; }
   .storyLead h3 + p { margin-top:10px; font-size:var(--text-read); line-height:1.65; }
   .storyLead .storyFigure { border-radius:12px; padding:14px; gap:10px; }
-  .storyRow { grid-template-columns:36px minmax(0,1fr); gap:8px 12px; padding:16px 18px; }
-  .storyRowCopy h4 { font-size:15px; line-height:1.45; }
+  .storyRow { grid-template-columns:40px minmax(0,1fr); padding:18px; }
+  .storyRowLogo, .storyRowLogo > :first-child { width:36px !important; height:36px !important; }
   .storyRowCopy p { -webkit-line-clamp:2; font-size:var(--text-base); line-height:1.55; }
   .storyRowMeta { grid-column:2; flex-wrap:wrap; gap:9px; padding-top:0; }
+  .storyArchive > li:nth-child(n+3) { display:none; }
+  .storyAllLink { display:flex; align-items:center; justify-content:center; gap:6px; min-height:44px; border-top:1px solid var(--line-soft); background:var(--surface-solid); color:var(--primary-ink); font-size:var(--text-small); font-weight:650; }
+  .storyAllLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:-3px; }
   .storyRowMeta svg { margin-left:auto; }
   .analysisLead { grid-template-areas:"identity score" "excerpt excerpt" "footer footer"; padding:16px; gap:12px 14px; }
   .analysisLeadLink { margin:0 12px 12px; }
@@ -453,32 +476,5 @@
   .storyRow,.storyRowMeta svg,.storyCastTile,.storyRowLogo { transition:none; }
   .storyRow:hover .storyRowLogo,.storyLead:hover .storyCastTile { translate:none; }
   .storyRow:hover .storyRowMeta svg { transform:none; }
+  .storyRow::before { transition:none; }
 }
-
-/* KAHRAMAN BÜYÜDÜ (26 Eylül, sahibinin isteği: "Açılış Ziline Kalan biraz
-   daha büyüsün, altındaki boşluk fazla"). Kolon sağdaki endeks ızgarasının
-   boyuna gerildiği için artan hava başlık ile rakamın arasına düşüyordu.
-   Boşluk esnetilmiyor, doldurulur: başlık 36 → 46 tavan, rakam 92 → 108
-   tavan (Countdown.module.css). Ölçüm yorumun altında. */
-.headline { font-size:clamp(28px,10cqi,46px); max-width:22ch; }
-.countdownBlock { padding-top:10px; }
-
-/* MERCEK ARŞİV SATIRLARI (26 Eylül, "bir tık daha görsel, dikeyde az
-   uzasın"). Satır 17 piksel dolguyla sıkışık duruyordu ve logo 32
-   piksellik bir işaretti. Dolgu 22'ye, logo 40'a çıktı; başlık bir kademe
-   büyüdü. Üzerine gelince satırın solunda mavi bir hat açılıyor ve logo
-   kalkıyor. */
-.storyRow { grid-template-columns:48px minmax(0,1fr) auto; padding:22px 26px; gap:14px 22px; }
-.storyRowLogo { width:40px; height:40px; }
-.storyRowLogo > :first-child { width:40px !important; height:40px !important; border-radius:11px !important; }
-.storyRowLogoSecond { right:-8px; bottom:-7px; }
-.storyRowCopy h4 { font-size:var(--text-lead); line-height:1.4; }
-.storyRowCopy p { margin-top:7px; }
-.storyRow { position:relative; }
-.storyRow::before { content:""; position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:0 3px 3px 0; background:var(--primary); transform:scaleY(0); transition:transform .28s var(--ease-brand); }
-.storyRow:hover::before { transform:scaleY(1); }
-@media(max-width:767px) {
-  .storyRow { grid-template-columns:40px minmax(0,1fr); padding:18px 18px; }
-  .storyRowLogo, .storyRowLogo > :first-child { width:36px !important; height:36px !important; }
-}
-@media(prefers-reduced-motion:reduce) { .storyRow::before { transition:none; } }

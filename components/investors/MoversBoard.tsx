@@ -127,11 +127,16 @@ function MoverColumn({
                 <small>{meta?.name ?? entry.issuer}</small>
               </span>
               <span className={styles.moverFaces} aria-hidden>
-                {slugs.slice(0, PORTRAIT_STACK).map((slug) => {
+                {/* "+1" YERİNE PORTRE (28 Eylül): tek bir yatırımcı artıyorsa
+                    çip onun portresine dönüşüyor. Portre 24 piksel ve
+                    öncekinin üstüne 5 piksel biniyor (19 piksel), "+1"
+                    çipi 6 piksel boşluk + ~12 piksel metin — sütun
+                    büyümüyor. */}
+                {slugs.slice(0, slugs.length === PORTRAIT_STACK + 1 ? PORTRAIT_STACK + 1 : PORTRAIT_STACK).map((slug) => {
                   const investor = investorBySlug(slug);
                   return investor ? <Portrait key={slug} investor={investor} size="chip" /> : null;
                 })}
-                {slugs.length > PORTRAIT_STACK && <span className={styles.moverMore}>+{slugs.length - PORTRAIT_STACK}</span>}
+                {slugs.length > PORTRAIT_STACK + 1 && <span className={styles.moverMore}>+{slugs.length - PORTRAIT_STACK}</span>}
               </span>
               <span className={styles.moverCounts}>
                 {parts(entry)
@@ -154,7 +159,7 @@ function MoverColumn({
           return (
             <li key={entry.key} className="min-w-0">
               {entry.ticker && meta ? (
-                <Link href={`/hisse/${entry.ticker}`} prefetch={false} className={styles.moverRow}>
+                <Link href={`/hisse/${entry.ticker}`} prefetch={false} className={styles.moverRow} data-cc={entry.ticker}>
                   {body}
                 </Link>
               ) : (

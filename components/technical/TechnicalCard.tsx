@@ -217,8 +217,10 @@ export function TechnicalCard({
       <div className={styles.cardHead}>
         {/* Kimlik balonu 22 Eylül'de dağılım logolarına taşındı: kart
             kimliği zaten gösteriyor, balon aynı bilgiyi ikinci kez veriyordu
-            ve kaplama bağlantısıyla çakışma riski taşıyordu. Bkz.
-            `CompanyBalloon`. */}
+            ve kaplama bağlantısıyla çakışma riski taşıyordu. 28 Eylül'de
+            balon sitenin ortak şirket kartına dönüştü
+            (components/ui/CompanyCard.tsx); bu karoda yine yok, aynı
+            gerekçeyle. */}
         {/* Uçuşun kaynağı karonun kendisi (`data-morph`, LogoTile); kartı
             kaplayan bağlantı onu içermediği için kart `data-morph-scope`
             taşıyor (teknik/page.tsx). */}

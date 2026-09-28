@@ -47,8 +47,19 @@
    dolgu sütunların içinde); yatay ayraç çizgiyi kesmesin diye karodan
    başlıyor. */
 .rowItem { min-width:0; }
+/* Manşetsiz günün tamamlama satırları yalnızca iki sütunlu düzende
+   (gerekçe TopNews.tsx → `pairFill`). */
+.pairFill { display:none; }
+@media (min-width:640px) { .pairFill { display:block; } }
+/* SAAT SÜTUNU 76 → 92 (28 Eylül). Göreli zaman ("38 Dakika Önce") 77
+   piksel tutuyor, sütunun içerik alanı 64'tü (76 − 12 dolgu); satır
+   `nowrap` ve sağa yaslı olduğu için künye SOLA taşıyordu: bölümün sol
+   kenarının 12–14 piksel dışına (1024/1440, ölçüldü), 390'da ekran
+   kenarına 4 piksel kalıyordu. 92 = 77 + 12 dolgu + 3 pay; İngilizcesi
+   ("38 Minutes Ago") de sığıyor. Telefonda 90 (dolgu 10): 88 denendi,
+   "45 Dakika Önce" 78 piksel ölçüldü ve pay sıfıra iniyordu. */
 .row {
-  --time-col:76px; --thumb:48px; --gap:14px;
+  --time-col:92px; --thumb:48px; --gap:14px;
   position:relative; display:grid; grid-template-columns:var(--time-col) var(--thumb) minmax(0,1fr);
   grid-template-areas:"time thumb headline" "time thumb byline"; grid-template-rows:auto auto; align-content:start;
   column-gap:var(--gap); min-width:0; border-radius:12px; color:inherit; transition:background-color .2s;
@@ -83,7 +94,7 @@
 .rowByline { grid-area:byline; display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; padding:5px 10px 14px 0; color:var(--text-muted); font-size:var(--text-tiny); line-height:1.3; }
 
 @media (max-width:639px) {
-  .row { --time-col:76px; --thumb:44px; --gap:12px; }
+  .row { --time-col:90px; --thumb:44px; --gap:12px; }
   .rowTime { padding-right:10px; }
   .rowTime time { font-size:13px; }
   .thumb { width:44px; height:44px; }

@@ -492,13 +492,22 @@ export function LogoTile({
   logoUrl,
   size = "md",
   className,
+  card,
 }: {
   symbol: string;
   logoUrl?: string | null;
   size?: LogoTileSize;
   className?: string;
+  /**
+   * Şirket kartı (components/ui/CompanyCard.tsx): `true` sembolün kendi
+   * kaydını, dize bir yüzeye özgü anahtarı (`cardKey`) açar. Karo yalnızca
+   * `data-cc` özniteliğini taşıyor; kartın verisini sayfadaki
+   * `CompanyCards` bırakıyor.
+   */
+  card?: boolean | string;
 }) {
   const step = LOGO_TILE_SIZE[size];
+  const cardAttr = card ? (typeof card === "string" ? card : symbol) : undefined;
   /* LOGO DEPODAYSA VERİTABANI SATIRINA BAĞLI DEĞİL.
      `logoUrl` çağrı yerlerine `symbols.logo_url`dan geliyor ve o satır
      yoksa null oluyordu: sembol tabloda değilse, günlük senkron onu henüz
@@ -521,6 +530,7 @@ export function LogoTile({
     <span
       aria-hidden
       data-morph={morph}
+      data-cc={cardAttr}
       className={cn(
         "numeral flex shrink-0 items-center justify-center bg-primary-wash font-bold tracking-[-0.02em] text-primary-ink",
         step.box,
@@ -545,6 +555,7 @@ export function LogoTile({
       )}
       fallback={letters}
       morph={morph}
+      card={cardAttr}
     />
   );
 }
