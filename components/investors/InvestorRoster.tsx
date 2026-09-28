@@ -9,6 +9,12 @@ import styles from "./Investors.module.css";
 
 /** Şeridin altında adıyla anılan en büyük pay sayısı; kalanı tek "Diğer". */
 const STRIP_NAMED = 5;
+/** Bu paydan büyük dilim portresini ve payını şeridin içinde taşıyor (yüzde). */
+const INLINE_SHARE = 8;
+/** Adı da sığdıran pay: %10'luk dilim 1440'ta ~125 piksel ve ad "Phil…" diye kesiliyordu. */
+const INLINE_NAME_SHARE = 20;
+/** Şeridin iki ucundaki bu genişlikte (yüzde) bilgi kartı kenara yaslanıyor. */
+const EDGE_SHARE = 16;
 
 /**
  * Dizin kapağının görseli (28 Eylül) — portre mozaiğinin yerine.
@@ -57,15 +63,56 @@ export function InvestorRoster({
       {total > 0 && (
         <figure className={styles.capital}>
           <figcaption className={styles.capitalTitle}>{t.capitalTitle}</figcaption>
-          <div className={styles.capitalBar} role="img" aria-label={t.capitalAria}>
-            {segments.map((segment, index) => (
-              <i
-                key={segment.investor.slug}
-                data-rank={Math.min(index, STRIP_NAMED)}
-                style={{ flexGrow: segment.value } as CSSProperties}
-                title={`${segment.investor.name} · ${formatPercentPlain(share(segment.value), locale, 1)}`}
-              />
-            ))}
+          {/* DİLİMLER BAĞLANTI (28 Eylül). Üzerine gelince ya da klavyeyle
+              odaklanınca dilimin üstünde bir bilgi kartı açılıyor: portre,
+              ad, kuruluş, değer ve pay. Öteki dilimler soluklaşıyor. Büyük
+              pay (≥ `INLINE_SHARE`) adını şeridin İÇİNDE taşıyor; küçükler
+              yalnızca kartla okunuyor. Kartın hizası dilimin şeritteki
+              yerinden: baştaki sola, sondaki sağa yaslanıyor ki panelin
+              kenarından taşmasın. */}
+          <div className={styles.capitalBar} aria-label={t.capitalAria}>
+            {(() => {
+              let before = 0;
+              return segments.map((segment, index) => {
+                const pct = share(segment.value);
+                const middle = before + pct / 2;
+                before += pct;
+                const align = middle < EDGE_SHARE ? "start" : middle > 100 - EDGE_SHARE ? "end" : "center";
+                return (
+                  <Link
+                    key={segment.investor.slug}
+                    href={`/yatirimcilar/${segment.investor.slug}`}
+                    prefetch={false}
+                    className={styles.capitalSegment}
+                    data-rank={Math.min(index, STRIP_NAMED)}
+                    data-align={align}
+                    style={{ flexGrow: segment.value } as CSSProperties}
+                    aria-label={`${segment.investor.name}, ${formatPercentPlain(pct, locale, 1)}`}
+                  >
+                    {pct >= INLINE_SHARE && (
+                      <span className={styles.capitalInline} aria-hidden>
+                        <Portrait investor={segment.investor} size="chip" />
+                        {pct >= INLINE_NAME_SHARE && (
+                          <span className={styles.capitalInlineName}>{segment.investor.name}</span>
+                        )}
+                        <b className="numeral">{formatPercentPlain(pct, locale, 0)}</b>
+                      </span>
+                    )}
+                    <span className={styles.capitalTip} aria-hidden>
+                      <Portrait investor={segment.investor} size="sm" />
+                      <span className={styles.capitalTipId}>
+                        <b>{segment.investor.name}</b>
+                        <small>{investorFirm(segment.investor, locale)}</small>
+                      </span>
+                      <span className={styles.capitalTipFigures}>
+                        <b className="numeral">{formatPercentPlain(pct, locale, 1)}</b>
+                        <small className="numeral">{formatMoneyCompact(segment.value, locale)}</small>
+                      </span>
+                    </span>
+                  </Link>
+                );
+              });
+            })()}
           </div>
           <ol className={styles.capitalLegend}>
             {named.map((segment, index) => (
