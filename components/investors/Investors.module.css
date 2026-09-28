@@ -472,3 +472,30 @@ a.company:hover b { color:var(--primary-ink); }
 }
 .holderTrade > :last-child { text-align:right; font-weight:600; }
 @media(hover:hover) and (pointer:fine) { .holderTrade:hover > :last-child { color:var(--primary-ink); } }
+
+/* ---- ARK'ın son işlemleri (Cathie Wood) ----------------------------------
+   Çeyreğin dört grubuyla aynı dil, iki sütun: alımlar ve satışlar. Fon
+   çipleri adın altında küçük künye; yeni açılan ya da kapanan pozisyon
+   yön rengini taşıyor. Önceki günler tek satırlık özet, tablo değil. */
+.arkSides { display:grid; grid-template-columns:minmax(0,1fr); border-top:1px solid var(--line); }
+@media(min-width:768px) { .arkSides { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+.arkFunds { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+.arkFunds i {
+  padding:1px 6px; border-radius:999px; background:var(--surface-sunken);
+  font-size:10.5px; font-style:normal; font-weight:650; letter-spacing:.02em; color:var(--text-muted);
+}
+.arkFunds i[data-tone="up"] { background:var(--up-wash); color:var(--up); }
+.arkFunds i[data-tone="down"] { background:var(--down-wash); color:var(--down); }
+.arkSides .moveFigures b { color:var(--text-strong); }
+.arkEarlier { padding:14px 18px 6px; border-top:1px solid var(--line); }
+.arkEarlierTitle { margin-bottom:6px; font-size:13px; font-weight:650; color:var(--text-strong); }
+.arkEarlierRow {
+  display:grid; grid-template-columns:minmax(88px,auto) minmax(110px,auto) minmax(0,1fr); align-items:baseline; gap:4px 16px;
+  padding:8px 0; border-top:1px solid var(--line-soft); font-size:13px; color:var(--text-body);
+}
+.arkEarlierRow:first-child { border-top:0; }
+.arkEarlierTickers { display:flex; flex-wrap:wrap; gap:4px 12px; min-width:0; }
+.arkEarlierTickers b { font-weight:650; }
+.arkEarlierTickers b[data-tone="up"] { color:var(--up); }
+.arkEarlierTickers b[data-tone="down"] { color:var(--down); }
+@media(max-width:639px) { .arkEarlierRow { grid-template-columns:minmax(0,1fr) auto; } .arkEarlierTickers { grid-column:1 / -1; } }

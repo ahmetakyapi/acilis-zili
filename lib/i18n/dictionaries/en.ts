@@ -2475,6 +2475,24 @@ const en: typeof tr = {
     },
   },
 
+  ark: {
+    title: "ARK's Latest Trades",
+    meta: "ETF Files · Daily",
+    buys: "Buys",
+    sells: "Sells",
+    dayMeta: "Between the {from} and {to} Files",
+    opened: "New Position",
+    closed: "Closed Position",
+    shares: "{count} Shares",
+    empty: "No trades on this side.",
+    first: "ARK files have been recorded since {date}; the first comparison arrives with the next trading day's file.",
+    earlierTitle: "Earlier Days",
+    dayCounts: "{buys} Buys · {sells} Sells",
+    noTrades: "No Trades",
+    note:
+      "ARK publishes the holdings of its six active ETFs (ARKK, ARKW, ARKQ, ARKG, ARKF, ARKX) every day; the difference between two days' files shows the previous trading day's buys and sells. When money flows in or out of an ETF every position grows or shrinks by the same ratio, so that common ratio is removed and only the remaining deviation counts as a trade.",
+    noteValue: "Amounts are approximated with the closing price in the file. Cash funds and rows without a ticker are not shown.",
+  },
   investors: {
     eyebrow: "Famous Investors",
     title: "Who Holds What",

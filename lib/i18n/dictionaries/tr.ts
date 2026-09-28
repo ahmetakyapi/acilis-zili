@@ -2903,6 +2903,24 @@ const tr = {
   },
 
   /* Ünlü yatırımcılar (28 Eylül) — /yatirimcilar, detay ve hisse paneli. */
+  ark: {
+    title: "ARK'ın Son İşlemleri",
+    meta: "ETF Dosyaları · Günlük",
+    buys: "Alımlar",
+    sells: "Satışlar",
+    dayMeta: "{from} ile {to} Dosyaları Arası",
+    opened: "Yeni Pozisyon",
+    closed: "Pozisyonu Kapattı",
+    shares: "{count} Adet",
+    empty: "Bu tarafta işlem yok.",
+    first: "ARK dosyaları {date} tarihinden beri kaydediliyor; ilk karşılaştırma bir sonraki işlem gününün dosyasıyla gelecek.",
+    earlierTitle: "Önceki Günler",
+    dayCounts: "{buys} Alış · {sells} Satış",
+    noTrades: "İşlem Yok",
+    note:
+      "ARK altı aktif ETF'sinin (ARKK, ARKW, ARKQ, ARKG, ARKF, ARKX) elindeki hisseleri her gün yayımlıyor; iki günün dosyası arasındaki fark bir önceki işlem günündeki alım ve satımları gösterir. ETF'ye para girip çıktığında bütün pozisyonlar aynı oranda büyüyüp küçüldüğü için bu ortak oran ayıklanıyor; kalan sapma işlem sayılıyor.",
+    noteValue: "Tutar, dosyadaki kapanış fiyatıyla yaklaşık hesaplanır. Nakit fonu ve sembolü olmayan satırlar gösterilmez.",
+  },
   investors: {
     eyebrow: "Ünlü Yatırımcılar",
     title: "Kim Ne Tutuyor",

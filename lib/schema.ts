@@ -1045,6 +1045,39 @@ export const congressTrades = pgTable(
   ],
 );
 
+/**
+ * ARK ETF'lerinin günlük pozisyon dosyaları (28 Eylül).
+ *
+ * Cathie Wood'un 13F'i çeyreklik ve 45 gün gecikmeli; ARK ise altı ETF'sinin
+ * elindeki hisseleri HER GÜN yayımlıyor. İki ardışık günün farkı ARK'ın bir
+ * önceki işlem günündeki alım ve satımları (hesap `lib/ark-view.ts`, pay
+ * yaratma/iade etkisi orada ayıklanıyor). Satırlar dosyadaki gibi; fark
+ * okuma anında hesaplanıyor.
+ *
+ * `as_of` dosyanın kendi tarihi. Son `ARK_KEEP_DAYS` gün tutuluyor, eskisi
+ * günlük cron'da siliniyor. Ayrı tablo, yabancı anahtar yok: migration
+ * elle uygulanıyor, tablo yokken okuyan kod sessizce boş dönüyor.
+ */
+export const arkHoldings = pgTable(
+  "ark_holdings",
+  {
+    asOf: date("as_of").notNull(),
+    fund: text("fund").notNull(),
+    cusip: text("cusip").notNull(),
+    ticker: text("ticker"),
+    company: text("company").notNull(),
+    shares: doublePrecision("shares").notNull(),
+    /** Dolar. */
+    marketValue: doublePrecision("market_value").notNull(),
+    /** Yüzde (9,12 → 9.12). */
+    weight: doublePrecision("weight").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.asOf, t.fund, t.cusip] }),
+    index("ark_holdings_ticker_idx").on(t.ticker),
+  ],
+);
+
 /* ==========================================================================
    Uygulama hataları — kendi barındırdığımız hata günlüğü
    ========================================================================== */

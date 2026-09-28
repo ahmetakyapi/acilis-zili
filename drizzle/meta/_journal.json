@@ -155,6 +155,13 @@
       "when": 1790590701470,
       "tag": "0021_large_santa_claus",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1790598835772,
+      "tag": "0022_confused_gamma_corps",
+      "breakpoints": true
     }
   ]
 }

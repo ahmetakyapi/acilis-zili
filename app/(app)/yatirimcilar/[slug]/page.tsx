@@ -12,6 +12,8 @@ import polish from "@/components/motion/UtilityExperience.module.css";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { DataStamp, EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
 import { getSymbolNames } from "@/lib/data";
+import { getArkActivity } from "@/lib/ark-data";
+import { ArkTrades } from "@/components/investors/ArkTrades";
 import { getI18n, type Dictionary } from "@/lib/i18n";
 import { getInvestorDetail } from "@/lib/investor-data";
 import { INVESTOR_SLUGS, investorBySlug, investorFirm, investorPortrait, type Investor } from "@/lib/investors";
@@ -52,6 +54,9 @@ export async function generateMetadata(props: PageProps<"/yatirimcilar/[slug]">)
   };
 }
 
+/** Günlük ETF dosyaları olan tek yatırımcı. */
+const ARK_INVESTOR = "cathie-wood";
+
 export default async function InvestorPage(props: PageProps<"/yatirimcilar/[slug]">) {
   const { slug } = await props.params;
   const investor = investorBySlug(slug);
@@ -66,7 +71,11 @@ export default async function InvestorPage(props: PageProps<"/yatirimcilar/[slug
       : detail?.kind === "congress"
         ? detail.trades.map((trade) => trade.ticker).filter((ticker): ticker is string => Boolean(ticker))
         : [];
-  const known = await getSymbolNames(tickers);
+  const [known, ark] = await Promise.all([
+    getSymbolNames(tickers),
+    /* ARK'ın günlük dosyaları yalnızca Cathie Wood'u anlatıyor. */
+    investor.slug === ARK_INVESTOR ? getArkActivity() : Promise.resolve(null),
+  ]);
   const closed = investor.status === "closed";
 
   return (
@@ -103,6 +112,7 @@ export default async function InvestorPage(props: PageProps<"/yatirimcilar/[slug
             note={closed ? ti.closedNote : undefined}
           />
           <FundStrip detail={detail} locale={locale} t={ti} />
+          {ark && <ArkTrades activity={ark} locale={locale} t={t} />}
           <FundBody detail={detail} investor={investor} known={known} locale={locale} t={ti} />
           <Notes investor={investor} t={t}>
             <p className={styles.note}>{ti.note13f}</p>

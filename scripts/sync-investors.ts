@@ -22,7 +22,9 @@ async function main() {
     houseYears: [year - 1, year],
     log: (message) => process.stdout.write(`${message}\n`),
   });
-  process.stdout.write(`\n${result.summary}\n${Math.round((Date.now() - started) / 1000)} sn\n`);
+  const { syncArk } = await import("../lib/ark-sync");
+  const ark = await syncArk();
+  process.stdout.write(`\n${result.summary}\nARK ${ark.summary}\n${Math.round((Date.now() - started) / 1000)} sn\n`);
 }
 
 main().catch((error) => {

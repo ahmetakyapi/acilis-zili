@@ -32,6 +32,7 @@ import { SPOTLIGHT_SYMBOLS } from "@/lib/spotlight";
 import { refreshSymbolMetrics } from "@/lib/symbol-metrics";
 import { purgeOldErrors } from "@/lib/error-log";
 import { syncInvestors } from "@/lib/investor-sync";
+import { syncArk } from "@/lib/ark-sync";
 import { INVESTORS_TAG } from "@/lib/investor-data";
 
 /**
@@ -218,6 +219,17 @@ export async function GET(request: Request) {
     report.investors = result.summary;
   } catch (error) {
     report.investors = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+
+  /* ---- 0c. ARK'ın günlük ETF dosyaları (Cathie Wood'un son işlemleri) ----
+     Altı küçük CSV, anahtarsız; dosya tarihi zaten yazılıysa yazım yok.
+     13F adımından ayrı `try`: biri düşerse öteki yine koşuyor. */
+  try {
+    const result = await syncArk();
+    if (result.changed) revalidateTag(INVESTORS_TAG, { expire: 0 });
+    report.ark = result.summary;
+  } catch (error) {
+    report.ark = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
 
   /* ---- 1. Bilanço takvimi (bugün → +30 gün) ----

@@ -572,6 +572,7 @@ const PROVIDER_LABEL: Record<string, string> = {
   fred: "FRED",
   sec: "SEC EDGAR",
   house: "House Clerk",
+  ark: "ARK Invest",
 };
 
 /* GECİKME DAMGAYA YAZILIYOR. Damgadaki saat verinin YAŞI değil, bizim onu

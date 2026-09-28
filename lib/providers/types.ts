@@ -36,7 +36,8 @@ export type DataSource =
   | "treasury"
   | "sec"
   | "openfigi"
-  | "house";
+  | "house"
+  | "ark";
 
 export type FailReason =
   | "missing-key"

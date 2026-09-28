@@ -52,9 +52,11 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       CUSIP çözüyor; 13F sezonunda Bridgewater'ın yüzlerce yeni pozisyonunun
       logosu birkaç günde geliyor (o arada ad yazılıyor). Anahtar bunu tek
       koşuma indirir.
-- [ ] **ARK günlük ETF işlemleri yapılmadı.** Cathie Wood sayfası yalnızca
-      13F'i (çeyreklik) gösteriyor; ARK'ın günlük holdings CSV'lerinden
-      "dünkü alım/satım" katmanı ikinci aşama.
+- [x] **ARK günlük ETF işlemleri (migration 0022, `ark_holdings`).** Cathie
+      Wood sayfasında 13F'in üstünde "ARK'ın Son İşlemleri": altı ETF'nin
+      günlük dosyası, iki günün farkı, pay yaratma/iade etkisi ayıklanmış
+      (`lib/ark-view.ts`). Kayıt 28 Eylül'de başladı; ilk karşılaştırma bir
+      sonraki işlem gününün dosyasıyla geliyor.
 
 - [ ] **Migration 0020 üretimde uygulanmadı.** Dört yeni tablo:
       `symbol_metrics`, `portfolio_positions`, `earnings_analysis_extras`,
