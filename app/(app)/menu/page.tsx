@@ -103,7 +103,7 @@ export default async function MenuPage() {
         { href: "/mercek", icon: Scroll, title: t.nav.stories, hint: t.menu.hintStories },
         { href: "/rehber", icon: BookOpen, title: t.nav.guide, hint: t.menu.hintGuide },
         { href: "/sozluk", icon: TextAa, title: t.glossary.title, hint: t.menu.hintGlossary },
-        { href: "/vergi", icon: Receipt, title: t.lira.tax.title, hint: t.menu.hintTax },
+        { href: "/vergi", icon: Receipt, title: t.nav.taxTool, hint: t.menu.hintTax },
         { href: "/haberler", icon: Newspaper, title: t.nav.news, hint: t.menu.hintNews },
         { href: "/bulten", icon: Envelope, title: t.footer.briefArchive, hint: t.menu.hintBrief },
       ],

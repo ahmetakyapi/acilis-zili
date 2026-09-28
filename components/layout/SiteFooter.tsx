@@ -42,7 +42,7 @@ export async function SiteFooter() {
           { href: "/haberler", label: t.nav.news },
           { href: "/bulten", label: t.footer.briefArchive },
           { href: "/sozluk", label: t.glossary.title },
-          { href: "/vergi", label: t.lira.tax.title },
+          { href: "/vergi", label: t.nav.taxTool },
           { href: "/feed.xml", label: t.footer.feed },
         ],
       },

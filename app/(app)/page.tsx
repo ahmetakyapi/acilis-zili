@@ -273,6 +273,9 @@ export default async function TodayPage() {
         className={styles.sectionIndex}
         items={[
           { id: "gunun-akisi", label: t.today.navFlow },
+          /* Bant akışın hemen altına taşındı (28 Eylül); çubuk sayfanın
+             sırasını izliyor, yoksa okuyucu atlarken geri dönüyordu. */
+          { id: "sektor-ve-tema", label: t.today.navThemes },
           { id: "gundem", label: t.today.navBrief },
           { id: "dunya-piyasalari", label: t.today.navMarkets },
           { id: "mercek-seckisi", label: t.today.navStories },

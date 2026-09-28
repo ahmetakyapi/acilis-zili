@@ -12,8 +12,9 @@ const tr = {
      bileşen, aynı punto, iki farklı imla. Kural: `title` KISA BİR
      BAŞLIKTIR, nokta almaz; `hint` ise cümledir ve nokta alır. */
   nav: {
+    taxTool: "Vergi Hesaplayıcı",
     themes: "Temalar",
-    moreGroupData: "Veri ve Ekranlar",
+    moreGroupData: "Veri ve Araçlar",
     moreGroupLearn: "Öğren",
     moreGroupRead: "Oku",
     tickerPause: "Şeridi Duraklat",
@@ -391,6 +392,7 @@ const tr = {
     watchlistSignedOutHint: "Giriş yapınca takip ettiğin semboller fiyatıyla burada listelenir.",
     // Yüzen bölüm dizini: adı ve altı durağı. Kısa, çünkü telefonda altısı tek şeritte.
     sectionIndex: "Sayfa Bölümleri",
+    navThemes: "Sektörler",
     navFlow: "Akış",
     navBrief: "Özet",
     navMarkets: "Piyasalar",
@@ -1833,7 +1835,7 @@ const tr = {
     hintInvestors: "Buffett, Pelosi, Burry: Kim Ne Aldı",
     hintThemes: "Yapay Zekâ, Yarı İletken, Katılım",
     hintGlossary: "Piyasa Terimleri, A’dan Z’ye",
-    hintTax: "Satış Kazancı ve Temettü, TL Olarak",
+    hintTax: "Hisse Kazancı ve Temettü Vergisi",
     hintSettings: "Hesap, Tema ve Dil",
     hintPrivacy: "Verilerin ve Haklarının Tamamı",
   },

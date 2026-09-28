@@ -204,7 +204,7 @@ export function TaxFiling({ labels, locale, today }: { labels: TaxLabels; locale
             <h3 className={styles.subTitle}>{F.docsTitle}</h3>
             <ul className={styles.checklist} data-motion-stagger>
               {docs.map((doc) => (
-                <li key={doc.name} className={styles.check}>
+                <li key={doc.name} className={styles.docItem}>
                   <span className={styles.checkIcon} aria-hidden>
                     <doc.icon size={16} weight="duotone" />
                   </span>

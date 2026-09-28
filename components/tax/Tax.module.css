@@ -335,7 +335,10 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .subTitle { margin:0 0 10px; font-size:15px; font-weight:700; color:var(--text-strong); }
 .checklist { display:grid; gap:0; margin:0; padding:0; list-style:none; }
 @media (min-width:560px) { .checklist { grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:24px; } }
-.check { display:grid; grid-template-columns:28px minmax(0,1fr); gap:10px; padding:12px 0; border-top:1px solid var(--line-soft); }
+/* Satırın kendi sınıfı. `.check` adı bir dönem burada da kullanılıyordu ve
+   dosyanın başındaki 18×18 onay kutusu kuralı satıra da uygulanıyordu:
+   satırlar 18 piksele sıkışıp metin üst üste biniyordu (28 Eylül). */
+.docItem { display:grid; grid-template-columns:28px minmax(0,1fr); gap:10px; padding:12px 0; border-top:1px solid var(--line-soft); }
 .checkIcon { display:grid; place-items:center; width:28px; height:28px; border-radius:8px; background:var(--primary-tint); color:var(--primary-ink); }
 .checkName { display:block; font-size:14px; font-weight:650; color:var(--text-strong); }
 .checkBody { display:block; margin-top:2px; font-size:12px; line-height:1.55; color:var(--text-body); }

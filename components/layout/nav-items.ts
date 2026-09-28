@@ -254,10 +254,13 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/vergi",
-    label: (t) => t.lira.tax.title,
+    /* MENÜDE ARACIN ADI (28 Eylül). "Yurt Dışı Hisse Vergisi" bir konu
+       başlığı gibi okunuyordu ve aynı ad rehber yazısında da var; bu satır
+       bir hesaplayıcıya açılıyor. Sayfanın kendi başlığı değişmedi. */
+    label: (t) => t.nav.taxTool,
     icon: Receipt,
     inBottomBar: false,
-    more: "learn",
+    more: "data",
     hint: (t) => t.menu.hintTax,
   },
   {

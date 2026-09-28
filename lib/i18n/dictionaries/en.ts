@@ -10,8 +10,9 @@ const en: typeof tr = {
   },
 
   nav: {
+    taxTool: "Tax Calculator",
     themes: "Themes",
-    moreGroupData: "Data and Screens",
+    moreGroupData: "Data and Tools",
     moreGroupLearn: "Learn",
     moreGroupRead: "Read",
     tickerPause: "Pause Ticker",
@@ -298,6 +299,7 @@ const en: typeof tr = {
     watchlistSignedOutTitle: "See Your Watchlist Here",
     watchlistSignedOutHint: "Sign in and the symbols you follow are listed here with their prices.",
     sectionIndex: "Page Sections",
+    navThemes: "Sectors",
     navFlow: "Flow",
     navBrief: "Brief",
     navMarkets: "Markets",
@@ -1466,7 +1468,7 @@ const en: typeof tr = {
     hintInvestors: "Buffett, Pelosi, Burry: Who Bought What",
     hintThemes: "AI, Semiconductors, Islamic-Compliant",
     hintGlossary: "Market Terms, A to Z",
-    hintTax: "Capital Gains and Dividends, in Lira",
+    hintTax: "Tax on Share Gains and Dividends",
     hintSettings: "Account, Theme and Language",
     hintPrivacy: "Your Data and Your Rights",
   },
