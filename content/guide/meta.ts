@@ -265,6 +265,15 @@ export const GUIDE_META = [
     related: ["cesitlendirme", "kaldirac"],
   },
   {
+    /* Teknik analiz ekranındaki görüşün kullanım kılavuzu. Risk
+       yönetiminin hemen ardında: kademeli alımın hesabı oradaki
+       pozisyon büyüklüğüne yaslanıyor. */
+    slug: "teknik-gorusler",
+    topic: "strateji",
+    glyph: "▲●▼", // yükseliş, bekleyiş, düşüş: üç görüş dile bağlı değil
+    related: ["risk-yonetimi", "emir-tipleri", "yurt-disi-hisse-vergisi"],
+  },
+  {
     slug: "cesitlendirme",
     topic: "strateji",
     glyph: "⁙",

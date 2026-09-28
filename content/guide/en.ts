@@ -841,6 +841,97 @@ The market decides how much you make; you decide how much you lose. Risk managem
   },
 
   /* ---------------------------------------------------------------------- */
+  "teknik-gorusler": {
+    title: "Technical Views: What BUY, HOLD and SELL Mean",
+    dek: "A view is not an order; it is a plan with a zone, a point of giving up and a sequence.",
+    bodyMd: `Every card on the technical analysis screen starts with one word: BUY, HOLD or SELL. One word reads like an order ("buy it all now", "sell it all now"), but that is not what it means. The word summarises the plan beneath it, and the plan always answers three questions: **where to buy, where to sell, where to give up.**
+
+::: tanim Technical View
+A summary of whether the trend, support and resistance and momentum on the daily chart give a reason for a new purchase today. It is not a price forecast but a conditional plan: "if price is in this zone, this; if it falls below that level, that".
+:::
+
+## Three Views in One Table
+
+| View | What the Chart Says | What the Edition Contains |
+|---|---|---|
+| BUY | Trend up, price above the 50-day average, an entry zone on a support | Entry zone, stop, 1–3 targets |
+| HOLD | Mixed picture, or a sound trend with price far from the zone | A zone if any, supports and resistances |
+| SELL | Trend down, price below the 50 and 200-day averages | Levels to sell into on a rally (resistances), support |
+
+## BUY: A Plan to Buy in a Zone
+
+BUY does not mean "buy now at any price". The plan gives an **entry zone**, a range rather than a single price. If price is above the zone, the plan does not chase it and waits for a pullback. If price falls under the stop, the plan is void.
+
+The first target is at least 1.5 times the risk away, measured from the top of the zone to the stop. If the nearest target is closer, the view is not BUY; the reward does not cover the risk.
+
+::: ornek A Hypothetical Plan
+Entry zone 96–100, stop 92, targets 112 and 120.
+Risk from the top of the zone to the stop: 100 − 92 = **8**.
+Reward to the first target: 112 − 100 = **12**. Ratio 1 : 1.5.
+:::
+
+### All at Once or in Steps?
+
+Neither breaks the plan; the difference is how the risk is measured.
+
+- **At once:** Buy anywhere in the zone in one go. The risk is taken at its worst, from the top of the zone to the stop.
+- **In steps:** Spread the purchase across the zone (part at the top, the rest toward the bottom). The average cost falls and the distance to the stop shrinks. The price: if price turns before reaching the bottom, the position stays half-built.
+
+::: ornek One Plan, Two Executions
+Capital of $10,000, at most 1% risk per idea: $100.
+All at 100: risk of 8 per share, at most **12 shares**.
+In steps, 6 shares at 100 and 6 at 96: average cost 98, risk of 6 per share, total risk **$72**.
+If price rises without touching 96, you hold 6 shares; risk and reward are both halved.
+:::
+
+Whichever route you take, the stop distance sets the size. More: [Risk Management](/rehber/risk-yonetimi)
+
+### If You Already Own It
+
+The position is held and the stop is watched as the point of giving up. Targets are not a single exit but stops for taking profit. A common approach is to sell part at the first target and carry the rest to the next: part of the gain is locked in and the rest still rides the move.
+
+## HOLD: Wait, Don't Sell
+
+HOLD covers two situations: the indicators disagree, or the trend is sound but price is far from the entry zone. The answer is the same in both: no rush to buy, no reason to sell.
+
+- **If you don't own it:** If a zone is given, wait for price to reach it and for confirmation: a close that holds in the zone, above-average volume. Without a zone, watch the listed supports and resistances.
+- **If you own it:** HOLD does not mean sell. Watch the stop if one is given, otherwise the nearest support. A break lower can turn the view to SELL.
+
+::: dikkat Waiting for BUY Before Adding
+Growing a position in a weakening stock because "it got cheaper" can mean putting more money into a wrong idea. Waiting for the view to turn to BUY before adding ties the decision to the chart recovering, not to the price.
+:::
+
+## SELL: No New Buying, Reduce Into Rallies
+
+A SELL view publishes no entry zone and no stop, because the plan is not a buying plan. The levels listed as targets are the **resistances** where a rally could stall.
+
+- **If you don't own it:** No new purchase. SELL is not a call to short either. Buying waits for the view to turn to HOLD or BUY, that is, for price to reclaim the averages.
+- **If you own it:** SELL does not mean "sell everything now". The plan sees rallies into resistance as a chance to reduce the position. Exiting can be staged: part at the first resistance, the rest at the next.
+
+::: dikkat If No Rally Comes
+The plan also gives a support level. If that support breaks, the decline continues, and waiting for a rally then adds risk. A staged exit is a way to use an opportunity, not a way to ignore a decline.
+:::
+
+The screen cannot know how much to sell; your cost, the position's weight in your portfolio and your tax position decide that. For Turkish residents, gains on foreign shares are declared, and the timing of a sale can change the tax. More: [Tax on Foreign Shares](/rehber/yurt-disi-hisse-vergisi)
+
+## Why the View Rarely Changes
+
+The view is reviewed in every edition but changes only on a concrete trigger:
+
+- a moving average breaking or being reclaimed,
+- price falling under the stop,
+- the entry zone being rebuilt.
+
+A single sharp day does not flip the view. Indicators come from daily closes; the plan is written for readers of the daily chart, not for intraday trading. A view that flipped from edition to edition would be tracking noise, not a plan.
+
+::: ozet One-Line Summary
+BUY is a plan to buy in a zone, HOLD is waiting without selling, SELL is no new buying and treating rallies as a chance to reduce; in all three, the stop distance and your own situation decide how much to buy or sell.
+:::
+
+This article explains a method. **Not Investment Advice.**`,
+  },
+
+  /* ---------------------------------------------------------------------- */
   "cesitlendirme": {
     title: "Diversification: How Many Baskets Are Enough?",
     dek: "Owning ten different stocks is not the same as owning ten different risks.",

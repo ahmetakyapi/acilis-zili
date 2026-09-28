@@ -13,6 +13,7 @@ import { PlanStrip } from "@/components/technical/PlanStrip";
 import { BalanceNotes } from "@/components/technical/BalanceNotes";
 import { PriceMap, PriceMapNotes } from "@/components/technical/PriceMap";
 import { SignalStrip } from "@/components/technical/SignalStrip";
+import { STANCE_GUIDE_SLUG, StanceGuide } from "@/components/technical/StanceGuide";
 import {
   changeToneClass,
   planPositionLabel,
@@ -212,6 +213,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
   const sectionItems = [
     { id: "technical-levels", label: t.technical.priceMap },
     { id: "technical-reading", label: t.technical.summary },
+    { id: "technical-stance", label: t.technical.stanceGuide.detailTitle.replace("{stance}", verdictLabel(verdict, t)) },
     { id: "technical-indicators", label: t.technical.indicators },
     { id: "technical-watch", label: t.technical.watch },
     ...(history.length > 1 ? [{ id: "technical-history", label: t.technical.history }] : []),
@@ -407,6 +409,11 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           <div className={styles.reading} data-tone={planReadingTone(reading)}>
             <span className={styles.readingLabel}>{t.technical.readingLabel}</span>
             <p>{planReadingText(reading, locale, t)}</p>
+            {/* Plan cümlesi görüşü varsayıyor; anlamını soran okuyucu
+                bir tık aşağıda, aynı sayfada cevabı buluyor. */}
+            <a href="#technical-stance" className={styles.stanceGuideLink}>
+              {t.technical.stanceGuide.detailTitle.replace("{stance}", verdictLabel(verdict, t))}
+            </a>
           </div>
           <SignalStrip snapshot={row.snapshot} price={price} locale={locale} t={t} compact />
         </div>
@@ -509,6 +516,14 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
         </div>
         <BalanceNotes />
       </div>
+
+      {/* ---- Görüşün anlamı ----
+          Planın hemen altında: okuyucu seviyeleri ve gerekçeyi okudu,
+          sıradaki soru "bu benim için ne demek". Göstergeler bir ölçü
+          ayrıntısı, bu ise planın kullanım kılavuzu; önce o geliyor. */}
+      <Reveal>
+        <StanceGuide variant="detail" verdict={verdict} t={t} id="technical-stance" />
+      </Reveal>
 
       {/* ---- Göstergeler ---- */}
       <Reveal>
@@ -629,7 +644,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
       <GuideHint
         label={t.guide.contextLabel}
         locale={locale}
-        slugs={["risk-yonetimi", "emir-tipleri"]}
+        slugs={[STANCE_GUIDE_SLUG, "risk-yonetimi"]}
       />
     </MotionExperience>
   );

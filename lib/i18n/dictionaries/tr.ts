@@ -969,6 +969,62 @@ const tr = {
     /* Trend göstergesinin iki etiketi: 50 ve 200 günlük ortalama. */
     ma50Short: "50G",
     ma200Short: "200G",
+    /* ---- Görüşler ne demek ----
+       Görüş kartta tek kelime (AL/TUT/SAT) ve okuyucu onu bir emir gibi
+       okuyordu: "şimdi hepsini al", "şimdi hepsini sat". Rutinin tanımı
+       öyle değil (docs/claude-rutinler.md § 5): AL bir alım BÖLGESİ ve
+       vazgeçme noktası olan plan, SAT yeni alım olmaması ve tepkide
+       azaltma. Metinler o tanımı okuyucunun iki durumuna (pozisyonu var /
+       yok) ve kademe sorusuna çeviriyor; tanımda olmayan bir şey (oran,
+       vade, yüzde) uydurmuyor. */
+    stanceGuide: {
+      detailTitle: "{stance} Ne Demek?",
+      boardTitle: "AL, TUT, SAT Ne Demek?",
+      boardLead:
+        "Görüş bir emir değil, planın tek kelimelik özetidir. Üçü de aynı soruya cevap verir: bugünkü grafikte yeni bir alım için gerekçe var mı, varsa nereden alınır ve nerede vazgeçilir.",
+      boardLink: "Görüşler Ne Demek?",
+      noPosition: "Pozisyonun Yoksa",
+      hasPosition: "Pozisyonun Varsa",
+      scaling: "Kademeli mi, Tek Seferde mi?",
+      othersLabel: "Öteki Görüşler",
+      stickyTitle: "Görüş Neden Kolay Değişmez",
+      sticky:
+        "Görüş her yayında gözden geçirilir ama somut bir tetik olmadan değişmez: bir ortalamanın kırılması, stopun altına inilmesi ya da alım bölgesinin yeniden kurulması. Göstergeler günlük kapanışlardan hesaplanır; plan gün içi al-sat için değil, günlük grafiği okuyanlar için yazılır.",
+      guideLink: "Ayrıntılı Rehber",
+      buy: {
+        short: "Trend yukarı; alım bölgesi, stop ve hedefler belli.",
+        meaning:
+          "Trend yukarı: fiyat 50 günlük ortalamanın üstünde ve bir desteğin üzerinde alım bölgesi kurulmuş. Stop ve hedefler belli, ilk hedef riskin en az 1,5 katı uzakta. “Hemen al” değil, “bu bölgede alım planı geçerli” demek.",
+        noPosition:
+          "Alım bölgenin içinde düşünülür. Fiyat bölgenin üstündeyse plan kovalamaz, geri çekilmeyi bekler; stopun altına inerse plan bozulur ve alım yapılmaz.",
+        hasPosition:
+          "Pozisyon taşınır, stop vazgeçme noktası olarak izlenir. Hedefler kâr almanın duraklarıdır: fiyat bir hedefe vardığında bir kısmını satıp kalanı sonraki hedefe taşımak yaygın bir yöntemdir.",
+        scaling:
+          "Bölge tek fiyat değil bir aralık. Alımı bölgeye yaymak (bir kısmı üst uçta, kalanı alt uca doğru) tek bir fiyata bağlanmayı önler. Tek seferde almak da plana aykırı değil, ama o zaman risk bölgenin tepesinden stopa kadar ölçülür. Tutarı stop mesafesi belirler: stop çalışırsa ne kadar kaybedileceği baştan bilinmeli.",
+      },
+      hold: {
+        short: "Tablo karışık ya da fiyat bölgeden uzak; teyit bekleniyor.",
+        meaning:
+          "Tablo karışık ya da trend sağlam ama fiyat alım bölgesinden uzak. Ne yeni alım ne satış için yeterli gerekçe var; plan bir seviyenin netleşmesini bekliyor.",
+        noPosition:
+          "Acele edilmez. Alım bölgesi verilmişse fiyatın oraya gelmesi ve teyit (bölgede tutunan bir kapanış, ortalamanın üstünde hacim) beklenir; bölge yoksa listelenen destek ve dirençler izlenir.",
+        hasPosition:
+          "TUT satmak demek değil: pozisyon taşınır. Stop verilmişse o seviye, verilmemişse en yakın destek izlenir; aşağı kırılırsa görüş SAT'a dönebilir.",
+        scaling:
+          "Yeni alım teyitten sonra ve yine bölgeye yayılarak düşünülür. Var olan pozisyona eklemek için AL görüşünü beklemek, zayıflayan bir hissede pozisyonu büyütmenin önüne geçer.",
+      },
+      sell: {
+        short: "Trend aşağı; yeni alım yok, tepkiler azaltma fırsatı.",
+        meaning:
+          "Trend aşağı: fiyat 50 ve 200 günlük ortalamaların altında. Yeni alım planı olmadığı için alım bölgesi ve stop yayımlanmaz; listelenen seviyeler, fiyat tepki verirse takılabileceği dirençlerdir.",
+        noPosition:
+          "Yeni alım yapılmaz; bu bir açığa satış önerisi de değil. Alım için görüşün TUT'a ya da AL'a dönmesi, yani fiyatın ortalamaları geri alması beklenir.",
+        hasPosition:
+          "“Hepsini hemen sat” demek değil. Plan, fiyatın dirençlere yükseldiği tepkileri pozisyonu azaltma fırsatı olarak görür. Destek kırılırsa düşüş sürer; o durumda tepki beklemek riski büyütür.",
+        scaling:
+          "Çıkış da kademeli olabilir: ilk dirençte bir kısmı, sonrakinde kalanı. Ne kadarının satılacağını maliyetin, portföydeki ağırlık ve vergi durumu belirler; ekran bunları bilemez.",
+      },
+    },
   },
 
   companies: {

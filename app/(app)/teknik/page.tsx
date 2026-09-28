@@ -5,6 +5,7 @@ import directory from "@/components/motion/DirectoryExperience.module.css";
 import styles from "@/components/technical/Technical.module.css";
 import { TechnicalBoard } from "@/components/technical/TechnicalBoard";
 import { TechnicalCard } from "@/components/technical/TechnicalCard";
+import { STANCE_GUIDE_SLUG, StanceGuide } from "@/components/technical/StanceGuide";
 import { TechnicalPulse, stanceFilterId } from "@/components/technical/TechnicalPulse";
 import { DataStamp, EmptyState, Panel } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, type VerdictKey } from "@/lib/analysis";
@@ -323,6 +324,10 @@ export default async function TechnicalPage() {
         </TechnicalBoard>
       )}
 
+      {/* Kartlar görüşü tek kelimeyle söylüyor; o kelimenin anlamı
+          panonun hemen altında, künyeden önce. */}
+      <StanceGuide variant="board" t={t} id="technical-stances" />
+
       <div className={styles.footNote}>
         {latest && (
           <p className={styles.footSchedule}>
@@ -364,7 +369,7 @@ export default async function TechnicalPage() {
         /* İKİ YAZI: şerit iki sütunlu ve üçüncü kart tek başına alt satıra
            düşüyordu (ölçüldü). Seviyeyle en doğrudan ilgili ikisi: stopun ne
            kadar uzağa konacağı ve stop emrinin kendisi. */
-        slugs={["risk-yonetimi", "emir-tipleri"]}
+        slugs={[STANCE_GUIDE_SLUG, "risk-yonetimi"]}
       />
     </MotionExperience>
   );

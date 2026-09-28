@@ -864,6 +864,97 @@ Ne kadar kazanacağını piyasa belirler, ne kadar kaybedeceğini sen belirlersi
   },
 
   /* ---------------------------------------------------------------------- */
+  "teknik-gorusler": {
+    title: "Teknik Görüşler: AL, TUT ve SAT Ne Demek?",
+    dek: "Görüş bir emir değil; bir bölgesi, bir vazgeçme noktası ve bir sırası olan plan.",
+    bodyMd: `Teknik analiz ekranındaki her kartın başında tek bir kelime durur: AL, TUT ya da SAT. Tek kelime bir emir gibi okunur ("şimdi hepsini al", "şimdi hepsini sat") ama kastettiği bu değildir. Kelime, altındaki planın özetidir; plan ise her zaman üç soruya cevap verir: **nereden alınır, nerede satılır, nerede vazgeçilir.**
+
+::: tanim Teknik Görüş
+Günlük grafikteki trend, destek-direnç ve momentumun bugün yeni bir alım için gerekçe verip vermediğinin özeti. Bir fiyat tahmini değil, koşullu bir plandır: "fiyat şu bölgedeyse şu, şu seviyenin altına inerse bu".
+:::
+
+## Üç Görüş, Tek Tabloda
+
+| Görüş | Grafik Ne Diyor | Yayında Ne Var |
+|---|---|---|
+| AL | Trend yukarı, fiyat 50 günlük ortalamanın üstünde, bir destek üzerinde alım bölgesi var | Alım bölgesi, stop, 1–3 hedef |
+| TUT | Tablo karışık ya da trend sağlam ama fiyat bölgeden uzak | Varsa bölge, destek ve dirençler |
+| SAT | Trend aşağı, fiyat 50 ve 200 günlük ortalamaların altında | Tepkide satış seviyeleri (dirençler), destek |
+
+## AL: Bölgede Alım Planı
+
+AL, "fiyat ne olursa olsun şimdi al" demek değildir. Plan bir **alım bölgesi** verir; bu tek bir fiyat değil, bir aralıktır. Fiyat bölgenin üstündeyse plan onu kovalamaz, geri çekilmeyi bekler. Fiyat stopun altına inerse plan bozulur.
+
+İlk hedef, bölgenin tepesinden stopa kadar olan riskin en az 1,5 katı uzaklıkta seçilir. Daha yakın bir hedef varsa görüş AL olmaz; ödül riski karşılamıyordur.
+
+::: ornek Varsayımsal Bir Plan
+Alım bölgesi 96–100, stop 92, hedefler 112 ve 120.
+Bölgenin tepesinden stopa risk: 100 − 92 = **8**.
+İlk hedefe getiri: 112 − 100 = **12**. Oran 1 : 1,5.
+:::
+
+### Kademeli mi, Tek Seferde mi?
+
+İkisi de plana aykırı değildir; fark riskin nasıl ölçüldüğündedir.
+
+- **Tek seferde:** Bölgenin herhangi bir yerinden bir kerede alınır. Risk en kötü hâliyle, bölgenin tepesinden stopa kadar hesaplanır.
+- **Kademeli:** Alım bölgeye yayılır (bir kısmı üst uçta, kalanı alt uca doğru). Ortalama maliyet düşer, stopa uzaklık kısalır. Bedeli şudur: fiyat alt uca inmeden dönerse pozisyon yarım kalır.
+
+::: ornek Aynı Plan, İki Uygulama
+Sermaye 10.000 dolar, fikir başına en fazla %1 risk: 100 dolar.
+Tek seferde 100'den: hisse başına risk 8, en fazla **12 adet**.
+Kademeli, 6 adet 100'den, 6 adet 96'dan: ortalama maliyet 98, hisse başına risk 6, toplam risk **72 dolar**.
+Fiyat 96'ya inmeden yükselirse elde 6 adet kalır; risk de getiri de yarıdır.
+:::
+
+Hangi yol seçilirse seçilsin tutarı belirleyen şey stop mesafesidir. Ayrıntı: [Risk Yönetimi](/rehber/risk-yonetimi)
+
+### Pozisyon Zaten Varsa
+
+Pozisyon taşınır, stop vazgeçme noktası olarak izlenir. Hedefler tek bir satış yeri değil, kâr almanın duraklarıdır. Yaygın bir yöntem, ilk hedefte bir kısmını satıp kalanı sonraki hedefe taşımaktır: kârın bir bölümü kesinleşir, yükselişin devamından da pay kalır.
+
+## TUT: Bekle Ama Satma
+
+TUT iki farklı durumu anlatır: göstergeler birbirini tutmuyordur ya da trend sağlamdır ama fiyat alım bölgesinden uzaktır. İkisinde de ortak cevap aynıdır: yeni alım için acele yok, satış için de gerekçe yok.
+
+- **Pozisyonun yoksa:** Bölge verilmişse fiyatın oraya gelmesi ve teyit beklenir: bölgede tutunan bir kapanış, ortalamanın üstünde hacim. Bölge yoksa listelenen destek ve dirençler izlenir.
+- **Pozisyonun varsa:** TUT satmak demek değildir. Stop verilmişse o seviye, verilmemişse en yakın destek izlenir. Aşağı kırılırsa görüş SAT'a dönebilir.
+
+::: dikkat Eklemek İçin AL'ı Beklemek
+Zayıflayan bir hissede "ucuzladı" diye pozisyonu büyütmek, yanlış fikre daha çok para koymak olabilir. Var olan pozisyona eklemek için görüşün AL'a dönmesini beklemek, eklemeyi fiyata değil grafiğin toparlanmasına bağlar.
+:::
+
+## SAT: Yeni Alım Yok, Tepkide Azalt
+
+SAT görüşünde alım bölgesi ve stop yayımlanmaz; çünkü plan bir alım planı değildir. Hedef diye listelenen seviyeler, fiyatın tepki verirse takılabileceği **dirençlerdir.**
+
+- **Pozisyonun yoksa:** Yeni alım yapılmaz. SAT bir açığa satış önerisi de değildir. Alım için görüşün TUT'a ya da AL'a dönmesi, yani fiyatın ortalamaları geri alması beklenir.
+- **Pozisyonun varsa:** SAT, "hepsini hemen sat" demek değildir. Plan, fiyatın dirençlere yükseldiği tepkileri pozisyonu azaltma fırsatı olarak görür. Çıkış da kademeli olabilir: ilk dirençte bir kısmı, sonrakinde kalanı.
+
+::: dikkat Tepki Gelmezse
+Plan bir destek seviyesi de verir. O destek kırılırsa düşüş sürer; o durumda tepki beklemek riski büyütür. Kademeli çıkış bir fırsatı kullanmanın yolu, düşüşü görmezden gelmenin değil.
+:::
+
+Ne kadarının satılacağını ekran bilemez; bunu senin maliyetin, pozisyonun portföydeki ağırlığı ve vergi durumun belirler. Yurt dışı hisse kazancı beyana tabidir, satışın zamanlaması vergiyi değiştirebilir. Ayrıntı: [Yurt Dışı Hisse Vergisi](/rehber/yurt-disi-hisse-vergisi)
+
+## Görüş Neden Kolay Değişmez
+
+Görüş her yayında gözden geçirilir ama somut bir tetik olmadan değişmez:
+
+- bir hareketli ortalamanın kırılması ya da geri alınması,
+- fiyatın stopun altına inmesi,
+- alım bölgesinin yeniden kurulması.
+
+Tek günlük sert bir hareket görüşü çevirmez. Göstergeler günlük kapanışlardan hesaplanır; plan gün içi al-sat için değil, günlük grafiği okuyanlar için yazılır. Görüşün bir yayından ötekine sık sık dönmesi planı değil gürültüyü izlemek olurdu.
+
+::: ozet Tek Cümlelik Özet
+AL bir bölgede alım planı, TUT beklemek ama satmamak, SAT yeni alım yapmamak ve tepkileri azaltma fırsatı olarak görmek demektir; üçünde de ne kadar alınıp satılacağını stop mesafesi ve senin kendi durumun belirler.
+:::
+
+Bu yazı bir yöntem anlatımıdır. **Yatırım Tavsiyesi Değildir.**`,
+  },
+
+  /* ---------------------------------------------------------------------- */
   "cesitlendirme": {
     title: "Çeşitlendirme: Kaç Sepet Yeter?",
     dek: "On farklı hisse almak, on farklı riske sahip olmak demek değildir.",

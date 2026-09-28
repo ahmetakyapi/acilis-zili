@@ -1867,3 +1867,50 @@
  .card:hover { translate:none; }
  .card:hover .cardHead > :first-child { scale:none; }
 }
+
+/* ---- Görüşler ne demek (`StanceGuide`) ----
+   Ton şeritle geliyor, kutuyla değil: detayda bölümün sol kenarında
+   görüşün rengi, listede her sütunun üstünde ince bir çizgi. Hücreler
+   ayrı kutu açmıyor (ekranın kuralı: bir açıklama için yeni kutu yok);
+   aralarında hairline, başlıkları küçük künye. */
+.stanceGuide { gap:18px; }
+.stanceGuide[data-tone="up"] { box-shadow:inset 3px 0 var(--up); }
+.stanceGuide[data-tone="down"] { box-shadow:inset 3px 0 var(--down); }
+.stanceGuide[data-tone="flat"] { box-shadow:inset 3px 0 var(--primary); }
+.stanceGuideLink { display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:650; color:var(--primary); }
+.stanceGuideLink:hover { color:var(--primary-hover); }
+.stanceLead { max-width:72ch; color:var(--text-strong); font-size:16px; line-height:1.65; text-wrap:pretty; }
+.stancePill { display:inline-flex; width:max-content; align-items:center; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:750; letter-spacing:.04em; }
+.stanceGrid { display:grid; grid-template-columns:minmax(0,1fr); gap:0; border-top:1px solid var(--line-soft); }
+.stanceGrid > div { display:grid; align-content:start; gap:6px; padding:16px 0; border-bottom:1px solid var(--line-soft); }
+.stanceGrid dt, .stanceCases dt { font-size:12px; font-weight:700; letter-spacing:.03em; color:var(--text-muted); }
+.stanceGrid dd { color:var(--text-body); font-size:14.5px; line-height:1.7; text-wrap:pretty; }
+@media(min-width:1024px) {
+ /* Üç sütun AYNI HATTA başlıyor ve aralarında dikey hairline; en uzun
+    hücre (kademe) satırın boyunu veriyor, ötekiler üstten hizalı. */
+ .stanceGrid { grid-template-columns:repeat(3, minmax(0,1fr)); border-bottom:1px solid var(--line-soft); }
+ .stanceGrid > div { padding:18px 24px; border-bottom:0; }
+ .stanceGrid > div:first-child { padding-left:0; }
+ .stanceGrid > div:last-child { padding-right:0; }
+ .stanceGrid > div + div { border-left:1px solid var(--line-soft); }
+}
+.stanceFoot { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
+@media(min-width:1024px) { .stanceFoot { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:32px; } }
+.stanceOthers { display:grid; gap:8px; align-content:start; }
+.stanceOthers ul { display:grid; gap:8px; list-style:none; padding:0; }
+.stanceOthers li { display:grid; grid-template-columns:52px minmax(0,1fr); align-items:baseline; gap:10px; color:var(--text-body); font-size:14px; line-height:1.55; }
+.stanceOthers li .stancePill { justify-content:center; width:100%; }
+.stanceSticky { color:var(--text-body); font-size:13.5px; line-height:1.65; text-wrap:pretty; }
+.stanceSticky b { color:var(--text-strong); font-weight:700; }
+.stanceColumns { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; }
+@media(min-width:900px) { .stanceColumns { grid-template-columns:repeat(3, minmax(0,1fr)); } }
+/* Üst işaret kartlardaki gibi kenarın İÇİNDE: düz bir gölge çizgisi
+   yuvarlak köşeden taşıp iki uçta kıvrılıyordu (görüldü, 1440). */
+.stanceColumn { position:relative; display:flex; min-width:0; flex-direction:column; gap:12px; padding:18px 18px 18px; border-radius:14px; background:var(--surface-sunken); }
+.stanceColumn::before { content:""; position:absolute; top:0; left:18px; right:18px; height:3px; border-radius:0 0 3px 3px; background:var(--primary); }
+.stanceColumn[data-tone="up"]::before { background:var(--up); }
+.stanceColumn[data-tone="down"]::before { background:var(--down); }
+.stanceMeaning { color:var(--text-strong); font-size:14.5px; line-height:1.65; text-wrap:pretty; }
+.stanceCases { display:grid; gap:12px; padding-top:12px; border-top:1px solid var(--line-soft); }
+.stanceCases > div { display:grid; gap:4px; }
+.stanceCases dd { color:var(--text-body); font-size:14px; line-height:1.65; text-wrap:pretty; }

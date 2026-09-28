@@ -748,6 +748,54 @@ const en: typeof tr = {
     proximityBelowStop: "Below Stop",
     ma50Short: "50D",
     ma200Short: "200D",
+    stanceGuide: {
+      detailTitle: "What Does {stance} Mean?",
+      boardTitle: "What Do BUY, HOLD and SELL Mean?",
+      boardLead:
+        "A view is not an order; it is the plan in one word. All three answer the same question: does today's chart give a reason for a new purchase, and if so, where to buy and where to give up.",
+      boardLink: "What the Views Mean",
+      noPosition: "If You Don't Own It",
+      hasPosition: "If You Own It",
+      scaling: "All at Once or in Steps?",
+      othersLabel: "The Other Views",
+      stickyTitle: "Why the View Rarely Changes",
+      sticky:
+        "The view is reviewed in every edition but changes only on a concrete trigger: a moving average breaking, price closing under the stop, or the entry zone being rebuilt. Indicators come from daily closes; the plan is written for readers of the daily chart, not for intraday trading.",
+      guideLink: "Full Guide",
+      buy: {
+        short: "Trend up; entry zone, stop and targets defined.",
+        meaning:
+          "The trend is up: price is above its 50-day average and an entry zone sits on a support. Stop and targets are defined, and the first target is at least 1.5 times the risk away. It means “the plan to buy in this zone is live”, not “buy now”.",
+        noPosition:
+          "Buying is considered inside the zone. If price is above it, the plan does not chase and waits for a pullback; if price falls under the stop, the plan is void and there is no purchase.",
+        hasPosition:
+          "The position is held and the stop is watched as the point of giving up. Targets are the stops for taking profit: selling part at one target and carrying the rest to the next is a common approach.",
+        scaling:
+          "The zone is a range, not a single price. Spreading the purchase across it (part at the top, the rest toward the bottom) avoids betting on one price. Buying at once does not break the plan either, but the risk is then measured from the top of the zone to the stop. The stop distance sets the size: know in advance how much you lose if the stop is hit.",
+      },
+      hold: {
+        short: "Mixed picture or price far from the zone; waiting for confirmation.",
+        meaning:
+          "The picture is mixed, or the trend is fine but price is far from the entry zone. There is not enough reason for a new purchase or for selling; the plan is waiting for a level to settle.",
+        noPosition:
+          "No rush. If an entry zone is given, wait for price to reach it and for confirmation (a close that holds in the zone, above-average volume); without a zone, watch the listed supports and resistances.",
+        hasPosition:
+          "HOLD does not mean sell: the position is held. Watch the stop if one is given, otherwise the nearest support; a break lower can turn the view to SELL.",
+        scaling:
+          "A new purchase comes after confirmation and is again spread across the zone. Waiting for a BUY view before adding avoids growing a position in a weakening stock.",
+      },
+      sell: {
+        short: "Trend down; no new buying, rallies are a chance to reduce.",
+        meaning:
+          "The trend is down: price is below its 50 and 200-day averages. With no buying plan there is no entry zone or stop; the listed levels are the resistances where a rally could stall.",
+        noPosition:
+          "No new purchase, and this is not a call to short. Buying waits for the view to turn to HOLD or BUY, that is, for price to reclaim the averages.",
+        hasPosition:
+          "It does not mean “sell everything now”. The plan sees rallies into resistance as a chance to reduce the position. If support breaks, the decline continues; waiting for a rally then adds risk.",
+        scaling:
+          "Exiting can be staged too: part at the first resistance, the rest at the next. How much to sell depends on your cost, the weight in your portfolio and your tax position; the screen cannot know those.",
+      },
+    },
   },
 
   companies: {
