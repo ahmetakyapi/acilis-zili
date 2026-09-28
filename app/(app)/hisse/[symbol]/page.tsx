@@ -568,6 +568,13 @@ export default async function StockPage(
         <Suspense fallback={<Skeleton className="h-[300px] w-full rounded-[20px]" />}>
           <DividendPanel symbol={symbol} locale={locale} />
         </Suspense>
+        {/* ŞİRKET ÖZETİ TEMETTÜNÜN YANINDA (28 Eylül). Gündem bölümünün
+            başında tam genişlikte iki satırlık bir metin bloğuydu; burada
+            ızgaranın boş kalan yuvasını dolduruyor. Tek kalırsa tam
+            genişliğe yayılıyor (depth.module.css). Yerel okumalar. */}
+        <Suspense fallback={<Skeleton className="h-[300px] w-full rounded-[20px]" />}>
+          <StockSummary symbol={symbol} locale={locale} t={t} />
+        </Suspense>
       </div>
 
         </ScrollStage>
@@ -610,12 +617,6 @@ export default async function StockPage(
 
       <section id="stock-context" className={styles.chapter}>
         <ChapterHeading title={t.stock.chapterContext} />
-      {/* ŞİRKET ÖZETİ BAĞLAMIN BAŞINDA: sayfanın geri kalanı sağlayıcı
-          verisi, bu blok sitenin kendi cümleleri (endeks, sektör, sonraki
-          bilanço, rehber). Gerekçe bileşenin başında. Yerel okumalar. */}
-      <Suspense fallback={<Skeleton className="h-[150px] w-full rounded-[20px]" />}>
-        <StockSummary symbol={symbol} locale={locale} t={t} />
-      </Suspense>
       {/* MERCEK EN SONDA, GEÇMİŞ BİLANÇOLARIN DA ALTINDA. Sıralama kodun
           kendi gerekçesini takip ediyor: analiz bir çeyreğin okunmuş hâli,
           geçmiş bilançolar o çeyreklerin tablosu — ikisi aynı malzeme ve

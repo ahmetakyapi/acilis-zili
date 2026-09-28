@@ -1,12 +1,14 @@
+import { Buildings, CalendarBlank, Stack, TreeStructure, UsersThree } from "@phosphor-icons/react/dist/ssr";
+import type { ReactNode } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { Panel, PanelHeader } from "@/components/ui/primitives";
+import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
 import { guideArticle } from "@/content/guide";
 import { DOW_MEMBERS, NDX_MEMBERS, SPX_MEMBERS, indexMemberOf, peersOf } from "@/db/seed/indices";
 import { getHolidays, getNextReport, getSymbolNames } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { sectorLabel } from "@/lib/sectors";
 import { subIndustryName } from "@/db/seed/sub-industries";
-import { formatEtDateLong } from "@/lib/utils";
+import { cn, formatEtDateLong } from "@/lib/utils";
 import { earningsWindow } from "./earnings-time";
 import styles from "./depth.module.css";
 
@@ -22,7 +24,18 @@ import styles from "./depth.module.css";
  * rehber (bağlantılar). Uydurma yok: bilinmeyen parça cümleden düşüyor.
  *
  * Aynı parçalar `generateMetadata` açıklamasına da giriyor (`summaryFacts`).
+ *
+ * KÜNYE, CÜMLE DEĞİL (28 Eylül). Panel Gündem bölümünün başında tam
+ * genişlikte tek bir cümle bloğuydu ve 1860 piksellik bir kutunun yarısında
+ * iki satır metin duruyordu. Artık derinlik ızgarasında, temettünün yanında;
+ * bildiklerimiz ikonlu bir künye ızgarası (endeks, sektör, alt sektör,
+ * sonraki bilanço, aynı alt sektör) ve alt sektörün en büyük beş şirketinin
+ * logo şeridi. Cümleler arama motoru ve ekran okuyucu için duruyor, künyenin
+ * altında. Izgaranın son satırında tek kalırsa panel tam genişliğe yayılıyor
+ * ve künye sütunları çoğalıyor (depth.module.css).
  */
+/** Logo şeridindeki en büyük alt sektör şirketi. */
+const PEER_LOGOS = 5;
 
 const INDEX_NAMES = [
   { name: "S&P 500", members: SPX_MEMBERS },
@@ -82,9 +95,14 @@ function guideSlugs(facts: SummaryFacts): string[] {
 
 export async function StockSummary({ symbol, locale, t }: { symbol: string; locale: Locale; t: Dictionary }) {
   const d = t.stockDepth;
-  const [facts, holidays] = await Promise.all([summaryFacts(symbol, locale), getHolidays()]);
+  const peers = peersOf(symbol);
+  const [facts, holidays, peerMeta] = await Promise.all([
+    summaryFacts(symbol, locale),
+    getHolidays(),
+    getSymbolNames(peers.map((peer) => peer.symbol)),
+  ]);
   const when = facts.next ? earningsWindow(facts.next.date, facts.next.hour, holidays, locale, t) : null;
-  const peerCount = peersOf(symbol).length;
+  const peerCount = peers.length;
   /* Pencere adı sözlükte Title Case (rozet); cümlenin içinde küçük harfle.
      `tr-TR` şart: "İ" doğru küçülsün (CLAUDE.md, Türkçe büyük harf tuzağı). */
   const lower = (text: string) => text.toLocaleLowerCase(locale === "tr" ? "tr-TR" : "en-US");
@@ -118,16 +136,65 @@ export async function StockSummary({ symbol, locale, t }: { symbol: string; loca
     .map((slug) => guideArticle(slug, locale))
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
+  /* Logo şeridi piyasa değerine göre: alt sektörü en çok temsil eden beş
+     şirket. Değeri bilinmeyen sona. */
+  const topPeers = [...peers]
+    .sort((a, b) => (peerMeta[b.symbol]?.marketCap ?? -1) - (peerMeta[a.symbol]?.marketCap ?? -1))
+    .slice(0, PEER_LOGOS);
+
+  const cells: { key: string; icon: ReactNode; label: string; value: ReactNode; meta?: ReactNode }[] = [];
+  if (facts.indices.length > 0) {
+    cells.push({ key: "index", icon: <Stack size={16} weight="duotone" />, label: d.sumFactIndex, value: facts.indices.join(" · ") });
+  }
+  if (facts.sector) {
+    cells.push({ key: "sector", icon: <Buildings size={16} weight="duotone" />, label: d.sumFactSector, value: facts.sector });
+  }
+  if (facts.sub) {
+    cells.push({ key: "sub", icon: <TreeStructure size={16} weight="duotone" />, label: d.sumFactSub, value: facts.sub });
+  }
+  if (facts.next && when) {
+    cells.push({
+      key: "next",
+      icon: <CalendarBlank size={16} weight="duotone" />,
+      label: d.sumFactNext,
+      value: <span className="numeral">{formatEtDateLong(facts.next.date, locale)}</span>,
+      meta: <span className="numeral">{when.approx ?? when.window}</span>,
+    });
+  }
+  if (peerCount > 0) {
+    cells.push({
+      key: "peers",
+      icon: <UsersThree size={16} weight="duotone" />,
+      label: d.sumFactPeers,
+      value: <span className="numeral">{d.sumPeerCount.replace("{n}", String(peerCount))}</span>,
+      meta: (
+        <span className={styles.summaryPeers}>
+          {topPeers.map((peer) => (
+            <Link key={peer.symbol} href={`/hisse/${peer.symbol}`} prefetch={false} aria-label={peerMeta[peer.symbol]?.name ?? peer.symbol}>
+              <LogoTile symbol={peer.symbol} logoUrl={peerMeta[peer.symbol]?.logoUrl ?? null} size="sm" />
+            </Link>
+          ))}
+        </span>
+      ),
+    });
+  }
+
   return (
-    <Panel className={styles.panel}>
+    <Panel className={cn(styles.panel, styles.summaryPanel)}>
       <PanelHeader title={d.sumTitle} />
       <div className={styles.body}>
-        {facts.next && when && (
-          <p className={styles.summaryLine}>
-            {d.sumNextLine.replace("{date}", formatEtDateLong(facts.next.date, locale))}
-            <span className="numeral font-normal text-muted">{", "}{when.approx ?? when.window}</span>
-          </p>
-        )}
+        <dl className={styles.summaryFacts} data-motion-stagger>
+          {cells.map((cell) => (
+            <div key={cell.key} className={styles.summaryFact}>
+              <dt>
+                <span className={styles.summaryIcon} aria-hidden>{cell.icon}</span>
+                {cell.label}
+              </dt>
+              <dd>{cell.value}</dd>
+              {cell.meta && <dd className={styles.summaryMeta}>{cell.meta}</dd>}
+            </div>
+          ))}
+        </dl>
         <p className={styles.summaryText}>{sentences.join(" ")}</p>
         {guides.length > 0 && (
           <p className={styles.guides}>
