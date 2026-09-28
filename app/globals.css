@@ -1,5 +1,29 @@
 @import "tailwindcss";
 
+/* TÜRK LİRASI İŞARETİ SİSTEM YAZI TİPİNDEN (28 Eylül).
+   Schibsted Grotesk ₺ (U+20BA) karakterini İngiliz lirasının eski işaretine
+   (₤) çok benzeyen bir şekille çiziyor: ekranda "362.931₤" okunuyordu —
+   vergi, portföy ve favorilerdeki bütün TL tutarlarında. Kod doğru karakteri
+   basıyordu; yanlış olan çizimdi (yan yana karşılaştırıldı, sistem yazı tipi doğru ₺).
+   Bu yüz YALNIZCA o tek karakteri kapsıyor (`unicode-range`) ve yığında
+   markanın yazı tipinden önce duruyor: metnin geri kalanına dokunmuyor.
+   Hiçbir yerel aday bulunmazsa yüz yüklenmiyor ve yığındaki sıradaki aileye
+   (bugünkü hâle) düşülüyor, yani en kötü durum değişmiyor.
+
+   SIRA ÖNEMLİ: `local()` ilk BULUNAN kaynağı alıyor, glifi olup olmadığına
+   bakmıyor. macOS'taki Arial'de ₺ yok (ölçüldü: Chrome onu Helvetica'ya
+   düşürüyor); Arial başta durduğunda yüz "yüklendi" görünüp hiçbir şey
+   çizmiyordu. Önce glifi kesin olanlar: Apple'da Helvetica Neue, Windows'ta
+   Segoe UI, Android'de Roboto; Arial en sonda. Ağırlık aralığı da şart:
+   belirtilmezse yüz yalnızca 400'te kayıtlı ve kalın tutarlar onu atlıyor. */
+@font-face {
+  font-family: "Lira Sign";
+  src: local("Helvetica Neue"), local("HelveticaNeue"), local("Helvetica"), local("Segoe UI"),
+    local("Roboto"), local("DejaVu Sans"), local("Arial");
+  unicode-range: U+20BA;
+  font-weight: 100 900;
+}
+
 /* ==========================================================================
    AÇILIŞ ZİLİ — Tasarım Tokenları
    Kaynak: docs/design/HANDOFF.md §2–§3 + docs/design/acilis-zili-*.dc.html
@@ -446,7 +470,7 @@
 
   /* Tek aile: Archivo. Serif display rolü kaldırıldı — sayfayı gazeteye
      çeviren oydu. Mono yalnızca bilanço kartlarındaki sayılarda. */
-  --font-sans: var(--font-body-face), system-ui, sans-serif;
+  --font-sans: "Lira Sign", var(--font-body-face), system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
   /* KÖŞE YARIÇAPI BASAMAKLARI — beş tane, hepsi burada.
@@ -633,7 +657,7 @@
   body {
     background-color: var(--page-bg);
     color: var(--text-body);
-    font-family: var(--font-body-face), system-ui, sans-serif;
+    font-family: "Lira Sign", var(--font-body-face), system-ui, sans-serif;
     /* tnum KÖKTE KAPALI — bkz. §Sayısal okumalar. Archivo döneminde açıktı ve
        doğru seçimdi; Schibsted Grotesk'te aynı ayar virgülü de rakam
        genişliğine çekiyor ve "8,97" ekranda "8 , 97" diye çıkıyor. */
@@ -2214,9 +2238,17 @@ html[data-scroll-behavior="smooth"] { scroll-behavior: smooth; }
 }
 .page-heading-copy > .page-eyebrow { animation: eyebrow-in 420ms var(--ease-brand) 80ms backwards; }
 .page-heading-copy h1 { animation: title-rise 760ms cubic-bezier(0.2, 0.8, 0.2, 1) 60ms backwards; }
-.page-heading-copy > p:not(.page-eyebrow) { animation: eyebrow-in 520ms var(--ease-brand) 260ms backwards; }
+/* AÇIKLAMA SATIRI SAYDAMLIKLA GELMİYOR (28 Eylül, ölçüldü). Satır sayfanın
+   en büyük metin öğesi olduğunda LCP onu sayıyor ve tarayıcı `opacity: 0`
+   öğeyi boyanmış saymıyor: 260 ms gecikme + 520 ms giriş, 4x yavaş
+   işlemcide LCP'yi ~200'den ~1.040 ms'ye itiyordu (/tema, /sozluk, /teknik,
+   /sirketler). Giriş artık yalnızca kayma; metin ilk karede görünür, hareket
+   yerinde. Üst künye (eyebrow) küçük olduğu için LCP adayı değil, onun
+   solması kalıyor. */
+.page-heading-copy > p:not(.page-eyebrow) { animation: copy-slide 520ms var(--ease-brand) 260ms backwards; }
 @keyframes eyebrow-rule { from { transform: scaleX(0); } }
 @keyframes eyebrow-in { from { opacity: 0; transform: translate3d(-6px, 0, 0); } }
+@keyframes copy-slide { from { transform: translate3d(-6px, 0, 0); } }
 @keyframes title-rise {
   from { clip-path: inset(0 0 100% 0); transform: translate3d(0, 35%, 0); }
   to { clip-path: inset(0 0 -0.3em 0); transform: none; }

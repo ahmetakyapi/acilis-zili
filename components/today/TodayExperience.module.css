@@ -290,8 +290,8 @@
   .dashboard { grid-template-columns:minmax(0,1fr); }
   .dashboard > [data-col] { display:contents; }
   /* Telefonda okuma sırası: günün özeti, dünya, hareketler, teknik
-     görünüm, mercek, ölçüler (tahvil · makro), takvim, listeler, bilanço,
-     haber akışı, künye.
+     görünüm, mercek, portföy (ya da Nabız), ölçüler (tahvil · makro),
+     takvim, listeler, bilanço, haber akışı, künye.
 
      SIRA HER BÖLÜME AÇIKÇA YAZILIYOR. Değeri olmayan bir bölüm `order:0`
      alıyor ve düzleşmiş yığının EN BAŞINA, günün özetinin üstüne çıkıyor —
@@ -319,21 +319,23 @@
   .dashboard [data-home-section="movers"] { order:3; }
   .dashboard [data-home-section="technical"] { order:4; }
   .dashboard [data-home-section="stories"] { order:5; }
-  .dashboard [data-home-section="yields"] { order:6; }
-  .dashboard [data-home-section="macro"] { order:7; }
-  .dashboard [data-home-section="schedule"] { order:8; }
-  .dashboard [data-home-section="week"] { order:9; }
-  .dashboard [data-home-section="watchlist"] { order:10; }
-  .dashboard [data-home-section="earnings"] { order:11; }
-  .dashboard [data-home-section="analyses"] { order:12; }
-  .dashboard [data-home-section="news"] { order:13; }
-  .dashboard [data-home-section="sources"] { order:14; }
+  /* Portföy ya da Nabız yuvası Mercek'in ardında, masaüstündeki sırayla aynı. */
+  .dashboard [data-home-section="portfolio"] { order:6; }
+  .dashboard [data-home-section="yields"] { order:7; }
+  .dashboard [data-home-section="macro"] { order:8; }
+  .dashboard [data-home-section="schedule"] { order:9; }
+  .dashboard [data-home-section="week"] { order:10; }
+  .dashboard [data-home-section="watchlist"] { order:11; }
+  .dashboard [data-home-section="earnings"] { order:12; }
+  .dashboard [data-home-section="analyses"] { order:13; }
+  .dashboard [data-home-section="news"] { order:14; }
+  .dashboard [data-home-section="sources"] { order:15; }
   /* GİRİŞ YAPMAMIŞ OKUYUCUNUN FAVORİLERİ BİLANÇOLARIN ARDINDA (24 Eylül).
      Panel onun için bir davet satırı (page.tsx → WatchlistSummary); günün
      bilançolarından ve analizlerden önce durması, sayfanın asıl içeriğine
      varmadan bir girişle karşılaşmak demekti. Giriş yapmış okuyucunun
      sırası değişmiyor — orada liste gerçekten onun listesi. */
-  .dashboard [data-home-section="watchlist"]:has(a[href$="/giris"]) { order:12; }
+  .dashboard [data-home-section="watchlist"]:has(a[href$="/giris"]) { order:13; }
 }
 
 /* TABLETTE İKİ KOLON (768–1023). Tek kolonda kahraman 768'de 683 piksel
@@ -360,10 +362,10 @@
      hafta, teknik | favoriler. Kısa olan panel erken bitiyor — boşluk
      esnetilmez (`align-items:start`). */
   .dashboard { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; }
-  .dashboard :is([data-home-section="brief"],[data-home-section="stories"],[data-home-section="earnings"],[data-home-section="analyses"],[data-home-section="news"],[data-home-section="sources"]) { grid-column:1 / -1; }
+  .dashboard :is([data-home-section="brief"],[data-home-section="stories"],[data-home-section="portfolio"],[data-home-section="earnings"],[data-home-section="analyses"],[data-home-section="news"],[data-home-section="sources"]) { grid-column:1 / -1; }
   /* Teknik görünüm tablette favorilerle eş: yerleşim sırası öyle kuruluyor
      (yan yana duracak iki panel ardışık olmalı). */
-  .dashboard [data-home-section="technical"] { order:10; }
+  .dashboard [data-home-section="technical"] { order:11; }
   /* Favoriler bir davet satırıysa (giriş yok) sona iniyor ve teknik panel
      eşsiz kalıyor; o hâlde tam genişlikte. */
   .dashboard:has([data-home-section="watchlist"] a[href$="/giris"]) [data-home-section="technical"] { grid-column:1 / -1; }

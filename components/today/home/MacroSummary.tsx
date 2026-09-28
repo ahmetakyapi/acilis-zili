@@ -1,11 +1,10 @@
 import { Panel, PanelLink } from "@/components/ui/primitives";
+import { formatMacroValue } from "@/components/macro/macro-format";
 import { getMacroRows } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import {
   cn,
-  formatPercentPlain,
   formatPeriodLabel,
-  formatPrice,
   NO_VALUE,
   unitLabel,
 } from "@/lib/utils";
@@ -91,10 +90,12 @@ export async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionar
              /makro'da birimsiz "-23", ekonomik takvimde ise "-23 bin"
              görünüyordu. Etiket kararı lib/utils.ts → `unitLabel`. */
           const birim = unitLabel(row.unit, locale);
+          /* /makro ile AYNI biçimlendirici (28 Eylül). Buradaki kopya
+             `formatPercentPlain` kullanıyordu ve o fonksiyon mutlak değer
+             yazıyor: eksiye düşen bir yüzde (deflasyonda TÜFE) panelde artı
+             görünecekti. Aynı sayı iki ekranda aynı kuraldan basılsın. */
           const show = (value: number) =>
-            isPct
-              ? formatPercentPlain(value, locale, 2)
-              : `${formatPrice(value, locale, { digits: 0 })} ${birim}`.trimEnd();
+            formatMacroValue(value, { locale, percent: isPct, digits: isPct ? 2 : 0, unit: birim });
           return (
             <div key={row.seriesId}>
               <p className="truncate text-tiny text-muted">

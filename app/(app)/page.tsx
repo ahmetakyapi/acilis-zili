@@ -28,6 +28,7 @@ import { ListSkeleton } from "@/components/today/home/ListSkeleton";
 import { SpotlightSkeleton, StoriesSpotlight } from "@/components/today/home/StoriesSpotlight";
 import { TechnicalPanel } from "@/components/today/home/TechnicalPanel";
 import { LatestAnalyses } from "@/components/today/home/LatestAnalyses";
+import { PortfolioSlot } from "@/components/today/home/PortfolioSlot";
 
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -376,6 +377,19 @@ export default async function TodayPage() {
         <div id="mercek-seckisi" data-home-section="stories">
           <Suspense fallback={<SpotlightSkeleton />}>
             <StoriesSpotlight locale={locale} t={t} />
+          </Suspense>
+        </div>
+
+        {/* ---- Portföy ya da Piyasa Nabzı ----
+             Mercek'in altında, çünkü ikisi de "sana ne anlatıyor" bloğu:
+             biri olayın mekanizmasını, öteki senin pozisyonlarını. Portföyü
+             olmayan okuyucuda aynı yuvaya kompakt Nabız giriyor; yuva boş
+             kalsaydı kolon dengesi yalnızca portföy tutanlar için kurulurdu
+             (ölçüm ve gerekçe `PortfolioSlot`). Yükleme yedeği iki hâlin
+             ortak iskeleti: başlık ve üç satır. */}
+        <div id="portfoy-ozeti" data-home-section="portfolio">
+          <Suspense fallback={<PanelSkeleton rows={3} />}>
+            <PortfolioSlot locale={locale} t={t} />
           </Suspense>
         </div>
 

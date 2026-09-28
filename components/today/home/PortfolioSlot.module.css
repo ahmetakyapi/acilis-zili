@@ -1,0 +1,46 @@
+/* Ana sayfanın portföy özeti. Derinlik tonla, gölge yok; tek renk ailesi. */
+
+.panel { display:flex; flex-direction:column; gap:16px; padding:16px; }
+@media (min-width: 640px) { .panel { padding:20px; } }
+
+.head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+
+.label { display:block; color:var(--text-muted); font-size:var(--text-nano); font-weight:500; }
+
+/* Toplam solda ve baskın; iki K/Z sağda, aynı hatta biter. Dar ekranda
+   alt alta. */
+.figures { display:grid; gap:14px; }
+@media (min-width: 480px) { .figures { grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); align-items:end; } }
+
+.total { display:flex; min-width:0; flex-direction:column; gap:4px; }
+.totalValue { color:var(--text-strong); font-size:clamp(28px,3vw,36px); font-weight:700; line-height:1.05; letter-spacing:-.045em; overflow-wrap:anywhere; }
+.sub { color:var(--text-muted); font-size:var(--text-tiny); }
+
+.pnl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.pnl dd { display:flex; flex-direction:column; gap:2px; margin-top:4px; font-size:15px; font-weight:700; line-height:1.2; }
+.pnl dd small { font-size:var(--text-tiny); font-weight:600; opacity:.85; }
+
+/* Dağılım şeridi — dilimler soldan sırayla açılır. */
+.weights { display:flex; flex-direction:column; gap:8px; }
+.bar { display:flex; height:10px; overflow:hidden; border-radius:999px; gap:2px; }
+.slice {
+  flex:0 0 var(--w);
+  background:color-mix(in srgb, var(--primary) var(--tone), var(--surface-sunken));
+  transform-origin:left center;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .slice { animation:slice-grow .7s var(--ease-brand) both; animation-delay:calc(var(--i) * 70ms); }
+}
+@keyframes slice-grow { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+
+.legend { display:flex; flex-wrap:wrap; gap:6px 14px; }
+.legend li { display:inline-flex; align-items:center; gap:6px; color:var(--text-body); font-size:var(--text-tiny); font-weight:600; }
+.legend b { color:var(--text-muted); font-weight:600; }
+.swatch { width:8px; height:8px; border-radius:2px; background:color-mix(in srgb, var(--primary) var(--tone), var(--surface-sunken)); }
+
+.rows > li + li { border-top:1px solid var(--line); }
+.row { display:flex; align-items:center; gap:12px; padding:10px 0; transition:opacity .2s; }
+.row:hover { opacity:.8; }
+
+.note { border-top:1px solid var(--line-soft); padding-top:10px; color:var(--text-muted); font-size:var(--text-tiny); line-height:1.5; }
+.stamp { margin-top:-4px; }
