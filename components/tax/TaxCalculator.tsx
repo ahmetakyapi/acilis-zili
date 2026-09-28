@@ -1,11 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { motion } from "motion/react";
 import {
   ChartLineUp,
   Coins,
   DownloadSimple,
+  FileArrowUp,
+  LockSimple,
   Plus,
   Trash,
   WarningCircle,
@@ -22,6 +25,7 @@ import {
   isIsoDate,
   TCMB_MIN_DATE,
 } from "@/lib/fx";
+import { formatDecimalInput, isAmbiguous, parseDecimalInput } from "@/lib/decimal-input";
 import { parseTaxHandoff, TAX_HANDOFF_KEY } from "@/lib/portfolio";
 import {
   dividendResult,
@@ -42,8 +46,20 @@ import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import { cn, directionOf, directionText, formatPrice, isValidSymbol } from "@/lib/utils";
 import { DividendMeter, Flow, Rolling, VerdictBadge, type FlowStep, type Verdict } from "./TaxResult";
-import { PANEL_TITLE } from "./tax-ui";
+import type { ImportPayload } from "./StatementImport";
+import { PANEL_TITLE, type DividendRow, type TradeRow } from "./tax-ui";
 import styles from "./Tax.module.css";
+
+/* EKSTREDEN AKTARIM AYRI BİR PARÇA. Önizleme, ayrıştırıcılar ve (PDF'te)
+   pdf.js ancak okuyucu bir dosya seçtiğinde iniyor; sayfanın ilk JS'inde
+   yalnızca bırakma alanı var (`ImportDrop`, aşağıda). Ölçüm (28 Eylül,
+   `next start`, /vergi, sıkıştırılmış indirilen JS): önce 313 KB, sonra
+   317 KB. Dosya seçilince: CSV'de +12 KB (önizleme ve ayrıştırıcılar);
+   PDF'te +133 KB ve pdf.js çalışanı (1,2 MB, gzip ~370 KB). */
+const StatementImport = dynamic(() => import("./StatementImport").then((m) => m.StatementImport), {
+  ssr: false,
+  loading: () => <div className={styles.importLoading} aria-hidden />,
+});
 
 /**
  * YURT DIŞI HİSSE VERGİSİ HESAPLAYICISI — tamamen istemcide.
@@ -70,24 +86,6 @@ export type TaxLabels = Dictionary["lira"]["tax"];
 
 type Tab = "sale" | "dividend";
 
-type TradeRow = {
-  id: string;
-  side: TradeSide;
-  symbol: string;
-  date: string;
-  quantity: string;
-  price: string;
-  commission: string;
-};
-
-type DividendRow = {
-  id: string;
-  symbol: string;
-  date: string;
-  gross: string;
-  withholding: "w8ben" | "none";
-};
-
 type RateState = Record<string, KurRate | null>;
 
 /** Kur isteğinin bekleme süresi — yazarken her tuşta istek açılmasın. */
@@ -96,6 +94,8 @@ const RATE_DEBOUNCE_MS = 500;
 const RATE_BATCH = 40;
 /** Kur dört basamak: TCMB'nin yayımladığı hassasiyet (`formatRate` ile aynı). */
 const RATE_DIGITS = 4;
+/** Ekstreden gelen stopaj oranında gösterilen ondalık. */
+const PCT_DIGITS = 2;
 /** Hisse adedinde gösterilen en fazla ondalık (kesirli hisse). */
 const QUANTITY_DIGITS = 8;
 
@@ -120,13 +120,13 @@ const emptyDividend = (id: string): DividendRow => ({
   date: "",
   gross: "",
   withholding: "w8ben",
+  statementPct: null,
 });
 
-/** "12,5" ve "12.5" ikisi de sayı; boş ya da bozuk alan null. */
-function num(raw: string): number | null {
-  const value = Number(raw.trim().replace(",", "."));
-  return raw.trim() !== "" && Number.isFinite(value) ? value : null;
-}
+const blankTrade = (row: TradeRow) =>
+  !row.symbol.trim() && !row.date && !row.quantity.trim() && !row.price.trim() && !row.commission.trim();
+const blankDividend = (row: DividendRow) => !row.symbol.trim() && !row.date && !row.gross.trim();
+
 
 export function TaxCalculator({
   labels,
@@ -158,12 +158,32 @@ export function TaxCalculator({
   const [ratesFailed, setRatesFailed] = useState(false);
   const [pendingRates, setPendingRates] = useState(false);
   const [imported, setImported] = useState(0);
+  /* Ekstreden aktarım: seçilen dosyalar önizlemeyi açar, onay kapatır. */
+  const [importFiles, setImportFiles] = useState<File[] | null>(null);
+  const [importNote, setImportNote] = useState<{ trades: number; dividends: number } | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
   const [autoIndex, setAutoIndex] = useState<Record<string, number>>({});
   const [indexMode, setIndexMode] = useState<"auto" | "manual">(indexAuto ? "auto" : "manual");
   const [manualIndex, setManualIndex] = useState<Record<string, string>>({});
   /* null: yılın kendi sınırı. Boş dize de sınıra düşer ama alan boş kalır —
      okuyucu kendi tutarını baştan yazabilsin. */
   const [thresholdInput, setThresholdInput] = useState<string | null>(null);
+
+  /* ---- Sayı alanları dilin kuralıyla okunur ve yazılır ----
+     Eskiden "12,5" ve "12.5" tek kuralla okunuyordu (ilk virgül noktaya) ve
+     TR'de "1.845,50" bozuk sayılıyordu; alana yazılan değer de `String()`
+     ile ondalık NOKTA taşıyordu. Kural ve belirsiz durum lib/decimal-input.ts
+     başında. Hesap (`lib/tax.ts`) değişmedi: yalnızca girdinin okunuşu. */
+  const num = useCallback((raw: string) => parseDecimalInput(raw, locale), [locale]);
+  const decimalText = useCallback((value: number) => formatDecimalInput(value, locale), [locale]);
+  /** "1.845" TR'de bin sekiz yüz kırk beş okunur; alan bunu altında söyler. */
+  const readAs = (raw: string) => {
+    const value = num(raw);
+    return value !== null && isAmbiguous(raw, locale)
+      ? /* Gruplamasız: "1.845 olarak okundu" yine aynı belirsizliği taşırdı. */
+        labels.readAs.replace("{value}", formatDecimalInput(value, locale))
+      : null;
+  };
 
   /* ---- Portföyden aktarım: bir kez oku, sonra SİL ---- */
   useEffect(() => {
@@ -188,20 +208,21 @@ export function TaxCalculator({
         side: "buy" as const,
         symbol: p.symbol,
         date: p.boughtAt,
-        quantity: String(p.quantity),
-        price: String(p.costUsd),
+        quantity: decimalText(p.quantity),
+        price: formatDecimalInput(p.costUsd, locale, { money: true }),
         commission: "",
       }));
       setTrades((prev) => [...buys, ...prev.filter((row) => row.side === "sell")]);
       if (positions.length === 1) {
-        setTrades((prev) => prev.map((row) => (row.side === "sell" ? { ...row, symbol: positions[0].symbol, quantity: String(positions[0].quantity) } : row)));
+        setTrades((prev) => prev.map((row) => (row.side === "sell" ? { ...row, symbol: positions[0].symbol, quantity: decimalText(positions[0].quantity) } : row)));
       } else {
         setAdvanced(true);
       }
       setTab("sale");
       setImported(positions.length);
     });
-  }, []);
+    /* Yalnızca ilk yüklemede: dil sayfa boyunca değişmiyor. */
+  }, [decimalText, locale]);
 
   /* ---- Kapaktaki üç soru sekmeyi seçer ---- */
   useEffect(() => {
@@ -266,7 +287,7 @@ export function TaxCalculator({
           },
         ];
       }),
-    [trades, dateUsable],
+    [trades, dateUsable, num],
   );
 
   const { lots, shortfalls } = useMemo(() => matchFifo(parsedTrades), [parsedTrades]);
@@ -290,11 +311,14 @@ export function TaxCalculator({
             symbol,
             date: row.date,
             grossUsd: gross,
-            withholdingPct: US_WITHHOLDING[row.withholding],
+            withholdingPct:
+              row.withholding === "statement" && row.statementPct !== null
+                ? row.statementPct
+                : US_WITHHOLDING[row.withholding === "none" ? "none" : "w8ben"],
           },
         ];
       }),
-    [dividends, yearPrefix, today],
+    [dividends, yearPrefix, today, num],
   );
 
   /* ---- Kurlar: eksik günler toplu ve gecikmeli ----
@@ -403,7 +427,7 @@ export function TaxCalculator({
       const value = num(manualIndex[month] ?? "");
       return value !== null && value > 0 ? value : null;
     },
-    [indexMode, autoIndex, manualIndex],
+    [indexMode, autoIndex, manualIndex, num],
   );
 
   /* ---- Sonuç ---- */
@@ -500,6 +524,42 @@ export function TaxCalculator({
     }
   };
   const removeDividend = (id: string) => setDividends((prev) => prev.filter((row) => row.id !== id));
+
+  /* ---- Ekstreden aktarım ----
+     Önizlemede onaylanan satırlar hesaplayıcının KENDİ satırları olarak
+     ekleniyor; boş başlangıç satırları (ilk açılıştaki alış ve satış)
+     atılıyor, okuyucunun yazdıkları kalıyor. Birden fazla işlem ilk giren
+     ilk çıkar ister: gelişmiş görünüm açılıyor. Vergi yılı en son SATIŞIN
+     yılına geçiyor — ekstre çoğu zaman bir önceki yılın beyanı için
+     yükleniyor. Kurlar mevcut akışla, satır satır kendiliğinden geliyor. */
+  const applyImport = (payload: ImportPayload) => {
+    if (payload.trades.length > 0) {
+      setTrades((prev) => [
+        ...prev.filter((row) => !blankTrade(row)),
+        ...payload.trades.map((row) => ({ ...row, id: nextId("t") })),
+      ]);
+      setAdvanced(true);
+    }
+    if (payload.dividends.length > 0) {
+      setDividends((prev) => [
+        ...prev.filter((row) => !blankDividend(row)),
+        ...payload.dividends.map((row) => ({ ...row, id: nextId("d") })),
+      ]);
+    }
+    const years = [
+      ...payload.trades.filter((t) => t.side === "sell").map((t) => Number(t.date.slice(0, 4))),
+      ...(payload.trades.some((t) => t.side === "sell") ? [] : payload.dividends.map((d) => Number(d.date.slice(0, 4)))),
+    ].filter((y) => TAX_YEARS[y]);
+    const target = years.length > 0 ? Math.max(...years) : null;
+    if (target !== null && target !== year) {
+      setYear(target);
+      setThresholdInput(null);
+    }
+    setTab(payload.trades.length > 0 ? "sale" : "dividend");
+    setImportNote({ trades: payload.trades.length, dividends: payload.dividends.length });
+    setImportFiles(null);
+  };
+  const pickFiles = () => fileInput.current?.click();
 
   /* ---- CSV ---- */
   const downloadCsv = () => {
@@ -700,6 +760,50 @@ export function TaxCalculator({
             </button>
           ))}
         </div>
+
+        <input
+          ref={fileInput}
+          type="file"
+          accept=".pdf,.csv,application/pdf,text/csv"
+          multiple
+          hidden
+          onChange={(event) => {
+            const picked = [...(event.target.files ?? [])];
+            event.target.value = "";
+            if (picked.length > 0) {
+              setImportNote(null);
+              setImportFiles(picked);
+            }
+          }}
+        />
+        {importFiles ? (
+          <StatementImport
+            key={importFiles.map((f) => `${f.name}:${f.size}:${f.lastModified}`).join("|")}
+            files={importFiles}
+            labels={labels}
+            locale={locale}
+            today={today}
+            onApply={applyImport}
+            onCancel={() => setImportFiles(null)}
+            onPick={pickFiles}
+          />
+        ) : (
+          <ImportDrop
+            labels={labels}
+            onPick={pickFiles}
+            onFiles={(dropped) => {
+              setImportNote(null);
+              setImportFiles(dropped);
+            }}
+          />
+        )}
+        {importNote && (
+          <p role="status" className="mt-3 text-small text-primary-ink">
+            {labels.import.applied
+              .replace("{trades}", String(importNote.trades))
+              .replace("{dividends}", String(importNote.dividends))}
+          </p>
+        )}
       </div>
 
       {tab === "sale" ? (
@@ -748,7 +852,7 @@ export function TaxCalculator({
                         className={cn(styles.input, styles.upper)}
                       />
                     </Field>
-                    <Field label={labels.quantity}>
+                    <Field label={labels.quantity} hint={readAs(buyRow?.quantity ?? "")}>
                       <input
                         inputMode="decimal"
                         autoComplete="off"
@@ -767,7 +871,7 @@ export function TaxCalculator({
                         className={styles.input}
                       />
                     </Field>
-                    <Field label={labels.priceUsd}>
+                    <Field label={labels.priceUsd} hint={readAs(buyRow?.price ?? "")}>
                       <input
                         inputMode="decimal"
                         autoComplete="off"
@@ -795,7 +899,7 @@ export function TaxCalculator({
                         className={styles.input}
                       />
                     </Field>
-                    <Field label={labels.priceUsd}>
+                    <Field label={labels.priceUsd} hint={readAs(sellRow?.price ?? "")}>
                       <input
                         inputMode="decimal"
                         autoComplete="off"
@@ -804,7 +908,7 @@ export function TaxCalculator({
                         className={styles.input}
                       />
                     </Field>
-                    <Field label={labels.sellQuantity}>
+                    <Field label={labels.sellQuantity} hint={readAs(sellRow?.quantity ?? "")}>
                       <input
                         inputMode="decimal"
                         autoComplete="off"
@@ -821,7 +925,7 @@ export function TaxCalculator({
                       {labels.commissionToggle}
                     </summary>
                     <div className={cn(styles.fields, "mt-1")}>
-                      <Field label={labels.buyCommission}>
+                      <Field label={labels.buyCommission} hint={readAs(buyRow?.commission ?? "")}>
                         <input
                           inputMode="decimal"
                           autoComplete="off"
@@ -830,7 +934,7 @@ export function TaxCalculator({
                           className={styles.input}
                         />
                       </Field>
-                      <Field label={labels.sellCommission}>
+                      <Field label={labels.sellCommission} hint={readAs(sellRow?.commission ?? "")}>
                         <input
                           inputMode="decimal"
                           autoComplete="off"
@@ -906,7 +1010,7 @@ export function TaxCalculator({
                             className={styles.input}
                           />
                         </Field>
-                        <Field label={labels.quantity}>
+                        <Field label={labels.quantity} hint={readAs(row.quantity)}>
                           <input
                             inputMode="decimal"
                             autoComplete="off"
@@ -915,7 +1019,7 @@ export function TaxCalculator({
                             className={styles.input}
                           />
                         </Field>
-                        <Field label={labels.priceUsd}>
+                        <Field label={labels.priceUsd} hint={readAs(row.price)}>
                           <input
                             inputMode="decimal"
                             autoComplete="off"
@@ -924,7 +1028,7 @@ export function TaxCalculator({
                             className={styles.input}
                           />
                         </Field>
-                        <Field label={labels.commissionUsd}>
+                        <Field label={labels.commissionUsd} hint={readAs(row.commission)}>
                           <input
                             inputMode="decimal"
                             autoComplete="off"
@@ -1092,7 +1196,7 @@ export function TaxCalculator({
                           className={cn(styles.input, styles.upper)}
                         />
                       </Field>
-                      <Field label={labels.grossUsd}>
+                      <Field label={labels.grossUsd} hint={readAs(row.gross)}>
                         <input
                           inputMode="decimal"
                           autoComplete="off"
@@ -1116,14 +1220,18 @@ export function TaxCalculator({
                           {labels.w8Label}
                         </span>
                         <span className={cn(styles.segment, "w-fit")} role="group" aria-labelledby={`${row.id}-w8`}>
-                          {(["w8ben", "none"] as const).map((option) => (
+                          {(row.statementPct === null ? (["w8ben", "none"] as const) : (["statement", "w8ben", "none"] as const)).map((option) => (
                             <button
                               key={option}
                               type="button"
                               aria-pressed={row.withholding === option}
                               onClick={() => updateDividend(row.id, { withholding: option })}
                             >
-                              {option === "w8ben" ? labels.w8Yes : labels.w8No}
+                              {option === "w8ben"
+                                ? labels.w8Yes
+                                : option === "none"
+                                  ? labels.w8No
+                                  : labels.w8Statement.replace("{pct}", formatPct(row.statementPct ?? 0, locale))}
                             </button>
                           ))}
                         </span>
@@ -1235,20 +1343,86 @@ export function TaxCalculator({
    Parçalar
    -------------------------------------------------------------------------- */
 
+/**
+ * Ekstreden aktarımın kapısı — sayfanın ilk JS'inde kalan TEK parçası.
+ * Hem düğme hem bırakma alanı: tıklayınca dosya seçici açılıyor, üstüne
+ * dosya bırakılınca doğrudan okumaya geçiyor. Gizlilik cümlesi kapının
+ * üstünde, okuyucu dosyayı seçmeden ÖNCE görsün diye.
+ */
+function ImportDrop({
+  labels,
+  onPick,
+  onFiles,
+}: {
+  labels: TaxLabels;
+  onPick: () => void;
+  onFiles: (files: File[]) => void;
+}) {
+  const L = labels.import;
+  const [over, setOver] = useState(false);
+  return (
+    <div
+      className={styles.drop}
+      data-over={over || undefined}
+      onDragEnter={(event) => {
+        if (event.dataTransfer.types.includes("Files")) {
+          event.preventDefault();
+          setOver(true);
+        }
+      }}
+      onDragOver={(event) => {
+        if (event.dataTransfer.types.includes("Files")) event.preventDefault();
+      }}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOver(false);
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        setOver(false);
+        const files = [...event.dataTransfer.files];
+        if (files.length > 0) onFiles(files);
+      }}
+    >
+      <button type="button" onClick={onPick} className={styles.dropButton}>
+        <span className={styles.dropIcon} aria-hidden>
+          <FileArrowUp size={22} weight="duotone" />
+        </span>
+        <span className="min-w-0">
+          <span className={styles.dropTitle}>{over ? L.drop : L.open}</span>
+          <span className={styles.dropHint}>{L.formats}</span>
+        </span>
+      </button>
+      <p className={styles.privacy}>
+        <LockSimple size={14} weight="bold" aria-hidden />
+        {L.privacy}
+      </p>
+    </div>
+  );
+}
+
+/** Stopaj oranı: "%15" (TR) · "15%" (EN) — iki ondalığa kadar. */
+function formatPct(value: number, locale: Locale): string {
+  return new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", { maximumFractionDigits: PCT_DIGITS }).format(value);
+}
+
 /** Etiket ÜSTTE, alan altta, hata en altta. Yer tutucu etiket değildir. */
 function Field({
   label,
   error,
+  hint,
   children,
 }: {
   label: string;
   error?: string;
+  /** Belirsiz sayı girişinin nasıl okunduğu (lib/decimal-input.ts). */
+  hint?: string | null;
   children: React.ReactNode;
 }) {
   return (
     <label className={styles.field}>
       <span className={styles.label}>{label}</span>
       {children}
+      {hint && <span className={styles.help} role="status">{hint}</span>}
       {error && <span className={cn(styles.help, styles.warn)}>{error}</span>}
     </label>
   );

@@ -124,6 +124,123 @@
 
 .addRow { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
 
+/* ---------- Ekstreden aktarım ----------
+   Kapı (bırakma alanı) sekmelerin altında ince bir şerit: hesaplayıcının
+   ilk ekranını itmesin, ama okuyucu "elle yazmak zorunda mıyım" diye
+   sormadan önce görsün. Kesikli çizgi "buraya bir şey bırakılır" demenin
+   evrensel işareti; derinlik yine ton farkıyla (gölge yok). Önizleme açılınca
+   şeridin yerini alıyor ve iki sütunun ÜSTÜNDE tam genişlikte duruyor:
+   yedi sütunlu tablo, formun yarım genişliğine sığmazdı. */
+
+.drop { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 16px; margin-top:14px; padding:8px 16px 8px 8px; border:1px dashed var(--line-strong); border-radius:16px; transition:border-color .25s, background-color .25s; }
+.drop[data-over] { border-color:var(--primary); border-style:solid; background:var(--primary-tint); }
+.dropButton { display:flex; align-items:center; gap:14px; min-height:56px; min-width:0; padding-right:8px; text-align:left; border-radius:12px; }
+.dropIcon { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; border-radius:12px; background:var(--primary-tint); color:var(--primary-ink); transition:transform .35s var(--ease-brand), background-color .25s; }
+.drop[data-over] .dropIcon { transform:translateY(-3px) scale(1.06); background:var(--primary-wash); }
+.dropTitle { display:block; font-size:15px; font-weight:650; line-height:1.25; letter-spacing:-.01em; color:var(--text-strong); }
+.dropHint { display:block; margin-top:2px; font-size:12px; line-height:1.4; color:var(--text-muted); }
+@media (hover:hover) and (pointer:fine) {
+  .drop:hover { border-color:var(--primary-faint); }
+  .dropButton:hover .dropIcon { transform:translateY(-2px); }
+}
+.privacy { display:inline-flex; align-items:center; gap:6px; margin:0; padding-left:8px; font-size:12px; font-weight:600; line-height:1.4; color:var(--text-body); }
+.privacy svg { flex-shrink:0; color:var(--primary-ink); }
+
+.import { margin-top:14px; padding:20px 16px; border-radius:18px; background:var(--surface-sunken); animation:chip-in 420ms var(--ease-brand) both; }
+@media (min-width:640px) { .import { padding:24px; } }
+.importLoading { height:132px; margin-top:14px; border-radius:18px; background:var(--surface-sunken); animation:chip-wait 1.2s ease-in-out infinite alternate; }
+.importState { display:flex; flex-direction:column; gap:14px; }
+.importTitle { margin:0; font-size:clamp(19px, 4.4vw, 22px); font-weight:700; line-height:1.2; letter-spacing:-.02em; color:var(--text-strong); }
+.importBody { margin:0; max-width:68ch; font-size:13px; line-height:1.6; color:var(--text-body); }
+.importMeta { display:flex; min-width:0; align-items:center; gap:8px; margin:0 0 8px; font-size:12px; line-height:1.4; color:var(--text-muted); }
+
+/* İlerleme: sayfa sayısı bilinince oranlı, bilinmezken (CSV, ilk sayfa)
+   gidip gelen kısa bir parça. Yalnızca `transform`. */
+.progress { position:relative; height:4px; max-width:420px; overflow:hidden; border-radius:4px; background:var(--line); }
+.progress > span { position:absolute; inset:0; border-radius:4px; background:var(--primary); transform-origin:0 50%; transform:scaleX(var(--p, 0)); transition:transform 400ms var(--ease-brand); }
+.progress[data-indeterminate="true"] > span { transform:translateX(-100%) scaleX(.35); animation:progress-run 1.2s var(--ease-brand) infinite; }
+@keyframes progress-run { to { transform:translateX(100%) scaleX(.35); } }
+
+.review { display:flex; flex-direction:column; gap:18px; }
+.reviewHead { display:grid; gap:16px 28px; }
+@media (min-width:768px) { .reviewHead { grid-template-columns:minmax(0,1fr) auto; align-items:end; } }
+.broker { flex-shrink:0; padding:2px 9px; border-radius:999px; background:var(--primary-tint); font-size:11px; font-weight:700; color:var(--primary-ink); }
+.broker[data-known="false"] { background:var(--brass-wash); color:var(--brass-ink); }
+
+/* Üç sayı büyük puntoda: okunan işlem, temettü, atlanan. Sayılar alttan
+   yükselerek giriyor, sırayla. */
+.tally { display:flex; gap:28px; margin:0; }
+.tally > div { display:flex; flex-direction:column-reverse; gap:4px; }
+.tally dt { font-size:12px; font-weight:600; color:var(--text-muted); }
+.tally dd { margin:0; font-size:clamp(30px, 7vw, 40px); font-weight:650; line-height:1; letter-spacing:-.045em; color:var(--text-strong); animation:tally-in 620ms var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 90ms + 120ms); }
+.tally > [data-muted] dd { color:var(--text-muted); }
+@keyframes tally-in { from { opacity:0; transform:translateY(12px); } }
+
+/* Aylık şerit: sütun başına bir ay (çubuk en fazla 28 piksel: üç aylık bir
+   ekstrede sütunlar şeridi kalın bloklarla dolduruyordu), alış altta (mavi), satış üstte
+   (pirinç). Sütunlar alttan büyüyor; yükseklik ayın işlem sayısının en
+   yoğun aya oranı. */
+.months { margin:0; }
+.months ol { display:grid; grid-template-columns:repeat(var(--n), minmax(0,1fr)); align-items:end; gap:3px; height:56px; margin:0; padding:0; list-style:none; border-bottom:1px solid var(--line); }
+.months li { display:flex; flex-direction:column-reverse; align-items:center; height:100%; transform-origin:50% 100%; animation:month-in 560ms var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 30ms + 160ms); }
+@keyframes month-in { from { transform:scaleY(0); } }
+.monthBar { display:block; width:100%; max-width:28px; height:calc(var(--h, 0) * 100%); border-radius:2px 2px 0 0; }
+.monthBar[data-side="buy"] { background:var(--primary); }
+.monthBar[data-side="sell"] { background:var(--brass); }
+.months figcaption { display:flex; justify-content:space-between; gap:12px; margin-top:6px; font-size:11px; color:var(--text-muted); }
+.monthKey { display:inline-flex; align-items:center; gap:6px; }
+.monthKey i { display:inline-block; width:8px; height:8px; margin-left:4px; border-radius:2px; }
+.monthKey i[data-side="buy"] { background:var(--primary); }
+.monthKey i[data-side="sell"] { background:var(--brass); }
+
+/* Önizleme tablosu. Sabit etiket sütunu (kutu + sembol) ve sabit başlık
+   satırı; kaydırma SAKLANMIYOR (CLAUDE.md "Kaydırma saklanmaz"): tabanın
+   bir genişliği var, dar ekranda yatay kayıyor ve sağ kenar "devamı var"
+   diye soluyor (ScrollEdges). Yüksekliği sınırlı: yıllık bir ekstre yüz
+   satır olabilir ve onay düğmesi tablonun dibinde kaybolmasın. Sabit hücrenin
+   zemini `--panel-fixed`, yani opak: kayan sayılar etiketin altına giriyor. */
+.previewBlock { display:flex; flex-direction:column; gap:8px; }
+.previewTitle { display:flex; align-items:baseline; gap:8px; margin:0; font-size:15px; font-weight:700; color:var(--text-strong); }
+.previewTitle > span { font-size:12px; font-weight:600; color:var(--text-muted); }
+.previewScroll { max-height:min(60vh, 540px); overflow:auto; border:1px solid var(--line-soft); border-radius:12px; background:var(--panel-fixed); }
+.preview { width:100%; min-width:780px; border-collapse:separate; border-spacing:0; font-size:13px; }
+.previewNarrow { min-width:560px; }
+.preview thead th { position:sticky; top:0; z-index:2; padding:10px 8px; border-bottom:1px solid var(--line-soft); background:var(--panel-fixed); text-align:left; font-size:11px; font-weight:600; white-space:nowrap; color:var(--text-muted); }
+.preview thead th.stick { z-index:3; }
+.preview tbody > tr > * { padding:5px 8px; border-top:1px solid var(--line-soft); vertical-align:middle; }
+.preview tbody > tr:first-child > * { border-top:0; }
+.preview tbody > tr { animation:chip-in 380ms var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 28ms); }
+.preview :is(th, td):first-child { padding-left:12px; }
+.preview thead th:global(.text-right) { text-align:right; }
+.stick { position:sticky; left:0; z-index:1; background:var(--panel-fixed); border-right:1px solid var(--line-soft); }
+.stickInner { display:flex; align-items:center; gap:10px; }
+.check { width:18px; height:18px; flex-shrink:0; accent-color:var(--primary); cursor:pointer; }
+.cell { height:36px; min-width:0; border:1px solid transparent; border-radius:8px; background:var(--surface); padding:0 8px; font-size:13px; color:var(--text-strong); outline:none; transition:border-color .2s, background-color .2s, opacity .2s; }
+.cell:focus { border-color:var(--line-focus); background:var(--panel-fixed); }
+.cell[aria-invalid="true"], .cell[data-ambiguous] { border-color:var(--brass); }
+select.cell { padding-right:4px; font-weight:700; }
+select.cell[data-side="buy"] { color:var(--primary-ink); }
+select.cell[data-side="sell"] { color:var(--brass-ink); }
+.preview tr[data-off] .cell, .preview tr[data-off] .flag, .preview tr[data-off] .flagOk { opacity:.45; }
+
+/* Durum rozetleri. Şüpheli (seçili gelmeyen) pirinç; bilgi nötr. Kırmızı
+   YOK: kırmızı bu sayfada zarar demek. */
+.flag { display:inline-flex; align-items:center; min-height:22px; padding:0 8px; border-radius:999px; background:var(--surface-elevated); font-size:11px; font-weight:600; white-space:nowrap; color:var(--text-body); }
+.flag[data-block] { background:var(--brass-wash); color:var(--brass-ink); }
+.flagOk { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; color:var(--text-muted); }
+.flagOk svg { color:var(--primary); }
+.legend { display:flex; flex-direction:column; gap:6px; margin:0; padding:0; list-style:none; font-size:12px; line-height:1.5; color:var(--text-body); }
+.legend li { display:flex; align-items:baseline; gap:8px; }
+
+.skipped { margin-top:0; }
+.skipped > div { display:flex; flex-direction:column; gap:8px; }
+.skipped ul { display:flex; flex-direction:column; gap:6px; max-height:240px; margin:0; padding:0; overflow:auto; list-style:none; }
+.skipped li { display:flex; align-items:baseline; gap:8px; }
+.skipped code { min-width:0; font-family:var(--font-mono); font-size:11px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; color:var(--text-body); }
+.skipped[open] > summary svg { transform:rotate(180deg); }
+.reviewFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding-top:16px; border-top:1px solid var(--line-soft); }
+.reviewFoot .privacy { padding-left:0; }
+
 /* ---------- Sonuç ---------- */
 
 .result { min-width:0; background:var(--surface-sunken); }
@@ -239,6 +356,9 @@
 .faq details > p, .faq details > ul { margin:0 0 16px; max-width:72ch; font-size:14px; line-height:1.7; color:var(--text-body); animation:chip-in 360ms var(--ease-brand) both; }
 
 @media (prefers-reduced-motion:reduce) {
+  .import, .importLoading, .tally dd, .months li, .preview tbody > tr, .progress[data-indeterminate="true"] > span { animation:none; }
+  .progress > span, .dropIcon, .cell { transition:none; }
+  .drop[data-over] .dropIcon { transform:none; }
   .paths > li, .chip, .chip[data-state="loading"], .row, .verdict, .disclosure > :not(summary), .faq details > p, .faq details > ul { animation:none; }
   .bar, .meterTick, .meterLimit, .pathArrow, .path, .disclosure > summary svg, .faq summary svg { transition:none; }
   .path:active { scale:none; }
