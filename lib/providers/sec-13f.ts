@@ -33,7 +33,7 @@ async function secFetch(url: string): Promise<Response> {
   lastSecCall = Date.now();
   return withTimeout(
     fetch(url, {
-      headers: { "User-Agent": secUserAgent() ?? "", Accept: "application/json, application/xml, text/xml" },
+      headers: { "User-Agent": secUserAgent(), Accept: "application/json, application/xml, text/xml" },
       cache: "no-store",
     }),
     BACKGROUND_TIMEOUT_MS,
@@ -41,7 +41,6 @@ async function secFetch(url: string): Promise<Response> {
 }
 
 async function secText(url: string): Promise<ProviderResult<string>> {
-  if (!secUserAgent()) return fail("sec", "missing-key", "SEC_USER_AGENT tanımlı değil");
   try {
     const res = await secFetch(url);
     if (res.status === 404) return fail("sec", "not-found", `${url} bulunamadı`);

@@ -426,15 +426,16 @@ export function investorBySlug(slug: string): Investor | null {
 
 /**
  * SEC isteklerinin kimliği — başlıksız ve tarayıcı kimliğiyle SEC 403 döner;
- * kural "kurum adı + iletişim adresi" (ör. "AcilisZili research ad@alan.com").
+ * kural "kurum adı + iletişim adresi".
  *
- * ORTAM DEĞİŞKENİNDE, KODDA DEĞİL: depo herkese açık ve iletişim adresi
- * kişisel bir e-posta. Tanımlı değilse senkron SEC'e hiç gitmiyor ve bunu
- * özetinde söylüyor; sayfalar tablodaki son veriyle çalışmaya devam ediyor.
+ * Varsayılan KODDA (sahibinin kararı, 28 Eylül: adres herkese açık olabilir,
+ * sunucuya ayrıca değişken eklemek istenmedi). `SEC_USER_AGENT` tanımlıysa
+ * o öncelikli.
  */
-export function secUserAgent(): string | null {
-  const value = process.env.SEC_USER_AGENT?.trim();
-  return value ? value : null;
+const SEC_USER_AGENT_DEFAULT = "AcilisZili research ahmetakyapii@gmail.com";
+
+export function secUserAgent(): string {
+  return process.env.SEC_USER_AGENT?.trim() || SEC_USER_AGENT_DEFAULT;
 }
 
 /** İlk doldurmada yatırımcı başına kaç çeyrek. Sonrasında yalnızca yeni dönem. */
