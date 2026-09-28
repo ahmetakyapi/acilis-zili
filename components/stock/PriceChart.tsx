@@ -3,7 +3,8 @@
 import styles from "./PriceChart.module.css";
 import { LoadingSurface } from "@/components/ui/LoadingState";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { motion } from "motion/react";
 import {
   AreaSeries,
   BaselineSeries,
@@ -195,6 +196,10 @@ export function PriceChart({
   live = false,
 }: PriceChartProps) {
   const usdQuote = quoteProp;
+  /* Seçim göstergelerinin `layoutId`si örneğe özgü: kabuktaki `LayoutGroup`
+     sitenin tamamını sarıyor ve bir yazıda iki grafik aynı adı paylaşırsa
+     gösterge bir grafikten ötekine uçardı. */
+  const thumbId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   /* Son çizim hangi veri ve görünüm için oynadı — bkz. `revealPlot`. */
@@ -1292,7 +1297,7 @@ export function PriceChart({
             tarayıcı odaklananı görünüre kaydırıyor — fazladan tab durağı
             kazanç değil, gürültü olurdu. */}
         <ScrollEdges
-          className="scroll-x-hint -mb-1 flex gap-1 pb-1"
+          className={cn("scroll-x-hint -mb-1 flex gap-1 pb-1", styles.segment)}
           role="group"
           aria-label={labels.rangeGroup}
         >
@@ -1303,12 +1308,27 @@ export function PriceChart({
               aria-pressed={range === r}
               onClick={() => setRange(r)}
               className={cn(
-                "numeral min-h-11 shrink-0 rounded-(--radius-sm) px-2.5 sm:min-h-[36px] text-xs font-semibold transition-colors",
+                "numeral relative isolate min-h-11 shrink-0 rounded-(--radius-sm) px-2.5 sm:min-h-[36px] text-xs font-semibold transition-colors",
+                styles.segmentButton,
                 range === r
-                  ? "bg-primary text-on-primary"
+                  ? "text-on-primary"
                   : "text-muted hover:bg-primary-wash hover:text-primary-ink",
               )}
             >
+              {/* SEÇİM KAYARAK GEÇİYOR (28 Eylül). Dolgu her düğmenin kendi
+                  zemini olduğu için seçim pat diye yer değiştiriyordu; artık
+                  tek bir gösterge var ve Motion onu eski düğmeden yenisine
+                  taşıyor (sekme alt çizgisiyle aynı yay: 500 / 40). Hareketi
+                  azaltan okuyucuda `MotionConfig reducedMotion="user"`
+                  (kabuk) geçişi anında bitiriyor. */}
+              {range === r && (
+                <motion.span
+                  aria-hidden
+                  layoutId={`${thumbId}-range`}
+                  className={cn("absolute inset-0 -z-10 rounded-(--radius-sm) bg-primary", styles.segmentThumb)}
+                  transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                />
+              )}
               {labels.ranges[r]}
             </button>
           ))}
@@ -1322,7 +1342,7 @@ export function PriceChart({
         <div className="flex items-center gap-2">
           {range !== "1D" && (
             <div
-              className="flex gap-1 border-r border-line-soft pr-2"
+              className={cn("flex gap-1 border-r border-line-soft pr-2", styles.segment, styles.segmentCurrency)}
               role="group"
               aria-label={labels.currencyGroup}
             >
@@ -1336,18 +1356,27 @@ export function PriceChart({
                   title={c === "usd" ? labels.usdLong : labels.tlLong}
                   onClick={() => setCurrency(c)}
                   className={cn(
-                    "numeral min-h-11 rounded-(--radius-sm) px-2.5 text-xs font-semibold sm:min-h-[36px] transition-colors",
+                    "numeral relative isolate min-h-11 rounded-(--radius-sm) px-2.5 text-xs font-semibold sm:min-h-[36px] transition-colors",
+                    styles.segmentButton,
                     currency === c
-                      ? "bg-primary-wash text-primary-ink"
+                      ? "text-primary-ink"
                       : "text-muted hover:bg-surface-elevated hover:text-soft",
                   )}
                 >
+                  {currency === c && (
+                    <motion.span
+                      aria-hidden
+                      layoutId={`${thumbId}-currency`}
+                      className={cn("absolute inset-0 -z-10 rounded-(--radius-sm) bg-primary-wash", styles.segmentThumbSoft)}
+                      transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                    />
+                  )}
                   {c === "usd" ? labels.usd : labels.tl}
                 </button>
               ))}
             </div>
           )}
-          <div className="flex gap-1" role="group" aria-label={labels.modeGroup}>
+          <div className={cn("flex gap-1", styles.segment)} role="group" aria-label={labels.modeGroup}>
             {(["area", "candles"] as const).map((m) => (
               <button
                 key={m}
@@ -1357,12 +1386,21 @@ export function PriceChart({
                 aria-pressed={mode === m}
                 onClick={() => setMode(m)}
                 className={cn(
-                  "min-h-11 rounded-(--radius-sm) px-2.5 text-xs font-medium sm:min-h-[36px] transition-colors",
+                  "relative isolate min-h-11 rounded-(--radius-sm) px-2.5 text-xs font-medium sm:min-h-[36px] transition-colors",
+                  styles.segmentButton,
                   mode === m
-                    ? "bg-primary-wash text-primary-ink"
+                    ? "text-primary-ink"
                     : "text-muted hover:bg-surface-elevated hover:text-soft",
                 )}
               >
+                {mode === m && (
+                  <motion.span
+                    aria-hidden
+                    layoutId={`${thumbId}-mode`}
+                    className={cn("absolute inset-0 -z-10 rounded-(--radius-sm) bg-primary-wash", styles.segmentThumbSoft)}
+                    transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                  />
+                )}
                 {m === "area" ? labels.area : labels.candles}
               </button>
             ))}

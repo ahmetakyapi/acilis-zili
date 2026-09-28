@@ -84,9 +84,7 @@
 .profileCapValue { color:var(--text-strong); font-size:clamp(28px,2.4vw,34px); line-height:1.1; font-weight:600; letter-spacing:-.045em; overflow-wrap:anywhere; }
 .profileCapNote { color:var(--text-muted); font-size:var(--text-nano); font-weight:500; line-height:1.4; }
 .about { padding-bottom:18px; border-bottom:1px solid var(--line-soft); color:var(--text-body); font-size:13px; line-height:1.8; }
-.profileBody > dl > div { min-height:45px; }
-.profileBody > dl dt { font-size:11px; font-weight:500; color:var(--text-muted); }
-.profileBody > dl dd { max-width:65%; font-size:12px; color:var(--text-strong); }
+/* (28 Eylül) Satır listesinin kuralları kalktı: liste künye ızgarasına döndü (`.facts`, dosyanın sonu). */
 /* Yıkama degradesi kalktı; kartı bölümün geri kalanından ayıran şey soldaki
    3 piksellik `--primary` kuralı ve kenarlığın tonu. */
 .upcomingPanel { position:relative; padding:22px; border:1px solid var(--primary-faint); border-radius:22px; background:var(--premium-surface,var(--surface-solid)); }
@@ -254,9 +252,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .companyOverview .profileMetric { gap:4px; }
 .companyOverview .profileCapValue { font-size:clamp(28px,2.2vw,32px); }
 .companyOverview .about { padding-bottom:12px; font-size:12px; line-height:1.7; }
-.companyOverview .profileBody > dl { flex:initial; }
-.companyOverview .profileBody > dl > div { flex:initial; min-height:36px; padding-block:7px; }
-.companyOverview .profileBody > dl dd { font-size:11px; }
+/* (28 Eylül) Satır listesinin kuralları kalktı: liste künye ızgarasına döndü (`.facts`, dosyanın sonu). */
 .chartSkeleton { width:100%; height:calc(var(--price-chart-height) + 145px); }
 /* Menünün gölgesi kalktı; yapışınca arkasında başlıkla aynı tonda bir bant
    açılıyor (SectionNav), ayrımı o yapıyor. */
@@ -524,9 +520,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 /* Profil satırının ikonu — sayfanın vurgu yıkamasında küçük bir karo
    (26 Eylül; gerekçe page.tsx → "SATIRIN İKONU"). Satıra gelince karo
    dolgun maviye geçiyor: satırın okunduğunu hareketsiz gösteriyor. */
-.profileIcon { display:grid; place-items:center; width:24px; height:24px; flex-shrink:0; border-radius:7px; background:var(--primary-wash); color:var(--primary-ink); transition:background-color .2s, color .2s; }
-dl > div:hover .profileIcon { background:var(--primary); color:var(--on-primary); }
-@media(prefers-reduced-motion:reduce) { .profileIcon { transition:none; } }
+/* (28 Eylül) Satır listesinin kuralları kalktı: liste künye ızgarasına döndü (`.facts`, dosyanın sonu). */
 
 /* ---- OKUNUR PROFİL (26 Eylül) ----
    Sağdaki profil kartı "bazıları okunamıyor" diye bildirildi ve ölçü
@@ -536,16 +530,11 @@ dl > div:hover .profileIcon { background:var(--primary); color:var(--on-primary)
    gövde tonunda, değer 13,5 piksel güçlü tonda ve yarı kalın; künyeler 12
    piksel. Satırın ikonu 26'lık karo. Yukarıdaki eski kurallar karar
    kaydı olarak yerinde, bu blok onları eziyor. */
-.profileBody > dl dt,
-.companyOverview .profileBody > dl dt { font-size:13px; font-weight:600; color:var(--text-body); }
-.profileBody > dl dd,
-.companyOverview .profileBody > dl dd { font-size:13.5px; font-weight:600; color:var(--text-strong); }
-.companyOverview .profileBody > dl > div { min-height:42px; padding-block:8px; }
+/* (28 Eylül) Satır listesinin kuralları kalktı: liste künye ızgarasına döndü (`.facts`, dosyanın sonu). */
 .profileMetric dt, .profileRank dt { font-size:12px; font-weight:600; color:var(--text-body); }
 .profileRankValue > span, .profileCapNote { font-size:12px; color:var(--text-body); }
 .profileBandLabel { font-size:12px; font-weight:600; color:var(--text-body); }
 .companyOverview .about { font-size:13px; line-height:1.75; }
-.profileIcon { width:26px; height:26px; border-radius:8px; }
 /* LOGO BİR KADEME BÜYÜK (26 Eylül): 48 → 56, telefonda 44 → 50. Kimlik
    satırı logoyla açılıyor; 48'de adın iki satırlık yüksekliğinin
    altında kalıyordu. */
@@ -677,3 +666,173 @@ dl > div:hover .profileIcon { background:var(--primary); color:var(--on-primary)
   .companyFallback { font-size:18px; }
   .identityChip a { white-space:normal; }
 }
+
+/* ==========================================================================
+   ÜST BÖLÜM, İKİNCİ TUR (28 Eylül) — "daha premium" isteği.
+   Ölçüler 1440/1280/390'da alındı (SNDK, NVDA, KO, JPM, SPY); önceki
+   kurallar karar kaydı olarak yukarıda, bu blok onları eziyor.
+   ========================================================================== */
+
+/* KÜNYE ÇUBUĞU. Geri bağlantı çıplak bir metindi ve sağdaki araştırma
+   çipinden (44 piksel, çerçeveli) daha zayıf okunuyordu; çubuk iki ucu
+   dengesiz bir satırdı. Geri bağlantı artık çiple aynı boyda bir hap:
+   ok hover'da geri yönde kayıyor (gideceği yönü gösteriyor). Sembol çipin
+   dilinde, ayraç kalıyor. */
+.breadcrumb { gap:10px; }
+.backLink { min-height:36px; padding:0 14px 0 10px; border:1px solid var(--line); border-radius:999px; background:var(--premium-surface,var(--surface-solid)); color:var(--text-body); transition:color .2s, border-color .2s; }
+.backLink > svg { transition:translate .25s var(--ease-brand); }
+.backLink:hover { border-color:var(--primary-faint); color:var(--primary-ink); }
+.backLink:hover > svg { translate:-3px 0; }
+.breadcrumb > .numeral { padding:3px 8px; border-radius:7px; background:var(--surface-sunken); letter-spacing:.06em; }
+.researchLinks a { min-height:40px; border-radius:999px; padding:0 6px 0 16px; font-size:12px; }
+.researchLinks a > svg { box-sizing:content-box; padding:6px; border-radius:50%; background:var(--primary); color:var(--on-primary); transition:translate .25s var(--ease-brand); }
+.researchLinks a:hover > svg { translate:2px -2px; }
+@media(prefers-reduced-motion:reduce) { .backLink > svg, .researchLinks a > svg { transition:none; } }
+
+/* KİMLİK. Logo karosu 88 pikseldi ve logoların çoğu kendi karesinin
+   ortasında küçük bir amblem (SNDK'da yazı markası karenin üçte biri):
+   kimliğin en büyük öğesi boş bir kareydi. Karo 72'ye indi, kazanılan yer
+   ADA gitti — kimliği taşıyan artık yazı. Ad sıkı ve ağır (46'ya kadar),
+   künye satırı onun hemen altında. */
+@media(min-width:768px) {
+  .companyOverview .identity { gap:20px; }
+  .companyOverview .companyLogo { width:72px; height:72px; border-radius:18px; }
+}
+.companyOverview .companyName { font-size:clamp(32px,3.15vw,46px); line-height:1.04; letter-spacing:-.05em; font-weight:750; }
+.identityNameSkeleton { height:calc(clamp(32px,3.15vw,46px) * 1.04); }
+
+/* FİYAT. Önceki hâl 48 puntoluk fiyat ile yanında 14 ve 12 puntoluk
+   değişimdi; hiyerarşi yalnızca iki kademeydi ve ikinci kademe
+   kayboluyordu. Şimdi üç kademe: fiyat 64'e kadar (yuvarlanarak geliyor,
+   HeaderReadout), yüzde büyük bir yön rozeti, mutlak fark onun altında.
+   Değişim bloğu fiyatın taban hizasında biter. */
+.companyOverview .livePrice { font-size:clamp(44px,4.5vw,64px); letter-spacing:-.06em; font-weight:700; }
+.companyOverview .priceLine { align-items:flex-end; gap:10px 18px; }
+.companyOverview .priceChange { flex-direction:column; align-items:flex-start; gap:2px; padding-bottom:.1em; font-size:clamp(44px,4.5vw,64px); }
+.companyOverview .priceChange > * { font-size:13px; line-height:1.2; }
+.companyOverview .priceChange > span:first-child { padding:5px 11px; font-size:15px; font-weight:650; }
+.companyOverview .priceBlock { padding-top:20px; }
+
+/* PROFİL — ÖLÇÜ BANDI. Piyasa değeri kartın tek büyük sayısı, 32'den 40'a;
+   sıra onun yanında aynı taban çizgisinde. Oran çubuğu ilk ekranda sıfırdan
+   uzuyor (yalnızca geniş ekranda: kart orada ilk ekranda, telefonda
+   katlamanın altında ve çubuk okuyucu gelmeden biterdi). */
+.companyOverview .profileVisual { margin-bottom:12px; padding:13px 18px 12px; }
+.companyOverview .profileMetric, .companyOverview .profileRank { gap:3px; }
+.companyOverview .profileCapValue { font-size:clamp(32px,2.8vw,40px); font-weight:700; letter-spacing:-.05em; line-height:1.02; }
+.profileRankValue { font-size:clamp(26px,2.2vw,32px); font-weight:700; letter-spacing:-.045em; }
+.profileRankTrack { height:5px; }
+.profileRankTrack > i { transform-origin:left center; }
+
+/* PROFİL — KÜNYE IZGARASI (gerekçe ProfileCard'da). İki sütun, hücre
+   ayraçları yalnızca İÇ kenarlarda: sütun arası dikey kıl çizgi, satır
+   arası yatay; dış çerçeve yok. */
+.facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); margin-top:2px; }
+.fact { display:flex; min-width:0; flex-direction:column; gap:4px; padding:9px 14px 9px 0; border-top:1px solid var(--line-soft); }
+.fact:nth-child(even) { padding:9px 0 9px 16px; border-left:1px solid var(--line-soft); }
+.fact:last-child:nth-child(odd) { grid-column:1 / -1; }
+/* Etiket 12,5 piksel GÖVDE tonunda, soluk değil: 26 Eylül'deki "okunamıyor"
+   bildiriminin kuralı (yukarıdaki OKUNUR PROFİL) ızgarada da geçerli. */
+.factLabel { display:flex; align-items:center; gap:6px; color:var(--text-body); font-size:12.5px; font-weight:600; line-height:1.3; }
+.factLabel > svg { flex:none; color:var(--primary-ink); }
+.fact > dd { color:var(--text-strong); font-size:14px; font-weight:650; line-height:1.35; letter-spacing:-.01em; overflow-wrap:anywhere; }
+.fact > dd a { min-height:0; }
+.companyOverview .about { padding-bottom:10px; border-bottom:0; }
+
+/* PROFİL — 52 HAFTA. Başlıkta konum rozeti, rayın altında iki uç. */
+.profileBand { padding:11px 0 0; border-top:1px solid var(--line-soft); }
+.bandHead { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.bandPosition { padding:3px 9px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:12px; font-weight:650; white-space:nowrap; }
+.bandRail { margin-top:6px; }
+.bandEnds { display:flex; justify-content:space-between; gap:12px; margin-top:4px; }
+.bandEnds > div { display:flex; align-items:baseline; gap:6px; }
+.bandEnds > div:last-child { flex-direction:row-reverse; }
+.bandEnds dt { color:var(--text-body); font-size:12px; font-weight:600; }
+.bandEnds dd { color:var(--text-strong); font-size:13.5px; font-weight:650; }
+
+/* İLK EKRAN GİRİŞİ — yalnızca dönüşüm, saydamlık yok (LCP adayı olabilen
+   metinler ilk karede boyanmış sayılsın; gerekçe globals.css `copy-slide`).
+   MotionExperience ilk ekrandaki öğeye bilerek dokunmuyor ("İLK EKRAN
+   HİDRATASYONDA KIMILDAMAZ"), bu yüzden giriş CSS'te ve sunucu HTML'iyle
+   birlikte başlıyor. Profil yalnızca iki kolonlu düzende (≥1100) oynuyor. */
+@media(prefers-reduced-motion:no-preference) {
+  .companyOverview .priceChange > span:first-child { animation:change-rise 620ms var(--ease-brand) 380ms backwards; }
+  .companyOverview .priceChange > span:last-child { animation:change-rise 620ms var(--ease-brand) 460ms backwards; }
+}
+@media(prefers-reduced-motion:no-preference) and (min-width:1100px) {
+  .companyOverview .profileRankTrack > i { animation:rank-grow 1100ms var(--ease-brand) 300ms backwards; }
+  .companyOverview .fact { animation:fact-rise 560ms var(--ease-brand) backwards; }
+  .companyOverview .fact:nth-child(2) { animation-delay:60ms; }
+  .companyOverview .fact:nth-child(3) { animation-delay:120ms; }
+  .companyOverview .fact:nth-child(4) { animation-delay:180ms; }
+  .companyOverview .fact:nth-child(5) { animation-delay:240ms; }
+  .companyOverview .fact:nth-child(n+6) { animation-delay:300ms; }
+}
+@keyframes change-rise { from { transform:translate3d(0,8px,0); } }
+@keyframes rank-grow { from { transform:scaleX(0); } }
+@keyframes fact-rise { from { transform:translate3d(0,6px,0); } }
+
+@media(max-width:767px) {
+  .companyOverview .companyLogo { width:60px; height:60px; border-radius:16px; }
+  .companyOverview .companyName { font-size:31px; }
+}
+@media(max-width:639px) {
+  .companyOverview .livePrice { font-size:44px; }
+  .companyOverview .priceChange { font-size:44px; }
+  .companyOverview .priceChange > span:first-child { font-size:14px; padding:4px 10px; }
+}
+@media(max-width:479px) {
+  .companyOverview .companyLogo { width:56px; height:56px; border-radius:15px; }
+  .companyOverview .companyName { font-size:28px; }
+}
+@media(max-width:359px) {
+  .companyOverview .livePrice, .companyOverview .priceChange { font-size:36px; }
+  .companyOverview .companyName { font-size:24px; }
+  .companyOverview .companyLogo { width:50px; height:50px; }
+  .fact, .fact:nth-child(even) { padding-inline:0; border-left:0; }
+  .facts { grid-template-columns:minmax(0,1fr); }
+}
+
+/* PROFİL TEK BAŞINA (gerekçe page.tsx → `data-solo`). Yalnızca iki kolonlu
+   düzende. Grafiğin tabanı 280'den 220'ye iniyor (900 piksellik ekranda); ızgara satırı sağ kolon
+   daha uzunsa çizimi zaten esnetiyor (yukarıdaki "SNDK at 1440" notu),
+   yani bu yalnızca SOL kolonun doğal boyunu kısaltıyor. Profilin iç
+   aralıkları sabit ve biraz daha geniş: esneme değil, tek kartlık kolonun
+   kendi yoğunluğu. Yedek (`chartSkeleton`) aynı değişkeni okuyor. */
+@media(min-width:1100px) {
+  .companyOverview[data-solo] .chartPanel { --price-chart-height:clamp(180px,calc(100svh - 580px),220px); }
+  .companyOverview[data-solo] .profileVisual { margin-bottom:16px; padding:20px 18px 18px; }
+  .companyOverview[data-solo] .fact { padding-block:15px; }
+  .companyOverview[data-solo] .about { padding-bottom:14px; }
+  .companyOverview[data-solo] .profileBand { padding-top:16px; }
+  .companyOverview[data-solo] .bandRail { margin-top:10px; }
+}
+
+/* YEDEKLER YENİ ÖLÇÜLERLE (28 Eylül, JS kapalı / açık karşılaştırıldı).
+   · Fiyat satırı artık `RollingFigure`: rakam pencereleri 1,1em, yani satır
+     1em değil 1,1em (64 puntoda 70 piksel). Yedeğin fiyat bloğu da öyle.
+   · Denetim satırı raylı hâliyle geniş ekranda 47, telefonda 117 piksel
+     (kenarlık dolguya geçti); iskeletin ayırdığı yer 54 ve 114'tü.
+   · Suspense yedeği (`chartSkeleton`) çizim + 117 (≥640) / + 187 (telefon):
+     okuma 25 + seans satırı 45 + denetim 47 (telefonda 117). */
+.companyOverview .priceSkeleton { height:1.1em; }
+.companyOverview .chartPanel { --price-chart-controls:38px; }
+.chartSkeleton { height:calc(var(--price-chart-height) + 117px); }
+@media(min-width:1100px) {
+  .companyOverview .chartPanel { --price-chart-controls:38px; }
+  .chartSkeleton { height:calc(var(--price-chart-height) + 117px); }
+}
+@media(max-width:639px) {
+  .companyOverview .chartPanel { --price-chart-controls:108px; }
+  .chartSkeleton { height:calc(var(--price-chart-height) + 187px); }
+}
+
+/* Kimlik yedeğinin satırları: kalp düğmesi satırı 36 (telefonda 30) + alt
+   pay 7/8, künye 10 piksel üst pay + 17 piksellik satır. */
+.identityMetaSkeleton { height:36px; margin-bottom:7px; }
+.sectorSkeleton { height:17px; margin-top:10px; }
+@media(max-width:767px) { .sectorSkeleton { margin-top:8px; } }
+@media(max-width:479px) { .identityMetaSkeleton { height:30px; margin-bottom:8px; } }
+@media(max-width:767px) { .identityNameSkeleton { height:32px; } }
+@media(max-width:479px) { .identityNameSkeleton { height:29px; } }
+@media(max-width:359px) { .identityNameSkeleton { height:25px; } }

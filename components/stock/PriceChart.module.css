@@ -105,3 +105,37 @@
 @media (max-width: 639px) {
   .root[data-compact="true"] .fxNote { order:2; }
 }
+
+/* ---- DENETİM ÇİZİME BİTİŞİK, SEÇİM KAYAN BİR GÖSTERGE (28 Eylül) ----
+   Geniş ekranda aralık düğmeleri çizimin değil "Seans Saatleri" satırının
+   altındaydı: grafiğin denetimi ile çizimi arasına katlanmış bir lejant
+   giriyordu. Telefonda bu sıra zaten düzeltilmişti (yukarıdaki "TELEFONDA
+   SIRA" notu); artık her genişlikte aynı: çizim → denetim → seans saatleri.
+   Toplam yükseklik değişmiyor (iki şeridin SIRASI değişiyor), iskeletin
+   ayırdığı yer aynı kalıyor.
+
+   Üç grup (aralık, para birimi, çizim türü) çökük tonda birer RAY; seçim
+   rayın üstünde kayan tek bir gösterge (`layoutId`, PriceChart). Derinlik
+   tonla: ray `--surface-sunken`, yumuşak gösterge kartın kendi yüzeyi.
+   Rayın varlığı artık ayırıcı çizgiyi taşıyor; kenarlığın bir pikseli
+   dolguya geçti, satırın boyu aynı. Yalnızca kompakt düzende (hisse
+   sayfası): yazı içi grafiklerin denetimi eskisi gibi. */
+.root[data-compact="true"] .controls { order:2; border-top:0; padding-top:9px; }
+.root[data-compact="true"] .fxNote { order:2; }
+.root[data-compact="true"] .sessions { order:3; }
+.root[data-compact="true"] .controls > .segment:first-child { flex:0 1 auto; }
+.root[data-compact="true"] .segment { gap:2px; margin:0; padding:3px; border:0; border-radius:12px; background:var(--surface-sunken); }
+.root[data-compact="true"] .segmentButton { border-radius:9px; }
+.root[data-compact="true"] .segmentThumb,
+.root[data-compact="true"] .segmentThumbSoft { border-radius:9px; }
+.root[data-compact="true"] .segmentThumbSoft { background:var(--premium-surface,var(--surface-solid)); box-shadow:0 0 0 1px var(--line); }
+.root[data-compact="true"] .segmentButton[aria-pressed="false"]:hover { background:transparent; color:var(--primary-ink); }
+@media(min-width:640px) {
+  .root[data-compact="true"] .segmentButton { min-height:32px; }
+}
+/* Telefonda aralık rayı kendi satırında tam genişlik (yukarıdaki "TELEFONDA
+   ARALIKLAR KENDİ SATIRINDA" kuralı): düğmeler rayın boyuna yayılıyor,
+   sağda boş bir ray parçası kalmıyor. */
+@media (max-width: 639px) {
+  .root[data-compact="true"] .controls > .segment:first-child { flex:0 0 100%; justify-content:space-between; }
+}

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 import { ChangePill } from "@/components/ui/primitives";
+import { RollingFigure } from "@/components/ui/RollingFigure";
 import { cn, directionOf, formatChange, formatPrice } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
 import styles from "./ChartReading.module.css";
@@ -64,20 +65,35 @@ export function HeaderReadout({
   classes: { line: string; price: string; change: string };
 }) {
   const tone = directionOf(change);
+  const formatted = formatPrice(price, locale, { currency: true });
   return (
     <>
       <div className={classes.line}>
-        <p className={classes.price}>{formatPrice(price, locale, { currency: true })}</p>
+        {/* FİYAT YUVARLANARAK GELİYOR (28 Eylül). Başlık fiyatı sayfanın ilk
+            okunan sayısı ve ilk ekranda; `RollingFigure` onu sunucuda son
+            hâliyle basıyor, yalnızca rakam şeritleri CSS'le yerine dönüyor
+            (JS yok, genişlik sıçramıyor, ekran okuyucu düz sayıyı duyuyor).
+            Bu sayfada fiyatı canlı güncelleyen bir istemci döngüsü YOK —
+            değer sunucu çiziminden geliyor ve bileşen yeniden bağlanmadıkça
+            dönüş bir daha oynamıyor. Değer yoksa tire düz metin kalır. */}
+        <p className={classes.price}>
+          {price === null ? formatted : <RollingFigure value={formatted} />}
+        </p>
+        {/* DEĞİŞİMİN İKİ KATI (28 Eylül). Mutlak fark ile yüzde aynı
+            satırda, fiyatın dibinde 14 ve 12 puntoyla duruyordu ve 48
+            puntoluk fiyatın yanında kayboluyordu. Yüzde artık öndeki
+            okuma (rozet büyüdü), mutlak fark onun altında ikinci satır:
+            fiyat → yüzde → fark, üç kademe. Renk yalnızca yönden. */}
         <div className={classes.change}>
+          <ChangePill changePct={changePct} locale={locale} />
           <span
             className={cn(
-              "numeral text-sm",
+              "numeral",
               tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-muted",
             )}
           >
             {formatChange(change, locale)}
           </span>
-          <ChangePill changePct={changePct} locale={locale} />
         </div>
       </div>
       {session}

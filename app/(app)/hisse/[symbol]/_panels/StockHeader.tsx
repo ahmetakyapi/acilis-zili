@@ -300,9 +300,11 @@ export function HeaderSkeleton({ sessionRow = false, chip = false }: { sessionRo
       <div className={styles.identity}>
         <Skeleton className={cn(styles.companyLogo, "shrink-0")} />
         <div className={styles.identityCopy}>
-          <Skeleton className="mb-2 h-7 w-20" />
+          {/* Üç satır gerçeğin ölçüsünde (28 Eylül): sembol + kalp satırı,
+              ad, künye — sınıflar stock.module.css "YEDEKLER" notunda. */}
+          <Skeleton className={cn("w-20", styles.identityMetaSkeleton)} />
           <Skeleton className={styles.identityNameSkeleton} />
-          <Skeleton className="mt-2 h-4 w-36 max-w-full" />
+          <Skeleton className={cn("w-36 max-w-full", styles.sectorSkeleton)} />
           {chip && <Skeleton className="mt-2 h-7 w-48 max-w-full md:hidden" />}
         </div>
       </div>

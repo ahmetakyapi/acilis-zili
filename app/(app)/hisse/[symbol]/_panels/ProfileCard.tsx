@@ -189,12 +189,8 @@ export async function ProfileCard({
   const rowLabel = (label: string) => {
     const Icon = rowIcon.get(label);
     return (
-      <dt className="flex items-center gap-2.5 text-xs font-semibold text-strong">
-        {Icon && (
-          <span aria-hidden className={styles.profileIcon}>
-            <Icon size={14} weight="duotone" />
-          </span>
-        )}
+      <dt className={styles.factLabel}>
+        {Icon && <Icon aria-hidden size={14} weight="duotone" />}
         {label}
       </dt>
     );
@@ -277,24 +273,35 @@ export async function ProfileCard({
           bu satırdı.
           Artan yer artık satırların İÇİNE gidiyor (`flex-1`), ayıraçlar eşit
           aralıkta kalıyor; emsali aynı sayfadaki Anahtar Metrikler kartı. */}
-      <dl className="flex flex-1 flex-col divide-y divide-line-soft">
+      {/* KÜNYE IZGARASI (28 Eylül). Satırlar tam genişlikte etiket-değer
+          listesiydi: altı satır × 42 piksel, her birinin solunda ikon
+          karosu, arasında kıl çizgi — bir form gibi okunuyordu ve kolonun
+          yarısı iki uç arasındaki boşluktu. Künye artık iki sütunlu bir
+          ızgara: etiket küçük ve üstte, değer altında ve güçlü. Aynı bilgi
+          üç satıra iniyor (tek sayıda kalırsa sonuncusu iki sütunu kaplıyor,
+          boş hücre yok); ikonlar etiketin önünde, karo değil. Satır
+          sırası ve koşulları aynı. */}
+      <dl className={styles.facts}>
         {rows.map(([label, value]) => (
-          <div key={label} className="flex flex-1 items-center justify-between gap-3 py-2">
+          <div key={label} className={styles.fact}>
             {rowLabel(label)}
-            <dd className="text-right text-sm text-body">{value}</dd>
+            <dd>{value}</dd>
           </div>
         ))}
         {/* Adres sağlayıcıdan geliyor; şeması süzülmeden href'e konmaz. */}
         {websiteHref && (
-          <div className="flex flex-1 items-center justify-between gap-3 py-2">
+          <div className={styles.fact}>
             {rowLabel(t.stock.website)}
-            <dd className="min-w-0 text-right text-sm">
+            <dd className="min-w-0">
               <a
                 href={websiteHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="tap-44 -my-2 block min-h-8 truncate py-2 text-primary hover:underline"
+                className="tap-44 text-primary hover:underline"
               >
+                {/* KIRPILMIYOR, SARIYOR: ızgaranın yarım hücresinde
+                    "coca-colacompany.com" üç nokta ile kesiliyordu
+                    (1440'ta ölçüldü); adres bölünmeden okunmalı. */}
                 {/* Sondaki eğik çizgi de gidiyor: "nvidia.com/" bir adres
                     değil, bir yolun başı gibi okunuyordu. */}
                 {websiteHref.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
@@ -310,22 +317,22 @@ export async function ProfileCard({
           yılın neresinde durduğu. Uçlar metin olarak yazılı; ray yalnızca
           çizim (`aria-hidden`). ADR'de uçlar ana borsanın parasında ve ray
           yok (`week52Band`). */}
+      {/* BANT OKUNUR KILINDI (28 Eylül). Uçlar tek bir "93,54 $ – 2.354,39 $"
+          dizesi olarak başlığın sağındaydı, konum yüzdesi etiketin yanında
+          soluk bir ekti; ray ise altta sayısız bir çizgi. Şimdi konum
+          başlıkta bir rozet, uçlar rayın İKİ UCUNUN ALTINDA kendi adlarıyla
+          (en düşük solda, en yüksek sağda): göz sayıyı çizginin ucunda
+          buluyor. Ray yine yalnızca çizim, her sayı metinde. ADR'de ray
+          yok; uçlar aynı satırda metin olarak kalıyor. */}
       {band && (
         <div className={styles.profileBand}>
-          <div className="flex items-baseline justify-between gap-3">
-            <span className={styles.profileBandLabel}>
-              {t.stock.week52Range}
-              {band.position !== null && (
-                <span className="numeral ml-2 font-normal text-muted">
-                  {t.stock.week52Position.replace("{value}", formatPercentPlain(band.position, locale, 0))}
-                </span>
-              )}
-            </span>
-            <span className="numeral text-xs text-strong">
-              {formatPrice(band.low, locale, { currency: band.para })}
-              {" – "}
-              {formatPrice(band.high, locale, { currency: band.para })}
-            </span>
+          <div className={styles.bandHead}>
+            <span className={styles.profileBandLabel}>{t.stock.week52Range}</span>
+            {band.position !== null && (
+              <span className={cn("numeral", styles.bandPosition)}>
+                {t.stock.week52Position.replace("{value}", formatPercentPlain(band.position, locale, 0))}
+              </span>
+            )}
           </div>
           {band.onRail && quoteForCap.ok && (
             <PriceRail
@@ -334,9 +341,19 @@ export async function ProfileCard({
                 { kind: "point", at: quoteForCap.data.price, variant: "live" },
               ]}
               pad={0}
-              className="mt-2"
+              className={styles.bandRail}
             />
           )}
+          <dl className={styles.bandEnds}>
+            <div>
+              <dt>{t.chart.periodLow}</dt>
+              <dd className="numeral">{formatPrice(band.low, locale, { currency: band.para })}</dd>
+            </div>
+            <div>
+              <dt>{t.chart.periodHigh}</dt>
+              <dd className="numeral">{formatPrice(band.high, locale, { currency: band.para })}</dd>
+            </div>
+          </dl>
         </div>
       )}
     </div>

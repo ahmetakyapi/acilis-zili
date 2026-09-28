@@ -324,7 +324,18 @@ export default async function StockPage(
         </nav>
       </StockBreadcrumb>
       {/* Üst blok — kimlik ve grafik solda tek panelde, şirket künyesi sağda */}
-      <div id="stock-overview" className={cn(styles.heroGrid, styles.companyOverview)}>
+      <div
+        id="stock-overview"
+        className={cn(styles.heroGrid, styles.companyOverview)}
+        /* PROFİL TEK BAŞINA MI (28 Eylül) — teknik analiz kartı yalnızca
+           kapsamdaki on iki sembolde basılıyor; öteki yaklaşık sekiz yüz
+           sembolde sağ kolon yalnızca profilden oluşuyor ve 1440×900'de
+           grafiğin 145 piksel altında bitiyordu. Bu işaretle orada grafik
+           daha kısa bir TABANDAN başlıyor (satır uzunsa yine esniyor) ve
+           profil kolonun tamamı olduğu için daha havadar diziliyor.
+           Ölçüler stock.module.css → "PROFİL TEK BAŞINA". */
+        data-solo={isTechnicalSymbol(symbol) ? undefined : ""}
+      >
         {/* SEKMEYLE AYNI ADDA BAŞLIK. "Genel Bakış" sekmesi ilk h2'si "Şirket
             Profili" olan bir bölüme iniyordu; her bölümün başlığı sekmesinin
             adını taşıyor (ChapterHeading). Kapak görsel bir başlık istemiyor
