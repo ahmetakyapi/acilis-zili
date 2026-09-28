@@ -311,8 +311,17 @@ export const NAV_ITEMS: NavItem[] = [
  * hedefli "Bugün"ü her sayfada aktif saydı: düğme hiç sönmüyor, "Bugün" her
  * sayfada `aria-current="page"` taşıyordu (ölçüldü, 1024–1920).
  */
+/**
+ * Kendi sekmesi olmayan ekranların ait olduğu sekme (28 Eylül). Hisse
+ * sayfası Şirketler dizininin detayı; masaüstünde orada hiçbir sekme
+ * yanmıyordu ve okuyucu şeride göre "hiçbir yerde" oluyordu.
+ */
+const ACTIVE_ALIASES: Record<string, readonly string[]> = {
+  "/sirketler": ["/hisse"],
+};
+
 export function isActive(pathname: string, href: string): boolean {
   const path = stripLocale(pathname);
   if (href === "/") return path === "/";
-  return path.startsWith(href);
+  return path.startsWith(href) || (ACTIVE_ALIASES[href] ?? []).some((alias) => path.startsWith(alias));
 }

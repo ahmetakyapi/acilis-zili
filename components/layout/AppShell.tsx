@@ -13,6 +13,9 @@ import type { MoreGroup } from "./nav-items";
 import { RouteProgress } from "./RouteProgress";
 import { NAV_ITEMS, isActive } from "./nav-items";
 
+/** Alt çubukta "Piyasa" sekmesini yakan ekranlar. */
+const MARKET_FAMILY = ["/hisse", "/sirketler", "/teknik", "/tema", "/karsilastir", "/makro", "/yatirimcilar"] as const;
+
 export type ShellLabels = {
   brandName: string;
   nav: Record<string, string>;
@@ -38,6 +41,8 @@ type AppShellProps = {
   /** İki başlığın da sağ ucu: hesap + tema + dil tek panelde. */
   accountMenu: React.ReactNode;
   ticker: React.ReactNode;
+  /** Markanın altındaki seans satırı (SessionLine). */
+  sessionLine: React.ReactNode;
   footer: React.ReactNode;
   children: React.ReactNode;
 };
@@ -93,6 +98,7 @@ export function AppShell({
   searchTrigger,
   accountMenu,
   ticker,
+  sessionLine,
   footer,
   children,
 }: AppShellProps) {
@@ -148,9 +154,16 @@ export function AppShell({
    * oraya götürüyor), orada hiçbir şey işaretlenmez — yoksa ana sayfa
    * "Menü'deymişsin" gibi görünürdü.
    */
-  const matchedBottom = bottomItems.find(
-    (item) => item.href !== "/menu" && isActive(pathname, item.href),
-  );
+  const matchedBottom =
+    bottomItems.find((item) => item.href !== "/menu" && isActive(pathname, item.href)) ??
+    /* PİYASA AİLESİ (28 Eylül). Hisse, şirketler, teknik, temalar,
+       karşılaştırma, makro ve yatırımcılar okuyucunun gözünde "Piyasa"
+       sekmesinin altı; bir hisse sayfasında Menü'nün yanması "menüdesin"
+       diyordu. Ailenin dışındakiler (rehber, sözlük, takvim…) Menü'ye
+       düşmeye devam ediyor. */
+    (MARKET_FAMILY.some((href) => isActive(pathname, href))
+      ? bottomItems.find((item) => item.href === "/piyasalar")
+      : undefined);
   /* Karşılaştırma DİLDEN ARINMIŞ yolla: İngilizce tarafta adres `/en`
      olduğu için ham eşitlik tutmuyor ve ana sayfada işaret "Menü"ye
      düşüyordu — okuyucu ana sayfadayken alt çubuk ona "menüdesin"
@@ -231,7 +244,10 @@ export function AppShell({
                 ad 19 → 22 piksel. Başlık 69 piksel; 44'lük karo üst ve altta
                 12,5'er piksel nefes bırakıyor. */}
             <BellMark size={44} />
-            <BrandWord name={labels.brandName} className="text-[1.375rem] leading-none" />
+            <span className="flex flex-col gap-1">
+              <BrandWord name={labels.brandName} className="text-[1.375rem] leading-none" />
+              {sessionLine}
+            </span>
           </Link>
 
           <MastheadNav
@@ -278,7 +294,10 @@ export function AppShell({
 
               Marka rengini bell işareti taşıyor (o bir SVG, maskeye ihtiyacı
               yok); yazı düz accent mürekkeple aynı kimliği veriyor. */}
-          <BrandWord name={labels.brandName} className="text-lead" />
+          <span className="flex flex-col gap-0.5">
+            <BrandWord name={labels.brandName} className="text-lead leading-none" />
+            {sessionLine}
+          </span>
         </Link>
         {/* İki düğme, üç değil. Tema ve dil ayrı birer kutu olarak duruyordu;
             ikisi de "ortam" ayarı ve ikisi de tek bir ikonla ne yaptığını

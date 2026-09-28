@@ -54,4 +54,6 @@ test("isActive compares the locale-free path and never marks home elsewhere", ()
   assert.equal(isActive("/en", "/"), true);
   assert.equal(isActive("/piyasalar", "/"), false);
   assert.equal(isActive("/en/rehber/pe-orani", "/rehber"), true);
+  assert.equal(isActive("/hisse/NVDA", "/sirketler"), true);
+  assert.equal(isActive("/en/hisse/NVDA", "/sirketler"), true);
 });
