@@ -16,6 +16,12 @@ import styles from "./Themes.module.css";
  * (aynı seansı anlatan yüzdeler — `sameSessionMoves`): dört hücre birbirini
  * tutuyor. Son kapanışa ait kümede sayılar yön rengi almıyor.
  *
+ * KAÇ ÜYE MEDYANDA, KÜNYEDE (28 Eylül denetimi). Bu seansta işlem
+ * görmeyen ya da kotasyonu gelmeyen üye medyana girmiyor; künye bunu
+ * söylemiyordu ve Siber Güvenlik'te "0 / 10" yükselen/düşen, kapaktaki
+ * "11 Şirket"in yanında bir üyeyi sessizce kaybediyordu. Eksik varsa
+ * künye "10/11 Üye" diyor.
+ *
  * Üye sayısı buradan çıktı: kapakta duruyor ve ızgarada ikinci kez yer
  * tutuyordu.
  */
@@ -34,6 +40,7 @@ export function ThemeStats({
     medianSession: string;
     medianLastClose: string;
     medianMissing: string;
+    coverage: string;
     breadth: string;
     best: string;
     worst: string;
@@ -75,7 +82,16 @@ export function ThemeStats({
     <Panel>
       <PanelHeader
         title={labels.title}
-        meta={moves === null ? undefined : moves.basis === "session" ? labels.medianSession : labels.medianLastClose}
+        meta={
+          moves === null
+            ? undefined
+            : [
+                moves.basis === "session" ? labels.medianSession : labels.medianLastClose,
+                ...(total < rows.length
+                  ? [labels.coverage.replace("{count}", String(total)).replace("{total}", String(rows.length))]
+                  : []),
+              ].join(" · ")
+        }
       />
       <div className={styles.metrics}>
         <div className={styles.metric}>

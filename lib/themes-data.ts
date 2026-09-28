@@ -2,10 +2,10 @@ import { cache } from "react";
 import { ALL_MEMBERS, primaryOnly } from "@/db/seed/indices";
 import { getSymbolNames, liveMarketCap, type SymbolMeta } from "@/lib/data";
 import { screenCompliance } from "@/lib/compliance";
-import { quoteBasis, type MarketStatus, type QuoteBasis } from "@/lib/market-hours";
+import { etParts, quoteBasis, type MarketStatus, type QuoteBasis } from "@/lib/market-hours";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
 import type { Quote } from "@/lib/providers/types";
-import type { ThemeEntry } from "@/content/themes";
+import { THEMES } from "@/content/themes";
 
 /**
  * Tematik listelerin veri katmanı.
@@ -106,10 +106,30 @@ export async function katilimMembers(
     .slice(0, KATILIM_MAX);
 }
 
-/** Temanın kotasyon anahtarına giren semboller (üyeler ya da adaylar + ölçüt). */
-export async function themeQuoteSymbols(theme: ThemeEntry): Promise<string[]> {
-  const members = theme.symbols === "katilim" ? await katilimPool() : [...theme.symbols];
-  return theme.benchmark ? [...members, theme.benchmark.symbol] : members;
+/**
+ * BÜTÜN TEMA EKRANLARININ TEK KOTASYON ANAHTARI — her temanın üyeleri (Katılım'da
+ * adaylar) ve her temanın ölçüt ETF'i, sıralı ve tekil.
+ *
+ * NEDEN TEK ANAHTAR (28 Eylül denetimi). Dizin ve ana sayfa bandı bütün
+ * temaların birleşimini, detay sayfası yalnızca kendi temasını + ölçütünü
+ * soruyordu. `getQuotes` anahtarı sıralı sembol dizesi; iki anahtar iki ayrı
+ * önbellek kaydı ve iki ayrı çekim anı demek. Ana sayfada "Bulut ve Yazılım
+ * −%2,53" görüp karta tıklayan okuyucu detayda başka bir medyan
+ * görebiliyordu (CLAUDE.md "aynı sayı iki yerde aynı kaynaktan"). Artık üç
+ * ekran aynı anahtarı soruyor; önbellek süresi içinde aynı paketi okuyorlar.
+ * Bedeli ölçütlerin eklenmesi (dokuz sembol); hepsi Alpaca'nın tek
+ * isteğine (200 sembol) sığıyor.
+ */
+export async function themeUniverse(): Promise<string[]> {
+  const pool = await katilimPool();
+  return [
+    ...new Set(
+      THEMES.flatMap((theme) => [
+        ...(theme.symbols === "katilim" ? pool : theme.symbols),
+        ...(theme.benchmark ? [theme.benchmark.symbol] : []),
+      ]),
+    ),
+  ].sort();
 }
 
 export type ThemeRow = {
@@ -119,6 +139,8 @@ export type ThemeRow = {
   price: number | null;
   changePct: number | null;
   basis: QuoteBasis | null;
+  /** Son işlemin ET günü — son kapanış kümesini tek güne indiriyor (`sameSessionMoves`). */
+  tradedDay: string | null;
   marketCap: number | null;
 };
 
@@ -137,6 +159,7 @@ export function themeRow(
     price: quote?.price ?? null,
     changePct: quote?.changePct ?? null,
     basis: quote ? quoteBasis(quote, status) : null,
+    tradedDay: quote?.tradedAt ? etParts(quote.tradedAt).dateStr : null,
     /* Canlı hesap — `/karsilastir` ve `/sirketler` ile aynı fonksiyon;
        aynı şirket iki ekranda iki piyasa değeri taşımasın. */
     marketCap: liveMarketCap(meta, quote?.price),

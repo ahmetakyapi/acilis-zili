@@ -4,9 +4,9 @@ import { THEMES } from "@/content/themes";
 import { getStatus, getSymbolNames } from "@/lib/data";
 import { logoSrc } from "@/lib/logos";
 import { getQuotes } from "@/lib/providers";
-import { median, sameSessionMoves } from "@/lib/theme-stats";
+import { median, sameSessionMoves, themePhase, type ThemePhase } from "@/lib/theme-stats";
 import { spreadScale } from "@/lib/theme-view";
-import { katilimMembers, katilimPool, themeRow } from "@/lib/themes-data";
+import { katilimMembers, katilimPool, themeRow, themeUniverse } from "@/lib/themes-data";
 
 /**
  * Temalar panosu — `/tema` dizininin ve ana sayfanın temalar bandının
@@ -17,7 +17,8 @@ import { katilimMembers, katilimPool, themeRow } from "@/lib/themes-data";
  * yani "günün en güçlü teması" iki yerde iki ayrı cevap veremez.
  *
  * TEK KOTASYON ÇAĞRISI: bütün temaların üyeleri tek anahtarda soruluyor
- * (`getQuotes` sıralı sembol dizesiyle önbellekli). NVDA üç temada birden
+ * (`getQuotes` sıralı sembol dizesiyle önbellekli; anahtar `themeUniverse`,
+ * detay sayfası da aynısını soruyor). NVDA üç temada birden
  * duruyor; üç ayrı çağrı üç ayrı fiyat anı demekti ve aynı hisse aynı
  * ekranda üç medyana üç farklı yüzdeyle girebilirdi. `cache()` istek
  * içinde tek hesap: dizinin üç Suspense sınırı da ana sayfanın bandı da
@@ -43,6 +44,8 @@ export type ThemeBoard = {
   scale: number | null;
   leader: string | null;
   laggard: string | null;
+  /** Künyenin penceresi: "Günün", "Açılış Öncesi" ya da "Son Kapanış". */
+  phase: ThemePhase | null;
 };
 
 /**
@@ -71,9 +74,7 @@ export const loadThemeBoard = cache(async function loadThemeBoard() {
   const status = await getStatus();
   const pool = await katilimPool();
 
-  const all = [
-    ...new Set(THEMES.flatMap((theme) => (theme.symbols === "katilim" ? pool : [...theme.symbols]))),
-  ];
+  const all = await themeUniverse();
   const [quotesResult, names] = await Promise.all([
     getQuotes(all, status),
     getSymbolNames(all),
@@ -125,6 +126,7 @@ export const loadThemeBoard = cache(async function loadThemeBoard() {
     scale,
     leader: ranked[0]?.theme.slug ?? null,
     laggard: ranked.length > 1 ? ranked[ranked.length - 1].theme.slug : null,
+    phase: comparable.length > 0 ? themePhase(scaleBasis, status.session) : null,
   };
   return { board, scaleBasis, comparable, quotesResult };
 });

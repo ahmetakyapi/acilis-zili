@@ -424,6 +424,12 @@ const tr = {
     weakestTheme: "Günün En Zayıf Teması",
     strongestLastClose: "Son Kapanışta En Güçlü Tema",
     weakestLastClose: "Son Kapanışta En Zayıf Tema",
+    /* Açılış öncesinde yüzdeler bu sabahın ön seans işlemi: "Günün" değil
+       (gerekçe lib/theme-stats.ts → themePhase). "Açılış Öncesinde…" 360
+       pikselde üç satıra kırılıyordu (ölçüldü); bu biçim öteki künyeler
+       gibi iki satırda kalıyor. */
+    strongestPreMarket: "Açılış Öncesi En Güçlü Tema",
+    weakestPreMarket: "Açılış Öncesi En Zayıf Tema",
   },
 
   calendar: {
@@ -2236,6 +2242,13 @@ const tr = {
     median: "Günün Medyanı",
     medianSession: "Bu Seans",
     medianLastClose: "Son Kapanış",
+    medianPreMarket: "Açılış Öncesi",
+    /* Sıralamanın künyesi pencereye göre tek ifade — "Günün Medyanı · Son
+       Kapanış" aynı satırda iki ayrı günü söylüyordu. */
+    medianPre: "Açılış Öncesi Medyanı",
+    medianClose: "Son Kapanış Medyanı",
+    /* Medyana giren üye sayısı, tüm üyelerden azsa (künye). */
+    coverage: "{count}/{total} Üye",
     medianMissing:
       "Üyelerin yüzdeleri farklı seansları anlatıyor; iki günden tek bir medyan kurulmuyor.",
     breadth: "Yükselen / Düşen",
@@ -2259,14 +2272,22 @@ const tr = {
     /* GÖRSEL KATMAN (28 Eylül): dizinin sıralaması ve dağılım şeridi,
        detayın kare haritası, ölçüt kıyası ve sıralanabilir tablo. */
     rankTitle: "Günün Sıralaması",
+    rankTitlePre: "Açılış Öncesi Sıralaması",
+    /* Sıralamanın künyesi yalnızca ÖLÇÜYÜ söylüyor; pencere başlıkta.
+       "Açılış Öncesi Sıralaması · Açılış Öncesi Medyanı" 768 pikselde
+       başlık satırını ikiye kırıyordu (ölçüldü). */
+    rankMeta: "Üye Medyanı",
+    rankTitleClose: "Son Kapanış Sıralaması",
     strongest: "Günün En Güçlüsü",
     weakest: "Günün En Zayıfı",
+    strongestPre: "Açılış Öncesi En Güçlü",
+    weakestPre: "Açılış Öncesi En Zayıf",
     /* Kapaktaki günün özeti (28 Eylül). */
     themesRising: "Yükselen Tema",
     themesFalling: "Düşen Tema",
     up: "Yükselen",
     down: "Düşen",
-    spreadLabel: "{count} üyenin günlük hareketi: {up} yükselen, {down} düşen.",
+    spreadLabel: "{count} üyenin hareketi: {up} yükselen, {down} düşen.",
     spreadMissing: "Üyelerin hareketi henüz aynı seansı anlatmıyor.",
     mapTitle: "Temanın Haritası",
     mapHint: "Karo boyu piyasa değerini, rengi günün hareketini gösterir.",

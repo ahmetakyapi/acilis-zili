@@ -82,6 +82,11 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
     };
   }).sort((a, b) => {
     if (a.change === null || b.change === null) return a.change === null ? 1 : -1;
+    /* Son kapanıştaki karo sıralamanın DIŞINDA, sonda (28 Eylül denetimi).
+       Şerit soldan sağa bu seansın en güçlüden en zayıfa dizilişi; dünün
+       yüzdesiyle araya girmesi, iki ayrı günü tek sıraya koymaktı. Tema
+       sıralaması aynı kuralı izliyor (ThemeRanking). */
+    if (a.lastClose !== b.lastClose) return a.lastClose ? 1 : -1;
     return b.change - a.change;
   });
   const allLastClose = rows.every((row) => row.change === null || row.lastClose);
@@ -163,6 +168,9 @@ const EXTREME_LOGOS_NARROW = 4;
  * (`ThemeRanking`), sağda iki uç — en güçlü ve en zayıf tema — logolarıyla,
  * büyük medyanıyla ve üyelerin dağılım şeridiyle.
  *
+ * Açılış öncesinde künye "Açılış Öncesi En Güçlü Tema" (`board.phase`,
+ * gerekçesi lib/theme-stats.ts → themePhase).
+ *
  * "Günün En Güçlüsü" YALNIZCA canlı seansta (dizindeki kuralın aynısı,
  * `board.leader`). Son kapanışa kalmış bir günde uçlar yine gösteriliyor
  * ama künyesi "Son Kapanışta En Güçlü" ve rakam nötr: dünü bugün diye
@@ -195,12 +203,18 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
 
   return (
     <ThemeFrame
-      ranking={<ThemeRanking cards={board.cards} basis={scaleBasis} locale={locale} t={t} heading="h4" />}
+      ranking={<ThemeRanking cards={board.cards} basis={scaleBasis} phase={board.phase} locale={locale} t={t} heading="h4" />}
       extremes={
         <>
           <ExtremeCard
             card={top}
-            label={session ? t.today.strongestTheme : t.today.strongestLastClose}
+            label={
+              !session
+                ? t.today.strongestLastClose
+                : board.phase === "pre-market"
+                  ? t.today.strongestPreMarket
+                  : t.today.strongestTheme
+            }
             session={session}
             scale={board.scale}
             locale={locale}
@@ -208,7 +222,13 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
           />
           <ExtremeCard
             card={bottom}
-            label={session ? t.today.weakestTheme : t.today.weakestLastClose}
+            label={
+              !session
+                ? t.today.weakestLastClose
+                : board.phase === "pre-market"
+                  ? t.today.weakestPreMarket
+                  : t.today.weakestTheme
+            }
             session={session}
             scale={board.scale}
             locale={locale}

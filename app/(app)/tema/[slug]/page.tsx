@@ -36,14 +36,15 @@ import { logoSrc } from "@/lib/logos";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { getQuotes } from "@/lib/providers";
 import { pageAlternates } from "@/lib/site";
-import { median, sameSessionMoves, type MoveSet } from "@/lib/theme-stats";
+import { median, sameSessionMoves, themePhase, type MoveSet } from "@/lib/theme-stats";
 import {
   byMarketCap,
   KATILIM_MAX,
   KATILIM_POOL,
   katilimMembers,
-  themeQuoteSymbols,
+  katilimPool,
   themeRow,
+  themeUniverse,
   type ThemeRow,
 } from "@/lib/themes-data";
 import { cn, directionOf, directionText, formatPercent, formatPrice, NO_VALUE } from "@/lib/utils";
@@ -60,8 +61,9 @@ import { cn, directionOf, directionText, formatPercent, formatPrice, NO_VALUE } 
  *   5. Metin (neden bu şirketler) ve künyeler panelin içinde.
  *   6. Diğer temalar, veri damgası, rehber.
  *
- * Kotasyon TEK ÇAĞRI: üyeler + ölçüt ETF'i aynı anahtarda (gerekçe
- * `lib/themes-data.ts`). Katılım temasında üyeler o çağrının sonucuyla
+ * Kotasyon TEK ÇAĞRI ve dizinle AYNI ANAHTAR: bütün temaların üyeleri ve
+ * ölçütleri (`themeUniverse`, gerekçesi orada). Ana sayfada okunan medyan
+ * detayda başka bir çekim anından hesaplanmasın. Katılım temasında üyeler o çağrının sonucuyla
  * seçiliyor, yani elemeye giren fiyat tabloda görünen fiyatın kendisi.
  *
  * SAYFA KOTASYONU BEKLEMİYOR (28 Eylül). Sayfa önce kotasyonu (ve Katılım
@@ -99,18 +101,17 @@ const OTHER_STACK_MAX = 4;
 const loadTheme = cache(async function loadTheme(slug: string) {
   const theme = themeBySlug(slug)!;
   const status = await getStatus();
-  const quoteSymbols = await themeQuoteSymbols(theme);
+  const universe = await themeUniverse();
   const [quotesResult, names] = await Promise.all([
-    getQuotes(quoteSymbols, status),
-    getSymbolNames(quoteSymbols),
+    getQuotes(universe, status),
+    getSymbolNames(universe),
   ]);
   const quotes = quotesResult.ok ? quotesResult.data : {};
 
-  const benchmarkSymbol = theme.benchmark?.symbol ?? null;
   const memberSymbols =
     theme.symbols === "katilim"
-      ? await katilimMembers(quoteSymbols, quotes, names)
-      : quoteSymbols.filter((symbol) => symbol !== benchmarkSymbol);
+      ? await katilimMembers(await katilimPool(), quotes, names)
+      : [...theme.symbols];
 
   const rows = memberSymbols
     .map((symbol) => themeRow(symbol, quotes, names, status))
@@ -123,7 +124,8 @@ const loadTheme = cache(async function loadTheme(slug: string) {
           displayName: theme.benchmark.name,
         }
       : null;
-  return { theme, rows, moves, benchmark, quotesResult };
+  const phase = moves ? themePhase(moves.basis, status.session) : null;
+  return { theme, rows, moves, phase, benchmark, quotesResult };
 });
 
 export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
@@ -247,7 +249,7 @@ async function LiveStamp({ slug, locale, t }: { slug: string; locale: Locale; t:
 }
 
 async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t: Dictionary }) {
-  const { rows, moves, benchmark, quotesResult } = await loadTheme(slug);
+  const { rows, moves, phase, benchmark, quotesResult } = await loadTheme(slug);
 
   /* İlk dört, piyasa değerine göre — karşılaştırma ekranının sembol sınırı. */
   const compareSet = rows.slice(0, MAX_COMPARE_SYMBOLS).map((row) => row.symbol);
@@ -282,7 +284,13 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
                 }}
               />
             </div>
-            {benchmark && <BenchmarkAside benchmark={benchmark} moves={moves} locale={locale} t={t} />}
+            {benchmark && <BenchmarkAside
+                benchmark={benchmark}
+                moves={moves}
+                sessionLabel={phase === "pre-market" ? t.themes.medianPreMarket : t.themes.medianSession}
+                locale={locale}
+                t={t}
+              />}
           </div>
         ) : (
           <p className="border-t border-line px-4 py-4 text-small text-muted sm:px-5">
@@ -302,8 +310,9 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
         locale={locale}
         labels={{
           title: t.themes.todayTitle,
-          median: t.themes.median,
-          medianSession: t.themes.medianSession,
+          median: phase === "pre-market" ? t.themes.medianPre : phase === "lastClose" ? t.themes.medianClose : t.themes.median,
+          medianSession: phase === "pre-market" ? t.themes.medianPreMarket : t.themes.medianSession,
+          coverage: t.themes.coverage,
           medianLastClose: t.themes.medianLastClose,
           medianMissing: t.themes.medianMissing,
           breadth: t.themes.breadth,
@@ -361,11 +370,13 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
 function BenchmarkAside({
   benchmark,
   moves,
+  sessionLabel,
   locale,
   t,
 }: {
   benchmark: ThemeRow & { displayName: string };
   moves: MoveSet | null;
+  sessionLabel: string;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -404,7 +415,7 @@ function BenchmarkAside({
       <div className={styles.benchRow}>
         <span className={styles.benchLabel}>
           <b>{t.themes.benchMedian}</b>
-          {moves ? (themeSession ? t.themes.medianSession : t.themes.medianLastClose) : NO_VALUE}
+          {moves ? (themeSession ? sessionLabel : t.themes.medianLastClose) : NO_VALUE}
         </span>
         <span className={cn("numeral", styles.benchValue, tone(mid, themeSession))}>
           {mid === null ? NO_VALUE : formatPercent(mid, locale)}

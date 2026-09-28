@@ -76,6 +76,13 @@ export type SpreadPoint = { symbol: string; change: number };
  * Yön rengi yalnızca bu seansın yüzdelerinde (`basis === "session"`).
  * Son kapanışa ait şeritte çentikler nötr: yeşil ve kırmızı "bugün" der.
  *
+ * ÖLÇEK DIŞI ÇENTİK UÇTA, KÜNYE "≤ / ≥" (28 Eylül denetimi). Ortak ölçek
+ * yüzde 90'lık dilimden (`spreadScale`), yani her gün bazı üyeler tavanı
+ * aşıyor ve şeridin ucuna yapışıyor. Uçtaki etiket "−%5" dediği için
+ * −%22,5'lik MDB çentiği −%5'te duruyormuş gibi okunuyordu. O yakada
+ * kırpılan bir çentik varsa etiket "≤ −%5" / "≥ %5" oluyor — ısı
+ * lejantının (`HeatLegend`) aynı yazımı.
+ *
  * Çentik girişi `travel`: sıfırdan kalkıp kendi yerine kayıyor. `data-delta`
  * yüzde puan, `cqw` şeridin kendi genişliği (şerit `container-type`).
  */
@@ -96,6 +103,8 @@ export function SpreadStrip({
   locale: string;
 }) {
   const neutral = basis !== "session";
+  const clippedLow = scale !== null && points.some((point) => point.change < -scale);
+  const clippedHigh = scale !== null && points.some((point) => point.change > scale);
   return (
     <div className={styles.spreadWrap}>
       <div className={styles.spread} role="img" aria-label={label}>
@@ -127,9 +136,9 @@ export function SpreadStrip({
       <div className={styles.spreadScale} aria-hidden>
         {/* Yedekte künye boş ama satır yerinde: sayılar inince şerit
             aşağı itilmesin. */}
-        <span>{scale === null ? "\u00a0" : formatPercent(-scale, locale, 0)}</span>
+        <span>{scale === null ? "\u00a0" : `${clippedLow ? "≤ " : ""}${formatPercent(-scale, locale, 0)}`}</span>
         <span>{scale === null ? "\u00a0" : "0"}</span>
-        <span>{scale === null ? "\u00a0" : formatPercent(scale, locale, 0)}</span>
+        <span>{scale === null ? "\u00a0" : `${clippedHigh ? "≥ " : ""}${formatPercent(scale, locale, 0)}`}</span>
       </div>
     </div>
   );

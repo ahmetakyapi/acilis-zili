@@ -88,7 +88,7 @@ export default async function ThemesIndexPage() {
       <Suspense
         fallback={
           <ThemeGallery
-            board={{ cards: placeholders, scale: null, leader: null, laggard: null }}
+            board={{ cards: placeholders, scale: null, leader: null, laggard: null, phase: null }}
             locale={locale}
             t={t}
           />
@@ -108,7 +108,7 @@ export default async function ThemesIndexPage() {
 
 async function LiveRanking({ locale, t }: { locale: Locale; t: Dictionary }) {
   const { board, scaleBasis } = await loadThemeBoard();
-  return <ThemeRanking cards={board.cards} basis={scaleBasis} locale={locale} t={t} />;
+  return <ThemeRanking cards={board.cards} basis={scaleBasis} phase={board.phase} locale={locale} t={t} />;
 }
 
 /**
@@ -128,6 +128,7 @@ type HeroSummaryData = {
   rising: number;
   falling: number;
   session: boolean;
+  preMarket: boolean;
   leader: ThemeCard | null;
   laggard: ThemeCard | null;
 };
@@ -142,6 +143,7 @@ async function LiveHeroSummary({ locale, t }: { locale: Locale; t: Dictionary })
         rising: comparable.filter((card) => card.median! > 0).length,
         falling: comparable.filter((card) => card.median! < 0).length,
         session: scaleBasis === "session",
+        preMarket: board.phase === "pre-market",
         leader: bySlug(board.leader),
         laggard: bySlug(board.laggard),
       }}
@@ -181,7 +183,11 @@ function HeroSummary({ summary, locale, t }: { summary: HeroSummaryData | null; 
       <div className={styles.heroStat}>
         <span className={styles.heroStatLabel}>
           {t.themes.themesRising}
-          {summary && !summary.session ? ` · ${t.themes.medianLastClose}` : ""}
+          {summary && !summary.session
+            ? ` · ${t.themes.medianLastClose}`
+            : summary?.preMarket
+              ? ` · ${t.themes.medianPreMarket}`
+              : ""}
         </span>
         {count(summary?.rising, "up")}
       </div>
@@ -189,8 +195,8 @@ function HeroSummary({ summary, locale, t }: { summary: HeroSummaryData | null; 
         <span className={styles.heroStatLabel}>{t.themes.themesFalling}</span>
         {count(summary?.falling, "down")}
       </div>
-      {extreme(summary?.leader ?? null, t.themes.strongest)}
-      {extreme(summary?.laggard ?? null, t.themes.weakest)}
+      {extreme(summary?.leader ?? null, summary?.preMarket ? t.themes.strongestPre : t.themes.strongest)}
+      {extreme(summary?.laggard ?? null, summary?.preMarket ? t.themes.weakestPre : t.themes.weakest)}
     </div>
   );
 }
@@ -236,11 +242,12 @@ function ThemeGallery({ board, locale, t }: { board: ThemeBoard; locale: Locale;
         const span = CARD_SPANS[index % CARD_SPANS.length];
         const wide = span >= WIDE_SPAN;
         const neutral = card.basis !== "session";
+        const pre = board.phase === "pre-market";
         const flag =
           card.theme.slug === board.leader
-            ? t.themes.strongest
+            ? pre ? t.themes.strongestPre : t.themes.strongest
             : card.theme.slug === board.laggard
-              ? t.themes.weakest
+              ? pre ? t.themes.weakestPre : t.themes.weakest
               : null;
         const katilim = card.theme.symbols === "katilim";
         return (
@@ -261,8 +268,11 @@ function ThemeGallery({ board, locale, t }: { board: ThemeBoard; locale: Locale;
                 <div className={styles.cardFigure}>
                   <span className={styles.figureLabel}>
                     <span>
-                      {t.themes.median}
-                      {card.basis === "lastClose" ? ` · ${t.themes.medianLastClose}` : ""}
+                      {card.basis === "lastClose"
+                        ? t.themes.medianClose
+                        : pre
+                          ? t.themes.medianPre
+                          : t.themes.median}
                     </span>
                     {flag && <span className={styles.flag}>{flag}</span>}
                   </span>

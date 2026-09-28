@@ -34,7 +34,10 @@ export const SECTOR_ETFS: readonly EtfEntry[] = [
   { symbol: "XLK", nameTr: "Teknoloji", nameEn: "Technology" },
   { symbol: "XLF", nameTr: "Finans", nameEn: "Financials" },
   { symbol: "XLV", nameTr: "Sağlık", nameEn: "Health Care" },
-  { symbol: "XLY", nameTr: "Tüketim", nameEn: "Consumer Discretionary" },
+  /* "Tüketim" hemen yanındaki "Temel Tüketim"le karışıyordu (28 Eylül
+     denetimi); şirket sayfası aynı GICS sektörüne zaten bu adı veriyor
+     (lib/sectors.ts → SECTOR_TR). */
+  { symbol: "XLY", nameTr: "İsteğe Bağlı Tüketim", nameEn: "Consumer Discretionary" },
   { symbol: "XLP", nameTr: "Temel Tüketim", nameEn: "Consumer Staples" },
   { symbol: "XLE", nameTr: "Enerji", nameEn: "Energy" },
   { symbol: "XLI", nameTr: "Sanayi", nameEn: "Industrials" },
