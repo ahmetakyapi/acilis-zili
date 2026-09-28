@@ -396,6 +396,19 @@ const tr = {
     // Dizinin sağındaki küçük geri sayımın öneki: "Açılışa 01 sa 04 dk".
     miniToOpen: "Açılışa",
     miniToClose: "Kapanışa",
+    /* Sektörler ve temalar bandı (28 Eylül): günün hareketi genişten dara.
+       Sektör adları ve fon künyesi `marketExtras`ten, tema adları ve
+       sıralama başlığı `themes`ten okunuyor; burada yalnızca bandın kendi
+       metinleri var. */
+    textureTitle: "Sektörler ve Temalar",
+    textureNote: "Günün hareketi önce on bir sektörde, sonra tematik listelerde.",
+    sectorsHeading: "Sektörler",
+    sectorsLink: "Sektör Tablosu",
+    themesLink: "Tüm Temalar",
+    /* Son kapanışa "Günün En Güçlüsü" denmiyor (dünü bugün diye anlatmak
+       olurdu); künye hangi günü anlattığını adıyla söylüyor. */
+    strongestLastClose: "Son Kapanışta En Güçlü",
+    weakestLastClose: "Son Kapanışta En Zayıf",
   },
 
   calendar: {
@@ -2188,6 +2201,11 @@ const tr = {
     mapLastClose:
       "Yüzdeler son kapanışa ait; yön rengi yalnızca bu seansın hareketinde kullanılır.",
     mapUnsized: "Piyasa Değeri Karşılaştırılamayan",
+    /* Haritanın küçük üyeleri ve künye kartı (28 Eylül). */
+    mapSmall: "Diğer {count}",
+    mapSmallTitle: "Haritada Küçük Kalanlar",
+    mapShare: "Temadaki Payı",
+    mapOpen: "Şirkete Git",
     benchTitle: "Ölçütle Kıyas",
     benchMedian: "Tema Medyanı",
     benchAbove: "Tema medyanı ölçütün {diff} puan üstünde.",

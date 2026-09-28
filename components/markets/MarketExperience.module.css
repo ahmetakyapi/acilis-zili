@@ -256,24 +256,19 @@
 .heatPct { font-size:11px; }
 .heatSymbol, .heatPct { color:inherit; }
 
-/* Mutlak, simetrik ölçek: <0,5 / 0,5–1,5 / 1,5–3 / ≥3. En koyu
-   açık-tema karosunda beyaz metin; gece temasında mürekkep tonu korunur. */
-.breadth { --heat-up-deep:var(--up); --heat-down-deep:var(--down); --heat-deep-ink:#fff; }
-:global([data-theme="dark"]) .breadth {
-  --heat-up-deep:color-mix(in srgb,var(--up) 45%,var(--premium-surface));
-  --heat-down-deep:color-mix(in srgb,var(--down) 45%,var(--premium-surface));
-  --heat-deep-ink:var(--text-strong);
-}
+/* Mutlak, simetrik ölçek: <0,5 / 0,5–1,5 / 1,5–3 / ≥3. Basamakların
+   tonları globals.css → `--heat-mix-*` ve `--heat-deep-*`: tema haritası
+   aynı tokenları okuyor, iki ekranda aynı yüzde aynı tonda. */
 .heatCell, .heatSwatches > i { --heat-tone:var(--line); --heat-mix:0%; background:var(--surface-sunken); color:var(--text-strong); }
 :is(.heatCell,.heatSwatches > i)[data-heat-tone="up"] { --heat-tone:var(--up); }
 :is(.heatCell,.heatSwatches > i)[data-heat-tone="down"] { --heat-tone:var(--down); }
-:is(.heatCell,.heatSwatches > i)[data-heat-level="1"] { --heat-mix:10%; }
-:is(.heatCell,.heatSwatches > i)[data-heat-level="2"] { --heat-mix:22%; }
-:is(.heatCell,.heatSwatches > i)[data-heat-level="3"] { --heat-mix:34%; }
-:is(.heatCell,.heatSwatches > i):not([data-heat-level="0"]) { background:color-mix(in srgb,var(--heat-tone) var(--heat-mix),var(--premium-surface)); }
+:is(.heatCell,.heatSwatches > i)[data-heat-level="1"] { --heat-mix:var(--heat-mix-1); }
+:is(.heatCell,.heatSwatches > i)[data-heat-level="2"] { --heat-mix:var(--heat-mix-2); }
+:is(.heatCell,.heatSwatches > i)[data-heat-level="3"] { --heat-mix:var(--heat-mix-3); }
+:is(.heatCell,.heatSwatches > i):not([data-heat-level="0"]) { background:color-mix(in oklab,var(--heat-tone) var(--heat-mix),var(--premium-surface)); }
 :is(.heatCell,.heatSwatches > i)[data-heat-level="4"] { color:var(--heat-deep-ink); }
-:is(.heatCell,.heatSwatches > i)[data-heat-level="4"][data-heat-tone="up"] { background:var(--heat-up-deep); }
-:is(.heatCell,.heatSwatches > i)[data-heat-level="4"][data-heat-tone="down"] { background:var(--heat-down-deep); }
+:is(.heatCell,.heatSwatches > i)[data-heat-level="4"][data-heat-tone="up"] { background:var(--heat-deep-up); }
+:is(.heatCell,.heatSwatches > i)[data-heat-level="4"][data-heat-tone="down"] { background:var(--heat-deep-down); }
 
 .heatCard { width:264px; color:var(--text-body); visibility:hidden; }
 .heatCell:is(:hover,:focus-visible) .heatCard { visibility:visible; }

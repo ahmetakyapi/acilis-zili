@@ -143,3 +143,33 @@ export function squarify(weights: readonly number[], aspect: number): TreemapRec
     h: rect.h * 100,
   }));
 }
+
+/**
+ * Haritaya karo olarak sığmayan küçük üyeler (28 Eylül).
+ *
+ * NEDEN GRUPLAMA, NEDEN TABAN KARO DEĞİL: karoya en küçük bir boy vermek
+ * alanların oranını bozar; 20 × 4 piksellik SPCE'yi okunur yapmak için
+ * büyütmek, onun piyasa değerini haritada olduğundan büyük göstermek
+ * demek. Gruplamada oran korunuyor: küçükler TEK karoda, alanı TOPLAM
+ * piyasa değerleri kadar ("Diğer N") ve her biri haritanın altında adıyla
+ * listeleniyor. Karonun içinde yazı olmayan tek bir üye kalmıyor.
+ *
+ * Tek bir küçük üye gruplanmıyor: "Diğer 1" karosu, üyenin kendi karosuyla
+ * aynı alanı kaplayıp adını saklamaktan başka bir şey yapmazdı.
+ *
+ * `minShare` piksel eşiğinden türüyor (ThemeTreemap → LAYOUTS): karonun
+ * sembolü okunacak en küçük alanın, yerleşimin en dar kabına oranı.
+ */
+export function splitSmall(
+  weights: readonly number[],
+  minShare: number,
+): { kept: number[]; grouped: number[] } {
+  const total = weights.reduce((sum, weight) => sum + Math.max(0, weight), 0);
+  const all = weights.map((_, index) => index).filter((index) => weights[index] > 0);
+  if (total <= 0) return { kept: all, grouped: [] };
+  const grouped = all
+    .filter((index) => weights[index] / total < minShare)
+    .sort((a, b) => weights[b] - weights[a]);
+  if (grouped.length < 2) return { kept: all, grouped: [] };
+  return { kept: all.filter((index) => !grouped.includes(index)), grouped };
+}

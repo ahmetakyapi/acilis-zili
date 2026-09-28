@@ -254,7 +254,8 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
 
   return (
     <>
-      <Panel>
+      {/* Panel kırpmıyor: karoların künye kartı haritanın dışına taşabiliyor. */}
+      <Panel className={styles.mapPanel}>
         <PanelHeader
           title={t.themes.mapTitle}
           action={rows.length > 0 ? <HeatLegend locale={locale} label={t.themes.mapHint} /> : undefined}
@@ -270,7 +271,15 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
                 moves={moves}
                 solo={!benchmark}
                 locale={locale}
-                labels={{ unsized: t.themes.mapUnsized, lastClose: t.themes.lastClose }}
+                labels={{
+                  unsized: t.themes.mapUnsized,
+                  lastClose: t.themes.lastClose,
+                  small: t.themes.mapSmall,
+                  smallTitle: t.themes.mapSmallTitle,
+                  share: t.themes.mapShare,
+                  cap: t.themes.colCap,
+                  open: t.themes.mapOpen,
+                }}
               />
             </div>
             {benchmark && <BenchmarkAside benchmark={benchmark} moves={moves} locale={locale} t={t} />}

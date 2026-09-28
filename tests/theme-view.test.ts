@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { heatOf, spreadPosition, spreadScale, squarify } from "../lib/theme-view";
+import { heatOf, splitSmall, spreadPosition, spreadScale, squarify } from "../lib/theme-view";
 
 /**
  * Tema ekranlarının çizim hesapları (gerekçe `lib/theme-view.ts`).
@@ -58,4 +58,19 @@ test("şerit ölçeği okunur bir tavana yuvarlanır ve uçlara yapışır", () 
   assert.equal(spreadPosition(0, 5), 50);
   assert.equal(spreadPosition(-5, 5), 0);
   assert.equal(spreadPosition(9, 5), 100);
+});
+
+test("küçük üyeler tek karoda toplanır, tek küçük üye gruplanmaz", () => {
+  /* Uzay teması, 28 Eylül: SPCX sepetin dörtte üçü, SPCE binde biri. */
+  const weights = [1750, 180, 110, 75, 38, 35, 17, 9, 0.4];
+  const { kept, grouped } = splitSmall(weights, 0.003);
+  assert.deepEqual(grouped, [], "yalnızca SPCE eşiğin altında");
+  assert.equal(kept.length, 9, "tek küçük üye haritada kalıyor");
+
+  const wide = splitSmall(weights, 0.006);
+  assert.deepEqual(wide.grouped, [7, 8], "büyükten küçüğe");
+  assert.deepEqual(wide.kept, [0, 1, 2, 3, 4, 5, 6]);
+
+  assert.deepEqual(splitSmall([0, 5, 5], 0.4), { kept: [1, 2], grouped: [] });
+  assert.deepEqual(splitSmall([], 0.1), { kept: [], grouped: [] });
 });

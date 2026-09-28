@@ -302,6 +302,13 @@ const en: typeof tr = {
     navNews: "News",
     miniToOpen: "To Open",
     miniToClose: "To Close",
+    textureTitle: "Sectors and Themes",
+    textureNote: "The day's move across eleven sectors, then across thematic lists.",
+    sectorsHeading: "Sectors",
+    sectorsLink: "Sector Table",
+    themesLink: "All Themes",
+    strongestLastClose: "Strongest at Last Close",
+    weakestLastClose: "Weakest at Last Close",
   },
 
   calendar: {
@@ -1798,6 +1805,10 @@ const en: typeof tr = {
     mapLastClose:
       "Percentages describe the last close; direction colour is reserved for this session's move.",
     mapUnsized: "Market Cap Not Comparable",
+    mapSmall: "{count} More",
+    mapSmallTitle: "Too Small for the Map",
+    mapShare: "Share of Theme",
+    mapOpen: "Open Company",
     benchTitle: "Against the Benchmark",
     benchMedian: "Theme Median",
     benchAbove: "The theme median is {diff} points above the benchmark.",

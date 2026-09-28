@@ -29,7 +29,7 @@
    -------------------------------------------------------------------------- */
 .rank { display:flex; flex-direction:column; gap:12px; min-width:0; }
 .rankHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:6px 12px; }
-.rankHead h2 { font-size:14px; font-weight:650; color:var(--text-strong); }
+.rankHead :is(h2,h3) { font-size:14px; font-weight:650; color:var(--text-strong); }
 .rankHead span { font-size:12px; color:var(--text-muted); }
 .rankList { display:flex; flex-direction:column; gap:1px; }
 .rankRow {
@@ -181,74 +181,202 @@
 .heroMeta b { font-weight:650; color:var(--text-strong); }
 
 /* --------------------------------------------------------------------------
-   Detay: kare haritası
+   Detay: kare haritası (gerekçe ThemeTreemap.tsx)
    -------------------------------------------------------------------------- */
+/* Panel kırpmıyor: künye kartı haritanın kenarından taşabiliyor. Ölçüt
+   sütununun çukur zemini kırpılmadığı için köşesini kendisi yuvarlıyor. */
+.mapPanel { overflow:visible; }
 .mapBody { display:grid; gap:0; border-top:1px solid var(--line); }
 .mapBody[data-bench] { grid-template-columns:minmax(0,1fr); }
-@media(min-width:1024px) { .mapBody[data-bench] { grid-template-columns:minmax(0,1fr) 272px; } }
+/* Ölçüt sütunu 1200'den itibaren yanda (önce 1024). 1024'te haritaya 662
+   × 315 piksel kalıyordu ve karoların yarısında yalnızca sembol vardı
+   (ölçüldü, 28 Eylül); 1024-1199 arasında sütun haritanın altına iniyor. */
+@media(min-width:1200px) {
+  .mapBody[data-bench] { grid-template-columns:minmax(0,1fr) 272px; }
+  .mapBody[data-bench] .bench { border-radius:0 0 var(--radius-panel, var(--radius-xl)) 0; }
+}
 .mapMain { min-width:0; padding:16px 20px 18px; }
 .mapHint { margin-bottom:12px; font-size:12.5px; line-height:1.6; color:var(--text-body); }
-.map { position:relative; width:100%; }
-.map[data-layout="wide"] { aspect-ratio:2.1 / 1; }
-/* Ölçüt sütunu yoksa harita tam genişlikte; aynı oran onu 1280'de 567
-   piksel boya çıkarıyordu. Daha yatık oran boyu ölçütlü hâle yaklaştırır
-   (`ThemeTreemap` → `WIDE_ASPECT_SOLO` ile aynı sayı). */
-.mapBody:not([data-bench]) .map[data-layout="wide"],
-.mapBody:not([data-bench]) .mapSkeleton { aspect-ratio:2.6 / 1; }
-.map[data-layout="narrow"] { display:none; aspect-ratio:.95 / 1; }
+.stage { position:relative; }
+.mapLayout[data-layout="narrow"] { display:none; }
+/* Oranlar `ThemeTreemap` → LAYOUTS ile aynı sayılar. 640-1199 arasında
+   harita tam satırı alıyor ve 2,6'lık oran onu 768'de 261 piksele
+   indiriyordu; 1,9 karoları dikeyde en fazla %37 geriyor, alanların
+   birbirine oranı değişmiyor (yerleşim yüzde). */
+.map, .mapSkeleton { position:relative; width:100%; aspect-ratio:1.9 / 1; }
+@media(min-width:1200px) {
+  .map, .mapSkeleton { aspect-ratio:2.1 / 1; }
+  .mapBody:not([data-bench]) :is(.map, .mapSkeleton) { aspect-ratio:2.6 / 1; }
+}
 @media(max-width:639px) {
-  .map[data-layout="wide"] { display:none; }
-  .map[data-layout="narrow"] { display:block; }
+  .mapLayout[data-layout="wide"] { display:none; }
+  .mapLayout[data-layout="narrow"] { display:block; }
+  .mapLayout[data-layout="narrow"] .map, .mapSkeleton { aspect-ratio:.8 / 1; }
   .mapMain { padding:14px 14px 16px; }
 }
-.mapSkeleton { width:100%; aspect-ratio:2.1 / 1; }
-@media(max-width:639px) { .mapSkeleton, .mapBody:not([data-bench]) .mapSkeleton { aspect-ratio:.95 / 1; } }
-.tile { position:absolute; padding:2px; }
-.tile:focus-visible { outline:none; }
-.tile:focus-visible .heat { box-shadow:0 0 0 2px var(--line-focus); }
-.tile .heat {
-  position:relative; display:flex; flex-direction:column; justify-content:space-between; gap:4px;
-  height:100%; padding:9px 10px; border-radius:10px; overflow:hidden;
-  transition:box-shadow .2s, transform .25s;
-}
-@media(hover:hover) and (pointer:fine) {
-  .tile:hover { z-index:1; }
-  .tile:hover .heat { transform:scale(1.02); box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); }
-}
-.tile[data-size="sm"] .heat, .tile[data-size="xs"] .heat { justify-content:center; align-items:center; padding:4px; border-radius:7px; }
-.tileSymbol { font-size:13px; font-weight:750; letter-spacing:.01em; line-height:1.15; }
-.tile[data-size="lg"] .tileSymbol { font-size:17px; }
-.tile[data-size="sm"] .tileSymbol { font-size:11px; }
-.tile[data-size="xs"] .tileSymbol { display:none; }
-.tilePct { font-size:12.5px; font-weight:600; line-height:1.2; letter-spacing:-.01em; }
-.tile[data-size="lg"] .tilePct { font-size:clamp(15px,1.6vw,22px); font-weight:650; letter-spacing:-.03em; }
-.tileName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11.5px; opacity:.8; }
-.tileHead { display:flex; align-items:center; gap:8px; min-width:0; }
 
-/* Isı tonu — `/piyasalar` ile aynı formül (MarketExperience.module.css).
-   En koyu kademede açık temada zıt mürekkep, gece temasında mürekkep
-   korunur ve ton yarıya indirilir. */
+/* Karo — içerik GERÇEK boyuna göre kademeli (kapsayıcı sorgusu). Taban:
+   yalnızca sembol, ortalı. Eşikler metnin kendisinden: dört harfli sembol
+   11,5 puntoda ≈ 34 piksel, "−%2,40" ≈ 42; logo ve ad ancak sol hizalı
+   düzene geçince giriyor. */
+.tile { position:absolute; padding:2px; container:tile / size; color:var(--text-strong); }
+.tile:focus-visible { outline:none; }
+.tile:focus-visible .tileFace { box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 4px var(--line-focus); }
+.tileFace {
+  position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  height:100%; padding:3px; border-radius:6px; overflow:hidden; text-align:center;
+  transition:box-shadow .2s, transform .3s, opacity .25s;
+}
+.tileHead { display:flex; align-items:center; justify-content:center; gap:8px; min-width:0; max-width:100%; }
+.tileLogo { display:none; }
+.tileId { display:flex; flex-direction:column; min-width:0; }
+.tileSymbol { font-size:clamp(8.5px, 26cqi, 10.5px); font-weight:750; letter-spacing:.01em; line-height:1.15; white-space:nowrap; }
+.tileName { display:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11.5px; line-height:1.3; opacity:.78; }
+.tilePct { display:none; font-size:11.5px; font-weight:650; line-height:1.15; letter-spacing:-.01em; white-space:nowrap; }
+.tileMuted { color:var(--text-muted); }
+.tileFoot { display:none; }
+@container tile (max-width:27px) or (max-height:17px) { .tileSymbol { display:none; } }
+/* Sembol ve yüzde dar karoda karonun genişliğiyle küçülüyor (en az 8,5
+   punto): 768'de 42 piksellik LHX karosunda yüzde yoktu, 390'da 44
+   piksellik MRVL karosunda sembolün son harfi kesiliyordu. */
+@container tile (min-width:36px) and (min-height:32px) {
+  .tileFace { gap:3px; padding:3px 2px; border-radius:8px; }
+  .tileSymbol { font-size:clamp(8.5px, 26cqi, 11.5px); }
+  .tilePct { display:block; font-size:clamp(8.5px, 24cqi, 11.5px); }
+}
+@container tile (min-width:84px) and (min-height:62px) {
+  .tileFace { align-items:stretch; justify-content:space-between; padding:9px 10px; border-radius:10px; text-align:left; }
+  .tileHead { justify-content:flex-start; }
+  .tileLogo { display:flex; width:22px; height:22px; border-radius:6px; }
+  .tileSymbol { font-size:13px; }
+  .tilePct { font-size:13.5px; }
+}
+@container tile (min-width:118px) and (min-height:80px) {
+  .tileLogo { width:28px; height:28px; border-radius:8px; }
+  .tileName { display:block; }
+}
+/* Büyük karo: yüzde karonun ortasında ve karoyla büyüyor. İlk hâlde
+   yüzde karonun dibinde 22 puntoydu ve 445 piksellik NVDA karosunun
+   ortası boştu; ölçüyü taşıyan bilgi en zayıf duranıydı. Dipte temadaki
+   payı ve piyasa değeri: karonun alanının hangi sayıdan geldiği. */
+@container tile (min-width:170px) and (min-height:128px) {
+  .tileFace { padding:14px 16px 12px; }
+  .tileLogo { width:36px; height:36px; border-radius:10px; }
+  .tileHead { gap:10px; }
+  .tileSymbol { font-size:17px; }
+  .tileName { font-size:12.5px; }
+  .tilePct { display:flex; flex:1; align-items:center; font-size:clamp(22px, 13cqmin, 56px); font-weight:650; line-height:1; letter-spacing:-.045em; }
+  .tileFoot {
+    display:none; align-items:baseline; justify-content:space-between; gap:8px; padding-top:8px;
+    border-top:1px solid color-mix(in oklab, currentColor 16%, transparent);
+    font-size:11.5px; white-space:nowrap;
+  }
+  .tileFoot > span { overflow:hidden; text-overflow:ellipsis; opacity:.78; }
+  .tileFoot b { font-weight:650; }
+}
+/* Dip satırı ancak "Temadaki Payı %23,0" ile "5,40 T $" yan yana
+   sığınca: 390'daki 183 piksellik NVDA karosunda künye kesiliyordu. */
+@container tile (min-width:230px) and (min-height:128px) { .tileFoot { display:flex; } }
+@media(hover:hover) and (pointer:fine) {
+  /* Üzerine gelinen karo öne çıkıyor, ötekiler bir ton geri çekiliyor:
+     kart açılınca hangi karonun künyesi olduğu tartışmasız. */
+  .map:hover .tileFace { opacity:.6; }
+  .tile:hover { z-index:3; }
+  .tile:hover .tileFace { opacity:1; transform:scale(1.015); box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); }
+}
+
+/* "Diğer N" — alanı gruptaki üyelerin toplamı. Yön rengi yok (birden çok
+   üyenin tek yönü olmaz); kesikli kenar onu tek bir şirketten ayırıyor. */
+.groupTile { color:var(--text-body); }
+.groupTile .tileFace { border:1px dashed var(--line-strong); background:var(--surface-sunken); }
+.groupLogos { display:none; }
+.groupLogos > * { box-shadow:0 0 0 2px var(--premium-surface); }
+.groupLogos > * + * { margin-left:-6px; }
+.groupLabel { display:none; font-size:12px; font-weight:650; color:var(--text-strong); }
+.groupCount { font-size:10.5px; font-weight:700; }
+@container tile (max-width:13px) or (max-height:15px) { .groupCount { display:none; } }
+@container tile (min-width:72px) and (min-height:56px) {
+  .groupTile .tileFace { gap:6px; }
+  .groupLogos { display:flex; }
+  .groupCount { display:none; }
+  .groupLabel { display:block; }
+}
+/* Dört logo 70 piksel tutuyor; daha dar grup karosunda ilki kesiliyordu. */
+@container tile (max-width:99px) { .groupLogos > :nth-child(n + 4) { display:none; } }
+
+/* Künye kartı — `/piyasalar` ısı haritasının kartıyla aynı dil. Tek kart,
+   yeri `TreemapStage`ten (sahneye göre mutlak konum). */
+.peek {
+  position:absolute; left:0; top:0; z-index:6;
+  display:flex; flex-direction:column; gap:10px; width:min(256px, calc(100vw - 16px)); padding:12px;
+  border:1px solid var(--line); border-radius:14px; background:var(--overlay-surface); box-shadow:var(--shadow-overlay);
+  color:var(--text-body); text-align:left; opacity:0; visibility:hidden; pointer-events:none;
+  transform:translateY(4px) scale(.97); transform-origin:center bottom;
+  transition:opacity .16s, transform .2s, visibility 0s .2s;
+}
+.peek[data-side="below"] { transform:translateY(-4px) scale(.97); transform-origin:center top; }
+.peek[data-open] { opacity:1; visibility:visible; pointer-events:auto; transform:none; transition:opacity .16s, transform .2s; }
+.peekPct { flex-shrink:0; padding:2px 7px; border-radius:999px; font-size:12px; font-weight:650; letter-spacing:0; color:var(--text-muted); }
+.peekPct[data-tone="up"] { background:var(--up-wash); color:var(--up); }
+.peekPct[data-tone="down"] { background:var(--down-wash); color:var(--down); }
+.peekHead { display:flex; min-width:0; flex-direction:column; gap:2px; }
+.peekHead b { display:block; font-size:14px; font-weight:700; color:var(--text-strong); }
+.peekHead small { display:-webkit-box; overflow:hidden; -webkit-line-clamp:2; -webkit-box-orient:vertical; font-size:12px; line-height:1.35; }
+.peekRow { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:21px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
+.peekMetrics { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px 12px; padding-top:10px; border-top:1px solid var(--line-soft); font-size:11px; }
+.peekMetrics > span { display:flex; min-width:0; flex-direction:column; gap:3px; }
+.peekMetrics b { font-size:13px; font-weight:650; color:var(--text-strong); }
+.peekFoot { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:11px; color:var(--text-muted); }
+.peekOpen { display:inline-flex; align-items:center; gap:4px; font-weight:650; color:var(--primary-ink); }
+
+/* Giriş koreografisi — büyükten küçüğe (`--i` alan sırası). Karo önce
+   yerine oturuyor, yazısı bir nefes sonra geliyor. Harita ilk ekranın
+   altındaysa `TreemapStage` onu görünmezken gizleyip görüş alanında
+   yeniden oynatıyor (`data-armed` → `data-play`); ikinci ad, animasyonun
+   yeniden başlaması için. */
+@media(prefers-reduced-motion:no-preference) {
+  .tile { animation:tile-in .62s var(--ease-brand) both; animation-delay:calc(min(var(--i), 16) * 34ms); }
+  .tileId, .tilePct { animation:tile-ink .45s var(--ease-brand) both; animation-delay:calc(min(var(--i), 16) * 34ms + 200ms); }
+  .stage[data-armed]:not([data-play]) .tile { animation:none; opacity:0; }
+  .stage[data-armed]:not([data-play]) :is(.tileId, .tilePct) { animation:none; }
+  .stage[data-play] .tile { animation-name:tile-in-again; }
+  .stage[data-play] :is(.tileId, .tilePct) { animation-name:tile-ink-again; }
+}
+@keyframes tile-in { from { opacity:0; transform:scale(.9); } }
+@keyframes tile-in-again { from { opacity:0; transform:scale(.9); } }
+@keyframes tile-ink { from { opacity:0; transform:translateY(4px); } }
+@keyframes tile-ink-again { from { opacity:0; transform:translateY(4px); } }
+
+/* Isı tonu — `/piyasalar` ile aynı kademe ve aynı tokenlar (globals.css →
+   `--heat-*`). */
 .heat { --heat-tone:var(--line); --heat-mix:0%; background:var(--surface-sunken); color:var(--text-strong); }
 .heat[data-heat-tone="up"] { --heat-tone:var(--up); }
 .heat[data-heat-tone="down"] { --heat-tone:var(--down); }
-.heat[data-heat-level="1"] { --heat-mix:10%; }
-.heat[data-heat-level="2"] { --heat-mix:22%; }
-.heat[data-heat-level="3"] { --heat-mix:34%; }
-.heat:not([data-heat-level="0"]) { background:color-mix(in srgb,var(--heat-tone) var(--heat-mix),var(--premium-surface)); }
-.heat[data-heat-level="4"] { color:var(--on-primary); }
-.heat[data-heat-level="4"][data-heat-tone="up"] { background:var(--up); }
-.heat[data-heat-level="4"][data-heat-tone="down"] { background:var(--down); }
-:global([data-theme="dark"]) .heat[data-heat-level="4"] { color:var(--text-strong); }
-:global([data-theme="dark"]) .heat[data-heat-level="4"][data-heat-tone="up"] { background:color-mix(in srgb,var(--up) 45%,var(--premium-surface)); }
-:global([data-theme="dark"]) .heat[data-heat-level="4"][data-heat-tone="down"] { background:color-mix(in srgb,var(--down) 45%,var(--premium-surface)); }
+.heat[data-heat-level="1"] { --heat-mix:var(--heat-mix-1); }
+.heat[data-heat-level="2"] { --heat-mix:var(--heat-mix-2); }
+.heat[data-heat-level="3"] { --heat-mix:var(--heat-mix-3); }
+.heat:not([data-heat-level="0"]) { background:color-mix(in oklab,var(--heat-tone) var(--heat-mix),var(--premium-surface)); }
+.heat[data-heat-level="4"] { color:var(--heat-deep-ink); }
+.heat[data-heat-level="4"][data-heat-tone="up"] { background:var(--heat-deep-up); }
+.heat[data-heat-level="4"][data-heat-tone="down"] { background:var(--heat-deep-down); }
 
 .legend { min-width:156px; max-width:190px; color:var(--text-body); }
 .legendSwatches { display:grid; grid-template-columns:repeat(9,1fr); gap:2px; height:7px; overflow:hidden; border-radius:3px; }
 .legendLabels { display:flex; justify-content:space-between; margin-top:3px; font-size:11px; line-height:1.2; }
 
-.unsized { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-muted); }
-.unsizedItem { display:inline-flex; align-items:center; gap:7px; min-height:32px; padding:3px 10px 3px 4px; border-radius:10px; font-weight:650; color:var(--text-strong); }
-.unsizedItem .tilePct { font-weight:600; }
+/* Haritanın altındaki ad listesi — gruptaki küçük üyeler ve piyasa değeri
+   karşılaştırılamayanlar. İlk hâlde karşılaştırılamayanlar tek satırda,
+   künyenin yanına sıkışmış hap düğmelerdi ve adları yoktu. */
+.roster { margin-top:14px; padding-top:12px; border-top:1px solid var(--line-soft); }
+.rosterTitle { display:flex; align-items:baseline; gap:6px; margin-bottom:8px; font-size:12.5px; font-weight:650; color:var(--text-strong); }
+.rosterTitle span { font-weight:600; color:var(--text-muted); }
+.rosterList { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:6px 10px; }
+.rosterItem { display:flex; align-items:center; gap:10px; min-height:44px; padding:6px 8px 6px 6px; border-radius:12px; background:var(--surface-sunken); transition:background .2s; }
+@media(hover:hover) { .rosterItem:hover { background:var(--primary-tint); } }
+.rosterText { display:flex; flex:1; min-width:0; flex-direction:column; }
+.rosterText b { font-size:13px; font-weight:700; line-height:1.25; color:var(--text-strong); }
+.rosterText small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11.5px; color:var(--text-muted); }
+.rosterPct { flex-shrink:0; padding:3px 7px; border-radius:7px; font-size:12px; font-weight:650; }
 
 /* Ölçüt kıyası — haritanın yanında, telefonda altında. */
 .bench { display:flex; flex-direction:column; gap:16px; min-width:0; padding:18px 20px; border-top:1px solid var(--line); background:var(--surface-sunken); }
@@ -331,9 +459,9 @@
 .otherLink .stack .logoSlot { transition:transform .4s; transition-delay:calc(var(--i) * 18ms); }
 
 @media(prefers-reduced-motion:reduce) {
-  .card, .cardArrow, .stack .logoSlot, .mosaic .logoSlot, .tick, .tile .heat, .otherArrow, .sortIcon { transition:none; }
+  .card, .cardArrow, .stack .logoSlot, .mosaic .logoSlot, .tick, .tileFace, .peek, .otherArrow, .sortIcon, .rosterItem { transition:none; }
   .card:hover .stack .logoSlot, .card:hover .mosaic .logoSlot, .card:hover .tick, .card:hover .cardArrow,
-  .otherLink:hover .stack .logoSlot, .tile:hover .heat { transform:none; }
+  .otherLink:hover .stack .logoSlot, .tile:hover .tileFace { transform:none; }
 }
 
 /* --------------------------------------------------------------------------

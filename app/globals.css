@@ -411,6 +411,38 @@
   --premium-shadow-hover: 0 0 #0000;
 }
 
+/* Isı kademesi — `/piyasalar` ısı haritası, tema haritası ve ikisinin
+   ölçek anahtarı AYNI tokenları okuyor (28 Eylül). Önceden iki modülde
+   aynı sayılar ayrı ayrı yazılıydı; birini değiştiren ötekini unutursa
+   aynı yüzde iki ekranda iki tonla boyanırdı.
+
+   ESKİ BASAMAKLAR 10 / 22 / 34 (açık, sRGB karışım) BİRBİRİNE YAPIŞIKTI:
+   yapay zekâ temasında −%0,88 ile −%2,52 yan yana neredeyse aynı pembe
+   okunuyordu. Basamaklar açıldı ve karışım OKLab'da (sRGB açık uçta hızla
+   soluyor). Ölçüldü, 28 Eylül — karonun yüzeye kontrastı, kademe kademe:
+   açık 1,22 / 1,57 / 2,19 / 5,86; koyu yeşil 1,23 / 1,70 / 2,43 / 3,30,
+   koyu kırmızı 1,17 / 1,46 / 1,88 / 3,03. Mürekkebin en koyu karodaki
+   kontrastı açıkta 5,86 / 6,08, koyuda 4,66 / 5,07. Koyu temada kırmızının tavanı
+   yeşilden yüksek: aynı karışımda kırmızı zemine çok daha az ayrışıyordu
+   (%50'de 2,30). Yeşilin tavanı %52, çünkü mürekkebin (#eaf1f8) yeşil
+   karodaki kontrastı ondan sonra 4,5'in altına iniyor (4,66). */
+:root {
+  --heat-mix-1: 14%;
+  --heat-mix-2: 30%;
+  --heat-mix-3: 50%;
+  --heat-deep-up: var(--up);
+  --heat-deep-down: var(--down);
+  --heat-deep-ink: var(--on-primary);
+}
+:root[data-theme="dark"] {
+  --heat-mix-1: 12%;
+  --heat-mix-2: 26%;
+  --heat-mix-3: 40%;
+  --heat-deep-up: color-mix(in oklab, var(--up) 52%, var(--premium-surface));
+  --heat-deep-down: color-mix(in oklab, var(--down) 64%, var(--premium-surface));
+  --heat-deep-ink: var(--text-strong);
+}
+
 @theme inline {
   --color-page: var(--page-bg);
   --color-surface: var(--surface);
