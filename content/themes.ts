@@ -78,6 +78,11 @@ export const THEMES = [
     symbols: [
       "NVDA", "AVGO", "AMD", "TSM", "ASML", "MU", "QCOM", "TXN", "ADI", "INTC",
       "AMAT", "LRCX", "KLAC", "MRVL", "ARM", "NXPI", "ON", "MCHP", "MPWR", "SKHY",
+      /* SanDisk (28 Eylül, sahibinin isteği): Western Digital'den 2025'te
+         ayrılan NAND flash üreticisi; endeks tohumunda GICS alt sektörü
+         zaten "Semiconductors" ve Micron ile SK hynix'in bellek ayağının
+         yanında duruyor. */
+      "SNDK",
     ],
     benchmark: { symbol: "SMH", name: "VanEck Semiconductor ETF" },
     titleTr: "Yarı İletkenler",
@@ -85,9 +90,9 @@ export const THEMES = [
     dekTr: "Çip tasarlayanlar, üretenler ve üretim makinelerini yapanlar: döngüsel ve sermaye yoğun bir sektör.",
     dekEn: "The companies that design chips, make them and build the machines that make them: a cyclical, capital-heavy industry.",
     whyTr:
-      "Sektör üç iş modeline ayrılıyor ve liste üçünü de taşıyor: kendi fabrikası olmadan tasarlayanlar (Nvidia, AMD, Broadcom, Qualcomm, Marvell, Arm), sözleşmeli ya da kendi adına üretenler (TSMC, Intel, Micron, SK hynix, Texas Instruments) ve üretim ekipmanı satanlar (ASML, Applied Materials, Lam Research, KLA). Otomotiv ve sanayi çiplerinin ağırlıklı olduğu NXP, onsemi, Microchip ve Analog Devices döngünün farklı bir evresinde hareket edebilir. ASML, TSMC ve SK hynix'in ana borsası ABD dışında; piyasa değeri bu yüzden boş kalıyor.",
+      "Sektör üç iş modeline ayrılıyor ve liste üçünü de taşıyor: kendi fabrikası olmadan tasarlayanlar (Nvidia, AMD, Broadcom, Qualcomm, Marvell, Arm), sözleşmeli ya da kendi adına üretenler (TSMC, Intel, Micron, SK hynix, SanDisk, Texas Instruments) ve üretim ekipmanı satanlar (ASML, Applied Materials, Lam Research, KLA). Otomotiv ve sanayi çiplerinin ağırlıklı olduğu NXP, onsemi, Microchip ve Analog Devices döngünün farklı bir evresinde hareket edebilir. ASML, TSMC ve SK hynix'in ana borsası ABD dışında; piyasa değeri bu yüzden boş kalıyor.",
     whyEn:
-      "The industry splits into three business models and the list carries all three: fabless designers (Nvidia, AMD, Broadcom, Qualcomm, Marvell, Arm), manufacturers working on contract or on their own account (TSMC, Intel, Micron, SK hynix, Texas Instruments), and equipment suppliers (ASML, Applied Materials, Lam Research, KLA). NXP, onsemi, Microchip and Analog Devices lean on automotive and industrial chips and can sit at a different point of the cycle. ASML, TSMC and SK hynix have their primary listing outside the US, so their market cap is left blank.",
+      "The industry splits into three business models and the list carries all three: fabless designers (Nvidia, AMD, Broadcom, Qualcomm, Marvell, Arm), manufacturers working on contract or on their own account (TSMC, Intel, Micron, SK hynix, SanDisk, Texas Instruments), and equipment suppliers (ASML, Applied Materials, Lam Research, KLA). NXP, onsemi, Microchip and Analog Devices lean on automotive and industrial chips and can sit at a different point of the cycle. ASML, TSMC and SK hynix have their primary listing outside the US, so their market cap is left blank.",
     guides: ["sektor-rotasyonu", "volatilite"],
   },
   {
