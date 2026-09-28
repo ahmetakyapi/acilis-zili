@@ -1,4 +1,6 @@
+import type { CSSProperties } from "react";
 import { DataStamp, Panel } from "@/components/ui/primitives";
+import { addEtDays, todayEt } from "@/lib/market-hours";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getNextFomc } from "@/lib/macro-data";
 import { readerDayOffset, timePair, zoneTag } from "@/lib/session-clock";
@@ -23,6 +25,29 @@ import styles from "./MacroExperience.module.css";
  *
  * Hedef aralık TOPLANTIDAN SONRA değişir; gözlem tarihi künyede.
  */
+/** Takvim şeridinin gün sınırı: getNextFomc'nin bakış penceresiyle aynı büyüklükte. */
+const STRIP_MAX_DAYS = 120;
+const SATURDAY = 6;
+const SUNDAY = 0;
+
+/**
+ * Bugünden toplantıya kadar her ET günü bir çizgi: hafta sonları kısa,
+ * toplantı günü marka renginde ve tam boy. Tarih UYDURULMUYOR; şerit
+ * takvimdeki tarihle bugünün arasındaki günlerden başka bir şey çizmiyor.
+ * Dökülme (sağa doğru sırayla uzama) CSS'te, hareketi azaltana düz basılır.
+ */
+function dayStrip(today: string, meeting: string) {
+  const days: { date: string; kind: "today" | "weekend" | "day" | "meeting" }[] = [];
+  for (let date = today, i = 0; date <= meeting && i <= STRIP_MAX_DAYS; date = addEtDays(date, 1), i++) {
+    const weekday = new Date(`${date}T12:00:00Z`).getUTCDay();
+    days.push({
+      date,
+      kind: date === meeting ? "meeting" : date === today ? "today" : weekday === SATURDAY || weekday === SUNDAY ? "weekend" : "day",
+    });
+  }
+  return days;
+}
+
 export async function FomcCard({ locale, t }: { locale: Locale; t: Dictionary }) {
   const x = t.marketExtras;
   const next = await getNextFomc();
@@ -30,49 +55,58 @@ export async function FomcCard({ locale, t }: { locale: Locale; t: Dictionary })
   const times = next.timeEt ? timePair(next.date, next.timeEt, locale) : null;
   const tags = zoneTag(locale);
   const away = readerDayOffset(next.date, next.timeEt, locale);
+  const strip = dayStrip(todayEt(), next.date);
 
+  /* Izgaranın ilk hücresi: öteki kartlarla aynı kutu (`styles.card`), ama
+     ton farklı (`data-kind="fomc"`): bir seri değil, bir takvim olayı ve
+     tıklanmıyor. Uzun "fiyatlama yok" notu kartın dibinde, saç teliyle. */
   return (
-    <Panel className={`${styles.card} flex flex-col p-4 sm:p-5`}>
-      <div className="flex items-start justify-between gap-2">
-        <h2 className="text-sm font-semibold leading-snug text-strong">{x.fomcTitle}</h2>
-        {away >= 0 && (
-          <span className="numeral shrink-0 text-nano font-semibold text-primary-ink">
-            {relativeDayLabel(away, t.calendar)}
-          </span>
-        )}
+    <Panel className={styles.fomc}>
+      <div className={styles.cardHead}>
+        <h2 className={`${styles.cardTitle} ${styles.inkTight}`}>{x.fomcTitle}</h2>
+        {next.withProjections && <span className={styles.status}>{x.fomcProjections}</span>}
       </div>
 
-      <p className="mt-3 text-read font-bold leading-tight text-strong">
+      <div className={styles.fomcCount}>
+        {away >= 1 ? (
+          <>
+            <b className="numeral">{away}</b>
+            <span>{x.fomcDaysLeft}</span>
+          </>
+        ) : (
+          <b>{relativeDayLabel(Math.max(away, 0), t.calendar)}</b>
+        )}
+      </div>
+      <p className={styles.fomcDate}>
         {formatEtDateLong(next.date, locale)}
+        {times && (
+          <span className="numeral"> {times.primary} <small>· {times.secondary} {tags.secondary}</small></span>
+        )}
       </p>
-      {times && (
-        <p className="numeral mt-1 text-small text-body">
-          {times.primary} <span className="text-muted">· {times.secondary} {tags.secondary}</span>
-        </p>
-      )}
-      {next.withProjections && (
-        <p className="mt-2 w-fit rounded-full bg-surface-elevated px-2 py-0.5 text-nano font-semibold text-body">
-          {x.fomcProjections}
-        </p>
+
+      {strip.length > 1 && (
+        <div className={styles.fomcStrip} role="img" aria-label={`${x.fomcCalendar}: ${strip.length - 1}`}>
+          {strip.map((day, i) => (
+            <span key={day.date} data-kind={day.kind} style={{ "--i": i } as CSSProperties} />
+          ))}
+        </div>
       )}
 
-      <dl className="mt-4 flex-1 divide-y divide-line-soft border-t border-line-soft text-xs">
-        <div className="flex items-center justify-between gap-3 py-2">
-          <dt className="text-muted">{x.fomcTarget}</dt>
-          <dd className="numeral text-right font-semibold text-strong">
-            {next.target
-              ? `${formatPercentPlain(next.target.lower, locale, 2)} – ${formatPercentPlain(next.target.upper, locale, 2)}`
-              : t.common.noData}
-          </dd>
-        </div>
+      <dl className={styles.fomcTarget}>
+        <dt>{x.fomcTarget}</dt>
+        <dd className="numeral">
+          {next.target
+            ? `${formatPercentPlain(next.target.lower, locale, 2)} - ${formatPercentPlain(next.target.upper, locale, 2)}`
+            : t.common.noData}
+        </dd>
         {next.target && (
-          <div className="flex items-center justify-between gap-3 py-2">
-            <dt className="text-muted">{x.observed}</dt>
-            <dd className="numeral text-right text-body">{formatEtDateMedium(next.target.date, locale)}</dd>
-          </div>
+          <>
+            <dt>{x.observed}</dt>
+            <dd className="numeral">{formatEtDateMedium(next.target.date, locale)}</dd>
+          </>
         )}
       </dl>
-      <p className="mt-3 border-t border-line-soft pt-3 text-tiny leading-relaxed text-muted">{x.fomcNoPricing}</p>
+      <p className={styles.fomcNote}>{x.fomcNoPricing}</p>
       {next.target && (
         <DataStamp labels={t.data} source="fred" at={next.target.fetchedAt} locale={locale} className="mt-2" />
       )}

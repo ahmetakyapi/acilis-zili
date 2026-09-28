@@ -1,0 +1,659 @@
+/* ==========================================================================
+   Temettü takvimi (/takvim?tur=temettu) — kahraman özeti, dört haftalık
+   şerit, zaman çizelgesi. Hisse sayfasının temettü paneli ayrı dosyada
+   (Dividends.module.css).
+
+   Derinlik ton farkıyla: yoğunluk basamakları `--primary-tint` →
+   `--primary`; son alım günü `--primary-wash` zeminde. Gölge ve ışıma yok.
+   ========================================================================== */
+
+.panel {
+  border-radius: 18px;
+  background: var(--premium-surface);
+}
+
+/* ---- Kahraman ---- */
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.heroTop {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.heroTitle {
+  color: var(--primary-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.heroCount {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.heroCountNumber {
+  color: var(--text-strong);
+  font-size: clamp(2rem, 3.6vw, 2.6rem);
+  font-weight: 600;
+  letter-spacing: -0.05em;
+}
+
+/* Son alım günü: kahramanın tek vurgusu, çizelgedeki grubuna iniyor. */
+.heroLastBuy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.15rem 0.75rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: 1rem;
+  background: var(--primary-wash);
+  color: var(--primary-ink);
+  transition:
+    background-color 0.25s var(--ease-brand),
+    transform 0.25s var(--ease-brand);
+}
+
+@media (hover: hover) {
+  .heroLastBuy:hover {
+    background: var(--primary-soft);
+    transform: translateY(-1px);
+  }
+}
+
+.heroLastBuyLabel {
+  grid-column: 1;
+  font-size: var(--text-tiny);
+  font-weight: 650;
+}
+
+.heroLastBuyDate {
+  grid-column: 1;
+  color: var(--text-strong);
+  font-size: clamp(1.25rem, 2.2vw, 1.5rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.heroRel {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: var(--text-tiny);
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.heroEx {
+  color: var(--text-muted);
+  font-size: var(--text-small);
+}
+
+.heroEx strong {
+  color: var(--text-body);
+  font-weight: 650;
+}
+
+.heroLogos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.heroLogo {
+  display: block;
+  border-radius: var(--radius-md);
+  transition: transform 0.3s var(--ease-brand);
+}
+
+@media (hover: hover) {
+  .heroLogo:hover {
+    transform: translateY(-2px) scale(1.06);
+  }
+}
+
+.heroMore {
+  display: inline-flex;
+  align-items: center;
+  height: 2rem;
+  padding-inline: 0.6rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  color: var(--text-body);
+  font-size: var(--text-tiny);
+  font-weight: 650;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes dividend-pop {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.9);
+    }
+  }
+
+  .heroLogos > li {
+    animation: dividend-pop 0.5s var(--ease-brand) both;
+    animation-delay: calc(0.2s + var(--i, 0) * 55ms);
+  }
+}
+
+/* ---- Dört haftalık şerit ---- */
+.strip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 1rem 1.1rem;
+}
+
+@media (min-width: 640px) {
+  .strip {
+    padding-inline: 1.25rem;
+  }
+}
+
+.stripHead,
+.stripWeek {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.stripHead > span {
+  min-height: 1rem;
+  padding-inline: 0.5rem;
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  font-weight: 600;
+}
+
+.cell {
+  min-width: 0;
+  height: 2.9rem;
+  border-radius: 0.6rem;
+  background: var(--surface-sunken);
+}
+
+.cell[data-heat="1"] {
+  background: var(--primary-tint);
+}
+
+.cell[data-heat="2"] {
+  background: var(--primary-wash);
+}
+
+.cell[data-heat="3"] {
+  background: var(--primary-soft);
+}
+
+.cell[data-heat="4"] {
+  background: var(--primary);
+}
+
+.cell[data-outside] {
+  opacity: 0.4;
+}
+
+.cell[data-today] {
+  box-shadow: inset 0 0 0 1.5px var(--primary);
+}
+
+.cellLink,
+.cellInner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.25rem;
+  width: 100%;
+  height: 100%;
+  padding: 0.4rem 0.5rem;
+  border-radius: inherit;
+}
+
+/* Telefonda hücre ~62 piksel: tarih ve sayı yan yana sığmıyor, "28 Eyl"
+   ile sayı çakışıyordu (390'da ölçüldü). Tarih üstte, sayı altta sağda. */
+@media (max-width: 639px) {
+  .cellLink,
+  .cellInner {
+    flex-direction: column;
+    gap: 0;
+    padding: 0.3rem 0.4rem;
+  }
+
+  .cellCount {
+    line-height: 1.1;
+  }
+}
+
+.cellLink {
+  transition: transform 0.2s var(--ease-brand);
+}
+
+.cellLink:hover {
+  transform: translateY(-1px);
+}
+
+.cellDay {
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  color: var(--text-body);
+  font-size: var(--text-tiny);
+  font-weight: 650;
+}
+
+.cellMonth {
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  font-weight: 500;
+}
+
+.cellCount {
+  align-self: flex-end;
+  color: var(--text-strong);
+  font-size: var(--text-small);
+  font-weight: 750;
+}
+
+/* İki koyu basamakta yazı zeminin karşıt tonunda: `--primary-soft` açık
+   temada orta mavi, koyu temada açık mavi ve iki durumda da gövde
+   mürekkebi üstünde okunmuyordu. `--on-primary` iki temada da karşıt. */
+.cell:is([data-heat="3"], [data-heat="4"]) :is(.cellDay, .cellMonth, .cellCount) {
+  color: var(--on-primary);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes dividend-cell {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+  }
+
+  .stripWeek > .cell {
+    animation: dividend-cell 0.45s var(--ease-brand) both;
+    animation-delay: calc(var(--i, 0) * 40ms);
+  }
+}
+
+/* ---- Zaman çizelgesi ---- */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+}
+
+.day {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  gap: 0 0.85rem;
+  padding: 1rem 1rem 0.5rem;
+  scroll-margin-top: calc(var(--app-bar-h) + 1.5rem);
+}
+
+@media (min-width: 640px) {
+  .day {
+    grid-template-columns: 4.25rem minmax(0, 1fr);
+    gap: 0 1.25rem;
+    padding-inline: 1.25rem;
+  }
+}
+
+/* Çizelgenin çizgisi: tarih karosunun altından bir sonraki güne. */
+.day::before {
+  content: "";
+  position: absolute;
+  top: 4.4rem;
+  bottom: 0;
+  left: calc(1rem + 1.625rem);
+  width: 1px;
+  background: var(--line);
+}
+
+@media (min-width: 640px) {
+  .day::before {
+    left: calc(1.25rem + 2.125rem);
+  }
+}
+
+.day:last-child::before {
+  display: none;
+}
+
+.day:target .rail {
+  background: var(--primary);
+}
+
+.day:target .rail > span {
+  color: var(--on-primary);
+}
+
+.rail {
+  position: sticky;
+  top: calc(var(--app-bar-h) + 0.75rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: start;
+  padding: 0.45rem 0 0.4rem;
+  border-radius: 0.9rem;
+  background: var(--surface-sunken);
+  transition: background-color 0.3s var(--ease-brand);
+}
+
+.railDay {
+  color: var(--text-strong);
+  font-size: clamp(1.35rem, 2.4vw, 1.7rem);
+  font-weight: 650;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.railMonth {
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  font-weight: 600;
+}
+
+.dayBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.dayHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
+  padding-top: 0.2rem;
+}
+
+.dayTitle {
+  color: var(--text-strong);
+  font-size: var(--text-base);
+  font-weight: 700;
+}
+
+.dayTag {
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  font-weight: 650;
+}
+
+.rel {
+  color: var(--primary-ink);
+  font-size: var(--text-tiny);
+  font-weight: 650;
+}
+
+.lastBuy {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  align-self: flex-start;
+  gap: 0.2rem 0.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: var(--primary-wash);
+  color: var(--primary-ink);
+  font-size: var(--text-tiny);
+  font-weight: 600;
+}
+
+.lastBuy strong {
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.rows > li + li {
+  border-top: 1px solid var(--line-soft);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "company amount"
+    "yield yield"
+    "meta meta";
+  gap: 0.35rem 0.75rem;
+  padding: 0.7rem 0;
+}
+
+@media (min-width: 768px) {
+  .row {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.75fr) minmax(0, 1fr) minmax(0, 0.9fr);
+    grid-template-areas: "company amount yield meta";
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+  }
+}
+
+.company {
+  grid-area: company;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.logo {
+  transition: transform 0.3s var(--ease-brand);
+}
+
+@media (hover: hover) {
+  .company:hover .logo {
+    transform: scale(1.08);
+  }
+
+  .company:hover .symbol {
+    color: var(--primary);
+  }
+}
+
+.symbol {
+  display: block;
+  color: var(--text-strong);
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: 1.2;
+  transition: color 0.2s var(--ease-brand);
+}
+
+.name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+}
+
+.amount {
+  grid-area: amount;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+@media (min-width: 768px) {
+  .amount {
+    align-items: flex-start;
+  }
+}
+
+.amountValue {
+  color: var(--text-strong);
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.amountUnit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+}
+
+.badge {
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--brass-wash);
+  color: var(--brass-ink);
+  font-size: var(--text-nano);
+  font-weight: 650;
+  line-height: 17px;
+}
+
+.yield {
+  grid-area: yield;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.yield:empty {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .yield:empty {
+    display: flex;
+  }
+}
+
+.yieldText {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: var(--text-tiny);
+}
+
+.yieldLabel {
+  color: var(--text-muted);
+}
+
+.yieldText b {
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.yieldBar {
+  display: block;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+}
+
+.yieldFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--share-2);
+  transform: scaleX(var(--ratio));
+  transform-origin: left center;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes dividend-grow-x {
+      from {
+        transform: scaleX(0);
+      }
+    }
+
+    .yieldFill {
+      animation: dividend-grow-x linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 30%;
+    }
+  }
+}
+
+.meta {
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+}
+
+@media (min-width: 768px) {
+  .meta {
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+  }
+}
+
+.meta b {
+  font-weight: 650;
+  color: var(--text-body);
+}
+
+/* ---- Künyeler ve damga ---- */
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line-soft);
+  font-size: var(--text-tiny);
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.inlineLink {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.inlineLink:hover {
+  color: var(--primary-hover);
+}
+
+.stamp {
+  padding: 10px 16px 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+@media (min-width: 640px) {
+  .notes,
+  .stamp {
+    padding-inline: 20px;
+  }
+}

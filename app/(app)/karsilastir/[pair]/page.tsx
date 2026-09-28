@@ -1,10 +1,9 @@
 import { notFound } from "next/navigation";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
-import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { GuideHint } from "@/components/article/GuideHint";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
-import { Panel, PanelHeader } from "@/components/ui/primitives";
+import { OtherPairs, PairFaceOff } from "@/components/markets/PairFaceOff";
 import { COMPARE_PAIRS, COMPARE_PAIR_SLUGS, comparePairBySlug } from "@/content/compare-pairs";
 import { DEFAULT_COMPARE_RANGE, isCompareRange, type CompareRange } from "@/lib/compare";
 import { getI18n } from "@/lib/i18n";
@@ -20,6 +19,12 @@ import { CompareBoard, resolveCompareCurrency } from "../page";
  * bileşeni (`CompareBoard`), kopya değil. Farklar yalnızca bu sayfaya ait:
  * "Nvidia ve AMD" diyen bir başlık, tablonun altında kısa bir "neden bu
  * ikisi" paragrafı ve kendi künyesi.
+ *
+ * KAHRAMAN BAŞLIĞIN ALTINDA (`lead`): iki şirket logolarıyla karşı karşıya,
+ * piyasa değerlerinin paylaştırıldığı çubuk ve "neden bu ikisi" paragrafı
+ * grafikten önce. Paragraf bir dönem tablonun altındaydı ve ilk ekranda
+ * çiftin neden çift olduğu yazmıyordu. Tablodan sonra yalnızca öteki
+ * çiftlere geçiş kalıyor (`OtherPairs`).
  *
  * CANONICAL KENDİSİ. Aynı içerik `?semboller=` adresinde de açılıyor ama
  * o adres canonical'sız bir araç ekranı; aranan, paylaşılan ve bağlanan
@@ -83,35 +88,9 @@ export default async function ComparePairPage(props: PageProps<"/karsilastir/[pa
           title: t.pairs.title.replace("{names}", names),
           subtitle: t.pairs.subtitle,
         }}
+        lead={<PairFaceOff pair={pair} locale={locale} t={t} />}
       >
-        <Panel>
-          <PanelHeader title={t.pairs.introTitle} />
-          <p className="border-t border-line px-4 py-4 text-read leading-[27px] text-body sm:px-5">
-            {locale === "en" ? pair.introEn : pair.introTr}
-          </p>
-          {/* ÖTEKİ ÇİFTLER PANELİN İÇİNDE: okuyucunun bir sonraki sorusu
-              çoğu zaman "peki şu ikisi" ve bu adresler başka hiçbir yerden
-              bağlanmıyordu — iç bağlantı ağının bu ucu burası. */}
-          <nav
-            aria-label={t.pairs.others}
-            className="flex flex-col gap-2.5 border-t border-line px-4 py-4 sm:px-5"
-          >
-            <p className="plate text-nano">{t.pairs.others}</p>
-            <ul className="flex flex-wrap gap-2">
-              {others.map((entry) => (
-                <li key={entry.slug}>
-                  <Link
-                    href={`/karsilastir/${entry.slug}`}
-                    prefetch={false}
-                    className="inline-flex min-h-11 items-center rounded-full bg-surface-elevated px-3 py-1.5 text-small font-semibold text-body transition-colors hover:text-primary sm:min-h-8"
-                  >
-                    {pairNames(entry.names, t.pairs.joiner)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </Panel>
+        <OtherPairs pairs={others} joiner={t.pairs.joiner} t={t} />
       </CompareBoard>
       <GuideHint
         label={t.guide.contextLabel}

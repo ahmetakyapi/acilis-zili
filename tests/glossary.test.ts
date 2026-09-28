@@ -102,3 +102,23 @@ test("tema ve çift metinlerinde uzun tire yok; semboller biçimce geçerli", ()
     }
   }
 });
+
+test("terim görselindeki her sayı o terimin örneğinden geliyor", async () => {
+  /* Görsel örneği ÇİZİYOR, yeni bir örnek kurmuyor (content/glossary/visuals.ts).
+     Örnek metni değişip görsel eski sayıda kalırsa ikisi aynı sayfada
+     çelişirdi. */
+  const { GLOSSARY_VISUALS } = await import("../content/glossary/visuals");
+  const numbers = (text: string) => text.match(/\d+(?:[.,]\d+)*/g) ?? [];
+  for (const locale of LOCALES) {
+    const terms = new Map(glossaryTerms(locale).map((term) => [term.slug, term]));
+    for (const [slug, visual] of Object.entries(GLOSSARY_VISUALS)) {
+      if (!visual || visual.kind !== "blocks") continue;
+      const example = terms.get(slug as never)?.example ?? "";
+      assert.ok(example, `${slug} (${locale}) örneksiz`);
+      const allowed = new Set(numbers(example));
+      for (const value of numbers(visual[locale])) {
+        assert.ok(allowed.has(value), `${slug} (${locale}): ${value} örnekte yok`);
+      }
+    }
+  }
+});

@@ -1476,4 +1476,32 @@
 }
 @media(min-width:1101px) {
  .assessment { margin-inline:-20px; padding-inline:19px; }
+
+ /* ÜST SIRA TEK EKSENDE (28 Eylül, COST 4Ç FY2026, 1280'de ölçüldü).
+    Skor sütunu 150 piksel sabitti ve içindekiler sola yaslıydı: 80'lik
+    halkanın sağında 70 piksel boşluk, altında "Genel Görüş" ve karar yine
+    sola yaslı; sütun kendi içinde dengesizdi ve paragrafla arasında ölü bir
+    şerit bırakıyordu. Halka ile karar artık yan yana ve sütun içeriği kadar
+    geniş (`auto`). Üç blok da satırın dikey ortasında: halka 45'te, hedef
+    47'de, paragraf 60'ta başlıyordu ve üç ayrı üst kenar hizasızlık gibi
+    okunuyordu. Hedefin ayracı satır boyu kalıyor (stretch), içeriği ortada. */
+ .assessment .verdictPanel { grid-template-columns:auto minmax(0,1fr) minmax(210px,.55fr); align-items:center; gap:28px; }
+ .assessment .verdictPanel[data-has-target="false"] { grid-template-columns:auto minmax(0,1fr); }
+ .assessment .verdictScore { flex-direction:row; align-items:center; gap:16px; }
+ .assessment .verdictTarget { align-self:stretch; justify-content:center; }
+
+ /* ÖLÇÜLER ETİKETİN HEMEN ALTINDA, KÜNYE SAYININ ALTINDA. Parantezli künye
+    etiketle sayı arasındaydı ve genişliğe göre bir ya da iki satıra sarıyordu
+    (F/K'ninki "Bugünkü Fiyatla · 20,76 $ · Son 12 Ay"); sayılar alta yaslı
+    olduğu için etiketle sayı arasında 60-100 piksellik bir boşluk açılıyordu
+    ve beş sayı soldaki bilanço günü kapanışıyla aynı hatta gelmiyordu. `dt`
+    yerleşimden çıkıyor (display: contents) ve üç parça sırayla diziliyor:
+    etiket, sayı, künye. Sayılar artık etiket satırından sabit bir mesafede,
+    beşi de aynı hatta; künyenin kaç satır tuttuğu sayıyı oynatmıyor.
+    Telefon ve tabletteki satır düzeni bu bloğun dışında, değişmedi. */
+ .assessment .coverFacts > dl > div { display:flex; flex-direction:column; gap:0; }
+ .assessment .coverFacts > dl dt { display:contents; }
+ .assessment .coverFacts > dl dt > span:first-child { order:1; }
+ .assessment .coverFacts > dl dd { order:2; margin-top:14px; font-size:26px; line-height:1.1; }
+ .assessment .coverFacts > dl dt > span:not(:first-child) { order:3; margin-top:8px; line-height:1.45; }
 }

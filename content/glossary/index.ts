@@ -101,3 +101,57 @@ export function glossaryMatchList(
     forms: texts[meta.slug].match,
   }));
 }
+
+/**
+ * Kaç terim bu terime bağlanıyor — öteki terimlerin `related` dizilerinde
+ * kaç kez geçtiği. Dizindeki "öne çıkan" seçimi buna dayanıyor: sözlüğün
+ * kendi ağında en çok başvurulan kavram, o kategoride önce bilinmesi
+ * gereken kavramdır. Bir editör tercihi değil, ölçülebilir bir sıra.
+ */
+export function glossaryIncoming(): ReadonlyMap<GlossarySlug, number> {
+  const counts = new Map<GlossarySlug, number>();
+  for (const meta of GLOSSARY_META) {
+    for (const slug of "related" in meta ? meta.related : []) {
+      if (isGlossarySlug(slug)) counts.set(slug, (counts.get(slug) ?? 0) + 1);
+    }
+  }
+  return counts;
+}
+
+/**
+ * Kategorideki komşular — dizindeki sırayla (dile göre alfabetik), yani
+ * okuyucunun listede gördüğü sırayla. Uçlarda `null`: sıra dönmüyor,
+ * son terimden ilk terime atlamak "sonraki" değil.
+ */
+export function glossaryNeighbors(
+  slug: string,
+  locale: string,
+): { previous: GlossaryTerm | null; next: GlossaryTerm | null } {
+  const term = glossaryTerm(slug, locale);
+  if (!term) return { previous: null, next: null };
+  const siblings = glossaryTerms(locale).filter((entry) => entry.category === term.category);
+  const index = siblings.findIndex((entry) => entry.slug === term.slug);
+  return {
+    previous: index > 0 ? siblings[index - 1] : null,
+    next: index >= 0 && index < siblings.length - 1 ? siblings[index + 1] : null,
+  };
+}
+
+/** Kısaltma karoda en fazla bu kadar harf taşır; uzunu karoya sığmıyor. */
+const GLYPH_MAX = 4;
+
+/**
+ * Terimin karosundaki işaret — rehber kartlarının `GlyphTile` dili.
+ * Adın parantezindeki kısaltma kısa ise o ("F/K", "EPS", "RSI"), değilse
+ * numaralı bir adın numarası ("10-K"), o da yoksa adın ilk harfi. Dile göre büyük harf: "i" Türkçede "İ" olur.
+ */
+export function glossaryGlyph(term: string, locale: string): string {
+  const short = /\(([^)]+)\)\s*$/.exec(term)?.[1]?.trim();
+  if (short && short.length <= GLYPH_MAX) return short;
+  const plain = term.replace(/\s*\([^)]*\)\s*$/, "").trim();
+  if (plain.length <= GLYPH_MAX && !plain.includes(" ")) return plain;
+  /* Formun adı numarasıdır: "Form 10-K" → "10-K", "T+1 Takas" → "T+1". */
+  const coded = /^(?:Form |Schedule )?([^\s]*\d[^\s]*)/.exec(plain)?.[1];
+  if (coded && coded.length <= GLYPH_MAX) return coded;
+  return plain.charAt(0).toLocaleUpperCase(locale === "en" ? "en" : "tr");
+}

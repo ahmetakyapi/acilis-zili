@@ -144,3 +144,54 @@ export function ExportToTaxButton({
     </button>
   );
 }
+
+/* --------------------------------------------------------------------------
+   Ekleme panelini açan bağlantı
+
+   Düz çapa (`#pozisyon-ekle`) kapalı `<details>`i açıyordu ama sayfa
+   yerinden kıpırdamıyordu: panelin içeriği açılış geçişinin ilk karesinde
+   sıfır yükseklikte ve tarayıcı kaydırmayı o kareye göre hesaplıyor
+   (ölçüldü: panel açık, alan 1577. pikselde, kaydırma 0). Tıklama paneli
+   kendisi açıyor, alana kaydırıyor ve odağı ilk girdiye veriyor.
+   JavaScript yoksa çapa eskisi gibi çalışıyor.
+   -------------------------------------------------------------------------- */
+
+/** Panelin açılış geçişi — Portfolio.module.css → `.addPanel` ile aynı süre. */
+const PANEL_OPEN_MS = 450;
+/** Geçişin bittiği kareyle yarışmamak için pay: tam sürede içerik hâlâ gizli olabiliyor. */
+const FOCUS_SLACK_MS = 120;
+
+export function AddPanelLink({
+  targetId,
+  className,
+  children,
+}: {
+  targetId: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <a
+      href={`#${targetId}`}
+      className={className}
+      onClick={(event) => {
+        const target = document.getElementById(targetId);
+        const panel = target?.closest("details");
+        if (!target || !panel) return;
+        event.preventDefault();
+        panel.open = true;
+        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        /* Kaydırılan PANELİN KENDİSİ, içerik değil: içerik geçiş boyunca
+           `content-visibility` ile gizli ve gizli öğeye ne kaydırma ne
+           odak gidiyor. Odak geçiş bitince veriliyor. */
+        panel.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+        window.setTimeout(
+          () => target.querySelector("input")?.focus({ preventScroll: true }),
+          reduce ? 0 : PANEL_OPEN_MS + FOCUS_SLACK_MS,
+        );
+      }}
+    >
+      {children}
+    </a>
+  );
+}

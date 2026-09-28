@@ -9,7 +9,12 @@ import { NextRelease } from "@/components/calendar/NextRelease";
 import { GuideHint } from "@/components/article/GuideHint";
 import { IpoCalendar } from "@/components/markets/IpoCalendar";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { DividendCalendar, DividendCalendarSkeleton } from "@/components/calendar/DividendCalendar";
+import {
+  DividendCalendar,
+  DividendCalendarSkeleton,
+  DividendHero,
+  DividendHeroSkeleton,
+} from "@/components/calendar/DividendCalendar";
 import {
   DataError,
   EmptyState,
@@ -250,6 +255,14 @@ export default async function CalendarPage(
               {t.marketExtras.dividendTitle}
             </h1>
             <p>{t.marketExtras.dividendSubtitle}</p>
+          </div>
+          {/* Sağ sütun ekonomik görünümdeki "sıradaki açıklama" kartının
+              yerinde: sıradaki hak kesim ve son alım günü. Veriye bağlı,
+              kendi Suspense sınırında; kapak ilk baytla geliyor. */}
+          <div className={styles.heroSide}>
+            <Suspense fallback={<DividendHeroSkeleton t={t} />}>
+              <DividendHero locale={locale} t={t} />
+            </Suspense>
           </div>
         </header>
         <KindTabs kind={kind} labels={kindLabels} />

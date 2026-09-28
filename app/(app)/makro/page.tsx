@@ -1,12 +1,20 @@
 import { Suspense } from "react";
 import { MarketPulse } from "@/components/macro/MarketPulse";
 import { HeroAccent } from "@/components/motion/HeroAccent";
-import { MacroExplorer } from "@/components/macro/MacroExplorer";
+import {
+  MacroGrid,
+  MacroSelection,
+  MacroStage,
+  type BoardData,
+  type BoardLabels,
+  type BoardSeries,
+} from "@/components/macro/MacroBoard";
+import { groupOf, groupRank } from "@/components/macro/macro-groups";
+import { formatMacroValue, type MacroValueFormat } from "@/components/macro/macro-format";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/macro/MacroExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
-import { Sparkline } from "@/components/ui/Sparkline";
-import { DataStamp, EmptyState, PageHeader, Panel, Skeleton } from "@/components/ui/primitives";
+import { DataStamp, EmptyState, PageHeader, Skeleton } from "@/components/ui/primitives";
 import { FomcCard } from "@/components/macro/FomcCard";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getMacroBoard, type MacroBoardRow } from "@/lib/macro-data";
@@ -15,9 +23,7 @@ import {
   formatEtDateMedium,
   formatPeriodLabel,
   formatPrice,
-  formatPercentPlain,
   unitLabel,
-  NO_VALUE,
 } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
@@ -40,7 +46,8 @@ export const generateMetadata = pageMetadata({
 });
 
 /**
- * Makro göstergeler — her seri bir gösterge kartı.
+ * Makro göstergeler: kapakta seçili serinin büyük grafiği, altında bütün
+ * serilerin küçük çoklu ızgarası (karar kaydı components/macro/MacroBoard.tsx).
  * Değer büyük ve mono; ok yalnızca yönü söyler (düşüş kırmızı, yükseliş
  * accent mavi) — yeşil bilinçli olarak yok, çünkü enflasyonun düşmesi iyi,
  * istihdamın düşmesi kötüdür ve yeşil "iyi haber" demek olurdu.
@@ -74,21 +81,20 @@ function unitText(unit: string, locale: Locale, t: Dictionary): string {
   return unit === "puan" ? t.markets.point : unitLabel(unit, locale);
 }
 
-/** Bir satırın değer biçimi — kart, gezgin ve önceki değer aynı kuraldan. */
-function formatterFor(row: MacroBoardRow, locale: Locale, t: Dictionary) {
+/**
+ * Bir satırın değer biçimi: kart, sahne, çip ve önceki değer aynı kuraldan.
+ * Hane sayısı seri tanımından (`digits`): Sahm göstergesi ve faiz farkı
+ * yüzde PUANI ve sıfır haneyle "0" basılırdı. Birim sözlükten ("bin" bilinçli
+ * küçük, sayı sözcüğü). Biçimin kendisi `macro-format.ts`te; istemcideki
+ * yuvarlanan rakam da oradan okuyor.
+ */
+function formatOf(row: MacroBoardRow, locale: Locale, t: Dictionary): MacroValueFormat {
   const percent = row.unit === "%";
-  const digits = row.definition.digits ?? (percent ? 2 : 0);
-  const unit = unitText(row.unit, locale, t);
   return {
+    locale,
     percent,
-    digits,
-    unit,
-    format: (value: number | null) =>
-      value === null
-        ? NO_VALUE
-        : percent
-          ? formatPercentPlain(value, locale, digits)
-          : `${formatPrice(value, locale, { digits })} ${unit}`.trimEnd(),
+    digits: row.definition.digits ?? (percent ? 2 : 0),
+    unit: percent ? "" : unitText(row.unit, locale, t),
   };
 }
 
@@ -120,193 +126,128 @@ function seriesNote(row: MacroBoardRow, locale: Locale, t: Dictionary): { status
   return null;
 }
 
+/** Eşik çizgisi olan seriler: Sahm (0,50 puan) ve 10Y-3A (sıfır: ters eğri sınırı). */
+function thresholdOf(row: MacroBoardRow, locale: Locale, t: Dictionary, format: MacroValueFormat) {
+  const value = row.definition.seriesId === "SAHMREALTIME" ? SAHM_THRESHOLD : row.definition.seriesId === "T10Y3M" ? 0 : null;
+  if (value === null) return null;
+  return { value, label: `${t.macro.threshold} ${formatMacroValue(value, format)}` };
+}
+
+/**
+ * Sunucu satırından istemci serisine. Her şey burada biçimleniyor (dönem
+ * künyesi, sonraki açıklama, değişimin birimi, damga); istemci yalnızca
+ * sayıyı yuvarlarken `formatMacroValue`u çağırıyor.
+ */
+function toBoard(rows: MacroBoardRow[], locale: Locale, t: Dictionary): BoardData {
+  const intl = locale === "tr" ? "tr-TR" : "en-US";
+  const monthLong = new Intl.DateTimeFormat(intl, { month: "long", year: "numeric", timeZone: "UTC" });
+  const monthShort = new Intl.DateTimeFormat(intl, { month: "short", year: "numeric", timeZone: "UTC" });
+  const series: BoardSeries[] = rows
+    .filter((row): row is MacroBoardRow & { latestValue: number } => row.latestValue !== null)
+    .sort((a, b) => groupRank(a.definition.seriesId) - groupRank(b.definition.seriesId))
+    .map((row) => {
+      const format = formatOf(row, locale, t);
+      const monthly = row.definition.frequency === "monthly";
+      const delta = row.prevValue !== null ? row.latestValue - row.prevValue : null;
+      /* Yüzde serisinde değişimin birimi PUAN, yüzde değil. */
+      const deltaUnit = format.percent ? t.markets.point : format.unit;
+      const note = seriesNote(row, locale, t);
+      return {
+        id: row.definition.seriesId,
+        group: groupOf(row.definition.seriesId),
+        title: locale === "tr" ? row.titleTr : row.titleEn,
+        period: periodOf(row, locale, t),
+        format,
+        latest: row.latestValue,
+        prev: row.prevValue,
+        delta,
+        deltaLabel: delta === null ? null : `${formatPrice(Math.abs(delta), locale, { digits: format.digits })} ${deltaUnit}`.trimEnd(),
+        next: row.nextReleaseAt ? formatEtDateLong(row.nextReleaseAt, locale) : null,
+        nextShort: row.nextReleaseAt ? formatEtDateMedium(row.nextReleaseAt, locale) : null,
+        threshold: thresholdOf(row, locale, t, format),
+        status: note?.status ?? null,
+        note: note?.text ?? null,
+        points: row.observations.map((point) => {
+          const date = new Date(`${point.date}T12:00:00Z`);
+          return {
+            t: date.getTime(),
+            value: point.value,
+            date: monthly ? monthLong.format(date) : formatEtDateMedium(point.date, locale),
+            axis: monthShort.format(date),
+          };
+        }),
+        /* Damga TABLONUN güncellenme anı; canlı yedekten gelen seride çekim
+           anı (lib/macro-data.ts). Gözlemin kendi tarihi dönem künyesinde. */
+        stamp: <DataStamp labels={t.data} source="fred" at={row.updatedAt} locale={locale} />,
+      };
+    });
+  return { series };
+}
+
+/**
+ * PERFORMANS (28 Eylül, ölçüldü, `next start`, 390 + 4x CPU).
+ * Sayfa `getMacroBoard`ı en üstte bekliyordu: tablo okuması, tabloda satırı
+ * olmayan seriler için canlı FRED turu, sonra ilk bayt. Veri önbelleği
+ * boşken ilk bayt 998 ms'de geliyordu (sıcakta ~150-200 ms). Artık
+ * başlık, sekme iskeleti ve piyasa nabzının yeri hemen gidiyor; tahta bir
+ * söz olarak istemci sağlayıcısına veriliyor ve sahne ile ızgara kendi
+ * Suspense sınırlarında akıyor. İskeletler son hâlin kutusunu tutuyor
+ * (CLS 0). Sonra, aynı koşulda: soğukta ilk bayt 188 ms, sıcakta 27-58 ms;
+ * CLS 0; istemci JS'i 295 → 298 KB. Masaüstü LCP 272 → 408 ms: en büyük öğe
+ * artık akışla gelen büyük rakam/grafik, ilk baytla gelen başlık değil.
+ */
 export default async function MacroPage() {
   const { locale, t } = await getI18n();
   /* Tablo + canlı yedek: tohumda satırı olmayan yeni seri de basılıyor
-     (gerekçe lib/macro-data.ts). */
-  const rows = await getMacroBoard();
-
-  const withData = rows.filter((row) => row.latestValue !== null);
-
-  // Historical observations carry their exact dates and units into the client.
-  // The published reading remains separate when a previous point is inspected.
-  const explorerSeries = withData.map((row) => {
-    const { format } = formatterFor(row, locale, t);
-    const dateFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
-      day: "numeric", month: "short", year: "numeric", timeZone: "UTC",
-    });
-    return {
-      id: row.definition.seriesId,
-      title: locale === "tr" ? row.titleTr : row.titleEn,
-      latest: format(row.latestValue),
-      period: periodOf(row, locale, t),
-      next: row.nextReleaseAt ? formatEtDateLong(row.nextReleaseAt, locale) : null,
-      points: row.observations
-        .map((point) => {
-          const date = new Date(`${point.date}T12:00:00Z`);
-          return { value: point.value, date: dateFormat.format(date), timestamp: date.getTime(), label: format(point.value) };
-        }),
-    };
-  });
+     (gerekçe lib/macro-data.ts). BEKLENMİYOR: söz sağlayıcıya gidiyor. */
+  const board = getMacroBoard().then((rows) => toBoard(rows, locale, t));
+  const x = t.macro;
+  const labels: BoardLabels = {
+    groups: { inflation: x.groupInflation, labor: x.groupLabor, policy: x.groupPolicy, growth: x.groupGrowth },
+    groupsLabel: x.groupsLabel,
+    seriesLabel: x.pick,
+    previous: x.previous,
+    nextRelease: x.nextRelease,
+    noNextRelease: x.noNextRelease,
+    unchanged: x.unchanged,
+    history: x.history,
+    historyEmpty: x.historyEmpty,
+    all: x.all,
+  };
 
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
-      <div className={`${styles.hero} page-frame`}>
-        <HeroAccent />
-        <MacroExplorer
-          intro={
-            <PageHeader
-              embedded
-              eyebrow={t.macro.eyebrow}
-              title={t.macro.title}
-              subtitle={t.macro.subtitle}
+      <MacroSelection board={board} labels={labels}>
+        <div className={`${styles.hero} page-frame`}>
+          <HeroAccent />
+          <PageHeader embedded eyebrow={x.eyebrow} title={x.title} subtitle={x.subtitle} />
+          <Suspense fallback={<StageSkeleton />}>
+            <MacroStage
+              empty={<EmptyState title={t.common.noData} hint={t.common.noDataHint} scene="chart" />}
             />
-          }
-          labels={{
-            title: t.macro.explorer,
-            pick: t.macro.pick,
-            latest: t.macro.latest,
-            next: t.macro.nextRelease,
-            noNext: t.macro.noNextRelease,
-            history: t.macro.history,
-            empty: t.macro.historyEmpty,
-          }}
-          series={explorerSeries}
-        />
-        <div className={styles.pulseArea}>
-          <Suspense fallback={<Skeleton className={styles.pulseSkeleton} />}>
-            <MarketPulse locale={locale} t={t} />
           </Suspense>
+          <div className={styles.pulseArea}>
+            <Suspense fallback={<Skeleton className={styles.pulseSkeleton} />}>
+              <MarketPulse locale={locale} t={t} />
+            </Suspense>
+          </div>
         </div>
-      </div>
 
-      {withData.length === 0 ? (
-        <Panel>
-          <EmptyState title={t.common.noData} hint={t.common.noDataHint} scene="chart" />
-        </Panel>
-      ) : (
-        <div className={styles.grid} data-motion-stagger>
+        <Suspense fallback={<GridSkeleton />}>
           {/* Sonraki FOMC ızgaranın başında: politika faizi kartının
-              "sonraki açıklama" satırı aylık ortalamanın yayın günü, karar
-              günü değil. Kararın kendisi bu kartta. */}
-          <Suspense fallback={null}>
-            <FomcCard locale={locale} t={t} />
-          </Suspense>
-          {withData.map((row) => {
-            const title = locale === "tr" ? row.titleTr : row.titleEn;
-            const observations = row.observations;
-            const delta =
-              row.latestValue !== null && row.prevValue !== null
-                ? row.latestValue - row.prevValue
-                : null;
-            /* YÜZDE KURALINI ANA SAYFAYLA AYNI YERDEN OKUYOR.
-               Bu ekran işareti elle sayının ARDINA koyuyor ve bir ondalığa
-               yuvarlıyordu; ana sayfadaki makro paneli aynı seriyi
-               `formatPercentPlain` ile iki ondalıklı ve dile göre doğru
-               tarafa yazıyor. Kural tek yerde: lib/utils.ts → withPercent.
-               BİRİM DE YAZILIYOR, yalnızca yüzde değil (PAYEMS "-23 bin";
-               gerekçe lib/utils.ts → `unitLabel`). Hane sayısı artık seri
-               tanımından (`digits`): Sahm göstergesi ve faiz farkı yüzde
-               PUANI ve sıfır haneyle "0" basılırdı. */
-            const { percent: yuzde, digits, unit: birim, format: olcu } = formatterFor(row, locale, t);
-            const note = seriesNote(row, locale, t);
-
-            return (
-              <Panel key={row.definition.seriesId} className={`${styles.card} flex flex-col p-4 sm:p-5`}>
-                <div className="flex items-start justify-between gap-2">
-                  <h2 className="text-sm font-semibold leading-snug text-strong">
-                    {title}
-                  </h2>
-                  <span className="numeral shrink-0 rounded-full bg-primary-tint px-2 py-0.5 text-nano text-soft">
-                    {periodOf(row, locale, t)}
-                  </span>
-                </div>
-
-                <div className="mt-3 flex items-baseline gap-2.5">
-                  <span className="tote text-[2rem] leading-none">
-                    {olcu(row.latestValue)}
-                  </span>
-                  {delta !== null && Math.abs(delta) > 0.001 && (
-                    <span className="numeral inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2 py-0.5 text-tiny font-medium text-body">
-                      {/* Ok yalnızca yönü söyler: düşüş kırmızı, yükseliş
-                          accent mavi. Yeşil yok — bkz. ana sayfa makro kartı. */}
-                      <span
-                        aria-hidden
-                        className={
-                          delta > 0
-                            ? "text-[0.8em] font-semibold text-primary"
-                            : "text-[0.8em] font-semibold text-down"
-                        }
-                      >
-                        {delta > 0 ? "▲" : "▼"}
-                      </span>
-                      {formatPrice(Math.abs(delta), locale, { digits })}
-                      {/* BİRİM SÖZLÜKTEN, elden yazılmış değil (Title Case
-                          künye kuralı; "bin" bilinçli küçük — sayı sözcüğü). */}
-                      {yuzde
-                        ? ` ${t.markets.point}`
-                        : birim
-                          ? ` ${birim}`
-                          : ""}
-                    </span>
-                  )}
-                </div>
-                {note?.status && (
-                  <p className="mt-2 w-fit rounded-full bg-surface-elevated px-2 py-0.5 text-nano font-semibold text-body">
-                    {note.status}
-                  </p>
-                )}
-
-                <div className="mt-4">
-                  <Sparkline
-                    points={observations}
-                    title={title}
-                    className="h-16 w-full"
-                  />
-                </div>
-
-                <dl className="mt-4 flex-1 divide-y divide-line-soft border-t border-line-soft text-xs">
-                  <div className="flex items-center justify-between py-2">
-                    <dt className="text-muted">{t.macro.previous}</dt>
-                    <dd className="numeral font-medium text-body">
-                      {olcu(row.prevValue)}
-                    </dd>
-                  </div>
-                  <div className="flex items-center justify-between gap-3 py-2">
-                    <dt className="shrink-0 text-muted">{t.macro.nextRelease}</dt>
-                    <dd className="text-right">
-                      {row.nextReleaseAt ? (
-                        <span className="numeral font-semibold text-primary">
-                          {formatEtDateLong(row.nextReleaseAt, locale)}
-                        </span>
-                      ) : (
-                        <span className="text-muted">
-                          {t.macro.noNextRelease}
-                        </span>
-                      )}
-                    </dd>
-                  </div>
-                </dl>
-
-                {note && (
-                  <p className="mt-3 border-t border-line-soft pt-3 text-tiny leading-relaxed text-muted">
-                    {note.text}
-                  </p>
-                )}
-
-                <DataStamp
-                  labels={t.data}
-                  source="fred"
-                  at={row.updatedAt}
-                  locale={locale}
-                  className="mt-3"
-                />
-              </Panel>
-            );
-          })}
-        </div>
-      )}
+              "Sonraki Açıklama" satırı aylık ortalamanın yayın günü, karar
+              günü değil. Kararın kendisi bu kartta. Kendi sınırında akıyor;
+              yer tutucu komşu kartlarla aynı kutu. */}
+          <MacroGrid
+            fomc={
+              <Suspense fallback={<Skeleton className={styles.cardSkeleton} />}>
+                <FomcCard locale={locale} t={t} />
+              </Suspense>
+            }
+          />
+        </Suspense>
+      </MacroSelection>
 
       <GuideHint
         label={t.guide.contextLabel}
@@ -315,5 +256,38 @@ export default async function MacroPage() {
         className="pt-1"
       />
     </MotionExperience>
+  );
+}
+
+/** Sahnenin yer tutucusu: sekme, çip, okuma ve grafik kutuları son hâlin ölçüsünde. */
+function StageSkeleton() {
+  return (
+    <div className={styles.stage} aria-hidden>
+      <div className={styles.picker}>
+        <Skeleton className={styles.skTabs} />
+        <Skeleton className={styles.skChips} />
+      </div>
+      <div className={`${styles.reading} ${styles.skReading}`}>
+        <div className={styles.readingMain}>
+          <Skeleton className={styles.skTitle} />
+          <Skeleton className={styles.skFigure} />
+        </div>
+      </div>
+      <Skeleton className={styles.skChart} />
+      <Skeleton className={styles.skFoot} />
+    </div>
+  );
+}
+
+const GRID_SKELETON_CARDS = 12;
+
+function GridSkeleton() {
+  return (
+    <div className={styles.multiples} aria-hidden>
+      <Skeleton className={styles.skHeading} />
+      <div className={styles.grid}>
+        {Array.from({ length: GRID_SKELETON_CARDS }, (_, i) => <Skeleton key={i} className={styles.cardSkeleton} />)}
+      </div>
+    </div>
   );
 }

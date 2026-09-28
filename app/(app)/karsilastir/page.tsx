@@ -219,12 +219,18 @@ export function resolveCompareCurrency(para: string | string[] | undefined): {
  * SEO için "Nvidia ve AMD" diyen bir h1) ve tablodan SONRA duran kısa
  * metin (`children`) — ekran düzeninde metin ölçü ızgarasının altında,
  * veri damgasının üstünde.
+ *
+ * `lead`: başlığın HEMEN ALTINDA duran künye şeridi — çift sayfasının
+ * "karşı karşıya" kahramanı. Ekran düzeni kuralında ikinci sıra (künye/seçim
+ * şeridi), yani grafikten önce; araç ekranı vermiyor ve orada hiçbir şey
+ * değişmiyor.
  */
 export async function CompareBoard({
   symbols,
   range,
   dropped,
   heading,
+  lead,
   children,
   currency,
   realAvailable,
@@ -233,6 +239,7 @@ export async function CompareBoard({
   range: CompareRange;
   dropped: string[];
   heading?: { eyebrow?: string; title: string; subtitle: string };
+  lead?: React.ReactNode;
   children?: React.ReactNode;
   currency: CurrencyMode;
   realAvailable: boolean;
@@ -687,6 +694,8 @@ export async function CompareBoard({
         subtitle={heading?.subtitle ?? t.compare.subtitle}
         action={<CompareRangeControl labels={labels} />}
       />
+
+      {lead}
 
       {/* Adresten düşen semboller SÖYLENİYOR: paylaşılan bir bağlantıda
           beşinci sembol sessizce yok oluyordu. */}

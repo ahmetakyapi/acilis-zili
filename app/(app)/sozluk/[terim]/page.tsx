@@ -1,17 +1,26 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, ArrowRight, Lightbulb } from "@phosphor-icons/react/dist/ssr";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
+import { HeroAccent } from "@/components/motion/HeroAccent";
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArticleBody } from "@/components/article/ArticleBody";
+import { GlyphTile } from "@/components/article/GlyphTile";
 import { GuideHint } from "@/components/article/GuideHint";
+import { GLOSSARY_CATEGORY_ICONS } from "@/components/glossary/category-icons";
+import styles from "@/components/glossary/Glossary.module.css";
+import { ConceptVisual, TermNetwork } from "@/components/glossary/TermVisuals";
 import { BreadcrumbJsonLd, DefinedTermJsonLd } from "@/components/seo/JsonLd";
-import { PageHeader, Panel, PanelHeader } from "@/components/ui/primitives";
+import { Panel, PanelHeader } from "@/components/ui/primitives";
 import {
   GLOSSARY_SLUGS,
   glossaryCategoryLabel,
+  glossaryGlyph,
+  glossaryIncoming,
+  glossaryNeighbors,
   glossaryTerm,
 } from "@/content/glossary";
+import { GLOSSARY_VISUALS } from "@/content/glossary/visuals";
 import { getI18n } from "@/lib/i18n";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
@@ -25,9 +34,18 @@ import { articleAutoLinker } from "@/lib/autolink-data";
  * sayfaya iniyor; okuyucu tanımı okuyup yazısına dönmeli, burada ikinci bir
  * makaleye takılmamalı.
  *
- * Tanım `ArticleBody` ile çiziliyor: örnek `::: ornek` kutusu oluyor ve
- * tanımın içindeki BAŞKA terimler de bağlanıyor (terimin kendisi hariç —
+ * TANIMIN İLK CÜMLESİ DISPLAY PUNTOSUNDA (28 Eylül). Sayfaya gelen okuyucu
+ * tek bir şey soruyor: "bu ne demek". İlk cümle o sorunun cevabı; kapağın
+ * içinde, başlığın hemen altında ve büyük. Geri kalan cümleler (nasıl
+ * okunur, nerede yanıltır) gövde puntosunda ve `ArticleBody` ile, yani
+ * içlerindeki BAŞKA terimler bağlanıyor (terimin kendisi hariç —
  * `excludeTerm`). Sözlük böylece kendi içinde gezilebilir bir ağ.
+ *
+ * ÖRNEK ÇİZİLİYOR, UYDURULMUYOR. Örneği çizilebilen terimlerde yazıların
+ * `:::` blokları (`content/glossary/visuals.ts`): her sayı örnek metninden
+ * aynen geliyor ve bunu bir test denetliyor. Getiri eğrisi ve RSI gibi
+ * şekli olan kavramlarda sayısız bir kavram çizimi. Hiçbiri yoksa panel
+ * yalnızca örnek metnini taşıyor.
  *
  * İKİ DİL DE HER ZAMAN VAR: içerik `Record<GlossarySlug, …>` tipinde ve
  * eksik çeviri derlemeyi kırıyor, o yüzden `hreflang` koşulsuz (rehberle
@@ -50,23 +68,31 @@ export async function generateMetadata(props: PageProps<"/sozluk/[terim]">) {
   };
 }
 
+/** Tanımı ilk cümle ve geri kalanı olarak böler. */
+function splitLede(text: string): { lede: string; rest: string } {
+  const match = /^(.+?[.!?])(?:\s+|$)/.exec(text);
+  if (!match) return { lede: text, rest: "" };
+  return { lede: match[1], rest: text.slice(match[0].length).trim() };
+}
+
 export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]">) {
   const { terim } = await props.params;
   const { locale, t } = await getI18n();
   const term = glossaryTerm(terim, locale);
   if (!term) notFound();
 
+  const lang = locale === "en" ? "en" : "tr";
   const related = term.related
     .map((slug) => glossaryTerm(slug, locale))
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
-
-  /* Örnek bir `ornek` kutusu: etiketi yazılmadığı için dile göre
-     varsayılan ("Örnek" / "Example") basılıyor. */
-  const markdown = term.example
-    ? `${term.definition}\n\n::: ornek\n${term.example}\n:::`
-    : term.definition;
+  const { previous, next } = glossaryNeighbors(term.slug, locale);
+  const links = glossaryIncoming().get(term.slug) ?? 0;
+  const { lede, rest } = splitLede(term.definition);
   const autoLink = await articleAutoLinker(locale, { excludeTerm: term.slug });
   const categoryLabel = glossaryCategoryLabel(term.category, locale);
+  const CategoryIcon = GLOSSARY_CATEGORY_ICONS[term.category];
+  const visual = GLOSSARY_VISUALS[term.slug];
+  const hasExamplePanel = Boolean(term.example || visual);
 
   return (
     <MotionExperience className={polish.page}>
@@ -92,37 +118,106 @@ export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]
         <ArrowLeft weight="bold" size={13} />
         {t.glossary.backToList}
       </Link>
-      <PageHeader eyebrow={categoryLabel} title={term.term} />
 
-      <Panel>
-        <PanelHeader title={t.glossary.definition} />
-        <div className="border-t border-line px-4 pb-5 pt-4 sm:px-5">
-          <ArticleBody markdown={markdown} locale={locale} autoLink={autoLink} />
+      {/* KAPAK: künye (kategori), ad, kavramın karosu ve tanım. Tanım
+          kapağın İÇİNDE: ayrı bir "Tanım" paneli başlığın altında ikinci
+          bir başlangıç gibi duruyordu. */}
+      <header className={`${styles.termHero} page-frame`}>
+        <HeroAccent />
+        <div className={`${styles.termHeading} page-heading-copy`}>
+          <p className="page-eyebrow">
+            <CategoryIcon aria-hidden size={15} weight="bold" />
+            {categoryLabel}
+          </p>
+          <h1 className="display-ink">{term.term}</h1>
         </div>
-        {related.length > 0 && (
-          /* İlişkili terimler panelin İÇİNDE, hairline ile ayrılmış: yeni
-             bir kutu açmak tanımın yanında ikinci bir içerik gibi duruyordu. */
-          <nav
-            aria-label={t.glossary.related}
-            className="flex flex-col gap-2.5 border-t border-line px-4 py-4 sm:px-5"
-          >
-            <p className="plate text-nano">{t.glossary.related}</p>
-            <ul className="flex flex-wrap gap-2">
-              {related.map((entry) => (
-                <li key={entry.slug}>
-                  <Link
-                    href={`/sozluk/${entry.slug}`}
-                    prefetch={false}
-                    className="inline-flex min-h-11 items-center rounded-full bg-surface-elevated px-3 py-1.5 text-small font-semibold text-body transition-colors hover:text-primary sm:min-h-8"
-                  >
-                    {entry.term}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+        <GlyphTile glyph={glossaryGlyph(term.term, locale)} size={64} className={styles.termGlyph} />
+        <div className={styles.termDefinition}>
+          <p className={styles.lede}>{lede}</p>
+          {rest && (
+            <ArticleBody markdown={rest} locale={locale} autoLink={autoLink} className={styles.restBody} />
+          )}
+        </div>
+      </header>
+
+      {hasExamplePanel && (
+        <Panel className={styles.examplePanel}>
+          <PanelHeader
+            title={term.example ? t.glossary.example : t.glossary.conceptTitle}
+            meta={visual?.kind === "concept" ? t.glossary.conceptNote : undefined}
+          />
+          <div className={styles.exampleBody}>
+            {visual?.kind === "blocks" && (
+              <ArticleBody markdown={visual[lang]} locale={locale} className={styles.exampleVisual} />
+            )}
+            {visual?.kind === "concept" && (
+              <ConceptVisual
+                concept={visual.concept}
+                focus={visual.focus}
+                labels={t.glossary.concept}
+                title={`${term.term}: ${t.glossary.conceptNote}`}
+              />
+            )}
+            {term.example && (
+              <div className={styles.exampleBox}>
+                <Lightbulb aria-hidden size={20} weight="duotone" />
+                <ArticleBody markdown={term.example} locale={locale} autoLink={autoLink} />
+              </div>
+            )}
+          </div>
+        </Panel>
+      )}
+
+      {related.length > 0 && (
+        <Panel>
+          <PanelHeader
+            title={t.glossary.related}
+            meta={links > 0 ? t.glossary.links.replace("{count}", String(links)) : undefined}
+          />
+          <nav aria-label={t.glossary.related} className={styles.networkWrap}>
+            <TermNetwork
+              center={term.term}
+              glyph={glossaryGlyph(term.term, locale)}
+              nodes={related.map((entry) => ({
+                slug: entry.slug,
+                term: entry.term,
+                glyph: glossaryGlyph(entry.term, locale),
+                category:
+                  entry.category === term.category
+                    ? null
+                    : glossaryCategoryLabel(entry.category, locale),
+              }))}
+            />
           </nav>
-        )}
-      </Panel>
+        </Panel>
+      )}
+
+      {(previous || next) && (
+        /* Kategorideki komşular — dizindeki sırayla. Uçta olmayan yön
+           boş bırakılıyor ama hücresi duruyor: "Sonraki" her zaman sağda. */
+        <nav aria-label={t.glossary.neighbors} className={styles.neighbors}>
+          {previous ? (
+            <Link href={`/sozluk/${previous.slug}`} prefetch={false} className={styles.neighbor} data-side="previous">
+              <ArrowLeft aria-hidden size={18} weight="bold" className={styles.neighborArrow} />
+              <span className="min-w-0">
+                <span className={styles.neighborLabel}>{t.glossary.previous}</span>
+                <span className={styles.neighborTerm}>{previous.term}</span>
+              </span>
+            </Link>
+          ) : (
+            <span aria-hidden />
+          )}
+          {next && (
+            <Link href={`/sozluk/${next.slug}`} prefetch={false} className={styles.neighbor} data-side="next">
+              <span className="min-w-0">
+                <span className={styles.neighborLabel}>{t.glossary.next}</span>
+                <span className={styles.neighborTerm}>{next.term}</span>
+              </span>
+              <ArrowRight aria-hidden size={18} weight="bold" className={styles.neighborArrow} />
+            </Link>
+          )}
+        </nav>
+      )}
 
       {term.guides.length > 0 && (
         <GuideHint label={t.glossary.guide} locale={locale} slugs={term.guides} />

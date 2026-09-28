@@ -1,105 +1,217 @@
 .page { display:flex; flex-direction:column; gap:var(--page-section-gap); }
-/* KAPAK: solda başlık ve gösterge listesi, sağda seçilenin geçmişi (bkz.
-   MacroExplorer). Liste sol yarının boşluğunu dolduruyor; iki yarı aynı
-   yüksekliğe yakın bitsin diye grafik 110'dan 176 piksele çıktı. */
-.hero { display:grid; grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr); gap:40px; align-items:start; }
-.intro { min-width:0; display:flex; flex-direction:column; gap:22px; }
-.intro h1 { font-size:var(--heading-page); line-height:1.12; max-width:12ch; }
-.intro p { max-width:37ch; }
+.page :is(input,button,a):focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 
-.seriesList { display:flex; flex-direction:column; gap:2px; }
-.seriesRow { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:14px; min-height:50px; margin-inline:-12px; padding:7px 12px; border-radius:var(--radius-lg); text-align:left; color:var(--text-body); cursor:pointer; transition:background-color var(--default-transition-duration,180ms); }
-.seriesRow > span { display:flex; flex-direction:column; gap:1px; min-width:0; font-size:14px; line-height:1.3; font-weight:600; color:var(--text-strong); }
-.seriesRow small { font-size:11px; line-height:1.35; font-weight:500; color:var(--text-muted); }
-.seriesRow > strong { font-size:16px; line-height:1.2; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
-.seriesRow[aria-pressed="true"] { background:var(--primary-tint); }
-.seriesRow[aria-pressed="true"] > span { color:var(--primary-ink); }
-@media(hover:hover) { .seriesRow[aria-pressed="false"]:hover { background:var(--surface-sunken); } }
-.seriesRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:0; }
+/* --------------------------------------------------------------------------
+   KAPAK: başlık, sonra sahne (sekme + çip + okuma + büyük grafik), dipte
+   piyasa nabzı. Tek sütun; eski iki kolonlu kapağın ölçümü ve gerekçesi
+   MacroBoard.tsx başında.
+   -------------------------------------------------------------------------- */
+.hero.hero { grid-template-columns:minmax(0,1fr); }
 
-/* Çerçevenin dış yüzeyi paylaşılan `page-frame`te; gezgin onun görsel
-   sütunu, ikinci bir kart açmıyor. */
-.explorer { min-width:0; padding:0 0 0 32px; border-left:1px solid var(--line); }
-.explorerLabel { font-size:12px; line-height:1.35; font-weight:650; color:var(--primary-ink); }
-.explorerReading { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin:14px 0 14px; }
-.explorerReading > div:first-child { display:flex; flex-direction:column; gap:3px; min-width:0; }
-.explorerReading h2 { font-size:17px; line-height:1.3; font-weight:650; letter-spacing:-.015em; }
-.explorerReading span { font-size:12px; color:var(--text-muted); }
-.explorerReading strong { margin-top:4px; font-size:36px; letter-spacing:-.04em; line-height:1.1; font-weight:650; color:var(--text-strong); }
-.explorerNext { display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0; text-align:right; }
-.explorerNext a { font-size:14px; line-height:1.35; font-weight:650; color:var(--primary); }
-@media(hover:hover) { .explorerNext a:hover { color:var(--primary-hover); } }
-.explorerNext em { font-size:13px; font-style:normal; color:var(--text-muted); }
-.history svg { width:100%; height:176px; overflow:visible; }
-.axis { display:flex; justify-content:space-between; margin:6px 0 12px; font-size:11px; color:var(--text-muted); }
-.historyLabel { display:grid; grid-template-columns:1fr auto; align-items:center; gap:6px; border-top:1px solid var(--line-soft); padding-top:10px; font-size:12px; color:var(--text-muted); }
-.historyLabel strong { color:var(--text-strong); margin-left:8px; font-size:13px; }
-.historyLabel input { grid-column:1/-1; width:100%; height:28px; appearance:none; background:transparent; cursor:ew-resize; }
-.noHistory { padding:24px 0; color:var(--text-muted); font-size:13px; }
-.grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
-.card { position:relative; min-width:0; border-radius:18px; background:var(--premium-surface); transition:border-color .25s; }
-.card h2 { font-size:14px; }
-.card :global(.tote) { font-size:28px; }
-.card svg { height:56px; }
-.card > div:first-child { min-height:36px; }
-.card > div:first-child > span { background:transparent; padding:2px 0; }
-.card dl { margin-top:12px; }
-.page :is(input,a):focus-visible { outline:2px solid var(--line-focus); outline-offset:4px; }
-/* Hover yalnızca kenarlık tonu — 3 piksellik kaldırma ve gölge 23 Eylül
-   taramasından kaçmıştı (gerekçe UtilityExperience.module.css başındaki not). */
-@media(hover:hover) and (pointer:fine) { .card:hover { border-color:var(--primary-faint); } }
-/* Dar ekranda liste YATAY bir şerit: altı satır alt alta grafiğin önüne
-   300 piksel koyuyordu. Şerit kaydırılıyor, sağ kenarda solan maske
-   "devamı var" diyor; dönem künyesi düşüyor, ad ve değer kalıyor. */
-@media(max-width:900px) {
-  .hero { grid-template-columns:1fr; gap:18px; }
-  .intro { gap:16px; }
-  .intro h1 { max-width:none; font-size:var(--heading-page); }
-  .seriesList { flex-direction:row; gap:8px; overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:none; scrollbar-width:none; margin-inline:calc(var(--page-frame-inset) * -1); padding-inline:var(--page-frame-inset); scroll-padding-inline:var(--page-frame-inset); mask-image:linear-gradient(90deg,transparent,var(--text-strong) 16px,var(--text-strong) calc(100% - 28px),transparent); }
-  .seriesList::-webkit-scrollbar { display:none; }
-  .seriesRow { flex-shrink:0; grid-template-columns:auto auto; gap:10px; min-height:44px; margin:0; padding:6px 14px; border:1px solid var(--line); border-radius:999px; }
-  .seriesRow[aria-pressed="true"] { border-color:var(--primary-faint); }
-  .seriesRow small { display:none; }
-  .seriesRow > span { font-size:13px; white-space:nowrap; }
-  .seriesRow > strong { font-size:14px; }
-  .explorer { padding:18px 0 0; border-left:0; border-top:1px solid var(--line); }
-  .grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-}
-@media(max-width:540px) { .page { gap:18px; } .intro h1 { font-size:28px; } .explorerReading h2 { font-size:15px; } .explorerReading strong { font-size:28px; } .history svg { height:120px; } .grid { grid-template-columns:1fr; gap:12px; } .card > div:first-child { min-height:0; } .card :global(.tote) { font-size:26px; } .card svg { height:48px; } }
-@media(prefers-reduced-motion:reduce) { .card { transition:none; } .card:hover { transform:none; } }
+.stage { display:flex; flex-direction:column; gap:18px; min-width:0; scroll-margin-top:calc(var(--app-bar-h, 64px) + 16px); }
+.picker { display:flex; flex-direction:column; gap:12px; min-width:0; padding-top:18px; border-top:1px solid var(--line); }
 
-.historyLabel input::-webkit-slider-runnable-track { height:3px; background:var(--primary-faint); border-radius:3px; }
-.historyLabel input::-webkit-slider-thumb { appearance:none; width:13px; height:13px; border-radius:50%; background:var(--primary); border:2px solid var(--panel-fixed); margin-top:-5px; box-shadow:0 0 0 1px var(--primary-faint); }
-.historyLabel input::-moz-range-track { height:3px; background:var(--primary-faint); border-radius:3px; }
-.historyLabel input::-moz-range-thumb { width:10px; height:10px; border-radius:50%; background:var(--primary); border:2px solid var(--panel-fixed); box-shadow:0 0 0 1px var(--primary-faint); }
+/* Grup sekmeleri: RAY + HAP (Segment ile aynı dil), hap sekmeler arasında
+   kayıyor. Dar ekranda ray yatay kayar, sağ kenardaki maske "devamı var". */
+.tabs { display:flex; gap:2px; width:max-content; max-width:100%; padding:3px; border-radius:999px; background:var(--surface-elevated); overflow-x:auto; scrollbar-width:none; }
+.tabs::-webkit-scrollbar { display:none; }
+.tabs button { position:relative; flex-shrink:0; min-height:36px; padding:0 16px; border-radius:999px; font-size:13.5px; font-weight:600; color:var(--text-body); white-space:nowrap; cursor:pointer; transition:color .2s; }
+.tabs button > span:last-child { position:relative; z-index:1; }
+.tabs button[aria-pressed="true"] { color:var(--on-primary); }
+@media(hover:hover) { .tabs button[aria-pressed="false"]:hover { color:var(--text-strong); } }
+.tabPill { position:absolute; inset:0; border-radius:inherit; background:var(--primary); }
 
-/* OKUMA GİRİŞİ. Seri değişince başlık ve büyük rakam bir karede
-   değişiyordu; şimdi kısa bir yükselişle ve okunur tondan (0,35, sıfır
-   değil) oturuyor, grafik çizilirken rakam da yerine geliyor. Yalnızca
-   okuyucu seri değiştirdiğinde (`data-enter`). */
-.explorerReading[data-enter] { animation:macro-reading-in 300ms var(--ease-brand) backwards; }
+/* Seri çipleri: ad ve son değer. Seçili çip ton değil ÇİZGİ farkıyla
+   (alt kenar marka mavisi) ayrılıyor; sekme hapıyla yarışmasın. */
+.chips { display:flex; gap:8px; min-width:0; overflow-x:auto; scrollbar-width:none; margin-inline:calc(var(--page-frame-inset) * -1); padding-inline:var(--page-frame-inset); scroll-padding-inline:var(--page-frame-inset); }
+.chips::-webkit-scrollbar { display:none; }
+.chips button { display:inline-flex; flex-shrink:0; align-items:baseline; gap:10px; min-height:40px; padding:8px 14px; border:1px solid var(--line); border-radius:12px; font-size:13px; font-weight:600; color:var(--text-body); white-space:nowrap; cursor:pointer; transition:border-color .2s, background-color .2s, color .2s; }
+.chips button b { font-size:13px; font-weight:650; color:var(--text-strong); }
+.chips button[aria-pressed="true"] { border-color:var(--primary); background:var(--primary-tint); color:var(--primary-ink); }
+@media(hover:hover) { .chips button[aria-pressed="false"]:hover { border-color:var(--line-strong); color:var(--text-strong); } }
+
+/* Okuma: solda ad, dönem, büyük rakam; sağda önceki ve sonraki açıklama. */
+.reading { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:14px 32px; min-width:0; }
+.readingMain { display:flex; flex-direction:column; gap:4px; min-width:0; }
+/* Başlıklar globalde degrade mürekkep (sahibin kararı, globals.css).
+   Blok başlıkta degrade kutu boyunca yayılıyor ve uzun adın sonu ("(Aylık
+   Değişim)") ayrı bir tonda kalıyordu: başlık metin kadar geniş ve 18
+   pikselin altında AA'yı geçen SIKI degradeyle. Özgüllük globali geçsin
+   diye iki sınıf. */
+.readingMain h2.inkTight, .fomc h2.inkTight, .multiplesTitle.multiplesTitle { width:fit-content; max-width:100%; }
+.readingMain h2.inkTight, .fomc h2.inkTight { background-image:var(--display-gradient-tight); }
+.readingMain h2 { font-size:18px; line-height:1.3; font-weight:650; letter-spacing:-.015em; color:var(--text-strong); }
+.readingMain > p { font-size:12.5px; line-height:1.35; font-weight:500; color:var(--text-muted); }
+.figure { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin-top:6px; }
+.figure strong { font-size:clamp(44px, 6vw, 64px); line-height:1; font-weight:700; letter-spacing:-.045em; color:var(--text-strong); }
+.readingSide { display:grid; grid-template-columns:auto auto; gap:0 28px; padding-bottom:6px; }
+.readingSide > div { display:flex; flex-direction:column; gap:3px; padding-left:14px; border-left:1px solid var(--line-soft); }
+.readingSide dt { font-size:11.5px; font-weight:600; color:var(--text-muted); }
+.readingSide dd { font-size:15px; font-weight:650; color:var(--text-strong); }
+.readingSide dd[data-muted] { font-weight:500; color:var(--text-muted); }
+
+.delta { display:inline-flex; align-items:center; gap:4px; padding:2px 9px; border-radius:999px; background:var(--surface-sunken); font-size:12px; font-weight:600; color:var(--text-body); white-space:nowrap; }
+.delta > span { font-size:.8em; }
+.delta[data-tone="up"] > span { color:var(--primary); }
+.delta[data-tone="down"] > span { color:var(--down); }
+.status { display:inline-flex; width:fit-content; padding:2px 9px; border-radius:999px; background:var(--surface-elevated); font-size:11px; font-weight:650; line-height:17px; color:var(--text-body); white-space:nowrap; }
+.status[data-alert] { background:var(--brass-wash); color:var(--brass-ink); }
+
+/* OKUMA GİRİŞİ: yalnızca okuyucu seri değiştirdiğinde; okunur tondan
+   (0,35) kısa bir yükselişle oturuyor. */
+.reading[data-enter] { animation:macro-reading-in 320ms var(--ease-brand) backwards; }
 @keyframes macro-reading-in { from { opacity:.35; transform:translate3d(0,6px,0); } }
-@media (prefers-reduced-motion: reduce) { .explorerReading[data-enter] { animation:none; } }
 
-/* ---- Gösterge kartları, premium (26 Eylül) ----
-   Tepede marka mavisinde bir aksan, görünüme girince çiziliyor. Renk YÖN
-   söylemiyor: makroda yükselen bir seri iyi ya da kötü değil (enflasyon
-   artıyorsa yeşil bir şerit yanlış bir yargı olurdu), o yüzden nötr mavi.
-   Rakam bir kademe büyük, kart üzerine gelince kalkıyor. */
-.card::before { content:""; position:absolute; z-index:1; top:-1px; left:24px; right:24px; height:3px; border-radius:0 0 3px 3px; background:var(--primary); transform-origin:left center; animation:macro-accent 720ms var(--ease-brand) 120ms both; }
-@keyframes macro-accent { from { transform:scaleX(0); } }
-.card :global(.tote) { font-size:34px; }
-.card svg { height:68px; }
-.card { transition:border-color .25s, translate .28s var(--ease-brand); }
-@media(hover:hover) and (pointer:fine) { .card:hover { translate:0 -3px; border-color:var(--primary-faint); } }
-@media(prefers-reduced-motion:reduce) { .card::before { animation:none; } .card { transition:none; } .card:hover { translate:none; } }
+/* ---- Büyük grafik ----
+   Çizim alanı 320 piksel (telefonda 220). Izgara etiketleri ve eşik
+   künyesi HTML: SVG oranı serbest ve metin orada gerilirdi. */
+.history { min-width:0; }
+.plot { --gutter:44px; position:relative; height:320px; }
+.canvas { position:absolute; inset:0 0 0 var(--gutter); touch-action:pan-y; }
+.canvas svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+.gridLine { stroke:var(--line-soft); stroke-width:1; }
+.gridLine[data-zero] { stroke:var(--line-strong); }
+.thresholdLine { stroke:var(--brass); stroke-width:1.25; stroke-dasharray:5 5; }
+.chartLine { fill:none; stroke:var(--primary); stroke-width:2.25; stroke-linejoin:round; stroke-linecap:round; }
+.cursorLine { stroke:var(--primary); stroke-opacity:.28; stroke-width:1; }
+.tick { position:absolute; left:0; width:calc(var(--gutter) - 10px); transform:translateY(-50%); font-size:11px; line-height:1; text-align:right; color:var(--text-muted); pointer-events:none; }
+.thresholdTag { position:absolute; right:0; transform:translateY(-100%); padding-bottom:4px; font-size:11px; font-weight:650; line-height:1; color:var(--brass-ink); pointer-events:none; }
+.cursorDot { position:absolute; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 3px var(--surface-solid); pointer-events:none; }
+/* Okuma künyesi imlecin yanında; sağ yarıda imlecin soluna geçiyor ki
+   kenardan taşmasın. */
+.cursorTag { position:absolute; display:flex; flex-direction:column; gap:1px; padding:6px 10px; border:1px solid var(--line); border-radius:10px; background:var(--surface-solid); font-size:14px; font-weight:650; line-height:1.2; color:var(--text-strong); white-space:nowrap; pointer-events:none; transform:translate(14px, calc(-100% - 10px)); }
+.cursorTag[data-side="left"] { transform:translate(calc(-100% - 14px), calc(-100% - 10px)); }
+.cursorTag small { font-size:11px; font-weight:500; color:var(--text-muted); }
+.axis { display:flex; justify-content:space-between; margin:8px 0 0 44px; font-size:11px; color:var(--text-muted); }
+.scrub { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:14px; margin-top:10px; font-size:12px; font-weight:600; color:var(--text-muted); }
+.scrub input { width:100%; height:28px; appearance:none; background:transparent; cursor:ew-resize; }
+.scrub input::-webkit-slider-runnable-track { height:3px; background:var(--primary-faint); border-radius:3px; }
+.scrub input::-webkit-slider-thumb { appearance:none; width:14px; height:14px; margin-top:-5.5px; border-radius:50%; background:var(--primary); border:2px solid var(--panel-fixed); box-shadow:0 0 0 1px var(--primary-faint); }
+.scrub input::-moz-range-track { height:3px; background:var(--primary-faint); border-radius:3px; }
+.scrub input::-moz-range-thumb { width:10px; height:10px; border-radius:50%; background:var(--primary); border:2px solid var(--panel-fixed); box-shadow:0 0 0 1px var(--primary-faint); }
+.noHistory { padding:24px 0; color:var(--text-muted); font-size:13px; }
+
+/* ÇİZİM GİRİŞİ: seri değişince çizgi, dolgu ve nokta soldan sağa açılıyor;
+   rakam aynı sürede sıfırdan yuvarlanıyor (MacroBoard → ROLL_SECONDS). */
+.draw[data-enter] { animation:macro-draw 700ms var(--ease-brand) both; }
+@keyframes macro-draw { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0 0 0 0); } }
+.cursorDot[data-enter] { animation:macro-dot 300ms var(--ease-brand) 560ms both; }
+@keyframes macro-dot { from { opacity:0; transform:scale(.4); } }
+
+.stageFoot { display:flex; flex-direction:column; gap:10px; padding-top:14px; border-top:1px solid var(--line-soft); }
+.stageFoot > p { max-width:78ch; font-size:12.5px; line-height:1.65; color:var(--text-body); }
+
+/* --------------------------------------------------------------------------
+   KÜÇÜK ÇOKLULAR: her seri bir kart ve kart bir düğme. Aynı ölçek dili:
+   eşik çizgisi, sıfır çizgisi, dolgu. Seçili kart kenarı ve tepe çizgisi
+   marka mavisinde; sahneyle hangi serinin açık olduğu iki yerden okunuyor.
+   Dört sütun × üç satır = FOMC + on bir seri, boş hücre yok.
+   -------------------------------------------------------------------------- */
+.multiples { display:flex; flex-direction:column; gap:14px; min-width:0; }
+.multiplesTitle { font-size:20px; line-height:1.25; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
+.grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); grid-auto-rows:1fr; gap:14px; }
+/* SATIRLAR EŞİT, GRAFİK ESNEK. FOMC hücresi (gün sayısı, takvim şeridi,
+   hedef aralık, fiyatlama notu) bir seri kartından ~110 piksel uzun ve ilk
+   satırı geriyordu: aynı satırdaki üç kartın içinde grafiğin üstünde boş
+   bir bant kalıyordu (1280, ölçüldü). Satırlar artık en uzun hücre kadar ve
+   her kartta boşluğu mini grafik dolduruyor; on bir grafik aynı boyda,
+   yani küçük çoklular aynı ölçekte kıyaslanıyor. */
+.card, .fomc { position:relative; display:flex; flex-direction:column; gap:10px; min-width:0; padding:16px 16px 14px; border:1px solid var(--line); border-radius:18px; background:var(--premium-surface); text-align:left; }
+.card { cursor:pointer; transition:border-color .25s, translate .28s var(--ease-brand); }
+.card::before { content:""; position:absolute; top:-1px; left:18px; right:18px; height:3px; border-radius:0 0 3px 3px; background:var(--primary); transform:scaleX(0); transform-origin:left center; transition:transform .45s var(--ease-brand); }
+.card[aria-pressed="true"] { border-color:var(--primary-faint); background:linear-gradient(var(--primary-tint), var(--primary-tint)), var(--premium-surface); }
+.card[aria-pressed="true"]::before { transform:scaleX(1); }
+@media(hover:hover) and (pointer:fine) { .card:hover { translate:0 -2px; border-color:var(--primary-faint); } }
+.card:active { translate:0 1px; }
+.cardHead { display:flex; flex-direction:column; gap:3px; min-height:50px; }
+.cardTitle { font-size:13.5px; line-height:1.3; font-weight:650; color:var(--text-strong); }
+.cardPeriod { font-size:11px; line-height:1.3; font-weight:500; color:var(--text-muted); }
+.cardFigure { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; }
+.cardFigure > b { font-size:26px; line-height:1.05; font-weight:700; letter-spacing:-.035em; color:var(--text-strong); }
+.cardFigure .delta { padding:1px 7px; font-size:11px; }
+.mini { display:block; flex:1 1 56px; width:100%; min-height:56px; overflow:visible; }
+.cardFoot { display:flex; justify-content:space-between; gap:8px; padding-top:9px; border-top:1px solid var(--line-soft); font-size:11px; color:var(--text-muted); }
+.cardFoot > span:last-child { font-weight:600; color:var(--text-body); text-align:right; }
+.cardFoot > span[data-muted] { font-weight:500; color:var(--text-muted); }
+
+/* FOMC hücresi: bir seri değil, bir takvim olayı. Ton farkı (marka
+   mavisinin en açık yıkaması) ve dev gün sayısı; tıklanmıyor. */
+.fomc { background:linear-gradient(var(--primary-wash), var(--primary-wash)), var(--premium-surface); border-color:var(--primary-faint); }
+.fomc .cardHead { flex-direction:row; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; min-height:0; }
+.fomcCount { display:flex; align-items:baseline; gap:8px; }
+.fomcCount b { font-size:44px; line-height:1; font-weight:700; letter-spacing:-.05em; color:var(--primary-ink); }
+.fomcCount span { font-size:13px; font-weight:650; color:var(--primary-ink); }
+.fomcDate { font-size:13.5px; line-height:1.4; font-weight:650; color:var(--text-strong); }
+.fomcDate > span { font-weight:600; color:var(--text-body); }
+.fomcDate small { font-size:11.5px; font-weight:500; color:var(--text-muted); }
+/* Takvim şeridi: her gün bir çizgi. Hafta sonu kısa, bugün koyu, toplantı
+   tam boy mavi. Çizgiler sırayla uzuyor; 120 güne kadar sığıyor. */
+.fomcStrip { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); align-items:end; gap:2px; height:30px; }
+.fomcStrip span { height:62%; border-radius:2px; background:var(--line-strong); transform-origin:bottom; animation:macro-tick .5s var(--ease-brand) calc(var(--i) * 14ms) both; }
+.fomcStrip span[data-kind="weekend"] { height:34%; background:var(--line); }
+.fomcStrip span[data-kind="today"] { height:62%; background:var(--text-strong); }
+.fomcStrip span[data-kind="meeting"] { height:100%; background:var(--primary); }
+@keyframes macro-tick { from { transform:scaleY(0); } }
+.fomcTarget { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 12px; padding-top:10px; border-top:1px solid var(--primary-faint); font-size:12px; }
+.fomcTarget dt { color:var(--text-muted); }
+.fomcTarget dd { text-align:right; font-weight:650; color:var(--text-strong); }
+.fomcNote { font-size:11px; line-height:1.6; color:var(--text-muted); }
+
+/* Yer tutucular son hâlin kutusunu tutuyor (CLS 0). Ölçüler 28 Eylül,
+   `next start`: seçici 113, okuma 119 (telefon 151), grafik bloğu 383
+   (telefon 283), dip 36; kart 334-351 (telefon 209-315). */
+.skTabs { width:min(470px,100%); height:42px; border-radius:999px; }
+.skChips { width:min(560px,100%); height:40px; border-radius:12px; }
+.skReading { min-height:119px; }
+.skTitle { width:220px; height:45px; border-radius:8px; }
+.skFigure { width:200px; height:64px; margin-top:6px; border-radius:10px; }
+.skChart { height:383px; border-radius:14px; }
+.skFoot { height:36px; border-radius:8px; }
+.skHeading { width:180px; height:25px; border-radius:8px; }
+.cardSkeleton { min-height:334px; border-radius:18px; }
+
+@media(max-width:1100px) { .grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(max-width:767px) {
+  .stage { gap:14px; }
+  .picker { padding-top:14px; }
+  .tabs { margin-inline:calc(var(--page-frame-inset) * -1); max-width:none; width:auto; border-radius:0; padding-inline:var(--page-frame-inset); background:none; gap:4px; }
+  .tabs button { min-height:40px; padding:0 14px; background:var(--surface-elevated); }
+  .tabs button[aria-pressed="true"] { background:transparent; }
+  .reading { flex-direction:column; align-items:stretch; gap:12px; }
+  .readingMain h2 { font-size:16px; }
+  .readingSide { grid-template-columns:1fr 1fr; gap:0 12px; padding-bottom:0; }
+  .readingSide > div:first-child { padding-left:0; border-left:0; }
+  .plot { --gutter:36px; height:220px; }
+  .axis { margin-left:36px; }
+  .tabs { mask-image:linear-gradient(90deg,var(--text-strong) calc(100% - 32px),transparent); }
+  .skChart { height:283px; }
+  .skReading { min-height:151px; }
+  .grid { grid-template-columns:repeat(2,minmax(0,1fr)); grid-auto-rows:auto; gap:10px; }
+  .card, .fomc { padding:13px 12px 12px; border-radius:16px; gap:8px; }
+  .fomc { grid-column:1 / -1; }
+  /* FOMC tam satır; ardından on bir kart iki sütunda tek kalıyor. Son kart
+     o zaman satırı dolduruyor, boş hücre yok. */
+  .fomc ~ .card:last-child:nth-child(even) { grid-column:1 / -1; }
+  .cardHead { min-height:48px; }
+  .cardTitle { font-size:12.5px; }
+  .cardFigure > b { font-size:21px; }
+  .mini { flex-basis:44px; min-height:44px; }
+  .cardFoot { flex-direction:column; gap:1px; }
+  .cardFoot > span:last-child { text-align:left; }
+  .cardSkeleton { min-height:210px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .reading[data-enter], .draw[data-enter], .cursorDot[data-enter], .fomcStrip span { animation:none; }
+  .card, .card::before, .tabs button, .chips button { transition:none; }
+  .card:hover, .card:active { translate:none; }
+}
 
 /* 27 Eylül: Faiz ve oynaklık, kullanıcı isteğiyle Makro kapağına taşındı. */
 .pulseArea { grid-column:1/-1; min-width:0; container-type:inline-size; }
 /* --------------------------------------------------------------------------
    Faiz ve oynaklık — kapağın dibinde (MarketPulse)
 
-   Geniş kapta (≥760) TEK SATIR: künye solda, altı ölçü eşit sütunlarda.
+   Geniş kapta (≥900) TEK SATIR: künye solda, altı ölçü eşit sütunlarda.
    Dar kapta (tablet, telefon) künye üstte, dört vade bir satır, eğri ve
    VIX altında ikişer sütun. Ölçüler saç teliyle ayrılıyor; kutu yok.
    -------------------------------------------------------------------------- */
@@ -129,7 +241,10 @@
 .pulseBand[data-tone="flat"] { background:var(--surface-elevated); color:var(--text-body); }
 .pulseBand[data-tone="warn"] { background:var(--brass-wash); color:var(--brass-ink); }
 .pulseBand[data-tone="down"] { background:var(--down-wash); color:var(--down); }
-@container (min-width:760px) {
+/* Eşik 760'tan 900'e (28 Eylül): kapak tek sütuna geçince nabız 900
+   genişlikte ~850 piksellik kaba düştü ve altı sütunda eğri farkı ile VIX
+   bitişti ("+0,36 Puan14,87", ölçüldü). */
+@container (min-width:900px) {
   .pulse { flex-direction:row; align-items:center; gap:24px; }
   .pulseHead { flex:none; flex-direction:column; align-items:flex-start; gap:2px; }
   .pulseGrid { flex:1; grid-template-columns:repeat(6,minmax(0,1fr)); }

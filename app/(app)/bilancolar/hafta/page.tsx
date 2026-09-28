@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache, Suspense, type CSSProperties } from "react";
 import Image from "next/image";
 import { ArrowLeft, ArrowRight, DownloadSimple } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -7,12 +8,16 @@ import { ShareButton } from "@/components/article/ShareButton";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import { EarningsTabs } from "@/components/earnings/EarningsTabs";
-import { WeekBoard } from "@/components/earnings/week/WeekBoard";
+import {
+  WeekBoard,
+  WeekBoardSkeleton,
+  WeekPulse,
+  WeekPulseSkeleton,
+} from "@/components/earnings/week/WeekBoard";
 import styles from "@/components/motion/DirectoryExperience.module.css";
 import board from "@/components/earnings/week/WeekBoard.module.css";
-import { DataStamp, EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
+import { buttonClass, DataStamp, EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
 import {
-  dayLabel,
   defaultWeekStart,
   mondayOf,
   parseWeekParam,
@@ -21,7 +26,7 @@ import {
 } from "@/lib/earnings-week";
 import { getEarningsWeek } from "@/lib/earnings-week-data";
 import { WEEK_OG_SIZES } from "@/lib/earnings-week-og";
-import { getDictionary, getI18n, getLocale, INTL_LOCALE } from "@/lib/i18n";
+import { getDictionary, getI18n, getLocale, INTL_LOCALE, type Dictionary, type Locale } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
@@ -43,9 +48,7 @@ import { absoluteUrl, pageAlternates } from "@/lib/site";
 
 const FILE_PREFIX = "aciliszili-bilanco-haftasi";
 
-type ImageKind = "yatay" | "dikey";
-
-function imagePath(kind: ImageKind, monday: string): string {
+function imagePath(kind: "yatay" | "dikey", monday: string): string {
   return `/bilancolar/hafta/gorsel?boyut=${kind}&hafta=${monday}`;
 }
 
@@ -90,6 +93,34 @@ export async function generateMetadata(
   };
 }
 
+/**
+ * Haftanın verisi istek içinde TEK okuma: kahramanın nabzı ve pano ayrı
+ * Suspense sınırlarında ama aynı listeyi çiziyor (CLAUDE.md "Veri
+ * dürüstlüğü" 3). Alttaki `getEarningsBetween` ve `getSymbolNames` zaten
+ * önbellekli; bu sarmal seçimin kendisini de (sıralama, süzgeç) iki kez
+ * koşturmuyor.
+ */
+const loadWeek = cache(getEarningsWeek);
+
+type ImageKind = "yatay" | "dikey";
+
+const IMAGE_KINDS: { kind: ImageKind; size: "landscape" | "portrait" }[] = [
+  { kind: "yatay", size: "landscape" },
+  { kind: "dikey", size: "portrait" },
+];
+
+function downloadName(monday: string, size: "landscape" | "portrait"): string {
+  const dims = WEEK_OG_SIZES[size];
+  return `${FILE_PREFIX}-${monday}-${dims.width}x${dims.height}.png`;
+}
+
+/**
+ * İLK BAYT VERİYİ BEKLEMİYOR. Sayfa bir dönem takvimi ve sembol tablosunu
+ * okuyup ancak ondan sonra ilk baytı gönderiyordu (soğuk önbellekte 252 ms,
+ * 28 Eylül ölçümü). Kapak, sekme çubuğu, hafta seçimi ve indirme eylemleri
+ * veriye bağlı değil — hepsi adresteki haftadan çıkıyor; yalnızca nabız ve
+ * pano Suspense içinde akıyor ve yedekleri aynı ızgarayı tutuyor.
+ */
 export default async function EarningsWeekPage(props: PageProps<"/bilancolar/hafta">) {
   const search = await props.searchParams;
   const param = typeof search.hafta === "string" ? parseWeekParam(search.hafta) : null;
@@ -98,29 +129,11 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
 
   const { locale, t } = await getI18n();
   const w = t.earningsExtra.week;
-  const week = await getEarningsWeek(monday, locale);
   const range = weekRangeLabel(monday, locale);
 
   const thisMonday = mondayOf(today);
   const weekHref = (target: string) =>
     target === defaultWeekStart(today) ? "/bilancolar/hafta" : `/bilancolar/hafta?hafta=${target}`;
-
-  const all = week.days.flatMap((day) => [...day.bmo, ...day.amc, ...day.other]);
-  const bmoCount = week.days.reduce((sum, day) => sum + day.bmo.length, 0);
-  const amcCount = week.days.reduce((sum, day) => sum + day.amc.length, 0);
-  /* En yoğun gün yalnızca bir gün öne çıkıyorsa yazılıyor: eşitlikte
-     "Salı" demek, Perşembe'yi de aynı sayıyla saklamak olurdu. */
-  const counts = week.days.map((day) => day.bmo.length + day.amc.length + day.other.length);
-  const peak = Math.max(0, ...counts);
-  const busiest =
-    peak > 0 && counts.filter((count) => count === peak).length === 1
-      ? week.days[counts.indexOf(peak)]
-      : null;
-
-  const images: { kind: ImageKind; size: "landscape" | "portrait"; label: string; alt: string }[] = [
-    { kind: "yatay", size: "landscape", label: w.imageLandscape, alt: w.landscapeAlt },
-    { kind: "dikey", size: "portrait", label: w.imagePortrait, alt: w.portraitAlt },
-  ];
 
   return (
     <MotionExperience className={styles.page}>
@@ -129,11 +142,42 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
         eyebrow={w.eyebrow}
         title={w.title}
         description={w.description}
-      />
+        visual={
+          <Suspense fallback={<WeekPulseSkeleton t={t} />}>
+            <HeroPulse monday={monday} locale={locale} t={t} />
+          </Suspense>
+        }
+      >
+        {/* EYLEMLER KAHRAMANDA. Görseller sayfanın en altındaydı ve indirme
+            bağlantısı ancak iki panel aşağıda bulunuyordu; oysa bu sayfanın
+            işi paylaşılacak bir çıktı. Adresler haftadan çıkıyor, veriyi
+            beklemiyor. */}
+        <div className={board.heroActions}>
+          {IMAGE_KINDS.map((image) => (
+            <a
+              key={image.kind}
+              href={withLocale(imagePath(image.kind, monday), locale)}
+              download={downloadName(monday, image.size)}
+              className={buttonClass({
+                variant: image.kind === "yatay" ? "primary" : "ghost",
+                size: "md",
+              })}
+            >
+              <DownloadSimple size={16} weight="bold" aria-hidden />
+              {image.kind === "yatay" ? w.downloadLandscape : w.downloadPortrait}
+            </a>
+          ))}
+          <ShareButton
+            url={absoluteUrl(pagePath(monday, true), locale)}
+            title={`${w.title} · ${range}`}
+            labels={{ ...t.share, title: w.shareTitle }}
+          />
+        </div>
+      </DirectoryHeader>
 
       <EarningsTabs active="calendar" t={t} className="-mt-2" />
 
-      {/* ---- Seçim şeridi: hangi hafta, öteki haftalar, paylaş ----
+      {/* ---- Seçim şeridi: hangi hafta, öteki haftalar ----
           Bağlantılar `scroll={false}`: hafta değiştiren okuyucu sayfanın
           başına fırlamasın (CLAUDE.md, sayfa içi süzgeç kuralı). */}
       <div className={board.strip}>
@@ -152,14 +196,57 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
             {w.nextWeek}
             <ArrowRight size={14} weight="bold" aria-hidden />
           </Link>
-          <ShareButton
-            url={absoluteUrl(pagePath(monday, true), locale)}
-            title={`${w.title} · ${range}`}
-            labels={{ ...t.share, title: w.shareTitle }}
-          />
         </nav>
       </div>
 
+      <Suspense
+        fallback={
+          <Panel>
+            <PanelHeader title={w.boardTitle} />
+            <div className={board.boardPanel}>
+              <WeekBoardSkeleton />
+            </div>
+          </Panel>
+        }
+      >
+        <WeekBody monday={monday} range={range} today={today} locale={locale} t={t} />
+      </Suspense>
+
+      <GuideHint label={t.guide.contextLabel} locale={locale} slugs={["bilanco"]} />
+    </MotionExperience>
+  );
+}
+
+async function HeroPulse({ monday, locale, t }: { monday: string; locale: Locale; t: Dictionary }) {
+  const week = await loadWeek(monday, locale);
+  return <WeekPulse days={week.days} picked={week.picked} locale={locale} t={t} />;
+}
+
+async function WeekBody({
+  monday,
+  range,
+  today,
+  locale,
+  t,
+}: {
+  monday: string;
+  range: string;
+  today: string;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const w = t.earningsExtra.week;
+  const week = await loadWeek(monday, locale);
+  const labels = { landscape: w.imageLandscape, portrait: w.imagePortrait };
+  const alts = { landscape: w.landscapeAlt, portrait: w.portraitAlt };
+  /* Sütun oranı = görselin en/boy oranı: iki görsel aynı yükseklikte biter
+     (gerekçe WeekBoard.module.css → .images). */
+  const ratio = (size: "landscape" | "portrait") =>
+    WEEK_OG_SIZES[size].width / WEEK_OG_SIZES[size].height;
+  const imageColumns = `minmax(0, ${ratio("landscape")}fr) minmax(0, ${ratio("portrait")}fr)`;
+
+  return (
+    <>
       <Panel>
         <PanelHeader
           title={w.boardTitle}
@@ -170,29 +257,7 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
         ) : (
           <>
             <div className={board.boardPanel}>
-              <WeekBoard days={week.days} locale={locale} t={t} />
-
-              {/* ---- Ölçüler ---- */}
-              <dl className={board.stats}>
-                <div className={board.stat}>
-                  <dt className={board.statLabel}>{w.statCompanies}</dt>
-                  <dd className={`figure ${board.statValue}`}>{week.picked}</dd>
-                </div>
-                <div className={board.stat}>
-                  <dt className={board.statLabel}>{w.statBeforeOpen}</dt>
-                  <dd className={`figure ${board.statValue}`}>{bmoCount}</dd>
-                </div>
-                <div className={board.stat}>
-                  <dt className={board.statLabel}>{w.statAfterClose}</dt>
-                  <dd className={`figure ${board.statValue}`}>{amcCount}</dd>
-                </div>
-                {busiest && (
-                  <div className={board.stat}>
-                    <dt className={board.statLabel}>{w.statBusiest}</dt>
-                    <dd className={board.statValue}>{dayLabel(busiest.date, locale).weekday}</dd>
-                  </div>
-                )}
-              </dl>
+              <WeekBoard days={week.days} locale={locale} t={t} today={today} />
             </div>
 
             {/* ---- Künyeler: panelin içinde, hairline ile ---- */}
@@ -209,11 +274,14 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
         )}
       </Panel>
 
-      {all.length > 0 && (
+      {week.picked > 0 && (
         <Panel>
           <PanelHeader title={w.imagesTitle} />
-          <div className={board.images}>
-            {images.map((image) => {
+          <div
+            className={board.images}
+            style={{ "--image-columns": imageColumns } as CSSProperties}
+          >
+            {IMAGE_KINDS.map((image) => {
               const src = withLocale(imagePath(image.kind, monday), locale);
               const dims = WEEK_OG_SIZES[image.size];
               return (
@@ -226,17 +294,17 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
                         yalnızca panele inilince çiziliyor. */}
                     <Image
                       src={src}
-                      alt={image.alt.replace("{range}", range)}
+                      alt={alts[image.size].replace("{range}", range)}
                       width={dims.width}
                       height={dims.height}
                       unoptimized
                     />
                   </div>
                   <figcaption className={board.imageCaption}>
-                    <span>{image.label}</span>
+                    <span>{labels[image.size]}</span>
                     <a
                       href={src}
-                      download={`${FILE_PREFIX}-${monday}-${dims.width}x${dims.height}.png`}
+                      download={downloadName(monday, image.size)}
                       className={board.download}
                     >
                       <DownloadSimple size={15} weight="bold" aria-hidden />
@@ -250,14 +318,7 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
         </Panel>
       )}
 
-      <DataStamp
-        source="finnhub"
-        at={week.updatedAt}
-        locale={locale}
-        labels={t.data}
-      />
-
-      <GuideHint label={t.guide.contextLabel} locale={locale} slugs={["bilanco"]} />
-    </MotionExperience>
+      <DataStamp source="finnhub" at={week.updatedAt} locale={locale} labels={t.data} />
+    </>
   );
 }

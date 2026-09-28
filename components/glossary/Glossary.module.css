@@ -1,32 +1,255 @@
 /* ==========================================================================
-   Sözlük ve temalar — programatik sayfaların ortak parçaları
+   Sözlük — dizin ve terim sayfası
 
-   Arama alanı şirketler dizininin alanıyla (CompanyDirectory.module.css →
-   .searchField) aynı ölçüde: sitede iki farklı arama kutusu durmasın.
-   Renk yok; hepsi token.
+   Dil sitenin premium dizinlerinden (DirectoryExperience.module.css): kapak
+   düz `--premium-surface`, derinlik GÖLGEYLE değil tonla, mavi yalnızca
+   etkileşim ve seçim. Kavram karoları rehberin `GlyphTile`ı. Renk yok;
+   hepsi token.
    ========================================================================== */
 
-.searchField { display:flex; min-width:0; max-width:32rem; align-items:center; gap:9px; padding:4px 13px; border:1px solid var(--line); border-radius:999px; background:var(--surface-sunken); transition:border-color .2s,background .2s,box-shadow .2s; }
-.searchField:hover { border-color:var(--line-strong); background:var(--surface-solid); }
-.searchField:focus-within { border-color:var(--line-focus); box-shadow:0 0 0 3px var(--primary-tint); }
-.searchField > svg { flex-shrink:0; color:var(--text-muted); }
-.searchField input { min-width:0; width:100%; height:36px; color:var(--text-strong); background:transparent; font-size:13px; outline:none; }
-.searchField input::placeholder { color:var(--text-muted); }
-/* Telefonda 16 piksel: iOS daha küçük puntolu alana odaklanınca sayfayı
-   yakınlaştırıyor. Kutu şirketler dizinindekiyle aynı gerekçe. */
-@media(max-width:767px) { .searchField input { font-size:16px; } }
-@media(prefers-reduced-motion:reduce) { .searchField { transition:none; } }
+.browser { display:flex; min-width:0; flex-direction:column; gap:22px; }
 
-/* Terim ızgarası — HÜCRELER ARASINDA HAIRLINE, kutu değil. Panel içindeki
-   satırlar sitenin geri kalanında da üstlerinde tek çizgi taşıyor. */
-.termGrid { display:grid; grid-template-columns:minmax(0,1fr); border-top:1px solid var(--line); }
-.termGrid > li + li { border-top:1px solid var(--line-soft); }
-@media(min-width:768px) {
-  .termGrid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .termGrid > li { border-top:1px solid var(--line-soft); }
-  .termGrid > li:nth-child(-n+2) { border-top:0; }
-  .termGrid > li:nth-child(odd) { border-right:1px solid var(--line-soft); }
+/* ---- Kapak ---------------------------------------------------------------- */
+.hero { position:relative; isolation:isolate; display:grid; min-width:0; gap:26px; padding:32px 34px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface); }
+.heroCopy { min-width:0; align-self:center; }
+.heroCopy h1 { margin:10px 0 12px; font-size:var(--heading-page); line-height:1.04; letter-spacing:-.055em; font-weight:600; }
+.heroCopy > p:not(:first-child) { max-width:46ch; font-size:15px; line-height:1.7; color:var(--text-body); text-wrap:pretty; }
+/* Kapağın üç ölçüsü — sayılar içerikten sayılıyor (page.tsx). */
+.metrics { display:flex; flex-wrap:wrap; gap:16px 30px; margin-top:22px; }
+.metrics > div { display:flex; flex-direction:column; gap:3px; }
+.metrics dt { order:2; font-size:12px; color:var(--text-muted); }
+.metrics dd { font-size:28px; line-height:1.1; letter-spacing:-.045em; font-weight:600; color:var(--text-strong); }
+@media(min-width:1024px) { .hero { grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr); align-items:center; gap:36px; } }
+
+/* Kategori kutucukları. 768 ve üstünde 3×3 ızgara (Tümü + sekiz kategori:
+   dokuz kutucuk, boş hücre yok); altında yatay kayan şerit. */
+.categories { min-width:0; overflow-x:auto; scrollbar-width:none; padding-block:2px; }
+.categories::-webkit-scrollbar { display:none; }
+.categoryGrid { display:flex; gap:8px; width:max-content; }
+.categoryTile { position:relative; display:flex; width:152px; flex-direction:column; align-items:flex-start; gap:6px; padding:12px 13px 13px; border:1px solid var(--line); border-radius:14px; background:var(--surface-sunken); color:var(--primary-ink); text-align:left; cursor:pointer; transition:background-color .25s,border-color .25s,scale .15s; }
+.categoryTile > svg { flex-shrink:0; transition:rotate .45s,scale .45s; }
+.categoryName { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:2.6em; font-size:13px; line-height:1.3; font-weight:600; color:var(--text-strong); }
+.categoryCount { font-size:11px; font-weight:500; color:var(--text-muted); }
+.categoryBar { display:block; width:100%; height:3px; margin-top:2px; overflow:hidden; border-radius:2px; background:var(--rail-track); }
+/* "Tümü" kutucuğunun çubuğu bir PAY: sekiz kategori, terim sayısıyla
+   orantılı ve aralarında ince boşluk. Tek bir dolu çubuk ötekilerle
+   karşılaştırılamazdı (en kalabalık kategoriye göre ölçeklenmiş). */
+.categoryBar[data-share] { display:flex; gap:2px; background:transparent; }
+.categoryBar[data-share] > span { flex:none; }
+.categoryBar > span { display:block; height:100%; border-radius:inherit; background:var(--primary); transform-origin:left center; animation:bar-grow .9s var(--ease-brand) both; animation-delay:calc(var(--tile, 0) * 55ms + 120ms); }
+@keyframes bar-grow { from { transform:scaleX(0); } }
+.categoryTile[aria-pressed="true"] { border-color:var(--primary-faint); background:var(--primary-wash); }
+.categoryTile[aria-pressed="true"] .categoryCount { color:var(--primary-ink); }
+.categoryTile:active { scale:.98; }
+.categoryTile:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+@media(hover:hover) and (pointer:fine) {
+ .categoryTile:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
+ .categoryTile:hover > svg { rotate:-8deg; scale:1.08; }
 }
-.termLink { display:block; min-height:44px; padding:12px 16px; transition:background .2s; }
+@media(min-width:768px) {
+ .categories { overflow:visible; }
+ .categoryGrid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:auto; gap:10px; }
+ .categoryTile { width:auto; }
+}
+
+/* ---- Arama şeridi ----------------------------------------------------------
+   768 ve üstünde yapışkan. Zemin görünüm alanı boyunca uzuyor (gölge
+   hilesi, kırpma ile yalnızca yatayda): şeridin iki yanından akan kartlar
+   aramanın üstünde görünmesin. */
+.toolbar { display:grid; min-width:0; grid-template-columns:minmax(0,1fr); gap:10px; padding-block:6px 4px; }
+@media(min-width:768px) {
+ .toolbar { position:sticky; top:var(--app-bar-h); z-index:5; grid-template-columns:minmax(0,17rem) minmax(0,1fr) auto; align-items:center; gap:14px 18px; padding-block:10px; border-bottom:1px solid var(--line-soft); background:var(--page-bg); box-shadow:0 0 0 100vmax var(--page-bg); clip-path:inset(0 -100vmax); }
+}
+.searchField { display:flex; min-width:0; align-items:center; gap:10px; padding:0 8px 0 15px; border:1px solid var(--line-strong); border-radius:999px; background:var(--premium-surface); transition:border-color .2s,box-shadow .2s; }
+.searchField:hover { border-color:var(--primary-faint); }
+.searchField:focus-within { border-color:var(--line-focus); box-shadow:0 0 0 3px var(--primary-tint); }
+.searchField > svg { flex-shrink:0; color:var(--primary-ink); }
+.searchField input { min-width:0; width:100%; height:44px; color:var(--text-strong); background:transparent; font-size:15px; outline:none; }
+.searchField input::placeholder { color:var(--text-muted); }
+.searchField input::-webkit-search-cancel-button { display:none; }
+/* Telefonda 16 piksel: iOS daha küçük puntolu alana odaklanınca sayfayı
+   yakınlaştırıyor. */
+@media(max-width:767px) { .searchField input { font-size:16px; } }
+.clearQuery { display:grid; flex-shrink:0; place-items:center; width:30px; height:30px; border-radius:999px; color:var(--text-muted); transition:background-color .2s,color .2s; }
+.clearQuery:hover { background:var(--primary-tint); color:var(--text-strong); }
+.clearQuery:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
+
+.letters { min-width:0; overflow-x:auto; scrollbar-width:none; }
+.letters::-webkit-scrollbar { display:none; }
+.letterRow { display:flex; gap:1px; width:max-content; }
+.letter { display:grid; place-items:center; min-width:26px; height:34px; padding-inline:4px; border-radius:9px; font-size:13px; font-weight:600; color:var(--text-body); transition:background-color .2s,color .2s,scale .15s; }
+.letter:not(:disabled) { cursor:pointer; }
+.letter:not(:disabled):hover { background:var(--primary-tint); color:var(--primary-ink); }
+.letter:not(:disabled):active { scale:.94; }
+.letter[aria-pressed="true"] { background:var(--primary); color:var(--on-primary); }
+.letter:disabled { color:var(--text-muted); opacity:.38; }
+.letter:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
+@media(max-width:767px) { .letter { min-width:36px; height:40px; } }
+
+.resultCount { display:flex; align-items:center; gap:12px; font-size:12px; font-weight:500; color:var(--text-muted); white-space:nowrap; }
+.clearAll { min-height:32px; font-weight:600; color:var(--primary-ink); }
+.clearAll:hover { text-decoration:underline; text-underline-offset:3px; }
+
+/* ---- Sonuçlar ------------------------------------------------------------- */
+/* Süzgeçten sonra sonuçların başı şeridin ALTINA iniyor (kaydırma payı =
+   yapışkan şeridin boyu). Telefonda şerit yapışmıyor; pay yalnızca kök
+   `scroll-padding` kadar. */
+.results { display:flex; min-width:0; flex-direction:column; gap:40px; scroll-margin-top:12px; }
+@media(min-width:768px) { .results { scroll-margin-top:84px; } }
+
+.section { min-width:0; }
+.sectionHead { display:flex; align-items:center; gap:12px; padding-top:16px; border-top:1px solid var(--line-strong); }
+.sectionHead h2 { min-width:0; font-size:23px; line-height:1.2; font-weight:600; letter-spacing:-.035em; color:var(--text-strong); }
+.sectionIcon { display:grid; flex-shrink:0; place-items:center; width:38px; height:38px; border-radius:12px; background:var(--primary-tint); color:var(--primary-ink); }
+.sectionCount { margin-left:auto; flex-shrink:0; font-size:12px; color:var(--text-muted); }
+
+/* Öne çıkanlar — kart SAYISI kadar hücre. Üç kartta büyük olan iki satır
+   boyu; iki kartta yan yana; tek kartta tam genişlik. */
+.featured { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; margin-top:16px; }
+@media(min-width:768px) {
+ .featured[data-count="2"] { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .featured[data-count="3"] { grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); }
+ .featureItem[data-lead] { grid-row:span 2; }
+}
+.featureItem { display:flex; min-width:0; }
+.featureCard { display:grid; flex:1; min-width:0; grid-template-columns:auto minmax(0,1fr); grid-template-areas:"glyph term" "glyph short" "meta meta"; align-content:start; gap:4px 14px; padding:18px 20px; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); transition:background-color .3s,border-color .3s; }
+.featureCard > span:first-child { grid-area:glyph; align-self:start; transition:rotate .5s,scale .5s; }
+.featureTerm { grid-area:term; align-self:end; font-size:17px; line-height:1.3; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); text-wrap:balance; }
+.featureShort { grid-area:short; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:13px; line-height:1.6; color:var(--text-body); }
+.featureMeta { grid-area:meta; display:flex; min-width:0; align-items:center; gap:10px; margin-top:10px; padding-top:10px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-muted); }
+.featureLinks { display:inline-flex; flex-shrink:0; align-items:center; gap:5px; font-weight:600; color:var(--primary-ink); }
+.featureRelated { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.featureArrow { flex-shrink:0; margin-left:auto; color:var(--primary-ink); transition:translate .3s; }
+/* Büyük kart: karo üstte, ad display puntosunda, tanım üç satır. */
+.featureItem[data-lead] .featureCard { grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto 1fr auto; grid-template-areas:"glyph" "term" "short" "meta"; gap:10px; padding:24px 26px; }
+.featureItem[data-lead] .featureTerm { margin-top:8px; font-size:clamp(22px,2.2vw,28px); line-height:1.15; letter-spacing:-.035em; }
+.featureItem[data-lead] .featureShort { -webkit-line-clamp:4; font-size:15px; line-height:1.65; }
+.featureItem[data-lead] .featureMeta { align-self:end; }
+.featureCard:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+@media(hover:hover) and (pointer:fine) {
+ .featureCard:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
+ .featureCard:hover > span:first-child { rotate:-6deg; scale:1.05; }
+ .featureCard:hover .featureArrow { translate:3px 0; }
+}
+
+/* Sıkı ızgara — kutu değil, hücre. Ad ve tanımın ilk cümlesinden tek satır. */
+.compact { display:grid; grid-template-columns:minmax(0,1fr); gap:2px 12px; margin-top:12px; }
+@media(min-width:640px) { .compact { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(min-width:1024px) { .compact { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+.termLink { display:flex; min-height:44px; flex-direction:column; justify-content:center; gap:2px; padding:9px 12px; border-radius:11px; transition:background-color .2s; }
+.termName { font-size:14px; line-height:1.35; font-weight:600; color:var(--text-strong); }
+.termShort { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; line-height:1.5; color:var(--text-muted); }
 .termLink:hover { background:var(--primary-tint); }
-@media(min-width:640px) { .termLink { padding:12px 20px; } }
+.termLink:hover .termName { color:var(--primary-ink); }
+.termLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
+
+@media(max-width:767px) {
+ .browser { gap:18px; }
+ .hero { gap:18px; padding:22px 20px 18px; border-radius:20px; }
+ .metrics { gap:12px 22px; margin-top:16px; }
+ .metrics dd { font-size:22px; }
+ .results { gap:32px; }
+ .sectionHead h2 { font-size:20px; }
+ .featureCard { padding:16px; }
+ .featureItem[data-lead] .featureCard { padding:18px; }
+}
+
+@media(prefers-reduced-motion:reduce) {
+ .categoryBar > span { animation:none; }
+ .categoryTile,.categoryTile > svg,.featureCard,.featureCard > span:first-child,.featureArrow,.letter,.termLink { transition:none; }
+ .categoryTile:hover > svg,.featureCard:hover > span:first-child { rotate:none; scale:none; }
+ .featureCard:hover .featureArrow { translate:none; }
+ .categoryTile:active,.letter:not(:disabled):active { scale:none; }
+}
+
+/* ==========================================================================
+   Terim sayfası
+   ========================================================================== */
+.termHero { position:relative; isolation:isolate; display:grid; min-width:0; grid-template-columns:minmax(0,1fr) auto; gap:18px 24px; padding:32px 34px 30px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface); }
+.termHeading { grid-column:1; grid-row:1; min-width:0; align-self:end; }
+.termHeading h1 { width:fit-content; max-width:100%; margin-top:10px; font-size:clamp(32px,4.2vw,52px); line-height:1.08; letter-spacing:-.05em; font-weight:600; text-wrap:balance; }
+.termGlyph { grid-column:2; grid-row:1; align-self:start; animation:glyph-in .7s var(--ease-brand) both; }
+@keyframes glyph-in { from { rotate:-10deg; scale:.82; opacity:0; } }
+/* Tanım: ilk cümle display puntosunda, gerisi gövde. */
+/* `span 2`, `1/-1` değil: 767 pikselin altında ortak çerçeve tek sütunlu
+   açık bir ızgara kuruyor (globals.css → .page-frame) ve karo örtük ikinci
+   sütuna düşüyor; `-1` o zaman yalnızca ilk sütunu kapsıyor ve tanım
+   234 piksele sıkışıyordu (390'da ölçüldü). */
+.termDefinition { grid-column:1 / span 2; min-width:0; padding-top:22px; border-top:1px solid var(--line); }
+.lede { max-width:36em; font-size:clamp(20px,2.2vw,26px); line-height:1.42; letter-spacing:-.022em; font-weight:500; color:var(--text-strong); text-wrap:pretty; }
+.restBody { max-width:68ch; margin-top:14px; }
+
+.exampleBody { display:flex; min-width:0; flex-direction:column; gap:18px; padding:2px 20px 22px; }
+.exampleVisual { min-width:0; }
+.exampleBox { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:start; gap:12px; padding:16px 18px; border:1px solid var(--primary-faint); border-radius:14px; background:var(--primary-tint); }
+.exampleBox > svg { margin-top:2px; color:var(--primary-ink); }
+.exampleBox p { color:var(--text-strong); }
+
+/* Kavram çizimi — sayısız; bant ve eksen tonla, çizgi markanın mavisiyle. */
+.concept { display:block; width:100%; max-width:480px; height:auto; overflow:visible; }
+.conceptBand rect { fill:var(--surface-sunken); }
+.conceptBand text { fill:var(--text-muted); font-size:10px; font-weight:600; }
+.conceptBand[data-on] rect { fill:var(--primary-wash); }
+.conceptBand[data-on] text { fill:var(--primary-ink); }
+.conceptTick { fill:var(--text-muted); font-size:10px; font-weight:500; }
+.conceptAxis { fill:none; stroke:var(--line-strong); stroke-width:1.2; }
+.conceptAxisLabel { fill:var(--text-body); font-size:11px; font-weight:600; }
+.conceptLine { fill:none; stroke:var(--primary); stroke-width:2.5; stroke-linecap:round; stroke-dasharray:1; }
+.conceptDot { fill:var(--premium-surface); stroke:var(--primary); stroke-width:2; }
+
+/* İlişki ağı. Kap boyut kabı: çizgiler `cqw`/`cqh` ile boylanıyor. */
+.networkWrap { padding:0 20px 22px; }
+.network { position:relative; height:340px; container-type:size; }
+.networkLine { position:absolute; left:50%; top:50%; height:1.5px; width:hypot(calc(var(--dx) * 1cqw), calc(var(--dy) * 1cqh)); border-radius:1px; background:linear-gradient(90deg,var(--primary-soft),var(--primary-faint)); transform-origin:left center; rotate:atan2(calc(var(--dy) * 1cqh), calc(var(--dx) * 1cqw)); }
+.networkCenter { position:absolute; left:50%; top:50%; z-index:1; display:flex; max-width:210px; flex-direction:column; align-items:center; gap:9px; padding:14px 18px; border:1px solid var(--primary-faint); border-radius:18px; background:var(--premium-surface); translate:-50% -50%; text-align:center; }
+.networkCenter > span:last-child { font-size:15px; line-height:1.3; font-weight:650; letter-spacing:-.015em; color:var(--text-strong); text-wrap:balance; }
+.networkNodes { position:absolute; inset:0; }
+.networkNodes > li { position:absolute; z-index:1; left:var(--x); top:var(--y); width:max-content; max-width:min(36%,230px); translate:-50% -50%; }
+.networkNode { display:flex; align-items:center; gap:9px; padding:7px 13px 7px 7px; border:1px solid var(--line); border-radius:14px; background:var(--premium-surface); transition:background-color .25s,border-color .25s,scale .15s; }
+.networkGlyph { display:grid; flex-shrink:0; place-items:center; min-width:30px; height:30px; padding-inline:4px; border-radius:9px; background:var(--primary-tint); color:var(--primary-ink); font-size:10px; font-weight:700; letter-spacing:-.01em; }
+.networkTerm { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:13px; line-height:1.3; font-weight:600; color:var(--text-strong); }
+.networkCategory { display:block; margin-top:1px; font-size:11px; line-height:1.4; color:var(--text-muted); }
+.networkNode:active { scale:.98; }
+.networkNode:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+@media(hover:hover) and (pointer:fine) {
+ .networkNode:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
+ .networkNode:hover .networkTerm { color:var(--primary-ink); }
+}
+/* Telefonda dal: merkez üstte, komşular altında bir omurgaya bağlı. */
+@media(max-width:639px) {
+ .network { height:auto; container-type:normal; display:flex; flex-direction:column; align-items:flex-start; gap:10px; }
+ .networkLine { display:none; }
+ .networkCenter { position:static; flex-direction:row; max-width:100%; padding:10px 14px 10px 10px; translate:none; text-align:left; }
+ .networkNodes { position:relative; inset:auto; display:flex; width:100%; flex-direction:column; gap:8px; padding-left:24px; }
+ .networkNodes::before { content:""; position:absolute; left:10px; top:-10px; bottom:22px; width:1.5px; background:var(--primary-faint); }
+ .networkNodes > li { position:relative; left:auto; top:auto; width:auto; max-width:100%; translate:none; }
+ .networkNodes > li::before { content:""; position:absolute; left:-14px; top:50%; width:14px; height:1.5px; background:var(--primary-faint); }
+}
+
+.neighbors { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.neighbor { display:flex; min-width:0; align-items:center; gap:14px; padding:16px 20px; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); transition:background-color .25s,border-color .25s; }
+.neighbor[data-side="next"] { grid-column:2; justify-content:flex-end; text-align:right; }
+.neighborArrow { flex-shrink:0; color:var(--primary-ink); transition:translate .3s; }
+.neighborLabel { display:block; font-size:12px; font-weight:500; color:var(--text-muted); }
+.neighborTerm { display:block; margin-top:2px; font-size:16px; line-height:1.3; font-weight:650; letter-spacing:-.015em; color:var(--text-strong); overflow-wrap:anywhere; }
+.neighbor:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+@media(hover:hover) and (pointer:fine) {
+ .neighbor:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
+ .neighbor[data-side="previous"]:hover .neighborArrow { translate:-3px 0; }
+ .neighbor[data-side="next"]:hover .neighborArrow { translate:3px 0; }
+}
+
+@media(max-width:767px) {
+ .termHero { gap:14px 16px; padding:22px 20px 20px; border-radius:20px; }
+ .termDefinition { padding-top:16px; }
+ .exampleBody { padding:2px 16px 18px; }
+ .networkWrap { padding:0 16px 18px; }
+ .neighbor { gap:10px; padding:14px; }
+ .neighborTerm { font-size:14px; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .termGlyph { animation:none; }
+ .networkNode,.neighbor,.neighborArrow { transition:none; }
+ .networkNode:active { scale:none; }
+ .neighbor:hover .neighborArrow { translate:none!important; }
+}

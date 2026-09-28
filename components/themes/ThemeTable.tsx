@@ -1,6 +1,11 @@
-import { Fragment } from "react";
+"use client";
+
+import { Fragment, useMemo, useState } from "react";
+import { motion } from "motion/react";
+import { ArrowDown } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ScaleBar } from "@/components/markets/CompareScale";
+import { useMotionPreference } from "@/components/motion/useMotionPreference";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import { LogoTile } from "@/components/ui/primitives";
 import { scaleRatios } from "@/lib/compare";
@@ -15,6 +20,7 @@ import {
   formatPrice,
   NO_VALUE,
 } from "@/lib/utils";
+import styles from "./Themes.module.css";
 
 /**
  * Tema tablosu — şirket, son fiyat, günlük değişim, piyasa değeri.
@@ -30,9 +36,15 @@ import {
  * GÜNLÜK DEĞİŞİMİN SEANSI (Veri dürüstlüğü 4): yüzde bu seansa ait değilse
  * yön rengini bırakıyor ve altında "Son Kapanış" künyesi duruyor — ana
  * sayfanın dünya piyasaları satırlarıyla aynı dil. Çubuk yalnızca medyana
- * giren (aynı günü anlatan) satırlara basılıyor: iki ayrı günün yüzdesini
- * aynı ölçekte uzunluk olarak yan yana koymak, olmayan bir sıralama
- * göstermek olurdu.
+ * giren (aynı günü anlatan) satırlara basılıyor.
+ *
+ * SIRALAMA İSTEMCİDE (28 Eylül). Yirmi satırlık bir tablo için sunucuya
+ * dönmek ve adrese bir parametre eklemek gereksiz: adres ve arama motoruna
+ * giden HTML aynı kalıyor (piyasa değerine göre), başlıktaki düğme yalnızca
+ * satırların sırasını değiştiriyor. Ölçek oranları sıralamadan ÖNCE
+ * hesaplanıp satıra bağlanıyor; sıra değişince çubuk kendi sayısıyla
+ * birlikte taşınıyor. Satırlar yerlerine kayarak geçiyor (`layout`), hareket
+ * azaltılmışsa tek karede.
  */
 
 /** Şirket sütununun sabit genişliği ve bir sayı sütununun en darı —
@@ -41,6 +53,14 @@ import {
 const LABEL_COL_PX = 148;
 const VALUE_COL_PX = 76;
 const VALUE_COLS = 3;
+/** Satır kayma süresi, saniye. */
+const ROW_LAYOUT_S = 0.45;
+
+type SortKey = "company" | "price" | "day" | "cap";
+type SortDir = "asc" | "desc";
+
+/** İlk tıklamada hangi yön: sayılarda büyükten küçüğe, adda A'dan Z'ye. */
+const FIRST_DIR: Record<SortKey, SortDir> = { company: "asc", price: "desc", day: "desc", cap: "desc" };
 
 export function ThemeTable({
   rows,
@@ -61,12 +81,74 @@ export function ThemeTable({
     cap: string;
     benchmark: string;
     lastClose: string;
+    sortBy: string;
   };
 }) {
-  const dayScale = scaleRatios(
-    rows.map((row, i) => (moves?.included[i] ? row.changePct : null)),
-  );
-  const capScale = scaleRatios(rows.map((row) => row.marketCap));
+  const reduced = useMotionPreference();
+  const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: "cap", dir: "desc" });
+
+  const scaled = useMemo(() => {
+    const dayScale = scaleRatios(rows.map((row, i) => (moves?.included[i] ? row.changePct : null)));
+    const capScale = scaleRatios(rows.map((row) => row.marketCap));
+    return rows.map((row, i) => ({
+      row,
+      dayRatio: dayScale.ratios[i],
+      daySigned: dayScale.signed,
+      capRatio: capScale.ratios[i],
+    }));
+  }, [rows, moves]);
+
+  const sorted = useMemo(() => {
+    const value = (row: ThemeRow): number | string | null =>
+      sort.key === "company"
+        ? row.symbol
+        : sort.key === "price"
+          ? row.price
+          : sort.key === "day"
+            ? row.changePct
+            : row.marketCap;
+    const factor = sort.dir === "asc" ? 1 : -1;
+    /* Değeri olmayan satır yön ne olursa olsun sonda kalır. */
+    return [...scaled].sort((a, b) => {
+      const av = value(a.row);
+      const bv = value(b.row);
+      if (av === null && bv === null) return a.row.symbol.localeCompare(b.row.symbol);
+      if (av === null) return 1;
+      if (bv === null) return -1;
+      if (typeof av === "string" || typeof bv === "string") return String(av).localeCompare(String(bv)) * factor;
+      return (av - bv) * factor;
+    });
+  }, [scaled, sort]);
+
+  const toggle = (key: SortKey) =>
+    setSort((current) =>
+      current.key === key
+        ? { key, dir: current.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: FIRST_DIR[key] },
+    );
+
+  const header = (key: SortKey, label: string, className: string) => {
+    const active = sort.key === key;
+    return (
+      <th
+        scope="col"
+        className={className}
+        aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
+      >
+        <button
+          type="button"
+          className={styles.sortButton}
+          data-active={active || undefined}
+          data-dir={active ? sort.dir : undefined}
+          aria-label={labels.sortBy.replace("{column}", label)}
+          onClick={() => toggle(key)}
+        >
+          {label}
+          {active && <ArrowDown weight="bold" size={11} className={styles.sortIcon} aria-hidden />}
+        </button>
+      </th>
+    );
+  };
 
   const renderDay = (row: ThemeRow, ratio: number | null | undefined, signed: boolean) => {
     if (row.changePct === null) return NO_VALUE;
@@ -122,23 +204,19 @@ export function ThemeTable({
       >
         <thead>
           <tr className="border-y border-line-soft text-left text-nano text-muted">
-            <th scope="col" className={cn(sticky, "px-4 py-2.5 font-medium sm:px-5")}>
-              {labels.company}
-            </th>
-            <th scope="col" className="px-2 py-2.5 text-right font-medium sm:px-4">
-              {labels.price}
-            </th>
-            <th scope="col" className="px-2 py-2.5 text-right font-medium sm:px-4">
-              {labels.day}
-            </th>
-            <th scope="col" className="py-2.5 pl-2 pr-4 text-right font-medium sm:pl-4 sm:pr-5">
-              {labels.cap}
-            </th>
+            {header("company", labels.company, cn(sticky, "px-4 py-2.5 font-medium sm:px-5"))}
+            {header("price", labels.price, "px-2 py-2.5 text-right font-medium sm:px-4")}
+            {header("day", labels.day, "px-2 py-2.5 text-right font-medium sm:px-4")}
+            {header("cap", labels.cap, "py-2.5 pl-2 pr-4 text-right font-medium sm:pl-4 sm:pr-5")}
           </tr>
         </thead>
         <tbody className="divide-y divide-line-soft">
-          {rows.map((row, i) => (
-            <tr key={row.symbol}>
+          {sorted.map(({ row, dayRatio, daySigned, capRatio }) => (
+            <motion.tr
+              key={row.symbol}
+              layout={reduced ? false : "position"}
+              transition={{ duration: ROW_LAYOUT_S, ease: [0.22, 1, 0.36, 1] }}
+            >
               <th scope="row" className={cn(sticky, "max-w-[220px] px-4 py-2 text-left font-normal sm:px-5")}>
                 {nameCell(row)}
               </th>
@@ -148,15 +226,13 @@ export function ThemeTable({
                 </span>
               </td>
               <td className="px-2 py-2 text-right align-top text-small sm:px-4 sm:text-base">
-                {renderDay(row, dayScale.ratios[i], dayScale.signed)}
+                {renderDay(row, dayRatio, daySigned)}
               </td>
               <td className="py-2 pl-2 pr-4 text-right align-top text-small text-body sm:pl-4 sm:pr-5 sm:text-base">
                 <span className="numeral">{formatMoneyCompact(row.marketCap, locale)}</span>
-                {capScale.ratios[i] != null && (
-                  <ScaleBar ratio={capScale.ratios[i]!} signed={false} />
-                )}
+                {capRatio != null && <ScaleBar ratio={capRatio} signed={false} />}
               </td>
-            </tr>
+            </motion.tr>
           ))}
           {benchmark && (
             <Fragment>
@@ -179,8 +255,9 @@ export function ThemeTable({
                   </span>
                 </td>
                 <td className="px-2 py-2 text-right align-top text-small sm:px-4 sm:text-base">
-                  {/* Ölçüt satırı ölçeğe girmiyor: bir fon ile şirketleri aynı
-                      çubukta sıralamak, fonu sepetin bir üyesi gibi gösterirdi. */}
+                  {/* Ölçüt satırı ölçeğe ve sıralamaya girmiyor: bir fon ile
+                      şirketleri aynı çubukta sıralamak, fonu sepetin bir
+                      üyesi gibi gösterirdi. */}
                   {renderDay(benchmark, null, false)}
                 </td>
                 <td className="py-2 pl-2 pr-4 text-right align-top text-small text-muted sm:pl-4 sm:pr-5 sm:text-base">

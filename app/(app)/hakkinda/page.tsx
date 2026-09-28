@@ -1,24 +1,36 @@
+import type { CSSProperties } from "react";
 import {
   ArrowRight,
   ArrowSquareOut,
-  Broadcast,
-  Database,
-  GithubLogo,
-  ShieldCheck,
   ArrowsLeftRight,
+  Broadcast,
+  Calculator,
+  Code,
+  Database,
+  Gift,
+  GithubLogo,
+  Monitor,
+  Prohibit,
+  Robot,
+  SealCheck,
+  ShieldCheck,
+  UserCheck,
 } from "@phosphor-icons/react/dist/ssr";
+import { FlowReveal } from "@/components/about/FlowReveal";
+import styles from "@/components/about/About.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { HeroAccent } from "@/components/motion/HeroAccent";
 import { MotionExperience, ScrollProgress, SectionNav } from "@/components/motion/PremiumMotion";
 import { EmbedSnippet } from "@/components/seo/EmbedSnippet";
 import { BreadcrumbJsonLd, REPO_URL } from "@/components/seo/JsonLd";
-import { PageHeader, Panel, PanelHeader, buttonClass } from "@/components/ui/primitives";
+import { Panel, PanelHeader, buttonClass } from "@/components/ui/primitives";
 import { getHolidays, getStatus } from "@/lib/data";
 import { EMBED_ROUTES, EMBED_THEME_PARAM } from "@/lib/embed";
 import { getI18n } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
 import { SESSION_BOUNDS, closeMinutesFor } from "@/lib/market-hours";
 import { pageMetadata } from "@/lib/page-meta";
-import { clockOf, timePair } from "@/lib/session-clock";
+import { clockOf, sessionWindows, timePair, type SessionWindow } from "@/lib/session-clock";
 import { SITE_URL } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -49,11 +61,45 @@ const EMBED_HEIGHT = { countdown: 240, earnings: 524 } as const;
 
 /** Üç katmanın simgeleri — sıra `about.layers` ile aynı. */
 const LAYER_ICONS = [Broadcast, ArrowsLeftRight, Database] as const;
+/** İlkelerin simgeleri — sıra `about.principles` ile aynı. */
+const PRINCIPLE_ICONS = [Prohibit, Gift, Code, SealCheck] as const;
+/** Yazı akışının simgeleri — sıra `about.contentSteps` ile aynı. */
+const CONTENT_ICONS = [Calculator, Robot, ShieldCheck, UserCheck] as const;
+
+/** Günün dakikası; seans şeridi bunun yüzdesiyle çiziliyor. */
+const DAY_MINUTES = 24 * 60;
+/** Şeridin altındaki saat çentikleri (dakika). */
+const CLOCK_TICKS = [0, 6, 12, 18, 24].map((hour) => hour * 60);
+/** Şeridin sağ ucu: `clockOf` 24:00'ı 00:00'a sarıyor. */
+const DAY_END_LABEL = "24:00";
 
 /** Bölüm gövdesinin iç payı — PanelHeader'ın yatay payıyla aynı hat. */
 const BODY = "flex flex-col gap-4 px-4 pb-5 sm:px-5 sm:pb-6";
 /** Okuma genişliği: gövde metni satırı ~70 karakterde kırılsın. */
 const PROSE = "max-w-[68ch] text-base leading-relaxed text-body";
+
+/** "16:30" → 990. */
+function minutesOf(clock: string): number {
+  const [hour, minute] = clock.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+type Segment = { key: string; left: number; width: number };
+
+/**
+ * Bir pencereyi şeritte yüzdelere çevirir. Gece yarısını aşan pencere
+ * (Türkiye saatiyle kapanış sonrası 23:00'ten 03:00'e) iki parçaya bölünür.
+ */
+function segmentsOf(key: string, from: string, to: string): Segment[] {
+  const start = minutesOf(from);
+  const end = minutesOf(to);
+  const pct = (minutes: number) => (minutes / DAY_MINUTES) * 100;
+  if (end > start) return [{ key, left: pct(start), width: pct(end - start) }];
+  return [
+    { key, left: pct(start), width: pct(DAY_MINUTES - start) },
+    { key: `${key}-wrap`, left: 0, width: pct(end) },
+  ];
+}
 
 /**
  * Hakkında ve Metodoloji — sitenin güven sayfası.
@@ -68,10 +114,21 @@ const PROSE = "max-w-[68ch] text-base leading-relaxed text-body";
  * hesaplıyor, sahibi düzeltiyor. Makale künyelerindeki yazar da bu yüzden
  * bir kişi değil kuruluş (components/seo/JsonLd.tsx).
  *
- * DÜZEN sitenin ekran sırası: başlık, bölüm dizini, paneller; uyarı
- * (Yatırım Tavsiyesi Değildir) en sonda, kendi panelinde. Görsel YOK:
- * sitenin kuralı fotoğrafsız; üç katman bir akış olarak çiziliyor ve
- * "Sitene Ekle" bölümü gerçek parçaları önizleme olarak gösteriyor.
+ * ANLATIM ÇİZİMLE (28 Eylül). Sayfa beş metin panelinden ibaretti ve
+ * güvenin asıl kanıtı (sayının hangi kapılardan geçtiği, yazının kimin
+ * elinden geçtiği) paragrafların içinde kayboluyordu. Şimdi:
+ *
+ *   - Kapağın sağında sitenin var olma nedeni, ölçülmüş olarak: bugünün
+ *     tarihiyle hesaplanmış seans saatleri ve günün 24 saatine yerleşmiş
+ *     seans pencereleri. Sabit bir süs değil; ABD yaz saatiyle kayıyor.
+ *   - İlkeler iri tipografiyle, kimlik bölümünün hemen ardından.
+ *   - Veri ve yazı üretimi ADIM ADIM açılan akışlar (`FlowReveal`): kaynak →
+ *     üç kapı → ekrandaki damga; site hesaplar → rutin yazar → yazma katmanı
+ *     denetler → sahip düzeltir.
+ *
+ * Çapalar (#kim, #veri, #yazilar, #acik-kaynak, #sitene-ekle) aynı kaldı;
+ * yalnızca sıra değişti: ilkeler veriden önce, çünkü okuyucunun ilk sorusu
+ * "bu site bana bir şey satıyor mu".
  */
 export default async function AboutPage() {
   const { locale, t } = await getI18n();
@@ -80,8 +137,18 @@ export default async function AboutPage() {
   /* Saatler O GÜNÜN tarihiyle: sabit yazılsaydı ABD yaz saati geçişinde
      sayfa bir saat yanlış söylerdi (CLAUDE.md "Saat kuralı"). */
   const day = status.etDate;
-  const open = timePair(day, clockOf(SESSION_BOUNDS.regularOpen), locale).primary;
-  const close = timePair(day, clockOf(closeMinutesFor(day, holidays)), locale).primary;
+  const closeMinutes = closeMinutesFor(day, holidays);
+  const open = timePair(day, clockOf(SESSION_BOUNDS.regularOpen), locale);
+  const close = timePair(day, clockOf(closeMinutes), locale);
+  /* Şerit okuyucunun BİRİNCİL saatiyle: pencere dizesi "16:30–23:00". */
+  const windowLabel = { pre: a.clockPre, regular: a.clockRegular, after: a.clockAfter } as const;
+  const windows = sessionWindows(day, locale, closeMinutes).filter(
+    (window): window is SessionWindow & { key: keyof typeof windowLabel } => window.key !== "overnight",
+  );
+  const segments = windows.flatMap((window) => {
+    const [from, to] = window.primary.split(/[–-]/);
+    return segmentsOf(window.key, from, to).map((segment) => ({ ...segment, kind: window.key }));
+  });
 
   /* Önizleme GÖRECELİ adresle (aynı köken, her ortamda çalışır), kod
      MUTLAK adresle (başka sitede çalışacak). */
@@ -101,24 +168,82 @@ export default async function AboutPage() {
 
   const sections = [
     { id: "kim", label: a.whoTitle },
+    { id: "acik-kaynak", label: a.freeTitle },
     { id: "veri", label: a.dataTitle },
     { id: "yazilar", label: a.contentTitle },
-    { id: "acik-kaynak", label: a.freeTitle },
     { id: "sitene-ekle", label: a.embedTitle },
   ];
+  const [whoLede, ...whoRest] = a.whoBody;
 
   return (
-    <MotionExperience className="mx-auto flex w-full max-w-[1040px] flex-col gap-5">
+    <MotionExperience className={cn("mx-auto flex w-full max-w-[1040px] flex-col gap-5", styles.about)}>
       <ScrollProgress />
       <BreadcrumbJsonLd locale={locale} items={[{ name: a.title, path: "/hakkinda" }]} />
-      <PageHeader eyebrow={a.eyebrow} title={a.title} subtitle={a.intro} />
+
+      <header className={`${styles.hero} page-frame`}>
+        <HeroAccent />
+        <div className={`${styles.heroCopy} page-heading-copy`}>
+          <p className="page-eyebrow">{a.eyebrow}</p>
+          <h1 className="display-ink">{a.title}</h1>
+          <p>{a.intro}</p>
+        </div>
+        {/* SEANS SAATİ KAPAKTA. Sitenin var olma nedeni New York saatini
+            Türkiye saatine doğru çevirmek; kapağın görseli o çevirinin
+            bugünkü sonucu. Pencereler `sessionWindows`tan, yarım günde
+            kapanış erkene çekiliyor. */}
+        <figure className={styles.clock}>
+          <figcaption className={styles.clockHead}>
+            <span>{a.clockTitle}</span>
+            <span>{a.clockZone}</span>
+          </figcaption>
+          <dl className={styles.clockTimes}>
+            {[
+              { label: a.clockOpen, pair: open },
+              { label: a.clockClose, pair: close },
+            ].map(({ label, pair }) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd className="numeral">{pair.primary}</dd>
+                <dd className={`${styles.clockSecondary} numeral`}>
+                  {pair.secondary} {a.clockSecondaryZone}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <div className={styles.track} role="img" aria-label={a.clockAria}>
+            {segments.map((segment, index) => (
+              <span
+                key={segment.key}
+                data-kind={segment.kind}
+                style={{ left: `${segment.left}%`, width: `${segment.width}%`, "--i": index } as CSSProperties}
+              />
+            ))}
+          </div>
+          <div aria-hidden className={`${styles.ticks} numeral`}>
+            {CLOCK_TICKS.map((tick) => (
+              <span key={tick} style={{ left: `${(tick / DAY_MINUTES) * 100}%` }}>
+                {tick === DAY_MINUTES ? DAY_END_LABEL : clockOf(tick)}
+              </span>
+            ))}
+          </div>
+          <ul className={styles.legend}>
+            {windows.map((window) => (
+              <li key={window.key} data-kind={window.key}>
+                {windowLabel[window.key]}
+              </li>
+            ))}
+          </ul>
+        </figure>
+      </header>
+
       <SectionNav items={sections} label={a.title} />
 
       {/* ---- Kim yapıyor ---- */}
       <Panel id="kim">
         <PanelHeader title={a.whoTitle} />
         <div className={BODY}>
-          {a.whoBody.map((paragraph) => (
+          <p className={styles.lede}>{whoLede}</p>
+          {whoRest.map((paragraph) => (
             <p key={paragraph} className={PROSE}>
               {paragraph}
             </p>
@@ -137,97 +262,24 @@ export default async function AboutPage() {
         </div>
       </Panel>
 
-      {/* ---- Veri ---- */}
-      <Panel id="veri">
-        <PanelHeader title={a.dataTitle} />
-        <div className={BODY}>
-          <p className={PROSE}>{a.dataIntro}</p>
-          {/* Kaynak dizini: ad solda, ne verdiği sağda. Satır başına çizgi
-              yok (tek hairline listenin üstünde); aralık grubu ayırıyor. */}
-          <dl className="grid gap-x-8 gap-y-3 border-t border-line pt-4 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
-            {a.sources.map((source) => (
-              <div key={source.name} className="contents">
-                <dt className="font-semibold text-strong">{source.name}</dt>
-                <dd className="-mt-2 text-small leading-relaxed text-body sm:mt-0 sm:text-base">
-                  {source.what}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-
-        {/* Üç katman: bir AKIŞ, üç eşit kart değil. Sıra anlam taşıyor ve
-            oklar onu söylüyor; dar ekranda akış dikey. */}
-        <div className={cn(BODY, "border-t border-line-soft pt-5")}>
-          <h3 className="text-read font-bold text-strong">{a.layersTitle}</h3>
-          <p className={PROSE}>{a.layersIntro}</p>
-          <ol className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-stretch">
-            {a.layers.map((layer, index) => {
-              const Icon = LAYER_ICONS[index] ?? Database;
-              return (
-                <li key={layer.title} className="contents">
-                  {index > 0 && (
-                    <ArrowRight
-                      aria-hidden
-                      size={18}
-                      className="hidden self-center text-muted md:block"
-                    />
-                  )}
-                  <div className="flex flex-col gap-1.5 rounded-lg border border-line bg-surface-sunken p-4">
-                    <Icon aria-hidden size={22} weight="duotone" className="text-primary" />
-                    <p className="font-semibold text-strong">{layer.title}</p>
-                    <p className="text-small leading-relaxed text-body">{layer.body}</p>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-
-        <div className={cn(BODY, "border-t border-line-soft pt-5")}>
-          <h3 className="text-read font-bold text-strong">{a.stampTitle}</h3>
-          {a.stampBody.map((paragraph) => (
-            <p key={paragraph} className={PROSE}>
-              {paragraph}
-            </p>
-          ))}
-          <h3 className="mt-2 text-read font-bold text-strong">{a.timeTitle}</h3>
-          <p className={cn(PROSE, "numeral")}>
-            {a.timeBody.replace("{open}", open).replace("{close}", close)}
-          </p>
-        </div>
-      </Panel>
-
-      {/* ---- İçerik üretimi ---- */}
-      <Panel id="yazilar">
-        <PanelHeader title={a.contentTitle} />
-        <div className={BODY}>
-          {a.contentBody.map((paragraph) => (
-            <p key={paragraph} className={PROSE}>
-              {paragraph}
-            </p>
-          ))}
-          <div className="flex flex-col gap-2.5 border-t border-line-soft pt-4">
-            <h3 className="text-read font-bold text-strong">{a.rhythmTitle}</h3>
-            <ul className="flex flex-wrap gap-2">
-              {a.rhythm.map((item) => (
-                <li
-                  key={item}
-                  className="rounded-full border border-line bg-surface-elevated px-3 py-1.5 text-small text-body"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </Panel>
-
-      {/* ---- Ücretsiz, açık kaynak, gizlilik ---- */}
+      {/* ---- İlkeler (çapa tarihten: #acik-kaynak) ----
+          Dört söz iri puntoyla, ızgarada; kutu değil, hairline. Kaynak kodu
+          ve hata bildirimi hemen altında: "açık kaynak" sözünün kanıtı. */}
       <Panel id="acik-kaynak">
         <PanelHeader title={a.freeTitle} />
-        <div className={BODY}>
-          <p className={PROSE}>{a.freeBody}</p>
+        <ol className={styles.principles} data-motion-stagger>
+          {a.principles.map((principle, index) => {
+            const Icon = PRINCIPLE_ICONS[index] ?? SealCheck;
+            return (
+              <li key={principle.title}>
+                <Icon aria-hidden size={24} weight="duotone" />
+                <h3>{principle.title}</h3>
+                <p>{principle.body}</p>
+              </li>
+            );
+          })}
+        </ol>
+        <div className={cn(BODY, "pt-5")}>
           <div className="flex flex-wrap gap-2.5">
             <a
               href={REPO_URL}
@@ -264,6 +316,136 @@ export default async function AboutPage() {
         </div>
       </Panel>
 
+      {/* ---- Veri ----
+          Akış: kaynaklar → üç kapı → ekrandaki damga. Bir sayının yolu,
+          sırasıyla; dar ekranda dikey. Adımlar `--step` sırasıyla açılıyor. */}
+      <Panel id="veri">
+        <PanelHeader title={a.dataTitle} />
+        <div className={BODY}>
+          <p className={PROSE}>{a.dataIntro}</p>
+        </div>
+        <FlowReveal className={styles.dataFlow}>
+          <section className={styles.stage} data-step style={{ "--step": 0 } as CSSProperties}>
+            <h3 className={styles.stageTitle}>
+              <Broadcast aria-hidden size={18} weight="duotone" />
+              {a.flowSources}
+            </h3>
+            <ul className={styles.sources}>
+              {a.sources.map((source) => (
+                <li key={source.name}>
+                  <strong>{source.name}</strong>
+                  <span>{source.what}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+          <span aria-hidden className={styles.connector} data-connector style={{ "--step": 1 } as CSSProperties} />
+          <section className={styles.stage} data-step style={{ "--step": 1.4 } as CSSProperties}>
+            <h3 className={styles.stageTitle}>
+              <ArrowsLeftRight aria-hidden size={18} weight="duotone" />
+              {a.layersTitle}
+            </h3>
+            <p className={styles.stageIntro}>{a.layersIntro}</p>
+            <ol className={styles.gates}>
+              {a.layers.map((layer, index) => {
+                const Icon = LAYER_ICONS[index] ?? Database;
+                return (
+                  <li key={layer.title} data-step style={{ "--step": 1.8 + index * 0.55 } as CSSProperties}>
+                    {index > 0 && <span className={styles.fallback}>{a.flowFallback}</span>}
+                    <div className={styles.gate}>
+                      <Icon aria-hidden size={20} weight="duotone" />
+                      <span>
+                        <strong>{layer.title}</strong>
+                        <span>{layer.body}</span>
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+          <span aria-hidden className={styles.connector} data-connector style={{ "--step": 3.6 } as CSSProperties} />
+          <section className={styles.stage} data-step style={{ "--step": 4 } as CSSProperties}>
+            <h3 className={styles.stageTitle}>
+              <Monitor aria-hidden size={18} weight="duotone" />
+              {a.flowScreen}
+            </h3>
+            {/* Damganın ANATOMİSİ, sahte bir ekran görüntüsü değil: kaynak
+                gerçek (fiyatlar Alpaca'dan), gecikme gerçek; saat bir yuva
+                olarak çiziliyor, uydurma bir saat yazılmıyor. */}
+            <div className={styles.stamp}>
+              <span>{a.stampSource}</span>
+              <span>{a.stampDelay}</span>
+              <span data-slot>{a.stampTime}</span>
+            </div>
+            <span className={styles.stale}>{a.stampStale}</span>
+            <p className={styles.stageIntro}>{a.stampCaption}</p>
+          </section>
+        </FlowReveal>
+
+        <div className={cn(BODY, "border-t border-line-soft pt-5")}>
+          <h3 className="text-read font-bold text-strong">{a.stampTitle}</h3>
+          {a.stampBody.map((paragraph) => (
+            <p key={paragraph} className={PROSE}>
+              {paragraph}
+            </p>
+          ))}
+          <h3 className="mt-2 text-read font-bold text-strong">{a.timeTitle}</h3>
+          <p className={PROSE}>{a.timeBody}</p>
+        </div>
+      </Panel>
+
+      {/* ---- İçerik üretimi ---- */}
+      <Panel id="yazilar">
+        <PanelHeader title={a.contentTitle} />
+        <div className={BODY}>
+          {a.contentBody.map((paragraph) => (
+            <p key={paragraph} className={PROSE}>
+              {paragraph}
+            </p>
+          ))}
+        </div>
+        <FlowReveal className={styles.contentFlowWrap}>
+          <ol className={styles.contentFlow}>
+            {a.contentSteps.map((step, index) => {
+              const Icon = CONTENT_ICONS[index] ?? UserCheck;
+              return (
+                <li key={step.title} data-step style={{ "--step": index * 1.1 } as CSSProperties}>
+                  {/* Çizgi SONRAKİ adıma uzanıyor: kendi simgesinin
+                      kenarından komşunun simgesine (geniş ekranda sağa,
+                      telefonda aşağı). */}
+                  {index < a.contentSteps.length - 1 && (
+                    <span
+                      aria-hidden
+                      className={styles.stepConnector}
+                      data-connector
+                      style={{ "--step": index * 1.1 + 0.6 } as CSSProperties}
+                    />
+                  )}
+                  <span aria-hidden className={styles.stepIcon}>
+                    <Icon size={22} weight="duotone" />
+                  </span>
+                  <h3>{step.title}</h3>
+                  <p>{step.body}</p>
+                </li>
+              );
+            })}
+          </ol>
+        </FlowReveal>
+        <div className={cn(BODY, "border-t border-line-soft pt-5")}>
+          <h3 className="text-read font-bold text-strong">{a.rhythmTitle}</h3>
+          <dl className={styles.rhythm} data-motion-stagger>
+            {a.rhythm.map((item) => (
+              <div key={item.what}>
+                <dt>{item.when}</dt>
+                <dd>{item.what}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className={PROSE}>{a.contentNote}</p>
+        </div>
+      </Panel>
+
       {/* ---- Sitene ekle ----
           Önizlemeler GERÇEK parçalar, ekran görüntüsü değil: çerçevenin
           içinde gömen sitenin göreceği sayfanın kendisi çiziliyor. */}
@@ -275,13 +457,15 @@ export default async function AboutPage() {
             {embeds.map((embed) => (
               <div key={embed.id} className="flex min-w-0 flex-col gap-3">
                 <h3 className="text-read font-bold text-strong">{embed.name}</h3>
-                <iframe
-                  src={embed.preview}
-                  title={a.embedPreviewLabel.replace("{name}", embed.name)}
-                  height={embed.height}
-                  loading="lazy"
-                  className="w-full max-w-[480px] border-0"
-                />
+                <div className={styles.preview}>
+                  <iframe
+                    src={embed.preview}
+                    title={a.embedPreviewLabel.replace("{name}", embed.name)}
+                    height={embed.height}
+                    loading="lazy"
+                    className="w-full max-w-[480px] border-0"
+                  />
+                </div>
                 <EmbedSnippet
                   code={snippet(embed.src, embed.name, embed.height)}
                   label={a.embedCodeLabel.replace("{name}", embed.name)}

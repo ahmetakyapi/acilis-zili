@@ -84,6 +84,7 @@ const ROUTES = [
   "/sozluk/fk",
   "/vergi",
   "/hakkinda",
+  "/portfoy",
 ];
 const NOT_FOUND_ROUTE = "/bu-sayfa-yok-duman-testi";
 

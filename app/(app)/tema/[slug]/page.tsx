@@ -1,27 +1,42 @@
+import { cache, Suspense } from "react";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { GuideHint } from "@/components/article/GuideHint";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
-import { ThemeTable } from "@/components/themes/ThemeTable";
 import { ThemeStats } from "@/components/themes/ThemeStats";
+import { ThemeTable } from "@/components/themes/ThemeTable";
+import { ThemeTreemap } from "@/components/themes/ThemeTreemap";
+import styles from "@/components/themes/Themes.module.css";
+import { HeatLegend, LogoGroup } from "@/components/themes/ThemeVisuals";
 import {
   ButtonLink,
   DataStamp,
-  PageHeader,
   Panel,
   PanelHeader,
+  Skeleton,
+  SkeletonRow,
 } from "@/components/ui/primitives";
-import { THEME_SLUGS, themeBySlug, themeDek, themeTitle, themeWhy } from "@/content/themes";
+import {
+  THEMES,
+  THEME_SLUGS,
+  themeBySlug,
+  themeDek,
+  themeTitle,
+  themeWhy,
+  type ThemeEntry,
+} from "@/content/themes";
 import { compareHref, MAX_COMPARE_SYMBOLS } from "@/lib/compare";
 import { getStatus, getSymbolNames } from "@/lib/data";
-import { getI18n } from "@/lib/i18n";
+import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { logoSrc } from "@/lib/logos";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { getQuotes } from "@/lib/providers";
 import { pageAlternates } from "@/lib/site";
-import { sameSessionMoves } from "@/lib/theme-stats";
+import { median, sameSessionMoves, type MoveSet } from "@/lib/theme-stats";
 import {
   byMarketCap,
   KATILIM_MAX,
@@ -29,19 +44,32 @@ import {
   katilimMembers,
   themeQuoteSymbols,
   themeRow,
+  type ThemeRow,
 } from "@/lib/themes-data";
+import { cn, directionOf, directionText, formatPercent, formatPrice, NO_VALUE } from "@/lib/utils";
 
 /**
  * Tematik liste — "yapay zekâ hisseleri hangileri, bugün ne yaptılar".
  *
- * Ekran sırası sitenin kuralı: başlık (sağında tek denetim: ilk dördü
- * karşılaştır), künye şeridi (üye sayısı, günün medyanı, yükselen/düşen),
- * ana tablo, metin (neden bu şirketler) ve künyeler panelin içinde, sonra
- * veri damgası ve rehber.
+ * Ekran sırası sitenin kuralı:
+ *   1. Kapak: ad, tek cümle, üye logolarının kümesi.
+ *   2. Ana görsel: kare haritası (piyasa değeriyle boyutlanmış karolar,
+ *      günün hareketiyle boyanmış) ve yanında temanın ölçüt ETF'i.
+ *   3. Ölçü ızgarası: medyan, yükselen/düşen, en güçlü ve en zayıf üye.
+ *   4. Sıralanabilir tablo, dibinde karşılaştırma bağlantısı.
+ *   5. Metin (neden bu şirketler) ve künyeler panelin içinde.
+ *   6. Diğer temalar, veri damgası, rehber.
  *
  * Kotasyon TEK ÇAĞRI: üyeler + ölçüt ETF'i aynı anahtarda (gerekçe
  * `lib/themes-data.ts`). Katılım temasında üyeler o çağrının sonucuyla
  * seçiliyor, yani elemeye giren fiyat tabloda görünen fiyatın kendisi.
+ *
+ * SAYFA KOTASYONU BEKLEMİYOR (28 Eylül). Sayfa önce kotasyonu (ve Katılım
+ * temasında kırk adayın bilanço taramasını) bekleyip sonra tek parça
+ * çiziyordu; soğuk önbellekte Katılım sayfasının ilk baytı 626 ms'ydi
+ * (ölçüldü). Kapak, metin ve diğer temalar durağan (content/themes.ts);
+ * veriye bağlı üç panel ve damga Suspense içinde akıyor ve hepsi aynı
+ * `loadTheme`i okuyor (`cache`, istek içinde tek hesap).
  */
 
 export async function generateStaticParams() {
@@ -61,12 +89,15 @@ export async function generateMetadata(props: PageProps<"/tema/[slug]">) {
   };
 }
 
-export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
-  const { slug } = await props.params;
-  const { locale, t } = await getI18n();
-  const theme = themeBySlug(slug);
-  if (!theme) notFound();
+/** Kapak kümesinde en fazla kaç logo — tavan temaların üye tavanıyla aynı. */
+const CLUSTER_MAX = 20;
+/** Bu farkın altında "aynı yerde" denir: iki basamaklı yazımda 0,00. */
+const EVEN_POINTS = 0.005;
+/** Diğer temalar satırındaki logo yığını. */
+const OTHER_STACK_MAX = 4;
 
+const loadTheme = cache(async function loadTheme(slug: string) {
+  const theme = themeBySlug(slug)!;
   const status = await getStatus();
   const quoteSymbols = await themeQuoteSymbols(theme);
   const [quotesResult, names] = await Promise.all([
@@ -92,10 +123,20 @@ export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
           displayName: theme.benchmark.name,
         }
       : null;
+  return { theme, rows, moves, benchmark, quotesResult };
+});
 
-  /* İlk dört, piyasa değerine göre — karşılaştırma ekranının sembol sınırı. */
-  const compareSet = rows.slice(0, MAX_COMPARE_SYMBOLS).map((row) => row.symbol);
+export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
+  const { slug } = await props.params;
+  const { locale, t } = await getI18n();
+  const theme = themeBySlug(slug);
+  if (!theme) notFound();
+
   const title = themeTitle(theme, locale);
+  const symbols = theme.symbols;
+  const katilim = symbols === "katilim";
+  const staticMembers =
+    symbols === "katilim" ? [] : symbols.map((symbol) => ({ symbol, logoUrl: logoSrc(symbol, null) }));
 
   return (
     <MotionExperience className={polish.page}>
@@ -113,31 +154,152 @@ export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
         <ArrowLeft weight="bold" size={13} />
         {t.themes.backToList}
       </Link>
-      <PageHeader
+      <DirectoryHeader
         eyebrow={t.themes.eyebrow}
         title={title}
-        subtitle={themeDek(theme, locale)}
-        action={
-          compareSet.length >= 2 ? (
-            <ButtonLink href={compareHref(compareSet)} variant="ghost" prefetch={false}>
-              {t.themes.compareTop}
-            </ButtonLink>
-          ) : undefined
+        description={themeDek(theme, locale)}
+        visual={
+          katilim ? (
+            <Suspense
+              fallback={<LogoGroup members={[]} variant="cluster" size="lg" max={CLUSTER_MAX} placeholder={KATILIM_MAX} />}
+            >
+              <LiveCluster slug={theme.slug} />
+            </Suspense>
+          ) : (
+            <LogoGroup members={staticMembers} variant="cluster" size="lg" max={CLUSTER_MAX} />
+          )
         }
-      />
+      >
+        <p className={styles.heroMeta}>
+          <span>
+            {katilim ? (
+              t.themes.companies.replace("{count}", `≤ ${KATILIM_MAX}`)
+            ) : (
+              <b className="numeral">{t.themes.companies.replace("{count}", String(theme.symbols.length))}</b>
+            )}
+          </span>
+          {theme.benchmark && (
+            <span>
+              {t.themes.benchmark}: <b className="numeral">{theme.benchmark.symbol}</b>
+            </span>
+          )}
+        </p>
+      </DirectoryHeader>
+
+      <Suspense fallback={<LiveSkeleton theme={theme} t={t} />}>
+        <LiveTheme slug={theme.slug} locale={locale} t={t} />
+      </Suspense>
+
+      <Panel>
+        <PanelHeader title={t.themes.whyTitle} />
+        <p className="border-t border-line px-4 py-4 text-read leading-[27px] text-body sm:px-5">
+          {themeWhy(theme, locale)}
+        </p>
+        {/* KÜNYELER PANELİN İÇİNDE, hairline ile ayrılmış düz paragraflar —
+            bir uyarı için yeni kutu açılmıyor (ekran düzeni kuralı 6). */}
+        {katilim && (
+          <>
+            <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
+              {t.themes.katilimPool
+                .replace("{pool}", String(KATILIM_POOL))
+                .replace("{max}", String(KATILIM_MAX))}
+            </p>
+            <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
+              <span className="font-semibold text-strong">{t.stock.complianceNotFatwa}.</span>{" "}
+              {t.stock.complianceDisclaimer} {t.stock.complianceMissing}
+            </p>
+          </>
+        )}
+        <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
+          {t.themes.listNote}
+        </p>
+      </Panel>
+
+      <OtherThemes current={theme.slug} locale={locale} t={t} />
+
+      {/* Damga en sonda ama aynı hesaptan: yedeği boş, akış ekranın
+          dibine iniyor ve üstündeki hiçbir şeyi oynatmıyor. */}
+      <Suspense fallback={null}>
+        <LiveStamp slug={theme.slug} locale={locale} t={t} />
+      </Suspense>
+      <GuideHint label={t.guide.contextLabel} locale={locale} slugs={[...theme.guides]} />
+    </MotionExperience>
+  );
+}
+
+async function LiveCluster({ slug }: { slug: string }) {
+  const { rows } = await loadTheme(slug);
+  return <LogoGroup members={rows} variant="cluster" size="lg" max={CLUSTER_MAX} />;
+}
+
+async function LiveStamp({ slug, locale, t }: { slug: string; locale: Locale; t: Dictionary }) {
+  const { quotesResult } = await loadTheme(slug);
+  if (!quotesResult.ok) return null;
+  return (
+    <DataStamp
+      labels={t.data}
+      source={quotesResult.source}
+      at={quotesResult.fetchedAt}
+      stale={quotesResult.stale}
+      locale={locale}
+    />
+  );
+}
+
+async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t: Dictionary }) {
+  const { rows, moves, benchmark, quotesResult } = await loadTheme(slug);
+
+  /* İlk dört, piyasa değerine göre — karşılaştırma ekranının sembol sınırı. */
+  const compareSet = rows.slice(0, MAX_COMPARE_SYMBOLS).map((row) => row.symbol);
+
+  return (
+    <>
+      <Panel>
+        <PanelHeader
+          title={t.themes.mapTitle}
+          action={rows.length > 0 ? <HeatLegend locale={locale} label={t.themes.mapHint} /> : undefined}
+        />
+        {rows.length > 0 ? (
+          <div className={styles.mapBody} data-bench={benchmark ? "" : undefined}>
+            <div className={styles.mapMain}>
+              <p className={styles.mapHint}>
+                {moves?.basis === "lastClose" ? t.themes.mapLastClose : t.themes.mapHint}
+              </p>
+              <ThemeTreemap
+                rows={rows}
+                moves={moves}
+                solo={!benchmark}
+                locale={locale}
+                labels={{ unsized: t.themes.mapUnsized, lastClose: t.themes.lastClose }}
+              />
+            </div>
+            {benchmark && <BenchmarkAside benchmark={benchmark} moves={moves} locale={locale} t={t} />}
+          </div>
+        ) : (
+          <p className="border-t border-line px-4 py-4 text-small text-muted sm:px-5">
+            {t.themes.katilimEmpty}
+          </p>
+        )}
+        {!quotesResult.ok && (
+          <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
+            {t.themes.quotesUnavailable}
+          </p>
+        )}
+      </Panel>
 
       <ThemeStats
-        count={rows.length}
+        rows={rows}
         moves={moves}
         locale={locale}
         labels={{
           title: t.themes.todayTitle,
-          companies: t.themes.companies,
           median: t.themes.median,
           medianSession: t.themes.medianSession,
           medianLastClose: t.themes.medianLastClose,
           medianMissing: t.themes.medianMissing,
           breadth: t.themes.breadth,
+          best: t.themes.best,
+          worst: t.themes.worst,
         }}
       />
 
@@ -157,6 +319,7 @@ export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
               cap: t.themes.colCap,
               benchmark: t.themes.benchmark,
               lastClose: t.themes.lastClose,
+              sortBy: t.themes.sortBy,
             }}
           />
         ) : (
@@ -164,48 +327,196 @@ export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
             {t.themes.katilimEmpty}
           </p>
         )}
-        {!quotesResult.ok && (
-          <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
-            {t.themes.quotesUnavailable}
-          </p>
+        {compareSet.length >= 2 && (
+          <div className={styles.tableFoot}>
+            <span className="text-small text-muted">{compareSet.join(" · ")}</span>
+            <ButtonLink href={compareHref(compareSet)} variant="ghost" prefetch={false}>
+              {t.themes.compareTop}
+            </ButtonLink>
+          </div>
         )}
       </Panel>
+    </>
+  );
+}
 
-      <Panel>
-        <PanelHeader title={t.themes.whyTitle} />
-        <p className="border-t border-line px-4 py-4 text-read leading-[27px] text-body sm:px-5">
-          {themeWhy(theme, locale)}
-        </p>
-        {/* KÜNYELER PANELİN İÇİNDE, hairline ile ayrılmış düz paragraflar —
-            bir uyarı için yeni kutu açılmıyor (ekran düzeni kuralı 6). */}
-        {theme.symbols === "katilim" && (
-          <>
-            <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
-              {t.themes.katilimPool
-                .replace("{pool}", String(KATILIM_POOL))
-                .replace("{max}", String(KATILIM_MAX))}
-            </p>
-            <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
-              <span className="font-semibold text-strong">{t.stock.complianceNotFatwa}.</span>{" "}
-              {t.stock.complianceDisclaimer} {t.stock.complianceMissing}
-            </p>
-          </>
-        )}
-        <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
-          {t.themes.listNote}
-        </p>
+/**
+ * Ölçüt kıyası — temanın medyanı ile temayı izleyen ETF'in günü, ortak
+ * sıfırdan iki yana açılan iki çubukla.
+ *
+ * Kıyas ancak ikisi AYNI SEANSI anlatıyorsa kuruluyor: açılış öncesinde
+ * ETF bu sabah işlem görmüş, üyeler görmemiş olabilir (ya da tersi). O
+ * hâlde iki sayı yine yazılıyor ama çubuk ve "kaç puan üstünde" cümlesi
+ * yok; iki ayrı günden bir fark üretmek, fark göstermemekten kötü.
+ */
+function BenchmarkAside({
+  benchmark,
+  moves,
+  locale,
+  t,
+}: {
+  benchmark: ThemeRow & { displayName: string };
+  moves: MoveSet | null;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const mid = moves ? median(moves.values) : null;
+  const themeSession = moves?.basis === "session";
+  const benchSession = benchmark.basis !== null && benchmark.basis !== "lastClose";
+  const comparable =
+    mid !== null && benchmark.changePct !== null && moves !== null && themeSession === benchSession;
+  const peak = comparable ? Math.max(Math.abs(mid), Math.abs(benchmark.changePct!)) : 0;
+  const diff = comparable ? mid - benchmark.changePct! : null;
+
+  const bar = (value: number | null, session: boolean) => {
+    if (!comparable || value === null || peak === 0 || value === 0) return null;
+    const ratio = value / peak;
+    return (
+      <i
+        className={styles.rankBar}
+        data-tone={session ? (ratio > 0 ? "up" : "down") : "flat"}
+        data-motion-draw="line"
+        style={
+          ratio > 0
+            ? { left: "50%", width: `${ratio * 50}%`, transformOrigin: "left center" }
+            : { right: "50%", width: `${-ratio * 50}%`, transformOrigin: "right center" }
+        }
+      />
+    );
+  };
+  const tone = (value: number | null, session: boolean) =>
+    value === null ? "text-muted" : session ? directionText(directionOf(value)) : "text-body";
+
+  return (
+    <aside className={styles.bench} aria-labelledby="theme-bench-title">
+      <h3 id="theme-bench-title" className={styles.benchTitle}>
+        {t.themes.benchTitle}
+      </h3>
+      <div className={styles.benchRow}>
+        <span className={styles.benchLabel}>
+          <b>{t.themes.benchMedian}</b>
+          {moves ? (themeSession ? t.themes.medianSession : t.themes.medianLastClose) : NO_VALUE}
+        </span>
+        <span className={cn("numeral", styles.benchValue, tone(mid, themeSession))}>
+          {mid === null ? NO_VALUE : formatPercent(mid, locale)}
+        </span>
+        <span className={styles.benchTrack} aria-hidden>
+          {bar(mid, themeSession)}
+        </span>
+      </div>
+      <div className={styles.benchRow}>
+        <span className={styles.benchLabel}>
+          <b className="numeral">{benchmark.symbol}</b>
+          {benchmark.displayName}
+        </span>
+        <span className={cn("numeral", styles.benchValue, tone(benchmark.changePct, benchSession))}>
+          {benchmark.changePct === null ? NO_VALUE : formatPercent(benchmark.changePct, locale)}
+        </span>
+        <span className={styles.benchTrack} aria-hidden>
+          {bar(benchmark.changePct, benchSession)}
+        </span>
+      </div>
+      <p className={styles.benchNote}>
+        {diff === null
+          ? t.themes.benchMixed
+          : Math.abs(diff) < EVEN_POINTS
+            ? t.themes.benchEven
+            : (diff > 0 ? t.themes.benchAbove : t.themes.benchBelow).replace(
+                "{diff}",
+                formatPrice(Math.abs(diff), locale),
+              )}
+      </p>
+    </aside>
+  );
+}
+
+/**
+ * Akış sürerken yerini tutan iskelet — haritanın kabı aynı oranda, tablo
+ * aynı satır sayısında (Katılım'da tavan kadar). Harita ilk ekranda
+ * duruyor; oranı tuttuğu için veri inince altındaki hiçbir şey kaymıyor.
+ */
+function LiveSkeleton({ theme, t }: { theme: ThemeEntry; t: Dictionary }) {
+  const rowCount = theme.symbols === "katilim" ? KATILIM_MAX : theme.symbols.length;
+  return (
+    <>
+      <Panel aria-busy>
+        <PanelHeader title={t.themes.mapTitle} />
+        <div className={styles.mapBody} data-bench={theme.benchmark ? "" : undefined}>
+          <div className={styles.mapMain}>
+            <p className={styles.mapHint}>{t.themes.mapHint}</p>
+            <div className={cn("skeleton rounded-xl", styles.mapSkeleton)} />
+          </div>
+          {theme.benchmark && (
+            <div className={styles.bench}>
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          )}
+        </div>
       </Panel>
+      <Panel aria-busy>
+        <PanelHeader title={t.themes.todayTitle} />
+        <div className={styles.metrics}>
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className={styles.metric}>
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-11 w-28" />
+            </div>
+          ))}
+        </div>
+      </Panel>
+      <Panel aria-busy>
+        <PanelHeader title={t.themes.tableTitle} />
+        <div className="border-t border-line-soft">
+          {Array.from({ length: rowCount }, (_, i) => (
+            <SkeletonRow key={i} />
+          ))}
+        </div>
+      </Panel>
+    </>
+  );
+}
 
-      {quotesResult.ok && (
-        <DataStamp
-          labels={t.data}
-          source={quotesResult.source}
-          at={quotesResult.fetchedAt}
-          stale={quotesResult.stale}
-          locale={locale}
-        />
-      )}
-      <GuideHint label={t.guide.contextLabel} locale={locale} slugs={[...theme.guides]} />
-    </MotionExperience>
+/**
+ * Diğer temalara geçiş — iki sütunlu satırlar, her satırda temanın ilk
+ * logoları. Durağan: sayılar yok, akış beklemiyor.
+ */
+function OtherThemes({ current, locale, t }: { current: string; locale: Locale; t: Dictionary }) {
+  const others = THEMES.filter((theme) => theme.slug !== current);
+  return (
+    <Panel>
+      <PanelHeader title={t.themes.otherThemes} />
+      <ul className={styles.others}>
+        {others.map((theme) => (
+          <li key={theme.slug} className="min-w-0">
+            <Link href={`/tema/${theme.slug}`} prefetch={false} className={styles.otherLink}>
+              {/* Katılım'ın üyeleri sayfa açılınca seçiliyor; burada logosu
+                  yok ama sütun yerinde, adlar aynı hatta başlasın. */}
+              <LogoGroup
+                members={
+                  theme.symbols === "katilim"
+                    ? []
+                    : theme.symbols.map((symbol) => ({ symbol, logoUrl: logoSrc(symbol, null) }))
+                }
+                variant="stack"
+                size="sm"
+                max={OTHER_STACK_MAX}
+                className={styles.otherStack}
+              />
+              <span className={styles.otherText}>
+                <b>{themeTitle(theme, locale)}</b>
+                <small>
+                  {theme.symbols === "katilim"
+                    ? t.themes.companies.replace("{count}", `≤ ${KATILIM_MAX}`)
+                    : t.themes.companies.replace("{count}", String(theme.symbols.length))}
+                </small>
+              </span>
+              <ArrowRight weight="bold" size={14} className={styles.otherArrow} aria-hidden />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </Panel>
   );
 }

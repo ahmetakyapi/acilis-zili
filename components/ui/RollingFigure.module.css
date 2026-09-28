@@ -1,0 +1,64 @@
+/* ==========================================================================
+   Yuvarlanan display sayısı — gerekçe RollingFigure.tsx'te.
+
+   Satır yüksekliği 1.1em'e sabit: şeridin adımı (rakam başına bir satır)
+   ile pencerenin boyu aynı sayı olmak zorunda, yoksa son rakam pencerenin
+   yarısında durur. Çağıranın punto ve ağırlığı miras alınıyor.
+   ========================================================================== */
+
+.figure {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.track {
+  display: inline-flex;
+  align-items: flex-start;
+  line-height: 1.1em;
+}
+
+.glyph {
+  display: inline-block;
+  height: 1.1em;
+}
+
+.window {
+  position: relative;
+  display: inline-block;
+  height: 1.1em;
+  overflow: hidden;
+  overflow: clip;
+}
+
+.sizer {
+  visibility: hidden;
+}
+
+/* Son konum: ikinci turdaki rakam (10 + rakam). İlk tur yalnızca dönüşün
+   yolu; sıfırdan başlayan bir sayı da bir tur dönerek geliyor. */
+.strip {
+  position: absolute;
+  inset: 0 -0.2em auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate3d(0, calc((10 + var(--digit)) * -1.1em), 0);
+}
+
+.strip > span {
+  display: block;
+  height: 1.1em;
+}
+
+@keyframes figure-roll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .strip {
+    animation: figure-roll 1.15s var(--ease-brand) both;
+    animation-delay: calc(var(--delay, 0ms) + var(--order, 0) * 55ms);
+  }
+}
