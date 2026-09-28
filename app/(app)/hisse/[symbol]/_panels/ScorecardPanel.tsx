@@ -1,4 +1,4 @@
-import { DataStamp, EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
+import { DataStamp, Panel, PanelHeader } from "@/components/ui/primitives";
 import { ScaleBar } from "@/components/markets/CompareScale";
 import { indexMemberOf } from "@/db/seed/indices";
 import { getStatus, getSymbolNames } from "@/lib/data";
@@ -56,22 +56,12 @@ export async function ScorecardPanel({ symbol, locale, t }: { symbol: string; lo
   const ownMetrics = raw.ok ? storedMetricsFrom(raw.data) : own?.metrics ?? null;
 
   const peerRows = rows.filter((row) => row.symbol !== symbol);
-  const header = (
-    <PanelHeader
-      title={d.scTitle}
-      meta={sectorLabel(sector, locale) ?? undefined}
-    />
-  );
-  const preparing = (
-    <Panel className={styles.panel}>
-      {header}
-      <EmptyState
-        compact
-        title={d.scPreparing}
-        hint={d.scPreparingHint.replace("{n}", String(SCORECARD_MIN_PEERS))}
-      />
-    </Panel>
-  );
+  /* HAZIRLANIYORKEN PANEL YOK (28 Eylül). Boş bir "Hazırlanıyor" paneli
+     derinlik ızgarasında analist tablosunun yanında 220 piksellik bir kutu
+     olarak duruyor ve satırın geri kalanını boş bırakıyordu (NVDA, ölçüldü).
+     Ölçüler toplanınca panel kendiliğinden geliyor; o zamana kadar ızgara
+     kalan panellerle kuruluyor. */
+  const preparing = null;
   if (!ownMetrics || peerRows.length < SCORECARD_MIN_PEERS) return preparing;
 
   const universe = [symbol, ...peerRows.map((row) => row.symbol)];

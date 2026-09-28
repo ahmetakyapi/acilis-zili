@@ -2005,9 +2005,6 @@ const en: typeof tr = {
       currentRatio: "Current Ratio",
       momentum: "6-Month Return",
     },
-    scPreparing: "Being Prepared",
-    scPreparingHint:
-      "A sector comparison needs figures for at least {n} companies; they are collected a little more every business day.",
     scNote:
       "Each axis is the company's percentile among index members in the same GICS sector; it is not a grade or a recommendation. Valuation uses the live price (earnings and sales yield), growth and margins are trailing twelve-month figures. A cheap stock may deserve to be cheap.",
     scOldest: "Oldest Figure {date}",

@@ -14,8 +14,20 @@
    erken biter; ızgaranın varsayılanı (stretch) kısa panelin altına boş bir
    kuyruk açardı ve CLAUDE.md "Boşluk esnetilmez" kuralı tam bunu yasaklıyor. */
 .grid { display:grid; grid-template-columns:minmax(0,1fr); align-items:start; gap:16px; }
+/* ÜST IZGARAYLA ARASI DA 16 (28 Eylül). İki ızgara kardeş ve aralarında
+   hiç boşluk yoktu: üstün son satırı 1629'da bitiyor, bu 1629'da
+   başlıyordu (NVDA, 1440, ölçüldü) — iki kart birbirine yapışıktı. */
+.grid { margin-top:16px; }
 @media (min-width:1100px) {
-  .grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  /* ÜSTTEKİ ÖLÇÜ IZGARASIYLA AYNI SÜTUNLAR VE AYNI SATIR DİLİ (28 Eylül).
+     Üstteki dört kart 1,08 : 1 sütunda ve satırdaki iki kart aynı boyda
+     bitiyor; bu ızgara 1 : 1'di ve paneller kendi boyunda bitiyordu. Aynı
+     bölümün iki yarısında sütun çizgisi 33 piksel kayıyor, alt satırlarda
+     yan yana iki panel 80–500 piksel farkla bitiyordu (NVDA, 1440,
+     ölçüldü). Artık aynı oran ve satırdaki paneller aynı hizada bitiyor:
+     kart ızgarasında bu kartın KENDİ yüzeyi, sayfa kolonlarındaki
+     "boşluk esnetilmez" kuralı (panel ARASI boşluk) burada geçerli değil. */
+  .grid { grid-template-columns:minmax(0,1.08fr) minmax(0,1fr); align-items:stretch; }
   /* SON SATIRDA TEK KALAN PANEL TAM GENİŞLİK. Panellerin kaçının basıldığı
      hisseye göre değişiyor (skor kartı yalnız endeks üyesinde, teknik
      fotoğraf yalnız listede olmayanda); tek sayıda panelde sonuncusu sol

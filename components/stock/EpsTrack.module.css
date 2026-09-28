@@ -23,6 +23,17 @@
   border-bottom: 1px solid var(--line-soft);
 }
 
+/* BEKLENTİ BELİRGİN (28 Eylül). Kesik çizgi `--text-muted` ile 1,5
+   pikseldi ve açık temada zemine karışıyordu; sahibi "çubuğun etrafındaki
+   çizgi belirgin olmalı" dedi. Artık üç katman: koyu ve düz bir TEPE
+   çizgisi (beklenen değerin kendisi), belirgin kesik yan kenarlar ve hafif
+   tonlu dolgu. Tepe çizgisi yan kenarlardan 4 piksel taşıyor ki dolu
+   sütunun tepesiyle kıyas bir cetvel gibi okunsun. */
+.track {
+  --estimate-line: var(--text-strong);
+  --estimate-edge: color-mix(in oklab, var(--text-strong) 55%, transparent);
+  --estimate-fill: color-mix(in oklab, var(--text-strong) 7%, transparent);
+}
 .legend {
   display: flex;
   justify-content: flex-end;
@@ -35,7 +46,7 @@
 .legend > span { display: inline-flex; align-items: center; gap: 6px; }
 .legendEstimate,
 .legendActual { width: 10px; height: 10px; border-radius: 3px; }
-.legendEstimate { border: 1.5px dashed var(--text-muted); }
+.legendEstimate { position: relative; border: 1.5px dashed var(--estimate-edge); border-top: 2.5px solid var(--estimate-line); background: var(--estimate-fill); }
 /* Gerçekleşen sütunu yön renginde: lejant ikisini birden gösteriyor. */
 .legendActual { background: linear-gradient(90deg, var(--up) 50%, var(--down) 50%); }
 
@@ -96,10 +107,35 @@
   left: 50%;
   width: min(62%, 64px);
   translate: -50% 0;
-  border: 1.5px dashed var(--text-muted);
-  border-radius: 7px 7px 3px 3px;
-  background: var(--surface-sunken);
+  border: 1.5px dashed var(--estimate-edge);
+  border-top: 0;
+  border-radius: 0 0 3px 3px;
+  background: var(--estimate-fill);
 }
+.estimate::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -5px;
+  right: -5px;
+  height: 2.5px;
+  border-radius: 2px;
+  background: var(--estimate-line);
+}
+/* Beklenen değer tepe çizgisinin sağında; yalnızca sütunlar genişken
+   (dört çeyrek 1100'de ~220 piksel sütun). Dar ekranda tablo söylüyor. */
+.estimateValue {
+  position: absolute;
+  top: -8px;
+  left: calc(100% + 10px);
+  display: none;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  color: var(--text-body);
+  white-space: nowrap;
+}
+@media (min-width: 1100px) { .estimateValue { display: block; } }
 /* Gerçekleşen: çerçevenin içinde, daha dar ve dolu; yön renginde. */
 .actual {
   position: absolute;
@@ -140,7 +176,7 @@
 .surprise b { font-size:13.5px; font-weight:700; color:var(--text-strong); }
 .surprise small { font-size:11.5px; font-weight:700; }
 .estimate { width:min(62%, 56px); }
-.actual { width:min(36%, 30px); }
+.actual { width:min(40%, 32px); }
 @media (max-width: 767px) {
   .wrap { grid-template-columns:minmax(0,1fr); }
   .aside { flex-direction:row; flex-wrap:wrap; align-items:center; gap:8px 16px; border-right:0; border-bottom:1px solid var(--line-soft); padding:14px 16px; }

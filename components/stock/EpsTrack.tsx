@@ -173,7 +173,11 @@ export function EpsTrack({
                     göz okumadan görüyor. İkisi de sıfırdan uzanıyor ve
                     görünüme girince bir kez büyüyor (`data-motion-draw`). */}
                 {est !== null && (
-                  <span className={styles.estimate} data-motion-draw="bar" style={bar(est)} />
+                  <span className={styles.estimate} data-motion-draw="bar" style={bar(est)}>
+                    <span className={cn("numeral", styles.estimateValue)}>
+                      {t.calendar.forecast} {formatPrice(est, locale, { currency })}
+                    </span>
+                  </span>
                 )}
                 {act !== null && (
                   <span

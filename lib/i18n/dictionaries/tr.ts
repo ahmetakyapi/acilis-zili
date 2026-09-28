@@ -2423,9 +2423,6 @@ const tr = {
       currentRatio: "Cari Oran",
       momentum: "6 Aylık Getiri",
     },
-    scPreparing: "Hazırlanıyor",
-    scPreparingHint:
-      "Sektör karşılaştırması için en az {n} şirketin ölçüsü gerekiyor; ölçüler her iş günü biraz daha toplanıyor.",
     scNote:
       "Her eksen, şirketin aynı GICS sektöründeki endeks üyeleri arasındaki yüzdeliğidir; bir not ya da tavsiye değil. Değerleme canlı fiyatla kurulur (kâr ve satış getirisi), büyüme ve marjlar son on iki ayın yıllık ölçüleridir. Ucuz bir hisse ucuzluğunu hak ediyor olabilir.",
     scOldest: "En Eski Ölçü {date}",
