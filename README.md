@@ -239,12 +239,15 @@ Yedi görsel blok (`sayilar` · `bar` · `pay` · `akis` · `oncesi` · `zaman` 
 Kazanç üç: telif riski yok, görsel barındırmak gerekmiyor, her temada
 tutarlı. Elimizdeki gerçek görsel kaynağı şirket logoları.
 
-Tek belgeli istisna ünlü yatırımcıların portreleri ve kuralın gerekçesini
-(telif) çiğnemiyor: yalnızca Wikimedia Commons'ta kamu malı ya da CC BY /
-CC BY-SA lisanslı dosyalar, lisansları tek tek okunarak, kare kırpılıp
-`public/investors/` altında yerelde barındırılıyor; atıf detay sayfasının
-künyesinde (kaynak `lib/investors.ts` → PORTRAITS). Özgür lisanslı
-fotoğrafı olmayan kişi baş harf karosuyla çiziliyor, fotoğraf üretilmiyor.
+Tek belgeli istisna ünlü yatırımcıların portreleri. Önce Wikimedia
+Commons'taki kamu malı ya da CC BY / CC BY-SA lisanslı dosyalar
+kullanılıyor, lisansları tek tek okunarak. Özgür portresi olmayan kişilerin
+karesi, sahibinin telif riskini bilerek kabul etmesiyle, kurumlarının ya da
+kendilerinin herkese açık sayfalarından alındı; künyede lisans değil
+yalnızca yayımlayan ve kaynak yazıyor. Hepsi kare kırpılıp
+`public/investors/` altında yerelde barındırılıyor (kayıt
+`lib/investors.ts` → PORTRAITS). Karesi olmayan ya da kaldırılan kişi,
+hikâyesinden gelen bir amblem karosuyla çiziliyor; fotoğraf üretilmiyor.
 
 ### Ölçmeden Düzen Değişmiyor
 

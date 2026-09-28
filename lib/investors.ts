@@ -43,7 +43,23 @@ export type Investor = {
    */
   status?: "closed";
   tagline: { tr: string; en: string };
+  /**
+   * Özgür lisanslı portresi olmayan kişinin görseli: hikâyesinden gelen bir
+   * simge (bkz. `Portrait`). Fotoğraf yerine uydurma bir yüz ya da
+   * lisanssız bir kare değil, okuyucuya kişiyi tanıtan bir işaret.
+   */
+  emblem?: InvestorEmblem;
 };
+
+export type InvestorEmblem =
+  | "short" // Burry: 2008 konut krizine karşı açığa oynayan
+  | "macro" // Druckenmiller: küresel makro
+  | "himalaya" // Li Lu: Himalaya Capital
+  | "quality" // Terry Smith: kaliteli şirket, fazla ödeme, dokunma
+  | "ai" // Aschenbrenner: yapay zekâ tezi
+  | "activist" // Icahn: aktivist yatırımcı
+  | "tiger" // Coleman: Tiger Global
+  | "growth"; // Laffont: teknoloji büyümesi
 
 /* --------------------------------------------------------------------------
    Portreler — belgeli istisna (28 Eylül)
@@ -63,22 +79,30 @@ export type Investor = {
        bunu belirtmeyi istiyor, künye "Kırpıldı" diyor. BY-SA dosyaların
        kırpılmış hâli de aynı lisansla.
 
-   Özgür lisanslı fotoğrafı BULUNAMAYAN kişi için fotoğraf uydurulmuyor,
-   üretilmiyor: baş harf karosu çiziliyor (components/investors/Portrait).
-   Carl Icahn'ın Commons'taki tek portresi 1980'lerden, "kendi eseri" CC0
-   beyanıyla yüklenmiş; kırk yıllık bir fotoğrafın yükleyenin eseri olduğu
-   doğrulanamadığı için kullanılmadı.
+   İKİNCİ KATMAN (28 Eylül, sahibinin kararı). Sekiz kişinin Commons'ta
+   doğrulanabilir özgür portresi yoktu ve dizinin yarısı görselsiz
+   kalıyordu. Sahibi telif riskini bilerek kabul etti: o kişilerin
+   portreleri kurumlarının ya da kendilerinin herkese açık sayfalarından
+   alındı. Bu karelerde `license` YOK ve künye yalnızca yayımlayanı ve
+   kaynağı yazıyor; özgür lisanslıymış gibi gösterilmiyor. Bir hak sahibi
+   kaldırma isterse dosya silinir ve kişi amblem karosuna düşer
+   (components/investors/Portrait) — başka hiçbir yer değişmez.
+
+   Fotoğrafı hiç bulunamayan kişi için fotoğraf uydurulmuyor, üretilmiyor.
    -------------------------------------------------------------------------- */
 
 export type PortraitCredit = {
   /** `public/investors/` altındaki dosya. */
   src: string;
   author: string;
-  /** "Kamu Malı" · "CC BY 2.0" … */
-  license: string;
+  /**
+   * "Public Domain" · "CC BY 2.0" … Özgür lisanslı OLMAYAN karede yok:
+   * künye o zaman yalnızca yayımlayanı ve kaynağı yazıyor.
+   */
+  license?: string;
   /** Lisans metni; kamu malında dosyanın Commons sayfası. */
-  licenseUrl: string;
-  /** Dosyanın Commons sayfası. */
+  licenseUrl?: string;
+  /** Dosyanın yayımlandığı sayfa (Commons ya da kurumun kendi sayfası). */
   source: string;
 };
 
@@ -139,6 +163,47 @@ const PORTRAITS: Record<string, PortraitCredit> = {
     licenseUrl: "https://creativecommons.org/licenses/by/2.0/",
     source: "https://commons.wikimedia.org/wiki/File:Howard_Marks_2.17.12_(cropped).jpg",
   },
+  /* ---- İkinci katman: özgür lisanslı değil, herkese açık kaynaktan ---- */
+  "michael-burry": {
+    src: "/investors/michael-burry.webp",
+    author: "Fortune · Jim Spellman / Getty Images",
+    source: "https://fortune.com/2025/11/05/michael-burry-1-billion-short-ai-stocks-markets/",
+  },
+  "stanley-druckenmiller": {
+    src: "/investors/stanley-druckenmiller.webp",
+    author: "Forbes",
+    source: "https://www.forbes.com/profile/stanley-druckenmiller/",
+  },
+  "li-lu": {
+    src: "/investors/li-lu.webp",
+    author: "Himalaya Capital",
+    source: "https://www.himcap.com/",
+  },
+  "terry-smith": {
+    src: "/investors/terry-smith.webp",
+    author: "The Money Maze Podcast",
+    source: "https://www.moneymazepodcast.com/podcast/terry-smith",
+  },
+  "leopold-aschenbrenner": {
+    src: "/investors/leopold-aschenbrenner.webp",
+    author: "Fortune · Josh Edelson",
+    source: "https://fortune.com/2025/10/08/leopold-aschenbrenner-openai-ftx-1-5-billion-hedge-fund-situational-awareness/",
+  },
+  "carl-icahn": {
+    src: "/investors/carl-icahn.webp",
+    author: "Forbes",
+    source: "https://www.forbes.com/profile/carl-icahn/",
+  },
+  "chase-coleman": {
+    src: "/investors/chase-coleman.webp",
+    author: "UVA McIntire School of Commerce",
+    source: "https://www.commerce.virginia.edu/chase-coleman",
+  },
+  "philippe-laffont": {
+    src: "/investors/philippe-laffont.webp",
+    author: "Forbes",
+    source: "https://www.forbes.com/profile/philippe-laffont/",
+  },
 };
 
 export function investorPortrait(slug: string): PortraitCredit | null {
@@ -157,6 +222,9 @@ export function investorInitials(name: string): string {
 }
 
 export const INVESTORS: readonly Investor[] = [
+  /* SIRA ÜNLÜLÜK SIRASI (28 Eylül, sahibinin isteği): okuyucunun adını
+     ilk duyacağı kişi önde. Dizin kapağı, kartlar ve hareket panosundaki
+     yüzler bu sırayı okuyor; portföy büyüklüğü sırası değil. */
   {
     slug: "warren-buffett",
     name: "Warren Buffett",
@@ -167,6 +235,19 @@ export const INVESTORS: readonly Investor[] = [
       tr: "Onlarca yıldır az sayıda büyük şirketi uzun süre tutan değer yatırımının simgesi.",
       en: "The emblem of value investing, holding a few large companies for decades.",
     },
+  },
+  {
+    slug: "michael-burry",
+    name: "Michael Burry",
+    firm: "Scion Asset Management",
+    kind: "13f",
+    ciks: [1649339],
+    status: "closed",
+    tagline: {
+      tr: "2008 konut krizini önceden gören, yoğun ve aykırı pozisyonlarıyla bilinen yönetici.",
+      en: "The manager who foresaw the 2008 housing crash, known for concentrated contrarian bets.",
+    },
+    emblem: "short",
   },
   {
     slug: "nancy-pelosi",
@@ -182,15 +263,14 @@ export const INVESTORS: readonly Investor[] = [
     },
   },
   {
-    slug: "michael-burry",
-    name: "Michael Burry",
-    firm: "Scion Asset Management",
+    slug: "cathie-wood",
+    name: "Cathie Wood",
+    firm: "ARK Investment Management",
     kind: "13f",
-    ciks: [1649339],
-    status: "closed",
+    ciks: [1697748],
     tagline: {
-      tr: "2008 konut krizini önceden gören, yoğun ve aykırı pozisyonlarıyla bilinen yönetici.",
-      en: "The manager who foresaw the 2008 housing crash, known for concentrated contrarian bets.",
+      tr: "Yapay zekâ, genom ve otonom araç gibi yıkıcı yeniliklere odaklanan ETF'lerin yöneticisi.",
+      en: "Runs ETFs focused on disruptive innovation such as AI, genomics and autonomous vehicles.",
     },
   },
   {
@@ -205,6 +285,29 @@ export const INVESTORS: readonly Investor[] = [
     },
   },
   {
+    slug: "ray-dalio",
+    name: "Ray Dalio",
+    firm: "Bridgewater Associates",
+    kind: "13f",
+    ciks: [1350694],
+    tagline: {
+      tr: "Dünyanın en büyük hedge fonunu kuran, yüzlerce hisseye yayılan makro yatırımcı.",
+      en: "Founder of the world's largest hedge fund, a macro investor spread across hundreds of stocks.",
+    },
+  },
+  {
+    slug: "carl-icahn",
+    name: "Carl Icahn",
+    firm: "Icahn Enterprises",
+    kind: "13f",
+    ciks: [921669],
+    tagline: {
+      tr: "Yönetim kurullarına baskı kurmasıyla ünlü, aktivist yatırımın öncülerinden.",
+      en: "A pioneer of activist investing, famous for pressuring corporate boards.",
+    },
+    emblem: "activist",
+  },
+  {
     slug: "stanley-druckenmiller",
     name: "Stanley Druckenmiller",
     firm: "Duquesne Family Office",
@@ -214,6 +317,7 @@ export const INVESTORS: readonly Investor[] = [
       tr: "Makro görüşünü hisse seçimine çeviren, pozisyonlarını hızla değiştiren efsanevi yönetici.",
       en: "A legendary manager who turns macro views into stock picks and moves positions quickly.",
     },
+    emblem: "macro",
   },
   {
     slug: "david-tepper",
@@ -224,17 +328,6 @@ export const INVESTORS: readonly Investor[] = [
     tagline: {
       tr: "Kriz dönemlerinde cesur alımlarıyla tanınan, büyük teknoloji ağırlıklı fon yöneticisi.",
       en: "A fund manager known for bold buying in crises, with a portfolio weighted to big tech.",
-    },
-  },
-  {
-    slug: "cathie-wood",
-    name: "Cathie Wood",
-    firm: "ARK Investment Management",
-    kind: "13f",
-    ciks: [1697748],
-    tagline: {
-      tr: "Yapay zekâ, genom ve otonom araç gibi yıkıcı yeniliklere odaklanan ETF'lerin yöneticisi.",
-      en: "Runs ETFs focused on disruptive innovation such as AI, genomics and autonomous vehicles.",
     },
   },
   {
@@ -249,25 +342,14 @@ export const INVESTORS: readonly Investor[] = [
     },
   },
   {
-    slug: "li-lu",
-    name: "Li Lu",
-    firm: "Himalaya Capital",
+    slug: "howard-marks",
+    name: "Howard Marks",
+    firm: "Oaktree Capital",
     kind: "13f",
-    ciks: [1709323],
+    ciks: [949509],
     tagline: {
-      tr: "Charlie Munger'ın güvendiği, çok az hisseye yoğunlaşan uzun vadeli yatırımcı.",
-      en: "A long-term investor trusted by Charlie Munger, concentrated in very few stocks.",
-    },
-  },
-  {
-    slug: "terry-smith",
-    name: "Terry Smith",
-    firm: "Fundsmith",
-    kind: "13f",
-    ciks: [1569205],
-    tagline: {
-      tr: "\"İyi şirketi al, fazla ödeme, hiçbir şey yapma\" ilkesiyle kalite hisselerini tutan İngiliz yönetici.",
-      en: "A British manager holding quality stocks by the rule \"buy good companies, don't overpay, do nothing\".",
+      tr: "Piyasa döngüleri üzerine notlarıyla bilinen, sıkıntılı borç ve fırsat yatırımcısı.",
+      en: "A distressed-debt and opportunity investor known for his memos on market cycles.",
     },
   },
   {
@@ -280,39 +362,31 @@ export const INVESTORS: readonly Investor[] = [
       tr: "Yapay zekânın enerji ve çip talebine yatırım yapan, OpenAI kökenli genç yönetici.",
       en: "A young former OpenAI researcher investing in the power and chip demand of AI.",
     },
+    emblem: "ai",
   },
   {
-    slug: "carl-icahn",
-    name: "Carl Icahn",
-    firm: "Icahn Enterprises",
+    slug: "li-lu",
+    name: "Li Lu",
+    firm: "Himalaya Capital",
     kind: "13f",
-    ciks: [921669],
+    ciks: [1709323],
     tagline: {
-      tr: "Yönetim kurullarına baskı kurmasıyla ünlü, aktivist yatırımın öncülerinden.",
-      en: "A pioneer of activist investing, famous for pressuring corporate boards.",
+      tr: "Charlie Munger'ın güvendiği, çok az hisseye yoğunlaşan uzun vadeli yatırımcı.",
+      en: "A long-term investor trusted by Charlie Munger, concentrated in very few stocks.",
     },
+    emblem: "himalaya",
   },
   {
-    slug: "ray-dalio",
-    name: "Ray Dalio",
-    firm: "Bridgewater Associates",
+    slug: "terry-smith",
+    name: "Terry Smith",
+    firm: "Fundsmith",
     kind: "13f",
-    ciks: [1350694],
+    ciks: [1569205],
     tagline: {
-      tr: "Dünyanın en büyük hedge fonunu kuran, yüzlerce hisseye yayılan makro yatırımcı.",
-      en: "Founder of the world's largest hedge fund, a macro investor spread across hundreds of stocks.",
+      tr: "\"İyi şirketi al, fazla ödeme, hiçbir şey yapma\" ilkesiyle kalite hisselerini tutan İngiliz yönetici.",
+      en: "A British manager holding quality stocks by the rule \"buy good companies, don't overpay, do nothing\".",
     },
-  },
-  {
-    slug: "howard-marks",
-    name: "Howard Marks",
-    firm: "Oaktree Capital",
-    kind: "13f",
-    ciks: [949509],
-    tagline: {
-      tr: "Piyasa döngüleri üzerine notlarıyla bilinen, sıkıntılı borç ve fırsat yatırımcısı.",
-      en: "A distressed-debt and opportunity investor known for his memos on market cycles.",
-    },
+    emblem: "quality",
   },
   {
     slug: "chase-coleman",
@@ -324,6 +398,7 @@ export const INVESTORS: readonly Investor[] = [
       tr: "Büyüyen teknoloji ve internet şirketlerine yatırım yapan \"Tiger Cub\" yöneticisi.",
       en: "A \"Tiger Cub\" manager investing in growing technology and internet companies.",
     },
+    emblem: "tiger",
   },
   {
     slug: "philippe-laffont",
@@ -335,6 +410,7 @@ export const INVESTORS: readonly Investor[] = [
       tr: "Teknoloji ve yapay zekâ şirketlerine odaklanan, halka açık ve özel yatırım yapan fon.",
       en: "A fund focused on technology and AI companies, investing in both public and private markets.",
     },
+    emblem: "growth",
   },
 ];
 

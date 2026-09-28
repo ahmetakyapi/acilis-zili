@@ -49,6 +49,27 @@
 }
 .portrait[data-size="card"] .initialsFirm { display:none; }
 
+/* Amblem karosu: aynı kutu, iki tonlu zemin (üst köşe biraz daha mavi),
+   ortada kişinin simgesi, sol üstte baş harfler, altta kuruluş. Simge
+   kutunun oranıyla büyüyor; `size` yalnızca SVG'nin ilk ölçüsü. */
+.emblem {
+  display:grid; place-items:center;
+  background:
+    radial-gradient(120% 90% at 18% 0%, color-mix(in oklab, var(--primary) 20%, transparent), transparent 62%),
+    color-mix(in oklab, var(--primary) 7%, var(--surface-sunken));
+  color:var(--primary-ink);
+}
+.emblemIcon { width:46%; height:46%; transition:transform .6s; }
+.portrait[data-size="chip"] .emblemIcon, .portrait[data-size="sm"] .emblemIcon { width:62%; height:62%; }
+.emblemInitials {
+  position:absolute; top:9%; left:10%;
+  font-size:clamp(9px, 11cqi, 18px); font-weight:750; letter-spacing:-.02em; line-height:1; color:var(--primary);
+}
+.emblemFirm {
+  position:absolute; right:8%; bottom:8%; left:8%; overflow:hidden; text-align:center; text-overflow:ellipsis; white-space:nowrap;
+  font-size:clamp(8px, 7.5cqi, 12px); font-weight:600; color:var(--text-muted);
+}
+
 /* ---- Dizin kapağı ------------------------------------------------------- */
 
 .hero {
@@ -91,6 +112,7 @@
   .galleryLink:hover .portraitImg, .card:hover .portraitImg { filter:none; transform:scale(1.04); }
   .galleryLink:hover .galleryName { color:var(--primary-ink); }
   .galleryLink:hover .initials, .card:hover .initials { background:color-mix(in oklab, var(--primary) 16%, var(--surface-sunken)); }
+  .galleryLink:hover .emblemIcon, .card:hover .emblemIcon { transform:scale(1.08) rotate(-4deg); }
 }
 .galleryLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 @media(max-width:1023px) { .gallery { gap:12px 8px; } .galleryName { font-size:11px; } }
@@ -418,6 +440,8 @@ a.company:hover b { color:var(--primary-ink); }
 @media(prefers-reduced-motion:reduce) {
   .portraitImg, .card, .cardArrow, .moverRow, .moveRow, .tickerRow { transition:none; }
   .galleryLink:hover .portraitImg, .card:hover .portraitImg { transform:none; }
+  .emblemIcon { transition:none; }
+  .galleryLink:hover .emblemIcon, .card:hover .emblemIcon { transform:none; }
 }
 
 /* ---- Hisse sayfası paneli ----------------------------------------------- */

@@ -182,10 +182,14 @@ function Notes({ investor, t, children }: { investor: Investor; t: Dictionary; c
           <a href={photo.source} target="_blank" rel="noopener noreferrer" className={styles.noteLink}>
             {photo.author}
           </a>
-          {" · "}
-          <a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer license" className={styles.noteLink}>
-            {photo.license === "Public Domain" ? ti.publicDomain : photo.license}
-          </a>
+          {photo.license && photo.licenseUrl && (
+            <>
+              {" · "}
+              <a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer license" className={styles.noteLink}>
+                {photo.license === "Public Domain" ? ti.publicDomain : photo.license}
+              </a>
+            </>
+          )}
           {" · "}
           {ti.photoCropped}
         </p>
