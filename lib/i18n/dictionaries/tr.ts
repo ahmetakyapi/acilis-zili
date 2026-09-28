@@ -2922,6 +2922,9 @@ const tr = {
     noteValue: "Tutar, dosyadaki kapanış fiyatıyla yaklaşık hesaplanır. Nakit fonu ve sembolü olmayan satırlar gösterilmez.",
   },
   investors: {
+    capitalTitle: "Takip Edilen Sermaye Kimde",
+    capitalAria: "Takip edilen hisse portföylerinin yatırımcılara göre payı",
+    capitalRest: "Diğer {count} Yatırımcı",
     eyebrow: "Ünlü Yatırımcılar",
     title: "Kim Ne Tutuyor",
     subtitle: "Buffett'tan Pelosi'ye ünlü yatırımcıların portföyleri, bu çeyrek aldıkları ve sattıkları.",

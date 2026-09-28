@@ -2494,6 +2494,9 @@ const en: typeof tr = {
     noteValue: "Amounts are approximated with the closing price in the file. Cash funds and rows without a ticker are not shown.",
   },
   investors: {
+    capitalTitle: "Who Holds the Tracked Capital",
+    capitalAria: "Share of tracked stock portfolios by investor",
+    capitalRest: "{count} Other Investors",
     eyebrow: "Famous Investors",
     title: "Who Holds What",
     subtitle: "From Buffett to Pelosi: famous investors' portfolios and what they bought and sold this quarter.",

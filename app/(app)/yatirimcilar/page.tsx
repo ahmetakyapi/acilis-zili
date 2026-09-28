@@ -1,11 +1,9 @@
-import type { CSSProperties } from "react";
 import { GuideHint } from "@/components/article/GuideHint";
 import { InvestorCard } from "@/components/investors/InvestorCard";
 import { MoversBoard } from "@/components/investors/MoversBoard";
-import { Portrait } from "@/components/investors/Portrait";
+import { InvestorRoster } from "@/components/investors/InvestorRoster";
 import { asOfLabel, filedLabel, quarterLabel } from "@/components/investors/format";
 import styles from "@/components/investors/Investors.module.css";
-import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
@@ -14,7 +12,7 @@ import { RollingFigure } from "@/components/ui/RollingFigure";
 import { getSymbolNames } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { getInvestorOverview } from "@/lib/investor-data";
-import { INVESTORS, investorBySlug } from "@/lib/investors";
+import { investorBySlug } from "@/lib/investors";
 import { pageMetadata } from "@/lib/page-meta";
 import { cn, formatEtDateMedium, formatMoneyCompact, NO_VALUE } from "@/lib/utils";
 
@@ -97,22 +95,7 @@ export default async function InvestorsPage() {
             </div>
           </dl>
         </div>
-        {/* Portre mozaiği: kişi başına bir karo, sıra listenin sırası. İlk
-            iki karo büyük (listenin başı); dar ekranda tek satır kaydırma
-            yerine sıkı bir ızgara. Giriş yalnızca DÖNÜŞÜM (CSS), opaklık
-            yok: ilk ekranın boyası beklemiyor. */}
-        <ul className={styles.gallery} aria-label={ti.investorsCount.replace("{count}", String(INVESTORS.length))}>
-          {INVESTORS.map((investor, index) => (
-            <li key={investor.slug} className={styles.galleryItem} style={{ "--i": index } as CSSProperties}>
-              <Link href={`/yatirimcilar/${investor.slug}`} prefetch={false} className={styles.galleryLink}>
-                <Portrait investor={investor} size="tile" priority={index < 4} />
-                <span className={styles.galleryName} lang="en">
-                  {investor.name}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <InvestorRoster overview={overview} locale={locale} t={ti} />
       </header>
 
       {overview ? (
