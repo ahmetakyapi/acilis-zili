@@ -1782,6 +1782,8 @@ const en: typeof tr = {
     rankTitle: "Today's Ranking",
     strongest: "Strongest Today",
     weakest: "Weakest Today",
+    themesRising: "Themes Up",
+    themesFalling: "Themes Down",
     up: "Advancers",
     down: "Decliners",
     spreadLabel: "Day move of {count} members: {up} advancing, {down} declining.",

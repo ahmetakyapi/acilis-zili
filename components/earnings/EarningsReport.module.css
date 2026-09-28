@@ -1489,6 +1489,13 @@
  .assessment .verdictPanel[data-has-target="false"] { grid-template-columns:auto minmax(0,1fr); }
  .assessment .verdictScore { flex-direction:row; align-items:center; gap:16px; }
  .assessment .verdictTarget { align-self:stretch; justify-content:center; }
+ /* PARAGRAF ORTA SÜTUNUN ORTASINDA (28 Eylül, sahibinin geri bildirimi).
+    Satır ölçüsü 36em'de tutuluyor ve sütun ondan geniş: blok sütunun soluna
+    yaslıyken sağında hedef ayracına kadar ~120 piksellik boş bir şerit
+    kalıyordu ve şerit iki yandan dengesiz görünüyordu. Blok artık içeriği
+    kadar geniş ve sütunda ortalı; satırlar kendi içinde sola yaslı kalıyor
+    (beş satırlık ortalı metin okunmaz). */
+ .assessment .headlineBlock { justify-self:center; min-width:0; max-width:100%; }
 
  /* ÖLÇÜLER ETİKETİN HEMEN ALTINDA, KÜNYE SAYININ ALTINDA. Parantezli künye
     etiketle sayı arasındaydı ve genişliğe göre bir ya da iki satıra sarıyordu

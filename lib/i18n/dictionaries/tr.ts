@@ -2169,6 +2169,9 @@ const tr = {
     rankTitle: "Günün Sıralaması",
     strongest: "Günün En Güçlüsü",
     weakest: "Günün En Zayıfı",
+    /* Kapaktaki günün özeti (28 Eylül). */
+    themesRising: "Yükselen Tema",
+    themesFalling: "Düşen Tema",
     up: "Yükselen",
     down: "Düşen",
     spreadLabel: "{count} üyenin günlük hareketi: {up} yükselen, {down} düşen.",

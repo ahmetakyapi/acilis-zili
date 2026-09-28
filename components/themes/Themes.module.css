@@ -335,3 +335,22 @@
   .card:hover .stack .logoSlot, .card:hover .mosaic .logoSlot, .card:hover .tick, .card:hover .cardArrow,
   .otherLink:hover .stack .logoSlot, .tile:hover .heat { transform:none; }
 }
+
+/* --------------------------------------------------------------------------
+   Kapağın günün özeti (28 Eylül) — sol yarıdaki boşluğu sıralamanın
+   özetiyle dolduruyor; gerekçe page.tsx → HeroSummary. Dört hücre iki
+   satırda: üstte sayılar, altta en güçlü ve en zayıf tema. Kutu değil
+   ton: hücreler çukur zeminde, gölgesiz.
+   -------------------------------------------------------------------------- */
+.heroSummary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:24px; max-width:34rem; }
+.heroStat { display:flex; min-width:0; flex-direction:column; gap:6px; padding:12px 14px; border-radius:12px; background:var(--surface-sunken); }
+.heroStatLabel { color:var(--text-muted); font-size:12px; font-weight:600; line-height:1.3; }
+.heroStatValue { font-size:28px; font-weight:700; line-height:1; letter-spacing:-.03em; }
+.heroExtreme { display:flex; min-width:0; align-items:baseline; justify-content:space-between; gap:10px; }
+.heroExtremeName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:15px; font-weight:650; }
+.heroExtreme b { flex-shrink:0; font-size:15px; font-weight:700; }
+@media(max-width:639px) { .heroSummary { margin-top:18px; } .heroStatValue { font-size:24px; } }
+
+/* Dar kart: dört sütunlu, iki satırlık logo ızgarası (gerekçe page.tsx →
+   NARROW_MOSAIC_MAX). Geniş kartın beş sütunu korunuyor. */
+.card:not([data-wide]) .mosaic { grid-template-columns:repeat(4,32px); }

@@ -93,7 +93,11 @@ export default async function ThemesIndexPage() {
             <LiveRanking locale={locale} t={t} />
           </Suspense>
         }
-      />
+      >
+        <Suspense fallback={<HeroSummary summary={null} locale={locale} t={t} />}>
+          <LiveHeroSummary locale={locale} t={t} />
+        </Suspense>
+      </DirectoryHeader>
 
       <Suspense
         fallback={
@@ -204,6 +208,90 @@ async function LiveRanking({ locale, t }: { locale: Locale; t: Dictionary }) {
   return <ThemeRanking cards={board.cards} basis={scaleBasis} locale={locale} t={t} />;
 }
 
+/**
+ * Kapağın sol yarısındaki günün özeti (28 Eylül).
+ *
+ * Sağdaki on satırlık sıralama kapağı uzatıyordu ve sol yarıda başlık ile
+ * tek cümlenin altında büyük bir boşluk kalıyordu (sahibinin geri
+ * bildirimi). Boşluk esnetilmiyor, sıralamanın zaten söylediğinin ÖZETİYLE
+ * doluyor: kaç tema yükseldi, kaç tema düştü, en güçlü ve en zayıf hangisi.
+ * Veri `loadBoard`tan, istek içinde önbellekli; yeni bir istek yok.
+ *
+ * En güçlü ve en zayıf YALNIZCA canlı seansta (galerideki künyeyle aynı
+ * kural); son kapanışa kalmış günde sayılar nötr basılıyor ve "Son Kapanış"
+ * diyor: dünü bugün diye anlatmıyor.
+ */
+type HeroSummaryData = {
+  rising: number;
+  falling: number;
+  session: boolean;
+  leader: ThemeCard | null;
+  laggard: ThemeCard | null;
+};
+
+async function LiveHeroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
+  const { board, scaleBasis } = await loadBoard();
+  const comparable = board.cards.filter((card) => card.basis === scaleBasis && card.median !== null);
+  const bySlug = (slug: string | null) => board.cards.find((card) => card.theme.slug === slug) ?? null;
+  return (
+    <HeroSummary
+      summary={{
+        rising: comparable.filter((card) => card.median! > 0).length,
+        falling: comparable.filter((card) => card.median! < 0).length,
+        session: scaleBasis === "session",
+        leader: bySlug(board.leader),
+        laggard: bySlug(board.laggard),
+      }}
+      locale={locale}
+      t={t}
+    />
+  );
+}
+
+function HeroSummary({ summary, locale, t }: { summary: HeroSummaryData | null; locale: Locale; t: Dictionary }) {
+  const count = (value: number | undefined, tone: "up" | "down") => (
+    <strong
+      className={cn(
+        "numeral",
+        styles.heroStatValue,
+        value === undefined ? "text-muted" : summary?.session ? (tone === "up" ? "text-up" : "text-down") : "text-body",
+      )}
+    >
+      {value === undefined ? NO_VALUE : value}
+    </strong>
+  );
+  const extreme = (card: ThemeCard | null, label: string) => (
+    <div className={styles.heroStat}>
+      <span className={styles.heroStatLabel}>{label}</span>
+      {card && card.median !== null ? (
+        <span className={styles.heroExtreme}>
+          <span className={styles.heroExtremeName}>{themeTitle(card.theme, locale)}</span>
+          <b className={cn("numeral", directionText(directionOf(card.median)))}>{formatPercent(card.median, locale)}</b>
+        </span>
+      ) : (
+        <strong className={cn("numeral text-muted", styles.heroStatValue)}>{NO_VALUE}</strong>
+      )}
+    </div>
+  );
+  return (
+    <div className={styles.heroSummary}>
+      <div className={styles.heroStat}>
+        <span className={styles.heroStatLabel}>
+          {t.themes.themesRising}
+          {summary && !summary.session ? ` · ${t.themes.medianLastClose}` : ""}
+        </span>
+        {count(summary?.rising, "up")}
+      </div>
+      <div className={styles.heroStat}>
+        <span className={styles.heroStatLabel}>{t.themes.themesFalling}</span>
+        {count(summary?.falling, "down")}
+      </div>
+      {extreme(summary?.leader ?? null, t.themes.strongest)}
+      {extreme(summary?.laggard ?? null, t.themes.weakest)}
+    </div>
+  );
+}
+
 async function LiveGallery({ locale, t }: { locale: Locale; t: Dictionary }) {
   const { board, quotesResult } = await loadBoard();
   return (
@@ -312,7 +400,12 @@ function ThemeRanking({
 const CARD_SPANS = [7, 5, 5, 7, 8, 4, 4, 8, 6, 6] as const;
 /** Geniş kartta mozaik, dar kartta yığın — kaç logo sığıyor. */
 const MOSAIC_MAX = 8;
-const STACK_MAX = 6;
+/* DAR KARTTA DA IZGARA (28 Eylül). Dar kartlar üst üste binen bir yığın
+   kullanıyordu; logoların ayırıcı halkası kart zemininden farklı tondaydı
+   ve karolar birbirine karışıp kırpılmış gibi okunuyordu ("+14" komşu
+   logonun üstüne biniyordu). Dar kart artık dört sütunlu, iki satırlık
+   ızgara: yedi logo ve "+N". */
+const NARROW_MOSAIC_MAX = 7;
 const WIDE_SPAN = 7;
 
 function ThemeGallery({ board, locale, t }: { board: Board; locale: Locale; t: Dictionary }) {
@@ -372,9 +465,9 @@ function ThemeGallery({ board, locale, t }: { board: Board; locale: Locale; t: D
                 </div>
                 <LogoGroup
                   members={card.members}
-                  variant={wide ? "mosaic" : "stack"}
-                  max={wide ? MOSAIC_MAX : STACK_MAX}
-                  placeholder={katilim ? (wide ? MOSAIC_MAX : Math.min(STACK_MAX, KATILIM_MAX)) : 0}
+                  variant="mosaic"
+                  max={wide ? MOSAIC_MAX : NARROW_MOSAIC_MAX}
+                  placeholder={katilim ? (wide ? MOSAIC_MAX : Math.min(NARROW_MOSAIC_MAX, KATILIM_MAX)) : 0}
                 />
               </div>
 
