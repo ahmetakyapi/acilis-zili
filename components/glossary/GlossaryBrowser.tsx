@@ -2,15 +2,16 @@
 
 import { useDeferredValue, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Graph, MagnifyingGlass, X } from "@phosphor-icons/react";
+import { ArrowRight, CaretDown, Graph, MagnifyingGlass, X } from "@phosphor-icons/react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { GlyphTile } from "@/components/article/GlyphTile";
 import { HeroAccent } from "@/components/motion/HeroAccent";
 import { ChipStrip } from "@/components/ui/ChipStrip";
 import { EmptyState } from "@/components/ui/primitives";
 import type { GlossaryCategoryKey } from "@/content/glossary";
+import type { GlossaryMotif } from "@/content/glossary/marks";
 import { foldForSearch } from "@/lib/search-fold";
 import { GLOSSARY_ALL_ICON, GLOSSARY_CATEGORY_ICONS } from "./category-icons";
+import { TermMark } from "./TermMark";
 import styles from "./Glossary.module.css";
 
 /**
@@ -20,31 +21,35 @@ import styles from "./Glossary.module.css";
  * "stopaj" yazan okuyucunun aradığı şey bir terim sayfası, paylaşılacak bir
  * süzülmüş liste değil. Adrese yazmak her tuşta bir gezinme (ya da sığ
  * güncelleme ve onun uçuştaki gezinmeyi öldürme tuzağı, CLAUDE.md) demekti.
- * Terimlerin tamamı sunucuda basılıyor; JavaScript kapalıyken liste tam ve
- * süzgeçsiz çalışıyor.
  *
  * ARAMA HARF KATLAYARAK: "fk" F/K'yı, "cekirdek" Çekirdek Enflasyon'u,
- * "withholding" İngilizce sayfada stopajı buluyor. Terim adı, otomatik
- * bağlantı biçimleri ve tanımın ilk cümlesi aranıyor; tanımın tamamı değil
- * — "faiz" yazan birine faizden söz eden kırk terim döndürmek aramayı
- * işe yaramaz yapardı.
+ * "withholding" İngilizce sayfada stopajı buluyor. Terim adı, slug ve
+ * otomatik bağlantı biçimleri aranıyor; tanımın tamamı değil — "faiz" yazan
+ * birine faizden söz eden kırk terim döndürmek aramayı işe yaramaz yapardı.
  *
- * ÜÇ SÜZGEÇ, TEK SONUÇ (28 Eylül). Kategori kutucukları, harf dizini ve
- * arama birlikte daralıyor. Harf dizini bir kâğıt sözlüğün sayfa kenarı:
- * o harfle başlayan terim yoksa düğme sönük ve basılamıyor, yani okuyucu
- * boş bir listeye hiç düşmüyor. Harfin sönük olup olmadığı öteki iki
- * süzgece göre hesaplanıyor ("Opsiyonlar"da D yalnızca Delta'yı açar).
+ * ÜÇ SÜZGEÇ, TEK SONUÇ. Kategori kutucukları, harf dizini ve arama birlikte
+ * daralıyor. O harfle başlayan terim yoksa düğme sönük ve basılamıyor,
+ * yani okuyucu boş bir listeye hiç düşmüyor.
  *
- * KOMPOZİSYON: her kategoride sözlüğün kendi ağında en çok başvurulan üç
- * terim büyük kartta (seçim sunucuda, `glossaryIncoming`), geri kalanı sıkı
- * bir ızgarada. 150 eş ağırlıklı satır taranmıyordu; öne çıkanlar "bu
- * kategoride önce neyi bilmeliyim" sorusunu cevaplıyor.
+ * İKİ HÂL: ATLAS VE SONUÇ (28 Eylül, ikinci tur). İlk tur yüz elli terimin
+ * hepsini sekiz bölümde alt alta basıyordu: sayfa 1280'de 7.441, 390'da
+ * 15.469 piksel boyundaydı ve sözlük bir keşif yüzeyi değil, kaydırılarak
+ * geçilen bir başvuru listesiydi. Süzgeç yokken artık bir ATLAS var: sekiz
+ * kategori iki sütunlu bir ızgarada, her birinde sözlüğün ağında en çok
+ * başvurulan üç terim kavram çizimiyle, kalanı bir `details` içinde. Bir
+ * süzgeç açılınca (kategori, harf ya da arama) eski sonuç düzeni geliyor:
+ * o zaman okuyucu bir şey arıyor ve her eşleşmeyi görmeli.
+ *
+ * BAĞLANTILAR DOM'DA KALIYOR. Kapalı `details` içindeki bağlantılar HTML'de
+ * duruyor; arama motoru yüz ellisini de görüyor ve JavaScript kapalıyken
+ * okuyucu her kategoriyi elle açabiliyor. Kategori düğmeleri JS ister ama
+ * hiçbir terim yalnızca onların arkasında değil.
  *
  * HAREKET: süzgeç değişince kalan kartlar yeni yerlerine KAYIYOR (Motion
- * `layout="position"`), çıkanlar sönerek yer açıyor. Göz, aradığı terimin
- * listede nereye gittiğini izleyebiliyor; anında yeniden dizilen bir liste
- * her tuşta baştan okunuyordu. Hareketi azaltan okuyucuda kök sağlayıcı
- * (`MotionProvider`, `reducedMotion="user"`) kaymayı kapatıyor.
+ * `layout="position"`), çıkanlar sönerek yer açıyor; hareketi azaltan
+ * okuyucuda kök sağlayıcı (`MotionProvider`, `reducedMotion="user"`)
+ * kaymayı kapatıyor. Kavram çizimleri `MotionExperience`in `arc` kalıbıyla
+ * görünüme girince çiziliyor.
  */
 
 export type GlossaryBrowserItem = {
@@ -56,9 +61,9 @@ export type GlossaryBrowserItem = {
   lede?: string;
   /** Adın ve biçimlerin katlanmış hâli — sunucuda bir kez kuruluyor. */
   haystack: string;
-  /** Harf dizinindeki yeri (dile göre büyük harf; alfabe dışıysa "#"). */
+  /** Harf dizinindeki yeri (dile göre büyük harf). */
   letter: string;
-  glyph: string;
+  motif: GlossaryMotif;
   /** Kaç terim buna bağlanıyor. */
   links: number;
   /** Kategorideki öne çıkma sırası: 1 büyük kart, 2-3 orta kart, 0 sıkı ızgara. */
@@ -71,6 +76,7 @@ export type GlossaryBrowserGroup = { key: GlossaryCategoryKey; label: string; co
 
 /** Süzgeç değişince sonuçlar yalnızca şerit yapışıkken başa alınır. */
 const SCROLL_SETTLE_PX = 4;
+const EASE = [0.22, 1, 0.36, 1] as const;
 
 export function GlossaryBrowser({
   items,
@@ -78,14 +84,17 @@ export function GlossaryBrowser({
   letters,
   locale,
   hero,
+  spotlight,
   labels,
 }: {
   items: GlossaryBrowserItem[];
   groups: GlossaryBrowserGroup[];
   letters: string[];
   locale: string;
-  /** Kapağın metni (üst künye, başlık, açıklama) — sunucuda çiziliyor. */
+  /** Kapağın metni (üst künye, başlık, açıklama, ölçüler) — sunucuda çiziliyor. */
   hero: ReactNode;
+  /** Kapağın sağındaki günün terimi — sunucuda seçiliyor ve çiziliyor. */
+  spotlight: ReactNode;
   labels: {
     filterLabel: string;
     filterPlaceholder: string;
@@ -98,6 +107,8 @@ export function GlossaryBrowser({
     clear: string;
     clearQuery: string;
     links: string;
+    openCategory: string;
+    moreTerms: string;
     scrollPrev: string;
     scrollNext: string;
   };
@@ -126,6 +137,10 @@ export function GlossaryBrowser({
 
   const maxCount = Math.max(1, ...groups.map((group) => group.count));
   const filtered = query !== "" || category !== null || letter !== null;
+  /* Atlas yalnızca hiçbir süzgeç yokken. Arama kutusu boşaltıldığı anda
+     değil, ertelenmiş değer boşaldığında döner: yazarken atlas ile sonuç
+     arasında gidip gelmesin. */
+  const browsing = needle === "" && category === null && letter === null;
 
   const byGroup = groups
     .map((group) => {
@@ -176,66 +191,68 @@ export function GlossaryBrowser({
       <header className={`${styles.hero} page-frame`}>
         <HeroAccent />
         <div className={`${styles.heroCopy} page-heading-copy`}>{hero}</div>
-        {/* KATEGORİ KUTUCUKLARI KAPAĞIN SAĞINDA. Her kutucuk bir süzgeç ve
-            aynı zamanda bir ölçü: çubuk kategorinin terim sayısını en
-            kalabalık kategoriye göre çiziyor. Sayı gerçek, çubuk süs değil.
-            Telefonda şerit yatay kayıyor; dokuz kutucuk alt alta 400
-            piksel tutuyordu. */}
-        <ChipStrip
-          activeKey={category}
-          className={styles.categories}
-          scrollLabels={{ prev: labels.scrollPrev, next: labels.scrollNext }}
-        >
-          <div role="group" aria-label={labels.categoryLabel} className={styles.categoryGrid}>
-            <button
-              type="button"
-              aria-pressed={category === null}
-              aria-current={category === null ? "true" : undefined}
-              onClick={() => pickCategory(null)}
-              className={styles.categoryTile}
-            >
-              <AllIcon aria-hidden size={20} weight="duotone" />
-              <span className={styles.categoryName}>{labels.allCategories}</span>
-              <span className={`${styles.categoryCount} numeral`}>{countLabel(items.length)}</span>
-              <span aria-hidden className={styles.categoryBar} data-share>
-                {groups.map((group, index) => (
-                  <span
-                    key={group.key}
-                    style={{ width: `${(group.count / items.length) * 100}%`, "--tile": index } as CSSProperties}
-                  />
-                ))}
-              </span>
-            </button>
-            {groups.map((group, index) => {
-              const Icon = GLOSSARY_CATEGORY_ICONS[group.key];
-              const active = category === group.key;
-              return (
-                <button
-                  key={group.key}
-                  type="button"
-                  aria-pressed={active}
-                  aria-current={active ? "true" : undefined}
-                  onClick={() => pickCategory(group.key)}
-                  className={styles.categoryTile}
-                  style={{ "--tile": index } as CSSProperties}
-                >
-                  <Icon aria-hidden size={20} weight="duotone" />
-                  <span className={styles.categoryName}>{group.label}</span>
-                  <span className={`${styles.categoryCount} numeral`}>{countLabel(group.count)}</span>
-                  <span aria-hidden className={styles.categoryBar}>
-                    <span style={{ width: `${(group.count / maxCount) * 100}%` }} />
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </ChipStrip>
+        {spotlight}
       </header>
 
-      {/* ARAMA ŞERİDİ YAPIŞKAN (768 ve üstü). Liste 150 terim; aşağıda bir
-          kategoriyi okurken aramaya ya da bir harfe dönmek için sayfanın
-          başına çıkmak gerekiyordu. Telefonda yapışmıyor: başlık, şerit ve
-          alt sekmeler birlikte okuma alanının dörtte birini yiyordu. */}
+      {/* KATEGORİ ŞERİDİ. Her kutucuk bir süzgeç ve aynı zamanda bir ölçü:
+          çubuk kategorinin terim sayısını en kalabalık kategoriye göre
+          çiziyor. Kapaktaki 3×3 ızgaradan tek satıra indi (yer günün
+          terimine kaldı); sığmadığı genişlikte yatay kayıyor. */}
+      <ChipStrip
+        activeKey={category}
+        className={styles.categories}
+        scrollLabels={{ prev: labels.scrollPrev, next: labels.scrollNext }}
+      >
+        <div role="group" aria-label={labels.categoryLabel} className={styles.categoryGrid}>
+          <button
+            type="button"
+            aria-pressed={category === null}
+            aria-current={category === null ? "true" : undefined}
+            onClick={() => pickCategory(null)}
+            className={styles.categoryTile}
+          >
+            <AllIcon aria-hidden size={20} weight="duotone" />
+            <span className={styles.categoryName}>{labels.allCategories}</span>
+            <span className={`${styles.categoryCount} numeral`}>{countLabel(items.length)}</span>
+            {/* "Tümü" kutucuğunun çubuğu bir PAY: sekiz kategori, terim
+                sayısıyla orantılı. */}
+            <span aria-hidden className={styles.categoryBar} data-share>
+              {groups.map((group, index) => (
+                <span
+                  key={group.key}
+                  style={{ width: `${(group.count / items.length) * 100}%`, "--tile": index } as CSSProperties}
+                />
+              ))}
+            </span>
+          </button>
+          {groups.map((group, index) => {
+            const Icon = GLOSSARY_CATEGORY_ICONS[group.key];
+            const active = category === group.key;
+            return (
+              <button
+                key={group.key}
+                type="button"
+                aria-pressed={active}
+                aria-current={active ? "true" : undefined}
+                onClick={() => pickCategory(group.key)}
+                className={styles.categoryTile}
+                style={{ "--tile": index } as CSSProperties}
+              >
+                <Icon aria-hidden size={20} weight="duotone" />
+                <span className={styles.categoryName}>{group.label}</span>
+                <span className={`${styles.categoryCount} numeral`}>{countLabel(group.count)}</span>
+                <span aria-hidden className={styles.categoryBar}>
+                  <span style={{ width: `${(group.count / maxCount) * 100}%` }} />
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </ChipStrip>
+
+      {/* ARAMA ŞERİDİ YAPIŞKAN (768 ve üstü). Telefonda yapışmıyor: başlık,
+          şerit ve alt sekmeler birlikte okuma alanının dörtte birini
+          yiyordu. */}
       <div ref={toolbarRef} className={styles.toolbar}>
         <label className={styles.searchField}>
           <MagnifyingGlass aria-hidden size={19} />
@@ -300,101 +317,236 @@ export function GlossaryBrowser({
       </div>
 
       <div ref={resultsRef} className={styles.results}>
-        {/* Sonuç alanının tamamı boşaldığında sayfa düzeyinde bir boş durum:
-            CLAUDE.md'nin `EmptyState scene=` kalıbı, ararken bulunamayan
-            için "searching" sahnesi. */}
-        {byGroup.length === 0 ? (
-          <EmptyState title={labels.noResults} hint={labels.noResultsHint} scene="searching" />
-        ) : (
-          <AnimatePresence initial={false} mode="popLayout">
-            {byGroup.map((group) => {
-              const Icon = GLOSSARY_CATEGORY_ICONS[group.key];
-              return (
-                <motion.section
+        <AnimatePresence initial={false} mode="popLayout">
+          {browsing ? (
+            <motion.div
+              key="atlas"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.28, ease: EASE }}
+              className={styles.atlas}
+            >
+              {byGroup.map((group, index) => (
+                <AtlasBlock
                   key={group.key}
+                  group={group}
+                  order={index}
+                  labels={labels}
+                  countLabel={countLabel}
+                  onOpen={() => pickCategory(group.key)}
+                />
+              ))}
+            </motion.div>
+          ) : byGroup.length === 0 ? (
+            /* Sonuç alanının tamamı boşaldığında sayfa düzeyinde bir boş
+               durum: CLAUDE.md'nin `EmptyState scene=` kalıbı. */
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.24, ease: EASE }}
+            >
+              <EmptyState title={labels.noResults} hint={labels.noResultsHint} scene="searching" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="results"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.28, ease: EASE }}
+              className={styles.resultList}
+            >
+              <AnimatePresence initial={false} mode="popLayout">
+                {byGroup.map((group) => (
+                  <ResultSection key={group.key} group={group} labels={labels} countLabel={countLabel} />
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+type Group = GlossaryBrowserGroup & {
+  featured: GlossaryBrowserItem[];
+  rest: GlossaryBrowserItem[];
+  total: number;
+};
+
+/**
+ * Atlasın bir kategorisi. Öne çıkan üç terim satır olarak (kart içinde
+ * kart değil: blok kendisi yüzey, satırlar tonla ayrılıyor), kalanı
+ * `details` içinde iki sütunlu bir ad dizini. Başlıktaki düğme kategoriyi
+ * süzgeç olarak açıyor: orada her terimin tanım cümlesi de görünüyor.
+ */
+function AtlasBlock({
+  group,
+  order,
+  labels,
+  countLabel,
+  onOpen,
+}: {
+  group: Group;
+  order: number;
+  labels: { openCategory: string; moreTerms: string };
+  countLabel: (count: number) => string;
+  onOpen: () => void;
+}) {
+  const Icon = GLOSSARY_CATEGORY_ICONS[group.key];
+  return (
+    <section
+      aria-labelledby={`sozluk-${group.key}`}
+      className={styles.atlasBlock}
+      data-motion-reveal
+      style={{ "--tile": order } as CSSProperties}
+    >
+      <div className={styles.atlasHead}>
+        <span aria-hidden className={styles.sectionIcon}>
+          <Icon size={20} weight="duotone" />
+        </span>
+        <div className="min-w-0">
+          <h2 id={`sozluk-${group.key}`}>{group.label}</h2>
+          <span className={`${styles.atlasCount} numeral`}>{countLabel(group.total)}</span>
+        </div>
+        <button type="button" onClick={onOpen} className={styles.atlasOpen}>
+          {labels.openCategory}
+          <ArrowRight aria-hidden size={14} weight="bold" />
+        </button>
+      </div>
+
+      <ol className={styles.atlasFeatured} data-motion-stagger>
+        {group.featured.map((item) => (
+          <li key={item.slug} data-lead={item.featured === 1 ? "" : undefined}>
+            <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.atlasTerm}>
+              <TermMark motif={item.motif} size={item.featured === 1 ? "lg" : "md"} draw />
+              <span className="min-w-0">
+                <span className={styles.atlasName}>{item.term}</span>
+                <span className={styles.atlasShort}>{item.short}</span>
+              </span>
+              <ArrowRight aria-hidden size={15} weight="bold" className={styles.atlasArrow} />
+            </Link>
+          </li>
+        ))}
+      </ol>
+
+      {group.rest.length > 0 && (
+        <details className={styles.atlasMore}>
+          <summary>
+            <span className="numeral">{labels.moreTerms.replace("{count}", String(group.rest.length))}</span>
+            <CaretDown aria-hidden size={14} weight="bold" className={styles.atlasCaret} />
+          </summary>
+          <ul className={styles.atlasList}>
+            {group.rest.map((item) => (
+              <li key={item.slug}>
+                <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.atlasLink}>
+                  {item.term}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </section>
+  );
+}
+
+/** Süzgeç açıkken bir kategorinin eşleşmeleri — öne çıkanlar kartta, kalanı ızgarada. */
+function ResultSection({
+  group,
+  labels,
+  countLabel,
+}: {
+  group: Group;
+  labels: { links: string };
+  countLabel: (count: number) => string;
+}) {
+  const Icon = GLOSSARY_CATEGORY_ICONS[group.key];
+  return (
+    <motion.section
+      layout="position"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3, ease: EASE }}
+      aria-labelledby={`sozluk-${group.key}`}
+      className={styles.section}
+    >
+      <div className={styles.sectionHead}>
+        <span aria-hidden className={styles.sectionIcon}>
+          <Icon size={20} weight="duotone" />
+        </span>
+        <h2 id={`sozluk-${group.key}`}>{group.label}</h2>
+        <span className={`${styles.sectionCount} numeral`}>{countLabel(group.total)}</span>
+      </div>
+
+      {group.featured.length > 0 && (
+        <ul className={styles.featured} data-count={group.featured.length}>
+          <AnimatePresence initial={false} mode="popLayout">
+            {group.featured.map((item) => {
+              const lead = item.featured === 1 && group.featured.length === 3;
+              return (
+                <motion.li
+                  key={item.slug}
                   layout="position"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                  aria-labelledby={`sozluk-${group.key}`}
-                  className={styles.section}
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.97 }}
+                  transition={{ duration: 0.32, ease: EASE }}
+                  className={styles.featureItem}
+                  data-lead={lead ? "" : undefined}
                 >
-                  <div className={styles.sectionHead}>
-                    <span aria-hidden className={styles.sectionIcon}>
-                      <Icon size={20} weight="duotone" />
+                  <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.featureCard}>
+                    <TermMark motif={item.motif} size={lead ? "lg" : "md"} draw />
+                    <span className={styles.featureTerm}>{item.term}</span>
+                    <span className={styles.featureShort}>{lead && item.lede ? item.lede : item.short}</span>
+                    <span className={styles.featureMeta}>
+                      <span className={styles.featureLinks}>
+                        <Graph aria-hidden size={14} weight="bold" />
+                        <span className="numeral">{labels.links.replace("{count}", String(item.links))}</span>
+                      </span>
+                      {item.related.length > 0 && (
+                        <span className={styles.featureRelated}>{item.related.join(", ")}</span>
+                      )}
+                      <ArrowRight aria-hidden size={15} weight="bold" className={styles.featureArrow} />
                     </span>
-                    <h2 id={`sozluk-${group.key}`}>{group.label}</h2>
-                    <span className={`${styles.sectionCount} numeral`}>{countLabel(group.total)}</span>
-                  </div>
-
-                  {group.featured.length > 0 && (
-                    <ul className={styles.featured} data-count={group.featured.length}>
-                      <AnimatePresence initial={false} mode="popLayout">
-                        {group.featured.map((item) => (
-                          <motion.li
-                            key={item.slug}
-                            layout="position"
-                            initial={{ opacity: 0, scale: 0.97 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.97 }}
-                            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-                            className={styles.featureItem}
-                            data-lead={item.featured === 1 && group.featured.length === 3 ? "" : undefined}
-                          >
-                            <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.featureCard}>
-                              <GlyphTile glyph={item.glyph} size={item.featured === 1 ? 56 : 44} />
-                              <span className={styles.featureTerm}>{item.term}</span>
-                              <span className={styles.featureShort}>
-                                {item.featured === 1 && group.featured.length === 3 && item.lede ? item.lede : item.short}
-                              </span>
-                              <span className={styles.featureMeta}>
-                                <span className={styles.featureLinks}>
-                                  <Graph aria-hidden size={14} weight="bold" />
-                                  <span className="numeral">
-                                    {labels.links.replace("{count}", String(item.links))}
-                                  </span>
-                                </span>
-                                {item.related.length > 0 && (
-                                  <span className={styles.featureRelated}>{item.related.join(", ")}</span>
-                                )}
-                                <ArrowRight aria-hidden size={15} weight="bold" className={styles.featureArrow} />
-                              </span>
-                            </Link>
-                          </motion.li>
-                        ))}
-                      </AnimatePresence>
-                    </ul>
-                  )}
-
-                  {group.rest.length > 0 && (
-                    <ul className={styles.compact}>
-                      <AnimatePresence initial={false} mode="popLayout">
-                        {group.rest.map((item) => (
-                          <motion.li
-                            key={item.slug}
-                            layout="position"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-                            className="min-w-0"
-                          >
-                            <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.termLink}>
-                              <span className={styles.termName}>{item.term}</span>
-                              <span className={styles.termShort}>{item.short}</span>
-                            </Link>
-                          </motion.li>
-                        ))}
-                      </AnimatePresence>
-                    </ul>
-                  )}
-                </motion.section>
+                  </Link>
+                </motion.li>
               );
             })}
           </AnimatePresence>
-        )}
-      </div>
-    </div>
+        </ul>
+      )}
+
+      {group.rest.length > 0 && (
+        <ul className={styles.compact}>
+          <AnimatePresence initial={false} mode="popLayout">
+            {group.rest.map((item) => (
+              <motion.li
+                key={item.slug}
+                layout="position"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.26, ease: EASE }}
+                className="min-w-0"
+              >
+                <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.termLink}>
+                  <TermMark motif={item.motif} size="sm" />
+                  <span className="min-w-0">
+                    <span className={styles.termName}>{item.term}</span>
+                    <span className={styles.termShort}>{item.short}</span>
+                  </span>
+                </Link>
+              </motion.li>
+            ))}
+          </AnimatePresence>
+        </ul>
+      )}
+    </motion.section>
   );
 }

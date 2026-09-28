@@ -19,14 +19,37 @@
 .metrics > div { display:flex; flex-direction:column; gap:3px; }
 .metrics dt { order:2; font-size:12px; color:var(--text-muted); }
 .metrics dd { font-size:28px; line-height:1.1; letter-spacing:-.045em; font-weight:600; color:var(--text-strong); }
-@media(min-width:1024px) { .hero { grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr); align-items:center; gap:36px; } }
+@media(min-width:1024px) { .hero { grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); align-items:stretch; gap:36px; } }
+
+/* Günün terimi — kapağın sağ yarısı. Yüzey kapaktan bir TON aşağıda
+   (`--surface-sunken`), gölge yok. Levhada yalnızca kavram çizimi:
+   arkasına konan kategori simgesi filigranı (terazi) paranın üstünde
+   ikinci bir şekil gibi okunuyordu, kaldırıldı. */
+.spotlight { position:relative; z-index:1; display:grid; min-width:0; grid-template-columns:minmax(0,1fr); gap:0; overflow:hidden; border:1px solid var(--line-soft); border-radius:20px; background:var(--surface-sunken); }
+@media(min-width:640px) { .spotlight { grid-template-columns:minmax(0,.8fr) minmax(0,1fr); } }
+.spotlightPlate { position:relative; isolation:isolate; display:grid; min-height:150px; place-items:center; padding:22px; border-bottom:1px solid var(--line-soft); background:var(--primary-tint); }
+@media(min-width:640px) { .spotlightPlate { border-bottom:0; border-right:1px solid var(--line-soft); } }
+.plateWatermark { position:absolute; right:-22px; bottom:-30px; z-index:-1; color:var(--primary-wash); pointer-events:none; }
+.spotlightCopy { display:flex; min-width:0; flex-direction:column; gap:8px; padding:22px 24px 20px; }
+.spotlightKicker { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; font-size:12px; line-height:1.4; font-weight:650; color:var(--primary-ink); }
+.spotlightKicker time { font-weight:500; color:var(--text-muted); }
+.spotlightKicker time::before { content:""; display:inline-block; width:12px; height:1px; margin-right:8px; vertical-align:middle; background:var(--line-strong); }
+.spotlightTerm { margin-top:4px; font-size:clamp(22px,2.2vw,28px); line-height:1.15; letter-spacing:-.035em; font-weight:650; color:var(--text-strong); text-wrap:balance; }
+.spotlightLede { font-size:14px; line-height:1.65; color:var(--text-body); text-wrap:pretty; }
+.spotlightMeta { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin-top:auto; padding-top:10px; font-size:12px; color:var(--text-muted); }
+.spotlightLink { display:inline-flex; min-height:40px; align-items:center; gap:8px; padding:0 16px; border-radius:999px; background:var(--primary); color:var(--on-primary); font-size:13px; font-weight:650; transition:background-color .25s,scale .15s; }
+.spotlightLink > svg { transition:translate .3s; }
+.spotlightLink:hover { background:var(--primary-hover); }
+.spotlightLink:hover > svg { translate:3px 0; }
+.spotlightLink:active { scale:.98; }
+.spotlightLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 
 /* Kategori kutucukları. 768 ve üstünde 3×3 ızgara (Tümü + sekiz kategori:
    dokuz kutucuk, boş hücre yok); altında yatay kayan şerit. */
 .categories { min-width:0; overflow-x:auto; scrollbar-width:none; padding-block:2px; }
 .categories::-webkit-scrollbar { display:none; }
 .categoryGrid { display:flex; gap:8px; width:max-content; }
-.categoryTile { position:relative; display:flex; width:152px; flex-direction:column; align-items:flex-start; gap:6px; padding:12px 13px 13px; border:1px solid var(--line); border-radius:14px; background:var(--surface-sunken); color:var(--primary-ink); text-align:left; cursor:pointer; transition:background-color .25s,border-color .25s,scale .15s; }
+.categoryTile { position:relative; display:flex; width:148px; flex-direction:column; align-items:flex-start; gap:6px; padding:12px 13px 13px; border:1px solid var(--line); border-radius:14px; background:var(--surface-sunken); color:var(--primary-ink); text-align:left; cursor:pointer; transition:background-color .25s,border-color .25s,scale .15s; }
 .categoryTile > svg { flex-shrink:0; transition:rotate .45s,scale .45s; }
 .categoryName { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:2.6em; font-size:13px; line-height:1.3; font-weight:600; color:var(--text-strong); }
 .categoryCount { font-size:11px; font-weight:500; color:var(--text-muted); }
@@ -46,9 +69,11 @@
  .categoryTile:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
  .categoryTile:hover > svg { rotate:-8deg; scale:1.08; }
 }
-@media(min-width:768px) {
+/* 1280'de dokuz kutucuk tek satıra sığıyor (ölçüldü: kap 1200, kutucuk
+   125); altında şerit kayıyor. */
+@media(min-width:1180px) {
  .categories { overflow:visible; }
- .categoryGrid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:auto; gap:10px; }
+ .categoryGrid { display:grid; grid-template-columns:repeat(9,minmax(0,1fr)); width:auto; gap:8px; }
  .categoryTile { width:auto; }
 }
 
@@ -94,7 +119,8 @@
 /* Süzgeçten sonra sonuçların başı şeridin ALTINA iniyor (kaydırma payı =
    yapışkan şeridin boyu). Telefonda şerit yapışmıyor; pay yalnızca kök
    `scroll-padding` kadar. */
-.results { display:flex; min-width:0; flex-direction:column; gap:40px; scroll-margin-top:12px; }
+.results { min-width:0; scroll-margin-top:12px; }
+.resultList { display:flex; min-width:0; flex-direction:column; gap:40px; }
 @media(min-width:768px) { .results { scroll-margin-top:84px; } }
 
 .section { min-width:0; }
@@ -113,7 +139,7 @@
 }
 .featureItem { display:flex; min-width:0; }
 .featureCard { display:grid; flex:1; min-width:0; grid-template-columns:auto minmax(0,1fr); grid-template-areas:"glyph term" "glyph short" "meta meta"; align-content:start; gap:4px 14px; padding:18px 20px; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); transition:background-color .3s,border-color .3s; }
-.featureCard > span:first-child { grid-area:glyph; align-self:start; transition:rotate .5s,scale .5s; }
+.featureCard > span:first-child { grid-area:glyph; align-self:start; }
 .featureTerm { grid-area:term; align-self:end; font-size:17px; line-height:1.3; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); text-wrap:balance; }
 .featureShort { grid-area:short; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:13px; line-height:1.6; color:var(--text-body); }
 .featureMeta { grid-area:meta; display:flex; min-width:0; align-items:center; gap:10px; margin-top:10px; padding-top:10px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-muted); }
@@ -128,7 +154,6 @@
 .featureCard:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 @media(hover:hover) and (pointer:fine) {
  .featureCard:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
- .featureCard:hover > span:first-child { rotate:-6deg; scale:1.05; }
  .featureCard:hover .featureArrow { translate:3px 0; }
 }
 
@@ -136,28 +161,117 @@
 .compact { display:grid; grid-template-columns:minmax(0,1fr); gap:2px 12px; margin-top:12px; }
 @media(min-width:640px) { .compact { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(min-width:1024px) { .compact { grid-template-columns:repeat(3,minmax(0,1fr)); } }
-.termLink { display:flex; min-height:44px; flex-direction:column; justify-content:center; gap:2px; padding:9px 12px; border-radius:11px; transition:background-color .2s; }
+.termLink { display:flex; min-height:44px; align-items:center; gap:12px; padding:9px 12px 9px 9px; border-radius:12px; transition:background-color .2s; }
+.termLink > span:last-child { display:flex; min-width:0; flex-direction:column; gap:2px; }
 .termName { font-size:14px; line-height:1.35; font-weight:600; color:var(--text-strong); }
 .termShort { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; line-height:1.5; color:var(--text-muted); }
 .termLink:hover { background:var(--primary-tint); }
 .termLink:hover .termName { color:var(--primary-ink); }
 .termLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
 
+/* ---- Atlas (süzgeç yokken) --------------------------------------------------
+   Sekiz kategori iki sütunda. Blok bir yüzey; içindeki öne çıkan terimler
+   kart değil SATIR (kart içinde kart yok), birbirinden ince çizgiyle
+   ayrılıyor. Izgara satırı blokları gerdirmiyor (`start`): bir kategorinin
+   dizini açılınca yanındaki blok boş bir dip kazanmasın. */
+.atlas { display:grid; min-width:0; grid-template-columns:minmax(0,1fr); align-items:start; gap:16px; }
+@media(min-width:900px) { .atlas { grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; } }
+.atlasBlock { display:flex; min-width:0; flex-direction:column; padding:20px 22px 8px; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); }
+.atlasHead { display:flex; align-items:center; gap:12px; padding-bottom:14px; }
+.atlasHead h2 { font-size:19px; line-height:1.25; font-weight:650; letter-spacing:-.03em; color:var(--text-strong); text-wrap:balance; }
+.atlasCount { display:block; margin-top:2px; font-size:12px; color:var(--text-muted); }
+.atlasOpen { display:inline-flex; flex-shrink:0; min-height:36px; margin-left:auto; align-items:center; gap:6px; padding:0 13px; border:1px solid var(--line); border-radius:999px; font-size:12px; font-weight:650; color:var(--primary-ink); cursor:pointer; transition:background-color .2s,border-color .2s,scale .15s; }
+.atlasOpen > svg { transition:translate .3s; }
+.atlasOpen:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
+.atlasOpen:hover > svg { translate:2px 0; }
+.atlasOpen:active { scale:.97; }
+.atlasOpen:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+
+.atlasFeatured { display:flex; min-width:0; flex-direction:column; border-top:1px solid var(--line-soft); }
+.atlasFeatured > li + li { border-top:1px solid var(--line-soft); }
+.atlasTerm { display:grid; min-width:0; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:14px; margin-inline:-10px; padding:12px 10px; border-radius:14px; transition:background-color .25s; }
+.atlasTerm > span:nth-child(2) { display:flex; flex-direction:column; gap:3px; }
+.atlasName { font-size:15px; line-height:1.3; font-weight:650; letter-spacing:-.015em; color:var(--text-strong); text-wrap:balance; }
+.atlasShort { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:13px; line-height:1.55; color:var(--text-body); }
+.atlasFeatured > li[data-lead] .atlasName { font-size:18px; letter-spacing:-.025em; }
+.atlasArrow { color:var(--primary-ink); opacity:.45; transition:translate .3s,opacity .3s; }
+.atlasTerm:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
+@media(hover:hover) and (pointer:fine) {
+ .atlasTerm:hover { background:var(--primary-tint); }
+ .atlasTerm:hover .atlasName { color:var(--primary-ink); }
+ .atlasTerm:hover .atlasArrow { translate:3px 0; opacity:1; }
+}
+
+/* Kategorinin geri kalanı. `details` JavaScript'siz de açılıyor; yükseklik
+   geçişi globals.css'teki `::details-content` kuralından. */
+.atlasMore { border-top:1px solid var(--line-soft); }
+.atlasMore > summary { display:flex; min-height:46px; align-items:center; gap:8px; list-style:none; font-size:13px; font-weight:600; color:var(--text-body); cursor:pointer; }
+.atlasMore > summary::-webkit-details-marker { display:none; }
+.atlasMore > summary:hover { color:var(--primary-ink); }
+.atlasMore > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:8px; }
+.atlasCaret { color:var(--primary-ink); transition:rotate .35s; }
+.atlasMore[open] .atlasCaret { rotate:180deg; }
+.atlasList { display:grid; grid-template-columns:minmax(0,1fr); gap:0 16px; padding-bottom:14px; }
+@media(min-width:480px) { .atlasList { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.atlasLink { display:flex; min-height:36px; align-items:center; padding:6px 10px; margin-inline:-10px; border-radius:10px; font-size:13px; line-height:1.35; font-weight:550; color:var(--text-strong); transition:background-color .2s,color .2s; }
+.atlasLink:hover { background:var(--primary-tint); color:var(--primary-ink); }
+.atlasLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
+
+/* ---- Kavram işareti (TermMark) ---------------------------------------------
+   Karo tonla ayrışıyor: kart zemininden bir basamak koyu, kenar yok.
+   Çizim markanın mavisinin dört yoğunluğunda; hepsi token. */
+.mark { display:grid; flex-shrink:0; place-items:center; border-radius:14px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--line-soft); }
+.mark svg { display:block; width:78%; height:auto; overflow:visible; transition:scale .45s; }
+.mark[data-size="xs"] svg,.mark[data-size="sm"] svg { width:86%; }
+.mark[data-size="xs"] { width:34px; height:34px; border-radius:10px; }
+.mark[data-size="sm"] { width:42px; height:42px; border-radius:12px; }
+.mark[data-size="md"] { width:54px; height:54px; }
+.mark[data-size="lg"] { width:72px; height:72px; border-radius:18px; }
+.mark[data-size="plate"] { width:min(100%,220px); aspect-ratio:8 / 5; background:transparent; box-shadow:none; }
+.mark[data-size="plate"] svg { width:100%; }
+.mkInk { fill:none; stroke:var(--primary); stroke-width:2.4; }
+.mkInk[data-motion-draw] { stroke-dasharray:1; }
+.mkSoft { fill:none; stroke:var(--primary-faint); stroke-width:1.6; }
+.mkSolid { fill:var(--primary); }
+.mkMid { fill:var(--primary-soft); fill-opacity:.45; }
+.mkMidFill { fill:var(--primary-soft); }
+.mkWash { fill:var(--primary-wash); stroke:var(--primary-soft); stroke-opacity:.45; stroke-width:1; }
+.mkTrack { fill:none; stroke:var(--primary-faint); stroke-width:5; }
+.mkTrackArc { fill:none; stroke:var(--primary-wash); stroke-width:4.5; stroke-linecap:round; }
+.mkFrame { fill:var(--premium-surface); stroke:var(--primary-faint); stroke-width:1.6; }
+.mkPip { fill:var(--primary-faint); }
+.mkRing { fill:none; stroke:var(--primary-faint); stroke-width:1.4; }
+.mkArea { fill:var(--primary-wash); }
+.mkHalo { fill:var(--premium-surface); stroke:var(--primary); stroke-width:2; }
+@media(hover:hover) and (pointer:fine) {
+ .atlasTerm:hover .mark svg,.featureCard:hover .mark svg,.termLink:hover .mark svg,.networkNode:hover .mark svg,.neighbor:hover .mark svg { scale:1.08; }
+}
+
 @media(max-width:767px) {
  .browser { gap:18px; }
  .hero { gap:18px; padding:22px 20px 18px; border-radius:20px; }
  .metrics { gap:12px 22px; margin-top:16px; }
  .metrics dd { font-size:22px; }
- .results { gap:32px; }
+ .resultList { gap:32px; }
  .sectionHead h2 { font-size:20px; }
  .featureCard { padding:16px; }
+ .atlasBlock { padding:16px 16px 4px; }
+ .atlasHead h2 { font-size:17px; }
+ .spotlightCopy { padding:18px 18px 16px; }
+ .spotlightPlate { min-height:0; padding:14px; }
+ .spotlightPlate .mark { width:min(100%,150px); }
+ /* Telefonda atlas satırı adla yetiniyor, tanım cümlesi yalnızca öne
+    çıkan ilk terimde: sekiz blokta satır başına iki satır metin sayfayı
+    ~900 piksel uzatıyordu. */
+ .atlasFeatured > li:not([data-lead]) .atlasShort { display:none; }
  .featureItem[data-lead] .featureCard { padding:18px; }
 }
 
 @media(prefers-reduced-motion:reduce) {
  .categoryBar > span { animation:none; }
- .categoryTile,.categoryTile > svg,.featureCard,.featureCard > span:first-child,.featureArrow,.letter,.termLink { transition:none; }
- .categoryTile:hover > svg,.featureCard:hover > span:first-child { rotate:none; scale:none; }
+ .categoryTile,.categoryTile > svg,.featureCard,.featureArrow,.letter,.termLink,.atlasTerm,.atlasArrow,.atlasOpen,.atlasCaret,.spotlightLink,.spotlightLink > svg,.mark svg { transition:none; }
+ .spotlightLink:hover > svg,.atlasTerm:hover .atlasArrow { translate:none; }
+ .categoryTile:hover > svg { rotate:none; scale:none; }
  .featureCard:hover .featureArrow { translate:none; }
  .categoryTile:active,.letter:not(:disabled):active { scale:none; }
 }
@@ -165,17 +279,30 @@
 /* ==========================================================================
    Terim sayfası
    ========================================================================== */
-.termHero { position:relative; isolation:isolate; display:grid; min-width:0; grid-template-columns:minmax(0,1fr) auto; gap:18px 24px; padding:32px 34px 30px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface); }
-.termHeading { grid-column:1; grid-row:1; min-width:0; align-self:end; }
+.termHero { position:relative; isolation:isolate; display:grid; min-width:0; grid-template-columns:minmax(0,1fr); gap:18px 36px; padding:32px 34px 30px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface); }
+.termHeading { min-width:0; align-self:end; }
+/* Kavramın levhası. 1024 ve üstünde sağ sütunda başlık ve tanım boyunca;
+   altında TANIMIN ARKASINDA alçak bir şerit: telefonda başlıkla tanımın
+   arasına girince okuyucunun sorduğu cümle ("bu ne demek") ilk ekranın
+   dibine itiliyordu (390'da ölçüldü: lede 470. pikselde başlıyordu). */
+.termPlate { position:relative; z-index:1; isolation:isolate; order:3; display:grid; min-width:0; min-height:132px; place-items:center; overflow:hidden; padding:18px; border-radius:20px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--line-soft); }
+.termPlate .mark { width:min(100%,170px); }
+@media(min-width:1024px) {
+ .termHero { grid-template-columns:minmax(0,1fr) minmax(0,300px); }
+ .termHeading { grid-column:1; grid-row:1; }
+ .termPlate { order:0; grid-column:2; grid-row:1 / span 2; align-self:stretch; min-height:240px; }
+ .termPlate .mark { width:min(100%,240px); }
+ .termDefinition { grid-column:1; grid-row:2; }
+}
 .termHeading h1 { width:fit-content; max-width:100%; margin-top:10px; font-size:clamp(32px,4.2vw,52px); line-height:1.08; letter-spacing:-.05em; font-weight:600; text-wrap:balance; }
-.termGlyph { grid-column:2; grid-row:1; align-self:start; animation:glyph-in .7s var(--ease-brand) both; }
-@keyframes glyph-in { from { rotate:-10deg; scale:.82; opacity:0; } }
+/* Levha kapakla birlikte gelir: yalnızca ölçek, saydamlık yok (LCP adayı
+   olmayan bir süs; yine de ilk karede görünür kalsın). */
+.termPlate .mark { animation:plate-in .8s var(--ease-brand) both; }
+@keyframes plate-in { from { scale:.9; } }
 /* Tanım: ilk cümle display puntosunda, gerisi gövde. */
-/* `span 2`, `1/-1` değil: 767 pikselin altında ortak çerçeve tek sütunlu
-   açık bir ızgara kuruyor (globals.css → .page-frame) ve karo örtük ikinci
-   sütuna düşüyor; `-1` o zaman yalnızca ilk sütunu kapsıyor ve tanım
-   234 piksele sıkışıyordu (390'da ölçüldü). */
-.termDefinition { grid-column:1 / span 2; min-width:0; padding-top:22px; border-top:1px solid var(--line); }
+/* Tanım tek sütunda; 1024 altında levhanın altında, üstünde başlığın
+   altında. Kenar çizgisi başlıktan ayırıyor. */
+.termDefinition { min-width:0; padding-top:22px; border-top:1px solid var(--line); }
 .lede { max-width:36em; font-size:clamp(20px,2.2vw,26px); line-height:1.42; letter-spacing:-.022em; font-weight:500; color:var(--text-strong); text-wrap:pretty; }
 .restBody { max-width:68ch; margin-top:14px; }
 
@@ -200,13 +327,17 @@
 /* İlişki ağı. Kap boyut kabı: çizgiler `cqw`/`cqh` ile boylanıyor. */
 .networkWrap { padding:0 20px 22px; }
 .network { position:relative; height:340px; container-type:size; }
-.networkLine { position:absolute; left:50%; top:50%; height:1.5px; width:hypot(calc(var(--dx) * 1cqw), calc(var(--dy) * 1cqh)); border-radius:1px; background:linear-gradient(90deg,var(--primary-soft),var(--primary-faint)); transform-origin:left center; rotate:atan2(calc(var(--dy) * 1cqh), calc(var(--dx) * 1cqw)); }
-.networkCenter { position:absolute; left:50%; top:50%; z-index:1; display:flex; max-width:210px; flex-direction:column; align-items:center; gap:9px; padding:14px 18px; border:1px solid var(--primary-faint); border-radius:18px; background:var(--premium-surface); translate:-50% -50%; text-align:center; }
+/* Kol düğümün ortasından merkeze: boyu ve açısı kabın gerçek ölçüsüyle.
+   Düğümün kendi yığın bağlamında en altta; merkez kartı (z 2) kolların
+   uçlarını örtüyor. */
+.networkArm { position:absolute; left:50%; top:50%; z-index:-1; width:hypot(calc(var(--dx) * 1cqw), calc(var(--dy) * 1cqh)); height:1.5px; transform-origin:left center; rotate:atan2(calc(var(--dy) * -1cqh), calc(var(--dx) * -1cqw)); pointer-events:none; }
+.networkArm > span { display:block; height:100%; border-radius:1px; background:linear-gradient(90deg,var(--primary-faint),var(--primary-soft)); transition:background-color .3s,scale .3s; }
+.networkNodes > li:hover .networkArm > span,.networkNodes > li:focus-within .networkArm > span { background:var(--primary); scale:1 2; }
+.networkCenter { position:absolute; left:50%; top:50%; z-index:2; display:flex; max-width:210px; flex-direction:column; align-items:center; gap:9px; padding:14px 18px; border:1px solid var(--primary-faint); border-radius:18px; background:var(--premium-surface); translate:-50% -50%; text-align:center; }
 .networkCenter > span:last-child { font-size:15px; line-height:1.3; font-weight:650; letter-spacing:-.015em; color:var(--text-strong); text-wrap:balance; }
 .networkNodes { position:absolute; inset:0; }
 .networkNodes > li { position:absolute; z-index:1; left:var(--x); top:var(--y); width:max-content; max-width:min(36%,230px); translate:-50% -50%; }
-.networkNode { display:flex; align-items:center; gap:9px; padding:7px 13px 7px 7px; border:1px solid var(--line); border-radius:14px; background:var(--premium-surface); transition:background-color .25s,border-color .25s,scale .15s; }
-.networkGlyph { display:grid; flex-shrink:0; place-items:center; min-width:30px; height:30px; padding-inline:4px; border-radius:9px; background:var(--primary-tint); color:var(--primary-ink); font-size:10px; font-weight:700; letter-spacing:-.01em; }
+.networkNode { display:flex; align-items:center; gap:10px; padding:6px 13px 6px 6px; border:1px solid var(--line); border-radius:14px; background:var(--premium-surface); transition:background-color .25s,border-color .25s,scale .15s; }
 .networkTerm { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:13px; line-height:1.3; font-weight:600; color:var(--text-strong); }
 .networkCategory { display:block; margin-top:1px; font-size:11px; line-height:1.4; color:var(--text-muted); }
 .networkNode:active { scale:.98; }
@@ -218,7 +349,7 @@
 /* Telefonda dal: merkez üstte, komşular altında bir omurgaya bağlı. */
 @media(max-width:639px) {
  .network { height:auto; container-type:normal; display:flex; flex-direction:column; align-items:flex-start; gap:10px; }
- .networkLine { display:none; }
+ .networkArm { display:none; }
  .networkCenter { position:static; flex-direction:row; max-width:100%; padding:10px 14px 10px 10px; translate:none; text-align:left; }
  .networkNodes { position:relative; inset:auto; display:flex; width:100%; flex-direction:column; gap:8px; padding-left:24px; }
  .networkNodes::before { content:""; position:absolute; left:10px; top:-10px; bottom:22px; width:1.5px; background:var(--primary-faint); }
@@ -226,9 +357,12 @@
  .networkNodes > li::before { content:""; position:absolute; left:-14px; top:50%; width:14px; height:1.5px; background:var(--primary-faint); }
 }
 
-.neighbors { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-.neighbor { display:flex; min-width:0; align-items:center; gap:14px; padding:16px 20px; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); transition:background-color .25s,border-color .25s; }
-.neighbor[data-side="next"] { grid-column:2; justify-content:flex-end; text-align:right; }
+.neighbors { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-areas:"pos pos" "prev next"; gap:12px; }
+@media(min-width:900px) { .neighbors { grid-template-columns:minmax(0,1fr) minmax(0,15rem) minmax(0,1fr); grid-template-areas:"prev pos next"; align-items:center; } }
+.neighbors > :first-child { grid-area:prev; }
+.neighbors > :last-child { grid-area:next; }
+.neighbor { display:flex; min-width:0; align-items:center; gap:14px; padding:14px 18px; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); transition:background-color .25s,border-color .25s; }
+.neighbor[data-side="next"] { justify-content:flex-end; text-align:right; }
 .neighborArrow { flex-shrink:0; color:var(--primary-ink); transition:translate .3s; }
 .neighborLabel { display:block; font-size:12px; font-weight:500; color:var(--text-muted); }
 .neighborTerm { display:block; margin-top:2px; font-size:16px; line-height:1.3; font-weight:650; letter-spacing:-.015em; color:var(--text-strong); overflow-wrap:anywhere; }
@@ -238,17 +372,28 @@
  .neighbor[data-side="previous"]:hover .neighborArrow { translate:-3px 0; }
  .neighbor[data-side="next"]:hover .neighborArrow { translate:3px 0; }
 }
+/* Konum şeridi: kategorinin her terimi bir çentik. Geçilenler soluk,
+   bulunulan dolu ve uzun, kalanlar çizgi tonunda. */
+.position { grid-area:pos; display:flex; min-width:0; flex-direction:column; align-items:center; gap:8px; }
+.positionRail { display:flex; width:100%; max-width:15rem; height:22px; align-items:center; justify-content:center; gap:3px; }
+.positionRail > span { flex:1 1 0; max-width:6px; height:10px; border-radius:2px; background:var(--line); transform-origin:center; animation:tick-in .5s var(--ease-brand) both; }
+.positionRail > span[data-past] { background:var(--primary-faint); }
+.positionRail > span[data-on] { height:22px; background:var(--primary); }
+@keyframes tick-in { from { scale:1 .2; } }
+.positionLabel { font-size:12px; font-weight:600; color:var(--text-muted); }
 
 @media(max-width:767px) {
  .termHero { gap:14px 16px; padding:22px 20px 20px; border-radius:20px; }
  .termDefinition { padding-top:16px; }
  .exampleBody { padding:2px 16px 18px; }
  .networkWrap { padding:0 16px 18px; }
- .neighbor { gap:10px; padding:14px; }
+ .neighbor { gap:10px; padding:12px; }
+ .neighbor .mark { display:none; }
  .neighborTerm { font-size:14px; }
 }
 @media(prefers-reduced-motion:reduce) {
- .termGlyph { animation:none; }
+ .termPlate .mark,.positionRail > span { animation:none; }
+ .networkArm > span { transition:none; }
  .networkNode,.neighbor,.neighborArrow { transition:none; }
  .networkNode:active { scale:none; }
  .neighbor:hover .neighborArrow { translate:none!important; }

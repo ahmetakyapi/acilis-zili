@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { GlyphTile } from "@/components/article/GlyphTile";
 import type { GlossaryConcept } from "@/content/glossary/visuals";
+import type { GlossaryMotif } from "@/content/glossary/marks";
+import { TermMark } from "./TermMark";
 import styles from "./Glossary.module.css";
 
 /* ==========================================================================
@@ -21,7 +22,7 @@ const TURN = 360;
 export type NetworkNode = {
   slug: string;
   term: string;
-  glyph: string;
+  motif: GlossaryMotif;
   /** Başka kategorideyse onun adı; aynı kategorideyse boş. */
   category: string | null;
 };
@@ -39,11 +40,11 @@ export type NetworkNode = {
  */
 export function TermNetwork({
   center,
-  glyph,
+  motif,
   nodes,
 }: {
   center: string;
-  glyph: string;
+  motif: GlossaryMotif;
   nodes: NetworkNode[];
 }) {
   const count = nodes.length;
@@ -55,33 +56,35 @@ export function TermNetwork({
 
   return (
     <div className={styles.network}>
-      {/* ÇİZGİLER SVG DEĞİL, KAP BİRİMLİ ŞERİTLER. Esnek bir SVG
-          (`preserveAspectRatio="none"`) kalınlığı eksene göre farklı
-          geriyordu; `non-scaling-stroke` ise çizimin kesik uzunluğunu
-          bozuyor (globals.css → .spark-line). Şerit kabın gerçek ölçüsüyle
-          (`cqw`/`cqh`) boylanıp açılanıyor ve `data-motion-draw="line"`
-          onu merkezden dışa doğru uzatıyor. */}
-      {points.map((point, index) => (
-        <span
-          key={nodes[index].slug}
-          aria-hidden
-          className={styles.networkLine}
-          data-motion-draw="line"
-          style={{ "--dx": (point.x - 50).toFixed(2), "--dy": (point.y - 50).toFixed(2) } as CSSProperties}
-        />
-      ))}
       <div aria-hidden className={styles.networkCenter}>
-        <GlyphTile glyph={glyph} size={40} />
+        <TermMark motif={motif} size="md" />
         <span>{center}</span>
       </div>
       <ul className={styles.networkNodes} data-motion-stagger>
         {nodes.map((node, index) => (
           <li
             key={node.slug}
-            style={{ "--x": `${points[index].x}%`, "--y": `${points[index].y}%` } as CSSProperties}
+            style={{
+              "--x": `${points[index].x}%`,
+              "--y": `${points[index].y}%`,
+              "--dx": (points[index].x - 50).toFixed(2),
+              "--dy": (points[index].y - 50).toFixed(2),
+            } as CSSProperties}
           >
+            {/* ÇİZGİ DÜĞÜMÜN İÇİNDE (28 Eylül, ikinci tur). Şeritler
+                ağın kökünde ayrı duruyordu ve bir düğümün üstüne gelmek
+                kendi çizgisini bilemiyordu. Artık kol düğümün ortasından
+                merkeze uzanıyor (`--dx`/`--dy` kabın gerçek ölçüsüyle,
+                `cqw`/`cqh`), mürekkep kolun MERKEZ ucundan dışa doğru
+                çiziliyor (`data-motion-draw="line"`, sağ uç kökeni) ve
+                düğüm üzerindeyken kendi kolu koyulaşıyor.
+                SVG değil şerit: esnek bir SVG kalınlığı eksene göre farklı
+                geriyordu (globals.css → .spark-line). */}
+            <span aria-hidden className={styles.networkArm}>
+              <span data-motion-draw="line" style={{ transformOrigin: "right center" }} />
+            </span>
             <Link href={`/sozluk/${node.slug}`} prefetch={false} className={styles.networkNode}>
-              <span aria-hidden className={styles.networkGlyph}>{node.glyph}</span>
+              <TermMark motif={node.motif} size="xs" />
               <span className="min-w-0">
                 <span className={styles.networkTerm}>{node.term}</span>
                 {node.category && <span className={styles.networkCategory}>{node.category}</span>}

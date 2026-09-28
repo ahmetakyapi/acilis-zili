@@ -5,22 +5,22 @@ import { HeroAccent } from "@/components/motion/HeroAccent";
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArticleBody } from "@/components/article/ArticleBody";
-import { GlyphTile } from "@/components/article/GlyphTile";
 import { GuideHint } from "@/components/article/GuideHint";
 import { GLOSSARY_CATEGORY_ICONS } from "@/components/glossary/category-icons";
 import styles from "@/components/glossary/Glossary.module.css";
 import { ConceptVisual, TermNetwork } from "@/components/glossary/TermVisuals";
+import { TermMark } from "@/components/glossary/TermMark";
 import { BreadcrumbJsonLd, DefinedTermJsonLd } from "@/components/seo/JsonLd";
 import { Panel, PanelHeader } from "@/components/ui/primitives";
 import {
   GLOSSARY_SLUGS,
   glossaryCategoryLabel,
-  glossaryGlyph,
   glossaryIncoming,
   glossaryNeighbors,
   glossaryTerm,
 } from "@/content/glossary";
 import { GLOSSARY_VISUALS } from "@/content/glossary/visuals";
+import { GLOSSARY_MARKS } from "@/content/glossary/marks";
 import { getI18n } from "@/lib/i18n";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
@@ -85,7 +85,7 @@ export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]
   const related = term.related
     .map((slug) => glossaryTerm(slug, locale))
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
-  const { previous, next } = glossaryNeighbors(term.slug, locale);
+  const { previous, next, index, total } = glossaryNeighbors(term.slug, locale);
   const links = glossaryIncoming().get(term.slug) ?? 0;
   const { lede, rest } = splitLede(term.definition);
   const autoLink = await articleAutoLinker(locale, { excludeTerm: term.slug });
@@ -119,9 +119,16 @@ export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]
         {t.glossary.backToList}
       </Link>
 
-      {/* KAPAK: künye (kategori), ad, kavramın karosu ve tanım. Tanım
+      {/* KAPAK: künye (kategori), ad, kavramın çizimi ve tanım. Tanım
           kapağın İÇİNDE: ayrı bir "Tanım" paneli başlığın altında ikinci
-          bir başlangıç gibi duruyordu. */}
+          bir başlangıç gibi duruyordu.
+          SAĞDA KAVRAMIN LEVHASI (28 Eylül, ikinci tur). Sağ üstte 64
+          piksellik bir harf karosu duruyordu ("L", "P"); kapağın görsel
+          ağırlığı tamamen başlıktaydı. Levha terimin kavram çizimini
+          (`TermMark`) kategorinin simgesiyle birlikte taşıyor ve çizgi
+          görünüme girince çiziliyor. Kategoriye ayrı bir RENK verilmedi:
+          "renk yalnızca yön ve etkileşim" kuralı (category-icons.ts);
+          kategorinin tonu simgesi ve kavramın şekli. */}
       <header className={`${styles.termHero} page-frame`}>
         <HeroAccent />
         <div className={`${styles.termHeading} page-heading-copy`}>
@@ -131,7 +138,10 @@ export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]
           </p>
           <h1 className="display-ink">{term.term}</h1>
         </div>
-        <GlyphTile glyph={glossaryGlyph(term.term, locale)} size={64} className={styles.termGlyph} />
+        <div className={styles.termPlate}>
+          <CategoryIcon aria-hidden size={150} weight="thin" className={styles.plateWatermark} />
+          <TermMark motif={GLOSSARY_MARKS[term.slug]} size="plate" draw />
+        </div>
         <div className={styles.termDefinition}>
           <p className={styles.lede}>{lede}</p>
           {rest && (
@@ -177,11 +187,11 @@ export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]
           <nav aria-label={t.glossary.related} className={styles.networkWrap}>
             <TermNetwork
               center={term.term}
-              glyph={glossaryGlyph(term.term, locale)}
+              motif={GLOSSARY_MARKS[term.slug]}
               nodes={related.map((entry) => ({
                 slug: entry.slug,
                 term: entry.term,
-                glyph: glossaryGlyph(entry.term, locale),
+                motif: GLOSSARY_MARKS[entry.slug],
                 category:
                   entry.category === term.category
                     ? null
@@ -193,12 +203,17 @@ export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]
       )}
 
       {(previous || next) && (
-        /* Kategorideki komşular — dizindeki sırayla. Uçta olmayan yön
-           boş bırakılıyor ama hücresi duruyor: "Sonraki" her zaman sağda. */
-        <nav aria-label={t.glossary.neighbors} className={styles.neighbors}>
+        /* Kategorideki komşular — dizindeki sırayla. Uçta olmayan yön boş
+           bırakılıyor ama hücresi duruyor: "Sonraki" her zaman sağda.
+           ARADA KONUM ŞERİDİ (28 Eylül, ikinci tur): kategorinin her terimi
+           bir çentik, bu terim dolu. "Kategoride 12 / 29" yazısının
+           uzunluk olarak okunuşu; okuyucu listenin neresinde olduğunu ve
+           geriye ne kaldığını görüyor. Sayı dizinin kendisinden. */
+        <nav aria-label={t.glossary.neighbors} className={styles.neighbors} data-motion-reveal>
           {previous ? (
             <Link href={`/sozluk/${previous.slug}`} prefetch={false} className={styles.neighbor} data-side="previous">
               <ArrowLeft aria-hidden size={18} weight="bold" className={styles.neighborArrow} />
+              <TermMark motif={GLOSSARY_MARKS[previous.slug]} size="sm" />
               <span className="min-w-0">
                 <span className={styles.neighborLabel}>{t.glossary.previous}</span>
                 <span className={styles.neighborTerm}>{previous.term}</span>
@@ -207,14 +222,27 @@ export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]
           ) : (
             <span aria-hidden />
           )}
-          {next && (
+          <p className={styles.position}>
+            <span aria-hidden className={styles.positionRail}>
+              {Array.from({ length: total }, (_, step) => (
+                <span key={step} data-on={step + 1 === index ? "" : undefined} data-past={step + 1 < index ? "" : undefined} />
+              ))}
+            </span>
+            <span className={`${styles.positionLabel} numeral`}>
+              {t.glossary.position.replace("{index}", String(index)).replace("{total}", String(total))}
+            </span>
+          </p>
+          {next ? (
             <Link href={`/sozluk/${next.slug}`} prefetch={false} className={styles.neighbor} data-side="next">
               <span className="min-w-0">
                 <span className={styles.neighborLabel}>{t.glossary.next}</span>
                 <span className={styles.neighborTerm}>{next.term}</span>
               </span>
+              <TermMark motif={GLOSSARY_MARKS[next.slug]} size="sm" />
               <ArrowRight aria-hidden size={18} weight="bold" className={styles.neighborArrow} />
             </Link>
+          ) : (
+            <span aria-hidden />
           )}
         </nav>
       )}

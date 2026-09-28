@@ -1,4 +1,6 @@
+import { ArrowRight, Sparkle } from "@phosphor-icons/react/dist/ssr";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
@@ -7,14 +9,17 @@ import {
   type GlossaryBrowserItem,
 } from "@/components/glossary/GlossaryBrowser";
 import styles from "@/components/glossary/Glossary.module.css";
+import { TermMark } from "@/components/glossary/TermMark";
 import {
   GLOSSARY_CATEGORIES,
+  GLOSSARY_SLUGS,
   glossaryCategoryLabel,
-  glossaryGlyph,
   glossaryIncoming,
   glossaryTerms,
   type GlossarySlug,
 } from "@/content/glossary";
+import { GLOSSARY_MARKS } from "@/content/glossary/marks";
+import { displayZone, zoneDateKey } from "@/lib/session-clock";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
 import { foldForSearch } from "@/lib/search-fold";
@@ -80,6 +85,8 @@ function sentences(text: string, count: number): string {
 }
 /** Büyük kartta tanımdan kaç cümle. Kart iki satır boyu; bir cümle boş kalıyordu. */
 const LEAD_SENTENCES = 2;
+/** Bir günün milisaniyesi — günün terimi takvim gününden sayılıyor. */
+const DAY_MS = 86_400_000;
 
 export default async function GlossaryIndexPage() {
   const { locale, t } = await getI18n();
@@ -100,6 +107,22 @@ export default async function GlossaryIndexPage() {
       .forEach((entry, index) => featuredRank.set(entry.slug, index + 1));
   }
 
+  /* GÜNÜN TERİMİ (28 Eylül, ikinci tur). Kapağın sağ yarısı kategori
+     kutucuklarını taşıyordu; onlar kapağın altına bir şeride indi ve yerini
+     bir editoryal giriş aldı. Seçim bir editör tercihi değil, bir SAAT:
+     okuyucunun takvim günü (TR önce, `displayZone`) terim listesinin
+     uzunluğuna bölünüyor, yani yüz elli günde her terim bir kez sahneye
+     çıkıyor ve aynı gün her okuyucu aynı terimi görüyor. Sıra dizin
+     sırası değil yapı sırası (`GLOSSARY_SLUGS`): alfabetik sırada art arda
+     günler aynı harfe düşüyordu. Sayfa zaten isteğe göre çiziliyor (dil
+     çerezi), gün değişince terim de değişiyor. */
+  const zone = displayZone(locale);
+  const now = new Date();
+  const dayNumber = Math.floor(Date.parse(`${zoneDateKey(now, zone)}T00:00:00Z`) / DAY_MS);
+  const todaySlug = GLOSSARY_SLUGS[dayNumber % GLOSSARY_SLUGS.length];
+  const today = terms.find((term) => term.slug === todaySlug) ?? terms[0];
+  const todayLabel = new Intl.DateTimeFormat(lang, { day: "numeric", month: "long", timeZone: zone }).format(now);
+
   const letterOf = (term: string) => term.charAt(0).toLocaleUpperCase(lang);
 
   const items: GlossaryBrowserItem[] = terms.map((term) => {
@@ -114,7 +137,7 @@ export default async function GlossaryIndexPage() {
         .map((part) => foldForSearch(part, locale))
         .join(" "),
       letter: letterOf(term.term),
-      glyph: glossaryGlyph(term.term, locale),
+      motif: GLOSSARY_MARKS[term.slug],
       links: incoming.get(term.slug) ?? 0,
       featured,
       related:
@@ -167,6 +190,29 @@ export default async function GlossaryIndexPage() {
             </dl>
           </>
         }
+        spotlight={
+          <aside aria-labelledby="sozluk-gunun-terimi" className={styles.spotlight}>
+            <div className={styles.spotlightPlate}>
+              <TermMark motif={GLOSSARY_MARKS[today.slug]} size="plate" draw />
+            </div>
+            <div className={styles.spotlightCopy}>
+              <h2 id="sozluk-gunun-terimi" className={styles.spotlightKicker}>
+                <Sparkle aria-hidden size={14} weight="fill" />
+                {t.glossary.spotlight}
+                <time dateTime={zoneDateKey(now, zone)}>{todayLabel}</time>
+              </h2>
+              <p className={styles.spotlightTerm}>{today.term}</p>
+              <p className={styles.spotlightLede}>{sentences(today.definition, 1)}</p>
+              <p className={styles.spotlightMeta}>
+                <Link href={`/sozluk/${today.slug}`} prefetch={false} className={styles.spotlightLink}>
+                  {t.glossary.readDefinition}
+                  <ArrowRight aria-hidden size={15} weight="bold" />
+                </Link>
+                <span>{glossaryCategoryLabel(today.category, locale)}</span>
+              </p>
+            </div>
+          </aside>
+        }
         labels={{
           filterLabel: t.glossary.filterLabel,
           filterPlaceholder: t.glossary.filterPlaceholder,
@@ -179,6 +225,8 @@ export default async function GlossaryIndexPage() {
           clear: t.glossary.clear,
           clearQuery: t.glossary.clearQuery,
           links: t.glossary.links,
+          openCategory: t.glossary.openCategory,
+          moreTerms: t.glossary.moreTerms,
           scrollPrev: t.common.scrollPrev,
           scrollNext: t.common.scrollNext,
         }}
