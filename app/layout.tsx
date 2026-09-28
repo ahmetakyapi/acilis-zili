@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Schibsted_Grotesk } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
+import { headers } from "next/headers";
 import { InkSplash, INK_SPLASH_SCRIPT } from "@/components/ink/InkSplash";
 import { SiteJsonLd } from "@/components/seo/JsonLd";
 import { getI18n, getTheme } from "@/lib/i18n";
@@ -134,11 +135,31 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 const PAGE_BG = { light: "#f7f9fb", dark: "#070d16" } as const;
 
+/** iPhone ve eski iPad kimlikleri. iPadOS 13+ kendini `Macintosh` diye
+    tanıtıyor ve sunucuda Mac'ten ayrılamıyor; orada koruma globals.css'teki
+    `pointer: coarse` → 16px kuralı. */
+const IOS_UA = /iPhone|iPad|iPod/;
+
 export async function generateViewport(): Promise<Viewport> {
-  const theme = await getTheme();
+  const [theme, ua] = await Promise.all([getTheme(), headers().then((h) => h.get("user-agent") ?? "")]);
   return {
     width: "device-width",
     initialScale: 1,
+    /* ODAKTA YAKINLAŞMA YOK — YALNIZCA iOS'TA (29 Eylül). iOS Safari 16
+       pikselden küçük yazılı bir alana odaklanınca sayfayı büyütüyor ve
+       klavye kapanınca geri küçültmüyor. Punto koruması globals.css'te
+       duruyor (`pointer: coarse` → 16px) ama bir modül sınıfı, bir üçüncü
+       taraf alanı ya da açılış animasyonu sırasında verilen odak onu
+       atlatabiliyordu; portföy penceresinde tam bu yaşandı.
+       `maximum-scale=1` iOS 10'dan beri iki parmakla yakınlaştırmayı
+       KAPATMIYOR, yalnızca otomatik yakınlaşmayı kapatıyor. Android'de ise
+       aynı değer iki parmağı da kilitler (erişilebilirlik kaybı) ve Android
+       odakta zaten yakınlaşmıyor — o yüzden kural kullanıcı ajanına bağlı. */
+    ...(IOS_UA.test(ua) ? { maximumScale: 1 } : {}),
+    /* Android Chrome'da klavye yerleşimi küçültsün: alta sabitli levhalar
+       (portföy penceresi) klavyenin arkasında kalmıyor. iOS bunu okumuyor,
+       orada `visualViewport` ile çözülüyor (PortfolioSheet). */
+    interactiveWidget: "resizes-content",
     /* `cover` KALDIRILDI — aynı gerekçe (bkz. `appleWebApp.statusBarStyle`).
        `viewport-fit=cover` görünüm alanını çentiğin ve sistem çubuklarının
        altına uzatıyordu; tarayıcıda da, ana ekrana eklenmiş hâlde de üst

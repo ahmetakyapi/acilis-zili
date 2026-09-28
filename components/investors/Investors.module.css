@@ -462,6 +462,53 @@ a.company:hover b { color:var(--primary-ink); }
 .detailCell { min-width:240px; max-width:360px; font-size:12.5px; line-height:1.5; color:var(--text-body); }
 @media(max-width:767px) { .company { max-width:200px; } }
 
+/* TELEFONDA POZİSYON TABLOSU KAYMIYOR, KATLANIYOR (29 Eylül, sahibinin
+   isteği; örnek Buffett'ın listesi). 640 piksellik tabanla 390'da yalnızca
+   sıra, şirket ve adet görünüyordu; değer, ağırlık ve değişim kaydırmanın
+   arkasındaydı ve satırı okumak için her satırda sağa gidip dönmek
+   gerekiyordu. "Kaydırma saklanmaz" kuralı tabloyu kabına ZORLAMAYI
+   yasaklıyor (sabit yerleşimde hücreler üst üste biniyordu); burada tablo
+   sıkıştırılmıyor, satır iki kata diziliyor ve hiçbir hücre komşusuyla
+   aynı hattı paylaşmıyor:
+
+     1  [logo] AAPL · Apple Inc          62,1 Mr $
+        ████████████░░░░░░░ %22,4     Artırdı +12
+
+   Adet telefonda yok: değer ve ağırlık aynı soruyu ("ne kadar büyük")
+   birim karışıklığı olmadan cevaplıyor, adet ise hisse fiyatını bilmeden
+   karşılaştırılamayan bir sayı. Masaüstünde sütunu yerinde. */
+@media(max-width:639px) {
+  .positions { min-width:0; }
+  .positions thead, .positions tbody { display:block; }
+  .positions tr { display:grid; grid-template-columns:22px minmax(0,1fr) minmax(100px,auto); grid-template-areas:"rank company value" ". weight change"; align-items:center; column-gap:10px; row-gap:5px; padding:10px 16px; border-top:1px solid var(--line-soft); }
+  .positions:not([data-compared]) tr { grid-template-areas:"rank company value" ". weight weight"; }
+  .positions th, .positions td { padding:0; border-top:0; }
+  .positions .colRank { grid-area:rank; width:auto; }
+  .positions .companyCell { grid-area:company; position:static; min-width:0; background:none; }
+  .positions .company { max-width:none; }
+  .positions .colValue { grid-area:value; font-weight:650; color:var(--text-strong); }
+  .positions .colShares { display:none; }
+  .positions .colWeight { grid-area:weight; width:auto; min-width:0; }
+  .positions .colChange { grid-area:change; }
+  /* Sağ sütunun tabanı 100 piksel: değişim çipi satırdan satıra
+     ("Aynı" 44, "Artırdı +%45" 92 piksel) genişlik değiştiriyordu ve
+     ağırlık çubukları her satırda başka yerde bitiyordu (390, ölçüldü).
+     Sabit taban çubukların sağ ucunu tek hatta topluyor. */
+  .positions .cellNote { text-align:right; }
+  /* Ağırlık tek satır: çubuk solda esniyor, yüzde sağında. Ağırlık
+     sütunu şirket adının altında başlıyor, logo hizasında değil — çubuk
+     adın uzantısı gibi okunuyor. */
+  .positions .weightCell { flex-direction:row-reverse; align-items:center; gap:10px; }
+  .positions .weightCell > :global(.numeral) { min-width:44px; font-size:12px; font-weight:600; color:var(--text-body); text-align:right; }
+  .positions .weightTrack { flex:1; border-radius:2px; background:var(--surface-sunken); }
+  /* Başlık satırı yalnızca iki ad taşıyor: şirket ve değer. Ağırlık ve
+     değişimin başlığı yok, çünkü çubuk ve çip kendini söylüyor. */
+  .positions thead tr { grid-template-areas:"rank company value"; padding-block:9px; background:var(--surface-sunken); border-top:0; }
+  .positions thead :is(.colWeight, .colChange) { display:none; }
+  .positions thead th { background:none; }
+  .table.positions tbody tr:hover .companyCell { background:none; }
+}
+
 /* ---- Geçmiş -------------------------------------------------------------- */
 
 .history { padding:18px 20px 16px; border-top:1px solid var(--line); }

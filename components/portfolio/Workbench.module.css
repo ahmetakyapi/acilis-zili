@@ -11,11 +11,13 @@
 /* ---- Pencere: telefonda alt çekmece, genişte ortada levha ---- */
 .sheet {
   position: fixed;
-  inset: auto 0 0 0;
+  /* Dip ve boy klavyeye göre (`--sheet-bottom`, `--sheet-room`,
+     PortfolioSheet); klavye yokken sıfır ve 100dvh. */
+  inset: auto 0 var(--sheet-bottom, 0px) 0;
   margin: 0;
   width: 100%;
   max-width: none;
-  max-height: 92dvh;
+  max-height: calc(min(100dvh, var(--sheet-room, 100dvh)) * .92);
   padding: 0;
   border: 0;
   border-top: 1px solid var(--line);
@@ -26,7 +28,7 @@
   overflow: hidden;
 }
 .sheet::backdrop { background: var(--scrim); }
-.sheetInner { display: flex; flex-direction: column; max-height: 92dvh; }
+.sheetInner { display: flex; flex-direction: column; max-height: calc(min(100dvh, var(--sheet-room, 100dvh)) * .92); }
 .sheetHead {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -128,10 +130,13 @@
 
 .picked {
   display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px;
-  min-height: 60px; padding: 8px 8px 8px 12px; border-radius: 14px; background: var(--surface-sunken);
+  min-height: 60px; padding: 8px 6px 8px 10px; border: 1px solid var(--primary-faint); border-radius: 14px;
+  background: var(--panel-fixed); box-shadow: 0 0 0 3px var(--primary-tint);
 }
-.pickedText { display: flex; min-width: 0; flex-direction: column; }
-.pickedSymbol { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; color: var(--text-strong); }
+.pickedText { display: flex; min-width: 0; flex-direction: column; gap: 1px; }
+.pickedLine { display: flex; align-items: center; gap: 6px; }
+.pickedSymbol { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.2; color: var(--text-strong); }
+.pickedCheck { flex: none; width: 18px; height: 18px; padding: 2.5px; border-radius: 99px; background: var(--up-wash); color: var(--up); }
 .pickedName { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--text-small); color: var(--text-muted); }
 
 /* Fiyat */

@@ -1824,6 +1824,15 @@
 .pulseLegend li[data-verdict="pending"] > span::before { background:var(--line-strong); }
 .pulseLegend b { font-size:22px; font-weight:600; line-height:1; letter-spacing:-.04em; color:var(--text-strong); }
 .pulseLegend small { text-align:right; font-size:12px; font-weight:600; letter-spacing:0; color:var(--text-muted); }
+/* Telefonda halka + lejant yerine cümle, sayı satır etiketinde (gerekçe
+   TechnicalPulse.tsx). */
+.pulseNote { display:none; }
+@media(max-width:767px) {
+  .pulse[data-variant="panel"] { grid-template-columns:minmax(0,1fr); }
+  .pulse[data-variant="panel"] > :is(.pulseDial, .pulseLegend) { display:none; }
+  .pulse[data-variant="panel"] > .pulseNote { display:block; margin:0; font-size:13px; line-height:1.45; color:var(--text-muted); }
+  .pulse[data-variant="panel"] .pulseStance b { display:inline; }
+}
 /* Logolar üzerine gelince kalkıyor; hangi logoya gelindiği balondan önce
    hareketle okunuyor. */
 @media(hover:hover) and (pointer:fine) {

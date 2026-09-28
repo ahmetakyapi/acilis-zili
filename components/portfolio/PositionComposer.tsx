@@ -564,15 +564,25 @@ function SymbolField({
     return (
       <div className={styles.fieldBlock}>
         <span className={styles.label}>{C.symbolLabel}</span>
+        {/* SEÇİLİ HİSSE BİR ALAN, AYRI BİR NESNE DEĞİL (29 Eylül). Gömük gri
+            bir kutuydu; formun geri kalanı çerçeveli alanlardan oluşurken o
+            başka bir bileşen gibi duruyordu. Şimdi arama alanının kendisi
+            DOLMUŞ gibi: aynı çerçeve ve yükseklik, büyütecin yerinde logo,
+            kenar marka tonunda ve sembolün yanında seçildiğini söyleyen bir
+            onay. Açılış ölçeklenmiyor, yalnızca beliriyor — telefonda bir
+            "zoom" gibi okunuyordu. */}
         <motion.div
           className={styles.picked}
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, ease: EASE }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.25, ease: EASE }}
         >
           <LogoTile symbol={picked.symbol} logoUrl={picked.logo} size="md" />
           <span className={styles.pickedText}>
-            <span className={cn("numeral", styles.pickedSymbol)}>{picked.symbol}</span>
+            <span className={styles.pickedLine}>
+              <span className={cn("numeral", styles.pickedSymbol)}>{picked.symbol}</span>
+              <Check size={13} weight="bold" aria-hidden className={styles.pickedCheck} />
+            </span>
             {picked.name && <span className={styles.pickedName}>{picked.name}</span>}
           </span>
           <button id={id} type="button" className={styles.linkButton} onClick={onClear}>

@@ -205,6 +205,17 @@ export function TechnicalPulse({
           (ekran görüntüsüyle bildirildi). Dizindeki halka panele de
           geliyor, yanında her görüşün sayısı ve payı. Sayı satırlarda
           ikinci kez yazılmıyor (CSS, `data-variant="panel"`). */}
+      {/* TELEFONDA HALKA YERİNE BİR CÜMLE (29 Eylül, sahibinin isteği:
+          "anlamsız, ne ifade ettiği belli değil"). 390'da halka ve lejant
+          panelin üçte birini tutuyor ve altındaki logo satırlarının
+          söylediğini — kaç hisse hangi görüşte — ikinci kez, açıklamasız
+          söylüyordu: on beş dilimli bir halka, ortasında "15 Takipte",
+          yanında "%47 / %53". Telefonda halka ve lejant gizli (CSS), sayı
+          satır etiketine dönüyor ("AL 7") ve dağılımın NEYİN dağılımı
+          olduğunu bu cümle söylüyor. Geniş ekranda halka yerinde. */}
+      {!filterable && total > 0 && (
+        <p className={styles.pulseNote}>{t.technical.distributionNote.replace("{n}", String(total))}</p>
+      )}
       {!filterable && total > 0 && (
         <ul className={styles.pulseLegend} data-motion-stagger>
           {[

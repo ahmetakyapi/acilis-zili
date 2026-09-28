@@ -41,8 +41,6 @@ type AppShellProps = {
   /** İki başlığın da sağ ucu: hesap + tema + dil tek panelde. */
   accountMenu: React.ReactNode;
   ticker: React.ReactNode;
-  /** Markanın altındaki seans satırı (SessionLine). */
-  sessionLine: React.ReactNode;
   footer: React.ReactNode;
   children: React.ReactNode;
 };
@@ -98,7 +96,6 @@ export function AppShell({
   searchTrigger,
   accountMenu,
   ticker,
-  sessionLine,
   footer,
   children,
 }: AppShellProps) {
@@ -244,13 +241,8 @@ export function AppShell({
                 ad 19 → 22 piksel. Başlık 69 piksel; 44'lük karo üst ve altta
                 12,5'er piksel nefes bırakıyor. */}
             <BellMark size={44} />
-            {/* İKİ SATIR ORTAK EKSENDE (28 Eylül, sahibinin isteği): seans
-                satırı marka adından birkaç piksel uzun ve ikisi farklı yerde
-                bitiyordu; ikisi de ortalı, sütunun genişliği uzun olanın. */}
-            <span className="flex flex-col items-center gap-1">
-              <BrandWord name={labels.brandName} className="text-[1.375rem] leading-none" />
-              {sessionLine}
-            </span>
+            {/* SEANS SATIRI YOK (29 Eylül) — gerekçe app/(app)/layout.tsx. */}
+            <BrandWord name={labels.brandName} className="text-[1.375rem] leading-none" />
           </Link>
 
           <MastheadNav
@@ -297,10 +289,7 @@ export function AppShell({
 
               Marka rengini bell işareti taşıyor (o bir SVG, maskeye ihtiyacı
               yok); yazı düz accent mürekkeple aynı kimliği veriyor. */}
-          <span className="flex flex-col items-center gap-0.5">
-            <BrandWord name={labels.brandName} className="text-lead leading-none" />
-            {sessionLine}
-          </span>
+          <BrandWord name={labels.brandName} className="text-lead leading-none" />
         </Link>
         {/* İki düğme, üç değil. Tema ve dil ayrı birer kutu olarak duruyordu;
             ikisi de "ortam" ayarı ve ikisi de tek bir ikonla ne yaptığını

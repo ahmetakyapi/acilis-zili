@@ -55,17 +55,13 @@ export const generateMetadata = pageMetadata({
  * terimin hepsi aynı kartta, tanımıyla açıkta (GlossaryBrowser); bir
  * sıralama ölçüsüne gerek kalmadı, kategori içi sıra alfabetik.
  *
- * Ölçü tek bir yerde geri döndü (29 Eylül, dördüncü tur): telefonda
- * kategoriler katlanıyor ve kapalı bölümün özet satırı "ROA, F/K, EPS…"
- * diye kategorinin en çok başvurulan üç terimini sayıyor
- * (`glossaryIncoming`, eşitlikte dizin sırası). Alfabetik ilk üç bir
- * kategoriyi tanıtmıyordu ("Aktif Kârlılığı, Borç/Özsermaye, Brüt Kâr").
+ * Ölçü tek bir yerde geri döndü (29 Eylül, dördüncü tur) ve beşinci turda
+ * yer değiştirdi: telefonda her kategori yana kayan bir kart şeridi ve
+ * şerit kategorinin EN ÇOK BAŞVURULAN teriminden başlıyor (`rank`,
+ * `glossaryIncoming`, eşitlikte dizin sırası). Ekranda ilk görünen iki kart
+ * kategoriyi tanıtıyor ("F/K, EPS"), alfabetik ilk ikisi tanıtmıyordu
+ * ("Aktif Kârlılığı, Borç/Özsermaye"). Geniş ekranın ızgarası alfabetik.
  */
-
-/** Katlanmış bölümün özetinde adı yazılan terim sayısı. */
-const PREVIEW_TERMS = 3;
-/** Parantez içindeki kısaltma: "Fiyat/Kazanç Oranı (F/K)" → "F/K". */
-const ABBREVIATION = /\(([^()]+)\)\s*$/;
 
 /** Dilin alfabesi — harf dizininin iskeleti; boş harfler sönük basılıyor. */
 const ALPHABET = {
@@ -117,6 +113,16 @@ export default async function GlossaryIndexPage() {
 
   const letterOf = (term: string) => term.charAt(0).toLocaleUpperCase(lang);
 
+  /* Kategori içi başvuru sırası — telefon şeridinin sırası (yukarıda). */
+  const incoming = glossaryIncoming();
+  const rank = new Map<string, number>();
+  for (const category of GLOSSARY_CATEGORIES) {
+    terms
+      .filter((term) => term.category === category.key)
+      .map((term, order) => ({ slug: term.slug, links: incoming.get(term.slug) ?? 0, order }))
+      .sort((a, b) => b.links - a.links || a.order - b.order)
+      .forEach(({ slug }, index) => rank.set(slug, index));
+  }
   const items: GlossaryBrowserItem[] = terms.map((term) => ({
     slug: term.slug,
     term: term.term,
@@ -126,27 +132,18 @@ export default async function GlossaryIndexPage() {
       .map((part) => foldForSearch(part, locale))
       .join(" "),
     letter: letterOf(term.term),
+    rank: rank.get(term.slug) ?? 0,
   }));
 
   /* Alfabe + alfabe dışında kalan baş harfler (Türkçede W: "W-8BEN"). */
   const letters = [...new Set([...ALPHABET[lang], ...items.map((item) => item.letter)])].sort(
     collator.compare,
   );
-  const incoming = glossaryIncoming();
-  const groups = GLOSSARY_CATEGORIES.map((category) => {
-    const members = terms.filter((term) => term.category === category.key);
-    const preview = members
-      .map((term, order) => ({ term, links: incoming.get(term.slug) ?? 0, order }))
-      .sort((a, b) => b.links - a.links || a.order - b.order)
-      .slice(0, PREVIEW_TERMS)
-      .map(({ term }) => ABBREVIATION.exec(term.term)?.[1] ?? term.term);
-    return {
-      key: category.key,
-      label: glossaryCategoryLabel(category.key, locale),
-      count: members.length,
-      preview: preview.join(", ") + (members.length > PREVIEW_TERMS ? "…" : ""),
-    };
-  });
+  const groups = GLOSSARY_CATEGORIES.map((category) => ({
+    key: category.key,
+    label: glossaryCategoryLabel(category.key, locale),
+    count: terms.filter((term) => term.category === category.key).length,
+  }));
   const linkTotal = terms.reduce((sum, term) => sum + term.related.length, 0);
 
   return (
@@ -198,7 +195,7 @@ export default async function GlossaryIndexPage() {
               <p className={styles.spotlightTerm}>{today.term}</p>
               <p className={styles.spotlightLede}>{sentences(today.definition, 1)}</p>
               <p className={styles.spotlightMeta}>
-                <Link href={`/sozluk/${today.slug}`} prefetch={false} className={styles.spotlightLink}>
+                <Link href={`/sozluk/${today.slug}`} prefetch={false} className={styles.spotlightLink} data-peek={today.slug}>
                   {t.glossary.readDefinition}
                   <ArrowRight aria-hidden size={15} weight="bold" />
                 </Link>
@@ -221,6 +218,10 @@ export default async function GlossaryIndexPage() {
           openCategory: t.glossary.openCategory,
           scrollPrev: t.common.scrollPrev,
           scrollNext: t.common.scrollNext,
+          peekTitle: t.glossary.title,
+          close: t.glossary.close,
+          peekError: t.glossary.peekError,
+          openFull: t.glossary.openFull,
         }}
       />
       <GuideHint

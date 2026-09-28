@@ -295,8 +295,8 @@
   .toplineBells { grid-area:bells; padding:10px 0 0; border-left:0; border-top:1px solid var(--line-soft); }
   .dashboard { grid-template-columns:minmax(0,1fr); }
   .dashboard > [data-col] { display:contents; }
-  /* Telefonda okuma sırası: günün özeti, dünya, hareketler, teknik
-     görünüm, mercek, portföy (ya da Nabız), ölçüler (tahvil · makro),
+  /* Telefonda okuma sırası: günün özeti, sektörler ve temalar, dünya,
+     hareketler, teknik görünüm, mercek, portföy (ya da Nabız), ölçüler (tahvil · makro),
      takvim, listeler, bilanço, haber akışı, künye.
 
      SIRA HER BÖLÜME AÇIKÇA YAZILIYOR. Değeri olmayan bir bölüm `order:0`
@@ -313,16 +313,17 @@
      mercek ikisinin ardına geçiyor. Masaüstünde de aynı sıra: panel yan
      kolonda hareket panelinin hemen altında duruyor.
 
-     DÜNYA PİYASALARI ÖZETİN HEMEN ALTINDA — 21 Eylül denetimi: kullanıcının
-     açık sırası Özet → Dünya → Hareketler. Bir dönem tahvilin üstüne,
+     DÜNYA PİYASALARI ÖZETİN ALTINDA — 21 Eylül denetimi: kullanıcının
+     açık sırası Özet → Dünya → Hareketler. 29 Eylül'den beri araya
+     sektör/tema bandı giriyor (aşağıda). Bir dönem tahvilin üstüne,
      "piyasanın geri kalanı" grubuna taşınmıştı; o gruplama bu isteği
      bozuyordu.
 
      Masaüstünde hiçbir şey değişmiyor: bu blok yalnızca 1024'ün altında
      çalışıyor, iki kolonlu düzende paneller kendi kolonlarında kalıyor. */
   .dashboard [data-home-section="brief"] { order:1; }
-  .dashboard [data-home-section="world"] { order:2; }
-  .dashboard [data-home-section="movers"] { order:3; }
+  .dashboard [data-home-section="world"] { order:3; }
+  .dashboard [data-home-section="movers"] { order:4; }
   .dashboard [data-home-section="technical"] { order:5; }
   .dashboard [data-home-section="stories"] { order:6; }
   /* Portföy ya da Nabız yuvası Mercek'in ardında, masaüstündeki sırayla aynı. */
@@ -334,11 +335,13 @@
   .dashboard [data-home-section="watchlist"] { order:12; }
   .dashboard [data-home-section="earnings"] { order:13; }
   .dashboard [data-home-section="analyses"] { order:14; }
-  /* SEKTÖRLER VE TEMALAR HAREKETLERİN ARDINDA (28 Eylül). Bir dönem
-     analizlerin ardındaydı ve 10.725 piksellik sayfanın 7.210. pikselinde
-     duruyordu (390, ölçüldü); sahibi yukarı istedi. "Bugün hangi isim
-     taşıdı"nın hemen ardından "hangi sektör ve tema" okunuyor. */
-  .dashboard [data-home-section="texture"] { order:4; }
+  /* SEKTÖRLER VE TEMALAR GÜNÜN ÖZETİNİN HEMEN ALTINDA (29 Eylül, sahibinin
+     isteği). Bir dönem analizlerin ardındaydı ve 10.725 piksellik sayfanın
+     7.210. pikselinde duruyordu (390, ölçüldü); 28 Eylül'de hareketlerin
+     ardına çıktı, şimdi bir basamak daha: masaüstünde bant iki kolonun
+     ÜSTÜNDE, telefonda da günün özetinden sonraki ilk blok. Özet günü
+     anlatıyor, bant o günün sektör ve tema dağılımını. */
+  .dashboard [data-home-section="texture"] { order:2; }
   .dashboard [data-home-section="news"] { order:16; }
   .dashboard [data-home-section="sources"] { order:17; }
   /* GİRİŞ YAPMAMIŞ OKUYUCUNUN FAVORİLERİ BİLANÇOLARIN ARDINDA (24 Eylül).

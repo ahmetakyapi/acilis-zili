@@ -10,6 +10,7 @@ import { GLOSSARY_CATEGORY_ICONS } from "@/components/glossary/category-icons";
 import styles from "@/components/glossary/Glossary.module.css";
 import { ConceptVisual, TermNetwork } from "@/components/glossary/TermVisuals";
 import { TermMark } from "@/components/glossary/TermMark";
+import { splitLede } from "@/components/glossary/TermPeek";
 import { BreadcrumbJsonLd, DefinedTermJsonLd } from "@/components/seo/JsonLd";
 import { Panel, PanelHeader } from "@/components/ui/primitives";
 import {
@@ -66,13 +67,6 @@ export async function generateMetadata(props: PageProps<"/sozluk/[terim]">) {
     description: metaDescription(term.definition),
     alternates: pageAlternates(`/sozluk/${term.slug}`, locale),
   };
-}
-
-/** Tanımı ilk cümle ve geri kalanı olarak böler. */
-function splitLede(text: string): { lede: string; rest: string } {
-  const match = /^(.+?[.!?])(?:\s+|$)/.exec(text);
-  if (!match) return { lede: text, rest: "" };
-  return { lede: match[1], rest: text.slice(match[0].length).trim() };
 }
 
 export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]">) {

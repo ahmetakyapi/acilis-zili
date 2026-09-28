@@ -398,8 +398,6 @@ const tr = {
     watchlistSignedOutHint: "Giriş yapınca takip ettiğin semboller fiyatıyla burada listelenir.",
     // Yüzen bölüm dizini: adı ve altı durağı. Kısa, çünkü telefonda altısı tek şeritte.
     // Dizinin sağındaki küçük geri sayımın öneki: "Açılışa 01 sa 04 dk".
-    miniToOpen: "Açılışa",
-    miniToClose: "Kapanışa",
     /* Sektörler ve temalar bandı (28 Eylül): günün hareketi genişten dara.
        Sektör adları ve fon künyesi `marketExtras`ten, tema adları ve
        sıralama başlığı `themes`ten okunuyor; burada yalnızca bandın kendi
@@ -881,6 +879,7 @@ const tr = {
     stockCount: "{n} Hisse",
     stockCountOne: "{n} Hisse",
     trackedLabel: "Takipte",
+    distributionNote: "Takip edilen {n} hissenin son analizdeki görüşü.",
     boardTitle: "Hisse Planları",
     /* BEKLEYEN SEMBOL — listeye yeni girmiş, ilk yayını henüz yok. */
     pendingLabel: "Bekliyor",
@@ -2251,6 +2250,10 @@ const tr = {
     readDefinition: "Tanımı Oku",
     openCategory: "Kategoriyi Aç",
     position: "Kategoride {index} / {total}",
+    /* Terim penceresi (29 Eylül): kart ayrı sayfaya değil pencereye açılıyor. */
+    openFull: "Terim Sayfasını Aç",
+    close: "Kapat",
+    peekError: "Tanım şu an yüklenemedi; terim sayfasından okuyabilirsin.",
   },
   themes: {
     eyebrow: "Tematik Listeler",

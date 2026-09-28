@@ -360,10 +360,10 @@ function PositionsTable({
           <span className="sr-only">{t.colRank}</span>
         </th>
         <th scope="col">{t.colCompany}</th>
-        <th scope="col" className={styles.num}>{t.colShares}</th>
-        <th scope="col" className={styles.num}>{t.colValue}</th>
+        <th scope="col" className={cn(styles.num, styles.colShares)}>{t.colShares}</th>
+        <th scope="col" className={cn(styles.num, styles.colValue)}>{t.colValue}</th>
         <th scope="col" className={styles.colWeight}>{t.colWeight}</th>
-        {compared && <th scope="col" className={styles.num}>{t.colChange}</th>}
+        {compared && <th scope="col" className={cn(styles.num, styles.colChange)}>{t.colChange}</th>}
       </tr>
     </thead>
   );
@@ -381,10 +381,10 @@ function PositionsTable({
           </span>
         )}
       </th>
-      <td className={cn("numeral", styles.num)}>
+      <td className={cn("numeral", styles.num, styles.colShares)}>
         {formatShares(position.amount, locale)}
       </td>
-      <td className={cn("numeral", styles.num)}>{formatMoneyCompact(position.value, locale)}</td>
+      <td className={cn("numeral", styles.num, styles.colValue)}>{formatMoneyCompact(position.value, locale)}</td>
       <td className={styles.colWeight}>
         <span className={styles.weightCell}>
           <span className="numeral">{formatWeight(position.weight, locale)}</span>
@@ -394,7 +394,7 @@ function PositionsTable({
         </span>
       </td>
       {compared && (
-        <td className={styles.num}>
+        <td className={cn(styles.num, styles.colChange)}>
           <span className={styles.moveChip} data-tone={moveTone(position.move)}>
             {moveLabel(position.move, t)}
             {position.changePct !== null && position.move !== "unchanged" && (
@@ -421,7 +421,7 @@ function PositionsTable({
     <Panel className={styles.tablePanel}>
       <PanelHeader title={t.tableTitle} meta={plural(positions.length, t.positionsOne, t.positions).replace("{count}", String(positions.length))} />
       <div className={styles.tableScroll}>
-        <table className={styles.table}>
+        <table className={cn(styles.table, styles.positions)} data-compared={compared || undefined}>
           {head}
           <tbody>{first.map(row)}</tbody>
         </table>
@@ -430,7 +430,7 @@ function PositionsTable({
         <details className={styles.tableMore}>
           <summary>{t.tableRest.replace("{count}", String(rest.length))}</summary>
           <div className={styles.tableScroll}>
-            <table className={styles.table}>
+            <table className={cn(styles.table, styles.positions)} data-compared={compared || undefined}>
               {head}
               <tbody>{rest.map((position, index) => row(position, index + TABLE_ROWS))}</tbody>
             </table>

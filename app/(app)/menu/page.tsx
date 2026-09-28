@@ -6,7 +6,6 @@ import {
   BookOpen,
   Buildings,
   CalendarBlank,
-  CaretRight,
   ChartBar,
   ChartLineUp,
   Envelope,
@@ -177,21 +176,27 @@ export default async function MenuPage() {
         )}
       </Panel>
 
-      {/* The server-resolved locale also owns these destinations. An /en/menu
+      {/* KARO IZGARASI, LİSTE DEĞİL (29 Eylül, sahibinin isteği: "görsel
+          revizyon, çok daha kullanışlı"). On dokuz satırlık liste telefonda
+          ~1.250 piksel kaydırılıyordu ve her satır aynı ağırlıktaydı: bir
+          ekranı bulmak için satırları tek tek okumak gerekiyordu. Karolarda
+          göz önce ikonu ve adı yakalıyor, iki sütun listeyi yarıya indiriyor.
+          İpucu satırı kalıyor (iki satıra kadar) — ekranın NE olduğunu
+          söyleyen tek yer o. Grup başlıkları kutu değil, düz h2.
+
+          The server-resolved locale also owns these destinations. An /en/menu
           visit without a preference cookie previously linked back to Turkish. */}
-      <div className={`${polish.menuGrid} grid gap-5 sm:grid-cols-2 lg:grid-cols-3`} data-motion-stagger>
+      <div className={polish.menuGroups}>
         {groups.map((group, groupIndex) => (
-          <Panel key={group.title} className="flex flex-col">
-            {/* Panelin başlığı — plaka görünümünde ama h2 ("her panelin bir
-                h2'si var"); ekran okuyucu grupları başlıkla geziyor. */}
-            <h2 className="plate px-4 pb-3 pt-4 text-nano sm:px-5">
+          <section key={group.title} aria-labelledby={`menu-group-${groupIndex}`}>
+            <h2 id={`menu-group-${groupIndex}`} className={polish.menuGroupTitle}>
               {group.title}
             </h2>
-            <ul>
+            <ul className={polish.menuTiles}>
               {group.entries.map((entry, entryIndex) => {
                 const Icon = entry.icon;
-                /* Satırın sayfadaki sırası: dökülme gruplar boyunca TEK
-                   akış (polish.menuGrid → menu-row-in). */
+                /* Karonun sayfadaki sırası: beliriş gruplar boyunca TEK
+                   akış (menu-tile-in). */
                 const order =
                   groups.slice(0, groupIndex).reduce((sum, g) => sum + g.entries.length, 0) +
                   entryIndex;
@@ -200,35 +205,22 @@ export default async function MenuPage() {
                     <Link
                       href={withLocale(entry.href, locale)}
                       prefetch={false}
-                      data-featured={entry.href === "/teknik"}
-                      className="data-[featured=true]:bg-primary-tint flex min-h-[52px] items-center gap-3 border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
+                      data-featured={entry.href === "/teknik" || undefined}
+                      className={polish.menuTile}
                     >
-                      <Icon
-                        weight="duotone"
-                        size={20}
-                        className="shrink-0 text-primary"
-                        aria-hidden
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-base font-semibold text-strong">
-                          {entry.title}
-                        </span>
-                        <span className="mt-px block truncate text-tiny text-muted">
-                          {entry.hint}
-                        </span>
+                      <span className={polish.menuIcon} aria-hidden>
+                        <Icon weight="duotone" size={20} />
                       </span>
-                      <CaretRight
-                        weight="bold"
-                        size={13}
-                        className="shrink-0 text-muted"
-                        aria-hidden
-                      />
+                      <span className={polish.menuTileText}>
+                        <b>{entry.title}</b>
+                        <small>{entry.hint}</small>
+                      </span>
                     </Link>
                   </li>
                 );
               })}
             </ul>
-          </Panel>
+          </section>
         ))}
       </div>
 

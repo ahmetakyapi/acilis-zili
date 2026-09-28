@@ -1,12 +1,14 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, ArrowUpRight, CaretDown, MagnifyingGlass, X } from "@phosphor-icons/react";
+import { ArrowRight, ArrowUpRight, MagnifyingGlass, X } from "@phosphor-icons/react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { HeroAccent } from "@/components/motion/HeroAccent";
 import { ChipStrip } from "@/components/ui/ChipStrip";
-import { EmptyState } from "@/components/ui/primitives";
+import { EmptyState, Skeleton } from "@/components/ui/primitives";
+import { PortfolioSheet } from "@/components/portfolio/PortfolioSheet";
+import { glossaryPeekAction } from "@/app/actions/glossary";
 import type { GlossaryCategoryKey } from "@/content/glossary";
 import { foldForSearch } from "@/lib/search-fold";
 import { GLOSSARY_ALL_ICON, GLOSSARY_CATEGORY_ICONS } from "./category-icons";
@@ -79,19 +81,18 @@ export type GlossaryBrowserItem = {
   haystack: string;
   /** Harf dizinindeki yeri (dile göre büyük harf). */
   letter: string;
+  /** Kategori içi başvuru sırası (0 = en çok başvurulan) — telefon şeridinin sırası. */
+  rank: number;
 };
 
 export type GlossaryBrowserGroup = {
   key: GlossaryCategoryKey;
   label: string;
   count: number;
-  /** Katlanmış bölümün özeti: en çok başvurulan üç terimin kısa adı. */
-  preview: string;
 };
 
-/** Bölümlerin katlanmadığı genişlik — Glossary.module.css `.fold` ile aynı sınır. */
-const FOLD_WIDE_QUERY = "(min-width: 768px)";
-
+/** Terim adresi — dil önekli ya da öneksiz (`/en/sozluk/pe-ratio`). */
+const GLOSSARY_HREF = /^(?:\/en)?\/sozluk\/([^/]+)\/?$/;
 /** Süzgeç değişince sonuçlar yalnızca şerit yapışıkken başa alınır. */
 const SCROLL_SETTLE_PX = 4;
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -127,6 +128,10 @@ export function GlossaryBrowser({
     openCategory: string;
     scrollPrev: string;
     scrollNext: string;
+    peekTitle: string;
+    close: string;
+    peekError: string;
+    openFull: string;
   };
 }) {
   const [query, setQuery] = useState("");
@@ -163,24 +168,6 @@ export function GlossaryBrowser({
       cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, []);
-
-  /* Geniş ekranda katlanan bölüm YOK: CSS `::details-content` ile kapalı
-     `details`in içeriğini gösteriyor, yani ilk karede JS beklenmiyor. O
-     seçiciyi tanımayan tarayıcıda (Safari 18.4 öncesi) kapalı `details`
-     geniş ekranda da kapalı kalırdı; orada bölümler JS ile açılıyor. */
-  useEffect(() => {
-    if (CSS.supports("selector(::details-content)")) return;
-    const media = window.matchMedia(FOLD_WIDE_QUERY);
-    const sync = () => {
-      if (!media.matches) return;
-      resultsRef.current?.querySelectorAll<HTMLDetailsElement>("details[data-fold]").forEach((fold) => {
-        fold.open = true;
-      });
-    };
-    sync();
-    media.addEventListener("change", sync);
-    return () => media.removeEventListener("change", sync);
   }, []);
 
   const needle = foldForSearch(deferred, locale);
@@ -242,8 +229,80 @@ export function GlossaryBrowser({
   const countLabel = (count: number) => labels.count.replace("{count}", String(count));
   const AllIcon = GLOSSARY_ALL_ICON;
 
+  /* ---- Terim penceresi (29 Eylül, sahibinin isteği) ----
+     Kart ayrı sayfaya değil pencereye açılıyor: bir terimi okumak için
+     sayfaya gidip sözlüğe geri dönmek, süzgeci ve kaydırma yerini
+     kaybetmek demekti. Gövde sunucuda çiziliyor (`glossaryPeekAction`,
+     gerekçe orada); açılış ANINDA kartın kendi metniyle (ad + ilk cümle)
+     başlıyor, gövde gelince yerine oturuyor. Yanıtlar oturum boyunca
+     slug başına bir kez isteniyor.
+
+     BAĞLANTI YERİNDE: kart hâlâ `/sozluk/{terim}`e giden bir `<a>`.
+     Değiştirici tuşla, orta tıkla ya da JS'siz açan okuyucu ve arama motoru
+     tam sayfaya gidiyor; yalnızca düz tıklama pencereye dönüyor. Adres
+     değişmiyor — sığ adres güncellemesi uçuştaki gezinmeyi öldürüyor
+     (CLAUDE.md), pencere o riske değmez. */
+  const [peekSlug, setPeekSlug] = useState<string | null>(null);
+  const [peekOpen, setPeekOpen] = useState(false);
+  const [peekBodies, setPeekBodies] = useState<Record<string, ReactNode | "failed">>({});
+  const peekRequests = useRef(new Map<string, Promise<void>>());
+  const bySlug = useMemo(() => new Map(items.map((item) => [item.slug, item])), [items]);
+
+  const loadPeek = useCallback((slug: string) => {
+    if (peekRequests.current.has(slug)) return;
+    const request = glossaryPeekAction(slug)
+      .then((node) => setPeekBodies((bodies) => ({ ...bodies, [slug]: node ?? "failed" })))
+      .catch(() => {
+        /* Başarısız istek önbellekte kalmasın: bir sonraki açılış yeniden denesin. */
+        peekRequests.current.delete(slug);
+        setPeekBodies((bodies) => ({ ...bodies, [slug]: "failed" }));
+      });
+    peekRequests.current.set(slug, request);
+  }, []);
+
+  /* Pencerenin İÇİNDEKİ otomatik sözlük bağlantıları da (tanım gövdesinde
+     "borç/özsermaye oranıyla") aynı pencerede açılıyor; `data-peek`
+     taşımıyorlar, slug adresten okunuyor. Pencere dışındaki bağlantılar
+     yalnızca `data-peek` ile. */
+  const peekSlugOf = (event: MouseEvent | React.PointerEvent) => {
+    const target = event.target as HTMLElement;
+    const marked = target.closest<HTMLAnchorElement>("a[data-peek]");
+    if (marked) return { link: marked, slug: marked.dataset.peek };
+    const inner = target.closest("dialog") ? target.closest<HTMLAnchorElement>("a[href]:not([data-peek-exit])") : null;
+    const slug = inner ? GLOSSARY_HREF.exec(new URL(inner.href).pathname)?.[1] : undefined;
+    return inner && slug && bySlug.has(slug) ? { link: inner, slug } : null;
+  };
+
+  const onPeekClick = (event: MouseEvent) => {
+    const found = peekSlugOf(event);
+    if (!found || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const { link, slug } = found;
+    if (!slug) return;
+    event.preventDefault();
+    loadPeek(slug);
+    setPeekSlug(slug);
+    setPeekOpen(true);
+    /* Pencere içinden başka terime geçilince gövde başa dönsün. */
+    link.closest("dialog")?.querySelector("[data-sheet-body]")?.scrollTo({ top: 0 });
+  };
+  /* Basış anında istek başlıyor: dokunuşun bırakılmasına kadar geçen
+     ~100 ms gövdeye kazandırılıyor. Üzerinde durmak (hover) istemiyor —
+     sunucu eylemleri sıraya giriyor ve fareyi kartların üstünden geçirmek
+     onlarca istek kuyruğa atardı. */
+  const onPeekPress = (event: React.PointerEvent) => {
+    const slug = peekSlugOf(event)?.slug;
+    if (slug) loadPeek(slug);
+  };
+
+  const peekItem = peekSlug ? bySlug.get(peekSlug) : undefined;
+  const peekBody = peekSlug ? peekBodies[peekSlug] : undefined;
+
   return (
-    <div className={styles.browser}>
+    /* YAKALAMA EVRESİ: `Link` kendi tıklama işleyicisini `<a>`nın üstünde,
+       kabarcıklanan bir üst işleyiciden ÖNCE çalıştırıp gezinmeyi başlatıyor.
+       Yakalamada `preventDefault` önce geliyor; `Link` `defaultPrevented`
+       görünce gezinmiyor. */
+    <div className={styles.browser} onClickCapture={onPeekClick} onPointerDown={onPeekPress}>
       <header className={`${styles.hero} page-frame`}>
         <HeroAccent />
         {hero}
@@ -424,6 +483,40 @@ export function GlossaryBrowser({
           )}
         </AnimatePresence>
       </div>
+
+      <PortfolioSheet
+        open={peekOpen}
+        onClose={() => setPeekOpen(false)}
+        onClosed={() => setPeekSlug(null)}
+        title={labels.peekTitle}
+        closeLabel={labels.close}
+      >
+        {peekBody === "failed" ? (
+          <div className={styles.peekFallback}>
+            <p>{labels.peekError}</p>
+            {peekSlug && (
+              <Link href={`/sozluk/${peekSlug}`} prefetch={false} className={styles.peekFull} data-peek-exit>
+                {labels.openFull}
+                <ArrowRight aria-hidden size={14} weight="bold" />
+              </Link>
+            )}
+          </div>
+        ) : peekBody ? (
+          peekBody
+        ) : peekItem ? (
+          /* Gövde gelene kadar kartın kendi metni: ad ve ilk cümle hemen
+             okunuyor, altta kalan kısmın iskeleti. */
+          <div className={styles.peek} aria-busy="true">
+            <header className={styles.peekHead}>
+              <div className={styles.peekTitle}>
+                <h2 className="display-ink">{peekItem.term}</h2>
+              </div>
+            </header>
+            <p className={styles.peekLede}>{peekItem.short}</p>
+            <Skeleton className="h-20 w-full" />
+          </div>
+        ) : null}
+      </PortfolioSheet>
     </div>
   );
 }
@@ -441,7 +534,7 @@ type Group = GlossaryBrowserGroup & {
  */
 function TermCard({ item }: { item: GlossaryBrowserItem }) {
   return (
-    <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.card} data-card>
+    <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.card} data-card data-peek={item.slug}>
       <span className={styles.cardName} data-name>
         {item.term}
       </span>
@@ -474,19 +567,19 @@ function SectionHead({
 
 /**
  * Süzgeçsiz dizinde bir kategori: başlık, sayı, "Kategoriyi Aç" ve bütün
- * terimleri kart ızgarasında. Düz `li` — kayma hareketi yalnızca süzülmüş
+ * terimleri kartlarda. Düz `li` — kayma hareketi yalnızca süzülmüş
  * görünümde (bkz. dosya başı).
  *
- * TELEFONDA KATLANIYOR (29 Eylül, dördüncü tur). Yüz elli kart 390'da
- * sayfayı 18.829 piksele çıkarıyordu. 768 altında her kategori kapalı bir
- * `details`: özet satırında simge, ad, terim sayısı ve en çok başvurulan
- * üç terimin kısa adı, yani kapalıyken de bölümün ne olduğu okunuyor.
- * Kartlar DOM'da (arama motoru ve JS'siz okuyucu için), yalnızca kapalı.
- * 768 ve üstünde aynı `details` CSS ile hep açık ve özet satırı düz bir
- * başlık; "Kategoriyi Aç" düğmesi özetin DIŞINDA (özetin içindeki düğme
- * hem katlamayı hem süzgeci tetikliyor ve ekran okuyucuda düğme içinde
- * düğme oluyordu), geniş ekranda başlığın sağına oturuyor. Süzülmüş
- * görünüm hiç katlanmıyor: okuyucu bir şey aradıysa her eşleşmeyi görmeli.
+ * TELEFONDA YANA KAYAN ŞERİT, KATLAMA DEĞİL (29 Eylül, beşinci tur).
+ * Dördüncü tur her kategoriyi kapalı bir `details`e koymuştu: sayfa 18.829
+ * pikselden 3.199'a indi ama tanımlar artık DOKUNMADAN görünmüyordu —
+ * okuyucu kapalı başlıkların altında yalnızca üç terimin adını görüyordu.
+ * Sahibinin isteği tam tersiydi: "bazıları tıklanmadan ne olduğu belli
+ * olsun". Şimdi her kategori bir satır kart: kartlar ekranın ~%80'i
+ * genişliğinde, sonraki kartın kenarı "devamı var" diye görünüyor, tanımın
+ * ilk cümlesi açıkta. Şerit kendi kabında kayıyor, sayfanın kenarına
+ * taşmıyor (negatif pay yok). 768 ve üstünde aynı liste ızgara.
+ * "Kategoriyi Aç" bölümün tamamını alt alta açan süzgeç.
  */
 function CategorySection({
   group,
@@ -501,7 +594,6 @@ function CategorySection({
   openLabel: string;
   onOpen: () => void;
 }) {
-  const Icon = GLOSSARY_CATEGORY_ICONS[group.key];
   return (
     <section
       aria-labelledby={`sozluk-${group.key}`}
@@ -509,30 +601,18 @@ function CategorySection({
       data-motion-reveal
       style={{ "--tile": order } as CSSProperties}
     >
-      <details className={styles.fold} data-fold>
-        <summary className={`${styles.sectionHead} ${styles.foldHead}`}>
-          <span aria-hidden className={styles.sectionIcon}>
-            <Icon size={18} weight="duotone" />
-          </span>
-          {/* Özetin içeriği yalnızca metin + başlık olabilir (kap `div`/
-              `span` içinde `h2` geçersiz): yerleşim özetin kendi ızgarasında. */}
-          <h2 id={`sozluk-${group.key}`}>{group.label}</h2>
-          <span className={styles.foldPreview}>{group.preview}</span>
-          <span className={`${styles.sectionCount} numeral`}>{countLabel(group.total)}</span>
-          <CaretDown aria-hidden size={14} weight="bold" className={styles.foldCaret} />
-        </summary>
-        <ul className={styles.cards}>
-          {group.members.map((item) => (
-            <li key={item.slug} className={styles.cardItem}>
-              <TermCard item={item} />
-            </li>
-          ))}
-        </ul>
-      </details>
+      <SectionHead group={group} countLabel={countLabel} />
       <button type="button" onClick={onOpen} className={styles.sectionOpen}>
         {openLabel}
         <ArrowRight aria-hidden size={13} weight="bold" />
       </button>
+      <ul className={styles.cards} data-rail>
+        {group.members.map((item) => (
+          <li key={item.slug} className={styles.cardItem} style={{ "--rank": item.rank } as CSSProperties}>
+            <TermCard item={item} />
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

@@ -656,6 +656,15 @@
     -webkit-tap-highlight-color: transparent;
     overflow-x: clip;
     overscroll-behavior-x: none;
+    /* ÇİFT DOKUNUŞ YAKINLAŞTIRMAZ (29 Eylül). Alt sekme çubuğuna art arda
+       iki kez basmak iOS'ta "çift dokunuşla yakınlaştır" hareketiydi:
+       sayfa büyüyor, sağda boş bir şerit açılıyor ve ekran ancak parmakla
+       geri küçültülünce düzeliyordu. Sebep taşma değil, ölçekti — yukarıdaki
+       kilit o yüzden yakalamıyordu. `manipulation` yalnızca çift dokunuşu
+       kapatıyor; iki parmakla yakınlaştırma (erişilebilirlik) açık kalıyor
+       ve dokunuşlar 300 ms beklemeden tık oluyor. Kalıtılmayan bir özellik
+       ama her öğenin dokunuşu kökün bu değeriyle kesişiyor, tek satır yeter. */
+    touch-action: manipulation;
 
     /* SABİT KATMANLAR ODAKLANAN ÖĞEYİ ÖRTMESİN (WCAG 2.2 · 2.4.11).
        Üstte 64px yapışkan başlık, altta mobilde sekme çubuğu, masaüstünde
@@ -2491,33 +2500,3 @@ html.ink-splash-out .ink-splash-layer {
  .palette-chip:hover, .palette-tile:hover { translate:none; }
 }
 
-/* ---- Markanın altındaki seans satırı (SessionLine, 28 Eylül) ----
-   Satır kendi genişliğinde ve marka adıyla birlikte ORTALI (sahibinin
-   isteği: iki satır farklı yerde bitmesin). Bir dönem genişliği yerleşime
-   sayılmıyordu (`width:0`), şerit hiç kıpırdamasın diye; ortalamak için
-   gerçek genişlik şart ve marka bloğu ~15 piksel büyüyor — şeridin
-   sığması 1024/1280 TR/EN'de yeniden ölçüldü (AppShell).
-   Nokta marka adının ilk harfiyle aynı sol hatta; sayılar koyu ve eşit
-   genişlikli, birimler bir kademe küçük ve soluk (geri sayımın `sa dk`
-   kararıyla aynı dil). */
-.session-line {
-  display: flex; width: max-content; align-items: center; gap: 6px;
-  overflow: visible; white-space: nowrap; line-height: 14px;
-}
-.session-dot { position: relative; width: 6px; height: 6px; flex: none; border-radius: 999px; background: var(--text-muted); }
-.session-line[data-tone="open"] .session-dot { background: var(--up); }
-.session-line[data-tone="extended"] .session-dot { background: var(--brass); }
-.session-text { display: inline-flex; align-items: baseline; gap: 4px; font-size: 11.5px; }
-.session-lead, .session-state { font-weight: 600; color: var(--text-muted); }
-.session-line[data-tone="open"] .session-state { color: var(--up); }
-.session-part { display: inline-flex; align-items: baseline; gap: 1px; }
-.session-part b { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.01em; color: var(--text-strong); }
-.session-part small { font-size: 10px; font-weight: 600; color: var(--text-muted); }
-/* Canlı seansın nabzı noktanın ETRAFINDA, nokta kendisi sabit. */
-@media (prefers-reduced-motion: no-preference) {
-  .session-line[data-tone="open"] .session-dot::after {
-    content: ""; position: absolute; inset: -3px; border-radius: 999px;
-    background: var(--up); opacity: .35; animation: session-pulse 2.4s var(--ease-brand) infinite;
-  }
-}
-@keyframes session-pulse { from { transform: scale(.6); opacity: .45; } to { transform: scale(1.6); opacity: 0; } }

@@ -303,8 +303,6 @@ const en: typeof tr = {
     worldLastCloseHint: "Percentages are against the last close; no trades in this session yet. The direction matches the local index, the percentage can differ with currency and session hours.",
     watchlistSignedOutTitle: "See Your Watchlist Here",
     watchlistSignedOutHint: "Sign in and the symbols you follow are listed here with their prices.",
-    miniToOpen: "To Open",
-    miniToClose: "To Close",
     textureTitle: "Sectors and Themes",
     textureNote: "The day's move across eleven sectors, then across thematic lists.",
     sectorsHeading: "Sectors",
@@ -675,6 +673,7 @@ const en: typeof tr = {
     stockCount: "{n} Stocks",
     stockCountOne: "{n} Stock",
     trackedLabel: "Following",
+    distributionNote: "Latest stance on each of the {n} stocks we follow.",
     boardTitle: "Stock Plans",
     pendingLabel: "Pending",
     pendingNoteOne:
@@ -1837,6 +1836,9 @@ const en: typeof tr = {
     readDefinition: "Read the Definition",
     openCategory: "Open Category",
     position: "{index} of {total} in Category",
+    openFull: "Open Term Page",
+    close: "Close",
+    peekError: "The definition couldn't load right now; you can read it on the term page.",
   },
   themes: {
     eyebrow: "Thematic Lists",

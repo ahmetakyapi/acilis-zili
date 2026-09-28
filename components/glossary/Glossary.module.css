@@ -143,40 +143,33 @@
 .sectionOpen:active { scale:.97; }
 .sectionOpen:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 
-/* ---- Katlanan bölüm (süzgeçsiz dizin) ---------------------------------------
-   Telefonda kapalı bir `details`: özet satırı simge, ad, sayı, ok ve altında
-   en çok başvurulan üç terimin kısa adı. Özet yalnızca metin ve başlık
-   taşıyabildiği için yerleşim özetin kendi ızgarasında. Bölümler arasında
-   aralık yok, üst çizgi ayırıyor: sekiz kapalı satır tek bir liste gibi
-   okunuyor. 768 ve üstünde aynı `details` hep açık (aşağıda). */
-.atlas { display:flex; min-width:0; flex-direction:column; }
-.fold > summary { list-style:none; }
-.fold > summary::-webkit-details-marker { display:none; }
-.foldHead { display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; grid-template-areas:"icon title count caret" "icon preview preview preview"; align-items:center; gap:1px 12px; padding-block:12px; cursor:pointer; }
-.foldHead > .sectionIcon { grid-area:icon; }
-.foldHead > h2 { grid-area:title; }
-.foldHead > .sectionCount { grid-area:count; }
-.foldPreview { grid-area:preview; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; line-height:1.45; color:var(--text-muted); }
-.foldCaret { grid-area:caret; color:var(--primary-ink); transition:rotate .35s; }
-.fold[open] .foldCaret { rotate:180deg; }
-.foldHead:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:8px; }
-.fold[open] > .cards { margin-top:2px; padding-bottom:16px; }
-.section > .sectionOpen { display:none; }
-.atlas > .section:last-child { border-bottom:1px solid var(--line-strong); }
-@media(hover:hover) and (pointer:fine) { .foldHead:hover h2 { color:var(--primary-ink); } }
-
-@media(min-width:768px) {
+/* ---- Süzgeçsiz dizin (atlas) ------------------------------------------------
+   Bölüm başlığı, sağında "Kategoriyi Aç", altında kartlar. Telefonda kartlar
+   yana kayan bir şerit (gerekçe GlossaryBrowser → CategorySection); 768 ve
+   üstünde ızgara. Katlanan `details` (dördüncü tur) kalktı. */
+.atlas { display:flex; min-width:0; flex-direction:column; gap:28px; }
+.atlas .sectionHead { padding-right:140px; }
+.section > .sectionOpen { position:absolute; top:14px; right:0; }
+@media(max-width:767px) {
  .atlas { gap:24px; }
- .atlas > .section:last-child { border-bottom:0; }
- /* Hep açık: kapalı `details`in içeriği görünür. Global geçiş kuralını
-    (`height:0` + `overflow:clip`) da eziyor. Seçiciyi tanımayan tarayıcıda
-    bölümleri GlossaryBrowser'daki etki açıyor. */
- .fold::details-content { content-visibility:visible; height:auto; overflow:visible; }
- .foldHead { display:flex; padding:14px 150px 0 0; cursor:default; pointer-events:none; }
- .foldPreview,.foldCaret { display:none; }
- .fold > .cards, .fold[open] > .cards { margin-top:14px; padding-bottom:0; }
- .section > .sectionOpen { position:absolute; top:14px; right:0; display:inline-flex; }
- .foldHead:hover h2 { color:inherit; }
+ /* Başlık iki satırlık bir kimlik: ikon solda, ad ve terim sayısı sağında
+    alt alta. Esnek sarmada uzun ad ("Değerleme ve Temel Analiz") ikonu
+    üstte tek başına bırakıyordu. */
+ .atlas .sectionHead { display:grid; grid-template-columns:auto minmax(0,1fr); grid-template-areas:"icon title" "icon count"; gap:1px 12px; padding-right:128px; }
+ .atlas .sectionHead > .sectionIcon { grid-area:icon; }
+ .atlas .sectionHead h2 { grid-area:title; font-size:18px; }
+ .atlas .sectionHead > .sectionCount { grid-area:count; }
+ /* Şerit: kart ekranın %80'i, sonrakinin kenarı görünüyor. Kaydırma
+    kendi kabında; kaydırma çubuğu gizli çünkü bir sonraki kartın görünen
+    kenarı zaten "devamı var" diyor. Kartlar aynı boyda (ızgara satırı). */
+ .cards[data-rail] {
+  grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:80%;
+  gap:10px; overflow-x:auto; overscroll-behavior-x:contain;
+  scroll-snap-type:x mandatory; scrollbar-width:none; padding-bottom:2px;
+ }
+ .cards[data-rail]::-webkit-scrollbar { display:none; }
+ .cards[data-rail] > .cardItem { order:var(--rank, 0); scroll-snap-align:start; }
+ .cards[data-rail] .card { min-height:128px; }
 }
 
 /* ---- Terim kartları ----------------------------------------------------------
@@ -267,7 +260,7 @@
 
 @media(prefers-reduced-motion:reduce) {
  .categoryBar > span { animation:none; }
- .categoryTile,.categoryTile > svg,.card,.cardArrow,.letter,.sectionOpen,.foldCaret,.sectionOpen > svg,.spotlightLink,.spotlightLink > svg,.mark svg { transition:none; }
+ .categoryTile,.categoryTile > svg,.card,.cardArrow,.letter,.sectionOpen,.sectionOpen > svg,.spotlightLink,.spotlightLink > svg,.mark svg { transition:none; }
  .spotlightLink:hover > svg,.card:hover .cardArrow,.sectionOpen:hover > svg { translate:none; }
  .categoryTile:hover > svg { rotate:none; scale:none; }
  .categoryTile:active,.letter:not(:disabled):active { scale:none; }
@@ -395,3 +388,34 @@
  .networkNode:active { scale:none; }
  .neighbor:hover .neighborArrow { translate:none!important; }
 }
+
+/* ---- Terim penceresi (29 Eylül) — gerekçe GlossaryBrowser / TermPeek ----
+   Levha portföyün yerli `<dialog>`i (telefonda alttan çekmece, genişte
+   ortada 560 piksellik levha). Gövde detay sayfasının kapağını küçültüyor:
+   künye + ad solda, kavram işareti sağda tonlu bir karoda; altında ilk
+   cümle büyük puntoyla, sonra kalan tanım, örnek kutusu ve ilgili terim
+   çipleri. Çipler aynı pencerede açılıyor (`data-peek`). */
+.peek { display:grid; gap:16px; padding-bottom:20px; }
+.peekHead { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:14px; }
+.peekTitle { display:grid; min-width:0; gap:6px; }
+.peekTitle h2 { font-size:clamp(26px,6vw,32px); font-weight:750; line-height:1.08; letter-spacing:-.03em; overflow-wrap:anywhere; }
+.peekEyebrow { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:650; color:var(--primary-ink); }
+.peekMark { display:grid; width:84px; height:84px; place-items:center; padding:10px; border-radius:18px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--line-soft); }
+.peekMark .mark { width:100%; }
+.peekLede { font-size:18px; font-weight:500; line-height:1.5; letter-spacing:-.012em; color:var(--text-strong); text-wrap:pretty; }
+.peekRest { font-size:15px; }
+.peekLabel { margin-bottom:6px; font-size:12px; font-weight:700; letter-spacing:.01em; color:var(--primary-ink); }
+.peekRelated ul { display:flex; flex-wrap:wrap; gap:8px; }
+.peekChip { display:inline-flex; min-height:40px; align-items:center; gap:8px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:var(--premium-surface); font-size:13.5px; font-weight:600; color:var(--text-strong); transition:border-color .2s, background-color .2s, scale .15s; }
+.peekChip:active { scale:.97; }
+.peekChip:focus-visible, .peekFull:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.peekFull { display:inline-flex; width:fit-content; min-height:44px; align-items:center; gap:8px; padding:0 16px; border-radius:12px; background:var(--primary-wash); font-size:14px; font-weight:650; color:var(--primary-ink); transition:background-color .2s; }
+.peekFull > svg { transition:translate .3s; }
+.peekFallback { display:grid; gap:14px; padding-bottom:20px; font-size:14px; line-height:1.5; color:var(--text-body); }
+@media(hover:hover) and (pointer:fine) {
+  .peekChip:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
+  .peekFull:hover { background:var(--primary-tint); }
+  .peekFull:hover > svg { translate:2px 0; }
+}
+@media(max-width:419px) { .peekMark { width:68px; height:68px; border-radius:15px; } .peekLede { font-size:17px; } }
+@media(prefers-reduced-motion:reduce) { .peekChip, .peekFull, .peekFull > svg { transition:none; } .peekChip:active { scale:none; } .peekFull:hover > svg { translate:none; } }

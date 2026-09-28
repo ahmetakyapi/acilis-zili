@@ -1,5 +1,5 @@
 import { MotionProvider } from "@/components/motion/MotionProvider";
-import { Suspense, cache } from "react";
+import { Suspense } from "react";
 import { auth } from "@/auth";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { AppShell, type ShellLabels } from "@/components/layout/AppShell";
@@ -11,8 +11,6 @@ import { ViewBeacon } from "@/components/layout/ViewBeacon";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { getI18n, getTheme } from "@/lib/i18n";
 import { getUserAvatar } from "@/lib/avatar-data";
-import { SessionLine } from "@/components/layout/SessionLine";
-import { getStatus } from "@/lib/data";
 
 /* --------------------------------------------------------------------------
    BU SEGMENTTE `loading.tsx` YOK — ve bu bilinçli.
@@ -36,41 +34,21 @@ import { getStatus } from "@/lib/data";
    sınırı olmamalı.
    -------------------------------------------------------------------------- */
 
-/** Seans satırının "şimdi"si — istek içinde tek (ana sayfadaki `getPageTimestamp` kalıbı). */
-const getShellTimestamp = cache(() => Date.now());
-
 export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [{ locale, t }, theme, session, market] = await Promise.all([
+  /* LOGONUN ALTINDAKİ SEANS SATIRI KALDIRILDI (29 Eylül, sahibinin
+     isteği: telefonda logonun altında yazı "kötü" duruyordu, sonra her
+     genişlikte istendi). Satır `SessionLine`dı ve kabuğun tek `getStatus`
+     okumasıydı; onunla birlikte o okuma da kalktı. Seansın durumu ana
+     sayfanın geri sayımında ve piyasa şeridinde yaşıyor. */
+  const [{ locale, t }, theme, session] = await Promise.all([
     getI18n(),
     getTheme(),
     auth(),
-    getStatus(),
   ]);
-  /* Markanın altındaki seans satırı — gerekçe SessionLine.tsx başında. */
-  const sessionLine = (
-    <SessionLine
-      data={{
-        session: market.session,
-        targetIso: (market.session === "regular" ? market.nextClose : market.nextOpen).toISOString(),
-        nowMs: getShellTimestamp(),
-      }}
-      labels={{
-        open: t.market.open,
-        closed: t.market.closed,
-        preMarket: t.market.preMarket,
-        afterHours: t.market.afterHours,
-        toOpen: t.today.miniToOpen,
-        toClose: t.today.miniToClose,
-        d: t.today.unitD,
-        h: t.today.unitH,
-        m: t.today.unitM,
-      }}
-    />
-  );
   /* Profil ikonu — giriş yapılmışsa tek küçük sorgu, istek içinde
      önbellekli (/menu aynı cevabı okuyor). Düşerse baş harfler. */
   const avatar = session?.user?.id ? await getUserAvatar(session.user.id) : null;
@@ -121,7 +99,6 @@ export default async function AppLayout({
   return (
     <MotionProvider>
       <AppShell
-        sessionLine={sessionLine}
         labels={labels}
         locale={locale}
         searchTrigger={

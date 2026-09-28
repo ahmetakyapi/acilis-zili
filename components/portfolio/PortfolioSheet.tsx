@@ -62,8 +62,16 @@ export function PortfolioSheet({
       delete dialog.dataset.closing;
       dialog.showModal();
       /* React `autoFocus`u diyalog açılmadan (görünmezken) uyguluyor; açılış
-         sonrası odağı içeriğin işaretlediği alana biz veriyoruz. */
-      dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+         sonrası odağı içeriğin işaretlediği alana biz veriyoruz.
+         DOKUNMATİKTE OTOMATİK ODAK YOK (29 Eylül). Telefonda levha alttan
+         kayarak geliyor ve odak `showModal()`ın hemen ardından, levha henüz
+         ekranın altındayken veriliyordu: iOS görünmeyen alanı görünür yapmak
+         için sayfayı kaydırıp büyütüyor, klavye levhanın açılışının üstüne
+         açılıyordu ("popup açılırken saçma bir zoom"). Dokunmatikte okuyucu
+         alana kendisi dokunuyor; klavyeyle gelen masaüstünde odak yerinde. */
+      if (window.matchMedia("(pointer: fine)").matches) {
+        dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus({ preventScroll: true });
+      }
       return;
     }
     if (!open && dialog.open) {
@@ -76,6 +84,35 @@ export function PortfolioSheet({
       const timer = window.setTimeout(() => dialog.close(), CLOSE_MS);
       return () => window.clearTimeout(timer);
     }
+  }, [open]);
+
+  /* KLAVYE AÇIKKEN LEVHA GÖRÜNÜR ALANDA (29 Eylül). iOS Safari klavye
+     açılınca yerleşim alanını küçültmüyor, üstüne çiziyor: dibe sabitli
+     levha klavyenin arkasında kalıyor, Safari de odaktaki alanı göstermek
+     için bütün sayfayı yukarı itiyordu — levha ekranın dışına sıçrıyor,
+     "Portföye Ekle" klavyenin altında kalıyordu. `visualViewport` gerçekten
+     görünen dikdörtgeni veriyor: levhanın dibi klavyenin üstüne, boyu da
+     görünen alana oturuyor. Klavye yokken iki değer de sıfır/tam boy ve
+     CSS'teki varsayılan geçerli. Android Chrome yerleşimi zaten küçültüyor
+     (`interactive-widget`), orada fark sıfır çıkıyor. */
+  useEffect(() => {
+    const dialog = ref.current;
+    const viewport = window.visualViewport;
+    if (!open || !dialog || !viewport) return;
+    const sync = () => {
+      const covered = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      dialog.style.setProperty("--sheet-bottom", `${Math.round(covered)}px`);
+      dialog.style.setProperty("--sheet-room", `${Math.round(viewport.height)}px`);
+    };
+    sync();
+    viewport.addEventListener("resize", sync);
+    viewport.addEventListener("scroll", sync);
+    return () => {
+      viewport.removeEventListener("resize", sync);
+      viewport.removeEventListener("scroll", sync);
+      dialog.style.removeProperty("--sheet-bottom");
+      dialog.style.removeProperty("--sheet-room");
+    };
   }, [open]);
 
   return (
@@ -112,7 +149,7 @@ export function PortfolioSheet({
             <X size={18} weight="bold" aria-hidden />
           </button>
         </header>
-        <div className={styles.sheetBody}>{children}</div>
+        <div className={styles.sheetBody} data-sheet-body>{children}</div>
         {footer && <footer className={styles.sheetFoot}>{footer}</footer>}
       </div>
     </dialog>
