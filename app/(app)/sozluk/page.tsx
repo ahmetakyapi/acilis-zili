@@ -133,6 +133,7 @@ export default async function GlossaryIndexPage() {
       .join(" "),
     letter: letterOf(term.term),
     rank: rank.get(term.slug) ?? 0,
+    motif: GLOSSARY_MARKS[term.slug],
   }));
 
   /* Alfabe + alfabe dışında kalan baş harfler (Türkçede W: "W-8BEN"). */

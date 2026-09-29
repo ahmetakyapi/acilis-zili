@@ -10,8 +10,10 @@ import { EmptyState, Skeleton } from "@/components/ui/primitives";
 import { PortfolioSheet } from "@/components/portfolio/PortfolioSheet";
 import { glossaryPeekAction } from "@/app/actions/glossary";
 import type { GlossaryCategoryKey } from "@/content/glossary";
+import type { GlossaryMotif } from "@/content/glossary/marks";
 import { foldForSearch } from "@/lib/search-fold";
 import { GLOSSARY_ALL_ICON, GLOSSARY_CATEGORY_ICONS } from "./category-icons";
+import { TermMark } from "./TermMark";
 import styles from "./Glossary.module.css";
 
 /**
@@ -83,6 +85,8 @@ export type GlossaryBrowserItem = {
   letter: string;
   /** Kategori içi başvuru sırası (0 = en çok başvurulan) — telefon şeridinin sırası. */
   rank: number;
+  /** Kartın kavram çizimi (`GLOSSARY_MARKS`). */
+  motif: GlossaryMotif;
 };
 
 export type GlossaryBrowserGroup = {
@@ -543,20 +547,40 @@ function splitTerm(term: string): { name: string; abbr: string | null } {
 }
 
 /**
- * Terim satırı — ad (ve varsa kısaltma rozeti), altında tanımın ilk
- * cümlesi; ok yalnızca üzerine gelince. Satırın tamamı detaya giden
- * bağlantı. Kısa tanım en çok üç satır (`line-clamp`, gerekçesi ve ölçümü
- * Glossary.module.css "Terim satırları"); ilk cümleler 35-223 harf.
+ * Terim kartı (29 Eylül, yedinci tur; sahibinin isteği: "tıklanabilir
+ * olduğu gözükmüyor, görsel kart ve ikon olsun"). Altıncı turun sözlük
+ * satırları sakindi ama bir bağlantı gibi okunmuyordu: çerçevesiz metin,
+ * ok yalnızca üzerine gelince. Kart şimdi üç katlı: solda terimin kavram
+ * çizimi (`TermMark`, görünüme girince uçtan uca çiziliyor), yanında ad ve
+ * kısaltma rozeti, sağ üstte HEP GÖRÜNEN yuvarlak bir ok, altında tanımın
+ * ilk cümlesi. Ok kartın bir düğme olduğunu dokunmatikte de söylüyor;
+ * üzerine gelmeyi bekleyen bir ipucu değil. İlk denemede ok dipte
+ * "Tanımı Oku" yazılı ayrı bir satırdaydı: kartı 213 pikselden ~160'a
+ * çıkarıyordu (1440'ta sayfa 11.181 piksel, ölçüldü) — aynı işareti başlık
+ * satırı bedavaya taşıyor.
+ *
+ * Beşinci turda kaldırılan işaretin gerekçesi (42 piksellik karo tanımdan
+ * satır yiyordu) karo AD'ın yanına alınarak karşılandı: ad ile karo aynı
+ * satırı paylaşıyor, tanım tam genişlikte.
+ *
+ * Kartın tamamı detaya giden bağlantı; düz tıklama sayfadan ayrılmadan
+ * terim penceresini açıyor (yukarıda, `onPeekClick`). Kısa tanım en çok
+ * üç satır; kırpılan kart tam cümlesini `title`da taşıyor.
  */
 function TermCard({ item }: { item: GlossaryBrowserItem }) {
   const { name, abbr } = splitTerm(item.term);
   return (
     <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.card} data-card data-peek={item.slug}>
-      <span className={styles.cardName} data-name>
-        <span>{name}</span>
-        {abbr && <span className={`${styles.cardAbbr} numeral`}>{abbr}</span>}
+      <span className={styles.cardHead}>
+        <TermMark motif={item.motif} size="md" draw className={styles.cardMark} />
+        <span className={styles.cardName} data-name>
+          <span>{name}</span>
+          {abbr && <span className={`${styles.cardAbbr} numeral`}>{abbr}</span>}
+        </span>
+        <span aria-hidden className={styles.cardArrow}>
+          <ArrowUpRight size={13} weight="bold" />
+        </span>
       </span>
-      <ArrowUpRight aria-hidden size={14} weight="bold" className={styles.cardArrow} />
       <span className={styles.cardShort} data-short>
         {item.short}
       </span>
@@ -616,7 +640,6 @@ function CategorySection({
     <section
       aria-labelledby={`sozluk-${group.key}`}
       className={styles.section}
-      data-motion-reveal
       style={{ "--tile": order } as CSSProperties}
     >
       <SectionHead group={group} countLabel={countLabel} />
@@ -624,7 +647,10 @@ function CategorySection({
         {openLabel}
         <ArrowRight aria-hidden size={13} weight="bold" />
       </button>
-      <ul className={styles.cards} data-rail>
+      {/* Kartlar görünüme girdikçe kademeli geliyor (`MotionExperience`,
+          `data-motion-stagger`); bölümün kendi girişi kalktı, iç içe iki
+          giriş aynı kartı iki kez kaydırıyordu. */}
+      <ul className={styles.cards} data-rail data-motion-stagger>
         {group.members.map((item) => (
           <li key={item.slug} className={styles.cardItem} style={{ "--rank": item.rank } as CSSProperties}>
             <TermCard item={item} />

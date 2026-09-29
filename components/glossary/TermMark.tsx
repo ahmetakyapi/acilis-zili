@@ -67,10 +67,27 @@ const MOTIFS: Record<GlossaryMotif, (props: Draw) => ReactNode> = {
     </>
   ),
   /* Bütünün dilimi: halka ve payı. */
+  /* PASTA, HALKA DEĞİL (29 Eylül, sahibinin notu: "loading gibi duruyor").
+     İlk çizim boşluklu bir halkaydı ve dizinde yedi kartta bir yükleme
+     simgesi gibi okunuyordu. Şimdi dolu bir pasta, payı dışarı çekilmiş
+     dilim: bütünün bir payı olduğu şekilden okunuyor, dönen bir şey gibi
+     değil. */
   margin: ({ draw }) => (
     <>
-      <circle cx={32} cy={20} r={13} className={styles.mkTrack} />
-      <Ink d="M32 7 A13 13 0 1 1 22.8 29.2" draw={draw} width={5} />
+      <path d="M30 21 L30 5 A16 16 0 1 0 43.86 29 Z" className={styles.mkWash} />
+      <path d="M32.6 19.5 L32.6 3.5 A16 16 0 0 1 46.46 27.5 Z" className={styles.mkSolid} />
+      <Ink d="M32.6 3.5 A16 16 0 0 1 46.46 27.5" draw={draw} width={2} />
+    </>
+  ),
+  /* Bir tabandan (varlıklar, özsermaye) çıkan kazanç: taban bloğu ve
+     ondan yükselen ok. ROA ve ROE bir marj değil, bir GETİRİ. */
+  returnOn: ({ draw }) => (
+    <>
+      <Soft d="M5 36.5 H59" width={1.4} />
+      <Blocks boxes={[[7, 19, 25, 16]]} tone="wash" />
+      <Blocks boxes={[[12, 24, 15, 11]]} tone="solid" />
+      <Ink d="M19.5 18 C21 10 33 7 51 7" draw={draw} />
+      <Ink d="M45 2.5 L51.5 7 L45.5 12" draw={draw} />
     </>
   ),
   /* Bir büyüklükten kalemler düşülerek varılan sonuç. */
@@ -171,13 +188,13 @@ const MOTIFS: Record<GlossaryMotif, (props: Draw) => ReactNode> = {
   /* Beklentinin merkezi ve çevresindeki tahminler. */
   target: ({ draw }) => (
     <>
-      <circle cx={32} cy={20} r={15} className={styles.mkRing} />
-      <circle cx={32} cy={20} r={8.5} className={styles.mkRing} />
-      <Dot x={32} y={20} r={3} />
-      {[[21, 12], [44, 15], [38, 31], [24, 28], [46, 25]].map(([x, y]) => (
-        <circle key={`${x}-${y}`} cx={x} cy={y} r={1.6} className={styles.mkPip} />
-      ))}
-      <Ink d="M52 6 L36 18" draw={draw} width={1.6} />
+      {/* Halkalar çizgi değil dolu: çevresine serpilmiş beş
+          noktayla birlikte karoda ayırt edilemeyen bir leke gibiydi. */}
+      <circle cx={30} cy={21} r={15} className={styles.mkWash} />
+      <circle cx={30} cy={21} r={9} className={styles.mkMidFill} />
+      <Dot x={30} y={21} r={3.6} />
+      <Ink d="M52 4 L32.5 19" draw={draw} width={2.2} />
+      <Ink d="M46 3.5 L52.5 3.5 L52.5 10" draw={draw} width={2} />
     </>
   ),
   /* Tutardan kesilen pay. */

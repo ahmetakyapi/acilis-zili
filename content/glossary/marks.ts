@@ -4,7 +4,7 @@
    Dizindeki karolar tek harf taşıyordu ("L", "P", "V"): Likidite ile Limit
    Emir aynı "L" karosuyla duruyordu, yani karo terimi ayırt ettirmiyordu
    (28 Eylül, ikinci tur). Karo artık kavramın ŞEKLİNİ çiziyor: oran bir
-   pay ve payda, marj bir halkanın dilimi, getiri eğrisi bir eğri, emir
+   pay ve payda, marj bir pastanın dilimi, getiri tabandan yükselen ok, getiri eğrisi bir eğri, emir
    defteri iki yana açılan basamaklar. Çizimler `components/glossary/TermMark.tsx`.
 
    SAYI YOK. Hiçbir çizim bir seriyi ya da bir değeri göstermiyor; bir
@@ -12,14 +12,14 @@
    değil. Rehberin konu çizimleriyle (`TopicDiagram`) aynı sözleşme.
 
    TAM KAYIT (`Record`, `Partial` değil): yeni bir terim işaret seçmeden
-   derlenmiyor. Yüz elli terim otuz şekli paylaşıyor; aynı kategoride aynı
+   derlenmiyor. Yüz elli terim otuz bir şekli paylaşıyor; aynı kategoride aynı
    şekli taşıyan terimler (F/K ile PD/DD) zaten aynı kavram ailesi.
    ========================================================================== */
 
 import type { GlossarySlug } from "./meta";
 
 export const GLOSSARY_MOTIFS = [
-  "ratio", "margin", "waterfall", "bars", "discount", "split", "stack", "balance",
+  "ratio", "margin", "returnOn", "waterfall", "bars", "discount", "split", "stack", "balance",
   "book", "timeline", "calendar", "document", "target", "tax", "trendUp", "trendDown",
   "grid", "gauge", "curveUp", "curveDown", "steps", "dots", "delta", "oscillator",
   "cross", "channel", "candles", "payoffCall", "payoffPut", "payoffV",
@@ -41,8 +41,8 @@ export const GLOSSARY_MARKS: Record<GlossarySlug, GlossaryMotif> = {
   "brut-kar-marji": "margin",
   "faaliyet-kar-marji": "margin",
   "net-kar-marji": "margin",
-  "aktif-karliligi": "margin",
-  "ozsermaye-karliligi": "margin",
+  "aktif-karliligi": "returnOn",
+  "ozsermaye-karliligi": "returnOn",
   "temettu-dagitim-orani": "margin",
   "favok": "waterfall",
   "firma-degeri": "waterfall",
