@@ -142,7 +142,7 @@ export function GlossaryBrowser({
   const toolbarRef = useRef<HTMLDivElement>(null);
 
   /* KIRPILAN TANIM `title` TAŞIYOR. Kartın tanımı satır tavanında
-     kesiliyorsa (dört sütunda 150 kartın ~20'si) tam cümle ipucu olarak
+     kesiliyorsa (üç satır tavanında bir avuç terim) tam cümle ipucu olarak
      okunabilsin. Hangi kartın kesildiği genişliğe bağlı, sunucu bilemez:
      kap boyu değişince (genişlik, süzgeç, açılan bölüm) yeniden ölçülüyor.
      Kapalı bölümdeki kart ölçülmüyor (boyu yok, `title`ı da gereksiz). */
@@ -527,16 +527,34 @@ type Group = GlossaryBrowserGroup & {
 };
 
 /**
- * Terim kartı — ad, sağ üstte ok, altında tanımın ilk cümlesi. Kartın
- * tamamı detaya giden bağlantı. Kısa tanım en çok dört satır
- * (`line-clamp`, gerekçesi ve ölçümü Glossary.module.css `.cardShort`);
- * ilk cümleler 35-223 harf.
+ * Adın sonundaki kısaltma ya da öteki ad ("Aktif Kârlılığı (ROA)",
+ * "Halka Açıklık (Free Float)") rozete ayrılıyor: tarayan göz terimi çoğu
+ * zaman o adıyla arıyor. Sınır en çok iki kelime ve 18 harf — TR'de 150
+ * terimin 43'ü rozet alıyor (EN 36); parantezli kalan dördü bir AÇILIM
+ * taşıyor ("ADR (Amerikan Depo Sertifikası)", JOLTS, SEC) ya da üç
+ * kelimelik bir açıklama ("Federal Fon Oranı") ve adın parçası kalıyor.
+ */
+const TRAILING_ALIAS = /^(.+?)\s+\(([^()]{1,18})\)$/u;
+
+function splitTerm(term: string): { name: string; abbr: string | null } {
+  const match = TRAILING_ALIAS.exec(term);
+  if (!match || match[2].trim().split(/\s+/).length > 2) return { name: term, abbr: null };
+  return { name: match[1], abbr: match[2] };
+}
+
+/**
+ * Terim satırı — ad (ve varsa kısaltma rozeti), altında tanımın ilk
+ * cümlesi; ok yalnızca üzerine gelince. Satırın tamamı detaya giden
+ * bağlantı. Kısa tanım en çok üç satır (`line-clamp`, gerekçesi ve ölçümü
+ * Glossary.module.css "Terim satırları"); ilk cümleler 35-223 harf.
  */
 function TermCard({ item }: { item: GlossaryBrowserItem }) {
+  const { name, abbr } = splitTerm(item.term);
   return (
     <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.card} data-card data-peek={item.slug}>
       <span className={styles.cardName} data-name>
-        {item.term}
+        <span>{name}</span>
+        {abbr && <span className={`${styles.cardAbbr} numeral`}>{abbr}</span>}
       </span>
       <ArrowUpRight aria-hidden size={14} weight="bold" className={styles.cardArrow} />
       <span className={styles.cardShort} data-short>
