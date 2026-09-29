@@ -120,10 +120,10 @@
    yapışkan şeridin boyu). Telefonda şerit yapışmıyor; pay yalnızca kök
    `scroll-padding` kadar. */
 .results { min-width:0; scroll-margin-top:12px; }
-/* Bölümler arası 20 (telefonda 26): 768 ve üstünde her bölüm kendi
-   panelinde, ayırıcı panelin kenarı; sitenin panel aralığı (`gap-5`).
-   Telefonda panel yok, bölüm başlığının üst çizgisi ayırıcı. */
-.resultList { display:flex; min-width:0; flex-direction:column; gap:20px; }
+/* Bölümler arası 36 (telefonda 26): bölüm başlığının üst çizgisi ayırıcı,
+   aralık kart ızgarasının 14'ünden belirgin büyük ki kategoriler
+   birbirine akmasın. */
+.resultList { display:flex; min-width:0; flex-direction:column; gap:36px; }
 @media(min-width:768px) { .results { scroll-margin-top:84px; } }
 
 /* KATEGORİ BÖLÜMLERİ TAM GENİŞLİK, iki sütun değil (29 Eylül). Yan yana
@@ -132,25 +132,22 @@
    terimlik bir komşu arasında sütun boyları dengesizleşiyordu: "kısa kolon
    erken biter" kuralı burada yüzlerce piksel boş zemin demek.
 
-   BİR KATEGORİ BİR PANEL, TERİM BİR SATIR (29 Eylül, altıncı tur; sahibinin
-   isteği: "çok iç içe, kolay ayırt edilsin"). Beşinci tur her terimi kendi
-   çerçeveli kartına koyuyordu: bir kategoride 29 kutu, aralarında 8 piksel,
-   her birinde bir ok. Kutuların kenarları birbirine değiyordu ve göz terimi
-   değil çerçeveyi okuyordu; ad ile tanım aynı gri tonda birbirine
-   karışıyordu. Şimdi 768 ve üstünde kategori tek bir panel (sitenin panel
-   dili), terimler panelin içinde SÖZLÜK SÜTUNLARINDA: yukarıdan aşağı
-   alfabetik akış, terimler arasında yalnızca ince çizgi. Ad güçlü ve
-   büyük, tanım bir ton açık; kısaltma (ROA, F/K) addan ayrılıp rozet oluyor,
-   tarayan göz ona takılıyor. Ok yalnızca üzerine gelince. Telefonda panel
-   yok (yana kayan şeridin kartları panelin içinde ikinci bir kutu olurdu).
-   Ölçüm (29 Eylül, önce → sonra): sayfa 1440'ta 6.165 → 7.877, 1024'te
-   7.530 → 10.133, 390'da 4.540 → 4.663 piksel; kırpılan tanım 1440'ta
-   21 → 11, 1280'de 43 → 21, 1024'te 24 → 0, 390'da 13 → 15. Boy bilerek
-   verildi: tanım 12,5 puntodan 14'e çıktı, uzunluk okunan metin. */
+   Altıncı tur (aynı gün) kategoriyi bir panele, terimi panelin içinde bir
+   sözlük satırına çevirmişti ("çok iç içe" isteği). Sakin okunuyordu ama
+   sahibinin ikinci notu haklıydı: çerçevesiz satır tıklanabilir
+   görünmüyordu. Yedinci tur KART, ama beşinci turun kartı değil: panel
+   kalktı (kart panelin içinde ikinci bir kutu olurdu), kartlar arası 8
+   değil 14 piksel, her kartın bir kavram çizimi ve dipte bir eylem satırı
+   var. Kenarlar artık birbirine değmiyor; ayırt edici olan çerçeve değil
+   çizim ve ad. Bölüm başlığının üst çizgisi kategorileri ayırıyor.
+   Ölçüm (29 Eylül): sayfa 1440'ta 9.696, 1280'de 9.953, 1024'te 12.013,
+   390'da 4.984 piksel; kırpılan tanım 1440'ta 6, 1280'de 19. Kartın
+   dibindeki "Tanımı Oku" satırı denendi ve kaldırıldı: sayfayı 11.181'e
+   çıkarıyordu, ok başlık satırına alındı. */
 .section { position:relative; min-width:0; }
-.sectionHead { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; padding-top:14px; border-top:1px solid var(--line-strong); }
-.sectionHead h2 { min-width:0; font-size:21px; line-height:1.2; font-weight:600; letter-spacing:-.035em; color:var(--text-strong); }
-.sectionIcon { display:grid; flex-shrink:0; place-items:center; width:34px; height:34px; border-radius:11px; background:var(--primary-tint); color:var(--primary-ink); }
+.sectionHead { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; padding-top:16px; border-top:1px solid var(--line-strong); }
+.sectionHead h2 { min-width:0; font-size:22px; line-height:1.2; font-weight:600; letter-spacing:-.035em; color:var(--text-strong); }
+.sectionIcon { display:grid; flex-shrink:0; place-items:center; width:36px; height:36px; border-radius:11px; background:var(--primary-tint); color:var(--primary-ink); }
 .sectionCount { flex-shrink:0; font-size:12px; color:var(--text-muted); }
 .sectionOpen { display:inline-flex; flex-shrink:0; min-height:34px; align-items:center; gap:6px; padding:0 12px; border:1px solid var(--line); border-radius:999px; font-size:12px; font-weight:650; color:var(--primary-ink); cursor:pointer; transition:background-color .2s,border-color .2s,scale .15s; }
 .sectionOpen > svg { transition:translate .3s; }
@@ -158,21 +155,16 @@
 .sectionOpen:hover > svg { translate:2px 0; }
 .sectionOpen:active { scale:.97; }
 .sectionOpen:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
-@media(min-width:768px) {
- .section { padding:22px 26px 14px; border:1px solid var(--line); border-radius:22px; background:var(--premium-surface); }
- .sectionHead { padding-top:0; border-top:0; }
-}
 
 /* ---- Süzgeçsiz dizin (atlas) ------------------------------------------------
-   Bölüm başlığı, sağında "Kategoriyi Aç", altında terimler. Telefonda kartlar
-   yana kayan bir şerit (gerekçe GlossaryBrowser → CategorySection); 768 ve
-   üstünde sözlük sütunları. Katlanan `details` (dördüncü tur) kalktı. */
-.atlas { display:flex; min-width:0; flex-direction:column; gap:20px; }
+   Bölüm başlığı, sağında "Kategoriyi Aç", altında kartlar. Telefonda kartlar
+   yana kayan bir şerit (gerekçe GlossaryBrowser → CategorySection); 640 ve
+   üstünde ızgara. Katlanan `details` (dördüncü tur) kalktı. */
+.atlas { display:flex; min-width:0; flex-direction:column; gap:36px; }
 .atlas .sectionHead { padding-right:140px; }
-.section > .sectionOpen { position:absolute; top:14px; right:0; }
-@media(min-width:768px) { .section > .sectionOpen { top:22px; right:24px; } }
+.section > .sectionOpen { position:absolute; top:16px; right:0; }
 @media(max-width:767px) {
- .atlas { gap:24px; }
+ .atlas { gap:28px; }
  /* Başlık iki satırlık bir kimlik: ikon solda, ad ve terim sayısı sağında
     alt alta. Esnek sarmada uzun ad ("Değerleme ve Temel Analiz") ikonu
     üstte tek başına bırakıyordu. */
@@ -180,53 +172,57 @@
  .atlas .sectionHead > .sectionIcon { grid-area:icon; }
  .atlas .sectionHead h2 { grid-area:title; font-size:18px; }
  .atlas .sectionHead > .sectionCount { grid-area:count; }
- /* Şerit: kart ekranın %80'i, sonrakinin kenarı görünüyor. Kaydırma
-    kendi kabında; kaydırma çubuğu gizli çünkü bir sonraki kartın görünen
-    kenarı zaten "devamı var" diyor. Kartlar aynı boyda (ızgara satırı).
-    Şeritte terim satır değil KART: yan yana duran satırları ayıracak bir
-    çizgi yok, kenarlık ve yüzey o işi görüyor. */
+}
+/* Telefon şeridi: kart ekranın %80'i, sonrakinin kenarı görünüyor.
+   Kaydırma kendi kabında; kaydırma çubuğu gizli çünkü bir sonraki kartın
+   görünen kenarı zaten "devamı var" diyor. Kartlar aynı boyda. */
+@media(max-width:639px) {
  .cards[data-rail] {
-  display:grid; grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:80%;
-  gap:10px; overflow-x:auto; overscroll-behavior-x:contain;
-  scroll-snap-type:x mandatory; scrollbar-width:none; padding-bottom:2px;
+  grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:80%;
+  gap:12px; overflow-x:auto; overscroll-behavior-x:contain;
+  scroll-snap-type:x mandatory; scrollbar-width:none; padding-block:4px 6px;
  }
  .cards[data-rail]::-webkit-scrollbar { display:none; }
  .cards[data-rail] > .cardItem { order:var(--rank, 0); scroll-snap-align:start; }
- .cards[data-rail] .card { min-height:128px; padding:12px 14px 13px; border:1px solid var(--line); border-radius:14px; background:var(--premium-surface); }
- .cards[data-rail] .cardShort { font-size:13px; }
 }
 
-/* ---- Terim satırları ---------------------------------------------------------
-   768 ve üstünde CSS SÜTUNLARI, ızgara değil: sözlük gibi önce aşağı sonra
-   yana okunuyor ve kısa tanımlı terim komşusunun boyuna gerilmiyor (ızgara
-   satırı kısa kartın dibini boş bırakıyordu). 768-1279 iki, üstünde üç
-   sütun: 1024'te üç sütun ~280 piksele iniyor ve 150 tanımın 68'i üç
-   satıra sığmıyordu (ölçüldü); dört sütun (beşinci tur) 1280'de 43 tanımı
-   kırpıyordu. Tavan 1280 altında dört, üstünde üç satır. Telefonda süzülmüş
-   liste tek sütun satır. */
-.cards { margin-top:14px; }
-@media(min-width:768px) {
- .cards { columns:2; column-gap:36px; margin-top:16px; }
- .cardItem { break-inside:avoid; }
-}
-@media(min-width:1280px) { .cards { columns:3; column-gap:40px; } }
+/* ---- Terim kartları ----------------------------------------------------------
+   640-1023 iki, 1024-1279 üç, üstünde dört sütun; satırdaki kartlar aynı
+   boyda (ızgara geriyor). Derinlik gölgeyle değil
+   tonla: kart zeminden bir ton yukarıda, üzerine gelince mavinin en açık
+   tonuna ve 3 piksel yukarı. */
+.cards { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; margin-top:16px; }
+@media(min-width:640px) { .cards { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; } }
+@media(min-width:1024px) { .cards { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(min-width:1280px) { .cards { grid-template-columns:repeat(4,minmax(0,1fr)); } }
 .cardItem { display:flex; min-width:0; }
-.card { position:relative; display:grid; flex:1; min-width:0; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"name arrow" "short short"; align-content:start; gap:5px 10px; padding:13px 10px 14px; border-top:1px solid var(--line-soft); border-radius:0; transition:background-color .25s,border-radius .25s; }
-/* Ad ve kısaltma aynı satırda; kısaltma sarılırsa adın altına iner. */
-.cardName { grid-area:name; display:flex; min-width:0; flex-wrap:wrap; align-items:baseline; gap:4px 8px; font-size:16px; line-height:1.3; font-weight:650; letter-spacing:-.018em; color:var(--text-strong); overflow-wrap:anywhere; }
+.card { position:relative; isolation:isolate; display:flex; flex:1; min-width:0; flex-direction:column; gap:11px; padding:14px 14px 16px; overflow:hidden; border:1px solid var(--line); border-radius:18px; background:var(--premium-surface); transition:translate .45s var(--ease-brand),border-color .3s,background-color .3s; }
+/* Üst kenarda ince bir ışık çizgisi: üzerine gelince soldan sağa doluyor.
+   Parıltı değil, 2 piksellik bir mürekkep çizgisi (markanın mavisi). */
+.card::before { content:""; position:absolute; inset:0 0 auto; z-index:1; height:2px; background:var(--primary); transform:scaleX(0); transform-origin:left center; transition:transform .55s var(--ease-brand); pointer-events:none; }
+.cardHead { display:grid; min-width:0; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:12px; }
+.cardMark { flex-shrink:0; transition:background-color .3s,scale .45s var(--ease-brand),rotate .45s var(--ease-brand); }
+.cardMark[data-size="md"] { width:50px; height:50px; border-radius:14px; background:var(--primary-wash); }
+.cardMark[data-size="md"] svg { width:88%; }
+/* Ad ve kısaltma: kısaltma sarılırsa adın altına iner. */
+.cardName { display:flex; min-width:0; flex-wrap:wrap; align-items:center; gap:4px 8px; font-size:16px; line-height:1.28; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); overflow-wrap:anywhere; transition:color .25s; }
 .cardName > span:first-child { text-wrap:balance; }
-.cardAbbr { flex-shrink:0; padding:1px 7px; border-radius:6px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--line-soft); font-size:11px; line-height:1.55; font-weight:700; letter-spacing:.02em; color:var(--primary-ink); translate:0 -1px; }
-.cardArrow { grid-area:arrow; margin-top:4px; color:var(--primary-ink); opacity:0; transition:translate .3s,opacity .3s; }
-/* Tavan dört (1280 ve üstü üç) satır; kırpılan satır tam cümlesini `title`da taşıyor
-   (GlossaryBrowser, ölçerek). Tanım addan bir ton açık: ad taranıyor,
-   tanım okunuyor. */
-.cardShort { grid-area:short; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; font-size:14px; line-height:1.55; color:var(--text-body); text-wrap:pretty; }
-.card:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; border-radius:12px; }
-@media(min-width:1280px) { .cardShort { -webkit-line-clamp:3; } }
+.cardAbbr { flex-shrink:0; padding:1px 7px; border-radius:6px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--line-soft); font-size:11px; line-height:1.55; font-weight:700; letter-spacing:.02em; color:var(--primary-ink); }
+/* Tavan DÖRT satır; kırpılan kart tam cümlesini `title`da taşıyor
+   (GlossaryBrowser, ölçerek). Üç satırda 1440'ta 43, 1280'de 64 kart
+   "…" ile bitiyordu (ölçüldü); kartın tamamı zaten pencereyi açıyor ama
+   yarım cümle bir tanıtım değil. Tanım addan bir ton açık. */
+.cardShort { display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; font-size:13.5px; line-height:1.55; color:var(--text-body); text-wrap:pretty; }
+/* Ok — kartın düğme olduğunu dokunmatikte de söyleyen işaret, adın hizasında. */
+.cardArrow { display:grid; flex-shrink:0; align-self:start; place-items:center; width:28px; height:28px; border-radius:999px; background:var(--primary-tint); color:var(--primary-ink); transition:background-color .3s,color .3s,rotate .45s var(--ease-brand); }
+.card:active { scale:.985; }
+.card:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 @media(hover:hover) and (pointer:fine) {
- .card:hover { border-radius:12px; background:var(--primary-tint); }
+ .card:hover { translate:0 -3px; border-color:var(--primary-faint); background:var(--primary-tint); }
+ .card:hover::before { transform:scaleX(1); }
  .card:hover .cardName { color:var(--primary-ink); }
- .card:hover .cardArrow { translate:2px -2px; opacity:1; }
+ .card:hover .cardMark { background:var(--premium-surface); scale:1.06; rotate:-4deg; }
+ .card:hover .cardArrow { background:var(--primary); color:var(--on-primary); rotate:45deg; }
 }
 
 /* ---- Kavram işareti (TermMark) ---------------------------------------------
@@ -252,7 +248,6 @@
 .mkTrackArc { fill:none; stroke:var(--primary-wash); stroke-width:4.5; stroke-linecap:round; }
 .mkFrame { fill:var(--premium-surface); stroke:var(--primary-faint); stroke-width:1.6; }
 .mkPip { fill:var(--primary-faint); }
-.mkRing { fill:none; stroke:var(--primary-faint); stroke-width:1.4; }
 .mkArea { fill:var(--primary-wash); }
 .mkHalo { fill:var(--premium-surface); stroke:var(--primary); stroke-width:2; }
 @media(hover:hover) and (pointer:fine) {
@@ -266,10 +261,9 @@
  .metrics dd { font-size:22px; }
  .resultList { gap:26px; }
  .sectionHead h2 { font-size:17px; }
- /* Telefonda satır iç payı 12/4: yüz elli terimde her piksel ~150 piksel. */
- .card { padding:12px 4px 13px; }
+ .card { gap:10px; padding:14px 14px 12px; border-radius:16px; }
+ .cardMark[data-size="md"] { width:46px; height:46px; border-radius:13px; }
  .cardName { font-size:15.5px; }
- .cardShort { font-size:13.5px; }
  .spotlightCopy { padding:18px 18px 16px; }
  .spotlightPlate { min-height:0; padding:14px; }
  .spotlightPlate .mark { width:min(100%,150px); }
@@ -277,8 +271,11 @@
 
 @media(prefers-reduced-motion:reduce) {
  .categoryBar > span { animation:none; }
- .categoryTile,.categoryTile > svg,.card,.cardArrow,.letter,.sectionOpen,.sectionOpen > svg,.spotlightLink,.spotlightLink > svg,.mark svg { transition:none; }
- .spotlightLink:hover > svg,.card:hover .cardArrow,.sectionOpen:hover > svg { translate:none; }
+ .categoryTile,.categoryTile > svg,.card,.card::before,.cardMark,.cardArrow,.letter,.sectionOpen,.sectionOpen > svg,.spotlightLink,.spotlightLink > svg,.mark svg { transition:none; }
+ .spotlightLink:hover > svg,.sectionOpen:hover > svg,.card:hover { translate:none; }
+ .card:hover .cardMark { scale:none; rotate:none; }
+ .card:hover .cardArrow { rotate:none; }
+ .card:active { scale:none; }
  .categoryTile:hover > svg { rotate:none; scale:none; }
  .categoryTile:active,.letter:not(:disabled):active { scale:none; }
 }
