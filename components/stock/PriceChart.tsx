@@ -479,7 +479,13 @@ export function PriceChart({
         vertLines: { color: "transparent" },
         horzLines: { color: grid },
       },
-      rightPriceScale: { borderVisible: false },
+      /* KÖŞE ETİKETİ YALNIZCA TAMAMI SIĞARSA (30 Eylül, sahibinin ekran
+         görüntüsü). Yuvarlak bir tik çizim alanının alt kenarına denk
+         geldiğinde ("1.064,00") etiketin yarısı zaman ekseninin altında
+         kalıyor, kesik bir sayı gibi okunuyordu. Kütüphanenin kendi ayarı:
+         üst ve alt köşedeki etiket ancak bütünüyle görünüyorsa basılıyor;
+         ızgara çizgisi yerinde. */
+      rightPriceScale: { borderVisible: false, entireTextOnly: true },
       timeScale: {
         // Preserve the selected time window on responsive layout changes.
         // At 1440 → 390px the latest session bars previously left the viewport.
