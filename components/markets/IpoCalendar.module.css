@@ -1,0 +1,33 @@
+/* HALKA ARZ TELEFONDA LİSTE (30 Eylül, sahibinin isteği). 420'nin altında
+   her arz ayrı bir kart olarak alt alta diziliyordu: kart başına ~190
+   piksel, aynı güne düşen üç arzda "30 Eyl · Çar" üç kez büyük puntoyla
+   tekrar ediyordu. Telefonda tek bir liste: her arz bir satır — solda gün,
+   ortada sembol, ad ve durum, sağda fiyat aralığı ve büyüklük. Aynı günün
+   ikinci ve sonraki satırında gün basılmıyor (`data-same-day`), yeri
+   korunuyor ki sütun hizası kaymasın; günler arası ayraç koyulaşıyor.
+   Geniş ekranda kart ızgarası yerinde. Tailwind sınıflarını ezmek için
+   modül katmansız (Tailwind v4 yardımcıları `@layer` içinde). */
+@media (max-width: 419px) {
+  .list { gap: 0; padding-top: 0; }
+  .row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    grid-template-areas: "date id figs" "date status figs";
+    align-items: start;
+    column-gap: 12px;
+    row-gap: 4px;
+    padding: 12px 0;
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+    background: none;
+  }
+  .row:first-child { border-top: 0; padding-top: 4px; }
+  .row[data-same-day] { border-top-color: var(--line-soft); }
+  .top { display: contents; }
+  .date { grid-area: date; flex-direction: column; align-items: flex-start; gap: 2px; }
+  .row[data-same-day] .date { visibility: hidden; }
+  .status { grid-area: status; justify-self: start; }
+  .id { grid-area: id; }
+  .figs { grid-area: figs; flex-direction: column; align-items: flex-end; gap: 2px; margin-top: 0; padding-top: 1px; border-top: 0; text-align: right; }
+}

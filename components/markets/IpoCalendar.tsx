@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import styles from "./IpoCalendar.module.css";
 /* `LocaleLink`, `next/link` DEĞİL: çıplak bağlantı /en/takvim'de sembol
    adreslerini öneksiz basıyordu ("/hisse/AMRO") ve sayfa yalnızca dil
    çerezi sayesinde İngilizce kalıyordu; adres dili taşımıyordu. */
@@ -127,19 +128,22 @@ async function IpoList({ locale, t }: { locale: Locale; t: Dictionary }) {
 
   return (
     <>
-      <ul className="grid grid-cols-1 gap-2 px-4 pb-4 min-[420px]:grid-cols-2 sm:px-5 md:grid-cols-3 xl:grid-cols-4">
-        {rows.map((row) => {
+      <ul className={`${styles.list} grid grid-cols-1 gap-2 px-4 pb-4 min-[420px]:grid-cols-2 sm:px-5 md:grid-cols-3 xl:grid-cols-4`}>
+        {rows.map((row, index) => {
           const when = dayParts(row.date);
           const exchange = shortExchange(row.exchange);
           const status = row.status ? statusLabel[row.status.toLowerCase()] ?? row.status : null;
           return (
             <li
               key={`${row.symbol}-${row.date}`}
-              className="flex min-w-0 flex-col gap-2.5 rounded-xl border border-line-soft bg-surface-sunken px-3.5 py-3 transition-colors hover:border-line"
+              /* Telefonda aynı günün ardışık satırı günü tekrar basmıyor
+                 (IpoCalendar.module.css). */
+              data-same-day={index > 0 && rows[index - 1]!.date === row.date ? "" : undefined}
+              className={`${styles.row} flex min-w-0 flex-col gap-2.5 rounded-xl border border-line-soft bg-surface-sunken px-3.5 py-3 transition-colors hover:border-line`}
             >
-              <span className="flex items-start justify-between gap-2">
+              <span className={`${styles.top} flex items-start justify-between gap-2`}>
                 {/* Gün tek bakışta: büyük rakam, yanında ay ve gün adı. */}
-                <span className="flex items-baseline gap-1.5" aria-label={formatEtDateLong(row.date, locale)}>
+                <span className={`${styles.date} flex items-baseline gap-1.5`} aria-label={formatEtDateLong(row.date, locale)}>
                   <b className="numeral text-[22px] font-bold leading-none tracking-tight text-strong">{when.day}</b>
                   <span className="text-tiny font-semibold leading-tight text-body">
                     {when.month}
@@ -147,12 +151,12 @@ async function IpoList({ locale, t }: { locale: Locale; t: Dictionary }) {
                   </span>
                 </span>
                 {status && (
-                  <span className="shrink-0 rounded-full border border-line-soft bg-surface px-[7px] py-px text-nano font-semibold text-body">
+                  <span className={`${styles.status} shrink-0 rounded-full border border-line-soft bg-surface px-[7px] py-px text-nano font-semibold text-body`}>
                     {status}
                   </span>
                 )}
               </span>
-              <span className="min-w-0">
+              <span className={`${styles.id} min-w-0`}>
                 <Link
                   href={`/hisse/${row.symbol}`}
                   className="tap-44 numeral text-base font-bold text-strong transition-colors hover:text-primary"
@@ -165,7 +169,7 @@ async function IpoList({ locale, t }: { locale: Locale; t: Dictionary }) {
               </span>
               {/* BİLİNMEYEN ALAN BOŞ KALIR, TİRE BASILMAZ: fiyat aralığı ya
                   da büyüklük yoksa satır yalnızca bildiğini yazıyor. */}
-              <span className="mt-auto flex items-baseline justify-between gap-2 border-t border-line-soft pt-2">
+              <span className={`${styles.figs} mt-auto flex items-baseline justify-between gap-2 border-t border-line-soft pt-2`}>
                 <span className="numeral min-w-0 truncate text-small font-semibold text-strong">
                   {row.priceRange ? priceRangeLabel(row.priceRange, locale) : exchange}
                 </span>
