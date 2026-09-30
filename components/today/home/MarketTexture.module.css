@@ -162,3 +162,44 @@
   .tile, .extreme, .extremeArrow, .extremeLogo { transition:none; }
   .tile:hover, .extreme:hover .extremeArrow, .extreme:hover .extremeLogo { transform:none; }
 }
+
+/* İKİ KART ORTAK SATIRDA (30 Eylül, sahibinin isteği: "kartlar içindeki
+   değerlerle beraber aynı hizada, kaymadan dursun"). Her kart kendi
+   sütunuydu: "Nükleer, Elektrik ve Şebeke" iki satıra kırılınca o kartın
+   logoları ve rakamı 25 piksel aşağı kayıyor, iki rakam farklı hatta
+   duruyordu. Kartlar artık `.extremes` ızgarasının dört satırını
+   `subgrid` ile paylaşıyor — etiket, ad, logolar, rakam — ve her satır
+   iki karttaki uzun içeriğin boyunda: ad bir kartta iki satırsa ötekinde
+   de o satır iki satırlık; logolar ve rakamlar aynı hatta. Aradaki
+   sarmalayıcılar (`extremeMain`, `extremeText`) bu genişlikte `contents`.
+   Taban yükseklik kalktı: boy artık içerikten, iki kartta aynı.
+   Bu blok ≤639 bloğunun ARDINDA durmak zorunda. */
+@media (max-width:767px) {
+  .extremes { row-gap:0; }
+  .extreme { display:grid; grid-row:span 4; grid-template-rows:subgrid; row-gap:8px; height:auto; min-height:0; }
+  .extremeMain, .extremeText { display:contents; }
+  .extremeTop { align-self:start; }
+  .extremeTitle { align-self:start; }
+  .extremeLogos { align-self:end; }
+  .extremeFigure { align-self:end; }
+  .extremeEmpty .extremeFigure { grid-row:4; }
+}
+
+/* LOGOLAR ÜST ÜSTE BİNİYOR (30 Eylül). Üç logo + çip 140 piksel istiyor,
+   kartın iç genişliği 390'da 131, 320'de 95: "+11" çipi ve 320'de üçüncü
+   logo kartın kenarında kesiliyordu. Karolar kart tonunda 2 piksellik bir
+   halkayla birbirinin üstüne biniyor (yatırımcı portre yığınıyla aynı dil).
+   Bindirme yalnızca GEREKTİĞİ kadar: 390'da 4, 360'ta 8, 320'de 13 piksel —
+   ilk denemede 390'da da 10'du ve yer varken logolar birbirini örtüyordu.
+   Ölçüldü: satır üç genişlikte de kartın iç kenarında bitiyor. */
+@media (max-width:767px) {
+  .extremeLogos { gap:0; overflow:visible; }
+  .extremeLogo, .extremeRest { position:relative; border-radius:var(--radius-md); box-shadow:0 0 0 2px var(--surface-sunken); }
+  .extremeLogo + .extremeLogo, .extremeLogo + .extremeRest, .extremeRest + .extremeRest { margin-left:-4px; }
+}
+@media (max-width:379px) {
+  .extremeLogo + .extremeLogo, .extremeLogo + .extremeRest, .extremeRest + .extremeRest { margin-left:-8px; }
+}
+@media (max-width:339px) {
+  .extremeLogo + .extremeLogo, .extremeLogo + .extremeRest, .extremeRest + .extremeRest { margin-left:-13px; }
+}
