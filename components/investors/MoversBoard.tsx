@@ -31,7 +31,12 @@ import styles from "./Investors.module.css";
  * metin, zayıf olan sessiz metin. Satır sabit yükseklikte ki iki sütunun
  * satırları aynı hatta dursun.
  */
-const PORTRAIT_STACK = 5;
+/* Yığında en çok BEŞ karo: kalabalıkta dört portre + "+N" karosu. "+N"
+   portreyle aynı boyda bir karo, yığının son elemanı — sağ sütun her
+   satırda aynı genişlikte ve yığınlar aynı sağ hatta biter (30 Eylül,
+   gerekçe Investors.module.css → "SAĞ SÜTUN SABİT"). "+1" hiç çıkmaz:
+   beş kişide beşinci karo portrenin kendisi. */
+const PORTRAIT_SLOTS = 5;
 
 export function MoversBoard({
   movers,
@@ -141,7 +146,7 @@ function MoverColumn({
           const total = counted.reduce((sum, part) => sum + part.count, 0);
           const slugs = who(entry);
           const investors = slugs.map((slug) => investorBySlug(slug)).filter((investor): investor is Investor => investor !== null);
-          const shown = investors.slice(0, investors.length === PORTRAIT_STACK + 1 ? PORTRAIT_STACK + 1 : PORTRAIT_STACK);
+          const shown = investors.slice(0, investors.length > PORTRAIT_SLOTS ? PORTRAIT_SLOTS - 1 : PORTRAIT_SLOTS);
           const body = (
             <>
               {entry.ticker ? (
@@ -179,6 +184,8 @@ function MoverColumn({
                 {/* "+1" YERİNE PORTRE (28 Eylül): tek bir yatırımcı artıyorsa
                     çip onun portresine dönüşüyor. Portre 24 piksel ve
                     öncekinin üstüne biniyor; "+1" çipi hiç yer kazandırmıyor.
+                    30 Eylül: "+N" artık yığının içinde portre boyunda bir
+                    karo (PORTRAIT_SLOTS).
                     Ad, portrenin üzerine gelince `title` ile; ekran okuyucu
                     tam listeyi gizli metinden duyar. */}
                 {shown.map((investor) => (

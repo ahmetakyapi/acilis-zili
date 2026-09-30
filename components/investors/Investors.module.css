@@ -215,7 +215,7 @@ a.capitalItem:hover .capitalName { color:var(--primary-ink); }
 @media(min-width:900px) { .movers { grid-template-columns:repeat(2, minmax(0,1fr)); } .moverColumn + .moverColumn { border-left:1px solid var(--line); } }
 @media(max-width:899px) { .moverColumn + .moverColumn { border-top:1px solid var(--line); } }
 .moverColumn { --measure:120px; min-width:0; padding:12px 12px 10px; }
-@media(max-width:519px) { .moverColumn { --measure:76px; } }
+@media(max-width:519px) { .moverColumn { --measure:84px; } }
 .moverHead { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:0 8px 4px; }
 .moverTitle {
   display:flex; align-items:center; gap:8px; font-size:13px; font-weight:650; color:var(--text-strong);
@@ -233,7 +233,7 @@ a.capitalItem:hover .capitalName { color:var(--primary-ink); }
    Ölçüm (29 Eylül, /yatirimcilar, 6+6 satır): satır 94 → 64, pano 1440'ta
    731 → 535, 390'da 1398 → 1007; iki sütunun satır üstleri arası fark 0. */
 .moverRow {
-  display:grid; grid-template-columns:32px minmax(0,1fr) auto; grid-template-rows:20px 24px;
+  display:grid; grid-template-columns:32px minmax(0,1fr) var(--measure); grid-template-rows:20px 24px;
   grid-template-areas:"logo id measure" "logo parts faces";
   align-items:center; column-gap:12px; row-gap:4px; height:64px; padding:8px; border-radius:12px;
   transition:background .2s, transform .25s;
@@ -242,7 +242,16 @@ a.capitalItem:hover .capitalName { color:var(--primary-ink); }
 .moverId { grid-area:id; display:flex; min-width:0; align-items:baseline; gap:8px; }
 .moverId b, .moveId b { font-size:14px; font-weight:700; line-height:1.25; color:var(--text-strong); }
 .moverId small, .moveId small { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
-.moverMeasure { grid-area:measure; display:flex; width:var(--measure); align-items:center; gap:8px; }
+/* SAĞ SÜTUN SABİT (30 Eylül, sahibinin bildirimi: "resimler alt satırla
+   aynı hizada durmuyor"). Her satır kendi ızgarası ve sağ sütun `auto`ydu:
+   beş portre + "+2" yığını (390'da ~110 piksel) ölçüden (76) geniş olan
+   satırda sütun genişliyor, o satırın çubuğu 40 piksel sola kayıyordu;
+   "+2" metni de yığının sağ ucunu içeri çekiyordu. Şimdi sütun her satırda
+   `--measure` genişliğinde: çubuklar aynı hattan başlıyor, sayılar ve
+   yığınlar aynı sağ hatta bitiyor. "+N" yığının içinde portre boyunda bir
+   karo, yığın en çok beş karo (MoversBoard → PORTRAIT_SLOTS); beş karo
+   telefonda 24 + 4×15 = 84 piksel, `--measure` ona göre. */
+.moverMeasure { grid-area:measure; display:flex; width:100%; align-items:center; gap:8px; }
 .moverMeasure b { min-width:14px; text-align:right; font-size:14px; font-weight:700; line-height:1; color:var(--up); }
 .moverColumn[data-tone="down"] .moverMeasure b { color:var(--down); }
 .moverTrack { display:block; flex:1; height:6px; border-radius:3px; background:var(--surface-sunken); overflow:hidden; }
@@ -251,9 +260,13 @@ a.capitalItem:hover .capitalName { color:var(--primary-ink); }
 .moverFill i[data-strong] { background:var(--up); }
 .moverColumn[data-tone="down"] .moverFill i { background:color-mix(in oklab, var(--down) 38%, transparent); }
 .moverColumn[data-tone="down"] .moverFill i[data-strong] { background:var(--down); }
-.moverParts { grid-area:parts; display:flex; min-width:0; align-items:center; gap:10px; overflow:hidden; white-space:nowrap; }
+/* SIĞMAYAN PARÇA YARIM KESİLMEZ, BÜTÜN DÜŞER. 320'de ikinci döküm
+   "5 A" diye harfin ortasından kırpılıyordu. Parçalar sarılıyor ve hat
+   24 piksel: sığmayan parça görünmeyen ikinci hatta iniyor (ekran okuyucu
+   yine okur); toplam sayı ve çubuğun iki tonu satırda kalıyor. */
+.moverParts { grid-area:parts; display:flex; height:24px; min-width:0; flex-wrap:wrap; align-items:center; align-content:flex-start; gap:24px 10px; overflow:hidden; white-space:nowrap; }
 /* Rozet değil, noktalı metin: nokta çubuğun iki tonunun lejantı. */
-.moverPart { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:550; color:var(--text-muted); }
+.moverPart { display:inline-flex; height:24px; align-items:center; gap:5px; font-size:12px; font-weight:550; color:var(--text-muted); }
 .moverPart::before { content:""; width:6px; height:6px; border-radius:50%; background:color-mix(in oklab, var(--up) 38%, transparent); }
 .moverPart[data-strong] { font-weight:650; color:var(--up); }
 .moverPart[data-strong]::before { background:var(--up); }
@@ -263,10 +276,10 @@ a.capitalItem:hover .capitalName { color:var(--primary-ink); }
 .moverFaces { grid-area:faces; display:flex; justify-content:flex-end; align-items:center; }
 .moverFace { display:flex; border-radius:7px; box-shadow:0 0 0 2px var(--premium-surface); }
 .moverFace + .moverFace { margin-left:-6px; }
-.moverMore { margin-left:6px; font-size:11px; font-weight:650; color:var(--text-muted); }
+.moverMore { position:relative; display:grid; width:24px; height:24px; margin-left:-6px; place-items:center; border-radius:7px; background:linear-gradient(var(--surface-elevated),var(--surface-elevated)),var(--premium-surface); box-shadow:0 0 0 2px var(--premium-surface); font-size:10.5px; font-weight:700; letter-spacing:-.02em; color:var(--text-body); font-variant-numeric:tabular-nums; }
 @media(max-width:519px) {
   .moverRow { column-gap:10px; }
-  .moverFace + .moverFace { margin-left:-9px; }
+  .moverFace + .moverFace, .moverMore { margin-left:-9px; }
 }
 @media(hover:hover) and (pointer:fine) {
   a.moverRow:hover { background:var(--primary-tint); transform:translateX(2px); }
