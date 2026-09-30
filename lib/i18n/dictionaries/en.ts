@@ -1926,6 +1926,13 @@ const en: typeof tr = {
     capShare: "Share of Combined Market Value",
     joiner: " vs ",
   },
+  analystTarget: {
+    label: "Average Price Target",
+    upside: "Upside",
+    analysts: "{n} Analysts",
+    from: "From {period} Analysis · {date}",
+  },
+
   stockDepth: {
     insiderTitle: "Insider Transactions",
     insiderWindow: "Last 90 Days",

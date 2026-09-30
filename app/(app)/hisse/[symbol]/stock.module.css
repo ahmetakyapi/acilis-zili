@@ -376,6 +376,19 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .analystRow:last-child { border-bottom:0; }
 .analystRow dt { font-size:11px; line-height:1.5; }
 .analystRow dd { font-size:12px; line-height:1.5; }
+/* ORTALAMA HEDEF FİYAT ŞERİDİ (30 Eylül, gerekçe AnalystCard.tsx). Dağılımın
+   altında kıl çizgiyle ayrılmış tek satır: etiket solda, fiyat ve potansiyel
+   sağda aynı taban çizgisinde; künye altında. Kutu değil, satır — kart
+   içinde yeni bir yüzey açılmıyor (CLAUDE.md ekran düzeni 6). */
+.analystTarget { margin-top:12px; padding-top:10px; border-top:1px solid var(--line-soft); }
+.analystTargetLine { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 10px; }
+.analystTargetLabel { margin-right:auto; font-size:12px; font-weight:600; color:var(--text-strong); }
+.analystTargetLine strong { font-size:17px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
+.analystTargetUpside { display:inline-flex; align-items:baseline; gap:4px; font-size:13px; font-weight:650; }
+.analystTargetUpside small { font-size:11px; font-weight:600; color:var(--text-muted); }
+.analystTargetMeta { margin-top:4px; font-size:11px; line-height:1.45; color:var(--text-muted); }
+.analystTargetMeta a { color:var(--primary-ink); }
+.analystTargetMeta a:hover { text-decoration:underline; }
 .analystExplanation { margin-top:10px; border-top:1px solid var(--line-soft); }
 .analystExplanation summary { display:flex; justify-content:space-between; align-items:center; gap:10px; min-height:32px; list-style:none; cursor:pointer; font-size:11px; color:var(--text-muted); }
 .analystExplanation summary::-webkit-details-marker { display:none; }

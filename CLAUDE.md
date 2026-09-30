@@ -245,7 +245,7 @@ mekanizma. `cache()` ile sarılı olanların tam listesi: `lib/data.ts`
 (`getHolidays`, `getStatus`, `getEventsBetween`, `getEventsBetweenResult`,
 `getEarningsBetween`, `getEarningsBetweenResult`,
 `getNewsById`, `getStoryBySlug`, `getStoryLocales`, `getBriefIssue`,
-`getAnalysis`, `getAnalysisLocales`, `symbolNamesForKey`, `isKnownSymbol`),
+`getAnalysis`, `getAnalysisLocales`, `getLatestTarget`, `symbolNamesForKey`, `isKnownSymbol`),
 `lib/technical-data.ts` (`getTechnicalBoard`, `getTechnicalDetail`,
 `getPublishedSymbols`), `lib/admin.ts` (`getAdmin`), `lib/admin-data.ts`,
 `lib/avatar-data.ts` (`getUserAvatar`), `lib/providers/index.ts`

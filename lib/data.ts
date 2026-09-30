@@ -1775,6 +1775,67 @@ export const getAnalysis = cache(async function getAnalysis(
 });
 
 /**
+ * Şirketin en son analizindeki ORTALAMA ANALİST HEDEF FİYATI (30 Eylül).
+ *
+ * Finnhub'ın `/stock/price-target` ucu ücretsiz katmanda kapalı (403,
+ * `lib/providers/finnhub-depth.ts`). Elimizdeki tek kaynak analiz rutininin
+ * yazdığı `target_price` — tanımı "analistlerin ortalama 12 aylık hedefi",
+ * yanında hedefi veren analist sayısı (`docs/claude-rutinler.md` § 4).
+ * Sayı CANLI DEĞİL, analizin yazıldığı anın hedefi: ekran onu tarihiyle ve
+ * analize bağlantıyla basıyor (CLAUDE.md, veri dürüstlüğü).
+ *
+ * Hedef dil bağımsız bir sayı ama dönem ETİKETİ değil ("2Ç FY2027" /
+ * "Q2 FY2027"): en yeni rapor tarihinin satırlarından okuyucunun dilindeki
+ * seçiliyor, yoksa öteki. `period` analiz sayfasının adresi için.
+ */
+export type LatestTarget = {
+  targetPrice: number;
+  analystCount: number | null;
+  reportDate: string;
+  period: string;
+  periodLabel: string;
+};
+
+export const getLatestTarget = cache(async function getLatestTarget(
+  symbol: string,
+  locale: string,
+): Promise<LatestTarget | null> {
+  try {
+    const rows = await db
+      .select({
+        targetPrice: earningsAnalyses.targetPrice,
+        analystCount: earningsAnalyses.analystCount,
+        reportDate: earningsAnalyses.reportDate,
+        period: earningsAnalyses.period,
+        periodLabel: earningsAnalyses.periodLabel,
+        locale: earningsAnalyses.locale,
+      })
+      .from(earningsAnalyses)
+      .where(
+        and(
+          eq(earningsAnalyses.symbol, symbol.toUpperCase()),
+          sql`${earningsAnalyses.targetPrice} is not null`,
+        ),
+      )
+      .orderBy(desc(earningsAnalyses.reportDate))
+      .limit(4);
+    const newest = rows.filter((candidate) => candidate.reportDate === rows[0]?.reportDate);
+    const row = newest.find((candidate) => candidate.locale === locale) ?? newest[0];
+    if (!row || row.targetPrice === null || !(row.targetPrice > 0)) return null;
+    return {
+      targetPrice: row.targetPrice,
+      analystCount: row.analystCount,
+      reportDate: row.reportDate,
+      period: row.period,
+      periodLabel: row.periodLabel,
+    };
+  } catch (error) {
+    yutuldu("getLatestTarget", error);
+    return null;
+  }
+});
+
+/**
  * Bir bilanço analizinin GERÇEKTEN yazıldığı diller.
  *
  * Gerekçe `getStoryLocales` künyesinde — aynı `hreflang` sorunu, aynı

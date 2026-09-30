@@ -3,7 +3,11 @@ import styles from "../stock.module.css";
 import { DataError, Panel, PanelHeader } from "@/components/ui/primitives";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { getRecommendations } from "@/lib/providers/finnhub";
-import { cn, formatPercentPlain, plural } from "@/lib/utils";
+import { getQuotes } from "@/lib/providers";
+import { getLatestTarget, getStatus } from "@/lib/data";
+import { analysisHref } from "@/lib/analysis";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { cn, directionOf, directionText, formatEtDateMedium, formatPercent, formatPercentPlain, formatPrice, plural } from "@/lib/utils";
 
 export async function AnalystCard({
   symbol,
@@ -21,8 +25,17 @@ export async function AnalystCard({
     </Panel>
   );
 
-  const result = await getRecommendations(symbol);
+  const [result, target, status] = await Promise.all([
+    getRecommendations(symbol),
+    getLatestTarget(symbol, locale),
+    getStatus(),
+  ]);
   if (!result.ok) return bos;
+  /* Potansiyel CANLI fiyata göre — başlıktaki kotasyonla aynı anahtar
+     (`[symbol]`), istek içinde tek tur. Kotasyon yoksa yalnızca hedef. */
+  const quote = target ? await getQuotes([symbol], status) : null;
+  const price = quote?.ok ? quote.data[symbol.toUpperCase()]?.price ?? null : null;
+  const upside = target && price && price > 0 ? ((target.targetPrice - price) / price) * 100 : null;
 
   const latest = result.data[0];
   const total =
@@ -158,6 +171,36 @@ export async function AnalystCard({
       {/* KÜNYE AÇIKLAMA SATIRINDA. "55 Analist · Eylül 2026" kartın dibinde
           tek başına bir satır tutuyordu; hemen üstündeki "12 Aylık Tavsiye
           Dağılımı" satırının ortası boştu (23 Eylül, sahibinin isteği). */}
+      {/* ORTALAMA HEDEF FİYAT (30 Eylül, sahibinin isteği). "Buraya yeni veri
+          eklenmez" kaydının gerekçesi masaüstündeki üçlü ızgarada satırı
+          uzatmamaktı; aynı kayıt kartın içinde ~197 piksellik ödenmiş boş
+          yer ölçmüştü. Şerit tek satır (+ künye) ve o boşluğa iniyor.
+          Sayı canlı değil: en son bilanço analizinin yazıldığı anın hedefi —
+          künye analizi ve tarihini söylüyor, analize bağlanıyor. Potansiyel
+          yönü renkte ve işarette; bir hüküm değil, hedefle fiyat arasındaki
+          fark. */}
+      {target && (
+        <div className={styles.analystTarget}>
+          <div className={styles.analystTargetLine}>
+            <span className={styles.analystTargetLabel}>{t.analystTarget.label}</span>
+            <strong className="numeral">{formatPrice(target.targetPrice, locale, { currency: true })}</strong>
+            {upside !== null && (
+              <span className={cn("numeral", styles.analystTargetUpside, directionText(directionOf(upside)))}>
+                {formatPercent(upside, locale)}
+                <small>{t.analystTarget.upside}</small>
+              </span>
+            )}
+          </div>
+          <p className={styles.analystTargetMeta}>
+            {target.analystCount ? <>{t.analystTarget.analysts.replace("{n}", String(target.analystCount))} · </> : null}
+            <Link href={analysisHref(symbol, target.period)} prefetch={false}>
+              {t.analystTarget.from
+                .replace("{period}", target.periodLabel)
+                .replace("{date}", formatEtDateMedium(target.reportDate, locale))}
+            </Link>
+          </p>
+        </div>
+      )}
       <details className={styles.analystExplanation}>
         <summary>
           <span className={styles.analystSummaryLabel}>{t.stock.analystReading}</span>
