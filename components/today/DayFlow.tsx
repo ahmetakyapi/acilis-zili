@@ -259,7 +259,29 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
                 <FlowNote event={event} labels={labels} />
               </span>
             </span>
-            {value ? <span className={styles.compactValue}><small>{valueLabel}</small><b className="numeral">{value}</b></span> : <span aria-hidden="true" />}
+            {/* GERÇEKLEŞENİN YANINDA KIYAS (30 Eylül, sahibinin isteği:
+                "beklenti de yazsın"). Açıklanan veride satır yalnızca
+                "Gerçekleşen %3,01" yazıyordu; sayı neyle kıyaslanacağını
+                söylemiyordu. İkinci, sakin bir çift: aynı satırda, daha
+                küçük ve soluk.
+                BEKLENTİ VARSA BEKLENTİ, YOKSA ÖNCEKİ. Makro olayların
+                kaynağı FRED ve FRED konsensüs yayımlamıyor (`forecast`
+                sütunu boş kalıyor; Finnhub'ın ekonomik takvimi ücretli
+                katmanda). Beklenti uydurulmuyor (CLAUDE.md "Veri
+                dürüstlüğü"); elimizdeki gerçek kıyas önceki değer. Bir
+                konsensüs kaynağı bağlandığında beklenti kendiliğinden
+                geçiyor. Geniş listedeki sonuç paneli üçünü de basıyor. */}
+            {value ? (
+              <span className={styles.compactValue}>
+                <span className={styles.compactPair}><small>{valueLabel}</small><b className="numeral">{value}</b></span>
+                {event.actual && (event.forecast || event.previous) && (
+                  <span className={styles.compactPair} data-secondary>
+                    <small>{event.forecast ? labels.forecast : labels.previous}</small>
+                    <b className="numeral">{event.forecast ?? event.previous}</b>
+                  </span>
+                )}
+              </span>
+            ) : <span aria-hidden="true" />}
             <Link href={href} prefetch={false} className={styles.compactLink} data-analysis={member?.status === "analyzed" || undefined}>{action}<ArrowUpRight size={15} aria-hidden /></Link>
           </li>;
         })}

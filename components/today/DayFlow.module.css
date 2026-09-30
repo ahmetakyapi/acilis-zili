@@ -51,9 +51,12 @@
 .compactRow { display:grid; grid-template-columns:74px minmax(0,1fr) auto auto; align-items:center; gap:14px 18px; min-width:0; padding:14px 12px; border-top:1px solid var(--line-soft); border-radius:12px; transition:background-color .2s; }
 .compactRow:first-child { border-top-color:transparent; }
 .compactRow[data-selected] { background:var(--primary-wash); box-shadow:inset 3px 0 var(--primary); }
-.compactValue { display:flex; flex-direction:column; align-items:flex-end; gap:2px; text-align:right; }
+.compactValue { display:flex; align-items:flex-end; gap:18px; text-align:right; }
+.compactPair { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
 .compactValue small { color:var(--text-muted); font-size:12px; }
 .compactValue b { color:var(--text-strong); font-size:17px; line-height:1.2; font-weight:650; letter-spacing:-.03em; }
+/* Beklenti ikinci çift: gerçekleşenin yanında, bir kademe küçük ve soluk. */
+.compactPair[data-secondary] b { color:var(--text-body); font-size:15px; font-weight:600; }
 .compactLink { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 12px; border:1px solid var(--line); border-radius:10px; color:var(--text-body); font-size:13px; font-weight:600; white-space:nowrap; transition:border-color .2s, background-color .2s; }
 .compactLink[data-analysis] { color:var(--primary-ink); }
 .compactLink:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
@@ -213,7 +216,8 @@
   .connection > span:not(.connectionDot) { display:none; }
   /* Kısa günün satırı: saat solda, sonuç ve bağlantı adın altında. */
   .compactRow { grid-template-columns:62px minmax(0,1fr); gap:10px; padding:12px 10px; }
-  .compactValue { grid-column:2; flex-direction:row; align-items:baseline; justify-content:flex-start; gap:8px; }
+  .compactValue { grid-column:2; flex-direction:row; flex-wrap:wrap; align-items:baseline; justify-content:flex-start; gap:4px 18px; }
+  .compactPair { flex-direction:row; align-items:baseline; gap:8px; }
   .compactValue:empty { display:none; }
   .compactLink { grid-column:2; justify-self:start; min-height:44px; }
   .eventHeading { margin:16px 0 8px; }
