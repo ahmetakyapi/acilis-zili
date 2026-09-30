@@ -165,14 +165,16 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
         <div className={styles.insiderAside}>
         {hasOpenMarket ? (
           <dl className={styles.readings}>
-            <div className={styles.reading}>
+            {/* SIFIR OKUMA SOLUK (30 Eylül): "0,00 $ · 0 Kişi" dolu okumayla
+                aynı mürekkepte duruyordu; göz önce boş olana gidiyordu. */}
+            <div className={styles.reading} data-zero={summary.buyers === 0 || undefined}>
               <dt>{d.insiderBuy}</dt>
               <dd className={cn("numeral", styles.readingValue)}>
                 {summary.buyPriced > 0 || summary.buyUnpriced === 0 ? formatMoneyCompact(summary.buyValue, locale) : NO_VALUE}
               </dd>
               <dd className={styles.readingMeta}>{people(summary.buyers)}</dd>
             </div>
-            <div className={styles.reading}>
+            <div className={styles.reading} data-zero={summary.sellers === 0 || undefined}>
               <dt>{d.insiderSell}</dt>
               <dd className={cn("numeral", styles.readingValue)}>
                 {summary.sellPriced > 0 || summary.sellUnpriced === 0 ? formatMoneyCompact(summary.sellValue, locale) : NO_VALUE}
@@ -434,10 +436,13 @@ function InsiderRow({
         {trade.shares > 0 ? "+" : "−"}
         {formatVolume(Math.abs(trade.shares), locale)}
       </td>
-      <td className={cn("numeral", open ? "text-body" : "text-muted")}>
+      {/* `data-empty`: telefonun kart satırında boş hücre basılmıyor (tire
+          orada bir sütunun hücresi değil, satırın sonunda başıboş bir işaret);
+          masaüstü tablosunda tire yerinde (depth.module.css). */}
+      <td className={cn("numeral", open ? "text-body" : "text-muted")} data-empty={trade.price === null || undefined}>
         {trade.price !== null ? formatPrice(trade.price, locale, { currency: true }) : NO_VALUE}
       </td>
-      <td className={cn("numeral", open ? "font-semibold text-strong" : "text-muted")}>
+      <td className={cn("numeral", open ? "font-semibold text-strong" : "text-muted")} data-empty={trade.value === null || undefined}>
         {trade.value !== null ? formatMoneyCompact(trade.value, locale) : NO_VALUE}
         {barPct !== null && (
           <span aria-hidden className={styles.valueBar} data-side={side}>
