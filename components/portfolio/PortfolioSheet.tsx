@@ -71,6 +71,12 @@ export function PortfolioSheet({
          alana kendisi dokunuyor; klavyeyle gelen masaüstünde odak yerinde. */
       if (window.matchMedia("(pointer: fine)").matches) {
         dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus({ preventScroll: true });
+      } else {
+        /* `showModal()` odağı İLK odaklanabilir öğeye veriyor: o da
+           kapatma düğmesi ve iOS etrafına kalın bir odak halkası çiziyordu
+           (30 Eylül, sahibinin ekran görüntüsü). Odak levhanın kendisinde:
+           ekran okuyucu başlıktan başlıyor, halka yok, klavye açılmıyor. */
+        dialog.focus({ preventScroll: true });
       }
       return;
     }
@@ -119,6 +125,7 @@ export function PortfolioSheet({
     <dialog
       ref={ref}
       aria-labelledby={titleId}
+      tabIndex={-1}
       className={cn(styles.sheet, size === "lg" && styles.sheetLg)}
       onCancel={(event) => {
         event.preventDefault();

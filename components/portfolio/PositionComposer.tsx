@@ -338,6 +338,7 @@ export function PositionComposer({
             inputMode="decimal"
             autoComplete="off"
             value={price}
+            placeholder={formatDecimalInput(0, locale, { money: true })}
             aria-invalid={visible("costUsd") ? true : undefined}
             aria-describedby={`${formId}-costUsd-help`}
             onChange={(event) => setPrice(event.target.value)}
@@ -358,7 +359,7 @@ export function PositionComposer({
         />
 
         {/* Öneri satırı — yükleniyor / öneri / yok. Yer tutucu yükseklik sabit: satır zıplamasın. */}
-        <div className={styles.suggest} aria-live="polite">
+        <div className={styles.suggest} data-active={suggestKey ? true : undefined} aria-live="polite">
           <AnimatePresence mode="wait" initial={false}>
             {suggestKey && !suggestReady && (
               <motion.span key="loading" className={styles.suggestMuted} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>

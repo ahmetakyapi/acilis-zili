@@ -28,6 +28,8 @@
   overflow: hidden;
 }
 .sheet::backdrop { background: var(--scrim); }
+/* Dokunmatikte açılış odağı levhanın kendisinde (PortfolioSheet); halka yok. */
+.sheet:focus, .sheet:focus-visible { outline: none; }
 .sheetInner { display: flex; flex-direction: column; max-height: calc(min(100dvh, var(--sheet-room, 100dvh)) * .92); }
 .sheetHead {
   display: grid;
@@ -80,21 +82,29 @@
 @keyframes fade-out { to { opacity: 0; } }
 
 /* ---- Form ---- */
-.composer { display: flex; flex-direction: column; gap: 18px; }
+/* TEK ÖLÇÜ (30 Eylül, sahibinin isteği: "çok iyi hale getir"). Alanlar dört
+   ayrı yükseklikteydi — arama 52, adet 46, tarih 44, fiyat 52 — ve iki
+   köşe yarıçapı (10 ve 14). Hepsi 52 piksel ve 14 yarıçap; tarih seçici
+   bu ölçüyü değişkenlerden alıyor. Tarih 16 punto: 15 punto alan iOS'ta
+   dokununca sayfayı yakınlaştırıyordu. */
+.composer { --dp-field-h: 52px; --dp-field-r: 14px; --dp-field-font: 16px; display: flex; flex-direction: column; gap: 18px; }
+/* Adet ve tarih 380'den itibaren YAN YANA (önce 420): 390'lık telefonda alt
+   alta düşüp formu 90 piksel uzatıyorlardı. Tarih alanı "30.09.2026 Çar"
+   ve takvim düğmesiyle 380'de 186 piksele sığıyor (ölçüldü). */
 .pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
-@media (min-width: 420px) { .pair { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 12px; } }
+@media (min-width: 380px) { .pair { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: 12px; } }
 .fieldBlock { display: flex; min-width: 0; flex-direction: column; gap: 7px; }
 .label { font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--text-body); }
 .input {
-  height: 46px; width: 100%; min-width: 0;
-  border: 1px solid var(--line); border-radius: var(--radius-md);
+  height: 52px; width: 100%; min-width: 0;
+  border: 1px solid var(--line); border-radius: 14px;
   background: var(--surface-elevated);
-  padding: 0 12px; font-size: 16px; color: var(--text-strong); outline: none;
-  transition: border-color .2s, background-color .2s;
+  padding: 0 14px; font-size: 16px; color: var(--text-strong); outline: none;
+  transition: border-color .2s, background-color .2s, box-shadow .2s;
 }
 .input::placeholder { color: var(--text-muted); }
 .input:hover { border-color: var(--line-strong); }
-.input:focus { border-color: var(--line-focus); background: var(--panel-fixed); }
+.input:focus { border-color: var(--line-focus); background: var(--panel-fixed); box-shadow: 0 0 0 3px var(--primary-tint); }
 .input[aria-invalid="true"] { border-color: var(--down); }
 .fieldError { font-size: var(--text-small); line-height: 1.35; color: var(--down); }
 .fieldHint { font-size: var(--text-small); line-height: 1.35; color: var(--text-muted); }
@@ -154,9 +164,15 @@
 .moneyField:focus-within { border-color: var(--line-focus); background: var(--panel-fixed); box-shadow: 0 0 0 3px var(--primary-tint); }
 .moneyField[data-invalid] { border-color: var(--down); }
 .moneyPrefix { padding: 0 4px 0 14px; font-size: 18px; font-weight: 600; color: var(--text-muted); }
+.moneyInput::placeholder { color: var(--text-muted); font-weight: 500; }
 .moneyInput { flex: 1 1 auto; min-width: 0; height: 100%; padding-right: 14px; border: 0; background: transparent; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; color: var(--text-strong); outline: none; }
 
-.suggest { min-height: 40px; display: flex; align-items: center; }
+/* Öneri satırı yalnızca hisse seçilince yer tutuyor: seçimden önce 40
+   piksellik boş yuva fiyatla "Not Ekle" arasında ~64 piksellik bir delik
+   açıyordu. Seçimden sonra yükseklik sabit — yükleniyor/öneri/yok arası
+   satır zıplamıyor. */
+.suggest { display: flex; align-items: center; }
+.suggest[data-active] { min-height: 40px; }
 .suggestMuted { display: inline-flex; align-items: center; gap: 8px; font-size: var(--text-small); color: var(--text-muted); }
 .offer {
   display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 4px 4px 4px 12px;
