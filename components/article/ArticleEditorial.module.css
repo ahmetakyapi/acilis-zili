@@ -403,6 +403,54 @@
 .prose > [data-block="callout"] > [data-part="label"] > svg { flex-shrink: 0; }
 .prose > [data-block="callout"][data-tone="tanim"] > [data-part="label"] { color: var(--text-strong); }
 .prose > [data-block="callout"][data-tone="tanim"] > [data-part="label"] > svg { color: var(--primary-ink); }
+/* DİKKAT KUTUSU YENİDEN (30 Eylül, sahibinin isteği: "rengini sevmedim,
+   çok daha iyi görünsün"). Kutu baştan sona pirinç yıkamasıydı: bej bir
+   zemin, bej kenarlık, pirinç başlık — gövde metninin arasında eski bir
+   kâğıt parçası gibi duruyor ve sayfanın geri kalanındaki tonla (açık
+   yüzey + saç teli) konuşmuyordu. Şimdi kutu öteki bloklarla aynı yüzeyde;
+   uyarı olduğunu SOLDAKİ PİRİNÇ ŞERİT ve ikonun rozeti söylüyor. Renk
+   bir vurgu, zemin değil. Başlığın altındaki çizgi de yok — kutu zaten kısa, çizgi
+   onu ikiye bölüyordu. Yalnızca editoryal görünüm (KVKK varsayılanla). */
+.prose > [data-block="callout"][data-tone="dikkat"] {
+  border-color: var(--line);
+  background: var(--premium-surface);
+  position: relative;
+  padding-left: calc(var(--read-inset, 24px) + 4px);
+}
+/* Şerit köşeye değmiyor: iç gölge köşe yarıçapını izleyip üstte ve altta
+   kanca gibi kıvrılıyordu (ekran görüntüsünde görüldü). Kendi uçları
+   yuvarlak, kutunun dikey ortasında duran bir çubuk. */
+.prose > [data-block="callout"][data-tone="dikkat"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18px;
+  bottom: 18px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--brass);
+}
+.prose > [data-block="callout"][data-tone="dikkat"] > [data-part="label"] {
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 0;
+  border-bottom: 0;
+  color: var(--text-strong);
+  font-size: 15px;
+}
+.prose > [data-block="callout"][data-tone="dikkat"] > [data-part="label"] > svg {
+  box-sizing: content-box;
+  padding: 6px;
+  border-radius: 999px;
+  background: var(--brass-wash);
+  color: var(--brass-ink);
+}
+.prose > [data-block="callout"][data-tone="dikkat"] :is(p, dd) {
+  color: var(--text-body);
+  font-size: 16px;
+}
+.prose > [data-block="callout"][data-tone="dikkat"] > [data-part="label"] + div { padding-left: 38px; }
+
 /* Kutu metni gövdeden bir kademe küçük, üç kademe değil: gövde 20'ye
    çıkınca 16 puntoluk kutu metni dipnot gibi kalıyordu. */
 .prose > [data-block="callout"] :is(p, dd) {
@@ -535,6 +583,11 @@
   .prose [data-block="shift"] [data-part="value"] { font-size: 30px; }
   .prose > [data-block="callout"] { margin-block: 28px; padding: 18px var(--read-inset, 18px) 20px; }
   .prose > [data-block="callout"] :is(p, dd) { font-size: 15.5px; }
+  .prose > [data-block="callout"][data-tone="dikkat"] { padding-left: calc(var(--read-inset, 18px) + 4px); }
+  .prose > [data-block="callout"][data-tone="dikkat"] :is(p, dd) { font-size: 15px; }
+  /* Telefonda metin ikonun hizasından değil kutunun hattından: 38 piksellik
+     girinti 390'da satırı dört-beş kelimeye indiriyordu. */
+  .prose > [data-block="callout"][data-tone="dikkat"] > [data-part="label"] + div { padding-left: 0; }
 
   /* Özet satırları dar ekranda İÇ İÇE: terim satırın başında kalın, metin
      aynı satırdan devam ediyor. Alt alta düzen dört olguya dört ek satır
