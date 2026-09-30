@@ -356,6 +356,69 @@
   .insiderAside .bars { height:56px; }
 }
 
+/* ---- İçeriden işlemler: telefonda kompakt (30 Eylül, sahibinin isteği) ----
+   390'da panel 887 piksel tutuyordu ve tablonun asıl bilgisi ekranın
+   dışındaydı: altı sütunluk tablo 560 piksel tabanla yatay kaydırmaya
+   düşüyor, ilk karede isim, tarih ve yarısı kesik bir "Satış" çipi
+   görünüyor; pay, fiyat ve TUTAR sağda saklı kalıyordu. Üstteki üç okuma
+   da alt alta 50'şer piksel tutuyordu.
+
+   OKUMALAR yan yana: üç sütun, değer 17 punto. Yukarıdaki satır kuralları
+   (639 bloğu) karar kaydı olarak yerinde, bu blok onları eziyor.
+
+   TABLO KART SATIRI: kaydırma yok, hiçbir sütun düşmüyor. Üst hatta isim
+   ve görev solda, tutar (ve çubuğu) sağda; alt hatta tarih · pay · fiyat
+   solda, çip sağda. Başlık satırı görsel olarak yok, ekran okuyucuya
+   duruyor; hücreler hâlâ `td`, tablo anlamı korunuyor. */
+@media (max-width:639px) {
+  .insiderAside .readings { grid-template-columns:repeat(3,minmax(0,1fr)); gap:0; padding-bottom:12px; }
+  .insiderAside .reading { display:flex; flex-direction:column; gap:2px; padding:0 0 0 12px; border-top:0; border-left:1px solid var(--line-soft); }
+  .insiderAside .reading:first-child { padding-left:0; border-left:0; }
+  .insiderAside .readingValue { font-size:17px; text-align:left; white-space:nowrap; }
+  .insiderAside .readingMeta { font-size:11px; }
+  .insiderAside .sentiment { padding-top:10px; }
+  .insiderAside .bars { height:48px; margin-top:8px; }
+
+  .insiderRecords :global(.scroll-x) { overflow:visible; }
+  /* Tablo `display:table` kalırsa içeriğinin en geniş hâline (görevin tam
+     uzunluğu) açılıyor ve satır kabın dışına taşıyordu (390, ölçüldü: 399). */
+  .insiderTable { display:block; width:100%; min-width:0; }
+  .insiderTable thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  .insiderTable tbody { display:block; }
+  .insiderTable tbody tr { display:flex; flex-wrap:wrap; align-items:center; column-gap:0; padding:8px 0; border-top:1px solid var(--line-soft); }
+  .insiderTable tbody tr:first-child { border-top:0; padding-top:2px; }
+  .insiderTable tbody td { position:static; padding:0; border:0; background:none; box-shadow:none; text-align:left; }
+  .insiderTable tbody td:first-child { position:static; flex:1 1 0; min-width:0; order:1; box-shadow:none; }
+  /* İsim ve görev AYNI HATTA: görev ismin ardında soluk tonda, sığmazsa
+     üç noktayla kesiliyor (tam hâli `title`da). Üç hatlık satır ikiye iniyor. */
+  .insiderTable .personText { flex-direction:row; align-items:baseline; gap:6px; }
+  .insiderTable .nameCell { flex:none; max-width:62%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .insiderTable .roleCell { flex:1 1 0; min-width:0; max-width:none; margin-top:0; font-size:12px; }
+  .insiderTable .initials { display:none; }
+  .insiderTable tbody td:nth-child(6) { position:relative; order:2; padding:0 0 6px 12px; font-size:14px; line-height:1.25; text-align:right; }
+  .insiderTable tbody td:nth-child(6) .valueBar { bottom:0; width:56px; }
+  .insiderTable tbody td:nth-child(2) { order:3; flex-basis:auto; margin-top:3px; font-size:12px; }
+  .insiderTable tbody td:nth-child(4), .insiderTable tbody td:nth-child(5) { order:4; margin-top:3px; font-size:12px; }
+  .insiderTable tbody td:nth-child(5) { order:5; }
+  .insiderTable tbody td:nth-child(2):not(:has(> :global(.sr-only)))::after,
+  .insiderTable tbody td:nth-child(4)::after { content:"·"; margin-inline:6px; color:var(--text-muted); }
+  .insiderTable tbody td:nth-child(2):has(> :global(.sr-only)) { margin-top:0; }
+  .insiderTable tbody td:nth-child(3) { order:6; margin:3px 0 0 auto; }
+  .insiderTable .chip { min-height:20px; padding:0 8px; font-size:11px; }
+  /* Satır kırılması: tutardan sonra tam genişlikte görünmez bir ayraç —
+     alt hat her zaman yeni bir satırda başlıyor. */
+  .insiderTable tbody tr::after { content:""; order:2; flex-basis:100%; height:0; }
+}
+/* 360'ın altında üç sütun dar: etiketler ikiye kırılıyor, net değer
+   sütunu dolduruyordu (320'de ölçüldü). Okumalar yeniden satır. */
+@media (max-width:359px) {
+  .insiderAside .readings { grid-template-columns:minmax(0,1fr); padding-bottom:8px; }
+  .insiderAside .reading { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; column-gap:12px; padding:8px 0; border-left:0; border-top:1px solid var(--line-soft); }
+  .insiderAside .reading:first-child { padding-top:0; border-top:0; }
+  .insiderAside .reading dt, .insiderAside .readingMeta { grid-column:1; }
+  .insiderAside .readingValue { grid-column:2; grid-row:1 / span 2; text-align:right; }
+}
+
 /* ---- Ünlü yatırımcılar: geniş ekranda iki sütun ----
    Sekiz satır tek sütunda 1200 piksellik panelin solunda dar bir şerit
    bırakıp 480 piksel tutuyordu. Sütun sütun okunur (`grid-auto-flow:
