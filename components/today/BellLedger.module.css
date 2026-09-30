@@ -48,3 +48,21 @@
   .day { grid-row:1; grid-column:2; justify-self:start; }
   .times { grid-row:2; grid-column:1 / -1; gap:2px 8px; }
 }
+
+/* TELEFONDA İKİ TONLU KARO (30 Eylül, "sınırlarını zorla"). İki hücre kıl
+   çizgiyle ayrılmış düz metindi; "Bugün" hap rozet, "Yarın" düz metin —
+   aynı bilginin iki biçimi. Şimdi iki eş karo: sayacın saydığı zil marka
+   tonunda (sayaç hangi zile sayıyor, karodan okunuyor), öteki gömük tonda.
+   Gün adı karonun sağ üstünde düz künye, iki karoda aynı biçim; saat 18
+   punto, öteki dilim aynı taban çizgisinde. Kutu değil ton (CLAUDE.md). */
+@media (max-width:1023px) {
+  .bells { gap:8px; }
+  .cell { gap:6px 8px; padding:10px 12px 11px; border-radius:12px; background:var(--surface-sunken); }
+  .cell + .cell { padding-left:12px; border-left:0; }
+  .cell[data-target] { background:var(--primary-tint); }
+  .day { justify-self:end; }
+  .day, .day[data-today] { padding:0; background:none; font-size:11px; font-weight:600; line-height:1.4; color:var(--text-muted); }
+  .cell[data-target] .day { color:var(--primary-ink); }
+  .primary { font-size:18px; }
+  .primary small { margin-left:3px; }
+}

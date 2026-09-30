@@ -288,11 +288,23 @@
   /* Üst şerit iki satır: tarih ve saat yan yana, zil künyesi altta tam
      genişlikte (gerekçe BellLedger.module.css). Grup kendi kutusunu
      bırakıyor ki tarih ile künye şeridin ayrı satırlarına düşebilsin. */
-  .heroTopline { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"date clock" "bells bells"; row-gap:10px; }
+  .heroTopline { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"date clock" "bells bells"; row-gap:14px; align-items:end; }
+  /* TARİH VE SAAT SİMETRİK (30 Eylül, sahibinin isteği: "üstteki sayıları,
+     tarihi ve saati daha iyi hale getir"). Solda 12 puntoluk "30 Eyl Çar",
+     sağda 20 puntoluk saat duruyordu: aynı şeridin iki ucu iki ayrı ölçekte
+     ve tarih saatin dipnotu gibi okunuyordu. Şimdi iki blok aynı kalıpta —
+     üstte 11 puntoluk künye (hafta günü · New York saati), altta 20
+     puntoluk okuma (gün ve ay · İstanbul saati). Ay adı kısaltılmıyor:
+     "30 Ağustos" 320'de de saatin yanına sığıyor (ölçüldü). */
+  .dateShort { display:flex; flex-direction:column; gap:3px; }
+  .dateShort > span:first-child { font-size:11px; font-weight:600; line-height:14px; color:var(--text-muted); }
+  .dateShort > span:last-child { font-size:20px; font-weight:600; line-height:1.08; letter-spacing:-.03em; color:var(--text-strong); }
+  /* Tablette saat 28 punto (kadranın boyu, LiveClock.module.css); tarih de. */
+  @media (min-width:768px) { .dateShort > span:last-child { font-size:28px; } }
   .toplineLead { display:contents; }
   .dateline { grid-area:date; }
   .heroTopline > :last-child { grid-area:clock; }
-  .toplineBells { grid-area:bells; padding:10px 0 0; border-left:0; border-top:1px solid var(--line-soft); }
+  .toplineBells { grid-area:bells; padding:0; border-left:0; }
   .dashboard { grid-template-columns:minmax(0,1fr); }
   .dashboard > [data-col] { display:contents; }
   /* Telefonda okuma sırası: günün özeti, sektörler ve temalar, dünya,

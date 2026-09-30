@@ -103,9 +103,14 @@ export default async function TodayPage() {
   const dateFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
     timeZone: readerZone, day: "numeric", month: "long", weekday: "long",
   });
-  /* Dar ekranın künyesi: "24 Eyl Per" — saatin yanına 320'de de sığıyor. */
-  const dateShortFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
-    timeZone: readerZone, day: "numeric", month: "short", weekday: "short",
+  /* Dar ekranın künyesi İKİ SATIR (30 Eylül): üstte hafta günü, altta
+     saatle aynı puntoda gün ve ay — "Çarşamba / 30 Eylül". Gerekçe
+     TodayExperience.module.css → "TARİH VE SAAT SİMETRİK". */
+  const weekdayFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    timeZone: readerZone, weekday: "long",
+  });
+  const dayMonthFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    timeZone: readerZone, day: "numeric", month: "long",
   });
   /* Kahramanın şeridi ile endeks kartlarının kıvılcım çizgileri AYNI
      ekseni okuyor — `sessionDomain`, gerekçe index-feed.ts'te. */
@@ -190,7 +195,10 @@ export default async function TodayPage() {
           <div className={styles.toplineLead}>
             <p className={styles.dateline}>
               <time dateTime={new Date(nowMs).toISOString()} className={styles.dateLong}>{dateFormat.format(new Date(nowMs))}</time>
-              <time dateTime={new Date(nowMs).toISOString()} className={styles.dateShort}>{dateShortFormat.format(new Date(nowMs))}</time>
+              <time dateTime={new Date(nowMs).toISOString()} className={styles.dateShort}>
+                <span>{weekdayFormat.format(new Date(nowMs))}</span>
+                <span>{dayMonthFormat.format(new Date(nowMs))}</span>
+              </time>
             </p>
             {/* ZİL SAATLERİ TARİHİN YANINDA — gerekçe BellLedger.module.css. */}
             <BellLedger locale={locale} t={t} status={status} nowMs={nowMs} className={styles.toplineBells} />

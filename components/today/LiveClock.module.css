@@ -43,3 +43,18 @@
    360'ta sığmıyor (286'ya 303) ve orada satır ikiye kırılıyor — saat
    künyenin altına, sağa iner (TodayExperience `.heroTopline`). */
 @media(max-width:767px) { .dial { display:none; } .primary time { font-size:20px; } .readings { gap:6px; } }
+
+/* TELEFONDA İKİ SATIR, SAĞA YASLI (30 Eylül). Solda tarih bloğu "hafta
+   günü / 30 Eylül" diye iki satır; saat de aynı kalıba giriyor: üstte 11
+   puntoluk New York künyesi, altta 20 puntoluk İstanbul saati. İki uç
+   aynı ölçekte ve aynı hatta biter (TodayExperience → "TARİH VE SAAT
+   SİMETRİK"). Satır tek sütun olduğu için 360'taki sarma sorunu da yok. */
+@media(max-width:1023px) {
+  .readings { flex-direction:column-reverse; align-items:flex-end; gap:3px; }
+  .secondary, .secondary time { font-size:11px; font-weight:600; line-height:14px; color:var(--text-muted); }
+  .primary time { font-size:20px; line-height:1.08; letter-spacing:-.03em; }
+  .secondary { gap:4px; }
+}
+/* Tablette kadran duruyor (52): iki satırlık okuma onun boyunda kalsın diye
+   birincil saat 28 punto (14 + 3 + 30 ≈ 47 piksel). */
+@media(min-width:768px) and (max-width:1023px) { .primary time { font-size:28px; } }
