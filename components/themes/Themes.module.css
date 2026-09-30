@@ -46,7 +46,13 @@
 .rankBar[data-tone="up"] { background:var(--up); }
 .rankBar[data-tone="down"] { background:var(--down); }
 .rankValue { text-align:right; font-weight:700; font-size:13px; }
-@media(max-width:767px) { .rankRow { grid-template-columns:minmax(0,8.5rem) minmax(0,1fr) 4.5rem; gap:10px; font-size:12.5px; } }
+/* TELEFONDA SATIR 40 PİKSEL (30 Eylül). 28 piksellik satırlar 1 piksel
+   arayla üst üste duruyordu (390 genişlikte ölçüldü: satırın ortasından
+   komşu satıra 15 piksel). Parmak ıskalayınca dokunuş boşa gitmiyor, BAŞKA
+   bir temanın sayfasına gidiyordu. `tap-44` burada işe yaramaz — satırlar
+   bitişik, görünmez alan komşuyu kapatırdı (globals.css) — o yüzden gerçek
+   yükseklik. İmleçli ekranda 28 kalıyor. */
+@media(max-width:767px) { .rankRow { grid-template-columns:minmax(0,8.5rem) minmax(0,1fr) 4.5rem; gap:10px; min-height:40px; font-size:12.5px; } }
 
 /* --------------------------------------------------------------------------
    Galeri

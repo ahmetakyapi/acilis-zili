@@ -412,7 +412,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             <p>{planReadingText(reading, locale, t)}</p>
             {/* Plan cümlesi görüşü varsayıyor; anlamını soran okuyucu
                 bir tık aşağıda, aynı sayfada cevabı buluyor. */}
-            <a href="#technical-stance" className={styles.stanceGuideLink}>
+            <a href="#technical-stance" className={cn("tap-44", styles.stanceGuideLink)}>
               {t.technical.stanceGuide.detailTitle.replace("{stance}", verdictLabel(verdict, t))}
             </a>
           </div>

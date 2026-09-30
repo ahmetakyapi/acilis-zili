@@ -155,7 +155,7 @@ async function IpoList({ locale, t }: { locale: Locale; t: Dictionary }) {
               <span className="min-w-0">
                 <Link
                   href={`/hisse/${row.symbol}`}
-                  className="numeral text-base font-bold text-strong transition-colors hover:text-primary"
+                  className="tap-44 numeral text-base font-bold text-strong transition-colors hover:text-primary"
                 >
                   {row.symbol}
                 </Link>

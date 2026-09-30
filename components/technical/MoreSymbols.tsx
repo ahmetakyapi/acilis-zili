@@ -55,7 +55,7 @@ export function MoreSymbols({
     <section id="technical-more" className={styles.block}>
       <div className={styles.blockHead}>
         <h2 className={styles.sectionTitle}>{t.technical.moreSymbols}</h2>
-        <Link href="/teknik" className={styles.moreAll}>
+        <Link href="/teknik" className={cn("tap-44", styles.moreAll)}>
           {t.technical.allStocks} ↗
         </Link>
       </div>
