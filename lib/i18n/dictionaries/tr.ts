@@ -2425,6 +2425,7 @@ const tr = {
     insiderLegend:
       "Renkli çipler açık piyasa kararlarıdır; sönük satırlar ödül, vergi kesintisi, hediye ya da opsiyon kullanımı gibi karar olmayan hareketlerdir.",
     insiderHowTitle: "Nasıl Okunur",
+    howRead: "Nasıl Okunur",
     sentimentLatest: "Son Değer ({month}): {value}",
     sentimentTitle: "Aylık Alım Oranı (MSPR)",
     sentimentNote:

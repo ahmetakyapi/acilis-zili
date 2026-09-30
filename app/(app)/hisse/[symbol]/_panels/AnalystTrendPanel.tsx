@@ -103,7 +103,12 @@ export async function AnalystTrendPanel({ symbol, locale, t }: { symbol: string;
             </tbody>
           </table>
         </ScrollEdges>
-        <p className={styles.note}>{d.atNote}</p>
+        {/* Yöntem notu katlamada (30 Eylül, "daha kompakt"); kotasyon notu
+            bu hisseye özgü, açıkta kalıyor. */}
+        <details className={styles.how}>
+          <summary>{d.howRead}</summary>
+          <p>{d.atNote}</p>
+        </details>
         {/* Analist kartındaki kotasyon notunun eşi: TSM'de dağılım Tayvan
             kotasyonunu izleyen analistlerden. */}
         {listing && listing !== symbol.toUpperCase() && (

@@ -1987,6 +1987,7 @@ const en: typeof tr = {
     insiderLegend:
       "Colored chips are open-market decisions; dimmed rows are grants, tax withholding, gifts or option exercises, which are not trading decisions.",
     insiderHowTitle: "How to Read",
+    howRead: "How to Read",
     sentimentLatest: "Latest ({month}): {value}",
     sentimentTitle: "Monthly Share Purchase Ratio (MSPR)",
     sentimentNote:

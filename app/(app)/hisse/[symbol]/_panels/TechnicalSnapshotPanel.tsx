@@ -175,7 +175,12 @@ export async function TechnicalSnapshotPanel({ symbol, locale, t }: { symbol: st
           </>
         )}
 
-        <p className={styles.note}>{d.tsNote}</p>
+        {/* Yöntem notu katlamada (30 Eylül, "daha kompakt"): İçeriden
+            İşlemler ile aynı öğe; telefonda üç satır tutuyordu. */}
+        <details className={styles.how}>
+          <summary>{d.howRead}</summary>
+          <p>{d.tsNote}</p>
+        </details>
         <DataStamp
           labels={t.data}
           source={bars.source}

@@ -336,14 +336,18 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
 
         <div className={styles.insiderNotes}>
 
-        {/* Okuma anahtarı tek cümle ve açık; yöntem notları "Nasıl Okunur"
-            altında. Fiyat uyarısı bu hisseye özgü, açık kalıyor. */}
-        {split && <p className={styles.note}>{d.insiderLegend}</p>}
+        {/* Okuma anahtarı tek cümle ve açıktı; yöntem notları "Nasıl Okunur"
+            altında. Fiyat uyarısı bu hisseye özgü, açık kalıyor.
+            ANAHTAR DA KATLAMADA (30 Eylül, sahibinin onayı: "daha kompakt").
+            Çiplerin rengi kendini büyük ölçüde anlatıyor (Satış kırmızı,
+            Alım yeşil, ötekiler sönük ve adıyla); cümle telefonda üç satır
+            tutuyordu. Katlamanın ilk paragrafı. */}
         {dropped > 0 && (
           <p className={styles.note}>{d.insiderPriceDropped.replace("{n}", String(dropped))}</p>
         )}
         <details className={styles.how}>
           <summary>{d.insiderHowTitle}</summary>
+          {split && <p>{d.insiderLegend}</p>}
           <p>{d.insiderNote}</p>
           {hasRoles && <p>{d.insiderRolesNote}</p>}
           {hasSentiment && <p>{d.sentimentNote}</p>}
