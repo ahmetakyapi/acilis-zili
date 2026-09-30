@@ -22,6 +22,7 @@ export function InvestorHero({
   figureLabel,
   figureMeta,
   note,
+  share,
 }: {
   investor: Investor;
   locale: string;
@@ -31,6 +32,8 @@ export function InvestorHero({
   figureMeta?: ReactNode;
   /** Kapağın dibinde hairline ile ayrılmış künye (kapanan fon). */
   note?: string;
+  /** Paylaş düğmesi (`PageShare`) — açıklama cümlesinin ardında. */
+  share?: ReactNode;
 }) {
   const closed = investor.status === "closed";
   return (
@@ -47,6 +50,7 @@ export function InvestorHero({
         </p>
         <h1 className={styles.detailName}>{investor.name}</h1>
         <p className={styles.detailDek}>{locale === "en" ? investor.tagline.en : investor.tagline.tr}</p>
+        {share && <div className={styles.detailShare}>{share}</div>}
         <div className={styles.detailFigure}>
           <span className={styles.detailFigureLabel}>{figureLabel}</span>
           <strong className="numeral">{figure ? <RollingFigure value={figure} /> : NO_VALUE}</strong>

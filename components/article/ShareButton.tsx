@@ -52,6 +52,8 @@ export function ShareButton({
   title,
   labels,
   className,
+  align = "right",
+  compact = false,
 }: {
   /** Yazının tam adresi — sunucudan, dili taşıyan canonical hâliyle. */
   url: string;
@@ -59,6 +61,13 @@ export function ShareButton({
   title: string;
   labels: ShareLabels;
   className?: string;
+  /** Masaüstü panelinin hangi kenara yaslanacağı. Düğme kapağın SOLUNDA
+      duruyorsa (`PageShare`) panel sola açılır; sağa yaslı açılsa 236
+      piksellik kutu ekranın sol kenarından taşardı. */
+  align?: "left" | "right";
+  /** Yalnızca simge (32 piksel, dokunma hedefi 44): hisse başlığında
+      kalbin yanında metinli düğme kimliğin önüne geçerdi. Ad `aria-label`. */
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -164,7 +173,12 @@ export function ShareButton({
         onClick={onClick}
         aria-expanded={open}
         aria-haspopup="dialog"
-        className={cn(
+        aria-label={compact ? (copied ? labels.copied : labels.action) : undefined}
+        title={compact ? labels.action : undefined}
+        className={compact ? cn(
+          "tap-44 inline-flex size-8 items-center justify-center rounded-sm transition-colors",
+          copied ? "text-up" : "text-muted hover:bg-surface-elevated hover:text-soft",
+        ) : cn(
           /* Yanındaki "Mercek'e Dön" bağlantısıyla aynı ağırlıkta duruyor:
              ikisi de yazının çevresindeki sessiz denetimler, hiçbiri
              metinden önce görülmemeli. Dokunma hedefi yine de 32px. */
@@ -177,9 +191,9 @@ export function ShareButton({
         {copied ? (
           <Check weight="bold" size={13} aria-hidden className="check-pop" />
         ) : (
-          <Share weight="bold" size={13} aria-hidden />
+          <Share weight={compact ? "duotone" : "bold"} size={compact ? 17 : 13} aria-hidden />
         )}
-        {copied ? labels.copied : labels.action}
+        {!compact && (copied ? labels.copied : labels.action)}
       </button>
 
       {open && (
@@ -192,7 +206,7 @@ export function ShareButton({
           <div
             role="dialog"
             aria-label={labels.title}
-            className="absolute right-0 top-[calc(100%+8px)] z-20 w-[236px] overflow-hidden rounded-xl border border-line bg-overlay-surface shadow-(--shadow-overlay)"
+            className={cn(align === "left" ? "left-0" : "right-0", "absolute top-[calc(100%+8px)] z-20 w-[236px] overflow-hidden rounded-xl border border-line bg-overlay-surface shadow-(--shadow-overlay)")}
           >
             <p className="plate border-b border-line-soft px-4 py-2.5 text-nano">
               {labels.title}

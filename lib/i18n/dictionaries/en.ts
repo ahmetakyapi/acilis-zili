@@ -83,6 +83,7 @@ const en: typeof tr = {
   share: {
     action: "Share",
     title: "Share This Story",
+    pageTitle: "Share This Page",
     copyLink: "Copy Link",
     copied: "Copied",
     onX: "Share on X",

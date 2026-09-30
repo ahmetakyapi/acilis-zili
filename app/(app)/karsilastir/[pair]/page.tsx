@@ -89,6 +89,7 @@ export default async function ComparePairPage(props: PageProps<"/karsilastir/[pa
           subtitle: t.pairs.subtitle,
         }}
         lead={<PairFaceOff pair={pair} locale={locale} t={t} />}
+        sharePath={`/karsilastir/${pair.slug}`}
       >
         <OtherPairs pairs={others} joiner={t.pairs.joiner} t={t} />
       </CompareBoard>

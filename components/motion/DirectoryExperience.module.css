@@ -15,6 +15,9 @@
 .hero h1 { margin:10px 0 13px; font-size:var(--heading-page); line-height:1.04; letter-spacing:-.055em; font-weight:600; color:var(--text-strong); }
 .heroTitle h1 { margin:0; }
 .description { max-width:52ch; color:var(--text-body); font-size:15px; line-height:1.7; text-wrap:pretty; }
+/* Paylaş düğmesi açıklamanın ardında (`PageShare`, 30 Eylül). Düğme kendi
+   dolgusunu taşıdığı için sol kenar metinle hizalansın diye −8 piksel. */
+.share { width:fit-content; margin:6px 0 0 -8px; }
 .metrics { display:flex; flex-wrap:wrap; gap:20px 34px; margin-top:24px; }
 .metrics > div { display:flex; flex-direction:column; gap:5px; }
 .metrics dt { order:2; font-size:12px; color:var(--text-muted); }

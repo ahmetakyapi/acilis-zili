@@ -4,6 +4,7 @@ import { GuideHint } from "@/components/article/GuideHint";
 import { CongressBody, CongressStrip } from "@/components/investors/CongressDetail";
 import { FundBody, FundStrip } from "@/components/investors/FundDetail";
 import { InvestorHero } from "@/components/investors/InvestorHero";
+import { PageShare } from "@/components/article/PageShare";
 import { filedLabel, asOfLabel, quarterLabel } from "@/components/investors/format";
 import styles from "@/components/investors/Investors.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -99,6 +100,7 @@ export default async function InvestorPage(props: PageProps<"/yatirimcilar/[slug
         <>
           <InvestorHero
             investor={investor}
+            share={<PageShare path={`/yatirimcilar/${investor.slug}`} title={`${investor.name} · ${ti.eyebrow}`} locale={locale} t={t} />}
             locale={locale}
             t={ti}
             figure={formatMoneyCompact(detail.diff.longValue, locale)}
@@ -152,6 +154,7 @@ export default async function InvestorPage(props: PageProps<"/yatirimcilar/[slug
         <>
           <InvestorHero
             investor={investor}
+            share={<PageShare path={`/yatirimcilar/${investor.slug}`} title={`${investor.name} · ${ti.eyebrow}`} locale={locale} t={t} />}
             locale={locale}
             t={ti}
             figure={String(detail.trades.length)}
@@ -177,7 +180,7 @@ export default async function InvestorPage(props: PageProps<"/yatirimcilar/[slug
         </>
       ) : (
         <>
-          <InvestorHero investor={investor} locale={locale} t={ti} figure={null} figureLabel={ti.portfolioValue} />
+          <InvestorHero investor={investor} locale={locale} t={ti} figure={null} figureLabel={ti.portfolioValue} share={<PageShare path={`/yatirimcilar/${investor.slug}`} title={`${investor.name} · ${ti.eyebrow}`} locale={locale} t={t} />} />
           <Panel>
             <EmptyState title={ti.emptyTitle} hint={ti.emptyHint} scene="lost" />
           </Panel>

@@ -8,8 +8,11 @@ import styles from "./DirectoryExperience.module.css";
  * takviminin Hafta/Ay anahtarı bir dönem açıklamanın altında kendi
  * satırındaydı ve telefonda başlık kartını 24 + 44 piksel uzatıyordu;
  * ekran düzeni kuralı (CLAUDE.md) denetimi başlığın sağına koyuyor. */
-export function DirectoryHeader({ eyebrow, title, description, children, visual, control, className = "" }: {
-  eyebrow: string; title: string; description?: string; children?: ReactNode; visual?: ReactNode; control?: ReactNode; className?: string;
+export function DirectoryHeader({ eyebrow, title, description, children, visual, control, share, className = "" }: {
+  eyebrow: string; title: string; description?: string; children?: ReactNode; visual?: ReactNode; control?: ReactNode;
+  /** Paylaş düğmesi (`PageShare`) — açıklama cümlesinin ardında, her ekranda aynı yerde. */
+  share?: ReactNode;
+  className?: string;
 }) {
   return <header className={`${styles.hero} page-frame ${className}`} data-has-visual={!!visual}>
     <HeroAccent />
@@ -25,6 +28,7 @@ export function DirectoryHeader({ eyebrow, title, description, children, visual,
         {control}
       </div>
       {description && <p className={styles.description}>{description}</p>}
+      {share && <div className={styles.share}>{share}</div>}
       {children}
     </div>
     {visual && <div className={styles.heroVisual}>{visual}</div>}

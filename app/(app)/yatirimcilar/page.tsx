@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { GuideHint } from "@/components/article/GuideHint";
+import { PageShare } from "@/components/article/PageShare";
 import { InvestorCard } from "@/components/investors/InvestorCard";
 import { MoversBoard } from "@/components/investors/MoversBoard";
 import { InvestorRoster } from "@/components/investors/InvestorRoster";
@@ -76,6 +77,7 @@ export default async function InvestorsPage() {
           <p className="page-eyebrow">{ti.eyebrow}</p>
           <h1 className={styles.heroTitle}>{ti.title}</h1>
           <p className={styles.heroDek}>{ti.subtitle}</p>
+          <PageShare path="/yatirimcilar" title={ti.title} locale={locale} t={t} className={styles.heroShare} />
           <dl className={styles.heroStats}>
             <div className={styles.heroStatLead}>
               <dt>{ti.trackedValue}</dt>

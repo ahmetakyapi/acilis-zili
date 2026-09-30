@@ -105,6 +105,8 @@ const tr = {
   share: {
     action: "Paylaş",
     title: "Bu Yazıyı Paylaş",
+    /* Yazı olmayan ekranların paneli (`PageShare`). */
+    pageTitle: "Bu Sayfayı Paylaş",
     copyLink: "Bağlantıyı Kopyala",
     copied: "Kopyalandı",
     onX: "X'te Paylaş",

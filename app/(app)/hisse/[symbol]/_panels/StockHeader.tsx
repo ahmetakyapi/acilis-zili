@@ -6,6 +6,7 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { and, eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { ArrowLeft, Heart, Stack, ChartLineUp } from "@phosphor-icons/react/dist/ssr";
+import { PageShare } from "@/components/article/PageShare";
 import styles from "../stock.module.css";
 import { FavoriteToggle } from "@/components/stock/FavoriteToggle";
 import { HeaderReadout } from "@/components/stock/ChartReadingContext";
@@ -203,6 +204,16 @@ export async function StockHeader({
                 <Heart weight="duotone" size={17} />
               </Link>
             )}
+            {/* PAYLAŞ KALBİN YANINDA (30 Eylül, sahibinin isteği: "böyle
+                ekranlara hep paylaş"). Aynı simge ölçüsü (32, dokunma 44);
+                telefonda işletim sisteminin paylaşım sayfası açılıyor. */}
+            <PageShare
+              path={`/hisse/${symbol}`}
+              title={`${symbol} · ${profile?.name || fund?.name || symbol}`}
+              locale={locale}
+              t={t}
+              compact
+            />
           </div>
           <h1 data-ink="solid" className={styles.companyName}>
             {profile?.name || fund?.name || symbol}

@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { Fragment } from "react";
@@ -32,6 +33,7 @@ import {
   COMPARE_RANGES,
   DEFAULT_COMPARE_RANGE,
   MAX_COMPARE_SYMBOLS,
+  compareHref,
   isCompareRange,
   parseCompareSymbols,
   scaleRatios,
@@ -234,7 +236,11 @@ export async function CompareBoard({
   children,
   currency,
   realAvailable,
+  sharePath,
 }: {
+  /** Paylaşılan adres. Verilmezse sembol listesinin kalıcı adresi
+      (`compareHref`); hazır çiftler kendi `/karsilastir/{çift}` yolunu verir. */
+  sharePath?: string;
   symbols: string[];
   range: CompareRange;
   dropped: string[];
@@ -694,6 +700,18 @@ export async function CompareBoard({
         subtitle={heading?.subtitle ?? t.compare.subtitle}
         action={<CompareRangeControl labels={labels} />}
       />
+      {/* PAYLAŞ (30 Eylül). Adres sunucudan: semboller ve para birimi
+          kalıcı adreste. Aralık istemcide değişiyor (sunucuya gidilmiyor),
+          o yüzden paylaşılan bağlantı sayfanın AÇILDIĞI aralığı taşır. */}
+      {symbols.length > 0 && (
+        <PageShare
+          path={sharePath ?? compareHref(symbols, range, currency)}
+          title={heading?.title ?? `${symbols.join(" · ")} · ${t.compare.title}`}
+          locale={locale}
+          t={t}
+          className="-mt-3 -ml-2 w-fit"
+        />
+      )}
 
       {lead}
 

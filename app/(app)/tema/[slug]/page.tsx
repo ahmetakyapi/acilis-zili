@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { cache, Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
@@ -169,6 +170,7 @@ export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
         eyebrow={t.themes.eyebrow}
         title={title}
         description={themeDek(theme, locale)}
+        share={<PageShare path={`/tema/${theme.slug}`} title={`${title} · ${t.themes.eyebrow}`} locale={locale} t={t} />}
         visual={
           katilim ? (
             <Suspense

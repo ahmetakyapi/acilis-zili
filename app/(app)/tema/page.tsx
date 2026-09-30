@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { Suspense } from "react";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
@@ -75,6 +76,7 @@ export default async function ThemesIndexPage() {
         eyebrow={t.themes.eyebrow}
         title={t.themes.title}
         description={t.themes.subtitle}
+        share={<PageShare path="/tema" title={t.themes.title} locale={locale} t={t} />}
         visual={
           <Suspense fallback={<ThemeRanking cards={placeholders} locale={locale} t={t} />}>
             <LiveRanking locale={locale} t={t} />

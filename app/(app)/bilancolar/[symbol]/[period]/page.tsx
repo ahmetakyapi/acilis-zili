@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -583,7 +584,10 @@ export default async function AnalysisDetailPage(
         ]}
       />
 
-      {/* ---- Künye ---- */}
+      {/* ---- Künye ----
+          PAYLAŞ KIRINTININ SAĞINDA (30 Eylül) — teknik analiz sayfasının
+          kalıbı: kırıntı ve paylaş tek satır, sığmayınca paylaş alta iner. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
       <nav
         aria-label={t.common.breadcrumb}
         className="flex flex-wrap items-center gap-2 text-small text-muted"
@@ -606,6 +610,14 @@ export default async function AnalysisDetailPage(
           {row.company} · {row.periodLabel}
         </span>
       </nav>
+      <PageShare
+        path={analysisHref(symbol, period)}
+        title={`${row.company} ${row.periodLabel} · ${t.analysis.ogEyebrow}`}
+        locale={row.locale as Locale}
+        t={t}
+        align="right"
+      />
+      </div>
 
       <ReportCover
         row={row}

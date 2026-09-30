@@ -691,3 +691,8 @@ a.company:hover b { color:var(--primary-ink); }
   .mosaicItem:nth-child(n+5) { display:none; }
   .tradeRow:nth-child(n+4) { display:none; }
 }
+
+/* Paylaş düğmesi kapağın açıklama cümlesinin ardında (`PageShare`, 30 Eylül).
+   Düğme kendi genişliğinde; kapağın dikey ritmine 14 piksellik payla
+   giriyor, rakam satırı ondan sonra. */
+.heroShare, .detailShare { width:fit-content; margin:14px 0 0 -8px; }

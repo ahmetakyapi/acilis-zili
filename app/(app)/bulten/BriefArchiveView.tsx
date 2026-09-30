@@ -3,6 +3,7 @@ import polish from "@/components/motion/UtilityExperience.module.css";
 import { Suspense } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { BriefBody } from "@/components/today/BriefBody";
+import { PageShare } from "@/components/article/PageShare";
 import {
   EmptyState,
   PageHeader,
@@ -184,6 +185,16 @@ async function ArchiveBoard({
                   ? t.brief.byClaude
                   : t.brief.byRules}
               </span>
+              {/* PAYLAŞ (30 Eylül). Adres sayının KALICI yolu (`briefHref`):
+                  paylaşılan bağlantı "bugünün bülteni" değil, bu sayı. */}
+              <PageShare
+                path={briefHref(brief.briefDate, period)}
+                title={brief.headline}
+                locale={locale}
+                t={t}
+                align="right"
+                className="-mr-2"
+              />
             </div>
 
             {/* Haftalık kaydın kurgusu başlıktan önce söylenir: kayıt biten
