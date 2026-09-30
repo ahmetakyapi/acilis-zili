@@ -11,7 +11,7 @@ import {
 import type { Icon } from "@phosphor-icons/react";
 import { ArticleChart } from "./ArticleChart";
 import { CHART_RANGES, type ChartRange } from "@/lib/providers/types";
-import { cn, safeExternalUrl, spaceRanges, titleCaseLabel } from "@/lib/utils";
+import { cn, safeExternalUrl, spaceRanges, tieFigures, titleCaseLabel } from "@/lib/utils";
 import type { AutoLinker } from "@/lib/autolink";
 
 /* ==========================================================================
@@ -1100,7 +1100,11 @@ export function ArticleBody({
                                 : "text-body",
                             )}
                           >
-                            {renderInline(cell, `${key}-${rowIndex}-${cellIndex}`, autoLink)}
+                            {/* Sayı birimine bağlı, aralık tiresi nefesli
+                                (`tieFigures`): dar hücrede "50,6–51,9 Mr" /
+                                "$" diye kırılıyordu (sahibinin ekran
+                                görüntüsü, 390). */}
+                            {renderInline(tieFigures(cell), `${key}-${rowIndex}-${cellIndex}`, autoLink)}
                           </td>
                         ))}
                       </tr>
