@@ -205,6 +205,32 @@
   .summaryFact dd { font-size:15px; text-wrap:pretty; }
   .summaryPeers { margin-top:4px; }
 }
+/* TELEFONDA TEK SATIR KÜNYE (30 Eylül, "burayı da iyileştirelim"). Bir
+   önceki sürüm her bilgiyi iki satıra koyuyordu (etiket üstte, değer altta)
+   ve beş bilgi 360 piksel tutuyordu. Kısa değerler etiketle aynı satırda
+   duruyor: solda ikon ve etiket, sağda değer; bilanço penceresi ve logolar
+   değerin altında, sağa yaslı. Göz etiket sütununda aşağı iniyor, değerler
+   sağ kenarda bir sütun oluşturuyor. Yukarıdaki satır kuralları karar kaydı
+   olarak yerinde; bu blok onları eziyor. */
+@media(max-width:639px) {
+  .summaryFact { grid-template-columns:28px minmax(0,auto) minmax(0,1fr); grid-template-areas:"icon label value" "icon meta meta"; align-items:center; column-gap:10px; row-gap:4px; padding:10px 0; }
+  .summaryIcon { grid-area:icon; align-self:center; width:28px; height:28px; border-radius:9px; }
+  .summaryFact:has(> .summaryMeta) .summaryIcon { align-self:start; }
+  .summaryLabel { grid-area:label; color:var(--text-body); font-size:13px; font-weight:600; white-space:nowrap; }
+  .summaryFact dd { grid-area:value; justify-self:end; font-size:15px; text-align:right; text-wrap:balance; }
+  .summaryFact dd.summaryMeta { grid-area:meta; justify-self:end; font-size:12px; }
+  .summaryPeers { justify-content:flex-end; margin-top:2px; }
+  /* Etiket ile değer aynı taban çizgisinde: ortaya hizada 13 puntoluk
+     etiket 15 puntoluk değerin iki piksel üstünde duruyordu. */
+  .summaryLabel, .summaryFact dd:not(.summaryMeta) { align-self:baseline; }
+}
+/* 320'de "S&P 500 · Nasdaq 100" ve "30 Eylül Çarşamba" iki satıra
+   kırılıyordu: 360'ın altında punto bir kademe küçük, ikon aralığı dar. */
+@media(max-width:359px) {
+  .summaryFact { column-gap:8px; }
+  .summaryLabel { font-size:12px; }
+  .summaryFact dd { font-size:14px; }
+}
 .summaryText { margin-top:14px; max-width:78ch; color:var(--text-body); font-size:13.5px; line-height:1.75; }
 .guides { display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:12px; padding-top:10px; border-top:1px solid var(--line-soft); }
 .guides > span { color:var(--text-muted); font-size:11px; font-weight:600; }

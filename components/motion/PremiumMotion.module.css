@@ -187,9 +187,15 @@
   transition: color 180ms ease, background-color 180ms ease;
 }
 
-.navLink:hover {
-  color: var(--text-strong);
-  background: var(--surface);
+/* ÜZERİNE GELME YALNIZCA İMLEÇTE (30 Eylül, sahibinin ekran görüntüsü).
+   Koşulsuz `:hover` telefonda dokunulan sekmede takılı kalıyordu: kaydırma
+   seçimi "Genel Bakış"a geri taşıdığında "Gündem" de zeminli duruyor, iki
+   sekme birden seçili görünüyordu. */
+@media (hover: hover) and (pointer: fine) {
+  .navLink:hover {
+    color: var(--text-strong);
+    background: var(--surface);
+  }
 }
 
 .navLink[aria-current="location"] {
