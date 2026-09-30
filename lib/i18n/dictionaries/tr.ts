@@ -2464,6 +2464,8 @@ const tr = {
 
     atTitle: "Analist Dağılımı Değişimi",
     atChange: "Değişim",
+    /* Telefonda sütun başlığı — altı sütun kaydırmasız sığsın diye. */
+    atChangeShort: "Fark",
     atTotal: "Toplam",
     atBuyShare: "Al Tarafı",
     atNote:

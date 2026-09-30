@@ -38,11 +38,11 @@ export async function AnalystTrendPanel({ symbol, locale, t }: { symbol: string;
     sell: t.stock.sell,
     strongSell: t.stock.strongSell,
   };
-  const month = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
-    month: "short",
-    year: "2-digit",
-    timeZone: "UTC",
-  });
+  /* Ay ve yıl AYRI parça: telefonda başlık iki satıra bölünüyor ("Haz" /
+     "26") ki altı sütun kaydırmasız sığsın (depth.module.css). */
+  const intl = locale === "tr" ? "tr-TR" : "en-US";
+  const monthName = new Intl.DateTimeFormat(intl, { month: "short", timeZone: "UTC" });
+  const monthYear = new Intl.DateTimeFormat(intl, { year: "2-digit", timeZone: "UTC" });
   const signed = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "0");
   const listing = result.data[0]?.symbol?.toUpperCase();
 
@@ -59,10 +59,14 @@ export async function AnalystTrendPanel({ symbol, locale, t }: { symbol: string;
                 </th>
                 {trend.periods.map((period) => (
                   <th key={period} scope="col" className="numeral">
-                    {month.format(new Date(`${period}T12:00:00Z`))}
+                    <span className={styles.trendMonth}>{monthName.format(new Date(`${period}T12:00:00Z`))}</span>{" "}
+                    <span className={styles.trendYear}>{monthYear.format(new Date(`${period}T12:00:00Z`))}</span>
                   </th>
                 ))}
-                <th scope="col">{d.atChange}</th>
+                <th scope="col" className={styles.trendDelta}>
+                  <span className={styles.trendLong}>{d.atChange}</span>
+                  <span className={styles.trendShort} aria-hidden>{d.atChangeShort}</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -77,7 +81,7 @@ export async function AnalystTrendPanel({ symbol, locale, t }: { symbol: string;
                       {value}
                     </td>
                   ))}
-                  <td className={cn("numeral", row.delta !== 0 ? "font-semibold text-strong" : "text-muted")}>
+                  <td className={cn("numeral", styles.trendDelta, row.delta !== 0 ? "font-semibold text-strong" : "text-muted")}>
                     {signed(row.delta)}
                   </td>
                 </tr>
@@ -89,7 +93,7 @@ export async function AnalystTrendPanel({ symbol, locale, t }: { symbol: string;
                     {total}
                   </td>
                 ))}
-                <td className="numeral text-body">{signed(trend.totals.at(-1)! - trend.totals[0]!)}</td>
+                <td className={cn("numeral text-body", styles.trendDelta)}>{signed(trend.totals.at(-1)! - trend.totals[0]!)}</td>
               </tr>
               <tr>
                 <th scope="row" className="text-left font-semibold text-strong">{d.atBuyShare}</th>
@@ -98,7 +102,7 @@ export async function AnalystTrendPanel({ symbol, locale, t }: { symbol: string;
                     {formatPercentPlain(share, locale, 0)}
                   </td>
                 ))}
-                <td aria-hidden />
+                <td aria-hidden className={styles.trendDelta} />
               </tr>
             </tbody>
           </table>

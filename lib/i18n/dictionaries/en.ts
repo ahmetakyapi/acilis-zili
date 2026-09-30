@@ -2026,6 +2026,7 @@ const en: typeof tr = {
 
     atTitle: "Analyst Distribution Change",
     atChange: "Change",
+    atChangeShort: "Chg",
     atTotal: "Total",
     atBuyShare: "Buy Side",
     atNote:

@@ -66,6 +66,31 @@
 .trendTable thead th { padding-block:2px 6px; }
 .insiderTable { min-width:560px; }
 .trendTable { min-width:420px; }
+.trendShort { display:none; }
+/* ANALİST DEĞİŞİMİ TELEFONDA KAYMAZ (30 Eylül, sahibinin isteği: "kaydırma
+   olmadan kompakt"). 420 piksellik taban 390'da 316 piksellik kaba
+   girmiyordu; Değişim sütunu — panelin asıl söylediği — kaydırmanın
+   arkasında kalıyordu. Tablo artık kabın genişliğinde: ay başlığı iki satır
+   ("Haz" / "26"), Değişim başlığı "Fark", hücreler yan dolgusuz ve sağa
+   yaslı (iki basamaklı sayılar; en genişi "%94"), nokta 6 piksel. Değişim
+   sütunu kıl çizgiyle ayrılıyor: ayların DEVAMI değil, onların özeti. Bu
+   bir `table-fixed` zorlaması değil — içerik 320'de de sığıyor (ölçüldü). */
+@media (max-width:639px) {
+  .trendTable { min-width:0; font-size:13px; }
+  .trendTable th, .trendTable td { padding-inline:0 0; }
+  .trendTable td, .trendTable thead th:not(:first-child) { padding-left:6px; }
+  .trendTable tbody th { padding-right:8px; font-size:12px; }
+  .trendTable thead th { line-height:1.25; vertical-align:bottom; }
+  .trendMonth, .trendYear { display:block; }
+  .trendYear { color:var(--text-soft); }
+  .trendTable .trendDelta { padding-left:10px; }
+  /* Son ay ayraca yapışmasın ("24|" okunuyordu, 390 ölçüldü). */
+  .trendTable td:nth-last-child(2), .trendTable thead th:nth-last-child(2) { padding-right:10px; }
+  .trendTable td.trendDelta, .trendTable th.trendDelta { box-shadow:inset 1px 0 var(--line-soft); }
+  .trendLong { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  .trendShort { display:inline; }
+  .trendTable .dot { width:6px; height:6px; margin-right:6px; vertical-align:1px; }
+}
 .historyTable { min-width:300px; max-width:640px; }
 .nameCell { display:block; max-width:13rem; overflow:hidden; text-overflow:ellipsis; color:var(--text-strong); font-weight:600; }
 /* Görev ismin altında, ikinci ton ve küçük punto. Uzun unvan ("İcra Başkan
