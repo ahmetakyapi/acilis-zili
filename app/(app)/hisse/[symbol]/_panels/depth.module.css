@@ -193,7 +193,13 @@
    Gerekçe FoldToggle.tsx'te. Katlı satır `display:none`: ekran okuyucu da
    yalnızca görüneni duyuyor, anahtarın etiketi kaç satırın katlı olduğunu
    söylüyor. */
-.fold { min-width:0; }
+/* ONAY KUTUSU DÜĞMENİN HİZASINDA (30 Eylül). `sr-only` kutuyu kabın
+   BAŞINA koyuyordu; etikete basınca tarayıcı kutuya odaklanıp onu ekrana
+   getiriyor ve okuyucu listenin başına fırlıyordu (başsız Chromium'da
+   ölçüldü: 390 genişlikte 916 → 216). Kutu kabın dibine sabitlendi, odak
+   düğmenin olduğu yerde kalıyor ve satırlar bastığın yerden aşağı açılıyor. */
+.fold { position:relative; min-width:0; }
+.foldInput { bottom:0; left:0; }
 .foldInput:not(:checked) ~ * [data-fold] { display:none; }
 .foldButton { display:inline-flex; min-height:44px; align-items:center; padding-inline:var(--fold-inset,0); color:var(--primary-ink); font-size:12.5px; font-weight:650; cursor:pointer; }
 .foldButton:hover { text-decoration:underline; text-underline-offset:3px; }
@@ -211,7 +217,9 @@
    (ölçüldü: ~600 kalıyor). Telefonda okumalar üst üste üç büyük sayı
    yerine satır satır (etiket solda, sayı sağda) ve kayıtların ilk beşi
    açık. */
-.insiderRecords { min-width:0; margin-top:12px; }
+.insiderRecords { position:relative; min-width:0; margin-top:12px; }
+/* Aynı gerekçe (`.foldInput`): kutu "Tümünü Gör" düğmesinin hizasında. */
+.clampInput { bottom:0; left:0; }
 
 /* ---- İçeriden işlemler: okuma katmanı (29 Eylül) ----
    Gerekçe InsiderPanel.tsx başında. Renk yalnızca yönden: çip, pay ve

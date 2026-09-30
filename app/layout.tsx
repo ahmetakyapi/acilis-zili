@@ -5,6 +5,7 @@ import Script from "next/script";
 import { headers } from "next/headers";
 import { InkSplash, INK_SPLASH_SCRIPT } from "@/components/ink/InkSplash";
 import { SiteJsonLd } from "@/components/seo/JsonLd";
+import { ExpandInPlace } from "@/components/layout/ExpandInPlace";
 import { getI18n, getTheme } from "@/lib/i18n";
 import { INTL_LOCALE } from "@/lib/i18n/config";
 import { INDEXABLE, SITE_URL } from "@/lib/site";
@@ -217,6 +218,8 @@ export default async function RootLayout({
         {/* Kuruluş + site künyesi; sayfa bazlı künyeler kendi rotalarında. */}
         <SiteJsonLd locale={locale} />
         {children}
+        {/* Katlama açılınca sayfa bastığın yerde kalsın — gerekçe bileşende. */}
+        <ExpandInPlace />
         {/* Vercel Analytics YALNIZCA Vercel'de basılır. Başka bir barındırmada
             bileşen `/_vercel/insights/script.js` çekmeye çalışıyor, o adres
             orada yok ve script 404'le sessizce ölüyor — ekranda hiçbir belirti

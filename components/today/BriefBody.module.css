@@ -7,6 +7,11 @@
 .toggle:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 .disclosure[open] { margin-top:0; padding-bottom:54px; }
 .disclosure[open] > .toggle { position:absolute; bottom:0; left:0; }
+/* Açılınca dibe taşınan düğme kaydırma çapası OLAMAZ: Safari 27 onu izleyip
+   okuyucuyu metnin sonuna fırlatıyordu (30 Eylül). Asıl koruma etkileşim
+   düzeyinde (`components/layout/ExpandInPlace.tsx`); bu, JS gelmeden önceki
+   güvence. */
+.toggle { overflow-anchor:none; }
 @media(prefers-reduced-motion:reduce) { .toggle { transition:none; } }
 
 /* ZAMAN RAYI (26 Eylül) — kartta girişten sonraki paragraflar. Solda ince

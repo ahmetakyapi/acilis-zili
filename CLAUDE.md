@@ -418,6 +418,13 @@ eklemeden önce bu paragraf kadar sağlam bir gerekçe yazılabiliyor mu diye ba
 - **Sayfa içi filtre ve sıralama bağlantıları `scroll={false}` ister.** App
   Router her gezinmede en üste kaydırıyor; tablonun ortasında sıralamayı
   değiştiren okuyucu sayfanın başına fırlıyordu.
+- **Katlama bastığın yerde açılır.** İki ayrı sıçrama vardı (30 Eylül):
+  Safari 27'nin yeni kaydırma çapalaması, açılınca dibe taşınan düğmeyi
+  izleyip okuyucuyu metnin sonuna atıyordu (bülten kartı); JS'siz onay
+  kutusu katlamalarında da etikete basınca odak kabın BAŞINDAKİ gizli
+  kutuya gidip sayfayı ~500 piksel yukarı çekiyordu. Koruma
+  `components/layout/ExpandInPlace.tsx` (aç/kapa anında çapalama kapalı);
+  yeni bir `sr-only` onay kutusu düğmenin hizasına konur (`.foldInput`).
 - **Mobilde sabit katmanlar güvenli alanı kendi taşır** (`env(safe-area-inset-*)`).
   Sayfa `viewport-fit=cover` ile açılıyor: dolgu eklenmezse başlık çentiğin
   altında kalıyor.
