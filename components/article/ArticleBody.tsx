@@ -11,7 +11,7 @@ import {
 import type { Icon } from "@phosphor-icons/react";
 import { ArticleChart } from "./ArticleChart";
 import { CHART_RANGES, type ChartRange } from "@/lib/providers/types";
-import { cn, safeExternalUrl, titleCaseLabel } from "@/lib/utils";
+import { cn, safeExternalUrl, spaceRanges, titleCaseLabel } from "@/lib/utils";
 import type { AutoLinker } from "@/lib/autolink";
 
 /* ==========================================================================
@@ -617,7 +617,8 @@ export function parseBlocks(markdown: string, locale: string): Block[] {
           label,
           items: body.map((row) => {
             const [value, ...rest] = row.split("|").map((c) => c.trim());
-            return { value, note: rest.join(" · ") };
+            /* Aralık tiresine ince boşluk — gerekçe `spaceRanges`. */
+            return { value: spaceRanges(value), note: rest.join(" · ") };
           }),
         });
         continue;

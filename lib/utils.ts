@@ -109,7 +109,24 @@ const TIE_UNIT = /(\d)\s+(T|Mr|Mn|Bin|B|M|K|TL|USD|EUR|mlr|mn|bin|puan|pts|bps|k
 const TIE_MONEY = /(\S)\s+([$€₺])(?=$|[\s.,;:·)\]!?])/g;
 
 export function tieFigures(text: string): string {
-  return text.replace(TIE_UNIT, "$1\u00A0$2").replace(TIE_MONEY, "$1\u00A0$2");
+  return spaceRanges(text.replace(TIE_UNIT, "$1\u00A0$2").replace(TIE_MONEY, "$1\u00A0$2"));
+}
+
+/**
+ * ARALIK TİRESİNE NEFES (30 Eylül, sahibinin bildirimi).
+ *
+ * Rutinin yazdığı aralıklar bitişik geliyor: "50,6–51,9 Mr $". Manşet
+ * puntosunda (Mercek'in "Rakamlarla" bloğu, 32 punto) tire iki sayının
+ * arasında kayboluyor ve değer tek bir uzun sayı gibi okunuyordu. İki
+ * sayı arasındaki tireye iki yandan ince boşluk: öncesi BÖLÜNMEZ (tire
+ * satır başına düşmesin), sonrası bölünebilir (dar kartta aralık tirenin
+ * ardından kırılabilsin). Yalnızca rakam–rakam arasındaki tireye dokunur;
+ * eksi işareti ("−5"), "10-K" ya da kelime arası tire etkilenmez.
+ */
+const RANGE_DASH = /([\d%])\s*([–—-])\s*(?=[%$€₺]?\d)/g;
+
+export function spaceRanges(text: string): string {
+  return text.replace(RANGE_DASH, (_, left: string, dash: string) => `${left}\u202F${dash === "-" ? "–" : dash}\u2009`);
 }
 
 /**
