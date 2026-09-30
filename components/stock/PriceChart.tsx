@@ -755,6 +755,10 @@ export function PriceChart({
     // `param.point` kontrol EDİLMİYOR: imleç elle sürüldüğünde (dokunmatik
     // okuma) o alan gelmeyebiliyor, oysa okunacak bar `time` ile belli.
     const onCrosshair = (param: MouseEventParams) => {
+      /* Dokunuş henüz niyetini belli etmediyse ya da bir kaydırmaya
+         dönüştüyse kütüphanenin kendi imleci okuma AÇMIYOR (gerekçe
+         aşağıda, `touchIntent`). */
+      if (touchIntent === "pending" || touchIntent === "scroll") return;
       if (!param.time) {
         setHover(null);
         return;
@@ -796,6 +800,25 @@ export function PriceChart({
 
     let pressed = false;
     let readRaf = 0;
+    /* DOKUNUŞ NİYETİNİ BELLİ EDENE KADAR OKUMA YOK (30 Eylül).
+       Okuma her `pointerdown`da açılıyordu; telefonda sayfayı kaydıran
+       parmak grafiğin üstünden geçerken de önce ona değiyor. Tarayıcı
+       kaydırmayı devralıp `pointercancel` gönderdiğinde okuma açık
+       kalıyor ve sayfanın geri kalanında balon grafiğin ortasında asılı
+       duruyordu (sahibinin bildirimi, ekran görüntüsüyle).
+       Dokunmatikte artık üç yol var:
+         - tek dokunuş (eşiğin içinde kalkan parmak) → okuma açılıyor,
+         - yatay sürükleme → okuma parmağı izliyor (eski davranış),
+         - dikey hareket ya da `pointercancel` → kaydırma: okuma açılmıyor,
+           açıksa kapanıyor.
+       Fare değişmedi: üzerine gelme ve basılı sürükleme aynen okuyor. */
+    let touchIntent: "pending" | "scrub" | "scroll" | null = null;
+    let touchStart = { x: 0, y: 0 };
+    const INTENT_SLOP = 8;
+    const clearReading = () => {
+      chart.clearCrosshairPosition();
+      setHover(null);
+    };
 
     /* TUZAK: `setCrosshairPosition` çağrısı, grafiğin AYNI olayı kendi
        içinde işlemesinden önce koşuyor. Kütüphane pointerdown'ı işlerken
@@ -816,18 +839,60 @@ export function PriceChart({
 
     const onPointerDown = (event: PointerEvent) => {
       pressed = true;
-      readSticky(event.clientX);
+      if (event.pointerType === "mouse") {
+        touchIntent = null;
+        readSticky(event.clientX);
+        return;
+      }
+      touchIntent = "pending";
+      touchStart = { x: event.clientX, y: event.clientY };
     };
     const onPointerMove = (event: PointerEvent) => {
-      if (pressed) readAtClientX(event.clientX);
+      // Fare geldiyse yarım kalmış bir dokunuş niyeti üzerine gelmeyi kilitlemesin.
+      if (event.pointerType === "mouse" && touchIntent !== null) touchIntent = null;
+      if (!pressed) return;
+      if (event.pointerType === "mouse" || touchIntent === "scrub") {
+        readAtClientX(event.clientX);
+        return;
+      }
+      if (touchIntent !== "pending") return;
+      const dx = Math.abs(event.clientX - touchStart.x);
+      const dy = Math.abs(event.clientY - touchStart.y);
+      if (dy > INTENT_SLOP && dy >= dx) {
+        touchIntent = "scroll";
+        clearReading();
+      } else if (dx > INTENT_SLOP) {
+        touchIntent = "scrub";
+        readSticky(event.clientX);
+      }
     };
-    const onPointerRelease = () => {
+    const onPointerRelease = (event: PointerEvent) => {
       pressed = false;
+      /* Tarayıcı hareketi kaydırma olarak devraldı: okuma kapanıyor.
+         Kütüphane imleci aynı olayda yeniden kurabildiği için temizlik bir
+         sonraki karede de tekrarlanıyor (`readSticky` ile aynı tuzak). */
+      if (event.type === "pointercancel" && touchIntent !== "scrub" && event.pointerType !== "mouse") {
+        clearReading();
+        requestAnimationFrame(clearReading);
+      }
+      /* TEK DOKUNUŞ BURADA TANINIYOR, `click`te değil: kütüphane
+         `touchend`de `preventDefault` çağırıyor ve dokunmatikte `click` hiç
+         gelmiyor (ölçüldü: yalnızca pointerdown + pointerup). Parmak eşiğin
+         içinde kalıp kalktıysa bu bir dokunuş — okuma açılıyor. */
+      if (event.type === "pointerup" && touchIntent === "pending") {
+        touchIntent = null;
+        readSticky(event.clientX);
+        return;
+      }
+      touchIntent = null;
     };
     /* Fare tarafında bazı tarayıcılar pointerdown'ı grafiğin kendi tıklama
        işleyicisinden SONRA teslim ediyor; click tek dokunuşu ikinci kez
        sabitliyor. Aynı bara ikinci kez yazmak zararsız. */
-    const onClick = (event: MouseEvent) => readSticky(event.clientX);
+    const onClick = (event: MouseEvent) => {
+      touchIntent = null;
+      readSticky(event.clientX);
+    };
     // Grafiğin dışına dokunulunca okuma kapanır, dönem özetine dönülür.
     const onOutsidePointerDown = (event: PointerEvent) => {
       if (container.contains(event.target as Node)) return;
