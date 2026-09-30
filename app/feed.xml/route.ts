@@ -72,11 +72,14 @@ export async function GET() {
   const locale = localeFromHeader(headerStore.get(LOCALE_HEADER)) ?? DEFAULT_LOCALE;
   const tr = locale === "tr";
 
-  /* Yayına kapalı ortamda (önizleme dağıtımları) besleme de kapalı: robots
-     zaten her şeyi engelliyor, besleme onu delerdi. */
-  if (!INDEXABLE) {
-    return new Response("not-found", { status: 404 });
-  }
+  /* YAYINA KAPALI ORTAMDA BESLEME AÇIK, İNDEKS KAPALI (30 Eylül). Burada
+     bir dönem 404 dönülüyordu ("robots zaten her şeyi engelliyor, besleme
+     onu delerdi"). Sonucu: `SITE_INDEXABLE=false` ile derlenen canlı kopyada
+     alt bilgideki RSS bağlantısı "not-found" sayfasına gidiyordu (sahibinin
+     bildirimi; aciliszili.com/feed.xml 404, ölçüldü). Besleme bir ARAMA
+     MOTORU yüzeyi değil, abone yüzeyi — okuyucunun Feedly'si robots.txt'e
+     bakmıyor. Gerekçenin asıl derdi olan indekslenme `X-Robots-Tag` ile
+     kapanıyor; besleme herkese açılıyor. */
 
   /* Veritabanı hatası beslemeyi ÇÖKERTMİYOR. İki sorgu try/catch dışındaydı
      ve Neon düştüğünde abonelerin okuyucusu 500 alıyordu; bazı RSS
@@ -165,6 +168,7 @@ ${items
       "Content-Type": "application/rss+xml; charset=utf-8",
       // Yarım saat: bülten günde bir, mercek günde en çok bir kez yazılıyor.
       "Cache-Control": "public, max-age=1800, s-maxage=1800",
+      ...(INDEXABLE ? {} : { "X-Robots-Tag": "noindex, nofollow" }),
     },
   });
 }

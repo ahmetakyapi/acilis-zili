@@ -98,6 +98,9 @@ export async function SiteFooter() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
+                    /* Besleme bir sayfa değil (XML döner): ön yükleme onu RSC
+                       yükü diye boşuna çekiyordu. Tıklama yine tam gezinme. */
+                    prefetch={link.href.endsWith(".xml") ? false : undefined}
                     /* Telefonda 44px: dizin bağlantıları 28px yüksekliğindeydi
                        ve alt bilgi ekranın en dibinde, başparmağın en zor
                        nişan aldığı yerde duruyor. Masaüstünde eski ölçü
