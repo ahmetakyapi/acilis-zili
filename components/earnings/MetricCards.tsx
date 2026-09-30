@@ -121,7 +121,20 @@ export function MetricNote({
   const toneKey = tone === "up" || tone === "down" ? tone : null;
   const toneClass = toneKey === "up" ? "text-up" : toneKey === "down" ? "text-down" : neutralClass;
   const signedIndex = parts.findIndex((part) => /^[▲▼+−]/.test(part));
-  if (signedIndex < 0) return <span className={toneClass}>{parts.join(" · ")}</span>;
+  /* `data-note-part` / `data-note-sep`: kapak telefonda parçaları alt
+     alta basıyor, ayracı gizliyor (EarningsReport.module.css). Kart
+     görünümü değişmiyor. */
+  if (signedIndex < 0)
+    return (
+      <span className={toneClass}>
+        {parts.map((part, index) => (
+          <Fragment key={index}>
+            {index > 0 && <span data-note-sep> · </span>}
+            <span data-note-part>{part}</span>
+          </Fragment>
+        ))}
+      </span>
+    );
 
   const sign = /^[▲+]/.test(parts[signedIndex]) ? "up" : "down";
   const conflict = toneKey !== null && toneKey !== sign;
@@ -129,16 +142,16 @@ export function MetricNote({
     <>
       {parts.map((part, index) => (
         <Fragment key={index}>
-          {index > 0 && !conflict && <span className={toneKey ? toneClass : neutralClass}> · </span>}
-          {index > 0 && conflict && " "}
+          {index > 0 && !conflict && <span data-note-sep className={toneKey ? toneClass : neutralClass}> · </span>}
+          {index > 0 && conflict && <span data-note-sep> </span>}
           {index === signedIndex ? (
-            <span className={sign === "up" ? "text-up" : "text-down"}>{part}</span>
+            <span data-note-part className={sign === "up" ? "text-up" : "text-down"}>{part}</span>
           ) : conflict ? (
-            <span className="inline-block rounded-xs bg-surface-elevated px-1.5 font-semibold text-body">
+            <span data-note-part className="inline-block rounded-xs bg-surface-elevated px-1.5 font-semibold text-body">
               {part}
             </span>
           ) : (
-            <span className={toneKey ? toneClass : neutralClass}>{part}</span>
+            <span data-note-part className={toneKey ? toneClass : neutralClass}>{part}</span>
           )}
         </Fragment>
       ))}

@@ -30,6 +30,33 @@ import { FactRail } from "./FactRail";
 import { VerdictStrip } from "./VerdictStrip";
 import { PLATE_LABEL, type Upside } from "./shared";
 
+/**
+ * KAPAK ETİKETİ: AD ÜSTTE, AYRINTI ALTTA (30 Eylül, sahibinin ekran
+ * görüntüsü). Etiketleri rutin yazıyor ve kapakta tek satırda duruyordu:
+ * "GAAP HBK (İade Hariç 6,60 $)" 390'da iki satıra kırılıyor, okuyucu
+ * kısaltmayı çözmek zorunda kalıyordu ("GAAP HBK falan ne"). Veriye
+ * dokunulmuyor, yalnızca gösterim bölünüyor:
+ *   - sondaki parantez alt satıra iniyor ("Gelir" / "4. Çeyrek"),
+ *   - muhasebe niteleyicisi (GAAP, Non-GAAP, Düzeltilmiş) alt satıra geçiyor,
+ *   - Türkçede "HBK" açık adıyla yazılıyor ("Hisse Başı Kâr").
+ * Sonuç: "Hisse Başı Kâr" · küçük satırda "GAAP · İade Hariç 6,60 $".
+ */
+const LABEL_QUALIFIER = /^(Non-GAAP|GAAP|Düzeltilmiş|Adjusted)\s+/i;
+function coverLabel(label: string, locale: string): { main: string; sub: string | null } {
+  let main = label.trim();
+  const parts: string[] = [];
+  const paren = /\s*\(([^)]+)\)\s*$/.exec(main);
+  if (paren) main = main.slice(0, paren.index).trim();
+  const qualifier = LABEL_QUALIFIER.exec(main);
+  if (qualifier) {
+    parts.push(qualifier[1]);
+    main = main.slice(qualifier[0].length).trim();
+  }
+  if (paren) parts.push(paren[1].trim());
+  if (locale === "tr") main = main.replace(/\bHBK\b/g, "Hisse Başı Kâr");
+  return { main: main || label, sub: parts.length > 0 ? parts.join(" · ") : null };
+}
+
 /** Bu uzunluğun üstündeki şirket adı bir kademe küçük manşetle yazılır. */
 const LONG_NAME_CHARS = 24;
 
@@ -404,7 +431,15 @@ export function ReportCover({
               <dl data-motion-stagger className={styles.coverLeadFacts}>
                 {coverMetrics.map((metric) => (
                   <div key={metric.label}>
-                    <dt>{tieFigures(metric.label)}</dt>
+                    {(() => {
+                      const label = coverLabel(metric.label, locale);
+                      return (
+                        <dt>
+                          {tieFigures(label.main)}
+                          {label.sub && <small className={styles.coverLabelSub}>{tieFigures(label.sub)}</small>}
+                        </dt>
+                      );
+                    })()}
                     <dd className="figure">{tieCurrency(metric.value)}</dd>
                     {metric.note && (
                       <dd className={styles.coverMetricNote}>
