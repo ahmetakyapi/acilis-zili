@@ -296,8 +296,16 @@
   .dashboard { grid-template-columns:minmax(0,1fr); }
   .dashboard > [data-col] { display:contents; }
   /* Telefonda okuma sırası: günün özeti, sektörler ve temalar, dünya,
-     hareketler, teknik görünüm, mercek, portföy (ya da Nabız), ölçüler (tahvil · makro),
-     takvim, listeler, bilanço, haber akışı, künye.
+     hareketler, teknik görünüm, mercek, portföy (ya da Nabız), bilanço
+     (bugün açıklayanlar · analizler), ölçüler (tahvil · makro), takvim,
+     listeler, haber akışı, künye.
+
+     BİLANÇOLAR NABZIN HEMEN ALTINDA (30 Eylül, sahibinin isteği). Bugün
+     açıklayanlar ve son analizler tahvil, makro, takvim ve favorilerin
+     ARDINDAYDI (13-14. sıra); telefonda ana içeriğe ancak dört ölçü
+     panelinden sonra varılıyordu. Masaüstünde ikisi zaten ana kolonda
+     Nabız yuvasının hemen altında duruyor; telefon sırası artık onunla
+     aynı.
 
      SIRA HER BÖLÜME AÇIKÇA YAZILIYOR. Değeri olmayan bir bölüm `order:0`
      alıyor ve düzleşmiş yığının EN BAŞINA, günün özetinin üstüne çıkıyor —
@@ -328,13 +336,13 @@
   .dashboard [data-home-section="stories"] { order:6; }
   /* Portföy ya da Nabız yuvası Mercek'in ardında, masaüstündeki sırayla aynı. */
   .dashboard [data-home-section="portfolio"] { order:7; }
-  .dashboard [data-home-section="yields"] { order:8; }
-  .dashboard [data-home-section="macro"] { order:9; }
-  .dashboard [data-home-section="schedule"] { order:10; }
-  .dashboard [data-home-section="week"] { order:11; }
-  .dashboard [data-home-section="watchlist"] { order:12; }
-  .dashboard [data-home-section="earnings"] { order:13; }
-  .dashboard [data-home-section="analyses"] { order:14; }
+  .dashboard [data-home-section="earnings"] { order:8; }
+  .dashboard [data-home-section="analyses"] { order:9; }
+  .dashboard [data-home-section="yields"] { order:10; }
+  .dashboard [data-home-section="macro"] { order:11; }
+  .dashboard [data-home-section="schedule"] { order:12; }
+  .dashboard [data-home-section="week"] { order:13; }
+  .dashboard [data-home-section="watchlist"] { order:14; }
   /* SEKTÖRLER VE TEMALAR GÜNÜN ÖZETİNİN HEMEN ALTINDA (29 Eylül, sahibinin
      isteği). Bir dönem analizlerin ardındaydı ve 10.725 piksellik sayfanın
      7.210. pikselinde duruyordu (390, ölçüldü); 28 Eylül'de hareketlerin
@@ -349,7 +357,7 @@
      bilançolarından ve analizlerden önce durması, sayfanın asıl içeriğine
      varmadan bir girişle karşılaşmak demekti. Giriş yapmış okuyucunun
      sırası değişmiyor — orada liste gerçekten onun listesi. */
-  .dashboard [data-home-section="watchlist"]:has(a[href$="/giris"]) { order:14; }
+  .dashboard [data-home-section="watchlist"]:has(a[href$="/giris"]) { order:15; }
 }
 
 /* TABLETTE İKİ KOLON (768–1023). Tek kolonda kahraman 768'de 683 piksel
@@ -379,7 +387,7 @@
   .dashboard :is([data-home-section="brief"],[data-home-section="stories"],[data-home-section="portfolio"],[data-home-section="earnings"],[data-home-section="analyses"],[data-home-section="texture"],[data-home-section="news"],[data-home-section="sources"]) { grid-column:1 / -1; }
   /* Teknik görünüm tablette favorilerle eş: yerleşim sırası öyle kuruluyor
      (yan yana duracak iki panel ardışık olmalı). */
-  .dashboard [data-home-section="technical"] { order:12; }
+  .dashboard [data-home-section="technical"] { order:14; }
   /* Favoriler bir davet satırıysa (giriş yok) sona iniyor ve teknik panel
      eşsiz kalıyor; o hâlde tam genişlikte. */
   .dashboard:has([data-home-section="watchlist"] a[href$="/giris"]) [data-home-section="technical"] { grid-column:1 / -1; }
