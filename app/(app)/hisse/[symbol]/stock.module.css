@@ -1026,3 +1026,34 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 :global(:root[data-theme="dark"]) .capLadderRun > i:not([data-self]) { background:color-mix(in oklab, var(--primary) 32%, transparent); }
 /* Sayaç dönerken pencere ±0,12em açık (RollingFigure); etiketle arası bir pay fazla. */
 .capFigures > div { gap:7px; }
+
+/* ---- PROFİL: İKİNCİ TUR (1 Ekim) — gerekçeler ProfileCard'da ---- */
+/* Endeks toplamındaki pay: değerin ikinci künyesi, vurgusu ton. */
+.capShare { color:var(--primary-ink); font-weight:650; }
+
+/* YAKIN PLAN: komşu kesimi kendi ölçeğinde; zemini bir kademe koyu ton,
+   üst kenarında büyütme oranı. Ölçek kırılması böylece gözle de ayrı. */
+.capLadder .capLadderRun[data-lens] { position:relative; padding:14px 4px 0; border-radius:8px 8px 0 0; background:var(--surface-sunken); }
+.capLadder .capLadderRun[data-lens]::after { content:attr(data-lens); position:absolute; top:2px; right:6px; color:var(--text-muted); font-size:9.5px; font-weight:700; letter-spacing:.02em; line-height:1; white-space:nowrap; }
+.capLadderNames .capLadderRun[data-lens-names] { padding-inline:4px; }
+.capLadder { height:60px; }
+
+/* KOMŞULAR: bir üst ve bir alt, farklarıyla; işaret oku CSS'te
+   (metin "Önde / Geride" diyor, ok yalnızca yön). */
+.capNeighbours { display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 12px; padding-top:9px; border-top:1px dashed var(--line); color:var(--text-body); font-size:12px; font-weight:600; }
+.capNeighbours > span { display:inline-flex; align-items:center; gap:5px; white-space:nowrap; }
+.capNeighbours > span::before { content:""; width:0; height:0; border-inline:4px solid transparent; }
+.capNeighbours > [data-dir="above"]::before { border-bottom:5px solid var(--text-muted); }
+.capNeighbours > [data-dir="below"]::before { border-top:5px solid var(--text-muted); }
+.capNeighbours > [data-dir="below"]:only-child, .capNeighbours > [data-dir="below"] { margin-left:auto; }
+
+/* 52 HAFTA: uçların altında uzaklık, uçla aynı hizada. Seçici `.bandEnds dd`
+   (değer, güçlü ton) kadar özgül olmalı, yoksa künye değer gibi basılıyor. */
+.bandEnds > div { flex-wrap:wrap; column-gap:6px; row-gap:1px; }
+.bandEnds .bandDistance { flex-basis:100%; color:var(--text-muted); font-size:11.5px; font-weight:600; }
+.bandEnds > div:last-child .bandDistance { text-align:right; }
+
+@media(max-width:639px) {
+  .capLadder { height:52px; }
+  .capNeighbours { font-size:11.5px; }
+}

@@ -40,7 +40,9 @@ const EDGE_SHARE = 35;
  *      yalnızca şerit; sayfa doğrudan kartlarla devam ediyor.
  *
  * Şerit girişi `clip-path` ile soldan açılıyor (opaklık yok, LCP
- * beklemiyor); hareketi azaltan okuyucu son kareyi görüyor.
+ * beklemiyor); hareketi azaltan okuyucu son kareyi görüyor. 1 Ekim: tek
+ * perde yerine DİLİM DİLİM — her dilim kendi sırasıyla (`--i`) açılıyor,
+ * pay sırası girişin kendisinden okunuyor (gerekçe CSS'te).
  */
 export function InvestorRoster({
   overview,
@@ -99,7 +101,7 @@ export function InvestorRoster({
                     data-rank={Math.min(index, STRIP_NAMED)}
                     data-rest={index >= STRIP_NAMED || undefined}
                     data-align={align}
-                    style={{ flexGrow: segment.value } as CSSProperties}
+                    style={{ flexGrow: segment.value, "--i": Math.min(index, STRIP_NAMED + 1) } as CSSProperties}
                     aria-label={`${segment.investor.name}, ${formatPercentPlain(pct, locale, 1)}`}
                   >
                     {pct >= INLINE_SHARE && (
@@ -139,7 +141,7 @@ export function InvestorRoster({
               <span
                 className={styles.capitalRestSegment}
                 data-rank={STRIP_NAMED}
-                style={{ flexGrow: restValue } as CSSProperties}
+                style={{ flexGrow: restValue, "--i": STRIP_NAMED } as CSSProperties}
                 aria-hidden
               />
             )}
@@ -156,6 +158,7 @@ export function InvestorRoster({
                 key={segment.investor.slug}
                 data-rank={index}
                 data-inline={share(segment.value) >= INLINE_NAME_SHARE || undefined}
+                style={{ "--i": index } as CSSProperties}
               >
                 <Link href={`/yatirimcilar/${segment.investor.slug}`} prefetch={false} className={styles.capitalItem}>
                   <Portrait investor={segment.investor} size="chip" />
@@ -165,7 +168,7 @@ export function InvestorRoster({
               </li>
             ))}
             {rest.length > 0 && (
-              <li data-rank={STRIP_NAMED} className={styles.capitalItem}>
+              <li data-rank={STRIP_NAMED} className={styles.capitalItem} style={{ "--i": STRIP_NAMED } as CSSProperties}>
                 <span className={styles.capitalRestDot} aria-hidden />
                 <span className={styles.capitalName}>{t.capitalRest.replace("{count}", String(rest.length))}</span>
                 <b className="numeral">{formatPercentPlain(share(restValue), locale, 0)}</b>

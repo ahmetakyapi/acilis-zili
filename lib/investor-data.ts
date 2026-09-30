@@ -328,7 +328,9 @@ const loadOverview = unstable_cache(
       trackedValue,
     };
   },
-  ["investors-overview-v2"],
+  /* v3 (1 Ekim): `crowdMoves` aynı yöndeki çift sayımı bırakıyor; eski
+     anahtarın önbelleği yedi kişiyi sekiz diye taşımaya devam ederdi. */
+  ["investors-overview-v3"],
   { revalidate: REVALIDATE_SECONDS, tags: [INVESTORS_TAG] },
 );
 

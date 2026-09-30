@@ -56,6 +56,9 @@
    görüldü). Köşe yalnızca seçili satırın tonunda kalıyor. */
 .compactRow:not([data-selected]) { border-radius:0; }
 .compactValue { display:flex; align-items:flex-end; gap:18px; text-align:right; }
+/* Bilanço ölçüleri kendi ızgarasında ve sola yaslı: ad, değer ve künye
+   satırları iki sütunda aynı hatta biter (`FlowFigures`). */
+.compactValue[data-figures] { text-align:left; }
 .compactPair { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
 .compactValue small { color:var(--text-muted); font-size:12px; }
 .compactValue b { color:var(--text-strong); font-size:17px; line-height:1.2; font-weight:650; letter-spacing:-.03em; }
@@ -161,9 +164,9 @@
 .memberIdentity { display:flex; align-items:center; gap:10px; }
 .memberIdentity > div { display:flex; min-width:0; flex-direction:column; gap:3px; }
 .memberIdentity strong { color:var(--text-strong); font-size:14px; font-weight:650; }
-.memberNumbers { display:flex; flex-wrap:wrap; gap:16px; }
-.memberNumbers dt { color:var(--text-muted); font-size:12px; }
-.memberNumbers dd { margin-top:3px; color:var(--text-strong); font-size:16px; line-height:1.35; font-weight:650; letter-spacing:-.03em; overflow-wrap:anywhere; }
+/* Şirketin sayıları `FlowFigures`ten (beklenti, açıklanan, sürpriz); buradaki
+   dt/dd kuralları kalktı — bileşenin kendi ızgarasıyla yarışıyorlardı. */
+.memberNumbers { min-width:0; }
 .detailLink { grid-column:3; display:flex; align-items:center; gap:6px; min-height:34px; color:var(--text-body); font-size:13px; font-weight:600; }
 .detailLink[data-analysis="true"] { color:var(--primary-ink); }
 .detailLink svg { flex-shrink:0; transition:transform .2s; }
@@ -223,6 +226,7 @@
   .compactValue { grid-column:2; flex-direction:row; flex-wrap:wrap; align-items:baseline; justify-content:flex-start; gap:4px 18px; }
   .compactPair { flex-direction:row; align-items:baseline; gap:8px; }
   .compactValue:empty { display:none; }
+  .compactValue[data-figures] { display:block; min-width:0; }
   /* BAĞLANTI DÜĞME DEĞİL METİN (30 Eylül, telefon denetimi). 44 piksellik
      çerçeveli düğme her olayın altında ayrı bir kat açıyordu: iki olaylık
      akışta kartın üçte biri iki düğmeydi ve olayın kendisinden ağır

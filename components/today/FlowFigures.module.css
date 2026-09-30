@@ -1,0 +1,45 @@
+/* Bilanço satırının ölçüleri — gerekçe `FlowFigures.tsx`.
+
+   IZGARA: sütunlar yan yana akıyor (`grid-auto-flow: column`), her ölçü üç
+   satırlık bir alt ızgara (`subgrid`). Ad, değer ve künye satırları iki
+   sütunda aynı hatta; bir sütunun künyesi yoksa (EPS açıklandı, gelir
+   gelmedi) ötekinin sayısı yine aynı yükseklikte duruyor.
+
+   Ayraç KUTU DEĞİL kıl çizgi: sonuç panelindeki `.results` ile aynı dil
+   (DayFlow.module.css), okunacak sayı açıklanansa onun çizgisi mavi. */
+
+.figures { display:grid; grid-auto-flow:column; grid-auto-columns:max-content; grid-template-rows:auto auto auto; column-gap:18px; min-width:0; margin:0; }
+.figure { display:grid; grid-row:1 / span 3; grid-template-rows:subgrid; row-gap:2px; min-width:0; padding-left:12px; border-left:1px solid var(--line); }
+.figure[data-released] { border-left:2px solid var(--primary); }
+.figure dt { align-self:end; color:var(--text-muted); font-size:12px; line-height:1.35; }
+.figure dd { margin:0; }
+
+/* Birim sayıdan KOPMAZ: "54,2 Mr $" tek parça (CLAUDE.md "ölçü ızgarası").
+   Sürpriz sayının yanında; dar sütunda sayının altına iner, sayı bölünmez. */
+.value { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 8px; }
+.value b { color:var(--text-strong); font-size:17px; line-height:1.25; font-weight:650; letter-spacing:-.03em; white-space:nowrap; }
+/* Açıklanmamış ölçü bir TAHMİN: aynı puntoda ama bir ton soluk, açıklanan
+   sayıyla aynı ağırlıkta okunmasın. */
+.figure:not([data-released]) .value b { color:var(--text-body); font-weight:600; }
+
+/* Sürpriz rengi yalnızca yönden; eşitse nötr. */
+.surprise { color:var(--text-muted); font-size:13px; font-weight:700; letter-spacing:-.01em; white-space:nowrap; }
+.surprise[data-dir="beat"] { color:var(--up); }
+.surprise[data-dir="miss"] { color:var(--down); }
+
+.foot { color:var(--text-muted); font-size:12px; line-height:1.35; }
+.foot span { color:var(--text-body); font-weight:600; white-space:nowrap; }
+
+/* Sonuç panelindeki şirket satırı: sayılar bir kademe küçük (16), satırın
+   geri kalanıyla aynı ölçek. */
+.figures[data-variant="detail"] .value b { font-size:16px; }
+
+@media (max-width:767px) {
+  /* Telefonda ölçüler adın altında, satırın kalan genişliğini ikiye bölüyor
+     (390'da ~250 piksel). Uzun ad ("Hisse Başına Kâr Beklentisi") iki
+     satıra kırılabiliyor; alt ızgara öteki sütunun sayısını aynı hatta
+     tutuyor. */
+  .figures { grid-auto-columns:minmax(0,1fr); column-gap:12px; }
+  .figure { padding-left:10px; }
+  .value b { font-size:16px; }
+}

@@ -8,6 +8,7 @@ import {
   currentWeekStart,
   defaultWeekStart,
   epsSurprise,
+  revenueSurprise,
   SCHEDULE_DAY_MAX,
   splitScheduleDay,
   tileTier,
@@ -144,6 +145,20 @@ test("epsSurprise: yön, negatif beklenti, yuvarlama payı ve sıfıra yakın pa
   assert.deepEqual(epsSurprise(0.44, 0.4444), { direction: "inline", ratio: null });
   // 0,0031 beklenti: yön var, yüzde yok.
   assert.deepEqual(epsSurprise(5.11, 0.0031), { direction: "beat", ratio: null });
+});
+
+test("revenueSurprise: oransal eşitlik bandı, sıfır ve negatif beklenti", () => {
+  assert.equal(revenueSurprise(null, 1e9), null);
+  assert.equal(revenueSurprise(1e9, null), null);
+  // CTAS, 22 Eylül: 3,014 Mr açıkladı, 3,044 Mr bekleniyordu.
+  const miss = revenueSurprise(3013980000, 3043574328);
+  assert.equal(miss?.direction, "miss");
+  assert.ok(Math.abs((miss?.ratio ?? 0) + 0.0097) < 0.001);
+  assert.equal(revenueSurprise(54.2e9, 52.6e9)?.direction, "beat");
+  // Binde yarımın altı "%0,0" yazılırdı: eşit, yüzde yok.
+  assert.deepEqual(revenueSurprise(100.04e9, 100e9), { direction: "inline", ratio: null });
+  assert.equal(revenueSurprise(1e9, 0), null);
+  assert.equal(revenueSurprise(1e9, -5e8), null);
 });
 
 const sched = (symbol: string, extra: Partial<ScheduleRow> = {}): ScheduleRow => ({

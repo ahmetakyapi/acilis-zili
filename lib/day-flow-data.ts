@@ -8,11 +8,15 @@ import { displayOffsets, zoneTag } from "./session-clock";
 import { getDictionary, type Locale } from "./i18n";
 import { withLocale } from "./i18n/routing";
 import { analysisHref } from "./analysis";
-import { formatEventValue, formatMoneyCompact, formatPrice } from "./utils";
+import { formatEventValue, formatMoneyCompact, formatPercent, formatPrice } from "./utils";
+import { epsSurprise, revenueSurprise, type Surprise } from "./earnings-week";
 import { isSpotlight } from "./spotlight";
 import { getEarningsCalendar } from "./providers/finnhub";
 import { getReleasedObservation } from "./providers/fred";
-import { earningsStatus, eventFamily, groupStatus, hasActual, type DayFlowSnapshot, type FlowEvent, type FlowMember } from "./day-flow";
+import { earningsStatus, eventFamily, groupStatus, hasActual, type DayFlowSnapshot, type FlowEvent, type FlowMember, type FlowSurprise } from "./day-flow";
+
+/** Sürprizin yazımı haftalık takvimle aynı: bir ondalık (`WeekSchedule`). */
+const SURPRISE_DIGITS = 1;
 
 /** One source for SSR and polling. GET reads providers, never mutates the DB. */
 export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayFlowSnapshot> {
@@ -100,13 +104,28 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
     // A missing value never erases an already confirmed database result.
     const eps = providerRow?.epsActual ?? row.epsActual;
     const revenue = providerRow?.revenueActual ?? row.revenueActual;
+    const epsEstimate = providerRow?.epsEstimate ?? row.epsEstimate;
+    const revenueEstimate = providerRow?.revenueEstimate ?? row.revenueEstimate;
     const hour = providerRow?.hour ?? row.hour ?? "unknown";
+    /* PARA BİRİMİ ŞİRKETİN ANA BORSASINDAN. Satır `currency: true` ile her
+       sayıyı dolar basıyordu; sağlayıcının tahmin ve sonuçları ana borsanın
+       parasında geliyor (gerekçe `EarningsCalendar` → `cardFigures`). `||`,
+       `??` değil: `symbols.currency` boş dize olabiliyor. */
+    const money = { currency: info?.currency || true } as const;
+    const code = info?.currency || null;
+    const surpriseOf = (value: Surprise | null): FlowSurprise | undefined => value
+      ? { direction: value.direction, pct: value.ratio === null ? undefined : formatPercent(value.ratio * 100, locale, SURPRISE_DIGITS) }
+      : undefined;
     const member: FlowMember = {
       symbol: row.symbol, logoUrl: info?.logoUrl ?? null, watched: watchedSet.has(row.symbol),
       status: earningsStatus(eps, revenue, !!analysis),
       href: withLocale(analysis ? analysisHref(row.symbol, analysis.period) : `/hisse/${row.symbol}`, locale),
-      eps: hasActual(eps) ? formatPrice(eps!, locale, { currency: true }) : undefined,
-      revenue: hasActual(revenue) ? formatMoneyCompact(revenue!, locale) : undefined,
+      eps: hasActual(eps) ? formatPrice(eps!, locale, money) : undefined,
+      revenue: hasActual(revenue) ? formatMoneyCompact(revenue!, locale, code) : undefined,
+      epsEstimate: hasActual(epsEstimate) ? formatPrice(epsEstimate!, locale, money) : undefined,
+      revenueEstimate: hasActual(revenueEstimate) ? formatMoneyCompact(revenueEstimate!, locale, code) : undefined,
+      epsSurprise: hasActual(eps) ? surpriseOf(epsSurprise(eps, epsEstimate)) : undefined,
+      revenueSurprise: hasActual(revenue) ? surpriseOf(revenueSurprise(revenue, revenueEstimate)) : undefined,
     };
     byWindow.set(hour, [...(byWindow.get(hour) ?? []), member]);
   }

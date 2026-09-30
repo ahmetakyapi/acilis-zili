@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { GuideHint } from "@/components/article/GuideHint";
 import { PageShare } from "@/components/article/PageShare";
+import { InvestorBalance } from "@/components/investors/InvestorBalance";
 import { InvestorCard } from "@/components/investors/InvestorCard";
 import { MoversBoard } from "@/components/investors/MoversBoard";
 import { InvestorRoster } from "@/components/investors/InvestorRoster";
@@ -41,6 +42,10 @@ export const generateMetadata = pageMetadata({
  *      dönen sayı) ve sağda portre mozaiği — her karo o kişinin sayfası.
  *   2. Şerit: bu çeyreğin hareketleri — aynı hisseye aynı yönde giden
  *      yatırımcılar ("META: 4 Artırdı").
+ *   2b. Denge (1 Ekim): aynı çeyrek bu kez KİŞİ başına — her yatırımcının
+ *      pozisyon hareketleri alım ve satım yönüne bölünmüş tek bir şerit,
+ *      portre sınırda ("Kim Alıyor, Kim Satıyor", `InvestorBalance`).
+ *      Hisse şeridinden sonra: önce neye gidildi, sonra kim gitti.
  *   3. Kartlar: portre, portföy değeri, en büyük pozisyonların ağırlık
  *      şeridi ve logo mozaiği, çeyreğin hareket sayıları. Kongre kartı ayrı
  *      türde: son işlemler, tutar aralığıyla.
@@ -105,6 +110,7 @@ export default async function InvestorsPage() {
       {overview ? (
         <>
           <MoversBoard movers={overview.movers} known={known} locale={locale} t={ti} />
+          <InvestorBalance overview={overview} locale={locale} t={ti} />
           {/* Şirket kartı: mozaik logoları, kongre işlemleri ve hareket
               satırları. Yalnızca sembolü tabloda bilinenler; kotasyonu kart
               kendisi soruyor, akışla iniyor (sayfanın geri kalanı fiyat

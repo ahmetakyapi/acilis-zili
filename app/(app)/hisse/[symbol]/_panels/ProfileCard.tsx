@@ -23,6 +23,14 @@ const LADDER_SIDE = 4;
 const LADDER_TAIL = 2;
 /** Sıfıra yakın bir sütun yine de çizgi olarak görünsün (yüzde). */
 const LADDER_MIN_SHARE = 3;
+/** Yakın plan en az bu kadar büyütüyorsa açılır. */
+const LENS_MIN_ZOOM = 3;
+/** Mercekteki en uzun sütun kabın bu oranı; üstte ×N etiketine yer kalıyor. */
+const LENS_HEADROOM = 0.72;
+/** Endeks payı küçük şirkette de okunur kalsın (0,04 → iki basamak). */
+const SHARE_DIGITS_SMALL = 2;
+const SHARE_DIGITS_LARGE = 1;
+const SHARE_SMALL_BELOW = 1;
 /** Sıra sayacı değerin ardından dönsün. */
 const RANK_ROLL_DELAY_MS = 220;
 
@@ -121,23 +129,77 @@ export async function ProfileCard({
     const ranked = [...others, { symbol, marketCap }].sort(
       (a, b) => (b.marketCap as number) - (a.marketCap as number),
     );
-    const selfIndex = rank - 1;
+    /* Eşit değerli şirketler varsa `rank` (kesin büyükler + 1) ile dizideki
+       yer ayrışabilir; pencere dizideki gerçek yerden kuruluyor. */
+    const selfIndex = ranked.findIndex((row) => row.symbol === symbol);
     const windowOf = (from: number, to: number) =>
       ranked.slice(Math.max(0, from), Math.min(ranked.length, to));
     const contiguous = selfIndex < LADDER_SIZE - LADDER_TAIL;
-    const ladder = (contiguous
-      ? [windowOf(0, LADDER_SIZE)]
-      : [windowOf(0, LADDER_HEAD), windowOf(selfIndex - LADDER_SIDE, selfIndex + LADDER_SIDE + 1)]
-    ).map((segment) =>
-      segment.map((row) => ({
-        symbol: row.symbol,
-        value: row.marketCap as number,
-        share: (row.marketCap as number) / leaderCap,
-        self: row.symbol === symbol,
-      })),
-    );
-    return { rank, total: pool.length, leader: rank === 1 ? null : leader, share: marketCap / leaderCap, ladder };
+    const toBar = (row: (typeof ranked)[number], scale: number) => ({
+      symbol: row.symbol,
+      value: row.marketCap as number,
+      share: (row.marketCap as number) / scale,
+      self: row.symbol === symbol,
+    });
+    /* YAKIN PLAN (1 Ekim). Kopuk pencerede komşular en büyüğe oranla
+       çiziliyordu ve 43. sıradaki SNDK'da sekiz sütunun hepsi taban
+       çizgisine yapışıktı (sahibinin ekran görüntüsü): "nerede duruyor"
+       sorusunun cevabı tam da okunamayan kısımdaydı. Komşu kesimi artık
+       KENDİ ölçeğinde, ayrı tonlu bir mercekte ve büyütme oranı üstünde
+       yazılı (×N) — ölçek kırılması saklanmıyor, adıyla söyleniyor.
+       Büyütme LENS_MIN_ZOOM'un altındaysa mercek açılmıyor: iki kat
+       büyütme okumayı değiştirmiyor, yalnızca bir kural daha ekliyor. */
+    const neighbours = contiguous
+      ? []
+      : windowOf(selfIndex - LADDER_SIDE, selfIndex + LADDER_SIDE + 1);
+    const lensMax = Math.max(0, ...neighbours.map((row) => row.marketCap as number));
+    const lensZoom = lensMax > 0 ? leaderCap / (lensMax / LENS_HEADROOM) : 1;
+    const lens = !contiguous && lensZoom >= LENS_MIN_ZOOM ? lensZoom : null;
+    const ladder = contiguous
+      ? [windowOf(0, LADDER_SIZE).map((row) => toBar(row, leaderCap))]
+      : [
+          windowOf(0, LADDER_HEAD).map((row) => toBar(row, leaderCap)),
+          neighbours.map((row) => toBar(row, lens ? leaderCap / lens : leaderCap)),
+        ];
+    /* KOMŞULAR (1 Ekim). Sıra tek başına "9." diyor; bir üstteki şirketle
+       arada ne kadar değer olduğunu söylemiyordu — sıranın ne kadar
+       sağlam olduğu tam o farkta. Bir üst ve bir alt, farklarıyla. */
+    const neighbourAt = (index: number) => {
+      const row = ranked[index];
+      if (!row || index === selfIndex) return null;
+      return { rank: index + 1, symbol: row.symbol, gap: Math.abs((row.marketCap as number) - marketCap) };
+    };
+    /* ENDEKS TOPLAMINDAKİ PAY — havuzun piyasa değerleri toplamına oran.
+       Endeksin resmî ağırlığı DEĞİL (o serbest dolaşıma göre düzeltiliyor);
+       etiket "toplamdaki pay" diyor, "ağırlık" demiyor. */
+    const poolTotal = ranked.reduce((sum, row) => sum + (row.marketCap as number), 0);
+    return {
+      rank,
+      total: pool.length,
+      leader: rank === 1 ? null : leader,
+      share: marketCap / leaderCap,
+      ladder,
+      lens,
+      above: neighbourAt(selfIndex - 1),
+      below: neighbourAt(selfIndex + 1),
+      poolShare: poolTotal > 0 ? (marketCap / poolTotal) * 100 : null,
+    };
   })();
+  /* DİP VE ZİRVEDEN UZAKLIK (1 Ekim). "Bant İçinde %73" fiyatın yerini
+     söylüyor ama iki ucun ne kadar uzakta olduğunu söylemiyordu; SNDK'da
+     dip 94 $, fiyat 1.735 $ — yüzde bin yedi yüzlük bir yol, bant
+     konumunda görünmüyor. Yüzdeler uca göre: dipten yükseliş dibe,
+     zirveden düşüş zirveye oran (bir yatırımcının "zirveden %26 aşağıda"
+     cümlesinin anlamı bu). Yalnızca ray çizildiğinde (dolar cinsinden
+     fiyat banda aitse); ADR'de fiyat ile uçlar farklı para biriminde. */
+  const bandPrice = quoteForCap.ok ? quoteForCap.data.price : null;
+  const bandDistance =
+    band && band.onRail && bandPrice !== null && band.low > 0 && band.high > 0
+      ? {
+          fromLow: ((bandPrice - band.low) / band.low) * 100,
+          fromHigh: ((band.high - bandPrice) / band.high) * 100,
+        }
+      : null;
   const about = await describeSymbol(symbol, locale);
   const websiteHref = safeExternalUrl(profile.weburl);
 
@@ -284,6 +346,21 @@ export async function ProfileCard({
                 <RollingFigure value={formatMoneyCompact(marketCap, locale)} />
               </dd>
               {liveCap && <dd className={styles.capNote}>{t.stock.capLiveNote}</dd>}
+              {rankInfo?.poolShare != null && (
+                <dd className={cn("numeral", styles.capNote, styles.capShare)}>
+                  {(rankPool
+                    ? t.stock.capIndexShare.replace("{index}", rankPool.name)
+                    : t.stock.capTrackedShare
+                  ).replace(
+                    "{value}",
+                    formatPercentPlain(
+                      rankInfo.poolShare,
+                      locale,
+                      rankInfo.poolShare < SHARE_SMALL_BELOW ? SHARE_DIGITS_SMALL : SHARE_DIGITS_LARGE,
+                    ),
+                  )}
+                </dd>
+              )}
             </div>
             {rankInfo && (
               <div className={styles.capRankCell}>
@@ -310,7 +387,13 @@ export async function ProfileCard({
                   gelen için `title` adı ve değeri söylüyor. */}
               <span aria-hidden className={styles.capLadder}>
                 {rankInfo.ladder.map((segment, si) => (
-                  <span key={si} className={styles.capLadderRun} data-gap={si > 0 || undefined} data-motion-stagger>
+                  <span
+                    key={si}
+                    className={styles.capLadderRun}
+                    data-gap={si > 0 || undefined}
+                    data-lens={si > 0 && rankInfo.lens ? t.stock.capLens.replace("{n}", Math.round(rankInfo.lens).toLocaleString(locale)) : undefined}
+                    data-motion-stagger
+                  >
                     {segment.map((bar, bi) => (
                       <i
                         key={bar.symbol}
@@ -334,7 +417,7 @@ export async function ProfileCard({
                   taşıyor. */}
               <span aria-hidden className={styles.capLadderNames}>
                 {rankInfo.ladder.map((segment, si) => (
-                  <span key={si} className={styles.capLadderRun} data-gap={si > 0 || undefined}>
+                  <span key={si} className={styles.capLadderRun} data-gap={si > 0 || undefined} data-lens-names={si > 0 && rankInfo.lens ? true : undefined}>
                     {segment.map((bar) => (
                       <b key={bar.symbol} data-self={bar.self || undefined}>
                         {bar.symbol}
@@ -355,6 +438,26 @@ export async function ProfileCard({
                       : t.stock.capLeaderSelf}
                 </span>
               </span>
+              {(rankInfo.above || rankInfo.below) && (
+                <span className={styles.capNeighbours}>
+                  {rankInfo.above && (
+                    <span className="numeral" data-dir="above">
+                      {t.stock.capAbove
+                        .replace("{rank}", rankInfo.above.rank.toLocaleString(locale))
+                        .replace("{symbol}", rankInfo.above.symbol)
+                        .replace("{value}", formatMoneyCompact(rankInfo.above.gap, locale))}
+                    </span>
+                  )}
+                  {rankInfo.below && (
+                    <span className="numeral" data-dir="below">
+                      {t.stock.capBelow
+                        .replace("{rank}", rankInfo.below.rank.toLocaleString(locale))
+                        .replace("{symbol}", rankInfo.below.symbol)
+                        .replace("{value}", formatMoneyCompact(rankInfo.below.gap, locale))}
+                    </span>
+                  )}
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -451,10 +554,20 @@ export async function ProfileCard({
             <div>
               <dt>{t.chart.periodLow}</dt>
               <dd className="numeral">{formatPrice(band.low, locale, { currency: band.para })}</dd>
+              {bandDistance && (
+                <dd className={cn("numeral", styles.bandDistance)}>
+                  {t.stock.bandFromLow.replace("{value}", formatPercentPlain(bandDistance.fromLow, locale, 0))}
+                </dd>
+              )}
             </div>
             <div>
               <dt>{t.chart.periodHigh}</dt>
               <dd className="numeral">{formatPrice(band.high, locale, { currency: band.para })}</dd>
+              {bandDistance && (
+                <dd className={cn("numeral", styles.bandDistance)}>
+                  {t.stock.bandFromHigh.replace("{value}", formatPercentPlain(bandDistance.fromHigh, locale, 0))}
+                </dd>
+              )}
             </div>
           </dl>
         </div>

@@ -303,6 +303,17 @@ export function crowdMoves(
     }
     for (const sold of diff.sold) push(entry(sold.cusip, sold.issuer).exited, slug);
   }
+  /* AYNI YÖNDE İKİ LİSTEDE BİR KİŞİ (1 Ekim). İki hisse sınıfı tek
+     anahtara inince bir yatırımcı GOOG'u yeni açıp GOOGL'u artırmış
+     olabiliyor ve hem "Yeni Aldı" hem "Artırdı" sayılıyordu: GOOGL satırı
+     yedi kişiyi sekiz diye topluyor, portre yığınında aynı yüz iki kez
+     duruyordu (React "aynı anahtar" uyarısı, `cathie-wood`). Şirket
+     düzeyinde doğrusu artırmak: elinde zaten bir sınıfı vardı. Satışta
+     aynı mantık: bir sınıfı kapatıp ötekini tutan "Azalttı". */
+  for (const found of map.values()) {
+    found.opened = found.opened.filter((slug) => !found.added.includes(slug));
+    found.exited = found.exited.filter((slug) => !found.trimmed.includes(slug));
+  }
   return [...map.values()];
 }
 

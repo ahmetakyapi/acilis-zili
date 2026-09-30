@@ -12,6 +12,7 @@ import { clockOf, displayZone } from "@/lib/session-clock";
 import { NO_VALUE } from "@/lib/utils";
 import { withLocale } from "@/lib/i18n/routing";
 import { onFlowSelect, publishFlow } from "./day-flow-store";
+import { FlowFigures } from "./FlowFigures";
 import styles from "./DayFlow.module.css";
 
 type Props = {
@@ -274,7 +275,16 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
                 § 1, adım 1b); yazıldığı olayda "Önceki"nin yerini
                 "Beklenti" alıyor. Geniş listedeki sonuç paneli üçünü de
                 basıyor. */}
-            {value ? (
+            {/* TEK ŞİRKETLİ BİLANÇODA GELİR VE EPS, BEKLENTİSİYLE (1 Ekim).
+                Satır yalnızca açıklanan EPS'yi yazıyordu; gelir ve
+                beklentiler veride vardı ama basılmıyordu (`FlowFigures`).
+                Çok şirketli pencerede sayılar sonuç panelinde, şirket
+                başına — satıra sığmaz. */}
+            {member && (member.eps || member.revenue || member.epsEstimate || member.revenueEstimate) ? (
+              <span className={styles.compactValue} data-figures>
+                <FlowFigures member={member} labels={labels} />
+              </span>
+            ) : value ? (
               <span className={styles.compactValue}>
                 <span className={styles.compactPair}><small>{valueLabel}</small><b className="numeral">{value}</b></span>
                 {event.actual && (event.forecast || event.previous) && (
@@ -358,7 +368,9 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
           {selected.note && <p className={styles.note}>{selected.note}</p>}
           {selected.members ? <div className={styles.members}>{selected.members.map((member) => <div key={member.symbol} className={styles.member}>
             <div className={styles.memberIdentity}><LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="sm" /><div><strong>{member.symbol}</strong><Status event={{ status: member.status, scheduledAt: selected.scheduledAt }} nowMs={nowMs} labels={labels} /></div></div>
-            {(member.revenue || member.eps) && <dl className={styles.memberNumbers}>{member.revenue && <div><dt>{labels.revenue}</dt><dd className="numeral">{member.revenue}</dd></div>}{member.eps && <div><dt>{labels.eps}</dt><dd className="numeral">{member.eps}</dd></div>}</dl>}
+            {/* Sonuç panelindeki şirket satırı da aynı ölçüleri basar: satır
+                ile panel aynı olayın iki farklı sayısını göstermesin. */}
+            {(member.revenue || member.eps || member.revenueEstimate || member.epsEstimate) && <div className={styles.memberNumbers}><FlowFigures member={member} labels={labels} variant="detail" /></div>}
             <Link href={member.href} className={styles.detailLink} data-analysis={member.status === "analyzed"}>{member.status === "analyzed" ? labels.readAnalysis : labels.viewCompany}<ArrowUpRight size={16} /></Link>
           </div>)}</div> : <>
             {(selected.actual || selected.forecast || selected.previous) && <dl className={styles.results}>{[[labels.actual, selected.actual], [labels.forecast, selected.forecast], [labels.previous, selected.previous]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd className="numeral">{value ?? NO_VALUE}</dd></div>)}</dl>}

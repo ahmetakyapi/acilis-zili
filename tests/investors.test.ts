@@ -277,6 +277,14 @@ test("crowd moves: a holder counts once when two share classes merge into one ke
   assert.equal(crowd.length, 1);
 });
 
+test("crowd moves: opening one share class while adding the other counts as added, once", () => {
+  const prev = [holding("A", 10, 10)];
+  const d = diffPeriods([holding("A", 20, 20), holding("C", 5, 5)], prev);
+  const crowd = crowdMoves([{ slug: "x", diff: d }], (c) => (c === "A" || c === "C" ? "GOOGL" : null));
+  const alphabet = crowd.find((e) => e.key === "GOOGL")!;
+  assert.deepEqual([alphabet.opened, alphabet.added], [[], ["x"]]);
+});
+
 /* ------------------------------------------------------------ OpenFIGI */
 
 test("OpenFIGI: class separator and CINS ids", () => {

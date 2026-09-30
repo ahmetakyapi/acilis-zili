@@ -1,5 +1,11 @@
 /** Serializable day-flow contract, shared by the server and interactive rail. */
 export type FlowStatus = "scheduled" | "released" | "analyzed";
+/** Açıklanan sayının beklentiye göre yeri; yüzde sunucuda biçimlenir. */
+export type FlowSurprise = {
+  direction: "beat" | "miss" | "inline";
+  /** "+%3,4" — beklenti bir sentin altındaysa ya da eşitse yok, yön kalır. */
+  pct?: string;
+};
 export type FlowMember = {
   symbol: string;
   logoUrl: string | null;
@@ -8,6 +14,15 @@ export type FlowMember = {
   href: string;
   eps?: string;
   revenue?: string;
+  /* BEKLENTİLER VE SÜRPRİZ (1 Ekim, sahibinin isteği). Satır yalnızca
+     açıklanan EPS'yi yazıyordu: açıklanmadan önce boş, açıklandıktan sonra
+     neyle kıyaslanacağı belirsiz bir sayı. Beklentiler bilanço takviminin
+     aynı satırından (`earnings_calendar`, sağlayıcı önce), sürpriz haftalık
+     takvimle aynı fonksiyondan (`epsSurprise`, `revenueSurprise`). */
+  epsEstimate?: string;
+  revenueEstimate?: string;
+  epsSurprise?: FlowSurprise;
+  revenueSurprise?: FlowSurprise;
 };
 export type FlowEvent = {
   id: string;
@@ -107,10 +122,15 @@ export function preserveConfirmedResults(previous: DayFlowSnapshot, next: DayFlo
       const restoreRevenue = !hasActual(member.revenue) && hasActual(oldMember.revenue);
       if (!restoreEps && !restoreRevenue) return member;
       retained = true;
+      /* Sürpriz sayısıyla birlikte korunur: geri getirilen EPS'nin yanında
+         sürprizi olmayan (ya da yeni snapshot'ın boş bıraktığı) bir satır,
+         aynı sonucu iki farklı hâlde gösterirdi. */
       return {
         ...member,
         eps: restoreEps ? oldMember.eps : member.eps,
         revenue: restoreRevenue ? oldMember.revenue : member.revenue,
+        epsSurprise: restoreEps ? oldMember.epsSurprise : member.epsSurprise,
+        revenueSurprise: restoreRevenue ? oldMember.revenueSurprise : member.revenueSurprise,
         // Yalnız sayıları sakla; yayından kalkan analizin bağlantısı ve
         // analyzed durumu önceki snapshot'tan asla geri taşınmaz.
         status: member.status === "analyzed" ? "analyzed" as const : "released" as const,

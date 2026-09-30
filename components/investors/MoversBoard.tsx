@@ -55,6 +55,13 @@ export function MoversBoard({
     ...movers.sells.map((entry) => entry.exited.length + entry.trimmed.length),
   );
   const empty = movers.buys.length === 0 && movers.sells.length === 0;
+  /* KARŞI YÖN (1 Ekim). Aynı hisse iki sütunda birden duruyorsa (GOOGL'u
+     yedi yatırımcı alırken beşi satıyor) her satır ötekinin kalabalığını
+     da söylüyor. YALNIZCA iki listede de varsa: listeler kesik (en çok
+     `MOVERS_LIMIT`, en az iki kişi), yani öteki listede yokluk "karşı
+     yönde kimse yok" demek değil — orada hiçbir şey basılmıyor. */
+  const buyCrowd = new Map(movers.buys.map((entry) => [entry.key, entry.opened.length + entry.added.length]));
+  const sellCrowd = new Map(movers.sells.map((entry) => [entry.key, entry.exited.length + entry.trimmed.length]));
 
   return (
     <Panel className={styles.moversPanel}>
@@ -81,6 +88,8 @@ export function MoversBoard({
               { count: entry.added.length, label: t.added, strong: false },
             ]}
             who={(entry) => [...entry.opened, ...entry.added]}
+            against={(entry) => sellCrowd.get(entry.key) ?? 0}
+            againstLabel={t.moversAgainstBuy}
             peak={peak}
             known={known}
             locale={locale}
@@ -95,6 +104,8 @@ export function MoversBoard({
               { count: entry.trimmed.length, label: t.trimmed, strong: false },
             ]}
             who={(entry) => [...entry.exited, ...entry.trimmed]}
+            against={(entry) => buyCrowd.get(entry.key) ?? 0}
+            againstLabel={t.moversAgainstSell}
             peak={peak}
             known={known}
             locale={locale}
@@ -113,6 +124,8 @@ function MoverColumn({
   entries,
   parts,
   who,
+  against,
+  againstLabel,
   peak,
   known,
   scale,
@@ -122,6 +135,8 @@ function MoverColumn({
   entries: CrowdEntry[];
   parts: (entry: CrowdEntry) => { count: number; label: string; strong: boolean }[];
   who: (entry: CrowdEntry) => string[];
+  against: (entry: CrowdEntry) => number;
+  againstLabel: string;
   peak: number;
   known: Record<string, SymbolMeta>;
   locale: string;
@@ -145,6 +160,7 @@ function MoverColumn({
           const counted = parts(entry).filter((part) => part.count > 0);
           const total = counted.reduce((sum, part) => sum + part.count, 0);
           const slugs = who(entry);
+          const opposite = against(entry);
           const investors = slugs.map((slug) => investorBySlug(slug)).filter((investor): investor is Investor => investor !== null);
           const shown = investors.slice(0, investors.length > PORTRAIT_SLOTS ? PORTRAIT_SLOTS - 1 : PORTRAIT_SLOTS);
           const body = (
@@ -179,6 +195,11 @@ function MoverColumn({
                     {part.label.replace("{count}", String(part.count))}
                   </span>
                 ))}
+                {opposite > 0 && (
+                  <span className={styles.moverPart} data-against>
+                    {againstLabel.replace("{count}", String(opposite))}
+                  </span>
+                )}
               </span>
               <span className={styles.moverFaces}>
                 {/* "+1" YERİNE PORTRE (28 Eylül): tek bir yatırımcı artıyorsa

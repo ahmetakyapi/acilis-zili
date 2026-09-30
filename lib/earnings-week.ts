@@ -383,6 +383,35 @@ export function epsSurprise(
   return { direction, ratio };
 }
 
+/**
+ * Gelirde "beklentiye eşit" bandı: oran olarak binde yarım. Sürpriz ekranda
+ * bir ondalıkla yazılıyor (`%0,0`); bu bandın içindeki sapma o yazımda
+ * sıfıra yuvarlanıyor ve "+%0,0" diye yeşil basılması, yuvarlamanın
+ * ürettiği bir farkı olay gibi göstermek olurdu. EPS'nin yarım sent
+ * toleransının gelirdeki karşılığı bu.
+ */
+export const REVENUE_INLINE_RATIO = 0.0005;
+
+/**
+ * Gelir sürprizi — `epsSurprise`in gelir karşılığı.
+ *
+ * Ayrı bir fonksiyon, çünkü iki büyüklüğün "eşit" tanımı farklı: EPS sentle
+ * açıklanıyor (mutlak tolerans), gelir milyarlarla (oransal tolerans). Gelir
+ * beklentisi sıfır ya da negatifse oran anlamsız; o zaman sürpriz yok.
+ */
+export function revenueSurprise(
+  actual: number | null | undefined,
+  estimate: number | null | undefined,
+): Surprise | null {
+  if (actual === null || actual === undefined || estimate === null || estimate === undefined) {
+    return null;
+  }
+  if (!(estimate > 0) || !Number.isFinite(actual)) return null;
+  const ratio = (actual - estimate) / estimate;
+  if (Math.abs(ratio) < REVENUE_INLINE_RATIO) return { direction: "inline", ratio: null };
+  return { direction: ratio > 0 ? "beat" : "miss", ratio };
+}
+
 /* ---------------------------------------------------------------------------
    Haftanın takvimi — gün gün tam liste
    --------------------------------------------------------------------------- */

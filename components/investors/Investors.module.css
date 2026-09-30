@@ -171,10 +171,23 @@
 .capitalName { font-weight:600; color:var(--text-strong); }
 .capitalItem b { font-weight:600; color:var(--text-muted); }
 a.capitalItem:hover .capitalName { color:var(--primary-ink); }
+/* DİLİM DİLİM (1 Ekim). Şerit tek bir perdeyle (`capital-draw`, bütün
+   şeride tek `clip-path`) açılıyordu: giriş "bir çubuk çizildi" diyordu,
+   "sermaye şu sırayla paylaşılmış" değil. Şimdi her dilim kendi sırasıyla
+   (`--i`, pay sırası; altıncıdan sonrası tek kademe) soldan açılıyor ve
+   içindeki portre/ad onunla birlikte kırpıktan çıkıyor. Hâlâ opaklık yok
+   (ilk ekran, LCP beklemiyor) ve yalnızca `clip-path`: yerleşim oynamıyor.
+   Toplam süre eskisiyle aynı bantta (~1,1 sn). `backwards`: bittiğinde
+   kırpma kalkıyor, dilimin üstünde açılan bilgi kartı kesilmiyor. */
 @media(prefers-reduced-motion:no-preference) {
-  .capitalBar { animation:capital-draw 1.1s var(--ease-brand) .2s backwards; }
+  .capitalSegment, .capitalRestSegment {
+    animation:capital-slice .7s var(--ease-brand) calc(.18s + var(--i, 0) * 70ms) backwards;
+  }
+  .capitalLegend > li { animation:capital-legend .6s var(--ease-brand) calc(.5s + var(--i, 0) * 40ms) backwards; }
 }
-@keyframes capital-draw { from { clip-path:inset(-80px 100% -8px 0 round 12px); } to { clip-path:inset(-80px 0 -8px 0 round 12px); } }
+@keyframes capital-slice { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0 0 0 0); } }
+/* Lejant dönüşümle, opaklıksız (ilk ekran): dilimin ardından yerine oturuyor. */
+@keyframes capital-legend { from { translate:0 6px; } to { translate:none; } }
 
 @media(hover:hover) and (pointer:fine) {
   .card:hover .initials { background:color-mix(in oklab, var(--primary) 16%, var(--surface-sunken)); }
@@ -285,6 +298,111 @@ a.capitalItem:hover .capitalName { color:var(--primary-ink); }
   a.moverRow:hover { background:var(--primary-tint); transform:translateX(2px); }
 }
 a.moverRow:active { scale:.99; }
+/* KARŞI YÖN (1 Ekim): aynı hisse öteki sütunda da varsa ("GOOGL: 7 alan,
+   5 satan") satırın dökümüne öteki yönün kalabalığı sessiz bir parça
+   olarak ekleniyor. Noktası karşı yönün rengi, metni sessiz: satırın yönü
+   değişmiyor, yalnızca tartışmalı olduğu söyleniyor. Son parça: dar
+   ekranda ilk o düşer (bkz. "SIĞMAYAN PARÇA… BÜTÜN DÜŞER"). */
+.moverPart[data-against] { font-weight:550; color:var(--text-muted); }
+.moverColumn[data-tone="up"] .moverPart[data-against]::before { background:var(--down); }
+.moverColumn[data-tone="down"] .moverPart[data-against]::before { background:var(--up); }
+
+/* ---- Kim alıyor, kim satıyor (1 Ekim) ------------------------------------
+   Gerekçe InvestorBalance.tsx. Eksen başlığı ve satırlar TEK sütun
+   tanımını paylaşıyor (`--balance-cols`): her satırın şeridi aynı x'te
+   başlayıp bitiyor, orta çizgiler üst üste tek bir dikey hat oluyor. */
+.balanceScore {
+  display:flex; flex-wrap:wrap; gap:10px 36px; margin:0; padding:16px 20px 18px; border-top:1px solid var(--line);
+}
+.balanceScore > div { display:flex; align-items:baseline; gap:10px; }
+.balanceScore dd { order:-1; font-size:clamp(30px, 3.2vw, 40px); line-height:1; letter-spacing:-.05em; font-weight:650; color:var(--text-strong); }
+.balanceScore dt { font-size:13px; font-weight:600; color:var(--text-body); }
+.balanceScore [data-tone="up"] dd { color:var(--up); }
+.balanceScore [data-tone="down"] dd { color:var(--down); }
+.balanceScore [data-tone="flat"] dd { color:var(--flat); }
+.balanceBody {
+  --balance-cols:minmax(0,236px) 44px minmax(0,1fr) 44px 108px;
+  padding:10px 12px 12px; border-top:1px solid var(--line);
+}
+.balanceAxis { display:grid; grid-template-columns:var(--balance-cols); column-gap:16px; padding:0 8px 6px; }
+.balanceAxisTrack {
+  grid-column:3; position:relative; display:flex; justify-content:space-between; gap:8px;
+  font-size:11.5px; font-weight:600; color:var(--text-muted); white-space:nowrap;
+}
+.balanceAxisTrack > span { display:inline-flex; align-items:center; gap:6px; }
+.balanceAxisTrack > [data-side="sell"]::before, .balanceAxisTrack > [data-side="buy"]::after {
+  content:""; width:8px; height:8px; border-radius:2px; background:var(--down);
+}
+.balanceAxisTrack > [data-side="buy"]::after { background:var(--up); }
+.balanceAxisTrack > [data-side="center"] { position:absolute; left:50%; translate:-50% 0; color:var(--text-body); }
+.balanceList { display:flex; flex-direction:column; }
+.balanceList > li + li { border-top:1px solid var(--line-soft); }
+.balanceRow {
+  display:grid; grid-template-columns:var(--balance-cols); align-items:center; column-gap:16px;
+  min-height:56px; padding:8px; border-radius:12px; transition:background .2s;
+}
+.balanceWho { display:flex; min-width:0; align-items:center; gap:10px; }
+.balanceId { display:flex; min-width:0; flex-direction:column; }
+.balanceId b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14px; font-weight:700; line-height:1.3; color:var(--text-strong); }
+.balanceId small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
+.balanceCount { font-size:14px; font-weight:700; line-height:1; }
+.balanceCount[data-side="sell"] { text-align:right; color:var(--down); }
+.balanceCount[data-side="buy"] { color:var(--up); }
+/* Şerit kendi genişliğinin kabı: düğümün kalkış kayması `cqw` ile
+   şeridin ölçüsünde (MotionExperience → travel). */
+.balanceTrack {
+  position:relative; height:8px; min-width:0; container-type:inline-size;
+  border-radius:4px; background:var(--surface-sunken);
+}
+/* Denge çizgisi: şeridin ortası, satırın boyunca. */
+.balanceTrack::before {
+  content:""; position:absolute; left:50%; top:-14px; bottom:-14px; width:0;
+  border-left:1px dashed var(--line-strong);
+}
+.balanceSell, .balanceBuy { position:absolute; top:0; bottom:0; display:flex; gap:1px; overflow:hidden; }
+.balanceSell { left:0; border-radius:4px 0 0 4px; }
+.balanceBuy { border-radius:0 4px 4px 0; }
+.balanceSell i, .balanceBuy i { display:block; min-width:0; flex:1 1 0; height:100%; }
+.balanceSell i { background:color-mix(in oklab, var(--down) 38%, transparent); }
+.balanceSell i[data-strong] { background:var(--down); }
+.balanceBuy i { background:color-mix(in oklab, var(--up) 38%, transparent); }
+.balanceBuy i[data-strong] { background:var(--up); }
+/* Düğüm: portre, sınırın tam üstünde. Ortalama `transform` ile DEĞİL
+   kenar payıyla: hareketi azaltan kural `[data-motion-draw]` öğelerinde
+   `transform`u sıfırlıyor (PremiumMotion.module.css) ve düğüm yarım
+   portre kayardı. Halka sayfa zemini tonunda, gölge değil. */
+.balanceKnot {
+  position:absolute; top:50%; left:var(--knot); z-index:1; display:flex;
+  margin:-12px 0 0 -12px; border-radius:8px; box-shadow:0 0 0 2px var(--premium-surface);
+}
+.balanceTotal { text-align:right; font-size:12px; font-weight:550; color:var(--text-muted); white-space:nowrap; }
+@media(hover:hover) and (pointer:fine) {
+  a.balanceRow:hover { background:var(--primary-tint); }
+  a.balanceRow:hover .balanceId b { color:var(--primary-ink); }
+}
+a.balanceRow:active { scale:.99; }
+@media(max-width:1023px) {
+  .balanceBody { --balance-cols:minmax(0,200px) 40px minmax(0,1fr) 40px 92px; }
+}
+/* TELEFON: kimlik ve toplam üst hatta, şerit alt hatta tam genişlik.
+   Sayı sütunları sabit (40) ki şeritler yine aynı x'te başlasın. */
+@media(max-width:699px) {
+  .balanceScore { padding:14px 16px 16px; gap:8px 24px; }
+  .balanceBody { --balance-cols:40px minmax(0,1fr) 40px; padding:8px 8px 10px; }
+  .balanceAxis { column-gap:12px; }
+  .balanceAxisTrack { grid-column:2; }
+  /* Üç etiket 390'da iç içe geçiyordu (şerit ~230 piksel); orta çizgi
+     zaten kesikli hat olarak her satırda, adı telefonda düşüyor. */
+  .balanceAxisTrack > [data-side="center"] { display:none; }
+  .balanceRow {
+    grid-template-areas:"who who who" "sell track buy"; column-gap:12px; row-gap:10px; padding:10px 8px 12px;
+  }
+  .balanceWho { grid-area:who; padding-right:96px; }
+  .balanceTotal { grid-area:who; justify-self:end; }
+  .balanceCount[data-side="sell"] { grid-area:sell; }
+  .balanceTrack { grid-area:track; }
+  .balanceCount[data-side="buy"] { grid-area:buy; }
+}
 
 .noLogo { display:block; width:26px; height:26px; flex-shrink:0; border-radius:7px; background:var(--surface-sunken); }
 .noLogoXs { display:block; width:22px; height:22px; flex-shrink:0; border-radius:6px; background:var(--surface-sunken); }
