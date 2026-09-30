@@ -947,3 +947,82 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
   .companyOverview[data-solo] .capHero { margin-bottom:16px; padding-block:20px 18px; }
   .companyOverview[data-solo] .factTile { padding-block:13px; }
 }
+
+/* ---- PROFİL: ZİRVE (30 Eylül) ----
+   Sahibinin isteği: "çok kötü duruyor, sınırları zorla, görsel olarak
+   zirve". Üç değişiklik, üçü de tonla — glow, cam, gölge yok (tema § 1):
+   · Üst bandın iki sayısı marka mürekkebinde (`display-ink`, kısa display
+     metin istisnası) ve bir kademe büyük.
+   · Tek çubuk merdivene açıldı: ilk sıralar ve komşular sütun sütun,
+     şirketin sütunu dolu mavi, ötekiler aynı ailenin yıkaması. Kopuk
+     pencerede aradaki boşluk noktalı bir ayraçla söyleniyor.
+   · Künye karoları tek bir kıl çizgili ızgaraya birleşti: dört ayrı kutu
+     bir form gibi okunuyordu; ızgara bir künye levhası. Ayraç `gap:1px`
+     ile kabın çizgi rengi; hücre dolgusu `--panel-fixed` (opak — `--surface-solid` koyu temada saydam ve çizgi rengi hücrenin içinden okunurdu). */
+.capHero { gap:16px; padding-block:18px 16px; }
+.capBig { font-size:clamp(34px,3vw,44px); font-weight:800; letter-spacing:-.055em; }
+.capFigures dt { color:var(--text-muted); font-size:11.5px; font-weight:650; letter-spacing:.01em; }
+.capFigures > div { gap:4px; }
+
+.capScale { gap:8px; }
+.capLadder { display:flex; align-items:stretch; gap:10px; height:52px; padding-bottom:1px; border-bottom:1px solid var(--line); }
+.capLadderRun { display:flex; flex:var(--run, 1) 1 0; align-items:flex-end; gap:3px; min-width:0; }
+.capLadderRun:first-child:not(:last-child) { --run:3; }
+.capLadderRun:last-child:not(:first-child) { --run:9; }
+.capLadderRun[data-gap] { position:relative; }
+.capLadder .capLadderRun[data-gap]::before { content:""; position:absolute; left:-7px; bottom:0; width:4px; height:60%; border-left:2px dotted var(--line-strong, var(--line)); }
+.capLadderRun > i { flex:1 1 0; min-width:0; border-radius:3px 3px 1px 1px; background:color-mix(in oklab, var(--primary) 20%, transparent); transform-origin:bottom center; }
+.capLadderRun > i[data-self] { background:var(--primary); }
+.capEnds { font-size:12.5px; }
+
+/* KÜNYE LEVHASI. Karolar kalktı; kap tek kenarlık, hücreler arası 1 piksel. */
+.factTiles { gap:1px; margin:0; overflow:hidden; border:1px solid var(--line-soft); border-radius:14px; background:var(--line-soft); }
+.factTile { grid-template-columns:auto minmax(0,1fr); grid-template-areas:"icon label" "value value"; align-content:start; column-gap:7px; row-gap:5px; padding:13px 14px 14px; border:0; border-radius:0; background:var(--panel-fixed); }
+.factIcon { width:auto; height:auto; background:none; border-radius:0; }
+.factTile > dt { color:var(--text-muted); font-size:11.5px; font-weight:650; letter-spacing:.01em; }
+.factTile > dd { font-size:15px; font-weight:700; letter-spacing:-.015em; }
+
+/* 52 HAFTA: rayın üstünde güncel fiyat etiketi var (PriceRail yerleştiriyor),
+   ray biraz nefes alıyor. */
+.factTiles + .profileBand { margin-top:16px; padding-top:14px; }
+.bandRail { margin-top:8px; }
+
+@media(prefers-reduced-motion:no-preference) and (min-width:1100px) {
+  .companyOverview .capLadderRun > i { animation:ladder-rise 900ms var(--ease-brand) backwards; animation-delay:calc(240ms + var(--i, 0) * 45ms); }
+}
+@keyframes ladder-rise { from { transform:scaleY(0); } }
+@media(max-width:639px) {
+  .capBig { font-size:36px; }
+  .capLadder { height:44px; gap:8px; }
+  .capLadderRun { gap:2px; }
+}
+@media(max-width:359px) {
+  .capBig { font-size:32px; }
+}
+/* Merdivende fareyle gezinmek bir okuma: üzerine gelinen sütun koyulaşıyor,
+   `title` adını ve değerini söylüyor. Şirketin kendi sütunu hep dolu. */
+.capLadderRun > i { transition:background-color 180ms; }
+@media(hover:hover) {
+  .capLadderRun > i:not([data-self]):hover { background:color-mix(in oklab, var(--primary) 48%, transparent); }
+}
+/* Sayaç pencereleri 1,1em; büyük sayının satırı ona göre. */
+.capBig { line-height:1.1; }
+/* Sütun altı semboller: merdivenle aynı esnek ölçü (koşu ağırlıkları ve
+   aralıklar birebir), yani her sembol kendi sütununun altında ortalı.
+   Kap 380 pikselden darsa sembol sütuna sığmıyor (telefonda sütun ~23
+   piksel, "GOOGL" 9,5 puntoda ~28) — sıra gizli, künye okumayı taşıyor. */
+.capScale { container-type:inline-size; }
+.capLadderNames { display:none; gap:10px; margin-top:-2px; }
+.capLadderNames > .capLadderRun { gap:3px; }
+.capLadderNames b { flex:1 1 0; min-width:0; overflow:visible; color:var(--text-muted); font-size:9.5px; font-weight:650; letter-spacing:-.01em; text-align:center; white-space:nowrap; }
+.capLadderNames b[data-self] { color:var(--primary-ink); font-weight:800; }
+@container (min-width:380px) {
+  .capLadderNames { display:flex; }
+}
+/* Koyu temada %20'lik yıkama zeminde kayboluyordu (1440, MU, gözle): sütun
+   ile zemin arasındaki ton farkı çizimin kendisi, o yüzden bir kademe
+   koyu. Sembol sütundan en fazla birkaç piksel taşabilir ("GOOGL" 30
+   piksellik sütunda ~31) — kırpmak "GOOGI" okutuyordu. */
+:global(:root[data-theme="dark"]) .capLadderRun > i:not([data-self]) { background:color-mix(in oklab, var(--primary) 32%, transparent); }
+/* Sayaç dönerken pencere ±0,12em açık (RollingFigure); etiketle arası bir pay fazla. */
+.capFigures > div { gap:7px; }

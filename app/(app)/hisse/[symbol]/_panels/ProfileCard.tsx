@@ -3,6 +3,7 @@ import styles from "../stock.module.css";
 import { exchangeLabel } from "@/components/stock/exchange-label";
 import { DataError, DataStamp, PanelHeader } from "@/components/ui/primitives";
 import { PriceRail } from "@/components/ui/PriceRail";
+import { RollingFigure } from "@/components/ui/RollingFigure";
 import { getStatus, getCompanies, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { getCompanyProfile, getQuote } from "@/lib/providers";
@@ -11,6 +12,19 @@ import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { describeSymbol } from "@/db/seed/descriptions";
 import { cn, formatMoneyCompact, formatEtDateMedium, formatPercentPlain, formatPrice, NO_VALUE, safeExternalUrl } from "@/lib/utils";
 import { week52Band } from "./shared";
+
+/** Merdivenin sütun sayısı; kopuk pencerede de aynı (3 + 9). */
+const LADDER_SIZE = 12;
+/** Kopuk pencerede baştan gösterilen sıra sayısı. */
+const LADDER_HEAD = 3;
+/** Kopuk pencerede şirketin iki yanındaki komşu sayısı. */
+const LADDER_SIDE = 4;
+/** Tek parça pencerede şirketten sonra en az bu kadar komşu görünsün. */
+const LADDER_TAIL = 2;
+/** Sıfıra yakın bir sütun yine de çizgi olarak görünsün (yüzde). */
+const LADDER_MIN_SHARE = 3;
+/** Sıra sayacı değerin ardından dönsün. */
+const RANK_ROLL_DELAY_MS = 220;
 
 export async function ProfileCard({
   symbol,
@@ -94,7 +108,35 @@ export async function ProfileCard({
       null,
     );
     const leaderCap = leader ? Math.max(leader.marketCap as number, marketCap) : marketCap;
-    return { rank, total: pool.length, leader: rank === 1 ? null : leader, share: marketCap / leaderCap };
+    /* MERDİVEN (30 Eylül, sahibinin isteği: "görsel olarak zirve"). Tek
+       çubuk yalnızca en büyüğe oranı söylüyordu; sıranın NEREDE olduğu —
+       önünde kimler var, arkasında kim — yine okunarak çıkıyordu. Merdiven
+       aynı ölçeği sütunlara açıyor: ilk sıralar ve şirketin komşuları, boy
+       en büyüğe oran (sıfırdan, yani uzunluk dürüst). Şirketten sonra en az
+       LADDER_TAIL komşu sığıyorsa pencere tek parça (ilk LADDER_SIZE sıra);
+       sığmıyorsa ilk LADDER_HEAD sıra, bir boşluk işareti ve şirketin iki
+       yanındaki LADDER_SIDE komşu. Eşik önce LADDER_HEAD + LADDER_SIDE idi
+       ve 9. sıradaki MU kopuk çiziliyordu — ilk on ikinin içindeki bir
+       şirketi bölmenin anlamı yok. Sütun sayısı her durumda aynı, kart zıplamıyor. */
+    const ranked = [...others, { symbol, marketCap }].sort(
+      (a, b) => (b.marketCap as number) - (a.marketCap as number),
+    );
+    const selfIndex = rank - 1;
+    const windowOf = (from: number, to: number) =>
+      ranked.slice(Math.max(0, from), Math.min(ranked.length, to));
+    const contiguous = selfIndex < LADDER_SIZE - LADDER_TAIL;
+    const ladder = (contiguous
+      ? [windowOf(0, LADDER_SIZE)]
+      : [windowOf(0, LADDER_HEAD), windowOf(selfIndex - LADDER_SIDE, selfIndex + LADDER_SIDE + 1)]
+    ).map((segment) =>
+      segment.map((row) => ({
+        symbol: row.symbol,
+        value: row.marketCap as number,
+        share: (row.marketCap as number) / leaderCap,
+        self: row.symbol === symbol,
+      })),
+    );
+    return { rank, total: pool.length, leader: rank === 1 ? null : leader, share: marketCap / leaderCap, ladder };
   })();
   const about = await describeSymbol(symbol, locale);
   const websiteHref = safeExternalUrl(profile.weburl);
@@ -234,13 +276,21 @@ export async function ProfileCard({
           <dl className={styles.capFigures} data-has-rank={rankInfo !== null || undefined}>
             <div>
               <dt>{t.market.marketCap}</dt>
-              <dd className={cn("numeral", styles.capBig)}>{formatMoneyCompact(marketCap, locale)}</dd>
+              <dd className={cn("numeral", styles.capBig)}>
+                {/* KİLOMETRE SAYACI (30 Eylül). `display-ink` burada KULLANILAMIYOR:
+                    şeritler `transform` taşıyor ve degrade maskesinin dışına
+                    düşüp görünmez oluyor (globals.css → TUZAK). Dönen sayı
+                    duran degradeden daha çok şey söylüyor. */}
+                <RollingFigure value={formatMoneyCompact(marketCap, locale)} />
+              </dd>
               {liveCap && <dd className={styles.capNote}>{t.stock.capLiveNote}</dd>}
             </div>
             {rankInfo && (
               <div className={styles.capRankCell}>
                 <dt>{t.stock.capRank}</dt>
-                <dd className={cn("numeral", styles.capBig)}>{rankInfo.rank.toLocaleString(locale)}.</dd>
+                <dd className={cn("numeral", styles.capBig)}>
+                  <RollingFigure value={`${rankInfo.rank.toLocaleString(locale)}.`} delayMs={RANK_ROLL_DELAY_MS} />
+                </dd>
                 <dd className={cn("numeral", styles.capNote)}>
                   {(rankPool ? t.stock.capRankOfIndex.replace("{index}", rankPool.name) : t.stock.capRankOf).replace(
                     "{n}",
@@ -255,8 +305,43 @@ export async function ProfileCard({
               {/* Ölçek: en büyük şirkete oran — bir büyüklük, yargı değil
                   (CLAUDE.md "Karşılaştırılan her büyüklük bir de ÇİZGİ").
                   Sayılar iki uçta metin olarak yazılı; çubuk yalnızca çizim. */}
-              <span aria-hidden className={styles.capTrack}>
-                <i style={{ width: `${Math.max(2, Math.min(100, rankInfo.share * 100)).toFixed(1)}%` }} />
+              {/* Tek çubuk merdivene açıldı (gerekçe `rankInfo` içinde).
+                  Sayılar metinde; sütunlar yalnızca çizim, fareyle üzerine
+                  gelen için `title` adı ve değeri söylüyor. */}
+              <span aria-hidden className={styles.capLadder}>
+                {rankInfo.ladder.map((segment, si) => (
+                  <span key={si} className={styles.capLadderRun} data-gap={si > 0 || undefined} data-motion-stagger>
+                    {segment.map((bar, bi) => (
+                      <i
+                        key={bar.symbol}
+                        data-self={bar.self || undefined}
+                        data-motion-draw="bar"
+                        title={`${bar.symbol} · ${formatMoneyCompact(bar.value, locale)}`}
+                        style={
+                          {
+                            height: `${Math.max(LADDER_MIN_SHARE, Math.min(100, bar.share * 100)).toFixed(1)}%`,
+                            "--i": si * LADDER_HEAD + bi,
+                          } as React.CSSProperties
+                        }
+                      />
+                    ))}
+                  </span>
+                ))}
+              </span>
+              {/* SEMBOLLER SÜTUNLARIN ALTINDA — aynı esnek ölçüyle hizalı ikinci bir
+                  sıra. Dar kapta (telefon) sembol sütuna sığmıyor; orada
+                  gizleniyor ve alttaki künye (şirket · en büyük) okumayı
+                  taşıyor. */}
+              <span aria-hidden className={styles.capLadderNames}>
+                {rankInfo.ladder.map((segment, si) => (
+                  <span key={si} className={styles.capLadderRun} data-gap={si > 0 || undefined}>
+                    {segment.map((bar) => (
+                      <b key={bar.symbol} data-self={bar.self || undefined}>
+                        {bar.symbol}
+                      </b>
+                    ))}
+                  </span>
+                ))}
               </span>
               <span className={styles.capEnds}>
                 <span className={cn("numeral", styles.capSelf)}>{symbol}</span>
@@ -301,7 +386,7 @@ export async function ProfileCard({
           üç satıra iniyor (tek sayıda kalırsa sonuncusu iki sütunu kaplıyor,
           boş hücre yok); ikonlar etiketin önünde, karo değil. Satır
           sırası ve koşulları aynı. */}
-      <dl className={styles.factTiles}>
+      <dl className={styles.factTiles} data-motion-stagger>
         {rows.map(([label, value]) => fact(label, value))}
         {/* Adres sağlayıcıdan geliyor; şeması süzülmeden href'e konmaz. */}
         {websiteHref &&
@@ -313,7 +398,11 @@ export async function ProfileCard({
                   (1440'ta ölçüldü); adres bölünmeden okunmalı. Sondaki
                   eğik çizgi de gidiyor: "nvidia.com/" bir yolun başı
                   gibi okunuyordu. */}
-              {websiteHref.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
+              {/* YALNIZCA ALAN ADI (30 Eylül). ASTS'nin adresi
+                  "ast-science.com/spacemobile" künye levhasının yarım
+                  hücresinde üç satıra kırılıyordu; yol bir kimlik bilgisi
+                  değil. Bağlantı yine tam adrese gidiyor. */}
+              {new URL(websiteHref).hostname.replace(/^www\./, "")}
             </a>,
           )}
       </dl>
@@ -345,7 +434,14 @@ export async function ProfileCard({
             <PriceRail
               marks={[
                 { kind: "band", from: band.low, to: band.high, tone: "range" },
-                { kind: "point", at: quoteForCap.data.price, variant: "live" },
+                {
+                  kind: "point",
+                  at: quoteForCap.data.price,
+                  variant: "live",
+                  label: t.stock.currentQuote,
+                  value: formatPrice(quoteForCap.data.price, locale, { currency: band.para }),
+                  side: "above",
+                },
               ]}
               pad={0}
               className={styles.bandRail}
