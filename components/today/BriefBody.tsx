@@ -43,9 +43,19 @@ function bulletsSinceLastHeading(lines: string[]): number {
    ilk satırını ham alıyordu ve okuyucularda "## Geçen Hafta" görünüyordu).
    İki ayrı kopya er geç birbirinden ayrı düşer. */
 
+/* İTALİK DE TANINIYOR (30 Eylül, sahibinin ekran görüntüsü). Rutin çeviri
+   alıntılarını `*"acele etmeye gerek yok"*` diye italik yazıyor ve kart
+   yıldızları olduğu gibi basıyordu. Tek yıldız yalnızca kelimeye bitişikse
+   italik sayılıyor ("5 * 3" gibi bir çarpma dokunulmadan kalır). */
+const INLINE_MARK = /(\*\*[^*]+\*\*|(?<![\w*])\*(?=\S)[^*]+?(?<=\S)\*(?![\w*]))/g;
+
 function renderInline(text: string, keyPrefix: string) {
-  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-    part.startsWith("**") && part.endsWith("**") ? (
+  return text.split(INLINE_MARK).map((part, i) =>
+    part.startsWith("*") && !part.startsWith("**") && part.endsWith("*") && part.length > 2 ? (
+      <em key={`${keyPrefix}-${i}`} className="italic">
+        {part.slice(1, -1)}
+      </em>
+    ) : part.startsWith("**") && part.endsWith("**") ? (
       /* ALT BAŞLIK AĞIRLIKLA AYRIŞIYOR, PUNTOYLA DEĞİL. Bülten
          paragrafları "Haftanın asıl sınavı cuma günü Wyoming'de:" gibi
          kalın bir giriş ibaresiyle açılıyor ve bu ibare işlevi gereği bir
