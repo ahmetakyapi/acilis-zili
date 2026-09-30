@@ -19,9 +19,16 @@
    `overflow-y: clip` denendi ve mutlak konumlu şeridi kırpmadı (ekranda
    komşu rakamlar sütunun üstünde ve altında görünüyordu — karede
    ölçüldü); kırpma yolu dikeyde sıfır, yatayda geniş. */
-.rollColumn { position:relative; clip-path:inset(0 -50%); }
-.rollSizer { visibility:hidden; }
-.rollStrip { position:absolute; inset:0 0 auto; display:flex; flex-direction:column; align-items:center; }
+/* KIRPMA YALNIZCA DÖNÜŞTE (1 Ekim). Sütun hep 1,1em'de kesiyordu ve
+   duran rakam o kesime bağlıydı; Safari'de hisse başlığındaki sayaçta
+   rakamların alt kavisi düz kesildi (gerekçe ui/RollingFigure.module.css
+   → `.sizer`). Durağan hâlde görünen akıştaki kopya; şerit ve kırpma
+   yalnızca kök `data-rolling` taşırken, yani dönüş sürerken. */
+.rollColumn { position:relative; }
+.rollStrip { position:absolute; inset:0 0 auto; display:flex; flex-direction:column; align-items:center; visibility:hidden; }
+[data-rolling] .rollColumn { clip-path:inset(0 -50%); }
+[data-rolling] .rollSizer { visibility:hidden; }
+[data-rolling] .rollStrip { visibility:visible; }
 .rollStrip > span { display:block; height:1.1em; }
 
 /* --------------------------------------------------------------------------

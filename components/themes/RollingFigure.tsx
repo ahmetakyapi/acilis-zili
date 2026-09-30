@@ -43,6 +43,14 @@ export function RollingFigure({ value, className }: { value: string; className?:
     if (rect.bottom > 0 && rect.top < window.innerHeight) return;
 
     const strips = Array.from(root.querySelectorAll<HTMLElement>("[data-roll-strip]"));
+    /* Kırpma ve şerit yalnızca dönüş boyunca (Themes.module.css →
+       `[data-rolling]`); son animasyon bitince durağan kopya geri geliyor. */
+    root.dataset.rolling = "";
+    let pending = strips.length;
+    const settle = () => {
+      pending -= 1;
+      if (pending <= 0) delete root.dataset.rolling;
+    };
     const animations = strips.map((strip, index) => {
       const animation = strip.animate(
         [{ transform: "translateY(0)" }, { transform: strip.style.transform }],
@@ -54,7 +62,10 @@ export function RollingFigure({ value, className }: { value: string; className?:
       );
       animation.pause();
       animation.currentTime = 0;
-      animation.onfinish = () => animation.cancel();
+      animation.onfinish = () => {
+        animation.cancel();
+        settle();
+      };
       return animation;
     });
     const observer = new IntersectionObserver(
@@ -69,6 +80,7 @@ export function RollingFigure({ value, className }: { value: string; className?:
     return () => {
       observer.disconnect();
       animations.forEach((animation) => animation.cancel());
+      delete root.dataset.rolling;
     };
   }, [reduced, value]);
 

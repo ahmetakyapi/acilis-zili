@@ -1874,6 +1874,33 @@ html.theme-switching::view-transition-new(root) {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     padding-bottom: .06em;
+    /* ÜSTTEKİ İMLER (1 Ekim). Degrade yalnızca kutunun içini boyuyor ve
+       satır yüksekliği 1,1-1,2 olan başlıkta Ü, İ, Ö, Ç'nin imi kutunun
+       ÜSTÜNE taşıyıp mürekkepsiz kalıyordu: /hakkinda "Ücretsiz" 2,9 px,
+       /giris "Zil Çalmadan Önce Hazır Ol" 2 px (Chrome; WebKit 0,8-2,7).
+       Yalnızca boyamayı değiştiren bir yol yok — gölge degradenin üstüne
+       biniyor, `overflow-clip-margin` arka plana işlemiyor. Kutu yukarı
+       açılıyor ve `translate` ile aynı pay kadar geri kalkıyor: metin
+       olduğu yerde, boyama alanı imlere kadar.
+       EKSİ ÜST BOŞLUKLA TELAFİ DENENDİ, GERİ ALINDI: başlıkların üst
+       boşluğu üç ayrı yerden geliyor (`.page-heading-copy` 8 px, okuma
+       modülü 56 px, `mt-*`) ve katmanlı bir eksi boşluk kimini ezdi,
+       kimine yenildi — rehber h2'leri 24'er piksel yukarı kaçtı, sayfa
+       başlıkları yine 6,7 aşağı indi (1440, 20 rota ölçüldü). Bu yolun
+       tek bedeli başlıktan SONRAKİ içeriğin 0,12em aşağı inmesi (12-16
+       pikselde 2, 56 pikselde 7 piksel). */
+  }
+  /* Yalnızca DISPLAY boyundaki başlıklar: küçük punto sınıfı (`text-read`
+     dahil — PanelHeader, 19 punto, satır 1,3) ya da `.plate` künyesi
+     taşıyan panel başlığı imi kutusunda tutuyor; ona da dolgu vermek her panelde 2 piksel
+     kaydırıp /hisse sayfasını 39 piksel uzatıyordu (1440, ölçüldü).
+     `:where` İLE SIFIR ÖZGÜLLÜK: okuma modülü rehber h2'lerine kendi üst
+     dolgusunu veriyor; bu kural onu ezince rehber sayfası 144 piksel
+     kısaldı. Kendi dolgusu olan başlıkta o kalır — kutusu zaten imlere
+     yetecek kadar yüksek. */
+  :where(main :is(h1, h2, h3):not([data-ink]):not(:is(.text-nano, .text-tiny, .text-xs, .text-small, .text-sm, .text-base, .text-read, .text-lead, .plate))) {
+    padding-top: .12em;
+    translate: 0 -.12em;
   }
   /* KART VE PANEL BAŞLIKLARI DA (24 Eylül, sahibinin isteği: "başlıkların
      hepsi mavi degrade tonumuzda olsun"). `h3` ve `.plate` künyeli panel
@@ -2499,4 +2526,3 @@ html.ink-splash-out .ink-splash-layer {
  .palette-option::before, .palette-go, .palette-chip, .palette-tile { transition:none; }
  .palette-chip:hover, .palette-tile:hover { translate:none; }
 }
-

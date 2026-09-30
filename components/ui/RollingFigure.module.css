@@ -36,12 +36,19 @@
   padding-block: 0.12em;
   margin-block: -0.12em;
   box-sizing: content-box;
-  overflow: hidden;
-  overflow: clip;
 }
 
+/* DURAN RAKAM ŞERİT DEĞİL, BU KOPYA (1 Ekim). Pencere önceden hep
+   kırpıyordu ve rakam dururken de o kırpmaya bağlıydı: sahibinin
+   Safari'sinde SNDK başlığındaki "1.735,00" rakamlarının ALT kavisleri
+   düz kesildi ($ tamdı — pencere dışı glif). Chrome ve WebKit 26.6'da
+   yeniden üretilemedi; yazı ölçüsündeki birkaç piksellik fark yetiyor.
+   Artık kırpma yalnızca DÖNÜŞ SÜRESİNCE var (`figure-window`, fill
+   backwards): bitince şerit gizleniyor, akıştaki bu kopya görünüyor ve
+   hiçbir kap onu kesmiyor. Hareketi azaltan okuyucu ve animasyonsuz
+   durum doğrudan bu hâlde. */
 .sizer {
-  visibility: hidden;
+  visibility: visible;
 }
 
 /* Son konum: ikinci turdaki rakam (10 + rakam). İlk tur yalnızca dönüşün
@@ -53,6 +60,7 @@
   flex-direction: column;
   align-items: center;
   transform: translate3d(0, calc((10 + var(--digit)) * -1.1em), 0);
+  visibility: hidden;
 }
 
 .strip > span {
@@ -66,9 +74,36 @@
   }
 }
 
+/* Üçü AYNI süre ve gecikmeyle: şerit görünür ve döner, kopya gizli,
+   pencere kırpar. `backwards` bekleme ve dönüş boyunca geçerli; bitince
+   üçü de düşer ve durağan hâl kalır. Kırpma dikeyde pencerenin dolgu
+   kutusu, yatayda geniş (şeritteki "0" son rakamdan geniş olabilir). */
+@keyframes figure-live {
+  from, to { visibility: visible; }
+}
+@keyframes figure-rest {
+  from, to { visibility: hidden; }
+}
+@keyframes figure-window {
+  from, to { clip-path: inset(0 -0.2em); }
+}
+
 @media (prefers-reduced-motion: no-preference) {
-  .strip {
-    animation: figure-roll 1.15s var(--ease-brand) both;
+  .window,
+  .strip,
+  .sizer {
+    animation-duration: 1.15s;
     animation-delay: calc(var(--delay, 0ms) + var(--order, 0) * 55ms);
+    animation-fill-mode: backwards;
+  }
+  .window {
+    animation-name: figure-window;
+  }
+  .sizer {
+    animation-name: figure-rest;
+  }
+  .strip {
+    animation-name: figure-roll, figure-live;
+    animation-timing-function: var(--ease-brand), linear;
   }
 }
