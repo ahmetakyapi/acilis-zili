@@ -629,19 +629,104 @@
    satırı görsel olarak yok, ekran okuyucuya duruyor; tablo anlamı yerinde.
    İki sütunlu tablolar sığıyor, tablo kalıyor. Yalnızca editoryal görünüm:
    KVKK ve panel önizlemesi değişmiyor. */
+/* KARTLAR YENİDEN (30 Eylül, ikinci tur; sahibinin isteği: "çok kötü
+   olmuş, sınırlarını zorla"). İlk sürüm her satırı kenardan kenara bir
+   bant yapıp altına iki sütunlu bir etiket–değer ızgarası koyuyordu: sol
+   sütunda alt alta gri "Neden Önemli / Olası Etki" şeridi, sağda kırılan
+   değerler, satırları ayıran tek şey kıl çizgi. Form gibi okunuyor, hangi
+   değerin hangi satıra ait olduğu çizgiye bakarak çözülüyordu.
+   Şimdi her satır kendi kartı:
+     - kart metnin hattında (taşma yok), köşeli, saç teli kenarlık, kartlar
+       arası 10 piksel boşluk — ayrım boşlukla, çizgiyle değil;
+     - başlığın başında sıra numarası (01, 02…), yazının öteki numaralı
+       listeleriyle aynı dilde; göz satırı numarasıyla buluyor;
+     - başlığın altında kıl çizgi, sonra olgular YAN YANA: her birinin
+       üstünde küçük mavi etiket, altında metin, aralarında dikey kıl
+       çizgi. Etiket değerin ÜSTÜNDE olduğu için sütunlar genişliğin
+       tamamını metne veriyor; iki olgu tek bakışta karşılaştırılıyor.
+   Dört ve daha fazla sütunda olgular ikişerli sıralanıyor. 360'ın altında
+   olgular alt alta iner. */
 @media (max-width: 639px) {
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) {
+    margin-inline: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: none;
+  }
   .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) table { display: block; min-width: 0; }
   .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) tbody { display: block; }
-  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) tr { display: block; padding: 12px calc(var(--prose-bleed) + var(--read-inset, 0px)); }
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    counter-reset: prose-row;
+  }
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 12px 16px 13px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--premium-surface);
+    counter-increment: prose-row;
+  }
   .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td { display: block; padding: 0; }
-  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td:first-child { padding: 0 0 5px; font-size: 16px; line-height: 1.35; }
-  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td + td { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); column-gap: 12px; padding: 2px 0 0; font-size: 15px; line-height: 1.45; }
-  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td + td::before { content: attr(data-label); padding-top: 1px; color: var(--text-muted); font-size: 12.5px; font-weight: 600; line-height: 1.6; }
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) :is(th, td):first-child,
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) :is(th, td):last-child { padding-inline: 0; }
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td:first-child {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: 16px;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+  }
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td:first-child::before {
+    content: counter(prose-row, decimal-leading-zero);
+    flex: none;
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td + td {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    font-size: 14.5px;
+    line-height: 1.42;
+    color: var(--text-strong);
+  }
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td + td::before {
+    content: attr(data-label);
+    color: var(--primary-ink);
+    font-size: 11.5px;
+    font-weight: 650;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+  }
+  /* Sağdaki olgu soldakinden kıl çizgiyle ayrılıyor; tek sayılı olgunun
+     sonuncusu (4+ sütun) tam genişlikte. */
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td:nth-child(odd):not(:first-child) {
+    padding-left: 14px;
+    border-left: 1px solid var(--line-soft);
+  }
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td:nth-child(even) { padding-right: 14px; }
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td:nth-child(n+4) { margin-top: 12px; }
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td:last-child:nth-child(even) { grid-column: 1 / -1; padding-right: 0; }
 }
 @media (max-width: 359px) {
   .prose { --prose-size: 16px; }
-  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td + td { grid-template-columns: minmax(0, 1fr); row-gap: 1px; }
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) tr { grid-template-columns: minmax(0, 1fr); }
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td:nth-child(odd):not(:first-child) { margin-top: 10px; padding-left: 0; border-left: 0; }
+  .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td:nth-child(even) { padding-right: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
