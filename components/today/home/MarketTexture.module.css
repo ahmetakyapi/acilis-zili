@@ -189,13 +189,19 @@
    kartın iç genişliği 390'da 131, 320'de 95: "+11" çipi ve 320'de üçüncü
    logo kartın kenarında kesiliyordu. Karolar kart tonunda 2 piksellik bir
    halkayla birbirinin üstüne biniyor (yatırımcı portre yığınıyla aynı dil).
-   Bindirme yalnızca GEREKTİĞİ kadar: 390'da 4, 360'ta 8, 320'de 13 piksel —
+   Bindirme yalnızca GEREKTİĞİ kadar: 410+ yok, 390'da 2, 360'ta 8, 320'de 13 —
    ilk denemede 390'da da 10'du ve yer varken logolar birbirini örtüyordu.
    Ölçüldü: satır üç genişlikte de kartın iç kenarında bitiyor. */
 @media (max-width:767px) {
   .extremeLogos { gap:0; overflow:visible; }
   .extremeLogo, .extremeRest { position:relative; border-radius:var(--radius-md); box-shadow:0 0 0 2px var(--surface-sunken); }
-  .extremeLogo + .extremeLogo, .extremeLogo + .extremeRest, .extremeRest + .extremeRest { margin-left:-4px; }
+  .extremeLogo + .extremeLogo, .extremeLogo + .extremeRest, .extremeRest + .extremeRest { margin-left:4px; }
+}
+/* 409'un üstünde bindirme YOK (30 Eylül): 430'luk telefonda satıra 150
+   piksel kalıyor ve dört karo 4 piksel aralıkla sığıyor; −4 orada logoları
+   gereksiz yere örtüyordu (sahibinin ekran görüntüsü). */
+@media (max-width:409px) {
+  .extremeLogo + .extremeLogo, .extremeLogo + .extremeRest, .extremeRest + .extremeRest { margin-left:-2px; }
 }
 @media (max-width:379px) {
   .extremeLogo + .extremeLogo, .extremeLogo + .extremeRest, .extremeRest + .extremeRest { margin-left:-8px; }

@@ -49,11 +49,22 @@
    puntoluk New York künyesi, altta 20 puntoluk İstanbul saati. İki uç
    aynı ölçekte ve aynı hatta biter (TodayExperience → "TARİH VE SAAT
    SİMETRİK"). Satır tek sütun olduğu için 360'taki sarma sorunu da yok. */
+/* NY VE TR AYNI HİZADA (30 Eylül, sahibinin isteği: "alt alta, aynı
+   hizada"). İki okuma ayrı esnek satırlardı ve sağa yaslıydı: etiketler
+   (NY, TR) aynı sütunda bitse de saatler kaymış duruyordu — "14:33" ile
+   "21:33"ün başı farklı yerde. Şimdi iki satırlık tek ızgara: solda saat
+   sütunu (sağa yaslı, rakamların sonu aynı hatta), sağda etiket sütunu
+   (sola yaslı, NY ile TR alt alta). Üstte New York künyesi, altta
+   İstanbul saati. */
 @media(max-width:1023px) {
-  .readings { flex-direction:column-reverse; align-items:flex-end; gap:3px; }
-  .secondary, .secondary time { font-size:11px; font-weight:600; line-height:14px; color:var(--text-muted); }
+  .readings { display:grid; grid-template-columns:auto auto; align-items:baseline; justify-items:end; column-gap:5px; row-gap:3px; }
+  .primary, .secondary { display:contents; }
+  .secondary > * { grid-row:1; }
+  .primary > * { grid-row:2; }
+  .readings time { justify-self:end; }
+  .readings time + span { justify-self:start; }
+  .secondary, .secondary time, .secondary > span { font-size:11px; font-weight:600; line-height:14px; color:var(--text-muted); }
   .primary time { font-size:20px; line-height:1.08; letter-spacing:-.03em; }
-  .secondary { gap:4px; }
 }
 /* Tablette kadran duruyor (52): iki satırlık okuma onun boyunda kalsın diye
    birincil saat 28 punto (14 + 3 + 30 ≈ 47 piksel). */

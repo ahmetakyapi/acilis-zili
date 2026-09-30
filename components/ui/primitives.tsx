@@ -91,12 +91,15 @@ export function PanelHeader({
           {title}
         </h2>
       )}
-      {/* İnen grup SAĞDA (30 Eylül). İkinci satıra düştüğünde sola
-          yaslanıyordu: "14 şirketin 5 tanesi Tümünü Gör" başlığın altında
-          solda, öteki panellerin "Tümünü Gör"ü sağ kenarda — aynı bağlantı
-          iki yerde. `ml-auto` tek satırda hiçbir şeyi değiştirmiyor. */}
+      {/* BAĞLANTILI GRUP İNİNCE SAĞDA (30 Eylül). İkinci satıra düştüğünde
+          sola yaslanıyordu: "14 şirketin 5 tanesi Tümünü Gör" başlığın
+          altında solda, öteki panellerin "Tümünü Gör"ü sağ kenarda — aynı
+          bağlantı iki yerde. Yalnızca KÜNYE taşıyan grup solda kalıyor:
+          orada künye başlığın alt satırı gibi okunuyor ve sağa itilince
+          ("30 Eylül Çarşamba · ~23:00 TR" Beklenen Hareket'te) başlıktan
+          kopuk duruyordu. `ml-auto` tek satırda hiçbir şeyi değiştirmiyor. */}
       {(meta || action) && (
-        <div className="ml-auto flex items-center gap-3">
+        <div className={cn("flex items-center gap-3", action && "ml-auto")}>
           {meta && (
             <span className="whitespace-nowrap text-xs text-muted">{meta}</span>
           )}
