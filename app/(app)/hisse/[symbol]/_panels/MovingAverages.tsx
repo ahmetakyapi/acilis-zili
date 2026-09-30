@@ -115,8 +115,14 @@ export async function MovingAverages({
       <dl className={styles.averageRows}>
         <div className={styles.averageRow}>
           <dt>{t.stock.currentQuote}</dt>
-          <dd className="numeral text-sm font-semibold text-strong">
-            {formatPrice(price, locale, { currency: true })}
+          {/* Yüzde sütunu boş ama YERİNDE: fiyat alttaki ortalamalarla aynı
+              hatta bitsin (30 Eylül, sahibinin isteği — son fiyat kartın
+              kenarına yaslanıp tek başına sağa taşıyordu). */}
+          <dd className="flex items-baseline gap-2.5">
+            <span className="numeral text-sm font-semibold text-strong">
+              {formatPrice(price, locale, { currency: true })}
+            </span>
+            <span className="w-14 shrink-0" aria-hidden />
           </dd>
         </div>
         {satirlar.map(({ pencere, deger }) => {
@@ -135,16 +141,15 @@ export async function MovingAverages({
                     ? formatPrice(deger, locale, { currency: true })
                     : NO_VALUE}
                 </span>
-                {fark !== null && (
-                  <span
-                    className={cn(
-                      "numeral w-14 shrink-0 text-right text-tiny font-semibold",
-                      directionText(directionOf(fark)),
-                    )}
-                  >
-                    {formatPercent(fark, locale)}
-                  </span>
-                )}
+                {/* Fark yoksa da yuva kalıyor; değer sütunu kaymasın. */}
+                <span
+                  className={cn(
+                    "numeral w-14 shrink-0 text-right text-tiny font-semibold",
+                    fark !== null && directionText(directionOf(fark)),
+                  )}
+                >
+                  {fark !== null ? formatPercent(fark, locale) : null}
+                </span>
               </dd>
             </div>
           );
