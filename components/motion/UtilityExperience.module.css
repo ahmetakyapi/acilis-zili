@@ -41,6 +41,11 @@
 .footer::before { content:""; position:absolute; left:0; top:-1px; width:84px; height:2px; background:linear-gradient(90deg,var(--primary),transparent); }
 .footer nav a { width:fit-content; transition:color .2s,translate .2s; }
 .footer > .footerBase { padding-top:18px; border-top:1px solid var(--line-soft); }
+/* TELEFONDA BAĞLANTILAR İKİ SÜTUN (30 Eylül, ana sayfa telefon denetimi).
+   Yirmi bağlantı tek sütunda, her biri 44 piksel: alt bilgi 390'da ~1.000
+   piksel tutuyor ve sayfanın en uzun bloğu oluyordu. Bölüm başına iki
+   sütun; dokunma hedefi aynı (44), yalnızca satır sayısı yarıya iniyor. */
+@media(max-width:639px) { .footer nav ul { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:16px; row-gap:0; } }
 @media(hover:hover) and (pointer:fine) { .preset:hover { border-color:var(--primary-faint); background:var(--primary-tint); } .footer nav a:hover { translate:2px 0; } }
 @media(max-width:1023px) { .archive { position:static; } }
 @media(max-width:767px) { .page { gap:20px; } .page > header { padding:4px 0 16px; } .bulletinGrid { gap:18px; } .bulletinArticle { padding:20px; } .bulletinArticle h2 { font-size:24px; } .preset { padding:18px; } .legal { padding:20px 18px; border-radius:18px; } .recovery { margin-block:12px; padding:26px 20px; } }

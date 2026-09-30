@@ -2008,3 +2008,20 @@
   .signalsCompact .signalDetail { display:none; }
   .signalsCompact { row-gap:0; }
 }
+
+/* ANA SAYFA PANELİNDE LOGOLAR TEK SATIR (30 Eylül, telefon denetimi).
+   36 piksellik karolar 8 piksel aralıkla 390'da satıra yedi tane sığıyor,
+   "AL 7"nin yedincisi, "TUT 8"in son ikisi alt satırda yalnız kalıyordu —
+   göz satırı iki ayrı grup sanıyordu. Karolar panel zemininde 2 piksellik
+   halkayla gerektiği kadar üst üste biniyor (tema kartları ve yatırımcı
+   portreleriyle aynı dil): sekiz logo 390'da 36 + 7×30 = 246, 360'ta
+   218, 320'de 190 piksel — üçü de 268 / 238 / 198'lik satıra sığıyor.
+   Sekizden fazlası yine sarar; yığının kendisi sararken bozulmuyor. */
+@media (max-width:767px) {
+  .pulse[data-variant="panel"] .pulseLogos { gap:6px 0; }
+  .pulse[data-variant="panel"] .pulseLogo { box-shadow:0 0 0 2px var(--premium-surface, var(--surface-solid)); }
+  .pulse[data-variant="panel"] .pulseLogo + .pulseLogo { margin-left:-6px; }
+  .pulse[data-variant="panel"] .pulseLogo[data-card-open] { z-index:1; box-shadow:0 0 0 2px var(--primary-faint); }
+}
+@media (max-width:379px) { .pulse[data-variant="panel"] .pulseLogo + .pulseLogo { margin-left:-10px; } }
+@media (max-width:339px) { .pulse[data-variant="panel"] .pulseLogo + .pulseLogo { margin-left:-14px; } }

@@ -13,6 +13,18 @@
 .section { display:flex; flex-direction:column; gap:16px; min-width:0; scroll-margin-top:100px; }
 .boards { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; align-items:start; }
 @media(min-width:1200px) { .boards { grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); } }
+/* YAN YANA İKİ PANO AYNI HATTA BİTER (30 Eylül, sahibinin kuralı: "yan
+   yana olan kartlar aynı hizada bitmeli"). Emtia sektörlerden ~110 piksel
+   kısa kalıyor ve sağ panelin dibi solunkinden yukarıda bitiyordu (1440,
+   ölçüldü). Satır iki panoyu aynı boya geriyor; kısa panoda fark tablonun
+   ALTINA düşüyor — künyeler ve damga panelin dibinde, öteki panoyla aynı
+   hatta. Yukarıdaki "kolonlar eşitlenmiyor" notu iki SÜTUN için (aralık
+   esnemez); bu iki KART, satırı paylaşıyorlar. */
+@media(min-width:1200px) {
+  .boards { align-items:stretch; }
+  .boards > .board { display:flex; flex-direction:column; }
+  .boards > .board > .notes { margin-top:auto; }
+}
 
 .board, .pulsePanel { border-radius:18px; background:var(--premium-surface); scroll-margin-top:100px; }
 

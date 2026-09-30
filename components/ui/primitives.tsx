@@ -91,8 +91,12 @@ export function PanelHeader({
           {title}
         </h2>
       )}
+      {/* İnen grup SAĞDA (30 Eylül). İkinci satıra düştüğünde sola
+          yaslanıyordu: "14 şirketin 5 tanesi Tümünü Gör" başlığın altında
+          solda, öteki panellerin "Tümünü Gör"ü sağ kenarda — aynı bağlantı
+          iki yerde. `ml-auto` tek satırda hiçbir şeyi değiştirmiyor. */}
       {(meta || action) && (
-        <div className="flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-3">
           {meta && (
             <span className="whitespace-nowrap text-xs text-muted">{meta}</span>
           )}

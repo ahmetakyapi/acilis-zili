@@ -278,8 +278,13 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
  .companyOverview .priceBlock { padding-top:5px; }
  .companyOverview .priceChange { padding-bottom:0; }
 }
+/* TABLETTE PROFİL KOLONU YİNE ALT ALTA (30 Eylül, sahibinin kuralı: "yan
+   yana olan kartlar aynı hizada bitmeli"). İki sütunda profil 614, teknik
+   kart 207 piksel boyundaydı: kısa kart sağ üstte bir şerit gibi duruyor,
+   altında 400 piksel boş zemin kalıyordu (768, NVDA, ölçüldü). Germek o
+   boşluğu kartın İÇİNE taşırdı. Tek sütunda ikisi de tam genişlik; 68
+   karakter sınırı aşağıdaki `max-width` ile korunuyor. */
 @media(min-width:768px) and (max-width:1099px) {
- .companyOverview .profileColumn { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); align-items:start; gap:20px; }
  .companyOverview .about { max-width:68ch; }
 }
 @media(min-width:1100px) {
@@ -463,6 +468,16 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 @media(min-width:1100px) {
  .companyOverview .chartPanel { display:flex; flex-direction:column; }
  .companyOverview .chartPanel > :last-child { flex:1 0 auto; }
+}
+/* KUYRUK KAPANDI (30 Eylül, sahibinin kuralı: "yan yana olan kartlar aynı
+   hizada bitmeli"). Yukarıdaki not grafiğin KISA kaldığı durumu çözüyordu;
+   ters durumda — grafik uzun, profil kısa — profil kartı grafiğin 66
+   piksel üstünde bitiyordu (AAPL, 1440, ölçüldü; ASTS ve TSM'de daha çok).
+   Kolon ızgara satırının boyunda (`align-items:stretch`) ve son kartı
+   kolonun kalanını dolduruyor: iki yüzeyin dibi aynı hatta, fark kartın
+   içinde, 52 hafta satırının altında. */
+@media(min-width:1100px) {
+ .companyOverview .profileColumn > :last-child { flex:1 0 auto; }
 }
 .fundamentalsGrid > section { display:flex; flex-direction:column; }
 .fundamentalsGrid .metricsBody { flex:1; display:flex; flex-direction:column; }

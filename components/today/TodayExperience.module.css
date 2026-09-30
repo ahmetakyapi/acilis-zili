@@ -396,6 +396,15 @@
      hafta, teknik | favoriler. Kısa olan panel erken bitiyor — boşluk
      esnetilmez (`align-items:start`). */
   .dashboard { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; }
+  /* ÇİFTLER AYNI HATTA BİTER (30 Eylül, sahibinin kuralı: "yan yana olan
+     kartlar aynı hizada bitmeli"). Yukarıdaki "kısa olan panel erken
+     bitiyor" kararı iki SÜTUNLU bir akış içindi; burada paneller satır
+     satır ÇİFT ve takvim | hafta 121 / 241, tahvil | makro 444 / 458
+     piksel bitiyordu (768, ölçüldü). Çift bölümler satırın boyuna
+     geriliyor, içlerindeki panel kalan yeri alıyor; fark panelin İÇİNDE,
+     dibinde. Tam genişlik bölümler satırı yalnız tuttuğu için etkilenmiyor. */
+  .dashboard :is([data-home-section="world"],[data-home-section="movers"],[data-home-section="yields"],[data-home-section="macro"],[data-home-section="schedule"],[data-home-section="week"],[data-home-section="technical"],[data-home-section="watchlist"]) { align-self:stretch; display:flex; flex-direction:column; }
+  .dashboard :is([data-home-section="world"],[data-home-section="movers"],[data-home-section="yields"],[data-home-section="macro"],[data-home-section="technical"],[data-home-section="watchlist"]) > :last-child { flex:1 0 auto; }
   .dashboard :is([data-home-section="brief"],[data-home-section="stories"],[data-home-section="portfolio"],[data-home-section="earnings"],[data-home-section="analyses"],[data-home-section="texture"],[data-home-section="news"],[data-home-section="sources"]) { grid-column:1 / -1; }
   /* Teknik görünüm tablette favorilerle eş: yerleşim sırası öyle kuruluyor
      (yan yana duracak iki panel ardışık olmalı). */
@@ -407,6 +416,14 @@
 }
 
 @media (max-width:767px) {
+  /* TELEFONDA DÜNYA PİYASALARI TAHVİLİN ÜSTÜNDE (30 Eylül, sahibinin
+     isteği: "alt taraflara çekelim, tahvillerin üstünde dursun"). 21
+     Eylül'den beri özetin altındaydı (≤1023 bloğundaki gerekçe); telefonda
+     ilk ekranların ABD'nin kendi gündemine (hareketler, teknik, mercek,
+     bilanço) ayrılması istendi. Sıra değeri tahvil ile aynı (10) ve DOM'da
+     tahvilden önce geldiği için hemen üstüne oturuyor. Tablette dokunulmadı:
+     orada dünya ile hareketler yan yana bir çift. */
+  .dashboard [data-home-section="world"] { order:10; }
   .page { gap:18px; }
   .hero { padding:18px; overflow:hidden; }
   /* KIRILABİLİR SATIR. 390'da künye ile saat tek satır (13 piksel pay);
