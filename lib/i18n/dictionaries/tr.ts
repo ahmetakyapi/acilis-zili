@@ -2432,6 +2432,7 @@ const tr = {
       "Satırlar SEC Form 4 dosyalarından; aynı dosyanın parçaları tek işlem olarak birleştirildi. Özet yalnızca açık piyasa alım ve satışlarını sayar: ödül, vergi kesintisi, hediye ve opsiyon kullanımı bir alım satım kararı değildir. Önceden planlanmış (10b5-1) satışlar kaynakta ayrıca işaretlenmez.",
 
     emTitle: "Beklenen Hareket",
+    emHowTitle: "Nasıl Hesaplanıyor",
     emImplied: "Opsiyonların Fiyatladığı",
     emImpliedDetail: "{expiry} Vadesi · {strike} Kullanım · Straddle {straddle}",
     emIndicative: "Gösterge Fiyat",

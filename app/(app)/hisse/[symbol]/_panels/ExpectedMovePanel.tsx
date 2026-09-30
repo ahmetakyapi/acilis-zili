@@ -63,21 +63,32 @@ export async function ExpectedMovePanel({
         meta={`${formatEtDateLong(next.date, locale)} · ${when.approx ?? when.window}`}
       />
       <div className={styles.body}>
-        <dl className={styles.readings}>
+        {/* KOMPAKT (30 Eylül, sahibinin isteği). Telefonda panel 1.220
+            piksel tutuyordu: iki okuma alt alta, "Gösterge Fiyat" kendi
+            satırında, tek raporluk geçmiş için başlık satırlı bir tablo ve
+            iki uzun yöntem paragrafı. Okumalar her genişlikte yan yana,
+            gösterge rozeti etiketin yanında, geçmiş satırları başlıksız
+            (başlıklar ekran okuyucuya duruyor), yöntem "Nasıl Hesaplanıyor"
+            katlamasında. Hiçbir bilgi kalkmadı. */}
+        <dl className={cn(styles.readings, styles.emReadings)}>
           <div className={styles.reading}>
             <dt>{d.emImplied}</dt>
             {implied ? (
               <>
-                <dd className={cn("numeral", styles.readingValue)}>±{formatPercentPlain(implied.pct, locale, 1)}</dd>
+                {/* Gösterge rozeti sayının YANINDA: türetilmiş besleme (OPRA
+                    değil) sayıya yapışık kalıyor, ayrı satır tutmuyor. Etiketin
+                    yanına konduğunda 390'daki yarım sütunda kendi satırına
+                    kırılıyordu (ölçüldü). */}
+                <dd className={styles.emValueLine}>
+                  <span className={cn("numeral", styles.readingValue)}>±{formatPercentPlain(implied.pct, locale, 1)}</span>
+                  <span className={styles.emBadge}>{d.emIndicative}</span>
+                </dd>
                 {scaleMax > 0 && <ReadingBar ratio={implied.pct / scaleMax} />}
                 <dd className={cn("numeral", styles.readingMeta)}>
                   {d.emImpliedDetail
                     .replace("{expiry}", formatEtDateCompact(implied.expiry, locale))
                     .replace("{strike}", formatPrice(implied.strike, locale, { currency: true }))
                     .replace("{straddle}", formatPrice(implied.straddle, locale, { currency: true }))}
-                </dd>
-                <dd className={styles.readingMeta}>
-                  <span className="rounded-full bg-surface-elevated px-2 py-[2px] font-semibold text-body">{d.emIndicative}</span>
                 </dd>
               </>
             ) : (
@@ -106,19 +117,22 @@ export async function ExpectedMovePanel({
           <>
             <p className="border-t border-line-soft pt-3 text-tiny font-semibold text-strong">{d.emHistory}</p>
             <ScrollEdges className="scroll-x" tabIndex={0} role="region" aria-label={d.emHistory}>
-              <table className={cn(styles.table, styles.historyTable)}>
-                <thead>
+              <table className={cn(styles.table, styles.historyTable, styles.emTable)}>
+                <thead className="sr-only">
                   <tr>
-                    <th scope="col">{d.emColReport}</th>
-                    <th scope="col">{d.emColTiming}</th>
+                    <th scope="col">{`${d.emColReport} · ${d.emColTiming}`}</th>
                     <th scope="col">{d.emColMove}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.history.map((row) => (
                     <tr key={row.date}>
-                      <td className="numeral font-semibold text-strong">{formatEtDateMedium(row.date, locale)}</td>
-                      <td className="text-body">{timingLabel(row.timing)}</td>
+                      {/* Zaman tarihin altında: iki kısa bilgi tek hücrede,
+                          satır ikiye değil tek hatta okunuyor. */}
+                      <td>
+                        <span className="numeral block font-semibold text-strong">{formatEtDateMedium(row.date, locale)}</span>
+                        <span className="block text-tiny text-muted">{timingLabel(row.timing)}</span>
+                      </td>
                       <td>
                         {row.movePct !== null ? (
                           <span className="inline-flex flex-col items-end gap-1">
@@ -145,8 +159,11 @@ export async function ExpectedMovePanel({
           </>
         )}
 
-        <p className={styles.note}>{d.emImpliedNote}</p>
-        {data.history.length > 0 && <p className={styles.note}>{d.emHistoryNote}</p>}
+        <details className={styles.how}>
+          <summary>{d.emHowTitle}</summary>
+          <p>{d.emImpliedNote}</p>
+          {data.history.length > 0 && <p>{d.emHistoryNote}</p>}
+        </details>
         {implied && data.optionsFetchedAt ? (
           <DataStamp
             labels={t.data}

@@ -1994,6 +1994,7 @@ const en: typeof tr = {
       "Rows come from SEC Form 4 filings; parts of the same filing are merged into one transaction. The summary counts only open-market buys and sales: grants, tax withholding, gifts and option exercises are not trading decisions. Pre-planned (10b5-1) sales are not flagged separately by the source.",
 
     emTitle: "Expected Move",
+    emHowTitle: "How It's Calculated",
     emImplied: "Priced by Options",
     emImpliedDetail: "{expiry} Expiry · {strike} Strike · Straddle {straddle}",
     emIndicative: "Indicative Price",

@@ -307,6 +307,22 @@
 .how > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:6px; }
 .how > p { margin-top:6px; color:var(--text-muted); font-size:11px; line-height:1.65; }
 .how + .stamp { margin-top:6px; }
+
+/* ---- Beklenen hareket: kompakt (30 Eylül, gerekçe ExpectedMovePanel) ----
+   İki okuma her genişlikte yan yana; tabandaki `.readings` 640'ın altında
+   tek sütundu. Rozet etiketin yanında, satır açmıyor. Geçmiş satırı tek
+   hücrede tarih + zaman, başlık satırı görsel olarak yok. */
+.emReadings { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 16px; padding-bottom:12px; }
+.emReadings > .reading + .reading { padding-left:16px; border-left:1px solid var(--line-soft); }
+.emValueLine { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; }
+.emBadge { display:inline-flex; padding:1px 7px; border-radius:999px; background:var(--surface-elevated); color:var(--text-body); font-size:10.5px; font-weight:600; line-height:1.5; }
+.emTable { min-width:0; }
+.emTable td { padding-block:8px; vertical-align:middle; }
+.emTable tbody tr:first-child td { border-top:0; }
+@media (max-width:359px) {
+  .emReadings { grid-template-columns:minmax(0,1fr); }
+  .emReadings > .reading + .reading { padding:10px 0 0; border-left:0; border-top:1px solid var(--line-soft); }
+}
 .clampButton { display:none; }
 .insiderNotes { min-width:0; }
 @media (min-width:1100px) {
