@@ -1055,6 +1055,7 @@ export function ArticleBody({
               <div
                 key={key}
                 data-block="table"
+                data-cols={block.head.length}
                 className="scroll-x rounded-(--radius-lg) border border-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
                 tabIndex={0}
                 role="region"
@@ -1075,7 +1076,9 @@ export function ArticleBody({
                           key={cellIndex}
                           className="px-2.5 py-2 text-nano font-bold text-muted sm:px-4 sm:py-2.5 sm:text-tiny"
                         >
-                          {cell}
+                          {/* Başlık satırı Title Case (CLAUDE.md): rutin
+                              "Neden önemli" diye yazıyordu. */}
+                          {titleCaseLabel(cell, locale)}
                         </th>
                       ))}
                     </tr>
@@ -1086,6 +1089,10 @@ export function ArticleBody({
                         {row.map((cell, cellIndex) => (
                           <td
                             key={cellIndex}
+                            /* Sütun adı hücrenin üstünde: editoryal görünüm
+                               dar ekranda satırı karta çeviriyor ve başlık
+                               satırı görünmüyor (ArticleEditorial.module.css). */
+                            data-label={cellIndex > 0 ? titleCaseLabel(block.head[cellIndex] ?? "", locale) : undefined}
                             className={cn(
                               "px-2.5 py-2 align-top leading-[18px] sm:px-4 sm:py-2.5 sm:leading-[22px]",
                               cellIndex === 0
