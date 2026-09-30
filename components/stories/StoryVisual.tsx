@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { LogoImage } from "@/components/ui/LogoImage";
 import styles from "./StoryVisual.module.css";
 import { cn, directionOf, directionText, formatPercent, formatPrice, formatEtDateCompact } from "@/lib/utils";
 import type { StoryClose } from "@/lib/story-market";
@@ -54,36 +54,30 @@ function LogoTile({
   size: number;
   radius: number;
 }) {
-  if (!logoUrl) {
-    return (
-      <span
-        aria-hidden
-        data-cc={symbol}
-        className="numeral flex shrink-0 items-center justify-center bg-primary-wash font-bold text-primary-ink"
-        style={{
-          width: size,
-          height: size,
-          borderRadius: radius,
-          fontSize: size * (symbol.length > 4 ? 0.2 : 0.26),
-        }}
-      >
-        {symbol}
-      </span>
-    );
-  }
-  return (
+  const letters = (
     <span
+      aria-hidden
       data-cc={symbol}
-      className="block shrink-0 overflow-hidden bg-white"
-      style={{ width: size, height: size, borderRadius: radius }}
+      className="numeral flex shrink-0 items-center justify-center bg-primary-wash font-bold text-primary-ink"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: radius,
+        fontSize: size * (symbol.length > 4 ? 0.2 : 0.26),
+      }}
     >
-      <Image
-        src={logoUrl}
-        alt=""
-        width={size}
-        height={size}
-        className="size-full object-contain"
-      />
+      {symbol}
+    </span>
+  );
+  if (!logoUrl) return letters;
+  /* DÜŞEN LOGO HARF KAROSUNA DÖNÜYOR (30 Eylül). Bu kopya `next/image`i
+     doğrudan çiziyordu ve yedeği yoktu: adresi olan ama yüklenmeyen logo
+     (/mercek'te RKT, telefonda görüldü) tarayıcının kırık-görsel simgesi
+     olarak duruyordu. Sitenin ortak dalı (`LogoImage`) düşüşü yakalayıp
+     harf karosunu basıyor — gerekçesi o dosyada. */
+  return (
+    <span className="block shrink-0 overflow-hidden" style={{ width: size, height: size, borderRadius: radius }}>
+      <LogoImage src={logoUrl} px={size} boxClass="block size-full overflow-hidden bg-white" card={symbol} fallback={letters} />
     </span>
   );
 }

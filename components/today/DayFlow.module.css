@@ -51,6 +51,10 @@
 .compactRow { display:grid; grid-template-columns:74px minmax(0,1fr) auto auto; align-items:center; gap:14px 18px; min-width:0; padding:14px 12px; border-top:1px solid var(--line-soft); border-radius:12px; transition:background-color .2s; }
 .compactRow:first-child { border-top-color:transparent; }
 .compactRow[data-selected] { background:var(--primary-wash); box-shadow:inset 3px 0 var(--primary); }
+/* Ayraç düz çizgi: satır 12 piksel yuvarlak köşeli ve üst kenarlık iki ucunda
+   kıvrılıp satırın başına bir kart kapağı gibi oturuyordu (30 Eylül, 390'da
+   görüldü). Köşe yalnızca seçili satırın tonunda kalıyor. */
+.compactRow:not([data-selected]) { border-radius:0; }
 .compactValue { display:flex; align-items:flex-end; gap:18px; text-align:right; }
 .compactPair { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
 .compactValue small { color:var(--text-muted); font-size:12px; }
@@ -219,7 +223,12 @@
   .compactValue { grid-column:2; flex-direction:row; flex-wrap:wrap; align-items:baseline; justify-content:flex-start; gap:4px 18px; }
   .compactPair { flex-direction:row; align-items:baseline; gap:8px; }
   .compactValue:empty { display:none; }
-  .compactLink { grid-column:2; justify-self:start; min-height:44px; }
+  /* BAĞLANTI DÜĞME DEĞİL METİN (30 Eylül, telefon denetimi). 44 piksellik
+     çerçeveli düğme her olayın altında ayrı bir kat açıyordu: iki olaylık
+     akışta kartın üçte biri iki düğmeydi ve olayın kendisinden ağır
+     okunuyordu. Mürekkep marka mavisi, çerçeve yok; dokunma hedefi yine 44
+     (dolgu negatif payla satırın kendi boyunu büyütmüyor). */
+  .compactLink { grid-column:2; justify-self:start; min-height:44px; margin:-10px 0 -10px -8px; padding:0 8px; border-color:transparent; color:var(--primary-ink); }
   .eventHeading { margin:16px 0 8px; }
   .eventCard { grid-template-columns:62px minmax(0,1fr); gap:10px; padding:12px 10px; }
   .cardTime b { font-size:16px; }

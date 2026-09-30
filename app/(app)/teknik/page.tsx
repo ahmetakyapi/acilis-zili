@@ -195,7 +195,9 @@ export default async function TechnicalPage() {
                   {KUNYE_SEP}
                   <span className="numeral">{editionClock(next.at, locale)}</span>
                   {todayEt(next.at) !== status.etDate && (
-                    <>{KUNYE_SEP}{formatEtDateCompact(todayEt(next.at), locale)}</>
+                    /* Tarih KIRILMAZ: 390'da "1 / Eki" diye ikiye bölünüyordu
+                       (30 Eylül, telefonda görüldü). Saatle aynı `nowrap`. */
+                    <>{KUNYE_SEP}<span className="whitespace-nowrap">{formatEtDateCompact(todayEt(next.at), locale)}</span></>
                   )}
                 </span>
               </div>
