@@ -108,7 +108,8 @@
   transition:opacity .25s, transform .3s, filter .25s;
 }
 .capitalSegment:first-child { border-radius:12px 6px 6px 12px; }
-.capitalSegment:last-child { border-radius:6px 12px 12px 6px; }
+/* `:last-child` değil: telefondaki "Diğer" dilimi kabın son çocuğu. */
+.capitalSegment:nth-last-child(1 of .capitalSegment) { border-radius:6px 12px 12px 6px; }
 /* Şeritteki ad: koyu dilimde beyaz, açık dilimde mürekkep. */
 .capitalInline {
   display:flex; min-width:0; align-items:center; gap:8px; padding-inline:10px;
@@ -141,12 +142,22 @@
 .capitalSegment[data-align]:not([data-align="center"]):is(:hover, :focus-visible) .capitalTip { transform:translate3d(0, 0, 0) scale(1); }
 .capitalBar:has(.capitalSegment:is(:hover, :focus-visible)) .capitalSegment:not(:hover, :focus-visible) { opacity:.4; }
 .capitalSegment:focus-visible { box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 4px var(--line-focus); }
+.capitalRestSegment { display:none; }
 @media(max-width:639px) {
   .capitalBar { height:30px; }
   .capitalSegment:not([data-rank="0"]) .capitalInline { display:none; }
   .capitalInline .portrait { display:none; }
+  /* Küçük fonlar tek "Diğer" diliminde (gerekçe InvestorRoster). */
+  .capitalSegment[data-rest] { display:none; }
+  .capitalRestSegment { display:block; min-width:10px; flex-basis:0; border-radius:6px 12px 12px 6px; background:var(--capital-tone); }
+  /* ADSIZ DİLİM DOKUNMAYA KAPALI. Telefonda üzerine gelme yok: bilgi kartı
+     hiç açılmıyor ve dokunuş doğrudan sayfaya gidiyor. Adını taşımayan
+     13 piksellik bir dilime basmak bilinmeyen bir yatırımcının sayfasını
+     açmak demekti. Adı yazan ilk dilim bağlantı olarak kalıyor; ötekilerin
+     bağlantısı hemen alttaki lejantta, adıyla. */
+  .capitalSegment:not([data-rank="0"]) { pointer-events:none; }
 }
-.capitalSegment, .capitalLegend > li { --capital-tone:color-mix(in oklab, var(--primary) 28%, var(--surface-sunken)); }
+.capitalSegment, .capitalRestSegment, .capitalLegend > li { --capital-tone:color-mix(in oklab, var(--primary) 28%, var(--surface-sunken)); }
 .capitalSegment[data-rank="0"], .capitalLegend > li[data-rank="0"] { --capital-tone:var(--primary); }
 .capitalSegment[data-rank="1"], .capitalLegend > li[data-rank="1"] { --capital-tone:color-mix(in oklab, var(--primary) 78%, var(--surface-sunken)); }
 .capitalSegment[data-rank="2"], .capitalLegend > li[data-rank="2"] { --capital-tone:color-mix(in oklab, var(--primary) 62%, var(--surface-sunken)); }
@@ -174,14 +185,19 @@ a.capitalItem:hover .capitalName { color:var(--primary-ink); }
   .capitalLegend { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px 12px; }
   .capitalLegend > li[data-inline]:not([data-rank="0"]) { display:block; }
   .capitalLegend > li { min-width:0; }
-  .capitalItem { display:flex; width:100%; font-size:12px; }
+  /* LEJANT BİR BAĞLANTI LİSTESİ, SATIR 36 PİKSEL (30 Eylül). Satırlar 18
+     piksel ve 6–8 piksel arayla üst üste duruyordu; ıskalanan dokunuş
+     BAŞKA bir yatırımcının sayfasını açıyordu. Şeridin küçük dilimleri
+     artık dokunmaya kapalı olduğu için bağlantının asıl yeri burası. */
+  .capitalLegend { row-gap:0; }
+  .capitalItem { display:flex; width:100%; min-height:36px; font-size:12px; }
   .capitalItem > .portrait { display:none; }
   .capitalName { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 }
 /* 400'ün altında şeridin açıklaması tek sütun: iki sütunda 320'de adlar
    kesiliyordu. */
 @media(max-width:399px) {
-  .capitalLegend { grid-template-columns:minmax(0,1fr); gap:6px; }
+  .capitalLegend { grid-template-columns:minmax(0,1fr); gap:0; }
 }
 
 

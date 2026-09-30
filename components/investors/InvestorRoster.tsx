@@ -97,6 +97,7 @@ export function InvestorRoster({
                     prefetch={false}
                     className={styles.capitalSegment}
                     data-rank={Math.min(index, STRIP_NAMED)}
+                    data-rest={index >= STRIP_NAMED || undefined}
                     data-align={align}
                     style={{ flexGrow: segment.value } as CSSProperties}
                     aria-label={`${segment.investor.name}, ${formatPercentPlain(pct, locale, 1)}`}
@@ -127,6 +128,21 @@ export function InvestorRoster({
                 );
               });
             })()}
+            {/* TELEFONDA "DİĞER" TEK DİLİM (30 Eylül). 390'da dokuz küçük fon
+                4–8 piksellik şeritlere düşüyordu (ölçüldü: 163, 26, 13, 13,
+                11, 11, 8, 7, 4×6): okunmuyor, parmakla seçilmiyor, üstelik her
+                biri başka bir yatırımcıya giden bir bağlantıydı. Telefonda
+                onlar gizli, yerlerinde lejanttaki "Diğer N Yatırımcı" ile
+                aynı toplamı taşıyan tek bir dilim duruyor; şerit ile lejant
+                aynı altı parçayı anlatıyor. Geniş ekranda gizli. */}
+            {rest.length > 0 && (
+              <span
+                className={styles.capitalRestSegment}
+                data-rank={STRIP_NAMED}
+                style={{ flexGrow: restValue } as CSSProperties}
+                aria-hidden
+              />
+            )}
           </div>
           <ol className={styles.capitalLegend}>
             {/* HER SAYI TEK YERDE (28 Eylül). Adını ve payını şeridin içinde
