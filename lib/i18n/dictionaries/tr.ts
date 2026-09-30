@@ -2201,6 +2201,7 @@ const tr = {
     payments: "{n} Ödeme",
     paymentsOne: "{n} Ödeme",
     recentPayments: "Son Ödemeler",
+    howTitle: "Nasıl Hesaplanıyor",
   },
   /* ---- Programatik sayfalar: sözlük, temalar, karşılaştırma çiftleri ----
      Üç yeni rota ailesinin metni; içerik (terim tanımları, tema ve çift

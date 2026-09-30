@@ -1792,6 +1792,7 @@ const en: typeof tr = {
     payments: "{n} Payments",
     paymentsOne: "{n} Payment",
     recentPayments: "Recent Payments",
+    howTitle: "How It's Calculated",
   },
   glossary: {
     eyebrow: "Market Terms",

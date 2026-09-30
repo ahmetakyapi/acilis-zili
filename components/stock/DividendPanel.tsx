@@ -133,7 +133,17 @@ export async function DividendPanel({
 
           {recent.length > 0 && (
             <div className={styles.recent}>
-              <h3>{x.recentPayments}</h3>
+              {/* GETİRİ TAHMİNİ BAŞLIĞIN SAĞINDA (30 Eylül): listenin altında
+                  kendi satırını tutuyordu; aynı ödemelerden türüyor ve
+                  onların başlığında okunuyor. */}
+              <div className={styles.recentHead}>
+                <h3>{x.recentPayments}</h3>
+                {result.yieldPct !== null && (
+                  <span className={styles.recentYield}>
+                    {x.yieldEstimate} <b className="numeral">~{formatPercentPlain(result.yieldPct, locale, 1)}</b>
+                  </span>
+                )}
+              </div>
               <ul>
                 {recent.map((item) => (
                   <li key={`${item.exDate}-${item.rate}`}>
@@ -147,7 +157,7 @@ export async function DividendPanel({
           )}
           </div>
 
-          {result.yieldPct !== null && (
+          {result.yieldPct !== null && recent.length === 0 && (
             <p className={styles.yieldLine}>
               {x.yieldEstimate} <b className="numeral">~{formatPercentPlain(result.yieldPct, locale, 1)}</b>
             </p>
@@ -163,8 +173,16 @@ export async function DividendPanel({
           <span aria-hidden> · </span>
           <Link href="/vergi" className={styles.inlineLink}>{x.taxGuide}</Link>
         </p>
-        {next && <p>{x.t1Rule}</p>}
-        {result.yieldPct !== null && <p>{x.yieldMethod}</p>}
+        {/* YÖNTEM KATLAMADA (30 Eylül, "daha kompakt"). T+1 kuralı ve getiri
+            yöntemi iki uzun paragraftı; stopaj cümlesi (okuyucunun cebine
+            dokunan tek bilgi) açıkta kalıyor, ikisi katlamada. */}
+        {(next || result.yieldPct !== null) && (
+          <details className={styles.how}>
+            <summary>{x.howTitle}</summary>
+            {next && <p>{x.t1Rule}</p>}
+            {result.yieldPct !== null && <p>{x.yieldMethod}</p>}
+          </details>
+        )}
       </div>
       <DataStamp labels={t.data} source={x.dividendSource} at={result.fetchedAt} locale={locale} className={styles.stamp} />
     </Panel>
