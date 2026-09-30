@@ -539,10 +539,20 @@ function HistoryPanel({
       <div className={styles.history}>
         <ol className={styles.historyBars} style={{ "--count": history.length } as CSSProperties}>
           {history.map((point, index) => (
-            <li key={point.period} data-current={index === history.length - 1 || undefined}>
+            <li
+              key={point.period}
+              data-current={index === history.length - 1 || undefined}
+              style={{ "--share": `${Math.max(2, (point.longValue / peak) * 100)}%` } as CSSProperties}
+            >
               <span className={cn("numeral", styles.historyValue)}>{formatMoneyCompact(point.longValue, locale)}</span>
+              {/* İKİ ÇUBUK, HER GENİŞLİKTE BİRİ (30 Eylül). Telefonda grafik
+                  yatay bir listeye dönüyor (gerekçe Investors.module.css →
+                  `.history`); hareket kancası çubuğun yönünü sunucudan gelen
+                  `data-motion-draw`dan okuduğu için dikey (`bar`) ve yatay
+                  (`line`) çubuk ayrı öğe, CSS görünmeyeni gizliyor. */}
               <span className={styles.historyTrack}>
-                <i data-motion-draw="bar" style={{ height: `${Math.max(2, (point.longValue / peak) * 100)}%` }} />
+                <i data-motion-draw="bar" data-axis="y" />
+                <i data-motion-draw="line" data-axis="x" />
               </span>
               <span className={cn("numeral", styles.historyLabel)}>{quarterLabel(point.period, t)}</span>
               <small className="numeral">{plural(point.positionCount, t.positionsOne, t.positions).replace("{count}", String(point.positionCount))}</small>

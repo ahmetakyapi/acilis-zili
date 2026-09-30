@@ -533,7 +533,7 @@ a.company:hover b { color:var(--primary-ink); }
 .historyValue { font-size:12px; font-weight:650; color:var(--text-body); white-space:nowrap; }
 .historyTrack { display:flex; align-items:flex-end; justify-content:center; width:100%; height:140px; border-bottom:1px solid var(--line); }
 .historyTrack i {
-  display:block; width:min(44px, 72%); border-radius:6px 6px 0 0; transform-origin:center bottom;
+  display:block; width:min(44px, 72%); height:var(--share); border-radius:6px 6px 0 0; transform-origin:center bottom;
   background:color-mix(in oklab, var(--primary) 32%, var(--premium-surface));
 }
 .historyBars li[data-current] .historyTrack i { background:var(--primary); }
@@ -541,9 +541,31 @@ a.company:hover b { color:var(--primary-ink); }
 .historyLabel { font-size:11.5px; font-weight:600; color:var(--text-strong); white-space:nowrap; }
 .historyBars small { font-size:11px; color:var(--text-muted); white-space:nowrap; }
 .historyNote { margin-top:12px; font-size:12px; color:var(--text-muted); }
+.historyTrack i[data-axis="x"] { display:none; }
+/* TELEFONDA YATAY LİSTE (30 Eylül). Sekiz sütun 390'da sütun başına ~34
+   piksel demekti; "3. Çeyrek 2024" ve "266 Mr $" oraya sığmıyor, ızgara
+   560 piksele zorlanıp yatay kaydırmaya düşüyordu. Sonuç: etiketler
+   komşusunun üstüne biniyor, son sütun hiçbir işaret vermeden kesiliyordu
+   (sahibinin ekran görüntüsü). Kaydırma her sütunu okunur kılmıyordu,
+   yalnızca sorunu ekranın dışına itiyordu.
+   Telefonda her çeyrek bir satır: solda çeyrek ve pozisyon sayısı, ortada
+   aynı sıfır tabanlı ölçekte yatay çubuk, sağda değer. Sıra aynı (eskiden
+   yeniye), son çeyrek yine koyu. Kaydırma yok. */
 @media(max-width:639px) {
-  .history { overflow-x:auto; }
-  .historyBars { min-width:560px; }
+  .history { padding:14px 16px; }
+  .historyBars { grid-template-columns:minmax(0,1fr); gap:0; }
+  .historyBars li {
+    display:grid; grid-template-columns:minmax(6.75rem, auto) minmax(0,1fr) auto;
+    grid-template-areas:"label track value" "small track value";
+    align-items:center; column-gap:12px; row-gap:1px; padding:7px 0; text-align:left;
+  }
+  .historyBars li + li { border-top:1px solid var(--line-soft); }
+  .historyLabel { grid-area:label; }
+  .historyBars small { grid-area:small; }
+  .historyValue { grid-area:value; min-width:4.5rem; text-align:right; }
+  .historyTrack { grid-area:track; height:10px; justify-content:flex-start; align-items:center; border-bottom:0; border-radius:5px; background:var(--surface-sunken); }
+  .historyTrack i[data-axis="y"] { display:none; }
+  .historyTrack i[data-axis="x"] { display:block; width:var(--share); height:100%; border-radius:5px; transform-origin:left center; }
 }
 
 /* ---- Kongre: hisse bazında ---------------------------------------------- */
