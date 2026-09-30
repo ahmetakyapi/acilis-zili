@@ -14,6 +14,7 @@ import { editionTime, livePriceLabel, slotLabel, stanceChangeLabel, technicalHre
 import type { TechnicalBoardEntry } from "@/lib/technical-data";
 import { cn, formatEtDateCompact, plural } from "@/lib/utils";
 import { changeToneClass } from "./TechnicalCard";
+import { PulseBar } from "./PulseBar";
 import styles from "./Technical.module.css";
 
 const VERDICTS: readonly VerdictKey[] = ["buy", "hold", "sell"];
@@ -232,16 +233,19 @@ export function TechnicalPulse({
             ))}
         </ul>
       )}
-      <div className={styles.pulseBar} aria-hidden data-motion-stagger>
-        {groups
-          .filter((group) => group.rows.length > 0)
-          .map((group) => (
-            <span key={group.verdict} data-verdict={group.verdict} data-motion-draw="line" style={{ flexGrow: group.rows.length }} />
-          ))}
-        {pending.length > 0 && (
-          <span data-verdict="pending" data-motion-draw="line" style={{ flexGrow: pending.length }} />
-        )}
-      </div>
+      {/* ÇUBUK OKUNUYOR (30 Eylül): dilime gelince/dokununca görüş, sayı
+          ve pay balonda. Gerekçe `PulseBar`. */}
+      <PulseBar
+        className={styles.pulseBar}
+        slices={[
+          ...groups.map((group) => ({ key: group.verdict, label: verdictLabel(group.verdict, t), count: group.rows.length })),
+          { key: "pending", label: t.technical.pendingLabel, count: pending.length },
+        ].map((slice) => ({
+          ...slice,
+          countLabel: plural(slice.count, t.technical.stockCountOne, t.technical.stockCount).replace("{n}", String(slice.count)),
+          share: total > 0 ? sharePercent.format(slice.count / total) : "",
+        }))}
+      />
 
       <div className={styles.pulseRows} data-motion-stagger>
         {groups

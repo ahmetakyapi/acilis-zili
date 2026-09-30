@@ -39,17 +39,43 @@
    Oran çubuğu bütünü, satırlar kimin nerede olduğunu gösteriyor. Çubukta
    yazı yok: sayı satırda bir kez yazılıyor, iki yerde aynı sayı durmuyor. */
 .pulse { display:grid; gap:14px; min-width:0; }
-.pulseBar { display:flex; gap:3px; height:10px; overflow:hidden; border-radius:999px; }
-.pulseBar > span { min-width:10px; border-radius:999px; transform-origin:left center; }
-.pulseBar > span[data-verdict="buy"] { background:var(--up); }
+/* DİLİM BİR DÜĞME (30 Eylül, `PulseBar`). Görünür şerit yine 10 piksel;
+   düğme dikeyde 13'er piksel dolgu alıp aynı kadar dışa taşıyor, yani
+   dokunma alanı 36 piksel ama düzende hiçbir şey kımıldamıyor. Kaptaki
+   `overflow:hidden` bu yüzden kalktı (dokunma alanını kırpıyordu); köşeler
+   zaten her dilimin kendi yarıçapında. */
+/* `position` + `z-index`: balon çubuğun üstündeki başlık satırına biniyor;
+   katman verilmezse başlığın metni balonun ÜSTÜNE basılıyordu (390'da
+   ekran görüntüsüyle görüldü). */
+.pulseBar { position:relative; z-index:3; display:flex; gap:3px; height:10px; }
+.pulseSlice { position:relative; display:flex; min-width:10px; padding:13px 0; margin:-13px 0; border:0; background:none; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.pulseSlice > span[data-motion-draw] { flex:1; border-radius:999px; transform-origin:left center; transition:filter .2s; }
+.pulseSlice:focus-visible { outline:none; }
+.pulseSlice:focus-visible > span[data-motion-draw] { outline:2px solid var(--line-focus); outline-offset:2px; }
+.pulseSlice[data-open] > span[data-motion-draw] { filter:brightness(1.12) saturate(1.1); box-shadow:0 0 0 2px var(--surface), 0 0 0 3px currentColor; }
+.pulseSlice[data-verdict="buy"] { color:var(--up); }
+.pulseSlice[data-verdict="hold"] { color:var(--primary); }
+.pulseSlice[data-verdict="sell"] { color:var(--down); }
+.pulseSlice[data-verdict="pending"] { color:var(--line-strong); }
+/* BALON dilimin ortasında, çubuğun üstünde; ilk ve son dilimde kenara
+   yaslanıyor ki dar ekranda kabın dışına taşmasın. */
+.pulseTip { position:absolute; bottom:calc(100% - 4px); left:50%; z-index:5; display:inline-flex; align-items:baseline; gap:8px; padding:6px 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel-fixed); box-shadow:0 6px 18px -8px color-mix(in srgb, var(--text-strong) 35%, transparent); font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap; translate:-50% 0; pointer-events:none; }
+.pulseTip b { font-size:12.5px; font-weight:750; letter-spacing:.03em; color:var(--text-muted); }
+.pulseSlice[data-verdict="buy"] .pulseTip b { color:var(--up); }
+.pulseSlice[data-verdict="hold"] .pulseTip b { color:var(--primary-ink); }
+.pulseSlice[data-verdict="sell"] .pulseTip b { color:var(--down); }
+.pulseTip > span:first-of-type { color:var(--text-strong); }
+.pulseSlice[data-edge="start"] .pulseTip { left:0; translate:none; }
+.pulseSlice[data-edge="end"] .pulseTip { left:auto; right:0; translate:none; }
+.pulseBar > .pulseSlice[data-verdict="buy"] > span[data-motion-draw] { background:var(--up); }
 /* Opaklık DEĞİL karışım: dilim bir hareket kancası ve azaltılmış harekette
    ortak kural opaklığı !important ile 1'e eziyor, TUT tam doygun kalıyordu. */
-.pulseBar > span[data-verdict="hold"] { background:color-mix(in srgb, var(--primary) 55%, transparent); }
-.pulseBar > span[data-verdict="sell"] { background:var(--down); }
+.pulseBar > .pulseSlice[data-verdict="hold"] > span[data-motion-draw] { background:color-mix(in srgb, var(--primary) 55%, transparent); }
+.pulseBar > .pulseSlice[data-verdict="sell"] > span[data-motion-draw] { background:var(--down); }
 /* BEKLEYEN DİLİM RENKSİZ. Bir görüş değil, henüz olmayan bir görüş —
    yeşil/mavi/kırmızının yanında dördüncü bir renk, olmayan bir kararı
    varmış gibi gösterirdi. */
-.pulseBar > span[data-verdict="pending"] { background:var(--line-strong); }
+.pulseBar > .pulseSlice[data-verdict="pending"] > span[data-motion-draw] { background:var(--line-strong); }
 /* ETİKET SÜTUNU EN UZUN ETİKETE GÖRE, PİKSELLE DEĞİL. Sütun sabit 78
    pikseldi; üç görüş etiketi ("AL", "TUT", "SAT") oraya rahat sığıyordu
    ama dördüncü satır gelince ("Bekliyor" 76 piksel) sayının ardındaki
