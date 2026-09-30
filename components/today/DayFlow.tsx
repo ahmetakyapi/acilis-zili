@@ -268,9 +268,12 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
                 kaynağı FRED ve FRED konsensüs yayımlamıyor (`forecast`
                 sütunu boş kalıyor; Finnhub'ın ekonomik takvimi ücretli
                 katmanda). Beklenti uydurulmuyor (CLAUDE.md "Veri
-                dürüstlüğü"); elimizdeki gerçek kıyas önceki değer. Bir
-                konsensüs kaynağı bağlandığında beklenti kendiliğinden
-                geçiyor. Geniş listedeki sonuç paneli üçünü de basıyor. */}
+                dürüstlüğü"); elimizdeki gerçek kıyas önceki değer.
+                30 Eylül: kaynak bağlandı — günlük rutin konsensüsü
+                `/api/takvim/beklenti`ye yazıyor (docs/claude-rutinler.md
+                § 1, adım 1b); yazıldığı olayda "Önceki"nin yerini
+                "Beklenti" alıyor. Geniş listedeki sonuç paneli üçünü de
+                basıyor. */}
             {value ? (
               <span className={styles.compactValue}>
                 <span className={styles.compactPair}><small>{valueLabel}</small><b className="numeral">{value}</b></span>

@@ -163,7 +163,10 @@ export async function GET(request: Request) {
       holiday_name: status.holiday?.nameTr ?? null,
       next_open_utc: status.nextOpen.toISOString(),
     },
+    /* `slug` + `forecast`: rutin beklentiyi `/api/takvim/beklenti`ye bu
+       anahtarla yazıyor (docs/claude-rutinler.md § 1, adım 1b). */
     economic_events: events.map((event) => ({
+      slug: event.slug,
       date_et: event.eventDate,
       time_et: event.eventTimeEt,
       title_tr: event.titleTr,
@@ -177,10 +180,13 @@ export async function GET(request: Request) {
     economic_events_next_week: weekEvents
       .filter((event) => event.importance === "high")
       .map((event) => ({
+        slug: event.slug,
         date_et: event.eventDate,
         time_et: event.eventTimeEt,
         title_tr: event.titleTr,
         importance: event.importance,
+        forecast: event.forecast,
+        unit: event.unit,
       })),
     earnings: {
       total_count: earnings.length,

@@ -81,6 +81,25 @@ curl -s -H "Authorization: Bearer $SECRET" \
   https://aciliszili.com/api/brief/context
 ```
 
+1b) Olay beklentilerini yaz. `economic_events` (bugün) ve
+`economic_events_next_week` listesinde `forecast` alanı BOŞ olan olaylar
+için piyasa beklentisini (konsensüs medyanı) güvenilir bir kaynaktan
+doğrula. Emin olmadığın olayı GÖNDERME — site beklentiyi "Beklenti"
+künyesiyle, gerçekleşenin yanında basıyor; yanlış bir sayı okuyucuya
+yanlış bir sürpriz anlatır. Değer ham sayı, olayın `unit` alanıyla aynı
+ölçekte (yüzde için "3.3", "%3,3" değil):
+
+```bash
+curl -s -X POST https://aciliszili.com/api/takvim/beklenti \
+  -H "Authorization: Bearer $SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"items": [{"slug": "<slug>", "date_et": "YYYY-MM-DD", "forecast": "3.3"}]}'
+```
+
+Yanıttaki `missing` boş olmalı; doluysa slug ya da tarih yanlış, düzeltip
+yalnızca onları tekrar gönder. Bulduğun beklentiyi aşağıdaki brifingde de
+aynı sayıyla kullan.
+
 2) Bu veriye dayanarak Türkçe bir sabah brifingi yaz.
 
 Başlık: en fazla 70 karakter, günün en önemli olayını taşır, clickbait değil.
