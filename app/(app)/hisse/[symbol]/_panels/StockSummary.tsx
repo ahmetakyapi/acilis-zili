@@ -142,7 +142,14 @@ export async function StockSummary({ symbol, locale, t }: { symbol: string; loca
       key: "next",
       icon: <CalendarBlank size={16} weight="duotone" />,
       label: d.sumFactNext,
-      value: <span className="numeral">{formatEtDateLong(facts.next.date, locale)}</span>,
+      /* Bölüme BAĞLANTI (30 Eylül): profildeki "Sıradaki Bilanço" satırı
+         bu künyenin kopyası olduğu için kalktı (ProfileCard); ayrıntıya
+         giden bağlantı onunla birlikte buraya taşındı. */
+      value: (
+        <a href="#stock-earnings" className={cn("numeral", styles.summaryLink)}>
+          {formatEtDateLong(facts.next.date, locale)}
+        </a>
+      ),
       meta: <span className="numeral">{when.approx ?? when.window}</span>,
     });
   }
@@ -187,7 +194,7 @@ export async function StockSummary({ symbol, locale, t }: { symbol: string; loca
             <div key={cell.key} className={styles.summaryFact}>
               <dt>
                 <span className={styles.summaryIcon} aria-hidden>{cell.icon}</span>
-                {cell.label}
+                <span className={styles.summaryLabel}>{cell.label}</span>
               </dt>
               <dd>{cell.value}</dd>
               {cell.meta && <dd className={styles.summaryMeta}>{cell.meta}</dd>}

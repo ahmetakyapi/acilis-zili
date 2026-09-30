@@ -183,6 +183,28 @@
 .summaryPeers { display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
 .summaryPeers > a { border-radius:10px; transition:transform .25s; }
 @media(hover:hover) and (pointer:fine) { .summaryPeers > a:hover { transform:translateY(-2px); } }
+.summaryLink { color:inherit; text-decoration:underline; text-decoration-color:var(--primary-faint); text-decoration-thickness:1.5px; text-underline-offset:4px; transition:color .2s, text-decoration-color .2s; }
+.summaryLink:hover { color:var(--primary-ink); text-decoration-color:currentColor; }
+/* TELEFONDA SATIR, SÜTUN DEĞİL (30 Eylül). Izgara 390'da tek sütuna
+   iniyordu ama hücreler arasında hiçbir ayraç yoktu: ikon + etiket, altında
+   dev punto değer, hemen altında bir sonraki ikon — hangi etiketin hangi
+   değere ait olduğu boşluktan tahmin ediliyordu ve beş bilgi 407 piksel
+   tutuyordu (sahibinin ekran görüntüsü). Telefonda her bilgi bir satır:
+   ikon kutusu solda iki hattı kaplıyor, etiket üstte, değer altta; satırlar
+   kıl çizgiyle ayrılıyor. Değer 16'dan 15'e iniyor, künye (bilanço
+   penceresi, logolar) değerin altında aynı sütunda. */
+@media(max-width:639px) {
+  .summaryFacts { grid-template-columns:minmax(0,1fr); gap:0; }
+  .summaryFact { display:grid; grid-template-columns:32px minmax(0,1fr); column-gap:12px; row-gap:2px; padding:11px 0; }
+  .summaryFact + .summaryFact { border-top:1px solid var(--line-soft); }
+  .summaryFact:first-child { padding-top:2px; }
+  .summaryFact:last-child { padding-bottom:0; }
+  .summaryFact dt { display:contents; }
+  .summaryIcon { grid-column:1; grid-row:1 / span 3; align-self:start; width:32px; height:32px; border-radius:10px; }
+  .summaryLabel, .summaryFact dd { grid-column:2; }
+  .summaryFact dd { font-size:15px; text-wrap:pretty; }
+  .summaryPeers { margin-top:4px; }
+}
 .summaryText { margin-top:14px; max-width:78ch; color:var(--text-body); font-size:13.5px; line-height:1.75; }
 .guides { display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:12px; padding-top:10px; border-top:1px solid var(--line-soft); }
 .guides > span { color:var(--text-muted); font-size:11px; font-weight:600; }

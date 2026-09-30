@@ -1,13 +1,12 @@
-import { Bank, CalendarCheck, Flag, GlobeHemisphereWest, LinkSimple, Stack } from "@phosphor-icons/react/dist/ssr";
+import { Bank, Flag, GlobeHemisphereWest, LinkSimple } from "@phosphor-icons/react/dist/ssr";
 import styles from "../stock.module.css";
 import { exchangeLabel } from "@/components/stock/exchange-label";
 import { DataError, DataStamp, PanelHeader } from "@/components/ui/primitives";
 import { PriceRail } from "@/components/ui/PriceRail";
-import { getStatus, getCompanies, getSymbolNames, liveMarketCap, getNextReport } from "@/lib/data";
+import { getStatus, getCompanies, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { getCompanyProfile, getQuote } from "@/lib/providers";
-import { NDX_MEMBERS, SPX_MEMBERS, indexMemberOf, primaryOnly } from "@/db/seed/indices";
-import { subIndustryName } from "@/db/seed/sub-industries";
+import { NDX_MEMBERS, SPX_MEMBERS, primaryOnly } from "@/db/seed/indices";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { describeSymbol } from "@/db/seed/descriptions";
 import { cn, formatMoneyCompact, formatEtDateMedium, formatPercentPlain, formatPrice, NO_VALUE, safeExternalUrl } from "@/lib/utils";
@@ -28,12 +27,10 @@ export async function ProfileCard({
      şirket, iki ekran, iki değer. Kural tek yerde: lib/data.ts →
      liveMarketCap. Fiyat alınamazsa kayıtlı değere düşülür. */
   const status = await getStatus();
-  const [result, meta, quoteForCap, nextReport, metricsForBand, directory] = await Promise.all([
+  const [result, meta, quoteForCap, metricsForBand, directory] = await Promise.all([
     getCompanyProfile(symbol),
     getSymbolNames([symbol]),
     getQuote(symbol, status),
-    /* Yerel takvim okuması; sağlayıcıya gitmiyor (lib/data.ts). */
-    getNextReport(symbol),
     /* 52 hafta bandı — Anahtar Metrikler ile aynı çağrı, `finnhubFetch`
        altı saat önbellekli: yeni tur yok. */
     getKeyMetrics(symbol),
@@ -67,7 +64,6 @@ export async function ProfileCard({
   const liveCapValue = liveMarketCap(meta[symbol], quoteForCap.ok ? quoteForCap.data.price : null);
   const liveCap = liveCapValue !== null;
   const marketCap = liveCapValue ?? (profile.currency === "USD" ? profile.marketCap : null);
-  const member = indexMemberOf(symbol);
   /* DİZİNDEKİ SIRA (24 Eylül). Piyasa değeri kartta tek başına bir sayıydı
      ve sağ yarısı boştu: "4,97 T $" büyük mü, küçük mü, okuyucu kendi
      bilgisiyle tamamlamak zorundaydı. Sıra ve en büyük şirkete oranı o
@@ -102,11 +98,6 @@ export async function ProfileCard({
   })();
   const about = await describeSymbol(symbol, locale);
   const websiteHref = safeExternalUrl(profile.weburl);
-  const hourLabels: Record<string, string> = {
-    bmo: t.earnings.beforeOpen,
-    amc: t.earnings.afterClose,
-    dmh: t.earnings.duringMarket,
-  };
 
   /* Ülke adı — kod tanınmazsa `of()` girdiyi aynen geri veriyor, o durumda
      "US" gibi ham bir kod basmak yerine satırı hiç açmıyoruz. */
@@ -133,12 +124,12 @@ export async function ProfileCard({
        cümle iki kez okunuyor. Değeri boşsa ikisi de boş — "Sektör: —"
        basmanın da bir faydası olmuyordu.
        ALT SEKTÖR KALIYOR: daha dar bir sınıflandırma ve künyede yok. */
-    ...(member?.sub
-      ? ([[t.stock.industry, subIndustryName(member.sub, locale)]] as [
-          string,
-          React.ReactNode,
-        ][])
-      : []),
+    /* ALT SEKTÖR DE KALKTI (30 Eylül). Şirket Özeti bu kartın hemen
+       altında, tam genişlikte duruyor ve sektörü, alt sektörü, sonraki
+       bilançoyu zaten taşıyor; profil aynı üç bilgiyi ikinci kez basıyordu
+       (sahibinin ekran görüntüsü: iki panelde "Yarı İletkenler", iki
+       panelde "30 Eylül"). Profil artık yalnızca özette OLMAYANI taşıyor:
+       ülke, borsa, halka arz, web sitesi. */
     /* ÜLKE — sağlayıcı ISO-2 kodu veriyor ("US", "TW", "NL") ve çeviri
        `Intl.DisplayNames` ile yapılıyor: yeni bir ülke sözlüğü kurmaya gerek
        yok, kural tarayıcının ve Node'un kendisinde. Satır ADR'lerde asıl
@@ -170,40 +161,36 @@ export async function ProfileCard({
        uzatıyordu); ama tarihin kendisi şirket künyesinin bir satırı ve
        profil kartının altında boşluk bırakan yere tam oturuyor. Satır
        bölüme bağlanıyor — ayrıntı orada. Tarih yoksa satır da yok. */
-    ...(nextReport
-      ? ([
-          [
-            t.stock.nextReportRow,
-            <a key="next" href="#stock-earnings" className="tap-44 numeral text-primary hover:underline">
-              {formatEtDateMedium(nextReport.date, locale)}
-              {nextReport.hour && hourLabels[nextReport.hour]
-                ? ` · ${hourLabels[nextReport.hour]}`
-                : ""}
-            </a>,
-          ],
-        ] as [string, React.ReactNode][])
-      : []),
+    /* SIRADAKİ BİLANÇO SATIRI DA KALKTI (30 Eylül) — aynı gerekçe: Şirket
+       Özeti'nde tarih ve pencere duruyor, bölüme bağlantı da artık orada
+       (StockSummary). */
   ];
   /* SATIRIN İKONU (26 Eylül). Profil etiket-değer satırlarından ibaretti ve
      "düz sayfa" gibi okunuyordu. Her satırın başında ne anlattığını
      gösteren küçük bir karo var; göz etiketi okumadan satırı buluyor.
      Eşleme etikete göre: satırlar koşullu eklendiği için sıra değil ad
      tanımlayıcı. Eşlenmeyen satır ikonsuz kalır, kaymaz. */
-  const rowIcon = new Map<string, typeof Stack>([
-    [t.stock.industry, Stack],
+  const rowIcon = new Map<string, typeof Bank>([
     [t.stock.country, GlobeHemisphereWest],
     [t.stock.exchange, Bank],
     [t.stock.ipoDate, Flag],
-    [t.stock.nextReportRow, CalendarCheck],
     [t.stock.website, LinkSimple],
   ]);
-  const rowLabel = (label: string) => {
+  /* KÜNYE KAROLARI (30 Eylül). Etiket-değer ızgarası kıl çizgilerle
+     bölünmüş bir form gibi okunuyordu ("çok karmaşık"). Her bilgi artık
+     kendi karosu: solda ikon kutusu, sağda etiket ve değer; karolar arası
+     boşluk ayraç görevi görüyor, çizgi yok. İkon satırı etiketi okumadan
+     buldurmaya devam ediyor. */
+  const fact = (label: string, value: React.ReactNode, key = label) => {
     const Icon = rowIcon.get(label);
     return (
-      <dt className={styles.factLabel}>
-        {Icon && <Icon aria-hidden size={14} weight="duotone" />}
-        {label}
-      </dt>
+      <div key={key} className={styles.factTile}>
+        <span className={styles.factIcon} aria-hidden>
+          {Icon && <Icon size={16} weight="duotone" />}
+        </span>
+        <dt>{label}</dt>
+        <dd>{value}</dd>
+      </div>
     );
   };
 
@@ -233,42 +220,57 @@ export async function ProfileCard({
           hesaplandığını söylüyor (lib/data.ts → liveMarketCap). Arka
           plandaki sembol filigranı ve yörünge halkaları da gitti: derinlik
           tonla kuruluyor, süsle değil (tema § 1). */}
+      {/* ÜST BANT YENİDEN (30 Eylül, sahibinin isteği: "daha okunabilir,
+          daha premium, çok karmaşık"). Sıra sağ sütunda dar bir bloğun
+          içindeydi: "9." yanında iki satıra kırılan bir künye, altında
+          neyi ölçtüğü yazmayan 180 piksellik bir çubuk ve onun altında
+          bir cümle daha. Şimdi iki büyük sayı yan yana (değer | sıra), her
+          birinin tek satır künyesi var; ÖLÇEK ikisinin altında tam
+          genişlikte: çubuğun tamamı endeksin en büyüğü, dolu kısım bu
+          şirket. Solda şirketin sembolü, sağda en büyük şirket — çubuk
+          ne ölçtüğünü iki ucunda kendisi söylüyor. */}
       {marketCap !== null && (
-        <div className={styles.profileVisual} data-has-rank={rankInfo !== null}>
-          <dl className={styles.profileMetric}>
-            <dt>{t.market.marketCap}</dt>
-            <dd className={cn("numeral", styles.profileCapValue)}>
-              {formatMoneyCompact(marketCap, locale)}
-            </dd>
-            {liveCap && <dd className={styles.profileCapNote}>{t.stock.capLiveNote}</dd>}
-          </dl>
-          {rankInfo && (
-            <dl className={styles.profileRank}>
-              <dt>{t.stock.capRank}</dt>
-              <dd className={cn("numeral", styles.profileRankValue)}>
-                {rankInfo.rank.toLocaleString(locale)}.
-                <span>
+        <div className={styles.capHero}>
+          <dl className={styles.capFigures} data-has-rank={rankInfo !== null || undefined}>
+            <div>
+              <dt>{t.market.marketCap}</dt>
+              <dd className={cn("numeral", styles.capBig)}>{formatMoneyCompact(marketCap, locale)}</dd>
+              {liveCap && <dd className={styles.capNote}>{t.stock.capLiveNote}</dd>}
+            </div>
+            {rankInfo && (
+              <div className={styles.capRankCell}>
+                <dt>{t.stock.capRank}</dt>
+                <dd className={cn("numeral", styles.capBig)}>{rankInfo.rank.toLocaleString(locale)}.</dd>
+                <dd className={cn("numeral", styles.capNote)}>
                   {(rankPool ? t.stock.capRankOfIndex.replace("{index}", rankPool.name) : t.stock.capRankOf).replace(
                     "{n}",
                     rankInfo.total.toLocaleString(locale),
                   )}
-                </span>
-              </dd>
+                </dd>
+              </div>
+            )}
+          </dl>
+          {rankInfo && (
+            <div className={styles.capScale}>
               {/* Ölçek: en büyük şirkete oran — bir büyüklük, yargı değil
-                  (CLAUDE.md "Karşılaştırılan her büyüklük bir de ÇİZGİ"). */}
-              <dd aria-hidden className={styles.profileRankTrack}>
+                  (CLAUDE.md "Karşılaştırılan her büyüklük bir de ÇİZGİ").
+                  Sayılar iki uçta metin olarak yazılı; çubuk yalnızca çizim. */}
+              <span aria-hidden className={styles.capTrack}>
                 <i style={{ width: `${Math.max(2, Math.min(100, rankInfo.share * 100)).toFixed(1)}%` }} />
-              </dd>
-              <dd className={styles.profileCapNote}>
-                {rankInfo.leader
-                  ? t.stock.capLeader
-                      .replace("{symbol}", rankInfo.leader.symbol)
-                      .replace("{value}", formatMoneyCompact(rankInfo.leader.marketCap, locale))
-                  : rankPool
-                    ? t.stock.capLeaderSelfIndex.replace("{index}", rankPool.name)
-                    : t.stock.capLeaderSelf}
-              </dd>
-            </dl>
+              </span>
+              <span className={styles.capEnds}>
+                <span className={cn("numeral", styles.capSelf)}>{symbol}</span>
+                <span className="numeral">
+                  {rankInfo.leader
+                    ? t.stock.capLeader
+                        .replace("{symbol}", rankInfo.leader.symbol)
+                        .replace("{value}", formatMoneyCompact(rankInfo.leader.marketCap, locale))
+                    : rankPool
+                      ? t.stock.capLeaderSelfIndex.replace("{index}", rankPool.name)
+                      : t.stock.capLeaderSelf}
+                </span>
+              </span>
+            </div>
           )}
         </div>
       )}
@@ -299,34 +301,21 @@ export async function ProfileCard({
           üç satıra iniyor (tek sayıda kalırsa sonuncusu iki sütunu kaplıyor,
           boş hücre yok); ikonlar etiketin önünde, karo değil. Satır
           sırası ve koşulları aynı. */}
-      <dl className={styles.facts}>
-        {rows.map(([label, value]) => (
-          <div key={label} className={styles.fact}>
-            {rowLabel(label)}
-            <dd>{value}</dd>
-          </div>
-        ))}
+      <dl className={styles.factTiles}>
+        {rows.map(([label, value]) => fact(label, value))}
         {/* Adres sağlayıcıdan geliyor; şeması süzülmeden href'e konmaz. */}
-        {websiteHref && (
-          <div className={styles.fact}>
-            {rowLabel(t.stock.website)}
-            <dd className="min-w-0">
-              <a
-                href={websiteHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="tap-44 text-primary hover:underline"
-              >
-                {/* KIRPILMIYOR, SARIYOR: ızgaranın yarım hücresinde
-                    "coca-colacompany.com" üç nokta ile kesiliyordu
-                    (1440'ta ölçüldü); adres bölünmeden okunmalı. */}
-                {/* Sondaki eğik çizgi de gidiyor: "nvidia.com/" bir adres
-                    değil, bir yolun başı gibi okunuyordu. */}
-                {websiteHref.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
-              </a>
-            </dd>
-          </div>
-        )}
+        {websiteHref &&
+          fact(
+            t.stock.website,
+            <a href={websiteHref} target="_blank" rel="noopener noreferrer" className="tap-44 text-primary hover:underline">
+              {/* KIRPILMIYOR, SARIYOR: ızgaranın yarım hücresinde
+                  "coca-colacompany.com" üç nokta ile kesiliyordu
+                  (1440'ta ölçüldü); adres bölünmeden okunmalı. Sondaki
+                  eğik çizgi de gidiyor: "nvidia.com/" bir yolun başı
+                  gibi okunuyordu. */}
+              {websiteHref.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
+            </a>,
+          )}
       </dl>
       {/* 52 HAFTA BANDI PROFİLİN SONUNDA (24 Eylül). Anahtar Metrikler'de
           ayrı bir bloktu; profil kartı ise grafiğin yanında içeriğinden
