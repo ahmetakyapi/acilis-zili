@@ -27,7 +27,9 @@
   .top { display: contents; }
   .date { grid-area: date; flex-direction: column; align-items: flex-start; gap: 2px; }
   .row[data-same-day] .date { visibility: hidden; }
-  .status { grid-area: status; justify-self: start; }
+  /* Durum telefonda hap değil düz künye: her satırda aynı "Beklenen"
+     hapı listeyi kutu sırasına çeviriyordu ("çok karmaşık", 30 Eylül). */
+  .status { grid-area: status; justify-self: start; padding: 0; border: 0; background: none; font-weight: 500; color: var(--text-muted); }
   .id { grid-area: id; }
   .figs { grid-area: figs; flex-direction: column; align-items: flex-end; gap: 2px; margin-top: 0; padding-top: 1px; border-top: 0; text-align: right; }
 }

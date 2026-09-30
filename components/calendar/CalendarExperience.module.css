@@ -258,26 +258,33 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
   .cellFoot { justify-content:center; }
   .cellCount, .cellNote { display:none; }
 
-  /* TELEFONDA TEK RAY (30 Eylül, sahibinin isteği: "sınırları zorlayarak
-     çok iyi hale getir"). Şerit üç ayrı hücre türü gibi okunuyordu:
-     olaylı iş günü kutulu kart, olaysız iş günü kutusuz ama geniş, hafta
-     sonu kutusuz ve dar — yedi gün eşit durmuyor, göz düzensiz bir dizi
-     görüyordu. Şimdi yedi gün tek bir raya oturuyor (soluk zemin, yuvarlak
-     köşe): olaylı gün rayın ÜSTÜNDE beyaz bir kart, olaysız gün aynı boyda
-     zeminsiz, hafta sonu dar ve soluk. Hepsi aynı nesnenin parçası; kart
-     olan gün "burada olay var" diyor. İş günü 2 / hafta sonu 1 birim
-     kararı yerinde. */
-  .strip:not(.month) { margin:12px 16px; padding:4px; gap:3px; border:0; border-radius:14px; background:var(--surface-sunken); }
-  .strip:not(.month) .cell { min-height:62px; border-color:transparent; border-radius:11px; background:none; }
-  .strip:not(.month) a.cell { border-color:var(--line-soft); background:var(--premium-surface); box-shadow:0 1px 0 color-mix(in srgb, var(--text-strong) 4%, transparent); }
-  .strip:not(.month) a.cell[aria-current="true"] { border-color:var(--primary); background:var(--primary-tint); }
+  /* TELEFONDA SADE ŞERİT (30 Eylül, iki tur). İlk tur şeridi soluk bir
+     raya oturtup olaylı günleri rayın üstünde kart yapmıştı; sahibinin
+     yanıtı "çok karmaşık duruyor". Ray + kart + çip hapları + görünüm
+     seçici üst üste dört katman kutuydu. Şimdi şeritte HİÇ kutu yok: yedi
+     gün düz sütun, olay olduğunu altındaki önem noktaları söylüyor, bugün
+     mavi rakam ve üst çizgi, seçili gün tek bir mavi ton. Hafta sonu dar
+     ve soluk (iş günü 2 / hafta sonu 1 birim kararı yerinde). */
+  .strip:not(.month) { gap:2px; padding:10px 12px; }
+  .strip:not(.month) .cell, .strip:not(.month) a.cell { min-height:60px; border-color:transparent; border-radius:12px; background:none; box-shadow:none; }
+  .strip:not(.month) a.cell[aria-current="true"] { background:var(--primary-tint); box-shadow:none; }
   .strip:not(.month) .cell[data-weekend] .cellTop, .strip:not(.month) .cell[data-weekend] .cellNum strong { color:var(--text-soft); }
   .strip:not(.month) .cell[data-today]::before { top:0; }
 
-  /* Önem çipleri satıra eşit genişlikte yayılıyor: üç hap sola yığılıp
-     sağda boşluk bırakıyordu. Yükseklik dokunma hedefi (44) yerinde. */
-  .panelHead .chips { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
-  .panelHead .chip { justify-content:center; padding:0 8px; }
+  /* Önem çipleri satıra eşit yayılıyor ve ZEMİNSİZ: üç gri hap şeridin
+     üstünde ikinci bir kutu sırası gibi duruyordu. Seçili çip tonunu
+     koruyor; dokunma hedefi (44) yerinde. */
+  .panelHead .chips { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+  .panelHead .chip { justify-content:center; padding:0 6px; background:none; }
+  .panelHead .chip[aria-current="true"] { background:var(--primary-wash); }
+
+  /* Olay satırı telefonda üç kutudan arınıyor: saat karosu zeminsiz (dört
+     olayın dördü aynı saatteyken dört mavi kutu yan yana diziliyordu),
+     "Planlandı" basılmıyor (henüz açıklanmamış olmak varsayılan hâl; bilgi
+     taşıyan tek durum "Açıklandı"), yalnız o etiketi taşıyan satır da
+     hiç yer tutmuyor. Yüksek etkinin sol hattı ve noktaları yerinde. */
+  .status:not([data-published]) { display:none; }
+  .statusLine:has(> .status:only-child:not([data-published])) { display:none; }
 
   .monthHead, .monthHead[data-weekend] { padding:0 0 4px; font-size:11px; text-align:center; }
   .month .cell, .month .cell[data-weekend] { min-height:46px; padding:6px 2px; }
@@ -290,7 +297,8 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
   .event, .agenda[data-values] .event { grid-template-columns:58px 18px minmax(0,1fr); gap:10px; padding:14px 16px; }
   .time { min-height:48px; }
   .time > span:first-child { font-size:16px; }
-  .values { grid-column:2 / -1; display:flex; flex-wrap:wrap; gap:8px 16px; }
+  /* Değerler metnin sol hattında (önem noktalarının altında değil). */
+  .values { grid-column:3 / -1; display:flex; flex-wrap:wrap; gap:8px 20px; margin-top:10px; }
   .value { align-items:flex-start; padding-left:0; border-left:0; }
   .value[data-empty] { display:none; }
   .quiet, .foot { padding-inline:16px; }
@@ -347,3 +355,12 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
  .event:hover .time { translate:0 -2px; }
 }
 @media(prefers-reduced-motion:reduce) { .event, .time { transition:none; } .event:hover .time { translate:none; } }
+
+/* Telefonda saat zeminsiz ve bir kademe küçük (gerekçe yukarıda, "Olay
+   satırı telefonda üç kutudan arınıyor"). Premium bloğundan SONRA: oradaki
+   58 piksellik karo aynı özgüllükte ve sonra geldiği için kazanıyordu. */
+@media (max-width:767px) {
+  .time, .time[data-high] { min-height:0; align-items:flex-start; padding:0; background:none; }
+  .time > span:first-child { font-size:17px; }
+  .time > span:nth-child(2) { font-size:11px; color:var(--text-muted); }
+}
