@@ -224,7 +224,17 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
         ekranda ikinci kez yazıyordu. Aynı fotoğrafı okuyarak geri sayımın
         altında çiziliyor (`SessionRail`, `day-flow-store`); "şimdi" ayracı
         ve seçim burada kaldı. */}
-    {events.length > 0 && events.length <= COMPACT_MAX ? (
+    {/* TELEFONDA HEP KISA LİSTE (1 Ekim, sahibinin isteği: "alttaki kartı
+        kaldıralım"). Üç ve daha fazla olayda telefon da liste + sonuç
+        paneli düzenini kuruyordu: panel listenin ALTINA iniyor ve seçili
+        olayı ikinci kez anlatıyordu (saat, ad, durum, beklentiler) — yan
+        yana değil alt alta olunca seçim hiçbir şey ayırmıyor, yalnızca
+        tekrar ediyor. Telefonda her olay kısa listedeki kendi satırı: sonuç
+        ve bağlantı satırın içinde. Geniş ekranda düzen aynı. İki düzen
+        birlikte basılıyor ve biri `display:none` — istemcide ölçüye göre
+        seçmek hidrasyonda sayfayı zıplatırdı; ekran okuyucu yalnızca
+        görüneni okur. */}
+    {events.length > 0 && <div className={events.length > COMPACT_MAX ? styles.phoneList : undefined}>{(
       /* KISA GÜN, KISA PANEL (24 Eylül). Bir-iki olaylı günde panel liste
          + sonuç paneli düzenini kuruyordu: 1440'ta tek olay için 622 piksel,
          "Günün Olayları 1" başlığı ve aynı olayı ikinci kez anlatan geniş
@@ -299,7 +309,8 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
           </li>;
         })}
       </ol>
-    ) : events.length ? <>
+    )}</div>}
+    {events.length > COMPACT_MAX ? <div className={styles.wideList}>
       {/* TEK OLAYDA LİSTE YOK. Tek satırlık liste ile sonuç paneli aynı olayı
           yan yana iki kez anlatıyordu (saat, ad, "Planlandı" iki yerde) ve
           ok düğmeleri gidecek yer olmadan, soluk duruyordu. Tek olayda
@@ -381,7 +392,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
       </AnimatePresence>
       </div>
       </div>
-    </> : snapshot.hiddenEarnings > 0 ? (
+    </div> : events.length ? null : snapshot.hiddenEarnings > 0 ? (
       /* Akış boş ama gün boş DEĞİL: eşiğin altındaki bilançolar var. "Açıklama
          yok" demek aynı sayfadaki bilanço paneliyle çelişirdi. */
       <div className={styles.empty}><span><CalendarBlank size={32} weight="duotone" /></span><div><h3>{labels.emptyMajorTitle}</h3><p>{labels.emptyMajorHint.replace("{count}", String(snapshot.hiddenEarnings))}{" "}<Link href={withLocale("/bilancolar", locale)} prefetch={false} className={styles.emptyLink}>{labels.emptyMajorLink}<ArrowUpRight size={12} weight="bold" aria-hidden /></Link></p></div></div>

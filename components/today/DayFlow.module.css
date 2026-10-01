@@ -259,3 +259,12 @@
   .flow *,.flow *::before { animation:none!important; transition:none!important; }
   .detail { opacity:1!important; transform:none!important; }
 }
+
+/* Telefonda kısa liste, genişte liste + sonuç paneli (gerekçe DayFlow.tsx,
+   "TELEFONDA HEP KISA LİSTE"). Yalnızca üç ve daha fazla olaylı günde iki
+   düzen birlikte basılıyor; daha azında kısa liste zaten tek düzen. */
+.phoneList { display:none; }
+@media (max-width:767px) {
+  .phoneList { display:block; }
+  .wideList { display:none; }
+}
