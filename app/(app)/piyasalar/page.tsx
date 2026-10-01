@@ -857,7 +857,10 @@ function IndexToolbar({ total, memberCount, heat, locale, t, children }: {
           <div className={styles.heat}>
             <div className={styles.heatHead}>
               <h2 data-ink="solid"><SquaresFour size={21} weight="duotone" aria-hidden />{t.markets.heatmap}</h2>
-              <p className={styles.heatHint}>{t.markets.heatmapHint}</p>
+              <p className={styles.heatHint}>
+                <span className={styles.heatHintWide}>{t.markets.heatmapHint}</span>
+                <span className={styles.heatHintPhone}>{t.markets.heatmapHintPhone}</span>
+              </p>
               <div className={styles.heatLegend} role="img" aria-label={t.markets.heatScaleHint}>
                 <div className={styles.heatSwatches} aria-hidden>
                   {[-4, -3, -2, -1, 0, 1, 2, 3, 4].map((level) => (

@@ -1499,6 +1499,8 @@ const tr = {
     breadthCoverage: "{total} şirketin {known} tanesinde değişim verisi mevcut.",
     heatmap: "Isı Haritası",
     heatmapHint: "Piyasa değerine göre ilk 30 şirket · Günlük değişim",
+    /* Telefonda harita 20 şirket (5 × 4) — künye ekrandakini söyler. */
+    heatmapHintPhone: "Piyasa değerine göre ilk 20 şirket · Günlük değişim",
     heatScaleHint: "Renk yoğunluğu eşikleri: yüzde 0,5, 1,5 ve 3; yeşil yükseliş, kırmızı düşüş.",
     heatScaleSteps: "Kademeler: %0,5 · %1,5 · %3",
     heatDayRange: "Gün İçi Aralık",

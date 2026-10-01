@@ -1177,6 +1177,7 @@ const en: typeof tr = {
     breadthCoverage: "Change data is available for {known} of {total} companies.",
     heatmap: "Heat Map",
     heatmapHint: "30 largest companies by market value · Daily change",
+    heatmapHintPhone: "20 largest companies by market value · Daily change",
     heatScaleHint: "Color intensity thresholds: 0.5, 1.5 and 3 percent; green is up, red is down.",
     heatScaleSteps: "Steps: 0.5% · 1.5% · 3%",
     heatDayRange: "Day Range",
