@@ -97,6 +97,11 @@ export function flowResultSignature(events: FlowEvent[]) {
     ({ id, title, status, actual, forecast, previous, members })));
 }
 
+/** Değeri tanımsız anahtarları atar — `preserveConfirmedResults` için. */
+function defined<T extends Record<string, unknown>>(entries: T): Partial<T> {
+  return Object.fromEntries(Object.entries(entries).filter(([, value]) => value !== undefined)) as Partial<T>;
+}
+
 /**
  * A temporary provider gap does not un-publish a confirmed numeric result.
  * New values and calendar corrections still win; analysis URLs always come
@@ -134,13 +139,18 @@ export function preserveConfirmedResults(previous: DayFlowSnapshot, next: DayFlo
       /* Sürpriz sayısıyla birlikte korunur: geri getirilen EPS'nin yanında
          sürprizi olmayan (ya da yeni snapshot'ın boş bıraktığı) bir satır,
          aynı sonucu iki farklı hâlde gösterirdi. */
+      /* Boş alan YAZILMIYOR: `epsSurprise: undefined` gibi anahtarlar
+         satırın biçimini değiştiriyor ve sonuç imzası (`flowResultSignature`)
+         aynı sonucu farklı sanıyordu. */
       return {
         ...member,
         eps: restoreEps ? oldMember.eps : member.eps,
         revenue: restoreRevenue ? oldMember.revenue : member.revenue,
-        epsSurprise: restoreEps ? oldMember.epsSurprise : member.epsSurprise,
-        revenueSurprise: restoreRevenue ? oldMember.revenueSurprise : member.revenueSurprise,
-        filing: member.filing ?? oldMember.filing,
+        ...defined({
+          epsSurprise: restoreEps ? oldMember.epsSurprise : member.epsSurprise,
+          revenueSurprise: restoreRevenue ? oldMember.revenueSurprise : member.revenueSurprise,
+          filing: member.filing ?? oldMember.filing,
+        }),
         // Yalnız sayıları sakla; yayından kalkan analizin bağlantısı ve
         // analyzed durumu önceki snapshot'tan asla geri taşınmaz.
         status: member.status === "analyzed" ? "analyzed" as const : "released" as const,

@@ -8,8 +8,19 @@ const para = (n: number) => sentence.repeat(n).trim();
 test("phone preview keeps the lede and one more paragraph", () => {
   const lines = [para(3), para(5), para(4), para(4), para(4), para(6), para(6), para(6)];
   const desktop = briefPreviewCut(lines);
-  const phone = briefPhoneCut(lines, desktop);
+  /* Kural 400 karakterlik bütçeyle yazıldı; varsayılan 30 Eylül'de 600'e
+     çıktı (lib/brief.ts → BRIEF_PHONE_PREVIEW_CHARS). Yapı testi bütçeyi
+     açıkça veriyor, varsayılanın etkisi aşağıdaki testte. */
+  const phone = briefPhoneCut(lines, desktop, 400);
   assert.equal(phone, 2);
+  assert.ok(phone < desktop);
+});
+
+test("the 600-character default opens one more paragraph on the phone", () => {
+  const lines = [para(3), para(5), para(4), para(4), para(4), para(6), para(6), para(6)];
+  const desktop = briefPreviewCut(lines);
+  const phone = briefPhoneCut(lines, desktop);
+  assert.equal(phone, 3);
   assert.ok(phone < desktop);
 });
 
