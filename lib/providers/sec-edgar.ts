@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { secUserAgent } from "@/lib/investors";
 import { etDateTimeToUtc } from "@/lib/market-hours";
 
 /**
@@ -22,8 +23,9 @@ import { etDateTimeToUtc } from "@/lib/market-hours";
  *    soruluyor — gün başına bir avuç sembol.
  *
  * KİMLİK BAŞLIĞI ZORUNLU. SEC, `User-Agent`ında iletişim bilgisi olmayan
- * istekleri 403 ile reddediyor. Değer `SEC_USER_AGENT` ortam değişkeninden
- * ("Ad e-posta"); depo herkese açık, kişisel e-posta koda yazılmıyor.
+ * istekleri 403 ile reddediyor. Başlık 13F ve Form 4 uçlarıyla ortak:
+ * `secUserAgent` (lib/investors.ts — varsayılan kodda, sahibinin kararı;
+ * `SEC_USER_AGENT` tanımlıysa o öncelikli).
  *
  * KABUL SAATİ JSON'DAN OKUNMUYOR. `acceptanceDateTime` "Z" (UTC) diye
  * işaretli ama kaymış: MU'da 4, ACN ve NKE'de 8 saat (ölçüldü, 1 Ekim —
@@ -44,14 +46,10 @@ const SUBMISSIONS_REVALIDATE_S = 60;
 /** 8-K maddesi: faaliyet sonuçları ve finansal durum — bilanço bülteni. */
 const RESULTS_ITEM = "2.02";
 
-function userAgent(): string {
-  return process.env.SEC_USER_AGENT?.trim() || "AcilisZili/1.0 (https://aciliszili.com)";
-}
-
 async function secJson<T>(url: string, revalidate: number): Promise<T | null> {
   try {
     const res = await fetch(url, {
-      headers: { "User-Agent": userAgent(), Accept: "application/json" },
+      headers: { "User-Agent": secUserAgent(), Accept: "application/json" },
       next: { revalidate },
       signal: AbortSignal.timeout(6000),
     });
@@ -67,7 +65,7 @@ async function acceptanceTime(cik: string, accession: string): Promise<string | 
   try {
     const res = await fetch(
       `https://www.sec.gov/Archives/edgar/data/${Number(cik)}/${accession.replace(/-/g, "")}/${accession}-index-headers.html`,
-      { headers: { "User-Agent": userAgent() }, next: { revalidate: TICKERS_REVALIDATE_S }, signal: AbortSignal.timeout(6000) },
+      { headers: { "User-Agent": secUserAgent() }, next: { revalidate: TICKERS_REVALIDATE_S }, signal: AbortSignal.timeout(6000) },
     );
     if (!res.ok) return null;
     const match = /ACCEPTANCE-DATETIME&gt;(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})/.exec(await res.text());
