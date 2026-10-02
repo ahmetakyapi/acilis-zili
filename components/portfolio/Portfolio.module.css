@@ -931,3 +931,107 @@
 .techLink:hover {
   text-decoration: underline;
 }
+
+/* ---- Sıra şeridi (2 Ekim) ----
+   Hangi sıranın geçerli olduğu solda, tek denetim sağda. Düzenleme sırasında
+   şerit başlığın altına YAPIŞIYOR: telefonda beş kartlık liste ekranı
+   aşıyor ve "Bitti" listenin başında kalınca okuyucu son kartı taşıdıktan
+   sonra yukarı kaydırmak zorundaydı. */
+.sortBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--panel-fixed);
+}
+
+@media (min-width: 640px) {
+  .sortBar {
+    padding-inline: 1.25rem;
+  }
+}
+
+.posList[data-editing] .sortBar {
+  position: sticky;
+  top: var(--app-bar-h);
+  z-index: 5;
+  box-shadow: 0 6px 12px -10px color-mix(in oklab, var(--text-strong) 35%, transparent);
+}
+
+.sortState {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  font-weight: 600;
+}
+
+.sortActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.sortButton {
+  min-height: 2.25rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-body);
+  font-size: var(--text-small);
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background-color 0.2s var(--ease-brand),
+    border-color 0.2s var(--ease-brand);
+}
+
+.sortButton:hover:not(:disabled) {
+  border-color: var(--line-strong);
+  background: var(--surface-sunken);
+}
+
+.sortButton:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.sortButton:focus-visible {
+  outline: 2px solid var(--line-focus);
+  outline-offset: 2px;
+}
+
+.sortPrimary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.sortPrimary:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--primary);
+  filter: brightness(0.94);
+}
+
+/* Taşıma okları: düzenlemede satırın tek denetimi, iki buton da görünür
+   (telefonda silme gizleniyordu, ok gizlenmiyor). */
+.rowMove {
+  border: 1px solid var(--line);
+  color: var(--text-body);
+}
+
+.rowMove:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.posList[data-editing] .posRow {
+  background: color-mix(in oklab, var(--primary) 4%, transparent);
+}

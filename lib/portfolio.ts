@@ -128,6 +128,25 @@ function toKurus(value: number): number {
   return Math.round(value * KURUS) / KURUS;
 }
 
+/**
+ * Pozisyon sırası (2 Ekim). VARSAYILAN en büyük pozisyon üstte (güncel dolar
+ * değeri; fiyatı olmayan sona). Okuyucu elle sıra verdiyse o sıra; sıradan
+ * sonra eklenen pozisyon listenin SONUNA, kendi içinde büyükten küçüğe —
+ * yeni bir satır okuyucunun kurduğu düzenin ortasına düşmüyor. Kayıtta olup
+ * artık var olmayan kimlik (silinmiş pozisyon) sessizce atlanıyor.
+ */
+export function orderPositions<T extends { id: string; valueUsd: number | null }>(
+  rows: readonly T[],
+  saved: readonly string[] | null,
+): T[] {
+  const byValue = (a: T, b: T) => (b.valueUsd ?? -1) - (a.valueUsd ?? -1);
+  if (!saved || saved.length === 0) return [...rows].sort(byValue);
+  const rank = new Map(saved.map((id, index) => [id, index]));
+  const known = rows.filter((row) => rank.has(row.id)).sort((a, b) => rank.get(a.id)! - rank.get(b.id)!);
+  const rest = rows.filter((row) => !rank.has(row.id)).sort(byValue);
+  return [...known, ...rest];
+}
+
 /** Sektör ağırlıkları — güncel dolar değerine göre, büyükten küçüğe. */
 export function sectorWeights(
   items: readonly { sector: string; valueUsd: number | null }[],

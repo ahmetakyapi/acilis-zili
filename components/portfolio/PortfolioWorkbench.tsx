@@ -80,6 +80,8 @@ type WorkbenchContext = {
   fresh: ReadonlySet<string>;
   labels: PortfolioLabels;
   locale: Locale;
+  /** Kısa bildirim — sıra kaydedilemediğinde liste kullanıyor. */
+  notify: (toast: Omit<Toast, "id">) => void;
 };
 
 const Context = createContext<WorkbenchContext | null>(null);
@@ -219,8 +221,9 @@ export function PortfolioWorkbench({
       fresh,
       labels,
       locale,
+      notify,
     }),
-    [show, remove, hidden, fresh, labels, locale],
+    [show, remove, hidden, fresh, labels, locale, notify],
   );
 
   const C = labels.composer;

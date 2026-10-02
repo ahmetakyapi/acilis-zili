@@ -178,6 +178,28 @@ export const portfolioPositions = pgTable(
   (t) => [index("portfolio_positions_user_idx").on(t.userId, t.boughtAt)],
 );
 
+/**
+ * Portföy sıralaması — okuyucunun elle verdiği sıra (2 Ekim).
+ *
+ * KENDİ TABLOSU. Sıra `portfolio_positions`a bir sütun olarak eklenmedi:
+ * migration'lar deploy'da uygulanmıyor ve o tabloya eklenen bir sütun,
+ * migration inene kadar portföyün HER okumasını kırardı (CLAUDE.md,
+ * "Bilinmesi gerekenler"). Bu tablo yokken okuma sessizce düşüyor ve liste
+ * varsayılan sırayla (en büyük pozisyon üstte) çiziliyor.
+ *
+ * Kullanıcı başına tek satır, pozisyon kimlikleri sırayla. Satır yoksa
+ * varsayılan; "En Büyük Üstte" satırı siliyor. Listede olmayan pozisyon
+ * (sıra verildikten sonra eklenen) sona, kendi içinde büyükten küçüğe;
+ * silinmiş pozisyonun kimliği okumada atlanıyor.
+ */
+export const portfolioOrder = pgTable("portfolio_order", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  positionIds: jsonb("position_ids").$type<string[]>().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 /* ==========================================================================
    Sembol meta verisi ve fiyat önbelleği
    Sağlayıcı düşerse "son bilinen değer" buradan gösterilir.

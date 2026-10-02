@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { portfolioPositions } from "@/lib/schema";
+import { portfolioOrder, portfolioPositions } from "@/lib/schema";
 
 /**
  * Portföy pozisyonları — `/portfoy`.
@@ -65,3 +65,21 @@ export const getPortfolioPositions = cache(
     }
   },
 );
+
+/**
+ * Okuyucunun elle verdiği sıra — yoksa `null` ve liste varsayılan sırayla
+ * (`orderPositions`). Tablo yokken (migration 0025 henüz uygulanmadıysa) de
+ * `null`: sıra bir tercih, okunamaması portföyü açılmaz yapmamalı.
+ */
+export const getPortfolioOrder = cache(async (userId: string): Promise<string[] | null> => {
+  try {
+    const [row] = await db
+      .select({ positionIds: portfolioOrder.positionIds })
+      .from(portfolioOrder)
+      .where(eq(portfolioOrder.userId, userId))
+      .limit(1);
+    return row && Array.isArray(row.positionIds) ? row.positionIds.filter((id) => typeof id === "string") : null;
+  } catch {
+    return null;
+  }
+});

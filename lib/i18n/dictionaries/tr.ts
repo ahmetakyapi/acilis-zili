@@ -3031,6 +3031,16 @@ const tr = {
       costShort: "Maliyet",
       buyRateShort: "Alış Kuru",
       fxPart: "Kur Katkısı",
+      /* Elle sıralama (2 Ekim). */
+      sortDefault: "En Büyük Pozisyon Üstte",
+      sortManual: "Senin Sıran",
+      sortEdit: "Sırayı Düzenle",
+      sortDone: "Bitti",
+      sortReset: "En Büyük Üstte",
+      sortHint: "Okları kullanarak pozisyonları istediğin sıraya koy.",
+      moveUp: "{symbol} pozisyonunu yukarı taşı",
+      moveDown: "{symbol} pozisyonunu aşağı taşı",
+      sortFailed: "Sıra kaydedilemedi; biraz sonra yeniden dene.",
       /* Yeni ekleme akışı (28 Eylül): sembol arama, fiyat önerisi, düzenleme,
          geri alma ve ekstreden içe aktarma. */
       emptyAddTitle: "İlk Pozisyonunu Ekle",

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, type CSSProperties } from "react";
+import { useEffect, useRef, useState, useTransition, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { PencilSimple, Trash } from "@phosphor-icons/react";
+import { ArrowsDownUp, CaretDown, CaretUp, PencilSimple, Trash } from "@phosphor-icons/react";
+import { savePortfolioOrderAction } from "@/app/actions/portfolio";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile } from "@/components/ui/primitives";
 import { formatIsoDate, formatLira } from "@/lib/fx";
@@ -52,8 +53,61 @@ export type PositionRow = ComposerPosition & {
 /** Giriş kademesi: bundan sonraki satırlar aynı anda girer. */
 const STAGGER_CAP = 12;
 
-export function PositionsTable({ rows }: { rows: PositionRow[] }) {
-  const { labels: L, locale, hidden, fresh, openEdit, remove, setExisting } = useWorkbench();
+export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: boolean }) {
+  const { labels: L, locale, hidden, fresh, openEdit, remove, setExisting, notify } = useWorkbench();
+
+  /* ELLE SIRA (2 Ekim). Sunucu satırları zaten doğru sırayla gönderiyor
+     (`orderPositions`); burada yalnızca düzenleme sırasındaki yerel sıra
+     tutuluyor. Oklar anında taşıyor, "Bitti" bir kez kaydediyor — her ok
+     basışında sunucuya gitmek beş taşımada beş yazma olurdu. Düzenleme
+     dışında yerel sıra sunucudan gelenle eşitleniyor (ekleme, silme). */
+  const [editing, setEditing] = useState(false);
+  const [order, setOrder] = useState<string[]>(() => rows.map((row) => row.id));
+  const [isManual, setIsManual] = useState(manual);
+  const [pending, startTransition] = useTransition();
+  const startOrder = useRef<string[]>([]);
+  /* Sunucudan yeni satır listesi gelince (ekleme, silme, revalidate) yerel
+     sıra RENDER SIRASINDA eşitleniyor — effect içinde setState bir tur geç
+     kalıp listeyi bir kare eski sırayla çizerdi. Düzenleme sürerken
+     okuyucunun sırası korunuyor. */
+  const rowsKey = `${rows.map((row) => row.id).join()}|${manual}`;
+  const [syncedKey, setSyncedKey] = useState(rowsKey);
+  if (!editing && syncedKey !== rowsKey) {
+    setSyncedKey(rowsKey);
+    setOrder(rows.map((row) => row.id));
+    setIsManual(manual);
+  }
+
+  const save = (ids: string[] | null) =>
+    startTransition(async () => {
+      const result = await savePortfolioOrderAction(ids);
+      if (result.status === "error") notify({ message: L.sortFailed, tone: "error" });
+    });
+  const move = (id: string, step: -1 | 1) =>
+    setOrder((current) => {
+      const index = current.indexOf(id);
+      const target = index + step;
+      if (index < 0 || target < 0 || target >= current.length) return current;
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  const finish = () => {
+    setEditing(false);
+    if (order.join() !== startOrder.current.join()) {
+      setIsManual(true);
+      save(order);
+    }
+  };
+  const reset = () => {
+    /* Varsayılan sıra yerelde de hemen kuruluyor; sunucu aynı sırayı
+       revalidate ile geri gönderiyor, liste zıplamıyor. */
+    const byValue = [...rows].sort((a, b) => (b.valueUsd ?? -1) - (a.valueUsd ?? -1)).map((row) => row.id);
+    setOrder(byValue);
+    setEditing(false);
+    setIsManual(false);
+    save(null);
+  };
 
   /* SÖKÜLÜNCE BOŞALT (28 Eylül denetimi). Liste yalnızca tablo varken
      yazılıyordu; portföy boşalınca (içe aktarmayı "Geri Al", son satırı
@@ -68,10 +122,54 @@ export function PositionsTable({ rows }: { rows: PositionRow[] }) {
   const usd = (value: number | null, signed = false) =>
     value === null ? NO_VALUE : `${signed && value > 0 ? "+" : ""}${formatPrice(value, locale, { currency: true })}`;
   const quantityText = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", { maximumFractionDigits: 8 });
-  const visibleRows = rows.filter((row) => !hidden.has(row.id));
+  const rank = new Map(order.map((id, index) => [id, index]));
+  const visibleRows = rows
+    .filter((row) => !hidden.has(row.id))
+    .sort((a, b) => (rank.get(a.id) ?? Infinity) - (rank.get(b.id) ?? Infinity));
 
   return (
-    <div className={styles.posList}>
+    <div className={styles.posList} data-editing={editing || undefined}>
+      {/* Sıra şeridi: hangi sıranın geçerli olduğu ve tek denetim. Tek
+          pozisyonda sıralanacak bir şey yok, şerit basılmıyor. */}
+      {rows.length > 1 && (
+        <div className={styles.sortBar}>
+          <p className={styles.sortState}>
+            <ArrowsDownUp size={14} weight="bold" aria-hidden />
+            {editing ? L.sortHint : isManual ? L.sortManual : L.sortDefault}
+          </p>
+          <div className={styles.sortActions}>
+            {editing ? (
+              <>
+                <button type="button" className={styles.sortButton} onClick={reset} disabled={pending}>
+                  {L.sortReset}
+                </button>
+                <button type="button" className={cn(styles.sortButton, styles.sortPrimary)} onClick={finish} disabled={pending}>
+                  {L.sortDone}
+                </button>
+              </>
+            ) : (
+              <>
+                {isManual && (
+                  <button type="button" className={styles.sortButton} onClick={reset} disabled={pending}>
+                    {L.sortReset}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className={styles.sortButton}
+                  onClick={() => {
+                    startOrder.current = order;
+                    setEditing(true);
+                  }}
+                  disabled={pending}
+                >
+                  {L.sortEdit}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
       {/* Başlık yalnızca geniş ekranda: telefonda her kutu kendi etiketini
           taşıyor. Satırlarla aynı sütun şablonu. */}
       <div className={styles.posHead} aria-hidden>
@@ -87,6 +185,7 @@ export function PositionsTable({ rows }: { rows: PositionRow[] }) {
           {visibleRows.map((row, i) => (
             <motion.li
               key={row.id}
+              layout="position"
               data-pos-row
               className={styles.posRow}
               data-fresh={fresh.has(row.id) || undefined}
@@ -146,22 +245,47 @@ export function PositionsTable({ rows }: { rows: PositionRow[] }) {
               </div>
 
               <div data-col="act" className={styles.rowActions}>
-                <button
-                  type="button"
-                  aria-label={L.editAria.replace("{symbol}", row.symbol)}
-                  className={styles.rowAction}
-                  onClick={() => openEdit(row)}
-                >
-                  <PencilSimple size={16} weight="duotone" aria-hidden />
-                </button>
-                <button
-                  type="button"
-                  aria-label={L.removeAria.replace("{symbol}", row.symbol)}
-                  className={cn(styles.rowAction, styles.rowActionDanger)}
-                  onClick={() => remove(row)}
-                >
-                  <Trash size={16} weight="duotone" aria-hidden />
-                </button>
+                {editing ? (
+                  <>
+                    <button
+                      type="button"
+                      aria-label={L.moveUp.replace("{symbol}", row.symbol)}
+                      className={cn(styles.rowAction, styles.rowMove)}
+                      onClick={() => move(row.id, -1)}
+                      disabled={i === 0}
+                    >
+                      <CaretUp size={16} weight="bold" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={L.moveDown.replace("{symbol}", row.symbol)}
+                      className={cn(styles.rowAction, styles.rowMove)}
+                      onClick={() => move(row.id, 1)}
+                      disabled={i === visibleRows.length - 1}
+                    >
+                      <CaretDown size={16} weight="bold" aria-hidden />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      aria-label={L.editAria.replace("{symbol}", row.symbol)}
+                      className={styles.rowAction}
+                      onClick={() => openEdit(row)}
+                    >
+                      <PencilSimple size={16} weight="duotone" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={L.removeAria.replace("{symbol}", row.symbol)}
+                      className={cn(styles.rowAction, styles.rowActionDanger)}
+                      onClick={() => remove(row)}
+                    >
+                      <Trash size={16} weight="duotone" aria-hidden />
+                    </button>
+                  </>
+                )}
               </div>
 
               {/* Künye: ikincil sayılar, her biri kendi kutusunda kırılmadan. */}

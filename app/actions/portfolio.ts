@@ -12,7 +12,7 @@ import { MAX_POSITIONS } from "@/lib/portfolio-data";
 import { getChartBars, getQuotes } from "@/lib/providers";
 import { getUsdTryAt, istanbulToday } from "@/lib/providers/fx-history";
 import { rateLimit } from "@/lib/rate-limit";
-import { portfolioPositions } from "@/lib/schema";
+import { portfolioOrder, portfolioPositions } from "@/lib/schema";
 import { isValidSymbol } from "@/lib/utils";
 
 /**
@@ -33,7 +33,9 @@ import { isValidSymbol } from "@/lib/utils";
  *
  * ŞEMA DEĞİŞMEDİ. Yeni akışın her parçası (düzenleme, geri alma, toplu
  * ekleme) var olan `portfolio_positions` satırıyla yapılıyor; migration
- * gerekmiyor.
+ * gerekmiyor. Tek istisna elle sıra (2 Ekim): o kendi tablosunda
+ * (`portfolio_order`, migration 0025) ve tablo yokken liste varsayılan
+ * sırada kalıyor — pozisyon okuması etkilenmiyor.
  */
 
 export type PortfolioError = "invalid" | "limit" | "rateLimited" | "failed" | "signedOut";
@@ -402,4 +404,44 @@ async function suggestPrice(
   const gapDays = (Date.parse(`${date}T12:00:00Z`) - Date.parse(`${best.date}T12:00:00Z`)) / DAY_MS;
   if (gapDays > MAX_GAP_DAYS) return null;
   return { kind: best.date === date ? "close" : "previousClose", value: best.value, date: best.date };
+}
+
+/* --------------------------------------------------------------------------
+   Sıra (2 Ekim)
+
+   `ids` okuyucunun verdiği sıra; `null` varsayılana dönüş ("En Büyük Üstte")
+   ve satırı siliyor. Kayda yalnızca okuyucunun KENDİ pozisyonlarının
+   kimlikleri giriyor: formdan gelen yabancı bir kimlik sessizce düşüyor.
+   Tablo yoksa (migration 0025) yazma düşüyor, liste varsayılan sırada kalıyor.
+   -------------------------------------------------------------------------- */
+
+export async function savePortfolioOrderAction(ids: string[] | null): Promise<PortfolioActionState> {
+  const userId = await sessionUser();
+  if (!userId) return { status: "error", error: "signedOut" };
+
+  const limited = rateLimit(`portfolio:${userId}`, WRITE_LIMIT, WRITE_WINDOW_MS);
+  if (!limited.allowed) return { status: "error", error: "rateLimited" };
+
+  try {
+    if (ids === null) {
+      await db.delete(portfolioOrder).where(eq(portfolioOrder.userId, userId));
+    } else {
+      const parsed = z.array(z.string().uuid()).max(MAX_POSITIONS).safeParse(ids);
+      if (!parsed.success) return { status: "error", error: "invalid" };
+      const owned = await db
+        .select({ id: portfolioPositions.id })
+        .from(portfolioPositions)
+        .where(and(eq(portfolioPositions.userId, userId), inArray(portfolioPositions.id, parsed.data.length ? parsed.data : ["00000000-0000-0000-0000-000000000000"])));
+      const mine = new Set(owned.map((row) => row.id));
+      const positionIds = [...new Set(parsed.data)].filter((id) => mine.has(id));
+      await db
+        .insert(portfolioOrder)
+        .values({ userId, positionIds })
+        .onConflictDoUpdate({ target: portfolioOrder.userId, set: { positionIds, updatedAt: new Date() } });
+    }
+  } catch {
+    return { status: "error", error: "failed" };
+  }
+  revalidatePath("/portfoy");
+  return { status: "saved" };
 }

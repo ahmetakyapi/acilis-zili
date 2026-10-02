@@ -24,8 +24,8 @@ import { DataStamp, EmptyState, Panel, PanelHeader, PanelSkeleton } from "@/comp
 import { companySector } from "@/lib/company-sector";
 import { formatIsoDate, formatRate, TCMB_MIN_DATE } from "@/lib/fx";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { sectorWeights } from "@/lib/portfolio";
-import { MAX_POSITIONS } from "@/lib/portfolio-data";
+import { orderPositions, sectorWeights } from "@/lib/portfolio";
+import { getPortfolioOrder, MAX_POSITIONS } from "@/lib/portfolio-data";
 import { loadPortfolio } from "@/lib/portfolio-snapshot";
 import { istanbulToday } from "@/lib/providers/fx-history";
 
@@ -221,9 +221,10 @@ async function PortfolioBody({
         ? Math.round((view.pnlTl - view.pnlUsd * todayRate) * 100) / 100
         : null,
   }));
-  /* En ağır pozisyon üstte: liste "neyim var" sorusunu büyükten küçüğe
-     cevaplıyor, halkanın lejantıyla aynı sıra. Fiyatı olmayan sona. */
-  rows.sort((a, b) => (b.valueUsd ?? -1) - (a.valueUsd ?? -1));
+  /* Varsayılan en ağır pozisyon üstte (halkanın lejantıyla aynı sıra);
+     okuyucu elle sıra verdiyse o sıra (`orderPositions`, lib/portfolio.ts). */
+  const savedOrder = await getPortfolioOrder(userId);
+  const orderedRows = orderPositions(rows, savedOrder);
 
   /* Teknik plan için sembol başına tek satır: aynı hissenin lotları
      birleşiyor, maliyet adetle ağırlıklı. Fiyat tablonun fiyatı. */
@@ -256,9 +257,12 @@ async function PortfolioBody({
         />
       </Panel>
 
-      <Panel>
+      {/* `overflow-clip`, `hidden` DEĞİL: sıra şeridi düzenlemede başlığın
+          altına yapışıyor ve `overflow: hidden` paneli bir kaydırma kabına
+          çevirip yapışkanlığı öldürüyordu. `clip` köşeleri yine kırpıyor. */}
+      <Panel className="overflow-clip">
         <PanelHeader title={L.positionsTitle} action={<AddPositionButton variant="ghost" />} />
-        <PositionsTable rows={rows} />
+        <PositionsTable rows={orderedRows} manual={savedOrder !== null && savedOrder.length > 0} />
         {/* Künyeler PANELİN İÇİNDE, hairline ile — yeni kutu açılmıyor. */}
         <div className="flex flex-col gap-1.5 border-t border-line px-4 py-3 text-small leading-relaxed text-muted sm:px-5">
           <p className="numeral">

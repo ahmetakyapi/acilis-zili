@@ -253,7 +253,8 @@ mekanizma. `cache()` ile sarılı olanların tam listesi: `lib/data.ts`
 `lib/autolink-data.ts` (`knownSymbols`), `lib/themes-data.ts`
 (`katilimPool`), `lib/market-boards.ts` (`loadBoardBars`),
 `lib/sentiment-data.ts` (`getSentiment`), `lib/earnings-extras.ts`
-(`getAnalysisExtras`) ve `lib/portfolio-data.ts` (`getPortfolioPositions`).
+(`getAnalysisExtras`) ve `lib/portfolio-data.ts` (`getPortfolioPositions`,
+`getPortfolioOrder`).
 Bileşen düzeyinde de var: `getPageTimestamp` (ana sayfa ve
 `/gomulu/geri-sayim`, sayacın "şimdi"si istek içinde tek) ve
 `components/stories/StoryCompanies.tsx` (`companyBars`).
