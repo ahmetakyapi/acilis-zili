@@ -560,3 +560,128 @@
     height: 2.25rem;
   }
 }
+
+/* ---- Teknik Plan (2 Ekim) ----
+   Kartlar ızgarada yan yana ve AYNI HATTA biter: kart esnek sütun, künye
+   satırı `margin-top:auto` ile dibe iniyor; kısa plan (SAT'ın iki hücresi)
+   kartı kısaltmıyor, aradaki boşluk künyenin üstünde toplanıyor. */
+.techGrid {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 16px 16px;
+  list-style: none;
+}
+
+@media (min-width: 640px) {
+  .techGrid {
+    padding-inline: 20px;
+  }
+}
+
+@media (min-width: 900px) {
+  .techGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.techCard {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.techHead {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.techStance {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Görüş çipi teknik analiz kapağında dev puntolu; burada kart başlığının
+   yanında, şirket sayfasındaki kısa kartın ölçüsünde. */
+.techStance > span:first-child {
+  padding: 4px 12px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+
+/* Üç ölçü aynı hatta: alt ızgara, etiket üstte, sayı altta. */
+.techMine {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.techMine > div {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: auto 1fr;
+  gap: 2px;
+}
+
+.techMine dt {
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-muted);
+}
+
+.techMine dd {
+  align-self: end;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  white-space: nowrap;
+  color: var(--text-strong);
+}
+
+/* Ton modül kuralının içinde: `.techMine dd` rengi bir yardımcı sınıftan
+   daha özgül ve `text-up` onu ezemiyordu. */
+.techMine dd[data-tone="up"] {
+  color: var(--up);
+}
+
+.techMine dd[data-tone="down"] {
+  color: var(--down);
+}
+
+.techFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-top: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.techLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 650;
+  color: var(--primary-ink);
+}
+
+.techLink:hover {
+  text-decoration: underline;
+}

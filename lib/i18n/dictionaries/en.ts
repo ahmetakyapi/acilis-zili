@@ -1951,6 +1951,23 @@ const en: typeof tr = {
     priceToBook: "P/B",
   },
 
+  /* Technical plan for portfolio positions covered by the daily analysis (2 October). */
+  portfolioTechnical: {
+    title: "Technical Plan",
+    meta: "{n} Positions in Technical Analysis",
+    metaOne: "1 Position in Technical Analysis",
+    intro: "Entry zone, sell targets and stop for the holdings in your portfolio that get a daily technical analysis.",
+    avgCost: "Your Average Cost",
+    toTarget: "To First Target",
+    toSellLevel: "To First Sell Level",
+    targetsPassed: "Targets Passed",
+    toStop: "To Stop",
+    belowStop: "Below Stop",
+    stopVsCost: "Stop {dir} Your Cost",
+    stopAboveCost: "Above",
+    stopBelowCost: "Below",
+    note: "Levels come from the daily technical analysis and refresh with every edition; distances use the price in the positions table. Not investment advice.",
+  },
   analystTarget: {
     current: "Current Average Target",
     range: "Target Range",

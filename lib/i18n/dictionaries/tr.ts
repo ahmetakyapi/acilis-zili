@@ -2394,6 +2394,23 @@ const tr = {
 
   /* Analist kartındaki ortalama hedef fiyat şeridi (30 Eylül). Kaynak en son
      bilanço analizi; künye hangi analizden ve hangi tarihte olduğunu söyler. */
+  /* Portföyde teknik analizi yapılan pozisyonların planı (2 Ekim). */
+  portfolioTechnical: {
+    title: "Teknik Plan",
+    meta: "{n} Pozisyon Teknik Analizde",
+    metaOne: "1 Pozisyon Teknik Analizde",
+    intro: "Portföyündeki hisselerden günlük teknik analizi yapılanların alım bölgesi, satış hedefleri ve stop seviyesi.",
+    avgCost: "Ortalama Maliyetin",
+    toTarget: "İlk Hedefe",
+    toSellLevel: "İlk Satış Seviyesine",
+    targetsPassed: "Hedefler Geçildi",
+    toStop: "Stopa",
+    belowStop: "Stopun Altında",
+    stopVsCost: "Stop Maliyetinin {dir}",
+    stopAboveCost: "Üstünde",
+    stopBelowCost: "Altında",
+    note: "Seviyeler günlük teknik analizden gelir ve her yayında yenilenir; uzaklıklar pozisyon tablosundaki fiyatla hesaplanır. Yatırım tavsiyesi değildir.",
+  },
   analystTarget: {
     current: "Güncel Ortalama Hedef",
     range: "Hedef Aralığı",

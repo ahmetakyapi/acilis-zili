@@ -13,6 +13,7 @@ import {
   ImportButton,
   PortfolioWorkbench,
 } from "@/components/portfolio/PortfolioWorkbench";
+import { PortfolioTechnical, type TechnicalHolding } from "@/components/portfolio/PortfolioTechnical";
 import { PositionsTable, type PositionRow } from "@/components/portfolio/PositionsTable";
 import {
   AllocationRing,
@@ -48,7 +49,8 @@ export const generateMetadata = pageMetadata({
  * taraf ve aynı kaynak (`lib/portfolio.ts`, `lib/fx.ts`).
  *
  * Ekran sırası kurala göre: kapak (sağında dağılım halkası) → toplam şeridi
- * → pozisyon tablosu (ölçüler) → sektör şeridi → ekleme paneli → künyeler
+ * → pozisyon tablosu (ölçüler) → teknik plan (yalnızca kapsamdaki
+ * pozisyonlar) → sektör şeridi → ekleme paneli → künyeler
  * panelin içinde → damga → rehber.
  *
  * İLK BAYT VERİYİ BEKLEMİYOR. Sayfa bir dönem pozisyonları, kotasyonları
@@ -230,6 +232,24 @@ async function PortfolioBody({
     rate: buyRate.get(view.boughtAt) ?? null,
   }));
 
+  /* Teknik plan için sembol başına tek satır: aynı hissenin lotları
+     birleşiyor, maliyet adetle ağırlıklı. Fiyat tablonun fiyatı. */
+  const holdingMap = new Map<string, TechnicalHolding & { quantity: number; costTotal: number }>();
+  for (const view of views) {
+    const current = holdingMap.get(view.symbol);
+    const quantity = (current?.quantity ?? 0) + view.quantity;
+    const costTotal = (current?.costTotal ?? 0) + view.costTotalUsd;
+    holdingMap.set(view.symbol, {
+      symbol: view.symbol,
+      name: names[view.symbol]?.name ?? null,
+      logoUrl: names[view.symbol]?.logoUrl ?? null,
+      price: view.price,
+      quantity,
+      costTotal,
+      avgCost: quantity > 0 ? costTotal / quantity : view.costUsd,
+    });
+  }
+
   return (
     <>
       {/* ---- Toplam şeridi ---- */}
@@ -269,6 +289,10 @@ async function PortfolioBody({
           <p>{L.notAdvice}</p>
         </div>
       </Panel>
+
+      {/* Teknik analizi yapılan pozisyonların planı — kesişim yoksa panel
+          hiç çizilmiyor (components/portfolio/PortfolioTechnical.tsx). */}
+      <PortfolioTechnical holdings={[...holdingMap.values()]} locale={locale} t={t} />
 
       {weights.length > 0 && (
         <Panel>
