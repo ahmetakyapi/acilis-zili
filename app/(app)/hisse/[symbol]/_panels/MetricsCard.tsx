@@ -82,6 +82,27 @@ export async function MetricsCard({
           string,
         ][])
       : []),
+    /* PD/DD CANLI FİYATTAN (2 Ekim, sahibinin isteği: "F/K, PD/DD daha
+       doğru ve anlık"). F/K ile aynı gerekçe: sağlayıcının hazır `pb`si
+       geriden gelen bir fiyatla kurulu (MU'da 8,54 diyordu, defter değeri
+       ve canlı fiyattan 8,7 çıkıyor). Pay canlı kotasyon, payda son
+       çeyreğin hisse başına defter değeri — çeyrekte bir değişen bir sayı,
+       yani oran fiyatla birlikte anlık. ADR'de para birimleri karıştığı
+       için sağlayıcının kendi oranı. Özsermayesi eksi olan şirkette oran
+       anlamsız; satır tire basıyor. */
+    [
+      t.valuation.priceToBook,
+      formatPrice(
+        hisseBasi(
+          homeCurrency
+            ? m.priceToBook
+            : quote?.price && m.bookValuePerShare && m.bookValuePerShare > 0
+              ? quote.price / m.bookValuePerShare
+              : null,
+        ),
+        locale,
+      ),
+    ],
     [
       t.stock.eps,
       hisseBasi(m.eps)

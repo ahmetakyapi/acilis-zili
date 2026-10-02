@@ -1942,6 +1942,10 @@ const en: typeof tr = {
     capShare: "Share of Combined Market Value",
     joiner: " vs ",
   },
+  valuation: {
+    priceToBook: "P/B",
+  },
+
   analystTarget: {
     label: "Average Price Target",
     upside: "Upside",

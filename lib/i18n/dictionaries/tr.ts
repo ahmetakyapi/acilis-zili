@@ -2381,6 +2381,11 @@ const tr = {
      altmış satır ve bu paneller kendi kaynaklarını ve kendi künyelerini
      taşıyor. `{ek}` Türkçe ek yer tutucusu (lib/scorecard.ts → trAblative);
      İngilizce metinde yok. */
+  /* Değerleme oranları — canlı fiyattan kurulanlar (2 Ekim). */
+  valuation: {
+    priceToBook: "PD/DD",
+  },
+
   /* Analist kartındaki ortalama hedef fiyat şeridi (30 Eylül). Kaynak en son
      bilanço analizi; künye hangi analizden ve hangi tarihte olduğunu söyler. */
   analystTarget: {

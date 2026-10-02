@@ -240,6 +240,10 @@ export type KeyMetrics = {
   low52: number | null;
   /** Katılım taraması için bilanço oranları — hisse başına. */
   bookValuePerShare: number | null;
+  /** Sağlayıcının kendi PD/DD'si — YALNIZCA ADR'de kullanılır (defter değeri
+      ana borsanın parasında, fiyat dolar; oran orada sadeleşiyor). Öteki
+      her yerde PD/DD canlı fiyattan kuruluyor (`MetricsCard`). */
+  priceToBook: number | null;
   debtToEquity: number | null;
   cashPerShare: number | null;
   /** Gelirin yüzde kaçı net kâra dönüyor — TTM, yüzde olarak (56.46). */

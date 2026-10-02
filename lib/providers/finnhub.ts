@@ -496,6 +496,7 @@ export async function getKeyMetrics(
       low52: m["52WeekLow"] ?? null,
       bookValuePerShare:
         m.bookValuePerShareQuarterly ?? m.bookValuePerShareAnnual ?? null,
+      priceToBook: m.pbQuarterly ?? m.pbAnnual ?? m.pb ?? null,
       debtToEquity:
         m["totalDebt/totalEquityQuarterly"] ??
         m["totalDebt/totalEquityAnnual"] ??
