@@ -270,6 +270,111 @@ export function packCurrent(
 }
 
 /**
+ * MELEZ KOTASYON — fiyat gerçek zamanlı (IEX), geri kalanı gecikmeli (SIP).
+ *
+ * SORUN. Ücretsiz katman konsolide tape'i 15 dakika geriden veriyor
+ * (gerekçe `alpaca.ts` başında); seans içinde ekrandaki fiyat gerçek
+ * fiyattan bu kadar uzaktı. IEX gerçek zamanlı ama tek borsa (hacmin %1-8'i,
+ * aynı ölçüm) — yalnız başına kullanılması bu yüzden bırakılmıştı.
+ *
+ * ÖLÇÜLDÜ (1 Ekim seansı, 1 dakikalık barlar, 30 sembol — büyük, orta, az
+ * işlem gören, endeks fonları). Aynı dakikada IEX'in son kapanışı ile
+ * konsolide kapanış arasındaki fark ve bugünkü 15 dakikalık gecikmenin
+ * kendi hatası, ikisi de gerçek konsolide fiyata göre:
+ *
+ *            15 dk gecikme  (medyan / p95 / en kötü)   melez
+ *   NVDA     %0,218 / 0,628 / 0,980                    %0,006 / 0,032 / 0,078
+ *   MU       %0,526 / 1,384 / 2,293                    %0,014 / 0,067 / 0,151
+ *   ACN      %0,403 / 1,881 / 2,856                    %0,023 / 0,121 / 0,279
+ *   ASTS     %0,390 / 1,360 / 3,858                    %0,043 / 0,225 / 0,528
+ *   NVR      %0,374 / 0,976 / 1,307                    %0,077 / 0,673 / 1,161
+ *
+ * Melez medyanda 10-40 kat daha doğru. Tek zayıf yer IEX'in işlem görmediği
+ * dakikalar (NVR seansın %62'si, DIA %44, AZO %34): orada IEX'in son barı
+ * eskiyor. KURAL: bar üç dakikadan eskiyse o sembol gecikmeli fiyatta
+ * kalıyor — ölçümde bu, en kötü durumda bugünkü hatayı aşmıyor (NVR'de
+ * IEX'in kullanıldığı dakikalar %71, geri kalanı bugünkü gibi).
+ *
+ * NE DEĞİŞİYOR, NE DEĞİŞMİYOR.
+ *  - Fiyat ve işlem anı: IEX barının kapanışı ve dakikası.
+ *  - Değişim ve yüzde: RESMİ önceki kapanışa göre (SIP'in `prevClose`u) —
+ *    taban değişmiyor, yalnızca pay güncelleniyor.
+ *  - Gün içi yüksek/düşük: yeni fiyatı kapsayacak kadar genişliyor; aksi
+ *    hâlde fiyat "En Yüksek"in üstünde basılırdı (işlem gerçekten oldu).
+ *  - Hacim, açılış: gecikmeli tape'ten (IEX hacmi yirmide bir, sıralamayı
+ *    bozar — gerekçe `alpaca.ts`).
+ *  - Grafik barları: gecikmeli; 1G'nin son noktası zaten başlıktaki fiyatı
+ *    okuyor (PriceChart → "SON NOKTANIN OKUMASI BAŞLIKTAKİ FİYATTIR"),
+ *    iki sayı yine aynı.
+ *
+ * YALNIZCA NORMAL SEANSTA ve yalnızca SIP paketi güncelse: IEX'te seans
+ * dışı işlem yok; açılış öncesi ve sonrası tape tek kaynak. Paketin künyesi
+ * kaynağı söylüyor (`alpaca-live` / `alpaca-mixed`) ve IEX'in koşulu olan
+ * atıf ("IEX Real-Time Price") damgada fiyatın yanında.
+ *
+ * İzin: IEX gerçek zamanlı verinin ücretsiz gösterimine atıfla izin veriyor
+ * (iextrading.com/api-exhibit-a); bağlantı Hakkında sayfasında.
+ */
+const REALTIME_MAX_AGE_MS = 3 * 60 * 1000;
+
+async function overlayRealtime(
+  pack: ProviderOk<Record<string, Quote>>,
+  status: MarketStatus,
+  ttl: number,
+): Promise<{ quotes: Record<string, Quote>; live: number }> {
+  if (status.session !== "regular") return { quotes: pack.data, live: 0 };
+  /* TAZELİK GERÇEK "ŞİMDİ"YE GÖRE. Yanıtın kendi saatine (`fetchedAt`)
+     göre ölçülseydi Next'in önbelleğinden gelen on dakikalık bir yanıt
+     kendi içinde "taze" görünür ve künye "Real-Time" derdi. Önbellekteki
+     yanıt eskiyse bir kez önbelleksiz soruluyor (kotasyondaki kuralın eşi). */
+  let iex = await alpaca.getLatestIexBars(Object.keys(pack.data), ttl);
+  if (iex.ok && Date.now() - iex.fetchedAt.getTime() > (ttl + RESPONSE_AGE_SLACK_SECONDS) * 1000) {
+    iex = await alpaca.getLatestIexBars(Object.keys(pack.data), ttl, { fresh: true });
+  }
+  if (!iex.ok) return { quotes: pack.data, live: 0 };
+  return mergeRealtime(pack.data, iex.data, Date.now());
+}
+
+/**
+ * Birleştirmenin saf hâli — kurallar `overlayRealtime` üzerinde.
+ * Dışa açık YALNIZCA test için (tests/realtime-overlay.test.ts).
+ */
+export function mergeRealtime(
+  data: Record<string, Quote>,
+  bars: Record<string, { close: number; minute: Date }>,
+  nowMs: number,
+): { quotes: Record<string, Quote>; live: number } {
+  const quotes: Record<string, Quote> = {};
+  let live = 0;
+  for (const [symbol, quote] of Object.entries(data)) {
+    const bar = bars[symbol] ?? bars[symbol.replace("-", ".")];
+    const fresh =
+      bar &&
+      nowMs - bar.minute.getTime() <= REALTIME_MAX_AGE_MS &&
+      (!quote.tradedAt || bar.minute.getTime() > quote.tradedAt.getTime());
+    if (!fresh) {
+      quotes[symbol] = quote;
+      continue;
+    }
+    const price = bar.close;
+    const change = quote.prevClose !== null ? price - quote.prevClose : null;
+    quotes[symbol] = {
+      ...quote,
+      price,
+      change,
+      changePct:
+        change !== null && quote.prevClose ? (change / quote.prevClose) * 100 : null,
+      high: quote.high !== null ? Math.max(quote.high, price) : null,
+      low: quote.low !== null ? Math.min(quote.low, price) : null,
+      tradedAt: bar.minute,
+      realtime: true,
+    };
+    live += 1;
+  }
+  return { quotes, live };
+}
+
+/**
  * Kotasyon çekmenin gerçek gövdesi — sarmalayıcı aşağıda.
  *
  * AYNI İSTEKTE İKİ KEZ ÇALIŞMAMALI. Alpaca çağrısı Next'in `fetch`
@@ -324,6 +429,17 @@ async function fetchQuotes(
        sokuyordu. Önbelleksiz tekrardan sonra bile seansa ait olmayan bir
        paket artık kendini eski ilan ediyor ve künye onu öyle basıyor. */
     const guncel = packCurrent(primary, status, ttl);
+
+    /* MELEZ: güncel pakette fiyat gerçek zamanlıya çekiliyor (gerekçe ve
+       ölçüm `overlayRealtime` üzerinde). Önbelleğe yazılan da bu hâl. */
+    if (guncel) {
+      const { quotes, live } = await overlayRealtime(primary, status, ttl);
+      if (live > 0) {
+        await persistQuotes(Object.values(quotes));
+        const source = live === Object.keys(quotes).length ? "alpaca-live" : "alpaca-mixed";
+        return ok(quotes, source, { fetchedAt: newestTrade(quotes) ?? enYeni ?? undefined });
+      }
+    }
 
     /* SEANSA AİT OLMAYAN PAKET ÖNBELLEĞE YAZILMIYOR. `persistQuotes`
        satırlara `updated_at = now` basıyor ve o damga `quotesFromCache`

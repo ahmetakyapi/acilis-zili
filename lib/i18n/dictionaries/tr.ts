@@ -395,7 +395,7 @@ const tr = {
        değil, bilinen bir sayı. */
     sourceLine:
       "Fiyat: Alpaca konsolide veri akışı · Profil ve bilanço: Finnhub · Makro: FRED",
-    sourceNote: "Endeksler ETF üzerinden izlenir · fiyatlar 15 dk gecikmeli",
+    sourceNote: "Endeksler ETF üzerinden izlenir · seans içinde fiyat gerçek zamanlı (IEX), hacim ve seans dışı 15 dakika gecikmeli",
     // Kahramanın zil künyesi: hangi zile sayıldığı ve bir sonraki zil.
     bellOpen: "Açılış Zili",
     bellClose: "Kapanış Zili",
@@ -770,6 +770,8 @@ const tr = {
     /* "Şu An" DEĞİL: kotasyon Alpaca'nın 15 dakika gecikmeli SIP akışı ve aynı
        ekranın veri damgası bunu söylüyor. Etiket tazeliği abartmasın. */
     now: "15 Dakika Gecikmeli",
+    /* Melez kotasyonda fiyat IEX'ten gerçek zamanlıysa (lib/providers/index.ts). */
+    nowRealtime: "Gerçek Zamanlı",
     /* Detay ekranında fiyatın ADI; gecikme yanında rozet olarak (`now`).
        Etiketin kendisi "15 Dakika Gecikmeli" olunca okuyucu fiyatın ne
        olduğunu değil yalnızca ne kadar geç olduğunu okuyordu. */
@@ -872,6 +874,8 @@ const tr = {
     allStocks: "Bütün Hisseler",
     snapshotNote:
       "Göstergeler {date} kapanışına göre hesaplandı; fiyat 15 dakika gecikmelidir.",
+    snapshotNoteRealtime:
+      "Göstergeler {date} kapanışına göre hesaplandı; fiyat gerçek zamanlıdır (IEX).",
     method:
       "Ortalamalar, RSI, MACD, hacim ve pivot seviyeleri sitenin kendi günlük fiyat verisinden hesaplanır. Görüş, seviyeler ve senaryolar bu göstergelerin üzerine Claude tarafından yazılır.",
     disclaimer:
@@ -1902,10 +1906,11 @@ const tr = {
        ayrı bir anahtarda yazılı (`stale`). */
     failedHint: "Sağlayıcıya ulaşılamıyor; bu kart şimdilik boş.",
     delayedNote:
-      "Fiyatlar konsolide veri akışından (SIP) gelir ve 15 dakika gecikmelidir. Gün içi hacim, açılış-en yüksek-en düşük ve önceki kapanış bütün borsaların toplamıdır.",
+      "Seans içinde fiyat IEX'ten gerçek zamanlıdır; az işlem gören sembollerde ve seans dışında konsolide veri akışından (SIP) 15 dakika gecikmeli gelir. Gün içi hacim, açılış ve önceki kapanış bütün borsaların toplamıdır.",
     /* Kaynak adları SÖZLÜKTE: "önbellek" ve "takvim" sabit bir tablodan
        geliyordu ve İngilizce sitede de Türkçe basılıyordu. */
     delayed: "15 Dakika Gecikmeli",
+    partlyDelayed: "Az İşlem Görenlerde 15 Dakika Gecikmeli",
     /* Seans dışında listelerdeki değişim sütununun künyesi.
        Konsolide tape'e geçtikten sonra açılış öncesi işlemler akıyor ama
        her sembol her sabah işlem görmüyor: gören sembol bu sabahın
@@ -1962,7 +1967,8 @@ const tr = {
     dataIntro:
       "Sitedeki her sayının adı belli bir kaynağı var. Site sayı uydurmuyor; kaynağın verdiğini hesaplıyor, biçimlendiriyor ve damgalıyor.",
     sources: [
-      { name: "Alpaca", what: "Hisse ve fon fiyatları, grafik barları. Konsolide tape (SIP), 15 dakika gecikmeli." },
+      { name: "Alpaca", what: "Hisse ve fon fiyatları, grafik barları. Seans içinde fiyat gerçek zamanlı (IEX); hacim, grafik ve seans dışı konsolide tape (SIP), 15 dakika gecikmeli." },
+      { name: "IEX", what: "Seans içindeki gerçek zamanlı fiyat. Data provided for free by IEX.", href: "https://iextrading.com/api-exhibit-a" },
       { name: "Finnhub", what: "Şirket profilleri, haberler, bilanço takvimi, analist dağılımı ve halka arzlar." },
       { name: "FRED", what: "ABD makro serileri: enflasyon, istihdam, büyüme ve faiz." },
       { name: "U.S. Treasury ve Cboe", what: "Tahvil getirileri ve VIX için resmî günlük kapanışlar." },
@@ -1972,7 +1978,7 @@ const tr = {
     flowScreen: "Ekranda",
     flowFallback: "Cevap Yoksa",
     stampSource: "Alpaca",
-    stampDelay: "15 Dakika Gecikmeli",
+    stampDelay: "Gerçek Zamanlı ya da 15 Dakika Gecikmeli",
     stampTime: "Çekildiği Saat",
     stampStale: "Bayatsa İşaretlenir",
     stampCaption: "Her veri kartının altındaki damga: kaynağın adı, gecikme ve verinin çekildiği saat.",
@@ -1986,7 +1992,7 @@ const tr = {
     ],
     stampTitle: "Kaynak ve Saat Damgası",
     stampBody: [
-      "Her veri kartının altında kaynağın adı ve verinin çekildiği saat yazıyor. Fiyatlar 15 dakika gecikmeli ve damga bunu da söylüyor. Kayıt dünden kaldıysa tarih de yazılıyor; bayat olabilecek bir kayıt ayrıca işaretleniyor.",
+      "Her veri kartının altında kaynağın adı ve verinin çekildiği saat yazıyor. Seans içinde fiyat gerçek zamanlı (IEX), az işlem gören sembollerde ve seans dışında 15 dakika gecikmeli; damga hangisi olduğunu söylüyor. Kayıt dünden kaldıysa tarih de yazılıyor; bayat olabilecek bir kayıt ayrıca işaretleniyor.",
       "Bir yüzde hangi seansı anlattığını kanıtlamıyorsa \"bugün\" diye gösterilmiyor. Bir ölçü dürüstçe gösterilemiyorsa hiç gösterilmiyor: kart boş kalıyor ya da ölçü kaldırılıyor.",
     ],
     timeTitle: "Saat Türkiye Saatiyle",
@@ -2062,7 +2068,7 @@ const tr = {
       halfDay: "Yarım Gün",
       eventsEmpty: "Takvimde öne çıkan bir veri ya da bilanço yok.",
       timeUnknown: "Saat Belirsiz",
-      movesSession: "Seans İçi · 15 Dakika Gecikmeli",
+      movesSession: "Seans İçi",
       movesPre: "Açılış Öncesi İşlem",
       movesAfter: "Kapanış Sonrası İşlem",
       movesLastClose: "Önceki Kapanış · {date}",
@@ -2158,7 +2164,7 @@ const tr = {
     pulseNoHighsLows:
       "52 haftalık zirve ve dip sayısı kullanılmıyor: her endeks üyesi için bir yıllık fiyat geçmişi gerekiyor ve bu ekranın verisinden türetilemiyor.",
     pulseSources:
-      "Kaynaklar: VIX Cboe (yedek FRED), yüksek getirili tahvil farkı ICE BofA serisi FRED üzerinden, SPY ve TLT günlük kapanışları ile S&P 500 kotasyonları Alpaca (15 dakika gecikmeli).",
+      "Kaynaklar: VIX Cboe (yedek FRED), yüksek getirili tahvil farkı ICE BofA serisi FRED üzerinden, SPY ve TLT günlük kapanışları ile S&P 500 kotasyonları Alpaca.",
 
     /* ---- Makro ikinci halka ---- */
     weekEnding: "{date} ile Biten Hafta",
@@ -3029,7 +3035,7 @@ const tr = {
         suggestLoading: "O günün fiyatına bakılıyor",
         suggestClose: "{date} Kapanışı",
         suggestPrevious: "{date} Kapanışı, Son İşlem Günü",
-        suggestLast: "Son Fiyat, 15 Dakika Gecikmeli",
+        suggestLast: "Son Fiyat",
         suggestUse: "Kullan",
         suggestNone: "Bu gün için kapanış fiyatı yok; fiyatı kendin yaz.",
         perShareIs: "Hisse Başı {price}",

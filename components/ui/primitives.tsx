@@ -578,6 +578,8 @@ export type DataStampLabels = {
   mayBeStale: string;
   /** "15 dk gecikmeli" — yayını gecikmeli sağlayıcılarda damgaya eklenir. */
   delayed: string;
+  /** Melez paket karışıksa: "Az İşlem Görenlerde 15 Dakika Gecikmeli". */
+  partlyDelayed: string;
   /** Damga bugünden DEĞİLSE kullanılan biçim — tarihi de taşır. */
   updatedOn: string;
 };
@@ -586,6 +588,10 @@ export type DataStampLabels = {
    geliyor: sabit tabloda dururken İngilizce sitede de Türkçe basılıyorlardı. */
 const PROVIDER_LABEL: Record<string, string> = {
   alpaca: "Alpaca · SIP",
+  /* "IEX Real-Time Price" IEX'in gösterim koşulundaki atıf metni — fiyatın
+     yanında, çevrilmeden (iextrading.com/api-exhibit-a). */
+  "alpaca-live": "Alpaca · IEX Real-Time Price",
+  "alpaca-mixed": "Alpaca · IEX Real-Time Price",
   finnhub: "Finnhub",
   fred: "FRED",
   sec: "SEC EDGAR",
@@ -704,6 +710,12 @@ export function DataStamp({
         <>
           <span aria-hidden>·</span>
           <span>{labels.delayed}</span>
+        </>
+      )}
+      {source === "alpaca-mixed" && (
+        <>
+          <span aria-hidden>·</span>
+          <span>{labels.partlyDelayed}</span>
         </>
       )}
       {stale && (

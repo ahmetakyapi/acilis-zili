@@ -621,7 +621,10 @@ export function livePriceLabel(
   if (!quote) return null;
   const live =
     status.session === "regular" && pack.ok && !pack.stale && isSessionTrade(quote.tradedAt, status);
-  return live ? t.technical.now : t.market.lastPrice;
+  /* Melez kotasyonda fiyat IEX'ten gerçek zamanlıysa rozet bunu söylüyor
+     (2 Ekim, `lib/providers/index.ts` → `overlayRealtime`). */
+  if (!live) return t.market.lastPrice;
+  return quote.realtime ? t.technical.nowRealtime : t.technical.now;
 }
 
 export function slotLabel(slot: string, t: Dictionary): string {

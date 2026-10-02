@@ -304,7 +304,7 @@ const en: typeof tr = {
     pageHeading: "Opening Bell: US Market Tracking",
     sourceLine:
       "Prices: Alpaca consolidated tape · Profiles and earnings: Finnhub · Macro: FRED",
-    sourceNote: "Indices tracked via ETFs · prices delayed 15 min",
+    sourceNote: "Indices tracked via ETFs · real-time IEX prices in session, volume and extended hours delayed 15 min",
     bellOpen: "Opening Bell",
     bellClose: "Closing Bell",
     nextOpen: "Next Open",
@@ -575,6 +575,7 @@ const en: typeof tr = {
     readAnalysis: "Read Analysis",
     shareTitle: "Share This Analysis",
     now: "15-Min Delayed",
+    nowRealtime: "Real-Time",
     currentPrice: "Current Price",
     thisEdition: "This Edition",
     atAnalysis: "At Analysis",
@@ -665,6 +666,8 @@ const en: typeof tr = {
     allStocks: "All Stocks",
     snapshotNote:
       "Indicators are calculated as of the {date} close; prices are delayed 15 minutes.",
+    snapshotNoteRealtime:
+      "Indicators are computed as of the {date} close; the price is real-time (IEX).",
     method:
       "Moving averages, RSI, MACD, volume and pivot levels are calculated from the site's own daily price data. The stance, levels and scenarios are written on top of those indicators by Claude.",
     disclaimer:
@@ -1521,8 +1524,9 @@ const en: typeof tr = {
     failed: "Couldn't load data",
     failedHint: "The provider isn't responding; this card is empty for now.",
     delayedNote:
-      "Prices come from the consolidated tape (SIP) with a 15-minute delay. Intraday volume, open-high-low and the previous close are the total across every exchange.",
+      "In session, prices are real-time from IEX; thinly traded symbols and extended hours use the consolidated tape (SIP), delayed 15 minutes. Intraday volume, open and previous close are totals across all exchanges.",
     delayed: "15 Minutes Delayed",
+    partlyDelayed: "15-Minute Delay for Thinly Traded",
     extendedNote: "Outside Regular Hours: Change Is per Symbol's Last Trade",
     sourceCache: "Cache",
     sourceSeed: "Calendar",
@@ -1559,7 +1563,8 @@ const en: typeof tr = {
     dataIntro:
       "Every number on the site has a named source. The site does not invent numbers; it computes, formats and stamps what the source provides.",
     sources: [
-      { name: "Alpaca", what: "Stock and fund prices, chart bars. Consolidated tape (SIP), 15 minutes delayed." },
+      { name: "Alpaca", what: "Stock and fund prices, chart bars. Real-time IEX prices in session; volume, charts and extended hours from the consolidated tape (SIP), 15 minutes delayed." },
+      { name: "IEX", what: "Real-time prices during the session. Data provided for free by IEX.", href: "https://iextrading.com/api-exhibit-a" },
       { name: "Finnhub", what: "Company profiles, news, the earnings calendar, analyst ratings and IPOs." },
       { name: "FRED", what: "US macro series: inflation, employment, growth and rates." },
       { name: "U.S. Treasury and Cboe", what: "Official daily closes for Treasury yields and the VIX." },
@@ -1569,7 +1574,7 @@ const en: typeof tr = {
     flowScreen: "On Screen",
     flowFallback: "If No Answer",
     stampSource: "Alpaca",
-    stampDelay: "15 Minutes Delayed",
+    stampDelay: "Real-Time or 15 Minutes Delayed",
     stampTime: "Time Fetched",
     stampStale: "Flagged If Stale",
     stampCaption: "The stamp under every data card: the source's name, the delay and the time the data was fetched.",
@@ -1583,7 +1588,7 @@ const en: typeof tr = {
     ],
     stampTitle: "Source and Time Stamps",
     stampBody: [
-      "Under every data card you will find the source name and the time the data was fetched. Prices are 15 minutes delayed and the stamp says that too. If a record is from yesterday the date is written out; a record that may be stale is flagged.",
+      "Under every data card you will find the source name and the time the data was fetched. In session prices are real-time (IEX); thinly traded symbols and extended hours are 15 minutes delayed, and the stamp says which. If a record is from yesterday the date is written out; a record that may be stale is flagged.",
       "A percentage that cannot prove which session it describes is not shown as \"today\". A measure that cannot be shown honestly is not shown at all: the card stays empty or the measure is removed.",
     ],
     timeTitle: "Times in Turkish Time",
@@ -1656,7 +1661,7 @@ const en: typeof tr = {
       halfDay: "Half Day",
       eventsEmpty: "No notable data or earnings on the calendar.",
       timeUnknown: "Time TBA",
-      movesSession: "Intraday · 15 Minutes Delayed",
+      movesSession: "Intraday",
       movesPre: "Pre-Market Trade",
       movesAfter: "After-Hours Trade",
       movesLastClose: "Previous Close · {date}",
@@ -1746,7 +1751,7 @@ const en: typeof tr = {
     pulseNoHighsLows:
       "New 52-week highs versus lows are not used: they need a year of price history for every index member, which this screen's data can't provide.",
     pulseSources:
-      "Sources: VIX from Cboe (FRED as fallback), the ICE BofA high-yield spread via FRED, SPY and TLT daily closes and S&P 500 quotes from Alpaca (15 minutes delayed).",
+      "Sources: VIX from Cboe (FRED as fallback), the ICE BofA high-yield spread via FRED, SPY and TLT daily closes and S&P 500 quotes from Alpaca.",
 
     weekEnding: "Week Ending {date}",
     sahmBelow: "Below Threshold",
@@ -2574,7 +2579,7 @@ const en: typeof tr = {
         suggestLoading: "Looking up that day's price",
         suggestClose: "{date} Close",
         suggestPrevious: "{date} Close, Last Trading Day",
-        suggestLast: "Last Price, 15 Minutes Delayed",
+        suggestLast: "Last Price",
         suggestUse: "Use",
         suggestNone: "No closing price for this day; type the price yourself.",
         perShareIs: "{price} per Share",

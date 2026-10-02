@@ -334,7 +334,12 @@ export default async function AboutPage() {
               {a.sources.map((source) => (
                 <li key={source.name}>
                   <strong>{source.name}</strong>
-                  <span>{source.what}</span>
+                  {/* IEX'in gösterim koşulu bağlantı istiyor (api-exhibit-a). */}
+                  {"href" in source && source.href ? (
+                    <a href={source.href} target="_blank" rel="noopener noreferrer">{source.what}</a>
+                  ) : (
+                    <span>{source.what}</span>
+                  )}
                 </li>
               ))}
             </ul>

@@ -474,6 +474,53 @@ export async function getSnapshots(
   return ok(quotes, "alpaca", { fetchedAt });
 }
 
+/**
+ * IEX'in SON DAKİKA BARI — gerçek zamanlı, tek borsa (2 Ekim).
+ *
+ * Melez kotasyonun gerçek zamanlı ayağı (gerekçe ve ölçüm
+ * `lib/providers/index.ts` → `overlayRealtime`). Tek tek işlem (`/trades/
+ * latest`) DEĞİL dakika barı: bar yalnızca fiyat belirleyen işlemlerden
+ * kuruluyor, küsuratlı ve sıra dışı basılan işlemler (odd-lot, geç
+ * bildirim) kapanışı oynatmıyor. Ölçüm de bu barlarla yapıldı.
+ *
+ * Dönen `t` dakikanın BAŞLANGICI. Hiç bar yoksa sembol sonuçta yok.
+ */
+export async function getLatestIexBars(
+  symbols: string[],
+  revalidate: number,
+  opts: { fresh?: boolean } = {},
+): Promise<ProviderResult<Record<string, { close: number; minute: Date }>>> {
+  if (symbols.length === 0) return ok({}, "alpaca");
+  const unique = [...new Set(symbols.map(canonicalSymbol))];
+  const out: Record<string, { close: number; minute: Date }> = {};
+  let fetchedAt: Date | undefined;
+  let lastFailure: ProviderResult<Record<string, { close: number; minute: Date }>> | null = null;
+  const results = await Promise.all(
+    batches(unique).map((batch) =>
+      symbolBatchFetch<{ bars?: Record<string, AlpacaBar | null> }>(
+        "/bars/latest",
+        { symbols: batch.join(","), feed: "iex" },
+        { revalidate, tags: ["quotes"], fresh: opts.fresh },
+      ),
+    ),
+  );
+  for (const result of results) {
+    if (!result.ok) {
+      lastFailure = result;
+      continue;
+    }
+    for (const [symbol, bar] of Object.entries(result.data?.bars ?? {})) {
+      if (!bar || typeof bar.c !== "number" || !Number.isFinite(bar.c) || bar.c <= 0) continue;
+      const minute = new Date(bar.t);
+      if (Number.isNaN(minute.getTime())) continue;
+      out[symbol] = { close: bar.c, minute };
+    }
+    if (!fetchedAt || result.fetchedAt > fetchedAt) fetchedAt = result.fetchedAt;
+  }
+  if (Object.keys(out).length === 0 && lastFailure) return lastFailure;
+  return ok(out, "alpaca", { fetchedAt });
+}
+
 /* --------------------------------------------------------------------------
    Toplu dönemsel değişim
 

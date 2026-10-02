@@ -26,6 +26,10 @@ export type ProviderResult<T> = ProviderOk<T> | ProviderFail;
 
 export type DataSource =
   | "alpaca"
+  /** Paketteki bütün fiyatlar IEX gerçek zamanlı (melez kotasyon). */
+  | "alpaca-live"
+  /** Bir kısmı gerçek zamanlı, az işlem görenler 15 dakika gecikmeli. */
+  | "alpaca-mixed"
   | "finnhub"
   | "fred"
   | "tcmb"
@@ -122,6 +126,10 @@ export type Quote = {
   prevClose: number | null;
   volume: number | null;
   tradedAt: Date | null;
+  /** Fiyat IEX'in gerçek zamanlı son dakika barından mı (melez kotasyon,
+      `lib/providers/index.ts` → `overlayRealtime`). Hacim ve gün barı yine
+      15 dakika gecikmeli konsolide tape'ten. */
+  realtime?: boolean;
 };
 
 export type Bar = {

@@ -207,7 +207,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
     : live
       ? t.technical.currentPrice
       : t.market.lastPrice;
-  const priceBadge = live ? t.technical.now : null;
+  const priceBadge = live ? (quote?.realtime ? t.technical.nowRealtime : t.technical.now) : null;
   const next = nextEdition(new Date(), holidays);
   const position = planPosition(price, row.entryLow, row.entryHigh, row.stop);
   const reading = planReading(verdict, price, row);
@@ -533,7 +533,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             <h2 className={styles.sectionTitle}>{t.technical.indicators}</h2>
             {row.snapshot.lastSession && (
               <span className={styles.blockNote}>
-                {t.technical.snapshotNote.replace("{date}", formatEtDateCompact(row.snapshot.lastSession, locale))}
+                {(live && quote?.realtime ? t.technical.snapshotNoteRealtime : t.technical.snapshotNote).replace("{date}", formatEtDateCompact(row.snapshot.lastSession, locale))}
               </span>
             )}
           </div>

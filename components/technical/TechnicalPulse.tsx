@@ -130,7 +130,7 @@ export function TechnicalPulse({
               changePct: quote.changePct,
               change: quote.change,
               basis: liveLabel,
-              live: liveLabel === t.technical.now,
+              live: liveLabel === t.technical.now || liveLabel === t.technical.nowRealtime,
             }
           : { value: fallback.price, changePct: fallback.changePct, basis: t.technical.atAnalysis },
       foot: fallback.foot,
