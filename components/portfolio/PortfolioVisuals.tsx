@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { RollingFigure } from "@/components/ui/RollingFigure";
 import { LogoTile, Skeleton } from "@/components/ui/primitives";
 import { formatLira } from "@/lib/fx";
-import type { Locale } from "@/lib/i18n";
+import type { Dictionary, Locale } from "@/lib/i18n";
 import type { PortfolioTotals } from "@/lib/portfolio";
 import { cn, directionOf, directionText, formatPercent, formatPercentPlain, formatPrice, NO_VALUE } from "@/lib/utils";
 import styles from "./Portfolio.module.css";
@@ -187,29 +187,44 @@ export function AllocationRingSkeleton({ title }: { title: string }) {
    Toplam şeridi
    --------------------------------------------------------------------------- */
 
-export type TotalsLabels = {
-  totalValue: string;
-  totalPnlUsd: string;
-  totalPnlTl: string;
-  fxEffect: string;
-  fxEffectHint: string;
-  fromStock: string;
-  fromFx: string;
-  sourceTitle: string;
-};
+export type TotalsLabels = Pick<
+  Dictionary["lira"]["portfolio"],
+  | "totalValue"
+  | "usdBasis"
+  | "tlBasis"
+  | "costShort"
+  | "value"
+  | "breakdownTitle"
+  | "fromStock"
+  | "fromFx"
+  | "fromStockHint"
+  | "fromFxHint"
+  | "tlTotal"
+  | "fxStoryUp"
+  | "fxStoryDown"
+  | "fxStoryFlat"
+>;
 
 /**
- * Toplam değer büyük puntoyla solda; üç kâr/zarar ölçüsü sağda, alt alta.
+ * GETİRİ BÖLÜMÜ — "ne kadar kazandım, dolarda mı lirada mı, neden farklı".
  *
- * DÖRT EŞİT KUTU DEĞİL. İlk sürüm dört aynı kartı yan yana diziyordu ve
- * "neyim var" sorusunun cevabı (toplam değer) kâr/zararla aynı ağırlıkta
- * duruyordu. Hiyerarşi artık punto farkıyla.
+ * İLK HÂL ÜÇ SATIRDI: "Dolar K/Z", "Lira K/Z", "Kurun Katkısı" alt alta, aynı
+ * puntoda (2 Ekim'e kadar). Üç sayı da doğruydu ama okuyucunun asıl sorusu —
+ * lira getirisi neden dolardakinden yüksek — cevapsızdı; "Kurun Katkısı"nın
+ * ne olduğunu küçük puntolu bir tanım anlatıyordu. Sahibi telefonda "TL ve
+ * dolar getirilerini daha iyi anlat" dedi.
  *
- * LİRA K/Z'NİN KAYNAĞI BİR ÇİZGİ. Ekranın varlık sebebi lira kazancının ne
- * kadarının hisseden, ne kadarının kurdan geldiği; iki parça aynı işaretteyse
- * (ikisi de kazanç ya da ikisi de kayıp) oranları tek çubukta okunuyor.
- * İşaretler ayrışınca bir parça ötekini yiyor ve "pay" diye bir şey
- * kalmıyor — o zaman çubuk hiç basılmıyor, sayılar yine yazıyor.
+ * Şimdi üç kat:
+ *  1. Toplam değer, iki para biriminde.
+ *  2. İKİ KART YAN YANA: dolar bazında ve lira bazında getiri, her biri kendi
+ *     maliyetinden değerine. Yan yana durunca iki yüzde doğrudan kıyaslanıyor.
+ *  3. ÇÖZÜMLEME: lira getirisi = hisseden + kurdan. Çubuk iki parçanın
+ *     oranını, denklem sayısını, cümle SEBEBİNİ veriyor: alış günlerinin
+ *     ortalama kuru (lira maliyet ÷ dolar maliyet, yani adetle ağırlıklı) ile
+ *     bugünün kuru. Cümle uydurma değil, aynı iki toplamdan hesaplanıyor.
+ *
+ * Çubuk yalnızca iki parça aynı işaretteyse basılıyor: işaretler ayrışınca
+ * bir parça ötekini yiyor ve "pay" diye bir şey kalmıyor; denklem yine yazıyor.
  */
 export function TotalsBand({
   totals,
@@ -223,22 +238,56 @@ export function TotalsBand({
   labels: TotalsLabels;
 }) {
   const usd = (value: number | null, signed = false) =>
-    value === null ? NO_VALUE : `${signed && value > 0 ? "+ " : ""}${formatPrice(value, locale, { currency: true })}`;
+    value === null ? NO_VALUE : `${signed && value > 0 ? "+" : ""}${formatPrice(value, locale, { currency: true })}`;
   const tl = (value: number | null, signed = false) =>
     value === null ? NO_VALUE : formatLira(value, locale, 2, signed);
   const pnlUsdPct = totals.costUsd > 0 ? (totals.pnlUsd / totals.costUsd) * 100 : null;
   const pnlTlPct = totals.pnlTl !== null && totals.costTl ? (totals.pnlTl / totals.costTl) * 100 : null;
 
-  const stockPart = todayRate !== null ? totals.pnlUsd * todayRate : null;
+  const stockPart = todayRate !== null && totals.pnlTl !== null ? totals.pnlUsd * todayRate : null;
   const fxPart = totals.fxEffectTl;
   const sameSign =
-    stockPart !== null && fxPart !== null && stockPart !== 0 && Math.sign(stockPart) === Math.sign(fxPart);
+    stockPart !== null && fxPart !== null && stockPart !== 0 && fxPart !== 0 && Math.sign(stockPart) === Math.sign(fxPart);
   const stockShare = sameSign ? (stockPart / (stockPart + fxPart)) * 100 : null;
 
-  const rows: { key: string; label: string; value: string; tone: number | null; sub: string | null }[] = [
-    { key: "usd", label: labels.totalPnlUsd, value: usd(totals.pnlUsd, true), tone: totals.pnlUsd, sub: formatPercent(pnlUsdPct, locale) },
-    { key: "tl", label: labels.totalPnlTl, value: tl(totals.pnlTl, true), tone: totals.pnlTl, sub: formatPercent(pnlTlPct, locale) },
-    { key: "fx", label: labels.fxEffect, value: tl(totals.fxEffectTl, true), tone: totals.fxEffectTl, sub: null },
+  /* Alış günlerinin ağırlıklı ortalama kuru ve bugüne değişimi. */
+  const buyAvg = totals.costTl !== null && totals.costUsd > 0 ? totals.costTl / totals.costUsd : null;
+  const rateChange = buyAvg !== null && todayRate !== null ? (todayRate / buyAvg - 1) * 100 : null;
+  const gap = pnlTlPct !== null && pnlUsdPct !== null ? pnlTlPct - pnlUsdPct : null;
+  /* Kur iki ondalıkla: TCMB dört basamak yayımlıyor ama cümlede dört
+     basamak okunmuyor; künyedeki bugünkü kur satırı tam değeri taşıyor. */
+  const rate = (value: number) => `${formatPrice(value, locale, { digits: 2 })} ₺`;
+  let story: string | null = null;
+  if (buyAvg !== null && todayRate !== null && rateChange !== null && gap !== null) {
+    const flat = Math.abs(rateChange) < 0.05;
+    story = flat
+      ? labels.fxStoryFlat
+      : (rateChange > 0 ? labels.fxStoryUp : labels.fxStoryDown)
+          .replace("{buy}", rate(buyAvg))
+          .replace("{today}", rate(todayRate))
+          .replace("{chg}", formatPercentPlain(Math.abs(rateChange), locale, 1))
+          .replace("{gap}", formatPrice(Math.abs(gap), locale, { digits: 1 }));
+  }
+
+  const cards = [
+    {
+      key: "usd",
+      label: labels.usdBasis,
+      value: usd(totals.pnlUsd, true),
+      pct: pnlUsdPct,
+      tone: totals.pnlUsd,
+      cost: usd(totals.costUsd),
+      worth: usd(totals.valueUsd),
+    },
+    {
+      key: "tl",
+      label: labels.tlBasis,
+      value: tl(totals.pnlTl, true),
+      pct: pnlTlPct,
+      tone: totals.pnlTl,
+      cost: totals.costTl !== null ? tl(totals.costTl) : null,
+      worth: totals.valueTl !== null ? tl(totals.valueTl) : null,
+    },
   ];
 
   return (
@@ -247,48 +296,72 @@ export function TotalsBand({
         <p className={styles.totalLabel}>{labels.totalValue}</p>
         <RollingFigure value={usd(totals.valueUsd)} className={styles.totalValue} />
         <p className={`figure ${styles.totalTl}`}>{tl(totals.valueTl)}</p>
-
-        {stockShare !== null && stockPart !== null && fxPart !== null && (
-          <div className={styles.source}>
-            <p className={styles.sourceTitle}>{labels.sourceTitle}</p>
-            <span className={styles.sourceBar} aria-hidden>
-              <span className={styles.sourceStock} style={{ flexGrow: stockShare }} />
-              <span className={styles.sourceFx} style={{ flexGrow: 100 - stockShare }} />
-            </span>
-            <dl className={styles.sourceLegend}>
-              <div>
-                <dt>
-                  <span className={styles.keyStock} aria-hidden />
-                  {labels.fromStock}
-                </dt>
-                <dd className="figure">{tl(stockPart, true)}</dd>
-              </div>
-              <div>
-                <dt>
-                  <span className={styles.keyFx} aria-hidden />
-                  {labels.fromFx}
-                </dt>
-                <dd className="figure">{tl(fxPart, true)}</dd>
-              </div>
-            </dl>
-          </div>
-        )}
       </div>
 
-      <dl className={styles.pnlList}>
-        {rows.map((row, index) => (
-          <div key={row.key} className={styles.pnlRow}>
-            <dt className={styles.pnlLabel}>
-              {row.label}
-              {row.key === "fx" && <span className={styles.pnlHint}>{labels.fxEffectHint}</span>}
-            </dt>
-            <dd className={cn(styles.pnlValue, directionText(directionOf(row.tone)))}>
-              <RollingFigure value={row.value} delayMs={(index + 1) * 120} />
-              {row.sub && <span className={`figure ${styles.pnlPct}`}>{row.sub}</span>}
+      <dl className={styles.basisGrid}>
+        {cards.map((card, index) => (
+          <div key={card.key} className={styles.basisCard} data-tone={directionOf(card.tone)}>
+            <dt className={styles.basisLabel}>{card.label}</dt>
+            <dd className={styles.basisBody}>
+              <span className={cn(styles.basisValue, directionText(directionOf(card.tone)))}>
+                <RollingFigure value={card.value} delayMs={(index + 1) * 120} />
+              </span>
+              {card.pct !== null && (
+                <span className={cn("figure", styles.basisPct)} data-tone={directionOf(card.tone)}>
+                  {formatPercent(card.pct, locale)}
+                </span>
+              )}
+              {card.cost && card.worth && (
+                <span className={styles.basisLine}>
+                  <span>
+                    {labels.costShort} <b className="figure">{card.cost}</b>
+                  </span>
+                  <span>
+                    {labels.value} <b className="figure">{card.worth}</b>
+                  </span>
+                </span>
+              )}
             </dd>
           </div>
         ))}
       </dl>
+
+      {stockPart !== null && fxPart !== null && totals.pnlTl !== null && (
+        <div className={styles.breakdown}>
+          <p className={styles.breakdownTitle}>{labels.breakdownTitle}</p>
+          {stockShare !== null && (
+            <span className={styles.sourceBar} aria-hidden>
+              <span className={styles.sourceStock} style={{ flexGrow: stockShare }} />
+              <span className={styles.sourceFx} style={{ flexGrow: 100 - stockShare }} />
+            </span>
+          )}
+          <dl className={styles.equation}>
+            <div>
+              <dt>
+                <span className={styles.keyStock} aria-hidden />
+                {labels.fromStock}
+              </dt>
+              <dd className="figure">{tl(stockPart, true)}</dd>
+              <dd className={styles.equationHint}>{labels.fromStockHint}</dd>
+            </div>
+            <span className={styles.equationOp} aria-hidden>+</span>
+            <div>
+              <dt>
+                <span className={styles.keyFx} aria-hidden />
+                {labels.fromFx}
+              </dt>
+              <dd className="figure">{tl(fxPart, true)}</dd>
+              <dd className={styles.equationHint}>{labels.fromFxHint}</dd>
+            </div>
+            <span className={styles.equationOp} aria-hidden>=</span>
+            <div className={styles.equationTotal}>
+              <dt>{labels.tlTotal}</dt>
+              <dd className="figure" data-tone={directionOf(totals.pnlTl)}>{tl(totals.pnlTl, true)}</dd>
+            </div>
+          </dl>
+          {story && <p className={styles.story}>{story}</p>}
+        </div>
+      )}
     </div>
   );
 }
