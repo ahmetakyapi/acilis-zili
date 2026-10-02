@@ -7,7 +7,7 @@ import { useMotionPreference } from "@/components/motion/useMotionPreference";
 import { ArrowLeft, ArrowRight, ArrowUpRight, Bell, CalendarBlank, Check, CircleNotch, Clock, TrendUp } from "@phosphor-icons/react";
 import { LogoTile } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { displayFlowStatus, flowResultSignature, preserveConfirmedResults, type DayFlowSnapshot, type FlowEvent } from "@/lib/day-flow";
+import { displayFlowStatus, flowResultSignature, preserveConfirmedResults, type DayFlowSnapshot, type FlowEvent, type FlowMember } from "@/lib/day-flow";
 import { clockOf, displayZone } from "@/lib/session-clock";
 import { NO_VALUE } from "@/lib/utils";
 import { withLocale } from "@/lib/i18n/routing";
@@ -47,6 +47,18 @@ function Status({ event, nowMs, labels }: { event: Pick<FlowEvent, "status" | "s
 function FlowNote({ event, labels }: { event: Pick<FlowEvent, "detail" | "timeEt">; labels: Props["labels"] }) {
   if (!event.detail) return event.timeEt ? null : <em>{labels.timeUnknown}</em>;
   return <em>{event.timeEt ? event.detail : `${event.detail} · ${labels.timeUnknown}`}</em>;
+}
+
+/* SEC BİLDİRİMİ (2 Ekim). Sonuç SEC'e yatırıldığı dakika görünüyor; bağlantı
+   EDGAR'daki dizin sayfasına, basın bülteni (Ex-99.1) orada. Dış site:
+   yeni sekme. Gerekçe `lib/providers/sec-edgar.ts`. */
+function FilingLink({ filing }: { filing: NonNullable<FlowMember["filing"]> }) {
+  return (
+    <a href={filing.url} target="_blank" rel="noopener noreferrer" className={styles.filingLink}>
+      <span className="numeral">{filing.label}</span>
+      <ArrowUpRight size={12} weight="bold" aria-hidden />
+    </a>
+  );
 }
 
 export function DayFlow({ initial, locale, labels, railLabels, heading }: Props) {
@@ -269,6 +281,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
                 <Status event={event} nowMs={nowMs} labels={labels} />
                 <FlowNote event={event} labels={labels} />
               </span>
+              {member?.filing && <FilingLink filing={member.filing} />}
             </span>
             {/* GERÇEKLEŞENİN YANINDA KIYAS (30 Eylül, sahibinin isteği:
                 "beklenti de yazsın"). Açıklanan veride satır yalnızca
@@ -378,7 +391,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
               (`dayFlow.notes`), karşılığı olmayan olayda hiç basılmıyor. */}
           {selected.note && <p className={styles.note}>{selected.note}</p>}
           {selected.members ? <div className={styles.members}>{selected.members.map((member) => <div key={member.symbol} className={styles.member}>
-            <div className={styles.memberIdentity}><LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="sm" /><div><strong>{member.symbol}</strong><Status event={{ status: member.status, scheduledAt: selected.scheduledAt }} nowMs={nowMs} labels={labels} /></div></div>
+            <div className={styles.memberIdentity}><LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="sm" /><div><strong>{member.symbol}</strong><Status event={{ status: member.status, scheduledAt: selected.scheduledAt }} nowMs={nowMs} labels={labels} />{member.filing && <FilingLink filing={member.filing} />}</div></div>
             {/* Sonuç panelindeki şirket satırı da aynı ölçüleri basar: satır
                 ile panel aynı olayın iki farklı sayısını göstermesin. */}
             {(member.revenue || member.eps || member.revenueEstimate || member.epsEstimate) && <div className={styles.memberNumbers}><FlowFigures member={member} labels={labels} variant="detail" /></div>}

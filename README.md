@@ -648,6 +648,7 @@ npm run dev
 | `NEXT_PUBLIC_SITE_URL` | üretimde | yayın adresi (OG görselleri, sitemap) |
 | `AUTH_TRUST_HOST` | üretimde | ters vekil arkasında `true` |
 | `SITE_INDEXABLE` | ikinci kopyada | canlıda `true`, ikinci kopyada `false` |
+| `SEC_USER_AGENT` | önerilir | `"Ad e-posta"`; SEC EDGAR iletişim bilgisi istiyor (anlık bilanço bildirimi) |
 | `DEEPL_API_KEY` | opsiyonel | haber başlığı çevirisi (önce bu denenir) |
 | `ANTHROPIC_API_KEY` | opsiyonel | haber başlığı çevirisinde yedek |
 | `ANALYTICS_SALT` | opsiyonel | ziyaretçi özetinin tuzu; yoksa `AUTH_SECRET` |

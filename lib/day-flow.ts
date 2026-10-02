@@ -23,6 +23,9 @@ export type FlowMember = {
   revenueEstimate?: string;
   epsSurprise?: FlowSurprise;
   revenueSurprise?: FlowSurprise;
+  /** SEC'e yatırılan sonuç bildirimi (8-K / 2.02) — `lib/providers/sec-edgar.ts`.
+      Etiket sunucuda biçimli: "SEC Bildirimi · 23:02 TR". */
+  filing?: { label: string; url: string; acceptedAt: string | null };
 };
 export type FlowEvent = {
   id: string;
@@ -120,7 +123,13 @@ export function preserveConfirmedResults(previous: DayFlowSnapshot, next: DayFlo
       // gelir gelmişken kaybolan EPS de geçici bir sağlayıcı boşluğudur.
       const restoreEps = !hasActual(member.eps) && hasActual(oldMember.eps);
       const restoreRevenue = !hasActual(member.revenue) && hasActual(oldMember.revenue);
-      if (!restoreEps && !restoreRevenue) return member;
+      /* SEC bildirimi de geri alınmaz: yatırılmış bir 8-K geri çekilmiyor,
+         kaybolması yalnızca EDGAR'ın o turda yanıt vermemesi. */
+      const restoreFiling = !member.filing && !!oldMember.filing;
+      if (!restoreEps && !restoreRevenue && !restoreFiling) return member;
+      if (!restoreEps && !restoreRevenue) {
+        return { ...member, filing: oldMember.filing, status: member.status === "analyzed" ? "analyzed" as const : "released" as const };
+      }
       retained = true;
       /* Sürpriz sayısıyla birlikte korunur: geri getirilen EPS'nin yanında
          sürprizi olmayan (ya da yeni snapshot'ın boş bıraktığı) bir satır,
@@ -131,6 +140,7 @@ export function preserveConfirmedResults(previous: DayFlowSnapshot, next: DayFlo
         revenue: restoreRevenue ? oldMember.revenue : member.revenue,
         epsSurprise: restoreEps ? oldMember.epsSurprise : member.epsSurprise,
         revenueSurprise: restoreRevenue ? oldMember.revenueSurprise : member.revenueSurprise,
+        filing: member.filing ?? oldMember.filing,
         // Yalnız sayıları sakla; yayından kalkan analizin bağlantısı ve
         // analyzed durumu önceki snapshot'tan asla geri taşınmaz.
         status: member.status === "analyzed" ? "analyzed" as const : "released" as const,

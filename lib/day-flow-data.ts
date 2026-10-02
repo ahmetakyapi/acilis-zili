@@ -4,7 +4,8 @@ import { db } from "./db";
 import { economicEvents, earningsCalendar, earningsAnalyses, watchlistItems, watchlists } from "./schema";
 import { getStatus, getSymbolNames, guncelBilanco } from "./data";
 import { etDateTimeToUtc } from "./market-hours";
-import { displayOffsets, zoneTag } from "./session-clock";
+import { displayOffsets, displayZone, formatInZone, zoneTag } from "./session-clock";
+import { getEarningsFiling } from "./providers/sec-edgar";
 import { getDictionary, type Locale } from "./i18n";
 import { withLocale } from "./i18n/routing";
 import { analysisHref } from "./analysis";
@@ -93,6 +94,18 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
      şirket listeliyordu (22 Eylül, ölçüldü: en büyüğü AZO, 46,6 milyar $).
      Sayı boş duruma taşınıyor ve cümle ona göre kuruluyor. */
   let hiddenEarnings = 0;
+  /* SEC BİLDİRİMİ ANLIK (2 Ekim). Şirket sonucu SEC'e yatırdığı dakika
+     8-K / 2.02 kaydı EDGAR'da; Finnhub'ın EPS'i dakikalar-saatler sonra
+     geliyor. Kayıt bulunursa satır "Açıklandı" oluyor ve bildirime
+     bağlanıyor (gerekçe `lib/providers/sec-edgar.ts`). Yalnızca akışta
+     GÖSTERİLEN şirketler, yalnızca 04:00 ET'den sonra ve paralel; SEC
+     düşerse akış eskisi gibi Finnhub'ı bekliyor. */
+  const shown = [...combined.values()].filter((row) => analysisMap.has(row.symbol) || watchedSet.has(row.symbol) || isSpotlight(row.symbol) || (meta[row.symbol]?.marketCap ?? 0) >= 50e9);
+  const filings = new Map(status.etMinutes >= 240
+    ? await Promise.all(shown.map(async (row) => [row.symbol, await getEarningsFiling(row.symbol, date)] as const))
+    : []);
+  const zone = displayZone(locale);
+  const zoneTags = zoneTag(locale);
   for (const row of combined.values()) {
     const analysis = analysisMap.get(row.symbol);
     const info = meta[row.symbol];
@@ -118,7 +131,8 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
       : undefined;
     const member: FlowMember = {
       symbol: row.symbol, logoUrl: info?.logoUrl ?? null, watched: watchedSet.has(row.symbol),
-      status: earningsStatus(eps, revenue, !!analysis),
+      /* Bildirim yatırıldıysa sonuç açıklanmıştır — rakam henüz gelmemiş olsa da. */
+      status: earningsStatus(eps, revenue, !!analysis) === "scheduled" && filings.get(row.symbol) ? "released" : earningsStatus(eps, revenue, !!analysis),
       href: withLocale(analysis ? analysisHref(row.symbol, analysis.period) : `/hisse/${row.symbol}`, locale),
       eps: hasActual(eps) ? formatPrice(eps!, locale, money) : undefined,
       revenue: hasActual(revenue) ? formatMoneyCompact(revenue!, locale, code) : undefined,
@@ -126,6 +140,18 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
       revenueEstimate: hasActual(revenueEstimate) ? formatMoneyCompact(revenueEstimate!, locale, code) : undefined,
       epsSurprise: hasActual(eps) ? surpriseOf(epsSurprise(eps, epsEstimate)) : undefined,
       revenueSurprise: hasActual(revenue) ? surpriseOf(revenueSurprise(revenue, revenueEstimate)) : undefined,
+      filing: (() => {
+        const filed = filings.get(row.symbol);
+        return filed
+          ? {
+              label: filed.acceptedAt
+                ? `${t.dayFlow.secFiling} · ${formatInZone(new Date(filed.acceptedAt), zone)} ${zoneTags.primary}`
+                : t.dayFlow.secFiling,
+              url: filed.url,
+              acceptedAt: filed.acceptedAt,
+            }
+          : undefined;
+      })(),
     };
     byWindow.set(hour, [...(byWindow.get(hour) ?? []), member]);
   }

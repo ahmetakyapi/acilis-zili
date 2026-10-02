@@ -164,6 +164,8 @@ const tr = {
   },
 
   dayFlow: {
+    /* Sonuç bildiriminin (8-K / 2.02) künyesi: "SEC Bildirimi · 23:02 TR". */
+    secFiling: "SEC Bildirimi",
     marketDay: "Piyasa Günü",
     timelineHint: "Sonuç ve analiz için bir olay seç.",
 

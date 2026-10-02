@@ -139,6 +139,8 @@ const en: typeof tr = {
   },
 
   dayFlow: {
+    /* Sonuç bildiriminin (8-K / 2.02) künyesi: "SEC Bildirimi · 23:02 TR". */
+    secFiling: "SEC Filing",
     marketDay: "Market Day",
     timelineHint: "Select an event for results and analysis.",
 

@@ -268,3 +268,9 @@
   .phoneList { display:block; }
   .wideList { display:none; }
 }
+
+/* SEC bildirimi bağlantısı (2 Ekim): künyenin altında küçük, marka mavisi;
+   dokunma hedefi negatif payla 32 piksel, satırın boyunu büyütmüyor. */
+.filingLink { display:inline-flex; align-items:center; gap:4px; width:fit-content; min-height:32px; margin:-6px 0 -6px; padding:0; color:var(--primary-ink); font-size:12px; font-weight:600; text-decoration:none; }
+.filingLink:hover { text-decoration:underline; }
+.memberIdentity .filingLink { margin-top:0; }
