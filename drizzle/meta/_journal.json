@@ -169,6 +169,13 @@
       "when": 1790611156310,
       "tag": "0023_dusty_luke_cage",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790938301306,
+      "tag": "0024_mature_mad_thinker",
+      "breakpoints": true
     }
   ]
 }

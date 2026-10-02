@@ -1181,3 +1181,43 @@ export type UserRole = (typeof USER_ROLES)[number];
 
 /** AL / TUT / SAT — kayıtta İngilizce anahtar, ekranda dile göre yazılır. */
 export type Verdict = "buy" | "hold" | "sell";
+
+/**
+ * ORTALAMA ANALİST HEDEF FİYATI — günlük, kaynaklı (2 Ekim).
+ *
+ * Finnhub'ın `/stock/price-target` ucu ücretsiz katmanda kapalı (403) ve
+ * bilanço analizindeki `target_price` yalnızca analizin yazıldığı günün
+ * hedefi (MU'da üç ay önceki 1.502 $). Günlük bülten rutini takip edilen
+ * hisselerin güncel ortalamasını kaynaklarından doğrulayıp
+ * `/api/hedef`e yazıyor; doğrulama ve korumalar `lib/analyst-targets.ts`te.
+ *
+ * KENDİ TABLOSU: migration'lar deploy'da uygulanmıyor (CLAUDE.md) ve okuyan
+ * kod tablo yokken sessizce analizin hedefine düşüyor
+ * (`lib/analyst-target-data.ts`). Satır gün başına — geçmiş kendiliğinden
+ * birikiyor; ekran en yenisini okuyor. Sayılar HAM ve hisse başına, kotasyon
+ * parasında (ADR'de dolar).
+ */
+export const analystTargets = pgTable(
+  "analyst_targets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    symbol: text("symbol").notNull(),
+    /** Kaynağın verdiği günün ET tarihi. */
+    asOf: date("as_of").notNull(),
+    mean: doublePrecision("mean").notNull(),
+    median: doublePrecision("median"),
+    high: doublePrecision("high"),
+    low: doublePrecision("low"),
+    analystCount: integer("analyst_count"),
+    /** Kaynağın adı ("MarketBeat", "Nasdaq"…) — ekranda künyede. */
+    source: text("source").notNull(),
+    sourceUrl: text("source_url"),
+    /** Yazma anındaki canlı fiyat — makullük kontrolünün dayanağı. */
+    priceAtWrite: doublePrecision("price_at_write"),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("analyst_targets_symbol_day_key").on(t.symbol, t.asOf),
+    index("analyst_targets_symbol_idx").on(t.symbol),
+  ],
+);

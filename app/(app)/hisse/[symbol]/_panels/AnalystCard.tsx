@@ -5,6 +5,7 @@ import { type Dictionary, type Locale } from "@/lib/i18n";
 import { getRecommendations } from "@/lib/providers/finnhub";
 import { getQuotes } from "@/lib/providers";
 import { getLatestTarget, getStatus } from "@/lib/data";
+import { getConsensusTarget } from "@/lib/analyst-target-data";
 import { analysisHref } from "@/lib/analysis";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { cn, directionOf, directionText, formatEtDateMedium, formatPercent, formatPercentPlain, formatPrice, plural } from "@/lib/utils";
@@ -25,17 +26,27 @@ export async function AnalystCard({
     </Panel>
   );
 
-  const [result, target, status] = await Promise.all([
+  const [result, target, consensus, status] = await Promise.all([
     getRecommendations(symbol),
     getLatestTarget(symbol, locale),
+    getConsensusTarget(symbol),
     getStatus(),
   ]);
   if (!result.ok) return bos;
+  /* GÜNCEL ORTALAMA ÖNCE (2 Ekim). Günlük rutinin kaynaklı yazdığı ortalama
+     (en çok on günlük, `lib/analyst-target-data.ts`) varsa o; yoksa son
+     bilanço analizinin hedefi, analizin tarihiyle. İkisi aynı satırda
+     durmuyor — "ortalama hedef" ekranda tek sayı. */
+  const shown = consensus
+    ? { price: consensus.mean, analystCount: consensus.analystCount }
+    : target
+      ? { price: target.targetPrice, analystCount: target.analystCount }
+      : null;
   /* Potansiyel CANLI fiyata göre — başlıktaki kotasyonla aynı anahtar
      (`[symbol]`), istek içinde tek tur. Kotasyon yoksa yalnızca hedef. */
-  const quote = target ? await getQuotes([symbol], status) : null;
+  const quote = shown ? await getQuotes([symbol], status) : null;
   const price = quote?.ok ? quote.data[symbol.toUpperCase()]?.price ?? null : null;
-  const upside = target && price && price > 0 ? ((target.targetPrice - price) / price) * 100 : null;
+  const upside = shown && price && price > 0 ? ((shown.price - price) / price) * 100 : null;
 
   const latest = result.data[0];
   const total =
@@ -179,11 +190,11 @@ export async function AnalystCard({
           künye analizi ve tarihini söylüyor, analize bağlanıyor. Potansiyel
           yönü renkte ve işarette; bir hüküm değil, hedefle fiyat arasındaki
           fark. */}
-      {target && (
+      {shown && (
         <div className={styles.analystTarget}>
           <div className={styles.analystTargetLine}>
             <span className={styles.analystTargetLabel}>{t.analystTarget.label}</span>
-            <strong className="numeral">{formatPrice(target.targetPrice, locale, { currency: true })}</strong>
+            <strong className="numeral">{formatPrice(shown.price, locale, { currency: true })}</strong>
             {upside !== null && (
               <span className={cn("numeral", styles.analystTargetUpside, directionText(directionOf(upside)))}>
                 {formatPercent(upside, locale)}
@@ -191,13 +202,32 @@ export async function AnalystCard({
               </span>
             )}
           </div>
+          {/* Aralık yalnızca kaynak verdiyse: en düşük ve en yüksek hedef. */}
+          {consensus?.low != null && consensus.high != null && (
+            <p className={cn("numeral", styles.analystTargetMeta)}>
+              {t.analystTarget.range}: {formatPrice(consensus.low, locale, { currency: true })} –{" "}
+              {formatPrice(consensus.high, locale, { currency: true })}
+            </p>
+          )}
           <p className={styles.analystTargetMeta}>
-            {target.analystCount ? <>{t.analystTarget.analysts.replace("{n}", String(target.analystCount))} · </> : null}
-            <Link href={analysisHref(symbol, target.period)} prefetch={false}>
-              {t.analystTarget.from
-                .replace("{period}", target.periodLabel)
-                .replace("{date}", formatEtDateMedium(target.reportDate, locale))}
-            </Link>
+            {shown.analystCount ? <>{t.analystTarget.analysts.replace("{n}", String(shown.analystCount))} · </> : null}
+            {consensus ? (
+              /* Kaynak künyede ve tıklanabilir: sayı bir sağlayıcıdan değil,
+                 rutinin doğruladığı sayfadan (gerekçe lib/analyst-targets.ts). */
+              consensus.sourceUrl ? (
+                <a href={consensus.sourceUrl} target="_blank" rel="noopener noreferrer">
+                  {consensus.source} · {formatEtDateMedium(consensus.asOf, locale)}
+                </a>
+              ) : (
+                <>{consensus.source} · {formatEtDateMedium(consensus.asOf, locale)}</>
+              )
+            ) : target ? (
+              <Link href={analysisHref(symbol, target.period)} prefetch={false}>
+                {t.analystTarget.from
+                  .replace("{period}", target.periodLabel)
+                  .replace("{date}", formatEtDateMedium(target.reportDate, locale))}
+              </Link>
+            ) : null}
           </p>
         </div>
       )}

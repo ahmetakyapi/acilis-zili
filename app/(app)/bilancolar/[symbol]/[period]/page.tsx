@@ -35,6 +35,7 @@ import { getQuotes } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { estimateIsPast } from "@/lib/earnings-report";
 import { getAnalysisExtras } from "@/lib/earnings-extras";
+import { getConsensusTarget } from "@/lib/analyst-target-data";
 import { addEtDays, etParts, todayEt } from "@/lib/market-hours";
 import { getI18n, type Locale } from "@/lib/i18n";
 import {
@@ -163,7 +164,7 @@ export default async function AnalysisDetailPage(
   /* Ekler (özet, segmentler, KPI'lar) ayrı tabloda ve satırın kimliğiyle
      okunuyor; tablo yoksa `null` döner ve sayfa eski hâliyle çizilir
      (gerekçe lib/earnings-extras.ts). Öteki okumalarla aynı turda. */
-  const [meta, userSymbols, quotes, keyMetrics, peers, nextReport, siblings, extras] = await Promise.all([
+  const [meta, userSymbols, quotes, keyMetrics, peers, nextReport, siblings, extras, consensus] = await Promise.all([
     metaP,
     session?.user?.id ? getUserSymbols(session.user.id) : Promise.resolve([]),
     getQuotes([symbol], status),
@@ -177,6 +178,7 @@ export default async function AnalysisDetailPage(
     getNextReport(symbol),
     getAnalyses(locale, { symbols: [symbol], limit: 4 }),
     getAnalysisExtras(row.id),
+    getConsensusTarget(symbol),
   ]);
 
   /* ---- Canlı kotasyon ----
@@ -526,7 +528,19 @@ export default async function AnalysisDetailPage(
   /* Kayda yazılmış künyede de "Sonraki Bilanço" satırı serbest metin ve
      aynı kuralla ayıklanıyor: değer yukarıdaki hesaptan, yoksa satır hiç. */
   const NEXT_EARNINGS_LABEL = /sonraki bilanço|next (earnings|report)/i;
-  const guidanceFooter: FooterStat[] = row.guidanceFooter?.length
+  /* GÜNCEL ORTALAMA (2 Ekim): kapaktaki hedef bilanço gününün ortalaması
+     ve potansiyel ona göre (karar yukarıda). Rutinin kaynaklı yazdığı güncel
+     ortalama analizden SONRA kaydedildiyse ayrı bir ölçü olarak, tarihiyle —
+     künyeyi kayıt da yazsa varsayılan da kursa sona ekleniyor; aynı günse
+     tekrar etmiyor. */
+  const consensusStat: FooterStat | null =
+    consensus && consensus.asOf > row.reportDate
+      ? {
+          label: `${t.analystTarget.current} · ${formatEtDateCompact(consensus.asOf, locale)}`,
+          value: formatPrice(consensus.mean, locale, { currency: true }),
+        }
+      : null;
+  const baseFooter: FooterStat[] = row.guidanceFooter?.length
     ? row.guidanceFooter.flatMap((stat) =>
         NEXT_EARNINGS_LABEL.test(stat.label)
           ? nextReportCompact
@@ -553,6 +567,7 @@ export default async function AnalysisDetailPage(
           value: formatPrice(row.targetPrice, locale, { currency: true }),
         },
       ].filter(Boolean) as FooterStat[]);
+  const guidanceFooter: FooterStat[] = consensusStat ? [...baseFooter, consensusStat] : baseFooter;
 
   /* Kapanış şeridinde kaç kart basılacak: rakip takvimi yalnızca aynı
      sektörden yaklaşan bilanço varsa çıkıyor; rehber şeridi her zaman var. */

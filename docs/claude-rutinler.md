@@ -100,6 +100,36 @@ Yanıttaki `missing` boş olmalı; doluysa slug ya da tarih yanlış, düzeltip
 yalnızca onları tekrar gönder. Bulduğun beklentiyi aşağıdaki brifingde de
 aynı sayıyla kullan.
 
+1c) Ortalama analist hedeflerini güncelle. Aday listesini çek:
+
+```bash
+curl -s -H "Authorization: Bearer $SECRET" \
+  https://aciliszili.com/api/hedef/context
+```
+
+Her aday için (`last.as_of` bugünse atla) güncel ORTALAMA 12 aylık analist
+hedef fiyatını tek bir güvenilir kaynaktan oku (MarketBeat, Nasdaq,
+WSJ/FactSet, Yahoo Finance — her hissede mümkünse aynı kaynak). Kaynağın
+gösterdiği ortalama, analist sayısı, en düşük ve en yüksek hedef, varsa
+medyan; tarih kaynağın verdiği gün (bilinmiyorsa bugün). Sayı HAM ve hisse
+başına dolar: "1,600.00" → 1600. Emin olmadığın hisseyi GÖNDERME — site
+bu sayıyı "Ortalama Hedef Fiyat" diye, kaynağıyla birlikte gösteriyor.
+
+```bash
+curl -s -X POST https://aciliszili.com/api/hedef \
+  -H "Authorization: Bearer $SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"items": [{"symbol": "MU", "as_of": "YYYY-MM-DD", "mean": 1600, "median": 1650, "high": 2000, "low": 1100, "analyst_count": 32, "source": "MarketBeat", "source_url": "https://…"}]}'
+```
+
+Yanıttaki `rejected` listesine bak. Sebepler: `implausible-vs-price`
+(ortalama fiyatın üçte biri–üç katı dışında: büyük ihtimalle okuma ya da
+ölçek hatası, düzelt), `jump-unconfirmed` (son kayıttan %20+ sapma: hisse
+bölündüyse ya da konsensüs gerçekten değiştiyse kaynağı yeniden doğrula ve
+`"confirm_jump": true` ile tekrar gönder), `too-old` / `future-date`
+(tarih), `range-order` / `median-out-of-range` (sayılar karışmış). Bir
+kalemin reddi ötekileri etkilemez.
+
 2) Bu veriye dayanarak Türkçe bir sabah brifingi yaz.
 
 Başlık: en fazla 70 karakter, günün en önemli olayını taşır, clickbait değil.

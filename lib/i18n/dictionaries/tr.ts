@@ -2395,6 +2395,8 @@ const tr = {
   /* Analist kartındaki ortalama hedef fiyat şeridi (30 Eylül). Kaynak en son
      bilanço analizi; künye hangi analizden ve hangi tarihte olduğunu söyler. */
   analystTarget: {
+    current: "Güncel Ortalama Hedef",
+    range: "Hedef Aralığı",
     label: "Ortalama Hedef Fiyat",
     upside: "Potansiyel",
     analysts: "{n} Analist",

@@ -1952,6 +1952,8 @@ const en: typeof tr = {
   },
 
   analystTarget: {
+    current: "Current Average Target",
+    range: "Target Range",
     label: "Average Price Target",
     upside: "Upside",
     analysts: "{n} Analysts",
