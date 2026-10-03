@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { RollingFigure } from "@/components/themes/RollingFigure";
 import { ThemeRanking } from "@/components/themes/ThemeRanking";
@@ -122,6 +122,16 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
             </li>
           );
         })}
+        {/* ON İKİNCİ HÜCRE (3 Ekim). On bir karo telefonda 3'erli dört satırda
+            ve 640–1179 arasında 6 + 5'te birer boş hücre bırakıyordu. Boşluk
+            esnetilmez, doldurulur: o hücre tablonun bağlantısı. Bu
+            genişliklerde başlıktaki aynı bağlantı gizli (11 sütunda tersi). */}
+        <li className={styles.tileMoreItem}>
+          <Link href="/piyasalar#sektor-performansi" prefetch={false} className={styles.tileMore}>
+            <span>{t.today.sectorsLink}</span>
+            <ArrowRight size={16} weight="bold" aria-hidden />
+          </Link>
+        </li>
       </ol>
     </SectorFrame>
   );
@@ -133,7 +143,7 @@ function SectorFrame({ t, meta, children }: { t: Dictionary; meta: string; child
       <div className={styles.partHead}>
         <h3>{t.today.sectorsHeading}</h3>
         <span className={styles.partMeta}>{meta}</span>
-        <PanelLink href="/piyasalar#sektor-performansi" className={styles.partLink}>
+        <PanelLink href="/piyasalar#sektor-performansi" className={cn(styles.partLink, styles.sectorsHeadLink)}>
           {t.today.sectorsLink}
         </PanelLink>
       </div>

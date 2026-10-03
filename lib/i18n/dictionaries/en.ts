@@ -269,6 +269,7 @@ const en: typeof tr = {
     schedule: "Today's Calendar",
     scheduleEmpty: "No economic releases scheduled for today.",
     earningsToday: "Reporting Today",
+    earningsOn: "Reporting {day}",
     earningsCount: "{n} of {total} reporting",
     watchlistSummary: "Your Watchlist",
     portfolioSummary: "Your Portfolio",

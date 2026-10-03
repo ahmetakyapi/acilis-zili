@@ -251,7 +251,7 @@ function holidayOn(
 }
 
 /** O gün işlem var mı — hafta sonu ve tam tatiller hariç. */
-function isTradingDay(dateStr: string, holidays: MarketHoliday[]): boolean {
+export function isTradingDay(dateStr: string, holidays: MarketHoliday[]): boolean {
   const weekday = weekdayOf(dateStr);
   if (weekday === 0 || weekday === 6) return false;
   const holiday = holidayOn(dateStr, holidays);
@@ -293,8 +293,10 @@ export function prevTradingDay(dateStr: string, holidays: MarketHoliday[]): stri
   return cursor;
 }
 
-/** Verilen tarihten sonraki ilk işlem gününü bulur (o gün dahil değil). */
-function nextTradingDay(dateStr: string, holidays: MarketHoliday[]): string {
+/** Verilen tarihten sonraki ilk işlem gününü bulur (o gün dahil değil).
+ *  Dışarı verildi (3 Ekim): ana sayfanın bilanço paneli hafta sonu ve
+ *  tatilde sıradaki işlem gününü gösteriyor. */
+export function nextTradingDay(dateStr: string, holidays: MarketHoliday[]): string {
   let cursor = addEtDays(dateStr, 1);
   for (let i = 0; i < 14; i++) {
     if (isTradingDay(cursor, holidays)) return cursor;

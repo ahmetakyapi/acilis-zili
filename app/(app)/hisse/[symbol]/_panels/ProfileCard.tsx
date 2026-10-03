@@ -348,10 +348,16 @@ export async function ProfileCard({
               {liveCap && <dd className={styles.capNote}>{t.stock.capLiveNote}</dd>}
               {rankInfo?.poolShare != null && (
                 <dd className={cn("numeral", styles.capNote, styles.capShare)}>
+                  {/* Yüzde önündeki kelimeye bölünmez boşlukla bağlı: dar
+                      sütunda "%1,7" tek başına alt satıra düşüyordu (390'da
+                      ölçüldü). EN kalıbında yüzde başta, bağ "of"a. */}
                   {(rankPool
                     ? t.stock.capIndexShare.replace("{index}", rankPool.name)
                     : t.stock.capTrackedShare
-                  ).replace(
+                  )
+                    .replace(" {value}", "\u00a0{value}")
+                    .replace("{value} ", "{value}\u00a0")
+                    .replace(
                     "{value}",
                     formatPercentPlain(
                       rankInfo.poolShare,

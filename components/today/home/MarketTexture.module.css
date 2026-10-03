@@ -42,6 +42,22 @@
    "Hammadde" kelime ortasından bölünüyordu (ölçüldü). Altında 6 + 5. */
 @media (min-width:1180px) { .ribbon { grid-template-columns:repeat(11,minmax(0,1fr)); } }
 .tileItem { min-width:0; }
+/* On ikinci hücre: sektör tablosunun bağlantısı. Ton gömük, kenar kesikli —
+   karolarla aynı boy, ama bir veri değil bir yön tabelası olduğu belli. */
+.tileMoreItem { min-width:0; }
+.tileMore {
+  display:flex; height:78px; flex-direction:column; justify-content:space-between; gap:6px;
+  padding:9px 10px; border:1px dashed var(--line-strong); border-radius:10px;
+  color:var(--primary-ink); font-size:12px; font-weight:650; line-height:1.25;
+  transition:background-color .2s, border-color .2s;
+}
+.tileMore:hover { border-color:var(--primary); background:var(--primary-tint); }
+.tileMore:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.sectorsHeadLink { display:none; }
+@media (min-width:1180px) {
+  .tileMoreItem { display:none; }
+  .sectorsHeadLink { display:inline-flex; }
+}
 .tile {
   display:flex; flex-direction:column; justify-content:space-between; gap:6px;
   height:78px; padding:9px 10px; border-radius:10px; overflow:hidden;
@@ -129,7 +145,7 @@
    satır kartın tam iç genişliğini alıyor. Karolar (`.tile`) 640 eşiğinde
    kalıyor; orada şerit altı sütun. */
 @media (max-width:639px) {
-  .tile { height:70px; padding:8px 9px; }
+  .tile, .tileMore { height:70px; padding:8px 9px; }
   .tileSkeleton { height:70px; }
   .tilePct { font-size:15px; }
 }

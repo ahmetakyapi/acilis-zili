@@ -8,8 +8,8 @@ import {
   TimingChip,
   LogoTile,
 } from "@/components/ui/primitives";
-import { getAnalysisBadges, getSymbolNames, getEarningsBetween } from "@/lib/data";
-import { todayEt } from "@/lib/market-hours";
+import { getAnalysisBadges, getEarningsBetween, getHolidays, getSymbolNames } from "@/lib/data";
+import { isTradingDay, nextTradingDay, todayEt } from "@/lib/market-hours";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { formatPrice } from "@/lib/utils";
 import { ListSkeleton } from "@/components/today/home/ListSkeleton";
@@ -36,14 +36,31 @@ export function EarningsTodaySkeleton({ t }: { t: Dictionary }) {
  * Başlık dışarıda, Suspense'in üstünde kalsaydı sayıya erişemezdi.
  */
 export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const today = todayEt();
+  /* HAFTA SONU SIRADAKİ İŞLEM GÜNÜ (3 Ekim). Panel cumartesi ve pazar
+     "Bu aralıkta bilanço açıklaması yok" diyordu — doğru ama işe yaramaz:
+     okuyucunun hafta sonu sorduğu soru "pazartesi kim açıklıyor". İşlem
+     günü olmayan bir günde (hafta sonu, tam tatil) liste sıradaki işlem
+     gününün listesi ve başlık o günün adını taşıyor ("Pazartesi Bilanço
+     Açıklayanlar"); işlem gününde her şey eskisi gibi bugün. */
+  const holidays = await getHolidays();
+  const calendarToday = todayEt();
+  const today = isTradingDay(calendarToday, holidays) ? calendarToday : nextTradingDay(calendarToday, holidays);
+  const title =
+    today === calendarToday
+      ? t.today.earningsToday
+      : t.today.earningsOn.replace(
+          "{day}",
+          new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", { weekday: "long", timeZone: "UTC" }).format(
+            new Date(`${today}T12:00:00Z`),
+          ),
+        );
   const rows = await getEarningsBetween(today, today);
 
   if (rows.length === 0) {
     return (
       <Panel>
         <PanelHeader
-          title={t.today.earningsToday}
+          title={title}
           tone="title"
           action={<PanelLink href="/bilancolar">{t.common.showAll}</PanelLink>}
         />
@@ -84,7 +101,7 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
   return (
     <Panel>
       <PanelHeader
-        title={t.today.earningsToday}
+        title={title}
         /* PLAKA BAŞLIK — PANOdaki öteki VERİ panelleriyle aynı aile.
            Bu panel başlığın büyük (`title`) tonundaydı ve hemen üstündeki
            "Bugünün Takvimi" ile "Haftaya Bakış" plakayken yan yana iki ayrı

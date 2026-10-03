@@ -205,7 +205,9 @@ export async function MetricsCard({
        Dar ekranda ızgara tek sütuna düşüyor, gerilme olmuyor ve satırlar
        kendi doğal boylarında kalıyor. */
     <div className={styles.metricsBody}>
-      <dl data-motion-stagger className={styles.metricsList}>
+      {/* `data-count`: sütun sayısı ölçü sayısına göre (stock.module.css) —
+          dokuz ölçü dört sütunda son satırda tek başına kalıyordu. */}
+      <dl data-motion-stagger data-count={rows.length} className={styles.metricsList}>
         {rows.map(([label, value]) => (
           <div key={label}>
             <dt>{label}</dt>

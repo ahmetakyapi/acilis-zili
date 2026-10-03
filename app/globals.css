@@ -722,6 +722,16 @@
     background: var(--page-glow);
   }
 
+  /* TEK KELİME ALT SATIRA DÜŞMÜYOR (3 Ekim). Sahibinin isteği: "tek kelime
+     için alt satıra gelmesin". `text-wrap` kalıtılıyor; gövdeye `pretty`
+     verildiğinde her paragraf, etiket ve künye son satırında yalnız bir
+     kelime bırakmamak için satırları dengeliyor (tarayıcı yalnızca son
+     birkaç satıra bakıyor, maliyeti küçük). Başlıklar aşağıda `balance`.
+     Ölçüldü: /hisse/MU 390 pikselde yetim satır 11 → tarama aşağıda. */
+  body {
+    text-wrap: pretty;
+  }
+
   h1,
   h2,
   h3,
@@ -805,7 +815,14 @@
      (`lg:overflow-y-auto`, bülten arşivi) yardımcı sınıfla bunu geçersiz
      kılabiliyor. CSS modüllerindeki kaydırıcılar aynı iki satırı kendileri
      taşıyor. */
+  /* KONUMLU KAP (3 Ekim). Kaydırılan tablonun içindeki mutlak konumlu bir
+     öğe (`sr-only` sütun etiketi) konumlu bir ata bulamayınca kabın DIŞINA
+     yerleşip belgeyi genişletiyordu: /piyasalar 390 pikselde belge 538
+     piksel (sektör tablosu). Aynı hata portföy tablosunda bir kez hücreye
+     `relative` verilerek yamanmıştı; kök çözüm kabın kendisi. `:where` ve
+     katman sayesinde `absolute`/`fixed` yardımcıları bunu ezer. */
   :where(.scroll-x, .scroll-x-hint, .overflow-x-auto) {
+    position: relative;
     overflow-y: hidden;
     overscroll-behavior-x: none;
   }

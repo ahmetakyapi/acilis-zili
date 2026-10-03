@@ -107,6 +107,9 @@
 .metricsList { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); flex:1; }
 .metricsList > div { display:flex; min-width:0; flex-direction:column; justify-content:center; gap:8px; padding:18px 12px 18px 0; border-top:1px solid var(--line-soft); }
 .metricsList > div:nth-child(even) { padding-right:0; padding-left:18px; border-left:1px solid var(--line-soft); }
+/* İki sütunda tek sayıda ölçü: son hücre satırı kaplıyor, yanında boş bir
+   yarım hücre kalmıyor. Geniş ekran kuralları aşağıda kendi sayısına göre. */
+.metricsList > div:last-child:nth-child(odd) { grid-column:1 / -1; }
 .metricsList dt { color:var(--text-muted); font-size:11px; }
 .metricsList dd { color:var(--text-strong); font-size:clamp(18px,1.85vw,27px); font-weight:600; letter-spacing:-.045em; line-height:1.2; }
 .analystPanel { display:flex; flex-direction:column; border-radius:22px; background:var(--premium-surface,var(--surface-solid)); }
@@ -427,6 +430,18 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
  .metricsList > div:nth-child(4n+1) { padding-left:0; }
  .metricsList dt { min-height:15px; }
  .fundamentalsGrid .metricsList dd { font-size:clamp(16px,1.48vw,22px); }
+ /* ÜÇ SÜTUN, ÖLÇÜ SAYISI ÜÇE BÖLÜNÜYORSA (3 Ekim). Ölçü sayısı şirkete göre
+    7-10 arası; dokuz ölçü dört sütunda son satırda TEK hücre bırakıyordu
+    ("Hacim" yalnız, sağında üç boş hücre — MU, 1280'de görüldü). 9 ve 6
+    üç sütunda tam ızgara; geri kalanında son satırın tek hücresi satırı
+    kaplıyor. */
+ .metricsList > div:last-child:nth-child(odd) { grid-column:auto; }
+ .metricsList:is([data-count="9"], [data-count="6"]) { grid-template-columns:repeat(3,minmax(0,1fr)); }
+ .metricsList:is([data-count="9"], [data-count="6"]) > div:not(:nth-child(4n+1)) { border-left:0; }
+ .metricsList:is([data-count="9"], [data-count="6"]) > div:nth-child(4n+1) { padding-left:10px; }
+ .metricsList:is([data-count="9"], [data-count="6"]) > div:not(:nth-child(3n+1)) { border-left:1px solid var(--line-soft); }
+ .metricsList:is([data-count="9"], [data-count="6"]) > div:nth-child(3n+1) { padding-left:0; }
+ .metricsList:not([data-count="9"], [data-count="6"]) > div:last-child:nth-child(4n+1) { grid-column:1 / -1; }
  .metricsSkeleton { height:207px; }
  .analystOverview { grid-template-columns:122px minmax(0,1fr); gap:24px; }
  .fundamentalsGrid .consensus { width:122px; }

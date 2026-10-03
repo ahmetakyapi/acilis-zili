@@ -333,6 +333,7 @@ const tr = {
     schedule: "Bugünün Takvimi",
     scheduleEmpty: "Bugün için planlanmış ekonomik veri yok.",
     earningsToday: "Bugün Bilanço Açıklayanlar",
+    earningsOn: "{day} Bilanço Açıklayanlar",
     /* Başlığın yanındaki sayaç: bugün kaç şirket açıklıyor ve kaçı
        listede. Listede piyasa değerine göre en büyük sekizi var.
        "TANESİ" — İYELİK EKİ YAZILAMAZ. Kalıp bir dönem "{n}'i" idi ve

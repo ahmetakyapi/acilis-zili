@@ -60,7 +60,15 @@
   .cell { gap:6px 8px; padding:10px 12px 11px; border-radius:12px; background:var(--surface-sunken); }
   .cell + .cell { padding-left:12px; border-left:0; }
   .cell[data-target] { background:var(--primary-tint); }
-  .day { justify-self:end; }
+  /* GÜN ALTTA (3 Ekim). Gün adı karonun sağ üstündeydi; "Bugün"/"Yarın"
+     sığıyor ama hafta sonu "5 Ekim Pazartesi" "Kapanış Zili"nin yanına
+     sığmıyor ve karonun dışına taşıyordu (360'ta 26, 390'da 11 piksel,
+     ölçüldü) — sığmayan etiket saat satırını da genişletiyordu. Gün artık
+     saatlerin altında tam genişlikte: üç satır, hiçbiri taşmıyor. */
+  .cell { grid-template-columns:minmax(0,1fr); }
+  .kicker { grid-column:1; }
+  .day { grid-row:3; grid-column:1; justify-self:start; }
+  .times { grid-column:1; }
   .day, .day[data-today] { padding:0; background:none; font-size:11px; font-weight:600; line-height:1.4; color:var(--text-muted); }
   .cell[data-target] .day { color:var(--primary-ink); }
   .primary { font-size:18px; }
