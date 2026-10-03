@@ -86,7 +86,26 @@
    boyuna gerildiği için artan hava başlık ile rakamın arasına düşüyordu.
    Boşluk esnetilmiyor, doldurulur: başlık 36 → 46 tavan, rakam 92 → 108
    tavan (Countdown.module.css). */
-.headline { max-width:22ch; font-size:clamp(28px,10cqi,46px); font-weight:550; line-height:1.12; letter-spacing:-.045em; color:var(--text-strong); text-wrap:balance; }
+/* BÜYÜDÜ (3 Ekim): 46 → 68 tavan, 10 → 10.75cqi. 1440'ta başlık 724
+   piksellik kolonun yalnızca 345'ini (%48) kullanıyordu; rakam ile arasında
+   ~90 piksellik ölü bant vardı. Sahibinin isteği: "Açılış Ziline Kalan bir
+   tık büyüsün, kahraman daha vurgulu olsun".
+   Oran rakama göre seçildi: başlık her genişlikte rakamın ~2/3'ü, rakam ana
+   okuma kalıyor. 12.5cqi denendi ve fazlaydı: 1024'te başlık 65, rakam 83
+   (0,78), 390'da 39'a 51; hiyerarşi düzleşiyordu.
+
+   GİRİŞ: satır, sayfa açılışında aşağıdan açılan bir maskeyle ve kısa bir
+   yükselmeyle gelir. Animasyon BAŞLIĞIN KENDİSİNDE: başlık degrade metin
+   (`main h1` → background-clip) ve çocuğa transform vermek onu kırpma
+   bölgesinden çıkarıp görünmez yapıyor (globals.css "TUZAK"). `transform`
+   ayrı özellik, üstteki imler için kullanılan `translate` ile birleşir.
+   Opaklık 0'dan başlamıyor: maske yalnızca alt %40'ı örtüyor, yani ilk
+   karede başlığın üstü zaten boyalı (LCP beklemiyor). */
+.headline { max-width:22ch; font-size:clamp(30px,10.75cqi,68px); font-weight:600; line-height:1.08; letter-spacing:-.05em; color:var(--text-strong); text-wrap:balance; animation:headline-in 760ms var(--ease-brand) 60ms both; }
+@keyframes headline-in {
+  from { transform:translateY(.28em); clip-path:inset(-.3em -.1em 40% -.1em); }
+  to { transform:none; clip-path:inset(-.3em -.1em -.3em -.1em); }
+}
 .countdown { min-width:0; }
 /* ARTIK RAKAMIN İKİ YANINA BÖLÜNÜYOR (22 Eylül, ikinci ölçüm).
    Blok dipte dururken kolonun artığı tek bir banda, başlık ile rakamın
@@ -494,6 +513,7 @@
 }
 
 @media (prefers-reduced-motion:reduce) {
+  .headline { animation:none; }
   .indexCard { transition:none; }
   .indexValue[data-flash] { animation:none; }
   .storyRow,.storyRowMeta svg,.storyCastTile,.storyRowLogo { transition:none; }

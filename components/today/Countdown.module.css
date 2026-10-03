@@ -18,8 +18,12 @@
    0,66em, "00" 1,18em — satır her tikte zıplardı. İki nokta tabular
    dizide 0,58em'lik bir sütun yiyordu; birimler ve ekran okuyucu adları
    zaten tabular dizinin DIŞINDA (globals.css "Sayısal okumalar"). */
-.countdown { display:flex; flex-wrap:nowrap; align-items:baseline; gap:0 .2em; font-size:clamp(48px,20cqi,108px); font-weight:600; line-height:.86; letter-spacing:-.055em; color:var(--text-strong); }
-.countdown[data-days="true"] { font-size:clamp(38px,16cqi,96px); }
+/* TAVANLAR YÜKSELDİ (3 Ekim): günsüz 108 → 120, günlü 96 → 110. Başlık
+   68'e büyüyünce rakam 96'da onun hemen altında, kolonun %83'ünde kalıyor
+   ve hiyerarşi düzleşiyordu; rakam ana okuma olmaya devam etmeli. Oranlar
+   (20/16cqi) değişmedi: tavanın altındaki genişliklerde sonuç aynı. */
+.countdown { display:flex; flex-wrap:nowrap; align-items:baseline; gap:0 .2em; font-size:clamp(48px,20cqi,120px); font-weight:600; line-height:.86; letter-spacing:-.055em; color:var(--text-strong); }
+.countdown[data-days="true"] { font-size:clamp(38px,16cqi,110px); }
 .group { display:inline-flex; align-items:baseline; gap:.06em; min-width:0; }
 /* Satır yüksekliği .86 yazı kutusunun altında; pencere duran rakamın
    mürekkebini KIRPMIYOR (`overflow-clip-margin`), yalnızca yuvarlanan
