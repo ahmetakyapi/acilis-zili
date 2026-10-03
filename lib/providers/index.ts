@@ -5,7 +5,6 @@ import { candlesCache, quotesCache, symbols as symbolsTable } from "../schema";
 import {
   boundedTtl,
   candleTtlSeconds,
-  etDateTimeToUtc,
   etParts,
   expectsSessionData,
   isSessionTrade,
@@ -271,16 +270,8 @@ export function packCurrent(
      Cumartesi açılan MU sayfası cuma SABAHININ (06:45 ET) ön seans fiyatını
      basıyordu: o paket cuma sabahı önbelleğe yazılmış, Next süresi dolmuş
      kaydı stale-while-revalidate ile bir kez daha vermişti — seyrek açılan
-     her sembolde olabilecek bir şey. Kapalı piyasada doğru paket, son
-     seansın AKŞAM SEANSI BİTTİKTEN sonra (20:00 ET + 15 dakikalık besleme
-     gecikmesi) çekilmiş olanı; daha erkense bir kez önbelleksiz. Taban
-     "bir saatten yeni" — ön seansın ilk çeyreği ve yarım günler gibi
-     sınırın henüz gelmediği anlarda istek yağmuru olmasın. */
-  if (!expectsSessionData(status, now)) {
-    const sessionEnd = etDateTimeToUtc(status.sessionDate, "20:15").getTime();
-    const floor = Math.min(sessionEnd, now.getTime() - CLOSED_FLOOR_MS);
-    return pack.fetchedAt.getTime() >= floor;
-  }
+     her sembolde olabilecek bir şey. Kural `closedResponseCurrent`te. */
+  if (!expectsSessionData(status, now)) return closedResponseCurrent(pack.fetchedAt, status, now);
   if (!isSessionTrade(newestTrade(pack.data), status)) return false;
   const age = now.getTime() - pack.fetchedAt.getTime();
   return age <= (ttl + RESPONSE_AGE_SLACK_SECONDS) * 1000;
@@ -750,9 +741,9 @@ export async function getChartBarsMulti(
   /* Tek sembollük yolla aynı tazelik kuralı (`barsCurrent`): önbellekten
      eski gelen semboller bir kez önbelleksiz, yalnızca onlar. */
   if (primary.ok) {
-    const stale = unique.filter(
-      (symbol) => out[symbol] && !barsCurrent(out[symbol], primary.fetchedAt, range, status, ttl),
-    );
+    /* Yanıt yaşı paketin tamamı için tek ölçü; eskiyse bütün semboller bir
+       kez önbelleksiz. */
+    const stale = barsCurrent(primary.fetchedAt, status, ttl) ? [] : unique.filter((symbol) => out[symbol]);
     if (stale.length > 0) {
       const retry = await alpaca.getBarsMulti(stale, range, ttl, { fresh: true });
       if (retry.ok) Object.assign(out, retry.data);
@@ -789,11 +780,27 @@ export async function getChartBarsMulti(
   return out;
 }
 
-/** SIP'in 15 dakikalık gecikmesi + bar süresi + bu pay kadar geriden biten
- *  seri seans içinde ESKİ sayılıyor (gecikmeli tape bile bu kadar geride
- *  kalmaz). Üç dakika: Alpaca'nın barı kapatıp yayımlama gecikmesi. */
-const BAR_SLACK_SECONDS = 180;
+/** SIP'in gecikmesi — gerçek zamanlı kuyruğun "eski" eşiği. */
 const SIP_DELAY_SECONDS = 15 * 60;
+
+/**
+ * KAPALI PİYASADA YANIT GÜNCEL Mİ — fiyat paketi ve bar serisi için tek kural.
+ *
+ * Beslemeden seans verisi beklenmeyen anlarda (gece, hafta sonu, ön seansın
+ * ilk çeyreği) doğru yanıt, anlatılan seansın verisi TAMAMLANDIKTAN sonra
+ * çekilmiş olanı: `status.sessionEnd` (o günün kendi kapanışı + akşam
+ * seansı + besleme gecikmesi; yarım günler dahil). Bu an henüz gelmediyse
+ * (ön seansın ilk çeyreğinde bugünün sonu ileride) yanıtın bir saatten yeni
+ * olması yetiyor — sınırı bekleyen her istek önbelleksiz gitmesin.
+ *
+ * Ölçü sağlayıcının `Date` başlığı (`responseDate`): önbellek isabetinde de
+ * ilk çekimin anını taşıyor, yani stale-while-revalidate'in verdiği eski
+ * kayıt burada yakalanıyor.
+ */
+function closedResponseCurrent(fetchedAt: Date, status: MarketStatus, now: Date): boolean {
+  const floor = Math.min(status.sessionEnd.getTime(), now.getTime() - CLOSED_FLOOR_MS);
+  return fetchedAt.getTime() >= floor;
+}
 
 /**
  * Bar serisi ŞU ANI anlatıyor mu? (3 Ekim) — kotasyondaki `packCurrent`in
@@ -802,37 +809,28 @@ const SIP_DELAY_SECONDS = 15 * 60;
  * Hisse sayfası grafiği bazen saatler önceki seriyi çiziyordu: barlar
  * Next'in veri önbelleğinden `revalidate` ile geliyor ve süresi dolmuş kayıt
  * stale-while-revalidate ile bir kez DAHA veriliyor — günde birkaç kez açılan
- * bir sembolde o kayıt sabahtan kalma olabiliyor. İki ölçü:
+ * bir sembolde o kayıt sabahtan kalma olabiliyor.
  *
- *  - Beslemeden seans verisi bekleniyorsa (`expectsSessionData`): yanıt
- *    TTL + payından eski olamaz (ölçü sağlayıcının `Date` başlığı, önbellek
- *    isabetinde de ilk çekimin anı). Gün içi aralıklarda ayrıca son barın
- *    başlangıcı "şimdi − 15 dk gecikme − bar süresi − pay"dan yeni olmalı.
- *  - Beklenmiyorsa (gece, hafta sonu): yanıt son seansın akşam seansı
- *    bittikten sonra (20:15 ET) çekilmiş olmalı; sınır henüz gelmediyse bir
- *    saatten yeni olması yeter.
+ *  - Seans verisi bekleniyorsa (`expectsSessionData`): yanıt TTL + payından
+ *    eski olamaz. Tek ölçü bu. Bir dönem gün içi aralıklarda ayrıca "son bar
+ *    15 dakika + bar süresi kadar yeni olmalı" deniyordu; yanıt tazeyse seri
+ *    zaten sağlayıcının verebildiği en yeni seri, ve az işlem gören bir
+ *    sembolde (SHAZ: 79 kovanın 73'ünde işlem) son dakikalarda bar olmaması
+ *    gerçek bir durum — kural onu her istekte önbelleksiz tekrara
+ *    zorluyordu.
+ *  - Beklenmiyorsa (gece, hafta sonu): `closedResponseCurrent`.
  *
  * Güncel değilse çağıran bir kez önbelleksiz tekrarlıyor. Dışa açık YALNIZCA
  * test için (tests/chart-freshness.test.ts).
  */
 export function barsCurrent(
-  bars: readonly Bar[],
   fetchedAt: Date,
-  range: ChartRange,
   status: MarketStatus,
   ttl: number,
   now: Date = new Date(),
 ): boolean {
-  if (!expectsSessionData(status, now)) {
-    const sessionEnd = etDateTimeToUtc(status.sessionDate, "20:15").getTime();
-    return fetchedAt.getTime() >= Math.min(sessionEnd, now.getTime() - CLOSED_FLOOR_MS);
-  }
-  if (now.getTime() - fetchedAt.getTime() > (ttl + RESPONSE_AGE_SLACK_SECONDS) * 1000) return false;
-  if (range !== "1D" && range !== "1W") return true;
-  const last = bars[bars.length - 1];
-  if (!last) return false;
-  const limit = now.getTime() / 1000 - SIP_DELAY_SECONDS - alpaca.barSeconds(range) - BAR_SLACK_SECONDS;
-  return last.time >= limit;
+  if (!expectsSessionData(status, now)) return closedResponseCurrent(fetchedAt, status, now);
+  return now.getTime() - fetchedAt.getTime() <= (ttl + RESPONSE_AGE_SLACK_SECONDS) * 1000;
 }
 
 /**
@@ -873,9 +871,11 @@ export async function getChartBars(
 
   /* Önbellekten eski seri geldiyse bir kez önbelleksiz (gerekçe
      `barsCurrent`). */
-  if (primary.ok && !barsCurrent(primary.data, primary.fetchedAt, range, status, ttl)) {
+  if (primary.ok && !barsCurrent(primary.fetchedAt, status, ttl)) {
     const retry = await alpaca.getBars(symbol, range, ttl, { fresh: true });
-    if (retry.ok) primary = retry;
+    /* Tekrar da düşerse eldeki seri gösteriliyor ama KENDİNİ ESKİ İLAN
+       EDİYOR — kotasyondaki kuralın aynısı. */
+    primary = retry.ok ? retry : { ...primary, stale: true };
   }
 
   if (primary.ok) {
@@ -887,7 +887,12 @@ export async function getChartBars(
 
     /* GERÇEK ZAMANLI KUYRUK — seans açıkken gün içi aralıklarda. Kuyruk
        alınamazsa SIP serisi tek başına çiziliyor (15 dakika geriden). */
-    if ((range === "1D" || range === "1W") && status.session !== "closed" && expectsSessionData(status)) {
+    /* YALNIZCA ANA SEANSTA (3 Ekim). IEX 08:00'den önce ve 17:00 ET'den sonra
+       işlem görmüyor; uzatılmış seansta kuyruk ya boş geliyordu ya da ince
+       likiditenin fiyatını taşıyordu, boş geldiğinde de her istek
+       önbelleksiz tekrara düşüyordu. Başlıktaki melez kotasyon da yalnızca
+       ana seansta (`overlayRealtime`) — eğrinin ucu ile fiyat aynı kuralda. */
+    if ((range === "1D" || range === "1W") && status.session === "regular") {
       const lastSip = primary.data[primary.data.length - 1]?.time ?? 0;
       let tail = await alpaca.getIexBarsSince(symbol, range, lastSip, TAIL_TTL_SECONDS);
       /* Kuyruğun kendisi de önbellekten eski gelebilir: son barı beş

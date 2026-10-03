@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { etParts } from "@/lib/market-hours";
 import { getStatus, isKnownSymbol } from "@/lib/data";
 import { getChartBars, getQuote } from "@/lib/providers";
 import { isChartRange, type Bar } from "@/lib/providers/types";
@@ -60,6 +61,11 @@ export type ChartResponse =
        * 1G'de güncel kotasyon (3 Ekim) — grafiğin canlı yoklaması başlıktaki
        * fiyatı da tazeliyor; eğri ile fiyat aynı yanıttan geliyor.
        */
+      /**
+       * Çizilen gün hâlâ işlem görüyor mu (3 Ekim) — grafiğin canlı yoklaması
+       * seans kapanınca bununla duruyor.
+       */
+      live?: boolean;
       quote?: {
         price: number | null;
         change: number | null;
@@ -132,6 +138,10 @@ export async function GET(
     stale: Boolean(result.stale),
     fetchedAt: result.fetchedAt.toISOString(),
     ...(prevClose !== undefined ? { prevClose } : {}),
+    live:
+      status.session !== "closed" &&
+      result.data.length > 0 &&
+      etParts(new Date(result.data[result.data.length - 1].time * 1000)).dateStr === status.sessionDate,
     ...(quoteResult?.ok
       ? {
           quote: {

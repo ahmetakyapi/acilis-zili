@@ -432,13 +432,20 @@ export function PriceChart({
     if (!live || (range !== "1D" && range !== "1W")) return;
     const key = `${symbol}:${range}`;
     let cancelled = false;
+    let stopped = false;
     let last = Date.now();
     const pull = () => {
+      if (stopped) return;
       last = Date.now();
       fetch(`/api/chart/${symbol}?range=${range}`, { cache: "no-store" })
         .then((res) => res.json() as Promise<ChartResponse>)
         .then((data) => {
           if (cancelled || !data.ok || data.bars.length === 0) return;
+          /* Seans kapandıysa bu son yoklama: veriyi alıp duruyor. */
+          if (data.live === false) {
+            stopped = true;
+            window.clearInterval(timer);
+          }
           silentRef.current = true;
           setResult((current) =>
             current?.key === key

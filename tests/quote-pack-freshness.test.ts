@@ -118,3 +118,16 @@ test("önceki seansın paketi seans içinde güncel değildir", () => {
   const dun = pack(edt("2026-09-17", "16:00"), edt("2026-09-18", "10:29:50"));
   assert.equal(packCurrent(dun, status, 15, now), false);
 });
+
+test("yarım günün ertesinde akşam seansı 17:00'de biten paket güncel", () => {
+  /* 27 Kasım 2026: kapanış 13:00, akşam seansı 17:00, besleme 17:15'te
+     tamam (EST, -05:00). Cumartesi o akşamın 17:20 paketi doğru olan. */
+  const holidays: MarketHoliday[] = [
+    { date: "2026-11-27", nameTr: "Şükran Günü Ertesi", nameEn: "Day After Thanksgiving", earlyCloseEt: "13:00" },
+  ];
+  const cumartesi = new Date("2026-11-28T15:00:00Z");
+  const status = getMarketStatus(cumartesi, holidays);
+  const est = (time: string) => new Date(`2026-11-27T${time}:00-05:00`);
+  assert.equal(packCurrent(pack(est("16:59"), est("17:20")), status, 900, cumartesi), true);
+  assert.equal(packCurrent(pack(est("12:59"), est("13:30")), status, 900, cumartesi), false);
+});

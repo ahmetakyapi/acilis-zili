@@ -96,6 +96,19 @@ export type MarketStatus = {
   tradingToday: boolean;
   /** Bugünün kapanış dakikası (yarım günlerde erken). */
   closeMinutes: number;
+  /**
+   * ANLATILAN SEANSIN VERİSİNİN TAMAMLANDIĞI AN (3 Ekim) — `sessionDate`in
+   * akşam seansı sonu + besleme gecikmesi (`FEED_DELAY_MINUTES`). Yarım
+   * günlerde akşam seansı da erken bitiyor (13:00 kapanış → 17:00), o
+   * yüzden o günün KENDİ kapanışından hesaplanıyor; sabit "20:15" yarım
+   * günde üç saat boyunca doğru paketi bile eski sayardı.
+   *
+   * Kapalı piyasada tazelik kuralının tek ölçüsü bu: bu andan ÖNCE çekilmiş
+   * bir fiyat paketi ya da bar serisi seansın sonunu kaçırmış demektir
+   * (`packCurrent`, `barsCurrent` — lib/providers/index.ts). Seans sürerken
+   * bu an ileride.
+   */
+  sessionEnd: Date;
   /** Bir sonraki açılış zili — piyasa açıkken de dolu. */
   nextOpen: Date;
   /** Bugünün kapanış zili anı; piyasa kapalıysa bir sonraki seansın kapanışı. */
@@ -397,11 +410,17 @@ export function getMarketStatus(
   const geceYarisi = etDateWithMinutes(addEtDays(dateStr, 1), 0);
   if (geceYarisi < nextTransition) nextTransition = geceYarisi;
 
+  const sessionEnd = new Date(
+    etDateWithMinutes(sessionDate, closeMinutesFor(sessionDate, holidays) + AFTER_HOURS_MINUTES).getTime() +
+      FEED_DELAY_MINUTES * 60_000,
+  );
+
   return {
     session,
     isRegularOpen: session === "regular",
     etDate: dateStr,
     sessionDate,
+    sessionEnd,
     etTime: `${pad(p.hour)}:${pad(p.minute)}`,
     etMinutes: minutes,
     isWeekend,
