@@ -139,3 +139,58 @@ export const getEarningsFiling = cache(async function getEarningsFiling(
   }
   return null;
 });
+
+/**
+ * Hisse sayısı geçmişi — sulandırma ölçüsü (3 Ekim, hisse seçimi).
+ *
+ * `dei:EntityCommonStockSharesOutstanding`: her 10-Q/10-K (yabancı
+ * şirketlerde 20-F) kapağındaki dolaşımdaki hisse sayısı. `companyconcept`
+ * ucu tek kavramı veriyor (~10 KB); `companyfacts` megabaytlarca ve Next'in
+ * veri önbelleğine sığmıyor. Kapak sayısı dosya gününe ait, bölünme
+ * düzeltmesi yok — yıllık karşılaştırma bölünme yılında yanıltır; çağıran
+ * onu bir sinyal olarak kullanıyor, kesin hüküm olarak değil. Bulunamazsa
+ * null (hata sessiz, kural "veri yok" der).
+ */
+export const getSharesSeries = cache(async function getSharesSeries(
+  symbol: string,
+): Promise<{ kind: "cover" | "annual"; rows: { end: string; value: number }[] } | null> {
+  const table = await tickerTable();
+  const cik = table?.get(symbol.toUpperCase()) ?? table?.get(symbol.toUpperCase().replace(".", "-"));
+  if (!cik) return null;
+  type Row = { end?: unknown; start?: unknown; val?: unknown; form?: unknown };
+  const concept = (taxonomy: string, tag: string) =>
+    secJson<{ units?: { shares?: unknown } }>(
+      `https://data.sec.gov/api/xbrl/companyconcept/CIK${cik}/${taxonomy}/${tag}.json`,
+      TICKERS_REVALIDATE_S,
+    ).then((data) => {
+      /* Yapı her şirkette aynı değil (KO'da `units.shares` boş bir nesne
+         geldi) — dizi değilse yok sayılıyor. */
+      const rows = data?.units?.shares;
+      return Array.isArray(rows) ? (rows as Row[]) : [];
+    });
+  const valid = (row: Row): row is { end: string; start?: string; val: number; form?: string } =>
+    typeof row.val === "number" && row.val > 0 && typeof row.end === "string";
+
+  /* Kapak serisi ancak GÜNCELSE: bazı şirketler (Ford) sayıyı yıllar önce
+     hisse sınıfı bazında yazmaya geçti ve sınıfsız seri orada bitiyor. */
+  const cover = (await concept("dei", "EntityCommonStockSharesOutstanding")).filter(valid);
+  const coverLatest = cover.reduce((max, row) => (row.end > max ? row.end : max), "");
+  if (cover.length >= 2 && (Date.now() - Date.parse(coverLatest)) / 86_400_000 <= 200) {
+    return { kind: "cover" as const, rows: cover.map((row) => ({ end: row.end, value: row.val })) };
+  }
+
+  /* YEDEK: yıllık raporun seyreltilmiş ağırlıklı ortalama hisse sayısı.
+     Yalnızca 10-K'nın tam yıllık dönemi (başlangıç-bitiş ~1 yıl): çeyreklik
+     ve yılbaşından bugüne satırları aynı dosyada karışık geliyor. İki
+     ardışık mali yıl `sharesChangeYoY`ın penceresine düşüyor. */
+  const annual = (await concept("us-gaap", "WeightedAverageNumberOfDilutedSharesOutstanding"))
+    .filter(valid)
+    .filter((row) => {
+      if (row.form !== "10-K" || typeof row.start !== "string") return false;
+      const days = (Date.parse(row.end) - Date.parse(row.start)) / 86_400_000;
+      return days > 350 && days < 380;
+    });
+  if (annual.length === 0) return null;
+  const byEnd = new Map(annual.map((row) => [row.end, row.val]));
+  return { kind: "annual" as const, rows: [...byEnd.entries()].map(([end, value]) => ({ end, value })) };
+});

@@ -252,7 +252,7 @@ mekanizma. `cache()` ile sarılı olanların tam listesi: `lib/data.ts`
 (`quotesForKey`), `lib/providers/alpaca-corporate.ts` (`dividendsForKey`),
 `lib/autolink-data.ts` (`knownSymbols`), `lib/themes-data.ts`
 (`katilimPool`), `lib/market-boards.ts` (`loadBoardBars`),
-`lib/sentiment-data.ts` (`getSentiment`), `lib/earnings-extras.ts`
+`lib/sentiment-data.ts` (`getSentiment`), `lib/screening-data.ts` (`loadScreen`), `lib/providers/sec-edgar.ts` (`getSharesSeries`), `lib/earnings-extras.ts`
 (`getAnalysisExtras`) ve `lib/portfolio-data.ts` (`getPortfolioPositions`,
 `getPortfolioOrder`).
 Bileşen düzeyinde de var: `getPageTimestamp` (ana sayfa ve

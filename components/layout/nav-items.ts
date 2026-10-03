@@ -6,6 +6,7 @@ import {
   CalendarBlank,
   ChartLineUp,
   EnvelopeSimple,
+  Funnel,
   Heart,
   ListDashes,
   Receipt,
@@ -233,6 +234,17 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: false,
     more: "data",
     hint: (t) => t.menu.hintCompare,
+  },
+  {
+    /* 3 Ekim: Daha Fazla → veri, Karşılaştır'ın ardında. Bir başvuru
+       aracı, her gün değişen bir ekran değil; şerit ölçüsü (yukarıda) yer
+       bırakmıyor. */
+    href: "/hisse-secimi",
+    label: (t) => t.screening.title,
+    icon: Funnel,
+    inBottomBar: false,
+    more: "data",
+    hint: (t) => t.menu.hintScreening,
   },
   {
     /* DAHA FAZLA'DA. Bir dönem yalnızca 1280 üstünde sekmeydi: aynı ekran

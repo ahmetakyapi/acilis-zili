@@ -102,3 +102,27 @@ export async function getRawMetrics(
   }
   return ok(metric, "finnhub", { fetchedAt: result.fetchedAt });
 }
+
+export type MetricSeries = {
+  annual: Record<string, { period: string; v: number }[]>;
+  quarterly: Record<string, { period: string; v: number }[]>;
+};
+
+/**
+ * Aynı `/stock/metric?metric=all` yanıtının SERİLERİ (3 Ekim) — hisse
+ * seçimi yıllık EPS (üç yıllık büyüme) ve son on iki ayın hisse başına
+ * serbest nakit akışını buradan okuyor. `getRawMetrics` ile aynı adres,
+ * aynı parametre sırası, aynı `revalidate`: Next'in veri önbelleği
+ * anahtarı adresten kuruluyor, sağlayıcıya ikinci istek gitmiyor.
+ */
+export async function getMetricSeries(symbol: string): Promise<ProviderResult<MetricSeries>> {
+  const result = await finnhubFetch<{ series?: Partial<MetricSeries> }>(
+    "/stock/metric",
+    { symbol, metric: "all" },
+    { revalidate: 86400, tags: [`metrics:${symbol}`] },
+  );
+  if (!result.ok) return result;
+  const series = result.data?.series;
+  if (!series) return fail("finnhub", "empty", "Seri verisi yok");
+  return ok({ annual: series.annual ?? {}, quarterly: series.quarterly ?? {} }, "finnhub", { fetchedAt: result.fetchedAt });
+}

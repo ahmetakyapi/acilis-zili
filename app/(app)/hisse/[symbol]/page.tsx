@@ -487,7 +487,20 @@ export default async function StockPage(
         {/* `flex flex-col` — içerideki liste kutuyu doldurabilsin diye;
             gerekçe MetricsCard'ın kendi künyesinde. */}
         <Panel className={styles.metricsPanel}>
-          <PanelHeader title={t.stock.metrics} action={<SquaresFour className={styles.cardIcon} size={19} weight="duotone" aria-hidden />} />
+          {/* KURAL KONTROLÜ BURADAN (3 Ekim). Hisse seçimi kuralları en
+              çok bu karttaki sayılara dayanıyor (marj, borç, 52 hafta,
+              hacim); süs simgesinin yerini rapora giden bağlantı aldı. Fonda
+              kurallar anlamsız (büyüme, marj yok), orada simge kalıyor. */}
+          <PanelHeader
+            title={t.stock.metrics}
+            action={
+              fundMetaOf(symbol) ? (
+                <SquaresFour className={styles.cardIcon} size={19} weight="duotone" aria-hidden />
+              ) : (
+                <PanelLink href={`/hisse-secimi/${symbol}`}>{t.screening.stockLink}</PanelLink>
+              )
+            }
+          />
           {/* ON ölçü satırı: sekiz sabit (F/K, hisse başına kâr, temettü,
               beta, 52 hafta yüksek/düşük, hacim) artı üç koşullu (ileri
               F/K, net kâr marjı, borç/özsermaye) — üçü de gelmezse yedi.
