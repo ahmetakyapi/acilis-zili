@@ -18,8 +18,9 @@ function scoreStatus(score: number | null): CheckStatus {
 
 /** Bankada sağlık kuralları "veri yok" değil "uygulanmaz" — okuyucu
     eksik bir ölçü değil bilinçli bir atlama görmeli. */
-function statusLabel(check: Check, data: ScreenData, t: T): string {
+export function statusLabel(check: Check, data: ScreenData, t: T): string {
   if (check.status === "na" && check.category === "health" && data.input.financial) return t.status.notApplicable;
+  if (check.baseEffect) return t.baseEffectStatus;
   return t.status[check.status];
 }
 
@@ -127,7 +128,9 @@ function CheckGroup({
   );
 }
 
-/** Metin: güçlü ve zayıf yanlar, kural cümleleriyle. */
+/** Metin: zayıf ve güçlü yanlar, kural cümleleriyle. ZAYIF YANLAR ÖNDE
+    (3 Ekim): ekranın en değerli işi kırmızı bayrağı göstermek; güçlü yanlar
+    öndeyken okuyucu on beş artıyı okuyup tek eksiye hiç inmiyordu. */
 export function SidesPanel({ data, locale, t }: { data: ScreenData; locale: string; t: T }) {
   const byId = new Map(data.result.checks.map((check) => [check.id, check]));
   const pros = data.result.pros.map((id) => byId.get(id)!);
@@ -135,21 +138,6 @@ export function SidesPanel({ data, locale, t }: { data: ScreenData; locale: stri
   return (
     <Panel>
       <div className={styles.sides}>
-        <section className={styles.side}>
-          <h2>{t.prosTitle}</h2>
-          {pros.length ? (
-            <ul className={styles.points}>
-              {pros.map((check) => (
-                <li key={check.id} data-status="pass">
-                  <CheckCircle size={18} weight="fill" aria-hidden="true" />
-                  <span>{checkSentence(check, locale, t, "pro")}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className={styles.none}>{t.noneLabel}</p>
-          )}
-        </section>
         <section className={styles.side}>
           <h2>{t.consTitle}</h2>
           {cons.length ? (
@@ -162,6 +150,21 @@ export function SidesPanel({ data, locale, t }: { data: ScreenData; locale: stri
                     <WarningCircle size={18} weight="fill" aria-hidden="true" />
                   )}
                   <span>{checkSentence(check, locale, t, "con")}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className={styles.none}>{t.noneLabel}</p>
+          )}
+        </section>
+        <section className={styles.side}>
+          <h2>{t.prosTitle}</h2>
+          {pros.length ? (
+            <ul className={styles.points}>
+              {pros.map((check) => (
+                <li key={check.id} data-status="pass">
+                  <CheckCircle size={18} weight="fill" aria-hidden="true" />
+                  <span>{checkSentence(check, locale, t, "pro")}</span>
                 </li>
               ))}
             </ul>

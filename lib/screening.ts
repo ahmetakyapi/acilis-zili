@@ -61,6 +61,14 @@ export const THRESHOLDS = {
   minDollarVolume: 10e6,
   /** Çeyreklik yıllık (YoY) EPS ve satış büyümesi, yüzde. */
   minGrowth: 10,
+  /**
+   * Baz etkisi tavanı, yüzde. Bunun üstündeki büyüme oranı büyümeden çok
+   * geçen yılın TABANINI anlatıyor: MU'da çeyreklik EPS büyümesi +%1.061
+   * görünüyordu (3 Ekim) — kârın neredeyse sıfır olduğu bir çeyreğe göre.
+   * Böyle bir oran geçti sayılırsa büyüme kategorisini tek başına tavana
+   * taşıyor; dikkat (yarım puan) olarak işaretleniyor ve öneri ekleniyor.
+   */
+  baseEffect: 300,
   /** Satış büyümesinin kâr büyümesini "desteklediği" taban, yüzde. */
   supportGrowth: 5,
   /** Cari oran tabanı. */
@@ -170,6 +178,8 @@ export type Check = {
   value: number | null;
   /** Eleme kontrolü kaldıysa hisse elendi. */
   eliminates?: boolean;
+  /** Büyüme oranı baz etkisi tavanını aştı (bkz. `THRESHOLDS.baseEffect`). */
+  baseEffect?: boolean;
 };
 
 export type CategoryScore = {
@@ -199,7 +209,8 @@ export type SuggestionId =
   | "growthSource"
   | "burn"
   | "richValuation"
-  | "liquidity";
+  | "liquidity"
+  | "baseEffect";
 
 export type ScreenResult = {
   checks: Check[];
@@ -266,9 +277,13 @@ export function evaluate(input: ScreenInput): ScreenResult {
   }
 
   /* ---- Büyüme ---- */
-  add({ id: "epsGrowthQ", category: "growth", value: input.epsGrowthQ, status: ladder(input.epsGrowthQ, T.minGrowth, 0) });
-  add({ id: "salesGrowthQ", category: "growth", value: input.salesGrowthQ, status: ladder(input.salesGrowthQ, T.minGrowth, 0) });
-  add({ id: "epsGrowth3Y", category: "growth", value: input.epsGrowth3Y, status: ladder(input.epsGrowth3Y, T.minGrowth, 0) });
+  const growth = (id: "epsGrowthQ" | "salesGrowthQ" | "epsGrowth3Y", value: number | null) =>
+    value !== null && value > T.baseEffect
+      ? add({ id, category: "growth", value, status: "warn", baseEffect: true })
+      : add({ id, category: "growth", value, status: ladder(value, T.minGrowth, 0) });
+  growth("epsGrowthQ", input.epsGrowthQ);
+  growth("salesGrowthQ", input.salesGrowthQ);
+  growth("epsGrowth3Y", input.epsGrowth3Y);
   {
     /* Büyümenin kaynağı: kâr çift haneli büyürken satış da en az %5
        büyüyorsa büyüme işin kendisinden geliyor; satış durgunken kâr
@@ -439,6 +454,7 @@ function suggest(input: ScreenInput, checks: Check[]): SuggestionId[] {
   if (status("nearHigh") === "fail") out.push("fallen");
   else if (status("aboveLow") === "warn" || status("aboveLow") === "fail") out.push("earlyBase");
   if (status("vsSector") === "fail" || status("vsMarket") === "fail") out.push("laggard");
+  if (checks.some((check) => check.baseEffect)) out.push("baseEffect");
   if (status("growthSource") === "warn") out.push("growthSource");
   if (status("dilution") === "fail" || status("dilution") === "warn") out.push("dilution");
   if (input.forwardPE !== null && input.forwardPE > 40) out.push("richValuation");

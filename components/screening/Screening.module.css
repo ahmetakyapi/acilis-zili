@@ -2,35 +2,37 @@
    Durum renkleri tek elden: geçti `--up`, dikkat `--brass`, kaldı `--down`,
    veri yok sessiz. Mavi yalnızca etkileşim (bağlantı, odak). */
 
-:is(.cat,.row,.gate,.points li)[data-status="pass"] { --st: var(--up); --st-wash: var(--up-wash); }
-:is(.cat,.row,.gate,.points li)[data-status="warn"] { --st: var(--brass); --st-wash: var(--brass-wash); }
-:is(.cat,.row,.gate,.points li)[data-status="fail"] { --st: var(--down); --st-wash: var(--down-wash); }
-:is(.cat,.row,.gate,.points li)[data-status="na"] { --st: var(--text-muted); --st-wash: var(--surface-sunken); }
+:is(.cat,.row,.gate,.points li,.flagList li,.flagCounts > span)[data-status="pass"] { --st: var(--up); --st-wash: var(--up-wash); }
+:is(.cat,.row,.gate,.points li,.flagList li,.flagCounts > span)[data-status="warn"] { --st: var(--brass); --st-wash: var(--brass-wash); }
+:is(.cat,.row,.gate,.points li,.flagList li,.flagCounts > span)[data-status="fail"] { --st: var(--down); --st-wash: var(--down-wash); }
+:is(.cat,.row,.gate,.points li,.flagList li,.flagCounts > span)[data-status="na"] { --st: var(--text-muted); --st-wash: var(--surface-sunken); }
 
-:is(.dial,.mini,.quickBand)[data-band="strong"],:is(.dial,.mini,.quickBand)[data-band="worth"] { --band: var(--up); --band-wash: var(--up-wash); }
-:is(.dial,.mini,.quickBand)[data-band="mixed"] { --band: var(--brass); --band-wash: var(--brass-wash); }
-:is(.dial,.mini,.quickBand)[data-band="weak"],:is(.dial,.mini,.quickBand)[data-band="eliminated"] { --band: var(--down); --band-wash: var(--down-wash); }
-:is(.dial,.mini,.quickBand)[data-band="limited"],:is(.dial,.mini,.quickBand)[data-band="none"] { --band: var(--text-muted); --band-wash: var(--surface-sunken); }
+:is(.mini,.quickBand,.bandPill)[data-band="strong"],:is(.mini,.quickBand,.bandPill)[data-band="worth"] { --band: var(--up); --band-wash: var(--up-wash); }
+:is(.mini,.quickBand,.bandPill)[data-band="mixed"] { --band: var(--brass); --band-wash: var(--brass-wash); }
+:is(.mini,.quickBand,.bandPill)[data-band="weak"],:is(.mini,.quickBand,.bandPill)[data-band="eliminated"] { --band: var(--down); --band-wash: var(--down-wash); }
+:is(.mini,.quickBand,.bandPill)[data-band="limited"],:is(.mini,.quickBand,.bandPill)[data-band="none"] { --band: var(--text-muted); --band-wash: var(--surface-sunken); }
 
-/* ---------- Puan halkası ---------- */
-.dial { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:18px 24px; }
-.dialRing { position:relative; width:148px; aspect-ratio:1; }
-.dialRing svg { display:block; width:100%; height:100%; transform:rotate(-90deg); }
-.dialTrack { fill:none; stroke:var(--line); stroke-width:10; }
-.dialFill { fill:none; stroke:var(--band); stroke-width:10; stroke-linecap:round; }
-.dialCenter { position:absolute; inset:0; display:grid; place-content:center; text-align:center; }
-.dialScore { font-size:46px; line-height:1; font-weight:600; letter-spacing:-.05em; color:var(--text-strong); font-variant-numeric:tabular-nums; }
-.dialOut { margin-top:4px; font-size:12px; color:var(--text-muted); }
-.dialCopy { min-width:0; display:grid; gap:8px; }
+/* ---------- Kapak: önce bayraklar, altında puan ---------- */
+.flags { display:grid; gap:14px; min-width:0; }
 .dialLabel { font-size:12px; font-weight:600; letter-spacing:.04em; color:var(--text-muted); }
-.bandPill { width:fit-content; padding:5px 12px; border-radius:999px; background:var(--band-wash); color:var(--band); font-size:14px; font-weight:650; }
-.dialHint { color:var(--text-body); font-size:14px; line-height:1.6; }
+.flagCounts { display:flex; flex-wrap:wrap; gap:10px 28px; }
+.flagCounts > span { display:flex; align-items:baseline; gap:8px; color:var(--text-body); font-size:13px; font-weight:550; }
+.flagCounts b { color:var(--st); font-size:40px; line-height:1; font-weight:650; letter-spacing:-.05em; font-variant-numeric:tabular-nums; }
+.flagList { list-style:none; margin:0; padding:0; display:grid; gap:6px; }
+.flagList li { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:34px; padding:6px 12px; border-radius:10px; background:var(--st-wash); }
+.flagName { position:relative; min-width:0; padding-left:14px; color:var(--text-strong); font-size:13.5px; font-weight:600; }
+.flagName::before { content:""; position:absolute; left:0; top:50%; width:7px; height:7px; border-radius:50%; background:var(--st); transform:translateY(-50%); }
+.flagState { flex:none; color:var(--st); font-size:12px; font-weight:650; }
+.flagList li.flagMore { justify-content:flex-start; background:none; padding:0 12px; min-height:0; color:var(--text-muted); font-size:12.5px; font-weight:550; }
+.flagEmpty { color:var(--text-body); font-size:14px; line-height:1.6; }
+.scoreLine { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:start; gap:14px; padding-top:14px; border-top:1px solid var(--line); }
+.scoreCopy { display:grid; gap:6px; min-width:0; }
+.scoreHead { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; color:var(--text-strong); font-size:13px; font-weight:600; }
+.dialTrack { fill:none; stroke:var(--line); }
+.dialFill { fill:none; stroke:var(--band); stroke-linecap:round; }
+.bandPill { width:fit-content; padding:3px 10px; border-radius:999px; background:var(--band-wash); color:var(--band); font-size:12.5px; font-weight:650; }
+.dialHint { color:var(--text-body); font-size:13px; line-height:1.6; }
 .dialCoverage { font-size:12px; color:var(--text-muted); }
-@media (max-width:520px) {
-  .dial { grid-template-columns:1fr; justify-items:start; }
-  .dialRing { width:132px; }
-  .dialScore { font-size:40px; }
-}
 
 /* ---------- Kimlik şeridi ---------- */
 .identity { display:flex; align-items:center; gap:14px; margin-top:20px; min-width:0; }

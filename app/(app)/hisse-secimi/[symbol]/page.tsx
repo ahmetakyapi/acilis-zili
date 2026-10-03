@@ -7,8 +7,8 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
-import { CategoryPanel, ChecksPanel, NextPanel, SidesPanel } from "@/components/screening/ScreenReport";
-import { ScoreDial } from "@/components/screening/ScreenVisuals";
+import { CategoryPanel, ChecksPanel, NextPanel, SidesPanel, statusLabel } from "@/components/screening/ScreenReport";
+import { FlagSummary } from "@/components/screening/ScreenVisuals";
 import styles from "@/components/screening/Screening.module.css";
 import { DataStamp, EmptyState, LogoTile } from "@/components/ui/primitives";
 import { analysisHref } from "@/lib/analysis";
@@ -17,6 +17,7 @@ import { getSymbolNames, isKnownSymbol } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { rateLimit, requestKey } from "@/lib/rate-limit";
+import type { CheckId } from "@/lib/screening";
 import { loadScreen } from "@/lib/screening-data";
 import { industryLabel } from "@/lib/sectors";
 import { pageAlternates } from "@/lib/site";
@@ -56,7 +57,8 @@ export async function generateMetadata(props: PageProps<"/hisse-secimi/[symbol]"
  * lib/screening-data.ts). Aynı hisse aynı veriyle her seferinde aynı puanı
  * alır ve her puanın hangi kuraldan geldiği satır satır görünür.
  *
- * Sıra ekran düzeni kuralının sırası: kapak (sağda puan halkası) → kimlik
+ * Sıra ekran düzeni kuralının sırası: kapak (sağda önce bayraklar, altında
+ * puan — gerekçe components/screening/ScreenVisuals.tsx → FlagSummary) → kimlik
  * şeridi ve geçiş bağlantıları (kapağın içinde) → kategoriler (ana görsel)
  * → kural kural (ölçü ızgarası) → güçlü/zayıf yanlar (metin) → sıradaki
  * adımlar, okuyucunun kontrolleri ve künyeler → damga → rehber.
@@ -112,7 +114,14 @@ export default async function ScreenReportPage(props: PageProps<"/hisse-secimi/[
         title={S.reportTitle.replace("{symbol}", symbol)}
         description={S.reportSubtitle.replace("{name}", data.name)}
         share={<PageShare path={`/hisse-secimi/${symbol}`} title={S.reportTitle.replace("{symbol}", symbol)} locale={locale} t={t} />}
-        visual={<ScoreDial result={data.result} t={S} />}
+        visual={
+          <FlagSummary
+            result={data.result}
+            names={Object.fromEntries(data.result.checks.map((check) => [check.id, S.checks[check.id].name])) as Record<CheckId, string>}
+            statusOf={(id) => statusLabel(data.result.checks.find((check) => check.id === id)!, data, S)}
+            t={S}
+          />
+        }
       >
         <div className={styles.identity}>
           <LogoTile symbol={symbol} logoUrl={data.logoUrl} size="md" />

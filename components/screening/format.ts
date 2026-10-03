@@ -70,7 +70,12 @@ export function formatCheckValue(check: Check, locale: string, t: T, mode: "cell
 
 /** Artı/eksi cümlesi — `{value}` ölçünün metin hâliyle doldurulur. */
 export function checkSentence(check: Check, locale: string, t: T, side: "pro" | "con"): string {
-  const template = (side === "pro" ? t.pro : t.con)[check.id];
+  /* Baz etkisi kendi cümlesiyle: "%1.061 büyüdü" kalıbı "tabanın altında"
+     diyen eksi cümlesine sığmıyor. */
+  const template =
+    side === "con" && check.baseEffect && check.id in t.baseEffect
+      ? t.baseEffect[check.id as keyof T["baseEffect"]]
+      : (side === "pro" ? t.pro : t.con)[check.id];
   const value = formatCheckValue(check, locale, t, "text");
   return template.replace("{value}", value ?? t.noneLabel);
 }

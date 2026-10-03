@@ -1,46 +1,88 @@
 import type { Dictionary } from "@/lib/i18n";
-import type { Band, ScreenResult } from "@/lib/screening";
+import type { Band, CheckId, ScreenResult } from "@/lib/screening";
 import styles from "./Screening.module.css";
 
 type T = Dictionary["screening"];
 
-/** Halkanın çevresi — r=52 (görüş kutusu 120). */
-const RING = 2 * Math.PI * 52;
 const MINI = 2 * Math.PI * 20;
+/** Kapakta adıyla yazılan bayrak sayısı; fazlası "+N Daha". */
+const FLAG_LIMIT = 5;
 
 /**
- * Puan halkası. Halkanın rengi PUANDAN değil BANTTAN geliyor: eleme
- * kuralına takılan 45 puanlık hisse ile kuralların çoğunda geride kalan 45
- * puanlık hisse aynı sayıyı taşıyor ama ikisi aynı hüküm değil; "Veri
- * Yetersiz" bant da sayıyı sessiz bir halkayla yazıyor ki 70 puan yeşil bir
- * hüküm gibi okunmasın.
+ * KAPAK ÖNCE BAYRAKLARI GÖSTERİYOR (3 Ekim). İlk sürümde kapağın sağı
+ * 148 piksellik bir puan halkasıydı ve "98 · Güçlü Aday" bir alım sinyali
+ * gibi okunuyordu — MU dibinin %546 üstündeyken. Ekranın gerçekten değerli
+ * işi kırmızı bayrak (kalan kural, dikkat) göstermek; puan bir araştırma
+ * önceliği, o yüzden altta küçük bir satır.
+ *
+ * Bayrak sırası motorun eksi sırası: önce kalanlar, sonra dikkatler. Eleme
+ * kuralına takılan kontrol adıyla en başta.
  */
-export function ScoreDial({ result, t }: { result: ScreenResult; t: T }) {
-  const band: Band | "none" = result.band ?? "none";
-  const score = result.score;
+export function FlagSummary({
+  result,
+  names,
+  statusOf,
+  t,
+}: {
+  result: ScreenResult;
+  /** Kontrolün adı (sözlükten) — bileşen sözlüğü bilmeden çizsin. */
+  names: Record<CheckId, string>;
+  /** Kontrolün durum etiketi ("Baz Etkisi" dahil) — rapordaki tablonun aynısı. */
+  statusOf: (id: CheckId) => string;
+  t: T;
+}) {
+  const byId = new Map(result.checks.map((check) => [check.id, check]));
+  const flags = result.cons.map((id) => byId.get(id)!);
+  const fails = flags.filter((check) => check.status === "fail").length;
+  const warns = flags.length - fails;
+  const shown = flags.slice(0, FLAG_LIMIT);
   return (
-    <div className={styles.dial} data-band={band}>
-      <div className={styles.dialRing}>
-        <svg viewBox="0 0 120 120" aria-hidden="true">
-          <circle className={styles.dialTrack} cx="60" cy="60" r="52" />
-          {score !== null && score > 0 && (
-            <circle
-              className={styles.dialFill}
-              cx="60"
-              cy="60"
-              r="52"
-              strokeDasharray={`${(RING * score) / 100} ${RING}`}
-            />
-          )}
-        </svg>
-        <div className={styles.dialCenter}>
-          <span className={styles.dialScore}>{score ?? "—"}</span>
-          <span className={styles.dialOut}>{t.outOf}</span>
-        </div>
+    <div className={styles.flags}>
+      <p className={styles.dialLabel}>{t.flagsTitle}</p>
+      <div className={styles.flagCounts}>
+        <span data-status={fails ? "fail" : "na"}>
+          <b>{fails}</b>
+          {t.failLabel}
+        </span>
+        <span data-status={warns ? "warn" : "na"}>
+          <b>{warns}</b>
+          {t.warnLabel}
+        </span>
       </div>
-      <div className={styles.dialCopy}>
-        <p className={styles.dialLabel}>{t.scoreLabel}</p>
-        {result.band && <p className={styles.bandPill}>{t.bands[result.band]}</p>}
+      {shown.length ? (
+        <ul className={styles.flagList}>
+          {shown.map((check) => (
+            <li key={check.id} data-status={check.status}>
+              <span className={styles.flagName}>{names[check.id]}</span>
+              <span className={styles.flagState}>{statusOf(check.id)}</span>
+            </li>
+          ))}
+          {flags.length > FLAG_LIMIT && (
+            <li className={styles.flagMore}>{t.moreFlags.replace("{n}", String(flags.length - FLAG_LIMIT))}</li>
+          )}
+        </ul>
+      ) : (
+        <p className={styles.flagEmpty}>{t.noFlags}</p>
+      )}
+      <ScoreLine result={result} t={t} />
+    </div>
+  );
+}
+
+/** Puan: küçük halka, bant ve tek cümlelik ipucu. */
+function ScoreLine({ result, t }: { result: ScreenResult; t: T }) {
+  return (
+    <div className={styles.scoreLine}>
+      <MiniDial score={result.score} band={result.band} />
+      <div className={styles.scoreCopy}>
+        <p className={styles.scoreHead}>
+          <span>{t.scoreLabel}</span>
+          {result.band && (
+            <span className={styles.bandPill} data-band={result.band}>
+              {t.bands[result.band]}
+            </span>
+          )}
+        </p>
         {result.band && <p className={styles.dialHint}>{t.bandHints[result.band]}</p>}
         <p className={styles.dialCoverage}>{t.coverage.replace("{n}", String(result.coverage))}</p>
       </div>
@@ -48,7 +90,9 @@ export function ScoreDial({ result, t }: { result: ScreenResult; t: T }) {
   );
 }
 
-/** Hızlı bakış kartlarının küçük halkası — aynı renk kuralı. */
+/** Küçük puan halkası. Rengi PUANDAN değil BANTTAN: eleme kuralına takılan
+    45 puanlık hisse ile kuralların çoğunda geride kalan 45 puanlık hisse aynı
+    sayıyı taşıyor ama aynı hüküm değil; "Veri Yetersiz" sessiz renkte. */
 export function MiniDial({ score, band }: { score: number | null; band: Band | null }) {
   return (
     <span className={styles.mini} data-band={band ?? "none"} aria-hidden="true">

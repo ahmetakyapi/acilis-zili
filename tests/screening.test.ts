@@ -151,3 +151,14 @@ test("a share series that stopped years ago is no measure (Ford's 2011 cover ser
   ];
   assert.equal(sharesChangeYoY(old, new Date("2026-10-01T00:00:00Z")), null);
 });
+
+test("growth above the base-effect ceiling is a caution, not a full pass", () => {
+  const result = evaluate({ ...strong, epsGrowthQ: 1061 });
+  const check = result.checks.find((c) => c.id === "epsGrowthQ")!;
+  assert.equal(check.status, "warn");
+  assert.equal(check.baseEffect, true);
+  assert.ok(result.suggestions.includes("baseEffect"));
+  assert.ok(result.cons.includes("epsGrowthQ"));
+  // Kâr büyümesi dikkatte olsa da satış desteği ölçüsü çalışmaya devam ediyor.
+  assert.equal(result.checks.find((c) => c.id === "growthSource")?.status, "pass");
+});
