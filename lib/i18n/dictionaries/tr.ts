@@ -3027,7 +3027,6 @@ const tr = {
       fxStoryFlat: "Pozisyonlarını aldığın günlerin kuru bugünkünden farksız; lira ve dolar getirisi aynı yerde.",
       usdReturn: "Dolar Getirisi",
       tlReturn: "Lira Getirisi",
-      quantityUnit: "{n} Adet",
       costShort: "Maliyet",
       buyRateShort: "Alış Kuru",
       fxPart: "Kur Katkısı",

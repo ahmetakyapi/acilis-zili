@@ -70,6 +70,21 @@ function tokenAt(index: number, slice: AllocationSlice) {
 }
 
 /**
+ * Sembol → halkadaki rengi. Pozisyon kartının kenar şeridi ve ağırlık
+ * çubuğu bu rengi taşıyor: kapaktaki halkada SNDK hangi tondaysa listede de
+ * o ton — okuyucu dilimi kartla göz ucuyla eşliyor. Halkada ayrı dilimi
+ * olmayan ("Diğer") pozisyon dinlenik tonu alıyor.
+ */
+export function shareAccents(slices: readonly AllocationSlice[]): Map<string, string> {
+  const map = new Map<string, string>();
+  slices.forEach((slice, index) => {
+    if (slice.symbol) map.set(slice.symbol, tokenAt(index, slice));
+  });
+  return map;
+}
+export const REST_ACCENT = REST_TOKEN;
+
+/**
  * Kahramanın halkası — pozisyon ağırlıkları.
  *
  * `pathLength="100"`: dilimin boyu doğrudan yüzdesi, çevre hesabı yok.
@@ -272,6 +287,7 @@ export function TotalsBand({
   const cards = [
     {
       key: "usd",
+      glyph: "$",
       label: labels.usdBasis,
       value: usd(totals.pnlUsd, true),
       pct: pnlUsdPct,
@@ -281,6 +297,7 @@ export function TotalsBand({
     },
     {
       key: "tl",
+      glyph: "₺",
       label: labels.tlBasis,
       value: tl(totals.pnlTl, true),
       pct: pnlTlPct,
@@ -301,7 +318,12 @@ export function TotalsBand({
       <dl className={styles.basisGrid}>
         {cards.map((card, index) => (
           <div key={card.key} className={styles.basisCard} data-tone={directionOf(card.tone)}>
-            <dt className={styles.basisLabel}>{card.label}</dt>
+            <dt className={styles.basisLabel}>
+              <span className={styles.basisGlyph} aria-hidden>
+                {card.glyph}
+              </span>
+              {card.label}
+            </dt>
             <dd className={styles.basisBody}>
               <span className={cn(styles.basisValue, directionText(directionOf(card.tone)))}>
                 <RollingFigure value={card.value} delayMs={(index + 1) * 120} />
@@ -335,31 +357,43 @@ export function TotalsBand({
               <span className={styles.sourceFx} style={{ flexGrow: 100 - stockShare }} />
             </span>
           )}
-          <dl className={styles.equation}>
-            <div>
-              <dt>
-                <span className={styles.keyStock} aria-hidden />
-                {labels.fromStock}
-              </dt>
-              <dd className="figure">{tl(stockPart, true)}</dd>
-              <dd className={styles.equationHint}>{labels.fromStockHint}</dd>
-            </div>
-            <span className={styles.equationOp} aria-hidden>+</span>
-            <div>
-              <dt>
-                <span className={styles.keyFx} aria-hidden />
-                {labels.fromFx}
-              </dt>
-              <dd className="figure">{tl(fxPart, true)}</dd>
-              <dd className={styles.equationHint}>{labels.fromFxHint}</dd>
-            </div>
-            <span className={styles.equationOp} aria-hidden>=</span>
-            <div className={styles.equationTotal}>
-              <dt>{labels.tlTotal}</dt>
-              <dd className="figure" data-tone={directionOf(totals.pnlTl)}>{tl(totals.pnlTl, true)}</dd>
-            </div>
-          </dl>
-          {story && <p className={styles.story}>{story}</p>}
+          {/* FİŞ DÜZENİ (2 Ekim). Denklem bir süre yatay duruyordu
+              ("Hisseden + Kurdan = Lira Getirisi"); geniş ekranda "=" işareti
+              iki sayının ortasında 600 piksel boşlukta asılı kalıyor,
+              telefonda ipuçları tek kelimeyle alt satıra düşüyordu. Şimdi
+              alt alta: iki parça, çizgi, toplam — bir hesap fişi gibi.
+              Geniş ekranda sağında sebep cümlesi. */}
+          <div className={styles.breakdownBody}>
+            <dl className={styles.receipt}>
+              <div>
+                <dt>
+                  <span className={styles.receiptLabel}>
+                    <span className={styles.keyStock} aria-hidden />
+                    {labels.fromStock}
+                  </span>
+                  <span className={styles.receiptHint}>{labels.fromStockHint}</span>
+                </dt>
+                <dd className="figure" data-tone={directionOf(stockPart)}>{tl(stockPart, true)}</dd>
+              </div>
+              <div>
+                <dt>
+                  <span className={styles.receiptLabel}>
+                    <span className={styles.keyFx} aria-hidden />
+                    {labels.fromFx}
+                  </span>
+                  <span className={styles.receiptHint}>{labels.fromFxHint}</span>
+                </dt>
+                <dd className="figure" data-tone={directionOf(fxPart)}>{tl(fxPart, true)}</dd>
+              </div>
+              <div className={styles.receiptTotal}>
+                <dt>
+                  <span className={styles.receiptLabel}>{labels.tlTotal}</span>
+                </dt>
+                <dd className="figure" data-tone={directionOf(totals.pnlTl)}>{tl(totals.pnlTl, true)}</dd>
+              </div>
+            </dl>
+            {story && <p className={styles.story}>{story}</p>}
+          </div>
         </div>
       )}
     </div>

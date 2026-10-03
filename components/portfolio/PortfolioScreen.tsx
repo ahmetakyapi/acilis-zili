@@ -17,7 +17,9 @@ import {
   AllocationRing,
   AllocationRingSkeleton,
   allocationSlices,
+  REST_ACCENT,
   SectorStrip,
+  shareAccents,
   TotalsBand,
 } from "@/components/portfolio/PortfolioVisuals";
 import { DataStamp, EmptyState, Panel, PanelHeader, PanelSkeleton } from "@/components/ui/primitives";
@@ -196,6 +198,18 @@ async function PortfolioBody({
 
   /* Tablonun satırları: hesap burada (sunucuda) bitiyor, istemciye yalnızca
      sonuç gidiyor. */
+  /* Kartın rengi halkadaki dilimin rengi; getiri çubukları tek ölçekte
+     (dolar ve lira yüzdelerinin en büyük mutlak değeri). */
+  const accents = shareAccents(
+    allocationSlices(
+      views.map((view) => ({ symbol: view.symbol, logoUrl: names[view.symbol]?.logoUrl ?? null, valueUsd: view.valueUsd })),
+      L.otherSector,
+    ),
+  );
+  const returnScale = Math.max(
+    0,
+    ...views.flatMap((view) => [view.pnlUsdPct, view.pnlTlPct].map((pct) => (pct === null ? 0 : Math.abs(pct)))),
+  );
   const rows: PositionRow[] = views.map((view) => ({
     id: view.id,
     symbol: view.symbol,
@@ -220,6 +234,8 @@ async function PortfolioBody({
       view.pnlTl !== null && view.pnlUsd !== null && todayRate !== null
         ? Math.round((view.pnlTl - view.pnlUsd * todayRate) * 100) / 100
         : null,
+    accent: accents.get(view.symbol) ?? REST_ACCENT,
+    returnScale,
   }));
   /* Varsayılan en ağır pozisyon üstte (halkanın lejantıyla aynı sıra);
      okuyucu elle sıra verdiyse o sıra (`orderPositions`, lib/portfolio.ts). */

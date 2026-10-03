@@ -2573,7 +2573,6 @@ const en: typeof tr = {
       fxStoryFlat: "The rate on your purchase days matches today's, so lira and dollar returns are the same.",
       usdReturn: "Dollar Return",
       tlReturn: "Lira Return",
-      quantityUnit: "{n} Shares",
       costShort: "Cost",
       buyRateShort: "Buy Rate",
       fxPart: "From the Rate",

@@ -7,7 +7,7 @@ import { savePortfolioOrderAction } from "@/app/actions/portfolio";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile } from "@/components/ui/primitives";
 import { formatIsoDate, formatLira } from "@/lib/fx";
-import { cn, directionOf, directionText, formatPercent, formatPercentPlain, formatPrice, NO_VALUE } from "@/lib/utils";
+import { cn, directionOf, formatPercent, formatPercentPlain, formatPrice, NO_VALUE } from "@/lib/utils";
 import styles from "./Portfolio.module.css";
 import { useWorkbench } from "./PortfolioWorkbench";
 import type { ComposerPosition } from "./PositionComposer";
@@ -48,6 +48,10 @@ export type PositionRow = ComposerPosition & {
   rate: { rate: number; bulletin: string } | null;
   /** Lira K/Z'nin kurdan gelen kısmı: lira K/Z − dolar K/Z × bugünün kuru. */
   fxTl: number | null;
+  /** Halkadaki dilimin rengi (CSS değişkeni) — kenar şeridi ve ağırlık çubuğu. */
+  accent: string;
+  /** Getiri çubuklarının ortak ölçeği: listedeki en büyük mutlak yüzde. */
+  returnScale: number;
 };
 
 /** Giriş kademesi: bundan sonraki satırlar aynı anda girer. */
@@ -189,27 +193,37 @@ export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: 
               data-pos-row
               className={styles.posRow}
               data-fresh={fresh.has(row.id) || undefined}
-              style={{ "--i": Math.min(i, STAGGER_CAP) } as CSSProperties}
+              style={{ "--i": Math.min(i, STAGGER_CAP), "--accent": row.accent } as CSSProperties}
               exit={{ opacity: 0, x: -16, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] } }}
             >
               <div data-col="sym" className={styles.posSym}>
                 <LogoTile symbol={row.symbol} logoUrl={row.logoUrl ?? null} size="md" />
                 <span className="flex min-w-0 flex-col">
-                  <Link href={`/hisse/${row.symbol}`} className="numeral w-fit font-bold text-strong transition-colors hover:text-primary">
+                  <Link href={`/hisse/${row.symbol}`} className={cn("numeral w-fit", styles.posTicker)}>
                     {row.symbol}
                   </Link>
-                  <span className="numeral truncate text-nano text-muted">
-                    {row.name ?? formatIsoDate(row.boughtAt, locale)}
-                  </span>
+                  {/* Ad KESİLMİYOR: telefonda sembol satırı kartın tam
+                      genişliğini alıyor (değer alttaki satıra indi), ad
+                      sığmazsa iki satıra iniyor; "Advanced Micro …" diye
+                      kesilen ad bir şey söylemiyordu. */}
+                  {row.name && <span className={styles.posName}>{row.name}</span>}
                 </span>
+              </div>
+
+              <div data-col="value" className={styles.posValue}>
+                <span className={cn("numeral", styles.posValueUsd)}>
+                  {row.price === null ? <span className="text-muted">{L.noQuote}</span> : usd(row.valueUsd)}
+                </span>
+                <span className={cn("numeral", styles.posValueTl)}>{formatLira(row.valueTl, locale)}</span>
               </div>
 
               {/* AĞIRLIK BİR BÜYÜKLÜK: sayı portföy içindeki pay, çubuk en
                   büyük pozisyona göre (CLAUDE.md "karşılaştırılan her
-                  büyüklük bir de çizgi"). Fiyatı olmayanın ağırlığı yok. */}
+                  büyüklük bir de çizgi"). Çubuğun rengi halkadaki dilimin
+                  rengi. Fiyatı olmayanın ağırlığı yok. */}
               <div data-col="weight" className={styles.posWeight}>
                 <span className={styles.posMobileLabel}>{L.weight}</span>
-                <span className="numeral font-semibold text-strong">
+                <span className={cn("numeral", styles.posWeightPct)}>
                   {row.share === null ? NO_VALUE : formatPercentPlain(row.share, locale, 1)}
                 </span>
                 <span className={styles.weightBar} aria-hidden>
@@ -217,32 +231,28 @@ export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: 
                 </span>
               </div>
 
-              <div data-col="value" className={styles.posValue}>
-                <span className="numeral font-semibold text-strong">
-                  {row.price === null ? <span className="text-muted">{L.noQuote}</span> : usd(row.valueUsd)}
-                </span>
-                <span className="numeral text-nano text-muted">{formatLira(row.valueTl, locale)}</span>
-              </div>
-
-              <div data-col="usd" className={styles.posReturn} data-tone={directionOf(row.pnlUsd)}>
-                <span className={styles.posMobileLabel}>{L.usdReturn}</span>
-                <span className={cn("numeral", styles.posReturnValue, directionText(directionOf(row.pnlUsd)))}>
-                  {usd(row.pnlUsd, true)}
-                </span>
-                <span className={cn("numeral", styles.posReturnPct, directionText(directionOf(row.pnlUsd)))}>
-                  {formatPercent(row.pnlUsdPct, locale)}
-                </span>
-              </div>
-
-              <div data-col="tl" className={styles.posReturn} data-tone={directionOf(row.pnlTl)}>
-                <span className={styles.posMobileLabel}>{L.tlReturn}</span>
-                <span className={cn("numeral", styles.posReturnValue, directionText(directionOf(row.pnlTl)))}>
-                  {formatLira(row.pnlTl, locale, 2, true)}
-                </span>
-                <span className={cn("numeral", styles.posReturnPct, directionText(directionOf(row.pnlTl)))}>
-                  {formatPercent(row.pnlTlPct, locale)}
-                </span>
-              </div>
+              {(
+                [
+                  { key: "usd", label: L.usdReturn, value: usd(row.pnlUsd, true), pct: row.pnlUsdPct, tone: row.pnlUsd },
+                  { key: "tl", label: L.tlReturn, value: formatLira(row.pnlTl, locale, 2, true), pct: row.pnlTlPct, tone: row.pnlTl },
+                ] as const
+              ).map((cell) => (
+                <div key={cell.key} data-col={cell.key} className={styles.posReturn} data-tone={directionOf(cell.tone)}>
+                  <span className={styles.posMobileLabel}>{cell.label}</span>
+                  <span className={cn("numeral", styles.posReturnValue)}>{cell.value}</span>
+                  <span className={styles.posReturnFoot}>
+                    <span className={cn("numeral", styles.posReturnPct)}>{formatPercent(cell.pct, locale)}</span>
+                    {/* İki getiri AYNI ölçekte: listedeki en büyük mutlak
+                        yüzde tam boy. Dolar ile lira çubuğu yan yana
+                        durunca kurun payı uzunluk farkı olarak okunuyor. */}
+                    {cell.pct !== null && row.returnScale > 0 && (
+                      <span className={styles.retBar} aria-hidden>
+                        <span style={{ "--r": Math.min(1, Math.abs(cell.pct) / row.returnScale) } as CSSProperties} />
+                      </span>
+                    )}
+                  </span>
+                </div>
+              ))}
 
               <div data-col="act" className={styles.rowActions}>
                 {editing ? (
@@ -288,27 +298,39 @@ export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: 
                 )}
               </div>
 
-              {/* Künye: ikincil sayılar, her biri kendi kutusunda kırılmadan. */}
-              <p data-col="detail" className={cn("numeral", styles.posDetail)}>
-                <span>{L.quantityUnit.replace("{n}", quantityText.format(row.quantity))}</span>
-                <span>
-                  {L.costShort} <b>{usd(row.costUsd)}</b>
-                </span>
-                {row.price !== null && (
-                  <span>
-                    {L.price} <b>{usd(row.price)}</b>
-                  </span>
-                )}
-                <span>
-                  {L.buyRateShort}{" "}
-                  <b>{row.rate ? `${formatPrice(row.rate.rate, locale, { digits: 2 })} ₺` : NO_VALUE}</b> · {formatIsoDate(row.boughtAt, locale)}
-                </span>
-                {row.fxTl !== null && (
-                  <span>
-                    {L.fxPart} <b className={directionText(directionOf(row.fxTl))}>{formatLira(row.fxTl, locale, 2, true)}</b>
-                  </span>
-                )}
-              </p>
+              {/* KÜNYE BİR IZGARA (2 Ekim). Düz bir satırdı ("14,88 Adet ·
+                  Maliyet … · Kur Katkısı …") ve telefonda son öğe tek
+                  başına alt satıra düşüyordu. Şimdi her ölçü kendi
+                  hücresinde, etiket üstte: telefonda üç sütun, geniş
+                  ekranda altı — hiçbir değer satır ortasında kırılmıyor. */}
+              <dl data-col="detail" className={styles.posFacts}>
+                <div>
+                  <dt>{L.quantity}</dt>
+                  <dd className="numeral">{quantityText.format(row.quantity)}</dd>
+                </div>
+                <div>
+                  <dt>{L.costShort}</dt>
+                  <dd className="numeral">{usd(row.costUsd)}</dd>
+                </div>
+                <div>
+                  <dt>{L.price}</dt>
+                  <dd className="numeral">{row.price === null ? NO_VALUE : usd(row.price)}</dd>
+                </div>
+                <div>
+                  <dt>{L.boughtAt}</dt>
+                  <dd className="numeral">{formatIsoDate(row.boughtAt, locale)}</dd>
+                </div>
+                <div>
+                  <dt>{L.buyRateShort}</dt>
+                  <dd className="numeral">{row.rate ? `${formatPrice(row.rate.rate, locale, { digits: 2 })} ₺` : NO_VALUE}</dd>
+                </div>
+                <div>
+                  <dt>{L.fxPart}</dt>
+                  <dd className="numeral" data-tone={directionOf(row.fxTl)}>
+                    {row.fxTl === null ? NO_VALUE : formatLira(row.fxTl, locale, 2, true)}
+                  </dd>
+                </div>
+              </dl>
             </motion.li>
           ))}
         </AnimatePresence>
