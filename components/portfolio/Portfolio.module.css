@@ -467,25 +467,6 @@
   text-wrap: pretty;
 }
 
-/* ---- Ağırlık çubuğu ---- */
-.weightBar {
-  display: block;
-  width: 100%;
-  height: 4px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--surface-sunken);
-}
-
-.weightFill {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--accent, var(--share-2));
-  transform: scaleX(var(--ratio));
-  transform-origin: left center;
-}
-
 /* ---- Sektör şeridi ---- */
 .sectors {
   display: flex;
@@ -549,7 +530,6 @@
       }
     }
 
-    .weightFill,
     .sectorBar {
       animation: portfolio-grow-x linear both;
       animation-timeline: view();
@@ -562,89 +542,95 @@
   }
 }
 
-/* ---- Pozisyon listesi (2 Ekim) ----
-   Telefon: her pozisyon AYRI BİR KART, aralarında boşluk. Beş sıra —
-     logo · sembol ve tam ad · düzelt
-     değer (dolar büyük, lira yanında)
-     ağırlık (etiket, yüzde, halkadaki renkte çubuk)
-     dolar getirisi | lira getirisi (iki kutu, ortak ölçekte çubuk)
-     künye ızgarası (üç sütun)
-   Kartın sol kenarında halkadaki dilimin renginde ince bir şerit; derinlik
-   tonla (gölge yok, modül başlığındaki kural).
-   900+: kartlar hizalı satırlara dönüyor — her satır aynı altı sütunlu
-   şablon, başlık satırı da; künye ikinci sırada altı hücre. */
-/* Eylem sütunu SABİT: `auto` başlık satırında (boş hücre) sıfır, satırlarda
-   iki düğme genişliğindeydi ve sağa yaslı başlıklar değerlerden ~45 piksel
-   kayıyordu (1280'de ölçüldü). İki düğme 2 × 2,25rem + 2px. */
-.posList {
-  --pos-cols: minmax(0, 1.5fr) minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.1fr) 4.75rem;
-}
-
-.posHead {
-  display: none;
-}
-
+/* ---- Pozisyon kartları (3 Ekim) ----
+   TABLO SATIRI DEĞİL, KART — İKİ GENİŞLİKTE DE. 900 pikselden itibaren
+   kartlar altı sütunlu hizalı satırlara dönüyordu (2 Ekim) ve sahibi
+   1366'daki ekran görüntüsüyle "daha görsel, çok daha iyi kartlar" istedi:
+   satır düzeninde her pozisyon aynı gri çizginin arasında beş sayıydı,
+   hangisinin kazandırdığı ancak rakamlar okunarak çıkıyordu. Kartta her
+   soru bir ŞEKİL taşıyor:
+     ağırlık → halkadaki dilimin renginde küçük bir halka (pay kadar dolu)
+     maliyetten bugüne → bir yol: maliyet halka, fiyat dolu nokta, arası
+       kazançta yeşil, kayıpta kırmızı
+     dolar | lira getirisi → iki renkli kutu, ortak ölçekte çubuk
+   Kartın tepesinde dilimin renginde bir şerit ve aynı renkte hafif bir
+   ışık; derinlik yine tonla (gölge yok).
+   Izgara: telefonda tek sütun, 760'tan itibaren iki. İki sütunda kartlar
+   satır içinde AYNI BOYDA (ızgara satırı geriyor) ve künye kartın dibine
+   yaslanıyor — yan yana iki kartın künyesi aynı hatta. */
 .rows {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.85rem;
   margin: 0;
-  padding: 0.85rem 0.85rem 1rem;
+  padding: 0.9rem 0.85rem 1rem;
   list-style: none;
+}
+
+@media (min-width: 760px) {
+  .rows {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    padding: 1.1rem 1.25rem 1.25rem;
+  }
 }
 
 .posRow {
   --accent: var(--share-rest);
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-  grid-template-areas:
-    "sym sym act"
-    "value value value"
-    "weight weight weight"
-    "usd tl tl"
-    "detail detail detail";
-  align-items: center;
-  gap: 0.8rem 0.6rem;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1rem;
   overflow: hidden;
-  padding: 0.95rem 0.95rem 1rem 1.15rem;
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
+  padding: 1.15rem 1.1rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(120% 70% at 0% 0%, color-mix(in oklab, var(--accent) 13%, transparent), transparent 62%),
+    var(--surface);
   transition:
-    background-color 0.2s var(--ease-brand),
-    border-color 0.2s var(--ease-brand);
+    border-color 0.2s var(--ease-brand),
+    transform 0.2s var(--ease-brand);
 }
 
-/* Halkadaki dilimin rengi: kenar şeridi. */
+@media (min-width: 760px) {
+  .posRow {
+    padding: 1.3rem 1.3rem 1.1rem;
+  }
+}
+
+/* Dilimin rengi: tepede ince şerit. */
 .posRow::before {
   content: "";
   position: absolute;
-  inset: 0 auto 0 0;
-  width: 4px;
-  background: var(--accent);
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), color-mix(in oklab, var(--accent) 30%, transparent));
 }
 
-.posRow [data-col="sym"] { grid-area: sym; }
-.posRow [data-col="weight"] { grid-area: weight; }
-.posRow [data-col="value"] { grid-area: value; }
-.posRow [data-col="usd"] { grid-area: usd; }
-.posRow [data-col="tl"] { grid-area: tl; }
-.posRow [data-col="act"] { grid-area: act; }
-.posRow [data-col="detail"] { grid-area: detail; }
+/* Üst satır: logo · sembol ve ad · ağırlık halkası · eylemler. */
+.posTop {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.75rem;
+}
 
 .posSym {
   display: flex;
   min-width: 0;
-  align-items: center;
-  gap: 0.7rem;
+  flex-direction: column;
+  gap: 0.1rem;
 }
 
 .posTicker {
+  width: fit-content;
   color: var(--text-strong);
-  font-size: var(--text-read);
+  font-size: 1.15rem;
   font-weight: 750;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
   transition: color 0.2s var(--ease-brand);
 }
 
@@ -659,75 +645,192 @@
   text-wrap: balance;
 }
 
-/* Telefonda değer kendi satırında: dolar büyük solda, lira sağda aynı
-   taban çizgisinde. */
-.posValue {
-  display: flex;
-  min-width: 0;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.15rem 0.75rem;
-  white-space: nowrap;
-}
-
-.posValueUsd {
-  color: var(--text-strong);
-  font-size: clamp(1.35rem, 6vw, 1.6rem);
-  font-weight: 700;
-  letter-spacing: -0.035em;
-  line-height: 1.1;
-}
-
-.posValueTl {
-  color: var(--text-muted);
-  font-size: var(--text-small);
-  font-weight: 600;
-}
-
+/* Ağırlık halkası: pay kadar dolu, ortasında yüzde. */
 .posWeight {
+  position: relative;
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr);
-  align-items: center;
-  gap: 0.6rem;
+  width: 3.5rem;
+  aspect-ratio: 1;
+  place-items: center;
+}
+
+.posWeight svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.posWeight circle {
+  fill: none;
+  stroke-width: 4;
+}
+
+.posWeightTrack {
+  stroke: var(--surface-sunken);
+}
+
+.posWeightArc {
+  stroke: var(--accent);
+  stroke-linecap: round;
 }
 
 .posWeightPct {
+  position: relative;
   color: var(--text-strong);
-  font-size: var(--text-small);
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
 }
 
-.posMobileLabel {
+/* Değer: dolar dev puntoda, lira altında. */
+.posValue {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.posLabel {
   color: var(--text-muted);
   font-size: var(--text-nano);
   font-weight: 650;
   letter-spacing: 0.01em;
 }
 
+.posValueUsd {
+  color: var(--text-strong);
+  font-size: clamp(1.6rem, 7vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  white-space: nowrap;
+}
+
+.posValueTl {
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Maliyetten bugüne yol. Ölçek sıfırdan başlıyor, yolun uzunluğu hareketin
+   yüzdesi (gerekçe `PositionsTable.tsx` → Journey). */
+.journey {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.journeyTrack {
+  position: relative;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+}
+
+.journeyFill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--from) * 100%);
+  width: calc((var(--to) - var(--from)) * 100%);
+  border-radius: inherit;
+  background: var(--text-muted);
+}
+
+.journey[data-tone="up"] .journeyFill {
+  background: linear-gradient(90deg, color-mix(in oklab, var(--up) 35%, transparent), var(--up));
+}
+
+.journey[data-tone="down"] .journeyFill {
+  background: linear-gradient(90deg, var(--down), color-mix(in oklab, var(--down) 35%, transparent));
+}
+
+.journeyDot {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--at) * 100%);
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.journeyDot[data-kind="cost"] {
+  border: 2px solid var(--text-muted);
+  background: var(--surface-solid);
+}
+
+.journeyDot[data-kind="price"] {
+  border: 2px solid var(--surface-solid);
+  background: var(--text-strong);
+  box-shadow: 0 0 0 1px var(--line-strong);
+}
+
+.journey[data-tone="up"] .journeyDot[data-kind="price"] {
+  background: var(--up);
+}
+
+.journey[data-tone="down"] .journeyDot[data-kind="price"] {
+  background: var(--down);
+}
+
+.journeyEnds {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: var(--text-tiny);
+}
+
+.journeyEnds > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.journeyEnds > span:last-child {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.journeyEnds b {
+  color: var(--text-strong);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* İki getiri kutusu, yan yana. */
+.posReturns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
 .posReturn {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.7rem 0.75rem 0.75rem;
+  gap: 0.3rem;
+  padding: 0.75rem 0.8rem 0.8rem;
   border-radius: var(--radius-md);
   background: var(--surface-sunken);
 }
 
 .posReturn[data-tone="up"] {
-  background: color-mix(in oklab, var(--up-wash) 70%, var(--surface-sunken));
+  background: color-mix(in oklab, var(--up-wash) 80%, var(--surface-sunken));
 }
 
 .posReturn[data-tone="down"] {
-  background: color-mix(in oklab, var(--down-wash) 70%, var(--surface-sunken));
+  background: color-mix(in oklab, var(--down-wash) 80%, var(--surface-sunken));
 }
 
 .posReturnValue {
   color: var(--text-strong);
-  font-size: var(--text-read);
+  font-size: clamp(1rem, 4.4vw, 1.2rem);
   font-weight: 750;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   white-space: nowrap;
 }
 
@@ -750,16 +853,17 @@
 .posReturnPct {
   flex: none;
   font-size: var(--text-tiny);
-  font-weight: 650;
+  font-weight: 700;
 }
 
 /* Getiri çubuğu: listedeki en büyük mutlak yüzde tam boy (iki para birimi
-   AYNI ölçekte). Renk yalnızca işaretten. */
+   AYNI ölçekte — kurun payı uzunluk farkı olarak okunuyor). Renk yalnızca
+   işaretten. */
 .retBar {
   display: block;
   flex: 1;
   min-width: 1.5rem;
-  height: 3px;
+  height: 4px;
   overflow: hidden;
   border-radius: 999px;
   background: color-mix(in oklab, var(--text-muted) 18%, transparent);
@@ -782,14 +886,27 @@
   background: var(--down);
 }
 
-/* Künye ızgarası: etiket üstte, değer altta; telefonda üç sütun. */
+/* Künye: kartın dibinde, dört hücre (telefonda iki sütun). Maliyet ve
+   fiyat yolun uçlarında yazdığı için burada tekrar edilmiyor. */
 .posFacts {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.6rem 0.75rem;
-  margin: 0;
-  padding-top: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem 0.75rem;
+  margin: auto 0 0;
+  padding-top: 0.85rem;
   border-top: 1px solid var(--line-soft);
+}
+
+@media (min-width: 420px) {
+  .posFacts {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 760px) and (max-width: 1099px) {
+  .posFacts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .posFacts > div {
@@ -823,104 +940,10 @@
   color: var(--down);
 }
 
-@media (min-width: 900px) {
-  .posHead {
-    display: grid;
-    grid-template-columns: var(--pos-cols);
-    gap: 1rem;
-    padding: 0.55rem 1.25rem 0.55rem calc(1.25rem + 4px);
-    border-bottom: 1px solid var(--line-soft);
-    color: var(--text-muted);
-    font-size: var(--text-nano);
-    font-weight: 600;
-  }
-
-  .posHead > span:not(:first-child) {
-    text-align: right;
-  }
-
-  .rows {
-    gap: 0;
-    padding: 0;
-  }
-
-  .posRow {
-    grid-template-columns: var(--pos-cols);
-    grid-template-areas:
-      "sym weight value usd tl act"
-      "detail detail detail detail detail act";
-    gap: 0.6rem 1rem;
-    padding: 1rem 1.25rem 1rem calc(1.25rem + 4px);
-    border: 0;
-    border-top: 1px solid var(--line-soft);
-    border-radius: 0;
-    background: transparent;
-  }
-
-  .rows > .posRow:first-child {
-    border-top: 0;
-  }
-
-  .posMobileLabel {
-    display: none;
-  }
-
-  .posValue {
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: flex-start;
-    gap: 0.1rem;
-    text-align: right;
-  }
-
-  .posValueUsd {
-    font-size: var(--text-read);
-  }
-
-  .posValueTl {
-    font-size: var(--text-nano);
-  }
-
-  .posWeight {
-    grid-template-columns: minmax(0, 1fr);
-    justify-items: end;
-    gap: 0.4rem;
-  }
-
-  .posWeight .weightBar {
-    width: min(100%, 5rem);
-  }
-
-  .posReturn,
-  .posReturn[data-tone="up"],
-  .posReturn[data-tone="down"] {
-    align-items: flex-end;
-    padding: 0;
-    background: none;
-    text-align: right;
-  }
-
-  .posReturnFoot {
-    flex-direction: row-reverse;
-  }
-
-  .retBar {
-    flex: none;
-    width: 3.5rem;
-    transform: scaleX(-1);
-  }
-
-  .posFacts {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 0.5rem 1rem;
-    padding: 0.6rem 0 0 calc(2rem + 0.7rem);
-    border-top: 1px dashed var(--line-soft);
-  }
-}
 
 @media (hover: hover) {
   .posRow:hover {
-    background-color: color-mix(in oklab, var(--primary) 6%, transparent);
+    border-color: color-mix(in oklab, var(--accent) 55%, var(--line));
   }
 }
 

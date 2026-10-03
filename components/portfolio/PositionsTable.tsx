@@ -26,10 +26,10 @@ import type { ComposerPosition } from "./PositionComposer";
  * getirdi. İkincil sayılar (adet, maliyet, fiyat, alış kuru, kurun katkısı)
  * alt satırda düz bir künye.
  *
- * TEK DÜZEN, İKİ GENİŞLİK. Aynı satır telefonda kart (sembol ve değer üstte,
- * ağırlık çubuğu, iki getiri kutusu yan yana, künye), 900 pikselden itibaren
- * hizalı bir satır: her satır aynı `grid-template-columns`u taşıyor, başlık
- * satırı da — sütunlar tablo olmadan hizalı. Kaydırma yok, saklanan da yok.
+ * TEK DÜZEN, İKİ GENİŞLİK. 900 pikselden itibaren kartlar hizalı satırlara
+ * dönüyordu; 3 Ekim'de sahibi daha görsel kartlar istedi ve satır düzeni
+ * kalktı: her genişlikte kart, telefonda tek sütun, 760'tan itibaren iki.
+ * Gerekçe ve ölçüler `Portfolio.module.css` → "Pozisyon kartları".
  */
 
 export type PositionRow = ComposerPosition & {
@@ -56,6 +56,67 @@ export type PositionRow = ComposerPosition & {
 
 /** Giriş kademesi: bundan sonraki satırlar aynı anda girer. */
 const STAGGER_CAP = 12;
+/** Ağırlık halkası (görüş kutusu 52). */
+const WEIGHT_R = 22;
+const WEIGHT_C = 2 * Math.PI * WEIGHT_R;
+
+/**
+ * Maliyetten bugüne yol: maliyet halka, fiyat dolu nokta, arası kazançta
+ * yeşil, kayıpta kırmızı.
+ *
+ * ÖLÇEK SIFIRDAN BAŞLIYOR. İlk sürümde ölçek iki ucun dörtte biri kadar
+ * dışına taşıyordu ve sonuç her kartta AYNI resimdi: noktalar hep altıda
+ * bir ile altıda beşte duruyordu, %7'lik MU ile %40'lık SHAZ aynı uzunlukta
+ * bir yol çiziyordu (3 Ekim, 1366'da görüldü). Sıfırdan büyük uca (%8 pay)
+ * çizilince yolun uzunluğu hareketin yüzdesi oluyor ve kartlar arasında
+ * karşılaştırılabiliyor.
+ */
+function Journey({
+  cost,
+  price,
+  costLabel,
+  priceLabel,
+  usd,
+}: {
+  cost: number;
+  price: number;
+  costLabel: string;
+  priceLabel: string;
+  usd: (value: number | null) => string;
+}) {
+  const lo = Math.min(cost, price);
+  const hi = Math.max(cost, price);
+  const top = hi * 1.08 || 1;
+  const at = (value: number) => Math.max(0, value) / top;
+  const tone = price > cost ? "up" : price < cost ? "down" : "flat";
+  return (
+    <div className={styles.journey} data-tone={tone}>
+      <span className={styles.journeyTrack} aria-hidden>
+        <span className={styles.journeyFill} style={{ "--from": at(lo), "--to": at(hi) } as CSSProperties} />
+        <span className={styles.journeyDot} data-kind="cost" style={{ "--at": at(cost) } as CSSProperties} />
+        <span className={styles.journeyDot} data-kind="price" style={{ "--at": at(price) } as CSSProperties} />
+      </span>
+      {/* Uçların etiketleri noktaların sırasıyla: kayıpta fiyat solda. */}
+      <span className={styles.journeyEnds}>
+        {(price < cost
+          ? [
+              [priceLabel, price],
+              [costLabel, cost],
+            ]
+          : [
+              [costLabel, cost],
+              [priceLabel, price],
+            ]
+        ).map(([label, value]) => (
+          <span key={label}>
+            {label}
+            <b className="numeral">{usd(value as number)}</b>
+          </span>
+        ))}
+      </span>
+    </div>
+  );
+}
 
 export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: boolean }) {
   const { labels: L, locale, hidden, fresh, openEdit, remove, setExisting, notify } = useWorkbench();
@@ -174,16 +235,6 @@ export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: 
           </div>
         </div>
       )}
-      {/* Başlık yalnızca geniş ekranda: telefonda her kutu kendi etiketini
-          taşıyor. Satırlarla aynı sütun şablonu. */}
-      <div className={styles.posHead} aria-hidden>
-        <span>{L.symbol}</span>
-        <span>{L.weight}</span>
-        <span>{L.value}</span>
-        <span>{L.usdReturn}</span>
-        <span>{L.tlReturn}</span>
-        <span />
-      </div>
       <ul className={styles.rows} aria-label={L.positionsTitle}>
         <AnimatePresence initial={false}>
           {visibleRows.map((row, i) => (
@@ -196,125 +247,124 @@ export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: 
               style={{ "--i": Math.min(i, STAGGER_CAP), "--accent": row.accent } as CSSProperties}
               exit={{ opacity: 0, x: -16, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] } }}
             >
-              <div data-col="sym" className={styles.posSym}>
+              <div className={styles.posTop}>
                 <LogoTile symbol={row.symbol} logoUrl={row.logoUrl ?? null} size="md" />
-                <span className="flex min-w-0 flex-col">
-                  <Link href={`/hisse/${row.symbol}`} className={cn("numeral w-fit", styles.posTicker)}>
+                <span className={styles.posSym}>
+                  <Link href={`/hisse/${row.symbol}`} className={cn("numeral", styles.posTicker)}>
                     {row.symbol}
                   </Link>
-                  {/* Ad KESİLMİYOR: telefonda sembol satırı kartın tam
-                      genişliğini alıyor (değer alttaki satıra indi), ad
-                      sığmazsa iki satıra iniyor; "Advanced Micro …" diye
-                      kesilen ad bir şey söylemiyordu. */}
+                  {/* Ad KESİLMİYOR: sığmazsa iki satıra iniyor; "Advanced
+                      Micro …" diye kesilen ad bir şey söylemiyordu. */}
                   {row.name && <span className={styles.posName}>{row.name}</span>}
                 </span>
+                {/* AĞIRLIK BİR BÜYÜKLÜK: halka portföy içindeki pay kadar
+                    dolu, rengi büyük halkadaki dilimin rengi. Fiyatı
+                    olmayanın ağırlığı yok. */}
+                <span
+                  className={styles.posWeight}
+                  role="img"
+                  aria-label={`${L.weight} ${row.share === null ? NO_VALUE : formatPercentPlain(row.share, locale, 1)}`}
+                >
+                  <svg viewBox="0 0 52 52" aria-hidden>
+                    <circle className={styles.posWeightTrack} cx="26" cy="26" r={WEIGHT_R} />
+                    {row.share !== null && row.share > 0 && (
+                      <circle
+                        className={styles.posWeightArc}
+                        cx="26"
+                        cy="26"
+                        r={WEIGHT_R}
+                        strokeDasharray={`${(WEIGHT_C * Math.min(row.share, 100)) / 100} ${WEIGHT_C}`}
+                      />
+                    )}
+                  </svg>
+                  <span className={cn("numeral", styles.posWeightPct)} aria-hidden>
+                    {row.share === null ? NO_VALUE : formatPercentPlain(row.share, locale, row.share >= 10 ? 0 : 1)}
+                  </span>
+                </span>
+                <div className={styles.rowActions}>
+                  {editing ? (
+                    <>
+                      <button
+                        type="button"
+                        aria-label={L.moveUp.replace("{symbol}", row.symbol)}
+                        className={cn(styles.rowAction, styles.rowMove)}
+                        onClick={() => move(row.id, -1)}
+                        disabled={i === 0}
+                      >
+                        <CaretUp size={16} weight="bold" aria-hidden />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={L.moveDown.replace("{symbol}", row.symbol)}
+                        className={cn(styles.rowAction, styles.rowMove)}
+                        onClick={() => move(row.id, 1)}
+                        disabled={i === visibleRows.length - 1}
+                      >
+                        <CaretDown size={16} weight="bold" aria-hidden />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        aria-label={L.editAria.replace("{symbol}", row.symbol)}
+                        className={styles.rowAction}
+                        onClick={() => openEdit(row)}
+                      >
+                        <PencilSimple size={16} weight="duotone" aria-hidden />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={L.removeAria.replace("{symbol}", row.symbol)}
+                        className={cn(styles.rowAction, styles.rowActionDanger)}
+                        onClick={() => remove(row)}
+                      >
+                        <Trash size={16} weight="duotone" aria-hidden />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
-              <div data-col="value" className={styles.posValue}>
+              <div className={styles.posValue}>
+                <span className={styles.posLabel}>{L.value}</span>
                 <span className={cn("numeral", styles.posValueUsd)}>
                   {row.price === null ? <span className="text-muted">{L.noQuote}</span> : usd(row.valueUsd)}
                 </span>
                 <span className={cn("numeral", styles.posValueTl)}>{formatLira(row.valueTl, locale)}</span>
               </div>
 
-              {/* AĞIRLIK BİR BÜYÜKLÜK: sayı portföy içindeki pay, çubuk en
-                  büyük pozisyona göre (CLAUDE.md "karşılaştırılan her
-                  büyüklük bir de çizgi"). Çubuğun rengi halkadaki dilimin
-                  rengi. Fiyatı olmayanın ağırlığı yok. */}
-              <div data-col="weight" className={styles.posWeight}>
-                <span className={styles.posMobileLabel}>{L.weight}</span>
-                <span className={cn("numeral", styles.posWeightPct)}>
-                  {row.share === null ? NO_VALUE : formatPercentPlain(row.share, locale, 1)}
-                </span>
-                <span className={styles.weightBar} aria-hidden>
-                  <span className={styles.weightFill} style={{ "--ratio": row.ratio } as CSSProperties} />
-                </span>
+              {row.price !== null && <Journey cost={row.costUsd} price={row.price} costLabel={L.costShort} priceLabel={L.price} usd={usd} />}
+
+              <div className={styles.posReturns}>
+                {(
+                  [
+                    { key: "usd", label: L.usdReturn, value: usd(row.pnlUsd, true), pct: row.pnlUsdPct, tone: row.pnlUsd },
+                    { key: "tl", label: L.tlReturn, value: formatLira(row.pnlTl, locale, 2, true), pct: row.pnlTlPct, tone: row.pnlTl },
+                  ] as const
+                ).map((cell) => (
+                  <div key={cell.key} className={styles.posReturn} data-tone={directionOf(cell.tone)}>
+                    <span className={styles.posLabel}>{cell.label}</span>
+                    <span className={cn("numeral", styles.posReturnValue)}>{cell.value}</span>
+                    <span className={styles.posReturnFoot}>
+                      <span className={cn("numeral", styles.posReturnPct)}>{formatPercent(cell.pct, locale)}</span>
+                      {/* İki getiri AYNI ölçekte: listedeki en büyük mutlak
+                          yüzde tam boy. Dolar ile lira çubuğu yan yana
+                          durunca kurun payı uzunluk farkı olarak okunuyor. */}
+                      {cell.pct !== null && row.returnScale > 0 && (
+                        <span className={styles.retBar} aria-hidden>
+                          <span style={{ "--r": Math.min(1, Math.abs(cell.pct) / row.returnScale) } as CSSProperties} />
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                ))}
               </div>
 
-              {(
-                [
-                  { key: "usd", label: L.usdReturn, value: usd(row.pnlUsd, true), pct: row.pnlUsdPct, tone: row.pnlUsd },
-                  { key: "tl", label: L.tlReturn, value: formatLira(row.pnlTl, locale, 2, true), pct: row.pnlTlPct, tone: row.pnlTl },
-                ] as const
-              ).map((cell) => (
-                <div key={cell.key} data-col={cell.key} className={styles.posReturn} data-tone={directionOf(cell.tone)}>
-                  <span className={styles.posMobileLabel}>{cell.label}</span>
-                  <span className={cn("numeral", styles.posReturnValue)}>{cell.value}</span>
-                  <span className={styles.posReturnFoot}>
-                    <span className={cn("numeral", styles.posReturnPct)}>{formatPercent(cell.pct, locale)}</span>
-                    {/* İki getiri AYNI ölçekte: listedeki en büyük mutlak
-                        yüzde tam boy. Dolar ile lira çubuğu yan yana
-                        durunca kurun payı uzunluk farkı olarak okunuyor. */}
-                    {cell.pct !== null && row.returnScale > 0 && (
-                      <span className={styles.retBar} aria-hidden>
-                        <span style={{ "--r": Math.min(1, Math.abs(cell.pct) / row.returnScale) } as CSSProperties} />
-                      </span>
-                    )}
-                  </span>
-                </div>
-              ))}
-
-              <div data-col="act" className={styles.rowActions}>
-                {editing ? (
-                  <>
-                    <button
-                      type="button"
-                      aria-label={L.moveUp.replace("{symbol}", row.symbol)}
-                      className={cn(styles.rowAction, styles.rowMove)}
-                      onClick={() => move(row.id, -1)}
-                      disabled={i === 0}
-                    >
-                      <CaretUp size={16} weight="bold" aria-hidden />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={L.moveDown.replace("{symbol}", row.symbol)}
-                      className={cn(styles.rowAction, styles.rowMove)}
-                      onClick={() => move(row.id, 1)}
-                      disabled={i === visibleRows.length - 1}
-                    >
-                      <CaretDown size={16} weight="bold" aria-hidden />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      aria-label={L.editAria.replace("{symbol}", row.symbol)}
-                      className={styles.rowAction}
-                      onClick={() => openEdit(row)}
-                    >
-                      <PencilSimple size={16} weight="duotone" aria-hidden />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={L.removeAria.replace("{symbol}", row.symbol)}
-                      className={cn(styles.rowAction, styles.rowActionDanger)}
-                      onClick={() => remove(row)}
-                    >
-                      <Trash size={16} weight="duotone" aria-hidden />
-                    </button>
-                  </>
-                )}
-              </div>
-
-              {/* KÜNYE BİR IZGARA (2 Ekim). Düz bir satırdı ("14,88 Adet ·
-                  Maliyet … · Kur Katkısı …") ve telefonda son öğe tek
-                  başına alt satıra düşüyordu. Şimdi her ölçü kendi
-                  hücresinde, etiket üstte: telefonda üç sütun, geniş
-                  ekranda altı — hiçbir değer satır ortasında kırılmıyor. */}
-              <dl data-col="detail" className={styles.posFacts}>
+              <dl className={styles.posFacts}>
                 <div>
                   <dt>{L.quantity}</dt>
                   <dd className="numeral">{quantityText.format(row.quantity)}</dd>
-                </div>
-                <div>
-                  <dt>{L.costShort}</dt>
-                  <dd className="numeral">{usd(row.costUsd)}</dd>
-                </div>
-                <div>
-                  <dt>{L.price}</dt>
-                  <dd className="numeral">{row.price === null ? NO_VALUE : usd(row.price)}</dd>
                 </div>
                 <div>
                   <dt>{L.boughtAt}</dt>
