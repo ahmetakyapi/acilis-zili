@@ -1522,6 +1522,8 @@ const tr = {
     contributionHint:
       "Katkı, hissenin bugün endeksi kaç puan yukarı ya da aşağı taşıdığını gösterir. Dow fiyat ağırlıklı bir endekstir: her hissenin dolar bazındaki değişimi endeksin bölenine oranlanarak hesaplanır.",
     constituents: "Endeks Bileşenleri",
+    constituentsMore: "{n} Şirket Daha",
+    constituentsLess: "Daha Az Göster",
     asOf: "Liste Kompozisyonu",
   },
 

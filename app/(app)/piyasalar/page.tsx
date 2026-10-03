@@ -55,6 +55,7 @@ import {
 } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
+import { FoldToggle } from "@/components/ui/FoldToggle";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
@@ -114,6 +115,8 @@ type SortDir = "asc" | "desc";
  * (Aynı ölçü ve aynı gerekçe /sirketler dizininde de var.)
  */
 const PAGE_STEP = 60;
+/** Telefonda bileşen tablosunun açık satırı; kalanı katlı (FoldToggle). */
+const PHONE_ROWS = 15;
 
 /** ABD Hazine tahvili serileri — FRED sabit vadeli getiriler. */
 /**
@@ -1229,7 +1232,7 @@ function MembersTable({
   const fresh = sorted.filter((row) => !cards.skip.has(row.member.symbol));
 
   return (
-    <Panel id="market-members" className={styles.members}>
+    <Panel id="market-members" className={styles.members} style={{ "--fold-inset": "16px" } as React.CSSProperties}>
       <CompanyCards
         symbols={fresh.map((row) => row.member.symbol)}
         quotes={cards.quotes}
@@ -1262,6 +1265,18 @@ function MembersTable({
           390px'e rahat sığıyor ve yatay kaydırma kalkıyor. Piyasa değeri
           kaybolmuyor — fiyatın altına ikinci satır olarak iniyor. */}
       {/* KAP KLAVYEYLE ODAKLANABİLİR — gerekçe ikizinde (sirketler). */}
+      {/* TELEFONDA İLK ON BEŞ (3 Ekim). Tablo 390 pikselde 60 satır,
+          ~4.600 piksel ölçüldü; altındaki bölümlere ulaşmak için yüz kez
+          kaydırmak gerekiyordu. Satırlar sunucuda yine çiziliyor, on beşin
+          ötesi katlı geliyor ve JS'siz anahtar açıyor (FoldToggle `phone`);
+          640'tan itibaren katlama yok. */}
+      <FoldToggle
+        id="members-fold"
+        phone
+        hiddenCount={Math.max(0, sorted.length - PHONE_ROWS)}
+        more={t.markets.constituentsMore.replace("{n}", String(Math.max(0, sorted.length - PHONE_ROWS)))}
+        less={t.markets.constituentsLess}
+      >
       <ScrollEdges
         className="scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
         tabIndex={0}
@@ -1326,6 +1341,7 @@ function MembersTable({
                 <tr
                   key={row.member.symbol}
                   className="transition-colors hover:bg-primary-tint"
+                  data-fold={index >= PHONE_ROWS || undefined}
                 >
                   <td className="numeral hidden px-4 py-2.5 text-xs text-muted sm:table-cell sm:px-5">
                     {index + 1}
@@ -1443,6 +1459,7 @@ function MembersTable({
           </tbody>
         </table>
       </ScrollEdges>
+      </FoldToggle>
       {/* Sayaç + devamı — /sirketler dizinindeki ölçünün aynısı.
           scroll={false}: okuyucu tablonun dibinde, yeni satırlar geldiğinde
           sayfanın başına fırlatılmamalı. */}

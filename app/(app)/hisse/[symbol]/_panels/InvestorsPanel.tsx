@@ -9,7 +9,7 @@ import { investorBySlug, investorFirm } from "@/lib/investors";
 import { cn, formatEtDateMedium, formatMoneyCompact, formatPercent } from "@/lib/utils";
 import type { CSSProperties } from "react";
 import depth from "./depth.module.css";
-import { FoldToggle } from "./FoldToggle";
+import { FoldToggle } from "@/components/ui/FoldToggle";
 
 /**
  * "Ünlü Yatırımcılar" — bu hisseyi son bildirimlerinde tutan yatırımcılar

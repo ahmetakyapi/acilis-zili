@@ -1198,6 +1198,8 @@ const en: typeof tr = {
     contributionHint:
       "Contribution shows how many index points a stock is adding or subtracting today. The Dow is price-weighted: each stock's dollar move is divided by the index divisor.",
     constituents: "Index Constituents",
+    constituentsMore: "{n} More Companies",
+    constituentsLess: "Show Less",
     asOf: "List Composition",
   },
 

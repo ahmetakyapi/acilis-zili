@@ -30,7 +30,7 @@ import {
 } from "@/lib/utils";
 import styles from "./depth.module.css";
 import { ClampProbe } from "./ClampProbe";
-import { FoldToggle } from "./FoldToggle";
+import { FoldToggle } from "@/components/ui/FoldToggle";
 
 /** Pencere — Form 4 iki iş günü içinde dosyalanıyor; 90 gün bir çeyrek. */
 const INSIDER_WINDOW_DAYS = 90;

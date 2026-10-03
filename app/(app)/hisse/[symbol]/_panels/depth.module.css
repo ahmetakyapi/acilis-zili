@@ -271,17 +271,7 @@
    getiriyor ve okuyucu listenin başına fırlıyordu (başsız Chromium'da
    ölçüldü: 390 genişlikte 916 → 216). Kutu kabın dibine sabitlendi, odak
    düğmenin olduğu yerde kalıyor ve satırlar bastığın yerden aşağı açılıyor. */
-.fold { position:relative; min-width:0; }
-.foldInput { bottom:0; left:0; }
-.foldInput:not(:checked) ~ * [data-fold] { display:none; }
-.foldButton { display:inline-flex; min-height:44px; align-items:center; padding-inline:var(--fold-inset,0); color:var(--primary-ink); font-size:12.5px; font-weight:650; cursor:pointer; }
-.foldButton:hover { text-decoration:underline; text-underline-offset:3px; }
-.foldInput:focus-visible ~ .foldButton { outline:2px solid var(--line-focus); outline-offset:-2px; border-radius:8px; }
-.foldInput:checked ~ .foldButton .foldMore, .foldInput:not(:checked) ~ .foldButton .foldLess { display:none; }
-@media (min-width:1100px) {
-  .foldNarrow > .foldInput:not(:checked) ~ * [data-fold] { display:revert; }
-  .foldNarrow > .foldInput, .foldNarrow > .foldButton { display:none; }
-}
+/* Katlama anahtarının kuralları components/ui/FoldToggle.module.css'te (3 Ekim). */
 
 /* ---- İçeriden işlemler: kompakt düzen (28 Eylül) ----
    Panel Gündem'in en uzun parçasıydı: NVDA'da 1280'de 1105, 390'da 1458

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import styles from "./depth.module.css";
+import styles from "./FoldToggle.module.css";
 
 /**
  * Uzun listeyi dar ekranda katlayan anahtar — JS'siz (28 Eylül).
@@ -20,6 +20,12 @@ import styles from "./depth.module.css";
  *
  * `narrow`: katlama yalnızca 1100'ün altında. Geniş ekranda paneller iki
  * sütuna açılıyor ve liste zaten kısa; orada anahtar hiç görünmüyor.
+ * `phone` (3 Ekim): katlama yalnızca 640'ın altında — /piyasalar'daki
+ * bileşen tablosu telefonda 60 satır, 4.600 piksel ölçüldü; tablette ve
+ * geniş ekranda liste yerinde.
+ *
+ * Paylaşılan bileşen (3 Ekim'de şirket sayfasının panel klasöründen
+ * taşındı): /piyasalar da aynı anahtarı kullanıyor.
  */
 export function FoldToggle({
   id,
@@ -27,6 +33,7 @@ export function FoldToggle({
   more,
   less,
   narrow = true,
+  phone = false,
   children,
 }: {
   /** Sayfada tekil olmalı: etiket kutuyu bununla buluyor. */
@@ -36,11 +43,13 @@ export function FoldToggle({
   more: string;
   less: string;
   narrow?: boolean;
+  /** Katlama yalnızca telefonda (<640). `narrow`ın yerine geçer. */
+  phone?: boolean;
   children: ReactNode;
 }) {
   if (hiddenCount <= 0) return <>{children}</>;
   return (
-    <div className={cn(styles.fold, narrow && styles.foldNarrow)}>
+    <div className={cn(styles.fold, phone ? styles.foldPhone : narrow && styles.foldNarrow)}>
       <input type="checkbox" id={id} className={cn("sr-only", styles.foldInput)} />
       {children}
       <label htmlFor={id} className={styles.foldButton}>

@@ -10,7 +10,7 @@ import { getQuotes } from "@/lib/providers";
 import { indexMemberOf, peersOf } from "@/db/seed/indices";
 import { subIndustryName } from "@/db/seed/sub-industries";
 import { formatMoneyCompact, formatPrice, NO_VALUE } from "@/lib/utils";
-import { FoldToggle } from "./FoldToggle";
+import { FoldToggle } from "@/components/ui/FoldToggle";
 
 /** Telefonda açık gelen satır (28 Eylül, Gündem'i kısaltma işi). Dokuz satır
     390'da 556 piksel tutuyordu; sayfanın şirketi beşin dışına düşse de
