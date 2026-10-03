@@ -56,6 +56,18 @@ export type ChartResponse =
        * (gap) kaybolmaz.
        */
       prevClose?: number;
+      /**
+       * 1G'de güncel kotasyon (3 Ekim) — grafiğin canlı yoklaması başlıktaki
+       * fiyatı da tazeliyor; eğri ile fiyat aynı yanıttan geliyor.
+       */
+      quote?: {
+        price: number | null;
+        change: number | null;
+        changePct: number | null;
+        tradedAt: string | null;
+        source: string;
+        fetchedAt: string;
+      };
     }
   | { ok: false; reason: string };
 
@@ -120,5 +132,17 @@ export async function GET(
     stale: Boolean(result.stale),
     fetchedAt: result.fetchedAt.toISOString(),
     ...(prevClose !== undefined ? { prevClose } : {}),
+    ...(quoteResult?.ok
+      ? {
+          quote: {
+            price: quoteResult.data.price,
+            change: quoteResult.data.change,
+            changePct: quoteResult.data.changePct,
+            tradedAt: quoteResult.data.tradedAt?.toISOString() ?? null,
+            source: quoteResult.source,
+            fetchedAt: quoteResult.fetchedAt.toISOString(),
+          },
+        }
+      : {}),
   });
 }

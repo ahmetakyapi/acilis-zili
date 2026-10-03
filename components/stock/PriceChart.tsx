@@ -38,7 +38,7 @@ import type { Locale } from "@/lib/i18n/config";
 import type { ChartLabels } from "@/lib/chart-labels";
 import { SESSION_BOUNDS, etDateTimeToUtc, etParts } from "@/lib/market-hours";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
-import { useChartReading } from "./ChartReadingContext";
+import { useChartReading, usePublishLiveQuote } from "./ChartReadingContext";
 import {
   clockOf,
   displayZone,
@@ -195,7 +195,10 @@ export function PriceChart({
   compact = false,
   live = false,
 }: PriceChartProps) {
-  const usdQuote = quoteProp;
+  /* Canlı yoklama kotasyonu da tazeliyor; gelene kadar sunucunun verdiği. */
+  const [liveQuote, setLiveQuote] = useState<PriceChartProps["quote"]>(null);
+  const usdQuote = liveQuote ?? quoteProp;
+  const publishLiveQuote = usePublishLiveQuote();
   /* Seçim göstergelerinin `layoutId`si örneğe özgü: kabuktaki `LayoutGroup`
      sitenin tamamını sarıyor ve bir yazıda iki grafik aynı adı paylaşırsa
      gösterge bir grafikten ötekine uçardı. */
@@ -204,6 +207,9 @@ export function PriceChart({
   const chartRef = useRef<IChartApi | null>(null);
   /* Son çizim hangi veri ve görünüm için oynadı — bkz. `revealPlot`. */
   const drawnRef = useRef<{ state: unknown; mode: unknown } | null>(null);
+  /* Sıradaki çizim canlı yoklamadan mı geliyor — öyleyse çizim animasyonu
+     oynamıyor. */
+  const silentRef = useRef(false);
   const [range, setRange] = useState<ChartRange>(initialRange);
   const [mode, setMode] = useState<"area" | "candles">("area");
   const [result, setResult] = useState<ChartResult | null>(
@@ -414,6 +420,52 @@ export function PriceChart({
       cancelled = true;
     };
   }, [symbol, range, result, labels.failed, labels.failedHint, labels.noData]);
+
+  /* CANLI YOKLAMA (3 Ekim). Grafik sayfa açıldığı andaki seriyi çizip
+     orada kalıyordu; seans içinde açık bırakılan bir sekmede eğri ve başlık
+     fiyatı dakikalarca eskiyordu. Çizilen gün bugünün seansıysa (`live`) ve
+     aralık gün içiyse dakikada bir aynı aralık yeniden isteniyor; sunucu
+     tazelik kontrolünü ve gerçek zamanlı kuyruğu kendisi uyguluyor
+     (`getChartBars`). Sekme arka plandayken istek gitmiyor, öne gelince
+     hemen bir tane. */
+  useEffect(() => {
+    if (!live || (range !== "1D" && range !== "1W")) return;
+    const key = `${symbol}:${range}`;
+    let cancelled = false;
+    let last = Date.now();
+    const pull = () => {
+      last = Date.now();
+      fetch(`/api/chart/${symbol}?range=${range}`, { cache: "no-store" })
+        .then((res) => res.json() as Promise<ChartResponse>)
+        .then((data) => {
+          if (cancelled || !data.ok || data.bars.length === 0) return;
+          silentRef.current = true;
+          setResult((current) =>
+            current?.key === key
+              ? { key, phase: "ready", bars: data.bars, prevClose: data.prevClose ?? (current.phase === "ready" ? current.prevClose : null) }
+              : current,
+          );
+          if (data.quote) {
+            setLiveQuote(data.quote);
+            /* Başlık da aynı yanıttan tazeleniyor (ChartReadingContext). */
+            publishLiveQuote(data.quote);
+          }
+        })
+        .catch(() => {});
+    };
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") pull();
+    }, LIVE_POLL_MS);
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && Date.now() - last > LIVE_POLL_MS) pull();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [live, range, symbol, publishLiveQuote]);
 
   const intraday = range === "1D" || range === "1W";
 
@@ -918,8 +970,12 @@ export function PriceChart({
        tema ve dil değişiminde de yeniden koşuyor; çizim her fiyat tikinde
        baştan oynasaydı grafik saniyede bir silinip yeniden çiziliyor gibi
        dururdu. Anahtar verinin kendisi (`state`) ve görünüm tipi. */
+    /* Canlı yoklamadan gelen veri SESSİZ: aynı aralığın yeni barları geldi,
+       eğri baştan çizilmiyor (bkz. canlı yoklama effect'i). */
     const fresh =
-      !drawnRef.current || drawnRef.current.state !== state || drawnRef.current.mode !== mode;
+      (!drawnRef.current || drawnRef.current.state !== state || drawnRef.current.mode !== mode) &&
+      !silentRef.current;
+    silentRef.current = false;
     drawnRef.current = { state, mode };
     const reveal = fresh ? revealPlot(container, chart) : null;
 
@@ -1540,6 +1596,8 @@ function shiftBarsToZone(bars: Bar[], zone: string): Bar[] {
  *  (MotionExperience → `.spark-line`). 700 ms denendi: eğri önden yüklü
  *  olduğu için çizginin %90'ı 133. ms'de açılmıştı ve çizim "çiziliyor"
  *  gibi değil "belirdi" gibi okunuyordu (ölçüldü, NVDA 1A). */
+/** Canlı yoklama aralığı — sunucudaki gün içi bar önbelleğiyle (60 sn) aynı. */
+const LIVE_POLL_MS = 60_000;
 const PLOT_REVEAL_MS = 1000;
 
 /**

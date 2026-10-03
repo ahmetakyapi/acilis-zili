@@ -271,6 +271,7 @@ export async function StockHeader({
             locale={locale}
             classes={{ line: styles.priceLine, price: cn("tote", styles.livePrice), change: styles.priceChange }}
             session={sessionNote}
+            stampLabels={t.data}
             stamp={
               <DataStamp
                 labels={t.data}

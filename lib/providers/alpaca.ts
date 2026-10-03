@@ -644,6 +644,7 @@ export async function getBars(
   symbol: string,
   range: ChartRange,
   revalidate: number,
+  opts: { fresh?: boolean } = {},
 ): Promise<ProviderResult<Bar[]>> {
   const spec = RANGE_SPECS[range];
   const now = new Date();
@@ -661,7 +662,7 @@ export async function getBars(
       feed: BAR_FEED,
       sort: "asc",
     },
-    { revalidate, tags: [`bars:${symbol}`] },
+    { revalidate, tags: [`bars:${symbol}`], fresh: opts.fresh },
   );
   if (!result.ok) return result;
 
@@ -691,6 +692,72 @@ export async function getBars(
 }
 
 /**
+ * GERÇEK ZAMANLI KUYRUK — `sinceSec`ten sonraki IEX barları (3 Ekim).
+ *
+ * Ücretsiz katmanın SIP bar ucu son 15 dakikayı vermiyor; gün içi grafik bu
+ * yüzden hep 15-20 dakika geriden bitiyordu ve başlıktaki melez (gerçek
+ * zamanlı) fiyatla eğrinin ucu arasında boşluk kalıyordu. IEX tek borsa ama
+ * gerçek zamanlı ve fiyatı konsolide tape'e çok yakın (ölçüm: `mergeRealtime`,
+ * lib/providers/index.ts — melez fiyat medyanda 10-40 kat daha doğru). Kuyruk
+ * yalnızca SIP serisinin BİTTİĞİ yerden sonrasını dolduruyor; grafik hacim
+ * çizmiyor, IEX hacminin küçüklüğü ekrana yansımıyor.
+ *
+ * Kısa TTL (çağıran veriyor) + çağıranın tazelik kontrolü: süresi dolmuş
+ * kayıt stale-while-revalidate ile bir kez daha verilebildiği için eski bir
+ * kuyruk gelirse çağıran `fresh` ile tekrarlıyor.
+ */
+export async function getIexBarsSince(
+  symbol: string,
+  range: ChartRange,
+  sinceSec: number,
+  revalidate: number,
+  opts: { fresh?: boolean } = {},
+): Promise<ProviderResult<Bar[]>> {
+  const spec = RANGE_SPECS[range];
+  const result = await alpacaFetch<{ bars?: Record<string, AlpacaBar[]> | AlpacaBar[] }>(
+    "/bars",
+    {
+      symbols: canonicalSymbol(symbol),
+      timeframe: spec.timeframe,
+      start: new Date((sinceSec + 1) * 1000).toISOString(),
+      limit: "500",
+      adjustment: "split",
+      feed: "iex",
+      sort: "asc",
+    },
+    { revalidate, tags: [`bars:${symbol}`], fresh: opts.fresh },
+  );
+  if (!result.ok) return result;
+  const raw = result.data.bars;
+  const list = Array.isArray(raw) ? raw : (raw?.[canonicalSymbol(symbol)] ?? []);
+  const bars: Bar[] = (list ?? [])
+    .map((b) => ({
+      time: Math.floor(new Date(b.t).getTime() / 1000),
+      open: b.o,
+      high: b.h,
+      low: b.l,
+      close: b.c,
+      volume: b.v,
+    }))
+    .filter((bar) => bar.time > sinceSec && Number.isFinite(bar.close) && bar.close > 0);
+  return ok(bars, "alpaca", { fetchedAt: result.fetchedAt });
+}
+
+/** Aralığın bar süresi, saniye — tazelik eşiği için. */
+export function barSeconds(range: ChartRange): number {
+  const tf = RANGE_SPECS[range].timeframe;
+  if (tf === "5Min") return 300;
+  if (tf === "30Min") return 1800;
+  if (tf === "1Day") return 86_400;
+  return 7 * 86_400;
+}
+
+/** Gün içi aralıkta son işlem günü — `getChartBars` kuyruğu ekledikten sonra yeniden süzüyor. */
+export function onlyLastTradingDay(bars: Bar[]): Bar[] {
+  return lastTradingDayOnly(bars);
+}
+
+/**
  * Alpaca'nın tek istekte döndürdüğü en fazla bar sayısı.
  *
  * `limit` sembol BAŞINA değil, YANITIN TAMAMI için geçerli. İstek hâlâ
@@ -716,6 +783,7 @@ export async function getBarsMulti(
   symbols: string[],
   range: ChartRange,
   revalidate: number,
+  opts: { fresh?: boolean } = {},
 ): Promise<ProviderResult<Record<string, Bar[]>>> {
   if (symbols.length === 0) return ok({}, "alpaca");
 
@@ -746,7 +814,7 @@ export async function getBarsMulti(
         feed: BAR_FEED,
         sort: "asc",
       },
-      { revalidate, tags: ["bars", `bars:${range}`] },
+      { revalidate, tags: ["bars", `bars:${range}`], fresh: opts.fresh },
     );
 
     if (!result.ok) {

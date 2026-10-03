@@ -81,12 +81,35 @@ test("likiditesi düşük sembol bayat sayılmaz — ölçü yanıtın yaşı", 
   assert.equal(packCurrent(sessiz, status, 15, now), true);
 });
 
-test("beslemeden seans verisi beklenmeyen anlarda yaş sorulmaz", () => {
-  // Cumartesi: anlatılan seans cuma, elde cuma kapanışı olması doğru olan.
+test("kapalı piyasada son seansın sonundan sonra çekilen paket güncel", () => {
+  // Cumartesi: anlatılan seans cuma; cuma akşam seansı bittikten sonra
+  // çekilmiş paket (son işlem 19:59) doğru olan.
   const cumartesi = edt("2026-09-19", "10:00");
   const status = getMarketStatus(cumartesi, HOLIDAYS);
-  const cumaKapanis = pack(edt("2026-09-18", "16:00"), edt("2026-09-18", "16:30"));
-  assert.equal(packCurrent(cumaKapanis, status, 900, cumartesi), true);
+  const cumaSonu = pack(edt("2026-09-18", "19:59"), edt("2026-09-18", "21:10"));
+  assert.equal(packCurrent(cumaSonu, status, 900, cumartesi), true);
+});
+
+test("kapalı piyasada cuma GÜNDÜZÜNÜN paketi güncel değildir — 3 Ekim hatası", () => {
+  /* Cumartesi açılan sayfa cuma sabahının ön seans fiyatını basıyordu:
+     paket önbellekten (stale-while-revalidate) geliyordu ve bu dal kapalı
+     piyasada her paketi kabul ediyordu. 16:30 paketi de akşam seansını
+     (16:00-20:00) kaçırıyor. */
+  const cumartesi = edt("2026-09-19", "10:00");
+  const status = getMarketStatus(cumartesi, HOLIDAYS);
+  const sabah = pack(edt("2026-09-18", "06:45"), edt("2026-09-18", "07:00"));
+  assert.equal(packCurrent(sabah, status, 900, cumartesi), false);
+  const ogleden = pack(edt("2026-09-18", "16:00"), edt("2026-09-18", "16:30"));
+  assert.equal(packCurrent(ogleden, status, 900, cumartesi), false);
+});
+
+test("ön seansın ilk çeyreğinde bir saatten yeni paket yeter", () => {
+  /* 04:05 ET: beslemeden henüz bugünün verisi beklenmiyor ve bugünün
+     seans sonu ileride — taban "bir saatten yeni". */
+  const now = edt("2026-09-18", "04:05");
+  const status = getMarketStatus(now, HOLIDAYS);
+  assert.equal(packCurrent(pack(edt("2026-09-17", "19:59"), edt("2026-09-18", "03:40")), status, 60, now), true);
+  assert.equal(packCurrent(pack(edt("2026-09-17", "19:59"), edt("2026-09-18", "02:30")), status, 60, now), false);
 });
 
 test("önceki seansın paketi seans içinde güncel değildir", () => {

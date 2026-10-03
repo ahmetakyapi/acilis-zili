@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, type ReactNode } from "react";
-import { ChangePill } from "@/components/ui/primitives";
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { ChangePill, DataStamp, type DataStampLabels } from "@/components/ui/primitives";
 import { RollingFigure } from "@/components/ui/RollingFigure";
 import { cn, directionOf, formatChange, formatPrice } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
@@ -30,16 +30,43 @@ import styles from "./ChartReading.module.css";
  * sınırı".
  */
 
-const Context = createContext(false);
+/** Grafiğin canlı yoklamasından gelen kotasyon (3 Ekim). */
+export type LiveQuote = {
+  price: number | null;
+  change: number | null;
+  changePct: number | null;
+  source: string;
+  fetchedAt: string;
+};
 
+type ReadingContext = { live: LiveQuote | null; setLive: (quote: LiveQuote) => void };
+
+const Context = createContext<ReadingContext | null>(null);
+
+/**
+ * CANLI KOTASYON DA BURADAN (3 Ekim). Grafik seans içinde dakikada bir
+ * tazeleniyor (PriceChart → canlı yoklama) ve başlık fiyatı sunucu
+ * çiziminde kalsaydı ekranda iki farklı "şu an" dururdu: eğrinin ucu
+ * 12:05'i, başlık 12:00'yi (CLAUDE.md, veri dürüstlüğü 3). Grafik yeni
+ * kotasyonu buraya yazıyor, başlık buradan okuyor — fiyat, değişim ve damga
+ * birlikte.
+ */
 export function ChartReadingProvider({ children }: { children: ReactNode }) {
-  return <Context.Provider value>{children}</Context.Provider>;
+  const [live, setLive] = useState<LiveQuote | null>(null);
+  const value = useMemo(() => ({ live, setLive }), [live]);
+  return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 
 /** Grafik hisse sayfasının içinde mi (okuma yüzen etikette). */
 export function useChartReading(): boolean {
-  return useContext(Context);
+  return useContext(Context) !== null;
 }
+
+/** Grafiğin canlı kotasyonu bağlama yazması için; bağlam yoksa no-op. */
+export function usePublishLiveQuote(): (quote: LiveQuote) => void {
+  return useContext(Context)?.setLive ?? noop;
+}
+const noop = () => {};
 
 /**
  * Başlığın fiyat satırı + künye satırı — canlı hâl, sunucudan gelen değerlerle.
@@ -52,18 +79,27 @@ export function HeaderReadout({
   locale,
   session,
   stamp,
+  stampLabels,
   classes,
 }: {
   price: number | null;
   change: number | null;
   changePct: number | null;
   locale: Locale;
+  /** Canlı kotasyon gelince damga istemcide yeniden basılıyor. */
+  stampLabels?: DataStampLabels;
   /** Seans dışı hapı ve önceki kapanış — sunucuda çizilmiş. */
   session?: ReactNode;
   /** Canlı damga — sunucuda çizilmiş. */
   stamp: ReactNode;
   classes: { line: string; price: string; change: string };
 }) {
+  const live = useContext(Context)?.live ?? null;
+  if (live) {
+    price = live.price;
+    change = live.change;
+    changePct = live.changePct;
+  }
   const tone = directionOf(change);
   const formatted = formatPrice(price, locale, { currency: true });
   return (
@@ -97,7 +133,13 @@ export function HeaderReadout({
         </div>
       </div>
       {session}
-      <div className={styles.stampSlot}>{stamp}</div>
+      <div className={styles.stampSlot}>
+        {live && stampLabels ? (
+          <DataStamp labels={stampLabels} source={live.source} at={live.fetchedAt} locale={locale} className="m-0 justify-start" />
+        ) : (
+          stamp
+        )}
+      </div>
     </>
   );
 }

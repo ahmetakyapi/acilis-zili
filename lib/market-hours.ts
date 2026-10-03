@@ -636,14 +636,19 @@ export function candleTtlSeconds(
   now: Date = new Date(),
 ): number {
   const intraday = timeframe === "1D" || timeframe === "1W";
+  /* Gün içi seans içinde 60 saniye (3 Ekim; önceden 300). Sahibinin ölçüsü
+     "en fazla 15 dakika gecikme": SIP zaten 15 dakika geriden geliyor ve
+     300 saniyelik önbellek bunun üstüne beş dakika daha ekliyordu. Barlar
+     sunucuda paylaşımlı önbellekte; istek sayısı trafikle değil bu süreyle
+     artıyor (sembol başına dakikada en fazla bir). */
   const base =
     status.session === "regular"
       ? intraday
-        ? 300
+        ? 60
         : 900
       : status.session === "pre-market" || status.session === "after-hours"
         ? intraday
-          ? 600
+          ? 120
           : 1800
         : 3600;
   return boundedTtl(base, status, now);

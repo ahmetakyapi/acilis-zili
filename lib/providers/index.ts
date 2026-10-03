@@ -5,6 +5,7 @@ import { candlesCache, quotesCache, symbols as symbolsTable } from "../schema";
 import {
   boundedTtl,
   candleTtlSeconds,
+  etDateTimeToUtc,
   etParts,
   expectsSessionData,
   isSessionTrade,
@@ -224,6 +225,8 @@ function newestTrade(quotes: Record<string, Quote>): Date | null {
  * yanında bol bir pay ama iki-üç dakikalık bir gecikmeyi yakalamaya yetiyor.
  */
 const RESPONSE_AGE_SLACK_SECONDS = 60;
+/** Kapalı piyasada paketin en fazla yaşı, son seansın sonu henüz gelmediyse. */
+const CLOSED_FLOOR_MS = 60 * 60 * 1000;
 
 /**
  * Paket ŞU ANI anlatıyor mu — iki soru, iki ölçü.
@@ -263,7 +266,21 @@ export function packCurrent(
   ttl: number,
   now: Date = new Date(),
 ): boolean {
-  if (!expectsSessionData(status, now)) return true;
+  /* KAPALI PİYASADA DA BİR ALT SINIR VAR (3 Ekim). Bu dal "beslemeden seans
+     verisi beklenmiyorsa yaş sorulmaz" diyor ve HER paketi güncel sayıyordu.
+     Cumartesi açılan MU sayfası cuma SABAHININ (06:45 ET) ön seans fiyatını
+     basıyordu: o paket cuma sabahı önbelleğe yazılmış, Next süresi dolmuş
+     kaydı stale-while-revalidate ile bir kez daha vermişti — seyrek açılan
+     her sembolde olabilecek bir şey. Kapalı piyasada doğru paket, son
+     seansın AKŞAM SEANSI BİTTİKTEN sonra (20:00 ET + 15 dakikalık besleme
+     gecikmesi) çekilmiş olanı; daha erkense bir kez önbelleksiz. Taban
+     "bir saatten yeni" — ön seansın ilk çeyreği ve yarım günler gibi
+     sınırın henüz gelmediği anlarda istek yağmuru olmasın. */
+  if (!expectsSessionData(status, now)) {
+    const sessionEnd = etDateTimeToUtc(status.sessionDate, "20:15").getTime();
+    const floor = Math.min(sessionEnd, now.getTime() - CLOSED_FLOOR_MS);
+    return pack.fetchedAt.getTime() >= floor;
+  }
   if (!isSessionTrade(newestTrade(pack.data), status)) return false;
   const age = now.getTime() - pack.fetchedAt.getTime();
   return age <= (ttl + RESPONSE_AGE_SLACK_SECONDS) * 1000;
@@ -730,6 +747,18 @@ export async function getChartBarsMulti(
   const primary = await alpaca.getBarsMulti(unique, range, ttl);
   const out: Record<string, Bar[]> = primary.ok ? { ...primary.data } : {};
 
+  /* Tek sembollük yolla aynı tazelik kuralı (`barsCurrent`): önbellekten
+     eski gelen semboller bir kez önbelleksiz, yalnızca onlar. */
+  if (primary.ok) {
+    const stale = unique.filter(
+      (symbol) => out[symbol] && !barsCurrent(out[symbol], primary.fetchedAt, range, status, ttl),
+    );
+    if (stale.length > 0) {
+      const retry = await alpaca.getBarsMulti(stale, range, ttl, { fresh: true });
+      if (retry.ok) Object.assign(out, retry.data);
+    }
+  }
+
   if (primary.ok && Object.keys(primary.data).length > 0) {
     await persistBarsMulti(range, primary.data);
   }
@@ -760,18 +789,122 @@ export async function getChartBarsMulti(
   return out;
 }
 
+/** SIP'in 15 dakikalık gecikmesi + bar süresi + bu pay kadar geriden biten
+ *  seri seans içinde ESKİ sayılıyor (gecikmeli tape bile bu kadar geride
+ *  kalmaz). Üç dakika: Alpaca'nın barı kapatıp yayımlama gecikmesi. */
+const BAR_SLACK_SECONDS = 180;
+const SIP_DELAY_SECONDS = 15 * 60;
+
+/**
+ * Bar serisi ŞU ANI anlatıyor mu? (3 Ekim) — kotasyondaki `packCurrent`in
+ * barlardaki karşılığı.
+ *
+ * Hisse sayfası grafiği bazen saatler önceki seriyi çiziyordu: barlar
+ * Next'in veri önbelleğinden `revalidate` ile geliyor ve süresi dolmuş kayıt
+ * stale-while-revalidate ile bir kez DAHA veriliyor — günde birkaç kez açılan
+ * bir sembolde o kayıt sabahtan kalma olabiliyor. İki ölçü:
+ *
+ *  - Beslemeden seans verisi bekleniyorsa (`expectsSessionData`): yanıt
+ *    TTL + payından eski olamaz (ölçü sağlayıcının `Date` başlığı, önbellek
+ *    isabetinde de ilk çekimin anı). Gün içi aralıklarda ayrıca son barın
+ *    başlangıcı "şimdi − 15 dk gecikme − bar süresi − pay"dan yeni olmalı.
+ *  - Beklenmiyorsa (gece, hafta sonu): yanıt son seansın akşam seansı
+ *    bittikten sonra (20:15 ET) çekilmiş olmalı; sınır henüz gelmediyse bir
+ *    saatten yeni olması yeter.
+ *
+ * Güncel değilse çağıran bir kez önbelleksiz tekrarlıyor. Dışa açık YALNIZCA
+ * test için (tests/chart-freshness.test.ts).
+ */
+export function barsCurrent(
+  bars: readonly Bar[],
+  fetchedAt: Date,
+  range: ChartRange,
+  status: MarketStatus,
+  ttl: number,
+  now: Date = new Date(),
+): boolean {
+  if (!expectsSessionData(status, now)) {
+    const sessionEnd = etDateTimeToUtc(status.sessionDate, "20:15").getTime();
+    return fetchedAt.getTime() >= Math.min(sessionEnd, now.getTime() - CLOSED_FLOOR_MS);
+  }
+  if (now.getTime() - fetchedAt.getTime() > (ttl + RESPONSE_AGE_SLACK_SECONDS) * 1000) return false;
+  if (range !== "1D" && range !== "1W") return true;
+  const last = bars[bars.length - 1];
+  if (!last) return false;
+  const limit = now.getTime() / 1000 - SIP_DELAY_SECONDS - alpaca.barSeconds(range) - BAR_SLACK_SECONDS;
+  return last.time >= limit;
+}
+
+/**
+ * SIP serisinin bittiği yerden sonrasını gerçek zamanlı IEX barlarıyla
+ * tamamlar. Yalnızca SON SIP barından SONRAKİ barlar ekleniyor (aynı kova
+ * iki kez çizilmiyor), gelecekte zaman damgası taşıyan bar atılıyor. 1G'de
+ * sonuç yeniden son işlem gününe süzülüyor: ön seansın başında SIP serisi
+ * hâlâ dünü taşırken IEX bugünün ilk barlarını verirse grafik yalnızca bugünü
+ * çiziyor, iki günü yan yana değil.
+ *
+ * Dışa açık YALNIZCA test için.
+ */
+export function spliceRealtimeTail(
+  sip: readonly Bar[],
+  iex: readonly Bar[],
+  range: ChartRange,
+  now: Date = new Date(),
+): { bars: Bar[]; added: number } {
+  const lastSip = sip[sip.length - 1]?.time ?? 0;
+  const nowSec = now.getTime() / 1000;
+  const tail = iex.filter((bar) => bar.time > lastSip && bar.time <= nowSec);
+  if (tail.length === 0) return { bars: [...sip], added: 0 };
+  const merged = [...sip, ...tail];
+  const bars = range === "1D" ? alpaca.onlyLastTradingDay(merged) : merged;
+  return { bars, added: tail.length };
+}
+
+/** Kuyruğun TTL'i: seans içinde 20 saniye — başlıktaki melez fiyatın ritmi. */
+const TAIL_TTL_SECONDS = 20;
+
 export async function getChartBars(
   symbol: string,
   range: ChartRange,
   status: MarketStatus,
 ): Promise<ProviderResult<Bar[]>> {
   const ttl = candleTtlSeconds(range, status);
-  const primary = await alpaca.getBars(symbol, range, ttl);
+  let primary = await alpaca.getBars(symbol, range, ttl);
+
+  /* Önbellekten eski seri geldiyse bir kez önbelleksiz (gerekçe
+     `barsCurrent`). */
+  if (primary.ok && !barsCurrent(primary.data, primary.fetchedAt, range, status, ttl)) {
+    const retry = await alpaca.getBars(symbol, range, ttl, { fresh: true });
+    if (retry.ok) primary = retry;
+  }
 
   if (primary.ok) {
     // Beklenerek çağrılır: tek gidiş-dönüş, ve `void` bırakıldığında
     // sunucusuz fonksiyon donunca yazma yarıda kesilebiliyordu.
+    // Önbelleğe YALNIZCA SIP serisi yazılıyor; gerçek zamanlı kuyruk her
+    // istekte yeniden ekleniyor, saklanan seri tek kaynaklı kalıyor.
     await persistBars(symbol, range, primary.data);
+
+    /* GERÇEK ZAMANLI KUYRUK — seans açıkken gün içi aralıklarda. Kuyruk
+       alınamazsa SIP serisi tek başına çiziliyor (15 dakika geriden). */
+    if ((range === "1D" || range === "1W") && status.session !== "closed" && expectsSessionData(status)) {
+      const lastSip = primary.data[primary.data.length - 1]?.time ?? 0;
+      let tail = await alpaca.getIexBarsSince(symbol, range, lastSip, TAIL_TTL_SECONDS);
+      /* Kuyruğun kendisi de önbellekten eski gelebilir: son barı beş
+         dakikadan eskiyse (ve SIP ucundan sonra bir şey vermediyse) bir kez
+         önbelleksiz. */
+      const tailLast = tail.ok ? tail.data[tail.data.length - 1]?.time ?? 0 : 0;
+      if (tail.ok && Date.now() / 1000 - Math.max(tailLast, lastSip) > SIP_DELAY_SECONDS) {
+        const retry = await alpaca.getIexBarsSince(symbol, range, lastSip, TAIL_TTL_SECONDS, { fresh: true });
+        if (retry.ok) tail = retry;
+      }
+      if (tail.ok) {
+        const spliced = spliceRealtimeTail(primary.data, tail.data, range);
+        if (spliced.added > 0) {
+          return ok(spliced.bars, "alpaca-mixed", { fetchedAt: new Date() });
+        }
+      }
+    }
     return primary;
   }
 
