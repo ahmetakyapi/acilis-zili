@@ -60,6 +60,11 @@ export const TECHNICAL_SYMBOLS = [
   "INTC",
   "SPCX",
   "TSLA",
+  /* AAPL 4 Ekim 2026'da, sahibinin isteğiyle eklendi; mega-cap kümesine,
+     GOOGL ile META'nın yanına. İlk yayına kadar panoda "Bekliyor" görünür
+     (`pendingSymbols`); rutin listeyi bağlam ucundan okuduğu için prompt
+     değişmiyor. */
+  "AAPL",
   "GOOGL",
   "META",
   "PLTR",
