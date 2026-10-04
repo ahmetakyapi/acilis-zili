@@ -121,9 +121,17 @@ export async function PortfolioTechnical({
                 t={t}
               />
 
-              {/* Kişisel satır — maliyet ve uzaklıklar. Ölçüler aynı hatta
-                  biter (alt ızgara), birimler sayıdan kopmaz. */}
+              {/* Kişisel satır — fiyat, maliyet ve uzaklıklar. Ölçüler aynı
+                  hatta biter (alt ızgara), birimler sayıdan kopmaz.
+                  Şu anki fiyat 4 Ekim'de eklendi (sahibinin isteği): uzaklıklar
+                  ona göre hesaplanıyordu ama sayının kendisi kartta yoktu,
+                  okuyucu "%5,5 neyin %5,5'i" diye tabloya dönüyordu. Kaynak
+                  pozisyon tablosunun fiyatı — aynı ekranda tek fiyat. */}
               <dl className={styles.techMine}>
+                <div>
+                  <dt>{P.price}</dt>
+                  <dd className="numeral">{price !== null ? money(price) : "—"}</dd>
+                </div>
                 <div>
                   <dt>{P.avgCost}</dt>
                   <dd className="numeral">{money(holding.avgCost)}</dd>

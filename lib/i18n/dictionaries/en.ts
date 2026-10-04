@@ -1961,6 +1961,7 @@ const en: typeof tr = {
     meta: "{n} Positions in Technical Analysis",
     metaOne: "1 Position in Technical Analysis",
     intro: "Entry zone, sell targets and stop for the holdings in your portfolio that get a daily technical analysis.",
+    price: "Current Price",
     avgCost: "Your Cost",
     toTarget: "To First Target",
     toSellLevel: "To First Sell Level",

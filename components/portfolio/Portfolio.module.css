@@ -1059,6 +1059,7 @@
 }
 
 .techCard {
+  container: tech-card / inline-size;
   display: flex;
   min-width: 0;
   flex-direction: column;
@@ -1096,11 +1097,21 @@
 /* Üç ölçü aynı hatta: alt ızgara, etiket üstte, sayı altta. */
 .techMine {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  /* Dört ölçü (fiyat, maliyet, hedefe, stopa). Kart dar ise 2×2: telefonda
+     kart ~330 piksel ve dört sütunda "1.419,80 $" 76 piksellik hücreye
+     sığmıyordu. Eşik kartın KENDİ genişliği (kap sorgusu), ekranın değil:
+     900 üstünde kartlar ikişer dizildiği için ekran genişliği yanıltır. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 8px;
   margin: 0;
   padding-top: 10px;
   border-top: 1px solid var(--line);
+}
+
+@container tech-card (min-width: 400px) {
+  .techMine {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .techMine > div {

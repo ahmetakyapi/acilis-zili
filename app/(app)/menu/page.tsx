@@ -84,6 +84,10 @@ export default async function MenuPage() {
       entries: [
         { href: "/piyasalar", icon: TrendUp, title: t.nav.markets, hint: t.menu.hintMarkets },
         { href: "/teknik", icon: ChartLineUp, title: t.technical.title, hint: t.menu.hintTechnical },
+        /* Portföy Teknik Analiz'in hemen ardında (4 Ekim): en alttaki Hesap
+           grubundaydı ve okuyucu onu yalnız profil menüsünde buluyordu.
+           Teknik planı da orada okuduğu için ikisi yan yana. */
+        { href: "/portfoy", icon: Briefcase, title: t.lira.portfolio.title, hint: t.menu.hintPortfolio },
         { href: "/sirketler", icon: Buildings, title: t.nav.companies, hint: t.menu.hintCompanies },
         { href: "/makro", icon: Percent, title: t.nav.macro, hint: t.menu.hintMacro },
         { href: "/bilancolar", icon: FileText, title: t.nav.earnings, hint: t.menu.hintEarnings },
@@ -111,7 +115,6 @@ export default async function MenuPage() {
       title: t.menu.groupAccount,
       entries: [
         { href: "/favoriler", icon: Heart, title: t.nav.watchlist, hint: t.menu.hintWatchlist },
-        { href: "/portfoy", icon: Briefcase, title: t.lira.portfolio.title, hint: t.menu.hintPortfolio },
         { href: "/ayarlar", icon: Gear, title: t.nav.settings, hint: t.menu.hintSettings },
         { href: "/kvkk", icon: ShieldCheck, title: t.footer.privacy, hint: t.menu.hintPrivacy },
       ],

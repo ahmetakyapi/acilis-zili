@@ -1,5 +1,6 @@
 import {
   Bell,
+  Briefcase,
   ChartBar,
   BookOpen,
   Buildings,
@@ -165,6 +166,21 @@ export const NAV_ITEMS: NavItem[] = [
        ekranı ve aramadan da açılıyor; Temalar (5) her gün bakılan ekran. */
     strip: { rank: 6 },
     hint: (t) => t.menu.hintCompanies,
+  },
+  {
+    /* PORTFÖY "DAHA FAZLA"DA, veri grubunun başında (4 Ekim, sahibinin
+       isteği: "yalnız profil kısmında görünmesin"). Favoriler'in hesap
+       panelinde kalma gerekçesi (misafire duvar gösteren sekme) burada da
+       geçerli, ama portföy teknik planla birlikte her gün bakılan bir ekran
+       oldu ve okuyucu onu hesap menüsünde aramıyordu. Misafir tıklarsa
+       giriş sayfası `devam=/portfoy` ile geri getiriyor. Hesap panelindeki
+       satır da duruyor. */
+    href: "/portfoy",
+    label: (t) => t.lira.portfolio.title,
+    icon: Briefcase,
+    inBottomBar: false,
+    more: "data",
+    hint: (t) => t.menu.hintPortfolio,
   },
   {
     href: "/makro",
