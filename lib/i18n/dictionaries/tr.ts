@@ -2436,6 +2436,8 @@ const tr = {
     metaOne: "1 Pozisyon Teknik Analizde",
     intro: "Portföyündeki hisselerden günlük teknik analizi yapılanların alım bölgesi, satış hedefleri ve stop seviyesi.",
     price: "Şu Anki Fiyat",
+    pnlUp: "{pct} Kârda",
+    pnlDown: "{pct} Zararda",
     avgCost: "Maliyetin",
     toTarget: "İlk Hedefe",
     toSellLevel: "İlk Satış Seviyesine",

@@ -1992,6 +1992,8 @@ const en: typeof tr = {
     metaOne: "1 Position in Technical Analysis",
     intro: "Entry zone, sell targets and stop for the holdings in your portfolio that get a daily technical analysis.",
     price: "Current Price",
+    pnlUp: "Up {pct}",
+    pnlDown: "Down {pct}",
     avgCost: "Your Cost",
     toTarget: "To First Target",
     toSellLevel: "To First Sell Level",

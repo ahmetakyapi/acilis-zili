@@ -8,7 +8,7 @@ import { verdictLabel, verdictOf, verdictPillClass } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { planPosition, slotLabel, stanceChangeLabel, technicalHref } from "@/lib/technical";
 import { getTechnicalBoard } from "@/lib/technical-data";
-import { cn, formatEtDateCompact, formatPercent, formatPrice } from "@/lib/utils";
+import { cn, formatEtDateCompact, formatPercent, formatPercentPlain, formatPrice } from "@/lib/utils";
 import styles from "./Portfolio.module.css";
 
 export type TechnicalHolding = {
@@ -85,6 +85,7 @@ export async function PortfolioTechnical({
           const sorted = [...sellLevels].sort((a, b) => a - b);
           const nextUp = price !== null ? sorted.find((level) => level > price) : undefined;
           const toTarget = price !== null && nextUp !== undefined ? ((nextUp - price) / price) * 100 : null;
+          const pnl = price !== null && holding.avgCost > 0 ? ((price - holding.avgCost) / holding.avgCost) * 100 : null;
           const toStop = price !== null && row.stop !== null && price >= row.stop ? ((row.stop - price) / price) * 100 : null;
 
           return (
@@ -131,6 +132,15 @@ export async function PortfolioTechnical({
                 <div>
                   <dt>{P.price}</dt>
                   <dd className="numeral">{price !== null ? money(price) : "—"}</dd>
+                  {/* KÂR/ZARAR YÜZDESİ fiyatın hemen altında (4 Ekim, sahibinin
+                      isteği): fiyat ile maliyet yan yana duruyordu ama
+                      aradaki farkı okuyucu kafadan hesaplıyordu. Aynı fiyat,
+                      aynı maliyet; renk yalnızca işaretten. */}
+                  {pnl !== null && (
+                    <dd className={cn("numeral", styles.techPnl)} data-tone={pnl > 0 ? "up" : pnl < 0 ? "down" : undefined}>
+                      {(pnl >= 0 ? P.pnlUp : P.pnlDown).replace("{pct}", formatPercentPlain(pnl, locale, 1))}
+                    </dd>
+                  )}
                 </div>
                 <div>
                   <dt>{P.avgCost}</dt>
