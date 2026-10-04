@@ -3,6 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
 import type { MarketStatus } from "@/lib/market-hours";
+import { SECTOR_FUNDS } from "@/db/seed/symbols";
 
 /**
  * Piyasalar ekranının fon panoları — sektörler ve emtia — ile Piyasa
@@ -28,24 +29,11 @@ type EtfEntry = {
  * Fonlar sektörün VEKİLİ, kendisi değil: her biri sektördeki S&P 500
  * şirketlerini piyasa değeriyle tutuyor ve tek şirket ağırlığına tavan
  * uyguluyor (XLK'da iki devin payı kırpılıyor). Panel künyesi bunu yazar.
- * Adlar /sirketler şeridinin Türkçesiyle aynı (lib/sectors.ts).
+ * Liste ve adlar fon künyesiyle TEK kaynakta: db/seed/symbols.ts →
+ * `SECTOR_FUNDS` (sektör kartı fon sayfasına açılıyor, ikisi aynı adı
+ * taşımalı).
  */
-export const SECTOR_ETFS: readonly EtfEntry[] = [
-  { symbol: "XLK", nameTr: "Teknoloji", nameEn: "Technology" },
-  { symbol: "XLF", nameTr: "Finans", nameEn: "Financials" },
-  { symbol: "XLV", nameTr: "Sağlık", nameEn: "Health Care" },
-  /* "Tüketim" hemen yanındaki "Temel Tüketim"le karışıyordu (28 Eylül
-     denetimi); şirket sayfası aynı GICS sektörüne zaten bu adı veriyor
-     (lib/sectors.ts → SECTOR_TR). */
-  { symbol: "XLY", nameTr: "İsteğe Bağlı Tüketim", nameEn: "Consumer Discretionary" },
-  { symbol: "XLP", nameTr: "Temel Tüketim", nameEn: "Consumer Staples" },
-  { symbol: "XLE", nameTr: "Enerji", nameEn: "Energy" },
-  { symbol: "XLI", nameTr: "Sanayi", nameEn: "Industrials" },
-  { symbol: "XLB", nameTr: "Hammadde", nameEn: "Materials" },
-  { symbol: "XLU", nameTr: "Kamu Hizmetleri", nameEn: "Utilities" },
-  { symbol: "XLRE", nameTr: "Gayrimenkul", nameEn: "Real Estate" },
-  { symbol: "XLC", nameTr: "İletişim Hizmetleri", nameEn: "Communication Services" },
-];
+export const SECTOR_ETFS: readonly EtfEntry[] = SECTOR_FUNDS;
 
 /**
  * Emtia — ETF VEKİLLERİYLE (28 Eylül).

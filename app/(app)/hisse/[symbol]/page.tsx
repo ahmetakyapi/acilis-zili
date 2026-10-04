@@ -38,6 +38,8 @@ import { ChartSection } from "./_panels/ChartSection";
 import { UpcomingEarnings } from "./_panels/UpcomingEarnings";
 import { MovingAverages } from "./_panels/MovingAverages";
 import { FundCard } from "./_panels/FundCard";
+import { FundHoldings } from "./_panels/FundHoldings";
+import { HOLDINGS_SOURCES } from "@/lib/etf-holdings-data";
 import { ProfileCard } from "./_panels/ProfileCard";
 import { MetricsCard } from "./_panels/MetricsCard";
 import { AnalystCard } from "./_panels/AnalystCard";
@@ -250,6 +252,15 @@ export default async function StockPage(
             </Panel>
           </div>
         </div>
+
+        {/* FONUN İÇİNDEKİLER — üst bloğun altında, tam genişlik (4 Ekim).
+            Kaynağı tanımlı olmayan fonda (ülke fonları, IWM) iskelet de
+            basılmıyor: boş bir yer ayrılıp sonra kapanmasın. */}
+        {HOLDINGS_SOURCES[symbol] && (
+          <Suspense fallback={<Skeleton className="h-[38rem] rounded-xl" />}>
+            <FundHoldings symbol={symbol} locale={locale} t={t} />
+          </Suspense>
+        )}
       </MotionExperience>
     );
   }

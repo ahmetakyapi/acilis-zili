@@ -43,6 +43,65 @@ export const SYMBOL_DESCRIPTIONS: Record<string, SymbolDescription> = {
     en: "ETF tracking the Russell 2000 — about 2,000 US small-cap companies, widely read as a pulse of the domestic economy.",
   },
 
+  // ---- Sektör fonları (SPDR) — 4 Ekim 2026 ----
+  /* Şirket adı SAYILMIYOR: fonun içeriği her gün değişiyor ve en büyük
+     kalemler sayfadaki "Fonun İçindekiler" panelinde, ihraççının günlük
+     dosyasından geliyor. Metin sektörün ne olduğunu anlatıyor. */
+  XLK: {
+    tr: "S&P 500'ün teknoloji sektörünü tutan SPDR fonu — yazılım, donanım, yarı iletken ve BT hizmetleri. Piyasa değeriyle ağırlıklandırılır ama tek şirkete tavan uygulanır; birkaç dev şirket yine de fonun büyük kısmını oluşturur.",
+    en: "SPDR fund holding the S&P 500's technology sector — software, hardware, semiconductors and IT services. It is weighted by market value with a cap on any single company; a few giants still make up a large part of the fund.",
+  },
+  XLF: {
+    tr: "S&P 500'ün finans sektörünü tutan SPDR fonu — bankalar, sigorta şirketleri, varlık yöneticileri, borsalar ve ödeme şirketleri. Faiz ortamına ve kredi döngüsüne duyarlıdır.",
+    en: "SPDR fund holding the S&P 500's financials sector — banks, insurers, asset managers, exchanges and payment companies. Sensitive to interest rates and the credit cycle.",
+  },
+  XLV: {
+    tr: "S&P 500'ün sağlık sektörünü tutan SPDR fonu — ilaç, biyoteknoloji, tıbbi cihaz, sağlık sigortası ve hastane işletmeleri. Ekonomik döngüye görece az duyarlı, savunmacı bir sektör sayılır.",
+    en: "SPDR fund holding the S&P 500's health care sector — pharmaceuticals, biotech, medical devices, health insurers and hospital operators. Usually seen as a defensive sector, less tied to the economic cycle.",
+  },
+  XLY: {
+    tr: "S&P 500'ün isteğe bağlı tüketim sektörünü tutan SPDR fonu — e-ticaret, otomotiv, perakende, restoran, otel ve eğlence. Hane halkının harcama iştahına bağlı olduğu için ekonomik döngüye duyarlıdır.",
+    en: "SPDR fund holding the S&P 500's consumer discretionary sector — e-commerce, autos, retail, restaurants, hotels and leisure. Tied to how freely households spend, so it is sensitive to the economic cycle.",
+  },
+  XLP: {
+    tr: "S&P 500'ün temel tüketim sektörünü tutan SPDR fonu — gıda, içecek, ev ve kişisel bakım ürünleri, market zincirleri. Talep ekonomik durgunlukta da sürdüğü için savunmacı sayılır.",
+    en: "SPDR fund holding the S&P 500's consumer staples sector — food, beverages, household and personal care products, and grocery chains. Demand holds up in downturns, so it is seen as defensive.",
+  },
+  XLE: {
+    tr: "S&P 500'ün enerji sektörünü tutan SPDR fonu — petrol ve doğal gaz üreticileri, rafineriler, boru hattı ve sondaj hizmetleri. Fiyatı büyük ölçüde petrol ve gaz fiyatlarıyla birlikte hareket eder.",
+    en: "SPDR fund holding the S&P 500's energy sector — oil and gas producers, refiners, pipelines and drilling services. Its price moves largely with oil and gas prices.",
+  },
+  XLI: {
+    tr: "S&P 500'ün sanayi sektörünü tutan SPDR fonu — havacılık ve savunma, makine, demiryolu ve lojistik, inşaat ve iş hizmetleri. Yatırım harcamaları ve küresel ticaretle birlikte hareket eder.",
+    en: "SPDR fund holding the S&P 500's industrials sector — aerospace and defense, machinery, railroads and logistics, construction and business services. Moves with capital spending and global trade.",
+  },
+  XLB: {
+    tr: "S&P 500'ün hammadde sektörünü tutan SPDR fonu — kimya, endüstriyel gaz, boya, metal ve madencilik, ambalaj ve inşaat malzemeleri. Emtia fiyatlarına ve sanayi talebine duyarlıdır.",
+    en: "SPDR fund holding the S&P 500's materials sector — chemicals, industrial gases, coatings, metals and mining, packaging and construction materials. Sensitive to commodity prices and industrial demand.",
+  },
+  XLU: {
+    tr: "S&P 500'ün kamu hizmetleri sektörünü tutan SPDR fonu — elektrik, doğal gaz ve su şirketleri. Düzenli temettüsüyle bilinir; faiz oranlarına duyarlıdır ve son dönemde veri merkezlerinin elektrik talebiyle de anılır.",
+    en: "SPDR fund holding the S&P 500's utilities sector — electric, gas and water companies. Known for steady dividends, sensitive to interest rates and lately also tied to data-center power demand.",
+  },
+  XLRE: {
+    tr: "S&P 500'ün gayrimenkul sektörünü tutan SPDR fonu — gayrimenkul yatırım ortaklıkları (REIT): lojistik depoları, iletişim kuleleri, veri merkezleri, sağlık ve konut mülkleri. Faiz oranlarına çok duyarlıdır.",
+    en: "SPDR fund holding the S&P 500's real estate sector — real estate investment trusts (REITs): logistics warehouses, cell towers, data centers, health care and residential property. Highly sensitive to interest rates.",
+  },
+  XLC: {
+    tr: "S&P 500'ün iletişim hizmetleri sektörünü tutan SPDR fonu — internet platformları, sosyal medya, eğlence ve yayıncılık, telekom şirketleri. İnternet devleri fonun büyük kısmını oluşturur.",
+    en: "SPDR fund holding the S&P 500's communication services sector — internet platforms, social media, entertainment and media, and telecom carriers. Internet giants make up a large part of the fund.",
+  },
+
+  // ---- Temaya odaklı fonlar — 4 Ekim 2026 ----
+  DRAM: {
+    tr: "Bellek çipi şirketlerine odaklanan ilk ETF — DRAM, yapay zekâ sunucularında kullanılan yüksek bant genişlikli bellek (HBM), NAND flash ve SSD üreticilerini tutar. Roundhill tarafından Nisan 2026'da çıkarıldı ve aktif yönetilir; bazı pozisyonlarını toplam getiri swap'ıyla tutar, bu yüzden hisse ağırlıklarının toplamı %100'ü geçebilir.",
+    en: "The first ETF focused on memory chip companies — it holds makers of DRAM, the high-bandwidth memory (HBM) used in AI servers, NAND flash and SSDs. Launched by Roundhill in April 2026 and actively managed; some positions are held through total return swaps, so the stock weights can add up to more than 100%.",
+  },
+  NASA: {
+    tr: "Uzay ekonomisine odaklanan aktif yönetilen ETF — roket ve uydu şirketleri, uydu iletişimi, uzay altyapısı ve bileşen üreticileri. Tema ETFs tarafından Mart 2026'da çıkarıldı; halka arz öncesinde SpaceX'e özel bir yapı üzerinden pay alan ilk uzay fonlarından biridir.",
+    en: "An actively managed ETF focused on the space economy — rocket and satellite companies, satellite communications, space infrastructure and component makers. Launched by Tema ETFs in March 2026; one of the first space funds to take a stake in SpaceX through a special-purpose vehicle before its IPO.",
+  },
+
   // ---- Ülke fonları (dünya piyasaları) ----
   EWJ: {
     tr: "Japonya borsasının büyük ve orta ölçekli şirketlerini tutan iShares MSCI Japonya fonu — Toyota, Sony, Mitsubishi UFJ, Hitachi ve Keyence gibi isimler en ağır kalemler. Nikkei 225 ve TOPIX ile aynı piyasayı temsil eder. ABD borsasında dolar cinsinden işlem gördüğü için fiyatına hem Tokyo'daki hisse hareketi hem de yen/dolar kuru yansır.",

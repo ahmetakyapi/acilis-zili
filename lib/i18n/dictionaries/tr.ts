@@ -1243,6 +1243,11 @@ const tr = {
       "Bu bir ABD borsa yatırım fonudur; ilgili ülkenin endeksinin kendisi değildir. Dolar cinsinden ve ABD seansında işlem görür. Yerel endeksle aynı yönü gösterir, ama kur farkı ve seans kayması yüzünden yüzdeler birebir tutmaz.",
     fundNoteIndex:
       "Bu bir borsa yatırım fonudur; endeksin kendisi değil, onu izleyen üründür. Fiyatı endeks seviyesinin bir oranıdır, günlük değişimi ise endeksle neredeyse birebir aynıdır.",
+    fundKindActive: "Aktif Yönetilen ETF",
+    fundNoteSector:
+      "Bu fon sektörün kendisi değil, S&P 500'ün o sektördeki şirketlerini tutan bir sepettir. Şirketler piyasa değeriyle ağırlıklandırılır, ama tek şirketin payına tavan konur; bu yüzden ağırlıklar sektördeki gerçek paylardan biraz farklıdır.",
+    fundNoteThematic:
+      "Bu fon bir endeksi izlemez; neyi ne kadar tutacağına fon yöneticisi karar verir ve içerik sık değişebilir. Bazı pozisyonlar swap gibi türev ürünlerle tutulabilir.",
     compliance: "Katılım Taraması",
     compliancePass: "Ön Elemeyi Geçiyor",
     complianceReview: "İnceleme Gerekir",
@@ -2398,6 +2403,27 @@ const tr = {
 
   /* Analist kartındaki ortalama hedef fiyat şeridi (30 Eylül). Kaynak en son
      bilanço analizi; künye hangi analizden ve hangi tarihte olduğunu söyler. */
+  /* ETF detayında fonun içindekiler (4 Ekim). */
+  fundHoldings: {
+    title: "Fonun İçindekiler",
+    meta: "{count} Hisse · İlk 10'un Payı {share}",
+    intro: "Fonun en büyük pozisyonları ve fon içindeki ağırlıkları.",
+    rank: "Sıra",
+    company: "Şirket",
+    weight: "Ağırlık",
+    showRest: "{count} Pozisyon Daha",
+    error: "Fonun içeriği şu an alınamadı.",
+    sourceSsga: "State Street Günlük Dosyası",
+    sourceRoundhill: "Roundhill Günlük Dosyası",
+    sourceTema: "Tema Günlük Dosyası",
+    sourceNport: "SEC N-PORT Beyanı",
+    asOf: "{date} İtibarıyla",
+    noteDaily: "Ağırlıklar fonu çıkaran kurumun günlük dosyasından; nakit ve teminat kalemleri listede yok.",
+    noteNport:
+      "Invesco günlük dosyasını otomatik erişime açmadığı için kaynak, fonun SEC'e verdiği çeyreklik portföy beyanı. Beyan çeyrek sonundan yaklaşık iki ay sonra yayımlanıyor; ağırlıklar o tarihteki hâli gösteriyor, bugünkü değil.",
+    noteSwap:
+      "Swap ile tutulan pozisyonlar dayanak hisseyle birleştirildi (fonun kendi hesabı da böyle). Swap'lar kaldıraç gibi çalıştığı için hisse ağırlıklarının toplamı %100'ü geçebilir.",
+  },
   /* Portföyde teknik analizi yapılan pozisyonların planı (2 Ekim). */
   portfolioTechnical: {
     title: "Teknik Plan",

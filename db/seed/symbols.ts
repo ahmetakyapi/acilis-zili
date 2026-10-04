@@ -246,9 +246,64 @@ export type FundMeta = {
   flag: string;
   /** Fonu çıkaran kurum. */
   issuer: string;
-  /** ABD endeks fonu mu, yabancı piyasa fonu mu — künye notu buna göre. */
-  kind: "us-index" | "country";
+  /**
+   * Fonun türü — künye notu buna göre. "sector": S&P 500'ün bir GICS
+   * sektörü (SPDR). "thematic": aktif yönetilen, bir temaya odaklı fon
+   * (DRAM, NASA); endeks izlemiyor.
+   */
+  kind: "us-index" | "country" | "sector" | "thematic";
 };
+
+/**
+ * SPDR sektör fonları — S&P 500'ün on bir GICS sektörü. TEK LİSTE:
+ * Piyasalar'ın sektör panosu (lib/market-boards.ts → `SECTOR_ETFS`) ve
+ * fon künyesi buradan okuyor. 4 Ekim'e kadar liste yalnızca panodaydı;
+ * sektör kartına basan okuyucu /hisse/XLK'da künyesiz, boş bir şirket
+ * sayfasına düşüyordu ("detayında bilgi yazmıyor").
+ * Adlar /sirketler şeridinin Türkçesiyle aynı (lib/sectors.ts).
+ */
+export const SECTOR_FUNDS: readonly { symbol: string; nameTr: string; nameEn: string; fundName: string }[] = [
+  { symbol: "XLK", nameTr: "Teknoloji", nameEn: "Technology", fundName: "Technology Select Sector SPDR Fund" },
+  { symbol: "XLF", nameTr: "Finans", nameEn: "Financials", fundName: "Financial Select Sector SPDR Fund" },
+  { symbol: "XLV", nameTr: "Sağlık", nameEn: "Health Care", fundName: "Health Care Select Sector SPDR Fund" },
+  /* "Tüketim" hemen yanındaki "Temel Tüketim"le karışıyordu (28 Eylül
+     denetimi); şirket sayfası aynı GICS sektörüne zaten bu adı veriyor
+     (lib/sectors.ts → SECTOR_TR). */
+  { symbol: "XLY", nameTr: "İsteğe Bağlı Tüketim", nameEn: "Consumer Discretionary", fundName: "Consumer Discretionary Select Sector SPDR Fund" },
+  { symbol: "XLP", nameTr: "Temel Tüketim", nameEn: "Consumer Staples", fundName: "Consumer Staples Select Sector SPDR Fund" },
+  { symbol: "XLE", nameTr: "Enerji", nameEn: "Energy", fundName: "Energy Select Sector SPDR Fund" },
+  { symbol: "XLI", nameTr: "Sanayi", nameEn: "Industrials", fundName: "Industrial Select Sector SPDR Fund" },
+  { symbol: "XLB", nameTr: "Hammadde", nameEn: "Materials", fundName: "Materials Select Sector SPDR Fund" },
+  { symbol: "XLU", nameTr: "Kamu Hizmetleri", nameEn: "Utilities", fundName: "Utilities Select Sector SPDR Fund" },
+  { symbol: "XLRE", nameTr: "Gayrimenkul", nameEn: "Real Estate", fundName: "Real Estate Select Sector SPDR Fund" },
+  { symbol: "XLC", nameTr: "İletişim Hizmetleri", nameEn: "Communication Services", fundName: "Communication Services Select Sector SPDR Fund" },
+];
+
+/** Aktif, temaya odaklı fonlar (4 Ekim 2026, sahibinin isteği). */
+const THEMATIC_FUNDS: FundMeta[] = [
+  {
+    symbol: "DRAM",
+    name: "Roundhill Memory ETF",
+    labelTr: "Bellek Çipleri",
+    labelEn: "Memory Chips",
+    tracksTr: "Küresel bellek üreticileri (DRAM, HBM, NAND) · aktif yönetim",
+    tracksEn: "Global memory makers (DRAM, HBM, NAND) · actively managed",
+    flag: "🌐",
+    issuer: "Roundhill Investments",
+    kind: "thematic",
+  },
+  {
+    symbol: "NASA",
+    name: "Tema Space Innovators ETF",
+    labelTr: "Uzay Ekonomisi",
+    labelEn: "Space Economy",
+    tracksTr: "Uzay ve uydu şirketleri, SpaceX payı dahil · aktif yönetim",
+    tracksEn: "Space and satellite companies, including a SpaceX stake · actively managed",
+    flag: "🌐",
+    issuer: "Tema ETFs",
+    kind: "thematic",
+  },
+];
 
 const US_INDEX_FUNDS: FundMeta[] = [
   {
@@ -300,6 +355,18 @@ const US_INDEX_FUNDS: FundMeta[] = [
 const FUND_META: Record<string, FundMeta> = Object.fromEntries(
   [
     ...US_INDEX_FUNDS,
+    ...SECTOR_FUNDS.map<FundMeta>((fund) => ({
+      symbol: fund.symbol,
+      name: fund.fundName,
+      labelTr: fund.nameTr,
+      labelEn: fund.nameEn,
+      tracksTr: `S&P 500 ${fund.nameTr} sektörü · ABD`,
+      tracksEn: `S&P 500 ${fund.nameEn} sector · US`,
+      flag: "🇺🇸",
+      issuer: "State Street",
+      kind: "sector",
+    })),
+    ...THEMATIC_FUNDS,
     ...WORLD_MARKETS.map<FundMeta>((market) => ({
       symbol: market.symbol,
       name: market.fundName,

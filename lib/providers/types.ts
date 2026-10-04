@@ -42,7 +42,11 @@ export type DataSource =
   | "openfigi"
   | "house"
   | "ark"
-  | "gib";
+  | "gib"
+  /* ETF pozisyon dosyaları (lib/providers/etf-holdings.ts). */
+  | "ssga"
+  | "roundhill"
+  | "tema";
 
 export type FailReason =
   | "missing-key"

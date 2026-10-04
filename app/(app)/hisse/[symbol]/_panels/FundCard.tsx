@@ -24,7 +24,7 @@ export async function FundCard({
 
   const about = await describeSymbol(symbol, locale);
   const rows: [string, React.ReactNode][] = [
-    [t.stock.fundKind, t.stock.fundKindLabel],
+    [t.stock.fundKind, fund.kind === "thematic" ? t.stock.fundKindActive : t.stock.fundKindLabel],
     [t.stock.fundTracks, locale === "tr" ? fund.tracksTr : fund.tracksEn],
     [t.stock.fundIssuer, fund.issuer],
   ];
@@ -38,7 +38,13 @@ export async function FundCard({
       <PanelHeader
         title={t.stock.fundProfile}
         action={
-          <PanelLink href={`/karsilastir?semboller=${INDEX_STRIP.join(",")}`}>
+          /* Endeks fonu dört endeks fonuyla, sektör ve tema fonu ise kendisi +
+             SPY + QQQ ile (4 Ekim): XLK'yı "piyasaya göre" okumak için. */
+          <PanelLink
+            href={`/karsilastir?semboller=${
+              fund.kind === "us-index" || fund.kind === "country" ? INDEX_STRIP.join(",") : [symbol, "SPY", "QQQ"].join(",")
+            }`}
+          >
             {t.compare.addCta}
           </PanelLink>
         }
@@ -63,7 +69,11 @@ export async function FundCard({
         <p className="mt-3 border-t border-line-soft pt-2.5 text-tiny leading-relaxed text-muted">
           {fund.kind === "country"
             ? t.stock.fundNoteCountry
-            : t.stock.fundNoteIndex}
+            : fund.kind === "sector"
+              ? t.stock.fundNoteSector
+              : fund.kind === "thematic"
+                ? t.stock.fundNoteThematic
+                : t.stock.fundNoteIndex}
         </p>
       </div>
     </Panel>

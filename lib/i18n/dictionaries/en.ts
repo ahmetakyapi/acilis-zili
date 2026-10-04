@@ -957,6 +957,11 @@ const en: typeof tr = {
       "This is a US-listed exchange-traded fund, not the country's index itself. It trades in dollars during the US session. It moves in the same direction as the local index, but currency moves and the session offset keep the percentages from matching exactly.",
     fundNoteIndex:
       "This is an exchange-traded fund, the product that tracks the index, not the index itself. Its price is a fraction of the index level, while its daily change is nearly identical.",
+    fundKindActive: "Actively Managed ETF",
+    fundNoteSector:
+      "This fund is not the sector itself but a basket of the S&P 500 companies in that sector. Companies are weighted by market value with a cap on any single name, so the weights differ slightly from the sector's true shares.",
+    fundNoteThematic:
+      "This fund does not track an index; the manager decides what to hold and how much, and the holdings can change often. Some positions may be held through derivatives such as swaps.",
     compliance: "Sharia Screening",
     compliancePass: "Passes the Screen",
     complianceReview: "Needs Review",
@@ -1956,6 +1961,26 @@ const en: typeof tr = {
   },
 
   /* Technical plan for portfolio positions covered by the daily analysis (2 October). */
+  fundHoldings: {
+    title: "Fund Holdings",
+    meta: "{count} Stocks · Top 10 Weight {share}",
+    intro: "The fund's largest positions and their weights in the fund.",
+    rank: "Rank",
+    company: "Company",
+    weight: "Weight",
+    showRest: "{count} More Positions",
+    error: "The fund's holdings could not be loaded right now.",
+    sourceSsga: "State Street Daily File",
+    sourceRoundhill: "Roundhill Daily File",
+    sourceTema: "Tema Daily File",
+    sourceNport: "SEC N-PORT Filing",
+    asOf: "As of {date}",
+    noteDaily: "Weights come from the issuer's daily file; cash and collateral items are left out.",
+    noteNport:
+      "Invesco does not open its daily file to automated access, so the source is the fund's quarterly portfolio filing with the SEC. The filing is published about two months after quarter end; the weights show that date, not today.",
+    noteSwap:
+      "Positions held through swaps are combined with the underlying stock (as the fund itself reports them). Swaps work like leverage, so the stock weights can add up to more than 100%.",
+  },
   portfolioTechnical: {
     title: "Technical Plan",
     meta: "{n} Positions in Technical Analysis",
