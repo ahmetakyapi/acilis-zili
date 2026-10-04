@@ -1,3 +1,4 @@
+import { AnchorSettle } from "@/components/layout/AnchorSettle";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ScaleBar } from "@/components/markets/CompareScale";
 import { DataStamp, EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
@@ -254,6 +255,10 @@ export async function SectorPerformance({
 
   return (
     <Panel id="sektor-performansi" className={styles.board}>
+      {/* Ana sayfanın sektör bağlantısı buraya iniyor; üstteki bölümler
+          sonradan akıp kısaldığı için iniş sayfa oturana kadar tutuluyor
+          (gerekçe ve ölçüm AnchorSettle'da). */}
+      <AnchorSettle id="sektor-performansi" />
       <PanelHeader title={x.sectorsTitle} meta={x.sectorsMeta} />
       {!hasData ? (
         <EmptyState compact title={t.common.noData} hint={t.common.noDataHint} />

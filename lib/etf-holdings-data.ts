@@ -6,7 +6,10 @@ import { inArray } from "drizzle-orm";
 import { db } from "./db";
 import { cusipTickers } from "./schema";
 import {
+  getGlobalXHoldings,
   getNportHoldings,
+  getTidalHoldings,
+  getVanEckHoldings,
   getRoundhillHoldings,
   getSsgaHoldings,
   getTemaHoldings,
@@ -28,7 +31,7 @@ function yutuldu(kaynak: string, error: unknown): void {
   console.error(`[fon içeriği] ${kaynak}: ${mesaj}`);
 }
 
-export type HoldingsSource = "ssga" | "roundhill" | "tema" | "nport";
+export type HoldingsSource = "ssga" | "roundhill" | "tema" | "nport" | "tidal" | "globalx" | "vaneck";
 
 /**
  * Hangi fon, hangi kaynaktan. Liste kısa ve elle: her ihraççının dosya
@@ -36,7 +39,7 @@ export type HoldingsSource = "ssga" | "roundhill" | "tema" | "nport";
  * demek (4 Ekim 2026'da SPY, DIA, XLK, DRAM, NASA ve QQQ'nun gerçek
  * dosyaları ayrıştırıcıdan geçirildi).
  */
-export const HOLDINGS_SOURCES: Record<string, { source: HoldingsSource; cik?: string }> = {
+export const HOLDINGS_SOURCES: Record<string, { source: HoldingsSource; cik?: string; url?: string; page?: string }> = {
   SPY: { source: "ssga" },
   DIA: { source: "ssga" },
   XLK: { source: "ssga" },
@@ -52,6 +55,13 @@ export const HOLDINGS_SOURCES: Record<string, { source: HoldingsSource; cik?: st
   XLC: { source: "ssga" },
   DRAM: { source: "roundhill" },
   NASA: { source: "tema" },
+  /* Yapay zekâ, yarı iletken ve katılım fonları (4 Ekim, sahibinin
+     isteği). Dördü de canlı uca karşı denendi. */
+  SMH: { source: "vaneck", page: "semiconductor-etf-smh" },
+  AIQ: { source: "globalx" },
+  BOTZ: { source: "globalx" },
+  CHAT: { source: "roundhill" },
+  SPUS: { source: "tidal", url: "https://www.sp-funds.com/wp-content/uploads/data/TidalFG_Holdings_SPUS.csv" },
   /* Invesco QQQ Trust, Series 1 — SEC CIK. */
   QQQ: { source: "nport", cik: "1067839" },
 };
@@ -82,6 +92,12 @@ async function fetchFile(symbol: string): Promise<ProviderResult<HoldingsFile>> 
       return getTemaHoldings(symbol);
     case "nport":
       return getNportHoldings(config.cik ?? "");
+    case "tidal":
+      return getTidalHoldings(symbol, config.url ?? "");
+    case "globalx":
+      return getGlobalXHoldings(symbol);
+    case "vaneck":
+      return getVanEckHoldings(config.page ?? "");
   }
 }
 

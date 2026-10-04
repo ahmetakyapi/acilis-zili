@@ -35,6 +35,9 @@ const SOURCE_LABEL: Record<HoldingsSource, (t: Dictionary) => string> = {
   roundhill: (t) => t.fundHoldings.sourceRoundhill,
   tema: (t) => t.fundHoldings.sourceTema,
   nport: (t) => t.fundHoldings.sourceNport,
+  tidal: (t) => t.fundHoldings.sourceTidal,
+  globalx: (t) => t.fundHoldings.sourceGlobalX,
+  vaneck: (t) => t.fundHoldings.sourceVanEck,
 };
 
 export async function FundHoldings({ symbol, locale, t }: { symbol: string; locale: Locale; t: Dictionary }) {
@@ -111,12 +114,12 @@ export async function FundHoldings({ symbol, locale, t }: { symbol: string; loca
           </ol>
         </details>
       )}
-      <Footnote holdings={holdings} symbol={symbol} locale={locale} t={t} />
+      <Footnote holdings={holdings} locale={locale} t={t} />
     </Panel>
   );
 }
 
-function Footnote({ holdings, symbol, locale, t }: { holdings: EtfHoldings; symbol: string; locale: Locale; t: Dictionary }) {
+function Footnote({ holdings, locale, t }: { holdings: EtfHoldings; locale: Locale; t: Dictionary }) {
   const H = t.fundHoldings;
   /* YIL YAZILIYOR: N-PORT beyanı aylarca eski olabiliyor ve yılsız bir
      "30 Haziran" bugünün yılı sanılırdı. */
@@ -132,7 +135,8 @@ function Footnote({ holdings, symbol, locale, t }: { holdings: EtfHoldings; symb
         {SOURCE_LABEL[holdings.source](t)} · {H.asOf.replace("{date}", date)}
       </p>
       <p>{holdings.source === "nport" ? H.noteNport : H.noteDaily}</p>
-      {symbol === "DRAM" && <p>{H.noteSwap}</p>}
+      {/* Roundhill fonları (DRAM, CHAT) pozisyonun bir kısmını swap'la tutuyor. */}
+      {holdings.source === "roundhill" && <p>{H.noteSwap}</p>}
     </div>
   );
 }

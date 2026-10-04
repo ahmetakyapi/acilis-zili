@@ -46,7 +46,10 @@ export type DataSource =
   /* ETF pozisyon dosyaları (lib/providers/etf-holdings.ts). */
   | "ssga"
   | "roundhill"
-  | "tema";
+  | "tema"
+  | "tidal"
+  | "globalx"
+  | "vaneck";
 
 export type FailReason =
   | "missing-key"

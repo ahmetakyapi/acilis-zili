@@ -73,7 +73,9 @@ export async function FundCard({
               ? t.stock.fundNoteSector
               : fund.kind === "thematic"
                 ? t.stock.fundNoteThematic
-                : t.stock.fundNoteIndex}
+                : fund.kind === "theme-index"
+                  ? t.stock.fundNoteThemeIndex
+                  : t.stock.fundNoteIndex}
         </p>
       </div>
     </Panel>

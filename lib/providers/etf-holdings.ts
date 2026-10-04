@@ -14,6 +14,10 @@ import { BACKGROUND_TIMEOUT_MS, withTimeout } from "./timeout";
  *   - State Street (SPY, DIA, XLK…): günlük .xlsx. Anahtarsız.
  *   - Roundhill (DRAM): günlük CSV, dosya adında tarih (AAGGYYYY).
  *   - Tema (NASA): günlük CSV; adı tarih taşıyor ve sayfadan okunuyor.
+ *   - Roundhill'in aynı dosyası CHAT'i de taşıyor; SP Funds (SPUS) aynı
+ *     altyapıda (Tidal) tek fonluk bir dosya.
+ *   - Global X (AIQ, BOTZ): günlük CSV, adında tarih.
+ *   - VanEck (SMH): günlük .xlsx, çerezli iki yönlendirmenin arkasında.
  *   - SEC N-PORT (QQQ): Invesco günlük dosyayı otomatik isteğe kapatıyor
  *     (406, 4 Ekim'de denendi: tarayıcı başlıklarıyla da). Elde kalan resmî
  *     kaynak fonun SEC'e verdiği çeyreklik beyan; tarihi her zaman
@@ -137,16 +141,18 @@ export function readXlsxRows(zip: Buffer): Record<string, string>[] | null {
   const sheet = readZipEntry(zip, "xl/worksheets/sheet1.xml");
   if (!sheet) return null;
   const shared = readZipEntry(zip, "xl/sharedStrings.xml") ?? "";
-  const strings = [...shared.matchAll(/<si>([\s\S]*?)<\/si>/g)].map((m) =>
+  /* Etiketler önekli de gelebiliyor: VanEck dosyası `<x:row>`, `<x:c>`
+     yazıyor (4 Ekim, SMH). Önek isteğe bağlı eşleniyor. */
+  const strings = [...shared.matchAll(/<(?:\w+:)?si>([\s\S]*?)<\/(?:\w+:)?si>/g)].map((m) =>
     decodeXml(m[1].replace(/<[^>]+>/g, "")),
   );
   const rows: Record<string, string>[] = [];
-  for (const row of sheet.matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)) {
+  for (const row of sheet.matchAll(/<(?:\w+:)?row[^>]*>([\s\S]*?)<\/(?:\w+:)?row>/g)) {
     const cells: Record<string, string> = {};
-    for (const cell of row[1].matchAll(/<c r="([A-Z]+)\d+"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+    for (const cell of row[1].matchAll(/<(?:\w+:)?c r="([A-Z]+)\d+"([^>]*?)(?:\/>|>([\s\S]*?)<\/(?:\w+:)?c>)/g)) {
       const [, column, attrs, body = ""] = cell;
-      const value = /<v>([\s\S]*?)<\/v>/.exec(body)?.[1];
-      const inline = /<is>[\s\S]*?<t[^>]*>([\s\S]*?)<\/t>/.exec(body)?.[1];
+      const value = /<(?:\w+:)?v>([\s\S]*?)<\/(?:\w+:)?v>/.exec(body)?.[1];
+      const inline = /<(?:\w+:)?is>[\s\S]*?<(?:\w+:)?t[^>]*>([\s\S]*?)<\/(?:\w+:)?t>/.exec(body)?.[1];
       if (value !== undefined && attrs.includes('t="s"')) cells[column] = strings[Number(value)] ?? "";
       else if (value !== undefined) cells[column] = decodeXml(value);
       else if (inline !== undefined) cells[column] = decodeXml(inline);
@@ -292,6 +298,127 @@ export async function getRoundhillHoldings(fund: string, today: Date = new Date(
     return fail("roundhill", "empty", "Roundhill dosyası bulunamadı");
   } catch (error) {
     return fail("roundhill", "network", error instanceof Error ? error.message : "Roundhill isteği düştü");
+  }
+}
+
+/**
+ * SP Funds (SPUS) — Roundhill'le aynı altyapı (Tidal): aynı sütunlar, tek
+ * fonluk sabit adlı dosya. İçindeki tarih portföyün kendi günü
+ * ("10/02/2026" dosyası 2 Ekim'in), Roundhill'deki gibi ertesi gün değil.
+ */
+export async function getTidalHoldings(fund: string, url: string): Promise<ProviderResult<HoldingsFile>> {
+  try {
+    const res = await get(url);
+    if (!res.ok) return fail("tidal", "upstream-error", `SP Funds ${res.status}`);
+    const text = await res.text();
+    const parsed = text.startsWith("Date,") ? parseRoundhillCsv(text, fund) : null;
+    return parsed ? ok(parsed, "tidal") : fail("tidal", "empty", "SP Funds dosyası okunamadı");
+  } catch (error) {
+    return fail("tidal", "network", error instanceof Error ? error.message : "SP Funds isteği düştü");
+  }
+}
+
+/* ==========================================================================
+   Global X (AIQ, BOTZ)
+   ========================================================================== */
+
+/**
+ * İlk satır fonun adı, ikincisi "Fund Holdings Data as of 10/02/2026",
+ * sonra başlık: % of Net Assets, Ticker, Name, SEDOL, … Dosya adı tarih
+ * taşıyor (YYYYAAGG) ve hafta sonu dosya yok (404). Sembolü boş satırlar
+ * döviz bakiyesi ve alacak/borç kalemleri: atlanıyor.
+ */
+export function parseGlobalXCsv(text: string): HoldingsFile | null {
+  const lines = text.split(/\r?\n/);
+  const date = /as of (\d{2})\/(\d{2})\/(\d{4})/i.exec(lines[1] ?? "");
+  const headerAt = lines.findIndex((line) => line.startsWith("% of Net Assets"));
+  if (!date || headerAt < 0) return null;
+  const rows: HoldingRow[] = [];
+  for (const line of lines.slice(headerAt + 1)) {
+    const cells = splitCsvLine(line);
+    if (cells.length < 3) continue;
+    const weight = Number(cells[0]);
+    const rawTicker = cells[1]?.trim() ?? "";
+    if (!rawTicker || !Number.isFinite(weight) || weight <= 0) continue;
+    rows.push({ ticker: usTicker(rawTicker), name: cells[2]?.trim() || rawTicker, weight, cusip: null });
+  }
+  return rows.length > 0 ? { asOf: `${date[3]}-${date[1]}-${date[2]}`, rows } : null;
+}
+
+export async function getGlobalXHoldings(fund: string, today: Date = new Date()): Promise<ProviderResult<HoldingsFile>> {
+  try {
+    for (let back = 0; back < 7; back += 1) {
+      const day = new Date(today.getTime() - back * 86_400_000).toISOString().slice(0, 10).replace(/-/g, "");
+      const res = await get(`https://assets.globalxetfs.com/funds/holdings/${fund.toLowerCase()}_full-holdings_${day}.csv`);
+      if (!res.ok) continue;
+      const parsed = parseGlobalXCsv(await res.text());
+      if (parsed) return ok(parsed, "globalx");
+    }
+    return fail("globalx", "empty", "Global X dosyası bulunamadı");
+  } catch (error) {
+    return fail("globalx", "network", error instanceof Error ? error.message : "Global X isteği düştü");
+  }
+}
+
+/* ==========================================================================
+   VanEck (SMH)
+   ========================================================================== */
+
+/**
+ * .xlsx; ilk hücre "Daily Holdings (%)  10/01/2026", başlık satırı
+ * Number | Ticker | Holding Name | Identifier (FIGI) | Shares | Asset Class
+ * | Market Value | Notional Value | % of Net Assets. Yalnız "Stock" sınıfı
+ * pozisyon; "Cash Bal" ve "Cash" satırları atlanıyor. Sütunlar başlığın
+ * adından bulunuyor, harfinden değil.
+ */
+export function parseVanEckRows(rows: Record<string, string>[]): HoldingsFile | null {
+  const date = /(\d{2})\/(\d{2})\/(\d{4})/.exec(rows[0]?.A ?? "");
+  const headerAt = rows.findIndex((row) => Object.values(row).includes("Holding Name"));
+  if (!date || headerAt < 0) return null;
+  const header = rows[headerAt];
+  const colOf = (name: string) => Object.keys(header).find((key) => header[key].trim() === name);
+  const [cTicker, cName, cClass, cWeight] = [colOf("Ticker"), colOf("Holding Name"), colOf("Asset Class"), colOf("% of Net Assets")];
+  if (!cTicker || !cName || !cWeight) return null;
+  const holdings: HoldingRow[] = [];
+  for (const row of rows.slice(headerAt + 1)) {
+    if (cClass && row[cClass]?.trim() !== "Stock") continue;
+    const weight = Number((row[cWeight] ?? "").replace(/[%,\s]/g, ""));
+    if (!Number.isFinite(weight) || weight <= 0) continue;
+    holdings.push({ ticker: usTicker(row[cTicker]), name: row[cName]?.trim() || row[cTicker]?.trim() || "", weight, cusip: null });
+  }
+  return holdings.length > 0 ? { asOf: `${date[3]}-${date[1]}-${date[2]}`, rows: holdings } : null;
+}
+
+/**
+ * Dosya iki yönlendirmeyle kuruluyor: ilki ülke/yatırımcı tercih
+ * çerezlerini koyup `?cken=true`a, ikincisi çerezleri doğrulayıp asıl
+ * adrese döndürüyor; çerezsiz istek döngüde kalıyor (4 Ekim, denendi).
+ * `fetch` çerez kavanozu tutmadığı için çerezler burada elle taşınıyor.
+ */
+export async function getVanEckHoldings(page: string): Promise<ProviderResult<HoldingsFile>> {
+  try {
+    const jar = new Map<string, string>();
+    let url = `https://www.vaneck.com/us/en/investments/${page}/downloads/holdings/`;
+    for (let hop = 0; hop < 5; hop += 1) {
+      const cookie = [...jar].map(([key, value]) => `${key}=${value}`).join("; ");
+      const res = await get(url, { redirect: "manual", headers: cookie ? { Cookie: cookie } : {} });
+      for (const line of res.headers.getSetCookie?.() ?? []) {
+        const [pair] = line.split(";");
+        const at = pair.indexOf("=");
+        if (at > 0) jar.set(pair.slice(0, at).trim(), pair.slice(at + 1).trim());
+      }
+      if (res.status >= 300 && res.status < 400) {
+        url = new URL(res.headers.get("location") ?? "", url).toString();
+        continue;
+      }
+      if (!res.ok) return fail("vaneck", "upstream-error", `VanEck ${res.status}`);
+      const rows = readXlsxRows(Buffer.from(await res.arrayBuffer()));
+      const parsed = rows ? parseVanEckRows(rows) : null;
+      return parsed ? ok(parsed, "vaneck") : fail("vaneck", "empty", "VanEck dosyası okunamadı");
+    }
+    return fail("vaneck", "upstream-error", "VanEck yönlendirme döngüsü");
+  } catch (error) {
+    return fail("vaneck", "network", error instanceof Error ? error.message : "VanEck isteği düştü");
   }
 }
 

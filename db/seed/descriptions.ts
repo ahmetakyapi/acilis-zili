@@ -102,6 +102,28 @@ export const SYMBOL_DESCRIPTIONS: Record<string, SymbolDescription> = {
     en: "An actively managed ETF focused on the space economy — rocket and satellite companies, satellite communications, space infrastructure and component makers. Launched by Tema ETFs in March 2026; one of the first space funds to take a stake in SpaceX through a special-purpose vehicle before its IPO.",
   },
 
+  // ---- Yapay zekâ, yarı iletken ve katılım fonları — 4 Ekim 2026 ----
+  SMH: {
+    tr: "ABD'de işlem gören en büyük 25 yarı iletken şirketini tutan VanEck fonu — çip tasarımcıları, üreticiler (dökümhaneler dahil) ve çip üretim ekipmanı şirketleri. Piyasa değeriyle ağırlıklandırılır, tek şirketin payı sınırlıdır; yapay zekâ çiplerine olan talep fonun en büyük itici gücüdür.",
+    en: "VanEck fund holding the 25 largest US-listed semiconductor companies — chip designers, manufacturers (foundries included) and chipmaking equipment makers. Weighted by market value with a cap per company; demand for AI chips is the fund's biggest driver.",
+  },
+  AIQ: {
+    tr: "Yapay zekâyı geliştiren ya da ondan doğrudan yararlanan şirketleri tutan Global X fonu — yazılım, bulut, veri analitiği, çip ve donanım şirketleri, ABD dışından isimlerle birlikte. Tek şirketin ağırlığı düşük tutulur; fon geniş bir sepete yayılır.",
+    en: "Global X fund holding companies that build AI or benefit from it directly — software, cloud, data analytics, chip and hardware companies, including names outside the US. Single-company weights are kept low, so the fund is spread across a wide basket.",
+  },
+  BOTZ: {
+    tr: "Robotik ve yapay zekâ şirketlerini tutan Global X fonu — endüstriyel robotlar, otomasyon, otonom sistemler ve bunlara çip ve yazılım sağlayan şirketler. Japonya ve Avrupa'dan otomasyon üreticileri ağırlıklı bir yer tutar.",
+    en: "Global X fund holding robotics and AI companies — industrial robots, automation, autonomous systems and the companies that supply them with chips and software. Automation makers from Japan and Europe carry significant weight.",
+  },
+  CHAT: {
+    tr: "Üretken yapay zekâya odaklanan aktif yönetilen Roundhill fonu — büyük dil modellerini geliştiren ya da kullanan şirketler, bulut sağlayıcıları ve bu modelleri çalıştıran çip ve bellek üreticileri. Bazı pozisyonları swap'la tutar.",
+    en: "Actively managed Roundhill fund focused on generative AI — companies that build or use large language models, cloud providers, and the chip and memory makers that run those models. Some positions are held through swaps.",
+  },
+  SPUS: {
+    tr: "S&P 500 şirketlerinden İslami finans ilkelerine uyanları tutan SP Funds fonu — faizli finans, alkol, tütün, kumar gibi faaliyetleri ve borçluluğu yüksek şirketleri dışarıda bırakan bir endeksi izler. Teknoloji ağırlığı S&P 500'den yüksektir, çünkü bankalar ve sigorta şirketleri fonda yoktur.",
+    en: "SP Funds fund holding the S&P 500 companies that meet Islamic finance principles — it tracks an index that excludes interest-based finance, alcohol, tobacco, gambling and highly indebted companies. Its tech weight is higher than the S&P 500's, since banks and insurers are left out.",
+  },
+
   // ---- Ülke fonları (dünya piyasaları) ----
   EWJ: {
     tr: "Japonya borsasının büyük ve orta ölçekli şirketlerini tutan iShares MSCI Japonya fonu — Toyota, Sony, Mitsubishi UFJ, Hitachi ve Keyence gibi isimler en ağır kalemler. Nikkei 225 ve TOPIX ile aynı piyasayı temsil eder. ABD borsasında dolar cinsinden işlem gördüğü için fiyatına hem Tokyo'daki hisse hareketi hem de yen/dolar kuru yansır.",

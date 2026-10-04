@@ -1246,6 +1246,8 @@ const tr = {
     fundKindActive: "Aktif Yönetilen ETF",
     fundNoteSector:
       "Bu fon sektörün kendisi değil, S&P 500'ün o sektördeki şirketlerini tutan bir sepettir. Şirketler piyasa değeriyle ağırlıklandırılır, ama tek şirketin payına tavan konur; bu yüzden ağırlıklar sektördeki gerçek paylardan biraz farklıdır.",
+    fundNoteThemeIndex:
+      "Bu fon bir temayı tanımlayan kurallı bir endeksi izler: hangi şirketin girip çıkacağını ve ağırlığını endeksin yöntemi belirler, fon yöneticisi değil. Endeks belli aralıklarla yeniden dengelenir.",
     fundNoteThematic:
       "Bu fon bir endeksi izlemez; neyi ne kadar tutacağına fon yöneticisi karar verir ve içerik sık değişebilir. Bazı pozisyonlar swap gibi türev ürünlerle tutulabilir.",
     compliance: "Katılım Taraması",
@@ -2417,6 +2419,9 @@ const tr = {
     sourceRoundhill: "Roundhill Günlük Dosyası",
     sourceTema: "Tema Günlük Dosyası",
     sourceNport: "SEC N-PORT Beyanı",
+    sourceTidal: "SP Funds Günlük Dosyası",
+    sourceGlobalX: "Global X Günlük Dosyası",
+    sourceVanEck: "VanEck Günlük Dosyası",
     asOf: "{date} İtibarıyla",
     noteDaily: "Ağırlıklar fonu çıkaran kurumun günlük dosyasından; nakit ve teminat kalemleri listede yok.",
     noteNport:

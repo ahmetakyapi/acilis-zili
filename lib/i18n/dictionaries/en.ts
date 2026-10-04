@@ -960,6 +960,8 @@ const en: typeof tr = {
     fundKindActive: "Actively Managed ETF",
     fundNoteSector:
       "This fund is not the sector itself but a basket of the S&P 500 companies in that sector. Companies are weighted by market value with a cap on any single name, so the weights differ slightly from the sector's true shares.",
+    fundNoteThemeIndex:
+      "This fund tracks a rules-based index that defines a theme: the index methodology, not a manager, decides which companies get in and how much they weigh. The index is rebalanced at set intervals.",
     fundNoteThematic:
       "This fund does not track an index; the manager decides what to hold and how much, and the holdings can change often. Some positions may be held through derivatives such as swaps.",
     compliance: "Sharia Screening",
@@ -1974,6 +1976,9 @@ const en: typeof tr = {
     sourceRoundhill: "Roundhill Daily File",
     sourceTema: "Tema Daily File",
     sourceNport: "SEC N-PORT Filing",
+    sourceTidal: "SP Funds Daily File",
+    sourceGlobalX: "Global X Daily File",
+    sourceVanEck: "VanEck Daily File",
     asOf: "As of {date}",
     noteDaily: "Weights come from the issuer's daily file; cash and collateral items are left out.",
     noteNport:

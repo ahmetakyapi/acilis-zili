@@ -249,9 +249,10 @@ export type FundMeta = {
   /**
    * Fonun türü — künye notu buna göre. "sector": S&P 500'ün bir GICS
    * sektörü (SPDR). "thematic": aktif yönetilen, bir temaya odaklı fon
-   * (DRAM, NASA); endeks izlemiyor.
+   * (DRAM, NASA, CHAT); endeks izlemiyor. "theme-index": bir temayı
+   * kurallı bir endeksle izleyen fon (SMH, AIQ, BOTZ, SPUS).
    */
-  kind: "us-index" | "country" | "sector" | "thematic";
+  kind: "us-index" | "country" | "sector" | "thematic" | "theme-index";
 };
 
 /**
@@ -302,6 +303,62 @@ const THEMATIC_FUNDS: FundMeta[] = [
     flag: "🌐",
     issuer: "Tema ETFs",
     kind: "thematic",
+  },
+  {
+    symbol: "CHAT",
+    name: "Roundhill Generative AI & Technology ETF",
+    labelTr: "Üretken Yapay Zekâ",
+    labelEn: "Generative AI",
+    tracksTr: "Üretken yapay zekâ ve onu taşıyan teknoloji şirketleri · aktif yönetim",
+    tracksEn: "Generative AI and the technology companies behind it · actively managed",
+    flag: "🌐",
+    issuer: "Roundhill Investments",
+    kind: "thematic",
+  },
+  /* Endeks izleyen tema fonları (4 Ekim 2026, sahibinin isteği). */
+  {
+    symbol: "SMH",
+    name: "VanEck Semiconductor ETF",
+    labelTr: "Yarı İletken",
+    labelEn: "Semiconductors",
+    tracksTr: "MVIS US Listed Semiconductor 25 · ABD'de işlem gören en büyük 25 çip şirketi",
+    tracksEn: "MVIS US Listed Semiconductor 25 · the 25 largest US-listed chip companies",
+    flag: "🌐",
+    issuer: "VanEck",
+    kind: "theme-index",
+  },
+  {
+    symbol: "AIQ",
+    name: "Global X Artificial Intelligence & Technology ETF",
+    labelTr: "Yapay Zekâ ve Teknoloji",
+    labelEn: "AI & Technology",
+    tracksTr: "Indxx Artificial Intelligence & Big Data · küresel",
+    tracksEn: "Indxx Artificial Intelligence & Big Data · global",
+    flag: "🌐",
+    issuer: "Global X",
+    kind: "theme-index",
+  },
+  {
+    symbol: "BOTZ",
+    name: "Global X Robotics & Artificial Intelligence ETF",
+    labelTr: "Robotik ve Yapay Zekâ",
+    labelEn: "Robotics & AI",
+    tracksTr: "Indxx Global Robotics & Artificial Intelligence Thematic · küresel",
+    tracksEn: "Indxx Global Robotics & Artificial Intelligence Thematic · global",
+    flag: "🌐",
+    issuer: "Global X",
+    kind: "theme-index",
+  },
+  {
+    symbol: "SPUS",
+    name: "SP Funds S&P 500 Sharia Industry Exclusions ETF",
+    labelTr: "S&P 500 Katılım",
+    labelEn: "S&P 500 Sharia",
+    tracksTr: "S&P 500 Shariah Industry Exclusions · ABD",
+    tracksEn: "S&P 500 Shariah Industry Exclusions · US",
+    flag: "🇺🇸",
+    issuer: "SP Funds",
+    kind: "theme-index",
   },
 ];
 
@@ -380,6 +437,11 @@ const FUND_META: Record<string, FundMeta> = Object.fromEntries(
     })),
   ].map((fund) => [fund.symbol, fund]),
 );
+
+/** Bütün fon künyeleri — arama paleti bunlarda da arıyor. */
+export function allFunds(): FundMeta[] {
+  return Object.values(FUND_META);
+}
 
 /** Sembol bir fon mu — öyleyse künyesi, değilse null. */
 export function fundMetaOf(symbol: string): FundMeta | null {

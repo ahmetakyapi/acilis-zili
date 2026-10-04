@@ -13,6 +13,7 @@ import { db } from "@/lib/db";
 import { stories, symbols } from "@/lib/schema";
 import { searchSymbols } from "@/lib/providers/finnhub";
 import { aliasSymbols } from "@/db/seed/aliases";
+import { allFunds } from "@/db/seed/symbols";
 import { guideArticles } from "@/content/guide";
 import { getLocale } from "@/lib/i18n";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
@@ -182,6 +183,25 @@ export async function GET(request: Request) {
     }
   } catch {
     // Veritabanı yoksa arama yine de sağlayıcı üzerinden çalışsın.
+  }
+
+  /* FON KÜNYESİ DE ARANIYOR (4 Ekim). Sektör ve tema fonları (XLK, SMH,
+     AIQ, DRAM, SPUS…) `symbols` tablosunda değil; "yarı iletken" ya da
+     "yapay zeka" yazan okuyucu fonu bulamıyordu. Künye depoda ve küçük:
+     bellekte, sembol + resmî ad + iki dildeki kısa ad. Birebir sembol
+     eşleşmesi listenin başına, ad eşleşmesi yerel sonuçların ardına. */
+  const needleFund = fold(query);
+  for (const fund of allFunds()) {
+    if (seen.has(fund.symbol)) continue;
+    const exact = fund.symbol.toLowerCase() === query.toLowerCase();
+    const byName =
+      query.length >= 3 &&
+      [fund.name, fund.labelTr, fund.labelEn].some((text) => fold(text).includes(needleFund));
+    if (!exact && !byName) continue;
+    seen.add(fund.symbol);
+    const hit = { symbol: fund.symbol, name: fund.name, industry: null, logo: logoSrc(fund.symbol, null) };
+    if (exact) hits.unshift(hit);
+    else if (hits.length < 10) hits.push(hit);
   }
 
   /* SAĞLAYICIYA YALNIZCA GEREKTİĞİNDE (26 Eylül). Yerel sonuç 6'nın
