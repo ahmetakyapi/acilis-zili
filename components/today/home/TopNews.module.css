@@ -23,6 +23,21 @@
 .lead:focus-visible { outline:2px solid var(--line-focus); outline-offset:4px; }
 .leadImage { order:-2; border-radius:18px; }
 .leadImage img { transition:transform .7s; }
+/* GÖRSEL KAYDIRMAYLA KAYAR (8 Ekim). Manşet görseli çerçevesinin içinde,
+   sayfadan biraz daha yavaş akıyor: çerçeve görüntüye girerken resmin
+   üstü, çıkarken altı görünüyor — düz bir kutu yerine bir pencere. Resim
+   %12 büyük basılıyor ki kayarken kenar açılmasın; büyütme ve kayma ayrı
+   `scale`/`translate` özellikleri, üzerine gelince yakınlaşan `transform`
+   onlarla birleşiyor. Zaman çizelgesi ÇERÇEVENİN (adıyla): çerçeve
+   `overflow-hidden` ve resmin kendi `view()`ı ona bakardı (globals.css →
+   "BAŞLIK MASKEDEN YÜKSELİR"). */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion:no-preference) {
+    .leadImage { view-timeline:--lead-photo block; }
+    .leadImage img { scale:1.12; animation:lead-drift linear both; animation-timeline:--lead-photo; animation-range:cover 0% cover 100%; }
+  }
+}
+@keyframes lead-drift { from { translate:0 -5%; } to { translate:0 5%; } }
 @media (hover:hover) and (pointer:fine) { .lead:hover .leadImage img { transform:scale(1.035); } }
 .leadMeta { order:-1; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin-top:6px; color:var(--text-muted); font-size:var(--text-small); }
 .leadSource { color:var(--text-body); font-weight:650; }

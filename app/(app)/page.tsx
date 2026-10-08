@@ -270,7 +270,7 @@ export default async function TodayPage() {
           yerinde: bağlantılar ve adres çubuğundaki #çapa çalışmaya devam
           ediyor. */}
 
-      <section id="gunun-akisi" className={styles.flowPanel}>
+      <section id="gunun-akisi" data-rise-scope className={styles.flowPanel}>
         {/* İSKELET GERÇEK ÖLÇÜYÜ AYIRIYOR. `h-28` yazıyordu, yani 112 piksel,
             ve akış 594–864 piksel geliyordu: yavaş ağda masaüstünde CLS 0,131
             ölçüldü, kaynağı tam olarak bu sıçramaydı. Yer tutucu o yüzden
@@ -563,7 +563,7 @@ export default async function TodayPage() {
            tamamını aldı; başlığı da bir panel başlığı değil BÖLÜM başlığı
            oldu — kutu yok, altında hairline var. Sayfa böylece "kutu, kutu,
            kutu" ritminden çıkıp bir bölümle kapanıyor. */}
-      <section data-home-section="news" id="haber-akisi" className={cn(styles.news, "min-w-0 lg:col-span-2 lg:row-start-3")}>
+      <section data-home-section="news" data-rise-scope id="haber-akisi" className={cn(styles.news, "min-w-0 lg:col-span-2 lg:row-start-3")}>
         <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
           <h2 className={styles.newsHeading}>
             {t.today.topNews}

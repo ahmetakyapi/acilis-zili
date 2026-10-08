@@ -1647,6 +1647,43 @@ html.theme-switching::view-transition-new(root) {
   }
 }
 
+/* BAŞLIK MASKEDEN YÜKSELİR (8 Ekim). Panel kaydırmayla beliriyordu ama
+   başlığı panelle tek blok geliyordu; sayfa başlığının dizgiden çıkan
+   girişi (`title-rise`) yalnızca ekranın tepesinde vardı. Artık panelin
+   kendi başlığı da aynı dili konuşuyor: panel girerken başlık alttan
+   açılan bir kırpmanın arkasından yükseliyor, panelin 40 piksel
+   ardından — önce kutu, sonra adı. Aralık kısa (160 piksel): footer'ın
+   üstündeki son panel de sonuna kadar kaydırılabiliyor, başlık yarım kalmıyor.
+
+   ZAMAN ÇİZELGESİ PANELİN, BAŞLIĞIN DEĞİL. `.panel` `overflow-hidden`
+   taşıyor ve bu onu bir kaydırma kabı yapıyor: başlıkta `view()` en yakın
+   kaydırma kabına, yani panelin kendisine bakar ve ilerleme hiç değişmez
+   (aynı tuzak `.oku-bar` notunda). Panel zaman çizelgesini ADIYLA
+   yayınlıyor (`--rise`), başlık onu okuyor. Kutu olmayan bölümler
+   (ana sayfanın akışı ve haber bandı) aynı adı `data-rise-scope` ile alır.
+
+   Bitiş karesinde kırpma YOK (`none`): uzatılmış negatif bir kırpma bile
+   başlığın içindeki rozeti ya da açılır bir yardım balonunu keserdi.
+   `inset` ile `none` arasında ara değer olmadığı için son binde birde
+   kesik geçiş yapılıyor; göz görmüyor. Küçük künye başlıkları (`.plate`)
+   ve ekran okuyucu başlıkları dışarıda — `sr-only` zaten bir kırpmayla
+   gizleniyor ve animasyon onu ezerdi. */
+@supports (animation-timeline: view()) {
+  .panel, [data-rise-scope], .chapter-heading { view-timeline: --rise block; }
+  @media (prefers-reduced-motion: no-preference) {
+    :is(.panel, [data-rise-scope], .chapter-heading) h2:not(.plate, .sr-only, [data-no-rise]) {
+      animation: heading-rise cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation-timeline: --rise;
+      animation-range: entry 40px entry 200px;
+    }
+  }
+}
+@keyframes heading-rise {
+  0% { clip-path: inset(-0.4em -0.4em 100% -0.4em); transform: translate3d(0, 0.5em, 0); }
+  99.9% { clip-path: inset(-0.4em -0.4em -0.4em -0.4em); transform: none; }
+  100% { clip-path: none; transform: none; }
+}
+
 /* BASMA GERİ BİLDİRİMİ. Tıklanabilir kart parmağın altında hafifçe
    çöker. Hover'da KALDIRMA YOK: `.panel-hover` yorumu "zıplamaz" diye
    yazılı bir karar ve marka derinliği gölgeyle değil tonla kuruyor. */
@@ -2404,6 +2441,20 @@ html[lang="tr"] .footer-wordmark { --wm-size: max(10cqi, 48px); }
 @keyframes wordmark-rise { from { transform: translate3d(0, 55%, 0); } to { transform: none; } }
 :root { --wordmark-gradient: linear-gradient(100deg, #c9d8ea 0%, #7fb3e6 55%, #3b8fd8 100%); }
 :root[data-theme="dark"] { --wordmark-gradient: linear-gradient(100deg, #243a55 0%, #25609c 55%, #3a9ae8 100%); }
+
+/* FOOTER BAĞLANTISININ ÇİZGİSİ (8 Ekim). Üzerine gelince yalnızca renk
+   değişiyordu; artık altında soldan bir kıl çizgi açılıyor, bırakınca
+   sağa doğru çekiliyor — imleç neredeyse çizgi oradan geliyor. Arka plan
+   degradesi, alt çizgi değil: kalınlık ve konum her yazı tipinde aynı,
+   satır yüksekliği değişmiyor. Yalnızca hassas işaretçide; dokunmatikte
+   üzerine gelme yok. */
+@media (hover: hover) and (pointer: fine) {
+  .footer-link {
+    background: linear-gradient(currentColor, currentColor) no-repeat right 100% / 0 1px;
+    transition: color .2s, background-size .35s var(--ease-brand);
+  }
+  .footer-link:hover { background-position: left 100%; background-size: 100% 1px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .page-heading-copy.page-heading-copy > .page-eyebrow::before,

@@ -106,7 +106,7 @@ export async function SiteFooter() {
                        nişan aldığı yerde duruyor. Masaüstünde eski ölçü
                        korunuyor — orada fare var, yüksek satırlar sütunu
                        gereksiz uzatıyordu. */
-                    className="-my-1 flex min-h-11 items-center py-1 text-base text-body transition-colors hover:text-primary sm:min-h-0 sm:inline-block"
+                    className="footer-link -my-1 flex min-h-11 items-center py-1 text-base text-body transition-colors hover:text-primary sm:min-h-0 sm:inline-block"
                   >
                     {link.label}
                   </Link>

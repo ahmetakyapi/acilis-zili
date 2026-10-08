@@ -296,7 +296,22 @@
   .dashboard > [data-col="main"] { grid-column:1; grid-row:2; }
   .dashboard > [data-col="side"] { grid-column:2; grid-row:2; }
   .dashboard > [data-home-section="texture"] { grid-column:1 / -1; grid-row:1; }
+  /* KAHRAMAN KAYDIRINCA GERİ ÇEKİLİR (8 Ekim). Sayfa aşağı indikçe sayaç
+     ve endeks destesi kartın içinde hafifçe küçülüp soluyor; kart kendisi
+     yerinde, kenarı ve zemini sabit. Altından gelen panel önde, kahraman
+     arkada okunuyor — derinlik gölgeyle değil ölçek ve tonla. Aralık
+     `exit`: kartın tepesi görüntünün tepesine değdiğinde başlıyor, yani
+     okuyucu kahramanı tam görürken hiçbir şey kıpırdamıyor. Yalnızca
+     ≥1024: telefonda kahraman bir buçuk ekran boyunda ve okunurken
+     solardı. Kaydırma zaman çizelgesi, JavaScript yok; tanımayan tarayıcı
+     ve hareketi azaltan okuyucu düz sayfayı görüyor. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion:no-preference) {
+      .heroMain { transform-origin:50% 0; animation:hero-recede linear both; animation-timeline:view(); animation-range:exit 0% exit 85%; }
+    }
+  }
 }
+@keyframes hero-recede { to { opacity:.35; transform:scale(.965) translateY(18px); } }
 
 @media (max-width:1023px) {
   .heroMain { grid-template-columns:minmax(0,1fr); }
