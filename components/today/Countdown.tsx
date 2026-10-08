@@ -155,6 +155,12 @@ export function Countdown({
  * saklama" kalıbı): efekt yok, fazladan çizim turu yok. Giden rakam
  * `aria-hidden`; ekran okuyucu grubun tam adını ve yalnızca güncel rakamı
  * duyuyor.
+ *
+ * İLK KARE (`digitBoot`): sayfa açılırken her basamak kendi penceresinde
+ * alttan yerine oturuyor, gruplar soldan sağa kademeli — sayaç "kuruluyor".
+ * Yalnızca CSS ve sunucu HTML'inde: hidratasyonu beklemiyor, ilk tikte
+ * değişen basamak zaten `digitIn`e geçiyor. Gerekçe ve ölçü
+ * Countdown.module.css → "AÇILIŞTA KURULUR".
  */
 function RollingDigit({ digit }: { digit: string }) {
   const [current, setCurrent] = useState(digit);
@@ -172,7 +178,7 @@ function RollingDigit({ digit }: { digit: string }) {
           {previous}
         </span>
       )}
-      <span key={`in-${turn}`} className={turn ? styles.digitIn : undefined}>
+      <span key={`in-${turn}`} className={turn ? styles.digitIn : styles.digitBoot}>
         {current}
       </span>
     </span>

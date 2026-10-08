@@ -10,7 +10,14 @@
 .bellLabel { position:absolute; bottom:0; transform:translateX(-50%); font-size:var(--text-tiny); font-weight:600; line-height:1.2; white-space:nowrap; color:var(--text-muted); }
 .bellLabel[data-target] { color:var(--text-strong); }
 .axis { position:relative; height:16px; }
-.track { position:absolute; inset:4px 0 auto; height:8px; overflow:hidden; border-radius:4px; background:var(--surface-sunken); }
+/* ŞERİT KENDİNİ ÇİZER (8 Ekim). Yüklemede oluk soldan sağa açılıyor ve
+   "şimdi" noktası çizgi yerine varınca beliriyor — sayaç kurulurken
+   (Countdown.module.css → "AÇILIŞTA KURULUR") günün ekseni de onunla
+   birlikte geliyor. Kırpma, genişlik değil: yerleşim hiç değişmiyor.
+   `.now` kendi `transform`unu taşıdığı için giriş ayrı `scale` özelliğiyle. */
+.track { position:absolute; inset:4px 0 auto; height:8px; overflow:hidden; border-radius:4px; background:var(--surface-sunken); animation:rail-draw 900ms var(--ease-brand) 200ms backwards; }
+@keyframes rail-draw { from { clip-path:inset(0 100% 0 0 round 4px); } to { clip-path:inset(0 0 0 0 round 4px); } }
+@keyframes rail-now-in { from { scale:0; } }
 .band { position:absolute; inset-block:0; overflow:hidden; }
 .band[data-band="regular"] { background:color-mix(in srgb, var(--primary) 30%, transparent); }
 /* İlerleme `scaleX` ile — genişlik değil dönüşüm, yani her dakikalık adım
@@ -28,7 +35,7 @@
    çevresinde yamuk bir elips çiziyordu (1440 ve 768, iki temada ölçüldü).
    Artık 8 piksellik yuvarlak bir nokta, halka onun üzerinde `inset:-4px`
    — kutusu kare, merkezi çubuğun ucu. */
-.now { position:absolute; top:4px; width:8px; height:8px; border-radius:50%; transform:translateX(-4px); background:var(--primary); box-shadow:0 0 0 2px var(--premium-surface); }
+.now { position:absolute; top:4px; width:8px; height:8px; border-radius:50%; transform:translateX(-4px); background:var(--primary); box-shadow:0 0 0 2px var(--premium-surface); animation:rail-now-in 420ms cubic-bezier(0.34,1.56,0.64,1) 820ms backwards; }
 .now[data-live]::after { content:""; position:absolute; inset:-4px; border:1px solid var(--primary); border-radius:50%; animation:rail-beacon 3s var(--ease-brand) infinite; }
 .now[data-still]::after { animation:none; opacity:0; }
 /* Bant adları zil adlarından bir kademe sessiz; seans adı bandın ortasında. */
@@ -66,4 +73,5 @@
 @media (prefers-reduced-motion:reduce) {
   .elapsed, .marker { transition:none; }
   .now::after { animation:none; opacity:0; }
+  .track, .now { animation:none; }
 }
