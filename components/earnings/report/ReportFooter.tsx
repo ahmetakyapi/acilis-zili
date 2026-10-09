@@ -39,7 +39,7 @@ export function ReportFooter({
             {/* "Kaynaklar" sekmesi buraya iniyor; başlıksız bir alt
                 bilgiye iniyordu. Etiket düzeyinde bir h2 — sayfanın üç
                 başlık düzeyinin en küçüğü. */}
-            <h2 className="plate text-muted">
+            <h2 className="plate text-read text-muted">
               {t.analysis.sourcesLabel}
             </h2>
             <ul className="flex flex-wrap gap-x-4 text-tiny text-muted">

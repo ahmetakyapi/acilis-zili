@@ -70,7 +70,7 @@ export function ReportSegments({
             {/* İki blok varsa her birinin kendi etiketi var; tek blokta
                 panel başlığı zaten aynı şeyi söylüyor. */}
             {kpis.length > 0 && (
-              <h3 className={cn("plate text-body", styles.blockTitle)}>{x.segmentsHeading}</h3>
+              <h3 className={cn("plate text-read text-body", styles.blockTitle)}>{x.segmentsHeading}</h3>
             )}
             <ul className={styles.segments} lang={lang}>
               {rows.map((segment) => (
@@ -115,7 +115,7 @@ export function ReportSegments({
         {kpis.length > 0 && (
           <div className={styles.block}>
             {rows.length > 0 && (
-              <h3 className={cn("plate text-body", styles.blockTitle)}>{x.kpisHeading}</h3>
+              <h3 className={cn("plate text-read text-body", styles.blockTitle)}>{x.kpisHeading}</h3>
             )}
             <ul className={styles.kpis}>
               {kpis.map((kpi) => (

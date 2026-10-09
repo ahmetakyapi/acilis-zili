@@ -1,7 +1,7 @@
 .reading { min-height:var(--price-chart-reading,56px); }
 .plot { height:var(--price-chart-height,300px); }
 .sessionSummary { display:none; }
-.root[data-compact="true"] .sessionSummary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:36px; color:var(--text-muted); font-size:11px; font-weight:550; cursor:pointer; list-style:none; }
+.root[data-compact="true"] .sessionSummary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:36px; color:var(--text-muted); font-size:12px; font-weight:550; cursor:pointer; list-style:none; }
 .sessionSummary::-webkit-details-marker { display:none; }
 .sessionSummary > span { font-size:18px; color:var(--primary-ink); transition:transform .2s; }
 .sessions[open] .sessionSummary > span { transform:rotate(45deg); }
@@ -83,7 +83,7 @@
 /* 320'de dönem satırı tek satır: künye 11 piksele iniyor (gerekçe
    stock.module.css'teki 320 notu). */
 @media (max-width: 359px) {
-  .root[data-compact="true"] .reading span:not(.periodPct) { font-size:11px; }
+  .root[data-compact="true"] .reading span:not(.periodPct) { font-size:12px; }
 }
 /* Satırın kendisi 24: `pb-2` ve taban çizgisi hizası 28-36 piksel
    yapıyordu (1G 28, 1H 36 ölçüldü) ve aralık değişince çizim kayıyordu. */
@@ -96,7 +96,7 @@
 .tip { position:absolute; z-index:3; display:grid; grid-template-columns:auto 1fr; align-items:baseline; gap:2px 8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel-fixed); pointer-events:none; }
 .tipPrice { font-size:15px; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
 .tipChange { justify-self:end; font-size:12px; font-weight:600; white-space:nowrap; }
-.tipDate { grid-column:1 / -1; font-size:11px; color:var(--text-muted); white-space:nowrap; }
+.tipDate { grid-column:1 / -1; font-size:12px; color:var(--text-muted); white-space:nowrap; }
 
 /* KUR KÜNYESİ DENETİMİN ALTINDA. Telefonda kompakt düzen sırayı `order`
    ile kuruyor (denetim 2, seans saatleri 3); künyenin sırası verilmeyince

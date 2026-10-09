@@ -305,7 +305,7 @@
 .tradeScroll { max-height: 18rem; overflow: auto; border-radius: 14px; background: var(--surface-sunken); overscroll-behavior: contain; }
 .tradeScroll:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
 .tradeTable { width: 100%; min-width: 30rem; border-collapse: collapse; font-size: 13px; }
-.tradeTable th { position: sticky; top: 0; z-index: 1; padding: 10px 10px; background: var(--surface-sunken); text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--line-soft); }
+.tradeTable th { position: sticky; top: 0; z-index: 1; padding: 10px 10px; background: var(--surface-sunken); text-align: left; font-size: 12px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--line-soft); }
 .tradeTable td { padding: 8px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; color: var(--text-body); }
 .tradeTable tr:last-child td { border-bottom: 0; }
 .tradeTable tr[data-selected] td { background: var(--panel-fixed); }
@@ -314,7 +314,7 @@
 .check { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
 .check:disabled { cursor: not-allowed; }
 .flags { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: 8px; vertical-align: middle; }
-.flag { padding: 1px 7px; border-radius: 99px; background: var(--down-wash); font-size: 11px; font-weight: 600; color: var(--brass); white-space: nowrap; }
+.flag { padding: 1px 7px; border-radius: 99px; background: var(--down-wash); font-size: 12px; font-weight: 600; color: var(--brass); white-space: nowrap; }
 .side { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 12px; font-weight: 600; }
 .side[data-side="buy"] { background: var(--up-wash); color: var(--up); }
 .side[data-side="sell"] { background: var(--down-wash); color: var(--down); }

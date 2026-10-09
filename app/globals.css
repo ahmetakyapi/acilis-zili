@@ -576,8 +576,15 @@
      `--text-micro` yalnızca METİN OLMAYAN yerde kalır: logo künyesindeki
      iki harf gibi, 26 piksellik bir kutunun içinde. */
   --text-micro: 0.5rem;        /* 8px   — en küçük künye, plaka */
-  --text-nano: 0.625rem;       /* 10    — mikro etiket, rozet */
-  --text-tiny: 0.6875rem;      /* 11    — künye satırı, veri damgası */
+  /* METİN TABANI 12 PİKSEL (9 Ekim, sahibinin isteği: "bu tür başlıklar
+     hiç okunmuyor … her şey net okunabilir olmalı"). `nano` (10) ve `tiny`
+     (11) künye, rozet, veri damgası ve bölüm etiketlerinin puntosuydu ve
+     koyu zeminde soluk renkle okunmuyordu. İkisi de `small`a eşitlendi;
+     adlar 470'ten fazla çağrı yerinde rol bilgisi taşıdığı için duruyor.
+     Bu basamağın altına METİN inmez — `micro` yalnızca ok, harf karosu
+     gibi metin olmayan işaretler için. */
+  --text-nano: 0.75rem;        /* 12    — mikro etiket, rozet */
+  --text-tiny: 0.75rem;        /* 12    — künye satırı, veri damgası */
   --text-small: 0.75rem;       /* 12    — ikincil metin, çip */
   --text-base: 0.8125rem;      /* 13    — kontrol ve tablo metni */
   --text-read: 0.875rem;       /* 14    — okuma gövdesi, panel başlığı */
@@ -991,11 +998,15 @@
      vardı, küçük harfli bir kelimede harfleri birbirinden koparıyordu.
      Çağrı yerlerindeki `tracking-[0.09em]` ekleri de bu yüzden kaldırıldı;
      aralığı artık tek yerden bu sınıf verir. */
+  /* 11 → 12 piksel, 700 → 600, aralık 0 (9 Ekim). Künye bir okuma metni
+     gibi okunmalı: kalın, sıkışık ve soluk 11 piksel koyu temada lekeye
+     dönüyordu. Renk `--text-soft` — `muted`un bir tık üstü, ikincil metin.
+     Panel başlığı olarak kullanılan künye (`h2.plate`) 14 piksel alır. */
   .plate {
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--text-soft);
   }
 
   /**
@@ -2116,7 +2127,7 @@ html.theme-switching::view-transition-new(root) {
 .loading-surface-status { position:sticky; top:calc(var(--app-bar-h) + 100px); display:flex; justify-content:center; width:100%; padding:24px 0; }
 .loading-mark-compact { width:fit-content; padding:14px 20px; gap:9px; border-radius:14px; box-shadow:var(--premium-shadow); animation:none; }
 .loading-mark-compact .route-loader-mark { width:50px; height:50px; }
-.loading-mark-compact .route-loader-label { font-size:11px; }
+.loading-mark-compact .route-loader-label { font-size:12px; }
 .loading-fallback { position:relative; min-width:0; }
 .loading-fallback-status { position:absolute; inset:0; display:flex; justify-content:center; align-items:flex-start; padding-top:24px; pointer-events:none; }
 .loading-fallback-status > div { position:sticky; top:calc(var(--app-bar-h) + 100px); }
@@ -2177,8 +2188,11 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
   header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { align-self:stretch; margin-top:4px; }
 }
 .page-heading-copy.page-heading-copy { min-width:0; padding:0; align-self:start; }
-.page-heading-copy.page-heading-copy > .page-eyebrow { display:flex; align-items:center; gap:8px; margin:0; min-height:18px; font-size:12px; line-height:18px; font-weight:600; letter-spacing:.04em; color:var(--primary-ink); }
-.page-heading-copy[data-has-eyebrow="false"]::before { content:""; display:block; height:18px; }
+/* Kapak künyesi 12 → 14 piksel, aralık .04em → 0 (9 Ekim): "her sectionun
+   başındaki ufak açıklama başlıkları okunmuyor". Boş künye yer tutucusu
+   aynı satır yüksekliğini taşır, başlıklar ekranlar arasında hizalı kalır. */
+.page-heading-copy.page-heading-copy > .page-eyebrow { display:flex; align-items:center; gap:8px; margin:0; min-height:20px; font-size:14px; line-height:20px; font-weight:600; letter-spacing:0; color:var(--primary-ink); }
+.page-heading-copy[data-has-eyebrow="false"]::before { content:""; display:block; height:20px; }
 .page-heading-copy.page-heading-copy h1 { margin:8px 0 0; font-size:var(--heading-page); line-height:1.12; letter-spacing:-.045em; font-weight:600; max-width:none; }
 .page-heading-copy.page-heading-copy > p:not(.page-eyebrow),
 .page-masthead.page-masthead > p { margin:10px 0 0; max-width:64ch; font-size:14px; line-height:1.65; color:var(--text-body); }
@@ -2186,7 +2200,7 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
 @media(max-width:767px) {
  :root { --page-section-gap:18px; --page-frame-inset:18px; }
  .page-frame.page-frame.page-frame { grid-template-columns:minmax(0,1fr); gap:18px; }
- .page-heading-copy.page-heading-copy > .page-eyebrow { font-size:11px; }
+ .page-heading-copy.page-heading-copy > .page-eyebrow { font-size:13px; }
  .page-heading-copy.page-heading-copy h1 { margin-top:7px; }
 }
 
@@ -2267,7 +2281,7 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
    kısayol küçük bir tuş kapağında. */
 .premium-masthead .masthead-search,.premium-masthead .masthead-account { border-color:var(--line); background:var(--premium-surface); color:var(--text-body); box-shadow:inset 0 1px var(--premium-highlight); transition:border-color 180ms,background-color 180ms,color 180ms,box-shadow 180ms; }
 .premium-masthead .masthead-search-icon { display:inline-grid; place-items:center; flex:none; color:var(--primary-ink); }
-.premium-masthead .masthead-kbd { align-items:center; height:22px; padding:0 7px; border:1px solid var(--line-soft); border-radius:999px; background:var(--surface-sunken); font-size:.6875rem; font-weight:600; letter-spacing:.02em; color:var(--text-muted); }
+.premium-masthead .masthead-kbd { align-items:center; height:22px; padding:0 7px; border:1px solid var(--line-soft); border-radius:999px; background:var(--surface-sunken); font-size:.75rem; font-weight:600; letter-spacing:0; color:var(--text-muted); }
 .premium-masthead .masthead-account[data-signed-in] { border-color:transparent; background:var(--primary); color:var(--on-primary); box-shadow:0 0 0 2px var(--premium-surface),0 0 0 3px var(--primary-faint); }
 .premium-masthead .masthead-account:not([data-signed-in]) > svg { color:var(--primary-ink); }
 .premium-masthead .masthead-search:focus-visible,.premium-masthead .masthead-account:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }

@@ -184,7 +184,7 @@ function AlertComposer({
 
       {alerts.length > 0 && (
         <section className={styles.existing} aria-label={labels.existing}>
-          <h3 className="plate">{labels.existing}</h3>
+          <h3 className="plate text-read">{labels.existing}</h3>
           <ul className={styles.list}>
             {alerts.map((alert) => (
               <AlertRow key={alert.id} alert={alert} price={price} locale={locale} labels={labels} />

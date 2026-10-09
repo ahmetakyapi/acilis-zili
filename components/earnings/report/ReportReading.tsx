@@ -124,7 +124,7 @@ export function ReportReading({
                   <section key={index} data-motion-reveal className={cn(styles.analysisItem, "border-t border-line")}>
                     <span
                       aria-hidden
-                      className="numeral mb-1.5 block text-tiny font-bold tracking-[0.04em] text-primary"
+                      className="numeral mb-1.5 block text-tiny font-bold text-primary"
                     >
                       {String(index + 1).padStart(2, "0")}
                     </span>

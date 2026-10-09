@@ -80,7 +80,7 @@
 
 .featureVerdict { grid-area: verdict; display: flex; align-items: center; gap: 12px; min-width: 0; }
 .featureVerdictText { display: grid; gap: 4px; min-width: 0; }
-.featureVerdictText > span { font-size: 11px; font-weight: 600; line-height: 1.3; color: var(--text-muted); }
+.featureVerdictText > span { font-size: 12px; font-weight: 600; line-height: 1.3; color: var(--text-muted); }
 .featureVerdictText > b { font-size: 18px; font-weight: 700; line-height: 1.1; }
 
 .featureHeadline { grid-area: headline; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; max-width: 72ch; font-size: 15px; line-height: 1.65; color: var(--text-body); text-wrap: pretty; }
@@ -165,7 +165,7 @@
 }
 .dateTile { grid-area: date; display: flex; flex-direction: column; align-items: center; gap: 3px; line-height: 1; }
 .dateTile b { font-size: 17px; font-weight: 700; letter-spacing: -.02em; color: var(--text-strong); }
-.dateTile > span { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.dateTile > span { font-size: 12px; font-weight: 600; color: var(--text-muted); }
 /* Tekrar eden tarih soluk ama OKUNUR: %40'ta ~1,8:1 kontrastla "13 Eki"
    neredeyse boş görünüyordu. %60 (~2,6:1) "aynı gün" diyor, kaybolmuyor. */
 .upcomingRow[data-repeat] .dateTile :is(b, span) { color: color-mix(in srgb, var(--text-muted) 60%, transparent); }
@@ -197,7 +197,7 @@
   .upcomingLogo { display: none; }
 }
 .upcomingWhen [data-today] { display: inline-block; padding: 0 7px; border-radius: 999px; background: var(--primary-wash); color: var(--primary-ink); font-weight: 600; }
-.upcomingEps { grid-area: eps; white-space: nowrap; font-size: 11px; color: var(--text-muted); }
+.upcomingEps { grid-area: eps; white-space: nowrap; font-size: 12px; color: var(--text-muted); }
 .upcomingEps > span { font-weight: 600; }
 
 /* GERİLEN PANEL, SIĞDIĞI KADAR SATIR. `contain: size` paneli ızgara
@@ -290,7 +290,7 @@
      kalıyordu, öteki hücrelerde 4. Etiket sayının üstüne iniyor. */
   .featureFigures > div:nth-child(1) { grid-template-rows: auto auto; align-content: end; }
   .featureVerdict { gap: 10px; }
-  .featureFigures dt { font-size: 11px; }
+  .featureFigures dt { font-size: 12px; }
   .featureFigures dd { font-size: clamp(20px, 5.6vw, 26px); }
 }
 @media (max-width: 359px) {

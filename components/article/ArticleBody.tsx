@@ -1353,7 +1353,7 @@ export function ArticleBody({
                         </li>
                       )}
                       <li data-part="step" className="flex min-w-0 flex-col rounded-(--radius-lg) border border-line bg-surface px-3.5 py-3 sm:flex-1">
-                        <span className="numeral text-nano font-bold tracking-[0.09em] text-primary">
+                        <span className="numeral text-nano font-bold text-primary">
                           {String(itemIndex + 1).padStart(2, "0")}
                         </span>
                         <span data-part="name" className="mt-1 text-base font-bold leading-tight text-strong">

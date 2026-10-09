@@ -18,10 +18,10 @@
    (ölçüldü: /bilancolar, 390 ve 1440). Kartın kimliği zaten sembol;
    ad bir bağlam ve kırpılması kartın düzeninden daha ucuz. */
 .companyName { overflow:hidden; font-size:12px; line-height:1.5; color:var(--text-muted); text-overflow:ellipsis; white-space:nowrap; }
-.miniCard :global(.plate) { font-size:11px; letter-spacing:.035em; }
+.miniCard :global(.plate) { font-size:12px; letter-spacing:0; }
 .miniCard :global(.text-lead) { font-size:22px; line-height:1.2; white-space:normal; overflow-wrap:anywhere; }
 .miniCard dl { font-size:12px; line-height:1.6; }
 .day details > summary { min-height:44px; font-size:13px; }
 @media(hover:hover) and (pointer:fine) { .miniCard:hover,.heroCard:hover { border-color:var(--primary-faint); } }
-@media(max-width:639px) { .dateHeader h2 { font-size:21px; } .dateHeader > div { gap:8px; } .miniGrid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } .miniCard { padding:13px; gap:12px; } .miniCard :global(.text-lead) { font-size:19px; } .heroCard { padding:18px; } .miniIdentity > :last-child { font-size:10px; } }
+@media(max-width:639px) { .dateHeader h2 { font-size:21px; } .dateHeader > div { gap:8px; } .miniGrid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } .miniCard { padding:13px; gap:12px; } .miniCard :global(.text-lead) { font-size:19px; } .heroCard { padding:18px; } .miniIdentity > :last-child { font-size:12px; } }
 @media(prefers-reduced-motion:reduce) { .miniCard,.heroCard { transition:none; } }

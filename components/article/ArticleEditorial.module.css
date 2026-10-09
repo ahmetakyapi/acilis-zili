@@ -707,7 +707,7 @@
   .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td + td::before {
     content: attr(data-label);
     color: var(--primary-ink);
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 650;
     line-height: 1.3;
     letter-spacing: 0.01em;

@@ -79,8 +79,9 @@ const LAYOUTS = [
   { key: "m", px: 340 },
   { key: "w", px: 480 },
 ] as const;
-/** Etiketin karakter başına tahmini genişliği (cömert): 11 ve 12 piksel. */
-const CHAR_PX = { sm: 6.5, md: 7.1 } as const;
+/** Etiketin karakter başına tahmini genişliği (cömert). İkisi de 12 piksel:
+ *  `sm` 11 pikseldi ve 6,5 varsayıyordu; `--text-tiny` 9 Ekim'de 12'ye çıktı. */
+const CHAR_PX = { sm: 7.1, md: 7.1 } as const;
 /** Aynı satırdaki iki etiket arasında en az bu kadar boşluk. */
 const LABEL_GAP_PX = 8;
 /** Değerler aynıysa (tek noktalık aralık) eksen değerin ±%2'si kadar açılır. */

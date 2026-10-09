@@ -63,13 +63,13 @@
    Ltd"); hap `flex:none` ve adın yanında hep tam boyda kalıyor. */
 .who span {
   display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
-  font-size:11px; line-height:1.35; color:var(--text-muted);
+  font-size:12px; line-height:1.35; color:var(--text-muted);
 }
-.pill { flex:none; padding:3px 8px; border-radius:var(--radius-sm); font-size:11px; font-weight:650; }
+.pill { flex:none; padding:3px 8px; border-radius:var(--radius-sm); font-size:12px; font-weight:650; }
 
 .sector {
   margin-top:-4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  font-size:11.5px; font-weight:500; line-height:1.4; color:var(--text-body);
+  font-size:12px; font-weight:500; line-height:1.4; color:var(--text-body);
 }
 
 /* FİYAT KENDİ TONUNDA. Kart yüzeyinden bir kademe koyu zemin, kutu değil:
@@ -81,14 +81,14 @@
   padding:10px 12px; border-radius:var(--radius-lg); background:var(--surface-sunken);
 }
 .quoteMain { display:flex; min-width:0; flex-direction:column; gap:2px; }
-.quoteMain small { font-size:10.5px; font-weight:600; color:var(--text-muted); }
+.quoteMain small { font-size:12px; font-weight:600; color:var(--text-muted); }
 .quoteMain b { font-size:20px; font-weight:700; line-height:1.1; letter-spacing:-.03em; color:var(--text-strong); white-space:nowrap; }
 .move { display:flex; flex:none; flex-direction:column; align-items:flex-end; gap:3px; color:var(--text-muted); }
 .move em {
   padding:2px 8px; border-radius:999px; background:var(--line-soft);
   font-style:normal; font-size:12px; font-weight:700; white-space:nowrap;
 }
-.move small { font-size:11px; font-weight:600; white-space:nowrap; }
+.move small { font-size:12px; font-weight:600; white-space:nowrap; }
 .move[data-dir="up"] { color:var(--up); }
 .move[data-dir="up"] em { background:var(--up-wash); }
 .move[data-dir="down"] { color:var(--down); }
@@ -99,7 +99,7 @@
   display:grid; grid-template-columns:auto minmax(0,1fr); align-items:baseline; gap:6px 12px;
 }
 .facts > div { display:contents; }
-.facts dt { font-size:11px; font-weight:600; color:var(--text-muted); }
+.facts dt { font-size:12px; font-weight:600; color:var(--text-muted); }
 .facts dd { min-width:0; text-align:right; font-size:12.5px; font-weight:650; color:var(--text-strong); overflow-wrap:anywhere; }
 
-.foot { padding-top:8px; border-top:1px solid var(--line-soft); font-size:10.5px; font-weight:600; line-height:1.45; color:var(--text-muted); }
+.foot { padding-top:8px; border-top:1px solid var(--line-soft); font-size:12px; font-weight:600; line-height:1.45; color:var(--text-muted); }

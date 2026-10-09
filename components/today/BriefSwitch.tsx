@@ -206,7 +206,7 @@ export function BriefSwitch({
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="numeral text-tiny text-body">{brief.dateLabel}</span>
               {brief.current && (
-                <span className="rounded-full bg-primary px-2 py-0.5 text-tiny font-bold tracking-[0.05em] text-on-primary">
+                <span className="rounded-full bg-primary px-2 py-0.5 text-tiny font-bold text-on-primary">
                   {labels.currentBadge[period]}
                 </span>
               )}

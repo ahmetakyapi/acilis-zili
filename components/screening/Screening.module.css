@@ -14,7 +14,7 @@
 
 /* ---------- Kapak: önce bayraklar, altında puan ---------- */
 .flags { display:grid; gap:14px; min-width:0; }
-.dialLabel { font-size:12px; font-weight:600; letter-spacing:.04em; color:var(--text-muted); }
+.dialLabel { font-size:12px; font-weight:600; letter-spacing:0; color:var(--text-muted); }
 .flagCounts { display:flex; flex-wrap:wrap; gap:10px 28px; }
 .flagCounts > span { display:flex; align-items:baseline; gap:8px; color:var(--text-body); font-size:13px; font-weight:550; }
 .flagCounts b { color:var(--st); font-size:40px; line-height:1; font-weight:650; letter-spacing:-.05em; font-variant-numeric:tabular-nums; }

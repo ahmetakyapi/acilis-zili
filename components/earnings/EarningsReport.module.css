@@ -171,7 +171,7 @@
 .coverLabelSub {
   display: block;
   margin-top: 1px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: var(--text-muted);
   opacity: 0.9;
@@ -194,14 +194,14 @@
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 0.25rem 0.75rem;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: var(--text-body);
   font-weight: 550;
 }
 
 .coverTrend figcaption > span:last-child {
   color: var(--text-muted);
-  font-size: 0.63rem;
+  font-size: 0.75rem;
   font-weight: 450;
 }
 
@@ -274,7 +274,7 @@
   bottom: calc(100% + 0.3rem);
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.69rem;
+  font-size: 0.75rem;
   line-height: 1;
   color: var(--text-body);
   white-space: nowrap;
@@ -1208,7 +1208,7 @@
   }
 
   .coverMetricNote {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     line-height: 1.5;
   }
   .coverMetricNote [data-note-sep] { display: none; }
@@ -1290,7 +1290,7 @@
   }
 
   .metricLabel {
-    font-size: 0.73rem;
+    font-size: 0.75rem;
   }
 
   .metricValue,
@@ -1300,7 +1300,7 @@
   }
 
   .metricNote {
-    font-size: 0.69rem;
+    font-size: 0.75rem;
   }
 
   .ceoQuote {

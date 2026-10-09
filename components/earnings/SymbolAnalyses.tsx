@@ -84,7 +84,7 @@ export function SymbolAnalyses({
                          büyük harfli ("AL"/"TUT"/"SAT") ve CSS ile
                          ikinci kez büyütmek Türkçede i→I tuzağını
                          davet ederdi. */
-                      "text-nano font-bold tracking-[0.06em]",
+                      "text-nano font-bold",
                       verdictTextClass(verdict),
                     )}
                   >

@@ -711,7 +711,7 @@ export function CompareStrip({
   return (
     <section className="flex flex-col gap-3" aria-labelledby="compare-selected">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 id="compare-selected" className="plate text-nano">
+        <h2 id="compare-selected" className="plate text-read">
           {labels.selected}
         </h2>
         {note && <span className="text-tiny text-muted">{note}</span>}

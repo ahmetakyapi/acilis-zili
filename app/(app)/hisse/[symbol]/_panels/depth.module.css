@@ -6,7 +6,7 @@
 
 .panel { min-width:0; border-radius:20px; background:var(--premium-surface,var(--surface-solid)); }
 .body { display:flex; min-width:0; flex-direction:column; padding:0 18px 16px; }
-.note { margin-top:12px; padding-top:10px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:11px; line-height:1.65; }
+.note { margin-top:12px; padding-top:10px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:12px; line-height:1.65; }
 .note + .note { margin-top:6px; padding-top:0; border-top:0; }
 .stamp { margin-top:10px; }
 
@@ -42,7 +42,7 @@
   .readings { grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); }
 }
 .reading { display:flex; min-width:0; flex-direction:column; gap:4px; }
-.reading dt { color:var(--text-muted); font-size:11px; font-weight:500; }
+.reading dt { color:var(--text-muted); font-size:12px; font-weight:500; }
 .readingValue { color:var(--text-strong); font-size:clamp(22px,2vw,28px); font-weight:600; line-height:1.15; letter-spacing:-.035em; }
 /* Okuma çubuğu sayının altında, soldan dolar: iki okuma aynı eksende. */
 .readingTrack { position:relative; width:100%; max-width:200px; height:3px; margin-top:6px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
@@ -98,13 +98,13 @@
    ismin tavanında kırılır, en çok iki satır; tamamı `title`da. Sütun dar
    ekranda yapışkan, genişlemesi kayan sütunları örterdi. */
 .roleCell { display:-webkit-box; max-width:13rem; margin-top:2px; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; color:var(--text-muted); font-size:var(--text-tiny); font-weight:500; line-height:1.35; white-space:normal; }
-.tag { display:inline-block; margin-left:6px; padding:1px 6px; border-radius:999px; background:var(--surface-elevated); color:var(--text-muted); font-size:10px; font-weight:600; vertical-align:1px; }
+.tag { display:inline-block; margin-left:6px; padding:1px 6px; border-radius:999px; background:var(--surface-elevated); color:var(--text-muted); font-size:12px; font-weight:600; vertical-align:1px; }
 .dot { display:inline-block; width:8px; height:8px; margin-right:8px; border-radius:999px; vertical-align:0; }
 
 /* MSPR çubukları — sıfır çizgisi ortada, yukarı alım, aşağı satım. Renk
    yalnızca işaretten; boş ay çubuksuz, yalnızca taban çizgisinde bir nokta. */
 .sentiment { margin-top:4px; padding-top:12px; border-top:1px solid var(--line-soft); }
-.sentimentLabel { color:var(--text-strong); font-size:11px; font-weight:600; }
+.sentimentLabel { color:var(--text-strong); font-size:12px; font-weight:600; }
 .bars { position:relative; display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:4px; height:72px; margin-top:10px; }
 .bars::before { position:absolute; inset-inline:0; top:50%; height:1px; background:var(--line); content:""; }
 .bar { position:relative; height:100%; }
@@ -112,17 +112,17 @@
 .bar > i[data-sign="up"] { bottom:50%; background:var(--up); }
 .bar > i[data-sign="down"] { top:50%; background:var(--down); }
 .bar > b { position:absolute; top:calc(50% - 2px); left:calc(50% - 2px); width:4px; height:4px; border-radius:999px; background:var(--line-strong); }
-.barAxis { display:flex; justify-content:space-between; margin-top:6px; color:var(--text-muted); font-size:10px; }
+.barAxis { display:flex; justify-content:space-between; margin-top:6px; color:var(--text-muted); font-size:12px; }
 /* MSPR başlık satırı (29 Eylül): solda ad, sağda en yeni ayın değeri —
    çizim yalnızca biçim veriyordu, sayısı hiçbir yerde yazmıyordu. Sağdaki
    yön etiketleri sıfır çizgisinin iki yanını adlandırıyor; eksen genişliği
    etiket kadar, `.barAxis` çubukların altında aynı hizada kalsın diye onun
    da sağına aynı boşluk. */
 .sentimentHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; }
-.sentimentLatest { color:var(--text-muted); font-size:11px; font-weight:500; }
+.sentimentLatest { color:var(--text-muted); font-size:12px; font-weight:500; }
 .sentimentLatest > span { font-weight:650; }
 .sentimentPlot { display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:8px; }
-.sentimentScale { display:grid; grid-template-rows:1fr 1fr; align-items:center; margin-top:10px; color:var(--text-muted); font-size:10px; font-weight:600; line-height:1; }
+.sentimentScale { display:grid; grid-template-rows:1fr 1fr; align-items:center; margin-top:10px; color:var(--text-muted); font-size:12px; font-weight:600; line-height:1; }
 .sentimentPlot + .barAxis { margin-right:calc(8px + 4ch); }
 
 /* Skor kartı satırı (28 Eylül): ad · dağılım şeridi · yüzde TEK hatta,
@@ -174,7 +174,7 @@
   .techGrid { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 .techRow { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:4px 10px; padding:8px 0; border-top:1px solid var(--line-soft); }
-.techRow dt { color:var(--text-strong); font-size:11px; font-weight:600; line-height:1.4; }
+.techRow dt { color:var(--text-strong); font-size:12px; font-weight:600; line-height:1.4; }
 .techRow dd { color:var(--text-body); font-size:13px; text-align:right; }
 .techSub { display:block; color:var(--text-muted); font-size:var(--text-nano); font-weight:500; }
 .rsiRail { position:relative; grid-column:1 / -1; height:6px; margin-top:4px; border-radius:3px; background:var(--rail-track,var(--line-soft)); }
@@ -182,11 +182,11 @@
 .rsiRail > i { position:absolute; top:-3px; width:12px; height:12px; margin-left:-6px; border:2px solid var(--surface-solid); border-radius:999px; background:var(--primary); }
 .pivots { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; margin-top:4px; padding-top:10px; border-top:1px solid var(--line-soft); }
 .pivots > div { display:flex; min-width:0; flex-direction:column; align-items:center; gap:3px; }
-.pivots dt { color:var(--text-muted); font-size:10px; text-align:center; }
+.pivots dt { color:var(--text-muted); font-size:12px; text-align:center; }
 .pivots dd { color:var(--text-strong); font-size:12px; font-weight:600; }
-.pivotLabel { color:var(--text-strong); font-size:11px; font-weight:600; margin-top:12px; }
+.pivotLabel { color:var(--text-strong); font-size:12px; font-weight:600; margin-top:12px; }
 @media (max-width:389px) {
-  .pivots dd { font-size:11px; }
+  .pivots dd { font-size:12px; }
 }
 
 /* Şirket özeti. */
@@ -199,7 +199,7 @@
 /* Sıkı (29 Eylül): hücre altı çizgisi ve 14'lük dolgu tek satırlık bir
    ızgarada boşuna ikinci bir kat açıyordu. */
 .summaryFact { display:flex; min-width:0; flex-direction:column; gap:4px; padding:4px 0 2px; }
-.summaryFact dt { display:flex; align-items:center; gap:8px; color:var(--text-muted); font-size:11.5px; font-weight:600; }
+.summaryFact dt { display:flex; align-items:center; gap:8px; color:var(--text-muted); font-size:12px; font-weight:600; }
 .summaryIcon { display:grid; width:26px; height:26px; place-items:center; border-radius:8px; background:var(--primary-wash); color:var(--primary-ink); }
 .summaryFact dd { min-width:0; color:var(--text-strong); font-size:16px; font-weight:650; line-height:1.3; letter-spacing:-.02em; text-wrap:balance; }
 .summaryFact dd.summaryMeta { color:var(--text-muted); font-size:12px; font-weight:500; letter-spacing:0; }
@@ -258,7 +258,7 @@
 }
 .summaryText { margin-top:14px; max-width:78ch; color:var(--text-body); font-size:13.5px; line-height:1.75; }
 .guides { display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:12px; padding-top:10px; border-top:1px solid var(--line-soft); }
-.guides > span { color:var(--text-muted); font-size:11px; font-weight:600; }
+.guides > span { color:var(--text-muted); font-size:12px; font-weight:600; }
 .guides a { color:var(--primary-ink); font-size:12px; font-weight:600; }
 .guides a:hover { text-decoration:underline; }
 
@@ -290,7 +290,7 @@
 /* Denge çubuğu: alım ile satış tutarı tek şeritte, oranları kadar. Ölçülerin
    altında hairline ile ayrılmış kendi satırı. */
 .balance { padding:10px 0 14px; border-top:1px solid var(--line-soft); }
-.balanceHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; color:var(--text-muted); font-size:11px; font-weight:500; }
+.balanceHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; color:var(--text-muted); font-size:12px; font-weight:500; }
 .balanceHead > span:first-child { color:var(--text-strong); font-weight:600; }
 .balanceBar { display:flex; gap:2px; height:8px; margin-top:8px; border-radius:999px; background:var(--rail-track,var(--line-soft)); overflow:hidden; }
 .balanceBar > i { flex-basis:0; min-width:2px; }
@@ -302,7 +302,7 @@
    kenarlıksız; dar ekranda sütun yapışkan ve dar, rozet orada basılmıyor. */
 .person { display:flex; align-items:center; gap:10px; }
 .personText { display:flex; min-width:0; flex-direction:column; }
-.initials { display:none; flex:none; width:28px; height:28px; place-items:center; border-radius:999px; background:var(--surface-elevated); color:var(--text-body); font-size:10.5px; font-weight:650; letter-spacing:.02em; }
+.initials { display:none; flex:none; width:28px; height:28px; place-items:center; border-radius:999px; background:var(--surface-elevated); color:var(--text-body); font-size:12px; font-weight:650; letter-spacing:.02em; }
 @media (min-width:640px) {
   .initials { display:grid; }
 }
@@ -323,7 +323,7 @@
 
 /* İşlem çipi. Nötr çip (ödül, vergi, hediye) sönük; açık piyasa kararı
    yön renginin wash'ı üzerinde, yön renginde. */
-.chip { display:inline-flex; align-items:center; min-height:22px; padding:0 9px; border-radius:999px; background:var(--surface-elevated); color:var(--text-muted); font-size:11.5px; font-weight:550; line-height:1; }
+.chip { display:inline-flex; align-items:center; min-height:22px; padding:0 9px; border-radius:999px; background:var(--surface-elevated); color:var(--text-muted); font-size:12px; font-weight:550; line-height:1; }
 .chip[data-side="up"] { background:var(--up-wash); color:var(--up); font-weight:650; }
 .chip[data-side="down"] { background:var(--down-wash); color:var(--down); font-weight:650; }
 
@@ -340,13 +340,13 @@
 /* "Nasıl Okunur": yöntem notları kapalı gelen bir açılır satırda. Özet
    satırı 32 piksel dokunma yüksekliğinde, ok CSS ile. */
 .how { margin-top:10px; border-top:1px solid var(--line-soft); }
-.how > summary { display:flex; min-height:32px; align-items:center; gap:6px; padding-top:6px; color:var(--primary-ink); font-size:11.5px; font-weight:650; list-style:none; cursor:pointer; }
+.how > summary { display:flex; min-height:32px; align-items:center; gap:6px; padding-top:6px; color:var(--primary-ink); font-size:12px; font-weight:650; list-style:none; cursor:pointer; }
 .how > summary::-webkit-details-marker { display:none; }
 .how > summary::after { width:6px; height:6px; margin-top:-3px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg); transition:transform .2s; content:""; }
 .how[open] > summary::after { margin-top:3px; transform:rotate(-135deg); }
 .how > summary:hover { text-decoration:underline; text-underline-offset:3px; }
 .how > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:6px; }
-.how > p { margin-top:6px; color:var(--text-muted); font-size:11px; line-height:1.65; }
+.how > p { margin-top:6px; color:var(--text-muted); font-size:12px; line-height:1.65; }
 .how + .stamp { margin-top:6px; }
 
 /* ---- Beklenen hareket: kompakt (30 Eylül, gerekçe ExpectedMovePanel) ----
@@ -356,7 +356,7 @@
 .emReadings { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 16px; padding-bottom:12px; }
 .emReadings > .reading + .reading { padding-left:16px; border-left:1px solid var(--line-soft); }
 .emValueLine { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; }
-.emBadge { display:inline-flex; padding:1px 7px; border-radius:999px; background:var(--surface-elevated); color:var(--text-body); font-size:10.5px; font-weight:600; line-height:1.5; }
+.emBadge { display:inline-flex; padding:1px 7px; border-radius:999px; background:var(--surface-elevated); color:var(--text-body); font-size:12px; font-weight:600; line-height:1.5; }
 .emTable { min-width:0; }
 .emTable td { padding-block:8px; vertical-align:middle; }
 .emTable tbody tr:first-child td { border-top:0; }
@@ -417,7 +417,7 @@
   .insiderAside .reading { display:flex; flex-direction:column; gap:2px; padding:0 0 0 12px; border-top:0; border-left:1px solid var(--line-soft); }
   .insiderAside .reading:first-child { padding-left:0; border-left:0; }
   .insiderAside .readingValue { font-size:17px; text-align:left; white-space:nowrap; }
-  .insiderAside .readingMeta { font-size:11px; }
+  .insiderAside .readingMeta { font-size:12px; }
   .insiderAside .sentiment { padding-top:10px; }
   .insiderAside .bars { height:48px; margin-top:8px; }
 
@@ -459,7 +459,7 @@
      pay adedinin ardındaki ayraç da düşüyor. */
   .insiderTable tbody td[data-empty] { display:none; }
   .insiderTable tbody tr:has(> td:nth-child(5)[data-empty]) td:nth-child(4)::after { content:none; }
-  .insiderTable .chip { min-height:20px; padding:0 8px; font-size:11px; }
+  .insiderTable .chip { min-height:20px; padding:0 8px; font-size:12px; }
   /* Satır kırılması: tutardan sonra tam genişlikte görünmez bir ayraç —
      alt hat her zaman yeni bir satırda başlıyor. */
   .insiderTable tbody tr::after { content:""; order:2; flex-basis:100%; height:0; }
@@ -467,8 +467,8 @@
 /* Dar ekranda nötr çip ("Opsiyon Kullanımı") ve türev etiketi bir kademe
    küçük: 320'de tarih ve pay adedini üçüncü satıra itiyordu. */
 @media (max-width:359px) {
-  .insiderTable .chip { padding:0 7px; font-size:10.5px; }
-  .insiderTable .tag { margin-left:4px; font-size:9.5px; }
+  .insiderTable .chip { padding:0 7px; font-size:12px; }
+  .insiderTable .tag { margin-left:4px; font-size:12px; }
 }
 /* 360'ın altında üç sütun dar: etiketler ikiye kırılıyor, net değer
    sütunu dolduruyordu (320'de ölçüldü). Okumalar yeniden satır. */

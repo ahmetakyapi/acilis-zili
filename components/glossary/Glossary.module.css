@@ -31,7 +31,7 @@
 @media(min-width:640px) { .spotlightPlate { border-bottom:0; border-right:1px solid var(--line-soft); } }
 .plateWatermark { position:absolute; right:-22px; bottom:-30px; z-index:-1; color:var(--primary-wash); pointer-events:none; }
 .spotlightCopy { display:flex; min-width:0; flex-direction:column; gap:8px; padding:22px 24px 20px; }
-.spotlightKicker { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; font-size:12px; line-height:1.4; font-weight:650; color:var(--primary-ink); }
+.spotlightKicker { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; font-size:14px; line-height:1.4; font-weight:650; color:var(--primary-ink); }
 .spotlightKicker time { font-weight:500; color:var(--text-muted); }
 .spotlightKicker time::before { content:""; display:inline-block; width:12px; height:1px; margin-right:8px; vertical-align:middle; background:var(--line-strong); }
 .spotlightTerm { margin-top:4px; font-size:clamp(22px,2.2vw,28px); line-height:1.15; letter-spacing:-.035em; font-weight:650; color:var(--text-strong); text-wrap:balance; }
@@ -52,7 +52,7 @@
 .categoryTile { position:relative; display:flex; width:148px; flex-direction:column; align-items:flex-start; gap:6px; padding:12px 13px 13px; border:1px solid var(--line); border-radius:14px; background:var(--surface-sunken); color:var(--primary-ink); text-align:left; cursor:pointer; transition:background-color .25s,border-color .25s,scale .15s; }
 .categoryTile > svg { flex-shrink:0; transition:rotate .45s,scale .45s; }
 .categoryName { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:2.6em; font-size:13px; line-height:1.3; font-weight:600; color:var(--text-strong); }
-.categoryCount { font-size:11px; font-weight:500; color:var(--text-muted); }
+.categoryCount { font-size:12px; font-weight:500; color:var(--text-muted); }
 .categoryBar { display:block; width:100%; height:3px; margin-top:2px; overflow:hidden; border-radius:2px; background:var(--rail-track); }
 /* "Tümü" kutucuğunun çubuğu bir PAY: sekiz kategori, terim sayısıyla
    orantılı ve aralarında ince boşluk. Tek bir dolu çubuk ötekilerle
@@ -207,7 +207,7 @@
 /* Ad ve kısaltma: kısaltma sarılırsa adın altına iner. */
 .cardName { display:flex; min-width:0; flex-wrap:wrap; align-items:center; gap:4px 8px; font-size:16px; line-height:1.28; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); overflow-wrap:anywhere; transition:color .25s; }
 .cardName > span:first-child { text-wrap:balance; }
-.cardAbbr { flex-shrink:0; padding:1px 7px; border-radius:6px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--line-soft); font-size:11px; line-height:1.55; font-weight:700; letter-spacing:.02em; color:var(--primary-ink); }
+.cardAbbr { flex-shrink:0; padding:1px 7px; border-radius:6px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--line-soft); font-size:12px; line-height:1.55; font-weight:700; letter-spacing:.02em; color:var(--primary-ink); }
 /* Tavan DÖRT satır; kırpılan kart tam cümlesini `title`da taşıyor
    (GlossaryBrowser, ölçerek). Üç satırda 1440'ta 43, 1280'de 64 kart
    "…" ile bitiyordu (ölçüldü); kartın tamamı zaten pencereyi açıyor ama
@@ -324,7 +324,7 @@
 .conceptBand[data-on] text { fill:var(--primary-ink); }
 .conceptTick { fill:var(--text-muted); font-size:10px; font-weight:500; }
 .conceptAxis { fill:none; stroke:var(--line-strong); stroke-width:1.2; }
-.conceptAxisLabel { fill:var(--text-body); font-size:11px; font-weight:600; }
+.conceptAxisLabel { fill:var(--text-body); font-size:12px; font-weight:600; }
 .conceptLine { fill:none; stroke:var(--primary); stroke-width:2.5; stroke-linecap:round; stroke-dasharray:1; }
 .conceptDot { fill:var(--premium-surface); stroke:var(--primary); stroke-width:2; }
 
@@ -343,7 +343,7 @@
 .networkNodes > li { position:absolute; z-index:1; left:var(--x); top:var(--y); width:max-content; max-width:min(36%,230px); translate:-50% -50%; }
 .networkNode { display:flex; align-items:center; gap:10px; padding:6px 13px 6px 6px; border:1px solid var(--line); border-radius:14px; background:var(--premium-surface); transition:background-color .25s,border-color .25s,scale .15s; }
 .networkTerm { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:13px; line-height:1.3; font-weight:600; color:var(--text-strong); }
-.networkCategory { display:block; margin-top:1px; font-size:11px; line-height:1.4; color:var(--text-muted); }
+.networkCategory { display:block; margin-top:1px; font-size:12px; line-height:1.4; color:var(--text-muted); }
 .networkNode:active { scale:.98; }
 .networkNode:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 @media(hover:hover) and (pointer:fine) {

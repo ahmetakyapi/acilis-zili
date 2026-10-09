@@ -78,14 +78,15 @@ export function PanelHeader({
     <div
       className={cn(
         "flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 sm:px-5",
-        /* Plaka başlık daha kısa: 11 piksellik bir etiketin çevresinde 16
-           piksel dolgu, kutuyu başlığın kendisinden büyük gösteriyor. */
+        /* Plaka başlık daha kısa: küçük bir etiketin çevresinde 16 piksel
+           dolgu, kutuyu başlığın kendisinden büyük gösteriyor. Etiket 9
+           Ekim'den beri 14 piksel (`text-read`) — 11'de okunmuyordu. */
         tone === "plate" ? "py-3.5" : "py-4",
         className,
       )}
     >
       {tone === "plate" ? (
-        <h2 className="plate">{title}</h2>
+        <h2 className="plate text-read">{title}</h2>
       ) : (
         /* 14 → 16 (9 Ekim, sahibinin isteği: "bazı başlıklar küçülmüş").
            Panel başlığı gövdeyle aynı puntodaydı ve ancak kalınlıkla
@@ -193,7 +194,8 @@ export function PageHeader({
   );
 }
 
-/** Küçük bölüm başlığı — accent kicker, 10.5–11px. */
+/** Küçük bölüm başlığı — accent kicker, 14px (9 Ekim: 11 piksellik
+ *  kicker bölümün başında okunmuyordu; `.plate` ailesinden, punto `text-read`). */
 export function Kicker({
   children,
   tone = "muted",
@@ -206,7 +208,7 @@ export function Kicker({
   return (
     <p
       className={cn(
-        "plate",
+        "plate text-read",
         tone === "primary" && "text-primary",
         className,
       )}

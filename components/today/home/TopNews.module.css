@@ -43,7 +43,7 @@
 .leadSource { color:var(--text-body); font-weight:650; }
 .chip {
   display:inline-flex; align-items:center; gap:6px; height:26px; padding:0 9px 0 2px; border-radius:999px;
-  background:var(--surface-sunken); color:var(--text-strong); font-size:11.5px; font-weight:700; letter-spacing:.01em;
+  background:var(--surface-sunken); color:var(--text-strong); font-size:12px; font-weight:700; letter-spacing:.01em;
 }
 .leadHeadline {
   display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden;
@@ -109,7 +109,7 @@
   color:var(--text-muted); font-size:var(--text-tiny); line-height:1.2; text-align:right; white-space:nowrap;
 }
 .rowTime time { color:var(--text-strong); font-size:14px; font-weight:700; letter-spacing:-.01em; }
-.rowTime small { font-size:10px; font-weight:600; color:var(--text-muted); }
+.rowTime small { font-size:12px; font-weight:600; color:var(--text-muted); }
 .thumb { grid-area:thumb; margin-block:14px; border-radius:12px; transition:transform .3s; }
 .initial { display:grid; place-items:center; width:var(--thumb); height:var(--thumb); background:var(--surface-sunken); color:var(--text-body); font-size:var(--text-lead); font-weight:700; }
 .rowHeadline {

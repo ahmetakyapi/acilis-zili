@@ -97,7 +97,7 @@
 }
 .tileHead { display:flex; flex-direction:column; gap:1px; min-width:0; }
 .tileName[data-short] { -webkit-line-clamp:1; }
-.tileBasis { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10.5px; font-weight:600; opacity:.75; }
+.tileBasis { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:600; opacity:.75; }
 .tilePct { font-size:19px; font-weight:700; line-height:1.1; letter-spacing:-.03em; white-space:nowrap; }
 .tileSkeleton { height:92px; border-radius:12px; }
 .ribbonError { padding:26px 0; color:var(--text-muted); font-size:var(--text-small); text-align:center; }

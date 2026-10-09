@@ -28,7 +28,7 @@
 .readings { display:flex; align-items:baseline; gap:12px; }
 .primary,.secondary { display:flex; align-items:baseline; gap:7px; }
 .primary time { font-size:30px; line-height:1.08; letter-spacing:-.04em; color:var(--text-strong); font-weight:600; }
-.primary > span,.secondary { font-size:11px; color:var(--text-muted); font-weight:500; }
+.primary > span,.secondary { font-size:12px; color:var(--text-muted); font-weight:500; }
 .secondary time { font-size:13px; }
 /* Mobilde yalnızca boşluk ve kadran küçülüyor; PUNTO KÜÇÜLMÜYOR.
    İkincil satır (New York saati) 10/11'den 9'a iniyordu — sığma sorunu
@@ -68,7 +68,7 @@
   .primary > * { grid-row:2; }
   .readings time { justify-self:end; }
   .readings time + span { justify-self:start; }
-  .secondary, .secondary time, .secondary > span { font-size:11px; font-weight:600; line-height:14px; color:var(--text-muted); }
+  .secondary, .secondary time, .secondary > span { font-size:12px; font-weight:600; line-height:14px; color:var(--text-muted); }
   .primary time { font-size:20px; line-height:1.08; letter-spacing:-.03em; }
 }
 /* Tablette kadran duruyor (52): iki satırlık okuma onun boyunda kalsın diye

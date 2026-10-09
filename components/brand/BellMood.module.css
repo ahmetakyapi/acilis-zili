@@ -14,7 +14,7 @@
    bir üçte birinde doğup yükselip sönüyor. */
 .zs { position:absolute; left:78%; bottom:62%; display:block; width:36px; height:40px; pointer-events:none; }
 .zs > span { position:absolute; left:0; bottom:0; color:var(--primary-ink); font-weight:700; line-height:1; opacity:0; animation:bell-z 3.6s ease-out infinite; }
-.zs > span:nth-child(1) { font-size:11px; }
+.zs > span:nth-child(1) { font-size:12px; }
 .zs > span:nth-child(2) { font-size:14px; animation-delay:1.2s; }
 .zs > span:nth-child(3) { font-size:17px; animation-delay:2.4s; }
 @keyframes bell-z {

@@ -220,7 +220,7 @@
 .review { display:flex; flex-direction:column; gap:18px; }
 .reviewHead { display:grid; gap:16px 28px; }
 @media (min-width:768px) { .reviewHead { grid-template-columns:minmax(0,1fr) auto; align-items:end; } }
-.broker { flex-shrink:0; padding:2px 9px; border-radius:999px; background:var(--primary-tint); font-size:11px; font-weight:700; color:var(--primary-ink); }
+.broker { flex-shrink:0; padding:2px 9px; border-radius:999px; background:var(--primary-tint); font-size:12px; font-weight:700; color:var(--primary-ink); }
 .broker[data-known="false"] { background:var(--brass-wash); color:var(--brass-ink); }
 
 /* Üç sayı büyük puntoda: okunan işlem, temettü, atlanan. Sayılar alttan
@@ -243,7 +243,7 @@
 .monthBar { display:block; width:100%; max-width:28px; height:calc(var(--h, 0) * 100%); border-radius:2px 2px 0 0; }
 .monthBar[data-side="buy"] { background:var(--primary); }
 .monthBar[data-side="sell"] { background:var(--brass); }
-.months figcaption { display:flex; justify-content:space-between; gap:12px; margin-top:6px; font-size:11px; color:var(--text-muted); }
+.months figcaption { display:flex; justify-content:space-between; gap:12px; margin-top:6px; font-size:12px; color:var(--text-muted); }
 .monthKey { display:inline-flex; align-items:center; gap:6px; }
 .monthKey i { display:inline-block; width:8px; height:8px; margin-left:4px; border-radius:2px; }
 .monthKey i[data-side="buy"] { background:var(--primary); }
@@ -261,7 +261,7 @@
 .previewScroll { max-height:min(60vh, 540px); overflow:auto; border:1px solid var(--line-soft); border-radius:12px; background:var(--panel-fixed); }
 .preview { width:100%; min-width:780px; border-collapse:separate; border-spacing:0; font-size:13px; }
 .previewNarrow { min-width:560px; }
-.preview thead th { position:sticky; top:0; z-index:2; padding:10px 8px; border-bottom:1px solid var(--line-soft); background:var(--panel-fixed); text-align:left; font-size:11px; font-weight:600; white-space:nowrap; color:var(--text-muted); }
+.preview thead th { position:sticky; top:0; z-index:2; padding:10px 8px; border-bottom:1px solid var(--line-soft); background:var(--panel-fixed); text-align:left; font-size:12px; font-weight:600; white-space:nowrap; color:var(--text-muted); }
 .preview thead th.stick { z-index:3; }
 .preview tbody > tr > * { padding:5px 8px; border-top:1px solid var(--line-soft); vertical-align:middle; }
 .preview tbody > tr:first-child > * { border-top:0; }
@@ -281,9 +281,9 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 
 /* Durum rozetleri. Şüpheli (seçili gelmeyen) pirinç; bilgi nötr. Kırmızı
    YOK: kırmızı bu sayfada zarar demek. */
-.flag { display:inline-flex; align-items:center; min-height:22px; padding:0 8px; border-radius:999px; background:var(--surface-elevated); font-size:11px; font-weight:600; white-space:nowrap; color:var(--text-body); }
+.flag { display:inline-flex; align-items:center; min-height:22px; padding:0 8px; border-radius:999px; background:var(--surface-elevated); font-size:12px; font-weight:600; white-space:nowrap; color:var(--text-body); }
 .flag[data-block] { background:var(--brass-wash); color:var(--brass-ink); }
-.flagOk { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; color:var(--text-muted); }
+.flagOk { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:var(--text-muted); }
 .flagOk svg { color:var(--primary); }
 .legend { display:flex; flex-direction:column; gap:6px; margin:0; padding:0; list-style:none; font-size:12px; line-height:1.5; color:var(--text-body); }
 .legend li { display:flex; align-items:baseline; gap:8px; }
@@ -292,7 +292,7 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .skipped > div { display:flex; flex-direction:column; gap:8px; }
 .skipped ul { display:flex; flex-direction:column; gap:6px; max-height:240px; margin:0; padding:0; overflow:auto; list-style:none; }
 .skipped li { display:flex; align-items:baseline; gap:8px; }
-.skipped code { min-width:0; font-family:var(--font-mono); font-size:11px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; color:var(--text-body); }
+.skipped code { min-width:0; font-family:var(--font-mono); font-size:12px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; color:var(--text-body); }
 .skipped[open] > summary svg { transform:rotate(180deg); }
 .reviewFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding-top:16px; border-top:1px solid var(--line-soft); }
 .reviewFoot .privacy { padding-left:0; pointer-events:auto; }
@@ -340,7 +340,7 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .range { margin-top:14px; }
 .rangeTrack { position:relative; height:12px; }
 .rangeTrack::before { content:""; position:absolute; left:0; right:0; top:50%; height:1px; background:var(--line); }
-.rangeKey { display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 12px; margin-top:8px; font-size:11px; font-weight:600; color:var(--text-muted); }
+.rangeKey { display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 12px; margin-top:8px; font-size:12px; font-weight:600; color:var(--text-muted); }
 .rangeKey span { display:inline-flex; align-items:center; gap:6px; }
 .rangeKey i { display:inline-block; width:12px; height:6px; border-radius:2px; }
 .rangeKey i[data-tone="proceeds"] { background:var(--primary); }
@@ -352,7 +352,7 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .basisList { display:grid; grid-template-columns:repeat(auto-fit, minmax(128px, 1fr)); gap:14px 20px; margin:0; }
 .basisList dt { font-size:12px; font-weight:600; color:var(--text-muted); }
 .basisList dd { display:flex; flex-direction:column; gap:2px; margin:3px 0 0; font-size:14px; font-weight:650; color:var(--text-strong); }
-.basisNote { font-size:11px; font-weight:500; color:var(--text-muted); }
+.basisNote { font-size:12px; font-weight:500; color:var(--text-muted); }
 
 /* Şelale: dört çubuk aynı TL ölçeğinde. Çubuk tam genişlikte bir öğe;
    konumu ve boyu yalnızca `transform` ile verilir, yani değer değişince
@@ -362,7 +362,7 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .flowRow { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 12px; align-items:baseline; }
 .flowName { font-size:13px; font-weight:600; color:var(--text-strong); }
 .flowValue { font-size:14px; font-weight:650; color:var(--text-strong); white-space:nowrap; }
-.flowNote { grid-column:1 / -1; font-size:11px; line-height:1.4; color:var(--text-muted); }
+.flowNote { grid-column:1 / -1; font-size:12px; line-height:1.4; color:var(--text-muted); }
 .track { position:relative; grid-column:1 / -1; height:12px; }
 .track::before { content:""; position:absolute; left:0; right:0; top:50%; height:1px; background:var(--line); }
 .bar { position:absolute; inset:0; border-radius:4px; transform-origin:0 50%; transform:translateX(calc(var(--from, 0) * 100%)) scaleX(var(--span, 0)); transition:transform 700ms var(--ease-brand); }
@@ -377,7 +377,7 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .meter { position:relative; height:14px; margin-top:14px; }
 .meter::before { content:""; position:absolute; left:0; right:0; top:50%; height:1px; background:var(--line); }
 .meterTick { position:absolute; top:-6px; bottom:-6px; width:2px; margin-left:-1px; border-radius:2px; background:var(--text-strong); left:calc(var(--at) * 100%); transition:left 700ms var(--ease-brand); }
-.meterScale { position:relative; min-height:16px; margin-top:10px; font-size:11px; color:var(--text-muted); }
+.meterScale { position:relative; min-height:16px; margin-top:10px; font-size:12px; color:var(--text-muted); }
 .meterLimit { position:absolute; top:0; left:calc(var(--at) * 100%); transform:translateX(-50%); white-space:nowrap; font-weight:600; color:var(--text-strong); transition:left 700ms var(--ease-brand); }
 
 .notes { display:flex; flex-direction:column; gap:8px; padding-top:18px; border-top:1px solid var(--line-soft); font-size:12px; line-height:1.55; color:var(--text-muted); }
@@ -399,7 +399,7 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .mile[data-done="true"] .mileDot { border-color:var(--primary); background:var(--primary); }
 .mileName { display:block; font-size:14px; font-weight:650; line-height:1.3; color:var(--text-strong); }
 .mileDate { display:block; margin-top:2px; font-size:12px; line-height:1.4; color:var(--text-muted); }
-.todayPin { font-size:11px; font-weight:700; color:var(--primary-ink); }
+.todayPin { font-size:12px; font-weight:700; color:var(--primary-ink); }
 
 /* Telefonda dikey: ray solda, "Bugün" sırasına göre bir satır. */
 @media (max-width:767px) {
@@ -506,7 +506,7 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
    alanının hairline ritmi. */
 .brackets { display:grid; gap:8px; padding-top:18px; margin-top:18px; border-top:1px solid var(--line-soft); }
 .bracketTable { width:100%; border-collapse:separate; border-spacing:0; font-size:13.5px; }
-.bracketTable thead th { padding:0 10px 6px; text-align:right; font-size:11.5px; font-weight:600; color:var(--text-muted); }
+.bracketTable thead th { padding:0 10px 6px; text-align:right; font-size:12px; font-weight:600; color:var(--text-muted); }
 .bracketTable thead th:first-child { padding-left:12px; text-align:left; }
 .bracketTable tbody th, .bracketTable tbody td { padding:9px 10px; border-top:1px solid var(--line-soft); text-align:right; color:var(--text-muted); white-space:nowrap; }
 .bracketTable tbody th { padding-left:12px; text-align:left; font-weight:600; }
@@ -517,7 +517,7 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .bracketTable tbody tr[data-current] td:nth-child(2) { color:var(--primary-ink); font-weight:700; }
 .bracketYours {
   display:inline-block; margin-left:8px; padding:1px 7px; border-radius:999px;
-  background:var(--primary-wash); color:var(--primary-ink); font-size:10.5px; font-weight:700; vertical-align:1px;
+  background:var(--primary-wash); color:var(--primary-ink); font-size:12px; font-weight:700; vertical-align:1px;
 }
 /* DAR EKRANDA SABİT SÜTUNLAR (320'de ölçüldü: "Bu Dilimden" sütunu kabın
    dışına taşıp kesiliyordu). Aralık sütunu iki satıra sarabiliyor, sayılar

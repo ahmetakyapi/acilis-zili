@@ -237,7 +237,7 @@ a.capitalItem:hover .capitalName { color:var(--primary-ink); }
 .moverColumn[data-tone="down"] .moverTitle::before { background:var(--down); }
 .moverTitle span { font-weight:550; color:var(--text-muted); }
 .moverTitle h3 { font:inherit; }
-.moverScale { min-width:var(--measure); flex-shrink:0; white-space:nowrap; text-align:right; font-size:11.5px; font-weight:550; color:var(--text-muted); }
+.moverScale { min-width:var(--measure); flex-shrink:0; white-space:nowrap; text-align:right; font-size:12px; font-weight:550; color:var(--text-muted); }
 .moverList { display:flex; flex-direction:column; }
 .moverList > li + li { border-top:1px solid var(--line-soft); }
 /* İki hat, sabit yükseklik (64): üstte kimlik + ölçü, altta döküm +
@@ -289,7 +289,7 @@ a.capitalItem:hover .capitalName { color:var(--primary-ink); }
 .moverFaces { grid-area:faces; display:flex; justify-content:flex-end; align-items:center; }
 .moverFace { display:flex; border-radius:7px; box-shadow:0 0 0 2px var(--premium-surface); }
 .moverFace + .moverFace { margin-left:-6px; }
-.moverMore { position:relative; display:grid; width:24px; height:24px; margin-left:-6px; place-items:center; border-radius:7px; background:linear-gradient(var(--surface-elevated),var(--surface-elevated)),var(--premium-surface); box-shadow:0 0 0 2px var(--premium-surface); font-size:10.5px; font-weight:700; letter-spacing:-.02em; color:var(--text-body); font-variant-numeric:tabular-nums; }
+.moverMore { position:relative; display:grid; width:24px; height:24px; margin-left:-6px; place-items:center; border-radius:7px; background:linear-gradient(var(--surface-elevated),var(--surface-elevated)),var(--premium-surface); box-shadow:0 0 0 2px var(--premium-surface); font-size:12px; font-weight:700; letter-spacing:-.02em; color:var(--text-body); font-variant-numeric:tabular-nums; }
 @media(max-width:519px) {
   .moverRow { column-gap:10px; }
   .moverFace + .moverFace, .moverMore { margin-left:-9px; }
@@ -327,7 +327,7 @@ a.moverRow:active { scale:.99; }
 .balanceAxis { display:grid; grid-template-columns:var(--balance-cols); column-gap:16px; padding:0 8px 6px; }
 .balanceAxisTrack {
   grid-column:3; position:relative; display:flex; justify-content:space-between; gap:8px;
-  font-size:11.5px; font-weight:600; color:var(--text-muted); white-space:nowrap;
+  font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap;
 }
 .balanceAxisTrack > span { display:inline-flex; align-items:center; gap:6px; }
 .balanceAxisTrack > [data-side="sell"]::before, .balanceAxisTrack > [data-side="buy"]::after {
@@ -430,7 +430,7 @@ a.balanceRow:active { scale:.99; }
 .cardArrow { align-self:start; color:var(--text-muted); transition:transform .25s, color .25s; }
 .badge {
   display:inline-flex; align-items:center; margin-top:4px; padding:2px 9px; border-radius:999px;
-  font-size:11px; font-weight:650; letter-spacing:.01em; white-space:nowrap;
+  font-size:12px; font-weight:650; letter-spacing:.01em; white-space:nowrap;
   background:var(--brass-wash); color:var(--brass-ink);
 }
 .badge[data-tone="congress"] { background:var(--primary-wash); color:var(--primary-ink); }
@@ -457,7 +457,7 @@ a.balanceRow:active { scale:.99; }
 .mosaicItem::before { content:""; position:absolute; left:0; top:9px; bottom:9px; width:3px; border-radius:0 2px 2px 0; }
 .mosaicText { display:flex; flex-direction:column; min-width:0; }
 .mosaicText b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:700; color:var(--text-strong); }
-.mosaicText small { font-size:11.5px; color:var(--text-muted); }
+.mosaicText small { font-size:12px; color:var(--text-muted); }
 @media(max-width:420px) { .mosaic { grid-template-columns:repeat(2, minmax(0,1fr)); } }
 
 .cardMoves { display:flex; flex-wrap:wrap; gap:6px 16px; font-size:12.5px; color:var(--text-muted); }
@@ -485,7 +485,7 @@ a.balanceRow:active { scale:.99; }
 .tradeAmount { grid-area:amount; font-size:12.5px; font-weight:600; text-align:right; color:var(--text-body); }
 .txChip, .moveChip {
   display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:999px;
-  font-size:11.5px; font-weight:650; white-space:nowrap; background:var(--surface-sunken); color:var(--text-body);
+  font-size:12px; font-weight:650; white-space:nowrap; background:var(--surface-sunken); color:var(--text-body);
 }
 .txChip[data-tone="up"], .moveChip[data-tone="up"] { background:var(--up-wash); color:var(--up); }
 .txChip[data-tone="down"], .moveChip[data-tone="down"] { background:var(--down-wash); color:var(--down); }
@@ -519,9 +519,9 @@ a.balanceRow:active { scale:.99; }
   border:1px solid var(--line); border-radius:18px; background:var(--surface-sunken);
 }
 .strip > div { display:flex; flex:1 1 150px; flex-direction:column; gap:3px; min-width:0; padding:14px 18px; box-shadow:-1px 0 0 var(--line); }
-.strip dt { font-size:11.5px; color:var(--text-muted); }
+.strip dt { font-size:12px; color:var(--text-muted); }
 .strip dd { font-size:17px; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
-.strip small { font-size:11.5px; color:var(--text-muted); }
+.strip small { font-size:12px; color:var(--text-muted); }
 .stripLink { display:inline-flex; align-items:center; gap:5px; color:var(--primary-ink); font-size:15px; }
 .stripLink:hover { text-decoration:underline; text-underline-offset:3px; }
 
@@ -535,7 +535,7 @@ a.balanceRow:active { scale:.99; }
 /* Geniş yerleşimin oranı `InvestorTreemap` → WIDE_ASPECT ile aynı. Telefon
    yerleşimi (0,8) tema modülünün kuralından geliyor. */
 .mapBody .map { aspect-ratio:2.2 / 1; }
-.legend { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:11.5px; color:var(--text-body); }
+.legend { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12px; color:var(--text-body); }
 .legend li { display:inline-flex; align-items:center; gap:5px; white-space:nowrap; }
 .legendSwatch { display:block; width:12px; height:12px; border-radius:3px; background:var(--surface-sunken); box-shadow:inset 0 0 0 1px var(--line); }
 .legendSwatch[data-tone="up"][data-level="4"] { background:var(--heat-deep-up); box-shadow:none; }
@@ -565,7 +565,7 @@ a.balanceRow:active { scale:.99; }
 .moveFigures { display:flex; flex-direction:column; align-items:flex-end; gap:1px; }
 .moveFigures b { font-size:13px; font-weight:700; color:var(--up); }
 .moveGroup[data-tone="down"] .moveFigures b { color:var(--down); }
-.moveFigures small { font-size:11.5px; color:var(--text-muted); white-space:nowrap; }
+.moveFigures small { font-size:12px; color:var(--text-muted); white-space:nowrap; }
 .moveMore { margin:4px 8px 0; font-size:12px; font-weight:600; color:var(--text-muted); }
 @media(hover:hover) and (pointer:fine) {
   a.moveRow:hover, a.tickerRow:hover { background:var(--primary-tint); transform:translateX(2px); }
@@ -579,7 +579,7 @@ a.balanceRow:active { scale:.99; }
 .tableScroll { overflow-x:auto; border-top:1px solid var(--line); overscroll-behavior-x:contain; }
 .table { width:100%; min-width:640px; border-collapse:collapse; font-size:13.5px; }
 .table th, .table td { padding:11px 12px; border-top:1px solid var(--line-soft); text-align:left; vertical-align:middle; }
-.table thead th { border-top:0; background:var(--surface-sunken); font-size:11.5px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
+.table thead th { border-top:0; background:var(--surface-sunken); font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
 .table tbody tr { transition:background .2s; }
 .table tbody tr:hover { background:var(--primary-tint); }
 .table .num { text-align:right; white-space:nowrap; }
@@ -592,7 +592,7 @@ a.balanceRow:active { scale:.99; }
 .companyText b { font-size:13.5px; font-weight:700; color:var(--text-strong); }
 .companyText small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
 a.company:hover b { color:var(--primary-ink); }
-.cellNote { display:block; margin-top:2px; font-size:11px; color:var(--text-muted); white-space:nowrap; }
+.cellNote { display:block; margin-top:2px; font-size:12px; color:var(--text-muted); white-space:nowrap; }
 .weightCell { display:flex; flex-direction:column; gap:5px; }
 .weightTrack { display:block; height:4px; }
 .weightTrack i { display:block; height:100%; border-radius:2px; background:var(--primary); }
@@ -669,8 +669,8 @@ a.company:hover b { color:var(--primary-ink); }
 }
 .historyBars li[data-current] .historyTrack i { background:var(--primary); }
 .historyBars li[data-current] .historyValue { color:var(--text-strong); }
-.historyLabel { font-size:11.5px; font-weight:600; color:var(--text-strong); white-space:nowrap; }
-.historyBars small { font-size:11px; color:var(--text-muted); white-space:nowrap; }
+.historyLabel { font-size:12px; font-weight:600; color:var(--text-strong); white-space:nowrap; }
+.historyBars small { font-size:12px; color:var(--text-muted); white-space:nowrap; }
 .historyNote { margin-top:12px; font-size:12px; color:var(--text-muted); }
 .historyTrack i[data-axis="x"] { display:none; }
 /* TELEFONDA YATAY LİSTE (30 Eylül). Sekiz sütun 390'da sütun başına ~34
@@ -711,8 +711,8 @@ a.company:hover b { color:var(--primary-ink); }
 .tickerBars > span { position:relative; display:flex; align-items:center; gap:8px; height:16px; }
 .tickerBars i { display:block; height:6px; min-width:0; border-radius:3px; background:var(--up); transform-origin:left center; }
 .tickerBars [data-tone="down"] i { background:var(--down); }
-.tickerBars b { flex-shrink:0; font-size:11.5px; font-weight:600; color:var(--text-body); white-space:nowrap; }
-.tickerLast { font-size:11.5px; color:var(--text-muted); white-space:nowrap; }
+.tickerBars b { flex-shrink:0; font-size:12px; font-weight:600; color:var(--text-body); white-space:nowrap; }
+.tickerLast { font-size:12px; color:var(--text-muted); white-space:nowrap; }
 @media(max-width:479px) {
   .tickerRow { grid-template-columns:auto minmax(0,1fr) minmax(96px, 40%); }
   .tickerLast { display:none; }
@@ -742,10 +742,10 @@ a.company:hover b { color:var(--primary-ink); }
 .holderId b { font-size:14px; font-weight:700; color:var(--text-strong); }
 .holderId small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
 .holderMove { display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
-.holderMove small { font-size:11.5px; color:var(--text-muted); white-space:nowrap; }
+.holderMove small { font-size:12px; color:var(--text-muted); white-space:nowrap; }
 .holderValue { display:flex; min-width:72px; flex-direction:column; align-items:flex-end; }
 .holderValue b { font-size:14px; font-weight:700; color:var(--text-strong); white-space:nowrap; }
-.holderValue small { font-size:11.5px; color:var(--text-muted); white-space:nowrap; }
+.holderValue small { font-size:12px; color:var(--text-muted); white-space:nowrap; }
 @media(hover:hover) and (pointer:fine) { .holderRow:hover { background:var(--primary-tint); transform:translateX(2px); } }
 @media(max-width:559px) {
   .holderRow { grid-template-columns:auto minmax(0,1fr) auto; }
@@ -760,7 +760,7 @@ a.company:hover b { color:var(--primary-ink); }
 .holderTrade > :last-child { text-align:right; font-weight:600; white-space:nowrap; }
 .holderTradeWho { display:flex; min-width:0; flex-direction:column; gap:1px; line-height:1.25; }
 .holderTradeWho > b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-weight:600; }
-.holderTradeWho > span { color:var(--text-muted); font-size:11.5px; }
+.holderTradeWho > span { color:var(--text-muted); font-size:12px; }
 /* Telefonda dört sütun sığmıyor (ad eklendikten sonra 390'da tutar
    taşıyordu): çip ve tutar sağda alt alta, ad ve tarih solda. */
 @media (max-width:519px) {
@@ -781,7 +781,7 @@ a.company:hover b { color:var(--primary-ink); }
 .arkFunds { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
 .arkFunds i {
   padding:1px 6px; border-radius:999px; background:var(--surface-sunken);
-  font-size:10.5px; font-style:normal; font-weight:650; letter-spacing:.02em; color:var(--text-muted);
+  font-size:12px; font-style:normal; font-weight:650; letter-spacing:.02em; color:var(--text-muted);
 }
 .arkFunds i[data-tone="up"] { background:var(--up-wash); color:var(--up); }
 .arkFunds i[data-tone="down"] { background:var(--down-wash); color:var(--down); }

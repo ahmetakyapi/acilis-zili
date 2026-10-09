@@ -172,7 +172,7 @@ async function ArchiveBoard({
                   : formatEtDateLong(brief.briefDate, locale)}
               </span>
               {brief.briefDate === currentAnchor && (
-                <span className="rounded-full bg-primary px-2 py-0.5 text-nano font-bold tracking-[0.05em] text-on-primary">
+                <span className="rounded-full bg-primary px-2 py-0.5 text-nano font-bold text-on-primary">
                   {(period === "weekly"
                     ? t.brief.thisWeek
                     : t.brief.today
@@ -202,7 +202,7 @@ async function ArchiveBoard({
                 taşıyor. Bu satır olmadan okuyucu iki bölümün neden yan yana
                 durduğunu anlamıyordu. */}
             {period === "weekly" && (
-              <p className="mt-3 text-tiny font-semibold tracking-[0.04em] text-primary">
+              <p className="mt-3 text-tiny font-semibold text-primary">
                 {t.brief.weeklyFrame}
               </p>
             )}
