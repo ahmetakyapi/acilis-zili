@@ -1,4 +1,5 @@
 import { CalendarBlank } from "@phosphor-icons/react/dist/ssr";
+import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import styles from "../stock.module.css";
 import { Panel } from "@/components/ui/primitives";
 import { getNextEarnings } from "@/lib/data";
@@ -79,6 +80,15 @@ export async function UpcomingEarnings({
           ? (earningsHourLabel[next.hour] ?? t.earnings.timeUnknown)
           : t.earnings.timeUnknown}
       </p>
+      {/* TAKVİME EKLE (8 Ekim). Bilanço takvimi, rapor kapağı ve analiz
+          listesi bu düğmeyi taşıyordu; tarihin en çok bakıldığı yer olan
+          bu kartta yoktu. Aynı uç (`/api/takvim`), aynı .ics. */}
+      <AddToCalendar
+        symbol={symbol}
+        date={next.reportDate}
+        label={t.earnings.addToCalendar}
+        className="mt-3 mb-0 w-fit self-start sm:mt-3 sm:mb-0"
+      />
       {(next.epsEstimate !== null || next.revenueEstimate !== null) && (
         /* İKİ ÖLÇÜ AYNI HATTA. Etiketler 84 piksellik hücrede iki
            satıra düşüyor (768'de ölçüldü) ve İkisi aynı anda düşmezse

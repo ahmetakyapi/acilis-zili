@@ -372,7 +372,7 @@ export async function signOutAction() {
    hesabı silememeli.
 
    Silme gerçekten siliyor: users satırı gidince watchlists,
-   watchlist_items, user_avatars ve portfolio_positions ON DELETE CASCADE
+   watchlist_items, user_avatars, portfolio_positions ve price_alerts ON DELETE CASCADE
    ile birlikte düşüyor. Kullanıcıya bağlı YENİ bir tablo da aynı kuralla
    kurulmalı — yoksa silinen hesabın verisi yetim kalır. Yumuşak silme
    (soft delete) bilinçli olarak yok — "sildim" demek, silmek demektir.

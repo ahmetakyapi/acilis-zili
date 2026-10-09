@@ -1,0 +1,73 @@
+/* FİYAT ALARMLARI — hisse levhası ve favorilerdeki panel aynı satırı
+   kullanıyor (PriceAlertButton → AlertRow). Derinlik tonla: kutular
+   yüzey basamağı ve kıl çizgi, gölge yok (levhanın kendi gölgesi katman
+   üstü — globals.css "Katman üstü"). */
+
+.bellIcon { transform-origin: 50% 12%; }
+/* Hedefe ulaşmış alarm: zilin sağ üstünde pirinç nokta. */
+.hitDot { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--brass); box-shadow: 0 0 0 2px var(--premium-surface); }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  button:hover > .bellIcon { animation: alert-ring 620ms var(--ease-brand); }
+}
+@keyframes alert-ring { 20% { transform: rotate(-14deg); } 45% { transform: rotate(11deg); } 70% { transform: rotate(-5deg); } }
+
+.composer { display: flex; flex-direction: column; gap: 18px; padding: 4px 16px 18px; }
+@media (min-width: 640px) { .composer { padding: 4px 20px 20px; } }
+.intro { font-size: var(--text-small); line-height: 1.5; color: var(--text-body); }
+
+.form { display: flex; flex-direction: column; gap: 10px; }
+.fieldRow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 14px; }
+.now { display: flex; flex-direction: column; gap: 7px; padding-bottom: 14px; text-align: right; }
+.now strong { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; color: var(--text-strong); }
+.hint { min-height: 1.35em; font-size: var(--text-small); line-height: 1.35; color: var(--text-body); }
+.hint [data-direction="above"] { color: var(--up); }
+.hint [data-direction="below"] { color: var(--down); }
+.error { color: var(--down); }
+.created { display: inline-flex; align-items: center; gap: 5px; color: var(--up); }
+.submit { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+@media (min-width: 640px) { .submit { width: auto; align-self: flex-end; min-width: 12rem; } }
+
+.existing { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
+.list { display: flex; flex-direction: column; gap: 8px; }
+.note { font-size: var(--text-tiny); line-height: 1.5; color: var(--text-muted); }
+
+/* ---- Satır ---- */
+.row { display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--premium-surface); }
+.row[data-hit] { border-color: color-mix(in srgb, var(--brass) 45%, var(--line)); background: color-mix(in srgb, var(--brass-wash) 55%, var(--premium-surface)); }
+.rowMain { display: flex; min-width: 0; flex: 1 1 auto; flex-direction: column; gap: 8px; }
+.rowHead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.rowSymbol { font-size: var(--text-read); font-weight: 800; letter-spacing: -0.01em; color: var(--text-strong); }
+.rowSymbol:hover { color: var(--primary-ink); }
+.rowDirection { font-size: var(--text-small); font-weight: 600; }
+.rowDirection[data-direction="above"] { color: var(--up); }
+.rowDirection[data-direction="below"] { color: var(--down); }
+.rowTarget { margin-left: auto; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; color: var(--text-strong); }
+/* Kurulduğu fiyattan hedefe alınan yol — çubuk bir büyüklük, yargı değil;
+   ton etkileşim mavisi, hedefe ulaşınca pirinç. */
+.track { position: relative; height: 4px; overflow: hidden; border-radius: 2px; background: var(--rail-track); }
+.fill { position: absolute; inset: 0; transform-origin: left center; background: var(--primary); transition: transform 600ms var(--ease-brand); }
+.row[data-hit] .fill { background: var(--brass); }
+.rowMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: var(--text-tiny); line-height: 1.35; color: var(--text-muted); }
+.pendingBadge, .hitBadge { padding: 2px 7px; border-radius: var(--radius-xs); font-weight: 700; }
+.pendingBadge { background: var(--primary-wash); color: var(--primary-ink); }
+.hitBadge { background: var(--brass-wash); color: var(--brass-ink); }
+.rowActions { display: flex; flex: none; gap: 2px; }
+.iconAction { display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--radius-sm); color: var(--text-muted); transition: background-color .2s, color .2s; }
+.iconAction:hover { background: var(--surface-sunken); color: var(--text-strong); }
+.iconDanger:hover { background: var(--down-wash); color: var(--down); }
+.iconAction:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 1px; }
+@media (pointer: coarse) { .iconAction { width: 44px; height: 44px; } }
+
+/* ---- Favorilerdeki panel ---- */
+.panelBody { display: flex; flex-direction: column; gap: 8px; padding: 0 16px 16px; }
+@media (min-width: 640px) { .panelBody { padding: 0 20px 20px; } }
+.panelEmpty { font-size: var(--text-small); line-height: 1.5; color: var(--text-body); }
+
+/* ---- Ana sayfadaki işaret ---- */
+.homeBanner { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--brass) 45%, var(--line)); border-radius: var(--radius-lg); background: color-mix(in srgb, var(--brass-wash) 55%, var(--premium-surface)); color: var(--brass-ink); font-size: var(--text-small); font-weight: 700; transition: border-color .2s; }
+.homeBanner:hover { border-color: var(--brass); }
+.homeBanner svg { flex: none; }
+.homeBanner span { flex: 1 1 auto; min-width: 0; }
+.homeSymbols { font-weight: 600; color: var(--text-body); }
+
+@media (prefers-reduced-motion: reduce) { .fill, .iconAction, .homeBanner { transition: none; } }

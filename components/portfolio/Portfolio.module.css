@@ -645,6 +645,19 @@
   text-wrap: balance;
 }
 
+/* Pozisyon notu (gerekçe PositionsTable): adın altında, tek satır. */
+.posNote {
+  overflow: hidden;
+  max-width: 100%;
+  margin-top: 2px;
+  color: var(--text-body);
+  font-size: var(--text-tiny);
+  font-style: italic;
+  line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 /* Ağırlık halkası: pay kadar dolu, ortasında yüzde. */
 .posWeight {
   position: relative;

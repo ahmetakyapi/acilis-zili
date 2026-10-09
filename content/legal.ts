@@ -14,14 +14,14 @@
    ========================================================================== */
 
 /** Metnin son güncellendiği tarih — sayfa künyesinde görünür (ET/TR farkı önemsiz). */
-export const LEGAL_UPDATED = "2026-09-28";
+export const LEGAL_UPDATED = "2026-10-08";
 
 const PRIVACY_TR = `Açılış Zili kişisel bir projedir ve ABD borsalarını Türkçe takip etmek için yapılmıştır. Bu sayfa, 6698 sayılı **Kişisel Verilerin Korunması Kanunu** (KVKK) kapsamında hangi verinin neden işlendiğini, nereye gittiğini ve senin hangi haklara sahip olduğunu anlatır.
 
 Kısa cevap peşindeysen: hesap açmadan siteyi kullanabilirsin ve o durumda seni tanımlayan hiçbir kayıt oluşmaz. Reklam ağı, izleme çerezi ve üçüncü taraf piksel bu sitede **yok**. Hangi sayfanın kaç kez okunduğu sayılır ama bu sayım kimliksizdir ve aşağıda satır satır anlatılmıştır.
 
 ::: ozet Üç Cümlede
-Hesap açmazsan yalnızca tema ve dil tercihin tarayıcında saklanır; sunucuda seni tanımlayan bir kayıt oluşmaz. Hesap açarsan kullanıcı adın, e-postan, şifrenin geri döndürülemez özeti, takip listen ve portföyüne eklediğin pozisyonlar saklanır. Bu veriler kimseye satılmaz, pazarlama amacıyla kullanılmaz.
+Hesap açmazsan yalnızca tema ve dil tercihin tarayıcında saklanır; sunucuda seni tanımlayan bir kayıt oluşmaz. Hesap açarsan kullanıcı adın, e-postan, şifrenin geri döndürülemez özeti, takip listen, portföyüne eklediğin pozisyonlar ve kurduğun fiyat alarmları saklanır. Bu veriler kimseye satılmaz, pazarlama amacıyla kullanılmaz.
 :::
 
 ## Veri Sorumlusu
@@ -75,6 +75,7 @@ Hukuki sebep: meşru menfaat (m. 5/2-f) — ürünün hangi bölümünün kullan
 | Şifrenin özeti | Girişi doğrulamak | Sözleşmenin ifası (m. 5/2-c) |
 | Takip listen ve notların | Ürünün asıl işlevi | Sözleşmenin ifası (m. 5/2-c) |
 | Portföy pozisyonların (sembol, adet, alış fiyatı, alış tarihi, not) | Dolar ve lira kâr/zararını hesaplamak | Sözleşmenin ifası (m. 5/2-c) |
+| Fiyat alarmların (sembol, hedef fiyat, yön, kurulduğu ve tetiklendiği an) | Hedef fiyata ulaşıldığında sana göstermek | Sözleşmenin ifası (m. 5/2-c) |
 | Tema ve dil tercihi | Arayüzü hatırlamak | Meşru menfaat (m. 5/2-f) |
 | Seçtiğin profil ikonu | Hesabını arayüzde göstermek | Meşru menfaat (m. 5/2-f) |
 | Son giriş zamanı | Hesabın hâlâ kullanılıp kullanılmadığını görmek | Meşru menfaat (m. 5/2-f) |
@@ -131,7 +132,7 @@ Barındırma sağlayıcısının teknik kayıtlarında (log) IP adresi ve taray�
 
 ## Saklama Süresi
 
-Hesap verilerin, hesabın açık kaldığı sürece saklanır. Hesabını sildiğinde kullanıcı kaydın ve ona bağlı bütün takip listeleri ve portföy pozisyonları veritabanından **kalıcı olarak** silinir; yedeklerdeki kopyalar da yedek döngüsü tamamlandığında (en geç 30 gün) düşer.
+Hesap verilerin, hesabın açık kaldığı sürece saklanır. Hesabını sildiğinde kullanıcı kaydın ve ona bağlı bütün takip listeleri, portföy pozisyonları ve fiyat alarmları veritabanından **kalıcı olarak** silinir; yedeklerdeki kopyalar da yedek döngüsü tamamlandığında (en geç 30 gün) düşer.
 
 Piyasa verileri, haberler ve yazılar kişisel veri değildir; onlar sende bir hesap olsun olmasın tutulur.
 
@@ -145,7 +146,7 @@ Başvurunu [GitHub deposu üzerinden](https://github.com/ahmetakyapi/acilis-zili
 
 Hesap silme talebi için beklemene gerek yok: Ayarlar ekranından hesabını kendin silebilirsin, işlem anında uygulanır.
 
-Verilerinin bir kopyası için de başvuru gerekmez: Ayarlar → Verilerin → **Verilerimi İndir** hesabının tuttuğu her şeyi (hesap bilgilerin, takip listelerin, semboller ve notların, profil ikonun) JSON ya da CSV dosyası olarak anında indirir.
+Verilerinin bir kopyası için de başvuru gerekmez: Ayarlar → Verilerin → **Verilerimi İndir** hesabının tuttuğu her şeyi (hesap bilgilerin, takip listelerin, semboller ve notların, portföyün, fiyat alarmların, profil ikonun) JSON ya da CSV dosyası olarak anında indirir.
 
 ## Güvenlik
 
@@ -218,7 +219,7 @@ const PRIVACY_EN = `Opening Bell is a personal project built to follow US market
 If you want the short answer: you can use the site without an account, and in that case no record identifying you is created. There are **no** ad networks, tracking cookies or third-party pixels on this site. Page reads are counted, but that count is anonymous and is explained line by line below.
 
 ::: ozet In Three Sentences
-Without an account, only your theme and language preferences are stored in your browser; no record identifying you is created on the server. With an account, your username, email address, an irreversible digest of your password, your watchlists and the positions you add to your portfolio are stored. This data is never sold and never used for marketing.
+Without an account, only your theme and language preferences are stored in your browser; no record identifying you is created on the server. With an account, your username, email address, an irreversible digest of your password, your watchlists, the positions you add to your portfolio and the price alerts you set are stored. This data is never sold and never used for marketing.
 :::
 
 ## Data Controller
@@ -272,6 +273,7 @@ Legal basis: legitimate interest (Art. 5/2-f) — seeing which part of the produ
 | Password digest | To verify sign-in | Performance of a contract (Art. 5/2-c) |
 | Your watchlists and notes | The product's core function | Performance of a contract (Art. 5/2-c) |
 | Your portfolio positions (symbol, quantity, buy price, buy date, note) | To compute dollar and lira profit and loss | Performance of a contract (Art. 5/2-c) |
+| Your price alerts (symbol, target price, direction, when set and when triggered) | To show you when a target price is reached | Performance of a contract (Art. 5/2-c) |
 | Theme and language preference | To remember the interface | Legitimate interest (Art. 5/2-f) |
 | The profile icon you picked | To show your account in the interface | Legitimate interest (Art. 5/2-f) |
 | Last sign-in time | To see whether the account is still in use | Legitimate interest (Art. 5/2-f) |
@@ -328,7 +330,7 @@ The hosting provider's technical logs may hold an IP address and browser informa
 
 ## Retention
 
-Your account data is kept for as long as the account exists. When you delete your account, your user record and every watchlist and portfolio position attached to it are **permanently** removed from the database; copies in backups fall away when the backup cycle completes (at most 30 days).
+Your account data is kept for as long as the account exists. When you delete your account, your user record and every watchlist, portfolio position and price alert attached to it are **permanently** removed from the database; copies in backups fall away when the backup cycle completes (at most 30 days).
 
 Market data, news and articles are not personal data; they are kept whether or not you have an account.
 
@@ -342,7 +344,7 @@ You can send your request [through the GitHub repository](https://github.com/ahm
 
 You do not have to wait for an account deletion request: you can delete your account yourself from the Settings screen, and it takes effect immediately.
 
-You do not need a request for a copy of your data either: Settings → Your Data → **Download My Data** immediately downloads everything your account holds (your account details, your watchlists, their symbols and notes, your profile icon) as a JSON or CSV file.
+You do not need a request for a copy of your data either: Settings → Your Data → **Download My Data** immediately downloads everything your account holds (your account details, your watchlists, their symbols and notes, your portfolio, your price alerts, your profile icon) as a JSON or CSV file.
 
 ## Security
 

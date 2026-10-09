@@ -7,6 +7,7 @@ import {
   Buildings,
   CalendarBlank,
   ChartBar,
+  Funnel,
   ChartLineUp,
   Envelope,
   FileText,
@@ -93,6 +94,10 @@ export default async function MenuPage() {
         { href: "/bilancolar", icon: FileText, title: t.nav.earnings, hint: t.menu.hintEarnings },
         { href: "/takvim", icon: CalendarBlank, title: t.nav.calendar, hint: t.menu.hintCalendar },
         { href: "/karsilastir", icon: ChartBar, title: t.compare.title, hint: t.menu.hintCompare },
+        /* Hisse Seçimi telefonda yalnız hisse panelinden açılıyordu: masaüstü
+           "Daha Fazla"da (nav-items.ts) ama bu elle yazılmış listede yoktu
+           ve `hintScreening` hiçbir yerde basılmıyordu. */
+        { href: "/hisse-secimi", icon: Funnel, title: t.screening.title, hint: t.menu.hintScreening },
         { href: "/tema", icon: SquaresFour, title: t.themes.eyebrow, hint: t.menu.hintThemes },
         { href: "/yatirimcilar", icon: UsersThree, title: t.investors.eyebrow, hint: t.menu.hintInvestors },
       ],

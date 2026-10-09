@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { GuideHint } from "@/components/article/GuideHint";
 import { ShareButton } from "@/components/article/ShareButton";
+import { FavoriteSlot } from "@/components/stock/FavoriteSlot";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { MotionExperience, Reveal, ScrollProgress, SectionNav } from "@/components/motion/PremiumMotion";
 import directory from "@/components/motion/DirectoryExperience.module.css";
@@ -257,6 +258,8 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             bir sohbet penceresinde okunmuyor. Sorunun cevabı zaten tek
             kelime — sembol, sayfanın adı ve görüş. Gerisini bağlantının
             kendi önizlemesi taşıyor (`opengraph-image`). */}
+        <span className="inline-flex items-center gap-2">
+        <FavoriteSlot symbol={symbol} back={technicalHref(symbol)} t={t} />
         <ShareButton
           url={absoluteUrl(technicalHref(symbol), locale)}
           title={`${symbol} ${t.technical.title} · ${verdictLabel(verdict, t)}`}
@@ -266,6 +269,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
              (X'te Paylaş, Bağlantıyı Kopyala) aynı kalıyor. */
           labels={{ ...t.share, title: t.technical.shareTitle }}
         />
+        </span>
       </div>
 
       {/* ---- Kapak ---- */}

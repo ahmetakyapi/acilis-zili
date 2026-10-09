@@ -5,10 +5,12 @@ import Image from "next/image";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { and, eq } from "drizzle-orm";
 import { auth } from "@/auth";
-import { ArrowLeft, Heart, Stack, ChartLineUp } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, Heart, Stack, ChartLineUp, BellSimpleRinging } from "@phosphor-icons/react/dist/ssr";
 import { PageShare } from "@/components/article/PageShare";
 import styles from "../stock.module.css";
 import { FavoriteToggle } from "@/components/stock/FavoriteToggle";
+import { PriceAlertButton } from "@/components/alerts/PriceAlertButton";
+import { getUserAlerts, settleAlerts } from "@/lib/price-alerts";
 import { HeaderReadout } from "@/components/stock/ChartReadingContext";
 import { ChangePill, DataStamp, Skeleton } from "@/components/ui/primitives";
 import { db } from "@/lib/db";
@@ -123,6 +125,20 @@ export async function StockHeader({
     }
   }
 
+  /* FİYAT ALARMLARI — bu sembolünkiler, başlığın kotasyonuyla
+     değerlendiriliyor (aynı sayı, aynı kaynak: veri dürüstlüğü 3). Tablo
+     yoksa (`available: false`) düğme hiç basılmıyor. */
+  let alertsAvailable = false;
+  let symbolAlerts: Awaited<ReturnType<typeof getUserAlerts>>["alerts"] = [];
+  if (session?.user?.id) {
+    const { available, alerts } = await getUserAlerts(session.user.id);
+    alertsAvailable = available;
+    const own = alerts.filter((alert) => alert.symbol === symbol);
+    symbolAlerts = quoteResult.ok
+      ? await settleAlerts(session.user.id, own, { [symbol]: quoteResult.data.price }, !quoteResult.stale)
+      : own;
+  }
+
   /* SEANS DIŞINDAKİ FİYAT KENDİNİ SÖYLÜYOR.
      Konsolide tape'e geçtikten sonra açılış öncesi ve kapanış
      sonrası işlemler akıyor (eski IEX beslemesinde hiç akmıyordu),
@@ -202,6 +218,29 @@ export async function StockHeader({
                 className="tap-44 inline-flex size-8 items-center justify-center rounded-sm text-muted transition-colors hover:bg-surface-elevated hover:text-soft"
               >
                 <Heart weight="duotone" size={17} />
+              </Link>
+            )}
+            {/* ALARM KALBİN YANINDA — aynı ölçü. Girişsiz okuyucuya da
+                görünüyor ve onu girişe, sonra bu hisseye geri götürüyor
+                (kalbin gerekçesiyle aynı). */}
+            {session?.user ? (
+              alertsAvailable && (
+                <PriceAlertButton
+                  symbol={symbol}
+                  price={quoteResult.ok && !quoteResult.stale ? quoteResult.data.price : null}
+                  alerts={symbolAlerts}
+                  locale={locale}
+                  labels={t.priceAlerts}
+                />
+              )
+            ) : (
+              <Link
+                href={`/giris?devam=${encodeURIComponent(`/hisse/${symbol}`)}`}
+                aria-label={t.priceAlerts.loginHint}
+                title={t.priceAlerts.loginHint}
+                className="tap-44 inline-flex size-8 items-center justify-center rounded-sm text-muted transition-colors hover:bg-surface-elevated hover:text-soft"
+              >
+                <BellSimpleRinging weight="duotone" size={17} />
               </Link>
             )}
             {/* PAYLAŞ KALBİN YANINDA (30 Eylül, sahibinin isteği: "böyle

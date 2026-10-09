@@ -8,7 +8,10 @@ import {
   type BoardLabels,
   type BoardQuote,
 } from "@/components/watchlist/WatchlistBoard";
-import { DataStamp, PageHeader } from "@/components/ui/primitives";
+import { DataStamp, PageHeader, Panel, PanelHeader } from "@/components/ui/primitives";
+import { AlertRow } from "@/components/alerts/PriceAlertButton";
+import alertStyles from "@/components/alerts/PriceAlerts.module.css";
+import { getUserAlerts, settleAlerts } from "@/lib/price-alerts";
 import { getStatus, getSymbolNames, getUserWatchlists } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { getQuotes } from "@/lib/providers";
@@ -33,10 +36,20 @@ export default async function WatchlistPage() {
   if (!session?.user?.id) redirect("/giris?devam=/favoriler");
 
   const { locale, t } = await getI18n();
-  const lists = await getUserWatchlists(session.user.id);
+  const [lists, alertData] = await Promise.all([
+    getUserWatchlists(session.user.id),
+    getUserAlerts(session.user.id),
+  ]);
 
-  const allSymbols = [
+  const listSymbols = [
     ...new Set(lists.flatMap((l) => l.items.map((i) => i.symbol))),
+  ];
+  /* ALARMLARIN SEMBOLLERİ AYNI İSTEKTE. Alarm favoride olmayan bir hisse
+     için de kurulabiliyor; iki ayrı `getQuotes` iki ayrı anahtar ve iki
+     ayrı paket demek — aynı hissenin iki farklı fiyatı yan yana durabilirdi
+     (CLAUDE.md → getQuotes notu). */
+  const allSymbols = [
+    ...new Set([...listSymbols, ...alertData.alerts.map((alert) => alert.symbol)]),
   ];
   const status = await getStatus();
   const [quotesResult, names, fx] = await Promise.all([
@@ -64,6 +77,20 @@ export default async function WatchlistPage() {
       }
     }
   }
+
+  const prices: Record<string, number> = {};
+  for (const [symbol, quote] of Object.entries(quotes)) prices[symbol] = quote.price;
+  const alerts = await settleAlerts(
+    session.user.id,
+    alertData.alerts,
+    prices,
+    Boolean(quotesResult?.ok && !quotesResult.stale),
+  );
+  /* Hedefe ulaşanlar üstte: sayfaya gelme sebebi çoğu zaman onlar. */
+  const sortedAlerts = [...alerts].sort(
+    (a, b) => Number(Boolean(b.triggeredAt)) - Number(Boolean(a.triggeredAt)),
+  );
+  const alertHits = alerts.filter((alert) => alert.triggeredAt).length;
 
   const nameMap: Record<string, string> = {};
   /* Logo, favori satırını sitedeki diğer listelerle aynı dile sokuyor:
@@ -99,6 +126,7 @@ export default async function WatchlistPage() {
     moveDown: t.watchlist.moveDown,
     cancel: t.common.cancel,
     alreadyInList: t.watchlist.alreadyInList,
+    listFull: t.watchlist.listFull,
     renameList: t.watchlist.renameList,
     save: t.common.save,
     dragHint: t.watchlist.dragHint,
@@ -122,6 +150,36 @@ export default async function WatchlistPage() {
         locale={locale}
         labels={labels}
       />
+
+      {alertData.available && (
+        <Panel id="alarmlar" aria-label={t.priceAlerts.panelTitle} className="scroll-mt-28">
+          <PanelHeader
+            title={t.priceAlerts.panelTitle}
+            meta={alertHits > 0 ? t.priceAlerts.hitBanner.replace("{n}", String(alertHits)) : undefined}
+          />
+          <div className={alertStyles.panelBody}>
+            {sortedAlerts.length > 0 ? (
+              <ul className={alertStyles.list}>
+                {sortedAlerts.map((alert) => (
+                  <AlertRow
+                    key={alert.id}
+                    alert={alert}
+                    price={prices[alert.symbol] ?? null}
+                    locale={locale}
+                    labels={t.priceAlerts}
+                    showSymbol
+                  />
+                ))}
+              </ul>
+            ) : (
+              <p className={alertStyles.panelEmpty}>
+                <strong className="text-strong">{t.priceAlerts.emptyTitle}.</strong> {t.priceAlerts.empty}
+              </p>
+            )}
+            <p className={alertStyles.note}>{t.priceAlerts.note}</p>
+          </div>
+        </Panel>
+      )}
 
       {quotesResult?.ok && fx && (
         <p className="numeral text-tiny leading-relaxed text-muted">

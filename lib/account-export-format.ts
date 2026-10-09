@@ -59,6 +59,22 @@ export type AccountExport = {
         note: string | null;
       }[]
     | null;
+  /**
+   * Fiyat alarmları — `null` tablo okunamadıysa (portföyle aynı ayrım).
+   * Alan sonradan eklendi; sürüm 1'i okuyan bir araç için ek bir anahtar,
+   * var olanların anlamı değişmedi.
+   */
+  priceAlerts?:
+    | {
+        symbol: string;
+        direction: "above" | "below";
+        target: number;
+        refPrice: number | null;
+        createdAt: string;
+        triggeredAt: string | null;
+        triggeredPrice: number | null;
+      }[]
+    | null;
 };
 
 /**

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { GuideHint } from "@/components/article/GuideHint";
 import { PageShare } from "@/components/article/PageShare";
+import { FavoriteSlot } from "@/components/stock/FavoriteSlot";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import directory from "@/components/motion/DirectoryExperience.module.css";
@@ -113,7 +114,12 @@ export default async function ScreenReportPage(props: PageProps<"/hisse-secimi/[
         eyebrow={S.title}
         title={S.reportTitle.replace("{symbol}", symbol)}
         description={S.reportSubtitle.replace("{name}", data.name)}
-        share={<PageShare path={`/hisse-secimi/${symbol}`} title={S.reportTitle.replace("{symbol}", symbol)} locale={locale} t={t} />}
+        share={
+          <span className="inline-flex items-center gap-2">
+            <FavoriteSlot symbol={symbol} back={`/hisse-secimi/${symbol}`} t={t} />
+            <PageShare path={`/hisse-secimi/${symbol}`} title={S.reportTitle.replace("{symbol}", symbol)} locale={locale} t={t} />
+          </span>
+        }
         visual={
           <FlagSummary
             result={data.result}
