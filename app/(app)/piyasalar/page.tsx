@@ -1405,7 +1405,9 @@ function MembersTable({
                                   ? "bg-down/70"
                                   : "bg-flat/50",
                             )}
+                            data-motion-draw="line"
                             style={{
+                              transformOrigin: "right center",
                               /* Değişim bilinmiyorsa çubuk çizilmiyor: sıfır
                                  genişlik "hareket yok" demek olurdu ve o da
                                  bir iddia. */

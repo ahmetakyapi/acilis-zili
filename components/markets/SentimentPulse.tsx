@@ -90,7 +90,11 @@ function Gauge({ score, label, size }: { score: number | null; label: string; si
           fill="none"
           strokeWidth={GAUGE.stroke}
           strokeLinecap="butt"
-          style={{ stroke: BAND_STROKE[band.key] }}
+          /* Kadran görünüme girince bantlar uçtan uca çiziliyor
+             (MotionExperience `arc`); JS yoksa tam çizili. */
+          pathLength={1}
+          data-motion-draw="arc"
+          style={{ stroke: BAND_STROKE[band.key], strokeDasharray: 1 }}
         />
       ))}
       {marker && (
@@ -231,7 +235,7 @@ export async function SentimentPulse({
             </p>
             {note && <p className={styles.gaugeNote}>{note}</p>}
           </div>
-          <ul className={styles.pulseChips}>
+          <ul className={styles.pulseChips} data-motion-stagger>
             {snapshot.readings.map((reading) => (
               <li key={reading.key}>
                 <span className={styles.pulseChipName}>
@@ -246,6 +250,7 @@ export async function SentimentPulse({
                 <span className={styles.pulseChipScore}>
                   <span className={cn(styles.scoreTrack, styles.chipTrack)} aria-hidden>
                     <i
+                      data-motion-draw="line"
                       style={{ width: `${reading.score}%` }}
                       data-side={reading.score >= SCORE_MAX / 2 ? "up" : "down"}
                     />
@@ -278,7 +283,7 @@ export async function SentimentPulse({
             {x.pulseAverageOf.replace("{n}", String(snapshot.readings.length))}
           </p>
         </div>
-        <ul className={styles.pulseList}>
+        <ul className={styles.pulseList} data-motion-stagger>
           {snapshot.readings.map((reading) => {
             const score = Math.round(reading.score);
             return (
@@ -294,6 +299,7 @@ export async function SentimentPulse({
                     büyüklük, renk yalnızca yarının hangi tarafında olduğu. */}
                 <span className={styles.scoreTrack} aria-hidden>
                   <i
+                    data-motion-draw="line"
                     style={{ width: `${reading.score}%` }}
                     data-side={reading.score >= SCORE_MAX / 2 ? "up" : "down"}
                   />

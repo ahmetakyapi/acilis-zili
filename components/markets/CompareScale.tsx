@@ -73,7 +73,11 @@ export function ScaleBar({
     >
       <span
         className="block h-full rounded-full"
+        data-motion-draw="line"
         style={{
+          /* Çizgi sıfırdan açılıyor (MotionExperience): işaretli rayda
+             sıfır ortada, işaretsizde sağ uçta. */
+          transformOrigin: signed && !eksi ? "left center" : "right center",
           ...(signed
             ? {
                 /* Sıfır tam ortada: artı sağa, eksi sola açılıyor. */

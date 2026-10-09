@@ -72,7 +72,7 @@ export function EarningsActivity({ rows, from, to, locale, t }: {
 
   return <figure className={styles.earningsActivity}>
     <figcaption><span>{t.directory.earningsActivity}</span><strong>{countLabel(rows.length)}</strong></figcaption>
-    <ol className={styles.activityBars} data-weekly={weekly || undefined}>
+    <ol className={styles.activityBars} data-weekly={weekly || undefined} data-motion-stagger>
       {columns.map((column) => {
         const peak = weekly
           ? busiest.date >= column.from && busiest.date <= column.to
@@ -85,7 +85,7 @@ export function EarningsActivity({ rows, from, to, locale, t }: {
         const body = <>
           <span className={styles.activityCount} aria-hidden>{column.count > 0 ? column.count.toLocaleString(locale) : ""}</span>
           <span className={styles.activityTrack} aria-hidden>
-            <i style={{ height: `${Math.max(column.count > 0 ? 6 : 0, column.count / max * 100)}%` }} />
+            <i data-motion-draw="bar" style={{ height: `${Math.max(column.count > 0 ? 6 : 0, column.count / max * 100)}%` }} />
           </span>
           <span className={styles.activityDay}>
             {label ?? <>{weekday.format(utcNoon(column.from))}<b className="numeral">{dayOfMonth.format(utcNoon(column.from))}</b></>}

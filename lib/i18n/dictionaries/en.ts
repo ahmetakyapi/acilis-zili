@@ -319,6 +319,8 @@ const en: typeof tr = {
     sectorsLink: "Sector Table",
     themesLink: "All Themes",
     sectorsWeight: "Market-Cap Weighted",
+    sectorsBreadth: "{up} Advancing · {down} Declining",
+    sectorsBreadthLabel: "{up} of eleven sectors are rising, {down} are falling",
     themesHeading: "Themes",
     themesMeta: "Median of Members · Equal Weight",
     strongestTheme: "Strongest Theme Today",

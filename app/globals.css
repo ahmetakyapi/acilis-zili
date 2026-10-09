@@ -1685,7 +1685,7 @@ html.theme-switching::view-transition-new(root) {
 @supports (animation-timeline: view()) {
   .panel, [data-rise-scope], .chapter-heading { view-timeline: --rise block; }
   @media (prefers-reduced-motion: no-preference) {
-    :is(.panel, [data-rise-scope], .chapter-heading) h2:not(.plate, .sr-only, [data-no-rise]) {
+    :is(.panel, [data-rise-scope], .chapter-heading) :is(h2, h3[data-rise]):not(.plate, .sr-only, [data-no-rise]) {
       animation: heading-rise cubic-bezier(0.22, 1, 0.36, 1) both;
       animation-timeline: --rise;
       animation-range: entry 40px entry 200px;
@@ -2607,4 +2607,17 @@ html.ink-splash-out .ink-splash-layer {
  .palette-row, .palette-progress[data-on]::after { animation:none; }
  .palette-option::before, .palette-go, .palette-chip, .palette-tile { transition:none; }
  .palette-chip:hover, .palette-tile:hover { translate:none; }
+}
+
+/* --------------------------------------------------------------------------
+   SATIR İMİ (9 Ekim, sahibinin isteği: "daha görsel, daha hareketli").
+   Kademeli tablolarda (`data-motion-stagger` tbody) üzerine gelinen satırın
+   ilk hücresinde 3 piksellik bir im: uzun bir satırda gözün hangi satırda
+   olduğunu sağ uçtaki sayıya kadar taşıyor. Panel başlıklarının yükselişi
+   yukarıdaki `heading-rise`ta; bölüm başlığı olan h3 (`data-rise`, ana
+   sayfanın Sektörler/Temalar bölümleri) de aynı kurala katıldı.
+   -------------------------------------------------------------------------- */
+[data-motion-stagger] > tr > :first-child { transition: box-shadow 220ms var(--ease-brand); }
+@media (hover: hover) and (pointer: fine) {
+  [data-motion-stagger] > tr:hover > :first-child { box-shadow: inset 3px 0 0 var(--primary); }
 }

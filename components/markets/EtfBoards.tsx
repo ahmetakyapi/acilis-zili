@@ -282,7 +282,7 @@ export async function SectorPerformance({
                   {SECTOR_COLUMNS.map((key) => head(key, labels[key].short, labels[key].long, styles.valueHead))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody data-motion-stagger>
                 {ordered.map((row) => (
                   <tr key={row.symbol}>
                     <th scope="row" className={styles.labelCell}>

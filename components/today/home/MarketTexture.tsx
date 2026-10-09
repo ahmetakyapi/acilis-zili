@@ -91,9 +91,45 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
     return b.change - a.change;
   });
   const allLastClose = rows.every((row) => row.change === null || row.lastClose);
+  /* BÜYÜKLÜK ÇİZGİSİ VE GENİŞLİK (9 Ekim). Karonun tonu dokuz kademe ve
+     "+%0,66 ile +%0,59" aynı kademede: iki komşu karo arasında hangisinin
+     büyük olduğu yine rakamdan okunuyordu. Karonun dibindeki ince çizgi
+     aynı yüzdeyi UZUNLUK olarak veriyor (ekran düzeni kuralı: karşılaştırılan
+     her büyüklük bir de çizgi). Ölçek bu seansın en büyük mutlak hareketi;
+     son kapanıştaki karo ölçeğin dışında ve çizgisi yok (iki ayrı günü tek
+     ölçüye koymamak, sıralamadaki kuralın aynısı). */
+  const live = rows.filter((row) => row.change !== null && !row.lastClose);
+  const peak = Math.max(0, ...live.map((row) => Math.abs(row.change!)));
+  const up = live.filter((row) => row.change! > 0).length;
+  const down = live.filter((row) => row.change! < 0).length;
+  const breadth =
+    live.length > 0 ? (
+      <span
+        className={styles.breadth}
+        role="img"
+        aria-label={t.today.sectorsBreadthLabel.replace("{up}", String(up)).replace("{down}", String(down))}
+      >
+        <span aria-hidden className={styles.breadthBar}>
+          {up > 0 && <i data-tone="up" data-motion-draw="line" style={{ flexGrow: up }} />}
+          {live.length - up - down > 0 && <i data-tone="flat" style={{ flexGrow: live.length - up - down }} />}
+          {down > 0 && <i data-tone="down" data-motion-draw="line" style={{ flexGrow: down, transformOrigin: "right center" }} />}
+        </span>
+        <span aria-hidden className={styles.breadthText}>
+          {t.today.sectorsBreadth.split(/(\{up\}|\{down\})/).map((part, i) =>
+            part === "{up}" ? (
+              <b key={i} className="text-up">{up}</b>
+            ) : part === "{down}" ? (
+              <b key={i} className="text-down">{down}</b>
+            ) : (
+              part
+            ),
+          )}
+        </span>
+      </span>
+    ) : null;
 
   return (
-    <SectorFrame t={t} meta={allLastClose ? `${x.sectorsMeta} · ${t.market.lastClose}` : `${x.sectorsMeta} · ${t.today.sectorsWeight}`}>
+    <SectorFrame t={t} aside={breadth} meta={allLastClose ? `${x.sectorsMeta} · ${t.market.lastClose}` : `${x.sectorsMeta} · ${t.today.sectorsWeight}`}>
       <ol className={styles.ribbon} data-motion-stagger>
         {rows.map((row) => {
           const heat = row.change === null || row.lastClose ? { tone: "flat", level: 0 } : heatOf(row.change);
@@ -115,9 +151,15 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
                   <span className={styles.tileName} data-short={marked || undefined}>{row.name}</span>
                   {marked && <span className={styles.tileBasis}>{t.market.lastClose}</span>}
                 </span>
+                <ArrowUpRight size={13} weight="bold" className={styles.tileArrow} aria-hidden />
                 <b className={cn("numeral", styles.tilePct)}>
                   {row.change === null ? NO_VALUE : formatPercent(row.change, locale)}
                 </b>
+                <span aria-hidden className={styles.tileMeter}>
+                  {!row.lastClose && row.change !== null && peak > 0 && row.change !== 0 && (
+                    <i data-motion-draw="line" style={{ width: `${Math.max(4, (Math.abs(row.change) / peak) * 100)}%` }} />
+                  )}
+                </span>
               </Link>
             </li>
           );
@@ -137,12 +179,23 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
   );
 }
 
-function SectorFrame({ t, meta, children }: { t: Dictionary; meta: string; children: React.ReactNode }) {
+function SectorFrame({
+  t,
+  meta,
+  aside,
+  children,
+}: {
+  t: Dictionary;
+  meta: string;
+  aside?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <div className={styles.part}>
       <div className={styles.partHead}>
-        <h3>{t.today.sectorsHeading}</h3>
+        <h3 data-rise>{t.today.sectorsHeading}</h3>
         <span className={styles.partMeta}>{meta}</span>
+        {aside}
         <PanelLink href="/piyasalar#sektor-performansi" className={cn(styles.partLink, styles.sectorsHeadLink)}>
           {t.today.sectorsLink}
         </PanelLink>
@@ -303,7 +356,7 @@ function ThemeFrame({
   return (
     <div className={styles.part}>
       <div className={styles.partHead}>
-        <h3>{t.today.themesHeading}</h3>
+        <h3 data-rise>{t.today.themesHeading}</h3>
         <span className={styles.partMeta}>{t.today.themesMeta}</span>
         <PanelLink href="/tema" className={styles.partLink}>
           {t.today.themesLink}
@@ -357,6 +410,9 @@ function ExtremeCard({
       className={styles.extreme}
       data-tone={tone ?? "flat"}
     >
+      {/* Kartın tepesindeki yön çizgisi: kart görünüme girince soldan
+          açılıyor. Işıma değil ton — renk yalnızca işaretten. */}
+      <span aria-hidden className={styles.extremeAccent} data-motion-draw="line" />
       <span className={styles.extremeTop}>
         <span className={styles.extremeLabel}>{label}</span>
         <ArrowUpRight weight="bold" size={15} className={styles.extremeArrow} aria-hidden />
@@ -364,7 +420,7 @@ function ExtremeCard({
       <span className={styles.extremeMain}>
         <span className={styles.extremeText}>
           <h3 className={styles.extremeTitle}>{themeTitle(card.theme, locale)}</h3>
-          <span aria-hidden className={styles.extremeLogos}>
+          <span aria-hidden className={styles.extremeLogos} data-motion-stagger>
             {members.map((member, i) => (
               <span key={member.symbol} className={styles.extremeLogo} style={{ "--i": i } as CSSProperties}>
                 <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="md" card />
