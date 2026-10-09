@@ -8,10 +8,10 @@ import { LiveClock } from "@/components/today/LiveClock";
 import { SessionRail } from "@/components/today/SessionRail";
 import { sessionDomain } from "@/components/today/index-feed";
 import { Panel, PanelHeader, PanelLink, Skeleton, PanelSkeleton } from "@/components/ui/primitives";
-import { getStatus } from "@/lib/data";
+import { getStatus, getTodayEvents } from "@/lib/data";
 import { displayZone, formatInZone, nextZoneMidnight, zoneTag } from "@/lib/session-clock";
 import { FillColumn } from "@/components/today/FillColumn";
-import { getI18n } from "@/lib/i18n";
+import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { RailSection } from "@/components/today/home/RailSection";
 import { IndexSkeleton, IndexStrip } from "@/components/today/home/IndexStrip";
@@ -523,16 +523,19 @@ export default async function TodayPage() {
 
              Sıra bilinçli: bugünün olayları, sonra hafta, sonra senin
              listen. Ölçekten kişisel olana doğru. */}
-        <Panel data-home-section="schedule">
-          <PanelHeader
-            title={t.today.schedule}
-            tone="title"
-            action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
-          />
-          <Suspense fallback={<ListSkeleton rows={3} />}>
-            <ScheduleList locale={locale} t={t} />
+        {/* BOŞ GÜNDE PANEL YOK (9 Ekim). Bugün takvimde veri yokken panel
+            başlığıyla birlikte "planlanmış ekonomik veri yok" diyen bir
+            kutu olarak duruyordu — çoğu gün böyle ve hemen altındaki
+            "Haftaya Bakış" sıradaki veriyi zaten gösteriyor. Sarmal boş
+            kalınca `:empty` onu ızgaradan düşürüyor; doldurma
+            (FillColumn) panelleri izlediği için kolon dengesi kendini
+            yeniden kuruyor. Yedek `null`: veri yerel veritabanından,
+            iskeletin bir an görünüp kaybolması boş günde bir kırpışma olurdu. */}
+        <div data-home-section="schedule">
+          <Suspense fallback={null}>
+            <SchedulePanel locale={locale} t={t} />
           </Suspense>
-        </Panel>
+        </div>
 
         <Panel data-home-section="week">
           <PanelHeader
@@ -606,5 +609,21 @@ export default async function TodayPage() {
       </footer>
     </div>
     </MotionExperience>
+  );
+}
+
+/** Bugünün takvimi — bugün veri yoksa hiç basılmıyor (gerekçe yerleştiği yerde). */
+async function SchedulePanel({ locale, t }: { locale: Locale; t: Dictionary }) {
+  const events = await getTodayEvents();
+  if (events.length === 0) return null;
+  return (
+    <Panel>
+      <PanelHeader
+        title={t.today.schedule}
+        tone="title"
+        action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
+      />
+      <ScheduleList locale={locale} t={t} />
+    </Panel>
   );
 }
