@@ -239,6 +239,33 @@ export function TaxCalculator({
         price: formatDecimalInput(p.costUsd, locale, { money: true }),
         commission: "",
       }));
+      /* PORTFÖYDE KAYITLI SATIŞLAR (9 Ekim). Satılmış partiler yukarıda alış
+         olarak geldi; satışın kendisi aynı gün ve fiyattaki partiler
+         birleşerek TEK satış satırı oluyor (portföyde bir satış olayı). */
+      const soldGroups = new Map<string, { symbol: string; date: string; price: number; quantity: number }>();
+      for (const p of positions) {
+        if (!p.soldAt || !p.priceUsd) continue;
+        const key = `${p.symbol}|${p.soldAt}|${p.priceUsd}`;
+        const group = soldGroups.get(key);
+        if (group) group.quantity += p.quantity;
+        else soldGroups.set(key, { symbol: p.symbol, date: p.soldAt, price: p.priceUsd, quantity: p.quantity });
+      }
+      const sells = [...soldGroups.values()].map((sale) => ({
+        id: nextId("t"),
+        side: "sell" as const,
+        symbol: sale.symbol,
+        date: sale.date,
+        quantity: decimalText(sale.quantity),
+        price: formatDecimalInput(sale.price, locale, { money: true }),
+        commission: "",
+      }));
+      if (sells.length > 0) {
+        setTrades([...buys, ...sells]);
+        setAdvanced(true);
+        setTab("sale");
+        setImported(positions.length);
+        return;
+      }
       setTrades((prev) => [...buys, ...prev.filter((row) => row.side === "sell")]);
       if (positions.length === 1) {
         setTrades((prev) => prev.map((row) => (row.side === "sell" ? { ...row, symbol: positions[0].symbol, quantity: decimalText(positions[0].quantity) } : row)));
@@ -608,6 +635,10 @@ export function TaxCalculator({
         labels.taxCostTl,
         labels.proceedsTl,
         labels.gainTl,
+        /* Dolar tutarları (9 Ekim): dosya geri yüklendiğinde oturum birebir
+           kurulabilsin (lib/tax-import/own.ts). Komisyon dahil. */
+        labels.costUsdColumn,
+        labels.proceedsUsdColumn,
       ],
       ...results.map((r) => [
         r.symbol,
@@ -621,6 +652,8 @@ export function TaxCalculator({
         r.taxCostTl,
         r.proceedsTl,
         r.gainTl,
+        r.costUsd,
+        r.proceedsUsd,
       ]),
       [],
       [labels.proceedsTl, totals.proceedsTl],

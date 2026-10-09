@@ -75,6 +75,7 @@ Hukuki sebep: meşru menfaat (m. 5/2-f) — ürünün hangi bölümünün kullan
 | Şifrenin özeti | Girişi doğrulamak | Sözleşmenin ifası (m. 5/2-c) |
 | Takip listen ve notların | Ürünün asıl işlevi | Sözleşmenin ifası (m. 5/2-c) |
 | Portföy pozisyonların (sembol, adet, alış fiyatı, alış tarihi, not) | Dolar ve lira kâr/zararını hesaplamak | Sözleşmenin ifası (m. 5/2-c) |
+| Portföy satışların (sembol, adet, satış fiyatı ve günü, satılan partinin alış fiyatı ve günü) | Gerçekleşen dolar ve lira kâr/zararını hesaplamak | Sözleşmenin ifası (m. 5/2-c) |
 | Fiyat alarmların (sembol, hedef fiyat, yön, kurulduğu ve tetiklendiği an) | Hedef fiyata ulaşıldığında sana göstermek | Sözleşmenin ifası (m. 5/2-c) |
 | Tema ve dil tercihi | Arayüzü hatırlamak | Meşru menfaat (m. 5/2-f) |
 | Seçtiğin profil ikonu | Hesabını arayüzde göstermek | Meşru menfaat (m. 5/2-f) |
@@ -132,7 +133,7 @@ Barındırma sağlayıcısının teknik kayıtlarında (log) IP adresi ve taray�
 
 ## Saklama Süresi
 
-Hesap verilerin, hesabın açık kaldığı sürece saklanır. Hesabını sildiğinde kullanıcı kaydın ve ona bağlı bütün takip listeleri, portföy pozisyonları ve fiyat alarmları veritabanından **kalıcı olarak** silinir; yedeklerdeki kopyalar da yedek döngüsü tamamlandığında (en geç 30 gün) düşer.
+Hesap verilerin, hesabın açık kaldığı sürece saklanır. Hesabını sildiğinde kullanıcı kaydın ve ona bağlı bütün takip listeleri, portföy pozisyonları ve satışları ve fiyat alarmları veritabanından **kalıcı olarak** silinir; yedeklerdeki kopyalar da yedek döngüsü tamamlandığında (en geç 30 gün) düşer.
 
 Piyasa verileri, haberler ve yazılar kişisel veri değildir; onlar sende bir hesap olsun olmasın tutulur.
 
@@ -146,7 +147,7 @@ Başvurunu [GitHub deposu üzerinden](https://github.com/ahmetakyapi/acilis-zili
 
 Hesap silme talebi için beklemene gerek yok: Ayarlar ekranından hesabını kendin silebilirsin, işlem anında uygulanır.
 
-Verilerinin bir kopyası için de başvuru gerekmez: Ayarlar → Verilerin → **Verilerimi İndir** hesabının tuttuğu her şeyi (hesap bilgilerin, takip listelerin, semboller ve notların, portföyün, fiyat alarmların, profil ikonun) JSON ya da CSV dosyası olarak anında indirir.
+Verilerinin bir kopyası için de başvuru gerekmez: Ayarlar → Verilerin → **Verilerimi İndir** hesabının tuttuğu her şeyi (hesap bilgilerin, takip listelerin, semboller ve notların, portföyün ve satışların, fiyat alarmların, profil ikonun) JSON ya da CSV dosyası olarak anında indirir.
 
 ## Güvenlik
 
@@ -273,6 +274,7 @@ Legal basis: legitimate interest (Art. 5/2-f) — seeing which part of the produ
 | Password digest | To verify sign-in | Performance of a contract (Art. 5/2-c) |
 | Your watchlists and notes | The product's core function | Performance of a contract (Art. 5/2-c) |
 | Your portfolio positions (symbol, quantity, buy price, buy date, note) | To compute dollar and lira profit and loss | Performance of a contract (Art. 5/2-c) |
+| Your portfolio sales (symbol, quantity, sale price and date, the sold lot's buy price and date) | To compute realized dollar and lira gain/loss | Performance of a contract (Art. 5/2-c) |
 | Your price alerts (symbol, target price, direction, when set and when triggered) | To show you when a target price is reached | Performance of a contract (Art. 5/2-c) |
 | Theme and language preference | To remember the interface | Legitimate interest (Art. 5/2-f) |
 | The profile icon you picked | To show your account in the interface | Legitimate interest (Art. 5/2-f) |
@@ -330,7 +332,7 @@ The hosting provider's technical logs may hold an IP address and browser informa
 
 ## Retention
 
-Your account data is kept for as long as the account exists. When you delete your account, your user record and every watchlist, portfolio position and price alert attached to it are **permanently** removed from the database; copies in backups fall away when the backup cycle completes (at most 30 days).
+Your account data is kept for as long as the account exists. When you delete your account, your user record and every watchlist, portfolio position and sale and price alert attached to it are **permanently** removed from the database; copies in backups fall away when the backup cycle completes (at most 30 days).
 
 Market data, news and articles are not personal data; they are kept whether or not you have an account.
 
@@ -344,7 +346,7 @@ You can send your request [through the GitHub repository](https://github.com/ahm
 
 You do not have to wait for an account deletion request: you can delete your account yourself from the Settings screen, and it takes effect immediately.
 
-You do not need a request for a copy of your data either: Settings → Your Data → **Download My Data** immediately downloads everything your account holds (your account details, your watchlists, their symbols and notes, your portfolio, your price alerts, your profile icon) as a JSON or CSV file.
+You do not need a request for a copy of your data either: Settings → Your Data → **Download My Data** immediately downloads everything your account holds (your account details, your watchlists, their symbols and notes, your portfolio and sales, your price alerts, your profile icon) as a JSON or CSV file.
 
 ## Security
 

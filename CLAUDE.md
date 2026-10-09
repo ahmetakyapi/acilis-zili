@@ -254,7 +254,8 @@ mekanizma. `cache()` ile sarılı olanların tam listesi: `lib/data.ts`
 (`katilimPool`), `lib/market-boards.ts` (`loadBoardBars`),
 `lib/sentiment-data.ts` (`getSentiment`), `lib/screening-data.ts` (`loadScreen`), `lib/providers/sec-edgar.ts` (`getSharesSeries`), `lib/earnings-extras.ts`
 (`getAnalysisExtras`), `lib/portfolio-data.ts` (`getPortfolioPositions`,
-`getPortfolioOrder`) ve `lib/price-alerts.ts` (`getUserAlerts`).
+`getPortfolioOrder`), `lib/portfolio-sales-data.ts` (`getPortfolioSales`,
+`loadRealized`) ve `lib/price-alerts.ts` (`getUserAlerts`).
 Bileşen düzeyinde de var: `getPageTimestamp` (ana sayfa ve
 `/gomulu/geri-sayim`, sayacın "şimdi"si istek içinde tek) ve
 `components/stories/StoryCompanies.tsx` (`companyBars`).

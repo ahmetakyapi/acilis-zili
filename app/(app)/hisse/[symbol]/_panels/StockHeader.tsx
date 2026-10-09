@@ -5,7 +5,7 @@ import Image from "next/image";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { and, eq } from "drizzle-orm";
 import { auth } from "@/auth";
-import { ArrowLeft, Heart, Stack, ChartLineUp, BellSimpleRinging } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, Heart, Stack, ChartLineUp, BellSimpleRinging, Briefcase } from "@phosphor-icons/react/dist/ssr";
 import { PageShare } from "@/components/article/PageShare";
 import styles from "../stock.module.css";
 import { FavoriteToggle } from "@/components/stock/FavoriteToggle";
@@ -203,6 +203,7 @@ export async function StockHeader({
                 isFavorite={isFavorite}
                 addLabel={t.stock.addToWatchlist}
                 removeLabel={t.stock.removeFromWatchlist}
+                fullLabel={t.watchlist.heartFull}
               />
             ) : (
               /* GİRİŞ YAPMAMIŞA DA GÖRÜNÜYOR. Düğme tamamen gizliydi: ürünün
@@ -243,6 +244,17 @@ export async function StockHeader({
                 <BellSimpleRinging weight="duotone" size={17} />
               </Link>
             )}
+            {/* PORTFÖYE EKLE (9 Ekim) — ekleme penceresini bu sembol seçili
+                açıyor (`/portfoy?ekle=`); girişsiz okuyucu girişten sonra
+                aynı pencereye dönüyor (portfoy/page.tsx). */}
+            <Link
+              href={`/portfoy?ekle=${symbol}`}
+              aria-label={t.lira.portfolio.addFromStock.replace("{symbol}", symbol)}
+              title={t.lira.portfolio.addFromStock.replace("{symbol}", symbol)}
+              className="tap-44 inline-flex size-8 items-center justify-center rounded-sm text-muted transition-colors hover:bg-surface-elevated hover:text-soft"
+            >
+              <Briefcase weight="duotone" size={17} />
+            </Link>
             {/* PAYLAŞ KALBİN YANINDA (30 Eylül, sahibinin isteği: "böyle
                 ekranlara hep paylaş"). Aynı simge ölçüsü (32, dokunma 44);
                 telefonda işletim sisteminin paylaşım sayfası açılıyor. */}

@@ -60,12 +60,20 @@ export default function GlobalError({
      yanındaki notta. İmzada duruyor ki sözleşme okunur kalsın. */
   reset?: () => void;
 }) {
-  /* Sunucuda `navigator` yok; varsayılan Türkçe. Ekran zaten yalnızca
-     istemcide görünüyor. */
-  const copy =
-    typeof navigator !== "undefined" && navigator.language?.startsWith("en")
-      ? COPY.en
-      : COPY.tr;
+  /* DİL SİTENİN, TARAYICININ DEĞİL (9 Ekim). Yalnızca `navigator.language`
+     okunuyordu: tarayıcısı İngilizce olan TR okuyucu hata ekranını
+     İngilizce, `/en`deki Türk tarayıcılı okuyucu Türkçe görüyordu. Sıra:
+     adresin `/en` öneki (sitenin doğruluk kaynağı), sonra `az-locale`
+     çerezi (proxy.ts, httpOnly değil), en son tarayıcı. Sunucuda üçü de
+     yok; varsayılan Türkçe — ekran zaten yalnızca istemcide görünüyor. */
+  const copy = (() => {
+    if (typeof window === "undefined") return COPY.tr;
+    const path = window.location.pathname;
+    if (path === "/en" || path.startsWith("/en/")) return COPY.en;
+    const cookie = document.cookie.match(/(?:^|;\s*)az-locale=(tr|en)/)?.[1];
+    if (cookie) return cookie === "en" ? COPY.en : COPY.tr;
+    return navigator.language?.startsWith("en") ? COPY.en : COPY.tr;
+  })();
 
   /* Kök layout'un tarayıcıda çöktüğü an panelin hata listesine gidiyor
      (lib/error-report.ts); `digest`li sunucu hatasını instrumentation.ts

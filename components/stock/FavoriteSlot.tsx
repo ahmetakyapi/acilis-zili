@@ -38,6 +38,7 @@ export async function FavoriteSlot({ symbol, back, t }: { symbol: string; back: 
       isFavorite={symbols.includes(symbol)}
       addLabel={t.stock.addToWatchlist}
       removeLabel={t.stock.removeFromWatchlist}
+      fullLabel={t.watchlist.heartFull}
     />
   );
 }

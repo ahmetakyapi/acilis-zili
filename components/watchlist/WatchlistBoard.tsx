@@ -13,6 +13,7 @@ import {
   Plus,
   Trash,
   PencilSimple,
+  NotePencil,
   X,
 } from "@phosphor-icons/react/dist/ssr";
 import {
@@ -22,6 +23,7 @@ import {
   renameWatchlist,
   removeSymbolFromList,
   reorderWatchlistItems,
+  setWatchlistNote,
 } from "@/app/actions/watchlist";
 import { ChangePill, LogoTile, Button } from "@/components/ui/primitives";
 import type { SearchHit } from "@/app/api/search/route";
@@ -38,7 +40,7 @@ import { formatLira } from "@/lib/fx";
  *   sonrası kimlik eşlemesiyle birleşir (efektsiz, deterministik).
  */
 
-export type BoardItem = { id: string; symbol: string };
+export type BoardItem = { id: string; symbol: string; note?: string | null };
 export type BoardList = {
   id: string;
   name: string;
@@ -82,6 +84,13 @@ export type BoardLabels = {
   alreadyInList: string;
   /** Liste tavana (200 sembol) dayandı. */
   listFull: string;
+  listsFull: string;
+  listNameEmpty: string;
+  noteAdd: string;
+  noteEdit: string;
+  notePlaceholder: string;
+  noteSave: string;
+  noteFailed: string;
   renameList: string;
   save: string;
   /* Tutamağın fare balonu — sabit Türkçe yazılıydı; görsel arayüzde
@@ -172,11 +181,16 @@ function RenameListForm({
   onDone: () => void;
 }) {
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <form
       action={async (formData: FormData) => {
-        await renameWatchlist(formData);
+        const result = await renameWatchlist(formData);
+        if (!result.ok) {
+          setError(result.reason === "empty" ? labels.listNameEmpty : null);
+          return;
+        }
         onDone();
         router.refresh();
       }}
@@ -230,12 +244,14 @@ function RenameListForm({
           {labels.cancel}
         </button>
       </div>
+      {error && <p role="alert" className="basis-full text-small text-down">{error}</p>}
     </form>
   );
 }
 
 function NewListForm({ labels }: { labels: BoardLabels }) {
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const close = () => {
     setOpen(false);
@@ -247,6 +263,7 @@ function NewListForm({ labels }: { labels: BoardLabels }) {
       <button
         ref={triggerRef}
         type="button"
+        data-new-list
         onClick={() => setOpen(true)}
         className="inline-flex h-11 items-center justify-center gap-2 self-start rounded-(--radius-md) border border-dashed border-line-strong px-4 text-sm font-medium text-soft transition-colors hover:border-primary hover:bg-primary-tint hover:text-primary"
       >
@@ -260,7 +277,12 @@ function NewListForm({ labels }: { labels: BoardLabels }) {
     <section className="panel p-4 sm:p-5">
       <form
         action={async (formData: FormData) => {
-          await createWatchlist(formData);
+          const result = await createWatchlist(formData);
+          if (!result.ok) {
+            setError(result.reason === "full" ? labels.listsFull : labels.listNameEmpty);
+            return;
+          }
+          setError(null);
           close();
         }}
         className="flex flex-wrap items-end gap-3"
@@ -319,6 +341,7 @@ function NewListForm({ labels }: { labels: BoardLabels }) {
             <X size={16} />
           </button>
         </div>
+        {error && <p role="alert" className="basis-full text-small text-down">{error}</p>}
       </form>
     </section>
   );
@@ -352,7 +375,7 @@ function ListPanel({
        imleç kartın üstündeyken çıkıyor. Kart başına bir tane olduğu için
        satırlardaki kadar gürültülü değildi ama yıkıcı bir eylemin sürekli
        ekranda durması için de bir sebep yok. */
-    <section className="panel group/list">
+    <section id={`liste-${list.id}`} className="panel group/list">
       {renaming ? (
         <RenameListForm
           list={list}
@@ -407,6 +430,11 @@ function ListPanel({
             const fd = new FormData();
             fd.set("listId", list.id);
             await deleteWatchlist(fd);
+            /* Odak, silinen listenin yerine gelen listenin başına ya da
+               "Yeni Liste" düğmesine — DOM'dan giden düğmede kalmasın. */
+            const panel = document.getElementById(`liste-${list.id}`);
+            const next = (panel?.nextElementSibling ?? panel?.previousElementSibling) as HTMLElement | null;
+            (next?.querySelector<HTMLElement>("button, a") ?? document.querySelector<HTMLElement>("[data-new-list]"))?.focus({ preventScroll: true });
             router.refresh();
           }}
           aria-label={`${labels.deleteList}: ${list.name}`}
@@ -476,6 +504,8 @@ function SortableRows({
   const [order, setOrder] = useState<string[] | null>(null);
   /* Silinmekte olan satırlar — sunucu dönene kadar tonu düşük (aşağıda). */
   const [removing, setRemoving] = useState<ReadonlySet<string>>(() => new Set());
+  /* Notu düzenlenen satır — aynı anda tek satır. */
+  const [noting, setNoting] = useState<string | null>(null);
   const dragId = useRef<string | null>(null);
   /* Sürükleme BAŞLARKENKİ sıra — geri alma hedefi bu. `onDragOver` yerel
      sırayı adım adım değiştiriyor, yani bırakma anındaki `order` artık
@@ -721,27 +751,61 @@ function SortableRows({
                 <span className="flex shrink-0 flex-col transition-opacity opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
                   <button
                     type="button"
-                    onClick={() => nudge(item.id, -1)}
-                    disabled={index === 0}
+                    onClick={() => {
+                      if (index === 0) return;
+                      nudge(item.id, -1);
+                    }}
+                    /* `disabled` DEĞİL: satır uca taşınınca odaklı düğme
+                       devre dışı kalıyor ve tarayıcı odağı <body>'ye
+                       düşürüyordu (FavoriteToggle'daki aynı tuzak). */
+                    aria-disabled={index === 0}
                     aria-label={`${labels.moveUp}: ${item.symbol}`}
-                    className="flex size-9 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong disabled:opacity-25 sm:h-5 sm:w-6"
+                    className="flex size-9 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong aria-disabled:opacity-25 sm:h-5 sm:w-6"
                   >
                     <CaretUp weight="duotone" size={13} />
                   </button>
                   <button
                     type="button"
-                    onClick={() => nudge(item.id, 1)}
-                    disabled={index === ordered.length - 1}
+                    onClick={() => {
+                      if (index === ordered.length - 1) return;
+                      nudge(item.id, 1);
+                    }}
+                    /* `disabled` DEĞİL: satır uca taşınınca odaklı düğme
+                       devre dışı kalıyor ve tarayıcı odağı <body>'ye
+                       düşürüyordu (FavoriteToggle'daki aynı tuzak). */
+                    aria-disabled={index === ordered.length - 1}
                     aria-label={`${labels.moveDown}: ${item.symbol}`}
-                    className="flex size-9 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong disabled:opacity-25 sm:h-5 sm:w-6"
+                    className="flex size-9 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong aria-disabled:opacity-25 sm:h-5 sm:w-6"
                   >
                     <CaretDown weight="duotone" size={13} />
                   </button>
                 </span>
 
+                {!item.note && (
+                  <button
+                    type="button"
+                    onClick={() => setNoting(item.id)}
+                    aria-label={`${labels.noteAdd}: ${item.symbol}`}
+                    title={labels.noteAdd}
+                    className="inline-flex size-10 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted/70 opacity-0 transition hover:bg-surface-elevated hover:text-strong group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100 sm:size-7"
+                  >
+                    <NotePencil weight="duotone" size={13} />
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={async () => {
+                  onClick={async (event) => {
+                    /* ODAK KOMŞUYA. Silinen satırın düğmesi DOM'dan gidince
+                       klavye odağı sayfanın başına düşüyordu; komşu satırın
+                       silme düğmesine (yoksa listenin sembol ekleme
+                       düğmesine) geçiyor. */
+                    const row = event.currentTarget.closest("li");
+                    const neighbor = (row?.nextElementSibling ?? row?.previousElementSibling) as HTMLElement | null;
+                    const target =
+                      neighbor?.querySelector<HTMLElement>(`button[aria-label^="${labels.removeSymbol}"]`) ??
+                      row?.closest("section")?.querySelector<HTMLElement>("[data-add-symbol]") ??
+                      null;
+                    target?.focus({ preventScroll: true });
                     setRemoving((current) => new Set(current).add(item.id));
                     const fd = new FormData();
                     fd.set("itemId", item.id);
@@ -764,6 +828,13 @@ function SortableRows({
                   <Trash weight="duotone" size={13} />
                 </button>
               </div>
+              <ItemNote
+                item={item}
+                labels={labels}
+                editing={noting === item.id}
+                onEdit={() => setNoting(item.id)}
+                onDone={() => setNoting(null)}
+              />
             </motion.li>
           );
         })}
@@ -889,6 +960,7 @@ function AddSymbolRow({
         <button
           ref={triggerRef}
           type="button"
+          data-add-symbol
           onClick={() => {
             setOpen(true);
             window.setTimeout(() => inputRef.current?.focus(), 20);
@@ -1032,4 +1104,124 @@ function AddSymbolRow({
       )}
     </div>
   );
+}
+
+/**
+ * FAVORİ NOTU (9 Ekim) — satırın altında, sembolün hizasında küçük eğik bir
+ * künye. "Neden takip ediyorum" sorusunun cevabı fiyatın yanında dursun.
+ * Not yoksa satır yalnızca imleçle (dokunmatikte her zaman) görünen bir
+ * "Not Ekle" bağlantısı taşıyor; liste sakin kalıyor. Düzenleme satır
+ * içinde: Enter kaydeder, Escape vazgeçer, boş bırakmak notu siler.
+ */
+function ItemNote({
+  item,
+  labels,
+  editing,
+  onEdit,
+  onDone,
+}: {
+  item: BoardItem;
+  labels: BoardLabels;
+  editing: boolean;
+  onEdit: () => void;
+  onDone: () => void;
+}) {
+  const router = useRouter();
+  const [value, setValue] = useState(item.note ?? "");
+  const [failed, setFailed] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const close = () => {
+    onDone();
+    requestAnimationFrame(() => triggerRef.current?.focus());
+  };
+
+  if (editing) {
+    return (
+      <form
+        className="flex flex-wrap items-center gap-2 px-2 pb-2.5 sm:pl-[4.25rem] sm:pr-3"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          if (saving) return;
+          setSaving(true);
+          const fd = new FormData();
+          fd.set("itemId", item.id);
+          fd.set("note", value);
+          let ok = false;
+          try {
+            ok = (await setWatchlistNote(fd)).ok;
+          } catch {
+            ok = false;
+          }
+          setSaving(false);
+          if (!ok) {
+            setFailed(true);
+            return;
+          }
+          setFailed(false);
+          close();
+          router.refresh();
+        }}
+      >
+        <input
+          autoFocus
+          value={value}
+          maxLength={200}
+          onChange={(event) => setValue(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              setValue(item.note ?? "");
+              close();
+            }
+          }}
+          placeholder={labels.notePlaceholder}
+          aria-label={`${labels.noteEdit}: ${item.symbol}`}
+          className="h-9 min-w-48 flex-1 rounded-(--radius-md) border border-line bg-surface-elevated px-3 text-sm text-strong outline-none placeholder:text-muted focus:border-line-focus"
+        />
+        <Button type="submit" size="sm" aria-disabled={saving}>
+          {labels.noteSave}
+        </Button>
+        <button
+          type="button"
+          onClick={() => {
+            setValue(item.note ?? "");
+            close();
+          }}
+          className="inline-flex h-9 items-center rounded-(--radius-md) px-2 text-sm font-medium text-muted hover:text-strong"
+        >
+          {labels.cancel}
+        </button>
+        {failed && (
+          <p role="alert" className="basis-full text-small text-down">
+            {labels.noteFailed}
+          </p>
+        )}
+      </form>
+    );
+  }
+
+  /* Not yoksa satır hiçbir şey basmıyor: "Not Ekle" satırın imleçle çıkan
+     düğmelerinde (çöp kutusunun yanında); her satıra boş bir şerit
+     eklemek listeyi uzatırdı. */
+  if (item.note) {
+    return (
+      <div className="flex items-start gap-1.5 px-2 pb-2.5 sm:pl-[4.25rem] sm:pr-3">
+        <p className="min-w-0 flex-1 text-tiny italic leading-snug text-body">{item.note}</p>
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={onEdit}
+          aria-label={`${labels.noteEdit}: ${item.symbol}`}
+          title={labels.noteEdit}
+          className="tap-44 inline-flex size-6 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted transition-colors hover:bg-surface-elevated hover:text-strong"
+        >
+          <PencilSimple weight="duotone" size={12} />
+        </button>
+      </div>
+    );
+  }
+
+  return null;
 }

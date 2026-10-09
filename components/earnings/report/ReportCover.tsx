@@ -7,7 +7,7 @@ import { LogoTile } from "@/components/ui/primitives";
 import { MetricNote } from "@/components/earnings/MetricCards";
 import { PriceRail, type RailMark } from "@/components/ui/PriceRail";
 import styles from "@/components/earnings/EarningsReport.module.css";
-import { toggleSymbolFavorite } from "@/app/actions/watchlist";
+import { toggleSymbolFavoriteForm } from "@/app/actions/watchlist";
 import type { AnalysisIndexRow, SymbolMeta } from "@/lib/data";
 import type { Quote } from "@/lib/providers/types";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -395,7 +395,7 @@ export function ReportCover({
               )}
 
               {signedIn && (
-                <form action={toggleSymbolFavorite}>
+                <form action={toggleSymbolFavoriteForm}>
                   <input type="hidden" name="symbol" value={symbol} />
                   <button
                     type="submit"

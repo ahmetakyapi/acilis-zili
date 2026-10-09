@@ -176,6 +176,10 @@ export type TaxHandoffPosition = {
   quantity: number;
   costUsd: number;
   boughtAt: string;
+  /** SATILMIŞ parti (9 Ekim, portföy satışları): satış günü ve hisse başı
+   *  fiyatı. Hesaplayıcı partiyi alış, satışı satış satırı olarak kuruyor. */
+  soldAt?: string;
+  priceUsd?: number;
 };
 
 /**
@@ -194,7 +198,7 @@ export function parseTaxHandoff(raw: string | null): TaxHandoffPosition[] {
   const out: TaxHandoffPosition[] = [];
   for (const entry of data.slice(0, HANDOFF_MAX)) {
     if (typeof entry !== "object" || entry === null) continue;
-    const { symbol, quantity, costUsd, boughtAt } = entry as Record<string, unknown>;
+    const { symbol, quantity, costUsd, boughtAt, soldAt, priceUsd } = entry as Record<string, unknown>;
     if (
       typeof symbol === "string" &&
       isValidSymbol(symbol) &&
@@ -205,7 +209,9 @@ export function parseTaxHandoff(raw: string | null): TaxHandoffPosition[] {
       typeof boughtAt === "string" &&
       /^\d{4}-\d{2}-\d{2}$/.test(boughtAt)
     ) {
-      out.push({ symbol, quantity, costUsd, boughtAt });
+      const sold =
+        typeof soldAt === "string" && /^\d{4}-\d{2}-\d{2}$/.test(soldAt) && soldAt >= boughtAt && typeof priceUsd === "number" && priceUsd > 0;
+      out.push(sold ? { symbol, quantity, costUsd, boughtAt, soldAt: soldAt as string, priceUsd: priceUsd as number } : { symbol, quantity, costUsd, boughtAt });
     }
   }
   return out;
@@ -213,3 +219,52 @@ export function parseTaxHandoff(raw: string | null): TaxHandoffPosition[] {
 
 /** Aktarım tavanı — portföyün kendi tavanıyla aynı mertebe. */
 const HANDOFF_MAX = 200;
+
+/* --------------------------------------------------------------------------
+   Günlük değişim (9 Ekim) — SEANSI KANITLANAN kotasyondan
+
+   Portföy yalnızca alıştan bu yana kâr/zarar gösteriyordu; "bugün ne oldu"
+   sorusunun cevabı yoktu. Değişim pozisyon başına adet × kotasyonun
+   `change`i, ama YALNIZCA kotasyon bu seansa aitse (`quoteBasis` önceki
+   kapanış değilse) ve paket bayat değilse — CLAUDE.md veri dürüstlüğü 4:
+   önbellekteki dünkü yüzde "bugün" diye basılmaz. Kanıtlanamayan pozisyon
+   toplamdan çıkıyor ve ekran kaçının çıktığını yazıyor; kısmi toplam
+   "portföyün bugünkü değişimi" diye sunulmuyor, `covered` ile birlikte.
+   -------------------------------------------------------------------------- */
+
+export type DayMove = {
+  /** Pozisyonun bu seanstaki dolar değişimi; kanıtlanamıyorsa null. */
+  changeUsd: number | null;
+  changePct: number | null;
+};
+
+export type DayTotals = {
+  changeUsd: number;
+  /** Değişimin önceki değere oranı (yalnızca kapsanan pozisyonlar). */
+  changePct: number | null;
+  /** Toplama giren ve girmeyen pozisyon sayısı. */
+  covered: number;
+  excluded: number;
+};
+
+export function dayMove(quantity: number, quote: { change: number | null; changePct: number | null } | null, proven: boolean): DayMove {
+  if (!proven || !quote || quote.change === null) return { changeUsd: null, changePct: null };
+  return { changeUsd: quantity * quote.change, changePct: quote.changePct };
+}
+
+export function dayTotals(moves: readonly (DayMove & { valueUsd: number | null })[]): DayTotals {
+  let changeUsd = 0;
+  let previous = 0;
+  let covered = 0;
+  let excluded = 0;
+  for (const move of moves) {
+    if (move.changeUsd === null || move.valueUsd === null) {
+      excluded += 1;
+      continue;
+    }
+    covered += 1;
+    changeUsd += move.changeUsd;
+    previous += move.valueUsd - move.changeUsd;
+  }
+  return { changeUsd, changePct: covered > 0 && previous > 0 ? (changeUsd / previous) * 100 : null, covered, excluded };
+}

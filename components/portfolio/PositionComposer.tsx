@@ -75,8 +75,11 @@ export function PositionComposer({
   minDate,
   maxPositions,
   editing,
+  preset = null,
   onCancel,
   onDelete,
+  onSell,
+  sellLabel,
   onSaved,
 }: {
   labels: PortfolioLabels;
@@ -85,9 +88,14 @@ export function PositionComposer({
   minDate: string;
   maxPositions: number;
   editing: ComposerPosition | null;
+  /** Hisse sayfasından gelindiyse seçili sembol (`/portfoy?ekle=`). */
+  preset?: Picked | null;
   onCancel: () => void;
   /** Yalnızca düzeltmede: silme de burada, telefonda tablonun sonuna gitmesin. */
   onDelete?: () => void;
+  /** Yalnızca düzeltmede ve satış kaydı açıksa: telefonda Sat'ın tek yolu. */
+  onSell?: () => void;
+  sellLabel?: string;
   onSaved: (id: string, symbol: string) => void;
 }) {
   const C = labels.composer;
@@ -100,7 +108,7 @@ export function PositionComposer({
 
   /* ---- Alanlar ---- */
   const [picked, setPicked] = useState<Picked | null>(
-    editing ? { symbol: editing.symbol, name: editing.name ?? null, logo: editing.logoUrl ?? null } : null,
+    editing ? { symbol: editing.symbol, name: editing.name ?? null, logo: editing.logoUrl ?? null } : preset,
   );
   const [query, setQuery] = useState("");
   const [quantity, setQuantity] = useState(editing ? formatDecimalInput(editing.quantity, locale) : "");
@@ -236,7 +244,7 @@ export function PositionComposer({
         query={query}
         setQuery={setQuery}
         error={visible("symbol")}
-        autoFocus={!editing}
+        autoFocus={!editing && !preset}
         onPick={(next) => {
           setPicked(next);
           setTouched((t) => ({ ...t, symbol: true }));
@@ -472,6 +480,11 @@ export function PositionComposer({
         ) : (
           <button type="button" onClick={onCancel} className={buttonClass({ variant: "quiet", size: "lg" })}>
             {C.cancel}
+          </button>
+        )}
+        {onSell && sellLabel && (
+          <button type="button" onClick={onSell} className={buttonClass({ variant: "ghost", size: "lg" })}>
+            {sellLabel}
           </button>
         )}
         <button type="submit" disabled={pending} className={buttonClass({ size: "lg", className: styles.submit })}>

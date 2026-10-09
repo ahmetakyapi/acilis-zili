@@ -1,6 +1,6 @@
 "use client";
 
-import { useOptimistic, useState, startTransition } from "react";
+import { useEffect, useOptimistic, useState, startTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { Heart } from "@phosphor-icons/react";
 import { toggleSymbolFavorite } from "@/app/actions/watchlist";
@@ -29,21 +29,39 @@ export function FavoriteToggle({
   isFavorite,
   addLabel,
   removeLabel,
+  fullLabel,
 }: {
   symbol: string;
   isFavorite: boolean;
   addLabel: string;
   removeLabel: string;
+  /** Liste doluyken (200 sembol) kalbin altında beliren açıklama. */
+  fullLabel?: string;
 }) {
   const [shown, setShown] = useOptimistic(isFavorite);
+  /* DOLU LİSTE SESSİZ DEĞİL (9 Ekim). Kalp iyimser olarak dolup eylem
+     sonrası boşalıyordu ve okuyucu neden olduğunu göremiyordu. */
+  const [full, setFull] = useState(false);
+  useEffect(() => {
+    if (!full) return;
+    const timer = window.setTimeout(() => setFull(false), 5000);
+    return () => window.clearTimeout(timer);
+  }, [full]);
 
   return (
     <form
+      className="relative"
       action={async (formData: FormData) => {
         startTransition(() => setShown(!shown));
-        await toggleSymbolFavorite(formData);
+        const result = await toggleSymbolFavorite(formData);
+        if (result?.full) setFull(true);
       }}
     >
+      {full && fullLabel && (
+        <span role="status" className="absolute left-0 top-full z-20 mt-1 w-64 rounded-md border border-line bg-overlay-surface px-3 py-2 text-small leading-snug text-body">
+          {fullLabel}
+        </span>
+      )}
       <input type="hidden" name="symbol" value={symbol} />
       <HeartButton
         active={shown}

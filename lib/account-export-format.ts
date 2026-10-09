@@ -64,6 +64,18 @@ export type AccountExport = {
    * Alan sonradan eklendi; sürüm 1'i okuyan bir araç için ek bir anahtar,
    * var olanların anlamı değişmedi.
    */
+  /** Portföy satışları (tüketilen partiler) — `null` tablo okunamadıysa. */
+  portfolioSales?:
+    | {
+        saleId: string;
+        symbol: string;
+        quantity: number;
+        priceUsd: number;
+        soldAt: string;
+        costUsd: number;
+        boughtAt: string;
+      }[]
+    | null;
   priceAlerts?:
     | {
         symbol: string;

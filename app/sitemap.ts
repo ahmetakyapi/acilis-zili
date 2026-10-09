@@ -74,6 +74,8 @@ const FEATURE_STATIC_ROUTES: StaticRoute[] = [
   { path: "/sozluk", priority: 0.8, frequency: "weekly" },
   { path: "/tema", priority: 0.7, frequency: "daily" },
   { path: "/yatirimcilar", priority: 0.7, frequency: "weekly" },
+  /* 9 Ekim: dizine açık, menüde ve README'de var ama haritada yoktu. */
+  { path: "/hisse-secimi", priority: 0.7, frequency: "weekly" },
   { path: "/bilancolar/hafta", priority: 0.7, frequency: "daily" },
 ];
 

@@ -372,7 +372,7 @@ export async function signOutAction() {
    hesabı silememeli.
 
    Silme gerçekten siliyor: users satırı gidince watchlists,
-   watchlist_items, user_avatars, portfolio_positions ve price_alerts ON DELETE CASCADE
+   watchlist_items, user_avatars, portfolio_positions, portfolio_sales ve price_alerts ON DELETE CASCADE
    ile birlikte düşüyor. Kullanıcıya bağlı YENİ bir tablo da aynı kuralla
    kurulmalı — yoksa silinen hesabın verisi yetim kalır. Yumuşak silme
    (soft delete) bilinçli olarak yok — "sildim" demek, silmek demektir.
@@ -427,4 +427,73 @@ export async function deleteAccountAction(
   // signOut yönlendirmeyi kendi atar; buradan sonrası çalışmaz.
   await signOut({ redirectTo: "/" });
   return {};
+}
+
+/* --------------------------------------------------------------------------
+   Şifre değiştirme (9 Ekim)
+
+   Ayarlarda şifre değiştirmenin hiçbir yolu yoktu. Mevcut şifre soruluyor
+   (oturum çerezi ele geçirilmiş bir tarayıcı şifreyi değiştirip hesabı
+   ele geçiremesin) ve deneme sayılıyor — hesap silmeyle aynı tehdit modeli,
+   aynı kova türü (kullanıcı başına).
+
+   Kurallar kayıtla AYNI: 8–72 karakter (bcrypt 72 bayt ötesini sessizce
+   yok sayıyor), kullanıcı adını ya da e-postanın yerel kısmını içermesin.
+   Yeni şifre eskisiyle aynı olamaz.
+
+   DİĞER OTURUMLAR AÇIK KALIYOR, bilerek ve ekranda yazılı. Oturumlar JWT;
+   eski çerezleri geçersiz kılmak `users`a bir oturum sürümü sütunu
+   eklemeyi gerektiriyor ve o sütun migration inene kadar her girişi
+   kırardı (CLAUDE.md → "Migration'lar deploy'da UYGULANMAZ").
+   -------------------------------------------------------------------------- */
+
+const PASSWORD_CHANGE_LIMIT = 5;
+
+export type ChangePasswordState = {
+  status: "idle" | "saved" | "error";
+  error?: string;
+  field?: "current" | "next" | "confirm" | "form";
+};
+
+export async function changePasswordAction(
+  _prev: ChangePasswordState,
+  formData: FormData,
+): Promise<ChangePasswordState> {
+  const locale = await getLocale();
+  const t = getDictionary(locale);
+  const P = t.passwordChange;
+
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return { status: "error", error: P.signedOut, field: "form" };
+
+  const limited = rateLimit(`change-password:${userId}`, PASSWORD_CHANGE_LIMIT, AUTH_WINDOW_MS);
+  if (!limited.allowed) return { status: "error", error: P.tooMany, field: "form" };
+
+  const current = String(formData.get("current") ?? "");
+  const next = String(formData.get("next") ?? "");
+  const confirm = String(formData.get("confirm") ?? "");
+
+  if (next.length < MIN_PASSWORD) return { status: "error", error: t.auth.errors.passwordLength, field: "next" };
+  if (next.length > MAX_PASSWORD) return { status: "error", error: t.auth.errors.passwordTooLong, field: "next" };
+  if (next !== confirm) return { status: "error", error: t.auth.errors.passwordMismatch, field: "confirm" };
+
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!user) return { status: "error", error: P.signedOut, field: "form" };
+  if (!current || !(await compare(current, user.passwordHash))) {
+    return { status: "error", error: P.wrongCurrent, field: "current" };
+  }
+  if (weakPassword(next, user.username, user.email)) {
+    return { status: "error", error: t.auth.errors.passwordWeak, field: "next" };
+  }
+  if (await compare(next, user.passwordHash)) {
+    return { status: "error", error: P.sameAsOld, field: "next" };
+  }
+
+  try {
+    await db.update(users).set({ passwordHash: await hash(next, 12) }).where(eq(users.id, userId));
+  } catch {
+    return { status: "error", error: P.failed, field: "form" };
+  }
+  return { status: "saved" };
 }

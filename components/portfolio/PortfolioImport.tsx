@@ -178,7 +178,7 @@ export function PortfolioImport({
   const money = (value: number, digits = 2) => formatPrice(value, locale, { currency: true, digits });
   const qtyText = (value: number) =>
     new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", { maximumFractionDigits: QTY_DECIMALS }).format(value);
-  const brokerName = broker === "midas" ? L.brokerMidas : broker === "ibkr" ? L.brokerIbkr : L.brokerUnknown;
+  const brokerName = broker === "midas" ? L.brokerMidas : broker === "ibkr" ? L.brokerIbkr : broker === "acilis-zili" ? L.brokerOwn : L.brokerUnknown;
 
   async function apply() {
     if (toAdd.length === 0 || pending.length > 0 || overLimit) return;

@@ -227,7 +227,7 @@ export function StatementImport({
     });
   };
 
-  const brokerName = broker === "midas" ? L.brokerMidas : broker === "ibkr" ? L.brokerIbkr : L.brokerUnknown;
+  const brokerName = broker === "midas" ? L.brokerMidas : broker === "ibkr" ? L.brokerIbkr : broker === "acilis-zili" ? L.brokerOwn : L.brokerUnknown;
   const fade = reduced
     ? { initial: false, animate: { opacity: 1 }, exit: { opacity: 0 } }
     : {

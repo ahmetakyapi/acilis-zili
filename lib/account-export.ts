@@ -4,6 +4,7 @@ import { users, watchlistItems, watchlists } from "./schema";
 import { getUserAvatar } from "./avatar-data";
 import { getPortfolioPositions } from "./portfolio-data";
 import { getUserAlerts } from "./price-alerts";
+import { getPortfolioSales } from "./portfolio-sales-data";
 import { EXPORT_FORMAT_VERSION, type AccountExport } from "./account-export-format";
 
 /**
@@ -34,7 +35,7 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
   /* Portföy iki paket paralel yazılırken bu dosyanın dışında kalmıştı:
      indirme "hesabın tuttuğu her şey" diyordu ama pozisyonları vermiyordu
      (28 Eylül, belge taramasında bulundu). KVKK veri taşınabilirliği. */
-  const [lists, avatar, portfolio, alerts] = await Promise.all([
+  const [lists, avatar, portfolio, alerts, sales] = await Promise.all([
     db
       .select()
       .from(watchlists)
@@ -43,6 +44,7 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
     getUserAvatar(userId),
     getPortfolioPositions(userId),
     getUserAlerts(userId),
+    getPortfolioSales(userId),
   ]);
   const items = lists.length
     ? await db
@@ -93,6 +95,17 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
           costUsd: position.costUsd,
           boughtAt: position.boughtAt,
           note: position.note,
+        }))
+      : null,
+    portfolioSales: sales.available
+      ? sales.parts.map((part) => ({
+          saleId: part.saleId,
+          symbol: part.symbol,
+          quantity: part.quantity,
+          priceUsd: part.priceUsd,
+          soldAt: part.soldAt,
+          costUsd: part.costUsd,
+          boughtAt: part.boughtAt,
         }))
       : null,
     priceAlerts: alerts.available
