@@ -110,6 +110,10 @@ sudo systemctl restart acilis-zili
 log "sağlık"
 if healthy; then
 	deployed=1
+	# Zamanlanmış işler YENİ sürümün listesinden (deploy/cron-install.sh).
+	# Düşerse dağıtım geri alınmıyor: sürüm sağlıklı, eksik bir cron satırı
+	# günlüğe yazılıyor ve bir sonraki dağıtım yeniden deniyor.
+	bash "$release/deploy/cron-install.sh" || echo "UYARI: crontab güncellenemedi" >&2
 	# Yalnızca başarılı geçişten sonra buda. `releases/` artık yalnızca
 	# canlıya çıkmış sürümleri taşıyor (bkz. cleanup), yani ada göre budama
 	# doğru olanı tutuyor.

@@ -1,6 +1,7 @@
 import { signInAction } from "@/app/actions/auth";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { getI18n } from "@/lib/i18n";
+import { emailConfigured } from "@/lib/email";
 
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -58,6 +59,10 @@ export default async function SignInPage(props: PageProps<"/giris">) {
             errorKey: "password",
           },
         ]}
+        /* Şifre sıfırlama — yalnızca e-posta servisi bağlıyken (lib/email.ts).
+           `?sifre=yenilendi`: sıfırlama eylemi buraya yönlendiriyor. */
+        forgot={emailConfigured() ? { href: "/sifremi-unuttum", label: t.passwordReset.forgot } : undefined}
+        initialNotice={search.sifre === "yenilendi" ? t.passwordReset.done : undefined}
         altText={t.auth.noAccount}
         altHref="/kayit"
         altLinkLabel={t.nav.signUp}

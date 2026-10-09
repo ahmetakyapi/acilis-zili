@@ -8,6 +8,7 @@ import { Sparkline } from "@/components/ui/Sparkline";
 import type { Locale } from "@/lib/i18n/config";
 import type { MarketSession } from "@/lib/market-hours";
 import { cn, directionOf, directionText, formatPercent, formatPrice } from "@/lib/utils";
+import { TickingFigure } from "@/components/ui/TickingFigure";
 import type { IndexFeed, IndexQuote } from "./index-feed";
 import { INDEX_EVENT, type IndexTickerPatch } from "./index-event";
 import styles from "./TodayExperience.module.css";
@@ -289,12 +290,21 @@ function IndexCard({
           <span className="numeral shrink-0 text-tiny text-muted">{symbol}</span>
         </div>
         <div className={styles.indexQuote}>
+          {/* `key` YOK: öğe yeniden bağlanırsa dönen rakamlar önceki değeri
+              unutur. Parlama, iki eş animasyon adı arasında gidip gelerek
+              (`data-flash-n` çift/tek) her değişimde baştan oynuyor. */}
           <p
-            key={flash ? `f${flash.n}` : "f0"}
             data-flash={flash?.tone}
+            data-flash-n={flash ? flash.n % 2 : undefined}
             className={styles.indexValue}
           >
-            {formatPrice(quote.price, locale)}
+            {/* Rakamlar yönünde dönüyor (ui/TickingFigure); zemin parlaması
+                yerinde — biri "değişti" diyor, öteki "şu basamak". */}
+            <TickingFigure
+              value={formatPrice(quote.price, locale)}
+              direction={flash?.tone}
+              decimal={locale === "tr" ? "," : "."}
+            />
           </p>
           <p
             className={cn(

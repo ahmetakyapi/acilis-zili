@@ -1,13 +1,18 @@
 "use server";
 
 import { compare, hash } from "bcryptjs";
-import { eq, or, sql } from "drizzle-orm";
+import { and, eq, isNull, or, sql } from "drizzle-orm";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { z } from "zod";
 import { DB_UNAVAILABLE, auth, signIn, signOut } from "@/auth";
 import { db } from "@/lib/db";
-import { users, watchlists } from "@/lib/schema";
+import { passwordResets, users, watchlists } from "@/lib/schema";
+import { emailConfigured, sendEmail } from "@/lib/email";
+import { hashResetToken, issueResetToken, resetEmail, resetTokenOwner } from "@/lib/password-reset";
+import { withLocale } from "@/lib/i18n/routing";
+import { SITE_URL } from "@/lib/site";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { normalizeUsername } from "@/lib/utils";
 import {
@@ -23,6 +28,8 @@ import {
 export type AuthFormState = {
   error?: string;
   field?: "username" | "email" | "password" | "passwordConfirm" | "form";
+  /** Başarı notu — şifre sıfırlama isteği "gönderildi" diyor (form yerinde kalıyor). */
+  notice?: string;
 };
 
 /* --------------------------------------------------------------------------
@@ -372,7 +379,7 @@ export async function signOutAction() {
    hesabı silememeli.
 
    Silme gerçekten siliyor: users satırı gidince watchlists,
-   watchlist_items, user_avatars, portfolio_positions, portfolio_sales ve price_alerts ON DELETE CASCADE
+   watchlist_items, user_avatars, portfolio_positions, portfolio_sales, price_alerts, push_subscriptions ve password_resets ON DELETE CASCADE
    ile birlikte düşüyor. Kullanıcıya bağlı YENİ bir tablo da aynı kuralla
    kurulmalı — yoksa silinen hesabın verisi yetim kalır. Yumuşak silme
    (soft delete) bilinçli olarak yok — "sildim" demek, silmek demektir.
@@ -496,4 +503,114 @@ export async function changePasswordAction(
     return { status: "error", error: P.failed, field: "form" };
   }
   return { status: "saved" };
+}
+
+/* --------------------------------------------------------------------------
+   Şifre sıfırlama (9 Ekim) — gerekçe lib/schema.ts → passwordResets.
+
+   HESAP VAR MI SORUSUNA CEVAP YOK. İstek her geçerli adreste AYNI notu
+   veriyor ("kayıtlı bir hesap varsa gelir"): aksi hâlde form, hangi
+   e-postanın sitede hesabı olduğunu soran herkese söylerdi. E-posta
+   gönderimi yanıttan SONRA (`after`), yani yanıt süresi de hesabın
+   varlığını ele vermiyor.
+   -------------------------------------------------------------------------- */
+
+/** IP başına on dakikada beş istek; adres başına saatte üç e-posta. */
+const RESET_REQUEST_LIMIT = 5;
+const RESET_EMAIL_LIMIT = 3;
+const RESET_SUBMIT_LIMIT = 10;
+
+export async function requestPasswordResetAction(
+  _prev: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const locale = await getLocale();
+  const t = getDictionary(locale);
+  const R = t.passwordReset;
+  if (!emailConfigured()) return { error: R.failed, field: "form" };
+
+  if (!rateLimit(await requestKey("pw-reset"), RESET_REQUEST_LIMIT, AUTH_WINDOW_MS).allowed) {
+    return { error: R.tooMany, field: "form" };
+  }
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!z.string().email().safeParse(email).success) {
+    return { error: t.auth.errors.emailFormat, field: "email" };
+  }
+
+  const sent: AuthFormState = { notice: R.requestSent };
+  /* Adres başına tavan sessiz: aşıldığında da aynı not dönüyor, yalnızca
+     yeni e-posta gitmiyor (birinin adresine posta yağdırılamasın). */
+  if (!rateLimit(`pw-reset-mail:${email}`, RESET_EMAIL_LIMIT, 60 * 60_000).allowed) return sent;
+
+  let user: { id: string; username: string; email: string } | undefined;
+  try {
+    [user] = await db
+      .select({ id: users.id, username: users.username, email: users.email })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+  } catch {
+    return { error: R.failed, field: "form" };
+  }
+  if (!user) return sent;
+
+  const token = await issueResetToken(user.id);
+  if (!token) return sent;
+  const link = `${SITE_URL}${withLocale("/sifre-sifirla", locale)}?anahtar=${token}`;
+  const message = resetEmail({ to: user.email, username: user.username, link, copy: R.mail });
+  after(async () => {
+    await sendEmail(message);
+  });
+  return sent;
+}
+
+export async function resetPasswordAction(
+  _prev: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const locale = await getLocale();
+  const t = getDictionary(locale);
+  const R = t.passwordReset;
+
+  if (!rateLimit(await requestKey("pw-reset-submit"), RESET_SUBMIT_LIMIT, AUTH_WINDOW_MS).allowed) {
+    return { error: R.tooMany, field: "form" };
+  }
+  const token = String(formData.get("anahtar") ?? "");
+  const next = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("passwordConfirm") ?? "");
+
+  const userId = await resetTokenOwner(token);
+  if (!userId) return { error: R.invalid, field: "form" };
+  if (next.length < MIN_PASSWORD) return { error: t.auth.errors.passwordLength, field: "password" };
+  if (next.length > MAX_PASSWORD) return { error: t.auth.errors.passwordTooLong, field: "password" };
+  if (next !== confirm) return { error: t.auth.errors.passwordMismatch, field: "passwordConfirm" };
+
+  try {
+    const [user] = await db
+      .select({ username: users.username, email: users.email })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    if (!user) return { error: R.invalid, field: "form" };
+    if (weakPassword(next, user.username, user.email)) {
+      return { error: t.auth.errors.passwordWeak, field: "password" };
+    }
+    const now = new Date();
+    /* Şifre, bağlantının kullanıldı işareti ve hesabın öteki açık
+       bağlantıları TEK işlemde: yarım kalmış bir sıfırlama, kullanılmış
+       sayılmayan bir bağlantı bırakmasın. */
+    await db.batch([
+      db.update(users).set({ passwordHash: await hash(next, 12) }).where(eq(users.id, userId)),
+      db
+        .update(passwordResets)
+        .set({ usedAt: now })
+        .where(and(eq(passwordResets.tokenHash, hashResetToken(token)), isNull(passwordResets.usedAt))),
+      db
+        .delete(passwordResets)
+        .where(and(eq(passwordResets.userId, userId), isNull(passwordResets.usedAt))),
+    ]);
+  } catch {
+    return { error: R.failed, field: "form" };
+  }
+  redirect(withLocale("/giris?sifre=yenilendi", locale));
 }

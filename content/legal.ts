@@ -71,12 +71,13 @@ Hukuki sebep: meşru menfaat (m. 5/2-f) — ürünün hangi bölümünün kullan
 | Veri | Neden işleniyor | Hukuki sebep |
 |---|---|---|
 | Kullanıcı adı | Hesabı tanımlamak ve giriş yapmak | Sözleşmenin ifası (m. 5/2-c) |
-| E-posta adresi | Hesabı benzersiz kılmak | Sözleşmenin ifası (m. 5/2-c) |
+| E-posta adresi | Hesabı benzersiz kılmak; istediğinde şifre sıfırlama bağlantısı göndermek | Sözleşmenin ifası (m. 5/2-c) |
 | Şifrenin özeti | Girişi doğrulamak | Sözleşmenin ifası (m. 5/2-c) |
 | Takip listen ve notların | Ürünün asıl işlevi | Sözleşmenin ifası (m. 5/2-c) |
 | Portföy pozisyonların (sembol, adet, alış fiyatı, alış tarihi, not) | Dolar ve lira kâr/zararını hesaplamak | Sözleşmenin ifası (m. 5/2-c) |
 | Portföy satışların (sembol, adet, satış fiyatı ve günü, satılan partinin alış fiyatı ve günü) | Gerçekleşen dolar ve lira kâr/zararını hesaplamak | Sözleşmenin ifası (m. 5/2-c) |
 | Fiyat alarmların (sembol, hedef fiyat, yön, kurulduğu ve tetiklendiği an) | Hedef fiyata ulaşıldığında sana göstermek | Sözleşmenin ifası (m. 5/2-c) |
+| Bildirim aboneliğin (tarayıcının verdiği bildirim adresi ve şifreleme anahtarları, cihaz adı, dil) — yalnızca Ayarlar'da bildirimleri açarsan | Alarmın tetiklendiğini cihazına bildirmek | Açık rıza (m. 5/1) — tarayıcının izin penceresi ve "Bu Cihazda Aç" düğmesi |
 | Tema ve dil tercihi | Arayüzü hatırlamak | Meşru menfaat (m. 5/2-f) |
 | Seçtiğin profil ikonu | Hesabını arayüzde göstermek | Meşru menfaat (m. 5/2-f) |
 | Son giriş zamanı | Hesabın hâlâ kullanılıp kullanılmadığını görmek | Meşru menfaat (m. 5/2-f) |
@@ -86,7 +87,7 @@ Hukuki sebep: meşru menfaat (m. 5/2-f) — ürünün hangi bölümünün kullan
 Şifrenin kendisi hiçbir yerde tutulmaz. Kaydedilen şey **bcrypt** algoritmasıyla üretilmiş, geri çevrilemeyen bir özettir. Veritabanına erişen biri bile şifreni okuyamaz. Buna rağmen başka bir serviste kullandığın şifreyi burada kullanma — bu, tüm siteler için geçerli genel bir kuraldır.
 :::
 
-E-posta adresin **yalnızca** hesabın benzersiz olmasını sağlamak için tutulur; bu adrese hiçbir zaman posta gönderilmez. Şifre sıfırlama özelliği henüz yok, yani şifreni unutursan e-posta adresin hesabını geri getirmez — bu yüzden şifreni bir parola yöneticisinde sakla.
+E-posta adresin hesabın benzersiz olmasını sağlamak ve **yalnızca sen istediğinde** şifre sıfırlama bağlantısı göndermek için tutulur. Bu adrese bülten, pazarlama ya da bildirim e-postası gönderilmez. Sıfırlama bağlantısı 30 dakika geçerlidir ve bir kez kullanılabilir; veritabanında bağlantının kendisi değil, geri çevrilemeyen bir özeti durur.
 
 Özel nitelikli kişisel veri (sağlık, din, biyometri, siyasi görüş vb.) hiçbir biçimde toplanmaz. Kimlik numarası, telefon, adres, doğum tarihi ve finansal hesap bilgisi de istenmez — site senin adına işlem yapmaz, bir aracı kuruma bağlanmaz.
 
@@ -126,14 +127,16 @@ Sitede yalnızca üç çerez vardır ve üçü de işlevseldir:
 | Alpaca, Finnhub, FRED, TCMB | Fiyat, şirket, makro ve kur verisi | **Hiçbir şey** — bu istekleri sunucu kendi adına yapar |
 | DeepL | Haber başlıklarının çevirisi | **Hiçbir şey** — yalnızca haber metni gider |
 | Anthropic | Bülten ve yazı metinlerinin üretimi | **Hiçbir şey** — yalnızca piyasa verisi gider |
+| Resend (ABD) | Şifre sıfırlama e-postasını iletmek | Yalnızca sen sıfırlama istediğinde: e-posta adresin, kullanıcı adın ve tek kullanımlık bağlantı |
+| Tarayıcının bildirim servisi (Chrome'da Google, Firefox'ta Mozilla, Safari'de Apple) | Bildirimleri açtıysan alarm bildirimini cihazına taşımak | Şifreli bildirim (hisse, hedef ve fiyat); servis içeriği okuyamaz. Hangi servisin kullanılacağına tarayıcın karar verir |
 
-Son üç satır önemli: veri sağlayıcılarına giden isteklerde senin kimliğin yoktur. Bir hisseye baktığında sağlayıcı bunu "Açılış Zili'nin isteği" olarak görür, "şu kullanıcının isteği" olarak değil.
+Veri sağlayıcılarıyla ilgili üç satır önemli: veri sağlayıcılarına giden isteklerde senin kimliğin yoktur. Bir hisseye baktığında sağlayıcı bunu "Açılış Zili'nin isteği" olarak görür, "şu kullanıcının isteği" olarak değil.
 
 Barındırma sağlayıcısının teknik kayıtlarında (log) IP adresi ve tarayıcı bilgisi kısa süre tutulabilir; bu, internetteki her sitede olan ve güvenlik için gereken bir işlemdir.
 
 ## Saklama Süresi
 
-Hesap verilerin, hesabın açık kaldığı sürece saklanır. Hesabını sildiğinde kullanıcı kaydın ve ona bağlı bütün takip listeleri, portföy pozisyonları ve satışları ve fiyat alarmları veritabanından **kalıcı olarak** silinir; yedeklerdeki kopyalar da yedek döngüsü tamamlandığında (en geç 30 gün) düşer.
+Hesap verilerin, hesabın açık kaldığı sürece saklanır. Hesabını sildiğinde kullanıcı kaydın ve ona bağlı bütün takip listeleri, portföy pozisyonları ve satışları, fiyat alarmları ve bildirim abonelikleri veritabanından **kalıcı olarak** silinir; yedeklerdeki kopyalar da yedek döngüsü tamamlandığında (en geç 30 gün) düşer.
 
 Piyasa verileri, haberler ve yazılar kişisel veri değildir; onlar sende bir hesap olsun olmasın tutulur.
 
@@ -147,7 +150,7 @@ Başvurunu [GitHub deposu üzerinden](https://github.com/ahmetakyapi/acilis-zili
 
 Hesap silme talebi için beklemene gerek yok: Ayarlar ekranından hesabını kendin silebilirsin, işlem anında uygulanır.
 
-Verilerinin bir kopyası için de başvuru gerekmez: Ayarlar → Verilerin → **Verilerimi İndir** hesabının tuttuğu her şeyi (hesap bilgilerin, takip listelerin, semboller ve notların, portföyün ve satışların, fiyat alarmların, profil ikonun) JSON ya da CSV dosyası olarak anında indirir.
+Verilerinin bir kopyası için de başvuru gerekmez: Ayarlar → Verilerin → **Verilerimi İndir** hesabının tuttuğu her şeyi (hesap bilgilerin, takip listelerin, semboller ve notların, portföyün ve satışların, fiyat alarmların, bildirim açtığın cihazlar, profil ikonun) JSON ya da CSV dosyası olarak anında indirir.
 
 ## Güvenlik
 
@@ -270,12 +273,13 @@ Legal basis: legitimate interest (Art. 5/2-f) — seeing which part of the produ
 | Data | Why it is processed | Legal basis |
 |---|---|---|
 | Username | To identify the account and sign in | Performance of a contract (Art. 5/2-c) |
-| Email address | To keep the account unique | Performance of a contract (Art. 5/2-c) |
+| Email address | To keep the account unique; to send you a password reset link when you ask | Performance of a contract (Art. 5/2-c) |
 | Password digest | To verify sign-in | Performance of a contract (Art. 5/2-c) |
 | Your watchlists and notes | The product's core function | Performance of a contract (Art. 5/2-c) |
 | Your portfolio positions (symbol, quantity, buy price, buy date, note) | To compute dollar and lira profit and loss | Performance of a contract (Art. 5/2-c) |
 | Your portfolio sales (symbol, quantity, sale price and date, the sold lot's buy price and date) | To compute realized dollar and lira gain/loss | Performance of a contract (Art. 5/2-c) |
 | Your price alerts (symbol, target price, direction, when set and when triggered) | To show you when a target price is reached | Performance of a contract (Art. 5/2-c) |
+| Your notification subscription (the push address and encryption keys your browser issues, device name, language) — only if you turn notifications on in Settings | To tell your device an alert has fired | Explicit consent (Art. 5/1) — the browser's permission prompt and the "Turn On for This Device" button |
 | Theme and language preference | To remember the interface | Legitimate interest (Art. 5/2-f) |
 | The profile icon you picked | To show your account in the interface | Legitimate interest (Art. 5/2-f) |
 | Last sign-in time | To see whether the account is still in use | Legitimate interest (Art. 5/2-f) |
@@ -285,7 +289,7 @@ Legal basis: legitimate interest (Art. 5/2-f) — seeing which part of the produ
 The password itself is kept nowhere. What is stored is an irreversible digest produced with the **bcrypt** algorithm. Even someone with database access cannot read your password. Even so, do not reuse a password from another service here — that is a general rule for every site.
 :::
 
-Your email address is stored **only** to keep your account unique; no mail is ever sent to it. There is no password reset feature yet, so if you forget your password your email address will not recover the account — keep it in a password manager.
+Your email address is stored to keep your account unique and to send you a password reset link **only when you ask for one**. No newsletter, marketing or notification email is ever sent to it. A reset link is valid for 30 minutes and can be used once; the database holds an irreversible digest of the link, not the link itself.
 
 No special categories of personal data (health, religion, biometrics, political opinion and so on) are collected in any form. National id number, phone, address, date of birth and financial account details are not requested either — the site does not act on your behalf and does not connect to a brokerage.
 
@@ -325,14 +329,16 @@ The product runs on the following infrastructure and data providers. Some of the
 | Alpaca, Finnhub, FRED, CBRT | Price, company, macro and exchange rate data | **Nothing** — the server makes these requests on its own behalf |
 | DeepL | Translation of news headlines | **Nothing** — only the news text is sent |
 | Anthropic | Generation of brief and article text | **Nothing** — only market data is sent |
+| Resend (US) | Delivering the password reset email | Only when you request a reset: your email address, your username and the single-use link |
+| Your browser's push service (Google for Chrome, Mozilla for Firefox, Apple for Safari) | Carrying an alert notification to your device, if you turned notifications on | An encrypted notification (symbol, target and price) the service cannot read. Your browser decides which service is used |
 
-The last three rows matter: requests to data providers carry no identity of yours. When you look at a stock, the provider sees it as "a request from Opening Bell", not "a request from this user".
+The three data-provider rows matter: requests to data providers carry no identity of yours. When you look at a stock, the provider sees it as "a request from Opening Bell", not "a request from this user".
 
 The hosting provider's technical logs may hold an IP address and browser information for a short period; this happens on every site on the internet and is required for security.
 
 ## Retention
 
-Your account data is kept for as long as the account exists. When you delete your account, your user record and every watchlist, portfolio position and sale and price alert attached to it are **permanently** removed from the database; copies in backups fall away when the backup cycle completes (at most 30 days).
+Your account data is kept for as long as the account exists. When you delete your account, your user record and every watchlist, portfolio position and sale, price alert and notification subscription attached to it are **permanently** removed from the database; copies in backups fall away when the backup cycle completes (at most 30 days).
 
 Market data, news and articles are not personal data; they are kept whether or not you have an account.
 
@@ -346,7 +352,7 @@ You can send your request [through the GitHub repository](https://github.com/ahm
 
 You do not have to wait for an account deletion request: you can delete your account yourself from the Settings screen, and it takes effect immediately.
 
-You do not need a request for a copy of your data either: Settings → Your Data → **Download My Data** immediately downloads everything your account holds (your account details, your watchlists, their symbols and notes, your portfolio and sales, your price alerts, your profile icon) as a JSON or CSV file.
+You do not need a request for a copy of your data either: Settings → Your Data → **Download My Data** immediately downloads everything your account holds (your account details, your watchlists, their symbols and notes, your portfolio and sales, your price alerts, the devices you turned notifications on for, your profile icon) as a JSON or CSV file.
 
 ## Security
 

@@ -285,6 +285,81 @@ export const portfolioSales = pgTable(
   ],
 );
 
+/**
+ * ŞİFRE SIFIRLAMA BAĞLANTILARI (9 Ekim) — "Şifremi Unuttum".
+ *
+ * Şifre sıfırlama yoktu ve KVKK metni "şifreni unutursan e-posta adresin
+ * hesabını geri getirmez" diyordu. E-posta (Resend, ücretsiz katman)
+ * bağlanınca okuyucu adresine tek kullanımlık, 30 dakikalık bir bağlantı
+ * istiyor.
+ *
+ * Satırda bağlantının KENDİSİ değil SHA-256 özeti duruyor: veritabanını
+ * okuyan biri (yedek, sızıntı) açık bir bağlantıyla herhangi bir hesabın
+ * şifresini değiştiremesin. Bağlantı yalnızca e-postada.
+ *
+ * KENDİ TABLOSU — migration deploy'da uygulanmıyor; tablo yokken istek
+ * eylemi sessizce "gönderildi" deyip hiçbir şey yazmıyor, sayfa çökmüyor
+ * (lib/password-reset.ts).
+ */
+export const passwordResets = pgTable(
+  "password_resets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("password_resets_token_idx").on(t.tokenHash),
+    index("password_resets_user_idx").on(t.userId),
+  ],
+);
+
+/**
+ * BİLDİRİM ABONELİKLERİ (9 Ekim) — Web Push, cihaz başına bir satır.
+ *
+ * Fiyat alarmı yalnızca okuyucu siteyi açınca görünüyordu. Web Push ücretsiz
+ * ve üçüncü taraf hesap istemiyor: tarayıcının kendi bildirim servisi
+ * (Chrome'da FCM, Firefox'ta Mozilla, Safari'de Apple) şifreli yükü cihaza
+ * taşıyor, içeriği okuyamıyor. Satır o servisin verdiği uç adres ve iki
+ * şifreleme anahtarı; uç benzersiz (aynı tarayıcı ikinci kez abone olursa
+ * satır yenileniyor). Servis 404/410 dönerse abonelik ölmüştür ve satır
+ * siliniyor (lib/push.ts).
+ *
+ * KENDİ TABLOSU — migration deploy'da uygulanmıyor; tablo yokken ayarlardaki
+ * bildirim paneli basılmıyor ve gönderici sessizce düşüyor.
+ */
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    /** Ayarlarda cihazı tanımak için kısa ad ("Chrome · macOS"). */
+    device: text("device"),
+    /** Bildirimin dili — aboneliği açan sayfanın dili ("tr" | "en"). */
+    locale: text("locale").notNull().default("tr"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    lastSentAt: timestamp("last_sent_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("push_subscriptions_endpoint_idx").on(t.endpoint),
+    index("push_subscriptions_user_idx").on(t.userId),
+  ],
+);
+
 export const portfolioOrder = pgTable("portfolio_order", {
   userId: uuid("user_id")
     .primaryKey()

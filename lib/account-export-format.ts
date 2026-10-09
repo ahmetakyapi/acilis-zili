@@ -59,11 +59,6 @@ export type AccountExport = {
         note: string | null;
       }[]
     | null;
-  /**
-   * Fiyat alarmları — `null` tablo okunamadıysa (portföyle aynı ayrım).
-   * Alan sonradan eklendi; sürüm 1'i okuyan bir araç için ek bir anahtar,
-   * var olanların anlamı değişmedi.
-   */
   /** Portföy satışları (tüketilen partiler) — `null` tablo okunamadıysa. */
   portfolioSales?:
     | {
@@ -76,6 +71,11 @@ export type AccountExport = {
         boughtAt: string;
       }[]
     | null;
+  /**
+   * Fiyat alarmları — `null` tablo okunamadıysa (portföyle aynı ayrım).
+   * Alan sonradan eklendi; sürüm 1'i okuyan bir araç için ek bir anahtar,
+   * var olanların anlamı değişmedi.
+   */
   priceAlerts?:
     | {
         symbol: string;
@@ -85,6 +85,20 @@ export type AccountExport = {
         createdAt: string;
         triggeredAt: string | null;
         triggeredPrice: number | null;
+      }[]
+    | null;
+  /**
+   * Bildirim açılmış cihazlar — `null` tablo okunamadıysa. Bildirim
+   * servisinin uç adresi ve şifreleme anahtarları dosyaya girmiyor: okuyucu
+   * için anlamsızlar ve dosya bir yerde unutulursa o cihaza bildirim
+   * gönderilmesine yararlardı.
+   */
+  notificationDevices?:
+    | {
+        device: string | null;
+        locale: string;
+        createdAt: string;
+        lastSentAt: string | null;
       }[]
     | null;
 };

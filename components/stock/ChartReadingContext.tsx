@@ -3,6 +3,7 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import { ChangePill, DataStamp, type DataStampLabels } from "@/components/ui/primitives";
 import { RollingFigure } from "@/components/ui/RollingFigure";
+import { TickingFigure } from "@/components/ui/TickingFigure";
 import { cn, directionOf, formatChange, formatPrice } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
 import styles from "./ChartReading.module.css";
@@ -95,6 +96,8 @@ export function HeaderReadout({
   classes: { line: string; price: string; change: string };
 }) {
   const live = useContext(Context)?.live ?? null;
+  const serverPrice = formatPrice(price, locale, { currency: true });
+  const serverChange = formatChange(change, locale);
   if (live) {
     price = live.price;
     change = live.change;
@@ -113,7 +116,17 @@ export function HeaderReadout({
             değer sunucu çiziminden geliyor ve bileşen yeniden bağlanmadıkça
             dönüş bir daha oynamıyor. Değer yoksa tire düz metin kalır. */}
         <p className={classes.price}>
-          {price === null ? formatted : <RollingFigure value={formatted} />}
+          {price === null ? (
+            formatted
+          ) : live ? (
+            /* CANLI GÜNCELLEMEDE yalnızca değişen rakamlar dönüyor (9 Ekim,
+               gerekçe ui/TickingFigure). İlk değer sunucunun bastığı:
+               grafiğin ilk yoklaması farklı bir fiyat getirirse o değişim
+               de görünüyor. */
+            <TickingFigure value={formatted} initial={serverPrice} decimal={locale === "tr" ? "," : "."} />
+          ) : (
+            <RollingFigure value={formatted} />
+          )}
         </p>
         {/* DEĞİŞİMİN İKİ KATI (28 Eylül). Mutlak fark ile yüzde aynı
             satırda, fiyatın dibinde 14 ve 12 puntoyla duruyordu ve 48
@@ -128,7 +141,11 @@ export function HeaderReadout({
               tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-muted",
             )}
           >
-            {formatChange(change, locale)}
+            {live ? (
+              <TickingFigure value={formatChange(change, locale)} initial={serverChange} decimal={locale === "tr" ? "," : "."} />
+            ) : (
+              formatChange(change, locale)
+            )}
           </span>
         </div>
       </div>

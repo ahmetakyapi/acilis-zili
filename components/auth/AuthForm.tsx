@@ -50,6 +50,12 @@ type AuthFormProps = {
   altLinkLabel: string;
   /** Giriş sonrası dönülecek yol — sunucu tarafında ayrıca doğrulanır. */
   continueTo?: string;
+  /** Formla gönderilen sabit değerler (sıfırlama bağlantısının anahtarı). */
+  hidden?: Record<string, string>;
+  /** Sayfa açılırken gösterilen not — "şifren yenilendi" (giriş sayfası). */
+  initialNotice?: string;
+  /** Şifre alanının altındaki "Şifremi Unuttum" — e-posta bağlıysa. */
+  forgot?: { href: string; label: string };
 };
 
 /**
@@ -57,9 +63,10 @@ type AuthFormProps = {
  * sağda form. Marka işareti masthead'de zaten duruyor, kartın tepesinde
  * tekrarlanmaz.
  *
- * Mockup'ta görünen "Google ile devam et", "Beni hatırla" ve "Parolamı
- * unuttum" burada YOK — hiçbiri kurulu değil ve çalışmayan düğme çizmek
- * tasarıma uymaktan daha kötü.
+ * Mockup'ta görünen "Google ile devam et" ve "Beni hatırla" burada YOK —
+ * kurulu değiller ve çalışmayan düğme çizmek tasarıma uymaktan daha kötü.
+ * "Şifremi Unuttum" aynı kuralla geldi (9 Ekim): yalnızca e-posta servisi
+ * bağlıyken (`forgot`, lib/email.ts) basılıyor.
  */
 export function AuthForm({
   pitchTitle,
@@ -78,8 +85,11 @@ export function AuthForm({
   altHref,
   altLinkLabel,
   continueTo,
+  hidden,
+  initialNotice,
+  forgot,
 }: AuthFormProps) {
-  const [state, formAction, pending] = useActionState(action, {});
+  const [state, formAction, pending] = useActionState(action, initialNotice ? { notice: initialNotice } : {});
 
   /* "HAYIR" SALLANMASI. Reddedilen bir denemede hata satırı ve kırmızı
      kenar tek karede beliriyordu; İKİNCİ yanlış denemede ise ekranda hiçbir
@@ -154,6 +164,9 @@ export function AuthForm({
           {continueTo && (
             <input type="hidden" name="devam" value={continueTo} />
           )}
+          {hidden && Object.entries(hidden).map(([name, value]) => (
+            <input key={name} type="hidden" name={name} value={value} />
+          ))}
           {fields.map((field) => {
             const hasError = state.field === field.errorKey;
             return (
@@ -207,6 +220,22 @@ export function AuthForm({
               </div>
             );
           })}
+
+          {/* "Şifremi Unuttum" şifre alanının dibinde, sağda: aranan yer orası. */}
+          {forgot && (
+            <Link
+              href={forgot.href}
+              className="-mt-2 inline-flex min-h-10 items-center self-end text-small font-semibold text-primary hover:text-primary-hover"
+            >
+              {forgot.label}
+            </Link>
+          )}
+
+          {state.notice && !state.error && (
+            <p role="status" className={cn("rounded-md bg-up-wash px-3.5 py-2.5 text-sm leading-relaxed text-strong", styles.errorIn)}>
+              {state.notice}
+            </p>
+          )}
 
           {state.field === "form" && state.error && (
             /* CANLI BÖLGE. Sunucu eylemi dönünce sayfa yeniden çizilmiyor,

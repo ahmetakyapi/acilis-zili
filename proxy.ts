@@ -26,7 +26,7 @@ import { LOCALE_HEADER, splitLocale, withLocale } from "@/lib/i18n/routing";
 const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 const PROTECTED = ["/favoriler", "/ayarlar", "/portfoy"];
-const AUTH_ROUTES = ["/giris", "/kayit"];
+const AUTH_ROUTES = ["/giris", "/kayit", "/sifremi-unuttum"];
 
 /* `/admin` BİLEREK BU LİSTEDE DEĞİL. Buradaki koruma girişe yönlendiriyor ve
    "giriş yap, sonra /admin'e devam edeceksin" demek, olmayan bir kapının VAR
@@ -212,6 +212,8 @@ export const config = {
      `feed.xml` LİSTEDE YOK, bilerek: o gerçekten `LOCALE_HEADER` okuyor
      (route.ts:62) ve `/en/feed.xml` İngilizce yayın vermeye devam etmeli. */
   matcher: [
-    "/((?!api/|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|_next/static|_next/image|favicon.ico|icon.svg|apple-icon|logos/|.*\\.(?:png|jpg|jpeg|webp|svg|ico)$).*)",
+    /* `sw.js` (9 Ekim): bildirim service worker'ı kökten, dil önekisiz
+       sunulmalı — kayıt kapsamı dosyanın yolundan geliyor. */
+    "/((?!api/|robots\\.txt|sitemap\\.xml|sw\\.js|manifest\\.webmanifest|_next/static|_next/image|favicon.ico|icon.svg|apple-icon|logos/|.*\\.(?:png|jpg|jpeg|webp|svg|ico)$).*)",
   ],
 };

@@ -310,7 +310,7 @@ else
 	DEPLOY_DIR="$SRC/deploy"
 	note "klondan — $(git -C "$SRC" rev-parse --short HEAD) ($BRANCH)"
 fi
-for f in acilis-zili.service Caddyfile update.sh cron-daily.sh; do
+for f in acilis-zili.service Caddyfile update.sh cron-daily.sh cron-alerts.sh cron-install.sh; do
 	[[ -r "$DEPLOY_DIR/$f" ]] || die "eksik dağıtım dosyası: $DEPLOY_DIR/$f"
 done
 
@@ -331,13 +331,10 @@ note "Caddy → $DOMAIN"
 # "Permission denied" ile düşerdi — journald'a tek satır, senkron hiç koşmaz.
 # İndeksteki bit ayrıca düzeltildi (git update-index --chmod=+x); bu önek
 # ikinci savunma, çünkü bit bir daha kaybolabilir.
-CRON_LINE="30 10 * * 1-5 /bin/bash $APP_ROOT/current/deploy/cron-daily.sh"
-if sudo -u "$APP_USER" crontab -l 2>/dev/null | grep -qF "$CRON_LINE"; then
-	note "crontab zaten var"
-else
-	printf '%s\n' "CRON_TZ=UTC" "$CRON_LINE" | sudo -u "$APP_USER" crontab -
-	note "crontab yazıldı (UTC 10:30, hafta içi)"
-fi
+# Satırların listesi tek yerde: deploy/cron-install.sh (update.sh de her
+# sürümde onu çağırıyor). Var olan satırlara dokunmuyor, eksiği ekliyor.
+sudo -u "$APP_USER" -H bash "$DEPLOY_DIR/cron-install.sh"
+note "crontab (UTC): günlük senkron 10:30 hafta içi · alarm taraması 5 dakikada bir"
 
 # --------------------------------------------------------------- ilk sürüm
 log "ilk sürüm — klon, npm ci, derleme, başlatma"

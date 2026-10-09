@@ -469,6 +469,22 @@ eklemeden önce bu paragraf kadar sağlam bir gerekçe yazılabiliyor mu diye ba
   `X-Frame-Options: DENY` + `frame-ancestors 'none'`; istisna
   `next.config.ts`te, gerekçesiyle. Gömülü parçalar kabuğun dışında ve
   dizine kapalı. Yeni bir yola çerçeve izni vermeden önce oraya bak.
+- **Bildirim Web Push, e-posta değil** (`lib/push.ts`, `public/sw.js`,
+  `app/api/cron/alarmlar`). Ücretsiz ve üçüncü taraf hesabı yok; anahtar
+  VAPID (`npx web-push generate-vapid-keys`). Service worker YALNIZCA
+  bildirim taşır: `fetch` dinleyicisi ve önbellek yok — bayat önbellekten
+  fiyat göstermek veri dürüstlüğü 2'yi çiğnerdi. Kayıt yalnızca okuyucu
+  Ayarlar'da "Bu Cihazda Aç"a basınca yapılıyor. Alarm taraması seans
+  boyunca beş dakikada bir koşuyor, bayat paketle hiçbir şey yazmıyor;
+  crontab satırlarının listesi `deploy/cron-install.sh`te ve `update.sh`
+  her sürümde onu çalıştırıyor — yeni bir zamanlanmış iş oraya eklenir.
+- **E-posta yalnızca şifre sıfırlama** (`lib/email.ts`, Resend, SDK'sız
+  `fetch`). Anahtar yoksa "Şifremi Unuttum" hiç basılmıyor. İstek her
+  geçerli adreste AYNI notu veriyor ve e-postayı `after` ile yanıttan
+  sonra gönderiyor: form hangi adresin hesabı olduğunu söylemez. Satırda
+  bağlantının SHA-256 özeti durur, kendisi değil. Bülten ya da bildirim
+  e-postası eklenirse KVKK metni ("pazarlama e-postası gönderilmez") önce
+  değişmeli.
 - **W-8BEN ile ABD temettü stopajı bireyde %20.** Türkiye–ABD anlaşmasının
   10. maddesi; %15 yalnızca şirketin oy hakkının en az %10'una sahip bir
   KURUM için, W-8BEN yoksa %30. Bu bir kez %15 diye yanlış yazıldı; tek
