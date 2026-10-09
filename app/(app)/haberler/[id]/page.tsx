@@ -6,7 +6,8 @@ import { notFound } from "next/navigation";
 import { NewsImage } from "@/components/news/NewsImage";
 import { PageShare } from "@/components/article/PageShare";
 import { ArrowSquareOut, CaretLeft } from "@phosphor-icons/react/dist/ssr";
-import { ChangePill, DataStamp, Panel, PanelHeader, buttonClass } from "@/components/ui/primitives";
+import { ChangePill, DataStamp, LogoTile, Panel, PanelHeader, buttonClass } from "@/components/ui/primitives";
+import { Sparkline } from "@/components/ui/Sparkline";
 import {
   getLatestNews,
   getNewsById,
@@ -17,9 +18,12 @@ import {
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
-import { getQuotes } from "@/lib/providers";
+import { getChartBarsMulti, getQuotes } from "@/lib/providers";
 import { displayZone, zoneTag } from "@/lib/session-clock";
-import { formatPrice, headlineMentions, safeExternalUrl, timeAgo, titleCaseLabel, NO_VALUE } from "@/lib/utils";
+import { directionOf, formatPrice, headlineMentions, safeExternalUrl, timeAgo, titleCaseLabel, NO_VALUE } from "@/lib/utils";
+
+/** Haberde gösterilen en çok şirket — sağlayıcı etiketi uzun bir liste olabiliyor. */
+const MENTIONED_MAX = 6;
 
 /**
  * Haber detayı — kullanıcı siteden ayrılmadan okur.
@@ -82,6 +86,16 @@ export default async function NewsDetailPage(
     : false;
 
   const sourceHref = safeExternalUrl(item.url);
+
+  /* HABERDE GEÇEN ŞİRKETLER BİR KEZ HESAPLANIYOR (9 Ekim): hem başlığın
+     altındaki şeritte hem aşağıdaki fiyat panelinde aynı liste. Sağlayıcı
+     etiketi haberin konusunu değil çekildiği beslemeyi söyleyebiliyor;
+     yalnızca metinde adı ya da sembolü geçenler (`headlineMentions`).
+     `getSymbolNames` istek içinde önbellekli, panel aynı anahtarı soruyor. */
+  const tagged = (item.symbols ?? []).slice(0, MENTIONED_MAX);
+  const names = tagged.length ? await getSymbolNames(tagged) : {};
+  const context = `${item.headline} ${item.summary ?? ""}`;
+  const mentioned = tagged.filter((symbol) => headlineMentions(context, symbol, names[symbol]?.name));
 
   /* SAAT DİLİMİ ŞART. Burada `timeZone` verilmiyordu, yani biçimlendirici
      SUNUCUNUN dilimini kullanıyordu — Vercel'de UTC. Türkiye'de 22 Ağustos
@@ -150,6 +164,25 @@ export default async function NewsDetailPage(
             <span className="italic">{item.headline}</span>
           </p>
         )}
+        {/* ŞİRKET ŞERİDİ (9 Ekim). Haberin kimin hakkında olduğu sayfanın
+            dibindeki panelde, özetin ve kaynak çağrısının altında
+            kalıyordu; okuyucu başlığı okuyup "hangi şirket" sorusunun
+            cevabını aşağıda arıyordu. Künye şeridi kuralı (CLAUDE.md →
+            ekran düzeni 2): başlığın hemen altında logolu çipler. Sayı yok
+            — fiyat ve yüzde aşağıdaki panelde, tek yerde. */}
+        {mentioned.length > 0 && (
+          <ul className={styles.detailChips}>
+            {mentioned.map((symbol) => (
+              <li key={symbol}>
+                <Link href={`/hisse/${symbol}`} className={styles.detailChip}>
+                  <LogoTile symbol={symbol} logoUrl={names[symbol]?.logoUrl} size="xs" />
+                  <span className="numeral font-semibold text-strong">{symbol}</span>
+                  {names[symbol]?.name && <span className={styles.detailChipName}>{names[symbol]!.name}</span>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </header>
 
       {/* Sabit oran: `max-h-96` yükseklik AUTO bıraktığı için object-cover
@@ -205,13 +238,8 @@ export default async function NewsDetailPage(
       </Panel>
       )}
 
-      {item.symbols && item.symbols.length > 0 && (
-        <MentionedSymbols
-          symbols={item.symbols}
-          context={`${item.headline} ${item.summary ?? ""}`}
-          locale={locale}
-          t={t}
-        />
+      {mentioned.length > 0 && (
+        <MentionedSymbols symbols={mentioned} names={names} locale={locale} t={t} />
       )}
 
       <RelatedNews
@@ -230,26 +258,27 @@ export default async function NewsDetailPage(
  * Kısa özetin veremediği bağlamı sayı veriyor: haber çıkarken hisse ne yapıyor?
  */
 async function MentionedSymbols({
-  symbols,
-  context,
+  symbols: mentioned,
+  names,
   locale,
   t,
 }: {
   symbols: string[];
-  context: string;
+  names: Awaited<ReturnType<typeof getSymbolNames>>;
   locale: Locale;
   t: Dictionary;
 }) {
-  const shown = symbols.slice(0, 6);
   const status = await getStatus();
-  const [result, names] = await Promise.all([
-    getQuotes(shown, status),
-    getSymbolNames(shown),
+  /* GÜNÜN ÇİZGİSİ (9 Ekim): satırda fiyat ve yüzde vardı, şekli yoktu.
+     Ana sayfanın favori özetiyle aynı kalıp — bir günlük barlar, çizgi
+     yalnızca kotasyon taze iken (şekil sayıyla aynı seansı anlatmalı;
+     gerekçe IndexStrip). Barlar düşerse satır çizgisiz kalıyor. */
+  const [result, bars] = await Promise.all([
+    getQuotes(mentioned, status),
+    getChartBarsMulti(mentioned, "1D", status).catch(() => ({}) as Awaited<ReturnType<typeof getChartBarsMulti>>),
   ]);
   const quotes = result.ok ? result.data : {};
-  // Provider feed tags may include a stock absent from the story itself.
-  const mentioned = shown.filter((symbol) => headlineMentions(context, symbol, names[symbol]?.name));
-  if (mentioned.length === 0) return null;
+  const sparkOk = result.ok && !result.stale;
 
   return (
     <Panel>
@@ -261,19 +290,31 @@ async function MentionedSymbols({
             <li key={symbol}>
               <Link
                 href={`/hisse/${symbol}`}
-                className="flex items-center justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-primary-tint sm:px-5"
+                className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
               >
-                <span className="flex min-w-0 items-baseline gap-2.5">
-                  <span className="numeral shrink-0 text-sm font-semibold text-strong">
-                    {symbol}
-                  </span>
-                  <span className="min-w-0 truncate text-xs text-soft">
-                    {names[symbol]?.name ?? ""}
+                <span className="flex min-w-0 flex-1 items-center gap-3">
+                  <LogoTile symbol={symbol} logoUrl={names[symbol]?.logoUrl} size="sm" />
+                  <span className="min-w-0">
+                    <span className="numeral block text-sm font-semibold text-strong">{symbol}</span>
+                    <span className="block truncate text-xs text-soft">{names[symbol]?.name ?? ""}</span>
                   </span>
                 </span>
+                {sparkOk && quote && (bars[symbol]?.length ?? 0) > 1 && (
+                  <Sparkline
+                    points={bars[symbol]!.map((bar) => ({ value: bar.close }))}
+                    title={`${symbol} · 1D`}
+                    tone={directionOf(quote.changePct)}
+                    width={72}
+                    height={28}
+                    showArea={false}
+                    className="hidden h-7 w-[72px] shrink-0 min-[420px]:block"
+                  />
+                )}
                 {quote ? (
-                  <span className="flex shrink-0 items-center gap-2.5">
-                    <span className="numeral text-sm text-body">
+                  /* Fiyat üstte, yüzde altında, sabit sütun: satırlar aynı
+                     hatta bitiyor (CLAUDE.md → ölçü ızgarası). */
+                  <span className="flex w-[92px] shrink-0 flex-col items-end gap-1">
+                    <span className="numeral text-sm font-semibold text-strong">
                       {formatPrice(quote.price, locale)}
                     </span>
                     <ChangePill
@@ -332,6 +373,17 @@ async function RelatedNews({
   const shown = [...related, ...fill].slice(0, 5);
 
   if (shown.length === 0) return null;
+  /* LOGO (9 Ekim): satırlar yalnızca metindi ve beş başlık alt alta tek
+     bir gri blok gibi okunuyordu. Ana sayfanın haber bandıyla aynı kural:
+     logo yalnızca haber gerçekten o şirketle ilgiliyse (başlıkta adı ya da
+     sembolü geçiyorsa); değilse kaynağın baş harfi. */
+  const firstSymbols = [...new Set(shown.map((n) => n.symbols?.[0]).filter((s): s is string => Boolean(s)))];
+  const logos = firstSymbols.length ? await getSymbolNames(firstSymbols) : {};
+  const logoOf = (n: (typeof shown)[number]) => {
+    const symbol = n.symbols?.[0];
+    const meta = symbol ? logos[symbol] : undefined;
+    return symbol && meta && headlineMentions(n.headline, symbol, meta.name) ? { symbol, logoUrl: meta.logoUrl } : null;
+  };
 
   return (
     <Panel>
@@ -341,8 +393,16 @@ async function RelatedNews({
           <li key={n.id}>
             <Link
               href={`/haberler/${n.id}`}
-              className="block px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
+              className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
             >
+              {logoOf(n) ? (
+                <LogoTile symbol={logoOf(n)!.symbol} logoUrl={logoOf(n)!.logoUrl} size="sm" className="mt-0.5" />
+              ) : (
+                <span aria-hidden className={styles.relatedInitial}>
+                  {(n.source ?? "?").slice(0, 1).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US")}
+                </span>
+              )}
+              <span className="min-w-0 flex-1">
               <p className="line-clamp-2 text-sm font-medium leading-snug text-strong">
                 <span lang={locale === "tr" && !n.headlineTr ? "en" : undefined}>
                   {locale === "tr" && n.headlineTr ? n.headlineTr : n.headline}
@@ -353,6 +413,7 @@ async function RelatedNews({
                 <span aria-hidden>·</span>
                 <span>{titleCaseLabel(timeAgo(n.publishedAt, locale), locale)}</span>
               </p>
+              </span>
             </Link>
           </li>
         ))}

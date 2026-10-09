@@ -48,6 +48,17 @@
 .detail > :global(.panel) { border-radius:var(--radius-panel); background:var(--premium-surface); }
 .detail > div { font-size:16px; line-height:1.85; }
 .detail > :global(.panel):first-of-type { border-color:var(--primary-faint); background:var(--premium-surface); }
+/* ŞİRKET ŞERİDİ (9 Ekim) — başlığın altında, haberin kimin hakkında
+   olduğunu söyleyen logolu çipler. Kutusu kıl çizgi, zemini sayfanın
+   yüzeyi: bir rozet değil bir künye. Ad dar ekranda düşüyor (sembol ve
+   logo yetiyor), geniş ekranda çipin içinde kısalarak kalıyor. */
+.detailChips { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+.detailChip { display:inline-flex; align-items:center; gap:8px; min-height:36px; max-width:100%; padding:5px 12px 5px 6px; border:1px solid var(--line); border-radius:999px; background:var(--premium-surface); font-size:13px; transition:border-color .2s, background .2s; }
+.detailChip:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
+.detailChipName { max-width:22ch; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-soft); font-size:12px; }
+@media (max-width:479px) { .detailChipName { display:none; } }
+/* Benzer haberin logosu yoksa kaynağın baş harfi — logo karosuyla aynı ölçü (26). */
+.relatedInitial { display:inline-grid; place-items:center; flex-shrink:0; width:26px; height:26px; margin-top:2px; border-radius:var(--radius-sm); background:var(--surface-elevated); color:var(--text-muted); font-size:12px; font-weight:650; }
 @media(hover:hover) and (pointer:fine) { .row:hover { background:var(--primary-tint); } }
 @media(max-width:767px) { .page { gap:20px; } .list { grid-template-columns:1fr; } .row { padding:18px 2px; min-height:140px; gap:12px; } .title { font-size:16px; } .list > li:first-child .row { padding:20px; align-items:flex-start; gap:12px; } .list > li:first-child .title { font-size:24px; } .list > li:first-child .thumb { width:48px; height:48px; } .thumb { width:48px; height:48px; } .detail { gap:20px; } .detail > header { padding:18px 0; } .detail h1 { font-size:27px; } }
 @media(prefers-reduced-motion:reduce) { .row { transition:none; } }
