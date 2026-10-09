@@ -310,6 +310,23 @@
 /* Kart bir bağlantı (başlıktaki `::after` kaplaması), hover'ı bu yüzden
    var — ve yalnızca kenarlık tonu. */
 .card:hover { border-color:var(--primary-faint); }
+/* TELEFONDA KATLAMA (9 Ekim) — gerekçe TechnicalCard. Dar ekranda kartlar
+   tek sütun, komşu hizası (subgrid) anlamsız: kart düz bir sütuna dönüyor,
+   böylece gizlenen bölümler boş satır ve aralık bırakmıyor. Ölçüm: kart
+   390'da 516 → 324 piksel, sayfa 11.944 → ~8.900. */
+.cardFold { display:none; }
+.cardFoldInput { bottom:0; left:0; }
+@media (max-width:639px) {
+  .cell { display:block; }
+  .card { display:flex; flex-direction:column; gap:14px; }
+  .card:has(> .cardFoldInput:not(:checked)) :is(.rail, .cardThesis, .gaugeBox) { display:none; }
+  /* Kartı kaplayan bağlantının (z-1) üstünde; dokunma hedefi 44. */
+  .cardFold { position:relative; z-index:3; display:inline-flex; align-self:flex-start; align-items:center; gap:6px; min-height:44px; margin-block:-10px -12px; color:var(--primary-ink); font-size:12.5px; font-weight:650; cursor:pointer; }
+  .cardFold svg { transition:transform var(--default-transition-duration) var(--ease-brand); }
+  .cardFoldInput:checked ~ .cardFold svg { transform:rotate(180deg); }
+  .cardFoldInput:checked ~ .cardFold .cardFoldMore, .cardFoldInput:not(:checked) ~ .cardFold .cardFoldLess { display:none; }
+  .cardFoldInput:focus-visible ~ .cardFold { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:8px; }
+}
 .card:has(.cardLink:focus-visible) { outline:2px solid var(--line-focus); outline-offset:3px; }
 .cardLink { color:inherit; }
 .cardLink::after { content:""; position:absolute; inset:0; z-index:1; border-radius:inherit; }

@@ -1,3 +1,4 @@
+import { FoldToggle } from "@/components/ui/FoldToggle";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { themeTitle } from "@/content/themes";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -33,6 +34,7 @@ export function ThemeRanking({
   t,
   heading: Heading = "h2",
   className,
+  phoneEnds,
 }: {
   cards: readonly ThemeCard[];
   basis?: "session" | "lastClose" | null;
@@ -42,6 +44,14 @@ export function ThemeRanking({
   /** Dizinde kapağın h2'si; ana sayfada bandın h2'sinin altında h3. */
   heading?: "h2" | "h3" | "h4";
   className?: string;
+  /**
+   * Telefonda (<640) yalnızca iki uçtan bu kadar satır açık; ortası
+   * katlı (9 Ekim, ana sayfa). Sıralamanın bilgisi uçlarda: en güçlü ve
+   * en zayıf temalar. Ana sayfa bandı telefonda 1.217 piksel ölçüldü ve
+   * on iki satırın yarısı ortadaki, okuyucunun aramadığı temalardı.
+   * Yalnızca sıralı (`basis` olan) listede; yedekte sıra editoryal.
+   */
+  phoneEnds?: number;
 }) {
   const inScale = (card: ThemeCard) => basis !== null && card.basis === basis && card.median !== null;
   const sorted = basis
@@ -51,6 +61,14 @@ export function ThemeRanking({
       })
     : cards;
   const peak = Math.max(0, ...sorted.filter(inScale).map((card) => Math.abs(card.median!)));
+  /* Telefonda açık satırlar: değeri olan temaların iki ucu. Değersiz
+     satırlar (bu seansta işlem görmemiş, `inScale` dışı) sıralamanın
+     dibine dizildiği için uç sayılmıyor — ön seansta "en zayıf üç" yerine
+     üç tire görünüyordu (390'da ölçüldü). */
+  const ranked = sorted.filter(inScale).length;
+  const phoneShown = (index: number) =>
+    !basis || !phoneEnds || index < phoneEnds || (index >= ranked - phoneEnds && index < ranked);
+  const phoneHidden = sorted.filter((_, index) => !phoneShown(index)).length;
 
   return (
     <div className={cn(styles.rank, className)}>
@@ -64,14 +82,22 @@ export function ThemeRanking({
         </Heading>
         <span>{t.themes.rankMeta}</span>
       </div>
+      <MaybeFold
+        hidden={phoneHidden}
+        more={t.compact.showAll}
+        less={t.compact.showLess}
+      >
       <ol className={styles.rankList}>
-        {sorted.map((card) => {
+        {sorted.map((card, index) => {
           const ratio = inScale(card) && peak > 0 ? card.median! / peak : null;
           const neutral = card.basis !== "session";
           /* Yedekte (`basis` yok) hiçbir satırda sayı yok zaten. */
           const shown = basis === null || inScale(card);
           return (
-            <li key={card.theme.slug}>
+            <li
+              key={card.theme.slug}
+              data-fold={phoneShown(index) ? undefined : ""}
+            >
               <Link href={`/tema/${card.theme.slug}`} prefetch={false} className={styles.rankRow}>
                 <span className={styles.rankName}>{themeTitle(card.theme, locale)}</span>
                 <span className={styles.rankTrack} aria-hidden>
@@ -106,6 +132,26 @@ export function ThemeRanking({
           );
         })}
       </ol>
+      </MaybeFold>
     </div>
+  );
+}
+
+function MaybeFold({
+  hidden,
+  more,
+  less,
+  children,
+}: {
+  hidden: number;
+  more: string;
+  less: string;
+  children: React.ReactNode;
+}) {
+  if (hidden === 0) return <>{children}</>;
+  return (
+    <FoldToggle id="tema-siralamasi" hiddenCount={hidden} more={more} less={less} phone>
+      {children}
+    </FoldToggle>
   );
 }

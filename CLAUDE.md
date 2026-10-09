@@ -108,7 +108,10 @@ hareketi azaltana hiç açılmaz; hidrasyon geç kalırsa sahne hızlanıp yine
 harita `lib/ink/route-scenes.ts`), iki 404 (`lost`), hata ekranı
 (`mishap`), giriş/kayıt (`hello`), sayfa düzeyindeki boş durumlar
 (`EmptyState scene=`) haberler kapağı, giriş/kayıt kartının kendini çizen çerçevesi
-(`cardFrame`) ve Mercek ile rehber yazısının bitiş işareti (`storyEnd`).
+(`cardFrame`) Mercek ile rehber yazısının bitiş işareti (`storyEnd`) ve ana sayfa
+kahramanının seansa göre uyuklayan, bekleyen ya da çalan zili
+(`heroSleep` / `heroWait` / `heroRing`; geniş kolonda rakamların yanında,
+dar kolonda seans çipinin satırında).
 Panel içindeki tek satırlık boş durumlara sahne konmaz. Tek istisna
 yükleme: `LoadingMark` döngülü `ringing` sahnesini çalar (sahnenin
 `loop` alanı; döngü yalnızca bekleme için, görünüme giren sahneler yine

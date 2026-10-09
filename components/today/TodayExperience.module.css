@@ -122,7 +122,29 @@
    kural silindi, değer her genişlikte 10 (28 Eylül; önce/sonra hesaplanmış
    stiller altı genişlikte karşılaştırıldı, fark yok). */
 .countdownBlock { align-self:stretch; display:flex; flex-direction:column; min-width:0; padding-top:10px; }
-.countdownBlock .countdown { margin-block:auto; }
+.countdownBlock .countdownRow { margin-block:auto; }
+/* RAKAM VE ZİL (9 Ekim). Rakamlar `20cqi` ile kolonla birlikte büyüyor ve
+   her genişlikte sağlarında kolonun ~%20'si boş kalıyordu (ölçüldü:
+   1440'ta 155, 1280'de ~135, 390'da ~100 piksel). Zil o boşluğa giriyor:
+   boyu rakamın göz yüksekliği (17cqi ≈ 0,86 × 20cqi), eni oranından.
+   Rakam küçülmüyor (`flex:none`); yer daralınca küçülen zil — InkCanvas
+   sahneyi kutusuna oranını koruyarak sığdırıyor, sıfıra inince hiç
+   görünmüyor. Sayaç sıfıra varıp kendi zilini çaldığında (`ring`) iki
+   zil yan yana durmasın diye bu sahne o an gizleniyor. */
+.countdownRow { display:flex; align-items:center; gap:clamp(6px,2.5cqi,22px); min-width:0; }
+.countdownRow .countdown { flex:none; }
+.heroBell { flex:0 1 auto; min-width:0; height:clamp(52px,17cqi,118px); aspect-ratio:160 / 150; }
+.countdownRow:has([data-phase="rang"]) .heroBell { visibility:hidden; }
+/* Dar kolonda zil çipin satırında. 52 piksellik tuvalin yalnızca 34'ü
+   satıra yer açıyor (negatif kenar payları): çip 28 piksel, satır 6 piksel
+   uzuyor ve başlık neredeyse yerinde kalıyor. Zilin dibi başlık satırının
+   sağ ucuna değil boşluğuna iniyor — başlık sola yaslı ve en uzun hâli
+   (1024, TR) zilin 46 piksel solunda bitiyor. */
+.heroTopRow { display:flex; align-items:center; justify-content:space-between; gap:12px; min-width:0; margin-bottom:10px; }
+.heroTopRow .heroSession { margin-bottom:0; }
+.heroBellSmall { flex:none; height:52px; aspect-ratio:160 / 150; margin-block:-12px -6px; }
+@container hero-copy (min-width:620px) { .heroBellSmall { display:none; } }
+@container hero-copy (max-width:619.98px) { .heroBell { display:none; } }
 /* Ölçüm (22 Eylül, TR, başsız Chrome, `.tmp-sep22b-home-hero-after.mjs`):
    - 1440 / 1280: kahraman 436 (değişmedi). Rozet 199 = "Endeksler" 199
      (önce 244); künyenin son satırı 508 = veri damgası 508 (önce 462).
@@ -526,7 +548,7 @@
      852×393'te rakam 299–361, alt çubuk 337 — rakamın 24 pikseli gizli;
      932×430'da rakamın üstünde 47 piksel hava (ölçüldü, 22 Eylül denetimi).
      Burada rakam başlığın hemen altına oturuyor, artık alta. */
-  .countdownBlock .countdown { margin-block:0 auto; }
+  .countdownBlock .countdownRow { margin-block:0 auto; }
 }
 
 @media (prefers-reduced-motion:reduce) {

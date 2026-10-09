@@ -120,7 +120,16 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
      sona eklemek kronolojiyi bozmuyor, hiçbir satır kaymıyor. Yedekler
      arasında şirket başına TEK haber: ilk denemede son iki satır da
      Apple'dı. */
-  const leadCandidate = items.find(hasImage) ?? null;
+  /* MANŞET GÖRSELSİZ DE OLABİLİYOR (9 Ekim, sahibinin isteği). Görselli
+     haber yoksa bant bir satır listesiyle bitiyordu ve sayfanın kapanışı
+     zayıf kalıyordu (canlıda 1440: üç küçük satır, ölçüldü). Artık en yeni
+     haber — özeti olan tercih edilerek — METİN AĞIRLIKLI bir manşet kartı
+     oluyor: büyük başlık, dört satır özet, şirketleri. Görsel UYDURULMUYOR
+     (CLAUDE.md "Fotoğraf yok"); kartın yüzeyi ve tipografisi taşıyor. Üçten
+     az haberli günde manşet yok — tek satırın yanı boş kalırdı. */
+  const imageLead = items.find(hasImage) ?? null;
+  const leadCandidate =
+    imageLead ?? (items.length >= 3 ? (items.find((item) => Boolean(item.summary)) ?? items[0]) : null);
   const baseRows = items.filter((item) => item !== leadCandidate);
   const oldestShown = Math.min(...(baseRows.length ? baseRows : items).map((item) => item.publishedAt.getTime()));
   const fillSymbols = new Set<string>();
@@ -217,9 +226,11 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
     return headlineMentions(item.headline, symbol, meta.name) ? meta.logoUrl : null;
   };
 
-  /* Manşet kartı: görseli olan İLK haber. Görselsiz haber 16:9'luk bir kart
-     değil, bir satır. */
-  const lead = items.find(hasImage) ?? null;
+  /* Manşet kartı: görseli olan İLK haber; yoksa metin manşeti (yukarıda,
+     `leadCandidate`). Görselsiz manşette 16:9 kutu yok — boş bir görsel
+     yeri basmak yerine kart metinden kuruluyor (`textLead`). */
+  const lead = leadCandidate;
+  const textLead = lead !== null && !hasImage(lead);
   const rows = items.filter((item) => item !== lead);
 
   /* KÜNYE: kaynak · zaman · dil (28 Eylül'de yeniden kuruldu).
@@ -312,7 +323,11 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
     <div data-news-grid className={cn(styles.grid, lead ? styles.withLead : undefined)}>
       {lead && (
         <div data-news-lead data-motion-reveal className={styles.leadItem}>
-          <Link href={`/haberler/${lead.id}`} prefetch={false} className={styles.lead}>
+          <Link
+            href={`/haberler/${lead.id}`}
+            prefetch={false}
+            className={cn(styles.lead, textLead && styles.leadText)}
+          >
             <span lang={langOf(lead)} className={styles.leadHeadline}>
               {headlineOf(lead)}
             </span>
@@ -337,12 +352,25 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
               <span aria-hidden>·</span>
               <span className="numeral">{whenOf(lead)}</span>
             </span>
-            <NewsImage
-              src={lead.imageUrl}
-              logoUrl={logoFor(lead)}
-              className={styles.leadImage}
-              sizeClass="aspect-[16/9] h-auto w-full"
-            />
+            {textLead ? (
+              /* Metin manşetinin işareti: haberin şirketinin logosu, varsa.
+                 Yoksa kart yalnızca tipografi — yer tutucu kutu basılmıyor. */
+              logoFor(lead) && (
+                <LogoTile
+                  symbol={lead.symbols![0]}
+                  logoUrl={logoFor(lead)}
+                  size="xl"
+                  className={styles.leadMark}
+                />
+              )
+            ) : (
+              <NewsImage
+                src={lead.imageUrl}
+                logoUrl={logoFor(lead)}
+                className={styles.leadImage}
+                sizeClass="aspect-[16/9] h-auto w-full"
+              />
+            )}
           </Link>
         </div>
       )}

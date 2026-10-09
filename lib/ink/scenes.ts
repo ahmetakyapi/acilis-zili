@@ -1415,7 +1415,149 @@ const storyEnd: InkScene = {
   },
 };
 
-export const INK_SCENES = { intro, searching, chart, press, lens, ledger, hello, lost, mishap, dayStrip, glyphHeart, glyphLedger, glyphPress, glyphFree, ringing, cardFrame, storyEnd } satisfies Record<string, InkScene>;
+/* ----------------------------------------------------------------------- */
+/* Ana sayfa — geri sayımın yanındaki zil (9 Ekim)                           */
+/* ----------------------------------------------------------------------- */
+
+/* Ana sayfanın kahramanı sitenin en çok bakılan yeri ve markanın karakteri
+   orada yoktu: dev rakamlar, şerit ve kartlar — doğru ama kişiliksiz. Zil
+   geri sayımın sağında, rakamların hizasında duruyor ve SEANSA GÖRE başka
+   bir şey yapıyor; sayfa açıldığında bir kez oynayıp oturuyor (dosya
+   başındaki not):
+   - kapalı: zil kendini çiziyor, gözleri ağırlaşıyor ve uyukluyor; tepesinden
+     üç "z" sırayla yükseliyor. Açılışa saatler var.
+   - ön ve akşam seansı: uyanık, bir kez hafifçe sallanıp soldaki rakamlara
+     bakıyor. Bir şey oluyor ama asıl seans değil.
+   - asıl seans: çalıyor — iki vuruş, çınlama yayları, pirinç kıvılcım — ve
+     gülümseyerek duruyor.
+   Kutu dar (160 × 150): zil ortada, çevresinde yalnızca "z"lere ve
+   kıvılcımlara yer var; kapsayıcı daraldıkça sahne oranını koruyarak
+   küçülüyor (InkCanvas sığdırıyor). */
+const HERO_BOX = { w: 160, h: 150 };
+const HERO_X = 78;
+const HERO_Y = 84;
+const HERO_S = 0.82;
+
+/** Zilin kendini çizmesi — üç sahnede aynı açılış, aynı hız. */
+function heroDraw(t: number) {
+  return {
+    outline: span(t, 0, 0.5),
+    lip: span(t, 0.4, 0.56),
+    hanger: span(t, 0.45, 0.6),
+    wash: span(t, 0.5, 0.72),
+    clapper: span(t, 0.55, 0.7),
+    eyes: span(t, 0.6, 0.76),
+    smile: span(t, 0.7, 0.9),
+  };
+}
+
+function heroShadow(ctx: Ctx, pal: InkPalette, t: number, seed: number) {
+  blot(ctx, HERO_X, 140, 15, { seed: seed + 50, spread: span(t, 0.05, 0.45), color: pal.ink, alpha: 0.1, squash: 0.4 });
+}
+
+/** Fırçayla bir "z": üç düz çizgi, köşeleri keskin. */
+function zee(ctx: Ctx, pal: InkPalette, x: number, y: number, size: number, progress: number, seed: number) {
+  if (progress <= 0) return;
+  const a = { x, y };
+  const b = { x: x + size, y: y + size * 0.04 };
+  const c = { x: x + size * 0.02, y: y + size };
+  const d = { x: x + size * 1.04, y: y + size * 0.98 };
+  const pts = [...segment(a, b, 6), ...segment(b, c, 8).slice(1), ...segment(c, d, 6).slice(1)];
+  brush(ctx, pts, {
+    width: Math.max(1.6, size * 0.2),
+    progress: ease.out(progress),
+    seed,
+    taper: 0.5,
+    alpha: 0.78,
+    color: pal.ink,
+  });
+}
+
+const heroSleep: InkScene = {
+  box: HERO_BOX,
+  end: 3.3,
+  render(ctx, t, pal, seed) {
+    heroShadow(ctx, pal, t, seed);
+    /* Göz kapakları ağırlaşıyor: önce bir kırpma, sonra yarı kapalıdan
+       neredeyse kapalıya. Son karede 0,86 — uyuyor ama hâlâ bir karakter. */
+    const blinkT = t - 0.95;
+    const blinkOnce = blinkT > 0 && blinkT < 0.16 ? Math.sin((blinkT / 0.16) * Math.PI) : 0;
+    const heavy = 0.86 * ease.inOut(span(t, 1.2, 1.9));
+    drawBell(ctx, pal, {
+      x: HERO_X,
+      y: HERO_Y,
+      s: HERO_S,
+      /* Uykuya dalarken hafifçe yana yatıyor. */
+      swing: -0.07 * ease.inOut(span(t, 1.3, 2.1)),
+      ...heroDraw(t),
+      blink: Math.max(blinkOnce, heavy),
+      smile: span(t, 0.7, 0.9),
+      seed,
+    });
+    /* Üç "z", küçükten büyüğe, sağ üstte sırayla; her biri çizilirken
+       biraz yükseliyor ve yerinde kalıyor. */
+    const zs = [
+      { x: 110, y: 48, size: 9, at: 1.75 },
+      { x: 121, y: 31, size: 12, at: 2.15 },
+      { x: 134, y: 12, size: 15, at: 2.55 },
+    ];
+    for (const [i, z] of zs.entries()) {
+      const p = span(t, z.at, z.at + 0.4);
+      if (p <= 0) continue;
+      zee(ctx, pal, z.x, z.y + 6 * (1 - ease.out(p)), z.size, p, seed + 70 + i);
+    }
+  },
+};
+
+const heroWait: InkScene = {
+  box: HERO_BOX,
+  end: 2.8,
+  render(ctx, t, pal, seed) {
+    heroShadow(ctx, pal, t, seed);
+    const blinkT = t - 2.2;
+    const blink = blinkT > 0 && blinkT < 0.16 ? Math.sin((blinkT / 0.16) * Math.PI) : 0;
+    drawBell(ctx, pal, {
+      x: HERO_X,
+      y: HERO_Y,
+      s: HERO_S,
+      /* Tek, yumuşak bir sallanma: uyanık ama çalmıyor. */
+      swing: 0.12 * damped(t - 0.85, 1.4, 1.8),
+      ...heroDraw(t),
+      blink,
+      /* Soldaki rakamlara bakıyor — sayaç onun beklediği şey. */
+      look: -1 * ease.inOut(span(t, 1.25, 1.6)),
+      seed,
+    });
+    ringArcs(ctx, pal, HERO_X, HERO_Y - 2, (t - 0.95) / 0.75, HERO_S * 0.85);
+  },
+};
+
+const heroRing: InkScene = {
+  box: HERO_BOX,
+  end: 3.1,
+  render(ctx, t, pal, seed) {
+    heroShadow(ctx, pal, t, seed);
+    const blinkT = t - 2.5;
+    const blink = blinkT > 0 && blinkT < 0.16 ? Math.sin((blinkT / 0.16) * Math.PI) : 0;
+    drawBell(ctx, pal, {
+      x: HERO_X,
+      y: HERO_Y,
+      s: HERO_S,
+      swing: 0.3 * damped(t - 0.8, 1.6, 1.25),
+      ...heroDraw(t),
+      blink,
+      seed,
+    });
+    ringArcs(ctx, pal, HERO_X, HERO_Y - 2, (t - 0.86) / 0.75, HERO_S);
+    ringArcs(ctx, pal, HERO_X, HERO_Y - 2, (t - 1.18) / 0.75, HERO_S);
+    /* Vuruşun kıvılcımı tokmağın çarptığı yandan: önce sağ, sonra sol
+       (`ringing` ile aynı dil). */
+    spark(ctx, pal, HERO_X + 26, HERO_Y + 22, (t - 0.92) / 0.55, 0.95, seed + 80);
+    spark(ctx, pal, HERO_X - 26, HERO_Y + 22, (t - 1.24) / 0.55, 0.95, seed + 81);
+  },
+};
+
+export const INK_SCENES = { intro, searching, chart, press, lens, ledger, hello, lost, mishap, dayStrip, glyphHeart, glyphLedger, glyphPress, glyphFree, ringing, cardFrame, storyEnd, heroSleep, heroWait, heroRing } satisfies Record<string, InkScene>;
 export type InkSceneName = keyof typeof INK_SCENES;
 
 /** Gerçek saati sahnenin saatine çevirir: sonda durur, döngülü sahne döner. */

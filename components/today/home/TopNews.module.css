@@ -61,6 +61,17 @@
    kıl çizgi satırdan satıra kesintisiz iniyor (satırın kendi dolgusu yok,
    dolgu sütunların içinde); yatay ayraç çizgiyi kesmesin diye karodan
    başlıyor. */
+/* METİN MANŞETİ (9 Ekim) — gerekçe TopNews.tsx. Görsel yokken kartı yüzey
+   ve tipografi taşıyor: kıl kenarlı premium yüzey (gölge ve ışıma yok,
+   derinlik tondan), başlık bir kademe büyük ve dört satır, özet dört satır.
+   Logo varsa kartın tepesinde 56'lık karo — haberin şirketi. */
+.leadText { gap:14px; padding:26px 28px 28px; border:1px solid var(--line); background:var(--premium-surface); transition:border-color .25s; }
+.leadText .leadHeadline { -webkit-line-clamp:4; font-size:clamp(24px,2.4vw,34px); line-height:1.16; }
+.leadText .leadSummary { -webkit-line-clamp:4; font-size:15.5px; line-height:1.65; }
+.leadText .leadMeta { margin-top:0; }
+.leadMark { order:-2; }
+@media (hover:hover) and (pointer:fine) { .leadText:hover { border-color:var(--primary-faint); } }
+@media (max-width:639px) { .leadText { padding:20px 20px 22px; } .leadText .leadHeadline { font-size:23px; } }
 .rowItem { min-width:0; }
 /* Manşetsiz günün tamamlama satırları yalnızca iki sütunlu düzende
    (gerekçe TopNews.tsx → `pairFill`). */
