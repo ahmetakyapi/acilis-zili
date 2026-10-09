@@ -3,7 +3,8 @@
    replace the stacked date/rows. Keep every estimate and session readable. */
 .radar { min-width:0; display:grid; gap:12px; }
 .visualHeader { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--primary-ink); }
-.visualHeader h2 { font-size:13px; font-weight:600; }
+/* 13 → 16 (9 Ekim): öteki panel başlıklarıyla aynı kademe ("Piyasanın Devleri" ile yan yana iki kapak aynı başlık ölçüsünde). */
+.visualHeader h2 { font-size:var(--text-lead); font-weight:650; letter-spacing:-.015em; }
 .visualHeader > svg { opacity:.7; flex-shrink:0; }
 /* Radarın öne çıkan kartı bir bağlantı; zemini yan kartlarla aynı düz
    `--primary-tint` (23 Eylül). Soldan sağa solan degrade kartın sağ
@@ -53,3 +54,19 @@
  .radarSession > svg,.radarFollowing a,.radarFollowing svg { transition:none; }
  .radarLead:hover .radarSession > svg,.radarFollowing a:hover,.radarFollowing a:hover svg { transform:none; }
 }
+
+/* ---- Radar girişi (9 Ekim) ----
+   Kapağın sağ sütunu ilk ekranda; giriş CSS'te ve yüklemede bir kez.
+   Öne çıkan kart yalnızca KAYARAK geliyor (opaklık yok: kartın 22 punto
+   sembolü sayfanın en büyük metinlerinden, LCP adayı olabilir — gerekçe
+   globals.css `copy-slide` notu). Tarih ve tahminler sayaç gibi dönüyor
+   (`RollingFigure`), tahmin şeridinin çizgisi soldan açılıyor, takip eden
+   iki şirket kartın ardından sırayla. */
+.radarSpotlight { animation:radar-slide 720ms var(--ease-brand) 120ms backwards; }
+.radarEstimates { animation:radar-rule 760ms var(--ease-brand) 300ms backwards; }
+.radarFollowing > a { animation:radar-follow 560ms var(--ease-brand) backwards; animation-delay:380ms; }
+.radarFollowing > a + a { animation-delay:450ms; }
+@keyframes radar-slide { from { transform:translate3d(0,14px,0); } }
+@keyframes radar-rule { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0 -2% 0 0); } }
+@keyframes radar-follow { from { opacity:0; transform:translate3d(0,10px,0); } }
+@media(prefers-reduced-motion:reduce) { .radarSpotlight, .radarEstimates, .radarFollowing > a { animation:none; } }

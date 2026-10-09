@@ -1532,3 +1532,23 @@
  .assessment .coverFacts > dl dd { order:2; margin-top:14px; font-size:26px; line-height:1.1; }
  .assessment .coverFacts > dl dt > span:not(:first-child) { order:3; margin-top:8px; line-height:1.45; }
 }
+
+/* ---- Kapak girişi (9 Ekim) ----
+   Kapak ilk ekranda; MotionExperience ilk ekrandaki öğeye dokunmadığı için
+   giriş CSS'te ve yüklemede bir kez (`backwards`, bitince iz yok).
+   · Öne çıkan iki ölçü sırayla, yalnızca KAYARAK: sayılar 49 punto ve LCP
+     adayı, saydamlıkla gelmiyor (globals.css → `copy-slide` notu).
+   · Gelir sütunları tabandan, soldan sağa (`--i`). Ölçek değil KIRPMA:
+     çubuğun içindeki değer etiketi ölçekte ezilirdi; kırpma tepeden
+     yukarı taşan bir payla bitiyor, etiket sütun oturunca görünüyor. */
+.coverLeadFacts > div { animation: cover-fact 700ms var(--ease-brand) 140ms backwards; }
+.coverLeadFacts > div + div { animation-delay: 240ms; }
+.coverTrendBar { animation: cover-bar 900ms var(--ease-brand) backwards; animation-delay: calc(260ms + var(--i, 0) * 70ms); }
+@keyframes cover-fact { from { transform: translate3d(0, 14px, 0); } }
+@keyframes cover-bar {
+  from { clip-path: inset(100% -2em 0 -2em); }
+  to { clip-path: inset(-2em -2em 0 -2em); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .coverLeadFacts > div, .coverTrendBar { animation: none; }
+}

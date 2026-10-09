@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, type CSSProperties } from "react";
 import { ArrowDownRight, ArrowRight, CalendarBlank, Star } from "@phosphor-icons/react/dist/ssr";
 import { MorphTarget } from "@/components/motion/Morph";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -475,7 +475,7 @@ export function ReportCover({
                           <span className="sr-only">{t.analysis.missingQuarter}</span>
                         </div>
                       )}
-                      <div className={styles.coverTrendColumn}>
+                      <div className={styles.coverTrendColumn} style={{ "--i": index } as CSSProperties}>
                         <div className={styles.coverTrendTrack}>
                           <div
                             className={styles.coverTrendBar}
