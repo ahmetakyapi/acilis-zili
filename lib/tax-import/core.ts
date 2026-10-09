@@ -14,7 +14,8 @@
  * önizlemede açılıp okunabilir.
  */
 
-export type Broker = "midas" | "ibkr";
+/** `acilis-zili`: vergi hesaplayıcısının kendi indirdiği döküm (own.ts). */
+export type Broker = "midas" | "ibkr" | "acilis-zili";
 
 /** Önizlemede satırın yanında duran uyarı. `block` olan satır seçili gelmez. */
 export type RowFlag =

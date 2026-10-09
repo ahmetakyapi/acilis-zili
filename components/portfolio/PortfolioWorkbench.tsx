@@ -11,6 +11,7 @@ import {
   useTransition,
 } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowCounterClockwise, FilePdf, Plus, X } from "@phosphor-icons/react";
 import {
@@ -25,6 +26,7 @@ import type { ExistingPosition } from "@/lib/portfolio-import";
 import { cn } from "@/lib/utils";
 import { PortfolioSheet } from "./PortfolioSheet";
 import { PositionComposer, type ComposerPosition } from "./PositionComposer";
+import { SellComposer } from "./SellComposer";
 import styles from "./Workbench.module.css";
 
 /* --------------------------------------------------------------------------
@@ -58,7 +60,11 @@ const PortfolioImport = dynamic(() => import("./PortfolioImport").then((m) => m.
   loading: () => <div className={styles.importLoading} aria-hidden />,
 });
 
-type Sheet = { kind: "add" } | { kind: "edit"; position: ComposerPosition } | { kind: "import" };
+type Sheet =
+  | { kind: "add"; preset?: { symbol: string; name: string | null; logo: string | null } }
+  | { kind: "edit"; position: ComposerPosition }
+  | { kind: "import" }
+  | { kind: "sell"; position: ComposerPosition };
 
 type Toast = {
   id: number;
@@ -71,6 +77,9 @@ type WorkbenchContext = {
   openAdd: () => void;
   openImport: () => void;
   openEdit: (position: ComposerPosition) => void;
+  /** Satış penceresi — `null` ise satış kaydı kapalı (tablo yok). */
+  openSell: ((position: ComposerPosition) => void) | null;
+  sales: Dictionary["portfolioSales"] | null;
   remove: (position: ComposerPosition) => void;
   /** Tablo o an görünen pozisyonları bildiriyor — içe aktarma çakışmayı onlarla arıyor. */
   setExisting: (positions: ExistingPosition[]) => void;
@@ -118,9 +127,15 @@ export function PortfolioWorkbench({
   today,
   minDate,
   maxPositions,
+  sales,
+  preset = null,
   children,
 }: {
+  /** `?ekle=` ile gelen sembol — ekleme penceresi onunla açık başlıyor. */
+  preset?: { symbol: string; name: string | null; logo: string | null } | null;
   labels: PortfolioLabels;
+  /** Satış etiketleri; `null` ise satış kaydı kapalı (migration 0027 yok). */
+  sales: Dictionary["portfolioSales"] | null;
   locale: Locale;
   /** İstanbul'un bugünü — tarih alanının üst sınırı, sunucudan. */
   today: string;
@@ -128,8 +143,15 @@ export function PortfolioWorkbench({
   maxPositions: number;
   children: React.ReactNode;
 }) {
-  const [sheet, setSheet] = useState<Sheet | null>(null);
-  const [open, setOpen] = useState(false);
+  const [sheet, setSheet] = useState<Sheet | null>(preset ? { kind: "add", preset } : null);
+  const [open, setOpen] = useState(Boolean(preset));
+  /* Adres temizleniyor ki yenileme pencereyi yeniden açmasın. Sığ değil,
+     gerçek bir gezinme (`router.replace`): sığ güncelleme uçuştaki
+     gezinmeyi öldürüyor (CLAUDE.md). */
+  const router = useRouter();
+  useEffect(() => {
+    if (preset) router.replace(window.location.pathname, { scroll: false });
+  }, [preset, router]);
   const [toast, setToast] = useState<Toast | null>(null);
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
   const [fresh, setFresh] = useState<ReadonlySet<string>>(new Set());
@@ -215,6 +237,8 @@ export function PortfolioWorkbench({
       openAdd: () => show({ kind: "add" }),
       openImport: () => show({ kind: "import" }),
       openEdit: (position) => show({ kind: "edit", position }),
+      openSell: sales ? (position) => show({ kind: "sell", position }) : null,
+      sales,
       remove,
       setExisting,
       hidden,
@@ -223,11 +247,18 @@ export function PortfolioWorkbench({
       locale,
       notify,
     }),
-    [show, remove, hidden, fresh, labels, locale, notify],
+    [show, remove, hidden, fresh, labels, locale, notify, sales],
   );
 
   const C = labels.composer;
-  const title = sheet?.kind === "import" ? labels.importer.title : sheet?.kind === "edit" ? C.editTitle : C.addTitle;
+  const title =
+    sheet?.kind === "import"
+      ? labels.importer.title
+      : sheet?.kind === "edit"
+        ? C.editTitle
+        : sheet?.kind === "sell" && sales
+          ? sales.sheetTitle.replace("{symbol}", sheet.position.symbol)
+          : C.addTitle;
 
   return (
     <Context.Provider value={value}>
@@ -241,7 +272,26 @@ export function PortfolioWorkbench({
         closeLabel={C.close}
         size={sheet?.kind === "import" ? "lg" : "md"}
       >
-        {sheet && sheet.kind !== "import" && (
+        {sheet?.kind === "sell" && sales && (
+          <SellComposer
+            key={`sell-${sheet.position.id}`}
+            symbol={sheet.position.symbol}
+            name={sheet.position.name ?? null}
+            logoUrl={sheet.position.logoUrl ?? null}
+            lots={existing.filter((lot) => lot.symbol === sheet.position.symbol)}
+            labels={labels}
+            sales={sales}
+            locale={locale}
+            today={today}
+            minDate={minDate}
+            onCancel={() => setOpen(false)}
+            onSaved={(_saleId, symbol) => {
+              setOpen(false);
+              notify({ message: sales.toastSold.replace("{symbol}", symbol) });
+            }}
+          />
+        )}
+        {sheet && (sheet.kind === "add" || sheet.kind === "edit") && (
           <PositionComposer
             key={sheet.kind === "edit" ? sheet.position.id : "add"}
             labels={labels}
@@ -250,6 +300,7 @@ export function PortfolioWorkbench({
             minDate={minDate}
             maxPositions={maxPositions}
             editing={sheet.kind === "edit" ? sheet.position : null}
+            preset={sheet.kind === "add" ? sheet.preset ?? null : null}
             onCancel={() => setOpen(false)}
             onDelete={
               sheet.kind === "edit"
@@ -259,6 +310,8 @@ export function PortfolioWorkbench({
                   }
                 : undefined
             }
+            onSell={sheet.kind === "edit" && sales ? () => show({ kind: "sell", position: sheet.position }) : undefined}
+            sellLabel={sales?.sell}
             onSaved={(id, symbol) => {
               setOpen(false);
               markFresh([id]);

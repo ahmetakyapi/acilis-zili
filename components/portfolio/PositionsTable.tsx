@@ -52,6 +52,11 @@ export type PositionRow = ComposerPosition & {
   accent: string;
   /** Getiri çubuklarının ortak ölçeği: listedeki en büyük mutlak yüzde. */
   returnScale: number;
+  /** Bu seanstaki değişim — kotasyon seansa ait değilse null (lib/portfolio.ts). */
+  dayChangeUsd: number | null;
+  dayChangePct: number | null;
+  /** Seansın adı ("Seans İçi", "Kapanış Sonrası"…). */
+  dayLabel: string | null;
 };
 
 /** Giriş kademesi: bundan sonraki satırlar aynı anda girer. */
@@ -119,7 +124,7 @@ function Journey({
 }
 
 export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: boolean }) {
-  const { labels: L, locale, hidden, fresh, openEdit, remove, setExisting, notify } = useWorkbench();
+  const { labels: L, locale, hidden, fresh, openEdit, openSell, sales, remove, setExisting, notify } = useWorkbench();
 
   /* ELLE SIRA (2 Ekim). Sunucu satırları zaten doğru sırayla gönderiyor
      (`orderPositions`); burada yalnızca düzenleme sırasındaki yerel sıra
@@ -294,8 +299,11 @@ export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: 
                         type="button"
                         aria-label={L.moveUp.replace("{symbol}", row.symbol)}
                         className={cn(styles.rowAction, styles.rowMove)}
-                        onClick={() => move(row.id, -1)}
-                        disabled={i === 0}
+                        onClick={() => {
+                          if (i === 0) return;
+                          move(row.id, -1);
+                        }}
+                        aria-disabled={i === 0}
                       >
                         <CaretUp size={16} weight="bold" aria-hidden />
                       </button>
@@ -303,8 +311,11 @@ export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: 
                         type="button"
                         aria-label={L.moveDown.replace("{symbol}", row.symbol)}
                         className={cn(styles.rowAction, styles.rowMove)}
-                        onClick={() => move(row.id, 1)}
-                        disabled={i === visibleRows.length - 1}
+                        onClick={() => {
+                          if (i === visibleRows.length - 1) return;
+                          move(row.id, 1);
+                        }}
+                        aria-disabled={i === visibleRows.length - 1}
                       >
                         <CaretDown size={16} weight="bold" aria-hidden />
                       </button>
@@ -319,6 +330,19 @@ export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: 
                       >
                         <PencilSimple size={16} weight="duotone" aria-hidden />
                       </button>
+                      {/* SAT (9 Ekim) — satış FIFO ile sembole yapılıyor
+                          (SellComposer); düğme her partide aynı pencereyi açar. */}
+                      {openSell && sales && (
+                        <button
+                          type="button"
+                          aria-label={sales.sellAria.replace("{symbol}", row.symbol)}
+                          title={sales.sellAria.replace("{symbol}", row.symbol)}
+                          className={cn(styles.rowAction, styles.rowSell)}
+                          onClick={() => openSell(row)}
+                        >
+                          {sales.sell}
+                        </button>
+                      )}
                       <button
                         type="button"
                         aria-label={L.removeAria.replace("{symbol}", row.symbol)}
@@ -338,6 +362,11 @@ export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: 
                   {row.price === null ? <span className="text-muted">{L.noQuote}</span> : usd(row.valueUsd)}
                 </span>
                 <span className={cn("numeral", styles.posValueTl)}>{formatLira(row.valueTl, locale)}</span>
+                {row.dayChangeUsd !== null && row.dayLabel && (
+                  <span className={cn("numeral", styles.posDay)} data-tone={directionOf(row.dayChangeUsd)}>
+                    {row.dayLabel} · {usd(row.dayChangeUsd, true)} · {formatPercent(row.dayChangePct, locale)}
+                  </span>
+                )}
               </div>
 
               {row.price !== null && <Journey cost={row.costUsd} price={row.price} costLabel={L.costShort} priceLabel={L.price} usd={usd} />}

@@ -12,7 +12,8 @@ import { MAX_POSITIONS } from "@/lib/portfolio-data";
 import { getChartBars, getQuotes } from "@/lib/providers";
 import { getUsdTryAt, istanbulToday } from "@/lib/providers/fx-history";
 import { rateLimit } from "@/lib/rate-limit";
-import { portfolioOrder, portfolioPositions } from "@/lib/schema";
+import { portfolioOrder, portfolioPositions, portfolioSales } from "@/lib/schema";
+import { planFifoSale } from "@/lib/portfolio-sales";
 import { isValidSymbol } from "@/lib/utils";
 
 /**
@@ -46,7 +47,9 @@ export type PortfolioActionState = {
   /** Yeni satırın kimliği — liste onu vurgulayarak getiriyor. */
   id?: string;
   /** Hangi alan hatalı — hata o alanın altına yazılıyor. */
-  field?: "symbol" | "quantity" | "costUsd" | "boughtAt";
+  field?: "symbol" | "quantity" | "costUsd" | "boughtAt" | "priceUsd" | "soldAt";
+  /** Satışta adet fazlaysa: o gün elde olan adet (FIFO'nun tüketebileceği). */
+  available?: number;
 };
 
 /** Dakikada yazma tavanı — elle form doldurmanın hızı bunun çok altında. */
@@ -445,3 +448,166 @@ export async function savePortfolioOrderAction(ids: string[] | null): Promise<Po
   revalidatePath("/portfoy");
   return { status: "saved" };
 }
+
+/* --------------------------------------------------------------------------
+   Satış (9 Ekim) — gerekçe `lib/schema.ts` → portfolioSales
+
+   Satış SEMBOLE yapılıyor, satıra değil: hangi partiden düşüleceğine İLK
+   GİREN İLK ÇIKAR karar veriyor (`planFifoSale`). Tükenen parti siliniyor,
+   kısmen tükenen partinin adedi azalıyor ve her tüketilen parti kendi
+   maliyetiyle `portfolio_sales`e yazılıyor. Hepsi TEK `batch`te: Neon'un
+   HTTP sürücüsünde bu bir işlem (transaction); yarısı yazılmış bir satış —
+   partisi silinmiş ama kaydı olmayan — mümkün değil.
+   -------------------------------------------------------------------------- */
+
+const SaleInput = z.object({
+  symbol: z
+    .string()
+    .trim()
+    .transform((raw) => raw.toUpperCase())
+    .refine((value) => isValidSymbol(value)),
+  quantity: decimal.pipe(z.number().min(MIN_QUANTITY).max(MAX_QUANTITY)),
+  priceUsd: decimal.pipe(z.number().min(MIN_PRICE_USD).max(MAX_PRICE_USD)),
+  soldAt: z.string().refine((value) => isIsoDate(value)),
+});
+
+function saleFieldOf(error: z.ZodError): PortfolioActionState["field"] {
+  const key = error.issues[0]?.path[0];
+  return key === "quantity" || key === "priceUsd" || key === "soldAt" ? key : undefined;
+}
+
+export async function sellPositionAction(
+  _prev: PortfolioActionState,
+  formData: FormData,
+): Promise<PortfolioActionState> {
+  const userId = await sessionUser();
+  if (!userId) return { status: "error", error: "signedOut" };
+  const limited = rateLimit(`portfolio:${userId}`, WRITE_LIMIT, WRITE_WINDOW_MS);
+  if (!limited.allowed) return { status: "error", error: "rateLimited" };
+
+  const parsed = SaleInput.safeParse({
+    symbol: String(formData.get("symbol") ?? ""),
+    quantity: String(formData.get("quantity") ?? ""),
+    priceUsd: String(formData.get("priceUsd") ?? ""),
+    soldAt: String(formData.get("soldAt") ?? ""),
+  });
+  if (!parsed.success) return { status: "error", error: "invalid", field: saleFieldOf(parsed.error) };
+  const input = parsed.data;
+  if (!dateInRange(input.soldAt)) return { status: "error", error: "invalid", field: "soldAt" };
+
+  const saleId = crypto.randomUUID();
+  try {
+    const lots = await db
+      .select()
+      .from(portfolioPositions)
+      .where(and(eq(portfolioPositions.userId, userId), eq(portfolioPositions.symbol, input.symbol)))
+      .orderBy(portfolioPositions.boughtAt, portfolioPositions.createdAt);
+    const plan = planFifoSale(
+      lots.map((row) => ({
+        id: row.id,
+        quantity: Number(row.quantity),
+        costUsd: Number(row.costUsd),
+        boughtAt: row.boughtAt,
+        note: row.note,
+      })),
+      input.quantity,
+      input.soldAt,
+    );
+    if (!plan.ok) {
+      return {
+        status: "error",
+        error: "invalid",
+        field: plan.reason === "noLots" ? "soldAt" : "quantity",
+        available: plan.available,
+      };
+    }
+
+    const [first, ...rest] = plan.steps.flatMap((step) => [
+      step.exhausted
+        ? db
+            .delete(portfolioPositions)
+            .where(and(eq(portfolioPositions.id, step.lot.id), eq(portfolioPositions.userId, userId)))
+        : db
+            .update(portfolioPositions)
+            .set({ quantity: String(step.lot.quantity - step.take) })
+            .where(and(eq(portfolioPositions.id, step.lot.id), eq(portfolioPositions.userId, userId))),
+      db.insert(portfolioSales).values({
+        userId,
+        saleId,
+        symbol: input.symbol,
+        quantity: String(step.take),
+        priceUsd: String(input.priceUsd),
+        soldAt: input.soldAt,
+        costUsd: String(step.lot.costUsd),
+        boughtAt: step.lot.boughtAt,
+        note: step.lot.note,
+      }),
+    ]);
+    await db.batch([first, ...rest]);
+  } catch {
+    return { status: "error", error: "failed" };
+  }
+
+  revalidatePath("/portfoy");
+  return { status: "saved", id: saleId };
+}
+
+/**
+ * Satışı geri alır: partiler pozisyonlara geri döner. Aynı sembol, alış
+ * günü ve maliyette bir parti hâlâ duruyorsa (kısmi satış) adedi ona
+ * ekleniyor; yoksa parti yeniden açılıyor. Kayıtlar siliniyor. Tek `batch`.
+ */
+export async function undoSaleAction(saleId: string): Promise<PortfolioActionState> {
+  const userId = await sessionUser();
+  if (!userId) return { status: "error", error: "signedOut" };
+  if (!z.string().uuid().safeParse(saleId).success) return { status: "error", error: "invalid" };
+  const limited = rateLimit(`portfolio:${userId}`, WRITE_LIMIT, WRITE_WINDOW_MS);
+  if (!limited.allowed) return { status: "error", error: "rateLimited" };
+
+  try {
+    const parts = await db
+      .select()
+      .from(portfolioSales)
+      .where(and(eq(portfolioSales.saleId, saleId), eq(portfolioSales.userId, userId)));
+    if (parts.length === 0) return { status: "error", error: "invalid" };
+    const symbol = parts[0].symbol;
+    const lots = await db
+      .select()
+      .from(portfolioPositions)
+      .where(and(eq(portfolioPositions.userId, userId), eq(portfolioPositions.symbol, symbol)));
+    const opened = parts.filter(
+      (part) => !lots.some((lot) => lot.boughtAt === part.boughtAt && Math.abs(Number(lot.costUsd) - Number(part.costUsd)) < 1e-9),
+    ).length;
+    if (opened > 0 && (await countPositions(userId)) + opened > MAX_POSITIONS) return { status: "error", error: "limit" };
+
+    const statements = parts.map((part) => {
+      const lot = lots.find(
+        (row) => row.boughtAt === part.boughtAt && Math.abs(Number(row.costUsd) - Number(part.costUsd)) < 1e-9,
+      );
+      return lot
+        ? db
+            .update(portfolioPositions)
+            .set({ quantity: String(Number(lot.quantity) + Number(part.quantity)) })
+            .where(and(eq(portfolioPositions.id, lot.id), eq(portfolioPositions.userId, userId)))
+        : db.insert(portfolioPositions).values({
+            userId,
+            symbol: part.symbol,
+            quantity: part.quantity,
+            costUsd: part.costUsd,
+            boughtAt: part.boughtAt,
+            note: part.note,
+          });
+    });
+    const [first, ...rest] = [
+      ...statements,
+      db.delete(portfolioSales).where(and(eq(portfolioSales.saleId, saleId), eq(portfolioSales.userId, userId))),
+    ];
+    await db.batch([first, ...rest]);
+  } catch {
+    return { status: "error", error: "failed" };
+  }
+
+  revalidatePath("/portfoy");
+  return { status: "saved" };
+}
+

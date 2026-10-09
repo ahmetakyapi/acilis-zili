@@ -1027,15 +1027,26 @@
   color: var(--down);
 }
 
+/* Sat: metinli düğme (ikon "sat"ı tek başına söylemiyor), aynı yükseklik. */
+.rowSell {
+  width: auto;
+  padding-inline: 0.75rem;
+  border: 1px solid var(--line);
+  font-size: var(--text-small);
+  font-weight: 700;
+  color: var(--text-body);
+}
+
 .rowAction:focus-visible {
   outline: 2px solid var(--line-focus);
   outline-offset: -2px;
 }
 
-/* Telefonda tek düğme: düzelt. Silme düzeltme penceresinin içinde; iki
-   düğme yapışık sütunu 100 piksele çıkarıp veriye 140 piksel bırakıyordu. */
+/* Telefonda tek düğme: düzelt. Silme ve Sat düzeltme penceresinin içinde;
+   iki düğme yapışık sütunu 100 piksele çıkarıp veriye 140 piksel bırakıyordu. */
 @media (max-width: 639px) {
-  .rowActionDanger {
+  .rowActionDanger,
+  .rowSell {
     display: none;
   }
 }
@@ -1295,7 +1306,7 @@
   color: var(--text-body);
 }
 
-.rowMove:disabled {
+.rowMove[aria-disabled="true"] {
   opacity: 0.3;
   cursor: default;
 }
@@ -1303,3 +1314,9 @@
 .posList[data-editing] .posRow {
   border-color: color-mix(in oklab, var(--primary) 35%, var(--line-soft));
 }
+
+/* Pozisyonun günlük değişimi — değerin altında, künye boyunda; renk yalnızca
+   yön (gerekçe lib/portfolio.ts → "Günlük değişim"). */
+.posDay { display:block; margin-top:2px; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
+.posDay[data-tone="up"] { color:var(--up); }
+.posDay[data-tone="down"] { color:var(--down); }

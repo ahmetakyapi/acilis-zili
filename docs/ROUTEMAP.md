@@ -58,7 +58,10 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       (`lib/ark-view.ts`). Kayıt 28 Eylül'de başladı; ilk karşılaştırma bir
       sonraki işlem gününün dosyasıyla geliyor.
 
-- [ ] **Migration 0026 (`price_alerts`) üretimde uygulanmalı.** Fiyat
+- [x] **Migration 0027 (`portfolio_sales`)** — portföy satışları ve gerçekleşen
+      kâr/zarar. Tablo yokken Sat düğmeleri ve Gerçekleşen paneli basılmıyor
+      (`lib/portfolio-sales-data.ts` → `available`).
+- [x] **Migration 0026 (`price_alerts`) üretimde uygulanmalı.** Fiyat
       alarmları kendi tablosunda; tablo yokken hisse sayfasındaki zil
       düğmesi ve favorilerdeki alarm paneli HİÇ basılmıyor (kurulamayacak
       bir düğme göstermemek için — `lib/price-alerts.ts` → `available`).

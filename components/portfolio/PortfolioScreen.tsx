@@ -13,6 +13,9 @@ import {
 } from "@/components/portfolio/PortfolioWorkbench";
 import { PortfolioTechnical, type TechnicalHolding } from "@/components/portfolio/PortfolioTechnical";
 import { PositionsTable, type PositionRow } from "@/components/portfolio/PositionsTable";
+import { RealizedPanel } from "@/components/portfolio/RealizedPanel";
+import { getPortfolioSales, loadRealized } from "@/lib/portfolio-sales-data";
+import { getSymbolNames } from "@/lib/data";
 import {
   AllocationRing,
   AllocationRingSkeleton,
@@ -24,6 +27,7 @@ import {
 } from "@/components/portfolio/PortfolioVisuals";
 import { DataStamp, EmptyState, Panel, PanelHeader, PanelSkeleton } from "@/components/ui/primitives";
 import { companySector } from "@/lib/company-sector";
+import { cn, directionOf, directionText, formatPercent, formatPrice } from "@/lib/utils";
 import { formatIsoDate, formatRate, TCMB_MIN_DATE } from "@/lib/fx";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { orderPositions, sectorWeights } from "@/lib/portfolio";
@@ -55,8 +59,18 @@ import { istanbulToday } from "@/lib/providers/fx-history";
  * migration'lar deploy'da uygulanmıyor; okuma düşerse sayfa "şu an
  * açılamıyor" der (`lib/portfolio-data.ts`).
  */
-export async function PortfolioScreen({ userId }: { userId: string }) {
-  const { locale, t } = await getI18n();
+export async function PortfolioScreen({ userId, preset = null }: { userId: string; preset?: string | null }) {
+  /* Satış tablosu var mı — Sat düğmeleri ve pencere ona bağlı. Tek küçük
+     sorgu; kotasyon ve kur okumalarını (ilk baytı geciktiren asıl iş)
+     beklemiyor. Aynı okuma `cache()`li, gövde onu yeniden kullanıyor. */
+  const [{ locale, t }, sales, presetNames] = await Promise.all([
+    getI18n(),
+    getPortfolioSales(userId),
+    preset ? getSymbolNames([preset]) : Promise.resolve(null),
+  ]);
+  const presetPick = preset
+    ? { symbol: preset, name: presetNames?.[preset]?.name ?? null, logo: presetNames?.[preset]?.logoUrl ?? null }
+    : null;
   const L = t.lira.portfolio;
   const today = istanbulToday();
 
@@ -66,7 +80,7 @@ export async function PortfolioScreen({ userId }: { userId: string }) {
   return (
     <MotionExperience className={directory.page}>
       <ScrollProgress />
-      <PortfolioWorkbench labels={L} locale={locale} today={today} minDate={TCMB_MIN_DATE} maxPositions={MAX_POSITIONS}>
+      <PortfolioWorkbench labels={L} locale={locale} today={today} minDate={TCMB_MIN_DATE} maxPositions={MAX_POSITIONS} sales={sales.available ? t.portfolioSales : null} preset={presetPick}>
         <DirectoryHeader
           eyebrow={L.eyebrow}
           title={L.title}
@@ -136,20 +150,32 @@ async function HeroAllocation({ userId, locale, t }: { userId: string; locale: L
 }
 
 async function HeroExport({ userId, label }: { userId: string; label: string }) {
-  const data = await loadPortfolio(userId);
+  const [data, realized] = await Promise.all([loadPortfolio(userId), loadRealized(userId)]);
+  /* Açık pozisyonlar alış, satılmış partiler alış + satış olarak gidiyor:
+     hesaplayıcı satışı FIFO ile eşleştiriyor, portföy de satışı FIFO ile
+     kaydettiği için iki ekranın kârı aynı partilerden kuruluyor. */
+  const sold = realized.parts.map((part) => ({
+    symbol: part.symbol,
+    quantity: part.quantity,
+    costUsd: part.costUsd,
+    boughtAt: part.boughtAt,
+    soldAt: part.soldAt,
+    priceUsd: part.priceUsd,
+  }));
   return (
     <ExportToTaxButton
       label={label}
-      positions={
-        data.ok
+      positions={[
+        ...(data.ok
           ? data.positions.map((p) => ({
               symbol: p.symbol,
               quantity: p.quantity,
               costUsd: p.costUsd,
               boughtAt: p.boughtAt,
             }))
-          : []
-      }
+          : []),
+        ...sold,
+      ]}
     />
   );
 }
@@ -177,16 +203,36 @@ async function PortfolioBody({
   /* Boş portföyün İKİ yolu yan yana: elle ekle ya da ekstreden getir.
      Eskiden boş durumun altında beş alanlı form açık geliyordu ve ekstresi
      olan okuyucu satır satır yazmak zorundaydı. */
+  const realized = await loadRealized(userId);
+  /* Satışların logoları — pozisyonu kalmamış sembol de olabilir. */
+  const realizedNames =
+    realized.views.length > 0 ? await getSymbolNames([...new Set(realized.views.map((view) => view.symbol))]) : {};
+
   if (data.positions.length === 0) {
+    /* Bütün pozisyonlar satıldıysa da gerçekleşen kâr görünmeli: boş
+       durum erken dönüyordu ve satışlar ekrandan kayboluyordu. */
     return (
-      <Panel>
-        <EmptyState title={L.emptyTitle} hint={L.emptyBody} scene="ledger" />
-        <EmptyChoices />
-      </Panel>
+      <>
+        <Panel>
+          <EmptyState title={L.emptyTitle} hint={L.emptyBody} scene="ledger" />
+          <EmptyChoices />
+        </Panel>
+        {realized.views.length > 0 && <RealizedPanel data={realized} names={realizedNames} locale={locale} t={t} />}
+      </>
     );
   }
 
-  const { views, totals, names, buyRate, todayFx, todayRate, quotesResult } = data;
+  const { views, totals, names, buyRate, todayFx, todayRate, quotesResult, days, day, dayBasis } = data;
+  const basisLabel =
+    dayBasis === "session"
+      ? t.companyCard.session
+      : dayBasis === "pre-market"
+        ? t.companyCard.preMarket
+        : dayBasis === "after-hours"
+          ? t.companyCard.afterHours
+          : dayBasis === "sessionClose"
+            ? t.companyCard.sessionClose
+            : null;
   const weights = sectorWeights(
     views.map((view) => ({
       sector: companySector(view.symbol, names[view.symbol]?.industry, locale) ?? L.otherSector,
@@ -236,6 +282,9 @@ async function PortfolioBody({
         : null,
     accent: accents.get(view.symbol) ?? REST_ACCENT,
     returnScale,
+    dayChangeUsd: days.get(view.id)?.changeUsd ?? null,
+    dayChangePct: days.get(view.id)?.changePct ?? null,
+    dayLabel: basisLabel,
   }));
   /* Varsayılan en ağır pozisyon üstte (halkanın lejantıyla aynı sıra);
      okuyucu elle sıra verdiyse o sıra (`orderPositions`, lib/portfolio.ts). */
@@ -264,7 +313,23 @@ async function PortfolioBody({
     <>
       {/* ---- Toplam şeridi ---- */}
       <Panel>
-        <PanelHeader title={L.returnsTitle} />
+        <PanelHeader
+          title={L.returnsTitle}
+          action={
+            /* GÜNÜN DEĞİŞİMİ başlığın sağında, künyesiyle: hangi seansı
+               anlattığı adıyla yazılı; hiçbir pozisyon kanıtlanmıyorsa
+               (bayat paket, önceki seans) hiç basılmıyor. */
+            basisLabel && day.covered > 0 ? (
+              <span className="numeral inline-flex flex-wrap items-baseline gap-x-2 text-small">
+                <span className="text-muted">{t.portfolioDay.title} · {basisLabel}</span>
+                <span className={cn("font-bold", directionText(directionOf(day.changeUsd)))}>
+                  {`${day.changeUsd > 0 ? "+" : ""}${formatPrice(day.changeUsd, locale, { currency: true })}`}
+                </span>
+                <span className={cn("font-semibold", directionText(directionOf(day.changeUsd)))}>{formatPercent(day.changePct, locale)}</span>
+              </span>
+            ) : undefined
+          }
+        />
         <TotalsBand
           totals={totals}
           todayRate={todayRate}
@@ -289,10 +354,15 @@ async function PortfolioBody({
               : L.fxMissing}
           </p>
           {quotesResult?.ok && quotesResult.stale && <p>{L.staleNote}</p>}
+          {basisLabel && day.excluded > 0 && day.covered > 0 && (
+            <p>{t.portfolioDay.excluded.replace("{n}", String(day.excluded))}</p>
+          )}
           <p>{L.exportHint}</p>
           <p>{L.notAdvice}</p>
         </div>
       </Panel>
+
+      <RealizedPanel data={realized} names={realizedNames} locale={locale} t={t} />
 
       {/* Teknik analizi yapılan pozisyonların planı — kesişim yoksa panel
           hiç çizilmiyor (components/portfolio/PortfolioTechnical.tsx). */}

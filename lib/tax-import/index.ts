@@ -11,10 +11,12 @@ import {
 } from "./core";
 import { looksLikeIbkrCsv, looksLikeIbkrText, parseIbkrCsv, parseIbkrText } from "./ibkr";
 import { looksLikeMidas, parseMidasText } from "./midas";
+import { looksLikeOwnCsv, parseOwnCsv } from "./own";
 
 export * from "./core";
 export { parseIbkrCsv, parseIbkrText } from "./ibkr";
 export { parseMidasText } from "./midas";
+export { parseOwnCsv } from "./own";
 
 /**
  * Ekstre metni → önerilen satırlar. Kurum biçimden tanınıyor; tanınmazsa
@@ -22,6 +24,8 @@ export { parseMidasText } from "./midas";
  * önizleme bunu okuyucuya söylüyor ve hiçbir satırı seçili getirmiyor.
  */
 export function importCsv(text: string): ImportResult {
+  /* Önce kendi dökümümüz: geri yüklenen yedek tahminle değil biçimiyle okunsun. */
+  if (looksLikeOwnCsv(text)) return parseOwnCsv(text);
   if (looksLikeIbkrCsv(text)) return parseIbkrCsv(text);
   return parseGenericLines(toLines(text).map((line) => line.replace(/[,;]/g, " ")));
 }

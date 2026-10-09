@@ -277,7 +277,7 @@ hatanın onu doğurduğunu anlatırlar.
 | Yazı | **Schibsted Grotesk**, tek aile, değişken 400–900 | Ayrım punto ve ağırlıkla |
 | Tema | Custom `data-theme` + `az-theme` çerezi | `next-themes` yok; ilk karede doğru tema |
 | Barındırma | Oracle Cloud Always Free · `next start` + systemd · Caddy (TLS) | Her push GitHub Actions ile deploy |
-| Doğrulama araçları | `tsx --test` (38 test dosyası) · başsız Chrome (`puppeteer-core`) duman testi ve ölçüm betikleri | |
+| Doğrulama araçları | `tsx --test` (41 test dosyası) · başsız Chrome (`puppeteer-core`) duman testi ve ölçüm betikleri | |
 
 ---
 
@@ -571,7 +571,7 @@ yazıları kim yazıyor; gömme kodları da burada)
 | Rota | Soru |
 |---|---|
 | `/vergi` | Yurt dışı hisse kazancım için ne kadar vergi: satış kazancı (alış ve satış günlerinin TCMB kuru), Yİ-ÜFE endekslemesi, temettü beyan sınırı, ABD stopajının mahsubu. Hesap tümüyle tarayıcıda; kurallar ve kaynaklar `lib/tax.ts` |
-| `/portfoy` | Neyim var ve lirada ne kazandırdı: pozisyon başına alış günü kuruyla TL maliyet, bugünün kuruyla TL değer, sektör ağırlığı. Oturum ister, dizine girmez |
+| `/portfoy` | Neyim var ve lirada ne kazandırdı: pozisyon başına alış günü kuruyla TL maliyet, bugünün kuruyla TL değer, sektör ağırlığı; seansı kanıtlanan kotasyondan günlük değişim; FIFO ile satış kaydı ve Gerçekleşen Kâr/Zarar (dolar ve iki günün kuruyla lira, yıl toplamları; vergi hesaplayıcısına satışlarıyla aktarılır). `?ekle=SEMBOL` ekleme penceresini o sembolle açar (hisse sayfasındaki çanta). Oturum ister, dizine girmez |
 
 ### Gömülü Parçalar ve Görseller
 
@@ -684,7 +684,7 @@ npm run build:favicon  # .ico ve PWA ikonlarını marka işaretinden üret
 ### Doğrulama
 
 1. **`typecheck` + `lint` + `build`**: üçü de temiz olmadan commit yok.
-2. **Birim testleri**: `tests/` altında 38 dosya. Kotasyon tazeliği ve paket
+2. **Birim testleri**: `tests/` altında 41 dosya. Kotasyon tazeliği ve paket
    yaşı, önbellek süreleri, rutin ve teknik yayın saatleri, rutin gecikmesi,
    karşılaştırma ölçeği, gün akışı, mali çeyrek hesabı, rota sahneleri,
    vergi ve kur hesabı, portföy, temettü, Piyasa Nabzı, skor kartı ve

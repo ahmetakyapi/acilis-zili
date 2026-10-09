@@ -127,6 +127,13 @@ export default async function WatchlistPage() {
     cancel: t.common.cancel,
     alreadyInList: t.watchlist.alreadyInList,
     listFull: t.watchlist.listFull,
+    listsFull: t.watchlist.listsFull,
+    listNameEmpty: t.watchlist.listNameEmpty,
+    noteAdd: t.watchlist.noteAdd,
+    noteEdit: t.watchlist.noteEdit,
+    notePlaceholder: t.watchlist.notePlaceholder,
+    noteSave: t.watchlist.noteSave,
+    noteFailed: t.watchlist.noteFailed,
     renameList: t.watchlist.renameList,
     save: t.common.save,
     dragHint: t.watchlist.dragHint,
@@ -142,7 +149,7 @@ export default async function WatchlistPage() {
           id: list.id,
           name: list.name,
           color: list.color,
-          items: list.items.map((item) => ({ id: item.id, symbol: item.symbol })),
+          items: list.items.map((item) => ({ id: item.id, symbol: item.symbol, note: item.note })),
         }))}
         quotes={quotes}
         names={nameMap}

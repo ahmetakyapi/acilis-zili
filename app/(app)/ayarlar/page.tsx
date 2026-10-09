@@ -11,6 +11,7 @@ import {
 import { auth } from "@/auth";
 import { signOutAction } from "@/app/actions/auth";
 import { DeleteAccount } from "@/components/auth/DeleteAccount";
+import { ChangePassword } from "@/components/auth/ChangePassword";
 import { AvatarPicker } from "@/components/auth/AvatarPicker";
 import { DataExportLinks } from "@/components/auth/DataExportLinks";
 import { getUserAvatar } from "@/lib/avatar-data";
@@ -64,6 +65,11 @@ export default async function SettingsPage() {
               <dd className="truncate text-body">{session.user.email}</dd>
             </div>
           </dl>
+
+          {/* ŞİFRE DEĞİŞTİRME (9 Ekim) — hesabın kendi panelinde, çıkışın üstünde. */}
+          <div className="border-t border-line-soft pt-3">
+            <ChangePassword labels={t.passwordChange} />
+          </div>
 
           <form action={signOutAction} className="border-t border-line-soft pt-3">
             <button

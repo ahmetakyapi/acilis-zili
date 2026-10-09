@@ -238,6 +238,53 @@ export const priceAlerts = pgTable(
   ],
 );
 
+/**
+ * PORTFÖY SATIŞLARI (9 Ekim) — gerçekleşen kâr/zarar.
+ *
+ * Satış kaydı yoktu: kısmi satışı kaydetmenin tek yolu pozisyonun adedini
+ * elle düşürmekti ve satılan kısmın dolar/lira kârı, vergi hesaplayıcısının
+ * ihtiyaç duyduğu geçmişle birlikte kayboluyordu.
+ *
+ * SATIR SATIŞ DEĞİL, TÜKETİLEN PARTİ. Satış sembol bazında İLK GİREN İLK
+ * ÇIKAR ile en eski alış partilerinden düşülüyor (Türkiye'de menkul kıymet
+ * kazancının yöntemi; vergi hesaplayıcısı da aynısını yapıyor) ve her
+ * tüketilen parti kendi maliyeti ve alış günüyle ayrı satır. Böylece
+ * gerçekleşen lira kârı alış gününün kuruyla kurulabiliyor ve satışı geri
+ * almak partileri birebir iade ediyor. Bir satışın satırlarını `sale_id`
+ * bağlıyor.
+ *
+ * KENDİ TABLOSU — migration deploy'da uygulanmıyor (CLAUDE.md); tablo yokken
+ * okuma boş döner ve satış düğmesi basılmaz (lib/portfolio-sales.ts).
+ */
+export const portfolioSales = pgTable(
+  "portfolio_sales",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** Aynı satışın partilerini bağlar. */
+    saleId: uuid("sale_id").notNull(),
+    symbol: text("symbol").notNull(),
+    quantity: numeric("quantity", { precision: 20, scale: 8 }).notNull(),
+    /** Hisse başı satış fiyatı, dolar. */
+    priceUsd: numeric("price_usd", { precision: 20, scale: 6 }).notNull(),
+    soldAt: date("sold_at").notNull(),
+    /** Tüketilen partinin hisse başı alış fiyatı ve günü. */
+    costUsd: numeric("cost_usd", { precision: 20, scale: 6 }).notNull(),
+    boughtAt: date("bought_at").notNull(),
+    /** Partinin notu — satış geri alınırsa pozisyona geri yazılıyor. */
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("portfolio_sales_user_idx").on(t.userId, t.soldAt),
+    index("portfolio_sales_sale_idx").on(t.saleId),
+  ],
+);
+
 export const portfolioOrder = pgTable("portfolio_order", {
   userId: uuid("user_id")
     .primaryKey()

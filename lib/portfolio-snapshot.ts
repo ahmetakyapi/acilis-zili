@@ -1,7 +1,8 @@
 import { cache } from "react";
 import { getStatus, getSymbolNames } from "@/lib/data";
 import { getPortfolioPositions } from "@/lib/portfolio-data";
-import { portfolioTotals, positionView, type PortfolioTotals, type PositionView } from "@/lib/portfolio";
+import { dayMove, dayTotals, portfolioTotals, positionView, type DayMove, type PortfolioTotals, type PositionView } from "@/lib/portfolio";
+import { displayBasis, quoteBasis, type DisplayBasis } from "@/lib/market-hours";
 import { getQuotes } from "@/lib/providers";
 import { getUsdTryAt } from "@/lib/providers/fx-history";
 import { getUsdTry } from "@/lib/providers/tcmb";
@@ -49,6 +50,24 @@ export const loadPortfolio = cache(async (userId: string) => {
   );
   const totals = portfolioTotals(views, todayRate);
 
+  /* Günlük değişim — gerekçe lib/portfolio.ts → "Günlük değişim". Seansın
+     ekrandaki adı paketin ortak künyesi: bayat paketse hiçbir pozisyon
+     kanıtlanmıyor. */
+  const stale = Boolean(quotesResult?.ok && quotesResult.stale);
+  const bases = new Map<string, DisplayBasis>();
+  const days = new Map<string, DayMove>();
+  for (const p of positions) {
+    const quote = quotes[p.symbol] ?? null;
+    const basis = quote ? displayBasis(quoteBasis(quote, status), stale, status) : "lastClose";
+    bases.set(p.id, basis);
+    days.set(p.id, dayMove(p.quantity, quote, basis !== "lastClose" && basis !== "lastPrice"));
+  }
+  const day = dayTotals(views.map((view) => ({ ...(days.get(view.id) ?? { changeUsd: null, changePct: null }), valueUsd: view.valueUsd })));
+  /* Kapsanan pozisyonların künyesi tek değilse (biri seans içi, biri
+     kapanış sonrası) ekran seansın kendi adını yazıyor. */
+  const provenBases = [...new Set([...bases.values()].filter((b) => b !== "lastClose" && b !== "lastPrice"))];
+  const dayBasis: DisplayBasis | null = provenBases.length === 1 ? provenBases[0] : provenBases.length > 1 ? (status.session === "regular" ? "session" : status.session === "pre-market" ? "pre-market" : status.session === "after-hours" ? "after-hours" : "sessionClose") : null;
+
   return {
     ok: true as const,
     positions,
@@ -59,6 +78,9 @@ export const loadPortfolio = cache(async (userId: string) => {
     todayFx,
     todayRate,
     quotesResult,
+    days,
+    day,
+    dayBasis,
   };
 });
 

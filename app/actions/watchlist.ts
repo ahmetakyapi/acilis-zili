@@ -81,7 +81,9 @@ export async function createWatchlist(formData: FormData) {
 
   const name = String(formData.get("name") ?? "").trim().slice(0, 40);
   const color = String(formData.get("color") ?? "primary");
-  if (!name) return;
+  /* SONUÇ DÖNÜYOR (9 Ekim). Boş ad ve 20 liste tavanı çıplak `return`
+     ediyordu; form kapanıp başarılı gibi görünüyor, liste hiç gelmiyordu. */
+  if (!name) return { ok: false as const, reason: "empty" as const };
 
   /* Sayım ve sıra tek sorguda: ikisi de aynı satır kümesinden çıkıyor,
      ayrı istek atmak Neon'da ikinci bir HTTP gidiş-dönüşü demek. */
@@ -93,7 +95,7 @@ export async function createWatchlist(formData: FormData) {
     .from(watchlists)
     .where(eq(watchlists.userId, userId));
 
-  if (total >= MAX_LISTS) return;
+  if (total >= MAX_LISTS) return { ok: false as const, reason: "full" as const };
 
   await db.insert(watchlists).values({
     userId,
@@ -103,6 +105,7 @@ export async function createWatchlist(formData: FormData) {
   });
 
   revalidatePath("/favoriler");
+  return { ok: true as const };
 }
 
 export async function renameWatchlist(formData: FormData) {
@@ -110,7 +113,8 @@ export async function renameWatchlist(formData: FormData) {
 
   const listId = String(formData.get("listId") ?? "");
   const name = String(formData.get("name") ?? "").trim().slice(0, 40);
-  if (!listId || !name) return;
+  if (!listId) return { ok: false as const, reason: "invalid" as const };
+  if (!name) return { ok: false as const, reason: "empty" as const };
 
   /* RENK DE BURADA. Eylem yalnızca adı güncelliyordu ve rengi değiştirmenin
      tek yolu listeyi silip yeniden kurmaktı — yani sembolleri kaybetmek.
@@ -126,6 +130,7 @@ export async function renameWatchlist(formData: FormData) {
     .where(and(eq(watchlists.id, listId), eq(watchlists.userId, userId)));
 
   revalidatePath("/favoriler");
+  return { ok: true as const };
 }
 
 export async function deleteWatchlist(formData: FormData) {
@@ -275,6 +280,39 @@ export async function removeSymbolFromList(formData: FormData) {
   revalidatePath("/favoriler");
 }
 
+/**
+ * Favori notu (9 Ekim). `watchlist_items.note` sütunu baştan beri vardı,
+ * hesap silme uyarısı "notların da silinir" diyordu ama notu yazmanın ya da
+ * görmenin hiçbir yolu yoktu. Boş not sütunu boşaltıyor. Sahiplik silmeyle
+ * aynı alt sorguyla doğrulanıyor.
+ */
+const MAX_NOTE_LENGTH = 200;
+
+export async function setWatchlistNote(formData: FormData): Promise<{ ok: boolean }> {
+  const userId = await requireUserIdOrRedirect();
+  const itemId = String(formData.get("itemId") ?? "");
+  const note = String(formData.get("note") ?? "").trim().slice(0, MAX_NOTE_LENGTH);
+  if (!itemId) return { ok: false };
+  try {
+    await db
+      .update(watchlistItems)
+      .set({ note: note || null })
+      .where(
+        and(
+          eq(watchlistItems.id, itemId),
+          sql`${watchlistItems.watchlistId} in (
+            select ${watchlists.id} from ${watchlists}
+            where ${watchlists.userId} = ${userId}
+          )`,
+        ),
+      );
+  } catch {
+    return { ok: false };
+  }
+  revalidatePath("/favoriler");
+  return { ok: true };
+}
+
 /** Hisse sayfasındaki yıldız — ilk listeye ekler / tüm listelerden çıkarır. */
 export async function toggleSymbolFavorite(formData: FormData) {
   /* Sembol oturumdan ÖNCE okunuyor: oturumu düşen kullanıcı girişten sonra
@@ -331,7 +369,9 @@ export async function toggleSymbolFavorite(formData: FormData) {
       .select({ total: sql<number>`count(*)::int` })
       .from(watchlistItems)
       .where(eq(watchlistItems.watchlistId, list.id));
-    if (total >= MAX_ITEMS_PER_LIST) return;
+    /* Dolu liste kalbi sessizce geri çeviriyordu: kalp dolup boşalıyor,
+       okuyucu neden olduğunu görmüyordu. Artık sonuç dönüyor (FavoriteToggle). */
+    if (total >= MAX_ITEMS_PER_LIST) return { full: true as const };
 
     await db
       .insert(watchlistItems)
@@ -344,4 +384,10 @@ export async function toggleSymbolFavorite(formData: FormData) {
   revalidatePath(`/teknik/${symbol.toLowerCase()}`);
   revalidatePath(`/hisse-secimi/${symbol}`);
   revalidatePath("/favoriler");
+}
+
+/** Düz `<form action>` için (sunucu bileşeni, sonucu okuyamıyor): bilanço
+ *  raporunun kapağındaki "Takibe Al" düğmesi. */
+export async function toggleSymbolFavoriteForm(formData: FormData): Promise<void> {
+  await toggleSymbolFavorite(formData);
 }
