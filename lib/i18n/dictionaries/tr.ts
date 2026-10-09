@@ -3822,6 +3822,13 @@ const tr = {
   },
   /* BİLDİRİMLER (9 Ekim) — gerekçe lib/push.ts; ekran
      components/notifications/PushSettings.tsx. */
+  /* TELEFONDA KATLAMA (9 Ekim) — uzun kart ve listelerin dar ekran anahtarı. */
+  compact: {
+    more: "Ayrıntıyı Göster",
+    less: "Ayrıntıyı Gizle",
+    showAll: "Tümünü Göster",
+    showLess: "Daha Az Göster",
+  },
   notifications: {
     title: "Bildirimler",
     hint: "Fiyat alarmın tetiklendiğinde bu cihaza bildirim gelir; site kapalıyken de. İzin cihaz başına verilir: telefonda ve bilgisayarda ayrı ayrı aç.",

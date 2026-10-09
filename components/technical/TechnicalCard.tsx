@@ -214,6 +214,15 @@ export function TechnicalCard({
        verdiği `isolation` CSS'te `.card` üzerinde; kaplama bağlantısının
        (`.cardLink::after`, z-1) yerel yığını ona bağlı. */
     <div className={styles.card} data-verdict={verdict}>
+      {/* TELEFONDA KATLI (9 Ekim). Kart 390'da 516 piksel, panoda on altı
+          kart: sayfa 11.944 piksel, on dört ekran boyu (ölçüldü). Telefonda
+          açık kalan kimlik, fiyat ve planın üç seviyesi ("nereden alınır,
+          nerede satılır, nerede vazgeçilir") — kartın asıl sorusu. Risk
+          rayı, gerekçe cümlesi ve gösterge şeridi bu anahtarla açılıyor;
+          kartın tamamı zaten detay sayfasına gidiyor. JS'siz onay kutusu
+          (`FoldToggle` ile aynı gerekçe: satırlar sunucuda, ilk karede son
+          hâlinde). 640 ve üstünde anahtar yok, kart olduğu gibi. */}
+      <input type="checkbox" id={`kart-${row.symbol}`} className={cn("sr-only", styles.cardFoldInput)} />
       <div className={styles.cardHead}>
         {/* Kimlik balonu 22 Eylül'de dağılım logolarına taşındı: kart
             kimliği zaten gösteriyor, balon aynı bilgiyi ikinci kez veriyordu
@@ -403,6 +412,11 @@ export function TechnicalCard({
           tamamı zaten bağlantı. On beş kartta telefonda ~700 piksel. İşaret
           sembolün yanına ok olarak çıktı, eski yayın etiketi cümlenin
           künyesine; kart beş satırlık alt ızgaraya indi (CSS `.cell`). */}
+      <label htmlFor={`kart-${row.symbol}`} className={styles.cardFold}>
+        <span className={styles.cardFoldMore}>{t.compact.more}</span>
+        <span className={styles.cardFoldLess}>{t.compact.less}</span>
+        <CaretDown size={12} weight="bold" aria-hidden />
+      </label>
     </div>
   );
 }

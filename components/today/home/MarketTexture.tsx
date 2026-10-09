@@ -228,7 +228,7 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
 
   return (
     <ThemeFrame
-      ranking={<ThemeRanking cards={board.cards} basis={scaleBasis} phase={board.phase} locale={locale} t={t} heading="h4" />}
+      ranking={<ThemeRanking cards={board.cards} basis={scaleBasis} phase={board.phase} locale={locale} t={t} heading="h4" phoneEnds={3} />}
       extremes={
         <>
           {/* Logoların üzerine gelince açılan şirket kartı (components/ui/

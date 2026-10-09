@@ -2,6 +2,7 @@ import { cache, Suspense } from "react";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/today/TodayExperience.module.css";
 import { Countdown } from "@/components/today/Countdown";
+import { InkCanvas } from "@/components/ink/InkCanvas";
 import { BellLedger } from "@/components/today/BellLedger";
 import { SessionRefresh } from "@/components/today/SessionRefresh";
 import { LiveClock } from "@/components/today/LiveClock";
@@ -124,6 +125,10 @@ export default async function TodayPage() {
   );
   const sessionState =
     status.session === "regular" ? "regular" : status.session === "closed" ? "closed" : "extended";
+  /* Kahramanın zili seansı anlatıyor: kapalıyken uyukluyor, ön ve akşam
+     seansında bekliyor, asıl seansta çalıyor (lib/ink/scenes.ts). */
+  const heroScene =
+    sessionState === "closed" ? "heroSleep" : sessionState === "regular" ? "heroRing" : "heroWait";
   /* Tazeleme anı: seansın bir sonraki sınırı ile OKUYUCUNUN gece yarısının
      erkeni. Üst şeritteki tarih ve zil künyesinin "Bugün / Yarın"ı okuyucunun
      gününe bağlı; yalnızca ET sınırında tazelenince TR okuyucu 00:00 ile
@@ -209,22 +214,45 @@ export default async function TodayPage() {
           <div className={styles.heroCopy} data-motion-intro>
             {/* SEANS ÇİPİ: nokta seansı renkle de söylüyor — asıl seansta yeşil
                 halkalı, uzatılmış seansta mavi, kapalıyken gri. */}
-            <div className={styles.heroSession} data-state={sessionState}><span aria-hidden="true" />{sessionLabel[status.session]}</div>
+            {/* Dar kolonda (telefon, tablet, 1024) zil rakamların yanına
+                sığmıyor (ölçüldü: 10–17 piksele eziliyordu) ve çipin
+                satırına, sağa oturuyor; geniş kolonda rakamların yanındaki
+                kopyası görünüyor. Seçim konteyner sorgusu (CSS); görünmeyen
+                tuval görünüme girmediği için hiç çizilmiyor. */}
+            <div className={styles.heroTopRow}>
+              <div className={styles.heroSession} data-state={sessionState}><span aria-hidden="true" />{sessionLabel[status.session]}</div>
+              <InkCanvas scene={heroScene} seed={11} delay={0.55} className={styles.heroBellSmall} />
+            </div>
             <h1 className={styles.headline}>{countdownLabel}</h1>
             {/* Rakam satırı ile zil şeridi TEK blok; rozet ve başlık tepede.
                 Zil künyesi 24 Eylül'den beri üst şeritte, tarihin yanında
                 (BellLedger.module.css). Ölçüm ve gerekçe
                 TodayExperience.module.css → `.heroCopy`. */}
             <div className={styles.countdownBlock}>
-              <Countdown
-                targetIso={countdownTarget.toISOString()}
-                initialNowMs={nowMs}
-                units={{ d: t.today.countdownDays, h: t.today.countdownHours, m: t.today.countdownMinutes, s: t.today.countdownSeconds }}
-                unitsShort={{ d: t.today.unitD, h: t.today.unitH, m: t.today.unitM, s: t.today.unitS }}
-                label={countdownLabel}
-                className={styles.countdown}
-                ring
-              />
+              {/* ZİL RAKAMLARIN YANINDA (9 Ekim) — seansa göre uyukluyor,
+                  bekliyor ya da çalıyor; sahneler ve gerekçe
+                  lib/ink/scenes.ts → heroSleep/heroWait/heroRing. Rakam
+                  satırıyla aynı esnek satırda: rakamın sağındaki boşluğa
+                  oturuyor ve satır daraldıkça (dört gruplu hafta sonu
+                  sayacı, dar telefon) oranını koruyarak küçülüyor; hiçbir
+                  genişlikte rakamı itmiyor (`flex-shrink`, ölçüm CSS'te). */}
+              <div className={styles.countdownRow}>
+                <Countdown
+                  targetIso={countdownTarget.toISOString()}
+                  initialNowMs={nowMs}
+                  units={{ d: t.today.countdownDays, h: t.today.countdownHours, m: t.today.countdownMinutes, s: t.today.countdownSeconds }}
+                  unitsShort={{ d: t.today.unitD, h: t.today.unitH, m: t.today.unitM, s: t.today.unitS }}
+                  label={countdownLabel}
+                  className={styles.countdown}
+                  ring
+                />
+                <InkCanvas
+                  scene={heroScene}
+                  seed={11}
+                  delay={0.55}
+                  className={styles.heroBell}
+                />
+              </div>
               <SessionRail
                 domain={rail.domain}
                 openAt={rail.openAt}

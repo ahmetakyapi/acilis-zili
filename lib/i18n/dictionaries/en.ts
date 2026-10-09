@@ -3339,6 +3339,12 @@ const en: typeof tr = {
       signature: "Opening Bell",
     },
   },
+  compact: {
+    more: "Show Details",
+    less: "Hide Details",
+    showAll: "Show All",
+    showLess: "Show Less",
+  },
   notifications: {
     title: "Notifications",
     hint: "When a price alert fires, this device gets a notification — even with the site closed. Permission is per device: turn it on separately on your phone and your computer.",
