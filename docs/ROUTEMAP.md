@@ -67,9 +67,12 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       (`*/5 * * * *` → `deploy/cron-alerts.sh`) `update.sh` tarafından
       `deploy/cron-install.sh` ile ekleniyor — bu satırı taşıyan sürümün
       update.sh'ı İKİNCİ dağıtımda koşuyor (ilk dağıtım eski kopyayla).
-- [ ] **E-posta servisi** (şifre sıfırlama, alarm e-postası) — bilinçli
-      olarak sona bırakıldı; ücretsiz katmanlı bir servis (Resend vb.)
-      ve anahtarı gerekiyor.
+- [ ] **Migration 0029 (`password_resets`) + Resend anahtarı.** "Şifremi
+      Unuttum" kodda hazır ama uykuda: `RESEND_API_KEY` ve `EMAIL_FROM`
+      `/etc/acilis-zili.env`e girene kadar bağlantı görünmüyor ve
+      `/sifremi-unuttum` 404. Resend'de alan adını doğrula (DNS'e üç
+      kayıt), anahtarı üret, iki değeri tırnaklı yaz, servisi yeniden
+      başlat. Alarm e-postası bilinçli olarak yok: bildirim Web Push'ta.
 - [x] **Migration 0027 (`portfolio_sales`)** — portföy satışları ve gerçekleşen
       kâr/zarar. Tablo yokken Sat düğmeleri ve Gerçekleşen paneli basılmıyor
       (`lib/portfolio-sales-data.ts` → `available`).

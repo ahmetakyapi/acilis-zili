@@ -561,7 +561,7 @@ Başlıkta Piyasalar'dan hemen sonra; mobilde Menü'den.
 
 ### Hesap
 
-`/giris` · `/kayit` · `/favoriler` (fiyatlar USD ya da TL; Fiyat Alarmları paneli — hedef hisse sayfasındaki zil düğmesiyle kurulur, siteyi açtığında ve seans boyunca beş dakikada bir sunucuda güncel fiyatla kontrol edilir, ana sayfada "Hedefe Ulaştı" şeridi; `lib/price-alerts.ts`, `lib/alert-sweep.ts`) · `/ayarlar` (profil
+`/giris` · `/kayit` · `/sifremi-unuttum` · `/sifre-sifirla` (e-postayla tek kullanımlık, 30 dakikalık bağlantı; yalnızca e-posta servisi bağlıyken — `lib/email.ts`, `lib/password-reset.ts`) · `/favoriler` (fiyatlar USD ya da TL; Fiyat Alarmları paneli — hedef hisse sayfasındaki zil düğmesiyle kurulur, siteyi açtığında ve seans boyunca beş dakikada bir sunucuda güncel fiyatla kontrol edilir, ana sayfada "Hedefe Ulaştı" şeridi; `lib/price-alerts.ts`, `lib/alert-sweep.ts`) · `/ayarlar` (profil
 ikonu ve rengi, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri — `lib/push.ts`, `public/sw.js` —, Verilerimi İndir, hesap silme) · `/menu` · `/kvkk` ·
 `/hakkinda` (Hakkında ve Metodoloji: kim yapıyor, sayılar nereden geliyor,
 yazıları kim yazıyor; gömme kodları da burada)
@@ -648,6 +648,7 @@ npm run dev
 | `FRED_API_KEY` | makro için | [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html) |
 | `CRON_SECRET` | üretimde | `openssl rand -hex 32`; cron ucunun `Bearer` anahtarı |
 | `VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` | bildirim için | `npx web-push generate-vapid-keys`; ücretsiz, üçüncü taraf hesap yok. Yoksa Ayarlar'daki bildirim paneli "bu sunucuda kapalı" der. Anahtar değişirse eski abonelikler geçersizleşir |
+| `RESEND_API_KEY` + `EMAIL_FROM` | şifre sıfırlama için | [resend.com](https://resend.com) ücretsiz katman (ayda 3.000, günde 100 e-posta); `EMAIL_FROM` doğrulanmış alan adından, ör. `"Açılış Zili <hesap@alanadi.com>"`. Yoksa "Şifremi Unuttum" hiç görünmez |
 | `VAPID_SUBJECT` | isteğe bağlı | `mailto:` adresi; bildirim servisinin sorun olduğunda yazacağı yer. Yoksa site adresi |
 | `BRIEF_SECRET` | içerik için | `openssl rand -hex 32`; rutin uçlarının kapısı |
 | `NEXT_PUBLIC_SITE_URL` | üretimde | yayın adresi (OG görselleri, sitemap) |

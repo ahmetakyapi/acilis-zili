@@ -26,7 +26,7 @@ import { LOCALE_HEADER, splitLocale, withLocale } from "@/lib/i18n/routing";
 const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 const PROTECTED = ["/favoriler", "/ayarlar", "/portfoy"];
-const AUTH_ROUTES = ["/giris", "/kayit"];
+const AUTH_ROUTES = ["/giris", "/kayit", "/sifremi-unuttum"];
 
 /* `/admin` BİLEREK BU LİSTEDE DEĞİL. Buradaki koruma girişe yönlendiriyor ve
    "giriş yap, sonra /admin'e devam edeceksin" demek, olmayan bir kapının VAR

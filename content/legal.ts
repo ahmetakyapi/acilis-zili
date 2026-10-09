@@ -71,7 +71,7 @@ Hukuki sebep: meşru menfaat (m. 5/2-f) — ürünün hangi bölümünün kullan
 | Veri | Neden işleniyor | Hukuki sebep |
 |---|---|---|
 | Kullanıcı adı | Hesabı tanımlamak ve giriş yapmak | Sözleşmenin ifası (m. 5/2-c) |
-| E-posta adresi | Hesabı benzersiz kılmak | Sözleşmenin ifası (m. 5/2-c) |
+| E-posta adresi | Hesabı benzersiz kılmak; istediğinde şifre sıfırlama bağlantısı göndermek | Sözleşmenin ifası (m. 5/2-c) |
 | Şifrenin özeti | Girişi doğrulamak | Sözleşmenin ifası (m. 5/2-c) |
 | Takip listen ve notların | Ürünün asıl işlevi | Sözleşmenin ifası (m. 5/2-c) |
 | Portföy pozisyonların (sembol, adet, alış fiyatı, alış tarihi, not) | Dolar ve lira kâr/zararını hesaplamak | Sözleşmenin ifası (m. 5/2-c) |
@@ -87,7 +87,7 @@ Hukuki sebep: meşru menfaat (m. 5/2-f) — ürünün hangi bölümünün kullan
 Şifrenin kendisi hiçbir yerde tutulmaz. Kaydedilen şey **bcrypt** algoritmasıyla üretilmiş, geri çevrilemeyen bir özettir. Veritabanına erişen biri bile şifreni okuyamaz. Buna rağmen başka bir serviste kullandığın şifreyi burada kullanma — bu, tüm siteler için geçerli genel bir kuraldır.
 :::
 
-E-posta adresin **yalnızca** hesabın benzersiz olmasını sağlamak için tutulur; bu adrese hiçbir zaman posta gönderilmez. Şifre sıfırlama özelliği henüz yok, yani şifreni unutursan e-posta adresin hesabını geri getirmez — bu yüzden şifreni bir parola yöneticisinde sakla.
+E-posta adresin hesabın benzersiz olmasını sağlamak ve **yalnızca sen istediğinde** şifre sıfırlama bağlantısı göndermek için tutulur. Bu adrese bülten, pazarlama ya da bildirim e-postası gönderilmez. Sıfırlama bağlantısı 30 dakika geçerlidir ve bir kez kullanılabilir; veritabanında bağlantının kendisi değil, geri çevrilemeyen bir özeti durur.
 
 Özel nitelikli kişisel veri (sağlık, din, biyometri, siyasi görüş vb.) hiçbir biçimde toplanmaz. Kimlik numarası, telefon, adres, doğum tarihi ve finansal hesap bilgisi de istenmez — site senin adına işlem yapmaz, bir aracı kuruma bağlanmaz.
 
@@ -127,6 +127,7 @@ Sitede yalnızca üç çerez vardır ve üçü de işlevseldir:
 | Alpaca, Finnhub, FRED, TCMB | Fiyat, şirket, makro ve kur verisi | **Hiçbir şey** — bu istekleri sunucu kendi adına yapar |
 | DeepL | Haber başlıklarının çevirisi | **Hiçbir şey** — yalnızca haber metni gider |
 | Anthropic | Bülten ve yazı metinlerinin üretimi | **Hiçbir şey** — yalnızca piyasa verisi gider |
+| Resend (ABD) | Şifre sıfırlama e-postasını iletmek | Yalnızca sen sıfırlama istediğinde: e-posta adresin, kullanıcı adın ve tek kullanımlık bağlantı |
 | Tarayıcının bildirim servisi (Chrome'da Google, Firefox'ta Mozilla, Safari'de Apple) | Bildirimleri açtıysan alarm bildirimini cihazına taşımak | Şifreli bildirim (hisse, hedef ve fiyat); servis içeriği okuyamaz. Hangi servisin kullanılacağına tarayıcın karar verir |
 
 Veri sağlayıcılarıyla ilgili üç satır önemli: veri sağlayıcılarına giden isteklerde senin kimliğin yoktur. Bir hisseye baktığında sağlayıcı bunu "Açılış Zili'nin isteği" olarak görür, "şu kullanıcının isteği" olarak değil.
@@ -272,7 +273,7 @@ Legal basis: legitimate interest (Art. 5/2-f) — seeing which part of the produ
 | Data | Why it is processed | Legal basis |
 |---|---|---|
 | Username | To identify the account and sign in | Performance of a contract (Art. 5/2-c) |
-| Email address | To keep the account unique | Performance of a contract (Art. 5/2-c) |
+| Email address | To keep the account unique; to send you a password reset link when you ask | Performance of a contract (Art. 5/2-c) |
 | Password digest | To verify sign-in | Performance of a contract (Art. 5/2-c) |
 | Your watchlists and notes | The product's core function | Performance of a contract (Art. 5/2-c) |
 | Your portfolio positions (symbol, quantity, buy price, buy date, note) | To compute dollar and lira profit and loss | Performance of a contract (Art. 5/2-c) |
@@ -288,7 +289,7 @@ Legal basis: legitimate interest (Art. 5/2-f) — seeing which part of the produ
 The password itself is kept nowhere. What is stored is an irreversible digest produced with the **bcrypt** algorithm. Even someone with database access cannot read your password. Even so, do not reuse a password from another service here — that is a general rule for every site.
 :::
 
-Your email address is stored **only** to keep your account unique; no mail is ever sent to it. There is no password reset feature yet, so if you forget your password your email address will not recover the account — keep it in a password manager.
+Your email address is stored to keep your account unique and to send you a password reset link **only when you ask for one**. No newsletter, marketing or notification email is ever sent to it. A reset link is valid for 30 minutes and can be used once; the database holds an irreversible digest of the link, not the link itself.
 
 No special categories of personal data (health, religion, biometrics, political opinion and so on) are collected in any form. National id number, phone, address, date of birth and financial account details are not requested either — the site does not act on your behalf and does not connect to a brokerage.
 
@@ -328,6 +329,7 @@ The product runs on the following infrastructure and data providers. Some of the
 | Alpaca, Finnhub, FRED, CBRT | Price, company, macro and exchange rate data | **Nothing** — the server makes these requests on its own behalf |
 | DeepL | Translation of news headlines | **Nothing** — only the news text is sent |
 | Anthropic | Generation of brief and article text | **Nothing** — only market data is sent |
+| Resend (US) | Delivering the password reset email | Only when you request a reset: your email address, your username and the single-use link |
 | Your browser's push service (Google for Chrome, Mozilla for Firefox, Apple for Safari) | Carrying an alert notification to your device, if you turned notifications on | An encrypted notification (symbol, target and price) the service cannot read. Your browser decides which service is used |
 
 The three data-provider rows matter: requests to data providers carry no identity of yours. When you look at a stock, the provider sees it as "a request from Opening Bell", not "a request from this user".

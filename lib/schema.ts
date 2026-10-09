@@ -286,6 +286,42 @@ export const portfolioSales = pgTable(
 );
 
 /**
+ * ŞİFRE SIFIRLAMA BAĞLANTILARI (9 Ekim) — "Şifremi Unuttum".
+ *
+ * Şifre sıfırlama yoktu ve KVKK metni "şifreni unutursan e-posta adresin
+ * hesabını geri getirmez" diyordu. E-posta (Resend, ücretsiz katman)
+ * bağlanınca okuyucu adresine tek kullanımlık, 30 dakikalık bir bağlantı
+ * istiyor.
+ *
+ * Satırda bağlantının KENDİSİ değil SHA-256 özeti duruyor: veritabanını
+ * okuyan biri (yedek, sızıntı) açık bir bağlantıyla herhangi bir hesabın
+ * şifresini değiştiremesin. Bağlantı yalnızca e-postada.
+ *
+ * KENDİ TABLOSU — migration deploy'da uygulanmıyor; tablo yokken istek
+ * eylemi sessizce "gönderildi" deyip hiçbir şey yazmıyor, sayfa çökmüyor
+ * (lib/password-reset.ts).
+ */
+export const passwordResets = pgTable(
+  "password_resets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("password_resets_token_idx").on(t.tokenHash),
+    index("password_resets_user_idx").on(t.userId),
+  ],
+);
+
+/**
  * BİLDİRİM ABONELİKLERİ (9 Ekim) — Web Push, cihaz başına bir satır.
  *
  * Fiyat alarmı yalnızca okuyucu siteyi açınca görünüyordu. Web Push ücretsiz

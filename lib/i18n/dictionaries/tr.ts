@@ -3789,6 +3789,37 @@ const tr = {
     signedOut: "Oturum bulunamadı. Tekrar giriş yap.",
     failed: "Şifre şu an değiştirilemedi; biraz sonra tekrar dene.",
   },
+  /* ŞİFRE SIFIRLAMA (9 Ekim) — gerekçe lib/schema.ts → passwordResets. */
+  passwordReset: {
+    forgot: "Şifremi Unuttum",
+    requestTitle: "Şifreni Sıfırla",
+    requestSubtitle: "Hesabının e-posta adresini yaz; şifreni yenilemen için bir bağlantı gönderelim.",
+    email: "E-posta",
+    emailPlaceholder: "ornek@eposta.com",
+    requestSubmit: "Bağlantı Gönder",
+    requestSent: "Bu adrese kayıtlı bir hesap varsa sıfırlama bağlantısı birkaç dakika içinde gelir. Bağlantı 30 dakika geçerli; gelmezse gereksiz klasörüne bak.",
+    resetTitle: "Yeni Şifre Belirle",
+    resetSubtitle: "Yeni şifreni iki kez yaz. Kaydettiğinde bağlantı kullanılmış sayılır.",
+    newPassword: "Yeni Şifre",
+    confirmPassword: "Yeni Şifre (Tekrar)",
+    resetSubmit: "Şifreyi Kaydet",
+    invalidTitle: "Bağlantı Geçersiz",
+    invalid: "Bu bağlantının süresi dolmuş ya da daha önce kullanılmış. Yeni bir bağlantı isteyebilirsin.",
+    requestAgain: "Yeni Bağlantı İste",
+    done: "Şifren yenilendi. Yeni şifrenle giriş yapabilirsin.",
+    backToSignIn: "Giriş Sayfasına Dön",
+    remembered: "Şifreni hatırladın mı?",
+    tooMany: "Çok fazla istek. Biraz bekleyip tekrar dene.",
+    failed: "Şu an işlenemedi; biraz sonra tekrar dene.",
+    mail: {
+      subject: "Açılış Zili · Şifre Sıfırlama",
+      greeting: "Merhaba {username},",
+      body: "Hesabın için bir şifre sıfırlama isteği aldık. Yeni şifreni belirlemek için aşağıdaki bağlantıyı aç. Bağlantı 30 dakika geçerli ve yalnızca bir kez kullanılabilir.",
+      button: "Yeni Şifre Belirle",
+      ignore: "Bu isteği sen yapmadıysan bu e-postayı yok sayabilirsin; şifren değişmez.",
+      signature: "Açılış Zili",
+    },
+  },
   /* BİLDİRİMLER (9 Ekim) — gerekçe lib/push.ts; ekran
      components/notifications/PushSettings.tsx. */
   notifications: {
