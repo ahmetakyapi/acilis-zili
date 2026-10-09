@@ -192,6 +192,52 @@ export const portfolioPositions = pgTable(
  * (sıra verildikten sonra eklenen) sona, kendi içinde büyükten küçüğe;
  * silinmiş pozisyonun kimliği okumada atlanıyor.
  */
+/**
+ * FİYAT ALARMLARI (8 Ekim) — "NVDA 250 doları geçerse haber ver".
+ *
+ * Favorilerde not vardı ama hedef yoktu: okuyucu beklediği fiyatı aklında
+ * tutup her gün sayfayı açıp bakıyordu. Satır bir hedef ve yön (`above`:
+ * hedefin üstüne çıkarsa, `below`: altına inerse); yön kurulurken o anki
+ * fiyattan türetiliyor ve `ref_price` olarak saklanıyor ki ekran "kurduğundan
+ * beri ne kadar yol aldı" diyebilsin.
+ *
+ * TETİK GÖRÜLDÜĞÜ AN, GERÇEKLEŞTİĞİ AN DEĞİL. Elimizde gün içi bir izleyici
+ * yok (cron günde bir); alarm, okuyucunun sitede güncel bir kotasyon
+ * gördüğü sayfada değerlendiriliyor ve `triggered_at` o kontrolün anı.
+ * Arayüz bunu böyle yazıyor ("… Kontrolde Görüldü"), "şu saatte geçti"
+ * demiyor — veri dürüstlüğü kuralı 1. Bayat kotasyon (`stale`) alarmı
+ * tetiklemiyor: önbellekteki dünkü fiyat bugünün hedefini geçmiş saymaz.
+ *
+ * KENDİ TABLOSU, `users`a SÜTUN DEĞİL — migration deploy'da uygulanmıyor
+ * (CLAUDE.md). Tablo yokken okuyan boş liste döner, yazan "kurulamadı" der
+ * (lib/price-alerts.ts).
+ */
+export const priceAlerts = pgTable(
+  "price_alerts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    symbol: text("symbol").notNull(),
+    /** "above" | "below" */
+    direction: text("direction").notNull(),
+    target: numeric("target", { precision: 20, scale: 6 }).notNull(),
+    /** Kurulduğu andaki fiyat; yoksa (sağlayıcı düşük) boş. */
+    refPrice: numeric("ref_price", { precision: 20, scale: 6 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    /** Hedefin geçildiğinin GÖRÜLDÜĞÜ kontrol; boşsa bekliyor. */
+    triggeredAt: timestamp("triggered_at", { withTimezone: true }),
+    triggeredPrice: numeric("triggered_price", { precision: 20, scale: 6 }),
+  },
+  (t) => [
+    index("price_alerts_user_idx").on(t.userId, t.createdAt),
+    index("price_alerts_user_symbol_idx").on(t.userId, t.symbol),
+  ],
+);
+
 export const portfolioOrder = pgTable("portfolio_order", {
   userId: uuid("user_id")
     .primaryKey()

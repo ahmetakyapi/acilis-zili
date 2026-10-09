@@ -245,8 +245,14 @@ export function AuthForm({
               ile kayıt arasında geçiş yapmanın TEK yolu bu bağlantı.
               `inline-flex` + dikey dolgu hedefi 40px'e çıkarıyor; negatif
               margin cümlenin satır yüksekliğini bozmuyor. */}
+          {/* `devam` GEÇİŞTE KORUNUYOR. Hisse sayfasındaki kalbe basan
+              misafir `/giris?devam=/hisse/NVDA`ye geliyor; hesabı yoksa
+              "Kayıt Ol"a basıyordu ve parametre bu bağlantıda düşüyordu:
+              kayıt sonrası NVDA'ya değil /favoriler'e iniyordu — sitenin
+              ana dönüşüm yolu tam bu adımda kopuyordu. Hedef zaten sunucuda
+              `safeRedirectTarget` ile doğrulanıyor. */}
           <Link
-            href={altHref}
+            href={continueTo ? `${altHref}?devam=${encodeURIComponent(continueTo)}` : altHref}
             className="-my-2 inline-flex min-h-10 items-center py-2 font-semibold text-primary hover:text-primary-hover"
           >
             {altLinkLabel}

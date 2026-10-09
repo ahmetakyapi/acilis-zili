@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { notFound } from "next/navigation";
 import { NewsImage } from "@/components/news/NewsImage";
+import { PageShare } from "@/components/article/PageShare";
 import { ArrowSquareOut, CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import { ChangePill, DataStamp, Panel, PanelHeader, buttonClass } from "@/components/ui/primitives";
 import {
@@ -123,6 +124,17 @@ export default async function NewsDetailPage(
           </span>
           <span aria-hidden>·</span>
           <span>{titleCaseLabel(timeAgo(item.publishedAt, locale), locale)}</span>
+          {/* PAYLAŞ (8 Ekim). Okuma ekranlarının hepsinde vardı (mercek,
+              rehber, bülten, tema…) — sahibinin kuralı "böyle ekranlara hep
+              paylaş" (StockHeader); haber detayı dışarıda kalmıştı. */}
+          <PageShare
+            path={`/haberler/${item.id}`}
+            title={headline}
+            locale={locale}
+            t={t}
+            compact
+            className="ml-auto"
+          />
         </p>
         {/* Çevirisi yoksa başlık İngilizce basılıyor; `lang` bunu söylüyor
             (gerekçe liste sayfasında). */}

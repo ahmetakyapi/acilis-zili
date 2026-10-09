@@ -80,6 +80,8 @@ export type BoardLabels = {
   moveDown: string;
   cancel: string;
   alreadyInList: string;
+  /** Liste tavana (200 sembol) dayandı. */
+  listFull: string;
   renameList: string;
   save: string;
   /* Tutamağın fare balonu — sabit Türkçe yazılıydı; görsel arayüzde
@@ -870,10 +872,15 @@ function AddSymbolRow({
         setNotice(labels.alreadyInList);
         return;
       }
+      if (result?.full) {
+        setBusy(false);
+        setNotice(labels.listFull);
+        return;
+      }
       reset();
       router.refresh();
     },
-    [labels.alreadyInList, listId, reset, router],
+    [labels.alreadyInList, labels.listFull, listId, reset, router],
   );
 
   if (!open) {

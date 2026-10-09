@@ -5,6 +5,7 @@ import { HeroAccent } from "@/components/motion/HeroAccent";
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArticleBody } from "@/components/article/ArticleBody";
+import { PageShare } from "@/components/article/PageShare";
 import { GuideHint } from "@/components/article/GuideHint";
 import { GLOSSARY_CATEGORY_ICONS } from "@/components/glossary/category-icons";
 import styles from "@/components/glossary/Glossary.module.css";
@@ -141,6 +142,9 @@ export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]
           {rest && (
             <ArticleBody markdown={rest} locale={locale} autoLink={autoLink} className={styles.restBody} />
           )}
+          {/* PAYLAŞ (8 Ekim) — bir terimin tanımı en çok paylaşılan şey;
+              okuma ekranlarının hepsinde olan düğme burada yoktu. */}
+          <PageShare path={`/sozluk/${term.slug}`} title={term.term} locale={locale} t={t} className="mt-4" />
         </div>
       </header>
 

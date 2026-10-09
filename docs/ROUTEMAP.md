@@ -10,7 +10,7 @@
 > rota eksikti ve okuyan onu güncel sanıyordu. İki yerde tutulan bir liste er geç
 > birbirinden ayrı düşer. Rota tablosu artık yalnızca README'de.
 
-**Son güncelleme:** 2026-09-28
+**Son güncelleme:** 2026-10-09
 **Durum:** 🟢 CANLI — https://aciliszili.com
 
 ---
@@ -58,6 +58,11 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       (`lib/ark-view.ts`). Kayıt 28 Eylül'de başladı; ilk karşılaştırma bir
       sonraki işlem gününün dosyasıyla geliyor.
 
+- [ ] **Migration 0026 (`price_alerts`) üretimde uygulanmalı.** Fiyat
+      alarmları kendi tablosunda; tablo yokken hisse sayfasındaki zil
+      düğmesi ve favorilerdeki alarm paneli HİÇ basılmıyor (kurulamayacak
+      bir düğme göstermemek için — `lib/price-alerts.ts` → `available`).
+      Üretim `DATABASE_URL`iyle `npm run db:migrate`.
 - [ ] **Migration 0020 üretimde uygulanmadı.** Dört yeni tablo:
       `symbol_metrics`, `portfolio_positions`, `earnings_analysis_extras`,
       `app_errors`. Kod tablo yokken sessizce düşüyor, yani uygulanana kadar

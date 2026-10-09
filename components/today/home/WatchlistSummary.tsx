@@ -16,6 +16,31 @@ import { type Dictionary, type Locale } from "@/lib/i18n";
 import { cn, directionOf, directionText, formatPercent, formatPrice } from "@/lib/utils";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { getChartBarsMulti } from "@/lib/providers";
+import { getUserAlerts, settleAlerts, type PriceAlert } from "@/lib/price-alerts";
+import { BellSimpleRinging, ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import alertStyles from "@/components/alerts/PriceAlerts.module.css";
+
+/**
+ * Hedefe ulaşmış alarmların şeridi — favoriler panelinin başında, yalnızca
+ * en az bir alarm tetiklendiyse. Ana sayfa okuyucunun her gün açtığı
+ * ekran; alarm burada görünmezse bir sonraki /favoriler ziyaretine kadar
+ * fark edilmezdi. Bekleyen alarm şerit basmıyor: sessiz kalmak onların işi.
+ */
+function AlertHits({ alerts, t }: { alerts: PriceAlert[]; t: Dictionary }) {
+  const hits = alerts.filter((alert) => alert.triggeredAt);
+  if (hits.length === 0) return null;
+  const symbols = [...new Set(hits.map((alert) => alert.symbol))];
+  return (
+    <Link href="/favoriler#alarmlar" className={cn(alertStyles.homeBanner, "mb-2")}>
+      <BellSimpleRinging size={18} weight="fill" aria-hidden />
+      <span>
+        {t.priceAlerts.hitBanner.replace("{n}", String(hits.length))}
+        <span className={alertStyles.homeSymbols}> · {symbols.slice(0, 4).join(", ")}{symbols.length > 4 ? "…" : ""}</span>
+      </span>
+      <ArrowRight size={16} weight="bold" aria-hidden />
+    </Link>
+  );
+}
 
 /** Favoriler listesinin taban satır sayısı ve yedeklerle birlikte tavanı. */
 const WATCHLIST_BASE = 5;
@@ -46,12 +71,27 @@ export async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dicti
     );
   }
 
-  const userSymbols = await getUserSymbols(session.user.id);
+  const [userSymbols, alertData] = await Promise.all([
+    getUserSymbols(session.user.id),
+    getUserAlerts(session.user.id),
+  ]);
+  const pendingAlertSymbols = alertData.alerts.filter((alert) => !alert.triggeredAt).map((alert) => alert.symbol);
 
   if (userSymbols.length === 0) {
+    const status = await getStatus();
+    const quotes = pendingAlertSymbols.length > 0 ? await getQuotes(pendingAlertSymbols, status) : null;
+    const alerts = quotes?.ok
+      ? await settleAlerts(
+          session.user.id,
+          alertData.alerts,
+          Object.fromEntries(Object.entries(quotes.data).map(([symbol, quote]) => [symbol, quote?.price])),
+          !quotes.stale,
+        )
+      : alertData.alerts;
     return (
       <Panel>
         <PanelHeader title={t.today.watchlistSummary} tone="title" />
+        <div className="px-4 sm:px-5"><AlertHits alerts={alerts} t={t} /></div>
         <EmptyState
           title={t.today.watchlistEmpty}
           action={<PanelLink href="/favoriler">{t.watchlist.addSymbol}</PanelLink>}
@@ -76,13 +116,23 @@ export async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dicti
      (orada gerekçesi yazılı); ana sayfadaki özet atlanmış.
      Sorgu ücretsiz sayılır: `getSymbolNames` istek içinde önbellekli ve
      anahtarı sıralı sembol dizesi, aynı sayfada beş kez daha çağrılıyor. */
+  /* Bekleyen alarmların sembolleri AYNI kotasyon isteğinde: ayrı bir
+     istek aynı hissenin iki ayrı paketi demek (CLAUDE.md → getQuotes). */
   const [result, bars, names] = await Promise.all([
-    getQuotes(shown, status),
+    getQuotes([...shown, ...pendingAlertSymbols], status),
     getChartBarsMulti(shown, "1D", status),
     getSymbolNames(shown),
   ]);
   /* Şekil sayıyla aynı seansı anlatmalı — gerekçe `IndexStrip` içinde. */
   const sparkOk = result.ok && !result.stale;
+  const alerts = result.ok
+    ? await settleAlerts(
+        session.user.id,
+        alertData.alerts,
+        Object.fromEntries(Object.entries(result.data).map(([symbol, quote]) => [symbol, quote?.price])),
+        !result.stale,
+      )
+    : alertData.alerts;
 
   return (
     <Panel className="px-4 py-4 sm:px-5">
@@ -96,6 +146,7 @@ export async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dicti
         <h2 className="display-ink display-ink-tight w-fit text-read font-bold min-w-0 truncate">{t.today.watchlistSummary}</h2>
         <PanelLink href="/favoriler">{t.common.showAll}</PanelLink>
       </div>
+      <AlertHits alerts={alerts} t={t} />
       {result.ok ? (
         <>
           <ul>

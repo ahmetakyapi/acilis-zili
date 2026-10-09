@@ -256,6 +256,12 @@ export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: 
                   {/* Ad KESİLMİYOR: sığmazsa iki satıra iniyor; "Advanced
                       Micro …" diye kesilen ad bir şey söylemiyordu. */}
                   {row.name && <span className={styles.posName}>{row.name}</span>}
+                  {/* NOT GÖRÜNÜYOR. Ekleme penceresi "Not Ekle" diyor ve not
+                      kaydediliyordu ama kartta hiçbir yerde basılmıyordu:
+                      okuyucu notu ancak Düzenle'yi açınca görüyordu (8 Ekim
+                      denetimi). Not bir künye — adın altında, soluk, tek
+                      satırda kırpılı; tamamı `title`da. */}
+                  {row.note && <span className={styles.posNote} title={row.note}>{row.note}</span>}
                 </span>
                 {/* AĞIRLIK BİR BÜYÜKLÜK: halka portföy içindeki pay kadar
                     dolu, rengi büyük halkadaki dilimin rengi. Fiyatı

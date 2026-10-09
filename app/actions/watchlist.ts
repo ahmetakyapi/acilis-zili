@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { watchlistItems, watchlists } from "@/lib/schema";
 import { isValidSymbol } from "@/lib/utils";
+import { getLocale } from "@/lib/i18n";
 
 /**
  * Takip listesi işlemleri.
@@ -164,7 +165,10 @@ export async function addSymbolToList(formData: FormData) {
     .from(watchlistItems)
     .where(eq(watchlistItems.watchlistId, listId));
 
-  if (total >= MAX_ITEMS_PER_LIST) return;
+  /* TAVAN DA SESSİZ DEĞİL (8 Ekim). Çıplak `return` istemcide BAŞARI
+     sayılıyordu: kutu kapanıyor, sayfa tazeleniyor, sembol listede yok —
+     okuyucu ne olduğunu anlayamıyordu. */
+  if (total >= MAX_ITEMS_PER_LIST) return { ok: false, duplicate: false, full: true };
 
   /* MÜKERRER EKLEME SESSİZ DEĞİL. `onConflictDoNothing()` ile bitiyordu:
      aynı sembolü ikinci kez ekleyen kullanıcıya hiçbir şey söylenmiyor, kutu
@@ -180,7 +184,7 @@ export async function addSymbolToList(formData: FormData) {
   revalidatePath("/favoriler");
   revalidatePath(`/hisse/${symbol}`);
 
-  return { ok: inserted.length > 0, duplicate: inserted.length === 0 };
+  return { ok: inserted.length > 0, duplicate: inserted.length === 0, full: false };
 }
 
 /**
@@ -308,7 +312,11 @@ export async function toggleSymbolFavorite(formData: FormData) {
     if (!list) {
       [list] = await db
         .insert(watchlists)
-        .values({ userId, name: "Takip listem", sortOrder: 0 })
+        /* Ad okuyucunun dilinde — kayıt da aynısını yapıyor
+           (app/actions/auth.ts). Burada sabit Türkçeydi: bütün listelerini
+           silmiş EN okuyucu kalbe basınca "Takip listem" adlı bir liste
+           alıyordu. */
+        .values({ userId, name: (await getLocale()) === "tr" ? "Takip listem" : "My watchlist", sortOrder: 0 })
         .returning({ id: watchlists.id });
     }
 
@@ -332,5 +340,8 @@ export async function toggleSymbolFavorite(formData: FormData) {
   }
 
   revalidatePath(`/hisse/${symbol}`);
+  /* Kalp artık teknik ve hisse seçimi detaylarında da var (FavoriteSlot). */
+  revalidatePath(`/teknik/${symbol.toLowerCase()}`);
+  revalidatePath(`/hisse-secimi/${symbol}`);
   revalidatePath("/favoriler");
 }

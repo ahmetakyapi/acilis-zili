@@ -277,7 +277,7 @@ hatanın onu doğurduğunu anlatırlar.
 | Yazı | **Schibsted Grotesk**, tek aile, değişken 400–900 | Ayrım punto ve ağırlıkla |
 | Tema | Custom `data-theme` + `az-theme` çerezi | `next-themes` yok; ilk karede doğru tema |
 | Barındırma | Oracle Cloud Always Free · `next start` + systemd · Caddy (TLS) | Her push GitHub Actions ile deploy |
-| Doğrulama araçları | `tsx --test` (37 test dosyası) · başsız Chrome (`puppeteer-core`) duman testi ve ölçüm betikleri | |
+| Doğrulama araçları | `tsx --test` (38 test dosyası) · başsız Chrome (`puppeteer-core`) duman testi ve ölçüm betikleri | |
 
 ---
 
@@ -561,7 +561,7 @@ Başlıkta Piyasalar'dan hemen sonra; mobilde Menü'den.
 
 ### Hesap
 
-`/giris` · `/kayit` · `/favoriler` (fiyatlar USD ya da TL) · `/ayarlar` (profil
+`/giris` · `/kayit` · `/favoriler` (fiyatlar USD ya da TL; Fiyat Alarmları paneli — hedef hisse sayfasındaki zil düğmesiyle kurulur, siteyi açtığında güncel fiyatla kontrol edilir, ana sayfada "Hedefe Ulaştı" şeridi; `lib/price-alerts.ts`) · `/ayarlar` (profil
 ikonu ve rengi, tema, dil, Verilerimi İndir, hesap silme) · `/menu` · `/kvkk` ·
 `/hakkinda` (Hakkında ve Metodoloji: kim yapıyor, sayılar nereden geliyor,
 yazıları kim yazıyor; gömme kodları da burada)
@@ -684,7 +684,7 @@ npm run build:favicon  # .ico ve PWA ikonlarını marka işaretinden üret
 ### Doğrulama
 
 1. **`typecheck` + `lint` + `build`**: üçü de temiz olmadan commit yok.
-2. **Birim testleri**: `tests/` altında 37 dosya. Kotasyon tazeliği ve paket
+2. **Birim testleri**: `tests/` altında 38 dosya. Kotasyon tazeliği ve paket
    yaşı, önbellek süreleri, rutin ve teknik yayın saatleri, rutin gecikmesi,
    karşılaştırma ölçeği, gün akışı, mali çeyrek hesabı, rota sahneleri,
    vergi ve kur hesabı, portföy, temettü, Piyasa Nabzı, skor kartı ve
