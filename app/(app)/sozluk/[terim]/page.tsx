@@ -127,11 +127,15 @@ export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]
       <header className={`${styles.termHero} page-frame`}>
         <HeroAccent />
         <div className={`${styles.termHeading} page-heading-copy`}>
-          <p className="page-eyebrow">
+          {/* KATEGORİ BAŞLIĞIN ALTINDA (9 Ekim 2026). Üst künyeydi; kapak
+              künyeleri sitenin her yerinden kalktı ama bu satır başka yerde
+              yazmayan bir bilgi (terimin kategorisi), o yüzden silinmedi,
+              başlığın altına indi. */}
+          <h1 className="display-ink">{term.term}</h1>
+          <p className={styles.termCategory}>
             <CategoryIcon aria-hidden size={15} weight="bold" />
             {categoryLabel}
           </p>
-          <h1 className="display-ink">{term.term}</h1>
         </div>
         <div className={styles.termPlate}>
           <CategoryIcon aria-hidden size={150} weight="thin" className={styles.plateWatermark} />

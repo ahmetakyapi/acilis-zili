@@ -285,6 +285,9 @@
    ========================================================================== */
 .termHero { position:relative; isolation:isolate; display:grid; min-width:0; grid-template-columns:minmax(0,1fr); gap:18px 36px; padding:32px 34px 30px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface); }
 .termHeading { min-width:0; align-self:end; }
+/* Kategori başlığın altında; ölçü ve renk kapağın açıklama satırından (9 Ekim 2026). */
+.termHeading > .termCategory { display:flex; align-items:center; gap:8px; font-weight:600; }
+.termCategory > svg { flex-shrink:0; color:var(--primary-ink); }
 /* Kavramın levhası. 1024 ve üstünde sağ sütunda başlık ve tanım boyunca;
    altında TANIMIN ARKASINDA alçak bir şerit: telefonda başlıkla tanımın
    arasına girince okuyucunun sorduğu cümle ("bu ne demek") ilk ekranın
@@ -298,7 +301,7 @@
  .termPlate .mark { width:min(100%,240px); }
  .termDefinition { grid-column:1; grid-row:2; }
 }
-.termHeading h1 { width:fit-content; max-width:100%; margin-top:10px; font-size:clamp(32px,4.2vw,52px); line-height:1.08; letter-spacing:-.05em; font-weight:600; text-wrap:balance; }
+.termHeading h1 { width:fit-content; max-width:100%; margin-top:0; font-size:clamp(32px,4.2vw,52px); line-height:1.08; letter-spacing:-.05em; font-weight:600; text-wrap:balance; }
 /* Levha kapakla birlikte gelir: yalnızca ölçek, saydamlık yok (LCP adayı
    olmayan bir süs; yine de ilk karede görünür kalsın). */
 .termPlate .mark { animation:plate-in .8s var(--ease-brand) both; }

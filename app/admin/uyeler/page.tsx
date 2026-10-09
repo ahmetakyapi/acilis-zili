@@ -73,7 +73,6 @@ export default async function MembersPage() {
        (390, ölçüldü). */
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Yönetim"
         title={ADMIN_SECTIONS.members.title}
         subtitle={ADMIN_SECTIONS.members.subtitle}
       />

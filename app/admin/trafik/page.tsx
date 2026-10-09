@@ -99,7 +99,6 @@ export default async function TrafficPage(props: PageProps<"/admin/trafik">) {
        piksellik kendi aralığını taşıyordu. */
     <div className="flex flex-col gap-5">
       <PageHeader
-        eyebrow="Yönetim"
         title={ADMIN_SECTIONS.traffic.title}
         subtitle={ADMIN_SECTIONS.traffic.subtitle}
         /* EKRANIN TEK DENETİMİ BAŞLIĞIN SAĞINDA, sitenin `Segment`i. Aralık

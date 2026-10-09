@@ -152,16 +152,23 @@ export function PanelLink({
 /**
  * Sayfa başlığı — 34px/700, altında 14px açıklama.
  * Serif display rolü kaldırıldı: tek aile, ayrım ağırlıkla kuruluyor.
+ *
+ * ÜST KÜNYE YOK (9 Ekim 2026). Başlığın üstünde küçük bir künye satırı
+ * duruyordu ("ABD Piyasası", "Kavramlar", "Mercek Altında"); aynı gün
+ * 12'den 14 piksele büyütüldü ve sahibi bu kez satırın kendisini istemedi:
+ * "hem okunmuyor hem kötü görünüyor". Künye başlığı tekrar ediyordu —
+ * ekranın adı zaten başlıkta ve menüde. `eyebrow` prop'u bu yüzden yok;
+ * aynı gün bölüm başlıklarının üstündeki `Kicker` ("Günün Özeti", "Son
+ * Yazı") da kaldırıldı. Başlığa ait gerçek bir bilgi (tarih, kurum, kategori)
+ * varsa başlığın ALTINA, açıklamanın yanına iner.
  */
 export function PageHeader({
-  eyebrow,
   title,
   subtitle,
   action,
   className,
   embedded = false,
 }: {
-  eyebrow?: string;
   title: string;
   subtitle?: string;
   action?: React.ReactNode;
@@ -173,13 +180,7 @@ export function PageHeader({
       className={cn("page-heading page-masthead flex flex-wrap items-start justify-between gap-4", className)}
       data-embedded={embedded}
     >
-      <div className="min-w-0 page-heading-copy" data-has-eyebrow={!!eyebrow}>
-        {/* KÜNYE TITLE CASE, BÜYÜK HARF DEĞİL (23 Eylül). `plate` künyeyi
-            büyük harfe çeviriyordu ("YAN YANA", "ABD EKONOMİSİ"); takvim,
-            rehber ve piyasalar kapakları kendi künyelerini Title Case
-            basıyor ("Ekonominin Ajandası"). Aynı ürünün kapaklarında iki
-            künye dili duruyordu; ölçü ve renk `.page-eyebrow`ta. */}
-        {eyebrow && <p className="page-eyebrow">{eyebrow}</p>}
+      <div className="min-w-0 page-heading-copy">
         <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
           {title}
         </h1>
@@ -191,30 +192,6 @@ export function PageHeader({
       </div>
       {action}
     </header>
-  );
-}
-
-/** Küçük bölüm başlığı — accent kicker, 14px (9 Ekim: 11 piksellik
- *  kicker bölümün başında okunmuyordu; `.plate` ailesinden, punto `text-read`). */
-export function Kicker({
-  children,
-  tone = "muted",
-  className,
-}: {
-  children: React.ReactNode;
-  tone?: "muted" | "primary";
-  className?: string;
-}) {
-  return (
-    <p
-      className={cn(
-        "plate text-read",
-        tone === "primary" && "text-primary",
-        className,
-      )}
-    >
-      {children}
-    </p>
   );
 }
 

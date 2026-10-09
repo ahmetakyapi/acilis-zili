@@ -82,7 +82,6 @@ export async function PortfolioScreen({ userId, preset = null }: { userId: strin
       <ScrollProgress />
       <PortfolioWorkbench labels={L} locale={locale} today={today} minDate={TCMB_MIN_DATE} maxPositions={MAX_POSITIONS} sales={sales.available ? t.portfolioSales : null} preset={presetPick}>
         <DirectoryHeader
-          eyebrow={L.eyebrow}
           title={L.title}
           description={L.subtitle}
           visual={

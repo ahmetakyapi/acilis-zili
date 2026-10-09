@@ -213,7 +213,6 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
       <div className={styles.masthead}>
       <SectionMasthead
         embedded
-        eyebrow={locale === "tr" ? "ABD Piyasası" : "US Market"}
         title={t.markets.title}
         description={t.markets.subtitle}
       />
@@ -764,12 +763,14 @@ async function IndexDetail({
    Sonraki yükleme düzeninde seçimler sonuç sınırının dışına çıktı: veri
    beklenirken çipler kaybolmaz veya devre dışı kalmaz; genişlik yine altındadır. */
 
-function IndexTabs({ tab, aside, identity, t }: { tab: TabKey; locale: Locale; t: Dictionary; aside?: ReactNode; identity?: ReactNode }) {
+function IndexTabs({ tab, aside, identity }: { tab: TabKey; locale: Locale; t: Dictionary; aside?: ReactNode; identity?: ReactNode }) {
   return <Panel className={styles.indexTabs}>
       <div className={styles.toolbarLayout}>
         <div className={styles.indexControls}>
         <div className={styles.indexChoices}>
-        <p className={styles.breadthEyebrow}>{t.markets.breadth}</p>
+        {/* "Piyasa Genişliği" künyesi çiplerin üstündeydi; 9 Ekim 2026'da
+            bütün bölüm künyeleriyle kalktı (`PageHeader` yorumu). Çiplerin
+            ne seçtiği adlarından, genişlik de "Yükselenlerin Payı"ndan okunuyor. */}
         {/* ÜÇ ÇİP MOBİLDE TEK SATIRDA. `flex-wrap` ile diziliyorlardı ve
             üçüncü çip (S&P 500) 390 pikselde alt satıra düşüyordu: üç eşit
             seçenek iki-bir diye kırılınca denetim tek bir seçici olmaktan

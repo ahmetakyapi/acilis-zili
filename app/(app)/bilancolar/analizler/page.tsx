@@ -262,7 +262,6 @@ export default async function AnalysesPage(
           Hangi görünümde olunduğunu hemen altındaki sekme çubuğu söylüyor;
           başlık bölümün adı, sekme de görünümün adı. */}
       <DirectoryHeader
-        eyebrow={t.directory.earningsEyebrow}
         title={t.analysis.symbolPanelTitle}
         description={t.directory.analysisDescription}
         visual={all.length > 0 && (

@@ -10,7 +10,6 @@ import {
   Panel,
   Segment,
   SegmentItem,
-  Kicker,
   Skeleton,
 } from "@/components/ui/primitives";
 import { getBriefArchive, getLatestBrief, weekAnchor } from "@/lib/data";
@@ -64,7 +63,6 @@ export function BriefArchiveView({
       {/* Kabuk veri beklemez: sekmeler hemen boyanır, tıklama anında tepki
           verir ve altındaki içerik akarak gelir. */}
       <PageHeader
-        eyebrow={t.brief.eyebrow}
         title={period === "weekly" ? t.brief.weeklyTitle : t.brief.title}
         subtitle={
           period === "weekly" ? t.brief.weeklySubtitle : t.brief.subtitle
@@ -150,11 +148,9 @@ async function ArchiveBoard({
         {brief ? (
           <>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <Kicker tone="primary">
-                {period === "weekly"
-                  ? t.brief.periodWeekly
-                  : t.brief.periodDaily}
-              </Kicker>
+              {/* Dönem künyesi ("Günlük"/"Haftalık") burada duruyordu; bölüm
+                  künyeleri 9 Ekim 2026'da kalktı. Dönem sayfa başlığında ve
+                  sekmede yazıyor. */}
               <span className="text-small text-body">
                 {period === "weekly"
                   ? t.brief.weeklyRange

@@ -342,7 +342,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
-      <DirectoryHeader className={companyStyles.hero} eyebrow={t.directory.companiesEyebrow} title={t.companies.title} description={t.companies.subtitle}
+      <DirectoryHeader className={companyStyles.hero} title={t.companies.title} description={t.companies.subtitle}
         visual={
           <>
             <CompanyLeaders leaders={leaders} labels={t.directory} locale={locale} />

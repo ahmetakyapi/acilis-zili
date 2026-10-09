@@ -85,7 +85,6 @@ export default async function TaxPage() {
     <MotionExperience className={polish.page}>
       <ScrollProgress />
       <DirectoryHeader
-        eyebrow={L.eyebrow}
         title={L.title}
         description={L.subtitle}
         visual={<TaxPaths labels={L} />}

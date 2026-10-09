@@ -81,7 +81,6 @@ export default async function AdminOverviewPage() {
        `items-start` ile hiçbiri öbürünün boyuna gerilmiyor. */
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Yönetim"
         title={ADMIN_SECTIONS.overview.title}
         subtitle={ADMIN_SECTIONS.overview.subtitle}
       />

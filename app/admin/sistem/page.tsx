@@ -60,7 +60,6 @@ export default async function SystemPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Yönetim"
         title={ADMIN_SECTIONS.system.title}
         subtitle={ADMIN_SECTIONS.system.subtitle}
       />

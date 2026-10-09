@@ -69,7 +69,6 @@ export default async function ScreeningPage(props: PageProps<"/hisse-secimi">) {
     <MotionExperience className={directory.page}>
       <ScrollProgress />
       <DirectoryHeader
-        eyebrow={S.eyebrow}
         title={S.title}
         description={S.description}
         visual={

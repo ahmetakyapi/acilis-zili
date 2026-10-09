@@ -166,7 +166,6 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
           (gerekçe `app/(app)/bilancolar/page.tsx`). "Haftalık Bilanço
           Takvimi" adı sayfa başlığında (metadata) ve görselde kalıyor. */}
       <DirectoryHeader
-        eyebrow={w.eyebrow}
         title={t.analysis.title}
         description={t.earningsWeek.description}
         visual={

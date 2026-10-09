@@ -115,7 +115,6 @@ export default async function BriefListPage(
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Yönetim"
         title={ADMIN_SECTIONS.writing.title}
         subtitle={ADMIN_SECTIONS.writing.subtitle}
         action={

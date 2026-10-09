@@ -142,7 +142,6 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
               Seçili hâlde aralık denetimi aynı köşede; iki hâl aynı yerde
               "burada ayarla" diyor. Hazır setler bir panel yukarı çıkıyor. */}
           <PageHeader
-            eyebrow={t.compare.eyebrow}
             title={t.compare.title}
             subtitle={t.compare.subtitle}
             action={
@@ -244,7 +243,7 @@ export async function CompareBoard({
   symbols: string[];
   range: CompareRange;
   dropped: string[];
-  heading?: { eyebrow?: string; title: string; subtitle: string };
+  heading?: { title: string; subtitle: string };
   lead?: React.ReactNode;
   children?: React.ReactNode;
   currency: CurrencyMode;
@@ -695,7 +694,6 @@ export async function CompareBoard({
           hisse sayfasının aynı denetimi yıllardır "1A · 3A · 6A · YBB"
           diyor — aynı ürün, iki dil. */}
       <PageHeader
-        eyebrow={heading ? heading.eyebrow : t.compare.eyebrow}
         title={heading?.title ?? t.compare.title}
         subtitle={heading?.subtitle ?? t.compare.subtitle}
         action={<CompareRangeControl labels={labels} />}

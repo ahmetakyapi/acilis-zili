@@ -13,7 +13,6 @@ import { CompanyCards } from "@/components/ui/CompanyCards";
 import {
   EmptyState,
   FilterChip,
-  Kicker,
   Panel,
   Skeleton,
 } from "@/components/ui/primitives";
@@ -120,7 +119,6 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
     <MotionExperience className={styles.page}>
       <ScrollProgress />
       <SectionMasthead
-        eyebrow={t.stories.eyebrow}
         title={t.stories.title}
         description={t.stories.subtitle}
         aside={
@@ -471,22 +469,20 @@ function LeadStory({
             okutuyordu. */}
         <div className={styles.leadLayout}>
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-              <Kicker tone="primary">{t.stories.latest}</Kicker>
-              {/* Yazı henüz bu dile çevrilmediyse orijinal gösterilir ve
-                  dili rozetle söylenir — sessizce yanlış dilde metin sunmak
-                  seçenek değil. */}
-              {story.locale !== locale && (
-                <span className="plate text-nano">
-                  {story.locale.toUpperCase()}
-                </span>
-              )}
-              {/* Arşiv kartındaki künyeyle aynı ağırlık — manşet yazının
-                  tarihi orada okunur, burada okunmaz olamaz. */}
-              <span className="numeral ml-auto text-base font-semibold text-body">
-                {formatEtDateLong(story.eventDate, locale)}
+            {/* "SON YAZI" KÜNYESİ KALKTI, TARİH ALT SATIRA İNDİ (9 Ekim 2026).
+                Manşetin üstünde solda "Son Yazı", sağda tarih duruyordu;
+                bölüm künyeleri sitenin her yerinden kalktı (`PageHeader`
+                yorumu). Tarih yazının bilgisi, silinmedi: okuma süresiyle
+                birlikte "Oku" satırının sağında. Manşetin en yeni yazı olduğu
+                yerinden okunuyor.
+                Yazı henüz bu dile çevrilmediyse orijinal gösterilir ve dili
+                rozetle söylenir — sessizce yanlış dilde metin sunmak seçenek
+                değil; rozet yalnızca o durumda basılıyor. */}
+            {story.locale !== locale && (
+              <span className="plate text-nano">
+                {story.locale.toUpperCase()}
               </span>
-            </div>
+            )}
 
             {/* MANŞET BİR BASAMAK KÜÇÜK VE ÖLÇÜLÜ GENİŞLİKTE.
                 32 punto + `w-fit` ile başlık doğal genişliğini alıyordu:
@@ -508,11 +504,21 @@ function LeadStory({
             <p className="mt-5 flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-small font-semibold text-primary">
               {t.guide.cardCta}
               <ArrowRight weight="bold" size={13} />
-              {story.readMinutes && (
-                <span className="numeral ml-auto font-normal text-muted">
-                  {story.readMinutes} {t.stories.readMinutes}
+              {/* Arşiv kartındaki künyeyle aynı ağırlık — manşet yazının
+                  tarihi orada okunur, burada okunmaz olamaz. */}
+              <span className="numeral ml-auto flex flex-wrap items-center justify-end gap-x-2 font-normal text-muted">
+                <span className="font-semibold text-body">
+                  {formatEtDateLong(story.eventDate, locale)}
                 </span>
-              )}
+                {story.readMinutes && (
+                  <>
+                    <span aria-hidden>·</span>
+                    <span>
+                      {story.readMinutes} {t.stories.readMinutes}
+                    </span>
+                  </>
+                )}
+              </span>
             </p>
           </div>
 

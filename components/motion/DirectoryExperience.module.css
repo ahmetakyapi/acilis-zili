@@ -8,11 +8,9 @@
 .hero[data-has-visual="true"] { grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); align-items:center; }
 .heroCopy,.heroVisual { min-width:0; }
 .heroVisual { padding-left:32px; border-left:1px solid var(--line); }
-/* Kapak künyesi 14 piksel, aralıksız (9 Ekim) — `.page-eyebrow` ile aynı ölçü. */
-.eyebrow { color:var(--primary-ink); font-size:14px; line-height:1.45; font-weight:600; letter-spacing:0; }
 /* Başlık satırı: solda h1, sağda ekranın tek denetimi (varsa). h1'in dış
    boşluğu satıra taşınıyor; denetim onunla ortalanıyor. */
-.heroTitle { display:flex; align-items:center; justify-content:space-between; gap:10px 16px; margin:10px 0 13px; }
+.heroTitle { display:flex; align-items:center; justify-content:space-between; gap:10px 16px; margin:0 0 13px; }
 .hero h1 { margin:10px 0 13px; font-size:var(--heading-page); line-height:1.04; letter-spacing:-.055em; font-weight:600; color:var(--text-strong); }
 .heroTitle h1 { margin:0; }
 .description { max-width:52ch; color:var(--text-body); font-size:15px; line-height:1.7; text-wrap:pretty; }

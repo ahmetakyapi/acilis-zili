@@ -130,7 +130,6 @@ export default async function MenuPage() {
     <MotionExperience className={`${polish.page} ${polish.menu}`}>
       <ScrollProgress />
       <PageHeader
-        eyebrow={t.menu.eyebrow}
         title={t.menu.title}
         subtitle={t.menu.subtitle}
       />

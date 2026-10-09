@@ -10,8 +10,6 @@
 .guidePage { display:flex; flex-direction:column; min-width:0; gap:36px; }
 .page :global(.panel),.guidePage :global(.panel) { animation:none; }
 .masthead { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:end; gap:24px; padding:12px 0 23px; border-bottom:1px solid var(--line); }
-/* Kapak künyesi 14 piksel, aralıksız (9 Ekim) — `.page-eyebrow` ile aynı ölçü. */
-.eyebrow { font-size:14px; line-height:1.45; font-weight:600; letter-spacing:0; color:var(--primary-ink); }
 .masthead h1 { margin-top:9px; font-size:var(--heading-page); line-height:1.04; letter-spacing:-.05em; color:var(--text-strong); font-weight:600; }
 .mastheadDescription { max-width:52ch; padding-bottom:4px; font-size:15px; line-height:1.7; color:var(--text-body); text-wrap:pretty; }
 .intro { font-size:12px; }
@@ -32,6 +30,8 @@
 .lead > section { padding:30px; border-radius:24px; background:var(--premium-surface); transition:border-color .3s,background-color .3s; }
 .leadLayout { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:32px; align-items:center; }
 .leadTitle { max-width:30ch; margin-top:18px; font-size:clamp(25px,2.6vw,34px); line-height:1.13; letter-spacing:-.04em; font-weight:600; color:var(--text-strong); text-wrap:balance; }
+/* Manşet kartın ilk satırı (9 Ekim 2026 — üstündeki "Son Yazı" künyesi kalktı); çeviri rozeti varsa onun altında. */
+.leadTitle:first-child { margin-top:0; }
 .leadDek { margin-top:18px; max-width:58ch; font-size:15px; line-height:1.75; color:var(--text-body); }
 .leadCast { min-width:0; }
 .archiveHeading { font-size:24px; line-height:1.2; font-weight:600; letter-spacing:-.035em; color:var(--text-strong); }

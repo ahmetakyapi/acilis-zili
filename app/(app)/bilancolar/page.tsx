@@ -111,7 +111,6 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           ediyor. */}
       <DirectoryHeader
         className={styles.earningsHeader}
-        eyebrow={t.directory.earningsEyebrow}
         title={t.analysis.title}
         description={t.earnings.subtitleLong}
         visual={<EarningsRadar rows={rows} meta={meta} locale={locale} t={t} />}

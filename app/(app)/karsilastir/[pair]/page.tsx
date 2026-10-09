@@ -84,7 +84,6 @@ export default async function ComparePairPage(props: PageProps<"/karsilastir/[pa
         currency={currency}
         realAvailable={realAvailable}
         heading={{
-          eyebrow: t.pairs.eyebrow,
           title: t.pairs.title.replace("{names}", names),
           subtitle: t.pairs.subtitle,
         }}

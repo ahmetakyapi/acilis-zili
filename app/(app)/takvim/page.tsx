@@ -250,7 +250,6 @@ export default async function CalendarPage(
         <header className={`${styles.hero} page-frame`}>
           <HeroAccent />
           <div className="page-heading-copy">
-            <p className="page-eyebrow">{t.calendar.eyebrow}</p>
             <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
               {t.marketExtras.dividendTitle}
             </h1>
@@ -647,7 +646,6 @@ export default async function CalendarPage(
       <header className={`${styles.hero} page-frame`}>
         <HeroAccent />
         <div className="page-heading-copy">
-          <p className="page-eyebrow">{t.calendar.eyebrow}</p>
           <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
             {t.calendar.title}
           </h1>

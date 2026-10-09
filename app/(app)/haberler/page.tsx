@@ -55,13 +55,12 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
     <MotionExperience className={styles.page}>
       <ScrollProgress />
       {/* KÜNYE VE SÜZGEÇ KAPAĞIN İÇİNDE. Kapak künyesizdi ve künye için
-          ayrılan 18 piksellik satır boş basılıyordu (globals.css,
-          `.page-heading-copy[data-has-eyebrow="false"]::before`), sağ yarısı
-          da tümüyle boştu. Sembol süzgeci ise kapağın ALTINDA kendi şeridini
-          açıyordu. İkisi kapağa girince boş satır bedavaya doluyor ve bir
-          şerit kalkıyor; yükseklik artmıyor. */}
+          ayrılan 18 piksellik satır boş basılıyordu, sağ yarısı da tümüyle
+          boştu. Sembol süzgeci ise kapağın ALTINDA kendi şeridini açıyordu.
+          İkisi kapağa girince bir şerit kalkıyor; yükseklik artmıyor.
+          (9 Ekim 2026: üst künye bütün kapaklardan kalktı, boş satırın yer
+          tutucusu da onunla — `PageHeader` yorumu.) */}
       <PageHeader
-        eyebrow={t.news.eyebrow}
         title={t.news.title}
         subtitle={t.news.subtitle}
         action={

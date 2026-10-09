@@ -167,7 +167,6 @@ export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
         {t.themes.backToList}
       </Link>
       <DirectoryHeader
-        eyebrow={t.themes.eyebrow}
         title={title}
         description={themeDek(theme, locale)}
         share={<PageShare path={`/tema/${theme.slug}`} title={`${title} · ${t.themes.eyebrow}`} locale={locale} t={t} />}

@@ -73,7 +73,6 @@ export default async function ThemesIndexPage() {
     <MotionExperience className={polish.page}>
       <BreadcrumbJsonLd locale={locale} items={[{ name: t.themes.title, path: "/tema" }]} />
       <DirectoryHeader
-        eyebrow={t.themes.eyebrow}
         title={t.themes.title}
         description={t.themes.subtitle}
         share={<PageShare path="/tema" title={t.themes.title} locale={locale} t={t} />}

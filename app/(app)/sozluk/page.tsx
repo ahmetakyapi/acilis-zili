@@ -163,7 +163,6 @@ export default async function GlossaryIndexPage() {
              "Each child in a list should have a unique key" basıyordu
              (ikisi birlikte kapatılınca sustu, ölçüldü). */
           <div key="hero" className={`${styles.heroCopy} page-heading-copy`}>
-            <p className="page-eyebrow">{t.glossary.eyebrow}</p>
             <h1 className="display-ink">{t.glossary.title}</h1>
             <p>{t.glossary.subtitle}</p>
             <dl className={styles.metrics}>

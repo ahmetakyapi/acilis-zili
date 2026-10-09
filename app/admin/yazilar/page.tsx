@@ -83,7 +83,6 @@ export default async function StoriesPage(props: PageProps<"/admin/yazilar">) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Yönetim"
         title={ADMIN_SECTIONS.writing.title}
         subtitle={ADMIN_SECTIONS.writing.subtitle}
         action={

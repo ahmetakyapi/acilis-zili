@@ -325,25 +325,25 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
       <SpotlightCard className={detail.coverSurface}>
       <header className={detail.cover} data-has-aside={Boolean(figure)}>
       <div className={detail.coverCopy} data-motion-intro>
-        <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-tiny">
-          <span className="text-tiny font-semibold text-primary">
-            {t.stories.eyebrow}
-          </span>
-          <span className="numeral text-muted">
-            {formatEtDateLong(story.eventDate, locale)}
-          </span>
-          <span aria-hidden className="text-muted">
-            ·
-          </span>
-          <span className="numeral text-muted">{minutesLabel}</span>
-        </p>
-
         {/* Degrade satır satır (`data-ink="lines"`, globals.css): manşet
             iki-üç satır ve kutu boyunca yayılan degradede ikinci satır
             başka bir tonda başlıyordu. */}
         <h1 data-ink="lines" className={detail.title}>
           <span className="ink-line">{story.title}</span>
         </h1>
+        {/* TARİH VE SÜRE MANŞETİN ALTINDA (9 Ekim 2026). Manşetin üstünde
+            "Mercek Altında · tarih · süre" künyesi duruyordu; başlık üstü
+            künyeler sitenin her yerinden kalktı. "Mercek Altında" ekranın
+            adını tekrar ediyordu, silindi; tarih ve okuma süresi yazının
+            kendi bilgisi, manşetin hemen altına indi (kolonun 22 piksellik
+            aralığından 10'u geri alınıyor, satır manşete yapışık okunsun). */}
+        <p className="-mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-small text-muted">
+          <span className="numeral">
+            {formatEtDateLong(story.eventDate, locale)}
+          </span>
+          <span aria-hidden>·</span>
+          <span className="numeral">{minutesLabel}</span>
+        </p>
         <p className={detail.dek}>{story.dek}</p>
 
         {/* Çeviri henüz yoksa orijinal gösterilir — ama bunu söyleyerek.

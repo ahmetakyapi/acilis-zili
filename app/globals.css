@@ -2188,20 +2188,23 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
   header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { align-self:stretch; margin-top:4px; }
 }
 .page-heading-copy.page-heading-copy { min-width:0; padding:0; align-self:start; }
-/* Kapak künyesi 12 → 14 piksel, aralık .04em → 0 (9 Ekim): "her sectionun
-   başındaki ufak açıklama başlıkları okunmuyor". Boş künye yer tutucusu
-   aynı satır yüksekliğini taşır, başlıklar ekranlar arasında hizalı kalır. */
-.page-heading-copy.page-heading-copy > .page-eyebrow { display:flex; align-items:center; gap:8px; margin:0; min-height:20px; font-size:14px; line-height:20px; font-weight:600; letter-spacing:0; color:var(--primary-ink); }
-.page-heading-copy[data-has-eyebrow="false"]::before { content:""; display:block; height:20px; }
-.page-heading-copy.page-heading-copy h1 { margin:8px 0 0; font-size:var(--heading-page); line-height:1.12; letter-spacing:-.045em; font-weight:600; max-width:none; }
-.page-heading-copy.page-heading-copy > p:not(.page-eyebrow),
+/* ÜST KÜNYE YOK (9 Ekim 2026). Kapak başlığının üstünde `.page-eyebrow`
+   künyesi ve künyesiz kapaklarda onun 20 piksellik boş yer tutucusu
+   duruyordu. Künye aynı sabah 12'den 14 piksele büyütüldü, akşam sahibi
+   satırın kendisini kaldırttı: "hem okunmuyor hem kötü görünüyor".
+   Başlık artık kapağın ilk satırı. Gerekçe `PageHeader` yorumunda
+   (components/ui/primitives.tsx); kapağa yeni bir üst künye eklenmez.
+
+   Tek kalan üst satır panel editörünün DÖNÜŞ BAĞLANTISI (`.page-backlink`,
+   admin/editor-parts.tsx): künye değil, gezinme. */
+.page-heading-copy.page-heading-copy > .page-backlink { display:flex; align-items:center; gap:8px; margin:0 0 8px; min-height:20px; font-size:14px; line-height:20px; font-weight:600; letter-spacing:0; color:var(--primary-ink); }
+.page-heading-copy.page-heading-copy h1 { margin:0; font-size:var(--heading-page); line-height:1.12; letter-spacing:-.045em; font-weight:600; max-width:none; }
+.page-heading-copy.page-heading-copy > p:not(.page-backlink),
 .page-masthead.page-masthead > p { margin:10px 0 0; max-width:64ch; font-size:14px; line-height:1.65; color:var(--text-body); }
 .page-masthead.page-masthead > p { margin-top:0; }
 @media(max-width:767px) {
  :root { --page-section-gap:18px; --page-frame-inset:18px; }
  .page-frame.page-frame.page-frame { grid-template-columns:minmax(0,1fr); gap:18px; }
- .page-heading-copy.page-heading-copy > .page-eyebrow { font-size:13px; }
- .page-heading-copy.page-heading-copy h1 { margin-top:7px; }
 }
 
 /* Görseli olmayan dizin kapağında da aynı gerekçe: taban yükseklik başlık
@@ -2381,8 +2384,8 @@ html[data-scroll-behavior="smooth"] { scroll-behavior: smooth; }
    değişince yalnızca bloğun tamamı 8 piksel yükseliyordu — başlık, sayfanın
    en büyük ve en çok okunan öğesi olduğu hâlde kendi girişi yoktu. Artık:
 
-   · Üst künyenin önünde 18 piksellik mavi bir çizgi soldan açılıyor
-     (sitenin gün şeridinin küçük bir yankısı) ve künye onu izliyor.
+   · (Üst künyenin önündeki 18 piksellik çizgi ve künyenin girişi künyeyle
+     birlikte kalktı — 9 Ekim 2026, gerekçe `PageHeader` yorumunda.)
    · Başlık bir maskenin ARKASINDAN yükseliyor: alt kenardan açılan bir
      kırpma ile birlikte 35% aşağıdan yerine geliyor — gazete manşetinin
      dizgiden çıkması gibi. Degradeli mürekkep bozulmuyor, çünkü kesilen
@@ -2393,23 +2396,14 @@ html[data-scroll-behavior="smooth"] { scroll-behavior: smooth; }
    yukarıdaki "Sayfa geçişi" notunda). Toplam ~0,75 saniye; içerik bu sırada
    zaten okunur hâlde. Azaltılmış harekette hiçbiri yok.
    -------------------------------------------------------------------------- */
-.page-heading-copy.page-heading-copy > .page-eyebrow::before {
-  content: ""; flex: none; width: 18px; height: 2px; border-radius: 1px;
-  background: var(--primary); transform-origin: left center;
-  animation: eyebrow-rule 520ms var(--ease-brand) backwards;
-}
-.page-heading-copy > .page-eyebrow { animation: eyebrow-in 420ms var(--ease-brand) 80ms backwards; }
 .page-heading-copy h1 { animation: title-rise 760ms cubic-bezier(0.2, 0.8, 0.2, 1) 60ms backwards; }
 /* AÇIKLAMA SATIRI SAYDAMLIKLA GELMİYOR (28 Eylül, ölçüldü). Satır sayfanın
    en büyük metin öğesi olduğunda LCP onu sayıyor ve tarayıcı `opacity: 0`
    öğeyi boyanmış saymıyor: 260 ms gecikme + 520 ms giriş, 4x yavaş
    işlemcide LCP'yi ~200'den ~1.040 ms'ye itiyordu (/tema, /sozluk, /teknik,
    /sirketler). Giriş artık yalnızca kayma; metin ilk karede görünür, hareket
-   yerinde. Üst künye (eyebrow) küçük olduğu için LCP adayı değil, onun
-   solması kalıyor. */
-.page-heading-copy > p:not(.page-eyebrow) { animation: copy-slide 520ms var(--ease-brand) 260ms backwards; }
-@keyframes eyebrow-rule { from { transform: scaleX(0); } }
-@keyframes eyebrow-in { from { opacity: 0; transform: translate3d(-6px, 0, 0); } }
+   yerinde. */
+.page-heading-copy > p:not(.page-backlink) { animation: copy-slide 520ms var(--ease-brand) 260ms backwards; }
 @keyframes copy-slide { from { transform: translate3d(-6px, 0, 0); } }
 @keyframes title-rise {
   from { clip-path: inset(0 0 100% 0); transform: translate3d(0, 35%, 0); }
@@ -2485,10 +2479,8 @@ html[lang="tr"] .footer-wordmark { --wm-size: max(10cqi, 48px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .page-heading-copy.page-heading-copy > .page-eyebrow::before,
-  .page-heading-copy > .page-eyebrow,
   .page-heading-copy h1,
-  .page-heading-copy > p:not(.page-eyebrow),
+  .page-heading-copy > p:not(.page-backlink),
   .footer-wordmark > span { animation: none !important; }
 }
 
@@ -2551,8 +2543,8 @@ html.ink-splash-out .ink-splash-layer {
 [data-admin-shell] .page-masthead.page-masthead[data-embedded="false"] { padding:16px 22px; }
 [data-admin-shell] .page-heading-copy h1 { font-size:1.625rem; line-height:1.15; }
 [data-admin-shell] .page-heading-copy + p,
-[data-admin-shell] .page-heading-copy p:not(.page-eyebrow) { margin-top:4px; }
-[data-admin-shell] .page-eyebrow { margin-bottom:2px; }
+[data-admin-shell] .page-heading-copy p:not(.page-backlink) { margin-top:4px; }
+[data-admin-shell] .page-heading-copy.page-heading-copy > .page-backlink { margin-bottom:2px; }
 [data-admin-shell] .page-enter > .gap-6 { gap:16px; }
 
 /* PROFİL KAROLARI KOYU TEMADA (26 Eylül). Karolar iki temada aynıydı ve

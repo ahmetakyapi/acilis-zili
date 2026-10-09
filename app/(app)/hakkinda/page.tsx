@@ -183,7 +183,6 @@ export default async function AboutPage() {
       <header className={`${styles.hero} page-frame`}>
         <HeroAccent />
         <div className={`${styles.heroCopy} page-heading-copy`}>
-          <p className="page-eyebrow">{a.eyebrow}</p>
           <h1 className="display-ink">{a.title}</h1>
           <p>{a.intro}</p>
         </div>

@@ -264,10 +264,11 @@ export function TekSatir({
  * başlık KAYDIN ADI ("Mercek Yazısı · 22 Eyl 2026" — düzenlenirken
  * değişmeyen kimlik), sağda tek denetim: dil.
  *
- * ELDEN KURULUYOR, sınıflar `PageHeader`ın kendisi: künyenin bağlantı
- * olması gerekiyor ve `PageHeader.eyebrow` düz metin alıyor. Emsal: takvim
- * kapağı kendi künyesini aynı `.page-eyebrow` ile basıyor. Görünüş sınıflarda
- * (globals.css → `.page-masthead`), yani kapak siteyle birlikte değişir.
+ * ELDEN KURULUYOR, sınıflar `PageHeader`ın kendisi: dönüş bağlantısı için
+ * `PageHeader`da yer yok. Görünüş sınıflarda (globals.css → `.page-masthead`),
+ * yani kapak siteyle birlikte değişir. 9 Ekim 2026'da kapakların üst künyesi
+ * kalktı; bu satır künye değil GEZİNME olduğu için kaldı, sınıfı da o yüzden
+ * `.page-backlink` (eski `.page-eyebrow`).
  */
 export function EditorBasligi({
   geri,
@@ -288,8 +289,8 @@ export function EditorBasligi({
       data-embedded="false"
       className="page-heading page-masthead flex flex-wrap items-start justify-between gap-4"
     >
-      <div className="page-heading-copy min-w-0" data-has-eyebrow="true">
-        <p className="page-eyebrow">
+      <div className="page-heading-copy min-w-0">
+        <p className="page-backlink">
           <Link
             href={geri}
             className="tap-44 inline-flex items-center gap-1 transition-colors hover:text-primary-hover"

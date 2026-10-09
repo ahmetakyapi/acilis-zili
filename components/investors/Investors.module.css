@@ -89,7 +89,7 @@
 .heroStats .heroStatLead dd { font-size:clamp(34px, 4vw, 46px); letter-spacing:-.05em; }
 @media(min-width:1024px) {
   .heroCopy { grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); }
-  .heroCopy > :global(.page-eyebrow), .heroTitle, .heroDek { grid-column:1; }
+  .heroTitle, .heroDek { grid-column:1; }
   .heroStats { grid-column:2; grid-row:1 / span 3; align-self:end; justify-content:flex-end; margin-top:0; }
   .heroStats .heroStatLead { flex-basis:100%; align-items:flex-end; text-align:right; }
 }
@@ -434,7 +434,7 @@ a.balanceRow:active { scale:.99; }
   background:var(--brass-wash); color:var(--brass-ink);
 }
 .badge[data-tone="congress"] { background:var(--primary-wash); color:var(--primary-ink); }
-:global(.page-eyebrow) .badge { margin:0 0 0 10px; vertical-align:1px; }
+.detailFirm .badge { margin:0 0 0 10px; vertical-align:1px; }
 
 .cardFigure { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 12px; }
 .cardFigureLabel { flex-basis:100%; font-size:12px; color:var(--text-muted); }
@@ -498,7 +498,10 @@ a.balanceRow:active { scale:.99; }
   padding:30px 34px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface);
 }
 .detailCopy { min-width:0; }
-.detailName { margin:8px 0 10px; font-size:clamp(34px, 4.6vw, 56px); line-height:1.02; letter-spacing:-.055em; font-weight:650; color:var(--text-strong); }
+/* Ad kapağın ilk satırı, kurum altında (9 Ekim 2026 — üst künye kalktı). */
+.detailName { margin:0; font-size:clamp(34px, 4.6vw, 56px); line-height:1.02; letter-spacing:-.055em; font-weight:650; color:var(--text-strong); }
+/* Ölçü ve renk kapağın açıklama satırından (globals.css → `.page-heading-copy > p`). */
+.detailFirm { font-weight:600; }
 .detailDek { max-width:60ch; font-size:15px; line-height:1.65; color:var(--text-body); text-wrap:pretty; }
 .detailFigure { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 16px; margin-top:18px; }
 .detailFigureLabel { flex-basis:100%; font-size:12px; color:var(--text-muted); }

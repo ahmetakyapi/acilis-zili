@@ -77,7 +77,7 @@ export default async function WatchedEarningsPage(
     return (
       <MotionExperience className={styles.page}>
         <ScrollProgress />
-        <DirectoryHeader eyebrow={t.directory.earningsEyebrow} title={t.analysis.title} description={t.directory.analysisDescription} />
+        <DirectoryHeader title={t.analysis.title} description={t.directory.analysisDescription} />
         <EarningsTabs active="watchlist" t={t} className="-mt-1" />
         <Panel>
           <EmptyState
@@ -139,7 +139,6 @@ export default async function WatchedEarningsPage(
           görünümünden biri yarım duruyordu. Üç sayı da sayfada zaten
           hesaplı, yeni sorgu yok. */}
       <DirectoryHeader
-        eyebrow={t.directory.earningsEyebrow}
         title={t.analysis.title}
         description={t.directory.analysisDescription}
         /* Anahtar takvim sekmesiyle aynı yerde: başlığın sağ üstünde. */

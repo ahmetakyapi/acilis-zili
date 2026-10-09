@@ -223,7 +223,7 @@ export default async function MacroPage() {
             components/macro/MacroBoard.tsx başında). */}
         <div className={`${styles.hero} page-frame`}>
           <HeroAccent />
-          <PageHeader embedded eyebrow={x.eyebrow} title={x.title} subtitle={x.subtitle} />
+          <PageHeader embedded title={x.title} subtitle={x.subtitle} />
           <Suspense fallback={<SummarySkeleton />}>
             <MacroSummary
               empty={<EmptyState title={t.common.noData} hint={t.common.noDataHint} scene="chart" />}

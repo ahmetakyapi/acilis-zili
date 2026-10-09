@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { EmptyState, Kicker } from "@/components/ui/primitives";
+import { EmptyState } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 import type { BriefPeriod } from "@/lib/brief";
 import styles from "./BriefSwitch.module.css";
@@ -174,10 +174,12 @@ export function BriefSwitch({
        künye, sekmeler ve arşiv sağda yapışkan bir raydaydı; bülten
        kaydırıldıkça ray kayıyor ve metnin sağında hep bir sütunluk boşluk
        varmış gibi duruyordu. Gerekçe BriefSwitch.module.css'te. */
-    <section className={cn("rounded-xl border border-primary-faint bg-surface-solid p-5", styles.card)}>
+    <section aria-label={labels.titles[period]} className={cn("rounded-xl border border-primary-faint bg-surface-solid p-5", styles.card)}>
       <div className={styles.rail}>
         <div className={cn("flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1", styles.railKicker)}>
-          <Kicker tone="primary">{labels.titles[period]}</Kicker>
+          {/* "Günün Özeti" / "Haftanın Özeti" künyesi burada duruyordu; bölüm
+              künyeleri 9 Ekim 2026'da kalktı (`PageHeader` yorumu). Dönem
+              sekmede, bölümün adı `aria-label`da. */}
           {brief && (
             <span className="numeral text-tiny text-muted">{brief.stamp}</span>
           )}

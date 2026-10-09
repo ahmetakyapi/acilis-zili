@@ -123,13 +123,15 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
           sağında tek bir kart: ilk yazı, kısa açıklaması ve müfredatın
           ölçüsü (23 Eylül). */}
       <SectionMasthead
-        eyebrow={t.guide.eyebrow}
         title={t.guide.title}
         description={t.guide.subtitle}
         aside={
           all[0] ? (
             <Link href={`/rehber/${all[0].slug}`} className={guideStyles.startCard}>
-              <span className={guideStyles.startKicker}>{t.guide.startFirst}</span>
+              {/* "BAŞTAN BAŞLA" BAŞLIĞIN ÜSTÜNDE DEĞİL, BAĞLANTININ YANINDA
+                  (9 Ekim 2026). Başlıkların üstündeki küçük künyeler sitenin
+                  her yerinden kalktı; bu satır künye değil kartın eylemi,
+                  o yüzden silinmedi, okun yanına indi. */}
               <span className={guideStyles.startTitle}>{all[0].title}</span>
               <span className={guideStyles.startDek}>{all[0].dek}</span>
               <span className={guideStyles.startMeta}>
@@ -137,7 +139,10 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
                   {all.length} {plural(all.length, t.guide.articleOne, t.guide.articleMany)} · ~{minutesOf(all)}{" "}
                   {t.guide.readMinutes}
                 </span>
-                <ArrowRight weight="bold" size={14} aria-hidden />
+                <span className={guideStyles.startAction}>
+                  {t.guide.startFirst}
+                  <ArrowRight weight="bold" size={14} aria-hidden />
+                </span>
               </span>
             </Link>
           ) : undefined

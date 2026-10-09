@@ -11,12 +11,12 @@ import styles from "./EditorialExperience.module.css";
  * ilk ekrana bir şerit kadar daha içerik giriyor. Dar ekranda ızgara tek
  * kolona iner ve denetim yine başlığın altına geçer.
  */
-export function SectionMasthead({ eyebrow, title, description, aside, embedded = false }: {
-  eyebrow: string; title: string; description: string; aside?: ReactNode; embedded?: boolean;
+export function SectionMasthead({ title, description, aside, embedded = false }: {
+  title: string; description: string; aside?: ReactNode; embedded?: boolean;
 }) {
   return <header className={`${styles.masthead} page-masthead`} data-embedded={embedded} data-has-aside={!!aside}>
     {!embedded && <HeroAccent />}
-    <div className="page-heading-copy"><p className={`${styles.eyebrow} page-eyebrow`}>{eyebrow}</p><h1>{title}</h1></div>
+    <div className="page-heading-copy"><h1>{title}</h1></div>
     <p className={styles.mastheadDescription}>{description}</p>
     {aside && <div data-masthead-aside className={styles.mastheadAside}>{aside}</div>}
   </header>;

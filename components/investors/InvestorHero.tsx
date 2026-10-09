@@ -40,7 +40,11 @@ export function InvestorHero({
     <header className={cn(styles.detailHero, "page-frame")}>
       <Portrait investor={investor} size="hero" priority className={styles.detailPortrait} />
       <div className={cn(styles.detailCopy, "page-heading-copy")}>
-        <p className="page-eyebrow">
+        {/* KURUM ADIN ALTINDA (9 Ekim 2026). Üst künyeydi; kapak künyeleri
+            kalktı ama kurum ve "Fon Kapandı" rozeti başka yerde yazmıyor,
+            o yüzden silinmedi, adın altına indi. */}
+        <h1 className={styles.detailName}>{investor.name}</h1>
+        <p className={styles.detailFirm}>
           {investorFirm(investor, locale)}
           {(closed || investor.kind === "congress") && (
             <span className={styles.badge} data-tone={closed ? "closed" : "congress"}>
@@ -48,7 +52,6 @@ export function InvestorHero({
             </span>
           )}
         </p>
-        <h1 className={styles.detailName}>{investor.name}</h1>
         <p className={styles.detailDek}>{locale === "en" ? investor.tagline.en : investor.tagline.tr}</p>
         {share && <div className={styles.detailShare}>{share}</div>}
         <div className={styles.detailFigure}>

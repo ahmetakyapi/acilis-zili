@@ -111,7 +111,6 @@ export default async function ScreenReportPage(props: PageProps<"/hisse-secimi/[
     <MotionExperience className={directory.page}>
       <ScrollProgress />
       <DirectoryHeader
-        eyebrow={S.title}
         title={S.reportTitle.replace("{symbol}", symbol)}
         description={S.reportSubtitle.replace("{name}", data.name)}
         share={

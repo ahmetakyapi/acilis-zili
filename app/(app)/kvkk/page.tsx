@@ -38,9 +38,6 @@ export default async function PrivacyPage() {
     <ScrollProgress />
     <article className={`${polish.legal} mx-auto flex w-full flex-col gap-7`}>
       <header className="flex flex-col gap-3">
-        <p className="plate text-nano text-primary">
-          {t.legal.eyebrow}
-        </p>
         <h1 className="display-ink w-fit text-subdisplay font-bold leading-[1.12] tracking-[-0.035em] sm:text-display">
           {t.legal.privacyTitle}
         </h1>
@@ -57,9 +54,6 @@ export default async function PrivacyPage() {
 
       <section className="flex flex-col gap-7">
         <header className="flex flex-col gap-3">
-          <p className="plate text-nano text-primary">
-            {t.legal.disclaimerEyebrow}
-          </p>
           <h2 className="display-ink w-fit text-heading font-bold leading-[1.14] tracking-[-0.035em] sm:text-subdisplay">
             {t.legal.disclaimerTitle}
           </h2>

@@ -79,7 +79,6 @@ export default async function InvestorsPage() {
 
       <header className={cn(styles.hero, "page-frame")}>
         <div className={cn(styles.heroCopy, "page-heading-copy")}>
-          <p className="page-eyebrow">{ti.eyebrow}</p>
           <h1 className={styles.heroTitle}>{ti.title}</h1>
           <p className={styles.heroDek}>{ti.subtitle}</p>
           <PageShare path="/yatirimcilar" title={ti.title} locale={locale} t={t} className={styles.heroShare} />

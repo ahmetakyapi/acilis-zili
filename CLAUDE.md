@@ -125,8 +125,13 @@ Ekranlar tek tek tasarlandı ve her biri kendi çözümünü buldu; sonuç, ayn�
 ürünün içinde birbirine benzemeyen sayfalardı. Kural artık tek: **bir ekranı
 tanımak için okumak gerekmiyor, sırası hep aynı.**
 
-1. **Başlık** — `PageHeader`: üst künye, ad, tek cümlelik açıklama, sağda o
-   ekranın tek denetimi (varsa).
+1. **Başlık** — `PageHeader`: ad, tek cümlelik açıklama, sağda o ekranın
+   tek denetimi (varsa). **Üst künye YOK** (9 Ekim 2026): başlığın ve bölüm
+   başlıklarının üstündeki küçük satırlar ("ABD Piyasası", "Kavramlar",
+   `Kicker` "Günün Özeti") sahibinin isteğiyle kaldırıldı — "hem okunmuyor
+   hem kötü görünüyor"; ekranın adını tekrar ediyorlardı. Yeni bir başlığın
+   üstüne künye konmaz; başlığa ait gerçek bir bilgi (tarih, kurum,
+   kategori) başlığın ALTINA iner. Gerekçe `PageHeader` yorumunda.
 2. **Künye/seçim şeridi** — ekranın neyi anlattığı: şirket kimliği, seçili
    semboller, kapak.
 3. **Ana görsel** — grafik ya da harita. Tek tane; ikincisi varsa ölçü
