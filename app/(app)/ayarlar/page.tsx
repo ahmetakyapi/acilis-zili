@@ -15,6 +15,8 @@ import { ChangePassword } from "@/components/auth/ChangePassword";
 import { AvatarPicker } from "@/components/auth/AvatarPicker";
 import { DataExportLinks } from "@/components/auth/DataExportLinks";
 import { getUserAvatar } from "@/lib/avatar-data";
+import { PushSettings } from "@/components/notifications/PushSettings";
+import { getUserSubscriptions, pushPublicKey } from "@/lib/push";
 import { PreferenceSettings } from "@/components/layout/preference-controls";
 import { Panel, PanelHeader, PageHeader } from "@/components/ui/primitives";
 import { getI18n, getTheme } from "@/lib/i18n";
@@ -39,10 +41,11 @@ export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user) redirect("/giris?devam=/ayarlar");
 
-  const [{ locale, t }, theme, avatar] = await Promise.all([
+  const [{ locale, t }, theme, avatar, push] = await Promise.all([
     getI18n(),
     getTheme(),
     session.user.id ? getUserAvatar(session.user.id) : Promise.resolve(null),
+    session.user.id ? getUserSubscriptions(session.user.id) : Promise.resolve({ available: false, subscriptions: [] }),
   ]);
   const username = session.user.name ?? "";
   const initials = username.slice(0, 2).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US");
@@ -130,6 +133,19 @@ export default async function SettingsPage() {
           />
         </div>
       </Panel>
+
+      {/* BİLDİRİMLER (9 Ekim) — fiyat alarmının telefona ulaşan yolu.
+          Tablo yoksa (migration 0028 uygulanmamış) panel hiç basılmıyor;
+          anahtar yoksa basılıyor ama "bu sunucuda kapalı" diyor. Çapa
+          `#bildirimler`: alarm sayfasındaki ipucu buraya bağlanıyor. */}
+      {push.available && (
+        <Panel id="bildirimler" className="scroll-mt-28">
+          <PanelHeader title={t.notifications.title} />
+          <div className="px-4 py-4 sm:px-5">
+            <PushSettings publicKey={pushPublicKey()} devices={push.subscriptions.length} labels={t.notifications} />
+          </div>
+        </Panel>
+      )}
 
       {/* Yönetim paneli — yalnızca yetkili hesapta. Menüde de var ama oraya
           ulaşmak için başlıktaki avatarı açmak gerekiyor; ayarlar sayfası

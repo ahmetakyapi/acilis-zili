@@ -3789,6 +3789,34 @@ const tr = {
     signedOut: "Oturum bulunamadı. Tekrar giriş yap.",
     failed: "Şifre şu an değiştirilemedi; biraz sonra tekrar dene.",
   },
+  /* BİLDİRİMLER (9 Ekim) — gerekçe lib/push.ts; ekran
+     components/notifications/PushSettings.tsx. */
+  notifications: {
+    title: "Bildirimler",
+    hint: "Fiyat alarmın tetiklendiğinde bu cihaza bildirim gelir; site kapalıyken de. İzin cihaz başına verilir: telefonda ve bilgisayarda ayrı ayrı aç.",
+    enable: "Bu Cihazda Aç",
+    enabling: "Açılıyor…",
+    disable: "Bu Cihazda Kapat",
+    test: "Deneme Bildirimi Gönder",
+    testSent: "Deneme bildirimi gönderildi.",
+    testFailed: "Bildirim gönderilemedi; biraz sonra tekrar dene.",
+    on: "Bu Cihazda Açık",
+    off: "Bu Cihazda Kapalı",
+    devices: "{n} Cihaz",
+    denied: "Tarayıcı bu site için bildirim iznini engellemiş. Adres çubuğundaki site ayarlarından izni açıp sayfayı yenile.",
+    unsupported: "Bu tarayıcı web bildirimlerini desteklemiyor. iPhone ve iPad'de önce Paylaş → Ana Ekrana Ekle ile siteyi uygulama olarak ekle, sonra oradan aç.",
+    unavailable: "Bildirimler bu sunucuda henüz açılmadı.",
+    failed: "Bildirim açılamadı; biraz sonra tekrar dene.",
+    testTitle: "Açılış Zili",
+    testBody: "Bildirimler bu cihazda çalışıyor.",
+    alertTitle: "{symbol} Alarmı",
+    alertAbove: "{symbol} {target} üstüne çıktı · Şimdi {price}",
+    alertBelow: "{symbol} {target} altına indi · Şimdi {price}",
+    alarmNote: "Seans boyunca alarmlar beş dakikada bir sunucuda da kontrol edilir; bildirimleri açtığın cihazlara haber gelir. Tetiklenme saati fiyatın hedefi geçtiği an değil, bunun görüldüğü kontroldür.",
+    alarmHint: "Alarm tetiklenince bildirim almak için",
+    alarmHintLink: "Bildirimleri Aç",
+  },
+
   /* PORTFÖY SATIŞLARI — gerekçe lib/schema.ts → portfolioSales. */
   portfolioSales: {
     sell: "Sat",

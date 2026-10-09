@@ -212,6 +212,8 @@ export const config = {
      `feed.xml` LİSTEDE YOK, bilerek: o gerçekten `LOCALE_HEADER` okuyor
      (route.ts:62) ve `/en/feed.xml` İngilizce yayın vermeye devam etmeli. */
   matcher: [
-    "/((?!api/|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|_next/static|_next/image|favicon.ico|icon.svg|apple-icon|logos/|.*\\.(?:png|jpg|jpeg|webp|svg|ico)$).*)",
+    /* `sw.js` (9 Ekim): bildirim service worker'ı kökten, dil önekisiz
+       sunulmalı — kayıt kapsamı dosyanın yolundan geliyor. */
+    "/((?!api/|robots\\.txt|sitemap\\.xml|sw\\.js|manifest\\.webmanifest|_next/static|_next/image|favicon.ico|icon.svg|apple-icon|logos/|.*\\.(?:png|jpg|jpeg|webp|svg|ico)$).*)",
   ],
 };

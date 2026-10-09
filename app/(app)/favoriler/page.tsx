@@ -12,6 +12,8 @@ import { DataStamp, PageHeader, Panel, PanelHeader } from "@/components/ui/primi
 import { AlertRow } from "@/components/alerts/PriceAlertButton";
 import alertStyles from "@/components/alerts/PriceAlerts.module.css";
 import { getUserAlerts, settleAlerts } from "@/lib/price-alerts";
+import { getUserSubscriptions, pushPublicKey } from "@/lib/push";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { getStatus, getSymbolNames, getUserWatchlists } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { getQuotes } from "@/lib/providers";
@@ -36,9 +38,10 @@ export default async function WatchlistPage() {
   if (!session?.user?.id) redirect("/giris?devam=/favoriler");
 
   const { locale, t } = await getI18n();
-  const [lists, alertData] = await Promise.all([
+  const [lists, alertData, push] = await Promise.all([
     getUserWatchlists(session.user.id),
     getUserAlerts(session.user.id),
+    getUserSubscriptions(session.user.id),
   ]);
 
   const listSymbols = [
@@ -183,7 +186,23 @@ export default async function WatchlistPage() {
                 <strong className="text-strong">{t.priceAlerts.emptyTitle}.</strong> {t.priceAlerts.empty}
               </p>
             )}
-            <p className={alertStyles.note}>{t.priceAlerts.note}</p>
+            {/* Not, sunucu taramasının (app/api/cron/alarmlar) varlığına göre:
+                bildirim tablosu yoksa o sürüm henüz inmemiş demek ve alarm
+                yalnızca sayfa açılınca kontrol ediliyor. Bildirimi açık
+                cihazı olmayan okuyucuya ayarlara giden tek satırlık yol. */}
+            <p className={alertStyles.note}>
+              {push.available ? t.notifications.alarmNote : t.priceAlerts.note}
+              {push.available && push.subscriptions.length === 0 && pushPublicKey() && (
+                <>
+                  {" "}
+                  {t.notifications.alarmHint}{" "}
+                  <Link href="/ayarlar#bildirimler" className="font-semibold text-primary hover:text-primary-hover">
+                    {t.notifications.alarmHintLink}
+                  </Link>
+                  .
+                </>
+              )}
+            </p>
           </div>
         </Panel>
       )}

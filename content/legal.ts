@@ -77,6 +77,7 @@ Hukuki sebep: meşru menfaat (m. 5/2-f) — ürünün hangi bölümünün kullan
 | Portföy pozisyonların (sembol, adet, alış fiyatı, alış tarihi, not) | Dolar ve lira kâr/zararını hesaplamak | Sözleşmenin ifası (m. 5/2-c) |
 | Portföy satışların (sembol, adet, satış fiyatı ve günü, satılan partinin alış fiyatı ve günü) | Gerçekleşen dolar ve lira kâr/zararını hesaplamak | Sözleşmenin ifası (m. 5/2-c) |
 | Fiyat alarmların (sembol, hedef fiyat, yön, kurulduğu ve tetiklendiği an) | Hedef fiyata ulaşıldığında sana göstermek | Sözleşmenin ifası (m. 5/2-c) |
+| Bildirim aboneliğin (tarayıcının verdiği bildirim adresi ve şifreleme anahtarları, cihaz adı, dil) — yalnızca Ayarlar'da bildirimleri açarsan | Alarmın tetiklendiğini cihazına bildirmek | Açık rıza (m. 5/1) — tarayıcının izin penceresi ve "Bu Cihazda Aç" düğmesi |
 | Tema ve dil tercihi | Arayüzü hatırlamak | Meşru menfaat (m. 5/2-f) |
 | Seçtiğin profil ikonu | Hesabını arayüzde göstermek | Meşru menfaat (m. 5/2-f) |
 | Son giriş zamanı | Hesabın hâlâ kullanılıp kullanılmadığını görmek | Meşru menfaat (m. 5/2-f) |
@@ -126,14 +127,15 @@ Sitede yalnızca üç çerez vardır ve üçü de işlevseldir:
 | Alpaca, Finnhub, FRED, TCMB | Fiyat, şirket, makro ve kur verisi | **Hiçbir şey** — bu istekleri sunucu kendi adına yapar |
 | DeepL | Haber başlıklarının çevirisi | **Hiçbir şey** — yalnızca haber metni gider |
 | Anthropic | Bülten ve yazı metinlerinin üretimi | **Hiçbir şey** — yalnızca piyasa verisi gider |
+| Tarayıcının bildirim servisi (Chrome'da Google, Firefox'ta Mozilla, Safari'de Apple) | Bildirimleri açtıysan alarm bildirimini cihazına taşımak | Şifreli bildirim (hisse, hedef ve fiyat); servis içeriği okuyamaz. Hangi servisin kullanılacağına tarayıcın karar verir |
 
-Son üç satır önemli: veri sağlayıcılarına giden isteklerde senin kimliğin yoktur. Bir hisseye baktığında sağlayıcı bunu "Açılış Zili'nin isteği" olarak görür, "şu kullanıcının isteği" olarak değil.
+Veri sağlayıcılarıyla ilgili üç satır önemli: veri sağlayıcılarına giden isteklerde senin kimliğin yoktur. Bir hisseye baktığında sağlayıcı bunu "Açılış Zili'nin isteği" olarak görür, "şu kullanıcının isteği" olarak değil.
 
 Barındırma sağlayıcısının teknik kayıtlarında (log) IP adresi ve tarayıcı bilgisi kısa süre tutulabilir; bu, internetteki her sitede olan ve güvenlik için gereken bir işlemdir.
 
 ## Saklama Süresi
 
-Hesap verilerin, hesabın açık kaldığı sürece saklanır. Hesabını sildiğinde kullanıcı kaydın ve ona bağlı bütün takip listeleri, portföy pozisyonları ve satışları ve fiyat alarmları veritabanından **kalıcı olarak** silinir; yedeklerdeki kopyalar da yedek döngüsü tamamlandığında (en geç 30 gün) düşer.
+Hesap verilerin, hesabın açık kaldığı sürece saklanır. Hesabını sildiğinde kullanıcı kaydın ve ona bağlı bütün takip listeleri, portföy pozisyonları ve satışları, fiyat alarmları ve bildirim abonelikleri veritabanından **kalıcı olarak** silinir; yedeklerdeki kopyalar da yedek döngüsü tamamlandığında (en geç 30 gün) düşer.
 
 Piyasa verileri, haberler ve yazılar kişisel veri değildir; onlar sende bir hesap olsun olmasın tutulur.
 
@@ -147,7 +149,7 @@ Başvurunu [GitHub deposu üzerinden](https://github.com/ahmetakyapi/acilis-zili
 
 Hesap silme talebi için beklemene gerek yok: Ayarlar ekranından hesabını kendin silebilirsin, işlem anında uygulanır.
 
-Verilerinin bir kopyası için de başvuru gerekmez: Ayarlar → Verilerin → **Verilerimi İndir** hesabının tuttuğu her şeyi (hesap bilgilerin, takip listelerin, semboller ve notların, portföyün ve satışların, fiyat alarmların, profil ikonun) JSON ya da CSV dosyası olarak anında indirir.
+Verilerinin bir kopyası için de başvuru gerekmez: Ayarlar → Verilerin → **Verilerimi İndir** hesabının tuttuğu her şeyi (hesap bilgilerin, takip listelerin, semboller ve notların, portföyün ve satışların, fiyat alarmların, bildirim açtığın cihazlar, profil ikonun) JSON ya da CSV dosyası olarak anında indirir.
 
 ## Güvenlik
 
@@ -276,6 +278,7 @@ Legal basis: legitimate interest (Art. 5/2-f) — seeing which part of the produ
 | Your portfolio positions (symbol, quantity, buy price, buy date, note) | To compute dollar and lira profit and loss | Performance of a contract (Art. 5/2-c) |
 | Your portfolio sales (symbol, quantity, sale price and date, the sold lot's buy price and date) | To compute realized dollar and lira gain/loss | Performance of a contract (Art. 5/2-c) |
 | Your price alerts (symbol, target price, direction, when set and when triggered) | To show you when a target price is reached | Performance of a contract (Art. 5/2-c) |
+| Your notification subscription (the push address and encryption keys your browser issues, device name, language) — only if you turn notifications on in Settings | To tell your device an alert has fired | Explicit consent (Art. 5/1) — the browser's permission prompt and the "Turn On for This Device" button |
 | Theme and language preference | To remember the interface | Legitimate interest (Art. 5/2-f) |
 | The profile icon you picked | To show your account in the interface | Legitimate interest (Art. 5/2-f) |
 | Last sign-in time | To see whether the account is still in use | Legitimate interest (Art. 5/2-f) |
@@ -325,14 +328,15 @@ The product runs on the following infrastructure and data providers. Some of the
 | Alpaca, Finnhub, FRED, CBRT | Price, company, macro and exchange rate data | **Nothing** — the server makes these requests on its own behalf |
 | DeepL | Translation of news headlines | **Nothing** — only the news text is sent |
 | Anthropic | Generation of brief and article text | **Nothing** — only market data is sent |
+| Your browser's push service (Google for Chrome, Mozilla for Firefox, Apple for Safari) | Carrying an alert notification to your device, if you turned notifications on | An encrypted notification (symbol, target and price) the service cannot read. Your browser decides which service is used |
 
-The last three rows matter: requests to data providers carry no identity of yours. When you look at a stock, the provider sees it as "a request from Opening Bell", not "a request from this user".
+The three data-provider rows matter: requests to data providers carry no identity of yours. When you look at a stock, the provider sees it as "a request from Opening Bell", not "a request from this user".
 
 The hosting provider's technical logs may hold an IP address and browser information for a short period; this happens on every site on the internet and is required for security.
 
 ## Retention
 
-Your account data is kept for as long as the account exists. When you delete your account, your user record and every watchlist, portfolio position and sale and price alert attached to it are **permanently** removed from the database; copies in backups fall away when the backup cycle completes (at most 30 days).
+Your account data is kept for as long as the account exists. When you delete your account, your user record and every watchlist, portfolio position and sale, price alert and notification subscription attached to it are **permanently** removed from the database; copies in backups fall away when the backup cycle completes (at most 30 days).
 
 Market data, news and articles are not personal data; they are kept whether or not you have an account.
 
@@ -346,7 +350,7 @@ You can send your request [through the GitHub repository](https://github.com/ahm
 
 You do not have to wait for an account deletion request: you can delete your account yourself from the Settings screen, and it takes effect immediately.
 
-You do not need a request for a copy of your data either: Settings → Your Data → **Download My Data** immediately downloads everything your account holds (your account details, your watchlists, their symbols and notes, your portfolio and sales, your price alerts, your profile icon) as a JSON or CSV file.
+You do not need a request for a copy of your data either: Settings → Your Data → **Download My Data** immediately downloads everything your account holds (your account details, your watchlists, their symbols and notes, your portfolio and sales, your price alerts, the devices you turned notifications on for, your profile icon) as a JSON or CSV file.
 
 ## Security
 

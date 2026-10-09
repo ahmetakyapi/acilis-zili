@@ -561,8 +561,8 @@ Başlıkta Piyasalar'dan hemen sonra; mobilde Menü'den.
 
 ### Hesap
 
-`/giris` · `/kayit` · `/favoriler` (fiyatlar USD ya da TL; Fiyat Alarmları paneli — hedef hisse sayfasındaki zil düğmesiyle kurulur, siteyi açtığında güncel fiyatla kontrol edilir, ana sayfada "Hedefe Ulaştı" şeridi; `lib/price-alerts.ts`) · `/ayarlar` (profil
-ikonu ve rengi, tema, dil, Verilerimi İndir, hesap silme) · `/menu` · `/kvkk` ·
+`/giris` · `/kayit` · `/favoriler` (fiyatlar USD ya da TL; Fiyat Alarmları paneli — hedef hisse sayfasındaki zil düğmesiyle kurulur, siteyi açtığında ve seans boyunca beş dakikada bir sunucuda güncel fiyatla kontrol edilir, ana sayfada "Hedefe Ulaştı" şeridi; `lib/price-alerts.ts`, `lib/alert-sweep.ts`) · `/ayarlar` (profil
+ikonu ve rengi, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri — `lib/push.ts`, `public/sw.js` —, Verilerimi İndir, hesap silme) · `/menu` · `/kvkk` ·
 `/hakkinda` (Hakkında ve Metodoloji: kim yapıyor, sayılar nereden geliyor,
 yazıları kim yazıyor; gömme kodları da burada)
 
@@ -602,6 +602,7 @@ okuma uçları herkese açık ve IP başına oran sınırlı.
 | `/api/olcum` | Çerezsiz sayfa ölçümü |
 | `/api/brief` · `/api/mercek` · `/api/analiz` · `/api/teknik` (+ `/context`) | İçerik rutinlerinin yazma ve geri okuma uçları |
 | `/api/cron/daily` · `/api/auth/[...nextauth]` · `/api/debug/providers` | Günlük cron, oturum, sağlayıcı anahtar kontrolü (yalnızca geliştirmede; üretimde 404) |
+| `/api/cron/alarmlar` | Fiyat alarmı taraması: 5 dakikada bir, piyasa kapalıyken ya da paket bayatken hiçbir şey yazmaz; tetiklenen alarmı abone cihazlara Web Push ile bildirir (`CRON_SECRET`) |
 
 ### Yönetim
 
@@ -646,6 +647,8 @@ npm run dev
 | `FINNHUB_API_KEY` | profil/haber için | [finnhub.io](https://finnhub.io) |
 | `FRED_API_KEY` | makro için | [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html) |
 | `CRON_SECRET` | üretimde | `openssl rand -hex 32`; cron ucunun `Bearer` anahtarı |
+| `VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` | bildirim için | `npx web-push generate-vapid-keys`; ücretsiz, üçüncü taraf hesap yok. Yoksa Ayarlar'daki bildirim paneli "bu sunucuda kapalı" der. Anahtar değişirse eski abonelikler geçersizleşir |
+| `VAPID_SUBJECT` | isteğe bağlı | `mailto:` adresi; bildirim servisinin sorun olduğunda yazacağı yer. Yoksa site adresi |
 | `BRIEF_SECRET` | içerik için | `openssl rand -hex 32`; rutin uçlarının kapısı |
 | `NEXT_PUBLIC_SITE_URL` | üretimde | yayın adresi (OG görselleri, sitemap) |
 | `AUTH_TRUST_HOST` | üretimde | ters vekil arkasında `true` |
@@ -728,6 +731,10 @@ Tam yol `docs/deploy-vps.md`'de, sunucu dosyaları `deploy/` altında.
    geçersizleştirilir, son gözlem tarihleri cron raporuna yazılır. Sayfa
    isteklerinde bu günlük serilerin önbellek süresi 1 saat; aylık makro
    serilerinki 6 saattir. Bu süreler kaynak yayın tarihini değiştirmez.
+4. Fiyat alarmı taraması (`/api/cron/alarmlar`) beş dakikada bir aynı
+   crontab'dan. Satırların listesi `deploy/cron-install.sh`te; `update.sh`
+   her sürümde yeni sürümün kopyasıyla onu çağırıyor ve eksik satırı
+   ekliyor.
 
 Migration'lar deploy'da **uygulanmaz**; şema değişikliği ayrıca
 `npm run db:migrate` ile üretim veritabanına uygulanır.
