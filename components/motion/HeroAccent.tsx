@@ -28,8 +28,9 @@ export function HeroAccent() {
     <div className={styles.heroAccent} aria-hidden="true">
       <svg viewBox="0 0 200 140" fill="none" preserveAspectRatio="xMaxYMin meet">
         <g className={styles.accentContours}>
-          <circle cx="196" cy="-8" r="94" />
-          <circle cx="196" cy="-8" r="136" />
+          {/* `pathLength`: yaylar yüklemede uçtan uca çiziliyor (CSS). */}
+          <circle cx="196" cy="-8" r="94" pathLength={1} />
+          <circle cx="196" cy="-8" r="136" pathLength={1} />
         </g>
       </svg>
     </div>

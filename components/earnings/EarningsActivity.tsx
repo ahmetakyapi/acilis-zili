@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { addEtDays } from "@/lib/market-hours";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -73,7 +74,7 @@ export function EarningsActivity({ rows, from, to, locale, t }: {
   return <figure className={styles.earningsActivity}>
     <figcaption><span>{t.directory.earningsActivity}</span><strong>{countLabel(rows.length)}</strong></figcaption>
     <ol className={styles.activityBars} data-weekly={weekly || undefined}>
-      {columns.map((column) => {
+      {columns.map((column, index) => {
         const peak = weekly
           ? busiest.date >= column.from && busiest.date <= column.to
           : column.from === busiest.date;
@@ -92,7 +93,7 @@ export function EarningsActivity({ rows, from, to, locale, t }: {
           </span>
           <span className="sr-only">{countLabel(column.count)}</span>
         </>;
-        return <li key={column.key} data-peak={peak || undefined} data-empty={column.count === 0 || undefined}>
+        return <li key={column.key} style={{ "--i": index } as CSSProperties} data-peak={peak || undefined} data-empty={column.count === 0 || undefined}>
           {column.count > 0
             ? <Link href={`#earnings-day-${weekly ? firstReporting(column, counts) : column.from}`}>{body}</Link>
             : <span>{body}</span>}

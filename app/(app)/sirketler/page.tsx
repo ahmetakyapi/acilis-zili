@@ -8,6 +8,7 @@ import companyStyles from "@/components/companies/CompanyDirectory.module.css";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import { ScaleBar } from "@/components/markets/CompareScale";
+import { RollingFigure } from "@/components/ui/RollingFigure";
 import styles from "@/components/motion/DirectoryExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -359,7 +360,9 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
             kaplıyordu. Aynı satırda okunması da doğru: solda dizinin NE
             KADAR olduğu, sağda o dizinin içinde tek bir şirketi bulma yolu. */}
         <div className={companyStyles.coverRow}>
-          <dl className={companyStyles.coverage}><div><dt>{t.directory.companyCount}</dt><dd>{companies.length.toLocaleString(locale)}</dd></div><div><dt>{t.directory.sectorCount}</dt><dd>{shownGroups.length}</dd></div></dl>
+          {/* Kapsam sayıları yüklemede sayaç gibi dönüyor (JS'siz, son hâl
+              HTML'de); sektör sayısı şirket sayısının ardından. */}
+          <dl className={companyStyles.coverage}><div><dt>{t.directory.companyCount}</dt><dd><RollingFigure value={companies.length.toLocaleString(locale)} /></dd></div><div><dt>{t.directory.sectorCount}</dt><dd><RollingFigure value={String(shownGroups.length)} delayMs={180} /></dd></div></dl>
           <CompanySearch action={withLocale("/sirketler", locale)} query={query} sector={activeGroup?.key}
             sort={sort} direction={dir} labels={t.companies} />
         </div>

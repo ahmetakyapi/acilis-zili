@@ -428,6 +428,10 @@ const tr = {
        üye hisselerin eşit ağırlıklı medyanı. Etiketler ve künyeler bunu
        adıyla söylüyor. */
     sectorsWeight: "Piyasa Değeri Ağırlıklı",
+    /* Şeridin genişlik künyesi (9 Ekim): bu seansta yükselen ve düşen fon
+       sayısı, başlığın yanında bölünmüş bir çubukla. Künye, cümle değil. */
+    sectorsBreadth: "{up} Yükselen · {down} Düşen",
+    sectorsBreadthLabel: "On bir sektörün {up} tanesi yükseliyor, {down} tanesi düşüyor",
     themesHeading: "Temalar",
     themesMeta: "Üye Hisselerin Medyanı · Eşit Ağırlık",
     strongestTheme: "Günün En Güçlü Teması",

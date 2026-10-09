@@ -163,3 +163,14 @@
 .tablePanel table thead th {
  background:linear-gradient(var(--surface-sunken),var(--surface-sunken)),var(--panel-fixed);
 }
+
+/* ---- Haftanın yoğunluğu: yüklemede yükselen sütunlar (9 Ekim) ----
+   Grafik kapağın içinde, ilk ekranda; MotionExperience ilk ekrandaki öğeye
+   dokunmadığı için giriş CSS'te ve yüklemede bir kez. Sütunlar tabandan,
+   soldan sağa sırayla (`--i`); sayılar sütun oturunca beliriyor.
+   `backwards`: bitince dönüşüm kalmıyor, JS'siz de tam çizili. */
+.activityTrack i { transform-origin:center bottom; animation:activity-rise 820ms var(--ease-brand) backwards; animation-delay:calc(260ms + var(--i, 0) * 55ms); }
+.activityCount { animation:activity-count 420ms var(--ease-brand) backwards; animation-delay:calc(620ms + var(--i, 0) * 55ms); }
+@keyframes activity-rise { from { transform:scaleY(0); } }
+@keyframes activity-count { from { opacity:0; transform:translate3d(0,4px,0); } }
+@media(prefers-reduced-motion:reduce) { .activityTrack i, .activityCount { animation:none; } }

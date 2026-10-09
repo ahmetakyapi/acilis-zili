@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { LogoTile } from "@/components/ui/primitives";
@@ -31,7 +32,7 @@ export function CompanyLeaders({ leaders, labels, locale }: {
       <span>{labels.leadersByCap}</span>
     </div>
     <ol className={styles.choices} data-motion-stagger>
-      {visible.map((item, index) => <li key={item.symbol}>
+      {visible.map((item, index) => <li key={item.symbol} style={{ "--i": index } as CSSProperties}>
         <Link href={withLocale(`/hisse/${item.symbol}`, locale)} prefetch={false}
           className={styles.company} data-first={index === 0 || undefined} aria-label={`${item.name} (${item.symbol})${item.marketCap !== null ? ` · ${formatMoneyCompact(item.marketCap, locale)}` : ""}`}
           /* Şirket kartı (components/ui/CompanyCard); yerel `title=` ipucu

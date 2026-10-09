@@ -53,3 +53,18 @@
 .company:focus-visible { border-color:var(--primary); background:var(--primary-tint); }
 .company:focus-visible .symbol { color:var(--primary-ink); }
 .company:active { background:var(--primary-wash); border-color:var(--primary); }
+
+/* ---- Kapak girişi (9 Ekim) ----
+   Raf kapağın parçası ve ilk ekranda: MotionExperience ilk ekrandaki öğeye
+   bilinçli olarak dokunmuyor (yüklemede sönme olmasın), giriş bu yüzden
+   CSS'te ve yüklemede bir kez. Karolar sıraya göre (`--i`) aşağıdan bir
+   dalga hâlinde, pay çubuğu karo oturduktan sonra soldan açılıyor — çubuk
+   kendisi `data-motion-draw` taşıdığı için kırpma kabında (`.share`).
+   Hepsi `backwards`: bitince geride dönüşüm kalmıyor. */
+.choices > li { animation:leader-in 640ms var(--ease-brand) backwards; animation-delay:calc(160ms + var(--i, 0) * 45ms); }
+.share { animation:leader-share 900ms var(--ease-brand) backwards; animation-delay:calc(420ms + var(--i, 0) * 45ms); }
+@keyframes leader-in { from { opacity:0; transform:translate3d(0,16px,0) scale(.97); } }
+@keyframes leader-share { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0); } }
+/* Başlık 14 → 16: öteki panel başlıklarıyla aynı kademe (9 Ekim). */
+.heading h2 { font-size:var(--text-lead); letter-spacing:-.015em; }
+@media(prefers-reduced-motion:reduce) { .choices > li, .share { animation:none; } }

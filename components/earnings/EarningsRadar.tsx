@@ -1,6 +1,7 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowUpRight, CalendarBlank } from "@phosphor-icons/react/dist/ssr";
 import { LogoTile } from "@/components/ui/primitives";
+import { RollingFigure } from "@/components/ui/RollingFigure";
 import { SpotlightCard } from "@/components/motion/PremiumMotion";
 import { timingOf } from "./EarningsCalendar";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -33,13 +34,13 @@ export function EarningsRadar({ rows, meta, locale, t }: { rows: EarningsRow[]; 
           <div><strong>{lead.symbol}</strong><span>{company?.name ?? lead.symbol}</span></div>
         </div>
         <time className={styles.radarDate} dateTime={lead.reportDate} aria-label={formatEtDateLong(lead.reportDate, locale)}>
-          <span>{month}</span><strong>{Number(lead.reportDate.slice(-2))}</strong>
+          <span>{month}</span><strong><RollingFigure value={String(Number(lead.reportDate.slice(-2)))} delayMs={200} /></strong>
         </time>
       </div>
       <div className={styles.radarSession}><span>{weekday} <i aria-hidden>·</i> {timingOf(lead.hour, t).label}</span><ArrowUpRight size={16} aria-hidden /></div>
       {(lead.revenueEstimate != null || lead.epsEstimate != null) && <dl className={styles.radarEstimates}>
-        {lead.revenueEstimate != null && <div><dt>{t.earnings.revenueEstimate}</dt><dd>{formatMoneyCompact(lead.revenueEstimate, locale, company?.currency)}</dd></div>}
-        {lead.epsEstimate != null && <div><dt>{t.earnings.epsEstimate}</dt><dd>{formatPrice(lead.epsEstimate, locale, { currency: company?.currency || true })}</dd></div>}
+        {lead.revenueEstimate != null && <div><dt>{t.earnings.revenueEstimate}</dt><dd><RollingFigure value={formatMoneyCompact(lead.revenueEstimate, locale, company?.currency)} delayMs={320} /></dd></div>}
+        {lead.epsEstimate != null && <div><dt>{t.earnings.epsEstimate}</dt><dd><RollingFigure value={formatPrice(lead.epsEstimate, locale, { currency: company?.currency || true })} delayMs={420} /></dd></div>}
       </dl>}
     </Link>
     </SpotlightCard>
