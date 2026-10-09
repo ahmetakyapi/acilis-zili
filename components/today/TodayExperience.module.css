@@ -169,7 +169,9 @@
 .indexValue[data-flash] { margin-inline:-3px; padding-inline:3px; border-radius:4px; animation:index-flash 600ms var(--ease-brand); }
 .indexValue[data-flash="up"] { --flash:var(--up-wash); }
 .indexValue[data-flash="down"] { --flash:var(--down-wash); }
+.indexValue[data-flash-n="1"] { animation-name:index-flash-b; }
 @keyframes index-flash { from { background:var(--flash); } to { background:transparent; } }
+@keyframes index-flash-b { from { background:var(--flash); } to { background:transparent; } }
 /* Yüzdenin hangi seansı anlattığı ("Kapanış Sonrası", "Son Kapanış"):
    bir künye, sayının gölgesinde — 11 punto, yarım kalın. */
 /* KÜNYE HER KARTTA KENDİ SATIRINDA (26 Eylül). Satır sarılıyordu ve

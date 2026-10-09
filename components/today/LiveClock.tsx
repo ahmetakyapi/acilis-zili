@@ -3,6 +3,7 @@
 import { useDualClock } from "@/components/layout/useDualClock";
 import { formatInZone } from "@/lib/session-clock";
 import type { Locale } from "@/lib/i18n/config";
+import { TickingFigure } from "@/components/ui/TickingFigure";
 import styles from "./LiveClock.module.css";
 
 /** The reader's current wall clock leads (TR in Turkish, NY in English).
@@ -18,18 +19,26 @@ export function LiveClock({ locale, initialNowMs }: { locale: Locale; initialNow
     ? [{ time: ist, tag: "TR" }, { time: ny, tag: "NY" }]
     : [{ time: ny, tag: "NY" }, { time: ist, tag: "TR" }];
   const [hours, minutes] = first.time.split(":").map(Number);
+  /* KADRAN SÜPÜRÜYOR (9 Ekim): ibreler dakika değişiminde atlamıyor,
+     yeni yerine dönüyor (CSS geçişi). Açı günün başından birikiyor ki
+     59 → 00 ibreyi geriye çevirmesin; gece yarısı tek sıçrama — o an
+     geçiş kapalı (`data-wrap`), ibre 24 tur geriye dönmesin. */
+  const dayMinutes = hours * 60 + minutes;
 
   return (
     <div className={styles.clock}>
-      <svg className={styles.dial} viewBox="0 0 40 40" aria-hidden="true">
+      <svg className={styles.dial} viewBox="0 0 40 40" aria-hidden="true" data-wrap={dayMinutes === 0 || undefined}>
         <circle cx="20" cy="20" r="18" />
         <path className={styles.ticks} d="M20 4v3M36 20h-3M20 36v-3M4 20h3" />
-        <path className={styles.hour} d="M20 21V11" transform={`rotate(${(hours % 12) * 30 + minutes / 2} 20 20)`} />
-        <path className={styles.minute} d="M20 23V7" transform={`rotate(${minutes * 6} 20 20)`} />
+        <path className={styles.hour} d="M20 21V11" style={{ transform: `rotate(${dayMinutes / 2}deg)` }} />
+        <path className={styles.minute} d="M20 23V7" style={{ transform: `rotate(${dayMinutes * 6}deg)` }} />
         <circle className={styles.pivot} cx="20" cy="20" r="1.6" />
       </svg>
       <div className={styles.readings}>
-        <span className={styles.primary}><time>{first.time}</time><span>{first.tag}</span></span>
+        {/* Dakika değişince değişen rakam yukarı dönüyor (ui/TickingFigure)
+            — geri sayımın saniyeleriyle aynı dil. Yön hep "yukarı": saat
+            geri gitmez, 23:59 → 00:00 da ileri. */}
+        <span className={styles.primary}><time><TickingFigure value={first.time} direction="up" /></time><span>{first.tag}</span></span>
         <span className={styles.secondary}><time>{second.time}</time><span>{second.tag}</span></span>
       </div>
     </div>

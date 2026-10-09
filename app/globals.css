@@ -1149,6 +1149,20 @@
 .page-enter > * > :nth-child(3) { animation-delay: 90ms; }
 .page-enter > * > :nth-child(n + 4) { animation-delay: 135ms; }
 
+/* GERİ ÇEKİLME (9 Ekim) — gezinme sürerken ESKİ sayfa söner; işaret
+   RouteProgress'te. Yalnızca opaklık: `transform` ya da `filter` sayfanın
+   içindeki sabit katmanları (okuma çubuğu, bölüm gezgini) bu öğeye
+   bağlar ve onlar söndüğü an yerinden sıçrardı.
+   GECİKME 120 ms: ön yüklenmiş bir gezinme ~100 ms'de bitiyor ve o
+   aralıkta sönme başlarsa ekran bir kare kırpışırdı; hızlı gezinme hiç
+   sönmeden geçiyor, yavaşı yumuşakça geri çekiliyor. Taban 0,5: eski
+   sayfa okunur kalıyor (okuyucu fikrini değiştirip başka bir bağlantıya
+   basabilir), yalnızca "geride" duruyor. */
+.page-enter[data-leaving] {
+  opacity: 0.5;
+  transition: opacity 280ms var(--ease-brand) 120ms;
+}
+
 /* --------------------------------------------------------------------------
    Tema geçişi — yeni tema tıklanan maketten büyüyen bir dairede açılır.
 

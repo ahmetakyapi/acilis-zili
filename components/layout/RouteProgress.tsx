@@ -211,6 +211,27 @@ export function RouteProgress({ label, brand }: { label: string; brand: string }
     return () => root.removeAttribute("data-navigating");
   }, [running]);
 
+  /* ESKİ SAYFA GERİ ÇEKİLİYOR (9 Ekim). Yeni sayfa yükselerek geliyordu
+     (`.page-enter`) ama tıklama anında eskisi kıpırdamıyordu: geçişin
+     yalnızca ikinci yarısı vardı. Şimdi gezinme sürerken eski sayfa
+     sönüyor, yenisi onun yerinden yükseliyor.
+
+     İşaret ÖĞENİN KENDİSİNDE, kökte değil: `template.tsx` her gezinmede
+     YENİ bir `.page-enter` bağlıyor ve kökteki bir kural onu da sönük
+     doğururdu (girişinin 0,35'i ile çarpılıp ~0,2'ye inerdi). Yalnızca
+     o an ekranda olan öğe işaretleniyor; yenisi işaretsiz geliyor.
+     Sayfa içi sorgu (filtre, sıralama) gezinme değil: kendi bölgesinin
+     beklemesi var (`data-query-transition`), sayfanın tamamı sönmüyor.
+     Süre ve gecikme globals.css → "geri çekilme". */
+  useEffect(() => {
+    if (!running || localQuery) return;
+    const leaving = [...document.querySelectorAll<HTMLElement>(".page-enter")];
+    for (const el of leaving) el.dataset.leaving = "";
+    return () => {
+      for (const el of leaving) delete el.dataset.leaving;
+    };
+  }, [running]);
+
   useEffect(() => {
     if (run === 0) return;
     const slowTimer = window.setTimeout(() => setSlowRun(run), SLOW_AFTER);
