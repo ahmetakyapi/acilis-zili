@@ -19,11 +19,18 @@
 
 ---
 
-Ekonomik takvim, bilanço tarihleri, gecikmeli ama damgalı canlı fiyat,
-grafikler, makro göstergeler, haber akışı ve kişisel takip listeleri. Hepsi
-**Türkiye saatiyle** ve tek ekranda. Üstüne her gün yazılan bir bülten,
-olayların arkasındaki mekanizmayı anlatan uzun yazılar, bilanço analizleri ve
-günde üç kez yenilenen teknik analizler.
+Açılış Zili'nin tek derdi, ABD borsasını Türkiye'den **doğru takip
+edebilmek**. Doğru takip dört şey demek: **doğru saatte** (İstanbul saatiyle,
+yaz saati kaymalarıyla birlikte), **doğru günde** (ekrandaki her sayı hangi
+seansı anlattığını bilir), **doğru sırayla** (bir işlem gününün ritmi, bilanço
+ve veri takviminin akışı) ve **eksiksiz bağlamla** (fiyatın yanında takvim,
+bilanço, makro veri, haber ve kendi takip listen).
+
+Bunun için bir araya gelen parçalar: ekonomik takvim, bilanço tarihleri,
+gecikmeli ama damgalı fiyat, grafikler, makro göstergeler, haber akışı ve
+kişisel takip listeleri. Hepsi **Türkiye saatiyle** ve tek ekranda. Üstüne her
+gün yazılan bir bülten, olayların arkasındaki mekanizmayı anlatan uzun
+yazılar, bilanço analizleri ve günde üç kez yenilenen teknik analizler.
 
 İki dil (TR/EN), açık ve koyu tema, telefondan geniş ekrana tam uyum.
 Ücretsiz, reklamsız, açık kaynak.
@@ -44,7 +51,7 @@ günde üç kez yenilenen teknik analizler.
 
 - [Ne Yapar](#ne-yapar)
 - [Bir İşlem Günü: Siteyi Nasıl Kullanırsın](#bir-i̇şlem-günü-siteyi-nasıl-kullanırsın)
-- [İki Kurucu Karar](#i̇ki-kurucu-karar)
+- [Doğru Takip Ne Demek](#doğru-takip-ne-demek)
 - [Mimari](#mimari)
 - [Teknoloji](#teknoloji)
 - [Hareket ve Mürekkep](#hareket-ve-mürekkep)
@@ -117,11 +124,13 @@ Pazartesi sabahı 09:30'da bir de haftalık bülten yayımlanıyor.
 
 ---
 
-## İki Kurucu Karar
+## Doğru Takip Ne Demek
 
-Ürünün geri kalanı bu iki karardan türüyor.
+Ürünün geri kalanı bu dört karardan türüyor. Canlı fiyat bunların yalnızca
+bir parçası, hem de en küçüğü; mesele fiyatı görmek değil, piyasayı doğru
+zamanda, doğru günde ve eksiksiz izleyebilmek.
 
-### Saat Türkiye Saatiyle
+### Doğru Saat: Türkiye Saatiyle
 
 Bütün kaynaklar New York saatiyle yayın yapıyor. Bir bilançonun "after the
 close" açıklanacağını bilmek yetmiyor; okuyucunun bunu kafasında 23:00'a
@@ -130,10 +139,38 @@ değişiyor. Bu üründe **birincil saat İstanbul**, New York künyede durur;
 İngilizceye geçince sıra tersine döner. Hiçbir yere sabit saat yazılmaz. Tek
 kaynak `lib/session-clock.ts`; ET↔UTC dönüşümünün tamamı `lib/market-hours.ts`te.
 
-### Ekranda Uydurma Sayı Yok
+### Doğru Gün: Takvim Günü Değil, Seans Günü
 
-Ücretsiz sağlayıcılar dünyayı yarım gösteriyor ve bu proje eksik veriyi
-gizlemek yerine **söylemeyi** seçiyor. Veri yoksa kart boş durur. Her kartın
+Cumartesi açılan ekran cumayı anlatır; New York'ta çarşamba gecesi 02:00'de
+hâlâ salı seansı konuşulur; tatil olan pazartesi önceki cumayı taşır. Ekranın
+hangi işlem gününü anlattığı tek bir alandan okunur (`status.sessionDate`,
+`lib/market-hours.ts`) ve her yüzde, her grafik, her hacim o güne ait olduğunu
+göstermek zorundadır. Gösteremiyorsa dünün sayısı "seans içi" künyesiyle
+basılmaz; kart boş kalır ya da "güncel olmayabilir" der. Kodun tarafı
+aşağıda, Üç Katmanlı Veri'de.
+
+### Doğru Sıra: Bir İşlem Gününün Ritmi
+
+Takip bir anlık görüntü değil, gün boyu süren bir akış: sabah önceki günün
+bilanço analizleri, öğleden sonra bülten, 16:30'da zil ve canlı ekran,
+kapanıştan sonra bilançolar, gece Mercek. Site bu ritme göre kuruldu;
+yukarıdaki tablo bir işlem gününün tamamı. Bilanço takvimi `.ics` olarak
+telefona iniyor, fiyat alarmı Web Push ile geliyor: takip etmek için sitede
+oturmak gerekmiyor.
+
+### Eksiksiz Bağlam: Fiyat Tek Başına Durmaz
+
+Bir hissenin sayfasında fiyatın yanında bilanço tarihi ve beklentisi,
+analist dağılımı, haberler, içeriden işlemler ve o hisseyi hangi ünlü
+yatırımcının tuttuğu var. Takip listesi kurduğunda ana sayfa yalnızca senin
+şirketlerinin bilanço takvimini öne çıkarır. Türkiye'den yatırım yapan biri
+için TL maliyet, kur etkisi ve vergi de bağlamın parçası; portföy ve vergi
+hesaplayıcısı bu yüzden sitenin içinde.
+
+### Dürüst Ekran: Uydurma Sayı Yok
+
+Doğru takip güvenilir bir ekran ister. Ücretsiz sağlayıcılar dünyayı yarım
+gösteriyor ve bu proje eksik veriyi gizlemek yerine **söylemeyi** seçiyor. Veri yoksa kart boş durur. Her kartın
 altında `kaynak · saat` damgası vardır. Gecikmeli besleme gecikmeli olduğunu
 yazar. Sağlayıcı dakika vermiyorsa saat `~` ile yaklaşık yazılır ve hangi
 pencere olduğu adıyla söylenir. Bir metrik dürüstçe gösterilemiyorsa hiç
@@ -205,7 +242,8 @@ sağlayıcı → Neon'daki son bilinen değer.** Hiçbir aşamada uydurma değer
 döndürür; kart "veri alınamadı" der ve sayfanın geri kalanı çalışmaya devam
 eder.
 
-Bir yüzde hangi seansı anlattığını **kanıtlamak** zorunda. Kotasyon ancak
+"Doğru gün" kuralının kodu burada: bir yüzde hangi seansı anlattığını
+**kanıtlamak** zorunda. Kotasyon ancak
 işlem günü `status.sessionDate`e eşitse ve yeterince tazeyse "bugün" sayılır.
 Ekran katmanı bayat veriyi künyesiyle gösterebilir; **yazma katmanı
 gösteremez.** Bülten, Mercek ve teknik uçlar bayat kotasyonu hiç kullanmaz,
