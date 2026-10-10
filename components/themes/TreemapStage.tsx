@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 /**
  * Tema haritasının istemci katmanı — karolar sunucuda çiziliyor; burada
@@ -25,49 +25,71 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
  *    ortak kartın kuralı; gerekçesi o dosyada.
  */
 
-/** Haritanın bu kadarı görününce koreografi başlar. */
-const PLAY_THRESHOLD = 0.2;
-
+/** Görünürlük eşiği haritanın boyunun %20'si yerine sabit 24px pay alır.
+ * Klavye odağı, End ile atlanan bölüm ve çalışma anında değişen hareket
+ * tercihi karoları son hâline alır; tercih geri açılınca yeniden gizlenmez. */
 export function TreemapStage({ children, className }: { children: ReactNode; className: string }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [armed, setArmed] = useState(false);
-  const [play, setPlay] = useState(false);
 
   useEffect(() => {
     const stage = ref.current;
     if (!stage) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    /* İlk görünürlük kararını gözlemcinin İLK bildirimi veriyor, bir
-       `getBoundingClientRect` değil: hidrasyonun ortasında konum okumak
-       yerleşimi zorla hesaplatırdı. */
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let observer: IntersectionObserver | undefined;
+    let frame = 0;
     let first = true;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const inView = entries.some((entry) => entry.isIntersecting);
+    let started = false;
+
+    const stopWatching = () => {
+      observer?.disconnect();
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", passedBy);
+    };
+    const settle = () => {
+      started = true;
+      delete stage.dataset.armed;
+      delete stage.dataset.play;
+      stage.dataset.settled = "";
+      stopWatching();
+    };
+    // End tuşuyla geçilen harita geriye dönülünce yeniden gizlenmez.
+    function passedBy() {
+      if (frame || started) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        if (stage!.getBoundingClientRect().bottom < 0) settle();
+      });
+    }
+    const onPreference = () => { if (preference.matches) settle(); };
+    stage.addEventListener("focusin", settle);
+    preference.addEventListener("change", onPreference);
+
+    if (preference.matches || !("IntersectionObserver" in window)) settle();
+    else {
+      observer = new IntersectionObserver(([entry]) => {
+        if (started) return;
         if (first) {
           first = false;
-          if (inView) observer.disconnect();
-          else setArmed(true);
+          if (entry.isIntersecting) {
+            started = true;
+            stopWatching();
+          } else stage.dataset.armed = "";
           return;
         }
-        if (!inView) return;
-        setPlay(true);
-        observer.disconnect();
-      },
-      { threshold: PLAY_THRESHOLD },
-    );
-    observer.observe(stage);
-    return () => observer.disconnect();
+        if (!entry.isIntersecting) return;
+        started = true;
+        stage.dataset.play = "";
+        stopWatching();
+      }, { threshold: 0, rootMargin: "0px 0px -24px 0px" });
+      observer.observe(stage);
+      window.addEventListener("scroll", passedBy, { passive: true });
+    }
+    return () => {
+      stopWatching();
+      stage.removeEventListener("focusin", settle);
+      preference.removeEventListener("change", onPreference);
+    };
   }, []);
 
-  return (
-    <div
-      ref={ref}
-      className={className}
-      data-armed={armed ? "" : undefined}
-      data-play={play ? "" : undefined}
-    >
-      {children}
-    </div>
-  );
+  return <div ref={ref} className={className}>{children}</div>;
 }

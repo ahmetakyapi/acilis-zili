@@ -1691,9 +1691,12 @@ html.theme-switching::view-transition-new(root) {
    başlığı panelle tek blok geliyordu; sayfa başlığının dizgiden çıkan
    girişi (`title-rise`) yalnızca ekranın tepesinde vardı. Artık panelin
    kendi başlığı da aynı dili konuşuyor: panel girerken başlık alttan
-   açılan bir kırpmanın arkasından yükseliyor, panelin 40 piksel
-   ardından — önce kutu, sonra adı. Aralık kısa (160 piksel): footer'ın
-   üstündeki son panel de sonuna kadar kaydırılabiliyor, başlık yarım kalmıyor.
+   açılan bir kırpmanın arkasından yükseliyor, panelin 20 piksel
+   ardından — önce kutu, sonra adı. 390×844'te Piyasa Nabzı başlığı
+   y=721'de bütünüyle okuma alanındayken eski 40–200px aralığı altını
+   hâlâ %45 kırpıyordu (10 Ekim, ölçüldü). 20–100px aralığı başlığı
+   mobil alt çubuğun üstüne geldiğinde tam açar; okumak için yeniden
+   kaydırmak gerekmez.
 
    ZAMAN ÇİZELGESİ PANELİN, BAŞLIĞIN DEĞİL. `.panel` `overflow-hidden`
    taşıyor ve bu onu bir kaydırma kabı yapıyor: başlıkta `view()` en yakın
@@ -1714,7 +1717,7 @@ html.theme-switching::view-transition-new(root) {
     :is(.panel, [data-rise-scope], .chapter-heading) :is(h2, h3[data-rise]):not(.plate, .sr-only, [data-no-rise]) {
       animation: heading-rise var(--ease-brand) both;
       animation-timeline: --rise;
-      animation-range: entry 40px entry 200px;
+      animation-range: entry 20px entry 100px;
     }
   }
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { EASE_BRAND_POINTS } from "@/lib/motion";
+
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "motion/react";
@@ -1618,7 +1620,7 @@ function EmptyLead({ text }: { text: string }) {
 }
 
 /** Segmentin kayan parçası: marka eğrisi, portföy penceresiyle aynı süre. */
-const THUMB_TRANSITION = { duration: 0.3, ease: [0.22, 1, 0.36, 1] } as const;
+const THUMB_TRANSITION = { duration: 0.3, ease: EASE_BRAND_POINTS } as const;
 
 type SegmentOption<T extends string | number> = { value: T; label: React.ReactNode; disabled?: boolean };
 

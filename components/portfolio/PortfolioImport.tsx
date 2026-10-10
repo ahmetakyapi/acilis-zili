@@ -1,5 +1,7 @@
 "use client";
 
+import { EASE_BRAND_POINTS } from "@/lib/motion";
+
 import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
@@ -67,7 +69,7 @@ const MAX_FILE_MB = 20;
 const BYTES_PER_MB = 1024 * 1024;
 const QTY_DECIMALS = 8;
 const COST_DECIMALS = 6;
-const EASE = [0.22, 1, 0.36, 1] as const;
+const EASE = EASE_BRAND_POINTS;
 
 class ReadError extends Error {}
 

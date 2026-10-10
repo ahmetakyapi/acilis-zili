@@ -1,5 +1,7 @@
 "use client";
 
+import { EASE_BRAND_POINTS } from "@/lib/motion";
+
 import { useLayoutEffect, useRef } from "react";
 import { animate } from "motion/react";
 import { CheckCircle, Info } from "@phosphor-icons/react";
@@ -9,7 +11,7 @@ import styles from "./Tax.module.css";
 /** Sayının yeni değerine yuvarlanma süresi, saniye. */
 const ROLL_SECONDS = 0.65;
 /** Marka eğrisi (`--ease-brand`), Motion'a dizi olarak. */
-const EASE_BRAND = [0.22, 1, 0.36, 1] as const;
+const EASE_BRAND = EASE_BRAND_POINTS;
 
 /**
  * YUVARLANAN SAYI — değer değişince eski değerden yenisine sayarak gider.

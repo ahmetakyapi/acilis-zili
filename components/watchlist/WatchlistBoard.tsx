@@ -1,5 +1,7 @@
 "use client";
 
+import { EASE_BRAND_POINTS } from "@/lib/motion";
+
 import { BellMood } from "@/components/brand/BellMood";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -848,12 +850,12 @@ function SortableRows({
 const ROW_MOTION = {
   layout: { type: "spring", stiffness: 520, damping: 42, mass: 0.8 },
   duration: 0.3,
-  ease: [0.22, 1, 0.36, 1],
+  ease: EASE_BRAND_POINTS,
 } as const;
 /** Çıkış hızlı ve hızlanarak — giden satır gözü tutmamalı. */
 const ROW_EXIT = { duration: 0.2, ease: [0.4, 0, 1, 1] } as const;
 /** Yeni satırın "buraya geldi" tonu: satır indikten sonra yavaşça söner. */
-const ROW_LANDED = { duration: 1.4, delay: 0.2, ease: [0.22, 1, 0.36, 1] } as const;
+const ROW_LANDED = { duration: 1.4, delay: 0.2, ease: EASE_BRAND_POINTS } as const;
 
 /* --------------------------------------------------------------------------
    Sembol ekleme — satır içi arama

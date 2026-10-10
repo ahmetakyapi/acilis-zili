@@ -1,5 +1,7 @@
 "use client";
 
+import { EASE_BRAND_POINTS } from "@/lib/motion";
+
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowCounterClockwise, CaretDown, CheckCircle, LockSimple } from "@phosphor-icons/react";
@@ -234,7 +236,7 @@ export function StatementImport({
         initial: { opacity: 0, y: 10 },
         animate: { opacity: 1, y: 0 },
         exit: { opacity: 0, y: -6 },
-        transition: { duration: 0.36, ease: [0.22, 1, 0.36, 1] as const },
+        transition: { duration: 0.36, ease: EASE_BRAND_POINTS },
       };
 
   return (

@@ -1,5 +1,7 @@
 "use client";
 
+import { EASE_BRAND_POINTS } from "@/lib/motion";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { AnimatePresence, motion } from "motion/react";
@@ -231,7 +233,7 @@ export function AccountMenu({
             initial={{ opacity: 0, y: -4, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.97 }}
-            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.16, ease: EASE_BRAND_POINTS }}
             style={{ transformOrigin: "top right" }}
             /* Zemin `--overlay-surface`, `--surface-solid` DEĞİL: ikincisi koyu
                temada saydam (beyazın %4,5'i) çünkü sayfa üstündeki kartlar için

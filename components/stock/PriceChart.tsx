@@ -1,5 +1,7 @@
 "use client";
 
+import { SELECTION_TRANSITION } from "@/lib/motion";
+
 import styles from "./PriceChart.module.css";
 import { LoadingSurface } from "@/components/ui/LoadingState";
 
@@ -1461,7 +1463,7 @@ export function PriceChart({
                   aria-hidden
                   layoutId={`${thumbId}-range`}
                   className={cn("absolute inset-0 -z-10 rounded-(--radius-sm) bg-primary", styles.segmentThumb)}
-                  transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                  transition={SELECTION_TRANSITION}
                 />
               )}
               {labels.ranges[r]}
@@ -1503,7 +1505,7 @@ export function PriceChart({
                       aria-hidden
                       layoutId={`${thumbId}-currency`}
                       className={cn("absolute inset-0 -z-10 rounded-(--radius-sm) bg-primary-wash", styles.segmentThumbSoft)}
-                      transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                      transition={SELECTION_TRANSITION}
                     />
                   )}
                   {c === "usd" ? labels.usd : labels.tl}
@@ -1533,7 +1535,7 @@ export function PriceChart({
                     aria-hidden
                     layoutId={`${thumbId}-mode`}
                     className={cn("absolute inset-0 -z-10 rounded-(--radius-sm) bg-primary-wash", styles.segmentThumbSoft)}
-                    transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                    transition={SELECTION_TRANSITION}
                   />
                 )}
                 {m === "area" ? labels.area : labels.candles}

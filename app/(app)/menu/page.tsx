@@ -3,6 +3,7 @@ import polish from "@/components/motion/UtilityExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import {
   Bell,
+  ArrowUpRight,
   BookOpen,
   Buildings,
   CalendarBlank,
@@ -26,7 +27,6 @@ import {
   TrendUp,
   UsersThree,
 } from "@phosphor-icons/react/dist/ssr";
-import type { CSSProperties } from "react";
 import { auth } from "@/auth";
 import { AvatarTile } from "@/components/brand/AvatarIcon";
 import { getUserAvatar } from "@/lib/avatar-data";
@@ -199,16 +199,11 @@ export default async function MenuPage() {
             <h2 id={`menu-group-${groupIndex}`} className={polish.menuGroupTitle}>
               {group.title}
             </h2>
-            <ul className={polish.menuTiles}>
-              {group.entries.map((entry, entryIndex) => {
+            <ul className={polish.menuTiles} data-motion-stagger>
+              {group.entries.map((entry) => {
                 const Icon = entry.icon;
-                /* Karonun sayfadaki sırası: beliriş gruplar boyunca TEK
-                   akış (menu-tile-in). */
-                const order =
-                  groups.slice(0, groupIndex).reduce((sum, g) => sum + g.entries.length, 0) +
-                  entryIndex;
                 return (
-                  <li key={entry.href} style={{ "--row": order } as CSSProperties}>
+                  <li key={entry.href}>
                     <Link
                       href={withLocale(entry.href, locale)}
                       prefetch={false}
@@ -222,6 +217,7 @@ export default async function MenuPage() {
                         <b>{entry.title}</b>
                         <small>{entry.hint}</small>
                       </span>
+                      <ArrowUpRight className={polish.menuArrow} size={15} weight="bold" aria-hidden />
                     </Link>
                   </li>
                 );

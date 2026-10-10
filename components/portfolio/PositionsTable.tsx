@@ -1,5 +1,7 @@
 "use client";
 
+import { EASE_BRAND_POINTS } from "@/lib/motion";
+
 import { useEffect, useRef, useState, useTransition, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowsDownUp, CaretDown, CaretUp, PencilSimple, Trash } from "@phosphor-icons/react";
@@ -250,7 +252,7 @@ export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: 
               className={styles.posRow}
               data-fresh={fresh.has(row.id) || undefined}
               style={{ "--i": Math.min(i, STAGGER_CAP), "--accent": row.accent } as CSSProperties}
-              exit={{ opacity: 0, x: -16, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] } }}
+              exit={{ opacity: 0, x: -16, transition: { duration: 0.22, ease: EASE_BRAND_POINTS } }}
             >
               <div className={styles.posTop}>
                 <LogoTile symbol={row.symbol} logoUrl={row.logoUrl ?? null} size="md" />

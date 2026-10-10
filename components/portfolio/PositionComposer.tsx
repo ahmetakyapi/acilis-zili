@@ -1,5 +1,7 @@
 "use client";
 
+import { EASE_BRAND_POINTS } from "@/lib/motion";
+
 import { useActionState, useEffect, useId, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, CircleNotch, MagnifyingGlass, NotePencil, Sparkle, Trash } from "@phosphor-icons/react";
@@ -66,7 +68,7 @@ const SUGGEST_DEBOUNCE_MS = 250;
 const MAX_HITS = 6;
 /** Şema hisse başı fiyatı altı ondalıkla tutuyor. */
 const COST_DECIMALS = 6;
-const EASE = [0.22, 1, 0.36, 1] as const;
+const EASE = EASE_BRAND_POINTS;
 
 export function PositionComposer({
   labels,

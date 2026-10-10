@@ -400,6 +400,7 @@
   .stage[data-armed]:not([data-play]) :is(.tileId, .tilePct) { animation:none; }
   .stage[data-play] .tile { animation-name:tile-in-again; }
   .stage[data-play] :is(.tileId, .tilePct) { animation-name:tile-ink-again; }
+  .stage[data-settled] :is(.tile, .tileId, .tilePct) { animation:none; opacity:1; transform:none; }
 }
 @keyframes tile-in { from { opacity:0; transform:scale(.9); } }
 @keyframes tile-in-again { from { opacity:0; transform:scale(.9); } }

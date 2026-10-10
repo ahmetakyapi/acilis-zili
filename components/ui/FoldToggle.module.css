@@ -3,8 +3,14 @@
 .fold { position:relative; min-width:0; }
 .foldInput { bottom:0; left:0; }
 .foldInput:not(:checked) ~ * [data-fold] { display:none; }
-.foldButton { display:inline-flex; min-height:44px; align-items:center; padding-inline:var(--fold-inset,0); color:var(--primary-ink); font-size:12.5px; font-weight:650; cursor:pointer; }
-.foldButton:hover { text-decoration:underline; text-underline-offset:3px; }
+.foldButton { display:inline-flex; min-height:44px; align-items:center; gap:8px; padding-inline:var(--fold-inset,0); color:var(--primary-ink); font-size:12.5px; font-weight:650; cursor:pointer; }
+.foldIcon { flex:none; transition:transform 220ms var(--ease-brand); }
+.foldInput:checked ~ .foldButton .foldIcon { transform:rotate(-180deg); }
+.foldButton:active { color:var(--text-strong); }
+@media (hover:hover) and (pointer:fine) {
+  .foldButton:hover { text-decoration:underline; text-underline-offset:3px; }
+}
+@media (prefers-reduced-motion:reduce) { .foldIcon { transition:none; } }
 .foldInput:focus-visible ~ .foldButton { outline:2px solid var(--line-focus); outline-offset:-2px; border-radius:8px; }
 .foldInput:checked ~ .foldButton .foldMore, .foldInput:not(:checked) ~ .foldButton .foldLess { display:none; }
 @media (min-width:1100px) {

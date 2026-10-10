@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { CaretDown } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/lib/utils";
 import styles from "./FoldToggle.module.css";
 
@@ -55,6 +56,7 @@ export function FoldToggle({
       <label htmlFor={id} className={styles.foldButton}>
         <span className={styles.foldMore}>{more}</span>
         <span className={styles.foldLess}>{less}</span>
+        <CaretDown className={styles.foldIcon} size={14} weight="bold" aria-hidden />
       </label>
     </div>
   );

@@ -17,7 +17,7 @@ import {
 } from "react";
 import styles from "./PremiumMotion.module.css";
 import { useMotionPreference } from "./useMotionPreference";
-import { EASE_BRAND } from "@/lib/motion";
+import { EASE_BRAND, EASE_BRAND_POINTS, SELECTION_TRANSITION } from "@/lib/motion";
 
 function classes(...values: (string | undefined)[]) {
   return values.filter(Boolean).join(" ");
@@ -56,7 +56,7 @@ export function Reveal({
     if (rect.top < window.innerHeight * 0.94) return;
 
     opacity.set(0);
-    y.set(26);
+    y.set(18);
     let stopAnimation: (() => void) | undefined;
     let revealed = false;
     const reveal = () => {
@@ -67,13 +67,11 @@ export function Reveal({
         const opacityAnimation = animate(opacity, 1, {
           duration: 0.55,
           delay: Math.min(Math.max(delay, 0), 0.3),
-          ease: [0.22, 1, 0.36, 1],
+          ease: EASE_BRAND_POINTS,
         });
         const positionAnimation = animate(y, 0, {
-          type: "spring",
-          stiffness: 105,
-          damping: 24,
-          mass: 0.8,
+          duration: 0.55,
+          ease: EASE_BRAND_POINTS,
           delay: Math.min(Math.max(delay, 0), 0.3),
         });
         stopAnimation = () => {
@@ -515,7 +513,7 @@ export function SectionNav({
                   aria-hidden="true"
                   layoutId={`${navId}-section-indicator`}
                   className={styles.navIndicator}
-                  transition={{ type: "spring", stiffness: 380, damping: 36 }}
+                  transition={SELECTION_TRANSITION}
                 />
               )}
             </a>
@@ -573,7 +571,8 @@ export function MotionExperience({ children, className }: { children: ReactNode;
        görünür olduklarında da oynamıyor, kırpık kalıyordu (makro kartlarının
        ikinci sırası — ölçüldü). Çizgi, kırpılmayan SVG'si görününce oynuyor. */
     const targetOf = (element: Element) =>
-      element.classList.contains("spark-line") ? (element as SVGElement).ownerSVGElement ?? element : element;
+      element.closest("[data-motion-track]") ??
+      (element.classList.contains("spark-line") ? (element as SVGElement).ownerSVGElement ?? element : element);
     const waiting = new Map<Element, Element[]>();
     const observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
@@ -594,7 +593,10 @@ export function MotionExperience({ children, className }: { children: ReactNode;
     };
     const unwatch = (element: Element) => {
       const target = targetOf(element);
-      observer.unobserve(target); waiting.delete(target);
+      const remaining = waiting.get(target)?.filter((item) => item !== element);
+      // Aynı SVG'yi izleyen başka çizgiler varsa onların gözlemini koru.
+      if (remaining?.length) waiting.set(target, remaining);
+      else { observer.unobserve(target); waiting.delete(target); }
     };
     /* İLK EKRAN HİDRATASYONDA KIMILDAMAZ (23 Eylül). Sunucu HTML'i her
        şeyi tam opaklıkta boyuyor; bu tur ise ekrandaki öğeleri de giriş

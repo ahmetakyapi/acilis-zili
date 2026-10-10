@@ -63,9 +63,13 @@ export function ScaleBar({
   return (
     /* RAY SAĞA YASLI. Sütundaki sayılar sağa yaslı ve çubuk onların sağ
        kenarıyla aynı hatta bitiyor; geniş ekranda 287 piksellik hücrenin
-       tamamına yayılan bir ray sayıdan kopuk duruyordu. */
+       tamamına yayılan bir ray sayıdan kopuk duruyordu.
+       Gözlemci küçülen çubuğu değil RAYI izler: /piyasalar 390px'de
+       sağdaki sıfır noktası x=377, kaydırıcı kenarı x=372. Eksi çubuğun
+       giriş pozu dışarıda kalınca görünür soldaki kısmı da hiç açılmıyordu. */
     <span
       aria-hidden
+      data-motion-track
       className={cn(
         "mt-1.5 ml-auto block h-[3px] w-full max-w-[128px] rounded-full bg-(--line-soft)",
         className,

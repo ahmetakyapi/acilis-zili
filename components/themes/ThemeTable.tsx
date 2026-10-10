@@ -1,5 +1,7 @@
 "use client";
 
+import { EASE_BRAND_POINTS } from "@/lib/motion";
+
 import { Fragment, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { ArrowDown } from "@phosphor-icons/react/dist/ssr";
@@ -218,7 +220,7 @@ export function ThemeTable({
             <motion.tr
               key={row.symbol}
               layout={reduced ? false : "position"}
-              transition={{ duration: ROW_LAYOUT_S, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: ROW_LAYOUT_S, ease: EASE_BRAND_POINTS }}
             >
               <th scope="row" className={cn(sticky, "max-w-[220px] px-4 py-2 text-left font-normal sm:px-5")}>
                 {nameCell(row)}

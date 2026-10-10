@@ -1,5 +1,7 @@
 "use client";
 
+import { EASE_BRAND_POINTS } from "@/lib/motion";
+
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { usePathname } from "next/navigation";
@@ -253,7 +255,7 @@ export function MastheadNav({
               initial={{ opacity: 0, y: -4, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.97 }}
-              transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.16, ease: EASE_BRAND_POINTS }}
               style={{ transformOrigin: alignEnd ? "top right" : "top left" }}
               onKeyDown={onPanelKeyDown}
               className={cn(

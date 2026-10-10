@@ -44,7 +44,7 @@
 .detail > a:first-child { min-height:36px; font-size:12px; }
 .detail > header { padding:22px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
 .detail h1 { margin-top:16px; font-size:clamp(27px,3vw,38px); line-height:1.17; letter-spacing:-.04em; text-wrap:pretty; }
-.detail > header > p:first-child { font-size:12px; line-height:1.7; }
+.detailMeta { font-size:12px; line-height:1.7; }
 .detail > :global(.panel) { border-radius:var(--radius-panel); background:var(--premium-surface); }
 .detail > div { font-size:16px; line-height:1.85; }
 .detail > :global(.panel):first-of-type { border-color:var(--primary-faint); background:var(--premium-surface); }

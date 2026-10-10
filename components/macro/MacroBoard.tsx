@@ -1,5 +1,7 @@
 "use client";
 
+import { EASE_BRAND_POINTS } from "@/lib/motion";
+
 import { animate } from "motion/react";
 import {
   createContext,
@@ -97,7 +99,7 @@ export type BoardLabels = {
   all: string;
 };
 
-const EASE = [0.22, 1, 0.36, 1] as const;
+const EASE = EASE_BRAND_POINTS;
 /** Değişim bu kadarın altındaysa "Değişmedi" (FRED en çok iki hane yayımlar). */
 const FLAT_DELTA = 0.001;
 /** Rakamın sıfırdan yuvarlanma süresi (saniye): grafiğin çizilişiyle aynı. */

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import { SELECTION_TRANSITION } from "@/lib/motion";
 
 /**
  * Sekme alt çizgisi — paylaşılan `layoutId` ile sekmeden sekmeye KAYAR.
@@ -8,13 +9,12 @@ import { motion } from "motion/react";
  * Eskiden her sekme kendi `border-b-2`sini taşıyordu ve aktif olan pat diye
  * değişiyordu. Çizgi artık tek bir hareketli öğe: aktif sekmenin içinde
  * mutlak konumda duruyor, sekme değişince Motion eski konumdan yeniye
- * yay fiziğiyle taşıyor. Bağlantının kendisi `relative` olmalı.
+ * ortak seçim eğrisiyle taşıyor. Bağlantının kendisi `relative` olmalı.
  *
  * `-bottom-px`: çubuğun 1px alt çizgisiyle üst üste biner, eski border'ın
  * durduğu yerin aynısı — düzen hiç kaymaz.
  *
- * Yay sertliği 500 / sönüm 40: hızlı varır, taşmaz. Sekme bir seçim, bir
- * zıplama değil.
+ * 280 ms: grafik aralığı ve bölüm diziniyle aynı ritimde hedefe oturur.
  */
 export function TabUnderline({ layoutId }: { layoutId: string }) {
   return (
@@ -22,7 +22,7 @@ export function TabUnderline({ layoutId }: { layoutId: string }) {
       layoutId={layoutId}
       aria-hidden
       className="absolute inset-x-0 -bottom-px h-0.5 bg-primary"
-      transition={{ type: "spring", stiffness: 500, damping: 40 }}
+      transition={SELECTION_TRANSITION}
     />
   );
 }

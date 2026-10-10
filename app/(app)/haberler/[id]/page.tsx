@@ -128,7 +128,10 @@ export default async function NewsDetailPage(
       </Link>
 
       <header>
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+        {/* Paylaş düğmesi bir div taşır. p içine koymak tarayıcının
+            paragrafı erken kapatmasına ve tüm haberin hidrasyonda
+            yeniden çizilmesine neden oluyordu (React #418). */}
+        <div className={`${styles.detailMeta} flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted`}>
           {item.source && (
             <span className="font-medium text-soft">{item.source}</span>
           )}
@@ -149,7 +152,7 @@ export default async function NewsDetailPage(
             compact
             className="ml-auto"
           />
-        </p>
+        </div>
         {/* Çevirisi yoksa başlık İngilizce basılıyor; `lang` bunu söylüyor
             (gerekçe liste sayfasında). */}
         <h1

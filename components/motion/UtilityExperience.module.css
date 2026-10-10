@@ -75,18 +75,30 @@
    aldığında karo 132 piksel ve sayfa listeden kısa değildi (2.343'e 2.328,
    390, ölçüldü); aynı satırda karo ~96 piksel. */
 .menuTile {
-  display:grid; height:100%; grid-template-columns:auto minmax(0, 1fr); align-content:start; align-items:center; gap:8px 10px; padding:12px;
+  position:relative; display:grid; height:100%; grid-template-columns:auto minmax(0, 1fr); align-content:start; align-items:center; gap:8px 10px; padding:12px;
   border:1px solid var(--line); border-radius:16px; background:var(--premium-surface);
-  transition:border-color .2s, background-color .2s, scale .15s;
+  transition:border-color 200ms var(--ease-brand), background-color 200ms var(--ease-brand), scale 150ms var(--ease-brand);
 }
 .menuTile[data-featured] { border-color:var(--primary-faint); background:var(--primary-tint); }
 .menuTile:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 .menuTile:active { scale:.98; }
-.menuIcon { display:grid; width:34px; height:34px; place-items:center; border-radius:10px; background:var(--primary-wash); color:var(--primary-ink); }
+.menuIcon { display:grid; width:34px; height:34px; place-items:center; border-radius:10px; background:var(--primary-wash); color:var(--primary-ink); transition:background-color 220ms var(--ease-brand), color 220ms var(--ease-brand); }
 .menuTileText { display:contents; }
 .menuTileText b { min-width:0; font-size:14.5px; font-weight:650; line-height:1.2; letter-spacing:-.005em; color:var(--text-strong); }
-.menuTileText small { grid-column:1 / -1; display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:12px; line-height:1.4; color:var(--text-muted); }
-@media(hover:hover) and (pointer:fine) { .menuTile:hover { border-color:var(--primary-faint); background:var(--primary-tint); } }
-.menuTiles > li { animation:menu-tile-in 420ms var(--ease-brand) backwards; animation-delay:calc(min(var(--row, 0), 12) * 24ms + 60ms); }
-@keyframes menu-tile-in { from { opacity:0; transform:translate3d(0, 8px, 0); } }
-@media(prefers-reduced-motion:reduce) { .menuTiles > li { animation:none; } .menuTile { transition:none; } .menuTile:active { scale:none; } }
+.menuTileText small { grid-column:1 / -1; padding-right:18px; display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:12px; line-height:1.4; color:var(--text-muted); }
+.menuArrow { position:absolute; right:12px; bottom:13px; color:var(--text-muted); transition:color 220ms var(--ease-brand), translate 220ms var(--ease-brand); }
+.menuTile:focus-visible { background:var(--primary-tint); border-color:var(--primary); }
+.menuTile:focus-visible .menuIcon { background:var(--primary); color:var(--on-primary); }
+.menuTile:focus-visible .menuArrow { color:var(--primary-ink); translate:2px -2px; }
+@media(hover:hover) and (pointer:fine) {
+ .menuTile:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
+ .menuTile:hover .menuIcon { background:var(--primary); color:var(--on-primary); }
+ .menuTile:hover .menuArrow { color:var(--primary-ink); translate:2px -2px; }
+}
+/* Alt grupların girişi yüklemede bitmez: data-motion-stagger ile göründüğü
+   satırda başlar. İlk ekran hidrasyonda yeniden söndürülmez. */
+@media(prefers-reduced-motion:reduce) {
+ .menuTile, .menuIcon, .menuArrow { transition:none; }
+ .menuTile:active { scale:none; }
+ .menuTile:is(:hover,:focus-visible) .menuArrow { translate:none; }
+}

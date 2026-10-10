@@ -1,5 +1,7 @@
 "use client";
 
+import { EASE_BRAND_POINTS } from "@/lib/motion";
+
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, ArrowUpRight, MagnifyingGlass, X } from "@phosphor-icons/react";
@@ -99,7 +101,7 @@ export type GlossaryBrowserGroup = {
 const GLOSSARY_HREF = /^(?:\/en)?\/sozluk\/([^/]+)\/?$/;
 /** Süzgeç değişince sonuçlar yalnızca şerit yapışıkken başa alınır. */
 const SCROLL_SETTLE_PX = 4;
-const EASE = [0.22, 1, 0.36, 1] as const;
+const EASE = EASE_BRAND_POINTS;
 
 export function GlossaryBrowser({
   items,
