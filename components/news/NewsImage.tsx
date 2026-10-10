@@ -130,7 +130,7 @@ export function NewsImage({
      temada kendi koyu harfleriyle kayboluyor. */
   if (usable(logoUrl)) {
     return (
-      <span className={cn(frame, "bg-white", className)}>
+      <span className={cn(frame, "bg-logo-plate", className)}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           ref={watch(logoUrl)}

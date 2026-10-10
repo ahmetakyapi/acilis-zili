@@ -10,23 +10,39 @@
    büyük başlığı; 28 pikselde panel başlıklarından ayrışmıyordu. Açıklama
    768'den itibaren başlığın yanında, taban çizgisinde (28 Eylül). */
 .band { display:flex; flex-direction:column; gap:22px; padding:24px 28px 18px; }
-.bandHead { display:flex; flex-direction:column; gap:6px; }
+/* AÇIKLAMA BAŞLIĞIN TABAN ÇİZGİSİNDE (10 Ekim, sahibinin isteği:
+   "başlıkların yanındaki alt başlıkları daha güzel hizala"). Satır taban
+   çizgisine hizalıydı ama açıklama 4,8 piksel AŞAĞIDA duruyordu (1440,
+   ölçüldü): display başlıklar Ü, İ, Ö'nün imleri degradeden taşmasın diye
+   0,12em yukarı açılıp `translate` ile geri kalkıyor (globals.css, "ÜSTTEKİ
+   İMLER") ve hizalama kaydırılmamış kutuya göre yapılıyor. Kural sitenin
+   her yerinde doğru, bozmak imleri keser; yanındaki metin aynı payla
+   kalkıyor (`--head` × 0,12). Arada ince bir dikey çizgi: başlık ile
+   açıklaması tek birim gibi okunuyor, aradaki boşluk "kopmuş" durmuyor. */
+.bandHead { --head:clamp(26px,3vw,40px); display:flex; flex-direction:column; gap:6px; }
 @media (min-width:768px) {
-  .bandHead { flex-direction:row; flex-wrap:wrap; align-items:baseline; gap:4px 20px; }
+  .bandHead { flex-direction:row; flex-wrap:wrap; align-items:baseline; gap:4px 18px; }
+  .bandHead p { translate:0 calc(var(--head) * -.12); padding-left:18px; border-left:1px solid var(--line-strong); }
 }
-.bandHead h2 { width:fit-content; max-width:100%; color:var(--text-strong); font-size:clamp(26px,3vw,40px); font-weight:700; letter-spacing:-.05em; line-height:1.05; }
-.bandHead p { max-width:56ch; color:var(--text-body); font-size:var(--text-read); line-height:1.55; }
+.bandHead h2 { width:fit-content; max-width:100%; color:var(--text-strong); font-size:var(--head); font-weight:700; letter-spacing:-.05em; line-height:1.05; }
+.bandHead p { max-width:56ch; color:var(--text-body); font-size:var(--text-read); line-height:1.5; }
 
 .part { display:flex; flex-direction:column; gap:14px; min-width:0; }
 .part + .part { padding-top:20px; border-top:1px solid var(--line); }
-.partHead { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; }
+.partHead { --head:var(--text-title); display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 14px; }
+/* Künyeler başlığın gerçek taban çizgisinde (gerekçe `.bandHead`, aynı
+   0,12em). */
+.partHead > :not(h3) { translate:0 calc(var(--head) * -.12); }
 /* BÖLÜM BAŞLIKLARI BİR KADEME BÜYÜDÜ (9 Ekim, sahibinin isteği: "bazı
    başlıklar küçülmüş"). "Sektörler" ve "Temalar" 14 pikseldi, kendi
    içeriklerinin altında kalıyordu. Artık `--text-title` (19) ve önünde
    2×16 piksellik işaret: panelde güncel sayfanın ve sayfa künyesinin aynı
    imi. */
-.partHead h3 { display:inline-flex; align-items:center; gap:9px; color:var(--text-strong); font-size:var(--text-title); font-weight:650; letter-spacing:-.02em; line-height:1.2; }
-.partHead h3::before { content:""; flex:none; width:3px; height:16px; border-radius:2px; background:var(--primary); }
+/* BAŞLIK BLOK, İM SATIR İÇİ (10 Ekim). `inline-flex` başlığın taban
+   çizgisi metinden değil İLK öğeden, yani içi boş imden geliyordu: künye
+   imin dibine hizalanıp metnin 8–10 piksel altına düşüyordu (ölçüldü). */
+.partHead h3 { color:var(--text-strong); font-size:var(--head); font-weight:650; letter-spacing:-.02em; line-height:1.2; }
+.partHead h3::before { content:""; display:inline-block; width:3px; height:.84em; margin-right:9px; border-radius:2px; vertical-align:-.06em; background:var(--primary); }
 .partMeta { color:var(--text-muted); font-size:12.5px; }
 .partLink { margin-left:auto; }
 .breadth { color:var(--text-body); font-size:12.5px; font-weight:600; white-space:nowrap; }

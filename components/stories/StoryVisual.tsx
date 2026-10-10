@@ -77,7 +77,7 @@ function LogoTile({
      harf karosunu basıyor — gerekçesi o dosyada. */
   return (
     <span className="block shrink-0 overflow-hidden" style={{ width: size, height: size, borderRadius: radius }}>
-      <LogoImage src={logoUrl} px={size} boxClass="block size-full overflow-hidden bg-white" card={symbol} fallback={letters} />
+      <LogoImage src={logoUrl} px={size} boxClass="block size-full overflow-hidden bg-logo-plate" card={symbol} fallback={letters} />
     </span>
   );
 }

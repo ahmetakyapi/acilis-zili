@@ -511,7 +511,14 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .fundamentalsGrid .metricsBody { flex:1; display:flex; flex-direction:column; }
 .fundamentalsGrid .metricsList { flex:1; }
 .fundamentalsGrid .complianceBody { flex:1; display:flex; flex-direction:column; }
-.fundamentalsGrid .complianceRatios { flex:1; align-content:center; }
+.fundamentalsGrid .complianceRatios { align-content:start; margin-top:14px; }
+/* ORANLAR ÜSTTEN DİZİLİR, ORTALANMAZ (10 Ekim). `flex:1` + `align-content:center`
+   oran ızgarasını komşu panelin boyuna gerip içeriği ortalıyordu: NVDA 1440'ta
+   başlık ile ilk satır arası 59 px (1024'te 52), Anahtar Metrikler'de 29.
+   Izgara 213 px'e kadar uzuyordu; artık kendi boyunda (içeriğin üstünde),
+   artan yer panelin dibinde kalır. Ölçüm (başlığın dibinden ilk metne):
+   `margin-top:14` ile her genişlikte 23; Anahtar Metrikler 1440'ta 29,
+   1024 ve 390'da 19. */
 .fundamentalsGrid .complianceBody > details { margin-top:14px; }
 
 /* Telefonda iki satırlık (72 piksel) okuma rezervi KALKTI: imleç okuması
@@ -608,7 +615,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 }
 .companyOverview .identity { align-items:center; gap:22px; }
 .identityMark { align-self:center; }
-.companyOverview .companyLogo { width:88px; height:88px; border-radius:22px; background:#fff; }
+.companyOverview .companyLogo { width:88px; height:88px; border-radius:22px; background:var(--logo-plate); }
 .companyOverview .companyLogo:global(.skeleton) { background:var(--surface-sunken); }
 .identityCopy { flex:1; min-width:0; }
 .identityMeta { display:flex; align-items:center; gap:10px; margin-bottom:7px; }

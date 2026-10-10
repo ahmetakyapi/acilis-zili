@@ -146,8 +146,13 @@
    damgası aynı hatta bitiyor. Liste ile künye arası en az 8 piksel. */
 .scorePanel { display:flex; flex-direction:column; }
 .scorePanel > .body { flex:1 1 auto; }
-.scorePanel .axisList { margin-bottom:8px; }
-.scorePanel .axisList + .note { margin-top:auto; }
+.scorePanel .axisList { margin-bottom:0; }
+.scorePanel .axisList + .note { margin-top:8px; }
+/* KÜNYE DİPE İTİLMİYOR (10 Ekim). `margin-top:auto` kısa kalan paneli
+   komşunun boyuna kadar listeyle künye ARASINDA açıyordu: NVDA 1440'ta son
+   eksen satırı 260'ta, künye 302'de (42 px boşluk, `.axisList` 8 ile
+   birlikte ~50). Künye ve damga listenin hemen altında; artan yer panelin
+   dibinde kalır (CLAUDE.md "Boşluk esnetilmez"). */
 .axisName { grid-area:name; min-width:0; color:var(--text-strong); font-size:12.5px; font-weight:600; line-height:1.3; }
 .axisPct { grid-area:pct; color:var(--text-strong); font-size:17px; font-weight:600; line-height:1; letter-spacing:-.03em; text-align:right; }
 .axisMeta { grid-area:meta; min-width:0; color:var(--text-muted); font-size:var(--text-nano); line-height:1.45; }

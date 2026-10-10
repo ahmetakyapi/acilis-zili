@@ -15,7 +15,9 @@ export function SectionMasthead({ title, description, aside, embedded = false }:
   title: string; description: string; aside?: ReactNode; embedded?: boolean;
 }) {
   return <header className={`${styles.masthead} page-masthead`} data-embedded={embedded} data-has-aside={!!aside}>
-    {!embedded && <HeroAccent />}
+    {/* Sağ yarıda veri varken yay YOK (10 Ekim): /tema'da sıralamanın
+        rakam sütununun arkasından geçiyordu (tasarım denetimi). */}
+    {!embedded && !aside && <HeroAccent />}
     <div className="page-heading-copy"><h1>{title}</h1></div>
     <p className={styles.mastheadDescription}>{description}</p>
     {aside && <div data-masthead-aside className={styles.mastheadAside}>{aside}</div>}

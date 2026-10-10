@@ -15,7 +15,9 @@ export function DirectoryHeader({ title, description, children, visual, control,
   className?: string;
 }) {
   return <header className={`${styles.hero} page-frame ${className}`} data-has-visual={!!visual}>
-    <HeroAccent />
+    {/* Sağ sütunda görsel varken yay YOK (10 Ekim): verinin arkasından
+        geçiyordu (tasarım denetimi, /bilancolar ve /teknik). */}
+    {!visual && <HeroAccent />}
     <div className={`${styles.heroCopy} page-heading-copy`}>
       {/* DENETİM BAŞLIĞIN YANINDA. İlk yerleşimde anahtar üst künyenin
           sağındaydı ve 390'da künye 117 piksellik anahtarın yanında iki

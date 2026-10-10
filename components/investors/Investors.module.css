@@ -145,6 +145,11 @@
 .capitalRestSegment { display:none; }
 @media(max-width:639px) {
   .capitalBar { height:30px; }
+  /* Dokunulan alan 44 (10 Ekim denetimi): çubuk 30 piksel, görünmez alan
+     yalnızca DİKEYDE büyüyor — yatayda komşu dilimin üstüne binseydi
+     dar dilime basmak bu kez komşuyu açardı. Dilim eni veriyle orantılı
+     (12–15 piksellikler var), o ölçü değişmiyor. */
+  .capitalSegment::after { content:""; position:absolute; inset:-7px 0; }
   .capitalSegment:not([data-rank="0"]) .capitalInline { display:none; }
   .capitalInline .portrait { display:none; }
   /* Küçük fonlar tek "Diğer" diliminde (gerekçe InvestorRoster). */

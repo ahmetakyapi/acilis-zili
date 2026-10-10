@@ -214,14 +214,16 @@ export default async function TodayPage() {
           <div className={styles.heroCopy} data-motion-intro>
             {/* SEANS ÇİPİ: nokta seansı renkle de söylüyor — asıl seansta yeşil
                 halkalı, uzatılmış seansta mavi, kapalıyken gri. */}
-            {/* Dar kolonda (telefon, tablet, 1024) zil rakamların yanına
-                sığmıyor (ölçüldü: 10–17 piksele eziliyordu) ve çipin
-                satırına, sağa oturuyor; geniş kolonda rakamların yanındaki
-                kopyası görünüyor. Seçim konteyner sorgusu (CSS); görünmeyen
-                tuval görünüme girmediği için hiç çizilmiyor. */}
+            {/* ZİL ÇİPİN SATIRINDA, HER GENİŞLİKTE (10 Ekim). Geniş kolonda
+                rakamların yanındaydı; sayaç tavanı yükselince (a603604)
+                rakamlar satırın 722 pikselinin 687'sini aldı ve zil 1440'ta
+                17, 1280'de 0 piksele eziliyordu (ölçüldü; sahibi: "zil çok
+                küçük kalmış"). Başlığın sağı da aday oldu ama İngilizce
+                başlık satırı dolduruyor (3–25 piksel kalıyor). Çipin sağı
+                her dilde ve genişlikte boş; ölçü CSS'te. */}
             <div className={styles.heroTopRow}>
               <div className={styles.heroSession} data-state={sessionState}><span aria-hidden="true" />{sessionLabel[status.session]}</div>
-              <InkCanvas scene={heroScene} seed={11} delay={0.55} className={styles.heroBellSmall} />
+              <InkCanvas scene={heroScene} seed={11} delay={0.55} className={styles.heroBell} />
             </div>
             <h1 className={styles.headline}>{countdownLabel}</h1>
             {/* Rakam satırı ile zil şeridi TEK blok; rozet ve başlık tepede.
@@ -229,13 +231,7 @@ export default async function TodayPage() {
                 (BellLedger.module.css). Ölçüm ve gerekçe
                 TodayExperience.module.css → `.heroCopy`. */}
             <div className={styles.countdownBlock}>
-              {/* ZİL RAKAMLARIN YANINDA (9 Ekim) — seansa göre uyukluyor,
-                  bekliyor ya da çalıyor; sahneler ve gerekçe
-                  lib/ink/scenes.ts → heroSleep/heroWait/heroRing. Rakam
-                  satırıyla aynı esnek satırda: rakamın sağındaki boşluğa
-                  oturuyor ve satır daraldıkça (dört gruplu hafta sonu
-                  sayacı, dar telefon) oranını koruyarak küçülüyor; hiçbir
-                  genişlikte rakamı itmiyor (`flex-shrink`, ölçüm CSS'te). */}
+              {/* Zilin yeri çipin satırı (yukarıda, 10 Ekim). */}
               <div className={styles.countdownRow}>
                 <Countdown
                   targetIso={countdownTarget.toISOString()}
@@ -245,12 +241,6 @@ export default async function TodayPage() {
                   label={countdownLabel}
                   className={styles.countdown}
                   ring
-                />
-                <InkCanvas
-                  scene={heroScene}
-                  seed={11}
-                  delay={0.55}
-                  className={styles.heroBell}
                 />
               </div>
               <SessionRail

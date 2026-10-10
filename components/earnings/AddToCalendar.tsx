@@ -111,6 +111,9 @@ export function AddToCalendar({
  * `overflow-hidden` taşıyan bir üst kutu yok — kartlar ve satırlar yalnızca
  * `rounded` + `border`.
  *
+ * GÖLGE YOK (10 Ekim): tek satırlık bir etiket; `--shadow-overlay` (60
+ * piksel yayılım) açılır katmanlar için. Ayrımı bir kademe koyu kenar taşıyor.
+ *
  * `hover:` varyantı Tailwind v4'te zaten `@media (hover: hover)` içinde;
  * dokunmatikte balon hiç açılmıyor, yani ekranda takılı kalmıyor.
  */
@@ -118,7 +121,7 @@ function HoverTip({ text }: { text: string }) {
   return (
     <span
       aria-hidden
-      className="pointer-events-none absolute bottom-full right-0 z-30 mb-1.5 hidden whitespace-nowrap rounded-lg border border-line bg-overlay-surface px-2 py-1 text-tiny font-semibold text-strong opacity-0 shadow-(--shadow-overlay) transition-opacity duration-150 group-hover/cal:opacity-100 group-focus-visible/cal:opacity-100 sm:block"
+      className="pointer-events-none absolute bottom-full right-0 z-30 mb-1.5 hidden whitespace-nowrap rounded-lg border border-line-strong bg-overlay-surface px-2 py-1 text-tiny font-semibold text-strong opacity-0 transition-opacity duration-150 group-hover/cal:opacity-100 group-focus-visible/cal:opacity-100 sm:block"
     >
       {text}
     </span>

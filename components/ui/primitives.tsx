@@ -539,7 +539,7 @@ export function LogoTile({
       src={source}
       px={step.px}
       boxClass={cn(
-        "block shrink-0 overflow-hidden bg-white",
+        "block shrink-0 overflow-hidden bg-logo-plate",
         step.box,
         className,
       )}

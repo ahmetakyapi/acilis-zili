@@ -68,7 +68,7 @@
    Başlık maskeden yükseliyor, altında gün şeridi çiziliyor, özellikler
    kendi gliflerini sırayla çiziyor. Sahnelerin kendileri lib/ink/scenes.ts'te;
    burada yalnızca yerleri. */
-.title { animation:title-rise 760ms cubic-bezier(0.2, 0.8, 0.2, 1) 80ms backwards; }
+.title { animation:title-rise 760ms var(--ease-brand) 80ms backwards; }
 
 /* ODAK ÇİZGİSİ. Odaklanılan alanın altında mavi bir mürekkep çizgisi soldan
    açılıyor: okuyucu nereye yazdığını kenarlık renginden önce hareketle
@@ -83,7 +83,7 @@
    kendi girişi (`.page-enter`) zaten tonla geliyor; ikisi çarpılsaydı form
    ilk karelerde neredeyse görünmez olurdu. Hata satırı bu kuralın dışında
    (kendi girişi var, `.errorIn`). */
-.formCard h1 { animation:title-rise 760ms cubic-bezier(0.2, 0.8, 0.2, 1) 220ms backwards; }
+.formCard h1 { animation:title-rise 760ms var(--ease-brand) 220ms backwards; }
 .formCard form > :not([role="alert"]) { animation:auth-field-rise 480ms var(--ease-brand) 260ms backwards; }
 .formCard form > :nth-child(2) { animation-delay:320ms; }
 .formCard form > :nth-child(3) { animation-delay:380ms; }

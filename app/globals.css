@@ -404,6 +404,12 @@
   --premium-shadow: 0 0 #0000;
   --premium-shadow-hover: 0 0 #0000;
 }
+/* LOGO PLAKASI (10 Ekim). Şirket logoları beyaz zemin varsayarak
+   çiziliyor (koyu mürekkepli işaretler saydam PNG); koyu temada da plaka
+   BEYAZ kalır, aksi hâlde yarısı görünmez olur. Değer bilinçli olarak
+   temadan bağımsız; dört yerde `bg-white` / `#fff` olarak tekrar
+   ediliyordu ve denetim onu token'sız renk diye işaretledi. */
+:root { --logo-plate: #ffffff; }
 :root[data-theme="dark"] {
   --premium-surface: #101a28;
   --premium-highlight: rgb(183 213 245 / .07);
@@ -451,6 +457,7 @@
   --color-rail-link: var(--rail-link);
   --color-surface-solid: var(--surface-solid);
   --color-surface-sunken: var(--surface-sunken);
+  --color-logo-plate: var(--logo-plate);
 
   --color-strong: var(--text-strong);
   --color-body: var(--text-body);
@@ -602,6 +609,14 @@
   --radius-xl: 1rem;
 
   --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
+  /* YAYLI EĞRİLER — yalnızca MİKRO GERİ BİLDİRİM (10 Ekim). Hedefini
+     aşıp geri oturan eğri; sayaç rakamı, saat kolu, sekme ikonu, onay
+     işareti, seans çizgisinin "şimdi" noktası gibi tek bir küçük öğenin
+     "oldu" demesi için. Panel, sayfa ya da metin girişinde KULLANILMAZ —
+     orada her şey `--ease-brand`. Elle yazılmış on kopyası vardı ve
+     denetim gerekçesiz diye işaretledi; ad ve kural burada. */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring-soft: cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 
 /* --------------------------------------------------------------------------
@@ -1697,7 +1712,7 @@ html.theme-switching::view-transition-new(root) {
   .panel, [data-rise-scope], .chapter-heading { view-timeline: --rise block; }
   @media (prefers-reduced-motion: no-preference) {
     :is(.panel, [data-rise-scope], .chapter-heading) :is(h2, h3[data-rise]):not(.plate, .sr-only, [data-no-rise]) {
-      animation: heading-rise cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation: heading-rise var(--ease-brand) both;
       animation-timeline: --rise;
       animation-range: entry 40px entry 200px;
     }
@@ -1784,7 +1799,7 @@ html.theme-switching::view-transition-new(root) {
   margin-left:-9px; border-radius:0 0 3px 3px; background:var(--primary);
   animation:tab-mark 320ms var(--ease-brand) both;
 }
-.tab-bar a[aria-current="page"] .tab-icon { animation:tab-hop 460ms cubic-bezier(0.34,1.56,0.64,1) both; }
+.tab-bar a[aria-current="page"] .tab-icon { animation:tab-hop 460ms var(--ease-spring) both; }
 @keyframes tab-mark { from { transform:scaleX(0); } to { transform:none; } }
 @keyframes tab-hop {
   0% { transform:translateY(0) scale(1); }
@@ -1799,7 +1814,7 @@ html.theme-switching::view-transition-new(root) {
    değişim tek kareydi ve göz çoğu zaman kaçırıyordu; okuyucu emin olmak
    için ikinci kez basıyordu. İşaret küçükten yaylanarak büyüyor.
    -------------------------------------------------------------------------- */
-.check-pop { animation:check-pop 420ms cubic-bezier(0.34,1.56,0.64,1) both; }
+.check-pop { animation:check-pop 420ms var(--ease-spring) both; }
 @keyframes check-pop {
   from { opacity:0; transform:scale(.3) rotate(-25deg); }
   to { opacity:1; transform:none; }
@@ -2396,7 +2411,8 @@ html[data-scroll-behavior="smooth"] { scroll-behavior: smooth; }
    yukarıdaki "Sayfa geçişi" notunda). Toplam ~0,75 saniye; içerik bu sırada
    zaten okunur hâlde. Azaltılmış harekette hiçbiri yok.
    -------------------------------------------------------------------------- */
-.page-heading-copy h1 { animation: title-rise 760ms cubic-bezier(0.2, 0.8, 0.2, 1) 60ms backwards; }
+/* Marka eğrisinde (10 Ekim): önceki (0.2, 0.8, 0.2, 1) ona yakın ama ayrı bir eğriydi, gerekçesi yoktu. */
+.page-heading-copy h1 { animation: title-rise 760ms var(--ease-brand) 60ms backwards; }
 /* AÇIKLAMA SATIRI SAYDAMLIKLA GELMİYOR (28 Eylül, ölçüldü). Satır sayfanın
    en büyük metin öğesi olduğunda LCP onu sayıyor ve tarayıcı `opacity: 0`
    öğeyi boyanmış saymıyor: 260 ms gecikme + 520 ms giriş, 4x yavaş

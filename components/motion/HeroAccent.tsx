@@ -9,7 +9,9 @@ import styles from "./PremiumMotion.module.css";
  * 352×466 ile kartın TAMAMINI kaplıyor, içindeki endeks kartının ortasından
  * geçiyordu. Masaüstünde sorun görünmüyordu çünkü orada sağ sütunda görsel
  * var ve süs onun arkasına düşüyor; mobilde kolonlar tek sütuna inince
- * saklanacak yer kalmıyor.
+ * saklanacak yer kalmıyor. "Arkasına düşüyor" da yanlıştı: /tema'da yaylar
+ * sıralamanın rakam sütununu kesiyordu (10 Ekim denetimi). Sağ sütunda veri
+ * olan başlık bu motifi hiç basmıyor (SectionMasthead, DirectoryHeader).
  *
  * Motif artık sınırlı bir köşe kutusunda: metin sütununa hiç girmiyor,
  * genişlik ve yükseklik sabit oranla büyüyor. Uzun çapraz iz KALDIRILDI —

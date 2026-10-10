@@ -553,8 +553,11 @@
      maliyetten bugüne → bir yol: maliyet halka, fiyat dolu nokta, arası
        kazançta yeşil, kayıpta kırmızı
      dolar | lira getirisi → iki renkli kutu, ortak ölçekte çubuk
-   Kartın tepesinde dilimin renginde bir şerit ve aynı renkte hafif bir
-   ışık; derinlik yine tonla (gölge yok).
+   Kartın tepesinde dilimin renginde düz bir şerit; derinlik tonla (gölge
+   yok). Kartın köşesindeki renkli ışık ve şeridin solan ucu KALKTI (10
+   Ekim, tasarım denetimi): degrade yalnızca üç yerde (kısa display başlık,
+   birincil eylem, marka karosu), veri kartı taşımaz. Dilimi tanıtan renk
+   şeritte ve ağırlık halkasında zaten var.
    Izgara: telefonda tek sütun, 760'tan itibaren iki. İki sütunda kartlar
    satır içinde AYNI BOYDA (ızgara satırı geriyor) ve künye kartın dibine
    yaslanıyor — yan yana iki kartın künyesi aynı hatta. */
@@ -586,9 +589,7 @@
   padding: 1.15rem 1.1rem 1rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-xl);
-  background:
-    radial-gradient(120% 70% at 0% 0%, color-mix(in oklab, var(--accent) 13%, transparent), transparent 62%),
-    var(--surface);
+  background: var(--surface);
   transition:
     border-color 0.2s var(--ease-brand),
     transform 0.2s var(--ease-brand);
@@ -606,7 +607,7 @@
   position: absolute;
   inset: 0 0 auto 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--accent), color-mix(in oklab, var(--accent) 30%, transparent));
+  background: var(--accent);
 }
 
 /* Üst satır: logo · sembol ve ad · ağırlık halkası · eylemler. */

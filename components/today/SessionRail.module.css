@@ -35,7 +35,7 @@
    çevresinde yamuk bir elips çiziyordu (1440 ve 768, iki temada ölçüldü).
    Artık 8 piksellik yuvarlak bir nokta, halka onun üzerinde `inset:-4px`
    — kutusu kare, merkezi çubuğun ucu. */
-.now { position:absolute; top:4px; width:8px; height:8px; border-radius:50%; transform:translateX(-4px); background:var(--primary); box-shadow:0 0 0 2px var(--premium-surface); animation:rail-now-in 420ms cubic-bezier(0.34,1.56,0.64,1) 820ms backwards; }
+.now { position:absolute; top:4px; width:8px; height:8px; border-radius:50%; transform:translateX(-4px); background:var(--primary); box-shadow:0 0 0 2px var(--premium-surface); animation:rail-now-in 420ms var(--ease-spring) 820ms backwards; }
 .now[data-live]::after { content:""; position:absolute; inset:-4px; border:1px solid var(--primary); border-radius:50%; animation:rail-beacon 3s var(--ease-brand) infinite; }
 .now[data-still]::after { animation:none; opacity:0; }
 /* Bant adları zil adlarından bir kademe sessiz; seans adı bandın ortasında. */
