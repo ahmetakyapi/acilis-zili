@@ -162,6 +162,22 @@ sudo -u acilis -H bash /srv/acilis-zili/current/deploy/update.sh
 
 ---
 
+## Claude Analiz Anahtarını GitHub Üzerinden Aktarma
+
+Repository → Settings → Secrets and variables → Actions altında
+`CLAUDE_ANALYSIS_API_KEY` secret'ını tanımla. Mevcut `VPS_SSH_KEY` secret'ı
+ve `VPS_HOST` değişkeni sunucu bağlantısı için kullanılır.
+
+Actions → **Sync Claude Analysis Key** → **Run workflow** yalnız bu
+anahtarı `/etc/acilis-zili.env` dosyasında günceller ve `acilis-zili`
+servisini yeniden başlatır. Diğer ortam değerleri korunur. Anahtar SSH'nin
+şifreli standart girdisinden aktarılır; komut argümanına veya loga yazılmaz.
+Dosya atomik olarak değiştirilir ve izinleri `root:acilis`, `0640` olur.
+
+Normal deploy da secret tanımlıysa aynı aktarımı yapar; secret boşsa mevcut
+sunucu değeri korunur. İki workflow aynı concurrency grubunu kullanır.
+Bu aktarım analiz özelliğini veya veritabanı migration'ını yayınlamaz.
+
 ## Sorun giderme
 
 | Belirti | Bakılacak yer |

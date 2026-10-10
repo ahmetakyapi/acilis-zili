@@ -48,6 +48,18 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - name: Analiz anahtarını sunucuya aktar
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST: ${{ vars.VPS_HOST }}
+          CLAUDE_ANALYSIS_API_KEY: ${{ secrets.CLAUDE_ANALYSIS_API_KEY }}
+        run: |
+          if [[ -n "$CLAUDE_ANALYSIS_API_KEY" ]]; then
+            bash deploy/sync-analysis-key.sh
+          else
+            echo "Analiz secret tanımlı değil; mevcut sunucu ortamı korunuyor."
+          fi
       - name: SSH ile sunucuda update.sh çalıştır
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
