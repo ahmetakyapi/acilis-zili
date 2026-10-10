@@ -1,0 +1,21 @@
+.list { display:grid; padding:0 12px 12px; }
+/* 1280 px: altı sütun tek hatta; künyeler (small) sütun başlığı yerine her hücrede, telefonda kart düzeni bozulmasın diye. */
+.row { display:grid; grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,.8fr) minmax(0,.9fr) minmax(0,1.5fr) minmax(0,1fr); gap:14px; align-items:center; min-height:64px; padding:12px; border-radius:12px; transition:background-color 200ms; }
+.row:hover { background:var(--primary-faint); }
+li + li .row { border-top:1px solid var(--line-soft); border-radius:0 0 12px 12px; }
+li + li .row:hover { border-top-color:transparent; border-radius:12px; }
+.row small { display:block; margin-bottom:3px; font-size:11.5px; font-weight:400; color:var(--text-muted); }
+.stock { display:grid; gap:2px; min-width:0; }
+.symbol { font-family:var(--font-mono); font-weight:700; font-size:15px; color:var(--text-strong); }
+.name { font-size:13px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.verdict { font-weight:750; font-size:15px; color:var(--text-strong); }
+[data-verdict="buy"] > .verdict { color:var(--up); }
+[data-verdict="sell"] > .verdict { color:var(--down); }
+.score { font-weight:650; font-size:15px; color:var(--text-strong); font-variant-numeric:tabular-nums; }
+.meta { font-size:13px; color:var(--text-body); font-variant-numeric:tabular-nums; }
+.since { font-size:13px; }
+@media(max-width:767px) {
+  .list { padding:0 8px 8px; }
+  .row { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px 10px; padding:14px 10px; }
+  .stock { grid-column:1 / -1; }
+}

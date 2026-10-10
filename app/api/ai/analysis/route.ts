@@ -6,13 +6,16 @@ import { analysisModel, generateAnalysis } from "@/lib/ai-analysis";
 import { AnalysisInput } from "@/lib/ai-analysis-core";
 import { db } from "@/lib/db";
 import { aiAnalysisRequests } from "@/lib/schema";
-import { isKnownSymbol } from "@/lib/data";
+import { getStatus, isKnownSymbol } from "@/lib/data";
+import { getQuotes } from "@/lib/providers";
+import { z } from "zod";
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
 const respond = (data: unknown, status = 200) => NextResponse.json(data, {
   status, headers: { "Cache-Control": "private, no-store", "Vary": "Cookie" },
 });
+const HISTORY_LIMIT = 20;
 const configured = () => !!process.env.CLAUDE_ANALYSIS_API_KEY && process.env.CLAUDE_ANALYSIS_DISABLED !== "1";
 
 export async function GET(request: Request) {
@@ -22,16 +25,30 @@ export async function GET(request: Request) {
     const params = new URL(request.url).searchParams;
     const symbol = params.get("symbol")?.toUpperCase();
     const locale = params.get("locale");
+    // Analizlerim'den gelen bağlantı: rapor başka dilde üretilmiş olabilir, dil süzgeci uygulanmaz.
+    const id = z.uuid().safeParse(params.get("id"));
     const history = await db.select({ id: aiAnalysisRequests.id, symbol: aiAnalysisRequests.symbol,
       horizon: aiAnalysisRequests.horizon, locale: aiAnalysisRequests.locale, result: aiAnalysisRequests.result,
     }).from(aiAnalysisRequests).where(and(
       eq(aiAnalysisRequests.userId, access.userId), eq(aiAnalysisRequests.status, "completed"),
-      symbol ? eq(aiAnalysisRequests.symbol, symbol) : undefined,
-      locale ? eq(aiAnalysisRequests.locale, locale) : undefined,
-    )).orderBy(desc(aiAnalysisRequests.createdAt)).limit(20);
+      id.success ? eq(aiAnalysisRequests.id, id.data) : undefined,
+      !id.success && symbol ? eq(aiAnalysisRequests.symbol, symbol) : undefined,
+      !id.success && locale ? eq(aiAnalysisRequests.locale, locale) : undefined,
+    )).orderBy(desc(aiAnalysisRequests.createdAt)).limit(HISTORY_LIMIT);
     return respond({ remaining: access.remaining, dailyLimit: access.dailyLimit,
-      inProgress: !!access.lockId && !!access.lockUntil && access.lockUntil > new Date(), history });
+      inProgress: !!access.lockId && !!access.lockUntil && access.lockUntil > new Date(), history,
+      current: symbol && !id.success ? await currentQuote(symbol) : null });
   } catch { return respond({ error: "unavailable" }, 503); }
+}
+
+/** "Rapordan Bugüne" için: bayat kotasyon büyük puntoyla gösterilmez, hiç gönderilmez. */
+async function currentQuote(symbol: string) {
+  try {
+    const status = await getStatus();
+    const quotes = await getQuotes([symbol], status);
+    const quote = quotes.ok && !quotes.stale ? quotes.data[symbol] : null;
+    return quote ? { price: quote.price, at: quote.tradedAt ?? null, realtime: !!quote.realtime } : null;
+  } catch { return null; }
 }
 
 export async function POST(request: Request) {

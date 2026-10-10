@@ -11,6 +11,7 @@ import { ViewBeacon } from "@/components/layout/ViewBeacon";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { getI18n, getTheme } from "@/lib/i18n";
 import { getUserAvatar } from "@/lib/avatar-data";
+import { hasAnalysisAccess } from "@/lib/ai-analysis-access";
 
 /* --------------------------------------------------------------------------
    BU SEGMENTTE `loading.tsx` YOK — ve bu bilinçli.
@@ -51,7 +52,9 @@ export default async function AppLayout({
   ]);
   /* Profil ikonu — giriş yapılmışsa tek küçük sorgu, istek içinde
      önbellekli (/menu aynı cevabı okuyor). Düşerse baş harfler. */
-  const avatar = session?.user?.id ? await getUserAvatar(session.user.id) : null;
+  const [avatar, analyses] = session?.user?.id
+    ? await Promise.all([getUserAvatar(session.user.id), hasAnalysisAccess(session.user.id)])
+    : [null, false];
 
   const labels: ShellLabels = {
     brandName: t.brand.name,
@@ -128,6 +131,7 @@ export default async function AppLayout({
                (lib/admin.ts). Burada sorgu yapmak her sayfada bir gidiş-dönüş
                daha demek olurdu. */
             isAdmin={session?.user?.role === "admin"}
+            analyses={analyses}
             initialTheme={theme}
             initialLocale={locale}
             labels={{
@@ -138,6 +142,7 @@ export default async function AppLayout({
               guest: t.menu.guestTitle,
               guestHint: t.menu.guestHint,
               watchlist: t.nav.watchlist,
+              analyses: t.aiAnalysis.page.title,
               portfolio: t.lira.portfolio.title,
               theme: t.settings.theme,
               themeLight: t.settings.themeLight,

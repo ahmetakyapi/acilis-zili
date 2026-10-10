@@ -86,7 +86,7 @@ const EMBED_SOURCES = ["/gomulu/:path*", "/en/gomulu/:path*"];
  * `robots.txt`e YAZILMIYOR — gerekçesi `app/robots.ts` başında: `Disallow`
  * taramayı engeller ve arama motoru bu başlığı hiç okuyamaz.
  */
-const NOINDEX_PATHS = ["/gomulu", "/portfoy", "/favoriler", "/ayarlar", "/admin"];
+const NOINDEX_PATHS = ["/gomulu", "/portfoy", "/favoriler", "/ayarlar", "/analizlerim", "/admin"];
 const NOINDEX_SOURCES = NOINDEX_PATHS.flatMap((path) => [
   path,
   `${path}/:path*`,

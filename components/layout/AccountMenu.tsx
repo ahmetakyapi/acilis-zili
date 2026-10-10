@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { usePathname } from "next/navigation";
 import {
   CaretRight,
+  ChartLineUp,
   Gear,
   Heart,
   Briefcase,
@@ -83,6 +84,7 @@ export type AccountMenuLabels = {
   /** Hesabın ne kazandırdığını söyleyen tek satır. */
   guestHint: string;
   watchlist: string;
+  analyses: string;
 };
 
 export function AccountMenu({
@@ -90,6 +92,7 @@ export function AccountMenu({
   username,
   avatar = null,
   isAdmin = false,
+  analyses = false,
   initialTheme,
   initialLocale,
   labels,
@@ -102,6 +105,8 @@ export function AccountMenu({
   /** Yönetim satırı yalnızca yöneticide çizilir — panelin kapısı ayrıca
       veritabanına soruyor, bu yalnızca görünürlük kararı. */
   isAdmin?: boolean;
+  /** Claude analizi açık hesap: "Analizlerim" satırı (erişim ayrıca sayfada doğrulanır). */
+  analyses?: boolean;
   initialTheme: Theme;
   initialLocale: Locale;
   labels: AccountMenuLabels;
@@ -285,6 +290,13 @@ export function AccountMenu({
                     icon={Heart}
                     label={labels.watchlist}
                   />
+                  {analyses && (
+                    <MenuRow
+                      href={withLocale("/analizlerim", initialLocale)}
+                      icon={ChartLineUp}
+                      label={labels.analyses}
+                    />
+                  )}
                   <MenuRow
                     href={withLocale("/portfoy", initialLocale)}
                     icon={Briefcase}

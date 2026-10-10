@@ -22,14 +22,31 @@ export const AnalysisOutput = z.object({
   bullScenario: prose.describe("What would have to happen for the positive case, tied to supplied levels."),
   bearScenario: prose.describe("What would have to happen for the negative case, tied to supplied levels."),
   invalidation: prose.describe("Observable conditions that would overturn the view."),
+  confidence: z.enum(["low", "medium", "high"]).describe("How firmly the evidence supports the verdict: high when trend, momentum, business quality and news agree; low when they conflict or data is thin."),
+  bullLevel: z.number().nullable().describe("The supplied price level whose daily close above would trigger the positive scenario; null if none fits."),
+  bearLevel: z.number().nullable().describe("The supplied price level whose daily close below would trigger the negative scenario; null if none fits."),
+  watch: z.array(z.string().min(1).max(400)).min(1).max(4).describe("One to three short, concrete things to watch within the horizon (a level, a scheduled report, a news thread)."),
   news: z.array(z.object({
     sourceIndex: z.number().int().min(0).describe("sourceIndex of a supplied news item."),
     impact: prose.describe("How this story bears on the horizon."),
   })).max(8),
 });
 export type AnalysisResult = z.infer<typeof AnalysisOutput>;
+/** Kayıtlı rapor: 11 Ekim 2026 öncesi raporlarda güven, tetik seviyeleri ve izleme listesi yok. */
+export type StoredAnalysisResult = Omit<AnalysisResult, "confidence" | "bullLevel" | "bearLevel" | "watch">
+  & Partial<Pick<AnalysisResult, "confidence" | "bullLevel" | "bearLevel" | "watch">>;
+/** Modelin seviyesi sağlanan seviyelerden birine %0,5 içinde oturmuyorsa uydurmadır, atılır. */
+const LEVEL_TOLERANCE = 0.005;
+export function snapLevel(value: number | null, levels: readonly number[]): number | null {
+  if (value === null || !Number.isFinite(value) || value <= 0) return null;
+  let best: number | null = null;
+  for (const level of levels) {
+    if (Math.abs(level - value) / value <= LEVEL_TOLERANCE && (best === null || Math.abs(level - value) < Math.abs(best - value))) best = level;
+  }
+  return best;
+}
 /** Var olmayan ya da tekrarlanan haber atfını atar; haber yoksa haber puanı da yoktur. */
-export function repairNewsCitations(output: AnalysisResult, newsCount: number): AnalysisResult {
+export function repairNewsCitations<T extends Pick<AnalysisResult, "news" | "newsScore">>(output: T, newsCount: number): T {
   const cited = new Set<number>();
   const news = output.news.filter(n => {
     if (n.sourceIndex >= newsCount || cited.has(n.sourceIndex)) return false;
@@ -59,6 +76,7 @@ export function safeSourceUrl(value: string): boolean {
 }
 
 const RECENT_SESSIONS = 10;
+const CHART_SESSIONS = 63;
 const RETURN_WINDOWS = { w1: 5, m1: 21, m3: 63, m6: 126 } as const;
 const round2 = (value: number) => Math.round(value * 100) / 100;
 const pct = (to: number, from: number) => round2((to / from - 1) * 100);
@@ -73,9 +91,54 @@ export function pricePath(done: readonly Bar[]) {
   return {
     returnsPct: Object.fromEntries(Object.entries(RETURN_WINDOWS).map(([key, n]) => [key, back(n)])) as Record<keyof typeof RETURN_WINDOWS, number | null>,
     range3m: { high: round2(high), low: round2(low), fromHighPct: pct(last.close, high), fromLowPct: pct(last.close, low) },
+    /** Ekrandaki grafik için; modele gitmez (girdi token'ı). */
+    chart: done.slice(-CHART_SESSIONS).map(bar => ({ date: etParts(new Date(bar.time * 1000)).dateStr, close: round2(bar.close) })),
     recentSessions: done.slice(-RECENT_SESSIONS).map((bar, i, list) => {
       const prev = i > 0 ? list[i - 1].close : done[done.length - RECENT_SESSIONS - 1]?.close;
       return { date: etParts(new Date(bar.time * 1000)).dateStr, close: round2(bar.close), changePct: prev ? pct(bar.close, prev) : null, volume: bar.volume };
     }),
   };
 }
+
+export type NewsCandidate = { headline: string; summary: string | null; url: string; publishedAt: Date };
+/** Rapor başına en çok bu kadar "yalnız özette geçen" haber: başlıkta adı geçmeyen çoğu zaman yan konu. */
+const SUMMARY_ONLY_LIMIT = 3;
+const SIMILAR_HEADLINE = 0.6;
+const headlineWords = (headline: string) => new Set(headline.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(w => w.length >= 3));
+function similar(a: Set<string>, b: Set<string>) {
+  let shared = 0;
+  for (const word of a) if (b.has(word)) shared++;
+  return shared / (a.size + b.size - shared || 1) >= SIMILAR_HEADLINE;
+}
+/**
+ * Haberi seçen tek yer. Eskiden en yeni 12 alınıyordu: yoğun bir günde yedi
+ * günlük pencerenin tamamı tek güne düşüyor, aynı olayın iki ajans metni iki
+ * kez sayılıyor, başlığında şirket geçmeyen bir pazarlama duyurusu da giriyordu
+ * (NVDA, 11 Ekim canlı rapor). Şimdi: ilgisiz ve yakın kopya elenir, başlığında
+ * şirket geçen haber önce gelir, günler sırayla dolaşılır.
+ */
+export function selectNews<T extends NewsCandidate>(items: readonly T[], symbol: string, company: string, limit: number): T[] {
+  const kept: { item: T; words: Set<string>; headline: boolean }[] = [];
+  const urls = new Set<string>();
+  for (const item of [...items].sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())) {
+    if (urls.has(item.url) || !companyNewsRelevant(symbol, company, item.headline, item.summary)) continue;
+    const words = headlineWords(item.headline);
+    if (kept.some(k => similar(k.words, words))) continue;
+    urls.add(item.url);
+    kept.push({ item, words, headline: companyNewsRelevant(symbol, company, item.headline, null) });
+  }
+  const byDay = (group: typeof kept) => {
+    const days = new Map<string, T[]>();
+    for (const { item } of group) {
+      const day = etParts(item.publishedAt).dateStr;
+      days.set(day, [...(days.get(day) ?? []), item]);
+    }
+    const queues = [...days.values()];
+    const out: T[] = [];
+    while (queues.some(q => q.length)) for (const q of queues) { const next = q.shift(); if (next) out.push(next); }
+    return out;
+  };
+  const picked = [...byDay(kept.filter(k => k.headline)), ...byDay(kept.filter(k => !k.headline)).slice(0, SUMMARY_ONLY_LIMIT)].slice(0, limit);
+  return picked.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
+}
+export type PricePath = NonNullable<ReturnType<typeof pricePath>>;

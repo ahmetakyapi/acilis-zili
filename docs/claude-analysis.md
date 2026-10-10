@@ -97,3 +97,23 @@ Saf kontroller: `npx tsx --test tests/ai-analysis.test.ts`. Gerçek PostgreSQL
 kota testi: `NODE_OPTIONS=--conditions=react-server AI_DB_TEST=1 npx tsx --test
 tests/ai-analysis-quota.integration.test.ts`. Bu test yalnız geçici hesabı
 kullanır ve sonunda FK cascade ile temizler.
+
+## Rapor Ekranı
+
+`components/ai/`: `AnalysisReport` (karar şeridi → fiyat haritası → puan çizgileri ve
+dönem getirisi → senaryolar → izleme listesi → gerekçe/risk → haber → künyeler),
+`PriceMap` (son 63 seansın kapanışı, pivot/ortalama/3 aylık bant çizgileri, seviye
+merdiveni). Model çıktısında `confidence`, `bullLevel`, `bearLevel`, `watch` var;
+tetik seviyesi `snapLevel` ile sağlanan seviyelerden birine oturmuyorsa `null`a
+düşer, ekrana uydurma seviye çizilmez. Grafik serisi (`pricePath.chart`) kayda
+girer ama modele gitmez. 11 Ekim 2026 öncesi raporlarda bu alanlar yok; o parçalar
+basılmaz (`StoredAnalysisResult`).
+
+Haber seçimi `selectNews`: ilgisiz ve yakın kopya başlıklar elenir, başlığında
+şirket geçen haber önce gelir, günler sırayla dolaşılır, yalnız özette geçen haber
+en çok üç.
+
+`/analizlerim` kullanıcının bütün kayıtlı raporları (hisse, görüş, puan, vade,
+Rapordan Bugüne). Satır `/hisse-secimi/SYM?rapor=<id>` açar; panel kimliği adresten
+okur, başka dilde üretilmiş raporu `GET ?id=` ile ister. Menü satırı yalnız erişimi
+açık hesapta (`hasAnalysisAccess`, tek birincil anahtar okuması).

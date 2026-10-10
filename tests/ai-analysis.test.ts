@@ -53,3 +53,33 @@ test("price path reports returns, the 3-month band and recent sessions from comp
   assert.equal(pricePath(bars.slice(0, 3))!.returnsPct.w1, null);
   assert.equal(pricePath([]), null);
 });
+
+test("news selection spreads across days, drops near duplicates and caps summary-only mentions", async () => {
+  const { selectNews } = await import("../lib/ai-analysis-core");
+  const at = (day: number, hour: number) => new Date(Date.UTC(2026, 9, day, hour));
+  const item = (headline: string, publishedAt: Date, summary: string | null = null) => ({ headline, summary, url: `https://x.test/${encodeURIComponent(headline)}`, publishedAt });
+  const items = [
+    ...Array.from({ length: 12 }, (_, i) => item(`Nvidia story number ${i} about chips ${"abcdefghijkl"[i]}${i}x`, at(10, 20 - i))),
+    item("Super Micro Contractor Pleads Guilty in $2.5 Billion Nvidia AI Chip Smuggling Case", at(9, 15)),
+    item("Super Micro Contractor Pleads Guilty in $2.5 Billion AI Server Smuggling Case Nvidia", at(9, 14)),
+    item("Nvidia supplier update", at(6, 15)),
+    ...["One", "Two", "Three", "Four"].map((n, i) => item(`Agency ${n} launches marketing tool`, at(8, 10 + i), "Built on Nvidia GPUs.")),
+    item("Bitcoin rallies", at(7, 12)),
+  ];
+  const picked = selectNews(items, "NVDA", "NVIDIA Corp", 12);
+  const days = new Set(picked.map(p => p.publishedAt.getUTCDate()));
+  assert.ok(days.has(9) && days.has(6), "older days are not crowded out by one busy day");
+  assert.equal(picked.filter(p => p.headline.startsWith("Super Micro")).length, 1);
+  assert.ok(picked.filter(p => p.headline.startsWith("Agency")).length <= 3);
+  assert.ok(!picked.some(p => p.headline === "Bitcoin rallies"));
+  assert.ok(picked.every((p, i) => i === 0 || picked[i - 1].publishedAt >= p.publishedAt));
+});
+
+test("model trigger levels must match a supplied level", async () => {
+  const { snapLevel } = await import("../lib/ai-analysis-core");
+  const levels = [227.62, 232.43, 202.15];
+  assert.equal(snapLevel(232.4, levels), 232.43);
+  assert.equal(snapLevel(240, levels), null);
+  assert.equal(snapLevel(null, levels), null);
+  assert.equal(snapLevel(-1, levels), null);
+});

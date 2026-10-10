@@ -8,11 +8,15 @@ import { getCompanyNews } from "./providers/finnhub";
 import { loadScreen } from "./screening-data";
 import { completedBars, computeSnapshot, type TechnicalSnapshot } from "./technical";
 import { evaluate } from "./screening";
-import { AnalysisOutput, companyNewsRelevant, pricePath, repairNewsCitations, safeSourceUrl, type AnalysisResult } from "./ai-analysis-core";
+import { AnalysisOutput, pricePath, repairNewsCitations, safeSourceUrl, selectNews, snapLevel, type PricePath, type StoredAnalysisResult } from "./ai-analysis-core";
 
 export type SavedAnalysis = {
-  output: AnalysisResult;
+  output: StoredAnalysisResult;
   snapshot: TechnicalSnapshot;
+  /** 11 Ekim 2026 öncesi raporlarda yok. */
+  pricePath?: PricePath | null;
+  /** Rapor anındaki kotasyon fiyatı; "Rapordan Bugüne" buna göre. */
+  quotePrice?: number;
   screeningScore: number | null;
   screeningCoverage: number;
   sources: { headline: string; url: string; source: string | null; publishedAt: string }[];
@@ -77,8 +81,12 @@ buy, hold or sell is a view for the selected horizon. Decide it from the evidenc
 - Write every prose field in request.language. In Turkish, write plain everyday Turkish a non-professional investor reads easily: standard market terms (hareketli ortalama, destek, direnç, momentum), no word-for-word renderings of English idioms, decimal commas (182,40 $, %12,5).
 - summary: two to four sentences giving the view and its main reason.
 - reasons and risks: two to four items each, one concrete point per item, with the supplied numbers that support it.
-- bullScenario and bearScenario: what would have to happen, tied to supplied levels.
+- bullScenario and bearScenario: what would have to happen, tied to supplied levels. bullLevel and bearLevel are the single supplied levels (copied exactly from the input) that trigger each scenario on a daily close; null when no supplied level fits.
 - invalidation: the observable conditions that would overturn the view.
+- confidence: high only when trend, momentum, business quality and news point the same way with good coverage; low when they conflict or key data is missing.
+- watch: one to three short items a reader can check during the horizon, each one line (a supplied level, the next earnings report, a news thread).
+- In Turkish, name verdicts as AL, TUT, SAT and Veri Yetersiz, never buy/hold/sell. Call swing highs and lows "tepe" and "dip", pivots "pivot direnci R1" or "pivot desteği S1". Write negative percentages as "-%2,9" and describe falls in words where natural ("%2,9 düştü").
+- Treat opinion, ranking and promotional pieces ("the stock I'd buy", listicles, sponsored launches) as opinion, not as company news: cite them only for sentiment, never as facts.
 - Keep each prose field under 600 characters. The quote time and feed are shown next to the report; mention them only when they change the reading.
 - No position sizing, no guaranteed returns, no instructions addressed to the reader.
 </writing>`;
@@ -107,10 +115,14 @@ export async function generateAnalysis(symbol: string, horizon: "short" | "mediu
   if (screen.input.price && screen.input.marketCap) fundamentals.marketCap = screen.input.marketCap * quote.price / screen.input.price;
   if (screen.input.price && screen.input.upside !== null) fundamentals.upside = (screen.input.price * (1 + screen.input.upside / 100) / quote.price - 1) * 100;
   const screening = evaluate(fundamentals);
-  const seen = new Set<string>();
-  const items = news.ok ? news.data.filter(n => safeSourceUrl(n.url) && n.publishedAt <= new Date() && n.publishedAt >= start && companyNewsRelevant(symbol, screen.name, n.headline, n.summary))
-    .sort((a,b) => b.publishedAt.getTime() - a.publishedAt.getTime())
-    .filter(n => { if (seen.has(n.url)) return false; seen.add(n.url); return true; }).slice(0, NEWS_LIMIT) : [];
+  const items = news.ok ? selectNews(news.data.filter(n => safeSourceUrl(n.url) && n.publishedAt <= new Date() && n.publishedAt >= start), symbol, screen.name, NEWS_LIMIT) : [];
+  const path = pricePath(completedBars(bars[symbol], status));
+  // Grafik serisi ekran için; modele dönem getirileri ve son 10 seans yeter.
+  const pathForModel = path && { returnsPct: path.returnsPct, range3m: path.range3m, recentSessions: path.recentSessions };
+  // Modelin tetik seviyesi ancak bu listeden biriyse ekrana çizilir.
+  const levels = [snapshot.pivots?.p, snapshot.pivots?.r1, snapshot.pivots?.r2, snapshot.pivots?.s1, snapshot.pivots?.s2,
+    snapshot.sma20, snapshot.sma50, snapshot.sma100, snapshot.sma200, snapshot.high52, snapshot.low52,
+    path?.range3m.high, path?.range3m.low, ...snapshot.swingHighs, ...snapshot.swingLows].filter((v): v is number => typeof v === "number");
   const quoteSource = quotes.ok ? quotes.source : "unknown";
   const model = analysisModel();
   const fallback = FALLBACK_MODELS.has(model);
@@ -126,7 +138,7 @@ export async function generateAnalysis(symbol: string, horizon: "short" | "mediu
     messages: [{ role: "user", content: JSON.stringify({
       request: { symbol, company: screen.name, horizon, language: locale, generatedAt: new Date().toISOString(), marketSession: status.session },
       quote: { price: quote.price, tradedAt: quote.tradedAt, source: quoteSource, realtime: !!quote.realtime },
-      pricePath: pricePath(completedBars(bars[symbol], status)),
+      pricePath: pathForModel,
       technical: snapshot,
       fundamentals,
       screening: { score: screening.score, band: screening.band, eliminated: screening.eliminated, coverage: screening.coverage,
@@ -140,9 +152,10 @@ export async function generateAnalysis(symbol: string, horizon: "short" | "mediu
   if (response.stop_reason !== "end_turn") throw new Error("invalid-output");
   const text = response.content.filter(block => block.type === "text").map(block => block.text).join("");
   // Bozuk haber atfı tüm ücretli raporu düşürmez: geçersiz atıf atılır, haber yoksa puan da yok.
-  const output = repairNewsCitations(AnalysisOutput.parse(JSON.parse(text)), items.length);
+  const parsed = repairNewsCitations(AnalysisOutput.parse(JSON.parse(text)), items.length);
+  const output = { ...parsed, bullLevel: snapLevel(parsed.bullLevel, levels), bearLevel: snapLevel(parsed.bearLevel, levels) };
   return {
-    output, snapshot, screeningScore: screening.score, screeningCoverage: screening.coverage,
+    output, snapshot, pricePath: path, quotePrice: quote.price, screeningScore: screening.score, screeningCoverage: screening.coverage,
     sources: items.map(n => ({ headline: n.headline, url: n.url, source: n.source, publishedAt: n.publishedAt.toISOString() })),
     generatedAt: new Date().toISOString(), quoteAt: new Date(quote.tradedAt).toISOString(), quoteSource,
     realtime: !!quote.realtime, newsFetchedAt: news.ok ? news.fetchedAt.toISOString() : null, newsAvailable: news.ok,

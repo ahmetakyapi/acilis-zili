@@ -67,6 +67,9 @@ try {
     assert(VERDICTS.has(output.verdict) && isScore(output.overallScore) && isScore(output.technicalScore));
     assert(output.newsScore === null || isScore(output.newsScore));
     assert(output.summary && output.reasons.length && output.risks.length && output.invalidation);
+    assert(["low", "medium", "high"].includes(output.confidence) && output.watch.length > 0);
+    // Tetik seviyesi ya null ya da raporun kendi seviyelerinden biri (snapLevel); grafik buna dayanıyor.
+    assert(report.result.pricePath?.chart.length > 1 && typeof report.result.quotePrice === "number");
     // Haber olmayan gün de geçerli rapordur; ölçülen, atıfların kaynağa düşmesi.
     assert(output.news.every((n) => n.sourceIndex < sources.length));
     assert(sources.length > 0 || output.newsScore === null);
@@ -77,6 +80,7 @@ try {
     const seconds = ((Date.now() - startedAt) / 1000).toFixed(1);
     console.log(`Live Claude generation passed: ${symbol} · ${horizon} · ${row.model} · ${seconds} s.`);
     console.log(`Verdict ${output.verdict} · overall ${output.overallScore} · technical ${output.technicalScore} · news ${output.newsScore ?? "—"} · ${sources.length} sources, ${output.news.length} cited.`);
+    console.log(`Confidence ${output.confidence} · bull trigger ${output.bullLevel ?? "—"} · bear trigger ${output.bearLevel ?? "—"} · ${output.watch.length} watch items.`);
     console.log(`Tokens: ${row.input_tokens} in / ${row.output_tokens} out (output includes thinking).`);
   } else console.log("Paid generation skipped; enable workflow input to test one real report.");
 } catch {
