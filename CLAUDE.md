@@ -72,6 +72,20 @@ başta gelirse büyür. "Faiz, Tahvil ve Getiri Eğrisi" · "Ne Kadar, Ne Zaman"
   duruyor (10 Ekim, sahibinin itirazı — `MarketTexture.module.css`).
 - **Tek font** (Schibsted Grotesk, değişken 400–900); mono yalnızca
   sembol ve dizin numarası gibi künyelerde (`--font-mono`).
+- **Eğri:** her geçiş `--ease-brand` (JS'te `lib/motion.ts` →
+  `EASE_BRAND`; `element.animate` CSS değişkenini çözmüyor). Hedefini aşıp
+  geri oturan `--ease-spring` / `--ease-spring-soft` YALNIZCA tek bir küçük
+  öğenin geri bildiriminde (sayaç rakamı, saat kolu, onay işareti); panel,
+  sayfa ve metin girişinde asla. Elle `cubic-bezier(...)` yazılmaz.
+- **Display başlığın yanındaki metin 0,12em kalkar.** Degrade başlıklar
+  Ü/İ/Ö imleri kesilmesin diye 0,12em yukarı açılıp `translate` ile geri
+  kalkıyor (globals.css, "ÜSTTEKİ İMLER") ve taban çizgisi hizalaması
+  kaydırılmamış kutuya göre yapılıyor: yanına taban çizgisiyle dizilen
+  künye 2–5 piksel aşağıda görünür. Yanındaki öğeye
+  `translate: 0 calc(<başlık puntosu> * -.12)` ver (örnek
+  `MarketTexture.module.css` → `.bandHead`, `.partHead`). Başlığa
+  `inline-flex` de verme; taban çizgisini içi boş bir `::before` imi
+  belirliyor.
 
 **Fotoğraf yok.** Yazıların görseli, metinden çizilen `:::` bloklarıdır: model
 yalnızca satırları yazar, çizimi site yapar. Telif riski yok, hiçbir yerde
