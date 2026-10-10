@@ -177,7 +177,7 @@ export default async function StockPage(
         action={
           <Link
             href={`/hisse/${symbol}`}
-            className="text-sm font-semibold text-primary hover:underline"
+            className="text-sm font-semibold text-primary hover:text-primary-hover"
           >
             {t.common.retry}
           </Link>

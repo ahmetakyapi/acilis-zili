@@ -60,7 +60,7 @@ export function ReportFooter({
                         href={href}
                         target="_blank"
                         rel="noopener noreferrer nofollow"
-                        className="inline-flex min-h-11 items-center text-primary hover:underline sm:min-h-8"
+                        className="inline-flex min-h-11 items-center text-primary hover:text-primary-hover sm:min-h-8"
                       >
                         {source.label}
                         <ArrowUpRight aria-hidden size={14} />

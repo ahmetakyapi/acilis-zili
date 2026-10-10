@@ -37,6 +37,9 @@ export async function ClaudeCta({ symbol, locale, focus }: { symbol: string; loc
       {latest ? <p className={styles.ctaLine}><strong className={styles.ctaVerdict}>{t.verdicts[latest.verdict]}</strong><span>{date} · TR</span></p>
         : <p className={styles.ctaLine}><span>{t.cta.none}</span></p>}
     </div>
-    <ButtonLink href={href} variant={latest ? "ghost" : "primary"} size="sm">{latest ? t.cta.open : t.cta.create}</ButtonLink>
+    <div className={styles.ctaActions}>
+      {latest && canGenerate && <ButtonLink href={`/claude/${encodeURIComponent(symbol)}?odak=${odak}&sekme=yeni`} variant="quiet" size="sm">{t.claude.regenerate}</ButtonLink>}
+      <ButtonLink href={href} variant={latest ? "ghost" : "primary"} size="sm">{latest ? t.cta.open : t.cta.create}</ButtonLink>
+    </div>
   </section>;
 }

@@ -40,7 +40,7 @@ export default async function TechnicalNotFound() {
               </Link>
             ))}
           </div>
-          <Link href="/teknik" className="text-sm font-semibold text-primary hover:underline">
+          <Link href="/teknik" className="text-sm font-semibold text-primary hover:text-primary-hover">
             {t.technical.allStocks}
           </Link>
         </div>

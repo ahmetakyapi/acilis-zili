@@ -103,7 +103,7 @@ const SMILE: Point[] = path(
 );
 const PIVOT = { x: 0, y: -50 };
 
-type BellPose = {
+export type BellPose = {
   x: number;
   y: number;
   s: number;
@@ -133,7 +133,7 @@ function placeOne(pt: Point, p: BellPose) {
   return place([pt], p)[0];
 }
 
-function drawBell(ctx: Ctx, pal: InkPalette, p: BellPose) {
+export function drawBell(ctx: Ctx, pal: InkPalette, p: BellPose) {
   const outline = p.outline ?? 1;
   const wash = p.wash ?? 1;
 
@@ -219,7 +219,7 @@ function drawBell(ctx: Ctx, pal: InkPalette, p: BellPose) {
 }
 
 /** Zilin çınlaması: iki yanda açılan ince yaylar. */
-function ringArcs(ctx: Ctx, pal: InkPalette, x: number, y: number, t: number, s: number) {
+export function ringArcs(ctx: Ctx, pal: InkPalette, x: number, y: number, t: number, s: number) {
   if (t <= 0 || t >= 1) return;
   for (let k = 0; k < 2; k++) {
     const local = clamp(t * 1.25 - k * 0.22);
@@ -244,7 +244,7 @@ function ringArcs(ctx: Ctx, pal: InkPalette, x: number, y: number, t: number, s:
 }
 
 /** Pirinç kıvılcım: vuruş anında dışarı savrulan kısa fırça darbeleri. */
-function spark(ctx: Ctx, pal: InkPalette, x: number, y: number, t: number, s: number, seed: number) {
+export function spark(ctx: Ctx, pal: InkPalette, x: number, y: number, t: number, s: number, seed: number) {
   if (t <= 0 || t >= 1) return;
   const r = rng(seed);
   const k = ease.out(t);

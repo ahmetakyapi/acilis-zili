@@ -6,6 +6,7 @@ import polish from "@/components/motion/UtilityExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { EmptyState, LogoTile, PageHeader, TabBar, TabItem, ButtonLink } from "@/components/ui/primitives";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
+import { InkCanvas } from "@/components/ink/InkCanvas";
 import { AnalysisReport } from "@/components/ai/AnalysisReport";
 import { ClaudeWorkbench } from "@/components/ai/ClaudeWorkbench";
 import type { FilmBar } from "@/components/ai/AnalysisFilm";
@@ -75,11 +76,18 @@ export default async function ClaudePage(props: PageProps<"/claude/[symbol]">) {
 
   const focusCard = (f: AnalysisFocus) => {
     const latest = reports.find(r => FOCUS_OF[r.horizon] === f);
+    // Mürekkep çizimi: teknik için grafik, seçim için defter sahnesi (lib/ink/scenes.ts); bir kez oynar.
     return <Link key={f} href={href({ focus: f, tab: tab === "gecmis" ? "gecmis" : latest ? "rapor" : "yeni" })} scroll={false}
       className={styles.focusCard} aria-current={f === focus ? "true" : undefined} data-verdict={latest?.verdict}>
-      <span className={styles.focusName}>{f === "technical" ? A.focus.technical : A.focus.selection}</span>
-      <span className={styles.focusHint}>{f === "technical" ? A.focus.technicalHint : A.focus.selectionHint}</span>
-      {latest && <span className={styles.focusLatest}><b>{A.verdicts[latest.verdict]}</b>{latest.score !== null && ` · ${latest.score}/100`} · {time(latest.generatedAt)}</span>}
+      <span className={styles.focusArt} aria-hidden><InkCanvas scene={f === "technical" ? "chart" : "ledger"} seed={f === "technical" ? 7 : 13} /></span>
+      <span className={styles.focusBody}>
+        <span className={styles.focusName}>{f === "technical" ? A.focus.technical : A.focus.selection}</span>
+        <span className={styles.focusHint}>{f === "technical" ? A.focus.technicalHint : A.focus.selectionHint}</span>
+        {latest ? <span className={styles.focusLatest}>
+          {latest.score !== null && <ScoreRing score={latest.score} verdict={latest.verdict === "insufficient" ? "hold" : latest.verdict} size={34} />}
+          <b>{A.verdicts[latest.verdict]}</b><span>{date(latest.generatedAt)}</span>
+        </span> : <span className={styles.focusLatest}><span>{A.cta.none}</span></span>}
+      </span>
     </Link>;
   };
 
@@ -108,7 +116,11 @@ export default async function ClaudePage(props: PageProps<"/claude/[symbol]">) {
     </TabBar>
 
     {tab === "rapor" && (result && selected ? <div className={styles.reportWrap}>
-      <p className={styles.createdAt}>{C.createdAt.replace("{date}", date(result.generatedAt))}{selected.locale !== locale ? ` ${C.otherLocale}` : ""}</p>
+      <div className={styles.reportBar}>
+        <p className={styles.createdAt}>{C.createdAt.replace("{date}", date(result.generatedAt))}{selected.locale !== locale ? ` ${C.otherLocale}` : ""}</p>
+        {/* Rapor varken de yeniden üretilebilir (sabah ve akşam iki rapor gibi): düğme her zaman burada. */}
+        {access && <ButtonLink href={href({ tab: "yeni" })} variant="primary" size="sm" scroll={false}>{C.regenerate}</ButtonLink>}
+      </div>
       <AnalysisReport result={result} t={A} locale={locale} symbol={symbol} horizon={selected.horizon} categoryNames={t.screening.categories}
         current={quote ? { price: quote.price, at: quote.tradedAt ? new Date(quote.tradedAt).toISOString() : null, realtime: !!quote.realtime } : null} />
     </div> : <EmptyState title={C.emptyTitle} hint={access ? C.emptyHint : C.emptyHintGuest} scene="chart"

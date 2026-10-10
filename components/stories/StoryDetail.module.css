@@ -138,7 +138,7 @@
 .sourceTitle { display:block; margin-top:2px; font-size:14px; line-height:1.45; color:var(--primary-ink); text-wrap:pretty; }
 .sourceLink > svg { margin-top:3px; color:var(--primary); }
 span.sourceLink .sourceTitle { color:var(--text-body); }
-@media(hover:hover) { a.sourceLink:hover .sourceTitle { color:var(--primary-hover); text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:3px; } a.sourceLink:hover > svg { transform:translate(2px,-2px); } }
+@media(hover:hover) { a.sourceLink:hover .sourceTitle { color:var(--primary-hover); } a.sourceLink:hover > svg { transform:translate(2px,-2px); } }
 a.sourceLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:var(--radius-sm); }
 .disclaimer { font-size:12px; line-height:1.6; color:var(--text-muted); }
 

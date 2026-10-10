@@ -25,7 +25,7 @@ export default async function NewsNotFound() {
         title={t.news.notFound}
         hint={t.news.notFoundHint}
         action={
-          <Link href="/haberler" className="text-sm text-primary hover:underline">
+          <Link href="/haberler" className="text-sm text-primary hover:text-primary-hover">
             {t.common.back}
           </Link>
         }

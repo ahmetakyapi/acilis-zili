@@ -1,76 +1,27 @@
-/* Bekleme filmi. Derinlik tonla (sahne `--surface-sunken`), cam/ışıma yok;
-   renk yalnız yönde (mum, terazi jetonu). Her geçiş `--ease-brand`. */
-.stage { position:relative; overflow:hidden; aspect-ratio:16 / 8; min-height:300px; border-radius:24px; background:var(--surface-sunken); isolation:isolate; }
-.chart { position:absolute; inset:28px 28px 96px; width:calc(100% - 56px); height:calc(100% - 124px); overflow:visible; transition:opacity 700ms var(--ease-brand); }
-.chart[data-dim] { opacity:.28; }
-.stage[data-scene="3"] .chart,.stage[data-scene="4"] .chart { opacity:.1; }
-.candle line { stroke-width:1; }
-.candle[data-tone="up"] line { stroke:var(--up); }
-.candle[data-tone="up"] rect { fill:var(--up); }
-.candle[data-tone="down"] line { stroke:var(--down); }
-.candle[data-tone="down"] rect { fill:var(--down); }
-.candle { transform-box:fill-box; transform-origin:center bottom; animation:candle-in 520ms var(--ease-brand) calc(var(--i,0) * 38ms) both; }
-@keyframes candle-in { from { opacity:0; scale:1 .2; translate:0 12px; } to { opacity:1; scale:1 1; translate:0 0; } }
-.ma { fill:none; stroke-width:2.25; stroke-linecap:round; stroke-linejoin:round; clip-path:inset(0 100% 0 0); animation:reveal 1600ms var(--ease-brand) 200ms forwards; }
-.ma[data-line="20"] { stroke:var(--text-strong); }
-.ma[data-line="50"] { stroke:var(--primary); animation-delay:700ms; }
-@keyframes reveal { to { clip-path:inset(0 0 0 0); } }
-
-.chips { position:absolute; top:28px; right:28px; display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; max-width:70%; }
-.chips span { padding:8px 14px; border-radius:999px; background:var(--premium-surface); border:1px solid var(--line); font-size:13px; color:var(--text-muted); animation:pop 520ms var(--ease-spring-soft) calc(900ms + var(--i,0) * 220ms) both; }
-.chips b { margin-left:4px; color:var(--text-strong); font-weight:700; }
-@keyframes pop { from { opacity:0; scale:.85; translate:0 6px; } to { opacity:1; scale:1; translate:0 0; } }
-
-.news { position:absolute; inset:28px 28px 104px; display:grid; align-content:center; gap:10px; }
-.news li { justify-self:start; max-width:min(560px,100%); padding:12px 16px; border-radius:14px; background:var(--premium-surface); border:1px solid var(--line); font-size:14px; line-height:1.45; font-weight:550; color:var(--text-strong); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; animation:card-in 640ms var(--ease-brand) calc(var(--i,0) * 700ms) both; }
-.news li:nth-child(even) { justify-self:end; }
-@keyframes card-in { from { opacity:0; translate:48px 0; } to { opacity:1; translate:0 0; } }
-
-.scale { position:absolute; inset:20px 20px 100px; display:grid; place-items:center; align-content:center; gap:4px; animation:fade 500ms var(--ease-brand) both; }
-.scale svg { width:min(320px,70%); overflow:visible; }
-.post { fill:var(--line-strong); }
-.beam { transform-box:view-box; transform-origin:120px 40px; animation:tilt 2600ms var(--ease-brand) infinite alternate; }
-.beam line { stroke:var(--text-strong); stroke-width:3; stroke-linecap:round; }
-.beam > circle { fill:var(--text-strong); }
-.pan line { stroke:var(--line-strong); stroke-width:1.5; }
-.pan path { fill:var(--premium-surface); stroke:var(--line-strong); stroke-width:1.5; }
-.token[data-tone="up"] { fill:var(--up); }
-.token[data-tone="down"] { fill:var(--down); }
-.token { animation:drop 900ms var(--ease-spring-soft) calc(400ms + var(--i,0) * 520ms) both; }
-@keyframes drop { from { opacity:0; translate:0 -46px; } to { opacity:1; translate:0 0; } }
-@keyframes tilt { from { rotate:-5deg; } to { rotate:5deg; } }
-.scaleLabels { display:flex; justify-content:space-between; width:min(340px,76%); font-size:13px; font-weight:650; }
-.scaleLabels [data-tone="up"] { color:var(--up); }
-.scaleLabels [data-tone="down"] { color:var(--down); }
-
-.curtain { position:absolute; inset:0; display:grid; place-items:center; background:var(--surface-sunken); animation:fade 420ms var(--ease-brand) both; z-index:2; }
-.curtain strong { font-size:clamp(2rem,5vw,3.5rem); font-weight:800; letter-spacing:-.05em; color:var(--text-strong); animation:rise 700ms var(--ease-brand) 120ms both; }
-@keyframes rise { from { opacity:0; translate:0 24px; } to { opacity:1; translate:0 0; } }
-@keyframes fade { from { opacity:0; } to { opacity:1; } }
-
-.caption { position:absolute; left:28px; right:28px; bottom:36px; display:grid; gap:3px; z-index:3; animation:rise 520ms var(--ease-brand) both; }
-.caption strong { font-size:clamp(1.15rem,2vw,1.5rem); font-weight:750; letter-spacing:-.03em; color:var(--text-strong); }
-.caption > span:last-child { font-size:14px; color:var(--text-body); }
-.sceneNo { font-size:12px; font-weight:700; color:var(--primary-ink); }
-.progress { position:absolute; left:28px; right:28px; bottom:20px; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; z-index:3; }
-.progress span { position:relative; height:4px; border-radius:999px; background:var(--line-strong); overflow:hidden; opacity:.5; }
-.progress span[data-state="done"] { background:var(--primary); opacity:1; }
+/* Mürekkep filmi: kâğıt zemin (`--surface-sunken`), çizgi tuvalde, altyazı DOM'da.
+   Cam/ışıma yok; her geçiş `--ease-brand`. */
+.stage { position:relative; overflow:hidden; aspect-ratio:16 / 8; min-height:320px; border-radius:24px; background:var(--surface-sunken); }
+.canvas { position:absolute; inset:0; width:100%; height:100%; }
+.caption { position:absolute; left:32px; right:32px; bottom:40px; display:grid; gap:4px; animation:caption-in 700ms var(--ease-brand) both; }
+.caption strong { font-size:clamp(1.25rem,2.2vw,1.65rem); font-weight:750; letter-spacing:-.035em; color:var(--text-strong); }
+.caption > span:last-child:not(.sceneNo) { font-size:14px; color:var(--text-body); }
+.caption[data-final] { left:0; right:0; bottom:44px; text-align:center; }
+.caption[data-final] strong { font-size:clamp(1.6rem,3.4vw,2.4rem); animation:caption-in 800ms var(--ease-brand) 1200ms both; }
+.sceneNo { font-size:12px; font-weight:700; letter-spacing:.08em; color:var(--brass-ink); }
+@keyframes caption-in { from { opacity:0; translate:0 10px; } to { opacity:1; translate:0 0; } }
+.progress { position:absolute; left:32px; right:32px; bottom:22px; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.progress span { position:relative; height:3px; border-radius:999px; background:var(--line-strong); overflow:hidden; opacity:.45; transition:opacity 400ms var(--ease-brand); }
+.progress span[data-state="done"] { opacity:1; background:var(--text-strong); }
 .progress span[data-state="active"] { opacity:1; }
 /* Doğrusal BİLEREK: süre göstergesi; yavaşlayan dolum geçen zamanı yanlış anlatır. */
-.progress span[data-state="active"]::after { content:""; position:absolute; inset:0; background:var(--primary); transform-origin:left; animation:fill 5000ms linear both; }
+.progress span[data-state="active"]::after { content:""; position:absolute; inset:0; background:var(--text-strong); transform-origin:left; animation:fill 5000ms linear both; }
 @keyframes fill { from { scale:0 1; } to { scale:1 1; } }
-
-.static ol { display:grid; gap:10px; padding:18px; border-radius:16px; background:var(--surface-sunken); }
-.static li { font-size:14px; color:var(--text-muted); }
-.static li[data-state="active"] { color:var(--text-strong); font-weight:650; }
-.static li[data-state="done"] { color:var(--text-body); }
-
 @media(max-width:639px) {
   .stage { aspect-ratio:4 / 5; min-height:0; border-radius:20px; }
-  .chart { inset:20px 16px 104px; width:calc(100% - 32px); height:calc(100% - 124px); }
-  .chips { top:16px; right:16px; max-width:90%; }
-  .news { inset:20px 16px 112px; }
-  .news li { white-space:normal; font-size:13.5px; }
-  .caption { left:18px; right:18px; bottom:34px; }
+  .caption { left:18px; right:18px; bottom:36px; }
   .progress { left:18px; right:18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .caption,.caption[data-final] strong { animation:none; }
+  .progress span[data-state="active"]::after { animation:none; scale:.5 1; }
 }

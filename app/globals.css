@@ -2231,8 +2231,9 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
 /* Shared motion surfaces retain the compact frame geometry. Link feedback
    paints within its existing hit area and does not shift adjacent readings. */
 .page-frame,.page-masthead { isolation:isolate; }
-[data-motion-action] { text-decoration:underline; text-decoration-color:transparent; text-underline-offset:4px; transition:color 180ms,text-decoration-color 240ms; }
-[data-motion-action]:is(:hover,:focus-visible) { text-decoration-color:currentColor; }
+/* ÜZERİNE GELİNCE ALT ÇİZGİ YOK (sahibinin isteği, 11 Ekim): geri bildirim renk ve oktaki kayma. */
+[data-motion-action] { text-decoration:none; transition:color 180ms; }
+[data-motion-action]:is(:hover,:focus-visible) { color:var(--primary-hover); }
 [data-motion-action] svg { transition:transform 260ms var(--ease-brand); }
 [data-motion-action]:is(:hover,:focus-visible) svg { transform:translateX(3px); }
 [data-motion-action]:active { opacity:.72; }

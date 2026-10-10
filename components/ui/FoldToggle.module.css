@@ -8,7 +8,7 @@
 .foldInput:checked ~ .foldButton .foldIcon { transform:rotate(-180deg); }
 .foldButton:active { color:var(--text-strong); }
 @media (hover:hover) and (pointer:fine) {
-  .foldButton:hover { text-decoration:underline; text-underline-offset:3px; }
+  .foldButton:hover { color:var(--primary-hover); }
 }
 @media (prefers-reduced-motion:reduce) { .foldIcon { transition:none; } }
 .foldInput:focus-visible ~ .foldButton { outline:2px solid var(--line-focus); outline-offset:-2px; border-radius:8px; }

@@ -161,10 +161,13 @@ async function translateWithClaude(items: PendingItem[]): Promise<Translated[]> 
        döndürüyor — çeviri o koşumda atlanıyor, koşum devam ediyor. */
     const response = await withTimeout(
       client.messages.parse({
-        model: "claude-opus-5",
+        /* Opus 5.5: düşünme kapatılamaz, efor tek ayar ve varsayılanı `medium`.
+           Çeviri basit iş: `low`ta model düşünmeyi çoğu istekte atlar, kırk
+           haberlik istek BACKGROUND_TIMEOUT_MS'e daha rahat sığar. */
+        model: "claude-opus-5-5",
         max_tokens: 16000,
         system: CLAUDE_SYSTEM,
-        output_config: { format: zodOutputFormat(TranslationSchema) },
+        output_config: { effort: "low", format: zodOutputFormat(TranslationSchema) },
         messages: [
           {
             role: "user",

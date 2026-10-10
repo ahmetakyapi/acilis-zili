@@ -102,7 +102,7 @@
 
 @media (hover: hover) {
   .feature:hover { border-color: var(--primary-faint); }
-  .feature:hover .featureLink { text-decoration-color: color-mix(in srgb, var(--primary) 70%, transparent); }
+  .feature:hover .featureLink { color: var(--primary-hover); }
   .feature:hover .featureRead { background: var(--primary); color: var(--on-primary); }
   .feature:hover .featureRead svg { transform: translate(2px, -2px); }
 }

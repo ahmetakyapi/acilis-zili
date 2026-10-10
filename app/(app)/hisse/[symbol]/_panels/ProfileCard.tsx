@@ -501,7 +501,7 @@ export async function ProfileCard({
         {websiteHref &&
           fact(
             t.stock.website,
-            <a href={websiteHref} target="_blank" rel="noopener noreferrer" className="tap-44 text-primary hover:underline">
+            <a href={websiteHref} target="_blank" rel="noopener noreferrer" className="tap-44 text-primary hover:text-primary-hover">
               {/* KIRPILMIYOR, SARIYOR: ızgaranın yarım hücresinde
                   "coca-colacompany.com" üç nokta ile kesiliyordu
                   (1440'ta ölçüldü); adres bölünmeden okunmalı. Sondaki

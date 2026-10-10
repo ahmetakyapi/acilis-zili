@@ -113,7 +113,7 @@
 
 .resultCount { display:flex; align-items:center; gap:12px; font-size:12px; font-weight:500; color:var(--text-muted); white-space:nowrap; }
 .clearAll { min-height:32px; font-weight:600; color:var(--primary-ink); }
-.clearAll:hover { text-decoration:underline; text-underline-offset:3px; }
+.clearAll:hover { color:var(--primary-hover); }
 
 /* ---- Sonuçlar ------------------------------------------------------------- */
 /* Süzgeçten sonra sonuçların başı şeridin ALTINA iniyor (kaydırma payı =

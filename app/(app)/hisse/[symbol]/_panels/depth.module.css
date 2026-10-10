@@ -214,7 +214,7 @@
 .summaryPeers > a { border-radius:10px; transition:transform .25s; }
 @media(hover:hover) and (pointer:fine) { .summaryPeers > a:hover { transform:translateY(-2px); } }
 .summaryLink { color:inherit; text-decoration:underline; text-decoration-color:var(--primary-faint); text-decoration-thickness:1.5px; text-underline-offset:4px; transition:color .2s, text-decoration-color .2s; }
-.summaryLink:hover { color:var(--primary-ink); text-decoration-color:currentColor; }
+.summaryLink:hover { color:var(--primary-ink); }
 /* TELEFONDA SATIR, SÜTUN DEĞİL (30 Eylül). Izgara 390'da tek sütuna
    iniyordu ama hücreler arasında hiçbir ayraç yoktu: ikon + etiket, altında
    dev punto değer, hemen altında bir sonraki ikon — hangi etiketin hangi
@@ -265,7 +265,7 @@
 .guides { display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:12px; padding-top:10px; border-top:1px solid var(--line-soft); }
 .guides > span { color:var(--text-muted); font-size:12px; font-weight:600; }
 .guides a { color:var(--primary-ink); font-size:12px; font-weight:600; }
-.guides a:hover { text-decoration:underline; }
+.guides a:hover { color:var(--primary-hover); }
 
 /* ---- Katlanan liste (FoldToggle) ----
    Gerekçe FoldToggle.tsx'te. Katlı satır `display:none`: ekran okuyucu da
@@ -351,7 +351,7 @@
 .how > summary::-webkit-details-marker { display:none; }
 .how > summary::after { width:6px; height:6px; margin-top:-3px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg); transition:transform .2s; content:""; }
 .how[open] > summary::after { margin-top:3px; transform:rotate(-135deg); }
-.how > summary:hover { text-decoration:underline; text-underline-offset:3px; }
+.how > summary:hover { color:var(--primary-hover); }
 .how > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:6px; }
 .how > p { margin-top:6px; color:var(--text-muted); font-size:12px; line-height:1.65; }
 .how + .stamp { margin-top:6px; }

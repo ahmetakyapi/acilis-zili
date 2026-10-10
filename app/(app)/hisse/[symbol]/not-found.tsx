@@ -24,7 +24,7 @@ export default async function StockNotFound() {
       action={
         <Link
           href="/sirketler"
-          className="text-sm font-semibold text-primary hover:underline"
+          className="text-sm font-semibold text-primary hover:text-primary-hover"
         >
           {t.nav.companies}
         </Link>
