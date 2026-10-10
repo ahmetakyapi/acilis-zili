@@ -38,7 +38,9 @@ import {
 } from "@/lib/earnings-week";
 import { getEarningsWeek } from "@/lib/earnings-week-data";
 import { WEEK_OG_SIZES } from "@/lib/earnings-week-og";
-import { getDictionary, getI18n, getLocale, INTL_LOCALE, type Dictionary, type Locale } from "@/lib/i18n";
+import { getDictionary, getI18n, getLocale, type Dictionary, type Locale } from "@/lib/i18n";
+import { LOCALES } from "@/lib/i18n/config";
+import { ogLocale } from "@/lib/page-meta";
 import { withLocale } from "@/lib/i18n/routing";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
@@ -101,7 +103,8 @@ export async function generateMetadata(
     openGraph: {
       type: "website",
       siteName: t.brand.name,
-      locale: INTL_LOCALE[locale].replace("-", "_"),
+      locale: ogLocale(locale),
+      alternateLocale: LOCALES.filter((l) => l !== locale).map(ogLocale),
       images: [
         {
           url: absoluteUrl(imagePath("yatay", monday), locale),

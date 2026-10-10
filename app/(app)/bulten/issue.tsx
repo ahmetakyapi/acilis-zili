@@ -49,6 +49,7 @@ export async function briefIssueMetadata(
     alternates: pageAlternates(briefHref(tarih, period), locale, locales),
     openGraph: articleOpenGraph(locale, {
       publishedTime: brief.generatedAt?.toISOString(),
+      availableLocales: locales,
     }),
   };
 }

@@ -24,6 +24,10 @@ HEALTH_URL=http://127.0.0.1:3000/
 
 log() { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 die() { printf '\033[1;31mHATA: %s\033[0m\n' "$*" >&2; exit 1; }
+warn() { printf '\033[1;33mUYARI: %s\033[0m\n' "$*" >&2; }
+
+# Üretim alan adı — indeks uyarısı yalnız bu adrese bağlanır (aşağıda).
+PROD_SITE_URL=https://aciliszili.com
 
 [[ -r "$ENV_FILE" ]] || die "$ENV_FILE okunamıyor (root:acilis 0640 olmalı)"
 
@@ -90,6 +94,21 @@ set -a
 # shellcheck disable=SC1090
 . "$ENV_FILE"
 set +a
+
+# İNDEKS KAPALIYSA YÜKSEK SESLE SÖYLE. `SITE_INDEXABLE=false` ikinci kopya
+# için doğru değer (lib/site.ts), ama asıl alan adına derleniyorsa sitenin
+# tamamı arama motorundan çekiliyor: robots.txt `Disallow: /`, her sayfada
+# `noindex`. Ekim 2026'da canlı tam olarak böyle kaldı ve hiçbir çıktıda
+# görünmedi — bootstrap var olan değeri bilerek koruyor (elle yapılanı
+# ezmesin diye), yani yanlış değer kendiliğinden düzelmiyor. Derlemeyi
+# DURDURMUYOR: bilinçli bir kapatma da olabilir; yalnız sessiz kalmıyor.
+noindex_prod=0
+indexable=$(printf '%s' "${SITE_INDEXABLE:-}" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
+if [[ ( $indexable == false || $indexable == 0 ) && "${NEXT_PUBLIC_SITE_URL%/}" == "$PROD_SITE_URL" ]]; then
+	noindex_prod=1
+	warn "SITE_INDEXABLE=$SITE_INDEXABLE ve adres $PROD_SITE_URL — site arama motorlarına KAPALI derleniyor (robots.txt Disallow: /, noindex). Açmak için $ENV_FILE içinde SITE_INDEXABLE=true yapıp yeniden dağıt."
+fi
+
 npm run build
 
 # `readlink -f` SON BİLEŞENİN VAR OLMASINI İSTEMİYOR: `current` henüz yokken
@@ -119,6 +138,10 @@ if healthy; then
 	# doğru olanı tutuyor.
 	find "$APP_ROOT/releases" -mindepth 1 -maxdepth 1 -type d |
 		sort | head -n "-$KEEP" | xargs -r rm -rf
+	# Derleme çıktısının altında kaybolmasın diye son satır olarak tekrar.
+	if [[ $noindex_prod -eq 1 ]]; then
+		warn "canlı sürüm arama motorlarına KAPALI (SITE_INDEXABLE=false)"
+	fi
 	exit 0
 fi
 

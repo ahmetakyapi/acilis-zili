@@ -7,7 +7,8 @@ import { InkSplash, INK_SPLASH_SCRIPT } from "@/components/ink/InkSplash";
 import { SiteJsonLd } from "@/components/seo/JsonLd";
 import { ExpandInPlace } from "@/components/layout/ExpandInPlace";
 import { getI18n, getTheme } from "@/lib/i18n";
-import { INTL_LOCALE } from "@/lib/i18n/config";
+import { LOCALES } from "@/lib/i18n/config";
+import { ogLocale } from "@/lib/page-meta";
 import { INDEXABLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -94,7 +95,11 @@ export async function generateMetadata(): Promise<Metadata> {
   openGraph: {
     type: "website",
     siteName: brand,
-    locale: INTL_LOCALE[locale].replace("-", "_"),
+    locale: ogLocale(locale),
+    /* Öteki dilin kartı da var: arayüz sözlükten geldiği için kök künyeyi
+       miras alan her sayfa iki dilde de var. Çevirisi eksik olabilen yazılar
+       kendi `openGraph`ını veriyor (`articleOpenGraph`, yalnız var olan dil). */
+    alternateLocale: LOCALES.filter((l) => l !== locale).map(ogLocale),
   },
   twitter: { card: "summary_large_image" },
   /* Uzun süre `index: false` idi ve bu bir geliştirme kalıntısıydı: site

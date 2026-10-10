@@ -7,7 +7,7 @@ import { COMPARE_PAIR_SLUGS } from "@/content/compare-pairs";
 import { getAnalyses, getBriefArchive, getCompanies, getStories } from "@/lib/data";
 import { briefHref, type BriefPeriod } from "@/lib/brief";
 import { SITE_URL } from "@/lib/site";
-import { LOCALES } from "@/lib/i18n/config";
+import { DEFAULT_LOCALE, LOCALES } from "@/lib/i18n/config";
 import { withLocale } from "@/lib/i18n/routing";
 import { analysisHref } from "@/lib/analysis";
 import { technicalHref } from "@/lib/technical";
@@ -16,7 +16,17 @@ import { getTechnicalBoard } from "@/lib/technical-data";
 type Locale = (typeof LOCALES)[number];
 type SitemapItem = { path: string; locale: Locale; modified: Date };
 type Frequency = MetadataRoute.Sitemap[number]["changeFrequency"];
-type StaticRoute = { path: string; priority: number; frequency: Frequency };
+type StaticRoute = {
+  path: string;
+  priority: number;
+  frequency: Frequency;
+  /**
+   * `false`: ekranın içeriği veriyle değişmiyor (metin, araç, künye) ve
+   * değişme anı bilinmiyor — `lastmod` yazılmaz. Gerekçe aşağıda
+   * `bothLocales` → `stamp`; yanlış `lastmod` görmezden gelinmeyi öğretiyor.
+   */
+  stamp?: boolean;
+};
 
 /**
  * Site haritası.
@@ -70,10 +80,10 @@ const COMPANY_SITEMAP_LIMIT = 300;
  * içinde çizilen parçalar. `/gun/[tarih]/kart` bir görsel, sayfa değil.
  */
 const FEATURE_STATIC_ROUTES: StaticRoute[] = [
-  { path: "/vergi", priority: 0.7, frequency: "monthly" },
-  { path: "/sozluk", priority: 0.8, frequency: "weekly" },
+  { path: "/vergi", priority: 0.7, frequency: "monthly", stamp: false },
+  { path: "/sozluk", priority: 0.8, frequency: "weekly", stamp: false },
   { path: "/tema", priority: 0.7, frequency: "daily" },
-  { path: "/yatirimcilar", priority: 0.7, frequency: "weekly" },
+  { path: "/yatirimcilar", priority: 0.7, frequency: "weekly", stamp: false },
   /* 9 Ekim: dizine açık, menüde ve README'de var ama haritada yoktu. */
   { path: "/hisse-secimi", priority: 0.7, frequency: "weekly" },
   { path: "/bilancolar/hafta", priority: 0.7, frequency: "daily" },
@@ -91,16 +101,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/takvim", priority: 0.8, frequency: "daily" },
     { path: "/makro", priority: 0.7, frequency: "daily" },
     { path: "/sirketler", priority: 0.6, frequency: "weekly" },
-    { path: "/karsilastir", priority: 0.6, frequency: "weekly" },
+    { path: "/karsilastir", priority: 0.6, frequency: "weekly", stamp: false },
     { path: "/haberler", priority: 0.6, frequency: "hourly" },
     { path: "/bulten", priority: 0.7, frequency: "daily" },
-    { path: "/rehber", priority: 0.9, frequency: "weekly" },
+    { path: "/rehber", priority: 0.9, frequency: "weekly", stamp: false },
     { path: "/mercek", priority: 0.9, frequency: "daily" },
     /* `/menu` YOK: telefon gezinmesinin tam ekran listesi, kendi içeriği
        olmayan bir bağlantı sayfası. Sayfa `noindex` taşıyor. */
-    { path: "/kvkk", priority: 0.3, frequency: "monthly" },
+    { path: "/kvkk", priority: 0.3, frequency: "monthly", stamp: false },
     /* Güven sayfası: kim işletiyor, veri ve içerik nasıl üretiliyor. */
-    { path: "/hakkinda", priority: 0.4, frequency: "monthly" },
+    { path: "/hakkinda", priority: 0.4, frequency: "monthly", stamp: false },
     ...FEATURE_STATIC_ROUTES,
   ];
 
@@ -108,11 +118,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
      listeliyordu ve İngilizce içeriğin adresi olmadığı için listelenecek bir
      şey de yoktu; arama motoru EN tarafını hiç görmüyordu. `alternates`
      bloğu iki adresi birbirinin çevirisi olarak bağlıyor. */
-  const alternatesFor = (path: string) => ({
-    languages: Object.fromEntries(
-      LOCALES.map((locale) => [locale, `${SITE_URL}${withLocale(path, locale)}`]),
+  /* `x-default` SAYFADAKİ KÜNYEYLE AYNI. Sayfalar `pageAlternates` ile
+     tr + en + x-default yazıyor, harita yalnızca tr + en yazıyordu; aynı
+     adres iki kaynakta iki farklı hreflang kümesi ilan ediyordu. Kural
+     da aynı: x-default önekSİZ Türkçe, Türkçesi olmayan kayıtta yazılmaz. */
+  const languagesFor = (path: string, langs: readonly Locale[] = LOCALES) => ({
+    ...Object.fromEntries(
+      langs.map((locale) => [locale, `${SITE_URL}${withLocale(path, locale)}`]),
     ),
+    ...(langs.includes(DEFAULT_LOCALE)
+      ? { "x-default": `${SITE_URL}${withLocale(path, DEFAULT_LOCALE)}` }
+      : {}),
   });
+  const alternatesFor = (path: string) => ({ languages: languagesFor(path) });
 
   const bothLocales = (
     path: string,
@@ -134,7 +152,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
   const entries: MetadataRoute.Sitemap = staticRoutes.flatMap((route) =>
-    bothLocales(route.path, route.priority, route.frequency),
+    bothLocales(route.path, route.priority, route.frequency, route.stamp ?? true),
   );
 
   for (const slug of GUIDE_SLUGS) {
@@ -193,11 +211,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...(langs.size > 1
           ? {
               alternates: {
-                languages: Object.fromEntries(
-                  LOCALES.filter((l) => langs.has(l)).map((l) => [
-                    l,
-                    `${SITE_URL}${withLocale(item.path, l)}`,
-                  ]),
+                languages: languagesFor(
+                  item.path,
+                  LOCALES.filter((l) => langs.has(l)),
                 ),
               },
             }

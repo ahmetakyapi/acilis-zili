@@ -79,6 +79,7 @@ export async function generateMetadata(props: PageProps<"/mercek/[slug]">) {
        `siteName` ve `locale`ı düşürüyordu, gerekçe orada. */
     openGraph: articleOpenGraph(locale, {
       publishedTime: story.publishedAt?.toISOString(),
+      availableLocales: diller,
     }),
   };
 }

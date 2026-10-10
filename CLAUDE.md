@@ -296,6 +296,10 @@ yazın 16:30, kışın 17:30 TR). ET↔UTC aritmetiği yalnız `lib/market-hours
 ## Küçük ama kritik
 
 - Sayfa içi filtre/sıralama bağlantıları `scroll={false}`.
+- **Çevirisi eksik olabilen içerik** (mercek, analiz, bülten, teknik): aynı
+  dil listesi hem `pageAlternates`e hem `articleOpenGraph`a (`availableLocales`)
+  gider; site haritası da yalnız o dilleri yazar. Canonical, hreflang ve
+  `og:locale` metnin dilini söyler, arayüzünkini değil (`lib/site.ts`).
 - **Katlama bastığın yerde açılır**: `components/layout/ExpandInPlace.tsx`
   (aç/kapa anında kaydırma çapası kapalı); yeni `sr-only` onay kutusu düğmenin
   hizasına (`.foldInput`, `components/ui/FoldToggle.module.css`).

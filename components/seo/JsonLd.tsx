@@ -59,10 +59,25 @@ function brandName(locale: Locale): string {
   return locale === "en" ? "Opening Bell" : "Açılış Zili";
 }
 
+/** Öteki dildeki adı — `alternateName`. */
+function otherBrandName(locale: Locale): string {
+  return brandName(locale === "en" ? "tr" : "en");
+}
+
+/**
+ * KURULUŞUN TEK KİMLİĞİ. İki dil iki ayrı ad yazıyor ("Açılış Zili",
+ * "Opening Bell") ve kimliksiz iki düğüm arama motoruna iki ayrı kuruluş
+ * gibi okunuyordu; makalelerin yayıncısı da her seferinde yeni, bağsız bir
+ * düğümdü. Aynı `@id` + öteki adın `alternateName` olarak yazılması hepsini
+ * tek varlığa bağlıyor. Adres dilsiz: kuruluş dile göre değişmiyor.
+ */
+const ORG_ID = `${SITE_URL}/#organization`;
+
 /** Yayıncı düğümü — Article ve NewsArticle aynı nesneyi taşıyor. */
 function publisherNode(locale: Locale) {
   return {
     "@type": "Organization",
+    "@id": ORG_ID,
     name: brandName(locale),
     url: `${SITE_URL}${withLocale("/", locale)}`,
     logo: { "@type": "ImageObject", url: `${SITE_URL}/icon-512.png` },
@@ -80,7 +95,9 @@ export function SiteJsonLd({ locale }: { locale: Locale }) {
         data={{
           "@context": "https://schema.org",
           "@type": "Organization",
+          "@id": ORG_ID,
           name,
+          alternateName: otherBrandName(locale),
           url: home,
           /* PNG, SVG değil: Google'ın logo yönergesi yalnızca raster
              biçimleri kabul ediyor; svg adresli logo sessizce yok sayılıyor. */
@@ -98,8 +115,12 @@ export function SiteJsonLd({ locale }: { locale: Locale }) {
           "@context": "https://schema.org",
           "@type": "WebSite",
           name,
+          /* Google'ın site adı seçimi `alternateName`i de okuyor; marka iki
+             dilde iki ad taşıdığı için öteki adı burada. */
+          alternateName: otherBrandName(locale),
           url: home,
           inLanguage: locale,
+          publisher: { "@id": ORG_ID },
           /* Site içi arama: sonuç ekranı `/sirketler` dizini — palet bir
              adres üretmiyor, dizin üretiyor. Parametre `q`: dizin sayfası
              onu okuyor (`search.q`). Bir dönem burada `ara` yazıyordu ve

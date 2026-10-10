@@ -27,7 +27,7 @@ import { DataStamp, EmptyState, LogoTile, Panel } from "@/components/ui/primitiv
 import { MorphTarget } from "@/components/motion/Morph";
 import { verdictLabel, verdictOf, verdictPillClass } from "@/lib/analysis";
 import { getHolidays, getStatus, getSymbolNames } from "@/lib/data";
-import { getDictionary, getI18n } from "@/lib/i18n";
+import { getDictionary, getI18n, type Locale } from "@/lib/i18n";
 import { articleOpenGraph, metaDescription, missingMetadata } from "@/lib/page-meta";
 import { getQuotes } from "@/lib/providers";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
@@ -70,6 +70,7 @@ export async function generateMetadata(
       : detail.row.copy.tr
     : null;
   const t = getDictionary(locale);
+  const diller: Locale[] = detail?.row.copy.en ? ["tr", "en"] : ["tr"];
   return {
     title: locale === "en" ? `${upper} Technical Analysis` : `${upper} Teknik Analiz`,
     /* ANALİZ YOKKEN SAYFA BOŞ BİR KABUK. Açıklaması da yoktu ve arama
@@ -78,15 +79,14 @@ export async function generateMetadata(
     description: copy ? metaDescription(copy.headline) : t.technical.noAnalysisHint,
     ...(detail ? {} : { robots: { index: false, follow: true } }),
     openGraph: detail
-      ? articleOpenGraph(locale, { modifiedTime: new Date(detail.row.updatedAt).toISOString() })
+      ? articleOpenGraph(locale, {
+          modifiedTime: new Date(detail.row.updatedAt).toISOString(),
+          availableLocales: diller,
+        })
       : undefined,
     /* HREFLANG YALNIZCA VAR OLAN DİLLERİ İLAN EDER — İngilizce metin yoksa
        /en adresi Türkçesini gösteriyor, o adres İngilizce sayfa değil. */
-    alternates: pageAlternates(
-      technicalHref(upper),
-      locale,
-      detail?.row.copy.en ? ["tr", "en"] : ["tr"],
-    ),
+    alternates: pageAlternates(technicalHref(upper), locale, diller),
   };
 }
 

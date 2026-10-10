@@ -133,6 +133,7 @@ export async function generateMetadata(
        `siteName` ve `locale`ı düşürüyordu, gerekçe orada. */
     openGraph: articleOpenGraph(locale, {
       publishedTime: row.publishedAt?.toISOString(),
+      availableLocales: diller,
     }),
   };
 }

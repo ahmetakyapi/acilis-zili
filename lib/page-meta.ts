@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getDictionary, getLocale, INTL_LOCALE, type Locale } from "./i18n";
+import { LOCALES } from "./i18n/config";
 import { pageAlternates } from "./site";
 
 /**
@@ -23,16 +24,41 @@ import { pageAlternates } from "./site";
  */
 export function articleOpenGraph(
   locale: Locale,
-  extra?: { publishedTime?: string; modifiedTime?: string },
+  {
+    availableLocales,
+    ...extra
+  }: {
+    publishedTime?: string;
+    modifiedTime?: string;
+    /**
+     * İçeriğin GERÇEKTEN var olduğu diller — `pageAlternates`e verilenle
+     * aynı liste. Verilmezse ikisi de.
+     *
+     * `og:locale` METNİN dili, arayüzün değil. Çevirisi olmayan bir yazı
+     * `/en/...` adresinde Türkçe gövdesiyle açılıyor ve kart ona `en_US`
+     * diyordu; `og:locale:alternate` da hiç yazılmıyordu. Kural canonical
+     * ile aynı: bu dilde metin yoksa metnin ait olduğu dil yazılır.
+     */
+    availableLocales?: readonly Locale[];
+  } = {},
 ): NonNullable<Metadata["openGraph"]> {
   const brand = getDictionary(locale).brand.name;
+  const mevcut =
+    availableLocales && availableLocales.length > 0 ? availableLocales : LOCALES;
+  const content = mevcut.includes(locale) ? locale : mevcut[0];
   return {
     type: "article",
     siteName: brand,
-    locale: INTL_LOCALE[locale].replace("-", "_"),
+    locale: ogLocale(content),
+    alternateLocale: mevcut.filter((l) => l !== content).map(ogLocale),
     authors: [brand],
     ...extra,
   };
+}
+
+/** `og:locale` biçimi: `tr_TR`, `en_US`. */
+export function ogLocale(locale: Locale): string {
+  return INTL_LOCALE[locale].replace("-", "_");
 }
 
 /**
