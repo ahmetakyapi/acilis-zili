@@ -13,6 +13,13 @@
 .heroTitle { display:flex; align-items:center; justify-content:space-between; gap:10px 16px; margin:0 0 13px; }
 .hero h1 { margin:10px 0 13px; font-size:var(--heading-page); line-height:1.04; letter-spacing:-.055em; font-weight:600; color:var(--text-strong); }
 .heroTitle h1 { margin:0; }
+/* Telefonda paylaş en sağda. Hafta/Ay gibi ek bir denetim varsa başlıkla
+   yarışmak yerine aynı kapağın sonraki satırına geçer. */
+@media(max-width:639px) {
+ .heroTitle[data-title-share] { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 12px; }
+ .heroTitle[data-title-share] > :global(.page-title-actions) { display:contents; }
+ .heroTitle[data-title-share] [data-header-control] { grid-column:1 / -1; grid-row:2; justify-self:end; }
+}
 .description { max-width:52ch; color:var(--text-body); font-size:15px; line-height:1.7; text-wrap:pretty; }
 /* Paylaş düğmesi açıklamanın ardında (`PageShare`, 30 Eylül). Düğme kendi
    dolgusunu taşıdığı için sol kenar metinle hizalansın diye −8 piksel. */

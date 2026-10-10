@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { GuideHint } from "@/components/article/GuideHint";
@@ -69,6 +70,8 @@ export default async function ScreeningPage(props: PageProps<"/hisse-secimi">) {
     <MotionExperience className={directory.page}>
       <ScrollProgress />
       <DirectoryHeader
+        shareInTitle
+        share={<PageShare compactOnMobile align="right" path="/hisse-secimi" title={S.title} locale={locale} t={t} />}
         title={S.title}
         description={S.description}
         visual={

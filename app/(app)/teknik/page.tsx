@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { GuideHint } from "@/components/article/GuideHint";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
@@ -146,6 +147,8 @@ export default async function TechnicalPage() {
     <MotionExperience className={directory.page}>
       <ScrollProgress />
       <DirectoryHeader
+        shareInTitle
+        share={<PageShare compactOnMobile align="right" path="/teknik" title={t.technical.title} locale={locale} t={t} />}
         className={styles.directoryHeader}
         title={t.technical.title}
         description={t.technical.description}

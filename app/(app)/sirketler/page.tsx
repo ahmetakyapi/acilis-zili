@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
 import { Suspense } from "react";
@@ -342,7 +343,7 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
-      <DirectoryHeader className={companyStyles.hero} title={t.companies.title} description={t.companies.subtitle}
+      <DirectoryHeader shareInTitle share={<PageShare compactOnMobile align="right" path="/sirketler" title={t.companies.title} locale={locale} t={t} />} className={companyStyles.hero} title={t.companies.title} description={t.companies.subtitle}
         visual={
           <>
             <CompanyLeaders leaders={leaders} labels={t.directory} locale={locale} />

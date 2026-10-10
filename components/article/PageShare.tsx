@@ -15,6 +15,9 @@ import { absoluteUrl } from "@/lib/site";
  *
  * YERİ HER EKRANDA AYNI: kapağın açıklama cümlesinden sonra, sola yaslı.
  * Panel de o yüzden sola açılıyor.
+ * 10 Ekim: dizin kapaklarında sahibinin tercihi başlığın sağı; bu kullanım
+ * `compactOnMobile` + `align="right"` ile telefonda 44px ikon hedefi sunar.
+ * Önceki detay kapaklarının açıklama altı yerleşimi varsayılan kalır.
  */
 export function PageShare({
   path,
@@ -23,6 +26,7 @@ export function PageShare({
   t,
   className,
   compact,
+  compactOnMobile = false,
   align = "left",
 }: {
   /** Dil öneksiz yol — "/yatirimcilar/warren-buffett". */
@@ -34,6 +38,8 @@ export function PageShare({
   className?: string;
   /** Simge biçimi — hisse başlığındaki kalbin yanı. */
   compact?: boolean;
+  /** Dar başlık satırında yalnız ikon, geniş ekranda ikon ve metin. */
+  compactOnMobile?: boolean;
   align?: "left" | "right";
 }) {
   return (
@@ -43,6 +49,7 @@ export function PageShare({
       labels={{ ...t.share, title: t.share.pageTitle }}
       align={align}
       compact={compact}
+      compactOnMobile={compactOnMobile}
       className={className}
     />
   );

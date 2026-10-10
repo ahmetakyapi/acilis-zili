@@ -2649,3 +2649,17 @@ html.ink-splash-out .ink-splash-layer {
 @media (hover: hover) and (pointer: fine) {
   [data-motion-stagger] > tr:hover > :first-child { box-shadow: inset 3px 0 0 var(--primary); }
 }
+
+/* Sayfa eylemi başlığın sağında kalır; mobilde 44px ikon hedefi. */
+.page-title-row { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; min-width:0; }
+.page-heading-copy:has(> .page-title-row) { width:100%; }
+.page-title-row > h1 { min-width:0; }
+.page-title-actions { display:flex; flex:none; align-items:center; gap:8px; }
+/* Kapak kendi yığın bağlamını kuruyor. Açık panel sonraki veri kutusunun
+   arkasına düşmesin; uygulama başlığı (30) yine üstte kalır. */
+:is(.page-frame, .page-masthead):has([aria-haspopup="dialog"][aria-expanded="true"]) { position:relative; z-index:25; }
+@media(max-width:639px) {
+ .share-responsive > button { width:44px; min-height:44px; margin:0; padding:0; justify-content:center; }
+ .share-responsive .share-label { display:none; }
+ .share-responsive > button > svg { width:17px; height:17px; }
+}

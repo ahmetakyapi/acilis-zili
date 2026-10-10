@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { Suspense } from "react";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -262,6 +263,8 @@ export default async function AnalysesPage(
           Hangi görünümde olunduğunu hemen altındaki sekme çubuğu söylüyor;
           başlık bölümün adı, sekme de görünümün adı. */}
       <DirectoryHeader
+        shareInTitle
+        share={<PageShare compactOnMobile align="right" path="/bilancolar/analizler" title={t.analysis.symbolPanelTitle} locale={locale} t={t} />}
         title={t.analysis.symbolPanelTitle}
         description={t.directory.analysisDescription}
         visual={all.length > 0 && (

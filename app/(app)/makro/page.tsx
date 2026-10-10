@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { Suspense } from "react";
 import { MarketPulse } from "@/components/macro/MarketPulse";
 import { HeroAccent } from "@/components/motion/HeroAccent";
@@ -223,7 +224,7 @@ export default async function MacroPage() {
             components/macro/MacroBoard.tsx başında). */}
         <div className={`${styles.hero} page-frame`}>
           <HeroAccent />
-          <PageHeader embedded title={x.title} subtitle={x.subtitle} />
+          <PageHeader share={<PageShare compactOnMobile align="right" path="/makro" title={x.title} locale={locale} t={t} />} embedded title={x.title} subtitle={x.subtitle} />
           <Suspense fallback={<SummarySkeleton />}>
             <MacroSummary
               empty={<EmptyState title={t.common.noData} hint={t.common.noDataHint} scene="chart" />}

@@ -165,12 +165,15 @@ export function PanelLink({
 export function PageHeader({
   title,
   subtitle,
+  share,
   action,
   className,
   embedded = false,
 }: {
   title: string;
   subtitle?: string;
+  /** Paylaşım başlık satırının sağında durur. */
+  share?: React.ReactNode;
   action?: React.ReactNode;
   className?: string;
   embedded?: boolean;
@@ -180,10 +183,13 @@ export function PageHeader({
       className={cn("page-heading page-masthead flex flex-wrap items-start justify-between gap-4", className)}
       data-embedded={embedded}
     >
-      <div className="min-w-0 page-heading-copy">
-        <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
-          {title}
-        </h1>
+      <div className={cn("min-w-0 page-heading-copy", share && "flex-1")}>
+        <div className={share ? "page-title-row" : undefined}>
+          <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
+            {title}
+          </h1>
+          {share && <div className="page-title-actions">{share}</div>}
+        </div>
         {subtitle && (
           <p className="mt-[7px] max-w-3xl text-sm leading-relaxed text-body">
             {subtitle}

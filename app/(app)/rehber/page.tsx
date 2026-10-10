@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { TopicDiagram } from "@/components/guide/TopicDiagram";
 import guideStyles from "@/components/guide/GuideExperience.module.css";
@@ -123,6 +124,7 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
           sağında tek bir kart: ilk yazı, kısa açıklaması ve müfredatın
           ölçüsü (23 Eylül). */}
       <SectionMasthead
+        share={<PageShare compactOnMobile align="right" path="/rehber" title={t.guide.title} locale={locale} t={t} />}
         title={t.guide.title}
         description={t.guide.subtitle}
         aside={

@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { storySinceEvent } from "@/lib/story-market";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
@@ -119,6 +120,7 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
     <MotionExperience className={styles.page}>
       <ScrollProgress />
       <SectionMasthead
+        share={<PageShare compactOnMobile align="right" path="/mercek" title={t.stories.title} locale={locale} t={t} />}
         title={t.stories.title}
         description={t.stories.subtitle}
         aside={

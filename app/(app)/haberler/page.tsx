@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
@@ -50,7 +51,7 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
   const symbolFilter =
     typeof search.sembol === "string" ? search.sembol.toUpperCase() : null;
 
-  const { t } = await getI18n();
+  const { t, locale } = await getI18n();
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
@@ -61,6 +62,7 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
           (9 Ekim 2026: üst künye bütün kapaklardan kalktı, boş satırın yer
           tutucusu da onunla — `PageHeader` yorumu.) */}
       <PageHeader
+        share={<PageShare compactOnMobile align="right" path="/haberler" title={t.news.title} locale={locale} t={t} />}
         title={t.news.title}
         subtitle={t.news.subtitle}
         action={

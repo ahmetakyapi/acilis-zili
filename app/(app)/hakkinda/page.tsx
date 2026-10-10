@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import type { CSSProperties } from "react";
 import {
   ArrowRight,
@@ -183,7 +184,10 @@ export default async function AboutPage() {
       <header className={`${styles.hero} page-frame`}>
         <HeroAccent />
         <div className={`${styles.heroCopy} page-heading-copy`}>
-          <h1 className="display-ink">{a.title}</h1>
+          <div className="page-title-row">
+            <h1 className="display-ink">{a.title}</h1>
+            <div className="page-title-actions"><PageShare compactOnMobile align="right" path="/hakkinda" title={a.title} locale={locale} t={t} /></div>
+          </div>
           <p>{a.intro}</p>
         </div>
         {/* SEANS SAATİ KAPAKTA. Sitenin var olma nedeni New York saatini

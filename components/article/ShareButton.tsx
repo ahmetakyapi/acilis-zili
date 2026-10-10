@@ -54,6 +54,7 @@ export function ShareButton({
   className,
   align = "right",
   compact = false,
+  compactOnMobile = false,
 }: {
   /** Yazının tam adresi — sunucudan, dili taşıyan canonical hâliyle. */
   url: string;
@@ -68,6 +69,7 @@ export function ShareButton({
   /** Yalnızca simge (32 piksel, dokunma hedefi 44): hisse başlığında
       kalbin yanında metinli düğme kimliğin önüne geçerdi. Ad `aria-label`. */
   compact?: boolean;
+  compactOnMobile?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -166,14 +168,14 @@ export function ShareButton({
   ] as const;
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative", compactOnMobile && "share-responsive", className)}>
       <button
         ref={triggerRef}
         type="button"
         onClick={onClick}
         aria-expanded={open}
         aria-haspopup="dialog"
-        aria-label={compact ? (copied ? labels.copied : labels.action) : undefined}
+        aria-label={compact || compactOnMobile ? (copied ? labels.copied : labels.action) : undefined}
         title={compact ? labels.action : undefined}
         className={compact ? cn(
           "tap-44 inline-flex size-8 items-center justify-center rounded-sm transition-colors",
@@ -193,7 +195,7 @@ export function ShareButton({
         ) : (
           <Share weight={compact ? "duotone" : "bold"} size={compact ? 17 : 13} aria-hidden />
         )}
-        {!compact && (copied ? labels.copied : labels.action)}
+        {!compact && <span className="share-label">{copied ? labels.copied : labels.action}</span>}
       </button>
 
       {open && (

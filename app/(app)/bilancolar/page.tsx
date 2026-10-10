@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { redirect } from "next/navigation";
 import { GuideHint } from "@/components/article/GuideHint";
@@ -110,6 +111,8 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           taşıyor; alt başlık bu sekmenin ne gösterdiğini anlatmaya devam
           ediyor. */}
       <DirectoryHeader
+        shareInTitle
+        share={<PageShare compactOnMobile align="right" path="/bilancolar" title={t.analysis.title} locale={locale} t={t} />}
         className={styles.earningsHeader}
         title={t.analysis.title}
         description={t.earnings.subtitleLong}

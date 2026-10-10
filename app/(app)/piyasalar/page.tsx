@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { ArrowUpRight, SquaresFour, TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
 import { HeroAccent } from "@/components/motion/HeroAccent";
 import { QueryTransition } from "@/components/layout/QueryTransition";
@@ -212,6 +213,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
         <HeroAccent />
       <div className={styles.masthead}>
       <SectionMasthead
+        share={<PageShare compactOnMobile align="right" path="/piyasalar" title={t.markets.title} locale={locale} t={t} />}
         embedded
         title={t.markets.title}
         description={t.markets.subtitle}

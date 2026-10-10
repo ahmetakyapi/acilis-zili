@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { Plus } from "@phosphor-icons/react/dist/ssr";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
@@ -85,6 +86,8 @@ export default async function TaxPage() {
     <MotionExperience className={polish.page}>
       <ScrollProgress />
       <DirectoryHeader
+        shareInTitle
+        share={<PageShare compactOnMobile align="right" path="/vergi" title={L.title} locale={locale} t={t} />}
         title={L.title}
         description={L.subtitle}
         visual={<TaxPaths labels={L} />}

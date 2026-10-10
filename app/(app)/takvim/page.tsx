@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { Suspense } from "react";
 import { HeroAccent } from "@/components/motion/HeroAccent";
 import { QueryTransition } from "@/components/layout/QueryTransition";
@@ -250,9 +251,12 @@ export default async function CalendarPage(
         <header className={`${styles.hero} page-frame`}>
           <HeroAccent />
           <div className="page-heading-copy">
-            <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
-              {t.marketExtras.dividendTitle}
-            </h1>
+            <div className="page-title-row">
+              <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
+                {t.marketExtras.dividendTitle}
+              </h1>
+              <div className="page-title-actions"><PageShare compactOnMobile align="right" path="/takvim?tur=temettu" title={t.marketExtras.dividendTitle} locale={locale} t={t} /></div>
+            </div>
             <p>{t.marketExtras.dividendSubtitle}</p>
           </div>
           {/* Sağ sütun ekonomik görünümdeki "sıradaki açıklama" kartının
@@ -646,9 +650,12 @@ export default async function CalendarPage(
       <header className={`${styles.hero} page-frame`}>
         <HeroAccent />
         <div className="page-heading-copy">
-          <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
-            {t.calendar.title}
-          </h1>
+          <div className="page-title-row">
+            <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
+              {t.calendar.title}
+            </h1>
+            <div className="page-title-actions"><PageShare compactOnMobile align="right" path="/takvim" title={t.calendar.title} locale={locale} t={t} /></div>
+          </div>
           <p>{t.calendar.subtitle}</p>
         </div>
         {/* KAPAĞIN SAĞI: görünüm seçimi üstte, sıradaki açıklama altında.
@@ -777,4 +784,3 @@ export default async function CalendarPage(
     </MotionExperience>
   );
 }
-

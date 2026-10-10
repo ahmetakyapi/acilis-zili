@@ -8,10 +8,12 @@ import styles from "./DirectoryExperience.module.css";
  * takviminin Hafta/Ay anahtarı bir dönem açıklamanın altında kendi
  * satırındaydı ve telefonda başlık kartını 24 + 44 piksel uzatıyordu;
  * ekran düzeni kuralı (CLAUDE.md) denetimi başlığın sağına koyuyor. */
-export function DirectoryHeader({ title, description, children, visual, control, share, className = "" }: {
+export function DirectoryHeader({ title, description, children, visual, control, share, shareInTitle = false, className = "" }: {
   title: string; description?: string; children?: ReactNode; visual?: ReactNode; control?: ReactNode;
-  /** Paylaş düğmesi (`PageShare`) — açıklama cümlesinin ardında, her ekranda aynı yerde. */
+  /** Paylaş düğmesi (`PageShare`) — varsayılan olarak açıklamanın ardında. */
   share?: ReactNode;
+  /** Dizinlerde başlığın sağı; dar ekranda ek denetim bir alt satıra iner. */
+  shareInTitle?: boolean;
   className?: string;
 }) {
   return <header className={`${styles.hero} page-frame ${className}`} data-has-visual={!!visual}>
@@ -24,12 +26,15 @@ export function DirectoryHeader({ title, description, children, visual, control,
           satıra sarıyordu (ölçüldü). Başlık satırı kısa ("Bilançolar" 124
           piksel) ve anahtar orada rahat duruyor. Üst künye 9 Ekim 2026'da
           kalktı (`PageHeader` yorumu). */}
-      <div className={styles.heroTitle}>
+      <div className={styles.heroTitle} data-title-share={shareInTitle || undefined}>
         <h1>{title}</h1>
-        {control}
+        {(control || (shareInTitle && share)) && <div className="page-title-actions">
+          {control && <div data-header-control>{control}</div>}
+          {shareInTitle && share}
+        </div>}
       </div>
       {description && <p className={styles.description}>{description}</p>}
-      {share && <div className={styles.share}>{share}</div>}
+      {!shareInTitle && share && <div className={styles.share}>{share}</div>}
       {children}
     </div>
     {visual && <div className={styles.heroVisual}>{visual}</div>}

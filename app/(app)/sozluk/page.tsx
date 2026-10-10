@@ -1,3 +1,4 @@
+import { PageShare } from "@/components/article/PageShare";
 import { ArrowRight, Sparkle } from "@phosphor-icons/react/dist/ssr";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -163,7 +164,10 @@ export default async function GlossaryIndexPage() {
              "Each child in a list should have a unique key" basıyordu
              (ikisi birlikte kapatılınca sustu, ölçüldü). */
           <div key="hero" className={`${styles.heroCopy} page-heading-copy`}>
-            <h1 className="display-ink">{t.glossary.title}</h1>
+            <div className="page-title-row">
+              <h1 className="display-ink">{t.glossary.title}</h1>
+              <div className="page-title-actions"><PageShare compactOnMobile align="right" path="/sozluk" title={t.glossary.title} locale={locale} t={t} /></div>
+            </div>
             <p>{t.glossary.subtitle}</p>
             <dl className={styles.metrics}>
               <div>
