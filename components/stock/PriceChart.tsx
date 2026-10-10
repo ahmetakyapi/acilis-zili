@@ -46,6 +46,7 @@ import {
   zoneOffsetSeconds,
   zoneTag,
 } from "@/lib/session-clock";
+import { EASE_BRAND } from "@/lib/motion";
 
 /**
  * Fiyat grafiği — lightweight-charts v5.
@@ -1644,7 +1645,7 @@ function revealPlot(container: HTMLElement, chart: IChartApi): Animation | null 
 
   const animation = container.animate(frames(), {
     duration: PLOT_REVEAL_MS,
-    easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+    easing: EASE_BRAND,
     fill: "backwards",
   });
   requestAnimationFrame(() => {

@@ -4,6 +4,7 @@ import { useId, useLayoutEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
 import styles from "@/components/earnings/EarningsReport.module.css";
+import { EASE_BRAND } from "@/lib/motion";
 
 /** Açılıp kapanmanın süresi — sitenin kısa geçişleriyle aynı bant. */
 const TOGGLE_MS = 220;
@@ -63,7 +64,7 @@ export function ClampedHeadline({
     if (Math.abs(end - start) < 1) return;
     element.animate(
       [{ height: `${start}px`, overflow: "hidden" }, { height: `${end}px`, overflow: "hidden" }],
-      { duration: TOGGLE_MS, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+      { duration: TOGGLE_MS, easing: EASE_BRAND },
     );
   }, [expanded, reduced]);
 

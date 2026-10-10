@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { useMotionPreference } from "@/components/motion/useMotionPreference";
+import { EASE_BRAND } from "@/lib/motion";
 
 /* Fiyat noktasının yolculuğu: bant çizildikten (650 ms) 150 ms sonra
    başlıyor ve nokta (`spark-dot`, 700 ms'de beliriyor) o ana kadar analiz
@@ -119,7 +120,7 @@ export function TechnicalBoard({ children, className }: { children: ReactNode; c
       const animation = dot.animate([{ left: from }, { left: dot.style.left }], {
         duration: TRAVEL_DURATION_MS,
         delay: TRAVEL_DELAY_MS,
-        easing: "cubic-bezier(.22,1,.36,1)",
+        easing: EASE_BRAND,
         fill: "backwards",
       });
       animation.pause();
@@ -166,7 +167,7 @@ export function TechnicalBoard({ children, className }: { children: ReactNode; c
           const animation = cell.animate([
             { transform: `translate(${dx}px, ${offset}px)`, opacity: old ? 1 : .35 },
             { transform: "none", opacity: 1 },
-          ], { duration: 420, delay: Math.min(index * 20, 100), easing: "cubic-bezier(.22,1,.36,1)", fill: "both" });
+          ], { duration: 420, delay: Math.min(index * 20, 100), easing: EASE_BRAND, fill: "both" });
           animation.onfinish = () => animation.cancel();
           animations.push(animation);
         });

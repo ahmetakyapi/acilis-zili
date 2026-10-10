@@ -17,6 +17,7 @@ import {
 } from "react";
 import styles from "./PremiumMotion.module.css";
 import { useMotionPreference } from "./useMotionPreference";
+import { EASE_BRAND } from "@/lib/motion";
 
 function classes(...values: (string | undefined)[]) {
   return values.filter(Boolean).join(" ");
@@ -718,7 +719,7 @@ export function MotionExperience({ children, className }: { children: ReactNode;
         const animation = element.animate(frames, {
           duration: spark || arc || bar || ring ? 1000 : travel ? 700 : settle ? 320 : 650,
           delay: settle ? 0 : delay + (area ? 220 : dot ? 700 : travel ? 150 : 0),
-          easing: "cubic-bezier(.22,1,.36,1)", fill: "both",
+          easing: EASE_BRAND, fill: "both",
         });
         animation.pause();
         animation.currentTime = 0;

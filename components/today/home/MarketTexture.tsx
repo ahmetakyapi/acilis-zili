@@ -1,10 +1,9 @@
 import type { CSSProperties } from "react";
-import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { RollingFigure } from "@/components/themes/RollingFigure";
 import { ThemeRanking } from "@/components/themes/ThemeRanking";
 import { SpreadStrip } from "@/components/themes/ThemeVisuals";
-import themeStyles from "@/components/themes/Themes.module.css";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { DataStamp, LogoTile, PanelLink, Skeleton } from "@/components/ui/primitives";
 import { themeTitle } from "@/content/themes";
@@ -46,18 +45,37 @@ import styles from "./MarketTexture.module.css";
  */
 
 /* ==========================================================================
-   Sektör şeridi
+   Sektör silueti
    ========================================================================== */
 
 /**
- * On bir sektör fonu, günün hareketine göre SIRALI ısı karoları: şerit
- * soldan sağa en güçlüden en zayıfa bir renk geçişi olarak okunuyor,
- * sıralamayı okumak için rakamlara bakmak gerekmiyor. Ton `/piyasalar` ve
- * tema haritasının AYNI eşikleri (`heatOf`).
+ * ÖLÇEĞİN TABANI (yüzde puan, 10 Ekim). Sütunlar günün en büyük
+ * hareketine göre ölçekleniyor; taban olmasa ±%0,2'lik sakin bir günün
+ * en uzun sütunu %3'lük bir günün sütunuyla aynı boyda dururdu. Bir
+ * puanın altındaki günlerde sütunlar alanın tamamına uzanmıyor ve şekil
+ * günün sakinliğini kendisi söylüyor.
+ */
+const SECTOR_SCALE_FLOOR = 1;
+
+/**
+ * On bir sektör fonu, günün hareketine göre SIRALI bir siluet (10 Ekim,
+ * sahibinin isteği: "çok daha iyi duracak, sınırları zorlayan bir
+ * tasarım"). Önceki şerit on bir ısı karosuydu: sıralamayı tonla
+ * veriyordu ama büyüklüğü vermiyordu, "Gayrimenkul +%1,93" ile "Finans
+ * +%0,99" arasındaki iki katlık fark iki benzer yeşil karoydu. Ekran
+ * kuralı (karşılaştırılan her büyüklük bir de ÇİZGİ olarak okunur) artık
+ * burada da geçerli: her fon sıfır çizgisinden iki yana açılan bir sütun,
+ * boyu yüzdeyle orantılı, tonu `/piyasalar` ve tema haritasının AYNI ısı
+ * eşiğinden (`heatOf`).
  *
- * Bu seansta işlem görmeyen fonun yüzdesi son kapanışı anlatıyor: karo
- * nötr tonda kalıyor, yön rengi yalnızca bu seansın hareketinde (Veri
- * dürüstlüğü 4, `quoteBasis`). Hepsi son kapanıştaysa künye bunu söylüyor.
+ * Rakamlar tek hatta, sütunların üstünde (ekran düzeni 4: yan yana duran
+ * ölçüler aynı hatta biter); düşen fonun sütunu sıfırın altına sarkıyor
+ * ama rakamı komşularıyla aynı satırda. 1180'in altında aynı veri yatay
+ * satır grafiğine dönüyor (CSS notu).
+ *
+ * Bu seansta işlem görmeyen fonun yüzdesi son kapanışı anlatıyor: sütun
+ * nötr tonda kalıyor ve sıralamanın dışında, sonda (Veri dürüstlüğü 4,
+ * `quoteBasis`). Hepsi son kapanıştaysa künye bunu söylüyor.
  */
 export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionary }) {
   const status = await getStatus();
@@ -83,97 +101,95 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
     };
   }).sort((a, b) => {
     if (a.change === null || b.change === null) return a.change === null ? 1 : -1;
-    /* Son kapanıştaki karo sıralamanın DIŞINDA, sonda (28 Eylül denetimi).
-       Şerit soldan sağa bu seansın en güçlüden en zayıfa dizilişi; dünün
+    /* Son kapanıştaki fon sıralamanın DIŞINDA, sonda (28 Eylül denetimi).
+       Siluet soldan sağa bu seansın en güçlüden en zayıfa dizilişi; dünün
        yüzdesiyle araya girmesi, iki ayrı günü tek sıraya koymaktı. Tema
        sıralaması aynı kuralı izliyor (ThemeRanking). */
     if (a.lastClose !== b.lastClose) return a.lastClose ? 1 : -1;
     return b.change - a.change;
   });
   const allLastClose = rows.every((row) => row.change === null || row.lastClose);
-  /* BÜYÜKLÜK ÇİZGİSİ VE GENİŞLİK (9 Ekim). Karonun tonu dokuz kademe ve
-     "+%0,66 ile +%0,59" aynı kademede: iki komşu karo arasında hangisinin
-     büyük olduğu yine rakamdan okunuyordu. Karonun dibindeki ince çizgi
-     aynı yüzdeyi UZUNLUK olarak veriyor (ekran düzeni kuralı: karşılaştırılan
-     her büyüklük bir de çizgi). Ölçek bu seansın en büyük mutlak hareketi;
-     son kapanıştaki karo ölçeğin dışında ve çizgisi yok (iki ayrı günü tek
-     ölçüye koymamak, sıralamadaki kuralın aynısı). */
-  const live = rows.filter((row) => row.change !== null && !row.lastClose);
-  const peak = Math.max(0, ...live.map((row) => Math.abs(row.change!)));
-  const up = live.filter((row) => row.change! > 0).length;
-  const down = live.filter((row) => row.change! < 0).length;
-  const breadth =
-    live.length > 0 ? (
-      <span
-        className={styles.breadth}
-        role="img"
-        aria-label={t.today.sectorsBreadthLabel.replace("{up}", String(up)).replace("{down}", String(down))}
-      >
-        <span aria-hidden className={styles.breadthBar}>
-          {up > 0 && <i data-tone="up" data-motion-draw="line" style={{ flexGrow: up }} />}
-          {live.length - up - down > 0 && <i data-tone="flat" style={{ flexGrow: live.length - up - down }} />}
-          {down > 0 && <i data-tone="down" data-motion-draw="line" style={{ flexGrow: down, transformOrigin: "right center" }} />}
-        </span>
-        <span aria-hidden className={styles.breadthText}>
-          {t.today.sectorsBreadth.split(/(\{up\}|\{down\})/).map((part, i) =>
-            part === "{up}" ? (
-              <b key={i} className="text-up">{up}</b>
-            ) : part === "{down}" ? (
-              <b key={i} className="text-down">{down}</b>
-            ) : (
-              part
-            ),
-          )}
-        </span>
-      </span>
-    ) : null;
+  /* Ölçek ve sayım aynı kümeden: karışık günde yalnızca bu seansın
+     fonları, hepsi son kapanıştaysa hepsi (künye o zaman bunu söylüyor). */
+  const counted = rows.filter((row) => row.change !== null && (allLastClose || !row.lastClose));
+  const changes = counted.map((row) => row.change!);
+  const up = Math.max(0, ...changes);
+  const down = Math.max(0, ...changes.map((change) => -change));
+  const span = Math.max(up + down, SECTOR_SCALE_FLOOR);
+  /* Sıfır çizgisi düşüşün payı kadar yukarıda: hepsi yükselen bir günde
+     sütunlar zeminden kalkıyor, alanın yarısı boş bir eksi bölgeye gitmiyor. */
+  const zero = (down / span) * 100;
+  const risers = changes.filter((change) => change > 0).length;
+  const fallers = changes.filter((change) => change < 0).length;
 
   return (
-    <SectorFrame t={t} aside={breadth} meta={allLastClose ? `${x.sectorsMeta} · ${t.market.lastClose}` : `${x.sectorsMeta} · ${t.today.sectorsWeight}`}>
-      <ol className={styles.ribbon} data-motion-stagger>
-        {rows.map((row) => {
+    <SectorFrame
+      t={t}
+      meta={allLastClose ? `${x.sectorsMeta} · ${t.market.lastClose}` : `${x.sectorsMeta} · ${t.today.sectorsWeight}`}
+      breadth={
+        /* Genişlik künyesi yalnızca METİN (10 Ekim). 9 Ekim'de yanında
+           72 piksellik bölünmüş bir çubuk vardı; siluetin kendisi aynı
+           bilgiyi çiziyor ve bant çubuk kalabalığına dönüyordu (sahibi:
+           "çizgi çubukları çok kötü duruyor"). */
+        <span
+          className={styles.breadth}
+          role="img"
+          aria-label={t.today.sectorsBreadthLabel.replace("{up}", String(risers)).replace("{down}", String(fallers))}
+        >
+          <span aria-hidden>
+            {t.today.sectorsBreadth.split(/(\{up\}|\{down\})/).map((part, i) =>
+              part === "{up}" ? (
+                <b key={i} className="numeral text-up">{risers}</b>
+              ) : part === "{down}" ? (
+                <b key={i} className="numeral text-down">{fallers}</b>
+              ) : (
+                part
+              ),
+            )}
+          </span>
+        </span>
+      }
+    >
+      <ol className={styles.ribbon} style={{ "--zero": `${zero}%` } as CSSProperties}>
+        {rows.map((row, i) => {
+          const inScale = row.change !== null && (allLastClose || !row.lastClose);
           const heat = row.change === null || row.lastClose ? { tone: "flat", level: 0 } : heatOf(row.change);
-          /* Karışık günde son kapanıştaki karo künyesini kendi taşıyor: nötr
-             tonu tek başına "hareket yok" gibi okunuyordu (koyu temada
-             şeritte bir delik gibi duruyordu). Hepsi son kapanıştaysa künye
-             başlıkta, karolarda tekrar yok. */
+          const size = row.change === null ? 0 : (Math.abs(row.change) / span) * 100;
+          const start = row.change === null || row.change >= 0 ? zero : zero - size;
+          /* Karışık günde son kapanıştaki fon künyesini kendi taşıyor: nötr
+             sütun tek başına "hareket yok" gibi okunurdu. */
           const marked = row.lastClose && !allLastClose;
           return (
-            <li key={row.symbol} className={styles.tileItem}>
+            <li
+              key={row.symbol}
+              className={styles.col}
+              style={{ "--start": `${start}%`, "--size": `${inScale ? size : 0}%`, "--i": i } as CSSProperties}
+            >
               <Link
                 href={`/hisse/${row.symbol}`}
                 prefetch={false}
-                className={cn(themeStyles.heat, styles.tile)}
-                data-heat-tone={heat.tone}
-                data-heat-level={heat.level}
+                className={styles.colLink}
+                data-tone={heat.tone}
+                data-level={heat.level}
+                data-sign={row.change !== null && row.change < 0 ? "down" : "up"}
               >
-                <span className={styles.tileHead}>
-                  <span className={styles.tileName} data-short={marked || undefined}>{row.name}</span>
-                  {marked && <span className={styles.tileBasis}>{t.market.lastClose}</span>}
-                </span>
-                <ArrowUpRight size={13} weight="bold" className={styles.tileArrow} aria-hidden />
-                <b className={cn("numeral", styles.tilePct)}>
+                <b className={cn("numeral", styles.colPct)}>
                   {row.change === null ? NO_VALUE : formatPercent(row.change, locale)}
                 </b>
-                <span aria-hidden className={styles.tileMeter}>
-                  {!row.lastClose && row.change !== null && peak > 0 && row.change !== 0 && (
-                    <i data-motion-draw="line" style={{ width: `${Math.max(4, (Math.abs(row.change) / peak) * 100)}%` }} />
-                  )}
+                <span aria-hidden className={styles.colTrack}>
+                  {inScale && size > 0 && <i className={styles.colBar} />}
+                </span>
+                <span className={styles.colLabel}>
+                  <span className={styles.colName}>{row.name}</span>
+                  <span className={styles.colSym}>
+                    {row.symbol}
+                    {marked && ` · ${t.market.lastClose}`}
+                  </span>
                 </span>
               </Link>
             </li>
           );
         })}
-        {/* ON İKİNCİ HÜCRE (3 Ekim). On bir karo telefonda 3'erli dört satırda
-            ve 640–1179 arasında 6 + 5'te birer boş hücre bırakıyordu. Boşluk
-            esnetilmez, doldurulur: o hücre tablonun bağlantısı. Bu
-            genişliklerde başlıktaki aynı bağlantı gizli (11 sütunda tersi). */}
-        <li className={styles.tileMoreItem}>
-          <Link href="/piyasalar#sektor-performansi" prefetch={false} className={styles.tileMore}>
-            <span>{t.today.sectorsLink}</span>
-            <ArrowRight size={16} weight="bold" aria-hidden />
-          </Link>
-        </li>
       </ol>
     </SectorFrame>
   );
@@ -182,12 +198,12 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
 function SectorFrame({
   t,
   meta,
-  aside,
+  breadth,
   children,
 }: {
   t: Dictionary;
   meta: string;
-  aside?: React.ReactNode;
+  breadth?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -195,8 +211,8 @@ function SectorFrame({
       <div className={styles.partHead}>
         <h3 data-rise>{t.today.sectorsHeading}</h3>
         <span className={styles.partMeta}>{meta}</span>
-        {aside}
-        <PanelLink href="/piyasalar#sektor-performansi" className={cn(styles.partLink, styles.sectorsHeadLink)}>
+        {breadth}
+        <PanelLink href="/piyasalar#sektor-performansi" className={styles.partLink}>
           {t.today.sectorsLink}
         </PanelLink>
       </div>
@@ -205,13 +221,13 @@ function SectorFrame({
   );
 }
 
-/** Sektör şeridinin yedeği: aynı başlık, aynı on bir karo. */
+/** Siluetin yedeği: aynı başlık, aynı on bir sütun kutusu. */
 export function SectorRibbonSkeleton({ t }: { t: Dictionary }) {
   return (
     <SectorFrame t={t} meta={t.marketExtras.sectorsMeta}>
       <div aria-hidden className={styles.ribbon}>
         {SECTOR_ETFS.map((entry) => (
-          <Skeleton key={entry.symbol} className={styles.tileSkeleton} />
+          <Skeleton key={entry.symbol} className={styles.colSkeleton} />
         ))}
       </div>
     </SectorFrame>
@@ -410,9 +426,6 @@ function ExtremeCard({
       className={styles.extreme}
       data-tone={tone ?? "flat"}
     >
-      {/* Kartın tepesindeki yön çizgisi: kart görünüme girince soldan
-          açılıyor. Işıma değil ton — renk yalnızca işaretten. */}
-      <span aria-hidden className={styles.extremeAccent} data-motion-draw="line" />
       <span className={styles.extremeTop}>
         <span className={styles.extremeLabel}>{label}</span>
         <ArrowUpRight weight="bold" size={15} className={styles.extremeArrow} aria-hidden />

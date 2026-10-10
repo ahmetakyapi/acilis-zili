@@ -202,7 +202,7 @@
 .breadthStamp { border-radius:0 0 20px 20px; }
 .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(10, minmax(0, 1fr)); gap:6px; margin-top:14px; }
 .heatCell { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; aspect-ratio:auto; min-height:74px; padding:8px 4px; border-radius:12px; overflow:visible; transition:scale .18s var(--ease-brand), box-shadow .18s; }
-.heatLogo { width:30px !important; height:30px !important; border-radius:9px !important; box-shadow:0 0 0 2px rgb(255 255 255 / .35); }
+.heatLogo { width:30px !important; height:30px !important; border-radius:9px !important; box-shadow:0 0 0 2px color-mix(in oklab, var(--premium-surface) 35%, transparent); }
 .heatSymbol { font-size:12px; font-weight:700; line-height:1.2; letter-spacing:.02em; color:var(--text-strong); }
 .heatPct { font-size:12px; font-weight:600; line-height:1.2; letter-spacing:-.01em; color:var(--text-strong); }
 .heatCell:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }

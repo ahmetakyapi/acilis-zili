@@ -2517,7 +2517,8 @@ html.ink-splash-out .ink-splash-layer {
      (`--ink-name-delay`), yoksa sahnenin kendi hızındaki an. */
   animation: ink-splash-name 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) var(--ink-name-delay, 1.75s) both;
 }
-@keyframes ink-splash-name { from { opacity: 0; transform: translateY(6px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
+/* Bulanıklık yok (10 Ekim): ekosistemin "blur yok" kuralı açılışta da geçerli. */
+@keyframes ink-splash-name { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes ink-splash-out { to { opacity: 0; transform: scale(1.015); visibility: hidden; } }
 @keyframes ink-splash-safety { to { opacity: 0; visibility: hidden; } }
 
@@ -2530,6 +2531,8 @@ html.ink-splash-out .ink-splash-layer {
 .chip-strip-arrow[data-side="end"] { right:-4px; }
 .chip-strip-arrow:hover { background:var(--primary-tint); border-color:var(--primary-faint); }
 .chip-strip-arrow:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+/* Görünen düğme 32, dokunulan alan 44 (10 Ekim denetimi). */
+.chip-strip-arrow::after { content:""; position:absolute; inset:-6px; }
 @keyframes chip-arrow-in { from { opacity:0; scale:.8; } }
 @media(prefers-reduced-motion:reduce) { .chip-strip-arrow { animation:none; } }
 

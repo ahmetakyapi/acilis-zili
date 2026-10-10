@@ -10,6 +10,7 @@ import type { AuthFormState } from "@/app/actions/auth";
 import type { InkSceneName } from "@/lib/ink/scenes";
 import { Button } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
+import { EASE_BRAND } from "@/lib/motion";
 
 /**
  * Özellik satırlarının mürekkep glifleri — `features` dizisinin SIRASIYLA
@@ -113,7 +114,7 @@ export function AuthForm({
         { transform: "translate3d(2px,0,0)" },
         { transform: "none" },
       ],
-      { duration: 380, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+      { duration: 380, easing: EASE_BRAND },
     );
     return () => shake.cancel();
   }, [state]);

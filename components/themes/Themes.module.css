@@ -49,9 +49,15 @@
 .rankRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
 @media(hover:hover) { .rankRow:hover { background:var(--primary-tint); color:var(--primary-ink); } }
 .rankName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:550; }
-.rankTrack { position:relative; height:9px; }
-.rankTrack::before { content:""; position:absolute; left:50%; top:-3px; bottom:-3px; width:1px; background:var(--line-strong); }
-.rankBar { position:absolute; top:0; bottom:0; border-radius:4px; background:var(--flat); transition:filter .2s; }
+/* ÇUBUK İNCE BİR ŞERİT, ALTINDA KULVAR (10 Ekim, sahibinin isteği:
+   "çizgi çubukları çok kötü duruyor"). 9 piksellik, 4 piksel yuvarlak
+   çubuk küçük değerlerde bir NOKTA gibi duruyordu (+%0,15 bir yeşil
+   damlaydı) ve boşta kalan iz hiç görünmediği için çubuklar havada
+   asılıydı. Şimdi 5 piksel, köşe 1,5; her satırın tam genişlikte sönük
+   bir kulvarı var, kısa çubuk da bir ölçeğin üstünde okunuyor. */
+.rankTrack { position:relative; height:5px; border-radius:1.5px; background:var(--line-soft); }
+.rankTrack::before { content:""; position:absolute; left:50%; top:-4px; bottom:-4px; width:1px; background:var(--line-strong); }
+.rankBar { position:absolute; top:0; bottom:0; border-radius:1.5px; background:var(--flat); transition:filter .2s; }
 @media(hover:hover) { .rankRow:hover .rankBar { filter:saturate(1.25) brightness(1.06); } }
 .rankBar[data-tone="up"] { background:var(--up); }
 .rankBar[data-tone="down"] { background:var(--down); }
@@ -239,7 +245,7 @@
 @media(prefers-reduced-motion:no-preference) {
   /* Kapak ilk boyamada kurulur: logolar sırayla yerine oturur. JS'e
      bağlı değil, hidratasyonda tekrar oynamaz. */
-  .cluster .logoSlot { animation:cluster-in .6s cubic-bezier(.22,1,.36,1) both; animation-delay:calc(var(--i) * 32ms); }
+  .cluster .logoSlot { animation:cluster-in .6s var(--ease-brand) both; animation-delay:calc(var(--i) * 32ms); }
 }
 @keyframes cluster-in { from { opacity:0; transform:translateY(10px) scale(.86); } }
 @media(hover:hover) {

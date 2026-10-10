@@ -322,8 +322,10 @@
 }
 
 /* İşlem çipi. Nötr çip (ödül, vergi, hediye) sönük; açık piyasa kararı
-   yön renginin wash'ı üzerinde, yön renginde. */
-.chip { display:inline-flex; align-items:center; min-height:22px; padding:0 9px; border-radius:999px; background:var(--surface-elevated); color:var(--text-muted); font-size:12px; font-weight:550; line-height:1; }
+   yön renginin wash'ı üzerinde, yön renginde. Nötr metin `--text-body`
+   (10 Ekim): `--text-muted` koyu temada `--surface-elevated` üzerinde
+   4,09:1 ölçüldü, küçük puntoda eşiğin altında. Sönüklüğü ton taşıyor. */
+.chip { display:inline-flex; align-items:center; min-height:22px; padding:0 9px; border-radius:999px; background:var(--surface-elevated); color:var(--text-body); font-size:12px; font-weight:550; line-height:1; }
 .chip[data-side="up"] { background:var(--up-wash); color:var(--up); font-weight:650; }
 .chip[data-side="down"] { background:var(--down-wash); color:var(--down); font-weight:650; }
 

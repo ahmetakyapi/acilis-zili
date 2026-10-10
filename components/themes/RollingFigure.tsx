@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useMotionPreference } from "@/components/motion/useMotionPreference";
 import styles from "./Themes.module.css";
+import { EASE_BRAND } from "@/lib/motion";
 
 /** Basamak başına yuvarlanma süresi ve basamaklar arası gecikme, ms. */
 const ROLL_MS = 900;
@@ -56,7 +57,7 @@ export function RollingFigure({ value, className }: { value: string; className?:
         [{ transform: "translateY(0)" }, { transform: strip.style.transform }],
         {
           duration: ROLL_MS + index * ROLL_STAGGER_MS,
-          easing: "cubic-bezier(.22,1,.36,1)",
+          easing: EASE_BRAND,
           fill: "both",
         },
       );

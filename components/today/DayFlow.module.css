@@ -132,7 +132,7 @@
 .cardKind em { font-style:normal; }
 .status { display:inline-flex; align-items:center; gap:5px; color:var(--text-body); font-size:12px; line-height:1.5; font-weight:550; }
 .statusDot { width:5px; height:5px; flex-shrink:0; border-radius:50%; background:currentColor; }
-.status[data-status="released"],.status[data-status="analyzed"] { color:var(--up); animation:result-arrive 800ms cubic-bezier(.22,1,.36,1) both; }
+.status[data-status="released"],.status[data-status="analyzed"] { color:var(--up); animation:result-arrive 800ms var(--ease-brand) both; }
 .status[data-status="partial"],.status[data-status="awaiting"] { color:var(--primary-ink); }
 .cardBottom { display:flex; align-items:center; gap:10px; color:var(--primary-ink); }
 .cardBottom > b { color:var(--text-strong); font-size:16px; font-weight:650; letter-spacing:-.03em; }

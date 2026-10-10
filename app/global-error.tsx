@@ -44,7 +44,7 @@ const CSS = `
   :root { color-scheme: light dark; }
   body { background: #f7f9fb; color: #54677c; }
   h1 { color: #101c2b; }
-  .digest { color: #75879a; }
+  .digest { color: #586a7c; }
   @media (prefers-color-scheme: dark) {
     body { background: #070d16; color: #94a7ba; }
     h1 { color: #eaf1f8; }
