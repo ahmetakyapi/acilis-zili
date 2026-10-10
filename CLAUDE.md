@@ -1,60 +1,123 @@
 # Açılış Zili — Claude Code notları
 
-Kararların gerekçesi kod içi yorumlarda yaşıyor ve oralar birer karar
-kaydıdır, silme. Bu dosya yalnızca **her oturumda bilmen gerekenleri** taşır.
+Kararların gerekçesi kod içi yorumlarda yaşar; oralar karar kaydıdır, silme.
+Bu dosya yalnızca **her oturumda bilmen gerekenleri** taşır: kural + tek
+satır neden + gerekçenin durduğu dosya. Rota listesi ve mimari yalnız
+`README.md`'de; `docs/ROUTEMAP.md` rota değil DURUM tutar (iki liste ayrı düşer).
 
-## Hızlı komutlar
+## Commit yazarı
+
+Commitler her zaman `Ahmet Akyapı <ahmetakyapii@gmail.com>` adına atılır;
+yazarı yalnızca "Claude" olan commit atılmaz. Claude, mesajın sonundaki
+`Co-Authored-By: Claude …` satırıyla ortak yazar olarak görünür. Oturum
+başında, ilk committen önce:
+
+```bash
+git config user.name "Ahmet Akyapı"
+git config user.email "ahmetakyapii@gmail.com"
+```
+
+Bu kural sahibinin tüm repolarında geçerli (9 Ekim 2026).
+
+## Komutlar
 
 ```
-npm run dev         # geliştirme (3000 doluysa 3001'e düşer)
-npm run typecheck   # tsc --noEmit  ·  `npx tsc` ÇALIŞMAZ
+npm run dev                      # 3000 doluysa 3001'e düşer
+npm run build                    # route tipleri bozulursa önce `rm -rf .next`
+npm run typecheck                # `npx tsc` değil — önce iCloud kopyalarını temizler
 npm run lint
-npm run build       # route tipleri bozulursa önce `rm -rf .next`
-npm run db:generate # şema değişti → YENİ migration dosyası, eskiyi düzenleme
-npm run db:migrate  # migration'ları uygula
-npm run db:seed     # takvim kapsamı azaldığında uyarı basar
+npx tsx --test tests/*.test.ts   # birim testleri (CI'da koşmaz)
+npm run smoke                    # başsız Chrome: rota kodu, konsol hatası, yatay taşma
+npm run db:generate              # şema değişti → YENİ migration; eskisini düzenleme
+npm run db:migrate
+npm run db:seed                  # takvim kapsamı azalınca uyarır; bir `stories` satırını da ezer
+npm run db:seed:events           # yalnız ekonomik takvim — takvimi tazelemek için bu
+npm run build:favicon            # .ico + PWA PNG'leri (elle üretme)
 ```
 
-**Temiz bir kopyada önce `npm run build` çalıştır.** `PageProps` ve
-`RouteContext` tipleri Next 16 tarafından `.next/types` altına üretiliyor ve
-ikisi de gitignore'da. Build almadan `npm run typecheck` çalıştırırsan
-"Cannot find name 'PageProps'" diye onlarca hata alırsın — kodda bir sorun
-olduğu için değil, tipler henüz üretilmediği için.
+- **Temiz kopyada önce `build`.** `PageProps`/`RouteContext` tipleri
+  `.next/types` altına build sırasında üretilir; öncesinde typecheck
+  "Cannot find name 'PageProps'" verir (CI sırası da bu: `deploy.yml`).
+- **Yayın:** `main`e push → `deploy.yml` (build + typecheck + lint) → SSH ile
+  VPS'te `deploy/update.sh`. Duman testi ayrı iş akışı (`smoke.yml`), kapı değil.
 
-## Yazım kuralı: Title Case
+## Commit'leme
 
-Vurgu taşıyan her metin **Title Case** yazılır. Kapsam:
+- **Oturumda iki-üç commit**, konu başına bir tane. Yapılanlar tek başlıkta
+  özetlenebiliyorsa tek commit; "görsel iyileştirme" ve "performans" gibi iki
+  alan varsa iki. Her mikro düzeltmeye ya da ekrana ayrı commit YOK.
+- **İş sürerken yeni istek gelirse commit'i ERTELE**; kuyruk boşalınca topla
+  (bu uyarı üç kez geldi). Mesele sayı, detay değil: gövdede her değişikliğin
+  gerekçesi ayrı paragraf.
+- Commit öncesi üçü temiz: `typecheck`, `lint`, `build`. Görsel değişiklik
+  tarayıcıda ÖLÇÜLMÜŞ olmalı — "sığıyor gibi duruyor" doğrulama değil.
 
-- Sayfa başlıkları, bölüm ve panel başlıkları, kart başlıkları
-- Buton ve bağlantı metinleri ("Tümünü Gör", "Hesabımı Sil", "Tekrar Dene")
-- Kategori, filtre, sekme ve rozet etiketleri
-- Tablo başlık satırları ve etiket görevi gören ilk sütun hücreleri
-- Rehber ve mercek yazılarındaki `##` / `###` başlıkları
-- Kısa vurgulu ifadeler ("Yatırım Tavsiyesi Değildir")
+## Yazım: Title Case
 
-Kural **künyeleri ve birimleri de kapsar**. Bir süre "ölçü altındaki mikro
-künyeler" muaf tutuldu ("olaydan bugüne", "15 dk gecikmeli", "0,05 puan") ve
-sonuç tutarsızlıktı: aynı ekranda Title Case bir rozetin altında küçük harfle
-başlayan bir künye duruyordu. Artık **cümle olmayan her metin Title Case**:
-"Olaydan Bugüne", "15 Dakika Gecikmeli", "0,05 Puan", "20:04 Güncellendi",
-"56 Analist", "Takipte", "Önbellek".
+**Cümle olmayan her metin Title Case** — künye ve birimler dahil:
+- Sayfa/bölüm/panel/kart başlıkları, buton ve bağlantılar ("Tümünü Gör"),
+  kategori/filtre/sekme/rozet, tablo başlıkları ve etiket sütunu, rehber ve
+  mercekteki `##`/`###`, kısa vurgular ("Yatırım Tavsiyesi Değildir").
+- Künyeler: "Olaydan Bugüne", "15 Dakika Gecikmeli", "0,05 Puan",
+  "20:04 Güncellendi", "56 Analist". (Muaf tutuldukları dönem tutarsızlık üretti.)
 
-Title Case OLMAYAN yerler — bunlar cümledir, başlık değil:
+Cümle düzeninde kalanlar: paragraflar, açıklama ve ipucu satırları; boş
+durum/hata **mesajları** (başlıkları Title Case); `placeholder` ve
+`aria-label` cümleleri; sayı + isim kalıbındaki kısa cümleler ("819 şirketin
+60 tanesi"); geri sayımın birim ekleri (`17 sa 59 dk 53 sn`).
 
-- Paragraflar, açıklama satırları, kart altı ipuçları
-- Boş durum ve hata **mesajları** (başlıkları Title Case, gövdeleri değil)
-- Yer tutucu metinleri (`placeholder`) ve `aria-label` cümleleri
-- Sayı + isim kalıbındaki tam cümleler ("819 şirketin 60 tanesi",
-  "son 40 haberden seçildi") — bunlar bir künye değil, kısa bir cümle
-- Geri sayımın birim ekleri (`17 sa 59 dk 53 sn`) — orada küçük harf,
-  dev puntolu sayının yanında bilinçli bir tipografik karar
+Bağlaç/edat (ve, ile, için, de/da, mi) başta değilse küçük: "Faiz, Tahvil ve
+Getiri Eğrisi". **`title()` / `capitalize` KULLANMA** (`i → I` üretir, `İ`
+değil); küçültürken `toLocaleLowerCase("tr-TR")`.
 
-Türkçe Title Case: bağlaç ve edatlar (ve, ile, için, de/da, mi) küçük kalır,
-başta gelirse büyür. "Faiz, Tahvil ve Getiri Eğrisi" · "Ne Kadar, Ne Zaman"
-`title()` / `capitalize` KULLANMA — `i → I` üretir, `İ` değil; küçültürken de
-`toLocaleLowerCase("tr-TR")` kullan.
+## Ekran düzeni: her ekranda aynı sıra
 
-## Görsel dili
+1. **Başlık** — `PageHeader`: ad, tek cümle açıklama, sağda tek denetim.
+   **Üst künye/kicker YOK** (sahibinin isteği, 9 Ekim 2026: "hem okunmuyor
+   hem kötü görünüyor"). Başlığa ait bilgi (tarih, kurum, kategori) başlığın
+   ALTINA iner. Gerekçe `components/ui/primitives.tsx` → `PageHeader`.
+2. **Künye/seçim şeridi** — şirket kimliği, seçili semboller, kapak.
+3. **Ana görsel** — tek grafik/harita; ikincisi ölçü ızgarasının altına.
+4. **Ölçü ızgarası** — yan yana ölçüler AYNI HATTA biter; birim sayıdan
+   kopmaz (`MONEY_GAP`, `tieFigures` — `lib/utils.ts`).
+5. **Metin** — yorum, değerlendirme, senaryo.
+6. **Künyeler/uyarılar** — panelin İÇİNDE, hairline ile ayrılmış düz
+   paragraf; uyarı için yeni kutu açılmaz.
+7. **`DataStamp`**, sonra **`GuideHint`**.
+
+- **Her panelin `h2`si var** — kalıp `PanelHeader` (kutu değil, ton).
+- **Karşılaştırılan büyüklük bir de ÇİZGİ olarak okunur**
+  (`components/markets/CompareScale.tsx`). Çubuk büyüklüktür, yargı değil:
+  renk yalnız işaretten gelir; karşılaştırılamayan ölçüde (farklı hisse
+  fiyatları) çubuk HİÇ basılmaz.
+- **Kaydırma saklanmaz.** Sığmayan tablo `table-fixed` ile kaba zorlanmaz
+  (değer komşu hücreye biner); taban genişlik + kaydırma + sabit etiket
+  sütunu + "devamı var" işareti.
+
+## Düzen: ölçmeden değiştirme
+
+- Boşluk/yerleşim kararı tahminle verilmez: ölç, değiştir, **ölçümü yoruma
+  yaz**. Kalıcı tarama `npm run smoke` (390/1280, iki dil); geçici ölçüm
+  betikleri `.tmp-*.mjs` (gitignore'da, commit'lenmez). Yatay taşma düzenli
+  kontrol edilir.
+- **Başsız Chrome CSS animasyonunu yanlış yakalar:** `el.screenshot()` çalışan
+  `animation`ı başa sarılmış karede çeker (10 Ekim, sektör silueti basık
+  göründü). Yerleşimi `prefers-reduced-motion: reduce` taklidiyle ya da
+  `headless: false` ile çek; animasyonu sayıyla (`getAnimations()`) doğrula,
+  görüntüyle değil.
+- **İki kolona `justify-between` konmaz** — fark panel aralarına dağılır,
+  aralık öteki kolonun boyuna bağlanır. Aralık hep `gap-5`.
+- **Boşluk esnetilmez, doldurulur** — iki yönlü: sunucu tavan kadar satır
+  basar, fazlası `hidden` + `data-fill`; `components/today/FillColumn.tsx`
+  kısa kolonu ölçüp sığanı açar. JS kapalıyken taban liste kalır.
+- **Kolonun dibi kutusunun dibi değil, SON ÇOCUĞUN dibi** (ızgara satırı
+  kolonları eşit gerer). Aynı nedenle gözlemci kolonu değil PANELLERİ izler;
+  yoksa sonradan inen panelde `ResizeObserver` hiç ateşlenmez.
+- **Kökte `:has()` yok** — `html:has()` her DOM değişikliğinde tüm belgeyi
+  yeniden hesaplatır (geri sayım saniyede bir). Sayfa kendisi basar ya da
+  `<html>` özniteliği taşır (bkz. `app/admin/layout.tsx`).
+
+## Görsel dil
 
 **Kimlik, bir bakışta.** Ayrıntı ve ölçülmüş kontrastlar
 `~/dev-starter/knowledge/themes/acilis-zili.md`te; token'lar
@@ -64,499 +127,197 @@ başta gelirse büyür. "Faiz, Tahvil ve Getiri Eğrisi" · "Ne Kadar, Ne Zaman"
   `premium-surface`. Tek gerçek gölge açılır katmanda ve marka karosunda.
   Cam, blur, ışıma YOK.
 - **Renk anlam taşır, süs değil:** mavi etkileşim, `up`/`down` yön. Veri
-  panelinde mavi bir sayı ya da yeşil bir başlık gördüysen hata vardır.
-- **Degrade yalnızca üç yerde:** kısa display başlık (`.display-ink`),
-  birincil eylem, marka karosu. Veri panelleri ve gövde metni taşımaz.
+  panelinde mavi sayı ya da yeşil başlık gördüysen hata vardır.
+- **Degrade yalnız üç yerde:** kısa display başlık (`.display-ink`), birincil
+  eylem, marka karosu. Veri panelleri ve gövde metni taşımaz.
 - **Grafik dili ince:** kulvar (`--line-soft`) üstünde 5 piksellik şerit,
   sıfır çizgisi `--line-strong`; dolu ağır bloklar "tablo programı" gibi
   duruyor (10 Ekim, sahibinin itirazı — `MarketTexture.module.css`).
-- **Tek font** (Schibsted Grotesk, değişken 400–900); mono yalnızca
-  sembol ve dizin numarası gibi künyelerde (`--font-mono`).
-- **Eğri:** her geçiş `--ease-brand` (JS'te `lib/motion.ts` →
-  `EASE_BRAND`; `element.animate` CSS değişkenini çözmüyor). Hedefini aşıp
-  geri oturan `--ease-spring` / `--ease-spring-soft` YALNIZCA tek bir küçük
-  öğenin geri bildiriminde (sayaç rakamı, saat kolu, onay işareti); panel,
-  sayfa ve metin girişinde asla. Elle `cubic-bezier(...)` yazılmaz.
-- **Display başlığın yanındaki metin 0,12em kalkar.** Degrade başlıklar
-  Ü/İ/Ö imleri kesilmesin diye 0,12em yukarı açılıp `translate` ile geri
-  kalkıyor (globals.css, "ÜSTTEKİ İMLER") ve taban çizgisi hizalaması
-  kaydırılmamış kutuya göre yapılıyor: yanına taban çizgisiyle dizilen
-  künye 2–5 piksel aşağıda görünür. Yanındaki öğeye
+- **Tek font** (Schibsted Grotesk, değişken 400–900); mono yalnız sembol ve
+  dizin numarası gibi künyelerde (`--font-mono`).
+- **Eğri:** her geçiş `--ease-brand` (JS'te `lib/motion.ts` → `EASE_BRAND`;
+  `element.animate` CSS değişkenini çözmüyor). Hedefini aşıp geri oturan
+  `--ease-spring` / `--ease-spring-soft` YALNIZ tek küçük öğenin geri
+  bildiriminde (sayaç rakamı, saat kolu, onay işareti); panel, sayfa ve metin
+  girişinde asla. Elle `cubic-bezier(...)` yazılmaz.
+- **Display başlığın yanındaki metin 0,12em kalkar.** Degrade başlıklar Ü/İ/Ö
+  imleri kesilmesin diye 0,12em yukarı açılıp `translate` ile geri kalkıyor
+  (globals.css, "ÜSTTEKİ İMLER"); taban çizgisi kaydırılmamış kutuya göre
+  hizalandığı için yanındaki künye 2–5 piksel aşağıda görünür. Yanındaki öğeye
   `translate: 0 calc(<başlık puntosu> * -.12)` ver (örnek
-  `MarketTexture.module.css` → `.bandHead`, `.partHead`). Başlığa
-  `inline-flex` de verme; taban çizgisini içi boş bir `::before` imi
-  belirliyor.
+  `components/today/home/MarketTexture.module.css` → `.bandHead`,
+  `.partHead`). Başlığa `inline-flex` verme; taban çizgisini içi boş bir
+  `::before` imi belirliyor.
 
-**Fotoğraf yok.** Yazıların görseli, metinden çizilen `:::` bloklarıdır: model
-yalnızca satırları yazar, çizimi site yapar. Telif riski yok, hiçbir yerde
-görsel barındırmak gerekmiyor, her temada tutarlı. Şema bir kez `image_url`
-alanı aldı (migration 0004) ve hemen geri alındı (0005) — gerekçesi
-`lib/schema.ts` yorumunda. **Tek belgeli istisna:** yatırımcı portreleri
-(`public/investors/`, özgür lisanslı; kaynak ve lisans `lib/investors.ts` →
-`PORTRAITS`). Yeni bir fotoğraf eklemeden önce oradaki gerekçe kadar
-sağlam bir lisans kaydı yazılabiliyor mu diye bak.
-
-Blok ailesi `components/article/ArticleBody.tsx` içinde:
-`sayilar` · `bar` · `pay` · `akis` · `oncesi` · `zaman` · `grafik`, artı dört
-metin kutusu `ornek` · `dikkat` · `ozet` · `tanim`. Sözdizimi ve yazım
-kuralları `docs/claude-rutinler.md` § 3'te; rutin prompt'u oradan kopyalanıyor.
-
-**Yeni blok eklersen DÖRT yeri birden güncelle:** çizici (`ArticleBody.tsx`),
-Mercek ve rehberin editoryal görünümü (`components/article/ArticleEditorial.module.css`),
-rutin prompt'u (`docs/claude-rutinler.md` § 3) ve panel editörünün çip
-listesi (`components/admin/StoryEditor.tsx` → `BLOKLAR`). Çipler yazıya
-örnek blok basıyor; listede olmayan blok editörden hiç eklenemez, listede
-olup çizicide olmayan blok da sayfada düz metne döner.
-
-**Mercek ve rehber yazıları `variant="editorial"` ile çiziliyor, KVKK ve panel
-önizlemesi varsayılanla.** Editoryal stil yalnızca `data-block` / `data-part` /
-`data-role` kancalarını okuyan ayrı bir modülde; KVKK ve panel önizlemesi
-piksel piksel aynı kalıyor. Blok rolleri (özet, giriş, ders, yöntem notu)
-CSS'te `:has()` ile tahmin edilmiyor, `blockRoles` ile TS'te hesaplanıyor.
-İki okuma sayfası aynı ızgarayı paylaşıyor: her şey kapak kartının
-genişliğinde (1040) ve İKİ HATTA. Yüzeyler (kutular, grafik, şirket kartı,
-içindekiler) kartın kenarında biter; metin (gövde, kutuların içi, künyeler)
-kartın iç payı kadar içeride, kapaktaki başlıkla aynı sol hattan başlar —
-`--read-inset`, masaüstü 36, telefon 20. Metni kutulardan AYRI bir sütunda
-dar tutmak iki kez denendi, iki kez geri alındı (kenarlar her blokta
-sıçrıyordu); 50rem'lik ortalı sütun da geri alındı (gövde kapaktan
-bağımsız, iki yanda 120 piksel boşlukta duruyordu). Satır ölçüsünü punto
-taşıyor (20 punto).
-
-**Görselin etrafında çerçeve yok.** Kenarlık ve iç dolgu, resmi kutunun
-ortasında duran ayrı bir nesne gibi gösteriyor; görsel kutunun kendisi olmalı
-(`overflow-hidden` + kendi köşe yarıçapı, `object-contain`/`object-cover`).
-Kenarlık yalnızca görsel OLMAYAN yer tutucularda kalır. Elimizdeki tek gerçek
-görsel kaynağı şirket logoları (`symbols.logo_url`, Finnhub): mercek kapakları
-ve haber künyeleri ondan besleniyor.
-
-**Mürekkep sahneleri** (`lib/ink/`, `components/ink/`): fotoğraf yerine
-çizimin ikinci ayağı. Canvas 2D, tohumlu ve deterministik — her sahne
-`render(ctx, t)` saf fonksiyonu, durum tutan parçacık yok; hareketi azaltan
-okuyucuya son kare tek çağrıyla basılıyor. Karakter markanın zili (gözler,
-gülümseme), renkler temadan (`--text-strong` mürekkep, `--brass` kıvılcım;
-mavi YOK). Sahneler DÖNMEZ: görünüme girince bir kez oynar ve oturur.
-Yerleri:
-
-- Oturumun ilk yüklemesindeki açılış (`InkSplash`). Botlara ve hareketi
-  azaltana hiç açılmaz; hidrasyon geç kalırsa sahne hızlanıp yine 3,4
-  saniyede biter.
-- Gezinme beklemesinin kartı: hedefe göre sahne, harita
-  `lib/ink/route-scenes.ts`.
-- İki 404 (`lost`), hata ekranı (`mishap`), giriş/kayıt (`hello`) ve
-  giriş/kayıt kartının kendini çizen çerçevesi (`cardFrame`).
-- Sayfa düzeyindeki boş durumlar (`EmptyState scene=`) ve haberler kapağı.
-- Mercek ile rehber yazısının bitiş işareti (`storyEnd`).
-- Ana sayfa kahramanının seansa göre uyuklayan, bekleyen ya da çalan zili
-  (`heroSleep` / `heroWait` / `heroRing`; geniş kolonda rakamların
-  yanında, dar kolonda seans çipinin satırında).
-
-Panel içindeki tek satırlık boş durumlara sahne konmaz. Tek döngü
-yüklemede: `LoadingMark` `ringing` sahnesini çalar (sahnenin `loop`
-alanı; görünüme giren sahneler yine dönmez). Kabın boyuna uyan sahneler
-(`fill`) kutu değil CSS boyutu alır. Yeni sahneyi `.tmp-*` bir önizlemede
-kare kare çizip hem açık hem koyu temada gözle kontrol et — çizim hatası
-ancak karede görünüyor.
-
-## Ekran düzeni: aynı sıra, her ekranda
-
-Ekranlar tek tek tasarlandı ve her biri kendi çözümünü buldu; sonuç, aynı
-ürünün içinde birbirine benzemeyen sayfalardı. Kural artık tek: **bir ekranı
-tanımak için okumak gerekmiyor, sırası hep aynı.**
-
-1. **Başlık** — `PageHeader`: ad, tek cümlelik açıklama, sağda o ekranın
-   tek denetimi (varsa). **Üst künye YOK** (9 Ekim 2026): başlığın ve bölüm
-   başlıklarının üstündeki küçük satırlar ("ABD Piyasası", "Kavramlar",
-   `Kicker` "Günün Özeti") sahibinin isteğiyle kaldırıldı — "hem okunmuyor
-   hem kötü görünüyor"; ekranın adını tekrar ediyorlardı. Yeni bir başlığın
-   üstüne künye konmaz; başlığa ait gerçek bir bilgi (tarih, kurum,
-   kategori) başlığın ALTINA iner. Gerekçe `PageHeader` yorumunda.
-2. **Künye/seçim şeridi** — ekranın neyi anlattığı: şirket kimliği, seçili
-   semboller, kapak.
-3. **Ana görsel** — grafik ya da harita. Tek tane; ikincisi varsa ölçü
-   ızgarasının altına iner.
-4. **Ölçü ızgarası** — sayılar. Yan yana duran ölçüler AYNI HATTA biter
-   (alt ızgara ya da `table-fixed`), birimler sayıdan kopmaz (`MONEY_GAP`,
-   `tieFigures`).
-5. **Metin** — yorum, değerlendirme, senaryo.
-6. **Künyeler ve uyarılar** — panelin İÇİNDE, hairline ile ayrılmış düz
-   paragraflar. Bir uyarı için yeni kutu açılmaz.
-7. **`DataStamp`**, sonra **`GuideHint`**.
-
-Buna bağlı üç kural:
-
-**Her panelin bir `h2`si var.** Karşılaştırma ekranında ölçü tablosu
-başlıksızdı: grafikten sonra doğrudan bir sütun başlığı satırına
-("METRİK NVDA AMD…") giriliyordu ve panelin nerede başladığı yalnızca
-çizgiden anlaşılıyordu. Başlık kalıbı `PanelHeader`; kutu değil, ton.
-
-**Karşılaştırılan her büyüklük bir de ÇİZGİ olarak okunur.** Dört sütunlu
-bir tabloda "hangisi büyük" sorusu basamak basamak okunarak cevaplanıyordu.
-Sayının altındaki ince çubuk aynı bilgiyi uzunluk olarak veriyor; sıralama
-okumadan çıkıyor (`components/markets/CompareScale.tsx`). Çubuk bir
-BÜYÜKLÜK, bir yargı değil: hangi F/K'nin iyi olduğunu ekran söylemez, renk
-yalnızca artı/eksi işaretinden gelir. Karşılaştırılamayan bir ölçüde
-(farklı şirketlerin hisse fiyatı) çubuk HİÇ basılmaz — olmayan bir sıralamayı
-varmış gibi gösterirdi.
-
-**Kaydırma saklanmaz.** Dar ekranda sığmayan tablo `table-fixed` ile kabına
-zorlanmaz: sabit yerleşimde tablo her zaman kap kadar geniştir ve bölünemez
-bir değer hücresinden taşıp komşu sayının üstüne biner — kaydırma yerine
-çakışma. Tabana bir genişlik verilir, kaydırma geri gelir ve sabit etiket
-sütunu ile "devamı var" işareti onu okunur tutar.
-
-## Düzen: ölçmeden değiştirme
-
-Yerleşim kararları tahminle verilmiyor. Bir boşluk "fazla duruyorsa" önce
-ölçülür, sonra değiştirilir ve **ölçüm yoruma yazılır** ki bir daha
-ölçülmesin. Chrome'u başsız koşturup rota × genişlik matrisini tarayan
-geçici betikler bunun için var (`.tmp-*.mjs`, commit'lenmez).
-
-**Başsız Chrome CSS animasyonunu yanlış yakalıyor.** `el.screenshot()`
-çalışan bir `animation`ı başa sarılmış karede çekiyor: sektör siluetinin
-sütunları ölçümde doğru boydaydı (`getAnimations()` → `finished`) ama
-görüntüde basık ve orantısızdı (10 Ekim, yarım saat kaybettirdi). Yerleşimi
-`prefers-reduced-motion: reduce` taklidiyle ya da `headless: false` ile
-çek; animasyonun kendisini sayıyla doğrula, görüntüyle değil.
-
-**`justify-between` iki kolona konmaz.** Ana sayfanın iki kolonu bir süre
-onu taşıdı ve sonuç şuydu: ızgara satırı iki kolonu aynı yüksekliğe geriyor,
-kısa olan kolon aradaki farkı PANEL ARALARINA dağıtıyor. Yani aralık kendi
-ölçüsü olmaktan çıkıp öteki kolonun boyuna bağlanıyor — sağ kolon kısayken
-oradaki boşluklar 20 pikselden 92'ye, sağ dolduğunda bu kez sol kolonun
-aralıkları 35 piksele çıkıyordu. Panel eklemek sayfanın ÖTEKİ tarafındaki
-boşlukları oynatıyordu. Aralık her zaman `gap-5`; kısa kolon erken biter ve
-iki sütunlu bir düzende olması gereken de budur.
-
-**Kolonun dibi kutusunun dibi değildir.** Izgara satırı kolonları aynı
-yüksekliğe gerdiği için `kolon.getBoundingClientRect().bottom` ikisinde de
-aynı sayıyı verir. İçeriğin gerçekten bittiği yer SON ÇOCUĞUN dibidir;
-kolon boyu ölçen her hesap onu okumalı (bkz. `components/today/FillColumn.tsx`).
-
-**Boşluk esnetilmez, doldurulur.** Kısa kalan kolon, kırpılmış bir listeye
-satır açarak dengelenir: sunucu tavan kadar satır basar, fazlası `hidden`
-gelir ve tarayıcı kaçının sığdığını ölçüp o kadarını açar. JavaScript
-kapalıyken taban satır sayısı kalır ve hiçbir şey zıplamaz — açılan satırlar
-zaten boş olan alana iner.
-
-Doldurma İKİ YÖNLÜ ve kapasite iki kolonda da var (`LatestAnalyses` solda,
-`WeekAhead` ile favoriler sağda). Bir dönem yalnızca sağ kolonu
-dolduruyordu — kısa kalanın hep o olduğu varsayılmıştı — ve bilanço açıklayan
-şirketin olmadığı bir günde sol kolon 127 piksel açıkta kalıyordu.
-
-**Gözlemci kolonu değil PANELLERİ izler.** Izgara satırı iki kolonu aynı
-yüksekliğe geriyor, yani kolonun kutusu UZUN kolonun boyuna kilitli: kısa
-kolonun içindeki bir panel akışla gelip büyüdüğünde hiçbir kolon kutusu
-değişmiyor ve `ResizeObserver` hiç ateşlenmiyor. Doldurma o zaman ilk
-karedeki (paneller henüz inmemiş) ölçüye göre karar verip orada kalıyor;
-belirtisi, aynı sayfanın aynı genişlikte bazen dolup bazen dolmamasıdır.
-
-## Saat kuralı: TR önce
-
-Kaynakların tamamı New York saatiyle yayın yapıyor ama okuyucu Türkiye'de.
-`lib/session-clock.ts` tek kaynak: TR dilinde birincil saat İstanbul, ikincil
-New York; EN'de sıra tersine döner. Fark ABD yaz saatiyle kaydığı için hiçbir
-yere sabit saat yazılmaz, o günün tarihiyle hesaplanır (açılış yazın 16:30,
-kışın 17:30 TR). Seansın kendi saati `lib/market-hours.ts`'te kalır — ET↔UTC
-dönüşümünün tamamı orada, başka yerde manuel saat aritmetiği yapılmaz.
-
-## İstemci ile sunucu sınırı
-
-**`"use client"` bir modülden dışa aktarılan DEĞER sunucu bileşenine gerçek
-değer olarak gelmez** — Next onu bir istemci referansına çevirir ve sonuç
-sessizdir: ne derleme ne çalışma zamanı konuşur. Renk sabitleri bu yüzden
-`lib/chart-series.ts`te, aralık sözleşmesi `lib/compare.ts`te duruyor; ikisi
-de `"use client"` değil ve iki taraftan da okunuyor.
-
-**Sunucu bileşeni istemci sağlayıcıya `children` olarak geçebilir.** Aralık
-karşılaştırma ekranında böyle çalışıyor: sağlayıcı istemci ama sardığı ağacın
-çoğu sunucuda çiziliyor, yalnızca aralığa BAĞLI hücreler istemci. Tabloyu
-bütünüyle istemciye taşımak aralıkla hiç değişmeyen beş ölçü bloğunu da
-tarayıcıya indirmek olurdu.
-
-**Sığ adres güncellemesi uçuştaki gezinmeyi ÖLDÜRÜR.** Next'in yamalı
-`history.replaceState`i o sırada bekleyen bir gezinmeyi sessizce iptal
-ediyor — geri gelmiyor, yeniden denenmiyor, hata da vermiyor. Sığ güncelleme
-yapan bir denetim, gezinme sürerken kendini kapatmak zorunda
-(`useRouteNavigating`, `components/layout/RouteProgress.tsx`).
-
-**Sığ güncelleme geçmiş girdisini tazelemez.** O adres için sunucudan RSC
-yükü çekilmediği için geri tuşu ÖNCEKİ durumun ağacını geri yükler. Adresten
-okunan bir durum, prop'tan değil ADRESTEN başlatılmalı; prop yalnızca sunucu
-çiziminde geçerlidir.
-
-**`getQuotes` ve `getSymbolNames` istek içinde önbellekli ve anahtar
-sıralanmış sembol dizesi.** İki panel birebir aynı listeyi sorarsa
-sağlayıcıya bir kez gidilir; listede tek bir sembol farkı anahtarı değiştirir
-ve tur ikiye çıkar. Aynı ekranda iki panel aynı veriyi gösteriyorsa aynı
-anahtarı sormalı — yoksa aynı hissenin iki farklı yüzdesi yan yana durabilir.
-
-`getSeries` bu kümede DEĞİL: düz bir `async function`, argümanı bir
-`SeriesRequest`. Makro serilerde istek-içi tekilleştirme yok; tek koruma
-`fetch`in kendi veri önbelleği (`revalidate`).
-
-**`cache()` ile sarılı olanların listesi burada TUTULMUYOR** (10 Ekim).
-Elle tutulan liste ROUTEMAP'in yolunu izledi: otuz dokuz dosyada kullanılıyor,
-listede yirmisi vardı (`theme-board`, `tax-data`, `investor-data`,
-`ark-data`, `sec-form4`, `analyst-target-data`, `portfolio-snapshot`
-eksikti). Bir fonksiyonun istek içinde tekil olup olmadığını kaynağa sor:
-
-```
-grep -rnE "= (React\.)?cache\(" lib components app
-```
-
-İstekler ARASI önbellek (`unstable_cache`) ayrı bir mekanizma ve hata
-önbelleğin DIŞINDA yakalanır (düşen veritabanının boş listesi saklanmasın):
-`loadHolidays` (gün) ve `loadSymbolTable` (5 dakika — sembol × kotasyon
-önbelleği birleşimi; `getSymbolNames` ile `getCompanies` ondan süzüyor,
-gerekçe ve ölçüm `lib/data.ts`te).
-
-**Kökte `:has()` yok.** `html:has(...)` belgedeki HER DOM değişikliğinde
-yeniden değerlendiriliyor ve tüm belgenin stilini baştan hesaplatıyor: ana
-sayfada geri sayım her saniye bir rakam eklediği için 4x yavaş CPU'da
-yükleme boyunca 126 tam belge hesabı, 2,1 saniye (24 Eylül, ölçüldü).
-Köke bağlı bir kural gerekiyorsa sayfanın kendisi basar (bkz.
-`app/admin/layout.tsx`) ya da `<html>` özniteliği taşır.
+- **Yazılarda fotoğraf yok.** Görsel, metinden çizilen `:::` bloklarıdır
+  (`stories.image_url` 0004'te eklendi, 0005'te kaldırıldı — `lib/schema.ts`).
+  **Tek belgeli istisna:** yatırımcı portreleri (`public/investors/`, özgür
+  lisanslı; kaynak ve lisans `lib/investors.ts` → `PORTRAITS`). Yeni fotoğraf
+  ancak o kadar sağlam bir lisans kaydıyla.
+  Bloklar `components/article/ArticleBody.tsx`: `sayilar` · `bar` · `pay` ·
+  `akis` · `oncesi` · `zaman` · `grafik` + metin kutuları `ornek` · `dikkat` ·
+  `ozet` · `tanim`. Kutuda `**Etiket:**` ile başlayan satır tanım listesine
+  dönüşür (yapıdır, süs değil).
+- **Yeni blok = DÖRT yer:** çizici (`ArticleBody.tsx`), editoryal stil
+  (`components/article/ArticleEditorial.module.css`), rutin prompt'u
+  (`docs/claude-rutinler.md` § 3) ve editör çipleri
+  (`components/admin/StoryEditor.tsx` → `BLOKLAR`).
+- Mercek ve rehber `variant="editorial"` ile çizilir; KVKK ve panel önizlemesi
+  varsayılanla, piksel piksel aynı kalır. Blok rolleri CSS `:has()` ile değil
+  TS'te `blockRoles` ile. Okuma ızgarası iki hat: yüzeyler 1040'lık kartın
+  kenarında, metin `--read-inset` (36 / telefonda 20) içeride. Metni ayrı dar
+  sütuna almak denendi ve geri alındı (`components/stories/StoryDetail.module.css`).
+- **Görselin etrafında çerçeve yok** — görsel kutunun kendisi
+  (`overflow-hidden` + yarıçap). Kenarlık yalnız yer tutucularda.
+- **Mürekkep sahneleri** (`lib/ink/scenes.ts` → `INK_SCENES`,
+  `components/ink/`): Canvas 2D, tohumlu, deterministik, saf `render(ctx, t)`;
+  hareketi azaltana son kare. Renk temadan (`--text-strong`, `--brass`; mavi
+  YOK). Sahne DÖNMEZ, bir kez oynar — tek istisna `LoadingMark`'ın `ringing`
+  döngüsü. Rota beklemesi `lib/ink/route-scenes.ts`; sayfa düzeyi boş durum
+  `EmptyState scene=`; panel içi tek satırlık boş duruma sahne konmaz. Yeni
+  sahneyi `.tmp-*` önizlemede kare kare, iki temada gözle kontrol et.
+  Açılış `InkSplash` botlara ve hareketi azaltana hiç açılmaz.
 
 ## Veri dürüstlüğü
 
-Üçü de birer hata düzeltmesinden geldi; yenisini yazarken bunları koru:
+1. **Uydurma kesinlik yok.** Dakika bilinmiyorsa `~` ve pencere adı
+   ("~23:00 · Kapanış Sonrası").
+2. **Eski veri büyük puntoyla gösterilmez**; küçük tarih kurtarmaz — metrik
+   kalkar (Brent örneği: `lib/market-boards.ts`).
+3. **Aynı sayı iki yerde duruyorsa aynı kaynaktan gelir** (başlıktaki kotasyon
+   ile grafiğin son barı).
+4. **Yüzde hangi seansı anlattığını KANITLAR.** Tek ölçü
+   `status.sessionDate` (`lib/market-hours.ts`): kotasyon ancak
+   `isSessionTrade` ise seansı anlatır. Gün yetmez, YAŞ da sorulur
+   (`packCurrent`, `lib/providers/index.ts`; ölçü sağlayıcının `Date`
+   başlığı) — güncel değilse bir kez önbelleksiz tekrar, sonra `stale: true`.
+   **Ekran bayat veriyi künyesiyle gösterebilir; YAZMA katmanı (teknik,
+   bülten, mercek uçları) hiç kullanmaz** — sayı metne geçip kalıcı olur.
+   Barlarda aynı kural: `cachedBarsUsable`. Açılış öncesi sağlayıcının gün
+   barı dünkü seanstır.
 
-1. **Uydurma kesinlik yok.** Sağlayıcı dakika vermiyorsa saat `~` ile yazılır
-   ve hangi pencere olduğu adıyla söylenir (bilanço satırları: "~23:00 ·
-   kapanış sonrası").
-2. **Eski veriyi büyük puntoyla gösterme.** Brent kartı FRED'in EIA spot
-   serisinden geliyordu ve o seri günlerce geriden yayımlanıyor; ekranda bir
-   haftalık eski fiyat duruyordu. Küçük puntoda tarih yazmak bunu kurtarmaz —
-   metrik kaldırıldı.
-3. **Aynı sayı iki yerde duruyorsa aynı kaynaktan gelmeli.** Hisse başlığı
-   anlık kotasyonu, grafik son dakika barının kapanışını yazıyordu; ikisi
-   tanımı gereği farklı sayılar ve yan yana durunca hata gibi okunuyor.
-4. **Bir yüzde hangi seansı anlattığını KANITLAMALI.** `changePct` kendi
-   başına "bugün" demiyor; hangi güne ait olduğuna sağlayıcı karar veriyor.
-   Sağlayıcı düştüğünde `getQuotes` Neon önbelleğine düşüyor ve orada önceki
-   seansın yüzdeleri duruyor — ana sayfanın hareket paneli seans açıkken
-   dünkü sıralamayı "seans içi" künyesiyle basıyordu. Tek kural, tek alan:
-   `status.sessionDate` (lib/market-hours.ts). Bir kotasyon ancak işlem günü
-   o alana eşitse (`isSessionTrade`) seansı anlatır. **Gün tek başına
-   yetmiyor, YAŞ da sorulur** (`packCurrent`, lib/providers/index.ts): paket
-   bugüne ait ama yetmiş üç dakika önce çekilmiş olabilir ve canlı seansta bu
-   da bayattır — ölçü sağlayıcının `Date` başlığı, son işlem anı değil
-   (likiditesi düşük sembol canlı seansta da uzun süre işlem görmeyebilir).
-   Sağlayıcı katmanı paketi güncel bulmazsa bir kez önbelleksiz tekrarlıyor,
-   sonra `stale: true` diyor. **Ekran katmanı bayat veriyi künyesiyle
-   gösterebilir; YAZMA katmanı gösteremez** — teknik fotoğraf, bülten ve
-   mercek uçları bayat kotasyonu hiç kullanmıyor, çünkü oradan çıkan sayı
-   metne geçip kalıcı oluyor.
-   Aynı kural BARLARDA da işliyor: gün içi aralıklar (1G, 1H) bir seansın
-   şeklini çiziyor, o yüzden önbellekten gelen seri ancak son barı seans
-   gününe aitse kullanılıyor; dönemsel aralıklarda beş günlük yaş tavanı
-   geçerli (`cachedBarsUsable`). Sağlayıcının GÜN BARI da her zaman bugünün
-   değil — açılış öncesinde dünkü seansı taşıyor, o yüzden açılış/en
-   yüksek/en düşük/hacim o pencerede boş dönüyor.
+## Saat: TR önce
 
-## Commit'leme
+`lib/session-clock.ts` tek kaynak: TR'de birincil İstanbul, ikincil New York;
+EN'de tersi. ABD yaz saati farkı kaydırdığı için sabit saat yazılmaz (açılış
+yazın 16:30, kışın 17:30 TR). ET↔UTC aritmetiği yalnız `lib/market-hours.ts`'te.
 
-**Bir oturumda iki-üç commit.** Her mikro düzeltme ya da her ekran için ayrı
-commit atma; kullanıcı arka arkaya iş sıraladığında hepsini bitir, sonra
-konu bazında topla. Ölçü: yapılanlar tek bir başlıkta özetlenebiliyorsa tek
-commit; "görsel iyileştirme" ile "performans" gibi iki farklı alan varsa iki.
+## İstemci/sunucu sınırı ve önbellek
 
-Commit'ten önce üçü de temiz olmalı: `npm run typecheck`, `npm run lint`,
-`npm run build`. Görsel bir değişiklikse ayrıca tarayıcıda ölçülmüş olmalı —
-"sığıyor gibi duruyor" bir doğrulama değil.
+- **`"use client"` modülden dışa aktarılan DEĞER sunucuya gerçek değer olarak
+  gelmez** — sessizce istemci referansına döner. Paylaşılan sabitler düz
+  modülde: `lib/chart-series.ts`, `lib/compare.ts`.
+- Sunucu bileşeni istemci sağlayıcıya `children` olarak geçebilir; yalnız
+  duruma BAĞLI hücreler istemcide (karşılaştırma ekranı).
+- **Sığ adres güncellemesi uçuştaki gezinmeyi sessizce ÖLDÜRÜR** — gezinme
+  sürerken kapan (`useRouteNavigating`, `components/layout/RouteProgress.tsx`).
+- **Sığ güncelleme geçmiş girdisini tazelemez**: geri tuşu eski ağacı yükler.
+  Adresten okunan durum prop'tan değil ADRESTEN başlatılır.
+- **İstek içi önbellek = React `cache()`**, argümanı KİMLİKLE eşler; bu yüzden
+  anahtar sıralanmış dize (`getQuotes` → `quotesForKey`, `getSymbolNames` →
+  `symbolNamesForKey`). Aynı veriyi gösteren iki panel aynı listeyi sormalı,
+  yoksa aynı hissenin iki farklı yüzdesi yan yana durabilir. Her fonksiyonun
+  sarılı olduğunu varsayma (ör. `getSeries`, `lib/providers/fred.ts`, sarılı
+  DEĞİL; makro serilerde tek koruma `fetch`in `revalidate`i). Liste burada
+  TUTULMAZ (elle tutulan liste 39 dosyanın 20'sini sayıyordu) — kaynağa sor:
+  `grep -rnE "= (React\.)?cache\(" lib components app`.
+- **İstekler arası önbellek = `unstable_cache`**; hata önbelleğin DIŞINDA
+  yakalanır ki düşen veritabanının boş sonucu saklanmasın
+  (`grep -rn "unstable_cache(" lib`; örnek `loadSymbolTable`, `lib/data.ts`).
 
-**İş ortasında yeni istek gelirse commit'i ERTELE.** Sahibi çoğu zaman bir
-iş sürerken yenisini yazıyor; her isteği bitirdikçe commit atmak bir
-oturumda altı commit demekti (26 Eylül) ve bu uyarı üçüncü kez geldi.
-Kuyruk boşalana kadar bekle, sonra ilgili işleri konu başına tek commit'te
-topla: "ana sayfa + şirket sayfası + tablolar" görsel iyileştirme olarak
-tek commit, README ayrı bir commit.
+## İçerik ve rutin köprüsü
 
-Mesele commit SAYISI, mesaj detayı değil — gövdede her değişikliğin gerekçesi
-ayrı paragraf olarak yazılmaya devam eder. Sekiz-on küçük commit geçmişi
-taranamaz hâle getiriyor.
+- Yazılı içeriği claude.ai rutinleri üretir; promptlar `docs/claude-rutinler.md`
+  (§ 1 günlük bülten, § 2 haftalık, § 3 mercek, § 4 bilanço analizi, § 5 teknik).
+  Uçlar `/api/{brief,mercek,analiz,teknik,hedef}`: POST yazar, GET geri okur,
+  `/context` rutine girdi verir; hepsi `BRIEF_SECRET` (`lib/api-auth.ts` →
+  `checkBearer`).
+- **İçeriğin yazma yolu TEK: `lib/content-write.ts`** (şema, sürüm fotoğrafı,
+  upsert) — `/api/mercek`, `/api/brief` ve panel eylemleri
+  (`app/actions/content.ts`) oradan geçer. Yeni giriş de oradan geçer.
+  Panel yeni kayıt ÜRETMEZ, var olanı düzeltir (`/admin/yazilar/...`);
+  üzerine yazılan hâl `story_revisions`a düşer (bülten anahtarı
+  `bulten:{tarih}:{dönem}`). Panelde **İçerik ÖLÇER, Yazılar DEĞİŞTİRİR**.
+- Rehber depoda (`content/guide/`: meta + tr + en, eksik çeviri derlemeyi
+  kırar); mercek veritabanında (`stories`, slug başına iki `locale`; çeviri
+  yoksa orijinal "TR" rozetiyle).
+- Bilanço analizi (`earnings_analyses`): sayılar HAM (8.97e9), metin dile
+  göre. Bilançolar dört sekme (`/bilancolar`, `/hafta`, `/analizler`,
+  `/takip`); sekme çubuğunu her sayfa kendi basar — detay sayfası sekmesiz.
+- Teknik analiz (`technical_analyses`): satır YAYIN başına (metin
+  `copy.{tr,en}`), rutin yorum yazar, göstergeleri uç hesaplar. Sembol
+  listesi `lib/technical.ts` → `TECHNICAL_SYMBOLS`; nöbet saati değişirse
+  `TECHNICAL_CRON`, `SLOT_UTC`, `currentSlot` üçü birden.
 
-## Belgeli istisna: `eslint-disable`
+## Altyapı ve güvenlik
 
-Ekosistem kuralı `eslint-disable` yorumunu yasaklıyor ("sorunu düzelt").
-Depoda **tek** istisna var ve gerekçesi güvenlik: `components/news/NewsImage.tsx`
-iki yerde `@next/next/no-img-element` kuralını kapatıyor.
+- **Depo herkese açık.** Gerçek sırlar (`BRIEF_SECRET`, `CRON_SECRET`, …)
+  asla commit'lenmez; doldurulmuş promptlar `docs/*.local.md` (gitignore'da).
+  Commit öncesi staged diff'i sırlara karşı tara.
+- **Migration'lar deploy'da UYGULANMAZ**; `npm run db:migrate` ayrıca, üretim
+  `DATABASE_URL`iyle koşulur. Kod migration'dan önce yayına inebilir: yeni
+  özellik mümkünse var olan tabloya (özellikle `users`) sütun eklemez, kendi
+  tablosunu açar ve tablo yokken sessizce düşer (`lib/avatar-data.ts`).
+  Migration'ı uygulamayı unutmak da sessiz hatadır.
+- **`/gomulu/*` çerçevelenebilen TEK yol**; geri kalanı `X-Frame-Options:
+  DENY` + `frame-ancestors 'none'` (`next.config.ts`).
+- **Bildirim Web Push** (`lib/push.ts`, `public/sw.js`,
+  `app/api/cron/alarmlar`, VAPID). Service worker yalnız bildirim taşır:
+  `fetch` dinleyicisi/önbellek YOK (bayat fiyat = veri dürüstlüğü 2). Kayıt
+  yalnız Ayarlar'daki düğmeyle. Zamanlanmış işler `deploy/cron-install.sh`'te
+  (`update.sh` her sürümde çalıştırır) — yeni iş oraya.
+- **E-posta yalnız şifre sıfırlama** (`lib/email.ts`, Resend, SDK'sız).
+  Anahtar yoksa "Şifremi Unuttum" basılmaz; her adrese aynı yanıt, gönderim
+  `after` ile; satırda bağlantının SHA-256 özeti. Bülten/bildirim e-postası
+  eklenirse önce KVKK metni değişir.
+- **Tek `eslint-disable` istisnası:** `components/news/NewsImage.tsx`'teki iki
+  `@next/next/no-img-element`. `next/image` her haber CDN'i için
+  `remotePatterns` ister; tek kapsayıcı yol `hostname: "**"` ve o,
+  `/_next/image`'ı herkese açık görsel proxy'sine çevirir. Yeni bir
+  `eslint-disable` bu kadar sağlam gerekçe ister.
 
-Haber görselleri onlarca farklı haber CDN'inden geliyor ve `next/image` her
-host için `remotePatterns` kaydı istiyor. Hepsini kapsamanın tek yolu
-`hostname: "**"` ve o da `/_next/image` ucunu HERKESİN kullanabileceği bir
-görsel proxy'sine çevirir. Şirket logosu dalı da kurtulmuyor: `logoSrc`
-bilinen sembollerde yerel dosya döndürüyor ama bilinmeyende Finnhub'ın uzak
-adresine düşüyor.
+## Stil, tema, metin
 
-Yani buradaki "sorunu düzeltmek" optimizasyon için bir güvenlik açığı açmak
-olurdu. Kural yerinde; istisna da yerinde ve tek. Yeni bir `eslint-disable`
-eklemeden önce bu paragraf kadar sağlam bir gerekçe yazılabiliyor mu diye bak.
+- **Tailwind v4**: `tailwind.config.ts` yok, tokenlar `app/globals.css` →
+  `@theme inline`. Hardcoded renk yasak.
+- **Tema** next-themes değil: `data-theme` + `az-theme` çerezi.
+- **Marka işareti tek kaynak** `components/brand/BellMark.tsx`
+  (`--mark-*`); `app/icon.svg`, `app/apple-icon.tsx`, `lib/og.tsx` aynı
+  sabitleri okur. Mavi degrade karo iki temada aynı.
+- **Arayüz metni** `lib/i18n/dictionaries/{tr,en}.ts`; `en`, `typeof tr` —
+  `tr`'ye eklenen anahtar `en`'i derletmez, ikisi birlikte. **Her özellik
+  kendi ad alanında** (`glossary`, `stockDepth`, `lira`…); var olana anahtar
+  serpiştirme.
+- **Büyük sayfalar panellere bölünür**, yeni panel kendi dosyasında:
+  `app/(app)/hisse/[symbol]/_panels/`, `components/today/home/`,
+  `components/earnings/report/`.
+- Mobilde sabit katmanlar `env(safe-area-inset-*)` taşır (`viewport-fit=cover`).
 
-## Bilinmesi gerekenler
+## Küçük ama kritik
 
-- **Depo herkese açık.** `BRIEF_SECRET` ve `CRON_SECRET` asla commit'lenmez.
-  Gerçek değerlerin bulunduğu `docs/rutinler.local.md` `*.local.md` deseniyle
-  gitignore'da; commit öncesi staged diff'i secret'a karşı tara.
-- **Migration'lar deploy'da UYGULANMAZ** (deploy.yml `db:migrate` çalıştırmıyor);
-  `npm run db:migrate` ayrıca, üretim `DATABASE_URL`iyle koşulur. Sonucu:
-  canlıdaki kod migration'dan ÖNCE yayına inebilir. Yeni bir özellik mümkünse
-  var olan tabloya sütun eklemez, kendi tablosunu alır ve onu okuyan kod tablo
-  yokken sessizce düşer (`user_avatars` → `lib/avatar-data.ts`). `users`a
-  eklenen bir sütun, migration inene kadar her kullanıcı sorgusunu ve girişi
-  kırardı. Uygulamayı atlamak da sessiz bir hata: 26 Eylül'de profil ikonları
-  "kaydedilemiyor" diye bildirildi, sebep uygulanmamış 0018'di.
-- **Tailwind v4** — `tailwind.config.ts` yok, tokenlar `app/globals.css`
-  içindeki `@theme inline` bloğunda. Hardcoded renk yasak.
-- **Tema** next-themes değil, `data-theme` + `az-theme` çerezi.
-- **Marka işareti tek kaynak:** `components/brand/BellMark.tsx` (zil
-  geometrisi, görüş kutusu, `--mark-*` token'ları). Mavi degrade karo iki
-  temada da aynı — sekme ve ana ekran ikonu temayı bilemiyor. `app/icon.svg`,
-  `app/apple-icon.tsx` ve `lib/og.tsx` aynı sabitleri okur; `.ico` ve PWA
-  PNG'leri elle değil `npm run build:favicon` ile üretilir.
-- **Arayüz metni** sözlükte: `lib/i18n/dictionaries/{tr,en}.ts`. `en`, `tr`
-  tipinden türüyor — `tr`'ye anahtar eklersen `en` derlenmez, ikisini birlikte
-  güncelle.
-- **Rehber yazıları** depoda (`content/guide/`), **mercek yazıları**
-  veritabanında (`stories` tablosu). `/api/mercek` POST ile yazılır, aynı uç
-  `?slug=` ile gövdeyi geri okur — rutin güncelleme yaparken onu kullanıyor.
-- **İçeriğin yazma yolu TEK: `lib/content-write.ts`.** Doğrulama şeması,
-  sürüm fotoğrafı ve upsert orada; `/api/mercek`, `/api/brief` ve panelin
-  sunucu eylemleri (`app/actions/content.ts`) hepsi oradan geçiyor. Bir dönem
-  "panelden içerik yazılmasın" kararı vardı ve gerekçesi ikilikti — iki
-  doğrulama, iki biçim kontrolü, ayrı düşen iki kod yolu. Karar
-  savuşturulmadı, gerekçesi ortadan kaldırıldı; yeni bir giriş eklerken de
-  aynı kural: şema ve yazma tek yerde kalır.
-  Panelden **yeni kayıt üretilmiyor**, yalnızca var olan düzeltiliyor:
-  mercek `/admin/yazilar/mercek/[slug]`, bülten
-  `/admin/yazilar/bulten/[tarih]?tur=haftalik&dil=en`. Üzerine yazılan hâlin
-  fotoğrafı `story_revisions`a düşüyor (bülten anahtarı
-  `bulten:{tarih}:{donem}` — mercek slug'ıyla çakışamaz, slug şeması iki
-  nokta üst üste kabul etmiyor).
-  Panel sekmelerinden **İçerik ÖLÇER, Yazılar DEĞİŞTİRİR** — biri sağlık
-  panosu (sayım, eksik çeviri, yayın ritmi), öteki editör girişi.
-- **Bilanço analizleri** de veritabanında (`earnings_analyses`) ve aynı
-  köprüden geliyor: `/api/analiz` POST yazar, `?symbol=&period=` geri okur,
-  `/api/analiz/context` rutine aday listesi verir. Rutin promptu
-  `docs/claude-rutinler.md` § 4'te. Sayılar **ham** tutulur (8.97e9), metin
-  alanları dile göre; sunum katmanı biçimlendirir.
-  Bilançolar ekranı dört sekmedir — Takvim (`/bilancolar`), Haftalık
-  (`/bilancolar/hafta`), Analizler (`/bilancolar/analizler`), Takip
-  Ettiklerim (`/bilancolar/takip`); detay `/bilancolar/{sembol}/{donem}`.
-  Sekme çubuğu paylaşılan bir layout'ta DEĞİL, dört sayfanın her biri
-  kendi basıyor: detay sayfası aynı segmentin
-  altında ve orada sekme istenmiyor.
-- **Teknik analizler** de veritabanında (`technical_analyses`) ve aynı
-  köprüden: `/api/teknik` POST bir yayını TOPLU yazar (`{session_date,
-  slot, items}`), `?symbol=` geri okur, `/api/teknik/context` göstergeleri
-  HESAPLAYIP verir. Rutin sayı üretmez, yorum yazar; gösterge fotoğrafını
-  (`snapshot`) yazma ucu kendisi hesaplar. Satır dil başına değil YAYIN
-  başına — görüş ve seviyeler iki dilde aynı sayı, metin `copy.{tr,en}`
-  içinde. Sembol listesi tek yerde: `lib/technical.ts` →
-  `TECHNICAL_SYMBOLS`; yazma yolu `lib/technical-data.ts`. Rutin promptu
-  `docs/claude-rutinler.md` § 5. Sadeleştirilmiş
-  başlıkta artık doğrudan Teknik Analiz sekmesi var; büyütülmüş yazıda
-  taşma önceliğiyle Daha Fazla paneline alınabilir
-  (ölçüm `components/layout/nav-items.ts`te).
-- **İçerik iki dilli.** Rehber: `content/guide/` üç katman (meta + tr + en),
-  eksik çeviri derlemeyi kırar. Mercek: aynı slug iki `locale` satırı; çeviri
-  yoksa sayfa orijinali "TR" rozeti ve notla gösterir, boş kalmaz.
-- **Sayfa içi filtre ve sıralama bağlantıları `scroll={false}` ister.** App
-  Router her gezinmede en üste kaydırıyor; tablonun ortasında sıralamayı
-  değiştiren okuyucu sayfanın başına fırlıyordu.
-- **Katlama bastığın yerde açılır.** İki ayrı sıçrama vardı (30 Eylül):
-  Safari 27'nin yeni kaydırma çapalaması, açılınca dibe taşınan düğmeyi
-  izleyip okuyucuyu metnin sonuna atıyordu (bülten kartı); JS'siz onay
-  kutusu katlamalarında da etikete basınca odak kabın BAŞINDAKİ gizli
-  kutuya gidip sayfayı ~500 piksel yukarı çekiyordu. Koruma
-  `components/layout/ExpandInPlace.tsx` (aç/kapa anında çapalama kapalı);
-  yeni bir `sr-only` onay kutusu düğmenin hizasına konur (`.foldInput`).
-- **Mobilde sabit katmanlar güvenli alanı kendi taşır** (`env(safe-area-inset-*)`).
-  Sayfa `viewport-fit=cover` ile açılıyor: dolgu eklenmezse başlık çentiğin
-  altında kalıyor.
-- **Yatay taşma** düzenli kontrol edilir; puppeteer koşumu route × genişlik
-  matrisini tarar (`.tmp-*.mjs` geçici dosyaları commit'lenmez).
-- **Karşılaştırma ekranı üç dosyaya yayılı.** Ortak sözleşme (aralık listesi,
-  sembol sınırı, adres biçimi, dönem getirisi hesabı) `lib/compare.ts`te ve
-  üç yerden okunuyor: sunucu sayfası, istemci denetimi
-  (`components/markets/CompareLive.tsx`) ve toplu bar ucu
-  (`app/api/karsilastir/route.ts`). Aralık İSTEMCİDE değişiyor; sunucuya bir
-  daha gidilmiyor, barlar aralık başına önbelleğe alınıyor ve düğmenin
-  üzerinde durmak isteği önden başlatıyor.
-- **Makale kutularında `**Etiket:**` kalıbı yapıdır.** `:::` metin kutusunda
-  bu kalıpla başlayan satır terim ve metne bölünüp tanım listesi olarak
-  çiziliyor (dar ekranda iki satır, geniş ekranda iki sütun). Kalıba uymayan
-  satır sıradan paragraf kalır — rehberdeki serbest paragraflı tanım kutuları
-  etkilenmiyor.
-- **Grafikte dokunulan okuma aralıkla temizlenir.** Dokunmatikte imleç
-  okuması grafiğin dışına dokunulana kadar ekranda kalıyor; aralık düğmeleri
-  grafiğin dışında değil ve temizlenmezse okuma satırı artık var olmayan bir
-  barı göstermeye devam ediyor.
-- **Rota listesi tek yerde: `README.md`.** `docs/ROUTEMAP.md` bir dönem
-  ikinci bir rota tablosu tutuyordu ve tam da bu yüzden güncelliğini yitirdi — on üç
-  rota eksik kalmıştı. O dosya artık yalnızca DURUM tutuyor: canlıda ne var,
-  ne yarım kaldı, ne bilinçli olarak yapılmadı.
-- **Büyük sayfalar panellere bölündü; yeni panel oraya.** Şirket sayfası
-  `app/(app)/hisse/[symbol]/_panels/`, ana sayfa `components/today/home/`,
-  bilanço detayı `components/earnings/report/` altında. Yeni bir paneli
-  sayfa dosyasına gömme; kendi dosyasını aç, sayfa onu yerleştirsin.
-- **Sözlükte her özellik kendi ad alanında.** `about`, `dataExport`,
-  `marketExtras`, `glossary`, `themes`, `pairs`, `stockDepth`, `lira`,
-  `earningsExtra` — paralel dallar aynı anahtarı ellemesin diye. Yeni bir
-  özellik mevcut bir ad alanına anahtar serpiştirmez, kendininkini açar
-  (`tr` ve `en` birlikte).
-- **Otomatik bağlantı tutucu** (`lib/autolink.ts`). Sözlük terimini ve
-  sembolü yazı boyunca yalnızca İLK geçişte bağlar; sembolü yalnızca açık
-  kalıpta (`$NVDA` ya da tek başına `(NVDA)`) ve bilinen sembol kümesindeyse.
-  Düz metindeki büyük harfli kelime sembol sayılmaz ("ABD", "FED", "ON").
-- **`/gomulu/*` çerçevelenebilen TEK yol.** Geri kalan her yol
-  `X-Frame-Options: DENY` + `frame-ancestors 'none'`; istisna
-  `next.config.ts`te, gerekçesiyle. Gömülü parçalar kabuğun dışında ve
-  dizine kapalı. Yeni bir yola çerçeve izni vermeden önce oraya bak.
-- **Bildirim Web Push, e-posta değil** (`lib/push.ts`, `public/sw.js`,
-  `app/api/cron/alarmlar`). Ücretsiz ve üçüncü taraf hesabı yok; anahtar
-  VAPID (`npx web-push generate-vapid-keys`). Service worker YALNIZCA
-  bildirim taşır: `fetch` dinleyicisi ve önbellek yok — bayat önbellekten
-  fiyat göstermek veri dürüstlüğü 2'yi çiğnerdi. Kayıt yalnızca okuyucu
-  Ayarlar'da "Bu Cihazda Aç"a basınca yapılıyor. Alarm taraması seans
-  boyunca beş dakikada bir koşuyor, bayat paketle hiçbir şey yazmıyor;
-  crontab satırlarının listesi `deploy/cron-install.sh`te ve `update.sh`
-  her sürümde onu çalıştırıyor — yeni bir zamanlanmış iş oraya eklenir.
-- **E-posta yalnızca şifre sıfırlama** (`lib/email.ts`, Resend, SDK'sız
-  `fetch`). Anahtar yoksa "Şifremi Unuttum" hiç basılmıyor. İstek her
-  geçerli adreste AYNI notu veriyor ve e-postayı `after` ile yanıttan
-  sonra gönderiyor: form hangi adresin hesabı olduğunu söylemez. Satırda
-  bağlantının SHA-256 özeti durur, kendisi değil. Bülten ya da bildirim
-  e-postası eklenirse KVKK metni ("pazarlama e-postası gönderilmez") önce
-  değişmeli.
-- **W-8BEN ile ABD temettü stopajı bireyde %20.** Türkiye–ABD anlaşmasının
-  10. maddesi; %15 yalnızca şirketin oy hakkının en az %10'una sahip bir
-  KURUM için, W-8BEN yoksa %30. Bu bir kez %15 diye yanlış yazıldı; tek
-  kaynak `lib/tax.ts` → `US_WITHHOLDING`, metinlerde de bu sayı geçer.
+- Sayfa içi filtre/sıralama bağlantıları `scroll={false}`.
+- **Katlama bastığın yerde açılır**: `components/layout/ExpandInPlace.tsx`
+  (aç/kapa anında kaydırma çapası kapalı); yeni `sr-only` onay kutusu düğmenin
+  hizasına (`.foldInput`, `components/ui/FoldToggle.module.css`).
+- Karşılaştırma ekranı: sözleşme `lib/compare.ts`, istemci
+  `components/markets/CompareLive.tsx`, bar ucu `app/api/karsilastir/route.ts`;
+  aralık istemcide değişir.
+- Grafikte dokunmatik okuma, aralık değişince temizlenir.
+- Otomatik bağlantı (`lib/autolink.ts`): terim/sembol yalnız İLK geçişte;
+  sembol yalnız `$NVDA` / `(NVDA)` kalıbında ve bilinen kümedeyse.
+- ABD temettü stopajı W-8BEN ile bireyde **%20** (yoksa %30; %15 yalnız ≥%10
+  oy hakkı olan kurum). Tek kaynak `lib/tax.ts` → `US_WITHHOLDING`.
+- **iCloud kopyaları** (`alpaca 2.ts`, `routes.d 5.ts`) `.next/types`'a düşüp
+  `TS6200` ile derlemeyi kırar; `typecheck`/`build` önce
+  `scripts/clean-sync-dupes.mjs` koşar, `.gitignore` commit'i engeller.
+  Kalıcı çözüm: iCloud Drive → "Masaüstü ve Belgeler Klasörleri" kapalı.
 
-## iCloud kopyaları — derlemeyi kırar
+## Yerelde
 
-Depo iCloud Drive'a bağlı bir klasörde (Masaüstü senkronu). Senkron bir
-dosyayı iki yerde değişmiş görünce ikinci bir kopya bırakıyor: `alpaca 2.ts`,
-`routes.d 5.ts`, `.gitignore 3`. Kopyalar eski sürüm taşır, hiçbir yerden
-import edilmez ama `.next/types` altına düştüklerinde TypeScript onları da
-okur ve derleme `TS6200: Definitions … conflict` ile kırılır — hata koddan
-değil dosya sisteminden gelir.
-
-`npm run typecheck` ve `npm run build` bu yüzden önce
-`scripts/clean-sync-dupes.mjs` çalıştırıyor; ayrıca `.gitignore` deseni
-kopyaların commit'e girmesini engelliyor. Kalıcı çözüm kaynakta: Sistem
-Ayarları → Apple Hesabı → iCloud → iCloud Drive → "Masaüstü ve Belgeler
-Klasörleri" kapatılırsa hiç oluşmazlar.
-
-## Yerelde çalışırken
-
-`.env.local` içindeki bazı sağlayıcı anahtarları boş olabilir. O zaman ilgili
-kartlar "veri alınamadı" gösterir ve **sayfa çökmez** — beklenen davranış bu.
-Grafik ya da eğri eksikse önce anahtara bak (`/api/debug/providers`), koda
-değil. `BRIEF_SECRET` yerelde boşsa korumalı uçlar geliştirmede açıktır
-(`lib/api-auth.ts`); üretimde anahtar yoksa uç 503 döner, açık kalmaz.
+Boş sağlayıcı anahtarında kartlar "veri alınamadı" der, sayfa çökmez —
+beklenen. Grafik eksikse önce anahtara bak (`/api/debug/providers`).
+`BRIEF_SECRET`/`CRON_SECRET` boşsa korumalı uçlar geliştirmede açık, üretimde
+503 (`lib/api-auth.ts`).
 
 <!-- BEGIN:nextjs-agent-rules -->
 
