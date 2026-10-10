@@ -729,14 +729,15 @@ export async function getChartBarsMulti(
   symbolList: string[],
   range: ChartRange,
   status: MarketStatus,
-  options: { allowCache?: boolean } = {},
+  options: { allowCache?: boolean; fresh?: boolean } = {},
 ): Promise<Record<string, Bar[]>> {
   const unique = [...new Set(symbolList)];
   if (unique.length === 0) return {};
 
   const ttl = candleTtlSeconds(range, status);
-  const primary = await alpaca.getBarsMulti(unique, range, ttl);
+  const primary = await alpaca.getBarsMulti(unique, range, ttl, { fresh: options.fresh });
   const out: Record<string, Bar[]> = primary.ok ? { ...primary.data } : {};
+  let fetchedAt = primary.ok ? primary.fetchedAt : null;
 
   /* Tek sembollük yolla aynı tazelik kuralı (`barsCurrent`): önbellekten
      eski gelen semboller bir kez önbelleksiz, yalnızca onlar. */
@@ -746,12 +747,20 @@ export async function getChartBarsMulti(
     const stale = barsCurrent(primary.fetchedAt, status, ttl) ? [] : unique.filter((symbol) => out[symbol]);
     if (stale.length > 0) {
       const retry = await alpaca.getBarsMulti(stale, range, ttl, { fresh: true });
-      if (retry.ok) Object.assign(out, retry.data);
+      if (retry.ok && barsCurrent(retry.fetchedAt, status, ttl)) { Object.assign(out, retry.data); fetchedAt = retry.fetchedAt; }
+      else if (options.allowCache === false) for (const symbol of stale) delete out[symbol];
+    }
+  }
+
+  // Ücretli/yazılan rapor, tarihî serinin eksik son seansını yeni gibi yorumlamaz.
+  if (options.allowCache === false) {
+    for (const symbol of unique) {
+      if (out[symbol] && !cachedBarsUsable(range, out[symbol], fetchedAt, status)) delete out[symbol];
     }
   }
 
   if (primary.ok && Object.keys(primary.data).length > 0) {
-    await persistBarsMulti(range, primary.data);
+    await persistBarsMulti(range, options.allowCache === false ? out : primary.data);
   }
 
   const missing = unique.filter((symbol) => !out[symbol]);

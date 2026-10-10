@@ -1,3 +1,4 @@
+import { AnalysisSlot } from "@/components/ai/AnalysisSlot";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -155,6 +156,7 @@ export default async function ScreenReportPage(props: PageProps<"/hisse-secimi/[
         </nav>
       </DirectoryHeader>
 
+      <AnalysisSlot symbol={symbol} locale={locale} />
       <CategoryPanel data={data} t={S} />
       <ChecksPanel data={data} locale={locale} t={S} />
       <SidesPanel data={data} locale={locale} t={S} />

@@ -557,7 +557,7 @@ Rota listesinin **tek kaynağı** burası. 49 sayfa var: 40'ı herkese açık
 | `/karsilastir` | İki ile dört hisseden hangisi: aynı ölçekte normalize grafik + tek tablo; getiri USD, TL ya da Reel TL |
 | `/karsilastir/[pair]` | Yirmi küratörlü çift (`/karsilastir/nvda-amd`): aynı tahta, başlık ve "neden bu ikisi" paragrafıyla; canonical adres bu (`content/compare-pairs.ts`) |
 | `/hisse-secimi` | Bir hisse nasıl seçilir: eleme, büyüme, kârlılık, sağlık, fiyat gücü, sahiplik ve katalizör kuralları, kullanım adımları, teknik analiz listesinin puanları; sembol formu JS'siz (GET → yönlendirme) |
-| `/hisse-secimi/[symbol]` | Tek hissenin kural kontrolü: 22 kural sitenin verileriyle ölçülür, kategori puanları, uyum puanı ve bandı, güçlü/zayıf yanlar, sıradaki adımlar. Yapay zekâ değil, sabit kurallar (`lib/screening.ts`, veri `lib/screening-data.ts`) |
+| `/hisse-secimi/[symbol]` | Tek hissenin kural kontrolü: 22 kural sitenin verileriyle ölçülür, kategori puanları, uyum puanı ve bandı, güçlü/zayıf yanlar, sıradaki adımlar. Sabit kural raporuna ek olarak, yalnız yetkili hesaplarda istek üzerine Claude analizi |
 | `/tema` · `/tema/[slug]` | Tematik listeler (yapay zekâ, yarı iletkenler, katılım uyumlu…): üyeler, günün medyanı, ölçüt fonu (`content/themes.ts`, on tema) |
 | `/yatirimcilar` · `/yatirimcilar/[slug]` | Ünlü yatırımcılar kim ne tutuyor: portre mozaiği, çeyreğin ortak hareketleri ("META: 4 Artırdı"), yatırımcı kartları; detayda portföy haritası (alan değer, renk hareket), Yeni/Artırdı/Azalttı/Tamamen Sattı, tam pozisyon tablosu, opsiyonlar (dayanak değer), son sekiz çeyrek. Pelosi sayfası Kongre bildirimi: işlem ve bildirim tarihi, tutar aralığı, sahip, opsiyon ayrıntısı (`lib/investors.ts`, on altı kişi) |
 | `/makro` | ABD ekonomisi nerede: on bir FRED serisi (haftalık işsizlik başvuruları, perakende satışlar, M2, Sahm kuralı ve 10Y–3A faiz farkı eklendi), sonraki açıklama, Sonraki FOMC Kararı kartı |
@@ -625,9 +625,10 @@ yazıları kim yazıyor; gömme kodları da burada)
 
 ### API Uçları
 
-24 uç. Yazma uçları (`brief`, `mercek`, `analiz`, `teknik` ve `context`
+Yazma uçları (`brief`, `mercek`, `analiz`, `teknik` ve `context`
 eşleri) `BRIEF_SECRET`, cron `CRON_SECRET`, Verilerimi İndir oturum ister;
-okuma uçları herkese açık ve IP başına oran sınırlı.
+genel okuma uçları herkese açık ve IP başına oran sınırlı. AI analizin okuma
+ve yazma uçları ayrıca oturum, admin tarafından atanmış erişim ve günlük kota ister.
 
 | Uç | Ne |
 |---|---|
@@ -637,6 +638,7 @@ okuma uçları herkese açık ve IP başına oran sınırlı.
 | `/api/health` | Dış izleyici için sağlık: veritabanı yanıt veriyorsa 200, vermiyorsa 503; geciken rutin gövdede `degraded`. Önbelleksiz |
 | `/api/hata` | İstemci hata sınırlarının bildirimi; her durumda gövdesiz 204 |
 | `/api/hesap/verilerim` | Verilerimi İndir (`?bicim=json\|csv`); yalnızca oturum sahibi |
+| `/api/ai/analysis` | GET: kendi analiz geçmişi ve kota; POST: güncel verilerle yeni Claude raporu. Günlük varsayılan 5, başarısız işte iade, aynı requestId için tek iş |
 | `/api/olcum` | Çerezsiz sayfa ölçümü |
 | `/api/brief` · `/api/mercek` · `/api/analiz` · `/api/teknik` (+ `/context`) | İçerik rutinlerinin yazma ve geri okuma uçları |
 | `/api/cron/daily` · `/api/auth/[...nextauth]` · `/api/debug/providers` | Günlük cron, oturum, sağlayıcı anahtar kontrolü (yalnızca geliştirmede; üretimde 404) |
@@ -645,7 +647,7 @@ okuma uçları herkese açık ve IP başına oran sınırlı.
 ### Yönetim
 
 Kabuğun dışında: `/admin`, `/admin/trafik`, `/admin/uyeler`,
-`/admin/icerik`, `/admin/sistem` (verinin durumu ve son 30 günün hata
+`/admin/icerik`, `/admin/ai` (Claude analiz erişimi, kotalar ve token kullanımı), `/admin/sistem` (verinin durumu ve son 30 günün hata
 kaydı), `/admin/yazilar`, `/admin/yazilar/bulten` ve iki editör
 (`/admin/yazilar/mercek/[slug]`, `/admin/yazilar/bulten/[tarih]`). Panel
 sekmelerinden **İçerik ölçer, Yazılar değiştirir.** Yetki veritabanında;
@@ -695,6 +697,8 @@ npm run dev
 | `SEC_USER_AGENT` | isteğe bağlı | `"Ad e-posta"`; boşsa koddaki varsayılan (`lib/investors.ts` → `secUserAgent`) — 13F, Form 4 ve anlık bilanço bildirimi |
 | `DEEPL_API_KEY` | opsiyonel | haber başlığı çevirisi (önce bu denenir) |
 | `ANTHROPIC_API_KEY` | opsiyonel | haber başlığı çevirisinde yedek |
+| `CLAUDE_ANALYSIS_API_KEY` | AI analiz için | sunucuda saklanan ayrı Claude anahtarı; erişim yalnız admin atamasıyla. Kurulum ve prompt: `docs/claude-analysis.md` |
+| `CLAUDE_ANALYSIS_MODEL` · `CLAUDE_ANALYSIS_DISABLED` | opsiyonel | varsayılan `claude-sonnet-4-6`; `DISABLED=1` analiz üretimini kapatır |
 | `ANALYTICS_SALT` | opsiyonel | ziyaretçi özetinin tuzu; yoksa `AUTH_SECRET` |
 | `EVDS_API_KEY` | opsiyonel | [evds3.tcmb.gov.tr](https://evds3.tcmb.gov.tr) → üye ol → profil → API anahtarı; Reel TL ve vergi hesaplayıcısının Yİ-ÜFE endekslemesi. Yoksa ikisi de okuyucuya açık alan bırakır |
 

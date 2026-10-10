@@ -1,3 +1,4 @@
+import { aiAnalysisEn } from "./ai-analysis";
 import type tr from "./tr";
 import { datePickerEn } from "./date-picker";
 
@@ -3460,6 +3461,7 @@ const en: typeof tr = {
     },
   },
   /* Tarih seçici — metin ayrı dosyada, gerekçesi orada. */
+  aiAnalysis: aiAnalysisEn,
   datePicker: datePickerEn,
 };
 

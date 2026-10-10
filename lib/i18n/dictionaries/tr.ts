@@ -1,3 +1,4 @@
+import { aiAnalysisTr } from "./ai-analysis";
 import { datePickerTr } from "./date-picker";
 
 const tr = {
@@ -3946,6 +3947,7 @@ const tr = {
     },
   },
   /* Tarih seçici — metin ayrı dosyada, gerekçesi orada. */
+  aiAnalysis: aiAnalysisTr,
   datePicker: datePickerTr,
 };
 

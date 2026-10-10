@@ -1,3 +1,4 @@
+import { AnalysisSlot } from "@/components/ai/AnalysisSlot";
 import { ArrowUpRight, ChartBar, TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -167,6 +168,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
     return (
       <MotionExperience className={directory.page}>
         {breadcrumb}
+        <AnalysisSlot symbol={symbol} locale={locale} />
         <Panel>
           <EmptyState title={t.technical.noAnalysis} hint={t.technical.noAnalysisHint} titleAs="h1" scene="chart" />
         </Panel>
@@ -232,6 +234,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
   return (
     <MotionExperience className={directory.page}>
       <ScrollProgress />
+      <AnalysisSlot symbol={symbol} locale={locale} />
       {/* MAKALE KÜNYESİ METNİN DİLİNDE. Sayfada yazılmış bir yorum var
           (başlık, değerlendirme, senaryolar) ama künyesi yalnızca kırıntıydı;
           mercek ve bilanço analiziyle aynı `Article` bloğu artık burada da.

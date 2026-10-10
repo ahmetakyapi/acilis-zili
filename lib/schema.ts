@@ -1411,3 +1411,38 @@ export const analystTargets = pgTable(
     index("analyst_targets_symbol_idx").on(t.symbol),
   ],
 );
+
+/** Ücretli analiz hakkı admin rolünden bağımsızdır. Tablo yokken erişim kapalı. */
+export const aiAnalysisAccess = pgTable("ai_analysis_access", {
+  userId: uuid("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+  enabled: boolean("enabled").notNull().default(false),
+  /** null: sınırsız; kullanıcı adı yerine kalıcı hesap kimliğine atanır. */
+  dailyLimit: integer("daily_limit").default(5),
+  usedDay: date("used_day"),
+  usedCount: integer("used_count").notNull().default(0),
+  lockId: uuid("lock_id"),
+  lockUntil: timestamp("lock_until", { withTimezone: true }),
+  updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+export const aiAnalysisRequests = pgTable("ai_analysis_requests", {
+  id: uuid("id").primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  symbol: text("symbol").notNull(),
+  horizon: text("horizon").notNull(),
+  locale: text("locale").notNull(),
+  status: text("status").notNull(),
+  model: text("model").notNull(),
+  inputTokens: integer("input_tokens"),
+  outputTokens: integer("output_tokens"),
+  result: jsonb("result").$type<import("./ai-analysis").SavedAnalysis>(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("ai_analysis_requests_user_created_idx").on(t.userId, t.createdAt)]);
+export const aiAnalysisAudit = pgTable("ai_analysis_audit", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  adminId: uuid("admin_id").references(() => users.id, { onDelete: "set null" }),
+  enabled: boolean("enabled").notNull(),
+  dailyLimit: integer("daily_limit"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

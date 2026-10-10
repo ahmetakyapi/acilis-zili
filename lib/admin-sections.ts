@@ -41,6 +41,7 @@ export const ADMIN_SECTIONS = {
     title: "Yazılar",
     subtitle: "Yayındaki mercek yazılarını ve bültenleri düzelt; yeni kayıt burada açılmaz.",
   },
+  ai: { href: "/admin/ai", tab: "AI Analiz", title: "AI Analiz", subtitle: "Ücretli analiz erişimi ve kullanıcı kotaları." },
   system: {
     href: "/admin/sistem",
     tab: "Sistem",
@@ -58,6 +59,7 @@ export const ADMIN_TAB_ORDER: readonly AdminSectionKey[] = [
   "members",
   "content",
   "writing",
+  "ai",
   "system",
 ] as const;
 

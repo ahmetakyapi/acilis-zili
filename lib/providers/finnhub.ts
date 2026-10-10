@@ -255,11 +255,12 @@ export async function getCompanyNews(
   symbol: string,
   from: string,
   to: string,
+  options: { fresh?: boolean } = {},
 ): Promise<ProviderResult<NewsItem[]>> {
   const result = await finnhubFetch<RawNews[]>(
     "/company-news",
     { symbol, from, to },
-    { revalidate: 1800, tags: [`news:${symbol}`] },
+    { revalidate: options.fresh ? 0 : 1800, tags: [`news:${symbol}`] },
   );
   if (!result.ok) return result;
 
