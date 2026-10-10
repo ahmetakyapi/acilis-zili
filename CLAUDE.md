@@ -56,11 +56,31 @@ başta gelirse büyür. "Faiz, Tahvil ve Getiri Eğrisi" · "Ne Kadar, Ne Zaman"
 
 ## Görsel dili
 
+**Kimlik, bir bakışta.** Ayrıntı ve ölçülmüş kontrastlar
+`~/dev-starter/knowledge/themes/acilis-zili.md`te; token'lar
+`app/globals.css` → `@theme inline`.
+
+- **Derinlik tonla**, gölgeyle değil: `surface` → `surface-sunken` →
+  `premium-surface`. Tek gerçek gölge açılır katmanda ve marka karosunda.
+  Cam, blur, ışıma YOK.
+- **Renk anlam taşır, süs değil:** mavi etkileşim, `up`/`down` yön. Veri
+  panelinde mavi bir sayı ya da yeşil bir başlık gördüysen hata vardır.
+- **Degrade yalnızca üç yerde:** kısa display başlık (`.display-ink`),
+  birincil eylem, marka karosu. Veri panelleri ve gövde metni taşımaz.
+- **Grafik dili ince:** kulvar (`--line-soft`) üstünde 5 piksellik şerit,
+  sıfır çizgisi `--line-strong`; dolu ağır bloklar "tablo programı" gibi
+  duruyor (10 Ekim, sahibinin itirazı — `MarketTexture.module.css`).
+- **Tek font** (Schibsted Grotesk, değişken 400–900); mono yalnızca
+  sembol ve dizin numarası gibi künyelerde (`--font-mono`).
+
 **Fotoğraf yok.** Yazıların görseli, metinden çizilen `:::` bloklarıdır: model
 yalnızca satırları yazar, çizimi site yapar. Telif riski yok, hiçbir yerde
 görsel barındırmak gerekmiyor, her temada tutarlı. Şema bir kez `image_url`
 alanı aldı (migration 0004) ve hemen geri alındı (0005) — gerekçesi
-`lib/schema.ts` yorumunda.
+`lib/schema.ts` yorumunda. **Tek belgeli istisna:** yatırımcı portreleri
+(`public/investors/`, özgür lisanslı; kaynak ve lisans `lib/investors.ts` →
+`PORTRAITS`). Yeni bir fotoğraf eklemeden önce oradaki gerekçe kadar
+sağlam bir lisans kaydı yazılabiliyor mu diye bak.
 
 Blok ailesi `components/article/ArticleBody.tsx` içinde:
 `sayilar` · `bar` · `pay` · `akis` · `oncesi` · `zaman` · `grafik`, artı dört
@@ -102,22 +122,27 @@ ve haber künyeleri ondan besleniyor.
 okuyucuya son kare tek çağrıyla basılıyor. Karakter markanın zili (gözler,
 gülümseme), renkler temadan (`--text-strong` mürekkep, `--brass` kıvılcım;
 mavi YOK). Sahneler DÖNMEZ: görünüme girince bir kez oynar ve oturur.
-Yerleri: oturumun ilk yüklemesindeki açılış (`InkSplash`, botlara ve
-hareketi azaltana hiç açılmaz; hidrasyon geç kalırsa sahne hızlanıp yine
-3,4 saniyede biter), gezinme beklemesinin kartı (hedefe göre sahne,
-harita `lib/ink/route-scenes.ts`), iki 404 (`lost`), hata ekranı
-(`mishap`), giriş/kayıt (`hello`), sayfa düzeyindeki boş durumlar
-(`EmptyState scene=`) haberler kapağı, giriş/kayıt kartının kendini çizen çerçevesi
-(`cardFrame`) Mercek ile rehber yazısının bitiş işareti (`storyEnd`) ve ana sayfa
-kahramanının seansa göre uyuklayan, bekleyen ya da çalan zili
-(`heroSleep` / `heroWait` / `heroRing`; geniş kolonda rakamların yanında,
-dar kolonda seans çipinin satırında).
-Panel içindeki tek satırlık boş durumlara sahne konmaz. Tek istisna
-yükleme: `LoadingMark` döngülü `ringing` sahnesini çalar (sahnenin
-`loop` alanı; döngü yalnızca bekleme için, görünüme giren sahneler yine
-dönmez). Kabın boyuna uyan sahneler (`fill`) kutu değil CSS boyutu alır. Yeni sahneyi `.tmp-*` bir önizlemede kare kare
-çizip hem açık hem koyu temada gözle kontrol et — çizim hatası ancak
-karede görünüyor.
+Yerleri:
+
+- Oturumun ilk yüklemesindeki açılış (`InkSplash`). Botlara ve hareketi
+  azaltana hiç açılmaz; hidrasyon geç kalırsa sahne hızlanıp yine 3,4
+  saniyede biter.
+- Gezinme beklemesinin kartı: hedefe göre sahne, harita
+  `lib/ink/route-scenes.ts`.
+- İki 404 (`lost`), hata ekranı (`mishap`), giriş/kayıt (`hello`) ve
+  giriş/kayıt kartının kendini çizen çerçevesi (`cardFrame`).
+- Sayfa düzeyindeki boş durumlar (`EmptyState scene=`) ve haberler kapağı.
+- Mercek ile rehber yazısının bitiş işareti (`storyEnd`).
+- Ana sayfa kahramanının seansa göre uyuklayan, bekleyen ya da çalan zili
+  (`heroSleep` / `heroWait` / `heroRing`; geniş kolonda rakamların
+  yanında, dar kolonda seans çipinin satırında).
+
+Panel içindeki tek satırlık boş durumlara sahne konmaz. Tek döngü
+yüklemede: `LoadingMark` `ringing` sahnesini çalar (sahnenin `loop`
+alanı; görünüme giren sahneler yine dönmez). Kabın boyuna uyan sahneler
+(`fill`) kutu değil CSS boyutu alır. Yeni sahneyi `.tmp-*` bir önizlemede
+kare kare çizip hem açık hem koyu temada gözle kontrol et — çizim hatası
+ancak karede görünüyor.
 
 ## Ekran düzeni: aynı sıra, her ekranda
 
@@ -172,6 +197,13 @@ Yerleşim kararları tahminle verilmiyor. Bir boşluk "fazla duruyorsa" önce
 ölçülür, sonra değiştirilir ve **ölçüm yoruma yazılır** ki bir daha
 ölçülmesin. Chrome'u başsız koşturup rota × genişlik matrisini tarayan
 geçici betikler bunun için var (`.tmp-*.mjs`, commit'lenmez).
+
+**Başsız Chrome CSS animasyonunu yanlış yakalıyor.** `el.screenshot()`
+çalışan bir `animation`ı başa sarılmış karede çekiyor: sektör siluetinin
+sütunları ölçümde doğru boydaydı (`getAnimations()` → `finished`) ama
+görüntüde basık ve orantısızdı (10 Ekim, yarım saat kaybettirdi). Yerleşimi
+`prefers-reduced-motion: reduce` taklidiyle ya da `headless: false` ile
+çek; animasyonun kendisini sayıyla doğrula, görüntüyle değil.
 
 **`justify-between` iki kolona konmaz.** Ana sayfanın iki kolonu bir süre
 onu taşıdı ve sonuç şuydu: ızgara satırı iki kolonu aynı yüksekliğe geriyor,
@@ -245,28 +277,19 @@ sağlayıcıya bir kez gidilir; listede tek bir sembol farkı anahtarı değişt
 ve tur ikiye çıkar. Aynı ekranda iki panel aynı veriyi gösteriyorsa aynı
 anahtarı sormalı — yoksa aynı hissenin iki farklı yüzdesi yan yana durabilir.
 
-Bu cümle bir dönem `getSeries`i sayıyordu ve YANLIŞTI: o düz bir `async
-function`, `cache()` sarmalı yok ve argümanı sembol listesi değil bir
-`SeriesRequest`. Makro serilerde istek-içi tekilleştirme YOK; oradaki tek
-koruma `fetch`in kendi veri önbelleği (`revalidate`), yani farklı bir
-mekanizma. `cache()` ile sarılı olanların tam listesi: `lib/data.ts`
-(`getHolidays`, `getStatus`, `getEventsBetween`, `getEventsBetweenResult`,
-`getEarningsBetween`, `getEarningsBetweenResult`,
-`getNewsById`, `getStoryBySlug`, `getStoryLocales`, `getBriefIssue`,
-`getAnalysis`, `getAnalysisLocales`, `getLatestTarget`, `symbolNamesForKey`, `isKnownSymbol`),
-`lib/technical-data.ts` (`getTechnicalBoard`, `getTechnicalDetail`,
-`getPublishedSymbols`), `lib/admin.ts` (`getAdmin`), `lib/admin-data.ts`,
-`lib/avatar-data.ts` (`getUserAvatar`), `lib/providers/index.ts`
-(`quotesForKey`), `lib/providers/alpaca-corporate.ts` (`dividendsForKey`),
-`lib/autolink-data.ts` (`knownSymbols`), `lib/themes-data.ts`
-(`katilimPool`), `lib/market-boards.ts` (`loadBoardBars`),
-`lib/sentiment-data.ts` (`getSentiment`), `lib/screening-data.ts` (`loadScreen`), `lib/providers/sec-edgar.ts` (`getSharesSeries`), `lib/earnings-extras.ts`
-(`getAnalysisExtras`), `lib/portfolio-data.ts` (`getPortfolioPositions`,
-`getPortfolioOrder`), `lib/portfolio-sales-data.ts` (`getPortfolioSales`,
-`loadRealized`) ve `lib/price-alerts.ts` (`getUserAlerts`).
-Bileşen düzeyinde de var: `getPageTimestamp` (ana sayfa ve
-`/gomulu/geri-sayim`, sayacın "şimdi"si istek içinde tek) ve
-`components/stories/StoryCompanies.tsx` (`companyBars`).
+`getSeries` bu kümede DEĞİL: düz bir `async function`, argümanı bir
+`SeriesRequest`. Makro serilerde istek-içi tekilleştirme yok; tek koruma
+`fetch`in kendi veri önbelleği (`revalidate`).
+
+**`cache()` ile sarılı olanların listesi burada TUTULMUYOR** (10 Ekim).
+Elle tutulan liste ROUTEMAP'in yolunu izledi: otuz dokuz dosyada kullanılıyor,
+listede yirmisi vardı (`theme-board`, `tax-data`, `investor-data`,
+`ark-data`, `sec-form4`, `analyst-target-data`, `portfolio-snapshot`
+eksikti). Bir fonksiyonun istek içinde tekil olup olmadığını kaynağa sor:
+
+```
+grep -rnE "= (React\.)?cache\(" lib components app
+```
 
 İstekler ARASI önbellek (`unstable_cache`) ayrı bir mekanizma ve hata
 önbelleğin DIŞINDA yakalanır (düşen veritabanının boş listesi saklanmasın):
@@ -418,7 +441,7 @@ eklemeden önce bu paragraf kadar sağlam bir gerekçe yazılabiliyor mu diye ba
   başına — görüş ve seviyeler iki dilde aynı sayı, metin `copy.{tr,en}`
   içinde. Sembol listesi tek yerde: `lib/technical.ts` →
   `TECHNICAL_SYMBOLS`; yazma yolu `lib/technical-data.ts`. Rutin promptu
-  `docs/claude-rutinler.md` § 5. İlk masthead düzeninde sekmesi yoktu; sığmıyordu. Sadeleştirilmiş
+  `docs/claude-rutinler.md` § 5. Sadeleştirilmiş
   başlıkta artık doğrudan Teknik Analiz sekmesi var; büyütülmüş yazıda
   taşma önceliğiyle Daha Fazla paneline alınabilir
   (ölçüm `components/layout/nav-items.ts`te).
