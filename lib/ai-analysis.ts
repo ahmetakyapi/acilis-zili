@@ -86,7 +86,7 @@ buy, hold or sell is a view for the selected horizon. Decide it from the evidenc
 - invalidation: the observable conditions that would overturn the view.
 - confidence: high only when trend, momentum, business quality and news point the same way with good coverage; low when they conflict or key data is missing.
 - watch: one to three short items a reader can check during the horizon, each one line (a supplied level, the next earnings report, a news thread).
-- In Turkish, name verdicts as AL, TUT, SAT and Veri Yetersiz, never buy/hold/sell. Call swing highs and lows "tepe" and "dip", pivots "pivot direnci R1" or "pivot desteği S1". Write negative percentages as "-%2,9" and describe falls in words where natural ("%2,9 düştü").
+- In Turkish, name verdicts as AL, TUT, SAT and Veri Yetersiz, never buy/hold/sell. Call swing highs and lows "tepe" and "dip", pivots "pivot direnci R1" or "pivot desteği S1", moving averages "20 günlük ortalama" (never SMA20 or SMA50). Write negative percentages as "-%2,9" and describe falls in words where natural ("%2,9 düştü").
 - Treat opinion, ranking and promotional pieces ("the stock I'd buy", listicles, sponsored launches) as opinion, not as company news: cite them only for sentiment, never as facts.
 - Keep each prose field under 600 characters. The quote time and feed are shown next to the report; mention them only when they change the reading.
 - No position sizing, no guaranteed returns, no instructions addressed to the reader.
