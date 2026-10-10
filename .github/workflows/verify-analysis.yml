@@ -1,0 +1,55 @@
+name: Verify Claude Analysis
+
+on:
+  workflow_dispatch:
+    inputs:
+      generate_report:
+        description: Generate one paid analysis for the owner account
+        type: boolean
+        default: false
+      symbol:
+        description: Symbol for the paid analysis
+        type: string
+        default: NVDA
+      horizon:
+        description: Horizon for the paid analysis
+        type: choice
+        options: [short, medium]
+        default: short
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Verify production permissions and optional Claude generation
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST: ${{ vars.VPS_HOST }}
+          GENERATE_REPORT: ${{ inputs.generate_report }}
+          SYMBOL: ${{ inputs.symbol }}
+          HORIZON: ${{ inputs.horizon }}
+        run: |
+          set -euo pipefail
+          set +x
+          [[ "$HOST" =~ ^[a-zA-Z0-9.-]+$ ]]
+          # Girdiler uzak komut dizesine giriyor: yalnız bilinen biçim geçer.
+          SYMBOL=$(printf '%s' "${SYMBOL:-NVDA}" | tr '[:lower:]' '[:upper:]')
+          [[ "$SYMBOL" =~ ^[A-Z][A-Z0-9.-]{0,9}$ ]] || { echo "Invalid symbol"; exit 1; }
+          [[ "$HORIZON" == "short" || "$HORIZON" == "medium" ]] || { echo "Invalid horizon"; exit 1; }
+          umask 077
+          key_file=$(mktemp)
+          trap 'rm -f "$key_file"' EXIT
+          printf '%s\n' "$SSH_KEY" > "$key_file"
+          paid=0
+          if [[ "$GENERATE_REPORT" == "true" ]]; then paid=1; fi
+          ssh -i "$key_file" -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
+            "ubuntu@$HOST" \
+            "sudo -n bash -c 'set +x; set -a; source /etc/acilis-zili.env; set +a; cd /srv/acilis-zili/current; VERIFY_PAID_ANALYSIS=$paid VERIFY_SYMBOL=$SYMBOL VERIFY_HORIZON=$HORIZON node deploy/verify-analysis.mjs'"

@@ -9,6 +9,9 @@ import tempfile
 
 VARIABLE = "CLAUDE_ANALYSIS_API_KEY"
 LINE = re.compile(r"^\s*(?:export\s+)?CLAUDE_ANALYSIS_API_KEY\s*=")
+# Belgenin eski örneği modeli sunucuda sabitliyordu; o satır kalkar, koddaki
+# varsayılan (lib/ai-analysis.ts) geçer. Bilerek seçilmiş başka model korunur.
+RETIRED_MODEL = re.compile(r"""^\s*(?:export\s+)?CLAUDE_ANALYSIS_MODEL\s*=\s*["']?claude-sonnet-4-6["']?\s*$""")
 
 
 def update_env(path: Path, raw_key: str, *, uid=None, gid=None):
@@ -22,6 +25,8 @@ def update_env(path: Path, raw_key: str, *, uid=None, gid=None):
     updated = []
     inserted = False
     for line in lines:
+        if RETIRED_MODEL.match(line):
+            continue
         if LINE.match(line):
             if not inserted:
                 updated.append(f'{VARIABLE}="{key}"')

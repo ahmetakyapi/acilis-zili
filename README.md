@@ -698,7 +698,7 @@ npm run dev
 | `DEEPL_API_KEY` | opsiyonel | haber başlığı çevirisi (önce bu denenir) |
 | `ANTHROPIC_API_KEY` | opsiyonel | haber başlığı çevirisinde yedek |
 | `CLAUDE_ANALYSIS_API_KEY` | AI analiz için | sunucuda saklanan ayrı Claude anahtarı; erişim yalnız admin atamasıyla. Kurulum ve prompt: `docs/claude-analysis.md` |
-| `CLAUDE_ANALYSIS_MODEL` · `CLAUDE_ANALYSIS_DISABLED` | opsiyonel | varsayılan `claude-sonnet-4-6`; `DISABLED=1` analiz üretimini kapatır |
+| `CLAUDE_ANALYSIS_MODEL` · `CLAUDE_ANALYSIS_DISABLED` | opsiyonel | varsayılan `claude-sonnet-5-5`; `DISABLED=1` analiz üretimini kapatır |
 | `ANALYTICS_SALT` | opsiyonel | ziyaretçi özetinin tuzu; yoksa `AUTH_SECRET` |
 | `EVDS_API_KEY` | opsiyonel | [evds3.tcmb.gov.tr](https://evds3.tcmb.gov.tr) → üye ol → profil → API anahtarı; Reel TL ve vergi hesaplayıcısının Yİ-ÜFE endekslemesi. Yoksa ikisi de okuyucuya açık alan bırakır |
 

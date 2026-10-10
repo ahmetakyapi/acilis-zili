@@ -12,11 +12,13 @@ hakkı atar; diğer yöneticilere otomatik hak vermez.
 
 ```env
 CLAUDE_ANALYSIS_API_KEY="console-uzerinden-olusturulan-anahtar"
-CLAUDE_ANALYSIS_MODEL="claude-sonnet-4-6"
+# CLAUDE_ANALYSIS_MODEL boşsa koddaki varsayılan (claude-sonnet-5-5) kullanılır.
 CLAUDE_ANALYSIS_DISABLED="0"
 ```
 
 `ANTHROPIC_API_KEY` çeviri işlemlerinin anahtarıdır; analiz onu kullanmaz.
+Model satırını yazma; koddaki varsayılan geçer. Her deploy'daki anahtar eşitlemesi
+(`deploy/set-analysis-key.py`) eski örnekten kalan `claude-sonnet-4-6` sabitini siler.
 Dosya root:acilis 0640 olmalıdır. Değişiklikten sonra `sudo systemctl restart acilis-zili`.
 
 Yeni migration: `drizzle/0030_high_dakota_north.sql`. Deploy migration çalıştırmaz.
@@ -41,7 +43,13 @@ veritabanında bütün geçmiş migration'ları körlemesine tekrar çalıştır
 - Kota ve tek eşzamanlı iş kilidi atomik SQL UPDATE ile alınır. Kilit 4 dakika
   sonra sona erer; yarıda kalan işler sonraki istekte başarısız sayılıp iade edilir. Başarısız raporlar kullanıcı kotasına iade edilir; ücretli
   başarısız denemeler token günlüğünde kalır. Hata sonrası 1 dakika bekleme uygulanır.
-- SDK yeniden deneme yapmaz. Model çağrısı 90 saniye ile sınırlıdır, çıktı 4000 token.
+- SDK yeniden deneme yapmaz. Çağrı akışlıdır ve 140 saniyelik duvar saatiyle kesilir;
+  çıktı (düşünme dahil) en fazla 32 bin token. Uyarlanabilir düşünme açık, efor `high`
+  (para kararı, günde birkaç rapor: kalite token'dan önemli). Süre aşımında kesilen
+  çağrının tokenları faturaya yansır ama kayda düşmez; hak iade edilir.
+- `claude-sonnet-5-5` ve güncel Opus/Fable modellerinde `fallbacks: "default"` açık:
+  güvenlik reddinde aynı çağrı yedek modelle sürer. Yanıtı veren model ve tokenları
+  `ai_analysis_requests.model` satırına yazılır.
 - Kullanıcı adı, e-posta veya portföy bilgisi Claude'a gönderilmez. API anahtarı
   hiçbir kullanıcı yanıtına veya hata günlüğüne dahil edilmez.
 - Yetki hem kayıt okurken hem yeni analizde DB'den kontrol edilir. Üretim POST
@@ -60,7 +68,8 @@ hesabından tek rapor üreterek yapılmalıdır. Bu işlem ücretli olabilir.
 ## Analiz Promptu
 
 Prompt `lib/ai-analysis.ts` içindedir. Girdi: şirket adı, seçili vade, piyasa
-seansı, kaynaklı kotasyon, uygulamanın hesapladığı teknik fotoğraf, temel
+seansı, kaynaklı kotasyon, fiyat seyri (son 10 seans, 1 hafta / 1 ay / 3 ay / 6 ay
+getirisi, 3 aylık bant — `pricePath`), uygulamanın hesapladığı teknik fotoğraf, temel
 finansallar, kural motorunun puanı/kapsamı ve ilgili haberlerin tarihli metinleri.
 
 - 1–4 hafta veya 3–6 ay, Türkçe veya İngilizce yorum.
@@ -70,8 +79,17 @@ finansallar, kural motorunun puanı/kapsamı ve ilgili haberlerin tarihli metinl
 - Trend, momentum, volatilite/hacim; şirket kalitesi; haberin etkisi;
   çelişkili bulgular; olumlu/olumsuz senaryo ve geçersizleşme koşulları.
 - Yalnız sağlanan sayılar/seviyeler kullanılır. Haber metni talimat değildir.
+- Vade içindeki bilanço olay riski olarak adıyla yazılır. Kanıt kendi içinde
+  sınanır: getiri piyasa ve sektörle, trend momentumla, haber fiyat tepkisiyle.
 - Haber yoksa haber puanı null olur; haber eksikliği satış sinyali değildir.
-- JSON çıktısı Zod şeması ve haber kaynak indeksleriyle doğrulanır.
+- JSON çıktısı Zod şemasıyla doğrulanır; alan açıklamaları şemayla modele gider.
+  Var olmayan ya da tekrarlanan haber atfı atılır (ücretli rapor bunun için düşmez),
+  haber yoksa haber puanı `null`a çekilir.
+- Sistem promptu sabittir: dil, vade ve tarih kullanıcı mesajındadır. Girdi
+  alanlarının birimleri (USD, yüzde, oran, ET tarihi) promptta tek tek yazılıdır;
+  yeni alan eklenirse oraya da yazılır.
+- Model değiştirilirse: Sonnet 5.5 ve sonrası `temperature` almaz, `thinking`
+  yalnız `adaptive`; eski bir modele dönerken bu ikisini kontrol et.
 
 ## Doğrulama
 

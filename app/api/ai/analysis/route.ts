@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { analysisAccess } from "@/lib/ai-analysis-access";
 import { reserveAnalysis, releaseAnalysis } from "@/lib/ai-analysis-quota";
-import { generateAnalysis } from "@/lib/ai-analysis";
+import { analysisModel, generateAnalysis } from "@/lib/ai-analysis";
 import { AnalysisInput } from "@/lib/ai-analysis-core";
 import { db } from "@/lib/db";
 import { aiAnalysisRequests } from "@/lib/schema";
@@ -68,9 +68,9 @@ export async function POST(request: Request) {
     }
     id = requestId; userId = access.userId;
     await db.insert(aiAnalysisRequests).values({ id, userId, symbol, horizon, locale,
-      status: "processing", model: process.env.CLAUDE_ANALYSIS_MODEL || "claude-sonnet-4-6" });
-    const result = await generateAnalysis(symbol, horizon, locale, async (inputTokens, outputTokens) => {
-      await db.update(aiAnalysisRequests).set({ inputTokens, outputTokens }).where(and(eq(aiAnalysisRequests.id, requestId), eq(aiAnalysisRequests.userId, access.userId)));
+      status: "processing", model: analysisModel() });
+    const result = await generateAnalysis(symbol, horizon, locale, async ({ inputTokens, outputTokens, model }) => {
+      await db.update(aiAnalysisRequests).set({ inputTokens, outputTokens, model }).where(and(eq(aiAnalysisRequests.id, requestId), eq(aiAnalysisRequests.userId, access.userId)));
     });
     if (!configured()) throw new Error("forbidden");
     // Yetki/kilit kontrolü sonuç kaydıyla aynı SQL'de: iptal edilmiş iş yayınlanmaz.

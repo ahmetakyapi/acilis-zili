@@ -28,3 +28,28 @@ test("news selection excludes unrelated provider stories before picking newest i
   assert.equal(companyNewsRelevant("F", "Ford Motor Co", "Series F funding round", null), false);
   assert.equal(companyNewsRelevant("BRK.B", "Berkshire Hathaway Inc", "BRKxB unrelated ticker", null), false);
 });
+
+test("invalid news citations are dropped instead of failing a paid report", async () => {
+  const { repairNewsCitations } = await import("../lib/ai-analysis-core");
+  const base = {verdict:"hold" as const,overallScore:50,technicalScore:50,newsScore:70,summary:"s",reasons:["r"],risks:["r"],bullScenario:"b",bearScenario:"b",invalidation:"i"};
+  const repaired = repairNewsCitations({...base,news:[{sourceIndex:0,impact:"a"},{sourceIndex:0,impact:"dup"},{sourceIndex:3,impact:"missing"}]}, 2);
+  assert.deepEqual(repaired.news, [{sourceIndex:0,impact:"a"}]);
+  assert.equal(repaired.newsScore, 70);
+  assert.equal(repairNewsCitations({...base,news:[{sourceIndex:0,impact:"a"}]}, 0).newsScore, null);
+});
+
+test("price path reports returns, the 3-month band and recent sessions from completed bars", async () => {
+  const { pricePath } = await import("../lib/ai-analysis-core");
+  const day = 86_400;
+  const bars = Array.from({ length: 130 }, (_, i) => ({ time: 1_767_330_000 + i * day, open: 100 + i, high: 101 + i, low: 99 + i, close: 100 + i, volume: 1000 + i }));
+  const path = pricePath(bars)!;
+  assert.equal(path.returnsPct.w1, Math.round((229 / 224 - 1) * 10000) / 100);
+  assert.equal(path.returnsPct.m6, Math.round((229 / 103 - 1) * 10000) / 100);
+  assert.equal(path.range3m.high, 230);
+  assert.equal(path.range3m.low, 166);
+  assert.equal(path.recentSessions.length, 10);
+  assert.equal(path.recentSessions.at(-1)!.close, 229);
+  assert.equal(path.recentSessions[0].changePct, Math.round((220 / 219 - 1) * 10000) / 100);
+  assert.equal(pricePath(bars.slice(0, 3))!.returnsPct.w1, null);
+  assert.equal(pricePath([]), null);
+});
