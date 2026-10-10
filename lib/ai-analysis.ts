@@ -79,7 +79,8 @@ buy, hold or sell is a view for the selected horizon. Decide it from the evidenc
 
 <writing>
 - Write every prose field in request.language. In Turkish, write plain everyday Turkish a non-professional investor reads easily: standard market terms (hareketli ortalama, destek, direnç, momentum), no word-for-word renderings of English idioms, decimal commas (182,40 $, %12,5).
-- summary: two to four sentences giving the view and its main reason.
+- summary: two to four sentences giving the view and its main reason. It is the report's lead paragraph, read first and in large type.
+- takeaways: exactly three lines, the first thing a hurried reader sees after the verdict: the decisive signal, the main risk, the level or event that settles it. Each under 140 characters with one supplied number.
 - reasons and risks: two to four items each, one concrete point per item, with the supplied numbers that support it.
 - bullScenario and bearScenario: what would have to happen, tied to supplied levels. bullLevel and bearLevel are the single supplied levels (copied exactly from the input) that trigger each scenario on a daily close; null when no supplied level fits.
 - invalidation: the observable conditions that would overturn the view.

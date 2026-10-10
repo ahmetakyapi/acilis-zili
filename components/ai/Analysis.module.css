@@ -1,3 +1,8 @@
+/* Claude analizi: panel denetimleri + rapor. Rapor bilanço raporunun dilinde
+   (components/earnings/EarningsReport.module.css): kapak → kısaca → bölümler.
+   Rakamlarda `tabular-nums` YOK — Schibsted'de virgülü rakam genişliğine
+   çekip "229 , 33 $" yazdırıyordu (11 Ekim ekran görüntüsü); `.figure` yeter. */
+
 .body { padding:0 20px 20px; display:grid; gap:20px; min-width:0; }
 .hint,.foot { color:var(--text-body); font-size:14px; line-height:1.65; }
 .controls { display:flex; flex-wrap:wrap; align-items:end; gap:12px 20px; }
@@ -5,7 +10,7 @@
 .select,.input { min-height:44px; max-width:100%; padding:9px 12px; border:1px solid var(--line-strong); border-radius:10px; color:var(--text-strong); background:var(--premium-surface); font:inherit; }
 .select:focus-visible,.input:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 .quota { display:grid; gap:6px; padding-bottom:3px; font-size:12px; color:var(--text-muted); }
-.quota strong { color:var(--text-strong); font-size:18px; font-variant-numeric:tabular-nums; }
+.quota strong { color:var(--text-strong); font-size:18px; }
 .stamp { color:var(--text-muted); font-size:13px; line-height:1.6; }
 .sectionTitle { color:var(--text-strong); font-size:15px; font-weight:650; margin-bottom:12px; }
 
@@ -38,123 +43,183 @@ li[data-state="done"] .stepMark::after { content:""; position:absolute; left:4.5
 .historyVerdict { font-weight:750; color:var(--text-strong); font-size:15px; }
 [data-verdict="buy"] > .historyVerdict { color:var(--up); }
 [data-verdict="sell"] > .historyVerdict { color:var(--down); }
-.historyScore { font-weight:650; color:var(--text-strong); font-variant-numeric:tabular-nums; }
+[data-verdict="hold"] > .historyVerdict { color:var(--primary-ink); }
+.historyScore { font-weight:650; color:var(--text-strong); }
 .historyScore small { font-size:11px; color:var(--text-muted); font-weight:400; }
 .historyMeta { grid-column:1 / -1; font-size:12px; color:var(--text-muted); }
 .reportAnchor { scroll-margin-top:calc(var(--app-bar-h, 64px) + 16px); min-width:0; }
 
-/* ---- Rapor ---- */
-.report { display:grid; gap:32px; padding-top:24px; border-top:1px solid var(--line); overflow-wrap:anywhere; }
-.report > * { animation:rise 520ms var(--ease-brand) both; }
-.report > :nth-child(2) { animation-delay:80ms; }
-.report > :nth-child(3) { animation-delay:160ms; }
-.report > :nth-child(n+4) { animation-delay:220ms; }
-@keyframes rise { from { opacity:0; translate:0 10px; } to { opacity:1; translate:0 0; } }
+/* ================= Rapor ================= */
+/* Dört kademe: rapor bölümleri clamp(2.5rem,5vw,4rem), bölüm içi clamp(1.25rem,2.5vw,2rem), kart 12–16 px. */
+.report { display:grid; gap:clamp(2.5rem,5vw,4rem); padding-top:24px; border-top:1px solid var(--line); overflow-wrap:anywhere; min-width:0; }
+.chapter { display:grid; gap:clamp(1.25rem,2.5vw,2rem); min-width:0; }
+.chapter > :global(.chapter-heading) { margin:0; }
 
-.hero { display:grid; gap:10px; padding:20px 22px; border-radius:16px; background:var(--surface-sunken); }
-.heroHead { display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 20px; }
-.verdict { font-size:34px; line-height:1.05; font-weight:800; letter-spacing:-.03em; color:var(--text-strong); }
-.hero[data-verdict="buy"] .verdict { color:var(--up); }
-.hero[data-verdict="sell"] .verdict { color:var(--down); }
-.heroFacts { display:flex; flex-wrap:wrap; gap:4px 16px; font-size:13px; color:var(--text-muted); }
-.heroFacts b { color:var(--text-strong); font-weight:650; }
-.verdictMeaning { font-size:14px; color:var(--text-body); }
-.summary { font-size:16px; line-height:1.75; color:var(--text-prose); max-width:72ch; }
-.since { display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; padding-top:12px; margin-top:4px; border-top:1px solid var(--line-soft); font-size:13px; color:var(--text-muted); font-variant-numeric:tabular-nums; }
-.since > :first-child { color:var(--text-strong); font-weight:650; }
+/* ---- Kapak: karar · giriş · künye. Açılışta sahnelenir. ---- */
+/* İki satır: karar | künye, altında tam genişlikte giriş. `auto` sütun anlam cümlesinin tek satırlık
+   max-content genişliğini alıp girişi 50 px'e eziyordu (1280 ölçümü). */
+.cover { --tone:var(--primary); position:relative; display:grid; grid-template-columns:minmax(0,1fr) minmax(240px,320px); gap:clamp(1.25rem,3vw,2rem) clamp(1.25rem,3vw,2.5rem); align-items:center; padding:clamp(1.25rem,3vw,2.25rem); border-radius:22px; background:var(--surface-sunken); overflow:hidden; }
+.cover[data-verdict="buy"] { --tone:var(--up); }
+.cover[data-verdict="sell"] { --tone:var(--down); }
+.cover[data-verdict="insufficient"] { --tone:var(--line-strong); }
+.cover::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--tone); transform-origin:left; animation:grow-x 900ms var(--ease-brand) both; }
+.coverVerdict { display:flex; align-items:center; gap:20px; }
+.coverRing { --score-ring-size:112px; }
+.coverWord { display:grid; gap:6px; min-width:0; }
+/* Kelime kendi kutusundan yükselir: üst 0,12em pay İ/Ü imleri için (globals.css "ÜSTTEKİ İMLER"). */
+.verdict { display:block; overflow:hidden; padding-top:.12em; margin-top:-.12em; font-size:clamp(2.6rem,5vw,4rem); line-height:1; font-weight:800; letter-spacing:-.055em; color:var(--tone); }
+.cover[data-verdict="hold"] .verdict { color:var(--primary-ink); }
+.cover[data-verdict="insufficient"] .verdict { color:var(--text-strong); font-size:clamp(1.9rem,3.4vw,2.6rem); }
+.verdict > span { display:inline-block; animation:word-rise 760ms var(--ease-brand) 180ms both; }
+@keyframes word-rise { from { translate:0 105%; } to { translate:0 0; } }
+.verdictMeaning { max-width:24em; font-size:14px; line-height:1.55; color:var(--text-body); animation:fade-up 600ms var(--ease-brand) 380ms both; }
+.lead { grid-column:1 / -1; max-width:40em; padding-left:18px; border-left:3px solid var(--primary); font-size:clamp(1.08rem,1.45vw,1.28rem); line-height:1.6; font-weight:450; color:var(--text-strong); text-wrap:pretty; animation:fade-up 700ms var(--ease-brand) 300ms both; }
+.coverFacts { grid-column:2; grid-row:1; display:grid; align-self:stretch; align-content:center; gap:0; padding-left:clamp(1rem,2vw,1.5rem); border-left:1px solid var(--line); animation:fade-up 700ms var(--ease-brand) 420ms both; }
+.coverFacts > div { display:grid; gap:3px; padding:10px 0; border-bottom:1px solid var(--line-soft); }
+.coverFacts > div:last-child { border-bottom:0; }
+.coverFacts dt { font-size:12px; font-weight:600; color:var(--text-soft); }
+.coverFacts dd { margin:0; font-size:15px; font-weight:600; color:var(--text-strong); }
+.sinceValue { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.confidence { display:flex; align-items:center; gap:10px; }
+.meter { display:inline-flex; gap:3px; }
+.meter > span { width:18px; height:5px; border-radius:999px; background:var(--line-strong); opacity:.45; }
+.meter > span[data-on] { background:var(--tone, var(--primary)); opacity:1; transform-origin:left; animation:grow-x 420ms var(--ease-brand) calc(650ms + var(--i,0) * 120ms) both; }
+.cover[data-verdict="hold"] .meter > span[data-on] { background:var(--primary); }
+@keyframes grow-x { from { scale:0 1; } to { scale:1 1; } }
+@keyframes fade-up { from { opacity:0; translate:0 10px; } to { opacity:1; translate:0 0; } }
 
-/* Fiyat haritası: grafik + seviye merdiveni. 1280 px'te 2:1, telefonda alt alta. */
-.mapGrid { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:24px; align-items:start; }
-.mapFigure { display:grid; gap:10px; min-width:0; }
-.chart { position:relative; height:240px; padding-right:84px; }
+/* ---- Kısaca ---- */
+.takeawaysSection { display:grid; gap:14px; margin-top:calc(clamp(2.5rem,5vw,4rem) * -.5); }
+.takeaways { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(1rem,2.5vw,2rem); }
+.takeaways li { display:grid; grid-template-columns:auto minmax(0,1fr); gap:14px; align-items:start; padding-top:16px; border-top:1px solid var(--line-strong); }
+.takeawayNo { font-size:28px; line-height:1; font-weight:700; letter-spacing:-.04em; color:var(--primary-ink); }
+.takeaways p { font-size:16px; line-height:1.55; font-weight:500; letter-spacing:-.01em; color:var(--text-strong); text-wrap:pretty; }
+
+/* ---- Fiyat haritası: grafik + seviye merdiveni. 1280 px'te 2:1, 899 px altında alt alta. ---- */
+.mapGrid { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:clamp(1rem,2.5vw,2rem); align-items:start; }
+.mapFigure { display:grid; gap:12px; min-width:0; padding:clamp(14px,2vw,20px); border-radius:20px; background:var(--premium-surface); border:1px solid var(--line); }
+.chart { position:relative; height:300px; padding-right:84px; }
 .chartSvg { width:100%; height:100%; overflow:visible; }
-.chartLine { fill:none; stroke-width:2; stroke-linejoin:round; stroke-linecap:round; stroke-dasharray:1; stroke-dashoffset:1; animation:draw 1100ms var(--ease-brand) 120ms forwards; }
-.chartArea { opacity:0; animation:area-in 700ms var(--ease-brand) 700ms forwards; }
-@keyframes draw { to { stroke-dashoffset:0; } }
-@keyframes area-in { to { opacity:.085; } }
-.levelLine { stroke:var(--line-strong); stroke-width:1; stroke-dasharray:4 4; opacity:0; animation:fade-in 400ms var(--ease-brand) both; }
+/* Çizim kırpmayla açılır: `pathLength` + `vector-effect: non-scaling-stroke` birlikte
+   kesik ölçüsünü kaydırıyor, çizgi sağ uçta yarım kalıyordu (1280 ölçümü). */
+.chartLine { fill:none; stroke-width:2.25; stroke-linejoin:round; stroke-linecap:round; clip-path:inset(0 100% 0 0); }
+.chartArea { opacity:0; }
+.levelLine { stroke:var(--line-strong); stroke-width:1; stroke-dasharray:4 4; opacity:0; }
 .levelLine[data-tone="up"] { stroke:var(--up); stroke-dasharray:none; stroke-width:1.5; }
 .levelLine[data-tone="down"] { stroke:var(--down); stroke-dasharray:none; stroke-width:1.5; }
+[data-inview] .chartLine { animation:draw 1300ms var(--ease-brand) 100ms forwards; }
+[data-inview] .chartArea { animation:fade-in 800ms var(--ease-brand) 900ms forwards; }
+[data-inview] .levelLine { animation:fade-in 450ms var(--ease-brand) both; }
+@keyframes draw { to { clip-path:inset(0 0 0 0); } }
 @keyframes fade-in { from { opacity:0; } to { opacity:1; } }
-.nowDot { position:absolute; right:84px; width:10px; height:10px; margin:-5px -5px 0 0; border-radius:50%; box-shadow:0 0 0 3px var(--surface); opacity:0; animation:dot-in 360ms var(--ease-spring-soft) 1150ms forwards; }
+.nowDot { position:absolute; right:84px; width:11px; height:11px; margin:-5.5px -5.5px 0 0; border-radius:50%; box-shadow:0 0 0 3px var(--premium-surface); opacity:0; }
+.nowDot::after { content:""; position:absolute; inset:-6px; border-radius:50%; border:1.5px solid currentColor; opacity:0; }
+[data-inview] .nowDot { animation:dot-in 420ms var(--ease-spring-soft) 1350ms forwards; }
+[data-inview] .nowDot::after { animation:ping 1200ms var(--ease-brand) 1700ms 2; }
 @keyframes dot-in { from { opacity:0; scale:.3; } to { opacity:1; scale:1; } }
+@keyframes ping { from { opacity:.6; scale:.6; } to { opacity:0; scale:1.8; } }
 .chartLabels { position:absolute; inset:0 0 0 auto; width:80px; }
 /* line-height 1: kutu ~12 px; LABEL_GAP (%7) 200 px'lik telefon grafiğinde 14 px. 18 px'lik kutuyla komşuya 4 px biniyordu (390 px ölçümü). */
-.chartLabel { position:absolute; left:0; translate:0 -50%; line-height:1; font-size:11.5px; font-variant-numeric:tabular-nums; color:var(--text-muted); white-space:nowrap; }
-.chartLabel[data-tone="up"] { color:var(--up); font-weight:600; }
-.chartLabel[data-tone="down"] { color:var(--down); font-weight:600; }
-.chartLabel[data-tone="now"] { color:var(--text-strong); font-weight:700; }
+.chartLabel { position:absolute; left:0; translate:0 -50%; line-height:1; font-size:11.5px; color:var(--text-muted); white-space:nowrap; opacity:0; }
+[data-inview] .chartLabel { animation:fade-in 400ms var(--ease-brand) both; }
+.chartLabel[data-tone="up"] { color:var(--up); font-weight:650; }
+.chartLabel[data-tone="down"] { color:var(--down); font-weight:650; }
+.chartLabel[data-tone="now"] { color:var(--text-strong); font-weight:750; }
 
-.ladder { display:grid; }
-.ladder li { display:grid; grid-template-columns:1fr auto 58px; gap:10px; align-items:baseline; padding:9px 2px; border-bottom:1px solid var(--line-soft); font-size:13px; animation:rise 420ms var(--ease-brand) both; }
-.ladder li[data-tone="now"] { padding:10px 10px; margin:2px -8px; border:0; border-radius:10px; background:var(--surface-sunken); font-weight:650; }
+.ladder { display:grid; padding:6px 14px; border-radius:20px; background:var(--premium-surface); border:1px solid var(--line); }
+.ladder li { display:grid; grid-template-columns:1fr auto 56px; gap:10px; align-items:baseline; padding:10px 2px; border-bottom:1px solid var(--line-soft); font-size:13px; opacity:0; }
+.ladder li:last-child { border-bottom:0; }
+[data-inview].ladder li { animation:fade-up 460ms var(--ease-brand) both; }
+.ladder li[data-tone="now"] { padding:11px 10px; margin:3px -8px; border:0; border-radius:12px; background:var(--surface-sunken); font-weight:700; }
 .ladderName { color:var(--text-body); }
-li[data-tone="up"] .ladderName { color:var(--up); }
-li[data-tone="down"] .ladderName { color:var(--down); }
+li[data-tone="up"] .ladderName { color:var(--up); font-weight:600; }
+li[data-tone="down"] .ladderName { color:var(--down); font-weight:600; }
 li[data-tone="now"] .ladderName { color:var(--text-strong); }
-.ladderValue { color:var(--text-strong); font-variant-numeric:tabular-nums; }
-.ladderDistance { color:var(--text-muted); text-align:right; font-variant-numeric:tabular-nums; font-size:12px; }
+.ladderValue { color:var(--text-strong); font-weight:600; }
+.ladderDistance { color:var(--text-muted); text-align:right; font-size:12px; }
 
-/* Ölçü ızgarası: puan çizgileri ve dönem getirisi aynı hatta biter. */
-.measures { display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr); gap:32px; align-items:start; }
-.lanes { display:grid; gap:14px; }
-.laneHead { display:flex; justify-content:space-between; gap:12px; font-size:13px; color:var(--text-muted); margin-bottom:7px; }
-.laneValue { color:var(--text-strong); font-weight:650; font-variant-numeric:tabular-nums; }
-.laneValue small { font-weight:400; color:var(--text-muted); font-size:12px; }
-/* Kulvar üstünde 5 piksellik şerit; bant sınırları 20'şer puanda ince çentik. */
-.lane { position:relative; display:block; height:5px; border-radius:999px; background:var(--line-soft);
-  background-image:linear-gradient(90deg, transparent calc(20% - 1px), var(--surface) calc(20% - 1px), var(--surface) 20%, transparent 20%, transparent calc(40% - 1px), var(--surface) calc(40% - 1px), var(--surface) 40%, transparent 40%, transparent calc(60% - 1px), var(--surface) calc(60% - 1px), var(--surface) 60%, transparent 60%, transparent calc(80% - 1px), var(--surface) calc(80% - 1px), var(--surface) 80%, transparent 80%); }
-.laneFill { position:absolute; inset:0 auto 0 0; border-radius:inherit; background:var(--text-strong); transform-origin:left; animation:fill 800ms var(--ease-brand) both; }
-@keyframes fill { from { scale:0 1; } to { scale:1 1; } }
-.returns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-bottom:12px; }
-.returns > div { display:grid; gap:6px; padding:12px 14px; border-radius:12px; background:var(--surface-sunken); }
-.returns dt { font-size:12px; color:var(--text-muted); }
-.returns dd { margin:0; }
+/* ---- Teknik görünüm ---- */
+.technicalGrid { display:grid; grid-template-columns:minmax(200px,.8fr) minmax(0,1.1fr) minmax(0,1.1fr); gap:clamp(1rem,2vw,1.5rem); align-items:start; }
+.technicalSide { display:grid; gap:10px; min-width:0; }
 
-.scenarios { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
-.scenario { display:grid; gap:10px; align-content:start; padding:18px 20px; border-radius:14px; background:var(--surface-sunken); border-top:3px solid var(--line-strong); color:var(--text-prose); font-size:15px; line-height:1.75; }
-.scenario[data-tone="up"] { border-top-color:var(--up); }
-.scenario[data-tone="down"] { border-top-color:var(--down); }
-.scenario h4,.invalidation h4 { color:var(--text-strong); font-size:15px; font-weight:650; }
-.trigger { justify-self:start; padding:4px 10px; border-radius:999px; font-size:12.5px; font-weight:600; font-variant-numeric:tabular-nums; }
+/* ---- Senaryolar ---- */
+.scenarios { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(.75rem,2vw,1.25rem); }
+.scenario { position:relative; display:grid; gap:12px; align-content:start; padding:22px 22px 24px; border-radius:20px; background:var(--premium-surface); border:1px solid var(--line); color:var(--text-prose); font-size:15px; line-height:1.8; overflow:hidden; }
+.scenario::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--line-strong); }
+.scenario[data-tone="up"]::before { background:var(--up); }
+.scenario[data-tone="down"]::before { background:var(--down); }
+.scenario h3,.invalidation h3 { font-size:var(--text-title); font-weight:700; line-height:1.3; letter-spacing:-.025em; }
+.scenario[data-tone="up"] h3 { color:var(--up); }
+.scenario[data-tone="down"] h3 { color:var(--down); }
+.trigger { justify-self:start; padding:5px 12px; border-radius:999px; font-size:13px; font-weight:650; line-height:1.4; }
 [data-tone="up"] > .trigger { background:var(--up-wash); color:var(--up); }
 [data-tone="down"] > .trigger { background:var(--down-wash); color:var(--down); }
-.invalidation { display:grid; gap:8px; margin-top:16px; padding-top:16px; border-top:1px solid var(--line); color:var(--text-prose); font-size:15px; line-height:1.75; }
+.invalidation { display:grid; gap:10px; padding-top:20px; border-top:1px solid var(--line); color:var(--text-prose); font-size:15px; line-height:1.85; }
+.invalidation p { max-width:42em; }
+.invalidation h3 { color:var(--text-strong); }
+.watchBlock { display:grid; gap:12px; }
 .watch { display:grid; gap:10px; counter-reset:watch; }
-.watch li { display:grid; grid-template-columns:28px 1fr; gap:10px; align-items:baseline; color:var(--text-prose); font-size:15px; line-height:1.7; counter-increment:watch; }
-.watch li::before { content:counter(watch); display:grid; place-items:center; width:24px; height:24px; border-radius:50%; background:var(--surface-sunken); color:var(--text-strong); font-size:12px; font-weight:700; font-variant-numeric:tabular-nums; }
+.watch li { display:grid; grid-template-columns:30px 1fr; gap:12px; align-items:center; min-height:48px; padding:10px 14px; border-radius:14px; background:var(--surface-sunken); color:var(--text-strong); font-size:15px; line-height:1.55; counter-increment:watch; }
+.watch li::before { content:counter(watch); display:grid; place-items:center; width:28px; height:28px; border-radius:9px; background:var(--primary-wash); color:var(--primary-ink); font-size:13px; font-weight:750; }
 
-.prose { color:var(--text-prose); font-size:15px; line-height:1.8; }
-.prose h3 { color:var(--text-strong); font-size:15px; font-weight:650; margin-bottom:10px; }
-.prose ul { list-style:disc; padding-left:20px; display:grid; gap:8px; }
-.columns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; }
-.indicators { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; margin-top:8px; }
+/* ---- Değerlendirme: bilanço PointsCard dilinde iki kart ---- */
+.points { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(.75rem,2vw,1.25rem); }
+.pointsCard { display:grid; align-content:start; gap:18px; padding:1.6rem; border-radius:20px; background:var(--premium-surface); border:1px solid var(--line); }
+.pointsCard h3 { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding-bottom:16px; border-bottom:1px solid var(--line); font-size:var(--text-title); font-weight:700; letter-spacing:-.025em; color:var(--text-strong); }
+.pointsCard h3 span { font-size:12px; font-weight:700; color:var(--text-muted); }
+.pointsCard ol { display:grid; gap:16px; }
+.pointsCard li { display:grid; grid-template-columns:24px minmax(0,1fr); gap:12px; align-items:start; }
+.pointsCard li p { font-size:15px; line-height:1.7; color:var(--text-prose); text-wrap:pretty; }
+.pointNo { display:grid; place-items:center; width:24px; height:24px; margin-top:2px; border-radius:7px; font-size:12px; font-weight:700; background:var(--primary-wash); color:var(--primary-ink); }
+.pointsCard[data-kind="risks"] .pointNo { background:var(--down-wash); color:var(--down); }
+.pointsCard[data-kind="risks"] h3 { color:var(--down); }
+
+/* ---- Haberler ---- */
+.sources { display:grid; gap:0; }
+.sources li { display:grid; gap:6px; padding:18px 0; border-top:1px solid var(--line); }
+.sources li:last-child { border-bottom:1px solid var(--line); }
+.sources a { justify-self:start; font-size:16px; font-weight:650; line-height:1.45; letter-spacing:-.01em; color:var(--text-strong); text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:4px; transition:text-decoration-color 200ms; }
+.sources a:hover { text-decoration-color:currentColor; }
+.sourceMeta { font-size:12.5px; color:var(--text-muted); }
+.impact { max-width:46em; font-size:15px; line-height:1.75; color:var(--text-body); }
+.otherSources { display:grid; gap:12px; padding:4px 0 8px; }
+.otherSources li { display:grid; gap:2px; }
+.otherSources a { font-size:14px; color:var(--text-strong); text-decoration:underline; text-underline-offset:3px; }
+.fold { border-bottom:1px solid var(--line-soft); }
+.fold summary { display:flex; align-items:center; min-height:48px; cursor:pointer; color:var(--text-strong); font-size:14px; font-weight:650; }
+.fold summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:6px; }
+.indicators { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; padding-bottom:12px; }
 .indicators > div { display:flex; justify-content:space-between; gap:16px; padding:10px 0; border-bottom:1px solid var(--line-soft); font-size:13px; }
 .indicators dt { color:var(--text-muted); }
-.indicators dd { margin:0; text-align:right; font-variant-numeric:tabular-nums; color:var(--text-strong); }
-.sources { display:grid; gap:16px; list-style:none !important; padding:0 !important; }
-.sources a { color:var(--text-strong); text-decoration:underline; text-underline-offset:3px; }
-.sources p { margin-top:5px; }
-.fold summary { display:flex; align-items:center; min-height:44px; cursor:pointer; color:var(--text-strong); font-size:14px; font-weight:600; }
-.fold summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:6px; }
-.fold[open] summary { margin-bottom:8px; }
-.foot { display:grid; gap:8px; border-top:1px solid var(--line); padding-top:16px; font-size:12px; }
+.indicators dd { margin:0; text-align:right; color:var(--text-strong); }
+.foot { display:grid; gap:8px; padding-top:16px; border-top:1px solid var(--line); font-size:12px; }
 
+@media(max-width:1099px) {
+  .cover { grid-template-columns:minmax(0,1fr); }
+  .coverFacts { grid-column:1 / -1; grid-row:auto; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:0 20px; padding:16px 0 0; border-left:0; border-top:1px solid var(--line); }
+  .coverFacts > div { border-bottom:0; }
+  .technicalGrid { grid-template-columns:minmax(200px,.8fr) minmax(0,1.2fr); }
+  .technicalGrid > :last-child { grid-column:1 / -1; }
+}
 @media(max-width:899px) {
-  .mapGrid,.measures { grid-template-columns:minmax(0,1fr); }
+  .mapGrid { grid-template-columns:minmax(0,1fr); }
+  .takeaways { grid-template-columns:minmax(0,1fr); }
 }
 @media(max-width:639px) {
   .body { padding:0 16px 16px; }
-  .hero { padding:16px; }
-  .verdict { font-size:28px; }
-  .chart { height:200px; padding-right:72px; }
+  .cover { padding:20px 18px; border-radius:18px; }
+  .coverRing { --score-ring-size:84px; }
+  .coverVerdict { gap:16px; }
+  .chart { height:220px; padding-right:72px; }
   .nowDot { right:72px; }
   .chartLabels { width:68px; }
-  .columns,.scenarios,.indicators { grid-template-columns:minmax(0,1fr); }
+  .scenarios,.points,.indicators,.technicalGrid { grid-template-columns:minmax(0,1fr); }
   .history { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .pointsCard { padding:1.2rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .report > *,.ladder li,.levelLine,.laneFill,.nowDot,.chartArea,.stepMark,.stepMark::after { animation:none !important; opacity:1; }
-  .chartLine { animation:none; stroke-dashoffset:0; }
-  .chartArea { opacity:.085; }
+  .cover::before,.verdict > span,.verdictMeaning,.lead,.coverFacts,.meter > span,.levelLine,.chartArea,.nowDot,.nowDot::after,.chartLabel,.ladder li,.stepMark,.stepMark::after { animation:none !important; }
+  .levelLine,.chartLabel,.ladder li,.nowDot { opacity:1; }
+  .chartArea { opacity:1; }
+  .chartLine { animation:none !important; clip-path:none; }
 }

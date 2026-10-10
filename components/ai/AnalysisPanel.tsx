@@ -23,6 +23,7 @@ export function AnalysisPanel({ symbol, locale, t }: { symbol: string; locale: L
   const [remaining, setRemaining] = useState<number | null | undefined>();
   const [selected, setSelected] = useState("");
   const [result, setResult] = useState<SavedAnalysis | null>(null);
+  const [resultHorizon, setResultHorizon] = useState<"short" | "medium">("short");
   const [history, setHistory] = useState<Entry[]>([]);
   const [current, setCurrent] = useState<CurrentQuote>(null);
   const [visible, setVisible] = useState(true);
@@ -52,7 +53,7 @@ export function AnalysisPanel({ symbol, locale, t }: { symbol: string; locale: L
         if (response.ok) entry = (await response.json()).history?.[0];
       }
       if (entry && entry.symbol === symbol && !controller.signal.aborted) {
-        setSelected(entry.id); setResult(entry.result); setHorizon(entry.horizon);
+        setSelected(entry.id); setResult(entry.result); setHorizon(entry.horizon); setResultHorizon(entry.horizon);
         requestAnimationFrame(() => reportRef.current?.scrollIntoView({ block: "start" }));
       }
     }).catch(() => { if (!controller.signal.aborted) setError(t.errors.unavailable); });
@@ -88,7 +89,7 @@ export function AnalysisPanel({ symbol, locale, t }: { symbol: string; locale: L
         requestId.current = null;
         throw new Error(body.error);
       }
-      setResult(body.result); setSelected(body.id); requestId.current = null;
+      setResult(body.result); setResultHorizon(horizon); setSelected(body.id); requestId.current = null;
       requestAnimationFrame(() => reportRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
       await refresh().catch(() => { setError(t.errors.unavailable); });
     } catch (e) {
@@ -98,7 +99,7 @@ export function AnalysisPanel({ symbol, locale, t }: { symbol: string; locale: L
     } finally { locked.current = false; setBusy(false); }
   }
   function open(entry: Entry) {
-    setSelected(entry.id); setResult(entry.result); setHorizon(entry.horizon);
+    setSelected(entry.id); setResult(entry.result); setHorizon(entry.horizon); setResultHorizon(entry.horizon);
   }
   if (!visible) return null;
   const step = STEP_STARTS_MS.findLastIndex(start => elapsed >= start);
@@ -140,7 +141,7 @@ export function AnalysisPanel({ symbol, locale, t }: { symbol: string; locale: L
         </ul>
       </section>}
       <div ref={reportRef} className={styles.reportAnchor}>
-        {result && <AnalysisReport key={selected} result={result} t={t} locale={locale} current={current} symbol={symbol} />}
+        {result && <AnalysisReport key={selected} result={result} t={t} locale={locale} current={current} symbol={symbol} horizon={resultHorizon} />}
       </div>
     </div>
   </Panel>;

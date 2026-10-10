@@ -49,6 +49,11 @@ export const aiAnalysisTr = {
     reports: "Raporlar", count: "Rapor",
     stock: "Hisse", verdict: "Görüş", score: "Genel Puan", horizon: "Vade", date: "Rapor Zamanı", open: "Raporu Aç",
   },
+  coverLabel: "Claude Görüşü", takeaways: "Kısaca", measuresTitle: "Teknik Görünüm", evaluation: "Değerlendirme",
+  trendTitle: "Trend Kontrolü", above: "Üstünde", below: "Altında", noNewsShort: "Haber Yok",
+  rsiZones: { oversold: "Aşırı Satım Bölgesi", neutral: "Nötr Bölge", overbought: "Aşırı Alım Bölgesi" },
+  axisTitle: "Senaryo Ekseni", axisHint: "Fiyatın iki senaryo tetiğine uzaklığı; günlük kapanış hangisini geçerse o senaryo öne çıkar.",
+  toBull: "Olumlu Tetiğe", toBear: "Olumsuz Tetiğe",
   errors: {
     quota: "Bugünün analiz haklarını kullandın. İstanbul saatiyle 00:00’dan sonra yeni rapor üretebilirsin.",
     busy: "Başka bir analiz sürüyor veya kısa bekleme süresi var. Biraz sonra tekrar dene.",
@@ -110,6 +115,11 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
     reports: "Reports", count: "Reports",
     stock: "Stock", verdict: "View", score: "Overall Score", horizon: "Horizon", date: "Report Time", open: "Open Report",
   },
+  coverLabel: "Claude's View", takeaways: "In Short", measuresTitle: "Technical Picture", evaluation: "Assessment",
+  trendTitle: "Trend Check", above: "Above", below: "Below", noNewsShort: "No News",
+  rsiZones: { oversold: "Oversold Zone", neutral: "Neutral Zone", overbought: "Overbought Zone" },
+  axisTitle: "Scenario Axis", axisHint: "How far the price sits from each scenario trigger; whichever a daily close crosses takes the lead.",
+  toBull: "To Bull Trigger", toBear: "To Bear Trigger",
   errors: {
     quota: "Today's analysis credits are used up. New credits become available at midnight Istanbul time.",
     busy: "Another analysis is running or a short cooldown applies. Try again shortly.",

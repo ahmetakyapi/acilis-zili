@@ -1,6 +1,7 @@
 import type { SavedAnalysis } from "@/lib/ai-analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { formatPercent, formatPrice } from "@/lib/utils";
+import { InView } from "./InView";
 import styles from "./Analysis.module.css";
 
 type Level = { key: string; label: string; value: number; tone: "up" | "down" | "plain" };
@@ -64,33 +65,36 @@ export function PriceMap({ result, t, locale }: { result: SavedAnalysis; t: Dict
   const overflow = labelled.at(-1)!.y - 100;
   if (overflow > 0) for (let i = labelled.length - 1; i >= 0; i--) labelled[i].y = Math.max(0, labelled[i].y - overflow);
 
-  return <section className={styles.mapSection} aria-labelledby="ai-price-map">
-    <h3 id="ai-price-map" className={styles.sectionTitle}>{t.priceMap}</h3>
-    <div className={styles.mapGrid}>
-      <figure className={styles.mapFigure}>
-        <div className={styles.chart} role="img" aria-label={`${t.priceMap}: ${t.now} ${formatPrice(price, locale, { currency: true })}`}>
-          <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} preserveAspectRatio="none" className={styles.chartSvg} aria-hidden>
-            {levels.map((level, i) => <line key={level.key} x1={0} x2={VIEW_W} y1={yPct(level.value) / 100 * VIEW_H} y2={yPct(level.value) / 100 * VIEW_H}
-              className={styles.levelLine} data-tone={level.tone} style={{ animationDelay: `${300 + i * 60}ms` }} vectorEffect="non-scaling-stroke" />)}
-            <polygon points={`0,${VIEW_H} ${line} ${VIEW_W},${VIEW_H}`} className={styles.chartArea} style={{ fill: stroke }} />
-            <polyline points={line} pathLength={1} className={styles.chartLine} style={{ stroke }} vectorEffect="non-scaling-stroke" />
-          </svg>
-          <span className={styles.nowDot} style={{ top: `${yPct(price)}%`, background: stroke }} aria-hidden />
-          <div className={styles.chartLabels} aria-hidden>
-            {labelled.map(level => <span key={level.key} className={styles.chartLabel} data-tone={level.key === "now" ? "now" : level.tone} style={{ top: `${level.y}%` }}>
-              {formatPrice(level.value, locale, { currency: true })}
-            </span>)}
-          </div>
+  return <div className={styles.mapGrid}>
+    <InView as="figure" className={styles.mapFigure}>
+      <div className={styles.chart} role="img" aria-label={`${t.priceMap}: ${t.now} ${formatPrice(price, locale, { currency: true })}`}>
+        <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} preserveAspectRatio="none" className={styles.chartSvg} aria-hidden>
+          <defs>
+            <linearGradient id="ai-map-area" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor={stroke} stopOpacity="0.16" />
+              <stop offset="1" stopColor={stroke} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {levels.map((level, i) => <line key={level.key} x1={0} x2={VIEW_W} y1={yPct(level.value) / 100 * VIEW_H} y2={yPct(level.value) / 100 * VIEW_H}
+            className={styles.levelLine} data-tone={level.tone} style={{ animationDelay: `${500 + i * 70}ms` }} vectorEffect="non-scaling-stroke" />)}
+          <polygon points={`0,${VIEW_H} ${line} ${VIEW_W},${VIEW_H}`} className={styles.chartArea} fill="url(#ai-map-area)" />
+          <polyline points={line} className={styles.chartLine} style={{ stroke }} vectorEffect="non-scaling-stroke" />
+        </svg>
+        <span className={styles.nowDot} style={{ top: `${yPct(price)}%`, background: stroke, color: stroke }} aria-hidden />
+        <div className={styles.chartLabels} aria-hidden>
+          {labelled.map((level, i) => <span key={level.key} className={styles.chartLabel} data-tone={level.key === "now" ? "now" : level.tone} style={{ top: `${level.y}%`, animationDelay: `${600 + i * 50}ms` }}>
+            {formatPrice(level.value, locale, { currency: true })}
+          </span>)}
         </div>
-        <figcaption className={styles.stamp}>{t.priceMapHint}</figcaption>
-      </figure>
-      <ol className={styles.ladder} aria-label={t.levelsTitle}>
-        {labelled.map((level, i) => <li key={level.key} data-tone={level.key === "now" ? "now" : level.tone} style={{ animationDelay: `${200 + i * 50}ms` }}>
-          <span className={styles.ladderName}>{level.label}</span>
-          <span className={styles.ladderValue}>{formatPrice(level.value, locale, { currency: true })}</span>
-          <span className={styles.ladderDistance}>{level.key === "now" ? "" : formatPercent((level.value / price - 1) * 100, locale, 1)}</span>
-        </li>)}
-      </ol>
-    </div>
-  </section>;
+      </div>
+      <figcaption className={styles.stamp}>{t.priceMapHint}</figcaption>
+    </InView>
+    <InView as="ol" className={styles.ladder} aria-label={t.levelsTitle}>
+      {labelled.map((level, i) => <li key={level.key} data-tone={level.key === "now" ? "now" : level.tone} style={{ animationDelay: `${150 + i * 55}ms` }}>
+        <span className={styles.ladderName}>{level.label}</span>
+        <span className={`figure ${styles.ladderValue}`}>{formatPrice(level.value, locale, { currency: true })}</span>
+        <span className={`figure ${styles.ladderDistance}`}>{level.key === "now" ? "" : formatPercent((level.value / price - 1) * 100, locale, 1)}</span>
+      </li>)}
+    </InView>
+  </div>;
 }

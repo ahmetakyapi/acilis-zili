@@ -25,6 +25,7 @@ export const AnalysisOutput = z.object({
   confidence: z.enum(["low", "medium", "high"]).describe("How firmly the evidence supports the verdict: high when trend, momentum, business quality and news agree; low when they conflict or data is thin."),
   bullLevel: z.number().nullable().describe("The supplied price level whose daily close above would trigger the positive scenario; null if none fits."),
   bearLevel: z.number().nullable().describe("The supplied price level whose daily close below would trigger the negative scenario; null if none fits."),
+  takeaways: z.array(z.string().min(1).max(300)).min(1).max(3).describe("Exactly three short lines a reader should take away, most important first, each under 140 characters, each with one supplied number; they must not repeat the summary sentence by sentence."),
   watch: z.array(z.string().min(1).max(400)).min(1).max(4).describe("One to three short, concrete things to watch within the horizon (a level, a scheduled report, a news thread)."),
   news: z.array(z.object({
     sourceIndex: z.number().int().min(0).describe("sourceIndex of a supplied news item."),
@@ -33,8 +34,8 @@ export const AnalysisOutput = z.object({
 });
 export type AnalysisResult = z.infer<typeof AnalysisOutput>;
 /** Kayıtlı rapor: 11 Ekim 2026 öncesi raporlarda güven, tetik seviyeleri ve izleme listesi yok. */
-export type StoredAnalysisResult = Omit<AnalysisResult, "confidence" | "bullLevel" | "bearLevel" | "watch">
-  & Partial<Pick<AnalysisResult, "confidence" | "bullLevel" | "bearLevel" | "watch">>;
+export type StoredAnalysisResult = Omit<AnalysisResult, "confidence" | "bullLevel" | "bearLevel" | "watch" | "takeaways">
+  & Partial<Pick<AnalysisResult, "confidence" | "bullLevel" | "bearLevel" | "watch" | "takeaways">>;
 /** Modelin seviyesi sağlanan seviyelerden birine %0,5 içinde oturmuyorsa uydurmadır, atılır. */
 const LEVEL_TOLERANCE = 0.005;
 export function snapLevel(value: number | null, levels: readonly number[]): number | null {

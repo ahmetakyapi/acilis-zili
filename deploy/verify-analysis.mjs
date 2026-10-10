@@ -67,7 +67,7 @@ try {
     assert(VERDICTS.has(output.verdict) && isScore(output.overallScore) && isScore(output.technicalScore));
     assert(output.newsScore === null || isScore(output.newsScore));
     assert(output.summary && output.reasons.length && output.risks.length && output.invalidation);
-    assert(["low", "medium", "high"].includes(output.confidence) && output.watch.length > 0);
+    assert(["low", "medium", "high"].includes(output.confidence) && output.watch.length > 0 && output.takeaways.length > 0);
     // Tetik seviyesi ya null ya da raporun kendi seviyelerinden biri (snapLevel); grafik buna dayanıyor.
     assert(report.result.pricePath?.chart.length > 1 && typeof report.result.quotePrice === "number");
     // Haber olmayan gün de geçerli rapordur; ölçülen, atıfların kaynağa düşmesi.

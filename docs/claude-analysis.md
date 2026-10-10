@@ -100,8 +100,12 @@ kullanır ve sonunda FK cascade ile temizler.
 
 ## Rapor Ekranı
 
-`components/ai/`: `AnalysisReport` (karar şeridi → fiyat haritası → puan çizgileri ve
-dönem getirisi → senaryolar → izleme listesi → gerekçe/risk → haber → künyeler),
+`components/ai/`: `AnalysisReport` bilanço raporunun dilinde: kapak (puan halkası,
+karar, güven, giriş paragrafı, Rapordan Bugüne) → Kısaca (`takeaways`, üç madde) →
+Fiyat Haritası → Teknik Görünüm (`AnalysisVisuals`: puan kartları, RSI kadranı, trend
+kontrolü, getiri çubukları) → Senaryolar (senaryo ekseni, tetikli kartlar, izleme) →
+Değerlendirme → Haberler. Çizimler görününce oynar (`InView`, `CountUp`); kapak
+açılışta sahnelenir; hareketi azaltana son kare. Rakamlarda `tabular-nums` yok.
 `PriceMap` (son 63 seansın kapanışı, pivot/ortalama/3 aylık bant çizgileri, seviye
 merdiveni). Model çıktısında `confidence`, `bullLevel`, `bearLevel`, `watch` var;
 tetik seviyesi `snapLevel` ile sağlanan seviyelerden birine oturmuyorsa `null`a
