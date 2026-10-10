@@ -299,10 +299,11 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
     <MotionExperience className={experience.article}>
     <ScrollProgress />
     <article className={detail.article}>
-      {/* Yazının iki denetimi aynı satırda: solda arşive çıkış, sağda
-          paylaşım. Paylaş düğmesi metnin İÇİNE değil kenarına konuyor —
-          okumayı kesen bir çağrı değil, elinin altında duran bir araç. İkisi
-          de sessiz: sayfada ilk görülmesi gereken şey manşet. */}
+      {/* Denetim satırında yalnız arşive çıkış kaldı. Paylaş düğmesi
+          buradaydı — kapak kartının ÜSTÜNDE, sayfanın sağ köşesinde; 1440'ta
+          manşetten 1000 piksel uzakta, hiçbir şeye ait olmadan duruyordu
+          (10 Ekim, sahibi: "çok saçma bir yerde"). Artık yazının kendi
+          künyesinde, tarih ve okuma süresiyle aynı satırda. */}
       <div className={detail.utility}>
         <Link
           href="/mercek"
@@ -311,11 +312,6 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
           <ArrowLeft weight="bold" size={13} />
           {t.stories.backToList}
         </Link>
-        <ShareButton
-          url={absoluteUrl(`/mercek/${story.slug}`, locale)}
-          title={story.title}
-          labels={t.share}
-        />
       </div>
 
       {/* KAPAK: manşet ve yazının kendi rakamları yan yana. Eski 720
@@ -338,13 +334,24 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
             adını tekrar ediyordu, silindi; tarih ve okuma süresi yazının
             kendi bilgisi, manşetin hemen altına indi (kolonun 22 piksellik
             aralığından 10'u geri alınıyor, satır manşete yapışık okunsun). */}
-        <p className="-mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-small text-muted">
-          <span className="numeral">
-            {formatEtDateLong(story.eventDate, locale)}
-          </span>
-          <span aria-hidden>·</span>
-          <span className="numeral">{minutesLabel}</span>
-        </p>
+        {/* Künye satırı: solda yazının bilgisi, sağda paylaşım — düğme
+            okuyanın baktığı yerde, manşetin hemen altında. Panel kapağın
+            içinde açılıyor; `.cover` artık taşanı kırpmıyor. */}
+        <div className="-mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+          <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-small text-muted">
+            <span className="numeral">
+              {formatEtDateLong(story.eventDate, locale)}
+            </span>
+            <span aria-hidden>·</span>
+            <span className="numeral">{minutesLabel}</span>
+          </p>
+          <ShareButton
+            url={absoluteUrl(`/mercek/${story.slug}`, locale)}
+            title={story.title}
+            labels={t.share}
+            className="-mr-2.5"
+          />
+        </div>
         <p className={detail.dek}>{story.dek}</p>
 
         {/* Çeviri henüz yoksa orijinal gösterilir — ama bunu söyleyerek.

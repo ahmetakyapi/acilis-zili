@@ -13,6 +13,19 @@
 :is(.mini,.quickBand,.bandPill)[data-band="limited"],:is(.mini,.quickBand,.bandPill)[data-band="none"] { --band: var(--text-muted); --band-wash: var(--surface-sunken); }
 
 /* ---------- Kapak: önce bayraklar, altında puan ---------- */
+/* Kapak oranı (10 Ekim): logo başlığın soluna geçince 1440'ta başlığa 545 px
+   kalıyor, "GOOGL Kural Kontrolü" 550 istiyordu ve iki satıra kırılıp sol
+   sütunu uzatıyordu (ölçüldü). Sol sütun geniş (sahibinin isteği: sağ özet
+   daha dar), 1,55 : 1; sağdaki özet dar sütunda da rahat. Çift sınıf: DirectoryExperience'taki oran kuralını
+   modül yükleme sırasından bağımsız ezsin. */
+.screenHero.screenHero[data-has-visual="true"] { grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); }
+@media (max-width:767px) { .screenHero.screenHero[data-has-visual="true"] { grid-template-columns:minmax(0,1fr); } }
+/* Sağ sütun: ayırıcı çizgi kapağın tam boyunda, içerik dikeyde ORTADA.
+   Üstte durunca fark (1440'ta 67 px) tek uca, puanın altına yığılıyordu;
+   germek ise bayrakla puan arasında boş bir oda açıyordu (denendi). */
+@media (min-width:768px) {
+  .screenHero.screenHero > :last-child { align-self:stretch; display:flex; flex-direction:column; justify-content:center; }
+}
 .flags { display:grid; gap:14px; min-width:0; }
 .dialLabel { font-size:12px; font-weight:600; letter-spacing:0; color:var(--text-muted); }
 .flagCounts { display:flex; flex-wrap:wrap; gap:10px 28px; }
@@ -25,7 +38,11 @@
 .flagState { flex:none; color:var(--st); font-size:12px; font-weight:650; }
 .flagList li.flagMore { justify-content:flex-start; background:none; padding:0 12px; min-height:0; color:var(--text-muted); font-size:12.5px; font-weight:550; }
 .flagEmpty { color:var(--text-body); font-size:14px; line-height:1.6; }
-.scoreLine { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:start; gap:14px; padding-top:14px; border-top:1px solid var(--line); }
+.scoreLine { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:start; gap:16px; padding-top:16px; border-top:1px solid var(--line); }
+/* Kapaktaki halka listedekinden büyük: puan kapağın hükmü, 46 px'te
+   bayrak sayaçlarının (40 px rakam) yanında sönük kalıyordu. */
+.scoreLine .mini { width:60px; }
+.scoreLine .mini b { font-size:18px; }
 .scoreCopy { display:grid; gap:6px; min-width:0; }
 .scoreHead { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; color:var(--text-strong); font-size:13px; font-weight:600; }
 .dialTrack { fill:none; stroke:var(--line); }
@@ -34,15 +51,13 @@
 .dialHint { color:var(--text-body); font-size:13px; line-height:1.6; }
 .dialCoverage { font-size:12px; color:var(--text-muted); }
 
-/* ---------- Kimlik şeridi ---------- */
-.identity { display:flex; align-items:center; gap:14px; margin-top:20px; min-width:0; }
-.identityName { min-width:0; display:grid; gap:2px; }
-.identityName strong { color:var(--text-strong); font-size:16px; font-weight:600; overflow-wrap:anywhere; }
-.identityName span { color:var(--text-muted); font-size:13px; }
-.facts { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,8.5rem),1fr)); gap:14px 24px; margin-top:20px; }
+/* ---------- Ölçüler ve bağlantılar (kimlik başlıkta: `lead` + `byline`) ---------- */
+.facts { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,8.5rem),1fr)); gap:14px 24px; margin-top:24px; padding-top:20px; border-top:1px solid var(--line-soft); }
 .facts > div { display:flex; flex-direction:column; gap:4px; min-width:0; }
 .facts dt { order:2; font-size:12px; color:var(--text-muted); }
-.facts dd { font-size:20px; line-height:1.2; letter-spacing:-.03em; font-weight:550; color:var(--text-strong); white-space:nowrap; font-variant-numeric:tabular-nums; }
+/* `tabular-nums` YOK: Schibsted'in tnum'u virgülü de rakam genişliğine
+   açıyor ve "351 ,60 $" okunuyordu. Tek başına duran ölçü hizalama istemez. */
+.facts dd { font-size:20px; line-height:1.2; letter-spacing:-.03em; font-weight:550; color:var(--text-strong); white-space:nowrap; }
 .links { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
 .link { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 13px; border:1px solid var(--line); border-radius:999px; color:var(--text-strong); font-size:13px; font-weight:550; transition:border-color .2s, color .2s; }
 .link:hover { border-color:var(--line-focus); color:var(--primary-ink); }
@@ -73,7 +88,7 @@
 .row + .row { border-top:1px solid var(--line-soft); }
 .rowName { color:var(--text-strong); font-size:14px; font-weight:550; }
 .rowRule { grid-column:1; color:var(--text-muted); font-size:12.5px; line-height:1.5; }
-.rowValue { grid-column:2; grid-row:1; justify-self:end; color:var(--text-strong); font-size:15px; font-weight:600; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.rowValue { grid-column:2; grid-row:1; justify-self:end; color:var(--text-strong); font-size:15px; font-weight:600; white-space:nowrap; } /* tnum yok: virgül ("%24,5") açılıyordu, bkz. .facts dd */
 .rowValue[data-empty="true"] { color:var(--text-muted); font-weight:450; }
 .rowStatus { grid-column:2; grid-row:2; justify-self:end; }
 .status { display:inline-flex; align-items:center; gap:6px; padding:3px 9px 3px 8px; border-radius:999px; background:var(--st-wash); color:var(--st); font-size:12px; font-weight:650; white-space:nowrap; }

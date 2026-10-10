@@ -144,10 +144,8 @@ export default async function GuideArticlePage(
           { name: article.title, path: `/rehber/${article.slug}` },
         ]}
       />
-      {/* Mercek yazılarıyla aynı denetim satırı: solda listeye çıkış, sağda
-          paylaşım. Rehber yazıları sitenin en çok paylaşılabilir metinleri —
-          bir kavramı anlatıyorlar ve bağlantısı bir cevap olarak
-          gönderiliyor. */}
+      {/* Mercek yazılarıyla aynı denetim satırı: listeye çıkış. Paylaşım
+          kapağın künye satırında (gerekçe mercek yazısında). */}
       <div className={detail.utility}>
         <Link
           href="/rehber"
@@ -156,11 +154,6 @@ export default async function GuideArticlePage(
           <ArrowLeft weight="bold" size={13} />
           {t.guide.backToList}
         </Link>
-        <ShareButton
-          url={absoluteUrl(`/rehber/${article.slug}`, locale)}
-          title={article.title}
-          labels={t.share}
-        />
       </div>
 
       <SpotlightCard className={detail.coverSurface}>
@@ -182,6 +175,15 @@ export default async function GuideArticlePage(
                   </span>
                 </p>
               </div>
+              {/* Rehber yazıları sitenin en çok paylaşılan metinleri — bir
+                  kavramı anlatıyorlar ve bağlantısı bir cevap olarak
+                  gönderiliyor. Düğme künyenin sağında, manşetin üstünde. */}
+              <ShareButton
+                url={absoluteUrl(`/rehber/${article.slug}`, locale)}
+                title={article.title}
+                labels={t.share}
+                className="-mr-2.5 ml-auto self-start"
+              />
             </div>
             <h1 data-ink="lines" className={detail.title}><span className="ink-line">{article.title}</span></h1>
             <p className={detail.dek}>{article.dek}</p>

@@ -111,7 +111,10 @@ export default async function ScreenReportPage(props: PageProps<"/hisse-secimi/[
     <MotionExperience className={directory.page}>
       <ScrollProgress />
       <DirectoryHeader
+        className={styles.screenHero}
         title={S.reportTitle.replace("{symbol}", symbol)}
+        lead={<LogoTile symbol={symbol} logoUrl={data.logoUrl} size="2xl" />}
+        byline={industry ? `${data.name} · ${industry}` : data.name}
         description={S.reportSubtitle.replace("{name}", data.name)}
         share={
           <span className="inline-flex items-center gap-2">
@@ -128,13 +131,6 @@ export default async function ScreenReportPage(props: PageProps<"/hisse-secimi/[
           />
         }
       >
-        <div className={styles.identity}>
-          <LogoTile symbol={symbol} logoUrl={data.logoUrl} size="md" />
-          <div className={styles.identityName}>
-            <strong>{data.name}</strong>
-            <span>{industry ? `${symbol} · ${industry}` : symbol}</span>
-          </div>
-        </div>
         <dl className={styles.facts}>
           {facts.map((fact) => (
             <div key={fact.label}>

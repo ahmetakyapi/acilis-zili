@@ -20,6 +20,26 @@
  .heroTitle[data-title-share] > :global(.page-title-actions) { display:contents; }
  .heroTitle[data-title-share] [data-header-control] { grid-column:1 / -1; grid-row:2; justify-self:end; }
 }
+/* Kimlikli başlık (`lead` + `byline`): logo iki satırı (başlık + künye)
+   birden kaplar ve bloğun dikey ortasında durur; künye başlık metninin
+   hizasında. Logo yalnız başlık satırında durunca telefonda künye logonun
+   ALTINA iniyor, arada boşluk açılıyordu (390, ölçüldü). */
+.heroLead { --lead-w:92px; display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:6px 20px; flex:1 1 auto; width:100%; min-width:0; container-type:inline-size; }
+@media (max-width:767px) { .heroLead { --lead-w:66px; column-gap:14px; } .heroLead > :first-child { width:52px; height:52px; } }
+/* Kimlikli başlık TEK SATIR (sahibinin isteği, 10 Ekim): telefonda "GOOGL
+   Kural / Kontrolü" diye kırılması tuhaf duruyordu. Punto kalan genişliğe
+   göre küçülür, sayfa başlığı ölçüsünü aşmaz. 10,2 = en uzun başlığın
+   ("GOOGL Kural Kontrolü") em cinsinden genişliği + pay (1440'ta 56 px'te
+   551 px ölçüldü); `--lead-w` = logo + aralık (72+20, telefonda 52+14). `container-type` kutuyu
+   içeriğinden bağımsız ölçtüğü için `width:100%` ŞART — yoksa esnek satırda
+   sıfıra iner ve başlık üç satıra kırılır (ilk denemede ölçüldü). */
+/* Üçlü sınıf: global `.page-heading-copy.page-heading-copy h1` (0,2,1) ve
+   telefondaki `.hero h1` puntoyu sabitliyor; bu kural ikisini de geçmeli. */
+.heroLead.heroLead.heroLead h1 { font-size:min(var(--heading-page), calc((100cqi - var(--lead-w)) / 10.2)); }
+.heroLead > :first-child { grid-row:span 2; }
+.heroLead > .byline { grid-column:2; align-self:start; }
+.heroLead > h1 { align-self:end; }
+.byline { color:var(--text-muted); font-size:14px; font-weight:500; line-height:1.4; overflow-wrap:anywhere; }
 .description { max-width:52ch; color:var(--text-body); font-size:15px; line-height:1.7; text-wrap:pretty; }
 /* Paylaş düğmesi açıklamanın ardında (`PageShare`, 30 Eylül). Düğme kendi
    dolgusunu taşıdığı için sol kenar metinle hizalansın diye −8 piksel. */

@@ -479,6 +479,9 @@ const LOGO_TILE_SIZE = {
   md: { box: "size-8 rounded-md", px: 32 },
   lg: { box: "size-11 rounded-lg", px: 44 },
   xl: { box: "size-14 rounded-lg", px: 56 },
+  /* Kimlikli sayfa başlığı (`DirectoryHeader` → `lead`): 56 px, 56 puntoluk
+     başlık + künye bloğunun (≈90 px) yanında küçük kalıyordu (10 Ekim). */
+  "2xl": { box: "size-[72px] rounded-xl", px: 72 },
 } as const;
 
 export type LogoTileSize = keyof typeof LOGO_TILE_SIZE;
