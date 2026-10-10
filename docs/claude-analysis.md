@@ -121,3 +121,26 @@ en çok üç.
 Rapordan Bugüne). Satır `/hisse-secimi/SYM?rapor=<id>` açar; panel kimliği adresten
 okur, başka dilde üretilmiş raporu `GET ?id=` ile ister. Menü satırı yalnız erişimi
 açık hesapta (`hasAnalysisAccess`, tek birincil anahtar okuması).
+
+## Claude Sayfası ve İki Odak
+
+`/claude/[symbol]` (`app/(app)/claude/[symbol]/page.tsx`): iki odak kartı, üç sekme
+(`?odak=teknik|secim`, `?sekme=rapor|yeni|gecmis`, `?rapor=<id>`).
+- **İki ayrı rapor.** Odak `horizon` sütununda taşınır (yeni sütun yok): `short` =
+  Teknik Odak (1–4 hafta; fiyat, seviyeler, momentum), `medium` = Hisse Seçimi Odağı
+  (3–6 ay; büyüme, kârlılık, sağlık, değerleme, sahiplik; teknik yalnız zamanlama).
+  Prompttaki `<focus>` bölümü ağırlığı ve sırayı değiştirir; ekran da sırayı
+  değiştirir (seçimde Şirket Karnesi önde, teknikte Fiyat Haritası).
+- **Okuma herkese, üretim kişiye.** `listSymbolReports` hissenin tüm tamamlanmış
+  raporlarını üreten kimliği olmadan verir (yalnız okuyanın kendi raporuna rozet).
+  Üretim yetki + kota ister.
+- **Bugün rapor varsa** Yeni Analiz sekmesi uyarır ve raporu açar; düğme tek basışla
+  yine çalışır ("Yine de Yeni Analiz Oluştur").
+- **Kısa film** (`AnalysisFilm`): hissenin son 60 mumu, ortalamaları, son haber
+  başlıkları ve terazi; sonuç gelince perde, ardından rapor sekmesi.
+- **Yatırımcı okuması:** kapakta rapor yaşı, Senaryo Durumu (şu anki fiyat tetiklere
+  göre; günlük kapanışla teyit), vade içindeki bilanço; senaryo ekseninde tetiklere
+  uzaklık, ATR katı ve Getiri / Risk oranı (`triggerMath`). Tavsiye değil, koşullu okuma.
+- Haber başlığı raporun dilinde (`news[].title`, model çevirir; özgünü ipucunda).
+- Hisse Seçimi ve Teknik sayfalarında yalnız `ClaudeCta` (son raporun özeti ya da
+  üretim düğmesi); eski gömülü panel kaldırıldı.

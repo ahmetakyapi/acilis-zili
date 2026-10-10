@@ -41,15 +41,14 @@ try {
   assert.equal((await fetch(`${base}/api/ai/analysis`, { method: "POST", headers: { ...authorized, origin: "https://untrusted.invalid", "content-type": "application/json" }, body: "{}" })).status, 403);
   console.log("Unauthenticated access and cross-origin generation: rejected.");
   phase = "page visibility";
-  for (const path of ["/hisse-secimi/NVDA", "/teknik/nvda"]) {
-    const paidPage = await fetch(`${base}${path}`, { headers: authorized });
-    assert.equal(paidPage.status, 200);
-    assert((await paidPage.text()).includes("data-ai-analysis"));
-    const freePage = await fetch(`${base}${path}`, { headers });
-    assert.equal(freePage.status, 200);
-    assert(!(await freePage.text()).includes("data-ai-analysis"));
+  // Raporları herkes okur; üretim düğmesi yalnız yetkili hesapta (Yeni Analiz sekmesi).
+  for (const path of ["/hisse-secimi/NVDA", "/teknik/nvda", "/claude/NVDA"]) {
+    assert.equal((await fetch(`${base}${path}`, { headers: authorized })).status, 200);
+    assert.equal((await fetch(`${base}${path}`, { headers })).status, 200);
   }
-  console.log("Both stock pages: authorized panel present, free pages unchanged.");
+  assert((await (await fetch(`${base}/claude/NVDA?sekme=yeni`, { headers: authorized })).text()).includes("data-claude-generate"));
+  assert(!(await (await fetch(`${base}/claude/NVDA?sekme=yeni`, { headers })).text()).includes("data-claude-generate"));
+  console.log("Stock pages and the Claude page open for everyone; the generate button only for the owner.");
   if (process.env.VERIFY_PAID_ANALYSIS === "1") {
     phase = "paid Claude generation";
     const requestId = randomUUID();
@@ -67,6 +66,7 @@ try {
     assert(VERDICTS.has(output.verdict) && isScore(output.overallScore) && isScore(output.technicalScore));
     assert(output.newsScore === null || isScore(output.newsScore));
     assert(output.summary && output.reasons.length && output.risks.length && output.invalidation);
+    assert(output.news.every((n) => typeof n.title === "string" && n.title.length > 0));
     assert(["low", "medium", "high"].includes(output.confidence) && output.watch.length > 0 && output.takeaways.length > 0);
     // Tetik seviyesi ya null ya da raporun kendi seviyelerinden biri (snapLevel); grafik buna dayanıyor.
     assert(report.result.pricePath?.chart.length > 1 && typeof report.result.quotePrice === "number");

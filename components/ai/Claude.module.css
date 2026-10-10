@@ -1,0 +1,81 @@
+/* Claude Analizi sayfası, Yeni Analiz sekmesi ve hisse sayfalarındaki giriş kartı.
+   Derinlik tonla; renk yalnız kararda (AL yeşil, SAT kırmızı, TUT mavi mürekkep). */
+
+/* ---- Kimlik şeridi ---- */
+.identity { display:flex; flex-wrap:wrap; align-items:center; gap:14px 18px; }
+.identityText { display:grid; gap:2px; min-width:0; }
+.identitySymbol { font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--text-strong); }
+.identityName { font-size:14px; color:var(--text-muted); }
+.identityLinks { display:flex; flex-wrap:wrap; gap:4px 18px; margin-left:auto; font-size:14px; }
+.identityLinks a { display:inline-flex; align-items:center; min-height:44px; color:var(--text-body); text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:4px; }
+.identityLinks a:hover { color:var(--text-strong); }
+
+/* ---- Odak kartları: iki rapor türü, seçili olan zeminle ---- */
+.focusRow { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.focusCard { position:relative; display:grid; align-content:start; gap:6px; min-height:112px; padding:18px 20px; border-radius:18px; background:var(--premium-surface); border:1px solid var(--line); overflow:hidden; transition:background-color 220ms, border-color 220ms; }
+.focusCard::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--line-strong); scale:0 1; transform-origin:left; transition:scale 420ms var(--ease-brand); }
+.focusCard:hover { border-color:var(--line-strong); }
+.focusCard[aria-current="true"] { background:var(--surface-sunken); border-color:transparent; }
+.focusCard[aria-current="true"]::before { scale:1 1; background:var(--primary); }
+.focusCard:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+.focusName { font-size:var(--text-title); font-weight:700; letter-spacing:-.025em; color:var(--text-strong); }
+.focusHint { font-size:13.5px; line-height:1.55; color:var(--text-body); max-width:42em; }
+.focusLatest { margin-top:4px; font-size:13px; color:var(--text-muted); }
+.focusLatest b { font-weight:750; color:var(--text-strong); }
+[data-verdict="buy"] > .focusLatest b { color:var(--up); }
+[data-verdict="sell"] > .focusLatest b { color:var(--down); }
+[data-verdict="hold"] > .focusLatest b { color:var(--primary-ink); }
+.tabs { margin-bottom:-8px; }
+
+.reportWrap { display:grid; gap:14px; min-width:0; }
+.createdAt { font-size:13px; color:var(--text-muted); }
+
+/* ---- Yeni Analiz ---- */
+.workbench { display:grid; gap:16px; }
+.launch { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:20px 32px; align-items:center; padding:clamp(20px,3vw,32px); border-radius:22px; background:var(--surface-sunken); }
+.launchTitle { margin-top:6px; font-size:clamp(1.5rem,2.6vw,2rem); font-weight:750; letter-spacing:-.04em; color:var(--text-strong); }
+.launchHint { margin-top:6px; max-width:44em; font-size:14.5px; line-height:1.6; color:var(--text-body); }
+.launchAction { display:grid; justify-items:end; gap:10px; }
+.launchButton { min-height:52px; padding-inline:28px; font-size:16px; }
+.quota { font-size:13px; color:var(--text-muted); }
+.quota b { color:var(--text-strong); }
+.today { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px 20px; padding:14px 18px; border-radius:16px; background:var(--brass-wash); color:var(--brass-ink); }
+.today strong { display:block; font-size:15px; font-weight:700; }
+.today p { margin-top:2px; font-size:14px; line-height:1.55; }
+.error { padding:12px 16px; border-radius:14px; background:var(--down-wash); color:var(--down); font-size:14px; }
+
+/* ---- Geçmiş ---- */
+.history { display:grid; gap:8px; }
+.historyRow { display:grid; grid-template-columns:44px minmax(70px,auto) minmax(0,1fr) auto auto; gap:16px; align-items:center; min-height:64px; padding:10px 16px; border-radius:16px; background:var(--premium-surface); border:1px solid var(--line); transition:background-color 200ms, border-color 200ms; }
+.historyRow:hover { border-color:var(--line-strong); background:var(--surface-sunken); }
+.historyVerdict { font-size:17px; font-weight:800; letter-spacing:-.03em; color:var(--text-strong); }
+[data-verdict="buy"] > .historyVerdict { color:var(--up); }
+[data-verdict="sell"] > .historyVerdict { color:var(--down); }
+[data-verdict="hold"] > .historyVerdict { color:var(--primary-ink); }
+.historyFocus { font-size:14px; font-weight:600; color:var(--text-body); }
+.historyDate { font-size:13px; color:var(--text-muted); }
+.historyTags { display:flex; gap:6px; font-family:var(--font-mono); font-size:11.5px; color:var(--text-muted); }
+.historyTags b { font-family:var(--font-sans); padding:2px 8px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-weight:650; }
+
+/* ---- Hisse sayfalarındaki giriş kartı: tek satır ---- */
+.cta { display:flex; align-items:center; gap:16px; padding:14px 18px; border-radius:18px; background:var(--premium-surface); border:1px solid var(--line); }
+.ctaMark { display:grid; place-items:center; width:52px; height:52px; border-radius:16px; background:var(--surface-sunken); color:var(--primary-ink); font-size:20px; font-weight:800; }
+.ctaBody { display:grid; gap:3px; min-width:0; flex:1; }
+.ctaLine { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; font-size:13.5px; color:var(--text-muted); }
+.ctaVerdict { font-size:20px; font-weight:800; letter-spacing:-.03em; color:var(--text-strong); }
+.cta[data-verdict="buy"] .ctaVerdict { color:var(--up); }
+.cta[data-verdict="sell"] .ctaVerdict { color:var(--down); }
+.cta[data-verdict="hold"] .ctaVerdict { color:var(--primary-ink); }
+
+@media(max-width:767px) {
+  .focusRow { grid-template-columns:minmax(0,1fr); }
+  .launch { grid-template-columns:minmax(0,1fr); }
+  .launchAction { justify-items:stretch; }
+  .launchButton { width:100%; }
+  .identityLinks { margin-left:0; width:100%; }
+  .historyRow { grid-template-columns:44px minmax(0,1fr) auto; gap:4px 12px; }
+  .historyFocus,.historyDate { grid-column:2 / -1; }
+  .historyTags { grid-column:3; grid-row:1; }
+  .cta { flex-wrap:wrap; }
+  .cta > :last-child { width:100%; }
+}

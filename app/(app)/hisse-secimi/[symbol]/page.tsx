@@ -1,4 +1,4 @@
-import { AnalysisSlot } from "@/components/ai/AnalysisSlot";
+import { ClaudeCta } from "@/components/ai/ClaudeCta";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -156,7 +156,7 @@ export default async function ScreenReportPage(props: PageProps<"/hisse-secimi/[
         </nav>
       </DirectoryHeader>
 
-      <AnalysisSlot symbol={symbol} locale={locale} />
+      <ClaudeCta symbol={symbol} locale={locale} focus="selection" />
       <CategoryPanel data={data} t={S} />
       <ChecksPanel data={data} locale={locale} t={S} />
       <SidesPanel data={data} locale={locale} t={S} />

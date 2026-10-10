@@ -2,6 +2,7 @@
 import type { SavedAnalysis } from "@/lib/ai-analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { formatPercent, formatPrice } from "@/lib/utils";
+import { triggerMath } from "@/lib/ai-analysis-core";
 import { CountUp, InView } from "./InView";
 import styles from "./AnalysisVisuals.module.css";
 
@@ -44,9 +45,19 @@ export function ScenarioAxis({ result, t, locale }: { result: SavedAnalysis; t: 
       <span className={styles.axisBull} />
       <span className={styles.axisNow}><span>{t.now} · {money(price)}</span></span>
     </div>
+    {(() => {
+      const m = triggerMath(price, bullLevel, bearLevel, result.snapshot.atr14);
+      if (!m) return null;
+      const atr = (v: number | null) => v === null ? "" : ` · ${formatPrice(v, locale, { digits: 1 })} ATR`;
+      return <dl className={styles.axisMath}>
+        <div><dt>{t.toBear}</dt><dd className="figure" data-tone="down">{formatPercent(m.downPct, locale, 1)}{atr(m.downAtr)}</dd></div>
+        <div><dt>{t.ratioTitle}</dt><dd className="figure">{m.ratio === null ? "—" : formatPrice(m.ratio, locale, { digits: 2 })}</dd></div>
+        <div><dt>{t.toBull}</dt><dd className="figure" data-tone="up">{formatPercent(m.upPct, locale, 1)}{atr(m.upAtr)}</dd></div>
+      </dl>;
+    })()}
     <div className={styles.axisEnds} aria-hidden>
-      <span data-tone="down"><b className="figure">{money(bearLevel)}</b>{t.toBear} {formatPercent((bearLevel / price - 1) * 100, locale, 1)}</span>
-      <span data-tone="up"><b className="figure">{money(bullLevel)}</b>{t.toBull} {formatPercent((bullLevel / price - 1) * 100, locale, 1)}</span>
+      <span data-tone="down"><b className="figure">{money(bearLevel)}</b>{t.bear}</span>
+      <span data-tone="up"><b className="figure">{money(bullLevel)}</b>{t.bull}</span>
     </div>
   </InView>;
 }
@@ -115,4 +126,36 @@ export function ReturnBars({ result, t, locale }: { result: SavedAnalysis; t: T;
       </li>;
     })}
   </InView>;
+}
+
+const PERCENT_METRICS = new Set(["salesGrowthQ", "epsGrowthQ", "grossMargin", "operatingMargin", "buyShareNow", "upside"]);
+/** Büyüme ve potansiyel yön taşır (işaret rengi); marj ve oranlar büyüklüktür, renksiz. */
+const SIGNED_METRICS = new Set(["salesGrowthQ", "epsGrowthQ", "upside"]);
+const SCORECARD_METRICS = ["salesGrowthQ", "epsGrowthQ", "grossMargin", "operatingMargin", "forwardPE", "debtToEquity", "buyShareNow", "upside"] as const;
+
+/** Şirket Karnesi: seçim motorunun altı kategorisi şerit olarak, altında raporun dayandığı sekiz ölçü. */
+export function CompanyScorecard({ result, t, locale, categoryNames }: { result: SavedAnalysis; t: T; locale: Locale; categoryNames: Record<string, string> }) {
+  const categories = result.categories?.filter(c => c.category !== "gate") ?? [];
+  const f = result.fundamentals ?? {};
+  const metrics = SCORECARD_METRICS.filter(key => typeof f[key] === "number");
+  if (!categories.length && !metrics.length) return null;
+  return <div className={styles.scorecard}>
+    {categories.length > 0 && <InView as="ul" className={styles.categories}>
+      {categories.map((c, i) => <li key={c.category} style={{ "--i": i } as React.CSSProperties}>
+        <span className={styles.catName}>{categoryNames[c.category] ?? c.category}<small>%{c.weight}</small></span>
+        <span className={styles.track} aria-hidden>{c.score !== null && <span className={styles.trackFill} style={{ width: `${c.score}%` }} />}</span>
+        <span className={`figure ${styles.catScore}`}>{c.score === null ? "—" : <CountUp value={c.score} />}</span>
+      </li>)}
+    </InView>}
+    {metrics.length > 0 && <InView as="dl" className={styles.metrics}>
+      {metrics.map((key, i) => {
+        const value = f[key] as number;
+        const tone = SIGNED_METRICS.has(key) ? (value >= 0 ? "up" : "down") : undefined;
+        return <div key={key} style={{ "--i": i } as React.CSSProperties} data-tone={tone}>
+          <dt>{t.scorecard.metrics[key]}</dt>
+          <dd className="figure">{PERCENT_METRICS.has(key) ? formatPercent(value, locale, 1).replace(/^\+/, SIGNED_METRICS.has(key) ? "+" : "") : formatPrice(value, locale, { digits: 1 })}</dd>
+        </div>;
+      })}
+    </InView>}
+  </div>;
 }

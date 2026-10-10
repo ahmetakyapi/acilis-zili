@@ -2,6 +2,14 @@ import { z } from "zod";
 import { etParts } from "./market-hours";
 import type { Bar } from "./providers/types";
 
+/**
+ * İki ayrı rapor: vade alanı ODAĞI da taşır (veritabanında `horizon`, yeni sütun yok).
+ * `short` = Teknik Odak (1–4 hafta: fiyat, seviyeler, momentum),
+ * `medium` = Hisse Seçimi Odağı (3–6 ay: iş kalitesi, büyüme, değerleme; teknik yalnız zamanlama).
+ */
+export const FOCUS_OF = { short: "technical", medium: "selection" } as const;
+export const HORIZON_OF = { technical: "short", selection: "medium" } as const;
+export type AnalysisFocus = (typeof FOCUS_OF)[keyof typeof FOCUS_OF];
 export const AnalysisInput = z.object({
   requestId: z.uuid(),
   symbol: z.string().trim().toUpperCase().regex(/^[A-Z][A-Z0-9.-]{0,9}$/),
@@ -29,13 +37,15 @@ export const AnalysisOutput = z.object({
   watch: z.array(z.string().min(1).max(400)).min(1).max(4).describe("One to three short, concrete things to watch within the horizon (a level, a scheduled report, a news thread)."),
   news: z.array(z.object({
     sourceIndex: z.number().int().min(0).describe("sourceIndex of a supplied news item."),
+    title: z.string().min(1).max(300).describe("The story's headline rendered in request.language, faithful to the original, under 110 characters."),
     impact: prose.describe("How this story bears on the horizon."),
   })).max(8),
 });
 export type AnalysisResult = z.infer<typeof AnalysisOutput>;
 /** Kayıtlı rapor: 11 Ekim 2026 öncesi raporlarda güven, tetik seviyeleri ve izleme listesi yok. */
-export type StoredAnalysisResult = Omit<AnalysisResult, "confidence" | "bullLevel" | "bearLevel" | "watch" | "takeaways">
-  & Partial<Pick<AnalysisResult, "confidence" | "bullLevel" | "bearLevel" | "watch" | "takeaways">>;
+export type StoredAnalysisResult = Omit<AnalysisResult, "confidence" | "bullLevel" | "bearLevel" | "watch" | "takeaways" | "news">
+  & Partial<Pick<AnalysisResult, "confidence" | "bullLevel" | "bearLevel" | "watch" | "takeaways">>
+  & { news: { sourceIndex: number; impact: string; title?: string }[] };
 /** Modelin seviyesi sağlanan seviyelerden birine %0,5 içinde oturmuyorsa uydurmadır, atılır. */
 const LEVEL_TOLERANCE = 0.005;
 export function snapLevel(value: number | null, levels: readonly number[]): number | null {
@@ -47,7 +57,7 @@ export function snapLevel(value: number | null, levels: readonly number[]): numb
   return best;
 }
 /** Var olmayan ya da tekrarlanan haber atfını atar; haber yoksa haber puanı da yoktur. */
-export function repairNewsCitations<T extends Pick<AnalysisResult, "news" | "newsScore">>(output: T, newsCount: number): T {
+export function repairNewsCitations<T extends { news: { sourceIndex: number }[]; newsScore: number | null }>(output: T, newsCount: number): T {
   const cited = new Set<number>();
   const news = output.news.filter(n => {
     if (n.sourceIndex >= newsCount || cited.has(n.sourceIndex)) return false;
@@ -143,3 +153,27 @@ export function selectNews<T extends NewsCandidate>(items: readonly T[], symbol:
   return picked.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
 }
 export type PricePath = NonNullable<ReturnType<typeof pricePath>>;
+
+export type ScenarioStatus = "aboveBull" | "between" | "belowBear";
+/** Şu anki fiyat tetiklere göre nerede. Gün içi fiyattır; senaryo günlük KAPANIŞLA teyit edilir (ekran bunu yazar). */
+export function scenarioStatus(price: number, bull: number | null | undefined, bear: number | null | undefined): ScenarioStatus | null {
+  if (typeof bull === "number" && price > bull) return "aboveBull";
+  if (typeof bear === "number" && price < bear) return "belowBear";
+  return typeof bull === "number" || typeof bear === "number" ? "between" : null;
+}
+
+/** Vadenin gün karşılığı: bilanço bu pencereye düşüyorsa olay riski. */
+export const HORIZON_DAYS = { short: 28, medium: 182 } as const;
+const DAY_MS = 86_400_000;
+export const daysSince = (iso: string, now = new Date()) => Math.max(0, Math.floor((now.getTime() - new Date(iso).getTime()) / DAY_MS));
+
+/** Tetiklere uzaklık, ATR katı ve oran: "seviyeler ne kadar aralıklı" sorusu, tavsiye değil. */
+export function triggerMath(price: number, bull: number | null | undefined, bear: number | null | undefined, atr: number | null) {
+  if (typeof bull !== "number" || typeof bear !== "number" || price <= 0) return null;
+  const up = bull - price, down = price - bear;
+  return {
+    upPct: (up / price) * 100, downPct: (-down / price) * 100,
+    upAtr: atr ? up / atr : null, downAtr: atr ? down / atr : null,
+    ratio: down > 0 && up > 0 ? up / down : null,
+  };
+}

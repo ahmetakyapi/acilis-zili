@@ -15,6 +15,8 @@ const Y_PAD = 0.06;
 const LABEL_GAP = 7;
 /** Ortalama, grafiğin fiyat bandından bu kadar uzaksa çizilmez; ölçeği ezerdi. */
 const FAR_LEVEL = 0.12;
+/** Alan dolgusu Sparkline ile aynı: düz, %8,5 (veri panelinde degrade yok). */
+const AREA_OPACITY = 0.085;
 
 /**
  * Raporun ANA GÖRSELİ: son 3 ayın kapanışı ve raporun dayandığı seviyeler.
@@ -69,15 +71,9 @@ export function PriceMap({ result, t, locale }: { result: SavedAnalysis; t: Dict
     <InView as="figure" className={styles.mapFigure}>
       <div className={styles.chart} role="img" aria-label={`${t.priceMap}: ${t.now} ${formatPrice(price, locale, { currency: true })}`}>
         <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} preserveAspectRatio="none" className={styles.chartSvg} aria-hidden>
-          <defs>
-            <linearGradient id="ai-map-area" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor={stroke} stopOpacity="0.16" />
-              <stop offset="1" stopColor={stroke} stopOpacity="0" />
-            </linearGradient>
-          </defs>
           {levels.map((level, i) => <line key={level.key} x1={0} x2={VIEW_W} y1={yPct(level.value) / 100 * VIEW_H} y2={yPct(level.value) / 100 * VIEW_H}
             className={styles.levelLine} data-tone={level.tone} style={{ animationDelay: `${500 + i * 70}ms` }} vectorEffect="non-scaling-stroke" />)}
-          <polygon points={`0,${VIEW_H} ${line} ${VIEW_W},${VIEW_H}`} className={styles.chartArea} fill="url(#ai-map-area)" />
+          <polygon points={`0,${VIEW_H} ${line} ${VIEW_W},${VIEW_H}`} className={styles.chartArea} style={{ fill: stroke }} fillOpacity={AREA_OPACITY} />
           <polyline points={line} className={styles.chartLine} style={{ stroke }} vectorEffect="non-scaling-stroke" />
         </svg>
         <span className={styles.nowDot} style={{ top: `${yPct(price)}%`, background: stroke, color: stroke }} aria-hidden />

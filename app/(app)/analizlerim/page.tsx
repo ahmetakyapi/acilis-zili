@@ -73,14 +73,14 @@ export default async function AnalysesPage() {
           const now = live[row.symbol]?.price;
           const since = now && row.reportPrice ? (now / row.reportPrice - 1) * 100 : null;
           return <li key={row.id}>
-            <Link href={`/hisse-secimi/${encodeURIComponent(row.symbol)}?rapor=${row.id}`} className={styles.row} data-verdict={verdict}>
+            <Link href={`/claude/${encodeURIComponent(row.symbol)}?sekme=rapor&rapor=${row.id}`} className={styles.row} data-verdict={verdict}>
               <span className={styles.stock}>
                 <span className={styles.symbol}>{row.symbol}</span>
                 <span className={styles.name}>{names[row.symbol]?.name ?? ""}</span>
               </span>
               <span className={styles.verdict}><small>{P.verdict}</small>{A.verdicts[verdict]}</span>
               <span className={styles.score}><small>{P.score}</small>{row.score ?? "—"}</span>
-              <span className={styles.meta}><small>{P.horizon}</small>{row.horizon === "medium" ? A.medium : A.short}</span>
+              <span className={styles.meta}><small>{A.focus.label}</small>{row.horizon === "medium" ? A.focus.selection : A.focus.technical}</span>
               <span className={styles.meta}><small>{P.date} · TR</small>{date(row.generatedAt)}</span>
               <span className={styles.since}><small>{A.sinceReport}</small>{since === null ? "—" : <ChangePill changePct={since} locale={locale} size="sm" />}</span>
               <span className="sr-only">{P.open}</span>

@@ -91,3 +91,29 @@ li[data-tone="down"] .returnPlot > span { top:50%; background:var(--down); trans
   .axisNow,.trend li { opacity:1 !important; translate:0 0 !important; animation:none !important; }
   .needle { rotate:var(--deg) !important; animation:none !important; }
 }
+
+/* ---- Şirket Karnesi ---- */
+.scorecard { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:clamp(1rem,2.5vw,2rem); align-items:start; }
+.categories { display:grid; gap:14px; padding:20px 22px; border-radius:20px; background:var(--premium-surface); border:1px solid var(--line); }
+.categories li { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1.6fr) 36px; gap:14px; align-items:center; }
+.catName { font-size:14px; font-weight:600; color:var(--text-strong); }
+.catName small { margin-left:6px; font-size:11.5px; font-weight:500; color:var(--text-muted); }
+.catScore { text-align:right; font-size:16px; font-weight:700; color:var(--text-strong); }
+.metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.metrics > div { display:grid; gap:6px; padding:14px 16px; border-radius:14px; background:var(--surface-sunken); opacity:0; translate:0 8px; }
+[data-inview].metrics > div { animation:metric-in 520ms var(--ease-brand) calc(var(--i,0) * 60ms) forwards; }
+@keyframes metric-in { to { opacity:1; translate:0 0; } }
+.metrics dt { font-size:12px; color:var(--text-muted); }
+.metrics dd { margin:0; font-size:20px; font-weight:650; letter-spacing:-.03em; color:var(--text-strong); }
+.metrics [data-tone="up"] dd { color:var(--up); }
+.metrics [data-tone="down"] dd { color:var(--down); }
+@media(max-width:899px) { .scorecard { grid-template-columns:minmax(0,1fr); } }
+@media (prefers-reduced-motion: reduce) { .metrics > div { opacity:1 !important; translate:0 0 !important; animation:none !important; } }
+.axisMath { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; padding-top:12px; border-top:1px solid var(--line-soft); }
+.axisMath > div { display:grid; gap:2px; }
+.axisMath > div:nth-child(2) { text-align:center; }
+.axisMath > div:last-child { text-align:right; }
+.axisMath dt { font-size:11.5px; color:var(--text-muted); }
+.axisMath dd { margin:0; font-size:14px; font-weight:650; color:var(--text-strong); }
+.axisMath [data-tone="up"] { color:var(--up); }
+.axisMath [data-tone="down"] { color:var(--down); }

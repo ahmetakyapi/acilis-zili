@@ -17,11 +17,13 @@ const COUNT_MS = 900;
 export function InView<T extends ElementType = "div">({ as, ...props }: { as?: T } & ComponentPropsWithoutRef<T>) {
   const ref = useRef<HTMLElement>(null);
   const reduced = useMotionPreference();
-  // Gözlemcisi olmayan tarayıcı baştan görünür sayar; effect içinde eşzamanlı setState yok.
-  const [seen, setSeen] = useState(() => typeof IntersectionObserver === "undefined");
+  // İlk çizimde sunucu ile aynı (false): sunucuda gözlemci yok, ilk değeri ona bağlamak hidrasyon farkı yapıyordu.
+  const [seen, setSeen] = useState(false);
   useEffect(() => {
     const node = ref.current;
     if (!node || seen) return;
+    // Gözlemcisi olmayan tarayıcı görünür sayar; ertelenmiş geri çağrıda, effect gövdesinde eşzamanlı setState yok.
+    if (typeof IntersectionObserver === "undefined") { const id = setTimeout(() => setSeen(true)); return () => clearTimeout(id); }
     const observer = new IntersectionObserver(entries => {
       if (entries.some(e => e.isIntersecting)) { setSeen(true); observer.disconnect(); }
     }, { threshold: THRESHOLD });

@@ -37,7 +37,7 @@ yazılar, bilanço analizleri ve günde üç kez yenilenen teknik analizler.
 
 <table>
 <tr>
-<td align="center"><b>50</b><br><sub>sayfa rotası</sub></td>
+<td align="center"><b>51</b><br><sub>sayfa rotası</sub></td>
 <td align="center"><b>24</b><br><sub>API ucu</sub></td>
 <td align="center"><b>22</b><br><sub>veritabanı tablosu</sub></td>
 <td align="center"><b>5</b><br><sub>veri sağlayıcısı</sub></td>
@@ -542,7 +542,7 @@ saklanmıyor (`private, no-store`).
 
 ## Ekranlar
 
-Rota listesinin **tek kaynağı** burası. 50 sayfa var: 41'i herkese açık
+Rota listesinin **tek kaynağı** burası. 51 sayfa var: 42'si herkese açık
 (ikisi başka sitelere gömülen parça), 9'u yönetim. Hepsi istek başına sunucuda çiziliyor. Her sayfa `/en/...` önekiyle
 İngilizce de açılıyor; önek sunucuda sökülüyor ve adres çubuğunda kalıyor.
 
@@ -557,7 +557,8 @@ Rota listesinin **tek kaynağı** burası. 50 sayfa var: 41'i herkese açık
 | `/karsilastir` | İki ile dört hisseden hangisi: aynı ölçekte normalize grafik + tek tablo; getiri USD, TL ya da Reel TL |
 | `/karsilastir/[pair]` | Yirmi küratörlü çift (`/karsilastir/nvda-amd`): aynı tahta, başlık ve "neden bu ikisi" paragrafıyla; canonical adres bu (`content/compare-pairs.ts`) |
 | `/hisse-secimi` | Bir hisse nasıl seçilir: eleme, büyüme, kârlılık, sağlık, fiyat gücü, sahiplik ve katalizör kuralları, kullanım adımları, teknik analiz listesinin puanları; sembol formu JS'siz (GET → yönlendirme) |
-| `/hisse-secimi/[symbol]` | Tek hissenin kural kontrolü: 22 kural sitenin verileriyle ölçülür, kategori puanları, uyum puanı ve bandı, güçlü/zayıf yanlar, sıradaki adımlar. Sabit kural raporuna ek olarak, yalnız yetkili hesaplarda istek üzerine Claude analizi (karar, güven, fiyat haritası, puan çizgileri, tetik seviyeli senaryolar; `components/ai/`) |
+| `/hisse-secimi/[symbol]` | Tek hissenin kural kontrolü: 22 kural sitenin verileriyle ölçülür, kategori puanları, uyum puanı ve bandı, güçlü/zayıf yanlar, sıradaki adımlar. Claude Görüşü kartı Hisse Seçimi Odağındaki son rapora ya da üretime götürür (`components/ai/ClaudeCta.tsx`) |
+| `/claude/[symbol]` | Claude bu hisse için ne diyor: iki ayrı rapor türü (Teknik Odak 1–4 hafta, Hisse Seçimi Odağı 3–6 ay), üç sekme (`?sekme=rapor\|yeni\|gecmis`, `?odak=teknik\|secim`, `?rapor=<id>`). Raporları herkes okur, üretim yetkili hesapta ve kişiye bağlı; bugün aynı odakta rapor varsa uyarır. Üretim sırasında hissenin mumları, ortalamaları ve haberleriyle kısa film. Dizine girmez |
 | `/tema` · `/tema/[slug]` | Tematik listeler (yapay zekâ, yarı iletkenler, katılım uyumlu…): üyeler, günün medyanı, ölçüt fonu (`content/themes.ts`, on tema) |
 | `/yatirimcilar` · `/yatirimcilar/[slug]` | Ünlü yatırımcılar kim ne tutuyor: portre mozaiği, çeyreğin ortak hareketleri ("META: 4 Artırdı"), yatırımcı kartları; detayda portföy haritası (alan değer, renk hareket), Yeni/Artırdı/Azalttı/Tamamen Sattı, tam pozisyon tablosu, opsiyonlar (dayanak değer), son sekiz çeyrek. Pelosi sayfası Kongre bildirimi: işlem ve bildirim tarihi, tutar aralığı, sahip, opsiyon ayrıntısı (`lib/investors.ts`, on altı kişi) |
 | `/makro` | ABD ekonomisi nerede: on bir FRED serisi (haftalık işsizlik başvuruları, perakende satışlar, M2, Sahm kuralı ve 10Y–3A faiz farkı eklendi), sonraki açıklama, Sonraki FOMC Kararı kartı |
@@ -600,7 +601,7 @@ Başlıkta Piyasalar'dan hemen sonra; mobilde Menü'den.
 ### Hesap
 
 `/giris` · `/kayit` · `/sifremi-unuttum` · `/sifre-sifirla` (e-postayla tek kullanımlık, 30 dakikalık bağlantı; yalnızca e-posta servisi bağlıyken — `lib/email.ts`, `lib/password-reset.ts`) · `/favoriler` (fiyatlar USD ya da TL; Fiyat Alarmları paneli — hedef hisse sayfasındaki zil düğmesiyle kurulur, siteyi açtığında ve seans boyunca beş dakikada bir sunucuda güncel fiyatla kontrol edilir, ana sayfada "Hedefe Ulaştı" şeridi; `lib/price-alerts.ts`, `lib/alert-sweep.ts`) · `/ayarlar` (profil
-ikonu ve rengi, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri — `lib/push.ts`, `public/sw.js` —, Verilerimi İndir, hesap silme) · `/analizlerim` (Claude ile üretilen kayıtlı raporlar; görüş, puan, vade ve Rapordan Bugüne fiyat değişimi, satır raporu hisse sayfasında `?rapor=` ile açar; yalnız analiz erişimi olan hesaplarda menüde, dizine girmez) · `/menu` · `/kvkk` ·
+ikonu ve rengi, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri — `lib/push.ts`, `public/sw.js` —, Verilerimi İndir, hesap silme) · `/analizlerim` (Claude ile üretilen kayıtlı raporlar; görüş, puan, vade ve Rapordan Bugüne fiyat değişimi, satır raporu `/claude/[symbol]?rapor=` ile açar; yalnız analiz erişimi olan hesaplarda menüde, dizine girmez) · `/menu` · `/kvkk` ·
 `/hakkinda` (Hakkında ve Metodoloji: kim yapıyor, sayılar nereden geliyor,
 yazıları kim yazıyor; gömme kodları da burada)
 

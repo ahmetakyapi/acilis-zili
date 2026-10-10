@@ -1,53 +1,14 @@
-/* Claude analizi: panel denetimleri + rapor. Rapor bilanço raporunun dilinde
+/* Claude analizi raporu (+ yönetim ekranının iki alanı). Rapor bilanço raporunun dilinde
    (components/earnings/EarningsReport.module.css): kapak → kısaca → bölümler.
    Rakamlarda `tabular-nums` YOK — Schibsted'de virgülü rakam genişliğine
    çekip "229 , 33 $" yazdırıyordu (11 Ekim ekran görüntüsü); `.figure` yeter. */
 
-.body { padding:0 20px 20px; display:grid; gap:20px; min-width:0; }
 .hint,.foot { color:var(--text-body); font-size:14px; line-height:1.65; }
-.controls { display:flex; flex-wrap:wrap; align-items:end; gap:12px 20px; }
+/* Yönetim ekranının (/admin/ai) alanları. */
 .field { display:grid; gap:7px; font-size:13px; color:var(--text-muted); min-width:0; }
 .select,.input { min-height:44px; max-width:100%; padding:9px 12px; border:1px solid var(--line-strong); border-radius:10px; color:var(--text-strong); background:var(--premium-surface); font:inherit; }
 .select:focus-visible,.input:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
-.quota { display:grid; gap:6px; padding-bottom:3px; font-size:12px; color:var(--text-muted); }
-.quota strong { color:var(--text-strong); font-size:18px; }
 .stamp { color:var(--text-muted); font-size:13px; line-height:1.6; }
-.sectionTitle { color:var(--text-strong); font-size:15px; font-weight:650; margin-bottom:12px; }
-
-/* Vade seçici: `Segment` ile aynı görünüm (bağlantı değil, düğme). */
-.segment { display:inline-flex; gap:2px; padding:3px; border-radius:999px; background:var(--surface-elevated); }
-.segmentItem { min-height:38px; padding:0 16px; border-radius:999px; font-size:14px; color:var(--text-body); transition:background-color 200ms, color 200ms; }
-.segmentItem[aria-checked="true"] { background:var(--surface); color:var(--text-strong); font-weight:600; }
-.segmentItem:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
-.segmentItem:disabled { opacity:.55; }
-
-/* ---- Bekleme: dört gerçek adım, sırayla ---- */
-.steps { display:grid; gap:12px; padding:16px 18px; border-radius:14px; background:var(--surface-sunken); }
-.steps ol { display:grid; gap:10px; }
-.steps li { display:flex; align-items:center; gap:12px; font-size:14px; color:var(--text-muted); transition:color 300ms; }
-.steps li[data-state="active"] { color:var(--text-strong); font-weight:600; }
-.steps li[data-state="done"] { color:var(--text-body); }
-.stepMark { position:relative; flex:none; width:16px; height:16px; border-radius:50%; border:1.5px solid var(--line-strong); transition:border-color 300ms, background-color 300ms; }
-li[data-state="active"] .stepMark { border-color:var(--primary); animation:step-pulse 1.4s var(--ease-brand) infinite; }
-li[data-state="done"] .stepMark { border-color:var(--primary); background:var(--primary); }
-li[data-state="done"] .stepMark::after { content:""; position:absolute; left:4.5px; top:1.5px; width:4px; height:8px; border:solid var(--on-primary); border-width:0 1.5px 1.5px 0; rotate:45deg; animation:step-check 260ms var(--ease-spring-soft) both; }
-@keyframes step-pulse { 0%,100% { box-shadow:0 0 0 0 var(--primary-wash); } 50% { box-shadow:0 0 0 5px var(--primary-wash); } }
-@keyframes step-check { from { scale:.4; opacity:0; } to { scale:1; opacity:1; } }
-
-/* ---- Kayıtlı raporlar: karar ve puan ilk bakışta ---- */
-.history { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:8px; }
-.history button { width:100%; min-height:64px; display:grid; grid-template-columns:1fr auto; gap:4px 10px; align-items:baseline; padding:11px 14px; border-radius:12px; background:var(--surface-sunken); text-align:left; transition:background-color 200ms; }
-.history button:hover { background:var(--primary-faint); }
-.history button[aria-pressed="true"] { background:var(--primary-tint); }
-.history button:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
-.historyVerdict { font-weight:750; color:var(--text-strong); font-size:15px; }
-[data-verdict="buy"] > .historyVerdict { color:var(--up); }
-[data-verdict="sell"] > .historyVerdict { color:var(--down); }
-[data-verdict="hold"] > .historyVerdict { color:var(--primary-ink); }
-.historyScore { font-weight:650; color:var(--text-strong); }
-.historyScore small { font-size:11px; color:var(--text-muted); font-weight:400; }
-.historyMeta { grid-column:1 / -1; font-size:12px; color:var(--text-muted); }
-.reportAnchor { scroll-margin-top:calc(var(--app-bar-h, 64px) + 16px); min-width:0; }
 
 /* ================= Rapor ================= */
 /* Dört kademe: rapor bölümleri clamp(2.5rem,5vw,4rem), bölüm içi clamp(1.25rem,2.5vw,2rem), kart 12–16 px. */
@@ -74,8 +35,15 @@ li[data-state="done"] .stepMark::after { content:""; position:absolute; left:4.5
 @keyframes word-rise { from { translate:0 105%; } to { translate:0 0; } }
 .verdictMeaning { max-width:24em; font-size:14px; line-height:1.55; color:var(--text-body); animation:fade-up 600ms var(--ease-brand) 380ms both; }
 .lead { grid-column:1 / -1; max-width:40em; padding-left:18px; border-left:3px solid var(--primary); font-size:clamp(1.08rem,1.45vw,1.28rem); line-height:1.6; font-weight:450; color:var(--text-strong); text-wrap:pretty; animation:fade-up 700ms var(--ease-brand) 300ms both; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+.chips li { padding:4px 10px; border-radius:999px; background:var(--premium-surface); font-size:12px; font-weight:600; color:var(--text-body); animation:fade-up 500ms var(--ease-brand) 520ms both; }
+.chips li[data-tone="warn"] { background:var(--brass-wash); color:var(--brass-ink); }
+.status { font-weight:700; }
+.status[data-status="aboveBull"] { color:var(--up); }
+.status[data-status="belowBear"] { color:var(--down); }
+.staleNote { grid-column:1 / -1; padding:10px 14px; border-radius:12px; background:var(--brass-wash); color:var(--brass-ink); font-size:13.5px; }
 .coverFacts { grid-column:2; grid-row:1; display:grid; align-self:stretch; align-content:center; gap:0; padding-left:clamp(1rem,2vw,1.5rem); border-left:1px solid var(--line); animation:fade-up 700ms var(--ease-brand) 420ms both; }
-.coverFacts > div { display:grid; gap:3px; padding:10px 0; border-bottom:1px solid var(--line-soft); }
+.coverFacts > div { display:grid; gap:3px; padding:9px 0; border-bottom:1px solid var(--line-soft); }
 .coverFacts > div:last-child { border-bottom:0; }
 .coverFacts dt { font-size:12px; font-weight:600; color:var(--text-soft); }
 .coverFacts dd { margin:0; font-size:15px; font-weight:600; color:var(--text-strong); }
@@ -174,14 +142,15 @@ li[data-tone="now"] .ladderName { color:var(--text-strong); }
 .pointsCard[data-kind="risks"] .pointNo { background:var(--down-wash); color:var(--down); }
 .pointsCard[data-kind="risks"] h3 { color:var(--down); }
 
-/* ---- Haberler ---- */
+/* ---- Haberler: kompakt satır, başlık raporun dilinde ---- */
 .sources { display:grid; gap:0; }
-.sources li { display:grid; gap:6px; padding:18px 0; border-top:1px solid var(--line); }
-.sources li:last-child { border-bottom:1px solid var(--line); }
-.sources a { justify-self:start; font-size:16px; font-weight:650; line-height:1.45; letter-spacing:-.01em; color:var(--text-strong); text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:4px; transition:text-decoration-color 200ms; }
+.sources li { display:grid; gap:4px; padding:12px 0; border-top:1px solid var(--line-soft); }
+.sources li:first-child { border-top:0; padding-top:0; }
+.sources a { justify-self:start; font-size:15px; font-weight:650; line-height:1.4; letter-spacing:-.01em; color:var(--text-strong); text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:4px; transition:text-decoration-color 200ms; }
 .sources a:hover { text-decoration-color:currentColor; }
-.sourceMeta { font-size:12.5px; color:var(--text-muted); }
-.impact { max-width:46em; font-size:15px; line-height:1.75; color:var(--text-body); }
+.sourceMeta { font-size:12px; color:var(--text-muted); }
+.impact { max-width:52em; font-size:14px; line-height:1.65; color:var(--text-body); }
+.folds { display:grid; }
 .otherSources { display:grid; gap:12px; padding:4px 0 8px; }
 .otherSources li { display:grid; gap:2px; }
 .otherSources a { font-size:14px; color:var(--text-strong); text-decoration:underline; text-underline-offset:3px; }
@@ -206,7 +175,6 @@ li[data-tone="now"] .ladderName { color:var(--text-strong); }
   .takeaways { grid-template-columns:minmax(0,1fr); }
 }
 @media(max-width:639px) {
-  .body { padding:0 16px 16px; }
   .cover { padding:20px 18px; border-radius:18px; }
   .coverRing { --score-ring-size:84px; }
   .coverVerdict { gap:16px; }
@@ -214,11 +182,10 @@ li[data-tone="now"] .ladderName { color:var(--text-strong); }
   .nowDot { right:72px; }
   .chartLabels { width:68px; }
   .scenarios,.points,.indicators,.technicalGrid { grid-template-columns:minmax(0,1fr); }
-  .history { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .pointsCard { padding:1.2rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cover::before,.verdict > span,.verdictMeaning,.lead,.coverFacts,.meter > span,.levelLine,.chartArea,.nowDot,.nowDot::after,.chartLabel,.ladder li,.stepMark,.stepMark::after { animation:none !important; }
+  .cover::before,.verdict > span,.verdictMeaning,.lead,.coverFacts,.meter > span,.levelLine,.chartArea,.nowDot,.nowDot::after,.chartLabel,.ladder li { animation:none !important; }
   .levelLine,.chartLabel,.ladder li,.nowDot { opacity:1; }
   .chartArea { opacity:1; }
   .chartLine { animation:none !important; clip-path:none; }

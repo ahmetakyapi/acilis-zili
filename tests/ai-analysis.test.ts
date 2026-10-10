@@ -83,3 +83,15 @@ test("model trigger levels must match a supplied level", async () => {
   assert.equal(snapLevel(null, levels), null);
   assert.equal(snapLevel(-1, levels), null);
 });
+
+test("scenario status and trigger math read the report's own levels", async () => {
+  const { scenarioStatus, triggerMath, daysSince } = await import("../lib/ai-analysis-core");
+  assert.equal(scenarioStatus(110, 105, 95), "aboveBull");
+  assert.equal(scenarioStatus(90, 105, 95), "belowBear");
+  assert.equal(scenarioStatus(100, 105, 95), "between");
+  assert.equal(scenarioStatus(100, null, null), null);
+  const m = triggerMath(100, 106, 97, 2)!;
+  assert.equal(m.upPct, 6); assert.equal(m.downPct, -3); assert.equal(m.upAtr, 3); assert.equal(m.downAtr, 1.5); assert.equal(m.ratio, 2);
+  assert.equal(triggerMath(100, null, 97, 2), null);
+  assert.equal(daysSince("2026-10-01T00:00:00Z", new Date("2026-10-11T12:00:00Z")), 10);
+});
