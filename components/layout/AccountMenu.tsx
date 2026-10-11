@@ -1,6 +1,6 @@
 "use client";
 
-import { EASE_BRAND_POINTS } from "@/lib/motion";
+import { EASE_BRAND_POINTS, exitOf } from "@/lib/motion";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -237,7 +237,8 @@ export function AccountMenu({
             aria-label={labels.account}
             initial={{ opacity: 0, y: -4, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            /* Çıkış girişin %55'i ve ease-in (lib/motion → exitOf): kapanan panel hızlanarak gider. */
+            exit={{ opacity: 0, y: -4, scale: 0.97, transition: exitOf(0.16) }}
             transition={{ duration: 0.16, ease: EASE_BRAND_POINTS }}
             style={{ transformOrigin: "top right" }}
             /* Zemin `--overlay-surface`, `--surface-solid` DEĞİL: ikincisi koyu

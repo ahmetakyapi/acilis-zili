@@ -1,4 +1,5 @@
 "use client";
+import { EASE_BRAND_POINTS, exitOf } from "@/lib/motion";
 
 import { Fragment, useEffect, useId, useRef, useState, useTransition, type ReactNode } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -383,7 +384,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
       </ol>
       <div ref={detailRef} className={styles.detailSlot}>
       <AnimatePresence initial={false} mode="wait">
-        {selected && <motion.div key={selected.id} id={detailId} role="region" aria-label={selected.title} className={styles.detail} data-kind={selected.kind} initial={reduced ? false : { opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -3 }} transition={{ duration: .18 }}>
+        {selected && <motion.div key={selected.id} id={detailId} role="region" aria-label={selected.title} className={styles.detail} data-kind={selected.kind} initial={reduced ? false : { opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -3, transition: exitOf(.18) }} transition={{ duration: .18, ease: EASE_BRAND_POINTS }}>
           <div className={styles.detailHeading}><div><span className={styles.detailKicker}><b className="numeral">{String(selectedIndex + 1).padStart(2, "0")}</b><span className="numeral">{timeOf(selected)} {selected.timeEt && snapshot.tags.primary}</span> · {selected.detail ?? (selected.kind === "earnings" ? labels.earnings : labels.economic)}</span><h4>{selected.title}</h4></div>{/* Tek şirketli bilançoda durum şirket satırında; başlıkta ikinci kez basılmıyor. */}{selected.members?.length !== 1 && <Status event={selected} nowMs={nowMs} labels={labels} />}</div>
           {/* "BU DA NE?" — başlığın altındaki tek cümle. Başlık olayın ADINI
               söylüyor ama adı bilmeyene bir şey anlatmıyor; "FOMC" ve "Nokta

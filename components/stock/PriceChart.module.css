@@ -3,7 +3,7 @@
 .sessionSummary { display:none; }
 .root[data-compact="true"] .sessionSummary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:36px; color:var(--text-muted); font-size:12px; font-weight:550; cursor:pointer; list-style:none; }
 .sessionSummary::-webkit-details-marker { display:none; }
-.sessionSummary > span { font-size:18px; color:var(--primary-ink); transition:transform .2s; }
+.sessionSummary > span { font-size:18px; color:var(--primary-ink); transition:transform .2s var(--ease-brand); }
 .sessions[open] .sessionSummary > span { transform:rotate(45deg); }
 .root[data-compact="true"] .sessions { margin-top:8px; border-top:1px solid var(--line-soft); }
 .root[data-compact="true"] .sessions > div { margin-top:0; padding-top:4px; border-top:0; padding-bottom:10px; }

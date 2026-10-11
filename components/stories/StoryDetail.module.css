@@ -105,7 +105,7 @@
 .tocBox > summary::-webkit-details-marker { display:none; }
 .tocBox > summary > span:first-child { font-size:15px; line-height:1.3; font-weight:650; color:var(--text-strong); }
 .tocBox > summary > span:nth-child(2) { font-size:12px; line-height:1.3; color:var(--text-muted); }
-.tocBox > summary > svg { margin-left:auto; flex-shrink:0; color:var(--text-muted); transition:transform var(--default-transition-duration,180ms) var(--ease-brand,ease); }
+.tocBox > summary > svg { margin-left:auto; flex-shrink:0; color:var(--text-muted); transition:transform var(--default-transition-duration,180ms) var(--ease-brand,var(--ease-brand)); }
 .tocBox[open] > summary > svg { transform:rotate(180deg); }
 .tocBox > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:var(--radius-xl); }
 .tocBox ol { display:flex; flex-direction:column; padding:0 var(--read-inset) 10px; border-top:1px solid var(--line-soft); }
@@ -152,7 +152,7 @@ a.sourceLink:focus-visible { outline:2px solid var(--line-focus); outline-offset
    hizasını kaybediyordu. */
 .moreStories li a > span:first-child { width:112px; }
 .moreStories:lang(en) li a > span:first-child { width:144px; }
-.moreStories li a > svg, .sourceLink > svg { transition:transform var(--default-transition-duration,180ms) var(--ease-brand,ease); }
+.moreStories li a > svg, .sourceLink > svg { transition:transform var(--default-transition-duration,180ms) var(--ease-brand,var(--ease-brand)); }
 .moreStories li a > svg { flex-shrink:0; color:var(--primary); }
 .moreCopy { display:flex; flex-direction:column; gap:6px; min-width:0; }
 .moreCopy strong { font-size:18px; font-weight:600; line-height:1.3; letter-spacing:-.025em; color:var(--text-strong); text-wrap:pretty; }
@@ -165,9 +165,9 @@ a.sourceLink:focus-visible { outline:2px solid var(--line-focus); outline-offset
 
 /* Kapaktaki şirket çipleri (26 Eylül): 40'lık logo, okunur ad, üzerine
    gelince kalkıp ok açılıyor. Logosu olmayan fon piyasa ikonu alıyor. */
-.symbolChip { display:flex; min-height:52px; align-items:center; gap:10px; padding:6px 14px 6px 6px; border:1px solid var(--line); border-radius:14px; background:var(--premium-surface); transition:border-color .2s, background-color .2s, translate .25s var(--ease-brand); }
+.symbolChip { display:flex; min-height:52px; align-items:center; gap:10px; padding:6px 14px 6px 6px; border:1px solid var(--line); border-radius:14px; background:var(--premium-surface); transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), translate .25s var(--ease-brand); }
 .symbolFund { display:grid; place-items:center; width:40px; height:40px; flex-shrink:0; border-radius:11px; background:var(--primary-wash); color:var(--primary-ink); }
-.symbolArrow { flex-shrink:0; color:var(--primary-ink); opacity:.45; transition:opacity .2s, transform .25s var(--ease-brand); }
+.symbolArrow { flex-shrink:0; color:var(--primary-ink); opacity:.45; transition:opacity .2s var(--ease-brand), transform .25s var(--ease-brand); }
 @media(hover:hover) and (pointer:fine) {
  .symbolChip:hover { translate:0 -2px; border-color:var(--primary-faint); background:var(--primary-tint); }
  .symbolChip:hover .symbolArrow { opacity:1; transform:translate(2px,-2px); }

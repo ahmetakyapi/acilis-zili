@@ -67,7 +67,7 @@
   grid-template-columns:minmax(0,1fr) minmax(0,38%) 4.75rem;
   grid-template-areas:"label track pct";
   column-gap:14px; min-height:48px; padding:6px 10px; border-radius:10px;
-  color:inherit; transition:background-color .25s;
+  color:inherit; transition:background-color .25s var(--ease-brand);
 }
 .colLink[data-tone="up"] { --tone:var(--up); }
 .colLink[data-tone="down"] { --tone:var(--down); }
@@ -86,7 +86,7 @@
 .colLink[data-tone="up"] .colPct { color:var(--up); }
 .colLink[data-tone="down"] .colPct { color:var(--down); }
 .colLabel { grid-area:label; display:flex; flex-direction:column; gap:1px; min-width:0; }
-.colName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:13px; font-weight:650; line-height:1.25; transition:color .2s; }
+.colName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:13px; font-weight:650; line-height:1.25; transition:color .2s var(--ease-brand); }
 .colSym { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-muted); font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:.02em; line-height:1.3; }
 .colTrack { grid-area:track; position:relative; align-self:center; height:5px; border-radius:1.5px; background:var(--line-soft); }
 .colTrack::before { content:""; position:absolute; top:-5px; bottom:-5px; left:var(--zero); width:1px; background:var(--line-strong); }
@@ -181,7 +181,7 @@
 .extreme {
   position:relative; display:flex; flex-direction:column; gap:6px; min-width:0; height:155px;
   padding:13px 18px 10px; border-radius:16px; color:inherit;
-  transition:background-color .3s, transform .2s;
+  transition:background-color .3s var(--ease-brand), transform .2s var(--ease-brand);
 }
 .extreme + .extreme::before { content:""; position:absolute; top:0; left:18px; right:18px; height:1px; background:var(--line); }
 @media (max-width:1023px) {
@@ -197,7 +197,7 @@
 .extremeSkeleton { height:155px; border-radius:16px; }
 .extremeTop { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .extremeLabel { color:var(--text-muted); font-size:12.5px; font-weight:650; }
-.extremeArrow { flex-shrink:0; color:var(--primary); transition:transform .35s; }
+.extremeArrow { flex-shrink:0; color:var(--primary); transition:transform .35s var(--ease-brand); }
 @media (hover:hover) { .extreme:hover .extremeArrow { transform:translate(3px,-3px); } }
 .extremeMain { display:flex; align-items:flex-end; justify-content:space-between; gap:14px; min-width:0; }
 .extremeText { display:flex; flex-direction:column; gap:8px; min-width:0; }
@@ -206,7 +206,7 @@
    işi bu iki sayı. */
 .extremeFigure { flex-shrink:0; font-size:clamp(32px,3.6vw,54px); font-weight:650; line-height:.92; letter-spacing:-.06em; }
 .extremeLogos { display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden; }
-.extremeLogo { display:inline-flex; flex-shrink:0; transition:transform .4s; transition-delay:calc(var(--i) * 22ms); }
+.extremeLogo { display:inline-flex; flex-shrink:0; transition:transform .4s var(--ease-brand); transition-delay:calc(var(--i) * 22ms); }
 @media (hover:hover) { .extreme:hover .extremeLogo { transform:translateY(-2px); } }
 .extremeRest[data-at="narrow"] { display:none; }
 /* Çip logo karosuyla aynı boyda ve köşede (`md`: 32, `rounded-md`);

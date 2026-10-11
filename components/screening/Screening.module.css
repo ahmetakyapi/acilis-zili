@@ -59,7 +59,7 @@
    açıyor ve "351 ,60 $" okunuyordu. Tek başına duran ölçü hizalama istemez. */
 .facts dd { font-size:20px; line-height:1.2; letter-spacing:-.03em; font-weight:550; color:var(--text-strong); white-space:nowrap; }
 .links { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
-.link { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 13px; border:1px solid var(--line); border-radius:999px; color:var(--text-strong); font-size:13px; font-weight:550; transition:border-color .2s, color .2s; }
+.link { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 13px; border:1px solid var(--line); border-radius:999px; color:var(--text-strong); font-size:13px; font-weight:550; transition:border-color .2s var(--ease-brand), color .2s var(--ease-brand); }
 .link:hover { border-color:var(--line-focus); color:var(--primary-ink); }
 .link:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 
@@ -164,7 +164,7 @@
 
 .quick { list-style:none; margin:0; padding:4px 20px 20px; display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,15rem),1fr)); gap:12px; }
 @media (min-width:900px) { .quick { padding:4px 24px 24px; } }
-.quickCard { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:12px; height:100%; padding:14px; border:1px solid var(--line); border-radius:16px; background:var(--surface); transition:border-color .2s, background .2s; }
+.quickCard { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:12px; height:100%; padding:14px; border:1px solid var(--line); border-radius:16px; background:var(--surface); transition:border-color .2s var(--ease-brand), background .2s var(--ease-brand); }
 .quickCard:hover { border-color:var(--line-focus); }
 .quickCard:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 .quickName { min-width:0; display:grid; gap:3px; }

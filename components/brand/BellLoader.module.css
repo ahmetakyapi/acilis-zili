@@ -50,11 +50,11 @@
 }
 
 .body {
-  animation: bell-swing var(--bell-cycle) cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  animation: bell-swing var(--bell-cycle) var(--ease-loop) infinite;
 }
 
 .clapper {
-  animation: bell-clapper var(--bell-cycle) cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  animation: bell-clapper var(--bell-cycle) var(--ease-loop) infinite;
 }
 
 .ripple {
@@ -64,7 +64,7 @@
   border: 1.5px solid var(--primary);
   opacity: 0;
   pointer-events: none;
-  animation: bell-ripple var(--bell-cycle) cubic-bezier(0.2, 0.7, 0.3, 1) infinite;
+  animation: bell-ripple var(--bell-cycle) var(--ease-brand) infinite;
 }
 
 /* İkinci halka ikinci vuruşta: gövdenin öteki uca varışı döngünün %21'i. */
@@ -128,6 +128,6 @@
     display: none;
   }
   .tile {
-    animation: bell-breathe 2.4s ease-in-out infinite;
+    animation: bell-breathe 2.4s var(--ease-loop) infinite;
   }
 }

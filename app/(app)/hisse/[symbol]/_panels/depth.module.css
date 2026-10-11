@@ -227,9 +227,9 @@
 /* Logolar aralıklı, üst üste binmiyor: bindirilen karolar birbirinin
    yarısını örtüyor ve kesik logo gibi okunuyordu (görüldü, 1440). */
 .summaryPeers { display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
-.summaryPeers > a { border-radius:10px; transition:transform .25s; }
+.summaryPeers > a { border-radius:10px; transition:transform .25s var(--ease-brand); }
 @media(hover:hover) and (pointer:fine) { .summaryPeers > a:hover { transform:translateY(-2px); } }
-.summaryLink { color:inherit; text-decoration:underline; text-decoration-color:var(--primary-faint); text-decoration-thickness:1.5px; text-underline-offset:4px; transition:color .2s, text-decoration-color .2s; }
+.summaryLink { color:inherit; text-decoration:underline; text-decoration-color:var(--primary-faint); text-decoration-thickness:1.5px; text-underline-offset:4px; transition:color .2s var(--ease-brand), text-decoration-color .2s var(--ease-brand); }
 .summaryLink:hover { color:var(--primary-ink); }
 /* TELEFONDA SATIR, SÜTUN DEĞİL (30 Eylül). Izgara 390'da tek sütuna
    iniyordu ama hücreler arasında hiçbir ayraç yoktu: ikon + etiket, altında
@@ -365,7 +365,7 @@
 .how { margin-top:10px; border-top:1px solid var(--line-soft); }
 .how > summary { display:flex; min-height:32px; align-items:center; gap:6px; padding-top:6px; color:var(--primary-ink); font-size:12px; font-weight:650; list-style:none; cursor:pointer; }
 .how > summary::-webkit-details-marker { display:none; }
-.how > summary::after { width:6px; height:6px; margin-top:-3px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg); transition:transform .2s; content:""; }
+.how > summary::after { width:6px; height:6px; margin-top:-3px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg); transition:transform .2s var(--ease-brand); content:""; }
 .how[open] > summary::after { margin-top:3px; transform:rotate(-135deg); }
 .how > summary:hover { color:var(--primary-hover); }
 .how > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:6px; }
@@ -401,7 +401,7 @@
   .clampBox { height:0; min-height:100%; overflow:hidden; mask-image:linear-gradient(to bottom, black calc(100% - 72px), transparent); }
   .clampInput:checked ~ .clampBox { height:auto; min-height:0; overflow:visible; mask-image:none; }
   .clampButton { position:absolute; left:28px; right:0; bottom:0; z-index:1; display:flex; justify-content:center; }
-  .clampButton > span { display:inline-flex; align-items:center; min-height:36px; padding:0 16px; border:1px solid var(--line); border-radius:999px; background:var(--panel-fixed); color:var(--primary-ink); font-size:12.5px; font-weight:650; cursor:pointer; transition:border-color .2s, background-color .2s; }
+  .clampButton > span { display:inline-flex; align-items:center; min-height:36px; padding:0 16px; border:1px solid var(--line); border-radius:999px; background:var(--panel-fixed); color:var(--primary-ink); font-size:12.5px; font-weight:650; cursor:pointer; transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand); }
   .clampButton:hover > span { border-color:var(--primary-faint); background:var(--primary-tint); }
   .clampInput:focus-visible ~ .clampButton > span { outline:2px solid var(--line-focus); outline-offset:2px; }
   .clampInput:checked ~ .clampButton { position:static; margin-top:10px; }

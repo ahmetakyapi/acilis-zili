@@ -29,7 +29,7 @@
 .inputWrap { position:relative; min-width:0; }
 .inputWrap input { width:100%; border-radius:10px; background:var(--premium-surface); height:46px; font-size:14px; }
 .inputWrap[data-password="true"] input { padding-right:48px; }
-.visibility { position:absolute; right:3px; top:3px; width:40px; height:40px; display:grid; place-items:center; color:var(--text-muted); border-radius:8px; cursor:pointer; transition:color .2s,background .2s; }
+.visibility { position:absolute; right:3px; top:3px; width:40px; height:40px; display:grid; place-items:center; color:var(--text-muted); border-radius:8px; cursor:pointer; transition:color .2s var(--ease-brand),background .2s var(--ease-brand); }
 .visibility:hover { background:var(--primary-tint); color:var(--primary-ink); }
 .visibility:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
 

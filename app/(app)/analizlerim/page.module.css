@@ -1,6 +1,6 @@
 .list { display:grid; padding:0 12px 12px; }
 /* 1280 px: altı sütun tek hatta; künyeler (small) sütun başlığı yerine her hücrede, telefonda kart düzeni bozulmasın diye. */
-.row { display:grid; grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,.8fr) minmax(0,.9fr) minmax(0,1.5fr) minmax(0,1fr); gap:14px; align-items:center; min-height:64px; padding:12px; border-radius:12px; transition:background-color 200ms; }
+.row { display:grid; grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,.8fr) minmax(0,.9fr) minmax(0,1.5fr) minmax(0,1fr); gap:14px; align-items:center; min-height:64px; padding:12px; border-radius:12px; transition:background-color 200ms var(--ease-brand); }
 .row:hover { background:var(--primary-faint); }
 li + li .row { border-top:1px solid var(--line-soft); border-radius:0 0 12px 12px; }
 li + li .row:hover { border-top-color:transparent; border-radius:12px; }

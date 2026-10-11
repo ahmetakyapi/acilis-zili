@@ -52,12 +52,14 @@ export const INK_SPLASH_SCRIPT = `try{var d=document.documentElement,s=sessionSt
 /* Sıra önemli: önce işaret, sonra sınıf. `setItem` kota yüzünden fırlatırsa
    sınıf hiç eklenmiyor; tersinde açılış her yüklemede gösterilirdi. */
 
-/** Açılış, gezinmenin başlangıcından bu ana kadar BİTER. */
-const DEADLINE_MS = 3400;
+/** Açılış, gezinmenin başlangıcından bu ana kadar BİTER. 3400'dü; 12 Ekim'de
+ *  kapanış girişin yarısına inince (420 → 240, ease-in) tavan da 3000'e indi. */
+const DEADLINE_MS = 3000;
 /** Sahnenin yazıldığı süre — `lib/ink/scenes.ts` → `intro.end` (2,3 sn). */
 const SCENE_MS = 2300;
-/** Sahneden sonra geçen süre: imza okunsun diye 280, kapanış 420. */
-const TAIL_MS = 700;
+/** Sahneden sonra geçen süre: imza okunsun diye 280, kapanış 240. */
+const CLOSE_MS = 240;
+const TAIL_MS = 280 + CLOSE_MS;
 /** Sahne saati bundan hızlı oynatılmaz; üstünde çizim okunmuyor, mürekkep
  *  akmıyor gibi duruyor. 1,9 hızda sahne 1,2 saniye sürüyor, yani hidrasyon
  *  1,5 saniyeye kadar gecikse bile açılış oynuyor (ölçülen bant 0,7-1,1). */
@@ -89,7 +91,7 @@ export function InkSplash({ name }: { name: string }) {
     window.setTimeout(() => {
       root.classList.remove("ink-splash", "ink-splash-out");
       setGone(true);
-    }, 420);
+    }, CLOSE_MS);
   }, []);
 
   /* Sahnenin hızı İLK çizimde bir kez hesaplanıyor; sonraki bir yeniden

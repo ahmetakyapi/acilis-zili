@@ -182,7 +182,8 @@ export function LevelTrack({
       {/* `spark-dot`: ortak sistemin nokta girişi — bant çizildikten sonra
           fiyat yerine oturuyor. Ortalama `margin` ile, `transform` ile değil:
           giriş animasyonu dönüşümü yönetiyor, ikisi çakışınca nokta bitişte
-          yarım genişlik sıçrıyordu. Yolculuk da aynı sebeple `left` ile. */}
+          yarım genişlik sıçrıyordu. Yolculuk ayrı `translate` özelliğiyle
+          (`TechnicalBoard`), dönüşüme dokunmadan. */}
       {price !== null && (
         <span
           className={`${styles.trackPrice} spark-dot`}

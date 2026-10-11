@@ -9,7 +9,7 @@
 .coverage dt { order:2; color:var(--text-muted); font-size:12px; }
 .coverage dd { color:var(--text-strong); font-size:22px; font-weight:600; letter-spacing:-.04em; }
 .search { min-width:0; flex:1 1 250px; max-width:330px; }
-.searchField { display:flex; min-width:0; align-items:center; gap:9px; padding:4px 4px 4px 13px; border:1px solid var(--line); border-radius:999px; background:var(--surface-sunken); transition:border-color .2s,background .2s,box-shadow .2s; }
+.searchField { display:flex; min-width:0; align-items:center; gap:9px; padding:4px 4px 4px 13px; border:1px solid var(--line); border-radius:999px; background:var(--surface-sunken); transition:border-color .2s var(--ease-brand),background .2s var(--ease-brand),box-shadow .2s var(--ease-brand); }
 .searchField:hover { border-color:var(--line-strong); background:var(--surface-solid); }
 .searchField:focus-within { border-color:var(--line-focus); box-shadow:0 0 0 3px var(--primary-tint); }
 .searchField > svg { flex-shrink:0; color:var(--text-muted); }
@@ -17,7 +17,7 @@
 .searchField input::placeholder { color:var(--text-muted); }
 /* Simge düğme: dolu mavi kutu kapakta ikinci bir çağrı gibi duruyordu.
    Dokunma hedefi görsel kutudan büyük — ::after ile 44 piksele taşınıyor. */
-.searchField button { position:relative; display:grid; place-items:center; flex-shrink:0; width:34px; height:34px; border-radius:999px; background:var(--primary-tint); color:var(--primary-ink); cursor:pointer; transition:background .2s,color .2s; }
+.searchField button { position:relative; display:grid; place-items:center; flex-shrink:0; width:34px; height:34px; border-radius:999px; background:var(--primary-tint); color:var(--primary-ink); cursor:pointer; transition:background .2s var(--ease-brand),color .2s var(--ease-brand); }
 .searchField button::after { content:""; position:absolute; inset:-5px; }
 .searchField button:hover { background:var(--primary); color:var(--on-primary); }
 .searchField button:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }

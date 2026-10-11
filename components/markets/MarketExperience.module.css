@@ -19,7 +19,7 @@
 .indexOverview { min-width:0; }
 .indexGrid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
 .indexLink { min-width:0; border-radius:14px; }
-.indexCard { position:relative; min-height:142px; height:100%; overflow:hidden; padding:15px 16px; border-radius:14px; background:var(--premium-surface); transition:border-color .25s,background-color .25s; }
+.indexCard { position:relative; min-height:142px; height:100%; overflow:hidden; padding:15px 16px; border-radius:14px; background:var(--premium-surface); transition:border-color .25s var(--ease-brand),background-color .25s var(--ease-brand); }
 /* Seçili endeks TONLA işaretli (24 Eylül): köşe ışıması ve 16 piksellik
    mavi gölge 23 Eylül taramasından kaçmıştı (gerekçe UtilityExperience.module.css başındaki not). Seçim bir
    etkileşim durumu, o yüzden mavi burada yerinde — ama zemin tonu ve
@@ -46,7 +46,7 @@
 .members { border-radius:18px; overflow:hidden; scroll-margin-top:100px; }
 .members thead { background:var(--surface-sunken); }
 .members h2 { font-size:17px; letter-spacing:-.025em; }
-.members tbody tr { transition:background .2s,box-shadow .2s; }
+.members tbody tr { transition:background .2s var(--ease-brand),box-shadow .2s var(--ease-brand); }
 .members tbody tr:hover,.members tbody tr:focus-within { background:var(--primary-tint); box-shadow:inset 3px 0 var(--primary); }
 .members tbody td { padding-block:11px; }
 .page :is(a,button):focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
@@ -106,7 +106,7 @@
 .breadthEmpty { padding-block:12px; color:var(--text-muted); font-size:13px; }
 .breadthStamp { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 16px; padding:10px 24px; border-top:1px solid var(--line); background:var(--primary-tint); }
 .movementScale { font-size:12px; line-height:1.6; color:var(--text-muted); }
-.moverLink { display:block; padding:12px 20px; transition:background 180ms; }
+.moverLink { display:block; padding:12px 20px; transition:background 180ms var(--ease-brand); }
 .moverLink:hover { background:var(--primary-tint); }
 .moverIdentity { display:flex; align-items:center; gap:12px; min-width:0; }
 .moverRank { font-size:12px; color:var(--text-muted); }
@@ -152,9 +152,10 @@
 .heatScale { display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); font-size:12px; font-weight:600; }
 .heatScale > i { width:96px; height:8px; border-radius:999px; background:linear-gradient(90deg, color-mix(in srgb, var(--down) 40%, var(--premium-surface)), var(--premium-surface) 50%, color-mix(in srgb, var(--up) 40%, var(--premium-surface))); }
 .heatGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(18px, 1fr)); gap:3px; margin-top:14px; }
-.heatCell { display:block; aspect-ratio:1; border-radius:4px; transition:scale .18s, box-shadow .18s; }
+.heatCell { display:block; aspect-ratio:1; border-radius:4px; transition:scale .18s var(--ease-brand), box-shadow .18s var(--ease-brand); }
 @media(hover:hover) and (pointer:fine) {
- .heatCell:hover { position:relative; z-index:1; scale:1.5; box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); }
+ /* Büyüteç 1,5 → 1,25 (12 Ekim): kimliği halka veriyor, büyüme komşuları örtüyordu. */
+ .heatCell:hover { position:relative; z-index:1; scale:1.25; box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); }
 }
 @media(max-width:639px) { .heat { padding:14px 16px 16px; } .heatGrid { grid-template-columns:repeat(auto-fill, minmax(14px, 1fr)); gap:2px; } .heatScale > i { width:64px; } }
 @media(prefers-reduced-motion:reduce) { .heatCell { transition:none; } .heatCell:hover { scale:none; } }
@@ -201,7 +202,7 @@
 .breadth { overflow:visible; }
 .breadthStamp { border-radius:0 0 20px 20px; }
 .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(10, minmax(0, 1fr)); gap:6px; margin-top:14px; }
-.heatCell { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; aspect-ratio:auto; min-height:74px; padding:8px 4px; border-radius:12px; overflow:visible; transition:scale .18s var(--ease-brand), box-shadow .18s; }
+.heatCell { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; aspect-ratio:auto; min-height:74px; padding:8px 4px; border-radius:12px; overflow:visible; transition:scale .18s var(--ease-brand), box-shadow .18s var(--ease-brand); }
 .heatLogo { width:30px !important; height:30px !important; border-radius:9px !important; box-shadow:0 0 0 2px color-mix(in oklab, var(--premium-surface) 35%, transparent); }
 .heatSymbol { font-size:12px; font-weight:700; line-height:1.2; letter-spacing:.02em; color:var(--text-strong); }
 .heatPct { font-size:12px; font-weight:600; line-height:1.2; letter-spacing:-.01em; color:var(--text-strong); }

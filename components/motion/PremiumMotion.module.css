@@ -128,13 +128,13 @@
   background: var(--chrome);
   translate: 0 -100%;
   visibility: hidden;
-  transition: translate 220ms var(--ease-brand), visibility 0s 220ms;
+  transition: translate 220ms var(--ease-brand), visibility 0s 220ms var(--ease-brand);
 }
 .sectionNav[data-variant="floating"]::before { content: none; }
 .sectionNav[data-variant="floating"][data-shown] {
   translate: none;
   visibility: visible;
-  transition: translate 220ms var(--ease-brand), visibility 0s;
+  transition: translate 220ms var(--ease-brand), visibility 0s var(--ease-brand);
 }
 .sectionNav[data-variant="floating"][data-shown][data-tucked] { translate: 0 -100%; }
 .sectionNav[data-variant="floating"] .navLink { flex: 0 0 auto; min-height: 36px; padding-block: 0.4rem; }
@@ -184,7 +184,7 @@
   font-size: 0.75rem;
   font-weight: 550;
   white-space: nowrap;
-  transition: color 180ms ease, background-color 180ms ease;
+  transition: color 180ms var(--ease-brand), background-color 180ms var(--ease-brand);
 }
 
 /* ÜZERİNE GELME YALNIZCA İMLEÇTE (30 Eylül, sahibinin ekran görüntüsü).
@@ -308,7 +308,7 @@
    kartları, öne çıkan analiz) ya da bir bağlantı taşıyorsa (benzer
    şirketler, bilanço radarı) karşılık veriyor; dil `.panel-hover`ınki:
    kenar `--primary-faint`, gölge yok. */
-.spotlight { transition:border-color 240ms,box-shadow 300ms; }
+.spotlight { transition:border-color 240ms var(--ease-brand),box-shadow 300ms var(--ease-brand); }
 .spotlight:focus-within { box-shadow:0 0 0 1px var(--primary-faint),var(--premium-shadow); }
 @media(hover:hover) and (pointer:fine) {
  :global(a):hover > .spotlight,

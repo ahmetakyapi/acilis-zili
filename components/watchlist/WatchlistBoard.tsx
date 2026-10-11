@@ -1,6 +1,6 @@
 "use client";
 
-import { EASE_BRAND_POINTS } from "@/lib/motion";
+import { EASE_BRAND_POINTS, exitOf } from "@/lib/motion";
 
 import { BellMood } from "@/components/brand/BellMood";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -853,7 +853,7 @@ const ROW_MOTION = {
   ease: EASE_BRAND_POINTS,
 } as const;
 /** Çıkış hızlı ve hızlanarak — giden satır gözü tutmamalı. */
-const ROW_EXIT = { duration: 0.2, ease: [0.4, 0, 1, 1] } as const;
+const ROW_EXIT = exitOf(ROW_MOTION.duration);
 /** Yeni satırın "buraya geldi" tonu: satır indikten sonra yavaşça söner. */
 const ROW_LANDED = { duration: 1.4, delay: 0.2, ease: EASE_BRAND_POINTS } as const;
 

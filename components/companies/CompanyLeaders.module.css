@@ -6,14 +6,14 @@
    90px selected reading made the hero 355.8px high on desktop. */
 .choices { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; margin-top:16px; padding:0; list-style:none; }
 .choices > li { min-width:0; }
-.company { position:relative; display:flex; min-width:0; min-height:91px; align-items:center; flex-direction:column; justify-content:center; gap:8px; padding:16px 4px 10px; border:1px solid var(--line); border-radius:12px; background:var(--premium-surface); transition:border-color .2s; -webkit-tap-highlight-color:transparent; }
+.company { position:relative; display:flex; min-width:0; min-height:91px; align-items:center; flex-direction:column; justify-content:center; gap:8px; padding:16px 4px 10px; border:1px solid var(--line); border-radius:12px; background:var(--premium-surface); transition:border-color .2s var(--ease-brand); -webkit-tap-highlight-color:transparent; }
 .rank { position:absolute; top:7px; left:8px; color:var(--text-muted); font-size:var(--text-nano); line-height:1; }
 /* İlk on şirket düz yüzeyde (24 Eylül): köşe yıkaması, logonun altındaki
    gölge ve hover'da 3 piksel kalkan logo 23 Eylül'ün tonla-derinlik
    taramasından kaçmıştı (gerekçe UtilityExperience.module.css başındaki not). Hover yalnızca kenarlık tonu. */
 .logo { display:block; }
 .symbol { color:var(--text-body); font-size:12px; line-height:1.2; font-weight:600; }
-.open { position:absolute; right:6px; top:6px; color:var(--primary-ink); opacity:0; transform:translate(-2px,2px); transition:opacity .2s,transform .25s; }
+.open { position:absolute; right:6px; top:6px; color:var(--primary-ink); opacity:0; transform:translate(-2px,2px); transition:opacity .2s var(--ease-brand),transform .25s var(--ease-brand); }
 .company:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 .company:focus-visible .open { opacity:1; transform:none; }
 @media(hover:hover) and (pointer:fine) {
@@ -33,7 +33,7 @@
    oranla bir pay çubuğu var. Üzerine gelince logo hafifçe kalkıyor. */
 .heading h2 { font-size:var(--text-read); font-weight:700; color:var(--text-strong); }
 .heading > span { font-size:12px; }
-.company { gap:7px; padding-bottom:14px; transition:border-color .2s, background-color .2s, translate .22s; }
+.company { gap:7px; padding-bottom:14px; transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), translate .22s var(--ease-brand); }
 .company[data-first] { border-color:var(--primary-faint); background:var(--primary-tint); }
 .symbol { font-size:12px; font-weight:700; color:var(--text-strong); }
 .cap { font-size:12px; font-weight:600; color:var(--text-body); margin-top:-3px; }

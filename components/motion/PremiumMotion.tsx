@@ -643,7 +643,6 @@ export function MotionExperience({ children, className }: { children: ReactNode;
       const measured: {
         element: HTMLElement | SVGElement;
         visible: boolean;
-        tall: boolean;
         ringEnd: string | null;
         step: number;
       }[] = [];
@@ -671,12 +670,11 @@ export function MotionExperience({ children, className }: { children: ReactNode;
         measured.push({
           element,
           visible,
-          tall: rect.height > window.innerHeight * .7,
           ringEnd: element.classList.contains("ring-fill") ? getComputedStyle(element).strokeDashoffset : null,
           step,
         });
       });
-      measured.forEach(({ element, visible, tall, ringEnd, step }) => {
+      measured.forEach(({ element, visible, ringEnd, step }) => {
         const parent = element.parentElement;
         const intro = parent?.hasAttribute("data-motion-intro") || parent?.classList.contains("page-heading-copy");
         const siblings = intro || parent?.hasAttribute("data-motion-stagger") ? Array.from(parent!.children) : [];
@@ -711,7 +709,13 @@ export function MotionExperience({ children, className }: { children: ReactNode;
           : bar ? [{ transform: "scaleY(.04)", transformOrigin: "center bottom" }, { transform: "scaleY(1)", transformOrigin: "center bottom" }]
           : line ? [{ transform: "scaleX(.04)", transformOrigin: origin }, { transform: "scaleX(1)", transformOrigin: origin }]
           : visible ? [{ opacity: .6 }, { opacity: 1 }]
-          : [{ opacity: intro ? .6 : .35, transform: tall ? "none" : `translateY(${intro ? 12 : 20}px)` }, { opacity: 1, transform: "none" }];
+          /* PANEL VE SATIR KAYMAZ (12 Ekim). Her `.panel` ve her kademeli çocuk
+             %35 opaklıktan 20 px aşağıdan geliyordu: motion-film skill'inin yasak
+             listesindeki "her öğede soluklaş-ve-yukarı-kay", tek kahramanın
+             olmadığı sahne. Hareket artık veriyi çizen öğelerde (çizgi, çubuk,
+             yay, halka, sparkline — planın kahramanları); okunacak kutular
+             yalnız opaklıkla ve kısa (420 ms), kademe korunur. */
+          : [{ opacity: intro ? .6 : .5 }, { opacity: 1 }];
         const settle = visible && !(spark || arc || bar || ring || line || area || dot || travel);
         /* Web Animations paints without mutating style/data attributes.
            Inline mutations on streamed Link nodes raced their hydration
@@ -719,7 +723,7 @@ export function MotionExperience({ children, className }: { children: ReactNode;
            Finish/cancel releases transforms for sticky descendants. CSS
            leaves charts fully drawn when JavaScript is absent. */
         const animation = element.animate(frames, {
-          duration: spark || arc || bar || ring ? 1000 : travel ? 700 : settle ? 320 : 650,
+          duration: spark || arc || bar || ring ? 1000 : travel ? 700 : settle ? 320 : line || area || dot ? 650 : 420,
           delay: settle ? 0 : delay + (area ? 220 : dot ? 700 : travel ? 150 : 0),
           easing: EASE_BRAND, fill: "both",
         });

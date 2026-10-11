@@ -29,7 +29,7 @@
 .date small { font-size:12px; color:var(--text-muted); }
 .marketDay { color:var(--text-muted); font-weight:450; }
 .connection { display:flex; flex-wrap:wrap; align-items:center; gap:9px; font-size:12px; }
-.connection button { display:flex; align-items:center; gap:6px; min-height:34px; padding:5px 10px; border-radius:9px; border:1px solid var(--line); color:var(--text-body); font-size:12px; cursor:pointer; transition:border-color .2s, background-color .2s; }
+.connection button { display:flex; align-items:center; gap:6px; min-height:34px; padding:5px 10px; border-radius:9px; border:1px solid var(--line); color:var(--text-body); font-size:12px; cursor:pointer; transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand); }
 .connection button:hover:not(:disabled) { border-color:var(--line-strong); background:var(--surface); }
 .connection button > span { color:var(--text-muted); }
 .connectionDot { width:6px; height:6px; flex-shrink:0; border-radius:50%; background:var(--up); box-shadow:0 0 0 3px var(--up-wash); }
@@ -48,7 +48,7 @@
    içinde "KISA GÜN"). Satır ~88 piksel: saat | ad ve durum | sonuç |
    bağlantı. Telefonda sonuç ve bağlantı adın altına iner. */
 .compactRows { display:grid; margin:14px 0 0; padding:0; list-style:none; }
-.compactRow { display:grid; grid-template-columns:74px minmax(0,1fr) auto auto; align-items:center; gap:14px 18px; min-width:0; padding:14px 12px; border-top:1px solid var(--line-soft); border-radius:12px; transition:background-color .2s; }
+.compactRow { display:grid; grid-template-columns:74px minmax(0,1fr) auto auto; align-items:center; gap:14px 18px; min-width:0; padding:14px 12px; border-top:1px solid var(--line-soft); border-radius:12px; transition:background-color .2s var(--ease-brand); }
 .compactRow:first-child { border-top-color:transparent; }
 .compactRow[data-selected] { background:var(--primary-wash); box-shadow:inset 3px 0 var(--primary); }
 /* Ayraç düz çizgi: satır 12 piksel yuvarlak köşeli ve üst kenarlık iki ucunda
@@ -64,7 +64,7 @@
 .compactValue b { color:var(--text-strong); font-size:17px; line-height:1.2; font-weight:650; letter-spacing:-.03em; }
 /* Beklenti ikinci çift: gerçekleşenin yanında, bir kademe küçük ve soluk. */
 .compactPair[data-secondary] b { color:var(--text-body); font-size:15px; font-weight:600; }
-.compactLink { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 12px; border:1px solid var(--line); border-radius:10px; color:var(--text-body); font-size:13px; font-weight:600; white-space:nowrap; transition:border-color .2s, background-color .2s; }
+.compactLink { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 12px; border:1px solid var(--line); border-radius:10px; color:var(--text-body); font-size:13px; font-weight:600; white-space:nowrap; transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand); }
 .compactLink[data-analysis] { color:var(--primary-ink); }
 .compactLink:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
 
@@ -73,7 +73,7 @@
 .eventHeading h3 { display:flex; align-items:baseline; gap:9px; color:var(--text-strong); font-size:15px; font-weight:650; letter-spacing:-.02em; }
 .eventHeading h3 > span { color:var(--text-muted); font-size:13px; font-weight:600; }
 .eventHeading > div { display:flex; gap:6px; }
-.eventHeading button { width:36px; height:36px; display:grid; place-items:center; border:1px solid var(--line); border-radius:10px; color:var(--text-body); cursor:pointer; transition:background-color .2s, border-color .2s; }
+.eventHeading button { width:36px; height:36px; display:grid; place-items:center; border:1px solid var(--line); border-radius:10px; color:var(--text-body); cursor:pointer; transition:background-color .2s var(--ease-brand), border-color .2s var(--ease-brand); }
 .eventHeading button:hover:not(:disabled) { border-color:var(--primary-faint); background:var(--primary-tint); }
 .eventHeading button:disabled { opacity:.3; cursor:default; }
 
@@ -107,7 +107,7 @@
 .eventCards { display:grid; align-content:start; min-width:0; margin:0; padding:0; list-style:none; }
 .eventCards > li { min-width:0; }
 .eventCards > li + li { border-top:1px solid var(--line-soft); }
-.eventCard { display:grid; width:100%; min-width:0; grid-template-columns:74px minmax(0,1fr) auto; align-items:center; gap:14px; padding:13px 12px; border-radius:12px; text-align:left; color:var(--text-body); cursor:pointer; transition:background-color .2s, box-shadow .2s; }
+.eventCard { display:grid; width:100%; min-width:0; grid-template-columns:74px minmax(0,1fr) auto; align-items:center; gap:14px; padding:13px 12px; border-radius:12px; text-align:left; color:var(--text-body); cursor:pointer; transition:background-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand); }
 .eventCard:hover { background:var(--primary-tint); }
 .eventCard[data-selected="true"] { background:var(--primary-wash); box-shadow:inset 3px 0 var(--primary); }
 /* Seçili satır bir BLOK olarak okunuyor: kendi üstündeki ve altındaki saç
@@ -136,7 +136,7 @@
 .status[data-status="partial"],.status[data-status="awaiting"] { color:var(--primary-ink); }
 .cardBottom { display:flex; align-items:center; gap:10px; color:var(--primary-ink); }
 .cardBottom > b { color:var(--text-strong); font-size:16px; font-weight:650; letter-spacing:-.03em; }
-.cardBottom > svg { flex-shrink:0; transition:transform .2s; }
+.cardBottom > svg { flex-shrink:0; transition:transform .2s var(--ease-brand); }
 .eventCard:hover .cardBottom > svg { transform:translateX(2px); }
 
 /* Sonuç paneli masaüstünde YAPIŞKAN: uzun bir ajandada satır seçerken panel
@@ -169,7 +169,7 @@
 .memberNumbers { min-width:0; }
 .detailLink { grid-column:3; display:flex; align-items:center; gap:6px; min-height:34px; color:var(--text-body); font-size:13px; font-weight:600; }
 .detailLink[data-analysis="true"] { color:var(--primary-ink); }
-.detailLink svg { flex-shrink:0; transition:transform .2s; }
+.detailLink svg { flex-shrink:0; transition:transform .2s var(--ease-brand); }
 .detailLink:hover svg { transform:translate(2px,-2px); }
 .detailFooter { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:5px 14px; margin-top:12px; color:var(--text-muted); font-size:12px; }
 .detailFooter a { display:flex; gap:6px; align-items:center; min-height:32px; color:var(--primary-ink); font-size:12px; font-weight:600; }

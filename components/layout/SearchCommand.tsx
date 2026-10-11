@@ -1,6 +1,6 @@
 "use client";
 
-import { EASE_BRAND_POINTS } from "@/lib/motion";
+import { EASE_BRAND_POINTS, exitOf } from "@/lib/motion";
 
 import { startRouteProgress } from "./RouteProgress";
 
@@ -550,7 +550,7 @@ export function SearchCommand({
           key="search-scrim"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          exit={{ opacity: 0, transition: exitOf(0.16) }}
           transition={{ duration: 0.16, ease: EASE_BRAND_POINTS }}
           /* Mobilde palet ekranın en tepesinden açılıyor; üst dolgu güvenli
              alanı taşımazsa arama kutusu çentiğin altında kalıyor ve
@@ -565,7 +565,7 @@ export function SearchCommand({
             ref={panelRef}
             initial={{ opacity: 0, y: -8, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.985 }}
+            exit={{ opacity: 0, y: -6, scale: 0.985, transition: exitOf(0.2) }}
             transition={{ duration: 0.2, ease: EASE_BRAND_POINTS }}
             className="w-full overflow-hidden border-b border-line-strong bg-overlay-surface shadow-(--shadow-overlay) sm:max-w-[640px] sm:rounded-xl sm:border"
             onClick={(event) => event.stopPropagation()}

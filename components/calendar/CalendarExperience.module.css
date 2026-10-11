@@ -345,7 +345,7 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
    Yüksek etkili olayın solunda marka mavisinde bir hat (etki bir yön değil,
    bir önem derecesi); saat karosu bir kademe iri. Satır üzerine gelince
    tonlanıyor ve karo kalkıyor — göz hangi olayı okuduğunu buluyor. */
-.event { position:relative; transition:background-color .2s; }
+.event { position:relative; transition:background-color .2s var(--ease-brand); }
 .event[data-impact="high"]::before { content:""; position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:0 3px 3px 0; background:var(--primary); }
 .time { min-height:58px; transition:translate .25s var(--ease-brand); }
 .time > span:first-child { font-size:20px; }

@@ -1,6 +1,6 @@
 "use client";
 
-import { EASE_BRAND_POINTS } from "@/lib/motion";
+import { EASE_BRAND_POINTS, exitOf } from "@/lib/motion";
 
 import {
   createContext,
@@ -365,7 +365,7 @@ export function PortfolioWorkbench({
               className={cn(styles.toast, toast.tone === "error" && styles.toastError)}
               initial={{ opacity: 0, y: 16, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 8 }}
+              exit={{ opacity: 0, y: 8, transition: exitOf(0.28) }}
               transition={{ duration: 0.28, ease: EASE_BRAND_POINTS }}
             >
               <span className={styles.toastText}>{toast.message}</span>

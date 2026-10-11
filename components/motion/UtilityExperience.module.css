@@ -16,13 +16,13 @@
 .bulletinArticle { border-radius:var(--radius-feature); background:var(--premium-surface); }
 .bulletinArticle h2 { font-size:clamp(25px,2.5vw,32px); line-height:1.2; text-wrap:pretty; }
 .archive { position:sticky; top:calc(var(--app-bar-h) + 20px); }
-.archive a { transition:background .25s,border-color .25s; }
+.archive a { transition:background .25s var(--ease-brand),border-color .25s var(--ease-brand); }
 .archive a[aria-current] { box-shadow:inset 2px 0 var(--primary); }
-.compare table tbody tr { transition:background .2s; }
+.compare table tbody tr { transition:background .2s var(--ease-brand); }
 .compare table tbody tr:hover { background:var(--primary-tint); }
 .compareIntro { border-color:var(--primary-faint); background:var(--premium-surface)!important; }
 .presets { gap:14px; }
-.preset { position:relative; overflow:hidden; border-radius:var(--radius-panel); padding:20px; background:var(--premium-surface); transition:border-color .3s,background-color .3s; }
+.preset { position:relative; overflow:hidden; border-radius:var(--radius-panel); padding:20px; background:var(--premium-surface); transition:border-color .3s var(--ease-brand),background-color .3s var(--ease-brand); }
 .preset > div:first-child p:first-child { font-size:16px; line-height:1.3; }
 .preset > div:first-child p:last-child { font-size:12px; line-height:1.65; }
 .menu > :global(.panel) { background:var(--premium-surface); }
@@ -39,7 +39,7 @@
 .recovery nav { background:var(--premium-surface); }
 .footer { position:relative; padding-top:30px; border-top:1px solid var(--line); }
 .footer::before { content:""; position:absolute; left:0; top:-1px; width:84px; height:2px; background:linear-gradient(90deg,var(--primary),transparent); }
-.footer nav a { width:fit-content; transition:color .2s,translate .2s; }
+.footer nav a { width:fit-content; transition:color .2s var(--ease-brand),translate .2s var(--ease-brand); }
 .footer > .footerBase { padding-top:18px; border-top:1px solid var(--line-soft); }
 /* TELEFONDA BAĞLANTILAR İKİ SÜTUN (30 Eylül, ana sayfa telefon denetimi).
    Yirmi bağlantı tek sütunda, her biri 44 piksel: alt bilgi 390'da ~1.000

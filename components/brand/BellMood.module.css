@@ -4,7 +4,7 @@
 .bell { display:block; transform-origin:50% 12%; }
 
 /* UYKU — 8° eğik, çok yavaş bir nefes; baş hafifçe iniyor ve kalkıyor. */
-.mood[data-mood="sleep"] .bell { animation:bell-doze 3.6s ease-in-out infinite; }
+.mood[data-mood="sleep"] .bell { animation:bell-doze 3.6s var(--ease-loop) infinite; }
 @keyframes bell-doze {
   0%, 100% { transform:rotate(-8deg) translateY(0); }
   50% { transform:rotate(-5deg) translateY(2px); }
@@ -13,7 +13,7 @@
 /* Üç "z" sağ üstte, küçükten büyüğe; her biri 3,6 s'lik döngünün ayrı
    bir üçte birinde doğup yükselip sönüyor. */
 .zs { position:absolute; left:78%; bottom:62%; display:block; width:36px; height:40px; pointer-events:none; }
-.zs > span { position:absolute; left:0; bottom:0; color:var(--primary-ink); font-weight:700; line-height:1; opacity:0; animation:bell-z 3.6s ease-out infinite; }
+.zs > span { position:absolute; left:0; bottom:0; color:var(--primary-ink); font-weight:700; line-height:1; opacity:0; animation:bell-z 3.6s var(--ease-brand) infinite; }
 .zs > span:nth-child(1) { font-size:12px; }
 .zs > span:nth-child(2) { font-size:14px; animation-delay:1.2s; }
 .zs > span:nth-child(3) { font-size:17px; animation-delay:2.4s; }
@@ -26,7 +26,7 @@
 
 /* KAYIP — sola bak, sağa bak, dur. Döngünün yarısı sessiz; durmadan
    sallanan bir işaret okunacak metnin yanında dikkat dağıtırdı. */
-.mood[data-mood="lost"] .bell { animation:bell-look 4.2s cubic-bezier(0.45,0,0.55,1) infinite; }
+.mood[data-mood="lost"] .bell { animation:bell-look 4.2s var(--ease-loop) infinite; }
 @keyframes bell-look {
   0%, 100% { transform:rotate(0); }
   12% { transform:rotate(-11deg); }

@@ -24,7 +24,7 @@
    gölge 23 Eylül'ün tonla-derinlik taramasından kaçmıştı (gerekçe UtilityExperience.module.css başındaki not).
    Onu listeden ayıran şey artık ölçüsü ve kutusu — rengi değil. */
 .list > li:first-child { grid-column:1/-1; border:1px solid var(--line); border-radius:var(--radius-feature); background:var(--premium-surface); margin-bottom:8px; }
-.row { position:relative; display:flex; align-items:flex-start; gap:18px; padding:22px 4px; min-height:156px; transition:background .25s; border-radius:12px; }
+.row { position:relative; display:flex; align-items:flex-start; gap:18px; padding:22px 4px; min-height:156px; transition:background .25s var(--ease-brand); border-radius:12px; }
 .copy { min-width:0; flex:1; }
 .title { font-size:17px; line-height:1.4; letter-spacing:-.02em; font-weight:550; color:var(--text-strong); text-wrap:pretty; }
 .summary { margin-top:9px; font-size:13px; line-height:1.75; color:var(--text-body); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
@@ -53,7 +53,7 @@
    yüzeyi: bir rozet değil bir künye. Ad dar ekranda düşüyor (sembol ve
    logo yetiyor), geniş ekranda çipin içinde kısalarak kalıyor. */
 .detailChips { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
-.detailChip { display:inline-flex; align-items:center; gap:8px; min-height:36px; max-width:100%; padding:5px 12px 5px 6px; border:1px solid var(--line); border-radius:999px; background:var(--premium-surface); font-size:13px; transition:border-color .2s, background .2s; }
+.detailChip { display:inline-flex; align-items:center; gap:8px; min-height:36px; max-width:100%; padding:5px 12px 5px 6px; border:1px solid var(--line); border-radius:999px; background:var(--premium-surface); font-size:13px; transition:border-color .2s var(--ease-brand), background .2s var(--ease-brand); }
 .detailChip:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
 .detailChipName { max-width:22ch; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-soft); font-size:12px; }
 @media (max-width:479px) { .detailChipName { display:none; } }

@@ -22,7 +22,7 @@
 .lead { display:flex; flex-direction:column; gap:12px; min-width:0; color:inherit; border-radius:18px; }
 .lead:focus-visible { outline:2px solid var(--line-focus); outline-offset:4px; }
 .leadImage { order:-2; border-radius:18px; }
-.leadImage img { transition:transform .7s; }
+.leadImage img { transition:transform .7s var(--ease-brand); }
 /* GÖRSEL KAYDIRMAYLA KAYAR (8 Ekim). Manşet görseli çerçevesinin içinde,
    sayfadan biraz daha yavaş akıyor: çerçeve görüntüye girerken resmin
    üstü, çıkarken altı görünüyor — düz bir kutu yerine bir pencere. Resim
@@ -48,7 +48,7 @@
 .leadHeadline {
   display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden;
   color:var(--text-strong); font-size:clamp(21px,2.05vw,29px); font-weight:650; line-height:1.2; letter-spacing:-.032em;
-  text-wrap:pretty; transition:color .25s;
+  text-wrap:pretty; transition:color .25s var(--ease-brand);
 }
 @media (hover:hover) and (pointer:fine) { .lead:hover .leadHeadline { color:var(--primary-ink); } }
 .leadSummary {
@@ -65,7 +65,7 @@
    ve tipografi taşıyor: kıl kenarlı premium yüzey (gölge ve ışıma yok,
    derinlik tondan), başlık bir kademe büyük ve dört satır, özet dört satır.
    Logo varsa kartın tepesinde 56'lık karo — haberin şirketi. */
-.leadText { gap:14px; padding:26px 28px 28px; border:1px solid var(--line); background:var(--premium-surface); transition:border-color .25s; }
+.leadText { gap:14px; padding:26px 28px 28px; border:1px solid var(--line); background:var(--premium-surface); transition:border-color .25s var(--ease-brand); }
 .leadText .leadHeadline { -webkit-line-clamp:4; font-size:clamp(24px,2.4vw,34px); line-height:1.16; }
 .leadText .leadSummary { -webkit-line-clamp:4; font-size:15.5px; line-height:1.65; }
 .leadText .leadMeta { margin-top:0; }
@@ -88,7 +88,7 @@
   --time-col:92px; --thumb:48px; --gap:14px;
   position:relative; display:grid; grid-template-columns:var(--time-col) var(--thumb) minmax(0,1fr);
   grid-template-areas:"time thumb headline" "time thumb byline"; grid-template-rows:auto auto; align-content:start;
-  column-gap:var(--gap); min-width:0; border-radius:12px; color:inherit; transition:background-color .2s;
+  column-gap:var(--gap); min-width:0; border-radius:12px; color:inherit; transition:background-color .2s var(--ease-brand);
 }
 .row::before {
   content:""; position:absolute; top:0; right:0; left:calc(var(--time-col) + var(--gap));
@@ -110,12 +110,12 @@
 }
 .rowTime time { color:var(--text-strong); font-size:14px; font-weight:700; letter-spacing:-.01em; }
 .rowTime small { font-size:12px; font-weight:600; color:var(--text-muted); }
-.thumb { grid-area:thumb; margin-block:14px; border-radius:12px; transition:transform .3s; }
+.thumb { grid-area:thumb; margin-block:14px; border-radius:12px; transition:transform .3s var(--ease-brand); }
 .initial { display:grid; place-items:center; width:var(--thumb); height:var(--thumb); background:var(--surface-sunken); color:var(--text-body); font-size:var(--text-lead); font-weight:700; }
 .rowHeadline {
   grid-area:headline; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
   margin-top:13px; padding-right:10px; color:var(--text-strong); font-size:15px; font-weight:600; line-height:1.4;
-  transition:color .2s;
+  transition:color .2s var(--ease-brand);
 }
 .rowByline { grid-area:byline; display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; padding:5px 10px 14px 0; color:var(--text-muted); font-size:var(--text-tiny); line-height:1.3; }
 

@@ -7,7 +7,7 @@
    sahibin kuralı "derinlik gölgeyle değil ton farkıyla" ve sitenin tek
    hover dili `.panel-hover` (yalnızca kenarlık tonu). Kart düz yüzeyde,
    üzerine gelince yalnızca kenarlığı koyulaşıyor. */
-.heroCard,.miniCard { border-radius:18px; background:var(--premium-surface); transition:border-color .2s; }
+.heroCard,.miniCard { border-radius:18px; background:var(--premium-surface); transition:border-color .2s var(--ease-brand); }
 .heroCard { padding:24px; }
 .miniCard { padding:18px; gap:14px; }
 .miniCard > a:first-child,.heroCard > a:first-child { border-radius:inherit; }

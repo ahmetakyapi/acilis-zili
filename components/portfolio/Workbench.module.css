@@ -41,7 +41,7 @@
 }
 .grabber { grid-column: 1 / -1; justify-self: center; width: 40px; height: 4px; border-radius: 99px; background: var(--line-strong); }
 .sheetTitle { font-size: 18px; font-weight: 700; letter-spacing: -0.015em; color: var(--text-strong); }
-.iconButton { display: grid; place-items: center; width: 44px; height: 44px; margin-right: -8px; border-radius: 12px; color: var(--text-muted); cursor: pointer; transition: background-color .2s, color .2s; }
+.iconButton { display: grid; place-items: center; width: 44px; height: 44px; margin-right: -8px; border-radius: 12px; color: var(--text-muted); cursor: pointer; transition: background-color .2s var(--ease-brand), color .2s var(--ease-brand); }
 .iconButton:hover { background: var(--surface-sunken); color: var(--text-strong); }
 .iconButton:focus-visible { outline: 2px solid var(--line-focus); outline-offset: -2px; }
 .sheetBody { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px 16px 0; }
@@ -100,7 +100,7 @@
   border: 1px solid var(--line); border-radius: 14px;
   background: var(--surface-elevated);
   padding: 0 14px; font-size: 16px; color: var(--text-strong); outline: none;
-  transition: border-color .2s, background-color .2s, box-shadow .2s;
+  transition: border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand);
 }
 .input::placeholder { color: var(--text-muted); }
 .input:hover { border-color: var(--line-strong); }
@@ -114,7 +114,7 @@
 .searchField {
   display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 14px;
   border: 1px solid var(--line); border-radius: 14px; background: var(--surface-elevated);
-  transition: border-color .2s, background-color .2s, box-shadow .2s;
+  transition: border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand);
 }
 .searchField:focus-within { border-color: var(--line-focus); background: var(--panel-fixed); box-shadow: 0 0 0 3px var(--primary-tint); }
 .searchField[data-invalid] { border-color: var(--down); }
@@ -152,14 +152,14 @@
 /* Fiyat */
 .priceHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .segment { display: inline-flex; padding: 3px; border-radius: 11px; background: var(--surface-sunken); }
-.segmentItem { position: relative; min-height: 34px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: color .2s; }
+.segmentItem { position: relative; min-height: 34px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: color .2s var(--ease-brand); }
 .segmentItem[aria-checked="true"] { color: var(--text-strong); }
 .segmentItem:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 1px; }
 .segmentThumb { position: absolute; inset: 0; border-radius: 8px; background: var(--panel-fixed); box-shadow: inset 0 0 0 1px var(--line); }
 .segmentText { position: relative; }
 .moneyField {
   display: flex; align-items: center; height: 52px; border: 1px solid var(--line); border-radius: 14px;
-  background: var(--surface-elevated); transition: border-color .2s, background-color .2s, box-shadow .2s;
+  background: var(--surface-elevated); transition: border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand);
 }
 .moneyField:focus-within { border-color: var(--line-focus); background: var(--panel-fixed); box-shadow: 0 0 0 3px var(--primary-tint); }
 .moneyField[data-invalid] { border-color: var(--down); }
@@ -181,7 +181,7 @@
 .offerIcon { flex: none; color: var(--primary-ink); }
 .offerText { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; min-width: 0; flex: 1 1 auto; font-size: var(--text-small); color: var(--text-body); }
 .offerText strong { font-weight: 700; color: var(--text-strong); }
-.offerUse { flex: none; display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--on-primary); background: var(--primary); cursor: pointer; transition: background-color .2s, scale .15s; }
+.offerUse { flex: none; display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--on-primary); background: var(--primary); cursor: pointer; transition: background-color .2s var(--ease-brand), scale .15s var(--ease-brand); }
 .offerUse:hover { background: var(--primary-hover); }
 .offerUse:active { scale: .97; }
 .offerUse:disabled { background: transparent; color: var(--primary-ink); cursor: default; }
@@ -196,7 +196,7 @@
 
 .linkButton {
   display: inline-flex; align-items: center; gap: 6px; width: fit-content; min-height: 36px; padding: 0 10px; margin-left: -10px;
-  border-radius: 9px; font-size: var(--text-small); font-weight: 600; color: var(--primary-ink); cursor: pointer; transition: background-color .2s;
+  border-radius: 9px; font-size: var(--text-small); font-weight: 600; color: var(--primary-ink); cursor: pointer; transition: background-color .2s var(--ease-brand);
 }
 .linkButton:hover { background: var(--primary-tint); }
 .linkButton:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 1px; }
@@ -256,7 +256,7 @@
 }
 .toastError { border-color: var(--down); }
 .toastText { flex: 1 1 auto; min-width: 0; font-size: var(--text-small); font-weight: 600; color: var(--text-strong); }
-.toastAction { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px; border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--primary-ink); cursor: pointer; transition: background-color .2s; }
+.toastAction { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px; border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--primary-ink); cursor: pointer; transition: background-color .2s var(--ease-brand); }
 .toastAction:hover { background: var(--primary-tint); }
 .toastClose { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; color: var(--text-muted); cursor: pointer; }
 .toastClose:hover { background: var(--surface-sunken); color: var(--text-strong); }

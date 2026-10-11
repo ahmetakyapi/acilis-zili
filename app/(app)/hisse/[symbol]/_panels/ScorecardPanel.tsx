@@ -130,7 +130,6 @@ export async function ScorecardPanel({ symbol, locale, t }: { symbol: string; lo
                 <span className={styles.axisName}>{d.scAxes[axis.axis]}</span>
                 <ScoreStrip
                   percentile={axis.percentile}
-                  values={values}
                   median={median}
                   label={d.scStrip
                     .replace("{n}", String(values.length))
@@ -175,25 +174,22 @@ export async function ScorecardPanel({ symbol, locale, t }: { symbol: string; lo
  * şirket sayısı başlığın künyesinde ve ekran okuyucu etiketinde duruyor.
  *
  * Eski çubuk yalnızca yüzdeyi uzunluk olarak tekrar ediyordu; yanında
- * yazan sayıdan başka bir şey söylemiyordu. Şerit o sayıya iki bilgi
- * ekliyor: sektördeki öteki şirketler nerede duruyor (ince çentikler,
- * `axisDistribution` — aynı yöntem, kendisi hariç herkese karşı) ve
- * sektörün ortası nerede (uzun çizgi, medyan). Dolu ray konunun yüzdeliği,
+ * yazan sayıdan başka bir şey söylemiyordu. Şerit o sayıya sektörün
+ * ortasının nerede olduğunu ekliyor (uzun çizgi, medyan; `axisDistribution`
+ * — aynı yöntem, kendisi hariç herkese karşı). Dolu ray konunun yüzdeliği,
  * yuvarlak işaret konunun kendisi.
  *
  * TEK TON, YARGI YOK. Yüksek yüzdelik "iyi" demek değil (lib/scorecard.ts
- * başlığı), o yüzden yön rengi yok: ray ve işaret marka tonunda, çentikler
+ * başlığı), o yüzden yön rengi yok: ray ve işaret marka tonunda, medyan
  * nötr. İşaret medyandan kalkıp kendi yerine kayıyor (`travel`): hareketin
  * kendisi "sektörün ortasına göre nerede" sorusunun cevabı.
  */
 function ScoreStrip({
   percentile,
-  values,
   median,
   label,
 }: {
   percentile: number;
-  values: readonly number[];
   median: number | null;
   label: string;
 }) {

@@ -21,7 +21,7 @@
    (menü satırlarıyla aynı kalıp, UtilityExperience.module.css). */
 .paths > li { animation:path-in 460ms var(--ease-brand) backwards; animation-delay:calc(var(--i, 0) * 60ms + 80ms); }
 @keyframes path-in { from { transform:translate3d(16px, 0, 0); } }
-.path { display:grid; grid-template-columns:44px minmax(0,1fr) 20px; align-items:center; gap:14px; min-height:72px; padding:14px 18px; color:var(--text-strong); transition:background-color .25s; }
+.path { display:grid; grid-template-columns:44px minmax(0,1fr) 20px; align-items:center; gap:14px; min-height:72px; padding:14px 18px; color:var(--text-strong); transition:background-color .25s var(--ease-brand); }
 .path:active { scale:.99; }
 .pathIcon { display:grid; place-items:center; width:44px; height:44px; border-radius:12px; background:var(--primary-tint); color:var(--primary-ink); }
 .pathTitle { display:block; font-size:16px; font-weight:650; line-height:1.25; letter-spacing:-.01em; }
@@ -65,7 +65,7 @@
    seçili parça panel zemininde, kenarı ince çizgi. Mavi dolgu yok; mavi bu
    sayfada eylem ("Beyan Etmen Gerekiyor") ve bağlantı. */
 .segment { display:inline-flex; width:fit-content; max-width:100%; gap:2px; padding:3px; border-radius:12px; background:var(--surface-sunken); box-shadow:inset 0 0 0 1px var(--line-soft); }
-.segItem { position:relative; display:inline-flex; align-items:center; justify-content:center; min-width:0; min-height:38px; padding:0 14px; border-radius:9px; font-size:13px; font-weight:600; white-space:nowrap; color:var(--text-muted); cursor:pointer; transition:color .2s; }
+.segItem { position:relative; display:inline-flex; align-items:center; justify-content:center; min-width:0; min-height:38px; padding:0 14px; border-radius:9px; font-size:13px; font-weight:600; white-space:nowrap; color:var(--text-muted); cursor:pointer; transition:color .2s var(--ease-brand); }
 .segItem[aria-pressed="true"], .segItem[aria-selected="true"] { color:var(--text-strong); }
 .segItem:disabled { opacity:.45; cursor:not-allowed; }
 .segItem:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
@@ -98,7 +98,7 @@
 .step::before { content:""; position:absolute; left:13px; top:30px; bottom:4px; width:2px; border-radius:2px; background:var(--line); }
 .step:last-child::before { display:none; }
 .step[data-done="true"]::before { background:var(--primary-faint); }
-.node { position:absolute; left:0; top:0; display:grid; place-items:center; width:28px; height:28px; border-radius:999px; border:1.5px solid var(--line-strong); background:var(--panel-fixed); color:var(--text-body); font-size:12px; font-weight:700; transition:background-color .3s, border-color .3s, color .3s; }
+.node { position:absolute; left:0; top:0; display:grid; place-items:center; width:28px; height:28px; border-radius:999px; border:1.5px solid var(--line-strong); background:var(--panel-fixed); color:var(--text-body); font-size:12px; font-weight:700; transition:background-color .3s var(--ease-brand), border-color .3s var(--ease-brand), color .3s var(--ease-brand); }
 .step[data-done="true"] .node { border-color:var(--primary); background:var(--primary); color:var(--on-primary); }
 .stepTitle { margin:2px 0 16px; font-size:17px; font-weight:650; line-height:1.3; letter-spacing:-.01em; color:var(--text-strong); }
 
@@ -120,7 +120,7 @@
 .help { font-size:12px; line-height:1.45; color:var(--text-muted); }
 .fieldError { display:flex; align-items:flex-start; gap:5px; font-size:12px; font-weight:500; line-height:1.4; color:var(--down); animation:chip-in 280ms var(--ease-brand) both; }
 .fieldError svg { flex-shrink:0; margin-top:1px; }
-.input { height:46px; width:100%; min-width:0; border:1px solid var(--line-strong); border-radius:var(--radius-md); background:var(--panel-fixed); padding:0 12px; font-size:16px; color:var(--text-strong); outline:none; transition:border-color .2s, box-shadow .2s; }
+.input { height:46px; width:100%; min-width:0; border:1px solid var(--line-strong); border-radius:var(--radius-md); background:var(--panel-fixed); padding:0 12px; font-size:16px; color:var(--text-strong); outline:none; transition:border-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand); }
 @media (hover:hover) and (pointer:fine) { .input:hover { border-color:var(--text-muted); } }
 .input:focus { border-color:var(--line-focus); box-shadow:0 0 0 3px var(--primary-tint); }
 .input[aria-invalid="true"] { border-color:var(--down); }
@@ -135,7 +135,7 @@
 .chip { display:inline-flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin-top:12px; padding:7px 12px; border-radius:999px; background:var(--primary-tint); border:1px solid var(--primary-faint); font-size:12px; line-height:1.3; color:var(--text-body); animation:chip-in 420ms var(--ease-brand) both; }
 .chip strong { font-weight:700; color:var(--text-strong); }
 .chip[data-state="missing"] { background:var(--down-wash); border-color:transparent; color:var(--down); }
-.chip[data-state="loading"] { background:transparent; border-style:dashed; border-color:var(--line-strong); color:var(--text-muted); animation:chip-in 420ms var(--ease-brand) both, chip-wait 1.2s ease-in-out 420ms infinite alternate; }
+.chip[data-state="loading"] { background:transparent; border-style:dashed; border-color:var(--line-strong); color:var(--text-muted); animation:chip-in 420ms var(--ease-brand) both, chip-wait 1.2s var(--ease-loop) 420ms infinite alternate; }
 @keyframes chip-in { from { opacity:0; transform:translateY(6px) scale(.97); } }
 @keyframes chip-wait { to { opacity:.55; } }
 
@@ -164,7 +164,7 @@
 .rowTag { display:inline-flex; align-items:center; min-height:26px; padding:0 10px; border-radius:999px; font-size:12px; font-weight:700; }
 .rowTag[data-side="buy"] { background:var(--primary-tint); color:var(--primary-ink); }
 .rowTag[data-side="sell"] { background:var(--brass-wash); color:var(--brass-ink); }
-.remove { display:inline-grid; place-items:center; width:44px; height:44px; margin:-8px -10px -8px 0; border-radius:999px; color:var(--text-muted); transition:background-color .2s, color .2s; }
+.remove { display:inline-grid; place-items:center; width:44px; height:44px; margin:-8px -10px -8px 0; border-radius:999px; color:var(--text-muted); transition:background-color .2s var(--ease-brand), color .2s var(--ease-brand); }
 @media (hover:hover) and (pointer:fine) { .remove:hover { background:var(--down-wash); color:var(--down); } }
 
 
@@ -183,13 +183,13 @@
    duruyordu. Şimdi çukur tonda bir şerit; bütün şerit düğme (`::after`).
    Dosya üstüne gelince çerçeve 2 piksel mavi ve zemin mavi tonda: ışıma yok,
    yalnızca ton. */
-.drop { position:relative; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 16px; padding:12px 18px 12px 12px; border-radius:16px; background:var(--surface-sunken); box-shadow:inset 0 0 0 1px var(--line-soft); transition:background-color .25s, box-shadow .25s; }
+.drop { position:relative; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 16px; padding:12px 18px 12px 12px; border-radius:16px; background:var(--surface-sunken); box-shadow:inset 0 0 0 1px var(--line-soft); transition:background-color .25s var(--ease-brand), box-shadow .25s var(--ease-brand); }
 .drop[data-over] { background:var(--primary-tint); box-shadow:inset 0 0 0 2px var(--primary); }
 .dropButton { display:flex; align-items:center; gap:14px; min-width:0; text-align:left; }
 .dropButton::after { content:""; position:absolute; inset:0; border-radius:16px; }
 .dropButton:focus-visible { outline:none; }
 .dropButton:focus-visible::after { outline:2px solid var(--line-focus); outline-offset:2px; }
-.dropIcon { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; border-radius:12px; background:var(--panel-fixed); box-shadow:inset 0 0 0 1px var(--line-soft); color:var(--primary-ink); transition:transform .35s var(--ease-brand), background-color .25s; }
+.dropIcon { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; border-radius:12px; background:var(--panel-fixed); box-shadow:inset 0 0 0 1px var(--line-soft); color:var(--primary-ink); transition:transform .35s var(--ease-brand), background-color .25s var(--ease-brand); }
 .drop[data-over] .dropIcon { transform:translateY(-3px) scale(1.06); background:var(--primary-wash); }
 .dropTitle { display:block; font-size:15px; font-weight:650; line-height:1.25; letter-spacing:-.01em; color:var(--text-strong); }
 .dropHint { display:block; margin-top:3px; font-size:12px; line-height:1.4; color:var(--text-muted); }
@@ -204,7 +204,7 @@
 
 .import { margin-top:14px; padding:20px 16px; border-radius:18px; background:var(--surface-sunken); animation:chip-in 420ms var(--ease-brand) both; }
 @media (min-width:640px) { .import { padding:24px; } }
-.importLoading { height:132px; margin-top:14px; border-radius:18px; background:var(--surface-sunken); animation:chip-wait 1.2s ease-in-out infinite alternate; }
+.importLoading { height:132px; margin-top:14px; border-radius:18px; background:var(--surface-sunken); animation:chip-wait 1.2s var(--ease-loop) infinite alternate; }
 .importState { display:flex; flex-direction:column; gap:14px; }
 .importTitle { margin:0; font-size:clamp(19px, 4.4vw, 22px); font-weight:700; line-height:1.2; letter-spacing:-.02em; color:var(--text-strong); }
 .importBody { margin:0; max-width:68ch; font-size:13px; line-height:1.6; color:var(--text-body); }
@@ -271,7 +271,7 @@
 .stick { position:sticky; left:0; z-index:1; background:var(--panel-fixed); border-right:1px solid var(--line-soft); }
 .stickInner { display:flex; align-items:center; gap:10px; }
 .check { width:18px; height:18px; flex-shrink:0; accent-color:var(--primary); cursor:pointer; }
-.cell { height:36px; min-width:0; border:1px solid transparent; border-radius:8px; background:var(--surface); padding:0 8px; font-size:13px; color:var(--text-strong); outline:none; transition:border-color .2s, background-color .2s, opacity .2s; }
+.cell { height:36px; min-width:0; border:1px solid transparent; border-radius:8px; background:var(--surface); padding:0 8px; font-size:13px; color:var(--text-strong); outline:none; transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), opacity .2s var(--ease-brand); }
 .cell:focus { border-color:var(--line-focus); background:var(--panel-fixed); }
 .cell[aria-invalid="true"], .cell[data-ambiguous] { border-color:var(--brass); }
 select.cell { padding-right:4px; font-weight:700; }
@@ -303,7 +303,7 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .resultInner { display:flex; flex-direction:column; gap:22px; padding:24px 20px 26px; }
 @media (min-width:640px) { .resultInner { padding:28px 28px 30px; } }
 
-.verdict { display:inline-flex; align-items:center; gap:8px; width:fit-content; min-height:36px; padding:0 14px 0 10px; border-radius:999px; font-size:14px; font-weight:700; animation:verdict-in 520ms cubic-bezier(.34,1.4,.64,1) both; }
+.verdict { display:inline-flex; align-items:center; gap:8px; width:fit-content; min-height:36px; padding:0 14px 0 10px; border-radius:999px; font-size:14px; font-weight:700; animation:verdict-in 520ms var(--ease-spring-soft) both; }
 .verdict[data-need="yes"] { background:var(--primary); color:var(--on-primary); }
 .verdict[data-need="no"] { background:var(--surface-elevated); color:var(--text-strong); }
 .verdict[data-need="wait"] { background:transparent; border:1px dashed var(--line-strong); color:var(--text-muted); font-weight:600; }
@@ -374,11 +374,14 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .bar[data-tone="down"] { background:var(--down); }
 
 /* Temettü sınır ölçeği: toplam çubuk, sınır bir çentik. */
-.meter { position:relative; height:14px; margin-top:14px; }
+/* Çentik ve etiket `left` yerine `translate` ile kayar (12 Ekim): kap
+   sorgusu birimi (cqw) rayın genişliğini verir, düzen her karede yeniden
+   hesaplanmaz. */
+.meter { position:relative; height:14px; margin-top:14px; container-type:inline-size; }
 .meter::before { content:""; position:absolute; left:0; right:0; top:50%; height:1px; background:var(--line); }
-.meterTick { position:absolute; top:-6px; bottom:-6px; width:2px; margin-left:-1px; border-radius:2px; background:var(--text-strong); left:calc(var(--at) * 100%); transition:left 700ms var(--ease-brand); }
-.meterScale { position:relative; min-height:16px; margin-top:10px; font-size:12px; color:var(--text-muted); }
-.meterLimit { position:absolute; top:0; left:calc(var(--at) * 100%); transform:translateX(-50%); white-space:nowrap; font-weight:600; color:var(--text-strong); transition:left 700ms var(--ease-brand); }
+.meterTick { position:absolute; top:-6px; bottom:-6px; width:2px; margin-left:-1px; border-radius:2px; background:var(--text-strong); left:0; translate:calc(var(--at) * 100cqw) 0; transition:translate 700ms var(--ease-brand); }
+.meterScale { position:relative; container-type:inline-size; min-height:16px; margin-top:10px; font-size:12px; color:var(--text-muted); }
+.meterLimit { position:absolute; top:0; left:0; translate:calc(var(--at) * 100cqw) 0; transform:translateX(-50%); white-space:nowrap; font-weight:600; color:var(--text-strong); transition:translate 700ms var(--ease-brand); }
 
 .notes { display:flex; flex-direction:column; gap:8px; padding-top:18px; border-top:1px solid var(--line-soft); font-size:12px; line-height:1.55; color:var(--text-muted); }
 .warn { color:var(--down); }
@@ -436,7 +439,7 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .checkIcon { display:grid; place-items:center; width:28px; height:28px; border-radius:8px; background:var(--primary-tint); color:var(--primary-ink); }
 .checkName { display:block; font-size:14px; font-weight:650; color:var(--text-strong); }
 .checkBody { display:block; margin-top:2px; font-size:12px; line-height:1.55; color:var(--text-body); }
-.inlineLink { display:inline-flex; align-items:center; gap:4px; min-height:32px; font-size:12px; font-weight:600; color:var(--primary-ink); transition:color .2s; }
+.inlineLink { display:inline-flex; align-items:center; gap:4px; min-height:32px; font-size:12px; font-weight:600; color:var(--primary-ink); transition:color .2s var(--ease-brand); }
 .inlineLink:hover { color:var(--primary-hover); }
 
 /* ---------- Nasıl hesaplanır (TaxHow, 29 Eylül) ----------

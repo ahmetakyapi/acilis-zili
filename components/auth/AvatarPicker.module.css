@@ -14,14 +14,14 @@
 .legend { padding:0; margin-bottom:10px; font-size:var(--text-small); font-weight:700; color:var(--text-strong); }
 
 .swatches { display:flex; flex-wrap:wrap; gap:10px; }
-.swatch { display:grid; place-items:center; width:36px; height:36px; border-radius:999px; color:var(--mark-ink); cursor:pointer; box-shadow:inset 0 0 0 1px var(--mark-edge); transition:translate .2s, scale .15s, box-shadow .2s; }
+.swatch { display:grid; place-items:center; width:36px; height:36px; border-radius:999px; color:var(--mark-ink); cursor:pointer; box-shadow:inset 0 0 0 1px var(--mark-edge); transition:translate .2s var(--ease-brand), scale .15s var(--ease-brand), box-shadow .2s var(--ease-brand); }
 .swatch[data-active] { box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 5px var(--primary), inset 0 0 0 1px var(--mark-edge); }
 .swatch:focus-visible { outline:2px solid var(--line-focus); outline-offset:4px; }
 
 .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(56px, 1fr)); gap:12px; }
-.option { position:relative; display:grid; place-items:center; aspect-ratio:1; border-radius:18px; cursor:pointer; transition:translate .22s, scale .15s; }
+.option { position:relative; display:grid; place-items:center; aspect-ratio:1; border-radius:18px; cursor:pointer; transition:translate .22s var(--ease-brand), scale .15s var(--ease-brand); }
 .option:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
-.tile { width:100%; height:100%; border-radius:16px; font-size:17px; transition:box-shadow .22s; }
+.tile { width:100%; height:100%; border-radius:16px; font-size:17px; transition:box-shadow .22s var(--ease-brand); }
 .option[data-active] .tile { box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 5px var(--primary), inset 0 0 0 1px var(--mark-edge) !important; }
 .check { position:absolute; right:-4px; top:-4px; display:grid; place-items:center; width:20px; height:20px; border-radius:999px; background:var(--primary); color:var(--on-primary); box-shadow:0 0 0 2px var(--premium-surface); animation:avatar-check 320ms var(--ease-spring) both; }
 @keyframes avatar-check { from { scale:.3; opacity:0; } }

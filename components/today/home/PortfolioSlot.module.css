@@ -39,7 +39,7 @@
 .swatch { width:8px; height:8px; border-radius:2px; background:color-mix(in srgb, var(--primary) var(--tone), var(--surface-sunken)); }
 
 .rows > li + li { border-top:1px solid var(--line); }
-.row { display:flex; align-items:center; gap:12px; padding:10px 0; transition:opacity .2s; }
+.row { display:flex; align-items:center; gap:12px; padding:10px 0; transition:opacity .2s var(--ease-brand); }
 .row:hover { opacity:.8; }
 
 .note { border-top:1px solid var(--line-soft); padding-top:10px; color:var(--text-muted); font-size:var(--text-tiny); line-height:1.5; }

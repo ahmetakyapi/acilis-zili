@@ -44,7 +44,7 @@
 .labelCell { text-align:left; font-weight:400; min-width:132px; }
 .labelLink { display:flex; flex-direction:column; gap:1px; margin-block:-6px; padding-block:6px; color:var(--text-strong); }
 .labelLink:hover .labelName { color:var(--primary); }
-.labelName { font-size:var(--text-base); font-weight:650; line-height:1.3; color:var(--text-strong); transition:color .2s; }
+.labelName { font-size:var(--text-base); font-weight:650; line-height:1.3; color:var(--text-strong); transition:color .2s var(--ease-brand); }
 .labelSymbol { font-size:var(--text-tiny); color:var(--text-muted); }
 .valueCell { text-align:right; white-space:nowrap; }
 .valueCell > span:first-child { display:block; }
@@ -52,7 +52,7 @@
 .basis { display:block; margin-top:3px; font-size:var(--text-nano); font-weight:600; color:var(--text-body); }
 /* Renk `--text-body` (10 Ekim): başlık hücresinden miras alınan sönük ton
    10–11 puntoda 4,48:1 ölçüldü, eşiğin hemen altında. */
-.sortLink { display:inline-flex; align-items:center; gap:4px; min-height:44px; margin-block:-12px; color:var(--text-body); transition:color .2s; }
+.sortLink { display:inline-flex; align-items:center; gap:4px; min-height:44px; margin-block:-12px; color:var(--text-body); transition:color .2s var(--ease-brand); }
 @media(min-width:640px) { .sortLink { min-height:32px; margin-block:-8px; } }
 .sortLink:hover, .sortLink[data-active] { color:var(--primary); }
 .groupRow th { padding-top:12px; padding-bottom:6px; text-align:left; }

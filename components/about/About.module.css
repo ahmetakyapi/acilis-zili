@@ -46,7 +46,7 @@
 .principles { display:grid; grid-template-columns:minmax(0,1fr); border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); }
 .principles > li { min-width:0; padding:24px 20px; }
 .principles > li + li { border-top:1px solid var(--line-soft); }
-.principles > li > svg { color:var(--primary-ink); transition:rotate .5s,scale .5s; }
+.principles > li > svg { color:var(--primary-ink); transition:rotate .5s var(--ease-brand),scale .5s var(--ease-brand); }
 .principles h3 { margin-top:12px; font-size:clamp(28px,3.4vw,40px); line-height:1.04; letter-spacing:-.05em; font-weight:600; color:var(--text-strong); }
 .principles p { max-width:36ch; margin-top:9px; font-size:14px; line-height:1.65; color:var(--text-body); }
 @media(min-width:640px) {

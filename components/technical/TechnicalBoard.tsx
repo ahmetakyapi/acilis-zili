@@ -117,7 +117,13 @@ export function TechnicalBoard({ children, className }: { children: ReactNode; c
          nokta da görünmeyen bir yerden kalkmıyor. */
       const ring = dot.parentElement?.querySelector<HTMLElement>("[data-travel-ring]");
       if (ring && getComputedStyle(ring).display === "none") continue;
-      const animation = dot.animate([{ left: from }, { left: dot.style.left }], {
+      /* Yol `translate` ile (12 Ekim): `left` her karede düzeni yeniden
+         hesaplatıyordu. `translate` ayrı özellik, `spark-dot`un `transform`
+         ölçeğiyle çakışmıyor; fark rayın genişliğinden piksele çevriliyor. */
+      const track = dot.offsetParent as HTMLElement | null;
+      const shift = ((parseFloat(from) - parseFloat(dot.style.left)) / 100) * (track?.clientWidth ?? 0);
+      if (!Number.isFinite(shift) || shift === 0) continue;
+      const animation = dot.animate([{ translate: `${shift}px 0` }, { translate: "0 0" }], {
         duration: TRAVEL_DURATION_MS,
         delay: TRAVEL_DELAY_MS,
         easing: EASE_BRAND,

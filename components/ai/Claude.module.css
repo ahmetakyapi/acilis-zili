@@ -7,12 +7,12 @@
 .identitySymbol { font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--text-strong); }
 .identityName { font-size:14px; color:var(--text-muted); }
 .identityLinks { display:flex; flex-wrap:wrap; gap:4px 18px; margin-left:auto; font-size:14px; }
-.identityLinks a { display:inline-flex; align-items:center; min-height:44px; color:var(--text-body); font-weight:600; transition:color 180ms; }
+.identityLinks a { display:inline-flex; align-items:center; min-height:44px; color:var(--text-body); font-weight:600; transition:color 180ms var(--ease-brand); }
 .identityLinks a:hover { color:var(--text-strong); }
 
 /* ---- Odak kartları: iki rapor türü, seçili olan zeminle ---- */
 .focusRow { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-.focusCard { position:relative; display:grid; grid-template-columns:120px minmax(0,1fr); gap:18px; align-items:center; min-height:150px; padding:18px 22px 18px 14px; border-radius:22px; background:var(--premium-surface); border:1px solid var(--line); overflow:hidden; transition:background-color 260ms, border-color 260ms, translate 320ms var(--ease-brand); }
+.focusCard { position:relative; display:grid; grid-template-columns:120px minmax(0,1fr); gap:18px; align-items:center; min-height:150px; padding:18px 22px 18px 14px; border-radius:22px; background:var(--premium-surface); border:1px solid var(--line); overflow:hidden; transition:background-color 260ms var(--ease-brand), border-color 260ms var(--ease-brand), translate 320ms var(--ease-brand); }
 .focusCard::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--primary); scale:0 1; transform-origin:left; transition:scale 520ms var(--ease-brand); }
 .focusCard:hover { border-color:var(--line-strong); translate:0 -2px; }
 .focusCard[aria-current="true"] { background:var(--surface-sunken); border-color:transparent; }
@@ -53,7 +53,7 @@
 .workbench { display:grid; gap:14px; }
 .stage { position:relative; isolation:isolate; display:grid; grid-template-rows:auto 1fr auto auto; gap:clamp(20px,3vw,32px); aspect-ratio:16 / 8; min-height:320px; padding:clamp(20px,3.2vw,36px); border-radius:24px; background:var(--surface-sunken); overflow:hidden; }
 /* Silik fiyat çizgisi: kırpmayla açılır (pathLength + non-scaling-stroke kesik ölçüsünü kaydırıyordu, Analysis.module.css → .chartLine). */
-.stageLine { position:absolute; z-index:-1; left:0; right:0; bottom:14%; width:100%; height:48%; overflow:visible; clip-path:inset(0 100% 0 0); animation:line-draw 2400ms var(--ease-brand) 500ms forwards; }
+.stageLine { position:absolute; z-index:-1; left:0; right:0; bottom:14%; width:100%; height:48%; overflow:visible; clip-path:inset(0 100% 0 0); animation:line-draw 1600ms var(--ease-brand) 300ms forwards; }
 .stageLine path { fill:none; stroke:var(--text-strong); stroke-width:2.4; stroke-linejoin:round; stroke-linecap:round; opacity:.09; }
 @keyframes line-draw { to { clip-path:inset(0 0 0 0); } }
 
@@ -68,26 +68,31 @@
 
 .stageBody { display:grid; align-content:center; gap:12px; min-width:0; }
 .stageTitle { font-size:clamp(2.3rem,6.2vw,4.75rem); line-height:1.02; font-weight:800; letter-spacing:-.055em; color:var(--text-strong); text-wrap:balance; }
-.stageHint { max-width:40em; font-size:15px; line-height:1.6; color:var(--text-body); animation:stage-in 700ms var(--ease-brand) 520ms both; }
+.stageHint { max-width:40em; font-size:15px; line-height:1.6; color:var(--text-body); animation:stage-in-2 520ms var(--ease-brand) 160ms both; }
 
 .program { display:grid; gap:12px; }
-.programTitle { font-size:12px; font-weight:700; color:var(--text-muted); animation:stage-in 600ms var(--ease-brand) 640ms both; }
+.programTitle { font-size:12px; font-weight:700; color:var(--text-muted); animation:stage-in-2 480ms var(--ease-brand) 280ms both; }
 .program ol { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px 18px; }
-.program li { position:relative; display:grid; grid-template-columns:auto minmax(0,1fr); gap:2px 10px; padding-top:12px; animation:stage-in 640ms var(--ease-brand) calc(720ms + var(--i,0) * 90ms) both; }
+.program li { position:relative; display:grid; grid-template-columns:auto minmax(0,1fr); gap:2px 10px; padding-top:12px; animation:stage-in-2 480ms var(--ease-brand) calc(340ms + var(--i,0) * 60ms) both; }
 /* Perde çizgisi soldan çekilir: filmin ilerleme çizgisinin habercisi. */
-.program li::before { content:""; position:absolute; inset:0 0 auto; height:2px; border-radius:999px; background:var(--line-strong); transform-origin:left; animation:rule-draw 760ms var(--ease-brand) calc(760ms + var(--i,0) * 90ms) both; }
+.program li::before { content:""; position:absolute; inset:0 0 auto; height:2px; border-radius:999px; background:var(--line-strong); transform-origin:left; animation:rule-draw 560ms var(--ease-brand) calc(360ms + var(--i,0) * 60ms) both; }
 @keyframes rule-draw { from { scale:0 1; } to { scale:1 1; } }
 .programNo { grid-row:span 2; font-family:var(--font-mono); font-size:12px; font-weight:700; line-height:1.6; color:var(--brass-ink); }
 .programName { font-size:14px; font-weight:700; letter-spacing:-.015em; color:var(--text-strong); }
 .programLine { font-size:12.5px; line-height:1.5; color:var(--text-muted); }
 
-.stageFoot { display:flex; flex-wrap:wrap; align-items:center; gap:14px 22px; animation:stage-in 700ms var(--ease-brand) 1050ms both; }
+.stageFoot { display:flex; flex-wrap:wrap; align-items:center; gap:14px 22px; animation:stage-in-2 480ms var(--ease-brand) 560ms both; }
 @keyframes stage-in { from { opacity:0; translate:0 14px; } to { opacity:1; translate:0 0; } }
+/* KADEME (12 Ekim; motion-film `sayilar.md` → hiyerarşi). Kahraman başlık
+   14 px yürüyor; geri kalanı ikincil: yolun %60'ı (8 px), sonraki öğe
+   öncekinin ~%40'ı bitince. Sahne 2,9 saniyede değil ~1,1 saniyede
+   kuruluyor; çizgi (ortam) 1,9 saniyede biter. */
+@keyframes stage-in-2 { from { opacity:0; translate:0 8px; } to { opacity:1; translate:0 0; } }
 
 /* Birincil eylem: marka degradesi (CLAUDE.md → degrade yalnız birincil eylemde).
    Üzerine gelince yazı yukarı kayar, altından kopyası gelir (gölgesiz text-shadow
    kopya, ışıma değil); ok kendi dairesinde ileri gider. */
-.go { display:inline-flex; align-items:center; gap:18px; min-height:60px; padding:8px 8px 8px 28px; border-radius:999px; background:var(--mark-gradient); color:var(--mark-ink); font-size:17px; font-weight:700; letter-spacing:-.015em; cursor:pointer; transition:padding 420ms var(--ease-brand), gap 420ms var(--ease-brand), scale 160ms var(--ease-brand), opacity 200ms; }
+.go { display:inline-flex; align-items:center; gap:18px; min-height:60px; padding:8px 8px 8px 28px; border-radius:999px; background:var(--mark-gradient); color:var(--mark-ink); font-size:17px; font-weight:700; letter-spacing:-.015em; cursor:pointer; transition:padding 420ms var(--ease-brand), gap 420ms var(--ease-brand), scale 160ms var(--ease-brand), opacity 200ms var(--ease-brand); }
 .go:active { scale:.97; }
 .go:focus-visible { outline:2px solid var(--line-focus); outline-offset:4px; }
 .go:disabled { opacity:.45; cursor:not-allowed; }
@@ -101,7 +106,7 @@
 .quota { display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-muted); }
 .quota b { font-size:15px; color:var(--text-strong); }
 .pips { display:inline-flex; gap:4px; }
-.pips i { width:8px; height:8px; border-radius:50%; background:var(--line-strong); animation:tile-in 420ms var(--ease-brand) calc(1150ms + var(--i,0) * 45ms) both; }
+.pips i { width:8px; height:8px; border-radius:50%; background:var(--line-strong); animation:tile-in 320ms var(--ease-brand) calc(620ms + var(--i,0) * 40ms) both; }
 .pips i[data-on] { background:var(--text-strong); }
 .latest { margin-left:auto; gap:8px; }
 .latest b { font-weight:800; color:var(--text-strong); }
@@ -110,7 +115,7 @@
 .latest[data-verdict="hold"] b { color:var(--primary-ink); }
 .latest small { font-size:11.5px; font-weight:500; color:var(--text-muted); }
 
-.today { padding:10px 14px; border-radius:14px; background:var(--brass-wash); color:var(--brass-ink); font-size:13.5px; line-height:1.55; animation:stage-in 600ms var(--ease-brand) 1200ms both; }
+.today { padding:10px 14px; border-radius:14px; background:var(--brass-wash); color:var(--brass-ink); font-size:13.5px; line-height:1.55; animation:stage-in-2 480ms var(--ease-brand) 640ms both; }
 .today strong { font-weight:700; }
 .stageNote { font-size:14px; color:var(--text-body); }
 .error { padding:12px 16px; border-radius:14px; background:var(--down-wash); color:var(--down); font-size:14px; }
@@ -118,9 +123,9 @@
 /* Çıkış: önce kimlik ve yazı yukarı kaçar, sonra perdeler; düğmenin yazısı
    kapanır, ok dairesi mürekkep damlasına döner ve kâğıda oturur. Filmin ilk
    karesi boş kâğıt: kesme okunmaz. */
-.stage[data-launching] :is(.stageHead,.stageBody,.program,.quota,.latest,.today,.ctaEdition,.stageLine) { animation:stage-out 380ms var(--ease-brand) both; }
-.stage[data-launching] .program { animation-delay:60ms; }
-.stage[data-launching] :is(.quota,.latest) { animation-delay:100ms; }
+.stage[data-launching] :is(.stageHead,.stageBody,.program,.quota,.latest,.today,.ctaEdition,.stageLine) { animation:stage-out 240ms var(--ease-brand-in) both; }
+.stage[data-launching] .program { animation-delay:40ms; }
+.stage[data-launching] :is(.quota,.latest) { animation-delay:70ms; }
 @keyframes stage-out { to { opacity:0; translate:0 -18px; } }
 .stage[data-launching] .go { gap:0; padding:8px; opacity:1; cursor:default; }
 .stage[data-launching] .goLabel { max-width:0; opacity:0; }
@@ -129,7 +134,7 @@
 
 /* ---- Geçmiş ---- */
 .history { display:grid; gap:8px; }
-.historyRow { display:grid; grid-template-columns:44px minmax(70px,auto) minmax(0,1fr) auto minmax(0,auto) auto; gap:16px; align-items:center; min-height:64px; padding:10px 16px; border-radius:16px; background:var(--premium-surface); border:1px solid var(--line); transition:background-color 200ms, border-color 200ms; }
+.historyRow { display:grid; grid-template-columns:44px minmax(70px,auto) minmax(0,1fr) auto minmax(0,auto) auto; gap:16px; align-items:center; min-height:64px; padding:10px 16px; border-radius:16px; background:var(--premium-surface); border:1px solid var(--line); transition:background-color 200ms var(--ease-brand), border-color 200ms var(--ease-brand); }
 .historyRow:hover { border-color:var(--line-strong); background:var(--surface-sunken); }
 .historyVerdict { font-size:17px; font-weight:800; letter-spacing:-.03em; color:var(--text-strong); }
 [data-verdict="buy"] > .historyVerdict { color:var(--up); }
@@ -163,7 +168,7 @@
 .ctaActions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
 /* Sıradaki teknik yayın: satırların altında sessiz bir künye satırı (kutu değil). */
 .ctaEdition { display:flex; align-items:flex-start; gap:10px; margin:14px 16px 0; padding:0 4px; font-size:13.5px; line-height:1.55; color:var(--text-body); }
-.ctaEdition[data-stage] { margin:0; padding:0; animation:stage-in 600ms var(--ease-brand) 1250ms both; }
+.ctaEdition[data-stage] { margin:0; padding:0; animation:stage-in-2 480ms var(--ease-brand) 680ms both; }
 .ctaEdition svg { flex:none; width:18px; height:18px; margin-top:1px; fill:none; stroke:var(--primary-ink); stroke-width:2; stroke-linecap:round; }
 .ctaHint { margin:14px 16px 0; padding:12px 4px 16px; border-top:1px solid var(--line); font-size:13px; line-height:1.55; color:var(--text-muted); }
 @container (max-width: 560px) {
@@ -187,7 +192,7 @@
    zemin, tam ad, sonda ok — tonlu hap düğme gibi okunmuyordu (11 Ekim).
    Teknik kartın tüm yüzeyini kaplayan bağlantının (::after, z-index 1)
    ÜSTÜNDE durur. `block`: kartın dibinde tam genişlik, ayırıcı çizginin altında. */
-.ctaAction { position:relative; z-index:2; display:inline-flex; align-items:center; gap:8px; min-height:36px; padding:0 14px; border-radius:999px; background:var(--primary); color:var(--on-primary); font-size:13.5px; font-weight:700; white-space:nowrap; transition:background-color 200ms; }
+.ctaAction { position:relative; z-index:2; display:inline-flex; align-items:center; gap:8px; min-height:36px; padding:0 14px; border-radius:999px; background:var(--primary); color:var(--on-primary); font-size:13.5px; font-weight:700; white-space:nowrap; transition:background-color 200ms var(--ease-brand); }
 .ctaAction:hover { background:var(--primary-hover); }
 .ctaAction:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 .ctaAction svg { flex:none; width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
@@ -243,7 +248,7 @@
 .tlStep[data-kind="next"] .tlDot { background:var(--premium-surface); border:2px dashed var(--line-strong); }
 .tlLink { position:absolute; z-index:1; top:4px; left:calc(22px + (100% + var(--gap)) / 2); padding:0 8px; background:var(--premium-surface); font-size:11.5px; font-weight:650; line-height:20px; color:var(--text-muted); white-space:nowrap; font-variant-numeric:tabular-nums; translate:-50% 0; }
 
-.tlCard { position:relative; display:grid; grid-template-rows:auto 34px auto; align-content:start; gap:10px; min-width:0; padding:14px 16px 12px; border-radius:18px; background:var(--surface-sunken); border:1px solid transparent; overflow:hidden; transition:background-color 220ms, border-color 220ms, translate 320ms var(--ease-brand); }
+.tlCard { position:relative; display:grid; grid-template-rows:auto 34px auto; align-content:start; gap:10px; min-width:0; padding:14px 16px 12px; border-radius:18px; background:var(--surface-sunken); border:1px solid transparent; overflow:hidden; transition:background-color 220ms var(--ease-brand), border-color 220ms var(--ease-brand), translate 320ms var(--ease-brand); }
 a.tlCard:hover { background:var(--premium-surface); border-color:var(--line-strong); translate:0 -2px; }
 a.tlCard:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 .tlCard[aria-current="true"] { background:var(--premium-surface); border-color:var(--primary); }

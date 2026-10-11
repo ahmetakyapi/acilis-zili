@@ -17,7 +17,7 @@
 .summary { display:flex; flex-direction:column; gap:12px; min-width:0; padding-top:18px; border-top:1px solid var(--line); }
 .summaryTitle.summaryTitle { width:fit-content; max-width:100%; font-size:13px; line-height:1.35; font-weight:650; letter-spacing:-.01em; }
 .summaryGrid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:10px; }
-.tile { position:relative; display:grid; grid-row:span 3; grid-template-rows:subgrid; row-gap:8px; min-width:0; padding:12px 12px 10px; border:1px solid var(--line-soft); border-radius:var(--radius-lg); background:var(--surface); color:inherit; text-decoration:none; transition:border-color .2s, background-color .2s, translate .28s var(--ease-brand); }
+.tile { position:relative; display:grid; grid-row:span 3; grid-template-rows:subgrid; row-gap:8px; min-width:0; padding:12px 12px 10px; border:1px solid var(--line-soft); border-radius:var(--radius-lg); background:var(--surface); color:inherit; text-decoration:none; transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), translate .28s var(--ease-brand); }
 @media(hover:hover) and (pointer:fine) { .tile:hover { translate:0 -2px; border-color:var(--primary-faint); background:var(--surface-elevated); } }
 .tile:active { translate:0 1px; }
 .tile:last-child:nth-child(6n+5) { grid-column:span 2; }
@@ -54,7 +54,7 @@
    (alt kenar marka mavisi) ayrılıyor; sekme hapıyla yarışmasın. */
 .chips { display:flex; gap:8px; min-width:0; overflow-x:auto; scrollbar-width:none; margin-inline:calc(var(--page-frame-inset) * -1); padding-inline:var(--page-frame-inset); scroll-padding-inline:var(--page-frame-inset); }
 .chips::-webkit-scrollbar { display:none; }
-.chips button { display:inline-flex; flex-shrink:0; align-items:center; min-height:36px; padding:6px 12px; border:1px solid var(--line); border-radius:12px; font-size:13px; font-weight:600; color:var(--text-body); white-space:nowrap; cursor:pointer; transition:border-color .2s, background-color .2s, color .2s; }
+.chips button { display:inline-flex; flex-shrink:0; align-items:center; min-height:36px; padding:6px 12px; border:1px solid var(--line); border-radius:12px; font-size:13px; font-weight:600; color:var(--text-body); white-space:nowrap; cursor:pointer; transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), color .2s var(--ease-brand); }
 .chips button[aria-pressed="true"] { border-color:var(--primary); background:var(--primary-tint); color:var(--primary-ink); }
 @media(hover:hover) { .chips button[aria-pressed="false"]:hover { border-color:var(--line-strong); color:var(--text-strong); } }
 

@@ -13,7 +13,7 @@
    `--dp-field-font`): portföy formunun alanları 52 piksel ve 14 yarıçap,
    tarih alanı onların arasında 46'da kalıp sırıtıyordu (30 Eylül).
    Varsayılanlar eski değerler. */
-.field { position:relative; display:flex; align-items:center; min-width:0; height:var(--dp-field-h, 46px); border:1px solid var(--line); border-radius:var(--dp-field-r, var(--radius-md)); background:var(--surface-elevated); transition:border-color .2s, background-color .2s, box-shadow .2s; }
+.field { position:relative; display:flex; align-items:center; min-width:0; height:var(--dp-field-h, 46px); border:1px solid var(--line); border-radius:var(--dp-field-r, var(--radius-md)); background:var(--surface-elevated); transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand); }
 .field:hover { border-color:var(--line-strong); }
 .field:focus-within, .field[data-open] { border-color:var(--line-focus); background:var(--panel-fixed); }
 .field[data-open] { box-shadow:0 0 0 3px var(--primary-tint); }
@@ -28,7 +28,7 @@
 
 .weekday { flex:none; padding:0 2px 0 6px; font-size:12px; font-weight:600; color:var(--text-muted); pointer-events:none; }
 
-.toggle { flex:none; display:grid; place-items:center; align-self:stretch; width:44px; margin-left:2px; border-radius:0 calc(var(--dp-field-r, var(--radius-md)) - 1px) calc(var(--dp-field-r, var(--radius-md)) - 1px) 0; color:var(--primary-ink); cursor:pointer; transition:background-color .2s, color .2s; }
+.toggle { flex:none; display:grid; place-items:center; align-self:stretch; width:44px; margin-left:2px; border-radius:0 calc(var(--dp-field-r, var(--radius-md)) - 1px) calc(var(--dp-field-r, var(--radius-md)) - 1px) 0; color:var(--primary-ink); cursor:pointer; transition:background-color .2s var(--ease-brand), color .2s var(--ease-brand); }
 .toggle:hover { background:var(--primary-tint); }
 .toggle:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
 .root[data-size="cell"] .toggle { width:32px; border-radius:0 7px 7px 0; }
@@ -62,13 +62,13 @@
 /* Yerli liste görünmez ve etiketin üstünde: tıklama ve klavye listeye
    gidiyor, görünen şey etiket. Telefonda işletim sisteminin çarkı açılıyor. */
 .dropdown { position:absolute; inset:0; z-index:2; width:100%; margin:0; padding:0; border:0; opacity:0; appearance:none; font:inherit; cursor:pointer; }
-.captionLabel { display:inline-flex; align-items:center; gap:6px; height:36px; padding:0 10px; border-radius:10px; font-size:var(--text-read); font-weight:700; letter-spacing:-.01em; white-space:nowrap; color:var(--text-strong); transition:background-color .2s, color .2s; }
+.captionLabel { display:inline-flex; align-items:center; gap:6px; height:36px; padding:0 10px; border-radius:10px; font-size:var(--text-read); font-weight:700; letter-spacing:-.01em; white-space:nowrap; color:var(--text-strong); transition:background-color .2s var(--ease-brand), color .2s var(--ease-brand); }
 .dropdownRoot:hover .captionLabel { background:var(--surface-sunken); }
 .dropdown:focus-visible + .captionLabel { outline:2px solid var(--line-focus); outline-offset:1px; }
 .dropdownRoot .chevron { color:var(--text-muted); }
 
 .navGroup { position:absolute; top:2px; right:0; z-index:3; display:flex; gap:4px; }
-.nav { display:grid; place-items:center; width:36px; height:36px; border-radius:10px; color:var(--primary-ink); cursor:pointer; transition:background-color .2s, opacity .2s; }
+.nav { display:grid; place-items:center; width:36px; height:36px; border-radius:10px; color:var(--primary-ink); cursor:pointer; transition:background-color .2s var(--ease-brand), opacity .2s var(--ease-brand); }
 .nav:hover:not([aria-disabled="true"]) { background:var(--primary-tint); }
 .nav[aria-disabled="true"] { color:var(--text-muted); opacity:.35; cursor:default; }
 .chevron { display:block; }
@@ -84,7 +84,7 @@
 .week { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:2px; }
 .weekdayHead { padding:2px 0 8px; font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--text-muted); text-align:center; }
 .cell { position:relative; display:block; min-width:0; }
-.day { position:relative; display:grid; place-items:center; width:100%; height:var(--dp-day); border-radius:12px; font-size:14px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--text-strong); cursor:pointer; transition:background-color .15s, color .15s; }
+.day { position:relative; display:grid; place-items:center; width:100%; height:var(--dp-day); border-radius:12px; font-size:14px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--text-strong); cursor:pointer; transition:background-color .15s var(--ease-brand), color .15s var(--ease-brand); }
 .weekend .day { color:var(--text-body); font-weight:500; }
 .outside .day { color:var(--text-muted); font-weight:400; opacity:.55; }
 .day:hover:not(:disabled) { background:var(--primary-tint); color:var(--primary-ink); }
@@ -101,7 +101,7 @@
 .footValue { flex:1 1 auto; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; padding-left:4px; font-size:var(--text-small); font-weight:600; color:var(--text-body); }
 .footValue[data-empty] { color:var(--text-muted); font-weight:500; }
 .popup[data-sheet] .foot { justify-content:space-between; }
-.footAction, .footQuiet { min-height:36px; padding:0 12px; border-radius:9px; font-size:var(--text-small); font-weight:600; cursor:pointer; transition:background-color .2s, color .2s; }
+.footAction, .footQuiet { min-height:36px; padding:0 12px; border-radius:9px; font-size:var(--text-small); font-weight:600; cursor:pointer; transition:background-color .2s var(--ease-brand), color .2s var(--ease-brand); }
 .footAction { color:var(--primary-ink); }
 .footAction:hover:not(:disabled) { background:var(--primary-tint); }
 .footAction:disabled { color:var(--text-muted); opacity:.5; cursor:default; }

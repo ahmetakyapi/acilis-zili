@@ -7,7 +7,7 @@
 .breadcrumb { display:flex; align-items:center; gap:12px; min-height:28px; }
 .breadcrumb:has(.researchLinks) { flex-wrap:wrap; }
 .researchLinks { min-width:0; margin-left:auto; }
-.researchLinks a { display:flex; min-height:44px; align-items:center; gap:10px; padding:0 12px; border:1px solid var(--primary-faint); border-radius:10px; background:var(--primary-tint); color:var(--primary-ink); font-size:12px; transition:background .2s; }
+.researchLinks a { display:flex; min-height:44px; align-items:center; gap:10px; padding:0 12px; border:1px solid var(--primary-faint); border-radius:10px; background:var(--primary-tint); color:var(--primary-ink); font-size:12px; transition:background .2s var(--ease-brand); }
 .researchLinks a:hover { background:var(--primary-wash); }
 .researchLinks a:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 .researchLinks strong { color:var(--text-strong); font-weight:600; }
@@ -26,7 +26,7 @@
  .identityChip svg { flex-shrink:0; }
 }
 @media(prefers-reduced-motion:reduce) { .researchLinks a { transition:none; } }
-.backLink { display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); font-size:12px; font-weight:600; transition:color 180ms ease; }
+.backLink { display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); font-size:12px; font-weight:600; transition:color 180ms var(--ease-brand); }
 .backLink:hover { color:var(--primary); }
 /* AYRAÇ ÇİZGİ RENGİNDE DEĞİL. `--line-strong` bir KENARLIK tonu; eğik çizgi
    onunla 1,41 kontrastta kalıyordu (ölçüldü) — ekranda neredeyse yok, bir
@@ -122,7 +122,7 @@
 .earningsPanel > div:first-child { padding-top:24px; padding-bottom:22px; }
 .earningsPanel thead { background:var(--surface-sunken); }
 .earningsPanel tbody td { padding-top:18px; padding-bottom:18px; }
-.earningsPanel tbody tr { transition:background 180ms ease; }
+.earningsPanel tbody tr { transition:background 180ms var(--ease-brand); }
 .earningsPanel tbody tr:hover { background:var(--primary-tint); }
 .peersPanel { --fold-inset:20px; border-radius:22px; background:var(--premium-surface,var(--surface-solid)); }
 /* BENZERLER SIRALI BİR LİSTE (24 Eylül) — gerekçe PeersCard'da. Satır 52
@@ -130,7 +130,7 @@
    Hover yalnızca satır tonu; kalkma, gölge, ok kayması yok. Sayfanın
    şirketi bağlantı değil, `--primary-tint` zeminli vurgulu satır. */
 .peerList { display:grid; grid-template-columns:minmax(0,1fr); padding:4px 20px 12px; }
-.peerRow { display:grid; min-height:52px; grid-template-columns:28px minmax(0,1fr) minmax(76px,.8fr) 104px; align-items:center; gap:12px; margin-inline:-8px; padding:6px 8px; border-radius:10px; transition:background 180ms ease; }
+.peerRow { display:grid; min-height:52px; grid-template-columns:28px minmax(0,1fr) minmax(76px,.8fr) 104px; align-items:center; gap:12px; margin-inline:-8px; padding:6px 8px; border-radius:10px; transition:background 180ms var(--ease-brand); }
 .peerList > li + li .peerRow { box-shadow:0 -1px 0 var(--line-soft); }
 a.peerRow:hover { background:var(--surface-sunken); }
 a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
@@ -147,7 +147,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    dolgu + 86 piksellik alt sınır + 84 piksellik görselle 1280'de 130
    piksel tutuyordu ve dört satırlık iki sütun 580'di. Dolgu 14, görsel 64,
    alt sınır 64: başlık yine üç satıra kadar sığıyor (15 × 1,45 × 3 ≈ 65). */
-.newsLink { display:block; height:100%; padding:14px 20px; transition:background 220ms ease; }
+.newsLink { display:block; height:100%; padding:14px 20px; transition:background 220ms var(--ease-brand); }
 .newsLink:hover { background:var(--primary-tint); }
 .newsInner { display:flex; align-items:flex-start; gap:18px; }
 .newsInner > span:first-child { display:flex; flex-direction:column; justify-content:space-between; min-height:64px; }
@@ -396,7 +396,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .analystExplanation summary { display:flex; justify-content:space-between; align-items:center; gap:10px; min-height:32px; list-style:none; cursor:pointer; font-size:12px; color:var(--text-muted); }
 .analystExplanation summary::-webkit-details-marker { display:none; }
 .analystExplanation summary > .analystSummaryLabel { margin-right:auto; }
-.analystExplanation summary > .analystToggle { color:var(--primary); font-size:17px; transition:transform .2s; }
+.analystExplanation summary > .analystToggle { color:var(--primary); font-size:17px; transition:transform .2s var(--ease-brand); }
 .analystExplanation[open] summary > .analystToggle { transform:rotate(45deg); }
 .fundamentalsGrid .analystPanel .cardNote { margin:0 0 12px; padding:0; border:0; }
 /* Künye açıklama satırının içinde, "+"nın solunda: ayrı bir dip satırı ve
@@ -748,7 +748,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    ok hover'da geri yönde kayıyor (gideceği yönü gösteriyor). Sembol çipin
    dilinde, ayraç kalıyor. */
 .breadcrumb { gap:10px; }
-.backLink { min-height:36px; padding:0 14px 0 10px; border:1px solid var(--line); border-radius:999px; background:var(--premium-surface,var(--surface-solid)); color:var(--text-body); transition:color .2s, border-color .2s; }
+.backLink { min-height:36px; padding:0 14px 0 10px; border:1px solid var(--line); border-radius:999px; background:var(--premium-surface,var(--surface-solid)); color:var(--text-body); transition:color .2s var(--ease-brand), border-color .2s var(--ease-brand); }
 .backLink > svg { transition:translate .25s var(--ease-brand); }
 .backLink:hover { border-color:var(--primary-faint); color:var(--primary-ink); }
 .backLink:hover > svg { translate:-3px 0; }
@@ -1032,7 +1032,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 }
 /* Merdivende fareyle gezinmek bir okuma: üzerine gelinen sütun koyulaşıyor,
    `title` adını ve değerini söylüyor. Şirketin kendi sütunu hep dolu. */
-.capLadderRun > i { transition:background-color 180ms; }
+.capLadderRun > i { transition:background-color 180ms var(--ease-brand); }
 @media(hover:hover) {
   .capLadderRun > i:not([data-self]):hover { background:color-mix(in oklab, var(--primary) 48%, transparent); }
 }

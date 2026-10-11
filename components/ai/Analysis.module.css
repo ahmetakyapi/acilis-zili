@@ -162,14 +162,14 @@ li[data-tone="now"] .ladderName { color:var(--text-strong); }
 .sources { display:grid; gap:0; }
 .sources li { display:grid; gap:4px; padding:12px 0; border-top:1px solid var(--line-soft); }
 .sources li:first-child { border-top:0; padding-top:0; }
-.sources a { justify-self:start; font-size:15px; font-weight:650; line-height:1.4; letter-spacing:-.01em; color:var(--text-strong); transition:color 180ms; }
+.sources a { justify-self:start; font-size:15px; font-weight:650; line-height:1.4; letter-spacing:-.01em; color:var(--text-strong); transition:color 180ms var(--ease-brand); }
 .sources a:hover { color:var(--primary-hover); }
 .sourceMeta { font-size:12px; color:var(--text-muted); }
 .impact { max-width:52em; font-size:14px; line-height:1.65; color:var(--text-body); }
 .folds { display:grid; }
 .otherSources { display:grid; gap:12px; padding:4px 0 8px; }
 .otherSources li { display:grid; gap:2px; }
-.otherSources a { font-size:14px; color:var(--text-strong); transition:color 180ms; }
+.otherSources a { font-size:14px; color:var(--text-strong); transition:color 180ms var(--ease-brand); }
 .otherSources a:hover { color:var(--primary-hover); }
 .fold { border-bottom:1px solid var(--line-soft); }
 .fold summary { display:flex; align-items:center; min-height:48px; cursor:pointer; color:var(--text-strong); font-size:14px; font-weight:650; }

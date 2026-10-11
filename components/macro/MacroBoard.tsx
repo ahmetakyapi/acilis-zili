@@ -1,17 +1,12 @@
 "use client";
 
-import { EASE_BRAND_POINTS } from "@/lib/motion";
-
-import { animate } from "motion/react";
 import {
   createContext,
   use,
   useCallback,
   useContext,
-  useEffect,
   useId,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -99,11 +94,8 @@ export type BoardLabels = {
   all: string;
 };
 
-const EASE = EASE_BRAND_POINTS;
 /** Değişim bu kadarın altındaysa "Değişmedi" (FRED en çok iki hane yayımlar). */
 const FLAT_DELTA = 0.001;
-/** Rakamın sıfırdan yuvarlanma süresi (saniye): grafiğin çizilişiyle aynı. */
-const ROLL_SECONDS = 0.7;
 
 type Selection = {
   board: Promise<BoardData>;
@@ -182,7 +174,7 @@ function MacroStage({ group, series, extra }: { group: MacroGroupKey; series: Bo
           <h3 id={headingId} className={styles.inkTight}>{active.title}</h3>
           <p className="numeral">{active.period}</p>
           <div className={styles.figure}>
-            <strong className="numeral"><RollingValue value={active.latest} format={active.format} play={play} /></strong>
+            <strong className="numeral"><MacroValue value={active.latest} format={active.format} /></strong>
             {active.delta !== null && <Delta series={active} labels={labels} />}
             {active.status && <span className={styles.status} data-alert={isAlert(active) ? "" : undefined}>{active.status}</span>}
           </div>
@@ -232,36 +224,14 @@ function Delta({ series, labels }: { series: BoardSeries; labels: BoardLabels })
 }
 
 /**
- * Yuvarlanan rakam. Sayfa yüklenirken son değer sunucudan hazır gelir ve
- * kımıldamaz; okuyucu seri değiştirdiğinde sıfırdan yuvarlanır. Ara kareler
- * React durumuna değil doğrudan metne yazılıyor (kare başına yeniden çizim
- * yok); bileşen seri başına anahtarlı olduğundan React'in metni hiç
- * değişmiyor ve çakışma yok. Hareket azaltılmışsa son değer tek seferde.
+ * Rakam yuvarlanmaz (12 Ekim). Seri değişince 0'dan yuvarlanıyordu: faiz
+ * 4,33 iken ekranda 0,8 ve 2,1 gibi hiç yayımlanmamış ara değerler 0,7 saniye
+ * okunuyordu (veri dürüstlüğü 1). Planın kahramanı çizilen grafik; rakam
+ * ikincil, yerinde durur.
  */
-function RollingValue({ value, format, play }: { value: number; format: MacroValueFormat; play: boolean }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const reduced = useMotionPreference();
-  const [initial] = useState(() => formatMacroValue(play && !reduced ? 0 : value, format));
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-    const final = formatMacroValue(value, format);
-    if (!play || reduced) {
-      element.textContent = final;
-      return;
-    }
-    const controls = animate(0, value, {
-      duration: ROLL_SECONDS,
-      ease: EASE,
-      onUpdate: (current) => { element.textContent = formatMacroValue(current, format); },
-      onComplete: () => { element.textContent = final; },
-    });
-    return () => {
-      controls.stop();
-      element.textContent = final;
-    };
-  }, [value, format, play, reduced]);
-  return <span ref={ref} aria-label={formatMacroValue(value, format)}>{initial}</span>;
+function MacroValue({ value, format }: { value: number; format: MacroValueFormat }) {
+  const text = formatMacroValue(value, format);
+  return <span aria-label={text}>{text}</span>;
 }
 
 /* ---------------------------------------------------------- Ölçek ortak */
