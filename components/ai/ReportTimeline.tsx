@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, type CSSProperties } from "react";
+import { Fragment, type CSSProperties } from "react";
 import type { Dictionary } from "@/lib/i18n";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { Panel, PanelHeader } from "@/components/ui/primitives";
@@ -24,6 +24,12 @@ export const initialsOf = (name: string, locale: string) => name.slice(0, 2).toL
  * orantılı çizilseydi bir günlük boşluk bir saatlik boşluğu ekrandan
  * silerdi; süre aradaki künyede yazılı.
  *
+ * KAYDIRMA YOK (11 Ekim, sahibinin isteği). İlk sürüm sekiz raporu yatay
+ * kaydırılan bir izde gösteriyordu; telefonda ekranda bir rapor ya da yalnız
+ * "Şimdi" kalıyordu. Şimdi son üç rapor; panel dar olunca (kap sorgusu,
+ * Claude.module.css → .timeline) iz dikey ray olur, genişse tek satıra sığar.
+ * Daha eskisi Geçmiş sekmesinde ("Tüm Raporlar").
+ *
  * Öneri yumuşaktır (`nextReportAt`, lib/ai-analysis-core.ts): düğme her
  * zaman çalışır, burası yalnız ne zaman anlamlı olduğunu söyler. Geri sayım
  * istemcide 30 sn'de bir tazelenir, ilk çizim sunucunun saatiyle.
@@ -34,26 +40,19 @@ export function ReportTimeline({ items, next, nextLabel, now: serverNow, locale,
 }) {
   const T = t.claude.timeline;
   const now = useNow(serverNow);
-  const track = useRef<HTMLOListElement>(null);
-  // En yeni sağda. Sığmazsa iz açık rapordan (yoksa en yenisinden) başlar: sona kaydırmak
-  // telefonda yalnız "Şimdi" ile öneriyi bırakıyordu, raporun kendisi ekrandan çıkıyordu (ölçüldü, 390 px).
-  useEffect(() => {
-    const el = track.current, anchor = el?.querySelector<HTMLElement>("[data-anchor]");
-    if (el && anchor) el.scrollLeft = anchor.offsetLeft - parseFloat(getComputedStyle(el).paddingLeft);
-  }, []);
-  const anchorId = (items.find(r => r.current) ?? items.at(-1))?.id;
 
   const span = (ms: number) => formatSpan(ms, T.units);
   const waiting = next ? new Date(next.at).getTime() > now : false;
   const last = items.at(-1);
 
   return <Panel className={styles.timeline}>
-    <PanelHeader title={T.title} meta={T.hours} />
-    {items.length ? <ol ref={track} className={styles.track} tabIndex={0} aria-label={T.title}>
-      {more && <li className={styles.tlMore}><Link href={more} scroll={false}>{T.more}</Link></li>}
-      {items.map((r, i) => <li key={r.id} className={styles.tlStep} style={{ "--i": i } as CSSProperties}>
-        {i > 0 && <span className={styles.tlGap} aria-hidden>{span(new Date(r.at).getTime() - new Date(items[i - 1].at).getTime())}</span>}
-        <Link href={r.href} scroll={false} className={styles.tlNode} data-verdict={r.verdict} data-anchor={r.id === anchorId ? "" : undefined} aria-current={r.current ? "true" : undefined}>
+    <PanelHeader title={T.title} meta={T.hours} action={more ? <Link href={more} scroll={false} className={styles.tlMore}>{T.more}</Link> : undefined} />
+    {items.length ? <ol className={styles.track} aria-label={T.title}>
+      {items.map((r, i) => <Fragment key={r.id}>
+        {i > 0 && <li className={styles.tlGap} aria-hidden>{span(new Date(r.at).getTime() - new Date(items[i - 1].at).getTime())}</li>}
+        <li className={styles.tlStep} style={{ "--i": i } as CSSProperties}>
+        <span className={styles.tlRow} data-current={r.current ? "" : undefined}>
+        <Link href={r.href} scroll={false} className={styles.tlNode} data-verdict={r.verdict} aria-current={r.current ? "true" : undefined}>
           <span className={styles.tlWhen}><b className="figure">{r.time}</b>{r.day && <small>{r.day}</small>}</span>
           <span className={styles.tlVerdict}>
             {r.score !== null && <ScoreRing score={r.score} verdict={r.verdict === "insufficient" ? "hold" : r.verdict} size={26} />}
@@ -65,17 +64,19 @@ export function ReportTimeline({ items, next, nextLabel, now: serverNow, locale,
             {r.mine && <i>{T.mine}</i>}
           </span>}
         </Link>
-      </li>)}
-      <li className={styles.tlStep} style={{ "--i": items.length } as CSSProperties}>
-        {last && <span className={styles.tlGap} aria-hidden>{T.ago.replace("{t}", span(now - new Date(last.at).getTime()))}</span>}
+        </span>
+        </li>
+      </Fragment>)}
+      {last && <li className={styles.tlGap} aria-hidden>{T.ago.replace("{t}", span(now - new Date(last.at).getTime()))}</li>}
+      <li className={styles.tlStep} data-kind="now" style={{ "--i": items.length } as CSSProperties}>
         <span className={styles.tlNow} data-ready={waiting ? undefined : ""}>
           <span className={styles.tlDot} aria-hidden />
           <b>{T.now}</b>
           {!waiting && next && <small>{T.ready}</small>}
         </span>
       </li>
-      {next && waiting && <li className={styles.tlStep} style={{ "--i": items.length + 1 } as CSSProperties}>
-        <span className={styles.tlGap} aria-hidden>{T.after.replace("{t}", span(new Date(next.at).getTime() - now))}</span>
+      {next && waiting && <li className={styles.tlGap} aria-hidden>{T.after.replace("{t}", span(new Date(next.at).getTime() - now))}</li>}
+      {next && waiting && <li className={styles.tlStep} data-kind="next" style={{ "--i": items.length + 1 } as CSSProperties}>
         <span className={styles.tlNext}>
           <small>{T.next}</small>
           <b className="figure">{next.reason === "market-closed" ? `${T.atOpen} · ${nextLabel}` : nextLabel}</b>

@@ -26,7 +26,7 @@ import { completedBars } from "@/lib/technical";
 const FILM_SESSIONS = 60;
 const FILM_HEADLINES = 5;
 /** Zaman çizelgesinde en fazla bu kadar rapor; fazlası Geçmiş sekmesinde. */
-const TIMELINE_REPORTS = 8;
+const TIMELINE_REPORTS = 3;
 const TABS = ["rapor", "yeni", "gecmis"] as const;
 type Tab = (typeof TABS)[number];
 

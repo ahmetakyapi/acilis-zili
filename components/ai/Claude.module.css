@@ -179,21 +179,26 @@
 }
 
 /* ---- Rapor zaman çizelgesi (ReportTimeline.tsx) ----
-   Düğümler eşit aralıklı, aradaki süre künyede. Dar ekranda iz yatay kayar
-   (kaydırma saklanmaz); açılışta en yeni sağda görünür. Gelecek düğüm kesik
-   kenarlı: henüz olmayan bir şeyin yer tutucusu (kenarlık yalnız orada). */
-.timeline { min-width:0; }
-.track { position:relative; display:flex; align-items:stretch; gap:0; overflow-x:auto; padding:2px 16px 14px; scrollbar-width:thin; overscroll-behavior-x:contain; }
-.track:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; border-radius:12px; }
-.tlStep { display:flex; align-items:stretch; flex:none; animation:stage-in 560ms var(--ease-brand) calc(var(--i,0) * 60ms) both; }
-.tlGap { position:relative; display:grid; place-items:end center; align-self:center; min-width:68px; padding:0 8px 8px; font-size:11.5px; font-weight:600; color:var(--text-muted); white-space:nowrap; font-variant-numeric:tabular-nums; }
+   Kaydırma yok. Geniş panelde tek satır: rapor düğümleri kalan genişliği
+   eşit paylaşır (süre künyeleri ayrı öğe, o yüzden paylaşıma girmez), "Şimdi"
+   ve öneri kendi boyunda. Ölçüldü: 1066 px panelde dört rapor düğümü 97 px'e
+   düşüp "Veri Yetersiz"i kesiyordu; üç raporla ~160 px. Panel 900 pikselden darsa
+   (kap sorgusu; ekran değil panel ölçülür) iz dikey ray olur: sol çizgi,
+   her düğümün önünde nokta, aradaki süre çizginin yanında. Gelecek düğüm
+   kesik kenarlı: henüz olmayan bir şeyin yer tutucusu (kenarlık yalnız orada). */
+.timeline { min-width:0; container-type:inline-size; }
+.track { position:relative; display:flex; align-items:stretch; padding:2px 16px 16px; }
+.tlStep { display:flex; align-items:stretch; flex:1 1 0; min-width:0; animation:stage-in 560ms var(--ease-brand) calc(var(--i,0) * 60ms) both; }
+.tlStep:is([data-kind="now"],[data-kind="next"]) { flex:none; }
+.tlRow { position:relative; display:flex; flex:1; min-width:0; }
+.tlGap { position:relative; display:grid; place-items:end center; align-self:center; flex:none; animation:stage-in 560ms var(--ease-brand) both; min-width:64px; padding:0 8px 8px; font-size:11.5px; font-weight:600; color:var(--text-muted); white-space:nowrap; font-variant-numeric:tabular-nums; }
 .tlGap::after { content:""; position:absolute; left:6px; right:6px; bottom:0; height:2px; border-radius:999px; background:var(--line-soft); }
-.tlNode { position:relative; display:grid; align-content:start; gap:8px; min-width:144px; padding:12px 14px; border-radius:16px; background:var(--surface-sunken); transition:background-color 200ms; overflow:hidden; }
+.tlNode { position:relative; display:grid; align-content:start; gap:8px; flex:1; min-width:0; padding:12px 14px; border-radius:16px; background:var(--surface-sunken); transition:background-color 200ms; overflow:hidden; }
 .tlNode::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--primary); scale:0 1; transform-origin:left; transition:scale 420ms var(--ease-brand); }
 .tlNode:hover { background:var(--premium-surface); }
 .tlNode[aria-current="true"]::before { scale:1 1; }
 .tlNode:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
-.tlWhen { display:flex; align-items:baseline; gap:8px; }
+.tlWhen { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; }
 .tlWhen b { font-size:18px; font-weight:750; letter-spacing:-.02em; color:var(--text-strong); }
 .tlWhen small { font-size:12px; color:var(--text-muted); white-space:nowrap; }
 .tlVerdict { display:flex; align-items:center; gap:8px; }
@@ -202,27 +207,46 @@
 [data-verdict="sell"] .tlVerdict b { color:var(--down); }
 [data-verdict="hold"] .tlVerdict b { color:var(--primary-ink); }
 .tlAuthor { display:flex; align-items:center; gap:7px; min-width:0; font-size:12.5px; font-weight:600; color:var(--text-body); }
-.tlAuthor > span:not(.tlAvatar) { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:9em; }
-.tlAuthor i { font-style:normal; padding:1px 7px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:11px; font-weight:650; }
+.tlAuthor > span:not(.tlAvatar) { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tlAuthor i { flex:none; font-style:normal; padding:1px 7px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:11px; font-weight:650; }
 .tlAvatar { width:22px; height:22px; border-radius:50%; font-size:9.5px; }
-.tlNow { display:grid; align-content:center; justify-items:center; gap:4px; min-width:84px; padding:8px 4px; font-size:13px; color:var(--text-strong); }
+.tlNow { display:grid; align-content:center; justify-items:center; gap:4px; min-width:76px; padding:8px 4px; font-size:13px; color:var(--text-strong); }
 .tlNow b { font-weight:750; }
 .tlNow small { font-size:12px; font-weight:650; color:var(--primary-ink); white-space:nowrap; }
 .tlDot { width:10px; height:10px; border-radius:50%; background:var(--text-strong); }
 .tlNow[data-ready] .tlDot { background:var(--primary); }
-.tlNext { display:grid; align-content:center; gap:4px; min-width:150px; padding:12px 14px; border-radius:16px; border:1.5px dashed var(--line-strong); }
+.tlNext { display:grid; align-content:center; gap:4px; padding:12px 14px; border-radius:16px; border:1.5px dashed var(--line-strong); }
 .tlNext small { font-size:12px; font-weight:650; color:var(--text-muted); white-space:nowrap; }
 .tlNext b { font-size:16px; font-weight:750; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
-.tlMore { display:flex; align-items:center; flex:none; padding-right:12px; }
-.tlMore a { display:inline-flex; align-items:center; min-height:44px; padding:0 14px; border-radius:999px; background:var(--surface-sunken); font-size:13px; font-weight:650; color:var(--text-body); white-space:nowrap; }
-.tlMore a:hover { color:var(--text-strong); }
+.tlMore { display:inline-flex; align-items:center; min-height:44px; font-size:13px; font-weight:650; color:var(--primary-ink); white-space:nowrap; }
+.tlMore:hover { color:var(--text-strong); }
 .tlEmpty { padding:0 20px 16px; font-size:14px; color:var(--text-muted); }
 .tlNote { margin:0 16px; padding:12px 4px 16px; border-top:1px solid var(--line); font-size:13px; line-height:1.55; color:var(--text-muted); }
-@media(max-width:767px) {
-  .tlNode,.tlNext { min-width:136px; }
-  .tlGap { min-width:64px; }
+
+/* Dar panel: dikey ray. Çizgi izin solunda (34 px'te), her adımın noktası
+   onun üstünde; süre künyesi iki düğüm arasında çizginin sağında. */
+@container (max-width: 900px) {
+  .track { flex-direction:column; padding:2px 16px 16px 44px; }
+  .track::before { content:""; position:absolute; left:27px; top:22px; bottom:38px; width:2px; border-radius:999px; background:var(--line-soft); }
+  .tlStep { position:relative; flex-direction:column; align-items:stretch; flex:none; }
+  .tlRow::before { content:""; position:absolute; left:-21px; top:50%; translate:0 -50%; width:10px; height:10px; border-radius:50%; background:var(--line-strong); }
+  .tlRow[data-current]::before { background:var(--primary); }
+  .tlGap { place-items:center start; align-self:stretch; min-width:0; padding:8px 0; }
+  .tlGap::after { display:none; }
+  .tlNode { grid-template-columns:auto minmax(0,1fr); align-items:center; gap:6px 14px; padding:12px 14px; }
+  .tlWhen { grid-row:span 2; display:grid; gap:0; min-width:5.5em; }
+  .tlNode::before { inset:0 auto 0 0; width:3px; height:auto; scale:1 0; transform-origin:top; }
+  .tlNode[aria-current="true"]::before { scale:1 1; }
+  .tlNow { position:relative; grid-auto-flow:column; justify-content:start; align-items:center; gap:10px; min-width:0; padding:6px 0; }
+  .tlDot { position:absolute; left:-22px; top:50%; translate:0 -50%; width:12px; height:12px; }
+  .tlNext { position:relative; }
+  .tlNext::before { content:""; position:absolute; left:-23px; top:50%; translate:0 -50%; width:10px; height:10px; border-radius:50%; border:1.5px dashed var(--line-strong); background:var(--surface); }
+  .tlNow b,.tlNow small { grid-row:1; }
+  .tlNext { grid-auto-flow:column; justify-content:space-between; align-items:center; gap:12px; }
+  .tlNext small { white-space:normal; }
+  .tlNext b { text-align:right; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .tlStep { animation:none; }
+  .tlStep,.tlGap { animation:none; }
   .tlNode::before { transition:none; }
 }
