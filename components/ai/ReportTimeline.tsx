@@ -1,5 +1,5 @@
 "use client";
-import { Fragment, type CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { Dictionary } from "@/lib/i18n";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { Panel, PanelHeader } from "@/components/ui/primitives";
@@ -44,46 +44,56 @@ export function ReportTimeline({ items, next, nextLabel, now: serverNow, locale,
   const span = (ms: number) => formatSpan(ms, T.units);
   const waiting = next ? new Date(next.at).getTime() > now : false;
   const last = items.at(-1);
+  const clock = new Date(now).toLocaleTimeString(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: "Europe/Istanbul", hour: "2-digit", minute: "2-digit" });
+
+  /* Her adım aynı üç satırı taşır (saat · durum · alt künye), boşken bile;
+     kartlar bu yüzden aynı boyda ve satırları aynı hizada. Hattaki süre
+     künyesi bir SONRAKİ adıma kadar olan süredir. */
+  type Step = { key: string; kind: "report" | "now" | "next"; link: string | null; current?: boolean; body: ReactNode };
+  const steps: Step[] = items.map((r, i) => ({
+    key: r.id, kind: "report", current: r.current,
+    link: span((i + 1 < items.length ? new Date(items[i + 1].at).getTime() : now) - new Date(r.at).getTime()),
+    body: <Link href={r.href} scroll={false} className={styles.tlCard} data-verdict={r.verdict} aria-current={r.current ? "true" : undefined}>
+      <span className={styles.tlHead}><b className="figure">{r.time}</b><small>{r.day ?? T.today}</small></span>
+      <span className={styles.tlMid}>
+        {r.score !== null ? <ScoreRing score={r.score} verdict={r.verdict === "insufficient" ? "hold" : r.verdict} size={30} /> : <span className={styles.tlRingEmpty} aria-hidden />}
+        <b>{t.verdicts[r.verdict]}</b>
+      </span>
+      <span className={styles.tlFoot}>
+        {r.author ? <>
+          <AvatarTile icon={r.author.icon} color={r.author.color} initials={initialsOf(r.author.name, locale)} className={styles.tlAvatar} />
+          <span className={styles.tlName}><span className="sr-only">{T.author}: </span>{r.author.name}</span>
+          {r.mine && <i>{T.mine}</i>}
+        </> : <span className={styles.tlName}>{T.noAuthor}</span>}
+      </span>
+    </Link>,
+  }));
+  steps.push({
+    key: "now", kind: "now", link: next && waiting ? span(new Date(next.at).getTime() - now) : null,
+    body: <div className={styles.tlCard} data-ready={waiting ? undefined : ""}>
+      <span className={styles.tlHead}><b className="figure">{clock}</b><small>{T.now}</small></span>
+      <span className={styles.tlMid}><span className={styles.tlPulse} aria-hidden /><b>{next && waiting ? T.left.replace("{t}", span(new Date(next.at).getTime() - now)) : T.ready}</b></span>
+      <span className={styles.tlFoot}><span className={styles.tlName}>{last ? T.sinceLast.replace("{t}", span(now - new Date(last.at).getTime())) : T.empty}</span></span>
+    </div>,
+  });
+  if (next && waiting) steps.push({
+    key: "next", kind: "next", link: null,
+    body: <div className={styles.tlCard}>
+      <span className={styles.tlHead}><b className="figure">{next.reason === "market-closed" ? T.atOpen : nextLabel}</b><small>{T.suggested}</small></span>
+      <span className={styles.tlMid}><b>{next.reason === "market-closed" ? nextLabel : T.after.replace("{t}", span(new Date(next.at).getTime() - now))}</b></span>
+      <span className={styles.tlFoot}><span className={styles.tlName}>{T.wait.replace("{t}", span(next.gapMinutes * 60_000))}</span></span>
+    </div>,
+  });
 
   return <Panel className={styles.timeline}>
     <PanelHeader title={T.title} meta={T.hours} action={more ? <Link href={more} scroll={false} className={styles.tlMore}>{T.more}</Link> : undefined} />
-    {items.length ? <ol className={styles.track} aria-label={T.title}>
-      {items.map((r, i) => <Fragment key={r.id}>
-        {i > 0 && <li className={styles.tlGap} aria-hidden>{span(new Date(r.at).getTime() - new Date(items[i - 1].at).getTime())}</li>}
-        <li className={styles.tlStep} style={{ "--i": i } as CSSProperties}>
-        <span className={styles.tlRow} data-current={r.current ? "" : undefined}>
-        <Link href={r.href} scroll={false} className={styles.tlNode} data-verdict={r.verdict} aria-current={r.current ? "true" : undefined}>
-          <span className={styles.tlWhen}><b className="figure">{r.time}</b>{r.day && <small>{r.day}</small>}</span>
-          <span className={styles.tlVerdict}>
-            {r.score !== null && <ScoreRing score={r.score} verdict={r.verdict === "insufficient" ? "hold" : r.verdict} size={26} />}
-            <b>{t.verdicts[r.verdict]}</b>
-          </span>
-          {r.author && <span className={styles.tlAuthor}>
-            <AvatarTile icon={r.author.icon} color={r.author.color} initials={initialsOf(r.author.name, locale)} className={styles.tlAvatar} />
-            <span><span className="sr-only">{T.author}: </span>{r.author.name}</span>
-            {r.mine && <i>{T.mine}</i>}
-          </span>}
-        </Link>
-        </span>
-        </li>
-      </Fragment>)}
-      {last && <li className={styles.tlGap} aria-hidden>{T.ago.replace("{t}", span(now - new Date(last.at).getTime()))}</li>}
-      <li className={styles.tlStep} data-kind="now" style={{ "--i": items.length } as CSSProperties}>
-        <span className={styles.tlNow} data-ready={waiting ? undefined : ""}>
-          <span className={styles.tlDot} aria-hidden />
-          <b>{T.now}</b>
-          {!waiting && next && <small>{T.ready}</small>}
-        </span>
-      </li>
-      {next && waiting && <li className={styles.tlGap} aria-hidden>{T.after.replace("{t}", span(new Date(next.at).getTime() - now))}</li>}
-      {next && waiting && <li className={styles.tlStep} data-kind="next" style={{ "--i": items.length + 1 } as CSSProperties}>
-        <span className={styles.tlNext}>
-          <small>{T.next}</small>
-          <b className="figure">{next.reason === "market-closed" ? `${T.atOpen} · ${nextLabel}` : nextLabel}</b>
-          <span className="sr-only">{T.after.replace("{t}", span(new Date(next.at).getTime() - now))}</span>
-        </span>
-      </li>}
-    </ol> : <p className={styles.tlEmpty}>{T.empty}</p>}
+    <ol className={styles.track} aria-label={T.title} style={{ "--steps": steps.length } as CSSProperties}>
+      {steps.map((st, i) => <li key={st.key} className={styles.tlStep} data-kind={st.kind} data-current={st.current ? "" : undefined} data-link={st.link ? "" : undefined} style={{ "--i": i } as CSSProperties}>
+        <span className={styles.tlDot} aria-hidden />
+        {st.body}
+        {st.link && <span className={styles.tlLink}>{st.link}</span>}
+      </li>)}
+    </ol>
     {next && <p className={styles.tlNote}>
       {next.reason === "market-closed"
         ? T.closedNote.replace("{time}", nextLabel ?? "")

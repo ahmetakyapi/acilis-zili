@@ -92,7 +92,8 @@ export const aiAnalysisTr = {
     timeline: {
       title: "Rapor Zaman Çizelgesi", hours: "Saatler TR", author: "Oluşturan", mine: "Sen",
       now: "Şimdi", next: "Önerilen Sonraki Rapor", ready: "Şimdi Uygun", atOpen: "Açılışta",
-      after: "{t} sonra", ago: "{t} önce", more: "Tüm Raporlar",
+      after: "{t} Sonra", ago: "{t} Önce", more: "Tüm Raporlar",
+      today: "Bugün", left: "{t} Kaldı", sinceLast: "Son Rapor {t} Önce", wait: "Bekleme {t}", suggested: "Önerilen", noAuthor: "Oluşturan Bilinmiyor",
       empty: "Bu odakta henüz rapor yok; ilk rapor zaman çizelgesini başlatır.",
       gapNote: "Yeni rapor için önerilen bekleme {gap}: {why}",
       why: { technical: "teknik odakta fiyat seans içinde saat saat değişir.", selection: "hisse seçimi bilanço, oran ve haber verisiyle çalışır; bu veri gün gün değişir." },
@@ -234,7 +235,8 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
     timeline: {
       title: "Report Timeline", hours: "Times in TR", author: "Created By", mine: "You",
       now: "Now", next: "Suggested Next Report", ready: "Ready Now", atOpen: "At the Open",
-      after: "in {t}", ago: "{t} ago", more: "All Reports",
+      after: "In {t}", ago: "{t} Ago", more: "All Reports",
+      today: "Today", left: "{t} Left", sinceLast: "Last Report {t} Ago", wait: "Wait {t}", suggested: "Suggested", noAuthor: "Creator Unknown",
       empty: "No reports in this focus yet; the first one starts the timeline.",
       gapNote: "Suggested wait before a new report: {gap}. {why}",
       why: { technical: "In the technical focus the price moves hour by hour during the session.", selection: "Stock picking runs on financials, ratios and news, which change day by day." },
