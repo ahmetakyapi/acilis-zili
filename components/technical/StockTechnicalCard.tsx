@@ -107,13 +107,6 @@ export async function StockTechnicalCard({
             {planPositionLabel(position, locale, t)}
           </span>
         )}
-        {/* CLAUDE İLE YENİ ANALİZ şirket sayfasından da (11 Ekim, sahibinin
-            isteği). Görüş satırının sağında, ayrı satırda değil: kartın yedeği
-            ölçülmüş sabit boyda (stock.module.css → .technicalSkeleton) ve
-            yeni bir satır kartı uzatıp sayfayı zıplatırdı. Kartın tamamı
-            teknik analize açılıyor; bu bağlantı o örtünün üstünde (z-index 2).
-            Hak yoksa son rapora, rapor da yoksa hiç basılmaz. */}
-        <ClaudeAction symbol={symbol} locale={locale} focus="technical" className={styles.stockCardClaude} fit />
       </div>
 
       <p className={styles.stockCardHeadline} lang={copyLang}>
@@ -131,6 +124,15 @@ export async function StockTechnicalCard({
             <span className="numeral">{editionClock(next.at, locale)}</span>
           </p>
         )}
+      </div>
+
+      {/* CLAUDE İLE ANALİZ şirket sayfasından da (11 Ekim, sahibinin isteği).
+          Kartın dibinde, ayırıcının altında tam genişlik bir DÜĞME: görüş
+          satırındaki tonlu hap düğme olduğu anlaşılmıyordu (sahibinin
+          itirazı). Her okuyucuya basılıyor ki kartın boyu sabit kalsın ve
+          yedeği ölçülmüş tek değerle tutulsun (.technicalSkeleton). */}
+      <div className={styles.stockCardClaude}>
+        <ClaudeAction symbol={symbol} locale={locale} focus="technical" block />
       </div>
     </section>
   );

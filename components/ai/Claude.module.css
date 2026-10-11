@@ -166,32 +166,21 @@
   .ctaRow { grid-template-columns:48px minmax(0,1fr); }
   .ctaActions { grid-column:1 / -1; display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); }
 }
-/* Kart içi tek bağlantı (şirket sayfasındaki teknik kartlar). Teknik kartın
-   tüm yüzeyini kaplayan bağlantının (::after, z-index 1) ÜSTÜNDE durur. */
-.ctaAction { position:relative; z-index:2; display:inline-flex; align-items:center; gap:7px; min-height:36px; padding:0 14px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:13px; font-weight:700; white-space:nowrap; transition:background-color 200ms, color 200ms; }
-.ctaAction:hover { background:var(--primary); color:var(--on-primary); }
-.ctaAction:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
-.ctaAction svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; transition:rotate 520ms var(--ease-brand); }
-.ctaAction:hover svg { rotate:45deg; }
-@media (prefers-reduced-motion: reduce) { .ctaAction svg { transition:none; } }
-/* Teknik kartta yer dar: görüş satırı (çip + plan + eylem) taşınca kart 38 px
-   uzuyor ve ölçülmüş yedeğinden (stock.module.css → .technicalSkeleton)
-   kopuyordu. Dar kapta kısa ad, daha darda ikon. */
-.ctaAction svg { flex:none; }
-.ctaActionShort { display:none; }
-@container (max-width: 400px) {
-  .ctaActionFit .ctaActionText { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
-  .ctaActionFit .ctaActionShort { display:inline; }
-}
-/* Ölçülen kart içi genişlik: 1440'ta 406, 1280'de 365, 1100'de 314, 390'da
-   312 px; görüş satırının geri kalanı 246 px. Tam ad 400, kısa ad 340 px'lik
-   kaba sığıyor; altında yalnız ikon. İki sınıflı seçici kartın kendi
-   dolgusunu (.stockCardClaude) ezer; dokunma alanı 44 px. */
-@container (max-width: 340px) {
-  .ctaAction.ctaActionFit { justify-content:center; width:28px; padding:0; }
-  .ctaActionFit .ctaActionShort { display:none; }
-  .ctaActionFit::after { content:""; position:absolute; inset:-8px; }
-}
+/* Kart içi Claude düğmesi (ClaudeAction). Birincil düğmenin dili: düz mavi
+   zemin, tam ad, sonda ok — tonlu hap düğme gibi okunmuyordu (11 Ekim).
+   Teknik kartın tüm yüzeyini kaplayan bağlantının (::after, z-index 1)
+   ÜSTÜNDE durur. `block`: kartın dibinde tam genişlik, ayırıcı çizginin altında. */
+.ctaAction { position:relative; z-index:2; display:inline-flex; align-items:center; gap:8px; min-height:36px; padding:0 14px; border-radius:999px; background:var(--primary); color:var(--on-primary); font-size:13.5px; font-weight:700; white-space:nowrap; transition:background-color 200ms; }
+.ctaAction:hover { background:var(--primary-hover); }
+.ctaAction:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+.ctaAction svg { flex:none; width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+.ctaSpark { transition:rotate 520ms var(--ease-brand); }
+.ctaArrow { transition:translate 320ms var(--ease-brand); }
+.ctaAction:hover .ctaSpark { rotate:45deg; }
+.ctaAction:hover .ctaArrow { translate:3px 0; }
+.ctaActionBlock { display:flex; width:100%; min-height:44px; padding:0 16px; border-radius:14px; font-size:14.5px; }
+.ctaActionBlock .ctaActionText { flex:1; }
+@media (prefers-reduced-motion: reduce) { .ctaSpark,.ctaArrow { transition:none; } }
 
 @media(max-width:767px) {
   .focusRow { grid-template-columns:minmax(0,1fr); }

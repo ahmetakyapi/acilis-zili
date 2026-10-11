@@ -81,25 +81,28 @@ export async function ClaudeCta({ symbol, locale, focus }: { symbol: string; loc
 }
 
 /**
- * Kartın içindeki tek bağlantı: şirket sayfasındaki teknik analiz kartı ve
- * teknik fotoğraf paneli. Hak varsa yeni analize, yoksa son rapora açılır;
- * ikisi de yoksa çizilmez.
+ * Kartın içindeki Claude düğmesi: şirket sayfasındaki teknik analiz kartı ve
+ * teknik fotoğraf paneli. GÖRÜNÜR BİR DÜĞME (11 Ekim, sahibinin itirazı:
+ * görüş satırındaki tonlu hap, dar kartta "Claude" ya da yalnız ikon,
+ * "düğme olduğu anlaşılmıyor"). Düz mavi zemin, tam ad, sonda ok.
+ *
+ * `block`: kartın dibinde tam genişlik ve HER ZAMAN basılır — misafire de
+ * (Claude sayfası giriş ister). Kartın boyu böylece okuyana göre değişmiyor
+ * ve yedeği tek ölçüyle tutuluyor (stock.module.css → .technicalSkeleton).
+ * Satır içi kullanımda hak ve rapor yoksa hiç basılmaz.
  */
-export async function ClaudeAction({ symbol, locale, focus, className, fit = false }: {
-  symbol: string; locale: "tr" | "en"; focus: AnalysisFocus; className?: string;
-  /** Dar kapta (en yakın `container-type` atası 460 px'ten darsa) kısa ad "Claude"; tam ad ekran okuyucuda ve ipucunda. */
-  fit?: boolean;
+export async function ClaudeAction({ symbol, locale, focus, className, block = false }: {
+  symbol: string; locale: "tr" | "en"; focus: AnalysisFocus; className?: string; block?: boolean;
 }) {
   const { canGenerate, latestOf } = await claudeState(symbol);
   const latest = latestOf(focus);
-  if (!canGenerate && !latest) return null;
+  if (!block && !canGenerate && !latest) return null;
   const t = getDictionary(locale).aiAnalysis;
-  const label = canGenerate ? t.cta.action : t.cta.actionOpen;
-  return <Link href={claudeHref(symbol, focus, canGenerate ? "yeni" : "rapor")} title={fit ? label : undefined}
-    className={[styles.ctaAction, fit && styles.ctaActionFit, className].filter(Boolean).join(" ")}>
-    <svg viewBox="0 0 24 24" aria-hidden><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.5 2.5M15.2 15.2l2.5 2.5M6.3 17.7l2.5-2.5M15.2 8.8l2.5-2.5" /></svg>
-    <span className={styles.ctaActionText}>{label}</span>
-    {fit && <span className={styles.ctaActionShort} aria-hidden>Claude</span>}
+  const openReport = !canGenerate && !!latest;
+  return <Link href={claudeHref(symbol, focus, openReport ? "rapor" : "yeni")}
+    className={[styles.ctaAction, block && styles.ctaActionBlock, className].filter(Boolean).join(" ")}>
+    <svg className={styles.ctaSpark} viewBox="0 0 24 24" aria-hidden><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.5 2.5M15.2 15.2l2.5 2.5M6.3 17.7l2.5-2.5M15.2 8.8l2.5-2.5" /></svg>
+    <span className={styles.ctaActionText}>{openReport ? t.cta.actionOpen : t.cta.create}</span>
+    <svg className={styles.ctaArrow} viewBox="0 0 24 24" aria-hidden><path d="M5 12h13M13 6l6 6-6 6" /></svg>
   </Link>;
 }
-

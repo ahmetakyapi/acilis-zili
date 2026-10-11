@@ -2049,6 +2049,5 @@
   .pulse[data-variant="panel"] .pulseRows { grid-template-columns:minmax(0,1fr); }
   .pulse[data-variant="panel"] .pulseRow { grid-column:auto; grid-template-columns:minmax(0,1fr); row-gap:8px; }
 }
-/* Kart Claude eyleminin kabı: eylem dar kartta ikona iner (Claude.module.css → .ctaActionFit). */
-.stockCard { container-type:inline-size; }
-.stockCardClaude { margin-left:auto; min-height:28px; padding:0 12px; font-size:12.5px; }
+/* Kartın dibindeki Claude düğmesi (StockTechnicalCard): ayırıcı çizginin altında. */
+.stockCardClaude { padding-top:14px; border-top:1px solid var(--line-soft); }
