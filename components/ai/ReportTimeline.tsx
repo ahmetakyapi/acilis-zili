@@ -6,6 +6,7 @@ import { Panel, PanelHeader } from "@/components/ui/primitives";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
 import { AvatarTile } from "@/components/brand/AvatarIcon";
 import { formatSpan, type NextReport } from "@/lib/ai-analysis-core";
+import { initialsOf } from "@/lib/avatars";
 import type { ReportAuthor } from "@/lib/ai-analysis-reports";
 import { useNow } from "./useNow";
 import styles from "./Claude.module.css";
@@ -15,8 +16,6 @@ export type TimelineItem = {
   at: string; time: string; day: string | null; author: ReportAuthor | null; mine: boolean; current: boolean;
 };
 
-/** Baş harfler kodda ve dile göre büyütülür (CSS `uppercase` Türkçe `i`yi `I` yapar). */
-export const initialsOf = (name: string, locale: string) => name.slice(0, 2).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US");
 
 /**
  * Bu hissenin bu odaktaki raporları soldan sağa (eskiden yeniye), sonra

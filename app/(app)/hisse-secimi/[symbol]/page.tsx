@@ -156,11 +156,13 @@ export default async function ScreenReportPage(props: PageProps<"/hisse-secimi/[
         </nav>
       </DirectoryHeader>
 
-      <ClaudeCta symbol={symbol} locale={locale} focus="selection" />
       <CategoryPanel data={data} t={S} />
       <ChecksPanel data={data} locale={locale} t={S} />
       <SidesPanel data={data} locale={locale} t={S} />
       <NextPanel data={data} locale={locale} t={S} />
+      {/* Claude'un ikinci görüşü raporun SONUNDA (11 Ekim): önce seçim motorunun
+          okuması, sonra karşılaştırma. Başlığın hemen altındaydı ve raporu itiyordu. */}
+      <ClaudeCta symbol={symbol} locale={locale} focus="selection" />
 
       {data.quote && (
         <DataStamp labels={t.data} source={data.quote.source} at={data.quote.fetchedAt} stale={data.quote.stale} locale={locale} />

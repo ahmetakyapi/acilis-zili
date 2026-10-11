@@ -1,5 +1,6 @@
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { ClaudeAction } from "@/components/ai/ClaudeCta";
 import { verdictLabel, verdictOf, verdictPillClass } from "@/lib/analysis";
 import { getHolidays, getStatus } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -106,6 +107,13 @@ export async function StockTechnicalCard({
             {planPositionLabel(position, locale, t)}
           </span>
         )}
+        {/* CLAUDE İLE YENİ ANALİZ şirket sayfasından da (11 Ekim, sahibinin
+            isteği). Görüş satırının sağında, ayrı satırda değil: kartın yedeği
+            ölçülmüş sabit boyda (stock.module.css → .technicalSkeleton) ve
+            yeni bir satır kartı uzatıp sayfayı zıplatırdı. Kartın tamamı
+            teknik analize açılıyor; bu bağlantı o örtünün üstünde (z-index 2).
+            Hak yoksa son rapora, rapor da yoksa hiç basılmaz. */}
+        <ClaudeAction symbol={symbol} locale={locale} focus="technical" className={styles.stockCardClaude} fit />
       </div>
 
       <p className={styles.stockCardHeadline} lang={copyLang}>

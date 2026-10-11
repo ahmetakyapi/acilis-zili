@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "./db";
 import { aiAnalysisRequests, userAvatars, users } from "./schema";
@@ -42,7 +43,8 @@ export type ReportAuthor = { name: string; icon: AvatarKey | null; color: Avatar
  * ayrı bir tablo, yoksa baş harfler basılır — ana liste düşmez.
  * Tablo yoksa (migration uygulanmamış) boş liste.
  */
-export async function listSymbolReports(symbol: string, viewerId: string | null): Promise<ReportSummary[]> {
+/* İstek içi önbellek: şirket sayfasında Claude paneli ve teknik kartın eylemi aynı listeyi soruyor. */
+export const listSymbolReports = cache(async (symbol: string, viewerId: string | null): Promise<ReportSummary[]> => {
   try {
     const rows = await db.select({
       id: aiAnalysisRequests.id, userId: aiAnalysisRequests.userId, username: users.username, horizon: aiAnalysisRequests.horizon, locale: aiAnalysisRequests.locale,
@@ -61,7 +63,7 @@ export async function listSymbolReports(symbol: string, viewerId: string | null)
       author: row.username ? { name: row.username, ...(avatars.get(row.userId) ?? { icon: null, color: null }) } : null,
     }));
   } catch { return []; }
-}
+});
 
 /** Oluşturanların profil karoları, tek sorguda; tablo yoksa boş (baş harfler basılır). */
 async function authorAvatars(userIds: string[]): Promise<Map<string, { icon: AvatarKey | null; color: AvatarColor | null }>> {

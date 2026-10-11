@@ -116,6 +116,8 @@ export const aiAnalysisTr = {
   },
   cta: {
     title: "Claude Görüşü", open: "Raporu Aç", create: "Claude ile Analiz Et", none: "Bu odakta henüz rapor yok.",
+    newAnalysis: "Yeni Analiz Oluştur", action: "Claude ile Analiz", actionOpen: "Claude Raporu",
+    hint: "Claude, sitenin kendi analizinden bağımsız ikinci bir görüş yazar; piyasa açıkken fiyatı anlık okur.",
   },
   scorecard: {
     title: "Şirket Karnesi",
@@ -258,6 +260,8 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
   },
   cta: {
     title: "Claude's View", open: "Open Report", create: "Analyse with Claude", none: "No report for this focus yet.",
+    newAnalysis: "Create New Analysis", action: "Analyse with Claude", actionOpen: "Claude Report",
+    hint: "Claude writes a second opinion independent of the site's own analysis; while the market is open it reads the live price.",
   },
   scorecard: {
     title: "Company Scorecard",

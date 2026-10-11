@@ -86,3 +86,11 @@ export function isAvatarKey(value: unknown): value is AvatarKey {
 export function isAvatarColor(value: unknown): value is AvatarColor {
   return typeof value === "string" && (AVATAR_COLORS as readonly string[]).includes(value);
 }
+
+/**
+ * Profil karosundaki baş harfler: kodda ve dile göre büyütülür (CSS
+ * `uppercase` Türkçe `i`yi `I` yapar, `İ` değil). Düz modülde: `"use client"`
+ * modülden dışa aktarılan değer sunucu bileşenine gerçek fonksiyon olarak
+ * gelmez, istemci referansına döner (11 Ekim, Claude sayfasında yakalandı).
+ */
+export const initialsOf = (name: string, locale: string) => name.slice(0, 2).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US");

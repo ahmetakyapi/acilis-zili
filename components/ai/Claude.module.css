@@ -142,16 +142,56 @@
 .historyTags { display:flex; gap:6px; font-family:var(--font-mono); font-size:11.5px; color:var(--text-muted); }
 .historyTags b { font-family:var(--font-sans); padding:2px 8px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-weight:650; }
 
-/* ---- Hisse sayfalarındaki giriş kartı: tek satır ---- */
-.cta { display:flex; align-items:center; gap:16px; padding:14px 18px; border-radius:18px; background:var(--premium-surface); border:1px solid var(--line); }
-.ctaMark { display:grid; place-items:center; width:52px; height:52px; border-radius:16px; background:var(--surface-sunken); color:var(--primary-ink); font-size:20px; font-weight:800; }
-.ctaBody { display:grid; gap:3px; min-width:0; flex:1; }
-.ctaActions { display:flex; flex-wrap:wrap; gap:8px; }
-.ctaLine { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; font-size:13.5px; color:var(--text-muted); }
-.ctaVerdict { font-size:20px; font-weight:800; letter-spacing:-.03em; color:var(--text-strong); }
-.cta[data-verdict="buy"] .ctaVerdict { color:var(--up); }
-.cta[data-verdict="sell"] .ctaVerdict { color:var(--down); }
-.cta[data-verdict="hold"] .ctaVerdict { color:var(--primary-ink); }
+/* ---- Claude paneli (ClaudeCta.tsx): sayfanın kendi okumasından SONRA ----
+   Her odak bir satır: halka · karar, zaman ve oluşturan · eylemler. Panel
+   sitenin öteki panelleriyle aynı dil (PanelHeader, ton farkı). Dar panelde
+   eylemler satırın altına iner ve ikiye bölünür (kap sorgusu). */
+.ctaPanel { container-type:inline-size; }
+.ctaRows { display:grid; gap:10px; padding:0 16px; }
+.ctaRow { display:grid; grid-template-columns:48px minmax(0,1fr) auto; align-items:center; gap:14px 16px; padding:14px 16px; border-radius:18px; background:var(--surface-sunken); }
+.ctaRing { width:48px; height:48px; border-radius:50%; border:2px dashed var(--line-strong); box-sizing:border-box; }
+.ctaBody { display:grid; gap:4px; min-width:0; }
+.ctaFocus { font-size:12px; font-weight:700; color:var(--text-muted); }
+.ctaVerdict { width:fit-content; font-size:20px; font-weight:800; letter-spacing:-.03em; line-height:1.15; color:var(--text-strong); }
+.ctaVerdict:hover { text-decoration:underline; text-underline-offset:3px; }
+.ctaRow[data-verdict="buy"] .ctaVerdict { color:var(--up); }
+.ctaRow[data-verdict="sell"] .ctaVerdict { color:var(--down); }
+.ctaRow[data-verdict="hold"] .ctaVerdict { color:var(--primary-ink); }
+.ctaMeta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 14px; font-size:13px; color:var(--text-muted); }
+.ctaAuthor { display:inline-flex; align-items:center; gap:6px; font-weight:600; color:var(--text-body); }
+.ctaNone { font-size:14.5px; color:var(--text-body); }
+.ctaActions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
+.ctaHint { margin:14px 16px 0; padding:12px 4px 16px; border-top:1px solid var(--line); font-size:13px; line-height:1.55; color:var(--text-muted); }
+@container (max-width: 560px) {
+  .ctaRow { grid-template-columns:48px minmax(0,1fr); }
+  .ctaActions { grid-column:1 / -1; display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); }
+}
+/* Kart içi tek bağlantı (şirket sayfasındaki teknik kartlar). Teknik kartın
+   tüm yüzeyini kaplayan bağlantının (::after, z-index 1) ÜSTÜNDE durur. */
+.ctaAction { position:relative; z-index:2; display:inline-flex; align-items:center; gap:7px; min-height:36px; padding:0 14px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:13px; font-weight:700; white-space:nowrap; transition:background-color 200ms, color 200ms; }
+.ctaAction:hover { background:var(--primary); color:var(--on-primary); }
+.ctaAction:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.ctaAction svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; transition:rotate 520ms var(--ease-brand); }
+.ctaAction:hover svg { rotate:45deg; }
+@media (prefers-reduced-motion: reduce) { .ctaAction svg { transition:none; } }
+/* Teknik kartta yer dar: görüş satırı (çip + plan + eylem) taşınca kart 38 px
+   uzuyor ve ölçülmüş yedeğinden (stock.module.css → .technicalSkeleton)
+   kopuyordu. Dar kapta kısa ad, daha darda ikon. */
+.ctaAction svg { flex:none; }
+.ctaActionShort { display:none; }
+@container (max-width: 400px) {
+  .ctaActionFit .ctaActionText { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  .ctaActionFit .ctaActionShort { display:inline; }
+}
+/* Ölçülen kart içi genişlik: 1440'ta 406, 1280'de 365, 1100'de 314, 390'da
+   312 px; görüş satırının geri kalanı 246 px. Tam ad 400, kısa ad 340 px'lik
+   kaba sığıyor; altında yalnız ikon. İki sınıflı seçici kartın kendi
+   dolgusunu (.stockCardClaude) ezer; dokunma alanı 44 px. */
+@container (max-width: 340px) {
+  .ctaAction.ctaActionFit { justify-content:center; width:28px; padding:0; }
+  .ctaActionFit .ctaActionShort { display:none; }
+  .ctaActionFit::after { content:""; position:absolute; inset:-8px; }
+}
 
 @media(max-width:767px) {
   .focusRow { grid-template-columns:minmax(0,1fr); }
@@ -166,8 +206,6 @@
   .historyRow { grid-template-columns:44px minmax(0,1fr) auto; gap:4px 12px; }
   .historyFocus,.historyDate,.historyAuthor { grid-column:2 / -1; }
   .historyTags { grid-column:3; grid-row:1; }
-  .cta { flex-wrap:wrap; }
-  .cta > :last-child { width:100%; }
   .focusCard { grid-template-columns:84px minmax(0,1fr); padding:14px 16px 14px 8px; }
   .focusArt { width:84px; height:80px; }
 }

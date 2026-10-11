@@ -168,10 +168,11 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
     return (
       <MotionExperience className={directory.page}>
         {breadcrumb}
-        <ClaudeCta symbol={symbol} locale={locale} focus="technical" />
         <Panel>
           <EmptyState title={t.technical.noAnalysis} hint={t.technical.noAnalysisHint} titleAs="h1" scene="chart" />
         </Panel>
+        {/* Yayın yokken Claude'un görüşü sayfanın tek okuması olabilir: boş durumun hemen altında. */}
+        <ClaudeCta symbol={symbol} locale={locale} focus="technical" />
         {/* Çıkış kartları BURADA DA duruyor — hatta asıl burada: boş durum
             okuyucuya "bu hissede yayın yok" diyor ve tek başına bıraksa
             sayfanın sonu geri tuşu olurdu. */}
@@ -234,7 +235,6 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
   return (
     <MotionExperience className={directory.page}>
       <ScrollProgress />
-      <ClaudeCta symbol={symbol} locale={locale} focus="technical" />
       {/* MAKALE KÜNYESİ METNİN DİLİNDE. Sayfada yazılmış bir yorum var
           (başlık, değerlendirme, senaryolar) ama künyesi yalnızca kırıntıydı;
           mercek ve bilanço analiziyle aynı `Article` bloğu artık burada da.
@@ -561,6 +561,13 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           ))}
         </ul>
       </section>
+
+      {/* ---- Claude'un görüşü ----
+          Sayfanın en üstündeydi ve okuyucu sitenin analizini okumadan ikinci
+          görüşle karşılaşıyordu (11 Ekim, sahibinin isteği). Artık analizin
+          bütün okumasından (harita, görüş, göstergeler, izleme) SONRA,
+          geçmişten önce: karşılaştırma yeri burası. */}
+      <ClaudeCta symbol={symbol} locale={locale} focus="technical" />
 
       {/* ---- Görüş geçmişi ---- */}
       {history.length > 1 && (

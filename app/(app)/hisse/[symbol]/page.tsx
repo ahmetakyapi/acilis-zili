@@ -52,6 +52,7 @@ import { ExpectedMovePanel } from "./_panels/ExpectedMovePanel";
 import { AnalystTrendPanel } from "./_panels/AnalystTrendPanel";
 import { ScorecardPanel } from "./_panels/ScorecardPanel";
 import { TechnicalSnapshotPanel } from "./_panels/TechnicalSnapshotPanel";
+import { ClaudeCta } from "@/components/ai/ClaudeCta";
 import { InvestorsPanel } from "./_panels/InvestorsPanel";
 import { StockSummary, metaExtras, summaryFacts } from "./_panels/StockSummary";
 import { StockJsonLd } from "./_panels/StockJsonLd";
@@ -611,6 +612,13 @@ export default async function StockPage(
           </Suspense>
         )}
       </div>
+      {/* CLAUDE PANELİ değerleme bölümünün SONUNDA, iki odak birden (11 Ekim,
+          sahibinin isteği: "analizi isterse şirket detaydan da yapabilmeli").
+          Bölüm şirketin ölçülerini okutuyor; ikinci görüş onların ardından.
+          Yedek yok: hak ve rapor yoksa panel hiç basılmıyor, iskelet zıplatır. */}
+      <Suspense fallback={null}>
+        <ClaudeCta symbol={symbol} locale={locale} focus="both" />
+      </Suspense>
 
         </ScrollStage>
       </section>

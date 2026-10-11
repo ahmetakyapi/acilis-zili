@@ -1,4 +1,5 @@
 import { DataError, DataStamp, Panel, PanelHeader } from "@/components/ui/primitives";
+import { ClaudeAction } from "@/components/ai/ClaudeCta";
 import { getStatus } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getChartBars, getQuote } from "@/lib/providers";
@@ -79,9 +80,12 @@ export async function TechnicalSnapshotPanel({ symbol, locale, t }: { symbol: st
 
   return (
     <Panel className={styles.panel}>
+      {/* Yazılı teknik analizi olmayan hissede Claude'un teknik analizi tek yorum
+          kaynağı: yeni analiz eylemi başlığın sağında (11 Ekim). */}
       <PanelHeader
         title={d.tsTitle}
         meta={snap.lastSession ? d.tsAsOf.replace("{date}", formatEtDateMedium(snap.lastSession, locale)) : undefined}
+        action={<ClaudeAction symbol={symbol} locale={locale} focus="technical" />}
       />
       <div className={styles.body}>
         <dl className={styles.techGrid}>
