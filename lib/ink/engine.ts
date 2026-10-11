@@ -157,6 +157,15 @@ export type BrushOptions = {
   wobble?: number;
   /** Kuru fırça izleri: çizginin içinde ince, kesik boşluklar. */
   dry?: number;
+  /**
+   * Kaynama (boil): elle çizilmiş animasyonda her çizim karesi çizgiyi biraz
+   * farklı çizer. Değer çizim karesinin sırası (ör. `floor(t * 12)`); yalnız
+   * KENAR gürültüsünü kaydırır — kuru fırça izleri ve basınç sabit kalır ki
+   * izler sürünmesin (lemo-opuscar ink-wash: "small boil on the width noise").
+   */
+  boil?: number;
+  /** Nokta başına basınç çarpanı, `pts` ile aynı sırada (kalemin hızından): hızlı çizgi ince, yavaş kalın. */
+  pressure?: number[];
   alpha?: number;
   color: string;
 };
@@ -221,8 +230,10 @@ export function brush(
     const press = Math.pow(Math.sin(Math.PI * clamp(u)), 0.55);
     const tp = u < 0.5 ? (o.taperStart ?? taper) : taper;
     const shape = 1 - tp + tp * press;
-    const grain = 1 + noise1(seed, u * 9) * wobble;
-    const w = (o.width / 2) * shape * grain * (0.35 + 0.65 * head);
+    const grain = 1 + noise1(seed + (o.boil ?? 0) * 7919, u * 9) * wobble;
+    // `drawn[i]` = `pts[i]` (kesim noktası dışında): basınç noktanın kendi sırasından.
+    const pr = o.pressure ? o.pressure[Math.min(o.pressure.length - 1, i)] : 1;
+    const w = (o.width / 2) * shape * grain * pr * (0.35 + 0.65 * head);
     left.push({ x: drawn[i].x + nx * w, y: drawn[i].y + ny * w });
     right.push({ x: drawn[i].x - nx * w, y: drawn[i].y - ny * w });
   }
@@ -287,6 +298,8 @@ export function blot(
     squash?: number;
     /** Yalnızca dikey ölçek — göz kırpması; genişlik değişmemeli. */
     scaleY?: number;
+    /** Kaynama karesi (bkz. BrushOptions.boil): kenar dalgası her çizim karesinde biraz değişir. */
+    boil?: number;
   },
 ) {
   const spread = clamp(o.spread ?? 1);
@@ -302,7 +315,7 @@ export function blot(
   const n = 40;
   for (let i = 0; i <= n; i++) {
     const a = (i / n) * Math.PI * 2;
-    const k = 1 + noise1(seed, (i % n) * 0.45) * jag;
+    const k = 1 + noise1(seed + (o.boil ?? 0) * 7919, (i % n) * 0.45) * (o.boil === undefined ? jag : Math.max(jag, 0.06));
     const px = x + Math.cos(a) * rr * k * (1 / squash);
     const py = y + Math.sin(a) * rr * k * squash * (o.scaleY ?? 1);
     if (i === 0) ctx.moveTo(px, py);

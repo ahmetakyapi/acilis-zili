@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { ACTS, CURTAIN_S, renderFilm, type FilmData, type FilmPalette, type FilmText } from "@/lib/ink/analysis-film";
+import { ACTS, CURTAIN_S, filmCues, renderFilm, type FilmData, type FilmPalette, type FilmText } from "@/lib/ink/analysis-film";
+import type { Point } from "@/lib/ink/engine";
+import { muteFilmSound, playCue, primeFilmSound, setSoundPreferred, soundPreferred } from "./filmSound";
 import styles from "./AnalysisFilm.module.css";
 
 export type FilmBar = { o: number; h: number; l: number; c: number };
@@ -11,7 +13,7 @@ type T = Dictionary["aiAnalysis"];
 export const CURTAIN_MS = CURTAIN_S * 1000;
 /** Hareketi azaltana her perdenin SON karesi (sn): film değil, o adımın resmi.
  *  III'ün karesi selin içinde, başlıklar yazılmışken; IV'ünkü kefeler dolarken. */
-const STILL_AT = [5, 8.6, 14.6, 21];
+const STILL_AT = [ACTS[1] - 0.05, ACTS[2] - 1.45, ACTS[3] - 1.3, ACTS[3] + 5];
 /** Perdelerin süresi (ms) — ilerleme çizgisi gerçek süreyle dolsun; IV sonuca kadar sürer. */
 const ACT_MS = ACTS.map((start, i) => i < ACTS.length - 1 ? (ACTS[i + 1] - start) * 1000 : 5000);
 /** Sel ekranın bu kadarını kapladıysa altyazı kâğıt rengine döner. */
@@ -43,11 +45,13 @@ function readPalette(): FilmPalette {
  * perdede "Rapor Hazır" tuvalde dev yazıyla çizildiği için altyazı yalnız
  * ekran okuyucuda kalır.
  */
-export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, done, t, locale, minHeight }: {
+export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, done, t, locale, minHeight, origin }: {
   bars: FilmBar[]; headlines: string[]; symbol: string; name: string; logoUrl: string | null; done: boolean; t: T; locale: Locale;
   /** Açılış sahnesinin boyu: film aynı kutuda başlasın (ClaudeWorkbench). En-boy oranı o
    *  zaman kapanır: oran + min-height genişliğe de aktarılıyor, telefonda kutu taşıyordu. */
   minHeight?: number | null;
+  /** Düğmenin büzüldüğü damlanın sahnedeki yeri: film o damlayla açılır. */
+  origin?: Point | null;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const doneRef = useRef<number | null>(null);
@@ -55,6 +59,10 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, done, t, 
   const startedRef = useRef(0);
   const [act, setAct] = useState(0);
   const [inverted, setInverted] = useState(false);
+  // Ses varsayılan kapalı; tercih tarayıcıda (filmSound.ts). Film yalnız istemcide çizildiği için ilk değer doğrudan okunur.
+  const [sound, setSound] = useState(soundPreferred);
+  const soundRef = useRef(sound);
+  useEffect(() => { soundRef.current = sound; }, [sound]);
   const S = t.claude.scenes;
 
   useEffect(() => {
@@ -63,7 +71,7 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, done, t, 
     if (!canvas || !ctx) return;
     // Logo tuvale çizilir; inmeden önce yerine harfli karo durur (render her karede `complete`a bakar).
     const logo = logoUrl ? Object.assign(new Image(), { decoding: "async", src: logoUrl }) : null;
-    const data: FilmData = { closes: bars.map(b => b.c), highs: bars.map(b => b.h), lows: bars.map(b => b.l), headlines, rsi: rsi14(bars.map(b => b.c)), logo };
+    const data: FilmData = { closes: bars.map(b => b.c), highs: bars.map(b => b.h), lows: bars.map(b => b.l), headlines, rsi: rsi14(bars.map(b => b.c)), logo, origin };
     const F = t.claude.film;
     const text: FilmText = {
       symbol, name, locale: locale === "tr" ? "tr-TR" : "en-US", ...F,
@@ -88,9 +96,14 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, done, t, 
       setInverted(cover >= INVERT_AT);
     };
     const actOf = (time: number) => doneRef.current !== null ? 4 : ACTS.findLastIndex(start => time >= start);
+    /** Son çalınan an: her karede (son, şimdi] aralığındaki ses olayları çalar. */
+    let heard = 0;
+    const cueMeta = { symbolLength: symbol.length, hasOrigin: !!origin, headlines: Math.min(5, headlines.length) };
     const tick = () => {
       const time = clock();
       draw(time);
+      if (soundRef.current) for (const cue of filmCues(heard, time, { ...cueMeta, doneAt: doneRef.current })) playCue(cue);
+      heard = time;
       setAct(actOf(time));
       raf = requestAnimationFrame(tick);
     };
@@ -108,7 +121,7 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, done, t, 
     const themeWatch = new MutationObserver(() => { pal = readPalette(); });
     themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     return () => { cancelAnimationFrame(raf); clearInterval(stillTimer); observer.disconnect(); themeWatch.disconnect(); };
-  }, [bars, headlines, symbol, name, logoUrl, locale, t.claude]);
+  }, [bars, headlines, symbol, name, logoUrl, locale, t.claude, origin]);
 
   useEffect(() => {
     if (done && doneRef.current === null) doneRef.current = (performance.now() - startedRef.current) / 1000;
@@ -118,6 +131,16 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, done, t, 
   return <div className={styles.stage} role="status" aria-live="polite" aria-label={`${t.claude.stage}: ${caption.title}`}
     data-inverted={inverted ? "" : undefined} data-final={act === 4 ? "" : undefined} style={minHeight ? { minHeight, aspectRatio: "auto" } : undefined}>
     <canvas ref={canvasRef} className={styles.canvas} aria-hidden />
+    <button type="button" className={styles.sound} aria-pressed={sound} onClick={() => {
+      const next = !sound;
+      if (next) primeFilmSound(); else muteFilmSound();
+      setSoundPreferred(next); setSound(next);
+    }}>
+      <svg viewBox="0 0 24 24" aria-hidden><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />{sound
+        ? <path className={styles.waves} pathLength={1} d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />
+        : <path d="M16 9.5l5 5M21 9.5l-5 5" />}</svg>
+      <span>{sound ? t.claude.sound.on : t.claude.sound.off}</span>
+    </button>
     <div className={styles.caption} key={act}>
       {act < 4 && <span className={styles.sceneNo}>{["I", "II", "III", "IV"][act]}</span>}
       <strong>{caption.title}</strong>

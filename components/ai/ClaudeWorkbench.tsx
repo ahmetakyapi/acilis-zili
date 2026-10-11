@@ -9,6 +9,7 @@ import { useMotionPreference } from "@/components/motion/useMotionPreference";
 import { HORIZON_OF, type AnalysisFocus } from "@/lib/ai-analysis-core";
 import { AnalysisFilm, CURTAIN_MS, type FilmBar } from "./AnalysisFilm";
 import { KineticText } from "./KineticText";
+import { primeFilmSound, soundPreferred } from "./filmSound";
 import styles from "./Claude.module.css";
 
 /** Düğme damlaya büzülür, sahne boşalır, film başlar (ms). İstek basıldığı an gider; bu yalnız görüntü. */
@@ -52,6 +53,9 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGe
   const stageRef = useRef<HTMLElement>(null);
   /** Film, sahnenin o anki boyunda açılır: kutu yerinde kalsın, alttaki sayfa zıplamasın. */
   const [stageHeight, setStageHeight] = useState<number | null>(null);
+  /** Düğmenin büzüldüğü damlanın sahnedeki yeri: film o damlayla açılır (kesmesiz geçiş). */
+  const [origin, setOrigin] = useState<{ x: number; y: number } | null>(null);
+  const goIconRef = useRef<HTMLSpanElement>(null);
   const C = t.claude;
   const L = C.launch;
   useEffect(() => () => clearTimeout(launchTimer.current), []);
@@ -59,8 +63,17 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGe
   async function generate() {
     if (busy || launching) return;
     setLaunching(true); setDone(false); setError("");
-    setStageHeight(stageRef.current?.offsetHeight ?? null);
-    launchTimer.current = window.setTimeout(() => setBusy(true), reduced ? 0 : LAUNCH_MS);
+    // Ölçü iki kez: tıklamada (sonuç çok hızlı gelirse) ve büzülme bitince — damla
+    // o zaman düğmenin sol ucuna kaymış olur; film tam oradan açılır.
+    const measure = () => {
+      setStageHeight(stageRef.current?.offsetHeight ?? null);
+      const stageBox = stageRef.current?.getBoundingClientRect(), iconBox = goIconRef.current?.getBoundingClientRect();
+      setOrigin(!reduced && stageBox && iconBox ? { x: iconBox.left + iconBox.width / 2 - stageBox.left, y: iconBox.top + iconBox.height / 2 - stageBox.top } : null);
+    };
+    measure();
+    // Ses tercihi açıksa bağlam BU tıklamanın içinde açılır (tarayıcı sesi ancak kullanıcı hareketiyle başlatır).
+    if (soundPreferred()) primeFilmSound();
+    launchTimer.current = window.setTimeout(() => { measure(); setBusy(true); }, reduced ? 0 : LAUNCH_MS);
     requestId.current ??= crypto.randomUUID();
     try {
       const response = await fetch("/api/ai/analysis", {
@@ -82,7 +95,7 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGe
     }
   }
 
-  if (busy) return <AnalysisFilm bars={bars} headlines={headlines} symbol={symbol} name={name} logoUrl={logoUrl} done={done} t={t} locale={locale} minHeight={stageHeight} />;
+  if (busy) return <AnalysisFilm bars={bars} headlines={headlines} symbol={symbol} name={name} logoUrl={logoUrl} done={done} t={t} locale={locale} minHeight={stageHeight} origin={origin} />;
 
   const spark = sparkPath(bars);
   const disabled = inProgress || remaining === 0;
@@ -127,7 +140,7 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGe
         {canGenerate ? <>
           <button type="button" data-claude-generate className={styles.go} onClick={generate} disabled={disabled || launching}>
             <span className={styles.goLabel}><span>{today ? L.startAnyway : L.start}</span></span>
-            <span className={styles.goIcon} aria-hidden>
+            <span ref={goIconRef} className={styles.goIcon} aria-hidden>
               <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" /></svg>
             </span>
           </button>
