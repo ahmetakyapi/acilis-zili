@@ -3,25 +3,35 @@
    altyazı ve ilerleme kâğıt rengine döner: mürekkebin üstünde mürekkep okunmaz. */
 .stage { position:relative; overflow:hidden; aspect-ratio:16 / 8; min-height:320px; border-radius:24px; background:var(--surface-sunken); }
 .canvas { position:absolute; inset:0; width:100%; height:100%; }
-.caption { position:absolute; left:32px; right:32px; bottom:40px; display:grid; gap:4px; animation:caption-in 700ms var(--ease-brand) both; }
+/* Altyazı solda, canlı künye sağda (anatomy figür kartı: ipucu sol alt, künye sağ alt). */
+.caption { position:absolute; left:32px; right:32px; bottom:62px; display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:24px; row-gap:4px; align-items:end; animation:caption-in 700ms var(--ease-brand) both; }
+.caption > :not(.readout) { grid-column:1; }
+.readout { grid-column:2; grid-row:1 / span 3; align-self:end; justify-self:end; font-family:var(--font-mono); font-size:12.5px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--text-body); white-space:nowrap; }
 .caption strong { font-size:clamp(1.25rem,2.2vw,1.65rem); font-weight:750; letter-spacing:-.035em; color:var(--text-strong); }
-.caption > span:last-child:not(.sceneNo) { font-size:14px; color:var(--text-body); }
+.line { font-size:14px; color:var(--text-body); }
 /* Son perdede "Rapor Hazır" tuvalde dev yazı; altyazı yalnız ekran okuyucuya. */
 .stage[data-final] .caption { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 .stage[data-final] .progress { opacity:0; transition:opacity 300ms var(--ease-brand); }
-.caption strong, .caption > span, .progress span::after { transition:color 300ms var(--ease-brand), background-color 300ms var(--ease-brand); }
-.stage[data-inverted] .caption strong, .stage[data-inverted] .caption > span:last-child:not(.sceneNo) { color:var(--page-bg); }
+.caption strong, .caption > span, .bar::after, .chip { transition:color 300ms var(--ease-brand), background-color 300ms var(--ease-brand); }
+.stage[data-inverted] .caption strong, .stage[data-inverted] .line, .stage[data-inverted] .readout, .stage[data-inverted] .chip { color:var(--page-bg); }
 .stage[data-inverted] .sceneNo { color:var(--brass); }
-.stage[data-inverted] .progress span { background:var(--page-bg); }
-.stage[data-inverted] .progress span[data-state="done"], .stage[data-inverted] .progress span[data-state="active"]::after { background:var(--page-bg); }
+.stage[data-inverted] .bar { background:var(--page-bg); }
+.stage[data-inverted] [data-state="done"] .bar, .stage[data-inverted] [data-state="active"] .bar::after { background:var(--page-bg); }
 .sceneNo { font-size:12px; font-weight:700; letter-spacing:.08em; color:var(--brass-ink); }
 @keyframes caption-in { from { opacity:0; translate:0 10px; } to { opacity:1; translate:0 0; } }
-.progress { position:absolute; left:32px; right:32px; bottom:22px; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
-.progress span { position:relative; height:3px; border-radius:999px; background:var(--line-strong); overflow:hidden; opacity:.45; transition:opacity 400ms var(--ease-brand), background-color 300ms var(--ease-brand); }
-.progress span[data-state="done"] { opacity:1; background:var(--text-strong); }
-.progress span[data-state="active"] { opacity:1; }
+/* Adlı perde çipleri: ad üstte, çizgi altta. Gelecek perde soluk, geçmiş dolu. */
+.progress { position:absolute; left:32px; right:32px; bottom:20px; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:0; padding:0; list-style:none; }
+.progress li { display:grid; gap:7px; min-width:0; opacity:.5; transition:opacity 400ms var(--ease-brand); }
+.progress li[data-state="done"], .progress li[data-state="active"] { opacity:1; }
+.chip { display:flex; align-items:baseline; gap:6px; min-width:0; font-size:11.5px; font-weight:650; color:var(--text-muted); white-space:nowrap; }
+.chip b { font-size:10.5px; font-weight:750; letter-spacing:.06em; color:var(--brass-ink); }
+.chip em { font-style:normal; overflow:hidden; text-overflow:ellipsis; }
+[data-state="active"] .chip { color:var(--text-strong); }
+.bar { position:relative; display:block; height:3px; border-radius:999px; background:var(--line-strong); overflow:hidden; transition:background-color 300ms var(--ease-brand); }
+[data-state="done"] .bar { background:var(--text-strong); }
 /* Doğrusal BİLEREK: süre göstergesi; yavaşlayan dolum geçen zamanı yanlış anlatır. */
-.progress span[data-state="active"]::after { content:""; position:absolute; inset:0; background:var(--text-strong); transform-origin:left; animation:fill var(--act-ms, 5000ms) linear both; }
+[data-state="active"] .bar::after { content:""; position:absolute; inset:0; background:var(--text-strong); transform-origin:left; animation:fill var(--act-ms, 5000ms) linear both; }
+.stage[data-inverted] .chip b { color:var(--brass); }
 @keyframes fill { from { scale:0 1; } to { scale:1 1; } }
 /* Ses düğmesi: sağ üst köşe, sessiz bir hap; selin üstünde rengini çevirir. */
 .sound { position:absolute; z-index:2; top:14px; right:14px; display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 12px 0 10px; border-radius:999px; background:var(--premium-surface); color:var(--text-body); font-size:12.5px; font-weight:650; cursor:pointer; transition:color 200ms var(--ease-brand), background-color 300ms var(--ease-brand); }
@@ -35,12 +45,15 @@
 .stage[data-inverted] .sound { background:color-mix(in srgb, var(--page-bg) 14%, transparent); color:var(--page-bg); }
 @media(max-width:639px) {
   .stage { aspect-ratio:4 / 5; min-height:0; border-radius:20px; }
-  .caption { left:18px; right:18px; bottom:36px; }
+  /* Telefonda künye altyazının altında; çiplerde yalnız numara. */
+  .caption { left:18px; right:18px; bottom:48px; grid-template-columns:minmax(0,1fr); }
+  .readout { grid-column:1; grid-row:auto; justify-self:start; margin-top:2px; }
+  .chip em { display:none; }
   .progress { left:18px; right:18px; }
   .sound { top:10px; right:10px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .caption { animation:none; }
   .waves { animation:none; stroke-dashoffset:0; }
-  .progress span[data-state="active"]::after { animation:none; scale:.5 1; }
+  [data-state="active"] .bar::after { animation:none; scale:.5 1; }
 }

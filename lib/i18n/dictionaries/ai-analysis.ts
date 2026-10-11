@@ -112,6 +112,8 @@ export const aiAnalysisTr = {
     },
     film: {
       last: "Son Kapanış", high: "Zirve", low: "Dip", ma20: "20 Günlük", ma50: "50 Günlük", news: "Manşetler",
+      /* Filmin canlı künyesi (AnalysisFilm): çizimle aynı veriden, birim sayıdan kopmaz. */
+      readout: { sessions: "{n} Seans", headlines: "{n} Manşet", elapsed: "Geçen {t}" },
       weighing: ["Riskler", "Fırsatlar", "Değerleme", "Momentum", "Seviyeler", "Senaryolar", "Kanıtlar"],
     },
   },
@@ -259,6 +261,7 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
     },
     film: {
       last: "Last Close", high: "High", low: "Low", ma20: "20-Day", ma50: "50-Day", news: "Headlines",
+      readout: { sessions: "{n} Sessions", headlines: "{n} Headlines", elapsed: "Elapsed {t}" },
       weighing: ["Risks", "Upside", "Valuation", "Momentum", "Levels", "Scenarios", "Evidence"],
     },
   },

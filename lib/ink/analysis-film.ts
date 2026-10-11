@@ -441,7 +441,9 @@ function layout(size: Size, n: number) {
   // Alttaki pay altyazının bloğu (numara + başlık + cümle + ilerleme): 1280'de 118 piksel
   // taban çizgisini altyazının içinden geçiriyordu.
   // Üst pay ses düğmesinin altında başlar (düğme 14 + 36 piksel): zirve künyesi altında kalıyordu.
-  const top = narrow ? 64 : 66, bottom = h - (narrow ? 146 : 136);
+  // Alt pay altyazı + canlı künye + adlı perde çipleri kadar (11 Ekim, ölçüldü: altyazı bloğu
+  // alttan 149 px masaüstünde, 150 telefonda); taban çizgisi (`bottom + 10`) bloğun ~12 px üstünde.
+  const top = narrow ? 64 : 66, bottom = h - (narrow ? 180 : 172);
   const cx = w / 2, beamY = top + (bottom - top) * 0.45, half = Math.min(220, (right - left) * 0.36);
   return { w, h, narrow, left, right, top, bottom, cx, beamY, half, n };
 }

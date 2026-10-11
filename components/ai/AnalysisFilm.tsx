@@ -4,6 +4,7 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { ACTS, CURTAIN_S, filmCues, renderFilm, type FilmData, type FilmPalette, type FilmText } from "@/lib/ink/analysis-film";
 import type { Point } from "@/lib/ink/engine";
 import { muteFilmSound, playCue, primeFilmSound, setSoundPreferred, soundPreferred } from "./filmSound";
+import { formatPrice } from "@/lib/utils";
 import styles from "./AnalysisFilm.module.css";
 
 export type FilmBar = { o: number; h: number; l: number; c: number };
@@ -14,17 +15,47 @@ export const CURTAIN_MS = CURTAIN_S * 1000;
 /** Hareketi azaltana her perdenin SON karesi (sn): film değil, o adımın resmi.
  *  III'ün karesi selin içinde, başlıklar yazılmışken; IV'ünkü kefeler dolarken. */
 const STILL_AT = [ACTS[1] - 0.05, ACTS[2] - 1.45, ACTS[3] - 1.3, ACTS[3] + 5];
+const NUMERALS = ["I", "II", "III", "IV"] as const;
 /** Perdelerin süresi (ms) — ilerleme çizgisi gerçek süreyle dolsun; IV sonuca kadar sürer. */
 const ACT_MS = ACTS.map((start, i) => i < ACTS.length - 1 ? (ACTS[i + 1] - start) * 1000 : 5000);
 /** Sel ekranın bu kadarını kapladıysa altyazı kâğıt rengine döner. */
 const INVERT_AT = 0.72;
 const MAX_DPR = 2;
+/** Bundan uzun bir boşlukta (sekme arka planda, film ekran dışında) kaçırılan ses olayları çalınmaz. */
+const CUE_GAP_S = 0.5;
+/** Ekran dışını erken sezmek için kenar payı (anatomy: rootMargin 120px). */
+const VIEW_MARGIN = "120px 0px";
 
 function rsi14(closes: number[]) {
   if (closes.length < 15) return null;
   let gain = 0, loss = 0;
   for (let i = closes.length - 14; i < closes.length; i++) { const d = closes[i] - closes[i - 1]; if (d > 0) gain += d; else loss -= d; }
   return loss === 0 ? 100 : 100 - 100 / (1 + gain / loss);
+}
+
+/**
+ * CANLI KÜNYE (11 Ekim; anatomy skill'inin "readout" kuralı: kartın köşesinde,
+ * çizimin kendisini çizen veriden gerçek sayılar). Perde I'in seans sayısı ve
+ * son kapanışı tuvaldeki mumların aynısı; II'nin RSI'ı ve 20 günlük ortalaması
+ * tuvaldeki çizgilerin aynısı; III'ün manşet sayısı tuvale düşen başlıkların
+ * sayısı (en fazla 5); IV gerçekten geçen süre. Uydurma bir ilerleme yüzdesi
+ * yok: Claude'un ne kadar sürdüğünü bilmiyoruz, ne kadar geçtiğini biliyoruz.
+ */
+function readoutOf(act: number, bars: FilmBar[], headlines: string[], seconds: number, R: T["claude"]["film"]["readout"], F: T["claude"]["film"], locale: Locale) {
+  const tag = locale === "tr" ? "tr-TR" : "en-US";
+  // Sitenin para biçimi (lib/utils → formatPrice): "124,77 $", birim sayıdan kopmaz.
+  const money = (v: number) => formatPrice(v, locale, { currency: true });
+  const closes = bars.map(b => b.c);
+  const last = closes.at(-1);
+  if (act === 0) return [R.sessions.replace("{n}", String(bars.length)), last !== undefined ? `${F.last} ${money(last)}` : null].filter(Boolean).join(" · ");
+  if (act === 1) {
+    const rsi = rsi14(closes);
+    const ma = closes.length >= 20 ? closes.slice(-20).reduce((a, b) => a + b, 0) / 20 : null;
+    return [rsi !== null ? `RSI ${rsi.toLocaleString(tag, { maximumFractionDigits: 1, minimumFractionDigits: 1 })}` : null, ma !== null ? `${F.ma20} ${money(ma)}` : null].filter(Boolean).join(" · ");
+  }
+  if (act === 2) return R.headlines.replace("{n}", String(Math.min(5, headlines.length)));
+  const m = Math.floor(seconds / 60), s = Math.floor(seconds % 60);
+  return R.elapsed.replace("{t}", `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
 }
 
 function readPalette(): FilmPalette {
@@ -61,6 +92,8 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
   const startedRef = useRef(0);
   const [act, setAct] = useState(0);
   const [inverted, setInverted] = useState(false);
+  /** Geçen tam saniye: IV. perdenin künyesi (saniyede bir yazılır, her karede değil). */
+  const [seconds, setSeconds] = useState(0);
   // Ses varsayılan kapalı; tercih tarayıcıda (filmSound.ts). Film yalnız istemcide çizildiği için ilk değer doğrudan okunur.
   const [sound, setSound] = useState(soundPreferred);
   const soundRef = useRef(sound);
@@ -101,12 +134,20 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
     /** Son çalınan an: her karede (son, şimdi] aralığındaki ses olayları çalar. */
     let heard = 0;
     const cueMeta = { symbolLength: symbol.length, hasOrigin: !!origin, headlines: Math.min(5, headlines.length) };
+    /* EKRAN DIŞINDA DURUR (anatomy, motion.md). Film zamana bağlı bir öykü:
+       geri gelince kaldığı yerden değil GEÇEN zamandan sürer. Gözlemcinin EN
+       YENİ kaydı okunur — ekrandan çıkıp dönen kutu tek çağrıda iki kayıt
+       getirir, ilki okunursa film ekrandayken donar. */
+    let visible = true, running = false;
     const tick = () => {
+      if (!visible) { raf = 0; return; }
       const time = clock();
       draw(time);
-      if (soundRef.current) for (const cue of filmCues(heard, time, { ...cueMeta, doneAt: doneRef.current })) playCue(cue);
+      // Uzun boşlukta (sekme arka planda, film ekran dışında) kaçırılan sesler üst üste çalmasın.
+      if (soundRef.current && time - heard < CUE_GAP_S) for (const cue of filmCues(heard, time, { ...cueMeta, doneAt: doneRef.current })) playCue(cue);
       heard = time;
       setAct(actOf(time));
+      setSeconds(Math.floor(time));
       raf = requestAnimationFrame(tick);
     };
     const still = () => {
@@ -126,13 +167,19 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
     void ready.then(() => {
       if (cancelled) return;
       startedRef.current = performance.now();
-      if (media.matches) { still(); stillTimer = window.setInterval(still, 500); } else raf = requestAnimationFrame(tick);
+      running = true;
+      if (media.matches) { still(); stillTimer = window.setInterval(() => { still(); setSeconds(Math.floor(clock())); }, 500); } else raf = requestAnimationFrame(tick);
     });
     const observer = new ResizeObserver(() => { resize(); if (media.matches) still(); });
     observer.observe(canvas);
+    const view = new IntersectionObserver((entries) => {
+      visible = entries[entries.length - 1].isIntersecting;
+      if (visible && !raf && !media.matches && running && !cancelled) { heard = clock(); raf = requestAnimationFrame(tick); }
+    }, { rootMargin: VIEW_MARGIN });
+    view.observe(canvas);
     const themeWatch = new MutationObserver(() => { pal = readPalette(); });
     themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => { cancelled = true; cancelAnimationFrame(raf); clearInterval(stillTimer); observer.disconnect(); themeWatch.disconnect(); };
+    return () => { cancelled = true; cancelAnimationFrame(raf); clearInterval(stillTimer); observer.disconnect(); view.disconnect(); themeWatch.disconnect(); };
   }, [bars, headlines, symbol, name, logoUrl, logoImage, locale, t.claude, origin]);
 
   useEffect(() => {
@@ -140,6 +187,7 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
   }, [done]);
 
   const caption = act === 4 ? { title: t.claude.ready, line: "" } : S[act];
+  const readout = act < 4 ? readoutOf(act, bars, headlines, seconds, t.claude.film.readout, t.claude.film, locale) : "";
   return <div className={styles.stage} role="status" aria-live="polite" aria-label={`${t.claude.stage}: ${caption.title}`}
     data-inverted={inverted ? "" : undefined} data-final={act === 4 ? "" : undefined} style={minHeight ? { minHeight, aspectRatio: "auto" } : undefined}>
     <canvas ref={canvasRef} className={styles.canvas} aria-hidden />
@@ -154,11 +202,18 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
       <span>{sound ? t.claude.sound.on : t.claude.sound.off}</span>
     </button>
     <div className={styles.caption} key={act}>
-      {act < 4 && <span className={styles.sceneNo}>{["I", "II", "III", "IV"][act]}</span>}
+      {act < 4 && <span className={styles.sceneNo}>{NUMERALS[act]}</span>}
       <strong>{caption.title}</strong>
-      {caption.line && <span>{caption.line}</span>}
+      {caption.line && <span className={styles.line}>{caption.line}</span>}
+      {/* Künye ekran okuyucuya okunmaz: canlı bölge yalnız perde değişince konuşur, saniyeyi saymaz. */}
+      {readout && <span className={styles.readout} aria-hidden>{readout}</span>}
     </div>
-    <div className={styles.progress} aria-hidden>{S.map((s, i) => <span key={s.title} style={{ "--act-ms": `${ACT_MS[i]}ms` } as CSSProperties}
-      data-state={act === 4 || i < act ? "done" : i === act ? "active" : "next"} />)}</div>
+    {/* ADLI PERDE ÇİPLERİ (anatomy'deki sahne sekmeleri): filmin dört perdesi bir
+        bakışta, etkin olanın çizgisi gerçek süreyle dolar. Telefonda yalnız numara. */}
+    <ol className={styles.progress} aria-hidden>{S.map((s, i) => <li key={s.title} style={{ "--act-ms": `${ACT_MS[i]}ms` } as CSSProperties}
+      data-state={act === 4 || i < act ? "done" : i === act ? "active" : "next"}>
+      <span className={styles.chip}><b>{NUMERALS[i]}</b><em>{s.title}</em></span>
+      <i className={styles.bar} />
+    </li>)}</ol>
   </div>;
 }
