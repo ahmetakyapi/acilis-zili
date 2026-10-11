@@ -87,6 +87,11 @@ export const aiAnalysisTr = {
       { title: "Claude Tartıyor", line: "Olumlu ve olumsuz kanıt karşılaştırılıyor." },
     ],
     sessions: "Seans", positive: "Olumlu", negative: "Olumsuz",
+    /** Bekleme filmindeki dev yazı ve künyeler (lib/ink/analysis-film.ts). */
+    film: {
+      last: "Son Kapanış", high: "Zirve", low: "Dip", ma20: "20 Günlük", ma50: "50 Günlük", news: "Manşetler",
+      weighing: ["Riskler", "Fırsatlar", "Değerleme", "Momentum", "Seviyeler", "Senaryolar", "Kanıtlar"],
+    },
   },
   cta: {
     title: "Claude Görüşü", open: "Raporu Aç", create: "Claude ile Analiz Et", none: "Bu odakta henüz rapor yok.",
@@ -207,6 +212,10 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
       { title: "Claude Is Weighing", line: "Comparing the positive and negative evidence." },
     ],
     sessions: "Sessions", positive: "Positive", negative: "Negative",
+    film: {
+      last: "Last Close", high: "High", low: "Low", ma20: "20-Day", ma50: "50-Day", news: "Headlines",
+      weighing: ["Risks", "Upside", "Valuation", "Momentum", "Levels", "Scenarios", "Evidence"],
+    },
   },
   cta: {
     title: "Claude's View", open: "Open Report", create: "Analyse with Claude", none: "No report for this focus yet.",

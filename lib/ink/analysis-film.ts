@@ -1,41 +1,73 @@
 /**
- * Claude analizi beklerken oynayan mürekkep filmi — TEK ÇİZGİNİN hikâyesi.
+ * Claude analizi beklerken oynayan mürekkep filmi — TEK ÇİZGİNİN, KESİLMEYEN
+ * PLANI.
  *
- * Bekleme 20–30 saniye. Sahneler birbirine kesmeyle değil BİÇİM DEĞİŞTİREREK
- * geçiyor; göz baştan sona aynı mürekkep çizgisini izliyor:
+ * Bekleme 20–30 saniye. İlk sürüm (11 Ekim) beş perdeyi biçim değiştirerek
+ * bağlıyordu ama kamera sabit, yazı küçüktü: çizim ekranın ortasında olup
+ * bitiyor, göz bir şeye "girmiyordu". Bu sürüm hareket tasarımının üç aracını
+ * ekliyor (prompt-motion.com derlemesindeki iyi örneklerin ortak paydası):
  *
- *   I   Fiyat       kalem hissenin son 60 kapanışını elle çizer, ucunda pirinç
- *                   kıvılcım; geçtiği her seansın tepe-dip çentiği düşer.
- *   II  Göstergeler aynı çizgi "gevşer", 20 günlük ortalamaya dönüşür; 50
- *                   günlük ortalama pirinçle iner, köşede RSI kadranı çizilir.
- *   III Haberler    ortalama çizgisi kalkar, beş kâğıt şeride bölünür; her
- *                   şeridin üstüne bir haber başlığı mürekkeple yazılır.
- *   IV  Tartı       şeritler tek bir kola toplanır, terazi çizilir; kefelere
- *                   olumlu ve olumsuz damlalar düşer, kol hafifçe salınır.
- *   V   Perde       kol durulur, yerine markanın zili çizilir ve çalar;
- *                   "Rapor Hazır" yazılır.
+ *   KAMERA    sahne bir dünya; yakınlaşır, kalemi izler, geri çekilir.
+ *   DEV YAZI  her perdenin bir kelimesi çerçeveyi doldurur; harfler maskenin
+ *             içinden sırayla yükselir, hızlıyken arkalarında iz bırakır.
+ *   MÜREKKEP  sert açık/koyu geçiş, ama süs değil: çizginin ucundan dökülen
+ *   SELİ      mürekkep ekranı kaplar, haberler kâğıt rengiyle onun üstüne
+ *             yazılır; sonra sel geri çekilip TEK BİR DAMLAYA döner ve o damla
+ *             terazinin mili olur. Sel çizimin altında değil, ÖNÜNDE: aynı
+ *             dünya ikinci kez, ters paletle, selin içine kırpılarak çizilir —
+ *             sınırı geçen çizgi rengini o sınırda değiştirir.
+ *
+ *   I   Fiyat       sembol dev harflerle oturur, sonundaki nokta mürekkep
+ *                   damlası olur; kamera damlaya girer, damla kalemin ucu olup
+ *                   son 60 kapanışı çizer, kamera kalemi izleyip geri çekilir.
+ *   II  Göstergeler aynı çizgi 20 günlük ortalamaya gevşer, 50 günlük pirinçle
+ *                   iner, köşede RSI kadranı; çizginin ucundan sel başlar.
+ *   III Haberler    selin içinde "Manşetler" kelimesi; çizgi beş şeride
+ *                   bölünür, başlıklar kâğıt rengiyle daktilo edilir. Sel
+ *                   terazinin miline çekilir.
+ *   IV  Tartı       şeritler kola toplanır, terazi çizilir, kefelere olumlu ve
+ *                   olumsuz damlalar düşer; tepede dev kelimeler döner
+ *                   ("Riskler", "Fırsatlar"…). Sonuç gelene kadar sürer.
+ *   V   Perde       milden ikinci sel, ters zeminde zil çizilip çalar, altında
+ *                   dev "Rapor Hazır".
  *
  * Mürekkep sahnelerinin kuralları (CLAUDE.md, lib/ink/scenes.ts): saf
- * `render(ctx, t)`, tohumlu ve belirli; renk temadan (mürekkep, pirinç; mavi
- * yok — yön renkleri yalnız tartının damlalarında, anlam taşıdıkları için).
- * IV. perde sonuç gelene kadar döner: bu bir yükleme göstergesi ("ringing"
- * istisnasıyla aynı gerekçe), sonuç gelince kalkar.
+ * `render(ctx, t)`, tohumlu ve belirli; renk temadan (mürekkep, kâğıt, pirinç;
+ * mavi yok — yön renkleri yalnız tartının damlalarında, anlam taşıdıkları
+ * için). Taşan eğri (`ease.back`, sönen salınım) yalnız TEK KÜÇÜK öğede:
+ * damla, kadran iğnesi, zil. Yazının girişi taşmaz. IV. perde sonuç gelene
+ * kadar döner: bu bir yükleme göstergesi ("ringing" istisnasıyla aynı
+ * gerekçe), sonuç gelince kalkar.
  */
-import { blot, brush, clamp, damped, ease, segment, span, splatter, type InkPalette, type Point } from "./engine";
+import { blot, brush, clamp, damped, ease, noise1, segment, span, splatter, type InkPalette, type Point } from "./engine";
 import { drawBell, ringArcs, spark } from "./scenes";
 
 type Ctx = CanvasRenderingContext2D;
-export type FilmPalette = InkPalette & { up: string; down: string; muted: string; font: string; /** Tartının iki kefesi: olumlu, olumsuz. */ labels: [string, string] };
+export type FilmPalette = InkPalette & {
+  up: string; down: string; muted: string; font: string;
+  /** Pirincin yazıda okunan koyusu (`--brass-ink`): ince metinde `--brass` kontrastı tutmuyor. */
+  brassInk: string;
+};
+/** Filmin kelimeleri; hepsi sözlükten (`aiAnalysis.claude.film`). */
+export type FilmText = {
+  symbol: string; locale: string;
+  last: string; high: string; low: string; ma20: string; ma50: string; news: string;
+  positive: string; negative: string; ready: string;
+  /** IV. perdede dönen dev kelimeler. */
+  weighing: string[];
+};
 export type FilmData = { closes: number[]; highs: number[]; lows: number[]; headlines: string[]; rsi: number | null };
 
-/** Perdelerin başladığı an (sn) — üretimin gerçek iş sırası. */
-export const ACTS = [0, 4.5, 9.5, 15] as const;
-/** Perde (V) süresi: zil çizilir, çalar, yazı oturur. */
-export const CURTAIN_S = 2.2;
+/** Perdelerin başladığı an (sn). III bir saniye uzun: başlıklar yazıldıktan sonra okunacak kadar dursun. */
+export const ACTS = [0, 5, 10, 16] as const;
+/** Perde (V) süresi: sel, zil, dev yazı. */
+export const CURTAIN_S = 2.8;
 const STRIPS = 5;
 const SWAY_PERIOD = 3.2;
 const SWAY = 0.075;
 const DROP_EVERY = 1.1;
+/** IV'te her dev kelimenin ekranda kaldığı süre — "her 1,5–2 saniyede yeni bir fikir". */
+const WORD_EVERY = 1.9;
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 const mix = (a: Point[], b: Point[], k: number) => a.map((p, i) => ({ x: lerp(p.x, b[i].x, k), y: lerp(p.y, b[i].y, k) }));
@@ -54,17 +86,178 @@ function fit(ctx: Ctx, text: string, width: number) {
   return text.slice(0, lo).trimEnd() + "…";
 }
 
-export type FilmFrame = { t: number; doneAt: number | null };
+/* ----------------------------------------------------------------------- */
+/* Dev yazı                                                                  */
+/* ----------------------------------------------------------------------- */
 
-export function renderFilm(ctx: Ctx, frame: FilmFrame, pal: FilmPalette, data: FilmData, size: { w: number; h: number }, seed = 11) {
+const DISPLAY = 850;
+const display = (font: string, size: number) => `${DISPLAY} ${size}px ${font}`;
+
+/** Genişliğe ve tavana göre dev yazının puntosu. */
+function displaySize(ctx: Ctx, font: string, text: string, width: number, max: number) {
+  ctx.font = display(font, 100);
+  return Math.min(max, (width / (ctx.measureText(text).width || 1)) * 100);
+}
+
+/**
+ * Kinetik kelime: harfler satırın maskesi içinden sırayla yükselir, çıkışta
+ * aynı yoldan yukarı kaçar. Harf yerleri ön ekin ölçüsünden (kerning korunur).
+ * Hızlı harfin arkasında iki soluk kopya: hareket bulanıklığının mürekkepteki
+ * karşılığı ("smear"). Giriş `ease.out` — yazı hedefini aşmaz.
+ *
+ * Maske ascent'i 1,02em: Türkçe büyük harflerin imleri (İ, Ü, Ö, Ş'nin
+ * çengeli aşağıda) kesilmesin; descent 0,3em (ğ, ş, ç).
+ */
+function kinetic(ctx: Ctx, text: string, o: {
+  x: number; y: number; size: number; font: string; color: string; t: number;
+  inAt: number; outAt?: number; align?: "left" | "center" | "right"; stagger?: number; alpha?: number;
+}) {
+  const stagger = o.stagger ?? 0.045, dur = 0.55, outDur = 0.42;
+  if (o.t < o.inAt) return;
+  const last = (text.length - 1) * stagger;
+  if (o.outAt !== undefined && o.t > o.outAt + last + outDur) return;
+  ctx.save();
+  ctx.font = display(o.font, o.size);
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  const total = ctx.measureText(text).width;
+  const x0 = o.align === "left" ? o.x : o.align === "right" ? o.x - total : o.x - total / 2;
+  ctx.beginPath();
+  ctx.rect(x0 - o.size * 0.2, o.y - o.size * 1.02, total + o.size * 0.4, o.size * 1.32);
+  ctx.clip();
+  ctx.fillStyle = o.color;
+  const rise = o.size * 1.05;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === " ") continue;
+    const enter = span(o.t, o.inAt + i * stagger, o.inAt + i * stagger + dur);
+    const leave = o.outAt === undefined ? 0 : span(o.t, o.outAt + i * stagger, o.outAt + i * stagger + outDur);
+    const pos = (k: number, l: number) => rise * (1 - ease.out(k)) - rise * ease.in(l);
+    const dy = pos(enter, leave);
+    // Hız: bir sonraki küçük adımdaki konum farkı. Durunca iz yok.
+    const dt = 0.03;
+    const v = pos(span(o.t + dt, o.inAt + i * stagger, o.inAt + i * stagger + dur), o.outAt === undefined ? 0 : span(o.t + dt, o.outAt + i * stagger, o.outAt + i * stagger + outDur)) - dy;
+    const lx = x0 + ctx.measureText(text.slice(0, i)).width;
+    const a = (o.alpha ?? 1) * (0.35 + 0.65 * ease.out(enter));
+    if (Math.abs(v) > o.size * 0.02) {
+      for (const [k, ga] of [[2.2, 0.16], [1.1, 0.3]] as const) { ctx.globalAlpha = a * ga; ctx.fillText(ch, lx, o.y + dy - v * k); }
+    }
+    ctx.globalAlpha = a;
+    ctx.fillText(ch, lx, o.y + dy);
+  }
+  ctx.restore();
+  return { x0, width: total };
+}
+
+/**
+ * Küçük künye: maskeden yükselen tek satır (Zirve, Dip, 20 Günlük…). Altında
+ * kâğıt renginde bir hale: çizgi künyenin içinden geçtiğinde yazı okunur
+ * kalır (haritacılığın yol adı tekniği). Selin içinde kâğıt = mürekkep.
+ */
+function tag(ctx: Ctx, text: string, x: number, y: number, k: number, o: { font: string; color: string; halo: string; size?: number; align?: CanvasTextAlign; alpha?: number }) {
+  if (k <= 0) return;
+  const size = o.size ?? 12;
+  ctx.save();
+  ctx.font = `700 ${size}px ${o.font}`;
+  ctx.textAlign = o.align ?? "left";
+  ctx.beginPath();
+  ctx.rect(x - 400, y - size * 1.1, 800, size * 1.45);
+  ctx.clip();
+  ctx.globalAlpha = (o.alpha ?? 1) * ease.out(k);
+  const ty = y + size * 1.1 * (1 - ease.out(k));
+  ctx.strokeStyle = o.halo; ctx.lineWidth = 4; ctx.lineJoin = "round";
+  ctx.strokeText(text, x, ty);
+  ctx.fillStyle = o.color;
+  ctx.fillText(text, x, ty);
+  ctx.restore();
+}
+
+/* ----------------------------------------------------------------------- */
+/* Mürekkep seli                                                             */
+/* ----------------------------------------------------------------------- */
+
+/**
+ * Selin kenarı: yavaşça dalgalanan daire. Dalga açının periyodik
+ * fonksiyonu (üç sinüs): değer gürültüsü 0 ile 2π'nin buluştuğu yerde
+ * kırık bırakıyordu, küçük selde de çiçek gibi çok yapraklı okunuyordu.
+ */
+function floodPath(ctx: Ctx, x: number, y: number, r: number, seed: number, t: number) {
+  ctx.beginPath();
+  const n = 96, jag = Math.min(0.07, 4 / Math.max(r, 1));
+  const ph = [noise1(seed, 0.5), noise1(seed, 1.5), noise1(seed, 2.5)].map(v => v * Math.PI);
+  for (let i = 0; i <= n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    const k = 1 + jag * (0.55 * Math.sin(3 * a + ph[0] + t * 0.9) + 0.3 * Math.sin(5 * a + ph[1] - t * 0.6) + 0.15 * Math.sin(8 * a + ph[2] + t * 1.3));
+    const px = x + Math.cos(a) * r * k, py = y + Math.sin(a) * r * k;
+    if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+  }
+  ctx.closePath();
+}
+
+export type FilmFrame = { t: number; doneAt: number | null };
+type Size = { w: number; h: number };
+
+/** Sahnenin iskeleti: aynı ölçüler hem çizimde hem selin hesabında. */
+function layout(size: Size, n: number) {
+  const { w, h } = size;
+  const narrow = w < 560;
+  const left = narrow ? 18 : 32, right = w - (narrow ? 18 : 32);
+  // Alttaki pay altyazının bloğu (numara + başlık + cümle + ilerleme): 1280'de 118 piksel
+  // taban çizgisini altyazının içinden geçiriyordu.
+  const top = narrow ? 56 : 48, bottom = h - (narrow ? 146 : 136);
+  const cx = w / 2, beamY = top + (bottom - top) * 0.45, half = Math.min(220, (right - left) * 0.36);
+  return { w, h, narrow, left, right, top, bottom, cx, beamY, half, n };
+}
+
+/**
+ * Sel nerede, ne kadar (ekran koordinatı). II sonunda çizginin ucundan
+ * yayılır, III sonunda terazinin miline çekilir; perdede milden yeniden.
+ * Dönüş değeri DOM'a da gider: altyazı sel üstündeyken rengini çevirir.
+ */
+export function floodOf(frame: FilmFrame, size: Size, end: Point | null) {
+  const { t, doneAt } = frame;
+  const L = layout(size, 2);
+  const reach = (x: number, y: number) => Math.max(Math.hypot(x, y), Math.hypot(L.w - x, y), Math.hypot(x, L.h - y), Math.hypot(L.w - x, L.h - y)) * 1.06;
+  const pivot = { x: L.cx, y: L.beamY };
+  if (doneAt !== null) {
+    const R = reach(pivot.x, pivot.y);
+    const r = lerp(5, R, ease.in(span(t - doneAt, 0.05, 0.5)));
+    if (t - doneAt > 0.05) return { ...pivot, r, R, full: r >= R };
+  }
+  const from = end ?? { x: L.right, y: (L.top + L.bottom) / 2 };
+  const grow = span(t, ACTS[2] - 1.15, ACTS[2] - 0.2);
+  const shrink = span(t, ACTS[3] - 1.0, ACTS[3] + 0.2);
+  if (grow <= 0 || shrink >= 1) return null;
+  if (shrink <= 0) {
+    const R = reach(from.x, from.y);
+    const r = lerp(4, R, ease.in(grow));
+    return { ...from, r, R, full: r >= R };
+  }
+  // Çekilirken merkez de mile kayar: sel, kenarından değil kendi içine çöker.
+  const k = ease.inOut(shrink);
+  const c = { x: lerp(from.x, pivot.x, k), y: lerp(from.y, pivot.y, k) };
+  const R = reach(c.x, c.y);
+  return { ...c, r: lerp(reach(from.x, from.y), 5, k), R, full: k <= 0 };
+}
+
+/* ----------------------------------------------------------------------- */
+/* Kamera                                                                    */
+/* ----------------------------------------------------------------------- */
+
+type Cam = { x: number; y: number; z: number };
+
+/* ----------------------------------------------------------------------- */
+/* Film                                                                      */
+/* ----------------------------------------------------------------------- */
+
+export function renderFilm(ctx: Ctx, frame: FilmFrame, pal: FilmPalette, data: FilmData, text: FilmText, size: Size, seed = 11) {
   const { t, doneAt } = frame;
   const { w, h } = size;
   ctx.clearRect(0, 0, w, h);
   const n = data.closes.length;
-  if (n < 2) return;
-  const narrow = w < 560;
-  const left = narrow ? 18 : 32, right = w - (narrow ? 18 : 32);
-  const top = narrow ? 56 : 48, bottom = h - (narrow ? 132 : 118);
+  if (n < 2) return 0;
+  const L = layout(size, n);
+  const { narrow, left, right, top, bottom, cx, beamY, half } = L;
   const lo = Math.min(...data.lows), hi = Math.max(...data.highs);
   const yOf = (v: number) => bottom - ((v - lo) / (hi - lo || 1)) * (bottom - top);
   const xOf = (i: number) => left + (i / (n - 1)) * (right - left);
@@ -86,7 +279,6 @@ export function renderFilm(ctx: Ctx, frame: FilmFrame, pal: FilmPalette, data: F
     return { x: lerp(left + 24, right - 24, u), y: stripY(k) };
   });
   // IV: hepsi tek kola toplanır.
-  const cx = w / 2, beamY = top + (bottom - top) * 0.32, half = Math.min(220, (right - left) * 0.36);
   const sway = doneAt === null ? 1 : 1 - ease.out(span(t - doneAt, 0, 0.6));
   const angle = SWAY * Math.sin((2 * Math.PI * (t - ACTS[3] - 1.6)) / SWAY_PERIOD) * span(t, ACTS[3] + 1.4, ACTS[3] + 2.4) * sway;
   const beam: Point[] = price.map((_, i) => {
@@ -96,145 +288,271 @@ export function renderFilm(ctx: Ctx, frame: FilmFrame, pal: FilmPalette, data: F
 
   // Çizginin o anki biçimi: fiyat → ortalama → şeritler → kol.
   const toMa = ease.inOut(span(t, ACTS[1] + 0.1, ACTS[1] + 1.8));
-  const toStrips = ease.inOut(span(t, ACTS[2] + 0.1, ACTS[2] + 1.7));
+  const toStrips = ease.inOut(span(t, ACTS[2] + 0.5, ACTS[2] + 1.7));
   const toBeam = ease.inOut(span(t, ACTS[3] + 0.1, ACTS[3] + 1.5));
   let line = mix(price, ma20, toMa);
   line = mix(line, strips, toStrips);
   line = mix(line, beam, toBeam);
-  const curtain = doneAt === null ? 0 : span(t - doneAt, 0.35, 1.0);
+  const curtain = doneAt === null ? 0 : span(t - doneAt, 0.1, 0.55);
 
-  /* ---- Zemin: silik kurşun kalem taban çizgisi (I–II) ---- */
-  const groundAlpha = (1 - toStrips) * span(t, 0, 0.6) * 0.14;
-  if (groundAlpha > 0) brush(ctx, segment({ x: left, y: bottom + 10 }, { x: right, y: bottom + 10 }, 20), { width: 1, taper: 0, seed: seed + 1, alpha: groundAlpha, color: pal.ink });
+  /* ---- I: sembol ve noktası ---- */
+  const symSize = displaySize(ctx, pal.font, text.symbol + ".", (right - left) * 0.82, narrow ? 120 : 190);
+  ctx.font = display(pal.font, symSize);
+  const symW = ctx.measureText(text.symbol).width;
+  const symY = (top + bottom) / 2 + symSize * 0.36;
+  const symX0 = cx - (symW + symSize * 0.26) / 2;
+  const dotHome = { x: symX0 + symW + symSize * 0.13, y: symY - symSize * 0.09 };
+  const dotR = symSize * 0.085;
+  const SYM_IN = 0.1, DOT_AT = 0.1 + text.symbol.length * 0.06 + 0.25, SYM_OUT = DOT_AT + 0.55;
+  const PEN_A = SYM_OUT + 0.95, PEN_B = 4.5;
+  const pen = span(t, PEN_A, PEN_B);
+  const penIdx = Math.min(n - 1, Math.floor(ease.inOut(pen) * (n - 1)));
 
-  /* ---- I: tepe-dip çentikleri, kalem geçtikçe ---- */
-  const pen = span(t, 0.3, 3.8);
-  const tickAlpha = (1 - toMa) * 0.32;
-  if (tickAlpha > 0) for (let i = 0; i < n; i++) {
-    const born = span(pen, i / n, i / n + 0.06);
-    if (born <= 0) continue;
-    brush(ctx, segment({ x: xOf(i), y: yOf(data.highs[i]) }, { x: xOf(i), y: yOf(data.lows[i]) }, 4), {
-      width: 1.6, progress: ease.out(born), taper: 0.4, seed: seed + 100 + i, alpha: tickAlpha, color: pal.ink,
-    });
-  }
+  /* ---- Kamera ---- */
+  const center = { x: w / 2, y: h / 2 };
+  const zMax = narrow ? 2.1 : 2.6;
+  const cam: Cam = (() => {
+    // Damlaya giriş, kalemle birlikte koşu, geri çekiliş.
+    const into = ease.inOut(span(t, SYM_OUT - 0.1, SYM_OUT + 0.7));
+    const back = ease.inOut(span(t, PEN_A + 0.55, PEN_B + 0.3));
+    let z = lerp(1, zMax, into);
+    z = lerp(z, 1, back);
+    const travel = ease.inOut(span(t, SYM_OUT + 0.3, PEN_A));
+    const dot = { x: lerp(dotHome.x, price[0].x, travel), y: lerp(dotHome.y, ma20[0].y, travel) };
+    // Kamera kalemin x'ini izler, y'de ortalamayı: fiyatın günlük titremesi kamerayı sarsmasın.
+    const follow = t < PEN_A ? dot : { x: price[penIdx].x, y: ma20[penIdx].y };
+    // Yakınken ekranın dışını göstermesin: merkez, görünür yarı-genişlik kadar içeride.
+    const hw = w / 2 / z, hh = h / 2 / z;
+    const clampX = (x: number) => clamp(x, Math.min(hw, w / 2), Math.max(w - hw, w / 2));
+    const clampY = (y: number) => clamp(y, Math.min(hh, h / 2), Math.max(h - hh, h / 2));
+    let x = lerp(center.x, clampX(follow.x), into), y = lerp(center.y, clampY(follow.y), into);
+    x = lerp(x, center.x, back); y = lerp(y, center.y, back);
+    // II: grafiğin sağına, ortalamaların buluştuğu yere hafif itiş; sel öncesi geri.
+    const push = ease.inOut(span(t, ACTS[1] + 0.6, ACTS[1] + 3.2)) * (1 - ease.inOut(span(t, ACTS[2] - 1.3, ACTS[2] - 0.4)));
+    z *= 1 + 0.1 * push; x = lerp(x, lerp(center.x, right - (right - left) * 0.3, 0.5), push); y = lerp(y, center.y, push);
+    // III: sel içinde yavaş bir süzülme.
+    const drift = span(t, ACTS[2], ACTS[3]) * (1 - span(t, ACTS[3] - 1, ACTS[3]));
+    z *= 1 + 0.035 * Math.sin(Math.PI * drift);
+    // IV: nefes — sabit kadraj ölü durur, sallanan kola eşlik eder.
+    const breath = span(t, ACTS[3] + 1.5, ACTS[3] + 3) * (doneAt === null ? 1 : 1 - span(t - doneAt, 0, 0.5));
+    z *= 1 + 0.025 * breath * Math.sin((2 * Math.PI * (t - ACTS[3])) / 7);
+    return { x, y, z };
+  })();
 
-  /* ---- II: 50 günlük ortalama pirinçle, RSI kadranı ---- */
-  const brass = span(t, ACTS[1] + 1.4, ACTS[1] + 3.6) * (1 - toStrips);
-  if (brass > 0) brush(ctx, ma50, { width: 2.4, progress: ease.inOut(span(t, ACTS[1] + 1.4, ACTS[1] + 3.6)), taper: 0.6, dry: 0.4, seed: seed + 7, alpha: 1 - toStrips, color: pal.spark });
-  const dial = span(t, ACTS[1] + 2.2, ACTS[1] + 3.4) * (1 - toStrips);
-  if (dial > 0 && data.rsi !== null) {
-    const r = narrow ? 26 : 32, dx = right - r - 4, dy = top + r - 6;
-    const arc: Point[] = [];
-    for (let i = 0; i <= 24; i++) { const a = Math.PI + (i / 24) * Math.PI; arc.push({ x: dx + Math.cos(a) * r, y: dy + Math.sin(a) * r }); }
-    brush(ctx, arc, { width: 2.2, progress: ease.out(dial), taper: 0.5, seed: seed + 9, alpha: (1 - toStrips) * 0.9, color: pal.ink });
-    const settle = span(t, ACTS[1] + 2.8, ACTS[1] + 4.4);
-    const needle = Math.PI + (data.rsi / 100) * Math.PI * ease.out(settle) + damped(settle * 1.6, 1.2, 3) * 0.25;
-    brush(ctx, segment({ x: dx, y: dy }, { x: dx + Math.cos(needle) * (r - 6), y: dy + Math.sin(needle) * (r - 6) }, 6), {
-      width: 2.4, progress: ease.out(span(t, ACTS[1] + 2.6, ACTS[1] + 3)), taper: 0.3, seed: seed + 10, alpha: 1 - toStrips, color: pal.ink,
-    });
-    blot(ctx, dx, dy, 3, { seed: seed + 11, spread: dial, color: pal.ink, alpha: 1 - toStrips });
+  /* ---- Dünya: her şey; sel için ikinci kez ters paletle çizilir ---- */
+  const world = (p: FilmPalette) => {
     ctx.save();
-    ctx.globalAlpha = ease.out(span(t, ACTS[1] + 3.6, ACTS[1] + 4.2)) * (1 - toStrips);
-    ctx.fillStyle = pal.muted; ctx.font = `600 11px ${pal.font}`; ctx.textAlign = "center";
-    ctx.fillText(`RSI ${Math.round(data.rsi)}`, dx, dy + 16);
-    ctx.restore();
-  }
+    ctx.translate(w / 2, h / 2); ctx.scale(cam.z, cam.z); ctx.translate(-cam.x, -cam.y);
 
-  /* ---- Ana çizgi (I–IV) ---- */
-  const lineAlpha = 1 - curtain;
-  if (lineAlpha > 0) {
-    // III'ten itibaren şeritler AYRI fırça darbeleri: aradaki dönüş yolu soluyor.
-    // Parçalar uçlarda birer nokta paylaşıyor; I–II'de tek çizgi gibi okunur.
-    const splitK = toStrips * (1 - toBeam);
-    if (splitK <= 0) {
-      brush(ctx, line, { width: lerp(2.6, 3.6, toBeam), progress: ease.inOut(pen), taper: 0.7, dry: 0.3, wobble: 0.1, seed: seed + 3, alpha: lineAlpha, color: pal.ink });
-    } else {
-      for (let k = 0; k < STRIPS; k++) {
-        const a = Math.ceil((k * n) / STRIPS), b = Math.min(n, Math.ceil(((k + 1) * n) / STRIPS) + 1);
-        brush(ctx, line.slice(a, b), { width: 2.6, taper: 0.7 * splitK, dry: 0.3, wobble: 0.1, seed: seed + 3 + k, alpha: lineAlpha, color: pal.ink });
-        // Şeritler arası dönüş: biçim değişirken görünür, şeritler oturunca kaybolur.
-        if (k < STRIPS - 1 && splitK < 1) brush(ctx, line.slice(b - 2, b + 1), { width: 2.6, taper: 0, seed: seed + 50 + k, alpha: lineAlpha * (1 - splitK), color: pal.ink });
+    // Perde selinin altında kalan her şey çizilmez (zil ve yazı dışında).
+    const live = curtain < 1;
+    // Sembol: harfler maskeden yükselir, nokta düşer; sonra harfler yukarı kaçar.
+    if (live && t < SYM_OUT + 1.2) kinetic(ctx, text.symbol, { x: symX0, y: symY, size: symSize, font: p.font, color: p.ink, t, inAt: SYM_IN, outAt: SYM_OUT, align: "left", stagger: 0.06 });
+    if (live && t >= DOT_AT && t < PEN_A + 0.2) {
+      // Damla: düşer (dikey uzar), oturur (yayvanlaşır), toparlanır — taşma yalnız bu tek küçük öğede.
+      const fall = ease.in(span(t, DOT_AT, DOT_AT + 0.28));
+      const land = t - DOT_AT - 0.28;
+      const squash = fall < 1 ? 1.5 : 1 - damped(land, 2.2, 5) * 0.45;
+      const travel = ease.inOut(span(t, SYM_OUT + 0.3, PEN_A));
+      const pos = { x: lerp(dotHome.x, price[0].x, travel), y: lerp(lerp(dotHome.y - symSize * 0.9, dotHome.y, fall), ma20[0].y, travel) - Math.sin(Math.PI * travel) * 40 };
+      const r = lerp(dotR, 3.6, ease.inOut(span(t, SYM_OUT + 0.3, PEN_A)));
+      blot(ctx, pos.x, pos.y, r, { seed: seed + 2, color: p.ink, squash: clamp(squash, 0.55, 1.6) });
+      if (land > 0 && land < 0.5) splatter(ctx, pos.x, pos.y + r, land, { seed: seed + 90, count: 6, reach: dotR * 1.4, size: dotR * 0.18, color: p.ink, up: true, fade: 0.2 });
+    }
+
+    // Zemin: silik kurşun kalem taban çizgisi (I–II).
+    const groundAlpha = (1 - toStrips) * span(t, PEN_A - 0.2, PEN_A + 0.4) * 0.14;
+    if (live && groundAlpha > 0) brush(ctx, segment({ x: left, y: bottom + 10 }, { x: right, y: bottom + 10 }, 20), { width: 1, taper: 0, seed: seed + 1, alpha: groundAlpha, color: p.ink });
+
+    // I: tepe-dip çentikleri, kalem geçtikçe.
+    const tickAlpha = (1 - toMa) * 0.32;
+    if (live && tickAlpha > 0 && pen > 0) for (let i = 0; i < n; i++) {
+      const born = span(ease.inOut(pen), i / n, i / n + 0.06);
+      if (born <= 0) continue;
+      brush(ctx, segment({ x: xOf(i), y: yOf(data.highs[i]) }, { x: xOf(i), y: yOf(data.lows[i]) }, 4), {
+        width: 1.6, progress: ease.out(born), taper: 0.4, seed: seed + 100 + i, alpha: tickAlpha, color: p.ink,
+      });
+    }
+    // I sonu: zirve ve dip künyeleri, son kapanış.
+    const marks = (1 - toMa);
+    if (live && marks > 0 && t > PEN_B - 0.6) {
+      const fmt = (v: number) => v.toLocaleString(text.locale, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+      const iHi = data.highs.indexOf(hi), iLo = data.lows.indexOf(lo);
+      const al = (x: number): CanvasTextAlign => x < left + 60 ? "left" : x > right - 60 ? "right" : "center";
+      tag(ctx, `${text.high} ${fmt(hi)}`, xOf(iHi), yOf(hi) - 8, span(t, PEN_B - 0.5, PEN_B), { font: p.font, halo: p.paper, color: p.muted, align: al(xOf(iHi)), alpha: marks });
+      tag(ctx, `${text.low} ${fmt(lo)}`, xOf(iLo), yOf(lo) + 20, span(t, PEN_B - 0.3, PEN_B + 0.2), { font: p.font, halo: p.paper, color: p.muted, align: al(xOf(iLo)), alpha: marks });
+      const end = price[n - 1];
+      // Zirve son seanslardaysa künyesi ucun üstünde: son kapanış alta iner (640 ölçümünde üst üste biniyordu).
+      const below = iHi >= n - 12;
+      const ly = below ? end.y + 36 : end.y - 10;
+      tag(ctx, text.last, end.x - 12, ly - 16, span(t, PEN_B, PEN_B + 0.4), { font: p.font, halo: p.paper, color: p.muted, size: 11, align: "right", alpha: marks });
+      tag(ctx, fmt(data.closes[n - 1]), end.x - 12, ly, span(t, PEN_B + 0.1, PEN_B + 0.5), { font: p.font, halo: p.paper, color: p.ink, size: 15, align: "right", alpha: marks });
+    }
+
+    // II: 50 günlük ortalama pirinçle, künyeler, RSI kadranı. Dev kelime gelmeden çekilirler.
+    const fadeII = 1 - span(t, ACTS[2] - 0.7, ACTS[2] - 0.15);
+    const brassK = span(t, ACTS[1] + 1.4, ACTS[1] + 3.2);
+    if (live && brassK > 0 && fadeII > 0) brush(ctx, ma50, { width: 2.4, progress: ease.inOut(brassK), taper: 0.6, dry: 0.4, seed: seed + 7, alpha: fadeII, color: p.spark });
+    if (live && fadeII > 0) {
+      const a = fadeII;
+      tag(ctx, text.ma20, ma20[n - 1].x, ma20[n - 1].y + (ma20[n - 1].y >= ma50[n - 1].y ? 22 : -10), span(t, ACTS[1] + 1.2, ACTS[1] + 1.7), { font: p.font, halo: p.paper, color: p.ink, align: "right", alpha: a });
+      tag(ctx, text.ma50, ma50[n - 1].x, ma50[n - 1].y + (ma20[n - 1].y >= ma50[n - 1].y ? -10 : 22), span(t, ACTS[1] + 2.9, ACTS[1] + 3.4), { font: p.font, halo: p.paper, color: p.brassInk, align: "right", alpha: a });
+    }
+    const dial = span(t, ACTS[1] + 2.2, ACTS[1] + 3.4) * fadeII;
+    if (live && dial > 0 && data.rsi !== null) {
+      // Kadran sağda, ortalamaların ucunun KARŞI yarısında: uçtaki künyelerle çakışmasın.
+      const r = narrow ? 26 : 32, dx = right - r - 4, dy = ma20[n - 1].y < (top + bottom) / 2 ? bottom - 16 : top + r - 6;
+      const arc: Point[] = [];
+      for (let i = 0; i <= 24; i++) { const ang = Math.PI + (i / 24) * Math.PI; arc.push({ x: dx + Math.cos(ang) * r, y: dy + Math.sin(ang) * r }); }
+      brush(ctx, arc, { width: 2.2, progress: ease.out(dial), taper: 0.5, seed: seed + 9, alpha: fadeII * 0.9, color: p.ink });
+      const settle = span(t, ACTS[1] + 2.8, ACTS[1] + 4.4);
+      const needle = Math.PI + (data.rsi / 100) * Math.PI * ease.out(settle) + damped(settle * 1.6, 1.2, 3) * 0.25;
+      brush(ctx, segment({ x: dx, y: dy }, { x: dx + Math.cos(needle) * (r - 6), y: dy + Math.sin(needle) * (r - 6) }, 6), {
+        width: 2.4, progress: ease.out(span(t, ACTS[1] + 2.6, ACTS[1] + 3)), taper: 0.3, seed: seed + 10, alpha: fadeII, color: p.ink,
+      });
+      blot(ctx, dx, dy, 3, { seed: seed + 11, spread: dial, color: p.ink, alpha: fadeII });
+      tag(ctx, `RSI ${Math.round(data.rsi)}`, dx, dy + 18, span(t, ACTS[1] + 3.4, ACTS[1] + 3.9), { font: p.font, halo: p.paper, color: p.muted, size: 11, align: "center", alpha: fadeII });
+    }
+
+    // Ana çizgi (I–IV).
+    // Dev "Manşetler" kelimesi ekrandayken çizgi gölgeye çekilir, şeritler otururken geri gelir.
+    const dip = span(t, ACTS[2] - 0.6, ACTS[2] - 0.1) - span(t, ACTS[2] + 1.1, ACTS[2] + 1.7);
+    const lineAlpha = (1 - curtain) * (1 - dip);
+    if (lineAlpha > 0.01 && pen > 0) {
+      // III'ten itibaren şeritler AYRI fırça darbeleri: aradaki dönüş yolu soluyor.
+      // Parçalar uçlarda birer nokta paylaşıyor; I–II'de tek çizgi gibi okunur.
+      const splitK = toStrips * (1 - toBeam);
+      if (splitK <= 0) {
+        brush(ctx, line, { width: lerp(2.6, 3.6, toBeam), progress: ease.inOut(pen), taper: 0.7, dry: 0.3, wobble: 0.1, seed: seed + 3, alpha: lineAlpha, color: p.ink });
+      } else {
+        // Her şerit YALNIZ kendi noktalarını çizer; komşuya giden dönüş ayrı darbe ve
+        // şeritler oturdukça söner. Ortak uç noktası bırakılınca yılan sırası şeritleri
+        // dikey kenarlarla kutuya çeviriyordu (640 ölçümü).
+        for (let k = 0; k < STRIPS; k++) {
+          const a = Math.ceil((k * n) / STRIPS), b = Math.min(n, Math.ceil(((k + 1) * n) / STRIPS));
+          brush(ctx, line.slice(a, b), { width: 2.6, taper: 0.7 * splitK, dry: 0.3, wobble: 0.1, seed: seed + 3 + k, alpha: lineAlpha, color: p.ink });
+          if (k < STRIPS - 1 && splitK < 1) brush(ctx, line.slice(b - 2, b + 2), { width: 2.6, taper: 0, seed: seed + 50 + k, alpha: lineAlpha * (1 - splitK), color: p.ink });
+        }
+      }
+      // Kalemin ucu: çizerken pirinç kıvılcım, sonra çizginin ucunda bir damla.
+      if (pen < 1) {
+        blot(ctx, line[penIdx].x, line[penIdx].y, 3.6, { seed: seed + 4 + penIdx, color: p.spark, spread: 1 });
+      } else if (toStrips < 1) {
+        const end = line[n - 1];
+        blot(ctx, end.x, end.y, 4.2 * ease.back(span(t, PEN_B, PEN_B + 0.5)), { seed: seed + 5, color: p.ink, alpha: 1 - toStrips });
       }
     }
-    // Kalemin ucu: çizerken pirinç kıvılcım, sonra çizgi kendi ucunda bir damla.
-    if (pen < 1) {
-      const i = Math.min(n - 1, Math.floor(pen * (n - 1)));
-      blot(ctx, line[i].x, line[i].y, 3.6, { seed: seed + 4 + i, color: pal.spark, spread: 1 });
-    } else if (toStrips < 1) {
-      const end = line[n - 1];
-      blot(ctx, end.x, end.y, 4.2 * ease.back(span(t, 3.8, 4.4)), { seed: seed + 5, color: pal.ink, alpha: 1 - toStrips });
-    }
-  }
 
-  /* ---- III: şeritlerin üstüne başlıklar ---- */
-  const writing = toStrips * (1 - toBeam);
-  if (writing > 0) {
-    ctx.save();
-    ctx.font = `600 ${narrow ? 12.5 : 14}px ${pal.font}`;
-    ctx.textBaseline = "alphabetic";
-    ctx.fillStyle = pal.ink;
-    const titles = (data.headlines.length ? data.headlines : []).slice(0, STRIPS);
-    titles.forEach((title, k) => {
-      const x0 = left + 24, width = right - left - 48;
-      const text = fit(ctx, title, width);
-      const reveal = span(t, ACTS[2] + 1.5 + k * 0.55, ACTS[2] + 1.5 + k * 0.55 + Math.min(1.6, text.length * 0.025));
-      const shown = text.slice(0, Math.round(text.length * reveal));
-      ctx.globalAlpha = writing;
-      ctx.fillText(shown, x0, stripY(k) - 8);
-    });
-    ctx.restore();
-  }
-
-  /* ---- IV: terazi ---- */
-  const scale = span(t, ACTS[3] + 0.9, ACTS[3] + 1.8) * (1 - curtain);
-  if (scale > 0) {
-    // Ayak: kolun ortasından tabana.
-    brush(ctx, [{ x: cx, y: beamY }, { x: cx - 3, y: lerp(beamY, bottom, 0.5) }, { x: cx - 26, y: bottom }], { width: 3, progress: ease.out(scale), taper: 0.4, seed: seed + 20, alpha: 1 - curtain, color: pal.ink });
-    brush(ctx, [{ x: cx, y: beamY }, { x: cx + 3, y: lerp(beamY, bottom, 0.5) }, { x: cx + 26, y: bottom }], { width: 3, progress: ease.out(scale), taper: 0.4, seed: seed + 21, alpha: 1 - curtain, color: pal.ink });
-    brush(ctx, segment({ x: cx - 44, y: bottom }, { x: cx + 44, y: bottom }, 12), { width: 3, progress: ease.out(scale), taper: 0.5, seed: seed + 22, alpha: 1 - curtain, color: pal.ink });
-    blot(ctx, cx, beamY, 5, { seed: seed + 23, spread: ease.back(scale), color: pal.ink, alpha: 1 - curtain });
-    const pans = span(t, ACTS[3] + 1.4, ACTS[3] + 2.3);
-    for (const [side, tone] of [[-1, pal.up], [1, pal.down]] as const) {
-      const end = beam[side < 0 ? 0 : n - 1];
-      const drop = narrow ? 44 : 58, panW = narrow ? 30 : 38;
-      const panY = end.y + drop;
-      brush(ctx, segment(end, { x: end.x, y: panY }, 8), { width: 1.4, progress: ease.out(pans), taper: 0, seed: seed + 30 + side, alpha: 0.7 * (1 - curtain), color: pal.ink });
-      const bowl: Point[] = [];
-      for (let i = 0; i <= 16; i++) { const a = Math.PI * (i / 16); bowl.push({ x: end.x - Math.cos(a) * panW, y: panY + Math.sin(a) * 11 }); }
-      brush(ctx, bowl, { width: 2.6, progress: ease.out(pans), taper: 0.5, seed: seed + 32 + side, alpha: 1 - curtain, color: pal.ink });
-      // Damlalar: kefeye düşer, dibinde birikir. Olumlu solda, olumsuz sağda.
-      const since = t - (ACTS[3] + 2.4) - (side < 0 ? 0 : DROP_EVERY / 2);
-      const count = since > 0 ? Math.min(7, Math.floor(since / DROP_EVERY) + 1) : 0;
-      for (let d = 0; d < count; d++) {
-        const local = since - d * DROP_EVERY;
-        const fall = ease.in(clamp(local / 0.55));
-        const restX = end.x + ((d % 4) - 1.5) * (panW / 3), restY = panY + 4 - Math.floor(d / 4) * 6;
-        const y = lerp(beamY - 70, restY, fall);
-        blot(ctx, restX, y, 4.2, { seed: seed + 40 + d * 3 + side, color: tone, squash: fall >= 1 ? 0.25 : 0, alpha: 1 - curtain });
-        if (local > 0.55 && local < 0.95) splatter(ctx, restX, restY, local - 0.55, { seed: seed + 60 + d, count: 4, reach: 9, size: 1.2, color: tone, up: true, fade: 0.25 });
-      }
+    // III: dev kelime, sonra şeritlerin üstüne başlıklar.
+    if (live && t > ACTS[2] - 0.6 && t < ACTS[2] + 2.5) {
+      const s = displaySize(ctx, p.font, text.news, (right - left) * 0.86, narrow ? 84 : 150);
+      kinetic(ctx, text.news, { x: cx, y: (top + bottom) / 2 + s * 0.36, size: s, font: p.font, color: p.ink, t, inAt: ACTS[2] - 0.15, outAt: ACTS[2] + 1.1, stagger: 0.04 });
     }
-    const labels = span(t, ACTS[3] + 2.2, ACTS[3] + 2.8) * (1 - curtain);
-    if (labels > 0) {
-      ctx.save(); ctx.globalAlpha = labels; ctx.font = `650 12.5px ${pal.font}`; ctx.textAlign = "center";
-      ctx.fillStyle = pal.up; ctx.fillText(pal.labels[0], beam[0].x, beam[0].y + (narrow ? 44 : 58) + 34);
-      ctx.fillStyle = pal.down; ctx.fillText(pal.labels[1], beam[n - 1].x, beam[n - 1].y + (narrow ? 44 : 58) + 34);
+    // Kola dönüşte başlıklar biçimden ÖNCE çekilir: yazının üstünden çizgi geçmesin.
+    const writing = toStrips * (1 - span(t, ACTS[3] - 0.1, ACTS[3] + 0.45)) * (1 - curtain);
+    if (writing > 0) {
+      ctx.save();
+      ctx.font = `650 ${narrow ? 12.5 : 14.5}px ${p.font}`;
+      ctx.textBaseline = "alphabetic";
+      ctx.fillStyle = p.ink;
+      const titles = data.headlines.slice(0, STRIPS);
+      const width = right - left - 48;
+      titles.forEach((title, k) => {
+        const line = fit(ctx, title, width);
+        const start = ACTS[2] + 1.3 + k * 0.45;
+        const reveal = span(t, start, start + Math.min(1.0, line.length * 0.018));
+        if (reveal <= 0) return;
+        const shown = line.slice(0, Math.round(line.length * reveal));
+        ctx.globalAlpha = writing;
+        ctx.fillText(shown, left + 24, stripY(k) - 9);
+        // Daktilonun başı: yazarken pirinç bir damla.
+        if (reveal < 1) blot(ctx, left + 24 + ctx.measureText(shown).width + 5, stripY(k) - 13, 3, { seed: seed + 140 + k, color: p.spark, alpha: writing });
+      });
       ctx.restore();
     }
-  }
 
-  /* ---- V: perde — zil çizilir ve çalar ---- */
-  if (doneAt !== null) {
-    const d = t - doneAt;
-    const s = narrow ? 0.9 : 1.15;
-    const by = (top + bottom) / 2 + 6;
-    drawBell(ctx, pal, {
-      x: cx, y: by, s, swing: damped(Math.max(0, d - 1.05), 1.6, 2.2) * 0.22,
-      outline: span(d, 0.4, 1.0), lip: span(d, 0.85, 1.05), hanger: span(d, 0.9, 1.1), wash: span(d, 0.95, 1.25),
-      clapper: span(d, 1.0, 1.15), eyes: span(d, 1.05, 1.3), smile: span(d, 1.15, 1.45), seed: seed + 70,
-    });
-    ringArcs(ctx, pal, cx, by - 2, span(d, 1.1, 1.75), s);
-    spark(ctx, pal, cx + 24 * s, by + 14 * s, span(d, 1.1, 1.55), s, seed + 80);
-    spark(ctx, pal, cx - 24 * s, by + 14 * s, span(d, 1.3, 1.75), s, seed + 81);
+    // IV: terazi.
+    const scale = span(t, ACTS[3] + 0.9, ACTS[3] + 1.8) * (1 - curtain);
+    // Mil: selin son damlası; terazi çizilmeden önce de orada.
+    if (t >= ACTS[3] + 0.2) blot(ctx, cx, beamY, 5, { seed: seed + 23, color: p.ink, alpha: 1 - curtain });
+    if (scale > 0) {
+      brush(ctx, [{ x: cx, y: beamY }, { x: cx - 3, y: lerp(beamY, bottom, 0.5) }, { x: cx - 26, y: bottom }], { width: 3, progress: ease.out(scale), taper: 0.4, seed: seed + 20, alpha: 1 - curtain, color: p.ink });
+      brush(ctx, [{ x: cx, y: beamY }, { x: cx + 3, y: lerp(beamY, bottom, 0.5) }, { x: cx + 26, y: bottom }], { width: 3, progress: ease.out(scale), taper: 0.4, seed: seed + 21, alpha: 1 - curtain, color: p.ink });
+      brush(ctx, segment({ x: cx - 44, y: bottom }, { x: cx + 44, y: bottom }, 12), { width: 3, progress: ease.out(scale), taper: 0.5, seed: seed + 22, alpha: 1 - curtain, color: p.ink });
+      const pans = span(t, ACTS[3] + 1.4, ACTS[3] + 2.3);
+      const drop = narrow ? 44 : 58, panW = narrow ? 30 : 38;
+      for (const [side, tone] of [[-1, p.up], [1, p.down]] as const) {
+        const end = beam[side < 0 ? 0 : n - 1];
+        const panY = end.y + drop;
+        brush(ctx, segment(end, { x: end.x, y: panY }, 8), { width: 1.4, progress: ease.out(pans), taper: 0, seed: seed + 30 + side, alpha: 0.7 * (1 - curtain), color: p.ink });
+        const bowl: Point[] = [];
+        for (let i = 0; i <= 16; i++) { const a = Math.PI * (i / 16); bowl.push({ x: end.x - Math.cos(a) * panW, y: panY + Math.sin(a) * 11 }); }
+        brush(ctx, bowl, { width: 2.6, progress: ease.out(pans), taper: 0.5, seed: seed + 32 + side, alpha: 1 - curtain, color: p.ink });
+        // Damlalar: kefeye düşer, dibinde birikir; yedinciden sonra gelenler yığına çarpıp dağılır.
+        const since = t - (ACTS[3] + 2.4) - (side < 0 ? 0 : DROP_EVERY / 2);
+        const count = since > 0 ? Math.floor(since / DROP_EVERY) + 1 : 0;
+        for (let d = Math.max(0, count - 8); d < count; d++) {
+          const local = since - d * DROP_EVERY;
+          const rests = d < 7;
+          const slot = rests ? d : 6;
+          const restX = end.x + ((slot % 4) - 1.5) * (panW / 3), restY = panY + 4 - Math.floor(slot / 4) * 6 - (rests ? 0 : 6);
+          const fall = ease.in(clamp(local / 0.55));
+          if (!rests && fall >= 1 && local > 0.95) continue;
+          const y = lerp(beamY - 70, restY, fall);
+          // Düşerken uzar, çarpınca yayvanlaşır.
+          const sq = fall < 1 ? lerp(1, 1.45, fall) : 0.25;
+          if (rests || fall < 1) blot(ctx, restX, y, 4.2, { seed: seed + 40 + d * 3 + side, color: tone, squash: sq, alpha: 1 - curtain });
+          if (local > 0.55 && local < 0.95) splatter(ctx, restX, restY, local - 0.55, { seed: seed + 60 + (d % 9), count: rests ? 4 : 6, reach: rests ? 9 : 13, size: 1.2, color: tone, up: true, fade: 0.25 });
+        }
+        const lab = span(t, ACTS[3] + 2.2, ACTS[3] + 2.8) * (1 - curtain);
+        tag(ctx, side < 0 ? text.positive : text.negative, end.x, panY + 34, lab, { font: p.font, halo: p.paper, color: tone, size: narrow ? 13 : 15, align: "center" });
+      }
+      // Dönen dev kelimeler: tartının ne yaptığını tek kelimeyle söyler, her ~2 sn yenisi.
+      const since = t - (ACTS[3] + 2.6);
+      if (since > 0 && text.weighing.length && doneAt === null) {
+        const slot = Math.floor(since / WORD_EVERY);
+        const word = text.weighing[slot % text.weighing.length];
+        // Kolun üstündeki bantta, kefelerin ipleri arasında: düşen damlalarla kesişmez.
+        const band = beamY - top - 22;
+        const s = displaySize(ctx, p.font, word, Math.max(120, half * 2 - (narrow ? 80 : 120)), Math.min(narrow ? 36 : 56, band * 0.8));
+        const at = ACTS[3] + 2.6 + slot * WORD_EVERY;
+        kinetic(ctx, word, { x: cx, y: top + band / 2 + s * 0.36, size: s, font: p.font, color: p.ink, t, inAt: at, outAt: at + WORD_EVERY - 0.55, stagger: 0.028 });
+      }
+    }
+
+    // V: perde — ters zeminde zil, altında dev yazı.
+    if (doneAt !== null) {
+      const d = t - doneAt;
+      const s = narrow ? 0.85 : 1.1;
+      const readySize = displaySize(ctx, p.font, text.ready, (right - left) * 0.84, narrow ? 64 : 104);
+      const by = (top + bottom) / 2 - readySize * 0.55;
+      drawBell(ctx, p, {
+        x: cx, y: by, s, swing: damped(Math.max(0, d - 1.05), 1.6, 2.2) * 0.22,
+        outline: span(d, 0.4, 1.0), lip: span(d, 0.85, 1.05), hanger: span(d, 0.9, 1.1), wash: span(d, 0.95, 1.25),
+        clapper: span(d, 1.0, 1.15), eyes: span(d, 1.05, 1.3), smile: span(d, 1.15, 1.45), seed: seed + 70,
+      });
+      ringArcs(ctx, p, cx, by - 2, span(d, 1.1, 1.75), s);
+      spark(ctx, p, cx + 24 * s, by + 14 * s, span(d, 1.1, 1.55), s, seed + 80);
+      spark(ctx, p, cx - 24 * s, by + 14 * s, span(d, 1.3, 1.75), s, seed + 81);
+      kinetic(ctx, text.ready, { x: cx, y: by + 72 * s + readySize * 0.95, size: readySize, font: p.font, color: p.ink, t: d, inAt: 1.15, stagger: 0.04 });
+    }
+    ctx.restore();
+  };
+
+  // Selin kaynağı çizginin ucu, EKRANDA: kamera o an hâlâ itişten dönüyor olabilir.
+  const tail = ma20[n - 1];
+  const flood = floodOf(frame, size, { x: (tail.x - cam.x) * cam.z + w / 2, y: (tail.y - cam.y) * cam.z + h / 2 });
+  if (!flood?.full) world(pal);
+  if (flood) {
+    const inv: FilmPalette = { ...pal, ink: pal.paper, paper: pal.ink, muted: pal.paper, brassInk: pal.spark };
+    ctx.save();
+    floodPath(ctx, flood.x, flood.y, flood.r, seed + 200, t);
+    ctx.fillStyle = pal.ink;
+    ctx.fill();
+    ctx.clip();
+    world(inv);
+    ctx.restore();
   }
+  // Sel ekranın ne kadarını kapladı: altyazı rengini buna göre çevirir.
+  return flood ? clamp(flood.r / flood.R) : 0;
 }
