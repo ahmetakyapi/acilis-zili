@@ -34,7 +34,7 @@ function readPalette(): FilmPalette {
     // Kâğıt OPAK sayfa zemini: selin içindeki yazı onunla çizilir; `--surface-sunken` yarı saydam.
     ink: v("--text-strong", "#101c2b"), spark: v("--brass", "#a4720f"), paper: v("--page-bg", "#f7f9fb"),
     up: v("--up", "#0f8a5f"), down: v("--down", "#c2353b"), muted: v("--text-muted", "#5b6878"),
-    brassInk: v("--brass-ink", "#8a5f0c"), font: getComputedStyle(document.body).fontFamily || "sans-serif",
+    brassInk: v("--brass-ink", "#8a5f0c"), plate: v("--logo-plate", "#ffffff"), font: getComputedStyle(document.body).fontFamily || "sans-serif",
   };
 }
 
@@ -45,13 +45,15 @@ function readPalette(): FilmPalette {
  * perdede "Rapor Hazır" tuvalde dev yazıyla çizildiği için altyazı yalnız
  * ekran okuyucuda kalır.
  */
-export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, done, t, locale, minHeight, origin }: {
+export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage, done, t, locale, minHeight, origin }: {
   bars: FilmBar[]; headlines: string[]; symbol: string; name: string; logoUrl: string | null; done: boolean; t: T; locale: Locale;
   /** Açılış sahnesinin boyu: film aynı kutuda başlasın (ClaudeWorkbench). En-boy oranı o
    *  zaman kapanır: oran + min-height genişliğe de aktarılıyor, telefonda kutu taşıyordu. */
   minHeight?: number | null;
   /** Düğmenin büzüldüğü damlanın sahnedeki yeri: film o damlayla açılır. */
   origin?: Point | null;
+  /** Açılış sahnesinin önceden çözdüğü logo (ClaudeWorkbench); yoksa film kendisi indirir. */
+  logoImage?: HTMLImageElement | null;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const doneRef = useRef<number | null>(null);
@@ -70,7 +72,7 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, done, t, 
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
     // Logo tuvale çizilir; inmeden önce yerine harfli karo durur (render her karede `complete`a bakar).
-    const logo = logoUrl ? Object.assign(new Image(), { decoding: "async", src: logoUrl }) : null;
+    const logo = logoImage ?? (logoUrl ? Object.assign(new Image(), { decoding: "async", src: logoUrl }) : null);
     const data: FilmData = { closes: bars.map(b => b.c), highs: bars.map(b => b.h), lows: bars.map(b => b.l), headlines, rsi: rsi14(bars.map(b => b.c)), logo, origin };
     const F = t.claude.film;
     const text: FilmText = {
@@ -114,14 +116,24 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, done, t, 
       setAct(now);
     };
     resize();
-    let stillTimer = 0;
-    if (media.matches) { still(); stillTimer = window.setInterval(still, 500); } else raf = requestAnimationFrame(tick);
+    let stillTimer = 0, cancelled = false;
+    // Logo henüz çözülmediyse film en fazla 450 ms bekler: damga anında logo hazır
+    // olsun (harfli karo yalnız logosu gerçekten olmayan hissede). Bekleme açılış
+    // düğmesinin büzülmesinin arkasında kalıyor; boş kâğıt kısa bir an.
+    const ready = logo && !(logo.complete && logo.naturalWidth > 0)
+      ? Promise.race([logo.decode().catch(() => undefined), new Promise(r => setTimeout(r, 450))])
+      : Promise.resolve();
+    void ready.then(() => {
+      if (cancelled) return;
+      startedRef.current = performance.now();
+      if (media.matches) { still(); stillTimer = window.setInterval(still, 500); } else raf = requestAnimationFrame(tick);
+    });
     const observer = new ResizeObserver(() => { resize(); if (media.matches) still(); });
     observer.observe(canvas);
     const themeWatch = new MutationObserver(() => { pal = readPalette(); });
     themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => { cancelAnimationFrame(raf); clearInterval(stillTimer); observer.disconnect(); themeWatch.disconnect(); };
-  }, [bars, headlines, symbol, name, logoUrl, locale, t.claude, origin]);
+    return () => { cancelled = true; cancelAnimationFrame(raf); clearInterval(stillTimer); observer.disconnect(); themeWatch.disconnect(); };
+  }, [bars, headlines, symbol, name, logoUrl, logoImage, locale, t.claude, origin]);
 
   useEffect(() => {
     if (done && doneRef.current === null) doneRef.current = (performance.now() - startedRef.current) / 1000;

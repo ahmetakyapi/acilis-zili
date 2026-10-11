@@ -59,10 +59,23 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGe
   const C = t.claude;
   const L = C.launch;
   useEffect(() => () => clearTimeout(launchTimer.current), []);
+  // Logo filme ÖNCEDEN hazır: sahne açılırken indirilip çözülür, film aynı görüntüyü
+  // çizer. Yoksa film başladığında logo daha inmemiş oluyor, damga anında harfli karo
+  // ("NV") görünüp sonradan logoya dönüyordu.
+  const [logoImage, setLogoImage] = useState<HTMLImageElement | null>(null);
+  useEffect(() => {
+    if (!logoUrl) return;
+    let live = true;
+    const img = Object.assign(new Image(), { decoding: "async" as const, src: logoUrl });
+    img.decode().then(() => { if (live) setLogoImage(img); }, () => { /* logo yok: harfli karo */ });
+    return () => { live = false; };
+  }, [logoUrl]);
+  /** Filme verilen logo basıldığı an dondurulur: sonradan çözülürse film baştan başlamasın (film o zaman kendisi bekler). */
+  const [filmLogo, setFilmLogo] = useState<HTMLImageElement | null>(null);
 
   async function generate() {
     if (busy || launching) return;
-    setLaunching(true); setDone(false); setError("");
+    setLaunching(true); setDone(false); setError(""); setFilmLogo(logoImage);
     // Ölçü iki kez: tıklamada (sonuç çok hızlı gelirse) ve büzülme bitince — damla
     // o zaman düğmenin sol ucuna kaymış olur; film tam oradan açılır.
     const measure = () => {
@@ -95,7 +108,7 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGe
     }
   }
 
-  if (busy) return <AnalysisFilm bars={bars} headlines={headlines} symbol={symbol} name={name} logoUrl={logoUrl} done={done} t={t} locale={locale} minHeight={stageHeight} origin={origin} />;
+  if (busy) return <AnalysisFilm bars={bars} headlines={headlines} symbol={symbol} name={name} logoUrl={logoUrl} done={done} t={t} locale={locale} minHeight={stageHeight} origin={origin} logoImage={filmLogo} />;
 
   const spark = sparkPath(bars);
   const disabled = inProgress || remaining === 0;

@@ -49,6 +49,8 @@ export type FilmPalette = InkPalette & {
   up: string; down: string; muted: string; font: string;
   /** Pirincin yazıda okunan koyusu (`--brass-ink`): ince metinde `--brass` kontrastı tutmuyor. */
   brassInk: string;
+  /** Logo karosunun zemini (`--logo-plate`): sitedeki logo karolarıyla aynı, iki temada beyaz. */
+  plate: string;
 };
 /** Filmin kelimeleri; hepsi sözlükten (`aiAnalysis.claude.film`). */
 export type FilmText = {
@@ -207,7 +209,7 @@ function tag(ctx: Ctx, text: string, x: number, y: number, k: number, o: { font:
  * Logo yoksa (ya da henüz inmediyse) mürekkep karo üstünde kâğıt renginde
  * iki harf. Karonun etrafındaki halka fırçayla çizilir — damganın mürekkebi.
  */
-function logoTile(ctx: Ctx, o: { x: number; y: number; size: number; scale: number; alpha: number; logo: HTMLImageElement | null | undefined; symbol: string; ink: string; paper: string; font: string }) {
+function logoTile(ctx: Ctx, o: { x: number; y: number; size: number; scale: number; alpha: number; logo: HTMLImageElement | null | undefined; symbol: string; ink: string; paper: string; plate: string; font: string }) {
   if (o.scale <= 0 || o.alpha <= 0) return;
   const s = o.size * o.scale, r = s * 0.24;
   ctx.save();
@@ -215,8 +217,12 @@ function logoTile(ctx: Ctx, o: { x: number; y: number; size: number; scale: numb
   ctx.beginPath();
   ctx.roundRect(o.x - s / 2, o.y - s / 2, s, s, r);
   const ready = o.logo && o.logo.complete && o.logo.naturalWidth > 0;
+  // Yolda olan logo (yavaş ağ) için harf basılmaz: karo boş ve beyaz bekler, logo inince
+  // içine oturur. Harfli karo yalnız logosu olmayan ya da yüklenemeyen hissede
+  // (`complete` ama genişlik 0). Yoksa damga "NV" basıp sonradan logoya dönüyordu.
+  const pending = o.logo && !o.logo.complete;
   // Logolar çoğu şeffaf zeminli ve koyu: karo her temada beyaz, logo içinde nefes payıyla.
-  ctx.fillStyle = ready ? "#ffffff" : o.ink;
+  ctx.fillStyle = ready || pending ? o.plate : o.ink;
   ctx.fill();
   if (ready) {
     ctx.clip();
@@ -224,7 +230,7 @@ function logoTile(ctx: Ctx, o: { x: number; y: number; size: number; scale: numb
     const k = Math.min(box / img.naturalWidth, box / img.naturalHeight);
     const iw = img.naturalWidth * k, ih = img.naturalHeight * k;
     ctx.drawImage(img, o.x - iw / 2, o.y - ih / 2, iw, ih);
-  } else {
+  } else if (!pending) {
     ctx.fillStyle = o.paper;
     ctx.font = `800 ${s * 0.36}px ${o.font}`;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -678,7 +684,7 @@ export function renderFilm(ctx: Ctx, frame: FilmFrame, pal: FilmPalette, data: F
       brush(ctx, ring, { width: narrow ? 3 : 4, progress: ease.inOut(ringK), taper: 0.8, dry: 0.4, seed: seed + 300, boil: bo, color: p.spark, alpha: (1 - span(t, SLIDE_A, SLIDE_B)) * 0.95 });
       logoTile(ctx, {
         x: tx, y: ty - leave * tile * 1.4, size: tile, scale: ease.back(span(t, 0.25 + O, 0.62 + O)), alpha: 1 - leave,
-        logo: data.logo, symbol: text.symbol, ink: p.ink, paper: p.paper, font: p.font,
+        logo: data.logo, symbol: text.symbol, ink: p.ink, paper: p.paper, plate: p.plate, font: p.font,
       });
       // Şirketin adı: tek başınayken logonun altında daktilo, sonra grubun altına iner.
       if (text.name) {
