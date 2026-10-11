@@ -71,6 +71,9 @@
 @media(min-width:640px) { .menuTiles { grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; } }
 @media(min-width:1024px) { .menuTiles { grid-template-columns:repeat(4, minmax(0, 1fr)); } }
 .menuTiles > li { min-width:0; }
+/* İki sütunda tek kalan son karo tam genişlik (11 Ekim): yedi ve beş karolu
+   gruplarda sağda boş bir delik kalıyordu. Üç ve dört sütunda gerekmiyor. */
+@media(max-width:639px) { .menuTiles > li:last-child:nth-child(odd) { grid-column:1 / -1; } }
 /* İkon adla AYNI SATIRDA, ipucu altında tam genişlikte. İkon kendi satırını
    aldığında karo 132 piksel ve sayfa listeden kısa değildi (2.343'e 2.328,
    390, ölçüldü); aynı satırda karo ~96 piksel. */

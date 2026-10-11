@@ -88,7 +88,7 @@ export default async function AppLayout({
         : [],
     ),
     more: t.nav.more,
-    moreGroups: { data: t.nav.moreGroupData, learn: t.nav.moreGroupLearn, read: t.nav.moreGroupRead },
+    moreGroups: { analyze: t.nav.moreGroupAnalyze, data: t.nav.moreGroupData, learn: t.nav.moreGroupLearn, read: t.nav.moreGroupRead },
     mainNav: t.nav.mainNav,
     bottomNav: t.nav.bottomNav,
     skipToContent: t.nav.skipToContent,

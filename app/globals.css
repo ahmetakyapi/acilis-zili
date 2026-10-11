@@ -2310,6 +2310,16 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
 .masthead-row:focus-visible .masthead-row-arrow { opacity:1; }
 .masthead-row[aria-current="page"] .masthead-row-icon { border-color:transparent; background:var(--primary); color:var(--on-primary); }
 .masthead-row[aria-current="page"] { background:var(--primary-wash); }
+/* ANALİZ ARAÇLARI BANDI (11 Ekim). Panelin üstünde iki sütuna yayılan iki
+   kart: Hisse Seçimi ve Karşılaştır. Satırlardan büyük (ikon 44, ad
+   `text-read`) ve tonlu zemin: panelin "araç" katı, altındaki iki sütun
+   başvuru katı. Gölge yok; derinlik ton farkıyla (primary-tint → wash). */
+.masthead-feature { padding-bottom:.625rem; margin-bottom:.375rem; border-bottom:1px solid var(--line-soft); }
+.masthead-feature-card { display:flex; align-items:center; gap:.875rem; min-height:4.75rem; padding:.75rem .875rem; border:1px solid var(--primary-faint); border-radius:14px; background:var(--primary-tint); transition:background-color 180ms,border-color 180ms; }
+.masthead-feature-card:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.masthead-feature-card[aria-current="page"] { border-color:var(--primary); background:var(--primary-wash); }
+.masthead-feature-icon { display:grid; place-items:center; flex:none; width:44px; height:44px; border-radius:13px; background:var(--primary); color:var(--on-primary); }
+.masthead-feature-card .masthead-row-arrow { opacity:.55; }
 /* ARAMA VE HESAP: EŞLEŞEN BİR ÇİFT (23 Eylül). İkisi aynı yüzeyde
    (`--premium-surface`, saç teli kenarlık, üst kenarda iç parıltı yerine
    `--premium-highlight` ince çizgisi), aynı yükseklikte ve tam yuvarlak.
@@ -2337,6 +2347,8 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
  .masthead-brand:hover > span:first-child::after { animation:masthead-ring 700ms var(--ease-brand) 240ms; }
  .masthead-row:hover .masthead-row-arrow { transform:translate(2px,-2px); opacity:1; }
  .masthead-row:hover .masthead-row-icon { border-color:var(--primary-soft, var(--primary-faint)); background:var(--primary-wash); }
+ .masthead-feature-card:hover { border-color:var(--primary-soft, var(--primary-faint)); background:var(--primary-wash); }
+ .masthead-feature-card:hover .masthead-row-arrow { transform:translate(2px,-2px); opacity:1; }
  .premium-masthead .masthead-search:hover,.premium-masthead .masthead-account:not([data-signed-in]):hover { border-color:var(--primary-faint); background:var(--primary-tint); color:var(--text-strong); }
  .premium-masthead .masthead-search:hover .masthead-search-icon { background:var(--primary-wash); }
  .premium-masthead .masthead-account[data-signed-in]:hover { background:var(--primary-hover); }
@@ -2360,6 +2372,7 @@ html[data-navigating] .masthead-brand > span:first-child svg { transform-origin:
     kuralında (`forced-color-adjust:none; background:CanvasText`) — hap
     biçimi kalktığı için burada ikinci bir tanım gerekmiyor. */
  .masthead-row-icon { border-color:ButtonText; }
+ .masthead-feature-card { border-color:ButtonText; }
 }
 
 /* İçerik genişliğindeki şerit 1440'ta aramadan önce 300 piksellik ölü bir

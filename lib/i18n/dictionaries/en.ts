@@ -14,6 +14,7 @@ const en: typeof tr = {
   nav: {
     taxTool: "Tax Calculator",
     themes: "Themes",
+    moreGroupAnalyze: "Analysis Tools",
     moreGroupData: "Data and Tools",
     moreGroupLearn: "Learn",
     moreGroupRead: "Read",
@@ -1490,6 +1491,7 @@ const en: typeof tr = {
     subtitle:
       "Every screen in the product. Sections that do not fit the tab bar are one tap away here.",
     groupMarket: "Market",
+    groupAnalyze: "Analysis & Tools",
     groupRead: "Reading",
     groupAccount: "Account & Site",
     guestTitle: "Guest",

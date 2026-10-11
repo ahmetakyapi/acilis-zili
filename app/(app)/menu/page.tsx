@@ -66,6 +66,9 @@ export const generateMetadata = pageMetadata({
   },
 });
 
+/** Vurgulu karolar: Claude analizinin iki odağı (Teknik Analiz, Hisse Seçimi). */
+const FEATURED = new Set(["/teknik", "/hisse-secimi"]);
+
 type Entry = {
   href: string;
   icon: typeof Bell;
@@ -79,25 +82,41 @@ export default async function MenuPage() {
   const username = session?.user?.name ?? null;
   const avatar = session?.user?.id ? await getUserAvatar(session.user.id) : null;
 
+  /* DÖRT GRUP (11 Ekim, sahibinin isteği: Hisse Seçimi "mantıklı, güzel bir
+     yere"). Hisse Seçimi "Piyasa"nın on bir karosunun dokuzuncusuydu ve
+     ekranın altında, alt çubuğun arkasında kalıyordu. Artık ayrı bir
+     "Analiz ve Araçlar" grubu: bir hisseyi sınayan ve okuyan ekranlar
+     (Teknik Analiz, Hisse Seçimi — Claude analizinin iki odağı —,
+     Karşılaştır), kendi hesabını tutan iki araç (Portföy, Vergi). "Piyasa"
+     yalnız piyasayı ölçen ekranlar. Masaüstünde aynı ayrım "Daha Fazla"nın
+     üst bandı (nav-items.ts → MORE_GROUPS). Telefonda grup EN ÜSTTE:
+     Piyasalar ve Bilançolar zaten alt çubukta, menüyü açan okuyucu çoğunlukla
+     çubukta olmayanı arıyor. */
   const groups: { title: string; entries: Entry[] }[] = [
+    {
+      title: t.menu.groupAnalyze,
+      entries: [
+        { href: "/teknik", icon: ChartLineUp, title: t.technical.title, hint: t.menu.hintTechnical },
+        /* Hisse Seçimi telefonda bir dönem yalnız hisse panelinden açılıyordu:
+           masaüstü "Daha Fazla"da (nav-items.ts) ama bu elle yazılmış
+           listede yoktu ve `hintScreening` hiçbir yerde basılmıyordu. */
+        { href: "/hisse-secimi", icon: Funnel, title: t.screening.title, hint: t.menu.hintScreening },
+        { href: "/karsilastir", icon: ChartBar, title: t.compare.title, hint: t.menu.hintCompare },
+        /* Portföy teknik planla birlikte okunuyor (4 Ekim): en alttaki Hesap
+           grubundaydı ve okuyucu onu yalnız profil menüsünde buluyordu. */
+        { href: "/portfoy", icon: Briefcase, title: t.lira.portfolio.title, hint: t.menu.hintPortfolio },
+        /* Vergi bir hesaplayıcı, okuma değil: "Okuma"dan buraya. */
+        { href: "/vergi", icon: Receipt, title: t.nav.taxTool, hint: t.menu.hintTax },
+      ],
+    },
     {
       title: t.menu.groupMarket,
       entries: [
         { href: "/piyasalar", icon: TrendUp, title: t.nav.markets, hint: t.menu.hintMarkets },
-        { href: "/teknik", icon: ChartLineUp, title: t.technical.title, hint: t.menu.hintTechnical },
-        /* Portföy Teknik Analiz'in hemen ardında (4 Ekim): en alttaki Hesap
-           grubundaydı ve okuyucu onu yalnız profil menüsünde buluyordu.
-           Teknik planı da orada okuduğu için ikisi yan yana. */
-        { href: "/portfoy", icon: Briefcase, title: t.lira.portfolio.title, hint: t.menu.hintPortfolio },
         { href: "/sirketler", icon: Buildings, title: t.nav.companies, hint: t.menu.hintCompanies },
-        { href: "/makro", icon: Percent, title: t.nav.macro, hint: t.menu.hintMacro },
         { href: "/bilancolar", icon: FileText, title: t.nav.earnings, hint: t.menu.hintEarnings },
+        { href: "/makro", icon: Percent, title: t.nav.macro, hint: t.menu.hintMacro },
         { href: "/takvim", icon: CalendarBlank, title: t.nav.calendar, hint: t.menu.hintCalendar },
-        { href: "/karsilastir", icon: ChartBar, title: t.compare.title, hint: t.menu.hintCompare },
-        /* Hisse Seçimi telefonda yalnız hisse panelinden açılıyordu: masaüstü
-           "Daha Fazla"da (nav-items.ts) ama bu elle yazılmış listede yoktu
-           ve `hintScreening` hiçbir yerde basılmıyordu. */
-        { href: "/hisse-secimi", icon: Funnel, title: t.screening.title, hint: t.menu.hintScreening },
         { href: "/tema", icon: SquaresFour, title: t.themes.eyebrow, hint: t.menu.hintThemes },
         { href: "/yatirimcilar", icon: UsersThree, title: t.investors.eyebrow, hint: t.menu.hintInvestors },
       ],
@@ -111,7 +130,6 @@ export default async function MenuPage() {
         { href: "/mercek", icon: Scroll, title: t.nav.stories, hint: t.menu.hintStories },
         { href: "/rehber", icon: BookOpen, title: t.nav.guide, hint: t.menu.hintGuide },
         { href: "/sozluk", icon: TextAa, title: t.glossary.title, hint: t.menu.hintGlossary },
-        { href: "/vergi", icon: Receipt, title: t.nav.taxTool, hint: t.menu.hintTax },
         { href: "/haberler", icon: Newspaper, title: t.nav.news, hint: t.menu.hintNews },
         { href: "/bulten", icon: Envelope, title: t.footer.briefArchive, hint: t.menu.hintBrief },
       ],
@@ -207,7 +225,7 @@ export default async function MenuPage() {
                     <Link
                       href={withLocale(entry.href, locale)}
                       prefetch={false}
-                      data-featured={entry.href === "/teknik" || undefined}
+                      data-featured={FEATURED.has(entry.href) || undefined}
                       className={polish.menuTile}
                     >
                       <span className={polish.menuIcon} aria-hidden>

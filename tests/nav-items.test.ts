@@ -16,7 +16,7 @@ test("strip ranks are exactly 1..n, each used once", () => {
 });
 
 test("every more item belongs to a panel group", () => {
-  for (const item of more) assert.ok(["data", "learn", "read"].includes(item.more!), item.href);
+  for (const item of more) assert.ok(["analyze", "data", "learn", "read"].includes(item.more!), item.href);
 });
 
 test("strip and more never share a destination", () => {

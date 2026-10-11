@@ -53,6 +53,10 @@ const PANEL_REM = 38;
  * okuma olduğu ayırt edilmiyordu. Solda "Veri ve Ekranlar", sağda "Öğren"
  * ile "Oku". Şeritten taşan sekmeler sol grubun başına iniyor. Klavye
  * sırası belge sırası: önce sol sütun, sonra sağ.
+ *
+ * 11 Ekim: üstte bir bant daha — "Analiz Araçları" (Hisse Seçimi,
+ * Karşılaştır), iki sütuna yayılan iki büyük kart. Gerekçe nav-items.ts →
+ * MORE_GROUPS.
  */
 export function MastheadNav({
   locale,
@@ -275,6 +279,44 @@ export function MastheadNav({
                   "Haberler" "Ünlü Yatırımcılar"ın karşısında, iki sütunun
                   dibi aynı çizgide. Taşan sekmelerin ayırıcısı da artık yer
                   tutmuyor (satırın kendi çizgisi), yoksa hat yine kayardı. */}
+              {(() => {
+                /* ANALİZ ARAÇLARI ÜST BANTTA, İKİ SÜTUNA YAYILIR (11 Ekim;
+                   gerekçe nav-items.ts → MORE_GROUPS). Klavye sırası belge
+                   sırası: önce bant, sonra sol ve sağ sütun. */
+                const featured = rows.filter((row) => row.group === "analyze");
+                if (featured.length === 0) return null;
+                return (
+                  <section aria-label={groups.analyze} className="masthead-feature">
+                    <h3 className="masthead-more-head flex h-8 items-end px-3 pb-1.5 text-tiny font-semibold text-muted">
+                      {groups.analyze}
+                    </h3>
+                    <ul className="grid grid-cols-2 gap-2 px-1">
+                      {featured.map((row) => {
+                        const current = activeRow?.href === row.href;
+                        const Icon = NAV_ITEMS.find((item) => item.href === row.href)?.icon;
+                        return (
+                          <li key={row.href} className="min-w-0">
+                            <Link
+                              href={withLocale(row.href, locale)}
+                              prefetch={false}
+                              aria-current={current ? "page" : undefined}
+                              onClick={() => setOpenedAt(null)}
+                              className="masthead-feature-card"
+                            >
+                              {Icon && <span className="masthead-feature-icon" aria-hidden><Icon size={22} weight="duotone" /></span>}
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-read font-bold text-strong">{row.label}</span>
+                                <span className="mt-0.5 block text-small leading-snug text-muted">{row.hint}</span>
+                              </span>
+                              <ArrowUpRight className="masthead-row-arrow" size={14} aria-hidden />
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </section>
+                );
+              })()}
               <div className="masthead-more-grid grid grid-cols-2">
                 {[["data"], ["learn", "read"]].map((column) => (
                   <div key={column.join("-")} className="masthead-more-col flex min-w-0 flex-col">

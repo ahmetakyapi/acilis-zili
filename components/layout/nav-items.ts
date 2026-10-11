@@ -23,10 +23,19 @@ import {
 import { stripLocale } from "@/lib/i18n/routing";
 import type { Dictionary } from "@/lib/i18n";
 
-export type MoreGroup = "data" | "learn" | "read";
+export type MoreGroup = "analyze" | "data" | "learn" | "read";
 
-/** Panelde grupların sırası — taşan şerit sekmeleri "data"nın başına iner. */
-export const MORE_GROUPS: readonly MoreGroup[] = ["data", "learn", "read"];
+/**
+ * Panelde grupların sırası — taşan şerit sekmeleri "data"nın başına iner.
+ *
+ * "analyze" panelin ÜSTÜNDE iki sütuna yayılan bant (11 Ekim, sahibinin
+ * isteği: Hisse Seçimi "mantıklı, güzel bir yere"). Hisse Seçimi "Veri ve
+ * Araçlar"ın altıncı satırıydı; oysa Teknik Analiz ile birlikte Claude
+ * analizinin iki odağından biri ve bir başvuru ekranı değil, bir araç.
+ * Bantta Karşılaştır da var: ikisi de "bir hisseyi sına/oku" işi. Sol sütun
+ * böylece 1 başlık + 5 satır, sağ 1 + 2 + 1 + 2 — iki sütun yine aynı dipte.
+ */
+export const MORE_GROUPS: readonly MoreGroup[] = ["analyze", "data", "learn", "read"];
 
 /** Masthead şeridinde taşma önceliği — 1 en son taşar. */
 export type StripRank = 1 | 2 | 3 | 4 | 5 | 6;
@@ -244,24 +253,25 @@ export const NAV_ITEMS: NavItem[] = [
     hint: (t) => t.menu.hintInvestors,
   },
   {
-    href: "/karsilastir",
-    label: (t) => t.compare.title,
-    icon: ChartBar,
-    inBottomBar: false,
-    more: "data",
-    hint: (t) => t.menu.hintCompare,
-  },
-  {
-    /* 3 Ekim: Daha Fazla → veri, Karşılaştır'ın ardında. Bir başvuru
-       aracı, her gün değişen bir ekran değil; şerit ölçüsü (yukarıda) yer
-       bırakmıyor. */
+    /* 11 Ekim: Daha Fazla'nın üst bandında, ilk kart ("analyze", gerekçe
+       MORE_GROUPS'ta). 3 Ekim'den beri "Veri ve Araçlar"ın altıncı
+       satırıydı. Şeritte değil: şerit ölçüsü (yukarıda) 1280'de 58 piksel
+       bırakıyor, sekme sığmıyor. */
     href: "/hisse-secimi",
     label: (t) => t.screening.title,
     icon: Funnel,
     inBottomBar: false,
-    more: "data",
+    more: "analyze",
     hint: (t) => t.menu.hintScreening,
+  },  {
+    href: "/karsilastir",
+    label: (t) => t.compare.title,
+    icon: ChartBar,
+    inBottomBar: false,
+    more: "analyze",
+    hint: (t) => t.menu.hintCompare,
   },
+
   {
     /* DAHA FAZLA'DA. Bir dönem yalnızca 1280 üstünde sekmeydi: aynı ekran
        dizüstünde menüde, masaüstünde şeritte duruyordu. Durağan bir

@@ -17,6 +17,7 @@ const tr = {
   nav: {
     taxTool: "Vergi Hesaplayıcı",
     themes: "Temalar",
+    moreGroupAnalyze: "Analiz Araçları",
     moreGroupData: "Veri ve Araçlar",
     moreGroupLearn: "Öğren",
     moreGroupRead: "Oku",
@@ -1869,6 +1870,7 @@ const tr = {
     subtitle:
       "Ürünün bütün ekranları burada. Alt çubukta yer olmayan bölümlere de tek dokunuşla ulaşırsın.",
     groupMarket: "Piyasa",
+    groupAnalyze: "Analiz ve Araçlar",
     groupRead: "Okuma",
     groupAccount: "Hesap ve Site",
     guestTitle: "Misafir",
