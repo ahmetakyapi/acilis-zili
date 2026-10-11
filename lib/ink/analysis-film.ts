@@ -33,6 +33,28 @@
  *   V   Perde       milden ikinci sel, ters zeminde zil çizilip çalar, altında
  *                   dev "Rapor Hazır".
  *
+ * YÖNLENDİRME (12 Ekim; motion-film skill'i § 0, "sıfat değil sayı" — Florence,
+ * "Opus 5.5 Motion Lab"). Film bu sekiz satırla yeniden kuruldu:
+ *
+ *   GOAL    Bekleyen okuyucu, Claude'un hissenin hangi verisini tarttığını
+ *           görsün ve beklemenin boş olmadığını hissetsin.
+ *   OUTPUT  Sayfa içi Canvas 2D, kutu 16:8 (telefonda 4:5), DOM altyazı + künye.
+ *   TIME    120 BPM: vuruş 0,5 sn, ölçü 2 sn. Perdeler ölçü başında: 0 · 6 · 12 ·
+ *           22 sn; IV sonuca kadar döner (ölçüde bir dev kelime, iki vuruşta bir damla).
+ *   LOOK    Kâğıt + mürekkep + tek vurgu pirinç; yön renkleri yalnız tartının
+ *           damlalarında. Tek font (sitenin), dev yazı 850.
+ *   MOTION  Yazı girişi ease-out-expo 0,6 sn, çıkışı ease-in 0,3 sn (girişin
+ *           yarısı); kamera ease-in-out-quart; taşma yalnız tek küçük öğede
+ *           (damla, kadran iğnesi, mühür, zil); harfler arası 1 kare (~30–45 ms).
+ *   SHOTS   Her planda tek kahraman: I logo → sembol → damla → kalem; II
+ *           ortalamalar → kadran; III "Manşetler" → başlıklar (her biri kelime
+ *           başına 0,3 + 0,5 sn okunacak kadar durur); IV terazi → dönen kelime.
+ *           Geçiş her zaman biçim değiştirme ya da sel; kesme yok.
+ *   BANNED  glow, parçacık süsü, mavi/mor degrade, her şeyin aynı anda girmesi,
+ *           okunurken kayan yazı, sayı uydurmak (künye çizimle aynı veriden).
+ *   QA      Her perdenin son karesi + soğan kabuğu (yazı girişi) + temas sayfası,
+ *           iki tema, 390 ve 1280.
+ *
  * Mürekkep sahnelerinin kuralları (CLAUDE.md, lib/ink/scenes.ts): saf
  * `render(ctx, t)`, tohumlu ve belirli; renk temadan (mürekkep, kâğıt, pirinç;
  * mavi yok — yön renkleri yalnız tartının damlalarında, anlam taşıdıkları
@@ -80,7 +102,21 @@ export type FilmData = {
  * başlıklar yazıldıktan sonra okunacak kadar dursun. Bekleme 20–40 sn; IV sonuca
  * kadar sürer.
  */
-export const ACTS = [0, 6, 11.5, 18] as const;
+/** Vuruş ızgarası: 120 BPM → vuruş 0,5 sn, ölçü 2 sn. Perdeler ölçü başında değişir. */
+export const BEAT = 0.5;
+export const ACTS = [0, 6, 12, 22] as const;
+/**
+ * III'te başlıkların başladığı an (perdeye göre) ve aralarındaki kademe: bir ölçü
+ * sonra, birer vuruş arayla. İki vuruş sonraydı ve ilk başlık "Manşetler" kelimesi
+ * daha çıkarken yazılıyordu: planda iki kahraman (temas sayfası, 12 Ekim). III bu
+ * yüzden 10 sn: beş başlık ~30 kelime, kelime başına 0,3 sn okunur.
+ */
+export const HEADLINE_AT = 4 * BEAT;
+export const HEADLINE_STEP = BEAT;
+/** Yazının asgari bekleme süresi (sn): kelime başına 0,3 + 0,5 (motion-film `sayilar.md`). */
+export const holdFor = (text: string) => 0.3 * text.trim().split(/\s+/).filter(Boolean).length + 0.5;
+/** IV'te ilk damlanın düştüğü an (perdeye göre); iniş bir vuruşa oturur (+0,55 düşüş = 3,0). */
+const DROP_FROM = 2.45;
 /** Perde (V) süresi: durgunluk, sel, zil, dev yazı ve mühür. */
 export const CURTAIN_S = 3.3;
 /** Sonuç gelince sel hemen gelmez: kol durulur, kamera usulca yaklaşır (ink-wash: "stillness before action"). */
@@ -88,11 +124,15 @@ const HUSH = 0.35;
 /** Kaynama hızı: çizgiler saniyede 12 kez yeniden çizilir (elle çizilmiş animasyon, "on twos"). */
 const BOIL_FPS = 12;
 const STRIPS = 5;
-const SWAY_PERIOD = 3.2;
+/** Kolun salınımı iki ölçü: ortam hareketi yavaş ve hiç durmaz. */
+const SWAY_PERIOD = 4;
 const SWAY = 0.075;
-const DROP_EVERY = 1.1;
-/** IV'te her dev kelimenin ekranda kaldığı süre — "her 1,5–2 saniyede yeni bir fikir". */
-const WORD_EVERY = 1.9;
+/** İki vuruşta bir damla. */
+const DROP_EVERY = 2 * BEAT;
+/** IV'te her dev kelime bir ölçü — "her 1,5–2 saniyede yeni bir fikir", ölçüde değişir. */
+const WORD_EVERY = 4 * BEAT;
+/** IV'te ilk dev kelimenin geldiği an (perdeye göre): kefeler oturduktan sonra, bir vuruşta. */
+const WORD_FROM = 3;
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 /** Önce geri, sonra ileri: hareketten önceki küçük ters hareket (anticipation). Bitişte taşma YOK. */
@@ -139,7 +179,8 @@ function kinetic(ctx: Ctx, text: string, o: {
   x: number; y: number; size: number; font: string; color: string; t: number;
   inAt: number; outAt?: number; align?: "left" | "center" | "right"; stagger?: number; alpha?: number;
 }) {
-  const stagger = o.stagger ?? 0.045, dur = 0.55, outDur = 0.42;
+  // Giriş 0,6 sn ease-out-expo (yazı açılışı), çıkış 0,3 sn: girişin yarısı (sayilar.md).
+  const stagger = o.stagger ?? 0.045, dur = 0.6, outDur = 0.3;
   if (o.t < o.inAt) return;
   const last = (text.length - 1) * stagger;
   if (o.outAt !== undefined && o.t > o.outAt + last + outDur) return;
@@ -160,13 +201,13 @@ function kinetic(ctx: Ctx, text: string, o: {
     const enter = span(o.t, o.inAt + i * stagger, o.inAt + i * stagger + dur);
     const leave = o.outAt === undefined ? 0 : span(o.t, o.outAt + i * stagger, o.outAt + i * stagger + outDur);
     // Çıkışta önce hafifçe aşağı çöker, sonra yukarı kaçar (anticipation): `backIn`.
-    const pos = (k: number, l: number) => rise * (1 - ease.out(k)) - rise * backIn(l);
+    const pos = (k: number, l: number) => rise * (1 - ease.outExpo(k)) - rise * backIn(l);
     const dy = pos(enter, leave);
     // Hız: bir sonraki küçük adımdaki konum farkı. Durunca iz yok.
     const dt = 0.03;
     const v = pos(span(o.t + dt, o.inAt + i * stagger, o.inAt + i * stagger + dur), o.outAt === undefined ? 0 : span(o.t + dt, o.outAt + i * stagger, o.outAt + i * stagger + outDur)) - dy;
     const lx = x0 + ctx.measureText(text.slice(0, i)).width;
-    const a = (o.alpha ?? 1) * (0.35 + 0.65 * ease.out(enter));
+    const a = (o.alpha ?? 1) * (0.35 + 0.65 * ease.outExpo(enter));
     if (Math.abs(v) > o.size * 0.02) {
       for (const [k, ga] of [[2.2, 0.16], [1.1, 0.3]] as const) { ctx.globalAlpha = a * ga; ctx.fillText(ch, lx, o.y + dy - v * k); }
     }
@@ -380,11 +421,13 @@ function floodPath(ctx: Ctx, x: number, y: number, r: number, seed: number, t: n
  * (düğmeden gelen) varsa her şey onun inişi kadar kayar.
  */
 export function openingTimes(symbolLength: number, hasOrigin: boolean) {
-  const O = hasOrigin ? 0.55 : 0;
-  const SLIDE_A = 0.85 + O, SLIDE_B = 1.3 + O;
-  const SYM_IN = 1.05 + O, DOT_AT = SYM_IN + symbolLength * 0.06 + 0.3, SYM_OUT = DOT_AT + 0.6;
-  // Kalem 1,9 sn; uzun sembolde (en çok 10 harf) kısalır: son kapanış künyesi II'den önce okunsun.
-  const PEN_A = SYM_OUT + 0.85, PEN_B = Math.min(PEN_A + 1.9, ACTS[1] - 0.6);
+  // Vuruşlar ızgarada: her olay sekizliğe (çeyrek vuruş değil, yarım vuruş: 0,25 sn) oturur.
+  const q = (x: number) => Math.round(x / (BEAT / 2)) * (BEAT / 2);
+  const O = hasOrigin ? BEAT : 0;
+  const SLIDE_A = 0.75 + O, SLIDE_B = 1.25 + O;
+  const SYM_IN = 2 * BEAT + O, DOT_AT = q(SYM_IN + symbolLength * 0.06 + 0.3), SYM_OUT = DOT_AT + BEAT;
+  // Kalem 2 vuruş sonra başlar, 4 vuruş sürer; uzun sembolde kısalır: son kapanış künyesi II'den önce okunsun.
+  const PEN_A = SYM_OUT + 2 * BEAT, PEN_B = Math.min(PEN_A + 4 * BEAT, ACTS[1] - 1.5 * BEAT);
   return { O, SLIDE_A, SLIDE_B, SYM_IN, DOT_AT, SYM_OUT, PEN_A, PEN_B };
 }
 
@@ -407,14 +450,14 @@ export function filmCues(t0: number, t1: number, o: { symbolLength: number; hasO
     { kind: "drop", at: T.DOT_AT + 0.28 },
     { kind: "pen", at: T.PEN_A, duration: T.PEN_B - T.PEN_A },
     { kind: "blot", at: T.PEN_B },
-    { kind: "floodIn", at: ACTS[2] - 1.15 },
-    ...Array.from({ length: Math.min(STRIPS, o.headlines) }, (_, k) => ({ kind: "type", at: ACTS[2] + 1.3 + k * 0.45 } as const)),
+    { kind: "floodIn", at: ACTS[2] - 2 * BEAT },
+    ...Array.from({ length: Math.min(STRIPS, o.headlines) }, (_, k) => ({ kind: "type", at: ACTS[2] + HEADLINE_AT + k * HEADLINE_STEP } as const)),
     { kind: "floodOut", at: ACTS[3] - 1.0 },
   ];
   const out: FilmCue[] = fixed.filter(c => c.at > t0 && c.at <= t1 && (o.doneAt === null || c.at < o.doneAt));
   // IV: kefelere düşen damlalar (dönerken sonsuz) — inişleri.
   if (o.doneAt === null) for (const [side, shift] of [["up", 0], ["down", DROP_EVERY / 2]] as const) {
-    const base = ACTS[3] + 2.4 + shift + 0.55;
+    const base = ACTS[3] + DROP_FROM + shift + 0.55;
     for (let d = Math.max(0, Math.floor((t0 - base) / DROP_EVERY)); ; d++) {
       const at = base + d * DROP_EVERY;
       if (at > t1) break;
@@ -464,7 +507,7 @@ export function floodOf(frame: FilmFrame, size: Size, end: Point | null) {
     if (t - doneAt > HUSH + 0.05) return { ...pivot, r, R, full: r >= R };
   }
   const from = end ?? { x: L.right, y: (L.top + L.bottom) / 2 };
-  const grow = span(t, ACTS[2] - 1.15, ACTS[2] - 0.2);
+  const grow = span(t, ACTS[2] - 2 * BEAT, ACTS[2] - BEAT / 2);
   const shrink = span(t, ACTS[3] - 1.0, ACTS[3] + 0.2);
   if (grow <= 0 || shrink >= 1) return null;
   if (shrink <= 0) {
@@ -593,13 +636,14 @@ export function renderFilm(ctx: Ctx, frame: FilmFrame, pal: FilmPalette, data: F
   const zMax = narrow ? 2.1 : 2.6;
   const cam: Cam = (() => {
     // Damlaya giriş, kalemle birlikte koşu, geri çekiliş.
-    const into = ease.inOut(span(t, SYM_OUT - 0.1, SYM_OUT + 0.7));
-    const back = ease.inOut(span(t, PEN_A + 0.7, PEN_B + 0.35));
+    // Kamera en yumuşak eğriyi alır (ease-in-out-quart); nesneler daha keskinini.
+    const into = ease.inOutQuart(span(t, SYM_OUT - 0.1, SYM_OUT + 0.7));
+    const back = ease.inOutQuart(span(t, PEN_A + 0.7, PEN_B + 0.35));
     let z = lerp(1, zMax, into);
     // Damla kalemin başına giderken kamera açılır: 2,6 kat yakınlıkta damla saniyede
     // ~2000 ekran pikseli gidiyor, hiçbir takip yetişmiyor ve kadrajdan çıkıyordu
     // (640 ölçümü). Yarı yakınlıkta yol okunur, kalem oradan başlar.
-    z = lerp(z, narrow ? 1.35 : 1.6, ease.inOut(span(t, SYM_OUT + 0.25, PEN_A + 0.1)));
+    z = lerp(z, narrow ? 1.35 : 1.6, ease.inOutQuart(span(t, SYM_OUT + 0.25, PEN_A + 0.1)));
     z = lerp(z, 1, back);
     // Dalıştan önce kamera bir nefes geri çekilir (anticipation), sonra damlaya girer.
     z *= 1 - 0.04 * Math.sin(Math.PI * span(t, SYM_OUT - 0.5, SYM_OUT - 0.05));
@@ -630,17 +674,17 @@ export function renderFilm(ctx: Ctx, frame: FilmFrame, pal: FilmPalette, data: F
     let x = lerp(center.x, clampX(follow.x), into), y = lerp(center.y, clampY(follow.y), into);
     x = lerp(x, center.x, back); y = lerp(y, center.y, back);
     // II: grafiğin sağına, ortalamaların buluştuğu yere hafif itiş; sel öncesi geri.
-    const push = ease.inOut(span(t, ACTS[1] + 0.6, ACTS[1] + 3.2)) * (1 - ease.inOut(span(t, ACTS[2] - 1.3, ACTS[2] - 0.4)));
+    const push = ease.inOutQuart(span(t, ACTS[1] + 0.6, ACTS[1] + 3.2)) * (1 - ease.inOutQuart(span(t, ACTS[2] - 1.3, ACTS[2] - 0.4)));
     z *= 1 + 0.1 * push; x = lerp(x, lerp(center.x, right - (right - left) * 0.3, 0.5), push); y = lerp(y, center.y, push);
     // III: sel içinde yavaş bir süzülme.
     const drift = span(t, ACTS[2], ACTS[3]) * (1 - span(t, ACTS[3] - 1, ACTS[3]));
     z *= 1 + 0.035 * Math.sin(Math.PI * drift);
     // IV: nefes — sabit kadraj ölü durur, sallanan kola eşlik eder.
     const breath = span(t, ACTS[3] + 1.5, ACTS[3] + 3) * (doneAt === null ? 1 : 1 - span(t - doneAt, 0, 0.5));
-    z *= 1 + 0.025 * breath * Math.sin((2 * Math.PI * (t - ACTS[3])) / 7);
+    z *= 1 + 0.025 * breath * Math.sin((2 * Math.PI * (t - ACTS[3])) / (16 * BEAT));
     // Durgunluk: sonuç geldi, sel gelmeden kamera mile doğru usulca yaklaşır.
     if (doneAt !== null) {
-      const hush = ease.inOut(span(t - doneAt, 0, HUSH + 0.45)) * (1 - span(t - doneAt, HUSH + 0.55, HUSH + 1.1));
+      const hush = ease.inOutQuart(span(t - doneAt, 0, HUSH + 0.45)) * (1 - span(t - doneAt, HUSH + 0.55, HUSH + 1.1));
       z *= 1 + 0.05 * hush; x = lerp(x, cx, hush * 0.5); y = lerp(y, beamY, hush * 0.3);
     }
     return { x, y, z };
@@ -842,7 +886,7 @@ export function renderFilm(ctx: Ctx, frame: FilmFrame, pal: FilmPalette, data: F
       const width = right - left - 48;
       titles.forEach((title, k) => {
         const line = fit(ctx, title, width);
-        const start = ACTS[2] + 1.3 + k * 0.45;
+        const start = ACTS[2] + HEADLINE_AT + k * HEADLINE_STEP;
         const reveal = span(t, start, start + Math.min(1.0, line.length * 0.018));
         if (reveal <= 0) return;
         const shown = line.slice(0, Math.round(line.length * reveal));
@@ -877,7 +921,7 @@ export function renderFilm(ctx: Ctx, frame: FilmFrame, pal: FilmPalette, data: F
         for (let i = 0; i <= 16; i++) { const a = Math.PI * (i / 16); bowl.push({ x: end.x - Math.cos(a) * panW, y: panY + Math.sin(a) * 11 }); }
         brush(ctx, bowl, { width: 2.6, progress: ease.out(pans), taper: 0.5, seed: seed + 32 + side, boil: bo, alpha: 1 - curtain, color: p.ink });
         // Damlalar: kefeye düşer, dibinde birikir; yedinciden sonra gelenler yığına çarpıp dağılır.
-        const since = t - (ACTS[3] + 2.4) - (side < 0 ? 0 : DROP_EVERY / 2);
+        const since = t - (ACTS[3] + DROP_FROM) - (side < 0 ? 0 : DROP_EVERY / 2);
         const count = since > 0 ? Math.floor(since / DROP_EVERY) + 1 : 0;
         for (let d = Math.max(0, count - 8); d < count; d++) {
           const local = since - d * DROP_EVERY;
@@ -896,15 +940,16 @@ export function renderFilm(ctx: Ctx, frame: FilmFrame, pal: FilmPalette, data: F
         tag(ctx, side < 0 ? text.positive : text.negative, end.x, panY + 34, lab, { font: p.font, halo: p.paper, color: tone, size: narrow ? 13 : 15, align: "center" });
       }
       // Dönen dev kelimeler: tartının ne yaptığını tek kelimeyle söyler, her ~2 sn yenisi.
-      const since = t - (ACTS[3] + 2.6);
+      const since = t - (ACTS[3] + WORD_FROM);
       if (since > 0 && text.weighing.length && doneAt === null) {
         const slot = Math.floor(since / WORD_EVERY);
         const word = text.weighing[slot % text.weighing.length];
         // Kolun üstündeki bantta, kefelerin ipleri arasında: düşen damlalarla kesişmez.
         const band = beamY - top - 22;
         const s = displaySize(ctx, p.font, word, Math.max(120, half * 2 - (narrow ? 80 : 120)), Math.min(narrow ? 36 : 56, band * 0.8));
-        const at = ACTS[3] + 2.6 + slot * WORD_EVERY;
-        kinetic(ctx, word, { x: cx, y: top + band / 2 + s * 0.36, size: s, font: p.font, color: p.ink, t, inAt: at, outAt: at + WORD_EVERY - 0.55, stagger: 0.028 });
+        const at = ACTS[3] + WORD_FROM + slot * WORD_EVERY;
+        // Çıkış bir sonraki kelime ölçüde girmeden biter (çıkış 0,3 sn + kademe).
+        kinetic(ctx, word, { x: cx, y: top + band / 2 + s * 0.36, size: s, font: p.font, color: p.ink, t, inAt: at, outAt: at + WORD_EVERY - 0.45, stagger: 0.028 });
       }
     }
 

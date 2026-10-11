@@ -70,6 +70,12 @@ export const ease = {
     x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2,
   out: (x: number) => 1 - Math.pow(1 - x, 3),
   in: (x: number) => x * x * x,
+  /** Yazı ve logo açılışı (ease-out-expo; motion-film `sayilar.md`). */
+  outExpo: (x: number) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * x)),
+  /** Hızlı çıkış (ease-in-expo): çıkış girişten kısa ve hızlanarak. */
+  inExpo: (x: number) => (x <= 0 ? 0 : Math.pow(2, 10 * x - 10)),
+  /** Kamera itişi (ease-in-out-quart): kamera en yumuşak eğriyi alır. */
+  inOutQuart: (x: number) => (x < 0.5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2),
   /** Hafif taşan varış — ezilip geri gelen bir damla, sıçrayan bir göz. */
   back: (x: number) => {
     const c = 1.70158;

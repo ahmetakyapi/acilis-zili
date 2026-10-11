@@ -27,3 +27,25 @@ test("sonuç gelince dönen damlalar susar, perde sesleri çalar", () => {
   assert.ok(!cues.some(c => c.kind === "tink" && c.at > 21));
   assert.deepEqual(cues.filter(c => c.at >= 21).map(c => c.kind), ["hush", "floodIn", "bell", "seal"]);
 });
+
+test("perdeler ölçü başında (120 BPM, ölçü 4 vuruş)", async () => {
+  const { BEAT } = await import("../lib/ink/analysis-film");
+  for (const at of ACTS) assert.equal((at / (4 * BEAT)) % 1, 0, `perde ${at} sn ölçüde değil`);
+});
+
+test("III'te en uzun başlık da okunacak kadar durur (kelime başına 0,3 + 0,5 sn)", async () => {
+  const { HEADLINE_AT, HEADLINE_STEP, holdFor } = await import("../lib/ink/analysis-film");
+  // Sekiz kelimelik başlık: filmin `fit`i satırı kesse de okuma süresi kelime sayısıyla.
+  const longest = "Analistler bellek talebindeki artış nedeniyle hedef fiyatı yükseltti";
+  const lastStart = ACTS[2] + HEADLINE_AT + 4 * HEADLINE_STEP;
+  const typed = lastStart + 1.0; // daktilo en fazla 1 sn
+  const floodOut = ACTS[3] - 1.0;
+  assert.ok(floodOut - typed >= holdFor(longest), `bekleme ${floodOut - typed} < ${holdFor(longest)}`);
+});
+
+test("açılış olayları yarım vuruş ızgarasında", () => {
+  for (const origin of [false, true]) for (const len of [1, 4, 10]) {
+    const T = openingTimes(len, origin);
+    for (const v of [T.SYM_IN, T.DOT_AT, T.SYM_OUT, T.PEN_A]) assert.equal((v / 0.25) % 1, 0, `${v} ızgarada değil`);
+  }
+});
