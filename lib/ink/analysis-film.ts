@@ -17,7 +17,9 @@
  *             dünya ikinci kez, ters paletle, selin içine kırpılarak çizilir —
  *             sınırı geçen çizgi rengini o sınırda değiştirir.
  *
- *   I   Fiyat       sembol dev harflerle oturur, sonundaki nokta mürekkep
+ *   I   Fiyat       şirketin logosu pirinç bir halkanın içinde damga gibi
+ *                   basılır, adı altına yazılır; logo sola kayar, sembol
+ *                   yanında dev harflerle oturur, sonundaki nokta mürekkep
  *                   damlası olur; kamera damlaya girer, damla kalemin ucu olup
  *                   son 60 kapanışı çizer, kamera kalemi izleyip geri çekilir.
  *   II  Göstergeler aynı çizgi 20 günlük ortalamaya gevşer, 50 günlük pirinçle
@@ -50,13 +52,18 @@ export type FilmPalette = InkPalette & {
 };
 /** Filmin kelimeleri; hepsi sözlükten (`aiAnalysis.claude.film`). */
 export type FilmText = {
-  symbol: string; locale: string;
+  /** Sembol ve şirketin adı: açılışta logonun yanında dev harfle, altında küçük. */
+  symbol: string; name: string; locale: string;
   last: string; high: string; low: string; ma20: string; ma50: string; news: string;
   positive: string; negative: string; ready: string;
   /** IV. perdede dönen dev kelimeler. */
   weighing: string[];
 };
-export type FilmData = { closes: number[]; highs: number[]; lows: number[]; headlines: string[]; rsi: number | null };
+export type FilmData = {
+  closes: number[]; highs: number[]; lows: number[]; headlines: string[]; rsi: number | null;
+  /** Şirket logosu; yüklenmediyse ya da yoksa yerine harfli mürekkep karosu çizilir. */
+  logo?: HTMLImageElement | null;
+};
 
 /** Perdelerin başladığı an (sn). III bir saniye uzun: başlıklar yazıldıktan sonra okunacak kadar dursun. */
 export const ACTS = [0, 5, 10, 16] as const;
@@ -169,6 +176,41 @@ function tag(ctx: Ctx, text: string, x: number, y: number, k: number, o: { font:
   ctx.strokeText(text, x, ty);
   ctx.fillStyle = o.color;
   ctx.fillText(text, x, ty);
+  ctx.restore();
+}
+
+/* ----------------------------------------------------------------------- */
+/* Şirket karosu                                                             */
+/* ----------------------------------------------------------------------- */
+
+/**
+ * Logo karosu: sitenin LogoTile'ı gibi yuvarlatılmış kare, içinde logo.
+ * Logo yoksa (ya da henüz inmediyse) mürekkep karo üstünde kâğıt renginde
+ * iki harf. Karonun etrafındaki halka fırçayla çizilir — damganın mürekkebi.
+ */
+function logoTile(ctx: Ctx, o: { x: number; y: number; size: number; scale: number; alpha: number; logo: HTMLImageElement | null | undefined; symbol: string; ink: string; paper: string; font: string }) {
+  if (o.scale <= 0 || o.alpha <= 0) return;
+  const s = o.size * o.scale, r = s * 0.24;
+  ctx.save();
+  ctx.globalAlpha = o.alpha;
+  ctx.beginPath();
+  ctx.roundRect(o.x - s / 2, o.y - s / 2, s, s, r);
+  const ready = o.logo && o.logo.complete && o.logo.naturalWidth > 0;
+  // Logolar çoğu şeffaf zeminli ve koyu: karo her temada beyaz, logo içinde nefes payıyla.
+  ctx.fillStyle = ready ? "#ffffff" : o.ink;
+  ctx.fill();
+  if (ready) {
+    ctx.clip();
+    const img = o.logo!, pad = s * 0.12, box = s - pad * 2;
+    const k = Math.min(box / img.naturalWidth, box / img.naturalHeight);
+    const iw = img.naturalWidth * k, ih = img.naturalHeight * k;
+    ctx.drawImage(img, o.x - iw / 2, o.y - ih / 2, iw, ih);
+  } else {
+    ctx.fillStyle = o.paper;
+    ctx.font = `800 ${s * 0.36}px ${o.font}`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(o.symbol.slice(0, 2), o.x, o.y + s * 0.02);
+  }
   ctx.restore();
 }
 
@@ -295,16 +337,24 @@ export function renderFilm(ctx: Ctx, frame: FilmFrame, pal: FilmPalette, data: F
   line = mix(line, beam, toBeam);
   const curtain = doneAt === null ? 0 : span(t - doneAt, 0.1, 0.55);
 
-  /* ---- I: sembol ve noktası ---- */
-  const symSize = displaySize(ctx, pal.font, text.symbol + ".", (right - left) * 0.82, narrow ? 120 : 190);
+  /* ---- I: şirket — logo, ad, sembol ve noktası ----
+     Önce logo tek başına ortada, etrafına fırçayla halka çekilir; adı altına
+     yazılır. Sonra logo sola kayar, sembol harfleri yanında maskeden yükselir,
+     noktası düşer. Grup: [logo] [SEMBOL.] — genişliğe birlikte sığdırılır. */
+  const tileMax = narrow ? 64 : 104;
+  const symSize = displaySize(ctx, pal.font, text.symbol + ".", (right - left) * 0.8 - tileMax * 1.3, narrow ? 104 : 176);
+  const tile = Math.min(tileMax, symSize * 0.82), tileGap = tile * 0.3;
   ctx.font = display(pal.font, symSize);
   const symW = ctx.measureText(text.symbol).width;
-  const symY = (top + bottom) / 2 + symSize * 0.36;
-  const symX0 = cx - (symW + symSize * 0.26) / 2;
+  const groupW = tile + tileGap + symW + symSize * 0.26;
+  const symY = (top + bottom) / 2 + symSize * 0.3;
+  const symX0 = cx - groupW / 2 + tile + tileGap;
+  const tileHome = { x: cx - groupW / 2 + tile / 2, y: symY - symSize * 0.36 };
   const dotHome = { x: symX0 + symW + symSize * 0.13, y: symY - symSize * 0.09 };
   const dotR = symSize * 0.085;
-  const SYM_IN = 0.1, DOT_AT = 0.1 + text.symbol.length * 0.06 + 0.25, SYM_OUT = DOT_AT + 0.55;
-  const PEN_A = SYM_OUT + 0.95, PEN_B = 4.5;
+  const SLIDE_A = 0.85, SLIDE_B = 1.3;
+  const SYM_IN = 1.05, DOT_AT = SYM_IN + text.symbol.length * 0.06 + 0.3, SYM_OUT = DOT_AT + 0.6;
+  const PEN_A = SYM_OUT + 0.9, PEN_B = 4.6;
   const pen = span(t, PEN_A, PEN_B);
   const penIdx = Math.min(n - 1, Math.floor(ease.inOut(pen) * (n - 1)));
 
@@ -346,6 +396,41 @@ export function renderFilm(ctx: Ctx, frame: FilmFrame, pal: FilmPalette, data: F
 
     // Perde selinin altında kalan her şey çizilmez (zil ve yazı dışında).
     const live = curtain < 1;
+    // Logo: halka çizilir, karo damga gibi basılır (tek küçük öğe: hafif taşma serbest),
+    // sonra sola, sembolün yanına kayar; çıkışta harflerle birlikte yukarı kaçar.
+    if (live && t < SYM_OUT + 1.0) {
+      const slide = ease.inOut(span(t, SLIDE_A, SLIDE_B));
+      const solo = { x: cx, y: (top + bottom) / 2 - (narrow ? 12 : 18) };
+      const tx = lerp(solo.x, tileHome.x, slide), ty = lerp(solo.y, tileHome.y, slide);
+      const leave = ease.in(span(t, SYM_OUT - 0.05, SYM_OUT + 0.45));
+      const ring: Point[] = [];
+      const rr = tile * 0.84;
+      for (let i = 0; i <= 40; i++) { const a = -Math.PI / 2 + (i / 40) * Math.PI * 2.08; ring.push({ x: tx + Math.cos(a) * rr, y: ty - leave * tile * 1.4 + Math.sin(a) * rr }); }
+      const ringK = span(t, 0.05, 0.6);
+      brush(ctx, ring, { width: narrow ? 3 : 4, progress: ease.inOut(ringK), taper: 0.8, dry: 0.4, seed: seed + 300, color: p.spark, alpha: (1 - span(t, SLIDE_A, SLIDE_B)) * 0.95 });
+      logoTile(ctx, {
+        x: tx, y: ty - leave * tile * 1.4, size: tile, scale: ease.back(span(t, 0.25, 0.62)), alpha: 1 - leave,
+        logo: data.logo, symbol: text.symbol, ink: p.ink, paper: p.paper, font: p.font,
+      });
+      // Şirketin adı: tek başınayken logonun altında daktilo, sonra grubun altına iner.
+      if (text.name) {
+        ctx.save();
+        const ns = narrow ? 14 : 17;
+        ctx.font = `650 ${ns}px ${p.font}`;
+        const nm = fit(ctx, text.name, (right - left) * 0.9);
+        const typed = span(t, 0.45, 0.45 + Math.min(0.6, nm.length * 0.025));
+        // Ad kaymaz, iki yerde görünür: halkanın altında söner, grubun altında yeniden
+        // yazılır. Kayarken sembolün harflerinin içinden geçiyordu (1280 ölçümü).
+        const out = span(t, SLIDE_A - 0.1, SLIDE_A + 0.15), back = span(t, SYM_IN + 0.35, SYM_IN + 0.6);
+        ctx.textAlign = "center";
+        ctx.fillStyle = p.muted;
+        ctx.globalAlpha = ease.out(span(t, 0.4, 0.6)) * (1 - out);
+        if (ctx.globalAlpha > 0) ctx.fillText(nm.slice(0, Math.round(nm.length * typed)), cx, solo.y + tile * 0.84 + ns * 1.9);
+        ctx.globalAlpha = ease.out(back) * (1 - leave);
+        if (ctx.globalAlpha > 0) ctx.fillText(nm.slice(0, Math.round(nm.length * back)), cx, symY + ns * 2.2 - leave * 30);
+        ctx.restore();
+      }
+    }
     // Sembol: harfler maskeden yükselir, nokta düşer; sonra harfler yukarı kaçar.
     if (live && t < SYM_OUT + 1.2) kinetic(ctx, text.symbol, { x: symX0, y: symY, size: symSize, font: p.font, color: p.ink, t, inAt: SYM_IN, outAt: SYM_OUT, align: "left", stagger: 0.06 });
     if (live && t >= DOT_AT && t < PEN_A + 0.2) {

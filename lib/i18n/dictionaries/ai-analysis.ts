@@ -88,6 +88,13 @@ export const aiAnalysisTr = {
     ],
     sessions: "Seans", positive: "Olumlu", negative: "Olumsuz",
     /** Bekleme filmindeki dev yazı ve künyeler (lib/ink/analysis-film.ts). */
+    /** Yeni Analiz sahnesi: filmle aynı kutu, düğmeye basınca film burada başlar. */
+    launch: {
+      title: { technical: "Fiyatın Yönü", selection: "Sahip Olmaya Değer mi?" },
+      start: "Analizi Başlat", startAnyway: "Yine de Başlat", program: "Raporun Yolu",
+      duration: "Rapor genellikle 20–40 saniyede hazır olur; sayfadan ayrılsan da kaydedilir.",
+      latest: "Son Rapor",
+    },
     film: {
       last: "Son Kapanış", high: "Zirve", low: "Dip", ma20: "20 Günlük", ma50: "50 Günlük", news: "Manşetler",
       weighing: ["Riskler", "Fırsatlar", "Değerleme", "Momentum", "Seviyeler", "Senaryolar", "Kanıtlar"],
@@ -212,6 +219,12 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
       { title: "Claude Is Weighing", line: "Comparing the positive and negative evidence." },
     ],
     sessions: "Sessions", positive: "Positive", negative: "Negative",
+    launch: {
+      title: { technical: "Where Price Is Heading", selection: "Worth Owning?" },
+      start: "Start the Analysis", startAnyway: "Start Anyway", program: "How the Report Is Built",
+      duration: "Reports are usually ready in 20–40 seconds and are saved even if you leave the page.",
+      latest: "Latest Report",
+    },
     film: {
       last: "Last Close", high: "High", low: "Low", ma20: "20-Day", ma50: "50-Day", news: "Headlines",
       weighing: ["Risks", "Upside", "Valuation", "Momentum", "Levels", "Scenarios", "Evidence"],

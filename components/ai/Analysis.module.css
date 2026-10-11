@@ -19,30 +19,41 @@
 /* ---- Kapak: karar · giriş · künye. Açılışta sahnelenir. ---- */
 /* İki satır: karar | künye, altında tam genişlikte giriş. `auto` sütun anlam cümlesinin tek satırlık
    max-content genişliğini alıp girişi 50 px'e eziyordu (1280 ölçümü). */
-.cover { --tone:var(--primary); position:relative; display:grid; grid-template-columns:minmax(0,1fr) minmax(240px,320px); gap:clamp(1.25rem,3vw,2rem) clamp(1.25rem,3vw,2.5rem); align-items:center; padding:clamp(1.25rem,3vw,2.25rem); border-radius:22px; background:var(--surface-sunken); overflow:hidden; }
+.cover { --tone:var(--primary); --lag:0ms; position:relative; display:grid; grid-template-columns:minmax(0,1fr) minmax(240px,320px); gap:clamp(1.25rem,3vw,2rem) clamp(1.25rem,3vw,2.5rem); align-items:center; padding:clamp(1.25rem,3vw,2.25rem); border-radius:22px; background:var(--surface-sunken); overflow:hidden; }
 .cover[data-verdict="buy"] { --tone:var(--up); }
 .cover[data-verdict="sell"] { --tone:var(--down); }
 .cover[data-verdict="insufficient"] { --tone:var(--line-strong); }
-.cover::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--tone); transform-origin:left; animation:grow-x 900ms var(--ease-brand) both; }
+.cover::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--tone); transform-origin:left; animation:grow-x 900ms var(--ease-brand) var(--lag) both; }
+/* Filmden gelince (`data-fresh`): filmin son karesi mürekkep seliydi; kapak o
+   selin altından açılır — sel karar halkasının yerine doğru çekilir, kapağın
+   kendi koreografisi `--lag` kadar sonra başlar. Kesme yerine devam. */
+.cover[data-fresh] { --lag:620ms; }
+.cover[data-fresh]::after { content:""; position:absolute; inset:0; z-index:3; background:var(--text-strong); pointer-events:none; clip-path:circle(150% at 12% 30%); animation:ink-drain 980ms var(--ease-brand) 120ms forwards; }
+@keyframes ink-drain { to { clip-path:circle(0% at 12% 30%); } }
 .coverVerdict { display:flex; align-items:center; gap:20px; }
 .coverRing { --score-ring-size:112px; }
 .coverWord { display:grid; gap:6px; min-width:0; }
 /* Kelime kendi kutusundan yükselir: üst 0,12em pay İ/Ü imleri için (globals.css "ÜSTTEKİ İMLER"). */
-.verdict { display:block; overflow:hidden; padding-top:.12em; margin-top:-.12em; font-size:clamp(2.6rem,5vw,4rem); line-height:1; font-weight:800; letter-spacing:-.055em; color:var(--tone); }
+.verdict { position:relative; display:block; justify-self:start; padding-bottom:.18em; font-size:clamp(2.6rem,5vw,4rem); line-height:1; font-weight:800; letter-spacing:-.055em; color:var(--tone); }
 .cover[data-verdict="hold"] .verdict { color:var(--primary-ink); }
 .cover[data-verdict="insufficient"] .verdict { color:var(--text-strong); font-size:clamp(1.9rem,3.4vw,2.6rem); }
-.verdict > span { display:inline-block; animation:word-rise 760ms var(--ease-brand) 180ms both; }
-@keyframes word-rise { from { translate:0 105%; } to { translate:0 0; } }
-.verdictMeaning { max-width:24em; font-size:14px; line-height:1.55; color:var(--text-body); animation:fade-up 600ms var(--ease-brand) 380ms both; }
-.lead { grid-column:1 / -1; max-width:40em; padding-left:18px; border-left:3px solid var(--primary); font-size:clamp(1.08rem,1.45vw,1.28rem); line-height:1.6; font-weight:450; color:var(--text-strong); text-wrap:pretty; animation:fade-up 700ms var(--ease-brand) 300ms both; }
+/* Fırça çizgisi: kelimenin altında, kararın renginde; harfler oturduktan sonra soldan çekilir. */
+.verdictInk { position:absolute; left:0; bottom:0; width:100%; height:.2em; overflow:visible; }
+.verdictInk path { fill:none; stroke:var(--tone); stroke-width:4.5; stroke-linecap:round; stroke-dasharray:1; stroke-dashoffset:1; animation:ink-line 720ms var(--ease-brand) calc(var(--lag) + 760ms) forwards; }
+.cover[data-verdict="hold"] .verdictInk path { stroke:var(--primary-ink); }
+@keyframes ink-line { to { stroke-dashoffset:0; } }
+.verdictMeaning { max-width:24em; font-size:14px; line-height:1.55; color:var(--text-body); animation:fade-up 600ms var(--ease-brand) calc(var(--lag) + 520ms) both; }
+.lead { grid-column:1 / -1; max-width:40em; padding-left:18px; border-left:3px solid var(--primary); font-size:clamp(1.08rem,1.45vw,1.28rem); line-height:1.6; font-weight:450; color:var(--text-strong); text-wrap:pretty; animation:write-on 1200ms var(--ease-brand) calc(var(--lag) + 420ms) both; }
+/* Giriş paragrafı yazılır gibi açılır: soldan sağa kırpma, kenar çizgisiyle birlikte. */
+@keyframes write-on { from { clip-path:inset(0 100% 0 0); opacity:.2; } to { clip-path:inset(0 0 0 0); opacity:1; } }
 .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
-.chips li { padding:4px 10px; border-radius:999px; background:var(--premium-surface); font-size:12px; font-weight:600; color:var(--text-body); animation:fade-up 500ms var(--ease-brand) 520ms both; }
+.chips li { padding:4px 10px; border-radius:999px; background:var(--premium-surface); font-size:12px; font-weight:600; color:var(--text-body); animation:fade-up 500ms var(--ease-brand) calc(var(--lag) + 640ms) both; }
 .chips li[data-tone="warn"] { background:var(--brass-wash); color:var(--brass-ink); }
 .status { font-weight:700; }
 .status[data-status="aboveBull"] { color:var(--up); }
 .status[data-status="belowBear"] { color:var(--down); }
 .staleNote { grid-column:1 / -1; padding:10px 14px; border-radius:12px; background:var(--brass-wash); color:var(--brass-ink); font-size:13.5px; }
-.coverFacts { grid-column:2; grid-row:1; display:grid; align-self:stretch; align-content:center; gap:0; padding-left:clamp(1rem,2vw,1.5rem); border-left:1px solid var(--line); animation:fade-up 700ms var(--ease-brand) 420ms both; }
+.coverFacts { grid-column:2; grid-row:1; display:grid; align-self:stretch; align-content:center; gap:0; padding-left:clamp(1rem,2vw,1.5rem); border-left:1px solid var(--line); animation:fade-up 700ms var(--ease-brand) calc(var(--lag) + 460ms) both; }
 .coverFacts > div { display:grid; gap:3px; padding:9px 0; border-bottom:1px solid var(--line-soft); }
 .coverFacts > div:last-child { border-bottom:0; }
 .coverFacts dt { font-size:12px; font-weight:600; color:var(--text-soft); }
@@ -51,7 +62,7 @@
 .confidence { display:flex; align-items:center; gap:10px; }
 .meter { display:inline-flex; gap:3px; }
 .meter > span { width:18px; height:5px; border-radius:999px; background:var(--line-strong); opacity:.45; }
-.meter > span[data-on] { background:var(--tone, var(--primary)); opacity:1; transform-origin:left; animation:grow-x 420ms var(--ease-brand) calc(650ms + var(--i,0) * 120ms) both; }
+.meter > span[data-on] { background:var(--tone, var(--primary)); opacity:1; transform-origin:left; animation:grow-x 420ms var(--ease-brand) calc(var(--lag) + 760ms + var(--i,0) * 120ms) both; }
 .cover[data-verdict="hold"] .meter > span[data-on] { background:var(--primary); }
 @keyframes grow-x { from { scale:0 1; } to { scale:1 1; } }
 @keyframes fade-up { from { opacity:0; translate:0 10px; } to { opacity:1; translate:0 0; } }
@@ -59,7 +70,10 @@
 /* ---- Kısaca ---- */
 .takeawaysSection { display:grid; gap:14px; margin-top:calc(clamp(2.5rem,5vw,4rem) * -.5); }
 .takeaways { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(1rem,2.5vw,2rem); }
-.takeaways li { display:grid; grid-template-columns:auto minmax(0,1fr); gap:14px; align-items:start; padding-top:16px; border-top:1px solid var(--line-strong); }
+.takeaways li { position:relative; display:grid; grid-template-columns:auto minmax(0,1fr); gap:14px; align-items:start; padding-top:16px; }
+/* Üst çizgi görününce soldan çekilir, sırayla: üç madde üç adım gibi okunur. */
+.takeaways li::before { content:""; position:absolute; inset:0 0 auto; height:1px; background:var(--line-strong); transform-origin:left; scale:0 1; }
+[data-inview].takeaways li::before { animation:grow-x 820ms var(--ease-brand) calc(var(--i,0) * 140ms) forwards; }
 .takeawayNo { font-size:28px; line-height:1; font-weight:700; letter-spacing:-.04em; color:var(--primary-ink); }
 .takeaways p { font-size:16px; line-height:1.55; font-weight:500; letter-spacing:-.01em; color:var(--text-strong); text-wrap:pretty; }
 
@@ -113,7 +127,9 @@ li[data-tone="now"] .ladderName { color:var(--text-strong); }
 /* ---- Senaryolar ---- */
 .scenarios { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(.75rem,2vw,1.25rem); }
 .scenario { position:relative; display:grid; gap:12px; align-content:start; padding:22px 22px 24px; border-radius:20px; background:var(--premium-surface); border:1px solid var(--line); color:var(--text-prose); font-size:15px; line-height:1.8; overflow:hidden; }
-.scenario::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--line-strong); }
+.scenario::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--line-strong); transform-origin:left; scale:0 1; }
+[data-inview] > .scenario::before { animation:grow-x 900ms var(--ease-brand) 200ms forwards; }
+[data-inview] > .scenario[data-tone="down"]::before { transform-origin:right; animation-delay:320ms; }
 .scenario[data-tone="up"]::before { background:var(--up); }
 .scenario[data-tone="down"]::before { background:var(--down); }
 .scenario h3,.invalidation h3 { font-size:var(--text-title); font-weight:700; line-height:1.3; letter-spacing:-.025em; }
@@ -186,7 +202,10 @@ li[data-tone="now"] .ladderName { color:var(--text-strong); }
   .pointsCard { padding:1.2rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cover::before,.verdict > span,.verdictMeaning,.lead,.coverFacts,.meter > span,.levelLine,.chartArea,.nowDot,.nowDot::after,.chartLabel,.ladder li { animation:none !important; }
+  .cover::before,.verdictMeaning,.lead,.coverFacts,.meter > span,.levelLine,.chartArea,.nowDot,.nowDot::after,.chartLabel,.ladder li,.chips li { animation:none !important; }
+  .cover[data-fresh]::after { display:none; }
+  .verdictInk path { animation:none; stroke-dashoffset:0; }
+  .takeaways li::before,.scenario::before { animation:none !important; scale:1 1; }
   .levelLine,.chartLabel,.ladder li,.nowDot { opacity:1; }
   .chartArea { opacity:1; }
   .chartLine { animation:none !important; clip-path:none; }

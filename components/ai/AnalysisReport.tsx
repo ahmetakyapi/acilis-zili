@@ -8,6 +8,8 @@ import { Reveal } from "@/components/motion/PremiumMotion";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
 import { FOCUS_OF, HORIZON_DAYS, daysSince, scenarioStatus } from "@/lib/ai-analysis-core";
 import { PriceMap } from "./PriceMap";
+import { KineticText } from "./KineticText";
+import { InView } from "./InView";
 import { CompanyScorecard, ReturnBars, RsiDial, ScenarioAxis, ScoreCards, TrendChecks } from "./AnalysisVisuals";
 import styles from "./Analysis.module.css";
 
@@ -29,9 +31,11 @@ export function analysisDate(value: string, locale: Locale) {
  * mi (yaş, şu anki fiyatın tetiklere göre yeri), vade içinde olay riski var
  * mı (bilanço). Hepsi raporun kendi sayılarından; tavsiye değil, koşullu okuma.
  */
-export function AnalysisReport({ result, t, locale, current, symbol, horizon, categoryNames }: {
+export function AnalysisReport({ result, t, locale, current, symbol, horizon, categoryNames, fresh = false }: {
   result: SavedAnalysis; t: Dictionary["aiAnalysis"]; locale: Locale; current?: CurrentQuote; symbol: string;
   horizon: "short" | "medium"; categoryNames: Record<string, string>;
+  /** Film az önce bitti (`yeni=1`): kapak filmin son karesindeki mürekkep selinin çekilmesiyle açılır. */
+  fresh?: boolean;
 }) {
   const { output: o, snapshot: s } = result;
   const focus = FOCUS_OF[horizon];
@@ -72,14 +76,14 @@ export function AnalysisReport({ result, t, locale, current, symbol, horizon, ca
   const scenarios = <section key="scenarios" aria-labelledby={id("scenarios")} className={styles.chapter}>
     <ChapterHeading id={id("scenarios")} title={t.scenarios} dek={t.axisHint} />
     <Reveal><ScenarioAxis result={result} t={t} locale={locale} /></Reveal>
-    <div className={styles.scenarios} data-motion-stagger>
+    <InView className={styles.scenarios} data-motion-stagger>
       {([["up", t.bull, o.bullScenario, o.bullLevel, t.triggerAbove], ["down", t.bear, o.bearScenario, o.bearLevel, t.triggerBelow]] as const).map(([tone, title, text, level, rule]) =>
         <div key={tone} className={styles.scenario} data-tone={tone}>
           <h3 data-ink="plain">{title}</h3>
           {typeof level === "number" && <p className={styles.trigger}>{t.trigger} · <span className="figure">{price(level)}</span> {rule}</p>}
           <p>{text}</p>
         </div>)}
-    </div>
+    </InView>
     <Reveal className={styles.invalidation}><h3 data-ink="plain">{t.invalidation}</h3><p>{o.invalidation}</p></Reveal>
     {o.watch && o.watch.length > 0 && <Reveal className={styles.watchBlock}>
       <p className="plate">{t.watch}</p>
@@ -99,12 +103,18 @@ export function AnalysisReport({ result, t, locale, current, symbol, horizon, ca
 
   return <article className={styles.report} aria-label={`${symbol} · ${t.saved} · ${analysisDate(result.generatedAt, locale)}`}>
     {/* ===== Kapak ===== */}
-    <header className={styles.cover} data-verdict={o.verdict}>
+    <header className={styles.cover} data-verdict={o.verdict} data-fresh={fresh ? "" : undefined}>
       <div className={styles.coverVerdict}>
         <ScoreRing score={o.overallScore} verdict={ring} size={112} showDenominator className={styles.coverRing} />
         <div className={styles.coverWord}>
           <p className="plate">{t.coverLabel} · {focus === "technical" ? t.focus.technical : t.focus.selection} · {horizon === "short" ? t.short : t.medium}</p>
-          <strong className={styles.verdict}><span>{t.verdicts[o.verdict]}</span></strong>
+          {/* Karar harf harf yükselir, altına mürekkep fırçasıyla çizgi çekilir (filmin dili). */}
+          <strong className={styles.verdict}>
+            <KineticText text={t.verdicts[o.verdict]} delay={fresh ? 820 : 200} stagger={70} />
+            <svg className={styles.verdictInk} viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden>
+              <path d="M4 8.5 C 38 4, 82 10.5, 122 6.5 S 178 4.5, 196 7" pathLength={1} />
+            </svg>
+          </strong>
           <p className={styles.verdictMeaning}>{t.verdictMeaning[o.verdict]}</p>
           <ul className={styles.chips}>
             <li data-tone={focus === "technical" && age >= TECHNICAL_STALE_DAYS ? "warn" : undefined}>{age === 0 ? t.age.today : t.age.days.replace("{n}", String(age))}</li>
@@ -134,9 +144,9 @@ export function AnalysisReport({ result, t, locale, current, symbol, horizon, ca
     {/* ===== Kısaca ===== */}
     {o.takeaways && o.takeaways.length > 0 && <section aria-labelledby={id("takeaways")} className={styles.takeawaysSection}>
       <p id={id("takeaways")} className="plate">{t.takeaways}</p>
-      <ol className={styles.takeaways} data-motion-stagger>
-        {o.takeaways.map((line, i) => <li key={i}><span className={`figure ${styles.takeawayNo}`} aria-hidden>{i + 1}</span><p>{line}</p></li>)}
-      </ol>
+      <InView as="ol" className={styles.takeaways} data-motion-stagger>
+        {o.takeaways.map((line, i) => <li key={i} style={{ "--i": i } as React.CSSProperties}><span className={`figure ${styles.takeawayNo}`} aria-hidden>{i + 1}</span><p>{line}</p></li>)}
+      </InView>
     </section>}
 
     {order}

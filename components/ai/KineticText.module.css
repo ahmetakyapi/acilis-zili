@@ -1,0 +1,9 @@
+/* Harf maskesi: kelime kutusu taşanı keser, harf kutunun altından yükselir.
+   Üstte 0,12em, altta 0,22em pay: İ/Ü imleri ve ğ/ş/ç kuyrukları kesilmesin
+   (globals.css "ÜSTTEKİ İMLER" ile aynı ölçü); pay negatif marjla geri alınır,
+   satır yüksekliği değişmez. */
+.kinetic { display:inline; }
+.word { display:inline-block; overflow:hidden; white-space:nowrap; vertical-align:bottom; padding:.12em .02em .22em; margin:-.12em -.02em -.22em; }
+.word > span { display:inline-block; animation:letter-rise 760ms var(--ease-brand) var(--d,0ms) both; }
+@keyframes letter-rise { from { translate:0 112%; } to { translate:0 0; } }
+@media (prefers-reduced-motion: reduce) { .word > span { animation:none; } }

@@ -11,7 +11,7 @@ type T = Dictionary["aiAnalysis"];
 export const CURTAIN_MS = CURTAIN_S * 1000;
 /** Hareketi azaltana her perdenin SON karesi (sn): film değil, o adımın resmi.
  *  III'ün karesi selin içinde, başlıklar yazılmışken; IV'ünkü kefeler dolarken. */
-const STILL_AT = [4.95, 8.6, 14.6, 21];
+const STILL_AT = [5, 8.6, 14.6, 21];
 /** Perdelerin süresi (ms) — ilerleme çizgisi gerçek süreyle dolsun; IV sonuca kadar sürer. */
 const ACT_MS = ACTS.map((start, i) => i < ACTS.length - 1 ? (ACTS[i + 1] - start) * 1000 : 5000);
 /** Sel ekranın bu kadarını kapladıysa altyazı kâğıt rengine döner. */
@@ -43,8 +43,11 @@ function readPalette(): FilmPalette {
  * perdede "Rapor Hazır" tuvalde dev yazıyla çizildiği için altyazı yalnız
  * ekran okuyucuda kalır.
  */
-export function AnalysisFilm({ bars, headlines, symbol, done, t, locale }: {
-  bars: FilmBar[]; headlines: string[]; symbol: string; done: boolean; t: T; locale: Locale;
+export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, done, t, locale, minHeight }: {
+  bars: FilmBar[]; headlines: string[]; symbol: string; name: string; logoUrl: string | null; done: boolean; t: T; locale: Locale;
+  /** Açılış sahnesinin boyu: film aynı kutuda başlasın (ClaudeWorkbench). En-boy oranı o
+   *  zaman kapanır: oran + min-height genişliğe de aktarılıyor, telefonda kutu taşıyordu. */
+  minHeight?: number | null;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const doneRef = useRef<number | null>(null);
@@ -58,10 +61,12 @@ export function AnalysisFilm({ bars, headlines, symbol, done, t, locale }: {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
-    const data: FilmData = { closes: bars.map(b => b.c), highs: bars.map(b => b.h), lows: bars.map(b => b.l), headlines, rsi: rsi14(bars.map(b => b.c)) };
+    // Logo tuvale çizilir; inmeden önce yerine harfli karo durur (render her karede `complete`a bakar).
+    const logo = logoUrl ? Object.assign(new Image(), { decoding: "async", src: logoUrl }) : null;
+    const data: FilmData = { closes: bars.map(b => b.c), highs: bars.map(b => b.h), lows: bars.map(b => b.l), headlines, rsi: rsi14(bars.map(b => b.c)), logo };
     const F = t.claude.film;
     const text: FilmText = {
-      symbol, locale: locale === "tr" ? "tr-TR" : "en-US", ...F,
+      symbol, name, locale: locale === "tr" ? "tr-TR" : "en-US", ...F,
       positive: t.claude.positive, negative: t.claude.negative, ready: t.claude.ready,
     };
     let pal = readPalette();
@@ -103,7 +108,7 @@ export function AnalysisFilm({ bars, headlines, symbol, done, t, locale }: {
     const themeWatch = new MutationObserver(() => { pal = readPalette(); });
     themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     return () => { cancelAnimationFrame(raf); clearInterval(stillTimer); observer.disconnect(); themeWatch.disconnect(); };
-  }, [bars, headlines, symbol, locale, t.claude]);
+  }, [bars, headlines, symbol, name, logoUrl, locale, t.claude]);
 
   useEffect(() => {
     if (done && doneRef.current === null) doneRef.current = (performance.now() - startedRef.current) / 1000;
@@ -111,7 +116,7 @@ export function AnalysisFilm({ bars, headlines, symbol, done, t, locale }: {
 
   const caption = act === 4 ? { title: t.claude.ready, line: "" } : S[act];
   return <div className={styles.stage} role="status" aria-live="polite" aria-label={`${t.claude.stage}: ${caption.title}`}
-    data-inverted={inverted ? "" : undefined} data-final={act === 4 ? "" : undefined}>
+    data-inverted={inverted ? "" : undefined} data-final={act === 4 ? "" : undefined} style={minHeight ? { minHeight, aspectRatio: "auto" } : undefined}>
     <canvas ref={canvasRef} className={styles.canvas} aria-hidden />
     <div className={styles.caption} key={act}>
       {act < 4 && <span className={styles.sceneNo}>{["I", "II", "III", "IV"][act]}</span>}

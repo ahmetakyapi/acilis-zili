@@ -17,6 +17,7 @@ import { FOCUS_OF, istanbulDay, type AnalysisFocus } from "@/lib/ai-analysis-cor
 import { getNewsForSymbol, getStatus, getSymbolNames, isKnownSymbol } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
+import { logoSrc } from "@/lib/logos";
 import { completedBars } from "@/lib/technical";
 
 /** Film: son 3 ayın en fazla bu kadar seansı (mum genişliği okunur kalsın). */
@@ -50,6 +51,7 @@ export default async function ClaudePage(props: PageProps<"/claude/[symbol]">) {
 
   const [reports, names] = await Promise.all([listSymbolReports(symbol, viewerId), getSymbolNames([symbol]).catch(() => ({} as Awaited<ReturnType<typeof getSymbolNames>>))]);
   const meta = names[symbol];
+  const logoUrl = meta?.logoUrl ?? logoSrc(symbol, null);
   const wantedId = typeof params.rapor === "string" ? params.rapor : null;
   const wanted = wantedId ? reports.find(r => r.id === wantedId) ?? null : null;
   // Adresteki rapor öteki odaktaysa sayfa o odakta açılır; odak kartı ile rapor aynı şeyi söylesin.
@@ -119,15 +121,18 @@ export default async function ClaudePage(props: PageProps<"/claude/[symbol]">) {
       <div className={styles.reportBar}>
         <p className={styles.createdAt}>{C.createdAt.replace("{date}", date(result.generatedAt))}{selected.locale !== locale ? ` ${C.otherLocale}` : ""}</p>
         {/* Rapor varken de yeniden üretilebilir (sabah ve akşam iki rapor gibi): düğme her zaman burada. */}
-        {access && <ButtonLink href={href({ tab: "yeni" })} variant="primary" size="sm" scroll={false}>{C.regenerate}</ButtonLink>}
+        {access && <ButtonLink href={href({ tab: "yeni" })} variant="primary" size="sm" scroll={false} className={styles.regen}>
+          <svg viewBox="0 0 24 24" aria-hidden><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" /></svg>{C.regenerate}
+        </ButtonLink>}
       </div>
-      <AnalysisReport result={result} t={A} locale={locale} symbol={symbol} horizon={selected.horizon} categoryNames={t.screening.categories}
+      <AnalysisReport result={result} t={A} locale={locale} symbol={symbol} horizon={selected.horizon} categoryNames={t.screening.categories} fresh={params.yeni === "1"}
         current={quote ? { price: quote.price, at: quote.tradedAt ? new Date(quote.tradedAt).toISOString() : null, realtime: !!quote.realtime } : null} />
     </div> : <EmptyState title={C.emptyTitle} hint={access ? C.emptyHint : C.emptyHintGuest} scene="chart"
       action={access ? <ButtonLink href={href({ tab: "yeni" })} variant="primary">{C.createCta}</ButtonLink> : undefined} />)}
 
-    {tab === "yeni" && <ClaudeWorkbench symbol={symbol} locale={locale} t={A} focus={focus}
-      canGenerate={!!access} signedIn={!!viewerId} remaining={access?.remaining ?? null}
+    {tab === "yeni" && <ClaudeWorkbench symbol={symbol} name={meta?.name ?? ""} logoUrl={logoUrl} locale={locale} t={A} focus={focus}
+      canGenerate={!!access} signedIn={!!viewerId} remaining={access?.remaining ?? null} limit={access?.dailyLimit ?? null}
+      latest={ofFocus[0] ? { href: href({ tab: "rapor", id: ofFocus[0].id }), verdict: ofFocus[0].verdict, score: ofFocus[0].score, when: date(ofFocus[0].generatedAt) } : null}
       inProgress={!!access?.lockId && !!access?.lockUntil && access.lockUntil > new Date()}
       today={today ? { href: href({ tab: "rapor", id: today.id }), time: time(today.generatedAt) } : null}
       bars={film.bars} headlines={film.headlines} />}
