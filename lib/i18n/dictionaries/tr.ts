@@ -2834,8 +2834,10 @@ const tr = {
       momentum: "6 Aylık Getiri",
     },
     scNote:
-      "Aynı GICS sektöründeki endeks üyeleri arasında konum; not ya da tavsiye değil. Çentikler şirketler, dikey çizgi medyan. Değerleme canlı fiyatla kurulur.",
+      "Aynı GICS sektöründeki endeks üyeleri arasında konum; not ya da tavsiye değil. Dolu şerit şirketin yüzdeliği, dikey çizgi sektörün medyanı. Değerleme canlı fiyatla kurulur.",
     scStrip: "Sektördeki {n} şirketin dağılımı: medyan {m}, bu şirket {p}",
+    scScale: { low: "Sektörün Altı", mid: "Medyan", high: "Sektörün Üstü" },
+    scScaleShort: { low: "Alt", mid: "Medyan", high: "Üst" },
     scOldest: "En Eski Ölçü {date}",
 
     tsTitle: "Teknik Fotoğraf",

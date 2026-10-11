@@ -235,8 +235,15 @@ export function TechnicalCard({
             taşıyor (teknik/page.tsx). */}
         <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="lg" />
         <div className={styles.cardName}>
-          {/* h3: kartlar sayfanın "Hisse Planları" bölüm başlığının altında. */}
-          <h3 id={headingId} className={styles.cardSymbol}>
+          {/* h3: kartlar sayfanın "Hisse Planları" bölüm başlığının altında.
+              `text-read` PUNTO İÇİN DEĞİL (puntoyu .cardSymbol veriyor): büyük
+              başlıkların üst im payı (`translate: 0 -.12em`, globals.css
+              "ÜSTTEKİ İMLER") başlığı kaplama bağlantısının kabı yapıyordu.
+              Kartı örtmesi gereken `::after` başlığın içinde kalıyordu
+              (225×28 px, ölçüldü): kartın yalnız sembolü tıklanıyordu
+              (11 Ekim, sahibinin itirazı). Küçük punto sınıfı kuralın
+              dışında; sembolde Türkçe üst im yok. */}
+          <h3 id={headingId} className={cn("text-read", styles.cardSymbol)}>
             <Link href={technicalHref(row.symbol)} prefetch={false} className={styles.cardLink}>
               {row.symbol}
               {/* "ANALİZİ OKU" AYAĞININ YERİNE (29 Eylül). Kartın tıklanabilir

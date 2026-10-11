@@ -2379,8 +2379,10 @@ const en: typeof tr = {
       momentum: "6-Month Return",
     },
     scNote:
-      "Position among index members in the same GICS sector, not a grade or a recommendation. Ticks are companies, the vertical line is the median. Valuation uses the live price.",
+      "Position among index members in the same GICS sector, not a grade or a recommendation. The filled bar is the company's percentile, the vertical line the sector median. Valuation uses the live price.",
     scStrip: "Spread of {n} companies in the sector: median {m}, this company {p}",
+    scScale: { low: "Sector Low", mid: "Median", high: "Sector High" },
+    scScaleShort: { low: "Low", mid: "Median", high: "High" },
     scOldest: "Oldest Figure {date}",
 
     tsTitle: "Technical Snapshot",

@@ -112,6 +112,14 @@ export async function ScorecardPanel({ symbol, locale, t }: { symbol: string; lo
             üç satır ve 72 piksel taşıyordu (ad, cümle, ölçü künyesi; 390'da
             91) ve panel 1280'de 529, 390'da 637 pikseldi. Artık ad, şerit
             ve yüzde TEK hatta; cümle ile ölçü adları altında tek künye. */}
+        {/* ÖLÇEK BAŞLIĞI (11 Ekim). Şeridin iki ucunun ve ortasının ne olduğu
+            yalnız dipteki künyedeydi; okuyucu şeridi okumadan geçiyordu.
+            Satırlarla aynı ızgarada, şerit sütununun üstünde. */}
+        <div className={styles.axisScale} aria-hidden>
+          {(["low", "mid", "high"] as const).map((key) => (
+            <span key={key}><b>{d.scScale[key]}</b><i>{d.scScaleShort[key]}</i></span>
+          ))}
+        </div>
         <ul className={styles.axisList} data-motion-stagger>
           {card.map((axis) => {
             const values = spread[axis.axis] ?? [];
@@ -157,7 +165,14 @@ export async function ScorecardPanel({ symbol, locale, t }: { symbol: string; lo
 }
 
 /**
- * Dağılım şeridi — eksenin sektördeki yayılımı ve konunun yeri (28 Eylül).
+ * Dağılım şeridi — konunun sektördeki yeri (28 Eylül; 11 Ekim'de sadeleşti).
+ *
+ * ÇENTİKLER KALKTI (11 Ekim, sahibinin itirazı: "çizgiler anlam ifade
+ * etmiyor"). Her şirket için bir çentik vardı; 70 şirketlik sektörde şerit
+ * bir barkoda dönüyordu ve okuyucu ne gösterdiğini çözemiyordu. Kalan: 5
+ * piksellik dolu şerit (konunun yüzdeliği), konunun noktası ve medyan
+ * çizgisi; ölçeğin uçları ve ortası listenin üstünde yazılı. Sektördeki
+ * şirket sayısı başlığın künyesinde ve ekran okuyucu etiketinde duruyor.
  *
  * Eski çubuk yalnızca yüzdeyi uzunluk olarak tekrar ediyordu; yanında
  * yazan sayıdan başka bir şey söylemiyordu. Şerit o sayıya iki bilgi
@@ -187,9 +202,6 @@ function ScoreStrip({
       <span className={styles.stripRail} aria-hidden>
         <i data-motion-draw="line" style={{ width: `${percentile}%` }} />
       </span>
-      {values.map((value, index) => (
-        <i key={index} aria-hidden className={styles.stripTick} style={{ left: `${value}%` }} />
-      ))}
       {median !== null && <i aria-hidden className={styles.stripMedian} style={{ left: `${median}%` }} />}
       <i
         aria-hidden

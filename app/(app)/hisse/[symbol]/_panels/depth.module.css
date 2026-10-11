@@ -162,16 +162,32 @@
   .axisPct { font-size:16px; }
 }
 
-/* Dağılım şeridi: ray = konunun yüzdeliği, ince çentik = sektördeki bir
-   şirket, uzun çizgi = medyan, yuvarlak işaret = konu. Uçlarda işaret
+/* Dağılım şeridi: ray = konunun yüzdeliği, uzun çizgi = medyan, yuvarlak
+   işaret = konu. Uçlarda işaret
    yarım taşmasın diye şerit kendi yarıçapı kadar içeride (`margin-inline`);
    `container-type` işaretin `travel` kaymasını şeridin eniyle ölçüyor. */
+/* 11 Ekim: çentikler kalktı (gerekçe ScoreStrip'te). Grafik dili CLAUDE.md
+   "ince": kulvar üstünde 5 piksellik şerit. Dolu kısım yüzdelik; medyan
+   kulvarı aşan tek ince çizgi; işaret konunun kendisi. */
 .strip { grid-area:strip; position:relative; display:block; height:18px; margin-inline:6px; container-type:inline-size; }
-.stripRail { position:absolute; inset-inline:0; top:50%; height:3px; margin-top:-1.5px; border-radius:999px; background:var(--rail-track,var(--line-soft)); }
-.stripRail > i { display:block; height:100%; border-radius:999px; background:color-mix(in srgb, var(--primary) 45%, transparent); }
-.stripTick { position:absolute; top:4px; bottom:4px; width:1.5px; margin-left:-.75px; border-radius:1px; background:color-mix(in srgb, var(--flat) 55%, transparent); }
-.stripMedian { position:absolute; top:0; bottom:0; width:2px; margin-left:-1px; border-radius:1px; background:var(--text-muted); }
-.stripDot { position:absolute; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border:2px solid var(--premium-surface,var(--surface-solid)); border-radius:999px; background:var(--primary); box-sizing:border-box; }
+.stripRail { position:absolute; inset-inline:0; top:50%; height:5px; margin-top:-2.5px; border-radius:999px; background:var(--rail-track,var(--line-soft)); }
+.stripRail > i { display:block; height:100%; border-radius:999px; background:color-mix(in srgb, var(--primary) 55%, transparent); }
+.stripMedian { position:absolute; top:1px; bottom:1px; width:2px; margin-left:-1px; border-radius:1px; background:var(--line-strong); }
+.stripDot { position:absolute; top:50%; width:13px; height:13px; margin:-6.5px 0 0 -6.5px; border:2.5px solid var(--premium-surface,var(--surface-solid)); border-radius:999px; background:var(--primary); box-sizing:border-box; }
+/* Ölçek başlığı: satırla aynı üç sütun; yazılar şerit sütununun solunda,
+   ortasında ve sağında (şeridin `margin-inline`i kadar içeride). */
+.axisScale { display:grid; grid-template-columns:minmax(0,9rem) minmax(0,1fr) 3.25rem; column-gap:16px; margin-bottom:6px; color:var(--text-muted); font-size:11.5px; font-weight:600; }
+.axisScale > span:nth-child(1) { grid-column:2; grid-row:1; justify-self:start; padding-left:6px; }
+.axisScale > span:nth-child(2) { grid-column:2; grid-row:1; justify-self:center; }
+.axisScale > span:nth-child(3) { grid-column:2; grid-row:1; justify-self:end; padding-right:6px; }
+.axisScale b { font-weight:inherit; }
+.axisScale i { display:none; font-style:normal; }
+/* Telefonda şerit ~130 px: uzun adlar üst üste biniyordu (390, ölçüldü). */
+@media (max-width:519px) {
+  .axisScale { grid-template-columns:minmax(0,6.75rem) minmax(0,1fr) 2.75rem; column-gap:12px; }
+  .axisScale b { display:none; }
+  .axisScale i { display:inline; }
+}
 
 /* Teknik fotoğraf — iki sütunlu ölçü listesi, satırlar aynı hatta. */
 .techGrid { display:grid; grid-template-columns:minmax(0,1fr); column-gap:24px; }
