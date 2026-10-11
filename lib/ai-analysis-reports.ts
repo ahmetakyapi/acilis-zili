@@ -1,7 +1,8 @@
 import "server-only";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "./db";
-import { aiAnalysisRequests } from "./schema";
+import { aiAnalysisRequests, userAvatars, users } from "./schema";
+import { AVATAR_DEFAULT_COLOR, isAvatarColor, isAvatarKey, type AvatarColor, type AvatarKey } from "./avatars";
 import type { SavedAnalysis } from "./ai-analysis";
 
 /** Sekmedeki geçmiş listesi; daha eskisi yalnız Analizlerim'de (kendi raporları). */
@@ -16,34 +17,63 @@ export type ReportSummary = {
   verdict: ReportVerdict;
   score: number | null;
   generatedAt: string;
-  /** Okuyanın kendi raporu mu — yalnız rozet; başkasının kimliği hiç çıkmaz. */
+  /** Okuyanın kendi raporu mu — "Senin Raporun" rozeti. */
   mine: boolean;
+  /** Raporu oluşturan: kullanıcı adı ve profil karosu. E-posta ve kimlik numarası ASLA. */
+  author: ReportAuthor | null;
 };
+
+export type ReportAuthor = { name: string; icon: AvatarKey | null; color: AvatarColor | null };
 
 /**
  * Hissenin TAMAMLANMIŞ raporları, kimin ürettiğinden bağımsız.
  *
  * Rapor üretmek kişiye bağlı (kota, yetki); OKUMAK herkese açık: rapor o
- * anın verisiyle yazılmış tarihli bir belge, üreten kullanıcı hiçbir yerde
- * görünmez (`user_id` yalnız "senin raporun" rozeti için karşılaştırılır).
+ * anın verisiyle yazılmış tarihli bir belge.
+ *
+ * OLUŞTURAN GÖRÜNÜR (11 Ekim, sahibinin isteği — önceki karar "üreten hiçbir
+ * yerde görünmez"di). Üretim yöneticinin açtığı az sayıda hesapta; kimin
+ * hangi saatte rapor ürettiği zaman çizelgesini anlamlı kılıyor ("bir saat
+ * önce X üretti, bekle"). Yalnız KULLANICI ADI ve profil karosu çıkar;
+ * e-posta ve `user_id` sayfaya hiç inmez. Kullanıcı adı zaten sitede
+ * herkese görünen addır (hesap menüsü).
+ *
+ * Avatar ayrı sorguda ve hatası yutuluyor: `user_avatars` migration'la gelen
+ * ayrı bir tablo, yoksa baş harfler basılır — ana liste düşmez.
  * Tablo yoksa (migration uygulanmamış) boş liste.
  */
 export async function listSymbolReports(symbol: string, viewerId: string | null): Promise<ReportSummary[]> {
   try {
     const rows = await db.select({
-      id: aiAnalysisRequests.id, userId: aiAnalysisRequests.userId, horizon: aiAnalysisRequests.horizon, locale: aiAnalysisRequests.locale,
+      id: aiAnalysisRequests.id, userId: aiAnalysisRequests.userId, username: users.username, horizon: aiAnalysisRequests.horizon, locale: aiAnalysisRequests.locale,
       verdict: sql<string>`${aiAnalysisRequests.result}->'output'->>'verdict'`,
       score: sql<number | null>`(${aiAnalysisRequests.result}->'output'->>'overallScore')::int`,
       generatedAt: sql<string>`${aiAnalysisRequests.result}->>'generatedAt'`,
     }).from(aiAnalysisRequests)
+      .leftJoin(users, eq(users.id, aiAnalysisRequests.userId))
       .where(and(eq(aiAnalysisRequests.symbol, symbol), eq(aiAnalysisRequests.status, "completed")))
       .orderBy(desc(aiAnalysisRequests.createdAt)).limit(SYMBOL_HISTORY_LIMIT);
+    const avatars = await authorAvatars([...new Set(rows.map(row => row.userId))]);
     return rows.map(row => ({
       id: row.id, horizon: row.horizon === "medium" ? "medium" : "short", locale: row.locale === "en" ? "en" : "tr",
       verdict: VERDICTS.includes(row.verdict as ReportVerdict) ? row.verdict as ReportVerdict : "insufficient",
       score: row.score, generatedAt: row.generatedAt, mine: viewerId !== null && row.userId === viewerId,
+      author: row.username ? { name: row.username, ...(avatars.get(row.userId) ?? { icon: null, color: null }) } : null,
     }));
   } catch { return []; }
+}
+
+/** Oluşturanların profil karoları, tek sorguda; tablo yoksa boş (baş harfler basılır). */
+async function authorAvatars(userIds: string[]): Promise<Map<string, { icon: AvatarKey | null; color: AvatarColor | null }>> {
+  if (!userIds.length) return new Map();
+  try {
+    const rows = await db.select({ userId: userAvatars.userId, icon: userAvatars.icon, color: userAvatars.color })
+      .from(userAvatars).where(inArray(userAvatars.userId, userIds));
+    return new Map(rows.map(row => {
+      const icon = isAvatarKey(row.icon) ? row.icon : null;
+      return [row.userId, { icon, color: isAvatarColor(row.color) ? row.color : icon ? AVATAR_DEFAULT_COLOR[icon] : null }];
+    }));
+  } catch { return new Map(); }
 }
 
 export async function getSymbolReport(symbol: string, id: string): Promise<SavedAnalysis | null> {

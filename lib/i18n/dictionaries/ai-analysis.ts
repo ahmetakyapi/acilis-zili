@@ -70,8 +70,6 @@ export const aiAnalysisTr = {
     emptyHint: "İlk raporu Yeni Analiz sekmesinden oluşturabilirsin.",
     emptyHintGuest: "Rapor oluşturma yönetici tarafından açılan hesaplarda kullanılabilir.",
     createCta: "Yeni Analiz Sekmesine Git", regenerate: "Yeni Analiz Oluştur",
-    todayTitle: "Bugün Bu Odakta Rapor Var",
-    todayHint: "{time} saatinde oluşturulmuş bir rapor var. Yine de yeni veriyle bir rapor üretebilirsin; bir hak kullanır.",
     openToday: "Bugünkü Raporu Aç",
     generateAnyway: "Yine de Yeni Analiz Oluştur",
     signIn: "Rapor oluşturmak için giriş yap.",
@@ -90,6 +88,19 @@ export const aiAnalysisTr = {
     /** Bekleme filmindeki dev yazı ve künyeler (lib/ink/analysis-film.ts). */
     /** Filmin ses düğmesi (varsayılan kapalı). */
     sound: { on: "Ses Açık", off: "Ses Kapalı" },
+    /** Rapor zaman çizelgesi ve önerilen sonraki rapor (components/ai/ReportTimeline.tsx). */
+    timeline: {
+      title: "Rapor Zaman Çizelgesi", hours: "Saatler TR", author: "Oluşturan", mine: "Sen",
+      now: "Şimdi", next: "Önerilen Sonraki Rapor", ready: "Şimdi Uygun", atOpen: "Açılışta",
+      after: "{t} sonra", ago: "{t} önce", more: "Tüm Raporlar",
+      empty: "Bu odakta henüz rapor yok; ilk rapor zaman çizelgesini başlatır.",
+      gapNote: "Yeni rapor için önerilen bekleme {gap}: {why}",
+      why: { technical: "teknik odakta fiyat seans içinde saat saat değişir.", selection: "hisse seçimi bilanço, oran ve haber verisiyle çalışır; bu veri gün gün değişir." },
+      closedNote: "Piyasa kapalı ve fiyat son rapordan beri değişmedi; yeni rapor için önerilen an açılış zili ({time}).",
+      waitHint: "Son rapor {ago} önce oluşturuldu. Önerilen bekleme {gap}; {left} kaldı. Yine de oluşturabilirsin; bir hak kullanır.",
+      closedHint: "Piyasa kapalı ve fiyat son rapordan beri değişmedi. Önerilen an açılış zili ({time}). Yine de oluşturabilirsin; bir hak kullanır.",
+      units: { min: "dk", hour: "sa", day: "gün" },
+    },
     /** Yeni Analiz sahnesi: filmle aynı kutu, düğmeye basınca film burada başlar. */
     launch: {
       title: { technical: "Fiyatın Yönü", selection: "Sahip Olmaya Değer mi?" },
@@ -204,8 +215,6 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
     emptyHint: "You can generate the first one from the New Analysis tab.",
     emptyHintGuest: "Generating reports is available on accounts enabled by an administrator.",
     createCta: "Go to New Analysis", regenerate: "Generate a New Analysis",
-    todayTitle: "A Report Already Exists Today",
-    todayHint: "A report for this focus was generated at {time}. You can still generate a fresh one; it uses one credit.",
     openToday: "Open Today's Report",
     generateAnyway: "Generate a New Analysis Anyway",
     signIn: "Sign in to generate a report.",
@@ -222,6 +231,18 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
     ],
     sessions: "Sessions", positive: "Positive", negative: "Negative",
     sound: { on: "Sound On", off: "Sound Off" },
+    timeline: {
+      title: "Report Timeline", hours: "Times in TR", author: "Created By", mine: "You",
+      now: "Now", next: "Suggested Next Report", ready: "Ready Now", atOpen: "At the Open",
+      after: "in {t}", ago: "{t} ago", more: "All Reports",
+      empty: "No reports in this focus yet; the first one starts the timeline.",
+      gapNote: "Suggested wait before a new report: {gap}. {why}",
+      why: { technical: "In the technical focus the price moves hour by hour during the session.", selection: "Stock picking runs on financials, ratios and news, which change day by day." },
+      closedNote: "The market is closed and the price has not moved since the last report; the suggested time is the opening bell ({time}).",
+      waitHint: "The last report was created {ago} ago. Suggested wait {gap}; {left} to go. You can still create one; it uses one credit.",
+      closedHint: "The market is closed and the price has not moved since the last report. Suggested time: the opening bell ({time}). You can still create one; it uses one credit.",
+      units: { min: "min", hour: "h", day: "d" },
+    },
     launch: {
       title: { technical: "Where Price Is Heading", selection: "Worth Owning?" },
       start: "Start the Analysis", startAnyway: "Start Anyway", program: "How the Report Is Built",

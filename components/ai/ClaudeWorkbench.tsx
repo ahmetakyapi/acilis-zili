@@ -6,10 +6,11 @@ import { withLocale } from "@/lib/i18n/routing";
 import { ButtonLink, LogoTile } from "@/components/ui/primitives";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
 import { useMotionPreference } from "@/components/motion/useMotionPreference";
-import { HORIZON_OF, type AnalysisFocus } from "@/lib/ai-analysis-core";
+import { HORIZON_OF, formatSpan, type AnalysisFocus, type NextReport } from "@/lib/ai-analysis-core";
 import { AnalysisFilm, CURTAIN_MS, type FilmBar } from "./AnalysisFilm";
 import { KineticText } from "./KineticText";
 import { primeFilmSound, soundPreferred } from "./filmSound";
+import { useNow } from "./useNow";
 import styles from "./Claude.module.css";
 
 /** Düğme damlaya büzülür, sahne boşalır, film başlar (ms). İstek basıldığı an gider; bu yalnız görüntü. */
@@ -32,15 +33,17 @@ function sparkPath(bars: FilmBar[]) {
  *
  * Sahnede: şirketin kimliği, odağın sorusu dev kinetik yazıyla, raporun dört
  * perdesi (filmin perdeleriyle aynı adlar), hak sayacı ve tek birincil eylem.
- * Bugün bu odakta rapor varsa önce o söylenir ama üretim engellenmez; düğmenin
- * adı "Yine de…" olur (sahibinin isteği, 11 Ekim). Üretim sürerken film oynar;
+ * Önerilen bekleme dolmadıysa (`nextReportAt`: teknik 1 sa, seçim 1 gün;
+ * piyasa kapalıyken açılış) önce o söylenir ama üretim engellenmez; düğmenin
+ * adı "Yine de…" olur (sahibinin isteği, 11 Ekim). Eskiden ölçü "bugün bu
+ * odakta rapor var mı"ydı; sabah ve akşam raporu ayırt etmiyordu. Üretim sürerken film oynar;
  * sonuç gelince perde açılır ve rapor sekmesine gidilir (sunucu raporu
  * veritabanından çizer). Adrese `yeni=1` eklenir: kapak filmin selinden açılır.
  */
-export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGenerate, signedIn, remaining, limit, inProgress, today, latest, bars, headlines }: {
+export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGenerate, signedIn, remaining, limit, inProgress, next, nextLabel, now: serverNow, latest, bars, headlines }: {
   symbol: string; name: string; logoUrl: string | null; locale: Locale; t: Dictionary["aiAnalysis"]; focus: AnalysisFocus;
   canGenerate: boolean; signedIn: boolean; remaining: number | null; limit: number | null; inProgress: boolean;
-  today: { href: string; time: string } | null; latest: LatestReport | null; bars: FilmBar[]; headlines: string[];
+  next: NextReport | null; nextLabel: string | null; now: string; latest: LatestReport | null; bars: FilmBar[]; headlines: string[];
 }) {
   const router = useRouter();
   const reduced = useMotionPreference();
@@ -58,6 +61,10 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGe
   const goIconRef = useRef<HTMLSpanElement>(null);
   const C = t.claude;
   const L = C.launch;
+  const T = C.timeline;
+  const now = useNow(serverNow);
+  const early = !!next && new Date(next.at).getTime() > now;
+  const span = (ms: number) => formatSpan(ms, T.units);
   useEffect(() => () => clearTimeout(launchTimer.current), []);
   // Logo filme ÖNCEDEN hazır: sahne açılırken indirilip çözülür, film aynı görüntüyü
   // çizer. Yoksa film başladığında logo daha inmemiş oluyor, damga anında harfli karo
@@ -152,7 +159,7 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGe
       <div className={styles.stageFoot}>
         {canGenerate ? <>
           <button type="button" data-claude-generate className={styles.go} onClick={generate} disabled={disabled || launching}>
-            <span className={styles.goLabel}><span>{today ? L.startAnyway : L.start}</span></span>
+            <span className={styles.goLabel}><span>{early ? L.startAnyway : L.start}</span></span>
             <span ref={goIconRef} className={styles.goIcon} aria-hidden>
               <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" /></svg>
             </span>
@@ -170,8 +177,10 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGe
         </ButtonLink>}
       </div>
 
-      {canGenerate && today && <p className={styles.today} role="note">
-        <strong>{C.todayTitle}</strong> {C.todayHint.replace("{time}", today.time)}
+      {canGenerate && next && early && <p className={styles.today} role="note">
+        {next.reason === "market-closed"
+          ? T.closedHint.replace("{time}", nextLabel ?? "")
+          : T.waitHint.replace("{ago}", span(now - new Date(next.lastAt).getTime())).replace("{gap}", span(next.gapMinutes * 60_000)).replace("{left}", span(new Date(next.at).getTime() - now))}
       </p>}
       {inProgress && <p role="status" className={styles.stageNote}>{t.pending}</p>}
       {error && <p role="alert" className={styles.error}>{error}</p>}

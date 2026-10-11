@@ -177,3 +177,37 @@ export function triggerMath(price: number, bull: number | null | undefined, bear
     ratio: down > 0 && up > 0 ? up / down : null,
   };
 }
+
+/**
+ * YENİ RAPOR İÇİN ÖNERİLEN BEKLEME (dk, 11 Ekim). Engel değil, öneri: düğme
+ * her zaman çalışır, adı "Yine de…" olur.
+ * - Teknik odak (1–4 hafta) fiyatın yönünü okur; seans içinde fiyat saat
+ *   saat değişir, bir saatten kısa arayla iki rapor aynı veriyi yazar.
+ * - Hisse seçimi (3–6 ay) bilanço, oranlar ve 7 günlük haberle çalışır; bu
+ *   veri gün gün değişir.
+ */
+export const RECOMMENDED_GAP_MINUTES = { technical: 60, selection: 24 * 60 } as const;
+
+export type NextReport = { lastAt: string; at: string; gapMinutes: number; reason: "gap" | "market-closed" };
+
+/**
+ * Bu odakta bir sonraki raporun önerilen anı — saf, test edilebilir.
+ * Piyasa veri üretmiyorsa (gece, hafta sonu, tatil) ve son rapor anlatılan
+ * seansın verisi tamamlandıktan SONRA yazıldıysa fiyat o rapordan beri hiç
+ * değişmemiştir: öneri bir sonraki açılış ziline kayar.
+ */
+export function nextReportAt(lastAt: Date, focus: AnalysisFocus, market: { flowing: boolean; sessionEnd: Date; nextOpen: Date }): NextReport {
+  const gapMinutes = RECOMMENDED_GAP_MINUTES[focus];
+  const base = new Date(lastAt.getTime() + gapMinutes * 60_000);
+  const frozen = !market.flowing && lastAt.getTime() >= market.sessionEnd.getTime() && market.nextOpen.getTime() > base.getTime();
+  return { lastAt: lastAt.toISOString(), at: (frozen ? market.nextOpen : base).toISOString(), gapMinutes, reason: frozen ? "market-closed" : "gap" };
+}
+
+/** Süre metni: "23 dk", "1 sa 12 dk", "2 gün 3 sa". Saniye yok; bir dakikanın altı "1 dk". */
+export function formatSpan(ms: number, units: { min: string; hour: string; day: string }): string {
+  const total = Math.max(1, Math.round(Math.abs(ms) / 60_000));
+  const d = Math.floor(total / 1440), h = Math.floor((total % 1440) / 60), m = total % 60;
+  if (d) return h ? `${d} ${units.day} ${h} ${units.hour}` : `${d} ${units.day}`;
+  if (h) return m ? `${h} ${units.hour} ${m} ${units.min}` : `${h} ${units.hour}`;
+  return `${m} ${units.min}`;
+}

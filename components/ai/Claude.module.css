@@ -33,6 +33,12 @@
 .reportWrap { display:grid; gap:14px; min-width:0; }
 .reportBar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 16px; }
 .createdAt { font-size:13px; color:var(--text-muted); }
+/* Oluşturan (11 Ekim, sahibinin isteği): kullanıcı adı ve profil karosu; e-posta asla. */
+.reportMeta { display:grid; gap:6px; min-width:0; }
+.byline { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; font-size:13px; color:var(--text-muted); }
+.byline b { font-weight:700; color:var(--text-strong); }
+.byline i { font-style:normal; padding:1px 8px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:11.5px; font-weight:650; }
+.bylineAvatar { width:24px; height:24px; border-radius:50%; font-size:10px; }
 /* Yeniden üret: ok dairesi üzerine gelince bir tur döner (tek küçük öğe — yaylı eğri serbest). */
 .regen svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; transition:rotate 620ms var(--ease-spring-soft); }
 .regen:hover svg { rotate:360deg; }
@@ -123,7 +129,7 @@
 
 /* ---- Geçmiş ---- */
 .history { display:grid; gap:8px; }
-.historyRow { display:grid; grid-template-columns:44px minmax(70px,auto) minmax(0,1fr) auto auto; gap:16px; align-items:center; min-height:64px; padding:10px 16px; border-radius:16px; background:var(--premium-surface); border:1px solid var(--line); transition:background-color 200ms, border-color 200ms; }
+.historyRow { display:grid; grid-template-columns:44px minmax(70px,auto) minmax(0,1fr) auto minmax(0,auto) auto; gap:16px; align-items:center; min-height:64px; padding:10px 16px; border-radius:16px; background:var(--premium-surface); border:1px solid var(--line); transition:background-color 200ms, border-color 200ms; }
 .historyRow:hover { border-color:var(--line-strong); background:var(--surface-sunken); }
 .historyVerdict { font-size:17px; font-weight:800; letter-spacing:-.03em; color:var(--text-strong); }
 [data-verdict="buy"] > .historyVerdict { color:var(--up); }
@@ -131,6 +137,8 @@
 [data-verdict="hold"] > .historyVerdict { color:var(--primary-ink); }
 .historyFocus { font-size:14px; font-weight:600; color:var(--text-body); }
 .historyDate { font-size:13px; color:var(--text-muted); }
+.historyAuthor { display:flex; align-items:center; gap:7px; min-width:0; font-size:13px; font-weight:600; color:var(--text-body); }
+.historyAuthor > span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:12em; }
 .historyTags { display:flex; gap:6px; font-family:var(--font-mono); font-size:11.5px; color:var(--text-muted); }
 .historyTags b { font-family:var(--font-sans); padding:2px 8px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-weight:650; }
 
@@ -156,7 +164,7 @@
   .latest { margin-left:0; }
   .identityLinks { margin-left:0; width:100%; }
   .historyRow { grid-template-columns:44px minmax(0,1fr) auto; gap:4px 12px; }
-  .historyFocus,.historyDate { grid-column:2 / -1; }
+  .historyFocus,.historyDate,.historyAuthor { grid-column:2 / -1; }
   .historyTags { grid-column:3; grid-row:1; }
   .cta { flex-wrap:wrap; }
   .cta > :last-child { width:100%; }
@@ -168,4 +176,53 @@
   .stageLine { animation:none; clip-path:none; }
   .stageHead,.stageLogo,.stageHint,.programTitle,.program li,.program li::before,.stageFoot,.pips i,.today { animation:none; }
   .goLabel > span,.goIcon svg { transition:none; }
+}
+
+/* ---- Rapor zaman çizelgesi (ReportTimeline.tsx) ----
+   Düğümler eşit aralıklı, aradaki süre künyede. Dar ekranda iz yatay kayar
+   (kaydırma saklanmaz); açılışta en yeni sağda görünür. Gelecek düğüm kesik
+   kenarlı: henüz olmayan bir şeyin yer tutucusu (kenarlık yalnız orada). */
+.timeline { min-width:0; }
+.track { position:relative; display:flex; align-items:stretch; gap:0; overflow-x:auto; padding:2px 16px 14px; scrollbar-width:thin; overscroll-behavior-x:contain; }
+.track:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; border-radius:12px; }
+.tlStep { display:flex; align-items:stretch; flex:none; animation:stage-in 560ms var(--ease-brand) calc(var(--i,0) * 60ms) both; }
+.tlGap { position:relative; display:grid; place-items:end center; align-self:center; min-width:68px; padding:0 8px 8px; font-size:11.5px; font-weight:600; color:var(--text-muted); white-space:nowrap; font-variant-numeric:tabular-nums; }
+.tlGap::after { content:""; position:absolute; left:6px; right:6px; bottom:0; height:2px; border-radius:999px; background:var(--line-soft); }
+.tlNode { position:relative; display:grid; align-content:start; gap:8px; min-width:144px; padding:12px 14px; border-radius:16px; background:var(--surface-sunken); transition:background-color 200ms; overflow:hidden; }
+.tlNode::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--primary); scale:0 1; transform-origin:left; transition:scale 420ms var(--ease-brand); }
+.tlNode:hover { background:var(--premium-surface); }
+.tlNode[aria-current="true"]::before { scale:1 1; }
+.tlNode:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.tlWhen { display:flex; align-items:baseline; gap:8px; }
+.tlWhen b { font-size:18px; font-weight:750; letter-spacing:-.02em; color:var(--text-strong); }
+.tlWhen small { font-size:12px; color:var(--text-muted); white-space:nowrap; }
+.tlVerdict { display:flex; align-items:center; gap:8px; }
+.tlVerdict b { font-size:14px; font-weight:800; letter-spacing:-.02em; color:var(--text-strong); }
+[data-verdict="buy"] .tlVerdict b { color:var(--up); }
+[data-verdict="sell"] .tlVerdict b { color:var(--down); }
+[data-verdict="hold"] .tlVerdict b { color:var(--primary-ink); }
+.tlAuthor { display:flex; align-items:center; gap:7px; min-width:0; font-size:12.5px; font-weight:600; color:var(--text-body); }
+.tlAuthor > span:not(.tlAvatar) { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:9em; }
+.tlAuthor i { font-style:normal; padding:1px 7px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:11px; font-weight:650; }
+.tlAvatar { width:22px; height:22px; border-radius:50%; font-size:9.5px; }
+.tlNow { display:grid; align-content:center; justify-items:center; gap:4px; min-width:84px; padding:8px 4px; font-size:13px; color:var(--text-strong); }
+.tlNow b { font-weight:750; }
+.tlNow small { font-size:12px; font-weight:650; color:var(--primary-ink); white-space:nowrap; }
+.tlDot { width:10px; height:10px; border-radius:50%; background:var(--text-strong); }
+.tlNow[data-ready] .tlDot { background:var(--primary); }
+.tlNext { display:grid; align-content:center; gap:4px; min-width:150px; padding:12px 14px; border-radius:16px; border:1.5px dashed var(--line-strong); }
+.tlNext small { font-size:12px; font-weight:650; color:var(--text-muted); white-space:nowrap; }
+.tlNext b { font-size:16px; font-weight:750; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
+.tlMore { display:flex; align-items:center; flex:none; padding-right:12px; }
+.tlMore a { display:inline-flex; align-items:center; min-height:44px; padding:0 14px; border-radius:999px; background:var(--surface-sunken); font-size:13px; font-weight:650; color:var(--text-body); white-space:nowrap; }
+.tlMore a:hover { color:var(--text-strong); }
+.tlEmpty { padding:0 20px 16px; font-size:14px; color:var(--text-muted); }
+.tlNote { margin:0 16px; padding:12px 4px 16px; border-top:1px solid var(--line); font-size:13px; line-height:1.55; color:var(--text-muted); }
+@media(max-width:767px) {
+  .tlNode,.tlNext { min-width:136px; }
+  .tlGap { min-width:64px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tlStep { animation:none; }
+  .tlNode::before { transition:none; }
 }
