@@ -3,7 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { getHolidays, getStatus } from "./data";
 import { etParts, prevTradingDay } from "./market-hours";
-import { getQuotes, getChartBarsMulti } from "./providers";
+import { getLiveQuotes, getChartBarsMulti } from "./providers";
 import { getCompanyNews } from "./providers/finnhub";
 import { loadScreen } from "./screening-data";
 import { completedBars, computeSnapshot, type TechnicalSnapshot } from "./technical";
@@ -51,7 +51,7 @@ const SYSTEM_PROMPT = `You write source-grounded research notes on US-listed sto
 <inputs>
 The user message is one JSON object built by the application:
 - request: symbol, company, focus ("technical" = 1–4 weeks, "selection" = 3–6 months, see <focus>), language ("tr" or "en"), generatedAt (UTC) and marketSession.
-- quote: price (USD), tradedAt, source and realtime (false = delayed feed).
+- quote: the price fetched at generation time, bypassing every cache: price (USD), tradedAt, ageSeconds (how old that trade was when the report started), session (pre-market, regular, after-hours or closed), source and realtime (false = delayed feed). live=true means the regular session is open and this is the real-time price of the moment: technical.price equals it, so read the distance to every level, the position against the moving averages and the day's move against this price, not against the last completed candle (that candle is the previous session). When live=false, the price is the last trade (extended hours or the close); say so where it changes the reading.
 - pricePath: from the same completed daily candles. returnsPct gives close-to-close returns over 1 week (w1), 1 month (m1), 3 months (m3) and 6 months (m6); range3m is the 3-month high/low band and the last close's distance from each in percent; recentSessions lists the last 10 sessions oldest first (date, close in USD, changePct, volume in shares). Use it to judge direction, pace and whether a move came on rising volume.
 - technical: computed by the application from completed daily candles; lastSession is an ET date. price, prevClose, sma*, atr14, high52, low52, pivots (p, r1, r2, s1, s2), swingHighs and swingLows are USD; changePct is percent; rsi14 is 0–100; macd.histogram's sign is momentum direction and macd.crossSessions is sessions since it last flipped; cross is a 50/200-day crossover within the last 30 sessions; avgVolume20, lastVolume and todayVolume are shares.
 - fundamentals: provider-cached reported financials, not live statements. Growth, margin, return, upside and buy-share fields are percent; currentRatio and debtToEquity are ratios; marketCap, cash and freeCashFlow are USD; insiderMspr is −100..100; analysisScore is the site's last earnings-review score (0–100); earningsInDays is days until the next scheduled earnings report; forwardPE is a ratio; null means unavailable.
@@ -107,15 +107,20 @@ export async function generateAnalysis(symbol: string, horizon: "short" | "mediu
   const end = status.etDate;
   const start = new Date(`${end}T12:00:00Z`);
   start.setUTCDate(start.getUTCDate() - 7);
+  // Fiyat ÖNBELLEKSİZ ve o an: rapor kalıcı bir belge, fiyat metne geçiyor (getLiveQuotes).
   const [quotes, bars, screen, news] = await Promise.all([
-    getQuotes([symbol], status),
+    getLiveQuotes([symbol], status),
     getChartBarsMulti([symbol], "1Y", status, { allowCache: false, fresh: true }),
     loadScreen(symbol, locale),
     getCompanyNews(symbol, start.toISOString().slice(0, 10), end, { fresh: true }),
   ]);
   const quote = quotes.ok && !quotes.stale ? quotes.data[symbol] : null;
   if (!quote?.tradedAt || !bars[symbol]?.length || !screen) throw new Error("data-unavailable");
-  if (status.session === "regular" && Date.now() - new Date(quote.tradedAt).getTime() > 30 * 60_000) throw new Error("data-unavailable");
+  const quoteAge = Date.now() - new Date(quote.tradedAt).getTime();
+  // Seans açıkken: gerçek zamanlı fiyat en çok 5 dakikalık olabilir (IEX'te seyrek işlem gören hisse),
+  // gecikmeli besleme (SIP, 15 dk geriden) en çok 30. Daha eskisi "şu anki fiyat" diye yazılamaz.
+  if (status.session === "regular" && quoteAge > (quote.realtime ? 5 : 30) * 60_000) throw new Error("data-unavailable");
+  const live = status.session === "regular" && !!quote.realtime;
   const snapshot = computeSnapshot(bars[symbol], quote, status, new Date());
   if (!snapshot || snapshot.sessions < 35) throw new Error("data-unavailable");
   const expectedSession = status.tradingToday && (status.session === "pre-market" || status.session === "regular")
@@ -148,7 +153,7 @@ export async function generateAnalysis(symbol: string, horizon: "short" | "mediu
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: JSON.stringify({
       request: { symbol, company: screen.name, focus: FOCUS_OF[horizon], language: locale, generatedAt: new Date().toISOString(), marketSession: status.session },
-      quote: { price: quote.price, tradedAt: quote.tradedAt, source: quoteSource, realtime: !!quote.realtime },
+      quote: { price: quote.price, tradedAt: quote.tradedAt, ageSeconds: Math.max(0, Math.round(quoteAge / 1000)), session: status.session, live, source: quoteSource, realtime: !!quote.realtime },
       pricePath: pathForModel,
       technical: snapshot,
       fundamentals,

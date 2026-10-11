@@ -329,8 +329,13 @@ async function overlayRealtime(
   pack: ProviderOk<Record<string, Quote>>,
   status: MarketStatus,
   ttl: number,
+  fresh = false,
 ): Promise<{ quotes: Record<string, Quote>; live: number }> {
   if (status.session !== "regular") return { quotes: pack.data, live: 0 };
+  if (fresh) {
+    const iex = await alpaca.getLatestIexBars(Object.keys(pack.data), ttl, { fresh: true });
+    return iex.ok ? mergeRealtime(pack.data, iex.data, Date.now()) : { quotes: pack.data, live: 0 };
+  }
   /* TAZELİK GERÇEK "ŞİMDİ"YE GÖRE. Yanıtın kendi saatine (`fetchedAt`)
      göre ölçülseydi Next'in önbelleğinden gelen on dakikalık bir yanıt
      kendi içinde "taze" görünür ve künye "Real-Time" derdi. Önbellekteki
@@ -396,13 +401,14 @@ export function mergeRealtime(
 async function fetchQuotes(
   symbolList: string[],
   status: MarketStatus,
+  opts: { fresh?: boolean } = {},
 ): Promise<ProviderResult<Record<string, Quote>>> {
   if (symbolList.length === 0) return ok({}, "alpaca");
 
   const unique = [...new Set(symbolList)];
   const ttl = quoteTtlSeconds(status);
 
-  let primary = await alpaca.getSnapshots(unique, ttl);
+  let primary = await alpaca.getSnapshots(unique, ttl, opts.fresh ? { fresh: true } : {});
 
   /* PAKET GÜNCEL DEĞİLSE BİR KEZ ÖNBELLEKSİZ TEKRARLANIR — gerekçesi
      `packCurrent` üzerinde. */
@@ -441,7 +447,7 @@ async function fetchQuotes(
     /* MELEZ: güncel pakette fiyat gerçek zamanlıya çekiliyor (gerekçe ve
        ölçüm `overlayRealtime` üzerinde). Önbelleğe yazılan da bu hâl. */
     if (guncel) {
-      const { quotes, live } = await overlayRealtime(primary, status, ttl);
+      const { quotes, live } = await overlayRealtime(primary, status, ttl, opts.fresh);
       if (live > 0) {
         await persistQuotes(Object.values(quotes));
         const source = live === Object.keys(quotes).length ? "alpaca-live" : "alpaca-mixed";
@@ -537,6 +543,26 @@ export async function getQuotes(
 ): Promise<ProviderResult<Record<string, Quote>>> {
   const unique = [...new Set(symbolList)].sort();
   return quotesForKey(unique.join(","), status);
+}
+
+/**
+ * O ANIN KOTASYONU — hiçbir önbellekten geçmeden (11 Ekim).
+ *
+ * Claude analizi kalıcı bir belge yazıyor ve fiyat metne geçiyor (CLAUDE.md
+ * → Veri dürüstlüğü 4: YAZMA katmanı bayat veri kullanmaz). `getQuotes`
+ * ekran içindir: 15 saniyelik paylaşımlı önbellek ve istek içi `cache()`
+ * ondan geçen her şeyi birkaç saniye geriden verebiliyor; seans açıkken
+ * rapor "şu anki fiyata göre" yazılıyorsa o birkaç saniye bile gereksiz.
+ * Burada anlık görüntü de gerçek zamanlı IEX katmanı da önbelleksiz
+ * soruluyor. Seans dışında (ön/akşam seansı ya da kapalı) aynı yol son işlemi
+ * verir. İstek içi önbellek yok: her çağrı sağlayıcıya gider — yalnız
+ * rapor üretimi gibi seyrek yazma yolları için.
+ */
+export async function getLiveQuotes(
+  symbolList: string[],
+  status: MarketStatus,
+): Promise<ProviderResult<Record<string, Quote>>> {
+  return fetchQuotes([...new Set(symbolList)], status, { fresh: true });
 }
 
 /**
