@@ -386,9 +386,11 @@ export function AppShell({
                  başladığında (tıklamadan 100-300 ms önce) — geçiş yine anlık. */
               prefetchOnIntent
               aria-current={active ? "page" : undefined}
+              /* Etiket vurgusu `.tab-bar a > span` (globals.css → "Alt sekme çubuğu"):
+                 ağırlık ve renk orada; burada yalnız yerleşim. */
               className={cn(
-                "flex flex-1 flex-col items-center gap-[5px] px-1 pb-2.5 pt-3 text-nano tracking-[0.03em] transition-colors",
-                active ? "font-semibold text-primary" : "text-muted",
+                "flex flex-1 flex-col items-center gap-[5px] px-1 pb-2.5 pt-3 transition-colors",
+                active ? "text-primary" : "text-body",
               )}
             >
               {/* Seçili sekmenin ikonu küçük bir zıplamayla geliyor ve

@@ -1797,6 +1797,19 @@ html.theme-switching::view-transition-new(root) {
    `aria-current` değişince yeniden eşleşiyor.
    -------------------------------------------------------------------------- */
 .tab-bar a { position:relative; }
+/* ETİKET VURUCU, TEK FONTLA (11 Ekim, sahibinin isteği: "fontu beğenmedim,
+   vurucu olsun"). Etiketler 12 piksel, 400 ağırlık, +0,03em açık aralık ve
+   soluk griydi: telefonda ince, dağınık, sistem yazısı gibi okunuyordu.
+   Yeni bir aile eklenmedi (CLAUDE.md → tek font): Schibsted'in kendi kalın
+   ucu. 12,5 piksel, 640 ağırlık, hafif sıkı aralık, gövde rengi; seçili
+   sekme 820'ye ve mavi rengine akar — aile değişken olduğu için ağırlık
+   geçişi kayarak oynuyor, sıçramıyor. Dokununca sekme bir an içeri basılır. */
+.tab-bar a > span {
+  font-size:12.5px; line-height:1.15; font-weight:640; letter-spacing:-.012em;
+}
+.tab-bar a[aria-current="page"] > span { font-weight:820; letter-spacing:-.02em; }
+.tab-bar a:active > .tab-icon, .tab-bar a:active > span { scale:.94; }
+.tab-bar a > .tab-icon, .tab-bar a > span { transition:scale 160ms var(--ease-brand), font-weight 240ms var(--ease-brand), color 200ms var(--ease-brand); }
 .tab-bar a[aria-current="page"]::before {
   content:""; position:absolute; top:0; left:50%; width:18px; height:3px;
   margin-left:-9px; border-radius:0 0 3px 3px; background:var(--primary);
@@ -1848,6 +1861,8 @@ html.theme-switching::view-transition-new(root) {
   .tab-bar a[aria-current="page"]::before,
   .tab-bar a[aria-current="page"] .tab-icon,
   .check-pop { animation:none; }
+  .tab-bar a > .tab-icon, .tab-bar a > span { transition:none; }
+  .tab-bar a:active > .tab-icon, .tab-bar a:active > span { scale:none; }
   details::details-content { transition:none; }
 }
 
