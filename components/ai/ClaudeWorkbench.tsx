@@ -40,10 +40,12 @@ function sparkPath(bars: FilmBar[]) {
  * sonuç gelince perde açılır ve rapor sekmesine gidilir (sunucu raporu
  * veritabanından çizer). Adrese `yeni=1` eklenir: kapak filmin selinden açılır.
  */
-export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGenerate, signedIn, remaining, limit, inProgress, next, nextLabel, now: serverNow, latest, bars, headlines }: {
+export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGenerate, signedIn, remaining, limit, inProgress, next, nextLabel, now: serverNow, edition, latest, bars, headlines }: {
   symbol: string; name: string; logoUrl: string | null; locale: Locale; t: Dictionary["aiAnalysis"]; focus: AnalysisFocus;
   canGenerate: boolean; signedIn: boolean; remaining: number | null; limit: number | null; inProgress: boolean;
-  next: NextReport | null; nextLabel: string | null; now: string; latest: LatestReport | null; bars: FilmBar[]; headlines: string[];
+  next: NextReport | null; nextLabel: string | null; now: string;
+  /** Sitenin teknik analizinin sıradaki yayını ("15:45 TR"); yalnız teknik odakta ve kapsamdaki hissede. */
+  edition: string | null; latest: LatestReport | null; bars: FilmBar[]; headlines: string[];
 }) {
   const router = useRouter();
   const reduced = useMotionPreference();
@@ -181,6 +183,11 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGe
         {next.reason === "market-closed"
           ? T.closedHint.replace("{time}", nextLabel ?? "")
           : T.waitHint.replace("{ago}", span(now - new Date(next.lastAt).getTime())).replace("{gap}", span(next.gapMinutes * 60_000)).replace("{left}", span(new Date(next.at).getTime() - now))}
+      </p>}
+      {/* Günde üç teknik yayın (11 Ekim, sahibinin isteği): yeni rapor istemeden önce beklenebilir. */}
+      {canGenerate && edition && <p className={styles.ctaEdition} data-stage>
+        <svg viewBox="0 0 24 24" aria-hidden><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></svg>
+        <span>{t.cta.editions.split("{time}")[0]}<b className="whitespace-nowrap font-semibold text-strong">{edition}</b>{t.cta.editions.split("{time}")[1]}</span>
       </p>}
       {inProgress && <p role="status" className={styles.stageNote}>{t.pending}</p>}
       {error && <p role="alert" className={styles.error}>{error}</p>}

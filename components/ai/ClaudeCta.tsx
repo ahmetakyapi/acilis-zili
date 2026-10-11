@@ -8,6 +8,8 @@ import { AvatarTile } from "@/components/brand/AvatarIcon";
 import { ButtonLink, Panel, PanelHeader } from "@/components/ui/primitives";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { initialsOf } from "@/lib/avatars";
+import { getHolidays } from "@/lib/data";
+import { editionClock, isTechnicalSymbol, nextEdition } from "@/lib/technical";
 import styles from "./Claude.module.css";
 
 const odakOf = (focus: AnalysisFocus) => (focus === "technical" ? "teknik" : "secim");
@@ -23,35 +25,56 @@ async function claudeState(symbol: string) {
     viewerId ? hasAnalysisAccess(viewerId).catch(() => false) : Promise.resolve(false),
   ]);
   const latestOf = (focus: AnalysisFocus) => reports.find(r => FOCUS_OF[r.horizon] === focus) ?? null;
-  return { canGenerate, latestOf };
+  return { canGenerate, signedIn: viewerId !== null, latestOf };
+}
+
+/** Yayın notu: saat ("15:45 TR") satır sonunda bölünmez ve kalın (390'da "15:45" / "TR" diye bölünüyordu). */
+export function EditionText({ text, time }: { text: string; time: string }) {
+  const [before, after = ""] = text.split("{time}");
+  return <span>{before}<b className="whitespace-nowrap font-semibold text-strong">{time}</b>{after}</span>;
+}
+
+/** Teknik odakta ve yazılı teknik analizi olan hissede sıradaki yayın: Claude'dan önce onu beklemek mümkün. */
+export async function editionNote(symbol: string, locale: "tr" | "en") {
+  if (!isTechnicalSymbol(symbol)) return null;
+  const next = nextEdition(new Date(), await getHolidays().catch(() => []));
+  return next ? editionClock(next.at, locale) : null;
 }
 
 /**
- * Claude girişi: PANEL, sayfanın en üstünde değil SAYFANIN KENDİ OKUMASINDAN
- * SONRA (11 Ekim, sahibinin isteği: "en üstte çıkmak yerine mantıklı yere").
- * Claude ikinci görüştür; okuyucu önce sitenin teknik analizini ya da seçim
- * raporunu okur, sonra karşılaştırır. Teknik sayfada izleme listesinin
- * ardından, Hisse Seçimi'nde "sırada ne var"ın ardından, şirket sayfasında
- * Değerleme bölümünün sonunda (iki odak birden).
+ * Şirket Analizi paneli (araç Claude). YER, 11 Ekim'de iki kez değişti:
+ * önce sayfanın en üstündeydi ("okumadan ikinci görüş"), sonra okumanın
+ * sonuna indi; telefonda 7.000. piksele düştü (teknik sayfada 10.641'in
+ * 6.876'sı, ölçüldü) ve sahibi "çok aşağıda, üstte bir yerde olmalı" dedi.
+ * Artık sayfanın KAPAĞININ hemen altında: önce sitenin kendi özeti
+ * (görüş, plan ya da kural kontrolü), hemen ardından Claude — üstte ama
+ * okumanın önünde değil.
  *
  * Her odak bir satır: son raporun puanı ve kararı, zamanı, oluşturanı;
- * sağda eylemler. Hak varsa "Yeni Analiz Oluştur" birincil eylemdir —
- * şirket sayfasından da üretilebilsin diye. Rapor yoksa ve hak yoksa hiç
- * çizilmez (oturum açmamış okuyucuya boş bir vitrin göstermeyelim).
+ * sağda eylemler. Panel misafire de basılır; misafir "Claude ile Analiz
+ * Et"e basınca Claude sayfası girişi ister. Hakkı olmayan oturumlu
+ * okuyucuya rapor yoksa panel çizilmez.
+ *
+ * Teknik odakta, sitenin yazılı teknik analizi olan hissede panel
+ * sıradaki yayını söyler (günde üç kez, `nextEdition`): okuyucu yeni bir
+ * Claude raporu istemek yerine onu bekleyebilir (sahibinin isteği).
  */
 export async function ClaudeCta({ symbol, locale, focus }: { symbol: string; locale: "tr" | "en"; focus: AnalysisFocus | "both" }) {
-  const { canGenerate, latestOf } = await claudeState(symbol);
+  const { canGenerate, signedIn, latestOf } = await claudeState(symbol);
   const focuses: AnalysisFocus[] = focus === "both" ? ["technical", "selection"] : [focus];
-  if (!canGenerate && focuses.every(f => !latestOf(f))) return null;
+  // Misafire de: düğme Claude sayfasına, o sayfa girişi ister. Hakkı olmayan oturumlu okuyucuya boş vitrin yok.
+  const canAsk = canGenerate || !signedIn;
+  if (!canAsk && focuses.every(f => !latestOf(f))) return null;
   const t = getDictionary(locale).aiAnalysis;
+  const edition = focuses.includes("technical") ? await editionNote(symbol, locale) : null;
   const date = (iso: string) => new Date(iso).toLocaleString(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: "Europe/Istanbul", dateStyle: "medium", timeStyle: "short" });
 
   return <Panel className={styles.ctaPanel}>
-    <PanelHeader title={t.cta.title} meta={focus === "both" ? undefined : focus === "technical" ? t.focus.technical : t.focus.selection} />
+    <PanelHeader title={t.cta.title} meta={focus === "both" ? t.cta.tool : `${focus === "technical" ? t.focus.technical : t.focus.selection} · ${t.cta.tool}`} />
     <ul className={styles.ctaRows}>
       {focuses.map(f => {
         const latest = latestOf(f);
-        if (!latest && !canGenerate) return null;
+        if (!latest && !canAsk) return null;
         return <li key={f} className={styles.ctaRow} data-verdict={latest?.verdict}>
           {latest && latest.score !== null
             ? <ScoreRing score={latest.score} verdict={latest.verdict === "insufficient" ? "hold" : latest.verdict} size={48} />
@@ -71,11 +94,15 @@ export async function ClaudeCta({ symbol, locale, focus }: { symbol: string; loc
           </div>
           <div className={styles.ctaActions}>
             {latest && <ButtonLink href={claudeHref(symbol, f, "rapor")} variant="ghost" size="sm">{t.cta.open}</ButtonLink>}
-            {canGenerate && <ButtonLink href={claudeHref(symbol, f, "yeni")} variant="primary" size="sm">{latest ? t.cta.newAnalysis : t.cta.create}</ButtonLink>}
+            {canAsk && <ButtonLink href={claudeHref(symbol, f, "yeni")} variant="primary" size="sm">{latest ? t.cta.newAnalysis : t.cta.create}</ButtonLink>}
           </div>
         </li>;
       })}
     </ul>
+    {edition && <p className={styles.ctaEdition}>
+      <svg viewBox="0 0 24 24" aria-hidden><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></svg>
+      <EditionText text={t.cta.editions} time={edition} />
+    </p>}
     <p className={styles.ctaHint}>{t.cta.hint}</p>
   </Panel>;
 }
@@ -91,8 +118,10 @@ export async function ClaudeCta({ symbol, locale, focus }: { symbol: string; loc
  * ve yedeği tek ölçüyle tutuluyor (stock.module.css → .technicalSkeleton).
  * Satır içi kullanımda hak ve rapor yoksa hiç basılmaz.
  */
-export async function ClaudeAction({ symbol, locale, focus, className, block = false }: {
+export async function ClaudeAction({ symbol, locale, focus, className, block = false, label }: {
   symbol: string; locale: "tr" | "en"; focus: AnalysisFocus; className?: string; block?: boolean;
+  /** Yeni analiz düğmesinin adı ("Bu Şirketi Analiz Et"); verilmezse "Claude ile Analiz Et". */
+  label?: string;
 }) {
   const { canGenerate, latestOf } = await claudeState(symbol);
   const latest = latestOf(focus);
@@ -102,7 +131,41 @@ export async function ClaudeAction({ symbol, locale, focus, className, block = f
   return <Link href={claudeHref(symbol, focus, openReport ? "rapor" : "yeni")}
     className={[styles.ctaAction, block && styles.ctaActionBlock, className].filter(Boolean).join(" ")}>
     <svg className={styles.ctaSpark} viewBox="0 0 24 24" aria-hidden><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.5 2.5M15.2 15.2l2.5 2.5M6.3 17.7l2.5-2.5M15.2 8.8l2.5-2.5" /></svg>
-    <span className={styles.ctaActionText}>{openReport ? t.cta.actionOpen : t.cta.create}</span>
+    <span className={styles.ctaActionText}>{openReport ? t.cta.actionOpen : label ?? t.cta.create}</span>
     <svg className={styles.ctaArrow} viewBox="0 0 24 24" aria-hidden><path d="M5 12h13M13 6l6 6-6 6" /></svg>
   </Link>;
+}
+
+/**
+ * Şirket sayfasında, sitenin yazılı teknik analizi OLMAYAN hissede teknik
+ * kartın yerine (11 Ekim, sahibinin isteği: "teknik analiz kartı yoksa
+ * analiz kartı çıkmaz; bu şirketi analiz et gibi bir kart"). Aynı yer,
+ * aynı ağırlık: profil kartının altı. Varsa son Claude raporunun özeti,
+ * yoksa ne yapacağını söyleyen tek cümle; dipte tam genişlik düğme.
+ *
+ * Her okuyucuya basılır (misafire de; Claude sayfası giriş ister) ki kartın
+ * boyu sabit kalsın ve yedeği tek ölçüyle tutulsun (.claudeCardSkeleton).
+ */
+export async function ClaudeCompanyCard({ symbol, locale }: { symbol: string; locale: "tr" | "en" }) {
+  const { latestOf } = await claudeState(symbol);
+  const t = getDictionary(locale).aiAnalysis;
+  const latest = latestOf("technical") ?? latestOf("selection");
+  const date = (iso: string) => new Date(iso).toLocaleString(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: "Europe/Istanbul", dateStyle: "medium", timeStyle: "short" });
+  return <section className={styles.companyCard} data-verdict={latest?.verdict}>
+    <div className={styles.companyHead}>
+      {/* `text-read`: büyük başlığın üst im kaydırması (globals.css) bu kartta gerekmiyor. */}
+      <h2 className="text-read font-bold">{t.cta.title}</h2>
+      <span className={styles.companyTool}>{t.cta.tool}</span>
+    </div>
+    {latest ? <div className={styles.companyLatest}>
+      {latest.score !== null
+        ? <ScoreRing score={latest.score} verdict={latest.verdict === "insufficient" ? "hold" : latest.verdict} size={40} />
+        : <span className={styles.ctaRing} aria-hidden />}
+      <span className={styles.ctaBody}>
+        <span className={styles.companyVerdict}>{t.verdicts[latest.verdict]}</span>
+        <span className={styles.ctaMeta}>{FOCUS_OF[latest.horizon] === "technical" ? t.focus.technical : t.focus.selection} · {date(latest.generatedAt)} · TR</span>
+      </span>
+    </div> : <p className={styles.companyHint}>{t.cta.companyHint}</p>}
+    <ClaudeAction symbol={symbol} locale={locale} focus={latest ? FOCUS_OF[latest.horizon] : "technical"} block label={t.cta.analyzeCompany} />
+  </section>;
 }

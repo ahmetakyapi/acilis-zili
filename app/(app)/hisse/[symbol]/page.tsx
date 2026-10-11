@@ -52,7 +52,7 @@ import { ExpectedMovePanel } from "./_panels/ExpectedMovePanel";
 import { AnalystTrendPanel } from "./_panels/AnalystTrendPanel";
 import { ScorecardPanel } from "./_panels/ScorecardPanel";
 import { TechnicalSnapshotPanel } from "./_panels/TechnicalSnapshotPanel";
-import { ClaudeCta } from "@/components/ai/ClaudeCta";
+import { ClaudeCompanyCard, ClaudeCta } from "@/components/ai/ClaudeCta";
 import { InvestorsPanel } from "./_panels/InvestorsPanel";
 import { StockSummary, metaExtras, summaryFacts } from "./_panels/StockSummary";
 import { StockJsonLd } from "./_panels/StockJsonLd";
@@ -437,10 +437,14 @@ export default async function StockPage(
               yalnızca kapsamdaki sembolde basıldığı için yedek de öyle. */}
           <Suspense
             fallback={
-              isTechnicalSymbol(symbol) ? <Skeleton className={styles.technicalSkeleton} /> : null
+              <Skeleton className={isTechnicalSymbol(symbol) ? styles.technicalSkeleton : styles.claudeCardSkeleton} />
             }
           >
-            <StockTechnicalCard symbol={symbol} locale={locale} t={t} />
+            {/* Yazılı teknik analizi olmayan hissede aynı yerde Şirket Analizi
+                kartı (Claude; 11 Ekim, sahibinin isteği). */}
+            {isTechnicalSymbol(symbol)
+              ? <StockTechnicalCard symbol={symbol} locale={locale} t={t} />
+              : <ClaudeCompanyCard symbol={symbol} locale={locale} />}
           </Suspense>
         </div>
       </div>

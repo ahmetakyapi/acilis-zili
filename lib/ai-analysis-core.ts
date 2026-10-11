@@ -4,7 +4,8 @@ import type { Bar } from "./providers/types";
 
 /**
  * İki ayrı rapor: vade alanı ODAĞI da taşır (veritabanında `horizon`, yeni sütun yok).
- * `short` = Teknik Odak (1–4 hafta: fiyat, seviyeler, momentum),
+ * `short` = Teknik Odak (1–2 hafta, 5–10 seans: fiyat, yakın seviyeler,
+ * momentum; 11 Ekim'e kadar 1–4 hafta idi, sahibi "çok uzun" dedi),
  * `medium` = Hisse Seçimi Odağı (3–6 ay: iş kalitesi, büyüme, değerleme; teknik yalnız zamanlama).
  */
 export const FOCUS_OF = { short: "technical", medium: "selection" } as const;
@@ -181,7 +182,7 @@ export function triggerMath(price: number, bull: number | null | undefined, bear
 /**
  * YENİ RAPOR İÇİN ÖNERİLEN BEKLEME (dk, 11 Ekim). Engel değil, öneri: düğme
  * her zaman çalışır, adı "Yine de…" olur.
- * - Teknik odak (1–4 hafta) fiyatın yönünü okur; seans içinde fiyat saat
+ * - Teknik odak (1–2 hafta) fiyatın yönünü okur; seans içinde fiyat saat
  *   saat değişir, bir saatten kısa arayla iki rapor aynı veriyi yazar.
  * - Hisse seçimi (3–6 ay) bilanço, oranlar ve 7 günlük haberle çalışır; bu
  *   veri gün gün değişir.

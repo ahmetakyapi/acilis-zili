@@ -9,6 +9,7 @@ import { ScoreRing } from "@/components/earnings/ScoreRing";
 import { InkCanvas } from "@/components/ink/InkCanvas";
 import { AnalysisReport } from "@/components/ai/AnalysisReport";
 import { ClaudeWorkbench } from "@/components/ai/ClaudeWorkbench";
+import { editionNote } from "@/components/ai/ClaudeCta";
 import { ReportTimeline, type TimelineItem } from "@/components/ai/ReportTimeline";
 import { initialsOf } from "@/lib/avatars";
 import { AvatarTile } from "@/components/brand/AvatarIcon";
@@ -73,6 +74,8 @@ export default async function ClaudePage(props: PageProps<"/claude/[symbol]">) {
   };
 
   const status = await getStatus();
+  // Teknik odakta, sitenin yazılı teknik analizi olan hissede sıradaki yayın (günde üç kez): Claude'dan önce beklenebilir.
+  const edition = tab === "yeni" && focus === "technical" ? await editionNote(symbol, locale) : null;
   const nowAt = new Date();
   // Önerilen sonraki rapor: son rapordan bekleme (teknik 1 sa, seçim 1 gün); piyasa
   // o rapordan beri kapalıysa açılış zili. Fiyat seans sonu + gecikmeye kadar akar (`sessionEnd`).
@@ -158,7 +161,7 @@ export default async function ClaudePage(props: PageProps<"/claude/[symbol]">) {
       canGenerate={!!access} signedIn={!!viewerId} remaining={access?.remaining ?? null} limit={access?.dailyLimit ?? null}
       latest={ofFocus[0] ? { href: href({ tab: "rapor", id: ofFocus[0].id }), verdict: ofFocus[0].verdict, score: ofFocus[0].score, when: date(ofFocus[0].generatedAt) } : null}
       inProgress={!!access?.lockId && !!access?.lockUntil && access.lockUntil > new Date()}
-      next={next} nextLabel={next ? stamp(next.at) : null} now={nowAt.toISOString()}
+      next={next} nextLabel={next ? stamp(next.at) : null} now={nowAt.toISOString()} edition={edition}
       bars={film.bars} headlines={film.headlines} />}
     {tab === "yeni" && ofFocus.length > 0 && timeline}
 

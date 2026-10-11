@@ -441,6 +441,13 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
         </div>
       </header>
 
+      {/* ---- Şirket Analizi (Claude) KAPAĞIN HEMEN ALTINDA ----
+          11 Ekim'de önce sayfanın en tepesinden (kırıntının üstü) okumanın
+          sonuna indi; telefonda 10.641 piksellik sayfanın 6.876'sına düştü
+          ve sahibi "çok aşağıda" dedi. Burada: önce sitenin görüşü ve planı
+          (kapak), hemen ardından ikinci görüş ve sıradaki yayın saati. */}
+      <ClaudeCta symbol={symbol} locale={locale} focus="technical" />
+
       <SectionNav className={styles.sectionNav} label={t.technical.sectionsLabel} items={sectionItems} trackAtNav />
 
       {/* ---- Fiyat haritası ve değerlendirme ---- */}
@@ -561,13 +568,6 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           ))}
         </ul>
       </section>
-
-      {/* ---- Claude'un görüşü ----
-          Sayfanın en üstündeydi ve okuyucu sitenin analizini okumadan ikinci
-          görüşle karşılaşıyordu (11 Ekim, sahibinin isteği). Artık analizin
-          bütün okumasından (harita, görüş, göstergeler, izleme) SONRA,
-          geçmişten önce: karşılaştırma yeri burası. */}
-      <ClaudeCta symbol={symbol} locale={locale} focus="technical" />
 
       {/* ---- Görüş geçmişi ---- */}
       {history.length > 1 && (

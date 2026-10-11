@@ -118,7 +118,7 @@
 /* Çıkış: önce kimlik ve yazı yukarı kaçar, sonra perdeler; düğmenin yazısı
    kapanır, ok dairesi mürekkep damlasına döner ve kâğıda oturur. Filmin ilk
    karesi boş kâğıt: kesme okunmaz. */
-.stage[data-launching] :is(.stageHead,.stageBody,.program,.quota,.latest,.today,.stageLine) { animation:stage-out 380ms var(--ease-brand) both; }
+.stage[data-launching] :is(.stageHead,.stageBody,.program,.quota,.latest,.today,.ctaEdition,.stageLine) { animation:stage-out 380ms var(--ease-brand) both; }
 .stage[data-launching] .program { animation-delay:60ms; }
 .stage[data-launching] :is(.quota,.latest) { animation-delay:100ms; }
 @keyframes stage-out { to { opacity:0; translate:0 -18px; } }
@@ -161,11 +161,28 @@
 .ctaAuthor { display:inline-flex; align-items:center; gap:6px; font-weight:600; color:var(--text-body); }
 .ctaNone { font-size:14.5px; color:var(--text-body); }
 .ctaActions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
+/* Sıradaki teknik yayın: satırların altında sessiz bir künye satırı (kutu değil). */
+.ctaEdition { display:flex; align-items:flex-start; gap:10px; margin:14px 16px 0; padding:0 4px; font-size:13.5px; line-height:1.55; color:var(--text-body); }
+.ctaEdition[data-stage] { margin:0; padding:0; animation:stage-in 600ms var(--ease-brand) 1250ms both; }
+.ctaEdition svg { flex:none; width:18px; height:18px; margin-top:1px; fill:none; stroke:var(--primary-ink); stroke-width:2; stroke-linecap:round; }
 .ctaHint { margin:14px 16px 0; padding:12px 4px 16px; border-top:1px solid var(--line); font-size:13px; line-height:1.55; color:var(--text-muted); }
 @container (max-width: 560px) {
   .ctaRow { grid-template-columns:48px minmax(0,1fr); }
   .ctaActions { grid-column:1 / -1; display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); }
 }
+/* ---- Şirket sayfası: teknik analizi olmayan hissede Şirket Analizi kartı ----
+   Teknik kartla (Technical.module.css → .stockCard) aynı kap dili: aynı
+   kenarlık, yarıçap ve dolgu; aynı yerde onun yerine duruyor. */
+.companyCard { display:grid; gap:14px; padding:18px 20px 20px; border:1px solid var(--line); border-radius:var(--radius-panel, 22px); background:var(--premium-surface); }
+.companyHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
+.companyTool { font-size:13px; font-weight:600; color:var(--text-muted); }
+.companyLatest { display:grid; grid-template-columns:40px minmax(0,1fr); align-items:center; gap:12px; min-height:48px; }
+.companyVerdict { font-size:18px; font-weight:800; letter-spacing:-.03em; color:var(--text-strong); }
+.companyCard[data-verdict="buy"] .companyVerdict { color:var(--up); }
+.companyCard[data-verdict="sell"] .companyVerdict { color:var(--down); }
+.companyCard[data-verdict="hold"] .companyVerdict { color:var(--primary-ink); }
+.companyHint { min-height:48px; font-size:14px; line-height:1.55; color:var(--text-body); }
+
 /* Kart içi Claude düğmesi (ClaudeAction). Birincil düğmenin dili: düz mavi
    zemin, tam ad, sonda ok — tonlu hap düğme gibi okunmuyordu (11 Ekim).
    Teknik kartın tüm yüzeyini kaplayan bağlantının (::after, z-index 1)
@@ -201,7 +218,7 @@
 @media(max-width:420px) { .program ol { grid-template-columns:minmax(0,1fr); } }
 @media (prefers-reduced-motion: reduce) {
   .stageLine { animation:none; clip-path:none; }
-  .stageHead,.stageLogo,.stageHint,.programTitle,.program li,.program li::before,.stageFoot,.pips i,.today { animation:none; }
+  .stageHead,.stageLogo,.stageHint,.programTitle,.program li,.program li::before,.stageFoot,.pips i,.today,.ctaEdition[data-stage] { animation:none; }
   .goLabel > span,.goIcon svg { transition:none; }
 }
 
