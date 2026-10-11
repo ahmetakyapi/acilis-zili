@@ -7,6 +7,7 @@ import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import { MiniDial } from "@/components/screening/ScreenVisuals";
+import { SymbolPicker } from "@/components/screening/SymbolPicker";
 import styles from "@/components/screening/Screening.module.css";
 import { LogoTile, Panel, PanelHeader, PanelSkeleton } from "@/components/ui/primitives";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
@@ -51,7 +52,8 @@ const RULE_COUNT = Object.values(RULES).reduce((sum, list) => sum + list.length,
  * kuralları sitenin verileriyle uygulamak (/hisse-secimi/{sembol}).
  *
  * FORM JAVASCRIPT İSTEMİYOR: sembol GET ile buraya geliyor ve sunucu rapora
- * yönlendiriyor; istemci bileşeni yok.
+ * yönlendiriyor. Alanın kendisi istemci bileşeni (`SymbolPicker`, yazdıkça
+ * öneri) ama ilerleme katmanı: JS yoksa düz bir `sembol` girdisi.
  *
  * Hızlı bakış teknik analiz listesini puanlıyor ve Suspense içinde akıyor:
  * on iki hissenin her biri bir düzine kaynağa gidiyor, kapak ve kurallar
@@ -97,19 +99,8 @@ export default async function ScreeningPage(props: PageProps<"/hisse-secimi">) {
         <form className={styles.picker} action={withLocale("/hisse-secimi", locale)} method="get" role="search">
           <label htmlFor="screen-symbol">{S.pickLabel}</label>
           <div className={styles.pickerRow}>
-            <input
-              id="screen-symbol"
-              name="sembol"
-              type="text"
-              inputMode="text"
-              autoComplete="off"
-              autoCapitalize="characters"
-              spellCheck={false}
-              maxLength={10}
-              required
-              pattern="[A-Za-z$.\-]{1,10}"
-              placeholder={S.pickPlaceholder}
-            />
+            {/* Yazdıkça öneren combobox (istemci); JS yoksa düz sembol alanı gibi çalışır. */}
+            <SymbolPicker id="screen-symbol" labels={{ placeholder: S.pickPlaceholder, ...S.picker }} />
             <button type="submit">{S.pickAction}</button>
           </div>
           <p className={styles.pickerHint}>{S.pickHint}</p>

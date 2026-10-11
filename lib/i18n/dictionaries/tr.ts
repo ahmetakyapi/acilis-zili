@@ -2469,7 +2469,14 @@ const tr = {
     title: "Hisse Seçimi",
     description: "Bir hisseyi incelemeye değer kılan kuralları elimizdeki verilerle ölç: büyüklük, büyüme, kârlılık, sağlık, fiyat gücü ve sahiplik.",
     pickLabel: "Hisse Seç",
-    pickPlaceholder: "Örn. MU",
+    pickPlaceholder: "Sembol ya da şirket adı: MU, Nvidia…",
+    /** Sembol alanının öneri listesi (components/screening/SymbolPicker.tsx). */
+    picker: {
+      listLabel: "Önerilen Hisseler", searching: "Aranıyor",
+      noResults: "Bu aramayla eşleşen hisse yok.",
+      error: "Öneriler şu an yüklenemedi; sembolü yazıp devam edebilirsin.",
+      useTyped: "{symbol} ile Devam Et",
+    },
     pickAction: "Kuralları Uygula",
     pickHint: "Takip edilen ABD hisselerinden birini yaz; değerlendirme sitenin kendi verileriyle yapılır.",
     quickTitle: "Hızlı Bakış",

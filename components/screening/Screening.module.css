@@ -126,13 +126,35 @@
 /* ---------- Seçim ekranı ---------- */
 .picker { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; margin-top:22px; max-width:30rem; }
 .picker label { font-size:12px; font-weight:600; color:var(--text-muted); }
-.pickerRow { display:flex; gap:8px; }
+.pickerRow { position:relative; display:flex; gap:8px; }
 .pickerRow input { flex:1; min-width:0; height:46px; padding:0 14px; border:1px solid var(--line-strong); border-radius:12px; background:var(--surface-solid); color:var(--text-strong); font-size:16px; font-weight:600; letter-spacing:.02em; text-transform:uppercase; }
 .pickerRow input::placeholder { text-transform:none; letter-spacing:0; font-weight:450; color:var(--text-muted); }
 .pickerRow input:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
 .pickerRow button { flex:none; height:46px; padding:0 18px; border-radius:12px; background:var(--primary); color:var(--on-primary); font-size:14px; font-weight:650; white-space:nowrap; }
 .pickerRow button:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 .pickerHint { font-size:12.5px; line-height:1.55; color:var(--text-muted); }
+
+/* ---- Sembol önerisi (SymbolPicker): açılır katman, sitenin tek gerçek gölgesiyle ----
+   Satırlar sırayla iner; seçili satır zeminle (mavi = etkileşim), eşleşen harfler
+   kalın mürekkeple — renk değil, ağırlık. */
+/* Liste kutunun değil SATIRIN genişliğinde (giriş + düğme): kutu kadar dar listede
+   şirket adı tek harfe iniyordu (390 ölçümü). Konum kabı `.pickerRow`. */
+.combo { flex:1; min-width:0; display:flex; position:static; }
+.comboField { position:relative; flex:1; min-width:0; display:flex; }
+.comboField > input { width:100%; }
+.comboSpin { position:absolute; right:14px; top:50%; width:16px; height:16px; margin-top:-8px; border-radius:50%; border:2px solid var(--line-strong); border-top-color:var(--text-strong); animation:combo-spin 700ms linear infinite; }
+@keyframes combo-spin { to { rotate:360deg; } }
+.comboList { position:absolute; z-index:30; top:calc(100% + 8px); left:0; right:0; display:grid; gap:2px; max-height:min(380px, 60vh); overflow-y:auto; padding:6px; border-radius:16px; border:1px solid var(--line); background:var(--premium-surface); box-shadow:var(--shadow-overlay); transform-origin:top; animation:combo-open 220ms var(--ease-brand) both; }
+@keyframes combo-open { from { opacity:0; translate:0 -6px; scale:1 .97; } to { opacity:1; translate:0 0; scale:1 1; } }
+.comboOption { display:grid; grid-template-columns:auto 4.6rem minmax(0,1fr); gap:12px; align-items:center; min-height:48px; padding:6px 10px; border-radius:11px; cursor:pointer; color:var(--text-body); transition:background-color 140ms var(--ease-brand); animation:combo-row 260ms var(--ease-brand) calc(var(--i,0) * 28ms) both; }
+@keyframes combo-row { from { opacity:0; translate:0 -4px; } to { opacity:1; translate:0 0; } }
+.comboOption[data-active] { background:var(--primary-tint); }
+.comboSymbol { font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:.01em; color:var(--text-strong); }
+.comboName { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:14px; color:var(--text-muted); }
+.comboOption mark { background:none; color:var(--text-strong); font-weight:800; }
+.comboTyped { grid-column:1 / -1; font-size:14px; font-weight:650; color:var(--primary-ink); }
+.comboEmpty { padding:12px 10px; font-size:13.5px; line-height:1.5; color:var(--text-muted); }
+@media (prefers-reduced-motion: reduce) { .comboList,.comboOption { animation:none; } .comboSpin { animation-duration:1.6s; } }
 
 .weights { display:grid; gap:13px; }
 .weight { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 12px; font-size:13px; color:var(--text-body); }
