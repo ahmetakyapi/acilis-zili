@@ -18,7 +18,11 @@ import {
   NO_VALUE,
 } from "@/lib/utils";
 import { earningsWindow } from "./earnings-time";
+import { ExpectedMoveFigure } from "./ExpectedMoveFigure";
 import styles from "./depth.module.css";
+
+/** Figür için en az bu kadar ölçülmüş rapor; tek nokta bir dağılım değil. */
+const MIN_FIG_MOVES = 2;
 
 /**
  * Beklenen hareket — sonraki rapor yakınsa (sayfa karar veriyor:
@@ -51,6 +55,10 @@ export async function ExpectedMovePanel({
   const measured = data.history.filter((row) => row.movePct !== null);
   /* Satırlarda eksi bir hareket varsa ölçek işaretli (sıfır ortada);
      CompareScale'ın kuralı. Üstteki iki okuma mutlak büyüklük, işaretsiz. */
+  /* Figürün noktaları tarih sırasıyla, eskiden yeniye (kademe o sırada). */
+  const figMoves = measured
+    .flatMap((row) => (row.movePct === null ? [] : [{ date: row.date, pct: row.movePct }]))
+    .sort((a, b) => a.date.localeCompare(b.date));
   const anyDown = measured.some((row) => row.movePct! < 0);
   const scaleMax = Math.max(implied?.pct ?? 0, data.average?.avg ?? 0, ...measured.map((row) => Math.abs(row.movePct!)));
   const timingLabel = (hour: string | null) =>
@@ -63,6 +71,17 @@ export async function ExpectedMovePanel({
         meta={`${formatEtDateLong(next.date, locale)} · ${when.approx ?? when.window}`}
       />
       <div className={styles.body}>
+        {/* Ana görsel ölçülerin ÜSTÜNDE (CLAUDE.md "Ekran düzeni" 3 → 4):
+            bant ile geçmiş hareketler aynı eksende. İki ölçülmüş rapordan
+            azsa figür bir şey göstermiyor, basılmıyor. */}
+        {implied && measured.length >= MIN_FIG_MOVES && (
+          <ExpectedMoveFigure
+            band={implied.pct}
+            moves={figMoves}
+            locale={locale}
+            d={d}
+          />
+        )}
         {/* KOMPAKT (30 Eylül, sahibinin isteği). Telefonda panel 1.220
             piksel tutuyordu: iki okuma alt alta, "Gösterge Fiyat" kendi
             satırında, tek raporluk geçmiş için başlık satırlı bir tablo ve

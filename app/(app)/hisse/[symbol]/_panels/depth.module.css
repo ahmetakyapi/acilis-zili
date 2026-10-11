@@ -513,3 +513,34 @@
   ul.holderGrid { display:grid; grid-auto-flow:column; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--rows,4),auto); column-gap:24px; }
   ul.tradeGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:40px; }
 }
+
+/* BANT VE GEÇMİŞ RAPORLAR (12 Ekim) — `ExpectedMoveFigure`. İnce grafik
+   dili: kulvar `--line-soft`, sıfır `--line-strong`, bant nötr ton, renk
+   yalnız işaretten. Sunucu son kareyi basar; hareket yalnız `data-armed`
+   altında tanımlı ve `data-play` gelene dek ilk karede duraklatılmış
+   (`PlayOnView`). Sayılar bileşenin başlığındaki sekiz satırda. */
+.emFig { display:flex; flex-direction:column; gap:12px; margin:0 0 16px; }
+.emFigHead h3 { font-size:var(--text-small); font-weight:650; color:var(--text-strong); }
+.emFigHead p { margin-top:2px; font-size:12px; line-height:1.55; color:var(--text-muted); }
+.emFigPlot { --dot:9px; --row-h:14px; position:relative; height:calc(var(--rows,1) * var(--row-h) + 20px); }
+.emFigPlot::before { content:""; position:absolute; left:0; right:0; top:50%; height:1px; background:var(--line-soft); }
+.emFigBand { position:absolute; inset-block:0; border-radius:6px; background:color-mix(in srgb, var(--text-strong) 7%, transparent); box-shadow:inset 1px 0 var(--line-strong), inset -1px 0 var(--line-strong); }
+.emFigZero { position:absolute; inset-block:4px; left:50%; width:1px; background:var(--line-strong); }
+.emFigDot { position:absolute; width:var(--dot); height:var(--dot); margin-left:calc(var(--dot) / -2); border-radius:50%; top:calc(50% - var(--rows,1) * var(--row-h) / 2 + var(--row,0) * var(--row-h) + (var(--row-h) - var(--dot)) / 2); background:var(--up); box-shadow:0 0 0 2px var(--premium-surface); }
+.emFigDot[data-dir="down"] { background:var(--down); }
+/* Bandın içinde kalan nokta kısık: göz önce dışarı çıkanları sayar. */
+.emFigDot:not([data-out]) { opacity:.55; }
+.emFigScale { text-align:center; font-size:12px; font-weight:600; color:var(--text-strong); }
+.emFigReadout { padding-top:10px; border-top:1px solid var(--line-soft); font-size:13px; line-height:1.5; color:var(--text-body); }
+
+.emFigStage[data-armed] .emFigBand { animation:em-band 600ms var(--ease-brand) both; }
+.emFigStage[data-armed] .emFigScale { animation:em-fade 240ms var(--ease-brand) 450ms both; }
+.emFigStage[data-armed] .emFigDot { animation:em-drop 360ms var(--ease-brand) calc(750ms + var(--i,0) * 70ms) both; }
+.emFigStage[data-armed] .emFigReadout { animation:em-fade 300ms var(--ease-brand) calc(1110ms + var(--n,0) * 70ms) both; }
+.emFigStage[data-armed]:not([data-play]) :is(.emFigBand,.emFigScale,.emFigDot,.emFigReadout) { animation-play-state:paused; }
+@keyframes em-band { from { scale:0 1; } }
+@keyframes em-drop { from { opacity:0; translate:0 -10px; } }
+@keyframes em-fade { from { opacity:0; } }
+@media (prefers-reduced-motion:reduce) {
+  .emFigStage[data-armed] :is(.emFigBand,.emFigScale,.emFigDot,.emFigReadout) { animation:none; }
+}
