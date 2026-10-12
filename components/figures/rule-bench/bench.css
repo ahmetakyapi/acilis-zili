@@ -1,0 +1,65 @@
+/*
+ * Kural Tezgâhı. Kitin token'ları (--anatomy-*) <html class="iso"> üzerinde;
+ * figürün kendi token'ları yalnız .rb kapsamında (anatomy: figür token'ı
+ * :root'a konmaz). Lamba renkleri raporun durum tonları: yeşil/kırmızı köprüde
+ * sitenin --up/--down'una bağlı, dikkat sitenin pirinç tonu.
+ */
+.rb-wrap {
+  --rb-warn: var(--brass);
+  display: grid;
+  gap: 12px;
+}
+
+.rb {
+  cursor: default;
+  touch-action: pan-y;
+  border-radius: 6px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rb:focus-visible {
+  outline: 2px solid var(--line-focus, var(--anatomy-muted));
+  outline-offset: 6px;
+}
+
+.rb .iso-svg { overflow: visible; }
+
+/* Lamba: sönükken kâğıt, yanınca durumun rengi. Durum değişimi kısa ve
+   eğrisi markanın; yalnız dolgu ve çizgi rengi geçer. */
+.rb-lamp > .iso-solid > .iso-top,
+.rb-lamp > .iso-solid > .iso-edge {
+  transition: fill 200ms var(--ease-brand), stroke 200ms var(--ease-brand);
+}
+.rb-lamp[data-on][data-status="pass"] > .iso-solid > .iso-top { fill: var(--anatomy-green); }
+.rb-lamp[data-on][data-status="pass"] > .iso-solid > .iso-edge { stroke: var(--anatomy-green); }
+.rb-lamp[data-on][data-status="warn"] > .iso-solid > .iso-top { fill: var(--rb-warn); }
+.rb-lamp[data-on][data-status="warn"] > .iso-solid > .iso-edge { stroke: var(--rb-warn); }
+.rb-lamp[data-on][data-status="fail"] > .iso-solid > .iso-top { fill: var(--anatomy-red); }
+.rb-lamp[data-on][data-status="fail"] > .iso-solid > .iso-edge { stroke: var(--anatomy-red); }
+/* Verisi olmayan kural hiç yanmaz; çerçevesi de soluk. */
+.rb-lamp[data-status="na"] > .iso-solid > .iso-edge { stroke: var(--anatomy-faint); }
+
+/* İnen kapı kolu: eleme bu figürde bir hüküm, rengi kalan kuralın rengi. */
+.rb-gate-down > .iso-solid > .iso-edge { stroke: var(--anatomy-red); }
+
+/* Lejant: kartın altında, lambayla aynı tonlar. */
+.rb-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+.rb-keys li { display: inline-flex; align-items: center; gap: 7px; }
+.rb-keys i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--line-strong); }
+.rb-keys [data-status="pass"] i { background: var(--up); border-color: var(--up); }
+.rb-keys [data-status="warn"] i { background: var(--brass); border-color: var(--brass); }
+.rb-keys [data-status="fail"] i { background: var(--down); border-color: var(--down); }
+.rb-caption { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--text-body); max-width: 68ch; }
+
+@media (max-width: 639px) {
+  .rb-wrap .iso-plate { padding: 44px 10px; }
+}

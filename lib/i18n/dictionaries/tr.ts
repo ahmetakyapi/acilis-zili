@@ -2640,6 +2640,26 @@ const tr = {
     coverage: "Kuralların %{n} Kadarı Ölçüldü",
     categoriesTitle: "Kategoriler",
     checksTitle: "Kural Kural",
+    /** Kural Tezgâhı figürü (components/figures/rule-bench). Künyeler Title Case. */
+    bench: {
+      title: "Kural Tezgâhı",
+      fig: "Şekil 1",
+      plateTitle: "Yedi İstasyon",
+      hint: "İstasyonun Üzerine Gel · ← →",
+      passed: "Geçen {n}",
+      warned: "Dikkat {n}",
+      failed: "Kalan {n}",
+      missing: "Veri Yok {n}",
+      score: "Puan {n}",
+      gatePass: "Geçti",
+      gateFail: "Elendi",
+      and: "ve",
+      keys: { pass: "Geçen Kural", warn: "Dikkat", fail: "Kalan Kural", na: "Verisi Yok" },
+      label:
+        "{symbol} için kural tezgâhı: hisse bir iş parçası olarak rayda yedi istasyondan geçer. Her istasyonun lambaları o kategorinin kurallarıdır; yeşil geçti, sarı dikkat, kırmızı kaldı, sönük olanın verisi yok.",
+      caption:
+        "{symbol} rayda yedi istasyondan geçiyor: önce eleme kapısı, sonra {rest}. İstasyonun yoklayıcısı parçaya iner ve her kural bir lamba olarak yanar; eleme kapısında kalan hisse orada durur ve kapının kolu iner. Sayılar aşağıdaki kural tablosunun aynısı.",
+    },
     prosTitle: "Güçlü Yanlar",
     consTitle: "Zayıf Yanlar",
     nextTitle: "Sıradaki Adımlar",

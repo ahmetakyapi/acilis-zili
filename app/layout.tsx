@@ -11,6 +11,8 @@ import { LOCALES } from "@/lib/i18n/config";
 import { ogLocale } from "@/lib/page-meta";
 import { INDEXABLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
+import "@/components/iso/iso.css";
+import "@/components/iso/bridge.css";
 
 /**
  * Tuzak: next/font `variable` adı @theme token adıyla aynı olursa CSS'te
@@ -209,7 +211,10 @@ export default async function RootLayout({
          kuralı `auto`ya çeviriyor. */
       data-scroll-behavior="smooth"
       suppressHydrationWarning
-      className={`${bodyFace.variable} h-full`}
+      /* `iso`: açıklayıcı figür kitinin (anatomy, components/iso) token kapsamı.
+         Kit `.iso[data-theme="light"]` ile açık temaya geçer; tema bu öğede
+         olduğu için hesap menüsündeki tema seçimi figürü de çevirir. */
+      className={`iso ${bodyFace.variable} h-full`}
     >
       <body className="min-h-full antialiased">
         {/* Açılışın kararı boyamadan önce: içerik bir kare görünüp sonra

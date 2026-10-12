@@ -1,0 +1,12 @@
+/*
+ * Figür kiti ↔ Açılış Zili köprüsü. Kitin gri tonları (kağıt, yan yüzler,
+ * kenar) BİLEREK nötr: figür bir ölçü aleti kartı, palet rengi taşımaz.
+ * Bağlananlar: yazı ailesi ve durum renkleri. Kitin yeşil/kırmızısı sitenin
+ * yükseliş/düşüş tonları olur; kural lambası raporun kalan/geçen rengini
+ * taşısın, ikinci bir yeşil icat edilmesin.
+ */
+.iso {
+  --anatomy-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --anatomy-green: var(--up);
+  --anatomy-red: var(--down);
+}
