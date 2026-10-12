@@ -130,6 +130,10 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
   /* Sıfır çizgisi düşüşün payı kadar yukarıda: hepsi yükselen bir günde
      sütunlar zeminden kalkıyor, alanın yarısı boş bir eksi bölgeye gitmiyor. */
   const zero = (down / span) * 100;
+  /* KARONUN ÇUBUĞU (12 Ekim, telefon ve tablet): sıfırdan iki yana değil,
+     büyüklük olarak soldan; tek karoda eksen yok, yön rengin ve işaretin.
+     Ölçek günün en büyük hareketi, tabanı yine `SECTOR_SCALE_FLOOR`. */
+  const peak = Math.max(up, down, SECTOR_SCALE_FLOOR);
   const risers = changes.filter((change) => change > 0).length;
   const fallers = changes.filter((change) => change < 0).length;
   const ranked = counted.length;
@@ -180,7 +184,14 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
               key={row.symbol}
               data-fold={phoneShown(i) ? undefined : ""}
               className={styles.col}
-              style={{ "--start": `${start}%`, "--size": `${inScale ? size : 0}%`, "--i": i } as CSSProperties}
+              style={
+                {
+                  "--start": `${start}%`,
+                  "--size": `${inScale ? size : 0}%`,
+                  "--mag": `${inScale && row.change !== null ? (Math.abs(row.change) / peak) * 100 : 0}%`,
+                  "--i": i,
+                } as CSSProperties
+              }
             >
               <Link
                 href={`/hisse/${row.symbol}`}

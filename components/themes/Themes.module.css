@@ -48,27 +48,44 @@
 }
 .rankRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
 @media(hover:hover) { .rankRow:hover { background:var(--primary-tint); color:var(--primary-ink); } }
-.rankName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:550; }
+.rankName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-weight:600; }
+@media(hover:hover) { .rankRow:hover .rankName { color:var(--primary-ink); } }
 /* ÇUBUK İNCE BİR ŞERİT, ALTINDA KULVAR (10 Ekim, sahibinin isteği:
    "çizgi çubukları çok kötü duruyor"). 9 piksellik, 4 piksel yuvarlak
    çubuk küçük değerlerde bir NOKTA gibi duruyordu (+%0,15 bir yeşil
    damlaydı) ve boşta kalan iz hiç görünmediği için çubuklar havada
    asılıydı. Şimdi 5 piksel, köşe 1,5; her satırın tam genişlikte sönük
    bir kulvarı var, kısa çubuk da bir ölçeğin üstünde okunuyor. */
-.rankTrack { position:relative; height:5px; border-radius:1.5px; background:var(--line-soft); }
+/* 5 → 6 piksel, köşe 3 (12 Ekim, sahibinin itirazı: "okunaklılık çok
+   kötü"): telefonda ince şerit ve gri adlar sönük duruyordu. */
+.rankTrack { position:relative; height:6px; border-radius:3px; background:var(--line-soft); }
 .rankTrack::before { content:""; position:absolute; left:50%; top:-4px; bottom:-4px; width:1px; background:var(--line-strong); }
-.rankBar { position:absolute; top:0; bottom:0; border-radius:1.5px; background:var(--flat); transition:filter .2s var(--ease-brand); }
+.rankBar { position:absolute; top:0; bottom:0; border-radius:3px; background:var(--flat); transition:filter .2s var(--ease-brand); }
 @media(hover:hover) { .rankRow:hover .rankBar { filter:saturate(1.25) brightness(1.06); } }
 .rankBar[data-tone="up"] { background:var(--up); }
 .rankBar[data-tone="down"] { background:var(--down); }
-.rankValue { text-align:right; font-weight:700; font-size:13px; }
+.rankValue { text-align:right; font-weight:750; font-size:13.5px; }
 /* TELEFONDA SATIR 40 PİKSEL (30 Eylül). 28 piksellik satırlar 1 piksel
    arayla üst üste duruyordu (390 genişlikte ölçüldü: satırın ortasından
    komşu satıra 15 piksel). Parmak ıskalayınca dokunuş boşa gitmiyor, BAŞKA
    bir temanın sayfasına gidiyordu. `tap-44` burada işe yaramaz — satırlar
    bitişik, görünmez alan komşuyu kapatırdı (globals.css) — o yüzden gerçek
    yükseklik. İmleçli ekranda 28 kalıyor. */
-@media(max-width:767px) { .rankRow { grid-template-columns:minmax(0,8.5rem) minmax(0,1fr) 4.5rem; gap:10px; min-height:40px; font-size:12.5px; } }
+/* TELEFONDA SATIR İKİ KAT (12 Ekim, sahibinin itirazı: "alttaki bilgi ve
+   okunaklılık çok kötü"). Üç sütunda ad 8,5 rem'e, kulvar ~100 piksele
+   sıkışıyordu: ad kesiliyor, çubuk nokta gibi kalıyordu. Şimdi üstte ad ve
+   rakam (15 punto), altta tam genişlikte kulvar; satır 52 piksel ve
+   dokunma hedefi yine gerçek yükseklik. */
+@media(max-width:767px) {
+  .rankList { gap:2px; }
+  .rankRow {
+    grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"name value" "track track";
+    gap:7px 12px; min-height:52px; padding-block:7px; font-size:14.5px;
+  }
+  .rankName { grid-area:name; white-space:normal; line-height:1.25; }
+  .rankValue { grid-area:value; font-size:15px; }
+  .rankTrack { grid-area:track; }
+}
 
 /* --------------------------------------------------------------------------
    Galeri

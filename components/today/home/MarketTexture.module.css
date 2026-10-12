@@ -68,16 +68,25 @@
    11 SÜTUN 1180'DEN İTİBAREN. Altında sütun 70 pikselin altına iniyor ve
    "Gayrimenkul" (12 punto, ~73 piksel) kelime ortasından bölünüyor —
    ısı karolarında da aynı eşik ölçülmüştü. */
-.ribbon { display:grid; grid-template-columns:minmax(0,1fr); gap:0; }
-.col { min-width:0; }
+/* KARO DÜZENİ 1180'İN ALTINDA (12 Ekim, sahibinin itirazı telefondan:
+   "görsel olarak çok kötü, okunaklılık çok kötü"). Satır düzeninde ad,
+   ~110 piksellik sönük bir kulvar ve 13 punto rakam yan yana sıkışıyordu;
+   çubuğun %40'lık karışımı açık temada neredeyse görünmüyordu. Şimdi her
+   fon kendi karosu: zemini yönün rengiyle ısı kademesi kadar tonlu (renk
+   anlam taşıyor, süs değil), üstte ad, altında 20 punto rakam, dipte
+   büyüklüğü soldan çizen 6 piksellik dolu çubuk. Sıra ve sayı aynı. */
+.ribbon { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; }
+.col { min-width:0; display:flex; }
 .colLink {
   --tone:var(--flat); --mix:40%;
-  position:relative; display:grid; align-items:center; min-width:0;
-  grid-template-columns:minmax(0,1fr) minmax(0,38%) 4.75rem;
-  grid-template-areas:"label track pct";
-  column-gap:14px; min-height:48px; padding:6px 10px; border-radius:10px;
+  position:relative; display:grid; align-content:start; flex:1; min-width:0;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"label" "pct" "track";
+  row-gap:6px; padding:11px 12px 12px; border-radius:14px;
+  background:color-mix(in oklab, var(--tone) calc(var(--mix) * .15), transparent);
   color:inherit; transition:background-color .25s var(--ease-brand);
 }
+.colLink[data-tone="flat"] { background:var(--surface-sunken); }
 .colLink[data-tone="up"] { --tone:var(--up); }
 .colLink[data-tone="down"] { --tone:var(--down); }
 /* Ton yoğunluğu ısı kademesinden: boy büyüklüğü, ton eşiği söylüyor.
@@ -88,99 +97,77 @@
 .colLink[data-level="4"] { --mix:100%; }
 .colLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
 @media (hover:hover) and (pointer:fine) {
-  .colLink:hover { background:var(--surface-sunken); }
+  .colLink:hover { background:color-mix(in oklab, var(--tone) calc(var(--mix) * .24), transparent); }
   .colLink:hover .colName { color:var(--primary-ink); }
 }
-.colPct { grid-area:pct; justify-self:end; font-size:15px; font-weight:700; line-height:1.1; letter-spacing:-.03em; white-space:nowrap; color:var(--text-body); }
+.colPct { grid-area:pct; justify-self:start; font-size:20px; font-weight:750; line-height:1.1; letter-spacing:-.035em; white-space:nowrap; color:var(--text-body); }
 .colLink[data-tone="up"] .colPct { color:var(--up); }
 .colLink[data-tone="down"] .colPct { color:var(--down); }
-.colLabel { grid-area:label; display:flex; flex-direction:column; gap:1px; min-width:0; }
-.colName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:13px; font-weight:650; line-height:1.25; transition:color .2s var(--ease-brand); }
-.colSym { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-muted); font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:.02em; line-height:1.3; }
-.colTrack { grid-area:track; position:relative; align-self:center; height:5px; border-radius:1.5px; background:var(--line-soft); }
-.colTrack::before { content:""; position:absolute; top:-5px; bottom:-5px; left:var(--zero); width:1px; background:var(--line-strong); }
-/* Satır düzeninde çubuk, tema sıralamasının şeridiyle AYNI dil: 5
-   piksellik sönük kulvarın üstünde dolu, ince bir şerit. Tonu ısı
-   kademesinden (`--mix`). */
+.colLabel { grid-area:label; display:flex; align-items:baseline; gap:6px; min-width:0; }
+.colName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:14px; font-weight:650; line-height:1.25; transition:color .2s var(--ease-brand); }
+.colSym { flex-shrink:0; color:var(--text-muted); font-family:var(--font-mono); font-size:11.5px; font-weight:600; letter-spacing:.02em; line-height:1.3; }
+.colTrack { grid-area:track; position:relative; align-self:end; height:6px; border-radius:3px; background:color-mix(in oklab, var(--line-soft) 70%, transparent); overflow:hidden; }
+.colTrack::before { content:none; }
 .colBar {
-  position:absolute; top:0; bottom:0; left:var(--start); width:var(--size); min-width:2px;
-  border-radius:1.5px; background:color-mix(in oklab, var(--tone) var(--mix), transparent);
+  position:absolute; top:0; bottom:0; left:0; width:var(--mag); min-width:3px;
+  border-radius:3px; background:var(--tone);
   transform-origin:left center; animation:sector-grow-x .9s var(--ease-brand) both; animation-delay:calc(var(--i) * 40ms);
 }
-.colLink[data-sign="down"] .colBar { transform-origin:right center; }
-.colSkeleton { height:48px; border-radius:10px; }
-.colSkeleton + .colSkeleton { margin-top:2px; }
+.colSkeleton { height:84px; border-radius:14px; }
 @keyframes sector-grow-x { from { scale:0 1; } }
 @keyframes sector-grow-y { from { scale:1 0; } }
 
-/* 640–1179: iki kolonlu satır listesi, sıra sütun sütun okunuyor
-   (6 + 5). */
+/* 640–1179: üç kolon, sıra sütun sütun (4 + 4 + 3). */
 @media (min-width:640px) and (max-width:1179px) {
-  .ribbon { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(6,auto); grid-auto-flow:column; column-gap:28px; }
+  .ribbon { grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(4,auto); grid-auto-flow:column; gap:10px; }
 }
 
 @media (min-width:1180px) {
   .ribbon { grid-template-columns:repeat(11,minmax(0,1fr)); gap:2px; }
+  .col { display:block; }
   .colLink {
+    display:grid; background:none; border-radius:10px; transition:background-color .25s var(--ease-brand);
     grid-template-columns:minmax(0,1fr);
     grid-template-rows:22px 96px 48px;
     grid-template-areas:"pct" "track" "label";
     align-items:start; row-gap:8px; min-height:0; padding:10px 6px 10px;
   }
-  .colPct { justify-self:start; font-size:18px; line-height:22px; }
+  .colPct { justify-self:start; font-size:18px; font-weight:700; line-height:22px; }
+  .colLabel { flex-direction:column; align-items:stretch; gap:1px; }
+  .colName { font-weight:650; }
+  .colSym { font-size:12px; }
   .colName { white-space:normal; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:12px; line-height:15px; overflow-wrap:break-word; }
-  .colTrack { align-self:stretch; height:auto; border-radius:0; background:none; }
-  .colTrack::before { top:auto; left:-4px; right:-4px; bottom:var(--zero); width:auto; height:1px; }
+  .colTrack { align-self:stretch; height:auto; border-radius:0; background:none; overflow:visible; }
+  .colTrack::before { content:""; position:absolute; top:auto; left:-4px; right:-4px; bottom:var(--zero); width:auto; height:1px; }
   .colBar {
     /* SÜTUN BİR ALAN VE BİR ÇİZGİ (10 Ekim). Dolu bloklar ilk denemede
        bir tablo programının çubuk grafiği gibi duruyordu (sahibi: "çok
        kötü duruyor"). Şimdi açık tonlu bir alan ve sıfırdan UZAK uçta 2
        piksellik keskin bir kapak: değer çizginin hizasında okunuyor, alan
        yalnızca büyüklüğü taşıyor. */
-    top:auto; left:0; right:0; bottom:var(--start); width:auto; height:var(--size); min-width:0; min-height:2px;
+    top:auto; left:0; right:0; bottom:var(--start); width:auto; height:var(--size); min-width:0; min-height:2px; transform-origin:center bottom;
     border-radius:0; border-top:2px solid var(--tone);
-    background:color-mix(in oklab, var(--tone) calc(var(--mix) * .32), transparent); transform-origin:center bottom; animation-name:sector-grow-y;
+    background:color-mix(in oklab, var(--tone) calc(var(--mix) * .45), transparent); transform-origin:center bottom; animation-name:sector-grow-y;
   }
   .colLink[data-sign="down"] .colBar { border-top:0; border-bottom:2px solid var(--tone); transform-origin:center top; }
   /* Komşu sütunların sıfır çizgileri birleşip tek bir eksen oluyor; ilk
      ve son sütunda çizgi panelin içinde kalsın. */
   .col:first-child .colTrack::before { left:0; }
   .col:last-child .colTrack::before { right:0; }
-  .colSkeleton { height:202px; }
-  .colSkeleton + .colSkeleton { margin-top:0; }
+  .colSkeleton { height:202px; border-radius:10px; }
 }
-/* TELEFONDA SEMBOL YOK (10 Ekim). Ad ve sembol iki satırda 48 piksel
-   istiyordu ve on bir satır bandı 390'da 1198'den 1505 piksele
-   çıkarıyordu (ölçüldü). Sembol bağlantının hedefinde.
-   TELEFONDA İKİ KOLON (12 Ekim, sahibinin isteği: "çok yer kaplıyor").
-   On bir tek kolon satır 390'da 484 piksel tutuyordu; şerit artık
-   tabletteki gibi sütun sütun okunan iki kolon (6 + 5) ve her hücre iki
-   satır: üstte ad, altta kulvar ve rakam. Ad tam hücre genişliğini
-   alıyor ("İsteğe Bağlı Tüketim" 390'da tek satır); 320'de iki satıra
-   sarıyor ve ızgara satırı iki kolonda birlikte uzuyor, rakamlar yine
-   aynı hatta. Ölçüldü (başsız Chrome, hareket azaltılmış): şerit 390'da
-   484 → 264, 320'de 278 piksel; tema sıralaması da telefonda uçtan üç
-   değil iki satır (`phoneEnds`, uçlar zaten skor tablosunda) ve bant
-   390'da 1377 → 1058 piksel. Yatay taşma yok.
-   Ardından telefonda beş fon (`SECTOR_PHONE_TOP`): şerit 390'da 132,
-   açılınca 264 piksel; bant 390'da 989 piksel. */
+/* TELEFONDA İKİ KOLON KARO, beş fon (12 Ekim, sahibinin istekleri: "çok
+   yer kaplıyor", "maks 5 tane göstersin"; gerekçe MarketTexture.tsx →
+   SECTOR_PHONE_TOP). Sol sütun en güçlü üç, sağ sütun en zayıf iki fon,
+   sütun sütun okunuyor. Sembol telefonda yok (bağlantının hedefinde). */
 @media (max-width:639px) {
-  .ribbon { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(6,auto); grid-auto-flow:column; column-gap:12px; }
-  .colLink {
-    /* Rakam sütunu SABİT: `auto` iken "+%2,40" ile "+%0,94" farklı
-       genişlikte, kulvarlar ve sıfır çizgileri hücreden hücreye kayıyordu. */
-    grid-template-columns:minmax(0,1fr) 3.9rem; grid-template-areas:"label label" "track pct";
-    column-gap:8px; row-gap:3px; align-content:center; min-height:44px; padding:4px;
-  }
+  .ribbon { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(6,auto); grid-auto-flow:column; gap:8px; }
   .colSym { display:none; }
-  .colName { white-space:normal; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:12.5px; line-height:16px; }
-  .colPct { font-size:13.5px; }
-  .colSkeleton { height:44px; }
-  .colSkeleton + .colSkeleton { margin-top:0; }
+  .colName { white-space:normal; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:13.5px; line-height:17px; }
+  .colPct { font-size:19px; }
   /* Katlıyken beş fon üç satırda (3 + 2): görünür satır sayısı kadar
-     ızgara satırı, yoksa beşi de sol sütuna dizilir. Gerekçe
-     MarketTexture.tsx → SECTOR_PHONE_TOP. Yedek aynı şekil: beş kutu ve
-     katlama düğmesinin 44 pikseli. */
+     ızgara satırı, yoksa beşi de sol sütuna dizilir. Yedek aynı şekil: beş
+     kutu ve katlama düğmesinin 44 pikseli. */
   input:not(:checked) ~ .ribbon, .ribbonSkeleton { grid-template-rows:repeat(3,auto); }
   .ribbonSkeleton > :nth-child(n+6) { display:none; }
   .ribbonSkeleton { padding-bottom:44px; }
@@ -205,7 +192,7 @@
    sıralamanın boyu (155'in ölçümü aşağıda). Üzerine gelinen yarı kendi
    köşesiyle tonlanıyor, bu yüzden kabın 4 piksellik iç payı var. */
 .extremes {
-  display:grid; gap:0; min-width:0; padding:4px;
+  display:grid; gap:4px; min-width:0; padding:4px;
   border:1px solid var(--line-soft); border-radius:20px; background:var(--surface-sunken);
 }
 @media (min-width:640px) and (max-width:1023px) { .extremes { grid-template-columns:repeat(2,minmax(0,1fr)); } }
@@ -222,6 +209,16 @@
 .extreme:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
 .extreme:active { transform:scale(.992); }
 @media (hover:hover) { a.extreme:hover { background:var(--primary-tint); } }
+/* UÇLAR YÖNÜN RENGİYLE (12 Ekim, sahibinin isteği: "renkli, görsel").
+   Yarılar çukur zeminde gri ikizdi; artık en güçlü yarı yeşilin, en zayıf
+   yarı kırmızının hafif tonunda ve etiket o renkte. Son kapanışta ton
+   `flat`: dünün uçları bugünün rengini almıyor. */
+.extreme[data-tone="up"] { background:color-mix(in oklab, var(--up) 9%, transparent); }
+.extreme[data-tone="down"] { background:color-mix(in oklab, var(--down) 8%, transparent); }
+.extreme[data-tone="up"] .extremeLabel { color:var(--up); }
+.extreme[data-tone="down"] .extremeLabel { color:var(--down); }
+.extreme[data-tone="flat"] { background:var(--surface); }
+.extreme[data-tone] + .extreme[data-tone]::before { display:none; }
 .extremeEmpty { justify-content:space-between; }
 /* 155: iki kart + 12 aralık = 322, soldaki sıralamanın boyu (1440 ve
    1024'te ölçüldü). 184'tü ve sağ sütun sıralamadan 58 piksel uzun
@@ -267,7 +264,7 @@
    logo ve çip 140 istiyor. Bu aralıkta rakam başlığın altına iniyor ve
    satır kartın tam iç genişliğini alıyor. */
 @media (max-width:767px) {
-  .extremes { grid-template-columns:repeat(2,minmax(0,1fr)); gap:0; }
+  .extremes { grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; }
   .extreme, .extremeSkeleton { height:148px; }
   .extreme { gap:8px; padding:12px 12px 12px; }
   .extreme > div:last-child { display:none; }
@@ -309,7 +306,7 @@
    Taban yükseklik kalktı: boy artık içerikten, iki kartta aynı.
    Bu blok ≤639 bloğunun ARDINDA durmak zorunda. */
 @media (max-width:767px) {
-  .extremes { row-gap:0; }
+  .extremes { row-gap:4px; }
   .extreme { display:grid; grid-row:span 4; grid-template-rows:subgrid; row-gap:8px; height:auto; min-height:0; }
   .extremeMain, .extremeText { display:contents; }
   .extremeTop { align-self:start; }
