@@ -47,7 +47,16 @@
 .partLink { margin-left:auto; }
 .breadth { color:var(--text-body); font-size:12.5px; font-weight:600; white-space:nowrap; }
 .breadth b { font-size:13.5px; font-weight:750; }
-@media (max-width:639px) { .breadth { order:5; flex-basis:100%; } }
+/* TELEFONDA BAŞLIK VE BAĞLANTI AYNI SATIRDA (12 Ekim, sahibinin isteği:
+   "kaydır kaydır bitmiyor"). Bağlantı `margin-left:auto` ile künyenin
+   ardından kendi satırına düşüyordu; sektör başlığı dört satırdı (ad,
+   künye, bağlantı, genişlik). Bağlantı başlığın sağına çıkıyor, künye ve
+   genişlik alttaki satırlarda: sektörlerde üç, temalarda iki satır. */
+@media (max-width:639px) {
+  .partLink { order:1; }
+  .partMeta { order:2; flex-basis:100%; }
+  .breadth { order:3; flex-basis:100%; }
+}
 
 /* ---- Sektör silueti (10 Ekim) ----
    Gerekçe MarketTexture.tsx → SectorRibbon. Her öğe dört satır: rakam,
@@ -142,16 +151,39 @@
 }
 /* TELEFONDA SEMBOL YOK (10 Ekim). Ad ve sembol iki satırda 48 piksel
    istiyordu ve on bir satır bandı 390'da 1198'den 1505 piksele
-   çıkarıyordu (ölçüldü). Sembol bağlantının hedefinde; satır 44 piksellik
-   dokunma hedefine iniyor. */
+   çıkarıyordu (ölçüldü). Sembol bağlantının hedefinde.
+   TELEFONDA İKİ KOLON (12 Ekim, sahibinin isteği: "çok yer kaplıyor").
+   On bir tek kolon satır 390'da 484 piksel tutuyordu; şerit artık
+   tabletteki gibi sütun sütun okunan iki kolon (6 + 5) ve her hücre iki
+   satır: üstte ad, altta kulvar ve rakam. Ad tam hücre genişliğini
+   alıyor ("İsteğe Bağlı Tüketim" 390'da tek satır); 320'de iki satıra
+   sarıyor ve ızgara satırı iki kolonda birlikte uzuyor, rakamlar yine
+   aynı hatta. Ölçüldü (başsız Chrome, hareket azaltılmış): şerit 390'da
+   484 → 264, 320'de 278 piksel; tema sıralaması da telefonda uçtan üç
+   değil iki satır (`phoneEnds`, uçlar zaten skor tablosunda) ve bant
+   390'da 1377 → 1058 piksel. Yatay taşma yok.
+   Ardından telefonda beş fon (`SECTOR_PHONE_TOP`): şerit 390'da 132,
+   açılınca 264 piksel; bant 390'da 989 piksel. */
 @media (max-width:639px) {
-  .colLink { grid-template-columns:minmax(0,1fr) minmax(0,30%) 4.25rem; column-gap:10px; min-height:44px; padding:4px; }
+  .ribbon { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(6,auto); grid-auto-flow:column; column-gap:12px; }
+  .colLink {
+    /* Rakam sütunu SABİT: `auto` iken "+%2,40" ile "+%0,94" farklı
+       genişlikte, kulvarlar ve sıfır çizgileri hücreden hücreye kayıyordu. */
+    grid-template-columns:minmax(0,1fr) 3.9rem; grid-template-areas:"label label" "track pct";
+    column-gap:8px; row-gap:3px; align-content:center; min-height:44px; padding:4px;
+  }
   .colSym { display:none; }
-  /* 320'de ad sütununa ~100 piksel kalıyor; "İletişim Hizmetleri"
-     kesilmesin diye iki satıra sarıyor, satır yine 44 içinde. */
   .colName { white-space:normal; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:12.5px; line-height:16px; }
-  .colPct { font-size:14px; }
+  .colPct { font-size:13.5px; }
   .colSkeleton { height:44px; }
+  .colSkeleton + .colSkeleton { margin-top:0; }
+  /* Katlıyken beş fon üç satırda (3 + 2): görünür satır sayısı kadar
+     ızgara satırı, yoksa beşi de sol sütuna dizilir. Gerekçe
+     MarketTexture.tsx → SECTOR_PHONE_TOP. Yedek aynı şekil: beş kutu ve
+     katlama düğmesinin 44 pikseli. */
+  input:not(:checked) ~ .ribbon, .ribbonSkeleton { grid-template-rows:repeat(3,auto); }
+  .ribbonSkeleton > :nth-child(n+6) { display:none; }
+  .ribbonSkeleton { padding-bottom:44px; }
 }
 .ribbonError { padding:26px 0; color:var(--text-muted); font-size:var(--text-small); text-align:center; }
 .stamp { justify-content:flex-end; }

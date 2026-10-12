@@ -5,6 +5,7 @@ import { RollingFigure } from "@/components/themes/RollingFigure";
 import { ThemeRanking } from "@/components/themes/ThemeRanking";
 import { SpreadStrip } from "@/components/themes/ThemeVisuals";
 import { CompanyCards } from "@/components/ui/CompanyCards";
+import { FoldToggle } from "@/components/ui/FoldToggle";
 import { DataStamp, LogoTile, PanelLink, Skeleton } from "@/components/ui/primitives";
 import { themeTitle } from "@/content/themes";
 import { getStatus } from "@/lib/data";
@@ -56,6 +57,16 @@ import styles from "./MarketTexture.module.css";
  * günün sakinliğini kendisi söylüyor.
  */
 const SECTOR_SCALE_FLOOR = 1;
+
+/**
+ * TELEFONDA BEŞ SEKTÖR (12 Ekim, sahibinin isteği: "maks 5 tane
+ * göstersin"). Şeridin bilgisi uçlarda: en güçlü üç ve en zayıf iki fon
+ * açık, ortası katlı (tema sıralamasının `phoneEnds` kuralıyla aynı dil).
+ * İki kolonda sol sütun yükselenler, sağ sütun düşenler gibi okunuyor.
+ * Son kapanıştaki fonlar sıralamanın dışında, uç sayılmıyor.
+ */
+const SECTOR_PHONE_TOP = 3;
+const SECTOR_PHONE_BOTTOM = 2;
 
 /**
  * On bir sektör fonu, günün hareketine göre SIRALI bir siluet (10 Ekim,
@@ -121,6 +132,10 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
   const zero = (down / span) * 100;
   const risers = changes.filter((change) => change > 0).length;
   const fallers = changes.filter((change) => change < 0).length;
+  const ranked = counted.length;
+  const phoneShown = (index: number) =>
+    index < SECTOR_PHONE_TOP || (index >= ranked - SECTOR_PHONE_BOTTOM && index < ranked);
+  const phoneHidden = rows.filter((_, index) => !phoneShown(index)).length;
 
   return (
     <SectorFrame
@@ -150,6 +165,7 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
         </span>
       }
     >
+      <FoldToggle id="sektor-siralamasi" hiddenCount={phoneHidden} more={t.compact.showAll} less={t.compact.showLess} phone>
       <ol className={styles.ribbon} style={{ "--zero": `${zero}%` } as CSSProperties}>
         {rows.map((row, i) => {
           const inScale = row.change !== null && (allLastClose || !row.lastClose);
@@ -162,6 +178,7 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
           return (
             <li
               key={row.symbol}
+              data-fold={phoneShown(i) ? undefined : ""}
               className={styles.col}
               style={{ "--start": `${start}%`, "--size": `${inScale ? size : 0}%`, "--i": i } as CSSProperties}
             >
@@ -191,6 +208,7 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
           );
         })}
       </ol>
+      </FoldToggle>
     </SectorFrame>
   );
 }
@@ -225,7 +243,7 @@ function SectorFrame({
 export function SectorRibbonSkeleton({ t }: { t: Dictionary }) {
   return (
     <SectorFrame t={t} meta={t.marketExtras.sectorsMeta}>
-      <div aria-hidden className={styles.ribbon}>
+      <div aria-hidden className={cn(styles.ribbon, styles.ribbonSkeleton)}>
         {SECTOR_ETFS.map((entry) => (
           <Skeleton key={entry.symbol} className={styles.colSkeleton} />
         ))}
@@ -297,7 +315,7 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
 
   return (
     <ThemeFrame
-      ranking={<ThemeRanking cards={board.cards} basis={scaleBasis} phase={board.phase} locale={locale} t={t} heading="h4" phoneEnds={3} />}
+      ranking={<ThemeRanking cards={board.cards} basis={scaleBasis} phase={board.phase} locale={locale} t={t} heading="h4" phoneEnds={2} />}
       extremes={
         <>
           {/* Logoların üzerine gelince açılan şirket kartı (components/ui/
