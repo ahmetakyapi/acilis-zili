@@ -43,7 +43,16 @@ export function ReportTimeline({ items, next, nextLabel, now: serverNow, locale,
   const span = (ms: number) => formatSpan(ms, T.units);
   const waiting = next ? new Date(next.at).getTime() > now : false;
   const last = items.at(-1);
-  const clock = new Date(now).toLocaleTimeString(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: "Europe/Istanbul", hour: "2-digit", minute: "2-digit" });
+  const tag = locale === "tr" ? "tr-TR" : "en-GB";
+  const clockOf = (at: number) => new Date(at).toLocaleTimeString(tag, { timeZone: "Europe/Istanbul", hour: "2-digit", minute: "2-digit" });
+  const dayOf = (at: number) => new Date(at).toLocaleDateString(tag, { timeZone: "Europe/Istanbul", day: "numeric", month: "short" });
+  const clock = clockOf(now);
+  /* Önerilen adımın başlığı da rapor kartları gibi: büyük satırda yalnız
+     saat, gün ve tür ("Önerilen" / "Açılışta") küçük künyede (12 Ekim).
+     "13 Eki 03:04" telefonda 4,8em'lik sütuna sığmayıp sağdaki "1 gün
+     Sonra"nın üstüne biniyordu; "Açılışta" da "Açılış…" diye kesiliyordu. */
+  const nextAt = next ? new Date(next.at).getTime() : 0;
+  const nextDay = next && dayOf(nextAt) !== dayOf(now) ? dayOf(nextAt) : null;
 
   /* Her adım aynı üç satırı taşır (saat · durum · alt künye), boşken bile;
      kartlar bu yüzden aynı boyda ve satırları aynı hizada. Hattaki süre
@@ -78,8 +87,8 @@ export function ReportTimeline({ items, next, nextLabel, now: serverNow, locale,
   if (next && waiting) steps.push({
     key: "next", kind: "next", link: null,
     body: <div className={styles.tlCard}>
-      <span className={styles.tlHead}><b className="figure">{next.reason === "market-closed" ? T.atOpen : nextLabel}</b><small>{T.suggested}</small></span>
-      <span className={styles.tlMid}><b>{next.reason === "market-closed" ? nextLabel : T.after.replace("{t}", span(new Date(next.at).getTime() - now))}</b></span>
+      <span className={styles.tlHead}><b className="figure">{clockOf(nextAt)}</b><small>{[nextDay, next.reason === "market-closed" ? T.atOpen : T.suggested].filter(Boolean).join(" · ")}</small></span>
+      <span className={styles.tlMid}><b>{T.after.replace("{t}", span(nextAt - now))}</b></span>
       <span className={styles.tlFoot}><span className={styles.tlName}>{T.wait.replace("{t}", span(next.gapMinutes * 60_000))}</span></span>
     </div>,
   });

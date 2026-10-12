@@ -1,9 +1,8 @@
 "use client";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { ACTS, CURTAIN_S, filmCues, renderFilm, type FilmData, type FilmPalette, type FilmText } from "@/lib/ink/analysis-film";
+import { ACTS, CURTAIN_S, renderFilm, type FilmData, type FilmPalette, type FilmText } from "@/lib/ink/analysis-film";
 import type { Point } from "@/lib/ink/engine";
-import { muteFilmSound, playCue, primeFilmSound, setSoundPreferred, soundPreferred } from "./filmSound";
 import { formatPrice } from "@/lib/utils";
 import styles from "./AnalysisFilm.module.css";
 
@@ -21,8 +20,6 @@ const ACT_MS = ACTS.map((start, i) => i < ACTS.length - 1 ? (ACTS[i + 1] - start
 /** Sel ekranın bu kadarını kapladıysa altyazı kâğıt rengine döner. */
 const INVERT_AT = 0.72;
 const MAX_DPR = 2;
-/** Bundan uzun bir boşlukta (sekme arka planda, film ekran dışında) kaçırılan ses olayları çalınmaz. */
-const CUE_GAP_S = 0.5;
 /** Ekran dışını erken sezmek için kenar payı (anatomy: rootMargin 120px). */
 const VIEW_MARGIN = "120px 0px";
 
@@ -94,10 +91,6 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
   const [inverted, setInverted] = useState(false);
   /** Geçen tam saniye: IV. perdenin künyesi (saniyede bir yazılır, her karede değil). */
   const [seconds, setSeconds] = useState(0);
-  // Ses varsayılan kapalı; tercih tarayıcıda (filmSound.ts). Film yalnız istemcide çizildiği için ilk değer doğrudan okunur.
-  const [sound, setSound] = useState(soundPreferred);
-  const soundRef = useRef(sound);
-  useEffect(() => { soundRef.current = sound; }, [sound]);
   const S = t.claude.scenes;
 
   useEffect(() => {
@@ -131,9 +124,6 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
       setInverted(cover >= INVERT_AT);
     };
     const actOf = (time: number) => doneRef.current !== null ? 4 : ACTS.findLastIndex(start => time >= start);
-    /** Son çalınan an: her karede (son, şimdi] aralığındaki ses olayları çalar. */
-    let heard = 0;
-    const cueMeta = { symbolLength: symbol.length, hasOrigin: !!origin, headlines: Math.min(5, headlines.length) };
     /* EKRAN DIŞINDA DURUR (anatomy, motion.md). Film zamana bağlı bir öykü:
        geri gelince kaldığı yerden değil GEÇEN zamandan sürer. Gözlemcinin EN
        YENİ kaydı okunur — ekrandan çıkıp dönen kutu tek çağrıda iki kayıt
@@ -143,9 +133,6 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
       if (!visible) { raf = 0; return; }
       const time = clock();
       draw(time);
-      // Uzun boşlukta (sekme arka planda, film ekran dışında) kaçırılan sesler üst üste çalmasın.
-      if (soundRef.current && time - heard < CUE_GAP_S) for (const cue of filmCues(heard, time, { ...cueMeta, doneAt: doneRef.current })) playCue(cue);
-      heard = time;
       setAct(actOf(time));
       setSeconds(Math.floor(time));
       raf = requestAnimationFrame(tick);
@@ -174,7 +161,7 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
     observer.observe(canvas);
     const view = new IntersectionObserver((entries) => {
       visible = entries[entries.length - 1].isIntersecting;
-      if (visible && !raf && !media.matches && running && !cancelled) { heard = clock(); raf = requestAnimationFrame(tick); }
+      if (visible && !raf && !media.matches && running && !cancelled) raf = requestAnimationFrame(tick);
     }, { rootMargin: VIEW_MARGIN });
     view.observe(canvas);
     const themeWatch = new MutationObserver(() => { pal = readPalette(); });
@@ -191,16 +178,6 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
   return <div className={styles.stage} role="status" aria-live="polite" aria-label={`${t.claude.stage}: ${caption.title}`}
     data-inverted={inverted ? "" : undefined} data-final={act === 4 ? "" : undefined} style={minHeight ? { minHeight, aspectRatio: "auto" } : undefined}>
     <canvas ref={canvasRef} className={styles.canvas} aria-hidden />
-    <button type="button" className={styles.sound} aria-pressed={sound} onClick={() => {
-      const next = !sound;
-      if (next) primeFilmSound(); else muteFilmSound();
-      setSoundPreferred(next); setSound(next);
-    }}>
-      <svg viewBox="0 0 24 24" aria-hidden><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />{sound
-        ? <path className={styles.waves} pathLength={1} d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />
-        : <path d="M16 9.5l5 5M21 9.5l-5 5" />}</svg>
-      <span>{sound ? t.claude.sound.on : t.claude.sound.off}</span>
-    </button>
     <div className={styles.caption} key={act}>
       {act < 4 && <span className={styles.sceneNo}>{NUMERALS[act]}</span>}
       <strong>{caption.title}</strong>

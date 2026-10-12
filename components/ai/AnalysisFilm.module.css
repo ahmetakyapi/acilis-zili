@@ -33,16 +33,6 @@
 [data-state="active"] .bar::after { content:""; position:absolute; inset:0; background:var(--text-strong); transform-origin:left; animation:fill var(--act-ms, 5000ms) linear both; }
 .stage[data-inverted] .chip b { color:var(--brass); }
 @keyframes fill { from { scale:0 1; } to { scale:1 1; } }
-/* Ses düğmesi: sağ üst köşe, sessiz bir hap; selin üstünde rengini çevirir. */
-.sound { position:absolute; z-index:2; top:14px; right:14px; display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 12px 0 10px; border-radius:999px; background:var(--premium-surface); color:var(--text-body); font-size:12.5px; font-weight:650; cursor:pointer; transition:color 200ms var(--ease-brand), background-color 300ms var(--ease-brand); }
-.sound:hover { color:var(--text-strong); }
-.sound:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
-.sound svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
-.sound[aria-pressed="true"] { color:var(--text-strong); }
-/* Açıkken dalgalar bir kez yayılır (tek küçük öğe). */
-.waves { stroke-dasharray:1; stroke-dashoffset:1; animation:waves-in 520ms var(--ease-spring-soft) forwards; }
-@keyframes waves-in { to { stroke-dashoffset:0; } }
-.stage[data-inverted] .sound { background:color-mix(in srgb, var(--page-bg) 14%, transparent); color:var(--page-bg); }
 @media(max-width:639px) {
   .stage { aspect-ratio:4 / 5; min-height:0; border-radius:20px; }
   /* Telefonda künye altyazının altında; çiplerde yalnız numara. */
@@ -50,10 +40,8 @@
   .readout { grid-column:1; grid-row:auto; justify-self:start; margin-top:2px; }
   .chip em { display:none; }
   .progress { left:18px; right:18px; }
-  .sound { top:10px; right:10px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .caption { animation:none; }
-  .waves { animation:none; stroke-dashoffset:0; }
   [data-state="active"] .bar::after { animation:none; scale:.5 1; }
 }

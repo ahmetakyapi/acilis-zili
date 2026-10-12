@@ -417,7 +417,7 @@ function floodPath(ctx: Ctx, x: number, y: number, r: number, seed: number, t: n
 }
 
 /**
- * I. perdenin anları — çizim ve ses AYNI kaynaktan okur. Açılış damlası
+ * I. perdenin anları — çizimin tek kaynağı. Açılış damlası
  * (düğmeden gelen) varsa her şey onun inişi kadar kayar.
  */
 export function openingTimes(symbolLength: number, hasOrigin: boolean) {
@@ -431,48 +431,6 @@ export function openingTimes(symbolLength: number, hasOrigin: boolean) {
   return { O, SLIDE_A, SLIDE_B, SYM_IN, DOT_AT, SYM_OUT, PEN_A, PEN_B };
 }
 
-export type FilmCue =
-  | { kind: "splash" | "stamp" | "rise" | "drop" | "blot" | "floodIn" | "floodOut" | "type" | "bell" | "seal" | "hush"; at: number }
-  | { kind: "pen"; at: number; duration: number }
-  | { kind: "tink"; at: number; tone: "up" | "down" };
-
-/**
- * Filmin sesleri: (t0, t1] aralığına düşen olaylar. Ses ancak görüntünün bir
- * olayına bağlıysa çalar (lemo-opuscar DIRECTOR § 6: "every visible action
- * has a sound"); saf fonksiyon, çizimin anlarından hesaplanır.
- */
-export function filmCues(t0: number, t1: number, o: { symbolLength: number; hasOrigin: boolean; headlines: number; doneAt: number | null }): FilmCue[] {
-  const T = openingTimes(o.symbolLength, o.hasOrigin);
-  const fixed: FilmCue[] = [
-    ...(o.hasOrigin ? [{ kind: "splash", at: T.O } as const] : []),
-    { kind: "stamp", at: 0.5 + T.O },
-    { kind: "rise", at: T.SYM_IN },
-    { kind: "drop", at: T.DOT_AT + 0.28 },
-    { kind: "pen", at: T.PEN_A, duration: T.PEN_B - T.PEN_A },
-    { kind: "blot", at: T.PEN_B },
-    { kind: "floodIn", at: ACTS[2] - 2 * BEAT },
-    ...Array.from({ length: Math.min(STRIPS, o.headlines) }, (_, k) => ({ kind: "type", at: ACTS[2] + HEADLINE_AT + k * HEADLINE_STEP } as const)),
-    { kind: "floodOut", at: ACTS[3] - 1.0 },
-  ];
-  const out: FilmCue[] = fixed.filter(c => c.at > t0 && c.at <= t1 && (o.doneAt === null || c.at < o.doneAt));
-  // IV: kefelere düşen damlalar (dönerken sonsuz) — inişleri.
-  if (o.doneAt === null) for (const [side, shift] of [["up", 0], ["down", DROP_EVERY / 2]] as const) {
-    const base = ACTS[3] + DROP_FROM + shift + 0.55;
-    for (let d = Math.max(0, Math.floor((t0 - base) / DROP_EVERY)); ; d++) {
-      const at = base + d * DROP_EVERY;
-      if (at > t1) break;
-      if (at > t0) out.push({ kind: "tink", at, tone: side });
-    }
-  }
-  if (o.doneAt !== null) {
-    for (const c of [{ kind: "hush", at: 0 }, { kind: "floodIn", at: HUSH + 0.05 }, { kind: "bell", at: HUSH + 1.05 }, { kind: "seal", at: HUSH + 1.95 + 0.42 }] as const) {
-      const at = o.doneAt + c.at;
-      if (at > t0 && at <= t1) out.push({ kind: c.kind, at });
-    }
-  }
-  return out;
-}
-
 export type FilmFrame = { t: number; doneAt: number | null };
 type Size = { w: number; h: number };
 
@@ -483,7 +441,7 @@ function layout(size: Size, n: number) {
   const left = narrow ? 18 : 32, right = w - (narrow ? 18 : 32);
   // Alttaki pay altyazının bloğu (numara + başlık + cümle + ilerleme): 1280'de 118 piksel
   // taban çizgisini altyazının içinden geçiriyordu.
-  // Üst pay ses düğmesinin altında başlar (düğme 14 + 36 piksel): zirve künyesi altında kalıyordu.
+  // Üst pay zirve künyesine yer bırakır (eskiden ses düğmesinin altıydı; düğme 12 Ekim'de kalktı).
   // Alt pay altyazı + canlı künye + adlı perde çipleri kadar (11 Ekim, ölçüldü: altyazı bloğu
   // alttan 149 px masaüstünde, 150 telefonda); taban çizgisi (`bottom + 10`) bloğun ~12 px üstünde.
   const top = narrow ? 64 : 66, bottom = h - (narrow ? 180 : 172);

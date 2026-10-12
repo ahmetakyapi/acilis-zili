@@ -9,7 +9,6 @@ import { useMotionPreference } from "@/components/motion/useMotionPreference";
 import { HORIZON_OF, formatSpan, type AnalysisFocus, type NextReport } from "@/lib/ai-analysis-core";
 import { AnalysisFilm, CURTAIN_MS, type FilmBar } from "./AnalysisFilm";
 import { KineticText } from "./KineticText";
-import { primeFilmSound, soundPreferred } from "./filmSound";
 import { useNow } from "./useNow";
 import styles from "./Claude.module.css";
 
@@ -93,8 +92,6 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGe
       setOrigin(!reduced && stageBox && iconBox ? { x: iconBox.left + iconBox.width / 2 - stageBox.left, y: iconBox.top + iconBox.height / 2 - stageBox.top } : null);
     };
     measure();
-    // Ses tercihi açıksa bağlam BU tıklamanın içinde açılır (tarayıcı sesi ancak kullanıcı hareketiyle başlatır).
-    if (soundPreferred()) primeFilmSound();
     launchTimer.current = window.setTimeout(() => { measure(); setBusy(true); }, reduced ? 0 : LAUNCH_MS);
     requestId.current ??= crypto.randomUUID();
     try {

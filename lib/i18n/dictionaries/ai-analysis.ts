@@ -88,7 +88,6 @@ export const aiAnalysisTr = {
     sessions: "Seans", positive: "Olumlu", negative: "Olumsuz",
     /** Bekleme filmindeki dev yazı ve künyeler (lib/ink/analysis-film.ts). */
     /** Filmin ses düğmesi (varsayılan kapalı). */
-    sound: { on: "Ses Açık", off: "Ses Kapalı" },
     /** Rapor zaman çizelgesi ve önerilen sonraki rapor (components/ai/ReportTimeline.tsx). */
     timeline: {
       title: "Rapor Zaman Çizelgesi", hours: "Saatler TR", author: "Oluşturan", mine: "Sen",
@@ -239,7 +238,6 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
       { title: "Claude Is Weighing", line: "Comparing the positive and negative evidence." },
     ],
     sessions: "Sessions", positive: "Positive", negative: "Negative",
-    sound: { on: "Sound On", off: "Sound Off" },
     timeline: {
       title: "Report Timeline", hours: "Times in TR", author: "Created By", mine: "You",
       now: "Now", next: "Suggested Next Report", ready: "Ready Now", atOpen: "At the Open",
