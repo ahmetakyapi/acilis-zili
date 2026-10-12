@@ -2466,6 +2466,26 @@ const tr = {
     note: "Seviyeler günlük teknik analizden gelir ve her yayında yenilenir; uzaklıklar pozisyon tablosundaki fiyatla hesaplanır. Yatırım tavsiyesi değildir.",
   },
   /* Hisse seçimi (3 Ekim) — kural tabanlı eleme ve uyum puanı. */
+  /** Seans Zili figürü (components/figures/session-bell). Künyeler Title Case. */
+  sessionBell: {
+    title: "Seans Zili",
+    fig: "Şekil 1",
+    plateTitle: "24 Saat · New York",
+    hint: "Kadranın Üzerinde Gezin · ← →",
+    stamp: "NY",
+    clock: "{tr} TR · {ny} NY",
+    sessions: { pre: "Ön Seans", regular: "Asıl Seans", after: "Akşam Seansı", closed: "Piyasa Kapalı" },
+    openBell: "Açılış Zili",
+    closeBell: "Kapanış Zili",
+    weekend: "Hafta Sonu · Piyasa Kapalı",
+    holiday: "{name} · Piyasa Kapalı",
+    keys: { regular: "Asıl Seans", extended: "Ön ve Akşam Seansı", contact: "Zil Kontağı" },
+    label:
+      "Seans zili: New York saatini gösteren 24 saatlik bir kadran ve bir çan. Kadranda günün seansları yay olarak çizili; asıl seansın iki ucundaki kontaktan geçen ibre devreyi kapatır, darbe kablodan bobine gider ve dövücü çanı vurur.",
+    caption:
+      "Kadran New York saatiyle bir günü gösteriyor: ön seans {pre}, asıl seans {open}–{close}, akşam seansı {after}'e kadar. İbre asıl seansın iki ucundaki kontaktan geçince devre kapanır, darbe kablodan bobine ulaşır ve dövücü çanı vurur: açılış ve kapanış zili. Türkiye saatiyle açılış {trOpen}, kapanış {trClose}.",
+    captionClosed: "Bugün işlem yok ({name}); kadranda seans yayı yok ve zil çalmıyor. Sıradaki açılış zili {next}.",
+  },
   screening: {
     eyebrow: "Önce Ele, Sonra İncele",
     title: "Hisse Seçimi",

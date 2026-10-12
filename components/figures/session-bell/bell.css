@@ -1,0 +1,47 @@
+/*
+ * Seans Zili. Kit token'ları (--anatomy-*) <html class="iso"> üzerinde;
+ * figürün kendileri yalnız .sb kapsamında. Renk tek yerde anlam taşıyor:
+ * asıl seansın yayı ve zil kontağı sitenin pirinç tonunda (mürekkep
+ * zilinin rengi, --brass); geri kalan her şey kitin nötr tonları.
+ */
+.sb-wrap { display: grid; gap: 12px; }
+/* Geniş ekranda figür solda, lejant ve altyazı sağda: tam genişlikte kart
+   1280'de ~700 px boy alıyordu, ana sayfa için fazla. */
+@media (min-width: 1024px) {
+  .sb-wrap { grid-template-columns: minmax(0, 1.75fr) minmax(240px, 1fr); grid-template-rows: auto 1fr; column-gap: 28px; align-items: start; }
+  .sb-wrap > .iso-figure { grid-row: 1 / span 2; }
+  .sb-keys { flex-direction: column; align-self: end; }
+}
+
+.sb-wrap > .iso-figure { margin: 0; }
+.sb { touch-action: pan-y; border-radius: 6px; -webkit-tap-highlight-color: transparent; }
+.sb:focus-visible { outline: 2px solid var(--line-focus, var(--anatomy-muted)); outline-offset: 6px; }
+.sb .iso-svg { overflow: visible; }
+
+/* Seans yayları: asıl seans kalın ve pirinç, uzatılmış seanslar ince ve kitin orta tonu. */
+.sb-arc { fill: none; stroke-linecap: round; }
+.sb-arc[data-kind="regular"] { stroke: var(--brass); stroke-width: 2.2; }
+.sb-arc[data-kind="pre"],
+.sb-arc[data-kind="after"] { stroke: var(--anatomy-mid); stroke-width: 1.2; }
+
+/* İbre: kâğıt dolgulu, kitin en koyu çizgisi. */
+.sb-needle { fill: var(--anatomy-face); stroke: var(--anatomy-hi); stroke-width: var(--anatomy-weight); stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+
+/* Kontak: zil anında yanar (pirinç), çan titreşirken. */
+.sb-contact > .iso-solid > .iso-top { transition: fill 160ms var(--ease-brand); }
+.sb-contact[data-on] > .iso-solid > .iso-top { fill: var(--brass); }
+.sb-contact[data-on] > .iso-solid > .iso-edge { stroke: var(--brass); }
+
+/* Kablodaki darbe: vuruşun ilk 0,4 sn'si boyunca akan çizgi. */
+.sb-wire[data-pulse] .iso-line { stroke: var(--brass); stroke-dasharray: 2 6; animation: sb-pulse 400ms linear infinite; }
+@keyframes sb-pulse { to { stroke-dashoffset: -16; } }
+
+.sb-keys { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 0; list-style: none; font-size: 12.5px; color: var(--text-muted); }
+.sb-keys li { display: inline-flex; align-items: center; gap: 7px; }
+.sb-keys i { display: inline-block; width: 16px; height: 0; border-top: 2px solid var(--brass); }
+.sb-keys [data-key="extended"] i { border-top: 1px solid var(--text-muted); }
+.sb-keys [data-key="contact"] i { width: 8px; height: 8px; border: 1px solid var(--brass); border-radius: 50%; background: var(--brass); }
+.sb-caption { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--text-body); max-width: 72ch; }
+
+@media (max-width: 639px) { .sb-wrap .iso-plate { padding: 44px 10px; } }
+@media (prefers-reduced-motion: reduce) { .sb-wire[data-pulse] .iso-line { animation: none; } }

@@ -3,6 +3,7 @@ import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMot
 import styles from "@/components/today/TodayExperience.module.css";
 import { Countdown } from "@/components/today/Countdown";
 import { InkCanvas } from "@/components/ink/InkCanvas";
+import { SessionBellFigure } from "@/components/figures/session-bell/figure";
 import { BellLedger } from "@/components/today/BellLedger";
 import { SessionRefresh } from "@/components/today/SessionRefresh";
 import { LiveClock } from "@/components/today/LiveClock";
@@ -313,6 +314,16 @@ export default async function TodayPage() {
           <RailSection t={t} locale={locale} heading={flowHeading} />
         </Suspense>
       </section>
+
+      {/* SEANS ZİLİ (12 Ekim): zilin ne zaman ve neden çaldığını anlatan
+          açıklayıcı figür (anatomy). Kahramandaki mürekkep zili yerinde; bu
+          bölüm İKİ KOLONLU IZGARANIN DIŞINDA, tam genişlikte: ızgaranın
+          kolonları ölçülü bir dengede ve araya giren panel ötekinde kendi boyu
+          kadar boşluk açardı. Saatler aynı `status`tan. */}
+      <Panel data-home-section="session-bell">
+        <PanelHeader title={t.sessionBell.title} />
+        <SessionBellFigure status={status} nowMs={nowMs} locale={locale} t={t} />
+      </Panel>
 
     <div className={styles.dashboard}>
       {/* Seans sınırında sayfa kendini tazeler. Hiçbir şey çizmez, ızgarada yer

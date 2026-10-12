@@ -2,7 +2,8 @@
 
 Kaynak commit: `689dcf966e63d92be10a5d593c6e19e10acd4422`
 
-Bu dizin `~/dev-starter/scripts/add-figure-kit.mjs` ile kopyalandı. Elle
+Bu dizin `~/dev-starter/scripts/add-figure-kit.mjs` ile kopyalandı. `lathe.mjs` ve
+`iso-kit.mjs` (döner parçalar: çan, kubbe, küre) aynı commit'ten, `--lathe` ile. Elle
 düzenleme: betik yeniden çalışınca `iso-kit.ts`, `iso.css` ve `react/`
 üzerine yazılır. Projeye özgü stil `bridge.css`e ya da figürün kendi CSS'ine.
 

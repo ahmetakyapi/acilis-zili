@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
       "react-hooks/immutability": "off",
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/exhaustive-deps": "off",
+      // lathe.mjs (anatomy, kopyalanan kit) kısa devre ifadesi kullanıyor; kitin kendi kodu.
+      "@typescript-eslint/no-unused-expressions": "off",
     },
   },
   // Override default ignores of eslint-config-next.
