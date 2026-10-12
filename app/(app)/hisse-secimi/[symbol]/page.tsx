@@ -11,8 +11,9 @@ import directory from "@/components/motion/DirectoryExperience.module.css";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import { CategoryPanel, ChecksPanel, NextPanel, SidesPanel, statusLabel } from "@/components/screening/ScreenReport";
 import { FlagSummary } from "@/components/screening/ScreenVisuals";
+import { RuleBenchFigure } from "@/components/figures/rule-bench/figure";
 import styles from "@/components/screening/Screening.module.css";
-import { DataStamp, EmptyState, LogoTile } from "@/components/ui/primitives";
+import { DataStamp, EmptyState, LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
 import { analysisHref } from "@/lib/analysis";
 import { compareHref } from "@/lib/compare";
 import { getSymbolNames, isKnownSymbol } from "@/lib/data";
@@ -163,6 +164,13 @@ export default async function ScreenReportPage(props: PageProps<"/hisse-secimi/[
       <ClaudeCta symbol={symbol} locale={locale} focus="selection" />
       <CategoryPanel data={data} t={S} />
       <ChecksPanel data={data} locale={locale} t={S} />
+      {/* KURAL TEZGÂHI (12 Ekim): aynı sonucun açıklayıcı figürü. Ekran düzeni
+          kuralı: ikinci görsel ölçü ızgarasının ALTINA. Figür hesaplamaz;
+          sayılar yukarıdaki tablonun aynısı (components/figures/rule-bench). */}
+      <Panel>
+        <PanelHeader title={S.bench.title} />
+        <RuleBenchFigure data={data} locale={locale} t={S} />
+      </Panel>
       <SidesPanel data={data} locale={locale} t={S} />
       <NextPanel data={data} locale={locale} t={S} />
 
