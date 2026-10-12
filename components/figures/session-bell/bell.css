@@ -6,23 +6,21 @@
  */
 .sb {
   display: grid; gap: 14px; padding: 2px 20px 20px;
-  grid-template-areas: "head" "stage" "chips" "note";
+  grid-template-areas: "head" "stage" "controls" "note";
 }
 .sb-head { grid-area: head; }
 .sb-stage { grid-area: stage; }
-.sb-chips { grid-area: chips; }
+.sb-controls { grid-area: controls; }
 .sb-note { grid-area: note; }
 /* Geniş ekranda figür solda, bilgi ve düğmeler sağ kolonda: tam genişlikte
    figür 1280'de ~1000 px boy alıyordu (ölçüldü). */
 @media (min-width: 1024px) {
   .sb {
     padding: 2px 24px 24px; column-gap: 24px; row-gap: 12px; align-items: start;
-    grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr);
+    grid-template-columns: minmax(0, 1.4fr) minmax(360px, 1fr);
     grid-template-rows: auto auto 1fr;
-    grid-template-areas: "stage head" "stage chips" "stage note";
+    grid-template-areas: "stage head" "stage controls" "stage note";
   }
-  .sb-chips { grid-template-columns: 1fr 1fr; }
-  .sb-ring { grid-column: 1 / -1; min-height: 52px; }
   .sb-count { margin-left: 0; width: 100%; font-size: 20px; }
 }
 
@@ -40,7 +38,8 @@
 .sb[data-ringing] .sb-badge::before { animation: sb-blink 400ms var(--ease-loop) 3 alternate; }
 @keyframes sb-blink { to { opacity: .25; } }
 .sb-clock { font-size: 16px; font-weight: 650; color: var(--text-strong); white-space: nowrap; }
-.sb-count { margin-left: auto; font-size: 16px; font-weight: 700; color: var(--text-strong); white-space: nowrap; }
+.sb-count { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; font-size: 16px; font-weight: 700; color: var(--text-strong); white-space: nowrap; }
+.sb-count svg { width: 17px; height: 17px; flex: none; fill: none; stroke: var(--primary); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
 .sb[data-previewing] .sb-count { color: var(--brass-ink); }
 .sb-back {
   display: none; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--primary-faint);
@@ -49,7 +48,7 @@
 .sb[data-previewing] .sb-back { display: inline-flex; align-items: center; }
 
 /* ---- Figür ---- */
-.sb-stage { border-radius: 14px; background: var(--anatomy-card); padding: 6px 4px; cursor: crosshair; touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
+.sb-stage { position: relative; border-radius: 14px; background: var(--anatomy-card); padding: 6px 4px; cursor: crosshair; touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
 .sb-stage:focus-visible { outline: 2px solid var(--line-focus, var(--primary)); outline-offset: 3px; }
 .sb-stage .iso-stage { --anatomy-paper: var(--anatomy-card); }
 .sb-stage .iso-svg { overflow: visible; }
@@ -71,30 +70,100 @@
 .sb-wire[data-pulse] .iso-line { stroke: var(--brass); stroke-dasharray: 2 6; animation: sb-pulse 400ms linear infinite; }
 @keyframes sb-pulse { to { stroke-dashoffset: -16; } }
 
-/* ---- Seans düğmeleri + Zili Çal ---- */
-.sb-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 10px; }
-.sb-chip {
-  position: relative; display: grid; gap: 2px; min-height: 64px; padding: 10px 12px 10px 16px; overflow: hidden;
-  border: 1px solid var(--line); border-radius: 12px; background: var(--surface); text-align: left; cursor: pointer;
-  transition: border-color 200ms var(--ease-brand), background-color 200ms var(--ease-brand);
+/* ---- Zil bildirimi ----
+   Zil çaldığında sahnenin sol üstünde "Açılış Zili · 16:30 TR": çanın
+   neden vurulduğunu söyleyen tek satır. Pirinç, çünkü zil anı pirinç
+   (kontak ve çan kenarı da o renge döner). */
+.sb-toast {
+  position: absolute; top: 10px; left: 10px; z-index: 2; display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 13px 7px 10px; border-radius: 999px; pointer-events: none;
+  background: var(--brass-wash); color: var(--brass-ink); font-size: 14px; font-weight: 750; white-space: nowrap;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brass) 35%, transparent);
+  opacity: 0; transform: translateY(-6px) scale(.96);
+  transition: opacity 260ms var(--ease-brand), transform 360ms var(--ease-brand);
 }
-.sb-chip::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--brass); }
-.sb-chip[data-chip="regular"]::before { background: var(--primary); }
-.sb-chip:hover { border-color: var(--line-strong); }
-.sb-chip[data-active] { border-color: var(--brass); background: var(--brass-wash); }
-.sb-chip[data-chip="regular"][data-active] { border-color: var(--primary); background: var(--primary-wash); }
-.sb-chip-name { font-size: 13px; font-weight: 650; color: var(--text-muted); }
-.sb-chip[data-active] .sb-chip-name { color: var(--text-strong); }
-.sb-chip-time { font-size: 17px; font-weight: 750; color: var(--text-strong); }
-.sb-chip-sub { font-size: 12px; color: var(--text-muted); }
-.sb-ring {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 64px; padding: 0 18px;
-  border: 0; border-radius: 12px; background: var(--primary); color: var(--on-primary); font-size: 15px; font-weight: 700; cursor: pointer;
-  transition: background-color 200ms var(--ease-brand);
+.sb-toast svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.sb[data-toasting] .sb-toast { opacity: 1; transform: none; }
+.sb[data-toasting][data-ringing] .sb-toast svg { animation: sb-swing 300ms var(--ease-brand) 4 alternate; transform-origin: 50% 15%; }
+@keyframes sb-swing { from { rotate: -14deg; } to { rotate: 14deg; } }
+
+/* ---- Seans çizelgesi ----
+   Üç seans eşit genişlikte üç kart (süreyle orantılı sütunlar denendi:
+   390'da akşam seansı 86 piksele düşüp saatini taşırıyordu); her kartın dibi seansın renginde bir şerit ve şeritler yan yana
+   günün çizelgesini oluşturuyor. Asıl seansın iki ucunda zil imi: zilin
+   ÇALDIĞI yer. Üstünden kayan siyah im ibrenin gösterdiği saat. Karta
+   dokunmak o seansı oynatır (live.tsx). */
+.sb-controls { display: grid; gap: 12px; }
+.sb-line { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding-bottom: 4px; }
+.sb-seg {
+  position: relative; display: grid; align-content: start; gap: 2px; min-width: 0; padding: 10px 11px 20px;
+  border: 0; border-radius: 12px; background: var(--surface-sunken); text-align: left; cursor: pointer;
+  transition: background-color 240ms var(--ease-brand);
+  -webkit-tap-highlight-color: transparent;
 }
-.sb-ring:hover { background: var(--primary-hover); }
-.sb-ring svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
-.sb-chip:focus-visible, .sb-ring:focus-visible, .sb-back:focus-visible { outline: 2px solid var(--line-focus, var(--primary)); outline-offset: 2px; }
+.sb-seg-name { font-size: 12.5px; font-weight: 700; color: var(--brass-ink); }
+.sb-seg[data-chip="regular"] .sb-seg-name { color: var(--primary-ink); }
+.sb-seg-time { font-size: 16px; font-weight: 750; color: var(--text-strong); letter-spacing: -.01em; white-space: nowrap; }
+.sb-seg-sub { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
+.sb-seg-bar {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 9px; border-radius: 0 0 12px 12px;
+  background: color-mix(in srgb, var(--brass) 45%, transparent); transition: background-color 240ms var(--ease-brand);
+}
+.sb-seg[data-chip="regular"] .sb-seg-bar { background: color-mix(in srgb, var(--primary) 55%, transparent); }
+.sb-seg[data-active] { background: var(--brass-wash); }
+.sb-seg[data-chip="regular"][data-active] { background: var(--primary-wash); }
+.sb-seg[data-active] .sb-seg-bar { background: var(--brass); }
+.sb-seg[data-chip="regular"][data-active] .sb-seg-bar { background: var(--primary); }
+@media (hover: hover) and (pointer: fine) {
+  .sb-seg:hover { background: color-mix(in srgb, var(--brass) 14%, var(--surface-sunken)); }
+  .sb-seg[data-chip="regular"]:hover { background: color-mix(in srgb, var(--primary) 12%, var(--surface-sunken)); }
+}
+.sb-seg:active { transform: scale(.985); }
+.sb-seg[data-playing] { box-shadow: inset 0 0 0 2px var(--brass); }
+.sb-seg[data-chip="regular"][data-playing] { box-shadow: inset 0 0 0 2px var(--primary); }
+
+/* Zil imleri: asıl seans şeridinin iki ucunda. Zil o uçta çalarken pirinç. */
+.sb-mark {
+  position: absolute; bottom: -7px; z-index: 1; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--surface); box-shadow: 0 0 0 1.5px var(--primary); color: var(--primary);
+  transition: background-color 200ms var(--ease-brand), color 200ms var(--ease-brand), box-shadow 200ms var(--ease-brand);
+}
+.sb-mark[data-at="open"] { left: -11px; }
+.sb-mark[data-at="close"] { right: -11px; }
+.sb-mark svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.sb[data-strike="open"] .sb-mark[data-at="open"], .sb[data-strike="close"] .sb-mark[data-at="close"] {
+  background: var(--brass); color: var(--on-primary); box-shadow: 0 0 0 1.5px var(--brass), 0 0 0 6px color-mix(in srgb, var(--brass) 25%, transparent);
+}
+
+/* "Şimdi" imi: ibrenin saati. Konumu live.tsx yazar (transform), seans
+   dışında çizelgenin ucunda ve sönük. */
+.sb-marker {
+  position: absolute; left: -1px; bottom: 4px; z-index: 2; width: 2px; height: 20px; border-radius: 1px; pointer-events: none;
+  background: var(--text-strong); transition: opacity 200ms var(--ease-brand);
+}
+.sb-marker::after {
+  content: ""; position: absolute; left: 50%; bottom: -1px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%;
+  background: var(--text-strong); box-shadow: 0 0 0 2.5px var(--surface);
+}
+.sb-marker[data-out] { opacity: .35; }
+
+/* ---- Günü Oynat ----
+   Ön seanstan akşam seansının sonuna; oynarken düğmenin zemini ilerlemeyle
+   dolar (`--p`, live.tsx). */
+.sb-play {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 52px; padding: 0 20px;
+  overflow: hidden; isolation: isolate; border: 0; border-radius: 12px; background: var(--primary); color: var(--on-primary);
+  font-size: 15.5px; font-weight: 750; cursor: pointer; transition: background-color 200ms var(--ease-brand), transform 160ms var(--ease-brand);
+}
+.sb-play::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; background: var(--primary-deep);
+  transform: scaleX(var(--p, 0)); transform-origin: left center;
+}
+.sb-play:hover { background: var(--primary-hover); }
+.sb-play:active { transform: scale(.985); }
+.sb-play svg { width: 17px; height: 17px; fill: currentColor; }
+.sb-play[data-playing] svg { animation: sb-blink 500ms var(--ease-loop) infinite alternate; }
+.sb-seg:focus-visible, .sb-play:focus-visible, .sb-back:focus-visible { outline: 2px solid var(--line-focus, var(--primary)); outline-offset: 2px; }
 
 .sb-note { margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-body); }
 
@@ -103,10 +172,13 @@
   .sb-count { margin-left: 0; font-size: 18px; }
   .sb:not([data-previewing]) .sb-count { width: 100%; }
   .sb-stage { margin-inline: -6px; padding: 2px 0; border-radius: 12px; }
-  .sb-chips { grid-template-columns: 1fr 1fr; }
-  .sb-chip { min-height: 60px; }
-  .sb-ring { min-height: 60px; }
+  .sb-line { gap: 5px; }
+  .sb-seg { padding: 9px 8px 19px; }
+  .sb-seg-name { font-size: 12px; }
+  .sb-seg-time { font-size: 14px; letter-spacing: -.02em; }
+  .sb-seg-sub { font-size: 10.5px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sb-wire[data-pulse] .iso-line, .sb[data-ringing] .sb-badge::before { animation: none; }
+  .sb-wire[data-pulse] .iso-line, .sb[data-ringing] .sb-badge::before, .sb-toast svg, .sb-play svg { animation: none !important; }
+  .sb-toast, .sb-seg, .sb-mark, .sb-marker, .sb-play { transition: none; }
 }

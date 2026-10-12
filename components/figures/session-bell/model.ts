@@ -146,3 +146,75 @@ export function countdownOf(nowMs: number, minutes: number, day: BellDay, nextOp
   const next = nextBellOf(nowMs, minutes, day, nextOpenMs, nextCloseMs);
   return (next.bell === "close" ? text.toClose : text.toOpen).replace("{d}", durationOf(next.ms, text.units));
 }
+
+/* ---- Oynatma (üçüncü sürüm, 12 Ekim) ----
+   Sahibinin itirazı: "tıkladığı gibi değişmesin, smooth olsun; zil çalmak
+   ne işe yarıyor anlamadım". İbre artık hiçbir yere ışınlanmıyor: her
+   hareket bir BACAK (başlangıç, bitiş, süre), yumuşak başlayıp yumuşak
+   duruyor. Seans düğmesi o seansı OYNATIR: ibre seansın 20 dk öncesine
+   gider (zilsiz), sonra seans boyunca ileri yürür; yolda açılışı ya da
+   kapanışı geçerse çan gerçekten vurulur. "Günü Oynat" ön seanstan akşam
+   seansının sonuna kadar yürür ve iki zili sırayla çaldırır. Zil bir süs
+   düğmesi değil, saatin sonucu. */
+
+export type Leg = { from: number; to: number; dur: number; ring: boolean };
+
+/** Seansın başından bu kadar dk önce başlar: açılış zili yolda çalsın (başlangıç noktası zil sayılmaz). */
+export const LEAD = 20;
+/** Oynatma bitince bu kadar sn bekler, sonra şimdiye döner. */
+export const HOLD = 4;
+
+const inOutCubic = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
+const inOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
+const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
+
+/** Bacağın `t` saniyedeki konumu. Taşıma kübik, seans yürüyüşü sinüs (uçlarda yumuşak, ortada düz hız). */
+export function legAt(leg: Leg, t: number) {
+  const p = clamp01(leg.dur > 0 ? t / leg.dur : 1);
+  return leg.from + (leg.to - leg.from) * (leg.ring ? inOutSine(p) : inOutCubic(p));
+}
+
+/** Zilsiz taşıma: kısa yoldan (gece yarısını geçebilir), süre mesafeyle 0,6–1,4 sn. */
+export function moveLeg(from: number, to: number): Leg {
+  const target = to + Math.round((from - to) / DAY) * DAY;
+  const span = Math.abs(target - from);
+  return { from, to: target, dur: Math.min(1.4, Math.max(0.6, 0.5 + (span / DAY) * 2.4)), ring: false };
+}
+
+/** Zilli yürüyüş: süre seansın uzunluğuyla 2–6 sn. */
+export function walkLeg(from: number, to: number, max = 4.2): Leg {
+  return { from, to, dur: Math.min(max, Math.max(2, 1.4 + ((to - from) / 60) * 0.36)), ring: true };
+}
+
+/** Bir seansı oynat: başının 20 dk öncesine taşı, sonra sonuna kadar yürü. */
+export function sessionPlan(from: number, segment: Segment): Leg[] {
+  const start = segment.from - LEAD;
+  const move = moveLeg(from, start);
+  // Taşıma kısa yoldan geldiyse yürüyüş aynı tur değerinden başlar.
+  const offset = move.to - start;
+  return [move, walkLeg(segment.from - LEAD + offset, segment.to + offset)];
+}
+
+/** Günü oynat: ön seansın öncesinden akşam seansının sonuna; iki zil sırayla. */
+export function dayPlan(from: number, day: BellDay): Leg[] {
+  if (!day.tradingToday) return [];
+  const start = day.preOpen - LEAD;
+  const move = moveLeg(from, start);
+  const offset = move.to - start;
+  return [move, walkLeg(start + offset, day.afterClose + offset, 6.5)];
+}
+
+/** Planın toplam süresi ve `t` saniyedeki konumu (bitti mi ve hangi bacakta). */
+export function planAt(legs: Leg[], t: number) {
+  let rest = t;
+  for (let index = 0; index < legs.length; index++) {
+    const leg = legs[index];
+    if (rest <= leg.dur || index === legs.length - 1) {
+      return { minutes: legAt(leg, rest), leg: index, ring: leg.ring, done: index === legs.length - 1 && rest >= leg.dur };
+    }
+    rest -= leg.dur;
+  }
+  return { minutes: 0, leg: -1, ring: false, done: true };
+}
+
+export const planLength = (legs: Leg[]) => legs.reduce((sum, leg) => sum + leg.dur, 0);

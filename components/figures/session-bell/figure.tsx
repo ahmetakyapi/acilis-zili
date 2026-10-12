@@ -45,18 +45,33 @@ export function SessionBellFigure({ status, nowMs, locale, t }: { status: Market
     tr: locale === "tr" ? range(segment.from, segment.to, trOffset) : `${range(segment.from, segment.to, 0)} NY`,
     ny: locale === "tr" ? `${range(segment.from, segment.to, 0)} NY` : `${range(segment.from, segment.to, trOffset)} TR`,
     from: segment.from,
+    to: segment.to,
   }));
 
   const holiday = status.holiday && !status.holiday.earlyCloseEt ? (locale === "tr" ? status.holiday.nameTr : status.holiday.nameEn) : null;
   const zone = displayZone(locale);
   const nextOpen = `${new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", { timeZone: zone, weekday: "long" }).format(status.nextOpen)} ${formatInZone(status.nextOpen, zone)}`;
   const closedNote = status.tradingToday ? null : B.closedNote.replace("{name}", holiday ?? B.weekend).replace("{next}", nextOpen);
+  // Notta zil saatleri okuyucunun birincil saatiyle (TR'de İstanbul, EN'de New York).
+  const primary = (minutes: number) => hhmm(minutes + (locale === "tr" ? trOffset : 0));
+  const note = B.note.replace("{open}", primary(day.open)).replace("{close}", primary(day.close));
 
   return (
     <SessionBellArt
       day={day}
       text={text}
-      labels={{ previewing: B.previewing, back: B.back, ring: B.ring, note: B.note, closedNote, chipsLabel: B.chipsLabel }}
+      labels={{
+        previewing: B.previewing,
+        playingDay: B.playingDay,
+        back: B.back,
+        play: B.play,
+        playing: B.playing,
+        openBell: B.openBell,
+        closeBell: B.closeBell,
+        note,
+        closedNote,
+        chipsLabel: B.chipsLabel,
+      }}
       chips={chips}
       label={B.label}
       nowMinutes={nowMinutes}

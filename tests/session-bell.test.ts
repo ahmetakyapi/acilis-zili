@@ -17,6 +17,12 @@ import {
   sessionAt,
   strikesBetween,
   sweepAt,
+  dayPlan,
+  legAt,
+  moveLeg,
+  planAt,
+  planLength,
+  sessionPlan,
   type BellDay,
 } from "../components/figures/session-bell/model";
 
@@ -105,4 +111,60 @@ test("geri sayım: asıl seansta kapanışa, değilse açılışa", () => {
   assert.equal(countdownOf(now, 671, normal, now + 1000 * min, now + 289 * min, text), "Kapanışa 4 sa 49 dk");
   assert.equal(countdownOf(now, 300, normal, now + 270 * min, now + 660 * min, text), "Açılışa 4 sa 30 dk");
   assert.equal(countdownOf(now, 600, closed, now + 2000 * min, now + 3000 * min, text), "Açılışa 1 g 9 sa");
+});
+
+/* ---- Oynatma (üçüncü sürüm) ---- */
+
+/** Planı 1/30 sn adımlarla yürütür, yoldaki zilleri toplar (live.tsx'in döngüsü gibi). */
+function run(legs: ReturnType<typeof sessionPlan>, day: BellDay) {
+  const bells: string[] = [];
+  let before = legs[0].from;
+  for (let t = 1 / 30; t <= planLength(legs) + 0.05; t += 1 / 30) {
+    const at = planAt(legs, t);
+    if (at.ring) for (const hit of strikesBetween(before, at.minutes, day)) bells.push(hit.bell);
+    before = at.minutes;
+  }
+  return { bells, end: planAt(legs, planLength(legs) + 1) };
+}
+
+test("legAt: bacak yumuşak başlar ve tam hedefte biter (ışınlanma yok)", () => {
+  const leg = moveLeg(600, 900);
+  assert.equal(legAt(leg, 0), 600);
+  assert.equal(legAt(leg, leg.dur), 900);
+  assert.ok(legAt(leg, leg.dur * 0.1) - 600 < 300 * 0.1, "başta yavaş");
+  assert.ok(leg.dur >= 0.6 && leg.dur <= 1.4);
+});
+
+test("moveLeg: gece yarısını kısa yoldan geçer", () => {
+  const leg = moveLeg(1380, 220);
+  assert.equal(leg.to, 220 + DAY);
+  assert.equal(leg.ring, false);
+});
+
+test("sessionPlan: asıl seansı oynatmak iki zili sırayla çaldırır", () => {
+  const regular = segments(normal).find((segment) => segment.kind === "regular")!;
+  const { bells, end } = run(sessionPlan(1000, regular), normal);
+  assert.deepEqual(bells, ["open", "close"]);
+  assert.equal(end.done, true);
+  assert.equal(sessionAt(end.minutes - 1, normal), "regular");
+});
+
+test("sessionPlan: ön seans açılış ziliyle, akşam seansı kapanış ziliyle biter ya da başlar", () => {
+  const [pre, , after] = segments(normal);
+  assert.deepEqual(run(sessionPlan(900, pre), normal).bells, ["open"]);
+  assert.deepEqual(run(sessionPlan(900, after), normal).bells, ["close"]);
+});
+
+test("sessionPlan: taşıma zilsiz (açılışın üstünden geçse bile)", () => {
+  // 18:00 ET'den ön seansa kısa yol geriye, açılış ve kapanışın üstünden geçmeden; ileri yol da olsa taşıma çalmaz.
+  const [pre] = segments(normal);
+  const legs = sessionPlan(1080, pre);
+  assert.equal(legs[0].ring, false);
+  assert.deepEqual(run(legs, normal).bells, ["open"]);
+});
+
+test("dayPlan: gün iki zil çalar; işlem olmayan günde plan yok", () => {
+  assert.deepEqual(run(dayPlan(700, normal), normal).bells, ["open", "close"]);
+  assert.deepEqual(run(dayPlan(700, half), half).bells, ["open", "close"]);
+  assert.deepEqual(dayPlan(700, closed), []);
 });
