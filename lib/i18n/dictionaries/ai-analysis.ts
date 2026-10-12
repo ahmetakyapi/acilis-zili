@@ -90,11 +90,11 @@ export const aiAnalysisTr = {
     /** Filmin ses düğmesi (varsayılan kapalı). */
     /** Rapor zaman çizelgesi ve önerilen sonraki rapor (components/ai/ReportTimeline.tsx). */
     timeline: {
-      title: "Rapor Zaman Çizelgesi", hours: "Saatler TR", author: "Oluşturan", mine: "Sen",
-      now: "Şimdi", next: "Önerilen Sonraki Rapor", ready: "Şimdi Uygun", atOpen: "Açılışta",
-      after: "{t} Sonra", ago: "{t} Önce", more: "Tüm Raporlar",
-      today: "Bugün", left: "{t} Kaldı", sinceLast: "Son Rapor {t} Önce", wait: "Bekleme {t}", suggested: "Önerilen", noAuthor: "Oluşturan Bilinmiyor",
-      empty: "Bu odakta henüz rapor yok; ilk rapor zaman çizelgesini başlatır.",
+      title: "Son Raporlar", hours: "Saatler TR", author: "Oluşturan", mine: "Sen",
+      next: "Sıradaki Rapor", ready: "Şimdi Uygun",
+      after: "{t} Sonra", more: "Tüm Raporlar",
+      today: "Bugün", noAuthor: "Oluşturan Bilinmiyor",
+      readyNote: "Son rapor {t} önce oluşturuldu; önerilen bekleme doldu, yeni rapor güncel veriyle çalışır.",
       gapNote: "Yeni rapor için önerilen bekleme {gap}: {why}",
       why: { technical: "teknik odakta fiyat seans içinde saat saat değişir.", selection: "hisse seçimi bilanço, oran ve haber verisiyle çalışır; bu veri gün gün değişir." },
       closedNote: "Piyasa kapalı ve fiyat son rapordan beri değişmedi; yeni rapor için önerilen an açılış zili ({time}).",
@@ -239,11 +239,11 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
     ],
     sessions: "Sessions", positive: "Positive", negative: "Negative",
     timeline: {
-      title: "Report Timeline", hours: "Times in TR", author: "Created By", mine: "You",
-      now: "Now", next: "Suggested Next Report", ready: "Ready Now", atOpen: "At the Open",
-      after: "In {t}", ago: "{t} Ago", more: "All Reports",
-      today: "Today", left: "{t} Left", sinceLast: "Last Report {t} Ago", wait: "Wait {t}", suggested: "Suggested", noAuthor: "Creator Unknown",
-      empty: "No reports in this focus yet; the first one starts the timeline.",
+      title: "Recent Reports", hours: "Times in TR", author: "Created By", mine: "You",
+      next: "Next Report", ready: "Ready Now",
+      after: "In {t}", more: "All Reports",
+      today: "Today", noAuthor: "Creator Unknown",
+      readyNote: "The last report was created {t} ago; the suggested wait is over, so a new report runs on fresh data.",
       gapNote: "Suggested wait before a new report: {gap}. {why}",
       why: { technical: "In the technical focus the price moves hour by hour during the session.", selection: "Stock picking runs on financials, ratios and news, which change day by day." },
       closedNote: "The market is closed and the price has not moved since the last report; the suggested time is the opening bell ({time}).",
