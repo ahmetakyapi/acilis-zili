@@ -15,8 +15,13 @@ export const CURTAIN_MS = CURTAIN_S * 1000;
  *  III'ün karesi selin içinde, başlıklar yazılmışken; IV'ünkü kefeler dolarken. */
 const STILL_AT = [ACTS[1] - 0.05, ACTS[2] - 1.45, ACTS[3] - 1.3, ACTS[3] + 5];
 const NUMERALS = ["I", "II", "III", "IV"] as const;
-/** Perdelerin süresi (ms) — ilerleme çizgisi gerçek süreyle dolsun; IV sonuca kadar sürer. */
-const ACT_MS = ACTS.map((start, i) => i < ACTS.length - 1 ? (ACTS[i + 1] - start) * 1000 : 5000);
+/** I–III'ün süresi (ms): çizgi gerçek süreyle dolar. IV'ün süresi YOK — Claude
+ *  bitene kadar sürer ve ne kadar süreceğini bilmiyoruz. Eskiden 5 sn'de dolup
+ *  dolu kalıyordu; dolu çizgi "bitti" diye okunur (anatomy: bilmediğin şeyin
+ *  ilerlemesini uydurma). IV açık uçlu: çizgide gidip gelen bir parça, sayı
+ *  künyedeki "Geçen" süresinde. */
+const ACT_MS = ACTS.slice(1).map((end, i) => (end - ACTS[i]) * 1000);
+const OPEN_ACT = ACTS.length - 1;
 /** Sel ekranın bu kadarını kapladıysa altyazı kâğıt rengine döner. */
 const INVERT_AT = 0.72;
 const MAX_DPR = 2;
@@ -155,13 +160,16 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
       if (cancelled) return;
       startedRef.current = performance.now();
       running = true;
-      if (media.matches) { still(); stillTimer = window.setInterval(() => { still(); setSeconds(Math.floor(clock())); }, 500); } else raf = requestAnimationFrame(tick);
+      // Hareketi azaltılmışta da ekran dışında çizilmez: aralık sürer (perde ve
+      // geçen süre doğru kalsın) ama görünmezken tuvale dokunmaz.
+      if (media.matches) { still(); stillTimer = window.setInterval(() => { if (!visible) return; still(); setSeconds(Math.floor(clock())); }, 500); } else raf = requestAnimationFrame(tick);
     });
     const observer = new ResizeObserver(() => { resize(); if (media.matches) still(); });
     observer.observe(canvas);
     const view = new IntersectionObserver((entries) => {
       visible = entries[entries.length - 1].isIntersecting;
-      if (visible && !raf && !media.matches && running && !cancelled) raf = requestAnimationFrame(tick);
+      if (!visible || !running || cancelled) return;
+      if (media.matches) { still(); setSeconds(Math.floor(clock())); } else if (!raf) raf = requestAnimationFrame(tick);
     }, { rootMargin: VIEW_MARGIN });
     view.observe(canvas);
     const themeWatch = new MutationObserver(() => { pal = readPalette(); });
@@ -187,8 +195,8 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
     </div>
     {/* ADLI PERDE ÇİPLERİ (anatomy'deki sahne sekmeleri): filmin dört perdesi bir
         bakışta, etkin olanın çizgisi gerçek süreyle dolar. Telefonda yalnız numara. */}
-    <ol className={styles.progress} aria-hidden>{S.map((s, i) => <li key={s.title} style={{ "--act-ms": `${ACT_MS[i]}ms` } as CSSProperties}
-      data-state={act === 4 || i < act ? "done" : i === act ? "active" : "next"}>
+    <ol className={styles.progress} aria-hidden>{S.map((s, i) => <li key={s.title} style={i < OPEN_ACT ? { "--act-ms": `${ACT_MS[i]}ms` } as CSSProperties : undefined}
+      data-state={act === 4 || i < act ? "done" : i === act ? (i === OPEN_ACT ? "open" : "active") : "next"}>
       <span className={styles.chip}><b>{NUMERALS[i]}</b><em>{s.title}</em></span>
       <i className={styles.bar} />
     </li>)}</ol>
