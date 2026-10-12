@@ -2020,6 +2020,25 @@ const en: typeof tr = {
     note: "Levels come from the daily technical analysis and refresh with every edition; distances use the price in the positions table. Not investment advice.",
   },
   /* Stock screening (3 October) — rule-based elimination and fit score. */
+  sessionBell: {
+    title: "Session Bell",
+    fig: "Fig 1",
+    plateTitle: "24 Hours · New York",
+    hint: "Move Over the Dial · ← →",
+    stamp: "NY",
+    clock: "{ny} NY · {tr} TR",
+    sessions: { pre: "Pre-Market", regular: "Regular Session", after: "After Hours", closed: "Market Closed" },
+    openBell: "Opening Bell",
+    closeBell: "Closing Bell",
+    weekend: "Weekend · Market Closed",
+    holiday: "{name} · Market Closed",
+    keys: { regular: "Regular Session", extended: "Pre-Market and After Hours", contact: "Bell Contact" },
+    label:
+      "Session bell: a 24-hour dial showing New York time and a bell. The day's sessions are drawn on the dial as arcs; when the hand passes the contact at either end of the regular session it closes the circuit, the pulse runs down the cable to the coil and the striker hits the bell.",
+    caption:
+      "The dial shows one day in New York time: pre-market from {pre}, the regular session {open}–{close}, after hours until {after}. When the hand passes a contact at either end of the regular session the circuit closes, the pulse reaches the coil and the striker hits the bell: the opening and closing bell. In Türkiye time the bell opens at {trOpen} and closes at {trClose}.",
+    captionClosed: "No trading today ({name}); the dial has no session arcs and the bell stays silent. Next opening bell: {next}.",
+  },
   screening: {
     eyebrow: "Eliminate First, Then Research",
     title: "Stock Screening",
