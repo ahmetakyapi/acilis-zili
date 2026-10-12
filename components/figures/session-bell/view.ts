@@ -22,7 +22,8 @@ export const DIAL_RING_H = 2;
 export const DIAL_R = 45;
 export const DIAL_TOP = DIAL_RING_H + 2.4;
 export const TICK_R = 43.5;
-export const ARC_R = 35;
+/** Seans dilimlerinin yarıçapı: çentik halkasının hemen içi. */
+export const WEDGE_R = 39.4;
 export const CONTACT_R = 1.9;
 export const CONTACT_H = 1.4;
 export const HUB_R = 3.6;

@@ -2022,22 +2022,21 @@ const en: typeof tr = {
   /* Stock screening (3 October) — rule-based elimination and fit score. */
   sessionBell: {
     title: "Session Bell",
-    fig: "Fig 1",
-    plateTitle: "24 Hours · New York",
-    hint: "Move Over the Dial · ← →",
     stamp: "NY",
     clock: "{ny} NY · {tr} TR",
     sessions: { pre: "Pre-Market", regular: "Regular Session", after: "After Hours", closed: "Market Closed" },
-    openBell: "Opening Bell",
-    closeBell: "Closing Bell",
-    weekend: "Weekend · Market Closed",
-    holiday: "{name} · Market Closed",
-    keys: { regular: "Regular Session", extended: "Pre-Market and After Hours", contact: "Bell Contact" },
+    toOpen: "Opens in {d}",
+    toClose: "Closes in {d}",
+    units: { day: "d", hour: "h", minute: "m" },
+    previewing: "Preview",
+    back: "Back to Now",
+    ring: "Ring the Bell",
+    chipsLabel: "Sessions",
+    note: "The bell rings at the open and the close of the regular session. Tap a session or the dial to see that time.",
+    weekend: "weekend",
+    closedNote: "No trading today ({name}). Next open: {next}.",
     label:
-      "Session bell: a 24-hour dial showing New York time and a bell. The day's sessions are drawn on the dial as arcs; when the hand passes the contact at either end of the regular session it closes the circuit, the pulse runs down the cable to the coil and the striker hits the bell.",
-    caption:
-      "The dial shows one day in New York time: pre-market from {pre}, the regular session {open}–{close}, after hours until {after}. When the hand passes a contact at either end of the regular session the circuit closes, the pulse reaches the coil and the striker hits the bell: the opening and closing bell. In Türkiye time the bell opens at {trOpen} and closes at {trClose}.",
-    captionClosed: "No trading today ({name}); the dial has no session arcs and the bell stays silent. Next opening bell: {next}.",
+      "Session bell: a 24-hour dial in New York time and a bell. Coloured slices are the day's sessions; the regular session is blue, pre-market and after hours are brass. The bell is struck when the hand reaches the start and the end of the regular session.",
   },
   screening: {
     eyebrow: "Eliminate First, Then Research",

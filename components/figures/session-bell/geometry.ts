@@ -21,7 +21,6 @@ import {
 } from "@/components/iso/iso-kit";
 import { angleOf, segments, type BellDay, type Segment } from "./model";
 import {
-  ARC_R,
   BAR_H,
   BELL_X,
   BELL_Y,
@@ -54,6 +53,7 @@ import {
   STRIKE_Z,
   STROKE,
   TICK_R,
+  WEDGE_R,
   at,
   onDial,
 } from "./view";
@@ -85,14 +85,16 @@ export const BELL_HEIGHT = 39;
 /** Dövücünün vurduğu yükseklikte (s = 5) çanın yarıçapı. */
 const R_AT_STRIKE = 20.9;
 
-function arcPath(segment: Segment, radius: number) {
+function arcPoints(segment: Segment, radius: number) {
   const a0 = angleOf(segment.from);
   let a1 = angleOf(segment.to);
   if (a1 <= a0) a1 += Math.PI * 2;
   const steps = Math.max(6, Math.ceil(((a1 - a0) / (Math.PI * 2)) * 96));
-  const points = Array.from({ length: steps + 1 }, (_, index) => onDial(a0 + ((a1 - a0) * index) / steps, radius));
-  return onTop(points, DIAL_TOP, P);
+  return Array.from({ length: steps + 1 }, (_, index) => onDial(a0 + ((a1 - a0) * index) / steps, radius));
 }
+
+/** Seans dilimi: göbekten kenar yayına kapalı bir pasta dilimi (kadran yüzünde, dolgulu). */
+const wedgePath = (segment: Segment, radius: number) => onTop([[DIAL_X, DIAL_Y], ...arcPoints(segment, radius)], DIAL_TOP, P, true);
 
 function build(day: BellDay) {
   const post = (y: number): Plan => ({ x: BELL_X - POST_W / 2, y: y - POST_D / 2, w: POST_W, d: POST_D, r: 1.2 });
@@ -104,7 +106,7 @@ function build(day: BellDay) {
   const plate: Plan = { x: -118, y: 44, w: 46, d: 8, r: 1 };
   const terminal: [number, number] = [-12, 36];
   const days = segments(day);
-  const contactAt = (minutes: number) => onDial(angleOf(minutes), ARC_R);
+  const contactAt = (minutes: number) => onDial(angleOf(minutes), WEDGE_R - 4);
   const strikeAxis = G.frameAlong([COIL.x, BELL_Y, STRIKE_Z], [-1, 0, 0]);
   const headX = BELL_X + R_AT_STRIKE + STROKE + HEAD_R;
 
@@ -131,8 +133,10 @@ function build(day: BellDay) {
       ticks: radialTicks(DIAL_X, DIAL_Y, TICK_R, 96, 4, DIAL_TOP, [1.8, 3.6], P),
       // Çentiklerin dibinde iç halka: her çentik bir çizgide biter (lines.mjs).
       tickRing: ring(DIAL_X, DIAL_Y, TICK_R - 3.6, DIAL_TOP, P, 72),
-      arcTrack: ring(DIAL_X, DIAL_Y, ARC_R, DIAL_TOP, P, 72),
-      arcs: days.map((segment) => ({ kind: segment.kind, d: arcPath(segment, ARC_R) })),
+      arcTrack: ring(DIAL_X, DIAL_Y, WEDGE_R, DIAL_TOP, P, 72),
+      // Renkli dilimler kadranı okutuyor: hangi saat hangi seans bir bakışta.
+      wedges: days.map((segment) => ({ kind: segment.kind, d: wedgePath(segment, WEDGE_R) })),
+      arcs: days.map((segment) => ({ kind: segment.kind, d: onTop(arcPoints(segment, WEDGE_R), DIAL_TOP, P) })),
       contacts: day.tradingToday ? [day.open, day.close].map((m) => cylinder(...contactAt(m), CONTACT_R, DIAL_TOP, CONTACT_H, P, 14)) : [],
       hub: cylinder(DIAL_X, DIAL_Y, HUB_R, DIAL_TOP, HUB_H, P, 24, 0.4),
       hubPin: dots([[DIAL_X, DIAL_Y, DIAL_TOP + HUB_H]]),

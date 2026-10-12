@@ -3,6 +3,7 @@ import { Dots, FaceText, Line, Solid, Wire } from "@/components/iso/react/draw";
 import { bellArt } from "./geometry";
 import { SessionBellLive } from "./live";
 import type { BellDay, BellText } from "./model";
+import type { BellChip, BellLabels } from "./live";
 
 /**
  * Statik çizim SUNUCUDA (anatomy references/react.md); her öğe prop'unun
@@ -16,18 +17,24 @@ import type { BellDay, BellText } from "./model";
 export function SessionBellArt({
   day,
   text,
-  closedName,
+  labels,
+  chips,
   label,
   nowMinutes,
   nowMs,
+  nextOpenMs,
+  nextCloseMs,
   stamp,
 }: {
   day: BellDay;
   text: BellText;
-  closedName: string | null;
+  labels: BellLabels;
+  chips: BellChip[];
   label: string;
   nowMinutes: number;
   nowMs: number;
+  nextOpenMs: number;
+  nextCloseMs: number;
   /** Kadrana kazınmış tek etiket. */
   stamp: string;
 }) {
@@ -59,6 +66,9 @@ export function SessionBellArt({
       <Line d={dial.tickRing} tone="faint" />
       <Line d={dial.ticks.minor} tone="lo" />
       <Line d={dial.ticks.major} tone="mid" />
+      {dial.wedges.map((wedge) => (
+        <path key={`w-${wedge.kind}`} className="sb-wedge" data-kind={wedge.kind} d={wedge.d} />
+      ))}
       <Line d={dial.arcTrack} tone="faint" />
       {dial.arcs.map((arc) => (
         <path key={arc.kind} className="iso-line sb-arc" data-kind={arc.kind} d={arc.d} />
@@ -126,10 +136,13 @@ export function SessionBellArt({
     <SessionBellLive
       day={day}
       text={text}
-      closedName={closedName}
+      labels={labels}
+      chips={chips}
       label={label}
       nowMinutes={nowMinutes}
       nowMs={nowMs}
+      nextOpenMs={nextOpenMs}
+      nextCloseMs={nextCloseMs}
       plinth={PLINTH}
       dial={DIAL}
       pin={PIN}

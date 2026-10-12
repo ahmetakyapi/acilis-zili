@@ -9,7 +9,9 @@ import {
   angleOf,
   minutesOfAngle,
   plungeAt,
-  readoutOf,
+  clockOf,
+  countdownOf,
+  durationOf,
   ringAt,
   segments,
   sessionAt,
@@ -27,10 +29,10 @@ const half: BellDay = { ...normal, close: 780, afterClose: 1020 };
 const closed: BellDay = { ...normal, tradingToday: false };
 const text = {
   sessions: { pre: "Ön Seans", regular: "Asıl Seans", after: "Akşam Seansı", closed: "Piyasa Kapalı" },
-  openBell: "Açılış Zili",
-  closeBell: "Kapanış Zili",
-  closedDay: "Hafta Sonu · Piyasa Kapalı",
   clock: "{tr} TR · {ny} NY",
+  toOpen: "Açılışa {d}",
+  toClose: "Kapanışa {d}",
+  units: { day: "g", hour: "sa", minute: "dk" },
 };
 
 test("seans yayları: ön, asıl, akşam; yarım günde kapanış ve akşam erken", () => {
@@ -83,10 +85,24 @@ test("günün tekrarı: gece yarısından şimdiye, SWEEP sn'de", () => {
   assert.equal(sweepAt(SWEEP * 2, 671), 671);
 });
 
-test("künye: TR ve NY saati, seans; zil anında zilin adı", () => {
-  assert.equal(readoutOf(671, normal, text), "18:11 TR · 11:11 NY · Asıl Seans");
-  assert.equal(readoutOf(570, normal, text), "16:30 TR · 09:30 NY · Açılış Zili");
-  assert.equal(readoutOf(962, normal, text), "23:02 TR · 16:02 NY · Kapanış Zili");
-  assert.equal(readoutOf(1300, normal, text), "04:40 TR · 21:40 NY · Piyasa Kapalı", "TR saati gece yarısını geçer");
-  assert.equal(readoutOf(600, closed, text, "Şükran Günü · Piyasa Kapalı"), "17:00 TR · 10:00 NY · Şükran Günü · Piyasa Kapalı");
+test("saat: TR ve NY, TR gece yarısını geçer", () => {
+  assert.equal(clockOf(671, normal, text), "18:11 TR · 11:11 NY");
+  assert.equal(clockOf(1300, normal, text), "04:40 TR · 21:40 NY");
+});
+
+test("süre: gün/saat/dakika, sıfır parça yazılmaz, yukarı yuvarlar", () => {
+  const min = 60_000;
+  assert.equal(durationOf(250 * min, text.units), "4 sa 10 dk");
+  assert.equal(durationOf(180 * min, text.units), "3 sa");
+  assert.equal(durationOf(7.2 * min, text.units), "8 dk");
+  assert.equal(durationOf((24 * 60 + 14 * 60 + 5) * min, text.units), "1 g 14 sa");
+  assert.equal(durationOf(-5, text.units), "0 dk");
+});
+
+test("geri sayım: asıl seansta kapanışa, değilse açılışa", () => {
+  const now = 1_000_000;
+  const min = 60_000;
+  assert.equal(countdownOf(now, 671, normal, now + 1000 * min, now + 289 * min, text), "Kapanışa 4 sa 49 dk");
+  assert.equal(countdownOf(now, 300, normal, now + 270 * min, now + 660 * min, text), "Açılışa 4 sa 30 dk");
+  assert.equal(countdownOf(now, 600, closed, now + 2000 * min, now + 3000 * min, text), "Açılışa 1 g 9 sa");
 });

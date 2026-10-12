@@ -104,27 +104,45 @@ export const sweepAt = (t: number, now: number) => now * inOutQuart(Math.min(1, 
 
 export type BellText = {
   sessions: Record<SessionKind, string>;
-  openBell: string;
-  closeBell: string;
-  closedDay: string;
   /** "{tr} TR · {ny} NY" sırası dile göre (TR önce, EN'de NY önce). */
   clock: string;
+  /** "{d} sonra açılış" gibi geri sayım kalıpları ve süre birimleri. */
+  toOpen: string;
+  toClose: string;
+  units: { day: string; hour: string; minute: string };
 };
 
-const hhmm = (minutes: number) => {
+export const hhmm = (minutes: number) => {
   const m = ((Math.round(minutes) % DAY) + DAY) % DAY;
   return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 };
 
-/** Zil anına bu kadar yakınsa künye zilin adını söyler (dakika). */
-const NEAR = 7.5;
+/** "18:50 TR · 11:50 NY": iki saat, sıra dile göre. */
+export const clockOf = (minutes: number, day: BellDay, text: Pick<BellText, "clock">) =>
+  text.clock.replace("{tr}", hhmm(minutes + day.trOffset)).replace("{ny}", hhmm(minutes));
 
-/** Künye: iki saat (TR ve NY), o anın seansı; zil anındaysa zilin adı. */
-export function readoutOf(minutes: number, day: BellDay, text: BellText, closedName?: string | null): string {
-  const clock = text.clock.replace("{tr}", hhmm(minutes + day.trOffset)).replace("{ny}", hhmm(minutes));
-  if (!day.tradingToday) return `${clock} · ${closedName ?? text.closedDay}`;
-  const m = ((minutes % DAY) + DAY) % DAY;
-  if (Math.abs(m - day.open) <= NEAR) return `${clock} · ${text.openBell}`;
-  if (Math.abs(m - day.close) <= NEAR) return `${clock} · ${text.closeBell}`;
-  return `${clock} · ${text.sessions[sessionAt(m, day)]}`;
+/** Süre: "1 g 14 sa", "4 sa 10 dk", "8 dk". Saniye yok (5 sn'de bir yazılıyor). */
+export function durationOf(ms: number, units: BellText["units"]) {
+  const minutes = Math.max(0, Math.ceil(ms / 60000));
+  const days = Math.floor(minutes / DAY);
+  const hours = Math.floor((minutes % DAY) / 60);
+  const rest = minutes % 60;
+  if (days > 0) return hours > 0 ? `${days} ${units.day} ${hours} ${units.hour}` : `${days} ${units.day}`;
+  if (hours > 0) return rest > 0 ? `${hours} ${units.hour} ${rest} ${units.minute}` : `${hours} ${units.hour}`;
+  return `${rest} ${units.minute}`;
+}
+
+/**
+ * Sıradaki zil ve ona kalan süre. Zamanlar `getMarketStatus`ın
+ * `nextOpen`/`nextClose`u: tatil ve yarım gün orada çözülmüş. Asıl seanstayken
+ * kapanış zili, değilse açılış zili.
+ */
+export function nextBellOf(nowMs: number, minutes: number, day: BellDay, nextOpenMs: number, nextCloseMs: number) {
+  const regular = sessionAt(minutes, day) === "regular";
+  return { bell: regular ? ("close" as const) : ("open" as const), ms: (regular ? nextCloseMs : nextOpenMs) - nowMs };
+}
+
+export function countdownOf(nowMs: number, minutes: number, day: BellDay, nextOpenMs: number, nextCloseMs: number, text: BellText) {
+  const next = nextBellOf(nowMs, minutes, day, nextOpenMs, nextCloseMs);
+  return (next.bell === "close" ? text.toClose : text.toOpen).replace("{d}", durationOf(next.ms, text.units));
 }

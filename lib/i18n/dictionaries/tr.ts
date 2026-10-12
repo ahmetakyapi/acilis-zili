@@ -2469,22 +2469,21 @@ const tr = {
   /** Seans Zili figürü (components/figures/session-bell). Künyeler Title Case. */
   sessionBell: {
     title: "Seans Zili",
-    fig: "Şekil 1",
-    plateTitle: "24 Saat · New York",
-    hint: "Kadranın Üzerinde Gezin · ← →",
     stamp: "NY",
     clock: "{tr} TR · {ny} NY",
     sessions: { pre: "Ön Seans", regular: "Asıl Seans", after: "Akşam Seansı", closed: "Piyasa Kapalı" },
-    openBell: "Açılış Zili",
-    closeBell: "Kapanış Zili",
-    weekend: "Hafta Sonu · Piyasa Kapalı",
-    holiday: "{name} · Piyasa Kapalı",
-    keys: { regular: "Asıl Seans", extended: "Ön ve Akşam Seansı", contact: "Zil Kontağı" },
+    toOpen: "Açılışa {d}",
+    toClose: "Kapanışa {d}",
+    units: { day: "g", hour: "sa", minute: "dk" },
+    previewing: "Önizleme",
+    back: "Şimdiye Dön",
+    ring: "Zili Çal",
+    chipsLabel: "Seanslar",
+    note: "Zil, asıl seansın açılışında ve kapanışında çalar. Bir seansa ya da kadrana dokun, o saati gör.",
+    weekend: "hafta sonu",
+    closedNote: "Bugün işlem yok ({name}). Sıradaki açılış: {next}.",
     label:
-      "Seans zili: New York saatini gösteren 24 saatlik bir kadran ve bir çan. Kadranda günün seansları yay olarak çizili; asıl seansın iki ucundaki kontaktan geçen ibre devreyi kapatır, darbe kablodan bobine gider ve dövücü çanı vurur.",
-    caption:
-      "Kadran New York saatiyle bir günü gösteriyor: ön seans {pre}, asıl seans {open}–{close}, akşam seansı {after}'e kadar. İbre asıl seansın iki ucundaki kontaktan geçince devre kapanır, darbe kablodan bobine ulaşır ve dövücü çanı vurur: açılış ve kapanış zili. Türkiye saatiyle açılış {trOpen}, kapanış {trClose}.",
-    captionClosed: "Bugün işlem yok ({name}); kadranda seans yayı yok ve zil çalmıyor. Sıradaki açılış zili {next}.",
+      "Seans zili: New York saatini gösteren 24 saatlik kadran ve bir çan. Renkli dilimler günün seansları; asıl seans mavi, ön ve akşam seansı pirinç. İbre asıl seansın başına ve sonuna gelince çan vurulur.",
   },
   screening: {
     eyebrow: "Önce Ele, Sonra İncele",
