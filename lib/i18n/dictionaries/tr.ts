@@ -2662,22 +2662,16 @@ const tr = {
     /** Kural Tezgâhı figürü (components/figures/rule-bench). Künyeler Title Case. */
     bench: {
       title: "Kural Tezgâhı",
-      fig: "Şekil 1",
-      plateTitle: "Yedi İstasyon",
-      hint: "İstasyonun Üzerine Gel · ← →",
-      passed: "Geçen {n}",
-      warned: "Dikkat {n}",
-      failed: "Kalan {n}",
-      missing: "Veri Yok {n}",
-      score: "Puan {n}",
+      score: "Puan",
+      noScore: "Puan Yok",
+      counts: { pass: "Geçti", warn: "Dikkat", fail: "Kaldı", na: "Veri Yok" },
+      stationsLabel: "İstasyonlar",
       gatePass: "Geçti",
       gateFail: "Elendi",
-      and: "ve",
-      keys: { pass: "Geçen Kural", warn: "Dikkat", fail: "Kalan Kural", na: "Verisi Yok" },
+      blocked: "Kapıdan geçemedi; kurallar yine de ölçüldü",
+      note: "Her lamba bir kural: yeşil geçti, sarı dikkat, kırmızı kaldı, gri veri yok. Bir istasyona dokun, kuralları gör.",
       label:
         "{symbol} için kural tezgâhı: hisse bir iş parçası olarak rayda yedi istasyondan geçer. Her istasyonun lambaları o kategorinin kurallarıdır; yeşil geçti, sarı dikkat, kırmızı kaldı, sönük olanın verisi yok.",
-      caption:
-        "{symbol} rayda yedi istasyondan geçiyor: önce eleme kapısı, sonra {rest}. İstasyonun yoklayıcısı parçaya iner ve her kural bir lamba olarak yanar; eleme kapısında kalan hisse orada durur ve kapının kolu iner. Sayılar aşağıdaki kural tablosunun aynısı.",
     },
     prosTitle: "Güçlü Yanlar",
     consTitle: "Zayıf Yanlar",

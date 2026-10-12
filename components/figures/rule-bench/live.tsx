@@ -3,8 +3,9 @@
 import * as React from "react";
 import { translateAlong } from "@/components/iso/iso-kit";
 import { IsoFigure } from "@/components/iso/react/draw";
-import { follow, useInView, useLoop, useReadout, useStillness } from "@/components/iso/react/live";
-import { HOME, finalPose, lastStop, loopLength, readoutOf, tourAt, START, TRAVEL, DWELL, type BenchData, type BenchText, type Pose } from "./model";
+import { follow, useInView, useLoop, useStillness } from "@/components/iso/react/live";
+import { HOME, finalPose, lastStop, loopLength, tourAt, START, TRAVEL, DWELL, type BenchData, type Pose } from "./model";
+import type { CheckStatus } from "@/lib/screening";
 import { BLOCK_D, BLOCK_H, BLOCK_Y, DIP, HEIGHT, P, PITCH, PROBE_Y, ROD_TIP, WIDTH, at, stationX } from "./view";
 
 /* Hareket (anatomy motion.md): zamana bağlı, kare süresi kitte 1/30 sn ile
@@ -20,9 +21,29 @@ const USER_DIP = 0.55;
 
 type Mode = { kind: "tour"; t: number } | { kind: "user"; target: number; since: number; dipAt: number | null } | { kind: "return"; target: number };
 
+export type BenchSummary = {
+  score: number | null;
+  band: string;
+  bandLabel: string;
+  counts: Record<CheckStatus, number>;
+};
+
+export type BenchLabels = {
+  score: string;
+  counts: Record<CheckStatus, string>;
+  stationsLabel: string;
+  note: string;
+  gatePass: string;
+  gateFail: string;
+  blocked: string;
+};
+
+const STATUS_ORDER: CheckStatus[] = ["pass", "warn", "fail", "na"];
+
 export function RuleBenchLive({
   data,
-  text,
+  summary,
+  labels,
   label,
   base,
   backRow,
@@ -32,7 +53,8 @@ export function RuleBenchLive({
   gate,
 }: {
   data: BenchData;
-  text: BenchText;
+  summary: BenchSummary;
+  labels: BenchLabels;
   label: string;
   base: React.ReactNode;
   backRow: React.ReactNode;
@@ -41,8 +63,11 @@ export function RuleBenchLive({
   probes: React.ReactNode;
   gate: React.ReactNode;
 }) {
-  const { anchor, say } = useReadout<HTMLDivElement>();
+  const root = React.useRef<HTMLDivElement>(null);
+  const anchor = React.useRef<HTMLDivElement>(null);
   const inView = useInView(anchor);
+  /** Kullanıcının seçtiği istasyon: altında o kategorinin kuralları adlarıyla. */
+  const [selected, setSelected] = React.useState<number | null>(null);
   const still = useStillness();
   const svg = React.useRef<SVGGElement>(null);
   const mode = React.useRef<Mode>({ kind: "tour", t: -TOUR_FIRST });
@@ -71,11 +96,10 @@ export function RuleBenchLive({
     [],
   );
 
-  /** Künye: kızak bir istasyonda duruyorsa o istasyon, yoksa bütün tezgâh. */
-  const speak = React.useCallback(
-    (station: number | null) => say(readoutOf(data, station, text)),
-    [data, text, say],
-  );
+  /** Kızağın durduğu istasyonun kartı vurgulanır (DOM'a yazılır, yeniden çizim yok). */
+  const speak = React.useCallback((station: number | null) => {
+    root.current?.querySelectorAll<HTMLElement>("[data-station]").forEach((card) => card.toggleAttribute("data-here", Number(card.dataset.station) === station));
+  }, []);
 
   const tick = React.useCallback(
     (dt: number) => {
@@ -139,7 +163,10 @@ export function RuleBenchLive({
 
   const choose = React.useCallback(
     (station: number) => {
-      const target = data.eliminated ? 0 : Math.max(0, Math.min(data.stations.length - 1, station));
+      const index = Math.max(0, Math.min(data.stations.length - 1, station));
+      // Elenen parça kapıyı geçemez: kızak kapıda kalır, ama seçilen istasyonun kuralları yine listelenir.
+      const target = data.eliminated ? 0 : index;
+      setSelected(index);
       speak(target);
       if (still) {
         apply({ ...finalPose(data), carriage: target });
@@ -180,42 +207,109 @@ export function RuleBenchLive({
     return m.kind === "user" ? m.target : Math.max(0, Math.round(pose.current.carriage));
   };
 
+  const chosen = selected === null ? null : data.stations[selected];
+
   return (
-    <div
-      ref={anchor}
-      className="rb"
-      tabIndex={0}
-      aria-label={label}
-      onPointerMove={(event) => {
-        const station = stationAt(event.clientX, event.clientY);
-        if (station !== null) choose(station);
-      }}
-      onPointerDown={(event) => {
-        const station = stationAt(event.clientX, event.clientY);
-        if (station !== null) choose(station);
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
-          event.preventDefault();
-          choose(current() + (event.key === "ArrowRight" ? 1 : -1));
-        } else if (event.key === "Home" || event.key === "End") {
-          event.preventDefault();
-          choose(event.key === "Home" ? 0 : data.stations.length - 1);
-        }
-      }}
-    >
-      <IsoFigure width={WIDTH} height={HEIGHT} label={label}>
-        <g ref={svg}>
-          {base}
-          {backRow}
-          {rail}
-          <g data-carriage="" transform={translateAlong(P, [stationX(last), 0, 0])}>
-            {carriage}
+    <div ref={root} className="rb">
+      <div className="rb-head">
+        <span className="rb-score" data-band={summary.band}>
+          <b>{summary.score ?? "—"}</b>
+          <span>
+            <small>{labels.score}</small>
+            {summary.bandLabel}
+          </span>
+        </span>
+        <ul className="rb-counts">
+          {STATUS_ORDER.filter((status) => summary.counts[status] > 0).map((status) => (
+            <li key={status} data-status={status}>
+              <b>{summary.counts[status]}</b>
+              {labels.counts[status]}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div
+        ref={anchor}
+        className="rb-stage"
+        tabIndex={0}
+        aria-label={label}
+        onPointerMove={(event) => {
+          if (event.pointerType !== "mouse") return;
+          const station = stationAt(event.clientX, event.clientY);
+          if (station !== null) choose(station);
+        }}
+        onPointerDown={(event) => {
+          const station = stationAt(event.clientX, event.clientY);
+          if (station !== null) choose(station);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+            event.preventDefault();
+            choose(current() + (event.key === "ArrowRight" ? 1 : -1));
+          } else if (event.key === "Home" || event.key === "End") {
+            event.preventDefault();
+            choose(event.key === "Home" ? 0 : data.stations.length - 1);
+          }
+        }}
+      >
+        <IsoFigure width={WIDTH} height={HEIGHT} label={label}>
+          <g ref={svg}>
+            {base}
+            {backRow}
+            {rail}
+            <g data-carriage="" transform={translateAlong(P, [stationX(last), 0, 0])}>
+              {carriage}
+            </g>
+            {probes}
+            {gate}
           </g>
-          {probes}
-          {gate}
-        </g>
-      </IsoFigure>
+        </IsoFigure>
+      </div>
+
+      <div className="rb-stations" role="group" aria-label={labels.stationsLabel}>
+        {data.stations.map((station, index) => (
+          <button
+            key={station.id}
+            type="button"
+            className="rb-station-card"
+            data-station={index}
+            data-selected={selected === index ? "" : undefined}
+            data-blocked={data.eliminated && index > 0 ? "" : undefined}
+            aria-pressed={selected === index}
+            onClick={() => choose(index)}
+          >
+            <span className="rb-card-name">{station.name}</span>
+            <span className="rb-card-score">
+              {index === 0 ? (data.eliminated ? labels.gateFail : labels.gatePass) : station.score === null ? "—" : Math.round(station.score)}
+            </span>
+            <span className="rb-card-dots" aria-hidden="true">
+              {station.statuses.map((status, rule) => (
+                <i key={rule} data-status={status} />
+              ))}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {chosen ? (
+        <div className="rb-detail" aria-live="polite">
+          <p className="rb-detail-title">
+            {chosen.name}
+            {data.eliminated && selected !== null && selected > 0 ? <small>{labels.blocked}</small> : null}
+          </p>
+          <ul>
+            {chosen.statuses.map((status, rule) => (
+              <li key={rule} data-status={status}>
+                <i aria-hidden="true" />
+                <span>{chosen.names?.[rule] ?? ""}</span>
+                <em>{labels.counts[status]}</em>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      <p className="rb-note">{labels.note}</p>
     </div>
   );
 }

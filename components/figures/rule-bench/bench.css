@@ -1,28 +1,43 @@
 /*
- * Kural Tezgâhı. Kitin token'ları (--anatomy-*) <html class="iso"> üzerinde;
- * figürün kendi token'ları yalnız .rb kapsamında (anatomy: figür token'ı
- * :root'a konmaz). Lamba renkleri raporun durum tonları: yeşil/kırmızı köprüde
- * sitenin --up/--down'una bağlı, dikkat sitenin pirinç tonu.
+ * Kural Tezgâhı, ikinci sürüm. Durum renkleri raporun kendisiyle aynı:
+ * geçti --up, dikkat --brass, kaldı --down, veri yok nötr. Puan rozetinin
+ * rengi BANTTAN (Screening.module.css'teki puan halkasıyla aynı kural).
+ * Figür token'ları yalnız .rb kapsamında.
  */
-.rb-wrap {
-  --rb-warn: var(--brass);
-  display: grid;
-  gap: 12px;
-}
-
 .rb {
-  cursor: default;
-  touch-action: pan-y;
-  border-radius: 6px;
-  -webkit-tap-highlight-color: transparent;
+  --rb-warn: var(--brass);
+  display: grid; gap: 14px; padding: 2px 20px 20px;
 }
+@media (min-width: 1024px) { .rb { padding: 2px 24px 24px; } }
 
-.rb:focus-visible {
-  outline: 2px solid var(--line-focus, var(--anatomy-muted));
-  outline-offset: 6px;
+/* ---- Üst bilgi: puan rozeti + sayaçlar ---- */
+.rb-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+.rb-score {
+  --band: var(--text-muted); --band-wash: var(--surface-sunken);
+  display: inline-flex; align-items: center; gap: 10px; padding: 6px 16px 6px 8px; border-radius: 999px;
+  background: var(--band-wash); color: var(--band);
 }
+.rb-score[data-band="strong"], .rb-score[data-band="worth"] { --band: var(--up); --band-wash: var(--up-wash); }
+.rb-score[data-band="mixed"] { --band: var(--brass-ink); --band-wash: var(--brass-wash); }
+.rb-score[data-band="weak"], .rb-score[data-band="eliminated"] { --band: var(--down); --band-wash: var(--down-wash); }
+.rb-score b {
+  display: grid; place-items: center; min-width: 44px; height: 44px; padding: 0 6px; border-radius: 999px;
+  background: var(--band); color: var(--on-primary); font-size: 20px; font-weight: 800;
+}
+.rb-score > span { display: grid; font-size: 16px; font-weight: 750; line-height: 1.15; }
+.rb-score small { font-size: 12px; font-weight: 600; opacity: .8; }
+.rb-counts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.rb-counts li { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 12px; border-radius: 10px; background: var(--surface-sunken); font-size: 14px; font-weight: 600; color: var(--text-body); }
+.rb-counts b { font-size: 18px; font-weight: 800; }
+.rb-counts [data-status="pass"] { background: var(--up-wash); color: var(--up); }
+.rb-counts [data-status="warn"] { background: var(--brass-wash); color: var(--brass-ink); }
+.rb-counts [data-status="fail"] { background: var(--down-wash); color: var(--down); }
 
-.rb .iso-svg { overflow: visible; }
+/* ---- Figür ---- */
+.rb-stage { border-radius: 14px; background: var(--anatomy-card); padding: 6px 4px; cursor: default; touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
+.rb-stage:focus-visible { outline: 2px solid var(--line-focus, var(--primary)); outline-offset: 3px; }
+.rb-stage .iso-stage { --anatomy-paper: var(--anatomy-card); }
+.rb-stage .iso-svg { overflow: visible; }
 
 /* Lamba: sönükken kâğıt, yanınca durumun rengi. Durum değişimi kısa ve
    eğrisi markanın; yalnız dolgu ve çizgi rengi geçer. */
@@ -39,27 +54,49 @@
 /* Verisi olmayan kural hiç yanmaz; çerçevesi de soluk. */
 .rb-lamp[data-status="na"] > .iso-solid > .iso-edge { stroke: var(--anatomy-faint); }
 
+
 /* İnen kapı kolu: eleme bu figürde bir hüküm, rengi kalan kuralın rengi. */
 .rb-gate-down > .iso-solid > .iso-edge { stroke: var(--anatomy-red); }
 
-/* Lejant: kartın altında, lambayla aynı tonlar. */
-.rb-keys {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 18px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: 12.5px;
-  color: var(--text-muted);
+/* ---- İstasyon kartları ---- */
+.rb-stations { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.rb-station-card {
+  display: grid; gap: 4px; align-content: start; min-height: 76px; padding: 10px 10px 9px; text-align: left; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+  transition: border-color 200ms var(--ease-brand), background-color 200ms var(--ease-brand);
 }
-.rb-keys li { display: inline-flex; align-items: center; gap: 7px; }
-.rb-keys i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--line-strong); }
-.rb-keys [data-status="pass"] i { background: var(--up); border-color: var(--up); }
-.rb-keys [data-status="warn"] i { background: var(--brass); border-color: var(--brass); }
-.rb-keys [data-status="fail"] i { background: var(--down); border-color: var(--down); }
-.rb-caption { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--text-body); max-width: 68ch; }
+.rb-station-card:hover { border-color: var(--line-strong); }
+.rb-station-card[data-here] { border-color: var(--primary-faint); }
+.rb-station-card[data-selected] { border-color: var(--primary); background: var(--primary-wash); }
+.rb-station-card[data-blocked] { opacity: .55; }
+.rb-station-card:focus-visible { outline: 2px solid var(--line-focus, var(--primary)); outline-offset: 2px; }
+.rb-card-name { font-size: 12.5px; font-weight: 650; line-height: 1.2; color: var(--text-muted); }
+.rb-card-score { font-size: 18px; font-weight: 800; color: var(--text-strong); }
+.rb-card-dots { display: flex; gap: 4px; }
+.rb-card-dots i, .rb-detail i { width: 9px; height: 9px; border-radius: 50%; background: var(--line-strong); }
+.rb-detail li[data-status="pass"] i, .rb-card-dots i[data-status="pass"] { background: var(--up); }
+.rb-detail li[data-status="warn"] i, .rb-card-dots i[data-status="warn"] { background: var(--brass); }
+.rb-detail li[data-status="fail"] i, .rb-card-dots i[data-status="fail"] { background: var(--down); }
 
+/* ---- Seçilen istasyonun kuralları ---- */
+.rb-detail { border-radius: 12px; background: var(--surface-sunken); padding: 12px 14px; }
+.rb-detail-title { margin: 0 0 6px; font-size: 15px; font-weight: 750; color: var(--text-strong); }
+.rb-detail-title small { display: block; font-size: 12.5px; font-weight: 500; color: var(--text-muted); }
+.rb-detail ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.rb-detail li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; font-size: 14.5px; color: var(--text-body); }
+.rb-detail li em { font-style: normal; font-size: 13px; font-weight: 700; color: var(--text-muted); }
+.rb-detail li[data-status="pass"] em { color: var(--up); }
+.rb-detail li[data-status="warn"] em { color: var(--brass-ink); }
+.rb-detail li[data-status="fail"] em { color: var(--down); }
+
+.rb-note { margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-body); }
+
+@media (max-width: 1023px) { .rb-stations { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (max-width: 639px) {
-  .rb-wrap .iso-plate { padding: 44px 10px; }
+  .rb-stage { margin-inline: -6px; padding: 2px 0; border-radius: 12px; }
+  .rb-stations { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rb-station-card { min-height: 64px; grid-template-columns: 1fr auto; grid-template-areas: "name score" "dots score"; align-items: center; }
+  .rb-card-name { grid-area: name; }
+  .rb-card-score { grid-area: score; font-size: 20px; }
+  .rb-card-dots { grid-area: dots; }
 }

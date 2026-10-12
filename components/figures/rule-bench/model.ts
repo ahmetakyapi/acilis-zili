@@ -18,6 +18,8 @@ export type BenchStation = {
   /** Kategori puanı (0–100); eleme kapısında ve ölçülemeyende null. */
   score: number | null;
   statuses: CheckStatus[];
+  /** Kuralların adları (statuses ile aynı sırada), seçilen istasyonun listesi için. */
+  names?: string[];
 };
 
 export type BenchData = {

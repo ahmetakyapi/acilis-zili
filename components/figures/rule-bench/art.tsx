@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Dots, FaceText, Line, Solid } from "@/components/iso/react/draw";
 import { benchArt } from "./geometry";
-import { RuleBenchLive } from "./live";
-import { finalPose, type BenchData, type BenchText } from "./model";
+import { RuleBenchLive, type BenchLabels, type BenchSummary } from "./live";
+import { finalPose, type BenchData } from "./model";
 
 /**
  * Statik çizim SUNUCUDA: bütün yollar burada JSX olur ve canlı bileşene
@@ -15,7 +15,7 @@ import { finalPose, type BenchData, type BenchText } from "./model";
  * kızağın ÜSTÜNDE) → kapı kolu (en önde, rayın önündeki göbekte).
  * Sunucu SON POZU basar: lambalar yanık, kızak son durakta.
  */
-export function RuleBenchArt({ data, text, label }: { data: BenchData; text: BenchText; label: string }) {
+export function RuleBenchArt({ data, summary, labels, label }: { data: BenchData; summary: BenchSummary; labels: BenchLabels; label: string }) {
   const art = benchArt(data.stations.map((station) => station.statuses.length));
   const rest = finalPose(data);
   const { base, ruler, rail, stations, sled, gate } = art;
@@ -119,7 +119,8 @@ export function RuleBenchArt({ data, text, label }: { data: BenchData; text: Ben
   return (
     <RuleBenchLive
       data={data}
-      text={text}
+      summary={summary}
+      labels={labels}
       label={label}
       base={BASE}
       backRow={BACK_ROW}
