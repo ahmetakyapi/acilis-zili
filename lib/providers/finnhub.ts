@@ -13,6 +13,7 @@ import {
 } from "./types";
 import { withTimeout } from "./timeout";
 import { saglayiciMetni } from "@/lib/text";
+import { noteProviderResponse } from "./usage";
 
 /**
  * Finnhub — şirket meta verisi, haberler, bilanço takvimi.
@@ -57,6 +58,7 @@ export async function finnhubFetch<T>(
       }),
     );
 
+    noteProviderResponse("finnhub", res);
     if (res.status === 429) {
       return fail("finnhub", "rate-limited", "Finnhub istek limiti aşıldı");
     }

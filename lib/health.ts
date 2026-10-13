@@ -11,6 +11,7 @@ import {
 } from "./schema";
 import { getHolidays } from "./data";
 import { providerStatus } from "./providers";
+import { providerUsage } from "./providers/usage";
 import {
   cronState,
   routineReports,
@@ -78,6 +79,9 @@ export type HealthReport = {
     lastQuoteAt: string | null;
     /** Günlük senkronun izi ve bugünkü durumu (lib/routine-schedule.ts → cronState). */
     cron: { lastRunAt: string | null; state: CronState; dueTr: string } | null;
+    /** Kota ve son başarılı çekme — süreç belleğinden, yoklama yok
+        (lib/providers/usage.ts). `since` sürecin başladığı an. */
+    usage: ReturnType<typeof providerUsage>;
   };
   routines: RoutineReport[] | null;
   /** Son 24 saatte kaydedilen uygulama hatası; tablo yoksa null. */
@@ -98,7 +102,7 @@ export async function buildHealthReport(now: Date = new Date()): Promise<HealthR
       status: "down",
       checkedAt: now.toISOString(),
       database,
-      providers: { configured, lastQuoteAt: null, cron: null },
+      providers: { configured, lastQuoteAt: null, cron: null, usage: providerUsage(now) },
       routines: null,
       errors24h: null,
     };
@@ -191,7 +195,7 @@ export async function buildHealthReport(now: Date = new Date()): Promise<HealthR
     status: late || cronMissed ? "degraded" : "ok",
     checkedAt: now.toISOString(),
     database,
-    providers: { configured, lastQuoteAt, cron },
+    providers: { configured, lastQuoteAt, cron, usage: providerUsage(now) },
     routines,
     errors24h,
   };

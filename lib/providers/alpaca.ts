@@ -10,6 +10,7 @@ import {
   responseDate,
 } from "./types";
 import { withTimeout } from "./timeout";
+import { noteProviderResponse } from "./usage";
 
 /**
  * Alpaca Market Data — fiyat ve grafik barları.
@@ -118,6 +119,7 @@ async function alpacaFetch<T>(
       }),
     );
 
+    noteProviderResponse("alpaca", res);
     if (res.status === 429) {
       return fail("alpaca", "rate-limited", "Alpaca istek limiti aşıldı");
     }

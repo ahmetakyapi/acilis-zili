@@ -9,6 +9,7 @@ import {
   responseDate,
 } from "./types";
 import { withTimeout } from "./timeout";
+import { noteProviderResponse } from "./usage";
 
 /**
  * FRED (St. Louis Fed) — makro göstergelerin resmî değerleri.
@@ -200,6 +201,7 @@ async function fredFetch<T>(
       }),
     );
 
+    noteProviderResponse("fred", res);
     if (res.status === 429) {
       return fail("fred", "rate-limited", "FRED istek limiti aşıldı");
     }
