@@ -5,13 +5,27 @@ import {
   getHolidays,
   getMacroRows,
   getSymbolNames,
-  getEarningsBetween,
   weekAnchor,
 } from "@/lib/data";
 import { getChartBars, getQuotes } from "@/lib/providers";
-import { addEtDays, getMarketStatus, todayEt } from "@/lib/market-hours";
+import {
+  addEtDays,
+  getMarketStatus,
+  isTradingDay,
+  prevTradingDay,
+  todayEt,
+  type MarketHoliday,
+} from "@/lib/market-hours";
 import { INDEX_STRIP } from "@/db/seed/symbols";
-import type { Bar } from "@/lib/providers/types";
+import {
+  EMPTY_MOVE,
+  closeToClose,
+  pctChange,
+  rangeCovering,
+  type IndexMove,
+} from "@/lib/brief-indices";
+import { fillEventActuals } from "@/lib/calendar-sync";
+import { getEarningsWithOverrides, sourceFields } from "@/lib/earnings-overrides";
 
 /**
  * Bülten için ham veri paketi.
@@ -26,6 +40,9 @@ import type { Bar } from "@/lib/providers/types";
  * Geçmiş bir tarih istendiğinde endeks hareketi CANLI kotasyondan değil, o
  * güne/haftaya ait bar kapanışlarından türetilir — arşiv yazısının rakamı
  * bugünün fiyatı olamaz. `retrospective: true` ajana metnin sesini söyler.
+ *
+ * Yüzde HER YOLDA kapanıştan kapanışa (`lib/brief-indices.ts`); yanında
+ * `prev_price` ve `prev_date` var ki rutin hesabı denetleyebilsin.
  */
 
 function authorized(request: Request): AuthOutcome {
@@ -34,16 +51,9 @@ function authorized(request: Request): AuthOutcome {
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-function dayOf(bar: Bar): string {
-  return new Date(bar.time * 1000).toISOString().slice(0, 10);
-}
-
-/** Aralıktaki barlardan dönem getirisi — ilk açılış → son kapanış. */
-function periodChangePct(bars: Bar[]): number | null {
-  if (bars.length === 0) return null;
-  const base = bars[0].open || bars[0].close;
-  if (!base) return null;
-  return ((bars[bars.length - 1].close - base) / base) * 100;
+/** O günün tatil kaydı — yarım gün de kayıt, `early_close_et` dolu. */
+function holidayOf(date: string, holidays: MarketHoliday[]): MarketHoliday | null {
+  return holidays.find((holiday) => holiday.date === date) ?? null;
 }
 
 export async function GET(request: Request) {
@@ -67,19 +77,22 @@ export async function GET(request: Request) {
 
   const holidays = await getHolidays();
   const status = getMarketStatus(new Date(), holidays);
+  const requested = holidayOf(date, holidays);
 
-  const [events, earnings, macro] = await Promise.all([
+  const [rawEvents, earnings, macro] = await Promise.all([
     getEventsBetween(from, to),
-    getEarningsBetween(from, to),
+    /* Elle düzeltilmiş bilanço takvimi (`lib/earnings-overrides.ts`). */
+    getEarningsWithOverrides(from, to).catch(() => []),
     getMacroRows(),
   ]);
+  /* Açıklanmış ama `actual`ı boş olay: değer olay gününün FRED vintage'ından
+     çekilip YAZILIR (gerekçe `fillEventActuals`). Geçmiş tarihli pakette
+     cron'un kaçırdığı satırlar da burada dolar. */
+  const { events } = await fillEventActuals(rawEvents);
 
-  // Endeks hareketi: güncel dönemde canlı kotasyon, geçmişte bar.
-  let indices: {
-    symbol: string;
-    price: number | null;
-    change_pct: number | null;
-  }[];
+  /* Endeks hareketi: güncel günlükte canlı kotasyon, geri kalan her yerde
+     bar kapanışları. Yüzde iki yolda da kapanıştan kapanışa. */
+  let indices: ({ symbol: string } & IndexMove)[];
   /** Endeks sayıları bu seansa ait değil — gerekçe aşağıda. */
   let indicesStale = false;
 
@@ -100,24 +113,26 @@ export async function GET(request: Request) {
     indicesStale = quotes.ok ? Boolean(quotes.stale) : true;
     indices = INDEX_STRIP.map((symbol) => {
       const quote = usable ? quotes.data[symbol] : null;
+      if (!quote) return { symbol, ...EMPTY_MOVE };
+      /* Kotasyonun anlattığı gün: son işlemin ET günü; açılıştan önce dünkü
+         seans. "Önceki" onun bir önceki işlem günü. */
+      const priceDate = quote.tradedAt ? todayEt(quote.tradedAt) : status.sessionDate;
       return {
         symbol,
-        price: quote?.price ?? null,
-        change_pct: quote?.changePct ?? null,
+        price: quote.price,
+        price_date: priceDate,
+        prev_price: quote.prevClose,
+        prev_date: quote.prevClose !== null ? prevTradingDay(priceDate, holidays) : null,
+        change_pct: pctChange(quote.price, quote.prevClose),
       };
     });
   } else {
+    const range = rangeCovering(from, today);
     indices = await Promise.all(
       INDEX_STRIP.map(async (symbol) => {
-        const result = await getChartBars(symbol, "3M", status);
-        const window = result.ok
-          ? result.data.filter((bar) => dayOf(bar) >= from && dayOf(bar) <= to)
-          : [];
-        return {
-          symbol,
-          price: window.length > 0 ? window[window.length - 1].close : null,
-          change_pct: periodChangePct(window),
-        };
+        if (!range) return { symbol, ...EMPTY_MOVE };
+        const result = await getChartBars(symbol, range, status);
+        return { symbol, ...(result.ok ? closeToClose(result.data, from, to) : EMPTY_MOVE) };
       }),
     );
   }
@@ -144,6 +159,7 @@ export async function GET(request: Request) {
       eps_actual: row.epsActual,
       revenue_estimate: row.revenueEstimate,
       revenue_actual: row.revenueActual,
+      ...sourceFields(row),
     }));
 
   const weekEvents =
@@ -157,12 +173,29 @@ export async function GET(request: Request) {
     brief_date: anchor,
     range_et: { from, to },
     retrospective,
+    /* `session` ve `next_open_utc` ŞİMDİYİ anlatıyor; tatil alanları
+       İSTENEN tarihi (`date`). Eskiden tatil de şimdiden okunuyordu ve
+       geçmiş bir tarihle çağrılınca 7 Eylül İşçi Bayramı "false" dönüyordu.
+       `is_holiday` yalnız TAM kapanış; yarım günde `early_close_et` dolu. */
     market: {
       session: status.session,
-      is_holiday: Boolean(status.holiday),
-      holiday_name: status.holiday?.nameTr ?? null,
+      date,
+      is_holiday: Boolean(requested && !requested.earlyCloseEt),
+      is_trading_day: isTradingDay(date, holidays),
+      holiday_name: requested?.nameTr ?? null,
+      early_close_et: requested?.earlyCloseEt ?? null,
       next_open_utc: status.nextOpen.toISOString(),
     },
+    /* Dönemdeki NYSE tatilleri ve yarım günleri — haftalık rutin tatili
+       web'den doğrulamasın. Günlükte en çok bir satır. */
+    holidays_in_range: holidays
+      .filter((holiday) => holiday.date >= from && holiday.date <= to)
+      .map((holiday) => ({
+        date: holiday.date,
+        name: holiday.nameTr,
+        name_en: holiday.nameEn,
+        early_close_et: holiday.earlyCloseEt,
+      })),
     /* `slug` + `forecast`: rutin beklentiyi `/api/takvim/beklenti`ye bu
        anahtarla yazıyor (docs/claude-rutinler.md § 1, adım 1b). */
     economic_events: events.map((event) => ({

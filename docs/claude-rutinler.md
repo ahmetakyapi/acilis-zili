@@ -1273,7 +1273,12 @@ Yanıtta:
                    relative_volume, today_volume, high52 / low52, pivots
                    (p, r1, r2, s1, s2), swing_highs (fiyatın üstündeki grafik
                    tepeleri), swing_lows (altındaki dipler)
-    earnings_next  45 gün içindeki bilanço tarihi (varsa)
+    earnings_next  45 gün içindeki bilanço tarihi (varsa): date, hour,
+                   date_source (provider | manual); elle kayıtta source_url,
+                   sağlayıcı farklı diyorsa date_conflict. Tarih ya da
+                   pencere boşsa ve yatırımcı sayfasından doğrulandıysa
+                   POST /api/takvim/bilanco {items:[{symbol, report_date,
+                   timing: bmo|amc, source_url}]} ile yazılır
     previous       bir önceki analiz: görüş, alım bölgesi, stop, hedefler,
                    destek/direnç ve başlık
 

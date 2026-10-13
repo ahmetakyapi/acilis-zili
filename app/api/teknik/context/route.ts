@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-import { and, asc, gte, inArray, lte } from "drizzle-orm";
 import { checkBearer } from "@/lib/api-auth";
-import { db } from "@/lib/db";
 import { getEventsBetween, getStatus, getSymbolNames } from "@/lib/data";
 import { ET_ZONE, SESSION_BOUNDS, addEtDays } from "@/lib/market-hours";
-import { earningsCalendar } from "@/lib/schema";
+import { getEarningsWithOverrides, sourceFields } from "@/lib/earnings-overrides";
 import { TR_ZONE, clockOf, formatInZone, timePair } from "@/lib/session-clock";
 import {
   SLOT_RANK,
@@ -106,29 +104,17 @@ export async function GET(request: Request) {
     getTechnicalSnapshots(symbols, status),
     getSymbolNames(symbols),
     getPreviousEditions(symbols, { sessionDate, slot }),
-    db
-      .select({
-        symbol: earningsCalendar.symbol,
-        reportDate: earningsCalendar.reportDate,
-        hour: earningsCalendar.hour,
-      })
-      .from(earningsCalendar)
-      .where(
-        and(
-          inArray(earningsCalendar.symbol, symbols),
-          gte(earningsCalendar.reportDate, sessionDate),
-          lte(earningsCalendar.reportDate, addEtDays(sessionDate, EARNINGS_HORIZON_DAYS)),
-        ),
-      )
-      .orderBy(asc(earningsCalendar.reportDate))
-      .catch(() => []),
+    /* Elle düzeltilmiş takvim (`lib/earnings-overrides.ts`): rutinin
+       yatırımcı sayfasından doğrulayıp yazdığı tarih sağlayıcının önüne
+       geçiyor. */
+    getEarningsWithOverrides(sessionDate, addEtDays(sessionDate, EARNINGS_HORIZON_DAYS), symbols).catch(() => []),
     getEventsBetween(sessionDate, sessionDate),
   ]);
 
-  const nextEarnings = new Map<string, { date: string; hour: string | null }>();
+  const nextEarnings = new Map<string, { date: string; hour: string | null } & ReturnType<typeof sourceFields>>();
   for (const row of upcoming) {
     if (!nextEarnings.has(row.symbol)) {
-      nextEarnings.set(row.symbol, { date: row.reportDate, hour: row.hour });
+      nextEarnings.set(row.symbol, { date: row.reportDate, hour: row.hour, ...sourceFields(row) });
     }
   }
 

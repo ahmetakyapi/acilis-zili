@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
+import { and, desc, eq } from "drizzle-orm";
 import { checkBearer, type AuthOutcome } from "@/lib/api-auth";
+import { db } from "@/lib/db";
+import { dailyBriefs, storyRevisions } from "@/lib/schema";
+import { isLocale } from "@/lib/i18n/config";
+import { weekAnchor } from "@/lib/data";
+import { BRIEF_DATE } from "@/lib/brief";
 import {
   BRIEF_INPUT_SHAPE,
   briefInputSchema,
+  briefRevisionKey,
   saveBrief,
 } from "@/lib/content-write";
 
@@ -22,6 +29,70 @@ import {
 
 function authorized(request: Request): AuthOutcome {
   return checkBearer(request, process.env.BRIEF_SECRET);
+}
+
+/**
+ * Bülteni geri okur — `?date=YYYY-MM-DD&locale=tr|en[&period=weekly]`.
+ *
+ * NEDEN VAR (13 Ekim). Günlük, Haftalık ve Denetim rutinleri bülteni
+ * sayfanın RSC akışından düzenli ifadeyle ayıklıyordu (~25 satırlık betik,
+ * üç talimatta). Sayfa düzeni değiştiği gün üçü de "bülten yok" sanırdı ve
+ * bunu hata olarak değil, yazılacak boş bir gün olarak okurdu. Mercek ve
+ * analiz uçlarının GET'iyle aynı sözleşme: alan adları POST gövdesiyle
+ * aynı, okunan paket düzenlenip geri gönderilebilir.
+ *
+ * Haftalıkta haftanın herhangi bir günü verilebilir; kayıt pazartesiye
+ * çapalı (gerekçe `saveBrief`). `updated_at` rutinin son yazışı ile
+ * paneldeki son düzeltmenin geç olanı — `generated_at` yalnızca rutinin.
+ */
+export async function GET(request: Request) {
+  const auth = authorized(request);
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  const url = new URL(request.url);
+  const dateParam = url.searchParams.get("date");
+  const localeParam = url.searchParams.get("locale");
+  const period = url.searchParams.get("period") === "weekly" ? "weekly" : "daily";
+  if (!dateParam || !BRIEF_DATE.test(dateParam)) {
+    return NextResponse.json(
+      { error: "missing-params", detail: "?date=YYYY-MM-DD zorunlu; locale=tr|en, period=daily|weekly opsiyonel. Liste: /api/brief/list" },
+      { status: 400 },
+    );
+  }
+  const locale = isLocale(localeParam) ? localeParam : "tr";
+  const date = period === "weekly" ? weekAnchor(dateParam) : dateParam;
+
+  const [row] = await db
+    .select()
+    .from(dailyBriefs)
+    .where(and(eq(dailyBriefs.briefDate, date), eq(dailyBriefs.locale, locale), eq(dailyBriefs.period, period)))
+    .limit(1);
+  if (!row) {
+    return NextResponse.json({ error: "not-found", date, locale, period }, { status: 404 });
+  }
+
+  const [revision] = await db
+    .select({ at: storyRevisions.replacedAt })
+    .from(storyRevisions)
+    .where(and(eq(storyRevisions.slug, briefRevisionKey(date, period)), eq(storyRevisions.locale, locale)))
+    .orderBy(desc(storyRevisions.replacedAt))
+    .limit(1)
+    .catch(() => []);
+  const updatedAt = revision && revision.at > row.generatedAt ? revision.at : row.generatedAt;
+
+  return NextResponse.json({
+    ok: true,
+    headline: row.headline,
+    body_md: row.bodyMd,
+    locale: row.locale,
+    date: row.briefDate,
+    period: row.period,
+    generated_by: row.generatedBy,
+    generated_at: row.generatedAt.toISOString(),
+    updated_at: updatedAt.toISOString(),
+  });
 }
 
 export async function POST(request: Request) {

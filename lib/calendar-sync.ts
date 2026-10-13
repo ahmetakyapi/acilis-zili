@@ -1,8 +1,8 @@
 import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { db } from "./db";
 import { economicEvents } from "./schema";
-import { getReleaseDates, getSeriesRelease } from "./providers/fred";
-import { addEtDays, todayEt } from "./market-hours";
+import { getReleaseDates, getReleasedObservation, getSeriesRelease } from "./providers/fred";
+import { addEtDays, etDateTimeToUtc, todayEt } from "./market-hours";
 import { joblessClaimsEvents } from "../db/seed/economic-events";
 
 /**
@@ -241,4 +241,65 @@ export async function calendarRunwayDays(
   } catch {
     return 0;
   }
+}
+
+/* --------------------------------------------------------------------------
+   Gerçekleşen değerin SAKLANMASI
+   -------------------------------------------------------------------------- */
+
+/** Açıklama saatinden bu kadar sonra FRED'e sorulur — yayın anında yansımıyor. */
+export const RELEASE_GRACE_MINUTES = 30;
+
+type EventRow = typeof economicEvents.$inferSelect;
+
+/** Olayın açıklama anı ve payı geçti mi. Saati olmayan olay "geçmedi". */
+export function releaseDue(event: Pick<EventRow, "eventDate" | "eventTimeEt">, now: Date): boolean {
+  if (!event.eventTimeEt) return false;
+  return etDateTimeToUtc(event.eventDate, event.eventTimeEt).getTime() + RELEASE_GRACE_MINUTES * 60000 <= now.getTime();
+}
+
+/**
+ * Açıklanmış ama `actual`ı boş olayların gerçekleşen değerini FRED'den çekip
+ * YAZAR; doldurulmuş satırlarla birlikte listeyi geri döner.
+ *
+ * NEDEN (13 Ekim). Değer ekranda canlı okunuyordu (Gün Akışı, Takvim:
+ * `getReleasedObservation`) ama yalnızca BUGÜNÜN satırı için ve hiçbir yere
+ * yazılmıyordu; cron da yalnızca son yedi güne bakıyor ve bütçe biterse
+ * adımı atlıyordu. Sonuç: geçmiş tarihli bülten bağlamı (`retrospective`)
+ * `actual`ı boş görüyordu ve rutin rakamı web'den arıyordu.
+ *
+ * VINTAGE, SON GÖZLEM DEĞİL. Değer olay gününün FRED vintage'ından okunuyor
+ * (`getReleasedObservation`): iki hafta sonra doldurulan bir TÜFE satırına
+ * o arada yayımlanmış bir sonraki ayın değeri yapışmasın. Vintage yeni
+ * gözlem göstermiyorsa (yayın ertelenmiş, seri desteklenmiyor) satıra
+ * DOKUNULMAZ — uydurma değil boşluk.
+ *
+ * Yazma hatası yutulur: okuma yolu (bülten bağlamı) yazamasa da değeri
+ * yanıtta taşır.
+ */
+export async function fillEventActuals<T extends EventRow>(
+  events: readonly T[],
+  now: Date = new Date(),
+): Promise<{ events: T[]; filled: number }> {
+  let filled = 0;
+  const out = await Promise.all(
+    events.map(async (event) => {
+      if (event.actual !== null && event.actual.trim() !== "") return event;
+      if (!event.fredSeriesId || !releaseDue(event, now)) return event;
+      const fresh = await getReleasedObservation(event.fredSeriesId, event.eventDate);
+      if (!fresh) return event;
+      const next = { ...event, actual: fresh.actual, previous: fresh.previous ?? event.previous };
+      try {
+        await db
+          .update(economicEvents)
+          .set({ actual: next.actual, previous: next.previous, updatedAt: new Date() })
+          .where(eq(economicEvents.id, event.id));
+        filled++;
+      } catch {
+        /* okuma yolu yine değeri taşır */
+      }
+      return next;
+    }),
+  );
+  return { events: out, filled };
 }

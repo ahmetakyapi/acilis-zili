@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import {
@@ -318,19 +318,66 @@ export function teaserKey(row: { symbol: string; period: string; locale: string 
  * yanlış bir alarm olurdu.
  */
 export async function getExtrasCoverage(): Promise<
-  Map<string, { takeaways: boolean; segments: boolean }> | null
+  Map<string, { takeaways: boolean; segments: boolean; kpis: boolean; segmentCount: number }> | null
 > {
   try {
     const rows = await db
       .select({
         analysisId: earningsAnalysisExtras.analysisId,
         takeaways: sql<boolean>`coalesce(jsonb_array_length(${earningsAnalysisExtras.takeaways}), 0) > 0`,
-        segments: sql<boolean>`coalesce(jsonb_array_length(${earningsAnalysisExtras.segments}), 0) > 0`,
+        segmentCount: sql<number>`coalesce(jsonb_array_length(${earningsAnalysisExtras.segments}), 0)::int`,
+        kpis: sql<boolean>`coalesce(jsonb_array_length(${earningsAnalysisExtras.kpis}), 0) > 0`,
       })
       .from(earningsAnalysisExtras);
     return new Map(
-      rows.map((row) => [row.analysisId, { takeaways: row.takeaways, segments: row.segments }]),
+      rows.map((row) => [
+        row.analysisId,
+        {
+          takeaways: row.takeaways,
+          segments: Number(row.segmentCount) > 0,
+          kpis: row.kpis,
+          segmentCount: Number(row.segmentCount),
+        },
+      ]),
     );
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Aynı analizin ÖTEKİ dilindeki segment sayısı — dil eşliği denetimi.
+ *
+ * Segment tablosu iki dilde aynı şirketin aynı kırılımı; TR'de dört, EN'de
+ * beş segment yazılırsa pay görseli iki dilde farklı toplam çizer. Yazma
+ * ucu bu sayıyı karşılaştırıyor ama REDDETMİYOR, uyarı dönüyor: sayıyı
+ * değiştirmek isteyen rutin önce bir dili yazmak zorunda ve red, iki dil
+ * arasında kilitlenme olurdu (hangisi önce gelirse öteki reddedilir).
+ * Öteki dil yoksa ya da segmentsizse `null`.
+ */
+export async function counterpartSegmentCount(
+  symbol: string,
+  period: string,
+  locale: string,
+): Promise<{ locale: string; count: number } | null> {
+  try {
+    const [row] = await db
+      .select({
+        locale: earningsAnalyses.locale,
+        count: sql<number>`coalesce(jsonb_array_length(${earningsAnalysisExtras.segments}), 0)::int`,
+      })
+      .from(earningsAnalyses)
+      .innerJoin(earningsAnalysisExtras, eq(earningsAnalysisExtras.analysisId, earningsAnalyses.id))
+      .where(
+        and(
+          eq(earningsAnalyses.symbol, symbol),
+          eq(earningsAnalyses.period, period),
+          ne(earningsAnalyses.locale, locale),
+        ),
+      )
+      .limit(1);
+    const count = Number(row?.count ?? 0);
+    return row && count > 0 ? { locale: row.locale, count } : null;
   } catch {
     return null;
   }

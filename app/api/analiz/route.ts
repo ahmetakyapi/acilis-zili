@@ -8,6 +8,7 @@ import { isLocale } from "@/lib/i18n/config";
 import { periodSlug } from "@/lib/analysis";
 import {
   EXTRAS_INPUT_SHAPE,
+  counterpartSegmentCount,
   extrasFromInput,
   extrasIssues,
   extrasToOutput,
@@ -449,6 +450,19 @@ export async function POST(request: Request) {
     ? await saveAnalysisExtras(saved.id, extrasFromInput(parsed))
     : "unavailable";
 
+  /* Dil eşliği: segment sayısı öteki dildekinden farklıysa UYARI (red
+     değil — gerekçe `counterpartSegmentCount`). */
+  const warnings: string[] = [];
+  const segmentCount = parsed.segments?.length ?? 0;
+  if (segmentCount > 0) {
+    const other = await counterpartSegmentCount(symbol, period, locale);
+    if (other && other.count !== segmentCount) {
+      warnings.push(
+        `segments: ${locale} kaydında ${segmentCount}, ${other.locale} kaydında ${other.count} segment var — iki dil aynı kırılımı taşımalı`,
+      );
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     symbol,
@@ -456,5 +470,6 @@ export async function POST(request: Request) {
     locale,
     url: `/bilancolar/${symbol.toLowerCase()}/${period}`,
     extras,
+    warnings,
   });
 }

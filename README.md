@@ -636,12 +636,14 @@ ve yazma uçları ayrıca oturum, admin tarafından atanmış erişim ve günlü
 | `/api/chart/[symbol]` · `/api/karsilastir` · `/api/endeks` · `/api/day-flow` · `/api/search` | Ekranların istemci tarafı okumaları: bar, toplu bar, endeks paketi, gün akışı, ⌘K arama |
 | `/api/takvim` | Bilanço takvimi `.ics` |
 | `/api/kur` · `/api/kur/yol` · `/api/kur/endeks` | TCMB günlük kuru (tek ya da toplu gün), iki gün arasındaki USD/TRY yolu (TL ve Reel TL görünümü), EVDS aylık endeksi (Yİ-ÜFE/TÜFE; anahtar yoksa `missing-key`) |
-| `/api/health` | Dış izleyici için sağlık: veritabanı yanıt veriyorsa 200, vermiyorsa 503; geciken rutin gövdede `degraded`. Önbelleksiz |
+| `/api/health` | Dış izleyici için sağlık: veritabanı yanıt veriyorsa 200, vermiyorsa 503; geciken rutin gövdede `degraded`; sağlayıcı kotası ve son başarılı çekme `providers.usage`ta (süreç belleği). Önbelleksiz |
 | `/api/hata` | İstemci hata sınırlarının bildirimi; her durumda gövdesiz 204 |
 | `/api/hesap/verilerim` | Verilerimi İndir (`?bicim=json\|csv`); yalnızca oturum sahibi |
 | `/api/ai/analysis` | GET: kendi analiz geçmişi ve kota; POST: güncel verilerle yeni Claude raporu. Günlük varsayılan 5, başarısız işte iade, aynı requestId için tek iş |
 | `/api/olcum` | Çerezsiz sayfa ölçümü |
-| `/api/brief` · `/api/mercek` · `/api/analiz` · `/api/teknik` (+ `/context`) | İçerik rutinlerinin yazma ve geri okuma uçları |
+| `/api/brief` · `/api/mercek` · `/api/analiz` · `/api/teknik` (+ `/context`) | İçerik rutinlerinin yazma ve geri okuma uçları; `/api/brief/list?from=&to=` yazılmış bültenlerin listesi |
+| `/api/takvim/beklenti` · `/api/takvim/bilanco` | Rutinin takvime yazdığı düzeltmeler: ekonomik olay beklentisi; bilanço tarihi ve penceresi (elle kayıt sağlayıcının önüne geçer, sağlayıcı aynısını söyleyince kapanır — `lib/earnings-overrides.ts`) |
+| `/api/kurallar?gorev=` | Rutinlerin ortak kuralları + göreve özgü ek (`content/kurallar/*.md`), `text/markdown`, sürüm `X-Kurallar-Surum` başlığında |
 | `/api/cron/daily` · `/api/auth/[...nextauth]` · `/api/debug/providers` | Günlük cron, oturum, sağlayıcı anahtar kontrolü (yalnızca geliştirmede; üretimde 404) |
 | `/api/cron/alarmlar` | Fiyat alarmı taraması: 5 dakikada bir, piyasa kapalıyken ya da paket bayatken hiçbir şey yazmaz; tetiklenen alarmı abone cihazlara Web Push ile bildirir (`CRON_SECRET`) |
 

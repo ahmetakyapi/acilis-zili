@@ -455,6 +455,48 @@ export const earningsCalendar = pgTable(
 );
 
 /**
+ * Bilanço tarihinin ELLE DÜZELTMESİ — sağlayıcının boş ya da yanlış bıraktığı
+ * tarih/pencere için rutinin yazdığı kayıt (`POST /api/takvim/bilanco`).
+ *
+ * NEDEN AYRI TABLO, `earnings_calendar`a satır değil: cron o tabloyu her
+ * koşuda sağlayıcıdan üzerine yazıyor ve revize edilmiş tarihin "ölü"
+ * satırını siliyor; elle girilen satır orada ilk koşuda ya ezilir ya
+ * silinirdi. Burada sağlayıcının dokunmadığı bir katman var, okuma yolu
+ * (`lib/earnings-overrides.ts`) ikisini birleştiriyor.
+ *
+ * Durum: `active` → sağlayıcının önüne geçiyor. `closed` → sağlayıcı aynı
+ * tarihi ve pencereyi döndürdü, düzeltmeye gerek kalmadı (ya da tarih
+ * geçti / yenisi yazıldı — `closedReason`). `conflict` → sağlayıcı FARKLI
+ * bir tarih ya da pencere söylüyor; elle girilen yine öne geçiyor ama
+ * bağlam ucu çelişkiyi açıkça yazıyor ki rutin kaynağı yeniden doğrulasın.
+ */
+export const earningsOverrides = pgTable(
+  "earnings_overrides",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    symbol: text("symbol").notNull(),
+    reportDate: date("report_date").notNull(),
+    /** bmo | amc — sağlayıcının `hour` alanıyla aynı sözlük. */
+    timing: text("timing").notNull(),
+    sourceUrl: text("source_url").notNull(),
+    /** active | closed | conflict */
+    status: text("status").notNull().default("active"),
+    /** provider-match | replaced | past */
+    closedReason: text("closed_reason"),
+    /** Son uzlaştırmada sağlayıcının aynı rapor için söylediği. */
+    providerDate: date("provider_date"),
+    providerHour: text("provider_hour"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("earnings_overrides_symbol_date_key").on(t.symbol, t.reportDate),
+    index("earnings_overrides_status_idx").on(t.status),
+  ],
+);
+
+/**
  * Ekonomik takvim.
  * Tarih ve saat New York saatiyle (ET) tutulur — kaynaklar bu şekilde yayınlar.
  * UTC dönüşümü lib/market-hours.ts içinde yapılır.

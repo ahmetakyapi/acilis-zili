@@ -2,7 +2,7 @@ import { getDailyMarketSeries } from "@/lib/providers/daily-markets";
 import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { checkBearer } from "@/lib/api-auth";
-import { and, desc, eq, gte, isNotNull, isNull, lt, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   earningsCalendar,
@@ -17,8 +17,8 @@ import {
   getMarketNews,
 } from "@/lib/providers/finnhub";
 import { DAILY_MARKET_SERIES, MACRO_SERIES, getSeries } from "@/lib/providers/fred";
-import { addEtDays, etParts, todayEt } from "@/lib/market-hours";
-import { calendarRunwayDays, syncCalendar } from "@/lib/calendar-sync";
+import { addEtDays, todayEt } from "@/lib/market-hours";
+import { calendarRunwayDays, fillEventActuals, releaseDue, syncCalendar } from "@/lib/calendar-sync";
 import { translatePendingNews, isTranslateConfigured } from "@/lib/translate";
 import {
   getEarningsSymbolsMissingProfile,
@@ -29,6 +29,8 @@ import { getCompanyProfile } from "@/lib/providers";
 import { symbols as symbolsTable } from "@/lib/schema";
 import { ALL_MEMBERS } from "@/db/seed/indices";
 import { SPOTLIGHT_SYMBOLS } from "@/lib/spotlight";
+import { TECHNICAL_SYMBOLS } from "@/lib/technical";
+import { reconcileOverrides } from "@/lib/earnings-overrides";
 import { refreshSymbolMetrics } from "@/lib/symbol-metrics";
 import { purgeOldErrors } from "@/lib/error-log";
 import { syncInvestors } from "@/lib/investor-sync";
@@ -139,6 +141,9 @@ const EARNINGS_HORIZON_DAYS = 30;
  * sağlayıcının gecikmesi. 7 ek istek, 60/dk limitinin çok altında.
  */
 const EARNINGS_BACKFILL_DAYS = 7;
+/** Takip listesinin bilançosu bu kadar ileriye kadar sembol sembol aranır —
+    teknik bağlamın 45 günlük penceresi + pay (gerekçe adım 1b). */
+const TRACKED_EARNINGS_HORIZON_DAYS = 60;
 
 /** Sayfa ölçümü kaç gün saklanır — panelin en geniş penceresi altı ay. */
 const VIEW_RETENTION_DAYS = 180;
@@ -155,22 +160,16 @@ const VIEW_RETENTION_DAYS = 180;
 const NEWS_RETENTION_DAYS = 90;
 
 /**
- * Bir olayın açıklanma saati geçti mi.
+ * Gerçekleşen değeri boş olaylar kaç gün geriye kadar doldurulur.
  *
- * Pay 30 dakika: FRED yayını saniyesinde yansıtmıyor ve sınırda koşan bir
- * cron, açıklanmış gibi görünen ama henüz gelmemiş bir gözlemi yazardı.
- * Saati bilinmeyen olay (eventTimeEt null) o gün için ATLANIR — ne zaman
- * çıktığını bilmediğimiz bir veriyi açıklanmış saymak, tam olarak kaçındığımız
- * uydurma kesinlik.
+ * Yedi gündü ve adım bütçe biterse atlanıyordu: bir haftalık kesinti o
+ * haftanın olaylarını kalıcı olarak boş bırakıyordu (13 Ekim: geçmiş tarihli
+ * bülten bağlamında `actual` hep boş). 45 gün aylık yayının bir sonrakine
+ * kadar her şeyi kapsıyor; değer olay gününün vintage'ından okunduğu için
+ * geç doldurulan satıra yanlış ayın değeri yapışmıyor. Saat kuralı (30
+ * dakika pay, saatsiz olay atlanır) `lib/calendar-sync.ts` → `releaseDue`.
  */
-const RELEASE_GRACE_MINUTES = 30;
-
-function hasReleased(timeEt: string | null, nowMinutesEt: number): boolean {
-  if (!timeEt) return false;
-  const [hour, minute] = timeEt.split(":").map(Number);
-  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return false;
-  return nowMinutesEt >= hour * 60 + minute + RELEASE_GRACE_MINUTES;
-}
+const ACTUALS_LOOKBACK_DAYS = 45;
 
 export const maxDuration = 120;
 
@@ -369,6 +368,83 @@ export async function GET(request: Request) {
     }
   } catch (error) {
     report.earnings = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+
+  /* ---- 1b. Takip edilen sembollerin UZAK bilançosu ----
+     Gün gün tarama 30 günde duruyor; teknik bağlam ise 45 gün ileriye
+     bakıyor. 13 Ekim taramasında NVDA'nın Kasım ortasındaki bilançosu tam o
+     boşluğa düşmüştü: `earnings_next` boş, rutin tarihi web'den arıyordu.
+     Bütün takvimi 60 güne uzatmak 30 ek istek demekti; burada yalnızca
+     takip listesindeki (teknik ∪ spotlight — hedef rutininin adayları) ve
+     penceresinde kaydı OLMAYAN
+     semboller, sembol başına TEK istekle soruluyor. Yazım aynı upsert. */
+  if (outOfTime()) {
+    report.earningsTracked = "atlandı: bütçe";
+  } else
+  try {
+    const horizon = addEtDays(today, TRACKED_EARNINGS_HORIZON_DAYS);
+    const tracked = [...new Set<string>([...TECHNICAL_SYMBOLS, ...SPOTLIGHT_SYMBOLS])];
+    const known = await db
+      .selectDistinct({ symbol: earningsCalendar.symbol })
+      .from(earningsCalendar)
+      .where(
+        and(
+          inArray(earningsCalendar.symbol, tracked),
+          gte(earningsCalendar.reportDate, today),
+          lte(earningsCalendar.reportDate, horizon),
+        ),
+      );
+    const have = new Set(known.map((row) => row.symbol));
+    const missing = tracked.filter((symbol) => !have.has(symbol));
+    let found = 0;
+    for (const symbol of missing) {
+      if (outOfTime()) break;
+      const result = await getEarningsCalendar(addEtDays(today, EARNINGS_HORIZON_DAYS + 1), horizon, symbol);
+      if (!result.ok) continue;
+      const rows = result.data
+        .filter((entry) => entry.symbol === symbol)
+        .map((entry) => ({
+          symbol: entry.symbol,
+          reportDate: entry.reportDate,
+          hour: entry.hour,
+          epsEstimate: entry.epsEstimate,
+          epsActual: entry.epsActual,
+          revenueEstimate: entry.revenueEstimate,
+          revenueActual: entry.revenueActual,
+          quarter: entry.quarter,
+          year: entry.year,
+        }));
+      if (rows.length === 0) continue;
+      await db
+        .insert(earningsCalendar)
+        .values(rows)
+        .onConflictDoUpdate({
+          target: [earningsCalendar.symbol, earningsCalendar.reportDate],
+          set: {
+            hour: sql`excluded.hour`,
+            epsEstimate: sql`excluded.eps_estimate`,
+            revenueEstimate: sql`excluded.revenue_estimate`,
+            updatedAt: new Date(),
+          },
+        });
+      found += rows.length;
+    }
+    report.earningsTracked = `${missing.length} sembol soruldu, ${found} kayıt`;
+  } catch (error) {
+    report.earningsTracked = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+
+  /* ---- 1c. Elle düzeltilmiş bilanço tarihleri ----
+     Takvim yazıldıktan SONRA: sağlayıcı aynı tarihi ve pencereyi artık
+     söylüyorsa elle kayıt kapanır, farklı söylüyorsa `conflict` olur
+     (`lib/earnings-overrides.ts`). */
+  try {
+    const tally = await reconcileOverrides(today);
+    report.earningsOverrides = tally
+      ? `${tally.open} açık, ${tally.conflict} çelişki, ${tally.closed} kapandı`
+      : "tablo yok (migration uygulanmadı mı?)";
+  } catch (error) {
+    report.earningsOverrides = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
 
   /* ---- 2. Piyasa haberleri ---- */
@@ -620,8 +696,8 @@ export async function GET(request: Request) {
   }
 
   /* ---- 4. Geçmiş olayların gerçekleşen değerleri ----
-     Son 7 günün olaylarından actual'ı boş olanlara FRED'deki en güncel
-     gözlemi işle. Sonraki açıklama tarihini de takvimden doldur.
+     Son 45 günün olaylarından actual'ı boş olanlara olay gününün FRED
+     gözlemini işle. Sonraki açıklama tarihini de takvimden doldur.
 
      AÇIKLANMAMIŞ OLAY DIŞARIDA. Sorgu bugünün olaylarını da kapsıyordu ve
      cron 06:30 ET civarında koşuyor; ekonomik veriler ise 08:30 ET'de
@@ -637,47 +713,26 @@ export async function GET(request: Request) {
     report.actuals = "atlandı: bütçe";
   } else
   try {
-    let filled = 0;
-    let skippedUnreleased = 0;
-    const nowEt = etParts(new Date());
+    const now = new Date();
     const pending = await db
       .select()
       .from(economicEvents)
       .where(
         and(
-          gte(economicEvents.eventDate, addEtDays(today, -7)),
+          gte(economicEvents.eventDate, addEtDays(today, -ACTUALS_LOOKBACK_DAYS)),
           lte(economicEvents.eventDate, today),
           isNull(economicEvents.actual),
         ),
       );
-
-    for (const event of pending) {
-      if (event.eventDate === today && !hasReleased(event.eventTimeEt, nowEt.minutes)) {
-        skippedUnreleased++;
-        continue;
-      }
-      if (!event.fredSeriesId) continue;
-      const definition = MACRO_SERIES.find(
-        (s) => s.seriesId === event.fredSeriesId,
-      );
-      if (!definition) continue;
-
-      const result = await getSeries(definition, 3);
-      if (!result.ok || result.data.latestValue === null) continue;
-
-      await db
-        .update(economicEvents)
-        .set({
-          actual: String(result.data.latestValue),
-          previous:
-            result.data.prevValue !== null
-              ? String(result.data.prevValue)
-              : event.previous,
-          updatedAt: new Date(),
-        })
-        .where(eq(economicEvents.id, event.id));
-      filled++;
-    }
+    /* Bugünün açıklanmamış satırları sayılır ama sorulmaz — saat kuralı
+       `releaseDue`da, bülten bağlamı da aynı kuralla dolduruyor. */
+    const skippedUnreleased = pending.filter(
+      (event) => event.eventDate === today && !releaseDue(event, now),
+    ).length;
+    /* SON GÖZLEM DEĞİL, VINTAGE (13 Ekim): `getSeries` en son gözlemi veriyordu;
+       pencere 45 güne çıkınca geçen ayın satırına bu ayın değeri yapışırdı.
+       Gerekçe `fillEventActuals`. */
+    const { filled } = await fillEventActuals(pending, now);
 
     // Makro kartlardaki "sonraki açıklama" — takvimdeki ilk ileri tarihli olay
     for (const definition of MACRO_SERIES) {

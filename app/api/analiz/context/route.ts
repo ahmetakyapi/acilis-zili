@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { and, desc, gte, inArray, lte } from "drizzle-orm";
+import { desc, inArray } from "drizzle-orm";
 import { checkBearer, type AuthOutcome } from "@/lib/api-auth";
 import { db } from "@/lib/db";
-import { earningsAnalyses, earningsCalendar, symbols } from "@/lib/schema";
+import { earningsAnalyses, symbols } from "@/lib/schema";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { sectorGroupOf } from "@/lib/sectors";
 import { SPOTLIGHT_SYMBOLS } from "@/lib/spotlight";
 import { getExtrasCoverage } from "@/lib/earnings-extras";
+import { getEarningsWithOverrides, sourceFields } from "@/lib/earnings-overrides";
 
 /**
  * Analiz rutini için bağlam paketi.
@@ -90,6 +91,8 @@ function isTechInfra(industry: string | null): boolean {
 
 /** Geriye bakış penceresi — bir haftadan eski bilanço artık haber değil. */
 const LOOKBACK_DAYS = 7;
+/** `next_window`: rutin yoğun günü önceden görsün diye ileriye bakış. */
+const LOOKAHEAD_DAYS = 7;
 
 export async function GET(request: Request) {
   const auth = authorized(request);
@@ -107,18 +110,14 @@ export async function GET(request: Request) {
   const today = todayEt();
   const from = addEtDays(today, -lookback);
 
-  const reported = await db
-    .select()
-    .from(earningsCalendar)
-    .where(
-      and(
-        gte(earningsCalendar.reportDate, from),
-        lte(earningsCalendar.reportDate, today),
-      ),
-    )
-    .orderBy(desc(earningsCalendar.reportDate));
+  /* Elle düzeltilmiş takvim (`lib/earnings-overrides.ts`) — sağlayıcının
+     yanlış tarihi aday listesini de kaydırıyordu. Geçmiş ve gelecek tek
+     sorguda; ikiye `today` sınırında bölünüyor. */
+  const calendar = await getEarningsWithOverrides(from, addEtDays(today, LOOKAHEAD_DAYS));
+  const reported = calendar.filter((row) => row.reportDate <= today).reverse();
+  const ahead = calendar.filter((row) => row.reportDate > today);
 
-  const symbolList = [...new Set(reported.map((row) => row.symbol))];
+  const symbolList = [...new Set(calendar.map((row) => row.symbol))];
 
   const [profiles, existing, coverage] = await Promise.all([
     symbolList.length > 0
@@ -179,6 +178,9 @@ export async function GET(request: Request) {
          ("bilinmiyor", eksik değil). */
       has_summary: boolean | null;
       has_segments: boolean | null;
+      has_kpis: boolean | null;
+      /** Dil başına segment sayısı — eşlik denetimi için. */
+      segment_counts: Record<string, number>;
     }
   >();
   for (const row of existing) {
@@ -189,6 +191,7 @@ export async function GET(request: Request) {
     const covered = coverage?.get(row.id);
     const summary = coverage ? Boolean(covered?.takeaways) : null;
     const segments = coverage ? Boolean(covered?.segments) : null;
+    const kpis = coverage ? Boolean(covered?.kpis) : null;
     if (held) {
       if (!held.locales.includes(row.locale)) held.locales.push(row.locale);
       /* İki dilden biri grafiksizse analiz eksik sayılır. */
@@ -196,6 +199,8 @@ export async function GET(request: Request) {
       held.has_summary = held.has_summary === null ? null : held.has_summary && Boolean(summary);
       held.has_segments =
         held.has_segments === null ? null : held.has_segments && Boolean(segments);
+      held.has_kpis = held.has_kpis === null ? null : held.has_kpis && Boolean(kpis);
+      held.segment_counts[row.locale] = covered?.segmentCount ?? 0;
     } else {
       grouped.set(key, {
         symbol: row.symbol,
@@ -208,6 +213,8 @@ export async function GET(request: Request) {
         has_charts: charts,
         has_summary: summary,
         has_segments: segments,
+        has_kpis: kpis,
+        segment_counts: { [row.locale]: covered?.segmentCount ?? 0 },
       });
     }
   }
@@ -269,6 +276,7 @@ export async function GET(request: Request) {
         eps_actual: row.epsActual,
         revenue_estimate: row.revenueEstimate,
         revenue_actual: row.revenueActual,
+        ...sourceFields(row),
         already_analyzed: analyzed.has(row.symbol),
       }];
     })
@@ -287,7 +295,63 @@ export async function GET(request: Request) {
        olanlar atlanır ya da güncellenir. */
     candidates,
     /* Zaten yazılmış analizler — `locales` hangi dillerin mevcut olduğunu
-       söyler; "en" eksikse çevirisi bekleniyor. */
-    existing_analyses: [...grouped.values()],
+       söyler; "en" eksikse çevirisi bekleniyor. `missing` eksik alanların
+       listesi (gerekçe `missingFields`); boş dizi "tam", ek tablosu
+       okunamıyorsa ek alanları listede yer almaz. */
+    existing_analyses: [...grouped.values()].map(({ segment_counts, ...entry }) => ({
+      ...entry,
+      missing: missingFields(entry, segment_counts),
+    })),
+    /* Önümüzdeki yedi günün büyük bilançoları — aynı eşik ve aynı
+       `izlenen` kapısı; rutin yoğun günü önceden görür. */
+    next_window: {
+      from: addEtDays(today, 1),
+      to: addEtDays(today, LOOKAHEAD_DAYS),
+      items: ahead.flatMap((row) => {
+        const profile = profileOf.get(row.symbol);
+        const marketCap = profile?.currency === "USD" ? (profile.marketCap ?? null) : null;
+        const watched = ALWAYS_ELIGIBLE.has(row.symbol);
+        const threshold = isTechInfra(profile?.industry ?? null) ? CAP_TECH_INFRA : CAP_GENERAL;
+        if (!watched && (marketCap ?? 0) < threshold) return [];
+        return [{
+          symbol: row.symbol,
+          company: profile?.name ?? null,
+          market_cap: marketCap,
+          report_date: row.reportDate,
+          timing: row.hour,
+          ...sourceFields(row),
+        }];
+      }),
+    },
   });
+}
+
+/**
+ * Bir analizin eksik alanları — rutinin tamamlama nöbeti bu listeyi okur
+ * (docs/claude-rutinler.md § 4). Adlar POST gövdesinin alan adları; dil
+ * eksikse `locale:en`. Bayrak `null` ise (ek tablosu okunamadı) o alan
+ * "eksik" sayılmaz: bilinmeyen eksik değildir.
+ */
+function missingFields(
+  entry: {
+    locales: string[];
+    has_charts: boolean;
+    has_summary: boolean | null;
+    has_segments: boolean | null;
+    has_kpis: boolean | null;
+  },
+  segmentCounts: Record<string, number>,
+): string[] {
+  const missing: string[] = [];
+  for (const locale of ["tr", "en"]) {
+    if (!entry.locales.includes(locale)) missing.push(`locale:${locale}`);
+  }
+  if (!entry.has_charts) missing.push("quarterly_revenue", "guidance");
+  if (entry.has_summary === false) missing.push("takeaways");
+  if (entry.has_segments === false) missing.push("segments");
+  if (entry.has_kpis === false) missing.push("kpis");
+  /* İki dilde de segment var ama sayıları farklı — eksik değil, uyumsuz. */
+  const counts = Object.values(segmentCounts).filter((count) => count > 0);
+  if (counts.length > 1 && new Set(counts).size > 1) missing.push("segments:locale-mismatch");
+  return missing;
 }

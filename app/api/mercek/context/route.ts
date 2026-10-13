@@ -45,6 +45,8 @@ export async function GET(request: Request) {
         title: stories.title,
         eventDate: stories.eventDate,
         locale: stories.locale,
+        publishedAt: stories.publishedAt,
+        updatedAt: stories.updatedAt,
       })
       .from(stories)
       .orderBy(desc(stories.eventDate))
@@ -68,19 +70,35 @@ export async function GET(request: Request) {
      sorusu tek bakışta cevaplanır, geri doldurma da buradan beslenir. */
   const grouped = new Map<
     string,
-    { slug: string; title: string; event_date: string; locales: string[] }
+    {
+      slug: string;
+      title: string;
+      event_date: string;
+      locales: string[];
+      /* İlk yazılış anı (dillerin en erkeni) ve son düzeltme. `published_at`
+         upsert'te bilerek korunuyor (`lib/content-write.ts`), yani satırın
+         doğum anı; Bekçi aynı günün iki koşusunu buradan ayırıyor. */
+      created_at: string;
+      updated_at: string;
+    }
   >();
   for (const row of existing) {
     const held = grouped.get(row.slug);
+    const created = row.publishedAt.toISOString();
+    const updated = row.updatedAt.toISOString();
     if (held) {
       if (!held.locales.includes(row.locale)) held.locales.push(row.locale);
       if (row.locale === "tr") held.title = row.title;
+      if (created < held.created_at) held.created_at = created;
+      if (updated > held.updated_at) held.updated_at = updated;
     } else {
       grouped.set(row.slug, {
         slug: row.slug,
         title: row.title,
         event_date: row.eventDate,
         locales: [row.locale],
+        created_at: created,
+        updated_at: updated,
       });
     }
   }
