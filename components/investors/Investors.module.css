@@ -530,6 +530,8 @@ a.balanceRow:active { scale:.99; }
 .strip dt { font-size:12px; color:var(--text-muted); }
 .strip dd { font-size:17px; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
 .strip small { font-size:12px; color:var(--text-muted); }
+/* Kaynak bağlantısı telefonda 105×23 pikseldi (14 Ekim, ölçüldü); `.tap-44`
+   (globals.css) görünür ölçüyü değiştirmeden hedefi 44'e açıyor. */
 .stripLink { display:inline-flex; align-items:center; gap:5px; color:var(--primary-ink); font-size:15px; }
 .stripLink:hover { color:var(--primary-hover); }
 

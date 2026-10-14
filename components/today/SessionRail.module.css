@@ -38,8 +38,12 @@
 .now { position:absolute; top:4px; width:8px; height:8px; border-radius:50%; transform:translateX(-4px); background:var(--primary); box-shadow:0 0 0 2px var(--premium-surface); animation:rail-now-in 420ms var(--ease-spring) 820ms backwards; }
 .now[data-live]::after { content:""; position:absolute; inset:-4px; border:1px solid var(--primary); border-radius:50%; animation:rail-beacon 3s var(--ease-brand) infinite; }
 .now[data-still]::after { animation:none; opacity:0; }
-/* Bant adları zil adlarından bir kademe sessiz; seans adı bandın ortasında. */
-.bandLabel { position:absolute; bottom:0; font-size:var(--text-nano); font-weight:500; line-height:1.2; white-space:nowrap; color:var(--text-muted); opacity:.85; }
+/* Bant adları zil adlarından bir kademe sessiz; seans adı bandın ortasında.
+   SESSİZLİK AĞIRLIKTAN, SAYDAMLIKTAN DEĞİL (14 Ekim). `opacity:.85`
+   `--text-muted`i açık temada beyaz kartın üstünde 4,04:1'e düşürüyordu
+   (axe, 1440; AA 4,5 ister) — README'deki 5,28'lik ayar tam bu yüzden
+   yapılmıştı. Zil adları 600 (`.bellLabel`), bant adları 500; ayrım o. */
+.bandLabel { position:absolute; bottom:0; font-size:var(--text-nano); font-weight:500; line-height:1.2; white-space:nowrap; color:var(--text-muted); }
 .bandLabel[data-center] { transform:translateX(-50%); }
 /* Saat cetveli: şeridin altında, tam saatte 3, dört saatte bir 6 piksel. */
 .hour { position:absolute; top:13px; width:1px; height:3px; transform:translateX(-.5px); background:var(--line-strong); }

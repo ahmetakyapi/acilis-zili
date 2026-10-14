@@ -54,7 +54,7 @@ export function CongressStrip({ detail, locale, t }: { detail: CongressDetailDat
               href={ptrUrl(Number(latest.filedAt.slice(0, 4)), latest.docId)}
               target="_blank"
               rel="noopener noreferrer"
-              className={styles.stripLink}
+              className={`tap-44 ${styles.stripLink}`}
             >
               {t.sourcePdf}
               <ArrowSquareOut size={13} weight="bold" aria-hidden />

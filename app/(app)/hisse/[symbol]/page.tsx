@@ -337,9 +337,14 @@ export default async function StockPage(
             düşüyordu. Aynı bağlantı orada sektör satırının altında bir çip;
             burada yalnızca geniş ekranda görünüyor (`display:none`, yani
             ekran okuyucu da tek kopya duyuyor). */}
-        <nav className={styles.researchLinks} aria-label={t.stock.experienceNav}>
+        {/* İŞARET NOKTASI DEĞİL (14 Ekim). Tek bağlantılık bu kutu ve
+            kimlikteki kopyası, alttaki bölüm menüsüyle AYNI adı taşıyan
+            birer `nav`dı: ekran okuyucunun bölge listesinde üç tane "Şirket
+            sayfası bölümleri" vardı ve ikisi tek bağlantıydı (axe
+            "landmark-unique"). Bölgenin adı artık yalnızca gerçek menüde. */}
+        <div className={styles.researchLinks}>
           {researchLink}
-        </nav>
+        </div>
       </StockBreadcrumb>
       {/* Üst blok — kimlik ve grafik solda tek panelde, şirket künyesi sağda */}
       <div
@@ -380,7 +385,7 @@ export default async function StockPage(
               symbol={symbol}
               locale={locale}
               t={t}
-              chip={<nav className={styles.identityChip} aria-label={t.stock.experienceNav}>{researchLink}</nav>}
+              chip={<div className={styles.identityChip}>{researchLink}</div>}
             />
           </Suspense>
           {/* ÖLÇÜLMÜŞ YÜKSEKLİK. Yedek 300 (mobil) / 430 piksel ayırıyordu

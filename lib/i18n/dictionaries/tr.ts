@@ -23,6 +23,9 @@ const tr = {
     moreGroupRead: "Oku",
     tickerPause: "Şeridi Duraklat",
     tickerResume: "Şeridi Sürdür",
+    /* Alttaki sabit şeridin işaret noktası adı (ekran okuyucunun bölge
+       listesinde görünen ad). */
+    tickerRegion: "Piyasa Şeridi",
     today: "Bugün",
     calendar: "Takvim",
     earnings: "Bilançolar",

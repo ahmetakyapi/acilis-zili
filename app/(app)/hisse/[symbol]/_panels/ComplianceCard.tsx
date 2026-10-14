@@ -126,34 +126,43 @@ export async function ComplianceCard({
                   ? 0
                   : Math.min((value / COMPLIANCE_THRESHOLD) * 100, 100);
               return (
+                /* `dt` VE `dd` GRUBUN DOĞRUDAN ÇOCUĞU (14 Ekim). İkisi bir
+                   ara `div`in içindeydi; `dl > div > div > dt` geçersiz bir
+                   tanım listesi ve axe hisse sayfasında "definition-list" +
+                   dört "dlitem" ihlali veriyordu (ekran okuyucu terimi
+                   değeriyle eşleyemiyor). Çubuk ve ölçek ikinci `dd`:
+                   aynı terimin ikinci tanımı, yani "eşiğe ne kadar yakın".
+                   Görünüm aynı — ara kutunun 7 piksellik aralığı değerin
+                   üst boşluğu oldu (stock.module.css → `.complianceValue`). */
                 <div key={label} className={styles.complianceRatio}>
-                  <div className={styles.complianceReading}>
-                    <dt className="text-tiny leading-tight text-muted">
-                      {label}
-                    </dt>
-                    <dd
-                      className={cn(
-                        "numeral shrink-0 text-xs font-semibold",
-                        over ? "text-down" : "text-strong",
-                      )}
-                    >
-                      {/* Yüzde işareti sözlüğe değil biçimlendiriciye ait:
-                          elden yazılan "%" iki dilde de sonda kalıyordu
-                          ("12,3%"), oysa Türkçede önde yazılır. */}
-                      {value !== null
-                        ? formatPercentPlain(value, locale, 1)
-                        : NO_VALUE}
-                    </dd>
-                  </div>
+                  <dt className="text-tiny leading-tight text-muted">
+                    {label}
+                  </dt>
+                  <dd
+                    className={cn(
+                      "numeral text-xs font-semibold",
+                      styles.complianceValue,
+                      over ? "text-down" : "text-strong",
+                    )}
+                  >
+                    {/* Yüzde işareti sözlüğe değil biçimlendiriciye ait:
+                        elden yazılan "%" iki dilde de sonda kalıyordu
+                        ("12,3%"), oysa Türkçede önde yazılır. */}
+                    {value !== null
+                      ? formatPercentPlain(value, locale, 1)
+                      : NO_VALUE}
+                  </dd>
                   {/* Eşiğe ne kadar yakın — çubuk %33'te dolar */}
-                  <div className={styles.complianceTrack}>
-                    <div
-                      data-motion-draw="line"
-                      className={cn("h-full", over ? "bg-down" : "bg-up")}
-                      style={{ width: `${width}%` }}
-                    />
-                  </div>
-                  <div className={styles.complianceScale}><span className="numeral">0</span><span>{t.stock.complianceLimit} <b className="numeral">{formatPercentPlain(COMPLIANCE_THRESHOLD, locale, 0)}</b></span></div>
+                  <dd>
+                    <div className={styles.complianceTrack}>
+                      <div
+                        data-motion-draw="line"
+                        className={cn("h-full", over ? "bg-down" : "bg-up")}
+                        style={{ width: `${width}%` }}
+                      />
+                    </div>
+                    <div className={styles.complianceScale}><span className="numeral">0</span><span>{t.stock.complianceLimit} <b className="numeral">{formatPercentPlain(COMPLIANCE_THRESHOLD, locale, 0)}</b></span></div>
+                  </dd>
                 </div>
               );
             })}

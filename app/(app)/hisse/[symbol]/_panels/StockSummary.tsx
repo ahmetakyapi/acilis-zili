@@ -146,7 +146,9 @@ export async function StockSummary({ symbol, locale, t }: { symbol: string; loca
          bu künyenin kopyası olduğu için kalktı (ProfileCard); ayrıntıya
          giden bağlantı onunla birlikte buraya taşındı. */
       value: (
-        <a href="#stock-earnings" className={cn("numeral", styles.summaryLink)}>
+        /* `.tap-44` (14 Ekim): bağlantı satırın tek eylemi ve 390'da
+           89×19 pikseldi (ölçüldü); görünür ölçü aynı, hedef 44. */
+        <a href="#stock-earnings" className={cn("numeral tap-44", styles.summaryLink)}>
           {formatEtDateLong(facts.next.date, locale)}
         </a>
       ),

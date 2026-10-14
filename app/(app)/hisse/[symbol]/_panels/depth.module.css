@@ -176,7 +176,10 @@
 .stripDot { position:absolute; top:50%; width:13px; height:13px; margin:-6.5px 0 0 -6.5px; border:2.5px solid var(--premium-surface,var(--surface-solid)); border-radius:999px; background:var(--primary); box-sizing:border-box; }
 /* Ölçek başlığı: satırla aynı üç sütun; yazılar şerit sütununun solunda,
    ortasında ve sağında (şeridin `margin-inline`i kadar içeride). */
-.axisScale { display:grid; grid-template-columns:minmax(0,9rem) minmax(0,1fr) 3.25rem; column-gap:16px; margin-bottom:6px; color:var(--text-muted); font-size:11.5px; font-weight:600; }
+/* 12 PİKSEL (14 Ekim): 11,5 sitenin metin tabanının altındaydı (globals.css
+   → `--text-nano`). Ölçüldü, 360–1440 arasında hiçbir genişlikte etiketler
+   birbirine yaklaşmadı (en dar aralık 520'de 4 px, önce de öyleydi). */
+.axisScale { display:grid; grid-template-columns:minmax(0,9rem) minmax(0,1fr) 3.25rem; column-gap:16px; margin-bottom:6px; color:var(--text-muted); font-size:12px; font-weight:600; }
 .axisScale > span:nth-child(1) { grid-column:2; grid-row:1; justify-self:start; padding-left:6px; }
 .axisScale > span:nth-child(2) { grid-column:2; grid-row:1; justify-self:center; }
 .axisScale > span:nth-child(3) { grid-column:2; grid-row:1; justify-self:end; padding-right:6px; }
@@ -187,6 +190,14 @@
   .axisScale { grid-template-columns:minmax(0,6.75rem) minmax(0,1fr) 2.75rem; column-gap:12px; }
   .axisScale b { display:none; }
   .axisScale i { display:inline; }
+}
+/* 360 ALTINDA "MEDYAN" YOK (14 Ekim). Şerit sütunu 320'de ~64 piksele
+   iniyor ve üç kısa ad bile sığmıyordu: "Alt" ile "Medyan" 8, "Medyan" ile
+   "Üst" 11 piksel üst üste biniyor, satır "AltMedyanÜst" okunuyordu
+   (canlıda ölçüldü; 340'ta da −1). Uçlardaki iki ad kalıyor (320'de aralık
+   25 piksel); dikey çizginin medyan olduğunu panelin künyesi söylüyor. */
+@media (max-width:359px) {
+  .axisScale > span:nth-child(2) { display:none; }
 }
 
 /* Teknik fotoğraf — iki sütunlu ölçü listesi, satırlar aynı hatta. */
@@ -302,8 +313,13 @@
    yerine satır satır (etiket solda, sayı sağda) ve kayıtların ilk beşi
    açık. */
 .insiderRecords { position:relative; min-width:0; margin-top:12px; }
-/* Aynı gerekçe (`.foldInput`): kutu "Tümünü Gör" düğmesinin hizasında. */
-.clampInput { bottom:0; left:0; }
+/* Aynı gerekçe (`.foldInput`): kutu "Tümünü Gör" düğmesinin hizasında.
+   YALNIZCA KISITLAMA ÇALIŞIRKEN ODAKLANIYOR (14 Ekim). Kutu 1100 altında ve
+   tablo zaten sığdığında (`data-fits`) da sekme sırasındaydı ama etiketi
+   (`.clampButton`) `display:none`dı: klavyeyle gezen okuyucu adı olmayan,
+   görünmeyen ve hiçbir şey yapmayan bir onay kutusuna düşüyordu (axe
+   "label", kritik, 390'da). Kutu etiketiyle aynı koşulda var. */
+.clampInput { bottom:0; left:0; display:none; }
 
 /* ---- İçeriden işlemler: okuma katmanı (29 Eylül) ----
    Gerekçe InsiderPanel.tsx başında. Renk yalnızca yönden: çip, pay ve
@@ -369,6 +385,11 @@
 .how[open] > summary::after { margin-top:3px; transform:rotate(-135deg); }
 .how > summary:hover { color:var(--primary-hover); }
 .how > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:6px; }
+/* DOKUNMATİKTE 44 (14 Ekim). "Nasıl Okunur" katlaması 390'da 316×32
+   pikseldi (ölçüldü, dört panelde); analist panelinin katlaması aynı
+   gerekçeyle zaten 44 (stock.module.css → `.analystExplanation`).
+   Farede 32 kalıyor — orada satır yoğunluğu önemli. */
+@media (hover:none) { .how > summary { min-height:44px; } }
 .how > p { margin-top:6px; color:var(--text-muted); font-size:12px; line-height:1.65; }
 .how + .stamp { margin-top:6px; }
 
@@ -400,6 +421,7 @@
      maskeyle soluyor; renk değil saydamlık, iki temada aynı. */
   .clampBox { height:0; min-height:100%; overflow:hidden; mask-image:linear-gradient(to bottom, black calc(100% - 72px), transparent); }
   .clampInput:checked ~ .clampBox { height:auto; min-height:0; overflow:visible; mask-image:none; }
+  .clampInput { display:block; }
   .clampButton { position:absolute; left:28px; right:0; bottom:0; z-index:1; display:flex; justify-content:center; }
   .clampButton > span { display:inline-flex; align-items:center; min-height:36px; padding:0 16px; border:1px solid var(--line); border-radius:999px; background:var(--panel-fixed); color:var(--primary-ink); font-size:12.5px; font-weight:650; cursor:pointer; transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand); }
   .clampButton:hover > span { border-color:var(--primary-faint); background:var(--primary-tint); }
@@ -407,7 +429,7 @@
   .clampInput:checked ~ .clampButton { position:static; margin-top:10px; }
   .clampInput:checked ~ .clampButton .clampMore, .clampInput:not(:checked) ~ .clampButton .clampLess { display:none; }
   .insiderRecords[data-fits] > .clampBox { mask-image:none; }
-  .insiderRecords[data-fits] > .clampButton { display:none; }
+  .insiderRecords[data-fits] > .clampButton, .insiderRecords[data-fits] > .clampInput { display:none; }
   .insiderAside .readings { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px 14px; }
   .insiderAside .readingValue { font-size:20px; }
 }

@@ -136,7 +136,7 @@ export default function GlobalError({
             {copy.retry}
           </button>
           {error.digest && (
-            <p className="digest" style={{ marginTop: 18, fontSize: 11.5 }}>
+            <p className="digest" style={{ marginTop: 18, fontSize: 12 }}>
               {copy.digest} {error.digest}
             </p>
           )}

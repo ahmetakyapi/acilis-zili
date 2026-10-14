@@ -174,7 +174,7 @@ export async function TickerFeed() {
     <MarketTicker
       groups={groups}
       skipGroups={["indices"]}
-      labels={{ pause: t.nav.tickerPause, resume: t.nav.tickerResume }}
+      labels={{ pause: t.nav.tickerPause, resume: t.nav.tickerResume, region: t.nav.tickerRegion }}
     />
   );
 }

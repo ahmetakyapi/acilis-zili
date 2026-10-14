@@ -73,6 +73,9 @@
 .how[open] > summary::after { margin-top:3px; transform:rotate(-135deg); }
 .how > summary:hover { color:var(--primary-hover); }
 .how > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:6px; }
+/* Dokunmatikte 44 (14 Ekim) — hisse sayfasındaki öteki "Nasıl Okunur"
+   katlamalarıyla aynı kural (depth.module.css → `.how`); 390'da 320×32'ydi. */
+@media (hover:none) { .how > summary { min-height:44px; } }
 .how > p { margin-top:4px; }
 .how > p + p { margin-top:6px; }
 @media(max-width:639px) {

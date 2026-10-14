@@ -246,7 +246,12 @@ function StoryFilters({
             active={symbol === active}
           >
             <span className="numeral">{symbol}</span>
-            <span className="ml-1.5 opacity-70">{count}</span>
+            {/* SAYI SAYDAM DEĞİL (14 Ekim). `opacity-70` koyu temada sayıyı
+                3,58:1'e düşürüyordu (axe, 390; AA 4,5 ister) — Şirketler
+                sayfasının sektör çipinde aynı gerekçeyle kalkan saydamlık.
+                Sayı etiketle aynı renkte; ayrımı aradaki boşluk kuruyor.
+                Soluk ton (`text-muted`) bu zeminde de 4,1'de kalıyordu. */}
+            <span className="numeral ml-1.5">{count}</span>
           </FilterChip>
         ))}
       </ScrollEdges>

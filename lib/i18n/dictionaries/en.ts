@@ -20,6 +20,7 @@ const en: typeof tr = {
     moreGroupRead: "Read",
     tickerPause: "Pause Ticker",
     tickerResume: "Resume Ticker",
+    tickerRegion: "Market Ticker",
     today: "Today",
     calendar: "Calendar",
     earnings: "Earnings",

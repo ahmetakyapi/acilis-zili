@@ -105,8 +105,9 @@ export function MarketTicker({
    * Kahramanı olmayan sayfalarda hiçbir şey değişmiyor.
    */
   skipGroups?: string[];
-  /** Duraklatma düğmesinin erişilebilir adı — iki durumu da taşır. */
-  labels: { pause: string; resume: string };
+  /** Duraklatma düğmesinin erişilebilir adı — iki durumu da taşır;
+      `region` şeridin işaret noktası adı. */
+  labels: { pause: string; resume: string; region: string };
 }) {
   const [page, setPage] = useState(0);
   /* Kaçıncı dönüş — 0 iken giriş animasyonu yok: ilk çizimde şerit
@@ -253,7 +254,13 @@ export function MarketTicker({
        "Piyasa" sekmesinin bir dokunuş ötesinde ve ana sayfanın kart
        ızgarasında; okuma alanını daraltmasına değmiyor. Masaüstünde yer bol,
        orada sayfanın dibinde kalıyor ve ortam bilgisi olarak işe yarıyor. */
-    <div
+    /* İŞARET NOKTASI (14 Ekim). Şerit hiçbir bölgenin içinde değildi:
+       axe her sayfada tek "region" ihlali veriyordu (1440, /giris'ten
+       /rehber'e dokuz rota) ve ekran okuyucunun bölge listesinde sayfanın
+       dibindeki bu sabit bant yoktu. `aside` + ad tamamlayıcı bir bölge;
+       görünüm ve davranış aynı. */
+    <aside
+      aria-label={labels.region}
       aria-live="off"
       onMouseEnter={() => setDurduruldu(true)}
       onMouseLeave={() => setDurduruldu(false)}
@@ -388,6 +395,6 @@ export function MarketTicker({
           )}
         </button>
       )}
-    </div>
+    </aside>
   );
 }

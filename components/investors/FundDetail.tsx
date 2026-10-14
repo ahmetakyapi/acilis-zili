@@ -66,7 +66,7 @@ export function FundStrip({
             href={secFilingUrl(detail.cik, detail.accession)}
             target="_blank"
             rel="noopener noreferrer"
-            className={styles.stripLink}
+            className={`tap-44 ${styles.stripLink}`}
           >
             {t.sourceSec}
             <ArrowSquareOut size={13} weight="bold" aria-hidden />

@@ -410,9 +410,12 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .complianceRatios { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:6px; }
 .complianceRatio { min-width:0; }
 .complianceRatio + .complianceRatio { border-left:1px solid var(--line-soft); padding-left:16px; }
-.complianceReading { display:flex; flex-direction:column; gap:7px; }
-.complianceReading dt { min-height:30px; font-size:12px; line-height:1.4; }
-.complianceReading dd { font-size:22px; line-height:1.2; letter-spacing:-.035em; }
+/* Terim ve değer `.complianceRatio`nun doğrudan çocukları (gerekçe
+   ComplianceCard.tsx); eski ara kutunun 7 piksellik aralığı değerin üst
+   boşluğu. Ölçüldü (390 ve 1440, önce canlı, sonra yerelde): değer terimin
+   37, çubuk değerin 38, ölçek değerin 51 piksel altında — iki ölçüm aynı. */
+.complianceRatio > dt { min-height:30px; font-size:12px; line-height:1.4; }
+.complianceValue { margin-top:7px; font-size:22px; line-height:1.2; letter-spacing:-.035em; }
 .complianceTrack { position:relative; height:7px; margin-top:12px; border-radius:2px; background:repeating-linear-gradient(90deg,var(--line-soft) 0 1px,transparent 1px 10%),var(--surface-sunken); }
 .complianceTrack::after { content:""; position:absolute; right:0; top:-3px; height:13px; width:1px; background:var(--text-muted); }
 .complianceTrack > div { border-radius:2px; }
