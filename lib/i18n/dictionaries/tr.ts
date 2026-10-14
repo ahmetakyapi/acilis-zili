@@ -1369,8 +1369,12 @@ const tr = {
       down: "Kırmızı",
       flat: "Gri",
     },
-    deleteListConfirm:
-      "Bu liste ve içindeki tüm semboller silinecek. Devam edilsin mi?",
+    /* Silme onayı listenin KENDİ başlığında, tarayıcının yerli onay
+       kutusunda değil (14 Ekim). Soru listenin adını, ipucu kaç sembolün
+       gideceğini söylüyor. */
+    deleteListQuestion: "“{name}” listesi silinsin mi?",
+    deleteListHint: "İçindeki {n} sembol de silinir; bu geri alınamaz.",
+    deleteListHintEmpty: "Liste boş; bu geri alınamaz.",
     addSymbol: "Sembol Ekle",
     symbolPlaceholder: "Sembol ara: örn. NVDA",
     alreadyInList: "Bu sembol listede zaten var",

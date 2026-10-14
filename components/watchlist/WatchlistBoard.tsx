@@ -67,7 +67,11 @@ export type BoardLabels = {
   deleteList: string;
   /** Satırdaki çöp kutusu — listeyi değil YALNIZCA o sembolü çıkarır. */
   removeSymbol: string;
-  deleteListConfirm: string;
+  /** "“{name}” listesi silinsin mi?" — satır içi onayın sorusu. */
+  deleteListQuestion: string;
+  /** "{n}" yer tutuculu ipucu; liste boşsa `deleteListHintEmpty`. */
+  deleteListHint: string;
+  deleteListHintEmpty: string;
   colorLegend: string;
   colorNames: Record<string, string>;
   addSymbol: string;
@@ -350,6 +354,98 @@ function NewListForm({ labels }: { labels: BoardLabels }) {
 }
 
 /* --------------------------------------------------------------------------
+   Liste silme onayı — başlığın yerinde, satır içi
+   -------------------------------------------------------------------------- */
+
+/**
+ * Yeniden adlandırma formu gibi başlığın YERİNE geçiyor: hangi listenin
+ * gittiği başlığın durduğu yerde yazıyor, sayfa kaymıyor. Odak önce
+ * "İptal"de — klavyede Enter'a basan okuyucu yanlışlıkla silmesin;
+ * Escape de vazgeçer. Silme sürerken iki düğme de kilitli. Ölçüldü (yerel
+ * fikstür, 390 ve 1440, iki tema): iki düğme de 44 piksel, yatay taşma yok,
+ * giriş bitince satırda dönüşüm kalmıyor (`transform: none`).
+ */
+function DeleteListConfirm({
+  list,
+  labels,
+  onCancel,
+  onDeleted,
+}: {
+  list: BoardList;
+  labels: BoardLabels;
+  onCancel: () => void;
+  onDeleted: () => void;
+}) {
+  const [pending, setPending] = useState(false);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const questionId = `liste-sil-${list.id}`;
+  const hintId = `liste-sil-ipucu-${list.id}`;
+  const count = list.items.length;
+
+  useEffect(() => {
+    cancelRef.current?.focus();
+  }, []);
+
+  return (
+    <motion.div
+      role="group"
+      aria-labelledby={questionId}
+      aria-describedby={hintId}
+      aria-busy={pending || undefined}
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22, ease: EASE_BRAND_POINTS }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && !pending) {
+          event.stopPropagation();
+          onCancel();
+        }
+      }}
+      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-line-soft bg-down-wash px-4 py-3 sm:px-5"
+    >
+      <div className="min-w-0 flex-1 basis-56">
+        <p id={questionId} className="text-read font-bold tracking-[-0.01em] text-strong [overflow-wrap:anywhere]">
+          {labels.deleteListQuestion.replace("{name}", list.name)}
+        </p>
+        <p id={hintId} className="mt-0.5 text-small text-body">
+          {count > 0
+            ? labels.deleteListHint.replace("{n}", String(count))
+            : labels.deleteListHintEmpty}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <Button ref={cancelRef} type="button" variant="ghost" size="lg" disabled={pending} onClick={onCancel}>
+          {labels.cancel}
+        </Button>
+        <Button
+          type="button"
+          size="lg"
+          disabled={pending}
+          className="bg-down text-page hover:bg-down/85"
+          onClick={async () => {
+            setPending(true);
+            const fd = new FormData();
+            fd.set("listId", list.id);
+            try {
+              await deleteWatchlist(fd);
+            } catch {
+              /* Eylem düştüyse liste yerinde duruyor; onay açık kalıyor ki
+                 okuyucu yeniden deneyebilsin ya da vazgeçebilsin. */
+              setPending(false);
+              return;
+            }
+            onDeleted();
+          }}
+        >
+          <Trash weight="bold" size={15} aria-hidden />
+          {labels.deleteList}
+        </Button>
+      </div>
+    </motion.div>
+  );
+}
+
+/* --------------------------------------------------------------------------
    Liste paneli — başlık + sıralanabilir satırlar + sembol ekleme
    -------------------------------------------------------------------------- */
 
@@ -370,7 +466,9 @@ function ListPanel({
 }) {
   const router = useRouter();
   const [renaming, setRenaming] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const renameTriggerRef = useRef<HTMLButtonElement>(null);
+  const deleteTriggerRef = useRef<HTMLButtonElement>(null);
 
   return (
     /* `group/list`: liste başlığındaki silme düğmesi de satırlardaki gibi
@@ -378,7 +476,26 @@ function ListPanel({
        satırlardaki kadar gürültülü değildi ama yıkıcı bir eylemin sürekli
        ekranda durması için de bir sebep yok. */
     <section id={`liste-${list.id}`} className="panel group/list">
-      {renaming ? (
+      {confirming ? (
+        <DeleteListConfirm
+          list={list}
+          labels={labels}
+          onCancel={() => {
+            setConfirming(false);
+            /* Vazgeçen okuyucu açtığı düğmeye döner (yeniden adlandırma
+               formuyla aynı kural). */
+            requestAnimationFrame(() => deleteTriggerRef.current?.focus());
+          }}
+          onDeleted={() => {
+            /* Odak, silinen listenin yerine gelen listenin başına ya da
+               "Yeni Liste" düğmesine — DOM'dan giden düğmede kalmasın. */
+            const panel = document.getElementById(`liste-${list.id}`);
+            const next = (panel?.nextElementSibling ?? panel?.previousElementSibling) as HTMLElement | null;
+            (next?.querySelector<HTMLElement>("button, a") ?? document.querySelector<HTMLElement>("[data-new-list]"))?.focus({ preventScroll: true });
+            router.refresh();
+          }}
+        />
+      ) : renaming ? (
         <RenameListForm
           list={list}
           labels={labels}
@@ -426,19 +543,14 @@ function ListPanel({
           <PencilSimple weight="duotone" size={14} />
         </button>
         <button
+          ref={deleteTriggerRef}
           type="button"
-          onClick={async () => {
-            if (!window.confirm(labels.deleteListConfirm)) return;
-            const fd = new FormData();
-            fd.set("listId", list.id);
-            await deleteWatchlist(fd);
-            /* Odak, silinen listenin yerine gelen listenin başına ya da
-               "Yeni Liste" düğmesine — DOM'dan giden düğmede kalmasın. */
-            const panel = document.getElementById(`liste-${list.id}`);
-            const next = (panel?.nextElementSibling ?? panel?.previousElementSibling) as HTMLElement | null;
-            (next?.querySelector<HTMLElement>("button, a") ?? document.querySelector<HTMLElement>("[data-new-list]"))?.focus({ preventScroll: true });
-            router.refresh();
-          }}
+          /* ONAY TARAYICININ KUTUSUNDA DEĞİL (14 Ekim). `window.confirm`
+             sitenin dışından bir pencereydi: dili tarayıcının, düğmeleri
+             "Tamam / İptal", hangi listenin silineceğini söylemiyordu ve
+             telefonda sayfanın üstünü kapatıyordu. Onay artık listenin
+             kendi başlığında açılıyor (`DeleteListConfirm`). */
+          onClick={() => setConfirming(true)}
           aria-label={`${labels.deleteList}: ${list.name}`}
           title={labels.deleteList}
           /* `opacity-100` ile `opacity-0` aynı sınıf dizesinde duruyordu ve

@@ -1065,8 +1065,9 @@ const en: typeof tr = {
       down: "Red",
       flat: "Grey",
     },
-    deleteListConfirm:
-      "This list and every symbol in it will be deleted. Continue?",
+    deleteListQuestion: "Delete the “{name}” list?",
+    deleteListHint: "The symbols in it go too ({n}); this can't be undone.",
+    deleteListHintEmpty: "The list is empty; this can't be undone.",
     addSymbol: "Add Symbol",
     symbolPlaceholder: "Search symbol: e.g. NVDA",
     alreadyInList: "That symbol is already in this list",
