@@ -269,6 +269,9 @@ const tr = {
   today: {
     countdownOpen: "Açılış Ziline Kalan",
     countdownClose: "Kapanış Ziline Kalan",
+    /* Gizli sekmenin başlığı, hedef geçtiğinde (components/today/TabCountdown). */
+    tabRangOpen: "Açılış Zili Çaldı",
+    tabRangClose: "Kapanış Zili Çaldı",
     countdownDays: "Gün",
     countdownHours: "Saat",
     countdownMinutes: "Dakika",
@@ -291,6 +294,7 @@ const tr = {
     briefWeeklyTitle: "Haftanın Özeti",
     briefEmpty: "Henüz günlük özet yazılmadı.",
     briefWeeklyEmpty: "Henüz haftalık özet yazılmadı.",
+    briefFailed: "Bülten şu an okunamıyor; birazdan yeniden dene.",
     briefPeriod: "Özet Dönemi",
     /* Günlük özet 16:00'da, haftalık pazartesi 09:30'da yazılıyor; o saate
        kadar en son yazılan metin duruyor ve tarihi burada söyleniyor.
@@ -371,6 +375,12 @@ const tr = {
     topNewsNote: "son {n} haberden seçildi",
     weekAhead: "Haftaya Bakış",
     weekAheadEmpty: "Önümüzdeki hafta için planlanmış önemli veri yok.",
+    /* OKUNAMAYAN TAKVİM BOŞ TAKVİM DEĞİL (14 Ekim). Bilanço ve haftaya
+       bakış panelleri veritabanı düştüğünde "bilanço açıklaması yok" ve
+       "önemli veri yok" diyordu — BAC, MS ve BLK'nın açıkladığı bir günde
+       bile. Takvim ve haftalık bilanço ekranlarının `ok: false` dalıyla
+       aynı söz: hata der, boşluk iddia etmez. */
+    calendarFailedHint: "Takvim şu an okunamıyor; bu boş bir takvim değil. Birazdan yeniden dene.",
     worldMarkets: "Dünya Piyasaları",
     /* KÜNYE DÖRT CÜMLEDEN BİRE İNDİ. Birinci cümle SATIRLARIN KENDİSİYLE
        tekrar ediyordu — her satır zaten "MSCI Türkiye · BIST'i izleyen ABD

@@ -1,6 +1,7 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { AnalysisBadge } from "@/components/earnings/AnalysisBadge";
 import {
+  DataError,
   EmptyState,
   Panel,
   PanelHeader,
@@ -8,7 +9,7 @@ import {
   TimingChip,
   LogoTile,
 } from "@/components/ui/primitives";
-import { getAnalysisBadges, getEarningsBetween, getHolidays, getSymbolNames } from "@/lib/data";
+import { getAnalysisBadges, getEarningsBetweenResult, getHolidays, getSymbolNames } from "@/lib/data";
 import { isTradingDay, nextTradingDay, todayEt } from "@/lib/market-hours";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { formatPrice } from "@/lib/utils";
@@ -54,7 +55,26 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
             new Date(`${today}T12:00:00Z`),
           ),
         );
-  const rows = await getEarningsBetween(today, today);
+  const result = await getEarningsBetweenResult(today, today);
+
+  /* OKUNAMADI ≠ BOŞ (14 Ekim). `getEarningsBetween` hatayı `[]` olarak
+     yutuyordu ve panel veritabanı düştüğünde "Bu aralıkta bilanço
+     açıklaması yok" diyordu: yerelde, 14 Ekim'de BAC, MS ve BLK
+     açıklarken ölçüldü. Sonuç tipli okuma (lib/data.ts) iki durumu
+     ayırıyor; hata dalı boşluk iddia etmiyor. */
+  if (!result.ok) {
+    return (
+      <Panel>
+        <PanelHeader
+          title={title}
+          tone="title"
+          action={<PanelLink href="/bilancolar">{t.common.showAll}</PanelLink>}
+        />
+        <DataError className="py-6" message={t.data.failed} hint={t.today.calendarFailedHint} />
+      </Panel>
+    );
+  }
+  const rows = result.rows;
 
   if (rows.length === 0) {
     return (

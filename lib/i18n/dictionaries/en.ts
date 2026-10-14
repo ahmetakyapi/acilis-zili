@@ -228,6 +228,8 @@ const en: typeof tr = {
   today: {
     countdownOpen: "Until the Opening Bell",
     countdownClose: "Until the Closing Bell",
+    tabRangOpen: "The Opening Bell Rang",
+    tabRangClose: "The Closing Bell Rang",
     countdownDays: "Days",
     countdownHours: "Hours",
     countdownMinutes: "Minutes",
@@ -250,6 +252,7 @@ const en: typeof tr = {
     briefWeeklyTitle: "The Week's Brief",
     briefEmpty: "No daily brief has been written yet.",
     briefWeeklyEmpty: "No weekly brief has been written yet.",
+    briefFailed: "The brief can't be read right now; try again shortly.",
     briefPeriod: "Brief Period",
     briefStaleNote:
       "This is the brief from {date}. The daily brief is published at {time} Istanbul time.",
@@ -292,6 +295,7 @@ const en: typeof tr = {
     topNewsNote: "picked from the last {n} stories",
     weekAhead: "The Week Ahead",
     weekAheadEmpty: "No major releases scheduled for the coming week.",
+    calendarFailedHint: "The calendar can't be read right now; this is not an empty calendar. Try again shortly.",
     worldMarkets: "World Markets",
     worldMarketsHint:
       "Daily moves of MSCI country funds trading in US dollars. The direction matches the local index, the percentage can differ with currency and session hours.",

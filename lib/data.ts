@@ -759,6 +759,16 @@ export type BriefIndexRow = {
 };
 
 /**
+ * Sonuç tipli okuma — okunamayan bülten "henüz yazılmamış" bülten değildir.
+ *
+ * Ana sayfanın bülten kartı `null`ı "Henüz günlük özet yazılmadı" diye
+ * basıyordu; veritabanı düştüğünde de aynı cümle çıkıyordu (yerelde, 14
+ * Ekim'de, bülten yayındayken ölçüldü). Takvim okumalarının
+ * (`getEventsBetweenResult`) ayrımının aynısı. Sorgu TEK YERDE, burada.
+ */
+export type BriefResult = { ok: true; row: DailyBriefRow | null } | { ok: false };
+
+/**
  * Dönemin en yeni kaydı.
  *
  * Bülten sayfası eskiden önce arşiv listesini çekip, listenin ilk satırından
@@ -768,10 +778,10 @@ export type BriefIndexRow = {
  * belirtilmediğinde en yeni kayıt doğrudan çekilebiliyor ve iki sorgu
  * paralel gidiyor.
  */
-export async function getLatestBrief(
+export async function getLatestBriefResult(
   locale: string,
   period: BriefPeriod = "daily",
-): Promise<DailyBriefRow | null> {
+): Promise<BriefResult> {
   try {
     /* Dil süzgeci sorguda değil sonra: en yeni GÜNÜN kaydı esas alınır ve
        o günün içinde istenen dil tercih edilir. Çeviri bir gün geride
@@ -784,14 +794,23 @@ export async function getLatestBrief(
       .where(eq(dailyBriefs.period, period))
       .orderBy(desc(dailyBriefs.briefDate))
       .limit(4);
-    if (rows.length === 0) return null;
+    if (rows.length === 0) return { ok: true, row: null };
     const latestDate = rows[0].briefDate;
     const sameDay = rows.filter((row) => row.briefDate === latestDate);
-    return sameDay.find((row) => row.locale === locale) ?? sameDay[0];
+    return { ok: true, row: sameDay.find((row) => row.locale === locale) ?? sameDay[0] };
   } catch (error) {
     yutuldu("getLatestBrief", error);
-    return null;
+    return { ok: false };
   }
+}
+
+/** Eski imza — hatayı `null` olarak yutuyor; ayrım gerekmeyen çağıranlar için. */
+export async function getLatestBrief(
+  locale: string,
+  period: BriefPeriod = "daily",
+): Promise<DailyBriefRow | null> {
+  const result = await getLatestBriefResult(locale, period);
+  return result.ok ? result.row : null;
 }
 
 /**

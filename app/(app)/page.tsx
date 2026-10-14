@@ -2,6 +2,7 @@ import { cache, Suspense } from "react";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/today/TodayExperience.module.css";
 import { Countdown } from "@/components/today/Countdown";
+import { TabCountdown } from "@/components/today/TabCountdown";
 import { InkCanvas } from "@/components/ink/InkCanvas";
 import { SessionBellFigure } from "@/components/figures/session-bell/figure";
 import { BellLedger } from "@/components/today/BellLedger";
@@ -242,6 +243,15 @@ export default async function TodayPage() {
                   label={countdownLabel}
                   className={styles.countdown}
                   ring
+                />
+                {/* Sekme arka plandayken aynı hedef sekme başlığında
+                    (gerekçe TabCountdown'da). Hiçbir şey çizmez. */}
+                <TabCountdown
+                  targetIso={countdownTarget.toISOString()}
+                  phrase={trading ? t.sessionBell.toClose : t.sessionBell.toOpen}
+                  rang={trading ? t.today.tabRangClose : t.today.tabRangOpen}
+                  units={t.sessionBell.units}
+                  brand={t.brand.name}
                 />
               </div>
               <SessionRail

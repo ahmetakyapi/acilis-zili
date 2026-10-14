@@ -1,5 +1,5 @@
-import { EmptyState, ImpactDot } from "@/components/ui/primitives";
-import { getEventsBetween, getTodayEvents } from "@/lib/data";
+import { DataError, EmptyState, ImpactDot } from "@/components/ui/primitives";
+import { getEventsBetweenResult, getTodayEvents } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { timePair, zoneTag } from "@/lib/session-clock";
 import { type Dictionary, type Locale } from "@/lib/i18n";
@@ -107,9 +107,12 @@ const WEEK_AHEAD_MAX = 6;
  */
 export async function WeekAhead({ locale, t }: { locale: Locale; t: Dictionary }) {
   const today = todayEt();
-  const events = (
-    await getEventsBetween(addEtDays(today, 1), addEtDays(today, 7))
-  ).filter((event) => event.importance !== "low");
+  const result = await getEventsBetweenResult(addEtDays(today, 1), addEtDays(today, 7));
+  /* Okunamayan hafta boş bir hafta değil — gerekçe EarningsToday'de. */
+  if (!result.ok) {
+    return <DataError className="py-6" message={t.data.failed} hint={t.today.calendarFailedHint} />;
+  }
+  const events = result.rows.filter((event) => event.importance !== "low");
 
   if (events.length === 0) {
     return <EmptyState compact title={t.today.weekAheadEmpty} />;

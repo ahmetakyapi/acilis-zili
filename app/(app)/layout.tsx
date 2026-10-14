@@ -1,5 +1,6 @@
 import { MotionProvider } from "@/components/motion/MotionProvider";
 import { Suspense } from "react";
+import { headers } from "next/headers";
 import { auth } from "@/auth";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { AppShell, type ShellLabels } from "@/components/layout/AppShell";
@@ -45,11 +46,16 @@ export default async function AppLayout({
      genişlikte istendi). Satır `SessionLine`dı ve kabuğun tek `getStatus`
      okumasıydı; onunla birlikte o okuma da kalktı. Seansın durumu ana
      sayfanın geri sayımında ve piyasa şeridinde yaşıyor. */
-  const [{ locale, t }, theme, session] = await Promise.all([
+  const [{ locale, t }, theme, session, ua] = await Promise.all([
     getI18n(),
     getTheme(),
     auth(),
+    headers().then((h) => h.get("user-agent") ?? ""),
   ]);
+  /* Arama kısayolunun künyesi işletim sistemine göre (gerekçe
+     SearchCommand → `shortcut`). iPadOS kendini Macintosh diye tanıtıyor;
+     klavyeli iPad'de de ⌘ doğru tuş. */
+  const searchShortcut = /Mac|iPhone|iPad|iPod/.test(ua) ? "⌘K" : "Ctrl K";
   /* Profil ikonu — giriş yapılmışsa tek küçük sorgu, istek içinde
      önbellekli (/menu aynı cevabı okuyor). Düşerse baş harfler. */
   const [avatar, analyses] = session?.user?.id
@@ -119,6 +125,7 @@ export default async function AppLayout({
             writingsLabel={t.nav.searchWritings}
             closeLabel={t.common.close}
             hints={{ move: t.nav.searchHintMove, open: t.nav.searchHintOpen }}
+            shortcut={searchShortcut}
           />
         }
         accountMenu={

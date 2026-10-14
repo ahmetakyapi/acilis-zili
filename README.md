@@ -115,7 +115,7 @@ Pazartesi sabahı 09:30'da bir de haftalık bülten yayımlanıyor.
 
 **Birkaç kısayol:**
 
-- **`⌘K` / `Ctrl K`**: her yerden sembol, şirket, teknik analiz ve yazı arama.
+- **`⌘K` / `Ctrl K`**: her yerden sembol, şirket, teknik analiz ve yazı arama. Ana sayfa arka plandaki sekmede kalırsa sekme başlığı zile kalan süreyi gösterir.
 - **Kalp ikonu**: bir hisseyi takip listene ekler; ana sayfada listenin özeti
   ve Bilançolar → Takip Ettiklerim'de yalnızca senin şirketlerin çıkar.
 - **Takvime Ekle**: bir bilançoyu `.ics` olarak telefonunun takvimine atar.

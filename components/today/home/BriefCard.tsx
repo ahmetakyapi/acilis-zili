@@ -1,6 +1,6 @@
 import { BriefBody } from "@/components/today/BriefBody";
 import { BriefSwitch, type BriefView } from "@/components/today/BriefSwitch";
-import { BRIEF_PUBLISH_TR, getLatestBrief, getEarningsBetween, weekAnchor } from "@/lib/data";
+import { BRIEF_PUBLISH_TR, getLatestBriefResult, getEarningsBetween, weekAnchor } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { formatEtDateLong, formatEtDateCompact } from "@/lib/utils";
@@ -38,11 +38,13 @@ const OZET_EK_SATIR = 4;
 
 export async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
   const today = todayEt();
-  const [daily, weekly, bugunBilanco] = await Promise.all([
-    getLatestBrief(locale, "daily"),
-    getLatestBrief(locale, "weekly"),
+  const [dailyResult, weeklyResult, bugunBilanco] = await Promise.all([
+    getLatestBriefResult(locale, "daily"),
+    getLatestBriefResult(locale, "weekly"),
     getEarningsBetween(today, today),
   ]);
+  const daily = dailyResult.ok ? dailyResult.row : null;
+  const weekly = weeklyResult.ok ? weeklyResult.row : null;
   const acikSatir =
     bugunBilanco.length < KISA_BILANCO_ESIGI
       ? OZET_TABAN_SATIR + OZET_EK_SATIR
@@ -132,9 +134,11 @@ export async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }
           daily: t.today.briefTitle,
           weekly: t.today.briefWeeklyTitle,
         },
+        /* Okunamayan bülten "henüz yazılmadı" demez (lib/data.ts →
+           `getLatestBriefResult`). */
         empty: {
-          daily: t.today.briefEmpty,
-          weekly: t.today.briefWeeklyEmpty,
+          daily: dailyResult.ok ? t.today.briefEmpty : t.today.briefFailed,
+          weekly: weeklyResult.ok ? t.today.briefWeeklyEmpty : t.today.briefFailed,
         },
         currentBadge: { daily: t.brief.today, weekly: t.brief.thisWeek },
         periodLabel: t.today.briefPeriod,

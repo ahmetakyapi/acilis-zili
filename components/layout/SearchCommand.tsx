@@ -150,6 +150,7 @@ export function SearchCommand({
   writingsLabel,
   closeLabel,
   hints,
+  shortcut = "⌘K",
 }: {
   placeholder: string;
   /** Masthead alanında görünen kısa çağrı — "Sembol veya olay ara". */
@@ -172,6 +173,16 @@ export function SearchCommand({
   closeLabel: string;
   /** Paletin alt şeridindeki klavye ipuçları. */
   hints: { move: string; open: string };
+  /**
+   * Masthead alanındaki kısayol künyesi — "⌘K" ya da "Ctrl K".
+   *
+   * HER İŞLETİM SİSTEMİNDE "⌘K" YAZIYORDU (14 Ekim). Dinleyici iki tuşu da
+   * kabul ediyor ama künye yalnızca Mac'in işaretini basıyordu; Windows'ta
+   * ⌘ tuşu yok ve okuyucuların çoğu Windows'ta. Künye sunucuda, isteğin
+   * tarayıcı kimliğinden seçiliyor (app/(app)/layout.tsx): istemcide
+   * seçilseydi hidratasyondan sonra yer değiştirirdi.
+   */
+  shortcut?: string;
 }) {
   const router = useRouter();
 
@@ -258,7 +269,14 @@ export function SearchCommand({
     togglePalette(true);
   }, []);
 
-  // ⌘K / Ctrl+K
+  /* ⌘K / Ctrl+K — YALNIZCA DEĞİŞTİRİCİLİ KISAYOL.
+     TEK TUŞLU "/" KISAYOLU DENENDİ VE KALDIRILDI (14 Ekim). Odak yazı
+     alanında değilken "/" paleti açıyordu; ama tek karakterlik kısayol
+     WCAG 2.1.4'e (A düzeyi) takılıyor: sesle yazan okuyucunun söylediği
+     "slash" ya da yanlışlıkla basılan tuş, kapatma/yeniden atama seçeneği
+     olmadan paleti açar. GitHub aynı kısayolu bu yüzden ayarlardan
+     kapatılabilir yaptı; burada öyle bir ayar yok. Palet düğmeyle ve
+     ⌘K / Ctrl K ile açılıyor. */
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
@@ -531,7 +549,7 @@ export function SearchCommand({
         </span>
         <span className="hidden truncate text-muted xl:inline">{placeholderShort}</span>
         <kbd aria-hidden className="masthead-kbd ml-auto hidden font-sans xl:inline-flex">
-          ⌘K
+          {shortcut}
         </kbd>
       </button>
 
