@@ -161,20 +161,20 @@
   .col:last-child .colTrack::before { right:0; }
   .colSkeleton { height:202px; border-radius:10px; }
 }
-/* TELEFONDA İKİ KOLON KARO, beş fon (12 Ekim, sahibinin istekleri: "çok
-   yer kaplıyor", "maks 5 tane göstersin"; gerekçe MarketTexture.tsx →
-   SECTOR_PHONE_TOP). Sol sütun en güçlü üç, sağ sütun en zayıf iki fon,
+/* TELEFONDA İKİ KOLON KARO, altı fon (14 Ekim; 12 Ekim'deki beş, 2×3
+   ızgaranın sağ altında boş hücre bırakıyordu — gerekçe MarketTexture.tsx →
+   SECTOR_PHONE_TOP). Sol sütun en güçlü üç, sağ sütun en zayıf üç fon,
    sütun sütun okunuyor. Sembol telefonda yok (bağlantının hedefinde). */
 @media (max-width:639px) {
   .ribbon { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(6,auto); grid-auto-flow:column; gap:8px; }
   .colSym { display:none; }
   .colName { white-space:normal; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:13.5px; line-height:17px; }
   .colPct { font-size:19px; }
-  /* Katlıyken beş fon üç satırda (3 + 2): görünür satır sayısı kadar
-     ızgara satırı, yoksa beşi de sol sütuna dizilir. Yedek aynı şekil: beş
+  /* Katlıyken altı fon üç satırda (3 + 3): görünür satır sayısı kadar
+     ızgara satırı, yoksa hepsi sol sütuna dizilir. Yedek aynı şekil: altı
      kutu ve katlama düğmesinin 44 pikseli. */
   input:not(:checked) ~ .ribbon, .ribbonSkeleton { grid-template-rows:repeat(3,auto); }
-  .ribbonSkeleton > :nth-child(n+6) { display:none; }
+  .ribbonSkeleton > :nth-child(n+7) { display:none; }
   .ribbonSkeleton { padding-bottom:44px; }
 }
 .ribbonError { padding:26px 0; color:var(--text-muted); font-size:var(--text-small); text-align:center; }

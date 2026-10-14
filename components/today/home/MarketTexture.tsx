@@ -59,14 +59,17 @@ import styles from "./MarketTexture.module.css";
 const SECTOR_SCALE_FLOOR = 1;
 
 /**
- * TELEFONDA BEŞ SEKTÖR (12 Ekim, sahibinin isteği: "maks 5 tane
- * göstersin"). Şeridin bilgisi uçlarda: en güçlü üç ve en zayıf iki fon
- * açık, ortası katlı (tema sıralamasının `phoneEnds` kuralıyla aynı dil).
- * İki kolonda sol sütun yükselenler, sağ sütun düşenler gibi okunuyor.
- * Son kapanıştaki fonlar sıralamanın dışında, uç sayılmıyor.
+ * TELEFONDA ALTI SEKTÖR (14 Ekim, sahibinin isteği: "6 tane gözüksün,
+ * neden boşluk?"). 12 Ekim'de "maks 5" ile 3+2 olmuştu ama katlı ızgara
+ * iki kolon × üç satır: beşinci fon sol sütunu doldururken sağ altta boş
+ * bir hücre kalıyordu. Üç + üç ızgarayı tam dolduruyor ve uçları simetrik
+ * yapıyor. Şeridin bilgisi uçlarda: en güçlü üç ve en zayıf üç fon açık,
+ * ortası katlı (tema sıralamasının `phoneEnds` kuralıyla aynı dil). İki
+ * kolonda sol sütun yükselenler, sağ sütun düşenler gibi okunuyor. Son
+ * kapanıştaki fonlar sıralamanın dışında, uç sayılmıyor.
  */
 const SECTOR_PHONE_TOP = 3;
-const SECTOR_PHONE_BOTTOM = 2;
+const SECTOR_PHONE_BOTTOM = 3;
 
 /**
  * On bir sektör fonu, günün hareketine göre SIRALI bir siluet (10 Ekim,
