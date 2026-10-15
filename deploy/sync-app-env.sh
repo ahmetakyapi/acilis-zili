@@ -4,6 +4,10 @@
 # Yalnız TANIMLI secret'lar gider; boş olan sunucudaki değere dokunmaz.
 # Değerler şifreli stdin'den JSON olarak akar, komut satırına düşmez.
 #
+#   SITE_INDEXABLE repo DEĞİŞKENİ (secret değil): derlemede okunur, bu yüzden
+#   yalnız deploy.yml'de etkili — "Sync App Env" yazar ama robots.txt
+#   ancak bir sonraki derlemede değişir.
+#
 #   RESTART=0  servisi yeniden başlatma (deploy.yml: update.sh zaten başlatıyor)
 set -euo pipefail
 set +x
@@ -13,7 +17,7 @@ set +x
 
 payload=$(python3 - <<'PY'
 import json, os
-names = ["RESEND_API_KEY", "EMAIL_FROM", "VAPID_PUBLIC_KEY", "VAPID_PRIVATE_KEY", "VAPID_SUBJECT"]
+names = ["RESEND_API_KEY", "EMAIL_FROM", "VAPID_PUBLIC_KEY", "VAPID_PRIVATE_KEY", "VAPID_SUBJECT", "SITE_INDEXABLE"]
 print(json.dumps({n: os.environ[n] for n in names if os.environ.get(n, "").strip()}))
 PY
 )

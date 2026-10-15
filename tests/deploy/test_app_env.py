@@ -46,6 +46,16 @@ class AppEnvTest(unittest.TestCase):
                     helper.update_env(target, values)
                 self.assertEqual(target.read_text(), 'BRIEF_SECRET="keep"\n')
 
+    def test_site_indexable_accepts_only_true_or_false(self):
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "app.env"
+            target.write_text('SITE_INDEXABLE=false\n')
+            helper.update_env(target, {"SITE_INDEXABLE": "true"})
+            self.assertEqual(target.read_text(), 'SITE_INDEXABLE="true"\n')
+            for value in ["yes", "true\nX=1", "TRUE"]:
+                with self.assertRaises(ValueError):
+                    helper.update_env(target, {"SITE_INDEXABLE": value})
+
     def test_refuses_symlink_target(self):
         with tempfile.TemporaryDirectory() as folder:
             target = Path(folder) / "app.env"

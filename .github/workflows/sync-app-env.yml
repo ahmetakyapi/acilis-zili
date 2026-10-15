@@ -29,6 +29,7 @@ jobs:
           VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+          SITE_INDEXABLE: ${{ vars.SITE_INDEXABLE }}
         run: |
           # Host anahtarı sabitlemesi — gerekçe deploy.yml (15 Ekim).
           if [[ -n "${VPS_HOST_KEY:-}" ]]; then

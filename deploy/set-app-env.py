@@ -22,6 +22,9 @@ ALLOWED = {
     "RESEND_API_KEY": re.compile(r"re_[A-Za-z0-9_]{8,128}"),
     # "Ad <adres@alan>" ya da çıplak adres; Türkçe harfler serbest.
     "EMAIL_FROM": re.compile(r"(?:[^\"\\$`<>\r\n]{1,80} )?<?[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}>?"),
+    # Arama motoru açık mı (lib/site.ts → INDEXABLE). DERLEMEDE okunur:
+    # değişince deploy gerekir, yeniden başlatma yetmez (robots.txt statik).
+    "SITE_INDEXABLE": re.compile(r"true|false"),
     "VAPID_PUBLIC_KEY": re.compile(r"[A-Za-z0-9_-]{40,128}"),
     "VAPID_PRIVATE_KEY": re.compile(r"[A-Za-z0-9_-]{20,128}"),
     "VAPID_SUBJECT": re.compile(r"(?:mailto:[^\s\"\\$`]{3,200}|https://[^\s\"\\$`]{3,200})"),
