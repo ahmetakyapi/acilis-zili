@@ -568,7 +568,7 @@ export async function requestPasswordResetAction(
     const token = await issueResetToken(found.id);
     if (!token) return;
     const link = `${SITE_URL}${withLocale("/sifre-sifirla", locale)}?anahtar=${token}`;
-    await sendEmail(resetEmail({ to: found.email, username: found.username, link, copy: R.mail }));
+    await sendEmail(resetEmail({ to: found.email, username: found.username, link, lang: locale === "en" ? "en" : "tr", copy: R.mail }));
   });
   return sent;
 }

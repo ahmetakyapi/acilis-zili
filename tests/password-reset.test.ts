@@ -29,7 +29,7 @@ test("satırda anahtarın kendisi değil özeti duruyor", () => {
 
 test("e-posta kullanıcı adını kaçışlıyor, bağlantı iki gövdede de var", () => {
   const link = "https://example.com/sifre-sifirla?anahtar=abc";
-  const mail = resetEmail({ to: "a@b.co", username: "<b>ali</b>", link, copy: tr.passwordReset.mail });
+  const mail = resetEmail({ to: "a@b.co", username: "<b>ali</b>", link, lang: "tr", copy: tr.passwordReset.mail });
   assert.equal(mail.subject, tr.passwordReset.mail.subject);
   assert.ok(mail.text.includes(link));
   assert.ok(mail.html.includes(link));

@@ -33,6 +33,7 @@ npm run db:migrate
 npm run db:seed                  # takvim kapsamı azalınca uyarır; bir `stories` satırını da ezer
 npm run db:seed:events           # yalnız ekonomik takvim — takvimi tazelemek için bu
 npm run build:favicon            # .ico + PWA PNG'leri (elle üretme)
+npm run build:email              # posta zil GIF'i (public/email/, elle üretme)
 ```
 
 - **Temiz kopyada önce `build`.** `PageProps`/`RouteContext` tipleri
