@@ -62,7 +62,10 @@ export function AdminTabs() {
               ? pathname === "/admin"
               : pathname.startsWith(tab.href);
           return (
-            <TabItem key={tab.href} href={tab.href} active={active}>
+            /* Aktif çizgi sitedeki sekmelerle aynı dille KAYAR (14 Ekim):
+               panel, kayan çizgiye geçen dört çubuktan geri kalan tek
+               istisnaydı. LayoutGroup admin layout'unda (MotionProvider). */
+            <TabItem key={tab.href} href={tab.href} active={active} underlineId="admin-tabs">
               {tab.label}
             </TabItem>
           );

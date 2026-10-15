@@ -714,3 +714,39 @@ dokuz Title Case ihlali (h1 olan "bulunamadı" başlıkları, "Veri Yok",
 EN "Your Data"/"Privacy Notice"/"Mkt Cap"), iki h2'siz panel (hisse
 sayfasının sıradaki bilanço kartı, menü grupları), iki azaltılmış hareket
 açığı ve iki ölü kod (`EarningsRhythm`, `SymbolBadge`).
+
+---
+
+## 14–15 Ekim: Hareket Taraması ve Görsel Zirve Geçişi
+
+**Kahraman zili bir DÜĞME.** Ana sayfanın mürekkep zili artık "Zili Çal"
+(`HeroBell`): basınca `heroTap` sahnesi — uyanış kırpması, kurulum ve
+sönümlü salınımla — yeniden oynuyor; geri sayım sıfırlanınca da aynı zil
+`az:bell-rang` olayıyla kendiliğinden çalıyor (`bell-event.ts`). Eski SMIL
+ikilisi `BellLoader`/`BellMood` silindi — bekleme ve boş durum dili artık
+tümüyle mürekkep (`ringing`, `heroSleep`).
+
+**Seans Zili dördüncü sürüm.** İzometrik masa makinesi sahibinin itirazıyla
+kalktı ("ne anlatıyor burası, anlamsız"); yerine cepheden tek bir 24 saat
+kadranı: seans bantları halkanın kendisinde, ziller halkada iki im, ibre
+imin üstünden geçince im çınlıyor, ortada iki saatli dev okuma (NY + TR).
+"Günü Oynat" aynı kadran üzerinde hızlandırılmış tur. Gerekçeler
+`components/figures/session-bell/view.ts` başında.
+
+**Ana sayfa ve ekranlar.** Sektör katlaması telefonda 6 karo (boş hücre
+yok); şerit animasyonları görünür olunca oynuyor (`PlayOnView`); seans
+rayının imleri kademeyle giriyor, fener tek vuruşla uyanıyor; bülten
+sekmesinin hapı kayıyor; rota göstergesinin ÇIKIŞI da animasyonlu.
+Piyasalar/hisse/bilançolar/şirketler/teknik: kıvılcım noktaları, çizilen
+yaylar ve bar/çizgi büyümeleri `data-motion-draw` diline bağlandı; iskelet
+yer tutucular yapıya uyduruldu; tablo satırları tıklanır ve hover tonlu.
+
+**Yönetim paneli.** `/admin/ai` panelin diline çevrildi (StatGrid +
+AdminTable + HealthMark); sekme çizgisi `layoutId` ile kayıyor (panelin
+kendi `MotionProvider`ı); Yaz|Önizle hapı kayıyor; sürüm geçmişi doğal
+`details` ile akarak açılıyor; kaydetme onayı `check-pop` ile yaylanıyor;
+yayın ritmi ızgarasında bağlantılı hücre hover'da ton değiştiriyor.
+
+Doğrulama: başsız Chromium'da kare kare şeritler (iki tema, 390/1280),
+`typecheck` + `lint` temiz; ayrıntılı karar kayıtları ilgili dosyaların
+yorumlarında.

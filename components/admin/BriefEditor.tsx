@@ -275,7 +275,7 @@ export function BriefEditor({
                   );
                 }}
                 title={lang === "en" ? kalip.en : kalip.tr}
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-small font-semibold text-body transition-colors hover:border-primary hover:bg-primary-tint hover:text-primary sm:min-h-8 sm:px-2.5"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-small font-semibold text-body transition-[color,background-color,border-color,scale] hover:border-primary hover:bg-primary-tint hover:text-primary active:scale-[0.97] sm:min-h-8 sm:px-2.5"
               >
                 {kalip.ad}
                 <code className="font-mono text-nano font-normal text-muted">

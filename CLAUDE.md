@@ -177,6 +177,11 @@ değil); küçültürken `toLocaleLowerCase("tr-TR")`.
   `EmptyState scene=`; panel içi tek satırlık boş duruma sahne konmaz. Yeni
   sahneyi `.tmp-*` önizlemede kare kare, iki temada gözle kontrol et.
   Açılış `InkSplash` botlara ve hareketi azaltana hiç açılmaz.
+- **Kahraman zili bir düğme** (`components/today/HeroBell.tsx`): basınca
+  `heroTap` sahnesi `key` remount'uyla yeniden oynar; geri sayım sıfırlanınca
+  `Countdown` `az:bell-rang` yayar, zil kendiliğinden çalar — olay adı tek
+  kaynak `components/today/bell-event.ts`. Zil animasyonu için ikinci bir
+  bileşen AÇMA (eski `BellLoader`/`BellMood` bu yüzden silindi, 14 Ekim).
 
 ## Veri dürüstlüğü
 

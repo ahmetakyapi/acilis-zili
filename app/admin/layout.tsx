@@ -7,6 +7,7 @@ import { getAdmin, type AdminSession } from "@/lib/admin";
 import { cn } from "@/lib/utils";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { BellMark } from "@/components/brand/BellMark";
+import { MotionProvider } from "@/components/motion/MotionProvider";
 import { RouteProgress } from "@/components/layout/RouteProgress";
 import { Panel } from "@/components/ui/primitives";
 
@@ -82,6 +83,12 @@ export default async function AdminLayout({
        İngilizce kuralıyla büyüyüp "İÇERİK" yerine "ICERIK" üretiyordu. */
     /* `data-admin-shell`: yönetim kabuğunun işareti (editör ve çapa
        bileşenleri ona atıf yapıyor). */
+    /* MotionProvider BURADA DA VAR (14 Ekim): panel `(app)` kabuğunun
+       dışında, yani sitedeki kök sağlayıcıyı görmüyor. Kayan sekme çizgisi
+       (`underlineId`) LayoutGroup ister; grup admin layout'unda durduğu ve
+       layout bölümler arası gezinmede kalıcı olduğu için çizgi sekmeden
+       sekmeye buradan hatırlanarak kayar. */
+    <MotionProvider>
     <div lang="tr" data-admin-shell className="flex min-h-dvh flex-col">
       {/* YÖNETİMİN KAYDIRMA PAYI KENDİ BANDINA GÖRE (23 Eylül). Sitenin üst
           payı 76 piksel (64 piksellik uygulama çubuğu + nefes); yönetimde o
@@ -109,7 +116,9 @@ export default async function AdminLayout({
           "flex items-center justify-between gap-4 pt-[max(env(safe-area-inset-top),14px)] pb-2",
         )}
       >
-        <Link href="/admin" className="flex min-h-11 items-center gap-2.5">
+        {/* Marka karosu sitedeki başlıkla aynı jeste sahip: üzerine gelince
+            zil bir kez sallanır (globals.css → data-admin-brand). */}
+        <Link href="/admin" data-admin-brand className="flex min-h-11 items-center gap-2.5">
           <BellMark size={26} />
           <span className="text-lead font-bold tracking-[-0.02em] text-strong">
             Yönetim
@@ -124,7 +133,7 @@ export default async function AdminLayout({
           )}
           <Link
             href="/"
-            className="inline-flex min-h-11 shrink-0 items-center text-primary hover:text-primary-hover"
+            className="inline-flex min-h-11 shrink-0 items-center text-primary transition-colors hover:text-primary-hover"
           >
             Siteye Dön
           </Link>
@@ -156,7 +165,7 @@ export default async function AdminLayout({
               Yönetici kaydı veritabanından okunamadı. Bağlantı çoğu zaman
               geçici olarak düşmüştür; sayfayı yenilemek genellikle yeter.
             </p>
-            <Link href="/admin" className="inline-flex min-h-11 items-center text-base font-semibold text-primary hover:text-primary-hover">
+            <Link href="/admin" className="inline-flex min-h-11 items-center text-base font-semibold text-primary transition-colors hover:text-primary-hover">
               Yeniden Dene
             </Link>
           </Panel>
@@ -165,5 +174,6 @@ export default async function AdminLayout({
         )}
       </main>
     </div>
+    </MotionProvider>
   );
 }

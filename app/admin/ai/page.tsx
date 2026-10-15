@@ -5,15 +5,43 @@ import { db } from "@/lib/db";
 import { aiAnalysisAccess, aiAnalysisAudit, aiAnalysisRequests, users } from "@/lib/schema";
 import { istanbulDay, remainingAnalyses } from "@/lib/ai-analysis-core";
 import { PageHeader, Button } from "@/components/ui/primitives";
-import { AdminPanel, AdminPanelTitle } from "@/components/admin/AdminUI";
-import { ScrollEdges } from "@/components/ui/ScrollEdges";
+import {
+  AdminCell,
+  AdminPanel,
+  AdminPanelError,
+  AdminPanelTitle,
+  AdminRow,
+  AdminTable,
+  HEALTH_INK,
+  HEALTH_LABEL,
+  HealthMark,
+  StatBox,
+  StatGrid,
+  type HealthTone,
+} from "@/components/admin/AdminUI";
 import { AnalysisAccessForm } from "@/components/ai/AnalysisAccessForm";
-import { adminDocTitle } from "@/lib/admin-sections";
+import { ADMIN_SECTIONS, adminDocTitle } from "@/lib/admin-sections";
 import styles from "@/components/ai/Analysis.module.css";
 
+/**
+ * AI Analiz yönetimi — PANELİN KENDİ DİLİYLE (14 Ekim). Sayfa panelin
+ * yeniden tasarımına hiç girmemişti: ham `<table>` (keyfi var'lı border
+ * sınıfları ve kökün ölçerek kapattığı `tabular-nums` ile), düz paragraf
+ * yığını ve durum sözcükleri renksizdi. Şimdi sayının yeri `StatGrid`,
+ * listenin yeri
+ * `AdminTable` (yapışkan ilk sütun + kaydırma işareti), durumun yeri
+ * `HealthMark` + sözcük — öteki beş bölümle aynı parçalar.
+ */
+
 export const metadata = { title: adminDocTitle("AI Analiz") };
-const statusLabel: Record<string, string> = { processing: "Hazırlanıyor", completed: "Tamamlandı", failed: "Başarısız" };
+const STATUS: Record<string, { tone: HealthTone; label: string }> = {
+  processing: { tone: "idle", label: "Hazırlanıyor" },
+  completed: { tone: "ok", label: "Tamamlandı" },
+  failed: { tone: "down", label: "Başarısız" },
+};
 const date = (value: Date) => value.toLocaleString("tr-TR", { timeZone: "Europe/Istanbul", dateStyle: "short", timeStyle: "short" });
+const count = (value: number | bigint) => Number(value).toLocaleString("tr-TR");
+
 async function readAnalysisAdmin(query: string) {
   const actor = alias(users, "actor");
   try {
@@ -26,39 +54,138 @@ async function readAnalysisAdmin(query: string) {
     return { rows, usage, totalsRows, audit };
   } catch { return null; }
 }
+
 export default async function AIAdminPage({ searchParams }: PageProps<"/admin/ai">) {
   await requireAdmin();
   const params = await searchParams;
   const query = typeof params.q === "string" ? params.q.trim().slice(0, 50) : "";
   const data = await readAnalysisAdmin(query);
-  if (!data) { return <div className="space-y-6"><PageHeader title="AI Analiz" subtitle="Erişim ver, günlük analiz hakkını yönet ve kullanımı izle." /><AdminPanel><AdminPanelTitle>Veritabanına Ulaşılamadı</AdminPanelTitle><p className=" text-sm text-body">Analiz tabloları henüz kurulmamış veya veritabanına erişilemiyor. Mevcut teknik analiz ve hisse seçimi ekranları çalışmaya devam eder.</p></AdminPanel></div>; }
+  const section = ADMIN_SECTIONS.ai;
+  if (!data) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader title={section.title} subtitle={section.subtitle} />
+        <AdminPanel>
+          <AdminPanelTitle>Veritabanına Ulaşılamadı</AdminPanelTitle>
+          <AdminPanelError>
+            Analiz tabloları henüz kurulmamış veya veritabanına erişilemiyor.
+            Mevcut teknik analiz ve hisse seçimi ekranları çalışmaya devam eder.
+          </AdminPanelError>
+        </AdminPanel>
+      </div>
+    );
+  }
   const { rows, usage, totalsRows, audit } = data;
   const totals = totalsRows[0];
-  // 390 px ölçümü: panel 349 px; ikinci px-5 içeriği 269 px'e indiriyordu. AdminPanel tek dolguyu verir.
-  return <div className="flex flex-col gap-6">
-      <PageHeader title="AI Analiz" subtitle="Erişim ver, günlük analiz hakkını yönet ve kullanımı izle." />
-      <AdminPanel><AdminPanelTitle>Sistem ve Kullanım</AdminPanelTitle><div className="space-y-3  text-sm text-body">
-        <p>{process.env.CLAUDE_ANALYSIS_API_KEY ? "Analiz anahtarı tanımlı." : "Analiz anahtarı henüz tanımlı değil."} {process.env.CLAUDE_ANALYSIS_DISABLED === "1" ? "Analiz üretimi kapalı." : "Analiz üretimi açık."}</p>
-        <p>Bugün: {totals.today} rapor · Toplam: {totals.completed} rapor · Başarısız: {totals.failed} istek</p>
-        <p>Giriş: {Number(totals.input).toLocaleString("tr-TR")} token · Çıkış: {Number(totals.output).toLocaleString("tr-TR")} token. Kesin API ücretlerini Claude Console üzerinden takip edebilirsin.</p>
-        <p>Yeni erişimler için varsayılan günlük hak 5’tir. Kota İstanbul saatiyle 00:00’da yenilenir. Başarısız işler kullanıcı hakkına iade edilir; kullanılan tokenlar burada kalır.</p>
-      </div></AdminPanel>
-      <AdminPanel><AdminPanelTitle>Kullanıcı Erişimi</AdminPanelTitle><div className="">
-        <form className="mb-4 flex flex-wrap items-end gap-3" method="get"><label className={styles.field}>Kullanıcı Ara<input name="q" defaultValue={query} className={styles.input} placeholder="Kullanıcı adı" maxLength={50} /></label><Button type="submit" variant="quiet" size="sm">Ara</Button></form>
-        <p className="mb-3 text-xs text-muted">İlk 100 eşleşme gösterilir. Daha fazla kullanıcı için adıyla ara. Diğer admin hesaplarına otomatik analiz erişimi verilmez.</p>
+  const keyOk = Boolean(process.env.CLAUDE_ANALYSIS_API_KEY);
+  const production = process.env.CLAUDE_ANALYSIS_DISABLED !== "1";
+
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader title={section.title} subtitle={section.subtitle} />
+
+      {/* Sayılar sayı kutusunda: öteki bölümlerin ilk ekranıyla aynı dil.
+          Başarısız istek sıfırdan büyükse kutu dikkat tonunda. */}
+      <StatGrid cols={4}>
+        <StatBox label="Bugün Rapor" value={count(totals.today)} sub="İstanbul gününde" />
+        <StatBox label="Toplam Rapor" value={count(totals.completed)} />
+        <StatBox
+          label="Başarısız İstek"
+          value={count(totals.failed)}
+          status={totals.failed > 0 ? { tone: "warn", label: HEALTH_LABEL.warn } : { tone: "ok", label: HEALTH_LABEL.ok }}
+        />
+        <StatBox
+          label="Token Giriş / Çıkış"
+          value={`${count(totals.input)} / ${count(totals.output)}`}
+          sub="Kesin ücret Claude Console'da"
+        />
+      </StatGrid>
+
+      <AdminPanel>
+        <AdminPanelTitle>Sistem</AdminPanelTitle>
+        <ul className="flex flex-col gap-2 text-sm text-body">
+          <li className="flex items-center gap-2.5">
+            <HealthMark tone={keyOk ? "ok" : "down"} />
+            <span>{keyOk ? "Analiz anahtarı tanımlı." : "Analiz anahtarı henüz tanımlı değil."}</span>
+          </li>
+          <li className="flex items-center gap-2.5">
+            <HealthMark tone={production ? "ok" : "idle"} />
+            <span>{production ? "Analiz üretimi açık." : "Analiz üretimi kapalı."}</span>
+          </li>
+        </ul>
+        <p className="mt-3 text-xs leading-relaxed text-muted">
+          Yeni erişimler için varsayılan günlük hak 5&apos;tir. Kota İstanbul
+          saatiyle 00:00&apos;da yenilenir. Başarısız işler kullanıcı hakkına
+          iade edilir; kullanılan tokenlar burada kalır.
+        </p>
+      </AdminPanel>
+
+      <AdminPanel>
+        <AdminPanelTitle>Kullanıcı Erişimi</AdminPanelTitle>
+        <form className="mb-4 flex flex-wrap items-end gap-3" method="get">
+          <label className={styles.field}>
+            Kullanıcı Ara
+            <input name="q" defaultValue={query} className={styles.input} placeholder="Kullanıcı adı" maxLength={50} />
+          </label>
+          <Button type="submit" variant="quiet" size="sm">Ara</Button>
+        </form>
+        <p className="mb-3 text-xs text-muted">
+          İlk 100 eşleşme gösterilir. Daha fazla kullanıcı için adıyla ara.
+          Diğer admin hesaplarına otomatik analiz erişimi verilmez.
+        </p>
         {!rows.length && <p className="text-sm text-body">Eşleşen kullanıcı bulunamadı.</p>}
         {rows.map(row => <AnalysisAccessForm key={row.id} userId={row.id} username={row.username} owner={row.username === "ahmetakyapi" && row.role === "admin"}
           enabled={row.enabled ?? false} dailyLimit={row.enabled === null ? 5 : row.dailyLimit}
           remaining={remainingAnalyses(row.dailyLimit ?? (row.enabled === null ? 5 : null), row.usedCount ?? 0, row.usedDay)} />)}
-      </div></AdminPanel>
-      <AdminPanel><AdminPanelTitle>Son Analiz İstekleri</AdminPanelTitle><ScrollEdges className="overflow-x-auto "><table className="w-full min-w-[760px] text-sm"><thead><tr>{["Kullanıcı", "Hisse", "Durum", "Model", "Token (Giriş / Çıkış)", "Tarih · TR"].map(s => <th key={s} className="py-3 pr-5 text-left text-muted font-medium">{s}</th>)}</tr></thead><tbody>
-        {usage.map(row => <tr key={row.id} className="border-t border-[var(--line)]"><td className="py-3 pr-5">{row.username}</td><td className="pr-5">{row.symbol}</td><td className="pr-5">{statusLabel[row.status] ?? row.status}</td><td className="pr-5">{row.model}</td><td className="pr-5 tabular-nums">{row.inputTokens ?? "—"} / {row.outputTokens ?? "—"}</td><td className="whitespace-nowrap">{date(row.createdAt)}</td></tr>)}
-        {!usage.length && <tr><td colSpan={6} className="py-4 text-muted">Henüz analiz isteği yok.</td></tr>}
-      </tbody></table></ScrollEdges></AdminPanel>
-      <AdminPanel><AdminPanelTitle>Erişim Değişiklikleri</AdminPanelTitle><ul className="space-y-3  text-sm text-body">
-        {audit.map(row => <li key={row.id}>{row.username} · {row.enabled ? row.dailyLimit === null ? "Sınırsız" : `Günlük ${row.dailyLimit} Analiz` : "Erişim Kapalı"} · {row.actor ?? "Silinmiş Yönetici"} · {date(row.createdAt)}</li>)}
-        {!audit.length && <li>Henüz erişim değişikliği yok.</li>}
-      </ul></AdminPanel>
-    </div>;
+      </AdminPanel>
 
+      <AdminPanel>
+        <AdminPanelTitle>Son Analiz İstekleri</AdminPanelTitle>
+        <AdminTable
+          head={["Kullanıcı", "Hisse", "Durum", "Model", "Token (Giriş / Çıkış)", "Tarih · TR"]}
+          label="Son analiz istekleri"
+          minWidth={760}
+          stickyFirst
+        >
+          {usage.map((row) => {
+            const status = STATUS[row.status] ?? { tone: "info" as const, label: row.status };
+            return (
+              <AdminRow key={row.id}>
+                <AdminCell strong>{row.username}</AdminCell>
+                <AdminCell numeral>{row.symbol}</AdminCell>
+                <AdminCell>
+                  <span className="flex items-center gap-2">
+                    <HealthMark tone={status.tone} />
+                    <span className={HEALTH_INK[status.tone]}>{status.label}</span>
+                  </span>
+                </AdminCell>
+                <AdminCell>{row.model}</AdminCell>
+                <AdminCell numeral>{row.inputTokens != null ? count(row.inputTokens) : "—"} / {row.outputTokens != null ? count(row.outputTokens) : "—"}</AdminCell>
+                <AdminCell align="right" numeral>{date(row.createdAt)}</AdminCell>
+              </AdminRow>
+            );
+          })}
+          {!usage.length && (
+            <AdminRow>
+              <AdminCell>Henüz analiz isteği yok.</AdminCell>
+            </AdminRow>
+          )}
+        </AdminTable>
+      </AdminPanel>
+
+      <AdminPanel>
+        <AdminPanelTitle>Erişim Değişiklikleri</AdminPanelTitle>
+        <ul className="flex flex-col text-sm text-body">
+          {audit.map((row) => (
+            <li key={row.id} className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 border-t border-line-soft py-2.5 first:border-t-0 first:pt-0 last:pb-0">
+              <span className="font-semibold text-strong">{row.username}</span>
+              <span>{row.enabled ? (row.dailyLimit === null ? "Sınırsız" : `Günlük ${row.dailyLimit} Analiz`) : "Erişim Kapalı"}</span>
+              <span className="ml-auto text-xs text-muted">{row.actor ?? "Silinmiş Yönetici"} · <span className="numeral">{date(row.createdAt)}</span></span>
+            </li>
+          ))}
+          {!audit.length && <li>Henüz erişim değişikliği yok.</li>}
+        </ul>
+      </AdminPanel>
+    </div>
+  );
 }

@@ -418,12 +418,23 @@ function Hucre({ gun, serit, gunAdi }: { gun: PublishDay; serit: Serit; gunAdi: 
   const hal = halOf(gun, serit);
   const metin = hucreMetni(`${adminDay(gun.day)} ${gunAdi}`, serit, gun, hal);
   const adet = serit === "stories" ? gun.stories : serit === "analyses" ? gun.analyses : 0;
+  const baglantili = serit === "daily" && Boolean(gun.daily);
 
   const kutu = (
     <span
       data-state={hal}
       title={metin}
-      className={cn("relative", serit !== "daily" && "numeral", HUCRE, HAL_SINIFI[hal])}
+      className={cn(
+        "relative",
+        serit !== "daily" && "numeral",
+        /* Bağlantılı hücre üzerine gelince TON DEĞİŞTİRİR: ızgarada elliden
+           fazla hücrenin hangilerinin basılabilir olduğunu yalnızca imleç
+           biçimi söylüyordu. Sınıf yalnızca bağlantıda — düz hücre bir
+           `group` altına girse de yanlışlıkla canlanmasın. */
+        baglantili && "transition-colors group-hover:bg-primary-hover group-focus-visible:bg-primary-hover",
+        HUCRE,
+        HAL_SINIFI[hal],
+      )}
     >
       {/* Bülten hücresinde YAZI YOK. Her dolu hücre bir "•" taşıyordu:
           hiçbir şey saymayan, hiçbir durumu ayırmayan bir işaret — elli bir
@@ -461,11 +472,11 @@ function Hucre({ gun, serit, gunAdi }: { gun: PublishDay; serit: Serit; gunAdi: 
      takvimde bunun anlamı "yanlış güne basmak" ve düzeltmeye çalıştığımız
      şeyin ta kendisi. Çözüm hücreyi gerçekten büyütmek (`HUCRE` ölçüsü) ve
      aralığı açmak; hedefler ayrı kalıyor. */
-  return serit === "daily" && gun.daily ? (
+  return baglantili ? (
     <Link
       href={`/admin/yazilar/bulten?tarih=${gun.day}&donem=gunluk`}
       prefetch={false}
-      className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+      className="group rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
     >
       {kutu}
     </Link>

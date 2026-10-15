@@ -310,7 +310,7 @@ async function RecentMembers() {
         <p>
           <Link
             href="/kvkk"
-            className="inline-flex min-h-11 items-center font-semibold text-primary hover:text-primary-hover sm:min-h-8"
+            className="inline-flex min-h-11 items-center font-semibold text-primary transition-colors hover:text-primary-hover sm:min-h-8"
           >
             KVKK Metni
           </Link>{" "}

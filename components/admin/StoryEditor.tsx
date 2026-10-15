@@ -455,7 +455,7 @@ export function StoryEditor({
                   blokYaz(govdeRef.current, lang === "en" ? blok.en : blok.tr, imlec.konum.current);
                 }}
                 title={`::: ${blok.ad} bloğu ekle`}
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-small font-semibold text-body transition-colors hover:border-primary hover:bg-primary-tint hover:text-primary sm:min-h-8 sm:px-2.5"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-small font-semibold text-body transition-[color,background-color,border-color,scale] hover:border-primary hover:bg-primary-tint hover:text-primary active:scale-[0.97] sm:min-h-8 sm:px-2.5"
               >
                 {blok.etiket}
                 <code className="font-mono text-nano font-normal text-muted">{blok.ad}</code>

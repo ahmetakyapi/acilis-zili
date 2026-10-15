@@ -19,14 +19,17 @@ import {
   ArrowSquareOut,
   CaretDown,
   CaretLeft,
+  Check,
   ClockCounterClockwise,
   Eye,
   FloppyDisk,
 } from "@phosphor-icons/react/dist/ssr";
+import { motion } from "motion/react";
 import type { EditorState, StoryRevision } from "@/app/actions/content";
 import { HealthMark, adminInput } from "@/components/admin/AdminUI";
 import { Segment, SegmentItem, buttonClass } from "@/components/ui/primitives";
 import { adminStamp } from "@/lib/admin-format";
+import { SELECTION_TRANSITION } from "@/lib/motion";
 import { TR_ZONE, formatInZone } from "@/lib/session-clock";
 import { cn } from "@/lib/utils";
 
@@ -1123,54 +1126,60 @@ export function SurumGecmisi({
   /** Kaydetmenin geçmişe ne yaptığını anlatan cümle. */
   not: string;
 }) {
-  const [acik, setAcik] = useState(false);
-  const listeId = useId();
+  /* Her açılışta artar: damgalar ("Bugün/Dün") göreli ve okuyucunun
+     saatiyle hesaplanıyor — artış yeniden çizdirip tazeliyor. Satırlar ilk
+     açılışa kadar hiç çizilmiyor; sonrasında kapansa da çizili kalıyorlar,
+     yoksa kapanma geçişinin altındaki içerik tek karede yok olurdu. */
+  const [nesil, setNesil] = useState(0);
   const n = revisions.length;
 
   return (
     <section className="flex flex-col gap-2 border-t border-line pt-5">
       {n === 0 ? (
-        <h3 className="flex min-h-9 items-center gap-2 text-small font-semibold text-strong">
-          <ClockCounterClockwise weight="duotone" size={16} aria-hidden className="text-muted" />
-          <span>
-            Sürüm Geçmişi <span className="font-normal text-muted">· Henüz Yok</span>
-          </span>
-        </h3>
-      ) : (
-        <h3>
-          <button
-            type="button"
-            onClick={() => setAcik((a) => !a)}
-            aria-expanded={acik}
-            aria-controls={listeId}
-            className="inline-flex min-h-11 items-center gap-2 text-small font-semibold text-strong transition-colors hover:text-primary sm:min-h-9"
-          >
-            <ClockCounterClockwise weight="duotone" size={16} aria-hidden />
-            Sürüm Geçmişi
-            <span
-              aria-hidden
-              className="numeral rounded-full bg-surface-elevated px-2 py-0.5 text-tiny font-bold text-muted"
-            >
-              {n}
+        <>
+          <h3 className="flex min-h-9 items-center gap-2 text-small font-semibold text-strong">
+            <ClockCounterClockwise weight="duotone" size={16} aria-hidden className="text-muted" />
+            <span>
+              Sürüm Geçmişi <span className="font-normal text-muted">· Henüz Yok</span>
             </span>
-            <span className="sr-only">({n} sürüm)</span>
-            <CaretDown
-              size={12}
-              weight="bold"
-              aria-hidden
-              className={cn("transition-transform", acik && "rotate-180")}
-            />
-          </button>
-        </h3>
-      )}
-      <p className="max-w-3xl text-small leading-relaxed text-muted">{not}</p>
-
-      {n > 0 && (
-        <ul id={listeId} hidden={!acik} className="mt-1 flex flex-col divide-y divide-line-soft">
-          {/* Satırlar yalnızca açıkken çiziliyor: damgalar "Bugün/Dün"
-              göreli ve okuyucunun saatiyle hesaplanıyor. */}
-          {acik &&
-            revisions.map((rev) => (
+          </h3>
+          <p className="max-w-3xl text-small leading-relaxed text-muted">{not}</p>
+        </>
+      ) : (
+        /* AÇILIŞ DOĞAL `details` (14 Ekim). Düğme + `hidden` tek karede
+           açıyordu; globals'taki `interpolate-size` geçişi listeyi 280 ms'de
+           akıtıyor, durum ve erişilebilirlik tarayıcının. Açıklama cümlesi
+           `summary`nin içinde: kapalıyken de görünür, üstelik dokunma hedefi
+           başlık satırından geniş. */
+        <details
+          className="group"
+          onToggle={(event) => {
+            if (event.currentTarget.open) setNesil((s) => s + 1);
+          }}
+        >
+          <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+            <h3 className="inline-flex min-h-11 items-center gap-2 text-small font-semibold text-strong transition-colors group-hover:text-primary sm:min-h-9">
+              <ClockCounterClockwise weight="duotone" size={16} aria-hidden />
+              Sürüm Geçmişi
+              <span
+                aria-hidden
+                className="numeral rounded-full bg-surface-elevated px-2 py-0.5 text-tiny font-bold text-muted"
+              >
+                {n}
+              </span>
+              <span className="sr-only">({n} sürüm)</span>
+              <CaretDown
+                size={12}
+                weight="bold"
+                aria-hidden
+                className="transition-transform group-open:rotate-180"
+              />
+            </h3>
+            <span className="block max-w-3xl text-small leading-relaxed text-muted">{not}</span>
+          </summary>
+          <ul className="mt-1 flex flex-col divide-y divide-line-soft">
+            {nesil > 0 &&
+              revisions.map((rev) => (
               <li
                 key={rev.id}
                 className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2.5"
@@ -1197,9 +1206,10 @@ export function SurumGecmisi({
                   <ArrowCounterClockwise weight="bold" size={13} aria-hidden />
                   Bu Hâle Dön
                 </button>
-              </li>
-            ))}
-        </ul>
+                </li>
+              ))}
+          </ul>
+        </details>
       )}
     </section>
   );
@@ -1227,7 +1237,7 @@ export function kayitDurumu({
   kaydediliyor: boolean;
   geriYukleniyor: boolean;
   kirli: boolean;
-}): { metin: string; ton: "down" | "warn" | "ok" | "idle" } {
+}): { metin: string; ton: "down" | "warn" | "ok" | "idle"; an?: string } {
   if (kaydediliyor) return { metin: "Kaydediliyor…", ton: "idle" };
   if (geriYukleniyor) return { metin: "Geri Yükleniyor…", ton: "idle" };
   const son = (kayit.at ?? "") >= (geri.at ?? "") ? kayit : geri;
@@ -1235,7 +1245,9 @@ export function kayitDurumu({
   if (kirli) return { metin: "Kaydedilmemiş Değişiklik", ton: "warn" };
   if (son.ok && son.savedAt) {
     const saat = formatInZone(new Date(son.savedAt), TR_ZONE);
-    return { metin: `${son === geri ? "Geri Yüklendi" : "Kaydedildi"} · ${saat}`, ton: "ok" };
+    /* `an` onay işaretinin anahtarı: her yeni kayıtta işaret yeniden doğup
+       yaylanıyor (check-pop) — aynı dakikada iki kayıt da ayrı `at` taşır. */
+    return { metin: `${son === geri ? "Geri Yüklendi" : "Kaydedildi"} · ${saat}`, ton: "ok", an: son.at };
   }
   /* Boş yuva yok: telefonda durum kendi satırında ve boş bir satır, şeridin
      üstünde nedeni görünmeyen bir boşluktu. Söylenecek bir şey yoksa
@@ -1263,6 +1275,7 @@ function YazOnizle({
     { k: "yaz", ad: "Yaz", hedef: yazId },
     { k: "onizle", ad: "Önizle", hedef: onizleId },
   ];
+  const hapId = useId();
   return (
     <div
       role="tablist"
@@ -1288,11 +1301,23 @@ function YazOnizle({
             ) as HTMLButtonElement | null)?.focus();
           }}
           className={cn(
-            "inline-flex min-h-11 items-center justify-center rounded-full px-4 py-[7px] transition-colors sm:min-h-8",
-            deger === k ? "bg-primary font-semibold text-on-primary" : "text-body hover:text-strong",
+            "relative inline-flex min-h-11 items-center justify-center rounded-full px-4 py-[7px] transition-colors sm:min-h-8",
+            deger === k ? "font-semibold text-on-primary" : "text-body hover:text-strong",
           )}
         >
-          {ad}
+          {/* HAP KAYIYOR — BriefSwitch'teki dille: dolgu düğmenin kendi arka
+              planı değil, `layoutId` ile sekmeden sekmeye yolculuk eden tek
+              öğe (LayoutGroup admin layout'undaki MotionProvider'da).
+              Azaltılmış harekette MotionConfig yerleşim animasyonunu kapatır. */}
+          {deger === k && (
+            <motion.span
+              aria-hidden="true"
+              layoutId={`${hapId}-yaz-onizle`}
+              className="absolute inset-0 rounded-full bg-primary"
+              transition={SELECTION_TRANSITION}
+            />
+          )}
+          <span className="relative">{ad}</span>
         </button>
       ))}
     </div>
@@ -1348,8 +1373,16 @@ export function EylemSeridi({
                 : "text-body",
           )}
         >
-          {durum.ton !== "down" && (
-            <HealthMark tone={durum.ton === "warn" ? "warn" : durum.ton === "ok" ? "ok" : "idle"} />
+          {/* Başarının işareti nokta değil ONAY İŞARETİ ve her kayıtta
+              yeniden yaylanıyor (`check-pop`, anahtar kaydın anı): "kaydet"e
+              basan göz düğmenin yanındaki yuvada bir doğum görüyor, renk
+              değişimi tek başına kolayca kaçıyordu. */}
+          {durum.ton === "ok" ? (
+            <span aria-hidden className="flex h-[1lh] shrink-0 items-center">
+              <Check key={durum.an ?? durum.metin} weight="bold" size={14} className="check-pop text-up" />
+            </span>
+          ) : (
+            durum.ton !== "down" && <HealthMark tone={durum.ton === "warn" ? "warn" : "idle"} />
           )}
           {durum.metin}
         </p>
