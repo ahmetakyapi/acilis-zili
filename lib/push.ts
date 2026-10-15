@@ -143,11 +143,30 @@ export async function sendToUser(
   return delivered.length;
 }
 
+/**
+ * Kullanıcı başına cihaz TAVANI. Öteki yazma yollarının hepsi tavanlı
+ * (MAX_ALERTS, watchlist, portföy) ama abonelikte yoktu: dakikada 10 farklı
+ * uç adres sınırı günde ~14.400 satır biriktirmeye yetiyor ve her gönderim
+ * satırların TAMAMINA istek açıyordu — hesap, sunucuyu keyfi adreslere POST
+ * yağdıran bir röleye dönüyordu (15 Ekim taraması). Uç adres doğrulaması
+ * bilinçli olarak https+uzunlukta kalıyor (Web Push standardı keyfi uca
+ * izin verir; allowlist UnifiedPush gibi meşru dağıtıcıları kırar) — kötüye
+ * kullanımın sınırı bu tavan. 12 cihaz: telefon + tablet + birkaç tarayıcı
+ * profiline bol bol yeter.
+ */
+const MAX_PUSH_DEVICES = 12;
+
 export async function saveSubscription(
   userId: string,
   input: { endpoint: string; p256dh: string; auth: string; device: string | null; locale: Locale },
 ): Promise<boolean> {
   try {
+    const existing = await db
+      .select({ endpoint: pushSubscriptions.endpoint })
+      .from(pushSubscriptions)
+      .where(eq(pushSubscriptions.userId, userId));
+    const known = existing.some((row) => row.endpoint === input.endpoint);
+    if (!known && existing.length >= MAX_PUSH_DEVICES) return false;
     await db
       .insert(pushSubscriptions)
       .values({ userId, ...input })

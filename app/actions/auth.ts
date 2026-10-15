@@ -510,9 +510,10 @@ export async function changePasswordAction(
 
    HESAP VAR MI SORUSUNA CEVAP YOK. İstek her geçerli adreste AYNI notu
    veriyor ("kayıtlı bir hesap varsa gelir"): aksi hâlde form, hangi
-   e-postanın sitede hesabı olduğunu soran herkese söylerdi. E-posta
-   gönderimi yanıttan SONRA (`after`), yani yanıt süresi de hesabın
-   varlığını ele vermiyor.
+   e-postanın sitede hesabı olduğunu soran herkese söylerdi. Token yazımı
+   ve e-posta gönderimi yanıttan SONRA (`after`), yani yanıt süresi de
+   hesabın varlığını ele vermiyor (yalnız e-posta `after`dayken token'ın
+   Neon yazımı var olan adresi ~bir gidiş-dönüş geç döndürüyordu).
    -------------------------------------------------------------------------- */
 
 /** IP başına on dakikada beş istek; adres başına saatte üç e-posta. */
@@ -554,12 +555,18 @@ export async function requestPasswordResetAction(
   }
   if (!user) return sent;
 
-  const token = await issueResetToken(user.id);
-  if (!token) return sent;
-  const link = `${SITE_URL}${withLocale("/sifre-sifirla", locale)}?anahtar=${token}`;
-  const message = resetEmail({ to: user.email, username: user.username, link, copy: R.mail });
+  /* TOKEN YAZIMI DA YANIT SONRASINDA (15 Ekim taraması). Yalnız e-posta
+     `after`a alınmıştı; `issueResetToken`ın Neon batch'i hesaplı dalda
+     yanıttan ÖNCE koşuyor ve o tek gidiş-dönüş (~20-80 ms) yukarıdaki
+     "yanıt süresi hesabın varlığını ele vermiyor" sözünü boşa çıkarıyordu
+     — var olan adresin yanıtı ölçülebilir biçimde geç dönüyordu. İki dal
+     artık aynı noktada dönüyor; iş tamamı yanıttan sonra. */
+  const found = user;
   after(async () => {
-    await sendEmail(message);
+    const token = await issueResetToken(found.id);
+    if (!token) return;
+    const link = `${SITE_URL}${withLocale("/sifre-sifirla", locale)}?anahtar=${token}`;
+    await sendEmail(resetEmail({ to: found.email, username: found.username, link, copy: R.mail }));
   });
   return sent;
 }

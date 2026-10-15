@@ -982,7 +982,13 @@ export async function getChartBars(
    Şirket profili — Finnhub'dan gelir, symbols tablosunda kalıcılaşır
    -------------------------------------------------------------------------- */
 
-export async function getCompanyProfile(
+/* İSTEK İÇİNDE TEKİL (15 Ekim taraması): hisse sayfasında dört ayrı panel
+   (StockHeader, ProfileCard, MetricsCard, StockJsonLd) aynı profili soruyor;
+   Finnhub fetch'i Next'in istek-içi memoization'ıyla teke inse de gövde dört
+   kez koşup AYNI upsert'i dört ayrı Neon gidiş-dönüşü olarak atıyordu —
+   kotasyonlarda ölçülüp düzeltilen desenin (yukarıda "tek satırlık aynı
+   upsert dört kez") profildeki eşi. Anahtar tek string, kimlik sorunu yok. */
+export const getCompanyProfile = cache(async function getCompanyProfile(
   symbol: string,
 ): Promise<ProviderResult<CompanyProfile>> {
   const live = await finnhub.getProfile(symbol);
@@ -1063,4 +1069,4 @@ export async function getCompanyProfile(
   }
 
   return live;
-}
+});

@@ -365,7 +365,13 @@ function renderInline(
     const link = LINK_PATTERN.exec(part);
     if (link) {
       const [, label, href] = link;
-      const internal = href.startsWith("/");
+      /* "/" tek başına İÇ YOL kanıtı değil (15 Ekim taraması): "//evil.com"
+         protokol-göreli DIŞ adrestir ve tarayıcı "\"yi "/" saydığı için
+         "/\evil.com" da öyle — ikisi de startsWith("/")'i geçip şema
+         süzgecine hiç uğramadan <Link>'e biniyordu. Aynı "//" sınıfı
+         safeRedirectTarget'ta (app/actions/auth.ts) zaten kapalı. */
+      const internal =
+        href.startsWith("/") && !href.startsWith("//") && !href.startsWith("/\\");
       const className =
         /* `--primary` düz zeminde 4,63 ile geçiyor ama makale bağlantılarının
            çoğu RENKLİ KUTULARIN içinde (dikkat, ornek, ozet): orada zemin bir

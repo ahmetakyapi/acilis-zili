@@ -7,6 +7,7 @@ import { getStatus } from "@/lib/data";
 import { db } from "@/lib/db";
 import { getQuote } from "@/lib/providers";
 import { isDirection, MAX_ALERTS, MAX_ALERTS_PER_SYMBOL } from "@/lib/price-alerts";
+import { rateLimit } from "@/lib/rate-limit";
 import { priceAlerts } from "@/lib/schema";
 import { isValidSymbol } from "@/lib/utils";
 
@@ -59,6 +60,14 @@ export async function createPriceAlert(
   const symbol = String(formData.get("symbol") ?? "").toUpperCase();
   const target = parseTarget(String(formData.get("target") ?? ""));
   if (!isValidSymbol(symbol) || target === null) return { status: "error", error: "target", at };
+
+  /* Kova SAĞLAYICI ÇAĞRISINDAN ÖNCE (15 Ekim taraması): isValidSymbol salt
+     biçim denetler, yani "QQZX", "QQZY"… gibi sonsuz benzersiz sembol
+     üretilebilir ve her biri getQuote'ta ayrı önbellek anahtarı — tavana
+     dayanmış hesap bile her çağrıda Alpaca isteği açtırıyordu. Kalıp
+     portfolio.ts'teki yazma kovasının aynısı. */
+  if (!rateLimit(`alerts:${userId}`, 30, 60_000).allowed)
+    return { status: "error", error: "unavailable", at };
 
   /* YÖN SUNUCUDA, GÜNCEL FİYATTAN. İstemcinin bildiği fiyat sayfanın
      çizildiği anınki; sunucu kotasyonu alabiliyorsa o esas. Alamıyorsa
@@ -133,6 +142,9 @@ export async function rearmPriceAlert(formData: FormData) {
   if (!userId) return;
   const id = String(formData.get("id") ?? "");
   if (!id) return;
+  /* Aynı kova: sembol kullanıcının kendi satırından gelse de yol aynı
+     getQuote'u koşuyor. */
+  if (!rateLimit(`alerts:${userId}`, 30, 60_000).allowed) return;
   try {
     const [row] = await db
       .select()

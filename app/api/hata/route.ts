@@ -47,9 +47,13 @@ export async function POST(request: Request) {
   /* Geliştirmede kayıt yok — gerekçe instrumentation.ts'te. */
   if (process.env.NODE_ENV !== "production") return NO_CONTENT();
 
+  /* Gövde tavanı JSON.parse'tan önce — gerekçe app/api/olcum/route.ts. */
+  if (Number(request.headers.get("content-length") || 0) > 4096) return NO_CONTENT();
   let payload: z.infer<typeof BODY>;
   try {
-    payload = BODY.parse(await request.json());
+    const raw = await request.text();
+    if (raw.length > 4096) return NO_CONTENT();
+    payload = BODY.parse(JSON.parse(raw));
   } catch {
     return NO_CONTENT();
   }

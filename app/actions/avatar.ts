@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { rateLimit } from "@/lib/rate-limit";
 import { userAvatars } from "@/lib/schema";
 import { isAvatarColor, isAvatarKey } from "@/lib/avatars";
 
@@ -28,6 +30,13 @@ export async function setAvatarAction(
   const userId = session?.user?.id;
   if (!userId) return { status: "failed" };
 
+  /* Kova (15 Ekim taraması): aşağıdaki `revalidatePath("/", "layout")`
+     kökten aşağı TÜM rotaların önbelleğini boşaltıyor — sınırsız bir döngü
+     siteyi kalıcı cache-miss'te çizdirip Neon ve sağlayıcı yükünü her
+     ziyaretçiye yansıtabiliyordu. 30/dk seçicide gezinen gerçek kullanıcıya
+     bol; sınırda kayıt da düşmez, seçici hatayı gösterir. */
+  if (!rateLimit(`avatar:${userId}`, 30, 60_000).allowed) return { status: "failed" };
+
   const rawIcon = formData.has("next-icon") ? formData.get("next-icon") : formData.get("icon");
   const rawColor = formData.has("next-color") ? formData.get("next-color") : formData.get("color");
   const icon = rawIcon === "" || rawIcon === null ? null : rawIcon;
@@ -35,6 +44,16 @@ export async function setAvatarAction(
   if (!isAvatarColor(rawColor)) return { status: "failed" };
 
   try {
+    /* Aynı değere ikinci basış site genelinde bir purge'a mal olmasın:
+       satır zaten bu hâldeyse yazmadan ve TAZELEMEDEN dön. */
+    const [current] = await db
+      .select({ icon: userAvatars.icon, color: userAvatars.color })
+      .from(userAvatars)
+      .where(eq(userAvatars.userId, userId))
+      .limit(1);
+    if (current && current.icon === icon && current.color === rawColor) {
+      return { status: "saved" };
+    }
     await db
       .insert(userAvatars)
       .values({ userId, icon, color: rawColor })

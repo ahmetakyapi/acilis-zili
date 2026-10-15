@@ -53,8 +53,16 @@ async function secGet(url: string, revalidate: number): Promise<string | null> {
   }
 }
 
-/** Sembol → ihraççı CIK. SEC tablosu sınıf ayracında tire kullanıyor (BRK-B). */
+/** Sembol → ihraççı CIK. SEC tablosu sınıf ayracında tire kullanıyor (BRK-B).
+    İSTEKLER ARASI MEMO (15 Ekim taraması): React cache() yalnız istek
+    kapsamında tekilliyor; gövde Next veri önbelleğinden gelse de ~800 KB
+    JSON.parse + 12 bin kayıtlık Map kurulumu HER hisse sayfası
+    görüntülemesinde tekrar ediyordu — hepsi tek `map.get` için. Süreç uzun
+    ömürlü (VPS), tablo haftada bir değişiyor; `lastPersisted` desenindeki
+    gibi modül seviyesinde TTL'li tutulur. Başarısız okuma SAKLANMAZ. */
+let tickerMemo: { at: number; map: Map<string, number> } | null = null;
 const tickerTable = cache(async (): Promise<Map<string, number> | null> => {
+  if (tickerMemo && Date.now() - tickerMemo.at < TICKERS_REVALIDATE_S * 1000) return tickerMemo.map;
   const text = await secGet(TICKERS_URL, TICKERS_REVALIDATE_S);
   if (!text) return null;
   try {
@@ -63,6 +71,7 @@ const tickerTable = cache(async (): Promise<Map<string, number> | null> => {
     for (const row of Object.values(json)) {
       if (row.ticker && typeof row.cik_str === "number") map.set(row.ticker.toUpperCase(), row.cik_str);
     }
+    tickerMemo = { at: Date.now(), map };
     return map;
   } catch {
     return null;

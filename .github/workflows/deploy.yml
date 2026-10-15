@@ -22,6 +22,15 @@ on:
     branches: [main]
   workflow_dispatch: {}
 
+# Token SALT OKUNUR ve checkout'ta diske YAZILMIYOR (15 Ekim taraması).
+# `permissions` yokken token depo varsayılanını alıyor ve checkout@v4
+# varsayılanı onu `.git/config`e yazıyordu; hemen ardından `npm ci`
+# yüzlerce bağımlılığın postinstall'ını o token erişilebilirken koşuyor —
+# update.sh'ın VPS için belgeleyip kapattığı tedarik zinciri senaryosunun
+# CI tarafı. Hiçbir adım token'la push yapmıyor (deploy SSH anahtarıyla).
+permissions:
+  contents: read
+
 concurrency:
   group: deploy-vps
   cancel-in-progress: false
@@ -31,6 +40,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -49,6 +60,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      # Sunucunun SSH host anahtarı biliniyorsa SABİTLENİR. Runner her
+      # koşumda boş known_hosts ile başladığı için `accept-new` fiilen "her
+      # anahtarı kabul et" demek; VPS'e giden yolu kesen biri araya kendi
+      # sunucusunu koyup stdin'den akan analiz anahtarını okuyabilirdi.
+      # `VPS_HOST_KEY` repo değişkeni (bir kez `ssh-keyscan <host>` çıktısı)
+      # tanımlıysa bağlantı yalnızca o anahtarı kabul eder; tanımlı değilse
+      # eski davranış sürer ki deploy kilitlenmesin — değişkeni tanımlamak
+      # bu uyarının kapanışı.
+      - name: Host anahtarını sabitle
+        env:
+          VPS_HOST_KEY: ${{ vars.VPS_HOST_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          if [[ -n "$VPS_HOST_KEY" ]]; then
+            printf '%s\n' "$VPS_HOST_KEY" > ~/.ssh/known_hosts
+            echo "strict=yes" >> "$GITHUB_ENV"
+          else
+            echo "strict=accept-new" >> "$GITHUB_ENV"
+          fi
       - name: Analiz anahtarını sunucuya aktar
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
@@ -68,6 +100,6 @@ jobs:
           set -euo pipefail
           install -m 600 /dev/null /tmp/deploy_key
           printf '%s\n' "$SSH_KEY" > /tmp/deploy_key
-          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
+          ssh -i /tmp/deploy_key -o "StrictHostKeyChecking=${strict:-accept-new}" -o ConnectTimeout=15 \
             "ubuntu@${HOST}" \
             'sudo -u acilis -H bash /srv/acilis-zili/current/deploy/update.sh'

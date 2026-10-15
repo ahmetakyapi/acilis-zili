@@ -28,12 +28,14 @@ function sweep(now: number) {
     if (bucket.resetAt <= now) buckets.delete(key);
   }
   if (buckets.size > MAX_KEYS) {
+    /* Taşmada EKLEME SIRASINA göre değil, süresi EN YAKIN dolanlardan
+       silinir (15 Ekim). Eski hâli Map sırasıyla siliyordu: dakikada on
+       binlerce tek kullanımlık anahtar üreten biri, henüz DOLU bir giriş
+       sayacını tablodan düşürüp sınırı sıfırlatabiliyordu. Süresine en az
+       kalan kayıt, kaybı en ucuz olandır. */
     const excess = buckets.size - MAX_KEYS;
-    let removed = 0;
-    for (const key of buckets.keys()) {
-      buckets.delete(key);
-      if (++removed >= excess) break;
-    }
+    const byExpiry = [...buckets.entries()].sort((a, b) => a[1].resetAt - b[1].resetAt);
+    for (let i = 0; i < excess; i++) buckets.delete(byExpiry[i][0]);
   }
 }
 
@@ -136,5 +138,22 @@ export async function requestKey(scope: string): Promise<string> {
 }
 
 function ipFrom(forwarded: string | null): string {
-  return forwarded?.split(",")[0]?.trim() || "bilinmeyen";
+  const ip = forwarded?.split(",")[0]?.trim() || "";
+  if (!ip) return "bilinmeyen";
+  /* IPv6 /64'E İNDİRİLİR (15 Ekim). Sıradan bir IPv6 aboneliği /64 = 2^64
+     adres verir; tam adres anahtar olunca her istekte yeni adresle sınırsız
+     kova açılıyor, SIGN_IN_LIMIT fiilen kalkıyordu. /64 bir abonenin tipik
+     tahsisi — aynı ev/sunucu tek sayaçta toplanır, komşu aboneler ayrışır.
+     IPv4 (ve "::ffff:1.2.3.4" gibi IPv4 gömülü adresler — nokta içerir)
+     olduğu gibi kalır; "::" sıkıştırması ilk dört grup sayılabilsin diye
+     sıfırlarla açılır, yoksa "2a01:db8::5" ile "::6" ayrı kova olurdu. */
+  if (!ip.includes(":") || ip.includes(".")) return ip;
+  const [head, tail = ""] = ip.split("::");
+  const headGroups = head ? head.split(":") : [];
+  if (!ip.includes("::")) return headGroups.slice(0, 4).join(":");
+  const tailGroups = tail ? tail.split(":") : [];
+  const missing = Math.max(8 - headGroups.length - tailGroups.length, 0);
+  return [...headGroups, ...Array<string>(missing).fill("0"), ...tailGroups]
+    .slice(0, 4)
+    .join(":");
 }

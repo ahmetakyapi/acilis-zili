@@ -10,10 +10,11 @@ import {
   clip,
   ogFonts,
 } from "@/lib/og";
-import { getStatus, getSymbolNames } from "@/lib/data";
+import { getStatus, getSymbolNames, isKnownSymbol } from "@/lib/data";
 import { getQuotes } from "@/lib/providers";
 import { DEFAULT_LOCALE, getDictionary } from "@/lib/i18n";
-import { formatMoneyCompact, formatPercentPlain, formatPrice } from "@/lib/utils";
+import { rateLimit, requestKey } from "@/lib/rate-limit";
+import { formatMoneyCompact, formatPercentPlain, formatPrice, isValidSymbol } from "@/lib/utils";
 import { industryLabel, sectorGroupLabel, sectorGroupOf } from "@/lib/sectors";
 
 export const size = OG_SIZE;
@@ -41,6 +42,26 @@ export default async function StockOgImage({
 }) {
   const { symbol: raw } = await params;
   const symbol = raw.toUpperCase();
+
+  /* /api/chart'ın KAPISININ AYNISI (15 Ekim taraması): bu rota da yetkisiz,
+     her farklı sembol ayrı önbellek anahtarı ve kart her istekte Alpaca'ya
+     gidip Satori çizdiriyor — "AAAA" sayım döngüsü chart ucundaki ölçülmüş
+     arızayı (200 istek/dk kota dakikalar içinde bitti, canlı fiyat herkes
+     için öldü) buradan da üretebiliyordu. Ayrım orada olduğu gibi kardinalite
+     üzerinden: tanınan ~800 sembol kapalı küme ve cömert; tanınmayan uzun
+     kuyruk meşru ama sayımın tek girişi, dar. Sınırda kart yerine 429 döner
+     — paylaşım önizlemesi kaybolur, site kaybolmaz. */
+  if (!isValidSymbol(symbol)) return new Response(null, { status: 404 });
+  const known = await isKnownSymbol(symbol);
+  const gate = rateLimit(
+    await requestKey(known ? "og-hisse" : "og-hisse-unknown"),
+    known ? 120 : 10,
+    60_000,
+  );
+  if (!gate.allowed) {
+    return new Response(null, { status: 429, headers: { "Retry-After": String(gate.retryAfter) } });
+  }
+
   const locale = DEFAULT_LOCALE;
   const t = getDictionary(locale);
   const fonts = await ogFonts();

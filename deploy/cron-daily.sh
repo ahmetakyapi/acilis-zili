@@ -43,9 +43,13 @@ if [[ -z "${CRON_SECRET:-}" ]]; then
 fi
 
 # --max-time, ucun 100 saniyelik bütçesinin üstünde bir pay bırakıyor.
+# Sır argv'de DEĞİL (15 Ekim taraması): -H "Bearer ..." komut satırında
+# koşum boyunca /proc/<pid>/cmdline'da dünya-okunur duruyordu — ortam
+# dosyasının 0640 izniyle kurulan korumayı deliyordu. Başlık stdin'den
+# (-H @-): /proc'ta yalnızca "@-" görünür.
 response=$(curl -sS --max-time 180 -w '\n%{http_code}' \
-	-H "Authorization: Bearer ${CRON_SECRET}" \
-	"$ENDPOINT" 2>&1)
+	-H @- \
+	"$ENDPOINT" <<<"Authorization: Bearer ${CRON_SECRET}" 2>&1)
 
 status=${response##*$'\n'}
 body=${response%$'\n'*}

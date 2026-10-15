@@ -22,6 +22,10 @@ on:
     branches: [main]
   workflow_dispatch: {}
 
+# Token salt okunur ve diske yazılmıyor — gerekçe deploy.yml (15 Ekim).
+permissions:
+  contents: read
+
 concurrency:
   group: smoke-${{ github.ref }}
   cancel-in-progress: true
@@ -36,6 +40,8 @@ jobs:
       CHROME_PATH: /usr/bin/google-chrome
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 24

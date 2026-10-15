@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { todayEt } from "@/lib/market-hours";
 import { getSeries, type SeriesRequest } from "./fred";
 import { fail, ok, responseDate, type MacroObservation, type MacroSeriesData, type ProviderResult } from "./types";
@@ -43,39 +44,56 @@ export function dailySourceLabel(source: string) {
   return source === "cboe" ? "Cboe" : source === "treasury" ? "U.S. Treasury" : "FRED";
 }
 
+/* Doğrudan kaynak okuması İSTEK İÇİNDE TEKİL (15 Ekim taraması). Alt bilgi
+   şeridi (app) altındaki her sayfada DGS2/DGS10/DGS30 soruyor, ana sayfa
+   üstüne VIX + üç tahvili bir daha — fetch gövdesi Next'çe memoize edilse
+   de `res.text()` decode'u ve regex taraması ÇAĞRI BAŞINA tekrar ediyordu:
+   render başına ~6 tam-yıl XML taraması + ~9.000 satırlık VIX CSV parse'ı.
+   Anahtar SIRALANMIŞ DEĞİL ama hepsi İLKEL (seriesId, limit, forceRefresh,
+   asOf) — `cache()` ilkel argümanları değerle eşler (CLAUDE.md'deki dize
+   anahtarı kuralı nesne argümanlar içindi). */
+const directRead = cache(async (
+  seriesId: string,
+  limit: number,
+  forceRefresh: boolean,
+  asOf: string,
+): Promise<ProviderResult<MacroSeriesData>> => {
+  const isVix = seriesId === "VIXCLS";
+  const source = isVix ? "cboe" : "treasury";
+  try {
+    const fetchText = async (url: string) => {
+      const res = await withTimeout(fetch(url, forceRefresh
+        ? { cache: "no-store" }
+        : { next: { revalidate: 3600, tags: isVix ? ["macro:vix"] : YIELD_TAGS } }));
+      if (!res.ok) throw new Error("source-unavailable");
+      return { text: await res.text(), at: responseDate(res) };
+    };
+    const year = Number(asOf.slice(0, 4));
+    const url = (y: number) => `${TREASURY_URL}?data=daily_treasury_yield_curve&field_tdr_date_value=${y}`;
+    const response = await fetchText(isVix ? CBOE_URL : url(year));
+    let points = isVix ? parseVixCsv(response.text, asOf) : parseTreasuryXml(response.text, seriesId, asOf);
+    // Ocak başında önceki kapanış önceki yılın dosyasında kalabilir.
+    if (!isVix && points.length < Math.max(2, limit)) {
+      const previous = await fetchText(url(year - 1));
+      points = sorted([...parseTreasuryXml(previous.text, seriesId, asOf), ...points], asOf);
+    }
+    if (points.length < 2) return fail(source, "empty", "İki geçerli kapanış bulunamadı");
+    const last = points.at(-1)!;
+    return ok({ seriesId, latestValue: last.value, prevValue: points.at(-2)!.value, periodLabel: last.date.slice(0, 7), observations: points.slice(-limit) }, source, { fetchedAt: response.at });
+  } catch {
+    return fail(source, "network", "Günlük kapanış kaynağına ulaşılamadı");
+  }
+});
+
 /** Doğrudan yayımlanan kapanış ile FRED'in tarihlerini karşılaştırır.
  * Seviyeler veya önceki kapanışlar iki sağlayıcı arasında karıştırılmaz. */
 export async function getDailyMarketSeries(definition: SeriesRequest, limit = 2, options: { forceRefresh?: boolean } = {}): Promise<ProviderResult<MacroSeriesData>> {
   const isVix = definition.seriesId === "VIXCLS";
   if (!isVix && !TENORS[definition.seriesId]) return getSeries(definition, limit, options);
-  const source = isVix ? "cboe" : "treasury";
-  const asOf = todayEt();
-  const read = async (): Promise<ProviderResult<MacroSeriesData>> => {
-    try {
-      const fetchText = async (url: string) => {
-        const res = await withTimeout(fetch(url, options.forceRefresh
-          ? { cache: "no-store" }
-          : { next: { revalidate: 3600, tags: isVix ? ["macro:vix"] : YIELD_TAGS } }));
-        if (!res.ok) throw new Error("source-unavailable");
-        return { text: await res.text(), at: responseDate(res) };
-      };
-      const year = Number(asOf.slice(0, 4));
-      const url = (y: number) => `${TREASURY_URL}?data=daily_treasury_yield_curve&field_tdr_date_value=${y}`;
-      const response = await fetchText(isVix ? CBOE_URL : url(year));
-      let points = isVix ? parseVixCsv(response.text, asOf) : parseTreasuryXml(response.text, definition.seriesId, asOf);
-      // Ocak başında önceki kapanış önceki yılın dosyasında kalabilir.
-      if (!isVix && points.length < Math.max(2, limit)) {
-        const previous = await fetchText(url(year - 1));
-        points = sorted([...parseTreasuryXml(previous.text, definition.seriesId, asOf), ...points], asOf);
-      }
-      if (points.length < 2) return fail(source, "empty", "İki geçerli kapanış bulunamadı");
-      const last = points.at(-1)!;
-      return ok({ seriesId: definition.seriesId, latestValue: last.value, prevValue: points.at(-2)!.value, periodLabel: last.date.slice(0, 7), observations: points.slice(-limit) }, source, { fetchedAt: response.at });
-    } catch {
-      return fail(source, "network", "Günlük kapanış kaynağına ulaşılamadı");
-    }
-  };
-  const [direct, fred] = await Promise.all([read(), getSeries(definition, limit, options)]);
+  const [direct, fred] = await Promise.all([
+    directRead(definition.seriesId, limit, Boolean(options.forceRefresh), todayEt()),
+    getSeries(definition, limit, options),
+  ]);
   if (!direct.ok) return fred;
   if (!fred.ok) return direct;
   return (fred.data.observations.at(-1)?.date ?? "") > (direct.data.observations.at(-1)?.date ?? "") ? fred : direct;

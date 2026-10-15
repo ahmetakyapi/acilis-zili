@@ -33,6 +33,7 @@ jobs:
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
           HOST: ${{ vars.VPS_HOST }}
+          VPS_HOST_KEY: ${{ vars.VPS_HOST_KEY }}
           GENERATE_REPORT: ${{ inputs.generate_report }}
           SYMBOL: ${{ inputs.symbol }}
           HORIZON: ${{ inputs.horizon }}
@@ -40,6 +41,13 @@ jobs:
           set -euo pipefail
           set +x
           [[ "$HOST" =~ ^[a-zA-Z0-9.-]+$ ]]
+          # Host anahtarı sabitlemesi — gerekçe deploy.yml (15 Ekim).
+          strict=accept-new
+          if [[ -n "${VPS_HOST_KEY:-}" ]]; then
+            mkdir -p ~/.ssh
+            printf '%s\n' "$VPS_HOST_KEY" > ~/.ssh/known_hosts
+            strict=yes
+          fi
           # Girdiler uzak komut dizesine giriyor: yalnız bilinen biçim geçer.
           SYMBOL=$(printf '%s' "${SYMBOL:-NVDA}" | tr '[:lower:]' '[:upper:]')
           [[ "$SYMBOL" =~ ^[A-Z][A-Z0-9.-]{0,9}$ ]] || { echo "Invalid symbol"; exit 1; }
@@ -50,6 +58,6 @@ jobs:
           printf '%s\n' "$SSH_KEY" > "$key_file"
           paid=0
           if [[ "$GENERATE_REPORT" == "true" ]]; then paid=1; fi
-          ssh -i "$key_file" -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
+          ssh -i "$key_file" -o BatchMode=yes -o "StrictHostKeyChecking=$strict" -o ConnectTimeout=15 \
             "ubuntu@$HOST" \
             "sudo -n bash -c 'set +x; set -a; source /etc/acilis-zili.env; set +a; cd /srv/acilis-zili/current; VERIFY_PAID_ANALYSIS=$paid VERIFY_SYMBOL=$SYMBOL VERIFY_HORIZON=$HORIZON node deploy/verify-analysis.mjs'"

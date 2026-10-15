@@ -229,10 +229,22 @@ export function createAutoLinker({
 
   return {
     claim(href) {
+      /* Bozuk yüzde kodlaması ("%", "%zz") decodeURIComponent'i URIError
+         ile patlatır ve gövde SUNUCUDA çizildiği için tek bozuk bağlantı
+         bütün sayfayı hata ekranına düşürüyordu (15 Ekim taraması). İçeriği
+         her gün bir rutin yazıyor — kasıt gerektirmeyen bir kırılganlıktı.
+         Çözülemeyen dize anahtar olarak ham hâliyle kullanılır. */
+      const dec = (value: string) => {
+        try {
+          return decodeURIComponent(value);
+        } catch {
+          return value;
+        }
+      };
       const term = /^\/sozluk\/([^/?#]+)/.exec(href);
-      if (term) used.add(`t:${decodeURIComponent(term[1])}`);
+      if (term) used.add(`t:${dec(term[1])}`);
       const symbol = /^\/hisse\/([^/?#]+)/.exec(href);
-      if (symbol) used.add(`s:${decodeURIComponent(symbol[1]).toUpperCase()}`);
+      if (symbol) used.add(`s:${dec(symbol[1]).toUpperCase()}`);
     },
 
     split(text) {

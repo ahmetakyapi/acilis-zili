@@ -143,6 +143,9 @@ type ChartResult =
       phase: "ready";
       bars: Bar[];
       prevClose: number | null;
+      /** Serinin alındığı an — aralığa DÖNÜŞTE bayatlık ölçüsü (aşağıda
+          canlı yoklama efekti). Kayıt yazan her yol damgayı tazeler. */
+      fetchedAt: number;
     };
 
 type HoverReading = {
@@ -231,10 +234,19 @@ export function PriceChart({
             phase: "ready",
             bars: initialBars.bars,
             prevClose: initialBars.prevClose ?? null,
+            fetchedAt: Date.now(),
           },
         }
       : {},
   );
+  /* Canlı yoklama efektinin kurulumda okuduğu ayna — `results` efektin
+     bağımlılığı yapılsaydı her yoklama yazımı interval'i söküp yeniden
+     kurardı. Ayna efekt yoklama efektinden ÖNCE tanımlı: aynı render'da
+     önce o koşar, ref taze olur. */
+  const resultsRef = useRef<Record<string, ChartResult>>(results);
+  useEffect(() => {
+    resultsRef.current = results;
+  }, [results]);
   const [hover, setHover] = useState<HoverReading>(null);
   /* HİSSE SAYFASINDA OKUMA GRAFİĞİN İÇİNDE, NOKTANIN YANINDA (24 Eylül).
      Okuma bir dönem başlığın fiyatına yazılıyordu: imleç gezerken 48
@@ -425,6 +437,7 @@ export function PriceChart({
           phase: "ready",
           bars: data.bars,
           prevClose: data.prevClose ?? null,
+          fetchedAt: Date.now(),
         });
       })
       .catch(() => {
@@ -467,7 +480,7 @@ export function PriceChart({
             if (!existing) return current;
             return {
               ...current,
-              [key]: { key, phase: "ready", bars: data.bars, prevClose: data.prevClose ?? (existing.phase === "ready" ? existing.prevClose : null) },
+              [key]: { key, phase: "ready", bars: data.bars, prevClose: data.prevClose ?? (existing.phase === "ready" ? existing.prevClose : null), fetchedAt: Date.now() },
             };
           });
           if (data.quote) {
@@ -481,6 +494,16 @@ export function PriceChart({
     const timer = window.setInterval(() => {
       if (document.visibilityState === "visible") pull();
     }, LIVE_POLL_MS);
+    /* ARALIĞA DÖNÜŞTE BAYAT SERİ BEKLETİLMEZ (15 Ekim taraması). Önbellek
+       kaydı varken veri efekti hiç fetch atmıyor ve ilk yoklama bir sonraki
+       tikte: 1G → 1Y → beş dakika → 1G dönüşünde beş dakikalık barlar 60
+       saniyeye kadar ekranda kalıyordu. Kayıt yoklama aralığından eskiyse
+       bir kez hemen çekilir; İLK montajda kayıt az önce damgalandığı için
+       (`fetchedAt`) bu yol koşmaz — sunucudan gelen seri çiftlenmez. */
+    if (resultsRef.current?.[key]?.phase === "ready") {
+      const at = (resultsRef.current[key] as { fetchedAt?: number }).fetchedAt ?? 0;
+      if (Date.now() - at > LIVE_POLL_MS && document.visibilityState === "visible") pull();
+    }
     const onVisible = () => {
       if (document.visibilityState === "visible" && Date.now() - last > LIVE_POLL_MS) pull();
     };

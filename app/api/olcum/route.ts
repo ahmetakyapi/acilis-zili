@@ -42,9 +42,19 @@ export async function POST(request: Request) {
     return new NextResponse(null, { status: 204 });
   }
 
+  /* GÖVDE TAVANI JSON.parse'TAN ÖNCE (15 Ekim taraması). Zod'un max(300)'ü
+     ancak gövdenin TAMAMI belleğe okunduktan sonra çalışır; Content-Length
+     ve okunan metin uzunluğu denetlenmeyince kimliksiz bir döngü yüzlerce
+     MB'lık gövdelerle süreci OOM'a sürükleyebiliyordu. Kalıp
+     app/api/ai/analysis'teki tavanın aynısı; 4 KB meşru yüke bol bol yeter. */
+  if (Number(request.headers.get("content-length") || 0) > 4096) {
+    return new NextResponse(null, { status: 204 });
+  }
   let payload: z.infer<typeof BODY>;
   try {
-    payload = BODY.parse(await request.json());
+    const raw = await request.text();
+    if (raw.length > 4096) return new NextResponse(null, { status: 204 });
+    payload = BODY.parse(JSON.parse(raw));
   } catch {
     return new NextResponse(null, { status: 204 });
   }

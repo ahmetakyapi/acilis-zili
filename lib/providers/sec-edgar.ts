@@ -77,12 +77,16 @@ async function acceptanceTime(cik: string, accession: string): Promise<string | 
   }
 }
 
-/** Sembol → 10 haneli CIK. İstek içinde tek tur (`cache`). */
+/** Sembol → 10 haneli CIK. İstek içinde tek tur (`cache`); istekler arası
+    TTL'li modül memo'su — gerekçe sec-form4.ts'teki eş kopyada (15 Ekim). */
+let tickerMemo: { at: number; map: Map<string, string> } | null = null;
 const tickerTable = cache(async (): Promise<Map<string, string> | null> => {
+  if (tickerMemo && Date.now() - tickerMemo.at < TICKERS_REVALIDATE_S * 1000) return tickerMemo.map;
   const data = await secJson<Record<string, { cik_str: number; ticker: string }>>(TICKERS_URL, TICKERS_REVALIDATE_S);
   if (!data) return null;
   const map = new Map<string, string>();
   for (const row of Object.values(data)) map.set(row.ticker.toUpperCase(), String(row.cik_str).padStart(10, "0"));
+  tickerMemo = { at: Date.now(), map };
   return map;
 });
 

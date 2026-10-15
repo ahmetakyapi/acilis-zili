@@ -19,6 +19,7 @@ import {
 } from "@/lib/market-hours";
 import { C, Chip, OG_CONTENT_TYPE, OgFrame, OgTitle, Tri, clip, ogFonts } from "@/lib/og";
 import { getQuotes } from "@/lib/providers";
+import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { clockOf, timePair } from "@/lib/session-clock";
 import { formatEtDateCompact, formatEtDateLong, formatPercentPlain } from "@/lib/utils";
 
@@ -115,6 +116,16 @@ export async function GET(
   const today = todayEt();
   const day = parseCardDate(tarih, today);
   if (!day) return new Response("Not Found", { status: 404 });
+
+  /* Oran sınırı (15 Ekim taraması): tarih penceresi × iki biçim yüzlerce
+     ayrı adres eder ve her biri istek başına Satori + dört sorgu — tek
+     döngü CPU'yu ve Neon'u meşgul edebiliyordu. İnsan bir karta bakar,
+     bot bir kez çeker; dakikada 30 ikisine de bol. Sınırda 429: paylaşım
+     önizlemesi gecikir, site etkilenmez. */
+  const gate = rateLimit(clientKey(request, "gun-kart"), 30, 60_000);
+  if (!gate.allowed) {
+    return new Response(null, { status: 429, headers: { "Retry-After": String(gate.retryAfter) } });
+  }
 
   const portrait = new URL(request.url).searchParams.get("bicim") === PORTRAIT_PARAM;
   const size = portrait ? PORTRAIT : LANDSCAPE;

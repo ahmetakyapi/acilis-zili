@@ -34,7 +34,9 @@ const TOKEN =
   /\[([^\]]+)\]\(([^)\s]+)\)|\*\*([^*]+)\*\*|<a\s+href=["']([^"']+)["'][^>]*>([^<]*)<\/a>/g;
 
 function safeHref(href: string): string | null {
-  if (href.startsWith("/") && !href.startsWith("//")) return href;
+  /* "/\" de dışarıdır: tarayıcı "\"yi "/" sayar, "/\evil.com" → "//evil.com"
+     (ArticleBody'deki iç-yol denetimiyle aynı kural, 15 Ekim taraması). */
+  if (href.startsWith("/") && !href.startsWith("//") && !href.startsWith("/\\")) return href;
   if (/^https:\/\//i.test(href)) return href;
   return null;
 }

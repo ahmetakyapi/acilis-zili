@@ -143,6 +143,31 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        /* Yatırımcı portreleri aynı profilde (15 Ekim taraması): sabit adlı,
+           nadiren değişen 16 webp (~325 KB) varsayılan `max-age=0` ile her
+           gezinmede yeniden isteniyordu — yukarıda logolar için ölçülen
+           arızanın (mobilde düşen istek = kırık görsel) birebir aynısı. */
+        source: "/investors/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800, stale-while-revalidate=2592000",
+          },
+        ],
+      },
+      {
+        /* PWA ikonları da (icon-192/512 + maskable) aynı varsayılana
+           düşüyordu; adları sabit, içerik `build:favicon` ile yılda birkaç
+           kez değişir. */
+        source: "/:icon(icon-192.png|icon-512.png|icon-maskable-192.png|icon-maskable-512.png)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800, stale-while-revalidate=2592000",
+          },
+        ],
+      },
     ];
   },
   // Ana dizinde başka bir lockfile var; kökü açıkça bu projeye sabitle.

@@ -17,7 +17,10 @@ import pathlib, shlex, sys
 print("sudo -n python3 -c " + shlex.quote(pathlib.Path(sys.argv[1]).read_text()))
 PY
 )
-ssh_args=(-i "$key_file" -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 "ubuntu@$HOST")
+# Host anahtarı sabitlemesi: iş akışı VPS_HOST_KEY'i known_hosts'a yazıp
+# `strict=yes` veriyorsa yalnız o anahtar kabul edilir (gerekçe deploy.yml,
+# 15 Ekim). Değişken tanımlı değilse eski accept-new davranışı sürer.
+ssh_args=(-i "$key_file" -o BatchMode=yes -o "StrictHostKeyChecking=${strict:-accept-new}" -o ConnectTimeout=15 "ubuntu@$HOST")
 printf '%s' "$CLAUDE_ANALYSIS_API_KEY" | ssh "${ssh_args[@]}" "$remote_command"
 ssh "${ssh_args[@]}" 'sudo -n systemctl restart acilis-zili && sudo -n systemctl is-active --quiet acilis-zili'
 echo 'Analysis secret synced; application service is active.'
