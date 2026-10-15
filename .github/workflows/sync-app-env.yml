@@ -1,0 +1,39 @@
+name: Sync App Env
+
+# Deploy beklemeden e-posta / Web Push anahtarlarını sunucuya yazar ve servisi
+# yeniden başlatır (ör. EMAIL_FROM değişti). Yalnız tanımlı secret'lar gider.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Update allow-listed app env and restart the service
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST: ${{ vars.VPS_HOST }}
+          VPS_HOST_KEY: ${{ vars.VPS_HOST_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+        run: |
+          # Host anahtarı sabitlemesi — gerekçe deploy.yml (15 Ekim).
+          if [[ -n "${VPS_HOST_KEY:-}" ]]; then
+            mkdir -p ~/.ssh
+            printf '%s\n' "$VPS_HOST_KEY" > ~/.ssh/known_hosts
+            export strict=yes
+          fi
+          bash deploy/sync-app-env.sh

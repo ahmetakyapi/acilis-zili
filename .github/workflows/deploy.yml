@@ -92,6 +92,20 @@ jobs:
           else
             echo "Analiz secret tanımlı değil; mevcut sunucu ortamı korunuyor."
           fi
+      # E-posta ve Web Push anahtarları (15 Ekim): yalnız GitHub'da TANIMLI
+      # olanlar sunucuya yazılır, tanımsız olan sunucudaki değerini korur.
+      # Servis burada yeniden başlatılmıyor; hemen ardından update.sh başlatıyor.
+      - name: Uygulama ortamını sunucuya aktar
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST: ${{ vars.VPS_HOST }}
+          RESTART: "0"
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+        run: bash deploy/sync-app-env.sh
       - name: SSH ile sunucuda update.sh çalıştır
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}

@@ -730,6 +730,8 @@ npm run dev
 | `ANALYTICS_SALT` | opsiyonel | ziyaretçi özetinin tuzu; yoksa `AUTH_SECRET` |
 | `EVDS_API_KEY` | opsiyonel | [evds3.tcmb.gov.tr](https://evds3.tcmb.gov.tr) → üye ol → profil → API anahtarı; Reel TL ve vergi hesaplayıcısının Yİ-ÜFE endekslemesi. Yoksa ikisi de okuyucuya açık alan bırakır |
 
+E-posta ve Web Push anahtarları (`RESEND_API_KEY`, `EMAIL_FROM`, `VAPID_*`) GitHub Secrets'ta da tutulabilir: tanımlı olanları her deploy sunucudaki `/etc/acilis-zili.env`e yazar, tanımsız olan sunucudaki değerini korur (`deploy/sync-app-env.sh`, yalnız izinli anahtarlar). Deploy beklemeden aktarmak için Actions → "Sync App Env".
+
 Anahtarlar olmadan da uygulama açılır; ilgili kartlar "veri alınamadı" der ve
 sayfa çökmez. Kontrol için `/api/debug/providers`. Korumalı uçlar yerelde
 secret boşsa açıktır; **üretimde secret yoksa uç 503 döner.**
