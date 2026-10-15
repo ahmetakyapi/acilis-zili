@@ -14,7 +14,10 @@ import { DeleteAccount } from "@/components/auth/DeleteAccount";
 import { ChangePassword } from "@/components/auth/ChangePassword";
 import { AvatarPicker } from "@/components/auth/AvatarPicker";
 import { DataExportLinks } from "@/components/auth/DataExportLinks";
+import { ProfileSettings } from "@/components/auth/ProfileSettings";
 import { getUserAvatar } from "@/lib/avatar-data";
+import { getProfileSettings } from "@/lib/profile-data";
+import { PROFILE_DEFAULTS } from "@/lib/profiles";
 import { PushSettings } from "@/components/notifications/PushSettings";
 import { getUserSubscriptions, pushPublicKey } from "@/lib/push";
 import { PreferenceSettings } from "@/components/layout/preference-controls";
@@ -41,11 +44,12 @@ export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user) redirect("/giris?devam=/ayarlar");
 
-  const [{ locale, t }, theme, avatar, push] = await Promise.all([
+  const [{ locale, t }, theme, avatar, push, profile] = await Promise.all([
     getI18n(),
     getTheme(),
     session.user.id ? getUserAvatar(session.user.id) : Promise.resolve(null),
     session.user.id ? getUserSubscriptions(session.user.id) : Promise.resolve({ available: false, subscriptions: [] }),
+    session.user.id ? getProfileSettings(session.user.id) : Promise.resolve(null),
   ]);
   const username = session.user.name ?? "";
   const initials = username.slice(0, 2).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US");
@@ -110,6 +114,21 @@ export default async function SettingsPage() {
               names: t.settings.avatarNames,
               colors: t.settings.avatarColors,
             }}
+          />
+        </div>
+      </Panel>
+
+      {/* HERKESE AÇIK PROFİL (15 Ekim) — varsayılan gizli; satır yoksa
+          varsayılanlar basılır ve ilk kayıt satırı açar. Görünürlük KVKK'da
+          açık rıza olarak sayılı (content/legal.ts); tablo yokken kaydetme
+          "şu an kaydedilemiyor" der (app/actions/profile.ts). */}
+      <Panel>
+        <PanelHeader title={t.profile.settings.title} />
+        <div className="px-4 py-4 sm:px-5">
+          <ProfileSettings
+            initial={profile ?? PROFILE_DEFAULTS}
+            username={username}
+            labels={t.profile.settings}
           />
         </div>
       </Panel>

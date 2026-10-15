@@ -101,6 +101,38 @@ export const userAvatars = pgTable("user_avatars", {
     .defaultNow(),
 });
 
+/**
+ * HERKESE AÇIK PROFİL (15 Ekim) — /u/[username] sayfasının ayarları.
+ *
+ * VARSAYILAN GİZLİ: satır yoksa ya da `is_public` false ise profil sayfası
+ * 404 verir — "kullanıcı var ama gizli" ile "kullanıcı yok" dışarıdan
+ * ayırt edilemez (kullanıcı adı sayım orakülü bilinçli kapalı, bkz.
+ * app/actions/auth.ts → DUMMY_HASH; profil sayfası onu yeniden açmamalı).
+ *
+ * Bloklar ayrı bayrak: profil açıkken bile takip listeleri ve portföy
+ * dağılımı tek tek açılır. KVKK'da görünürlük AÇIK RIZA satırı olarak
+ * sayılı (content/legal.ts); kaydedilen her alan o tabloda.
+ *
+ * KENDİ TABLOSU, `users`a SÜTUN DEĞİL — migration'lar deploy'da
+ * uygulanmıyor (user_avatars kuralı, yukarıda). Okuyan tek yol
+ * (lib/profile-data.ts) tablo yokken sessizce `null` döner: profil
+ * "gizli" varsayılana düşer, Ayarlar paneli "şu an kaydedilemiyor" der.
+ * Hesap silinince CASCADE ile düşer (deleteAccountAction listesi).
+ */
+export const userProfiles = pgTable("user_profiles", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  /** Tek nefeslik tanıtım; sınır lib/profiles.ts → BIO_MAX. Boşsa null. */
+  bio: text("bio"),
+  isPublic: boolean("is_public").notNull().default(false),
+  showWatchlists: boolean("show_watchlists").notNull().default(false),
+  showPortfolio: boolean("show_portfolio").notNull().default(false),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const watchlists = pgTable(
   "watchlists",
   {

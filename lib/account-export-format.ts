@@ -88,6 +88,16 @@ export type AccountExport = {
       }[]
     | null;
   /**
+   * Herkese açık profil ayarları (15 Ekim) — `null` tablo okunamadıysa ya
+   * da satır hiç açılmadıysa; varsayılan zaten "gizli" ve sıfır veri.
+   */
+  profile?: {
+    bio: string | null;
+    isPublic: boolean;
+    showWatchlists: boolean;
+    showPortfolio: boolean;
+  } | null;
+  /**
    * Bildirim açılmış cihazlar — `null` tablo okunamadıysa. Bildirim
    * servisinin uç adresi ve şifreleme anahtarları dosyaya girmiyor: okuyucu
    * için anlamsızlar ve dosya bir yerde unutulursa o cihaza bildirim

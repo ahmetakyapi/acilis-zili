@@ -14,7 +14,7 @@
    ========================================================================== */
 
 /** Metnin son güncellendiği tarih — sayfa künyesinde görünür (ET/TR farkı önemsiz). */
-export const LEGAL_UPDATED = "2026-10-08";
+export const LEGAL_UPDATED = "2026-10-15";
 
 const PRIVACY_TR = `Açılış Zili kişisel bir projedir ve ABD borsalarını Türkçe takip etmek için yapılmıştır. Bu sayfa, 6698 sayılı **Kişisel Verilerin Korunması Kanunu** (KVKK) kapsamında hangi verinin neden işlendiğini, nereye gittiğini ve senin hangi haklara sahip olduğunu anlatır.
 
@@ -80,6 +80,7 @@ Hukuki sebep: meşru menfaat (m. 5/2-f) — ürünün hangi bölümünün kullan
 | Bildirim aboneliğin (tarayıcının verdiği bildirim adresi ve şifreleme anahtarları, cihaz adı, dil) — yalnızca Ayarlar'da bildirimleri açarsan | Alarmın tetiklendiğini cihazına bildirmek | Açık rıza (m. 5/1) — tarayıcının izin penceresi ve "Bu Cihazda Aç" düğmesi |
 | Tema ve dil tercihi | Arayüzü hatırlamak | Meşru menfaat (m. 5/2-f) |
 | Seçtiğin profil ikonu | Hesabını arayüzde göstermek | Meşru menfaat (m. 5/2-f) |
+| Profil tanıtımın ve görünürlük tercihlerin (profil açık mı; takip listelerin ve portföy dağılımın görünsün mü) — yalnızca profil ayarlarına dokunursan | Profilini \`/u/kullanıcı-adın\` adresinde senin seçtiğin kapsamla göstermek | Açık rıza (m. 5/1) — Ayarlar'daki "Profilim Herkese Açık" anahtarı |
 | Son giriş zamanı | Hesabın hâlâ kullanılıp kullanılmadığını görmek | Meşru menfaat (m. 5/2-f) |
 | Oturum çerezi | Girişi açık tutmak | Sözleşmenin ifası (m. 5/2-c) |
 
@@ -91,7 +92,7 @@ E-posta adresin hesabın benzersiz olmasını sağlamak ve **yalnızca sen isted
 
 Özel nitelikli kişisel veri (sağlık, din, biyometri, siyasi görüş vb.) hiçbir biçimde toplanmaz. Kimlik numarası, telefon, adres, doğum tarihi ve finansal hesap bilgisi de istenmez — site senin adına işlem yapmaz, bir aracı kuruma bağlanmaz.
 
-Portföy ekranına girdiğin pozisyonlar yalnızca senin elle yazdığın sayılardır: aracı kurum hesabın, bakiyen ya da hesap numaran istenmez. Pozisyonları yalnızca sen görürsün; başka bir kullanıcıya gösterilmez, analiz ya da pazarlama için kullanılmaz. **Vergi hesaplayıcısına** girdiğin işlemler ise hiç saklanmaz: hesap tarayıcında yapılır ve sunucuya yalnızca kuru sorulacak tarihler gider, adet ya da fiyat gitmez.
+Portföy ekranına girdiğin pozisyonlar yalnızca senin elle yazdığın sayılardır: aracı kurum hesabın, bakiyen ya da hesap numaran istenmez. Pozisyonları varsayılan olarak yalnızca sen görürsün; analiz ya da pazarlama için kullanılmaz. Tek istisna senin açman: profil ayarlarından "Portföy Dağılımım Görünsün" dersen profil sayfanda yalnızca **ağırlık yüzdeleri, getiri oranı ve en eski alışının ay-yıl'ı** ("Başlangıç" künyesi) görünür — tutar, adet, maliyet ve gün bazında alış tarihleri hiçbir durumda gösterilmez ve anahtarı kapattığın an blok yayından kalkar. **Vergi hesaplayıcısına** girdiğin işlemler ise hiç saklanmaz: hesap tarayıcında yapılır ve sunucuya yalnızca kuru sorulacak tarihler gider, adet ya da fiyat gitmez.
 
 ## Toplanmayan Veriler
 
@@ -136,7 +137,7 @@ Barındırma sağlayıcısının teknik kayıtlarında (log) IP adresi ve taray�
 
 ## Saklama Süresi
 
-Hesap verilerin, hesabın açık kaldığı sürece saklanır. Hesabını sildiğinde kullanıcı kaydın ve ona bağlı bütün takip listeleri, portföy pozisyonları ve satışları, fiyat alarmları ve bildirim abonelikleri veritabanından **kalıcı olarak** silinir; yedeklerdeki kopyalar da yedek döngüsü tamamlandığında (en geç 30 gün) düşer.
+Hesap verilerin, hesabın açık kaldığı sürece saklanır. Hesabını sildiğinde kullanıcı kaydın ve ona bağlı bütün takip listeleri, portföy pozisyonları ve satışları, fiyat alarmları, bildirim abonelikleri ve profil ayarların (tanıtım ve görünürlük tercihleri) veritabanından **kalıcı olarak** silinir; yedeklerdeki kopyalar da yedek döngüsü tamamlandığında (en geç 30 gün) düşer.
 
 Piyasa verileri, haberler ve yazılar kişisel veri değildir; onlar sende bir hesap olsun olmasın tutulur.
 
@@ -150,7 +151,7 @@ Başvurunu [GitHub deposu üzerinden](https://github.com/ahmetakyapi/acilis-zili
 
 Hesap silme talebi için beklemene gerek yok: Ayarlar ekranından hesabını kendin silebilirsin, işlem anında uygulanır.
 
-Verilerinin bir kopyası için de başvuru gerekmez: Ayarlar → Verilerin → **Verilerimi İndir** hesabının tuttuğu her şeyi (hesap bilgilerin, takip listelerin, semboller ve notların, portföyün ve satışların, fiyat alarmların, bildirim açtığın cihazlar, profil ikonun) JSON ya da CSV dosyası olarak anında indirir.
+Verilerinin bir kopyası için de başvuru gerekmez: Ayarlar → Verilerin → **Verilerimi İndir** hesabının tuttuğu her şeyi (hesap bilgilerin, takip listelerin, semboller ve notların, portföyün ve satışların, fiyat alarmların, bildirim açtığın cihazlar, profil ikonun, profil tanıtımın ve görünürlük tercihlerin) JSON ya da CSV dosyası olarak anında indirir.
 
 ## Güvenlik
 
@@ -282,6 +283,7 @@ Legal basis: legitimate interest (Art. 5/2-f) — seeing which part of the produ
 | Your notification subscription (the push address and encryption keys your browser issues, device name, language) — only if you turn notifications on in Settings | To tell your device an alert has fired | Explicit consent (Art. 5/1) — the browser's permission prompt and the "Turn On for This Device" button |
 | Theme and language preference | To remember the interface | Legitimate interest (Art. 5/2-f) |
 | The profile icon you picked | To show your account in the interface | Legitimate interest (Art. 5/2-f) |
+| Your profile intro and visibility preferences (whether the profile is public; whether your watchlists and portfolio weights are shown) — only if you touch the profile settings | To show your profile at \`/u/your-username\` with the scope you chose | Explicit consent (Art. 5/1) — the "My Profile Is Public" switch in Settings |
 | Last sign-in time | To see whether the account is still in use | Legitimate interest (Art. 5/2-f) |
 | Session cookie | To keep you signed in | Performance of a contract (Art. 5/2-c) |
 
@@ -293,7 +295,7 @@ Your email address is stored to keep your account unique and to send you a passw
 
 No special categories of personal data (health, religion, biometrics, political opinion and so on) are collected in any form. National id number, phone, address, date of birth and financial account details are not requested either — the site does not act on your behalf and does not connect to a brokerage.
 
-The positions you enter on the portfolio screen are only the numbers you type in yourself: your brokerage account, balance or account number are never requested. Only you see your positions; they are not shown to other users and not used for analysis or marketing. Trades you enter in the **tax calculator** are not stored at all: the math runs in your browser and only the dates whose exchange rate is needed reach the server, never quantities or prices.
+The positions you enter on the portfolio screen are only the numbers you type in yourself: your brokerage account, balance or account number are never requested. By default only you see your positions, and they are not used for analysis or marketing. The one exception is you opening them up: if you turn on "Show My Portfolio Weights" in profile settings, your profile page shows only **weight percentages, the return rate and the month-year of your earliest purchase** (the "Since" plate) — amounts, quantities, costs and day-level buy dates are never displayed, and the block leaves the page the moment you turn the switch off. Trades you enter in the **tax calculator** are not stored at all: the math runs in your browser and only the dates whose exchange rate is needed reach the server, never quantities or prices.
 
 ## Data That Is Not Collected
 
@@ -338,7 +340,7 @@ The hosting provider's technical logs may hold an IP address and browser informa
 
 ## Retention
 
-Your account data is kept for as long as the account exists. When you delete your account, your user record and every watchlist, portfolio position and sale, price alert and notification subscription attached to it are **permanently** removed from the database; copies in backups fall away when the backup cycle completes (at most 30 days).
+Your account data is kept for as long as the account exists. When you delete your account, your user record and every watchlist, portfolio position and sale, price alert, notification subscription and profile setting (intro and visibility preferences) attached to it are **permanently** removed from the database; copies in backups fall away when the backup cycle completes (at most 30 days).
 
 Market data, news and articles are not personal data; they are kept whether or not you have an account.
 
@@ -352,7 +354,7 @@ You can send your request [through the GitHub repository](https://github.com/ahm
 
 You do not have to wait for an account deletion request: you can delete your account yourself from the Settings screen, and it takes effect immediately.
 
-You do not need a request for a copy of your data either: Settings → Your Data → **Download My Data** immediately downloads everything your account holds (your account details, your watchlists, their symbols and notes, your portfolio and sales, your price alerts, the devices you turned notifications on for, your profile icon) as a JSON or CSV file.
+You do not need a request for a copy of your data either: Settings → Your Data → **Download My Data** immediately downloads everything your account holds (your account details, your watchlists, their symbols and notes, your portfolio and sales, your price alerts, the devices you turned notifications on for, your profile icon, your profile intro and visibility preferences) as a JSON or CSV file.
 
 ## Security
 

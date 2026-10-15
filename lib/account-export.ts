@@ -2,6 +2,7 @@ import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "./db";
 import { users, watchlistItems, watchlists } from "./schema";
 import { getUserAvatar } from "./avatar-data";
+import { getProfileSettings } from "./profile-data";
 import { getPortfolioPositions } from "./portfolio-data";
 import { getUserAlerts } from "./price-alerts";
 import { getPortfolioSales } from "./portfolio-sales-data";
@@ -36,7 +37,7 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
   /* Portföy iki paket paralel yazılırken bu dosyanın dışında kalmıştı:
      indirme "hesabın tuttuğu her şey" diyordu ama pozisyonları vermiyordu
      (28 Eylül, belge taramasında bulundu). KVKK veri taşınabilirliği. */
-  const [lists, avatar, portfolio, alerts, sales, push] = await Promise.all([
+  const [lists, avatar, portfolio, alerts, sales, push, profile] = await Promise.all([
     db
       .select()
       .from(watchlists)
@@ -47,6 +48,7 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
     getUserAlerts(userId),
     getPortfolioSales(userId),
     getUserSubscriptions(userId),
+    getProfileSettings(userId),
   ]);
   const items = lists.length
     ? await db
@@ -74,6 +76,16 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
       lastSeenAt: account.lastSeenAt?.toISOString() ?? null,
     },
     avatar: avatar ? { icon: avatar.icon, color: avatar.color } : null,
+    /* Profil ayarları (15 Ekim): tanıtım ve görünürlük anahtarları da
+       KVKK tablosunda sayılı üye verisi — indirilen dosyada da olmalı. */
+    profile: profile
+      ? {
+          bio: profile.bio,
+          isPublic: profile.isPublic,
+          showWatchlists: profile.showWatchlists,
+          showPortfolio: profile.showPortfolio,
+        }
+      : null,
     /* Veritabanı kimlikleri (uuid) dışarıda: okuyucu için anlamsızlar ve
        dosyanın tek işi okuyucunun kendi verisini ona geri vermek. */
     watchlists: lists.map((list) => ({
