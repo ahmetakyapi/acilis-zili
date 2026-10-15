@@ -55,6 +55,61 @@ function FilingLink({ filing }: { filing: NonNullable<FlowMember["filing"]> }) {
   );
 }
 
+/* KATLI LİSTE — çok şirketli bilançonun gövdesi (15 Ekim, sahibinin
+   isteği: "6 şirket olunca çok uzatıyor, daha kompakt olsun"). Şirketler
+   sıkı satırlar ve dörtten fazlası varsa yalnızca ilk üçü açık; kalanı
+   "+N Şirket Daha" düğmesi YERİNDE açar (CLAUDE.md "katlama bastığın
+   yerde açılır" — kaydırma/rotasyonla saklanmaz, sayısı yazılıdır).
+   Tek tek dönen kart denendi ve İSTENMEDİ ("6 şirket tek tek gözükmesin");
+   dönen şey olayların kendisi (DayFlow → "OTOMATİK TUR"). */
+function MemberList({ members, scheduledAt, nowMs, labels, openEventId, onEngage }: {
+  members: FlowMember[];
+  scheduledAt: FlowEvent["scheduledAt"];
+  nowMs: number;
+  labels: Props["labels"];
+  /** Katlama açık olay değişince kapanır — sıradaki olayın listesi kısa başlar. */
+  openEventId: string | null;
+  /** Katlamayı açmak bir okuma niyetidir: otomatik tur durdurulsun. */
+  onEngage: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  /* "Önceki prop" kalıbı (RollingDigit ile aynı): efekt içinde setState
+     kademeli çizim tetikler, türetilmiş sıfırlama çizim sırasında yapılır. */
+  const [lastEvent, setLastEvent] = useState(openEventId);
+  if (openEventId !== lastEvent) {
+    setLastEvent(openEventId);
+    setExpanded(false);
+  }
+  /* Dört şirkete kadar katlama yok: tek satırlık bir kuyruk için düğme,
+     düğmenin kendisinden uzun olurdu. */
+  const folded = !expanded && members.length > 4;
+  const shown = folded ? members.slice(0, 3) : members;
+  return <>
+    <ol className={styles.tlMembers}>
+      {shown.map((member) => <li key={member.symbol} className={styles.tlMemberRow}>
+        <span className={styles.memberIdentity}>
+          <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="xs" />
+          <strong>{member.symbol}</strong>
+          <Status event={{ status: member.status, scheduledAt }} nowMs={nowMs} labels={labels} />
+          {member.filing && <FilingLink filing={member.filing} />}
+        </span>
+        {/* `detail` varyantı: sütunlar satırın payını PAYLAŞIR (max-content
+            kenarda "Beklentisi"ni kırpıyordu, ölçüldü). */}
+        {(member.revenue || member.eps || member.revenueEstimate || member.epsEstimate)
+          ? <span className={styles.memberNumbers}><FlowFigures member={member} labels={labels} variant="detail" /></span>
+          : <span aria-hidden="true" />}
+        <Link href={member.href} prefetch={false} className={styles.tlMemberLink} data-analysis={member.status === "analyzed" || undefined}>{member.status === "analyzed" ? labels.readAnalysis : labels.viewCompany}<ArrowUpRight size={14} aria-hidden /></Link>
+      </li>)}
+    </ol>
+    {folded && (
+      <button type="button" className={styles.moreMembers} onClick={() => { setExpanded(true); onEngage(); }}>
+        {labels.moreMembers.replace("{count}", String(members.length - 3))}
+        <CaretDown size={14} weight="bold" aria-hidden />
+      </button>
+    )}
+  </>;
+}
+
 export function DayFlow({ initial, locale, labels, railLabels, heading }: Props) {
   const [snapshot, setSnapshot] = useState(initial);
   const [nowMs, setNowMs] = useState(() => new Date(initial.asOf).getTime());
@@ -62,6 +117,8 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
      satırı kendisi kapattı — otomatik seçim onu yeniden açmasın. */
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [allClosed, setAllClosed] = useState(false);
+  /* Olaylar arası otomatik tur — elle ilk seçimde kapanır (aşağıda). */
+  const [autoTour, setAutoTour] = useState(true);
   const [connection, setConnection] = useState<"ready" | "checking" | "error">("ready");
   const [announcement, setAnnouncement] = useState("");
   const [, startTransition] = useTransition();
@@ -86,6 +143,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
   useEffect(() => { publishFlow(snapshot); }, [snapshot]);
   useEffect(() => onFlowSelect((id) => {
     setAllClosed(false);
+    setAutoTour(false);
     setSelectedId(id);
     /* Kahramandaki şeritten gelen seçim: satır görünüme gelsin ki açılan
        gövde ekran dışında kalmasın. */
@@ -205,7 +263,45 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
   const checked = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: displayZone(locale), hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(snapshot.asOf));
   const dayLabel = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: "UTC", month: "long", day: "numeric", weekday: "long" }).format(new Date(snapshot.dateEt + "T12:00:00Z"));
 
+  /* OTOMATİK TUR (15 Ekim, sahibinin isteği: "üç sekme kendi aralarında
+     geçsin; kullanıcı isterse eliyle de geçsin"). Açık olay sekiz saniyede
+     bir sıradakine akıp başa döner. Tur KİBAR: imleç ya da odak bölümün
+     üstündeyken, bölüm ekran dışındayken, sekme arka plandayken ve hareketi
+     azaltanda bekler; okuyucu bir olayı ELİYLE seçtiği ya da katlı listeyi
+     açtığı an kendini tamamen kapatır (WCAG 2.2.2 — durdurma yolu,
+     etkileşimin kendisi). Tur sayfayı KAYDIRMAZ; kaydırma yalnızca elle
+     seçimde ve kahraman şeridinden gelen seçimde. */
+  useEffect(() => {
+    if (!autoTour || allClosed || events.length < 2 || !openId) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const el = ref.current;
+    let paused = false;
+    let visible = true;
+    const hold = () => { paused = true; };
+    const release = () => { paused = false; };
+    el?.addEventListener("pointerenter", hold);
+    el?.addEventListener("pointerleave", release);
+    el?.addEventListener("focusin", hold);
+    el?.addEventListener("focusout", release);
+    const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; });
+    if (el) observer.observe(el);
+    const timer = window.setInterval(() => {
+      if (document.hidden || paused || !visible) return;
+      const at = events.findIndex((event) => event.id === openId);
+      setSelectedId(events[(at + 1) % events.length]!.id);
+    }, 8_000);
+    return () => {
+      window.clearInterval(timer);
+      observer.disconnect();
+      el?.removeEventListener("pointerenter", hold);
+      el?.removeEventListener("pointerleave", release);
+      el?.removeEventListener("focusin", hold);
+      el?.removeEventListener("focusout", release);
+    };
+  }, [autoTour, allClosed, events, openId]);
+
   function toggle(id: string) {
+    setAutoTour(false);
     if (openId === id) { setAllClosed(true); setSelectedId(null); return; }
     setAllClosed(false);
     setSelectedId(id);
@@ -306,22 +402,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
                         olayda hiç basılmıyor. */}
                     {event.note && <p className={styles.note}>{event.note}</p>}
                     {event.members ? (
-                      <div className={styles.tlMembers}>
-                        {event.members.map((item) => <div key={item.symbol} className={styles.tlMember}>
-                          <div className={styles.memberIdentity}>
-                            <LogoTile symbol={item.symbol} logoUrl={item.logoUrl} size="sm" />
-                            <div><strong>{item.symbol}</strong><Status event={{ status: item.status, scheduledAt: event.scheduledAt }} nowMs={nowMs} labels={labels} />{item.filing && <FilingLink filing={item.filing} />}</div>
-                            <Link href={item.href} prefetch={false} className={styles.tlMemberLink} data-analysis={item.status === "analyzed" || undefined}>{item.status === "analyzed" ? labels.readAnalysis : labels.viewCompany}<ArrowUpRight size={14} aria-hidden /></Link>
-                          </div>
-                          {/* Şirketin sayıları `FlowFigures`ten: satır ile
-                              panel aynı olayın iki farklı sayısını
-                              göstermesin. */}
-                          {/* `detail` varyantı: sütunlar kartın genişliğini
-                              PAYLAŞIR (max-content taşırıyordu — kart
-                              kenarında "Beklentisi" kırpılmıştı, ölçüldü). */}
-                          {(item.revenue || item.eps || item.revenueEstimate || item.epsEstimate) && <div className={styles.memberNumbers}><FlowFigures member={item} labels={labels} variant="detail" /></div>}
-                        </div>)}
-                      </div>
+                      <MemberList members={event.members} scheduledAt={event.scheduledAt} nowMs={nowMs} labels={labels} openEventId={openId} onEngage={() => setAutoTour(false)} />
                     ) : <>
                       {(event.actual || event.forecast || event.previous) && <dl className={styles.results}>{[[labels.actual, event.actual], [labels.forecast, event.forecast], [labels.previous, event.previous]].map(([label, figure]) => <div key={label}><dt>{label}</dt><dd className="numeral">{figure ?? NO_VALUE}</dd></div>)}</dl>}
                       {!event.actual && <p className={styles.waiting}>{displayFlowStatus(event, nowMs) === "scheduled" ? labels.scheduledHint : labels.pendingHint}</p>}

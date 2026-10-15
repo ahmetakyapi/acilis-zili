@@ -162,6 +162,7 @@ const en: typeof tr = {
     previous: "Previous",
     readAnalysis: "Read Analysis",
     viewCompany: "View Company",
+    moreMembers: "{count} More Companies",
     calendar: "View Calendar",
     calendarSource: "Economic Calendar",
     timeUnknown: "Time Unconfirmed",

@@ -125,15 +125,17 @@
 
 .note { margin:4px 0 0; padding-left:11px; border-left:2px solid var(--primary-faint); color:var(--text-body); font-size:13px; line-height:1.65; text-wrap:pretty; }
 
-/* Çok şirketli bilanço: tam satırlar değil SIKI KARTLAR — altı şirket
-   1440'ta iki sıra, telefonda tek sütun. Kart zemini bir basamak ton
-   (surface-sunken üstünde solid kart değil; çizelge zaten panelde, kart
-   kıl çizgiyle ayrışıyor). */
-.tlMembers { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:10px; margin-top:12px; }
-.tlMember { display:flex; min-width:0; flex-direction:column; gap:8px; padding:11px 12px; border:1px solid var(--line-soft); border-radius:12px; background:var(--surface); }
-.memberIdentity { display:flex; align-items:center; gap:10px; min-width:0; }
-.memberIdentity > div { display:flex; min-width:0; flex-direction:column; gap:2px; }
+/* Çok şirketli bilanço: SIKI SATIRLAR + KATLAMA — gerekçe DayFlow.tsx →
+   MemberList. Satır ~56 piksel: kimlik | ölçüler | bağlantı; dörtten çoğu
+   katlı başlar, "+N Şirket Daha" yerinde açar. Kimlik sütunu sabit ki altı
+   satırın ölçüleri AYNI HATTA başlasın (CLAUDE.md "ölçü ızgarası"). */
+.tlMembers { display:grid; margin:10px 0 0; padding:0; list-style:none; }
+.tlMemberRow { display:grid; min-width:0; grid-template-columns:150px minmax(0,1fr) auto; align-items:center; gap:6px 16px; padding:8px 0; border-top:1px solid var(--line-soft); }
+.tlMemberRow:first-child { border-top-color:transparent; }
+.memberIdentity { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; min-width:0; }
 .memberIdentity strong { color:var(--text-strong); font-size:14px; font-weight:650; }
+.moreMembers { display:flex; align-items:center; justify-content:center; gap:6px; width:100%; min-height:40px; margin-top:2px; border-top:1px solid var(--line-soft); color:var(--primary-ink); font-size:13px; font-weight:600; cursor:pointer; transition:color .2s var(--ease-brand); }
+.moreMembers:hover { color:var(--primary-hover); }
 .tlMemberLink { display:inline-flex; align-items:center; gap:5px; margin-left:auto; min-height:36px; color:var(--text-body); font-size:12px; font-weight:600; white-space:nowrap; }
 .tlMemberLink[data-analysis] { color:var(--primary-ink); }
 .tlMemberLink svg { flex-shrink:0; transition:transform .2s var(--ease-brand); }
@@ -190,6 +192,13 @@
   .tlSummary > strong { font-size:14px; }
   .tlValue b { font-size:15px; }
   .tlDetailInner { padding-right:0; }
+  /* Şirket satırı telefonda iki katlı: kimlik + bağlantı üstte, ölçüler
+     altta tam genişlikte. Bağlantı açıkça ilk satıra: otomatik yerleşim onu
+     ölçülerin altına üçüncü bir kat olarak atıyordu (390'da görüldü). */
+  .tlMemberRow { grid-template-columns:minmax(0,1fr) auto; }
+  .tlMemberLink { grid-row:1; grid-column:2; }
+  .memberNumbers { grid-column:1 / -1; }
+  .moreMembers { min-height:44px; }
   .results { gap:8px; }
   .results > div { padding-left:9px; }
   .results dd { font-size:19px; }

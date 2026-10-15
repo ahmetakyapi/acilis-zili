@@ -189,6 +189,9 @@ const tr = {
     previous: "Önceki",
     readAnalysis: "Analizi Oku",
     viewCompany: "Şirkete Git",
+    /* Katlı şirket listesinin düğmesi — çok şirketli bilançoda ilk üç satır
+       açık, kalanı bu düğmeyle yerinde açılır (DayFlow → "KATLI LİSTE"). */
+    moreMembers: "{count} Şirket Daha",
     calendar: "Takvimde Gör",
     calendarSource: "Ekonomik Takvim",
     timeUnknown: "Saat Belirtilmedi",
