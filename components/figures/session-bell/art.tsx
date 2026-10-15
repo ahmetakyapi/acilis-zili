@@ -81,6 +81,12 @@ export function SessionBellArt({
       <FaceText transform={dial.label} size={3.6} tone="lo" anchor="middle">
         {stamp}
       </FaceText>
+      {/* Dört ana saat — gerekçe geometry.ts → `hours`. */}
+      {dial.hours.map((hour) => (
+        <FaceText key={hour.text} transform={hour.transform} size={3.4} tone="mid" anchor="middle">
+          {hour.text}
+        </FaceText>
+      ))}
       <Solid paths={dial.terminal} tone="mid" crease="faint" />
       <Line d={dial.terminalRing} tone="lo" />
       <Solid paths={dial.hub} tone="mid" crease="faint" />

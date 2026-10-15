@@ -141,6 +141,16 @@ function build(day: BellDay) {
       hub: cylinder(DIAL_X, DIAL_Y, HUB_R, DIAL_TOP, HUB_H, P, 24, 0.4),
       hubPin: dots([[DIAL_X, DIAL_Y, DIAL_TOP + HUB_H]]),
       label: topMatrix([DIAL_X, DIAL_Y + 17], DIAL_TOP, P),
+      /* Saat rakamları (15 Ekim): kadran yalnız çentik ve renkli dilimdi;
+         "hangi saat nerede" sorusunu dışarıdaki seans kartları cevaplıyordu
+         ama kadranın KENDİSİ cevaplamıyordu — "ne anlatıyor" şikâyetinin
+         kökü. Dört ana saat NY ekseninde (00 tepede, model.ts), dilimlerin
+         içinde r=32,5'te: çentik halkasına (39,9) değmiyor, göbekten (3,6)
+         uzak. */
+      hours: [0, 6, 12, 18].map((hour) => ({
+        text: String(hour).padStart(2, "0"),
+        transform: topMatrix(onDial(angleOf(hour * 60), 32.5), DIAL_TOP, P),
+      })),
       terminal: cylinder(terminal[0], terminal[1], 2.2, 0, 4.5, P, 16),
       terminalRing: ring(terminal[0], terminal[1], 1, 4.5, P, 12),
     },

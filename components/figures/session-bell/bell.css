@@ -53,9 +53,13 @@
 .sb-stage .iso-stage { --anatomy-paper: var(--anatomy-card); }
 .sb-stage .iso-svg { overflow: visible; }
 
+/* Dilim tonları 26/22 → 34/30 (15 Ekim): soluk dilimler telefonda kadranı
+   "anlamsız" bırakıyordu — rengi bir kademe doldurmak dilimleri saat
+   rakamlarıyla birlikte okutuyor; rakamların mürekkebi (iso tone mid)
+   üstlerinde seçiliyor, iki temada bakıldı. */
 .sb-wedge { stroke: none; }
-.sb-wedge[data-kind="regular"] { fill: color-mix(in srgb, var(--primary) 26%, transparent); }
-.sb-wedge[data-kind="pre"], .sb-wedge[data-kind="after"] { fill: color-mix(in srgb, var(--brass) 22%, transparent); }
+.sb-wedge[data-kind="regular"] { fill: color-mix(in srgb, var(--primary) 34%, transparent); }
+.sb-wedge[data-kind="pre"], .sb-wedge[data-kind="after"] { fill: color-mix(in srgb, var(--brass) 30%, transparent); }
 .sb-arc { fill: none; stroke-linecap: round; }
 .sb-arc[data-kind="regular"] { stroke: var(--primary); stroke-width: 2.6; }
 .sb-arc[data-kind="pre"], .sb-arc[data-kind="after"] { stroke: var(--brass); stroke-width: 1.8; }

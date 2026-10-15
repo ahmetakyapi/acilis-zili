@@ -59,7 +59,11 @@ const fitPoints: Point3[] = [
   [BELL_X + POST_W / 2, POST_Y + POST_D, POST_H + BAR_H],
 ];
 
-export const P = fitProjection(fitPoints, WIDTH, HEIGHT, { pad: 18, azimuth: AZIMUTH });
+/* Pay 18 → 10 (15 Ekim): makine kutusunda dört yanda 18 piksellik ölü hava
+   taşıyordu ve telefonda zaten küçük olan sahneyi bir kademe daha
+   küçültüyordu. 10 ile figür ~%5 büyüyor; overflow görünür (bell.css),
+   taşma yok (390 ve 1280'de ölçüldü). */
+export const P = fitProjection(fitPoints, WIDTH, HEIGHT, { pad: 10, azimuth: AZIMUTH });
 export const at = (point: Point3) => iso(point, P);
 
 /** Kadranda açıdaki nokta (0 = −y, saat yönü; radialTicks ile aynı kural). */
