@@ -1098,3 +1098,34 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
   .capLadder { height:52px; }
   .capNeighbours { font-size:12px; }
 }
+
+/* ---- İLK EKRANA OTURAN KAPAK (15 Ekim) — gerekçe _panels/Week52Band.tsx ----
+   Ölçüm (canlı, 1440×900, öncesi): sağ kolon 1059–1081 piksel (profil 784
+   + teknik kart 255–278 + 20), grafik ona gerilip çizimi 620–642'ye
+   uzatıyordu; kapak 1214–1236'da bitiyordu. 52 hafta bandı geniş ekranda
+   fiyatın sağındaki boşluğa taşındı, profilin üst bandı ve künye ızgarası
+   sıkıldı. Sonrası ölçümle aşağıda (commit gövdesi). */
+.headerBand { display:none; }
+@media(min-width:1100px) {
+  .companyOverview .priceBlockWithBand { display:grid; grid-template-columns:minmax(0,1fr) minmax(240px,300px); column-gap:28px; align-items:end; }
+  .companyOverview .priceBlockWithBand > :not(.headerBand) { grid-column:1; }
+  .companyOverview .headerBand { display:block; grid-column:2; grid-row:1 / span 4; align-self:end; padding:11px 14px 10px; border:1px solid var(--line-soft); border-radius:16px; background:var(--surface-sunken); }
+  .companyOverview .headerBand .bandRail { margin-top:4px; }
+  .companyOverview .headerBand .bandEnds { margin-top:2px; }
+  .companyOverview .profileBandNarrow { display:none; }
+  /* Profilin üst bandı: iki büyük sayı ve merdiven bir kademe sıkı. */
+  .companyOverview .capHero { gap:10px; padding-block:12px 12px; margin-bottom:12px; }
+  .companyOverview .capBig { font-size:clamp(28px,2.3vw,34px); }
+  .companyOverview .capLadder { height:40px; }
+  .companyOverview .capFigures > div { gap:4px; }
+  /* Künye karoları: dört karo iki satır, karo başına ~20 piksel kazanç. */
+  .companyOverview .factTile { padding:9px 12px 10px; row-gap:3px; }
+  .companyOverview .factTile > dd { font-size:14px; }
+  .companyOverview .about { padding-bottom:10px; }
+  .companyOverview[data-solo] .capHero { padding-block:14px 14px; margin-bottom:12px; }
+  .companyOverview[data-solo] .factTile { padding-block:10px; }
+}
+/* MAVİ SAYI YOK (CLAUDE.md "Renk anlam taşır"): bant konumu ve endeks payı
+   birer ölçü, bağlantı değil — ton nötr, vurgu ağırlıkla. */
+.bandPosition { border:1px solid var(--line-soft); background:var(--premium-surface, var(--surface)); color:var(--text-strong); }
+.capShare { color:var(--text-body); }

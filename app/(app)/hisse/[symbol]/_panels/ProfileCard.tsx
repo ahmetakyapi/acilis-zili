@@ -2,7 +2,6 @@ import { Bank, Flag, GlobeHemisphereWest, LinkSimple } from "@phosphor-icons/rea
 import styles from "../stock.module.css";
 import { exchangeLabel } from "@/components/stock/exchange-label";
 import { DataError, DataStamp, PanelHeader } from "@/components/ui/primitives";
-import { PriceRail } from "@/components/ui/PriceRail";
 import { RollingFigure } from "@/components/ui/RollingFigure";
 import { getStatus, getCompanies, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
@@ -12,6 +11,7 @@ import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { describeSymbol } from "@/db/seed/descriptions";
 import { cn, formatMoneyCompact, formatEtDateMedium, formatPercentPlain, formatPrice, NO_VALUE, safeExternalUrl } from "@/lib/utils";
 import { week52Band } from "./shared";
+import { Week52Band } from "./Week52Band";
 
 /** Merdivenin sütun sayısı; kopuk pencerede de aynı (3 + 9). */
 const LADDER_SIZE = 12;
@@ -193,13 +193,6 @@ export async function ProfileCard({
      cümlesinin anlamı bu). Yalnızca ray çizildiğinde (dolar cinsinden
      fiyat banda aitse); ADR'de fiyat ile uçlar farklı para biriminde. */
   const bandPrice = quoteForCap.ok ? quoteForCap.data.price : null;
-  const bandDistance =
-    band && band.onRail && bandPrice !== null && band.low > 0 && band.high > 0
-      ? {
-          fromLow: ((bandPrice - band.low) / band.low) * 100,
-          fromHigh: ((band.high - bandPrice) / band.high) * 100,
-        }
-      : null;
   const about = await describeSymbol(symbol, locale);
   const websiteHref = safeExternalUrl(profile.weburl);
 
@@ -529,54 +522,16 @@ export async function ProfileCard({
           (en düşük solda, en yüksek sağda): göz sayıyı çizginin ucunda
           buluyor. Ray yine yalnızca çizim, her sayı metinde. ADR'de ray
           yok; uçlar aynı satırda metin olarak kalıyor. */}
+      {/* Geniş ekranda (≥1100) bant grafiğin başlığında, fiyatın yanında
+          (Week52Band.tsx); burada yalnız dar ekranda görünür. */}
       {band && (
-        <div className={styles.profileBand}>
-          <div className={styles.bandHead}>
-            <span className={styles.profileBandLabel}>{t.stock.week52Range}</span>
-            {band.position !== null && (
-              <span className={cn("numeral", styles.bandPosition)}>
-                {t.stock.week52Position.replace("{value}", formatPercentPlain(band.position, locale, 0))}
-              </span>
-            )}
-          </div>
-          {band.onRail && quoteForCap.ok && (
-            <PriceRail
-              marks={[
-                { kind: "band", from: band.low, to: band.high, tone: "range" },
-                {
-                  kind: "point",
-                  at: quoteForCap.data.price,
-                  variant: "live",
-                  label: t.stock.currentQuote,
-                  value: formatPrice(quoteForCap.data.price, locale, { currency: band.para }),
-                  side: "above",
-                },
-              ]}
-              pad={0}
-              className={styles.bandRail}
-            />
-          )}
-          <dl className={styles.bandEnds}>
-            <div>
-              <dt>{t.chart.periodLow}</dt>
-              <dd className="numeral">{formatPrice(band.low, locale, { currency: band.para })}</dd>
-              {bandDistance && (
-                <dd className={cn("numeral", styles.bandDistance)}>
-                  {t.stock.bandFromLow.replace("{value}", formatPercentPlain(bandDistance.fromLow, locale, 0))}
-                </dd>
-              )}
-            </div>
-            <div>
-              <dt>{t.chart.periodHigh}</dt>
-              <dd className="numeral">{formatPrice(band.high, locale, { currency: band.para })}</dd>
-              {bandDistance && (
-                <dd className={cn("numeral", styles.bandDistance)}>
-                  {t.stock.bandFromHigh.replace("{value}", formatPercentPlain(bandDistance.fromHigh, locale, 0))}
-                </dd>
-              )}
-            </div>
-          </dl>
-        </div>
+        <Week52Band
+          band={band}
+          price={bandPrice}
+          locale={locale}
+          t={t}
+          className={cn(styles.profileBand, styles.profileBandNarrow)}
+        />
       )}
     </div>
     </>

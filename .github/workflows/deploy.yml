@@ -31,18 +31,24 @@ on:
 permissions:
   contents: read
 
+# SÜRÜMLER SABİT (15 Ekim): checkout/setup-node v5 Node 24 çalışma zamanında
+# koşuyor (v4'ün Node 20'si kullanımdan kalktı, Actions uyarıyordu). Runner
+# `ubuntu-24.04`e sabit: `ubuntu-latest` 19 Ekim'den itibaren Ubuntu 26'ya
+# geçiyor ve deploy hattının sessizce değişmesi istenmiyor — yükseltme
+# bilinçli bir commit olsun. Diğer iş akışları da aynı sürümlerde.
+
 concurrency:
   group: deploy-vps
   cancel-in-progress: false
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -57,9 +63,9 @@ jobs:
 
   deploy:
     needs: verify
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       # Sunucunun SSH host anahtarı biliniyorsa SABİTLENİR. Runner her

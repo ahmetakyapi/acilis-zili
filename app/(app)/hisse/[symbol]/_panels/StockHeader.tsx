@@ -19,6 +19,9 @@ import { watchlistItems, watchlists } from "@/lib/schema";
 import { getStatus, getSymbolNames } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { getCompanyProfile, getQuote } from "@/lib/providers";
+import { getKeyMetrics } from "@/lib/providers/finnhub";
+import { week52Band } from "./shared";
+import { Week52Band } from "./Week52Band";
 import { companySector } from "@/lib/company-sector";
 import { fundMetaOf } from "@/db/seed/symbols";
 import { cn, formatPrice } from "@/lib/utils";
@@ -86,11 +89,20 @@ export async function StockHeader({
   chip?: React.ReactNode;
 }) {
   const status = await getStatus();
-  const [quoteResult, profileResult, session] = await Promise.all([
+  const [quoteResult, profileResult, session, metricsForBand, names] = await Promise.all([
     getQuote(symbol, status),
     getCompanyProfile(symbol),
     auth(),
+    /* 52 hafta bandı — profil kartıyla AYNI çağrılar (altı saat ve istek
+       içi önbellekli), yeni tur yok; gerekçe Week52Band.tsx. */
+    getKeyMetrics(symbol),
+    getSymbolNames([symbol]),
   ]);
+  const band = week52Band(
+    metricsForBand.ok ? metricsForBand.data : null,
+    quoteResult.ok ? quoteResult.data.price : null,
+    names[symbol]?.currency ?? null,
+  );
 
   const profile = profileResult.ok ? profileResult.data : null;
   /* Künyedeki sektör, profil panelindekiyle ve /teknik dağılım balonuyla
@@ -316,7 +328,7 @@ export async function StockHeader({
       </div>
 
       {quoteResult.ok ? (
-        <div className={styles.priceBlock}>
+        <div className={cn(styles.priceBlock, band && styles.priceBlockWithBand)}>
           {/* FİYAT VE DEĞİŞİM AYNI SATIRDA. Değişim satırı fiyatın altına
               iniyordu ve telefonda başlık dört satıra çıkıyordu; oysa ikisi
               tek bir okuma — "şu fiyat, şu kadar değişmiş". Sığmadığında
@@ -346,6 +358,15 @@ export async function StockHeader({
               />
             }
           />
+          {band && (
+            <Week52Band
+              band={band}
+              price={quoteResult.data.price}
+              locale={locale}
+              t={t}
+              className={styles.headerBand}
+            />
+          )}
         </div>
       ) : (
         /* Hata dalı GERÇEK bloğun silüetinde (14 Ekim): `text-right`
