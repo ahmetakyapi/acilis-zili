@@ -136,3 +136,11 @@ export function absoluteUrl(
 ): string {
   return `${SITE_URL}${withLocale(path, locale)}`;
 }
+
+/**
+ * Sitenin iletişim adresi (15 Ekim) — KVKK başvurusu, alt bilgi ve yasal
+ * sayfa buradan okur. Bildirim e-postaları bu adresten GİTMEZ ve yanıt da
+ * buraya yönlenmez: gönderen `EMAIL_FROM` (bildirim@), yanıt almayan bir
+ * adres ve postada bunu açıkça söylüyor (lib/password-reset.ts).
+ */
+export const CONTACT_EMAIL = "hello@aciliszili.com";

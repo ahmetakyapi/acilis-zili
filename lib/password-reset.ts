@@ -80,10 +80,10 @@ export function resetEmail(input: {
   to: string;
   username: string;
   link: string;
-  copy: { subject: string; greeting: string; body: string; button: string; ignore: string; signature: string };
+  copy: { subject: string; greeting: string; body: string; button: string; ignore: string; noReply: string; signature: string };
 }): Email {
   const greeting = input.copy.greeting.replace("{username}", input.username);
-  const text = [greeting, "", input.copy.body, "", input.link, "", input.copy.ignore, "", input.copy.signature].join("\n");
+  const text = [greeting, "", input.copy.body, "", input.link, "", input.copy.ignore, "", input.copy.signature, "", input.copy.noReply].join("\n");
   const html = `<!doctype html><html><body style="margin:0;padding:24px;background:#f5f7fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#0f1b2d">
 <div style="max-width:480px;margin:0 auto;background:#ffffff;border:1px solid #e3e8ef;border-radius:14px;padding:28px">
 <p style="margin:0 0 14px;font-size:16px">${escapeHtml(greeting)}</p>
@@ -91,6 +91,7 @@ export function resetEmail(input: {
 <p style="margin:0 0 22px"><a href="${escapeHtml(input.link)}" style="display:inline-block;background:#1268c9;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:11px 18px;border-radius:10px">${escapeHtml(input.copy.button)}</a></p>
 <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#5b6b80">${escapeHtml(input.copy.ignore)}</p>
 <p style="margin:18px 0 0;font-size:13px;color:#5b6b80">${escapeHtml(input.copy.signature)}</p>
+<p style="margin:14px 0 0;padding-top:12px;border-top:1px solid #e3e8ef;font-size:12px;color:#8a97a8">${escapeHtml(input.copy.noReply)}</p>
 </div></body></html>`;
   return { to: input.to, subject: input.copy.subject, text, html };
 }

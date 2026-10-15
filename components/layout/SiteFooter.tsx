@@ -3,6 +3,7 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { GithubLogo } from "@phosphor-icons/react/dist/ssr";
 import { BellMark } from "@/components/brand/BellMark";
 import { getI18n } from "@/lib/i18n";
+import { CONTACT_EMAIL } from "@/lib/site";
 
 /**
  * Sayfa altı — künye ve bölüm dizini.
@@ -148,6 +149,12 @@ export async function SiteFooter() {
         >
           {t.about.footerLink}
         </Link>
+        <a
+          href={`mailto:${CONTACT_EMAIL}`}
+          className="tap-44 -my-2 inline-flex min-h-8 items-center py-2 transition-colors hover:text-primary"
+        >
+          {t.footer.contact}
+        </a>
         <span>{t.footer.disclaimer}</span>
         <a
           href={GITHUB_URL}

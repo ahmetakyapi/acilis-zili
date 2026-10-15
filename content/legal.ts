@@ -5,9 +5,10 @@
    geçmişinde izlenebilir olmalı, veritabanından sessizce değiştirilebilir
    olmamalı.
 
-   İLETİŞİM: başvurular şimdilik GitHub üzerinden alınıyor. E-posta adresi
-   eklemek istersen aşağıdaki "Haklarını Nasıl Kullanırsın" bölümündeki
-   satıra bir `mailto:` bağlantısı koyman yeterli — başka yeri değişmiyor.
+   İLETİŞİM (15 Ekim): başvuru kanalı hello@aciliszili.com, GitHub ikinci
+   yol. Adres düz metin: yazı çizici yalnız http(s) bağlantısı basıyor
+   (lib/utils.ts → safeExternalUrl); tıklanır `mailto:` bağlantısı sayfanın
+   altında (kvkk/page.tsx). Adresin tek kaynağı lib/site.ts → CONTACT_EMAIL.
 
    YÜRÜRLÜK: metni her değiştirdiğinde LEGAL_UPDATED tarihini de güncelle;
    sayfanın künyesi bu değeri gösteriyor.
@@ -30,7 +31,7 @@ Hesap açmazsan yalnızca tema ve dil tercihin tarayıcında saklanır; sunucuda
 |---|---|
 | Veri sorumlusu | Ahmet Akyapı (gerçek kişi, kişisel proje) |
 | Hizmet | Açılış Zili — aciliszili.com |
-| Başvuru kanalı | [GitHub üzerinden](https://github.com/ahmetakyapi/acilis-zili/issues) |
+| Başvuru kanalı | E-posta: hello@aciliszili.com · ya da [GitHub üzerinden](https://github.com/ahmetakyapi/acilis-zili/issues) |
 
 Bu bir ticari işletme değildir; ürün ücretsizdir, ödeme alınmaz ve herhangi bir aracı kurumla bağı yoktur.
 
@@ -150,7 +151,7 @@ Sitenin kendi hata kayıtları (bir sayfa çöktüğünde hangi ekranda ve hangi
 
 KVKK m. 11 sana şu hakları verir: kişisel verinin işlenip işlenmediğini öğrenme, işlenmişse bilgi talep etme, amacına uygun kullanılıp kullanılmadığını öğrenme, yurt içinde ve yurt dışında aktarıldığı tarafları bilme, eksik veya yanlış işlenmişse düzeltilmesini isteme, silinmesini veya yok edilmesini isteme, bu işlemlerin aktarıldığı taraflara bildirilmesini isteme, otomatik sistemlerle analiz sonucu aleyhine bir sonuç çıkmasına itiraz etme ve zarara uğraman hâlinde giderilmesini talep etme.
 
-Başvurunu [GitHub deposu üzerinden](https://github.com/ahmetakyapi/acilis-zili/issues) iletebilirsin. Talepler en geç **30 gün** içinde ücretsiz olarak sonuçlandırılır.
+Başvurunu **hello@aciliszili.com** adresine e-postayla ya da [GitHub deposu üzerinden](https://github.com/ahmetakyapi/acilis-zili/issues) iletebilirsin. Talepler en geç **30 gün** içinde ücretsiz olarak sonuçlandırılır.
 
 Hesap silme talebi için beklemene gerek yok: Ayarlar ekranından hesabını kendin silebilirsin, işlem anında uygulanır.
 
@@ -163,7 +164,7 @@ Verilerinin bir kopyası için de başvuru gerekmez: Ayarlar → Verilerin → *
 - Veritabanı bağlantısı şifrelidir ve yalnızca uygulama sunucusundan erişilebilir.
 - Oturum çerezi HttpOnly ve Secure bayraklarıyla yazılır.
 
-Buna rağmen internet üzerinden yapılan hiçbir aktarım %100 güvenli değildir. Bir güvenlik açığı fark edersen [GitHub üzerinden](https://github.com/ahmetakyapi/acilis-zili/issues) bildirmen yeterli; açığı kötüye kullanmadan bildirdiğin sürece teşekkürden başka bir karşılık görmezsin.
+Buna rağmen internet üzerinden yapılan hiçbir aktarım %100 güvenli değildir. Bir güvenlik açığı fark edersen hello@aciliszili.com adresine yazman yeterli; açığı kötüye kullanmadan bildirdiğin sürece teşekkürden başka bir karşılık görmezsin.
 
 ## On Sekiz Yaş Altı
 
@@ -236,7 +237,7 @@ Without an account, only your theme and language preferences are stored in your 
 |---|---|
 | Data controller | Ahmet Akyapı (individual, personal project) |
 | Service | Opening Bell — aciliszili.com |
-| Contact channel | [via GitHub](https://github.com/ahmetakyapi/acilis-zili/issues) |
+| Contact channel | Email: hello@aciliszili.com · or [via GitHub](https://github.com/ahmetakyapi/acilis-zili/issues) |
 
 This is not a commercial business; the product is free, no payment is taken and it has no affiliation with any brokerage.
 
@@ -356,7 +357,7 @@ The site's own error records (which screen failed and with which error) contain 
 
 Article 11 of the KVKK gives you the right to: learn whether your personal data is processed; request information if it has been; learn whether it is used for its intended purpose; know the parties it is transferred to inside and outside Turkey; request correction if it is incomplete or wrong; request its deletion or destruction; request that these actions be notified to the parties it was transferred to; object to an adverse outcome produced by automated analysis; and claim compensation if you suffer damage.
 
-You can send your request [through the GitHub repository](https://github.com/ahmetakyapi/acilis-zili/issues). Requests are answered free of charge within **30 days** at the latest.
+You can send your request by email to **hello@aciliszili.com** or [through the GitHub repository](https://github.com/ahmetakyapi/acilis-zili/issues). Requests are answered free of charge within **30 days** at the latest.
 
 You do not have to wait for an account deletion request: you can delete your account yourself from the Settings screen, and it takes effect immediately.
 
@@ -369,7 +370,7 @@ You do not need a request for a copy of your data either: Settings → Your Data
 - The database connection is encrypted and reachable only from the application server.
 - The session cookie is written with the HttpOnly and Secure flags.
 
-Even so, no transmission over the internet is 100% secure. If you notice a security flaw, reporting it [via GitHub](https://github.com/ahmetakyapi/acilis-zili/issues) is enough; as long as you report it without exploiting it, you will get nothing but thanks.
+Even so, no transmission over the internet is 100% secure. If you notice a security flaw, writing to hello@aciliszili.com is enough; as long as you report it without exploiting it, you will get nothing but thanks.
 
 ## Under Eighteen
 

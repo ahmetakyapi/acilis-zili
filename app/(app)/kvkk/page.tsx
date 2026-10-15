@@ -6,6 +6,7 @@ import { LEGAL_UPDATED, disclaimerMd, privacyMd } from "@/content/legal";
 import { getI18n } from "@/lib/i18n";
 import { formatEtDateLong } from "@/lib/utils";
 import { pageMetadata } from "@/lib/page-meta";
+import { CONTACT_EMAIL } from "@/lib/site";
 
 /**
  * KVKK aydınlatma metni ve sorumluluk reddi.
@@ -73,13 +74,12 @@ export default async function PrivacyPage() {
         >
           {t.legal.manageAccount}
         </Link>
+        {/* Başvuru kanalı e-posta (15 Ekim); GitHub metinde ikinci yol. */}
         <a
-          href="https://github.com/ahmetakyapi/acilis-zili/issues"
-          target="_blank"
-          rel="noreferrer noopener"
+          href={`mailto:${CONTACT_EMAIL}`}
           className="inline-flex min-h-11 items-center font-semibold text-primary sm:min-h-8"
         >
-          {t.legal.contact}
+          {t.legal.contact} · {CONTACT_EMAIL}
         </a>
       </footer>
     </article>
