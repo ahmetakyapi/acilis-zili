@@ -15,12 +15,14 @@ import { getI18n } from "@/lib/i18n";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { loadShowcase } from "@/lib/profile-showcase";
 import {
+  getAuthorProfile,
   getOwnerProfile,
   getPublicProfile,
   profileBadges,
   type PublicProfile,
 } from "@/lib/profile-data";
 import { pageAlternates } from "@/lib/site";
+import { getPublishedPostsByUser } from "@/lib/user-post-data";
 import {
   directionOf,
   directionText,
@@ -70,12 +72,22 @@ export async function generateMetadata(props: PageProps<"/u/[username]">) {
       };
     }
   }
+  /* Yazar görünümü (gövdedeki düşüşün aynısı): yayını olan üyenin sayfası
+     gerçek başlığıyla açılır. */
+  const author = await getAuthorProfile(username);
+  if (author && (await getPublishedPostsByUser(author.userId)).length > 0) {
+    return {
+      title: `${author.username} · ${t.profile.title}`,
+      description: metaDescription(t.profile.subtitle),
+      alternates: pageAlternates(`/u/${author.username}`, locale),
+    };
+  }
   return missingMetadata(locale);
 }
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-brass/40 bg-brass/10 px-2 py-0.5 text-tiny font-semibold text-brass">
+    <span className="inline-flex items-center rounded-full border border-brass/40 bg-brass/10 px-2 py-0.5 text-tiny font-semibold text-strong">
       {children}
     </span>
   );
@@ -91,12 +103,21 @@ export default async function ProfilePage(props: PageProps<"/u/[username]">) {
     viewer?.id && viewer.name && normalizeUsername(viewer.name) === target,
   );
 
-  const profile: PublicProfile | null =
+  let profile: PublicProfile | null =
     isOwner && viewer?.id ? await getOwnerProfile(viewer.id) : await getPublicProfile(raw);
+  /* Gizli profil ama yayında yazısı var: yazar görünümü — yalnız künye ve
+     yazılar (gerekçe lib/profile-data.ts → getAuthorProfile). Yazısız
+     hesap yine 404: sayım orakülü yazarlar dışında kapalı kalır. */
+  if (!profile && !isOwner) {
+    const author = await getAuthorProfile(raw);
+    if (author && (await getPublishedPostsByUser(author.userId)).length > 0) {
+      profile = author;
+    }
+  }
   if (!profile) notFound();
 
   const previewOnly = isOwner && !profile.isPublic;
-  const [badges, lists, showcase] = await Promise.all([
+  const [badges, lists, showcase, posts] = await Promise.all([
     profileBadges(profile.joinedAt),
     profile.showWatchlists
       ? getUserWatchlists(profile.userId).then((all) => all.filter((list) => list.items.length > 0))
@@ -104,8 +125,11 @@ export default async function ProfilePage(props: PageProps<"/u/[username]">) {
     profile.showPortfolio
       ? loadShowcase(profile.userId, locale, t.profile.showcase.otherSector)
       : Promise.resolve(null),
+    /* Yayındaki yazılar görünürlük anahtarına bağlı DEĞİL: yayımlamak zaten
+       açık bir edim, yazı /topluluk'ta kullanıcı adıyla duruyor. */
+    getPublishedPostsByUser(profile.userId),
   ]);
-  const hasBlocks = lists.length > 0 || showcase !== null;
+  const hasBlocks = lists.length > 0 || showcase !== null || posts.length > 0;
 
   const joinedLabel = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
     month: "long",
@@ -155,6 +179,7 @@ export default async function ProfilePage(props: PageProps<"/u/[username]">) {
                   : t.profile.badgeYear.replace("{n}", String(badge.n))}
               </Badge>
             ))}
+            {posts.length > 0 && <Badge>{t.profile.badgeAuthor}</Badge>}
           </div>
           <p className="text-small text-muted">
             {t.profile.joined} ·{" "}
@@ -282,6 +307,41 @@ export default async function ProfilePage(props: PageProps<"/u/[username]">) {
               />
             </div>
           </div>
+        </Panel>
+      )}
+
+      {posts.length > 0 && (
+        <Panel>
+          <PanelHeader
+            title={t.profile.postsTitle}
+            meta={
+              posts.length === 1
+                ? t.profile.postCountOne
+                : t.profile.postCount.replace("{n}", String(posts.length))
+            }
+          />
+          <ul className="divide-y divide-line-soft px-4 sm:px-5">
+            {posts.map((post) => (
+              <li key={post.id} className="py-3">
+                <Link href={`/topluluk/${post.slug}`} className="group flex flex-col gap-0.5">
+                  <span className="text-base font-semibold text-strong transition-colors group-hover:text-primary">
+                    {post.title}
+                  </span>
+                  <span className="flex items-center gap-2 text-tiny text-muted">
+                    {post.publishedAt && (
+                      <time dateTime={post.publishedAt.toISOString().slice(0, 10)} className="tabular-nums">
+                        {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        }).format(post.publishedAt)}
+                      </time>
+                    )}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </Panel>
       )}
 

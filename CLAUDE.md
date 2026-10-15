@@ -161,7 +161,8 @@ değil); küçültürken `toLocaleLowerCase("tr-TR")`.
 - **Yeni blok = DÖRT yer:** çizici (`ArticleBody.tsx`), editoryal stil
   (`components/article/ArticleEditorial.module.css`), rutin prompt'u
   (`docs/claude-rutinler.md` § 3) ve editör çipleri
-  (`components/admin/StoryEditor.tsx` → `BLOKLAR`).
+  (`lib/article-blocks.ts` → `BLOKLAR`; StoryEditor ve topluluk
+  PostEditor'ü aynı listeyi basar).
 - Mercek ve rehber `variant="editorial"` ile çizilir; KVKK ve panel önizlemesi
   varsayılanla, piksel piksel aynı kalır. Blok rolleri CSS `:has()` ile değil
   TS'te `blockRoles` ile. Okuma ızgarası iki hat: yüzeyler 1040'lık kartın

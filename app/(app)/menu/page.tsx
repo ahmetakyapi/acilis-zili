@@ -10,6 +10,8 @@ import {
   ChartBar,
   Funnel,
   FunnelSimple,
+  ChatsCircle,
+  PencilSimpleLine,
   ChartLineUp,
   Envelope,
   FileText,
@@ -130,6 +132,7 @@ export default async function MenuPage() {
            bulunmayan içerik bu. Rehber durağan bir müfredat — bir kez
            okunuyor, sonra referans kalıyor. */
         { href: "/mercek", icon: Scroll, title: t.nav.stories, hint: t.menu.hintStories },
+        { href: "/topluluk", icon: ChatsCircle, title: t.community.feed.title, hint: t.menu.hintCommunity },
         { href: "/rehber", icon: BookOpen, title: t.nav.guide, hint: t.menu.hintGuide },
         { href: "/sozluk", icon: TextAa, title: t.glossary.title, hint: t.menu.hintGlossary },
         { href: "/haberler", icon: Newspaper, title: t.nav.news, hint: t.menu.hintNews },
@@ -140,6 +143,7 @@ export default async function MenuPage() {
       title: t.menu.groupAccount,
       entries: [
         { href: "/favoriler", icon: Heart, title: t.nav.watchlist, hint: t.menu.hintWatchlist },
+        { href: "/yazilarim", icon: PencilSimpleLine, title: t.community.mine.title, hint: t.menu.hintMyPosts },
         { href: "/ayarlar", icon: Gear, title: t.nav.settings, hint: t.menu.hintSettings },
         { href: "/kvkk", icon: ShieldCheck, title: t.footer.privacy, hint: t.menu.hintPrivacy },
       ],

@@ -466,6 +466,67 @@ export const portfolioOrder = pgTable("portfolio_order", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * KULLANICI YAZILARI (15 Ekim) — topluluk katmanı: /yazilarim (editör),
+ * /topluluk (yayın akışı), /admin/moderasyon (kuyruk).
+ *
+ * `stories`dan AYRI tablo: Mercek sitenin kendi yazdığı, kaynak künyeli
+ * editoryal içerik; burası okuyucunun imzasıyla yayımlanan içerik. İkisini
+ * tek tabloda ayırt etmeye çalışmak (kolon bayrakları, yazar null'ları)
+ * content-write'ın tek yazma yolunu da bulandırırdı. Görsel dil AYNI:
+ * gövde Markdown + ::: blokları, çizim ArticleBody.
+ *
+ * YAYIN MODERASYONDAN GEÇER: durum makinesi draft → pending → published |
+ * rejected. Yayımlanmış yazının düzenlenmesi yazıyı pending'e GERİ düşürür
+ * — herkese açık içerik her an "onaylanmış son hâl"dir, onaysız fark
+ * yayında duramaz. Red gerekçesi `review_note` ile yazara görünür.
+ *
+ * Sürüm fotoğrafı tablosu BİLEREK YOK (story_revisions'ın aksine): yazar
+ * kendi metninin tek sahibi, rutin üzerine yazmıyor; "yanlış düzenlemeden
+ * dönüş" ihtiyacı yok. Hesap silinince yazılar da CASCADE ile gider —
+ * "sildim" demek silmek demektir (deleteAccountAction kuralı).
+ *
+ * Slug KÜRESEL benzersiz (adres /topluluk/[slug]) ve başlıktan bir kez
+ * türetilir, sonradan değişmez — paylaşılmış adres kırılmaz.
+ */
+export const userPosts = pgTable(
+  "user_posts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    slug: text("slug").notNull(),
+    locale: text("locale").notNull().default("tr"),
+    title: text("title").notNull(),
+    /** Tek cümlelik giriş — kartta ve sayfa başında (stories.dek kalıbı). */
+    dek: text("dek").notNull(),
+    bodyMd: text("body_md").notNull(),
+    /** Yazıda geçen semboller — ilgili hisselere bağlanır (≤12). */
+    symbols: jsonb("symbols").$type<string[]>(),
+    /** draft | pending | published | rejected — lib/user-posts.ts. */
+    status: text("status").notNull().default("draft"),
+    /** Moderasyon notu — red gerekçesi, yazara görünür. */
+    reviewNote: text("review_note"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    /** Kuyruğa son giriş anı — moderasyon sırası bunu okur. */
+    submittedAt: timestamp("submitted_at", { withTimezone: true }),
+    /** İlk onay anı — listede ve künyede görünen yayın tarihi. */
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("user_posts_slug_key").on(t.slug),
+    index("user_posts_user_idx").on(t.userId, t.updatedAt),
+    index("user_posts_status_idx").on(t.status, t.submittedAt),
+    index("user_posts_published_idx").on(t.status, t.publishedAt),
+  ],
+);
+
 /* ==========================================================================
    Sembol meta verisi ve fiyat önbelleği
    Sağlayıcı düşerse "son bilinen değer" buradan gösterilir.

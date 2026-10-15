@@ -50,6 +50,7 @@ import {
   type Gorunum,
 } from "@/components/admin/editor-parts";
 import { cn } from "@/lib/utils";
+import { BLOKLAR as PAYLASILAN_BLOKLAR } from "@/lib/article-blocks";
 
 /**
  * Mercek yazısı editörü.
@@ -123,80 +124,7 @@ const DAKIKADA_SOZCUK = 160;
  * ayrıştırıcı o tireyi atmıyor: "sayilar" çipinin bastığı rakam "- 4,2 Mr $"
  * diye, "pay" çipininki "- Şirket" diye çiziliyordu. Belge tiresiz yazıyor.
  */
-const BLOKLAR = [
-  {
-    ad: "sayilar",
-    etiket: "Sayılar",
-    tr: "::: sayilar Rakamlarla\n4,2 Mr $ | Toplam tutar\n:::",
-    en: "::: sayilar By the Numbers\n$4.2B | Total amount\n:::",
-  },
-  {
-    ad: "bar",
-    etiket: "Çubuk",
-    tr: "::: bar Karşılaştırma\nEtiket | 58,4\n:::",
-    en: "::: bar Comparison\nLabel | 58.4\n:::",
-  },
-  {
-    ad: "pay",
-    etiket: "Pay",
-    tr: "::: pay Pazar Payı\nŞirket | 42\nDiğerleri | 58\n:::",
-    en: "::: pay Market Share\nCompany | 42\nOthers | 58\n:::",
-  },
-  {
-    ad: "akis",
-    etiket: "Akış",
-    tr: "::: akis Zincir\nAdım | Oyuncu\n:::",
-    en: "::: akis Chain\nStep | Player\n:::",
-  },
-  /* `oncesi` LİSTEDE YOKTU ve çizicide vardı. Sonuç sessizdi: blok
-     ArticleBody'de çiziliyor, rutin promptunda (§ 3) anlatılıyor ama
-     panelden EKLENEMİYORDU — çip basmadığı için editördeki kimse onun
-     varlığını bilmiyordu. CLAUDE.md'nin "dört yeri birden güncelle"
-     kuralının tam olarak uyardığı hâl; o yer buydu.
-     Sözdizimi TAM İKİ SATIR: önce ve sonra. */
-  {
-    ad: "oncesi",
-    etiket: "Önce ve Sonra",
-    tr: "::: oncesi Piyasa Değeri\n52,5 Mr $ | 12 Haziran\n19 Mr $ | 29 Temmuz\n:::",
-    en: "::: oncesi Market Value\n$52.5B | June 12\n$19B | July 29\n:::",
-  },
-  {
-    ad: "zaman",
-    etiket: "Kronoloji",
-    tr: "::: zaman Kronoloji\n12 Ağustos | Olay\n:::",
-    en: "::: zaman Timeline\nAugust 12 | Event\n:::",
-  },
-  {
-    ad: "grafik",
-    etiket: "Grafik",
-    tr: "::: grafik NVDA | 3M | Nvidia, bugünden geriye üç ay\n:::",
-    en: "::: grafik NVDA | 3M | Nvidia, three months back from today\n:::",
-  },
-  {
-    ad: "ornek",
-    etiket: "Örnek",
-    tr: "::: ornek Hesap\n**Adım:** açıklama\n:::",
-    en: "::: ornek Worked Example\n**Step:** explanation\n:::",
-  },
-  {
-    ad: "dikkat",
-    etiket: "Dikkat",
-    tr: "::: dikkat Uyarı\nMetin\n:::",
-    en: "::: dikkat Caution\nText\n:::",
-  },
-  {
-    ad: "ozet",
-    etiket: "Özet",
-    tr: "::: ozet Ders\nMetin\n:::",
-    en: "::: ozet Takeaway\nText\n:::",
-  },
-  {
-    ad: "tanim",
-    etiket: "Tanım",
-    tr: "::: tanim Terim\n**Terim:** açıklama\n:::",
-    en: "::: tanim Term\n**Term:** definition\n:::",
-  },
-] as const;
+const BLOKLAR = PAYLASILAN_BLOKLAR;
 
 type Alanlar = {
   title: string;

@@ -239,6 +239,13 @@
       "when": 1792069631277,
       "tag": "0033_flaky_fixer",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1792070500137,
+      "tag": "0034_tough_puck",
+      "breakpoints": true
     }
   ]
 }

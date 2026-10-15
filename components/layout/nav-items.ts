@@ -1,5 +1,6 @@
 import {
   Bell,
+  ChatsCircle,
   Briefcase,
   ChartBar,
   BookOpen,
@@ -313,6 +314,17 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: false,
     more: "data",
     hint: (t) => t.menu.hintTax,
+  },
+  {
+    /* TOPLULUK (15 Ekim) — okuma grubunda: üyelerin yazdığı, moderasyondan
+       geçmiş yazılar. Şeritte değil; akış dolup her gün bakılan bir ekran
+       olursa sıra yeniden tartılır (Temalar'ın izlediği yol). */
+    href: "/topluluk",
+    label: (t) => t.community.feed.title,
+    icon: ChatsCircle,
+    inBottomBar: false,
+    more: "read",
+    hint: (t) => t.menu.hintCommunity,
   },
   {
     href: "/haberler",

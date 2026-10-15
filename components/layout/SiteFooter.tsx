@@ -40,6 +40,7 @@ export async function SiteFooter() {
         links: [
           { href: "/rehber", label: t.nav.guide },
           { href: "/mercek", label: t.nav.stories },
+          { href: "/topluluk", label: t.community.feed.title },
           { href: "/haberler", label: t.nav.news },
           { href: "/bulten", label: t.footer.briefArchive },
           { href: "/sozluk", label: t.glossary.title },
@@ -51,6 +52,7 @@ export async function SiteFooter() {
         title: t.footer.sectionAccount,
         links: [
           { href: "/favoriler", label: t.nav.watchlist },
+          { href: "/yazilarim", label: t.community.mine.title },
           { href: "/portfoy", label: t.lira.portfolio.title },
           { href: "/ayarlar", label: t.nav.settings },
           { href: "/kvkk", label: t.footer.privacy },

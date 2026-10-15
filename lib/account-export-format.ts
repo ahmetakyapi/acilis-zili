@@ -98,6 +98,22 @@ export type AccountExport = {
         triggeredPct: number | null;
       }[]
     | null;
+  /** Topluluk yazıları (15 Ekim) — `null` tablo okunamadıysa. */
+  posts?:
+    | {
+        slug: string;
+        title: string;
+        dek: string;
+        bodyMd: string;
+        symbols: string[];
+        status: string;
+        reviewNote: string | null;
+        createdAt: string;
+        updatedAt: string;
+        submittedAt: string | null;
+        publishedAt: string | null;
+      }[]
+    | null;
   /** Bildirim tercihleri (15 Ekim) — `null` tablo okunamadıysa ya da satır yoksa. */
   notificationPrefs?: { earningsReminder: boolean } | null;
   /**

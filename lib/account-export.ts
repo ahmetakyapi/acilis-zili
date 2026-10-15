@@ -5,6 +5,7 @@ import { getUserAvatar } from "./avatar-data";
 import { getNotificationPrefs } from "./notification-prefs";
 import { getUserPercentAlerts } from "./percent-alerts";
 import { getProfileSettings } from "./profile-data";
+import { getOwnPosts } from "./user-post-data";
 import { getPortfolioPositions } from "./portfolio-data";
 import { getUserAlerts } from "./price-alerts";
 import { getPortfolioSales } from "./portfolio-sales-data";
@@ -39,7 +40,7 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
   /* Portföy iki paket paralel yazılırken bu dosyanın dışında kalmıştı:
      indirme "hesabın tuttuğu her şey" diyordu ama pozisyonları vermiyordu
      (28 Eylül, belge taramasında bulundu). KVKK veri taşınabilirliği. */
-  const [lists, avatar, portfolio, alerts, sales, push, profile, percent, prefs] = await Promise.all([
+  const [lists, avatar, portfolio, alerts, sales, push, profile, percent, prefs, posts] = await Promise.all([
     db
       .select()
       .from(watchlists)
@@ -53,6 +54,7 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
     getProfileSettings(userId),
     getUserPercentAlerts(userId),
     getNotificationPrefs(userId),
+    getOwnPosts(userId),
   ]);
   const items = lists.length
     ? await db
@@ -145,6 +147,21 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
           createdAt: alert.createdAt,
           triggeredAt: alert.triggeredAt,
           triggeredPct: alert.triggeredPct,
+        }))
+      : null,
+    posts: posts.available
+      ? posts.posts.map((post) => ({
+          slug: post.slug,
+          title: post.title,
+          dek: post.dek,
+          bodyMd: post.bodyMd,
+          symbols: post.symbols,
+          status: post.status,
+          reviewNote: post.reviewNote,
+          createdAt: post.createdAt.toISOString(),
+          updatedAt: post.updatedAt.toISOString(),
+          submittedAt: post.submittedAt?.toISOString() ?? null,
+          publishedAt: post.publishedAt?.toISOString() ?? null,
         }))
       : null,
     notificationPrefs: prefs.available ? { earningsReminder: prefs.earningsReminder } : null,

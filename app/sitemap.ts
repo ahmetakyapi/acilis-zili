@@ -87,6 +87,10 @@ const FEATURE_STATIC_ROUTES: StaticRoute[] = [
   /* 9 Ekim: dizine açık, menüde ve README'de var ama haritada yoktu. */
   { path: "/hisse-secimi", priority: 0.7, frequency: "weekly" },
   { path: "/tarama", priority: 0.7, frequency: "daily" },
+  /* Topluluk yazilari (detay) haritada DEGIL: tek tek adresler moderasyon
+     ritmiyle degisiyor ve ince sayfa gostermemek kurali (COMPANY_SITEMAP_LIMIT
+     gerekcesi) burada da gecerli; akis sayfasi listeliyor. */
+  { path: "/topluluk", priority: 0.6, frequency: "daily" },
   { path: "/bilancolar/hafta", priority: 0.7, frequency: "daily" },
 ];
 

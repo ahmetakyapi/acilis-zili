@@ -97,6 +97,40 @@ export const getPublicProfile = cache(async (rawUsername: string): Promise<Publi
 });
 
 /**
+ * YAZAR görünümü — profili gizli (ya da hiç açılmamış) ama /topluluk'ta
+ * yayını olan üye. Yayın, kullanıcı adını ZATEN herkese açtı: akıştaki
+ * yazar bağlantısını 404'e çıkarmak kırık görünürdü; sayım orakülü de
+ * burada korunmaz bir şey korumuyor. SAYFA bu görünümü yalnızca yayını
+ * OLAN hesaba açar (yazısızlar yine 404) — kapı sayfada, bu fonksiyon
+ * yalnız künyeyi getirir. Bio ve bloklar kapalı döner.
+ */
+export const getAuthorProfile = cache(async (rawUsername: string): Promise<PublicProfile | null> => {
+  const username = normalizeUsername(rawUsername);
+  if (!USERNAME_PATTERN.test(username)) return null;
+  try {
+    const [row] = await db
+      .select({ userId: users.id, username: users.username, joinedAt: users.createdAt })
+      .from(users)
+      .where(eq(users.username, username))
+      .limit(1);
+    if (!row) return null;
+    const avatar = await getUserAvatar(row.userId);
+    return {
+      userId: row.userId,
+      username: row.username,
+      joinedAt: row.joinedAt,
+      avatar,
+      bio: null,
+      isPublic: false,
+      showWatchlists: false,
+      showPortfolio: false,
+    };
+  } catch {
+    return null;
+  }
+});
+
+/**
  * Sahibin KENDİ profil görünümü — /u/[username] sayfasının sahip önizlemesi.
  * Gizliyken de döner: sahip, profili açmadan önce nasıl görüneceğini
  * görebilmeli. Profil satırı yoksa varsayılanlarla (gizli) döner; yalnızca

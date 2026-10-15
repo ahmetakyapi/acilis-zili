@@ -37,9 +37,9 @@ yazılar, bilanço analizleri ve günde üç kez yenilenen teknik analizler.
 
 <table>
 <tr>
-<td align="center"><b>53</b><br><sub>sayfa rotası</sub></td>
+<td align="center"><b>60</b><br><sub>sayfa rotası</sub></td>
 <td align="center"><b>25</b><br><sub>API ucu</sub></td>
-<td align="center"><b>28</b><br><sub>veritabanı tablosu</sub></td>
+<td align="center"><b>31</b><br><sub>veritabanı tablosu</sub></td>
 <td align="center"><b>5</b><br><sub>veri sağlayıcısı</sub></td>
 <td align="center"><b>5</b><br><sub>içerik rutini</sub></td>
 <td align="center"><b>17</b><br><sub>mürekkep sahnesi</sub></td>
@@ -366,7 +366,7 @@ sıçrıyor. Gezinme bekleyişinin kartı marka adıyla açılıyor.
 
 ## Veri Modeli
 
-30 tablo. "Kim yazar" sütunu önemli: bir tablonun tazeliği onu yazanın
+31 tablo. "Kim yazar" sütunu önemli: bir tablonun tazeliği onu yazanın
 ritmine bağlı.
 
 | Tablo | Ne tutar | Kim yazar |
@@ -376,6 +376,7 @@ ritmine bağlı.
 | `user_profiles` | Herkese açık profil: tanıtım + görünürlük anahtarları (varsayılan gizli) | Kullanıcı eylemi (Ayarlar) |
 | `percent_alerts` | Günlük yüzde değişim alarmları (eşik + yön, tek seferlik) | Kullanıcı eylemi (hisse sayfası) |
 | `notification_prefs` | Hesap genelinde bildirim anahtarları (bilanço hatırlatması) | Kullanıcı eylemi (Ayarlar) |
+| `user_posts` | Topluluk yazıları: taslak → kuyruk → yayın/red durum makinesi | Kullanıcı eylemi (editör) + moderasyon |
 | `symbols` | Sembol künyesi: ad, borsa, sektör, logo, piyasa değeri, hisse sayısı | Tohum + cron + sayfa isteği |
 | `quotes_cache` | Son bilinen fiyat; sağlayıcı düşünce gösterilecek yedek | Sayfa isteği |
 | `candles_cache` | Aralık başına bar dizisi | Sayfa isteği |
@@ -549,8 +550,8 @@ saklanmıyor (`private, no-store`).
 
 ## Ekranlar
 
-Rota listesinin **tek kaynağı** burası. 53 sayfa var: 44'ü herkese açık
-(ikisi başka sitelere gömülen parça), 9'u yönetim. Hepsi istek başına sunucuda çiziliyor. Her sayfa `/en/...` önekiyle
+Rota listesinin **tek kaynağı** burası. 60 sayfa var: 49'u herkese açık
+(ikisi başka sitelere gömülen parça), 11'i yönetim. Hepsi istek başına sunucuda çiziliyor. Her sayfa `/en/...` önekiyle
 İngilizce de açılıyor; önek sunucuda sökülüyor ve adres çubuğunda kalıyor.
 
 ### Ana Akış
@@ -613,13 +614,15 @@ açarsa yayımlanır ve kapattığı an adres yeniden 404 olur.
 
 | Rota | Soru |
 |---|---|
-| `/u/[kullanici]` | Bu üye kim: profil karosu, rozetler (Erken Üye, üyelik yılı), tanıtım; sahibi açtıysa takip listeleri (notlar asla) ve tutar içermeyen portföy dağılımı — ağırlık yüzdeleri, sitenin alış günlerinden kendisi hesapladığı Doğrulanmış Getiri ve aynı dönemde SPY kıyası |
+| `/u/[kullanici]` | Bu üye kim: profil karosu, rozetler (Erken Üye, üyelik yılı, Yazar), tanıtım, yayındaki yazıları; sahibi açtıysa takip listeleri (notlar asla) ve tutar içermeyen portföy dağılımı — ağırlık yüzdeleri, sitenin alış günlerinden kendisi hesapladığı Doğrulanmış Getiri ve aynı dönemde SPY kıyası |
+| `/topluluk` | Üyeler ne yazdı: moderasyondan geçmiş yazıların akışı, yazar künyesiyle |
+| `/topluluk/[slug]` | Tek topluluk yazısı: Mercek'le aynı ::: blok çizimi, yazar imzası, sorumluluk notu ve bildirim bağlantısı |
 
 ### Hesap
 
 `/giris` · `/kayit` · `/sifremi-unuttum` · `/sifre-sifirla` (e-postayla tek kullanımlık, 30 dakikalık bağlantı; yalnızca e-posta servisi bağlıyken — `lib/email.ts`, `lib/password-reset.ts`) · `/favoriler` (fiyatlar USD ya da TL; Fiyat ve yüzde alarmları paneli — hisse sayfasındaki zil düğmesiyle kurulur (hedef fiyat ya da günlük değişim eşiği), siteyi açtığında ve seans boyunca beş dakikada bir sunucuda güncel fiyatla kontrol edilir, ana sayfada "Hedefe Ulaştı" şeridi; `lib/price-alerts.ts`, `lib/alert-sweep.ts`) · `/ayarlar` (profil
 ikonu ve rengi, herkese açık profil — tanıtım + görünürlük anahtarları,
-varsayılan gizli —, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri ve hesap genelinde bilanço hatırlatması — `lib/push.ts`, `public/sw.js`, `app/api/cron/bilanco` —, Verilerimi İndir, hesap silme) · `/analizlerim` (Claude ile üretilen kayıtlı raporlar; görüş, puan, vade ve Rapordan Bugüne fiyat değişimi, satır raporu `/claude/[symbol]?rapor=` ile açar; yalnız analiz erişimi olan hesaplarda menüde, dizine girmez) · `/menu` · `/kvkk` ·
+varsayılan gizli —, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri ve hesap genelinde bilanço hatırlatması — `lib/push.ts`, `public/sw.js`, `app/api/cron/bilanco` —, Verilerimi İndir, hesap silme) · `/yazilarim` (topluluk yazıların: taslak, kuyruk, yayın; editör ::: bloklarıyla, önizleme yayındaki çizimin kendisi — `/yazilarim/yeni` ve `/yazilarim/[id]`. Oturum ister, dizine girmez) · `/analizlerim` (Claude ile üretilen kayıtlı raporlar; görüş, puan, vade ve Rapordan Bugüne fiyat değişimi, satır raporu `/claude/[symbol]?rapor=` ile açar; yalnız analiz erişimi olan hesaplarda menüde, dizine girmez) · `/menu` · `/kvkk` ·
 `/hakkinda` (Hakkında ve Metodoloji: kim yapıyor, sayılar nereden geliyor,
 yazıları kim yazıyor; gömme kodları da burada)
 
@@ -669,7 +672,9 @@ ve yazma uçları ayrıca oturum, admin tarafından atanmış erişim ve günlü
 ### Yönetim
 
 Kabuğun dışında: `/admin`, `/admin/trafik`, `/admin/uyeler`,
-`/admin/icerik`, `/admin/ai` (Claude analiz erişimi, kotalar ve token kullanımı), `/admin/sistem` (verinin durumu ve son 30 günün hata
+`/admin/icerik`, `/admin/moderasyon` ve detayı `/admin/moderasyon/[id]`
+(topluluk yazılarının onay kuyruğu: gövde yayındaki çizimle okunur, onay
+okunan sürüme bağlanır, red gerekçe ister), `/admin/ai` (Claude analiz erişimi, kotalar ve token kullanımı), `/admin/sistem` (verinin durumu ve son 30 günün hata
 kaydı), `/admin/yazilar`, `/admin/yazilar/bulten` ve iki editör
 (`/admin/yazilar/mercek/[slug]`, `/admin/yazilar/bulten/[tarih]`). Panel
 sekmelerinden **İçerik ölçer, Yazılar değiştirir.** Yetki veritabanında;
