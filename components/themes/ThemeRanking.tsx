@@ -90,7 +90,10 @@ export function ThemeRanking({
       <ol className={styles.rankList}>
         {sorted.map((card, index) => {
           const ratio = inScale(card) && peak > 0 ? card.median! / peak : null;
-          const neutral = card.basis !== "session";
+          /* Renk son kapanışta da işaretten (15 Ekim, sahibinin isteği) —
+             başlık dönemi söylüyor ("Son Kapanış Sıralaması"). Yedekte
+             (`basis` yok) sayı da yok, nötr kalması o yüzden. */
+          const neutral = card.basis == null;
           /* Yedekte (`basis` yok) hiçbir satırda sayı yok zaten. */
           const shown = basis === null || inScale(card);
           return (

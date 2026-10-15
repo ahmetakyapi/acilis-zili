@@ -160,7 +160,9 @@ export function ThemeTable({
         <span
           className={cn(
             "numeral font-semibold",
-            lastClose ? "text-muted" : directionText(directionOf(row.changePct)),
+            /* Renk son kapanışta da işaretten (15 Ekim, sahibinin isteği);
+               "Son Kapanış" alt satırı dönemi söylemeye devam ediyor. */
+            directionText(directionOf(row.changePct)),
           )}
         >
           {formatPercent(row.changePct, locale)}

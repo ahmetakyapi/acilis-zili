@@ -51,7 +51,10 @@ const HOVER_FOLLOW = 0.22;
 const BACK_AFTER = 6;
 const LIVE_EVERY = 5000;
 const STEP = 15;
-const JITTER = 0.6;
+/* 0,6 → 0,9 (15 Ekim): çanın vuruştaki sarsıntısı ekranda ~1 pikseldi ve
+   oynatmada vuruş neredeyse görünmüyordu; 0,9 hâlâ metal bir çan gibi
+   küçük, ama zil anı duraklamasında seçilir. */
+const JITTER = 0.9;
 const TOAST_MS = 2400;
 
 type PlanKind = Exclude<SessionKind, "closed"> | "day" | "dial" | "return";

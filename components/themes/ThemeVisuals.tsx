@@ -129,8 +129,10 @@ export type SpreadPoint = { symbol: string; change: number };
  * söylemiyor: %0,3'lük bir medyanın altında on altı üyenin hepsi sıfıra
  * yakın da olabilir, yarısı +%4 yarısı −%4 de. Şerit ikisini ayırıyor.
  *
- * Yön rengi yalnızca bu seansın yüzdelerinde (`basis === "session"`).
- * Son kapanışa ait şeritte çentikler nötr: yeşil ve kırmızı "bugün" der.
+ * Yön rengi son kapanışta DA işaretten (15 Ekim, sahibinin isteği —
+ * önceki kural "yeşil/kırmızı 'bugün' der" diye nötrlüyordu ve açılış
+ * öncesi bütün panel gri kalıyordu). Dönemi kartın künyesi söylüyor;
+ * yalnız `basis` yokken (yedek, sayı da yok) nötr.
  *
  * ÖLÇEK DIŞI ÇENTİK UÇTA, KÜNYE "≤ / ≥" (28 Eylül denetimi). Ortak ölçek
  * yüzde 90'lık dilimden (`spreadScale`), yani her gün bazı üyeler tavanı
@@ -158,7 +160,9 @@ export function SpreadStrip({
   label: string;
   locale: string;
 }) {
-  const neutral = basis !== "session";
+  /* Renk son kapanışta da işaretten (15 Ekim, sahibinin isteği) — dönemi
+     kartın künyesi söylüyor; yalnız `basis` yokken (yedek) nötr. */
+  const neutral = basis == null;
   const clippedLow = scale !== null && points.some((point) => point.change < -scale);
   const clippedHigh = scale !== null && points.some((point) => point.change > scale);
   return (

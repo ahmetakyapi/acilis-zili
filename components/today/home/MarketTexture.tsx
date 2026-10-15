@@ -185,7 +185,12 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
       <ol className={styles.ribbon} style={{ "--zero": `${zero}%` } as CSSProperties}>
         {rows.map((row, i) => {
           const inScale = row.change !== null && (allLastClose || !row.lastClose);
-          const heat = row.change === null || row.lastClose ? { tone: "flat", level: 0 } : heatOf(row.change);
+          /* RENK SON KAPANIŞTA DA İŞARETTEN (15 Ekim, sahibinin isteği:
+             "eksiyse kırmızı artıysa yeşil olmalı"). Son kapanış kipinde
+             ton nötrleniyordu ve açılış öncesi bütün panel gri kalıyordu;
+             dönemi künye zaten söylüyor ("Son Kapanış" başlıkta ve karışık
+             günde satırda), renk yalnız yönü taşıyor — tazelik iddiası yok. */
+          const heat = row.change === null ? { tone: "flat", level: 0 } : heatOf(row.change);
           const size = row.change === null ? 0 : (Math.abs(row.change) / span) * 100;
           const start = row.change === null || row.change >= 0 ? zero : zero - size;
           /* Karışık günde son kapanıştaki fon künyesini kendi taşıyor: nötr
@@ -360,7 +365,6 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
                   ? t.today.strongestPreMarket
                   : t.today.strongestTheme
             }
-            session={session}
             scale={board.scale}
             locale={locale}
             t={t}
@@ -374,7 +378,6 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
                   ? t.today.weakestPreMarket
                   : t.today.weakestTheme
             }
-            session={session}
             scale={board.scale}
             locale={locale}
             t={t}
@@ -432,14 +435,12 @@ function ThemeFrame({
 function ExtremeCard({
   card,
   label,
-  session,
   scale,
   locale,
   t,
 }: {
   card: ThemeCard | null;
   label: string;
-  session: boolean;
   scale: number | null;
   locale: Locale;
   t: Dictionary;
@@ -460,7 +461,9 @@ function ExtremeCard({
     card.members.length === EXTREME_LOGOS + 1 ? EXTREME_LOGOS + 1 : EXTREME_LOGOS,
   );
   const rest = card.members.length - members.length;
-  const tone = session ? directionOf(card.median) : null;
+  /* Renk son kapanışta da işaretten — gerekçe yukarıda (SectorRibbon).
+     Kartın başlığı dönemi zaten söylüyor ("Son Kapanışta En Güçlü Tema"). */
+  const tone = directionOf(card.median);
   return (
     <Link
       href={`/tema/${card.theme.slug}`}

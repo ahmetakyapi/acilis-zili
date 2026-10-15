@@ -141,7 +141,11 @@
 .tlMemberRow:first-child { border-top-color:transparent; }
 .memberIdentity { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; min-width:0; }
 .memberIdentity strong { color:var(--text-strong); font-size:14px; font-weight:650; }
-.moreMembers { display:flex; align-items:center; justify-content:center; gap:6px; width:100%; min-height:36px; margin-top:2px; border-top:1px solid var(--line-soft); color:var(--primary-ink); font-size:13px; font-weight:600; cursor:pointer; transition:color .2s var(--ease-brand); }
+/* Dip şeridi TEK SATIR: solda kaynak, ortada katlama, sağda takvim (15
+   Ekim, sahibinin isteği — kaynak/takvim ayrı bir boşluk satırı açmasın). */
+.memberFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 14px; min-height:36px; margin-top:2px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:12px; }
+.memberFoot > a { display:flex; gap:6px; align-items:center; min-height:32px; color:var(--primary-ink); font-weight:600; }
+.moreMembers { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 10px; color:var(--primary-ink); font-size:13px; font-weight:600; cursor:pointer; transition:color .2s var(--ease-brand); }
 .moreMembers:hover { color:var(--primary-hover); }
 .tlMemberLink { display:inline-flex; align-items:center; gap:5px; margin-left:auto; min-height:36px; color:var(--text-body); font-size:12px; font-weight:600; white-space:nowrap; }
 .tlMemberLink[data-analysis] { color:var(--primary-ink); }
@@ -209,6 +213,7 @@
   .tlMemberLink { grid-row:1; grid-column:2; }
   .memberNumbers { grid-column:1 / -1; max-width:none; }
   .moreMembers { min-height:44px; }
+  .memberFoot > a { min-height:44px; }
   .results { gap:8px; }
   .results > div { padding-left:9px; }
   .results dd { font-size:19px; }

@@ -195,13 +195,37 @@ export function sessionPlan(from: number, segment: Segment): Leg[] {
   return [move, walkLeg(segment.from - LEAD + offset, segment.to + offset)];
 }
 
-/** Günü oynat: ön seansın öncesinden akşam seansının sonuna; iki zil sırayla. */
+/** Zil anındaki duraklama (sn): vuruş zarfı 1,2 sn — çanın sesi sönerken
+    ibre kıpırdamaz, an sahnede izlenir. */
+const BELL_PAUSE = 1.1;
+
+/** Günü oynat: ön seansın öncesinden akşam seansının sonuna; iki zil sırayla.
+    ZİL ANLARINDA DURAKLAR (15 Ekim, sahibinin isteği: "Günü Oynat'ı daha
+    iyi hale getirelim"). Önceki plan tek 6,5 saniyelik düz yürüyüştü ve
+    ibre zilleri YOLDA GEÇİYORDU: vuruş, hareketin içinde kaynıyordu.
+    Şimdi yürüyüş açılışta ve kapanışta zilin TAM ÜSTÜNDE bitiyor, ibre
+    vuruş zarfı sönerken bekliyor (duraklama bacağı), sonra yoluna devam
+    ediyor — makinenin anlattığı şey (ibre kontağa değince çan vurulur)
+    oynatmanın da ritmi. Duraklama bacağı `ring: true` OLMAK ZORUNDA:
+    sınırı geçen kare planda artık duraklamanın içine düşüyor ve vuruş o
+    karenin bacağından soruluyor — false olsaydı zil hiç çalmazdı
+    (ölçüldü: açılış karesi sessizdi). İkinci vuruş yok: duraklamada
+    from == to, strikesBetween boş döner. */
 export function dayPlan(from: number, day: BellDay): Leg[] {
   if (!day.tradingToday) return [];
   const start = day.preOpen - LEAD;
   const move = moveLeg(from, start);
   const offset = move.to - start;
-  return [move, walkLeg(start + offset, day.afterClose + offset, 6.5)];
+  const at = (minutes: number) => minutes + offset;
+  const pause = (minutes: number): Leg => ({ from: at(minutes), to: at(minutes), dur: BELL_PAUSE, ring: true });
+  return [
+    move,
+    { from: at(start), to: at(day.open), dur: 1.7, ring: true },
+    pause(day.open),
+    { from: at(day.open), to: at(day.close), dur: 2.9, ring: true },
+    pause(day.close),
+    { from: at(day.close), to: at(day.afterClose), dur: 1.4, ring: true },
+  ];
 }
 
 /** Planın toplam süresi ve `t` saniyedeki konumu (bitti mi ve hangi bacakta). */

@@ -62,7 +62,7 @@ function FilingLink({ filing }: { filing: NonNullable<FlowMember["filing"]> }) {
    yerde açılır" — kaydırma/rotasyonla saklanmaz, sayısı yazılıdır).
    Tek tek dönen kart denendi ve İSTENMEDİ ("6 şirket tek tek gözükmesin");
    dönen şey olayların kendisi (DayFlow → "OTOMATİK TUR"). */
-function MemberList({ members, scheduledAt, nowMs, labels, openEventId, onEngage }: {
+function MemberList({ members, scheduledAt, nowMs, labels, openEventId, onEngage, source, href }: {
   members: FlowMember[];
   scheduledAt: FlowEvent["scheduledAt"];
   nowMs: number;
@@ -71,6 +71,10 @@ function MemberList({ members, scheduledAt, nowMs, labels, openEventId, onEngage
   openEventId: string | null;
   /** Katlamayı açmak bir okuma niyetidir: otomatik tur durdurulsun. */
   onEngage: () => void;
+  /** Kaynak ve takvim KATLAMAYLA AYNI ŞERİTTE (15 Ekim, sahibinin isteği:
+      "altta boşluk olarak çıkmasın") — ayrı bir alt satır açılmıyor. */
+  source: string;
+  href: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   /* "Önceki prop" kalıbı (RollingDigit ile aynı): efekt içinde setState
@@ -101,12 +105,16 @@ function MemberList({ members, scheduledAt, nowMs, labels, openEventId, onEngage
         <Link href={member.href} prefetch={false} className={styles.tlMemberLink} data-analysis={member.status === "analyzed" || undefined}>{member.status === "analyzed" ? labels.readAnalysis : labels.viewCompany}<ArrowUpRight size={14} aria-hidden /></Link>
       </li>)}
     </ol>
-    {folded && (
-      <button type="button" className={styles.moreMembers} onClick={() => { setExpanded(true); onEngage(); }}>
-        {labels.moreMembers.replace("{count}", String(members.length - 3))}
-        <CaretDown size={14} weight="bold" aria-hidden />
-      </button>
-    )}
+    <div className={styles.memberFoot}>
+      <span>{labels.source}: {source}</span>
+      {folded && (
+        <button type="button" className={styles.moreMembers} onClick={() => { setExpanded(true); onEngage(); }}>
+          {labels.moreMembers.replace("{count}", String(members.length - 3))}
+          <CaretDown size={14} weight="bold" aria-hidden />
+        </button>
+      )}
+      <Link href={href}>{labels.calendar}<ArrowUpRight size={14} /></Link>
+    </div>
   </>;
 }
 
@@ -402,12 +410,12 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
                         olayda hiç basılmıyor. */}
                     {event.note && <p className={styles.note}>{event.note}</p>}
                     {event.members ? (
-                      <MemberList members={event.members} scheduledAt={event.scheduledAt} nowMs={nowMs} labels={labels} openEventId={openId} onEngage={() => setAutoTour(false)} />
+                      <MemberList members={event.members} scheduledAt={event.scheduledAt} nowMs={nowMs} labels={labels} openEventId={openId} onEngage={() => setAutoTour(false)} source={event.source} href={event.href} />
                     ) : <>
                       {(event.actual || event.forecast || event.previous) && <dl className={styles.results}>{[[labels.actual, event.actual], [labels.forecast, event.forecast], [labels.previous, event.previous]].map(([label, figure]) => <div key={label}><dt>{label}</dt><dd className="numeral">{figure ?? NO_VALUE}</dd></div>)}</dl>}
                       {!event.actual && <p className={styles.waiting}>{displayFlowStatus(event, nowMs) === "scheduled" ? labels.scheduledHint : labels.pendingHint}</p>}
+                      <div className={styles.detailFooter}><span>{labels.source}: {event.source}</span><Link href={event.href}>{labels.calendar}<ArrowUpRight size={14} /></Link></div>
                     </>}
-                    <div className={styles.detailFooter}><span>{labels.source}: {event.source}</span><Link href={event.href}>{labels.calendar}<ArrowUpRight size={14} /></Link></div>
                   </div>
                 </div>
               </div>
