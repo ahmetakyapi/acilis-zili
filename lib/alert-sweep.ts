@@ -1,5 +1,6 @@
 import { alertCrossed, type AlertDirection } from "@/lib/price-alerts";
-import { formatPrice } from "@/lib/utils";
+import { percentCrossed, type PercentDirection } from "@/lib/percent-alerts";
+import { formatPercent, formatPrice } from "@/lib/utils";
 import { withLocale } from "@/lib/i18n/routing";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n";
@@ -51,5 +52,54 @@ export function alertPayload(hit: AlertHit, locale: Locale, t: Dictionary["notif
     body,
     url: withLocale(`/hisse/${hit.symbol}`, locale),
     tag: `alert-${hit.id}`,
+  };
+}
+
+/* --------------------------------------------------------------------------
+   Yüzde alarmları (15 Ekim) — aynı tarama, ikinci alarm türü.
+   Gerekçe lib/schema.ts → percentAlerts; değerlendirici lib/percent-alerts.ts.
+   -------------------------------------------------------------------------- */
+
+export type PendingPercentAlert = {
+  id: string;
+  userId: string;
+  symbol: string;
+  direction: PercentDirection;
+  thresholdPct: number;
+};
+
+export type PercentHit = PendingPercentAlert & { changePct: number };
+
+/**
+ * Eşiği geçen bekleyen yüzde alarmları. `changePct`i null olan sembol
+ * ATLANIR: null "önceki kapanış bilinmiyor" demek, "sıfır" değil.
+ */
+export function findPercentHits(
+  alerts: readonly PendingPercentAlert[],
+  changes: Record<string, number | null | undefined>,
+): PercentHit[] {
+  const hits: PercentHit[] = [];
+  for (const alert of alerts) {
+    const changePct = changes[alert.symbol];
+    if (changePct == null || !Number.isFinite(changePct)) continue;
+    if (percentCrossed(alert, changePct)) hits.push({ ...alert, changePct });
+  }
+  return hits;
+}
+
+export function percentPayload(
+  hit: PercentHit,
+  locale: Locale,
+  t: Dictionary["notifications"],
+): PushPayload {
+  const body = (hit.direction === "up" ? t.percentUp : t.percentDown)
+    .replace("{symbol}", hit.symbol)
+    .replace("{threshold}", formatPercent(hit.direction === "up" ? hit.thresholdPct : -hit.thresholdPct, locale, 1))
+    .replace("{change}", formatPercent(hit.changePct, locale, 2));
+  return {
+    title: t.alertTitle.replace("{symbol}", hit.symbol),
+    body,
+    url: withLocale(`/hisse/${hit.symbol}`, locale),
+    tag: `percent-${hit.id}`,
   };
 }

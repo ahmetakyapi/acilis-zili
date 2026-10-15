@@ -19,6 +19,7 @@ import { getUserAvatar } from "@/lib/avatar-data";
 import { getProfileSettings } from "@/lib/profile-data";
 import { PROFILE_DEFAULTS } from "@/lib/profiles";
 import { PushSettings } from "@/components/notifications/PushSettings";
+import { getNotificationPrefs } from "@/lib/notification-prefs";
 import { getUserSubscriptions, pushPublicKey } from "@/lib/push";
 import { PreferenceSettings } from "@/components/layout/preference-controls";
 import { Panel, PanelHeader, PageHeader } from "@/components/ui/primitives";
@@ -44,12 +45,15 @@ export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user) redirect("/giris?devam=/ayarlar");
 
-  const [{ locale, t }, theme, avatar, push, profile] = await Promise.all([
+  const [{ locale, t }, theme, avatar, push, profile, prefs] = await Promise.all([
     getI18n(),
     getTheme(),
     session.user.id ? getUserAvatar(session.user.id) : Promise.resolve(null),
     session.user.id ? getUserSubscriptions(session.user.id) : Promise.resolve({ available: false, subscriptions: [] }),
     session.user.id ? getProfileSettings(session.user.id) : Promise.resolve(null),
+    session.user.id
+      ? getNotificationPrefs(session.user.id)
+      : Promise.resolve({ available: false, earningsReminder: false }),
   ]);
   const username = session.user.name ?? "";
   const initials = username.slice(0, 2).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US");
@@ -161,7 +165,12 @@ export default async function SettingsPage() {
         <Panel id="bildirimler" className="scroll-mt-28">
           <PanelHeader title={t.notifications.title} />
           <div className="px-4 py-4 sm:px-5">
-            <PushSettings publicKey={pushPublicKey()} devices={push.subscriptions.length} labels={t.notifications} />
+            <PushSettings
+              publicKey={pushPublicKey()}
+              devices={push.subscriptions.length}
+              earnings={prefs.available ? { enabled: prefs.earningsReminder } : null}
+              labels={t.notifications}
+            />
           </div>
         </Panel>
       )}

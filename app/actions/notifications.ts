@@ -2,10 +2,12 @@
 
 import { z } from "zod";
 import { auth } from "@/auth";
+import { db } from "@/lib/db";
 import { getLocale, getDictionary } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
 import { rateLimit } from "@/lib/rate-limit";
 import { pushConfigured, removeSubscription, saveSubscription, sendToUser } from "@/lib/push";
+import { notificationPrefs } from "@/lib/schema";
 
 /**
  * Bildirim aboneliği eylemleri — Ayarlar → Bildirimler
@@ -53,6 +55,30 @@ export async function unsubscribePushAction(endpoint: string): Promise<{ ok: boo
   if (!id || typeof endpoint !== "string") return { ok: false };
   await removeSubscription(id, endpoint);
   return { ok: true };
+}
+
+/**
+ * Bilanço hatırlatması anahtarı (15 Ekim) — gerekçe lib/schema.ts →
+ * notificationPrefs. Tercih HESAP genelinde; gönderim zaten hesabın tüm
+ * abone cihazlarına gidiyor. Tablo yokken yazma düşer ve `ok: false`
+ * döner; anahtar zaten `available` kapısının arkasında basılıyor.
+ */
+export async function setEarningsReminderAction(enabled: boolean): Promise<{ ok: boolean }> {
+  const id = await userId();
+  if (!id) return { ok: false };
+  if (!rateLimit(`push-pref:${id}`, 10, 60_000).allowed) return { ok: false };
+  try {
+    await db
+      .insert(notificationPrefs)
+      .values({ userId: id, earningsReminder: enabled === true })
+      .onConflictDoUpdate({
+        target: notificationPrefs.userId,
+        set: { earningsReminder: enabled === true, updatedAt: new Date() },
+      });
+    return { ok: true };
+  } catch {
+    return { ok: false };
+  }
 }
 
 /** "Deneme Bildirimi Gönder" — dakikada üç; kendi cihazlarına. */

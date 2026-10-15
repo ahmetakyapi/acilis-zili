@@ -2,6 +2,8 @@ import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "./db";
 import { users, watchlistItems, watchlists } from "./schema";
 import { getUserAvatar } from "./avatar-data";
+import { getNotificationPrefs } from "./notification-prefs";
+import { getUserPercentAlerts } from "./percent-alerts";
 import { getProfileSettings } from "./profile-data";
 import { getPortfolioPositions } from "./portfolio-data";
 import { getUserAlerts } from "./price-alerts";
@@ -37,7 +39,7 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
   /* Portföy iki paket paralel yazılırken bu dosyanın dışında kalmıştı:
      indirme "hesabın tuttuğu her şey" diyordu ama pozisyonları vermiyordu
      (28 Eylül, belge taramasında bulundu). KVKK veri taşınabilirliği. */
-  const [lists, avatar, portfolio, alerts, sales, push, profile] = await Promise.all([
+  const [lists, avatar, portfolio, alerts, sales, push, profile, percent, prefs] = await Promise.all([
     db
       .select()
       .from(watchlists)
@@ -49,6 +51,8 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
     getPortfolioSales(userId),
     getUserSubscriptions(userId),
     getProfileSettings(userId),
+    getUserPercentAlerts(userId),
+    getNotificationPrefs(userId),
   ]);
   const items = lists.length
     ? await db
@@ -133,6 +137,17 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
           triggeredPrice: alert.triggeredPrice,
         }))
       : null,
+    percentAlerts: percent.available
+      ? percent.alerts.map((alert) => ({
+          symbol: alert.symbol,
+          direction: alert.direction,
+          thresholdPct: alert.thresholdPct,
+          createdAt: alert.createdAt,
+          triggeredAt: alert.triggeredAt,
+          triggeredPct: alert.triggeredPct,
+        }))
+      : null,
+    notificationPrefs: prefs.available ? { earningsReminder: prefs.earningsReminder } : null,
     notificationDevices: push.available
       ? push.subscriptions.map((sub) => ({
           device: sub.device,

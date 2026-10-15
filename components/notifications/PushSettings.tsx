@@ -3,7 +3,12 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { BellRinging, BellSlash, CheckCircle, PaperPlaneTilt, WarningCircle } from "@phosphor-icons/react";
-import { sendTestPushAction, subscribePushAction, unsubscribePushAction } from "@/app/actions/notifications";
+import {
+  sendTestPushAction,
+  setEarningsReminderAction,
+  subscribePushAction,
+  unsubscribePushAction,
+} from "@/app/actions/notifications";
 import { Button } from "@/components/ui/primitives";
 import type { Dictionary } from "@/lib/i18n";
 
@@ -51,17 +56,35 @@ async function currentSubscription(): Promise<PushSubscription | null> {
 export function PushSettings({
   publicKey,
   devices,
+  earnings,
   labels,
 }: {
   /** `null`: sunucuda VAPID anahtarı yok — panel yalnızca bunu söylüyor. */
   publicKey: string | null;
   devices: number;
+  /** Bilanço hatırlatması tercihi; `null` tablo yok demek — anahtar basılmaz. */
+  earnings: { enabled: boolean } | null;
   labels: Dictionary["notifications"];
 }) {
   const router = useRouter();
   const [state, setState] = useState<State>("checking");
   const [flash, setFlash] = useState<Flash>(null);
   const [testing, startTest] = useTransition();
+  /* İyimser anahtar: tık anında döner, yazma düşerse geri sarar. */
+  const [earningsOn, setEarningsOn] = useState(earnings?.enabled ?? false);
+  const [savingPref, startPref] = useTransition();
+
+  function toggleEarnings(next: boolean) {
+    setFlash(null);
+    setEarningsOn(next);
+    startPref(async () => {
+      const result = await setEarningsReminderAction(next);
+      if (!result.ok) {
+        setEarningsOn(!next);
+        setFlash({ kind: "error", text: labels.earningsPrefFailed });
+      }
+    });
+  }
 
   useEffect(() => {
     let alive = true;
@@ -181,6 +204,25 @@ export function PushSettings({
             </span>
           )}
         </div>
+      )}
+
+      {/* BİLANÇO HATIRLATMASI (15 Ekim) — hesap genelinde, cihaz başına
+          değil (gerekçe lib/schema.ts → notificationPrefs). Yalnızca tablo
+          varken ve bildirim altyapısı kuruluyken basılır. */}
+      {earnings && publicKey && state !== "unsupported" && (
+        <label className="flex min-h-11 cursor-pointer items-start gap-3 border-t border-line-soft pt-3 sm:min-h-0">
+          <input
+            type="checkbox"
+            checked={earningsOn}
+            disabled={savingPref}
+            onChange={(event) => toggleEarnings(event.target.checked)}
+            className="mt-0.5 size-4 shrink-0 accent-primary"
+          />
+          <span className="flex flex-col gap-0.5">
+            <span className="text-sm font-semibold text-strong">{labels.earningsPref}</span>
+            <span className="text-small leading-relaxed text-muted">{labels.earningsPrefHint}</span>
+          </span>
+        </label>
       )}
 
       {flash && (

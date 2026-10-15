@@ -87,6 +87,19 @@ export type AccountExport = {
         triggeredPrice: number | null;
       }[]
     | null;
+  /** Yüzde alarmları (15 Ekim) — `null` tablo okunamadıysa. */
+  percentAlerts?:
+    | {
+        symbol: string;
+        direction: "up" | "down";
+        thresholdPct: number;
+        createdAt: string;
+        triggeredAt: string | null;
+        triggeredPct: number | null;
+      }[]
+    | null;
+  /** Bildirim tercihleri (15 Ekim) — `null` tablo okunamadıysa ya da satır yoksa. */
+  notificationPrefs?: { earningsReminder: boolean } | null;
   /**
    * Herkese açık profil ayarları (15 Ekim) — `null` tablo okunamadıysa ya
    * da satır hiç açılmadıysa; varsayılan zaten "gizli" ve sıfır veri.

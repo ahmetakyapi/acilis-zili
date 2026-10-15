@@ -271,6 +271,72 @@ export const priceAlerts = pgTable(
 );
 
 /**
+ * YÜZDE ALARMLARI (15 Ekim) — "NVDA günde %5'ten çok düşerse haber ver".
+ *
+ * Fiyat alarmı SEVİYE bekliyor; buradaki satır GÜNLÜK HAREKET bekliyor:
+ * eşik yüzde ve yön (`down`: gün içi değişim −eşiğin altına inerse,
+ * `up`: +eşiğin üstüne çıkarsa). Tek seferlik — tetiklenince durur,
+ * okuyucu yeniden kurar (fiyat alarmının kalıbı; gün-kapsamlı tekrar
+ * bilinçli yok: her sabah kendiliğinden kurulan alarm bildirim gürültüsüne
+ * döner).
+ *
+ * Değerlendirme YALNIZCA sunucu taramasında (5 dakikalık cron): fiyat
+ * alarmının sayfa-içi değerlendirmesi push yokken yazılmıştı; yüzde alarmı
+ * push varken doğdu, ikinci bir değerlendirme yolu açmanın karşılığı yok.
+ * Tetik anı yine "eşiğin geçildiğinin GÖRÜLDÜĞÜ kontrol"; bayat paket
+ * tetiklemez ve changePct'i null olan sembol atlanır (null "sıfır" değil
+ * "önceki kapanış bilinmiyor" demek — lib/providers notu).
+ *
+ * KENDİ TABLOSU, `price_alerts`e sütun DEĞİL: migration'lar deploy'da
+ * uygulanmıyor ve `getUserAlerts` tam satır `select()` yapıyor — oraya
+ * eklenen sütun, migration inene kadar alarmların HER okumasını kırardı.
+ * Tablo yokken okuma `available: false`, tarama `skipped: no-table`.
+ */
+export const percentAlerts = pgTable(
+  "percent_alerts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    symbol: text("symbol").notNull(),
+    /** "up" | "down" — günlük değişimin yönü. */
+    direction: text("direction").notNull(),
+    /** Eşik, yüzde puanı (5 = %5). Sınırlar app/actions/alerts.ts'te. */
+    thresholdPct: numeric("threshold_pct", { precision: 6, scale: 2 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    /** Eşiğin geçildiğinin GÖRÜLDÜĞÜ kontrol; boşsa bekliyor. */
+    triggeredAt: timestamp("triggered_at", { withTimezone: true }),
+    triggeredPct: numeric("triggered_pct", { precision: 8, scale: 4 }),
+  },
+  (t) => [index("percent_alerts_user_idx").on(t.userId, t.createdAt)],
+);
+
+/**
+ * BİLDİRİM TERCİHLERİ (15 Ekim) — hesap genelinde anahtarlar.
+ *
+ * İlk anahtar bilanço hatırlatması: "takip ettiklerimden birinin bilançosu
+ * yarınsa akşamdan haber ver" (cron günde bir, app/api/cron/bilanco).
+ * Cihaz başına değil HESAP başına: tercih içeriğe dair, cihaza değil;
+ * gönderim zaten hesabın tüm abone cihazlarına gidiyor (sendToUser).
+ *
+ * KENDİ TABLOSU (user_avatars kuralı). Satır yokken tercih kapalı sayılır;
+ * tablo yokken Ayarlar'daki anahtar basılmaz ve cron sessizce atlar.
+ * KVKK tablosunda açık rıza satırı olarak sayılı.
+ */
+export const notificationPrefs = pgTable("notification_prefs", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  earningsReminder: boolean("earnings_reminder").notNull().default(false),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/**
  * PORTFÖY SATIŞLARI (9 Ekim) — gerçekleşen kâr/zarar.
  *
  * Satış kaydı yoktu: kısmi satışı kaydetmenin tek yolu pozisyonun adedini

@@ -10,6 +10,7 @@ import { PageShare } from "@/components/article/PageShare";
 import styles from "../stock.module.css";
 import { FavoriteToggle } from "@/components/stock/FavoriteToggle";
 import { PriceAlertButton } from "@/components/alerts/PriceAlertButton";
+import { getUserPercentAlerts, type PercentAlert } from "@/lib/percent-alerts";
 import { getUserAlerts, settleAlerts } from "@/lib/price-alerts";
 import { HeaderReadout } from "@/components/stock/ChartReadingContext";
 import { ChangePill, DataStamp, Skeleton } from "@/components/ui/primitives";
@@ -130,13 +131,22 @@ export async function StockHeader({
      yoksa (`available: false`) düğme hiç basılmıyor. */
   let alertsAvailable = false;
   let symbolAlerts: Awaited<ReturnType<typeof getUserAlerts>>["alerts"] = [];
+  /* Yüzde alarmları (15 Ekim): yalnızca gösterim — değerlendirme sunucu
+     taramasında (gerekçe lib/schema.ts → percentAlerts). */
+  let percentAvailable = false;
+  let symbolPercentAlerts: PercentAlert[] = [];
   if (session?.user?.id) {
-    const { available, alerts } = await getUserAlerts(session.user.id);
+    const [{ available, alerts }, pct] = await Promise.all([
+      getUserAlerts(session.user.id),
+      getUserPercentAlerts(session.user.id),
+    ]);
     alertsAvailable = available;
     const own = alerts.filter((alert) => alert.symbol === symbol);
     symbolAlerts = quoteResult.ok
       ? await settleAlerts(session.user.id, own, { [symbol]: quoteResult.data.price }, !quoteResult.stale)
       : own;
+    percentAvailable = pct.available;
+    symbolPercentAlerts = pct.alerts.filter((alert) => alert.symbol === symbol);
   }
 
   /* SEANS DIŞINDAKİ FİYAT KENDİNİ SÖYLÜYOR.
@@ -230,6 +240,8 @@ export async function StockHeader({
                   symbol={symbol}
                   price={quoteResult.ok && !quoteResult.stale ? quoteResult.data.price : null}
                   alerts={symbolAlerts}
+                  percentAlerts={symbolPercentAlerts}
+                  percentAvailable={percentAvailable}
                   locale={locale}
                   labels={t.priceAlerts}
                 />

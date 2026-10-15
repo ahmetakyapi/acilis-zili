@@ -9,8 +9,9 @@ import {
   type BoardQuote,
 } from "@/components/watchlist/WatchlistBoard";
 import { DataStamp, PageHeader, Panel, PanelHeader } from "@/components/ui/primitives";
-import { AlertRow } from "@/components/alerts/PriceAlertButton";
+import { AlertRow, PercentAlertRow } from "@/components/alerts/PriceAlertButton";
 import alertStyles from "@/components/alerts/PriceAlerts.module.css";
+import { getUserPercentAlerts } from "@/lib/percent-alerts";
 import { getUserAlerts, settleAlerts } from "@/lib/price-alerts";
 import { getUserSubscriptions, pushPublicKey } from "@/lib/push";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -38,9 +39,12 @@ export default async function WatchlistPage() {
   if (!session?.user?.id) redirect("/giris?devam=/favoriler");
 
   const { locale, t } = await getI18n();
-  const [lists, alertData, push] = await Promise.all([
+  const [lists, alertData, percentData, push] = await Promise.all([
     getUserWatchlists(session.user.id),
     getUserAlerts(session.user.id),
+    /* Yüzde alarmları yalnızca gösterim: değerlendirme sunucu taramasında
+       (gerekçe lib/schema.ts → percentAlerts). */
+    getUserPercentAlerts(session.user.id),
     getUserSubscriptions(session.user.id),
   ]);
 
@@ -93,7 +97,12 @@ export default async function WatchlistPage() {
   const sortedAlerts = [...alerts].sort(
     (a, b) => Number(Boolean(b.triggeredAt)) - Number(Boolean(a.triggeredAt)),
   );
-  const alertHits = alerts.filter((alert) => alert.triggeredAt).length;
+  const sortedPercentAlerts = [...percentData.alerts].sort(
+    (a, b) => Number(Boolean(b.triggeredAt)) - Number(Boolean(a.triggeredAt)),
+  );
+  const alertHits =
+    alerts.filter((alert) => alert.triggeredAt).length +
+    sortedPercentAlerts.filter((alert) => alert.triggeredAt).length;
 
   const nameMap: Record<string, string> = {};
   /* Logo, favori satırını sitedeki diğer listelerle aynı dile sokuyor:
@@ -170,13 +179,22 @@ export default async function WatchlistPage() {
             meta={alertHits > 0 ? t.priceAlerts.hitBanner.replace("{n}", String(alertHits)) : undefined}
           />
           <div className={alertStyles.panelBody}>
-            {sortedAlerts.length > 0 ? (
+            {sortedAlerts.length > 0 || sortedPercentAlerts.length > 0 ? (
               <ul className={alertStyles.list}>
                 {sortedAlerts.map((alert) => (
                   <AlertRow
                     key={alert.id}
                     alert={alert}
                     price={prices[alert.symbol] ?? null}
+                    locale={locale}
+                    labels={t.priceAlerts}
+                    showSymbol
+                  />
+                ))}
+                {sortedPercentAlerts.map((alert) => (
+                  <PercentAlertRow
+                    key={alert.id}
+                    alert={alert}
                     locale={locale}
                     labels={t.priceAlerts}
                     showSymbol

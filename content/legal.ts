@@ -76,7 +76,8 @@ Hukuki sebep: meşru menfaat (m. 5/2-f) — ürünün hangi bölümünün kullan
 | Takip listen ve notların | Ürünün asıl işlevi | Sözleşmenin ifası (m. 5/2-c) |
 | Portföy pozisyonların (sembol, adet, alış fiyatı, alış tarihi, not) | Dolar ve lira kâr/zararını hesaplamak | Sözleşmenin ifası (m. 5/2-c) |
 | Portföy satışların (sembol, adet, satış fiyatı ve günü, satılan partinin alış fiyatı ve günü) | Gerçekleşen dolar ve lira kâr/zararını hesaplamak | Sözleşmenin ifası (m. 5/2-c) |
-| Fiyat alarmların (sembol, hedef fiyat, yön, kurulduğu ve tetiklendiği an) | Hedef fiyata ulaşıldığında sana göstermek | Sözleşmenin ifası (m. 5/2-c) |
+| Fiyat ve yüzde alarmların (sembol, hedef ya da eşik, yön, kurulduğu ve tetiklendiği an) | Hedefe ya da eşiğe ulaşıldığında sana göstermek ve bildirmek | Sözleşmenin ifası (m. 5/2-c) |
+| Bilanço hatırlatması tercihin (açık/kapalı) — yalnızca Ayarlar'dan açarsan | Takip ettiklerinden birinin bilançosu yarınsa cihazına bildirmek | Açık rıza (m. 5/1) — Ayarlar'daki "Bilanço Hatırlatması" anahtarı |
 | Bildirim aboneliğin (tarayıcının verdiği bildirim adresi ve şifreleme anahtarları, cihaz adı, dil) — yalnızca Ayarlar'da bildirimleri açarsan | Alarmın tetiklendiğini cihazına bildirmek | Açık rıza (m. 5/1) — tarayıcının izin penceresi ve "Bu Cihazda Aç" düğmesi |
 | Tema ve dil tercihi | Arayüzü hatırlamak | Meşru menfaat (m. 5/2-f) |
 | Seçtiğin profil ikonu | Hesabını arayüzde göstermek | Meşru menfaat (m. 5/2-f) |
@@ -137,7 +138,7 @@ Barındırma sağlayıcısının teknik kayıtlarında (log) IP adresi ve taray�
 
 ## Saklama Süresi
 
-Hesap verilerin, hesabın açık kaldığı sürece saklanır. Hesabını sildiğinde kullanıcı kaydın ve ona bağlı bütün takip listeleri, portföy pozisyonları ve satışları, fiyat alarmları, bildirim abonelikleri ve profil ayarların (tanıtım ve görünürlük tercihleri) veritabanından **kalıcı olarak** silinir; yedeklerdeki kopyalar da yedek döngüsü tamamlandığında (en geç 30 gün) düşer.
+Hesap verilerin, hesabın açık kaldığı sürece saklanır. Hesabını sildiğinde kullanıcı kaydın ve ona bağlı bütün takip listeleri, portföy pozisyonları ve satışları, fiyat ve yüzde alarmları, bildirim abonelikleri ve tercihleri, profil ayarların (tanıtım ve görünürlük tercihleri) veritabanından **kalıcı olarak** silinir; yedeklerdeki kopyalar da yedek döngüsü tamamlandığında (en geç 30 gün) düşer.
 
 Piyasa verileri, haberler ve yazılar kişisel veri değildir; onlar sende bir hesap olsun olmasın tutulur.
 
@@ -151,7 +152,7 @@ Başvurunu [GitHub deposu üzerinden](https://github.com/ahmetakyapi/acilis-zili
 
 Hesap silme talebi için beklemene gerek yok: Ayarlar ekranından hesabını kendin silebilirsin, işlem anında uygulanır.
 
-Verilerinin bir kopyası için de başvuru gerekmez: Ayarlar → Verilerin → **Verilerimi İndir** hesabının tuttuğu her şeyi (hesap bilgilerin, takip listelerin, semboller ve notların, portföyün ve satışların, fiyat alarmların, bildirim açtığın cihazlar, profil ikonun, profil tanıtımın ve görünürlük tercihlerin) JSON ya da CSV dosyası olarak anında indirir.
+Verilerinin bir kopyası için de başvuru gerekmez: Ayarlar → Verilerin → **Verilerimi İndir** hesabının tuttuğu her şeyi (hesap bilgilerin, takip listelerin, semboller ve notların, portföyün ve satışların, fiyat ve yüzde alarmların, bildirim açtığın cihazlar ve bildirim tercihlerin, profil ikonun, profil tanıtımın ve görünürlük tercihlerin) JSON ya da CSV dosyası olarak anında indirir.
 
 ## Güvenlik
 
@@ -279,7 +280,8 @@ Legal basis: legitimate interest (Art. 5/2-f) — seeing which part of the produ
 | Your watchlists and notes | The product's core function | Performance of a contract (Art. 5/2-c) |
 | Your portfolio positions (symbol, quantity, buy price, buy date, note) | To compute dollar and lira profit and loss | Performance of a contract (Art. 5/2-c) |
 | Your portfolio sales (symbol, quantity, sale price and date, the sold lot's buy price and date) | To compute realized dollar and lira gain/loss | Performance of a contract (Art. 5/2-c) |
-| Your price alerts (symbol, target price, direction, when set and when triggered) | To show you when a target price is reached | Performance of a contract (Art. 5/2-c) |
+| Your price and percent alerts (symbol, target or threshold, direction, when set and when triggered) | To show and notify you when a target or threshold is reached | Performance of a contract (Art. 5/2-c) |
+| Your earnings reminder preference (on/off) — only if you turn it on in Settings | To notify your device when a company you follow reports tomorrow | Explicit consent (Art. 5/1) — the "Earnings Reminder" switch in Settings |
 | Your notification subscription (the push address and encryption keys your browser issues, device name, language) — only if you turn notifications on in Settings | To tell your device an alert has fired | Explicit consent (Art. 5/1) — the browser's permission prompt and the "Turn On for This Device" button |
 | Theme and language preference | To remember the interface | Legitimate interest (Art. 5/2-f) |
 | The profile icon you picked | To show your account in the interface | Legitimate interest (Art. 5/2-f) |
@@ -340,7 +342,7 @@ The hosting provider's technical logs may hold an IP address and browser informa
 
 ## Retention
 
-Your account data is kept for as long as the account exists. When you delete your account, your user record and every watchlist, portfolio position and sale, price alert, notification subscription and profile setting (intro and visibility preferences) attached to it are **permanently** removed from the database; copies in backups fall away when the backup cycle completes (at most 30 days).
+Your account data is kept for as long as the account exists. When you delete your account, your user record and every watchlist, portfolio position and sale, price and percent alert, notification subscription and preference, and profile setting (intro and visibility preferences) attached to it are **permanently** removed from the database; copies in backups fall away when the backup cycle completes (at most 30 days).
 
 Market data, news and articles are not personal data; they are kept whether or not you have an account.
 
@@ -354,7 +356,7 @@ You can send your request [through the GitHub repository](https://github.com/ahm
 
 You do not have to wait for an account deletion request: you can delete your account yourself from the Settings screen, and it takes effect immediately.
 
-You do not need a request for a copy of your data either: Settings → Your Data → **Download My Data** immediately downloads everything your account holds (your account details, your watchlists, their symbols and notes, your portfolio and sales, your price alerts, the devices you turned notifications on for, your profile icon, your profile intro and visibility preferences) as a JSON or CSV file.
+You do not need a request for a copy of your data either: Settings → Your Data → **Download My Data** immediately downloads everything your account holds (your account details, your watchlists, their symbols and notes, your portfolio and sales, your price and percent alerts, the devices you turned notifications on for and your notification preferences, your profile icon, your profile intro and visibility preferences) as a JSON or CSV file.
 
 ## Security
 

@@ -16,6 +16,7 @@ APP_ROOT=/srv/acilis-zili
 LINES=(
 	"30 10 * * 1-5 /bin/bash $APP_ROOT/current/deploy/cron-daily.sh"
 	"*/5 * * * * /bin/bash $APP_ROOT/current/deploy/cron-alerts.sh"
+	"20 16 * * * /bin/bash $APP_ROOT/current/deploy/cron-bilanco.sh"
 )
 
 current=$(crontab -l 2>/dev/null || true)

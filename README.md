@@ -38,7 +38,7 @@ yazılar, bilanço analizleri ve günde üç kez yenilenen teknik analizler.
 <table>
 <tr>
 <td align="center"><b>53</b><br><sub>sayfa rotası</sub></td>
-<td align="center"><b>24</b><br><sub>API ucu</sub></td>
+<td align="center"><b>25</b><br><sub>API ucu</sub></td>
 <td align="center"><b>28</b><br><sub>veritabanı tablosu</sub></td>
 <td align="center"><b>5</b><br><sub>veri sağlayıcısı</sub></td>
 <td align="center"><b>5</b><br><sub>içerik rutini</sub></td>
@@ -366,7 +366,7 @@ sıçrıyor. Gezinme bekleyişinin kartı marka adıyla açılıyor.
 
 ## Veri Modeli
 
-28 tablo. "Kim yazar" sütunu önemli: bir tablonun tazeliği onu yazanın
+30 tablo. "Kim yazar" sütunu önemli: bir tablonun tazeliği onu yazanın
 ritmine bağlı.
 
 | Tablo | Ne tutar | Kim yazar |
@@ -374,6 +374,8 @@ ritmine bağlı.
 | `users` · `watchlists` · `watchlist_items` | Hesap, takip listeleri ve sembolleri | Kullanıcı eylemleri |
 | `user_avatars` | Seçilen profil ikonu ve rengi (anahtar olarak) | Kullanıcı eylemi (Ayarlar) |
 | `user_profiles` | Herkese açık profil: tanıtım + görünürlük anahtarları (varsayılan gizli) | Kullanıcı eylemi (Ayarlar) |
+| `percent_alerts` | Günlük yüzde değişim alarmları (eşik + yön, tek seferlik) | Kullanıcı eylemi (hisse sayfası) |
+| `notification_prefs` | Hesap genelinde bildirim anahtarları (bilanço hatırlatması) | Kullanıcı eylemi (Ayarlar) |
 | `symbols` | Sembol künyesi: ad, borsa, sektör, logo, piyasa değeri, hisse sayısı | Tohum + cron + sayfa isteği |
 | `quotes_cache` | Son bilinen fiyat; sağlayıcı düşünce gösterilecek yedek | Sayfa isteği |
 | `candles_cache` | Aralık başına bar dizisi | Sayfa isteği |
@@ -615,9 +617,9 @@ açarsa yayımlanır ve kapattığı an adres yeniden 404 olur.
 
 ### Hesap
 
-`/giris` · `/kayit` · `/sifremi-unuttum` · `/sifre-sifirla` (e-postayla tek kullanımlık, 30 dakikalık bağlantı; yalnızca e-posta servisi bağlıyken — `lib/email.ts`, `lib/password-reset.ts`) · `/favoriler` (fiyatlar USD ya da TL; Fiyat Alarmları paneli — hedef hisse sayfasındaki zil düğmesiyle kurulur, siteyi açtığında ve seans boyunca beş dakikada bir sunucuda güncel fiyatla kontrol edilir, ana sayfada "Hedefe Ulaştı" şeridi; `lib/price-alerts.ts`, `lib/alert-sweep.ts`) · `/ayarlar` (profil
+`/giris` · `/kayit` · `/sifremi-unuttum` · `/sifre-sifirla` (e-postayla tek kullanımlık, 30 dakikalık bağlantı; yalnızca e-posta servisi bağlıyken — `lib/email.ts`, `lib/password-reset.ts`) · `/favoriler` (fiyatlar USD ya da TL; Fiyat ve yüzde alarmları paneli — hisse sayfasındaki zil düğmesiyle kurulur (hedef fiyat ya da günlük değişim eşiği), siteyi açtığında ve seans boyunca beş dakikada bir sunucuda güncel fiyatla kontrol edilir, ana sayfada "Hedefe Ulaştı" şeridi; `lib/price-alerts.ts`, `lib/alert-sweep.ts`) · `/ayarlar` (profil
 ikonu ve rengi, herkese açık profil — tanıtım + görünürlük anahtarları,
-varsayılan gizli —, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri — `lib/push.ts`, `public/sw.js` —, Verilerimi İndir, hesap silme) · `/analizlerim` (Claude ile üretilen kayıtlı raporlar; görüş, puan, vade ve Rapordan Bugüne fiyat değişimi, satır raporu `/claude/[symbol]?rapor=` ile açar; yalnız analiz erişimi olan hesaplarda menüde, dizine girmez) · `/menu` · `/kvkk` ·
+varsayılan gizli —, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri ve hesap genelinde bilanço hatırlatması — `lib/push.ts`, `public/sw.js`, `app/api/cron/bilanco` —, Verilerimi İndir, hesap silme) · `/analizlerim` (Claude ile üretilen kayıtlı raporlar; görüş, puan, vade ve Rapordan Bugüne fiyat değişimi, satır raporu `/claude/[symbol]?rapor=` ile açar; yalnız analiz erişimi olan hesaplarda menüde, dizine girmez) · `/menu` · `/kvkk` ·
 `/hakkinda` (Hakkında ve Metodoloji: kim yapıyor, sayılar nereden geliyor,
 yazıları kim yazıyor; gömme kodları da burada)
 
@@ -661,7 +663,8 @@ ve yazma uçları ayrıca oturum, admin tarafından atanmış erişim ve günlü
 | `/api/takvim/beklenti` · `/api/takvim/bilanco` | Rutinin takvime yazdığı düzeltmeler: ekonomik olay beklentisi; bilanço tarihi ve penceresi (elle kayıt sağlayıcının önüne geçer, sağlayıcı aynısını söyleyince kapanır — `lib/earnings-overrides.ts`) |
 | `/api/kurallar?gorev=` | Rutinlerin ortak kuralları + göreve özgü ek (`content/kurallar/*.md`), `text/markdown`, sürüm `X-Kurallar-Surum` başlığında |
 | `/api/cron/daily` · `/api/auth/[...nextauth]` · `/api/debug/providers` | Günlük cron, oturum, sağlayıcı anahtar kontrolü (yalnızca geliştirmede; üretimde 404) |
-| `/api/cron/alarmlar` | Fiyat alarmı taraması: 5 dakikada bir, piyasa kapalıyken ya da paket bayatken hiçbir şey yazmaz; tetiklenen alarmı abone cihazlara Web Push ile bildirir (`CRON_SECRET`) |
+| `/api/cron/alarmlar` | Alarm taraması (fiyat hedefi + günlük yüzde): 5 dakikada bir, piyasa kapalıyken ya da paket bayatken hiçbir şey yazmaz; tetiklenen alarmı abone cihazlara Web Push ile bildirir (`CRON_SECRET`) |
+| `/api/cron/bilanco` | "Bilanço yarın" hatırlatması: günde bir, tercihi açan hesaplara takip listelerindeki yarınki bilançoları tek bildirimde gönderir (`CRON_SECRET`) |
 
 ### Yönetim
 
