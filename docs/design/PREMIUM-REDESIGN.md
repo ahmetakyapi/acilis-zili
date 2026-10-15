@@ -726,12 +726,24 @@ sönümlü salınımla — yeniden oynuyor; geri sayım sıfırlanınca da aynı
 ikilisi `BellLoader`/`BellMood` silindi — bekleme ve boş durum dili artık
 tümüyle mürekkep (`ringing`, `heroSleep`).
 
-**Seans Zili dördüncü sürüm.** İzometrik masa makinesi sahibinin itirazıyla
-kalktı ("ne anlatıyor burası, anlamsız"); yerine cepheden tek bir 24 saat
-kadranı: seans bantları halkanın kendisinde, ziller halkada iki im, ibre
-imin üstünden geçince im çınlıyor, ortada iki saatli dev okuma (NY + TR).
-"Günü Oynat" aynı kadran üzerinde hızlandırılmış tur. Gerekçeler
-`components/figures/session-bell/view.ts` başında.
+**Seans Zili dördüncü sürüm — VE GERİ ALINIŞI.** İzometrik masa makinesi
+mobildeki okunurluk şikâyetiyle düz bir 24 saat kadranına çevrildi; sahibi
+aynı gün geri çağırdı ("o animasyon skilliyle yeni bir şey yapmıştık, o
+görselliği kaybetmeyelim — sadece daha iyi hale getirmek istemiştim").
+Üçüncü sürüm (anatomy kitli makine) olduğu gibi geri döndü; ders şu:
+figürün GÖRSEL KİMLİĞİ sahibinin sahiplendiği bir değer, sorun çözerken
+değiştirilecek şey o değil. Düz kadranın kodu git geçmişinde
+(`ed1b14b`'deki `session-bell/`).
+
+**Bugünün Akışı zaman çizelgesi oldu** (sahibinin isteği: "hiç kompakt
+hissetmiyor, timeline gibi bir şey yapmalıyız"). Liste + seçili olayı
+ikinci kez anlatan sonuç paneli ve telefona özel üçüncü düzen kalktı; tek
+düzen: solda numaralı düğümlü omurga, olay başına ~56 piksellik satır,
+gövde yerinde açılıyor (0fr→1fr), sıradaki olay kendiliğinden açık, çok
+şirketli bilançoda şirketler tam satır yerine üç kolonlu sıkı kartlarda
+(`FlowFigures` detay varyantı — max-content kart kenarında kırpıyordu,
+ölçüldü). Altı şirketli pencere 1440'ta ~1200 pikselden ~500'e indi; iki
+tema ve 390/1280 ekran görüntüsüyle doğrulandı.
 
 **Ana sayfa ve ekranlar.** Sektör katlaması telefonda 6 karo (boş hücre
 yok); şerit animasyonları görünür olunca oynuyor (`PlayOnView`); seans

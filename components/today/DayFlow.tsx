@@ -1,11 +1,8 @@
 "use client";
-import { EASE_BRAND_POINTS, exitOf } from "@/lib/motion";
 
 import { Fragment, useEffect, useId, useRef, useState, useTransition, type ReactNode } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { AnimatePresence, motion } from "motion/react";
-import { useMotionPreference } from "@/components/motion/useMotionPreference";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Bell, CalendarBlank, Check, CircleNotch, Clock, TrendUp } from "@phosphor-icons/react";
+import { ArrowRight, ArrowUpRight, Bell, CalendarBlank, CaretDown, Check, CircleNotch, Clock, TrendUp } from "@phosphor-icons/react";
 import { LogoTile } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { displayFlowStatus, flowResultSignature, preserveConfirmedResults, type DayFlowSnapshot, type FlowEvent, type FlowMember } from "@/lib/day-flow";
@@ -25,10 +22,6 @@ type Props = {
   heading?: ReactNode;
 };
 const minutesOf = (time: string) => { const [h, m] = time.split(":").map(Number); return h * 60 + m; };
-
-/* Bu kadar ya da daha az olayda akış liste + sonuç paneli değil, satır
-   kartları: gerekçe `DayFlow` içinde, "KISA GÜN" notunda. */
-const COMPACT_MAX = 2;
 
 function Status({ event, nowMs, labels }: { event: Pick<FlowEvent, "status" | "scheduledAt">; nowMs: number; labels: Props["labels"] }) {
   const status = displayFlowStatus(event, nowMs);
@@ -65,15 +58,16 @@ function FilingLink({ filing }: { filing: NonNullable<FlowMember["filing"]> }) {
 export function DayFlow({ initial, locale, labels, railLabels, heading }: Props) {
   const [snapshot, setSnapshot] = useState(initial);
   const [nowMs, setNowMs] = useState(() => new Date(initial.asOf).getTime());
+  /* `null` = seçim OTOMATİK (sıradaki olay açık); `allClosed` = okuyucu açık
+     satırı kendisi kapattı — otomatik seçim onu yeniden açmasın. */
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [allClosed, setAllClosed] = useState(false);
   const [connection, setConnection] = useState<"ready" | "checking" | "error">("ready");
   const [announcement, setAnnouncement] = useState("");
   const [, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
-  const detailRef = useRef<HTMLDivElement>(null);
   const refresh = useRef<() => void>(() => {});
   const announcedResults = useRef(flowResultSignature(initial.events));
-  const reduced = useMotionPreference();
   const detailId = useId();
 
   useEffect(() => {
@@ -90,7 +84,18 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
      işaretleri ile buradaki satırlar aynı birleştirilmiş veriden. Şeritteki
      bir işarete basılınca seçim buraya geliyor. */
   useEffect(() => { publishFlow(snapshot); }, [snapshot]);
-  useEffect(() => onFlowSelect((id) => setSelectedId(id)), []);
+  useEffect(() => onFlowSelect((id) => {
+    setAllClosed(false);
+    setSelectedId(id);
+    /* Kahramandaki şeritten gelen seçim: satır görünüme gelsin ki açılan
+       gövde ekran dışında kalmasın. */
+    window.requestAnimationFrame(() =>
+      ref.current?.querySelector(`[data-event-id="${CSS.escape(id)}"]`)
+        ?.scrollIntoView({
+          block: "nearest",
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+        }));
+  }), []);
 
   useEffect(() => {
     const timer = window.setInterval(() => { if (!document.hidden) setNowMs(Date.now()); }, 15_000);
@@ -177,42 +182,38 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
   }, [locale]);
 
   const events = snapshot.events;
-  const selected = events.find((event) => event.id === selectedId) ?? events[0];
-  const selectedIndex = events.findIndex((event) => event.id === selected?.id);
   const nowEt = new Intl.DateTimeFormat("en-GB", { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(nowMs));
   const now = minutesOf(nowEt);
-  /* "ŞİMDİ" AYRACI — listenin neresindeyiz.
-     Şerit bunu bir eksende söylüyordu ama olaylar kümelendiğinde (bir FOMC
-     gününde dördü de 21:00 civarı) eksen hiçbir şey ayırt etmiyor: on altı
-     saatlik bir çizginin tek bir noktasında üst üste binen rozetler. Liste
-     ise zaten sıralı; ayraç onu ikiye bölüyor ve "bunlar geçti, bunlar
-     gelecek" tek bakışta okunuyor.
-     Yalnızca GERÇEKTEN böldüğünde basılıyor: gün başlamadıysa hepsi zaten
-     gelecek demektir ve ayraç fazladan bir satır olurdu. Saati belirsiz
-     olaylar ayracı tetiklemiyor — onların hangi tarafta olduğu bilinmiyor. */
+  /* "ŞİMDİ" İŞARETİ — çizelgenin neresindeyiz.
+     Omurga zaten sıralı; işaret onu ikiye bölüyor ve "bunlar geçti, bunlar
+     gelecek" tek bakışta okunuyor. Yalnızca GERÇEKTEN böldüğünde basılıyor:
+     gün başlamadıysa hepsi zaten gelecek demektir ve işaret fazladan bir
+     satır olurdu. Saati belirsiz olaylar işareti tetiklemiyor — onların
+     hangi tarafta olduğu bilinmiyor. */
   const firstUpcoming = events.findIndex((event) => event.timeEt !== null && minutesOf(event.timeEt) > now);
   const hasPast = events.some((event) => event.timeEt !== null && minutesOf(event.timeEt) <= now);
   const dividerAt = !hasPast ? null : firstUpcoming === -1 ? events.length : firstUpcoming;
+  /* OTOMATİK AÇIK SATIR SIRADAKİ OLAY: okuyucunun sorusu "şimdi ne olacak".
+     Gün başlamadıysa ilk olay, gün bittiyse son olay (günün son cevabı). */
+  const autoId = events.length === 0 ? null
+    : (dividerAt === null ? events[0] : events[Math.min(dividerAt, events.length - 1)])!.id;
+  const openId = allClosed ? null
+    : selectedId && events.some((event) => event.id === selectedId) ? selectedId : autoId;
   const primary = (minutes: number) => clockOf(minutes + snapshot.offsets.primary);
   const nowLabel = `${railLabels.now} · ${primary(now)} ${snapshot.tags.primary}`;
   const timeOf = (event: FlowEvent) => event.timeEt ? `${event.approx ? "~" : ""}${primary(minutesOf(event.timeEt))}` : labels.timeUnknown;
   const checked = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: displayZone(locale), hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(snapshot.asOf));
   const dayLabel = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: "UTC", month: "long", day: "numeric", weekday: "long" }).format(new Date(snapshot.dateEt + "T12:00:00Z"));
 
-  /* Seçim SAYFAYI kaydırıyor, kutunun içini değil.
-     Liste bir dönem kendi içinde kayan 206 piksellik bir kutuydu ve mobilde
-     sonuç paneli o kutunun ALTINDA kalıyordu: okuyucu bir satıra basıyor,
-     cevabın nerede belirdiğini göremiyordu (ekran görüntüsünde 04. satır
-     ortasından kesiliyordu). İç kaydırma kalktı; seçilen olayın paneli
-     `block: "nearest"` ile görünüme giriyor, yani zaten görünüyorsa
-     hiçbir şey kaymıyor — masaüstünde panel listenin yanında duruyor. */
-  function select(id: string) {
+  function toggle(id: string) {
+    if (openId === id) { setAllClosed(true); setSelectedId(null); return; }
+    setAllClosed(false);
     setSelectedId(id);
-    const panel = detailRef.current;
-    if (!panel) return;
-    window.requestAnimationFrame(() =>
-      panel.scrollIntoView({ block: "nearest", behavior: reduced ? "instant" : "smooth" }));
   }
+
+  const nowMark = (
+    <li className={styles.nowMark} aria-hidden="true"><b>{nowLabel}</b></li>
+  );
 
   return <div ref={ref} className={styles.flow} data-day-flow>
     {/* BAŞLIK VE KÜNYE TEK SATIR (24 Eylül). Bölümün başlığı ayrı bir
@@ -232,181 +233,109 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
       </div>
     </div>
 
-    {/* GÜN ŞERİDİ KAHRAMANDA (24 Eylül). Bu panelin içinde 190 piksel
-        tutuyordu ve açılış/kapanış saatlerini zil künyesinden sonra ilk
-        ekranda ikinci kez yazıyordu. Aynı fotoğrafı okuyarak geri sayımın
-        altında çiziliyor (`SessionRail`, `day-flow-store`); "şimdi" ayracı
-        ve seçim burada kaldı. */}
-    {/* TELEFONDA HEP KISA LİSTE (1 Ekim, sahibinin isteği: "alttaki kartı
-        kaldıralım"). Üç ve daha fazla olayda telefon da liste + sonuç
-        paneli düzenini kuruyordu: panel listenin ALTINA iniyor ve seçili
-        olayı ikinci kez anlatıyordu (saat, ad, durum, beklentiler) — yan
-        yana değil alt alta olunca seçim hiçbir şey ayırmıyor, yalnızca
-        tekrar ediyor. Telefonda her olay kısa listedeki kendi satırı: sonuç
-        ve bağlantı satırın içinde. Geniş ekranda düzen aynı. İki düzen
-        birlikte basılıyor ve biri `display:none` — istemcide ölçüye göre
-        seçmek hidrasyonda sayfayı zıplatırdı; ekran okuyucu yalnızca
-        görüneni okur. */}
-    {events.length > 0 && <div className={events.length > COMPACT_MAX ? styles.phoneList : undefined}>{(
-      /* KISA GÜN, KISA PANEL (24 Eylül). Bir-iki olaylı günde panel liste
-         + sonuç paneli düzenini kuruyordu: 1440'ta tek olay için 622 piksel,
-         "Günün Olayları 1" başlığı ve aynı olayı ikinci kez anlatan geniş
-         bir sonuç kutusu. Her olay artık tek satırlık bir kart: saat, ad ve
-         durum, varsa sonuç, ve olayın gideceği yer. Başlık basılmıyor —
-         satırın kendisi ne olduğunu söylüyor. Üç ve daha fazla olayda
-         liste ile sonuç paneli aynen duruyor; orada seçim bir şey ayırıyor. */
-      <ol className={styles.compactRows} aria-label={labels.events}>
+    {/* ZAMAN ÇİZELGESİ (15 Ekim, sahibinin isteği: "hiç kompakt
+        hissetmiyor, timeline gibi bir şey yapmalıyız"). Önceki düzen bir
+        liste + yanında seçili olayı İKİNCİ kez anlatan büyük bir sonuç
+        paneliydi; 1440'ta altı şirketli bir bilanço penceresi ~1200 piksel
+        tutuyor ve telefon için üçüncü bir düzen (kısa liste) daha
+        basılıyordu. Şimdi TEK düzen, her genişlikte: solda numaralı
+        düğümlerin dizildiği bir omurga, her olay omurgada tek satır, gövdesi
+        YERİNDE açılıyor (tek açık satır — seçim bir şeyi ayırsın), çok
+        şirketli bilançoda şirketler tam satır yerine sıkı kartlarda. Sonuç
+        paneli, gezinme okları ve telefon/masaüstü çifte düzeni kalktı.
+        Sıradaki olay kendiliğinden açık: okuyucunun sorusu "şimdi ne
+        olacak". Satır yüksekliği ~56 piksel; altı olaylı gün ilk ekranda
+        bütünüyle okunuyor. */}
+    {events.length > 0 ? <>
+      <div className={styles.agendaHead}><h3>{labels.events}<span className="numeral">{events.length}</span></h3></div>
+      <ol className={styles.timeline}>
         {events.map((event, index) => {
+          const open = openId === event.id;
+          const past = event.timeEt !== null && minutesOf(event.timeEt) <= now;
           const member = event.members?.length === 1 ? event.members[0]! : null;
-          const href = member ? member.href : event.href;
-          const action = member
-            ? member.status === "analyzed" ? labels.readAnalysis : labels.viewCompany
-            : labels.calendar;
-          const value = event.actual ?? member?.eps ?? event.forecast;
-          const valueLabel = event.actual ? labels.actual : member?.eps ? labels.eps : labels.forecast;
-          return <li key={event.id} className={styles.compactRow} data-selected={selectedId === event.id || undefined}>
-            <span className={styles.cardTime} data-unknown={!event.timeEt}><span className={styles.eventNumber}>{String(index + 1).padStart(2, "0")}</span><b className="numeral" aria-label={event.timeEt ? undefined : labels.timeUnknown}>{event.timeEt ? timeOf(event) : NO_VALUE}</b>{event.timeEt && <small>{snapshot.tags.primary}</small>}</span>
-            <span className={styles.cardSummary}>
-              <strong>{event.title}</strong>
-              <span className={styles.cardKind}>
-                {event.kind === "earnings" && event.members?.length ? (
-                  <span className={styles.cardLogos} aria-hidden="true">
-                    {event.members.slice(0, 3).map((item) => (
-                      <LogoTile key={item.symbol} symbol={item.symbol} logoUrl={item.logoUrl} size="xs" className={styles.cardLogo} />
-                    ))}
+          const value = event.actual ?? member?.eps ?? null;
+          const valueLabel = event.actual ? labels.actual : member?.eps ? labels.eps : null;
+          const bodyId = `${detailId}-${index}`;
+          return <Fragment key={event.id}>
+            {index === dividerAt && nowMark}
+            <li className={styles.tlRow} data-event-id={event.id} data-open={open || undefined} data-past={past || undefined} data-kind={event.kind}>
+              {/* Düğüm sıra numarasını taşıyor; omurga çizgisi CSS'te
+                  (`.tlRow::before`). Geçmiş düğüm dolu ve sakin, açık düğüm
+                  marka mavisi, gelecek düğüm çerçeveli — durum renk +
+                  dolgunun İKİSİYLE ayrışıyor. */}
+              <span className={styles.tlNode} aria-hidden="true"><b className="numeral">{String(index + 1).padStart(2, "0")}</b></span>
+              <div className={styles.tlMain}>
+                <button type="button" className={styles.tlHead} onClick={() => toggle(event.id)} aria-expanded={open} aria-controls={bodyId}>
+                  <span className={styles.tlTime} data-unknown={!event.timeEt}><b className="numeral" aria-label={event.timeEt ? undefined : labels.timeUnknown}>{event.timeEt ? timeOf(event) : NO_VALUE}</b>{event.timeEt && <small>{snapshot.tags.primary}</small>}</span>
+                  <span className={styles.tlSummary}>
+                    <strong>{event.title}</strong>
+                    <span className={styles.cardKind}>
+                      {/* Bilanço satırında simge değil ŞİRKETİN LOGOSU: zil
+                          her bilanço satırında aynıydı ve hiçbir şey ayırt
+                          etmiyordu; logo ediyor. Üçten fazlası sığmıyor,
+                          başlık kaçının olduğunu söylüyor. */}
+                      {event.kind === "earnings" && event.members?.length ? (
+                        <span className={styles.cardLogos} aria-hidden="true">
+                          {event.members.slice(0, 3).map((item) => (
+                            <LogoTile key={item.symbol} symbol={item.symbol} logoUrl={item.logoUrl} size="xs" className={styles.cardLogo} />
+                          ))}
+                        </span>
+                      ) : (
+                        <i data-kind={event.kind} aria-hidden="true">{event.kind === "earnings" ? <Bell size={13} /> : <TrendUp size={13} />}</i>
+                      )}
+                      {!event.detail && <span className="sr-only">{event.kind === "earnings" ? labels.earnings : labels.economic}</span>}
+                      <Status event={event} nowMs={nowMs} labels={labels} />
+                      <FlowNote event={event} labels={labels} />
+                    </span>
                   </span>
-                ) : (
-                  <i data-kind={event.kind} aria-hidden="true">{event.kind === "earnings" ? <Bell size={13} /> : <TrendUp size={13} />}</i>
-                )}
-                {!event.detail && <span className="sr-only">{event.kind === "earnings" ? labels.earnings : labels.economic}</span>}
-                <Status event={event} nowMs={nowMs} labels={labels} />
-                <FlowNote event={event} labels={labels} />
-              </span>
-              {member?.filing && <FilingLink filing={member.filing} />}
-            </span>
-            {/* GERÇEKLEŞENİN YANINDA KIYAS (30 Eylül, sahibinin isteği:
-                "beklenti de yazsın"). Açıklanan veride satır yalnızca
-                "Gerçekleşen %3,01" yazıyordu; sayı neyle kıyaslanacağını
-                söylemiyordu. İkinci, sakin bir çift: aynı satırda, daha
-                küçük ve soluk.
-                BEKLENTİ VARSA BEKLENTİ, YOKSA ÖNCEKİ. Makro olayların
-                kaynağı FRED ve FRED konsensüs yayımlamıyor (`forecast`
-                sütunu boş kalıyor; Finnhub'ın ekonomik takvimi ücretli
-                katmanda). Beklenti uydurulmuyor (CLAUDE.md "Veri
-                dürüstlüğü"); elimizdeki gerçek kıyas önceki değer.
-                30 Eylül: kaynak bağlandı — günlük rutin konsensüsü
-                `/api/takvim/beklenti`ye yazıyor (docs/claude-rutinler.md
-                § 1, adım 1b); yazıldığı olayda "Önceki"nin yerini
-                "Beklenti" alıyor. Geniş listedeki sonuç paneli üçünü de
-                basıyor. */}
-            {/* TEK ŞİRKETLİ BİLANÇODA GELİR VE EPS, BEKLENTİSİYLE (1 Ekim).
-                Satır yalnızca açıklanan EPS'yi yazıyordu; gelir ve
-                beklentiler veride vardı ama basılmıyordu (`FlowFigures`).
-                Çok şirketli pencerede sayılar sonuç panelinde, şirket
-                başına — satıra sığmaz. */}
-            {member && (member.eps || member.revenue || member.epsEstimate || member.revenueEstimate) ? (
-              <span className={styles.compactValue} data-figures>
-                <FlowFigures member={member} labels={labels} />
-              </span>
-            ) : value ? (
-              <span className={styles.compactValue}>
-                <span className={styles.compactPair}><small>{valueLabel}</small><b className="numeral">{value}</b></span>
-                {event.actual && (event.forecast || event.previous) && (
-                  <span className={styles.compactPair} data-secondary>
-                    <small>{event.forecast ? labels.forecast : labels.previous}</small>
-                    <b className="numeral">{event.forecast ?? event.previous}</b>
-                  </span>
-                )}
-              </span>
-            ) : <span aria-hidden="true" />}
-            <Link href={href} prefetch={false} className={styles.compactLink} data-analysis={member?.status === "analyzed" || undefined}>{action}<ArrowUpRight size={15} aria-hidden /></Link>
-          </li>;
+                  {/* GERÇEKLEŞENİN YANINDA KIYAS yok — kapalı satır tek sayı
+                      taşır (gerçekleşen, yoksa tek şirketin EPS'i); kıyas ve
+                      gelir açılan gövdede. Satır kompakt kalsın diye. */}
+                  {value && valueLabel ? (
+                    <span className={styles.tlValue}><small>{valueLabel}</small><b className="numeral">{value}</b></span>
+                  ) : <span aria-hidden="true" />}
+                  <CaretDown size={15} weight="bold" aria-hidden className={styles.tlCaret} />
+                </button>
+                {/* Gövde YERİNDE açılır (`grid-template-rows` 0fr→1fr,
+                    --ease-brand); `inert` kapalı gövdenin bağlantılarını
+                    sekme sırasından düşürür. */}
+                <div id={bodyId} className={styles.tlDetail} inert={!open}>
+                  <div className={styles.tlDetailInner}>
+                    {/* "BU DA NE?" — başlığın altındaki tek cümle. Cümle tür
+                        başına sözlükte (`dayFlow.notes`), karşılığı olmayan
+                        olayda hiç basılmıyor. */}
+                    {event.note && <p className={styles.note}>{event.note}</p>}
+                    {event.members ? (
+                      <div className={styles.tlMembers}>
+                        {event.members.map((item) => <div key={item.symbol} className={styles.tlMember}>
+                          <div className={styles.memberIdentity}>
+                            <LogoTile symbol={item.symbol} logoUrl={item.logoUrl} size="sm" />
+                            <div><strong>{item.symbol}</strong><Status event={{ status: item.status, scheduledAt: event.scheduledAt }} nowMs={nowMs} labels={labels} />{item.filing && <FilingLink filing={item.filing} />}</div>
+                            <Link href={item.href} prefetch={false} className={styles.tlMemberLink} data-analysis={item.status === "analyzed" || undefined}>{item.status === "analyzed" ? labels.readAnalysis : labels.viewCompany}<ArrowUpRight size={14} aria-hidden /></Link>
+                          </div>
+                          {/* Şirketin sayıları `FlowFigures`ten: satır ile
+                              panel aynı olayın iki farklı sayısını
+                              göstermesin. */}
+                          {/* `detail` varyantı: sütunlar kartın genişliğini
+                              PAYLAŞIR (max-content taşırıyordu — kart
+                              kenarında "Beklentisi" kırpılmıştı, ölçüldü). */}
+                          {(item.revenue || item.eps || item.revenueEstimate || item.epsEstimate) && <div className={styles.memberNumbers}><FlowFigures member={item} labels={labels} variant="detail" /></div>}
+                        </div>)}
+                      </div>
+                    ) : <>
+                      {(event.actual || event.forecast || event.previous) && <dl className={styles.results}>{[[labels.actual, event.actual], [labels.forecast, event.forecast], [labels.previous, event.previous]].map(([label, figure]) => <div key={label}><dt>{label}</dt><dd className="numeral">{figure ?? NO_VALUE}</dd></div>)}</dl>}
+                      {!event.actual && <p className={styles.waiting}>{displayFlowStatus(event, nowMs) === "scheduled" ? labels.scheduledHint : labels.pendingHint}</p>}
+                    </>}
+                    <div className={styles.detailFooter}><span>{labels.source}: {event.source}</span><Link href={event.href}>{labels.calendar}<ArrowUpRight size={14} /></Link></div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </Fragment>;
         })}
+        {dividerAt === events.length && nowMark}
       </ol>
-    )}</div>}
-    {events.length > COMPACT_MAX ? <div className={styles.wideList}>
-      {/* TEK OLAYDA LİSTE YOK. Tek satırlık liste ile sonuç paneli aynı olayı
-          yan yana iki kez anlatıyordu (saat, ad, "Planlandı" iki yerde) ve
-          ok düğmeleri gidecek yer olmadan, soluk duruyordu. Tek olayda
-          yalnızca sonuç paneli, tam genişlikte. */}
-      <div className={styles.eventHeading}><h3>{labels.events}<span className="numeral">{events.length}</span></h3>{events.length > 1 && <div><button aria-label={labels.back} disabled={selectedIndex <= 0} onClick={() => events[selectedIndex - 1] && select(events[selectedIndex - 1]!.id)}><ArrowLeft size={17} /></button><button aria-label={labels.next} disabled={selectedIndex >= events.length - 1} onClick={() => events[selectedIndex + 1] && select(events[selectedIndex + 1]!.id)}><ArrowRight size={17} /></button></div>}</div>
-      <div className={styles.eventLayout} data-single={events.length === 1 || undefined}>
-      {/* İÇ KAYDIRMA YOK. Liste sayfayla birlikte kayıyor; günün olayları
-          altı-sekiz satır ve hepsi tek bakışta okunuyor. */}
-      <ol className={styles.eventCards}>
-        {events.map((event, index) => <Fragment key={event.id}>
-          {index === dividerAt && <li className={styles.nowRow} aria-hidden="true"><span /><b>{nowLabel}</b><span /></li>}
-          <li><button data-event-id={event.id} className={styles.eventCard} data-selected={selected?.id === event.id} data-kind={event.kind} onClick={() => select(event.id)} aria-pressed={selected?.id === event.id} aria-controls={detailId}>
-          {/* SAATİ BELİRSİZ OLAYDA SÜTUN TİRE BASIYOR. "Saat Belirtilmedi"
-              62 piksellik sütuna sığmıyor ve "Saat / Belirtilme / di" diye üç
-              satıra bölünüyordu; üstelik aynı cümle satırın künyesinde İKİNCİ
-              kez duruyordu. Sebep künyeye ait, sütun yalnızca saati taşır. */}
-          <span className={styles.cardTime} data-unknown={!event.timeEt}><span className={styles.eventNumber}>{String(index + 1).padStart(2, "0")}</span><b className="numeral" aria-label={event.timeEt ? undefined : labels.timeUnknown}>{event.timeEt ? timeOf(event) : NO_VALUE}</b>{event.timeEt && <small>{snapshot.tags.primary}</small>}</span>
-          <span className={styles.cardSummary}>
-            <strong>{event.title}</strong>
-            {/* Tür ADI değil İŞARETİ: altı satırın altısında da "Ekonomik
-                Veri" yazıyordu ve satırın yarısını kaplıyordu. Simge türü
-                söylüyor, lejant simgeyi adlandırıyor; okunacak bilgi
-                DURUM — o her satırda farklı. */}
-            <span className={styles.cardKind}>
-              {/* BİLANÇO SATIRINDA SİMGE DEĞİL ŞİRKETİN LOGOSU.
-                  Zil her bilanço satırında aynı ve o satırların tamamı zaten
-                  künyesinde "Bilanço" yazıyor — yani simge hiçbir şey ayırt
-                  etmiyordu. Logo ayırt ediyor: listede gözü çeken şey şirket.
-                  Logolar zaten `event.members` içinde istemciye inmiş
-                  durumda (`lib/day-flow-data.ts`), yeni bir sorgu yok.
-                  Üçten fazlası sığmıyor; başlık kaçının olduğunu söylüyor. */}
-              {event.kind === "earnings" && event.members?.length ? (
-                <span className={styles.cardLogos} aria-hidden="true">
-                  {event.members.slice(0, 3).map((member) => (
-                    <LogoTile key={member.symbol} symbol={member.symbol} logoUrl={member.logoUrl} size="xs" className={styles.cardLogo} />
-                  ))}
-                </span>
-              ) : (
-                <i data-kind={event.kind} aria-hidden="true">{event.kind === "earnings" ? <Bell size={13} /> : <TrendUp size={13} />}</i>
-              )}
-              {/* TÜR BİR KEZ SÖYLENİR. Künye varsa türü zaten o taşıyor
-                  (bilanço satırında "Bilanço · Kapanış Sonrası"); ikinci bir
-                  gizli etiket ekran okuyucuya aynı kelimeyi iki kez okutur.
-                  Künyesi olmayan satırda tür yalnızca simgede kalıyor, o
-                  yüzden orada gizli etiket şart. */}
-              {!event.detail && <span className="sr-only">{event.kind === "earnings" ? labels.earnings : labels.economic}</span>}
-              <Status event={event} nowMs={nowMs} labels={labels} />
-              {/* Sütundan düşen "Saat Belirtilmedi" künyeye burada iniyor
-                  (`FlowNote`). */}
-              <FlowNote event={event} labels={labels} />
-            </span>
-          </span>
-          <span className={styles.cardBottom}>{event.actual && <b className="numeral">{event.actual}</b>}<ArrowRight size={16} /></span>
-        </button></li>
-        </Fragment>)}
-        {dividerAt === events.length && <li className={styles.nowRow} aria-hidden="true"><span /><b>{nowLabel}</b><span /></li>}
-      </ol>
-      <div ref={detailRef} className={styles.detailSlot}>
-      <AnimatePresence initial={false} mode="wait">
-        {selected && <motion.div key={selected.id} id={detailId} role="region" aria-label={selected.title} className={styles.detail} data-kind={selected.kind} initial={reduced ? false : { opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -3, transition: exitOf(.18) }} transition={{ duration: .18, ease: EASE_BRAND_POINTS }}>
-          <div className={styles.detailHeading}><div><span className={styles.detailKicker}><b className="numeral">{String(selectedIndex + 1).padStart(2, "0")}</b><span className="numeral">{timeOf(selected)} {selected.timeEt && snapshot.tags.primary}</span> · {selected.detail ?? (selected.kind === "earnings" ? labels.earnings : labels.economic)}</span><h4>{selected.title}</h4></div>{/* Tek şirketli bilançoda durum şirket satırında; başlıkta ikinci kez basılmıyor. */}{selected.members?.length !== 1 && <Status event={selected} nowMs={nowMs} labels={labels} />}</div>
-          {/* "BU DA NE?" — başlığın altındaki tek cümle. Başlık olayın ADINI
-              söylüyor ama adı bilmeyene bir şey anlatmıyor; "FOMC" ve "Nokta
-              Grafiği" okuyucunun yarısı için boş. Cümle tür başına sözlükte
-              (`dayFlow.notes`), karşılığı olmayan olayda hiç basılmıyor. */}
-          {selected.note && <p className={styles.note}>{selected.note}</p>}
-          {selected.members ? <div className={styles.members}>{selected.members.map((member) => <div key={member.symbol} className={styles.member}>
-            <div className={styles.memberIdentity}><LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="sm" /><div><strong>{member.symbol}</strong><Status event={{ status: member.status, scheduledAt: selected.scheduledAt }} nowMs={nowMs} labels={labels} />{member.filing && <FilingLink filing={member.filing} />}</div></div>
-            {/* Sonuç panelindeki şirket satırı da aynı ölçüleri basar: satır
-                ile panel aynı olayın iki farklı sayısını göstermesin. */}
-            {(member.revenue || member.eps || member.revenueEstimate || member.epsEstimate) && <div className={styles.memberNumbers}><FlowFigures member={member} labels={labels} variant="detail" /></div>}
-            <Link href={member.href} className={styles.detailLink} data-analysis={member.status === "analyzed"}>{member.status === "analyzed" ? labels.readAnalysis : labels.viewCompany}<ArrowUpRight size={16} /></Link>
-          </div>)}</div> : <>
-            {(selected.actual || selected.forecast || selected.previous) && <dl className={styles.results}>{[[labels.actual, selected.actual], [labels.forecast, selected.forecast], [labels.previous, selected.previous]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd className="numeral">{value ?? NO_VALUE}</dd></div>)}</dl>}
-            {!selected.actual && <p className={styles.waiting}>{displayFlowStatus(selected, nowMs) === "scheduled" ? labels.scheduledHint : labels.pendingHint}</p>}
-          </>}
-          <div className={styles.detailFooter}><span>{labels.source}: {selected.source}</span><Link href={selected.href}>{labels.calendar}<ArrowUpRight size={14} /></Link></div>
-        </motion.div>}
-      </AnimatePresence>
-      </div>
-      </div>
-    </div> : events.length ? null : snapshot.hiddenEarnings > 0 ? (
+    </> : snapshot.hiddenEarnings > 0 ? (
       /* Akış boş ama gün boş DEĞİL: eşiğin altındaki bilançolar var. "Açıklama
          yok" demek aynı sayfadaki bilanço paneliyle çelişirdi. */
       <div className={styles.empty}><span><CalendarBlank size={32} weight="duotone" /></span><div><h3>{labels.emptyMajorTitle}</h3><p>{labels.emptyMajorHint.replace("{count}", String(snapshot.hiddenEarnings))}{" "}<Link href={withLocale("/bilancolar", locale)} prefetch={false} className={styles.emptyLink}>{labels.emptyMajorLink}<ArrowUpRight size={12} weight="bold" aria-hidden /></Link></p></div></div>
