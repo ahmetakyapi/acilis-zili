@@ -12,6 +12,7 @@ import {
   FunnelSimple,
   ChatsCircle,
   PencilSimpleLine,
+  BellRinging,
   ChartLineUp,
   Envelope,
   FileText,
@@ -144,6 +145,7 @@ export default async function MenuPage() {
       entries: [
         { href: "/favoriler", icon: Heart, title: t.nav.watchlist, hint: t.menu.hintWatchlist },
         { href: "/yazilarim", icon: PencilSimpleLine, title: t.community.mine.title, hint: t.menu.hintMyPosts },
+        { href: "/raporum", icon: BellRinging, title: t.bellReport.title, hint: t.menu.hintReport },
         { href: "/ayarlar", icon: Gear, title: t.nav.settings, hint: t.menu.hintSettings },
         { href: "/kvkk", icon: ShieldCheck, title: t.footer.privacy, hint: t.menu.hintPrivacy },
       ],

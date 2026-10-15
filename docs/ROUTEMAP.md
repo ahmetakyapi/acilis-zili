@@ -19,7 +19,7 @@
 
 | | |
 |---|---|
-| Sayfa rotası | 60 (49 açık, 11 yönetim; `/en` önekiyle ikinci bir adreste daha) |
+| Sayfa rotası | 61 (50 açık, 11 yönetim; `/en` önekiyle ikinci bir adreste daha) |
 | API ucu | 25 |
 | Veritabanı tablosu | 31 · 35 migration (0000–0034; uygulanmamış olanlar aşağıda "Açık işler"te) |
 | Sağlayıcı | Alpaca · Finnhub · FRED · TCMB · SEC EDGAR · OpenFIGI · House Clerk · TCMB EVDS (isteğe bağlı) |

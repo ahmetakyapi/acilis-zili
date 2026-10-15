@@ -33,9 +33,14 @@ import type { Bar } from "@/lib/providers/types";
 
 export type ShowcaseWeight = { symbol: string; pct: number };
 
+/** Sembol başına getiri (maliyete göre, USD) — Zil Raporu'nun en iyi/kötü satırı. */
+export type ShowcaseMove = { symbol: string; returnPct: number };
+
 export type Showcase = {
   /** Sembol başına ağırlık, büyükten küçüğe; yüzde MUTLAK (toplam 100). */
   weights: ShowcaseWeight[];
+  /** Sembol başına getiri, büyükten küçüğe — rapor en iyi/kötüyü okur. */
+  moves: ShowcaseMove[];
   sectors: { sector: string; pct: number }[];
   /** Maliyete göre getiri, USD, temettü hariç. */
   returnPct: number;
@@ -104,6 +109,7 @@ export const loadShowcase = cache(
     let excludedCount = 0;
     let sinceDay: string | null = null;
     const valueBySymbol = new Map<string, number>();
+    const costBySymbol = new Map<string, number>();
     const sectorItems: { sector: string; valueUsd: number }[] = [];
 
     for (const position of data.positions) {
@@ -121,6 +127,7 @@ export const loadShowcase = cache(
       totalValue += value;
       totalCost += cost;
       valueBySymbol.set(position.symbol, (valueBySymbol.get(position.symbol) ?? 0) + value);
+      costBySymbol.set(position.symbol, (costBySymbol.get(position.symbol) ?? 0) + cost);
       sectorItems.push({
         sector:
           companySector(position.symbol, names[position.symbol]?.industry, locale) ??
@@ -145,9 +152,16 @@ export const loadShowcase = cache(
     const weights = [...valueBySymbol.entries()]
       .map(([symbol, value]) => ({ symbol, pct: (value / totalValue) * 100 }))
       .sort((a, b) => b.pct - a.pct);
+    const moves = [...valueBySymbol.entries()]
+      .flatMap(([symbol, value]) => {
+        const cost = costBySymbol.get(symbol);
+        return cost && cost > 0 ? [{ symbol, returnPct: ((value - cost) / cost) * 100 }] : [];
+      })
+      .sort((a, b) => b.returnPct - a.returnPct);
 
     return {
       weights,
+      moves,
       sectors: sectorWeights(sectorItems).map(({ sector, pct }) => ({ sector, pct })),
       returnPct: ((totalValue - totalCost) / totalCost) * 100,
       spyReturnPct: spyCost > 0 ? ((spyValue - spyCost) / spyCost) * 100 : null,

@@ -53,6 +53,7 @@ export async function SiteFooter() {
         links: [
           { href: "/favoriler", label: t.nav.watchlist },
           { href: "/yazilarim", label: t.community.mine.title },
+          { href: "/raporum", label: t.bellReport.title },
           { href: "/portfoy", label: t.lira.portfolio.title },
           { href: "/ayarlar", label: t.nav.settings },
           { href: "/kvkk", label: t.footer.privacy },

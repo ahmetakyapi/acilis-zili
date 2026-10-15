@@ -37,7 +37,7 @@ yazılar, bilanço analizleri ve günde üç kez yenilenen teknik analizler.
 
 <table>
 <tr>
-<td align="center"><b>60</b><br><sub>sayfa rotası</sub></td>
+<td align="center"><b>61</b><br><sub>sayfa rotası</sub></td>
 <td align="center"><b>25</b><br><sub>API ucu</sub></td>
 <td align="center"><b>31</b><br><sub>veritabanı tablosu</sub></td>
 <td align="center"><b>5</b><br><sub>veri sağlayıcısı</sub></td>
@@ -550,7 +550,7 @@ saklanmıyor (`private, no-store`).
 
 ## Ekranlar
 
-Rota listesinin **tek kaynağı** burası. 60 sayfa var: 49'u herkese açık
+Rota listesinin **tek kaynağı** burası. 61 sayfa var: 50'si herkese açık
 (ikisi başka sitelere gömülen parça), 11'i yönetim. Hepsi istek başına sunucuda çiziliyor. Her sayfa `/en/...` önekiyle
 İngilizce de açılıyor; önek sunucuda sökülüyor ve adres çubuğunda kalıyor.
 
@@ -622,7 +622,7 @@ açarsa yayımlanır ve kapattığı an adres yeniden 404 olur.
 
 `/giris` · `/kayit` · `/sifremi-unuttum` · `/sifre-sifirla` (e-postayla tek kullanımlık, 30 dakikalık bağlantı; yalnızca e-posta servisi bağlıyken — `lib/email.ts`, `lib/password-reset.ts`) · `/favoriler` (fiyatlar USD ya da TL; Fiyat ve yüzde alarmları paneli — hisse sayfasındaki zil düğmesiyle kurulur (hedef fiyat ya da günlük değişim eşiği), siteyi açtığında ve seans boyunca beş dakikada bir sunucuda güncel fiyatla kontrol edilir, ana sayfada "Hedefe Ulaştı" şeridi; `lib/price-alerts.ts`, `lib/alert-sweep.ts`) · `/ayarlar` (profil
 ikonu ve rengi, herkese açık profil — tanıtım + görünürlük anahtarları,
-varsayılan gizli —, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri ve hesap genelinde bilanço hatırlatması — `lib/push.ts`, `public/sw.js`, `app/api/cron/bilanco` —, Verilerimi İndir, hesap silme) · `/yazilarim` (topluluk yazıların: taslak, kuyruk, yayın; editör ::: bloklarıyla, önizleme yayındaki çizimin kendisi — `/yazilarim/yeni` ve `/yazilarim/[id]`. Oturum ister, dizine girmez) · `/analizlerim` (Claude ile üretilen kayıtlı raporlar; görüş, puan, vade ve Rapordan Bugüne fiyat değişimi, satır raporu `/claude/[symbol]?rapor=` ile açar; yalnız analiz erişimi olan hesaplarda menüde, dizine girmez) · `/menu` · `/kvkk` ·
+varsayılan gizli —, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri ve hesap genelinde bilanço hatırlatması — `lib/push.ts`, `public/sw.js`, `app/api/cron/bilanco` —, Verilerimi İndir, hesap silme) · `/yazilarim` (topluluk yazıların: taslak, kuyruk, yayın; editör ::: bloklarıyla, önizleme yayındaki çizimin kendisi — `/yazilarim/yeni` ve `/yazilarim/[id]`. Oturum ister, dizine girmez) · `/raporum` (Zil Raporu: üyelik, seans sayısı, takip, alarm, portföy getirisi vs SPY ve yazılar — bölüm bölüm kayan kişisel özet, her sayı hesabın kendi verisinden; tutar yok. Oturum ister, dizine girmez) · `/analizlerim` (Claude ile üretilen kayıtlı raporlar; görüş, puan, vade ve Rapordan Bugüne fiyat değişimi, satır raporu `/claude/[symbol]?rapor=` ile açar; yalnız analiz erişimi olan hesaplarda menüde, dizine girmez) · `/menu` · `/kvkk` ·
 `/hakkinda` (Hakkında ve Metodoloji: kim yapıyor, sayılar nereden geliyor,
 yazıları kim yazıyor; gömme kodları da burada)
 
