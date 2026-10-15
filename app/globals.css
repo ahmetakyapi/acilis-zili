@@ -1121,20 +1121,11 @@
 }
 
 
-/* Piyasa açıkken nabız — accent, glow değil sadece opaklık. */
-.pulse-live {
-  animation: pulse-live 2.4s var(--ease-brand) infinite;
-}
-
-@keyframes pulse-live {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.45;
-  }
-}
+/* `.pulse-live` SİLİNDİ (14 Ekim). "Piyasa açıkken nabız" diye tanımlanmış
+   sonsuz bir opaklık döngüsüydü ve hiçbir yerden çağrılmıyordu; döngülü
+   animasyon yalnız yükleme göstergesinin hakkı (lib/ink/scenes.ts başı,
+   WCAG 2.2.2) — zil şeridinin nabzı da aynı gün veriye bağlandı
+   (SessionRail "NABIZ VERİYLE ATAR"). */
 
 /* --------------------------------------------------------------------------
    Sayfa geçişi
@@ -1314,9 +1305,11 @@ html.theme-switching::view-transition-new(root) {
    sefer gözün gitmediği bir yerde, sayfanın kenarında duran cansız bir
    etiket oldu.
 
-   Şimdi tam ortada ve bekleyişi ürünün KENDİ işaretine bağlıyor: marka zili
-   çalıyor, her vuruşta karodan ses halkası yayılıyor, altında tek kelime.
-   Bekleme anı da markanın göründüğü bir andır (components/brand/BellLoader).
+   Şimdi tam ortada ve bekleyişi ürünün KENDİ işaretine bağlıyor: kartta
+   rotaya uygun bir mürekkep sahnesi oynuyor, altında tek kelime. Bekleme
+   anı da markanın göründüğü bir andır (components/ink/InkLoader.tsx;
+   sahneler lib/ink/route-scenes.ts — eski SMIL zili BellLoader 14 Ekim'de
+   kalktı, bekleme dili artık mürekkep).
 
    Katman tıklamayı ENGELLEMEZ. Tam ekran bir kalkan çift tıklamayı önlerdi
    ama gösterge herhangi bir sebeple takılırsa ekranı kilitlerdi; emniyet
@@ -1346,6 +1339,30 @@ html.theme-switching::view-transition-new(root) {
   animation: route-loader-fade 0.18s var(--ease-brand) both;
 }
 
+/* ÇIKIŞ — gerekçe RouteProgress.tsx "ÇIKIŞ DA OYNUYOR". Giden şey
+   hızlanarak gider (lib/motion.ts `exitOf`): süre girişin ~%55'i, eğri
+   ease-in. `animation:none` giriş animasyonunun `both` dolgusunu bırakır;
+   öğe zaten son pozunda, geçiş oradan sıfıra iner. */
+.route-progress[data-leaving] {
+  opacity: 0;
+  transition: opacity 0.12s var(--ease-brand-in);
+}
+.route-loader[data-leaving] {
+  animation: none;
+  opacity: 0;
+  transition: opacity 0.14s var(--ease-brand-in);
+}
+.route-loader[data-leaving] .route-loader-card {
+  animation: none;
+  opacity: 0;
+  translate: 0 4px;
+  scale: 0.985;
+  transition:
+    opacity 0.14s var(--ease-brand-in),
+    translate 0.14s var(--ease-brand-in),
+    scale 0.14s var(--ease-brand-in);
+}
+
 .route-loader-card {
   display: flex;
   flex-direction: column;
@@ -1360,8 +1377,9 @@ html.theme-switching::view-transition-new(root) {
 }
 
 /* İşaretin yuvası: zilin çevresinde ses halkalarının büyüyeceği pay.
-   Halkalar karonun %62 dışına çıkıyor; yuva bunu kartın dolgusuna
-   taşırmadan tutuyor. Canlandırmanın kendisi components/brand/BellLoader. */
+   Halkalar karonun dışına taşıyor; yuva bunu kartın dolgusuna taşırmadan
+   tutuyor. Canlandırmanın kendisi mürekkep zili (`scene="ringing"`,
+   components/ui/LoadingState.tsx — BellLoader'ın yerini aldı). */
 .route-loader-mark {
   position: relative;
   display: grid;
@@ -2295,7 +2313,14 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
 .premium-masthead { background:var(--premium-surface); }
 .masthead-brand { border-radius:10px; }
 .masthead-brand > span:first-child { transition:transform 260ms var(--ease-brand); }
-.masthead-brand svg { transform-origin:50% 15%; }
+/* TEK ASKI (14 Ekim). Hover sallanması %15'ten, gezinme sallanması %22'den
+   dönüyordu — aynı zil iki ayrı askıdan sallanıyor, imleç üstündeyken
+   gezinme başlarsa pivot zıplıyordu. Askının dibi BellMark görüş kutusunda
+   (128, 50) — BellLoader'daki karar kaydıyla aynı nokta; `transform-box:
+   view-box` ile boyuttan bağımsız. */
+/* Yönetim panelinin marka karosu da aynı askıdan sallanır (data-admin-brand,
+   app/admin/layout.tsx) — panel sitenin kabuğu dışında ama jest ortak. */
+.masthead-brand svg,[data-admin-brand] svg { transform-box:view-box; transform-origin:128px 50px; }
 /* ÇINLAMA (26 Eylül). Logonun üzerine gelince zil sallanıyordu ama ses
    yoktu; karonun iki yanında bir ses dalgası büyüyüp sönüyor — sitenin
    mürekkep zilinin (yükleme, açılış) başlıktaki karşılığı. Yalnızca
@@ -2344,7 +2369,10 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
    Derinlik tonla: gölge yok, cam yok. Masaüstünde 40 piksel, dokunmatikte
    44. Aramanın büyüteci geniş alanda kendi tonlu dairesinde duruyor,
    kısayol küçük bir tuş kapağında. */
-.premium-masthead .masthead-search,.premium-masthead .masthead-account { border-color:var(--line); background:var(--premium-surface); color:var(--text-body); box-shadow:inset 0 1px var(--premium-highlight); transition:border-color 180ms var(--ease-brand),background-color 180ms var(--ease-brand),color 180ms var(--ease-brand),box-shadow 180ms var(--ease-brand); }
+.premium-masthead .masthead-search,.premium-masthead .masthead-account { border-color:var(--line); background:var(--premium-surface); color:var(--text-body); box-shadow:inset 0 1px var(--premium-highlight); scale:1; transition:border-color 180ms var(--ease-brand),background-color 180ms var(--ease-brand),color 180ms var(--ease-brand),box-shadow 180ms var(--ease-brand),scale 120ms var(--ease-brand); }
+/* Basma geri bildirimi evin tek lehçesinde: ölçek (BUTTON_BASE). */
+.premium-masthead .masthead-search:active,.premium-masthead .masthead-account:active { scale:.96; }
+@media(prefers-reduced-motion:reduce) { .premium-masthead .masthead-search:active,.premium-masthead .masthead-account:active { scale:none; } }
 .premium-masthead .masthead-search-icon { display:inline-grid; place-items:center; flex:none; color:var(--primary-ink); }
 .premium-masthead .masthead-kbd { align-items:center; height:22px; padding:0 7px; border:1px solid var(--line-soft); border-radius:999px; background:var(--surface-sunken); font-size:.75rem; font-weight:600; letter-spacing:0; color:var(--text-muted); }
 .premium-masthead .masthead-account[data-signed-in] { border-color:transparent; background:var(--primary); color:var(--on-primary); box-shadow:0 0 0 2px var(--premium-surface),0 0 0 3px var(--primary-faint); }
@@ -2360,7 +2388,7 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
 }
 @media(hover:hover) and (pointer:fine) {
  .masthead-brand:hover > span:first-child { transform:translateY(-1px); }
- .masthead-brand:hover svg { animation:masthead-bell 600ms var(--ease-brand); }
+ .masthead-brand:hover svg,[data-admin-brand]:hover svg { animation:masthead-bell 600ms var(--ease-brand); }
  .masthead-brand:hover > span:first-child::before { animation:masthead-ring 700ms var(--ease-brand) 60ms; }
  .masthead-brand:hover > span:first-child::after { animation:masthead-ring 700ms var(--ease-brand) 240ms; }
  .masthead-row:hover .masthead-row-arrow { transform:translate(2px,-2px); opacity:1; }
@@ -2378,10 +2406,11 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
    tepesinden sarkıyor. Hover'daki tek salınımdan daha yumuşak ve döngünün
    yarısı sessiz — başlık gözün hep gördüğü yer, orada durmadan sallanan
    bir şey dikkat dağıtırdı. */
-html[data-navigating] .masthead-brand > span:first-child svg { transform-origin:50% 22%; animation:masthead-bell-wait 1.6s var(--ease-brand) infinite; }
+/* Pivot yukarıdaki tek askıdan (transform-box) — yerel override kalktı. */
+html[data-navigating] .masthead-brand > span:first-child svg { animation:masthead-bell-wait 1.6s var(--ease-brand) infinite; }
 @keyframes masthead-bell-wait { 0% { transform:none; } 12% { transform:rotate(-10deg); } 28% { transform:rotate(8deg); } 42% { transform:rotate(-4deg); } 54%,100% { transform:none; } }
 @media(prefers-reduced-motion:reduce) {
- .masthead-brand:hover svg,html[data-navigating] .masthead-brand > span:first-child svg,.masthead-brand:hover > span:first-child::before,.masthead-brand:hover > span:first-child::after { animation:none; }
+ .masthead-brand:hover svg,[data-admin-brand]:hover svg,html[data-navigating] .masthead-brand > span:first-child svg,.masthead-brand:hover > span:first-child::before,.masthead-brand:hover > span:first-child::after { animation:none; }
  .masthead-brand > span:first-child,.masthead-row-arrow,.masthead-nav .masthead-link { transition:none; }
  .masthead-brand:hover > span:first-child,.masthead-row:hover .masthead-row-arrow { transform:none; }
 }
@@ -2595,7 +2624,13 @@ html.ink-splash-out .ink-splash-layer {
    ortasında, şeridin yüzeyinde yuvarlak bir düğme; beliriş kısa bir
    kayma. Derinlik tonla: kenarlık ve yüzey, gölge yok. */
 .chip-strip { position:relative; min-width:0; }
-.chip-strip-arrow { position:absolute; top:50%; z-index:1; display:grid; place-items:center; width:32px; height:32px; margin-top:-16px; border:1px solid var(--line); border-radius:999px; background:var(--overlay-surface); color:var(--primary-ink); cursor:pointer; animation:chip-arrow-in 220ms var(--ease-brand) both; transition:background-color .2s var(--ease-brand), border-color .2s var(--ease-brand); }
+/* GİRİŞLİ VE ÇIKIŞLI (14 Ekim). Düğme koşullu render'dı: kenara ulaşınca
+   unmount olup TEK karede yok oluyordu — giriş 220 ms kurulmuşken çıkış
+   yoktu (lib/motion.ts exit kuralı). Artık hep bağlı; `data-can` yoksa
+   sönerek gizleniyor (visibility gecikmeli: geçiş bitince odaktan ve
+   erişilebilirlik ağacından da düşsün). */
+.chip-strip-arrow { position:absolute; top:50%; z-index:1; display:grid; place-items:center; width:32px; height:32px; margin-top:-16px; border:1px solid var(--line); border-radius:999px; background:var(--overlay-surface); color:var(--primary-ink); cursor:pointer; opacity:0; visibility:hidden; pointer-events:none; transition:background-color .2s var(--ease-brand), border-color .2s var(--ease-brand), opacity 120ms var(--ease-brand-in), visibility 0s 120ms; }
+.chip-strip-arrow[data-can] { opacity:1; visibility:visible; pointer-events:auto; animation:chip-arrow-in 220ms var(--ease-brand) both; transition:background-color .2s var(--ease-brand), border-color .2s var(--ease-brand), opacity 180ms var(--ease-brand); }
 .chip-strip-arrow[data-side="start"] { left:-4px; }
 .chip-strip-arrow[data-side="end"] { right:-4px; }
 .chip-strip-arrow:hover { background:var(--primary-tint); border-color:var(--primary-faint); }

@@ -184,7 +184,15 @@
   font-size: 0.75rem;
   font-weight: 550;
   white-space: nowrap;
-  transition: color 180ms var(--ease-brand), background-color 180ms var(--ease-brand);
+  scale: 1;
+  transition: color 180ms var(--ease-brand), background-color 180ms var(--ease-brand), scale 120ms var(--ease-brand);
+}
+/* Basma geri bildirimi evin tek lehçesinde: ölçek (BUTTON_BASE
+   `active:scale-[0.97]`, primitives.tsx). Sekme basılınca kısaca çöküyor. */
+.navLink:active { scale: 0.97; }
+@media (prefers-reduced-motion: reduce) {
+  .navLink { transition: color 180ms var(--ease-brand), background-color 180ms var(--ease-brand); }
+  .navLink:active { scale: none; }
 }
 
 /* ÜZERİNE GELME YALNIZCA İMLEÇTE (30 Eylül, sahibinin ekran görüntüsü).
@@ -261,12 +269,11 @@
 .stageContent { min-width:0; }
 @media (prefers-reduced-motion:reduce) { .stageContent { transform:none!important; } }
 
-/* Release the entrance transform so fixed progress and sticky navigation
-   use the viewport again once the page has arrived. */
-.experience { animation:page-arrive 620ms var(--ease-brand); }
-@keyframes page-arrive { from { opacity:.35; translate:0 14px; } to { opacity:1; translate:none; } }
+/* `page-arrive` SİLİNDİ (14 Ekim): tanımlandığı satırın on satır altındaki
+   koşulsuz `animation:none` (aşağıda, "One conductor owns entrances")
+   onu zaten hiç oynatmıyordu — keyframe ve ilk kural ölüydü. Azaltılmış
+   hareketin zorunlu açığa çıkarma kuralları duruyor. */
 @media (prefers-reduced-motion:reduce) {
-  .experience { animation:none; }
   .experience :is([data-motion-reveal],[data-motion-draw]),
   .experience [data-motion-stagger] > * { opacity:1!important; transform:none!important; }
 }

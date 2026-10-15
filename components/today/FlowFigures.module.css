@@ -33,6 +33,15 @@
 /* Sonuç panelindeki şirket satırı: sayılar bir kademe küçük (16), satırın
    geri kalanıyla aynı ölçek. */
 .figures[data-variant="detail"] .value b { font-size:16px; }
+/* Detay sütunları KOLONU PAYLAŞIR, max-content DEĞİL (14 Ekim, ölçüldü):
+   ana sayfanın akış panelinde dört şirketli bilanço kartında
+   "1,08 $ −%7,0 / Beklenti 1,16 $" ikilisi max-content ile kolonun
+   (minmax(0,1.2fr), DayFlow.module.css `.member`) dışına taşıyor ve EPS
+   yüzdesi "Analizi Oku" bağlantısının ALTINA giriyordu (1280'de yüzde ile
+   bağlantı üst üste basılı). Sütunlar 1fr'ı bölüşünce uzun ad kırılıyor,
+   sürpriz gerekirse sayının altına iniyor (`.value` zaten `flex-wrap`);
+   alt ızgara iki sütunun satırlarını aynı hatta tutmaya devam ediyor. */
+.figures[data-variant="detail"] { grid-auto-columns:minmax(0,1fr); }
 
 @media (max-width:767px) {
   /* Telefonda ölçüler adın altında, satırın kalan genişliğini ikiye bölüyor

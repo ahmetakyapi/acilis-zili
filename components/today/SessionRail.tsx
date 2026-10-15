@@ -167,6 +167,10 @@ export function SessionRail({
   }
 
   const pct = (value: number) => `${(value * 100).toFixed(3)}%`;
+  /* Giriş gecikmesi işaretin yatay konumundan (CSS `--x`, SessionRail.module.css
+     → "İŞARETLER FIRÇAYI İZLER"): çizgi oraya varınca işaret beliriyor. */
+  const markAt = (value: number, extra?: Record<string, string>) =>
+    ({ ...extra, "--x": value.toFixed(3) }) as React.CSSProperties;
 
   /* SAAT CETVELİ (26 Eylül). Şerit düz bir çubuktu; saat ekseni olduğu
      yalnızca iki uçtaki saatten anlaşılıyordu. Altında her tam saatte ince
@@ -187,10 +191,10 @@ export function SessionRail({
           anlamını tahmin etmek zorundaydı. Adlar çentiğin tam üstünde,
           sayacın saydığı zil koyu. Saatler okuyucunun saatiyle. */}
       <div className={styles.bells} aria-hidden="true">
-        <span className={styles.bellLabel} data-target={target === "open" || undefined} style={{ left: pct(open) }}>
+        <span className={`${styles.bellLabel} ${styles.mark}`} data-target={target === "open" || undefined} style={markAt(open, { left: pct(open) })}>
           {labels.open}
         </span>
-        <span className={styles.bellLabel} data-target={target === "close" || undefined} style={{ left: pct(close) }}>
+        <span className={`${styles.bellLabel} ${styles.mark}`} data-target={target === "close" || undefined} style={markAt(close, { left: pct(close) })}>
           {labels.close}
         </span>
         {/* BANT ADLARI — ön seans sola, akşam sağa yaslı (zil adlarıyla
@@ -198,9 +202,9 @@ export function SessionRail({
             gizli: 350 pikselde zil adlarının üstüne biniyorlar (CSS). */}
         {labels.bands && (
           <>
-            <span className={styles.bandLabel} style={{ left: 0 }}>{labels.bands.pre}</span>
-            <span className={styles.bandLabel} data-center style={{ left: pct((open + close) / 2) }}>{labels.bands.regular}</span>
-            <span className={styles.bandLabel} style={{ right: 0 }}>{labels.bands.after}</span>
+            <span className={`${styles.bandLabel} ${styles.mark}`} style={markAt(0, { left: "0" })}>{labels.bands.pre}</span>
+            <span className={`${styles.bandLabel} ${styles.mark}`} data-center style={markAt((open + close) / 2, { left: pct((open + close) / 2) })}>{labels.bands.regular}</span>
+            <span className={`${styles.bandLabel} ${styles.mark}`} style={markAt(1, { right: "0" })}>{labels.bands.after}</span>
           </>
         )}
       </div>
@@ -235,15 +239,15 @@ export function SessionRail({
         </div>
         {/* Zil çentikleri gerçek saatte; sayacın saydığı zil hangisiyse o
             koyu (kapalıyken açılış, seans içinde kapanış). */}
-        <span aria-hidden="true" className={styles.bell} data-target={target === "open" || undefined} style={{ left: pct(open) }} />
-        <span aria-hidden="true" className={styles.bell} data-target={target === "close" || undefined} style={{ left: pct(close) }} />
+        <span aria-hidden="true" className={`${styles.bell} ${styles.mark}`} data-target={target === "open" || undefined} style={markAt(open, { left: pct(open) })} />
+        <span aria-hidden="true" className={`${styles.bell} ${styles.mark}`} data-target={target === "close" || undefined} style={markAt(close, { left: pct(close) })} />
         {hours.map((hour) => (
           <span
             aria-hidden="true"
             key={`hour-${hour.at}`}
-            className={styles.hour}
+            className={`${styles.hour} ${styles.mark}`}
             data-major={hour.major || undefined}
-            style={{ left: pct(hour.at) }}
+            style={markAt(hour.at, { left: pct(hour.at) })}
           />
         ))}
         {nowFraction > 0 && nowFraction < 1 && (
@@ -252,6 +256,9 @@ export function SessionRail({
             className={styles.now}
             data-live={live || undefined}
             data-still={reduced || undefined}
+            /* Dakika parite biti: her tikte 0↔1 döner ve halka bir kez
+               atar (CSS "NABIZ VERİYLE ATAR"). */
+            data-beat={Math.floor(nowMs / TICK_MS) % 2}
             style={{ left: pct(nowFraction) }}
           />
         )}
@@ -259,14 +266,14 @@ export function SessionRail({
           <span
             aria-hidden="true"
             key={`tick-${group.time}`}
-            className={styles.tick}
+            className={`${styles.tick} ${styles.mark}`}
             data-released={group.events.some((event) => event.released) || undefined}
-            style={{ left: pct(group.at) }}
+            style={markAt(group.at, { left: pct(group.at) })}
           />
         ))}
       </div>
       <div className={styles.lane}>
-        <span className={`numeral ${styles.end}`}>{labels.start}</span>
+        <span className={`numeral ${styles.end} ${styles.mark}`} style={markAt(0)}>{labels.start}</span>
         {groups.map((group, index) => {
           const first = group.events[0]!;
           const x = width > 0 ? xs[index]! : null;
@@ -274,9 +281,9 @@ export function SessionRail({
             <button
               key={group.time}
               type="button"
-              className={styles.marker}
+              className={`${styles.marker} ${styles.mark}`}
               data-released={group.events.some((event) => event.released) || undefined}
-              style={x === null ? { left: pct(group.at) } : { left: x }}
+              style={markAt(group.at, x === null ? { left: pct(group.at) } : ({ left: `${x}px` } as unknown as Record<string, string>))}
               onClick={() => choose(first.id)}
               aria-label={`${labels.selectEvent}: ${group.events.map((event) => event.title).join(", ")}`}
               title={group.events.map((event) => event.title).join(", ")}
@@ -292,7 +299,7 @@ export function SessionRail({
             </button>
           );
         })}
-        <span className={`numeral ${styles.end}`}>{labels.end}</span>
+        <span className={`numeral ${styles.end} ${styles.mark}`} style={markAt(1)}>{labels.end}</span>
       </div>
     </div>
   );

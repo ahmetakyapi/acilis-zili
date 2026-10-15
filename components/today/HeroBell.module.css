@@ -1,0 +1,35 @@
+/* Zili Çal düğmesi — gerekçe HeroBell.tsx.
+
+   Düğme görünmez: zemin, kenarlık ve dolgu yok; görünen şey zilin kendisi.
+   Basışta hafif çökme ve yaylı geri dönüş — "tek küçük öğenin geri
+   bildirimi" (CLAUDE.md eğri kuralı): çökme kısa ve düz, bırakış
+   `--ease-spring` ile hedefini bir tık aşıp oturuyor. Odak halkası
+   globalden geliyor (globals.css `:focus-visible`); yuvarlak köşe halkanın
+   zilin çevresini izlemesi için. */
+.button {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  -webkit-tap-highlight-color: transparent;
+  scale: 1;
+  transition: scale 0.32s var(--ease-spring);
+}
+.button:active {
+  scale: 0.93;
+  transition-duration: 0.1s;
+  transition-timing-function: var(--ease-brand);
+}
+.canvas {
+  width: 100%;
+  height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .button:active {
+    scale: none;
+    transition: none;
+  }
+}

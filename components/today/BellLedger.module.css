@@ -19,6 +19,15 @@
 .cell + .cell { padding-left:22px; border-left:1px solid var(--line-soft); margin-left:-1px; }
 .kicker { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; font-size:12px; font-weight:600; line-height:1.4; color:var(--text-muted); white-space:nowrap; }
 .cell[data-target] .kicker { color:var(--primary-ink); }
+/* SAYILAN ZİL GENİŞ EKRANDA DA İŞARETLİ (14 Ekim). Telefonda hedef hücre
+   marka tonunda bir karo (aşağıda); ≥1024'te tek fark etiket mürekkebinin
+   tonuydu — "sayaç hangi zile sayıyor"u söylemek için fazla sessiz. Etiket
+   "Bugün" rozetiyle aynı aileden bir plaka alıyor (`--primary-tint` +
+   `--primary-ink`); negatif kenar, plakanın dolgusunu yutup metni hizada
+   tutuyor. */
+@media (min-width:1024px) {
+  .cell[data-target] .kicker { padding:1px 6px; margin-left:-6px; border-radius:var(--radius-sm); background:var(--primary-tint); }
+}
 /* Yarım gün rozeti karar rozetleriyle aynı aileden: `--radius-sm`, hap değil. */
 .early { padding:1px 6px; border-radius:var(--radius-sm); background:var(--primary-tint); color:var(--primary-ink); font-size:var(--text-nano); font-weight:600; line-height:1.5; }
 .reading { display:flex; align-items:baseline; gap:8px; margin:0; }

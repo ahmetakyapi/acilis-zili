@@ -36,7 +36,16 @@
    Artık 8 piksellik yuvarlak bir nokta, halka onun üzerinde `inset:-4px`
    — kutusu kare, merkezi çubuğun ucu. */
 .now { position:absolute; top:4px; width:8px; height:8px; border-radius:50%; transform:translateX(-4px); background:var(--primary); box-shadow:0 0 0 2px var(--premium-surface); animation:rail-now-in 420ms var(--ease-spring) 820ms backwards; }
-.now[data-live]::after { content:""; position:absolute; inset:-4px; border:1px solid var(--primary); border-radius:50%; animation:rail-beacon 3s var(--ease-brand) infinite; }
+/* NABIZ VERİYLE ATAR, SÜREKLİ DEĞİL (14 Ekim). Halka seans boyunca 3 sn'de
+   bir sonsuz dönüyordu — döngü yalnız yükleme göstergesinin hakkı
+   (lib/ink/scenes.ts başı, WCAG 2.2.2) ve hemen yanında saniyede bir
+   tikleyen sayaç canlılığı zaten taşıyor. Şerit dakikada bir ilerliyor
+   (`TICK_MS`); halka da yalnız o anda, ilerleme geçişi (600 ms) oturduktan
+   sonra BİR kez nefes alıyor. İki eş keyframe, `data-beat` 0/1 arasında
+   dönerken animasyonu yeniden tetikliyor (depodaki `index-flash` deseni). */
+.now[data-live]::after { content:""; position:absolute; inset:-4px; border:1px solid var(--primary); border-radius:50%; opacity:0; }
+.now[data-live][data-beat="0"]::after { animation:rail-beacon-a 2.4s var(--ease-brand) .6s 1; }
+.now[data-live][data-beat="1"]::after { animation:rail-beacon-b 2.4s var(--ease-brand) .6s 1; }
 .now[data-still]::after { animation:none; opacity:0; }
 /* Bant adları zil adlarından bir kademe sessiz; seans adı bandın ortasında.
    SESSİZLİK AĞIRLIKTAN, SAYDAMLIKTAN DEĞİL (14 Ekim). `opacity:.85`
@@ -56,7 +65,10 @@
    küçük kalıyor. */
 .lane { position:relative; display:flex; justify-content:space-between; align-items:center; min-height:26px; margin-top:4px; }
 .end { font-size:var(--text-tiny); font-weight:500; color:var(--text-muted); }
-.marker { position:absolute; top:1px; z-index:1; display:flex; align-items:center; justify-content:center; gap:2px; min-width:28px; height:24px; padding:0 6px; border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--premium-surface); color:var(--text-strong); font-size:var(--text-small); font-weight:650; cursor:pointer; transform:translateX(-50%); transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand); }
+/* Basışta ölçekle çöker (evin tek lehçesi, BUTTON_BASE) — `transform`
+   konumu taşıdığı için çökme ayrı `scale` özelliğinde. */
+.marker { position:absolute; top:1px; z-index:1; display:flex; align-items:center; justify-content:center; gap:2px; min-width:28px; height:24px; padding:0 6px; border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--premium-surface); color:var(--text-strong); font-size:var(--text-small); font-weight:650; cursor:pointer; transform:translateX(-50%); scale:1; transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), scale 120ms var(--ease-brand); }
+.marker:active { scale:.95; }
 .marker::before { content:""; position:absolute; inset:-8px -4px; }
 .marker { gap:5px; }
 .marker small { color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; }
@@ -64,7 +76,19 @@
 .marker:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
 .marker:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 
-@keyframes rail-beacon { from { transform:scale(.6); opacity:.7; } 80%, to { transform:scale(1.6); opacity:0; } }
+@keyframes rail-beacon-a { from { transform:scale(.6); opacity:.7; } 80%, to { transform:scale(1.6); opacity:0; } }
+@keyframes rail-beacon-b { from { transform:scale(.6); opacity:.7; } 80%, to { transform:scale(1.6); opacity:0; } }
+
+/* İŞARETLER FIRÇAYI İZLER (14 Ekim). Oluk 900 ms kendini çizerken üstündeki
+   her şey — çentikler, adlar, saat cetveli, rozetler — ilk kareden hazır
+   duruyordu: aynı kahraman blokta sayaç kademeyle kurulurken (Countdown
+   "AÇILIŞTA KURULUR") şeridin yarısı bitmiş geliyordu. Her işaret kendi
+   yatay konumundan türeyen gecikmeyle (--x, 0-1) yalnızca OPAKLIKLA
+   beliriyor: çizgi oraya varınca. Yerleşim hiç oynamıyor; veriyle sonradan
+   düşen olay rozeti de aynı yumuşaklıkla girer. JS yokken animasyon yine
+   koşar ve son karede biter. */
+.mark { animation:rail-mark-in 300ms var(--ease-brand) calc(200ms + var(--x, 0) * 700ms) backwards; }
+@keyframes rail-mark-in { from { opacity:0; } }
 
 /* Telefonda rozet yok, çentik var — gerekçe bileşende. */
 @media (max-width:767px) {
@@ -76,6 +100,7 @@
 
 @media (prefers-reduced-motion:reduce) {
   .elapsed, .marker { transition:none; }
+  .marker:active { scale:none; }
   .now::after { animation:none; opacity:0; }
-  .track, .now { animation:none; }
+  .track, .now, .mark { animation:none; }
 }

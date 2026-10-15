@@ -692,6 +692,10 @@ export function MotionExperience({ children, className }: { children: ReactNode;
         const dot = element.classList.contains("spark-dot");
         const ring = element.classList.contains("ring-fill");
         const origin = element.style.transformOrigin || "left center";
+        /* Dikey çubuk da kendi sıfır çizgisinden büyür (14 Ekim): MSPR gibi
+           iki yönlü grafikte eksi ay tepeden sarkar ve satır içi
+           `transformOrigin:"center top"` taşır; verilmemişse taban. */
+        const barOrigin = element.style.transformOrigin || "center bottom";
         // Signed distance bars start at their zero reference: negative
         // values grow from the right. Existing lines retain their origin.
         // Curves reveal along the actual SVG path, never squeeze the series.
@@ -706,7 +710,7 @@ export function MotionExperience({ children, className }: { children: ReactNode;
           : ring ? [{ strokeDashoffset: element.style.getPropertyValue("--ring-circumference") }, { strokeDashoffset: ringEnd ?? "0" }]
           : area ? [{ opacity: 0 }, { opacity: element.getAttribute("opacity") || 1 }]
           : dot ? [{ opacity: 0, transform: "scale(.5)" }, { opacity: 1, transform: "none" }]
-          : bar ? [{ transform: "scaleY(.04)", transformOrigin: "center bottom" }, { transform: "scaleY(1)", transformOrigin: "center bottom" }]
+          : bar ? [{ transform: "scaleY(.04)", transformOrigin: barOrigin }, { transform: "scaleY(1)", transformOrigin: barOrigin }]
           : line ? [{ transform: "scaleX(.04)", transformOrigin: origin }, { transform: "scaleX(1)", transformOrigin: origin }]
           : visible ? [{ opacity: .6 }, { opacity: 1 }]
           /* PANEL VE SATIR KAYMAZ (12 Ekim). Her `.panel` ve her kademeli çocuk

@@ -1,25 +1,33 @@
 /*
- * Seans Zili, ikinci sürüm. Renk anlam taşıyor ve sitenin seans şeridiyle
- * aynı: ASIL SEANS MAVİ (--primary), ön ve akşam seansı PİRİNÇ (--brass),
- * kapalı nötr. İbre de mavi (şeritteki "şimdi" noktası gibi). Makinenin
- * gövdesi kitin nötr tonlarında kalıyor; renk yalnız bilgi olan yerde.
+ * Seans Zili, dördüncü sürüm (14 Ekim) — düz kadran; gerekçe view.ts
+ * başında. Renk anlam taşıyor ve sitenin seans şeridiyle aynı: ASIL SEANS
+ * MAVİ (--primary), ön ve akşam seansı PİRİNÇ (--brass), kapalı nötr.
+ * İbre mavi (şeritteki "şimdi" noktası gibi); zil anı pirinç.
  */
 .sb {
   display: grid; gap: 14px; padding: 2px 20px 20px;
-  grid-template-areas: "head" "stage" "controls" "note";
+  grid-template-areas: "head" "stage" "controls" "hint" "note";
 }
 .sb-head { grid-area: head; }
 .sb-stage { grid-area: stage; }
 .sb-controls { grid-area: controls; }
 .sb-note { grid-area: note; }
+/* Kadran ipucu notun hemen üstünde kendi satırında — gerekçe live.tsx
+   "KADRANIN İPUCU". Taban gizli; yalnız ince işaretçi görür, gizliyken
+   satırı sıfır (boş `auto` satır iz bırakmaz). */
+.sb-hint { grid-area: hint; display: none; margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-muted); }
+@media (hover: hover) and (pointer: fine) {
+  .sb-hint { display: block; }
+}
 /* Geniş ekranda figür solda, bilgi ve düğmeler sağ kolonda: tam genişlikte
    figür 1280'de ~1000 px boy alıyordu (ölçüldü). */
 @media (min-width: 1024px) {
   .sb {
-    padding: 2px 24px 24px; column-gap: 24px; row-gap: 12px; align-items: start;
-    grid-template-columns: minmax(0, 1.4fr) minmax(360px, 1fr);
-    grid-template-rows: auto auto 1fr;
-    grid-template-areas: "stage head" "stage controls" "stage note";
+    padding: 2px 24px 24px; column-gap: 28px; row-gap: 12px; align-items: start;
+    /* Kare kadran geniş makinenin yerini aldı: iki kolon dengeli. */
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr);
+    grid-template-rows: auto auto auto 1fr;
+    grid-template-areas: "stage head" "stage controls" "stage hint" "stage note";
   }
   .sb-count { margin-left: 0; width: 100%; font-size: 20px; }
 }
@@ -47,28 +55,54 @@
 }
 .sb[data-previewing] .sb-back { display: inline-flex; align-items: center; }
 
-/* ---- Figür ---- */
-.sb-stage { position: relative; border-radius: 14px; background: var(--anatomy-card); padding: 6px 4px; cursor: crosshair; touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
+/* ---- Figür: düz 24 saat kadranı (dördüncü sürüm, 14 Ekim) ----
+   İzometrik makine kalktı — gerekçe view.ts başında. Kare sahne ortalı,
+   geniş ekranda 430 piksele kadar; telefonda kolonu dolduruyor. */
+.sb-stage { position: relative; border-radius: 14px; background: var(--anatomy-card); padding: 10px 8px; cursor: crosshair; touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
 .sb-stage:focus-visible { outline: 2px solid var(--line-focus, var(--primary)); outline-offset: 3px; }
-.sb-stage .iso-stage { --anatomy-paper: var(--anatomy-card); }
-.sb-stage .iso-svg { overflow: visible; }
+.sb2-svg { display: block; width: 100%; max-width: 430px; height: auto; margin-inline: auto; }
 
-.sb-wedge { stroke: none; }
-.sb-wedge[data-kind="regular"] { fill: color-mix(in srgb, var(--primary) 26%, transparent); }
-.sb-wedge[data-kind="pre"], .sb-wedge[data-kind="after"] { fill: color-mix(in srgb, var(--brass) 22%, transparent); }
-.sb-arc { fill: none; stroke-linecap: round; }
-.sb-arc[data-kind="regular"] { stroke: var(--primary); stroke-width: 2.6; }
-.sb-arc[data-kind="pre"], .sb-arc[data-kind="after"] { stroke: var(--brass); stroke-width: 1.8; }
+/* Saat çentikleri ve rakamlar: eksen NY (model.ts başı). */
+.sb2-tick { stroke: var(--line-strong); stroke-width: 1; }
+.sb2-tick[data-major] { stroke: var(--text-muted); stroke-width: 1.6; }
+.sb2-num { fill: var(--text-muted); font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-anchor: middle; dominant-baseline: middle; }
 
-.sb-needle { fill: var(--primary); stroke: var(--primary); stroke-width: var(--anatomy-weight); stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+/* Halka: ray + seans bantları. Renk anlam: mavi asıl seans, pirinç ön ve
+   akşam (zil şeridiyle aynı dil). Zil çalarken asıl seans bandı tam tona
+   çıkıyor — olayın bandı parlıyor. */
+.sb2-track { fill: none; stroke: var(--rail-track, var(--line-soft)); stroke-width: 16; }
+.sb2-band { fill: none; stroke-width: 16; stroke-linecap: butt; transition: stroke 240ms var(--ease-brand); }
+.sb2-band[data-kind="regular"] { stroke: color-mix(in srgb, var(--primary) 55%, transparent); }
+.sb2-band[data-kind="pre"], .sb2-band[data-kind="after"] { stroke: color-mix(in srgb, var(--brass) 45%, transparent); }
+.sb[data-ringing] .sb2-band[data-kind="regular"] { stroke: var(--primary); }
 
-.sb-contact > .iso-solid > .iso-top { fill: var(--primary); transition: fill 160ms var(--ease-brand); }
-.sb-contact[data-on] > .iso-solid > .iso-top { fill: var(--brass-bright); }
-.sb-contact[data-on] > .iso-solid > .iso-edge { stroke: var(--brass); }
-.sb[data-ringing] [data-bell] .iso-solid > .iso-edge { stroke: var(--brass); }
+/* Geçen gün: gece yarısından ibreye ince bir yay (ofseti live.tsx yazar).
+   "Günü Oynat"ta gün bu yayla doluyor. */
+.sb2-elapsed { fill: none; stroke: var(--text-strong); stroke-width: 3; opacity: .22; stroke-dasharray: 1; stroke-dashoffset: 1; }
 
-.sb-wire[data-pulse] .iso-line { stroke: var(--brass); stroke-dasharray: 2 6; animation: sb-pulse 400ms linear infinite; }
-@keyframes sb-pulse { to { stroke-dashoffset: -16; } }
+/* Merkez: plaka (ton basamağı) + iki saatli okuma. Punto SVG ölçeğinde —
+   430 piksellik sahnede ~40, telefonda oranla iner. */
+.sb2-plate { fill: var(--surface-sunken); }
+.sb2-stamp { fill: var(--text-muted); font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-anchor: middle; }
+.sb2-ny { fill: var(--text-strong); font-size: 44px; font-weight: 650; letter-spacing: -.02em; text-anchor: middle; font-variant-numeric: tabular-nums; }
+.sb2-tr { fill: var(--text-muted); font-size: 15px; font-weight: 600; text-anchor: middle; font-variant-numeric: tabular-nums; }
+.sb[data-previewing] .sb2-ny { fill: var(--brass-ink); }
+
+/* İbre: şeritteki "şimdi" noktasının rengi; dönüşü live.tsx yazar. */
+.sb2-needle { fill: var(--primary); }
+
+/* Zil imleri halkanın üstünde. Vuruşta im pirince döner, glif sallanır,
+   iki dalga açılır — makinenin "kontak + çan" anlatımının olay hâli. */
+.sb2-bellmark { color: var(--primary); }
+.sb2-bellface { fill: var(--premium-surface, var(--surface-solid)); stroke: currentColor; stroke-width: 2; transition: fill 200ms var(--ease-brand), stroke 200ms var(--ease-brand); }
+.sb2-bellmark > path { fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; transition: stroke 200ms var(--ease-brand); transform-box: fill-box; transform-origin: 50% 20%; }
+.sb2-wave { fill: none; stroke: var(--brass); stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.sb[data-strike="open"] [data-bellmark="open"], .sb[data-strike="close"] [data-bellmark="close"] { color: var(--brass); }
+.sb[data-strike="open"] [data-bellmark="open"] .sb2-bellface, .sb[data-strike="close"] [data-bellmark="close"] .sb2-bellface { fill: var(--brass); stroke: var(--brass); }
+.sb[data-strike="open"] [data-bellmark="open"] > path, .sb[data-strike="close"] [data-bellmark="close"] > path { stroke: var(--on-primary); animation: sb-swing 300ms var(--ease-brand) 4 alternate; }
+.sb[data-strike="open"] [data-bellmark="open"] .sb2-wave, .sb[data-strike="close"] [data-bellmark="close"] .sb2-wave { animation: sb-wave 700ms var(--ease-brand) both; }
+.sb[data-strike="open"] [data-bellmark="open"] .sb2-wave[data-late], .sb[data-strike="close"] [data-bellmark="close"] .sb2-wave[data-late] { animation-delay: 220ms; }
+@keyframes sb-wave { from { opacity: .8; transform: scale(1); } to { opacity: 0; transform: scale(2.6); } }
 
 /* ---- Zil bildirimi ----
    Zil çaldığında sahnenin sol üstünde "Açılış Zili · 16:30 TR": çanın
@@ -171,7 +205,7 @@
   .sb-head { gap: 6px 10px; }
   .sb-count { margin-left: 0; font-size: 18px; }
   .sb:not([data-previewing]) .sb-count { width: 100%; }
-  .sb-stage { margin-inline: -6px; padding: 2px 0; border-radius: 12px; }
+  .sb-stage { margin-inline: -6px; padding: 6px 2px; border-radius: 12px; }
   .sb-line { gap: 5px; }
   .sb-seg { padding: 9px 8px 19px; }
   .sb-seg-name { font-size: 12px; }
@@ -179,6 +213,7 @@
   .sb-seg-sub { font-size: 10.5px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sb-wire[data-pulse] .iso-line, .sb[data-ringing] .sb-badge::before, .sb-toast svg, .sb-play svg { animation: none !important; }
-  .sb-toast, .sb-seg, .sb-mark, .sb-marker, .sb-play { transition: none; }
+  .sb[data-ringing] .sb-badge::before, .sb-toast svg, .sb-play svg,
+  .sb2-bellmark > path, .sb2-wave { animation: none !important; }
+  .sb-toast, .sb-seg, .sb-mark, .sb-marker, .sb-play, .sb2-band, .sb2-bellface { transition: none; }
 }

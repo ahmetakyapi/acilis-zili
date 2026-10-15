@@ -275,6 +275,8 @@ const tr = {
     /* Gizli sekmenin başlığı, hedef geçtiğinde (components/today/TabCountdown). */
     tabRangOpen: "Açılış Zili Çaldı",
     tabRangClose: "Kapanış Zili Çaldı",
+    /* Kahraman zili düğmesinin adı (HeroBell). */
+    ringBell: "Zili Çal",
     countdownDays: "Gün",
     countdownHours: "Saat",
     countdownMinutes: "Dakika",
@@ -779,6 +781,8 @@ const tr = {
     slotLateday: "Kapanış Öncesi",
     latestEdition: "Son Yayın",
     nextEdition: "Sıradaki Yayın",
+    /* Saat künyesinin yanındaki kalan süre (NextEditionIn). */
+    nextEditionIn: "{d} sonra",
     scheduleLabel: "Yayın Saatleri",
     schedule: "Her işlem günü {pre}, {mid} ve {late}",
     changedToBuy: "Ala Döndü",
@@ -2500,6 +2504,9 @@ const tr = {
     openBell: "Açılış Zili",
     closeBell: "Kapanış Zili",
     chipsLabel: "Seanslar: dokun, o seansı oynat",
+    /* Yalnız ince işaretçide görünür (bell.css `.sb-hint`): dokunmatikte
+       seans kartları ve not aynı işi görüyor. */
+    dialHint: "Kadranın üzerinde gezin ya da bir saatine dokun: ibre oraya yürür.",
     note: "Zil günde iki kez çalar: asıl seans açılırken ({open}) ve kapanırken ({close}). Bir seansa dokun, ibre o seansı dolaşsın.",
     weekend: "hafta sonu",
     closedNote: "Bugün işlem yok ({name}). Sıradaki açılış: {next}.",

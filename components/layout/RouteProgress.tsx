@@ -30,6 +30,9 @@ import type { InkSceneName } from "@/lib/ink/scenes";
 const SLOW_AFTER = 420;
 /** Emniyet freni: hiçbir sinyal gelmezse çubuk sonsuza kadar dönmesin. */
 const MAX_RUN = 10_000;
+/** Çıkış sönmesinin süresi — CSS'teki geçişten bir tık uzun (globals.css
+ *  `.route-loader[data-leaving]`), geçiş bitmeden katman sökülmesin. */
+const EXIT_MS = 170;
 
 /* Modül seviyesinde küçük bir mağaza: göstergeyi hem tıklama dinleyicisi hem
    de sunucu eylemi yakan bileşenler (dil değişimi) tetikleyebilmeli, ikisi de
@@ -242,11 +245,38 @@ export function RouteProgress({ label, brand }: { label: string; brand: string }
     };
   }, [run]);
 
-  if (!running) return null;
+  /* ÇIKIŞ DA OYNUYOR (14 Ekim). Gezinme bitince perde + kart tek karede
+     sökülüyordu: giriş 180/260 ms özenle kuruluyken ekranın yarısını
+     karartan en büyük katman, projenin kendi çıkış kuralını (lib/motion.ts
+     `exitOf`: "giden şey hızlanarak gider") uygulamayan tek katmandı.
+     Gösterge şimdi `data-leaving` ile ~150 ms sönerek iniyor ve yeni
+     sayfanın `.page-enter` yükselişi perdenin altından beliriyor; süre
+     girişin ~%55'i, eğri `--ease-brand-in` (stil globals.css). Azaltılmış
+     harekette global kural geçişi zaten kapatıyor.
+
+     Koşunun düşüşü RENDER SIRASINDA yakalanıyor (RollingDigit'in "önceki
+     prop" kalıbı): efekt yalnızca süre dolunca katmanı söküyor. Kartın
+     çıkışta da görünmesi gerektiği o anki `slowRun`dan okunuyor — koşu
+     bittiğinde `slow` çoktan false, ama numarası duruyor. */
+  const [exit, setExit] = useState<{ run: number; card: boolean } | null>(null);
+  const [lastRun, setLastRun] = useState(0);
+  if (run !== lastRun) {
+    setLastRun(run);
+    if (run === 0) setExit({ run: lastRun, card: slowRun === lastRun && !inlineFeedback });
+    else if (exit) setExit(null);
+  }
+  useEffect(() => {
+    if (!exit) return;
+    const timer = window.setTimeout(() => setExit(null), EXIT_MS);
+    return () => window.clearTimeout(timer);
+  }, [exit]);
+
+  if (!running && !exit) return null;
+  const leaving = running ? undefined : "";
 
   return (
     <>
-      <span aria-hidden className="route-progress" />
+      <span aria-hidden className="route-progress" data-leaving={leaving} />
       {/* Gecikirse EKRANIN ORTASINDA marka işareti. Köşedeki küçük hap
           "bir şeyler oluyor" diyordu ama gözün gitmediği bir yerde
           duruyordu; ortadaki kart bekleyişi ürünün kendi işaretine
@@ -258,8 +288,8 @@ export function RouteProgress({ label, brand }: { label: string; brand: string }
           (harita `lib/ink/route-scenes.ts`). Sayfa içi yükleme işaretleri
           (filtre, grafik) küçük zil olarak kaldı: dar bir panelin içinde
           sahne, bekleyişin kendisinden büyük bir olay olurdu. */}
-      {slow && !inlineFeedback && (
-        <div className="route-loader"><InkLoader scene={scene} label={label} brand={brand} /></div>
+      {(running ? slow && !inlineFeedback : exit?.card) && (
+        <div className="route-loader" data-leaving={leaving}><InkLoader scene={scene} label={label} brand={brand} /></div>
       )}
     </>
   );

@@ -74,7 +74,15 @@ export function InkCanvas({
     let dpr = 1;
     const size = () => {
       dpr = Math.min(2, window.devicePixelRatio || 1);
-      const { width, height } = canvas.getBoundingClientRect();
+      /* YERLEŞİM ölçüsü, dönüşümlü değil. `getBoundingClientRect` atadaki
+         transform'u da ölçüyor: zil düğmesinin basış çökmesi (`HeroBell`
+         :active, scale .93) sırasında kurulan tuval %7 küçük açılıyor ve
+         ölçek geri gelince sahne bir tık bulanık kalıyordu (ölçüldü:
+         195×183 yerine 181×170). ResizeObserver transform'a tepki vermez,
+         yani kutu kendini sonradan da düzeltmiyordu. `clientWidth` bu
+         sahte küçülmeyi hiç görmüyor. */
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
       canvas.width = Math.max(1, Math.round(width * dpr));
       canvas.height = Math.max(1, Math.round(height * dpr));
     };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BellLoader } from "@/components/brand/BellLoader";
+import { BELL_RANG_EVENT } from "./bell-event";
 import styles from "./Countdown.module.css";
 
 /** Son kaç saniye "geri sayım" gibi atıyor. */
@@ -86,15 +86,27 @@ export function Countdown({
   /* ZİL ANI. Sitenin adı bu an ve sayaç ona saniye saniye sayıyordu, ama
      sıfıra varınca hiçbir şey olmuyordu: rakamlar "00" olup sayfa
      tazelenene kadar donuk kalıyordu. Son on saniyede saniye rakamı her
-     tikte bir kalp gibi atıyor (`data-phase="final"`); sıfırda rakamların
-     yanında zil çalıyor ve dört saniye çalmaya devam ediyor. Sıfır anı
+     tikte bir kalp gibi atıyor (`data-phase="final"`); sıfırda rakamlar
+     dört saniye pirince dönüyor ve ZİL OLAYI yayınlanıyor. Sıfır anı
      render sırasında yakalanıyor — SessionRefresh yeni hedefi getirince
-     sayaç yeniden saymaya başlasa da zil kendi süresini tamamlıyor, çünkü
-     bileşen aynı yerde kalıyor ve bu durum onunla yaşıyor. */
+     sayaç yeniden saymaya başlasa da faz kendi süresini tamamlıyor, çünkü
+     bileşen aynı yerde kalıyor ve bu durum onunla yaşıyor.
+
+     ÇALAN ZİL RAKAMLARIN YANINDAN KALKTI (14 Ekim). Sıfırda yanda beliren
+     BellLoader sonsuz döngülü bir BEKLEME göstergesiydi ve o anda kahraman
+     zili `visibility:hidden` ile tek karede gizleniyordu: kutlama anında
+     iki zil birbirinin yerine ışınlanıyordu. Şimdi sayaç `BELL_RANG_EVENT`
+     yayınlıyor, çalan şey kahramanın KENDİ mürekkep zili (HeroBell —
+     tıklamayla aynı `heroTap` sahnesi). Gömülü sayfada `ring` verilmiyor,
+     orada olay da yok. */
   const [rangAt, setRangAt] = useState<number | null>(null);
   if (remaining === 0 && rangAt === null && nowMs !== initialNowMs) {
     setRangAt(nowMs);
   }
+  useEffect(() => {
+    if (!ring || rangAt === null) return;
+    window.dispatchEvent(new CustomEvent(BELL_RANG_EVENT));
+  }, [ring, rangAt]);
   const ringing = rangAt !== null && nowMs - rangAt < RING_MS;
   // Zil sustu ve yeni hedef uzakta: bir sonraki sıfır için yeniden kur.
   if (rangAt !== null && !ringing && remaining > FINAL_SECONDS) {
@@ -131,11 +143,6 @@ export function Countdown({
           <span className="sr-only">{names[index]}</span>
         </span>
       ))}
-      {ring && ringing && (
-        <span className={styles.bell}>
-          <BellLoader size={52} />
-        </span>
-      )}
     </div>
   );
 }

@@ -40,7 +40,7 @@
    akışta — pencerenin genişliği hep tek rakam (tabular), satır zıplamaz.
    Giriş yaylı (hafifçe aşıp oturuyor), çıkış düz: gelen rakam "varıyor",
    giden yalnızca yol veriyor. Gerekçe Countdown.tsx → RollingDigit. */
-.digit { position:relative; display:inline-block; }
+.digit { position:relative; display:inline-block; transition:color 300ms var(--ease-brand); }
 .digitIn { display:inline-block; animation:digit-in 420ms var(--ease-spring-soft) both; }
 .digitOut { position:absolute; left:0; top:0; animation:digit-out 300ms var(--ease-brand) both; }
 /* Tek canlı vurgu saniye: değişen tek grup o. */
@@ -72,13 +72,15 @@
   55% { opacity:1; transform:translateY(0) scale(1.1); }
   to { opacity:1; transform:translateY(0) scale(1); }
 }
-/* SIFIR — rakamlar marka rengine döner ve yanlarında zil çalar. Zil
-   yaylanarak sahneye giriyor; ses halkaları BellLoader'ın kendisinde. */
-.countdown[data-phase="rang"] .digit { color:var(--primary); }
-.bell { display:inline-grid; place-items:center; align-self:center; margin-left:.12em; animation:bell-enter 480ms var(--ease-spring) both; }
-@keyframes bell-enter { from { opacity:0; transform:scale(.4) rotate(-18deg); } to { opacity:1; transform:none; } }
+/* SIFIR — rakamlar PİRİNCE döner; çalan şey kahramanın kendi zili
+   (HeroBell, BELL_RANG_EVENT — gerekçe Countdown.tsx "ZİL ANI"). Pirinç
+   çünkü vuruş anının rengi marka dilinde o: mürekkep sahnelerinin
+   kıvılcımı `--brass`, seans zili figürünün kontağı `--brass-bright`;
+   mavi ise etkileşimin rengi (CLAUDE.md). Renk geçişli (`.digit`
+   yukarıda): faz dönerken rakamlar tek karede boyanıp sönmesin. */
+.countdown[data-phase="rang"] .digit { color:var(--brass-ink); }
 @media (prefers-reduced-motion:reduce) {
-  .digitIn, .digitBoot, .countdown[data-phase="final"] .group:last-child .digitIn, .bell { animation:none; }
+  .digitIn, .digitBoot, .countdown[data-phase="final"] .group:last-child .digitIn { animation:none; }
   .digitOut { display:none; }
 }
 /* Kap sorgusu desteklemeyen tarayıcıda `cqi` küçük görünüme çözülür ve

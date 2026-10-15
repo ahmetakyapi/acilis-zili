@@ -34,6 +34,15 @@ const ROUTE_SCENES: readonly (readonly [prefix: string, scene: InkSceneName])[] 
   ["/ayarlar", "hello"],
   ["/portfoy", "ledger"],
   ["/vergi", "ledger"],
+  /* 14 Ekim: sahnesi hazır olup açılışa düşen hedefler eşlendi. Takvim gün
+     şeridini alıyor (sitenin imzası, saat çentikleri); sözlük terim arayan
+     okuyucu için büyüteç; hisse seçimi bir arama; analizlerim terazi;
+     tematik listeler grafik. */
+  ["/takvim", "dayStrip"],
+  ["/sozluk", "lens"],
+  ["/hisse-secimi", "searching"],
+  ["/analizlerim", "ledger"],
+  ["/tema", "chart"],
 ];
 
 export function sceneForPath(pathname: string | null): InkSceneName {

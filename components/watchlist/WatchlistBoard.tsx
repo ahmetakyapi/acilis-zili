@@ -2,7 +2,7 @@
 
 import { EASE_BRAND_POINTS, exitOf } from "@/lib/motion";
 
-import { BellMood } from "@/components/brand/BellMood";
+import { InkCanvas } from "@/components/ink/InkCanvas";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { useRouter } from "next/navigation";
@@ -138,8 +138,13 @@ export function WatchlistBoard({
               var"); gövdesi cümle. İkisi de gri 12-14 piksellik satırlardı
               ve hangisinin başlık olduğu okunmuyordu. */}
           <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
+            {/* Uyuyan zil MÜREKKEP sahnesi (14 Ekim). BellMood sonsuz
+                döngüyle sallanıyordu — döngü yalnız yükleme göstergesinin
+                hakkı (lib/ink/scenes.ts başı, WCAG 2.2.2) ve geometrik karo
+                sitenin mürekkep boş-durum diliyle çelişiyordu. `heroSleep`
+                bir kez oynayıp uyuyakalıyor; "z"ler son karede duruyor. */}
             <span className="mb-3">
-              <BellMood mood="sleep" size={52} />
+              <InkCanvas scene="heroSleep" seed={5} className="h-[104px] w-[111px]" />
             </span>
             <h2 className="text-read font-bold tracking-[-0.01em] text-strong">
               {labels.emptyAll}

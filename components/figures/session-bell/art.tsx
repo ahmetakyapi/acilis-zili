@@ -1,19 +1,42 @@
 import * as React from "react";
-import { Dots, FaceText, Line, Solid, Wire } from "@/components/iso/react/draw";
-import { bellArt } from "./geometry";
 import { SessionBellLive } from "./live";
-import type { BellDay, BellText } from "./model";
+import { angleOf, segments, type BellDay, type BellText } from "./model";
 import type { BellChip, BellLabels } from "./live";
+import {
+  BAND_R,
+  CX,
+  CY,
+  ELAPSED_R,
+  NUM_R,
+  TICK_MAJOR_R1,
+  TICK_R0,
+  TICK_R1,
+  arcPath,
+  point,
+} from "./view";
 
 /**
- * Statik çizim SUNUCUDA (anatomy references/react.md); her öğe prop'unun
- * kökünde kalıcı `key` (büyük sayfada tembel parça uyarısı).
+ * Kadranın YÜZÜ sunucuda çizilir (statik kısım); ibre, geçen-gün yayı ve
+ * okuma istemcide yaşar (live.tsx). Dördüncü sürümün gerekçesi view.ts
+ * başında: izometrik makine kalktı, cepheden tek kadran.
  *
- * Ressam sırası arkadan öne: kaide → kadran (halka, yüz, çentik, seans
- * yayları, kontaklar, göbek) → ibre (canlı) → göbek vidası → arka direk →
- * çan (askı, gövde) → bobin ve dövücü → ön direk, travers → kablo (zeminde,
- * en önde). Sunucu canlı saati basar; çan dinlenmede.
+ * Ressam sırası arkadan öne: çentikler ve rakamlar → halka rayı → seans
+ * bantları → zil imleri. Zil imlerinin çınlama dalgaları da burada, sönük;
+ * vuruş anında CSS açıyor (bell.css → data-strike).
  */
+
+const fine = (value: number) => Math.round(value * 100) / 100;
+
+function BellGlyph() {
+  /* BellIcon'un (live.tsx) 20'lik kutusu; im 26 piksellik dairede. */
+  return (
+    <path
+      d="M10 3a5 5 0 0 0-5 5v3.2L3.6 14h12.8L15 11.2V8a5 5 0 0 0-5-5Zm-2 12.5a2 2 0 0 0 4 0"
+      transform="translate(-10 -10)"
+    />
+  );
+}
+
 export function SessionBellArt({
   day,
   text,
@@ -35,100 +58,88 @@ export function SessionBellArt({
   nowMs: number;
   nextOpenMs: number;
   nextCloseMs: number;
-  /** Kadrana kazınmış tek etiket. */
+  /** Kadrana kazınmış etiket ("NY"). */
   stamp: string;
 }) {
-  const art = bellArt(day);
-  const { plinth, dial, yoke, bell, striker, wire } = art;
+  const bands = segments(day);
 
-  const PLINTH = (
-    <g key="plinth">
-      <path className="iso-halo" d={plinth.halo} />
-      {plinth.feet.map((paths, index) => (
-        <Solid key={index} paths={paths} tone="lo" crease="faint" />
-      ))}
-      <Solid paths={plinth.slab} tone="mid" crease="faint" inner={<Line d={plinth.seam} tone="faint" />} />
-      <Line d={plinth.groove} tone="faint" />
-      <Line d={plinth.screwRings} tone="lo" />
-      <Dots points={plinth.screws} size={0.5} tone="mid" />
-      <Solid paths={plinth.plate} tone="lo" crease="none" />
-      <Line d={plinth.plateRules} tone="lo" free />
-      <Dots points={plinth.plateScrews} size={0.42} tone="mid" />
-      <path className="iso-halo" d={bell.halo} />
-    </g>
-  );
+  /* Saat çentikleri: 24 çentik, altı saatte bir uzun + rakam. Rakamlar NY
+     saati — kadranın ekseni o (model.ts başı); TR karşılıkları seans
+     kartlarında zaten yazılı. */
+  const ticks: React.ReactNode[] = [];
+  const numerals: React.ReactNode[] = [];
+  for (let hour = 0; hour < 24; hour++) {
+    const angle = angleOf(hour * 60);
+    const major = hour % 6 === 0;
+    const [x0, y0] = point(angle, TICK_R0).map(fine);
+    const [x1, y1] = point(angle, major ? TICK_MAJOR_R1 : TICK_R1).map(fine);
+    ticks.push(
+      <line
+        key={hour}
+        x1={x0}
+        y1={y0}
+        x2={x1}
+        y2={y1}
+        className="sb2-tick"
+        data-major={major || undefined}
+      />,
+    );
+    if (major) {
+      const [nx, ny] = point(angle, NUM_R).map(fine);
+      numerals.push(
+        <text key={hour} x={nx} y={ny} className="sb2-num">
+          {String(hour).padStart(2, "0")}
+        </text>,
+      );
+    }
+  }
 
-  const DIAL = (
-    <g key="dial">
-      <Solid paths={dial.ringBase} tone="lo" crease="faint" />
-      <Solid paths={dial.face} tone="mid" crease="faint" />
-      <Line d={dial.bezel} tone="lo" />
-      <Line d={dial.tickRing} tone="faint" />
-      <Line d={dial.ticks.minor} tone="lo" />
-      <Line d={dial.ticks.major} tone="mid" />
-      {dial.wedges.map((wedge) => (
-        <path key={`w-${wedge.kind}`} className="sb-wedge" data-kind={wedge.kind} d={wedge.d} />
+  /* KÖKTE `key` VAR (15 Ekim): yüz sunucuda doğup `face` PROP'uyla istemci
+     bileşene iniyor; Flight'tan çözülen öğe dondurulmuş geldiği için
+     istemcinin statik `validateChildKeys` işareti üstüne yazılamıyor ve
+     React kardeş listesinde "unique key" uyarısı basıyordu. Açık anahtar
+     uyarıyı kökünden susturur; çizime etkisi yok. */
+  const face = (
+    <g key="face">
+      {ticks}
+      {numerals}
+      {/* Halka rayı: günün 24 saati. İşlem olmayan günde yalnız ray var —
+          bant yok, zil çalmaz (model.segments). */}
+      <circle cx={CX} cy={CY} r={BAND_R} className="sb2-track" />
+      {bands.map((band) => (
+        <path
+          key={band.kind}
+          d={arcPath(band.from, band.to, BAND_R)}
+          className="sb2-band"
+          data-kind={band.kind}
+        />
       ))}
-      <Line d={dial.arcTrack} tone="faint" />
-      {dial.arcs.map((arc) => (
-        <path key={arc.kind} className="iso-line sb-arc" data-kind={arc.kind} d={arc.d} />
-      ))}
-      {dial.contacts.map((paths, index) => (
-        <g key={index} className="sb-contact" data-contact={index === 0 ? "open" : "close"}>
-          <Solid paths={paths} tone="mid" crease="none" />
-        </g>
-      ))}
-      <FaceText transform={dial.label} size={3.6} tone="lo" anchor="middle">
+      {/* Geçen gün: gece yarısından ibreye incecik bir yay — istemci
+          `pathLength`li dairenin ofsetini yazar. Taban tam daire, sönük. */}
+      <circle cx={CX} cy={CY} r={ELAPSED_R} pathLength={1} className="sb2-elapsed" data-elapsed="" transform={`rotate(-90 ${CX} ${CY})`} />
+      {/* Okumanın plakası: tonla bir basamak (gölge yok) — rakamlar kendi
+          zemininde otursun. Kazınmış eksen etiketi üstünde. */}
+      <circle cx={CX} cy={CY} r={66} className="sb2-plate" />
+      <text x={CX} y={CY - 34} className="sb2-stamp">
         {stamp}
-      </FaceText>
-      <Solid paths={dial.terminal} tone="mid" crease="faint" />
-      <Line d={dial.terminalRing} tone="lo" />
-      <Solid paths={dial.hub} tone="mid" crease="faint" />
-    </g>
-  );
-
-  const PIN = <Dots key="pin" points={dial.hubPin} size={0.7} tone="hi" />;
-
-  const BACK = (
-    <g key="back">
-      <Solid paths={yoke.backFoot} tone="lo" crease="none" />
-      <Dots points={yoke.backScrews} size={0.45} tone="mid" />
-      <Solid paths={yoke.back} tone="mid" crease="faint" />
-    </g>
-  );
-
-  const BELL = (
-    <g key="bell">
-      <Solid paths={bell.hanger} tone="mid" crease="faint" />
-      <g data-bell="">
-        <Solid paths={bell.body} tone="hi" crease="faint" lit inner={<><Line d={bell.lip} tone="faint" /><Line d={bell.band} tone="faint" /></>} />
-      </g>
-    </g>
-  );
-
-  const STRIKER = (
-    <g key="striker">
-      <Solid paths={striker.stand} tone="lo" crease="faint" />
-      <Dots points={striker.standScrews} size={0.45} tone="mid" />
-      <g data-plunger="">
-        <Solid paths={striker.rod} tone="mid" crease="none" />
-        <Solid paths={striker.head} tone="mid" crease="none" />
-      </g>
-      <Solid paths={striker.coil} tone="mid" crease="faint" inner={<Line d={striker.coilSeams} tone="faint" />} />
-      <Dots points={striker.coilScrews} size={0.45} tone="mid" />
-    </g>
-  );
-
-  const FRONT = (
-    <g key="front">
-      <Solid paths={yoke.frontFoot} tone="lo" crease="none" />
-      <Dots points={yoke.frontScrews} size={0.45} tone="mid" />
-      <Solid paths={yoke.front} tone="mid" crease="faint" inner={<Line d={yoke.frontSeam} tone="faint" />} />
-      <Solid paths={yoke.bar} tone="mid" crease="faint" />
-      <Dots points={yoke.barScrews} size={0.5} tone="mid" />
-      <g data-wire="" className="sb-wire">
-        <Wire from={wire.from} to={wire.to} via={wire.via} tone="lo" />
-      </g>
+      </text>
+      {/* Zil imleri: AÇILIŞ ve KAPANIŞ halkanın üstünde. İbre üstünden
+          geçince im çınlar (bell.css: sallanma + iki dalga). */}
+      {day.tradingToday &&
+        ([
+          ["open", day.open],
+          ["close", day.close],
+        ] as const).map(([bell, at]) => {
+          const [bx, by] = point(angleOf(at), BAND_R).map(fine);
+          return (
+            <g key={bell} className="sb2-bellmark" data-bellmark={bell} transform={`translate(${bx} ${by})`}>
+              <circle className="sb2-wave" r={14} />
+              <circle className="sb2-wave" data-late="" r={14} />
+              <circle className="sb2-bellface" r={13} />
+              <BellGlyph />
+            </g>
+          );
+        })}
     </g>
   );
 
@@ -143,13 +154,7 @@ export function SessionBellArt({
       nowMs={nowMs}
       nextOpenMs={nextOpenMs}
       nextCloseMs={nextCloseMs}
-      plinth={PLINTH}
-      dial={DIAL}
-      pin={PIN}
-      back={BACK}
-      bell={BELL}
-      striker={STRIKER}
-      front={FRONT}
+      face={face}
     />
   );
 }

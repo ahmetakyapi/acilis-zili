@@ -3,7 +3,7 @@ import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMot
 import styles from "@/components/today/TodayExperience.module.css";
 import { Countdown } from "@/components/today/Countdown";
 import { TabCountdown } from "@/components/today/TabCountdown";
-import { InkCanvas } from "@/components/ink/InkCanvas";
+import { HeroBell } from "@/components/today/HeroBell";
 import { SessionBellFigure } from "@/components/figures/session-bell/figure";
 import { BellLedger } from "@/components/today/BellLedger";
 import { SessionRefresh } from "@/components/today/SessionRefresh";
@@ -225,7 +225,9 @@ export default async function TodayPage() {
                 her dilde ve genişlikte boş; ölçü CSS'te. */}
             <div className={styles.heroTopRow}>
               <div className={styles.heroSession} data-state={sessionState}><span aria-hidden="true" />{sessionLabel[status.session]}</div>
-              <InkCanvas scene={heroScene} seed={11} delay={0.55} className={styles.heroBell} />
+              {/* Zil bir düğme: tıklanınca çalıyor ("Zili Çal", 14 Ekim) —
+                  gerekçe HeroBell.tsx. Açılış sahnesi yine seanstan. */}
+              <HeroBell scene={heroScene} label={t.today.ringBell} className={styles.heroBell} />
             </div>
             <h1 className={styles.headline}>{countdownLabel}</h1>
             {/* Rakam satırı ile zil şeridi TEK blok; rozet ve başlık tepede.

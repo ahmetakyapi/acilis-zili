@@ -6,6 +6,7 @@ import { ThemeRanking } from "@/components/themes/ThemeRanking";
 import { SpreadStrip } from "@/components/themes/ThemeVisuals";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { FoldToggle } from "@/components/ui/FoldToggle";
+import { PlayOnView } from "@/components/motion/PlayOnView";
 import { DataStamp, LogoTile, PanelLink, Skeleton } from "@/components/ui/primitives";
 import { themeTitle } from "@/content/themes";
 import { getStatus } from "@/lib/data";
@@ -173,6 +174,14 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
       }
     >
       <FoldToggle id="sektor-siralamasi" hiddenCount={phoneHidden} more={t.compact.showAll} less={t.compact.showLess} phone>
+      {/* Sütunlar GÖRÜNÜNCE büyüyor (14 Ekim). `sector-grow` düz CSS
+          animasyonu ve öğe DOM'a girdiği an başlıyordu; bant ise kahraman +
+          akış + Seans Zili'nin altında, 1440×900'de ilk ekranın dışında —
+          0,9 saniyelik kademeli büyüme kimse görmeden oynayıp bitiyordu.
+          `PlayOnView` sarmalı ekran altındaysa ilk karede duraklatıyor
+          (aşağıda .ribbonPlay), görününce bırakıyor. JS yokken, azaltılmış
+          harekette ve ilk ekranda davranış değişmiyor. */}
+      <PlayOnView className={styles.ribbonPlay}>
       <ol className={styles.ribbon} style={{ "--zero": `${zero}%` } as CSSProperties}>
         {rows.map((row, i) => {
           const inScale = row.change !== null && (allLastClose || !row.lastClose);
@@ -222,6 +231,7 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
           );
         })}
       </ol>
+      </PlayOnView>
       </FoldToggle>
     </SectorFrame>
   );

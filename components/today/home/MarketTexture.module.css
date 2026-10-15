@@ -121,6 +121,10 @@
 .colSkeleton { height:84px; border-radius:14px; }
 @keyframes sector-grow-x { from { scale:0 1; } }
 @keyframes sector-grow-y { from { scale:1 0; } }
+/* Ekranın altındayken İLK karede duraklat; `data-play` gelince süren
+   zaman kaldığı yerden (gecikmeler dahil) akar — kademe korunur.
+   Gerekçe MarketTexture.tsx → PlayOnView sarmalı. */
+.ribbonPlay[data-armed]:not([data-play]) .colBar { animation-play-state:paused; }
 
 /* 640–1179: üç kolon, sıra sütun sütun (4 + 4 + 3). */
 @media (min-width:640px) and (max-width:1179px) {
@@ -173,7 +177,10 @@
   /* Katlıyken altı fon üç satırda (3 + 3): görünür satır sayısı kadar
      ızgara satırı, yoksa hepsi sol sütuna dizilir. Yedek aynı şekil: altı
      kutu ve katlama düğmesinin 44 pikseli. */
-  input:not(:checked) ~ .ribbon, .ribbonSkeleton { grid-template-rows:repeat(3,auto); }
+  /* `.ribbon` artık PlayOnView sarmalının içinde (14 Ekim): doğrudan
+     kardeş seçicisi (`~ .ribbon`) eşleşmez olmuştu ve katlı durum altı
+     satıra düşüyordu — torun seçicisiyle aynı davranış. */
+  input:not(:checked) ~ .ribbonPlay .ribbon, .ribbonSkeleton { grid-template-rows:repeat(3,auto); }
   .ribbonSkeleton > :nth-child(n+7) { display:none; }
   .ribbonSkeleton { padding-bottom:44px; }
 }

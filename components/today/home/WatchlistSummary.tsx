@@ -167,9 +167,15 @@ export async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dicti
                   suppressHydrationWarning
                   className="border-t border-line first:border-t-0"
                 >
+                  {/* Hover sitenin tek diliyle (`--primary-tint`,
+                      globals.css "SİTENİN TEK HOVER DİLİ"); `opacity-80`
+                      içeriği soldurup "devre dışı" gibi okutuyordu ve
+                      `transition-colors` opaklığı geçişlemiyordu. Satır
+                      panelin dolgusuna negatif kenarla açılıyor ki vurgu
+                      kutunun kenarına kadar sürsün (DayMovers ile aynı). */}
                   <Link
                     href={`/hisse/${symbol}`}
-                    className="flex items-center gap-3 py-2.5 transition-colors hover:opacity-80"
+                    className="-mx-4 flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-primary-tint sm:-mx-5 sm:px-5"
                   >
                     <LogoTile symbol={symbol} logoUrl={names[symbol]?.logoUrl} size="sm" />
                     <span className="min-w-0 flex-1">

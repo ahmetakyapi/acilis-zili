@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
+import { motion } from "motion/react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { EmptyState } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
+import { SELECTION_TRANSITION } from "@/lib/motion";
 import type { BriefPeriod } from "@/lib/brief";
 import styles from "./BriefSwitch.module.css";
 
@@ -79,6 +81,7 @@ export function BriefSwitch({
   labels: BriefSwitchLabels;
 }) {
   const [period, setPeriod] = useState<BriefPeriod>("daily");
+  const pillId = useId();
   /* GEÇİŞİN YÖNÜ — yalnızca okuyucu sekme değiştirdiğinde dolu. Kart ana
      sayfanın ilk ekranında; ilk çizimde animasyon oynasaydı sunucunun tam
      boyadığı metin yüklenirken kayıp soluklaşırdı (23 Eylül kuralı:
@@ -151,13 +154,29 @@ export function BriefSwitch({
             /* Telefonda 44px: 34px'lik sekmeler dokunma eşiğinin altındaydı
                ve bunlar bültenin tek denetimi. Masaüstünde imleç hassas,
                orada 34px yeterli. */
-            "min-h-11 rounded-full px-4 transition-colors sm:min-h-8",
+            "relative min-h-11 rounded-full px-4 transition-colors sm:min-h-8",
             period === key
-              ? "bg-primary font-semibold text-on-primary"
+              ? "font-semibold text-on-primary"
               : "text-body hover:text-strong",
           )}
         >
-          {labels.tabs[key]}
+          {/* HAP KAYIYOR (14 Ekim). Dolgu her düğmenin kendi arka planıydı:
+              seçim değişince bir düğmede sönüp ötekinde beliriyordu, oysa
+              hemen altındaki panel YÖNLÜ kayıyor (`brief-enter-next/prev`)
+              ve sitenin öteki seçim işaretleri kayarak gider (SectionNav
+              göstergesi, TabUnderline). Hap `layoutId` ile sekmeden sekmeye
+              yolculuk ediyor; yolu panelin kayış yönünü önceden söylüyor.
+              Azaltılmış harekette MotionConfig (reducedMotion="user")
+              yerleşim animasyonunu zaten kapatıyor. */}
+          {period === key && (
+            <motion.span
+              aria-hidden="true"
+              layoutId={`${pillId}-brief-pill`}
+              className="absolute inset-0 rounded-full bg-primary"
+              transition={SELECTION_TRANSITION}
+            />
+          )}
+          <span className="relative">{labels.tabs[key]}</span>
         </button>
       ))}
     </div>
