@@ -1,5 +1,6 @@
-import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
-import polish from "@/components/motion/UtilityExperience.module.css";
+import { MotionExperience, ScrollProgress, SpotlightCard } from "@/components/motion/PremiumMotion";
+import experience from "@/components/motion/EditorialExperience.module.css";
+import detail from "@/components/stories/StoryDetail.module.css";
 import editorial from "@/components/article/ArticleEditorial.module.css";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
@@ -62,90 +63,102 @@ export default async function CommunityPostPage(props: PageProps<"/topluluk/[slu
   });
 
   return (
-    <MotionExperience className={`${polish.page} mx-auto w-full max-w-3xl`}>
+    /* OKUMA KABI MERCEK'LE AYNI (15 Ekim): `max-w-3xl` dar sütun yerine
+       StoryDetail'in 1040'lık kartı ve iki hattı (yüzey kenarda, metin
+       `--read-inset` içeride). Bir ::: bloğu Mercek'te nerede duruyorsa
+       burada da orada — kullanıcı yazısı ikinci sınıf bir sayfa değil. */
+    <MotionExperience className={experience.article}>
       <ScrollProgress />
-      <nav className="pt-1">
-        <Link
-          href="/topluluk"
-          className="inline-flex min-h-11 items-center gap-1.5 text-small font-semibold text-muted transition-colors hover:text-strong sm:min-h-0"
-        >
-          <ArrowLeft size={14} aria-hidden />
-          {L.post.back}
-        </Link>
-      </nav>
-
-      <header className="flex flex-col gap-3 border-b border-line pb-5">
-        <h1 className="display-ink text-3xl font-black leading-tight tracking-tight sm:text-4xl [overflow-wrap:anywhere]">
-          {post.title}
-        </h1>
-        <p className="max-w-2xl text-base leading-relaxed text-body [overflow-wrap:anywhere]">{post.dek}</p>
-        {/* Künye başlığın ALTINDA (kicker yasağı): yazar karosu, tarih, süre. */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-small text-muted">
+      <article className={detail.article}>
+        <div className={detail.utility}>
           <Link
-            href={`/u/${post.author.username}`}
-            className="inline-flex min-h-11 items-center gap-2 font-semibold text-body transition-colors hover:text-strong sm:min-h-0"
+            href="/topluluk"
+            className="tap-44 -my-2 inline-flex w-fit min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-muted transition-colors hover:text-primary"
           >
-            <AvatarTile
-              icon={post.author.avatar?.icon ?? null}
-              color={post.author.avatar?.color}
-              initials={initialsOf(post.author.username, locale)}
-              className="size-7 rounded-full text-[11px]"
-            />
-            {post.author.username}
+            <ArrowLeft weight="bold" size={13} aria-hidden />
+            {L.post.back}
           </Link>
-          <span aria-hidden>·</span>
-          <time dateTime={post.publishedAt.toISOString().slice(0, 10)} className="tabular-nums">
-            {dateFormat.format(post.publishedAt)}
-          </time>
-          <span aria-hidden>·</span>
-          <span className="tabular-nums">
-            {minutes} {t.stories.readMinutes}
-          </span>
-          {post.symbols.length > 0 && (
-            <>
-              <span aria-hidden>·</span>
-              <span className="flex flex-wrap gap-1.5">
-                {post.symbols.slice(0, 8).map((symbol) => (
-                  <Link
-                    key={symbol}
-                    href={`/hisse/${symbol}`}
-                    className="numeral inline-flex min-h-11 items-center rounded-full border border-line bg-surface-sunken px-2 text-tiny font-semibold text-body transition-colors hover:border-line-focus hover:text-strong sm:min-h-6"
-                  >
-                    {symbol}
-                  </Link>
-                ))}
-              </span>
-            </>
-          )}
         </div>
-      </header>
 
-      <div lang={post.locale} data-motion-article>
-        <ArticleBody
-          markdown={post.bodyMd}
-          blocks={blocks}
-          locale={post.locale}
-          variant="editorial"
-          className={editorial.prose}
-          autoLink={autoLink}
-        />
-      </div>
+        <SpotlightCard className={detail.coverSurface}>
+          <header className={detail.cover} data-has-aside="false">
+            <div className={detail.coverCopy} data-motion-intro>
+              <h1 data-ink="lines" className={detail.title}>
+                <span className="ink-line">{post.title}</span>
+              </h1>
+              {/* Künye başlığın ALTINDA (kicker yasağı): yazar, tarih, süre. */}
+              <div className="-mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-small text-muted">
+                <Link
+                  href={`/u/${post.author.username}`}
+                  className="inline-flex min-h-11 items-center gap-2 font-semibold text-body transition-colors hover:text-strong sm:min-h-0"
+                >
+                  <AvatarTile
+                    icon={post.author.avatar?.icon ?? null}
+                    color={post.author.avatar?.color}
+                    initials={initialsOf(post.author.username, locale)}
+                    className="size-7 rounded-full text-[11px]"
+                  />
+                  {post.author.username}
+                </Link>
+                <span aria-hidden>·</span>
+                <time dateTime={post.publishedAt.toISOString().slice(0, 10)} className="numeral">
+                  {dateFormat.format(post.publishedAt)}
+                </time>
+                <span aria-hidden>·</span>
+                <span className="numeral">
+                  {minutes} {t.stories.readMinutes}
+                </span>
+              </div>
+              <p className={detail.dek}>{post.dek}</p>
+              {post.symbols.length > 0 && (
+                <ul className="flex flex-wrap gap-1.5">
+                  {post.symbols.slice(0, 8).map((symbol) => (
+                    <li key={symbol}>
+                      <Link
+                        href={`/hisse/${symbol}`}
+                        className="numeral inline-flex min-h-11 items-center rounded-full border border-line bg-surface-sunken px-2.5 text-tiny font-semibold text-body transition-colors hover:border-line-focus hover:text-strong sm:min-h-7"
+                      >
+                        {symbol}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </header>
+        </SpotlightCard>
 
-      {/* Sorumluluk ve bildirim — hairline üstünde düz paragraf, yeni kutu yok. */}
-      <footer className="flex flex-col gap-2 border-t border-line-soft pt-4">
-        <p className="text-small leading-relaxed text-muted">
-          {L.post.disclaimer.replace("{author}", post.author.username)}
-        </p>
-        <a
-          href="https://github.com/ahmetakyapi/acilis-zili/issues"
-          target="_blank"
-          rel="noreferrer noopener"
-          className="inline-flex min-h-11 w-fit items-center gap-1 text-small font-semibold text-muted underline decoration-line underline-offset-2 transition-colors hover:text-strong sm:min-h-0"
-        >
-          {L.post.report}
-          <ArrowUpRight size={13} aria-hidden />
-        </a>
-      </footer>
+        <div className={detail.layout}>
+          <div className={detail.mainCol}>
+            <div lang={post.locale} data-motion-article>
+              <ArticleBody
+                markdown={post.bodyMd}
+                blocks={blocks}
+                locale={post.locale}
+                variant="editorial"
+                className={editorial.prose}
+                autoLink={autoLink}
+              />
+            </div>
+
+            {/* Sorumluluk ve bildirim — hairline üstünde düz paragraf, yeni kutu yok. */}
+            <footer className={detail.sources}>
+              <p className={detail.disclaimer}>
+                {L.post.disclaimer.replace("{author}", post.author.username)}
+              </p>
+              <a
+                href="https://github.com/ahmetakyapi/acilis-zili/issues"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="inline-flex min-h-11 w-fit items-center gap-1 text-small font-semibold text-muted underline decoration-line underline-offset-2 transition-colors hover:text-strong sm:min-h-0"
+              >
+                {L.post.report}
+                <ArrowUpRight size={13} aria-hidden />
+              </a>
+            </footer>
+          </div>
+        </div>
+      </article>
     </MotionExperience>
   );
 }

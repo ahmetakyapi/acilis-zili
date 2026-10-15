@@ -5,6 +5,9 @@ import { and, eq, sql } from "drizzle-orm";
 import { requireAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 import { userPosts } from "@/lib/schema";
+import { getDictionary } from "@/lib/i18n";
+import { withLocale } from "@/lib/i18n/routing";
+import { notifyUser } from "@/lib/notifications";
 
 /**
  * Moderasyon eylemleri — /admin/moderasyon. Her eylemin İLK SATIRI
@@ -45,9 +48,19 @@ export async function approvePostAction(formData: FormData) {
           eq(userPosts.updatedAt, seenAt),
         ),
       )
-      .returning({ slug: userPosts.slug });
+      .returning({ slug: userPosts.slug, userId: userPosts.userId, title: userPosts.title });
     if (!row) return;
     slug = row.slug;
+    /* Yazar sonucu /yazilarim'a girmeden öğrensin — zil + push. */
+    await notifyUser(
+      row.userId,
+      "post_approved",
+      (locale) => {
+        const t = getDictionary(locale).inbox;
+        return { title: t.approvedTitle, body: t.approvedBody.replace("{title}", row.title), path: `/topluluk/${row.slug}`, tag: `post-${id}` };
+      },
+      withLocale,
+    );
   } catch {
     return;
   }
@@ -64,10 +77,23 @@ export async function rejectPostAction(formData: FormData) {
   /* Gerekçesiz red yok: yazar neyi düzelteceğini bilmeli. */
   if (!id || !note) return;
   try {
-    await db
+    const rejected = await db
       .update(userPosts)
       .set({ status: "rejected", reviewNote: note, updatedAt: new Date() })
-      .where(and(eq(userPosts.id, id), eq(userPosts.status, "pending")));
+      .where(and(eq(userPosts.id, id), eq(userPosts.status, "pending")))
+      .returning({ userId: userPosts.userId, title: userPosts.title });
+    const row = rejected[0];
+    if (row) {
+      await notifyUser(
+        row.userId,
+        "post_rejected",
+        (locale) => {
+          const t = getDictionary(locale).inbox;
+          return { title: t.rejectedTitle, body: t.rejectedBody.replace("{title}", row.title), path: `/yazilarim/${id}`, tag: `post-${id}` };
+        },
+        withLocale,
+      );
+    }
   } catch {
     return;
   }

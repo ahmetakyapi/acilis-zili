@@ -37,9 +37,9 @@ yazılar, bilanço analizleri ve günde üç kez yenilenen teknik analizler.
 
 <table>
 <tr>
-<td align="center"><b>61</b><br><sub>sayfa rotası</sub></td>
+<td align="center"><b>62</b><br><sub>sayfa rotası</sub></td>
 <td align="center"><b>25</b><br><sub>API ucu</sub></td>
-<td align="center"><b>31</b><br><sub>veritabanı tablosu</sub></td>
+<td align="center"><b>32</b><br><sub>veritabanı tablosu</sub></td>
 <td align="center"><b>5</b><br><sub>veri sağlayıcısı</sub></td>
 <td align="center"><b>5</b><br><sub>içerik rutini</sub></td>
 <td align="center"><b>17</b><br><sub>mürekkep sahnesi</sub></td>
@@ -366,7 +366,7 @@ sıçrıyor. Gezinme bekleyişinin kartı marka adıyla açılıyor.
 
 ## Veri Modeli
 
-31 tablo. "Kim yazar" sütunu önemli: bir tablonun tazeliği onu yazanın
+32 tablo. "Kim yazar" sütunu önemli: bir tablonun tazeliği onu yazanın
 ritmine bağlı.
 
 | Tablo | Ne tutar | Kim yazar |
@@ -377,6 +377,7 @@ ritmine bağlı.
 | `percent_alerts` | Günlük yüzde değişim alarmları (eşik + yön, tek seferlik) | Kullanıcı eylemi (hisse sayfası) |
 | `notification_prefs` | Hesap genelinde bildirim anahtarları (bilanço hatırlatması) | Kullanıcı eylemi (Ayarlar) |
 | `user_posts` | Topluluk yazıları: taslak → kuyruk → yayın/red durum makinesi | Kullanıcı eylemi (editör) + moderasyon |
+| `notifications` | Bildirim kutusu: alarm, bilanço ve moderasyon bildirimlerinin kalıcı kaydı (90 gün) | `lib/notifications.ts` → `notifyUser` (cron + moderasyon) |
 | `symbols` | Sembol künyesi: ad, borsa, sektör, logo, piyasa değeri, hisse sayısı | Tohum + cron + sayfa isteği |
 | `quotes_cache` | Son bilinen fiyat; sağlayıcı düşünce gösterilecek yedek | Sayfa isteği |
 | `candles_cache` | Aralık başına bar dizisi | Sayfa isteği |
@@ -622,7 +623,7 @@ açarsa yayımlanır ve kapattığı an adres yeniden 404 olur.
 
 `/giris` · `/kayit` · `/sifremi-unuttum` · `/sifre-sifirla` (e-postayla tek kullanımlık, 30 dakikalık bağlantı; yalnızca e-posta servisi bağlıyken — `lib/email.ts`, `lib/password-reset.ts`) · `/favoriler` (fiyatlar USD ya da TL; Fiyat ve yüzde alarmları paneli — hisse sayfasındaki zil düğmesiyle kurulur (hedef fiyat ya da günlük değişim eşiği), siteyi açtığında ve seans boyunca beş dakikada bir sunucuda güncel fiyatla kontrol edilir, ana sayfada "Hedefe Ulaştı" şeridi; `lib/price-alerts.ts`, `lib/alert-sweep.ts`) · `/ayarlar` (profil
 ikonu ve rengi, herkese açık profil — tanıtım + görünürlük anahtarları,
-varsayılan gizli —, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri ve hesap genelinde bilanço hatırlatması — `lib/push.ts`, `public/sw.js`, `app/api/cron/bilanco` —, Verilerimi İndir, hesap silme) · `/yazilarim` (topluluk yazıların: taslak, kuyruk, yayın; editör ::: bloklarıyla, önizleme yayındaki çizimin kendisi — `/yazilarim/yeni` ve `/yazilarim/[id]`. Oturum ister, dizine girmez) · `/raporum` (Zil Raporu: üyelik, seans sayısı, takip, alarm, portföy getirisi vs SPY ve yazılar — bölüm bölüm kayan kişisel özet, her sayı hesabın kendi verisinden; tutar yok. Oturum ister, dizine girmez) · `/analizlerim` (Claude ile üretilen kayıtlı raporlar; görüş, puan, vade ve Rapordan Bugüne fiyat değişimi, satır raporu `/claude/[symbol]?rapor=` ile açar; yalnız analiz erişimi olan hesaplarda menüde, dizine girmez) · `/menu` · `/kvkk` ·
+varsayılan gizli —, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri ve hesap genelinde bilanço hatırlatması — `lib/push.ts`, `public/sw.js`, `app/api/cron/bilanco` —, Verilerimi İndir, hesap silme) · `/bildirimler` (bildirim kutusu: alarm, bilanço ve moderasyon bildirimleri; başlıktaki zil okunmamışları sayar, push kapalı cihazda da kayıt kalır. Oturum ister, dizine girmez) · `/yazilarim` (topluluk yazıların: taslak, kuyruk, yayın; editör şablonlarla açılır (`?sablon=`), ::: blokları ve yanında canlı önizleme — `/yazilarim/yeni` ve `/yazilarim/[id]`. Oturum ister, dizine girmez) · `/raporum` (Zil Raporu: üyelik, seans sayısı, takip, alarm, portföy getirisi vs SPY ve yazılar — bölüm bölüm kayan kişisel özet, her sayı hesabın kendi verisinden; tutar yok. Oturum ister, dizine girmez) · `/analizlerim` (Claude ile üretilen kayıtlı raporlar; görüş, puan, vade ve Rapordan Bugüne fiyat değişimi, satır raporu `/claude/[symbol]?rapor=` ile açar; yalnız analiz erişimi olan hesaplarda menüde, dizine girmez) · `/menu` · `/kvkk` ·
 `/hakkinda` (Hakkında ve Metodoloji: kim yapıyor, sayılar nereden geliyor,
 yazıları kim yazıyor; gömme kodları da burada)
 

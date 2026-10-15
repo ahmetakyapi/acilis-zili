@@ -98,6 +98,10 @@ export type AccountExport = {
         triggeredPct: number | null;
       }[]
     | null;
+  /** Bildirim kutusu (15 Ekim) — `null` tablo okunamadıysa. */
+  inbox?:
+    | { kind: string; title: string; body: string; url: string; createdAt: string; read: boolean }[]
+    | null;
   /** Topluluk yazıları (15 Ekim) — `null` tablo okunamadıysa. */
   posts?:
     | {

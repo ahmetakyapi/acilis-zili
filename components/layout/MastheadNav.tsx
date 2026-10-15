@@ -26,8 +26,8 @@ export type MastheadStripItem = {
 
 export type MastheadMoreItem = { href: string; label: string; hint: string; group: MoreGroup };
 
-/** Panelin genişliği rem cinsinden — sınıftaki `w-[38rem]` ile aynı sayı. */
-const PANEL_REM = 38;
+/** Panelin genişliği rem cinsinden — sınıftaki `w-[44rem]` ile aynı sayı. */
+const PANEL_REM = 44;
 
 /**
  * Masaüstü şeridi — yedi sekme ve "Daha Fazla".
@@ -263,22 +263,24 @@ export function MastheadNav({
               style={{ transformOrigin: alignEnd ? "top right" : "top left" }}
               onKeyDown={onPanelKeyDown}
               className={cn(
-                "masthead-dropdown absolute outline-none top-[calc(100%+0.75rem)] z-40 w-[38rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-overlay-surface p-2.5 shadow-(--shadow-overlay)",
+                "masthead-dropdown absolute outline-none top-[calc(100%+0.75rem)] z-40 w-[44rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-overlay-surface p-2.5 shadow-(--shadow-overlay)",
                 alignEnd
                   ? "right-[calc(var(--masthead-tab-px)-1rem)]"
                   : "left-[calc(var(--masthead-tab-px)-1rem)]",
               )}
             >
-              {/* SATIRLAR İKİ SÜTUNDA AYNI HATTA (28 Eylül). Solda beş satır,
-                  sağda iki grup ikişer satır; sağın ikinci grup başlığı kısa
-                  bir başlık + boşluk olduğu için sağdaki satırlar soldakilerin
-                  hattından kayıyor ve sağ sütunun altı boş kalıyordu. Artık
-                  satır boyu sabit (`--more-row`) ve bir sütunun İKİNCİ ve
-                  sonraki grup başlığı tam bir satır boyunda, yazısı dibinde:
-                  sol 1 başlık + 5 satır, sağ 1 başlık + 2 + 1 + 2 satır;
-                  "Haberler" "Ünlü Yatırımcılar"ın karşısında, iki sütunun
-                  dibi aynı çizgide. Taşan sekmelerin ayırıcısı da artık yer
-                  tutmuyor (satırın kendi çizgisi), yoksa hat yine kayardı. */}
+              {/* PANEL 38 → 44rem, ÜÇ KARTLIK BANT (15 Ekim; sahibi: "Daha
+                  Fazla görsel olarak daha iyi olsun"). Ekran görüntüsünde üç
+                  kusur vardı: (1) analiz bandı iki sütunluydu ve Tarayıcı
+                  gelince üçüncü kart ikinci satırda tek başına kaldı; (2) sağ
+                  sütunun ikinci grup başlığı TAM SATIR boyundaydı (28 Eylül'ün
+                  hat hizalama çözümü) ve "Oku"nun önünde 58 piksellik boşluk
+                  açıyordu — grupların sayısı değişince hizalama zaten
+                  tutmuyordu (sol 5, sağ 2 + 3 satır); (3) 38rem'de satır
+                  ipuçları kesiliyordu ("Pozisyonların, Dolar ve Lira…").
+                  Şimdi bant üç eşit dikey kart, ikinci grup başlığı ilkiyle
+                  aynı boyda (üstünde hairline ile ayrılır), ipuçları sarar,
+                  kesilmez. Klavye sırası belge sırası: bant, sol, sağ. */}
               {(() => {
                 /* ANALİZ ARAÇLARI ÜST BANTTA, İKİ SÜTUNA YAYILIR (11 Ekim;
                    gerekçe nav-items.ts → MORE_GROUPS). Klavye sırası belge
@@ -290,7 +292,7 @@ export function MastheadNav({
                     <h3 className="masthead-more-head flex h-8 items-end px-3 pb-1.5 text-tiny font-semibold text-muted">
                       {groups.analyze}
                     </h3>
-                    <ul className="grid grid-cols-2 gap-2 px-1">
+                    <ul className="grid grid-cols-3 gap-2 px-1">
                       {featured.map((row) => {
                         const current = activeRow?.href === row.href;
                         const Icon = NAV_ITEMS.find((item) => item.href === row.href)?.icon;
@@ -303,10 +305,10 @@ export function MastheadNav({
                               onClick={() => setOpenedAt(null)}
                               className="masthead-feature-card"
                             >
-                              {Icon && <span className="masthead-feature-icon" aria-hidden><Icon size={22} weight="duotone" /></span>}
-                              <span className="min-w-0 flex-1">
-                                <span className="block truncate text-read font-bold text-strong">{row.label}</span>
-                                <span className="mt-0.5 block text-small leading-snug text-muted">{row.hint}</span>
+                              {Icon && <span className="masthead-feature-icon" aria-hidden><Icon size={20} weight="duotone" /></span>}
+                              <span className="min-w-0">
+                                <span className="block text-read font-bold leading-snug text-strong">{row.label}</span>
+                                <span className="mt-1 block text-small leading-snug text-muted">{row.hint}</span>
                               </span>
                               <ArrowUpRight className="masthead-row-arrow" size={14} aria-hidden />
                             </Link>
@@ -327,8 +329,8 @@ export function MastheadNav({
                         <section key={group} aria-label={groups[group]}>
                           <h3
                             className={cn(
-                              "masthead-more-head flex items-end px-3 pb-1.5 text-tiny font-semibold text-muted",
-                              groupIndex === 0 ? "h-8" : "h-(--more-row)",
+                              "masthead-more-head flex h-8 items-end px-3 pb-1.5 text-tiny font-semibold text-muted",
+                              groupIndex > 0 && "masthead-more-head-next",
                             )}
                           >
                             {groups[group]}
@@ -352,7 +354,7 @@ export function MastheadNav({
                                       <span className={cn("block truncate text-base font-semibold", current ? "text-primary-ink" : "text-strong")}>
                                         {row.label}
                                       </span>
-                                      <span className="mt-0.5 block truncate text-tiny text-muted">{row.hint}</span>
+                                      <span className="mt-0.5 block text-tiny leading-snug text-muted">{row.hint}</span>
                                     </span>
                                     <ArrowUpRight className="masthead-row-arrow" size={14} aria-hidden />
                                   </Link>

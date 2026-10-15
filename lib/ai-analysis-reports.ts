@@ -85,3 +85,37 @@ export async function getSymbolReport(symbol: string, id: string): Promise<Saved
     return row?.result ?? null;
   } catch { return null; }
 }
+
+export type UserReportSummary = {
+  id: string;
+  symbol: string;
+  horizon: "short" | "medium";
+  verdict: ReportVerdict;
+  score: number | null;
+  generatedAt: string;
+};
+
+/**
+ * Bir üyenin TAMAMLANMIŞ raporları — profil sayfasının "Claude Analizleri"
+ * bloğu (15 Ekim). Yeni bir görünürlük açmıyor: raporlar hisse sayfasında
+ * oluşturanın adıyla zaten herkese açık (listSymbolReports kararı); profil
+ * aynı kayıtları kişi bazında topluyor. Satır yalnız künye, raporun gövdesi
+ * /claude/[symbol] sayfasında. Tablo yoksa boş liste.
+ */
+export const listUserReports = cache(async (userId: string, limit = 12): Promise<UserReportSummary[]> => {
+  try {
+    const rows = await db.select({
+      id: aiAnalysisRequests.id, symbol: aiAnalysisRequests.symbol, horizon: aiAnalysisRequests.horizon,
+      verdict: sql<string>`${aiAnalysisRequests.result}->'output'->>'verdict'`,
+      score: sql<number | null>`(${aiAnalysisRequests.result}->'output'->>'overallScore')::int`,
+      generatedAt: sql<string>`${aiAnalysisRequests.result}->>'generatedAt'`,
+    }).from(aiAnalysisRequests)
+      .where(and(eq(aiAnalysisRequests.userId, userId), eq(aiAnalysisRequests.status, "completed")))
+      .orderBy(desc(aiAnalysisRequests.createdAt)).limit(limit);
+    return rows.map(row => ({
+      id: row.id, symbol: row.symbol, horizon: row.horizon === "medium" ? "medium" : "short",
+      verdict: VERDICTS.includes(row.verdict as ReportVerdict) ? row.verdict as ReportVerdict : "insufficient",
+      score: row.score, generatedAt: row.generatedAt,
+    }));
+  } catch { return []; }
+});

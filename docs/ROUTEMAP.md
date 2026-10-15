@@ -40,6 +40,9 @@ gerçek değerlerin bulunduğu `docs/rutinler.local.md` gitignore'da.
 
 Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
 
+- [x] **Migration 0035 (`notifications`) üretimde uygulanmalı.** Bildirim
+      kutusu. Tablo yokken zil sıfır sayar, /bildirimler "şu an açılamıyor"
+      der, push yine gider (`lib/notifications.ts`). Uygulandı (15 Ekim).
 - [x] **Migration 0034 (`user_posts`) üretimde uygulanmalı.** Topluluk
       yazıları. Tablo yokken /topluluk boş akış, /yazilarim "şu an
       açılamıyor", moderasyon kuyruğu "tablo okunamadı" der

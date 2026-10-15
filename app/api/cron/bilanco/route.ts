@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { notificationPrefs, watchlistItems, watchlists } from "@/lib/schema";
 import { getEarningsBetween } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
-import { sendToUser } from "@/lib/push";
+import { notifyUser } from "@/lib/notifications";
 import { getDictionary } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
 
@@ -76,21 +76,26 @@ export async function GET(request: Request) {
   let delivered = 0;
   for (const [userId, symbols] of byUser) {
     const list = [...symbols].sort();
-    delivered += await sendToUser(userId, (locale) => {
-      const t = getDictionary(locale).notifications;
-      const named = list.slice(0, LISTED_SYMBOLS).join(", ");
-      const rest = list.length - LISTED_SYMBOLS;
-      const body = (list.length === 1 ? t.earningsBodyOne : t.earningsBody)
-        .replace("{symbols}", rest > 0 ? `${named} +${rest}` : named)
-        .replace("{n}", String(list.length));
-      return {
-        title: t.earningsTitle,
-        body,
-        url: withLocale("/bilancolar/takip", locale),
-        /* Gün-kapsamlı tag: aynı günün ikinci koşumu (olmamalı) yığmaz. */
-        tag: `earnings-${tomorrow}`,
-      };
-    });
+    delivered += await notifyUser(
+      userId,
+      "earnings",
+      (locale) => {
+        const t = getDictionary(locale).notifications;
+        const named = list.slice(0, LISTED_SYMBOLS).join(", ");
+        const rest = list.length - LISTED_SYMBOLS;
+        const body = (list.length === 1 ? t.earningsBodyOne : t.earningsBody)
+          .replace("{symbols}", rest > 0 ? `${named} +${rest}` : named)
+          .replace("{n}", String(list.length));
+        return {
+          title: t.earningsTitle,
+          body,
+          path: "/bilancolar/takip",
+          /* Gün-kapsamlı tag: aynı günün ikinci koşumu (olmamalı) yığmaz. */
+          tag: `earnings-${tomorrow}`,
+        };
+      },
+      withLocale,
+    );
   }
 
   return NextResponse.json({

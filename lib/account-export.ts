@@ -6,6 +6,7 @@ import { getNotificationPrefs } from "./notification-prefs";
 import { getUserPercentAlerts } from "./percent-alerts";
 import { getProfileSettings } from "./profile-data";
 import { getOwnPosts } from "./user-post-data";
+import { getInbox } from "./notifications";
 import { getPortfolioPositions } from "./portfolio-data";
 import { getUserAlerts } from "./price-alerts";
 import { getPortfolioSales } from "./portfolio-sales-data";
@@ -40,7 +41,7 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
   /* Portföy iki paket paralel yazılırken bu dosyanın dışında kalmıştı:
      indirme "hesabın tuttuğu her şey" diyordu ama pozisyonları vermiyordu
      (28 Eylül, belge taramasında bulundu). KVKK veri taşınabilirliği. */
-  const [lists, avatar, portfolio, alerts, sales, push, profile, percent, prefs, posts] = await Promise.all([
+  const [lists, avatar, portfolio, alerts, sales, push, profile, percent, prefs, posts, inbox] = await Promise.all([
     db
       .select()
       .from(watchlists)
@@ -55,6 +56,7 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
     getUserPercentAlerts(userId),
     getNotificationPrefs(userId),
     getOwnPosts(userId),
+    getInbox(userId),
   ]);
   const items = lists.length
     ? await db
@@ -147,6 +149,16 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
           createdAt: alert.createdAt,
           triggeredAt: alert.triggeredAt,
           triggeredPct: alert.triggeredPct,
+        }))
+      : null,
+    inbox: inbox.available
+      ? inbox.items.map((item) => ({
+          kind: item.kind,
+          title: item.title,
+          body: item.body,
+          url: item.url,
+          createdAt: item.createdAt.toISOString(),
+          read: item.read,
         }))
       : null,
     posts: posts.available

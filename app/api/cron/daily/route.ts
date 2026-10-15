@@ -1,3 +1,4 @@
+import { pruneNotifications } from "@/lib/notifications";
 import { getDailyMarketSeries } from "@/lib/providers/daily-markets";
 import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
@@ -668,6 +669,10 @@ export async function GET(request: Request) {
      Tek bir DELETE, sağlayıcıya gitmiyor; bütçe kontrolü gerekmiyor.
      Fonksiyon hatayı değer olarak döndürüyor, tablo yoksa 0. */
   report.errorsPurged = await purgeOldErrors();
+
+  /* ---- 2h. Eski bildirimler ----
+     Gelen kutusu 90 günden eskisini tutmuyor (lib/notifications.ts). */
+  report.notificationsPurged = await pruneNotifications();
 
   /* ---- 3. Makro seriler ---- */
   if (outOfTime()) {

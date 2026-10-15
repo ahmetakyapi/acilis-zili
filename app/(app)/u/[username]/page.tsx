@@ -23,6 +23,7 @@ import {
 } from "@/lib/profile-data";
 import { pageAlternates } from "@/lib/site";
 import { getPublishedPostsByUser } from "@/lib/user-post-data";
+import { listUserReports } from "@/lib/ai-analysis-reports";
 import {
   directionOf,
   directionText,
@@ -110,14 +111,18 @@ export default async function ProfilePage(props: PageProps<"/u/[username]">) {
      hesap yine 404: sayım orakülü yazarlar dışında kapalı kalır. */
   if (!profile && !isOwner) {
     const author = await getAuthorProfile(raw);
-    if (author && (await getPublishedPostsByUser(author.userId)).length > 0) {
+    if (
+      author &&
+      ((await getPublishedPostsByUser(author.userId)).length > 0 ||
+        (await listUserReports(author.userId)).length > 0)
+    ) {
       profile = author;
     }
   }
   if (!profile) notFound();
 
   const previewOnly = isOwner && !profile.isPublic;
-  const [badges, lists, showcase, posts] = await Promise.all([
+  const [badges, lists, showcase, posts, reports] = await Promise.all([
     profileBadges(profile.joinedAt),
     profile.showWatchlists
       ? getUserWatchlists(profile.userId).then((all) => all.filter((list) => list.items.length > 0))
@@ -128,8 +133,11 @@ export default async function ProfilePage(props: PageProps<"/u/[username]">) {
     /* Yayındaki yazılar görünürlük anahtarına bağlı DEĞİL: yayımlamak zaten
        açık bir edim, yazı /topluluk'ta kullanıcı adıyla duruyor. */
     getPublishedPostsByUser(profile.userId),
+    /* Claude raporları hisse sayfalarında oluşturanın adıyla zaten açık
+       (lib/ai-analysis-reports.ts kararı); profil yalnız kişi bazında toplar. */
+    listUserReports(profile.userId),
   ]);
-  const hasBlocks = lists.length > 0 || showcase !== null || posts.length > 0;
+  const hasBlocks = lists.length > 0 || showcase !== null || posts.length > 0 || reports.length > 0;
 
   const joinedLabel = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
     month: "long",
@@ -137,7 +145,7 @@ export default async function ProfilePage(props: PageProps<"/u/[username]">) {
   }).format(profile.joinedAt);
 
   return (
-    <MotionExperience className={`${polish.page} mx-auto w-full max-w-2xl`}>
+    <MotionExperience className={polish.page}>
       <ScrollProgress />
       <PageHeader title={profile.username} subtitle={t.profile.subtitle} />
 
@@ -194,198 +202,256 @@ export default async function ProfilePage(props: PageProps<"/u/[username]">) {
         </div>
       </section>
 
-      {showcase && (
-        <Panel>
-          <PanelHeader
-            title={t.profile.showcase.title}
-            /* Başlangıç AY hassasiyetinde: gün bazında alış tarihi KVKK'nın
-               "hiçbir durumda gösterilmez" sınıfında (content/legal.ts) —
-               ilk sürüm günü basıyordu, incelemede yakalandı (15 Ekim). */
-            meta={`${
-              showcase.symbolCount === 1
-                ? t.profile.showcase.metaOne
-                : t.profile.showcase.meta.replace("{n}", String(showcase.symbolCount))
-            } · ${t.profile.showcase.since} ${formatIsoMonth(showcase.sinceDay.slice(0, 7), locale)}`}
-          />
-          <div className="flex flex-col gap-5 px-4 py-4 sm:px-5">
-            {/* Ölçü ızgarası: iki getiri AYNI HATTA biter; karşılaştırılan
-                büyüklük bir de çizgi olarak okunur (ScaleBar, işaretli). */}
-            <div className="grid grid-cols-2 gap-5">
-              {(() => {
-                const maxAbs = Math.max(
-                  Math.abs(showcase.returnPct),
-                  Math.abs(showcase.spyReturnPct ?? 0),
-                  0.01,
-                );
-                const figure = (label: string, hint: string, value: number | null) => (
-                  <div className="flex flex-col gap-1.5">
-                    <span className="text-tiny font-semibold text-muted">
-                      {label}
-                    </span>
-                    <span
-                      className={`text-2xl font-bold tabular-nums tracking-tight ${directionText(directionOf(value))}`}
-                    >
-                      {formatPercent(value, locale, 1)}
-                    </span>
-                    <ScaleBar
-                      ratio={value === null ? 0 : Math.max(-1, Math.min(1, value / maxAbs))}
-                      signed={showcase.returnPct < 0 || (showcase.spyReturnPct ?? 0) < 0}
-                      tone="signal"
-                    />
-                    <span className="text-tiny leading-relaxed text-muted">{hint}</span>
-                  </div>
-                );
-                return (
-                  <>
-                    {figure(
-                      t.profile.showcase.returnLabel,
-                      t.profile.showcase.returnHint,
-                      showcase.returnPct,
-                    )}
-                    {figure(
-                      t.profile.showcase.spyLabel,
-                      t.profile.showcase.spyHint,
-                      showcase.spyReturnPct,
-                    )}
-                  </>
-                );
-              })()}
-            </div>
+      {/* İKİ KOLON (15 Ekim): kap artık diğer ekranlarla aynı genişlikte;
+          tek sütun 1280'de satır uzunluğunu iki katına çıkarıyordu. Solda
+          kanıtlı içerik (vitrin, yazılar), sağda kısa listeler. Kolonlardan
+          biri boşsa ızgara tek sütun kalır — yarım ekran boş durmaz. */}
+      <div
+        className={
+          (showcase || posts.length > 0) && (reports.length > 0 || lists.length > 0)
+            ? "grid items-start gap-5 lg:grid-cols-2"
+            : "grid gap-5"
+        }
+      >
+        <div className="flex min-w-0 flex-col gap-5 empty:hidden">
+          {showcase && (
+            <Panel>
+              <PanelHeader
+                title={t.profile.showcase.title}
+                /* Başlangıç AY hassasiyetinde: gün bazında alış tarihi KVKK'nın
+                   "hiçbir durumda gösterilmez" sınıfında (content/legal.ts) —
+                   ilk sürüm günü basıyordu, incelemede yakalandı (15 Ekim). */
+                meta={`${
+                  showcase.symbolCount === 1
+                    ? t.profile.showcase.metaOne
+                    : t.profile.showcase.meta.replace("{n}", String(showcase.symbolCount))
+                } · ${t.profile.showcase.since} ${formatIsoMonth(showcase.sinceDay.slice(0, 7), locale)}`}
+              />
+              <div className="flex flex-col gap-5 px-4 py-4 sm:px-5">
+                {/* Ölçü ızgarası: iki getiri AYNI HATTA biter; karşılaştırılan
+                    büyüklük bir de çizgi olarak okunur (ScaleBar, işaretli). */}
+                <div className="grid grid-cols-2 gap-5">
+                  {(() => {
+                    const maxAbs = Math.max(
+                      Math.abs(showcase.returnPct),
+                      Math.abs(showcase.spyReturnPct ?? 0),
+                      0.01,
+                    );
+                    const figure = (label: string, hint: string, value: number | null) => (
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-tiny font-semibold text-muted">
+                          {label}
+                        </span>
+                        <span
+                          className={`text-2xl font-bold tabular-nums tracking-tight ${directionText(directionOf(value))}`}
+                        >
+                          {formatPercent(value, locale, 1)}
+                        </span>
+                        <ScaleBar
+                          ratio={value === null ? 0 : Math.max(-1, Math.min(1, value / maxAbs))}
+                          signed={showcase.returnPct < 0 || (showcase.spyReturnPct ?? 0) < 0}
+                          tone="signal"
+                        />
+                        <span className="text-tiny leading-relaxed text-muted">{hint}</span>
+                      </div>
+                    );
+                    return (
+                      <>
+                        {figure(
+                          t.profile.showcase.returnLabel,
+                          t.profile.showcase.returnHint,
+                          showcase.returnPct,
+                        )}
+                        {figure(
+                          t.profile.showcase.spyLabel,
+                          t.profile.showcase.spyHint,
+                          showcase.spyReturnPct,
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
 
-            {/* Ağırlıklar: çubuk MUTLAK pay (%50 = yarım kulvar) — görece
-                ölçek en büyük dilimi hep tam basıp payları abartırdı. */}
-            <div className="flex flex-col gap-1.5">
-              <h3 className="text-tiny font-semibold text-muted">
-                {t.profile.showcase.weightsTitle}
-              </h3>
-              <ul className="flex flex-col">
-                {showcase.weights.map((weight) => (
-                  <li
-                    key={weight.symbol}
-                    className="grid grid-cols-[88px_minmax(0,1fr)_56px] items-center gap-3 py-1.5"
-                  >
-                    <Link
-                      href={`/hisse/${weight.symbol}`}
-                      className="-my-1.5 inline-flex min-h-11 items-center truncate py-1.5 font-mono text-xs font-semibold text-body transition-colors hover:text-strong sm:-my-0 sm:min-h-0 sm:py-0"
-                    >
-                      {weight.symbol}
+                {/* Ağırlıklar: çubuk MUTLAK pay (%50 = yarım kulvar) — görece
+                    ölçek en büyük dilimi hep tam basıp payları abartırdı. */}
+                <div className="flex flex-col gap-1.5">
+                  <h3 className="text-tiny font-semibold text-muted">
+                    {t.profile.showcase.weightsTitle}
+                  </h3>
+                  <ul className="flex flex-col">
+                    {showcase.weights.map((weight) => (
+                      <li
+                        key={weight.symbol}
+                        className="grid grid-cols-[88px_minmax(0,1fr)_56px] items-center gap-3 py-1.5"
+                      >
+                        <Link
+                          href={`/hisse/${weight.symbol}`}
+                          className="-my-1.5 inline-flex min-h-11 items-center truncate py-1.5 font-mono text-xs font-semibold text-body transition-colors hover:text-strong sm:-my-0 sm:min-h-0 sm:py-0"
+                        >
+                          {weight.symbol}
+                        </Link>
+                        <ScaleBar ratio={weight.pct / 100} signed={false} tone="neutral" />
+                        <span className="text-right text-xs font-semibold tabular-nums text-strong">
+                          {formatPercentPlain(weight.pct, locale, 1)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {showcase.sectors.length > 0 && (
+                  <div className="flex flex-col gap-1.5">
+                    <h3 className="text-tiny font-semibold text-muted">
+                      {t.profile.showcase.sectorsTitle}
+                    </h3>
+                    <SectorStrip weights={showcase.sectors} locale={locale} />
+                  </div>
+                )}
+
+                {/* Künye ve uyarılar panelin İÇİNDE, hairline üstünde. */}
+                <div className="flex flex-col gap-2 border-t border-line-soft pt-3">
+                  <p className="text-tiny leading-relaxed text-muted">
+                    {t.profile.showcase.note}
+                    {showcase.excludedCount > 0 &&
+                      ` ${t.profile.showcase.excluded.replace("{n}", String(showcase.excludedCount))}`}
+                    {showcase.spyReturnPct !== null &&
+                      showcase.spyCoverage < 0.995 &&
+                      ` ${t.profile.showcase.spyPartial.replace("{pct}", String(Math.round(showcase.spyCoverage * 100)))}`}
+                  </p>
+                  <DataStamp
+                    source={showcase.source}
+                    at={showcase.asOf}
+                    stale={showcase.stale}
+                    locale={locale}
+                    labels={t.data}
+                  />
+                </div>
+              </div>
+            </Panel>
+          )}
+
+          {posts.length > 0 && (
+            <Panel>
+              <PanelHeader
+                title={t.profile.postsTitle}
+                meta={
+                  posts.length === 1
+                    ? t.profile.postCountOne
+                    : t.profile.postCount.replace("{n}", String(posts.length))
+                }
+              />
+              <ul className="divide-y divide-line-soft px-4 sm:px-5">
+                {posts.map((post) => (
+                  <li key={post.id} className="py-3">
+                    <Link href={`/topluluk/${post.slug}`} className="group flex flex-col gap-0.5">
+                      <span className="text-base font-semibold text-strong transition-colors group-hover:text-primary">
+                        {post.title}
+                      </span>
+                      <span className="flex items-center gap-2 text-tiny text-muted">
+                        {post.publishedAt && (
+                          <time dateTime={post.publishedAt.toISOString().slice(0, 10)} className="tabular-nums">
+                            {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                            }).format(post.publishedAt)}
+                          </time>
+                        )}
+                      </span>
                     </Link>
-                    <ScaleBar ratio={weight.pct / 100} signed={false} tone="neutral" />
-                    <span className="text-right text-xs font-semibold tabular-nums text-strong">
-                      {formatPercentPlain(weight.pct, locale, 1)}
-                    </span>
                   </li>
                 ))}
               </ul>
-            </div>
+            </Panel>
+          )}
 
-            {showcase.sectors.length > 0 && (
-              <div className="flex flex-col gap-1.5">
-                <h3 className="text-tiny font-semibold text-muted">
-                  {t.profile.showcase.sectorsTitle}
-                </h3>
-                <SectorStrip weights={showcase.sectors} locale={locale} />
-              </div>
-            )}
-
-            {/* Künye ve uyarılar panelin İÇİNDE, hairline üstünde. */}
-            <div className="flex flex-col gap-2 border-t border-line-soft pt-3">
-              <p className="text-tiny leading-relaxed text-muted">
-                {t.profile.showcase.note}
-                {showcase.excludedCount > 0 &&
-                  ` ${t.profile.showcase.excluded.replace("{n}", String(showcase.excludedCount))}`}
-                {showcase.spyReturnPct !== null &&
-                  showcase.spyCoverage < 0.995 &&
-                  ` ${t.profile.showcase.spyPartial.replace("{pct}", String(Math.round(showcase.spyCoverage * 100)))}`}
-              </p>
-              <DataStamp
-                source={showcase.source}
-                at={showcase.asOf}
-                stale={showcase.stale}
-                locale={locale}
-                labels={t.data}
+        </div>
+        <div className="flex min-w-0 flex-col gap-5 empty:hidden">
+          {reports.length > 0 && (
+            <Panel>
+              <PanelHeader
+                title={t.profile.reportsTitle}
+                meta={t.profile.reportCount.replace("{n}", String(reports.length))}
               />
-            </div>
-          </div>
-        </Panel>
-      )}
-
-      {posts.length > 0 && (
-        <Panel>
-          <PanelHeader
-            title={t.profile.postsTitle}
-            meta={
-              posts.length === 1
-                ? t.profile.postCountOne
-                : t.profile.postCount.replace("{n}", String(posts.length))
-            }
-          />
-          <ul className="divide-y divide-line-soft px-4 sm:px-5">
-            {posts.map((post) => (
-              <li key={post.id} className="py-3">
-                <Link href={`/topluluk/${post.slug}`} className="group flex flex-col gap-0.5">
-                  <span className="text-base font-semibold text-strong transition-colors group-hover:text-primary">
-                    {post.title}
-                  </span>
-                  <span className="flex items-center gap-2 text-tiny text-muted">
-                    {post.publishedAt && (
-                      <time dateTime={post.publishedAt.toISOString().slice(0, 10)} className="tabular-nums">
-                        {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        }).format(post.publishedAt)}
-                      </time>
-                    )}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </Panel>
-      )}
-
-      {lists.length > 0 && (
-        <Panel>
-          <PanelHeader title={t.profile.watchlistsTitle} />
-          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
-            {lists.map((list) => (
-              <div key={list.id} className="flex flex-col gap-2">
-                <div className="flex items-baseline justify-between gap-3">
-                  <h3 className="text-sm font-semibold text-strong">{list.name}</h3>
-                  <span className="shrink-0 text-tiny text-muted">
-                    {list.items.length === 1
-                      ? t.profile.listCountOne
-                      : t.profile.listCount.replace("{n}", String(list.items.length))}
-                  </span>
-                </div>
-                <ul className="flex flex-wrap gap-1.5">
-                  {list.items.slice(0, CHIP_LIMIT).map((item) => (
-                    <li key={item.id}>
-                      <Link
-                        href={`/hisse/${item.symbol}`}
-                        className="inline-flex min-h-11 items-center rounded-full border border-line bg-surface-sunken px-3 font-mono text-xs font-semibold text-body transition-colors hover:border-line-focus hover:text-strong sm:min-h-8 sm:px-2.5"
+              <ul className="divide-y divide-line-soft px-4 sm:px-5">
+                {reports.map((report) => (
+                  <li key={report.id}>
+                    <Link
+                      href={`/claude/${encodeURIComponent(report.symbol)}?sekme=rapor&rapor=${report.id}`}
+                      className="grid min-h-11 grid-cols-[64px_minmax(0,1fr)_auto] items-center gap-3 py-2.5 transition-colors hover:text-primary"
+                    >
+                      <span className="font-mono text-sm font-bold text-strong">{report.symbol}</span>
+                      <span className="min-w-0 truncate text-small text-muted">
+                        {report.horizon === "medium" ? t.aiAnalysis.focus.selection : t.aiAnalysis.focus.technical}
+                        {" · "}
+                        {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", { day: "numeric", month: "short", year: "numeric" }).format(new Date(report.generatedAt))}
+                      </span>
+                      {/* Görüş bir YÖN: AL yeşil, SAT kırmızı, kalanı nötr. */}
+                      <span
+                        className={
+                          report.verdict === "buy"
+                            ? "text-small font-bold text-up"
+                            : report.verdict === "sell"
+                              ? "text-small font-bold text-down"
+                              : "text-small font-bold text-muted"
+                        }
                       >
-                        {item.symbol}
-                      </Link>
-                    </li>
-                  ))}
-                  {list.items.length > CHIP_LIMIT && (
-                    <li className="inline-flex min-h-11 items-center px-1 text-xs font-semibold text-muted sm:min-h-8">
-                      {t.profile.moreSymbols.replace("{n}", String(list.items.length - CHIP_LIMIT))}
-                    </li>
-                  )}
-                </ul>
+                        {t.aiAnalysis.verdicts[report.verdict]}
+                        {report.score !== null && <span className="ml-1.5 font-semibold text-muted tabular-nums">{report.score}</span>}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <p className="border-t border-line-soft px-4 py-3 text-tiny leading-relaxed text-muted sm:px-5">
+                {t.profile.reportsNote}
+              </p>
+            </Panel>
+          )}
+
+          {lists.length > 0 && (
+            <Panel>
+              <PanelHeader title={t.profile.watchlistsTitle} />
+              <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+                {lists.map((list) => (
+                  <div key={list.id} className="flex flex-col gap-2">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <h3 className="text-sm font-semibold text-strong">{list.name}</h3>
+                      <span className="shrink-0 text-tiny text-muted">
+                        {list.items.length === 1
+                          ? t.profile.listCountOne
+                          : t.profile.listCount.replace("{n}", String(list.items.length))}
+                      </span>
+                    </div>
+                    <ul className="flex flex-wrap gap-1.5">
+                      {list.items.slice(0, CHIP_LIMIT).map((item) => (
+                        <li key={item.id}>
+                          <Link
+                            href={`/hisse/${item.symbol}`}
+                            className="inline-flex min-h-11 items-center rounded-full border border-line bg-surface-sunken px-3 font-mono text-xs font-semibold text-body transition-colors hover:border-line-focus hover:text-strong sm:min-h-8 sm:px-2.5"
+                          >
+                            {item.symbol}
+                          </Link>
+                        </li>
+                      ))}
+                      {list.items.length > CHIP_LIMIT && (
+                        <li className="inline-flex min-h-11 items-center px-1 text-xs font-semibold text-muted sm:min-h-8">
+                          {t.profile.moreSymbols.replace("{n}", String(list.items.length - CHIP_LIMIT))}
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                ))}
+                {/* Uyarı panelin İÇİNDE, hairline ile ayrılmış düz paragraf —
+                    yeni kutu açılmaz (CLAUDE.md, ekran sırası 6). */}
+                <p className="border-t border-line-soft pt-3 text-tiny leading-relaxed text-muted">
+                  {t.profile.watchlistNote}
+                </p>
               </div>
-            ))}
-            {/* Uyarı panelin İÇİNDE, hairline ile ayrılmış düz paragraf —
-                yeni kutu açılmaz (CLAUDE.md, ekran sırası 6). */}
-            <p className="border-t border-line-soft pt-3 text-tiny leading-relaxed text-muted">
-              {t.profile.watchlistNote}
-            </p>
-          </div>
-        </Panel>
-      )}
+            </Panel>
+          )}
+        </div>
+      </div>
     </MotionExperience>
   );
 }

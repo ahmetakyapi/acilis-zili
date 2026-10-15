@@ -2340,8 +2340,8 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
 .masthead-nav .masthead-link:focus-visible > span:first-child { outline-offset:3px; }
 .masthead-dropdown { max-height:calc(100dvh - var(--app-bar-h) - 32px); overflow-y:auto; background:var(--overlay-surface); }
 .masthead-row { transition:background 180ms var(--ease-brand); }
-/* DAHA FAZLA PANELİ (28 Eylül ikinci geçiş). Satır boyu sabit: iki sütunun
-   satırları aynı hatta (gerekçe MastheadNav.tsx). rem cinsinden, büyütülmüş
+/* DAHA FAZLA PANELİ (28 Eylül ikinci geçiş; 15 Ekim üçüncü). Satır boyu
+   taban: ipucu artık sararsa satır uzar (gerekçe MastheadNav.tsx). rem cinsinden, büyütülmüş
    yazıda satırla birlikte büyüyor. Sütunlar arasında tek hairline; ok
    yalnızca üzerine gelince ya da odakta, dinlenirken panel bir liste. */
 .masthead-dropdown { --more-row:3.625rem; }
@@ -2358,10 +2358,14 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
    `text-read`) ve tonlu zemin: panelin "araç" katı, altındaki iki sütun
    başvuru katı. Gölge yok; derinlik ton farkıyla (primary-tint → wash). */
 .masthead-feature { padding-bottom:.625rem; margin-bottom:.375rem; border-bottom:1px solid var(--line-soft); }
-.masthead-feature-card { display:flex; align-items:center; gap:.875rem; min-height:4.75rem; padding:.75rem .875rem; border:1px solid var(--primary-faint); border-radius:14px; background:var(--primary-tint); transition:background-color 180ms var(--ease-brand),border-color 180ms var(--ease-brand); }
+/* 15 Ekim: üç eşit DİKEY kart (ikon üstte, ad, iki satıra kadar ipucu);
+   ok sağ üst köşede. Yükseklik ızgara satırından — üçü aynı boyda biter. */
+.masthead-feature-card { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:.75rem; height:100%; min-height:8.5rem; padding:.875rem .875rem 1rem; border:1px solid var(--primary-faint); border-radius:14px; background:var(--primary-tint); transition:background-color 180ms var(--ease-brand),border-color 180ms var(--ease-brand); }
+.masthead-feature-card .masthead-row-arrow { position:absolute; top:.875rem; right:.875rem; }
+.masthead-more-head-next { margin-top:.375rem; border-top:1px solid var(--line-soft); }
 .masthead-feature-card:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 .masthead-feature-card[aria-current="page"] { border-color:var(--primary); background:var(--primary-wash); }
-.masthead-feature-icon { display:grid; place-items:center; flex:none; width:44px; height:44px; border-radius:13px; background:var(--primary); color:var(--on-primary); }
+.masthead-feature-icon { display:grid; place-items:center; flex:none; width:40px; height:40px; border-radius:12px; background:var(--primary); color:var(--on-primary); }
 .masthead-feature-card .masthead-row-arrow { opacity:.55; }
 /* ARAMA VE HESAP: EŞLEŞEN BİR ÇİFT (23 Eylül). İkisi aynı yüzeyde
    (`--premium-surface`, saç teli kenarlık, üst kenarda iç parıltı yerine

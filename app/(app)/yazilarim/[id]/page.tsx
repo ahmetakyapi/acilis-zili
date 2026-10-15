@@ -1,9 +1,11 @@
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { notFound, redirect } from "next/navigation";
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { previewUserPostBody } from "@/app/actions/user-post-preview";
 import { PostEditor } from "@/components/community/PostEditor";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { PageHeader } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
@@ -32,10 +34,22 @@ export default async function EditPostPage(props: PageProps<"/yazilarim/[id]">) 
   const ilkOnizleme = await previewUserPostBody(post.bodyMd).catch(() => null);
 
   return (
-    <MotionExperience className={`${polish.page} mx-auto w-full max-w-3xl`}>
+    <MotionExperience className={polish.page}>
       <ScrollProgress />
-      <PageHeader title={post.title} subtitle={L.editor.subtitle} />
-      <PostEditor post={post} ilkOnizleme={ilkOnizleme} labels={L.editor} locale={post.locale === "en" ? "en" : "tr"} />
+      <PageHeader
+        title={post.title}
+        subtitle={L.editor.editSubtitle}
+        action={
+          <Link
+            href="/yazilarim"
+            className="tap-44 inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-muted transition-colors hover:text-primary"
+          >
+            <ArrowLeft weight="bold" size={13} aria-hidden />
+            {L.editor.backToPosts}
+          </Link>
+        }
+      />
+      <PostEditor post={post} ilkOnizleme={ilkOnizleme} labels={L.editor} templateLabels={L.templates} locale={post.locale === "en" ? "en" : "tr"} />
     </MotionExperience>
   );
 }

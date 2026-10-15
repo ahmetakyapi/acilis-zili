@@ -337,6 +337,42 @@ export const notificationPrefs = pgTable("notification_prefs", {
 });
 
 /**
+ * BİLDİRİM MERKEZİ (15 Ekim) — uygulama içi gelen kutusu.
+ *
+ * Web Push cihaza bağlı ve izin ister; bildirimi açmamış okuyucu tetiklenen
+ * alarmı, yarınki bilançoyu ya da yazısının onaylandığını hiç öğrenmiyordu.
+ * Her olay buraya da bir satır düşer; başlıktaki zil okunmamış sayısını
+ * gösterir, /bildirimler listesi açılınca okundu sayılır.
+ *
+ * Metin YAZILIRKEN hesabın diliyle kurulur (users.locale) — satır
+ * şablon anahtarı değil, okunacak cümle; sözlük değişse de geçmiş
+ * bildirimin anlamı kaymaz. Push metni ise cihazın dilinde (ayrı yol).
+ *
+ * KENDİ TABLOSU; tablo yokken yazma sessizce düşer, zil sayısı 0 döner.
+ * Satırlar 90 gün sonra günlük cron'la silinir (cron/daily).
+ */
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** alert | percent | earnings | post_approved | post_rejected */
+    kind: text("kind").notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    /** Dilsiz yerel yol ("/hisse/NVDA"); okurken dile göre öneklenir. */
+    url: text("url").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    readAt: timestamp("read_at", { withTimezone: true }),
+  },
+  (t) => [index("notifications_user_idx").on(t.userId, t.createdAt)],
+);
+
+/**
  * PORTFÖY SATIŞLARI (9 Ekim) — gerçekleşen kâr/zarar.
  *
  * Satış kaydı yoktu: kısmi satışı kaydetmenin tek yolu pozisyonun adedini

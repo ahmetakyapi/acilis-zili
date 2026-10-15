@@ -12,6 +12,8 @@ import { ViewBeacon } from "@/components/layout/ViewBeacon";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { getI18n, getTheme } from "@/lib/i18n";
 import { getUserAvatar } from "@/lib/avatar-data";
+import { getUnreadCount } from "@/lib/notifications";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { hasAnalysisAccess } from "@/lib/ai-analysis-access";
 
 /* --------------------------------------------------------------------------
@@ -58,9 +60,14 @@ export default async function AppLayout({
   const searchShortcut = /Mac|iPhone|iPad|iPod/.test(ua) ? "⌘K" : "Ctrl K";
   /* Profil ikonu — giriş yapılmışsa tek küçük sorgu, istek içinde
      önbellekli (/menu aynı cevabı okuyor). Düşerse baş harfler. */
-  const [avatar, analyses] = session?.user?.id
-    ? await Promise.all([getUserAvatar(session.user.id), hasAnalysisAccess(session.user.id)])
-    : [null, false];
+  const [avatar, analyses, unread] = session?.user?.id
+    ? await Promise.all([
+        getUserAvatar(session.user.id),
+        hasAnalysisAccess(session.user.id),
+        /* Zilin sayısı: tek COUNT, istek içinde önbellekli; tablo yokken 0. */
+        getUnreadCount(session.user.id),
+      ])
+    : [null, false, 0];
 
   const labels: ShellLabels = {
     brandName: t.brand.name,
@@ -129,6 +136,11 @@ export default async function AppLayout({
           />
         }
         accountMenu={
+          <>
+          {/* Zil yalnız oturumluya: misafirin gelen kutusu yok. */}
+          {session?.user && (
+            <NotificationBell unread={unread} label={t.inbox.bell} unreadLabel={t.inbox.bellUnread} />
+          )}
           <AccountMenu
             signedIn={Boolean(session?.user)}
             username={session?.user?.name ?? null}
@@ -157,6 +169,7 @@ export default async function AppLayout({
               language: t.settings.language,
             }}
           />
+          </>
         }
         ticker={
           <Suspense fallback={null}>

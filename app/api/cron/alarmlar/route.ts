@@ -15,8 +15,9 @@ import {
   type PendingAlert,
   type PendingPercentAlert,
 } from "@/lib/alert-sweep";
-import { sendToUser } from "@/lib/push";
 import { getDictionary } from "@/lib/i18n";
+import { withLocale } from "@/lib/i18n/routing";
+import { notifyUser } from "@/lib/notifications";
 
 /**
  * Alarm taraması — `deploy/cron-alerts.sh` seans boyunca beş dakikada bir
@@ -128,8 +129,16 @@ export async function GET(request: Request) {
       .catch(() => []);
     if (claimed.length === 0) continue;
     triggered += 1;
-    delivered += await sendToUser(hit.userId, (locale) =>
-      alertPayload(hit, locale, getDictionary(locale).notifications),
+    /* Gelen kutusu + push tek girişten (lib/notifications.ts): bildirimi
+       açmamış okuyucu da tetiği başlıktaki zilde görür. */
+    delivered += await notifyUser(
+      hit.userId,
+      "alert",
+      (locale) => {
+        const p = alertPayload(hit, locale, getDictionary(locale).notifications);
+        return { title: p.title, body: p.body, path: `/hisse/${hit.symbol}`, tag: p.tag };
+      },
+      withLocale,
     );
   }
   for (const hit of pctHits) {
@@ -141,8 +150,14 @@ export async function GET(request: Request) {
       .catch(() => []);
     if (claimed.length === 0) continue;
     triggered += 1;
-    delivered += await sendToUser(hit.userId, (locale) =>
-      percentPayload(hit, locale, getDictionary(locale).notifications),
+    delivered += await notifyUser(
+      hit.userId,
+      "percent",
+      (locale) => {
+        const p = percentPayload(hit, locale, getDictionary(locale).notifications);
+        return { title: p.title, body: p.body, path: `/hisse/${hit.symbol}`, tag: p.tag };
+      },
+      withLocale,
     );
   }
 
