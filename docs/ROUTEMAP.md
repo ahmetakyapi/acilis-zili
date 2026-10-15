@@ -21,7 +21,7 @@
 |---|---|
 | Sayfa rotası | 61 (50 açık, 11 yönetim; `/en` önekiyle ikinci bir adreste daha) |
 | API ucu | 25 |
-| Veritabanı tablosu | 31 · 35 migration (0000–0034; uygulanmamış olanlar aşağıda "Açık işler"te) |
+| Veritabanı tablosu | 31 · 35 migration (0000–0034; üretimde hepsi uygulandı, 15 Ekim) |
 | Sağlayıcı | Alpaca · Finnhub · FRED · TCMB · SEC EDGAR · OpenFIGI · House Clerk · TCMB EVDS (isteğe bağlı) |
 | Ortam değişkeni | 16 (`.env.example`) |
 | Cron | `/api/cron/daily` hafta içi 10:30 UTC · `/api/cron/alarmlar` 5 dk'da bir · `/api/cron/bilanco` her gün 16:20 UTC (`deploy/cron-install.sh`) |
@@ -40,18 +40,18 @@ gerçek değerlerin bulunduğu `docs/rutinler.local.md` gitignore'da.
 
 Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
 
-- [ ] **Migration 0034 (`user_posts`) üretimde uygulanmalı.** Topluluk
+- [x] **Migration 0034 (`user_posts`) üretimde uygulanmalı.** Topluluk
       yazıları. Tablo yokken /topluluk boş akış, /yazilarim "şu an
       açılamıyor", moderasyon kuyruğu "tablo okunamadı" der
       (`lib/user-post-data.ts`). Üretim `DATABASE_URL`iyle `npm run db:migrate`.
-- [ ] **Migration 0033 (`percent_alerts`, `notification_prefs`) üretimde
+- [x] **Migration 0033 (`percent_alerts`, `notification_prefs`) üretimde
       uygulanmalı.** Yüzde alarmları ve bilanço hatırlatması. Tablo yokken
       zil levhasında yüzde sekmesi ve Ayarlar'daki hatırlatma anahtarı hiç
       basılmaz, tarama ve cron sessizce atlar (`lib/percent-alerts.ts`,
       `lib/notification-prefs.ts`). Üretim `DATABASE_URL`iyle
       `npm run db:migrate`; crontab satırını (`cron-bilanco.sh`) bu sürümün
       update.sh'ı İKİNCİ dağıtımda ekler (cron-alerts kuralı).
-- [ ] **Migration 0032 (`user_profiles`) üretimde uygulanmalı.** Herkese açık
+- [x] **Migration 0032 (`user_profiles`) üretimde uygulanmalı.** Herkese açık
       profil (varsayılan gizli). Tablo yokken `/u/[kullanici]` 404 verir ve
       Ayarlar'daki Herkese Açık Profil paneli "şu an kaydedilemiyor" der
       (`lib/profile-data.ts`, `app/actions/profile.ts`). Üretim
