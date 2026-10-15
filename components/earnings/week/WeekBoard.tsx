@@ -362,10 +362,15 @@ function Tile({
           {tier !== "md" && cap && <span className={`figure ${styles.tileCap}`}>{cap}</span>}
         </span>
         {surprise && (
+          /* Küçük karoda yüzde sığmıyor; sonuç 6 piksellik renkli NOKTAYDI
+             ve beat/miss yalnız renkten okunuyordu (kırmızı-yeşil ayırt
+             edemeyen okuyucuya hiçbir şey söylemiyordu). Nokta yön glifine
+             döndü (14 Ekim): biçim + renk birlikte. `aria-hidden` duruyor —
+             sonucun sözlü hâli karonun kendi etiketinde (`verdict`). */
           <span className={styles.tileResult} data-dir={surprise.direction} aria-hidden>
             {tier !== "md" && surprise.ratio !== null
               ? formatPercent(surprise.ratio * 100, locale, 0)
-              : null}
+              : surprise.direction === "beat" ? "▲" : surprise.direction === "miss" ? "▼" : "="}
           </span>
         )}
         {badge && <span className={styles.tileBadge} aria-hidden>{e.analysis}</span>}

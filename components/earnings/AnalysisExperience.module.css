@@ -5,9 +5,19 @@
 .distribution > div { display: grid; gap: 8px; font-size: 12px; font-weight: 600; }
 .distribution b { color: var(--text-strong); font-size: 32px; line-height: 1; letter-spacing: -.05em; font-weight: 550; }
 .distributionTrack { height: 4px; overflow: hidden; border-radius: 4px; background: var(--rail-track); }
-.distributionTrack i { display: block; height: 100%; border-radius: inherit; background: var(--primary); }
+/* Kapak görseli KARDEŞLERİ GİBİ kendini çiziyor (14 Ekim): takvim
+   sekmesinin yoğunluk çubukları ve hafta nabzı yüklemede kademeyle
+   büyürken bu üç çubuk tek karede basılıyordu; filtre değişince genişlik
+   de sıçrıyordu. Büyüme soldan, 90 ms kademeli; genişlik değişimi geçişli. */
+.distributionTrack i { display: block; height: 100%; border-radius: inherit; background: var(--primary); transform-origin: left center; transition: width 300ms var(--ease-brand); }
 .distributionTrack i[data-verdict="buy"] { background: var(--up); }
 .distributionTrack i[data-verdict="sell"] { background: var(--down); }
+@media (prefers-reduced-motion: no-preference) {
+  .distributionTrack i { animation: dist-grow 700ms var(--ease-brand) backwards; }
+  .distribution > div:nth-child(2) .distributionTrack i { animation-delay: 90ms; }
+  .distribution > div:nth-child(3) .distributionTrack i { animation-delay: 180ms; }
+}
+@keyframes dist-grow { from { scale: 0 1; } }
 
 /* ---- Üst sıra: öne çıkan kart + yan paneller ----
    İKİ KOLON 1024'TE BAŞLIYOR (eskiden 1101). 1024-1100 arasında kart tek
@@ -160,6 +170,9 @@
   padding: 6px 20px;
 }
 .weekRow { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 20px; }
+/* Hover geçişli (14 Ekim): tint TEK karede basılıyordu; aynı ekrandaki
+   arşiv satırları ve sitenin öteki listeleri eğriyle döner. */
+.upcomingRow, .weekRow { transition: background-color var(--default-transition-duration) var(--ease-brand); }
 @media (hover: hover) {
   .upcomingRow:hover, .weekRow:hover { background: var(--primary-tint); }
 }
@@ -217,8 +230,9 @@
 .archive > div:first-child { padding-block: 8px; }
 .archive h2 { font-size: 21px; line-height: 1.25; letter-spacing: -.035em; }
 .archive :global(.panel) { border-radius: var(--radius-panel); }
-.archive [role="row"]:has([role="columnheader"]) { background: var(--surface-sunken); }
-.archive [role="row"]:focus-within { background: var(--primary-tint); box-shadow: inset 3px 0 var(--primary); }
+/* Başlık tonu ve odak vurgusu AnalysisTable'ın kendisine taşındı
+   (14 Ekim): `.archive` kapsamında kalınca takip sekmesindeki aynı tablo
+   bu iki kuralı almıyordu. */
 
 /* Tek kolon: kart, arşiv, sonra yaklaşanlar. Arşiv sayfanın asıl işi;
    takvim bir dokunuş ötede. Burada `contain` yok, liste taban beş satırda.
@@ -300,4 +314,6 @@
 @media (prefers-reduced-motion: reduce) {
   .feature, .featureRead, .featureRead svg, .featureLink { transition: none; }
   .feature:hover .featureRead svg { transform: none; }
+  /* Filtre değişimindeki genişlik geçişi de hareket (14 Ekim). */
+  .distributionTrack i { transition: none; }
 }

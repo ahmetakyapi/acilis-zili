@@ -86,11 +86,18 @@
 .about { padding-bottom:18px; border-bottom:1px solid var(--line-soft); color:var(--text-body); font-size:13px; line-height:1.8; }
 /* (28 Eylül) Satır listesinin kuralları kalktı: liste künye ızgarasına döndü (`.facts`, dosyanın sonu). */
 /* Yıkama degradesi kalktı; kartı bölümün geri kalanından ayıran şey soldaki
-   3 piksellik `--primary` kuralı ve kenarlığın tonu. */
-.upcomingPanel { position:relative; padding:22px; border:1px solid var(--primary-faint); border-radius:22px; background:var(--premium-surface,var(--surface-solid)); }
-.upcomingPanel::after { position:absolute; top:0; bottom:0; left:0; width:3px; background:var(--primary); content:""; }
-.eventKicker { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--primary); }
-.eventKicker h2 { color:var(--primary-ink); }
+   3 piksellik kural ve kenarlığın tonu.
+   VURGU PİRİNÇ (14 Ekim). Kart "pirinç vurgulu" diye tanımlanmıştı
+   (UpcomingEarnings.tsx başı) ama baştan sona maviydi; CLAUDE.md'de mavi
+   ETKİLEŞİMİN rengi ve bu kart tıklanabilir bir yüzey değil, bir OLAY
+   vurgusu — zilin çalacağı an. Pirinç ailesi zil-vuruşu dilinin kendisi
+   (mürekkep kıvılcımı, seans zili figürünün kontağı, sayaç sıfırının
+   rakamları). İçerideki GERÇEK etkileşim (takvim düğmesi) mavi kalıyor:
+   "mavi = tıklanır, pirinç = zil anı" ayrımı tek kartta okunuyor. */
+.upcomingPanel { position:relative; padding:22px; border:1px solid color-mix(in srgb, var(--brass) 28%, transparent); border-radius:22px; background:var(--premium-surface,var(--surface-solid)); }
+.upcomingPanel::after { position:absolute; top:0; bottom:0; left:0; width:3px; background:var(--brass); content:""; }
+.eventKicker { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--brass-ink); }
+.eventKicker h2 { color:var(--brass-ink); }
 .earningsDate { margin-top:14px; font-size:24px; line-height:1.2; font-weight:600; letter-spacing:-.045em; color:var(--text-strong); }
 /* BÖLÜM ÜSTÜ SIKI (29 Eylül, sahibinin isteği: "Bilançolar ve Gündem
    başlığının üstündeki boşluğu azaltalım"). 36'lık iç boşluk sayfa

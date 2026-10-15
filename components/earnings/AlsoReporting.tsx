@@ -53,7 +53,7 @@ export function AlsoReporting({
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
-        className="flex min-h-10 items-center gap-2 py-1.5 text-base text-muted transition-colors hover:text-body"
+        className="flex min-h-11 items-center gap-2 py-1.5 text-base text-muted transition-colors hover:text-body"
       >
         <CaretDown
           weight="duotone"
@@ -65,8 +65,10 @@ export function AlsoReporting({
         <span className="numeral">({total})</span>
       </button>
 
+      {/* `step-in`: yüzlerce çipli panel tek karede patlıyordu; açılan
+          içerik evin hazır giriş sınıfıyla geliyor (reduce korumalı). */}
       {open && (
-        <Panel className="mt-1 px-4 py-3.5 sm:px-5">
+        <Panel className="step-in mt-1 px-4 py-3.5 sm:px-5">
           <div className="flex flex-col gap-3.5">
             {groups
               .filter((group) => group.symbols.length > 0)

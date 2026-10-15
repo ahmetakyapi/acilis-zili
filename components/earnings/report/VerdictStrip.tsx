@@ -42,7 +42,8 @@ export function VerdictStrip({
   return (
     <section className={styles.verdictPanel} aria-labelledby="report-verdict" data-has-target={targetText !== null}>
       <div className={styles.verdictScore}>
-      <ScoreRing score={row.score} verdict={verdict} size={80} showDenominator />
+      {/* `roll`: kapak halkası ilk ekranda — sayı halkayla birlikte oturur. */}
+      <ScoreRing score={row.score} verdict={verdict} size={80} showDenominator roll />
       <div className={styles.verdictDecision}>
         {/* Etiket, manşet değil — sayfanın üç başlık düzeyinden en küçüğü
             (`.plate`): bölüm başlığı, panel başlığı, etiket. 11 piksellik

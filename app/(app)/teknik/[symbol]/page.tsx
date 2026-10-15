@@ -10,6 +10,7 @@ import { MotionExperience, Reveal, ScrollProgress, SectionNav } from "@/componen
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { IndicatorPanels } from "@/components/technical/IndicatorPanels";
+import { NextEditionIn } from "@/components/technical/NextEditionIn";
 import { MoreSymbols, type MoreSymbolEntry } from "@/components/technical/MoreSymbols";
 import { PlanHistory } from "@/components/technical/PlanHistory";
 import { PlanStrip } from "@/components/technical/PlanStrip";
@@ -358,6 +359,8 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
                     {todayEt(next.at) !== status.etDate && (
                       <span>{formatEtDateCompact(todayEt(next.at), locale)}</span>
                     )}
+                    {/* Kalan süre — gerekçe NextEditionIn. */}
+                    <NextEditionIn atIso={next.at.toISOString()} template={t.technical.nextEditionIn} units={t.sessionBell.units} />
                   </dd>
                 </>
               )}
@@ -560,6 +563,11 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
 
       {/* Volume interpretation now accompanies the main assessment. Watch
           items form one shared reading strip, rather than mismatched cards. */}
+      {/* GİRİŞ RİTMİ TEK KARAR (14 Ekim): StanceGuide ve Göstergeler
+          `Reveal` ile girerken aynı derinlikteki bu üç bölüm çıplaktı —
+          sayfanın alt yarısı iki ayrı lehçe konuşuyordu. Künyeler (dipnot,
+          damga, rehber) bilerek çıplak. */}
+      <Reveal>
       <section id="technical-watch" className={cn(styles.block, styles.watchPanel)}>
         <h2 className={styles.sectionTitle}>{t.technical.watch}</h2>
         <ul className={styles.watch} lang={copyLang}>
@@ -568,9 +576,11 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           ))}
         </ul>
       </section>
+      </Reveal>
 
       {/* ---- Görüş geçmişi ---- */}
       {history.length > 1 && (
+        <Reveal>
         <section id="technical-history" className={styles.block}>
           <h2 className={styles.sectionTitle}>{t.technical.history}</h2>
           {/* Tablo `PlanHistory`e taşındı (29 Eylül): aynı planın art arda
@@ -578,11 +588,14 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
               Gerekçe ve ölçüm bileşenin üzerinde. */}
           <PlanHistory history={history} locale={locale} t={t} />
         </section>
+        </Reveal>
       )}
 
       {/* Sayfanın son bloğu: okuyucunun bir sonraki durağı. Dipnot bunun
           ALTINDA kalıyor — yöntem ve uyarı metni bir çıkış değil, künye. */}
+      <Reveal>
       <MoreSymbols entries={moreEntries} cards={moreCards} locale={locale} t={t} />
+      </Reveal>
 
       <div className={styles.footNote}>
         <p>{t.technical.method}</p>

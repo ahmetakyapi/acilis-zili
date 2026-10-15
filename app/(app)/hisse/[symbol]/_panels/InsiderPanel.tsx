@@ -210,7 +210,9 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
                 {d.insiderBalanceShare.replace("{buy}", String(balance.buy)).replace("{sell}", String(balance.sell))}
               </span>
             </div>
-            <div aria-hidden className={styles.balanceBar}>
+            {/* Ray tek hamlede soldan açılır (14 Ekim): dilimlere ayrı ayrı
+                çizim vermek iki kopuk parça üretirdi (breadth rayı kararı). */}
+            <div aria-hidden data-motion-draw="line" className={styles.balanceBar}>
               {summary.buyValue > 0 && <i data-sign="up" style={{ flexGrow: summary.buyValue }} />}
               {summary.sellValue > 0 && <i data-sign="down" style={{ flexGrow: summary.sellValue }} />}
             </div>
@@ -232,13 +234,24 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
                 Sağdaki iki etiket sıfır çizgisinin iki yanının ne anlattığını
                 söylüyor: çubuk yukarıdaysa o ay alım ağır basmış. */}
             <div className={styles.sentimentPlot}>
+            {/* Aylar sıfır çizgisinden büyüyerek girer (14 Ekim): sayfanın
+                geri kalanı `data-motion-draw` ile çizilirken bu grafik tek
+                karede basılıyordu. Eksi ay tepeden sarkar — origin satır
+                içinde (PremiumMotion bar dalı onu okur). Kademe yok:
+                çubuğu taşıyan `i` sarmal `.bar`ın çocuğu, stagger sayacı
+                ona ulaşmıyor; 12 ayın birlikte büyümesi de iki yönlü
+                grafikte "aynı anda iki taraf" okuması veriyor. */}
             <div aria-hidden className={styles.bars}>
               {series.map((month, index) => (
                 <span key={month?.month ?? `bos-${index}`} className={styles.bar}>
                   {month ? (
                     <i
+                      data-motion-draw="bar"
                       data-sign={month.mspr >= 0 ? "up" : "down"}
-                      style={{ height: `${(Math.min(MSPR_MAX, Math.abs(month.mspr)) / MSPR_MAX) * 50}%` }}
+                      style={{
+                        height: `${(Math.min(MSPR_MAX, Math.abs(month.mspr)) / MSPR_MAX) * 50}%`,
+                        transformOrigin: month.mspr >= 0 ? undefined : "center top",
+                      }}
                     />
                   ) : (
                     <b />

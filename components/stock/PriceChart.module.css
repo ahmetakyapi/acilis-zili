@@ -42,7 +42,7 @@
  .legendSkeletonContent { height:var(--price-chart-legend,53px); }
  .controlsSkeleton { height:var(--price-chart-controls,24px); }
 }
-@media(prefers-reduced-motion:reduce) { .sessionSummary > span { transition:none; } }
+@media(prefers-reduced-motion:reduce) { .sessionSummary > span { transition:none; } .tip { animation:none; } }
 
 @media(min-width:1100px) {
  .root[data-compact="true"] { display:flex; flex-direction:column; }
@@ -93,7 +93,13 @@
 /* Yüzen okuma etiketi (hisse sayfası) — gerekçe PriceChart.tsx'te.
    Derinlik tonla: kart yüzeyi, ince kenar; gölge yok. Fiyat 15 punto:
    başlıktaki 48 puntoluk canlı fiyatla yarışmıyor, bir okuma olduğu belli. */
-.tip { position:absolute; z-index:3; display:grid; grid-template-columns:auto 1fr; align-items:baseline; gap:2px 8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel-fixed); pointer-events:none; }
+/* Yüzen okuma etiketi KISA bir girişle gelir (14 Ekim): panelde her şey
+   geçişliyken (seri kırpmayla çiziliyor, seçim kayıyor) en sık tetiklenen
+   katman tek karede patlıyordu. Yalnız görünme anında, bir kez; konum
+   güncellemeleri animasyonsuz. Çıkış yok — imleç ayrılınca okuma bitti,
+   etiketin oyalanması yeni okumayı geciktirirdi. */
+.tip { position:absolute; z-index:3; display:grid; grid-template-columns:auto 1fr; align-items:baseline; gap:2px 8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel-fixed); pointer-events:none; animation:tip-in 140ms var(--ease-brand) both; }
+@keyframes tip-in { from { opacity:0; translate:0 3px; } }
 .tipPrice { font-size:15px; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
 .tipChange { justify-self:end; font-size:12px; font-weight:600; white-space:nowrap; }
 .tipDate { grid-column:1 / -1; font-size:12px; color:var(--text-muted); white-space:nowrap; }

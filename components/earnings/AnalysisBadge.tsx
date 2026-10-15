@@ -58,7 +58,11 @@ export function AnalysisBadge({
       href={analysisHref(badge.symbol, badge.period)}
       prefetch={false}
       className={cn(
-        "tap-44 z-10 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full font-bold ring-1 ring-current/25 ring-inset transition-opacity hover:opacity-80",
+        /* Hover sönmez, HALKA koyulaşır (14 Ekim): `opacity-80` yön
+           renkli karar hapinin kontrastını düşürüyor ve alandaki tek
+           "sönme" hover'ıydı — kenar-afordans dili (aşağıdaki karar
+           kaydı) zaten halkayı kurmuş, hover onu belirginleştiriyor. */
+        "tap-44 z-10 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full font-bold ring-1 ring-current/25 ring-inset transition-shadow hover:ring-current/50",
         verdictPillClass(verdict),
         size === "sm"
           ? "px-2.5 py-1 text-tiny sm:px-2 sm:py-[3px] sm:text-nano"

@@ -91,8 +91,13 @@
 .breadthVisual { min-width:0; padding-left:30px; border-left:1px solid var(--line); }
 .breadthRatio { display:flex; align-items:baseline; justify-content:space-between; gap:12px; color:var(--text-body); font-size:12px; }
 .breadthRatio strong { color:var(--text-strong); font-size:32px; font-weight:550; line-height:1; letter-spacing:-.045em; }
-.breadthRail { display:flex; height:9px; overflow:hidden; margin:14px 0; border-radius:6px; background:var(--rail-track); }
+/* Giriş: ray tek hamlede soldan süpürülerek açılır (gerekçe page.tsx →
+   BreadthSummary). Kırpma yuvarlak köşeyi koruyor; JS yokken ve azaltılmış
+   harekette son kare. */
+.breadthRail { display:flex; height:9px; overflow:hidden; margin:14px 0; border-radius:6px; background:var(--rail-track); animation:rail-sweep .7s var(--ease-brand) both; }
+@keyframes rail-sweep { from { clip-path:inset(0 100% 0 0 round 6px); } to { clip-path:inset(0 0 0 0 round 6px); } }
 .breadthRail > span { min-width:0; }
+@media(prefers-reduced-motion:reduce) { .breadthRail { animation:none; } }
 .breadthCounts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
 .breadthCounts > div { display:flex; align-items:baseline; gap:8px; }
 /* Üç sayaç çubuğun üç noktasına oturuyor: artıda solda, yatay ortada,
@@ -114,10 +119,18 @@
 .moverCompany > span:first-child { font-size:13px; line-height:18px; }
 .moverCompany > span:last-child { font-size:12px; line-height:14px; }
 .mover li a { padding-block:9px; }
-.moverTrack { position:relative; display:flex; align-items:center; gap:8px; margin-top:8px; background:var(--rail-track); min-height:3px; border-radius:3px; }
-.moverTrack > span:first-child { flex-shrink:0; }
+/* RAY KENDİ ÇİZGİSİNDE, MASKE YOK (14 Ekim). Zemin kabın kendisindeydi;
+   Dow sekmesinde katkı etiketi ikinci satıra sarınca kabın zemini etiketin
+   arkasına da uzanıyor ve `--surface-solid` ile örtülüyordu — açık temada
+   ikisi de beyazken görünmeyen yama, koyu temada panelin
+   `--premium-surface`inden ayrışan yabancı bir bant olarak beliriyordu.
+   Ray artık ilk satırı kaplayan bir `::before`; dolgu onun üstünde, etiket
+   satırının arkasında hiçbir şey yok. */
+.moverTrack { position:relative; display:flex; align-items:center; gap:8px; margin-top:8px; min-height:3px; }
+.moverTrack::before { content:""; position:absolute; left:0; right:0; top:0; height:3px; border-radius:3px; background:var(--rail-track); }
+.moverTrack > span:first-child { position:relative; flex-shrink:0; }
 .moverTrack:has(> span:nth-child(2)) { flex-wrap:wrap; }
-.moverTrack > span:nth-child(2) { flex-basis:100%; padding-top:3px; background:var(--surface-solid); }
+.moverTrack > span:nth-child(2) { flex-basis:100%; padding-top:3px; }
 @media(max-width:1023px) {
  .breadthOverview { gap:22px; }
  .breadthVisual { padding-left:22px; }
@@ -149,15 +162,17 @@
 .heatHead { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .heatHead :is(h2,h3) { font-size:var(--text-read); font-weight:700; color:var(--text-strong); }
 .heatHint { margin-top:4px; color:var(--text-body); font-size:12px; line-height:1.6; }
-.heatScale { display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); font-size:12px; font-weight:600; }
-.heatScale > i { width:96px; height:8px; border-radius:999px; background:linear-gradient(90deg, color-mix(in srgb, var(--down) 40%, var(--premium-surface)), var(--premium-surface) 50%, color-mix(in srgb, var(--up) 40%, var(--premium-surface))); }
+/* `.heatScale` SİLİNDİ (14 Ekim): birinci nesil haritanın degrade ölçeği,
+   hiçbir TSX'te geçmiyordu (bugünkü künye `.heatLegend`). Degrade yalnız
+   display başlık / birincil eylem / marka karosunda serbest; ölü kural
+   canlandırılsaydı dil ihlali hazır bekliyordu. */
 .heatGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(18px, 1fr)); gap:3px; margin-top:14px; }
 .heatCell { display:block; aspect-ratio:1; border-radius:4px; transition:scale .18s var(--ease-brand), box-shadow .18s var(--ease-brand); }
 @media(hover:hover) and (pointer:fine) {
  /* Büyüteç 1,5 → 1,25 (12 Ekim): kimliği halka veriyor, büyüme komşuları örtüyordu. */
  .heatCell:hover { position:relative; z-index:1; scale:1.25; box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); }
 }
-@media(max-width:639px) { .heat { padding:14px 16px 16px; } .heatGrid { grid-template-columns:repeat(auto-fill, minmax(14px, 1fr)); gap:2px; } .heatScale > i { width:64px; } }
+@media(max-width:639px) { .heat { padding:14px 16px 16px; } .heatGrid { grid-template-columns:repeat(auto-fill, minmax(14px, 1fr)); gap:2px; } }
 @media(prefers-reduced-motion:reduce) { .heatCell { transition:none; } .heatCell:hover { scale:none; } }
 
 /* ---- Genişlik kartı, ikinci düzen (26 Eylül) ----
@@ -210,10 +225,13 @@
 
 .heatCell:is(:hover, :focus-visible) { z-index:5; }
 @media(hover:hover) and (pointer:fine) { .heatCell:hover { scale:1.06; box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); } }
+/* Basış geri bildirimi (evin lehçesi, BUTTON_BASE): dokunmatikte hover yok,
+   karo basınca kısaca çöküyor. */
+.heatCell:active { scale:.97; }
 @media(max-width:639px) {
  .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(5, minmax(0, 1fr)); }
 }
-@media(prefers-reduced-motion:reduce) { .heatCell { transition:none; } .heatCell:hover { scale:none; } }
+@media(prefers-reduced-motion:reduce) { .heatCell { transition:none; } .heatCell:is(:hover,:active) { scale:none; } }
 
 /* 27 Eylül: 1440/1280'de eski harita 405px, hareket listeleri y=979.
    Endeks kimliği seçicinin üstündeki boşluğa taşındı. Harita tüm paneli

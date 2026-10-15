@@ -98,11 +98,15 @@ function Gauge({ score, label, size }: { score: number | null; label: string; si
         />
       ))}
       {marker && (
+        /* İşaretçi `spark-dot` ile OTURUYOR (14 Ekim): bantlar 1 sn kendini
+           çizerken okumanın kendisi (nokta) kare 0'dan tam opak duruyordu —
+           fon animasyonlu, kahraman donuk. Sparkline'ın son noktasıyla aynı
+           dil; transform-box/origin ve reduced-motion muafiyeti sınıftan. */
         <circle
           cx={marker.x}
           cy={marker.y}
           r={GAUGE.stroke / 2 + 3}
-          className={styles.gaugeMarker}
+          className={cn("spark-dot", styles.gaugeMarker)}
         />
       )}
     </svg>

@@ -111,9 +111,12 @@ export function PlanHistory({
                   </td>
                   {scale && (
                     <td data-cell="track" aria-hidden>
+                      {/* Bölge kapsülü soldan çizilir, stop çentiği yerine
+                          oturur (14 Ekim) — sayfadaki öteki karşılaştırma
+                          çubuklarıyla aynı giriş dili. */}
                       <span className={styles.historyTrack} data-verdict={stance}>
-                        {zone && <b style={{ left: `${zoneLeft}%`, width: `${zoneWidth}%` }} />}
-                        {entry.stop !== null && <i style={{ left: `${pct(entry.stop)}%` }} />}
+                        {zone && <b data-motion-draw="line" style={{ left: `${zoneLeft}%`, width: `${zoneWidth}%` }} />}
+                        {entry.stop !== null && <i className="spark-dot" style={{ left: `${pct(entry.stop)}%` }} />}
                       </span>
                     </td>
                   )}

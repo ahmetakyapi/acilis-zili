@@ -58,8 +58,11 @@
 .pulseSlice[data-verdict="sell"] { color:var(--down); }
 .pulseSlice[data-verdict="pending"] { color:var(--line-strong); }
 /* BALON dilimin ortasında, çubuğun üstünde; ilk ve son dilimde kenara
-   yaslanıyor ki dar ekranda kabın dışına taşmasın. */
-.pulseTip { position:absolute; bottom:calc(100% - 4px); left:50%; z-index:5; display:inline-flex; align-items:baseline; gap:8px; padding:6px 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel-fixed); box-shadow:0 6px 18px -8px color-mix(in srgb, var(--text-strong) 35%, transparent); font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap; translate:-50% 0; pointer-events:none; }
+   yaslanıyor ki dar ekranda kabın dışına taşmasın. Girişi kısa bir solma
+   (14 Ekim): koşullu render olduğu için keyframe her açılışta kendiliğinden
+   oynar; YALNIZ opaklık — konum `translate` ile veriliyor ve kenar
+   varyantları `translate:none` kullanıyor, transform'a dokunma. */
+.pulseTip { animation:pulse-tip-in 160ms var(--ease-brand) both; position:absolute; bottom:calc(100% - 4px); left:50%; z-index:5; display:inline-flex; align-items:baseline; gap:8px; padding:6px 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel-fixed); box-shadow:0 6px 18px -8px color-mix(in srgb, var(--text-strong) 35%, transparent); font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap; translate:-50% 0; pointer-events:none; }
 .pulseTip b { font-size:12.5px; font-weight:750; letter-spacing:.03em; color:var(--text-muted); }
 .pulseSlice[data-verdict="buy"] .pulseTip b { color:var(--up); }
 .pulseSlice[data-verdict="hold"] .pulseTip b { color:var(--primary-ink); }
@@ -93,6 +96,11 @@
 .pulseStance { display:flex; align-items:baseline; gap:8px; font-size:13px; font-weight:700; letter-spacing:.03em; cursor:pointer; }
 .pulseStance b { font-size:22px; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
 .pulseStanceStatic { cursor:default; }
+/* Tıklanabilir etiket hover'da cevap verir (14 Ekim): dilim hover'ıyla
+   aynı dil (parlaklık), hareket yok. Statik etiketler dışarıda. */
+@media (hover:hover) and (pointer:fine) {
+  .pulseStance:not(.pulseStanceStatic):hover { filter:brightness(1.08); }
+}
 .pulseStancePending { color:var(--text-muted); font-weight:650; }
 .pulseStancePending b { color:var(--text-muted); }
 /* Logosu soluk: sembol takipte ama henüz söyleyecek bir şeyi yok. */
@@ -123,6 +131,14 @@
 .pulseChanges { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-muted); }
 .pulseChange { display:inline-flex; align-items:center; gap:6px; padding:3px 9px 3px 4px; border:1px solid var(--line); border-radius:999px; font-size:12px; font-weight:600; color:var(--text-strong); }
 .pulseChange:hover { border-color:var(--primary-faint); }
+/* Dokunma hedefi 42-44 piksele kaplama katmanıyla çıkar (14 Ekim): çip
+   ~28 pikseldi ve dosyanın kendi 40/44 standardının altındaydı. Görünen
+   çip aynı; dikey aralık 14, komşu alanlar binişmez. */
+@media (max-width:767px), (pointer:coarse) {
+  .pulseChange { position:relative; }
+  .pulseChange::after { content:""; position:absolute; inset:-7px -2px; }
+  .pulseChanges { gap:14px 8px; }
+}
 
 /* ---- Görüş süzgeci ----
    JavaScript YOK: dört radyo düğmesi ve `:has()`. Adres değişmiyor; sığ
@@ -326,6 +342,10 @@
   .cardFoldInput:checked ~ .cardFold svg { transform:rotate(180deg); }
   .cardFoldInput:checked ~ .cardFold .cardFoldMore, .cardFoldInput:not(:checked) ~ .cardFold .cardFoldLess { display:none; }
   .cardFoldInput:focus-visible ~ .cardFold { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:8px; }
+  /* "Devamı" tek karede patlamıyor (14 Ekim): display:none'dan çıkan üç
+     bölüm kısa bir solmayla girer — animasyon her açılışta baştan oynar,
+     yalnız ok dönüyordu. */
+  .card:has(> .cardFoldInput:checked) :is(.rail, .cardThesis, .gaugeBox) { animation:fold-in 220ms var(--ease-brand) backwards; }
 }
 .card:has(.cardLink:focus-visible) { outline:2px solid var(--line-focus); outline-offset:3px; }
 .cardLink { color:inherit; }
@@ -2051,3 +2071,17 @@
 }
 /* Kartın dibindeki Claude düğmesi (StockTechnicalCard): ayırıcı çizginin altında. */
 .stockCardClaude { padding-top:14px; border-top:1px solid var(--line-soft); }
+
+@keyframes pulse-tip-in { from { opacity:0; } }
+@keyframes fold-in { from { opacity:0; } }
+/* Dokunmatikte basış izi KARTIN tamamında (14 Ekim): global kural basılan
+   bağlantıyı %60 opaklığa indiriyor ama buradaki bağlantı başlıktaki küçük
+   `<a>` — yalnız sembol yazısı sönüyordu. İz, kartı kaplayan ::after
+   katmanına veriliyor; token üzerinden karışım, yerleşim oynamaz. */
+@media (hover:none) {
+  .cardLink:active::after, .stockCardLink:active::after { background:color-mix(in srgb, var(--text-strong) 7%, transparent); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .pulseTip { animation:none; }
+  .card:has(> .cardFoldInput:checked) :is(.rail, .cardThesis, .gaugeBox) { animation:none; }
+}

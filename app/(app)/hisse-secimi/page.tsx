@@ -83,12 +83,13 @@ export default async function ScreeningPage(props: PageProps<"/hisse-secimi">) {
               <span>{S.rulesMeta.replace("{n}", String(RULE_COUNT))}</span>
             </p>
             <div className={styles.weights}>
-              {(Object.keys(CATEGORY_WEIGHTS) as (keyof typeof CATEGORY_WEIGHTS)[]).map((category) => (
+              {(Object.keys(CATEGORY_WEIGHTS) as (keyof typeof CATEGORY_WEIGHTS)[]).map((category, index) => (
                 <div key={category} className={styles.weight}>
                   <span>{S.categories[category]}</span>
                   <b>{S.weight.replace("{n}", String(CATEGORY_WEIGHTS[category]))}</b>
                   <span className={styles.track} aria-hidden="true">
-                    <span style={{ width: `${(CATEGORY_WEIGHTS[category] / 30) * 100}%` }} data-total={weightTotal} />
+                    {/* `--i`: kapak girişinin kademe sırası (CSS weight-in). */}
+                    <span style={{ width: `${(CATEGORY_WEIGHTS[category] / 30) * 100}%`, "--i": index } as React.CSSProperties} data-total={weightTotal} />
                   </span>
                 </div>
               ))}

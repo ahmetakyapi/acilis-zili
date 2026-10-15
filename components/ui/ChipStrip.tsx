@@ -38,6 +38,8 @@ export function ChipStrip({
   scrollLabels?: { prev: string; next: string };
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  /* İlk merkezleme sayfanın açılış konumu: animasyonsuz oturur. */
+  const firstCenter = useRef(true);
   const [edge, setEdge] = useState<Edge>("none");
 
   /* KENAR SOLMASI ŞERİDİN KENDİSİNDE. Eskiden kabın içinde ayrı bir gradyan
@@ -82,14 +84,20 @@ export function ChipStrip({
     const active = strip.querySelector<HTMLElement>('[aria-current="true"]');
     if (!active) return;
     /* `scrollIntoView` DEĞİL: o, sayfayı dikeyde de kaydırıyor ve okuyucuyu
-       şeride yapıştırıyor. Burada yalnızca şeridin kendi ekseni oynuyor. */
+       şeride yapıştırıyor. Burada yalnızca şeridin kendi ekseni oynuyor.
+       İLK KONUMLAMA ANINDA, SONRAKİLER KAYARAK (14 Ekim): seçim değişince
+       şerit `auto` ile zıplıyordu ve filtrenin uygulandığını gösteren o
+       yeniden konumlanma hiç okunmuyordu — sayfa düğmeleri zaten smooth
+       kaydırıyor, aynı dil. */
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     strip.scrollTo({
       left: Math.max(
         0,
         active.offsetLeft - (strip.clientWidth - active.offsetWidth) / 2,
       ),
-      behavior: "auto",
+      behavior: firstCenter.current || reduce ? "auto" : "smooth",
     });
+    firstCenter.current = false;
   }, [activeKey]);
 
   /* YÖN DÜĞMELERİ (26 Eylül). Kenar solması "devamı var" diyordu ama çok
@@ -113,13 +121,17 @@ export function ChipStrip({
       <div ref={ref} className={`edge-fade ${className ?? ""}`}>
         {children}
       </div>
-      {scrollLabels && canBack && (
-        <button type="button" className="chip-strip-arrow" data-side="start" aria-label={scrollLabels.prev} onClick={() => page(-1)}>
+      {/* Düğmeler HEP BAĞLI, `data-can` sürüyor (14 Ekim): koşullu render
+          kenara ulaşınca tek karede yok ediyordu — giriş animasyonluyken
+          çıkış yoktu. Stil globals.css `.chip-strip-arrow`; kapalıyken
+          odaktan da düşer (tabIndex -1 + visibility). */}
+      {scrollLabels && (
+        <button type="button" className="chip-strip-arrow" data-side="start" data-can={canBack || undefined} tabIndex={canBack ? 0 : -1} aria-label={scrollLabels.prev} onClick={() => page(-1)}>
           <CaretLeft weight="bold" size={14} aria-hidden />
         </button>
       )}
-      {scrollLabels && canForward && (
-        <button type="button" className="chip-strip-arrow" data-side="end" aria-label={scrollLabels.next} onClick={() => page(1)}>
+      {scrollLabels && (
+        <button type="button" className="chip-strip-arrow" data-side="end" data-can={canForward || undefined} tabIndex={canForward ? 0 : -1} aria-label={scrollLabels.next} onClick={() => page(1)}>
           <CaretRight weight="bold" size={14} aria-hidden />
         </button>
       )}

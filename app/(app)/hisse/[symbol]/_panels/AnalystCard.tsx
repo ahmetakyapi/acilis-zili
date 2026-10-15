@@ -119,12 +119,38 @@ export async function AnalystCard({
       <div className={styles.consensus}>
         <svg viewBox="0 0 120 120" className={styles.consensusRing} aria-hidden>
           <circle cx="60" cy="60" r="47" fill="none" stroke="var(--surface-elevated)" strokeWidth="8" />
-          {segments.map((segment, index) => {
-            const circumference = 2 * Math.PI * 47;
-            const length = segment.value / total * circumference;
-            const offset = segments.slice(0, index).reduce((sum, item) => sum + item.value, 0) / total * circumference;
-            return segment.value > 0 ? <circle key={segment.label} cx="60" cy="60" r="47" fill="none" stroke={segment.color} strokeWidth="8" strokeDasharray={`${Math.max(0, length - 2)} ${circumference - Math.max(0, length - 2)}`} strokeDashoffset={-offset} transform="rotate(-90 60 60)" /> : null;
-          })}
+          {/* DİLİMLER KENDİNİ ÇİZİYOR (14 Ekim). Halka sayfanın kendini
+              çizmeyen tek veri grafiğiydi (12 Ekim kararı: "hareket veriyi
+              çizen öğelerde"). Geometri `pathLength={1}`e normalize edildi
+              ve başlangıç açısı dilimin KENDİ `rotate`ına gömüldü: nihai
+              dashoffset 0, yani MotionExperience'ın `arc` dalı (1→0)
+              her dilimi kendi başından çiziyor; `data-motion-stagger` ile
+              dilimler sırayla. Boşluk aralığı `2 - len`: tam çevre 1,
+              periyodun 1'i aşması dash'in başlangıç ofsetinde (1) tümüyle
+              gizlenebilmesi için şart (SentimentPulse bantlarıyla aynı
+              kalıp). Son kare eski çizimle piksel piksel aynı. */}
+          <g data-motion-stagger>
+            {segments.map((segment, index) => {
+              const circumference = 2 * Math.PI * 47;
+              const len = Math.max(0, (segment.value / total) * circumference - 2) / circumference;
+              const start = segments.slice(0, index).reduce((sum, item) => sum + item.value, 0) / total;
+              return segment.value > 0 ? (
+                <circle
+                  key={segment.label}
+                  data-motion-draw="arc"
+                  pathLength={1}
+                  cx="60"
+                  cy="60"
+                  r="47"
+                  fill="none"
+                  stroke={segment.color}
+                  strokeWidth="8"
+                  strokeDasharray={`${len} ${2 - len}`}
+                  transform={`rotate(${-90 + start * 360} 60 60)`}
+                />
+              ) : null;
+            })}
+          </g>
           <circle cx="60" cy="60" r="33" fill="none" stroke="var(--line-soft)" strokeWidth="1" />
         </svg>
         <div className={styles.consensusValue}>

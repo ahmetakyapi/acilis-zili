@@ -44,6 +44,19 @@
 .labelCell { text-align:left; font-weight:400; min-width:132px; }
 .labelLink { display:flex; flex-direction:column; gap:1px; margin-block:-6px; padding-block:6px; color:var(--text-strong); }
 .labelLink:hover .labelName { color:var(--primary); }
+/* SATIR CEVAP VERİYOR (14 Ekim). Satır bir /hisse bağlantısı taşıyor ama
+   imleç değer hücrelerindeyken hiçbir şey olmuyordu; aynı sayfadaki
+   bileşen tablosu ve hareket listeleri `--primary-tint` ile cevap veriyor
+   (MarketExperience.module.css) — tek hover dili. Grup başlığı satırları
+   bağlantısız, seçicinin dışında. Yapışkan etiket hücresi SAYDAM tint'i
+   alamaz (altından kayan sayılar içinden okunurdu): opak eşdeğerini alıyor
+   (ısı haritasının color-mix + premium-surface kalıbı). */
+.table tbody tr:has(.labelLink):focus-within { background:var(--primary-tint); }
+.table tbody tr:has(.labelLink):focus-within > :first-child { background:color-mix(in srgb, var(--primary) 5%, var(--premium-surface)); }
+@media(hover:hover) {
+  .table tbody tr:has(.labelLink):hover { background:var(--primary-tint); }
+  .table tbody tr:has(.labelLink):hover > :first-child { background:color-mix(in srgb, var(--primary) 5%, var(--premium-surface)); }
+}
 .labelName { font-size:var(--text-base); font-weight:650; line-height:1.3; color:var(--text-strong); transition:color .2s var(--ease-brand); }
 .labelSymbol { font-size:var(--text-tiny); color:var(--text-muted); }
 .valueCell { text-align:right; white-space:nowrap; }
@@ -87,7 +100,13 @@
 .pulseRowHead { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
 .pulseName { font-size:var(--text-base); font-weight:650; color:var(--text-strong); }
 .pulseRowHead b { font-size:20px; font-weight:700; letter-spacing:-.03em; color:var(--text-strong); }
-.scoreTrack { display:block; height:4px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
+/* 50 ORTA ÇİZGİSİ İKİ SÜRÜMDE DE (14 Ekim). Çizgi yalnız kompakt rayda
+   (`.chipTrack::after`) vardı; /piyasalar'daki tam sürüm çıplaktı ve
+   dolgunun yönü/rengi neye göre döndüğü okunmuyordu — aynı gösterge iki
+   ekranda iki dil konuşuyordu. Kırpma kalktı: dolgu kendi yarıçapını
+   taşıyor, kırpılacak şey yok; çizgi rayın 3'er piksel dışına taşıyor. */
+.scoreTrack { display:block; position:relative; height:4px; border-radius:999px; background:var(--line-soft); }
+.scoreTrack::after { content:""; position:absolute; top:-3px; bottom:-3px; left:50%; width:1px; background:var(--line-strong); }
 .scoreTrack i { display:block; height:100%; border-radius:999px; background:color-mix(in srgb, var(--down) 70%, transparent); }
 .scoreTrack i[data-side="up"] { background:color-mix(in srgb, var(--up) 70%, transparent); }
 .pulseRaw { font-size:var(--text-tiny); line-height:1.45; color:var(--text-muted); }
@@ -101,8 +120,8 @@
    "sağdaki sayılar çok ufak"), yön tonunda; ray sabit genişlikte ki beş
    satırın rayları alt alta aynı ölçekte okunsun. */
 .pulseChipScore { display:flex; align-items:center; gap:14px; }
-.chipTrack { width:120px; height:6px; position:relative; overflow:visible; }
-.chipTrack::after { content:""; position:absolute; top:-3px; bottom:-3px; left:50%; width:1px; background:var(--line-strong); }
+/* Orta çizgi artık `.scoreTrack`ın kendisinde (yukarıda); bu yalnız ölçü. */
+.chipTrack { width:120px; height:6px; }
 .pulseChipScore b { min-width:2.2ch; font-size:22px; font-weight:700; line-height:1; letter-spacing:-.03em; text-align:right; color:var(--down); }
 .pulseChipScore b[data-side="up"] { color:var(--up); }
 /* Telefonda puan adın satırında, açıklama altta tam genişlikte: ray ayrı

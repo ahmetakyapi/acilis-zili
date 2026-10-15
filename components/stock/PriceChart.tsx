@@ -215,15 +215,25 @@ export function PriceChart({
   const silentRef = useRef(false);
   const [range, setRange] = useState<ChartRange>(initialRange);
   const [mode, setMode] = useState<"area" | "candles">("area");
-  const [result, setResult] = useState<ChartResult | null>(
+  /* ARALIK ÖNBELLEĞİ (14 Ekim). Sonuç TEK nesneydi: 1G→1A→1G gezintisinde
+     1G barları ELDEYKEN bile yeniden isteniyor ve her geçişte yükleme
+     sahnesi (mürekkep zili + shimmer) çakıyordu. Sonuçlar artık
+     `sembol:aralık` anahtarıyla duruyor: eldeki aralığa dönüş ağa
+     çıkmadan, sahnesiz gelir. Bellek maliyeti 8 aralık × bar dizisi —
+     önemsiz. Canlı yoklama aktif aralığın kaydını güncelliyor, bayat
+     önbellek kalmıyor; hatalı aralık yine kaydediliyor ki bugünkü davranış
+     (hata ekranı, kendiliğinden yeniden denemez) değişmesin. */
+  const [results, setResults] = useState<Record<string, ChartResult>>(() =>
     initialBars && initialBars.bars.length > 0
       ? {
-          key: `${symbol}:${initialRange}`,
-          phase: "ready",
-          bars: initialBars.bars,
-          prevClose: initialBars.prevClose ?? null,
+          [`${symbol}:${initialRange}`]: {
+            key: `${symbol}:${initialRange}`,
+            phase: "ready",
+            bars: initialBars.bars,
+            prevClose: initialBars.prevClose ?? null,
+          },
         }
-      : null,
+      : {},
   );
   const [hover, setHover] = useState<HoverReading>(null);
   /* HİSSE SAYFASINDA OKUMA GRAFİĞİN İÇİNDE, NOKTANIN YANINDA (24 Eylül).
@@ -257,12 +267,10 @@ export function PriceChart({
   const [zones, setZones] = useState<SessionZone[]>([]);
 
   const requestKey = `${symbol}:${range}`;
+  const result = results[requestKey] ?? null;
   const usdState = useMemo(
-    () =>
-      result && result.key === requestKey
-        ? result
-        : ({ phase: "loading" } as const),
-    [result, requestKey],
+    () => result ?? ({ phase: "loading" } as const),
+    [result],
   );
 
   /* ---- TL GÖRÜNÜMÜ ----
@@ -388,27 +396,31 @@ export function PriceChart({
     const key = `${symbol}:${range}`;
 
     /* ELDEKİ ARALIK İÇİN AĞA ÇIKILMIYOR. Açılış aralığının barları
-       sunucudan geliyor (`initialBars`) ve `result` onlarla başlatılıyor;
-       koşulsuz bir fetch aynı veriyi ikinci kez istemek olurdu.
+       sunucudan geliyor (`initialBars`) ve önbellek onlarla başlıyor;
+       koşulsuz bir fetch aynı veriyi ikinci kez istemek olurdu. Daha önce
+       gezilen HER aralık da burada tutuluyor (yukarıdaki "ARALIK
+       ÖNBELLEĞİ" kararı): 1A'dan 1G'ye dönüş ağa çıkmaz.
 
        `result` bağımlılık listesinde ve bu bir döngü kurmuyor: fetch bittiğinde
-       setResult aynı anahtarı yazıyor, effect bir kez daha koşup buradan
-       dönüyor. Aralık değiştiğinde anahtar tutmuyor ve istek gidiyor. */
-    if (result?.key === key) return;
+       setResults aynı anahtarı yazıyor, effect bir kez daha koşup buradan
+       dönüyor. Yeni bir aralığa geçildiğinde kayıt yok ve istek gidiyor. */
+    if (result) return;
 
+    const commit = (value: ChartResult) =>
+      setResults((current) => ({ ...current, [key]: value }));
     fetch(`/api/chart/${symbol}?range=${range}`)
       .then((res) => res.json() as Promise<ChartResponse>)
       .then((data) => {
         if (cancelled) return;
         if (!data.ok) {
-          setResult({ key, phase: "error", message: labels.failed, hint: labels.failedHint });
+          commit({ key, phase: "error", message: labels.failed, hint: labels.failedHint });
           return;
         }
         if (data.bars.length === 0) {
-          setResult({ key, phase: "error", message: labels.noData });
+          commit({ key, phase: "error", message: labels.noData });
           return;
         }
-        setResult({
+        commit({
           key,
           phase: "ready",
           bars: data.bars,
@@ -416,7 +428,7 @@ export function PriceChart({
         });
       })
       .catch(() => {
-        if (!cancelled) setResult({ key, phase: "error", message: labels.failed, hint: labels.failedHint });
+        if (!cancelled) commit({ key, phase: "error", message: labels.failed, hint: labels.failedHint });
       });
 
     return () => {
@@ -450,11 +462,14 @@ export function PriceChart({
             window.clearInterval(timer);
           }
           silentRef.current = true;
-          setResult((current) =>
-            current?.key === key
-              ? { key, phase: "ready", bars: data.bars, prevClose: data.prevClose ?? (current.phase === "ready" ? current.prevClose : null) }
-              : current,
-          );
+          setResults((current) => {
+            const existing = current[key];
+            if (!existing) return current;
+            return {
+              ...current,
+              [key]: { key, phase: "ready", bars: data.bars, prevClose: data.prevClose ?? (existing.phase === "ready" ? existing.prevClose : null) },
+            };
+          });
           if (data.quote) {
             setLiveQuote(data.quote);
             /* Başlık da aynı yanıttan tazeleniyor (ChartReadingContext). */
@@ -1445,7 +1460,7 @@ export function PriceChart({
               aria-pressed={range === r}
               onClick={() => setRange(r)}
               className={cn(
-                "numeral relative isolate min-h-11 shrink-0 rounded-(--radius-sm) px-2.5 sm:min-h-[36px] text-xs font-semibold transition-colors",
+                "numeral relative isolate min-h-11 shrink-0 rounded-(--radius-sm) px-2.5 sm:min-h-[36px] text-xs font-semibold transition-colors duration-[280ms]",
                 styles.segmentButton,
                 range === r
                   ? "text-on-primary"
@@ -1457,7 +1472,12 @@ export function PriceChart({
                   tek bir gösterge var ve Motion onu eski düğmeden yenisine
                   taşıyor (sekme alt çizgisiyle aynı yay: 500 / 40). Hareketi
                   azaltan okuyucuda `MotionConfig reducedMotion="user"`
-                  (kabuk) geçişi anında bitiriyor. */}
+                  (kabuk) geçişi anında bitiriyor.
+                  RENK GÖSTERGEYLE BİRLİKTE (14 Ekim): etiket varsayılan
+                  ~150 ms'de beyaza dönüyor, gösterge 280 ms'de varıyordu —
+                  arada yazı çökük zeminde beyaz, neredeyse okunmaz kalıyordu.
+                  Üç segmentte de renk süresi SELECTION_TRANSITION ile aynı
+                  (`duration-[280ms]`), eğri varsayılandan (--ease-brand). */}
               {range === r && (
                 <motion.span
                   aria-hidden
@@ -1493,7 +1513,7 @@ export function PriceChart({
                   title={c === "usd" ? labels.usdLong : labels.tlLong}
                   onClick={() => setCurrency(c)}
                   className={cn(
-                    "numeral relative isolate min-h-11 rounded-(--radius-sm) px-2.5 text-xs font-semibold sm:min-h-[36px] transition-colors",
+                    "numeral relative isolate min-h-11 rounded-(--radius-sm) px-2.5 text-xs font-semibold sm:min-h-[36px] transition-colors duration-[280ms]",
                     styles.segmentButton,
                     currency === c
                       ? "text-primary-ink"
@@ -1523,7 +1543,7 @@ export function PriceChart({
                 aria-pressed={mode === m}
                 onClick={() => setMode(m)}
                 className={cn(
-                  "relative isolate min-h-11 rounded-(--radius-sm) px-2.5 text-xs font-medium sm:min-h-[36px] transition-colors",
+                  "relative isolate min-h-11 rounded-(--radius-sm) px-2.5 text-xs font-medium sm:min-h-[36px] transition-colors duration-[280ms]",
                   styles.segmentButton,
                   mode === m
                     ? "text-primary-ink"

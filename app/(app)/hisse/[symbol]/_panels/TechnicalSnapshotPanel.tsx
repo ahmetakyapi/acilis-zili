@@ -105,7 +105,9 @@ export async function TechnicalSnapshotPanel({ symbol, locale, t }: { symbol: st
                 {RSI_MARKS.map((mark) => (
                   <span key={mark} style={{ left: `${mark}%` }} />
                 ))}
-                <i style={{ left: `${Math.max(0, Math.min(100, snap.rsi14))}%` }} />
+                {/* `spark-dot`: işaret noktası yerine oturarak girer —
+                    sparkline'ın son noktasıyla aynı dil (14 Ekim). */}
+                <i className="spark-dot" style={{ left: `${Math.max(0, Math.min(100, snap.rsi14))}%` }} />
               </dd>
             )}
           </div>

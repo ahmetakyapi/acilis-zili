@@ -385,8 +385,9 @@ export function TechnicalCard({
                 </span>
                 {rsiZoneText && <span className="sr-only">, {rsiZoneText}</span>}
               </span>
+              {/* `spark-dot`: işaret noktası yerine oturarak girer (14 Ekim). */}
               <span className={styles.gaugeMeter} data-kind="rsi" data-tone={rsiTone} aria-hidden>
-                <i style={{ left: `${Math.min(100, Math.max(0, rsi.rsi))}%` }} />
+                <i className="spark-dot" style={{ left: `${Math.min(100, Math.max(0, rsi.rsi))}%` }} />
               </span>
             </li>
           )}

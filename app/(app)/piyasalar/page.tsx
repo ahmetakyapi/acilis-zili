@@ -38,7 +38,8 @@ import {
 import { getStatus, getSymbolNames, liveMarketCap, type SymbolMeta } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
-import type { MarketStatus } from "@/lib/market-hours";
+import { quoteBasis, type MarketStatus } from "@/lib/market-hours";
+import { sessionDomain } from "@/components/today/index-feed";
 import type { Quote } from "@/lib/providers/types";
 import {
   cn,
@@ -302,12 +303,18 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
           kalırdı. Üçü de seçili endeksten bağımsız; kendi Suspense
           sınırlarında akıyorlar, endeks sekmesi değişince yeniden
           beklenmiyorlar (anahtarları sekmeye bağlı değil). */}
+      {/* YEDEKLER YAPISAL (14 Ekim). Üç pano düz plakaydı (h-72 / h-[520px])
+          ve gerçek boylarıyla eşleşmiyordu: aşağı inmiş okuyucunun altında
+          sayfa kayıyordu. Endeks detayının kendi standardı (DetailSkeleton:
+          "yer tutucular yükseklikle değil YAPIYLA eşleşir") buraya da
+          uygulandı; satır sayıları sabit ve sunucuda biliniyor (nabız 5
+          gösterge, sektör 11, emtia 6+2 ve iki grup başlığı). */}
       <section className={boardStyles.section} aria-label={t.marketExtras.boardsLabel}>
-        <Suspense fallback={<Skeleton className="h-72 rounded-[18px]" />}>
+        <Suspense fallback={<PulseSkeleton />}>
           <SentimentPulse locale={locale} t={t} />
         </Suspense>
         <div className={boardStyles.boards}>
-          <Suspense fallback={<Skeleton className="h-[520px] rounded-[18px]" />}>
+          <Suspense fallback={<BoardSkeleton rows={11} />}>
             <SectorPerformance
               locale={locale}
               t={t}
@@ -316,7 +323,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
               hrefFor={sectorHref}
             />
           </Suspense>
-          <Suspense fallback={<Skeleton className="h-[520px] rounded-[18px]" />}>
+          <Suspense fallback={<BoardSkeleton rows={8} groups={2} />}>
             <CommodityBoard locale={locale} t={t} />
           </Suspense>
         </div>
@@ -362,6 +369,10 @@ async function IndexCards({
 
   if (!quotesResult.ok) return <Panel className={styles.indexUnavailable}><EmptyState title={t.common.noData} hint={t.common.noDataHint} scene="chart" /></Panel>;
 
+  /* Kıvılcım çizgilerinin ekseni — ana sayfanın endeks kartlarıyla aynı
+     (`sessionDomain`): dört kart aynı günü aynı ölçekte anlatır. */
+  const rail = sessionDomain(status);
+
   // The selected index occupies the first visual position. Keep DOM and
   // keyboard order aligned with that position; the toolbar keeps its order.
   // Keep all three positions stable when the active index changes.
@@ -372,9 +383,19 @@ async function IndexCards({
     <div className={styles.indexGrid} data-motion-stagger>
       {orderedTabs.map((entry) => {
         const quote = quotesResult.data[entry.proxy];
+        /* ÇİZGİ SEANS EKSENİNDE, TABAN ÖNCEKİ KAPANIŞ (14 Ekim). Barlar
+           yalnızca değerle eşlenip eksensiz çiziliyordu: %0,05'lik kıpırtı
+           kartı dolduruyor, x ekseni bar SIRASI olunca ön seans günü yarım
+           gösteriyordu — Sparkline'ın kendi karar kaydının ana sayfada
+           ölçüp düzelttiği hata buradaydı. Ana sayfanın kuralının aynısı:
+           zaman + `sessionDomain` + `prevClose` tabanı + açılışta yarım
+           ton; sayı o seansa ait değilse (`quoteBasis === "lastClose"`)
+           şekil HİÇ çizilmiyor (veri dürüstlüğü 3-4). */
         const points = (bars[entry.proxy] ?? []).map((bar) => ({
+          time: bar.time,
           value: bar.close,
         }));
+        const sparkOk = quote ? quoteBasis(quote, status) !== "lastClose" : false;
         const tone = directionOf(quote?.changePct);
         const selected = entry.key === activeTab;
 
@@ -419,7 +440,7 @@ async function IndexCards({
                       {formatPercent(quote.changePct, locale)}
                     </p>
                   </div>
-                  {points.length > 1 && (
+                  {sparkOk && points.length > 1 && (
                     <Sparkline
                       points={points}
                       title={`${entry.label} · ${locale === "tr" ? "1G" : "1D"}`}
@@ -427,6 +448,9 @@ async function IndexCards({
                       height={38}
                       showLastDot
                       strokeWidth={1.8}
+                      baseline={quote.prevClose}
+                      domain={rail.domain}
+                      split={rail.openAt}
                       className={styles.spark}
                     />
                   )}
@@ -790,7 +814,10 @@ function IndexTabs({ tab, aside, identity }: { tab: TabKey; locale: Locale; t: D
                 aria-current={activeTab ? "page" : undefined}
                 scroll={false}
                 className={cn(
-                  "flex min-h-11 items-center justify-center gap-2 rounded-full px-2.5 py-1.5 text-xs font-semibold transition-colors sm:min-h-[38px] sm:px-4 sm:text-sm",
+                  /* Basış evin tek lehçesinde (BUTTON_BASE): ekranın ana
+                     seçicisi dokunuşa sessiz kalıyordu — sunucu gezinmesi
+                     dönene kadar hiçbir şey değişmiyordu (14 Ekim). */
+                  "flex min-h-11 items-center justify-center gap-2 rounded-full px-2.5 py-1.5 text-xs font-semibold transition-[color,background-color,border-color,scale] active:scale-[0.97] motion-reduce:active:scale-100 sm:min-h-[38px] sm:px-4 sm:text-sm",
                   activeTab
                     ? "bg-primary text-on-primary"
                     : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
@@ -941,8 +968,13 @@ function BreadthSummary({
         <span>{t.markets.advancingShare}</span>
         <strong className="numeral">{formatPercentPlain(share, locale, 0)}</strong>
       </div>
+      {/* Ray TEK süpürmeyle açılıyor (14 Ekim). Üç dilimin her biri ayrı
+          `bar-fill` + `data-motion-draw` taşıyordu ve her dilim KENDİ sol
+          kenarından scaleX ile büyüyordu: flex kutuları yerinde durduğu
+          için giriş "üç kopuk dilim" olarak okunuyordu. Süpürme rayın
+          kendisinde (`rail-sweep`, MarketExperience.module.css). */}
       <div className={styles.breadthRail} aria-hidden>
-        {parts.map((part) => part.value > 0 && <span key={part.key} data-motion-draw="line" className={cn("bar-fill", part.fill)} style={{ flex: part.value }} />)}
+        {parts.map((part) => part.value > 0 && <span key={part.key} className={part.fill} style={{ flex: part.value }} />)}
       </div>
       <dl className={styles.shareCounts}>
         {parts.map((part) => (
@@ -1568,6 +1600,76 @@ function DetailSkeleton({ rows, contribution }: { rows: number; contribution: bo
           {Array.from({ length: rows }, (_, i) => <SkeletonRow key={i} />)}
         </div>
       </Panel>
+    </div>
+  );
+}
+
+/* ---- Pano yedekleri — gerekçe panoların Suspense sınırında ---- */
+
+/** Piyasa Nabzı iskeleti: başlık + açıklama + kadran dairesi + 5 gösterge. */
+function PulseSkeleton() {
+  return (
+    <div className={boardStyles.pulsePanel}>
+      <div className="flex min-h-12 items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
+        <Skeleton className="h-3 w-32" />
+        <Skeleton className="h-2.5 w-24" />
+      </div>
+      <div className="px-4 pb-1 sm:px-5"><Skeleton className="h-2.5 w-72 max-w-full" /></div>
+      <div className={boardStyles.pulseBody}>
+        <div className="flex items-center justify-center py-2"><Skeleton className="size-44 rounded-full" /></div>
+        <div className="flex flex-col gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between gap-4 border-t border-line-soft pt-3 first:border-t-0 first:pt-0">
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                <Skeleton className="h-2.5 w-36" />
+                <Skeleton className="h-1 w-full max-w-64" />
+              </div>
+              <Skeleton className="h-4 w-7" />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-col gap-2 border-t border-line-soft px-4 py-3 sm:px-5">
+        <Skeleton className="h-2 w-full max-w-xl" />
+        <Skeleton className="h-2 w-3/4" />
+      </div>
+    </div>
+  );
+}
+
+/** Sektör/Emtia pano iskeleti: başlık + sütun satırı + N satır + künye. */
+function BoardSkeleton({ rows, groups = 0 }: { rows: number; groups?: number }) {
+  return (
+    <div className={boardStyles.board}>
+      <div className="flex min-h-12 items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
+        <Skeleton className="h-3 w-40" />
+        <Skeleton className="h-2.5 w-16" />
+      </div>
+      <div className="flex h-9 items-center gap-6 bg-surface-sunken px-4 sm:px-5">
+        <Skeleton className="h-2 w-24" />
+        <Skeleton className="ml-auto h-2 w-10" />
+        <Skeleton className="h-2 w-10" />
+        <Skeleton className="h-2 w-10" />
+      </div>
+      <div className="flex flex-col">
+        {Array.from({ length: groups }).map((_, i) => (
+          <div key={`g-${i}`} className="px-4 pb-1.5 pt-3 sm:px-5"><Skeleton className="h-2 w-16" /></div>
+        ))}
+        {Array.from({ length: rows }).map((_, i) => (
+          <div key={i} className="flex items-center gap-6 border-t border-line-soft px-4 py-3 first:border-t-0 sm:px-5">
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-2 w-12" />
+            </div>
+            <Skeleton className="h-3 w-14" />
+            <Skeleton className="h-3 w-12" />
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-col gap-2 border-t border-line-soft px-4 py-3 sm:px-5">
+        <Skeleton className="h-2 w-full max-w-md" />
+        <Skeleton className="h-2 w-2/3" />
+      </div>
     </div>
   );
 }

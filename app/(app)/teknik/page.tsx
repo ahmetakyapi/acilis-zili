@@ -4,6 +4,7 @@ import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import styles from "@/components/technical/Technical.module.css";
+import { NextEditionIn } from "@/components/technical/NextEditionIn";
 import { TechnicalBoard } from "@/components/technical/TechnicalBoard";
 import { TechnicalCard } from "@/components/technical/TechnicalCard";
 import { STANCE_GUIDE_SLUG, StanceGuide } from "@/components/technical/StanceGuide";
@@ -201,6 +202,8 @@ export default async function TechnicalPage() {
                        (30 Eylül, telefonda görüldü). Saatle aynı `nowrap`. */
                     <>{KUNYE_SEP}<span className="whitespace-nowrap">{formatEtDateCompact(todayEt(next.at), locale)}</span></>
                   )}
+                  {/* Kalan süre — gerekçe NextEditionIn. */}
+                  <NextEditionIn atIso={next.at.toISOString()} template={t.technical.nextEditionIn} units={t.sessionBell.units} sep={KUNYE_SEP} />
                 </span>
               </div>
             )}

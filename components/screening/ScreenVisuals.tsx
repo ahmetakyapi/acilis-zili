@@ -99,8 +99,14 @@ export function MiniDial({ score, band }: { score: number | null; band: Band | n
       <svg viewBox="0 0 48 48">
         <circle className={styles.dialTrack} cx="24" cy="24" r="20" />
         {score !== null && score > 0 && (
+          /* Halka kendini çiziyor (14 Ekim): dolgu statik dasharray'di ve
+             siteninki olan `.ring-fill` sözleşmesinin (globals.css
+             `ring-draw`, MotionExperience `ring` dalı, reduced-motion
+             kapatması) dışında kalan tek halkaydı. Son kare piksel piksel
+             aynı. */
           <circle
-            className={styles.dialFill}
+            className={`ring-fill ${styles.dialFill}`}
+            style={{ "--ring-circumference": MINI } as React.CSSProperties}
             cx="24"
             cy="24"
             r="20"

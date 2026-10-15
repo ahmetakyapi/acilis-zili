@@ -1,6 +1,7 @@
 import type React from "react";
 import { cn } from "@/lib/utils";
 import { verdictStroke, type VerdictKey } from "@/lib/analysis";
+import { RollingFigure } from "@/components/ui/RollingFigure";
 import styles from "@/components/earnings/EarningsReport.module.css";
 
 /**
@@ -18,6 +19,7 @@ export function ScoreRing({
   verdict,
   size = 64,
   showDenominator = false,
+  roll = false,
   className,
 }: {
   score: number;
@@ -25,6 +27,12 @@ export function ScoreRing({
   size?: number;
   /** "/ 100" alt satırı — yalnızca 60px üstü halkalarda okunuyor. */
   showDenominator?: boolean;
+  /** Skor halkayla birlikte yuvarlanarak otursun (14 Ekim) — YALNIZCA ilk
+      ekrandaki kapak halkası için (RollingFigure'ın kendi kuralı: yükleme
+      animasyonu, görünüme giriş değil). Halka 0,9 sn kendini çizerken sayı
+      donuk duruyordu; dolan ölçüyle sonucu baştan söyleyen sayı iki ayrı
+      tempoydu. Liste halkaları `false` kalır. */
+  roll?: boolean;
   className?: string;
 }) {
   const radius = 26;
@@ -93,7 +101,7 @@ export function ScoreRing({
           className="figure font-bold leading-none text-strong"
           style={{ fontSize: `calc(${box} * 0.27)` }}
         >
-          {score}
+          {roll ? <RollingFigure value={String(score)} delayMs={200} /> : score}
         </span>
         {/* 11 piksel (`text-tiny`): "/ 100" bir sözcük gibi okunuyor;
             `--text-micro` yalnızca metin OLMAYAN yerde (globals.css). 10 piksel

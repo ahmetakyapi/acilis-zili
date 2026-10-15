@@ -4,6 +4,7 @@ import type { InkSceneName } from "@/lib/ink/scenes";
 import { LogoImage } from "./LogoImage";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { TabUnderline } from "./TabUnderline";
+import { ScrollEdges } from "./ScrollEdges";
 import { cn, directionOf, directionWash, formatPercent, NO_VALUE } from "@/lib/utils";
 import { displayZone, zoneDateKey, zoneTag } from "@/lib/session-clock";
 import type { Locale } from "@/lib/i18n/config";
@@ -57,8 +58,10 @@ export function PanelHeader({
   title: string;
   /** Sağdaki bağlantı ya da filtre grubu. */
   action?: React.ReactNode;
-  /** Başlığın sağındaki sessiz bilgi — "04:00 — 20:00 ET" gibi. */
-  meta?: string;
+  /** Başlığın sağındaki sessiz bilgi — "04:00 — 20:00 ET" gibi. Düğüm de
+      alır: dar ekranda görünen ek parça gibi duyarlı künyeler için
+      (örnek sirketler tablosunun telefon sıralama künyesi). */
+  meta?: React.ReactNode;
   tone?: "title" | "plate";
   className?: string;
 }) {
@@ -405,14 +408,15 @@ export function TabBar({
        ALT ÇİZGİ DE KAPTA. `ul`de dururken çizgi listeyle birlikte KAYIYORDU:
        sona kadar kaydırıldığında sağda kabın dolgusu kadar bir bant çizgisiz
        kalıyor, başa dönüldüğünde de aynı boşluk solda açılıyordu. */
-    <nav
-      aria-label={label}
-      className={cn(
-        "no-scrollbar -mx-4 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0",
-        className,
-      )}
-    >
-      <ul className="flex min-w-max gap-0.5">{children}</ul>
+    /* KESİLEN SEKME GÖRÜNÜR (14 Ekim). Çubuk gizliydi ("no-scrollbar") ve
+       kenarda "devamı var" işareti yoktu: 360 piksellik telefonda dördüncü
+       sekmenin varlığını hiçbir şey söylemiyordu (hafta/page.tsx ölçümü:
+       dört sekme 360'ta 8 piksel taşıyor). `ScrollEdges` kesilen ucu
+       solduruyor — CLAUDE.md "Kaydırma saklanmaz". */
+    <nav aria-label={label} className={className}>
+      <ScrollEdges className="no-scrollbar -mx-4 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0">
+        <ul className="flex min-w-max gap-0.5">{children}</ul>
+      </ScrollEdges>
     </nav>
   );
 }
@@ -427,7 +431,7 @@ export function TabItem({
   active: boolean;
   children: React.ReactNode;
   /** Verilirse aktif çizgi sekmeden sekmeye kayar (bkz. TabUnderline).
-      Verilmezse eski davranış: statik `border-b-2`. AdminTabs vermiyor. */
+      Verilmezse eski davranış: statik `border-b-2`. */
   underlineId?: string;
 }) {
   const kayan = underlineId !== undefined;

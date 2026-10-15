@@ -1,6 +1,7 @@
 "use client";
 
 import Form from "next/form";
+import { useEffect, useRef } from "react";
 import { ArrowRight, MagnifyingGlass } from "@phosphor-icons/react";
 import { startRouteProgress } from "@/components/layout/RouteProgress";
 import type { Dictionary } from "@/lib/i18n";
@@ -11,6 +12,17 @@ export function CompanySearch({ action, query, sector, sort, direction, labels }
   action: string; query: string; sector?: string; sort: string; direction: string;
   labels: Dictionary["companies"];
 }) {
+  /* GİRDİ YENİDEN KURULMUYOR (14 Ekim). `key={query}` her gönderimde alanı
+     remount ediyordu: klavye odağı body'ye düşüyor, sorgusunu daraltmak
+     isteyen okuyucu alana yeniden tıklamak zorunda kalıyordu (telefonda
+     klavye de kapanıyordu). Alan kontrolsüz; dışarıdan gelen sorgu
+     ("Aramayı Temizle", geri tuşu) yalnızca alan ODAKTA DEĞİLKEN yazılır —
+     yazan kullanıcının değeri ezilmez. */
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const el = inputRef.current;
+    if (el && document.activeElement !== el) el.value = query;
+  }, [query]);
   return <Form action={action} scroll={false} prefetch={false} role="search"
     className={styles.search}
     onSubmit={event => {
@@ -29,7 +41,7 @@ export function CompanySearch({ action, query, sector, sort, direction, labels }
     <label className="sr-only" htmlFor="company-query">{labels.searchLabel}</label>
     <div className={styles.searchField}>
       <MagnifyingGlass aria-hidden size={17} />
-      <input key={query} id="company-query" name="q" type="search" defaultValue={query}
+      <input ref={inputRef} id="company-query" name="q" type="search" defaultValue={query}
         placeholder={labels.searchPlaceholder} maxLength={100} autoComplete="off" autoCapitalize="none" spellCheck={false} enterKeyHint="search" />
       <button type="submit" aria-label={labels.searchSubmit}>
         <ArrowRight aria-hidden size={15} weight="bold" />

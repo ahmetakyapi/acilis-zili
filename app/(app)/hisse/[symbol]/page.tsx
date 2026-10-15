@@ -6,7 +6,7 @@ import { SymbolAnalyses } from "@/components/earnings/SymbolAnalyses";
 import { analysisHref } from "@/lib/analysis";
 import { withLocale } from "@/lib/i18n/routing";
 import { ArrowDownRight, ArrowUpRight, SquaresFour, ChartLineUp } from "@phosphor-icons/react/dist/ssr";
-import { MotionExperience, ScrollStage, Reveal, ScrollProgress, SectionNav } from "@/components/motion/PremiumMotion";
+import { MotionExperience, ScrollStage, ScrollProgress, SectionNav } from "@/components/motion/PremiumMotion";
 import styles from "./stock.module.css";
 import { ChartReadingProvider } from "@/components/stock/ChartReadingContext";
 import { StockTechnicalCard } from "@/components/technical/StockTechnicalCard";
@@ -652,19 +652,20 @@ export default async function StockPage(
         )}
       {/* Analizler tablonun HEMEN üstünde: tablo çeyreklerin rakamları,
           panel o rakamların okunmuş hâli. Analizi olmayan şirkette hiçbir
-          şey basılmaz. Akışta DEĞİL — gerekçesi bileşenin kendi yorumunda. */}
-      <Reveal><SymbolAnalyses rows={analysisRows} locale={locale} t={t} /></Reveal>
+          şey basılmaz. Akışta DEĞİL — gerekçesi bileşenin kendi yorumunda.
+          `Reveal` SARMALI KALKTI (14 Ekim): panel `.panel` sınıfıyla
+          MotionExperience'ın girişine zaten giriyor ve iki lehçe üst üste
+          biniyordu — Reveal 18 px kaydırıyor, 12 Ekim kararı ("PANEL VE
+          SATIR KAYMAZ") paneli yalnız opaklıkla getiriyor. Tek şef. */}
+      <SymbolAnalyses rows={analysisRows} locale={locale} t={t} />
 
       {/* Bilanço tablosu tam genişlikte — kolonlar sıkışmadan okunur */}
-      <Reveal>
       <Panel className={styles.earningsPanel}>
         <PanelHeader title={t.stock.pastEarnings} />
         <Suspense fallback={<ListSkeleton rows={6} />}>
           <PastEarnings symbol={symbol} locale={locale} t={t} analyses={analysisRows} />
         </Suspense>
       </Panel>
-
-      </Reveal>
 
       {/* TEMETTÜ BİLANÇOLARIN ALTINDA (28 Eylül, sahibinin isteği). Değerleme
           ızgarasında skor kartı ile analist değişiminin yanındaydı; oysa
@@ -745,8 +746,8 @@ export default async function StockPage(
       </Suspense>
 
 
-      {/* Haberler en altta — mobilde de masaüstünde de son durak */}
-      <Reveal>
+      {/* Haberler en altta — mobilde de masaüstünde de son durak.
+          `Reveal` sarmalı kalktı (yukarıdaki kararla aynı). */}
       <Panel className={styles.newsPanel}>
         {/* SEMBOL SÜZGECİNE KÖPRÜ. `/haberler?sembol=XXX` çalışıyor ve bir
             hata düzeltmesiyle sağlamlaştırılmış (60 haberlik pencere,
@@ -766,7 +767,6 @@ export default async function StockPage(
           <CompanyNews symbol={symbol} locale={locale} t={t} />
         </Suspense>
       </Panel>
-      </Reveal>
       {/* SAYFA REHBERLE KAPANIYOR — öteki ekranların sırası (CLAUDE.md
           "Ekran düzeni" 7). Tablonun altındaki EPS açıklama paragrafının
           yerini de bu şerit alıyor: kısaltma orada tek satırlık künye,

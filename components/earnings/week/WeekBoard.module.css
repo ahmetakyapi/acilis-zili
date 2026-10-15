@@ -30,7 +30,11 @@
   padding: 0.35rem;
   border-radius: 1.1rem;
   background: var(--surface-sunken);
-  transition: background-color var(--default-transition-duration) var(--ease-brand);
+  /* Opaklık da geçişte (14 Ekim): geçmiş gün hover'da 0,62→1'e TEK karede
+     atlıyordu — beş günlük duvarda çok görünür bir sıçrama. */
+  transition:
+    background-color var(--default-transition-duration) var(--ease-brand),
+    opacity var(--default-transition-duration) var(--ease-brand);
 }
 
 .day[data-state="today"] {
@@ -233,9 +237,9 @@
   text-align: left;
 }
 
-.tileLogo {
-  transition: transform 0.35s var(--ease-brand);
-}
+/* `.tileLogo` kuralı kalktı (14 Ekim): tek içeriği hover zoom'unun
+   geçişiydi, zoom da aşağıdaki kararla silindi. Sınıf TSX'te duruyor —
+   LogoTile'ın yuvası, gelecekte yine buradan hedeflenir. */
 
 .tileText {
   display: flex;
@@ -335,12 +339,8 @@
   color: var(--down);
 }
 
-.tileResult:empty {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: currentColor;
-}
+/* `:empty` nokta kuralı kalktı (14 Ekim): küçük karo artık yön glifi
+   (▲/▼/=) basıyor — renk tek başına bilgi taşımıyor (WCAG 1.4.1). */
 
 /* Analizi yayımlanmış bilanço: karo analize gidiyor ve bunu söylüyor. */
 .tileBadge {
@@ -363,13 +363,13 @@
 }
 
 @media (hover: hover) {
+  /* KALKIŞ VE LOGO ZOOM'U KALKTI (14 Ekim). Karo hover'da 1 piksel
+     yükselip logosunu büyütüyordu — sitenin tek hover dili ton
+     (globals.css `.panel-hover`: "Kaldırma ve gölge yok") ve aynı ekran
+     ailesi aynı gerekçeyle 4 piksellik kalkışı zaten kaldırmıştı
+     (EarningsCalendar.module.css). Ton + sembol rengi yeterli afordans. */
   .tile:hover {
     background: var(--premium-surface);
-    transform: translateY(-1px);
-  }
-
-  .tile:hover .tileLogo {
-    transform: scale(1.06);
   }
 
   .tile:hover .tileSymbol {
@@ -809,17 +809,13 @@
   background: var(--surface-sunken);
 }
 
+/* Hover zoom'u kalktı (14 Ekim): sitenin hover dili ton, görselin yavaşça
+   büyümesi kaldırılan "kaldırma" ailesindendi (globals.css `.panel-hover`
+   kararı). Çerçevenin bağlantı olduğu altındaki eylemden okunuyor. */
 .imageFrame img {
   display: block;
   width: 100%;
   height: auto;
-  transition: transform 0.6s var(--ease-brand);
-}
-
-@media (hover: hover) {
-  .imageFrame:hover img {
-    transform: scale(1.015);
-  }
 }
 
 .imageCaption {
@@ -871,5 +867,23 @@
 @media (min-width: 768px) {
   .boardPanel {
     padding: 0.25rem 1.25rem 1.25rem;
+  }
+}
+
+/* Azaltılmış harekette dönüşüm taşıyan ne kaldıysa durur (14 Ekim):
+   komşu dosyaların kalıbı (EarningsCalendar, AnalysisExperience). Renk
+   geçişleri kalıyor — hareket değil. */
+@media (prefers-reduced-motion: reduce) {
+  .tile,
+  .navLink > svg {
+    transition: none;
+  }
+
+  .tile:active {
+    transform: none;
+  }
+
+  .navLink:hover > svg {
+    transform: none;
   }
 }

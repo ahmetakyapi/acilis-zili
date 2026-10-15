@@ -336,7 +336,13 @@ export async function StockHeader({
           />
         </div>
       ) : (
-        <div className="text-right">
+        /* Hata dalı GERÇEK bloğun silüetinde (14 Ekim): `text-right`
+           kimliğin fiyatın solunda durduğu eski iki sütunlu başlıktan
+           kalmaydı — çerçevesiz, sağa yaslı tek satır, kıl çizgisiz.
+           `priceBlock` sarmalı üst çizgiyi ve girişi (stock.module.css
+           `.priceBlock::before`) korur; yükseklik iskeletin ayırdığı yere
+           yaklaşır. */
+        <div className={styles.priceBlock}>
           <p className="text-sm text-muted">{t.data.failed}</p>
         </div>
       )}

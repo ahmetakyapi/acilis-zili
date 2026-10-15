@@ -135,10 +135,13 @@ export async function UpcomingEarnings({
               TAŞIYICI DEĞİL — dolu/boş ayrımı gri tonlamada da okunuyor ve
               altındaki cümle sayıyı zaten yazıyor. Sıra ESKİDEN YENİYE:
               soldan sağa okuma yönü zamanla aynı. */}
-          <div aria-hidden className="mt-1.5 flex gap-1">
+          {/* Kapsüller soldan sağa sırayla basılır (14 Ekim): zaman yönüyle
+              aynı kademe (`data-motion-stagger` + `line` çizimi). */}
+          <div aria-hidden data-motion-stagger className="mt-1.5 flex gap-1">
             {[...karneler].reverse().map((durum, i) => (
               <span
                 key={i}
+                data-motion-draw="line"
                 className={cn(
                   "h-1.5 flex-1 rounded-full",
                   durum === "asti" ? "bg-up" : "bg-line-strong",

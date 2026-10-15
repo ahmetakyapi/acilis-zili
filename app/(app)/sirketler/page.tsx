@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { CompanyLeaders } from "@/components/companies/CompanyLeaders";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { CompanySearch } from "@/components/companies/CompanySearch";
+import { LinkedRows } from "@/components/companies/LinkedRows";
 import companyStyles from "@/components/companies/CompanyDirectory.module.css";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
@@ -21,6 +22,7 @@ import {
   PanelHeader,
   PanelLink,
   LogoTile,
+  Skeleton,
   SkeletonRow,
 } from "@/components/ui/primitives";
 import { primaryOnly } from "@/db/seed/indices";
@@ -452,8 +454,15 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
       </p>
 
       <QueryTransition label={t.common.loading}>
+      {/* `limit` ANAHTARDA DEĞİL (14 Ekim). "Daha Fazla Göster" anahtarı
+          değiştirip sınırı sıfırlıyordu: 60 okunmuş satır DOM'dan atılıp
+          yeniden kuruluyor ve giriş pozundan bir daha oynuyordu. Satırlar
+          `key={symbol}` taşıdığı için anahtar sabit kalınca React ilk
+          satırları yerinde korur; yalnız eklenenler kendi kademesiyle
+          gelir. Filtre/sıralama/sorgu anahtarda kalıyor — oralarda iskelet
+          anında gelmeye devam ediyor. */}
       <Suspense
-        key={`${activeGroup?.key ?? "hepsi"}:${query}:${sort}:${dir}:${limit}`}
+        key={`${activeGroup?.key ?? "hepsi"}:${query}:${sort}:${dir}`}
         fallback={<LoadingFallback label={t.common.loading}><TableSkeleton rows={Math.min(rows.length || 12, limit)} /></LoadingFallback>}
       >
         <CompaniesTable
@@ -687,8 +696,8 @@ async function CompaniesTable({
                paket önbellekten geldiğinde o sütun ÖNCEKİ seansın
                yüzdelerini gösteriyor. İşaret başlığın yanına, iddianın
                kurulduğu yere yazılıyor; damga aşağıda kalıyor. */
-            meta={
-              [
+            meta={(() => {
+              const parts = [
                 hasMore
                   ? t.companies.showing
                       .replace("{n}", String(rows.length))
@@ -697,10 +706,28 @@ async function CompaniesTable({
                 quotesResult.ok && quotesResult.stale
                   ? staleMark(t.data.mayBeStale, quotesResult.fetchedAt, locale)
                   : null,
-              ]
-                .filter(Boolean)
-                .join(" · ") || undefined
-            }
+              ].filter(Boolean).join(" · ");
+              /* TELEFONDA ETKİN SIRALAMA KÜNYEDE (14 Ekim). Haftalık ve
+                 Hacim sütunları <640'ta gizli: paylaşılan bir
+                 `?sirala=hacim` adresi telefonda açıldığında tablo
+                 GÖRÜNMEYEN bir ölçüye göre diziliydi ve ekranda bunu
+                 söyleyen hiçbir şey yoktu. Künye yalnız dar ekranda,
+                 sütun başlığı zaten görünürken ikinci kez söylemiyor. */
+              const sortLabels: Record<string, string> = {
+                degisim: t.companies.change,
+                hafta: t.companies.weekChange,
+                fiyat: t.companies.price,
+                cap: t.market.marketCap,
+                hacim: t.market.volume,
+              };
+              const sortNote = `${sortLabels[sort] ?? sort} ${dir === "asc" ? "▲" : "▼"}`;
+              return (
+                <>
+                  {parts || null}
+                  <span className="sm:hidden">{parts ? " · " : ""}{sortNote}</span>
+                </>
+              );
+            })()}
           />
         )}
         {/* KAP KLAVYEYLE ODAKLANABİLİR. Tablo dar ekranda kendi kabında
@@ -717,6 +744,9 @@ async function CompaniesTable({
             tabIndex={0}
             role="region"
             aria-label={t.companies.title}
+            /* Kimlik sütunu 640-1023'te yapışkan (DirectoryExperience):
+               sol kenar solmasın, yalnız sağ uç "devamı var" desin. */
+            fixedStart
           >
             {/* MOBİLDE SABİT DÜZEN. Otomatik düzende şirket sütunu
                 içeriğinin doğal genişliğini alıyordu: en uzun ad ("Space
@@ -785,13 +815,14 @@ async function CompaniesTable({
                   />
                 </tr>
               </thead>
-              <tbody data-motion-stagger className="divide-y divide-line-soft">
+              {/* Satırın tamamı gezinir — gerekçe LinkedRows. */}
+              <LinkedRows data-motion-stagger className="divide-y divide-line-soft">
                 {rows.map((company, index) => {
                   const quote = quotes[company.symbol];
                   return (
                     <tr
                       key={company.symbol}
-                      className="transition-colors hover:bg-primary-tint"
+                      className="cursor-pointer transition-colors hover:bg-primary-tint"
                     >
                       <td className="numeral hidden px-4 py-3 text-xs text-muted sm:table-cell sm:px-5">
                         {index + 1}
@@ -908,7 +939,7 @@ async function CompaniesTable({
                     </tr>
                   );
                 })}
-              </tbody>
+              </LinkedRows>
             </table>
           </ScrollEdges>
         )}
@@ -926,17 +957,30 @@ async function CompaniesTable({
         )}
         {hasMore && (
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 sm:px-5">
-            <p className="numeral text-small text-muted">
-              {t.companies.showing
-                .replace("{n}", String(rows.length))
-                .replace("{total}", String(total))}
-            </p>
+            {/* Sayacın ÇİZGİSİ var (14 Ekim): "60 / 670" bir büyüklük
+                karşılaştırması ve kural "karşılaştırılan büyüklük bir de
+                çizgi olarak okunur" (CLAUDE.md). 3 piksellik nötr ray,
+                listenin neresinde olduğunu sayıdan önce söylüyor. */}
+            <div className="min-w-0">
+              <p className="numeral text-small text-muted">
+                {t.companies.showing
+                  .replace("{n}", String(rows.length))
+                  .replace("{total}", String(total))}
+              </p>
+              <span aria-hidden className="mt-1.5 block h-[3px] w-28 overflow-hidden rounded-full bg-(--line-soft)">
+                <span
+                  data-motion-draw="line"
+                  className="block h-full rounded-full bg-primary/60"
+                  style={{ width: `${Math.min(100, (rows.length / Math.max(1, total)) * 100)}%` }}
+                />
+              </span>
+            </div>
             <Link
               href={moreHref}
               scroll={false}
               /* 44px: sayfanın en altındaki tek eylem ve mobilde dokunma
-                 eşiğinin altındaydı (40px). */
-              className="inline-flex min-h-11 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong sm:min-h-10"
+                 eşiğinin altındaydı (40px). Basılı durum evin lehçesinde. */
+              className="inline-flex min-h-11 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-[color,background-color,border-color,scale] hover:border-line-strong hover:text-strong active:scale-[0.97] motion-reduce:active:scale-100 sm:min-h-10"
             >
               {t.companies.showMore}
             </Link>
@@ -971,6 +1015,20 @@ async function CompaniesTable({
 function TableSkeleton({ rows }: { rows: number }) {
   return (
     <Panel>
+      {/* İskelet GERÇEK tablonun açılışını da taşıyor (14 Ekim): yalnız
+          satır listesi basılıyordu ve içerik gelince başlık (~48px) +
+          sütun satırı (~36px) satırları aşağı itiyordu — iskeletin bütün
+          amacı olan "takas yerinde oturur" bozuluyordu. */}
+      <div className="flex min-h-12 items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
+        <Skeleton className="h-3 w-36" />
+        <Skeleton className="h-2.5 w-16" />
+      </div>
+      <div className="flex h-9 items-center gap-6 border-b border-line bg-surface-sunken px-4 sm:px-5">
+        <Skeleton className="h-2 w-20" />
+        <Skeleton className="h-2 w-12" />
+        <Skeleton className="ml-auto h-2 w-14" />
+        <Skeleton className="h-2 w-14" />
+      </div>
       <div className="flex flex-col gap-px">
         {/* Satır düzeni artık paylaşılan `SkeletonRow`da: aynı iskelet
             /piyasalar'ın bileşen tablosunda da kullanılıyor ve ikisinin

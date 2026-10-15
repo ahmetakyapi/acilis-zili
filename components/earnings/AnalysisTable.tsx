@@ -211,9 +211,13 @@ export function AnalysisTable({
           aria-label={labels.tableRegion}
         >
           <div className="min-w-[860px] sm:min-w-[1180px]" role="table">
+            {/* Başlık tonu ve odak vurgusu BİLEŞENİN KENDİSİNDE (14 Ekim):
+                `.archive` kapsamındaydı ve aynı tablo /bilancolar/takip'te
+                başlıksız-ton, odak-vurgusuz basılıyordu — iki sekmede iki
+                farklı tablo gibi. */}
             <div
               role="row"
-              className="flex items-center gap-4 border-b border-line px-4 py-3.5 text-tiny font-bold text-muted sm:px-5"
+              className="flex items-center gap-4 border-b border-line bg-surface-sunken px-4 py-3.5 text-tiny font-bold text-muted sm:px-5"
             >
               <span role="columnheader" className={COLS.symbol}>
                 {labels.colSymbol}
@@ -274,7 +278,7 @@ export function AnalysisTable({
                   key={row.key}
                   role="row"
                   className={cn(
-                    "relative flex items-center gap-4 border-b border-line-soft px-4 py-3.5 transition-colors last:border-b-0 hover:bg-surface-elevated sm:px-5",
+                    "relative flex items-center gap-4 border-b border-line-soft px-4 py-3.5 transition-colors last:border-b-0 hover:bg-surface-elevated focus-within:bg-primary-tint focus-within:[box-shadow:inset_3px_0_var(--primary)] sm:px-5",
                     highlightFirst && !searching && index === 0 && "bg-primary-tint",
                     filtered && "filter-settle",
                   )}

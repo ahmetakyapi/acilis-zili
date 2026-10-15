@@ -507,7 +507,10 @@ export function GuidanceRanges({
             {howToRead}
             <CaretDown aria-hidden size={12} weight="bold" />
           </summary>
-          <p className="mt-1.5 max-w-[62ch]">
+          {/* `step-in` evin açılır-içerik girişi (globals.css): paragraf
+              tek karede beliriyordu. Global sınıf, modül keyframe'i değil —
+              CSS modülü keyframe adını yerelleştirirdi. */}
+          <p className="step-in mt-1.5 max-w-[62ch]">
             {axisNote.replace("{value}", formatPercent(axis * 100))}
           </p>
         </details>

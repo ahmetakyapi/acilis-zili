@@ -151,7 +151,10 @@ export function PriceMap({
                 Orada bir "–" duruyordu ve eksik bir veri gibi okunuyordu. */}
             <span className={styles.levelDistance} data-dir={distance != null && distance > 0 ? "up" : distance != null && distance < 0 ? "down" : "flat"}>
               {rung.kind !== "price" && <span className="numeral">{distance !== null ? formatPercent(distance, locale, 1) : NO_VALUE}</span>}
-              {distance !== null && <i aria-hidden className={styles.levelDistanceTrack}><b style={{ width: `${Math.abs(distance) / extent * 50}%`, left: distance < 0 ? `${50 - Math.abs(distance) / extent * 50}%` : "50%" }} /></i>}
+              {/* Uzaklık çubuğu sıfır çizgisinden dışa büyüyerek girer
+                  (14 Ekim) — gösterge panellerinin sapma çubuklarıyla aynı
+                  dil (IndicatorPanels, inline origin). */}
+              {distance !== null && <i aria-hidden className={styles.levelDistanceTrack}><b data-motion-draw="line" style={{ width: `${Math.abs(distance) / extent * 50}%`, left: distance < 0 ? `${50 - Math.abs(distance) / extent * 50}%` : "50%", transformOrigin: distance < 0 ? "right center" : "left center" }} /></i>}
             </span>
           </li>;
         })}

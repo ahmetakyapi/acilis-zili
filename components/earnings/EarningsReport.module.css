@@ -663,6 +663,11 @@
   display: none;
 }
 
+/* Ok geçişli döner (14 Ekim): tek karede takla atıyordu. */
+.axisNote > summary svg {
+  transition: rotate var(--default-transition-duration) var(--ease-brand);
+}
+
 .axisNote > summary:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
@@ -1415,7 +1420,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .coverTrendLink,
-  .readoutLine {
+  .readoutLine,
+  .axisNote > summary svg {
     transition: none;
   }
 }
