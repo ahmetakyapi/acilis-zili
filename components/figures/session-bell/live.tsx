@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { iso, translateAlong } from "@/components/iso/iso-kit";
+import { IsoFigure } from "@/components/iso/react/draw";
 import { follow, useInView, useLoop, useStillness } from "@/components/iso/react/live";
 import {
   DAY,
@@ -12,11 +14,12 @@ import {
   dayPlan,
   clockOf,
   countdownOf,
-  hhmm,
   minutesOfAngle,
   moveLeg,
   planAt,
   planLength,
+  plungeAt,
+  ringAt,
   sessionAt,
   sessionPlan,
   strikesBetween,
@@ -27,7 +30,7 @@ import {
   type SessionKind,
   type Strike,
 } from "./model";
-import { CX, CY, HIT_R, SIZE, needleShape } from "./view";
+import { DIAL_RING_R, DIAL_TOP, DIAL_X, DIAL_Y, HEIGHT, P, STROKE, WIDTH, needlePath } from "./view";
 
 /* Hareket (anatomy motion.md): zamana bağlı, kare süresi kitte 1/30 sn ile
    kırpılı. İlk görünüşte günün tekrarı (ibre 00:00'dan şimdiye, yolda zil
@@ -48,6 +51,7 @@ const HOVER_FOLLOW = 0.22;
 const BACK_AFTER = 6;
 const LIVE_EVERY = 5000;
 const STEP = 15;
+const JITTER = 0.6;
 const TOAST_MS = 2400;
 
 type PlanKind = Exclude<SessionKind, "closed"> | "day" | "dial" | "return";
@@ -70,8 +74,6 @@ export type BellLabels = {
   note: string;
   closedNote: string | null;
   chipsLabel: string;
-  /** Kadranın fare ipucu — yalnız ince işaretçide görünür (bell.css). */
-  dialHint: string;
 };
 
 const BellIcon = () => (
@@ -90,7 +92,13 @@ export function SessionBellLive({
   nowMs,
   nextOpenMs,
   nextCloseMs,
-  face,
+  plinth,
+  dial,
+  pin,
+  back,
+  bell,
+  striker,
+  front,
 }: {
   day: BellDay;
   text: BellText;
@@ -102,8 +110,14 @@ export function SessionBellLive({
   nowMs: number;
   nextOpenMs: number;
   nextCloseMs: number;
-  /** Kadranın statik yüzü — sunucuda çizilir (art.tsx). */
-  face: React.ReactNode;
+  plinth: React.ReactNode;
+  dial: React.ReactNode;
+  /** İbrenin göbek vidası: ibrenin ÜSTÜNDE. */
+  pin: React.ReactNode;
+  back: React.ReactNode;
+  bell: React.ReactNode;
+  striker: React.ReactNode;
+  front: React.ReactNode;
 }) {
   const root = React.useRef<HTMLDivElement>(null);
   const stage = React.useRef<HTMLDivElement>(null);
@@ -202,27 +216,22 @@ export function SessionBellLive({
   const draw = React.useCallback(() => {
     const g = svg.current;
     if (!g) return;
-    /* İbre tek `rotate`; geçen-gün yayı pathLength'li dairenin ofseti;
-       merkez okuma iki saat. Vuruşun görseli CSS'te (bell.css →
-       data-strike): im sallanır, iki dalga açılır. */
-    const deg = ((angleOf(shown.current) * 180) / Math.PI).toFixed(2);
-    g.querySelector("[data-needle]")?.setAttribute("transform", `rotate(${deg} ${CX} ${CY})`);
-    const frac = (((shown.current % DAY) + DAY) % DAY) / DAY;
-    const elapsed = g.querySelector<SVGCircleElement>("[data-elapsed]");
-    if (elapsed) elapsed.style.strokeDashoffset = String(1 - frac);
-    const ny = g.querySelector("[data-dial-ny]");
-    if (ny) ny.textContent = hhmm(shown.current);
-    const tr = g.querySelector("[data-dial-tr]");
-    if (tr) tr.textContent = `${hhmm(shown.current + day.trOffset)} TR`;
+    g.querySelector("[data-needle]")?.setAttribute("d", needlePath(angleOf(shown.current)));
     const s = strike.current;
+    const plunge = s ? plungeAt(s.age) : 0;
+    const ring = s ? ringAt(s.age) : 0;
+    g.querySelector("[data-plunger]")?.setAttribute("transform", plunge ? translateAlong(P, [-STROKE * plunge, 0, 0]) : "");
+    g.querySelector("[data-bell]")?.setAttribute("transform", ring ? translateAlong(P, [JITTER * ring, 0, 0]) : "");
     const ringing = Boolean(s && s.age < RING);
+    g.querySelectorAll<SVGGElement>("[data-contact]").forEach((contact) => contact.toggleAttribute("data-on", ringing && contact.dataset.contact === s?.bell));
+    g.querySelector("[data-wire]")?.toggleAttribute("data-pulse", Boolean(s && s.age < 0.4));
     const el = root.current;
     if (el) {
       el.toggleAttribute("data-ringing", ringing);
       if (ringing && s) el.dataset.strike = s.bell;
       else delete el.dataset.strike;
     }
-  }, [day.trOffset]);
+  }, []);
 
   const startReturn = React.useCallback(() => {
     const legs = [moveLeg(shown.current, liveMinutes())];
@@ -338,14 +347,20 @@ export function SessionBellLive({
     [],
   );
 
-  /** Ekrandaki nokta → kadran açısı; kadranın dışındaysa null (düz kadran:
-      merkezden açı, HIT_R'ye kadar). */
+  /** Ekrandaki nokta → kadran düzlemindeki açı (z = kadran yüzü), kadranın dışındaysa null. */
   const angleAt = (clientX: number, clientY: number) => {
     const box = stage.current?.querySelector("svg")?.getBoundingClientRect();
-    if (!box || !box.width) return null;
-    const dx = ((clientX - box.left) / box.width) * SIZE - CX;
-    const dy = ((clientY - box.top) / box.height) * SIZE - CY;
-    if (Math.hypot(dx, dy) > HIT_R) return null;
+    if (!box) return null;
+    const sx = ((clientX - box.left) / box.width) * WIDTH;
+    const sy = ((clientY - box.top) / box.height) * HEIGHT;
+    const o = iso([DIAL_X, DIAL_Y, DIAL_TOP], P);
+    const ex = iso([DIAL_X + 1, DIAL_Y, DIAL_TOP], P);
+    const ey = iso([DIAL_X, DIAL_Y + 1, DIAL_TOP], P);
+    const [ax, ay, bx, by] = [ex[0] - o[0], ex[1] - o[1], ey[0] - o[0], ey[1] - o[1]];
+    const det = ax * by - bx * ay;
+    const dx = ((sx - o[0]) * by - bx * (sy - o[1])) / det;
+    const dy = (ax * (sy - o[1]) - (sx - o[0]) * ay) / det;
+    if (Math.hypot(dx, dy) > DIAL_RING_R + 6) return null;
     return Math.atan2(dx, -dy);
   };
 
@@ -413,14 +428,9 @@ export function SessionBellLive({
         <span className="sb-clock" data-clock="">
           {clockOf(nowMinutes, day, text)}
         </span>
-        {/* CANLI BÖLGE DEĞİL (14 Ekim). `aria-live="polite"` dakika
-            taneciğindeki bu metni ekran okuyucuya DAKİKADA BİR anons
-            ettiriyordu; kahramandaki sayaç aynı durumda bilinçli susturulmuş
-            (`role="timer"` + `aria-live="off"`, Countdown.tsx). Tek canlı
-            bölge zilin çaldığı anın tostu (`sb-toast`). */}
-        <span className="sb-count" role="timer">
+        <span className="sb-count">
           <BellIcon />
-          <span data-count="">
+          <span data-count="" aria-live="polite">
             {countdownOf(nowMs, nowMinutes, day, nextOpenMs, nextCloseMs, text)}
           </span>
         </span>
@@ -450,28 +460,18 @@ export function SessionBellLive({
           } else if (event.key === "Escape") goLive();
         }}
       >
-        {/* Sahne div'i zaten odaklanabilir denetim ve `aria-label` taşıyor;
-            svg süs katmanı (çift anons olmasın). */}
-        <svg viewBox={`0 0 ${SIZE} ${SIZE}`} aria-hidden="true" className="sb2-svg">
+        <IsoFigure width={WIDTH} height={HEIGHT} label={label}>
           <g ref={svg}>
-            {face}
-            <path
-              data-needle=""
-              className="sb2-needle"
-              d={needleShape()}
-              transform={`rotate(${((angleOf(nowMinutes) * 180) / Math.PI).toFixed(2)} ${CX} ${CY})`}
-            />
-            {/* Merkez okuma: kadranın cevabı. Büyük saat NY (kadranın
-                ekseni), altında TR karşılığı; oynatmada ikisi birlikte
-                akıyor — "Günü Oynat"ın anlattığı şey burada okunuyor. */}
-            <text data-dial-ny="" x={CX} y={CY + 8} className="sb2-ny">
-              {hhmm(nowMinutes)}
-            </text>
-            <text data-dial-tr="" x={CX} y={CY + 36} className="sb2-tr">
-              {`${hhmm(nowMinutes + day.trOffset)} TR`}
-            </text>
+            {plinth}
+            {dial}
+            <path data-needle="" className="sb-needle" d={needlePath(angleOf(nowMinutes))} />
+            {pin}
+            {back}
+            {bell}
+            {striker}
+            {front}
           </g>
-        </svg>
+        </IsoFigure>
         <span className="sb-toast" aria-live="polite">
           <BellIcon />
           <span data-toast="" />
@@ -519,11 +519,6 @@ export function SessionBellLive({
           </button>
         </div>
       ) : null}
-      {/* KADRANIN İPUCU (14 Ekim). Kadran fareyle gezilebilir ve
-          tıklanabilir ama bunu söyleyen tek şey crosshair imleciydi;
-          dokunmatikte seans kartları + not aynı işi zaten yapıyor, ipucu
-          yalnız ince işaretçide görünür (bell.css `.sb-hint`). */}
-      <p className="sb-hint">{labels.dialHint}</p>
       <p className="sb-note">{labels.closedNote ?? labels.note}</p>
     </div>
   );

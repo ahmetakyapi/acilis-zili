@@ -71,7 +71,6 @@ export function SessionBellFigure({ status, nowMs, locale, t }: { status: Market
         note,
         closedNote,
         chipsLabel: B.chipsLabel,
-        dialHint: B.dialHint,
       }}
       chips={chips}
       label={B.label}
