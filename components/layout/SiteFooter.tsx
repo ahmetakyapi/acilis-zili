@@ -25,6 +25,7 @@ export async function SiteFooter() {
         links: [
           { href: "/piyasalar", label: t.nav.markets },
           { href: "/sirketler", label: t.nav.companies },
+          { href: "/tarama", label: t.screener.title },
           { href: "/makro", label: t.nav.macro },
           { href: "/bilancolar", label: t.nav.earnings },
           { href: "/teknik", label: t.technical.title },

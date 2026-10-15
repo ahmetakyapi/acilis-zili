@@ -9,6 +9,7 @@ import {
   CalendarBlank,
   ChartBar,
   Funnel,
+  FunnelSimple,
   ChartLineUp,
   Envelope,
   FileText,
@@ -101,6 +102,7 @@ export default async function MenuPage() {
            masaüstü "Daha Fazla"da (nav-items.ts) ama bu elle yazılmış
            listede yoktu ve `hintScreening` hiçbir yerde basılmıyordu. */
         { href: "/hisse-secimi", icon: Funnel, title: t.screening.title, hint: t.menu.hintScreening },
+        { href: "/tarama", icon: FunnelSimple, title: t.screener.title, hint: t.menu.hintScreener },
         { href: "/karsilastir", icon: ChartBar, title: t.compare.title, hint: t.menu.hintCompare },
         /* Portföy teknik planla birlikte okunuyor (4 Ekim): en alttaki Hesap
            grubundaydı ve okuyucu onu yalnız profil menüsünde buluyordu. */

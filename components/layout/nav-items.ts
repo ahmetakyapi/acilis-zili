@@ -8,6 +8,7 @@ import {
   ChartLineUp,
   EnvelopeSimple,
   Funnel,
+  FunnelSimple,
   Heart,
   ListDashes,
   Receipt,
@@ -263,7 +264,18 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: false,
     more: "analyze",
     hint: (t) => t.menu.hintScreening,
-  },  {
+  },
+  {
+    /* HİSSE TARAYICI (15 Ekim) — analiz bandında Hisse Seçimi'nin yanı:
+       biri tek hisseyi kurallarla sınıyor, öteki evreni ölçülerle süzüyor. */
+    href: "/tarama",
+    label: (t) => t.screener.title,
+    icon: FunnelSimple,
+    inBottomBar: false,
+    more: "analyze",
+    hint: (t) => t.menu.hintScreener,
+  },
+  {
     href: "/karsilastir",
     label: (t) => t.compare.title,
     icon: ChartBar,

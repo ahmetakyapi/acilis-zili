@@ -10,7 +10,7 @@
 > rota eksikti ve okuyan onu güncel sanıyordu. İki yerde tutulan bir liste er geç
 > birbirinden ayrı düşer. Rota tablosu artık yalnızca README'de.
 
-**Son güncelleme:** 2026-10-09
+**Son güncelleme:** 2026-10-15
 **Durum:** 🟢 CANLI — https://aciliszili.com
 
 ---
@@ -19,9 +19,9 @@
 
 | | |
 |---|---|
-| Sayfa rotası | 51 (42 açık, 9 yönetim; `/en` önekiyle ikinci bir adreste daha) |
+| Sayfa rotası | 53 (44 açık, 9 yönetim; `/en` önekiyle ikinci bir adreste daha) |
 | API ucu | 24 |
-| Veritabanı tablosu | 27 · 22 migration (0000–0021; **0020 üretimde uygulanmadı**, aşağıda; 0021 `.env.local`in işaret ettiği veritabanına 28 Eylül'de uygulandı) |
+| Veritabanı tablosu | 28 · 33 migration (0000–0032; uygulanmamış olanlar aşağıda "Açık işler"te) |
 | Sağlayıcı | Alpaca · Finnhub · FRED · TCMB · SEC EDGAR · OpenFIGI · House Clerk · TCMB EVDS (isteğe bağlı) |
 | Ortam değişkeni | 16 (`.env.example`) |
 | Cron | `/api/cron/daily` — hafta içi 10:30 UTC (13:30 TR) |
@@ -39,6 +39,12 @@ gerçek değerlerin bulunduğu `docs/rutinler.local.md` gitignore'da.
 ## Açık işler
 
 Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
+
+- [ ] **Migration 0032 (`user_profiles`) üretimde uygulanmalı.** Herkese açık
+      profil (varsayılan gizli). Tablo yokken `/u/[kullanici]` 404 verir ve
+      Ayarlar'daki Herkese Açık Profil paneli "şu an kaydedilemiyor" der
+      (`lib/profile-data.ts`, `app/actions/profile.ts`). Üretim
+      `DATABASE_URL`iyle `npm run db:migrate`.
 
 - [ ] **Ünlü yatırımcılar (migration 0021).** Beş tablo: `investor_filings`,
       `investor_holdings`, `cusip_tickers`, `congress_filings`,

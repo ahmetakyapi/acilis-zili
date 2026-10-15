@@ -48,6 +48,38 @@ export type SectorMetricsRow = {
   updatedAt: Date;
 };
 
+export type ScreenerMetricsRow = SectorMetricsRow & { sector: string };
+
+/**
+ * Tablonun TAMAMI — hisse tarayıcısı (/tarama) için (15 Ekim).
+ *
+ * Skor kartı tek sektör soruyor (`getSectorMetrics`); tarayıcı bütün
+ * evreni sıralıyor ve 11 ayrı sorgu yerine tek okuma. Evren zaten tavanlı
+ * (~500 GICS'li endeks üyesi), satır başına tek jsonb — tek sorgu ucuz.
+ * Tablo yokken null: sayfa "Hazırlanıyor" der (avatar-data kalıbı).
+ */
+export async function getAllMetrics(): Promise<ScreenerMetricsRow[] | null> {
+  try {
+    const rows = await db
+      .select({
+        symbol: symbolMetrics.symbol,
+        sector: symbolMetrics.sector,
+        currency: symbolMetrics.currency,
+        metrics: symbolMetrics.metrics,
+        updatedAt: symbolMetrics.updatedAt,
+      })
+      .from(symbolMetrics);
+    return rows.flatMap((row) => {
+      const metrics = parseStoredMetrics(row.metrics);
+      /* Sektörsüz satır evrende zaten yok (rememberOwnMetrics yazmıyor);
+         sütun tipi gevşek diye tarayıcıya null sektör sızdırılmaz. */
+      return metrics && row.sector ? [{ ...row, sector: row.sector, metrics }] : [];
+    });
+  } catch {
+    return null;
+  }
+}
+
 /** Sektördeki bütün satırlar; tablo yoksa null. */
 export async function getSectorMetrics(sector: string): Promise<SectorMetricsRow[] | null> {
   try {

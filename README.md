@@ -37,9 +37,9 @@ yazılar, bilanço analizleri ve günde üç kez yenilenen teknik analizler.
 
 <table>
 <tr>
-<td align="center"><b>51</b><br><sub>sayfa rotası</sub></td>
+<td align="center"><b>53</b><br><sub>sayfa rotası</sub></td>
 <td align="center"><b>24</b><br><sub>API ucu</sub></td>
-<td align="center"><b>22</b><br><sub>veritabanı tablosu</sub></td>
+<td align="center"><b>28</b><br><sub>veritabanı tablosu</sub></td>
 <td align="center"><b>5</b><br><sub>veri sağlayıcısı</sub></td>
 <td align="center"><b>5</b><br><sub>içerik rutini</sub></td>
 <td align="center"><b>17</b><br><sub>mürekkep sahnesi</sub></td>
@@ -89,7 +89,11 @@ Bir de kişisel taraf var: çoklu takip listeleri, renkli etiketler, ana sayfada
 kendi listenin özeti, yalnızca senin izlediklerinin bilanço takvimi,
 alış günü kuruyla TL kâr/zarar tutan bir portföy, hesabındaki her şeyi tek
 dosyada indiren "Verilerimi İndir" ve hesabını gösteren, sitenin kendi
-çizdiği on altı profil ikonundan biri ve yedi renkten biri.
+çizdiği on altı profil ikonundan biri ve yedi renkten biri. İstersen bir de
+herkese açık profilin var (`/u/kullanıcı-adın`): varsayılan gizli, açarsan
+tanıtımın, rozetlerin ve seçtiğin bloklar — takip listelerin ve tutar
+içermeyen portföy dağılımın, sitenin kendi hesapladığı "doğrulanmış
+getiri"yle — görünür.
 
 ---
 
@@ -362,13 +366,14 @@ sıçrıyor. Gezinme bekleyişinin kartı marka adıyla açılıyor.
 
 ## Veri Modeli
 
-27 tablo. "Kim yazar" sütunu önemli: bir tablonun tazeliği onu yazanın
+28 tablo. "Kim yazar" sütunu önemli: bir tablonun tazeliği onu yazanın
 ritmine bağlı.
 
 | Tablo | Ne tutar | Kim yazar |
 |---|---|---|
 | `users` · `watchlists` · `watchlist_items` | Hesap, takip listeleri ve sembolleri | Kullanıcı eylemleri |
 | `user_avatars` | Seçilen profil ikonu ve rengi (anahtar olarak) | Kullanıcı eylemi (Ayarlar) |
+| `user_profiles` | Herkese açık profil: tanıtım + görünürlük anahtarları (varsayılan gizli) | Kullanıcı eylemi (Ayarlar) |
 | `symbols` | Sembol künyesi: ad, borsa, sektör, logo, piyasa değeri, hisse sayısı | Tohum + cron + sayfa isteği |
 | `quotes_cache` | Son bilinen fiyat; sağlayıcı düşünce gösterilecek yedek | Sayfa isteği |
 | `candles_cache` | Aralık başına bar dizisi | Sayfa isteği |
@@ -542,7 +547,7 @@ saklanmıyor (`private, no-store`).
 
 ## Ekranlar
 
-Rota listesinin **tek kaynağı** burası. 51 sayfa var: 42'si herkese açık
+Rota listesinin **tek kaynağı** burası. 53 sayfa var: 44'ü herkese açık
 (ikisi başka sitelere gömülen parça), 9'u yönetim. Hepsi istek başına sunucuda çiziliyor. Her sayfa `/en/...` önekiyle
 İngilizce de açılıyor; önek sunucuda sökülüyor ve adres çubuğunda kalıyor.
 
@@ -553,6 +558,7 @@ Rota listesinin **tek kaynağı** burası. 51 sayfa var: 42'si herkese açık
 | `/` | Zil çalmadan önce bugün ne var: geri sayım, endeksler, gün akışı, bülten, Mercek, teknik görünüm, bilançolar, favoriler, haberler |
 | `/piyasalar` | Piyasanın nabzı: endeksler, tahvil faizleri, VIX, piyasa genişliği ve ısı haritası, gün içi hareket, endeks bileşenleri; Piyasa Nabzı (bileşenleri ve ham değerleri ekranda duran 0–100 bileşik ölçü, ağırlıksız), Sektör Performansı (on bir SPDR sektör fonu), Emtia (altın, gümüş, petrol, doğal gaz, bakır, tarım ve Bitcoin/Ether fonları) |
 | `/sirketler` | Hangi şirket hangi sektörde, ne kadar ediyor: sektör şeridi + sıralanabilir dizin (`?sektor=` ile süzülür) |
+| `/tarama` | Hangi hisse şu süzgeçten geçiyor: GICS'li endeks üyeleri temel ölçülerle (canlı fiyattan kurulan F/K, gelir büyümesi, net marj, ROE, borç/özkaynak) süzülüp sıralanır; hazır süzgeçler (Değer, Büyüme, Kârlılık, Sağlam Bilanço) ölçütünü künyede söyler |
 | `/hisse/[symbol]` | Bu şirket nasıl gidiyor: canlı grafik (USD · TL · Reel TL), profil, metrikler, analistler, haber, beklenti ile gerçekleşeni aynı sütunda gösteren geçmiş bilançolar. Yeni paneller: Hisse Skor Kartı (beş eksende sektör yüzdeliği; yalnızca GICS sektörü bilinen endeks üyelerinde), Analist Dağılımı Değişimi (dört aylık dağılımın farkı), Teknik Fotoğraf (teknik analiz listesinde olmayan hisselerde, yorumsuz göstergeler), Temettü (hak kesim, yıl toplamları, stopaj künyesi), Beklenen Hareket (sonraki rapora yakınken opsiyonların fiyatladığı hareket ve geçmiş rapor ertesi hareketler), İçeriden İşlemler |
 | `/karsilastir` | İki ile dört hisseden hangisi: aynı ölçekte normalize grafik + tek tablo; getiri USD, TL ya da Reel TL |
 | `/karsilastir/[pair]` | Yirmi küratörlü çift (`/karsilastir/nvda-amd`): aynı tahta, başlık ve "neden bu ikisi" paragrafıyla; canonical adres bu (`content/compare-pairs.ts`) |
@@ -598,10 +604,20 @@ Başlıkta Piyasalar'dan hemen sonra; mobilde Menü'den.
 | `/sozluk` · `/sozluk/[terim]` | Bu terim ne demek: yüz elli terim, sekiz kategoride, iki dilde. Mercek, rehber ve bilanço analizlerinde terimin ilk geçişi buraya kendiliğinden bağlanıyor |
 | `/bulten` · `/bulten/[tarih]` · `/bulten/haftalik` · `/bulten/haftalik/[tarih]` | Dünkü ya da geçen haftaki bülten; her sayının kalıcı adresi var |
 
+### Topluluk
+
+Üyelik varsayılan olarak görünmezdir: profil yalnızca sahibi Ayarlar'dan
+açarsa yayımlanır ve kapattığı an adres yeniden 404 olur.
+
+| Rota | Soru |
+|---|---|
+| `/u/[kullanici]` | Bu üye kim: profil karosu, rozetler (Erken Üye, üyelik yılı), tanıtım; sahibi açtıysa takip listeleri (notlar asla) ve tutar içermeyen portföy dağılımı — ağırlık yüzdeleri, sitenin alış günlerinden kendisi hesapladığı Doğrulanmış Getiri ve aynı dönemde SPY kıyası |
+
 ### Hesap
 
 `/giris` · `/kayit` · `/sifremi-unuttum` · `/sifre-sifirla` (e-postayla tek kullanımlık, 30 dakikalık bağlantı; yalnızca e-posta servisi bağlıyken — `lib/email.ts`, `lib/password-reset.ts`) · `/favoriler` (fiyatlar USD ya da TL; Fiyat Alarmları paneli — hedef hisse sayfasındaki zil düğmesiyle kurulur, siteyi açtığında ve seans boyunca beş dakikada bir sunucuda güncel fiyatla kontrol edilir, ana sayfada "Hedefe Ulaştı" şeridi; `lib/price-alerts.ts`, `lib/alert-sweep.ts`) · `/ayarlar` (profil
-ikonu ve rengi, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri — `lib/push.ts`, `public/sw.js` —, Verilerimi İndir, hesap silme) · `/analizlerim` (Claude ile üretilen kayıtlı raporlar; görüş, puan, vade ve Rapordan Bugüne fiyat değişimi, satır raporu `/claude/[symbol]?rapor=` ile açar; yalnız analiz erişimi olan hesaplarda menüde, dizine girmez) · `/menu` · `/kvkk` ·
+ikonu ve rengi, herkese açık profil — tanıtım + görünürlük anahtarları,
+varsayılan gizli —, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri — `lib/push.ts`, `public/sw.js` —, Verilerimi İndir, hesap silme) · `/analizlerim` (Claude ile üretilen kayıtlı raporlar; görüş, puan, vade ve Rapordan Bugüne fiyat değişimi, satır raporu `/claude/[symbol]?rapor=` ile açar; yalnız analiz erişimi olan hesaplarda menüde, dizine girmez) · `/menu` · `/kvkk` ·
 `/hakkinda` (Hakkında ve Metodoloji: kim yapıyor, sayılar nereden geliyor,
 yazıları kim yazıyor; gömme kodları da burada)
 
