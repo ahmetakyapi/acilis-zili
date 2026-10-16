@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
@@ -80,6 +81,62 @@ export const DB_UNAVAILABLE = "az:db-unavailable";
  */
 const DUMMY_HASH =
   "$2b$12$TjyHOgtBI3ZBWBa7RFOzgOP1aMG93k3eLq6fu2uz46SbM.KGCAi7K";
+
+/* --------------------------------------------------------------------------
+   ŞİFRE DEĞİŞİNCE ESKİ OTURUMLAR DÜŞER (16 Ekim).
+
+   JWT oturumu 180 gün yaşıyor ve `jwt` callback'i veritabanına hiç
+   bakmıyordu: şifre sıfırlandı ya da değiştirildi diye çalınmış bir çerez
+   geçersiz olmuyordu. Sıfırlamanın var olma sebebi tam olarak çalınmış hesap
+   (OWASP Forgot Password Cheat Sheet: "invalidate existing sessions").
+
+   MIGRATION YOK: token'a girişte parola özetinin kısa bir PARMAK İZİ
+   yazılıyor; her okumada hesabın güncel parmak iziyle karşılaştırılıyor,
+   uyuşmazsa `null` → Auth.js çerezi siliyor. Özet bcrypt tuzlu olduğundan
+   her şifre değişikliği yeni bir iz demek. İz sır değil ama çerezden de
+   okunmuyor (JWT şifreli); 16 karakterlik SHA-256 öneki çakışmaya kapalı.
+
+   MALİYET: veritabanı her istekte değil, süreç içi önbellekle kullanıcı
+   başına beş dakikada bir. Sıfırlama ve değiştirme eylemleri önbelleği
+   ANINDA siler (`forgetPasswordFingerprint`) — çalınmış oturum bir sonraki
+   istekte düşer. Tek süreçli VPS'te yeterli; birden çok süreç olsaydı
+   öteki süreçlerde gecikme en fazla beş dakika.
+
+   Veritabanına ulaşılamazsa oturum DÜŞMEZ (Neon kesintisi herkesi
+   çıkarmasın). Bu değişiklikten önce verilmiş token'larda iz yok: ilk
+   okumada güncel iz benimseniyor — o andan sonraki şifre değişikliği onları
+   da düşürür.
+   -------------------------------------------------------------------------- */
+const FINGERPRINT_TTL_MS = 5 * 60_000;
+const fingerprints = new Map<string, { fp: string | null; at: number }>();
+
+function passwordFingerprint(passwordHash: string): string {
+  return createHash("sha256").update(passwordHash).digest("base64url").slice(0, 16);
+}
+
+/** `undefined`: veritabanı okunamadı. `null`: hesap yok. */
+async function currentFingerprint(userId: string): Promise<string | null | undefined> {
+  const cached = fingerprints.get(userId);
+  if (cached && Date.now() - cached.at < FINGERPRINT_TTL_MS) return cached.fp;
+  try {
+    const [row] = await db
+      .select({ passwordHash: users.passwordHash })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    const fp = row ? passwordFingerprint(row.passwordHash) : null;
+    if (fingerprints.size > 10_000) fingerprints.clear();
+    fingerprints.set(userId, { fp, at: Date.now() });
+    return fp;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Şifre değişti: bu hesabın açık oturumları bir sonraki istekte düşsün. */
+export function forgetPasswordFingerprint(userId: string): void {
+  fingerprints.delete(userId);
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // Oturum 180 gün yaşar ve aktif kullanımda kayarak yenilenir —
@@ -170,12 +227,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.username,
           email: user.email,
           role: user.role,
+          pwv: passwordFingerprint(user.passwordHash),
         };
       },
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         token.sub = user.id;
         /* Rol token'a giriş anında yazılır ve oturum boyunca orada kalır.
@@ -183,8 +241,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
            token'ı yenilenene kadar (updateAge: 1 gün) hâlâ "admin" yazıyor
            olabilir. Kapıyı tutan kontrol veritabanına bakar — lib/admin.ts */
         token.role = (user as { role?: string }).role ?? "user";
+        const pwv = (user as { pwv?: string }).pwv;
+        if (pwv) token.pwv = pwv;
+        return token;
       }
-      return token;
+      /* Şifre değişince eski oturumlar düşer — gerekçe yukarıda. */
+      if (!token.sub) return token;
+      const fp = await currentFingerprint(token.sub);
+      if (fp === undefined) return token;
+      if (fp === null) return null;
+      if (typeof token.pwv !== "string") {
+        token.pwv = fp;
+        return token;
+      }
+      return token.pwv === fp ? token : null;
     },
     session({ session, token }) {
       if (token.sub) session.user.id = token.sub;

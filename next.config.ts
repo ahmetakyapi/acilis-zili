@@ -157,6 +157,22 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        /* E-POSTA GÖRSELLERİ VE FONTU (16 Ekim) — posta istemcisi siteden
+           farklı bir kökende çalışıyor ve web fontu tarayıcı motorlarında
+           CORS'a tabi: başlıksız `@font-face` engellenip sessizce sistem
+           fontuna düşebilir. Dosyalar
+           herkese açık ve sırsız, `*` güvenli. Önbellek logolarla aynı
+           profil (sabit ad, nadiren değişir — lib/email-layout.ts). */
+        source: "/email/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800, stale-while-revalidate=2592000",
+          },
+        ],
+      },
+      {
         /* PWA ikonları da (icon-192/512 + maskable) aynı varsayılana
            düşüyordu; adları sabit, içerik `build:favicon` ile yılda birkaç
            kez değişir. */

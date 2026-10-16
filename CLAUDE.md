@@ -33,7 +33,7 @@ npm run db:migrate
 npm run db:seed                  # takvim kapsamı azalınca uyarır; bir `stories` satırını da ezer
 npm run db:seed:events           # yalnız ekonomik takvim — takvimi tazelemek için bu
 npm run build:favicon            # .ico + PWA PNG'leri (elle üretme)
-npm run build:email              # posta zil GIF'i (public/email/, elle üretme)
+npm run build:email              # posta bant GIF'i (public/email/hero.gif, elle üretme)
 ```
 
 - **Temiz kopyada önce `build`.** `PageProps`/`RouteContext` tipleri
@@ -273,6 +273,10 @@ yazın 16:30, kışın 17:30 TR). ET↔UTC aritmetiği yalnız `lib/market-hours
   `fetch` dinleyicisi/önbellek YOK (bayat fiyat = veri dürüstlüğü 2). Kayıt
   yalnız Ayarlar'daki düğmeyle. Zamanlanmış işler `deploy/cron-install.sh`'te
   (`update.sh` her sürümde çalıştırır) — yeni iş oraya.
+- **Şifre değişince açık oturumlar düşer** (`auth.ts`: JWT'de parola özetinin
+  parmak izi, beş dakikalık süreç önbelleğiyle denetlenir). Şifre YAZAN her
+  yeni yol `forgetPasswordFingerprint(userId)` çağırır; çağırmazsa çalınmış
+  oturum beş dakika daha yaşar.
 - **E-posta yalnız şifre sıfırlama** (`lib/email.ts`, Resend, SDK'sız).
   Anahtar yoksa "Şifremi Unuttum" basılmaz; her adrese aynı yanıt, gönderim
   `after` ile; satırda bağlantının SHA-256 özeti. Bülten/bildirim e-postası

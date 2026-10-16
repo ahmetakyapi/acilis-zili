@@ -6,7 +6,7 @@ import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { z } from "zod";
-import { DB_UNAVAILABLE, auth, signIn, signOut } from "@/auth";
+import { DB_UNAVAILABLE, auth, forgetPasswordFingerprint, signIn, signOut } from "@/auth";
 import { db } from "@/lib/db";
 import { passwordResets, users, watchlists } from "@/lib/schema";
 import { emailConfigured, sendEmail } from "@/lib/email";
@@ -111,10 +111,19 @@ const usernameSchema = z
 const MIN_PASSWORD = 8;
 const MAX_PASSWORD = 72;
 
+/* 72 BAYT, karakter değil (16 Ekim). bcrypt 72 UTF-8 baytından sonrasını
+   sessizce yok sayıyor; sınır `.length` (UTF-16 birimi) sayıyordu. Türkçe
+   harflerin her biri 2 bayt: 45–72 karakterlik Türkçe bir parola sınırı
+   geçiyor, sonu (çoğu zaman eklenen rakamlar) girişte hiç denetlenmiyordu.
+   Yalnız şifre KURULURKEN; girişteki karşılaştırma eski özetlerle aynı. */
+function passwordTooLong(password: string): boolean {
+  return Buffer.byteLength(password, "utf8") > MAX_PASSWORD;
+}
+
 const signUpSchema = z.object({
   username: usernameSchema,
   email: z.string().trim().toLowerCase().email(),
-  password: z.string().min(MIN_PASSWORD).max(MAX_PASSWORD),
+  password: z.string().min(MIN_PASSWORD).refine((value) => !passwordTooLong(value)),
 });
 
 function weakPassword(password: string, username: string, email: string) {
@@ -205,7 +214,7 @@ export async function signUpAction(
   if (password.length < MIN_PASSWORD) {
     return { error: t.passwordLength, field: "password" };
   }
-  if (password.length > MAX_PASSWORD) {
+  if (passwordTooLong(password)) {
     return { error: t.passwordTooLong, field: "password" };
   }
   if (password !== passwordConfirm) {
@@ -484,7 +493,7 @@ export async function changePasswordAction(
   const confirm = String(formData.get("confirm") ?? "");
 
   if (next.length < MIN_PASSWORD) return { status: "error", error: t.auth.errors.passwordLength, field: "next" };
-  if (next.length > MAX_PASSWORD) return { status: "error", error: t.auth.errors.passwordTooLong, field: "next" };
+  if (passwordTooLong(next)) return { status: "error", error: t.auth.errors.passwordTooLong, field: "next" };
   if (next !== confirm) return { status: "error", error: t.auth.errors.passwordMismatch, field: "confirm" };
 
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
@@ -503,6 +512,16 @@ export async function changePasswordAction(
     await db.update(users).set({ passwordHash: await hash(next, 12) }).where(eq(users.id, userId));
   } catch {
     return { status: "error", error: P.failed, field: "form" };
+  }
+  /* Öteki cihazlardaki oturumlar bir sonraki istekte düşer (auth.ts →
+     parmak izi). BU cihazın oturumu yeni şifreyle yeniden açılıyor: şifreyi
+     değiştiren kişi kendini dışarı atmasın. Giriş düşerse (oran sınırı)
+     okuyucu yeni şifresiyle tekrar girer — güvenli taraf bu. */
+  forgetPasswordFingerprint(userId);
+  try {
+    await signIn("credentials", { username: user.username, password: next, redirect: false });
+  } catch {
+    /* yeniden giriş olmadı — eski oturum bir sonraki istekte kapanır */
   }
   return { status: "saved" };
 }
@@ -568,7 +587,7 @@ export async function requestPasswordResetAction(
     const token = await issueResetToken(found.id);
     if (!token) return;
     const link = `${SITE_URL}${withLocale("/sifre-sifirla", locale)}?anahtar=${token}`;
-    await sendEmail(resetEmail({ to: found.email, username: found.username, link, lang: locale === "en" ? "en" : "tr", copy: R.mail }));
+    await sendEmail(resetEmail({ to: found.email, username: found.username, link, lang: locale === "en" ? "en" : "tr", requestedAt: new Date(), copy: R.mail }));
   });
   return sent;
 }
@@ -591,7 +610,7 @@ export async function resetPasswordAction(
   const userId = await resetTokenOwner(token);
   if (!userId) return { error: R.invalid, field: "form" };
   if (next.length < MIN_PASSWORD) return { error: t.auth.errors.passwordLength, field: "password" };
-  if (next.length > MAX_PASSWORD) return { error: t.auth.errors.passwordTooLong, field: "password" };
+  if (passwordTooLong(next)) return { error: t.auth.errors.passwordTooLong, field: "password" };
   if (next !== confirm) return { error: t.auth.errors.passwordMismatch, field: "passwordConfirm" };
 
   try {
@@ -604,20 +623,34 @@ export async function resetPasswordAction(
     if (weakPassword(next, user.username, user.email)) {
       return { error: t.auth.errors.passwordWeak, field: "password" };
     }
-    const now = new Date();
-    /* Şifre, bağlantının kullanıldı işareti ve hesabın öteki açık
-       bağlantıları TEK işlemde: yarım kalmış bir sıfırlama, kullanılmış
-       sayılmayan bir bağlantı bırakmasın. */
-    await db.batch([
-      db.update(users).set({ passwordHash: await hash(next, 12) }).where(eq(users.id, userId)),
-      db
-        .update(passwordResets)
-        .set({ usedAt: now })
-        .where(and(eq(passwordResets.tokenHash, hashResetToken(token)), isNull(passwordResets.usedAt))),
-      db
-        .delete(passwordResets)
-        .where(and(eq(passwordResets.userId, userId), isNull(passwordResets.usedAt))),
-    ]);
+    /* BAĞLANTIYI SAHİPLENMEK VE ŞİFREYİ YAZMAK TEK İFADE (16 Ekim).
+       Geçerlilik yalnız yukarıdaki okumada (`resetTokenOwner`) soruluyordu;
+       ardından ~300 ms'lik bcrypt ve ayrı bir yazma geliyordu. Aynı
+       bağlantıyla iki gönderim (çift tık, iki cihaz) ikisi de denetimden
+       geçiyor ve ikinci, "kullanıldı" işareti 0 satır eşleşse de şifreyi
+       eziyordu — postadaki "Tek Seferlik" sözü tutulmuyordu. Şimdi şifre
+       YALNIZCA bağlantıyı bu ifadede sahiplenen istekte yazılıyor: ikinci
+       istek satır kilidinde bekliyor, `used_at is null` artık yanlış,
+       sıfır satır döner. Süresi işlem sırasında dolan bağlantı da aynı. */
+    const passwordHash = await hash(next, 12);
+    const claimed = await db.execute(sql`
+      with sahiplenilen as (
+        update ${passwordResets} set used_at = now()
+        where token_hash = ${hashResetToken(token)} and used_at is null and expires_at > now()
+        returning user_id
+      )
+      update ${users} set password_hash = ${passwordHash}
+      from sahiplenilen where ${users}.id = sahiplenilen.user_id
+      returning ${users}.id
+    `);
+    if ((claimed.rows ?? []).length === 0) return { error: R.invalid, field: "form" };
+    /* Hesabın öteki açık bağlantıları da kapanır; açık oturumlar bir
+       sonraki istekte düşer (auth.ts → parmak izi). */
+    await db
+      .delete(passwordResets)
+      .where(and(eq(passwordResets.userId, userId), isNull(passwordResets.usedAt)))
+      .catch(() => undefined);
+    forgetPasswordFingerprint(userId);
   } catch {
     return { error: R.failed, field: "form" };
   }

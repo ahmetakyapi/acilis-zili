@@ -2,8 +2,9 @@ import { createHash, randomBytes } from "node:crypto";
 import { and, eq, gt, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { passwordResets } from "@/lib/schema";
-import { escapeHtml, type Email } from "@/lib/email";
-import { brandedEmailHtml, emailButton, emailChips, emailText } from "@/lib/email-layout";
+import type { Email } from "@/lib/email";
+import { brandedEmailHtml, emailButton, emailMeta, emailText } from "@/lib/email-layout";
+import { displayZone, formatInZone } from "@/lib/session-clock";
 
 /**
  * Şifre sıfırlama bağlantıları — gerekçe `lib/schema.ts` → passwordResets.
@@ -77,12 +78,30 @@ export async function resetTokenOwner(token: string, now: Date = new Date()): Pr
  * HTML markalı kaptan geçiyor (lib/email-layout.ts — tablo düzeni, satır
  * içi stil, zil GIF'i; gerekçeler orada). Düz metin sürümü aynı sırayı
  * izliyor: HTML'i göstermeyen istemcide de bağlantı ve uyarılar tam.
+ *
+ * İSTEK ZAMANI postada (16 Ekim): okuyucunun "bunu ben mi istedim" sorusuna
+ * en hızlı cevap. Saat okuyucunun duvar saatinde — TR'de İstanbul, EN'de
+ * New York (lib/session-clock.ts → displayZone, sitenin tek saat kuralı) —
+ * ve dilimin adı yanında, çünkü posta başka bir dilimde açılabilir.
  */
+export function requestedAtLabel(at: Date, lang: "tr" | "en", zoneName: string): string {
+  const zone = displayZone(lang);
+  const day = new Intl.DateTimeFormat(lang === "en" ? "en-US" : "tr-TR", {
+    timeZone: zone,
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(at);
+  return `${day} · ${formatInZone(at, zone)} ${zoneName}`;
+}
+
 export function resetEmail(input: {
   to: string;
   username: string;
   link: string;
   lang: "tr" | "en";
+  /** İsteğin geldiği an — postada okuyucunun saatinde yazılır. */
+  requestedAt: Date;
   copy: {
     subject: string;
     preheader: string;
@@ -91,8 +110,12 @@ export function resetEmail(input: {
     greeting: string;
     body: string;
     button: string;
-    validity: string;
-    singleUse: string;
+    metaRequested: string;
+    metaValidity: string;
+    metaValidityValue: string;
+    metaUse: string;
+    metaUseValue: string;
+    zoneName: string;
     fallback: string;
     noteTitle: string;
     ignore: string;
@@ -106,6 +129,11 @@ export function resetEmail(input: {
   const greeting = copy.greeting.replace("{username}", input.username);
   const origin = new URL(input.link).origin;
   const prefix = input.lang === "en" ? "/en" : "";
+  const meta = [
+    { label: copy.metaRequested, value: requestedAtLabel(input.requestedAt, input.lang, copy.zoneName) },
+    { label: copy.metaValidity, value: copy.metaValidityValue },
+    { label: copy.metaUse, value: copy.metaUseValue },
+  ];
   const text = [
     greeting,
     "",
@@ -113,7 +141,7 @@ export function resetEmail(input: {
     "",
     input.link,
     "",
-    `${copy.validity} · ${copy.singleUse}`,
+    ...meta.map((row) => `${row.label}: ${row.value}`),
     "",
     copy.ignore,
     "",
@@ -124,19 +152,17 @@ export function resetEmail(input: {
   const html = brandedEmailHtml({
     lang: input.lang,
     preheader: copy.preheader,
-    heroTitle: copy.heroTitle,
-    heroLead: copy.heroLead,
+    title: copy.heroTitle,
+    lead: copy.heroLead,
     brandName: copy.signature,
     origin,
     bodyHtml: [
       emailText.greeting(greeting),
       emailText.paragraph(copy.body),
       emailButton(copy.button, input.link),
-      `<div style="height:18px;line-height:18px">&nbsp;</div>`,
-      emailChips([copy.validity, copy.singleUse]),
+      emailMeta(meta),
       emailText.fallback(copy.fallback, input.link),
       emailText.note(copy.noteTitle, copy.ignore),
-      emailText.signature(escapeHtml(copy.signature)),
     ].join("\n"),
     footerLines: [copy.noReply],
     footerLinks: [

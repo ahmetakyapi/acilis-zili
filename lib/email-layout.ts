@@ -1,36 +1,55 @@
 import { escapeHtml } from "@/lib/email";
 
 /**
- * Markalı e-posta kabı (15 Ekim) — şifre sıfırlama bugün tek kullanıcısı;
- * ileride doğrulama ya da bildirim postası da bu kabı giyer.
+ * Markalı e-posta kabı (15 Ekim; 16 Ekim'de kenardan kenara bant) — şifre
+ * sıfırlama bugün tek kullanıcısı; ileride doğrulama ya da bildirim postası
+ * da bu kabı giyer.
  *
  * E-POSTA HTML'İ WEB DEĞİL. Kurallar istemcilerin en dar ortak paydası:
  * - Düzen TABLO, stil SATIR İÇİ. Gmail `<style>`'ı kısmen okuyor, Outlook
  *   masaüstü Word motoruyla çiziyor; satır içi stil her yerde aynı.
- * - Animasyon GIF (public/email/bell-ring.gif): Gmail CSS animasyonunu ve
- *   SVG'yi siliyor. `<style>` yalnız İLERLEME: Apple Mail'de düğmenin üstünden
- *   bir ışık geçiyor ve koyu tema renkleri geliyor; okumayan istemcide posta
- *   eksiksiz. Hareketi azaltana ışık hiç geçmez.
- * - Kahraman bandı DÜZ koyu lacivert ve GIF'in zemini aynı renk: Gmail'in koyu
- *   teması açık zeminleri çeviriyor ama koyu zemine dokunmuyor, yani bant iki
- *   temada da aynı görünüyor; açık kart Gmail'de kendiliğinden kararıyor.
+ * - Animasyon GIF (public/email/hero.gif — gerekçe scripts/build-email-assets.mjs):
+ *   Gmail CSS animasyonunu ve SVG'yi siliyor. `<style>` yalnız İLERLEME:
+ *   Apple Mail'de marka fontu, düğmenin üstünden geçen ışık ve koyu tema
+ *   renkleri geliyor; okumayan istemcide posta eksiksiz. Hareketi azaltana
+ *   ışık hiç geçmez.
+ * - BANT GIF'İN KENDİSİ, başlık kartın İÇİNDE. İlk sürümde başlık koyu bandın
+ *   içindeydi ve GIF bandın ortasında küçük bir kareydi: Gmail iOS koyu temada
+ *   sayfayı TAM ters çeviriyor, bant açılıyor ama GIF çevrilmiyor — bandın
+ *   ortasında koyu bir kare kalıyordu. Şimdi ters çeviren istemcide kart
+ *   kararıyor, bant zaten koyu; Gmail Android/web açık kartı kendisi
+ *   koyulaştırıyor, koyu banda dokunmuyor. Her istemcide aynı görüntü.
  * - Düğme "kurşun geçirmez": bağlantının kendisi dolgulu blok, arka plan hem
  *   `bgcolor` hem degrade — degradeyi silen istemcide düz marka mavisi kalır.
+ *   Telefonda tam genişlik (medya sorgusu; okumayan istemcide yine dolgulu).
+ *
+ * MARKA FONTU sitenin kökünden (public/email/*.woff2, SIL OFL 1.1), Google
+ * Fonts'tan DEĞİL: postayı açan okurun IP'si üçüncü tarafa gitmesin (KVKK).
+ * Türkçe iki alt küme ister — `ı` latin'de, `ş ğ İ` latin-ext'te. Font
+ * desteklemeyen istemci (Gmail) sistem fontuna düşer; ölçüldü: 390 pikselde
+ * metin bir satır fazla kırılıyor (posta 1118 → 1138 piksel), 640'ta fark
+ * yok — düzen sabit yükseklik varsaymıyor.
+ *
+ * OUTLOOK MASAÜSTÜ (Word motoru) ayrı ele alınır: yığının başındaki web
+ * fontunu bulamayınca yığının gerisine bakmadan Times New Roman basıyor,
+ * `max-width`i okumuyor (sütun okuma bölmesinin tamamına yayılıyor) ve
+ * `<a>` üzerindeki dolguyu yok sayıyor. `@font-face` `@media screen` içinde
+ * (Word medya bloğunu okumaz), `[if mso]` blokları fontu Segoe UI'a, sütunu
+ * 560 piksellik bir "hayalet" tabloya sabitliyor; düğmenin dolgusu
+ * `mso-padding-alt` ile hücrede.
  *
  * Görseller postanın gönderildiği sitenin kökünden (`origin`) yüklenir;
  * bağlantı adresi zaten mutlak olduğu için ayrı bir ayar gerekmiyor.
  *
  * Renkler sitenin token'larından elle aktarıldı (posta CSS değişkeni
  * okumuyor): marka mavisi #1268c9, karo degradesi #5cc4ff → #1f86e0 →
- * #0b3f86, metin #0f1b2d / #3b4a5e, sessiz #6b7a90.
+ * #0b3f86, metin #0f1b2d / #3b4a5e, sessiz #6b7a90, pirinç #b8862f.
  */
 
 const C = {
   page: "#eef2f8",
   card: "#ffffff",
-  hero: "#0b2a5b",
-  heroInk: "#ffffff",
-  heroLead: "#a9cdf5",
+  band: "#0b2a5b",
   ink: "#0f1b2d",
   body: "#3b4a5e",
   muted: "#6b7a90",
@@ -40,49 +59,60 @@ const C = {
   brass: "#b8862f",
 };
 
-const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif";
+const FONT = "'Schibsted Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif";
+const MONO = "ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
 
 export type BrandedEmail = {
   lang: "tr" | "en";
   /** Gelen kutusunda konunun yanında görünen gizli önizleme satırı. */
   preheader: string;
-  heroTitle: string;
-  heroLead: string;
+  title: string;
+  lead: string;
   /** Kartın gövdesi — HTML, çağıran kaçışlar (`escapeHtml`). */
   bodyHtml: string;
   /** Kart altındaki küçük satırlar — düz metin, burada kaçışlanır. */
   footerLines: string[];
   brandName: string;
-  /** Sitenin kökü — görseller ve alt bağlantılar buradan. */
+  /** Sitenin kökü — görseller, font ve alt bağlantılar buradan. */
   origin: string;
   footerLinks: { label: string; href: string }[];
 };
 
 /** Kurşun geçirmez birincil düğme. */
 export function emailButton(label: string, href: string): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate">
-<tr><td class="az-btn" bgcolor="${C.primary}" style="border-radius:14px;background:${C.primary};background-image:linear-gradient(135deg,#2a8ff0 0%,${C.primary} 55%,#0b4fa3 100%);box-shadow:0 8px 20px -8px rgba(18,104,201,.55)">
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="az-btn-table" style="border-collapse:separate">
+<tr><td class="az-btn" align="center" bgcolor="${C.primary}" style="mso-padding-alt:16px 30px;border-radius:14px;background:${C.primary};background-image:linear-gradient(135deg,#2a8ff0 0%,${C.primary} 55%,#0b4fa3 100%);box-shadow:0 8px 20px -8px rgba(18,104,201,.55)">
 <a href="${escapeHtml(href)}" target="_blank" class="az-btn-link" style="display:inline-block;padding:16px 30px;font-family:${FONT};font-size:16px;font-weight:700;line-height:20px;color:#ffffff;text-decoration:none;border-radius:14px;letter-spacing:.01em">${escapeHtml(label)}&nbsp;&nbsp;&rarr;</a>
 </td></tr></table>`;
 }
 
-/** İki küçük künye çipi yan yana ("30 Dakika Geçerli", "Tek Kullanımlık"). */
-export function emailChips(items: string[]): string {
-  const cells = items
+/**
+ * Künye tablosu — "İstek Zamanı · 16 Ekim 2026 · 18:04 İstanbul" gibi
+ * etiket/değer satırları, aralarında ince çizgi (sitedeki künye düzeni:
+ * kutu değil, hairline). Değerler sağa yaslı; `tnum` YOK — Schibsted
+ * Grotesk'te iki noktayı da rakam genişliğine çekip "18 : 04" basıyor
+ * (sitede de kökte kapalı, app/layout.tsx).
+ */
+export function emailMeta(rows: { label: string; value: string }[]): string {
+  const cells = rows
     .map(
-      (item) =>
-        `<td style="padding:0 8px 8px 0"><span class="az-chip" style="display:inline-block;padding:7px 12px;border-radius:999px;background:${C.sunken};border:1px solid ${C.line};font-family:${FONT};font-size:12px;font-weight:600;line-height:14px;color:${C.body};white-space:nowrap"><span style="display:inline-block;width:6px;height:6px;border-radius:3px;background:${C.brass};vertical-align:middle;margin-right:7px"></span>${escapeHtml(item)}</span></td>`,
+      (row, i) =>
+        `<tr><td class="az-muted${i ? " az-rule" : ""}" style="padding:11px 0;${i ? `border-top:1px solid ${C.line};` : ""}font-family:${FONT};font-size:13px;line-height:18px;color:${C.muted}"><span style="display:inline-block;width:6px;height:6px;border-radius:3px;background:${C.brass};vertical-align:middle;margin-right:9px"></span>${escapeHtml(row.label)}</td>
+<td align="right" class="az-ink${i ? " az-rule" : ""}" style="padding:11px 0 11px 16px;${i ? `border-top:1px solid ${C.line};` : ""}font-family:${FONT};font-size:13px;line-height:18px;font-weight:600;color:${C.ink}">${escapeHtml(row.value)}</td></tr>`,
     )
-    .join("");
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>${cells}</tr></table>`;
+    .join("\n");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="az-meta" style="margin:26px 0 0;border-top:1px solid ${C.line};border-bottom:1px solid ${C.line}">
+${cells}
+</table>`;
 }
 
 export function brandedEmailHtml(email: BrandedEmail): string {
   const origin = email.origin.replace(/\/$/, "");
+  const asset = (file: string) => escapeHtml(`${origin}/email/${file}`);
   const links = email.footerLinks
     .map(
       (link) =>
-        `<a href="${escapeHtml(link.href)}" target="_blank" style="color:${C.muted};text-decoration:underline">${escapeHtml(link.label)}</a>`,
+        `<a href="${escapeHtml(link.href)}" target="_blank" class="az-muted" style="color:${C.muted};text-decoration:underline">${escapeHtml(link.label)}</a>`,
     )
     .join(`&nbsp;&nbsp;&middot;&nbsp;&nbsp;`);
   const footer = email.footerLines
@@ -100,8 +130,16 @@ export function brandedEmailHtml(email: BrandedEmail): string {
 <meta name="x-apple-disable-message-reformatting">
 <meta name="color-scheme" content="light dark">
 <meta name="supported-color-schemes" content="light dark">
-<title>${escapeHtml(email.heroTitle)}</title>
+<title>${escapeHtml(email.title)}</title>
 <style>
+  @media screen {
+  @font-face { font-family:'Schibsted Grotesk'; font-style:normal; font-weight:400 900; font-display:swap;
+    src:url(${asset("schibsted-grotesk-latin-ext.woff2")}) format('woff2');
+    unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+  @font-face { font-family:'Schibsted Grotesk'; font-style:normal; font-weight:400 900; font-display:swap;
+    src:url(${asset("schibsted-grotesk-latin.woff2")}) format('woff2');
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+  }
   :root { color-scheme: light dark; }
   body { margin:0; padding:0; -webkit-text-size-adjust:100%; }
   a { text-decoration:none; }
@@ -110,9 +148,11 @@ export function brandedEmailHtml(email: BrandedEmail): string {
   .az-btn-link { background-image:linear-gradient(110deg,rgba(255,255,255,0) 35%,rgba(255,255,255,.28) 50%,rgba(255,255,255,0) 65%); background-size:220% 100%; background-repeat:no-repeat; animation:az-sheen 4.6s ease-in-out 1.2s infinite; }
   @media (prefers-reduced-motion: reduce) { .az-btn-link { animation:none; background-image:none; } }
   @media (max-width:600px) {
-    .az-shell { padding:20px 12px !important; }
-    .az-pad { padding-left:24px !important; padding-right:24px !important; }
-    .az-title { font-size:26px !important; line-height:32px !important; }
+    .az-shell { padding:16px 10px 28px !important; }
+    .az-pad { padding-left:22px !important; padding-right:22px !important; }
+    .az-title { font-size:27px !important; line-height:32px !important; }
+    .az-btn-table { width:100% !important; }
+    .az-btn-link { display:block !important; text-align:center !important; }
   }
   @media (prefers-color-scheme: dark) {
     .az-page { background:#0a0f18 !important; }
@@ -121,32 +161,34 @@ export function brandedEmailHtml(email: BrandedEmail): string {
     .az-body { color:#b4c1d3 !important; }
     .az-muted { color:#8b99ad !important; }
     .az-note { background:#172234 !important; border-color:#223047 !important; border-left-color:#b8862f !important; }
-    .az-chip { background:#172234 !important; border-color:#223047 !important; color:#b4c1d3 !important; }
-    .az-rule { border-color:#223047 !important; }
+    .az-meta, .az-rule { border-color:#223047 !important; }
+    .az-link { color:#5cb0ff !important; }
   }
 </style>
+<!--[if mso]><style>body,table,td,p,a,span,h1{font-family:'Segoe UI',Arial,sans-serif !important;}</style><![endif]-->
 </head>
 <body class="az-page" style="margin:0;padding:0;background:${C.page}">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all">${escapeHtml(email.preheader)}${"&#8199;&#65279;&#847; ".repeat(40)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="az-page" bgcolor="${C.page}" style="background:${C.page}">
-<tr><td align="center" class="az-shell" style="padding:36px 16px">
+<tr><td align="center" class="az-shell" style="padding:32px 16px 36px">
+<!--[if mso]><table role="presentation" width="560" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px">
 
-<tr><td align="center" style="padding:0 0 20px">
+<tr><td align="center" style="padding:0 0 18px">
 <a href="${escapeHtml(origin)}" target="_blank" style="text-decoration:none">
-<img src="${escapeHtml(origin)}/icon-192.png" width="32" height="32" alt="" style="display:inline-block;width:32px;height:32px;border:0;border-radius:10px;vertical-align:middle">
-<span class="az-ink" style="display:inline-block;vertical-align:middle;margin-left:10px;font-family:${FONT};font-size:18px;font-weight:800;letter-spacing:-.02em;color:${C.ink}">${escapeHtml(email.brandName)}</span>
+<img src="${escapeHtml(origin)}/icon-192.png" width="30" height="30" alt="" style="display:inline-block;width:30px;height:30px;border:0;border-radius:9px;vertical-align:middle">
+<span class="az-ink" style="display:inline-block;vertical-align:middle;margin-left:10px;font-family:${FONT};font-size:17px;font-weight:800;letter-spacing:-.02em;color:${C.ink}">${escapeHtml(email.brandName)}</span>
 </a>
 </td></tr>
 
 <tr><td class="az-card" style="background:${C.card};border:1px solid ${C.line};border-radius:24px;overflow:hidden">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-<tr><td align="center" bgcolor="${C.hero}" style="background:${C.hero};border-radius:23px 23px 0 0;padding:28px 24px 30px">
-<img src="${escapeHtml(origin)}/email/bell-ring.gif" width="176" height="176" alt="" style="display:block;width:176px;height:176px;border:0;margin:0 auto 6px">
-<h1 class="az-title" style="margin:0;font-family:${FONT};font-size:30px;line-height:36px;font-weight:800;letter-spacing:-.03em;color:${C.heroInk}">${escapeHtml(email.heroTitle)}</h1>
-<p style="margin:10px auto 0;max-width:400px;font-family:${FONT};font-size:15px;line-height:23px;color:${C.heroLead}">${escapeHtml(email.heroLead)}</p>
+<tr><td bgcolor="${C.band}" style="background:${C.band};border-radius:23px 23px 0 0;padding:0;font-size:0;line-height:0">
+<img src="${asset("hero.gif")}" width="560" height="220" alt="" style="display:block;width:100%;max-width:560px;height:auto;border:0;border-radius:23px 23px 0 0">
 </td></tr>
-<tr><td class="az-pad" style="padding:34px 40px 36px">
+<tr><td class="az-pad" style="padding:32px 40px 36px">
+<h1 class="az-title az-ink" style="margin:0;font-family:${FONT};font-size:30px;line-height:36px;font-weight:800;letter-spacing:-.03em;color:${C.ink}">${escapeHtml(email.title)}</h1>
+<p class="az-body" style="margin:10px 0 26px;font-family:${FONT};font-size:16px;line-height:24px;color:${C.body}">${escapeHtml(email.lead)}</p>
 ${email.bodyHtml}
 </td></tr>
 </table>
@@ -158,6 +200,7 @@ ${footer}
 </td></tr>
 
 </table>
+<!--[if mso]></td></tr></table><![endif]-->
 </td></tr>
 </table>
 </body>
@@ -167,19 +210,17 @@ ${footer}
 /** Gövde parçaları — ortak tipografi, satır içi. */
 export const emailText = {
   greeting: (text: string) =>
-    `<p class="az-ink" style="margin:0 0 12px;font-family:${FONT};font-size:18px;line-height:26px;font-weight:700;color:${C.ink}">${escapeHtml(text)}</p>`,
+    `<p class="az-ink az-rule" style="margin:0 0 10px;padding-top:24px;border-top:1px solid ${C.line};font-family:${FONT};font-size:17px;line-height:24px;font-weight:700;color:${C.ink}">${escapeHtml(text)}</p>`,
   paragraph: (text: string) =>
     `<p class="az-body" style="margin:0 0 26px;font-family:${FONT};font-size:15px;line-height:24px;color:${C.body}">${escapeHtml(text)}</p>`,
   /** Düğme çalışmazsa kopyalanacak çıplak adres. */
   fallback: (label: string, href: string) =>
     `<p class="az-muted" style="margin:22px 0 6px;font-family:${FONT};font-size:12px;line-height:18px;color:${C.muted}">${escapeHtml(label)}</p>
-<p style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:18px;word-break:break-all"><a href="${escapeHtml(href)}" target="_blank" style="color:${C.primary};text-decoration:none">${escapeHtml(href)}</a></p>`,
+<p style="margin:0;font-family:${MONO};font-size:12px;line-height:18px;word-break:break-all"><a href="${escapeHtml(href)}" target="_blank" class="az-link" style="color:${C.primary};text-decoration:none">${escapeHtml(href)}</a></p>`,
   /** Tonlu not kutusu — güvenlik uyarısı gibi ikincil bilgi. */
   note: (title: string, text: string) =>
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:28px"><tr><td class="az-note" style="background:${C.sunken};border:1px solid ${C.line};border-left:3px solid ${C.brass};border-radius:14px;padding:16px 18px">
 <p class="az-ink" style="margin:0 0 4px;font-family:${FONT};font-size:13px;line-height:18px;font-weight:700;color:${C.ink}">${escapeHtml(title)}</p>
 <p class="az-body" style="margin:0;font-family:${FONT};font-size:13px;line-height:20px;color:${C.body}">${escapeHtml(text)}</p>
 </td></tr></table>`,
-  signature: (text: string) =>
-    `<p class="az-muted az-rule" style="margin:28px 0 0;padding-top:20px;border-top:1px solid ${C.line};font-family:${FONT};font-size:13px;line-height:20px;color:${C.muted}">${text}</p>`,
 };
