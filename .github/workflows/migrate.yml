@@ -1,0 +1,52 @@
+name: Migrate DB
+
+# Üretim veritabanına bekleyen migration'ları uygular — ELLE tetiklenir.
+# Migration'lar deploy'da uygulanmıyor (CLAUDE.md); adres yalnız sunucuda,
+# bu iş SSH ile canlı sürümün dizininde deploy/remote-migrate.sh'ı koşturur.
+# Önce `check` ile bekleyenleri gör, sonra `apply`.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "check: yalnız durum · apply: bekleyenleri uygula"
+        required: true
+        default: check
+        type: choice
+        options: [check, apply]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  migrate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Sunucuda migration
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST: ${{ vars.VPS_HOST }}
+          VPS_HOST_KEY: ${{ vars.VPS_HOST_KEY }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          set -euo pipefail
+          [[ "$MODE" == check || "$MODE" == apply ]] || { echo "geçersiz mod"; exit 1; }
+          [[ "$HOST" =~ ^[a-zA-Z0-9.-]+$ ]] || { echo "geçersiz host"; exit 1; }
+          strict=accept-new
+          mkdir -p ~/.ssh
+          if [[ -n "${VPS_HOST_KEY:-}" ]]; then
+            printf '%s\n' "$VPS_HOST_KEY" > ~/.ssh/known_hosts
+            strict=yes
+          fi
+          umask 077
+          key=$(mktemp); trap 'rm -f "$key"' EXIT
+          printf '%s\n' "$SSH_KEY" > "$key"
+          ssh -i "$key" -o BatchMode=yes -o "StrictHostKeyChecking=$strict" -o ConnectTimeout=15 "ubuntu@${HOST}" \
+            "sudo -n -u acilis -H bash -s -- $MODE" < deploy/remote-migrate.sh
