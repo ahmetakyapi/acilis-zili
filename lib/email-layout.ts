@@ -46,7 +46,7 @@ import { escapeHtml } from "@/lib/email";
  * #0b3f86, metin #0f1b2d / #3b4a5e, sessiz #6b7a90, pirinç #b8862f.
  */
 
-const C = {
+export const C = {
   page: "#eef2f8",
   card: "#ffffff",
   band: "#0b2a5b",
@@ -57,10 +57,16 @@ const C = {
   sunken: "#f4f7fb",
   primary: "#1268c9",
   brass: "#b8862f",
+  /* Yön renkleri sitenin --up / --down token'ları; yıkamalar postada
+     saydamlık yerine düz renk (Outlook rgba okumuyor). */
+  up: "#0c7350",
+  upWash: "#e5f2ec",
+  down: "#c01a3d",
+  downWash: "#fbe8ec",
 };
 
-const FONT = "'Schibsted Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif";
-const MONO = "ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
+export const FONT = "'Schibsted Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif";
+export const MONO = "ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
 
 export type BrandedEmail = {
   lang: "tr" | "en";
@@ -153,6 +159,9 @@ export function brandedEmailHtml(email: BrandedEmail): string {
     .az-title { font-size:27px !important; line-height:32px !important; }
     .az-btn-table { width:100% !important; }
     .az-btn-link { display:block !important; text-align:center !important; }
+    .az-stack { display:block !important; width:100% !important; }
+    .az-stack-gap { padding:0 0 10px !important; }
+    .az-hide-sm { display:none !important; }
   }
   @media (prefers-color-scheme: dark) {
     .az-page { background:#0a0f18 !important; }
@@ -163,6 +172,12 @@ export function brandedEmailHtml(email: BrandedEmail): string {
     .az-note { background:#172234 !important; border-color:#223047 !important; border-left-color:#b8862f !important; }
     .az-meta, .az-rule { border-color:#223047 !important; }
     .az-link { color:#5cb0ff !important; }
+    .az-sunken { background:#172234 !important; border-color:#223047 !important; }
+    .az-up { color:#3ddc97 !important; }
+    .az-down { color:#ff5c7a !important; }
+    .az-up-wash { background:#10301f !important; color:#3ddc97 !important; }
+    .az-down-wash { background:#3a1520 !important; color:#ff5c7a !important; }
+    .az-flat-wash { background:#1d2a3d !important; color:#b4c1d3 !important; }
   }
 </style>
 <!--[if mso]><style>body,table,td,p,a,span,h1{font-family:'Segoe UI',Arial,sans-serif !important;}</style><![endif]-->
@@ -205,6 +220,19 @@ ${footer}
 </table>
 </body>
 </html>`;
+}
+
+/**
+ * Bölüm başlığı — postanın içindeki `h2`. Sitedeki panel başlığı gibi kutu
+ * değil, ton: pirinç kısa çizgi + koyu başlık + istenirse sağda künye.
+ */
+export function emailSection(title: string, meta?: string, first = false): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:${first ? "6px" : "34px"} 0 14px">
+<tr><td style="padding:0 0 8px"><span style="display:block;width:28px;height:3px;border-radius:2px;background:${C.brass};font-size:0;line-height:0">&nbsp;</span></td></tr>
+<tr><td><h2 class="az-ink" style="margin:0;font-family:${FONT};font-size:20px;line-height:26px;font-weight:800;letter-spacing:-.02em;color:${C.ink}">${escapeHtml(title)}</h2>${
+    meta ? `<p class="az-muted" style="margin:4px 0 0;font-family:${FONT};font-size:12px;line-height:18px;color:${C.muted}">${escapeHtml(meta)}</p>` : ""
+  }</td></tr>
+</table>`;
 }
 
 /** Gövde parçaları — ortak tipografi, satır içi. */

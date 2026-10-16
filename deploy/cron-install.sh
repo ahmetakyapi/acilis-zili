@@ -17,6 +17,7 @@ LINES=(
 	"30 10 * * 1-5 /bin/bash $APP_ROOT/current/deploy/cron-daily.sh"
 	"*/5 * * * * /bin/bash $APP_ROOT/current/deploy/cron-alerts.sh"
 	"20 16 * * * /bin/bash $APP_ROOT/current/deploy/cron-bilanco.sh"
+	"15 11-15 * * 1 /bin/bash $APP_ROOT/current/deploy/cron-weekly-mail.sh"
 )
 
 # SUNUCU UTC OLMALI. Ubuntu 24.04'ün cron'u (Debian vixie-cron) `CRON_TZ`yi

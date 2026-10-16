@@ -19,6 +19,8 @@ import { getUserAvatar } from "@/lib/avatar-data";
 import { getProfileSettings } from "@/lib/profile-data";
 import { PROFILE_DEFAULTS } from "@/lib/profiles";
 import { PushSettings } from "@/components/notifications/PushSettings";
+import { EmailSettings } from "@/components/notifications/EmailSettings";
+import { getEmailPrefs } from "@/lib/email-notify";
 import { getNotificationPrefs } from "@/lib/notification-prefs";
 import { getUserSubscriptions, pushPublicKey } from "@/lib/push";
 import { PreferenceSettings } from "@/components/layout/preference-controls";
@@ -45,7 +47,7 @@ export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user) redirect("/giris?devam=/ayarlar");
 
-  const [{ locale, t }, theme, avatar, push, profile, prefs] = await Promise.all([
+  const [{ locale, t }, theme, avatar, push, profile, prefs, emailPrefs] = await Promise.all([
     getI18n(),
     getTheme(),
     session.user.id ? getUserAvatar(session.user.id) : Promise.resolve(null),
@@ -54,6 +56,9 @@ export default async function SettingsPage() {
     session.user.id
       ? getNotificationPrefs(session.user.id)
       : Promise.resolve({ available: false, earningsReminder: false }),
+    session.user.id
+      ? getEmailPrefs(session.user.id)
+      : Promise.resolve({ available: false, alerts: false, weekly: false, confirmed: false, pending: false }),
   ]);
   const username = session.user.name ?? "";
   const initials = username.slice(0, 2).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US");
@@ -171,6 +176,19 @@ export default async function SettingsPage() {
               earnings={prefs.available ? { enabled: prefs.earningsReminder } : null}
               labels={t.notifications}
             />
+          </div>
+        </Panel>
+      )}
+
+      {/* E-POSTA BİLDİRİMLERİ (16 Ekim) — alarm postası ve pazartesi özeti.
+          E-posta servisi kapalıysa ya da tablo yoksa (migration 0036) panel
+          basılmaz. Çapa `#e-posta`: postaların altındaki "E-posta
+          Tercihleri" bağlantısı buraya iner. */}
+      {emailPrefs.available && (
+        <Panel id="e-posta" className="scroll-mt-28">
+          <PanelHeader title={t.emailNotify.settings.title} />
+          <div className="px-4 py-4 sm:px-5">
+            <EmailSettings email={session.user.email ?? ""} initial={emailPrefs} labels={t.emailNotify.settings} />
           </div>
         </Panel>
       )}

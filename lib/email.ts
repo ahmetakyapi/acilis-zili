@@ -1,6 +1,7 @@
 /**
- * E-POSTA — gönderici (9 Ekim). Tek kullanıcısı şimdilik şifre sıfırlama
- * (lib/password-reset.ts).
+ * E-POSTA — gönderici (9 Ekim). Kullanıcıları şifre sıfırlama
+ * (lib/password-reset.ts) ve 16 Ekim'den beri okuyucunun açtığı bildirim
+ * postaları (lib/email-notify.ts: alarm, pazartesi özeti).
  *
  * SERVİS RESEND, SDK YOK. Ücretsiz katmanı ayda 3.000, günde 100 e-posta;
  * bu sitenin hacminde (yalnızca okuyucunun kendi istediği sıfırlama
@@ -25,6 +26,8 @@ export type Email = {
   subject: string;
   text: string;
   html: string;
+  /** Ek başlıklar — bildirim postasında `List-Unsubscribe` (tek tıkla çıkış). */
+  headers?: Record<string, string>;
 };
 
 /** Gönderir; servis kabul ettiyse true. Hata fırlatmaz — çağıran günlüğe bakmaz. */
@@ -43,6 +46,7 @@ export async function sendEmail(email: Email): Promise<boolean> {
         subject: email.subject,
         text: email.text,
         html: email.html,
+        ...(email.headers ? { headers: email.headers } : {}),
       }),
       signal: AbortSignal.timeout(10_000),
       cache: "no-store",

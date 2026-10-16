@@ -1,4 +1,5 @@
 import { aiAnalysisTr } from "./ai-analysis";
+import { emailNotifyTr } from "./email-notify";
 import { datePickerTr } from "./date-picker";
 
 const tr = {
@@ -4367,6 +4368,7 @@ const tr = {
   /* Tarih seçici — metin ayrı dosyada, gerekçesi orada. */
   aiAnalysis: aiAnalysisTr,
   datePicker: datePickerTr,
+  emailNotify: emailNotifyTr,
 };
 
 export default tr;

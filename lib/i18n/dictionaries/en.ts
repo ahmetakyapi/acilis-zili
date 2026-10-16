@@ -1,5 +1,6 @@
 import { aiAnalysisEn } from "./ai-analysis";
 import type tr from "./tr";
+import { emailNotifyEn } from "./email-notify";
 import { datePickerEn } from "./date-picker";
 
 const en: typeof tr = {
@@ -3847,6 +3848,7 @@ const en: typeof tr = {
   /* Tarih seçici — metin ayrı dosyada, gerekçesi orada. */
   aiAnalysis: aiAnalysisEn,
   datePicker: datePickerEn,
+  emailNotify: emailNotifyEn,
 };
 
 export default en;

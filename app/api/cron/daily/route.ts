@@ -1,4 +1,5 @@
 import { pruneNotifications } from "@/lib/notifications";
+import { pruneEmailLog } from "@/lib/email-notify";
 import { getDailyMarketSeries } from "@/lib/providers/daily-markets";
 import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
@@ -673,6 +674,8 @@ export async function GET(request: Request) {
   /* ---- 2h. Eski bildirimler ----
      Gelen kutusu 90 günden eskisini tutmuyor (lib/notifications.ts). */
   report.notificationsPurged = await pruneNotifications();
+  /* E-posta defteri de 90 gün (lib/email-notify.ts). */
+  report.emailLogPurged = await pruneEmailLog();
 
   /* ---- 3. Makro seriler ---- */
   if (outOfTime()) {

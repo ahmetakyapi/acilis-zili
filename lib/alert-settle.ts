@@ -78,6 +78,7 @@ export async function settleAlerts(
             return { title: p.title, body: p.body, path: `/hisse/${alert.symbol}`, tag: p.tag };
           },
           withLocale,
+          { alertId: alert.id, kind: "price", symbol: alert.symbol, direction: alert.direction, target: alert.target, price, firedAt: now },
         ).catch(() => 0);
       }
     });

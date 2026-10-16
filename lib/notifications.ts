@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { notifications, users } from "@/lib/schema";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { sendToUser } from "@/lib/push";
+import { sendAlertEmail } from "@/lib/alert-email";
+import type { AlertEmailInput } from "@/lib/notify-emails";
 
 /**
  * Bildirim merkezi — gerekçe lib/schema.ts → notifications.
@@ -50,12 +52,17 @@ async function accountLocale(userId: string): Promise<Locale> {
   }
 }
 
-/** Gelen kutusuna yazar (hesabın diliyle) ve push gönderir (cihazın diliyle). */
+/**
+ * Gelen kutusuna yazar (hesabın diliyle), push gönderir (cihazın diliyle)
+ * ve `email` verildiyse alarm postasını dener (16 Ekim; tercih ve onay
+ * lib/email-notify.ts'te — kapalıysa sessizce gitmez).
+ */
 export async function notifyUser(
   userId: string,
   kind: NotificationKind,
   text: (locale: Locale) => NotificationText,
   withLocalePath: (path: string, locale: Locale) => string,
+  email?: AlertEmailInput & { alertId: string },
 ): Promise<number> {
   const locale = await accountLocale(userId);
   const inbox = text(locale);
@@ -70,7 +77,7 @@ export async function notifyUser(
   } catch {
     /* tablo yok (migration 0035) — push yine gider */
   }
-  return sendToUser(userId, (deviceLocale) => {
+  const delivered = await sendToUser(userId, (deviceLocale) => {
     const push = text(deviceLocale);
     return {
       title: push.title,
@@ -79,6 +86,8 @@ export async function notifyUser(
       tag: push.tag ?? `${kind}-${Date.now()}`,
     };
   });
+  if (email) await sendAlertEmail(userId, email).catch(() => undefined);
+  return delivered;
 }
 
 /** Okunmamış sayısı — başlıktaki zil her sayfada sorar; istek içinde tek sorgu. */

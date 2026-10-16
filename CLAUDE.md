@@ -280,10 +280,16 @@ yazın 16:30, kışın 17:30 TR). ET↔UTC aritmetiği yalnız `lib/market-hours
   parmak izi, beş dakikalık süreç önbelleğiyle denetlenir). Şifre YAZAN her
   yeni yol `forgetPasswordFingerprint(userId)` çağırır; çağırmazsa çalınmış
   oturum beş dakika daha yaşar.
-- **E-posta yalnız şifre sıfırlama** (`lib/email.ts`, Resend, SDK'sız).
-  Anahtar yoksa "Şifremi Unuttum" basılmaz; her adrese aynı yanıt, gönderim
-  `after` ile; satırda bağlantının SHA-256 özeti. Bülten/bildirim e-postası
-  eklenirse önce KVKK metni değişir.
+- **E-posta: şifre sıfırlama + okuyucunun açtığı bildirim postaları**
+  (`lib/email.ts`, Resend, SDK'sız). Sıfırlamada anahtar yoksa "Şifremi
+  Unuttum" basılmaz; her adrese aynı yanıt, gönderim `after` ile; satırda
+  bağlantının SHA-256 özeti. Bildirim postası (alarm, pazartesi özeti — 16
+  Ekim) TEK KAPIDAN: `sendNotificationEmail` (`lib/email-notify.ts`) —
+  tercih açık mı, adres ÇİFT ONAYLI mı (`confirmedEmail` = bugünkü adres),
+  günlük bütçe (`EMAIL_DAILY_BUDGET`, varsayılan 80; Resend ücretsiz katmanı
+  günde 100) ve `dedupeKey`. Kendi başına `sendEmail` çağıran bildirim yolu
+  açma. Yeni posta türü = KVKK metni + şablon (`lib/notify-emails.ts`) +
+  `emailNotify` sözlüğü + çıkış kapsamı.
 - **Tek `eslint-disable` istisnası:** `components/news/NewsImage.tsx`'teki iki
   `@next/next/no-img-element`. `next/image` her haber CDN'i için
   `remotePatterns` ister; tek kapsayıcı yol `hostname: "**"` ve o,

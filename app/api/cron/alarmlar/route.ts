@@ -177,6 +177,7 @@ export async function GET(request: Request) {
         return { title: p.title, body: p.body, path: `/hisse/${hit.symbol}`, tag: p.tag };
       },
       withLocale,
+      { alertId: hit.id, kind: "price", symbol: hit.symbol, direction: hit.direction, target: hit.target, price: hit.price, firedAt: now },
     );
   }
   for (const hit of pctHits) {
@@ -199,6 +200,7 @@ export async function GET(request: Request) {
         return { title: p.title, body: p.body, path: `/hisse/${hit.symbol}`, tag: p.tag };
       },
       withLocale,
+      { alertId: hit.id, kind: "percent", symbol: hit.symbol, direction: hit.direction, thresholdPct: hit.thresholdPct, changePct: hit.changePct, firedAt: now },
     );
   }
 

@@ -456,6 +456,78 @@ export const passwordResets = pgTable(
 );
 
 /**
+ * E-POSTA TERCİHLERİ (16 Ekim) — alarm e-postası ve pazartesi özeti.
+ *
+ * İKİSİ DE VARSAYILAN KAPALI ve açık rızayla açılır (KVKK metni). Adres
+ * ÇİFT ONAYLI: kayıtta adres doğrulanmıyor, yani başkasının adresiyle hesap
+ * açan biri ona bülten yağdırabilirdi. Anahtar açılınca adrese onay
+ * bağlantısı gider (`confirmTokenHash`, 48 saat); gönderim yalnızca
+ * `confirmedEmail` hesabın BUGÜNKÜ adresine eşitken yapılır — adres
+ * değişirse onay kendiliğinden düşer.
+ *
+ * `unsubToken` girişsiz çıkış bağlantısının anahtarı (postadaki "Abonelikten
+ * Çık" ve `List-Unsubscribe`); tahmin edilemez, satır başına sabit.
+ *
+ * KENDİ TABLOSU — `notification_prefs`e sütun eklenseydi, migration canlıya
+ * inmeden yayımlanan kod o tabloyu okuyan her sorguyu kırardı (CLAUDE.md).
+ * Tablo yokken Ayarlar'daki e-posta paneli basılmaz, gönderici sessizce düşer.
+ */
+export const emailPrefs = pgTable(
+  "email_prefs",
+  {
+    userId: uuid("user_id")
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    alerts: boolean("alerts").notNull().default(false),
+    weekly: boolean("weekly").notNull().default(false),
+    confirmedEmail: text("confirmed_email"),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    confirmTokenHash: text("confirm_token_hash"),
+    confirmExpiresAt: timestamp("confirm_expires_at", { withTimezone: true }),
+    unsubToken: text("unsub_token").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("email_prefs_unsub_key").on(t.unsubToken),
+    uniqueIndex("email_prefs_confirm_key").on(t.confirmTokenHash),
+  ],
+);
+
+/**
+ * GÖNDERİM KAYDI (16 Ekim) — bildirim postalarının defteri.
+ *
+ * İki işi var: (1) TEKRARSIZLIK — `dedupeKey` benzersiz ("weekly:2026-10-19:
+ * <kullanıcı>", "alert:<alarm>:<tetik anı>"); cron yeniden koşunca aynı
+ * posta ikinci kez gitmez, satır ÖNCE yazılır (sahiplenme), gönderim düşerse
+ * silinir. (2) BÜTÇE — Resend'in ücretsiz katmanı günde 100 e-posta; bugünkü
+ * satır sayısı `EMAIL_DAILY_BUDGET`ı aşınca bildirim postası durur, şifre
+ * sıfırlamaya pay kalır (lib/email-notify.ts). Alıcı adresi YAZILMAZ.
+ * 90 gün sonra günlük cron'la silinir.
+ */
+export const emailLog = pgTable(
+  "email_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** confirm | alert | weekly */
+    kind: text("kind").notNull(),
+    dedupeKey: text("dedupe_key").notNull(),
+    sentAt: timestamp("sent_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("email_log_dedupe_key").on(t.dedupeKey),
+    index("email_log_sent_idx").on(t.sentAt),
+    index("email_log_user_idx").on(t.userId, t.sentAt),
+  ],
+);
+
+/**
  * BİLDİRİM ABONELİKLERİ (9 Ekim) — Web Push, cihaz başına bir satır.
  *
  * Fiyat alarmı yalnızca okuyucu siteyi açınca görünüyordu. Web Push ücretsiz

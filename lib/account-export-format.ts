@@ -120,6 +120,8 @@ export type AccountExport = {
     | null;
   /** Bildirim tercihleri (15 Ekim) — `null` tablo okunamadıysa ya da satır yoksa. */
   notificationPrefs?: { earningsReminder: boolean } | null;
+  /** E-posta bildirim tercihleri (16 Ekim) — `null` satır ya da tablo yoksa. */
+  emailPrefs?: { alerts: boolean; weekly: boolean; confirmedEmail: string | null; confirmedAt: string | null } | null;
   /**
    * Herkese açık profil ayarları (15 Ekim) — `null` tablo okunamadıysa ya
    * da satır hiç açılmadıysa; varsayılan zaten "gizli" ve sıfır veri.
