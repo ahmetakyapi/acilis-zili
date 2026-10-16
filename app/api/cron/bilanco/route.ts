@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, gte, inArray } from "drizzle-orm";
 import { checkBearer } from "@/lib/api-auth";
 import { db } from "@/lib/db";
-import { notificationPrefs, watchlistItems, watchlists } from "@/lib/schema";
-import { getEarningsBetween } from "@/lib/data";
+import { notificationPrefs, notifications, watchlistItems, watchlists } from "@/lib/schema";
+import { getEarningsBetweenResult } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { notifyUser } from "@/lib/notifications";
 import { getDictionary } from "@/lib/i18n";
@@ -25,6 +25,14 @@ import { withLocale } from "@/lib/i18n/routing";
  *   altı taneden fazlası "+n" ile söylenir.
  * - Tablolardan biri yoksa (migration 0033 / takip listeleri) sessizce
  *   atlanır; sonraki koşum dener.
+ *
+ * TEKRAR DENENEBİLİR (16 Ekim). Günde tek koşum ve tekrarsızlık yüzünden
+ * 16:20'de denk gelen bir sürüm (servis birkaç saniye kapalı) ya da Neon
+ * hatası o günün hatırlatmalarını sessizce yutuyordu: takvim okunamayınca
+ * `getEarningsBetween` boş liste dönüyor, uç 200 "earnings: 0" diyordu.
+ * Şimdi okuma hatası 503 (betik günlüğe yazar ve `curl --retry` ile yeniden
+ * dener) ve son 12 saatte "bilanço" bildirimi almış hesap atlanır — aynı
+ * günün ikinci koşumu kimseye ikinci bildirim göndermez.
  */
 
 export const dynamic = "force-dynamic";
@@ -40,7 +48,12 @@ export async function GET(request: Request) {
   }
 
   const tomorrow = addEtDays(todayEt(), 1);
-  const rows = await getEarningsBetween(tomorrow, tomorrow);
+  const calendar = await getEarningsBetweenResult(tomorrow, tomorrow);
+  if (!calendar.ok) {
+    console.error("[bilanço] takvim okunamadı", tomorrow);
+    return NextResponse.json({ date: tomorrow, error: "calendar" }, { status: 503 });
+  }
+  const rows = calendar.rows;
   if (rows.length === 0) return NextResponse.json({ date: tomorrow, earnings: 0 });
   const reporting = new Set(rows.map((row) => row.symbol));
 
@@ -58,9 +71,11 @@ export async function GET(request: Request) {
         ),
       )
       .where(inArray(watchlistItems.symbol, [...reporting]));
-  } catch {
-    /* notification_prefs yok (migration 0033) ya da veritabanı düştü. */
-    return NextResponse.json({ date: tomorrow, skipped: "no-table" });
+  } catch (error) {
+    /* notification_prefs yok (migration 0033) ya da veritabanı düştü —
+       ikisi de görünür olmalı: 503, betik günlüğe yazar ve yeniden dener. */
+    console.error("[bilanço] takipçiler okunamadı", error);
+    return NextResponse.json({ date: tomorrow, error: "db" }, { status: 503 });
   }
   if (watchers.length === 0) {
     return NextResponse.json({ date: tomorrow, earnings: reporting.size, users: 0 });
@@ -73,8 +88,33 @@ export async function GET(request: Request) {
     byUser.set(row.userId, set);
   }
 
+  /* Aynı günün önceki koşumunda bildirim almış hesaplar atlanır. Kutu
+     tablosu yoksa (migration 0035) bilgi yok — gönderim sürer. */
+  const since = new Date(Date.now() - 12 * 3600 * 1000);
+  let alreadySent = new Set<string>();
+  try {
+    const sent = await db
+      .select({ userId: notifications.userId })
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.kind, "earnings"),
+          gte(notifications.createdAt, since),
+          inArray(notifications.userId, [...byUser.keys()]),
+        ),
+      );
+    alreadySent = new Set(sent.map((row) => row.userId));
+  } catch {
+    /* tablo yok */
+  }
+
   let delivered = 0;
+  let skipped = 0;
   for (const [userId, symbols] of byUser) {
+    if (alreadySent.has(userId)) {
+      skipped += 1;
+      continue;
+    }
     const list = [...symbols].sort();
     delivered += await notifyUser(
       userId,
@@ -102,6 +142,7 @@ export async function GET(request: Request) {
     date: tomorrow,
     earnings: reporting.size,
     users: byUser.size,
+    skipped,
     delivered,
   });
 }

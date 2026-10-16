@@ -201,7 +201,10 @@ değil); küçültürken `toLocaleLowerCase("tr-TR")`.
    **Ekran bayat veriyi künyesiyle gösterebilir; YAZMA katmanı (teknik,
    bülten, mercek uçları) hiç kullanmaz** — sayı metne geçip kalıcı olur.
    Barlarda aynı kural: `cachedBarsUsable`. Açılış öncesi sağlayıcının gün
-   barı dünkü seanstır.
+   barı dünkü seanstır. **Paket tazeliği sembolün tazeliği değil:**
+   `packCurrent` paketteki EN YENİ işleme bakar; alarm gibi yazan yollar her
+   sembolün kendi seansını ister (`sessionReadings`, `lib/price-alerts.ts`) —
+   yoksa henüz işlem görmemiş hisse dünün yüzdesiyle alarm tetikliyordu.
 
 ## Saat: TR önce
 

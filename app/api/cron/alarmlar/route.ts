@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, lte } from "drizzle-orm";
 import { checkBearer } from "@/lib/api-auth";
 import { db } from "@/lib/db";
-import { percentAlerts, priceAlerts } from "@/lib/schema";
+import { percentAlerts, priceAlerts, symbols as symbolsTable } from "@/lib/schema";
 import { getStatus } from "@/lib/data";
 import { getQuotes } from "@/lib/providers";
-import { isDirection } from "@/lib/price-alerts";
+import type { Quote } from "@/lib/providers/types";
+import { isDirection, sessionReadings } from "@/lib/price-alerts";
 import { isPercentDirection } from "@/lib/percent-alerts";
 import {
   alertPayload,
@@ -38,6 +39,17 @@ import { notifyUser } from "@/lib/notifications";
  *   binen iki koşumdan işaretlenen alarm için ikinci bildirim gitmiyor.
  *   Yüzde alarmında `changePct` null olan sembol atlanıyor (null "sıfır"
  *   değil "önceki kapanış bilinmiyor").
+ *
+ * 16 Ekim'de üç kapı daha:
+ * - SEMBOL kendi seansını kanıtlar (`sessionReadings`): paket güncel olsa da
+ *   henüz işlem görmemiş hissenin kotasyonu dünün yüzdesini taşıyordu ve
+ *   yüzde alarmı sabah dünkü hareketle tetikleniyordu.
+ * - Bilinen ve bilinmeyen semboller AYRI paketlerde: uydurma sembolleri
+ *   ayıklama bütçesi (8 deneme) tükenince paket düşüyor, herkesin alarmı
+ *   atlanıyordu. Bilinmeyen grup düşerse yalnız kendisi düşer.
+ * - Yüzde alarmı `createdAt <= şimdi` olunca bakılır: aynı seansta yeniden
+ *   kurulan alarm ertesi seansa ertelenir (app/actions/alerts.ts →
+ *   rearmPercentAlert), aynı hareket için ikinci bildirim gitmez.
  */
 
 export const dynamic = "force-dynamic";
@@ -51,6 +63,7 @@ export async function GET(request: Request) {
 
   const status = await getStatus();
   if (status.session === "closed") return NextResponse.json({ skipped: "closed" });
+  const now = new Date();
 
   let pending: PendingAlert[];
   try {
@@ -69,9 +82,12 @@ export async function GET(request: Request) {
         ? [{ ...row, direction: row.direction, target: Number(row.target) }]
         : [],
     );
-  } catch {
-    /* Tablo yok (migration 0026) ya da veritabanı düştü — sonraki koşum dener. */
-    return NextResponse.json({ skipped: "no-table" });
+  } catch (error) {
+    /* Veritabanı düştü (tablo 0026'dan beri var). 200 dönerken bu koşum
+       "tetik yok" ile ayırt edilemiyordu ve günlüğe hiçbir şey düşmüyordu;
+       503 ile cron-alerts.sh hata yolundan yazar (16 Ekim). */
+    console.error("[alarm] bekleyen alarmlar okunamadı", error);
+    return NextResponse.json({ error: "db" }, { status: 503 });
   }
 
   /* Yüzde alarmları AYRI try/catch: tablo (migration 0033) fiyat
@@ -87,13 +103,14 @@ export async function GET(request: Request) {
         thresholdPct: percentAlerts.thresholdPct,
       })
       .from(percentAlerts)
-      .where(isNull(percentAlerts.triggeredAt));
+      .where(and(isNull(percentAlerts.triggeredAt), lte(percentAlerts.createdAt, now)));
     pendingPct = rows.flatMap((row) =>
       isPercentDirection(row.direction) && Number.isFinite(Number(row.thresholdPct))
         ? [{ ...row, direction: row.direction, thresholdPct: Number(row.thresholdPct) }]
         : [],
     );
-  } catch {
+  } catch (error) {
+    console.error("[alarm] yüzde alarmları okunamadı", error);
     pendingPct = [];
   }
 
@@ -102,22 +119,40 @@ export async function GET(request: Request) {
   const symbols = [
     ...new Set([...pending.map((alert) => alert.symbol), ...pendingPct.map((alert) => alert.symbol)]),
   ];
-  const quotes = await getQuotes(symbols, status);
-  if (!quotes.ok || quotes.stale) {
+  /* Bilinen semboller (evren tablosu) ve bilinmeyenler AYRI paketlerde —
+     gerekçe başlıkta. Bir sembol iki türün alarmında da olsa TEK pakette:
+     aynı sayı aynı kaynaktan. Sorgu düşerse hepsi tek grupta (eski hâl). */
+  let known = new Set<string>();
+  try {
+    const rows = await db
+      .select({ symbol: symbolsTable.symbol })
+      .from(symbolsTable)
+      .where(inArray(symbolsTable.symbol, symbols));
+    known = new Set(rows.map((row) => row.symbol));
+  } catch {
+    /* evren tablosu okunamadı — tek grup */
+  }
+  const groups = [symbols.filter((s) => known.has(s)), symbols.filter((s) => !known.has(s))].filter(
+    (group) => group.length > 0,
+  );
+  const data: Record<string, Quote | undefined> = {};
+  let usable = 0;
+  for (const group of groups) {
+    const pack = await getQuotes(group, status);
+    if (!pack.ok || pack.stale) continue;
+    usable += 1;
+    Object.assign(data, pack.data);
+  }
+  if (usable === 0) {
     return NextResponse.json({ pending: pending.length + pendingPct.length, skipped: "stale" });
   }
 
-  const prices: Record<string, number> = {};
-  const changes: Record<string, number | null> = {};
-  for (const [symbol, quote] of Object.entries(quotes.data)) {
-    if (!quote) continue;
-    prices[symbol] = quote.price;
-    changes[symbol] = quote.changePct;
-  }
+  /* Paket güncel olsa da her sembol KENDİ seansını kanıtlar — gerekçe
+     lib/price-alerts.ts → sessionReadings. */
+  const { prices, changes } = sessionReadings(data, status);
   const hits = findHits(pending, prices);
   const pctHits = findPercentHits(pendingPct, changes);
 
-  const now = new Date();
   let triggered = 0;
   let delivered = 0;
   for (const hit of hits) {
@@ -126,7 +161,10 @@ export async function GET(request: Request) {
       .set({ triggeredAt: now, triggeredPrice: String(hit.price) })
       .where(and(eq(priceAlerts.id, hit.id), isNull(priceAlerts.triggeredAt)))
       .returning({ id: priceAlerts.id })
-      .catch(() => []);
+      .catch((error) => {
+        console.error("[alarm] tetik yazılamadı", error);
+        return [];
+      });
     if (claimed.length === 0) continue;
     triggered += 1;
     /* Gelen kutusu + push tek girişten (lib/notifications.ts): bildirimi
@@ -147,7 +185,10 @@ export async function GET(request: Request) {
       .set({ triggeredAt: now, triggeredPct: String(hit.changePct) })
       .where(and(eq(percentAlerts.id, hit.id), isNull(percentAlerts.triggeredAt)))
       .returning({ id: percentAlerts.id })
-      .catch(() => []);
+      .catch((error) => {
+        console.error("[alarm] tetik yazılamadı", error);
+        return [];
+      });
     if (claimed.length === 0) continue;
     triggered += 1;
     delivered += await notifyUser(

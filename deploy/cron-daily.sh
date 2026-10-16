@@ -15,10 +15,12 @@
 # (bootstrap.sh bu girdiyi kendisi yazıyor; yol `current` bağı üzerinden
 # ki her sürümde betiğin o sürümdeki hâli çalışsın.)
 #
-# `CRON_TZ=UTC` ŞART. `vercel.json` içindeki `30 10 * * 1-5` ifadesi UTC'dir;
+# SAAT UTC OLMALI. `vercel.json` içindeki `30 10 * * 1-5` ifadesi UTC'dir;
 # sistem crontab'ı ise sunucunun YEREL saatini kullanır. Sunucu İstanbul'a
 # ayarlıysa aynı satır işi üç saat erken çalıştırır — yani ABD piyasası
-# açılmadan, o günün bilanço sonuçları daha yokken.
+# açılmadan, o günün bilanço sonuçları daha yokken. Ubuntu'nun cron'u
+# `CRON_TZ`yi desteklemediği için güvence sunucunun saat dilimi: bootstrap
+# UTC'ye ayarlıyor, cron-install.sh her sürümde denetliyor (16 Ekim).
 
 set -uo pipefail
 

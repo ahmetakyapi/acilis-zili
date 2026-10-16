@@ -681,6 +681,35 @@ export function normalizeUsername(raw: string): string {
     .trim();
 }
 
+/**
+ * Okuyucunun yazdığı sayı — fiyat hedefi ya da yüzde eşiği (16 Ekim).
+ *
+ * Site fiyatı dilin biçimiyle basıyor (TR "1.477,21", EN "1,477.21") ve
+ * okuyucu da öyle yazıyor. Eski okuyucu virgülü noktaya çevirip geçiyordu:
+ * Türkçe "1.500" 1,5 okunuyor, SNDK'ye kurulan 1.500 dolarlık alarm 1,50
+ * dolara yazılıyordu (asla tetiklenmez ya da hemen tetiklenir). Kural:
+ * - Dilin binlik kalıbı TAM uyuyorsa (TR `1.500` / `1.500,25`, EN `5,100` /
+ *   `5,100.75`) gruplar silinir.
+ * - Tek ayırıcı + 1–2 ya da 4+ hane ondalıktır, iki dilde de: `245,50`,
+ *   `245.50`, `2,25` — eski davranış korunuyor.
+ * - Geri kalan karışık biçim REDDEDİLİR (null): yanlış okumaktansa sormak.
+ * `$`, `%` ve boşluk yok sayılır.
+ */
+export function parseDecimalInput(raw: string, locale: "tr" | "en"): number | null {
+  const s = raw.trim().replace(/[\s$%\u00a0]/g, "");
+  if (!s) return null;
+  let normalized: string | null = null;
+  const grouped = locale === "tr" ? /^\d{1,3}(\.\d{3})+(,\d+)?$/ : /^\d{1,3}(,\d{3})+(\.\d+)?$/;
+  if (grouped.test(s)) {
+    normalized = locale === "tr" ? s.replace(/\./g, "").replace(",", ".") : s.replace(/,/g, "");
+  } else if (/^\d+([.,]\d+)?$/.test(s)) {
+    normalized = s.replace(",", ".");
+  }
+  if (normalized === null) return null;
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : null;
+}
+
 export function isValidSymbol(symbol: string): boolean {
   return /^[A-Z][A-Z.-]{0,9}$/.test(symbol);
 }

@@ -361,10 +361,21 @@ export function mergeRealtime(
   let live = 0;
   for (const [symbol, quote] of Object.entries(data)) {
     const bar = bars[symbol] ?? bars[symbol.replace("-", ".")];
+    /* AYNI ET GÜNÜ ŞART (16 Ekim). `prevClose` gecikmeli işlemin seansına
+       göre seçildi (alpaca.ts → referenceClose). Gecikmeli tape'te bugün
+       henüz işlem yoksa o referans DÜNKÜ kotasyonunki — iki gün önceki
+       kapanış — ve bugünün IEX fiyatı onun üstüne konup `tradedAt` bugüne
+       çekilince iki seansın toplam hareketi "bugün" diye basılıyor,
+       önbelleğe yazılıyor ve yüzde alarmını tetikliyordu. İşlem anı yoksa
+       referansın seansı da bilinmiyor. İkisinde de gecikmeli kotasyon kalır
+       ve kendi seansını söyler. */
+    const sameDay =
+      quote.tradedAt !== null && bar !== undefined && etParts(quote.tradedAt).dateStr === etParts(bar.minute).dateStr;
     const fresh =
       bar &&
+      sameDay &&
       nowMs - bar.minute.getTime() <= REALTIME_MAX_AGE_MS &&
-      (!quote.tradedAt || bar.minute.getTime() > quote.tradedAt.getTime());
+      bar.minute.getTime() > quote.tradedAt!.getTime();
     if (!fresh) {
       quotes[symbol] = quote;
       continue;

@@ -11,6 +11,7 @@ import {
 import { auth } from "@/auth";
 import { markInboxReadAction } from "@/app/actions/inbox";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { InboxItemLink, InboxNewBadge } from "@/components/notifications/InboxLatch";
 import { MarkInboxRead } from "@/components/notifications/MarkInboxRead";
 import { Button, EmptyState, PageHeader, Panel, PanelHeader } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
@@ -80,18 +81,16 @@ export default async function InboxPage() {
         <EmptyState scene="heroSleep" title={L.emptyTitle} hint={L.emptyHint} />
       ) : (
         <Panel>
-          <PanelHeader title={L.title} meta={unread > 0 ? L.bellUnread.replace("{n}", String(unread)) : undefined} />
+          <PanelHeader title={L.title} meta={unread > 0 ? L.unreadMeta.replace("{n}", String(unread)) : undefined} />
           <ul className="divide-y divide-line-soft">
             {inbox.items.map((item) => {
               const Icon = ICON[item.kind] ?? BellRinging;
               return (
                 <li key={item.id}>
-                  <Link
+                  <InboxItemLink
                     href={item.url}
-                    className={cn(
-                      "flex items-start gap-3.5 px-4 py-3.5 transition-colors hover:bg-primary-tint sm:px-5",
-                      !item.read && "bg-primary-tint/60",
-                    )}
+                    isNew={!item.read}
+                    className="flex items-start gap-3.5 px-4 py-3.5 transition-colors hover:bg-primary-tint sm:px-5"
                   >
                     <span
                       aria-hidden
@@ -107,11 +106,7 @@ export default async function InboxPage() {
                     <span className="min-w-0 flex-1">
                       <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                         <span className="text-base font-semibold text-strong">{item.title}</span>
-                        {!item.read && (
-                          <span className="rounded-full bg-primary px-1.5 text-[11px] font-bold leading-[18px] text-on-primary">
-                            {L.newBadge}
-                          </span>
-                        )}
+                        <InboxNewBadge isNew={!item.read} label={L.newBadge} />
                       </span>
                       <span className="mt-0.5 block text-small leading-relaxed text-body [overflow-wrap:anywhere]">
                         {item.body}
@@ -120,7 +115,7 @@ export default async function InboxPage() {
                         {L.kinds[item.kind]} · {dayFormat.format(item.createdAt)} {formatInZone(item.createdAt, zone)}
                       </span>
                     </span>
-                  </Link>
+                  </InboxItemLink>
                 </li>
               );
             })}

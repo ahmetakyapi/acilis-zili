@@ -139,7 +139,7 @@ export default async function AppLayout({
           <>
           {/* Zil yalnız oturumluya: misafirin gelen kutusu yok. */}
           {session?.user && (
-            <NotificationBell unread={unread} label={t.inbox.bell} unreadLabel={t.inbox.bellUnread} />
+            <NotificationBell unread={unread} label={t.inbox.bell} unreadLabel={t.inbox.bellUnread} unreadOneLabel={t.inbox.bellUnreadOne} />
           )}
           <AccountMenu
             signedIn={Boolean(session?.user)}

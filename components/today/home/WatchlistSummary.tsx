@@ -16,7 +16,8 @@ import { type Dictionary, type Locale } from "@/lib/i18n";
 import { cn, directionOf, directionText, formatPercent, formatPrice } from "@/lib/utils";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { getChartBarsMulti } from "@/lib/providers";
-import { getUserAlerts, settleAlerts, type PriceAlert } from "@/lib/price-alerts";
+import { getUserAlerts, type PriceAlert } from "@/lib/price-alerts";
+import { settleAlerts } from "@/lib/alert-settle";
 import { BellSimpleRinging, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import alertStyles from "@/components/alerts/PriceAlerts.module.css";
 
@@ -81,12 +82,7 @@ export async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dicti
     const status = await getStatus();
     const quotes = pendingAlertSymbols.length > 0 ? await getQuotes(pendingAlertSymbols, status) : null;
     const alerts = quotes?.ok
-      ? await settleAlerts(
-          session.user.id,
-          alertData.alerts,
-          Object.fromEntries(Object.entries(quotes.data).map(([symbol, quote]) => [symbol, quote?.price])),
-          !quotes.stale,
-        )
+      ? await settleAlerts(session.user.id, alertData.alerts, quotes.data, status, !quotes.stale)
       : alertData.alerts;
     return (
       <Panel>
@@ -126,12 +122,7 @@ export async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dicti
   /* Şekil sayıyla aynı seansı anlatmalı — gerekçe `IndexStrip` içinde. */
   const sparkOk = result.ok && !result.stale;
   const alerts = result.ok
-    ? await settleAlerts(
-        session.user.id,
-        alertData.alerts,
-        Object.fromEntries(Object.entries(result.data).map(([symbol, quote]) => [symbol, quote?.price])),
-        !result.stale,
-      )
+    ? await settleAlerts(session.user.id, alertData.alerts, result.data, status, !result.stale)
     : alertData.alerts;
 
   return (

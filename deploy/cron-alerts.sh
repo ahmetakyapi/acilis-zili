@@ -44,6 +44,12 @@ if [[ "$status" != "200" ]]; then
 	logger -t acilis-alarm -p user.err "basarisiz (http ${status}): ${body:0:400}"
 	exit 1
 fi
+# Bayat paket = alarmlar DEĞERLENDİRİLMİYOR (sağlayıcı düşük ya da anahtar
+# süresi dolmuş). "Tetik yok"tan ayırt edilebilsin diye uyarı düzeyinde
+# yazılıyor; kesinti boyunca saatte ~12 satır — istenen sinyal bu.
+if [[ "$body" == *'"skipped":"stale"'* ]]; then
+	logger -t acilis-alarm -p user.warning "atlandi (bayat kotasyon): ${body:0:400}"
+fi
 if [[ "$body" == *'"triggered":'[1-9]* ]]; then
 	logger -t acilis-alarm -p user.info "tetiklendi: ${body:0:400}"
 fi

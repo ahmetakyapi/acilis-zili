@@ -12,7 +12,8 @@ import { DataStamp, PageHeader, Panel, PanelHeader } from "@/components/ui/primi
 import { AlertRow, PercentAlertRow } from "@/components/alerts/PriceAlertButton";
 import alertStyles from "@/components/alerts/PriceAlerts.module.css";
 import { getUserPercentAlerts } from "@/lib/percent-alerts";
-import { getUserAlerts, settleAlerts } from "@/lib/price-alerts";
+import { getUserAlerts } from "@/lib/price-alerts";
+import { settleAlerts } from "@/lib/alert-settle";
 import { getUserSubscriptions, pushPublicKey } from "@/lib/push";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { getStatus, getSymbolNames, getUserWatchlists } from "@/lib/data";
@@ -90,7 +91,8 @@ export default async function WatchlistPage() {
   const alerts = await settleAlerts(
     session.user.id,
     alertData.alerts,
-    prices,
+    quotesResult?.ok ? quotesResult.data : {},
+    status,
     Boolean(quotesResult?.ok && !quotesResult.stale),
   );
   /* Hedefe ulaşanlar üstte: sayfaya gelme sebebi çoğu zaman onlar. */

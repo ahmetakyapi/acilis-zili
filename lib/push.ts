@@ -1,4 +1,5 @@
 import webpush from "web-push";
+import { z } from "zod";
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { pushSubscriptions } from "@/lib/schema";
@@ -46,6 +47,43 @@ export function pushConfigured(): boolean {
   return configured;
 }
 
+/**
+ * Uç adres kabul edilebilir mi — https, alan adı, standart port.
+ *
+ * Web Push standardı keyfi uca izin veriyor ve allowlist UnifiedPush gibi
+ * meşru dağıtıcıları kırardı (gerekçe aşağıda, MAX_PUSH_DEVICES). Ama hiçbir
+ * gerçek push servisi IP adresiyle ya da `localhost`la abone vermiyor (FCM,
+ * Mozilla, Apple, WNS, UnifiedPush hep alan adı): IP-literal uç yalnızca
+ * sunucuyu kendi iç ağına ya da makinesine POST attırmaya yarar. Reddedilir.
+ */
+export function pushEndpointAllowed(value: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:" || url.username || url.password) return false;
+  if (url.port && url.port !== "443") return false;
+  const host = url.hostname.toLowerCase();
+  if (host === "localhost" || host.endsWith(".localhost") || !host.includes(".")) return false;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.startsWith("[")) return false;
+  return true;
+}
+
+/**
+ * Tarayıcıdan gelen abonelik nesnesi — güvenilmez. Ayarlar eylemi
+ * (app/actions/notifications.ts) ve service worker'ın yenileme ucu
+ * (app/api/push/yenile) AYNI şemadan geçer.
+ */
+export const pushSubscriptionSchema = z.object({
+  endpoint: z.string().url().max(1000).refine(pushEndpointAllowed),
+  keys: z.object({
+    p256dh: z.string().regex(/^[A-Za-z0-9_-]+=*$/).max(200),
+    auth: z.string().regex(/^[A-Za-z0-9_-]+=*$/).max(100),
+  }),
+});
+
 export function pushPublicKey(): string | null {
   return pushConfigured() ? process.env.VAPID_PUBLIC_KEY ?? null : null;
 }
@@ -91,6 +129,55 @@ export async function getUserSubscriptions(
 }
 
 /**
+ * TEK TESLİM — kesin süreli, yönlendirmesiz, gövdesiz (16 Ekim).
+ *
+ * `webpush.sendNotification` çıplak `https.request` açıyor: süre yalnızca
+ * istenirse ve BOŞTA kalma süresi (bayt bayt damlatan sunucu onu da
+ * atlatıyor), yanıt gövdesi ise sınırsız biriktiriliyor (`responseText +=
+ * chunk`). Uç adres okuyucudan geliyor; kendi sunucusunu abone eden biri
+ * "201" deyip sonsuz bir gövde akıtarak üretim sürecinin belleğini
+ * doldurabiliyor ya da isteği asılı tutup alarm taramasını durdurabiliyordu.
+ * Kütüphane yalnız şifreleme ve VAPID başlıkları için kalıyor; isteği biz
+ * atıyoruz: toplam süre tavanı, `redirect: "manual"` (iç adrese yönlendirme
+ * izlenmez) ve gövde OKUNMADAN kapatılıyor — durum kodu yeterli.
+ *
+ * Dönen değer HTTP durum kodu; ağ hatası ya da süre aşımı 0 (geçici sayılır).
+ */
+const PUSH_TIMEOUT_MS = 10_000;
+
+export async function deliverPush(
+  subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
+  body: string,
+): Promise<number> {
+  if (!pushEndpointAllowed(subscription.endpoint)) return 410;
+  const details = webpush.generateRequestDetails(subscription, body, {
+    /* Bir saat içinde teslim edilemeyen fiyat bildirimi artık haber değil;
+       servis onu tutmasın. `urgency` telefonu uykudan uyandırmaya izin
+       veriyor. */
+    TTL: 3600,
+    urgency: "high",
+  });
+  const headers: Record<string, string> = {};
+  for (const [key, value] of Object.entries(details.headers)) {
+    if (key.toLowerCase() !== "content-length" && value != null) headers[key] = String(value);
+  }
+  try {
+    const response = await fetch(details.endpoint, {
+      method: details.method,
+      headers,
+      body: details.body ? new Uint8Array(details.body) : undefined,
+      redirect: "manual",
+      cache: "no-store",
+      signal: AbortSignal.timeout(PUSH_TIMEOUT_MS),
+    });
+    await response.body?.cancel().catch(() => undefined);
+    return response.status;
+  } catch {
+    return 0;
+  }
+}
+
+/**
  * Bir hesabın bütün cihazlarına gönderir. Ölü abonelik (404/410: kullanıcı
  * izni geri aldı ya da tarayıcı verisini sildi) siliniyor; geçici hata
  * (ağ, 5xx) satırı yerinde bırakıyor. Dönen sayı başarılı teslim.
@@ -116,20 +203,12 @@ export async function sendToUser(
     JSON.stringify(typeof payload === "function" ? payload(locale === "en" ? "en" : "tr") : payload);
   await Promise.all(
     rows.map(async (row) => {
-      try {
-        await webpush.sendNotification(
-          { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
-          bodyFor(row.locale),
-          /* Bir saat içinde teslim edilemeyen fiyat bildirimi artık haber
-             değil; servis onu tutmasın. `urgency` telefonu uykudan
-             uyandırmaya izin veriyor. */
-          { TTL: 3600, urgency: "high" },
-        );
-        delivered.push(row.id);
-      } catch (error) {
-        const status = (error as { statusCode?: number }).statusCode;
-        if (status === 404 || status === 410) dead.push(row.id);
-      }
+      const status = await deliverPush(
+        { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
+        bodyFor(row.locale),
+      );
+      if (status >= 200 && status < 300) delivered.push(row.id);
+      else if (status === 404 || status === 410) dead.push(row.id);
     }),
   );
   try {
@@ -156,17 +235,21 @@ export async function sendToUser(
  */
 const MAX_PUSH_DEVICES = 12;
 
+/**
+ * Kaydet ya da tazele. `changed`: satır bu hesaba YENİ geldi (ilk kayıt ya da
+ * başka hesaptan taşındı) — ekrandaki cihaz sayısı ancak o zaman değişir.
+ */
 export async function saveSubscription(
   userId: string,
   input: { endpoint: string; p256dh: string; auth: string; device: string | null; locale: Locale },
-): Promise<boolean> {
+): Promise<{ ok: boolean; changed: boolean }> {
   try {
     const existing = await db
       .select({ endpoint: pushSubscriptions.endpoint })
       .from(pushSubscriptions)
       .where(eq(pushSubscriptions.userId, userId));
     const known = existing.some((row) => row.endpoint === input.endpoint);
-    if (!known && existing.length >= MAX_PUSH_DEVICES) return false;
+    if (!known && existing.length >= MAX_PUSH_DEVICES) return { ok: false, changed: false };
     await db
       .insert(pushSubscriptions)
       .values({ userId, ...input })
@@ -174,10 +257,37 @@ export async function saveSubscription(
         target: pushSubscriptions.endpoint,
         set: { userId, p256dh: input.p256dh, auth: input.auth, device: input.device, locale: input.locale, createdAt: new Date() },
       });
-    return true;
+    return { ok: true, changed: !known };
   } catch {
-    return false;
+    return { ok: false, changed: false };
   }
+}
+
+/**
+ * Tarayıcı aboneliği kendisi yeniledi (`pushsubscriptionchange`, public/sw.js).
+ * Eski satır BU hesabınsa yerinde güncellenir (cihaz adı ve dil korunur);
+ * değilse yeni satır olarak kaydedilir. Yenilenmezse sunucu eski adrese
+ * göndermeye devam ediyor, 410 alıp satırı siliyor ve okuyucu sessizce
+ * bildirimsiz kalıyordu.
+ */
+export async function replaceSubscription(
+  userId: string,
+  oldEndpoint: string | null,
+  input: { endpoint: string; p256dh: string; auth: string; device: string | null; locale: Locale },
+): Promise<boolean> {
+  if (oldEndpoint && oldEndpoint !== input.endpoint) {
+    try {
+      const moved = await db
+        .update(pushSubscriptions)
+        .set({ endpoint: input.endpoint, p256dh: input.p256dh, auth: input.auth })
+        .where(and(eq(pushSubscriptions.userId, userId), eq(pushSubscriptions.endpoint, oldEndpoint)))
+        .returning({ id: pushSubscriptions.id });
+      if (moved.length > 0) return true;
+    } catch {
+      /* yeni uç başka bir satırda zaten varsa (benzersiz dizin) aşağıdaki upsert halleder */
+    }
+  }
+  return (await saveSubscription(userId, input)).ok;
 }
 
 export async function removeSubscription(userId: string, endpoint: string): Promise<void> {

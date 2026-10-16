@@ -11,7 +11,9 @@ import styles from "../stock.module.css";
 import { FavoriteToggle } from "@/components/stock/FavoriteToggle";
 import { PriceAlertButton } from "@/components/alerts/PriceAlertButton";
 import { getUserPercentAlerts, type PercentAlert } from "@/lib/percent-alerts";
-import { getUserAlerts, settleAlerts } from "@/lib/price-alerts";
+import { getUserAlerts } from "@/lib/price-alerts";
+import { pushConfigured } from "@/lib/push";
+import { settleAlerts } from "@/lib/alert-settle";
 import { HeaderReadout } from "@/components/stock/ChartReadingContext";
 import { ChangePill, DataStamp, Skeleton } from "@/components/ui/primitives";
 import { db } from "@/lib/db";
@@ -155,7 +157,7 @@ export async function StockHeader({
     alertsAvailable = available;
     const own = alerts.filter((alert) => alert.symbol === symbol);
     symbolAlerts = quoteResult.ok
-      ? await settleAlerts(session.user.id, own, { [symbol]: quoteResult.data.price }, !quoteResult.stale)
+      ? await settleAlerts(session.user.id, own, { [symbol]: quoteResult.data }, status, !quoteResult.stale)
       : own;
     percentAvailable = pct.available;
     symbolPercentAlerts = pct.alerts.filter((alert) => alert.symbol === symbol);
@@ -254,6 +256,7 @@ export async function StockHeader({
                   alerts={symbolAlerts}
                   percentAlerts={symbolPercentAlerts}
                   percentAvailable={percentAvailable}
+                  note={pushConfigured() ? t.notifications.alarmNote : t.priceAlerts.note}
                   locale={locale}
                   labels={t.priceAlerts}
                 />

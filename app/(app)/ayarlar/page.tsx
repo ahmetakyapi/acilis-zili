@@ -9,7 +9,7 @@ import {
   SlidersHorizontal,
 } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
-import { signOutAction } from "@/app/actions/auth";
+import { SignOutForm } from "@/components/auth/SignOutForm";
 import { DeleteAccount } from "@/components/auth/DeleteAccount";
 import { ChangePassword } from "@/components/auth/ChangePassword";
 import { AvatarPicker } from "@/components/auth/AvatarPicker";
@@ -82,7 +82,7 @@ export default async function SettingsPage() {
             <ChangePassword labels={t.passwordChange} />
           </div>
 
-          <form action={signOutAction} className="border-t border-line-soft pt-3">
+          <SignOutForm className="border-t border-line-soft pt-3">
             <button
               type="submit"
               className="inline-flex h-10 items-center gap-2 rounded-(--radius-md) px-3 text-sm font-medium text-body transition-colors hover:bg-surface-elevated hover:text-strong"
@@ -90,7 +90,7 @@ export default async function SettingsPage() {
               <SignOut weight="duotone" size={16} />
               {t.nav.signOut}
             </button>
-          </form>
+          </SignOutForm>
 
         </div>
       </Panel>

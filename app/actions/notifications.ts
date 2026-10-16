@@ -1,30 +1,21 @@
 "use server";
 
-import { z } from "zod";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { getLocale, getDictionary } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
 import { rateLimit } from "@/lib/rate-limit";
-import { pushConfigured, removeSubscription, saveSubscription, sendToUser } from "@/lib/push";
+import { pushConfigured, pushSubscriptionSchema, removeSubscription, saveSubscription, sendToUser } from "@/lib/push";
 import { notificationPrefs } from "@/lib/schema";
 
 /**
  * Bildirim aboneliği eylemleri — Ayarlar → Bildirimler
  * (components/notifications/PushSettings.tsx). Gerekçe lib/push.ts.
  *
- * Abonelik nesnesi tarayıcıdan geliyor ve güvenilmez: uç adres yalnızca
- * https ve makul uzunlukta, anahtarlar base64url. Satır OTURUMUN hesabına
- * yazılıyor, formdan gelen kimliğe değil.
+ * Abonelik nesnesi tarayıcıdan geliyor ve güvenilmez: şema
+ * lib/push.ts → pushSubscriptionSchema (https, alan adlı uç, base64url
+ * anahtarlar). Satır OTURUMUN hesabına yazılıyor, formdan gelen kimliğe değil.
  */
-
-const SubscriptionInput = z.object({
-  endpoint: z.string().url().max(1000).refine((value) => value.startsWith("https://")),
-  keys: z.object({
-    p256dh: z.string().regex(/^[A-Za-z0-9_-]+=*$/).max(200),
-    auth: z.string().regex(/^[A-Za-z0-9_-]+=*$/).max(100),
-  }),
-});
 
 async function userId(): Promise<string | null> {
   const session = await auth();
@@ -34,20 +25,19 @@ async function userId(): Promise<string | null> {
 export async function subscribePushAction(
   subscription: unknown,
   device: string,
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: boolean; changed: boolean }> {
   const id = await userId();
-  if (!id || !pushConfigured()) return { ok: false };
-  if (!rateLimit(`push-sub:${id}`, 10, 60_000).allowed) return { ok: false };
-  const parsed = SubscriptionInput.safeParse(subscription);
-  if (!parsed.success) return { ok: false };
-  const ok = await saveSubscription(id, {
+  if (!id || !pushConfigured()) return { ok: false, changed: false };
+  if (!rateLimit(`push-sub:${id}`, 10, 60_000).allowed) return { ok: false, changed: false };
+  const parsed = pushSubscriptionSchema.safeParse(subscription);
+  if (!parsed.success) return { ok: false, changed: false };
+  return saveSubscription(id, {
     endpoint: parsed.data.endpoint,
     p256dh: parsed.data.keys.p256dh,
     auth: parsed.data.keys.auth,
     device: device.slice(0, 60) || null,
     locale: await getLocale(),
   });
-  return { ok };
 }
 
 export async function unsubscribePushAction(endpoint: string): Promise<{ ok: boolean }> {

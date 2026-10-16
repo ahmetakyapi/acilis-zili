@@ -141,3 +141,19 @@ for (const size of PWA_SIZES) {
     .toFile(path.join(ROOT, file));
   console.log(`${file} yazıldı`);
 }
+
+/**
+ * Bildirim rozeti (16 Ekim) — Android'in durum çubuğunda ve bildirim
+ * başlığında gösterdiği küçük işaret (public/sw.js → `badge`). Sistem görseli
+ * YALNIZ alfa kanalından okuyup tek renge boyuyor: zemin saydam, zil beyaz.
+ * Önceden opak maskeli ikon veriliyordu ve rozet düz beyaz bir kare
+ * çıkıyordu. 96 piksel = Android'in 24dp rozetinin 4 katı; zil kutuyu
+ * kenarlarda ~%10 boşlukla dolduruyor (küçük boyda okunsun).
+ */
+const BADGE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="26 28 204 204" width="96" height="96" fill="#ffffff">${BELL}
+</svg>`;
+await sharp(Buffer.from(BADGE_SVG), { density: 384 })
+  .resize(96, 96)
+  .png({ compressionLevel: 9 })
+  .toFile(path.join(ROOT, "public/badge-96.png"));
+console.log("public/badge-96.png yazıldı");

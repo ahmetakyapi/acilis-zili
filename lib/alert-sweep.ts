@@ -1,5 +1,5 @@
 import { alertCrossed, type AlertDirection } from "@/lib/price-alerts";
-import { percentCrossed, type PercentDirection } from "@/lib/percent-alerts";
+import { percentCrossed, thresholdDigits, type PercentDirection } from "@/lib/percent-alerts";
 import { formatPercent, formatPrice } from "@/lib/utils";
 import { withLocale } from "@/lib/i18n/routing";
 import type { Locale } from "@/lib/i18n/config";
@@ -94,7 +94,10 @@ export function percentPayload(
 ): PushPayload {
   const body = (hit.direction === "up" ? t.percentUp : t.percentDown)
     .replace("{symbol}", hit.symbol)
-    .replace("{threshold}", formatPercent(hit.direction === "up" ? hit.thresholdPct : -hit.thresholdPct, locale, 1))
+    .replace(
+      "{threshold}",
+      formatPercent(hit.direction === "up" ? hit.thresholdPct : -hit.thresholdPct, locale, thresholdDigits(hit.thresholdPct)),
+    )
     .replace("{change}", formatPercent(hit.changePct, locale, 2));
   return {
     title: t.alertTitle.replace("{symbol}", hit.symbol),

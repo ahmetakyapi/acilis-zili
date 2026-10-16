@@ -175,8 +175,8 @@ const nextConfig: NextConfig = {
       {
         /* PWA ikonları da (icon-192/512 + maskable) aynı varsayılana
            düşüyordu; adları sabit, içerik `build:favicon` ile yılda birkaç
-           kez değişir. */
-        source: "/:icon(icon-192.png|icon-512.png|icon-maskable-192.png|icon-maskable-512.png)",
+           kez değişir. Bildirim rozeti (badge-96, 16 Ekim) aynı aile. */
+        source: "/:icon(icon-192.png|icon-512.png|icon-maskable-192.png|icon-maskable-512.png|badge-96.png)",
         headers: [
           {
             key: "Cache-Control",

@@ -10,7 +10,9 @@ import {
   unsubscribePushAction,
 } from "@/app/actions/notifications";
 import { Button } from "@/components/ui/primitives";
+import { cn } from "@/lib/utils";
 import type { Dictionary } from "@/lib/i18n";
+import { deviceLabel } from "@/lib/push-device";
 
 /**
  * Ayarlar → Bildirimler. Gerekçe lib/push.ts ve public/sw.js.
@@ -22,9 +24,17 @@ import type { Dictionary } from "@/lib/i18n";
  *
  * Durum tarayıcıdan okunuyor, sunucudan değil: aynı hesabın telefonu açık,
  * bilgisayarı kapalı olabilir. Sunucudaki sayı (`devices`) yalnızca künye.
+ *
+ * AMA "AÇIK" SUNUCUYLA EŞİTLENEREK SÖYLENİR (16 Ekim). Durum yalnız
+ * tarayıcıdan okunurken iki yalan mümkündü: (1) ortak bir cihazda A çıkıp B
+ * girince tarayıcıdaki abonelik A'nın satırına bağlı kalıyor, panel B'ye
+ * "Açık" diyor, bildirimler A'ya gidiyordu; (2) VAPID anahtarı değişince eski
+ * abonelik ölü ama tarayıcıda duruyor. Panel açılınca anahtar karşılaştırılır
+ * (uyuşmazsa abonelik bırakılır, "Kapalı") ve abonelik sessizce bu hesaba
+ * yeniden yazılır — eylem upsert, aynı satırsa hiçbir şey değişmez.
  */
 
-type State = "checking" | "unsupported" | "denied" | "off" | "on" | "busy";
+type State = "checking" | "unsupported" | "denied" | "off" | "on" | "busy" | "disabling";
 type Flash = { kind: "ok" | "error"; text: string } | null;
 
 /** VAPID genel anahtarı base64url → `applicationServerKey`in beklediği bayt dizisi. */
@@ -36,12 +46,18 @@ function keyBytes(base64url: string): Uint8Array<ArrayBuffer> {
   return out;
 }
 
-/** Cihaz künyesi — listede hangi satırın hangi cihaz olduğunu söylemeye yeter. */
+/** Cihaz künyesi — tek kaynak lib/push-device.ts (yenileme ucu da okur). */
 function deviceName(): string {
-  const ua = navigator.userAgent;
-  const os = /iPhone|iPad/.test(ua) ? (/iPad/.test(ua) ? "iPad" : "iPhone") : /Android/.test(ua) ? "Android" : /Mac OS X/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : /Linux/.test(ua) ? "Linux" : "";
-  const browser = /Edg\//.test(ua) ? "Edge" : /Firefox\//.test(ua) ? "Firefox" : /Chrome\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : "";
-  return [browser, os].filter(Boolean).join(" · ");
+  return deviceLabel(navigator.userAgent);
+}
+
+/** Abonelik bu sunucunun BUGÜNKÜ anahtarıyla mı alınmış? Bilinmiyorsa evet say. */
+function sameKey(subscription: PushSubscription, publicKey: string): boolean {
+  const current = subscription.options?.applicationServerKey;
+  if (!current) return true;
+  const a = new Uint8Array(current);
+  const b = keyBytes(publicKey);
+  return a.length === b.length && a.every((value, i) => value === b[i]);
 }
 
 function supported(): boolean {
@@ -93,12 +109,27 @@ export function PushSettings({
       if (!supported()) return alive && setState("unsupported");
       if (Notification.permission === "denied") return alive && setState("denied");
       const subscription = await currentSubscription().catch(() => null);
-      if (alive) setState(subscription && Notification.permission === "granted" ? "on" : "off");
+      if (!subscription || Notification.permission !== "granted" || !publicKey) {
+        if (alive) setState("off");
+        return;
+      }
+      if (!sameKey(subscription, publicKey)) {
+        await subscription.unsubscribe().catch(() => undefined);
+        if (alive) setState("off");
+        return;
+      }
+      const result = await subscribePushAction(subscription.toJSON(), deviceName()).catch(() => ({
+        ok: false,
+        changed: false,
+      }));
+      if (!alive) return;
+      setState(result.ok ? "on" : "off");
+      if (result.changed) router.refresh();
     })();
     return () => {
       alive = false;
     };
-  }, []);
+  }, [publicKey, router]);
 
   async function enable() {
     if (!publicKey) return;
@@ -112,8 +143,13 @@ export function PushSettings({
       }
       const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
       await navigator.serviceWorker.ready;
+      let existing = await registration.pushManager.getSubscription();
+      if (existing && !sameKey(existing, publicKey)) {
+        await existing.unsubscribe().catch(() => undefined);
+        existing = null;
+      }
       const subscription =
-        (await registration.pushManager.getSubscription()) ??
+        existing ??
         (await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(publicKey) }));
       const result = await subscribePushAction(subscription.toJSON(), deviceName());
       if (!result.ok) {
@@ -128,19 +164,24 @@ export function PushSettings({
     }
   }
 
+  /* ÖNCE TARAYICI (16 Ekim). Gerçek anahtar tarayıcıdaki abonelik: o
+     bırakılınca push servisi bu cihaza hiçbir şey taşımaz, sunucudaki satır
+     ilk gönderimde 410 alıp kendiliğinden silinir. Sıra tersken sunucu
+     çağrısı düşünce (çevrimdışı, sürüm değişti) tarayıcı aboneliği yerinde
+     kalıyor, ekran "Kapalı" derken bildirimler gelmeye devam ediyordu. */
   async function disable() {
     setFlash(null);
-    setState("busy");
+    setState("disabling");
+    let subscription: PushSubscription | null = null;
     try {
-      const subscription = await currentSubscription();
-      if (subscription) {
-        await unsubscribePushAction(subscription.endpoint);
-        await subscription.unsubscribe();
-      }
+      subscription = await currentSubscription();
+      if (subscription && !(await subscription.unsubscribe())) throw new Error("unsubscribe");
     } catch {
-      // Tarayıcı tarafı düşse de sunucudaki satır silindi; bir sonraki
-      // gönderimde servis 410 dönerse o da temizlenir.
+      setState("on");
+      setFlash({ kind: "error", text: labels.failed });
+      return;
     }
+    if (subscription) await unsubscribePushAction(subscription.endpoint).catch(() => undefined);
     setState("off");
     router.refresh();
   }
@@ -172,19 +213,24 @@ export function PushSettings({
         note(labels.denied)
       ) : (
         <div className="flex flex-wrap items-center gap-2">
-          {state === "on" ? (
+          {state === "on" || state === "disabling" ? (
             <>
               <span className="inline-flex items-center gap-1.5 pr-1 text-sm font-semibold text-up">
                 <BellRinging weight="fill" size={16} />
                 {labels.on}
               </span>
-              <Button type="button" variant="ghost" onClick={test} aria-disabled={testing || undefined}>
+              <Button type="button" variant="ghost" onClick={test} aria-disabled={testing || state === "disabling" || undefined}>
                 <PaperPlaneTilt weight="duotone" size={15} />
                 {labels.test}
               </Button>
-              <Button type="button" variant="ghost" onClick={disable}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={state === "on" ? disable : undefined}
+                aria-disabled={state === "disabling" || undefined}
+              >
                 <BellSlash weight="duotone" size={15} />
-                {labels.disable}
+                {state === "disabling" ? labels.disabling : labels.disable}
               </Button>
             </>
           ) : (
@@ -200,7 +246,7 @@ export function PushSettings({
           )}
           {devices > 0 && (
             <span className="text-small text-muted tabular-nums">
-              {labels.devices.replace("{n}", String(devices))}
+              {(devices === 1 ? labels.devicesOne : labels.devices).replace("{n}", String(devices))}
             </span>
           )}
         </div>
@@ -225,16 +271,22 @@ export function PushSettings({
         </label>
       )}
 
-      {flash && (
-        <p role="status" className="flex items-start gap-2 text-small leading-relaxed text-body">
-          {flash.kind === "ok" ? (
-            <CheckCircle weight="fill" size={16} className="mt-0.5 shrink-0 text-up" />
-          ) : (
-            <WarningCircle weight="fill" size={16} className="mt-0.5 shrink-0 text-down" />
-          )}
-          {flash.text}
-        </p>
-      )}
+      {/* Canlı bölge HEP basılı, yalnız içeriği değişir: sonradan eklenen
+          `role="status"` düğümünü NVDA/JAWS çoğu zaman okumuyordu. */}
+      <p role="status" aria-live="polite" className={cn("items-start gap-2 text-small leading-relaxed text-body", flash ? "flex" : "sr-only")}>
+        {flash ? (
+          <>
+            {flash.kind === "ok" ? (
+              <CheckCircle weight="fill" size={16} className="mt-0.5 shrink-0 text-up" />
+            ) : (
+              <WarningCircle weight="fill" size={16} className="mt-0.5 shrink-0 text-down" />
+            )}
+            {flash.text}
+          </>
+        ) : state === "on" ? (
+          labels.on
+        ) : null}
+      </p>
     </div>
   );
 }

@@ -1,10 +1,13 @@
 import { cache } from "react";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { isSessionTrade, type MarketStatus } from "@/lib/market-hours";
+import type { Quote } from "@/lib/providers/types";
 import { priceAlerts } from "@/lib/schema";
 
 /**
- * Fiyat alarmları — okuma ve değerlendirme. Yazma `app/actions/alerts.ts`.
+ * Fiyat alarmları — okuma ve saf değerlendirme. Yazma `app/actions/alerts.ts`,
+ * sayfada tetik lib/alert-settle.ts, tarama app/api/cron/alarmlar.
  *
  * Gerekçe ve tetik anlamı şemada (`lib/schema.ts` → priceAlerts). Kısaca:
  * alarm, okuyucunun güncel bir kotasyon gördüğü sayfada değerlendiriliyor
@@ -70,6 +73,39 @@ export function alertProgress(
   return Math.min(1, Math.max(0, done));
 }
 
+/** Değerlendirmenin bir kotasyondan okuduğu üç alan. */
+export type SessionQuote = Pick<Quote, "price" | "changePct" | "tradedAt">;
+
+/**
+ * SEMBOL BAŞINA SEANS KAPISI (16 Ekim) — alarm yalnız BU seansın işlemini
+ * taşıyan kotasyonla değerlendirilir.
+ *
+ * Tazelik paketin geneline soruluyordu (`packCurrent`, paketteki EN YENİ
+ * işlem). Tarama bütün bekleyen sembolleri tek pakette istiyor: ön seansta
+ * NVDA işlem görünce paket "güncel" sayılıyor, henüz işlem görmemiş bir
+ * hissenin kotasyonu ise hâlâ DÜNÜN işlemini ve dünün yüzdesini taşıyor.
+ * "Bugün %5 düşerse haber ver" alarmı sabah dünkü düşüşle tetikleniyor ve
+ * okuyucunun telefonuna yanlış bir haber gidiyordu. 04:00–04:15 ET arasında
+ * paket kuralı işlemlere hiç bakmıyor (`closedResponseCurrent`) — o pencerede
+ * de her kotasyon önceki seansındı.
+ *
+ * Tek ölçü ekranla aynı: `isSessionTrade` (CLAUDE.md "Veri dürüstlüğü" 4).
+ * Seansa ait olmayan sembol atlanır; ilk işlemi gelince değerlendirilir.
+ */
+export function sessionReadings(
+  quotes: Record<string, SessionQuote | null | undefined>,
+  status: MarketStatus,
+): { prices: Record<string, number>; changes: Record<string, number | null> } {
+  const prices: Record<string, number> = {};
+  const changes: Record<string, number | null> = {};
+  for (const [symbol, quote] of Object.entries(quotes)) {
+    if (!quote || !isSessionTrade(quote.tradedAt, status)) continue;
+    prices[symbol] = quote.price;
+    changes[symbol] = quote.changePct;
+  }
+  return { prices, changes };
+}
+
 function toAlert(row: typeof priceAlerts.$inferSelect): PriceAlert | null {
   if (!isDirection(row.direction)) return null;
   const target = Number(row.target);
@@ -115,49 +151,4 @@ export const getUserAlerts = cache(
   },
 );
 
-/**
- * Bekleyen alarmları elimizdeki fiyatlarla değerlendirir; hedefi geçenleri
- * işaretler ve listenin GÜNCEL hâlini döndürür.
- *
- * `fresh: false` gelirse hiçbir şey yazılmıyor: bayat paket (önbellekteki
- * önceki seans) alarmı tetiklemez — CLAUDE.md "Veri dürüstlüğü" 4, yazma
- * katmanı bayat kotasyon kullanmaz. Yazma başarısız olursa liste yine
- * işaretli döner; bir sonraki kontrol aynı yazmayı yeniden dener.
- */
-export async function settleAlerts(
-  userId: string,
-  alerts: PriceAlert[],
-  prices: Record<string, number | undefined>,
-  fresh: boolean,
-): Promise<PriceAlert[]> {
-  if (!fresh) return alerts;
-  const now = new Date();
-  const hits = alerts.filter((alert) => {
-    const price = prices[alert.symbol];
-    return !alert.triggeredAt && price != null && price > 0 && alertCrossed(alert, price);
-  });
-  if (hits.length === 0) return alerts;
-
-  await Promise.all(
-    hits.map((alert) =>
-      db
-        .update(priceAlerts)
-        .set({ triggeredAt: now, triggeredPrice: String(prices[alert.symbol]) })
-        .where(
-          and(
-            eq(priceAlerts.id, alert.id),
-            eq(priceAlerts.userId, userId),
-            isNull(priceAlerts.triggeredAt),
-          ),
-        )
-        .catch(() => undefined),
-    ),
-  );
-
-  const hitIds = new Set(hits.map((alert) => alert.id));
-  return alerts.map((alert) =>
-    hitIds.has(alert.id)
-      ? { ...alert, triggeredAt: now.toISOString(), triggeredPrice: prices[alert.symbol] ?? null }
-      : alert,
-  );
-}
+/* Sayfada değerlendirme (`settleAlerts`) sunucuya özel modülde: lib/alert-settle.ts. */

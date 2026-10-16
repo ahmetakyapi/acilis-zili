@@ -29,6 +29,16 @@ export type PercentAlert = {
 export const MIN_THRESHOLD_PCT = 0.5;
 export const MAX_THRESHOLD_PCT = 90;
 
+/**
+ * Eşiğin GÖSTERİM hanesi — kayıtlı hassasiyet kadar (16 Ekim). Sabit bir
+ * hane "2,25" eşiğini "2,3" basıyordu; −%2,26'da gelen bildirim "−%2,3
+ * eşiği aşıldı" diyerek kendisiyle çelişiyordu. 0, 1 ya da 2 hane.
+ */
+export function thresholdDigits(value: number): number {
+  const near = (x: number) => Math.abs(x - Math.round(x)) < 1e-6;
+  return near(value) ? 0 : near(value * 10) ? 1 : 2;
+}
+
 export function isPercentDirection(value: unknown): value is PercentDirection {
   return value === "up" || value === "down";
 }

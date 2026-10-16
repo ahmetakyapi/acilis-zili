@@ -34,7 +34,7 @@ import {
 import { auth } from "@/auth";
 import { AvatarTile } from "@/components/brand/AvatarIcon";
 import { getUserAvatar } from "@/lib/avatar-data";
-import { signOutAction } from "@/app/actions/auth";
+import { SignOutForm } from "@/components/auth/SignOutForm";
 import { PageHeader, Panel, ButtonLink } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
@@ -193,7 +193,7 @@ export default async function MenuPage() {
           </span>
         </span>
         {username ? (
-          <form action={signOutAction}>
+          <SignOutForm>
             <button
               type="submit"
               className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-small font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
@@ -201,7 +201,7 @@ export default async function MenuPage() {
               <SignOut weight="duotone" size={15} />
               {t.nav.signOut}
             </button>
-          </form>
+          </SignOutForm>
         ) : (
           <ButtonLink href={withLocale("/giris", locale)} variant="primary" className="shrink-0">
             {t.nav.signIn}

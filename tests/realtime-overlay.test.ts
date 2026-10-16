@@ -62,3 +62,34 @@ test("sembol biçimi farkı (BRK-B / BRK.B) eşleşir; barı olmayan sembol doku
   assert.equal(quotes["BRK-B"]!.price, 101);
   assert.equal(quotes.NVR!.price, 100);
 });
+
+/* GÜN SINIRI (16 Ekim). Gecikmeli tape'te bugün henüz işlem yokken
+   kotasyonun `prevClose`u DÜNKÜ kotasyonun referansı, yani iki gün önceki
+   kapanış. Bugünün IEX fiyatı onun üstüne konup `tradedAt` bugüne çekilirse
+   iki seansın toplam hareketi "bugün" diye basılıyor, önbelleğe yazılıyor ve
+   yüzde alarmını tetikliyordu. Katman yalnız aynı ET gününde uygulanır. */
+test("gecikmeli işlem DÜNE aitse IEX katmanı uygulanmaz — iki seanslık yüzde bugüne yazılmaz", () => {
+  const morning = Date.parse("2026-10-16T13:45:00Z"); // Cuma 09:45 ET
+  const yesterday = quote({
+    price: 94, prevClose: 100, change: -6, changePct: -6, // dünkü hareket, referansı önceki gün
+    tradedAt: new Date("2026-10-15T19:58:00Z"),
+  });
+  const { quotes, live } = mergeRealtime(
+    { XYZ: yesterday },
+    { XYZ: { close: 95, minute: new Date(morning - 60_000) } },
+    morning,
+  );
+  assert.equal(live, 0);
+  assert.equal(quotes.XYZ!.price, 94);
+  assert.equal(quotes.XYZ!.tradedAt!.toISOString(), "2026-10-15T19:58:00.000Z", "dünün kotasyonu dünde kalır");
+  assert.equal(quotes.XYZ!.realtime, undefined);
+});
+
+test("işlem anı bilinmiyorsa referansın seansı da bilinmez — katman uygulanmaz", () => {
+  const { live } = mergeRealtime(
+    { MU: quote({ tradedAt: null }) },
+    { MU: { close: 102.5, minute: new Date(now - 60_000) } },
+    now,
+  );
+  assert.equal(live, 0);
+});

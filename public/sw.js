@@ -31,7 +31,10 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(title, {
       body: data.body || "",
       icon: "/icon-192.png",
-      badge: "/icon-maskable-192.png",
+      /* Android rozeti yalnız ALFA kanalından çizer: opak renkli ikon durum
+         çubuğunda düz beyaz kare oluyordu. Rozet saydam zeminde beyaz zil
+         (scripts/build-favicon.mjs). */
+      badge: "/badge-96.png",
       tag: data.tag || undefined,
       renotify: Boolean(data.tag),
       data: { url: typeof data.url === "string" ? data.url : "/" },
@@ -51,10 +54,46 @@ self.addEventListener("notificationclick", (event) => {
       for (const win of windows) {
         if (win.url === target && "focus" in win) return win.focus();
       }
+      /* `navigate` bu worker'ın denetlemediği sekmede REDDEDİLİR (sert
+         yenilenmiş sekme, "Sayfadan Ayrıl?" sorusuna "Kal" denmesi). Ret
+         zinciri koparıyordu: bildirim kapanmış, hiçbir pencere açılmamış —
+         tık boşa gidiyordu. Her başarısızlıkta yeni pencere. */
       for (const win of windows) {
-        if ("navigate" in win && "focus" in win) return win.navigate(target).then((w) => (w ? w.focus() : undefined));
+        if ("navigate" in win && "focus" in win) {
+          return win
+            .navigate(target)
+            .then((w) => (w ? w.focus() : self.clients.openWindow(target)))
+            .catch(() => self.clients.openWindow(target));
+        }
       }
       return self.clients.openWindow(target);
     }),
+  );
+});
+
+/*
+ * ABONELİK YENİLENDİ (16 Ekim). Tarayıcı aboneliği kendisi yenileyebiliyor
+ * (süre dolumu, anahtar dönüşü — Firefox yapıyor). Dinleyici yokken sunucu
+ * eski adrese göndermeye devam ediyor, 410 alıp satırı siliyor ve okuyucu
+ * Ayarlar "Açık" derken sessizce bildirimsiz kalıyordu. Yeni abonelik aynı
+ * genel anahtarla alınır ve sunucuya bildirilir (app/api/push/yenile).
+ */
+self.addEventListener("pushsubscriptionchange", (event) => {
+  event.waitUntil(
+    (async () => {
+      const old = event.oldSubscription || null;
+      let fresh = event.newSubscription || null;
+      const key = old && old.options ? old.options.applicationServerKey : null;
+      if (!fresh && key) {
+        fresh = await self.registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+      }
+      if (!fresh) return;
+      await fetch("/api/push/yenile", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ old: old ? old.endpoint : null, subscription: fresh.toJSON() }),
+      });
+    })().catch(() => undefined),
   );
 });

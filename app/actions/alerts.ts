@@ -3,8 +3,9 @@
 import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
-import { getStatus } from "@/lib/data";
+import { getStatus, isKnownSymbol } from "@/lib/data";
 import { db } from "@/lib/db";
+import { isSessionTrade } from "@/lib/market-hours";
 import { getQuote } from "@/lib/providers";
 import {
   isPercentDirection,
@@ -14,7 +15,8 @@ import {
 import { isDirection, MAX_ALERTS, MAX_ALERTS_PER_SYMBOL } from "@/lib/price-alerts";
 import { rateLimit } from "@/lib/rate-limit";
 import { percentAlerts, priceAlerts } from "@/lib/schema";
-import { isValidSymbol } from "@/lib/utils";
+import { getLocale } from "@/lib/i18n";
+import { isValidSymbol, parseDecimalInput } from "@/lib/utils";
 
 /**
  * Fiyat alarmı eylemleri. Her eylem oturumu kendisi doğrular.
@@ -31,7 +33,7 @@ import { isValidSymbol } from "@/lib/utils";
 
 export type AlertActionState = {
   status: "idle" | "ok" | "error";
-  error?: "auth" | "target" | "same" | "limit" | "symbolLimit" | "unavailable";
+  error?: "auth" | "target" | "direction" | "threshold" | "same" | "limit" | "symbolLimit" | "unavailable";
   /** Her gönderimde değişir; istemci aynı hatayı iki kez duyurabilsin. */
   at: number;
 };
@@ -45,12 +47,11 @@ function revalidate(symbol: string) {
   revalidatePath("/");
 }
 
-/** "245,50" ve "245.50" ikisi de geçerli; binlik ayırıcı kabul edilmiyor. */
-function parseTarget(raw: string): number | null {
-  const cleaned = raw.trim().replace(/\s|\$/g, "").replace(",", ".");
-  if (!/^\d+(\.\d+)?$/.test(cleaned)) return null;
-  const value = Number(cleaned);
-  return Number.isFinite(value) && value > 0 && value < MAX_TARGET ? value : null;
+/** "245,50" ve "245.50" iki dilde de geçerli; binlik ayırıcı DİLE GÖRE
+    (TR "1.500" = 1500 — gerekçe lib/utils.ts → parseDecimalInput). */
+function parseTarget(raw: string, locale: "tr" | "en"): number | null {
+  const value = parseDecimalInput(raw, locale);
+  return value !== null && value > 0 && value < MAX_TARGET ? value : null;
 }
 
 export async function createPriceAlert(
@@ -63,7 +64,7 @@ export async function createPriceAlert(
   if (!userId) return { status: "error", error: "auth", at };
 
   const symbol = String(formData.get("symbol") ?? "").toUpperCase();
-  const target = parseTarget(String(formData.get("target") ?? ""));
+  const target = parseTarget(String(formData.get("target") ?? ""), await getLocale());
   if (!isValidSymbol(symbol) || target === null) return { status: "error", error: "target", at };
 
   /* Kova SAĞLAYICI ÇAĞRISINDAN ÖNCE (15 Ekim taraması): isValidSymbol salt
@@ -74,20 +75,33 @@ export async function createPriceAlert(
   if (!rateLimit(`alerts:${userId}`, 30, 60_000).allowed)
     return { status: "error", error: "unavailable", at };
 
-  /* YÖN SUNUCUDA, GÜNCEL FİYATTAN. İstemcinin bildiği fiyat sayfanın
-     çizildiği anınki; sunucu kotasyonu alabiliyorsa o esas. Alamıyorsa
-     (sağlayıcı düşük) formdaki yön kullanılıyor ve kuruluş fiyatı boş
-     kalıyor — ilerleme çubuğu o alarmda çizilmiyor. */
+  /* YÖN SUNUCUDA, BİLİNEN SON FİYATTAN. İstemcinin bildiği fiyat sayfanın
+     çizildiği anınki; sunucu kotasyonu alabiliyorsa o esas.
+
+     BAYAT FİYAT DA YÖNÜ SÖYLER (16 Ekim). Yön yalnız TAZE fiyattan
+     türetiliyordu; bayat kotasyonda (ön seansta henüz işlem görmemiş hisse,
+     sağlayıcı kesintisi) sayfa fiyatı göstermiyor, formun gizli alanı hep
+     "above" gönderiyor ve sunucu ona güveniyordu: $94'teki hisseye "90'ın
+     altına inerse" diye kurulan alarm "90'ın üstüne çıkarsa" olarak
+     yazılıyor, ilk taze taramada "90 üstüne çıktı" diye YANLIŞ bir push
+     gidiyordu. Hedefin hangi tarafta olduğu bir gösterim iddiası değil,
+     son işlem fiyatı bunu söylemeye yeter. Kuruluş fiyatı (ilerleme
+     çubuğu) ise yine yalnız taze fiyattan. Hiç fiyat yoksa yön okuyucunun
+     AÇIK seçimi olmalı (form o zaman iki yönü sorar). */
   const status = await getStatus();
   const quote = await getQuote(symbol, status);
+  /* Uydurma sembol tarama paketini bozuyordu (bkz. alarm taraması): ne
+     evrende ne sağlayıcıda olan sembole alarm kurulmaz. */
+  if (!quote.ok && !(await isKnownSymbol(symbol))) return { status: "error", error: "target", at };
   const price = quote.ok && !quote.stale ? quote.data.price : null;
+  const side = quote.ok ? quote.data.price : null;
   let direction: "above" | "below";
-  if (price != null) {
-    if (Math.abs(price - target) / price < 0.0005) return { status: "error", error: "same", at };
-    direction = target > price ? "above" : "below";
+  if (side != null) {
+    if (Math.abs(side - target) / side < 0.0005) return { status: "error", error: "same", at };
+    direction = target > side ? "above" : "below";
   } else {
     const submitted = formData.get("direction");
-    if (!isDirection(submitted)) return { status: "error", error: "target", at };
+    if (!isDirection(submitted)) return { status: "error", error: "direction", at };
     direction = submitted;
   }
 
@@ -143,14 +157,13 @@ export async function deletePriceAlert(formData: FormData) {
    fiyattan türetilecek bir şey yok.
    -------------------------------------------------------------------------- */
 
-/** "5", "5,5" ve "5.5" geçerli; aralık sınırı lib/percent-alerts.ts'te. */
-function parseThreshold(raw: string): number | null {
-  const cleaned = raw.trim().replace(/\s|%/g, "").replace(",", ".");
-  if (!/^\d+(\.\d+)?$/.test(cleaned)) return null;
-  const value = Number(cleaned);
-  return Number.isFinite(value) && value >= MIN_THRESHOLD_PCT && value <= MAX_THRESHOLD_PCT
-    ? value
-    : null;
+/** "5", "5,5" ve "5.5" geçerli; aralık sınırı lib/percent-alerts.ts'te. Kayıt
+    `numeric(6,2)`: iki haneden fazlası yuvarlanırdı ve satırda yazan eşikle
+    tetiklenen eşik ayrı düşerdi — iki haneyle sınırlı. */
+function parseThreshold(raw: string, locale: "tr" | "en"): number | null {
+  const value = parseDecimalInput(raw, locale);
+  if (value === null || Math.abs(value * 100 - Math.round(value * 100)) > 1e-6) return null;
+  return value >= MIN_THRESHOLD_PCT && value <= MAX_THRESHOLD_PCT ? value : null;
 }
 
 export async function createPercentAlert(
@@ -163,13 +176,22 @@ export async function createPercentAlert(
   if (!userId) return { status: "error", error: "auth", at };
 
   const symbol = String(formData.get("symbol") ?? "").toUpperCase();
-  const threshold = parseThreshold(String(formData.get("threshold") ?? ""));
+  const threshold = parseThreshold(String(formData.get("threshold") ?? ""), await getLocale());
   const direction = formData.get("pct-direction");
-  if (!isValidSymbol(symbol) || threshold === null || !isPercentDirection(direction))
-    return { status: "error", error: "target", at };
+  if (!isValidSymbol(symbol) || !isPercentDirection(direction)) return { status: "error", error: "target", at };
+  if (threshold === null) return { status: "error", error: "threshold", at };
 
   if (!rateLimit(`alerts:${userId}`, 30, 60_000).allowed)
     return { status: "error", error: "unavailable", at };
+
+  /* UYDURMA SEMBOL YOK (16 Ekim). `isValidSymbol` yalnız biçimi denetliyor;
+     tarama bütün bekleyen sembolleri tek pakette istiyor ve Alpaca geçersiz
+     sembolü 400 ile reddedince istemci onları TEK TEK ayıklıyor (8 deneme).
+     Dokuz uydurma sembole kurulan alarm paketi düşürüyor, tarama "bayat"
+     deyip HERKESİN alarmını atlıyordu. Evrende yoksa sağlayıcıya sorulur;
+     ikisinde de yoksa kurulmaz. */
+  if (!(await isKnownSymbol(symbol)) && !(await getQuote(symbol, await getStatus())).ok)
+    return { status: "error", error: "target", at };
 
   try {
     const [{ total, forSymbol }] = await db
@@ -216,8 +238,17 @@ export async function deletePercentAlert(formData: FormData) {
 
 /**
  * Tetiklenmiş yüzde alarmını yeniden kurar: eşik ve yön aynı kalır, tetik
- * temizlenir. Fiyat alarmındaki yön çevirme burada gerekmez: tetik günlük
- * değişime bağlı ve ertesi seans sayaç zaten sıfırdan başlıyor.
+ * temizlenir.
+ *
+ * AYNI SEANSTA YENİDEN KURULAN ALARM ERTESİ SEANSTA DEVREYE GİRER (16 Ekim).
+ * Yorum "ertesi seans sayaç zaten sıfırdan başlıyor" diyordu ama tarama
+ * yalnız `triggeredAt IS NULL` ve bugünkü değişime bakıyor: −%5'te öten
+ * alarm, okuyucu "bir dahaki sefere de haber ver" diye yeniden kurunca
+ * değişim hâlâ −%6 olduğu için beş dakika içinde AYNI bildirimi tekrar
+ * gönderiyordu. Tetik bu seansa aitse `createdAt` seansın verisinin
+ * tamamlandığı ana (`sessionEnd`) çekiliyor; tarama `createdAt <= şimdi`
+ * şartıyla o ana kadar ona bakmıyor. Satır "Sonraki Seansta Devreye
+ * Girer" der. Migration gerekmiyor.
  */
 export async function rearmPercentAlert(formData: FormData) {
   const session = await auth();
@@ -227,9 +258,21 @@ export async function rearmPercentAlert(formData: FormData) {
   if (!id) return;
   if (!rateLimit(`alerts:${userId}`, 30, 60_000).allowed) return;
   try {
+    const [current] = await db
+      .select({ triggeredAt: percentAlerts.triggeredAt })
+      .from(percentAlerts)
+      .where(and(eq(percentAlerts.id, id), eq(percentAlerts.userId, userId)))
+      .limit(1);
+    if (!current) return;
+    const now = new Date();
+    const status = await getStatus();
+    const armAt =
+      current.triggeredAt && isSessionTrade(current.triggeredAt, status) && status.sessionEnd > now
+        ? status.sessionEnd
+        : now;
     const [row] = await db
       .update(percentAlerts)
-      .set({ createdAt: new Date(), triggeredAt: null, triggeredPct: null })
+      .set({ createdAt: armAt, triggeredAt: null, triggeredPct: null })
       .where(and(eq(percentAlerts.id, id), eq(percentAlerts.userId, userId)))
       .returning({ symbol: percentAlerts.symbol });
     if (row) revalidate(row.symbol);
@@ -242,7 +285,10 @@ export async function rearmPercentAlert(formData: FormData) {
  * Hedefe ulaşmış alarmı yeniden kurar: aynı hedef, yön ve kuruluş fiyatı
  * GÜNCEL fiyattan yeniden türetiliyor. Fiyat hâlâ hedefin ötesindeyse alarm
  * kurulur kurulmaz yeniden tetiklenirdi; yön o yüzden çevriliyor
- * ("250'nin üstüne çıktı" → artık "250'nin altına inerse").
+ * ("250'nin üstüne çıktı" → artık "250'nin altına inerse"). Yön için bayat
+ * son fiyat da, o da yoksa tetik fiyatı yeter (16 Ekim): taze fiyat
+ * şartı yön çevirmeyi atlatıyor, alarm aynı bildirimi hemen tekrar
+ * gönderiyordu. Kuruluş fiyatı yalnız taze fiyattan.
  */
 export async function rearmPriceAlert(formData: FormData) {
   const session = await auth();
@@ -264,8 +310,9 @@ export async function rearmPriceAlert(formData: FormData) {
     const status = await getStatus();
     const quote = await getQuote(row.symbol, status);
     const price = quote.ok && !quote.stale ? quote.data.price : null;
+    const side = quote.ok ? quote.data.price : row.triggeredPrice != null ? Number(row.triggeredPrice) : null;
     const direction =
-      price == null ? row.direction : target > price ? "above" : "below";
+      side == null || !Number.isFinite(side) ? row.direction : target > side ? "above" : "below";
     await db
       .update(priceAlerts)
       .set({

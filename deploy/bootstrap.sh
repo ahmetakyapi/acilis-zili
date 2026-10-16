@@ -122,6 +122,10 @@ fi
 log "paketler"
 apt-get update -qq
 apt-get install -y -qq git curl ca-certificates gnupg cron >/dev/null
+# Cron saatleri UTC — Ubuntu'nun cron'u CRON_TZ'yi yok sayar, saati sunucunun
+# saat dilimi belirler (gerekçe deploy/cron-install.sh).
+timedatectl set-timezone Etc/UTC
+systemctl restart cron
 
 # Node 24 ŞART, 22 DEĞİL. Next.js'in kendi RSC akışı (streaming) Node'un
 # dahili `TransformStream`ını kullanıyor ve orada bilinen bir yarış durumu

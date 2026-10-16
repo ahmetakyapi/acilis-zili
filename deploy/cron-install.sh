@@ -19,10 +19,22 @@ LINES=(
 	"20 16 * * * /bin/bash $APP_ROOT/current/deploy/cron-bilanco.sh"
 )
 
+# SUNUCU UTC OLMALI. Ubuntu 24.04'ün cron'u (Debian vixie-cron) `CRON_TZ`yi
+# DESTEKLEMİYOR — satır işe ortam değişkeni olarak geçiyor, çalışma saatini
+# değiştirmiyor (crontab(5): "does not support per-user timezones"). Saati
+# UTC tutan şey sunucunun kendi saat dilimi; biri onu İstanbul'a çevirirse
+# günlük iş ABD açılışından önce koşar. Her sürümde denetlenir, update.sh bu
+# çıktıyı basar (16 Ekim).
+if [[ $(date +%z) != "+0000" ]]; then
+	echo "UYARI: sunucu saat dilimi $(date +%Z) ($(date +%z)) — cron saatleri UTC değil. Düzelt: sudo timedatectl set-timezone Etc/UTC && sudo systemctl restart cron" >&2
+	logger -t acilis-cron -p user.warning "sunucu saat dilimi UTC degil: $(date +%Z)"
+fi
+
 current=$(crontab -l 2>/dev/null || true)
 next="$current"
-# `CRON_TZ=UTC` ŞART ve en üstte: altındaki her satırın saati UTC
-# (gerekçe cron-daily.sh).
+# `CRON_TZ=UTC` cronie'de (ve başka dağıtımda) saati UTC'ye sabitler;
+# Debian/Ubuntu cron'unda etkisiz, orada güvence yukarıdaki saat dilimi
+# denetimi. Zararsız, kalıyor.
 if ! grep -qxF "CRON_TZ=UTC" <<<"$next"; then
 	next=$(printf 'CRON_TZ=UTC\n%s' "$next")
 fi
