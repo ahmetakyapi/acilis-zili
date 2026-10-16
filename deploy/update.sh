@@ -2,7 +2,13 @@
 #
 # Açılış Zili — yeni sürüm çıkar. Uygulama kullanıcısı olarak:
 #
-#   sudo -u acilis -H bash /srv/acilis-zili/current/deploy/update.sh
+#   sudo -u acilis -H bash /srv/acilis-zili/current/deploy/update.sh [<sha>]
+#
+# SHA VERİLİRSE TAM O COMMIT DERLENİR (16 Ekim). Deploy iş akışı verify'ın
+# geçtiği commit'i (`github.sha`) geçiyor. Dal ucu klonlanıyordu ve o, yarış
+# demekti: X'in yayını sürerken gelen Y ortak `concurrency` grubunda bekliyor,
+# ama X'in klonu dal ucunda Y'yi buluyor — Y kendi verify'ı koşmadan canlıya
+# çıkıyordu. Argümansız çağrı (elle, deploy/remote.sh) dal ucunu derler.
 #
 # HER SÜRÜM KENDİ DİZİNİNDE. `releases/<zaman>-<sha>` altına klonlanır ve
 # orada derlenir; `current` bağı ancak derleme BİTTİKTEN sonra ona çevrilip
@@ -38,8 +44,15 @@ deployed=0
 # ölür, C başarılı olur → budama en yeni ikiyi (B, C) tutup A'yı siler, yani
 # elde geri dönülecek sağlam sürüm kalmaz ve `previous` yuvasında hiç
 # çalışmamış bir dizin durur. Ayrıca her başarısız deneme ~600 MB bırakıyordu.
+#
+# "Canlı mı" sorusunu bayrak değil BAĞIN HEDEFİ cevaplıyor. Bağ çevrildikten
+# sonra, sağlık kontrolü bitmeden SSH koparsa (iş iptali, ağ) sonraki çıktıda
+# gelen SIGPIPE/SIGHUP da bu trap'i koşturuyor; `deployed` henüz 0 olduğu için
+# canlı sürümün dizini silinip servis boşluğa bakıyordu.
 cleanup() {
-	[[ -n "$release" && $deployed -eq 0 && -d "$release" ]] && rm -rf "$release"
+	[[ -n "$release" && $deployed -eq 0 && -d "$release" ]] || return 0
+	[[ "$(readlink -e "$APP_ROOT/current" 2>/dev/null || true)" == "$release" ]] && return 0
+	rm -rf "$release"
 	return 0
 }
 trap cleanup EXIT
@@ -67,10 +80,22 @@ healthy() {
 }
 
 log "kaynak"
-sha=$(git ls-remote "$REPO" "refs/heads/$BRANCH" | cut -c1-7)
-[[ -n "$sha" ]] || die "uzak dal okunamadı: $REPO $BRANCH"
-release="$APP_ROOT/releases/$(date -u +%Y%m%d-%H%M%S)-$sha"
-git clone -q --depth 1 --branch "$BRANCH" "$REPO" "$release"
+want="${1:-}"
+if [[ -n "$want" ]]; then
+	[[ "$want" =~ ^[0-9a-f]{40}$ ]] || die "geçersiz SHA: $want"
+	sha=${want:0:7}
+	release="$APP_ROOT/releases/$(date -u +%Y%m%d-%H%M%S)-$sha"
+	git init -q "$release"
+	git -C "$release" remote add origin "$REPO"
+	git -C "$release" fetch -q --depth 1 origin "$want"
+	git -C "$release" checkout -q --detach FETCH_HEAD
+	[[ "$(git -C "$release" rev-parse HEAD)" == "$want" ]] || die "çekilen commit $want değil"
+else
+	sha=$(git ls-remote "$REPO" "refs/heads/$BRANCH" | cut -c1-7)
+	[[ -n "$sha" ]] || die "uzak dal okunamadı: $REPO $BRANCH"
+	release="$APP_ROOT/releases/$(date -u +%Y%m%d-%H%M%S)-$sha"
+	git clone -q --depth 1 --branch "$BRANCH" "$REPO" "$release"
+fi
 echo "$release"
 
 # BAĞIMLILIKLAR SIRSIZ ORTAMDA KURULUYOR — sıra bilinçli.
@@ -85,9 +110,19 @@ echo "$release"
 # Kurulum aşamasının bu değerlere ihtiyacı yok. Derlemenin VAR:
 # NEXT_PUBLIC_SITE_URL demete gömülüyor, SITE_INDEXABLE robots.ts statik
 # üretildiği için oraya pişiyor, statik sayfalar DATABASE_URL'e gidiyor.
+#
+# ORTAMI GEÇİRMEMEK YETMİYOR: dosya `root:acilis 0640` ve `npm ci` aynı
+# kullanıcıyla koşuyor, yani postinstall `cat /etc/acilis-zili.env` ile
+# hepsini okuyabilir. Kurulum betikleri bu yüzden HİÇ koşmuyor
+# (`--ignore-scripts`, 16 Ekim). Kilitte betik taşıyan beş paket var —
+# esbuild (üç kopya; JS API platform paketini kendisi buluyor), fsevents
+# (yalnız macOS), unrs-resolver (yalnız lint) — hiçbiri derlemeye ya da
+# çalışma anına gerekmiyor; Next/SWC ve sharp platform paketleriyle geliyor.
+# Yeni bir bağımlılık kurulum betiği isterse derleme burada kırılır; çözüm
+# bayrağı kaldırmak değil, o paketi `npm rebuild <ad>` ile tek tek açmak.
 log "bağımlılıklar"
 cd "$release"
-npm ci --no-audit --no-fund
+npm ci --no-audit --no-fund --ignore-scripts
 
 log "derleme"
 set -a

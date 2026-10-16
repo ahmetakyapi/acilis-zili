@@ -37,9 +37,15 @@ permissions:
 # geçiyor ve deploy hattının sessizce değişmesi istenmiyor — yükseltme
 # bilinçli bir commit olsun. Diğer iş akışları da aynı sürümlerde.
 
+# `queue: max` (16 Ekim): onsuz grupta yalnız BİR koşum bekliyor ve yeni
+# gelen — ör. elle tetiklenen "Sync App Env" — bekleyen yayını sessizce
+# iptal ediyordu; son commit bir sonraki push'a kadar yayına inmiyordu, iz
+# yalnız Actions'taki "canceled". Sunucuya dokunan dört iş akışı da aynı
+# grupta ve aynı ayarla.
 concurrency:
   group: deploy-vps
   cancel-in-progress: false
+  queue: max
 
 jobs:
   verify:
@@ -113,6 +119,8 @@ jobs:
           VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
           SITE_INDEXABLE: ${{ vars.SITE_INDEXABLE }}
         run: bash deploy/sync-app-env.sh
+      # Sunucu verify'ın geçtiği commit'i derler, dal ucunu değil
+      # (`GITHUB_SHA`, gerekçe update.sh başında).
       - name: SSH ile sunucuda update.sh çalıştır
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
@@ -123,4 +131,4 @@ jobs:
           printf '%s\n' "$SSH_KEY" > /tmp/deploy_key
           ssh -i /tmp/deploy_key -o "StrictHostKeyChecking=${strict:-accept-new}" -o ConnectTimeout=15 \
             "ubuntu@${HOST}" \
-            'sudo -u acilis -H bash /srv/acilis-zili/current/deploy/update.sh'
+            "sudo -u acilis -H bash /srv/acilis-zili/current/deploy/update.sh ${GITHUB_SHA}"

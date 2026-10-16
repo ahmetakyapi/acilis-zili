@@ -23,6 +23,7 @@ permissions:
 concurrency:
   group: deploy-vps
   cancel-in-progress: false
+  queue: max
 
 jobs:
   verify:
