@@ -603,7 +603,7 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
       eventsBlock(data, W),
       `<div style="height:30px;line-height:30px;font-size:0">&nbsp;</div>`,
       emailButton(W.button, calendarUrl),
-      emailText.note(copy.common.notAdvice, copy.common.whyReceived),
+      emailText.note(copy.common.notAdvice, W.whyReceived),
     ].join("\n"),
     footerLines: [copy.common.noReply],
     footerLinks: footerFor(recipient, copy.common, "weekly"),
@@ -648,7 +648,7 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
     if (data.nextEvent) text.push(`${W.eventsNext}: ${data.nextEvent.title} — ${dayLabel(data.nextEvent.date, locale)}${data.nextEvent.time ? ` ${data.nextEvent.time}` : ""}`);
   }
   else text.push(...data.events.map((e) => `- ${dayLabel(e.date, locale)} ${e.time ?? W.timeUnknown}: ${e.title}`));
-  text.push("", calendarUrl, "", copy.common.notAdvice, copy.common.whyReceived, `${copy.common.unsubscribe}: ${unsubscribeUrl(recipient, "weekly")}`);
+  text.push("", calendarUrl, "", copy.common.notAdvice, W.whyReceived, `${copy.common.unsubscribe}: ${unsubscribeUrl(recipient, "weekly")}`);
 
   return { to: recipient.email, subject, text: text.join("\n"), html };
 }

@@ -97,7 +97,7 @@ export type BrandedEmail = {
 export function emailButton(label: string, href: string): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="az-btn-table" style="border-collapse:separate">
 <tr><td class="az-btn" align="center" bgcolor="${C.primary}" style="mso-padding-alt:16px 30px;border-radius:14px;background:${C.primary};background-image:linear-gradient(135deg,#2a8ff0 0%,${C.primary} 55%,#0b4fa3 100%);box-shadow:0 8px 20px -8px rgba(18,104,201,.55)">
-<a href="${escapeHtml(href)}" target="_blank" class="az-btn-link" style="display:inline-block;padding:16px 30px;font-family:${FONT};font-size:16px;font-weight:700;line-height:20px;color:#ffffff;text-decoration:none;border-radius:14px;letter-spacing:.01em">${escapeHtml(label)}&nbsp;&nbsp;&rarr;</a>
+<a href="${escapeHtml(href)}" target="_blank" class="az-btn-link" style="display:inline-block;padding:16px 30px;font-family:${FONT};font-size:16px;font-weight:700;line-height:20px;color:#ffffff;text-decoration:none;border-radius:14px;letter-spacing:.01em"><span class="az-gblend-s"><span class="az-gblend-d">${escapeHtml(label)}&nbsp;&nbsp;&rarr;</span></span></a>
 </td></tr></table>`;
 }
 
@@ -175,6 +175,14 @@ export function brandedEmailHtml(email: BrandedEmail): string {
   body { margin:0; padding:0; -webkit-text-size-adjust:100%; }
   a { text-decoration:none; }
   /* Apple Mail: düğmenin üstünden geçen ışık — Gmail siler, posta onsuz tam. */
+  /* Gmail iOS koyu tema (17 Ekim, sahibinin ekran görüntüsü): sayfayı
+     tersine çevirirken düğmenin degrade zeminini bırakıp beyaz yazısını
+     koyulaştırıyordu. "u + .body" yalnız Gmail'de eşleşir (gövdeyi
+     <u></u> ardındaki .body kabına çeviriyor); iki katmanlı karışım
+     (screen + difference) çevrilen rengi geri beyaza çeker, açık temada
+     görünür bir şey değiştirmez. Başka istemci kuralı hiç okumaz. */
+  u + .body .az-gblend-s { background:#000; mix-blend-mode:screen; }
+  u + .body .az-gblend-d { background:#000; mix-blend-mode:difference; }
   @keyframes az-sheen { 0%,62% { background-position:-180% 0; } 100% { background-position:280% 0; } }
   .az-btn-link { background-image:linear-gradient(110deg,rgba(255,255,255,0) 35%,rgba(255,255,255,.28) 50%,rgba(255,255,255,0) 65%); background-size:220% 100%; background-repeat:no-repeat; animation:az-sheen 4.6s ease-in-out 1.2s infinite; }
   @keyframes az-grow-x { from { transform:scaleX(0); } to { transform:scaleX(1); } }
@@ -224,7 +232,7 @@ export function brandedEmailHtml(email: BrandedEmail): string {
 </style>
 <!--[if mso]><style>body,table,td,p,a,span,h1{font-family:'Segoe UI',Arial,sans-serif !important;}</style><![endif]-->
 </head>
-<body class="az-page" style="margin:0;padding:0;background:${C.page}">
+<body class="az-page body" style="margin:0;padding:0;background:${C.page}">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all">${escapeHtml(email.preheader)}${"&#8199;&#65279;&#847; ".repeat(40)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="az-page" bgcolor="${C.page}" style="background:${C.page}">
 <tr><td align="center" class="az-shell" style="padding:32px 16px 36px">

@@ -151,6 +151,7 @@ export const emailNotifyTr = {
     personalTitle: "Takip Listende Bu Hafta",
     personalMore: "ve {n} şirket daha — tamamı sitedeki takvimde.",
     commentaryNote: "Yorum paragrafları bu postadaki verilerden Claude ile yazıldı; yatırım tavsiyesi değildir.",
+    whyReceived: "Pazar özeti bütün Açılış Zili üyelerine gider. İstemiyorsan aşağıdaki \"Bu Postadan Çık\" bağlantısıyla ya da Ayarlar'dan tek dokunuşla kapatabilirsin.",
     button: "Haftanın Takvimini Aç",
   },
 };
@@ -301,6 +302,7 @@ export const emailNotifyEn: typeof emailNotifyTr = {
     personalTitle: "On Your Watchlist This Week",
     personalMore: "and {n} more — the full list is in the calendar on the site.",
     commentaryNote: "The commentary paragraphs were written with Claude from the data in this email; not investment advice.",
+    whyReceived: "The Sunday digest goes to every Açılış Zili member. If you don't want it, turn it off with one tap using the unsubscribe link below or in Settings.",
     button: "Open This Week's Calendar",
   },
 };
