@@ -66,8 +66,13 @@ export const C = {
   downWash: "#fbe8ec",
 };
 
-export const FONT = "'Schibsted Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif";
-export const MONO = "ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
+/* Yığın KISA (17 Ekim): her hücrede satır içi tekrarlandığı için pazar
+   özetinde ~300 kez geçiyor ve postanın üçte birini tutuyordu. Gmail 102
+   KB'ı aşan postayı kırpıp ALTINI (çıkış bağlantısı dahil) gizliyor.
+   BlinkMacSystemFont ve Helvetica Neue düştü: -apple-system ikisini de
+   karşılıyor. */
+export const FONT = "'Schibsted Grotesk',-apple-system,'Segoe UI',Roboto,Arial,sans-serif";
+export const MONO = "ui-monospace,Menlo,Consolas,monospace";
 
 export type BrandedEmail = {
   lang: "tr" | "en";
@@ -147,6 +152,7 @@ export function brandedEmailHtml(email: BrandedEmail): string {
     )
     .join("");
 
+  /* Satır başı girintileri atılır (boyut, yukarıdaki FONT notu). */
   return `<!doctype html>
 <html lang="${email.lang}" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -253,7 +259,7 @@ ${footer}
 </td></tr>
 </table>
 </body>
-</html>`;
+</html>`.replace(/\n[ \t]+/g, "\n");
 }
 
 /**

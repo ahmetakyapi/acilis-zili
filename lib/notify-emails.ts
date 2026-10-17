@@ -305,23 +305,19 @@ function divergingBar(value: number, share: number, order: number): string {
 
 /** Beş seansın kapanıştan kapanışa adımı — yukarı yeşil, aşağı kırmızı, sıfır çizgisi ortada. */
 function stepBars(steps: DigestData["indices"][number]["steps"], maxAbs: number, order: number): string {
-  /* 16 piksellik yarım: 390'da ölçüldü, 13'te günün %0,1'lik adımı ile
-     %1'lik adımı aynı kısa çizgi gibi okunuyordu. */
+  /* TEK TABLO, üç satır (yukarı çubuklar · sıfır çizgisi · aşağı çubuklar).
+     İlk sürüm her gün için iç içe bir tablo açıyordu ve dört endeksin
+     adımları postanın ~20 KB'ını tutuyordu (Gmail 102 KB'ta kırpıyor). */
   const HALF = 16;
-  const cells = steps
-    .map((step, i) => {
-      const tone = TONE[toneOf(step.changePct)];
-      const h = maxAbs > 0 ? Math.max(2, Math.round((Math.abs(step.changePct) / maxAbs) * HALF)) : 2;
-      const bar = `<div class="${tone.fill} az-grow-y" style="${delay(260 + 90 * order + 50 * i)}${step.changePct < 0 ? "transform-origin:center top;" : ""}width:8px;height:${h}px;border-radius:2px;background:${tone.ink};font-size:0;line-height:0">&nbsp;</div>`;
-      return `<td width="11" style="padding:0 2px">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0">
-<tr><td valign="bottom" height="${HALF}" style="height:${HALF}px;font-size:0;line-height:0">${step.changePct >= 0 ? bar : "&nbsp;"}</td></tr>
-<tr><td class="az-zero" bgcolor="${ZERO}" height="1" style="height:1px;background:${ZERO};font-size:0;line-height:0">&nbsp;</td></tr>
-<tr><td valign="top" height="${HALF}" style="height:${HALF}px;font-size:0;line-height:0">${step.changePct < 0 ? bar : "&nbsp;"}</td></tr>
-</table></td>`;
-    })
-    .join("");
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right"><tr>${cells}</tr></table>`;
+  const bar = (step: (typeof steps)[number], i: number) => {
+    const tone = TONE[toneOf(step.changePct)];
+    const h = maxAbs > 0 ? Math.max(2, Math.round((Math.abs(step.changePct) / maxAbs) * HALF)) : 2;
+    return `<div class="${tone.fill} az-grow-y" style="${delay(260 + 90 * order + 50 * i)}${step.changePct < 0 ? "transform-origin:center top;" : ""}width:8px;height:${h}px;border-radius:2px;background:${tone.ink}"></div>`;
+  };
+  const cell = "padding:0 2px;font-size:0;line-height:0";
+  const up = steps.map((step, i) => `<td valign="bottom" height="${HALF}" style="${cell};height:${HALF}px">${step.changePct >= 0 ? bar(step, i) : ""}</td>`).join("");
+  const down = steps.map((step, i) => `<td valign="top" height="${HALF}" style="${cell};height:${HALF}px">${step.changePct < 0 ? bar(step, i) : ""}</td>`).join("");
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right"><tr>${up}</tr><tr><td colspan="${steps.length}" class="az-zero" bgcolor="${ZERO}" height="1" style="height:1px;background:${ZERO};font-size:0;line-height:0"></td></tr><tr>${down}</tr></table>`;
 }
 
 function indicesBlock(data: DigestData, W: Copy["weeklyMail"]): string {
