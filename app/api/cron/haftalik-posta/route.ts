@@ -42,13 +42,21 @@ export async function GET(request: Request) {
 
   const now = new Date();
   const weekday = new Date(`${todayEt(now)}T00:00:00Z`).getUTCDay();
-  const force = new URL(request.url).searchParams.get("zorla") === "1";
-  if (weekday !== 0 && !force) return NextResponse.json({ skipped: "not-sunday" });
+  const params = new URL(request.url).searchParams;
+  const force = params.get("zorla") === "1";
+  /* DENEME (17 Ekim): `?deneme=<üyenin adresi>` postayı YALNIZ o üyeye,
+     günden bağımsız, gerçek veri ve yorumla gönderir; konu "[Deneme]"
+     önekli, defter anahtarı her seferinde yeni (asıl pazar postasını
+     engellemez). Yetki aynı CRON_SECRET; bütçeden düşer. Üye olmayan
+     adrese gitmez. */
+  const testTo = params.get("deneme")?.trim().toLowerCase() || null;
+  if (weekday !== 0 && !force && !testTo) return NextResponse.json({ skipped: "not-sunday" });
 
   /* Varsayılan açık: henüz kaydedilmemiş üyeler (yeni kayıtlar dahil) önce
      özete eklenir — gerekçe lib/email-notify.ts → enrollWeeklyDefault. */
   const enrolled = await enrollWeeklyDefault(now);
-  const recipients = await weeklyRecipients();
+  const all = await weeklyRecipients();
+  const recipients = testTo && all ? all.filter((r) => r.email.trim().toLowerCase() === testTo) : all;
   if (recipients === null) {
     console.error("[haftalık posta] alıcılar okunamadı");
     return NextResponse.json({ error: "db" }, { status: 503 });
@@ -87,9 +95,11 @@ export async function GET(request: Request) {
       .map((p) => ({ symbol: p.symbol, date: p.hit.date, timing: p.hit.timing }))
       .sort((a, b) => a.date.localeCompare(b.date) || a.symbol.localeCompare(b.symbol));
     const copy = getDictionary(recipient.locale).emailNotify;
-    const result = await sendNotificationEmail(recipient, "weekly", `weekly:${data.thisMonday}:${recipient.userId}`, (r) =>
-      weeklyEmailMessage(r, data, personal, copy),
-    );
+    const dedupeKey = testTo ? `weekly-test:${data.thisMonday}:${recipient.userId}:${now.getTime()}` : `weekly:${data.thisMonday}:${recipient.userId}`;
+    const result = await sendNotificationEmail(recipient, "weekly", dedupeKey, (r) => {
+      const mail = weeklyEmailMessage(r, data, personal, copy);
+      return testTo ? { ...mail, subject: `[Deneme] ${mail.subject}` } : mail;
+    });
     if (result === "sent") counts.sent += 1;
     else if (result === "duplicate") counts.duplicate += 1;
     else if (result === "failed") counts.failed += 1;
