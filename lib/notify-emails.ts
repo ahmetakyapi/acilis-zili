@@ -239,13 +239,21 @@ function chip(text: string, tone: Tone): string {
   return `<span class="${t.washCls}" style="display:inline-block;padding:3px 9px;border-radius:999px;background:${t.wash};color:${t.ink};font-family:${FONT};font-size:11px;line-height:16px;font-weight:700;white-space:nowrap">${escapeHtml(text)}</span>`;
 }
 
-/** Bölüm bandı — "01 · Geride Kalan Hafta". Koyu bant iki temada aynı. */
+/**
+ * Bölüm bandı — "01 · Geride Kalan Hafta". AÇIK TONLU ZEMİN, KOYU YAZI
+ * (17 Ekim, sahibinin Gmail iOS ekran görüntüsü): ilk sürüm lacivert bant
+ * üstünde beyaz yazıydı; Gmail iOS koyu temada sayfayı tersine çevirirken
+ * koyu zemini olduğu gibi bırakıp beyaz yazıyı koyulaştırıyordu — başlık
+ * okunmuyordu. Gövdede koyu zemin üstünde açık yazı YOK: tersine çeviren
+ * istemcide bant koyu, yazı açık olur; Apple Mail'de az-chapter sınıfı
+ * koyulaştırır. Koyu ve renkli tek yüzey bant GIF'i (görsel, çevrilmez).
+ */
 function chapter(index: string, title: string, range: string): string {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:40px 0 0"><tr><td bgcolor="${C.band}" style="background:${C.band};background-image:linear-gradient(135deg,#123c7a 0%,${C.band} 60%,#081d40 100%);border-radius:18px;padding:18px 20px">
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:40px 0 0"><tr><td class="az-chapter" bgcolor="#e8f0fb" style="background:#e8f0fb;border:1px solid #d3e0f2;border-left:4px solid ${C.primary};border-radius:16px;padding:16px 18px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-<td valign="middle" width="46" style="padding-right:14px"><span style="display:inline-block;width:40px;height:40px;border-radius:12px;background:#163e78;border:1px solid #2a5596;font-family:${MONO};font-size:14px;line-height:40px;font-weight:800;color:#e3b864;text-align:center">${escapeHtml(index)}</span></td>
-<td valign="middle"><p style="margin:0;font-family:${FONT};font-size:19px;line-height:24px;font-weight:800;letter-spacing:-.02em;color:#ffffff">${escapeHtml(title)}</p>
-<p style="margin:3px 0 0;font-family:${FONT};font-size:12px;line-height:16px;color:#c9d6ea">${escapeHtml(range)}</p></td>
+<td valign="middle" width="46" style="padding-right:14px"><span class="az-chapter-index" style="display:inline-block;width:38px;height:38px;border-radius:11px;background:#ffffff;border:1px solid #d3e0f2;font-family:${MONO};font-size:14px;line-height:38px;font-weight:800;color:#8a5f12;text-align:center">${escapeHtml(index)}</span></td>
+<td valign="middle"><p class="az-ink" style="margin:0;font-family:${FONT};font-size:19px;line-height:24px;font-weight:800;letter-spacing:-.02em;color:${C.ink}">${escapeHtml(title)}</p>
+<p class="az-muted" style="margin:3px 0 0;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted}">${escapeHtml(range)}</p></td>
 </tr></table>
 </td></tr></table>`;
 }
@@ -416,7 +424,7 @@ function linkList(links: DigestData["news"], locale: Locale): string {
   return links
     .map(
       (link, i) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px"><tr>
-<td valign="top" width="34" style="padding-top:1px"><span style="display:inline-block;width:24px;height:24px;border-radius:8px;background:${C.band};color:#e3b864;font-family:${MONO};font-size:11px;line-height:24px;font-weight:800;text-align:center">${String(i + 1).padStart(2, "0")}</span></td>
+<td valign="top" width="34" style="padding-top:1px"><span class="az-chapter-index" style="display:inline-block;width:24px;height:24px;border-radius:8px;background:#e8f0fb;color:#8a5f12;font-family:${MONO};font-size:11px;line-height:24px;font-weight:800;text-align:center">${String(i + 1).padStart(2, "0")}</span></td>
 <td valign="top"><a href="${escapeHtml(pathFor(link.path, locale))}" target="_blank" class="az-ink" style="font-family:${FONT};font-size:15px;line-height:21px;font-weight:700;color:${C.ink};text-decoration:none">${escapeHtml(link.title)}</a>${
         link.meta ? `<p class="az-muted" style="margin:3px 0 0;font-family:${FONT};font-size:12px;line-height:17px;color:${C.muted}">${escapeHtml(link.meta.length > 140 ? `${link.meta.slice(0, 139)}…` : link.meta)}</p>` : ""
       }</td></tr></table>`,

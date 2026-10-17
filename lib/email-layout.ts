@@ -207,6 +207,8 @@ export function brandedEmailHtml(email: BrandedEmail): string {
     .az-link { color:#5cb0ff !important; }
     .az-sunken { background:#172234 !important; border-top-color:#223047 !important; border-right-color:#223047 !important; border-bottom-color:#223047 !important; }
     .az-sunken-flat { border-left-color:#223047 !important; }
+    .az-chapter { background:#16233a !important; border-top-color:#223047 !important; border-right-color:#223047 !important; border-bottom-color:#223047 !important; }
+    .az-chapter-index { background:#0f1a2b !important; border-color:#223047 !important; color:#e3b864 !important; }
     .az-lane { background:#223047 !important; }
     .az-zero { background:#3a4c66 !important; }
     .az-up-fill { background:#3ddc97 !important; }
