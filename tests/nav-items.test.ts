@@ -16,7 +16,15 @@ test("strip ranks are exactly 1..n, each used once", () => {
 });
 
 test("every more item belongs to a panel group", () => {
-  for (const item of more) assert.ok(["analyze", "data", "learn", "read"].includes(item.more!), item.href);
+  for (const item of more) assert.ok(["analyze", "mine", "data", "learn", "read"].includes(item.more!), item.href);
+});
+
+/* Panelin iki sütunu satır satır aynı hatta (17 Ekim): sol "mine" + "data",
+   sağ "learn" + "read" — grup boyları eşleşmeli. */
+test("panel columns pair up row for row", () => {
+  const count = (group: string) => more.filter((item) => item.more === group).length;
+  assert.equal(count("mine"), count("learn"));
+  assert.equal(count("data"), count("read"));
 });
 
 test("strip and more never share a destination", () => {

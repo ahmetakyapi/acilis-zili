@@ -228,6 +228,7 @@ export async function StockHeader({
                 addLabel={t.stock.addToWatchlist}
                 removeLabel={t.stock.removeFromWatchlist}
                 fullLabel={t.watchlist.heartFull}
+                text={[t.stock.addToWatchlist, t.stock.inWatchlist]}
               />
             ) : (
               /* GİRİŞ YAPMAMIŞA DA GÖRÜNÜYOR. Düğme tamamen gizliydi: ürünün
@@ -240,9 +241,11 @@ export async function StockHeader({
                 href={`/giris?devam=${encodeURIComponent(`/hisse/${symbol}`)}`}
                 aria-label={t.stock.addToWatchlist}
                 title={t.stock.addToWatchlist}
+                data-labeled=""
                 className="tap-44 inline-flex size-8 items-center justify-center rounded-sm text-muted transition-colors hover:bg-surface-elevated hover:text-soft"
               >
                 <Heart weight="duotone" size={17} />
+                <span data-action-text>{t.stock.addToWatchlist}</span>
               </Link>
             )}
             {/* ALARM KALBİN YANINDA — aynı ölçü. Girişsiz okuyucuya da
@@ -259,6 +262,7 @@ export async function StockHeader({
                   note={pushConfigured() ? t.notifications.alarmNote : t.priceAlerts.note}
                   locale={locale}
                   labels={t.priceAlerts}
+                  withText
                 />
               )
             ) : (
@@ -266,9 +270,11 @@ export async function StockHeader({
                 href={`/giris?devam=${encodeURIComponent(`/hisse/${symbol}`)}`}
                 aria-label={t.priceAlerts.loginHint}
                 title={t.priceAlerts.loginHint}
+                data-labeled=""
                 className="tap-44 inline-flex size-8 items-center justify-center rounded-sm text-muted transition-colors hover:bg-surface-elevated hover:text-soft"
               >
                 <BellSimpleRinging weight="duotone" size={17} />
+                <span data-action-text>{t.priceAlerts.button}</span>
               </Link>
             )}
             {/* PORTFÖYE EKLE (9 Ekim) — ekleme penceresini bu sembol seçili
@@ -278,9 +284,11 @@ export async function StockHeader({
               href={`/portfoy?ekle=${symbol}`}
               aria-label={t.lira.portfolio.addFromStock.replace("{symbol}", symbol)}
               title={t.lira.portfolio.addFromStock.replace("{symbol}", symbol)}
+              data-labeled=""
               className="tap-44 inline-flex size-8 items-center justify-center rounded-sm text-muted transition-colors hover:bg-surface-elevated hover:text-soft"
             >
               <Briefcase weight="duotone" size={17} />
+              <span data-action-text>{t.stock.addToPortfolio}</span>
             </Link>
             {/* PAYLAŞ KALBİN YANINDA (30 Eylül, sahibinin isteği: "böyle
                 ekranlara hep paylaş"). Aynı simge ölçüsü (32, dokunma 44);

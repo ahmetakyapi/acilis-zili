@@ -63,7 +63,10 @@ export function PriceAlertButton({
   note,
   locale,
   labels,
+  withText = false,
 }: {
+  /** Tetikte görünür yazı (17 Ekim, hisse başlığı) — etiketin kendisi. */
+  withText?: boolean;
   symbol: string;
   /** Sayfanın çizildiği andaki fiyat; sağlayıcı düşükse boş. */
   price: number | null;
@@ -95,6 +98,7 @@ export function PriceAlertButton({
         aria-label={spoken}
         title={spoken}
         aria-haspopup="dialog"
+        data-labeled={withText ? "" : undefined}
         onClick={() => {
           setMounted(true);
           setOpen(true);
@@ -108,6 +112,7 @@ export function PriceAlertButton({
       >
         <BellSimpleRinging size={17} weight={pending > 0 ? "fill" : "duotone"} aria-hidden className={styles.bellIcon} />
         {hits > 0 && <span className={styles.hitDot} aria-hidden />}
+        {withText && <span data-action-text>{label}</span>}
       </button>
       {/* LEVHA GÖVDEYE TAŞINIYOR. Düğme hisse başlığının künye satırında
           ve o satırın `:is(button, a)` kuralı (stock.module.css →

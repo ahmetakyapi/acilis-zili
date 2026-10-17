@@ -19,7 +19,8 @@ const tr = {
     taxTool: "Vergi Hesaplayıcı",
     themes: "Temalar",
     moreGroupAnalyze: "Analiz Araçları",
-    moreGroupData: "Veri ve Araçlar",
+    moreGroupMine: "Portföy ve Vergi",
+    moreGroupData: "Piyasa Verisi",
     moreGroupLearn: "Öğren",
     moreGroupRead: "Oku",
     tickerPause: "Şeridi Duraklat",
@@ -1248,6 +1249,8 @@ const tr = {
     nextEarnings: "Yaklaşan Bilanço",
     addToWatchlist: "Favorilere Ekle",
     removeFromWatchlist: "Favorilerden Çıkar",
+    inWatchlist: "Favorilerde",
+    addToPortfolio: "Portföye Ekle",
     /* Künye açıklaması ŞABLON. Sabit Türkçe yazılmıştı ve dil ne olursa
        olsun "Fiyat, grafik, bilanço geçmişi ve haberler." gidiyordu — aynı
        fonksiyon sektör etiketini zaten çeviriyor olmasına rağmen.
@@ -2501,6 +2504,16 @@ const tr = {
   /* Hisse seçimi (3 Ekim) — kural tabanlı eleme ve uyum puanı. */
   /** Seans Zili figürü (components/figures/session-bell). Künyeler Title Case. */
   /** Hisse sayfasının Claude notları (components/stock/StockInsightCard.tsx). */
+  newsInsight: {
+    briefingTitle: "Günün Gündemi",
+    briefingWindow: "Son 24 Saat · {n} Haberden",
+    briefingLoading: "Claude son 24 saatin haberlerini okuyor…",
+    explainerTitle: "Bu Haber Ne Anlatıyor",
+    explainerLoading: "Claude haberi sade dille açıyor…",
+    unavailable: "Not şu an hazırlanamadı; birazdan yeniden dene.",
+    briefingDisclosure: "Başlıklar ve özetler, listedeki haberlerden Claude ile yazıldı. Haberlerde olmayan bilgi eklemez; ayrıntı ve doğrulama için habere git. Yatırım tavsiyesi değildir.",
+    explainerDisclosure: "Bu açıklama yalnız yukarıdaki haber metninden Claude ile yazıldı; habere bilgi eklemez. Ayrıntı için kaynağı oku. Yatırım tavsiyesi değildir.",
+  },
   stockInsight: {
     moveTitle: "Bu Hafta Neden Hareket Etti",
     earningsTitle: "Son Bilançonun Kısa Notu",
@@ -2512,6 +2525,12 @@ const tr = {
     source: "Kaynak",
     daily: "Gün Gün Değişim",
     compare: "Beş Seansta",
+    pathTitle: "Beş Seansın Seyri, S&P 500 ile",
+    aboveMarket: "Piyasanın {pts} Puan Üstünde",
+    belowMarket: "Piyasanın {pts} Puan Altında",
+    inlineMarket: "Piyasayla Aynı",
+    highVolume: "İşlem hacmi 20 seans ortalamasının üstünde",
+    volumeTimes: "Hacim {x}×",
     estimate: "Beklenti",
     actual: "Gerçekleşen",
     eps: "Hisse Başına Kâr",

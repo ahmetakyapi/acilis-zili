@@ -320,7 +320,7 @@ export function MastheadNav({
                 );
               })()}
               <div className="masthead-more-grid grid grid-cols-2">
-                {[["data"], ["learn", "read"]].map((column) => (
+                {[["mine", "data"], ["learn", "read"]].map((column) => (
                   <div key={column.join("-")} className="masthead-more-col flex min-w-0 flex-col">
                     {MORE_GROUPS.filter((group) => column.includes(group)).map((group, groupIndex) => {
                       const groupRows = rows.filter((row) => row.group === group);

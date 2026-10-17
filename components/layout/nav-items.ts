@@ -25,7 +25,7 @@ import {
 import { stripLocale } from "@/lib/i18n/routing";
 import type { Dictionary } from "@/lib/i18n";
 
-export type MoreGroup = "analyze" | "data" | "learn" | "read";
+export type MoreGroup = "analyze" | "mine" | "data" | "learn" | "read";
 
 /**
  * Panelde grupların sırası — taşan şerit sekmeleri "data"nın başına iner.
@@ -36,8 +36,15 @@ export type MoreGroup = "analyze" | "data" | "learn" | "read";
  * analizinin iki odağından biri ve bir başvuru ekranı değil, bir araç.
  * Bantta Karşılaştır da var: ikisi de "bir hisseyi sına/oku" işi. Sol sütun
  * böylece 1 başlık + 5 satır, sağ 1 + 2 + 1 + 2 — iki sütun yine aynı dipte.
+ *
+ * 17 Ekim (sahibinin ekran görüntüsü: "eşit sayıda satır varken sağ ve sol
+ * eşit hizada olmalı"): sağ sütun 1 + 2 + 1 + 3, sol 1 + 5'ti; sağdaki
+ * ikinci başlık yüzünden üçüncü satırdan sonra her satır 38 piksel kayık
+ * duruyordu. Sol da iki gruba bölündü — "Portföy ve Vergi" (kişisel
+ * hesap ekranları, 2) ve "Piyasa Verisi" (3) — iki sütun artık satır satır
+ * aynı hatta. Taşan şerit sekmeleri "data"ya iner (yalnız büyütülmüş yazıda).
  */
-export const MORE_GROUPS: readonly MoreGroup[] = ["analyze", "data", "learn", "read"];
+export const MORE_GROUPS: readonly MoreGroup[] = ["analyze", "mine", "data", "learn", "read"];
 
 /** Masthead şeridinde taşma önceliği — 1 en son taşar. */
 export type StripRank = 1 | 2 | 3 | 4 | 5 | 6;
@@ -190,7 +197,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.lira.portfolio.title,
     icon: Briefcase,
     inBottomBar: false,
-    more: "data",
+    more: "mine",
     hint: (t) => t.menu.hintPortfolio,
   },
   {
@@ -312,7 +319,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.taxTool,
     icon: Receipt,
     inBottomBar: false,
-    more: "data",
+    more: "mine",
     hint: (t) => t.menu.hintTax,
   },
   {

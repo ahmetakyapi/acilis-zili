@@ -27,6 +27,12 @@
    belirleniyor ve burada doğrulanmadığı için o ad kullanılmıyor. 3M (MMM)
    2024'teki bölünmeden sonra temettüsünü düşürdüğü için listede yok.
 
+   BAŞLIK VE AÇIKLAMA (17 Ekim, sahibinin isteği: "daha güzel, daha
+   anlamlı"): başlık temanın neden izlendiğini söyler ("Yapay Zekâ
+   Zinciri", "Temettüsünü Her Yıl Artıranlar"); açıklama jargonsuz tek
+   cümle — "uç nokta" gibi sektör terimi yerine korunan şeyin kendisi.
+   Slug'lar değişmedi, bağlantılar aynı.
+
    KATILIM UYUMLU listesi elle yazılmıyor: endeks üyeleri arasında
    `lib/compliance.ts` ön elemesini geçenler sayfa açıldığında seçiliyor
    (`lib/themes-data.ts`). Sembol dizisi bu yüzden `"katilim"` işareti.
@@ -63,10 +69,10 @@ export const THEMES = [
       "ORCL", "PLTR", "MU", "SNDK", "ANET", "DELL", "SMCI", "ALAB", "NOW",
     ],
     benchmark: null,
-    titleTr: "Yapay Zekâ",
-    titleEn: "Artificial Intelligence",
-    dekTr: "Yapay zekâ modellerini eğiten ve çalıştıran çiplerden bulut altyapısına ve yazılıma uzanan zincir.",
-    dekEn: "The chain from the chips that train and run AI models to the cloud infrastructure and software on top.",
+    titleTr: "Yapay Zekâ Zinciri",
+    titleEn: "The AI Supply Chain",
+    dekTr: "Çipten buluta, sunucudan yazılıma: yapay zekâya yapılan yatırımın parasının aktığı şirketler.",
+    dekEn: "From chips to cloud, servers to software: the companies that AI spending flows through.",
     whyTr:
       "Liste, yapay zekâ harcamasının parasının aktığı üç halkadan seçildi: hızlandırıcı, bellek ve veri merkezi depolaması üreten yarı iletken şirketleri (Nvidia, AMD, Broadcom, Micron, SanDisk, TSMC), bu çipleri veri merkezlerine kuran ve kiralayan bulut sağlayıcıları (Microsoft, Alphabet, Amazon, Oracle, Meta) ve sunucu, ağ ve yazılım tarafı (Dell, Super Micro, Arista, Astera Labs, Palantir, ServiceNow). Halkalar aynı talebe bağlı ama aynı anda hareket etmek zorunda değil: bulut şirketlerinin yatırım bütçesi bir halkanın geliri, ötekinin gideridir.",
     whyEn:
@@ -87,8 +93,8 @@ export const THEMES = [
     benchmark: { symbol: "SMH", name: "VanEck Semiconductor ETF" },
     titleTr: "Yarı İletkenler",
     titleEn: "Semiconductors",
-    dekTr: "Çip tasarlayanlar, üretenler ve üretim makinelerini yapanlar: döngüsel ve sermaye yoğun bir sektör.",
-    dekEn: "The companies that design chips, make them and build the machines that make them: a cyclical, capital-heavy industry.",
+    dekTr: "Çipi tasarlayan, üreten ve üretim makinesini yapan şirketler: teknolojinin en döngüsel, en sermaye yoğun halkası.",
+    dekEn: "The companies that design chips, make them and build the machines that make them: tech's most cyclical, capital-heavy link.",
     whyTr:
       "Sektör üç iş modeline ayrılıyor ve liste üçünü de taşıyor: kendi fabrikası olmadan tasarlayanlar (Nvidia, AMD, Broadcom, Qualcomm, Marvell, Arm), sözleşmeli ya da kendi adına üretenler (TSMC, Intel, Micron, SK hynix, SanDisk, Texas Instruments) ve üretim ekipmanı satanlar (ASML, Applied Materials, Lam Research, KLA). Otomotiv ve sanayi çiplerinin ağırlıklı olduğu NXP, onsemi, Microchip ve Analog Devices döngünün farklı bir evresinde hareket edebilir. ASML, TSMC ve SK hynix'in ana borsası ABD dışında; piyasa değeri bu yüzden boş kalıyor.",
     whyEn:
@@ -102,10 +108,10 @@ export const THEMES = [
       "SNOW", "DDOG", "MDB", "WDAY", "SHOP", "NET",
     ],
     benchmark: { symbol: "SKYY", name: "First Trust Cloud Computing ETF" },
-    titleTr: "Bulut ve Yazılım",
-    titleEn: "Cloud & Software",
-    dekTr: "Altyapıyı kiralayan dev bulut sağlayıcıları ve abonelikle satılan kurumsal yazılım.",
-    dekEn: "The hyperscalers that rent out infrastructure and the enterprise software sold by subscription.",
+    titleTr: "Bulut ve Abonelik Yazılımı",
+    titleEn: "Cloud and Subscription Software",
+    dekTr: "Sunucu kiralayan bulut devleri ve şirketlere abonelikle yazılım satanlar: geliri her ay yenilenen işler.",
+    dekEn: "The cloud giants that rent out servers and the companies selling software by subscription: revenue that renews every month.",
     whyTr:
       "İlk grup altyapıyı kiralıyor: Amazon Web Services, Microsoft Azure, Google Cloud ve Oracle Cloud. İkinci grup bu altyapının üstünde abonelikle yazılım satıyor: Salesforce, ServiceNow, Adobe, Intuit, Workday ve Shopify. Snowflake, Datadog, MongoDB ve Cloudflare kullanıma göre ücretlendiren veri ve altyapı yazılımı sunuyor; müşterinin bulut faturası büyüdükçe onların geliri de büyüyor. Abonelik gelirinin öngörülebilirliği bu şirketlerin değerlemesini genellikle kârdan çok gelir büyümesine bağlıyor.",
     whyEn:
@@ -120,8 +126,8 @@ export const THEMES = [
     benchmark: { symbol: "CIBR", name: "First Trust NASDAQ Cybersecurity ETF" },
     titleTr: "Siber Güvenlik",
     titleEn: "Cybersecurity",
-    dekTr: "Uç nokta, ağ, kimlik ve veri koruması: şirketlerin kesmeye en son cesaret ettiği bütçe kalemi.",
-    dekEn: "Endpoint, network, identity and data protection: the budget line companies are slowest to cut.",
+    dekTr: "Bilgisayarları, ağları, kullanıcı hesaplarını ve verileri saldırılara karşı koruyan şirketler: ekonomi yavaşlasa da kolay kısılmayan bir harcama.",
+    dekEn: "The companies that protect computers, networks, user accounts and data from attacks: spending that rarely gets cut, even in a slowdown.",
     whyTr:
       "Liste güvenliğin katmanlarına göre seçildi: uç nokta koruması (CrowdStrike), güvenlik duvarı ve ağ güvenliği (Palo Alto Networks, Fortinet, Cisco, F5), ağ kenarı ve web trafiği (Cloudflare, Akamai), kimlik yönetimi (Okta, SailPoint), yedekleme ve veri kurtarma (Rubrik) ve tüketici güvenliği (Gen Digital). Güvenlik harcaması ekonomik yavaşlamada diğer bilişim kalemlerinden genellikle daha dirençli kalıyor, ama büyük bir ihlal ya da hatalı bir güncelleme tek bir şirketin hissesini sektörden bağımsız sarsabiliyor.",
     whyEn:
@@ -145,10 +151,10 @@ export const THEMES = [
        sembol tablosunda yok; tablo genişlerse ilk adaylar onlar. */
     symbols: ["LLY", "AMGN", "PFE", "ALT", "WST"],
     benchmark: null,
-    titleTr: "Obezite İlaçları (GLP-1)",
-    titleEn: "Obesity Drugs (GLP-1)",
-    dekTr: "GLP-1 sınıfı kilo verme ilaçlarını satanlar, geliştirenler ve üretim zincirine parça verenler.",
-    dekEn: "Companies selling, developing or supplying the production chain for GLP-1 class weight-loss drugs.",
+    titleTr: "Kilo Verme İlaçları (GLP-1)",
+    titleEn: "Weight-Loss Drugs (GLP-1)",
+    dekTr: "Mounjaro ve Zepbound gibi kilo verdiren iğneleri satan, yenisini geliştiren ve kalemini üreten şirketler.",
+    dekEn: "The companies selling weight-loss injections such as Mounjaro and Zepbound, developing the next ones and making the pens.",
     whyTr:
       "Eli Lilly, tirzepatid (Mounjaro, Zepbound) ile pazarın iki büyük satıcısından biri ve listede obezitenin gelirin ana kalemi olduğu tek büyük şirket; öteki satıcı Novo Nordisk sembol tablomuzda olmadığı için listede yok. Amgen (MariTide) ve Pfizer (Metsera satın alımıyla gelen adaylar) son aşama klinik denemelerdeki programlarla temaya giriyor; ikisinin de bugünkü geliri başka ilaçlardan geliyor, hisselerini obeziteye bağlayan beklenti. Altimmune'un (pemvidutid) tek işi bu. West Pharmaceutical enjeksiyon kalemlerinin bileşenlerini üretiyor. Obezite adayı yalnızca erken aşamada, lisansla alınmış büyük ilaç şirketleri (Regeneron, AbbVie, Merck) listede değil: hisseleri başka ilaçlarla hareket ediyor. Geliştirme aşamasındaki bir ilacın klinik sonucu hisseyi tek günde sert oynatabilir.",
     whyEn:
@@ -163,15 +169,18 @@ export const THEMES = [
        da kapsadığını söylüyor. Üstteki kural: birebir izleyen yaygın fon
        yoksa ölçüt yok. */
     benchmark: null,
-    /* Ad (28 Eylül): "Nükleer ve Enerji Altyapısı" idi. On bir üyenin
+    /* Ad (17 Ekim): "Veri Merkezlerinin Elektriği" — sahibinin isteği,
+       başlık temanın ne olduğunu değil NEDEN izlendiğini söylesin; listenin
+       ortak sorusu veri merkezi elektrik talebi. Nükleer açıklamada.
+       Ad (28 Eylül): "Nükleer ve Enerji Altyapısı" idi. On bir üyenin
        yalnızca üçünün işi nükleer (Constellation, Cameco, GE Vernova'nın
        reaktör programı); kalanı elektrik üreticisi ya da şebeke ve güç
        ekipmanı. "Enerji" Türkçede petrol ve doğal gazı da çağırıyor, listede
        ikisi de yok. Slug bağlantılar için aynı kaldı. */
-    titleTr: "Nükleer, Elektrik ve Şebeke",
-    titleEn: "Nuclear, Power & Grid",
-    dekTr: "Veri merkezlerinin elektrik talebini karşılayan üretici, yakıt tedarikçisi ve şebeke ekipmanı şirketleri.",
-    dekEn: "The generators, fuel suppliers and grid-equipment makers meeting data centres' demand for electricity.",
+    titleTr: "Veri Merkezlerinin Elektriği",
+    titleEn: "Powering the Data Centres",
+    dekTr: "Yapay zekâyla hızla artan elektrik ihtiyacını karşılayan nükleer ve doğal gaz santralleri, uranyum ve şebeke ekipmanı şirketleri.",
+    dekEn: "The nuclear and gas generators, uranium miners and grid-equipment makers meeting the fast-growing power demand from AI.",
     whyTr:
       "Üreticiler: Constellation Energy ABD'nin en büyük nükleer santral filosunu işletiyor; Vistra, NRG ve NextEra nükleer, doğal gaz ve yenilenebilir kapasite taşıyor. Yakıt: Cameco uranyum üretiyor (ana borsası Kanada olduğu için piyasa değeri boş). Ekipman ve kurulum: GE Vernova gaz türbini ve şebeke ekipmanı yapıyor ve küçük modüler reaktör geliştiriyor; Eaton, Hubbell ve Vertiv elektrik dağıtımı ve veri merkezi soğutması, Quanta şebeke inşaatı, Bloom Energy yerinde elektrik üreten yakıt pilleri satıyor. Ortak soru aynı: şebekeye bağlanmayı bekleyen talep ne kadar hızlı karşılanabilir.",
     whyEn:
@@ -184,8 +193,8 @@ export const THEMES = [
     benchmark: { symbol: "DRIV", name: "Global X Autonomous & Electric Vehicles ETF" },
     titleTr: "Elektrikli Araçlar",
     titleEn: "Electric Vehicles",
-    dekTr: "Elektrikli araç üreticileri, araç içi çip ve elektrik sistemi tedarikçileri, batarya hammaddesi ve şarj ağı.",
-    dekEn: "EV makers, suppliers of in-vehicle chips and electrical systems, battery materials and charging networks.",
+    dekTr: "Elektrikli otomobil üreticileri ve onlara çip, elektrik sistemi, batarya hammaddesi ve şarj ağı sağlayan şirketler.",
+    dekEn: "Electric car makers and the companies supplying their chips, electrical systems, battery materials and charging networks.",
     whyTr:
       "Üreticiler: Tesla yalnızca elektrikli araç satıyor; General Motors ve Ford elektrikli modelleri içten yanmalı araç işinin yanında yürütüyor; VinFast Vietnam merkezli (ana para birimi ABD doları olmadığı için piyasa değeri boş). Tedarik: onsemi ve NXP araç içi güç ve kontrol çipleri, Aptiv elektrik mimarisi ve yazılım, Albemarle batarya için lityum üretiyor. ChargePoint şarj istasyonu ağı işletiyor. Tedarikçilerin gelirinin önemli bir kısmı elektrikli olmayan araçlardan da geliyor; tema tek başına bu hisseleri açıklamıyor.",
     whyEn:
@@ -196,10 +205,10 @@ export const THEMES = [
     slug: "uzay",
     symbols: ["SPCX", "RKLB", "ASTS", "SPCE", "LMT", "NOC", "LHX", "BA", "KTOS"],
     benchmark: { symbol: "UFO", name: "Procure Space ETF" },
-    titleTr: "Uzay",
-    titleEn: "Space",
-    dekTr: "Fırlatma, uydu ve uzay araçları: yeni şirketlerle köklü savunma üreticileri yan yana.",
-    dekEn: "Launch, satellites and spacecraft: young companies alongside established defence contractors.",
+    titleTr: "Uzay Ekonomisi",
+    titleEn: "The Space Economy",
+    dekTr: "Roket fırlatan, uydu kuran ve uzay aracı üreten şirketler: genç girişimlerle köklü savunma devleri yan yana.",
+    dekEn: "The companies launching rockets, building satellites and making spacecraft: young start-ups alongside established defence giants.",
     whyTr:
       "Fırlatma ve uzay aracı: SpaceX (Haziran 2026'da halka arz oldu), Rocket Lab ve Virgin Galactic. Uydu hizmeti: AST SpaceMobile uzaydan doğrudan telefonlara bağlantı kurmayı hedefliyor. Köklü üreticiler: Lockheed Martin, Northrop Grumman, L3Harris ve Boeing uydu, roket motoru ve uzay aracı programları yürütüyor; Kratos uydu yer sistemleri sağlıyor. Köklü üreticilerde uzay gelirin küçük bir parçası, genç şirketlerde ise gelirin neredeyse tamamı; ikisi aynı haberlere çok farklı tepki verebilir.",
     whyEn:
@@ -213,10 +222,10 @@ export const THEMES = [
       "ITW", "ADP", "LOW", "TGT", "WMT", "MCD", "ABT", "SYY", "NUE", "CINF",
     ],
     benchmark: { symbol: "VIG", name: "Vanguard Dividend Appreciation ETF" },
-    titleTr: "Uzun Temettü Geçmişi",
-    titleEn: "Long Dividend Records",
-    dekTr: "Temettüsünü on yıllardır her yıl artırmasıyla bilinen şirketler.",
-    dekEn: "Companies known for raising their dividend every year for decades.",
+    titleTr: "Temettüsünü Her Yıl Artıranlar",
+    titleEn: "Steady Dividend Raisers",
+    dekTr: "Kâr payını on yıllardır her yıl artırmasıyla bilinen, çoğu günlük hayattan tanıdık şirketler.",
+    dekEn: "Companies known for raising their dividend every year for decades, most of them household names.",
     whyTr:
       "Listedeki şirketler temettülerini on yıllardır kesintisiz artırmasıyla tanınıyor: tüketim ürünleri (Coca-Cola, Procter & Gamble, PepsiCo, Colgate, Kimberly-Clark), sağlık (Johnson & Johnson, Abbott), sanayi (Emerson, Dover, Parker-Hannifin, Illinois Tool Works, Nucor), perakende (Walmart, Lowe's, Target, McDonald's) ve hizmet (ADP, Sysco, Genuine Parts, Cincinnati Financial). Uzun bir artış serisi geçmişi anlatır, geleceği garanti etmez: seriler kesilebiliyor. Bu bir endeks üyeliği listesi değil; kıyas için temettü büyütenleri izleyen bir fon kullanılıyor.",
     whyEn:
@@ -234,7 +243,7 @@ export const THEMES = [
        değil oran taraması olduğu. */
     titleTr: "Katılım Uyumlu",
     titleEn: "Shariah-Compliant",
-    dekTr: "Katılım (faizsiz finans) ön elemesini geçen en büyük endeks şirketleri: faaliyeti uygun, borcu ve faizli nakdi sınırın altında. Her gün yeniden seçilir; sertifika değildir.",
+    dekTr: "Faizsiz finans (katılım) ön elemesini geçen büyük ABD şirketleri: işi uygun, borcu ve faizli nakdi sınırın altında. Liste her gün yeniden seçilir; sertifika değildir.",
     dekEn: "The largest index companies that pass an Islamic finance pre-screen: permissible business, debt and interest-bearing cash under the limits. Reselected daily; not a certification.",
     whyTr:
       "Bu liste elle seçilmiyor. S&P 500, Nasdaq 100 ve Dow Jones üyelerinden faaliyet alanı elenmeyenler piyasa değerine göre sıralanıyor, en büyüklerinin borç ve nakit oranları sitenin hisse sayfalarındaki katılım taramasıyla aynı kurala göre ölçülüyor ve ön elemeyi geçenler burada listeleniyor. Oranlar üç ayda bir yayımlanan bilançodan geldiği için liste çoğu gün aynı kalır; fiyat değiştikçe sınıra yakın bir şirket girip çıkabilir.",

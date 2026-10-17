@@ -657,6 +657,29 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
   background:var(--surface-sunken);
   color:var(--primary-ink);
 }
+/* YAZILI EYLEMLER (17 Ekim, sahibinin isteği: "yerimiz varken düğmelere ne
+   yaptığını yazalım"). Favori, alarm ve portföy 640 piksel üstünde simge +
+   yazı hapı; telefonda yazı gizlenir, düğme yine 36'lık daire (yan yana
+   üç hap 390'da sembolle birlikte sığmıyor). Paylaş sağda simge kalır. */
+.identityMeta :is(button,a)[data-labeled] { transition:background-color .25s var(--ease-brand), color .25s var(--ease-brand), translate .25s var(--ease-brand); }
+.identityMeta [data-action-text] { display:none; }
+@media(min-width:640px) {
+  .identityMeta { gap:8px; }
+  .identityMeta :is(button,a)[data-labeled] {
+    width:auto;
+    gap:7px;
+    padding:0 14px 0 11px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:650;
+    white-space:nowrap;
+  }
+  .identityMeta :is(button,a)[data-labeled]:hover { background:var(--primary-wash); color:var(--primary-ink); translate:0 -1px; }
+  .identityMeta :is(button,a)[data-labeled][aria-pressed="true"] { background:var(--primary-wash); }
+  .identityMeta [data-action-text] { display:inline; color:var(--text-strong); }
+  .identityMeta [aria-pressed="true"] [data-action-text] { color:var(--primary-ink); }
+}
+@media(prefers-reduced-motion:reduce) { .identityMeta :is(button,a)[data-labeled]:hover { translate:none; } }
 .companyOverview .companyName {
   font-size:clamp(30px,3vw,42px);
   font-weight:700;

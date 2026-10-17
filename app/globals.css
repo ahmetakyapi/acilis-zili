@@ -2312,7 +2312,7 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
    değişmedi. */
 .premium-masthead { background:var(--premium-surface); }
 .masthead-brand { border-radius:10px; }
-.masthead-brand > span:first-child { transition:transform 260ms var(--ease-brand); }
+.masthead-brand > span:first-child { transition:transform 420ms var(--ease-brand); }
 /* TEK ASKI (14 Ekim). Hover sallanması %15'ten, gezinme sallanması %22'den
    dönüyordu — aynı zil iki ayrı askıdan sallanıyor, imleç üstündeyken
    gezinme başlarsa pivot zıplıyordu. Askının dibi BellMark görüş kutusunda
@@ -2391,10 +2391,16 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
  .premium-masthead .masthead-search-icon { width:30px; height:30px; border-radius:999px; background:var(--primary-tint); }
 }
 @media(hover:hover) and (pointer:fine) {
- .masthead-brand:hover > span:first-child { transform:translateY(-1px); }
- .masthead-brand:hover svg,[data-admin-brand]:hover svg { animation:masthead-bell 600ms var(--ease-brand); }
- .masthead-brand:hover > span:first-child::before { animation:masthead-ring 700ms var(--ease-brand) 60ms; }
- .masthead-brand:hover > span:first-child::after { animation:masthead-ring 700ms var(--ease-brand) 240ms; }
+ .masthead-brand:hover > span:first-child { transform:translateY(-1.5px); }
+ /* SÖNÜMLÜ SALINIM (17 Ekim, sahibinin itirazı: "çok hızlı ve fazla
+    hareket ediyor"). Eskisi 600 ms'de −9° / +7° / −3° idi ve her ara kare
+    --ease-brand'in hızlı çıkışıyla başlıyordu: zil sarsılır gibi duruyordu.
+    Şimdi 1,6 sn, genlik 5°'den başlayıp her yarım salınımda ~%55 sönüyor
+    (5 → 2,8 → 1,5 → 0,8), ara kareler ease-in-out — sarkaç gibi tepe
+    noktalarında yavaşlıyor. Halkalar da yavaş ve az büyüyor. */
+ .masthead-brand:hover svg,[data-admin-brand]:hover svg { animation:masthead-bell 1.6s ease-in-out; }
+ .masthead-brand:hover > span:first-child::before { animation:masthead-ring 1.4s var(--ease-brand) 80ms; }
+ .masthead-brand:hover > span:first-child::after { animation:masthead-ring 1.4s var(--ease-brand) 420ms; }
  .masthead-row:hover .masthead-row-arrow { transform:translate(2px,-2px); opacity:1; }
  .masthead-row:hover .masthead-row-icon { border-color:var(--primary-soft, var(--primary-faint)); background:var(--primary-wash); }
  .masthead-feature-card:hover { border-color:var(--primary-soft, var(--primary-faint)); background:var(--primary-wash); }
@@ -2403,8 +2409,8 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
  .premium-masthead .masthead-search:hover .masthead-search-icon { background:var(--primary-wash); }
  .premium-masthead .masthead-account[data-signed-in]:hover { background:var(--primary-hover); }
 }
-@keyframes masthead-ring { from { opacity:0; scale:.86; } 30% { opacity:1; } to { opacity:0; scale:1.28; } }
-@keyframes masthead-bell { 20% { transform:rotate(-9deg); } 50% { transform:rotate(7deg); } 80% { transform:rotate(-3deg); } to { transform:none; } }
+@keyframes masthead-ring { from { opacity:0; scale:.92; } 35% { opacity:.85; } to { opacity:0; scale:1.18; } }
+@keyframes masthead-bell { 0% { transform:none; } 16% { transform:rotate(-5deg); } 38% { transform:rotate(2.8deg); } 58% { transform:rotate(-1.5deg); } 76% { transform:rotate(.8deg); } 90% { transform:rotate(-.3deg); } 100% { transform:none; } }
 /* Gezinme sürerken başlıktaki zil sallanır (gerekçe RouteProgress.tsx →
    `data-navigating`). Dönme noktası askı: zil karonun ortasından değil
    tepesinden sarkıyor. Hover'daki tek salınımdan daha yumuşak ve döngünün

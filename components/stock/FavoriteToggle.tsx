@@ -30,11 +30,14 @@ export function FavoriteToggle({
   addLabel,
   removeLabel,
   fullLabel,
+  text,
 }: {
   symbol: string;
   isFavorite: boolean;
   addLabel: string;
   removeLabel: string;
+  /** Görünür yazı (17 Ekim, hisse başlığı): [eklenmemişken, eklenmişken]. */
+  text?: readonly [string, string];
   /** Liste doluyken (200 sembol) kalbin altında beliren açıklama. */
   fullLabel?: string;
 }) {
@@ -66,6 +69,7 @@ export function FavoriteToggle({
       <HeartButton
         active={shown}
         label={shown ? removeLabel : addLabel}
+        text={text ? text[shown ? 1 : 0] : undefined}
       />
     </form>
   );
@@ -75,7 +79,7 @@ export function FavoriteToggle({
  * Düğme AYRI bir bileşen: `useFormStatus` yalnızca kendisini saran formun
  * ALTINDAKİ bir bileşenden okunabiliyor, formu render eden bileşenden değil.
  */
-function HeartButton({ active, label }: { active: boolean; label: string }) {
+function HeartButton({ active, label, text }: { active: boolean; label: string; text?: string }) {
   const { pending } = useFormStatus();
   /* Kutlama TIKLAMAYA bağlı: sayfa açıldığında favori olan kalp oynamaz.
      Sayaç her tıklamada artıyor ve anahtar olarak kullanılıyor — art arda
@@ -109,6 +113,7 @@ function HeartButton({ active, label }: { active: boolean; label: string }) {
       /* `aria-pressed` durumu ekran okuyucuya da söylüyor: ikonun dolu mu
          boş mu olduğu yalnızca görene bilgi veriyordu. */
       aria-pressed={active}
+      data-labeled={text ? "" : undefined}
       className={cn(
         "tap-44 inline-flex size-8 items-center justify-center rounded-(--radius-sm) transition-colors",
         active
@@ -136,6 +141,7 @@ function HeartButton({ active, label }: { active: boolean; label: string }) {
         ))}
         <Heart className={styles.icon} weight={active ? "fill" : "duotone"} size={17} />
       </span>
+      {text && <span data-action-text>{text}</span>}
     </button>
   );
 }
