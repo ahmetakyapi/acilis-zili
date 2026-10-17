@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isBot } from "@/lib/analytics";
-import { getNewsBriefing, getNewsExplainer } from "@/lib/news-insights";
+import { briefingFailure, getNewsBriefing, getNewsExplainer } from "@/lib/news-insights";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { insightsConfigured } from "@/lib/stock-insights";
 
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   if (params.get("tur") === "gundem") {
     const briefing = await getNewsBriefing();
-    return respond(briefing ? { ok: true, insight: briefing } : { ok: false, reason: "unavailable" });
+    return respond(briefing ? { ok: true, insight: briefing } : { ok: false, reason: "unavailable", cause: briefingFailure() });
   }
   const id = params.get("id") ?? "";
   if (!UUID.test(id)) return respond({ ok: false, reason: "bad-request" }, 400);

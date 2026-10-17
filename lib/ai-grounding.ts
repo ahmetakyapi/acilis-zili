@@ -25,3 +25,9 @@ export function numbersGroundedAcrossLocales(output: string, input: string): boo
   const allowed = new Set((input.match(NUMBER) ?? []).map(unify));
   return (output.match(NUMBER) ?? []).every((n) => allowed.has(unify(n)));
 }
+
+/** Tanı için: girdide karşılığı olmayan sayılar (ayraçlar tek biçimde). */
+export function ungroundedNumbers(output: string, input: string): string[] {
+  const allowed = new Set((input.match(NUMBER) ?? []).map(unify));
+  return (output.match(NUMBER) ?? []).filter((n) => !allowed.has(unify(n)));
+}

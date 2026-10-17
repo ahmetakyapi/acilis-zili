@@ -2,7 +2,7 @@ import "server-only";
 import { and, desc, gte, lt } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { z } from "zod";
-import { numbersGroundedAcrossLocales } from "@/lib/ai-grounding";
+import { numbersGroundedAcrossLocales, ungroundedNumbers } from "@/lib/ai-grounding";
 import { getNewsById } from "@/lib/data";
 import { db } from "@/lib/db";
 import { news } from "@/lib/schema";
@@ -124,8 +124,24 @@ async function briefingInput(slot: Date) {
   return { from, picked };
 }
 
+/* BAŞARISIZLIK DA HATIRLANIR (17 Ekim, canlıda görüldü). `unstable_cache`
+   fırlatılan hatayı saklamıyor: gündem yazılamazsa her okur Claude'u
+   yeniden çağırıyordu. Dönem başına son başarısızlık süreçte 20 dakika
+   tutulur; nedeni uca geçer ("thin" az haber, "ungrounded" sayı denetimi,
+   "no-output" model yanıtı) — tanı için, metin içermez. */
+const failures = new Map<string, { at: number; reason: string }>();
+const FAILURE_TTL = 20 * 60_000;
+let lastBriefingFailure: { reason: string; detail?: string } | null = null;
+export const briefingFailure = () => lastBriefingFailure;
+
 export async function getNewsBriefing(now: Date = new Date()): Promise<NewsBriefing | null> {
   const slot = briefingSlot(now);
+  const key = slot.toISOString();
+  const failed = failures.get(key);
+  if (failed && Date.now() - failed.at < FAILURE_TTL) {
+    lastBriefingFailure = { reason: failed.reason };
+    return null;
+  }
   try {
     return await unstable_cache(
       async (): Promise<NewsBriefing> => {
@@ -163,14 +179,20 @@ export async function getNewsBriefing(now: Date = new Date()): Promise<NewsBrief
           .slice(0, 5);
         if (themes.length < 2) throw new Error("thin");
         const written = themes.flatMap((t) => [t.title.tr, t.title.en, t.summary.tr, t.summary.en]).join("\n");
-        if (!numbersGroundedAcrossLocales(written, input)) throw new Error("ungrounded");
+        if (!numbersGroundedAcrossLocales(written, input)) {
+          lastBriefingFailure = { reason: "ungrounded", detail: ungroundedNumbers(written, input).join(" ") };
+          throw new Error("ungrounded");
+        }
         return { kind: "briefing", slot: slot.toISOString(), from: from.toISOString(), to: slot.toISOString(), considered: picked.length, themes, generatedAt: new Date().toISOString() };
       },
       ["news-briefing-v1", slot.toISOString()],
       { revalidate: 7 * 3600, tags: ["news-insight"] },
     )();
   } catch (error) {
-    if (error instanceof Error && error.message === "ungrounded") console.error("[gündem] girdide olmayan sayı, gündem düşürüldü");
+    const reason = error instanceof Error && ["thin", "ungrounded", "no-output"].includes(error.message) ? error.message : "error";
+    if (reason !== "ungrounded") lastBriefingFailure = { reason };
+    failures.set(key, { at: Date.now(), reason });
+    console.error(`[gündem] yazılamadı: ${reason}${lastBriefingFailure?.detail ? ` (${lastBriefingFailure.detail})` : ""}`);
     return null;
   }
 }
@@ -184,6 +206,7 @@ const EXPLAINER_SYSTEM = `You explain one market news item for Açılış Zili, 
 Return tr / en, each with:
 - summary: one or two sentences, at most 40 words, in plain words: what happened.
 - points: 2 or 3 points, each title at most 5 words, detail at most 35 words. Cover, as the text allows: why it matters for the company or its shareholders; a term or mechanism in the item explained simply; what the item itself says to watch next. If the text does not say why it matters, do not guess a reason; explain the terms instead.
+- Never write a sentence about what the text does NOT say ("the text does not mention…"); if there is nothing more to say, return fewer points.
 
 ${RULES}`;
 
