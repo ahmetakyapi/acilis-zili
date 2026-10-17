@@ -42,7 +42,7 @@ export const sampleDigest = (overrides: Partial<DigestData> = {}): DigestData =>
     { symbol: "QQQ", label: "Nasdaq 100", changePct: -0.42, price: 560, steps: [] },
   ],
   reported: [
-    { symbol: "JPM", name: "JPMorgan Chase & Co.", reportDate: "2026-10-14", eps: { direction: "beat", ratio: 0.083 }, revenue: { direction: "miss", ratio: -0.012 }, analysisPath: "/bilancolar/jpm/2026q3" },
+    { symbol: "JPM", name: "JPMorgan Chase & Co.", reportDate: "2026-10-14", eps: { direction: "beat", ratio: 0.083 }, revenue: { direction: "miss", ratio: -0.012 }, analysisPath: "/bilancolar/jpm/2026q3", week: { changePct: 4.2, steps: [] } },
   ],
   pastFailed: false,
   brief: { headline: "Bankalar Haftayı Taşıdı", path: "/bulten/haftalik/2026-10-12" },
@@ -107,7 +107,7 @@ test("onay postası: bağlantı, açılan postalar, kaçışlanmış ad", () => 
   });
   assert.equal(mail.subject, tr.emailNotify.confirmMail.subject);
   assert.match(mail.html, /e-posta\/onay\?anahtar=abc/);
-  assert.match(mail.html, /Alarm E-postası · Pazar Özeti/);
+  assert.match(mail.html, /Alarm E-postası · Haftanın Özeti/);
   assert.ok(!mail.html.includes("okur<b>"));
   assert.match(mail.text, /okur<b>/);
 });
@@ -127,14 +127,14 @@ test("alarm postası: konu, yön rengi, çıkış bağlantısı", () => {
     { kind: "percent", symbol: "AMD", direction: "up", thresholdPct: 5, changePct: 6.31, firedAt: new Date() },
     en.emailNotify,
   );
-  assert.equal(plain(pct.subject), "AMD passed its + 5% gain threshold today");
-  assert.match(plain(pct.html), /\+ 6\.31%/);
+  assert.equal(plain(pct.subject), "AMD passed its +5% gain threshold today");
+  assert.match(plain(pct.html), /\+6\.31%/);
 });
 
 test("haftalık posta: bölümler, kaçış, kişisel satır", () => {
   const mail = weeklyEmailMessage(recipient, sampleDigest(), [{ symbol: "TSLA", date: "2026-10-21", timing: "amc" }], tr.emailNotify);
-  assert.equal(plain(mail.subject), "Açılış Zili · Pazar Özeti · 19 – 23 Ekim");
-  for (const part of ["Endeksler", "Büyük Şirketlerin Bilançoları", "JPMorgan Chase &amp; Co.", "Hisse Başı Kâr", "+ %8,3", "− %1,2", "Beklentinin Altında", "weekly.gif", "Bankalar Haftayı Taşıdı", "Takip Listende Bu Hafta", "Tesla", "21 Ekim Çarşamba", "Tüketici Fiyatları", "kapsam=weekly"]) {
+  assert.equal(plain(mail.subject), "Açılış Zili · Haftanın Özeti · 19 – 23 Ekim");
+  for (const part of ["Endeksler", "Büyük Şirketlerin Bilançoları", "JPMorgan Chase &amp; Co.", "Hisse Başı Kâr", "+%8,3", "−%1,2", "+%4,2", "Haftalık Hareket", "Haftanın Özeti ve Genel Bakış", "Beklentinin Altında", "weekly.gif", "Bankalar Haftayı Taşıdı", "Takip Listende Bu Hafta", "Tesla", "21 Ekim Çarşamba", "Tüketici Fiyatları", "kapsam=weekly"]) {
     assert.ok(plain(mail.html).includes(part), part);
   }
   /* Sayaçlar kalktı (17 Ekim). */

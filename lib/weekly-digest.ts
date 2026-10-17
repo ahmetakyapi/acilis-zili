@@ -69,6 +69,11 @@ export type DigestReport = {
   revenue: Surprise | null;
   /** Bizim yazdığımız analiz varsa yolu (dilsiz). */
   analysisPath: string | null;
+  /** Hissenin geride kalan haftası, kapanıştan kapanışa — endekslerle aynı
+      ölçü (indexMoveFromBars). Seri eksikse null; satır yüzdesiz basılır.
+      17 Ekim, sahibinin isteği: "beklentiyi aştı" tek başına anlamsız,
+      piyasanın nasıl karşıladığı yanında okunmalı. */
+  week: { changePct: number; steps: DigestIndex["steps"] } | null;
 };
 
 export type DigestLink = { title: string; meta: string | null; path: string; external?: boolean };
@@ -131,15 +136,21 @@ function timing(hour: string | null): DigestAheadItem["timing"] {
   return hour === "bmo" ? "bmo" : hour === "amc" ? "amc" : "other";
 }
 
-async function weeklyIndices(pastMonday: string, pastFriday: string, now: Date): Promise<DigestIndex[]> {
+/** Sembollerin geride kalan haftası — endeks şeridi ve bilanço açıklayan hisseler aynı yoldan. */
+async function weeklyMoves(symbols: readonly string[], pastMonday: string, pastFriday: string, now: Date): Promise<DigestIndex[]> {
+  if (symbols.length === 0) return [];
   const [status, holidays] = await Promise.all([getStatus(), getHolidays()]);
   const range = rangeCovering(pastMonday, todayEt(now));
   if (!range) return [];
   const lastSession = isTradingDay(pastFriday, holidays) ? pastFriday : prevTradingDay(pastFriday, holidays);
   const moves = await Promise.all(
-    INDEX_STRIP.map(async (symbol): Promise<DigestIndex | null> => {
-      const result = await getChartBars(symbol, range, status);
-      return result.ok ? indexMoveFromBars(symbol, result.data, pastMonday, pastFriday, lastSession) : null;
+    symbols.map(async (symbol): Promise<DigestIndex | null> => {
+      try {
+        const result = await getChartBars(symbol, range, status);
+        return result.ok ? indexMoveFromBars(symbol, result.data, pastMonday, pastFriday, lastSession) : null;
+      } catch {
+        return null;
+      }
     }),
   );
   return moves.filter((move): move is DigestIndex => move !== null);
@@ -233,7 +244,7 @@ export async function gatherDigest(locale: Locale, now: Date = new Date()): Prom
   const [past, ahead, indices, analyses, stories, brief, events, later] = await Promise.all([
     getEarningsWeek(pastMonday, locale),
     getEarningsWeek(thisMonday, locale),
-    weeklyIndices(pastMonday, pastFriday, now),
+    weeklyMoves(INDEX_STRIP, pastMonday, pastFriday, now),
     getAnalyses(locale, { limit: 60, sort: "tarih" }),
     getStories(locale, 30),
     getBriefByDate(pastMonday, locale, "weekly"),
@@ -253,13 +264,17 @@ export async function gatherDigest(locale: Locale, now: Date = new Date()): Prom
   const reportedRows = pastPicked
     .filter((row) => row.epsActual !== null || row.revenueActual !== null)
     .sort((a, b) => Number(b.spotlight) - Number(a.spotlight) || (b.marketCap ?? 0) - (a.marketCap ?? 0));
-  const reported: DigestReport[] = reportedRows.slice(0, MAX_REPORTED).map((row) => ({
+  const reportedTop = reportedRows.slice(0, MAX_REPORTED);
+  const weekOf = (move: DigestIndex | undefined) => (move ? { changePct: move.changePct, steps: move.steps } : null);
+  const stockMoves = new Map((await weeklyMoves(reportedTop.map((row) => row.symbol), pastMonday, pastFriday, now)).map((m) => [m.symbol, m]));
+  const reported: DigestReport[] = reportedTop.map((row) => ({
     symbol: row.symbol,
     name: row.name,
     reportDate: row.reportDate,
     eps: epsSurprise(row.epsActual, row.epsEstimate),
     revenue: revenueSurprise(row.revenueActual, row.revenueEstimate),
     analysisPath: analysisBySymbol.get(row.symbol) ?? null,
+    week: weekOf(stockMoves.get(row.symbol)),
   }));
   const reportedSet = new Set(reportedRows.map((row) => row.symbol));
 

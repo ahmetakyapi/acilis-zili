@@ -8,6 +8,17 @@ import type { Locale } from "@/lib/i18n/config";
 import { displayZone, formatInZone } from "@/lib/session-clock";
 import { SITE_URL } from "@/lib/site";
 import { formatPercent, formatPrice } from "@/lib/utils";
+
+/**
+ * Postadaki yüzde — işaretle yüzde bitişik: "+%8,3", "−%1,97". Sitenin
+ * formatPercent'i işaretten sonra ince boşluk bırakıyor; postada sistem
+ * fontuna düşen istemcide (Gmail) o boşluk tam boşluk genişliğinde
+ * basılıp "+ %8,3" gibi kopuk duruyordu (17 Ekim, sahibinin itirazı).
+ * Yorum istemi de bu biçimi görür ki Claude aynısını kopyalasın.
+ */
+export function emailPercent(value: number, locale: Locale, digits = 2): string {
+  return formatPercent(value, locale, digits).replace(/^([+\u2212])\s+/u, "$1");
+}
 import type { DigestData, DigestReport } from "@/lib/weekly-digest";
 
 /**
@@ -115,9 +126,9 @@ export function alertEmailMessage(recipient: Recipient, alert: AlertEmailInput, 
     directionLabel = alert.direction === "above" ? A.directionAbove : A.directionBelow;
     lead = A.leadPrice;
   } else {
-    const threshold = formatPercent(alert.direction === "up" ? alert.thresholdPct : -alert.thresholdPct, locale, alert.thresholdPct % 1 === 0 ? 0 : 2);
+    const threshold = emailPercent(alert.direction === "up" ? alert.thresholdPct : -alert.thresholdPct, locale, alert.thresholdPct % 1 === 0 ? 0 : 2);
     subject = (alert.direction === "up" ? A.subjectUp : A.subjectDown).replace("{symbol}", alert.symbol).replace("{threshold}", threshold);
-    bigValue = formatPercent(alert.changePct, locale, 2);
+    bigValue = emailPercent(alert.changePct, locale, 2);
     bigLabel = A.changeLabel;
     sideValue = threshold;
     sideLabel = A.thresholdLabel;
@@ -293,7 +304,7 @@ function indicesBlock(data: DigestData, W: Copy["weeklyMail"]): string {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
 <td valign="middle" style="font-family:${FONT};font-size:15px;line-height:20px;font-weight:800;color:${C.ink}"><span class="az-ink">${escapeHtml(index.label)}</span></td>
 <td valign="middle" width="84" class="az-hide-sm" style="padding:0 12px">${index.steps.length > 1 ? stepBars(index.steps, maxStep, i) : ""}</td>
-<td valign="middle" align="right" width="86" class="${tone.cls}" style="font-family:${FONT};font-size:18px;line-height:22px;font-weight:800;letter-spacing:-.02em;color:${tone.ink};white-space:nowrap">${escapeHtml(formatPercent(index.changePct, data.locale, 2))}</td>
+<td valign="middle" align="right" width="86" class="${tone.cls}" style="font-family:${FONT};font-size:18px;line-height:22px;font-weight:800;letter-spacing:-.02em;color:${tone.ink};white-space:nowrap">${escapeHtml(emailPercent(index.changePct, data.locale, 2))}</td>
 </tr></table>
 ${divergingBar(index.changePct, Math.abs(index.changePct) / maxWeek, i)}
 </td></tr>`;
@@ -313,7 +324,7 @@ function surpriseCell(label: string, s: DigestReport["eps"], W: Copy["weeklyMail
   if (!s) return "";
   const tone = TONE[s.direction === "beat" ? "up" : s.direction === "miss" ? "down" : "flat"];
   const verdict = s.direction === "beat" ? W.beat : s.direction === "miss" ? W.miss : W.inline;
-  const value = s.ratio !== null ? formatPercent(s.ratio * 100, locale, 1) : verdict;
+  const value = s.ratio !== null ? emailPercent(s.ratio * 100, locale, 1) : verdict;
   /* Sol şerit yön rengi; az-sunken koyu temada yalnız öteki üç kenarı koyultur. */
   return `<td valign="top" width="50%" style="padding:0 ${last ? 0 : 4}px 0 ${first ? 0 : 4}px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="az-sunken" style="background:${C.sunken};border:1px solid ${C.line};border-left:3px solid ${tone.ink};border-radius:12px;padding:10px 12px 11px">
@@ -332,7 +343,7 @@ function reportedBlock(data: DigestData, W: Copy["weeklyMail"]): string {
     .map((report, i) => {
       const name = report.name ? (report.name.length > 44 ? `${report.name.slice(0, 43)}…` : report.name) : report.symbol;
       const link = report.analysisPath
-        ? `&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="${escapeHtml(pathFor(report.analysisPath, data.locale))}" target="_blank" class="az-link" style="font-weight:700;color:${C.primary};text-decoration:none;white-space:nowrap">${escapeHtml(W.readAnalysis)}&nbsp;&rarr;</a>`
+        ? `<span class="az-muted" style="color:${C.muted}">&nbsp;&nbsp;&middot; </span><a href="${escapeHtml(pathFor(report.analysisPath, data.locale))}" target="_blank" class="az-link" style="font-weight:700;color:${C.primary};text-decoration:none;white-space:nowrap">${escapeHtml(W.readAnalysis)}&nbsp;&rarr;</a>`
         : "";
       const cells = [
         report.eps ? (first: boolean, last: boolean) => surpriseCell(W.epsLabel, report.eps, W, data.locale, first, last) : null,
@@ -341,9 +352,20 @@ function reportedBlock(data: DigestData, W: Copy["weeklyMail"]): string {
       const grid = cells.length
         ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:12px 0 0"><tr>${cells.map((cell, j) => cell(j === 0, j === cells.length - 1)).join("")}${cells.length === 1 ? `<td width="50%"></td>` : ""}</tr></table>`
         : "";
+      const week = report.week
+        ? (() => {
+            const tone = TONE[toneOf(report.week.changePct)];
+            return `<td valign="top" align="right" width="112" style="padding-left:12px">
+<p class="${tone.cls}" style="margin:0;font-family:${FONT};font-size:21px;line-height:24px;font-weight:800;letter-spacing:-.02em;color:${tone.ink};white-space:nowrap">${escapeHtml(emailPercent(report.week.changePct, data.locale, 1))}</p>
+<p class="az-muted" style="margin:3px 0 0;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted};white-space:nowrap">${escapeHtml(W.weekMove)}</p>
+</td>`;
+          })()
+        : "";
       return `<tr><td class="az-rule" style="padding:18px 0;${i ? `border-top:1px solid ${C.line};` : ""}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td valign="top">
 <a href="${escapeHtml(pathFor(`/hisse/${report.symbol}`, data.locale))}" target="_blank" class="az-ink" style="font-family:${FONT};font-size:19px;line-height:24px;font-weight:800;letter-spacing:-.02em;color:${C.ink};text-decoration:none">${escapeHtml(name)}</a>
-<p style="margin:4px 0 0;font-family:${FONT};font-size:13px;line-height:19px"><span class="az-muted" style="font-family:${MONO};font-size:12px;font-weight:800;color:${C.muted}">${escapeHtml(report.symbol)}</span><span class="az-muted" style="color:${C.muted}">&nbsp;&nbsp;&middot;&nbsp;&nbsp;${escapeHtml(dayLabel(report.reportDate, data.locale))}</span>${link}</p>
+<p style="margin:4px 0 0;font-family:${FONT};font-size:13px;line-height:19px"><span class="az-muted" style="font-family:${MONO};font-size:12px;font-weight:800;color:${C.muted}">${escapeHtml(report.symbol)}</span><span class="az-muted" style="color:${C.muted}">&nbsp;&nbsp;&middot; </span><span class="az-muted" style="color:${C.muted};white-space:nowrap">${escapeHtml(dayLabel(report.reportDate, data.locale))}</span>${link}</p>
+</td>${week}</tr></table>
 ${grid}
 </td></tr>`;
     })
@@ -355,11 +377,12 @@ ${grid}
 
 function linkList(links: DigestData["news"], locale: Locale): string {
   /* Numara zeminsiz pirinç: renkli küçük karo Gmail iOS koyu temada açık
-     kalıp numarayı okunmaz bırakıyordu (17 Ekim). */
+     kalıp numarayı okunmaz bırakıyordu (17 Ekim). Sıfırsız "1, 2, 3"
+     (sahibinin isteği; "01" kod künyesi gibi duruyordu). */
   const rows = links
     .map(
       (link, i) => `<tr>
-<td valign="top" width="40" class="az-rule" style="padding:15px 0;${i ? `border-top:1px solid ${C.line};` : ""}"><span class="az-brass" style="font-family:${MONO};font-size:15px;line-height:24px;font-weight:800;color:${BRASS_INK}">${String(i + 1).padStart(2, "0")}</span></td>
+<td valign="top" width="40" class="az-rule" style="padding:15px 0;${i ? `border-top:1px solid ${C.line};` : ""}"><span class="az-brass" style="font-family:${MONO};font-size:15px;line-height:24px;font-weight:800;color:${BRASS_INK}">${i + 1}</span></td>
 <td valign="top" class="az-rule" style="padding:15px 0;${i ? `border-top:1px solid ${C.line};` : ""}"><a href="${escapeHtml(pathFor(link.path, locale))}" target="_blank" class="az-ink" style="font-family:${FONT};font-size:17px;line-height:24px;font-weight:800;letter-spacing:-.01em;color:${C.ink};text-decoration:none">${escapeHtml(link.title)}</a>${
         link.meta ? `<p class="az-body" style="margin:5px 0 0;font-family:${FONT};font-size:14px;line-height:21px;color:${C.body}">${escapeHtml(link.meta.length > 170 ? `${link.meta.slice(0, 169)}…` : link.meta)}</p>` : ""
       }</td></tr>`,
@@ -495,12 +518,12 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
     bodyHtml: [
       emailText.greeting(greeting),
       emailText.paragraph(W.intro),
-      chapter("01", W.pastSection, pastRange),
+      chapter("1", W.pastSection, pastRange),
       commentaryBlock(data.commentary?.past, W, false),
       developmentsBlock(data, W),
       reportedBlock(data, W),
       indicesBlock(data, W),
-      chapter("02", W.aheadSection, thisRange),
+      chapter("2", W.aheadSection, thisRange),
       commentaryBlock(data.commentary?.ahead, W, true),
       personalBlock(personal, locale, W),
       aheadBlock(data, W),
@@ -523,7 +546,7 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
   const text: string[] = [greeting, "", W.intro, "", `== ${W.pastSection} · ${pastRange} ==`];
   if (data.commentary) text.push("", data.commentary.past);
   if (data.indices.length) {
-    text.push("", `${W.marketTitle} (${W.marketNote})`, ...data.indices.map((i) => `- ${i.label}: ${formatPercent(i.changePct, locale, 2)}`));
+    text.push("", `${W.marketTitle} (${W.marketNote})`, ...data.indices.map((i) => `- ${i.label}: ${emailPercent(i.changePct, locale, 2)}`));
   }
   text.push("", W.reportedTitle);
   if (data.pastFailed) text.push(W.reportedFailed);

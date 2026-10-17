@@ -11,9 +11,10 @@ import { EASE_BRAND } from "@/lib/motion";
  *   masaüstü Word motoruyla çiziyor; satır içi stil her yerde aynı.
  * - Animasyon GIF (public/email/hero.gif — gerekçe scripts/build-email-assets.mjs):
  *   Gmail CSS animasyonunu ve SVG'yi siliyor. `<style>` yalnız İLERLEME:
- *   Apple Mail'de marka fontu, düğmenin üstünden geçen ışık ve koyu tema
- *   renkleri geliyor; okumayan istemcide posta eksiksiz. Hareketi azaltana
- *   ışık hiç geçmez.
+ *   Apple Mail'de marka fontu, giriş animasyonları ve koyu tema renkleri
+ *   geliyor; okumayan istemcide posta eksiksiz. Düğmenin üstünden geçen ışık
+ *   ve Gmail için karışım (mix-blend) hilesi 17 Ekim'de kalktı: sahibi
+ *   düğmenin üstünde bir çizgi gördü; düz mavi düğme her istemcide temiz.
  * - BANT GIF'İN KENDİSİ, başlık kartın İÇİNDE. İlk sürümde başlık koyu bandın
  *   içindeydi ve GIF bandın ortasında küçük bir kareydi: Gmail iOS koyu temada
  *   sayfayı TAM ters çeviriyor, bant açılıyor ama GIF çevrilmiyor — bandın
@@ -104,7 +105,7 @@ export type BrandedEmail = {
 export function emailButton(label: string, href: string): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="az-btn-table" style="border-collapse:separate">
 <tr><td class="az-btn" align="center" bgcolor="${C.primary}" style="mso-padding-alt:16px 30px;border-radius:14px;background:${C.primary}">
-<a href="${escapeHtml(href)}" target="_blank" class="az-btn-link" style="display:inline-block;padding:16px 30px;font-family:${FONT};font-size:16px;font-weight:700;line-height:20px;color:#ffffff;text-decoration:none;border-radius:14px;letter-spacing:.01em"><span class="az-gblend-s"><span class="az-gblend-d">${escapeHtml(label)}&nbsp;&nbsp;&rarr;</span></span></a>
+<a href="${escapeHtml(href)}" target="_blank" class="az-btn-link" style="display:inline-block;padding:16px 30px;font-family:${FONT};font-size:16px;font-weight:700;line-height:20px;color:#ffffff;text-decoration:none;border-radius:14px;letter-spacing:.01em">${escapeHtml(label)}&nbsp;&nbsp;&rarr;</a>
 </td></tr></table>`;
 }
 
@@ -179,24 +180,13 @@ export function brandedEmailHtml(email: BrandedEmail): string {
   :root { color-scheme: light dark; }
   body { margin:0; padding:0; -webkit-text-size-adjust:100%; }
   a { text-decoration:none; }
-  /* Apple Mail: düğmenin üstünden geçen ışık — Gmail siler, posta onsuz tam. */
-  /* Gmail iOS koyu tema (17 Ekim, sahibinin ekran görüntüsü): sayfayı
-     tersine çevirirken düğmenin degrade zeminini bırakıp beyaz yazısını
-     koyulaştırıyordu. "u + .body" yalnız Gmail'de eşleşir (gövdeyi
-     <u></u> ardındaki .body kabına çeviriyor); iki katmanlı karışım
-     (screen + difference) çevrilen rengi geri beyaza çeker, açık temada
-     görünür bir şey değiştirmez. Başka istemci kuralı hiç okumaz. */
-  u + .body .az-gblend-s { background:#000; mix-blend-mode:screen; }
-  u + .body .az-gblend-d { background:#000; mix-blend-mode:difference; }
-  @keyframes az-sheen { 0%,62% { background-position:-180% 0; } 100% { background-position:280% 0; } }
-  .az-btn-link { background-image:linear-gradient(110deg,rgba(255,255,255,0) 35%,rgba(255,255,255,.28) 50%,rgba(255,255,255,0) 65%); background-size:220% 100%; background-repeat:no-repeat; animation:az-sheen 4.6s ease-in-out 1.2s infinite; }
   @keyframes az-grow-x { from { transform:scaleX(0); } to { transform:scaleX(1); } }
   @keyframes az-grow-y { from { transform:scaleY(0); } to { transform:scaleY(1); } }
   @keyframes az-rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
   .az-grow-x { transform-origin:left center; animation:az-grow-x .9s ${EASE_BRAND} both; }
   .az-grow-y { transform-origin:center bottom; animation:az-grow-y .8s ${EASE_BRAND} both; }
   .az-rise { animation:az-rise .7s ${EASE_BRAND} both; }
-  @media (prefers-reduced-motion: reduce) { .az-btn-link { animation:none; background-image:none; } .az-grow-x, .az-grow-y, .az-rise { animation:none !important; } }
+  @media (prefers-reduced-motion: reduce) { .az-grow-x, .az-grow-y, .az-rise { animation:none !important; } }
   @media (max-width:600px) {
     .az-shell { padding:16px 10px 28px !important; }
     .az-pad { padding-left:22px !important; padding-right:22px !important; }

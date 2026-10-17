@@ -4,7 +4,7 @@ import { z } from "zod";
 import { numbersGrounded } from "@/lib/ai-grounding";
 import { claudeKey } from "@/lib/claude-key";
 import type { Locale } from "@/lib/i18n/config";
-import { formatPercent } from "@/lib/utils";
+import { emailPercent } from "@/lib/notify-emails";
 import type { DigestData } from "@/lib/weekly-digest";
 
 /**
@@ -59,7 +59,7 @@ Rules:
 
 /** Postada basılan biçimle aynı: model bu metinleri görür, sayıları buradan kopyalar. */
 function payloadOf(data: DigestData) {
-  const pct = (value: number, digits = 2) => formatPercent(value, data.locale, digits);
+  const pct = (value: number, digits = 2) => emailPercent(value, data.locale, digits);
   const day = (date: string) =>
     new Intl.DateTimeFormat(data.locale === "en" ? "en-US" : "tr-TR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(
       new Date(`${date}T12:00:00Z`),
@@ -70,6 +70,7 @@ function payloadOf(data: DigestData) {
     reported: data.reported.map((r) => ({
       symbol: r.symbol,
       name: r.name,
+      weeklyStockChange: r.week ? pct(r.week.changePct, 1) : null,
       eps: r.eps ? { verdict: r.eps.direction, surprise: r.eps.ratio !== null ? pct(r.eps.ratio * 100, 1) : null } : null,
       revenue: r.revenue ? { verdict: r.revenue.direction, surprise: r.revenue.ratio !== null ? pct(r.revenue.ratio * 100, 1) : null } : null,
     })),

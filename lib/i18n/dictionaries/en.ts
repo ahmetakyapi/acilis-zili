@@ -1549,7 +1549,7 @@ const en: typeof tr = {
     builtBy: "Ahmet Akyapı",
     copyright: "© 2026 Opening Bell",
     disclaimer: "Not Investment Advice",
-    digestTitle: "Sunday Digest",
+    digestTitle: "Weekly Recap",
     digestHint: "Every Sunday morning: the week's earnings behind you and the calendar ahead, in one email.",
     digestCta: "Get It by Email",
   },

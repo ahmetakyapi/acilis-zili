@@ -1943,7 +1943,7 @@ const tr = {
     builtBy: "Ahmet Akyapı",
     copyright: "© 2026 Açılış Zili",
     disclaimer: "Yatırım Tavsiyesi Değildir",
-    digestTitle: "Pazar Özeti",
+    digestTitle: "Haftanın Özeti",
     digestHint: "Her pazar sabahı geride kalan haftanın bilançoları ve yeni haftanın takvimi, tek postada.",
     digestCta: "E-Postayla Al",
   },
