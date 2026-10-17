@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkBearer } from "@/lib/api-auth";
 import { syncMarketNews } from "@/lib/news-sync";
+import { warmEarningsInsights } from "@/lib/stock-insights";
 import { isTranslateConfigured, translatePendingNews } from "@/lib/translate";
 
 /**
@@ -13,10 +14,13 @@ import { isTranslateConfigured, translatePendingNews } from "@/lib/translate";
  * Çeviri tabloda kalır ("önbellek"): her koşu yalnız `headline_tr` boş olan
  * satırları çevirir, aynı haber ikinci kez ücretlenmez. Koşu başına en çok
  * 40 haber — Claude çağrısı BACKGROUND_TIMEOUT_MS'e sığsın.
+ *
+ * Aynı koşu son iki günde açıklanan büyük bilançoların Claude notunu da
+ * önceden yazdırır (lib/stock-insights.ts → warmEarningsInsights).
  */
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 280;
 
 export async function GET(request: Request) {
   const auth = checkBearer(request, process.env.CRON_SECRET);
@@ -32,6 +36,11 @@ export async function GET(request: Request) {
     report.translate = isTranslateConfigured() ? await translatePendingNews(40) : "atlandı: çeviri anahtarı yok";
   } catch (error) {
     report.translate = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+  try {
+    report.earningsNotes = await warmEarningsInsights(12);
+  } catch (error) {
+    report.earningsNotes = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
   const failed = String(report.news).startsWith("hata") && String(report.translate).startsWith("hata");
   return NextResponse.json(report, { status: failed ? 503 : 200 });

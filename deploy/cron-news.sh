@@ -31,7 +31,7 @@ set +a
 [[ -n "${CRON_SECRET:-}" ]] || { logger -t acilis-haber -p user.err "CRON_SECRET tanimli degil"; exit 1; }
 
 # Sır argv'de değil, stdin'den — gerekçe deploy/cron-daily.sh.
-response=$(curl -sS --max-time 130 --retry 2 --retry-delay 60 --retry-connrefused -w '\n%{http_code}' \
+response=$(curl -sS --max-time 290 --retry 2 --retry-delay 60 --retry-connrefused -w '\n%{http_code}' \
 	-H @- \
 	"$ENDPOINT" <<<"Authorization: Bearer ${CRON_SECRET}" 2>&1)
 

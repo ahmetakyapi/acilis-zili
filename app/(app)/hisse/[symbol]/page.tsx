@@ -56,6 +56,7 @@ import { ClaudeCompanyCard, ClaudeCta } from "@/components/ai/ClaudeCta";
 import { InvestorsPanel } from "./_panels/InvestorsPanel";
 import { StockSummary, metaExtras, summaryFacts } from "./_panels/StockSummary";
 import { StockJsonLd } from "./_panels/StockJsonLd";
+import { EarningsInsight, MoveInsight } from "./_panels/StockInsights";
 import depth from "./_panels/depth.module.css";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { EXPECTED_MOVE_HORIZON_DAYS } from "@/lib/expected-move";
@@ -466,6 +467,12 @@ export default async function StockPage(
         <StockSummary symbol={symbol} locale={locale} t={t} />
       </Suspense>
 
+      {/* BU HAFTA NEDEN HAREKET ETTİ (17 Ekim, sahibinin isteği): şirketi
+          tanıtan özetin hemen ardında — okur önce "ne iş yapıyor", sonra
+          "bu hafta ne oldu" diye soruyor. Claude notu; gerekçe
+          lib/stock-insights.ts. */}
+      <MoveInsight symbol={symbol} locale={locale} t={t} />
+
       {/* ÜNLÜ YATIRIMCILAR BURADAN GÜNDEM'E İNDİ (28 Eylül, sahibinin
           isteği: "burası çok üstte olmuş"). Özetin hemen altında 423–851
           piksel tutuyor ve Değerleme'yi ilk ekranların dışına itiyordu.
@@ -634,6 +641,11 @@ export default async function StockPage(
 
       <section id="stock-earnings" className={styles.chapter}>
         <ChapterHeading title={t.stock.chapterEarnings} />
+        {/* Son bilançonun Claude notu — yalnız son 10 günde açıklanan
+            bilançoda; yoksa hiçbir şey basılmıyor (yedek de yok). */}
+        <Suspense fallback={null}>
+          <EarningsInsight symbol={symbol} locale={locale} t={t} />
+        </Suspense>
         {/* Yaklaşan bilanço, geçmiş sonuçlarla aynı bölümde; ilk fiyat ekranının boyunu uzatmaz. */}
         <Suspense
           fallback={

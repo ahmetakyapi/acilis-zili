@@ -2500,6 +2500,27 @@ const tr = {
   },
   /* Hisse seçimi (3 Ekim) — kural tabanlı eleme ve uyum puanı. */
   /** Seans Zili figürü (components/figures/session-bell). Künyeler Title Case. */
+  /** Hisse sayfasının Claude notları (components/stock/StockInsightCard.tsx). */
+  stockInsight: {
+    moveTitle: "Bu Hafta Neden Hareket Etti",
+    earningsTitle: "Son Bilançonun Kısa Notu",
+    window: "Son 5 Seans · {range}",
+    market: "S&P 500 Aynı Dönemde {pct}",
+    reported: "{date} Açıklandı",
+    reaction: "İlk Seans Tepkisi",
+    explained: { news: "Haberden", market: "Piyasayla Birlikte", mixed: "Haber ve Piyasa", unclear: "Sebep Net Değil" },
+    source: "Kaynak",
+    daily: "Gün Gün Değişim",
+    compare: "Beş Seansta",
+    estimate: "Beklenti",
+    actual: "Gerçekleşen",
+    eps: "Hisse Başına Kâr",
+    revenue: "Gelir",
+    verdict: { beat: "Beklentiyi Aştı", miss: "Beklentinin Altında", inline: "Beklentiye Paralel" },
+    loading: "Claude notu hazırlıyor…",
+    unavailable: "Not şu an hazırlanamadı; birazdan yeniden dene.",
+    disclosure: "Bu not, sayfadaki fiyat verisinden ve şirketin haberlerinden Claude ile yazıldı. Haberlerde olmayan bir sebep uydurmaz; yatırım tavsiyesi değildir.",
+  },
   sessionBell: {
     title: "Seans Zili",
     stamp: "NY",

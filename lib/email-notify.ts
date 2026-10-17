@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { cache } from "react";
 import { and, count, eq, gte, isNotNull, lt, ne, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { emailConfigured, sendEmail, type Email } from "@/lib/email";
+import { emailConfigured, emailProvider, sendEmail, type Email } from "@/lib/email";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { emailLog, emailPrefs, users } from "@/lib/schema";
 import { SITE_URL } from "@/lib/site";
@@ -35,7 +35,9 @@ export const CONFIRM_TTL_MS = 48 * 3600_000;
  */
 export function dailyBudget(): number {
   const raw = Number(process.env.EMAIL_DAILY_BUDGET);
-  return Number.isFinite(raw) && raw >= 0 ? Math.floor(raw) : 80;
+  if (Number.isFinite(raw) && raw >= 0 && process.env.EMAIL_DAILY_BUDGET?.trim()) return Math.floor(raw);
+  /* Brevo'nun ücretsiz katmanı günde 300 (lib/email.ts); 260 sıfırlamaya pay bırakır. */
+  return emailProvider() === "brevo" ? 260 : 80;
 }
 
 /** Bir kullanıcıya bir günde giden alarm postası tavanı — oynak günde kutuyu boğmasın. */

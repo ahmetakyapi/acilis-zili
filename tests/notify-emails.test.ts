@@ -195,7 +195,7 @@ test("okunamayan takvim boş hafta diye yazılmaz", () => {
 });
 
 test("haftalık yorum: girdide olmayan sayı yorumu düşürür", async () => {
-  const { numbersGrounded } = await import("../lib/weekly-commentary");
+  const { numbersGrounded } = await import("../lib/ai-grounding");
   const input = JSON.stringify({ weeklyChange: "−%1,97", day: "19 Ekim Pazartesi", name: "S&P 500" });
   assert.equal(numbersGrounded("S&P 500 haftayı %1,97 düşüşle kapattı; 19 Ekim'de takvim yoğun.", input), true);
   assert.equal(numbersGrounded("S&P 500 %2,1 düştü.", input), false);

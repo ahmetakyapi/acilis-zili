@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
+import { numbersGrounded } from "@/lib/ai-grounding";
 import { claudeKey } from "@/lib/claude-key";
 import type { Locale } from "@/lib/i18n/config";
 import { formatPercent } from "@/lib/utils";
@@ -17,7 +18,7 @@ import type { DigestData } from "@/lib/weekly-digest";
  * alınamaz. Bu yüzden:
  * - Modele yalnız postada basılan sayılar BİÇİMLENMİŞ hâlde verilir; model
  *   hesap yapmaz, yeni sayı üretmez.
- * - Çıktıdaki her sayı girdide geçmek ZORUNDA (`numbersGrounded`); geçmeyen
+ * - Çıktıdaki her sayı girdide geçmek ZORUNDA (`numbersGrounded`, lib/ai-grounding.ts); geçmeyen
  *   tek bir sayı yorumu düşürür. Posta yorumsuz da eksiksiz.
  * - Fiyat yönü tahmini, öneri ve "yatırım tavsiyesi" dili yasak; postada
  *   ayrıca "Claude ile yazıldı" künyesi var.
@@ -82,14 +83,6 @@ function payloadOf(data: DigestData) {
     keyData: data.eventsFailed ? null : data.events.map((e) => ({ day: day(e.date), time: e.time, title: e.title })),
     nextKeyDataAfterThisWeek: data.nextEvent ? { day: day(data.nextEvent.date), title: data.nextEvent.title } : null,
   };
-}
-
-const NUMBER = /\d+(?:[.,]\d+)*/g;
-
-/** Çıktıdaki her sayı girdinin metninde de geçiyor mu. Gün numaraları ve yüzdeler dahil. */
-export function numbersGrounded(output: string, input: string): boolean {
-  const allowed = new Set(input.match(NUMBER) ?? []);
-  return (output.match(NUMBER) ?? []).every((n) => allowed.has(n));
 }
 
 const cache = new Map<string, DigestCommentary | null>();

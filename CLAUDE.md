@@ -254,6 +254,12 @@ yazın 16:30, kışın 17:30 TR). ET↔UTC aritmetiği yalnız `lib/market-hours
 - Bilanço analizi (`earnings_analyses`): sayılar HAM (8.97e9), metin dile
   göre. Bilançolar dört sekme (`/bilancolar`, `/hafta`, `/analizler`,
   `/takip`); sekme çubuğunu her sayfa kendi basar — detay sayfası sekmesiz.
+- **Claude'un site içi notları** (17 Ekim): hisse sayfasında "Bu Hafta Neden
+  Hareket Etti" ve son bilançonun kısa notu (`lib/stock-insights.ts`), pazar
+  özetinin yorumu (`lib/weekly-commentary.ts`). Üçü de yazma katmanı: yalnız
+  tamamlanmış seans ve biçimlenmiş sayı verilir, çıktıdaki her sayı girdide
+  geçmek zorunda (`lib/ai-grounding.ts`); not istemciden istenir, botlara
+  açılmaz. Anahtar `lib/claude-key.ts`.
 - Teknik analiz (`technical_analyses`): satır YAYIN başına (metin
   `copy.{tr,en}`), rutin yorum yazar, göstergeleri uç hesaplar. Sembol
   listesi `lib/technical.ts` → `TECHNICAL_SYMBOLS`; nöbet saati değişirse
