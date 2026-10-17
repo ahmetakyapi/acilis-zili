@@ -5,6 +5,7 @@
  * gövdesi kitin nötr tonlarında kalıyor; renk yalnız bilgi olan yerde.
  */
 .sb {
+  --sb-navy: #0b3f86;
   display: grid; gap: 14px; padding: 2px 20px 20px;
   grid-template-areas: "head" "stage" "controls" "note";
 }
@@ -17,15 +18,29 @@
 @media (min-width: 1024px) {
   .sb {
     padding: 2px 24px 24px; column-gap: 24px; row-gap: 12px; align-items: start;
-    grid-template-columns: minmax(0, 1.4fr) minmax(360px, 1fr);
+    /* 1,4fr → 1,15fr (17 Ekim, "panel daha az yer kaplasın"): figür
+       kolonu daralınca sahne ve panel ~%15 kısalıyor; sağ kolon zaten
+       kartları ve düğmeyi taşıyor. Ölçüm aşağıda, `.sb-stage` notunda. */
+    grid-template-columns: minmax(0, 1.15fr) minmax(360px, 1fr);
     grid-template-rows: auto auto 1fr;
     grid-template-areas: "stage head" "stage controls" "stage note";
   }
-  .sb-count { margin-left: 0; width: 100%; font-size: 20px; }
+  .sb-count { margin-left: 0; width: fit-content; font-size: 15px; }
 }
 
 /* ---- Üst bilgi: rozet, iki saat, geri sayım ---- */
-.sb-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+/* Başlık IZGARA (17 Ekim, sahibinin itirazı: "badgeler alt alta tuhaf
+   duruyor"): esnek satırda rozet, saat, geri sayım ve "Şimdiye Dön" kolon
+   genişliğine göre rastgele kırılıyordu. Artık iki sabit satır: üstte seans
+   rozeti ve (önizlemede) dönüş düğmesi, altta iri saat ve geri sayım. */
+.sb-head {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px 14px;
+  grid-template-areas: "badge back" "clock count";
+}
+.sb-badge { grid-area: badge; justify-self: start; }
+.sb-clock { grid-area: clock; }
+.sb-count { grid-area: count; justify-self: end; }
+.sb-back { grid-area: back; justify-self: end; }
 .sb-badge {
   display: inline-flex; align-items: center; gap: 8px; padding: 6px 13px 6px 11px; border-radius: 999px;
   font-size: 15px; font-weight: 700; line-height: 1.2; white-space: nowrap;
@@ -37,10 +52,19 @@
 .sb-badge[data-kind="pre"], .sb-badge[data-kind="after"] { background: var(--brass-wash); color: var(--brass-ink); }
 .sb[data-ringing] .sb-badge::before { animation: sb-blink 400ms var(--ease-loop) 3 alternate; }
 @keyframes sb-blink { to { opacity: .25; } }
-.sb-clock { font-size: 16px; font-weight: 650; color: var(--text-strong); white-space: nowrap; }
-.sb-count { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; font-size: 16px; font-weight: 700; color: var(--text-strong); white-space: nowrap; }
+/* Saat iki kademe (17 Ekim, "daha okunaklı"): birincil saat iri, ikincisi
+   yanında sessiz. Tek satırlık "23:44 TR · 16:44 NY" rozetin yanında
+   sıkışıyordu ve hangisinin okuyucunun saati olduğu seçilmiyordu. */
+.sb-clock { display: inline-flex; align-items: baseline; gap: 10px; white-space: nowrap; }
+.sb-clock b { font-size: 26px; line-height: 1; font-weight: 800; letter-spacing: -.02em; color: var(--text-strong); }
+.sb-clock span { font-size: 14px; font-weight: 600; color: var(--text-muted); }
+.sb-count {
+  display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px 7px 11px; border-radius: 999px;
+  background: var(--primary-tint); color: var(--primary-ink); font-size: 15px; font-weight: 750; white-space: nowrap;
+}
 .sb-count svg { width: 17px; height: 17px; flex: none; fill: none; stroke: var(--primary); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
-.sb[data-previewing] .sb-count { color: var(--brass-ink); }
+.sb[data-previewing] .sb-count { background: var(--brass-wash); color: var(--brass-ink); }
+.sb[data-previewing] .sb-count svg { stroke: var(--brass); }
 .sb-back {
   display: none; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--primary-faint);
   background: var(--primary-tint); color: var(--primary-ink); font-size: 14px; font-weight: 650; cursor: pointer;
@@ -98,24 +122,28 @@
    ÇALDIĞI yer. Üstünden kayan siyah im ibrenin gösterdiği saat. Karta
    dokunmak o seansı oynatır (live.tsx). */
 .sb-controls { display: grid; gap: 12px; }
-.sb-line { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding-bottom: 4px; }
+.sb-line { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+/* Kart (17 Ekim): ton yüzey + iki yandan girintili şerit kartın İÇİNDE;
+   eskiden şerit kartın dibine yapışıktı ve zil imleri iki kartın arasına
+   taşıp metne biniyordu. Ad satırında seans simgesi. */
 .sb-seg {
-  position: relative; display: grid; align-content: start; gap: 2px; min-width: 0; padding: 10px 11px 20px;
-  border: 0; border-radius: 12px; background: var(--surface-sunken); text-align: left; cursor: pointer;
-  transition: background-color 240ms var(--ease-brand);
+  position: relative; display: grid; align-content: start; gap: 3px; min-width: 0; padding: 11px 12px 26px;
+  border: 1px solid transparent; border-radius: 14px; background: var(--surface-sunken); text-align: left; cursor: pointer;
+  transition: background-color 240ms var(--ease-brand), border-color 240ms var(--ease-brand);
   -webkit-tap-highlight-color: transparent;
 }
-.sb-seg-name { font-size: 12.5px; font-weight: 700; color: var(--brass-ink); }
+.sb-seg-name { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 750; color: var(--brass-ink); }
+.sb-seg-icon { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
 .sb-seg[data-chip="regular"] .sb-seg-name { color: var(--primary-ink); }
-.sb-seg-time { font-size: 16px; font-weight: 750; color: var(--text-strong); letter-spacing: -.01em; white-space: nowrap; }
+.sb-seg-time { margin-top: 2px; font-size: 17px; font-weight: 800; color: var(--text-strong); letter-spacing: -.015em; white-space: nowrap; }
 .sb-seg-sub { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
 .sb-seg-bar {
-  position: absolute; left: 0; right: 0; bottom: 0; height: 9px; border-radius: 0 0 12px 12px;
+  position: absolute; left: 12px; right: 12px; bottom: 11px; height: 6px; border-radius: 3px;
   background: color-mix(in srgb, var(--brass) 45%, transparent); transition: background-color 240ms var(--ease-brand);
 }
 .sb-seg[data-chip="regular"] .sb-seg-bar { background: color-mix(in srgb, var(--primary) 55%, transparent); }
-.sb-seg[data-active] { background: var(--brass-wash); }
-.sb-seg[data-chip="regular"][data-active] { background: var(--primary-wash); }
+.sb-seg[data-active] { background: var(--brass-wash); border-color: color-mix(in srgb, var(--brass) 40%, transparent); }
+.sb-seg[data-chip="regular"][data-active] { background: var(--primary-wash); border-color: color-mix(in srgb, var(--primary) 35%, transparent); }
 .sb-seg[data-active] .sb-seg-bar { background: var(--brass); }
 .sb-seg[data-chip="regular"][data-active] .sb-seg-bar { background: var(--primary); }
 @media (hover: hover) and (pointer: fine) {
@@ -127,22 +155,29 @@
 .sb-seg[data-chip="regular"][data-playing] { box-shadow: inset 0 0 0 2px var(--primary); }
 
 /* Zil imleri: asıl seans şeridinin iki ucunda. Zil o uçta çalarken pirinç. */
+/* Zil imleri (17 Ekim, dördüncü kez: "iki uçtaki zil ikonları daha iyi
+   durmalı"): 22 piksellik beyaz halkalar şeridin dışına taşıp kartın
+   kenarına değiyordu; telefonda kart kenarından da taşıyordu (320'de
+   ölçüldü). Artık 18 piksellik DOLU mavi rozet, beyaz zil; merkezi şeridin
+   ucunun 3 piksel içinde, dış kenarı kartın dolgusunda kalıyor. Kart
+   zemininden ince bir halkayla ayrılıyor. Zil o uçta çalarken pirince
+   döner ve dışa bir halka açar. */
 .sb-mark {
-  position: absolute; bottom: -7px; z-index: 1; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
-  background: var(--surface); box-shadow: 0 0 0 1.5px var(--primary); color: var(--primary);
-  transition: background-color 200ms var(--ease-brand), color 200ms var(--ease-brand), box-shadow 200ms var(--ease-brand);
+  position: absolute; bottom: -6px; z-index: 1; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--primary); color: var(--on-primary); box-shadow: 0 0 0 2px var(--surface);
+  transition: background-color 200ms var(--ease-brand), box-shadow 200ms var(--ease-brand), scale 200ms var(--ease-spring-soft);
 }
-.sb-mark[data-at="open"] { left: -11px; }
-.sb-mark[data-at="close"] { right: -11px; }
-.sb-mark svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.sb-mark[data-at="open"] { left: -6px; }
+.sb-mark[data-at="close"] { right: -6px; }
+.sb-mark svg { width: 11px; height: 11px; fill: currentColor; stroke: currentColor; stroke-width: 1; stroke-linejoin: round; stroke-linecap: round; }
 .sb[data-strike="open"] .sb-mark[data-at="open"], .sb[data-strike="close"] .sb-mark[data-at="close"] {
-  background: var(--brass); color: var(--on-primary); box-shadow: 0 0 0 1.5px var(--brass), 0 0 0 6px color-mix(in srgb, var(--brass) 25%, transparent);
+  background: var(--brass); scale: 1.15; box-shadow: 0 0 0 2px var(--surface), 0 0 0 6px color-mix(in srgb, var(--brass) 28%, transparent);
 }
 
 /* "Şimdi" imi: ibrenin saati. Konumu live.tsx yazar (transform), seans
    dışında çizelgenin ucunda ve sönük. */
 .sb-marker {
-  position: absolute; left: -1px; bottom: 4px; z-index: 2; width: 2px; height: 20px; border-radius: 1px; pointer-events: none;
+  position: absolute; left: -1px; bottom: 9px; z-index: 2; width: 2px; height: 18px; border-radius: 1px; pointer-events: none;
   background: var(--text-strong); transition: opacity 200ms var(--ease-brand);
 }
 .sb-marker::after {
@@ -169,20 +204,121 @@
 .sb-play[data-playing] svg { animation: sb-blink 500ms var(--ease-loop) infinite alternate; }
 .sb-seg:focus-visible, .sb-play:focus-visible, .sb-back:focus-visible { outline: 2px solid var(--line-focus, var(--primary)); outline-offset: 2px; }
 
-.sb-note { margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-body); }
+.sb-note { margin: 0; padding-top: 12px; border-top: 1px solid var(--line-soft); font-size: 13.5px; line-height: 1.55; color: var(--text-muted); }
 
 @media (max-width: 639px) {
-  .sb-head { gap: 6px 10px; }
-  .sb-count { margin-left: 0; font-size: 18px; }
-  .sb:not([data-previewing]) .sb-count { width: 100%; }
+  /* Telefonda geri sayım rozetin sağında, dönüş düğmesi saatin sağında:
+     390'da iki satır, kırılma yok (önizlemenin en uzun metni "Pazartesi
+     Önizlemesi" ile ölçüldü). Kart adındaki simge telefonda yok — "Asıl
+     Seans" 110 piksellik kartta iki satıra kırılıyordu. */
+  .sb-head { gap: 10px 8px; grid-template-areas: "badge count" "clock back"; }
+  .sb-count { font-size: 13.5px; padding: 6px 11px 6px 9px; gap: 6px; }
+  .sb-badge { font-size: 13.5px; padding: 5px 11px 5px 9px; }
+  .sb-seg-icon { display: none; }
   .sb-stage { margin-inline: -6px; padding: 2px 0; border-radius: 12px; }
   .sb-line { gap: 5px; }
-  .sb-seg { padding: 9px 8px 19px; }
+  .sb-seg { padding: 10px 9px 24px; }
+  .sb-seg-bar { left: 9px; right: 9px; bottom: 10px; }
+  .sb-marker { bottom: 8px; }
+  .sb-clock b { font-size: 22px; }
   .sb-seg-name { font-size: 12px; }
   .sb-seg-time { font-size: 14px; letter-spacing: -.02em; }
   .sb-seg-sub { font-size: 10.5px; }
 }
+/* 320–379: rozet ve geri sayım yan yana sığmıyor (320'de üst üste
+   biniyordu), kart saatleri komşu karta taşıyordu — ölçüldü. */
+@media (max-width: 379px) {
+  .sb-head { grid-template-areas: "badge back" "clock clock" "count count"; }
+  .sb-count { justify-self: start; }
+  .sb-seg { padding: 9px 5px 24px; }
+  .sb-seg-bar { left: 7px; right: 7px; }
+  .sb-seg-name { font-size: 10.5px; white-space: nowrap; letter-spacing: -.01em; }
+  .sb-seg-time { font-size: 12.5px; letter-spacing: -.03em; }
+  .sb-seg-sub { font-size: 9.5px; letter-spacing: -.02em; }
+}
 @media (prefers-reduced-motion: reduce) {
   .sb-wire[data-pulse] .iso-line, .sb[data-ringing] .sb-badge::before, .sb-toast svg, .sb-play svg { animation: none !important; }
   .sb-toast, .sb-seg, .sb-mark, .sb-marker, .sb-play { transition: none; }
+}
+
+/* ---- Renk (17 Ekim, üçüncü sürüm) ----
+   Sahibinin itirazı: "soldaki çizilen görsel daha iyi ve daha renkli, daha
+   animasyonlu olmalı". Makine kitin gri tonlarındaydı ve kadranın renkli
+   dilimleri dışında hiçbir şey okunmuyordu. Malzeme rengi verildi — anlam
+   değil, nesne: ÇAN PİRİNÇ (sitenin zil rengi, mürekkep sahneleri de öyle),
+   kadran halkası ve boyunduruk marka lacivertinin tonu, bobin mavi (devre),
+   dövücü başı ve isim levhası pirinç, kaide hafif mavi tonlu. Kitin ton
+   değişkenleriyle karıştırılıyor; koyu temada aynı kural kendiliğinden
+   koyulaşıyor. Gölge, degrade, ışıma YOK — derinlik yine tonla. */
+.sb-stage { background: color-mix(in srgb, var(--primary) 4%, var(--anatomy-card)); }
+.sb-stage .iso-stage { --anatomy-paper: color-mix(in srgb, var(--primary) 4%, var(--anatomy-card)); }
+
+.sb-slab > .iso-top { fill: color-mix(in srgb, var(--primary) 7%, var(--anatomy-top)); }
+.sb-slab > .iso-shade { fill: color-mix(in srgb, var(--primary) 14%, var(--anatomy-shade-1)); }
+.sb-slab > .iso-shade[data-shade="0"] { fill: color-mix(in srgb, var(--primary) 18%, var(--anatomy-shade-0)); }
+
+/* Halka marka lacivertinin AÇIK tonu: tam lacivert ilk denemede kadranın
+   çevresinde siyah bir kalın çember gibi okunuyordu (1280'de ölçüldü). */
+.sb-ring > .iso-top, .sb-ring > .iso-fill { fill: color-mix(in srgb, var(--sb-navy) 34%, var(--anatomy-top)); }
+.sb-ring > .iso-shade { fill: color-mix(in srgb, var(--sb-navy) 52%, var(--anatomy-shade-1)); }
+.sb-face > .iso-top { fill: color-mix(in srgb, var(--brass) 4%, var(--anatomy-top)); }
+.sb-hub > .iso-top { fill: var(--primary); }
+.sb-hub > .iso-shade { fill: var(--sb-navy); }
+
+.sb-post > .iso-top { fill: color-mix(in srgb, var(--primary) 22%, var(--anatomy-top)); }
+.sb-post > .iso-fill, .sb-post > .iso-shade { fill: color-mix(in srgb, var(--primary) 30%, var(--anatomy-shade-1)); }
+.sb-post > .iso-shade[data-shade="0"] { fill: color-mix(in srgb, var(--primary) 38%, var(--anatomy-shade-0)); }
+
+/* Çan: ışık alan yüz açık pirinç, gölge tarafı koyu pirinç, ağız kenarı en koyu. */
+/* Dört gölge kademesi birbirine YAKIN: tornalanmış gövdenin kademeleri
+   geniş aralıkta (açık pirinçten kahverengiye) eş yükselti çizgileri gibi
+   bantlanıyordu (ilk denemede ölçüldü). */
+/* Seçici `.iso-solid[data-lit]` taşıyor: kitin ışıklı gövde kuralı
+   (iso.css, 0-3-0) yüzü beyaza boyuyordu ve ilk denemede çanın yarısı beyaz,
+   gölge kademeleri de beyaz dikiş çizgileriyle bantlı göründü (3× bakışta
+   ölçüldü). Dikişler dolguyla aynı renkte. Kademeler birbirine yakın. */
+.sb .sb-bell-body.iso-solid[data-lit] > .iso-fill,
+.sb .sb-bell-body.iso-solid[data-lit] > .iso-top { fill: color-mix(in srgb, var(--brass-bright) 46%, #fff); stroke: none; }
+.sb .sb-bell-body.iso-solid[data-lit] > .iso-shade { stroke-width: .6; }
+.sb .sb-bell-body.iso-solid[data-lit] > .iso-shade[data-shade="3"] { fill: color-mix(in srgb, var(--brass-bright) 54%, #fff); stroke: color-mix(in srgb, var(--brass-bright) 54%, #fff); }
+.sb .sb-bell-body.iso-solid[data-lit] > .iso-shade[data-shade="2"] { fill: color-mix(in srgb, var(--brass-bright) 62%, #fff); stroke: color-mix(in srgb, var(--brass-bright) 62%, #fff); }
+.sb .sb-bell-body.iso-solid[data-lit] > .iso-shade[data-shade="1"] { fill: color-mix(in srgb, var(--brass-bright) 72%, #fff); stroke: color-mix(in srgb, var(--brass-bright) 72%, #fff); }
+.sb .sb-bell-body.iso-solid[data-lit] > .iso-shade[data-shade="0"] { fill: color-mix(in srgb, var(--brass-bright) 84%, #fff); stroke: color-mix(in srgb, var(--brass-bright) 84%, #fff); }
+.sb .sb-bell-body.iso-solid[data-lit] > .iso-edge, .sb .sb-bell-body .iso-line { stroke: color-mix(in srgb, var(--brass) 70%, #000); }
+.sb[data-ringing] .sb-bell-body.iso-solid[data-lit] > .iso-fill { fill: color-mix(in srgb, var(--brass-bright) 30%, #fff); }
+
+.sb-coil > .iso-top { fill: color-mix(in srgb, var(--primary) 30%, var(--anatomy-top)); }
+.sb-coil > .iso-fill, .sb-coil > .iso-shade { fill: color-mix(in srgb, var(--primary) 42%, var(--anatomy-shade-1)); }
+.sb-coil > .iso-shade[data-shade="0"] { fill: color-mix(in srgb, var(--primary) 55%, var(--anatomy-shade-0)); }
+.sb-head-ball > .iso-fill, .sb-head-ball > .iso-top, .sb-head-ball > .iso-shade { fill: var(--brass); }
+.sb-plate > .iso-top, .sb-plate > .iso-fill { fill: color-mix(in srgb, var(--brass) 55%, var(--anatomy-top)); }
+
+/* ---- Ses halkaları ----
+   Vuruşta (`data-ringing`, 1,2 sn) çanın belinden üç halka dışa açılıp
+   söner. Öznitelik her vuruşta yeniden konduğu için animasyon baştan
+   başlar. Hareketi azaltana halka yok: vuruşu rozet ve bildirim söylüyor. */
+.sb-waves path {
+  fill: none; stroke: var(--brass); stroke-width: 1.6; vector-effect: non-scaling-stroke; opacity: 0;
+  transform-box: fill-box; transform-origin: center;
+}
+.sb[data-ringing] .sb-waves path { animation: sb-wave 1.1s var(--ease-brand) both; }
+.sb[data-ringing] .sb-waves path[data-wave="1"] { animation-delay: 120ms; }
+.sb[data-ringing] .sb-waves path[data-wave="2"] { animation-delay: 240ms; }
+@keyframes sb-wave { from { opacity: .95; scale: .72; } to { opacity: 0; scale: 1.12; } }
+
+/* ---- Sıradaki zil ----
+   Kapalı günde açılış kontağında pirinç bir im ve dışa açılan halkası:
+   "zil burada çalacak". Dört kez atar ve durur (sahne dönmez). */
+.sb-beacon { display: none; pointer-events: none; }
+.sb[data-closed] .sb-beacon { display: inline; }
+.sb-beacon circle { fill: var(--brass); }
+.sb-beacon circle:last-child { fill: none; stroke: var(--brass); stroke-width: 1.4; vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center; opacity: 0; animation: sb-beacon 2.2s var(--ease-brand) 1.2s 4; }
+@keyframes sb-beacon { from { opacity: .8; scale: 1; } to { opacity: 0; scale: 3.4; } }
+
+/* Kapalı günün kart başlığı — kartların SIRADAKİ günü anlattığını söyler. */
+.sb-preview { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13.5px; font-weight: 750; color: var(--text-strong); }
+.sb-preview::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--brass); flex: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sb[data-ringing] .sb-waves path, .sb-beacon circle:last-child { animation: none !important; }
 }

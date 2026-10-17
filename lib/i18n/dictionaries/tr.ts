@@ -1943,6 +1943,9 @@ const tr = {
     builtBy: "Ahmet Akyapı",
     copyright: "© 2026 Açılış Zili",
     disclaimer: "Yatırım Tavsiyesi Değildir",
+    digestTitle: "Pazar Özeti",
+    digestHint: "Her pazar sabahı geride kalan haftanın bilançoları ve yeni haftanın takvimi, tek postada.",
+    digestCta: "E-Postayla Al",
   },
 
   errors: {
@@ -2518,7 +2521,9 @@ const tr = {
     dialHint: "Kadranın üzerinde gezin ya da bir saatine dokun: ibre oraya yürür.",
     note: "Zil günde iki kez çalar: asıl seans açılırken ({open}) ve kapanırken ({close}). Bir seansa dokun, ibre o seansı dolaşsın.",
     weekend: "hafta sonu",
-    closedNote: "Bugün işlem yok ({name}). Sıradaki açılış: {next}.",
+    closedNote: "Bugün işlem yok ({name}). Sıradaki açılış: {next}. Kadran o günün seanslarını gösteriyor; bir seansa dokun ya da günü oynat.",
+    previewHeading: "Sıradaki İşlem Günü · {date}",
+    previewDay: "{day} Önizlemesi",
     label:
       "Seans zili: New York saatini gösteren 24 saatlik kadran ve bir çan. Renkli dilimler günün seansları; asıl seans mavi, ön ve akşam seansı pirinç. İbre asıl seansın başına ve sonuna gelince çan vurulur.",
   },

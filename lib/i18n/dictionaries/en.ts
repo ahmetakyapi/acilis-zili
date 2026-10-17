@@ -1549,6 +1549,9 @@ const en: typeof tr = {
     builtBy: "Ahmet Akyapı",
     copyright: "© 2026 Opening Bell",
     disclaimer: "Not Investment Advice",
+    digestTitle: "Sunday Digest",
+    digestHint: "Every Sunday morning: the week's earnings behind you and the calendar ahead, in one email.",
+    digestCta: "Get It by Email",
   },
 
   errors: {
@@ -2054,7 +2057,9 @@ const en: typeof tr = {
     dialHint: "Hover over the dial or click an hour: the hand walks there.",
     note: "The bell rings twice a day: when the regular session opens at {open} and when it closes at {close}. Tap a session and the hand walks through it.",
     weekend: "weekend",
-    closedNote: "No trading today ({name}). Next open: {next}.",
+    closedNote: "No trading today ({name}). Next open: {next}. The dial shows that day's sessions; tap a session or play the day.",
+    previewHeading: "Next Trading Day · {date}",
+    previewDay: "{day} Preview",
     label:
       "Session bell: a 24-hour dial in New York time and a bell. Coloured slices are the day's sessions; the regular session is blue, pre-market and after hours are brass. The bell is struck when the hand reaches the start and the end of the regular session.",
   },

@@ -13,6 +13,7 @@ import {
   angleOf,
   dayPlan,
   clockOf,
+  liveSessionAt,
   countdownOf,
   minutesOfAngle,
   moveLeg,
@@ -77,6 +78,8 @@ export type BellLabels = {
   note: string;
   closedNote: string | null;
   chipsLabel: string;
+  /** Kapalı günde kartların başlığı: "Sıradaki İşlem Günü · Pazartesi 20 Ekim". */
+  previewHeading: string | null;
 };
 
 const BellIcon = () => (
@@ -84,6 +87,21 @@ const BellIcon = () => (
     <path d="M10 3a5 5 0 0 0-5 5v3.2L3.6 14h12.8L15 11.2V8a5 5 0 0 0-5-5Zm-2 12.5a2 2 0 0 0 4 0" />
   </svg>
 );
+
+/** Seans simgesi: ön seans gün doğumu, asıl seans zil, akşam seansı ay. */
+function SessionIcon({ kind }: { kind: BellChip["kind"] }) {
+  return (
+    <svg className="sb-seg-icon" viewBox="0 0 20 20" aria-hidden="true">
+      {kind === "pre" ? (
+        <path d="M3 14h14M6 14a4 4 0 0 1 8 0M10 4.5V7M4.6 8.6l1.5 1.2M15.4 8.6l-1.5 1.2M6 17h8" />
+      ) : kind === "regular" ? (
+        <path d="M10 3a5 5 0 0 0-5 5v3.2L3.6 14h12.8L15 11.2V8a5 5 0 0 0-5-5Zm-2 12.5a2 2 0 0 0 4 0" />
+      ) : (
+        <path d="M14.5 12.8A6 6 0 0 1 7.2 5.5a6 6 0 1 0 7.3 7.3Z" />
+      )}
+    </svg>
+  );
+}
 
 export function SessionBellLive({
   day,
@@ -157,14 +175,19 @@ export function SessionBellLive({
       if (!el) return;
       const m = mode.current;
       const exploring = m.kind === "hover" || (m.kind === "play" && m.what !== "return");
-      const kind = sessionAt(minutes, day);
+      /* Gezinirken ve oynatırken çizelgenin seansı; canlıda ŞU ANIN seansı —
+         önizleme gününde (hafta sonu, tatil) canlı rozet hep "Piyasa Kapalı". */
+      const kind = exploring ? sessionAt(minutes, day) : liveSessionAt(minutes, day);
       const badge = el.querySelector<HTMLElement>("[data-badge]");
       if (badge) {
         badge.dataset.kind = kind;
         badge.textContent = text.sessions[kind];
       }
-      const clock = el.querySelector("[data-clock]");
-      if (clock) clock.textContent = clockOf(minutes, day, text);
+      const [clockA, clockB] = clockOf(minutes, day, text).split(" · ");
+      const a = el.querySelector("[data-clock-a]");
+      const b = el.querySelector("[data-clock-b]");
+      if (a) a.textContent = clockA;
+      if (b) b.textContent = clockB ?? "";
       const count = el.querySelector("[data-count]");
       if (count) {
         count.textContent = exploring
@@ -187,18 +210,26 @@ export function SessionBellLive({
         const segs = [...line.querySelectorAll<HTMLElement>("[data-chip]")];
         let x = 0;
         let out = true;
+        /* Şerit kartın İÇİNDE (iki yandan girintili, 17 Ekim): im kartın
+           değil şeridin boyunca yürür. */
+        const barOf = (seg: HTMLElement) => {
+          const bar = seg.querySelector<HTMLElement>(".sb-seg-bar");
+          return { left: seg.offsetLeft + (bar?.offsetLeft ?? 0), width: bar?.offsetWidth ?? seg.offsetWidth };
+        };
         for (const seg of segs) {
           const from = Number(seg.dataset.from);
           const to = Number(seg.dataset.to);
           if (m0 >= from && m0 < to) {
-            x = seg.offsetLeft + ((m0 - from) / (to - from)) * seg.offsetWidth;
+            const bar = barOf(seg);
+            x = bar.left + ((m0 - from) / (to - from)) * bar.width;
             out = false;
             break;
           }
         }
         if (out && segs.length) {
-          const last = segs[segs.length - 1];
-          x = m0 >= Number(last.dataset.to) && m0 < DAY ? last.offsetLeft + last.offsetWidth : segs[0].offsetLeft;
+          const first = barOf(segs[0]);
+          const last = barOf(segs[segs.length - 1]);
+          x = m0 >= Number(segs[segs.length - 1].dataset.to) && m0 < DAY ? last.left + last.width : first.left;
         }
         marker.style.transform = `translateX(${x.toFixed(1)}px)`;
         marker.toggleAttribute("data-out", out);
@@ -245,7 +276,9 @@ export function SessionBellLive({
     (dt: number) => {
       const m = mode.current;
       const before = shown.current;
-      let ringing = true;
+      /* Canlı saat ve ilk tekrar yalnız İŞLEM GÜNÜNDE zil çalar; önizleme
+         gününde çizelge yarının, bugün zil yok. */
+      let ringing = m.kind === "hover" || m.kind === "play" || day.tradingToday;
       if (m.kind === "sweep") {
         m.t += dt;
         shown.current = sweepAt(m.t, liveMinutes());
@@ -304,7 +337,7 @@ export function SessionBellLive({
       if (mode.current.kind !== "live") return;
       const before = shown.current;
       shown.current = liveMinutes();
-      const hit = still ? undefined : strikesBetween(before, shown.current, day).at(-1);
+      const hit = still || !day.tradingToday ? undefined : strikesBetween(before, shown.current, day).at(-1);
       draw();
       paint(shown.current);
       if (hit) {
@@ -329,10 +362,22 @@ export function SessionBellLive({
     }
     if (!running || swept.current) return;
     swept.current = true;
+    /* KAPALI GÜNDE (17 Ekim) ilk görünüş sıradaki işlem gününü bir kez
+       oynatır: ibre ön seansa yürür, açılış ve kapanış zilleri çalar, sonra
+       şimdiye döner. Gece yarısından şimdiye tekrar o gün boş bir kadranda
+       anlamsız bir tur oluyordu. */
+    if (day.preview) {
+      shown.current = liveMinutes();
+      const legs = dayPlan(shown.current, day);
+      mode.current = { kind: "play", what: "day", legs, t: 0, total: planLength(legs), hold: 0 };
+      draw();
+      paint(shown.current);
+      return;
+    }
     mode.current = { kind: "sweep", t: 0 };
     shown.current = 0;
     draw();
-  }, [running, still, draw, paint, liveMinutes]);
+  }, [running, still, draw, paint, liveMinutes, day]);
 
   // Pencere boyu değişince im yeniden yerleşir (kutular genişledi).
   React.useEffect(() => {
@@ -423,13 +468,14 @@ export function SessionBellLive({
   const current = () => Math.round(shown.current / STEP) * STEP;
 
   return (
-    <div ref={root} className="sb">
+    <div ref={root} className="sb" data-closed={day.tradingToday ? undefined : ""}>
       <div className="sb-head">
-        <span className="sb-badge" data-badge="" data-kind={sessionAt(nowMinutes, day)}>
-          {text.sessions[sessionAt(nowMinutes, day)]}
+        <span className="sb-badge" data-badge="" data-kind={liveSessionAt(nowMinutes, day)}>
+          {text.sessions[liveSessionAt(nowMinutes, day)]}
         </span>
         <span className="sb-clock" data-clock="">
-          {clockOf(nowMinutes, day, text)}
+          <b data-clock-a="">{clockOf(nowMinutes, day, text).split(" · ")[0]}</b>
+          <span data-clock-b="">{clockOf(nowMinutes, day, text).split(" · ")[1] ?? ""}</span>
         </span>
         <span className="sb-count">
           <BellIcon />
@@ -483,6 +529,7 @@ export function SessionBellLive({
 
       {chips.length > 0 ? (
         <div className="sb-controls">
+          {labels.previewHeading ? <p className="sb-preview">{labels.previewHeading}</p> : null}
           <div className="sb-line" data-line="" role="group" aria-label={labels.chipsLabel}>
             {chips.map((chip) => (
               <button
@@ -492,10 +539,13 @@ export function SessionBellLive({
                 data-chip={chip.kind}
                 data-from={chip.from}
                 data-to={chip.to}
-                data-active={sessionAt(nowMinutes, day) === chip.kind ? "" : undefined}
+                data-active={liveSessionAt(nowMinutes, day) === chip.kind ? "" : undefined}
                 onClick={() => play(chip.kind, sessionPlan(shown.current, { kind: chip.kind, from: chip.from, to: chip.to }))}
               >
-                <span className="sb-seg-name">{chip.name}</span>
+                <span className="sb-seg-name">
+                  <SessionIcon kind={chip.kind} />
+                  {chip.name}
+                </span>
                 <span className="sb-seg-time">{chip.tr}</span>
                 <span className="sb-seg-sub">{chip.ny}</span>
                 <span className="sb-seg-bar" aria-hidden="true">

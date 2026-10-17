@@ -42,16 +42,16 @@ export function SessionBellArt({
   const { plinth, dial, yoke, bell, striker, wire } = art;
 
   const PLINTH = (
-    <g key="plinth">
+    <g key="plinth" className="sb-plinth">
       <path className="iso-halo" d={plinth.halo} />
       {plinth.feet.map((paths, index) => (
         <Solid key={index} paths={paths} tone="lo" crease="faint" />
       ))}
-      <Solid paths={plinth.slab} tone="mid" crease="faint" inner={<Line d={plinth.seam} tone="faint" />} />
+      <Solid className="sb-slab" paths={plinth.slab} tone="mid" crease="faint" inner={<Line d={plinth.seam} tone="faint" />} />
       <Line d={plinth.groove} tone="faint" />
       <Line d={plinth.screwRings} tone="lo" />
       <Dots points={plinth.screws} size={0.5} tone="mid" />
-      <Solid paths={plinth.plate} tone="lo" crease="none" />
+      <Solid className="sb-plate" paths={plinth.plate} tone="lo" crease="none" />
       <Line d={plinth.plateRules} tone="lo" free />
       <Dots points={plinth.plateScrews} size={0.42} tone="mid" />
       <path className="iso-halo" d={bell.halo} />
@@ -60,8 +60,8 @@ export function SessionBellArt({
 
   const DIAL = (
     <g key="dial">
-      <Solid paths={dial.ringBase} tone="lo" crease="faint" />
-      <Solid paths={dial.face} tone="mid" crease="faint" />
+      <Solid className="sb-ring" paths={dial.ringBase} tone="lo" crease="faint" />
+      <Solid className="sb-face" paths={dial.face} tone="mid" crease="faint" />
       <Line d={dial.bezel} tone="lo" />
       <Line d={dial.tickRing} tone="faint" />
       <Line d={dial.ticks.minor} tone="lo" />
@@ -89,7 +89,13 @@ export function SessionBellArt({
       ))}
       <Solid paths={dial.terminal} tone="mid" crease="faint" />
       <Line d={dial.terminalRing} tone="lo" />
-      <Solid paths={dial.hub} tone="mid" crease="faint" />
+      <Solid className="sb-hub" paths={dial.hub} tone="mid" crease="faint" />
+      {dial.beacon ? (
+        <g className="sb-beacon" aria-hidden="true">
+          <circle cx={dial.beacon[0]} cy={dial.beacon[1]} r={4.2} />
+          <circle cx={dial.beacon[0]} cy={dial.beacon[1]} r={4.2} />
+        </g>
+      ) : null}
     </g>
   );
 
@@ -99,15 +105,22 @@ export function SessionBellArt({
     <g key="back">
       <Solid paths={yoke.backFoot} tone="lo" crease="none" />
       <Dots points={yoke.backScrews} size={0.45} tone="mid" />
-      <Solid paths={yoke.back} tone="mid" crease="faint" />
+      <Solid className="sb-post" paths={yoke.back} tone="mid" crease="faint" />
     </g>
   );
 
   const BELL = (
     <g key="bell">
       <Solid paths={bell.hanger} tone="mid" crease="faint" />
+      {/* Ses halkaları çanın ARKASINDA başlıyor ama halka çandan geniş;
+          önde kalan yarısı direğin önünde değil — FRONT katmanı sonra. */}
+      <g className="sb-waves" aria-hidden="true">
+        {bell.waves.map((d, index) => (
+          <path key={index} d={d} data-wave={index} />
+        ))}
+      </g>
       <g data-bell="">
-        <Solid paths={bell.body} tone="hi" crease="faint" lit inner={<><Line d={bell.lip} tone="faint" /><Line d={bell.band} tone="faint" /></>} />
+        <Solid className="sb-bell-body" paths={bell.body} tone="hi" crease="faint" lit inner={<><Line d={bell.lip} tone="faint" /><Line d={bell.band} tone="faint" /></>} />
       </g>
     </g>
   );
@@ -118,9 +131,9 @@ export function SessionBellArt({
       <Dots points={striker.standScrews} size={0.45} tone="mid" />
       <g data-plunger="">
         <Solid paths={striker.rod} tone="mid" crease="none" />
-        <Solid paths={striker.head} tone="mid" crease="none" />
+        <Solid className="sb-head-ball" paths={striker.head} tone="mid" crease="none" />
       </g>
-      <Solid paths={striker.coil} tone="mid" crease="faint" inner={<Line d={striker.coilSeams} tone="faint" />} />
+      <Solid className="sb-coil" paths={striker.coil} tone="mid" crease="faint" inner={<Line d={striker.coilSeams} tone="faint" />} />
       <Dots points={striker.coilScrews} size={0.45} tone="mid" />
     </g>
   );
@@ -129,8 +142,8 @@ export function SessionBellArt({
     <g key="front">
       <Solid paths={yoke.frontFoot} tone="lo" crease="none" />
       <Dots points={yoke.frontScrews} size={0.45} tone="mid" />
-      <Solid paths={yoke.front} tone="mid" crease="faint" inner={<Line d={yoke.frontSeam} tone="faint" />} />
-      <Solid paths={yoke.bar} tone="mid" crease="faint" />
+      <Solid className="sb-post" paths={yoke.front} tone="mid" crease="faint" inner={<Line d={yoke.frontSeam} tone="faint" />} />
+      <Solid className="sb-post" paths={yoke.bar} tone="mid" crease="faint" />
       <Dots points={yoke.barScrews} size={0.5} tone="mid" />
       <g data-wire="" className="sb-wire">
         <Wire from={wire.from} to={wire.to} via={wire.via} tone="lo" />

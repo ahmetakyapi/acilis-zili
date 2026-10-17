@@ -1,8 +1,9 @@
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { GithubLogo } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, GithubLogo } from "@phosphor-icons/react/dist/ssr";
 import { BellMark } from "@/components/brand/BellMark";
 import { getI18n } from "@/lib/i18n";
+import { emailConfigured } from "@/lib/email";
 import { CONTACT_EMAIL } from "@/lib/site";
 
 /**
@@ -18,6 +19,7 @@ const GITHUB_URL = "https://github.com/ahmetakyapi";
 
 export async function SiteFooter() {
   const { t } = await getI18n();
+  const digest = emailConfigured();
 
   const columns: { title: string; links: { href: string; label: string }[] }[] =
     [
@@ -63,64 +65,98 @@ export async function SiteFooter() {
     ];
 
   return (
-    <footer className={`${polish.footer} flex flex-col gap-7`}>
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
-        {/* ---- Künye ---- */}
-        <div className="flex flex-col gap-3">
+    <footer className={`${polish.footer} flex flex-col gap-8`}>
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-12">
+        {/* ---- Künye + pazar özeti ----
+             ESKİDEN künye tek başına sol sütunu tutuyordu ve altında 200
+             piksellik boşluk vardı; sayfanın dibinde ayrıca "Açılış Zili"
+             yazan dev, soluk bir ad duruyordu (17 Ekim, sahibinin itirazı:
+             "çok kötü duruyor"). Dev ad kalktı; marka bloğu tonlu bir yüzey
+             oldu ve boşluğu bir işle dolduruyor: pazar özetine abone olma
+             yolu. Posta servisi kapalıysa (`emailConfigured`) çağrı hiç
+             basılmaz — açılamayan bir postayı önermek tıklamayı yutmak. */}
+        <div className={`${polish.footerBrand} flex flex-col gap-4`}>
           {/* Marka bağlantısı 34 piksel — zil işaretinin kendi boyu.
               Genişletme görünen künyeye dokunmuyor. */}
           <Link href="/" className="tap-44 flex w-fit items-center gap-2.5">
             <BellMark size={34} />
-            <span className="display-ink display-ink-tight text-read font-bold tracking-[-0.03em]">
+            <span className="display-ink display-ink-tight text-title font-extrabold tracking-[-0.03em]">
               {t.brand.name}
             </span>
           </Link>
-          <p className="max-w-[38ch] text-small leading-[20px] text-muted">
+          <p className="max-w-[44ch] text-read leading-[22px] text-body">
             {t.footer.blurb}
           </p>
+          {digest ? (
+            <div className={`${polish.footerDigest} flex flex-col gap-1.5`}>
+              <p className="text-read font-bold text-strong">{t.footer.digestTitle}</p>
+              <p className="text-small leading-[18px] text-muted">{t.footer.digestHint}</p>
+              <Link
+                href="/ayarlar#e-posta"
+                className="tap-44 mt-1 inline-flex w-fit items-center gap-1.5 text-base font-semibold text-primary"
+              >
+                {t.footer.digestCta}
+                <ArrowRight weight="bold" size={13} aria-hidden />
+              </Link>
+            </div>
+          ) : null}
         </div>
 
-        {columns.map((column, index) => {
-          /* HER YER İMİNİN ADI VAR. Üç sütun da adsız `<nav>` idi ve ekran
-             okuyucunun yer imi listesinde yalnızca "navigation, navigation,
-             navigation" görünüyordu — hangisinin piyasa, hangisinin hesap
-             olduğu ancak içine girip okuyunca anlaşılıyordu (WCAG 1.3.1).
-             Ad, zaten ekranda duran sütun başlığından geliyor: ayrı bir
-             sözlük anahtarı eklemeye gerek yok ve ikisi hiçbir zaman
-             birbirinden ayrı düşemez. */
-          const headingId = `footer-col-${index}`;
-          return (
-          <nav
-            key={column.title}
-            aria-labelledby={headingId}
-            className="flex flex-col gap-2.5"
-          >
-            <p id={headingId} className="plate text-nano">
-              {column.title}
-            </p>
-            <ul className="flex flex-col gap-2">
-              {column.links.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    /* Besleme bir sayfa değil (XML döner): ön yükleme onu RSC
-                       yükü diye boşuna çekiyordu. Tıklama yine tam gezinme. */
-                    prefetch={link.href.endsWith(".xml") ? false : undefined}
-                    /* Telefonda 44px: dizin bağlantıları 28px yüksekliğindeydi
-                       ve alt bilgi ekranın en dibinde, başparmağın en zor
-                       nişan aldığı yerde duruyor. Masaüstünde eski ölçü
-                       korunuyor — orada fare var, yüksek satırlar sütunu
-                       gereksiz uzatıyordu. */
-                    className="footer-link -my-1 flex min-h-11 items-center py-1 text-base text-body transition-colors hover:text-primary sm:min-h-0 sm:inline-block"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          );
-        })}
+        <div className="grid gap-8 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] sm:gap-6">
+          {columns.map((column, index) => {
+            /* HER YER İMİNİN ADI VAR. Üç sütun da adsız `<nav>` idi ve ekran
+               okuyucunun yer imi listesinde yalnızca "navigation, navigation,
+               navigation" görünüyordu — hangisinin piyasa, hangisinin hesap
+               olduğu ancak içine girip okuyunca anlaşılıyordu (WCAG 1.3.1).
+               Ad, zaten ekranda duran sütun başlığından geliyor: ayrı bir
+               sözlük anahtarı eklemeye gerek yok ve ikisi hiçbir zaman
+               birbirinden ayrı düşemez. */
+            const headingId = `footer-col-${index}`;
+            return (
+              <nav
+                key={column.title}
+                aria-labelledby={headingId}
+                className="flex flex-col gap-3"
+              >
+                <p id={headingId} className="plate text-nano">
+                  {column.title}
+                </p>
+                {/* Piyasa on bağlantı, ötekiler sekiz ve altı: tek sütunda
+                    kalınca alt bilginin boyunu o tek sütun belirliyordu ve
+                    yanındaki iki sütunun altı boş kalıyordu. Geniş ekranda
+                    Piyasa kendi içinde iki sütun; en uzun sütun 10 satırdan
+                    8'e iniyor. Telefonda bütün listeler zaten iki sütun
+                    (UtilityExperience.module.css). */}
+                <ul
+                  className={
+                    index === 0
+                      ? "flex flex-col gap-2 sm:grid sm:grid-flow-col sm:grid-rows-5 sm:gap-x-6"
+                      : "flex flex-col gap-2"
+                  }
+                >
+                  {column.links.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        /* Besleme bir sayfa değil (XML döner): ön yükleme onu RSC
+                           yükü diye boşuna çekiyordu. Tıklama yine tam gezinme. */
+                        prefetch={link.href.endsWith(".xml") ? false : undefined}
+                        /* Telefonda 44px: dizin bağlantıları 28px yüksekliğindeydi
+                           ve alt bilgi ekranın en dibinde, başparmağın en zor
+                           nişan aldığı yerde duruyor. Masaüstünde eski ölçü
+                           korunuyor — orada fare var, yüksek satırlar sütunu
+                           gereksiz uzatıyordu. */
+                        className="footer-link -my-1 flex min-h-11 items-center py-1 text-base text-body transition-colors hover:text-primary sm:min-h-0 sm:inline-block"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            );
+          })}
+        </div>
       </div>
 
       {/* ---- Yasal satır + geliştirici imzası ----
@@ -165,18 +201,6 @@ export async function SiteFooter() {
           <GithubLogo weight="fill" size={14} aria-hidden />
           {t.footer.builtBy}
         </a>
-      </div>
-
-      {/* DEV KÜNYE (24 Eylül). Sayfanın dibi bir liste bağlantıyla
-          bitiyordu; site kendi adını en son 34 piksellik bir işaretle
-          söylüyordu. Artık footer'ın dibinde kolon genişliğinde, alt
-          kenarından kırpılmış dev bir ad — gazetenin son sayfasındaki
-          künye gibi. Süs: `aria-hidden`, ad zaten yukarıda bağlantı olarak
-          okunuyor. Kaydırma zaman çizelgesini tanıyan tarayıcıda görünüme
-          girerken yükseliyor; tanımayanda yerinde duruyor (globals.css →
-          "Dev künye"). */}
-      <div className="footer-wordmark" aria-hidden="true">
-        <span>{t.brand.name}</span>
       </div>
     </footer>
   );

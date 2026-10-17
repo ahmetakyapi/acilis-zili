@@ -19,7 +19,7 @@ import {
   type Point3,
   type SolidPaths,
 } from "@/components/iso/iso-kit";
-import { angleOf, segments, type BellDay, type Segment } from "./model";
+import { angleOf, hasSchedule, segments, type BellDay, type Segment } from "./model";
 import {
   BAR_H,
   BELL_X,
@@ -137,9 +137,12 @@ function build(day: BellDay) {
       // Renkli dilimler kadranı okutuyor: hangi saat hangi seans bir bakışta.
       wedges: days.map((segment) => ({ kind: segment.kind, d: wedgePath(segment, WEDGE_R) })),
       arcs: days.map((segment) => ({ kind: segment.kind, d: onTop(arcPoints(segment, WEDGE_R), DIAL_TOP, P) })),
-      contacts: day.tradingToday ? [day.open, day.close].map((m) => cylinder(...contactAt(m), CONTACT_R, DIAL_TOP, CONTACT_H, P, 14)) : [],
+      contacts: hasSchedule(day) ? [day.open, day.close].map((m) => cylinder(...contactAt(m), CONTACT_R, DIAL_TOP, CONTACT_H, P, 14)) : [],
       hub: cylinder(DIAL_X, DIAL_Y, HUB_R, DIAL_TOP, HUB_H, P, 24, 0.4),
       hubPin: dots([[DIAL_X, DIAL_Y, DIAL_TOP + HUB_H]]),
+      /* Sıradaki zilin yeri — kapalı günde açılış kontağında yanıp sönen im
+         (bell.css `.sb-beacon`). Ekran noktası. */
+      beacon: hasSchedule(day) ? at([...contactAt(day.open), DIAL_TOP + CONTACT_H]) : null,
       label: topMatrix([DIAL_X, DIAL_Y + 17], DIAL_TOP, P),
       /* Saat rakamları (15 Ekim): kadran yalnız çentik ve renkli dilimdi;
          "hangi saat nerede" sorusunu dışarıdaki seans kartları cevaplıyordu
@@ -172,6 +175,10 @@ function build(day: BellDay) {
       hanger: cylinder(BELL_X, BELL_Y, HANGER_R, BELL_Z + BELL_HEIGHT - 1, POST_H - (BELL_Z + BELL_HEIGHT - 1), P, 18),
       body: G.solidOf(BELL_PROFILE, F, P) as SolidPaths,
       lip: G.arcOf(F, 2.8, 22, P, { slope: -0.4 }) as string,
+      /* Ses halkaları (17 Ekim): vuruşta çanın belinden dışa yayılan üç iz
+         halka — çanın titremesi ekranda ~1 piksel, vuruşu bunlar okutuyor.
+         Zeminde değil çanın ortası hizasında; yalnız zil anında görünür. */
+      waves: [26, 36, 46].map((r) => ring(BELL_X, BELL_Y, r, BELL_Z + BELL_HEIGHT * 0.45, P, 64)),
       band: G.arcOf(F, 25, 14.1, P, { slope: -0.2 }) as string,
     },
     striker: {
@@ -199,7 +206,7 @@ export type BellArt = ReturnType<typeof build>;
 
 const cache = new Map<string, BellArt>();
 export function bellArt(day: BellDay): BellArt {
-  const key = `${day.tradingToday}:${day.preOpen}:${day.open}:${day.close}:${day.afterClose}`;
+  const key = `${day.tradingToday}:${day.preview ?? false}:${day.preOpen}:${day.open}:${day.close}:${day.afterClose}`;
   let art = cache.get(key);
   if (!art) cache.set(key, (art = build(day)));
   return art;

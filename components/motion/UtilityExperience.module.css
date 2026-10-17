@@ -41,6 +41,11 @@
 .footer::before { content:""; position:absolute; left:0; top:-1px; width:84px; height:2px; background:linear-gradient(90deg,var(--primary),transparent); }
 .footer nav a { width:fit-content; transition:color .2s var(--ease-brand),translate .2s var(--ease-brand); }
 .footer > .footerBase { padding-top:18px; border-top:1px solid var(--line-soft); }
+/* Künye bloğu tonlu yüzey (CLAUDE.md "derinlik tonla"): gölge yok, kenar
+   hairline. Pazar özeti çağrısı aynı yüzeyin içinde, hairline'la ayrılmış
+   düz paragraf — ayrı kutu açılmıyor. */
+.footerBrand { align-self:start; padding:22px 22px 20px; border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--premium-surface); }
+.footerDigest { margin-top:2px; padding-top:16px; border-top:1px solid var(--line-soft); }
 /* TELEFONDA BAĞLANTILAR İKİ SÜTUN (30 Eylül, ana sayfa telefon denetimi).
    Yirmi bağlantı tek sütunda, her biri 44 piksel: alt bilgi 390'da ~1.000
    piksel tutuyor ve sayfanın en uzun bloğu oluyordu. Bölüm başına iki

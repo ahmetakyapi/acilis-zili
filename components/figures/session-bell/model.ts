@@ -23,15 +23,28 @@ export type BellDay = {
   afterClose: number;
   /** TR saatinin ET'den farkı (dakika; yaz saati geçişlerinde değişir). */
   trOffset: number;
+  /**
+   * ÖNİZLEME (17 Ekim): bugün işlem yok ama kadran SIRADAKİ işlem gününün
+   * seanslarını taşıyor. Sahibinin itirazı ("seans kapalıyken burası kötü
+   * duruyor"): hafta sonu ve tatilde kadran renksiz, seans kartları ve
+   * "Günü Oynat" yoktu; sağ kolonda yalnız bir rozet kalıyordu. Önizleme
+   * gününde canlı saat yine "Piyasa Kapalı" der ve zil CANLIDA hiç çalmaz
+   * (`liveSessionAt`, live.tsx); yalnız oynatma ve kadranda gezinme seansı
+   * gösterir.
+   */
+  preview?: boolean;
 };
+
+/** Kadranda seans çizelgesi var mı — bugün işlem varsa ya da önizlemede. */
+export const hasSchedule = (day: BellDay) => day.tradingToday || Boolean(day.preview);
 
 export type Segment = { kind: "pre" | "regular" | "after"; from: number; to: number };
 export type SessionKind = Segment["kind"] | "closed";
 export type Strike = { at: number; bell: "open" | "close" };
 
-/** Günün seans yayları. İşlem olmayan günde boş: kadranda yay yok, zil çalmaz. */
+/** Günün seans yayları. İşlem olmayan günde boş (önizleme hariç): kadranda yay yok, zil çalmaz. */
 export function segments(day: BellDay): Segment[] {
-  if (!day.tradingToday) return [];
+  if (!hasSchedule(day)) return [];
   return [
     { kind: "pre", from: day.preOpen, to: day.open },
     { kind: "regular", from: day.open, to: day.close },
@@ -53,13 +66,16 @@ export function sessionAt(minutes: number, day: BellDay): SessionKind {
   return segments(day).find((segment) => m >= segment.from && m < segment.to)?.kind ?? "closed";
 }
 
+/** ŞU ANIN seansı: önizleme gününde çizelge ne derse desin piyasa kapalı. */
+export const liveSessionAt = (minutes: number, day: BellDay): SessionKind => (day.tradingToday ? sessionAt(minutes, day) : "closed");
+
 /**
  * İbre `from`dan `to`ya ileri giderken geçtiği ziller. Geri giderken zil
  * çalmaz (kadranı geri sarmak açılışı yeniden yaşatmaz). Gece yarısını
  * geçen tur desteklenir; bir turdan uzun yol tek tur sayılır.
  */
 export function strikesBetween(from: number, to: number, day: BellDay): Strike[] {
-  if (!day.tradingToday || to <= from) return [];
+  if (!hasSchedule(day) || to <= from) return [];
   const out: Strike[] = [];
   const span = Math.min(to - from, DAY);
   for (const [bell, at] of [
@@ -138,7 +154,7 @@ export function durationOf(ms: number, units: BellText["units"]) {
  * kapanış zili, değilse açılış zili.
  */
 export function nextBellOf(nowMs: number, minutes: number, day: BellDay, nextOpenMs: number, nextCloseMs: number) {
-  const regular = sessionAt(minutes, day) === "regular";
+  const regular = liveSessionAt(minutes, day) === "regular";
   return { bell: regular ? ("close" as const) : ("open" as const), ms: (regular ? nextCloseMs : nextOpenMs) - nowMs };
 }
 
@@ -212,7 +228,7 @@ const BELL_PAUSE = 1.1;
     (ölçüldü: açılış karesi sessizdi). İkinci vuruş yok: duraklamada
     from == to, strikesBetween boş döner. */
 export function dayPlan(from: number, day: BellDay): Leg[] {
-  if (!day.tradingToday) return [];
+  if (!hasSchedule(day)) return [];
   const start = day.preOpen - LEAD;
   const move = moveLeg(from, start);
   const offset = move.to - start;
