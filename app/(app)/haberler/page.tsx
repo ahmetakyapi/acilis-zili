@@ -8,6 +8,7 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { EmptyState, PageHeader } from "@/components/ui/primitives";
 import { InkCanvas } from "@/components/ink/InkCanvas";
 import { NewsImage } from "@/components/news/NewsImage";
+import { NewsBriefingCard } from "@/components/news/NewsInsight";
 import {
   getGenericImageUrls,
   getLatestNews,
@@ -15,6 +16,7 @@ import {
   getSymbolNames,
 } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
+import { insightsConfigured } from "@/lib/stock-insights";
 import { cn, headlineMentions, timeAgo, titleCaseLabel } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
@@ -83,6 +85,11 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
           )
         }
       />
+
+      {/* GÜNÜN GÜNDEMİ (17 Ekim): uzun akışın üstünde "bugün ne konuşuluyor"
+          özeti; sembol süzgecinde basılmaz (süzülen liste zaten tek konu).
+          Gerekçe lib/news-insights.ts. */}
+      {!symbolFilter && insightsConfigured() && <NewsBriefingCard locale={locale} labels={t.newsInsight} />}
 
       <QueryTransition label={t.common.loading}>
       <Suspense key={symbolFilter ?? "all"} fallback={<LoadingFallback label={t.common.loading}><NewsSkeleton /></LoadingFallback>}>

@@ -4,6 +4,9 @@ import type { Metadata } from "next";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { notFound } from "next/navigation";
 import { NewsImage } from "@/components/news/NewsImage";
+import { NewsExplainerCard } from "@/components/news/NewsInsight";
+import { explainable } from "@/lib/news-insights";
+import { insightsConfigured } from "@/lib/stock-insights";
 import { PageShare } from "@/components/article/PageShare";
 import { ArrowSquareOut, CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import { ChangePill, DataStamp, LogoTile, Panel, PanelHeader, buttonClass } from "@/components/ui/primitives";
@@ -214,6 +217,13 @@ export default async function NewsDetailPage(
         </div>
       ) : (
         <p className="text-sm text-muted">{t.common.noDataHint}</p>
+      )}
+
+      {/* BU HABER NE ANLATIYOR (17 Ekim): kısa İngilizce özetin sade dille
+          açılımı, özetin hemen altında. Yalnız açılacak kadar metni olan
+          haberde (explainable); gerekçe lib/news-insights.ts. */}
+      {insightsConfigured() && explainable(item.summary) && (
+        <NewsExplainerCard id={item.id} locale={locale} labels={t.newsInsight} />
       )}
 
       {/* Kaynak çağrısı — özetin kısa olduğunu dürüstçe söyler.

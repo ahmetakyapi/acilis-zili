@@ -36,13 +36,14 @@
 .disclosure { margin: 2px 0 0; padding-top: 12px; border-top: 1px solid var(--line-soft); font-size: var(--text-small); line-height: 1.5; color: var(--text-muted); }
 .failed { margin: 0; font-size: var(--text-read); color: var(--text-muted); }
 
-/* İskelet notun ölçülmüş boyunda (17 Ekim, örnek notla): figürlü hareket
-   notu gövdede 1280'de ~430, 390'da ~880; bilanço notu ~300 / ~610 piksel.
-   İlk sürüm 132 piksel ayırıyordu, not gelince sayfa zıplıyordu. */
-.loading { display: flex; flex-direction: column; gap: 9px; min-height: 420px; }
+/* İskelet notun ölçülmüş boyunda (17 Ekim, örnek notla). İlk sürüm 132
+   piksel ayırıyordu, not gelince sayfa zıplıyordu. Hareket notu ikinci
+   sürümde (seyir çizgisi, kompakt) panel 1280'de 595, 390'da 824 piksel;
+   gövde iskeleti buna göre 500 / 720. Bilanço notu ~300 / ~610 piksel. */
+.loading { display: flex; flex-direction: column; gap: 9px; min-height: 500px; }
 .loading[data-kind="earnings"] { min-height: 300px; }
-@media (max-width: 899px) { .loading { min-height: 720px; } .loading[data-kind="earnings"] { min-height: 520px; } }
-@media (max-width: 639px) { .loading { min-height: 860px; } .loading[data-kind="earnings"] { min-height: 600px; } }
+@media (max-width: 899px) { .loading { min-height: 620px; } .loading[data-kind="earnings"] { min-height: 520px; } }
+@media (max-width: 639px) { .loading { min-height: 720px; } .loading[data-kind="earnings"] { min-height: 600px; } }
 .loadingText { margin: 0 0 2px; font-size: var(--text-small); color: var(--text-muted); }
 .line { height: 12px; border-radius: 6px; }
 
@@ -53,32 +54,75 @@
 @media (min-width: 900px) { .figure { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; } }
 .caption { margin: 0 0 10px; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
 
-.dayBars { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
-.day { display: grid; justify-items: center; gap: 4px; min-width: 0; }
-.dayValue { font-size: 11.5px; font-weight: 750; white-space: nowrap; color: var(--text-muted); }
+/* ---- Hareket figürü (17 Ekim, ikinci sürüm; gerekçe StockInsightCard.tsx
+   → MoveFigure). Yüzey ton, çizgiler ince: hisse 2,5, S&P 1,5 kesik,
+   sıfır çizgisi --line-strong kesik. Alan düz ton (%10), degrade yok. */
+.move { display: grid; gap: 4px; padding: 14px 16px 10px; border-radius: var(--radius-lg); background: var(--surface-sunken); animation: si-rise .5s var(--ease-brand) both; }
+@media (min-width: 640px) { .move { padding: 14px 20px 10px; } }
+.moveHead { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; }
+.moveHead .caption { margin-bottom: 2px; }
+.heroValue { margin: 0; font-size: clamp(26px, 5vw, 32px); line-height: 1.05; font-weight: 850; letter-spacing: -.035em; color: var(--text-strong); animation: si-rise .6s var(--ease-brand) both; animation-delay: 80ms; }
+.heroValue[data-tone="up"] { color: var(--up); }
+.heroValue[data-tone="down"] { color: var(--down); }
+.heroSub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 4px 0 0; font-size: var(--text-base); color: var(--text-muted); animation: si-rise .6s var(--ease-brand) both; animation-delay: 160ms; }
+.heroSub b { font-weight: 800; color: var(--text-strong); }
+.heroSub b[data-tone="up"] { color: var(--up); }
+.heroSub b[data-tone="down"] { color: var(--down); }
+.gap { padding: 3px 9px; border-radius: 999px; font-size: var(--text-small); font-weight: 750; background: var(--surface); color: var(--text-body); }
+.gap[data-tone="up"] { background: var(--up-wash); color: var(--up); }
+.gap[data-tone="down"] { background: var(--down-wash); color: var(--down); }
+.legend { display: flex; gap: 14px; margin: 0; padding: 0; list-style: none; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
+.legend li { display: inline-flex; align-items: center; gap: 6px; }
+.legend li::before { content: ""; width: 16px; height: 0; border-top: 2.5px solid var(--text-strong); border-radius: 2px; }
+.legend li[data-tone="up"]::before { border-top-color: var(--up); }
+.legend li[data-tone="down"]::before { border-top-color: var(--down); }
+.legend li[data-series="market"]::before { border-top: 1.5px dashed var(--text-muted); }
+.legend li[data-series="stock"] { font-family: var(--font-mono); color: var(--text-strong); }
+
+/* Kompakt (17 Ekim, sahibinin itirazı "grafik uzun kalmış"): seyir 150/170
+   → 96/110, gün şeridi 102 → 78 piksel; şekil okunur kalıyor. */
+.path { position: relative; height: 96px; margin: 6px 0 0; }
+@media (min-width: 900px) { .path { height: 110px; } }
+.pathSvg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.zero { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 3 4; }
+.area { fill: color-mix(in oklab, var(--text-muted) 10%, transparent); stroke: none; }
+.area[data-tone="up"] { fill: color-mix(in oklab, var(--up) 11%, transparent); }
+.area[data-tone="down"] { fill: color-mix(in oklab, var(--down) 11%, transparent); }
+.stockLine, .marketLine { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+/* Çizim soldan sağa açılan maskeyle (clip-path): SVG genişliğe esnediği ve
+   çizgi `non-scaling-stroke` taşıdığı için pathLength + dasharray çizgiyi
+   kesik kesik bırakıyordu (17 Ekim, önizlemede görüldü). */
+.pathSvg { animation: si-reveal 1.3s var(--ease-brand) both; animation-delay: .15s; }
+.stockLine { stroke: var(--text-strong); stroke-width: 2.5; }
+.stockLine[data-tone="up"] { stroke: var(--up); }
+.stockLine[data-tone="down"] { stroke: var(--down); }
+.marketLine { stroke: var(--text-muted); stroke-width: 1.5; stroke-dasharray: 4 4; opacity: .9; }
+.dot, .marketDot { position: absolute; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: var(--surface-sunken); border: 2px solid var(--text-strong); }
+.dot[data-tone="up"] { border-color: var(--up); }
+.dot[data-tone="down"] { border-color: var(--down); }
+.dot[data-last] { width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; background: var(--text-strong); box-shadow: 0 0 0 4px var(--surface-sunken); }
+.dot[data-last][data-tone="up"] { background: var(--up); }
+.dot[data-last][data-tone="down"] { background: var(--down); }
+.dot { animation: si-pop .45s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 240ms + 200ms); }
+.marketDot { width: 8px; height: 8px; margin: -4px 0 0 -4px; border-color: var(--text-muted); animation: si-fade .6s var(--ease-brand) both; animation-delay: 1s; }
+
+/* Gün şeridi: her seans kendi noktasının altında, aynı x. */
+.days { position: relative; height: 78px; margin-top: 2px; border-top: 1px solid var(--line-soft); }
+.day { position: absolute; top: 0; display: grid; justify-items: center; gap: 2px; width: 64px; margin-left: -32px; padding-top: 6px; }
+.dayValue { font-size: 11.5px; font-weight: 700; white-space: nowrap; color: var(--text-muted); }
 .dayValue[data-tone="up"] { color: var(--up); }
 .dayValue[data-tone="down"] { color: var(--down); }
-.dayTrack { display: grid; grid-template-rows: 34px 34px; width: 100%; max-width: 30px; }
-.dayHalf { position: relative; display: flex; justify-content: center; background: var(--line-soft); }
-.dayHalf[data-side="up"] { align-items: flex-end; border-radius: 6px 6px 0 0; box-shadow: inset 0 -1px 0 var(--line-strong); }
-.dayHalf[data-side="down"] { align-items: flex-start; border-radius: 0 0 6px 6px; }
-.dayBar { display: block; width: 100%; border-radius: 5px; background: var(--text-muted); }
-.dayBar[data-tone="up"] { background: var(--up); transform-origin: bottom; }
-.dayBar[data-tone="down"] { background: var(--down); transform-origin: top; }
+.dayValue[data-biggest] { padding: 1px 6px; border-radius: 999px; font-weight: 850; background: var(--surface); }
+.dayLane { position: relative; width: 5px; height: 22px; border-radius: 3px; background: var(--line-soft); }
+.dayLane::after { content: ""; position: absolute; left: -4px; right: -4px; top: 50%; height: 1px; background: var(--line-strong); }
+.dayBar { position: absolute; left: 0; right: 0; border-radius: 3px; background: var(--text-muted); }
+.dayBar[data-side="up"] { bottom: 50%; transform-origin: bottom; }
+.dayBar[data-side="down"] { top: 50%; transform-origin: top; }
+.dayBar[data-tone="up"] { background: var(--up); }
+.dayBar[data-tone="down"] { background: var(--down); }
 .dayLabel { font-size: 11.5px; font-weight: 650; color: var(--text-body); }
-
-.compareRow { display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px; align-items: center; gap: 10px; }
-.compareRow + .compareRow { margin-top: 10px; }
-.compareLabel { font-size: var(--text-base); font-weight: 650; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.compareStrong { font-family: var(--font-mono); font-weight: 800; color: var(--text-strong); }
-.compareTrack { position: relative; height: 8px; border-radius: 4px; background: var(--line-soft); }
-.compareTrack::after { content: ""; position: absolute; left: 50%; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--line-strong); }
-.compareBar { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--text-muted); }
-.compareBar[data-tone="up"] { background: var(--up); transform-origin: left; }
-.compareBar[data-tone="down"] { background: var(--down); transform-origin: right; }
-.compareValue { font-size: var(--text-read); font-weight: 800; text-align: right; white-space: nowrap; color: var(--text-strong); }
-.compareValue[data-tone="up"] { color: var(--up); }
-.compareValue[data-tone="down"] { color: var(--down); }
+.volume { font-size: 10.5px; font-weight: 750; color: var(--brass-ink); white-space: nowrap; }
+@media (max-width: 420px) { .day { width: 52px; margin-left: -26px; } .dayValue { font-size: 10.5px; } }
 
 .figure[data-kind="earnings"] { grid-template-columns: none; }
 @media (min-width: 900px) { .figure[data-kind="earnings"] { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); } }
@@ -104,9 +148,11 @@
 @keyframes si-grow-y { from { scale: 1 0; } }
 @keyframes si-grow-x { from { scale: 0 1; } }
 @keyframes si-rise { from { opacity: 0; translate: 0 8px; } }
+@keyframes si-reveal { from { clip-path: inset(-10% 100% -10% 0); } to { clip-path: inset(-10% 0 -10% 0); } }
+@keyframes si-fade { from { opacity: 0; } }
+@keyframes si-pop { from { opacity: 0; scale: .2; } }
 @keyframes si-glint { 0%, 100% { opacity: .45; scale: .9; } 50% { opacity: 1; scale: 1.08; } }
-.dayBar { animation: si-grow-y .7s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 70ms + 80ms); }
-.compareBar { animation: si-grow-x .8s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 120ms + 260ms); }
+.dayBar { animation: si-grow-y .6s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 230ms + 300ms); }
 .metricBar { animation: si-grow-x .8s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 140ms + var(--j, 0) * 90ms + 100ms); }
 .summary, .point, .disclosure { animation: si-rise .55s var(--ease-brand) both; }
 .summary { animation-delay: 120ms; }
@@ -116,5 +162,5 @@
 .loadingText { display: inline-flex; align-items: center; gap: 6px; }
 .loadingIcon { color: var(--brass); animation: si-glint 1.4s var(--ease-brand) infinite; }
 @media (prefers-reduced-motion: reduce) {
-  .dayBar, .compareBar, .metricBar, .summary, .point, .disclosure, .figure, .loadingIcon { animation: none !important; }
+  .dayBar, .metricBar, .summary, .point, .disclosure, .figure, .move, .heroValue, .heroSub, .pathSvg, .dot, .marketDot, .loadingIcon { animation: none !important; }
 }

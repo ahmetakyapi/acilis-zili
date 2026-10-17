@@ -11,3 +11,17 @@ export function numbersGrounded(output: string, input: string): boolean {
   const allowed = new Set(input.match(NUMBER) ?? []);
   return (output.match(NUMBER) ?? []).every((n) => allowed.has(n));
 }
+
+/**
+ * Dil sınırı aşan denetim (17 Ekim, haber notları): girdi İngilizce haber
+ * metni, çıktı Türkçe — "16.8" Türkçede "16,8", "848,250" ise "848.250"
+ * yazılır. Ayraçlar tek biçime indirilip karşılaştırılır; rakam dizisi
+ * aynı kalmak zorunda. Gevşeklik bilinçli: "1.5" ile "1,5" aynı sayılır,
+ * yeni bir rakam dizisi hâlâ metni düşürür.
+ */
+const unify = (n: string) => n.replace(/,/g, ".");
+
+export function numbersGroundedAcrossLocales(output: string, input: string): boolean {
+  const allowed = new Set((input.match(NUMBER) ?? []).map(unify));
+  return (output.match(NUMBER) ?? []).every((n) => allowed.has(unify(n)));
+}

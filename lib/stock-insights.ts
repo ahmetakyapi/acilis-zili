@@ -56,8 +56,12 @@ export type MoveInsight = {
   to: string;
   changePct: number;
   marketPct: number | null;
-  /** Beş seansın kapanıştan kapanışa adımı — kartın gün çubukları. */
-  sessions: { date: string; changePct: number }[];
+  /** Beş seansın kapanıştan kapanışa adımı — kartın gün çubukları.
+      `volumeRatio` seansın hacmi / önceki 20 seansın ortalaması. */
+  sessions: { date: string; changePct: number; volumeRatio?: number | null }[];
+  /** S&P 500'ün aynı beş seansı (SPY) — kartın kıyas çizgisi. Seriler
+      hizalı değilse yok; kart o zaman tek çizgi çizer. */
+  marketSessions?: { date: string; changePct: number }[] | null;
   explained: "news" | "market" | "mixed" | "unclear";
   text: { tr: InsightText; en: InsightText };
   generatedAt: string;
@@ -167,7 +171,7 @@ async function completedDailyBars(symbol: string): Promise<Bar[] | null> {
   return bars;
 }
 
-async function callClaude<T extends z.ZodType>(system: string, schema: T, input: string): Promise<z.infer<T> | null> {
+export async function callClaude<T extends z.ZodType>(system: string, schema: T, input: string): Promise<z.infer<T> | null> {
   const apiKey = claudeKey();
   if (!apiKey || !takeCall()) return null;
   const model = insightModel();
@@ -255,16 +259,28 @@ async function buildMove(symbol: string): Promise<{ key: string; input: string; 
       to,
       changePct,
       marketPct: spyAligned,
-      sessions: window.slice(1).map((bar, i) => ({ date: barDate(bar), changePct: ((bar.close - window[i]!.close) / window[i]!.close) * 100 })),
+      sessions: window.slice(1).map((bar, i) => ({
+        date: barDate(bar),
+        changePct: ((bar.close - window[i]!.close) / window[i]!.close) * 100,
+        volumeRatio: avgVolume > 0 ? bar.volume / avgVolume : null,
+      })),
+      marketSessions: spyAligned === null || !spy ? null : stepsOf(spy.slice(-6)),
     },
   };
 }
+
+const stepsOf = (window: Bar[]) =>
+  window.slice(1).map((bar, i) => ({ date: barDate(bar), changePct: ((bar.close - window[i]!.close) / window[i]!.close) * 100 }));
 
 export async function getMoveInsight(symbol: string): Promise<MoveInsight | null> {
   try {
     const built = await buildMove(symbol);
     if (!built) return null;
-    return await unstable_cache(
+    /* Figürün sayıları (seanslar, hacim, S&P çizgisi) önbelleğin DIŞINDA,
+       her istekte aynı seans barlarından: önbellekteki eski notta olmayan
+       alanlar Claude'u yeniden çağırmadan gelir, metinle aynı seansı anlatır
+       (anahtar sembol + son seans). */
+    const cached = await unstable_cache(
       async (): Promise<MoveInsight> => {
         const out = await callClaude(MOVE_SYSTEM, MoveSchema, built.input);
         if (!out) throw new Error("no-output");
@@ -275,6 +291,7 @@ export async function getMoveInsight(symbol: string): Promise<MoveInsight | null
       ["stock-move-v2", built.key],
       { revalidate: 36 * 3600, tags: ["stock-insight"] },
     )();
+    return { ...cached, ...built.meta };
   } catch (error) {
     if (error instanceof Error && error.message === "ungrounded") console.error(`[içgörü] ${symbol}: girdide olmayan sayı, not düşürüldü`);
     return null;

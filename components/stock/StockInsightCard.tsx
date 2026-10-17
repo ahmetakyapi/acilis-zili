@@ -38,65 +38,140 @@ const weekday = (date: string, locale: Locale) =>
 const tone = (value: number) => (value > 0 ? "up" : value < 0 ? "down" : "flat");
 
 /**
- * Hareket figürü — iki çizgi, ikisi de GERÇEK sayı (CLAUDE.md
- * "karşılaştırılan büyüklük bir de çizgi olarak okunur"): solda beş
- * seansın gün gün adımı (sıfır çizgisinden yukarı/aşağı), sağda hissenin
- * ve S&P 500'ün beş seanslık değişimi ORTAK ölçekte. Renk yalnız işaretten.
+ * Hareket figürü (17 Ekim, ikinci sürüm — sahibinin isteği "görsel zirve").
+ * İlk sürüm gün gün kalın bloklar ve ayrı bir kıyas çizgisiydi; bloklar
+ * sıfır çizgisinden kopuk "tablo programı" gibi duruyordu (CLAUDE.md →
+ * grafik dili ince). Şimdi üç katman, hepsi GERÇEK sayı:
+ *
+ * 1. Künye: beş seansın değişimi büyük puntoyla, altında S&P 500 ve
+ *    farkı ("Piyasanın 12,62 Puan Altında") — fark ekranda hesaplanır,
+ *    Claude'a verilmez (yazma katmanı değil, gösterim).
+ * 2. Seyir: hisse ve S&P 500'ün beş seanslık BİRİKİMLİ yolu, ortak ölçek,
+ *    sıfır çizgisi kesik. Çizgiler soldan sağa açılarak gelir, altındaki
+ *    alan düz ton (degrade yok — veri paneli). Uç noktalarda değer.
+ * 3. Gün şeridi: her seansın kendi değişimi sıfır çizgisinden ince şerit;
+ *    hacmi 20 seans ortalamasının 1,5 katını aşan gün işaretli. En sert gün
+ *    kalın yazılır.
+ *
+ * Konumlar yüzde: SVG `preserveAspectRatio="none"` ile genişliğe yayılır,
+ * çizgi kalınlığı `vector-effect` ile sabit; noktalar ve etiketler HTML
+ * (SVG'de esnerlerdi). Renk yalnız işaretten; S&P çizgisi nötr mürekkep.
  */
+const X0 = 3;
+const X1 = 97;
+const xAt = (i: number, n: number) => X0 + (i / Math.max(1, n - 1)) * (X1 - X0);
+
+function cumulative(steps: { changePct: number }[]): number[] {
+  const out = [0];
+  let level = 1;
+  for (const step of steps) {
+    level *= 1 + step.changePct / 100;
+    out.push((level - 1) * 100);
+  }
+  return out;
+}
+
 function MoveFigure({ insight, locale, labels }: { insight: MoveInsight; locale: Locale; labels: Labels }) {
+  const stock = cumulative(insight.sessions);
+  const market = insight.marketSessions?.length === insight.sessions.length ? cumulative(insight.marketSessions) : null;
+  const all = [...stock, ...(market ?? []), 0];
+  const hi = Math.max(...all);
+  const lo = Math.min(...all);
+  const pad = Math.max((hi - lo) * 0.12, 0.2);
+  const top = hi + pad;
+  const bottom = lo - pad;
+  const yAt = (v: number) => ((top - v) / (top - bottom)) * 100;
+  const n = stock.length;
+  const path = (values: number[]) => values.map((v, i) => `${i ? "L" : "M"}${xAt(i, n).toFixed(2)} ${yAt(v).toFixed(2)}`).join(" ");
+  const zeroY = yAt(0);
+  const area = `${path(stock)} L${xAt(n - 1, n).toFixed(2)} ${zeroY.toFixed(2)} L${xAt(0, n).toFixed(2)} ${zeroY.toFixed(2)} Z`;
+  const stockTone = tone(insight.changePct);
   const maxStep = Math.max(...insight.sessions.map((s) => Math.abs(s.changePct)), 0.01);
-  const rows = [
-    { label: insight.symbol, value: insight.changePct, strong: true },
-    ...(insight.marketPct !== null ? [{ label: "S&P 500", value: insight.marketPct, strong: false }] : []),
-  ];
-  const maxWeek = Math.max(...rows.map((r) => Math.abs(r.value)), 0.01);
+  const biggest = insight.sessions.reduce((best, s, i) => (Math.abs(s.changePct) > Math.abs(insight.sessions[best]!.changePct) ? i : best), 0);
+  const gap = insight.marketPct !== null ? insight.changePct - insight.marketPct : null;
+  const gapText =
+    gap === null
+      ? null
+      : Math.abs(gap) < 0.05
+        ? labels.inlineMarket
+        : (gap > 0 ? labels.aboveMarket : labels.belowMarket).replace(
+            "{pts}",
+            new Intl.NumberFormat(locale === "en" ? "en-US" : "tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(gap)),
+          );
+
   return (
-    <div className={styles.figure}>
-      <figure className={styles.days} aria-label={labels.daily}>
-        <figcaption className={styles.caption}>{labels.daily}</figcaption>
-        <div className={styles.dayBars}>
-          {insight.sessions.map((session, i) => {
-            const h = Math.max(4, (Math.abs(session.changePct) / maxStep) * 100);
-            return (
-              <div key={session.date} className={styles.day} style={{ "--i": i } as CSSProperties}>
-                <span className={styles.dayValue} data-tone={tone(session.changePct)}>
-                  {formatPercent(session.changePct, locale, 1)}
-                </span>
-                <div className={styles.dayTrack}>
-                  <div className={styles.dayHalf} data-side="up">
-                    {session.changePct > 0 && <i className={styles.dayBar} data-tone="up" style={{ height: `${h}%` }} />}
-                  </div>
-                  <div className={styles.dayHalf} data-side="down">
-                    {session.changePct <= 0 && <i className={styles.dayBar} data-tone={tone(session.changePct)} style={{ height: `${h}%` }} />}
-                  </div>
-                </div>
-                <span className={styles.dayLabel}>{weekday(session.date, locale)}</span>
-              </div>
-            );
-          })}
-        </div>
-      </figure>
-      <figure className={styles.compare} aria-label={labels.compare}>
-        <figcaption className={styles.caption}>{labels.compare}</figcaption>
-        {rows.map((row, i) => {
-          const w = Math.max(2, (Math.abs(row.value) / maxWeek) * 50);
-          return (
-            <div key={row.label} className={styles.compareRow} style={{ "--i": i } as CSSProperties}>
-              <span className={cn(styles.compareLabel, row.strong && styles.compareStrong)}>{row.label}</span>
-              <div className={styles.compareTrack}>
-                <i
-                  className={styles.compareBar}
-                  data-tone={tone(row.value)}
-                  style={row.value >= 0 ? { left: "50%", width: `${w}%` } : { right: "50%", width: `${w}%` }}
-                />
-              </div>
-              <span className={styles.compareValue} data-tone={tone(row.value)}>
-                {formatPercent(row.value, locale, 2)}
+    <div className={styles.move}>
+      <div className={styles.moveHead}>
+        <div>
+          <p className={styles.caption}>{labels.compare}</p>
+          <p className={styles.heroValue} data-tone={stockTone}>
+            {formatPercent(insight.changePct, locale, 2)}
+          </p>
+          {insight.marketPct !== null && (
+            <p className={styles.heroSub}>
+              <span>
+                S&amp;P 500 <b data-tone={tone(insight.marketPct)}>{formatPercent(insight.marketPct, locale, 2)}</b>
               </span>
+              {gapText && <span className={styles.gap} data-tone={gap === null ? "flat" : tone(gap)}>{gapText}</span>}
+            </p>
+          )}
+        </div>
+        <ul className={styles.legend} aria-hidden>
+          <li data-series="stock" data-tone={stockTone}>{insight.symbol}</li>
+          {market && <li data-series="market">S&amp;P 500</li>}
+        </ul>
+      </div>
+
+      <figure className={styles.path} aria-label={labels.pathTitle}>
+        <svg className={styles.pathSvg} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+          <line x1="0" x2="100" y1={zeroY} y2={zeroY} className={styles.zero} vectorEffect="non-scaling-stroke" />
+          <path d={area} className={styles.area} data-tone={stockTone} />
+          {market && <path d={path(market)} className={styles.marketLine} vectorEffect="non-scaling-stroke" />}
+          <path d={path(stock)} className={styles.stockLine} data-tone={stockTone} vectorEffect="non-scaling-stroke" />
+        </svg>
+        {stock.map((v, i) =>
+          i === 0 ? null : (
+            <span
+              key={i}
+              className={styles.dot}
+              data-tone={stockTone}
+              data-last={i === n - 1 || undefined}
+              style={{ left: `${xAt(i, n)}%`, top: `${yAt(v)}%`, "--i": i } as CSSProperties}
+            />
+          ),
+        )}
+        {market && (
+          <span className={styles.marketDot} style={{ left: `${xAt(n - 1, n)}%`, top: `${yAt(market[n - 1]!)}%` }} />
+        )}
+      </figure>
+
+      <div className={styles.days} aria-label={labels.daily}>
+        {insight.sessions.map((session, i) => {
+          const h = Math.max(6, (Math.abs(session.changePct) / maxStep) * 100);
+          const loud = (session.volumeRatio ?? 0) >= 1.5;
+          return (
+            <div key={session.date} className={styles.day} style={{ left: `${xAt(i + 1, n)}%`, "--i": i } as CSSProperties}>
+              <span className={styles.dayValue} data-tone={tone(session.changePct)} data-biggest={i === biggest || undefined}>
+                {formatPercent(session.changePct, locale, 1)}
+              </span>
+              <span className={styles.dayLane}>
+                <i
+                  className={styles.dayBar}
+                  data-tone={tone(session.changePct)}
+                  data-side={session.changePct >= 0 ? "up" : "down"}
+                  style={{ height: `${h / 2}%` }}
+                />
+              </span>
+              <span className={styles.dayLabel}>{weekday(session.date, locale)}</span>
+              {loud && (
+                <span className={styles.volume} title={labels.highVolume}>
+                  {labels.volumeTimes.replace("{x}", new Intl.NumberFormat(locale === "en" ? "en-US" : "tr-TR", { maximumFractionDigits: 1 }).format(session.volumeRatio!))}
+                </span>
+              )}
             </div>
           );
         })}
-      </figure>
+      </div>
     </div>
   );
 }
@@ -214,10 +289,6 @@ export function StockInsightCard({
           {insight.kind === "move" ? (
             <>
               <span className={styles.stripLabel}>{labels.window.replace("{range}", rangeLabel(insight.from, insight.to, locale))}</span>
-              <ChangePill changePct={insight.changePct} locale={locale} />
-              {insight.marketPct !== null && (
-                <span className={styles.stripMuted}>{labels.market.replace("{pct}", formatPercent(insight.marketPct, locale, 2))}</span>
-              )}
             </>
           ) : (
             <>

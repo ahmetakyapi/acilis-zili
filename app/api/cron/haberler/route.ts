@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { checkBearer } from "@/lib/api-auth";
+import { getNewsBriefing } from "@/lib/news-insights";
 import { syncMarketNews } from "@/lib/news-sync";
-import { warmEarningsInsights } from "@/lib/stock-insights";
+import { insightsConfigured, warmEarningsInsights } from "@/lib/stock-insights";
 import { isTranslateConfigured, translatePendingNews } from "@/lib/translate";
 
 /**
@@ -16,7 +17,9 @@ import { isTranslateConfigured, translatePendingNews } from "@/lib/translate";
  * 40 haber — Claude çağrısı BACKGROUND_TIMEOUT_MS'e sığsın.
  *
  * Aynı koşu son iki günde açıklanan büyük bilançoların Claude notunu da
- * önceden yazdırır (lib/stock-insights.ts → warmEarningsInsights).
+ * önceden yazdırır (lib/stock-insights.ts → warmEarningsInsights) ve
+ * dönemin "Günün Gündemi"ni ısıtır (lib/news-insights.ts): dönem nöbetle
+ * aynı saatte başlıyor, okur gündemi hazır bulur.
  */
 
 export const dynamic = "force-dynamic";
@@ -41,6 +44,11 @@ export async function GET(request: Request) {
     report.earningsNotes = await warmEarningsInsights(12);
   } catch (error) {
     report.earningsNotes = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+  try {
+    report.briefing = insightsConfigured() ? ((await getNewsBriefing())?.themes.length ?? "yazılamadı") : "atlandı: anahtar yok";
+  } catch (error) {
+    report.briefing = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
   const failed = String(report.news).startsWith("hata") && String(report.translate).startsWith("hata");
   return NextResponse.json(report, { status: failed ? 503 : 200 });
