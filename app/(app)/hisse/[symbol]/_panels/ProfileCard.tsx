@@ -9,7 +9,7 @@ import { getCompanyProfile, getQuote } from "@/lib/providers";
 import { NDX_MEMBERS, SPX_MEMBERS, primaryOnly } from "@/db/seed/indices";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { describeSymbol } from "@/db/seed/descriptions";
-import { cn, formatMoneyCompact, formatEtDateMedium, formatPercentPlain, formatPrice, NO_VALUE, safeExternalUrl } from "@/lib/utils";
+import { cn, formatMoneyCompact, formatEtDateMedium, formatPercentPlain, NO_VALUE, safeExternalUrl } from "@/lib/utils";
 import { week52Band } from "./shared";
 import { Week52Band } from "./Week52Band";
 
