@@ -19,7 +19,8 @@ import { durationOf, type BellText } from "@/components/figures/session-bell/mod
  * araçları sekmeyi hiç gizlemiyor; başlığı hep asıl hâliyle görüyorlar.
  *
  * DAKİKADA BİR, SANİYEDE DEĞİL: süre `durationOf` ile yazılıyor (Seans
- * Zili'nin biçimi, saniyesiz: "1 sa 28 dk"); zamanlayıcı yalnızca yazılan
+ * Zili'nin biçimi, saniyesiz; birimler sekmede açık yazılır — "1 Saat 28
+ * Dakika", `today.tabUnits`, 17 Ekim); zamanlayıcı yalnızca yazılan
  * dakika değişince uyanıyor. Arka plan sekmesinde tarayıcılar
  * zamanlayıcıları zaten dakikada bire kadar kısıyor; daha sık yazmanın
  * karşılığı yok. Hiçbir şey çizmez.

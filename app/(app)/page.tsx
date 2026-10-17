@@ -252,7 +252,7 @@ export default async function TodayPage() {
                   targetIso={countdownTarget.toISOString()}
                   phrase={trading ? t.sessionBell.toClose : t.sessionBell.toOpen}
                   rang={trading ? t.today.tabRangClose : t.today.tabRangOpen}
-                  units={t.sessionBell.units}
+                  units={t.today.tabUnits}
                   brand={t.brand.name}
                 />
               </div>

@@ -958,8 +958,8 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .capNote { color:var(--text-muted); font-size:12px; font-weight:500; line-height:1.35; }
 .capRankCell { padding-left:16px; border-left:1px solid var(--line-soft); }
 .capScale { display:flex; flex-direction:column; gap:6px; }
-.capTrack { position:relative; display:block; height:8px; border-radius:4px; background:color-mix(in oklab, var(--primary) 12%, var(--surface)); overflow:hidden; }
-.capTrack > i { position:absolute; inset-block:0; left:0; border-radius:4px; background:var(--primary); transform-origin:left center; }
+.capTrack { position:relative; display:block; height:5px; border-radius:3px; background:var(--rail-track); overflow:hidden; }
+.capTrack > i { position:absolute; inset-block:0; left:0; border-radius:3px; background:var(--primary); transform-origin:left center; }
 .capEnds { display:flex; justify-content:space-between; gap:12px; color:var(--text-body); font-size:12px; font-weight:600; }
 .capSelf { display:inline-flex; align-items:center; gap:6px; color:var(--primary-ink); }
 .capSelf::before { content:""; width:8px; height:8px; border-radius:999px; background:var(--primary); }

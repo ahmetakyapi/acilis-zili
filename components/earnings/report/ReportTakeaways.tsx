@@ -45,7 +45,7 @@ export function ReportTakeaways({
           {takeaways.map((item, index) => (
             <li key={index} className={styles.takeaway}>
               <span aria-hidden className={styles.takeawayIndex}>
-                {String(index + 1).padStart(2, "0")}
+                {index + 1}
               </span>
               <span>
                 <RichText text={item} linker={linker} />

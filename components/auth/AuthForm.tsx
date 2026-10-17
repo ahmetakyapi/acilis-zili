@@ -306,7 +306,7 @@ export function AuthForm({
                   className={styles.glyph}
                 />
               ) : (
-                <span aria-hidden>{String(index + 1).padStart(2, "0")}</span>
+                <span aria-hidden>{index + 1}</span>
               )}
               <span className="text-read text-body">{feature}</span>
             </p>

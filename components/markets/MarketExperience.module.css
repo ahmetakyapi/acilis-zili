@@ -33,6 +33,16 @@
 .reading > p:last-child { font-size:12px; }
 .spark { width:100%; flex:1 1 38px; min-height:38px; height:auto; margin-top:12px; }
 .indexCard :global(.spark-line) { animation-duration:1.1s; }
+/* Gün aralığı şeridi (17 Ekim) — 5 piksellik kulvar, fiyat noktası yön
+   renginde; uçlarda günün dibi ve tepesi. Telefonda kart tek satır, gizli. */
+.dayRange { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:8px; margin-top:10px; color:var(--text-muted); font-size:11px; font-weight:600; }
+.rangeLane { position:relative; height:5px; border-radius:3px; background:var(--rail-track); }
+.rangeLane > b { position:absolute; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--text-muted); box-shadow:0 0 0 2px var(--premium-surface); animation:range-in .8s var(--ease-brand) both; animation-delay:.5s; }
+.rangeLane > b[data-tone="up"] { background:var(--up); }
+.rangeLane > b[data-tone="down"] { background:var(--down); }
+.indexLink[aria-current="true"] .rangeLane > b { box-shadow:0 0 0 2px var(--primary-tint); }
+@keyframes range-in { from { opacity:0; scale:.4; } }
+@media(prefers-reduced-motion:reduce) { .rangeLane > b { animation:none; } }
 .indexStamp { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:5px 12px; margin-top:9px; color:var(--text-muted); font-size:12px; }
 .indexSkeleton,.indexUnavailable { min-height:176px; border-radius:14px; }
 .indexUnavailable { display:grid; place-items:center; }
@@ -64,6 +74,7 @@
  .price { font-size:24px; }
  .reading > p:last-child { font-size:12px; }
  .spark { height:32px; margin-top:0; }
+ .dayRange { display:none; }
  .indexSkeleton,.indexUnavailable { min-height:296px; }
  .indexStamp { font-size:12px; }
  .movers { grid-template-columns:minmax(0,1fr); }
@@ -94,7 +105,7 @@
 /* Giriş: ray tek hamlede soldan süpürülerek açılır (gerekçe page.tsx →
    BreadthSummary). Kırpma yuvarlak köşeyi koruyor; JS yokken ve azaltılmış
    harekette son kare. */
-.breadthRail { display:flex; height:9px; overflow:hidden; margin:14px 0; border-radius:6px; background:var(--rail-track); animation:rail-sweep .7s var(--ease-brand) both; }
+.breadthRail { display:flex; height:6px; overflow:hidden; margin:14px 0; border-radius:3px; background:var(--rail-track); animation:rail-sweep .7s var(--ease-brand) both; }
 @keyframes rail-sweep { from { clip-path:inset(0 100% 0 0 round 6px); } to { clip-path:inset(0 0 0 0 round 6px); } }
 .breadthRail > span { min-width:0; }
 @media(prefers-reduced-motion:reduce) { .breadthRail { animation:none; } }

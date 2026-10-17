@@ -126,7 +126,7 @@ export function ReportReading({
                       aria-hidden
                       className="numeral mb-1.5 block text-tiny font-bold text-primary"
                     >
-                      {String(index + 1).padStart(2, "0")}
+                      {index + 1}
                     </span>
                     <h3 className="mb-2 text-base font-bold leading-[20px] tracking-[-0.015em] text-strong [text-wrap:balance]">
                       {section.title}

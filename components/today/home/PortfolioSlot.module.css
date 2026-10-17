@@ -22,7 +22,7 @@
 
 /* Dağılım şeridi — dilimler soldan sırayla açılır. */
 .weights { display:flex; flex-direction:column; gap:8px; }
-.bar { display:flex; height:10px; overflow:hidden; border-radius:999px; gap:2px; }
+.bar { display:flex; height:6px; overflow:hidden; border-radius:999px; gap:2px; }
 .slice {
   flex:0 0 var(--w);
   background:color-mix(in srgb, var(--primary) var(--tone), var(--surface-sunken));

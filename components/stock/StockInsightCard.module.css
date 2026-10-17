@@ -134,8 +134,8 @@
 .verdict[data-verdict="miss"] { background: var(--down-wash); color: var(--down); }
 .metricRow { display: grid; grid-template-columns: 84px minmax(0, 1fr) 76px; align-items: center; gap: 10px; }
 .metricRowLabel { font-size: var(--text-base); color: var(--text-muted); }
-.metricTrack { height: 8px; border-radius: 4px; background: var(--line-soft); }
-.metricBar { display: block; height: 100%; border-radius: 4px; background: var(--text-muted); transform-origin: left; }
+.metricTrack { height: 5px; border-radius: 3px; background: var(--line-soft); }
+.metricBar { display: block; height: 100%; border-radius: 3px; background: var(--text-muted); transform-origin: left; }
 .metricBar[data-kind="beat"] { background: var(--up); }
 .metricBar[data-kind="miss"] { background: var(--down); }
 .metricBar[data-kind="inline"] { background: var(--text-body); }

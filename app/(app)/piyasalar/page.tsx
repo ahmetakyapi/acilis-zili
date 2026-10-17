@@ -93,11 +93,13 @@ export const generateMetadata = pageMetadata({
 /* Sıra Nasdaq 100 ile başlıyor: okuyucunun bu siteye gelme sebebi ağırlıkla
    teknoloji hissesi ve gün içi hareketin konuşulduğu endeks o. Dizi hem üstteki
    endeks kartlarını hem seçici çiplerini besliyor, ikisi de aynı sırayı
-   izliyor — ve açılıştaki seçili sekme de baştaki endeks. */
+   izliyor — ve açılıştaki seçili sekme de baştaki endeks. Ardından S&P 500,
+   en sonda Dow Jones (17 Ekim, sahibinin isteği: piyasanın genelini anlatan
+   S&P 500 ikinci, 30 hisselik fiyat ağırlıklı Dow sonda). */
 const INDEX_TABS = [
   { key: "nasdaq", label: "Nasdaq 100", proxy: "QQQ", members: primaryOnly(NDX_MEMBERS) },
-  { key: "dow", label: "Dow Jones", proxy: "DIA", members: primaryOnly(DOW_MEMBERS) },
   { key: "sp500", label: "S&P 500", proxy: "SPY", members: primaryOnly(SPX_MEMBERS) },
+  { key: "dow", label: "Dow Jones", proxy: "DIA", members: primaryOnly(DOW_MEMBERS) },
 ] as const;
 
 type TabKey = (typeof INDEX_TABS)[number]["key"];
@@ -453,6 +455,18 @@ async function IndexCards({
                       split={rail.openAt}
                       className={styles.spark}
                     />
+                  )}
+                  {/* GÜN ARALIĞI (17 Ekim): kıvılcım şekli söylüyor, aralık
+                      ölçüyü — günün dibi ve tepesi arasında fiyat nerede.
+                      Kıvılcımla aynı kural: sayı bu seansa ait değilse yok. */}
+                  {sparkOk && quote.low !== null && quote.high !== null && quote.high > quote.low && (
+                    <div className={styles.dayRange} aria-label={`${t.markets.dayRange}: ${formatPrice(quote.low, locale)} – ${formatPrice(quote.high, locale)}`}>
+                      <span className="numeral">{formatPrice(quote.low, locale)}</span>
+                      <i className={styles.rangeLane} aria-hidden>
+                        <b data-tone={tone} style={{ left: `${Math.min(100, Math.max(0, ((quote.price - quote.low) / (quote.high - quote.low)) * 100))}%` }} />
+                      </i>
+                      <span className="numeral">{formatPrice(quote.high, locale)}</span>
+                    </div>
                   )}
                 </>
               ) : (
@@ -1059,13 +1073,15 @@ function MoverPanel({
                 data-cc={row.member.symbol}
               >
                 <div className={styles.moverIdentity}>
-                  <span className={styles.moverRank} aria-hidden>{String(index + 1).padStart(2, "0")}</span>
+                  <span className={styles.moverRank} aria-hidden>{index + 1}</span>
                   <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="sm" className={styles.moverLogo} />
                   <span className={styles.moverCompany}>
                     <span className="shrink-0 text-base font-bold text-strong">
                       {row.member.symbol}
                     </span>
-                    <span className="min-w-0 truncate text-tiny text-muted" title={row.member.name}>
+                    {/* İKİ SATIR, KESİLMEZ (17 Ekim): beş sütunlu kartta ad tek
+                        satırda "Northrop Grumm…" diye kırpılıyordu. */}
+                    <span className="min-w-0 line-clamp-2 text-tiny leading-snug text-muted" title={row.member.name}>
                       {row.member.name}
                     </span>
                   </span>

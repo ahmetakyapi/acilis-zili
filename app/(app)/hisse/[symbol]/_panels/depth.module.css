@@ -106,9 +106,10 @@
 .sentiment { margin-top:4px; padding-top:12px; border-top:1px solid var(--line-soft); }
 .sentimentLabel { color:var(--text-strong); font-size:12px; font-weight:600; }
 .bars { position:relative; display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:4px; height:72px; margin-top:10px; }
-.bars::before { position:absolute; inset-inline:0; top:50%; height:1px; background:var(--line); content:""; }
+.bars::before { position:absolute; inset-inline:0; top:50%; height:1px; background:var(--line-strong); content:""; }
 .bar { position:relative; height:100%; }
-.bar > i { position:absolute; inset-inline:15%; border-radius:2px; }
+/* İnce şerit (17 Ekim, CLAUDE.md "grafik dili ince"): sütunun %70'ini dolduran blok 6 piksele indi. */
+.bar > i { position:absolute; left:calc(50% - 3px); width:6px; border-radius:3px; }
 .bar > i[data-sign="up"] { bottom:50%; background:var(--up); }
 .bar > i[data-sign="down"] { top:50%; background:var(--down); }
 .bar > b { position:absolute; top:calc(50% - 2px); left:calc(50% - 2px); width:4px; height:4px; border-radius:999px; background:var(--line-strong); }

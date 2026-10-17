@@ -336,8 +336,11 @@ export function RevenueColumns({
                   </div>
                   <div
                     data-motion-draw="bar"
+                    /* İnce sütun (17 Ekim, CLAUDE.md "grafik dili ince"): hücre
+                       genişliğinde dolu blok "tablo programı" gibi duruyordu;
+                       18 piksele inip hücrenin ortasında duruyor. */
                     className={cn(
-                      "w-full rounded-t-[3px]",
+                      "mx-auto w-full max-w-[18px] rounded-t-[4px]",
                       styles.revenueBar,
                       bar.projected &&
                         "border border-dashed border-primary bg-primary-tint",

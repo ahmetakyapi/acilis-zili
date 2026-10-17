@@ -1851,11 +1851,13 @@ html.theme-switching::view-transition-new(root) {
   margin-left:-9px; border-radius:0 0 3px 3px; background:var(--primary);
   animation:tab-mark 320ms var(--ease-brand) both;
 }
-.tab-bar a[aria-current="page"] .tab-icon { animation:tab-hop 460ms var(--ease-spring) both; }
+.tab-bar a[aria-current="page"] .tab-icon { animation:tab-hop 520ms var(--ease-brand) both; }
 @keyframes tab-mark { from { transform:scaleX(0); } to { transform:none; } }
 @keyframes tab-hop {
   0% { transform:translateY(0) scale(1); }
-  40% { transform:translateY(-4px) scale(1.12); }
+  /* 17 Ekim: yay eğrisi ve %12 büyüme kalktı — sekme çubuğu sayfa düzeyi
+     öğe, her gezinmede oynuyor (CLAUDE.md: yay yalnız tek küçük geri bildirimde). */
+  40% { transform:translateY(-2px); }
   100% { transform:none; }
 }
 
@@ -2417,8 +2419,9 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
    yarısı sessiz — başlık gözün hep gördüğü yer, orada durmadan sallanan
    bir şey dikkat dağıtırdı. */
 /* Pivot yukarıdaki tek askıdan (transform-box) — yerel override kalktı. */
-html[data-navigating] .masthead-brand > span:first-child svg { animation:masthead-bell-wait 1.6s var(--ease-brand) infinite; }
-@keyframes masthead-bell-wait { 0% { transform:none; } 12% { transform:rotate(-10deg); } 28% { transform:rotate(8deg); } 42% { transform:rotate(-4deg); } 54%,100% { transform:none; } }
+html[data-navigating] .masthead-brand > span:first-child svg { animation:masthead-bell-wait 1.8s ease-in-out infinite; }
+/* 17 Ekim: üzerine gelmedeki sönümlü salınımın yarısı (−3 → 1,6 → −0,8°); eskisi −10/+8/−4° idi ve sayfa yüklenirken hover'dan da sert sallanıyordu. */
+@keyframes masthead-bell-wait { 0% { transform:none; } 14% { transform:rotate(-3deg); } 30% { transform:rotate(1.6deg); } 44% { transform:rotate(-.8deg); } 58%,100% { transform:none; } }
 @media(prefers-reduced-motion:reduce) {
  .masthead-brand:hover svg,[data-admin-brand]:hover svg,html[data-navigating] .masthead-brand > span:first-child svg,.masthead-brand:hover > span:first-child::before,.masthead-brand:hover > span:first-child::after { animation:none; }
  .masthead-brand > span:first-child,.masthead-row-arrow,.masthead-nav .masthead-link { transition:none; }
@@ -2637,18 +2640,19 @@ html.ink-splash-out .ink-splash-layer {
 @media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
  :is(button, a, .masthead-account):hover > [data-avatar] .avatar-glyph,
  :is(button, a):hover [data-avatar] .avatar-glyph { animation:avatar-bob 520ms var(--ease-brand); }
- :is(button, a, .masthead-account):hover [data-avatar="bell"] .avatar-glyph { transform-origin:50% 22%; animation:avatar-ring 620ms var(--ease-brand); }
+ :is(button, a, .masthead-account):hover [data-avatar="bell"] .avatar-glyph { transform-origin:50% 22%; animation:avatar-ring 1.2s ease-in-out; }
  :is(button, a, .masthead-account):hover [data-avatar="rocket"] .avatar-glyph { animation:avatar-lift 620ms var(--ease-brand); }
  :is(button, a, .masthead-account):hover [data-avatar="coin"] .avatar-glyph { animation:avatar-flip 700ms var(--ease-brand); }
  :is(button, a, .masthead-account):hover :is([data-avatar="trend"], [data-avatar="candles"], [data-avatar="bull"]) .avatar-glyph { animation:avatar-rise 560ms var(--ease-brand); }
- :is(button, a, .masthead-account):hover :is([data-avatar="compass"], [data-avatar="globe"], [data-avatar="pie"], [data-avatar="target"]) .avatar-glyph { transform-origin:50% 50%; animation:avatar-turn 640ms var(--ease-brand); }
+ :is(button, a, .masthead-account):hover :is([data-avatar="compass"], [data-avatar="globe"], [data-avatar="pie"], [data-avatar="target"]) .avatar-glyph { transform-origin:50% 50%; animation:avatar-turn 1s ease-in-out; }
 }
 @keyframes avatar-bob { 40% { transform:translateY(-8%) scale(1.06); } }
-@keyframes avatar-ring { 20% { transform:rotate(-14deg); } 45% { transform:rotate(11deg); } 70% { transform:rotate(-5deg); } }
+/* Zil ve dönüş 17 Ekim'de yumuşadı (logodaki sönümlü salınımla aynı dil): eskisi ±14° / 24°, 620 ms. */
+@keyframes avatar-ring { 16% { transform:rotate(-6deg); } 38% { transform:rotate(3.4deg); } 58% { transform:rotate(-1.8deg); } 76% { transform:rotate(.8deg); } }
 @keyframes avatar-lift { 45% { transform:translateY(-16%); } 60% { transform:translateY(-12%); } }
 @keyframes avatar-flip { 50% { transform:scaleX(-1); } }
 @keyframes avatar-rise { 40% { transform:translateY(-10%) scale(1.04); } }
-@keyframes avatar-turn { 50% { transform:rotate(24deg); } }
+@keyframes avatar-turn { 50% { transform:rotate(10deg); } }
 
 /* ---- Arama paleti (26 Eylül) — gerekçe SearchCommand.tsx ----
    Grup başlıkları sitenin künye dilinde, satırlar logolu ve sırayla iniyor;

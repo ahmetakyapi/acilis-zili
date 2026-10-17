@@ -279,6 +279,9 @@ const tr = {
     countdownClose: "Kapanış Ziline Kalan",
     /* Gizli sekmenin başlığı, hedef geçtiğinde (components/today/TabCountdown). */
     tabRangOpen: "Açılış Zili Çaldı",
+    /* Sekme başlığında birimler açık yazılır (17 Ekim, sahibinin isteği:
+       "Açılışa 1 Gün 14 Saat"); sayaçtaki kısa "g/sa/dk" dar yer içindi. */
+    tabUnits: { day: "Gün", hour: "Saat", minute: "Dakika" },
     tabRangClose: "Kapanış Zili Çaldı",
     /* Kahraman zili düğmesinin adı (HeroBell). */
     ringBell: "Zili Çal",
@@ -329,7 +332,7 @@ const tr = {
        üyelerinin taraması ve içinde yalnızca bu seansta gerçekten işlem
        görenler var. */
     moversNote:
-      "{n} endeks üyesi tarandı · yalnızca bu seansta işlem görenler",
+      "{n} Endeks Üyesi Tarandı · Yalnız Bu Seansta İşlem Görenler",
     /* ---- Günün hareketleri (yan kolon) ----
        PANEL ARTIK HER SEANSTA VAR. Ön seans ve akşam seansı için yazılmıştı
        ve yalnızca o iki pencerede basılıyordu; seans açıkken ana sayfada
@@ -342,8 +345,8 @@ const tr = {
        burada yapılan şey sıralama. */
     dayMovers: "Günün Hareketleri",
     dayMoversClosed: "Son Kapanışın Hareketleri",
-    dayMoversNote: "{n} endeks üyesi tarandı · seans içi",
-    dayMoversClosedNote: "{n} endeks üyesi tarandı · son kapanışa göre",
+    dayMoversNote: "{n} Endeks Üyesi Tarandı · Seans İçi",
+    dayMoversClosedNote: "{n} Endeks Üyesi Tarandı · Son Kapanışa Göre",
     dayMoversEmpty: "Sıralama için yeterli fiyat verisi yok.",
 
     schedule: "Bugünün Takvimi",
@@ -382,7 +385,7 @@ const tr = {
     /* Bölüm başlığının yanındaki künye. Liste "son haberler" değil bir
        SEÇKİ: kırk haberlik havuzdan altısı alınıyor ve sembol başına en
        fazla ikisi giriyor. Başlık bunu söylemiyordu. */
-    topNewsNote: "son {n} haberden seçildi",
+    topNewsNote: "Son {n} Haberden Seçildi",
     weekAhead: "Haftaya Bakış",
     weekAheadEmpty: "Önümüzdeki hafta için planlanmış önemli veri yok.",
     /* OKUNAMAYAN TAKVİM BOŞ TAKVİM DEĞİL (14 Ekim). Bilanço ve haftaya
@@ -787,7 +790,7 @@ const tr = {
     latestEdition: "Son Yayın",
     nextEdition: "Sıradaki Yayın",
     /* Saat künyesinin yanındaki kalan süre (NextEditionIn). */
-    nextEditionIn: "{d} sonra",
+    nextEditionIn: "{d} Sonra",
     scheduleLabel: "Yayın Saatleri",
     schedule: "Her işlem günü {pre}, {mid} ve {late}",
     changedToBuy: "Ala Döndü",
@@ -1151,7 +1154,7 @@ const tr = {
     capTrackedShare: "Takip Edilenlerin Toplamındaki Payı {value}",
     capAbove: "{rank}. {symbol} · {value} Önde",
     capBelow: "{rank}. {symbol} · {value} Geride",
-    capLens: "Yakın Plan ×{n}",
+    capLens: "{n} Kat Büyütülmüş",
     bandFromLow: "Dibin {value} Üstünde",
     bandFromHigh: "Zirvenin {value} Altında",
     nextReportRow: "Sıradaki Bilanço",
@@ -1175,7 +1178,7 @@ const tr = {
     exchange: "Borsa",
     ipoDate: "Halka Arz",
     website: "Web Sitesi",
-    metrics: "Anahtar Metrikler",
+    metrics: "Temel Göstergeler",
     peRatio: "F/K Oranı",
     forwardPe: "İleri F/K",
     movingAverages: "Hareketli Ortalamalar",
@@ -1532,6 +1535,7 @@ const tr = {
   },
 
   markets: {
+    dayRange: "Gün Aralığı",
     fearTitle: "Korku Endeksi",
     fearCalm: "Sakin",
     fearNormal: "Normal",
@@ -1681,9 +1685,9 @@ const tr = {
     showMore: "Daha Fazla Göster",
     /* Sayfanın kendini tanıttığı bant — "Mercek" adı tek başına burada ne
        yazıldığını söylemiyor ve liste haber akışından ayırt edilemiyordu. */
-    whatShort: "altı ay sonra da merak edilecek olaylar",
-    howShort: "doğrulanmış rakamlar, künyede kaynaklar",
-    rhythmShort: "her gün değil, olay olduğunda",
+    whatShort: "Altı ay sonra da merak edilecek olaylar.",
+    howShort: "Doğrulanmış rakamlar, künyede kaynaklar.",
+    rhythmShort: "Her gün değil, olay olduğunda.",
     whatTitle: "Ne Yazılır",
     howTitle: "Nasıl Yazılır",
     rhythmTitle: "Ne Sıklıkla",
@@ -2259,7 +2263,7 @@ const tr = {
     dividendNext: "Sıradaki Hak Kesim",
     dividendNextCompanies: "Sıradaki hak kesim gününde ödeyen şirketler",
     dividendPaymentsUnit: "Ödeme",
-    dividendPaymentsCount: "{n} ödeme",
+    dividendPaymentsCount: "{n} Ödeme",
     dividendMore: "+{n}",
     dividendStripLabel: "Önümüzdeki dört haftanın hak kesim günleri",
     dividendEmpty: "Bu dönemde hak kesimi olan temettü yok",
@@ -2876,9 +2880,9 @@ const tr = {
     insiderHowTitle: "Nasıl Okunur",
     howRead: "Nasıl Okunur",
     sentimentLatest: "Son Değer ({month}): {value}",
-    sentimentTitle: "Aylık Alım Oranı (MSPR)",
+    sentimentTitle: "İçeriden Alım Dengesi",
     sentimentNote:
-      "MSPR −100 ile 100 arasında: 100 o ay yalnızca alım, −100 yalnızca satış demek. Boş ay, kaynakta o ay için hesaplanmış bir değer olmadığını gösterir; son aylar kaynağa gecikmeli düşebilir.",
+      "Ölçü (MSPR, aylık içeriden alım oranı) −100 ile 100 arasında: 100 o ay yalnızca alım, −100 yalnızca satış demek. Boş ay, kaynakta o ay için hesaplanmış bir değer olmadığını gösterir; son aylar kaynağa gecikmeli düşebilir.",
     insiderNote:
       "Satırlar SEC Form 4 dosyalarından; aynı dosyanın parçaları tek işlem olarak birleştirildi. Özet yalnızca açık piyasa alım ve satışlarını sayar: ödül, vergi kesintisi, hediye ve opsiyon kullanımı bir alım satım kararı değildir. Önceden planlanmış (10b5-1) satışlar kaynakta ayrıca işaretlenmez.",
 
@@ -2916,7 +2920,7 @@ const tr = {
     emHistoryNote:
       "Açılış öncesi raporda önceki kapanıştan rapor gününün kapanışına, kapanış sonrası raporda rapor gününün kapanışından ertesi seansın kapanışına kadar ölçülür. Saati bilinmeyen rapor ortalamaya girmez. Rapor tarihleri sitenin kendi takviminden; takvim biriktikçe liste sekiz rapora uzar.",
 
-    atTitle: "Analist Dağılımı Değişimi",
+    atTitle: "Analist Görüşleri Nasıl Değişti",
     atChange: "Değişim",
     /* Telefonda sütun başlığı — altı sütun kaydırmasız sığsın diye. */
     atChangeShort: "Fark",
@@ -2960,7 +2964,7 @@ const tr = {
     scScaleShort: { low: "Alt", mid: "Medyan", high: "Üst" },
     scOldest: "En Eski Ölçü {date}",
 
-    tsTitle: "Teknik Fotoğraf",
+    tsTitle: "Teknik Görünüm",
     tsAsOf: "{date} Kapanışı",
     tsMa20: "20 Günlük Ortalama",
     tsCrossGolden: "50 Günlük Ortalama 200 Günlüğün Üstüne Geçti",

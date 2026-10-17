@@ -233,6 +233,7 @@ const en: typeof tr = {
     countdownOpen: "Until the Opening Bell",
     countdownClose: "Until the Closing Bell",
     tabRangOpen: "The Opening Bell Rang",
+    tabUnits: { day: "d", hour: "h", minute: "min" },
     tabRangClose: "The Closing Bell Rang",
     ringBell: "Ring the Bell",
     countdownDays: "Days",
@@ -1192,6 +1193,7 @@ const en: typeof tr = {
   },
 
   markets: {
+    dayRange: "Day Range",
     fearTitle: "Fear Index",
     fearCalm: "Calm",
     fearNormal: "Normal",

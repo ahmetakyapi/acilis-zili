@@ -7,9 +7,10 @@
 /* Hedefe ulaşmış alarm: zilin sağ üstünde pirinç nokta. */
 .hitDot { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--brass); box-shadow: 0 0 0 2px var(--premium-surface); }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  button:hover > .bellIcon { animation: alert-ring 620ms var(--ease-brand); }
+  button:hover > .bellIcon { animation: alert-ring 1.4s ease-in-out; }
 }
-@keyframes alert-ring { 20% { transform: rotate(-14deg); } 45% { transform: rotate(11deg); } 70% { transform: rotate(-5deg); } }
+/* Logodaki sönümlü salınımla aynı dil (17 Ekim; eskisi ±14°, 620 ms). */
+@keyframes alert-ring { 16% { transform: rotate(-6deg); } 38% { transform: rotate(3.4deg); } 58% { transform: rotate(-1.8deg); } 76% { transform: rotate(.8deg); } }
 
 .composer { display: flex; flex-direction: column; gap: 18px; padding: 4px 16px 18px; }
 @media (min-width: 640px) { .composer { padding: 4px 20px 20px; } }
