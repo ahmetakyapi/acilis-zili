@@ -1,0 +1,52 @@
+name: Deneme Postası
+
+# Pazar özetini TEK bir üyeye deneme olarak gönderir — ELLE tetiklenir
+# (17 Ekim). Sunucuda deploy/remote-test-mail.sh, yerel uca CRON_SECRET'le
+# istek atar; posta gerçek veri ve Claude yorumuyla, "[Deneme]" önekiyle
+# gider ve asıl pazar postasını engellemez (app/api/cron/haftalik-posta).
+# Adres sitede kayıtlı bir üyeye ait olmalı.
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: "Deneme postasının gideceği üyenin adresi"
+        required: true
+        default: ahmetakyapii@gmail.com
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  send:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Sunucudan deneme postası
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST: ${{ vars.VPS_HOST }}
+          VPS_HOST_KEY: ${{ vars.VPS_HOST_KEY }}
+          ADDRESS: ${{ inputs.email }}
+        run: |
+          set -euo pipefail
+          [[ "$ADDRESS" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]] || { echo "geçersiz adres"; exit 1; }
+          [[ "$HOST" =~ ^[a-zA-Z0-9.-]+$ ]] || { echo "geçersiz host"; exit 1; }
+          strict=accept-new
+          mkdir -p ~/.ssh
+          if [[ -n "${VPS_HOST_KEY:-}" ]]; then
+            printf '%s\n' "$VPS_HOST_KEY" > ~/.ssh/known_hosts
+            strict=yes
+          fi
+          umask 077
+          key=$(mktemp); trap 'rm -f "$key"' EXIT
+          printf '%s\n' "$SSH_KEY" > "$key"
+          ssh -i "$key" -o BatchMode=yes -o "StrictHostKeyChecking=$strict" -o ConnectTimeout=15 "ubuntu@${HOST}" \
+            "sudo -n -u acilis -H bash -s -- $ADDRESS" < deploy/remote-test-mail.sh
