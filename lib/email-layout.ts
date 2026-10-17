@@ -20,8 +20,11 @@ import { EASE_BRAND } from "@/lib/motion";
  *   ortasında koyu bir kare kalıyordu. Şimdi ters çeviren istemcide kart
  *   kararıyor, bant zaten koyu; Gmail Android/web açık kartı kendisi
  *   koyulaştırıyor, koyu banda dokunmuyor. Her istemcide aynı görüntü.
- * - Düğme "kurşun geçirmez": bağlantının kendisi dolgulu blok, arka plan hem
- *   `bgcolor` hem degrade — degradeyi silen istemcide düz marka mavisi kalır.
+ * - Düğme "kurşun geçirmez": bağlantının kendisi dolgulu blok, arka plan DÜZ
+ *   marka mavisi (`bgcolor` + `background`). Degrade 17 Ekim'de kalktı:
+ *   Gmail iOS koyu temada görsel zemini (degrade) çevirmiyor ama yazıyı
+ *   çeviriyor — beyaz yazı koyulaşıp mavi üstünde okunmuyordu. Düz renkte
+ *   zemin ve yazı birlikte çevrilir.
  *   Telefonda tam genişlik (medya sorgusu; okumayan istemcide yine dolgulu).
  *
  * MARKA FONTU sitenin kökünden (public/email/*.woff2, SIL OFL 1.1), Google
@@ -36,7 +39,7 @@ import { EASE_BRAND } from "@/lib/motion";
  * `max-width`i okumuyor (sütun okuma bölmesinin tamamına yayılıyor) ve
  * `<a>` üzerindeki dolguyu yok sayıyor. `@font-face` `@media screen` içinde
  * (Word medya bloğunu okumaz), `[if mso]` blokları fontu Segoe UI'a, sütunu
- * 560 piksellik bir "hayalet" tabloya sabitliyor; düğmenin dolgusu
+ * 720 piksellik bir "hayalet" tabloya sabitliyor; düğmenin dolgusu
  * `mso-padding-alt` ile hücrede.
  *
  * Görseller postanın gönderildiği sitenin kökünden (`origin`) yüklenir;
@@ -88,15 +91,19 @@ export type BrandedEmail = {
   /** Sitenin kökü — görseller, font ve alt bağlantılar buradan. */
   origin: string;
   footerLinks: { label: string; href: string }[];
-  /** Bant görseli — varsayılan zil bandı (hero.gif, 560×220). Pazar özeti
-      kendi hafta bandını giyer (weekly.gif, 560×200). */
+  /** Bant görseli — varsayılan zil bandı (hero.gif, 1120×440 kaynak). Pazar
+      özeti kendi hafta bandını giyer (weekly.gif, 1120×400). Basım genişliği
+      720 (17 Ekim, sahibinin isteği: 560'ta masaüstünde iki yanda boşluk
+      çoktu; "daha da genişlesin"). 720 Gmail web okuma bölmesine sığan üst
+      sınır; GIF'ler 1120 piksel üretildiği için 720'de keskin. Telefonda kap
+      ekranın kendisi, 720'nin bir etkisi yok. */
   hero?: { file: string; width: number; height: number };
 };
 
 /** Kurşun geçirmez birincil düğme. */
 export function emailButton(label: string, href: string): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="az-btn-table" style="border-collapse:separate">
-<tr><td class="az-btn" align="center" bgcolor="${C.primary}" style="mso-padding-alt:16px 30px;border-radius:14px;background:${C.primary};background-image:linear-gradient(135deg,#2a8ff0 0%,${C.primary} 55%,#0b4fa3 100%);box-shadow:0 8px 20px -8px rgba(18,104,201,.55)">
+<tr><td class="az-btn" align="center" bgcolor="${C.primary}" style="mso-padding-alt:16px 30px;border-radius:14px;background:${C.primary}">
 <a href="${escapeHtml(href)}" target="_blank" class="az-btn-link" style="display:inline-block;padding:16px 30px;font-family:${FONT};font-size:16px;font-weight:700;line-height:20px;color:#ffffff;text-decoration:none;border-radius:14px;letter-spacing:.01em"><span class="az-gblend-s"><span class="az-gblend-d">${escapeHtml(label)}&nbsp;&nbsp;&rarr;</span></span></a>
 </td></tr></table>`;
 }
@@ -128,8 +135,6 @@ ${cells}
  *   animasyon yalnız BAŞTAN gelir. Çubuk büyür (yatay soldan, dikey
  *   dipten), kutu yükselir. Eğri sitenin --ease-brand'i (EASE_BRAND);
  *   posta CSS değişkeni okumuyor.
- * - Ölçü kutuları telefonda da yan yana (390'da ölçüldü: alt alta üç kutu
- *   330 piksel tutuyordu); punto ve dolgu küçülür.
  * - Sol şerit RENK TAŞIYOR (pirinç not, mavi kişisel kutu, yön rengi alarm
  *   karosu): koyu temada yalnız öteki üç kenar koyulur. İlk sürüm
  *   border-color yazıyordu ve alarm karosunun yön şeridi griye, kişisel
@@ -137,7 +142,7 @@ ${cells}
  */
 export function brandedEmailHtml(email: BrandedEmail): string {
   const origin = email.origin.replace(/\/$/, "");
-  const hero = email.hero ?? { file: "hero.gif", width: 560, height: 220 };
+  const hero = email.hero ?? { file: "hero.gif", width: 720, height: 283 };
   const asset = (file: string) => escapeHtml(`${origin}/email/${file}`);
   const links = email.footerLinks
     .map(
@@ -201,8 +206,6 @@ export function brandedEmailHtml(email: BrandedEmail): string {
     .az-stack { display:block !important; width:100% !important; }
     .az-stack-gap { padding:0 0 10px !important; }
     .az-hide-sm { display:none !important; }
-    .az-stat-box { padding:12px 10px 11px !important; border-radius:14px !important; }
-    .az-stat-val { font-size:20px !important; line-height:24px !important; }
   }
   @media (prefers-color-scheme: dark) {
     .az-page { background:#0a0f18 !important; }
@@ -213,16 +216,14 @@ export function brandedEmailHtml(email: BrandedEmail): string {
     .az-note { background:#172234 !important; border-top-color:#223047 !important; border-right-color:#223047 !important; border-bottom-color:#223047 !important; }
     .az-meta, .az-rule { border-color:#223047 !important; }
     .az-link { color:#5cb0ff !important; }
+    .az-brass { color:#e3b864 !important; }
     .az-sunken { background:#172234 !important; border-top-color:#223047 !important; border-right-color:#223047 !important; border-bottom-color:#223047 !important; }
     .az-sunken-flat { border-left-color:#223047 !important; }
-    .az-chapter { background:#16233a !important; border-top-color:#223047 !important; border-right-color:#223047 !important; border-bottom-color:#223047 !important; }
-    .az-chapter-index { background:#0f1a2b !important; border-color:#223047 !important; color:#e3b864 !important; }
     .az-lane { background:#223047 !important; }
     .az-zero { background:#3a4c66 !important; }
     .az-up-fill { background:#3ddc97 !important; }
     .az-down-fill { background:#ff5c7a !important; }
     .az-flat-fill { background:#5d6f88 !important; }
-    .az-ink-fill { background:#4f86d1 !important; background-image:none !important; }
     .az-up { color:#3ddc97 !important; }
     .az-down { color:#ff5c7a !important; }
     .az-up-wash { background:#10301f !important; color:#3ddc97 !important; }
@@ -236,8 +237,8 @@ export function brandedEmailHtml(email: BrandedEmail): string {
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all">${escapeHtml(email.preheader)}${"&#8199;&#65279;&#847; ".repeat(40)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="az-page" bgcolor="${C.page}" style="background:${C.page}">
 <tr><td align="center" class="az-shell" style="padding:32px 16px 36px">
-<!--[if mso]><table role="presentation" width="560" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px">
+<!--[if mso]><table role="presentation" width="720" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:720px">
 
 <tr><td align="center" style="padding:0 0 18px">
 <a href="${escapeHtml(origin)}" target="_blank" style="text-decoration:none">
@@ -249,9 +250,9 @@ export function brandedEmailHtml(email: BrandedEmail): string {
 <tr><td class="az-card" style="background:${C.card};border:1px solid ${C.line};border-radius:24px;overflow:hidden">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
 <tr><td bgcolor="${C.band}" style="background:${C.band};border-radius:23px 23px 0 0;padding:0;font-size:0;line-height:0">
-<img src="${asset(hero.file)}" width="${hero.width}" height="${hero.height}" alt="" style="display:block;width:100%;max-width:560px;height:auto;border:0;border-radius:23px 23px 0 0">
+<img src="${asset(hero.file)}" width="${hero.width}" height="${hero.height}" alt="" style="display:block;width:100%;max-width:720px;height:auto;border:0;border-radius:23px 23px 0 0">
 </td></tr>
-<tr><td class="az-pad" style="padding:32px 40px 36px">
+<tr><td class="az-pad" style="padding:36px 52px 42px">
 <h1 class="az-title az-ink" style="margin:0;font-family:${FONT};font-size:30px;line-height:36px;font-weight:800;letter-spacing:-.03em;color:${C.ink}">${escapeHtml(email.title)}</h1>
 <p class="az-body" style="margin:10px 0 26px;font-family:${FONT};font-size:16px;line-height:24px;color:${C.body}">${escapeHtml(email.lead)}</p>
 ${email.bodyHtml}

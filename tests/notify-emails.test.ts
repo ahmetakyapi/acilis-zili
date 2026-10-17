@@ -44,17 +44,14 @@ export const sampleDigest = (overrides: Partial<DigestData> = {}): DigestData =>
   reported: [
     { symbol: "JPM", name: "JPMorgan Chase & Co.", reportDate: "2026-10-14", eps: { direction: "beat", ratio: 0.083 }, revenue: { direction: "miss", ratio: -0.012 }, analysisPath: "/bilancolar/jpm/2026q3" },
   ],
-  reportedTotal: 14,
-  scorecard: { beat: 9, inline: 2, miss: 3 },
   pastFailed: false,
   brief: { headline: "Bankalar Haftayı Taşıdı", path: "/bulten/haftalik/2026-10-12" },
   stories: [],
   news: [{ title: "Haber <script>", meta: "JPM — Reuters", path: "/haberler/1" }],
   ahead: [
-    { date: "2026-10-19", closed: null, items: [], bmoClock: "~15:00", amcClock: "~23:00", total: 0, events: 0 },
-    { date: "2026-10-21", closed: null, items: [{ symbol: "TSLA", name: "Tesla", timing: "amc" }], bmoClock: "~15:00", amcClock: "~23:00", total: 41, events: 1 },
+    { date: "2026-10-19", closed: null, items: [], bmoClock: "~15:00", amcClock: "~23:00" },
+    { date: "2026-10-21", closed: null, items: [{ symbol: "TSLA", name: "Tesla", timing: "amc" }], bmoClock: "~15:00", amcClock: "~23:00" },
   ],
-  aheadTotal: 41,
   aheadFailed: false,
   aheadAll: new Map([["TSLA", { date: "2026-10-21", timing: "amc" as const }]]),
   events: [{ date: "2026-10-22", time: "15:30", title: "Tüketici Fiyatları" }],
@@ -137,30 +134,35 @@ test("alarm postası: konu, yön rengi, çıkış bağlantısı", () => {
 test("haftalık posta: bölümler, kaçış, kişisel satır", () => {
   const mail = weeklyEmailMessage(recipient, sampleDigest(), [{ symbol: "TSLA", date: "2026-10-21", timing: "amc" }], tr.emailNotify);
   assert.equal(plain(mail.subject), "Açılış Zili · Pazar Özeti · 19 – 23 Ekim");
-  for (const part of ["Haftanın Rakamları", "9/14", "Endeksler", "Bilanço Karnesi", "Haftanın Yoğun Günleri", "weekly.gif", "HBK · Beklentiyi Aştı + %8,3", "Gelir · Beklentinin Altında − %1,2", "Bankalar Haftayı Taşıdı", "Takip Listende Bu Hafta", "Tüketici Fiyatları", "kapsam=weekly"]) {
+  for (const part of ["Endeksler", "Büyük Şirketlerin Bilançoları", "JPMorgan Chase &amp; Co.", "Hisse Başı Kâr", "+ %8,3", "− %1,2", "Beklentinin Altında", "weekly.gif", "Bankalar Haftayı Taşıdı", "Takip Listende Bu Hafta", "Tesla", "21 Ekim Çarşamba", "Tüketici Fiyatları", "kapsam=weekly"]) {
     assert.ok(plain(mail.html).includes(part), part);
   }
+  /* Sayaçlar kalktı (17 Ekim). */
+  for (const gone of ["Haftanın Rakamları", "Haftanın Yoğun Günleri", "Bilanço Karnesi"]) assert.ok(!mail.html.includes(gone), gone);
   assert.ok(!mail.html.includes("<script>"));
   assert.match(mail.text, /- TSLA: /);
-  assert.match(mail.text, /9 Aştı · 2 Paralel · 3 Altında/);
+  assert.match(mail.text, /Tesla \(TSLA\)/);
 });
 
-test("haftalık posta: çubuklar gerçek sayıdan, en büyük tam boy", () => {
+test("haftalık posta: her gönderimde ayrı iz, Gmail katlamasın", () => {
+  const a = weeklyEmailMessage(recipient, sampleDigest(), [], tr.emailNotify);
+  const b = weeklyEmailMessage(recipient, sampleDigest(), [], tr.emailNotify);
+  assert.ok(a.headers?.["X-Entity-Ref-ID"]);
+  assert.notEqual(a.headers?.["X-Entity-Ref-ID"], b.headers?.["X-Entity-Ref-ID"]);
+  assert.notEqual(a.html, b.html);
+});
+
+test("haftalık posta: endeks çizgisi gerçek sayıdan, en büyük tam boy", () => {
   const mail = weeklyEmailMessage(recipient, sampleDigest(), [], tr.emailNotify);
-  /* Endeks çizgisi: en büyük haftalık değişim (SPY %1,24) kulvarın tamamı,
-     QQQ (−%0,42) oranında (34). */
+  /* En büyük haftalık değişim (SPY %1,24) kulvarın tamamı, QQQ (−%0,42) oranında (34). */
   assert.match(mail.html, /width:100%;height:6px/);
   assert.match(mail.html, /width:34%;height:6px/);
-  /* Gün sütunu: 41 şirketli gün tam boy (72), boş gün çubuksuz. */
-  assert.match(mail.html, /width:26px;height:72px/);
-  /* Karne: 9/14 = %64,3 genişlik. */
-  assert.match(mail.html, /width="64\.3%"/);
 });
 
-test("haftalık posta: karnesi boşsa ölçü kutusu basılmaz, takvim okunamadıysa sayı yok", () => {
-  const mail = weeklyEmailMessage(recipient, sampleDigest({ scorecard: { beat: 0, inline: 0, miss: 0 }, aheadFailed: true, indices: [] }), [], tr.emailNotify);
-  assert.ok(!mail.html.includes("Haftanın Rakamları"));
-  assert.ok(!mail.html.includes("Haftanın Yoğun Günleri"));
+test("haftalık posta: takvim okunamadıysa günler basılmaz", () => {
+  const mail = weeklyEmailMessage(recipient, sampleDigest({ aheadFailed: true, indices: [] }), [], tr.emailNotify);
+  assert.ok(mail.html.includes(tr.emailNotify.weeklyMail.aheadFailed));
+  assert.ok(!mail.html.includes("Tesla"));
 });
 
 test("haftada kritik veri yoksa sıradaki yazılır", () => {

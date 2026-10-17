@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { escapeHtml, type Email } from "@/lib/email";
 import { C, FONT, MONO, brandedEmailHtml, emailButton, emailMeta, emailSection, emailText } from "@/lib/email-layout";
 import type { Recipient } from "@/lib/email-notify";
@@ -212,14 +213,6 @@ function dayLabel(date: string, locale: Locale): string {
   return new Intl.DateTimeFormat(intlLocale(locale), { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(utcDay(date));
 }
 
-function weekdayShort(date: string, locale: Locale): string {
-  return new Intl.DateTimeFormat(intlLocale(locale), { weekday: "short", timeZone: "UTC" }).format(utcDay(date));
-}
-
-function dayNumber(date: string, locale: Locale): string {
-  return new Intl.DateTimeFormat(intlLocale(locale), { day: "numeric", month: "short", timeZone: "UTC" }).format(utcDay(date));
-}
-
 type Tone = "up" | "down" | "flat";
 const toneOf = (value: number): Tone => (value > 0 ? "up" : value < 0 ? "down" : "flat");
 const TONE = {
@@ -230,7 +223,9 @@ const TONE = {
 /* Nötr çubuk (sayı, yön değil) ve kulvar — sitenin --line-soft / --line-strong'u. */
 const LANE = "#e9eef5";
 const ZERO = "#b7c3d3";
-const FLAT_FILL = "#9aa8bb";
+/* Pirinç künye mürekkebi — C.brass beyaz zeminde 3:1'in altında kalıyor;
+   koyu temada az-brass açar. */
+const BRASS_INK = "#8a5f12";
 
 const delay = (ms: number) => `animation-delay:${ms}ms;`;
 
@@ -240,60 +235,19 @@ function chip(text: string, tone: Tone): string {
 }
 
 /**
- * Bölüm bandı — "01 · Geride Kalan Hafta". AÇIK TONLU ZEMİN, KOYU YAZI
- * (17 Ekim, sahibinin Gmail iOS ekran görüntüsü): ilk sürüm lacivert bant
- * üstünde beyaz yazıydı; Gmail iOS koyu temada sayfayı tersine çevirirken
- * koyu zemini olduğu gibi bırakıp beyaz yazıyı koyulaştırıyordu — başlık
- * okunmuyordu. Gövdede koyu zemin üstünde açık yazı YOK: tersine çeviren
- * istemcide bant koyu, yazı açık olur; Apple Mail'de az-chapter sınıfı
- * koyulaştırır. Koyu ve renkli tek yüzey bant GIF'i (görsel, çevrilmez).
+ * Bölüm başlığı — "01 · 12 – 16 Ekim" künyesi üstte, büyük başlık altta.
+ * ZEMİNSİZ (17 Ekim, ikinci tur): Gmail iOS koyu temada zemini ve yazıyı
+ * birbirinden bağımsız çeviriyor — önce lacivert bant beyaz yazıyı, sonra
+ * açık bant koyu yazıyı okunmaz bıraktı (sahibinin iki ayrı ekran
+ * görüntüsü). Zemin yoksa çevrilecek tek şey yazı ve her temada okunur.
+ * Ağırlığı puntodan ve alttaki 3 piksellik marka çizgisinden alıyor; çizgi
+ * az-rule taşımaz, koyu temada da mavi kalır.
  */
 function chapter(index: string, title: string, range: string): string {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:40px 0 0"><tr><td class="az-chapter" bgcolor="#e8f0fb" style="background:#e8f0fb;border:1px solid #d3e0f2;border-left:4px solid ${C.primary};border-radius:16px;padding:16px 18px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-<td valign="middle" width="46" style="padding-right:14px"><span class="az-chapter-index" style="display:inline-block;width:38px;height:38px;border-radius:11px;background:#ffffff;border:1px solid #d3e0f2;font-family:${MONO};font-size:14px;line-height:38px;font-weight:800;color:#8a5f12;text-align:center">${escapeHtml(index)}</span></td>
-<td valign="middle"><p class="az-ink" style="margin:0;font-family:${FONT};font-size:19px;line-height:24px;font-weight:800;letter-spacing:-.02em;color:${C.ink}">${escapeHtml(title)}</p>
-<p class="az-muted" style="margin:3px 0 0;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted}">${escapeHtml(range)}</p></td>
-</tr></table>
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:48px 0 0"><tr><td style="padding:0 0 14px;border-bottom:3px solid ${C.primary}">
+<p class="az-brass" style="margin:0 0 6px;font-family:${MONO};font-size:13px;line-height:16px;font-weight:800;letter-spacing:.06em;color:${BRASS_INK}">${escapeHtml(index)}&nbsp;&nbsp;&middot;&nbsp;&nbsp;<span style="font-family:${FONT};letter-spacing:0">${escapeHtml(range)}</span></p>
+<p class="az-ink" style="margin:0;font-family:${FONT};font-size:26px;line-height:31px;font-weight:800;letter-spacing:-.03em;color:${C.ink}">${escapeHtml(title)}</p>
 </td></tr></table>`;
-}
-
-/* ---- Haftanın rakamları (ölçü ızgarası) ---- */
-
-function statTile(label: string, value: string, sub: string, valueClass: string, valueColor: string, order: number, last: boolean, width: string): string {
-  /* Dış kenarlar içerikle hizalı (negatif margin Outlook'ta yok); arada 8 piksel. */
-  const pad = `0 ${last ? 0 : 4}px 0 ${order === 0 ? 0 : 4}px`;
-  /* Eşit boy: dış tablo `height:1px`, hücre ve iç tablo %100 — üç kutudan
-     birinin alt satırı kırılınca ötekiler kısa kalıyordu (640'ta ölçüldü). */
-  return `<td valign="top" width="${width}" height="100%" style="padding:${pad};height:100%">
-<table role="presentation" width="100%" height="100%" cellpadding="0" cellspacing="0" border="0" style="height:100%"><tr><td valign="top" class="az-sunken az-sunken-flat az-rise az-stat-box" style="${delay(120 * order)}background:${C.sunken};border:1px solid ${C.line};border-radius:16px;padding:16px 16px 15px">
-<p class="az-muted" style="margin:0;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted}">${escapeHtml(label)}</p>
-<p class="${valueClass} az-stat-val" style="margin:6px 0 0;font-family:${FONT};font-size:26px;line-height:30px;font-weight:800;letter-spacing:-.03em;color:${valueColor};white-space:nowrap">${escapeHtml(value)}</p>
-<p class="az-muted" style="margin:4px 0 0;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted}">${escapeHtml(sub)}</p>
-</td></tr></table></td>`;
-}
-
-function statsBlock(data: DigestData, W: Copy["weeklyMail"]): string {
-  const tiles: ((order: number, last: boolean, width: string) => string)[] = [];
-  const lead = data.indices[0];
-  if (lead) {
-    const tone = TONE[toneOf(lead.changePct)];
-    tiles.push((o, l, w) => statTile(lead.label, formatPercent(lead.changePct, data.locale, 2), W.statWeekly, tone.cls, tone.ink, o, l, w));
-  }
-  const scored = data.scorecard.beat + data.scorecard.inline + data.scorecard.miss;
-  if (!data.pastFailed && scored > 0) {
-    tiles.push(
-      (o, l, w) => statTile(W.statBeat, `${data.scorecard.beat}/${scored}`, W.statBeatOf.replace("{n}", String(scored)), "az-ink", C.ink, o, l, w),
-    );
-  }
-  if (!data.aheadFailed) {
-    const events = data.eventsFailed || data.events.length === 0 ? "" : W.statEvents.replace("{n}", String(data.events.length));
-    tiles.push((o, l, w) => statTile(W.statAhead, String(data.aheadTotal), [W.statAheadUnit, events].filter(Boolean).join(" · "), "az-ink", C.ink, o, l, w));
-  }
-  if (tiles.length === 0) return "";
-  const cells = tiles.map((tile, i) => tile(i, i === tiles.length - 1, `${Math.floor(100 / tiles.length)}%`));
-  return `${emailSection(W.statsTitle, undefined, true)}
-<table role="presentation" width="100%" height="1" cellpadding="0" cellspacing="0" border="0" style="height:1px"><tr>${cells.join("")}</tr></table>`;
 }
 
 /* ---- Endeksler: haftalık değişim çizgisi + gün gün adımlar ---- */
@@ -349,87 +303,69 @@ ${divergingBar(index.changePct, Math.abs(index.changePct) / maxWeek, i)}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="az-meta" style="border-top:1px solid ${C.line};border-bottom:1px solid ${C.line}">${rows}</table>`;
 }
 
-/* ---- Bilanço karnesi ---- */
+/* ---- Büyük şirketlerin bilançoları ----
+   Sayaç YOK (17 Ekim, sahibinin isteği): "kaç şirket açıkladı / kaçı aştı"
+   karnesi ve ölçü kutuları kalktı; odak tek tek büyük şirketler. Şirket
+   ADI başlık puntosunda, sembol künyede. Sapma iki kutuda: hisse başı kâr
+   ve gelir, rakam büyük, yargı altında. */
 
-function surpriseChip(report: DigestReport, W: Copy["weeklyMail"], locale: Locale): string {
-  const parts: string[] = [];
-  const one = (label: string, s: DigestReport["eps"]) => {
-    if (!s) return;
-    const text = s.direction === "beat" ? W.beat : s.direction === "miss" ? W.miss : W.inline;
-    const pct = s.ratio !== null ? ` ${formatPercent(s.ratio * 100, locale, 1)}` : "";
-    parts.push(chip(`${label} · ${text}${pct}`, s.direction === "beat" ? "up" : s.direction === "miss" ? "down" : "flat"));
-  };
-  one(W.epsLabel, report.eps);
-  one(W.revenueLabel, report.revenue);
-  return parts.join(`<span style="display:inline-block;width:4px"></span>`);
-}
-
-function scorecardBar(data: DigestData, W: Copy["weeklyMail"]): string {
-  const { beat, inline, miss } = data.scorecard;
-  const total = beat + inline + miss;
-  if (total === 0) return "";
-  const parts = (
-    [
-      { n: beat, tone: "up", label: W.scoreBeat },
-      { n: inline, tone: "flat", label: W.scoreInline },
-      { n: miss, tone: "down", label: W.scoreMiss },
-    ] as const
-  ).filter((p) => p.n > 0);
-  const cells = parts
-    .map((p, i) => {
-      const color = p.tone === "flat" ? FLAT_FILL : TONE[p.tone].ink;
-      const radius = `${i === 0 ? "5px" : "0"} ${i === parts.length - 1 ? "5px 5px" : "0 0"} ${i === 0 ? "5px" : "0"}`;
-      return `<td width="${((p.n / total) * 100).toFixed(1)}%" class="${TONE[p.tone].fill}" bgcolor="${color}" style="background:${color};height:10px;border-radius:${radius};font-size:0;line-height:0;${i ? `border-left:2px solid ${C.card};` : ""}">&nbsp;</td>`;
-    })
-    .join("");
-  const legend = parts
-    .map(
-      (p) =>
-        `<span style="display:inline-block;margin:0 14px 0 0;white-space:nowrap"><span class="${TONE[p.tone].fill}" style="display:inline-block;width:8px;height:8px;border-radius:4px;background:${p.tone === "flat" ? FLAT_FILL : TONE[p.tone].ink};vertical-align:middle;margin-right:6px"></span><strong class="az-ink" style="color:${C.ink}">${p.n}</strong> <span class="az-muted" style="color:${C.muted}">${escapeHtml(p.label)}</span></span>`,
-    )
-    .join("");
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:2px 0 0"><tr><td class="az-grow-x" style="${delay(150)}">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${cells}</tr></table>
-</td></tr></table>
-<p style="margin:10px 0 16px;font-family:${FONT};font-size:13px;line-height:20px">${legend}</p>`;
+function surpriseCell(label: string, s: DigestReport["eps"], W: Copy["weeklyMail"], locale: Locale, first: boolean, last: boolean): string {
+  if (!s) return "";
+  const tone = TONE[s.direction === "beat" ? "up" : s.direction === "miss" ? "down" : "flat"];
+  const verdict = s.direction === "beat" ? W.beat : s.direction === "miss" ? W.miss : W.inline;
+  const value = s.ratio !== null ? formatPercent(s.ratio * 100, locale, 1) : verdict;
+  /* Sol şerit yön rengi; az-sunken koyu temada yalnız öteki üç kenarı koyultur. */
+  return `<td valign="top" width="50%" style="padding:0 ${last ? 0 : 4}px 0 ${first ? 0 : 4}px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="az-sunken" style="background:${C.sunken};border:1px solid ${C.line};border-left:3px solid ${tone.ink};border-radius:12px;padding:10px 12px 11px">
+<p class="az-muted" style="margin:0;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted}">${escapeHtml(label)}</p>
+<p class="${tone.cls}" style="margin:3px 0 0;font-family:${FONT};font-size:21px;line-height:26px;font-weight:800;letter-spacing:-.02em;color:${tone.ink};white-space:nowrap">${escapeHtml(value)}</p>${
+    s.ratio !== null ? `<p class="${tone.cls}" style="margin:1px 0 0;font-family:${FONT};font-size:12px;line-height:16px;font-weight:700;color:${tone.ink}">${escapeHtml(verdict)}</p>` : ""
+  }
+</td></tr></table></td>`;
 }
 
 function reportedBlock(data: DigestData, W: Copy["weeklyMail"]): string {
-  const head = emailSection(W.reportedTitle, data.reportedTotal > data.reported.length ? W.reportedMore.replace("{total}", String(data.reportedTotal)) : undefined);
+  const head = emailSection(W.reportedTitle, data.pastFailed || data.reported.length === 0 ? undefined : W.reportedNote);
   if (data.pastFailed) return `${head}${emailText.paragraph(W.reportedFailed)}`;
   if (data.reported.length === 0) return `${head}${emailText.paragraph(W.reportedEmpty)}`;
   const rows = data.reported
     .map((report, i) => {
-      const name = report.name ? escapeHtml(report.name.length > 34 ? `${report.name.slice(0, 33)}…` : report.name) : "";
+      const name = report.name ? (report.name.length > 44 ? `${report.name.slice(0, 43)}…` : report.name) : report.symbol;
       const link = report.analysisPath
-        ? `<a href="${escapeHtml(pathFor(report.analysisPath, data.locale))}" target="_blank" class="az-link" style="font-family:${FONT};font-size:12px;line-height:16px;font-weight:700;color:${C.primary};text-decoration:none;white-space:nowrap">${escapeHtml(W.readAnalysis)}&nbsp;&rarr;</a>`
+        ? `&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="${escapeHtml(pathFor(report.analysisPath, data.locale))}" target="_blank" class="az-link" style="font-weight:700;color:${C.primary};text-decoration:none;white-space:nowrap">${escapeHtml(W.readAnalysis)}&nbsp;&rarr;</a>`
         : "";
-      return `<tr><td class="az-rule" style="padding:12px 0;${i ? `border-top:1px solid ${C.line};` : ""}">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-<td valign="top" class="az-stack az-stack-gap" style="padding-right:10px">
-<a href="${escapeHtml(pathFor(`/hisse/${report.symbol}`, data.locale))}" target="_blank" style="text-decoration:none"><span class="az-ink" style="font-family:${MONO};font-size:15px;line-height:20px;font-weight:800;color:${C.ink}">${escapeHtml(report.symbol)}</span></a>
-<span class="az-muted" style="font-family:${FONT};font-size:12px;line-height:18px;color:${C.muted}">&nbsp;&nbsp;${name}</span>
-<br><span class="az-muted" style="font-family:${FONT};font-size:12px;line-height:18px;color:${C.muted}">${escapeHtml(dayLabel(report.reportDate, data.locale))}</span>${link ? `&nbsp;&nbsp;·&nbsp;&nbsp;${link}` : ""}
-</td>
-<td valign="top" align="right" class="az-stack" style="text-align:right">${surpriseChip(report, W, data.locale)}</td>
-</tr></table></td></tr>`;
+      const cells = [
+        report.eps ? (first: boolean, last: boolean) => surpriseCell(W.epsLabel, report.eps, W, data.locale, first, last) : null,
+        report.revenue ? (first: boolean, last: boolean) => surpriseCell(W.revenueLabel, report.revenue, W, data.locale, first, last) : null,
+      ].filter((cell) => cell !== null);
+      const grid = cells.length
+        ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:12px 0 0"><tr>${cells.map((cell, j) => cell(j === 0, j === cells.length - 1)).join("")}${cells.length === 1 ? `<td width="50%"></td>` : ""}</tr></table>`
+        : "";
+      return `<tr><td class="az-rule" style="padding:18px 0;${i ? `border-top:1px solid ${C.line};` : ""}">
+<a href="${escapeHtml(pathFor(`/hisse/${report.symbol}`, data.locale))}" target="_blank" class="az-ink" style="font-family:${FONT};font-size:19px;line-height:24px;font-weight:800;letter-spacing:-.02em;color:${C.ink};text-decoration:none">${escapeHtml(name)}</a>
+<p style="margin:4px 0 0;font-family:${FONT};font-size:13px;line-height:19px"><span class="az-muted" style="font-family:${MONO};font-size:12px;font-weight:800;color:${C.muted}">${escapeHtml(report.symbol)}</span><span class="az-muted" style="color:${C.muted}">&nbsp;&nbsp;&middot;&nbsp;&nbsp;${escapeHtml(dayLabel(report.reportDate, data.locale))}</span>${link}</p>
+${grid}
+</td></tr>`;
     })
     .join("\n");
-  return `${head}${scorecardBar(data, W)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="az-meta" style="border-top:1px solid ${C.line};border-bottom:1px solid ${C.line}">${rows}</table>`;
+  return `${head}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="az-meta" style="border-top:1px solid ${C.line};border-bottom:1px solid ${C.line}">${rows}</table>`;
 }
 
 /* ---- Gelişmeler ---- */
 
 function linkList(links: DigestData["news"], locale: Locale): string {
-  return links
+  /* Numara zeminsiz pirinç: renkli küçük karo Gmail iOS koyu temada açık
+     kalıp numarayı okunmaz bırakıyordu (17 Ekim). */
+  const rows = links
     .map(
-      (link, i) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px"><tr>
-<td valign="top" width="34" style="padding-top:1px"><span class="az-chapter-index" style="display:inline-block;width:24px;height:24px;border-radius:8px;background:#e8f0fb;color:#8a5f12;font-family:${MONO};font-size:11px;line-height:24px;font-weight:800;text-align:center">${String(i + 1).padStart(2, "0")}</span></td>
-<td valign="top"><a href="${escapeHtml(pathFor(link.path, locale))}" target="_blank" class="az-ink" style="font-family:${FONT};font-size:15px;line-height:21px;font-weight:700;color:${C.ink};text-decoration:none">${escapeHtml(link.title)}</a>${
-        link.meta ? `<p class="az-muted" style="margin:3px 0 0;font-family:${FONT};font-size:12px;line-height:17px;color:${C.muted}">${escapeHtml(link.meta.length > 140 ? `${link.meta.slice(0, 139)}…` : link.meta)}</p>` : ""
-      }</td></tr></table>`,
+      (link, i) => `<tr>
+<td valign="top" width="40" class="az-rule" style="padding:15px 0;${i ? `border-top:1px solid ${C.line};` : ""}"><span class="az-brass" style="font-family:${MONO};font-size:15px;line-height:24px;font-weight:800;color:${BRASS_INK}">${String(i + 1).padStart(2, "0")}</span></td>
+<td valign="top" class="az-rule" style="padding:15px 0;${i ? `border-top:1px solid ${C.line};` : ""}"><a href="${escapeHtml(pathFor(link.path, locale))}" target="_blank" class="az-ink" style="font-family:${FONT};font-size:17px;line-height:24px;font-weight:800;letter-spacing:-.01em;color:${C.ink};text-decoration:none">${escapeHtml(link.title)}</a>${
+        link.meta ? `<p class="az-body" style="margin:5px 0 0;font-family:${FONT};font-size:14px;line-height:21px;color:${C.body}">${escapeHtml(link.meta.length > 170 ? `${link.meta.slice(0, 169)}…` : link.meta)}</p>` : ""
+      }</td></tr>`,
     )
     .join("\n");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>`;
 }
 
 function developmentsBlock(data: DigestData, W: Copy["weeklyMail"]): string {
@@ -445,43 +381,12 @@ function developmentsBlock(data: DigestData, W: Copy["weeklyMail"]): string {
   return `${emailSection(W.newsTitle)}${brief}${linkList(links, data.locale)}`;
 }
 
-/* ---- Yeni hafta: ritim, gün gün takvim, veriler ---- */
+/* ---- Yeni hafta: gün gün büyük şirketler, veriler ----
+   Günün şirket SAYISI ve sayı sütunları kalktı (17 Ekim, sahibinin isteği);
+   her gün en büyük şirketler ADIYLA, sembol sağda künye. */
 
-/** Beş günün sütunu — çubuk o gün açıklayan şirket SAYISI (nötr mürekkep). */
-function rhythmBlock(data: DigestData, W: Copy["weeklyMail"]): string {
-  if (data.aheadFailed || data.ahead.length === 0) return "";
-  const max = Math.max(...data.ahead.map((d) => d.total), 1);
-  const BAR = 72;
-  const anyEvents = data.ahead.some((d) => d.events > 0);
-  const cells = data.ahead
-    .map((day, i) => {
-      const h = day.closed || day.total === 0 ? 0 : Math.max(4, Math.round((day.total / max) * BAR));
-      const bar = day.closed
-        ? `<p class="az-muted" style="margin:0;font-family:${FONT};font-size:11px;line-height:14px;color:${C.muted}">${escapeHtml(W.closed)}</p>`
-        : h > 0
-          ? `<div class="az-grow-y az-ink-fill" style="${delay(200 + 110 * i)}width:26px;height:${h}px;margin:0 auto;border-radius:7px 7px 3px 3px;background:${C.band};background-image:linear-gradient(180deg,#2c62ad 0%,${C.band} 100%);font-size:0;line-height:0">&nbsp;</div>`
-          : "&nbsp;";
-      const events = day.events > 0
-        ? `<span style="display:inline-block;margin-top:5px;padding:2px 7px;border-radius:999px;background:#f6ecd9;color:#7a5512;font-family:${FONT};font-size:10px;line-height:14px;font-weight:700;white-space:nowrap" class="az-flat-wash">${escapeHtml(W.rhythmEvents.replace("{n}", String(day.events)))}</span>`
-        : anyEvents
-          ? `<span style="display:inline-block;margin-top:5px;font-size:10px;line-height:18px">&nbsp;</span>`
-          : "";
-      return `<td valign="bottom" align="center" width="20%" style="padding:0 3px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-<tr><td valign="bottom" align="center" height="${BAR + 22}" style="height:${BAR + 22}px">
-<p class="az-ink" style="margin:0 0 6px;font-family:${FONT};font-size:15px;line-height:16px;font-weight:800;color:${C.ink}">${day.closed ? "&nbsp;" : day.total}</p>
-${bar}</td></tr>
-<tr><td align="center" class="az-rule" style="padding:8px 0 0;border-top:2px solid ${ZERO}">
-<p class="az-ink" style="margin:0;font-family:${FONT};font-size:13px;line-height:16px;font-weight:800;color:${C.ink}">${escapeHtml(weekdayShort(day.date, data.locale))}</p>
-<p class="az-muted" style="margin:1px 0 0;font-family:${FONT};font-size:11px;line-height:14px;color:${C.muted};white-space:nowrap">${escapeHtml(dayNumber(day.date, data.locale))}</p>
-${events}
-</td></tr></table></td>`;
-    })
-    .join("");
-  return `${emailSection(W.rhythmTitle, W.rhythmNote)}
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="az-sunken az-sunken-flat" style="background:${C.sunken};border:1px solid ${C.line};border-radius:18px"><tr><td style="padding:18px 10px 16px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${cells}</tr></table>
-</td></tr></table>`;
+function dayLong(date: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(intlLocale(locale), { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(utcDay(date));
 }
 
 function aheadBlock(data: DigestData, W: Copy["weeklyMail"]): string {
@@ -497,21 +402,20 @@ function aheadBlock(data: DigestData, W: Copy["weeklyMail"]): string {
           if (items.length === 0) return "";
           const clock = timing === "bmo" ? day.bmoClock : timing === "amc" ? day.amcClock : "";
           const label = `${timing === "bmo" ? W.bmo : timing === "amc" ? W.amc : W.other}${clock ? ` · ${clock}` : ""}`;
-          const pills = items
+          const lines = items
             .map(
-              (item) =>
-                `<a href="${escapeHtml(pathFor(`/hisse/${item.symbol}`, data.locale))}" target="_blank" class="az-sunken az-sunken-flat" style="display:inline-block;margin:0 4px 5px 0;padding:3px 8px;border:1px solid ${C.line};border-radius:8px;background:${C.sunken};font-family:${MONO};font-size:12px;line-height:17px;font-weight:700;color:${C.ink};text-decoration:none"><span class="az-ink">${escapeHtml(item.symbol)}</span></a>`,
+              (item) => `<tr><td style="padding:4px 10px 4px 0"><a href="${escapeHtml(pathFor(`/hisse/${item.symbol}`, data.locale))}" target="_blank" class="az-ink" style="font-family:${FONT};font-size:16px;line-height:22px;font-weight:700;color:${C.ink};text-decoration:none">${escapeHtml(item.name ?? item.symbol)}</a></td>
+<td align="right" valign="middle" class="az-muted" style="padding:4px 0;font-family:${MONO};font-size:12px;line-height:22px;font-weight:800;color:${C.muted};white-space:nowrap">${escapeHtml(item.symbol)}</td></tr>`,
             )
             .join("");
-          return `<p class="az-muted" style="margin:0 0 5px;font-family:${FONT};font-size:11px;line-height:15px;color:${C.muted}">${escapeHtml(label)}</p>
-<p style="margin:0 0 6px">${pills}</p>`;
+          return `<p class="az-brass" style="margin:12px 0 2px;font-family:${FONT};font-size:12px;line-height:16px;font-weight:700;color:${BRASS_INK}">${escapeHtml(label)}</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${lines}</table>`;
         })
         .join("");
-      return `<tr>
-<td valign="top" width="86" class="az-rule" style="padding:13px 10px 6px 0;${i ? `border-top:1px solid ${C.line};` : ""}"><p class="az-ink" style="margin:0;font-family:${FONT};font-size:14px;line-height:18px;font-weight:800;color:${C.ink}">${escapeHtml(weekdayShort(day.date, data.locale))}</p><p class="az-muted" style="margin:1px 0 0;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted}">${escapeHtml(dayNumber(day.date, data.locale))}</p></td>
-<td valign="top" class="az-rule" style="padding:13px 0 6px;${i ? `border-top:1px solid ${C.line};` : ""}">${
-        day.closed ? `<p style="margin:0 0 8px">${chip(`${W.closed} · ${day.closed}`, "flat")}</p>` : groups
-      }</td></tr>`;
+      return `<tr><td class="az-rule" style="padding:18px 0 14px;${i ? `border-top:1px solid ${C.line};` : ""}">
+<p class="az-ink" style="margin:0;font-family:${FONT};font-size:18px;line-height:23px;font-weight:800;letter-spacing:-.02em;color:${C.ink}">${escapeHtml(dayLong(day.date, data.locale))}</p>
+${day.closed ? `<p style="margin:10px 0 0">${chip(`${W.closed} · ${day.closed}`, "flat")}</p>` : groups}
+</td></tr>`;
     })
     .join("\n");
   return `${head}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="az-meta" style="border-top:1px solid ${C.line};border-bottom:1px solid ${C.line}">${rows}</table>`;
@@ -577,6 +481,8 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
   const greeting = W.greeting.replace("{username}", recipient.username);
   const subject = W.subject.replace("{range}", thisRange);
   const calendarUrl = pathFor("/bilancolar/hafta", locale);
+  const ref = randomUUID();
+  const trace = `<span style="display:none;font-size:0;line-height:0;max-height:0;overflow:hidden;mso-hide:all">${ref.slice(0, 13)}</span>`;
 
   const html = brandedEmailHtml({
     lang: locale,
@@ -585,26 +491,31 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
     lead: W.heroLead.replace("{pastRange}", pastRange).replace("{thisRange}", thisRange),
     brandName: copy.common.signature,
     origin: SITE_URL,
-    hero: { file: "weekly.gif", width: 560, height: 200 },
+    hero: { file: "weekly.gif", width: 720, height: 257 },
     bodyHtml: [
       emailText.greeting(greeting),
       emailText.paragraph(W.intro),
-      statsBlock(data, W),
       chapter("01", W.pastSection, pastRange),
       commentaryBlock(data.commentary?.past, W, false),
-      indicesBlock(data, W),
-      reportedBlock(data, W),
       developmentsBlock(data, W),
+      reportedBlock(data, W),
+      indicesBlock(data, W),
       chapter("02", W.aheadSection, thisRange),
       commentaryBlock(data.commentary?.ahead, W, true),
       personalBlock(personal, locale, W),
-      rhythmBlock(data, W),
       aheadBlock(data, W),
       eventsBlock(data, W),
       `<div style="height:30px;line-height:30px;font-size:0">&nbsp;</div>`,
       emailButton(W.button, calendarUrl),
       emailText.note(copy.common.notAdvice, W.whyReceived),
-    ].join("\n"),
+    ]
+      .filter(Boolean)
+      /* Her bölümün arasına postaya özgü görünmez bir iz (17 Ekim): Gmail
+         aynı konulu postaları tek konuşmada topluyor ve öncekiyle AYNI kalan
+         gövdeyi "…" düğmesinin arkasına katlıyordu — pazar özetinin yarısı
+         kapalı geliyordu. Her gönderimde farklı iz, katlanacak ortak parça
+         bırakmaz; X-Entity-Ref-ID başlığı da konuşmaya hiç eklenmesin diye. */
+      .join(`\n${trace}\n`),
     footerLines: [copy.common.noReply],
     footerLinks: footerFor(recipient, copy.common, "weekly"),
   });
@@ -618,8 +529,6 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
   if (data.pastFailed) text.push(W.reportedFailed);
   else if (data.reported.length === 0) text.push(W.reportedEmpty);
   else {
-    const { beat, inline, miss } = data.scorecard;
-    if (beat + inline + miss > 0) text.push(`${beat} ${W.scoreBeat} · ${inline} ${W.scoreInline} · ${miss} ${W.scoreMiss}`);
     text.push(
       ...data.reported.map((r) => {
         const s = r.eps ?? r.revenue;
@@ -639,7 +548,7 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
   else
     for (const day of data.ahead) {
       if (day.closed) text.push(`- ${dayLabel(day.date, locale)}: ${W.closed} (${day.closed})`);
-      else if (day.items.length) text.push(`- ${dayLabel(day.date, locale)} (${day.total}): ${day.items.map((i) => i.symbol).join(", ")}`);
+      else if (day.items.length) text.push(`- ${dayLabel(day.date, locale)}: ${day.items.map((i) => (i.name ? `${i.name} (${i.symbol})` : i.symbol)).join(", ")}`);
     }
   text.push("", W.eventsTitle);
   if (data.eventsFailed) text.push(W.eventsFailed);
@@ -650,5 +559,5 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
   else text.push(...data.events.map((e) => `- ${dayLabel(e.date, locale)} ${e.time ?? W.timeUnknown}: ${e.title}`));
   text.push("", calendarUrl, "", copy.common.notAdvice, W.whyReceived, `${copy.common.unsubscribe}: ${unsubscribeUrl(recipient, "weekly")}`);
 
-  return { to: recipient.email, subject, text: text.join("\n"), html };
+  return { to: recipient.email, subject, text: text.join("\n"), html, headers: { "X-Entity-Ref-ID": ref } };
 }

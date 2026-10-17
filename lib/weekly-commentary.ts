@@ -36,8 +36,8 @@ const SYSTEM = {
   tr: `Açılış Zili'nin pazar özeti postası için kısa bir hafta yorumu yazıyorsun. Okur, ABD borsalarını Türkçe takip eden bireysel yatırımcı.
 
 İki paragraf yaz:
-- past: geride kalan haftanın hikâyesi — endeksler, bilanço karnesi ve öne çıkan gelişmeler arasındaki bağ. En çok 70 kelime.
-- ahead: yeni haftada nelere dikkat edileceği — yoğun günler, öne çıkan şirketler, önemli veriler. En çok 60 kelime.
+- past: geride kalan haftanın hikâyesi — öne çıkan haberler ve büyük şirketlerin bilançoları önde, endeksler bağlam olarak. Şirketleri adıyla an; kaç şirketin açıkladığını ya da beklentiyi aştığını SAYMA. En çok 70 kelime.
+- ahead: yeni haftada nelere dikkat edileceği — hangi gün hangi büyük şirket açıklıyor, önemli veriler. Şirketleri adıyla an; günlük şirket sayısı verme. En çok 60 kelime.
 
 Kurallar:
 - YALNIZ verilen veriyi kullan. Verilmeyen hiçbir sayı, tarih, fiyat ya da olay yazma; hesap yapma (fark, toplam, ortalama yok). Sayıyı kullanırsan verilen biçimde aynen yaz.
@@ -47,8 +47,8 @@ Kurallar:
   en: `You write a short weekly commentary for Açılış Zili's Sunday digest email. The reader is an individual investor following US markets.
 
 Write two paragraphs:
-- past: the story of the week behind — how the indices, the earnings scorecard and the key developments connect. At most 70 words.
-- ahead: what to watch in the week ahead — busy days, notable companies, key data. At most 60 words.
+- past: the story of the week behind — the key headlines and the big companies' earnings first, the indices as context. Name the companies; do NOT count how many reported or beat. At most 70 words.
+- ahead: what to watch in the week ahead — which big company reports on which day, and key data. Name the companies; no per-day company counts. At most 60 words.
 
 Rules:
 - Use ONLY the data given. Do not write any number, date, price or event that is not given; do not compute (no differences, sums or averages). If you use a number, copy it exactly as formatted.
@@ -67,7 +67,6 @@ function payloadOf(data: DigestData) {
   return {
     pastWeek: `${day(data.pastMonday)} – ${day(data.pastFriday)}`,
     indices: data.indices.map((i) => ({ name: i.label, weeklyChange: pct(i.changePct), dailySteps: i.steps.map((s) => `${day(s.date)}: ${pct(s.changePct)}`) })),
-    earningsScorecard: data.pastFailed ? null : { beat: data.scorecard.beat, inLine: data.scorecard.inline, missed: data.scorecard.miss, notableReported: data.reportedTotal },
     reported: data.reported.map((r) => ({
       symbol: r.symbol,
       name: r.name,
@@ -79,7 +78,7 @@ function payloadOf(data: DigestData) {
     nextWeek: `${day(data.thisMonday)} – ${day(data.thisFriday)}`,
     earningsAhead: data.aheadFailed
       ? null
-      : data.ahead.map((d) => ({ day: day(d.date), marketClosed: d.closed, companiesReporting: d.total, largest: d.items.map((i) => i.symbol) })),
+      : data.ahead.map((d) => ({ day: day(d.date), marketClosed: d.closed, largest: d.items.map((i) => (i.name ? `${i.name} (${i.symbol})` : i.symbol)) })),
     keyData: data.eventsFailed ? null : data.events.map((e) => ({ day: day(e.date), time: e.time, title: e.title })),
     nextKeyDataAfterThisWeek: data.nextEvent ? { day: day(data.nextEvent.date), title: data.nextEvent.title } : null,
   };

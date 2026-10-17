@@ -61,9 +61,6 @@ export type DigestIndex = {
   steps: { date: string; changePct: number }[];
 };
 
-/** Bilanço karnesi — kayda değer açıklayanların HBK (yoksa gelir) sonucu. */
-export type DigestScorecard = { beat: number; inline: number; miss: number };
-
 export type DigestReport = {
   symbol: string;
   name: string | null;
@@ -85,10 +82,6 @@ export type DigestAheadDay = {
   /** Okuyucunun saatiyle "~16:00" — açılış öncesi ve kapanış sonrası. */
   bmoClock: string;
   amcClock: string;
-  /** O gün açıklayan BÜTÜN şirketler (seçilmeyenler dahil) — gün çubuğu. */
-  total: number;
-  /** O günün yüksek önemli veri sayısı. */
-  events: number;
 };
 
 export type DigestEvent = { date: string; time: string | null; title: string };
@@ -101,15 +94,11 @@ export type DigestData = {
   thisFriday: string;
   indices: DigestIndex[];
   reported: DigestReport[];
-  reportedTotal: number;
-  scorecard: DigestScorecard;
   pastFailed: boolean;
   brief: { headline: string; path: string } | null;
   stories: DigestLink[];
   news: DigestLink[];
   ahead: DigestAheadDay[];
-  /** Yeni haftada açıklayan şirketlerin tamamı. */
-  aheadTotal: number;
   aheadFailed: boolean;
   /** Bu haftanın bilanço açıklayan bütün sembolleri — kişisel satır için. */
   aheadAll: Map<string, { date: string; timing: DigestAheadItem["timing"] }>;
@@ -124,7 +113,7 @@ export type DigestData = {
 const MAX_REPORTED = 8;
 const MAX_AHEAD_PER_DAY = 6;
 const MAX_EVENTS = 8;
-const MAX_NEWS = 4;
+const MAX_NEWS = 6;
 const MAX_STORIES = 3;
 
 /** Bu postanın haftası: pazar (ve cumartesi) koşunca GELEN pazartesi; hafta içi elle koşulursa içinde bulunulan hafta. */
@@ -273,11 +262,6 @@ export async function gatherDigest(locale: Locale, now: Date = new Date()): Prom
     analysisPath: analysisBySymbol.get(row.symbol) ?? null,
   }));
   const reportedSet = new Set(reportedRows.map((row) => row.symbol));
-  const scorecard: DigestScorecard = { beat: 0, inline: 0, miss: 0 };
-  for (const row of reportedRows) {
-    const verdict = epsSurprise(row.epsActual, row.epsEstimate) ?? revenueSurprise(row.revenueActual, row.revenueEstimate);
-    if (verdict) scorecard[verdict.direction] += 1;
-  }
 
   const newsLinks = await weeklyNews(locale, pastMonday, thisMonday, reportedSet);
 
@@ -298,8 +282,6 @@ export async function gatherDigest(locale: Locale, now: Date = new Date()): Prom
       items,
       bmoClock: day.bmoClock.primary,
       amcClock: day.amcClock.primary,
-      total: ahead.schedule.find((d) => d.date === day.date)?.total ?? items.length,
-      events: highEvents.filter((row) => row.eventDate === day.date).length,
     };
   });
 
@@ -342,14 +324,11 @@ export async function gatherDigest(locale: Locale, now: Date = new Date()): Prom
     thisFriday,
     indices,
     reported,
-    reportedTotal: reportedRows.length,
-    scorecard,
     pastFailed: past.failed,
     brief: brief ? { headline: brief.headline, path: briefHref(pastMonday, "weekly") } : null,
     stories: storyLinks,
     news: newsLinks,
     ahead: aheadDays,
-    aheadTotal: ahead.total,
     aheadFailed: ahead.failed,
     aheadAll,
     events: eventRows,
