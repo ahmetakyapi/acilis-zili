@@ -137,7 +137,7 @@ test("alarm postası: konu, yön rengi, çıkış bağlantısı", () => {
 test("haftalık posta: bölümler, kaçış, kişisel satır", () => {
   const mail = weeklyEmailMessage(recipient, sampleDigest(), [{ symbol: "TSLA", date: "2026-10-21", timing: "amc" }], tr.emailNotify);
   assert.equal(plain(mail.subject), "Açılış Zili · Pazar Özeti · 19 – 23 Ekim");
-  for (const part of ["Haftanın Rakamları", "9/14", "Endeksler", "Bilanço Karnesi", "Haftanın Ritmi", "weekly.gif", "HBK · Beklentiyi Aştı + %8,3", "Gelir · Beklentinin Altında − %1,2", "Bankalar Haftayı Taşıdı", "Takip Listende Bu Hafta", "Tüketici Fiyatları", "kapsam=weekly"]) {
+  for (const part of ["Haftanın Rakamları", "9/14", "Endeksler", "Bilanço Karnesi", "Haftanın Yoğun Günleri", "weekly.gif", "HBK · Beklentiyi Aştı + %8,3", "Gelir · Beklentinin Altında − %1,2", "Bankalar Haftayı Taşıdı", "Takip Listende Bu Hafta", "Tüketici Fiyatları", "kapsam=weekly"]) {
     assert.ok(plain(mail.html).includes(part), part);
   }
   assert.ok(!mail.html.includes("<script>"));
@@ -160,7 +160,7 @@ test("haftalık posta: çubuklar gerçek sayıdan, en büyük tam boy", () => {
 test("haftalık posta: karnesi boşsa ölçü kutusu basılmaz, takvim okunamadıysa sayı yok", () => {
   const mail = weeklyEmailMessage(recipient, sampleDigest({ scorecard: { beat: 0, inline: 0, miss: 0 }, aheadFailed: true, indices: [] }), [], tr.emailNotify);
   assert.ok(!mail.html.includes("Haftanın Rakamları"));
-  assert.ok(!mail.html.includes("Haftanın Ritmi"));
+  assert.ok(!mail.html.includes("Haftanın Yoğun Günleri"));
 });
 
 test("haftada kritik veri yoksa sıradaki yazılır", () => {
