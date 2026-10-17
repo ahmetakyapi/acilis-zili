@@ -285,7 +285,9 @@ yazın 16:30, kışın 17:30 TR). ET↔UTC aritmetiği yalnız `lib/market-hours
   Unuttum" basılmaz; her adrese aynı yanıt, gönderim `after` ile; satırda
   bağlantının SHA-256 özeti. Bildirim postası (alarm, pazar özeti — 16
   Ekim) TEK KAPIDAN: `sendNotificationEmail` (`lib/email-notify.ts`) —
-  tercih açık mı, adres ÇİFT ONAYLI mı (`confirmedEmail` = bugünkü adres),
+  tercih açık mı, adres ÇİFT ONAYLI mı (`confirmedEmail` = bugünkü adres;
+  yalnız alarm — pazar özeti 17 Ekim'den beri bütün üyelere varsayılan açık
+  ve onaysız, `enrollWeeklyDefault`),
   günlük bütçe (`EMAIL_DAILY_BUDGET`, varsayılan 80; Resend ücretsiz katmanı
   günde 100) ve `dedupeKey`. Kendi başına `sendEmail` çağıran bildirim yolu
   açma. Yeni posta türü = KVKK metni + şablon (`lib/notify-emails.ts`) +

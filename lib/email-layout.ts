@@ -116,6 +116,20 @@ ${cells}
 </table>`;
 }
 
+/*
+ * <style> notları (17 Ekim) — postanın içine girmesin diye burada:
+ * - Pazar özetinin girişleri yalnız Apple Mail / iOS Mail oynatır; Gmail
+ *   <style> animasyonunu siler ve son kare satır içi stilin kendisi:
+ *   animasyon yalnız BAŞTAN gelir. Çubuk büyür (yatay soldan, dikey
+ *   dipten), kutu yükselir. Eğri sitenin --ease-brand'i (EASE_BRAND);
+ *   posta CSS değişkeni okumuyor.
+ * - Ölçü kutuları telefonda da yan yana (390'da ölçüldü: alt alta üç kutu
+ *   330 piksel tutuyordu); punto ve dolgu küçülür.
+ * - Sol şerit RENK TAŞIYOR (pirinç not, mavi kişisel kutu, yön rengi alarm
+ *   karosu): koyu temada yalnız öteki üç kenar koyulur. İlk sürüm
+ *   border-color yazıyordu ve alarm karosunun yön şeridi griye, kişisel
+ *   kutunun mavisi pirince dönüyordu (17 Ekim denetimi).
+ */
 export function brandedEmailHtml(email: BrandedEmail): string {
   const origin = email.origin.replace(/\/$/, "");
   const hero = email.hero ?? { file: "hero.gif", width: 560, height: 220 };
@@ -157,12 +171,6 @@ export function brandedEmailHtml(email: BrandedEmail): string {
   /* Apple Mail: düğmenin üstünden geçen ışık — Gmail siler, posta onsuz tam. */
   @keyframes az-sheen { 0%,62% { background-position:-180% 0; } 100% { background-position:280% 0; } }
   .az-btn-link { background-image:linear-gradient(110deg,rgba(255,255,255,0) 35%,rgba(255,255,255,.28) 50%,rgba(255,255,255,0) 65%); background-size:220% 100%; background-repeat:no-repeat; animation:az-sheen 4.6s ease-in-out 1.2s infinite; }
-  /* Pazar özetinin girişleri (17 Ekim) — yalnız Apple Mail / iOS Mail
-     oynatır; Gmail <style> animasyonunu siler ve son kare zaten satır içi
-     stilin kendisi: animasyon yalnız BAŞTAN gelir, hiçbir şey ona muhtaç
-     değil. Çubuk büyür (yatay soldan, dikey dipten), kutu yükselir. Eğri
-     sitenin --ease-brand'i (lib/motion.ts → EASE_BRAND); posta CSS
-     değişkeni okumadığı için değer TS'ten basılıyor. */
   @keyframes az-grow-x { from { transform:scaleX(0); } to { transform:scaleX(1); } }
   @keyframes az-grow-y { from { transform:scaleY(0); } to { transform:scaleY(1); } }
   @keyframes az-rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
@@ -179,8 +187,6 @@ export function brandedEmailHtml(email: BrandedEmail): string {
     .az-stack { display:block !important; width:100% !important; }
     .az-stack-gap { padding:0 0 10px !important; }
     .az-hide-sm { display:none !important; }
-    /* Ölçü kutuları telefonda da yan yana (390'da ölçüldü: alt alta üç
-       kutu 330 piksel tutuyordu); punto ve dolgu küçülür. */
     .az-stat-box { padding:12px 10px 11px !important; border-radius:14px !important; }
     .az-stat-val { font-size:20px !important; line-height:24px !important; }
   }
@@ -190,10 +196,6 @@ export function brandedEmailHtml(email: BrandedEmail): string {
     .az-ink { color:#eef3fa !important; }
     .az-body { color:#b4c1d3 !important; }
     .az-muted { color:#8b99ad !important; }
-    /* Sol şerit RENK TAŞIYOR (pirinç not, mavi kişisel kutu, yön rengi
-       alarm karosu): koyu temada yalnız öteki üç kenar koyulur. İlk sürüm
-       border-color yazıyordu ve alarm karosunun yön şeridi griye, kişisel
-       kutunun mavisi pirince dönüyordu (17 Ekim denetimi). */
     .az-note { background:#172234 !important; border-top-color:#223047 !important; border-right-color:#223047 !important; border-bottom-color:#223047 !important; }
     .az-meta, .az-rule { border-color:#223047 !important; }
     .az-link { color:#5cb0ff !important; }

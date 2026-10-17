@@ -458,8 +458,11 @@ export const passwordResets = pgTable(
 /**
  * E-POSTA TERCİHLERİ (16 Ekim) — alarm e-postası ve pazar özeti.
  *
- * İKİSİ DE VARSAYILAN KAPALI ve açık rızayla açılır (KVKK metni). Adres
- * ÇİFT ONAYLI: kayıtta adres doğrulanmıyor, yani başkasının adresiyle hesap
+ * 17 Ekim'den beri PAZAR ÖZETİ bütün üyelere VARSAYILAN AÇIK ve onaysız
+ * (sahibinin kararı; lib/email-notify.ts → enrollWeeklyDefault — `weekly`
+ * sütununun false varsayılanı yalnız eski satırlar için anlamlı). Alarm
+ * postası varsayılan kapalı, açık rızayla açılır (KVKK metni). Adres
+ * ÇİFT ONAYLI (alarm postası için): kayıtta adres doğrulanmıyor, yani başkasının adresiyle hesap
  * açan biri ona bülten yağdırabilirdi. Anahtar açılınca adrese onay
  * bağlantısı gider (`confirmTokenHash`, 48 saat); gönderim yalnızca
  * `confirmedEmail` hesabın BUGÜNKÜ adresine eşitken yapılır — adres

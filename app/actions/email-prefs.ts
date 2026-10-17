@@ -70,7 +70,8 @@ async function sendConfirm(userId: string, token: string): Promise<void> {
       username: row.username,
       locale,
       link: `${SITE_URL}${withLocale("/e-posta/onay", locale)}?anahtar=${token}`,
-      kinds: { alerts: row.alerts, weekly: row.weekly },
+      /* Onay yalnız alarm postası için; pazar özeti onaysız gidiyor. */
+      kinds: { alerts: true, weekly: false },
       copy: getDictionary(locale).emailNotify,
     }),
   );

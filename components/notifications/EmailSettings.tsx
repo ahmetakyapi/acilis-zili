@@ -9,10 +9,12 @@ import type { Dictionary } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /**
- * Ayarlar → E-posta Bildirimleri (16 Ekim). İki anahtar: alarm postası ve
- * pazar özeti; ikisi de varsayılan kapalı. Açılan ilk anahtar adresi
- * onaysız bulursa sunucu onay bağlantısı gönderir ve satır "Onay bekleniyor"
- * der — onaylanmayan adrese hiçbir bildirim postası gitmez (lib/email-notify.ts).
+ * Ayarlar → E-posta Bildirimleri (16 Ekim). İki anahtar: alarm postası
+ * (varsayılan kapalı, çift onaylı) ve pazar özeti (17 Ekim'den beri bütün
+ * üyelere varsayılan AÇIK, onaysız — sahibinin kararı, lib/email-notify.ts →
+ * enrollWeeklyDefault). Alarm anahtarı adresi onaysız bulursa sunucu onay
+ * bağlantısı gönderir ve satır "Onay bekleniyor" der; onay satırı yalnız
+ * alarm açıkken görünür.
  *
  * Anahtar iyimser döner, sunucu reddederse geri alınır; durum satırı
  * sunucunun döndürdüğü görünümle tazelenir (açmak "bekliyor"a geçirir).
@@ -59,7 +61,7 @@ export function EmailSettings({
     });
   }
 
-  const anyOn = prefs.alerts || prefs.weekly;
+  const anyOn = prefs.alerts;
   const status = prefs.confirmed ? labels.confirmed : prefs.pending ? labels.pending : labels.unconfirmed;
 
   return (

@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { cache } from "react";
-import { and, count, eq, gte, isNotNull, lt, sql } from "drizzle-orm";
+import { and, count, eq, gte, isNotNull, lt, ne, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { emailConfigured, sendEmail, type Email } from "@/lib/email";
 import { isLocale, type Locale } from "@/lib/i18n/config";
@@ -15,6 +15,9 @@ import { SITE_URL } from "@/lib/site";
  * bütçe yetiyor mu, bu posta daha önce gitti mi — hepsini o soruyor. Alarm
  * yolu da haftalık özet de buradan geçer; biri kendi başına `sendEmail`
  * çağırsaydı er geç onaysız adrese ya da bütçenin üstünde posta giderdi.
+ *
+ * PAZAR ÖZETİ VARSAYILAN AÇIK, ONAYSIZ (17 Ekim, sahibinin kararı) — gerekçe
+ * `enrollWeeklyDefault`. Alarm postası açık rıza + çift onayla kalıyor.
  *
  * Her şey EN İYİ ÇABA: tablo yoksa ya da yazma düşerse olayın kendisi
  * (alarm tetiği) etkilenmez, posta yalnız gitmez.
@@ -94,7 +97,8 @@ export const getEmailPrefs = cache(async (userId: string): Promise<EmailPrefsVie
     return {
       available: true,
       alerts: row.alerts === true,
-      weekly: row.weekly === true,
+      /* Satırı olmayan hesap pazar özetine VARSAYILAN AÇIK (enrollWeeklyDefault). */
+      weekly: row.weekly ?? true,
       confirmed,
       pending: !confirmed && row.confirmExpiresAt !== null && row.confirmExpiresAt.getTime() > Date.now(),
     };
@@ -130,7 +134,8 @@ export async function writeEmailPref(
 
     const confirmed = existing.confirmedEmail !== null && existing.confirmedEmail === existing.email;
     const pending = existing.confirmExpiresAt !== null && existing.confirmExpiresAt.getTime() > now.getTime();
-    const confirmToken = enabled && !confirmed && !pending ? newEmailToken() : null;
+    /* Onay yalnız ALARM postası için (pazar özeti onaysız gider — enrollWeeklyDefault). */
+    const confirmToken = enabled && kind === "alerts" && !confirmed && !pending ? newEmailToken() : null;
     const confirmFields = confirmToken
       ? { confirmTokenHash: hashEmailToken(confirmToken), confirmExpiresAt: new Date(now.getTime() + CONFIRM_TTL_MS) }
       : {};
@@ -138,11 +143,15 @@ export async function writeEmailPref(
     const toggle = kind === "alerts" ? { alerts: enabled } : { weekly: enabled };
     await db
       .insert(emailPrefs)
-      .values({ userId, ...toggle, unsubToken: newEmailToken(), updatedAt: now, ...confirmFields })
+      /* Yeni satır pazar özetine açık doğar (varsayılan açık — enrollWeeklyDefault). */
+      .values({ userId, weekly: true, ...toggle, unsubToken: newEmailToken(), updatedAt: now, ...confirmFields })
       .onConflictDoUpdate({
         target: emailPrefs.userId,
         set: { ...toggle, updatedAt: now, ...confirmFields },
       });
+    /* Okuyucu pazar özeti hakkında KENDİSİ karar verdi: kayıt adımı onun
+       seçimini bir daha değiştirmesin. */
+    if (kind === "weekly") await markEnrolled(userId, now);
     return { ok: true, confirmToken };
   } catch {
     return { ok: false, confirmToken: null };
@@ -163,7 +172,7 @@ export async function reissueConfirmToken(userId: string, now: Date = new Date()
       .where(
         and(
           eq(emailPrefs.userId, userId),
-          sql`(${emailPrefs.alerts} or ${emailPrefs.weekly})`,
+          eq(emailPrefs.alerts, true),
           sql`${emailPrefs.confirmedEmail} is distinct from (select ${users.email} from ${users} where ${users.id} = ${userId})`,
         ),
       )
@@ -235,6 +244,7 @@ export async function unsubscribeResult(token: string, scope: UnsubscribeScope, 
       .set({ ...set, updatedAt: now })
       .where(eq(emailPrefs.unsubToken, token))
       .returning({ userId: emailPrefs.userId });
+    if (rows[0] && scope !== "alerts") await markEnrolled(rows[0].userId, now);
     return rows.length > 0 ? "ok" : "unknown";
   } catch {
     return "error";
@@ -303,15 +313,62 @@ export async function deliverableRecipient(userId: string, kind: EmailKind): Pro
   }
 }
 
-/** Haftalık özetin alıcıları — tercih açık, adres onaylı. */
+/**
+ * Haftalık özetin alıcıları — tercih açık. ADRES ONAYI ARANMAZ (17 Ekim,
+ * sahibinin kararı): pazar özeti bütün üyelere varsayılan açık; okuyucu
+ * postadaki tek tıkla çıkışla ya da Ayarlar'dan kapatır. Alarm postası
+ * onaylı adres istemeye devam ediyor (`deliverableRecipient`).
+ */
 export async function weeklyRecipients(): Promise<Recipient[] | null> {
   try {
     const rows = await db
       .select(recipientColumns)
       .from(emailPrefs)
       .innerJoin(users, eq(users.id, emailPrefs.userId))
-      .where(and(eq(emailPrefs.weekly, true), isNotNull(emailPrefs.confirmedEmail), eq(emailPrefs.confirmedEmail, users.email)));
+      .where(and(eq(emailPrefs.weekly, true), isNotNull(users.email)));
     return rows.map(toRecipient);
+  } catch {
+    return null;
+  }
+}
+
+/** Varsayılan açılışın defter işareti — bir kez yazılır, budanmaz, bütçeye sayılmaz. */
+export const ENROLL_KIND = "enroll";
+const enrollKey = (userId: string) => `weekly-default:${userId}`;
+
+async function markEnrolled(userId: string, now: Date): Promise<void> {
+  await db
+    .insert(emailLog)
+    .values({ userId, kind: ENROLL_KIND, dedupeKey: enrollKey(userId), sentAt: now })
+    .onConflictDoNothing({ target: emailLog.dedupeKey });
+}
+
+/**
+ * PAZAR ÖZETİ VARSAYILAN AÇIK (17 Ekim, sahibinin kararı: "şu an aktif
+ * olarak her kullanıcıya ekleyelim, isterse ayarlardan kapatsın").
+ *
+ * Her hesap HAYATINDA BİR KEZ kaydedilir: tercih satırı yoksa `weekly: true`
+ * ve çıkış anahtarıyla açılır, varsa (yalnız alarmı açmış hesaplarda
+ * `weekly` varsayılanı false'tu) true yapılır; defterine `enroll` işareti
+ * düşer. İşaret sayesinde özeti kapatan okuyucu bir sonraki pazar yeniden
+ * açılmaz. Yeni üyeler ilk pazar koşusunda kaydedilir. Migration yok:
+ * işaret var olan `email_log` tablosunda (budama ve bütçe onu dışlıyor).
+ */
+export async function enrollWeeklyDefault(now: Date = new Date()): Promise<number | null> {
+  try {
+    const pending = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(sql`not exists (select 1 from ${emailLog} where ${emailLog.dedupeKey} = 'weekly-default:' || ${users.id}::text)`)
+      .limit(5000);
+    for (const { id } of pending) {
+      await db
+        .insert(emailPrefs)
+        .values({ userId: id, weekly: true, unsubToken: newEmailToken(), updatedAt: now })
+        .onConflictDoUpdate({ target: emailPrefs.userId, set: { weekly: true, updatedAt: now } });
+      await markEnrolled(id, now);
+    }
+    return pending.length;
   } catch {
     return null;
   }
@@ -336,7 +393,10 @@ export async function claimSend(
 ): Promise<ClaimResult> {
   try {
     const since = startOfUtcDay(now);
-    const [today] = await db.select({ n: count() }).from(emailLog).where(gte(emailLog.sentAt, since));
+    const [today] = await db
+      .select({ n: count() })
+      .from(emailLog)
+      .where(and(gte(emailLog.sentAt, since), ne(emailLog.kind, ENROLL_KIND)));
     if ((today?.n ?? 0) >= dailyBudget()) return "budget";
     if (kind === "confirm") {
       const [mine] = await db
@@ -448,7 +508,11 @@ export async function exportEmailPrefs(
 export async function pruneEmailLog(now: Date = new Date()): Promise<string> {
   try {
     const cutoff = new Date(now.getTime() - 90 * 24 * 3600 * 1000);
-    const rows = await db.delete(emailLog).where(lt(emailLog.sentAt, cutoff)).returning({ id: emailLog.id });
+    /* Kayıt işareti budanmaz: silinirse özeti kapatan okuyucu yeniden açılırdı. */
+    const rows = await db
+      .delete(emailLog)
+      .where(and(lt(emailLog.sentAt, cutoff), ne(emailLog.kind, ENROLL_KIND)))
+      .returning({ id: emailLog.id });
     return String(rows.length);
   } catch {
     return "atlandı: email_log tablosu yok";

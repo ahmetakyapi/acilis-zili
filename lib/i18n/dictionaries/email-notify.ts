@@ -8,7 +8,7 @@
 export const emailNotifyTr = {
   settings: {
     title: "E-posta Bildirimleri",
-    hint: "İkisi de kapalı başlar. Açtığında adresine bir onay bağlantısı gider; onaylamadan hiçbir posta gönderilmez.",
+    hint: "Pazar özeti bütün üyelere açık başlar; istemezsen buradan ya da postadaki bağlantıdan tek dokunuşla kapatırsın. Alarm postası kapalı başlar; açtığında adresine bir onay bağlantısı gider.",
     alerts: "Alarm Tetiklenince E-posta",
     alertsHint: "Fiyat ya da yüzde alarmın tetiklendiğinde aynı anda e-postayla da haber verir.",
     weekly: "Pazar Haftalık Özet",
@@ -158,7 +158,7 @@ export const emailNotifyTr = {
 export const emailNotifyEn: typeof emailNotifyTr = {
   settings: {
     title: "Email Notifications",
-    hint: "Both start off. When you turn one on we send a confirmation link to your address; nothing is sent until you confirm.",
+    hint: "The Sunday digest starts on for every member; turn it off here or with one tap from the link in the email. Alert emails start off; when you turn them on we send a confirmation link to your address.",
     alerts: "Email When an Alert Fires",
     alertsHint: "When a price or percent alert fires, you also get an email at the same moment.",
     weekly: "Sunday Weekly Digest",

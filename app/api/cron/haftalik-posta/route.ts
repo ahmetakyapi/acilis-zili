@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkBearer } from "@/lib/api-auth";
 import { emailConfigured } from "@/lib/email";
-import { sendNotificationEmail, weeklyRecipients } from "@/lib/email-notify";
+import { enrollWeeklyDefault, sendNotificationEmail, weeklyRecipients } from "@/lib/email-notify";
 import { getDictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import { refreshEarningsResults } from "@/lib/earnings-refresh";
@@ -45,6 +45,9 @@ export async function GET(request: Request) {
   const force = new URL(request.url).searchParams.get("zorla") === "1";
   if (weekday !== 0 && !force) return NextResponse.json({ skipped: "not-sunday" });
 
+  /* Varsayılan açık: henüz kaydedilmemiş üyeler (yeni kayıtlar dahil) önce
+     özete eklenir — gerekçe lib/email-notify.ts → enrollWeeklyDefault. */
+  const enrolled = await enrollWeeklyDefault(now);
   const recipients = await weeklyRecipients();
   if (recipients === null) {
     console.error("[haftalık posta] alıcılar okunamadı");
@@ -101,5 +104,6 @@ export async function GET(request: Request) {
     ...counts,
     budget: budgetHit ? "exhausted" : "ok",
     earningsRefreshed: refreshed.ok ? refreshed.rows : "failed",
+    enrolled: enrolled ?? "failed",
   });
 }
