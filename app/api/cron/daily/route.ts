@@ -16,7 +16,6 @@ import {
 import {
   getCompanyNews,
   getEarningsCalendar,
-  getMarketNews,
 } from "@/lib/providers/finnhub";
 import { DAILY_MARKET_SERIES, MACRO_SERIES, getSeries } from "@/lib/providers/fred";
 import { addEtDays, todayEt } from "@/lib/market-hours";
@@ -33,6 +32,8 @@ import { ALL_MEMBERS } from "@/db/seed/indices";
 import { SPOTLIGHT_SYMBOLS } from "@/lib/spotlight";
 import { TECHNICAL_SYMBOLS } from "@/lib/technical";
 import { reconcileOverrides } from "@/lib/earnings-overrides";
+import { upsertEarnings } from "@/lib/earnings-refresh";
+import { syncMarketNews } from "@/lib/news-sync";
 import { refreshSymbolMetrics } from "@/lib/symbol-metrics";
 import { purgeOldErrors } from "@/lib/error-log";
 import { syncInvestors } from "@/lib/investor-sync";
@@ -304,34 +305,8 @@ export async function GET(request: Request) {
          satır" diye ayırıyor; her paket kendi `new Date()`ini yazsaydı
          paketler arasında milisaniyelik fark olur ve ölçüt bulanıklaşırdı. */
       const runAt = new Date();
-      const rows = [...unique.values()].map((entry) => ({
-        symbol: entry.symbol,
-        reportDate: entry.reportDate,
-        hour: entry.hour,
-        epsEstimate: entry.epsEstimate,
-        epsActual: entry.epsActual,
-        revenueEstimate: entry.revenueEstimate,
-        revenueActual: entry.revenueActual,
-        quarter: entry.quarter,
-        year: entry.year,
-      }));
-
-      for (let i = 0; i < rows.length; i += 200) {
-        await db
-          .insert(earningsCalendar)
-          .values(rows.slice(i, i + 200))
-          .onConflictDoUpdate({
-            target: [earningsCalendar.symbol, earningsCalendar.reportDate],
-            set: {
-              hour: sql`excluded.hour`,
-              epsEstimate: sql`excluded.eps_estimate`,
-              epsActual: sql`excluded.eps_actual`,
-              revenueEstimate: sql`excluded.revenue_estimate`,
-              revenueActual: sql`excluded.revenue_actual`,
-              updatedAt: runAt,
-            },
-          });
-      }
+      const rows = [...unique.values()];
+      await upsertEarnings(rows, runAt);
 
       /* ---- Revize edilmiş tarihin ölü satırını sil ----
          Tekil anahtar `(symbol, report_date)`: sağlayıcı bir şirketin
@@ -449,36 +424,9 @@ export async function GET(request: Request) {
     report.earningsOverrides = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
 
-  /* ---- 2. Piyasa haberleri ---- */
+  /* ---- 2. Piyasa haberleri ---- (lib/news-sync.ts; günde üç kez ayrıca /api/cron/haberler) */
   try {
-    const result = await getMarketNews("general");
-    if (result.ok) {
-      const seen = new Set<string>();
-      const rows = result.data
-        .slice(0, 60)
-        .filter((item) => {
-          if (seen.has(item.providerId)) return false;
-          seen.add(item.providerId);
-          return true;
-        })
-        .map((item) => ({
-          providerId: item.providerId,
-          headline: item.headline,
-          summary: item.summary,
-          url: item.url,
-          imageUrl: item.imageUrl,
-          source: item.source,
-          category: item.category,
-          symbols: item.symbols,
-          publishedAt: item.publishedAt,
-        }));
-      if (rows.length > 0) {
-        await db.insert(newsTable).values(rows).onConflictDoNothing();
-      }
-      report.news = rows.length;
-    } else {
-      report.news = `atlandı: ${result.message}`;
-    }
+    report.news = await syncMarketNews();
   } catch (error) {
     report.news = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
@@ -543,7 +491,7 @@ export async function GET(request: Request) {
     if (isTranslateConfigured()) {
       report.translate = await translatePendingNews(40);
     } else {
-      report.translate = "atlandı: DEEPL_API_KEY veya ANTHROPIC_API_KEY yok";
+      report.translate = "atlandı: DEEPL_API_KEY, ANTHROPIC_API_KEY ya da CLAUDE_ANALYSIS_API_KEY yok";
     }
   } catch (error) {
     report.translate = `hata: ${error instanceof Error ? error.message : "?"}`;

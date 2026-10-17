@@ -1,7 +1,7 @@
 /**
  * E-POSTA — gönderici (9 Ekim). Kullanıcıları şifre sıfırlama
  * (lib/password-reset.ts) ve 16 Ekim'den beri okuyucunun açtığı bildirim
- * postaları (lib/email-notify.ts: alarm, pazartesi özeti).
+ * postaları (lib/email-notify.ts: alarm, pazar özeti).
  *
  * SERVİS RESEND, SDK YOK. Ücretsiz katmanı ayda 3.000, günde 100 e-posta;
  * bu sitenin hacminde (yalnızca okuyucunun kendi istediği sıfırlama

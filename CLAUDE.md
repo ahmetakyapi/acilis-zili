@@ -283,7 +283,7 @@ yazın 16:30, kışın 17:30 TR). ET↔UTC aritmetiği yalnız `lib/market-hours
 - **E-posta: şifre sıfırlama + okuyucunun açtığı bildirim postaları**
   (`lib/email.ts`, Resend, SDK'sız). Sıfırlamada anahtar yoksa "Şifremi
   Unuttum" basılmaz; her adrese aynı yanıt, gönderim `after` ile; satırda
-  bağlantının SHA-256 özeti. Bildirim postası (alarm, pazartesi özeti — 16
+  bağlantının SHA-256 özeti. Bildirim postası (alarm, pazar özeti — 16
   Ekim) TEK KAPIDAN: `sendNotificationEmail` (`lib/email-notify.ts`) —
   tercih açık mı, adres ÇİFT ONAYLI mı (`confirmedEmail` = bugünkü adres),
   günlük bütçe (`EMAIL_DAILY_BUDGET`, varsayılan 80; Resend ücretsiz katmanı

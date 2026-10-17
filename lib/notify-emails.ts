@@ -183,7 +183,21 @@ export function alertEmailMessage(recipient: Recipient, alert: AlertEmailInput, 
 }
 
 /* --------------------------------------------------------------------------
-   Pazartesi özeti
+   Pazar özeti (17 Ekim'de pazartesiden pazara, görsel yeniden çizim)
+
+   Düzen sitenin ekran sırası: bant → haftanın rakamları (ölçü ızgarası) →
+   geride kalan hafta (endeks çizgileri, bilanço karnesi, gelişmeler) →
+   yeni hafta (takip listen, haftanın ritmi, gün gün takvim, veriler).
+
+   GRAFİKLER TABLO. Gmail SVG'yi ve <canvas>'ı siliyor; çubuklar ölçülü
+   `div`ler, yükseklik ve genişlik piksel ya da yüzde olarak satır içinde.
+   Her çubuk GERÇEK bir sayıdan geliyor — süs çubuğu yok (CLAUDE.md
+   "Karşılaştırılan büyüklük bir de çizgi olarak okunur"; renk yalnız
+   işaretten). Gün çubuğu bir SAYI (o gün açıklayan şirket), yön değil:
+   nötr mürekkep, yeşil/kırmızı değil.
+
+   HAREKET yalnız Apple Mail'de (lib/email-layout.ts → az-grow-*, az-rise);
+   başka her istemcide son kare satır içi stilin kendisi.
    -------------------------------------------------------------------------- */
 
 const intlLocale = (locale: Locale) => (locale === "en" ? "en-US" : "tr-TR");
@@ -198,32 +212,140 @@ function dayLabel(date: string, locale: Locale): string {
   return new Intl.DateTimeFormat(intlLocale(locale), { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(utcDay(date));
 }
 
-function chip(text: string, tone: "up" | "down" | "flat"): string {
-  const map = {
-    up: { bg: C.upWash, ink: C.up, cls: "az-up-wash" },
-    down: { bg: C.downWash, ink: C.down, cls: "az-down-wash" },
-    flat: { bg: C.sunken, ink: C.body, cls: "az-flat-wash" },
-  }[tone];
-  return `<span class="${map.cls}" style="display:inline-block;padding:3px 9px;border-radius:999px;background:${map.bg};color:${map.ink};font-family:${FONT};font-size:11px;line-height:16px;font-weight:700;white-space:nowrap">${escapeHtml(text)}</span>`;
+function weekdayShort(date: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(intlLocale(locale), { weekday: "short", timeZone: "UTC" }).format(utcDay(date));
+}
+
+function dayNumber(date: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(intlLocale(locale), { day: "numeric", month: "short", timeZone: "UTC" }).format(utcDay(date));
+}
+
+type Tone = "up" | "down" | "flat";
+const toneOf = (value: number): Tone => (value > 0 ? "up" : value < 0 ? "down" : "flat");
+const TONE = {
+  up: { ink: C.up, wash: C.upWash, cls: "az-up", washCls: "az-up-wash", fill: "az-up-fill" },
+  down: { ink: C.down, wash: C.downWash, cls: "az-down", washCls: "az-down-wash", fill: "az-down-fill" },
+  flat: { ink: C.body, wash: C.sunken, cls: "az-body", washCls: "az-flat-wash", fill: "az-flat-fill" },
+} as const;
+/* Nötr çubuk (sayı, yön değil) ve kulvar — sitenin --line-soft / --line-strong'u. */
+const LANE = "#e9eef5";
+const ZERO = "#b7c3d3";
+const FLAT_FILL = "#9aa8bb";
+
+const delay = (ms: number) => `animation-delay:${ms}ms;`;
+
+function chip(text: string, tone: Tone): string {
+  const t = TONE[tone];
+  return `<span class="${t.washCls}" style="display:inline-block;padding:3px 9px;border-radius:999px;background:${t.wash};color:${t.ink};font-family:${FONT};font-size:11px;line-height:16px;font-weight:700;white-space:nowrap">${escapeHtml(text)}</span>`;
+}
+
+/** Bölüm bandı — "01 · Geride Kalan Hafta". Koyu bant iki temada aynı. */
+function chapter(index: string, title: string, range: string): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:40px 0 0"><tr><td bgcolor="${C.band}" style="background:${C.band};background-image:linear-gradient(135deg,#123c7a 0%,${C.band} 60%,#081d40 100%);border-radius:18px;padding:18px 20px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+<td valign="middle" width="46" style="padding-right:14px"><span style="display:inline-block;width:40px;height:40px;border-radius:12px;background:#163e78;border:1px solid #2a5596;font-family:${MONO};font-size:14px;line-height:40px;font-weight:800;color:#e3b864;text-align:center">${escapeHtml(index)}</span></td>
+<td valign="middle"><p style="margin:0;font-family:${FONT};font-size:19px;line-height:24px;font-weight:800;letter-spacing:-.02em;color:#ffffff">${escapeHtml(title)}</p>
+<p style="margin:3px 0 0;font-family:${FONT};font-size:12px;line-height:16px;color:#c9d6ea">${escapeHtml(range)}</p></td>
+</tr></table>
+</td></tr></table>`;
+}
+
+/* ---- Haftanın rakamları (ölçü ızgarası) ---- */
+
+function statTile(label: string, value: string, sub: string, valueClass: string, valueColor: string, order: number, last: boolean, width: string): string {
+  /* Dış kenarlar içerikle hizalı (negatif margin Outlook'ta yok); arada 8 piksel. */
+  const pad = `0 ${last ? 0 : 4}px 0 ${order === 0 ? 0 : 4}px`;
+  /* Eşit boy: dış tablo `height:1px`, hücre ve iç tablo %100 — üç kutudan
+     birinin alt satırı kırılınca ötekiler kısa kalıyordu (640'ta ölçüldü). */
+  return `<td valign="top" width="${width}" height="100%" style="padding:${pad};height:100%">
+<table role="presentation" width="100%" height="100%" cellpadding="0" cellspacing="0" border="0" style="height:100%"><tr><td valign="top" class="az-sunken az-sunken-flat az-rise az-stat-box" style="${delay(120 * order)}background:${C.sunken};border:1px solid ${C.line};border-radius:16px;padding:16px 16px 15px">
+<p class="az-muted" style="margin:0;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted}">${escapeHtml(label)}</p>
+<p class="${valueClass} az-stat-val" style="margin:6px 0 0;font-family:${FONT};font-size:26px;line-height:30px;font-weight:800;letter-spacing:-.03em;color:${valueColor};white-space:nowrap">${escapeHtml(value)}</p>
+<p class="az-muted" style="margin:4px 0 0;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted}">${escapeHtml(sub)}</p>
+</td></tr></table></td>`;
+}
+
+function statsBlock(data: DigestData, W: Copy["weeklyMail"]): string {
+  const tiles: ((order: number, last: boolean, width: string) => string)[] = [];
+  const lead = data.indices[0];
+  if (lead) {
+    const tone = TONE[toneOf(lead.changePct)];
+    tiles.push((o, l, w) => statTile(lead.label, formatPercent(lead.changePct, data.locale, 2), W.statWeekly, tone.cls, tone.ink, o, l, w));
+  }
+  const scored = data.scorecard.beat + data.scorecard.inline + data.scorecard.miss;
+  if (!data.pastFailed && scored > 0) {
+    tiles.push(
+      (o, l, w) => statTile(W.statBeat, `${data.scorecard.beat}/${scored}`, W.statBeatOf.replace("{n}", String(scored)), "az-ink", C.ink, o, l, w),
+    );
+  }
+  if (!data.aheadFailed) {
+    const events = data.eventsFailed || data.events.length === 0 ? "" : W.statEvents.replace("{n}", String(data.events.length));
+    tiles.push((o, l, w) => statTile(W.statAhead, String(data.aheadTotal), [W.statAheadUnit, events].filter(Boolean).join(" · "), "az-ink", C.ink, o, l, w));
+  }
+  if (tiles.length === 0) return "";
+  const cells = tiles.map((tile, i) => tile(i, i === tiles.length - 1, `${Math.floor(100 / tiles.length)}%`));
+  return `${emailSection(W.statsTitle, undefined, true)}
+<table role="presentation" width="100%" height="1" cellpadding="0" cellspacing="0" border="0" style="height:1px"><tr>${cells.join("")}</tr></table>`;
+}
+
+/* ---- Endeksler: haftalık değişim çizgisi + gün gün adımlar ---- */
+
+/** Sıfırdan iki yana açılan çizgi — `share` 0..1, büyüklüğün en büyüğe oranı. */
+function divergingBar(value: number, share: number, order: number): string {
+  const tone = TONE[toneOf(value)];
+  const pct = Math.max(2, Math.round(share * 100));
+  const bar = `<div class="${tone.fill} az-grow-x" style="${delay(200 + 90 * order)}width:${pct}%;height:6px;border-radius:3px;background:${tone.ink};font-size:0;line-height:0">&nbsp;</div>`;
+  const left = value < 0 ? `<div class="${tone.fill} az-grow-x" style="${delay(200 + 90 * order)}transform-origin:right center;margin-left:auto;width:${pct}%;height:6px;border-radius:3px;background:${tone.ink};font-size:0;line-height:0">&nbsp;</div>` : "&nbsp;";
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 0"><tr>
+<td width="50%" align="right" class="az-lane" bgcolor="${LANE}" style="background:${LANE};border-radius:3px 0 0 3px;font-size:0;line-height:0;height:6px">${left}</td>
+<td width="2" class="az-zero" bgcolor="${ZERO}" style="background:${ZERO};font-size:0;line-height:0;width:2px">&nbsp;</td>
+<td width="50%" class="az-lane" bgcolor="${LANE}" style="background:${LANE};border-radius:0 3px 3px 0;font-size:0;line-height:0;height:6px">${value > 0 ? bar : "&nbsp;"}</td>
+</tr></table>`;
+}
+
+/** Beş seansın kapanıştan kapanışa adımı — yukarı yeşil, aşağı kırmızı, sıfır çizgisi ortada. */
+function stepBars(steps: DigestData["indices"][number]["steps"], maxAbs: number, order: number): string {
+  /* 16 piksellik yarım: 390'da ölçüldü, 13'te günün %0,1'lik adımı ile
+     %1'lik adımı aynı kısa çizgi gibi okunuyordu. */
+  const HALF = 16;
+  const cells = steps
+    .map((step, i) => {
+      const tone = TONE[toneOf(step.changePct)];
+      const h = maxAbs > 0 ? Math.max(2, Math.round((Math.abs(step.changePct) / maxAbs) * HALF)) : 2;
+      const bar = `<div class="${tone.fill} az-grow-y" style="${delay(260 + 90 * order + 50 * i)}${step.changePct < 0 ? "transform-origin:center top;" : ""}width:8px;height:${h}px;border-radius:2px;background:${tone.ink};font-size:0;line-height:0">&nbsp;</div>`;
+      return `<td width="11" style="padding:0 2px">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0">
+<tr><td valign="bottom" height="${HALF}" style="height:${HALF}px;font-size:0;line-height:0">${step.changePct >= 0 ? bar : "&nbsp;"}</td></tr>
+<tr><td class="az-zero" bgcolor="${ZERO}" height="1" style="height:1px;background:${ZERO};font-size:0;line-height:0">&nbsp;</td></tr>
+<tr><td valign="top" height="${HALF}" style="height:${HALF}px;font-size:0;line-height:0">${step.changePct < 0 ? bar : "&nbsp;"}</td></tr>
+</table></td>`;
+    })
+    .join("");
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right"><tr>${cells}</tr></table>`;
 }
 
 function indicesBlock(data: DigestData, W: Copy["weeklyMail"]): string {
   if (data.indices.length === 0) return "";
-  const cells = data.indices.map((index) => {
-    const tone = index.changePct > 0 ? "up" : index.changePct < 0 ? "down" : "flat";
-    const color = tone === "up" ? C.up : tone === "down" ? C.down : C.body;
-    const cls = tone === "up" ? "az-up" : tone === "down" ? "az-down" : "az-body";
-    return `<td width="50%" valign="top" style="padding:5px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="az-sunken" style="background:${C.sunken};border:1px solid ${C.line};border-radius:14px;padding:14px 16px">
-<p class="az-muted" style="margin:0;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted}">${escapeHtml(index.label)}</p>
-<p class="${cls}" style="margin:3px 0 0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:800;letter-spacing:-.02em;color:${color}">${escapeHtml(formatPercent(index.changePct, data.locale, 2))}</p>
-</td></tr></table></td>`;
-  });
-  const rows: string[] = [];
-  for (let i = 0; i < cells.length; i += 2) rows.push(`<tr>${cells[i]}${cells[i + 1] ?? '<td width="50%"></td>'}</tr>`);
+  const maxWeek = Math.max(...data.indices.map((i) => Math.abs(i.changePct)), 0.0001);
+  const maxStep = Math.max(...data.indices.flatMap((i) => i.steps.map((s) => Math.abs(s.changePct))), 0);
+  const rows = data.indices
+    .map((index, i) => {
+      const tone = TONE[toneOf(index.changePct)];
+      return `<tr><td class="az-rule" style="padding:14px 0 15px;${i ? `border-top:1px solid ${C.line};` : ""}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+<td valign="middle" style="font-family:${FONT};font-size:15px;line-height:20px;font-weight:800;color:${C.ink}"><span class="az-ink">${escapeHtml(index.label)}</span></td>
+<td valign="middle" width="84" class="az-hide-sm" style="padding:0 12px">${index.steps.length > 1 ? stepBars(index.steps, maxStep, i) : ""}</td>
+<td valign="middle" align="right" width="86" class="${tone.cls}" style="font-family:${FONT};font-size:18px;line-height:22px;font-weight:800;letter-spacing:-.02em;color:${tone.ink};white-space:nowrap">${escapeHtml(formatPercent(index.changePct, data.locale, 2))}</td>
+</tr></table>
+${divergingBar(index.changePct, Math.abs(index.changePct) / maxWeek, i)}
+</td></tr>`;
+    })
+    .join("\n");
   return `${emailSection(W.marketTitle, W.marketNote)}
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows.join("")}</table>`;
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="az-meta" style="border-top:1px solid ${C.line};border-bottom:1px solid ${C.line}">${rows}</table>`;
 }
+
+/* ---- Bilanço karnesi ---- */
 
 function surpriseChip(report: DigestReport, W: Copy["weeklyMail"], locale: Locale): string {
   const parts: string[] = [];
@@ -235,7 +357,37 @@ function surpriseChip(report: DigestReport, W: Copy["weeklyMail"], locale: Local
   };
   one(W.epsLabel, report.eps);
   one(W.revenueLabel, report.revenue);
-  return parts.join("&nbsp;");
+  return parts.join(`<span style="display:inline-block;width:4px"></span>`);
+}
+
+function scorecardBar(data: DigestData, W: Copy["weeklyMail"]): string {
+  const { beat, inline, miss } = data.scorecard;
+  const total = beat + inline + miss;
+  if (total === 0) return "";
+  const parts = (
+    [
+      { n: beat, tone: "up", label: W.scoreBeat },
+      { n: inline, tone: "flat", label: W.scoreInline },
+      { n: miss, tone: "down", label: W.scoreMiss },
+    ] as const
+  ).filter((p) => p.n > 0);
+  const cells = parts
+    .map((p, i) => {
+      const color = p.tone === "flat" ? FLAT_FILL : TONE[p.tone].ink;
+      const radius = `${i === 0 ? "5px" : "0"} ${i === parts.length - 1 ? "5px 5px" : "0 0"} ${i === 0 ? "5px" : "0"}`;
+      return `<td width="${((p.n / total) * 100).toFixed(1)}%" class="${TONE[p.tone].fill}" bgcolor="${color}" style="background:${color};height:10px;border-radius:${radius};font-size:0;line-height:0;${i ? `border-left:2px solid ${C.card};` : ""}">&nbsp;</td>`;
+    })
+    .join("");
+  const legend = parts
+    .map(
+      (p) =>
+        `<span style="display:inline-block;margin:0 14px 0 0;white-space:nowrap"><span class="${TONE[p.tone].fill}" style="display:inline-block;width:8px;height:8px;border-radius:4px;background:${p.tone === "flat" ? FLAT_FILL : TONE[p.tone].ink};vertical-align:middle;margin-right:6px"></span><strong class="az-ink" style="color:${C.ink}">${p.n}</strong> <span class="az-muted" style="color:${C.muted}">${escapeHtml(p.label)}</span></span>`,
+    )
+    .join("");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:2px 0 0"><tr><td class="az-grow-x" style="${delay(150)}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${cells}</tr></table>
+</td></tr></table>
+<p style="margin:10px 0 16px;font-family:${FONT};font-size:13px;line-height:20px">${legend}</p>`;
 }
 
 function reportedBlock(data: DigestData, W: Copy["weeklyMail"]): string {
@@ -253,20 +405,22 @@ function reportedBlock(data: DigestData, W: Copy["weeklyMail"]): string {
 <td valign="top" class="az-stack az-stack-gap" style="padding-right:10px">
 <a href="${escapeHtml(pathFor(`/hisse/${report.symbol}`, data.locale))}" target="_blank" style="text-decoration:none"><span class="az-ink" style="font-family:${MONO};font-size:15px;line-height:20px;font-weight:800;color:${C.ink}">${escapeHtml(report.symbol)}</span></a>
 <span class="az-muted" style="font-family:${FONT};font-size:12px;line-height:18px;color:${C.muted}">&nbsp;&nbsp;${name}</span>
-${link ? `<br>${link}` : ""}
+<br><span class="az-muted" style="font-family:${FONT};font-size:12px;line-height:18px;color:${C.muted}">${escapeHtml(dayLabel(report.reportDate, data.locale))}</span>${link ? `&nbsp;&nbsp;·&nbsp;&nbsp;${link}` : ""}
 </td>
 <td valign="top" align="right" class="az-stack" style="text-align:right">${surpriseChip(report, W, data.locale)}</td>
 </tr></table></td></tr>`;
     })
     .join("\n");
-  return `${head}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="az-meta" style="border-top:1px solid ${C.line};border-bottom:1px solid ${C.line}">${rows}</table>`;
+  return `${head}${scorecardBar(data, W)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="az-meta" style="border-top:1px solid ${C.line};border-bottom:1px solid ${C.line}">${rows}</table>`;
 }
+
+/* ---- Gelişmeler ---- */
 
 function linkList(links: DigestData["news"], locale: Locale): string {
   return links
     .map(
-      (link, i) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 12px"><tr>
-<td valign="top" width="28" style="padding-top:1px"><span style="display:inline-block;width:22px;height:22px;border-radius:11px;background:${C.band};color:#ffffff;font-family:${FONT};font-size:11px;line-height:22px;font-weight:800;text-align:center">${i + 1}</span></td>
+      (link, i) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px"><tr>
+<td valign="top" width="34" style="padding-top:1px"><span style="display:inline-block;width:24px;height:24px;border-radius:8px;background:${C.band};color:#e3b864;font-family:${MONO};font-size:11px;line-height:24px;font-weight:800;text-align:center">${String(i + 1).padStart(2, "0")}</span></td>
 <td valign="top"><a href="${escapeHtml(pathFor(link.path, locale))}" target="_blank" class="az-ink" style="font-family:${FONT};font-size:15px;line-height:21px;font-weight:700;color:${C.ink};text-decoration:none">${escapeHtml(link.title)}</a>${
         link.meta ? `<p class="az-muted" style="margin:3px 0 0;font-family:${FONT};font-size:12px;line-height:17px;color:${C.muted}">${escapeHtml(link.meta.length > 140 ? `${link.meta.slice(0, 139)}…` : link.meta)}</p>` : ""
       }</td></tr></table>`,
@@ -277,7 +431,7 @@ function linkList(links: DigestData["news"], locale: Locale): string {
 function developmentsBlock(data: DigestData, W: Copy["weeklyMail"]): string {
   const links = [...data.stories, ...data.news];
   const brief = data.brief
-    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 16px"><tr><td class="az-note" style="background:${C.sunken};border:1px solid ${C.line};border-left:3px solid ${C.brass};border-radius:14px;padding:16px 18px">
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 18px"><tr><td class="az-note" style="background:${C.sunken};border:1px solid ${C.line};border-left:3px solid ${C.brass};border-radius:14px;padding:16px 18px">
 <p class="az-muted" style="margin:0 0 4px;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted}">${escapeHtml(W.briefTitle)}</p>
 <p class="az-ink" style="margin:0 0 8px;font-family:${FONT};font-size:16px;line-height:22px;font-weight:800;color:${C.ink}">${escapeHtml(data.brief.headline)}</p>
 <a href="${escapeHtml(pathFor(data.brief.path, data.locale))}" target="_blank" class="az-link" style="font-family:${FONT};font-size:13px;line-height:18px;font-weight:700;color:${C.primary};text-decoration:none">${escapeHtml(W.briefLink)}&nbsp;&rarr;</a>
@@ -287,8 +441,47 @@ function developmentsBlock(data: DigestData, W: Copy["weeklyMail"]): string {
   return `${emailSection(W.newsTitle)}${brief}${linkList(links, data.locale)}`;
 }
 
+/* ---- Yeni hafta: ritim, gün gün takvim, veriler ---- */
+
+/** Beş günün sütunu — çubuk o gün açıklayan şirket SAYISI (nötr mürekkep). */
+function rhythmBlock(data: DigestData, W: Copy["weeklyMail"]): string {
+  if (data.aheadFailed || data.ahead.length === 0) return "";
+  const max = Math.max(...data.ahead.map((d) => d.total), 1);
+  const BAR = 72;
+  const anyEvents = data.ahead.some((d) => d.events > 0);
+  const cells = data.ahead
+    .map((day, i) => {
+      const h = day.closed || day.total === 0 ? 0 : Math.max(4, Math.round((day.total / max) * BAR));
+      const bar = day.closed
+        ? `<p class="az-muted" style="margin:0;font-family:${FONT};font-size:11px;line-height:14px;color:${C.muted}">${escapeHtml(W.closed)}</p>`
+        : h > 0
+          ? `<div class="az-grow-y az-ink-fill" style="${delay(200 + 110 * i)}width:26px;height:${h}px;margin:0 auto;border-radius:7px 7px 3px 3px;background:${C.band};background-image:linear-gradient(180deg,#2c62ad 0%,${C.band} 100%);font-size:0;line-height:0">&nbsp;</div>`
+          : "&nbsp;";
+      const events = day.events > 0
+        ? `<span style="display:inline-block;margin-top:5px;padding:2px 7px;border-radius:999px;background:#f6ecd9;color:#7a5512;font-family:${FONT};font-size:10px;line-height:14px;font-weight:700;white-space:nowrap" class="az-flat-wash">${escapeHtml(W.rhythmEvents.replace("{n}", String(day.events)))}</span>`
+        : anyEvents
+          ? `<span style="display:inline-block;margin-top:5px;font-size:10px;line-height:18px">&nbsp;</span>`
+          : "";
+      return `<td valign="bottom" align="center" width="20%" style="padding:0 3px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td valign="bottom" align="center" height="${BAR + 22}" style="height:${BAR + 22}px">
+<p class="az-ink" style="margin:0 0 6px;font-family:${FONT};font-size:15px;line-height:16px;font-weight:800;color:${C.ink}">${day.closed ? "&nbsp;" : day.total}</p>
+${bar}</td></tr>
+<tr><td align="center" class="az-rule" style="padding:8px 0 0;border-top:2px solid ${ZERO}">
+<p class="az-ink" style="margin:0;font-family:${FONT};font-size:13px;line-height:16px;font-weight:800;color:${C.ink}">${escapeHtml(weekdayShort(day.date, data.locale))}</p>
+<p class="az-muted" style="margin:1px 0 0;font-family:${FONT};font-size:11px;line-height:14px;color:${C.muted};white-space:nowrap">${escapeHtml(dayNumber(day.date, data.locale))}</p>
+${events}
+</td></tr></table></td>`;
+    })
+    .join("");
+  return `${emailSection(W.rhythmTitle, W.rhythmNote)}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="az-sunken az-sunken-flat" style="background:${C.sunken};border:1px solid ${C.line};border-radius:18px"><tr><td style="padding:18px 10px 16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${cells}</tr></table>
+</td></tr></table>`;
+}
+
 function aheadBlock(data: DigestData, W: Copy["weeklyMail"]): string {
-  const head = emailSection(W.aheadEarnings);
+  const head = emailSection(W.aheadEarnings, data.aheadFailed ? undefined : W.aheadNote);
   if (data.aheadFailed) return `${head}${emailText.paragraph(W.aheadFailed)}`;
   const days = data.ahead.filter((day) => day.closed || day.items.length > 0);
   if (days.length === 0) return `${head}${emailText.paragraph(W.aheadEmpty)}`;
@@ -300,13 +493,19 @@ function aheadBlock(data: DigestData, W: Copy["weeklyMail"]): string {
           if (items.length === 0) return "";
           const clock = timing === "bmo" ? day.bmoClock : timing === "amc" ? day.amcClock : "";
           const label = `${timing === "bmo" ? W.bmo : timing === "amc" ? W.amc : W.other}${clock ? ` · ${clock}` : ""}`;
-          return `<p class="az-muted" style="margin:0 0 3px;font-family:${FONT};font-size:11px;line-height:15px;color:${C.muted}">${escapeHtml(label)}</p>
-<p style="margin:0 0 8px;font-family:${MONO};font-size:13px;line-height:19px;font-weight:700"><span class="az-ink" style="color:${C.ink}">${items.map((item) => escapeHtml(item.symbol)).join("&nbsp;&nbsp;·&nbsp;&nbsp;")}</span></p>`;
+          const pills = items
+            .map(
+              (item) =>
+                `<a href="${escapeHtml(pathFor(`/hisse/${item.symbol}`, data.locale))}" target="_blank" class="az-sunken az-sunken-flat" style="display:inline-block;margin:0 4px 5px 0;padding:3px 8px;border:1px solid ${C.line};border-radius:8px;background:${C.sunken};font-family:${MONO};font-size:12px;line-height:17px;font-weight:700;color:${C.ink};text-decoration:none"><span class="az-ink">${escapeHtml(item.symbol)}</span></a>`,
+            )
+            .join("");
+          return `<p class="az-muted" style="margin:0 0 5px;font-family:${FONT};font-size:11px;line-height:15px;color:${C.muted}">${escapeHtml(label)}</p>
+<p style="margin:0 0 6px">${pills}</p>`;
         })
         .join("");
       return `<tr>
-<td valign="top" width="92" class="az-rule" style="padding:12px 10px 4px 0;${i ? `border-top:1px solid ${C.line};` : ""}font-family:${FONT};font-size:13px;line-height:18px;font-weight:800;color:${C.ink}"><span class="az-ink">${escapeHtml(dayLabel(day.date, data.locale))}</span></td>
-<td valign="top" class="az-rule" style="padding:12px 0 4px;${i ? `border-top:1px solid ${C.line};` : ""}">${
+<td valign="top" width="86" class="az-rule" style="padding:13px 10px 6px 0;${i ? `border-top:1px solid ${C.line};` : ""}"><p class="az-ink" style="margin:0;font-family:${FONT};font-size:14px;line-height:18px;font-weight:800;color:${C.ink}">${escapeHtml(weekdayShort(day.date, data.locale))}</p><p class="az-muted" style="margin:1px 0 0;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted}">${escapeHtml(dayNumber(day.date, data.locale))}</p></td>
+<td valign="top" class="az-rule" style="padding:13px 0 6px;${i ? `border-top:1px solid ${C.line};` : ""}">${
         day.closed ? `<p style="margin:0 0 8px">${chip(`${W.closed} · ${day.closed}`, "flat")}</p>` : groups
       }</td></tr>`;
     })
@@ -315,14 +514,23 @@ function aheadBlock(data: DigestData, W: Copy["weeklyMail"]): string {
 }
 
 function eventsBlock(data: DigestData, W: Copy["weeklyMail"]): string {
-  const head = emailSection(W.eventsTitle);
+  const head = emailSection(W.eventsTitle, data.eventsFailed || data.events.length === 0 ? undefined : W.eventsNote);
   if (data.eventsFailed) return `${head}${emailText.paragraph(W.eventsFailed)}`;
-  if (data.events.length === 0) return `${head}${emailText.paragraph(W.eventsEmpty)}`;
+  if (data.events.length === 0) {
+    const next = data.nextEvent
+      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:-12px 0 0"><tr><td class="az-note" style="background:${C.sunken};border:1px solid ${C.line};border-left:3px solid ${C.brass};border-radius:14px;padding:14px 18px">
+<p class="az-muted" style="margin:0 0 3px;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted}">${escapeHtml(W.eventsNext)}</p>
+<p class="az-ink" style="margin:0;font-family:${FONT};font-size:15px;line-height:21px;font-weight:800;color:${C.ink}">${escapeHtml(data.nextEvent.title)}</p>
+<p class="az-body" style="margin:2px 0 0;font-family:${FONT};font-size:13px;line-height:18px;color:${C.body}">${escapeHtml(`${dayLabel(data.nextEvent.date, data.locale)}${data.nextEvent.time ? ` · ${data.nextEvent.time}` : ""}`)}</p>
+</td></tr></table>`
+      : "";
+    return `${head}${emailText.paragraph(W.eventsEmpty)}${next}`;
+  }
   const rows = data.events
     .map(
       (event, i) => `<tr>
-<td valign="top" width="92" class="az-muted az-rule" style="padding:10px 10px 10px 0;${i ? `border-top:1px solid ${C.line};` : ""}font-family:${FONT};font-size:12px;line-height:18px;color:${C.muted}">${escapeHtml(dayLabel(event.date, data.locale))}<br><strong class="az-ink" style="color:${C.ink}">${escapeHtml(event.time ?? W.timeUnknown)}</strong></td>
-<td valign="top" class="az-ink az-rule" style="padding:10px 0;${i ? `border-top:1px solid ${C.line};` : ""}font-family:${FONT};font-size:14px;line-height:20px;font-weight:700;color:${C.ink}"><span style="display:inline-block;width:7px;height:7px;border-radius:4px;background:${C.down};vertical-align:middle;margin-right:8px"></span>${escapeHtml(event.title)}</td>
+<td valign="top" width="86" class="az-rule" style="padding:11px 10px 11px 0;${i ? `border-top:1px solid ${C.line};` : ""}font-family:${FONT};font-size:12px;line-height:17px"><span class="az-muted" style="color:${C.muted}">${escapeHtml(dayLabel(event.date, data.locale))}</span><br><strong class="az-ink" style="color:${C.ink};font-size:14px">${escapeHtml(event.time ?? W.timeUnknown)}</strong></td>
+<td valign="middle" class="az-ink az-rule" style="padding:11px 0;${i ? `border-top:1px solid ${C.line};` : ""}font-family:${FONT};font-size:14px;line-height:20px;font-weight:700;color:${C.ink}"><span style="display:inline-block;width:8px;height:8px;border-radius:4px;background:${C.brass};vertical-align:middle;margin-right:9px"></span>${escapeHtml(event.title)}</td>
 </tr>`,
     )
     .join("\n");
@@ -333,22 +541,28 @@ export type DigestPersonal = { symbol: string; date: string; timing: "bmo" | "am
 
 function personalBlock(personal: DigestPersonal, locale: Locale, W: Copy["weeklyMail"]): string {
   if (personal.length === 0) return "";
-  const items = personal
+  const rows = personal
     .slice(0, 8)
-    .map((p) => `<strong class="az-ink" style="font-family:${MONO};color:${C.ink}">${escapeHtml(p.symbol)}</strong> <span class="az-muted" style="color:${C.muted}">${escapeHtml(`${dayLabel(p.date, locale)} · ${p.timing === "bmo" ? W.bmo : p.timing === "amc" ? W.amc : W.other}`)}</span>`)
-    .join("<br>");
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:30px 0 0"><tr><td class="az-note" style="background:${C.sunken};border:1px solid ${C.line};border-left:3px solid ${C.primary};border-radius:14px;padding:16px 18px">
-<p class="az-ink" style="margin:0 0 8px;font-family:${FONT};font-size:14px;line-height:18px;font-weight:800;color:${C.ink}">${escapeHtml(W.personalTitle)}</p>
-<p class="az-body" style="margin:0;font-family:${FONT};font-size:13px;line-height:22px;color:${C.body}">${items}</p>
+    .map(
+      (p, i) => `<tr>
+<td valign="middle" class="az-rule" style="padding:8px 0;${i ? `border-top:1px solid ${C.line};` : ""}"><a href="${escapeHtml(pathFor(`/hisse/${p.symbol}`, locale))}" target="_blank" style="text-decoration:none"><strong class="az-ink" style="font-family:${MONO};font-size:14px;line-height:18px;color:${C.ink}">${escapeHtml(p.symbol)}</strong></a></td>
+<td valign="middle" align="right" class="az-muted az-rule" style="padding:8px 0;${i ? `border-top:1px solid ${C.line};` : ""}font-family:${FONT};font-size:12px;line-height:18px;color:${C.muted}">${escapeHtml(`${dayLabel(p.date, locale)} · ${p.timing === "bmo" ? W.bmo : p.timing === "amc" ? W.amc : W.other}`)}</td>
+</tr>`,
+    )
+    .join("");
+  const more = personal.length > 8 ? `<p class="az-muted" style="margin:8px 0 0;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted}">${escapeHtml(W.personalMore.replace("{n}", String(personal.length - 8)))}</p>` : "";
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 0"><tr><td class="az-note az-rise" style="${delay(100)}background:${C.sunken};border:1px solid ${C.line};border-left:3px solid ${C.primary};border-radius:14px;padding:16px 18px 12px">
+<p class="az-ink" style="margin:0 0 6px;font-family:${FONT};font-size:15px;line-height:20px;font-weight:800;color:${C.ink}">${escapeHtml(W.personalTitle)}</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>${more}
 </td></tr></table>`;
 }
 
-/** Bölüm ayırıcı — "Geçen Hafta" / "Bu Hafta Bizi Ne Bekliyor" büyük başlığı. */
-function chapter(title: string, range: string): string {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:40px 0 0"><tr><td bgcolor="${C.band}" style="background:${C.band};background-image:linear-gradient(135deg,#123c7a 0%,${C.band} 60%,#081d40 100%);border-radius:16px;padding:16px 20px">
-<p style="margin:0;font-family:${FONT};font-size:18px;line-height:24px;font-weight:800;letter-spacing:-.02em;color:#ffffff">${escapeHtml(title)}</p>
-<p style="margin:2px 0 0;font-family:${FONT};font-size:12px;line-height:16px;color:#c9d6ea">${escapeHtml(range)}</p>
-</td></tr></table>`;
+/** Bölüm bandının altındaki yorum paragrafı — sitenin okuma gövdesi gibi, kutusuz. */
+function commentaryBlock(text: string | undefined, W: Copy["weeklyMail"], last: boolean): string {
+  if (!text) return "";
+  return `<p class="az-ink" style="margin:18px 0 0;font-family:${FONT};font-size:16px;line-height:26px;color:${C.ink}">${escapeHtml(text)}</p>${
+    last ? `<p class="az-muted" style="margin:8px 0 0;font-family:${FONT};font-size:11px;line-height:16px;color:${C.muted}">${escapeHtml(W.commentaryNote)}</p>` : ""
+  }`;
 }
 
 export function weeklyEmailMessage(recipient: Recipient, data: DigestData, personal: DigestPersonal, copy: Copy): Email {
@@ -367,15 +581,20 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
     lead: W.heroLead.replace("{pastRange}", pastRange).replace("{thisRange}", thisRange),
     brandName: copy.common.signature,
     origin: SITE_URL,
+    hero: { file: "weekly.gif", width: 560, height: 200 },
     bodyHtml: [
       emailText.greeting(greeting),
       emailText.paragraph(W.intro),
-      chapter(W.pastSection, pastRange),
+      statsBlock(data, W),
+      chapter("01", W.pastSection, pastRange),
+      commentaryBlock(data.commentary?.past, W, false),
       indicesBlock(data, W),
       reportedBlock(data, W),
       developmentsBlock(data, W),
-      chapter(W.aheadSection, thisRange),
+      chapter("02", W.aheadSection, thisRange),
+      commentaryBlock(data.commentary?.ahead, W, true),
       personalBlock(personal, locale, W),
+      rhythmBlock(data, W),
       aheadBlock(data, W),
       eventsBlock(data, W),
       `<div style="height:30px;line-height:30px;font-size:0">&nbsp;</div>`,
@@ -387,13 +606,16 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
   });
 
   const text: string[] = [greeting, "", W.intro, "", `== ${W.pastSection} · ${pastRange} ==`];
+  if (data.commentary) text.push("", data.commentary.past);
   if (data.indices.length) {
     text.push("", `${W.marketTitle} (${W.marketNote})`, ...data.indices.map((i) => `- ${i.label}: ${formatPercent(i.changePct, locale, 2)}`));
   }
   text.push("", W.reportedTitle);
   if (data.pastFailed) text.push(W.reportedFailed);
   else if (data.reported.length === 0) text.push(W.reportedEmpty);
-  else
+  else {
+    const { beat, inline, miss } = data.scorecard;
+    if (beat + inline + miss > 0) text.push(`${beat} ${W.scoreBeat} · ${inline} ${W.scoreInline} · ${miss} ${W.scoreMiss}`);
     text.push(
       ...data.reported.map((r) => {
         const s = r.eps ?? r.revenue;
@@ -401,21 +623,26 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
         return `- ${r.symbol}${r.name ? ` (${r.name})` : ""}${verdict ? ` — ${verdict}` : ""}`;
       }),
     );
+  }
   if (data.brief) text.push("", `${W.briefTitle}: ${data.brief.headline}`, pathFor(data.brief.path, locale));
   const links = [...data.stories, ...data.news];
   if (links.length) text.push("", W.newsTitle, ...links.map((l) => `- ${l.title} ${pathFor(l.path, locale)}`));
   text.push("", `== ${W.aheadSection} · ${thisRange} ==`);
+  if (data.commentary) text.push("", data.commentary.ahead, `(${W.commentaryNote})`);
   if (personal.length) text.push("", W.personalTitle, ...personal.map((p) => `- ${p.symbol}: ${dayLabel(p.date, locale)}`));
   text.push("", W.aheadEarnings);
   if (data.aheadFailed) text.push(W.aheadFailed);
   else
     for (const day of data.ahead) {
       if (day.closed) text.push(`- ${dayLabel(day.date, locale)}: ${W.closed} (${day.closed})`);
-      else if (day.items.length) text.push(`- ${dayLabel(day.date, locale)}: ${day.items.map((i) => i.symbol).join(", ")}`);
+      else if (day.items.length) text.push(`- ${dayLabel(day.date, locale)} (${day.total}): ${day.items.map((i) => i.symbol).join(", ")}`);
     }
   text.push("", W.eventsTitle);
   if (data.eventsFailed) text.push(W.eventsFailed);
-  else if (data.events.length === 0) text.push(W.eventsEmpty);
+  else if (data.events.length === 0) {
+    text.push(W.eventsEmpty);
+    if (data.nextEvent) text.push(`${W.eventsNext}: ${data.nextEvent.title} — ${dayLabel(data.nextEvent.date, locale)}${data.nextEvent.time ? ` ${data.nextEvent.time}` : ""}`);
+  }
   else text.push(...data.events.map((e) => `- ${dayLabel(e.date, locale)} ${e.time ?? W.timeUnknown}: ${e.title}`));
   text.push("", calendarUrl, "", copy.common.notAdvice, copy.common.whyReceived, `${copy.common.unsubscribe}: ${unsubscribeUrl(recipient, "weekly")}`);
 

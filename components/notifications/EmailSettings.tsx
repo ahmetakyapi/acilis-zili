@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Ayarlar → E-posta Bildirimleri (16 Ekim). İki anahtar: alarm postası ve
- * pazartesi özeti; ikisi de varsayılan kapalı. Açılan ilk anahtar adresi
+ * pazar özeti; ikisi de varsayılan kapalı. Açılan ilk anahtar adresi
  * onaysız bulursa sunucu onay bağlantısı gönderir ve satır "Onay bekleniyor"
  * der — onaylanmayan adrese hiçbir bildirim postası gitmez (lib/email-notify.ts).
  *

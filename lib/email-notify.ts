@@ -38,6 +38,17 @@ export function dailyBudget(): number {
 /** Bir kullanıcıya bir günde giden alarm postası tavanı — oynak günde kutuyu boğmasın. */
 export const ALERT_EMAILS_PER_USER_DAY = 12;
 
+/**
+ * ONAY POSTASI TAVANLARI (17 Ekim denetimi). Kayıtta adres doğrulanmıyor:
+ * hesap başına "Tekrar Gönder" saatte üç olsa da yirmi sahte hesap günlük
+ * bütçenin tamamını onay postasına harcayabiliyor (o gün kimseye alarm ve
+ * pazar postası gitmezdi), tek hesap da başkasının adresine günde onlarca
+ * onay postası yollayabiliyordu. Kullanıcı başına günde 3, bütün onaylar
+ * için günde bütçenin dörtte biri.
+ */
+export const CONFIRM_EMAILS_PER_USER_DAY = 3;
+const confirmShare = () => Math.max(5, Math.floor(dailyBudget() / 4));
+
 export type EmailPrefsView = {
   /** false: tablo yok ya da e-posta servisi kapalı — panel basılmaz. */
   available: boolean;
@@ -210,7 +221,12 @@ export function isUnsubscribeScope(value: unknown): value is UnsubscribeScope {
 
 /** Girişsiz çıkış — postadaki bağlantı ve `List-Unsubscribe-Post`. */
 export async function unsubscribe(token: string, scope: UnsubscribeScope, now: Date = new Date()): Promise<boolean> {
-  if (!looksLikeEmailToken(token)) return false;
+  return (await unsubscribeResult(token, scope, now)) === "ok";
+}
+
+/** Aynı iş, sonucu adıyla: tanınmayan anahtar ile veritabanı hatası ayrı (tek tıkla uç 404 / 503). */
+export async function unsubscribeResult(token: string, scope: UnsubscribeScope, now: Date = new Date()): Promise<"ok" | "unknown" | "error"> {
+  if (!looksLikeEmailToken(token)) return "unknown";
   const set =
     scope === "all" ? { alerts: false, weekly: false } : scope === "alerts" ? { alerts: false } : { weekly: false };
   try {
@@ -219,9 +235,21 @@ export async function unsubscribe(token: string, scope: UnsubscribeScope, now: D
       .set({ ...set, updatedAt: now })
       .where(eq(emailPrefs.unsubToken, token))
       .returning({ userId: emailPrefs.userId });
-    return rows.length > 0;
+    return rows.length > 0 ? "ok" : "unknown";
   } catch {
-    return false;
+    return "error";
+  }
+}
+
+/** Onay postası gitmediyse bekleyen onayı geri al: Ayarlar "onay bekleniyor" demesin, sonraki dokunuş yeni bağlantı üretsin. */
+export async function abandonConfirm(userId: string, tokenHash: string): Promise<void> {
+  try {
+    await db
+      .update(emailPrefs)
+      .set({ confirmTokenHash: null, confirmExpiresAt: null })
+      .where(and(eq(emailPrefs.userId, userId), eq(emailPrefs.confirmTokenHash, tokenHash)));
+  } catch {
+    /* tablo yok */
   }
 }
 
@@ -310,6 +338,18 @@ export async function claimSend(
     const since = startOfUtcDay(now);
     const [today] = await db.select({ n: count() }).from(emailLog).where(gte(emailLog.sentAt, since));
     if ((today?.n ?? 0) >= dailyBudget()) return "budget";
+    if (kind === "confirm") {
+      const [mine] = await db
+        .select({ n: count() })
+        .from(emailLog)
+        .where(and(eq(emailLog.userId, userId), eq(emailLog.kind, "confirm"), gte(emailLog.sentAt, since)));
+      if ((mine?.n ?? 0) >= CONFIRM_EMAILS_PER_USER_DAY) return "user-cap";
+      const [all] = await db
+        .select({ n: count() })
+        .from(emailLog)
+        .where(and(eq(emailLog.kind, "confirm"), gte(emailLog.sentAt, since)));
+      if ((all?.n ?? 0) >= confirmShare()) return "budget";
+    }
     if (kind === "alert") {
       const [mine] = await db
         .select({ n: count() })
@@ -329,7 +369,7 @@ export async function claimSend(
 }
 
 /** Gönderim düştüyse sahiplenmeyi geri al — sonraki koşu yeniden denesin. */
-async function releaseSend(dedupeKey: string): Promise<void> {
+export async function releaseSend(dedupeKey: string): Promise<void> {
   try {
     await db.delete(emailLog).where(eq(emailLog.dedupeKey, dedupeKey));
   } catch {
@@ -358,18 +398,29 @@ export async function sendNotificationEmail(
   dedupeKey: string,
   build: (recipient: Recipient) => Email,
 ): Promise<ClaimResult | "sent" | "failed"> {
+  /* Posta SAHİPLENMEDEN ÖNCE kurulur (17 Ekim denetimi): şablon beklenmedik
+     veride fırlatınca defter satırı kalıyor, alıcı o haftanın bütün tekrar
+     koşularında "duplicate" sayılıp postasız kalıyordu. */
+  const email = build(recipient);
   const claim = await claimSend(recipient.userId, kind, dedupeKey);
   if (claim !== "claimed") return claim;
   const scope: UnsubscribeScope = kind === "alert" ? "alerts" : "weekly";
-  const email = build(recipient);
-  const ok = await sendEmail({
+  const message: Email = {
     ...email,
     headers: {
       ...email.headers,
       "List-Unsubscribe": `<${oneClickUrl(recipient, scope)}>`,
       "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
     },
-  });
+  };
+  /* Alarm yeniden tetiklenmez: geçici bir servis hatası (5xx, zaman aşımı)
+     o postayı sonsuza kadar kaybettirirdi. Bir kez, kısa bir aradan sonra
+     yeniden denenir; haftalık posta zaten sonraki saatlik koşuda tamamlanıyor. */
+  let ok = await sendEmail(message);
+  if (!ok && kind === "alert") {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    ok = await sendEmail(message);
+  }
   if (!ok) {
     await releaseSend(dedupeKey);
     return "failed";

@@ -6,7 +6,9 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { emailConfigured, sendEmail } from "@/lib/email";
 import {
+  abandonConfirm,
   claimSend,
+  releaseSend,
   confirmEmail,
   getEmailPrefs,
   hashEmailToken,
@@ -52,9 +54,17 @@ async function sendConfirm(userId: string, token: string): Promise<void> {
     .limit(1);
   if (!row) return;
   const locale = isLocale(row.locale) ? row.locale : "tr";
-  const claim = await claimSend(userId, "confirm", `confirm:${hashEmailToken(token).slice(0, 32)}`);
-  if (claim !== "claimed") return;
-  await sendEmail(
+  /* Gitmeyen onay (tavan, bütçe, servis hatası) BEKLEYEN onay olarak
+     kalmasın (17 Ekim denetimi): Ayarlar 48 saat "onay bekleniyor" deyip
+     yeni bağlantı üretmiyordu. Düşen gönderimin defter satırı da geri alınır. */
+  const hash = hashEmailToken(token);
+  const dedupeKey = `confirm:${hash.slice(0, 32)}`;
+  const claim = await claimSend(userId, "confirm", dedupeKey);
+  if (claim !== "claimed") {
+    if (claim !== "duplicate") await abandonConfirm(userId, hash);
+    return;
+  }
+  const sent = await sendEmail(
     confirmEmailMessage({
       to: row.email,
       username: row.username,
@@ -64,6 +74,10 @@ async function sendConfirm(userId: string, token: string): Promise<void> {
       copy: getDictionary(locale).emailNotify,
     }),
   );
+  if (!sent) {
+    await releaseSend(dedupeKey);
+    await abandonConfirm(userId, hash);
+  }
 }
 
 export async function setEmailPrefAction(kind: EmailKind, enabled: boolean): Promise<Result> {

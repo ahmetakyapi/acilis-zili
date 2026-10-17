@@ -26,24 +26,39 @@ export const sampleDigest = (overrides: Partial<DigestData> = {}): DigestData =>
   thisMonday: "2026-10-19",
   thisFriday: "2026-10-23",
   indices: [
-    { symbol: "SPY", label: "S&P 500", changePct: 1.24, price: 640 },
-    { symbol: "QQQ", label: "Nasdaq 100", changePct: -0.42, price: 560 },
+    {
+      symbol: "SPY",
+      label: "S&P 500",
+      changePct: 1.24,
+      price: 640,
+      steps: [
+        { date: "2026-10-12", changePct: 0.4 },
+        { date: "2026-10-13", changePct: -0.2 },
+        { date: "2026-10-14", changePct: 0.6 },
+        { date: "2026-10-15", changePct: 0.1 },
+        { date: "2026-10-16", changePct: 0.34 },
+      ],
+    },
+    { symbol: "QQQ", label: "Nasdaq 100", changePct: -0.42, price: 560, steps: [] },
   ],
   reported: [
     { symbol: "JPM", name: "JPMorgan Chase & Co.", reportDate: "2026-10-14", eps: { direction: "beat", ratio: 0.083 }, revenue: { direction: "miss", ratio: -0.012 }, analysisPath: "/bilancolar/jpm/2026q3" },
   ],
   reportedTotal: 14,
+  scorecard: { beat: 9, inline: 2, miss: 3 },
   pastFailed: false,
   brief: { headline: "Bankalar Haftayı Taşıdı", path: "/bulten/haftalik/2026-10-12" },
   stories: [],
   news: [{ title: "Haber <script>", meta: "JPM — Reuters", path: "/haberler/1" }],
   ahead: [
-    { date: "2026-10-19", closed: null, items: [], bmoClock: "~15:00", amcClock: "~23:00" },
-    { date: "2026-10-21", closed: null, items: [{ symbol: "TSLA", name: "Tesla", timing: "amc" }], bmoClock: "~15:00", amcClock: "~23:00" },
+    { date: "2026-10-19", closed: null, items: [], bmoClock: "~15:00", amcClock: "~23:00", total: 0, events: 0 },
+    { date: "2026-10-21", closed: null, items: [{ symbol: "TSLA", name: "Tesla", timing: "amc" }], bmoClock: "~15:00", amcClock: "~23:00", total: 41, events: 1 },
   ],
+  aheadTotal: 41,
   aheadFailed: false,
   aheadAll: new Map([["TSLA", { date: "2026-10-21", timing: "amc" as const }]]),
   events: [{ date: "2026-10-22", time: "15:30", title: "Tüketici Fiyatları" }],
+  nextEvent: null,
   eventsFailed: false,
   ...overrides,
 });
@@ -74,8 +89,11 @@ test("hafta aralığı Türkçe ve İngilizce", () => {
   assert.equal(plain(weekRangeLabel("2026-09-28", "2026-10-02", "tr")), "28 Eylül – 2 Ekim");
 });
 
-test("özetin haftası: pazartesi bugün, hafta sonu gelen pazartesi", () => {
-  /* 19 Ekim 2026 pazartesi 11:15 UTC = 07:15 ET */
+test("özetin haftası: pazar sabahı gelen pazartesi, hafta içi içinde bulunulan hafta", () => {
+  /* 18 Ekim 2026 pazar 07:00 UTC = 10:00 TR = 03:00 ET — cron'un ilk koşusu. */
+  assert.deepEqual(digestWeek(new Date("2026-10-18T07:00:00Z")), { thisMonday: "2026-10-19", pastMonday: "2026-10-12" });
+  /* Cumartesi elle koşulsa da aynı hafta. */
+  assert.deepEqual(digestWeek(new Date("2026-10-17T15:00:00Z")), { thisMonday: "2026-10-19", pastMonday: "2026-10-12" });
   assert.deepEqual(digestWeek(new Date("2026-10-19T11:15:00Z")), { thisMonday: "2026-10-19", pastMonday: "2026-10-12" });
   assert.deepEqual(digestWeek(new Date("2026-10-18T15:00:00Z")), { thisMonday: "2026-10-19", pastMonday: "2026-10-12" });
   assert.deepEqual(digestWeek(new Date("2026-10-21T15:00:00Z")), { thisMonday: "2026-10-19", pastMonday: "2026-10-12" });
@@ -92,7 +110,7 @@ test("onay postası: bağlantı, açılan postalar, kaçışlanmış ad", () => 
   });
   assert.equal(mail.subject, tr.emailNotify.confirmMail.subject);
   assert.match(mail.html, /e-posta\/onay\?anahtar=abc/);
-  assert.match(mail.html, /Alarm E-postası · Pazartesi Özeti/);
+  assert.match(mail.html, /Alarm E-postası · Pazar Özeti/);
   assert.ok(!mail.html.includes("okur<b>"));
   assert.match(mail.text, /okur<b>/);
 });
@@ -118,12 +136,54 @@ test("alarm postası: konu, yön rengi, çıkış bağlantısı", () => {
 
 test("haftalık posta: bölümler, kaçış, kişisel satır", () => {
   const mail = weeklyEmailMessage(recipient, sampleDigest(), [{ symbol: "TSLA", date: "2026-10-21", timing: "amc" }], tr.emailNotify);
-  assert.equal(plain(mail.subject), "Açılış Zili · Haftanın Özeti · 19 – 23 Ekim");
-  for (const part of ["Endeksler", "Açıklanan Bilançolar", "HBK · Beklentiyi Aştı + %8,3", "Gelir · Beklentinin Altında − %1,2", "Bankalar Haftayı Taşıdı", "Takip Listende Bu Hafta", "Tüketici Fiyatları", "kapsam=weekly"]) {
+  assert.equal(plain(mail.subject), "Açılış Zili · Pazar Özeti · 19 – 23 Ekim");
+  for (const part of ["Haftanın Rakamları", "9/14", "Endeksler", "Bilanço Karnesi", "Haftanın Ritmi", "weekly.gif", "HBK · Beklentiyi Aştı + %8,3", "Gelir · Beklentinin Altında − %1,2", "Bankalar Haftayı Taşıdı", "Takip Listende Bu Hafta", "Tüketici Fiyatları", "kapsam=weekly"]) {
     assert.ok(plain(mail.html).includes(part), part);
   }
   assert.ok(!mail.html.includes("<script>"));
   assert.match(mail.text, /- TSLA: /);
+  assert.match(mail.text, /9 Aştı · 2 Paralel · 3 Altında/);
+});
+
+test("haftalık posta: çubuklar gerçek sayıdan, en büyük tam boy", () => {
+  const mail = weeklyEmailMessage(recipient, sampleDigest(), [], tr.emailNotify);
+  /* Endeks çizgisi: en büyük haftalık değişim (SPY %1,24) kulvarın tamamı,
+     QQQ (−%0,42) oranında (34). */
+  assert.match(mail.html, /width:100%;height:6px/);
+  assert.match(mail.html, /width:34%;height:6px/);
+  /* Gün sütunu: 41 şirketli gün tam boy (72), boş gün çubuksuz. */
+  assert.match(mail.html, /width:26px;height:72px/);
+  /* Karne: 9/14 = %64,3 genişlik. */
+  assert.match(mail.html, /width="64\.3%"/);
+});
+
+test("haftalık posta: karnesi boşsa ölçü kutusu basılmaz, takvim okunamadıysa sayı yok", () => {
+  const mail = weeklyEmailMessage(recipient, sampleDigest({ scorecard: { beat: 0, inline: 0, miss: 0 }, aheadFailed: true, indices: [] }), [], tr.emailNotify);
+  assert.ok(!mail.html.includes("Haftanın Rakamları"));
+  assert.ok(!mail.html.includes("Haftanın Ritmi"));
+});
+
+test("haftada kritik veri yoksa sıradaki yazılır", () => {
+  const mail = weeklyEmailMessage(
+    recipient,
+    sampleDigest({ events: [], nextEvent: { date: "2026-10-28", time: "21:00", title: "Fed Faiz Kararı (FOMC)" } }),
+    [],
+    tr.emailNotify,
+  );
+  assert.ok(mail.html.includes(tr.emailNotify.weeklyMail.eventsEmpty));
+  assert.ok(mail.html.includes("Fed Faiz Kararı (FOMC)"));
+  assert.match(mail.text, /FOMC/);
+});
+
+test("endeks haftası: son seans eksikse yüzde yok, adımlar kapanıştan kapanışa", async () => {
+  const { indexMoveFromBars } = await import("../lib/weekly-digest");
+  const bar = (day: string, close: number) => ({ time: Date.parse(`${day}T20:00:00Z`) / 1000, open: close, high: close, low: close, close, volume: 1 });
+  const bars = [bar("2026-10-09", 100), bar("2026-10-12", 101), bar("2026-10-13", 99.99), bar("2026-10-14", 102), bar("2026-10-15", 102), bar("2026-10-16", 103)];
+  const move = indexMoveFromBars("SPY", bars, "2026-10-12", "2026-10-16", "2026-10-16");
+  assert.ok(move);
+  assert.equal(Math.round(move.changePct * 100) / 100, 3);
+  assert.deepEqual(move.steps.map((s) => Math.round(s.changePct * 100) / 100), [1, -1, 2.01, 0, 0.98]);
+  assert.equal(indexMoveFromBars("SPY", bars.slice(0, -1), "2026-10-12", "2026-10-16", "2026-10-16"), null);
 });
 
 test("okunamayan takvim boş hafta diye yazılmaz", () => {
@@ -132,4 +192,21 @@ test("okunamayan takvim boş hafta diye yazılmaz", () => {
   assert.ok(mail.html.includes(tr.emailNotify.weeklyMail.aheadFailed));
   assert.ok(!mail.html.includes(tr.emailNotify.weeklyMail.reportedEmpty));
   assert.ok(!mail.html.includes("Endeksler"));
+});
+
+test("haftalık yorum: girdide olmayan sayı yorumu düşürür", async () => {
+  const { numbersGrounded } = await import("../lib/weekly-commentary");
+  const input = JSON.stringify({ weeklyChange: "−%1,97", day: "19 Ekim Pazartesi", name: "S&P 500" });
+  assert.equal(numbersGrounded("S&P 500 haftayı %1,97 düşüşle kapattı; 19 Ekim'de takvim yoğun.", input), true);
+  assert.equal(numbersGrounded("S&P 500 %2,1 düştü.", input), false);
+  assert.equal(numbersGrounded("Endeks iki gün üst üste düştü.", input), true);
+});
+
+test("haftalık posta: yorum bant altında ve künyesiyle", () => {
+  const mail = weeklyEmailMessage(recipient, sampleDigest({ commentary: { past: "Geçen hafta bankalar öndeydi.", ahead: "Yeni haftada teknoloji bilançoları var." } }), [], tr.emailNotify);
+  const html = plain(mail.html);
+  assert.ok(html.indexOf("Geçen hafta bankalar öndeydi.") > html.indexOf("Geride Kalan Hafta"));
+  assert.ok(html.indexOf("Yeni haftada teknoloji bilançoları var.") > html.indexOf("Yeni Haftada Bizi Ne Bekliyor"));
+  assert.ok(html.includes(tr.emailNotify.weeklyMail.commentaryNote));
+  assert.match(mail.text, /bankalar öndeydi/);
 });

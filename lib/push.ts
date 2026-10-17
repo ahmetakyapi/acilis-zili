@@ -186,6 +186,10 @@ export async function deliverPush(
  * bilgisayarı İngilizce açılmış olabilir ve dil hesapta değil sayfada
  * (aboneliği açan sayfanın dili satırda duruyor).
  */
+const STALE_MS = 30 * 24 * 3600_000;
+const stale = (row: { lastSentAt: Date | null; createdAt: Date }) =>
+  Date.now() - (row.lastSentAt ?? row.createdAt).getTime() > STALE_MS;
+
 export async function sendToUser(
   userId: string,
   payload: PushPayload | ((locale: Locale) => PushPayload),
@@ -209,6 +213,13 @@ export async function sendToUser(
       );
       if (status >= 200 && status < 300) delivered.push(row.id);
       else if (status === 404 || status === 410) dead.push(row.id);
+      /* 401/403 KALICI RET (17 Ekim denetimi): VAPID anahtarı değişince FCM
+         ve Mozilla eski aboneliği hep reddediyor; satır sonsuza kadar kalıp
+         her gönderimde boşuna istek açıyordu. Ama aynı kod bizim anahtar
+         ayarımız bozulduğunda da gelir — o zaman HER satır reddedilir ve
+         körü körüne silmek bütün cihazları düşürürdü. Bu yüzden yalnız 30
+         gündür hiç teslim edilmemiş satır silinir. */
+      else if ((status === 401 || status === 403) && stale(row)) dead.push(row.id);
     }),
   );
   try {

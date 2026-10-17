@@ -37,6 +37,8 @@ import sharp from "sharp";
  * tırtıklı bırakır. Boyut her üretimde basılıyor; 250 KB'ı geçerse
  * sahne ağırlaşmış demektir (mobil veride posta bununla açılıyor).
  *
+ * Pazar özetinin bandı da burada (weekly.gif — gerekçe dosyanın sonunda).
+ *
  * Çalıştır:  npm run build:email
  */
 
@@ -168,7 +170,135 @@ const gif = await sharp(buffers, { join: { animated: true } })
 
 await mkdir(path.join(ROOT, "public/email"), { recursive: true });
 await writeFile(path.join(ROOT, "public/email/hero.gif"), gif);
+await buildWeekly();
 /* Eski kare GIF (176×176, 15 Ekim) — yeni şablon onu kullanmıyor. Sıfırlama
    bağlantısı 30 dakikada ölüyor; eski postanın görseli tutulmuyor. */
 await rm(path.join(ROOT, "public/email/bell-ring.gif"), { force: true });
 console.log(`hero.gif yazıldı — ${frames.length} kare, ${W}×${H}, ${(gif.length / 1024).toFixed(1)} KB`);
+
+/* ==========================================================================
+   PAZAR ÖZETİNİN BANDI — public/email/weekly.gif (17 Ekim), 560×200.
+
+   SAHNE: bir hafta şeridi. Solda geride kalan haftanın beş günü (dolu
+   pirinç noktalar), ortada zil karosu, sağda yeni haftanın beş günü (boş
+   halkalar). Bir ışık soldan beş günün üstünden geçip zile varıyor, zil
+   vuruyor, ışık sağa geçip yeni haftanın günlerini sırayla yakıyor ve
+   halkalar yeniden soluyor — "hafta kapandı, zil yenisini çalıyor".
+
+   VERİ ÇİZMİYOR. Postanın görseli fiyat grafiğine benzerse (iniş çıkışlı
+   çizgi, çubuk) okuyucu onu geçen haftanın gerçek seyri sanar; sayı taşıyan
+   her çizgi postanın gövdesinde, gerçek veriden (lib/notify-emails.ts).
+   Burada yalnız takvim geometrisi: on gün, eşit aralık, tek eksen.
+
+   Hero ile aynı kurallar: ilk kare = son kare = durgun afiş (Outlook ilk
+   kareyi gösterir), bir kez oynar (`loop: 1`), zemin düz renk.
+   ========================================================================== */
+async function buildWeekly() {
+  const WH = 200 * SCALE;
+  const WCY = WH / 2;
+  const WTILE = 78 * SCALE;
+  const SIDE_GAP = 30 * SCALE;
+  const EDGE_W = 44 * SCALE;
+  const step = (CX - WTILE / 2 - SIDE_GAP - EDGE_W) / 4;
+  const pastX = Array.from({ length: 5 }, (_, i) => EDGE_W + i * step);
+  const nextX = Array.from({ length: 5 }, (_, i) => CX + WTILE / 2 + SIDE_GAP + i * step);
+  const DOT = 6 * SCALE;
+  const RING = 7 * SCALE;
+  const IVORY = "#fbe7bf";
+  const RING_REST = "#4b6fa8";
+  const T_STRIKE = 1.0;
+  const T_END = 2.75;
+
+  /* Işığın konumu: 0–1 sn sol uçtan karoya, 1,05–2,25 sn karodan sağ uca. */
+  function pulseX(t) {
+    if (t <= 0) return null;
+    if (t < T_STRIKE) return pastX[0] + (CX - WTILE / 2 - pastX[0]) * ease(t / T_STRIKE);
+    if (t < 1.05) return null;
+    if (t < 2.25) return CX + WTILE / 2 + (nextX[4] - CX - WTILE / 2) * ease((t - 1.05) / 1.2);
+    return null;
+  }
+  /* Bir halkanın ışık geçtiği an — sonra sönerek afişe döner. */
+  function passTime(x) {
+    const span = nextX[4] - CX - WTILE / 2;
+    const f = (x - CX - WTILE / 2) / span;
+    // ease'in tersi: 1-(1-u)^3 = f → u = 1-(1-f)^(1/3)
+    return 1.05 + 1.2 * (1 - Math.cbrt(1 - Math.min(0.999, f)));
+  }
+
+  function wframe(t) {
+    const px = pulseX(t);
+    const parts = [];
+    /* Eksen: iki yarı, karoya değmiyor. */
+    parts.push(`<rect x="${pastX[0]}" y="${WCY - SCALE / 2}" width="${CX - WTILE / 2 - 14 * SCALE - pastX[0]}" height="${SCALE}" fill="${LANE}"/>`);
+    parts.push(`<rect x="${CX + WTILE / 2 + 14 * SCALE}" y="${WCY - SCALE / 2}" width="${nextX[4] - CX - WTILE / 2 - 14 * SCALE}" height="${SCALE}" fill="${LANE}"/>`);
+    /* Geçen hafta: ışık geçerken nokta büyüyüp fildişine açılıyor. */
+    for (const x of pastX) {
+      const near = px !== null && t < T_STRIKE ? Math.exp(-(((px - x) / (16 * SCALE)) ** 2)) : 0;
+      const r = DOT * (1 + 0.55 * near);
+      parts.push(`<circle cx="${x}" cy="${WCY}" r="${r.toFixed(1)}" fill="${mix(BRASS, IVORY, near)}"/>`);
+    }
+    /* Yeni hafta: halka, ışık geçince dolup parlıyor, sonra sönüyor. */
+    for (const x of nextX) {
+      const tp = passTime(x);
+      const glow = t >= tp - 0.08 ? Math.exp(-Math.max(0, t - tp) / 0.42) * Math.min(1, (t - tp + 0.08) / 0.08) : 0;
+      if (glow > 0.02) {
+        parts.push(`<circle cx="${x}" cy="${WCY}" r="${(RING * (1.9 + glow)).toFixed(1)}" fill="${BRASS}" fill-opacity="${(0.18 * glow).toFixed(3)}"/>`);
+        /* Kare kök: düz karışım lacivertle pirincin ortasında griye düşüyor
+           (hero'daki şeritle aynı gerekçe). */
+        const g = Math.sqrt(glow);
+        parts.push(`<circle cx="${x}" cy="${WCY}" r="${RING}" fill="${mix(BG, BRASS, g)}" stroke="${mix(RING_REST, BRASS, g)}" stroke-width="${2 * SCALE}"/>`);
+      } else {
+        parts.push(`<circle cx="${x}" cy="${WCY}" r="${RING}" fill="${BG}" stroke="${RING_REST}" stroke-width="${2 * SCALE}"/>`);
+      }
+    }
+    if (px !== null) {
+      parts.push(`<circle cx="${px.toFixed(1)}" cy="${WCY}" r="${18 * SCALE}" fill="url(#pulse)"/>`);
+      parts.push(`<circle cx="${px.toFixed(1)}" cy="${WCY}" r="${3 * SCALE}" fill="${IVORY}"/>`);
+    }
+    const tt = t - T_STRIKE;
+    const swing = tt > 0 ? 14 * Math.sin(tt * Math.PI * 2 * 2.1) * Math.exp(-tt * 2.6) : 0;
+    const clap = tt > 0 ? 14 * Math.sin(tt * Math.PI * 2 * 2.1 - 0.9) * Math.exp(-tt * 2.4) : 0;
+    const x = CX - WTILE / 2;
+    const y = WCY - WTILE / 2;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${WH}" viewBox="0 0 ${W} ${WH}">
+  <defs>
+    <linearGradient id="tile" x1="12%" y1="0%" x2="88%" y2="100%">
+      <stop offset="0" stop-color="#5cc4ff"/><stop offset=".48" stop-color="#1f86e0"/><stop offset="1" stop-color="#0b3f86"/>
+    </linearGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".22"/><stop offset=".5" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#1f86e0" stop-opacity=".3"/><stop offset="1" stop-color="#1f86e0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="pulse" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="${BRASS}" stop-opacity=".55"/><stop offset="1" stop-color="${BRASS}" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="${W}" height="${WH}" fill="${BG}"/>
+  <circle cx="${CX}" cy="${WCY}" r="${WH * 0.5}" fill="url(#halo)"/>
+  ${parts.join("\n  ")}
+  <g transform="translate(${x} ${y})">
+    <rect width="${WTILE}" height="${WTILE}" rx="${WTILE / 3}" fill="url(#tile)"/>
+    <rect width="${WTILE}" height="${WTILE}" rx="${WTILE / 3}" fill="url(#gloss)"/>
+    <rect x="1.5" y="1.5" width="${WTILE - 3}" height="${WTILE - 3}" rx="${WTILE / 3 - 1.5}" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="3"/>
+    <svg width="${WTILE}" height="${WTILE}" viewBox="-11.13 -15.13 278.26 278.26" fill="#ffffff">
+      <g transform="rotate(${clap.toFixed(2)} 128 40)">${CLAPPER}</g>
+      <g transform="rotate(${swing.toFixed(2)} 128 40)">${BELL}</g>
+    </svg>
+  </g>
+</svg>`;
+  }
+
+  const n = Math.round(T_END * FPS);
+  const svgs = [wframe(0)];
+  for (let i = 1; i <= n; i += 1) svgs.push(wframe(i / FPS));
+  svgs.push(wframe(0));
+  const pngs = await Promise.all(svgs.map((svg) => sharp(Buffer.from(svg)).png().toBuffer()));
+  const delays = [POSTER_MS, ...Array(n).fill(1000 / FPS), REST_MS].map(Math.round);
+  const out = await sharp(pngs, { join: { animated: true } })
+    .gif({ delay: delays, loop: 1, effort: 10, colours: 48, dither: 0, interFrameMaxError: 6, interPaletteMaxError: 4 })
+    .toBuffer();
+  await writeFile(path.join(ROOT, "public/email/weekly.gif"), out);
+  console.log(`weekly.gif yazıldı — ${svgs.length} kare, ${W}×${WH}, ${(out.length / 1024).toFixed(1)} KB`);
+}

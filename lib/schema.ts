@@ -456,7 +456,7 @@ export const passwordResets = pgTable(
 );
 
 /**
- * E-POSTA TERCİHLERİ (16 Ekim) — alarm e-postası ve pazartesi özeti.
+ * E-POSTA TERCİHLERİ (16 Ekim) — alarm e-postası ve pazar özeti.
  *
  * İKİSİ DE VARSAYILAN KAPALI ve açık rızayla açılır (KVKK metni). Adres
  * ÇİFT ONAYLI: kayıtta adres doğrulanmıyor, yani başkasının adresiyle hesap

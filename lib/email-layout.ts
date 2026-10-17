@@ -1,4 +1,5 @@
 import { escapeHtml } from "@/lib/email";
+import { EASE_BRAND } from "@/lib/motion";
 
 /**
  * Markalı e-posta kabı (15 Ekim; 16 Ekim'de kenardan kenara bant) — şifre
@@ -82,6 +83,9 @@ export type BrandedEmail = {
   /** Sitenin kökü — görseller, font ve alt bağlantılar buradan. */
   origin: string;
   footerLinks: { label: string; href: string }[];
+  /** Bant görseli — varsayılan zil bandı (hero.gif, 560×220). Pazar özeti
+      kendi hafta bandını giyer (weekly.gif, 560×200). */
+  hero?: { file: string; width: number; height: number };
 };
 
 /** Kurşun geçirmez birincil düğme. */
@@ -114,6 +118,7 @@ ${cells}
 
 export function brandedEmailHtml(email: BrandedEmail): string {
   const origin = email.origin.replace(/\/$/, "");
+  const hero = email.hero ?? { file: "hero.gif", width: 560, height: 220 };
   const asset = (file: string) => escapeHtml(`${origin}/email/${file}`);
   const links = email.footerLinks
     .map(
@@ -152,7 +157,19 @@ export function brandedEmailHtml(email: BrandedEmail): string {
   /* Apple Mail: düğmenin üstünden geçen ışık — Gmail siler, posta onsuz tam. */
   @keyframes az-sheen { 0%,62% { background-position:-180% 0; } 100% { background-position:280% 0; } }
   .az-btn-link { background-image:linear-gradient(110deg,rgba(255,255,255,0) 35%,rgba(255,255,255,.28) 50%,rgba(255,255,255,0) 65%); background-size:220% 100%; background-repeat:no-repeat; animation:az-sheen 4.6s ease-in-out 1.2s infinite; }
-  @media (prefers-reduced-motion: reduce) { .az-btn-link { animation:none; background-image:none; } }
+  /* Pazar özetinin girişleri (17 Ekim) — yalnız Apple Mail / iOS Mail
+     oynatır; Gmail <style> animasyonunu siler ve son kare zaten satır içi
+     stilin kendisi: animasyon yalnız BAŞTAN gelir, hiçbir şey ona muhtaç
+     değil. Çubuk büyür (yatay soldan, dikey dipten), kutu yükselir. Eğri
+     sitenin --ease-brand'i (lib/motion.ts → EASE_BRAND); posta CSS
+     değişkeni okumadığı için değer TS'ten basılıyor. */
+  @keyframes az-grow-x { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+  @keyframes az-grow-y { from { transform:scaleY(0); } to { transform:scaleY(1); } }
+  @keyframes az-rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  .az-grow-x { transform-origin:left center; animation:az-grow-x .9s ${EASE_BRAND} both; }
+  .az-grow-y { transform-origin:center bottom; animation:az-grow-y .8s ${EASE_BRAND} both; }
+  .az-rise { animation:az-rise .7s ${EASE_BRAND} both; }
+  @media (prefers-reduced-motion: reduce) { .az-btn-link { animation:none; background-image:none; } .az-grow-x, .az-grow-y, .az-rise { animation:none !important; } }
   @media (max-width:600px) {
     .az-shell { padding:16px 10px 28px !important; }
     .az-pad { padding-left:22px !important; padding-right:22px !important; }
@@ -162,6 +179,10 @@ export function brandedEmailHtml(email: BrandedEmail): string {
     .az-stack { display:block !important; width:100% !important; }
     .az-stack-gap { padding:0 0 10px !important; }
     .az-hide-sm { display:none !important; }
+    /* Ölçü kutuları telefonda da yan yana (390'da ölçüldü: alt alta üç
+       kutu 330 piksel tutuyordu); punto ve dolgu küçülür. */
+    .az-stat-box { padding:12px 10px 11px !important; border-radius:14px !important; }
+    .az-stat-val { font-size:20px !important; line-height:24px !important; }
   }
   @media (prefers-color-scheme: dark) {
     .az-page { background:#0a0f18 !important; }
@@ -169,10 +190,21 @@ export function brandedEmailHtml(email: BrandedEmail): string {
     .az-ink { color:#eef3fa !important; }
     .az-body { color:#b4c1d3 !important; }
     .az-muted { color:#8b99ad !important; }
-    .az-note { background:#172234 !important; border-color:#223047 !important; border-left-color:#b8862f !important; }
+    /* Sol şerit RENK TAŞIYOR (pirinç not, mavi kişisel kutu, yön rengi
+       alarm karosu): koyu temada yalnız öteki üç kenar koyulur. İlk sürüm
+       border-color yazıyordu ve alarm karosunun yön şeridi griye, kişisel
+       kutunun mavisi pirince dönüyordu (17 Ekim denetimi). */
+    .az-note { background:#172234 !important; border-top-color:#223047 !important; border-right-color:#223047 !important; border-bottom-color:#223047 !important; }
     .az-meta, .az-rule { border-color:#223047 !important; }
     .az-link { color:#5cb0ff !important; }
-    .az-sunken { background:#172234 !important; border-color:#223047 !important; }
+    .az-sunken { background:#172234 !important; border-top-color:#223047 !important; border-right-color:#223047 !important; border-bottom-color:#223047 !important; }
+    .az-sunken-flat { border-left-color:#223047 !important; }
+    .az-lane { background:#223047 !important; }
+    .az-zero { background:#3a4c66 !important; }
+    .az-up-fill { background:#3ddc97 !important; }
+    .az-down-fill { background:#ff5c7a !important; }
+    .az-flat-fill { background:#5d6f88 !important; }
+    .az-ink-fill { background:#4f86d1 !important; background-image:none !important; }
     .az-up { color:#3ddc97 !important; }
     .az-down { color:#ff5c7a !important; }
     .az-up-wash { background:#10301f !important; color:#3ddc97 !important; }
@@ -199,7 +231,7 @@ export function brandedEmailHtml(email: BrandedEmail): string {
 <tr><td class="az-card" style="background:${C.card};border:1px solid ${C.line};border-radius:24px;overflow:hidden">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
 <tr><td bgcolor="${C.band}" style="background:${C.band};border-radius:23px 23px 0 0;padding:0;font-size:0;line-height:0">
-<img src="${asset("hero.gif")}" width="560" height="220" alt="" style="display:block;width:100%;max-width:560px;height:auto;border:0;border-radius:23px 23px 0 0">
+<img src="${asset(hero.file)}" width="${hero.width}" height="${hero.height}" alt="" style="display:block;width:100%;max-width:560px;height:auto;border:0;border-radius:23px 23px 0 0">
 </td></tr>
 <tr><td class="az-pad" style="padding:32px 40px 36px">
 <h1 class="az-title az-ink" style="margin:0;font-family:${FONT};font-size:30px;line-height:36px;font-weight:800;letter-spacing:-.03em;color:${C.ink}">${escapeHtml(email.title)}</h1>

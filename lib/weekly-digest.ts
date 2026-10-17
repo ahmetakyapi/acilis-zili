@@ -3,7 +3,7 @@ import { indexMemberOf } from "@/db/seed/indices";
 import { INDEX_STRIP } from "@/db/seed/symbols";
 import { analysisHref } from "@/lib/analysis";
 import { briefHref } from "@/lib/brief";
-import { closeToClose, rangeCovering } from "@/lib/brief-indices";
+import { barDay, closeToClose, rangeCovering } from "@/lib/brief-indices";
 import {
   getAnalyses,
   getBriefByDate,
@@ -19,13 +19,15 @@ import { getEarningsWeek } from "@/lib/earnings-week-data";
 import type { Locale } from "@/lib/i18n/config";
 import { addEtDays, etDateTimeToUtc, isTradingDay, prevTradingDay, todayEt } from "@/lib/market-hours";
 import { getChartBars } from "@/lib/providers";
+import type { Bar } from "@/lib/providers/types";
 import { news, watchlistItems, watchlists } from "@/lib/schema";
 import { timePair } from "@/lib/session-clock";
 import { isSpotlight } from "@/lib/spotlight";
 
 /**
- * PAZARTESİ ÖZETİ — verisi (16 Ekim). Posta lib/notify-emails.ts →
- * `weeklyEmail`; gönderen app/api/cron/haftalik-posta.
+ * PAZAR ÖZETİ — verisi (16 Ekim; 17 Ekim'de pazartesiden pazara). Posta
+ * lib/notify-emails.ts → `weeklyEmailMessage`; gönderen
+ * app/api/cron/haftalik-posta.
  *
  * İçerik dil başına BİR KEZ toplanır (her alıcı için ayrı sorgu yok); yalnız
  * "takip listende bu hafta" satırı kişiye özel.
@@ -35,8 +37,10 @@ import { isSpotlight } from "@/lib/spotlight";
  * - Endeks yüzdesi ancak son kapanış geçen haftanın son işlem günüyse
  *   basılır; önbellekten gelen eski seri "bu hafta" diye yazılmaz.
  * - Açıklanmamış bilanço (`epsActual` null) "kaçırdı" değil — listeye
- *   hiç girmez. Cuma kapanış sonrası sonuçları pazartesi 13:30 TR
- *   eşitlemesinde dolar; posta bu yüzden 14:15 TR'de gider (cron).
+ *   hiç girmez. Günlük eşitleme hafta içi 13:30 TR'de koştuğu için cuma
+ *   sonuçları pazartesiye kadar tabloya düşmüyordu; uç göndermeden önce
+ *   geçen haftanın gerçekleşenlerini kendisi tazeliyor
+ *   (lib/earnings-refresh.ts).
  * - Okunamayan takvim boş hafta değil (`failed`): bölüm "alınamadı" der,
  *   "bilanço yok" demez.
  */
@@ -48,7 +52,17 @@ export const INDEX_LABELS: Record<string, string> = {
   IWM: "Russell 2000",
 };
 
-export type DigestIndex = { symbol: string; label: string; changePct: number; price: number };
+export type DigestIndex = {
+  symbol: string;
+  label: string;
+  changePct: number;
+  price: number;
+  /** Haftanın seansları, kapanıştan kapanışa — postadaki günlük adım çubukları. */
+  steps: { date: string; changePct: number }[];
+};
+
+/** Bilanço karnesi — kayda değer açıklayanların HBK (yoksa gelir) sonucu. */
+export type DigestScorecard = { beat: number; inline: number; miss: number };
 
 export type DigestReport = {
   symbol: string;
@@ -71,6 +85,10 @@ export type DigestAheadDay = {
   /** Okuyucunun saatiyle "~16:00" — açılış öncesi ve kapanış sonrası. */
   bmoClock: string;
   amcClock: string;
+  /** O gün açıklayan BÜTÜN şirketler (seçilmeyenler dahil) — gün çubuğu. */
+  total: number;
+  /** O günün yüksek önemli veri sayısı. */
+  events: number;
 };
 
 export type DigestEvent = { date: string; time: string | null; title: string };
@@ -84,16 +102,23 @@ export type DigestData = {
   indices: DigestIndex[];
   reported: DigestReport[];
   reportedTotal: number;
+  scorecard: DigestScorecard;
   pastFailed: boolean;
   brief: { headline: string; path: string } | null;
   stories: DigestLink[];
   news: DigestLink[];
   ahead: DigestAheadDay[];
+  /** Yeni haftada açıklayan şirketlerin tamamı. */
+  aheadTotal: number;
   aheadFailed: boolean;
   /** Bu haftanın bilanço açıklayan bütün sembolleri — kişisel satır için. */
   aheadAll: Map<string, { date: string; timing: DigestAheadItem["timing"] }>;
   events: DigestEvent[];
+  /** Haftada yüksek önemli veri yoksa sıradaki (altı hafta içinde) — bölüm boş kalmasın. */
+  nextEvent: DigestEvent | null;
   eventsFailed: boolean;
+  /** Claude'un iki paragraflık yorumu (lib/weekly-commentary.ts); yoksa bölüm basılmaz. */
+  commentary?: { past: string; ahead: string } | null;
 };
 
 const MAX_REPORTED = 8;
@@ -102,7 +127,7 @@ const MAX_EVENTS = 8;
 const MAX_NEWS = 4;
 const MAX_STORIES = 3;
 
-/** Bu postanın haftası: pazartesi çalışınca bugün; hafta sonu koşarsa gelen pazartesi. */
+/** Bu postanın haftası: pazar (ve cumartesi) koşunca GELEN pazartesi; hafta içi elle koşulursa içinde bulunulan hafta. */
 export function digestWeek(now: Date): { thisMonday: string; pastMonday: string } {
   const today = todayEt(now);
   const anchor = weekAnchor(today);
@@ -125,14 +150,37 @@ async function weeklyIndices(pastMonday: string, pastFriday: string, now: Date):
   const moves = await Promise.all(
     INDEX_STRIP.map(async (symbol): Promise<DigestIndex | null> => {
       const result = await getChartBars(symbol, range, status);
-      if (!result.ok) return null;
-      const move = closeToClose(result.data, pastMonday, pastFriday);
-      /* Son kapanış haftanın son seansı değilse seri eksik — yüzde YOK. */
-      if (move.change_pct === null || move.price === null || move.price_date !== lastSession) return null;
-      return { symbol, label: INDEX_LABELS[symbol] ?? symbol, changePct: move.change_pct, price: move.price };
+      return result.ok ? indexMoveFromBars(symbol, result.data, pastMonday, pastFriday, lastSession) : null;
     }),
   );
   return moves.filter((move): move is DigestIndex => move !== null);
+}
+
+/**
+ * Bir endeksin haftası — saf, test edilir. Son kapanış haftanın son seansı
+ * değilse seri eksik: yüzde YOK (null). Gün adımları kapanıştan kapanışa;
+ * haftanın ilk adımı önceki haftanın son kapanışından.
+ */
+export function indexMoveFromBars(
+  symbol: string,
+  bars: readonly Bar[],
+  pastMonday: string,
+  pastFriday: string,
+  lastSession: string,
+): DigestIndex | null {
+  const move = closeToClose(bars, pastMonday, pastFriday);
+  if (move.change_pct === null || move.price === null || move.price_date !== lastSession) return null;
+  const steps: DigestIndex["steps"] = [];
+  let prevClose: number | null = null;
+  for (const bar of bars) {
+    const day = barDay(bar);
+    if (day > pastFriday) break;
+    if (day >= pastMonday && prevClose !== null && prevClose > 0) {
+      steps.push({ date: day, changePct: ((bar.close - prevClose) / prevClose) * 100 });
+    }
+    prevClose = bar.close;
+  }
+  return { symbol, label: INDEX_LABELS[symbol] ?? symbol, changePct: move.change_pct, price: move.price, steps };
 }
 
 function important(symbols: readonly string[] | null, reportedSet: Set<string>): number {
@@ -193,7 +241,7 @@ export async function gatherDigest(locale: Locale, now: Date = new Date()): Prom
   const pastSunday = addEtDays(pastMonday, 6);
   const thisFriday = addEtDays(thisMonday, 4);
 
-  const [past, ahead, indices, analyses, stories, brief, events] = await Promise.all([
+  const [past, ahead, indices, analyses, stories, brief, events, later] = await Promise.all([
     getEarningsWeek(pastMonday, locale),
     getEarningsWeek(thisMonday, locale),
     weeklyIndices(pastMonday, pastFriday, now),
@@ -201,6 +249,7 @@ export async function gatherDigest(locale: Locale, now: Date = new Date()): Prom
     getStories(locale, 30),
     getBriefByDate(pastMonday, locale, "weekly"),
     getEventsBetweenResult(thisMonday, thisFriday),
+    getEventsBetweenResult(addEtDays(thisFriday, 1), addEtDays(thisFriday, 42)),
   ]);
 
   const analysisBySymbol = new Map<string, string>();
@@ -224,6 +273,11 @@ export async function gatherDigest(locale: Locale, now: Date = new Date()): Prom
     analysisPath: analysisBySymbol.get(row.symbol) ?? null,
   }));
   const reportedSet = new Set(reportedRows.map((row) => row.symbol));
+  const scorecard: DigestScorecard = { beat: 0, inline: 0, miss: 0 };
+  for (const row of reportedRows) {
+    const verdict = epsSurprise(row.epsActual, row.epsEstimate) ?? revenueSurprise(row.revenueActual, row.revenueEstimate);
+    if (verdict) scorecard[verdict.direction] += 1;
+  }
 
   const newsLinks = await weeklyNews(locale, pastMonday, thisMonday, reportedSet);
 
@@ -232,6 +286,7 @@ export async function gatherDigest(locale: Locale, now: Date = new Date()): Prom
     .slice(0, MAX_STORIES)
     .map((story) => ({ title: story.title, meta: story.dek ?? null, path: `/mercek/${story.slug}` }));
 
+  const highEvents = events.ok ? events.rows.filter((row) => row.importance === "high") : [];
   const aheadDays: DigestAheadDay[] = ahead.days.map((day) => {
     const items = [...day.bmo, ...day.amc, ...day.other]
       .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
@@ -243,6 +298,8 @@ export async function gatherDigest(locale: Locale, now: Date = new Date()): Prom
       items,
       bmoClock: day.bmoClock.primary,
       amcClock: day.amcClock.primary,
+      total: ahead.schedule.find((d) => d.date === day.date)?.total ?? items.length,
+      events: highEvents.filter((row) => row.eventDate === day.date).length,
     };
   });
 
@@ -258,17 +315,24 @@ export async function gatherDigest(locale: Locale, now: Date = new Date()): Prom
     }
   }
 
+  const toEvent = (row: { eventDate: string; eventTimeEt: string | null; titleTr: string; titleEn: string }): DigestEvent => ({
+    date: row.eventDate,
+    time: row.eventTimeEt ? timePair(row.eventDate, row.eventTimeEt, locale).primary : null,
+    title: locale === "tr" ? row.titleTr : row.titleEn,
+  });
   const eventRows = events.ok
-    ? events.rows
-        .filter((row) => row.importance === "high")
+    ? highEvents
         .sort((a, b) => a.eventDate.localeCompare(b.eventDate) || (a.eventTimeEt ?? "99").localeCompare(b.eventTimeEt ?? "99"))
         .slice(0, MAX_EVENTS)
-        .map((row) => ({
-          date: row.eventDate,
-          time: row.eventTimeEt ? timePair(row.eventDate, row.eventTimeEt, locale).primary : null,
-          title: locale === "tr" ? row.titleTr : row.titleEn,
-        }))
+        .map((row) => toEvent(row))
     : [];
+
+  const nextRow =
+    eventRows.length === 0 && later.ok
+      ? later.rows
+          .filter((row) => row.importance === "high")
+          .sort((a, b) => a.eventDate.localeCompare(b.eventDate) || (a.eventTimeEt ?? "99").localeCompare(b.eventTimeEt ?? "99"))[0]
+      : undefined;
 
   return {
     locale,
@@ -279,14 +343,17 @@ export async function gatherDigest(locale: Locale, now: Date = new Date()): Prom
     indices,
     reported,
     reportedTotal: reportedRows.length,
+    scorecard,
     pastFailed: past.failed,
     brief: brief ? { headline: brief.headline, path: briefHref(pastMonday, "weekly") } : null,
     stories: storyLinks,
     news: newsLinks,
     ahead: aheadDays,
+    aheadTotal: ahead.total,
     aheadFailed: ahead.failed,
     aheadAll,
     events: eventRows,
+    nextEvent: nextRow ? toEvent(nextRow) : null,
     eventsFailed: !events.ok,
   };
 }

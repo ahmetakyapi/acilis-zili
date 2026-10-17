@@ -17,6 +17,14 @@ LINES=(
 	"30 10 * * 1-5 /bin/bash $APP_ROOT/current/deploy/cron-daily.sh"
 	"*/5 * * * * /bin/bash $APP_ROOT/current/deploy/cron-alerts.sh"
 	"20 16 * * * /bin/bash $APP_ROOT/current/deploy/cron-bilanco.sh"
+	"0 7-11 * * 0 /bin/bash $APP_ROOT/current/deploy/cron-weekly-mail.sh"
+	"35 5,11,17 * * * /bin/bash $APP_ROOT/current/deploy/cron-news.sh"
+)
+# EMEKLİ SATIRLAR — saati değişen iş eski satırıyla kalmasın. Ekleme
+# yalnız eksik satırı yazıyordu; pazartesi özeti pazara taşınınca (17 Ekim)
+# eski satır crontab'da kalır ve pazartesi de uç çağrılırdı (uç "not-sunday"
+# deyip dönerdi ama günlükte gürültü). Buradakiler her sürümde silinir.
+RETIRED=(
 	"15 11-15 * * 1 /bin/bash $APP_ROOT/current/deploy/cron-weekly-mail.sh"
 )
 
@@ -39,6 +47,9 @@ next="$current"
 if ! grep -qxF "CRON_TZ=UTC" <<<"$next"; then
 	next=$(printf 'CRON_TZ=UTC\n%s' "$next")
 fi
+for line in "${RETIRED[@]}"; do
+	next=$(grep -vxF "$line" <<<"$next" || true)
+done
 for line in "${LINES[@]}"; do
 	grep -qxF "$line" <<<"$next" || next=$(printf '%s\n%s' "$next" "$line")
 done

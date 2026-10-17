@@ -41,11 +41,32 @@ export const maxDuration = 60;
 /** Gövdede adıyla sayılan sembol sayısı; kalanı "+n". */
 const LISTED_SYMBOLS = 6;
 
+/**
+ * TEK KOŞU KİLİDİ (17 Ekim denetimi). Betik `curl --max-time 90 --retry 4`
+ * ile çağırıyor; yavaş bir push ucu (her biri 10 sn'ye kadar) koşuyu 90
+ * saniyenin ötesine taşıyınca curl yeniden deniyor ama ilk istek sunucuda
+ * SÜRÜYOR — ikinci koşu "son 12 saatte bildirim aldı mı" sorusunu ilki daha
+ * o kullanıcılara varmadan soruyor ve onlara ikinci bildirim gidiyordu.
+ * Uygulama VPS'te tek süreç: süreç içi bayrak yeter. Kilitliyken 200 döner
+ * (curl 2xx'i yeniden denemez); ilk koşu işi bitiriyor.
+ */
+let running = false;
+
 export async function GET(request: Request) {
   const auth = checkBearer(request, process.env.CRON_SECRET);
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
+  if (running) return NextResponse.json({ skipped: "running" });
+  running = true;
+  try {
+    return await run();
+  } finally {
+    running = false;
+  }
+}
+
+async function run(): Promise<NextResponse> {
 
   const tomorrow = addEtDays(todayEt(), 1);
   const calendar = await getEarningsBetweenResult(tomorrow, tomorrow);

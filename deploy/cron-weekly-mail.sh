@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Açılış Zili — pazartesi özeti postası (16 Ekim).
+# Açılış Zili — pazar özeti postası (16 Ekim; 17 Ekim'de pazara taşındı).
 #
 # `/api/cron/haftalik-posta` ucunu `CRON_SECRET` ile çağırır; uç, özeti açan
 # ve adresini onaylayan hesaplara geçen haftanın ve bu haftanın özetini
@@ -8,11 +8,12 @@
 #
 # Crontab girdisi `deploy/cron-install.sh` ile yazılıyor:
 #
-#   15 11-15 * * 1 /bin/bash /srv/acilis-zili/current/deploy/cron-weekly-mail.sh
+#   0 7-11 * * 0 /bin/bash /srv/acilis-zili/current/deploy/cron-weekly-mail.sh
 #
-# PAZARTESİ, SAATTE BİR, BEŞ KEZ. İlk koşu 11:15 UTC = 14:15 TR (gerekçe
-# uçta: bilanço gerçekleşenleri 13:30 TR eşitlemesinde doluyor). Sonraki
-# dört koşu yalnız eksikleri tamamlar — uç her alıcıyı defterle sahipleniyor,
+# PAZAR, SAATTE BİR, BEŞ KEZ. İlk koşu 07:00 UTC = 10:00 TR (Türkiye UTC+3
+# sabit, saat kaymaz; ET'de hâlâ pazar). Uç göndermeden önce geçen haftanın
+# bilanço gerçekleşenlerini tazeliyor (gerekçe uçta). Sonraki dört koşu
+# yalnız eksikleri tamamlar — uç her alıcıyı defterle sahipleniyor,
 # giden ikinci kez gitmez; günlük e-posta bütçesine takılanlar ya da
 # düşen gönderimler sıradaki saatte gider.
 #

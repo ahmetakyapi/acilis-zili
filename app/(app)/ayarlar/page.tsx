@@ -180,7 +180,7 @@ export default async function SettingsPage() {
         </Panel>
       )}
 
-      {/* E-POSTA BİLDİRİMLERİ (16 Ekim) — alarm postası ve pazartesi özeti.
+      {/* E-POSTA BİLDİRİMLERİ (16 Ekim) — alarm postası ve pazar özeti.
           E-posta servisi kapalıysa ya da tablo yoksa (migration 0036) panel
           basılmaz. Çapa `#e-posta`: postaların altındaki "E-posta
           Tercihleri" bağlantısı buraya iner. */}
