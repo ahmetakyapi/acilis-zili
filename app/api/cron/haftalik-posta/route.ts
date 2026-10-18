@@ -51,13 +51,19 @@ export async function GET(request: Request) {
      engellemez). Yetki aynı CRON_SECRET; bütçeden düşer. Üye olmayan
      adrese gitmez. */
   const testTo = params.get("deneme")?.trim().toLowerCase() || null;
-  if (weekday !== 0 && !force && !testTo) return NextResponse.json({ skipped: "not-sunday" });
+  /* YENİDEN GÖNDERİM (18 Ekim): adresi sonradan düzeltilen üyeye haftanın
+     postasını GERÇEK haliyle (önek yok) bir kez daha yollar — kendi defter
+     anahtarı `weekly-resend:<pazartesi>:<kullanıcı>`, yani üye başına
+     haftada en çok bir kez. Yetki ve üyelik şartı denemeyle aynı. */
+  const resendTo = params.get("yeniden")?.trim().toLowerCase() || null;
+  const single = testTo ?? resendTo;
+  if (weekday !== 0 && !force && !single) return NextResponse.json({ skipped: "not-sunday" });
 
   /* Varsayılan açık: henüz kaydedilmemiş üyeler (yeni kayıtlar dahil) önce
      özete eklenir — gerekçe lib/email-notify.ts → enrollWeeklyDefault. */
   const enrolled = await enrollWeeklyDefault(now);
   const all = await weeklyRecipients();
-  const recipients = testTo && all ? all.filter((r) => r.email.trim().toLowerCase() === testTo) : all;
+  const recipients = single && all ? all.filter((r) => r.email.trim().toLowerCase() === single) : all;
   if (recipients === null) {
     console.error("[haftalık posta] alıcılar okunamadı");
     return NextResponse.json({ error: "db" }, { status: 503 });
@@ -121,7 +127,11 @@ export async function GET(request: Request) {
     const data = digests.get(recipient.locale)!;
     const personal = personalOf(recipient, data);
     const copy = getDictionary(recipient.locale).emailNotify;
-    const dedupeKey = testTo ? `weekly-test:${data.thisMonday}:${recipient.userId}:${now.getTime()}` : `weekly:${data.thisMonday}:${recipient.userId}`;
+    const dedupeKey = testTo
+      ? `weekly-test:${data.thisMonday}:${recipient.userId}:${now.getTime()}`
+      : resendTo
+        ? `weekly-resend:${data.thisMonday}:${recipient.userId}`
+        : `weekly:${data.thisMonday}:${recipient.userId}`;
     const result = await sendNotificationEmail(recipient, "weekly", dedupeKey, (r) => {
       const mail = weeklyEmailMessage(r, data, personal, copy, weeks.get(recipient.userId));
       return testTo ? { ...mail, subject: `[Deneme] ${mail.subject}` } : mail;
