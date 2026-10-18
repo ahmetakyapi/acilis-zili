@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { hashEmailToken, isUnsubscribeScope, looksLikeEmailToken, newEmailToken, unsubscribeUrl, type Recipient } from "../lib/email-notify";
+import { keepTogetherHtml } from "../lib/email-layout";
 import { alertEmailMessage, confirmEmailMessage, weekRangeLabel, weeklyEmailMessage } from "../lib/notify-emails";
 import { digestWeek, type DigestData } from "../lib/weekly-digest";
 import tr from "../lib/i18n/dictionaries/tr";
@@ -227,4 +228,12 @@ test("haftalık posta: yorum bant altında ve künyesiyle", () => {
   assert.ok(html.indexOf("Yeni haftada teknoloji bilançoları var.") > html.indexOf("Yeni Haftada Bizi Ne Bekliyor"));
   assert.ok(html.includes(tr.emailNotify.weeklyMail.commentaryNote));
   assert.match(mail.text, /bankalar öndeydi/);
+});
+
+test("posta başlığı: birlikte okunan kelimeler birlikte kalır", () => {
+  const nb = " ";
+  assert.equal(keepTogetherHtml("Haftanın Özeti ve Genel Bakış"), `Haftanın Özeti ve${nb}Genel${nb}Bakış`);
+  assert.equal(keepTogetherHtml("Weekly Recap and Overview"), `Weekly Recap${nb}and${nb}Overview`);
+  assert.equal(keepTogetherHtml("12 – 16 Ekim"), `12${nb}– 16${nb}Ekim`);
+  assert.equal(keepTogetherHtml("A & B"), `A &amp;${nb}B`);
 });

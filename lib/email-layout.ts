@@ -1,4 +1,22 @@
 import { escapeHtml } from "@/lib/email";
+
+/**
+ * BİRLİKTE OKUNAN KELİMELER BİRLİKTE KALIR (18 Ekim, sahibinin isteği: Gmail
+ * iOS'ta başlık "Haftanın Özeti ve Genel / Bakış" diye kırılıyordu). Sitede
+ * bunu `text-wrap: balance / pretty` yapıyor (globals.css); posta
+ * istemcileri `text-wrap`ı tanımıyor, o yüzden bölünmez boşlukla:
+ * - son iki kelime ayrılmaz (tek kelime alt satıra düşmez),
+ * - bağlaç sonrakine yapışır ("ve Genel Bakış", "Recap and Overview"),
+ * - sayı arkasındaki kelimeye yapışır ("23 Ekim", "12 – 16 Ekim").
+ * Girdi düz metin; çıktı kaçışlı HTML.
+ */
+const GLUE = /(^|\s)(ve|ile|veya|and|or|of|the|to|in|on|for|a|an)\s+/gu;
+export function keepTogetherHtml(text: string): string {
+  let out = text.trim().replace(GLUE, "$1$2\u00a0").replace(/(\d)\s+(?=[\p{L}–-])/gu, "$1\u00a0").replace(/\s+([–-])\s+/gu, "\u00a0$1 ");
+  const words = out.split(" ");
+  if (words.length >= 3) out = `${words.slice(0, -1).join(" ")}\u00a0${words[words.length - 1]}`;
+  return escapeHtml(out);
+}
 import { EASE_BRAND } from "@/lib/motion";
 
 /**
@@ -243,8 +261,8 @@ export function brandedEmailHtml(email: BrandedEmail): string {
 <img src="${asset(hero.file)}" width="${hero.width}" height="${hero.height}" alt="" style="display:block;width:100%;max-width:720px;height:auto;border:0;border-radius:23px 23px 0 0">
 </td></tr>
 <tr><td class="az-pad" style="padding:36px 52px 42px">
-<h1 class="az-title az-ink" style="margin:0;font-family:${FONT};font-size:30px;line-height:36px;font-weight:800;letter-spacing:-.03em;color:${C.ink}">${escapeHtml(email.title)}</h1>
-<p class="az-body" style="margin:10px 0 26px;font-family:${FONT};font-size:16px;line-height:24px;color:${C.body}">${escapeHtml(email.lead)}</p>
+<h1 class="az-title az-ink" style="margin:0;font-family:${FONT};font-size:30px;line-height:36px;font-weight:800;letter-spacing:-.03em;color:${C.ink}">${keepTogetherHtml(email.title)}</h1>
+<p class="az-body" style="margin:10px 0 26px;font-family:${FONT};font-size:16px;line-height:24px;color:${C.body}">${keepTogetherHtml(email.lead)}</p>
 ${email.bodyHtml}
 </td></tr>
 </table>
@@ -270,7 +288,7 @@ ${footer}
 export function emailSection(title: string, meta?: string, first = false): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:${first ? "6px" : "34px"} 0 14px">
 <tr><td style="padding:0 0 8px"><span style="display:block;width:28px;height:3px;border-radius:2px;background:${C.brass};font-size:0;line-height:0">&nbsp;</span></td></tr>
-<tr><td><h2 class="az-ink" style="margin:0;font-family:${FONT};font-size:20px;line-height:26px;font-weight:800;letter-spacing:-.02em;color:${C.ink}">${escapeHtml(title)}</h2>${
+<tr><td><h2 class="az-ink" style="margin:0;font-family:${FONT};font-size:20px;line-height:26px;font-weight:800;letter-spacing:-.02em;color:${C.ink}">${keepTogetherHtml(title)}</h2>${
     meta ? `<p class="az-muted" style="margin:4px 0 0;font-family:${FONT};font-size:12px;line-height:18px;color:${C.muted}">${escapeHtml(meta)}</p>` : ""
   }</td></tr>
 </table>`;

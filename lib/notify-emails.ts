@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { escapeHtml, type Email } from "@/lib/email";
-import { C, FONT, MONO, brandedEmailHtml, emailButton, emailMeta, emailSection, emailText } from "@/lib/email-layout";
+import { C, FONT, MONO, brandedEmailHtml, emailButton, emailMeta, emailSection, emailText, keepTogetherHtml } from "@/lib/email-layout";
 import type { Recipient } from "@/lib/email-notify";
 import { unsubscribeUrl } from "@/lib/email-notify";
 import type { emailNotifyTr } from "@/lib/i18n/dictionaries/email-notify";
@@ -257,7 +257,7 @@ function chip(text: string, tone: Tone): string {
 function chapter(index: string, title: string, range: string): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:48px 0 0"><tr><td style="padding:0 0 14px;border-bottom:3px solid ${C.primary}">
 <p class="az-brass" style="margin:0 0 6px;font-family:${MONO};font-size:13px;line-height:16px;font-weight:800;letter-spacing:.06em;color:${BRASS_INK}">${escapeHtml(index)}&nbsp;&nbsp;&middot;&nbsp;&nbsp;<span style="font-family:${FONT};letter-spacing:0">${escapeHtml(range)}</span></p>
-<p class="az-ink" style="margin:0;font-family:${FONT};font-size:26px;line-height:31px;font-weight:800;letter-spacing:-.03em;color:${C.ink}">${escapeHtml(title)}</p>
+<p class="az-ink" style="margin:0;font-family:${FONT};font-size:26px;line-height:31px;font-weight:800;letter-spacing:-.03em;color:${C.ink}">${keepTogetherHtml(title)}</p>
 </td></tr></table>`;
 }
 
