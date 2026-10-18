@@ -4,23 +4,48 @@
 
 .window { margin: -10px 0 0; font-size: var(--text-base); font-weight: 650; color: var(--text-muted); }
 
-.themes { display: grid; gap: 18px; margin: 0; padding: 0; list-style: none; }
-/* İki kolon yalnız geniş ekranda; başlıklar eşit sırada okunur, aralık gap-5. */
-@media (min-width: 900px) { .themes { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; } }
-.theme { display: flex; gap: 12px; align-items: flex-start; animation: nb-rise .55s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 90ms + 80ms); }
-.themeIndex {
-  display: grid; place-items: center; flex: none; width: 26px; height: 26px; margin-top: 1px; border-radius: 8px;
-  background: var(--surface-sunken); color: var(--brass-ink); font-family: var(--font-mono); font-size: 13px; font-weight: 800;
+/* KARTLAR (18 Ekim, sahibinin isteği "daha görsel"): her konu ton yüzeyli
+   bir kart — başında sıra, şirket logoları ve haber sayısı; ilk konu geniş
+   ekranda iki kolonu kaplayan öne çıkan kart, haberleri iki sütunda —
+   yalnız konu sayısı TEKKEN (dört konuda son satırda bir hücre boş
+   kalıyordu, örnek gündemle ölçüldü).
+   Derinlik ton (surface-sunken), gölge yok. */
+.themes { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+@media (min-width: 900px) { .themes { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; } }
+.theme {
+  display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 14px 16px 6px; border-radius: var(--radius-lg);
+  background: var(--surface-sunken); border: 1px solid transparent;
+  transition: border-color .25s var(--ease-brand), background-color .25s var(--ease-brand);
+  animation: nb-rise .55s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 90ms + 80ms);
 }
-.themeBody { flex: 1; min-width: 0; }
+@media (hover: hover) and (pointer: fine) { .theme:hover { border-color: var(--line); } }
+@media (min-width: 900px) {
+  .theme[data-lead] { grid-column: 1 / -1; padding: 18px 20px 8px; }
+  .theme[data-lead] .themeTitle { font-size: 21px; }
+  .theme[data-lead] .items { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+}
+.themeHead { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.themeIndex {
+  display: grid; place-items: center; flex: none; width: 26px; height: 26px; border-radius: 8px;
+  background: var(--surface); color: var(--brass-ink); font-family: var(--font-mono); font-size: 13px; font-weight: 800;
+}
+.logos { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.logo {
+  display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 2px; border-radius: 999px; background: var(--surface);
+  transition: background-color .2s var(--ease-brand);
+}
+.logo:hover { background: var(--primary-tint); }
+.logoSymbol { font-family: var(--font-mono); font-size: 11px; font-weight: 800; color: var(--text-strong); }
+.count { margin-left: auto; flex: none; font-size: var(--text-small); font-weight: 650; color: var(--text-muted); white-space: nowrap; }
+.themeBody { min-width: 0; }
 /* Başlık p: h3'ün sitedeki display degradesi veri panelinde yasak (CLAUDE.md "degrade yalnız üç yerde"). */
 .themeTitle { margin: 0; font-size: 17px; line-height: 1.3; font-weight: 800; letter-spacing: -.01em; color: var(--text-strong); text-wrap: balance; }
 .themeSummary { margin: 4px 0 0; font-size: var(--text-read); line-height: 1.55; color: var(--text-body); text-wrap: pretty; }
 
-.items { display: grid; margin: 10px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line-soft); }
+.items { display: grid; margin: 10px 0 0; padding: 0; list-style: none; }
 .item {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 8px 0;
-  border-bottom: 1px solid var(--line-soft); transition: color .2s var(--ease-brand);
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 9px 0;
+  border-top: 1px solid var(--line-soft); transition: color .2s var(--ease-brand);
 }
 .item:hover .itemHeadline { color: var(--primary); }
 .itemHeadline {
@@ -36,9 +61,11 @@
    zıplıyordu. Düzeltme sonrası iskelet / not: 1280'de 603 / 596, 390'da
    1201 / 1204. Haber notu (üç madde) hisse notunun bilanço iskeletiyle aynı boy. */
 .loading { display: flex; flex-direction: column; gap: 9px; min-height: 300px; }
-.loading[data-kind="briefing"] { min-height: 510px; }
-@media (max-width: 899px) { .loading { min-height: 420px; } .loading[data-kind="briefing"] { min-height: 900px; } }
-@media (max-width: 639px) { .loading { min-height: 500px; } .loading[data-kind="briefing"] { min-height: 1110px; } }
+/* Kartlı gündem (18 Ekim): dört konu / on bir haberle panel 1280'de 876,
+   390'da 1500 piksel; iskelet buna göre. */
+.loading[data-kind="briefing"] { min-height: 780px; }
+@media (max-width: 899px) { .loading { min-height: 420px; } .loading[data-kind="briefing"] { min-height: 1150px; } }
+@media (max-width: 639px) { .loading { min-height: 500px; } .loading[data-kind="briefing"] { min-height: 1400px; } }
 
 @keyframes nb-rise { from { opacity: 0; translate: 0 8px; } }
 @media (prefers-reduced-motion: reduce) { .theme { animation: none !important; } }

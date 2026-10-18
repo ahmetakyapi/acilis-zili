@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Sparkle } from "@phosphor-icons/react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { Panel, PanelHeader, Skeleton } from "@/components/ui/primitives";
+import { LogoTile, Panel, PanelHeader, Skeleton } from "@/components/ui/primitives";
 import base from "@/components/stock/StockInsightCard.module.css";
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
@@ -82,11 +82,28 @@ export function NewsBriefingCard({ locale, labels }: { locale: Locale; labels: L
         <>
           <p className={styles.window}>{labels.briefingWindow.replace("{n}", String(briefing.considered))}</p>
           <ol className={styles.themes}>
-            {briefing.themes.map((theme, i) => (
-              <li key={i} className={styles.theme} style={{ "--i": i } as CSSProperties}>
-                <span className={styles.themeIndex} aria-hidden>
-                  {i + 1}
-                </span>
+            {briefing.themes.map((theme, i) => {
+              /* Konunun şirketleri — logo şeridi (18 Ekim). Yalnız sitede
+                 sayfası olan semboller (uç bilinmeyeni süzüyor). */
+              const symbols = [...new Set(theme.items.flatMap((item) => item.symbols))].filter((sym) => briefing.logos && sym in briefing.logos).slice(0, 4);
+              return (
+              <li key={i} className={styles.theme} data-lead={(i === 0 && briefing.themes.length % 2 === 1) || undefined} style={{ "--i": i } as CSSProperties}>
+                <div className={styles.themeHead}>
+                  <span className={styles.themeIndex} aria-hidden>
+                    {i + 1}
+                  </span>
+                  {symbols.length > 0 && (
+                    <span className={styles.logos}>
+                      {symbols.map((sym) => (
+                        <Link key={sym} href={`/hisse/${sym}`} className={styles.logo} title={sym}>
+                          <LogoTile symbol={sym} logoUrl={briefing.logos?.[sym]} size="xs" />
+                          <span className={styles.logoSymbol}>{sym}</span>
+                        </Link>
+                      ))}
+                    </span>
+                  )}
+                  <span className={styles.count}>{labels.storyCount.replace("{n}", String(theme.items.length))}</span>
+                </div>
                 <div className={styles.themeBody}>
                   <p className={styles.themeTitle}>{theme.title[locale]}</p>
                   <p className={styles.themeSummary}>{theme.summary[locale]}</p>
@@ -107,7 +124,8 @@ export function NewsBriefingCard({ locale, labels }: { locale: Locale; labels: L
                   </ul>
                 </div>
               </li>
-            ))}
+              );
+            })}
           </ol>
           <p className={base.disclosure}>{labels.briefingDisclosure}</p>
         </>

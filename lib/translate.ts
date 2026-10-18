@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { eq, desc, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { claudeKey } from "./claude-key";
 import { db } from "./db";
 import { BACKGROUND_TIMEOUT_MS, withTimeout } from "./providers/timeout";
@@ -56,13 +56,16 @@ export async function translatePendingNews(limit = 40): Promise<number> {
     .limit(limit);
 
   if (pending.length === 0) return 0;
+  return (await translateAndStore(backend, pending)).size;
+}
 
+async function translateAndStore(backend: TranslateBackend, pending: PendingItem[]): Promise<Map<string, string>> {
   const results =
     backend === "deepl"
       ? await translateWithDeepL(pending)
       : await translateWithClaude(pending);
 
-  let updated = 0;
+  const done = new Map<string, string>();
   for (const item of results) {
     if (!item.headlineTr.trim()) continue;
     await db
@@ -72,9 +75,27 @@ export async function translatePendingNews(limit = 40): Promise<number> {
         summaryTr: item.summaryTr?.trim() || null,
       })
       .where(eq(news.id, item.id));
-    updated++;
+    done.set(item.id, item.headlineTr.trim());
   }
-  return updated;
+  return done;
+}
+
+/**
+ * Belirli haberleri hemen çevirir (18 Ekim, sahibinin isteği: hisse
+ * sayfasındaki haberler de Türkçe görünsün). Şirket haberleri canlı uçtan
+ * gelip o an tabloya işleniyor; nöbet onları ancak sonraki koşusunda
+ * çeviriyordu ve panel çoğu zaman İngilizce kalıyordu. Yalnız çevirisi boş
+ * olanlar gider; aynı haber ikinci kez ücretlenmez. Dönüş: id → Türkçe başlık.
+ */
+export async function translateNewsByIds(ids: string[]): Promise<Map<string, string>> {
+  const backend = activeTranslateBackend();
+  if (!backend || ids.length === 0) return new Map();
+  const pending: PendingItem[] = await db
+    .select({ id: news.id, headline: news.headline, summary: news.summary })
+    .from(news)
+    .where(and(isNull(news.headlineTr), inArray(news.id, ids)));
+  if (pending.length === 0) return new Map();
+  return translateAndStore(backend, pending);
 }
 
 type Translated = { id: string; headlineTr: string; summaryTr: string | null };

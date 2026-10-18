@@ -9,6 +9,7 @@ import { getGenericImageUrls, getSymbolNames } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { getCompanyNews } from "@/lib/providers/finnhub";
 import { addEtDays, todayEt } from "@/lib/market-hours";
+import { isTranslateConfigured, translateNewsByIds } from "@/lib/translate";
 import { headlineMentions, safeExternalUrl, timeAgo, titleCaseLabel } from "@/lib/utils";
 
 export async function CompanyNews({
@@ -94,6 +95,22 @@ export async function CompanyNews({
         .filter((row) => row.headlineTr)
         .map((row) => [row.providerId, row.headlineTr as string]),
     );
+    /* ÇEVİRİSİ EKSİK BAŞLIK O AN ÇEVRİLİR (18 Ekim, sahibinin isteği).
+       Türkçe arayüzde eksikler tek çağrıda çevrilip tabloya yazılıyor;
+       panel en çok 4 saniye bekler, yetişmeyen çeviri arka planda biter ve
+       sonraki açılışta görünür. Aynı haber ikinci kez ücretlenmez. */
+    const missing = shown
+      .filter((item) => !trByProvider.has(item.providerId))
+      .map((item) => idByProvider.get(item.providerId))
+      .filter((id): id is string => Boolean(id));
+    if (locale === "tr" && missing.length > 0 && isTranslateConfigured()) {
+      const job = translateNewsByIds(missing).catch(() => new Map<string, string>());
+      const done = await Promise.race([job, new Promise<Map<string, string>>((resolve) => setTimeout(() => resolve(new Map()), 4000))]);
+      for (const [providerId, id] of idByProvider) {
+        const tr = done.get(id);
+        if (tr) trByProvider.set(providerId, tr);
+      }
+    }
   } catch {
     // DB yazılamazsa haberler kaynağa bağlanır — liste yine çalışır.
   }

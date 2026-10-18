@@ -28,6 +28,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Claude Code'un geçici çalışma kopyaları (alt ajanlar) — depo kodu değil.
+    ".claude/**",
   ]),
 ]);
 

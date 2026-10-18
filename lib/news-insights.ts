@@ -37,7 +37,17 @@ import { isSpotlight } from "@/lib/spotlight";
 
 export type BriefingItem = { id: string; headline: string; headlineTr: string | null; source: string | null; symbols: string[] };
 export type BriefingTheme = { title: { tr: string; en: string }; summary: { tr: string; en: string }; items: BriefingItem[] };
-export type NewsBriefing = { kind: "briefing"; slot: string; from: string; to: string; considered: number; themes: BriefingTheme[]; generatedAt: string };
+export type NewsBriefing = {
+  kind: "briefing";
+  slot: string;
+  from: string;
+  to: string;
+  considered: number;
+  themes: BriefingTheme[];
+  generatedAt: string;
+  /** Konulardaki sembollerin logoları — uçta, önbelleğin dışında eklenir. */
+  logos?: Record<string, string | null>;
+};
 
 export type ExplainerText = { summary: string; points: { title: string; detail: string }[] };
 export type NewsExplainer = { kind: "explainer"; id: string; text: { tr: ExplainerText; en: ExplainerText }; generatedAt: string };

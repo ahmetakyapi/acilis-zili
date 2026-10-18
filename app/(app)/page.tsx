@@ -250,7 +250,7 @@ export default async function TodayPage() {
                     (gerekçe TabCountdown'da). Hiçbir şey çizmez. */}
                 <TabCountdown
                   targetIso={countdownTarget.toISOString()}
-                  phrase={trading ? t.sessionBell.toClose : t.sessionBell.toOpen}
+                  phrase={trading ? t.today.tabToClose : t.today.tabToOpen}
                   rang={trading ? t.today.tabRangClose : t.today.tabRangOpen}
                   units={t.today.tabUnits}
                   brand={t.brand.name}

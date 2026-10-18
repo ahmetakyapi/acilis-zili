@@ -27,10 +27,11 @@
    belirleniyor ve burada doğrulanmadığı için o ad kullanılmıyor. 3M (MMM)
    2024'teki bölünmeden sonra temettüsünü düşürdüğü için listede yok.
 
-   BAŞLIK VE AÇIKLAMA (17 Ekim, sahibinin isteği: "daha güzel, daha
-   anlamlı"): başlık temanın neden izlendiğini söyler ("Yapay Zekâ
-   Zinciri", "Temettüsünü Her Yıl Artıranlar"); açıklama jargonsuz tek
-   cümle — "uç nokta" gibi sektör terimi yerine korunan şeyin kendisi.
+   BAŞLIK VE AÇIKLAMA (17-18 Ekim, sahibinin isteği): başlık KISA ve net,
+   en çok üç kelime — sıralama listesi ve kart başlığı onu tek satırda
+   basıyor ("Temettüsünü Her Yıl Artır…" kesiliyordu, "Yapay Zekâ
+   Zinciri"ndeki "Zinciri" fazlaydı). Anlatım açıklamaya düşer: jargonsuz
+   tek cümle, "uç nokta" gibi sektör terimi yerine korunan şeyin kendisi.
    Slug'lar değişmedi, bağlantılar aynı.
 
    KATILIM UYUMLU listesi elle yazılmıyor: endeks üyeleri arasında
@@ -69,8 +70,8 @@ export const THEMES = [
       "ORCL", "PLTR", "MU", "SNDK", "ANET", "DELL", "SMCI", "ALAB", "NOW",
     ],
     benchmark: null,
-    titleTr: "Yapay Zekâ Zinciri",
-    titleEn: "The AI Supply Chain",
+    titleTr: "Yapay Zekâ",
+    titleEn: "Artificial Intelligence",
     dekTr: "Çipten buluta, sunucudan yazılıma: yapay zekâya yapılan yatırımın parasının aktığı şirketler.",
     dekEn: "From chips to cloud, servers to software: the companies that AI spending flows through.",
     whyTr:
@@ -108,8 +109,8 @@ export const THEMES = [
       "SNOW", "DDOG", "MDB", "WDAY", "SHOP", "NET",
     ],
     benchmark: { symbol: "SKYY", name: "First Trust Cloud Computing ETF" },
-    titleTr: "Bulut ve Abonelik Yazılımı",
-    titleEn: "Cloud and Subscription Software",
+    titleTr: "Bulut ve Yazılım",
+    titleEn: "Cloud and Software",
     dekTr: "Sunucu kiralayan bulut devleri ve şirketlere abonelikle yazılım satanlar: geliri her ay yenilenen işler.",
     dekEn: "The cloud giants that rent out servers and the companies selling software by subscription: revenue that renews every month.",
     whyTr:
@@ -151,7 +152,7 @@ export const THEMES = [
        sembol tablosunda yok; tablo genişlerse ilk adaylar onlar. */
     symbols: ["LLY", "AMGN", "PFE", "ALT", "WST"],
     benchmark: null,
-    titleTr: "Kilo Verme İlaçları (GLP-1)",
+    titleTr: "Kilo İlaçları (GLP-1)",
     titleEn: "Weight-Loss Drugs (GLP-1)",
     dekTr: "Mounjaro ve Zepbound gibi kilo verdiren iğneleri satan, yenisini geliştiren ve kalemini üreten şirketler.",
     dekEn: "The companies selling weight-loss injections such as Mounjaro and Zepbound, developing the next ones and making the pens.",
@@ -169,16 +170,16 @@ export const THEMES = [
        da kapsadığını söylüyor. Üstteki kural: birebir izleyen yaygın fon
        yoksa ölçüt yok. */
     benchmark: null,
-    /* Ad (17 Ekim): "Veri Merkezlerinin Elektriği" — sahibinin isteği,
-       başlık temanın ne olduğunu değil NEDEN izlendiğini söylesin; listenin
-       ortak sorusu veri merkezi elektrik talebi. Nükleer açıklamada.
+    /* Ad (18 Ekim): "Elektrik ve Nükleer". 17 Ekim'de "Veri Merkezlerinin
+       Elektriği" denendi; sıralama listesinde ve kartta uzun kalıyordu,
+       sahibi kısa ve net başlık istedi. Veri merkezi bağı açıklamada.
        Ad (28 Eylül): "Nükleer ve Enerji Altyapısı" idi. On bir üyenin
        yalnızca üçünün işi nükleer (Constellation, Cameco, GE Vernova'nın
        reaktör programı); kalanı elektrik üreticisi ya da şebeke ve güç
        ekipmanı. "Enerji" Türkçede petrol ve doğal gazı da çağırıyor, listede
        ikisi de yok. Slug bağlantılar için aynı kaldı. */
-    titleTr: "Veri Merkezlerinin Elektriği",
-    titleEn: "Powering the Data Centres",
+    titleTr: "Elektrik ve Nükleer",
+    titleEn: "Power and Nuclear",
     dekTr: "Yapay zekâyla hızla artan elektrik ihtiyacını karşılayan nükleer ve doğal gaz santralleri, uranyum ve şebeke ekipmanı şirketleri.",
     dekEn: "The nuclear and gas generators, uranium miners and grid-equipment makers meeting the fast-growing power demand from AI.",
     whyTr:
@@ -205,8 +206,8 @@ export const THEMES = [
     slug: "uzay",
     symbols: ["SPCX", "RKLB", "ASTS", "SPCE", "LMT", "NOC", "LHX", "BA", "KTOS"],
     benchmark: { symbol: "UFO", name: "Procure Space ETF" },
-    titleTr: "Uzay Ekonomisi",
-    titleEn: "The Space Economy",
+    titleTr: "Uzay",
+    titleEn: "Space",
     dekTr: "Roket fırlatan, uydu kuran ve uzay aracı üreten şirketler: genç girişimlerle köklü savunma devleri yan yana.",
     dekEn: "The companies launching rockets, building satellites and making spacecraft: young start-ups alongside established defence giants.",
     whyTr:
@@ -222,8 +223,8 @@ export const THEMES = [
       "ITW", "ADP", "LOW", "TGT", "WMT", "MCD", "ABT", "SYY", "NUE", "CINF",
     ],
     benchmark: { symbol: "VIG", name: "Vanguard Dividend Appreciation ETF" },
-    titleTr: "Temettüsünü Her Yıl Artıranlar",
-    titleEn: "Steady Dividend Raisers",
+    titleTr: "Temettü Artıranlar",
+    titleEn: "Dividend Growers",
     dekTr: "Kâr payını on yıllardır her yıl artırmasıyla bilinen, çoğu günlük hayattan tanıdık şirketler.",
     dekEn: "Companies known for raising their dividend every year for decades, most of them household names.",
     whyTr:

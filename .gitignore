@@ -69,3 +69,6 @@ next-env.d.ts
 .playwright-cli/
 output/playwright/
 __pycache__/
+
+# Claude Code alt ajanlarının geçici çalışma kopyaları
+.claude/worktrees/
