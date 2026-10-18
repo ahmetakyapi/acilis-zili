@@ -53,8 +53,10 @@ export async function GET(request: Request) {
   const testTo = params.get("deneme")?.trim().toLowerCase() || null;
   /* YENİDEN GÖNDERİM (18 Ekim): adresi sonradan düzeltilen üyeye haftanın
      postasını GERÇEK haliyle (önek yok) bir kez daha yollar — kendi defter
-     anahtarı `weekly-resend:<pazartesi>:<kullanıcı>`, yani üye başına
-     haftada en çok bir kez. Yetki ve üyelik şartı denemeyle aynı. */
+     anahtarı `weekly-resend:<pazartesi>:<kullanıcı>:<adres>`, yani aynı
+     adrese haftada en çok bir kez; adres bir daha düzeltilirse yeni adres
+     de alır (18 Ekim, Sedat'ın adresi iki kez düzeltildi). Yetki ve üyelik
+     şartı denemeyle aynı. */
   const resendTo = params.get("yeniden")?.trim().toLowerCase() || null;
   const single = testTo ?? resendTo;
   if (weekday !== 0 && !force && !single) return NextResponse.json({ skipped: "not-sunday" });
@@ -130,7 +132,7 @@ export async function GET(request: Request) {
     const dedupeKey = testTo
       ? `weekly-test:${data.thisMonday}:${recipient.userId}:${now.getTime()}`
       : resendTo
-        ? `weekly-resend:${data.thisMonday}:${recipient.userId}`
+        ? `weekly-resend:${data.thisMonday}:${recipient.userId}:${recipient.email.trim().toLowerCase()}`
         : `weekly:${data.thisMonday}:${recipient.userId}`;
     const result = await sendNotificationEmail(recipient, "weekly", dedupeKey, (r) => {
       const mail = weeklyEmailMessage(r, data, personal, copy, weeks.get(recipient.userId));
