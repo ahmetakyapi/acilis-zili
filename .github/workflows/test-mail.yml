@@ -13,6 +13,12 @@ on:
         required: true
         default: ahmetakyapii@gmail.com
         type: string
+      kind:
+        description: "deneme: [Deneme] önekli, her seferinde yeni · yeniden: gerçek posta, adresi düzeltilen üyeye haftada bir kez"
+        required: true
+        default: deneme
+        type: choice
+        options: [deneme, yeniden]
 
 permissions:
   contents: read
@@ -35,10 +41,12 @@ jobs:
           HOST: ${{ vars.VPS_HOST }}
           VPS_HOST_KEY: ${{ vars.VPS_HOST_KEY }}
           ADDRESS: ${{ inputs.email }}
+          KIND: ${{ inputs.kind }}
         run: |
           set -euo pipefail
           [[ "$ADDRESS" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]] || { echo "geçersiz adres"; exit 1; }
           [[ "$HOST" =~ ^[a-zA-Z0-9.-]+$ ]] || { echo "geçersiz host"; exit 1; }
+          [[ "$KIND" == "deneme" || "$KIND" == "yeniden" ]] || { echo "geçersiz tür"; exit 1; }
           strict=accept-new
           mkdir -p ~/.ssh
           if [[ -n "${VPS_HOST_KEY:-}" ]]; then
@@ -49,4 +57,4 @@ jobs:
           key=$(mktemp); trap 'rm -f "$key"' EXIT
           printf '%s\n' "$SSH_KEY" > "$key"
           ssh -i "$key" -o BatchMode=yes -o "StrictHostKeyChecking=$strict" -o ConnectTimeout=15 "ubuntu@${HOST}" \
-            "sudo -n -u acilis -H bash -s -- $ADDRESS" < deploy/remote-test-mail.sh
+            "sudo -n -u acilis -H bash -s -- $ADDRESS $KIND" < deploy/remote-test-mail.sh
