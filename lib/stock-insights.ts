@@ -13,7 +13,7 @@ import { epsSurprise, revenueSurprise } from "@/lib/earnings-week";
 import { addEtDays, prevTradingDay, todayEt } from "@/lib/market-hours";
 import { barDate } from "@/lib/period-returns";
 import { getChartBars } from "@/lib/providers";
-import { getCompanyNews } from "@/lib/providers/finnhub";
+import { getCompanyNews, getEarningsSurprises } from "@/lib/providers/finnhub";
 import type { Bar } from "@/lib/providers/types";
 import { earningsCalendar } from "@/lib/schema";
 import { formatPercent, formatPrice, safeExternalUrl } from "@/lib/utils";
@@ -422,5 +422,140 @@ export async function warmEarningsInsights(limit = 12): Promise<number> {
     .slice(0, limit);
   let written = 0;
   for (const symbol of picked) if (await getEarningsInsight(symbol)) written += 1;
+  return written;
+}
+
+/* ---------------------------------------------------------------------------
+   Bilanço Öncesi Önizleme (18 Ekim, sahibinin isteği: Claude ile katma değer)
+
+   Açıklamaya on gün ya da daha az kalan bilançoda "neye bakılacak": bu
+   çeyreğin beklentileri, son çeyreklerde beklentiyi aşma geçmişi, son
+   yirmi seansın hareketi ve açıklama öncesi haberler. Bilanço notunun
+   kuralları aynen: yalnız verilen biçimlenmiş sayılar, tahmin ve öneri
+   yok, haberde olmayan rehberlik ya da sebep yok. Not her gün bir kez
+   yazılır (anahtar sembol + rapor tarihi + gün): yeni haberler girsin,
+   aynı gün ikinci okur Claude'a gitmesin.
+   --------------------------------------------------------------------------- */
+
+export type PreviewQuarter = { period: string; quarter: number | null; year: number | null; direction: "beat" | "miss" | "inline"; ratio: number | null };
+
+export type PreviewInsight = {
+  kind: "preview";
+  symbol: string;
+  reportDate: string;
+  timing: "bmo" | "amc" | "other";
+  epsEstimate: number | null;
+  revenueEstimate: number | null;
+  /** Son dört çeyreğin HBK sürprizi, eskiden yeniye — kartın sürpriz şeridi. */
+  quarters: PreviewQuarter[];
+  /** Son yirmi tamamlanmış seansın değişimi; bar yoksa null. */
+  monthPct: number | null;
+  text: { tr: InsightText; en: InsightText };
+  generatedAt: string;
+};
+
+const PREVIEW_SYSTEM = `You write a short pre-earnings preview for Açılış Zili (a Turkish site for individual investors following US stocks): what to watch when the company reports.
+
+Return tr / en, each with: summary (at most 2 sentences, at most 45 words: when it reports and what the consensus expects) and points (2–3 points, each title at most 6 words, detail at most 30 words: e.g. the estimates, the record of beating or missing estimates in recent quarters, how the stock moved into the report, a topic from the recent news that the report may address). If a figure is null it is unknown; do not mention it as if known. Never predict whether the company will beat or miss, or how the stock will react.
+
+${SHARED_RULES}`;
+
+const PreviewSchema = z.object({ tr: Lang, en: Lang });
+
+/** Açıklanmamış, on gün içindeki ilk bilanço. */
+export async function upcomingEarnings(symbol: string) {
+  const today = todayEt();
+  try {
+    const [row] = await db
+      .select()
+      .from(earningsCalendar)
+      .where(and(eq(earningsCalendar.symbol, symbol), gte(earningsCalendar.reportDate, today), lte(earningsCalendar.reportDate, addEtDays(today, 10))))
+      .orderBy(earningsCalendar.reportDate)
+      .limit(1);
+    return row && row.epsActual === null ? row : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getPreviewInsight(symbol: string): Promise<PreviewInsight | null> {
+  try {
+    const row = await upcomingEarnings(symbol);
+    if (!row) return null;
+    const [bars, names, surprises] = await Promise.all([completedDailyBars(symbol), getSymbolNames([symbol]), getEarningsSurprises(symbol)]);
+    const company = names[symbol]?.name ?? symbol;
+    const quarters: PreviewQuarter[] = (surprises.ok ? surprises.data : [])
+      .filter((q) => q.epsActual !== null && q.epsEstimate !== null)
+      .sort((a, b) => a.period.localeCompare(b.period))
+      .slice(-4)
+      .flatMap((q) => {
+        const s = epsSurprise(q.epsActual, q.epsEstimate);
+        return s ? [{ period: q.period, quarter: q.quarter, year: q.year, direction: s.direction, ratio: s.ratio }] : [];
+      });
+    const monthPct = bars && bars.length > 21 ? closeChange(bars, 20) : null;
+    const news = newsInput(await getCompanyNews(symbol, addEtDays(todayEt(), -10), todayEt()), symbol, company, 8);
+    const money = (value: number | null) => (value === null ? null : usd2(value));
+    const billions = (value: number | null) =>
+      value === null ? null : { tr: `${(value / 1e9).toFixed(2).replace(".", ",")} milyar $`, en: `$${(value / 1e9).toFixed(2)} billion` };
+    const timing = row.hour === "bmo" ? "bmo" : row.hour === "amc" ? "amc" : "other";
+    const payload = {
+      symbol,
+      company,
+      reportDate: row.reportDate,
+      timing: timing === "bmo" ? "before open" : timing === "amc" ? "after close" : "unknown",
+      fiscalPeriod: row.quarter && row.year ? `Q${row.quarter} ${row.year}` : null,
+      consensus: { eps: money(row.epsEstimate), revenue: billions(row.revenueEstimate) },
+      recentQuarters: quarters.map((q) => ({ quarter: q.quarter && q.year ? `Q${q.quarter} ${q.year}` : q.period, epsVerdict: q.direction, surprise: q.ratio === null ? null : pct2(q.ratio * 100) })),
+      stockLast20Sessions: monthPct === null ? null : pct2(monthPct),
+      news: news.map(withoutUrl),
+    };
+    const input = JSON.stringify(payload);
+    return await unstable_cache(
+      async (): Promise<PreviewInsight> => {
+        const out = await callClaude(PREVIEW_SYSTEM, PreviewSchema, input);
+        if (!out) throw new Error("no-output");
+        const text = { tr: resolvePoints(out.tr, news), en: resolvePoints(out.en, news) };
+        if (!grounded(text, input)) throw new Error("ungrounded");
+        return {
+          kind: "preview",
+          symbol,
+          reportDate: row.reportDate,
+          timing,
+          epsEstimate: row.epsEstimate,
+          revenueEstimate: row.revenueEstimate,
+          quarters,
+          monthPct,
+          text,
+          generatedAt: new Date().toISOString(),
+        };
+      },
+      ["stock-preview-v1", symbol, row.reportDate, todayEt()],
+      { revalidate: 24 * 3600, tags: ["stock-insight"] },
+    )();
+  } catch (error) {
+    if (error instanceof Error && error.message === "ungrounded") console.error(`[içgörü] ${symbol}: önizlemede girdide olmayan sayı`);
+    return null;
+  }
+}
+
+/** Önümüzdeki iki gün açıklayacak büyük şirketlerin önizlemesini önceden yazdırır. */
+export async function warmEarningsPreviews(limit = 10): Promise<number> {
+  if (!insightsConfigured()) return 0;
+  const today = todayEt();
+  let rows: { symbol: string }[];
+  try {
+    rows = await db
+      .selectDistinct({ symbol: earningsCalendar.symbol })
+      .from(earningsCalendar)
+      .where(and(gte(earningsCalendar.reportDate, today), lte(earningsCalendar.reportDate, addEtDays(today, 2))));
+  } catch {
+    return 0;
+  }
+  const picked = rows
+    .map((row) => row.symbol)
+    .filter((symbol) => isSpotlight(symbol))
+    .slice(0, limit);
+  let written = 0;
+  for (const symbol of picked) if (await getPreviewInsight(symbol)) written += 1;
   return written;
 }

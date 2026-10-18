@@ -42,6 +42,10 @@
    gövde iskeleti buna göre 500 / 720. Bilanço notu ~300 / ~610 piksel. */
 .loading { display: flex; flex-direction: column; gap: 9px; min-height: 500px; }
 .loading[data-kind="earnings"] { min-height: 300px; }
+/* Önizleme (18 Ekim, örnek notla): panel 1280'de 450, 390'da 847 piksel. */
+.loading[data-kind="preview"] { min-height: 360px; }
+@media (max-width: 899px) { .loading[data-kind="preview"] { min-height: 580px; } }
+@media (max-width: 639px) { .loading[data-kind="preview"] { min-height: 760px; } }
 @media (max-width: 899px) { .loading { min-height: 620px; } .loading[data-kind="earnings"] { min-height: 520px; } }
 @media (max-width: 639px) { .loading { min-height: 720px; } .loading[data-kind="earnings"] { min-height: 600px; } }
 .loadingText { margin: 0 0 2px; font-size: var(--text-small); color: var(--text-muted); }
@@ -125,6 +129,18 @@
 @media (max-width: 420px) { .day { width: 52px; margin-left: -26px; } .dayValue { font-size: 10.5px; } }
 
 .figure[data-kind="earnings"] { grid-template-columns: none; }
+/* Önizleme (18 Ekim): beklenti kutuları + son dört çeyreğin sürpriz şeridi.
+   Şerit gün şeridinin diliyle (5 piksel, sıfır çizgisi --line-strong). */
+.previewTiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.previewTile { display: grid; gap: 4px; padding: 10px 12px; border-radius: var(--radius-md, 10px); background: var(--surface); animation: si-rise .5s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 90ms + 80ms); }
+.previewValue { font-size: 20px; line-height: 1.1; font-weight: 800; letter-spacing: -.02em; color: var(--text-strong); white-space: nowrap; }
+.previewValue[data-tone="up"] { color: var(--up); }
+.previewValue[data-tone="down"] { color: var(--down); }
+.quarterRow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.quarter { display: grid; justify-items: center; gap: 4px; }
+.quarterLane { position: relative; width: 5px; height: 44px; border-radius: 3px; background: var(--line-soft); }
+.quarterLane::after { content: ""; position: absolute; left: -5px; right: -5px; top: 50%; height: 1px; background: var(--line-strong); }
+@media (prefers-reduced-motion: reduce) { .previewTile { animation: none !important; } }
 @media (min-width: 900px) { .figure[data-kind="earnings"] { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); } }
 .metric { margin: 0; display: grid; gap: 8px; }
 .metricHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; }

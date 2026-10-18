@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { checkBearer } from "@/lib/api-auth";
 import { getNewsBriefing } from "@/lib/news-insights";
 import { syncMarketNews } from "@/lib/news-sync";
-import { insightsConfigured, warmEarningsInsights } from "@/lib/stock-insights";
+import { insightsConfigured, warmEarningsInsights, warmEarningsPreviews } from "@/lib/stock-insights";
 import { isTranslateConfigured, translatePendingNews } from "@/lib/translate";
 
 /**
@@ -44,6 +44,11 @@ export async function GET(request: Request) {
     report.earningsNotes = await warmEarningsInsights(12);
   } catch (error) {
     report.earningsNotes = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+  try {
+    report.earningsPreviews = await warmEarningsPreviews(10);
+  } catch (error) {
+    report.earningsPreviews = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
   try {
     report.briefing = insightsConfigured() ? ((await getNewsBriefing())?.themes.length ?? "yazılamadı") : "atlandı: anahtar yok";

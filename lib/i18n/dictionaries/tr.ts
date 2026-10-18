@@ -2555,6 +2555,12 @@ const tr = {
   stockInsight: {
     moveTitle: "Bu Hafta Neden Hareket Etti",
     earningsTitle: "Son Bilançonun Kısa Notu",
+    previewTitle: "Bilanço Öncesi Önizleme",
+    upcoming: "{date} Açıklanacak",
+    timing: { bmo: "Açılış Öncesi", amc: "Kapanış Sonrası", other: "Saati Belirsiz" },
+    consensus: "Bu Çeyreğin Beklentisi",
+    month: "Son 20 Seans",
+    track: "Son Dört Çeyrekte Hisse Başına Kâr Sürprizi",
     window: "Son 5 Seans · {range}",
     market: "S&P 500 Aynı Dönemde {pct}",
     reported: "{date} Açıklandı",

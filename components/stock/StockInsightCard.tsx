@@ -5,7 +5,7 @@ import { ArrowUpRight, Sparkle } from "@phosphor-icons/react";
 import { ChangePill, Panel, PanelHeader, Skeleton } from "@/components/ui/primitives";
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
-import type { EarningsFigure, EarningsInsight, InsightText, MoveInsight } from "@/lib/stock-insights";
+import type { EarningsFigure, EarningsInsight, InsightText, MoveInsight, PreviewInsight } from "@/lib/stock-insights";
 import { cn, formatPercent, formatPrice } from "@/lib/utils";
 import styles from "./StockInsightCard.module.css";
 
@@ -24,7 +24,7 @@ import styles from "./StockInsightCard.module.css";
  */
 
 type Labels = Dictionary["stockInsight"];
-type Insight = MoveInsight | EarningsInsight;
+type Insight = MoveInsight | EarningsInsight | PreviewInsight;
 
 const dateFmt = (locale: Locale) =>
   new Intl.DateTimeFormat(locale === "en" ? "en-US" : "tr-TR", { day: "numeric", month: "long", timeZone: "UTC" });
@@ -224,6 +224,66 @@ function EarningsFigureView({ insight, locale, labels }: { insight: EarningsInsi
   );
 }
 
+/**
+ * Önizleme figürü (18 Ekim): solda bu çeyreğin beklentileri, sağda son dört
+ * çeyreğin HBK sürprizi — sıfır çizgisinden yukarı (aştı) ya da aşağı
+ * (kaçırdı) ince şerit, ortak ölçek; renk yalnız işaretten. Altta son yirmi
+ * seansın değişimi. Hepsi gerçek sayı; tahmin yok.
+ */
+function PreviewFigure({ insight, locale, labels }: { insight: PreviewInsight; locale: Locale; labels: Labels }) {
+  const maxRatio = Math.max(...insight.quarters.map((q) => Math.abs(q.ratio ?? 0)), 0.0001);
+  const revenue = (v: number) => (locale === "tr" ? `${(v / 1e9).toFixed(2).replace(".", ",")} Mr $` : `$${(v / 1e9).toFixed(2)}B`);
+  return (
+    <div className={styles.figure} data-kind="preview">
+      <div className={styles.previewEstimates}>
+        <p className={styles.caption}>{labels.consensus}</p>
+        <div className={styles.previewTiles}>
+          {insight.epsEstimate !== null && (
+            <div className={styles.previewTile} style={{ "--i": 0 } as CSSProperties}>
+              <span className={styles.metricRowLabel}>{labels.eps}</span>
+              <span className={styles.previewValue}>{formatPrice(insight.epsEstimate, locale, { currency: true })}</span>
+            </div>
+          )}
+          {insight.revenueEstimate !== null && (
+            <div className={styles.previewTile} style={{ "--i": 1 } as CSSProperties}>
+              <span className={styles.metricRowLabel}>{labels.revenue}</span>
+              <span className={styles.previewValue}>{revenue(insight.revenueEstimate)}</span>
+            </div>
+          )}
+          {insight.monthPct !== null && (
+            <div className={styles.previewTile} style={{ "--i": 2 } as CSSProperties}>
+              <span className={styles.metricRowLabel}>{labels.month}</span>
+              <span className={styles.previewValue} data-tone={tone(insight.monthPct)}>{formatPercent(insight.monthPct, locale, 1)}</span>
+            </div>
+          )}
+        </div>
+      </div>
+      {insight.quarters.length > 0 && (
+        <figure className={styles.previewQuarters} aria-label={labels.track}>
+          <figcaption className={styles.caption}>{labels.track}</figcaption>
+          <div className={styles.quarterRow}>
+            {insight.quarters.map((q, i) => {
+              const h = q.ratio === null ? 6 : Math.max(6, (Math.abs(q.ratio) / maxRatio) * 100);
+              const side = q.direction === "miss" ? "down" : "up";
+              return (
+                <div key={q.period} className={styles.quarter} style={{ "--i": i } as CSSProperties}>
+                  <span className={styles.dayValue} data-tone={q.direction === "beat" ? "up" : q.direction === "miss" ? "down" : "flat"}>
+                    {q.ratio === null ? labels.verdict[q.direction] : formatPercent(q.ratio * 100, locale, 1)}
+                  </span>
+                  <span className={styles.quarterLane}>
+                    <i className={styles.dayBar} data-tone={q.direction === "beat" ? "up" : q.direction === "miss" ? "down" : "flat"} data-side={side} style={{ height: `${h / 2}%` }} />
+                  </span>
+                  <span className={styles.dayLabel}>{q.quarter && q.year ? (locale === "tr" ? `${q.quarter}Ç ${String(q.year).slice(2)}` : `Q${q.quarter} ’${String(q.year).slice(2)}`) : q.period}</span>
+                </div>
+              );
+            })}
+          </div>
+        </figure>
+      )}
+    </div>
+  );
+}
+
 export function StockInsightCard({
   symbol,
   kind,
@@ -231,7 +291,7 @@ export function StockInsightCard({
   labels,
 }: {
   symbol: string;
-  kind: "move" | "earnings";
+  kind: "move" | "earnings" | "preview";
   locale: Locale;
   labels: Labels;
 }) {
@@ -243,7 +303,7 @@ export function StockInsightCard({
     if (!el || state.status !== "idle") return;
     const load = () => {
       setState({ status: "loading" });
-      fetch(`/api/ai/hisse-notu?sembol=${encodeURIComponent(symbol)}&tur=${kind === "move" ? "hareket" : "bilanco"}`)
+      fetch(`/api/ai/hisse-notu?sembol=${encodeURIComponent(symbol)}&tur=${kind === "move" ? "hareket" : kind === "earnings" ? "bilanco" : "onizleme"}`)
         .then((response) => response.json() as Promise<{ ok: boolean; insight?: Insight }>)
         .then((data) => setState(data.ok && data.insight ? { status: "done", insight: data.insight } : { status: "failed" }))
         .catch(() => setState({ status: "failed" }));
@@ -265,7 +325,7 @@ export function StockInsightCard({
     return () => observer.disconnect();
   }, [symbol, kind, state.status]);
 
-  const title = kind === "move" ? labels.moveTitle : labels.earningsTitle;
+  const title = kind === "move" ? labels.moveTitle : kind === "earnings" ? labels.earningsTitle : labels.previewTitle;
   const insight = state.insight;
   const text: InsightText | undefined = insight ? insight.text[locale] : undefined;
 
@@ -290,6 +350,13 @@ export function StockInsightCard({
             <>
               <span className={styles.stripLabel}>{labels.window.replace("{range}", rangeLabel(insight.from, insight.to, locale))}</span>
             </>
+          ) : insight.kind === "preview" ? (
+            <>
+              <span className={styles.stripLabel}>
+                {labels.upcoming.replace("{date}", dateFmt(locale).format(new Date(`${insight.reportDate}T12:00:00Z`)))}
+              </span>
+              <span className={styles.stripMuted}>{labels.timing[insight.timing]}</span>
+            </>
           ) : (
             <>
               <span className={styles.stripLabel}>
@@ -310,6 +377,7 @@ export function StockInsightCard({
         <MoveFigure insight={insight} locale={locale} labels={labels} />
       ) : null}
       {state.status === "done" && insight?.kind === "earnings" ? <EarningsFigureView insight={insight} locale={locale} labels={labels} /> : null}
+      {state.status === "done" && insight?.kind === "preview" ? <PreviewFigure insight={insight} locale={locale} labels={labels} /> : null}
 
       {state.status === "done" && text ? (
         <div className={styles.body}>

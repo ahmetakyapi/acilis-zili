@@ -2082,6 +2082,12 @@ const en: typeof tr = {
   stockInsight: {
     moveTitle: "Why It Moved This Week",
     earningsTitle: "Latest Earnings, in Brief",
+    previewTitle: "Earnings Preview",
+    upcoming: "Reports {date}",
+    timing: { bmo: "Before Open", amc: "After Close", other: "Time Unknown" },
+    consensus: "This Quarter's Consensus",
+    month: "Last 20 Sessions",
+    track: "EPS Surprise, Last Four Quarters",
     window: "Last 5 Sessions · {range}",
     market: "S&P 500 Over the Same Sessions {pct}",
     reported: "Reported {date}",
