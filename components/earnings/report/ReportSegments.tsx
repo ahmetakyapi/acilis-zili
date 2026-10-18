@@ -99,9 +99,19 @@ export function ReportSegments({
                     </span>
                   </div>
                   {/* Çubuk sayının kopyası: pay yanında metin olarak yazılı. */}
-                  <div className={styles.segmentTrack} aria-hidden>
+                  {/* GÖZLENEN KUTU KULVAR (`data-motion-track`), dolgu değil:
+                      %0,4 paylı segmentin dolgusu giriş pozunda (scaleX .04)
+                      0,2 piksele iniyor ve kesişme gözlemcisi onu hiç
+                      görmüyordu — kaydırıldıktan sonra da sönük kaldı
+                      (1280'de getAnimations ile ölçüldü: 5 dolgudan biri
+                      "paused"). */}
+                  <div className={styles.segmentTrack} aria-hidden data-motion-track>
+                    {/* Dolgu girişte kendi sıfırından (sol uç) açılıyor —
+                        MotionExperience `line`; hareketi azaltanda tam
+                        çizili durur, JS yoksa da. */}
                     <span
                       className={styles.segmentFill}
+                      data-motion-draw="line"
                       style={{ width: `${segment.share * 100}%` }}
                     />
                   </div>
@@ -117,7 +127,7 @@ export function ReportSegments({
             {rows.length > 0 && (
               <h3 className={cn("plate text-read text-body", styles.blockTitle)}>{x.kpisHeading}</h3>
             )}
-            <ul className={styles.kpis}>
+            <ul className={styles.kpis} data-motion-stagger>
               {kpis.map((kpi) => (
                 <li key={kpi.name} className={styles.kpi}>
                   <p className={styles.kpiLabel} lang={lang}>

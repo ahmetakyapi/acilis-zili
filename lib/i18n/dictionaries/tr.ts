@@ -532,6 +532,18 @@ const tr = {
     thisWeek: "Bu Hafta",
   },
 
+  /* Takvim kapağının sol kolonu: bu ayın önemli açıklamaları (18 Ekim).
+     Gerekçe components/calendar/MonthReleases.tsx. */
+  calendarMonth: {
+    title: "Bu Ayın Önemli Verileri",
+    // Saati geçmiş ama değeri gelmemiş satır: yayın iddiası taşımaz.
+    passed: "Geçti",
+    // "+3 Veri Daha" — sayı + isim kalıbı, künye.
+    more: "Veri Daha",
+    monthView: "Ay Görünümü",
+    listLabel: "Bu ayın yüksek ve orta etkili veri açıklamaları",
+  },
+
   earnings: {
     emptyWatchlist: "Favorilerinde bu aralıkta bilanço yok",
     emptyWatchlistHint:
@@ -903,6 +915,7 @@ const tr = {
     pivotP: "Denge Noktası",
     pivotS1: "1. Destek",
     pivotS2: "2. Destek",
+    levelInZone: "Fiyat Bölgenin İçinde",
     maNote: "Yüzde, güncel fiyatın ortalamaya göre farkı; merdivendeki uzaklık ise fiyattan seviyeye.",
     pivots: "Pivot Seviyeleri",
     scenarios: "Senaryolar",
@@ -3405,6 +3418,34 @@ const tr = {
         readGuide: "Yurt Dışı Hisse Vergisi Rehberi",
       },
       guideTitle: "Bilmen Gerekenler",
+      guide: {
+        tariffLead: "Oran basamak basamak artar ve her oran yalnızca kendi dilimine düşen kısma uygulanır.",
+        ladderLabel: "{year} tarifesi, alttan üste {count} dilim",
+        sliceRange: "{from} ile {to} arası: %{rate}",
+        sliceOver: "{from} üstü: %{rate}",
+        sampleKey: "Örnek Matrahın Geçtiği Dilimler",
+        restKey: "Üst Dilimler",
+        sampleTitle: "Örnek: {amount} Matrah",
+        sampleLead: "Vergi her dilimden ayrı hesaplanıp toplanır; bu matrah ilk {count} dilimi doldurur.",
+        sliceName: "%{rate} Dilimi",
+        sliceTotal: "Toplam Vergi",
+        marginal: "Marjinal Oran",
+        marginalHint: "Matrahın son lirasına uygulanan oran.",
+        effective: "Ortalama Oran",
+        effectiveHint: "Toplam vergi bölü matrah.",
+        sampleNote:
+          "Hesap, kazanç tek gelirse geçerli; ücret gibi başka bir gelir varsa alt dilimleri o doldurur ve oran yükselir.",
+        calcLink: "Kendi Matrahını Hesapla",
+        details: "Ayrıntılar",
+        w8With: "W-8BEN İle",
+        w8Without: "W-8BEN Yoksa",
+        formBy: "Form 1042-S",
+        calendarLink: "Beyan Takvimi",
+        firstBracket: "İlk Dilim Sınırı",
+        dividendLimit: "Temettü Beyan Sınırı",
+        changesFrom: "{year}: {value}",
+        sourcesCount: "{count} Kaynak",
+      },
       sections: {
         changesTitle: "2026'da Ne Değişti",
         changesBody:

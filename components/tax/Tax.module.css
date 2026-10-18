@@ -430,6 +430,9 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 
 .filingGrid { display:grid; gap:26px; }
 @media (min-width:900px) { .filingGrid { grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:40px; } }
+.whereCard { display:grid; grid-template-columns:36px minmax(0,1fr); gap:14px; align-self:start; padding:16px; border-radius:16px; background:var(--surface-sunken); }
+@media (min-width:640px) { .whereCard { padding:18px 20px; } }
+.whereCard .subTitle { margin-top:7px; }
 .subTitle { margin:0 0 10px; font-size:15px; font-weight:700; color:var(--text-strong); }
 .checklist { display:grid; gap:0; margin:0; padding:0; list-style:none; }
 @media (min-width:560px) { .checklist { grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:24px; } }
@@ -496,31 +499,103 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .exampleNote { display:flex; align-items:flex-start; gap:8px; margin:0 0 18px; font-size:12px; line-height:1.5; color:var(--text-body); animation:chip-in 420ms var(--ease-brand) both; }
 .exampleNote svg { flex-shrink:0; margin-top:1px; color:var(--primary-ink); }
 
-/* Durağan tarife: sayfanın dibinde, SSS'nin yanında. */
-.guideGrid { display:grid; gap:8px; }
-@media (min-width:1024px) { .guideGrid { grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); gap:40px; align-items:start; } }
-.tariff { padding:16px 16px 8px; }
-@media (min-width:640px) { .tariff { padding:16px 28px 8px; } }
-@media (min-width:1024px) { .tariff { padding:16px 0 8px 28px; } }
-/* İki sütun: dar ekrandaki üç sütunluk sabit genişlikler burada geçmez. */
-@media (max-width:519px) {
-  .tariffTable thead th:nth-child(1) { width:70%; }
-  .tariffTable thead th:nth-child(2) { width:30%; }
+/* ---------- Bilmen gerekenler (TaxGuide, 18 Ekim) ----------
+   Solda tarife merdiveni ve örnek matrah, sağda üç kart. Gerekçe
+   TaxGuide.tsx başında. Ölçüldü (18 Ekim, TR, açık tema; son çocukların
+   dibi): 1280'de sol 776, sağ 794 piksel (18 fark); 1024'te 813 / 882.
+   390 ve 320'de tek kolon, yatay taşma yok. Eski panel 1280'de ~470
+   piksel boyundaydı ve bilgisinin üçte ikisi kapalı satırlardaydı. */
+.guideGrid { display:grid; gap:20px; }
+@media (min-width:1024px) { .guideGrid { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:40px; align-items:start; } }
+.tariff { min-width:0; padding:16px 16px 0; }
+@media (min-width:640px) { .tariff { padding:16px 28px 0; } }
+@media (min-width:1024px) { .tariff { padding:16px 0 0 28px; } }
+.tariffLead { margin:-4px 0 0; max-width:60ch; font-size:13px; line-height:1.55; color:var(--text-body); }
+
+/* Merdiven. Sütun bloğu `--line-soft` tonunda (çukur ton koyu temada
+   siyah bir boşluk gibi okunuyordu), tepesi 5 piksellik
+   şerit (kulvar dili); taban `--line-strong` sıfır çizgisi. Blok boyu
+   oran / en üst oran; oran etiketi için 26 piksel üstte boş kalıyor. */
+.stairsFigure { margin:18px 0 0; container:stairs / inline-size; }
+.stairs { display:grid; grid-template-columns:repeat(var(--n, 5), minmax(0,1fr)); gap:0 4px; margin:0; padding:0; list-style:none; }
+.stair { display:flex; min-width:0; flex-direction:column; }
+.stairPlot { display:flex; flex-direction:column; justify-content:flex-end; height:150px; border-bottom:1px solid var(--line-strong); }
+.stairRate { margin:0 0 6px 2px; font-size:15px; font-weight:700; line-height:20px; letter-spacing:-.01em; color:var(--text-body); }
+.stairBlock { display:block; height:calc(var(--h, 1) * (100% - 26px)); border-top:5px solid var(--line-strong); border-radius:4px 4px 0 0; background:var(--line-soft); }
+.stair[data-sample] .stairRate { color:var(--text-strong); }
+.stair[data-sample] .stairBlock { border-top-color:var(--primary); background:var(--primary-wash); }
+.stairAxis { padding:6px 0 0 2px; font-size:12px; font-weight:600; line-height:1.3; white-space:nowrap; color:var(--text-muted); }
+.stairShort { display:none; }
+/* KISA EKSEN dar kapta. Ölçüldü (18 Ekim, TR): en uzun tam etiket
+   "5.300.000 ₺" 68 piksel; 1280'de kap 551 / sütun 107, 1024'te 439 / 85 —
+   ikisinde tam tutar sığıyor. 390'da kap 320 / sütun 61, tam tutar komşu
+   sütuna biniyordu; kısa "5,3 Mn ₺" 47 piksel. 320'de kap 250 / sütun 47,
+   kısa etiket 11 puntoda 43 piksel. Eşik 400: sütun ≥ 77 piksel. */
+@container stairs (max-width:399px) { .stairFull { display:none; } .stairShort { display:inline; } }
+@container stairs (max-width:279px) { .stairAxis { font-size:11px; padding-left:0; } .stairRate { font-size:13px; } }
+.stairsKey { display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:12px; font-size:12px; font-weight:600; color:var(--text-muted); }
+.stairsKey span { display:inline-flex; align-items:center; gap:6px; }
+.stairsKey i { display:inline-block; width:12px; height:6px; border-radius:2px; background:var(--line-strong); }
+.stairsKey i[data-tone="sample"] { background:var(--primary); }
+
+/* Örnek matrah: tek çukur ton (çalışılmış örnekle aynı aile). */
+.sample { margin-top:20px; padding:16px; border-radius:16px; background:var(--surface-sunken); container:sample / inline-size; }
+@media (min-width:640px) { .sample { padding:18px 20px; } }
+.sampleTitle { margin:0; font-size:15px; font-weight:700; line-height:1.3; letter-spacing:-.01em; color:var(--text-strong); }
+.sampleLead { margin:4px 0 0; max-width:62ch; font-size:12px; line-height:1.55; color:var(--text-muted); }
+.slices { display:flex; flex-direction:column; margin:12px 0 0; padding:0; list-style:none; }
+/* Dar kapta üç sütun sığmıyor: "600.000 ₺ × %27" ikinci satıra iniyor. */
+.slices li { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:2px 12px; align-items:baseline; padding:7px 0; border-top:1px solid var(--line-soft); font-size:13px; }
+.slices li[data-total] { border-top-color:var(--line-strong); }
+.sliceRate { font-weight:600; color:var(--text-body); }
+.sliceAmount { grid-column:1 / -1; grid-row:2; font-size:12px; color:var(--text-muted); white-space:nowrap; }
+.sliceTax { font-weight:650; color:var(--text-strong); text-align:right; white-space:nowrap; }
+.slices li[data-total] .sliceRate, .slices li[data-total] .sliceTax { font-weight:700; color:var(--text-strong); }
+@container sample (min-width:380px) {
+  .slices li { grid-template-columns:minmax(0,1fr) auto minmax(96px,auto); }
+  .sliceAmount { grid-column:auto; grid-row:auto; font-size:13px; text-align:right; }
 }
+.rates { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 20px; margin:14px 0 12px; padding-top:14px; border-top:1px solid var(--line-soft); }
+.rates dt, .facts dt { font-size:12px; font-weight:600; line-height:1.3; color:var(--text-muted); }
+.rates dd, .facts dd { margin:3px 0 0; font-size:22px; font-weight:650; line-height:1.1; letter-spacing:-.025em; color:var(--text-strong); white-space:nowrap; }
+.rateHint { display:block; margin-top:6px; font-size:12px; line-height:1.45; color:var(--text-muted); }
+.factTrack { display:block; height:5px; margin-top:8px; border-radius:3px; background:var(--line-soft); overflow:hidden; }
+.factBar { display:block; height:100%; border-radius:3px; background:var(--text-muted); }
+.factBar[data-tone="effective"] { background:var(--primary); }
 
-/* ---------- Bilmen gerekenler ---------- */
-
-.faqWrap { padding:0 16px; }
-@media (min-width:640px) { .faqWrap { padding:0 28px; } }
-@media (min-width:1024px) { .guideGrid .faqWrap { padding-left:0; } }
-
-.faq { margin:0; padding:0; list-style:none; }
-.faq > li + li { border-top:1px solid var(--line-soft); }
-.faq summary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:56px; padding:8px 0; cursor:pointer; list-style:none; font-size:15px; font-weight:650; color:var(--text-strong); }
-.faq summary::-webkit-details-marker { display:none; }
-.faq summary svg { flex-shrink:0; color:var(--primary-ink); transition:transform .3s var(--ease-brand); }
-.faq details[open] summary svg { transform:rotate(45deg); }
-.faq details > p, .faq details > ul { margin:0 0 16px; max-width:72ch; font-size:14px; line-height:1.7; color:var(--text-body); animation:chip-in 360ms var(--ease-brand) both; }
+/* Kartlar: anahtar bilgi kapalıyken görünür, uzun metin "Ayrıntılar"da. */
+.guideCards { display:flex; min-width:0; flex-direction:column; gap:12px; padding:0 16px; }
+@media (min-width:640px) { .guideCards { padding:0 28px; } }
+@media (min-width:1024px) { .guideCards { padding:16px 28px 0 0; } }
+.guideCard { display:flex; min-width:0; flex-direction:column; gap:12px; padding:16px; border-radius:16px; background:var(--surface-sunken); container-type:inline-size; }
+@media (min-width:640px) { .guideCard { padding:18px 20px; } }
+.guideCardHead { display:flex; align-items:center; gap:12px; }
+.guideCardHead > :last-child:not(h3) { margin-left:auto; }
+.guideIcon { display:grid; place-items:center; flex-shrink:0; width:36px; height:36px; border-radius:10px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--primary-faint); color:var(--primary-ink); }
+.guideCardTitle { width:fit-content; max-width:100%; min-width:0; margin:0; font-size:16px; font-weight:650; line-height:1.3; letter-spacing:-.01em; color:var(--text-strong); }
+.facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 20px; margin:0; }
+@container (min-width:400px) { .facts[data-cols="3"] { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@container (max-width:399px) { .facts[data-cols="3"] > :last-child { grid-column:1 / -1; } }
+.facts dd.factDate { font-size:16px; line-height:1.3; letter-spacing:-.01em; white-space:normal; }
+.factWas { display:block; margin-top:4px; font-size:12px; font-weight:500; color:var(--text-muted); }
+.more { border-top:1px solid var(--line-soft); }
+.more > summary { display:inline-flex; align-items:center; gap:6px; min-height:44px; cursor:pointer; list-style:none; font-size:13px; font-weight:600; color:var(--primary-ink); }
+.more > summary::-webkit-details-marker { display:none; }
+.more > summary svg { transition:transform .3s var(--ease-brand); }
+.more[open] > summary svg { transform:rotate(45deg); }
+.more > p { margin:0 0 4px; max-width:72ch; font-size:13px; line-height:1.65; color:var(--text-body); animation:chip-in 360ms var(--ease-brand) both; }
+@media (hover:hover) and (pointer:fine) { .more > summary:hover { color:var(--primary-hover); } }
+.sourceList { display:flex; flex-direction:column; margin:-4px -8px -8px; padding:0; list-style:none; }
+.sourceList > li + li { border-top:1px solid var(--line-soft); }
+.source { display:grid; grid-template-columns:minmax(0,1fr) 16px; align-items:center; gap:10px; min-height:44px; padding:8px; border-radius:10px; transition:background-color .25s var(--ease-brand); }
+.sourceName { display:block; font-size:13px; font-weight:600; line-height:1.4; color:var(--text-strong); }
+.sourceHost { display:block; margin-top:1px; font-size:12px; line-height:1.4; color:var(--text-muted); }
+.sourceArrow { color:var(--primary-ink); transition:transform .25s var(--ease-brand); }
+@media (hover:hover) and (pointer:fine) {
+  .source:hover { background:var(--primary-tint); }
+  .source:hover .sourceArrow { transform:translate(2px, -2px); }
+}
+.source:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
 
 @media (prefers-reduced-motion:reduce) {
   .import, .importLoading, .tally dd, .months li, .preview tbody > tr, .progress[data-indeterminate="true"] > span { animation:none; }
@@ -529,8 +604,8 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
   .filled, .fieldError { animation:none; }
   .segItem, .input, .drop { transition:none; }
   .drop:hover .dropIcon { transform:none; }
-  .paths > li, .chip, .chip[data-state="loading"], .row, .verdict, .disclosure > :not(summary), .faq details > p, .faq details > ul { animation:none; }
-  .bar, .meterTick, .meterLimit, .pathArrow, .path, .disclosure > summary svg, .faq summary svg { transition:none; }
+  .paths > li, .chip, .chip[data-state="loading"], .row, .verdict, .disclosure > :not(summary), .more > p { animation:none; }
+  .bar, .meterTick, .meterLimit, .pathArrow, .path, .disclosure > summary svg, .more > summary svg, .source, .sourceArrow { transition:none; }
   .path:active { scale:none; }
 }
 

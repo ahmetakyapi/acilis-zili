@@ -32,6 +32,81 @@
 .shareSide { display:inline-flex; }
 .shareTitle.shareTitle { display:none; }
 
+/* Kapağın solu: başlık + bu ayın önemli verileri (18 Ekim; gerekçe
+   MonthReleases.tsx). Kolon esnek sütun ve kapağın satırına GERİLİYOR
+   (`align-self:stretch` — `.page-frame` öğeleri başa yaslıyor); başlık
+   bloğu genel kuralın `align-self:start`ını burada germeye çeviriyor,
+   yoksa telefondaki paylaş düğmesi başlık satırının sağına değil
+   başlığın yanına oturur.
+
+   AYNI HAT. Kart varken kutu `contain: size` — kapağın satır boyuna hiç
+   katkı vermiyor, satırı sağ kolon (seçim + kart) belirliyor ve kutu
+   kalan boyu dolduruyor; kutunun dibi kartın dibi. Satırlar kutuya
+   sığdığı kadar açılıyor (MonthFill), aralık esnetilmiyor.
+   Ölçüldü (sahte veri, 9 satır, hareketi azaltılmış, açık tema):
+   - İlk deneme iki satırlı, 47 piksellik satırlar + alt künye: 1440'ta
+     kutu 164 piksel ve içine TEK satır sığıyordu. Satır geniş kutuda tek
+     hatta (34) iniyor, künye başlık satırına çıkıyor, kutu dolgusu 14'ten
+     10'a, kolon aralığı 20'den 14'e.
+   - Sonuç (kapak kartı 168–408): 1440 ve 1280'de kutu dibi 408,4 = kart
+     dibi, üç tek hatlı satır (35), son satırın altında 25 piksel (bir
+     satırdan kısa), "+6". 1024'te kutu 462 geniş, iki satırlı düzen (48),
+     iki satır, dip yine 408,4. 800'de üç satır, dip 419,6 = kart dibi.
+   - Telefon (390/320, iki tema): kart önce, liste altında beş satır (48)
+     + "+4"; belge genişliği 390/320, yatay taşma yok, başlık üç noktayla
+     kısalıyor.
+   Taban 112 piksel: başlık + iki satır; kart çok kısa kalırsa kapak bu
+   kadar uzar, liste hiç kaybolmaz. */
+.heroMain { display:flex; min-width:0; flex-direction:column; align-self:stretch; gap:14px; }
+.heroMain.heroMain > :global(.page-heading-copy) { align-self:stretch; }
+.keyBox { display:flex; min-width:0; flex-direction:column; gap:4px; padding:10px 12px 6px; border:1px solid var(--line-soft); border-radius:var(--radius-xl); background:var(--surface); container-type:inline-size; }
+.keyBox[data-constrained] { flex:1 1 0; min-height:112px; contain:size; }
+.keyHead { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; padding-inline:4px; }
+.keyTag { font-size:12px; font-weight:600; line-height:16px; color:var(--text-muted); }
+.keyMore { display:inline-flex; align-items:baseline; gap:8px; margin-left:auto; font-size:12px; font-weight:600; line-height:16px; color:var(--text-muted); white-space:nowrap; }
+.keyLink { color:var(--primary-ink); text-decoration:none; }
+/* Liste kutunun kalanını alıyor ve taşanı gizliyor; taşma MonthFill'in
+   ölçüsü (`scrollHeight > clientHeight`), hiçbir zaman ekranda kalmıyor:
+   sığmayan satır `hidden`. */
+.keyList { display:flex; min-height:0; flex:1 1 auto; flex-direction:column; overflow:hidden; }
+.keyRow + .keyRow { border-top:1px solid var(--line-soft); }
+/* DAR KUTU (telefon, 768–1023): iki satır — tarih karosu üst üste gün +
+   hafta günü, başlık ve altında önem · saat. GENİŞ KUTU (≥560, aşağıda):
+   tek hat. */
+.keyLine { display:grid; grid-template-columns:36px minmax(0,1fr) auto; align-items:center; gap:12px; padding:5px 4px; border-radius:var(--radius-lg); color:inherit; text-decoration:none; transition-property:background-color; }
+.keyDate { display:flex; flex-direction:column; align-items:center; gap:2px; }
+.keyDate strong { font-size:17px; font-weight:650; line-height:18px; letter-spacing:-.03em; color:var(--text-strong); }
+.keyDate span { font-size:12px; font-weight:600; line-height:14px; color:var(--text-muted); }
+.keyBody { display:flex; min-width:0; flex-direction:column; gap:2px; }
+.keyTitle { min-width:0; overflow:hidden; font-size:14px; font-weight:600; line-height:19px; color:var(--text-strong); text-overflow:ellipsis; white-space:nowrap; }
+.keyMeta { display:flex; flex:none; align-items:center; gap:6px; font-size:12px; line-height:16px; color:var(--text-soft); white-space:nowrap; }
+.keyStatus { font-size:12px; font-weight:600; line-height:16px; color:var(--text-soft); text-align:right; white-space:nowrap; }
+.keyStatus strong { font-size:14px; font-weight:650; color:var(--text-strong); }
+@container (min-width:560px) {
+  .keyLine { grid-template-columns:52px minmax(0,1fr) auto; padding:7px 4px; }
+  .keyDate { flex-direction:row; align-items:baseline; justify-content:flex-start; gap:5px; }
+  .keyDate strong { font-size:15px; line-height:20px; }
+  .keyBody { flex-direction:row; align-items:center; gap:14px; }
+  .keyTitle { flex:1 1 auto; line-height:20px; }
+}
+/* GEÇEN SATIR SOLUK — TONLA, saydamlıkla değil: `opacity` noktaların ve
+   değerin kontrastını da düşürürdü. Değer (varsa) gövde tonunda kalıyor;
+   okuyucunun geçmişte aradığı şey o. */
+.keyRow:is([data-state="passed"],[data-state="released"]) :is(.keyTitle,.keyDate strong) { color:var(--text-soft); }
+.keyRow:is([data-state="passed"],[data-state="released"]) .keyStatus { color:var(--text-muted); }
+/* Sıradaki satır kapak kartının ikizi: aynı ton, mavi yalnız tarih
+   rakamında (kartın tarih karosu gibi — satır bir bağlantı). Komşu
+   hairline'lar tonlu satırın kenarına değmesin diye satır üstte ve altta
+   kendi çerçevesini taşıyor. */
+.keyRow[data-next] .keyLine { background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--primary-faint); }
+.keyRow[data-next], .keyRow[data-next] + .keyRow { border-top-color:transparent; }
+.keyRow[data-next] .keyDate strong { color:var(--primary-ink); }
+.keyRow[data-next] .keyStatus { color:var(--text-strong); }
+/* Giriş: satırlar sırayla, yalnız OPAKLIK (kartın `next-in` kararı:
+   okunacak kutular kaymaz). Kart katları 120–330 ms'de; liste 160'tan
+   45'er ms, sekizinci satırda tavan. */
+.keyRow { animation:next-in 420ms var(--ease-brand) backwards; animation-delay:calc(min(var(--i, 0), 8) * 45ms + 160ms); }
+
 /* Sıradaki açıklama kartı. Derinlik TONLA: eski kartın radyal parıltısı,
    köşe halkası ve gölgesi kalktı (sayfa içi kartta gölge yok, yalnızca
    katmanlarda). Tarih karosu bir TARİH, bir ikon değil — sayı büyük.
@@ -308,6 +383,9 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 /* Hover yalnızca TON: kaldırma yok. Bağlantı olmayan satırlar (olaylar)
    hover almaz. */
 @media (hover:hover) and (pointer:fine) {
+  a.keyLine:hover { background:var(--surface-sunken); }
+  .keyRow[data-next] a.keyLine:hover { background:var(--primary-wash); }
+  .keyLink:hover { color:var(--primary-hover); }
   a.cell:hover { border-color:var(--line-strong); }
   a.next:hover { background:var(--primary-wash); }
   .chip:not([aria-current="true"]):hover { color:var(--text-strong); }
@@ -324,6 +402,21 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 @media (max-width:767px) {
   .hero { grid-template-columns:minmax(0,1fr); gap:16px; }
   .heroSide { align-items:stretch; gap:12px; }
+  /* TELEFONDA KART ÖNCE, AY LİSTESİ SONRA. Sol kolon `contents` olup
+     kapağın tek sütunlu ızgarasına açılıyor ve liste kartın altına
+     iniyor. Sayfanın asıl cevabı ("sırada ne var, ne kadar kaldı")
+     kartta; liste önce gelseydi kart ilk ekranın dibine inerdi (390,
+     ölçüldü: kart 237'de, liste 497–802 yani 305 piksel; ters sırada kart
+     305 + 18 piksel aşağı, ~560'a inerdi — hesap, ölçüm değil). Liste
+     burada gerilmiyor, taban beş satır + "+N". */
+  .heroMain { display:contents; }
+  .keyBox { order:2; }
+  .keyBox[data-constrained] { flex:none; min-height:0; contain:none; }
+  .keyBox { padding:10px 10px 6px; }
+  .keyLine { grid-template-columns:34px minmax(0,1fr) auto; gap:10px; }
+  /* Durum en çok 96 piksel; "Sonuç Bekleniyor" 320'de iki satıra kırılıyor
+     ve başlığa yer kalıyor. */
+  .keyStatus { max-width:96px; white-space:normal; }
   .heroSeg { display:none; }
   .heroControls { display:none; }
   .shareTitle.shareTitle { display:flex; }
@@ -466,11 +559,15 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
   /* Kapak kısa kalsın (yukarıdaki ölçü): "neden" cümlesi yatay telefonda
      yok; aynı cümle gündemdeki satırda duruyor. */
   .nextWhy { display:none; }
+  /* Ay listesi de yok: kapak kısa kalsın diye (yukarıdaki ölçü). Aynı
+     açıklamalar ay görünümünde. */
+  .keyBox { display:none; }
 }
 
 @media (prefers-reduced-motion:reduce) {
   .next, .cell, .chip { transition:none; }
-  .next > *, .lane .laneSlot[data-impact] { animation:none; }
+  .next > *, .lane .laneSlot[data-impact], .keyRow { animation:none; }
+  .keyLine { transition:none; }
 }
 
 /* ---- Olay satırları, premium (26 Eylül) ----

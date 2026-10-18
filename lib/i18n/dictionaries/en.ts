@@ -394,6 +394,14 @@ const en: typeof tr = {
     thisWeek: "This Week",
   },
 
+  calendarMonth: {
+    title: "This Month's Key Releases",
+    passed: "Past",
+    more: "More",
+    monthView: "Month View",
+    listLabel: "This month's high and medium impact releases",
+  },
+
   earnings: {
     emptyWatchlist: "No earnings from your watchlist",
     emptyWatchlistHint:
@@ -674,6 +682,7 @@ const en: typeof tr = {
     pivotP: "Pivot",
     pivotS1: "Support 1",
     pivotS2: "Support 2",
+    levelInZone: "Price Inside the Zone",
     maNote: "The percentage is the current price's distance from each average; the ladder measures from price to level.",
     pivots: "Pivot Levels",
     scenarios: "Scenarios",
@@ -2916,6 +2925,34 @@ const en: typeof tr = {
         readGuide: "Foreign Stock Tax Guide",
       },
       guideTitle: "What to Know",
+      guide: {
+        tariffLead: "The rate climbs step by step, and each rate applies only to the part that falls in its own bracket.",
+        ladderLabel: "{year} schedule, {count} brackets from lowest to highest",
+        sliceRange: "{from} to {to}: {rate}%",
+        sliceOver: "Over {from}: {rate}%",
+        sampleKey: "Brackets the Sample Base Passes Through",
+        restKey: "Higher Brackets",
+        sampleTitle: "Example: {amount} Tax Base",
+        sampleLead: "Tax is worked out bracket by bracket and added up; this base fills the first {count} brackets.",
+        sliceName: "{rate}% Bracket",
+        sliceTotal: "Total Tax",
+        marginal: "Marginal Rate",
+        marginalHint: "The rate on the last lira of the base.",
+        effective: "Effective Rate",
+        effectiveHint: "Total tax divided by the base.",
+        sampleNote:
+          "This holds if the gain is your only income; other income such as a salary fills the lower brackets first and the rate rises.",
+        calcLink: "Calculate Your Own Base",
+        details: "Details",
+        w8With: "With W-8BEN",
+        w8Without: "Without W-8BEN",
+        formBy: "Form 1042-S",
+        calendarLink: "Filing Calendar",
+        firstBracket: "First Bracket Limit",
+        dividendLimit: "Dividend Filing Threshold",
+        changesFrom: "{year}: {value}",
+        sourcesCount: "{count} Sources",
+      },
       sections: {
         changesTitle: "What Changed in 2026",
         changesBody:

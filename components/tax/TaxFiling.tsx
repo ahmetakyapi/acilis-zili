@@ -4,6 +4,7 @@ import {
   CalendarCheck,
   ChartLineUp,
   Coins,
+  Desktop,
   FileCsv,
   FileText,
   IdentificationCard,
@@ -100,7 +101,7 @@ function todayAt(today: string, dates: readonly string[]): number {
   return NODE_AT[NODE_AT.length - 1];
 }
 
-function dayMonth(date: string, locale: Locale): string {
+export function dayMonth(date: string, locale: Locale): string {
   const [y, m, d] = date.split("-").map(Number);
   return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
     timeZone: "UTC",
@@ -192,23 +193,31 @@ export function TaxFiling({
         </section>
 
         <div className={styles.filingGrid}>
-          <section>
-            <h3 className={styles.subTitle}>{F.whereTitle}</h3>
-            <p className="text-sm leading-relaxed text-body">{F.whereBody}</p>
-            <div className="mt-2 flex flex-wrap gap-x-5">
-              <a
-                href="https://hazirbeyan.gib.gov.tr"
-                target="_blank"
-                rel="noreferrer noopener"
-                className={styles.inlineLink}
-              >
-                {F.whereLink}
-                <ArrowUpRight size={13} weight="bold" aria-hidden />
-              </a>
-              <Link href="/rehber/yurt-disi-hisse-vergisi" className={styles.inlineLink}>
-                {F.readGuide}
-                <ArrowRight size={13} weight="bold" aria-hidden />
-              </Link>
+          {/* NEREYE BİR KART (18 Ekim): düz paragraf ve iki bağlantı, yanındaki
+              simgeli belge listesinin karşısında sönük kalıyordu. Çukur ton,
+              "Bilmen Gerekenler" kartlarıyla aynı aile; gölge yok. */}
+          <section className={styles.whereCard}>
+            <span className={styles.guideIcon} aria-hidden>
+              <Desktop size={20} weight="duotone" />
+            </span>
+            <div className="min-w-0">
+              <h3 className={styles.subTitle}>{F.whereTitle}</h3>
+              <p className="text-sm leading-relaxed text-body">{F.whereBody}</p>
+              <div className="mt-2 flex flex-wrap gap-x-5">
+                <a
+                  href="https://hazirbeyan.gib.gov.tr"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className={styles.inlineLink}
+                >
+                  {F.whereLink}
+                  <ArrowUpRight size={13} weight="bold" aria-hidden />
+                </a>
+                <Link href="/rehber/yurt-disi-hisse-vergisi" className={styles.inlineLink}>
+                  {F.readGuide}
+                  <ArrowRight size={13} weight="bold" aria-hidden />
+                </Link>
+              </div>
             </div>
           </section>
           <section>

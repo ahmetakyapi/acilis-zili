@@ -7,6 +7,7 @@ import styles from "@/components/calendar/CalendarExperience.module.css";
 import { CalendarStrip } from "@/components/calendar/CalendarStrip";
 import { DayPicker } from "@/components/calendar/DayPicker";
 import { NextRelease } from "@/components/calendar/NextRelease";
+import { MonthReleases, type MonthItem } from "@/components/calendar/MonthReleases";
 import { WeekLookahead } from "@/components/calendar/WeekLookahead";
 import { buildLookahead, valueRatios } from "@/components/calendar/lookahead";
 import { ScaleBar } from "@/components/markets/CompareScale";
@@ -335,10 +336,21 @@ export default async function CalendarPage(
   const start = readerToday > today ? readerToday : today;
   const to = addEtDays(start, VIEW_SPAN[view]);
 
+  /* AYIN BAŞINA KADAR GERİ (18 Ekim). Kapağın "Bu Ayın Önemli Verileri"
+     listesi okuyucunun ayının geçmiş günlerini de istiyor; ayrı bir sorgu
+     açmak yerine tek sorgunun alt sınırı ayın ilk gününe iniyor (bugünden
+     önceyse). Üst sınır 41 gün: ayın sonu her zaman içeride (en çok 30
+     gün ileride). Geçmiş satırlar `all`a KARIŞMIYOR — sıradaki açıklama,
+     sayaçlar, altı hafta ve FRED tazelemesi eskisi gibi bugünden başlıyor
+     (saatsiz geçmiş bir satır `isAhead`te "sırada" sayılırdı). */
+  const monthKey = start.slice(0, 7);
+  const monthStart = `${monthKey}-01`;
+  const queryFrom = monthStart < today ? monthStart : today;
   const [result, holidayRows] = await Promise.all([
-    getEventsBetweenResult(today, addEtDays(today, LOOKAHEAD_DAYS)),
+    getEventsBetweenResult(queryFrom, addEtDays(today, LOOKAHEAD_DAYS)),
     getHolidays(),
   ]);
+  const monthPast = result.ok ? result.rows.filter((event) => event.eventDate < today) : [];
   const nowMinutes = etParts(now).minutes;
   /* SAATİ GEÇMİŞ SATIR "PLANLANDI" DEMEZ. Veri tabanındaki `actual` çoğu
      olayda geri doldurulmuyor (ölçüldü: 17 Eylül işsizlik başvuruları ve
@@ -356,7 +368,7 @@ export default async function CalendarPage(
     (event.eventDate === today && event.eventTimeEt !== null && minutesOf(event.eventTimeEt) <= nowMinutes);
   const all = result.ok
     ? await Promise.all(
-        result.rows.map(async (event) => {
+        result.rows.filter((event) => event.eventDate >= today).map(async (event) => {
           if (event.eventDate !== today || !event.fredSeriesId || hasActual(event.actual) || !passed(event)) {
             return event;
           }
@@ -443,6 +455,54 @@ export default async function CalendarPage(
         ? `/takvim?g=month#gun-${date}`
         : null;
   const nextHref = next ? hrefFor(next.eventDate) : null;
+  /* BU AYIN ÖNEMLİ VERİLERİ: yüksek etkililer; altıdan azsa ortalar da
+     (sessiz bir ayda liste iki satıra düşmesin). Düşükler hiç girmiyor —
+     kapak "önemli olan"ı söylüyor, tam liste aşağıda. */
+  const monthEvents = [...monthPast, ...all].filter((event) => event.eventDate.startsWith(monthKey));
+  const monthHigh = monthEvents.filter((event) => event.importance === "high");
+  const monthPicked =
+    monthHigh.length >= 6
+      ? monthHigh
+      : monthEvents.filter((event) => event.importance === "high" || event.importance === "medium");
+  /* Vurgulanan satır kapak kartının olayı; kart bu ayın dışındaysa ayın
+     ilk "sıradaki" satırı. */
+  const nextIndex = (() => {
+    const card = next ? monthPicked.findIndex((event) => event.id === next.id) : -1;
+    return card >= 0 ? card : monthPicked.findIndex((event) => event.eventDate >= today && isAhead(event));
+  })();
+  /* Açılma sırası: sıradaki, ondan sonraki, son geçen, ileri kalanlar,
+     sonra geçmiş (yeniden eskiye). Telefonda ilk beşi görünür; ayın
+     başındaki geçmiş satırlar "sırada ne var"ı aşağı itmesin. */
+  const pivot = nextIndex >= 0 ? nextIndex : monthPicked.length;
+  const order = [
+    pivot,
+    pivot + 1,
+    pivot - 1,
+    ...monthPicked.map((_, index) => index).filter((index) => index > pivot + 1),
+    ...monthPicked.map((_, index) => index).filter((index) => index < pivot - 1).reverse(),
+  ].filter((index, position, list) => index >= 0 && index < monthPicked.length && list.indexOf(index) === position);
+  const monthItems: MonthItem[] = monthPicked.map((event, index) => {
+    const state: MonthItem["state"] = hasActual(event.actual)
+      ? "released"
+      : event.eventDate < today
+        ? "passed"
+        : passed(event)
+          ? "awaiting"
+          : "ahead";
+    const href = event.eventDate >= start ? hrefFor(event.eventDate) : null;
+    return {
+      event,
+      state,
+      away: readerDayOffset(event.eventDate, event.eventTimeEt, locale, now),
+      href,
+      inPage: href?.startsWith("#") ?? false,
+      next: index === nextIndex,
+      rank: order.indexOf(index),
+    };
+  });
+  const monthName = new Intl.DateTimeFormat(intlLocale, { month: "long", timeZone: "UTC" }).format(
+    new Date(`${monthStart}T12:00:00Z`),
+  );
   const lookahead = result.ok
     ? buildLookahead({ events: all, holidays, from: start, until: addEtDays(today, LOOKAHEAD_DAYS) })
     : [];
@@ -691,14 +751,29 @@ export default async function CalendarPage(
       <ScrollProgress />
       <header className={`${styles.hero} page-frame`}>
         <HeroAccent />
-        <div className="page-heading-copy">
-          <div className="page-title-row">
-            <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
-              {t.calendar.title}
-            </h1>
-            <div className={cn("page-title-actions", styles.shareTitle)}>{share("/takvim", t.calendar.title)}</div>
+        {/* KAPAĞIN SOLU: başlık + bu ayın önemli verileri (18 Ekim; gerekçe
+            MonthReleases.tsx). Liste kutusu sağdaki kart varken kartın
+            boyuna geriliyor ve iki kolon aynı hatta bitiyor. */}
+        <div className={styles.heroMain}>
+          <div className="page-heading-copy">
+            <div className="page-title-row">
+              <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
+                {t.calendar.title}
+              </h1>
+              <div className={cn("page-title-actions", styles.shareTitle)}>{share("/takvim", t.calendar.title)}</div>
+            </div>
+            <p>{t.calendar.subtitle}</p>
           </div>
-          <p>{t.calendar.subtitle}</p>
+          {monthItems.length > 0 && (
+            <MonthReleases
+              items={monthItems}
+              monthName={monthName}
+              highCount={monthHigh.length}
+              constrained={next !== undefined}
+              locale={locale}
+              t={t}
+            />
+          )}
         </div>
         {/* KAPAĞIN SAĞI: görünüm seçimi üstte, sıradaki açıklama altında.
             Seçim burada kalıyor (Ahmet'in açık isteği: "Gün/hafta/ay seçimi

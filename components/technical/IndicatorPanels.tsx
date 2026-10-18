@@ -1,7 +1,7 @@
 import type { Icon } from "@phosphor-icons/react";
 import { ChartBar, Compass, Crosshair, Pulse, Stack, Waveform } from "@phosphor-icons/react/dist/ssr";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { distancePct, rsiZone, type TechnicalSnapshot } from "@/lib/technical";
+import { distancePct, indicatorSignals, rsiZone, type TechnicalSnapshot } from "@/lib/technical";
 import {
   cn,
   directionOf,
@@ -187,7 +187,7 @@ function RsiPanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; locale
                     x1={100 + 72 * Math.cos(angle)} y1={98 - 72 * Math.sin(angle)}
                     x2={100 + 88 * Math.cos(angle)} y2={98 - 88 * Math.sin(angle)} />;
                 })}
-                <circle className={styles.dialMarker} r="5"
+                <circle className={styles.dialMarker} data-zone={zone ?? undefined} r="5"
                   cx={100 + 80 * Math.cos(Math.PI * (1 - Math.min(100, Math.max(0, rsi)) / 100))}
                   cy={98 - 80 * Math.sin(Math.PI * (1 - Math.min(100, Math.max(0, rsi)) / 100))} />
                 <text x="5" y="110">0</text><text x="35" y="24">30</text>
@@ -233,12 +233,17 @@ function MacdPanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; local
                 return <div className={styles.row} key={label}>
                   <dt>{label}</dt>
                   <dd>{formatPrice(value, locale, { digits: 2 })}</dd>
-                  {/* All three readings share one symmetric zero axis. */}
+                  {/* Üç okuma tek simetrik sıfır ekseninde. RENK İŞARETTEN
+                      (18 Ekim): MACD ve sinyal çubukları `--primary` maviyle
+                      basılıyordu — veri panelinde mavi etkileşimin rengi ve
+                      okuyucuya "tıklanır" ya da "iyi" diyordu. Üçü de artık
+                      yalnız işaretten renk alıyor; histogramın kuralı zaten
+                      buydu. */}
                   <div className={styles.deviation} aria-hidden="true">
                     <span data-motion-draw="line" style={{
                       left: `${value < 0 ? 50 - Math.abs(value) / extent * 50 : 50}%`,
                       width: `${Math.abs(value) / extent * 50}%`,
-                      background: label === t.technical.macdHistogram ? (value >= 0 ? "var(--up)" : "var(--down)") : "var(--primary)",
+                      background: value >= 0 ? "var(--up)" : "var(--down)",
                       transformOrigin: value < 0 ? "right" : "left",
                     }} /><i />
                   </div>
@@ -269,6 +274,11 @@ function MacdPanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; local
 function VolumePanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; locale: Locale; t: Dictionary }) {
   const ratio =
     snapshot.lastVolume !== null && snapshot.avgVolume20 ? snapshot.lastVolume / snapshot.avgVolume20 : null;
+  /* TON ÖZET ŞERİDİNDEN (18 Ekim). Çubuk her oranda mavi, künye 1×'in
+     üstünde mavi basılıyordu; özet şeridi ve liste kartı ise maviyi yalnız
+     YOĞUN hacme (≥1,5×) veriyor, gerisi düz. Aynı 1,3× üç yerde iki ayrı
+     renkteydi. Eşik tek kaynakta: `indicatorSignals`. */
+  const heavy = indicatorSignals(snapshot, null).volume?.tone === "heavy";
   /* Ölçek üç kat: ortalamanın üç katı hacim zaten olağanüstü, fazlası
      çubuğu doldurur. Ortalama çizgisi ölçeğin üçte birinde. */
   const scale = 3;
@@ -278,7 +288,7 @@ function VolumePanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; loc
         icon={ChartBar}
         title={t.technical.volume}
         tag={ratio !== null ? `${formatPrice(ratio, locale, { digits: 1 })}×` : null}
-        tagClass={ratio !== null && ratio >= 1 ? "text-primary-ink" : "text-muted"}
+        tagClass={heavy ? "text-primary-ink" : "text-muted"}
       />
       <Lead>{t.technical.volumeLead}</Lead>
       <div className={styles.indicatorBody}>
@@ -309,7 +319,7 @@ function VolumePanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; loc
         </dl>
         {ratio !== null && (
           <>
-            <div className={styles.ratioTrack} aria-hidden>
+            <div className={styles.ratioTrack} data-heavy={heavy || undefined} aria-hidden>
               <span data-motion-draw="bar" style={{ width: `${Math.min(100, (ratio / scale) * 100)}%` }} />
               <i style={{ left: `${100 / scale}%` }} />
             </div>
@@ -408,11 +418,56 @@ function PivotPanel({
     ["S1", t.technical.pivotS1, pivots.s1],
     ["S2", t.technical.pivotS2, pivots.s2],
   ] as const;
+  /* MERDİVEN, FİYAT İŞARETİYLE (18 Ekim). Beş satır sayıyı veriyordu ama
+     panelin asıl sorusu — "fiyat bu basamakların neresinde" — satırların
+     yüzdelerinden tek tek çıkarılıyordu. Ray S2'den R2'ye ortak ölçekte;
+     çentikler basamaklar, nokta fiyat. Fiyattan denge noktasına uzanan
+     şerit işaretten renk alıyor (P'nin üstü alıcı bölgesi, altı satıcı —
+     panelin kendi tanımı). Eksen S2–R2'ye SABİT: fiyat dışarıdaysa nokta
+     uçta durur ve `data-out` ile boş halkaya döner; ekseni fiyata göre
+     genişletmek beş basamağı bir uca sıkıştırırdı. Formül gereği komşu iki
+     basamak en az eksenin altıda biri kadar ayrık (P−S1 = H−P ≥ (H−L)/3,
+     eksen 2(H−L)); 320'de ray 230 piksel (ölçüldü), en dar aralık 38,
+     en geniş etiket ("R2") 14 piksel — etiketler çakışmıyor. */
+  const lo = pivots.s2;
+  const hi = pivots.r2;
+  const at = (value: number) => (hi > lo ? ((value - lo) / (hi - lo)) * 100 : 50);
+  const pricePos = price !== null ? at(price) : null;
+  const clamped = pricePos === null ? null : Math.min(100, Math.max(0, pricePos));
+  const pivotPos = at(pivots.p);
   return (
     <section className={styles.indicator}>
       <Head title={t.technical.pivots} icon={Crosshair} />
       <Lead>{t.technical.pivotsLead}</Lead>
       <div className={styles.indicatorBody}>
+        {hi > lo && (
+          <div className={styles.pivotLadder} aria-hidden>
+            <div className={styles.pivotRail}>
+              {clamped !== null && (
+                <span
+                  data-motion-draw="line"
+                  style={{
+                    left: `${Math.min(clamped, pivotPos)}%`,
+                    width: `${Math.abs(clamped - pivotPos)}%`,
+                    background: clamped >= pivotPos ? "var(--up)" : "var(--down)",
+                    transformOrigin: clamped >= pivotPos ? "left" : "right",
+                  }}
+                />
+              )}
+              {rows.map(([label, , value]) => (
+                <i key={label} style={{ left: `${at(value)}%` }} data-pivot={label === "P" || undefined} />
+              ))}
+              {clamped !== null && (
+                <b style={{ left: `${clamped}%` }} data-out={pricePos !== clamped || undefined} />
+              )}
+            </div>
+            <div className={styles.pivotTicks}>
+              {[...rows].reverse().map(([label, , value]) => (
+                <span key={label} style={{ left: `${at(value)}%` }}>{label}</span>
+              ))}
+            </div>
+          </div>
+        )}
         <dl className={styles.rows}>
           {rows.map(([label, name, value]) => {
             const distance = distancePct(value, price);

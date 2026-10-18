@@ -1,8 +1,8 @@
 import { Fragment } from "react";
 import type { VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { formatRange, riskReward } from "@/lib/technical";
-import { cn, formatPercentPlain, formatPrice } from "@/lib/utils";
+import { distancePct, formatRange, riskReward } from "@/lib/technical";
+import { cn, directionOf, directionText, formatPercent, formatPercentPlain, formatPrice } from "@/lib/utils";
 import styles from "./Technical.module.css";
 
 type Cell = { kind: "entry" | "target" | "stop" | "sellLevel" | "support" | "resistance"; label: string; value: string | null };
@@ -36,6 +36,7 @@ export function PlanStrip({
   supports,
   resistances,
   size = "sm",
+  price = null,
   locale,
   t,
 }: {
@@ -48,6 +49,8 @@ export function PlanStrip({
   resistances: readonly number[];
   /** `lg`: detail level board and risk comparison; rows stack on phones. */
   size?: "sm" | "lg";
+  /** Yalnız `lg`: hücrenin dibindeki "Fiyata Uzaklık" künyesinin ölçüsü. */
+  price?: number | null;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -140,12 +143,45 @@ export function PlanStrip({
       entry: t.technical.entryZone, target: t.technical.targetsLabel, stop: t.technical.stop,
     };
     const maxLeg = rr ? Math.max(rr.riskAbs, rr.rewardAbs) : 1;
+    /* HÜCRENİN DİBİ BOŞTU, ŞİMDİ UZAKLIK (18 Ekim). Üç hücre sağdaki risk
+       kolonunun boyuna geriliyordu ve sayının altında 1280'de ~55 piksellik
+       renkli bir boşluk kalıyordu (hücre 127 piksel). Künyeyle içerik
+       hücrenin dibine kadar iniyor: son çocuğun altında yalnız 14 piksellik
+       iç boşluk (ölçüldü, 1280, üç hücre aynı hatta). Boşluk
+       esnetilmez, doldurulur: okuyucunun hücreye bakınca sorduğu ikinci
+       soru "fiyat buna ne kadar uzak". Ölçü fiyat haritasının "Fiyata
+       Uzaklık" sütunuyla AYNI (`distancePct(seviye, fiyat)`) — aynı sayı iki
+       yerde aynı kaynaktan. Bölgedeyken yüzde değil söz: bölgenin içinde
+       "uzaklık" yok. Birden çok hedefte en yakını ölçülüyor. */
+    const distanceFor = (kind: Cell["kind"]): "inZone" | { pct: number } | null => {
+      if (price === null) return null;
+      let level: number | null | undefined = null;
+      if (kind === "entry" && entryLow !== null && entryHigh !== null) {
+        if (price >= entryLow && price <= entryHigh) return "inZone";
+        level = price > entryHigh ? entryHigh : entryLow;
+      } else if (kind === "target") level = targets[0];
+      else if (kind === "sellLevel") level = (targets.length ? targets : resistances)[0];
+      else if (kind === "stop") level = stop;
+      else if (kind === "support") level = supports[0];
+      else if (kind === "resistance") level = resistances[0];
+      const pct = distancePct(level ?? null, price);
+      return pct === null ? null : { pct };
+    };
     return <div className={styles.planOverview} data-has-risk={!!rr}>
       <dl className={styles.overviewCells} style={{ "--cells": cells.length } as React.CSSProperties}>
-        {cells.map(cell => <div key={cell.kind} className={styles.overviewCell} data-kind={cell.kind}>
-          <dt><i className={styles.legendDot} data-kind={cell.kind} aria-hidden />{labels[cell.kind] ?? cell.label}</dt>
-          <dd className={cn("numeral", cell.value === null && styles.planEmpty)}>{cell.value ?? t.technical.planNone}</dd>
-        </div>)}
+        {cells.map(cell => {
+          const away = cell.value === null ? null : distanceFor(cell.kind);
+          return <div key={cell.kind} className={styles.overviewCell} data-kind={cell.kind}>
+            <dt><i className={styles.legendDot} data-kind={cell.kind} aria-hidden />{labels[cell.kind] ?? cell.label}</dt>
+            <dd className={cn("numeral", cell.value === null && styles.planEmpty)}>{cell.value ?? t.technical.planNone}</dd>
+            {away && <dd className={styles.overviewAway}>
+              {away === "inZone" ? t.technical.levelInZone : <>
+                {t.technical.levelsNote}{" "}
+                <b className={cn("numeral", directionText(directionOf(away.pct)))}>{formatPercent(away.pct, locale, 1)}</b>
+              </>}
+            </dd>}
+          </div>;
+        })}
       </dl>
       {rr && <div className={styles.riskComparison}>
         <p><span>{t.technical.riskReward}</span><strong className="numeral">{t.technical.riskRewardValue.replace("{n}", formatPrice(rr.ratio, locale, { digits: 1 }))}</strong></p>

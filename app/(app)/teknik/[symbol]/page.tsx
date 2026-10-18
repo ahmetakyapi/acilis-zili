@@ -440,7 +440,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             ÖLÇÜ. Bu not bir süre yalnızca inişi anlatıyordu ve kodla
             çelişiyordu; iki hâl de burada yazılı olsun. */}
         <div className={styles.coverPlan}>
-          <PlanStrip verdict={verdict} {...levelProps} size="lg" locale={locale} t={t} />
+          <PlanStrip verdict={verdict} {...levelProps} size="lg" price={price} locale={locale} t={t} />
         </div>
       </header>
 

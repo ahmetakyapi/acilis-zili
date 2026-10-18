@@ -143,7 +143,7 @@
   left: -12px;
   width: 1px;
   content: "";
-  background: var(--primary-faint);
+  background: var(--line);
 }
 
 .coverLeadFacts dt {
@@ -158,12 +158,12 @@
   font-weight: 550;
   letter-spacing: -0.065em;
   line-height: 1.12;
-  color: var(--primary-ink);
-  overflow-wrap: anywhere;
-}
-
-.coverLeadFacts > div + div dd:not(.coverMetricNote) {
+  /* MAVİ DEĞİL (18 Ekim). İlk ölçü `--primary-ink` basılıyordu, ikincisi
+     düz mürekkep: aynı satırda iki eşdeğer sonuç, biri etkileşim renginde
+     (CLAUDE.md "Renk anlam taşır": veri panelinde mavi sayı hatadır).
+     Yanındaki ölçüyle aynı mürekkep; yön rengi altındaki künyede. */
   color: var(--text-strong);
+  overflow-wrap: anywhere;
 }
 
 /* Etiketin ayrıntısı (parantez, GAAP) kendi satırında, küçük (gerekçe
@@ -256,11 +256,17 @@
    düşüyordu (açık tema, piksel örneği); tema dosyası tam bu yüzden
    `--bar` token'ını koymuştu (yüzey tonundan çizilen çubuk gece 1,35:1'di).
    En yeni çeyrek düz `--primary`; altındaki parıltı kalktı. */
+/* İNCE SÜTUN (18 Ekim): rakamlar bölümündeki sütunlar 18 piksele inmişti
+   (RevenueColumns, 17 Ekim), kapaktaki mini grafik 48 piksellik dolu
+   bloklarda kalmıştı — aynı seri iki kalınlıkta. Ölçü ve yarıçap aynı
+   (18 px, tepe 4 px); taban düz, sıfır çizgisine oturuyor. Ölçüldü: beş
+   çubuk 320/390/1280'de 18'er piksel; değer etiketleri arası en dar 12
+   piksel (320), etiket çubuktan geniş ama komşusuna binmiyor. */
 .coverTrendBar {
   position: relative;
   width: 100%;
-  max-width: 48px;
-  border-radius: 7px 7px 2px 2px;
+  max-width: 18px;
+  border-radius: 4px 4px 0 0;
   background: var(--bar);
   transform-origin: center bottom;
 }

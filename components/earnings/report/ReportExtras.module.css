@@ -14,10 +14,17 @@
 /* ---- 30 Saniyede ----
    ÜÇ MADDE YAN YANA, geniş ekranda. Alt alta dizildiklerinde 1280'de her
    satır ~130 harf oluyordu; üç sütunda ~45, yani üçü de tek bakışta. */
+/* NUMARALI KART, KIL ÇİZGİ DEĞİL (18 Ekim). Maddeler üstte bir hairline ve
+   12 piksellik mavi bir "1" ile ayrılıyordu: üç madde panelin içinde
+   sütunlara dağılmış düz metin gibi okunuyor, numara gözden kaçıyordu.
+   Her madde artık çukur tonda bir kart (derinlik tonla — gölge, kenarlık
+   yok) ve dizin numarası mono künye ("01"). Kartlar ızgaranın varsayılan
+   gerilmesiyle aynı hatta biter (1280'de üç kartın dibi 1216'da,
+   ölçüldü). Numara mavi DEĞİL: veri panelinde mavi
+   etkileşim rengi; dizin bir künye, sönük mürekkepte. */
 .takeaways {
   display: grid;
-  gap: 1rem 1.75rem;
-  counter-reset: takeaway;
+  gap: 0.75rem;
 }
 
 @media (min-width: 900px) {
@@ -29,10 +36,11 @@
 .takeaway {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.55rem;
   min-width: 0;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--line);
+  padding: 1rem 1.1rem 1.1rem;
+  border-radius: 0.9rem;
+  background: var(--surface-sunken);
   color: var(--text-strong);
   font-size: 1rem;
   font-weight: 500;
@@ -42,10 +50,12 @@
 }
 
 .takeawayIndex {
-  color: var(--primary-ink);
+  font-family: var(--font-mono);
+  color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0;
+  line-height: 1;
+  letter-spacing: 0.04em;
 }
 
 /* ---- Segment ve KPI ---- */
@@ -116,10 +126,13 @@
 /* PAY BİR BÜTÜNÜN PARÇASI: ray kabın tamamı (%100), dolgu o segmentin
    payı. `CompareScale`teki gibi en büyüğe göre ölçeklenseydi en büyük
    segment her şirkette tam dolu görünür ve "gelirin yarısı" ile "gelirin
-   tamamı" aynı çizilirdi. */
+   tamamı" aynı çizilirdi.
+   5 PİKSEL (18 Ekim): sitenin şerit ölçüsü (CLAUDE.md "grafik dili ince",
+   `--line-soft` kulvar üstünde 5 piksel); 6 piksel tek istisnaydı. Dolgu
+   girişte soldan açılıyor (`data-motion-draw="line"`). */
 .segmentTrack {
   position: relative;
-  height: 6px;
+  height: 5px;
   border-radius: 999px;
   background: var(--line-soft);
   overflow: hidden;

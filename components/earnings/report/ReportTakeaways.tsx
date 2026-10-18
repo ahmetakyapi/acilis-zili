@@ -41,7 +41,10 @@ export function ReportTakeaways({
           meta={t.earningsExtra.summaryMeta}
           id="report-takeaways"
         />
-        <ol className={styles.takeaways} lang={lang}>
+        {/* KADEMELİ GİRİŞ (18 Ekim): kartlar `data-motion-stagger` ile soldan
+            sağa 28 ms arayla, yalnız opaklıkla (MotionExperience); hareketi
+            azaltanda hiç oynamaz. */}
+        <ol className={styles.takeaways} lang={lang} data-motion-stagger>
           {takeaways.map((item, index) => (
             <li key={index} className={styles.takeaway}>
               <span aria-hidden className={styles.takeawayIndex}>

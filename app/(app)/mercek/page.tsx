@@ -1,4 +1,4 @@
-import { PageShare } from "@/components/article/PageShare";
+import { InkCanvas } from "@/components/ink/InkCanvas";
 import { storySinceEvent } from "@/lib/story-market";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
@@ -121,9 +121,10 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
-      {/* Paylaş kapağın sağ üst köşesinde; gerekçe `MercekMasthead`. */}
+      {/* Paylaş yok, süzgeç sağ üstte, solda mercek imi; gerekçe
+          `MercekMasthead`. */}
       <MercekMasthead
-        share={<PageShare compactOnMobile align="right" path="/mercek" title={t.stories.title} locale={locale} t={t} />}
+        mark={<InkCanvas scene="lens" seed={5} />}
         title={t.stories.title}
         description={t.stories.subtitle}
         filters={
@@ -215,16 +216,16 @@ function IntroLine({ t }: { t: Dictionary }) {
 }
 
 /**
- * Şirkete göre süzme — kapağın sağ sütununda, Paylaş'ın altında.
+ * Şirkete göre süzme — kapağın sağ üstünde, başlıkla aynı hatta.
  *
  * Çipler arşivin TAMAMINDAN türer, ekrandaki listeden değil: bir sembole
  * süzdükten sonra diğerlerine geçebilmek gerekiyor ve sayının da gerçek
  * toplamı söylemesi lazım.
  *
- * Şerit kapağın altındayken tek satırda yatay kayıyordu. Kapağın sağında
- * yeri dar ama YÜKSEK: sekiz çip iki-üç satıra sarıyor ve kaydırmaya gerek
- * kalmıyor. Dar ekranda ızgara tek kolona indiğinde eski davranış geri
- * geliyor — orada sarmak yerine kaymak doğru, çünkü genişlik yok.
+ * Bir dönem kapağın sağ altında iki-üç satıra sarıyordu ve kapağı uzatan
+ * oydu (18 Ekim, sahibinin itirazı: "burayı daha derli toplu yap"). Artık
+ * her genişlikte TEK SATIR: sığmayan kısım kayar, kenar solar. Gerekçe
+ * `MercekMasthead`.
  */
 function StoryFilters({
   chips,

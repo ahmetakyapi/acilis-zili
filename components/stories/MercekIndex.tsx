@@ -33,28 +33,37 @@ import styles from "./MercekIndex.module.css";
    ------------------------------------------------------------------------- */
 
 /**
- * PAYLAŞ KAPAĞIN SAĞ ÜST KÖŞESİNDE. Ortak kapakta düğme başlık satırının
- * (`.page-title-row`) sağ ucuna yaslanıyordu; ama o satır kapağın SOL
- * kolonu, yani "Paylaş" 1440 pikselde kapağın tam ortasında, başlıkla çip
- * kümesinin arasında boşlukta asılı duruyordu (sahibinin ekran görüntüsü).
- * Burada düğme ızgaranın kendi hücresinde: geniş ekranda kapağın sağ üst
- * köşesi, çiplerin hemen üstü — sayfanın genel eylemi, sayfanın köşesinde.
- * Dar ekranda aynı hücre başlık satırının sağına düşüyor (ikon, 44 px).
+ * KAPAK: SOLDA AD, SAĞ ÜSTTE SÜZGEÇ (18 Ekim, sahibinin isteği: "Paylaş'ı
+ * buradan kaldır, şirket süzgecini sağ üste al, burayı daha derli toplu
+ * yap; görsel bir ayrıntı eklenebilirse iyi olur").
  *
- * Ölçüldü (18 Ekim, örnek veriyle, başsız Chrome, hareket azaltılmış):
- * düğmenin sağ kenarı kapağın sağ kenarından 1440'ta 25, 390'da 19 piksel
- * içeride (kapağın iç boşluğu); dikey merkezi h1'in merkezinden 1440'ta 7,
- * 390'da 4 piksel aşağıda. Yatay taşma 1440/390/320'de 0.
+ * - PAYLAŞ YOK. Dizin sayfasının paylaşılacak bir içeriği yok — paylaşılan
+ *   şey yazının kendisi ve her yazının kendi Paylaş'ı var. Kapağın köşesinde
+ *   süzgeçle yer kavgası yapıyor, çipleri ikinci bir satıra itiyordu.
+ * - SÜZGEÇ BAŞLIK SATIRINDA, TEK SATIR. Çipler eskiden kapağın sağ altında
+ *   iki satıra sarıyordu; sağ üstte boşluk, sol altta boşluk, kapak 1440'ta
+ *   üç satır yüksekliğindeydi. Şimdi "Şirkete Göre" etiketi ve çipler
+ *   başlıkla aynı hatta, tek satır; sığmazsa şerit KAYAR (sarmaz) ve
+ *   `ScrollEdges` sağ kenarı soldurur — kaydırma saklanmaz (CLAUDE.md).
+ *   Dar ekranda (< 1024) şerit açıklamanın altına iner, yine tek satır.
+ * - MERCEK İMİ. Başlığın solunda `lens` mürekkep sahnesi: satırların
+ *   üstünde gezen büyüteç, bir satırın altını pirinçle çiziyor — bölümün
+ *   adının kendisi. Renk temadan (`--text-strong`, `--brass`; mavi yok),
+ *   bir kez oynuyor, hareketi azaltana son kare. Telefonda (< 640) basılmaz:
+ *   320'de başlığın yanında yer yok ve kapağı uzatmaktan başka iş görmez.
+ *
+ * Ölçümler `MercekIndex.module.css` → KAPAK.
  */
 export function MercekMasthead({
   title,
   description,
-  share,
+  mark,
   filters,
 }: {
   title: string;
   description: string;
-  share: ReactNode;
+  /** Başlığın solundaki süs (mürekkep sahnesi); `aria-hidden` kendinde. */
+  mark?: ReactNode;
   filters?: ReactNode;
 }) {
   return (
@@ -63,10 +72,10 @@ export function MercekMasthead({
       data-embedded="false"
       data-has-filters={filters ? "true" : "false"}
     >
+      {mark && <div className={styles.mastMark}>{mark}</div>}
       <div className={cn("page-heading-copy", styles.mastTitle)}>
         <h1>{title}</h1>
       </div>
-      <div className={styles.mastShare}>{share}</div>
       <p className={styles.mastDesc}>{description}</p>
       {filters && <div className={styles.mastFilters}>{filters}</div>}
     </header>

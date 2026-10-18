@@ -4,41 +4,81 @@
 
 /* ---------------------------------------------------------------- KAPAK */
 
-/* Izgara: geniş ekranda "başlık | paylaş" / "açıklama | çipler".
+/* Izgara: geniş ekranda "im | başlık | süzgeç" / "im | açıklama | açıklama".
    `.masthead.masthead` çift sınıf: globals.css'teki `header.page-masthead`
    (0,1,1) kapağı sütun akışına zorluyor; modül sırası belirsiz olduğu için
    özgüllükle eziliyor. Çerçeve, zemin ve iç boşluk ortak kapaktan
    (`.page-masthead[data-embedded="false"]`) geliyor — öteki dizinlerle aynı
-   kutu. */
+   kutu. Başlık sütunu `max-content` (h1'in boyu; açıklama iki sütuna
+   yayılıyor, payı esnek sütuna düşüyor), süzgeç kalan `1fr`de sağa yaslı.
+   İlk deneme tersiydi — `minmax(0,1fr)` başlık + `minmax(0,auto)` süzgeç —
+   ve 1024'te çipler kendi tam genişliklerini (642) alıp "Mercek"in ÜSTÜNE
+   bindi: `auto` iz esnek izden önce büyüyor. `justify-self:end` de aynı
+   hatayı verdi: hücre "sığdır" genişliğine iner ve tek satırlık esnek
+   şeridin en küçük boyu bütün çiplerin toplamı — 1024'te süzgeç 696,
+   sütun 637, fark yine başlığın üstüne taştı. Hücre sütunu doldurup
+   (`stretch`) içeriğini sağa yaslıyor; sığmayan çip kayıyor.
+
+   ÖLÇÜLDÜ (18 Ekim; sekiz çiplik örnek veri, başsız Chrome, hareket
+   azaltılmış, eski ve yeni kapak yan yana). Kapak yüksekliği eski → yeni:
+   1440 235 → 152, 1280 232 → 149, 1024 218 → 135, 768 218 → 209,
+   390/320 229 → 220. Çip ortası h1'in ortasıyla aynı hatta (1440 55/55,
+   1280 53/53, 1024 48/48); başlıkla süzgeç arası 32. Çipler 1440 ve
+   1280'de tek satıra tam sığıyor (642), 1024'te 535'i görünür ve sağ
+   kenar soluyor (EN "Close-Up" ile 502); 390'da 316, 320'de 246 piksel
+   görünür, şerit kayar. Yatay taşma 1440/1280/1024/768/390/320'de 0,
+   iki temada. */
 .masthead.masthead {
   display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  grid-template-areas:"title share" "desc filters";
-  align-items:start;
-  gap:10px 40px;
+  grid-template-columns:auto max-content minmax(0,1fr);
+  grid-template-areas:"mark title filters" "mark desc desc";
+  align-items:center;
+  /* Kolon aralığı 16: sahnenin kendi kutusunda sağda ~17 piksel boş kenar
+     var (240'lık kutuda satırlar 204'te bitiyor), görünen boşluk ~33. */
+  gap:6px 16px;
 }
-.masthead[data-has-filters="false"] { grid-template-areas:"title share" "desc desc"; }
-.mastTitle { grid-area:title; }
-.mastShare { grid-area:share; justify-self:end; align-self:center; display:flex; }
-.masthead.masthead > .mastDesc { grid-area:desc; align-self:start; max-width:52ch; }
-.mastFilters { grid-area:filters; justify-self:end; align-self:end; min-width:0; max-width:440px; }
+.masthead[data-has-filters="false"] { grid-template-areas:"mark title title" "mark desc desc"; }
+/* `align-self` her hücrede AÇIK yazılı: ortak kapağın
+   `.page-masthead.page-masthead[data-embedded="false"]` kuralı (0,3,0)
+   `align-items:start` veriyor ve ızgaranınkini eziyor.
+   Süzgeç h1'in hücresine ortalanıp başlık puntosunun 0,12'si kadar kalkıyor:
+   degrade başlık kutusu imler için 0,12em yukarı açılıp geri kalkıyor, yani
+   hücrenin ortası harflerin ortasından o kadar aşağıda (CLAUDE.md, display
+   başlığın yanındaki metin). +2 piksel: şeridin alt dolgusu (çubuğun yeri,
+   6) üsttekinden (2) büyük, çip şeridin ortasından 2 piksel yukarıda. */
+.mastMark { grid-area:mark; align-self:center; display:flex; }
+.mastMark > canvas { width:112px; height:70px; }
+.mastTitle { grid-area:title; align-self:center; }
+.masthead.masthead > .mastDesc { grid-area:desc; align-self:start; max-width:60ch; }
+.mastFilters { grid-area:filters; align-self:center; justify-self:stretch; min-width:0; margin-left:16px; translate:0 calc(var(--heading-page) * -.12 + 2px); }
 @media(max-width:1023px) {
-  .masthead.masthead { grid-template-areas:"title share" "desc desc" "filters filters"; gap:10px 16px; }
-  .mastFilters { justify-self:stretch; max-width:none; margin-top:6px; }
+  .masthead.masthead {
+    grid-template-columns:auto minmax(0,1fr);
+    grid-template-areas:"mark title" "mark desc" "filters filters";
+    gap:6px 20px;
+  }
+  .masthead[data-has-filters="false"] { grid-template-areas:"mark title" "mark desc"; }
+  .mastFilters { margin:8px 0 0; translate:none; }
+}
+@media(max-width:639px) {
+  .masthead.masthead { grid-template-columns:minmax(0,1fr); grid-template-areas:"title" "desc" "filters"; }
+  .masthead[data-has-filters="false"] { grid-template-areas:"title" "desc"; }
+  .mastMark { display:none; }
 }
 
-/* Çip kümesi: geniş ekranda sağa yaslı, sarar; dar ekranda tek satır kayar
-   (ScrollEdges kenarı soldurur — kaydırma saklanmaz). */
-.filters { display:flex; min-width:0; flex-direction:column; gap:8px; }
-.filtersLabel { font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--text-muted); }
-.chips { display:flex; flex-wrap:nowrap; align-items:center; gap:8px; overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:none; scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent; padding-block:2px 7px; }
+/* Süzgeç: etiket ve çipler TEK SATIR. Geniş ekranda etiket çiplerin
+   solunda aynı hatta; dar ekranda üstünde küçük künye. Şerit hiçbir
+   genişlikte sarmaz, kayar: `ScrollEdges` taşan kenarı soldurur, ince
+   çubuk da kalır (kaydırma saklanmaz). */
+.filters { display:flex; min-width:0; flex-direction:column; gap:6px; }
+.filtersLabel { flex-shrink:0; font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--text-muted); }
+.chips { display:flex; min-width:0; flex-wrap:nowrap; align-items:center; gap:6px; overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:none; scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent; padding-block:2px 6px; }
 .chips > * { flex-shrink:0; }
 .chips a { min-height:40px; font-size:12px; transition:color .2s var(--ease-brand),background-color .2s var(--ease-brand); }
 .chips a:not([aria-current]):hover { background:var(--primary-tint); }
 @media(min-width:1024px) {
-  .filters { align-items:flex-end; }
-  .chips { flex-wrap:wrap; justify-content:flex-end; overflow:visible; padding-block:0; }
-  .chips a { min-height:34px; }
+  .filters { flex-direction:row; align-items:center; justify-content:flex-end; gap:12px; }
+  .chips a { min-height:32px; }
 }
 
 /* --------------------------------------------------------------- MANŞET */
