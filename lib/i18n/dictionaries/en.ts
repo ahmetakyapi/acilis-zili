@@ -2104,6 +2104,10 @@ const en: typeof tr = {
   },
   stockInsight: {
     moveTitle: "Why It Moved This Week",
+    film: {
+      scenes: ["Reading Five Sessions", "Scanning the News", "Matching the Move to the News", "Claude Is Writing the Note"],
+      scene: "{n}/{total}",
+    },
     earningsTitle: "Latest Earnings, in Brief",
     previewTitle: "Earnings Preview",
     upcoming: "Reports {date}",

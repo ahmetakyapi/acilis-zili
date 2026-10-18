@@ -2581,6 +2581,10 @@ const tr = {
   },
   stockInsight: {
     moveTitle: "Bu Hafta Neden Hareket Etti",
+    film: {
+      scenes: ["Beş Seans Okunuyor", "Haberler Taranıyor", "Hareket Haberle Eşleşiyor", "Claude Notu Yazıyor"],
+      scene: "{n}/{total}",
+    },
     earningsTitle: "Son Bilançonun Kısa Notu",
     previewTitle: "Bilanço Öncesi Önizleme",
     upcoming: "{date} Açıklanacak",

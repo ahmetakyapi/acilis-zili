@@ -7,6 +7,7 @@ import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import type { EarningsFigure, EarningsInsight, InsightText, MoveInsight, PreviewInsight } from "@/lib/stock-insights";
 import { cn, formatPercent, formatPrice } from "@/lib/utils";
+import { MoveFilm } from "./MoveFilm";
 import styles from "./StockInsightCard.module.css";
 
 /**
@@ -409,6 +410,19 @@ export function StockInsightCard({
         <p className={styles.failed}>{labels.unavailable}</p>
       ) : (
         <div className={styles.loading} data-kind={kind}>
+          {kind === "move" ? (
+            <>
+              <MoveFilm scenes={labels.film.scenes} sceneLabel={labels.film.scene} />
+              {/* Filmin altında notun iskeleti: kutu notun ölçülmüş boyunda
+                  kalıyor (telefonda 720), film tek başına ~330 tutuyordu. */}
+              <div className={styles.filmLines} aria-hidden>
+                <Skeleton className={cn(styles.line, "w-[92%]")} />
+                <Skeleton className={cn(styles.line, "w-[78%]")} />
+                <Skeleton className={cn(styles.line, "w-[85%]")} />
+              </div>
+            </>
+          ) : (
+          <>
           <p className={styles.loadingText}>
             <Sparkle className={styles.loadingIcon} size={15} weight="fill" aria-hidden />
             {labels.loading}
@@ -417,6 +431,8 @@ export function StockInsightCard({
           <Skeleton className={cn(styles.line, "w-[78%]")} />
           <Skeleton className={cn(styles.line, "w-[85%]")} />
           <Skeleton className={cn(styles.line, "w-[60%]")} />
+          </>
+          )}
         </div>
       )}
     </Panel>

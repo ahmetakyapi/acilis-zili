@@ -48,6 +48,7 @@
 @media (max-width: 639px) { .loading[data-kind="preview"] { min-height: 760px; } }
 @media (max-width: 899px) { .loading { min-height: 620px; } .loading[data-kind="earnings"] { min-height: 520px; } }
 @media (max-width: 639px) { .loading { min-height: 720px; } .loading[data-kind="earnings"] { min-height: 600px; } }
+.filmLines { display: flex; flex-direction: column; gap: 9px; margin-top: 10px; }
 .loadingText { margin: 0 0 2px; font-size: var(--text-small); color: var(--text-muted); }
 .line { height: 12px; border-radius: 6px; }
 

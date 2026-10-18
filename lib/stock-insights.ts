@@ -224,8 +224,22 @@ const failures = new Map<string, { at: number; reason: string; detail?: string }
 const FAILURE_TTL = 20 * 60_000;
 export const insightFailure = (kind: string, symbol: string) => failures.get(`${kind}:${symbol}`) ?? null;
 
-async function remembered<T>(kind: string, symbol: string, run: () => Promise<T | null>): Promise<T | null> {
+/* UÇUŞTAKİ ÇAĞRI PAYLAŞILIR (18 Ekim): önbellek notu yazıldıktan SONRA
+   dolar; ilk not 10–20 saniye sürerken aynı hisseye gelen her okur kendi
+   Claude çağrısını başlatıyordu (sabah MU sayfasına ilk dakikada gelen on
+   okur = on çağrı). Aynı süreçte aynı not için tek istek; ötekiler onu bekler. */
+const inflight = new Map<string, Promise<unknown>>();
+
+function remembered<T>(kind: string, symbol: string, run: () => Promise<T | null>): Promise<T | null> {
   const key = `${kind}:${symbol}`;
+  const pending = inflight.get(key) as Promise<T | null> | undefined;
+  if (pending) return pending;
+  const promise = rememberedOnce(key, run).finally(() => inflight.delete(key));
+  inflight.set(key, promise);
+  return promise;
+}
+
+async function rememberedOnce<T>(key: string, run: () => Promise<T | null>): Promise<T | null> {
   const failed = failures.get(key);
   if (failed && Date.now() - failed.at < FAILURE_TTL) return null;
   try {
