@@ -40,9 +40,15 @@ import type { Dictionary } from "@/lib/i18n";
  * ekranı yavaşlatır ve seçim yapmaya yardımı olmaz.
  */
 
+/* Yalnız DÜZ METİN anahtarları: ad alanında artık iç içe bir sözlük de var
+   (`note`, Claude Karşılaştırma Notu) ve bir nesne düğüm olarak basılamaz. */
+type CompareTextKey = {
+  [K in keyof Dictionary["compare"]]: Dictionary["compare"][K] extends string ? K : never;
+}[keyof Dictionary["compare"]];
+
 export type ComparePreset = {
-  labelKey: keyof Dictionary["compare"];
-  noteKey: keyof Dictionary["compare"];
+  labelKey: CompareTextKey;
+  noteKey: CompareTextKey;
   symbols: string[];
 };
 

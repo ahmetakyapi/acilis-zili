@@ -1,0 +1,53 @@
+/* Karşılaştırma notu (CompareNoteCard.tsx). Gövde, maddeler, künye ve
+   iskelet hisse notunun stilinden (StockInsightCard.module.css) — iki not
+   aynı dili konuşsun. Burada yalnız ölçü ızgarası ve iskeletin boyu. */
+
+/* ---- Ölçü ızgarası ----
+   Ton yüzey (surface-sunken), gölge yok. Sayılar sağa yaslı, birim sayıdan
+   kopmaz (nowrap); çubuk sayının altında, ScaleBar'ın kendi 128'lik tavanı.
+   Taban genişlik 320: 390'da panel içi ~320 piksel, dört sembolde tablo
+   kaydırmasız sığıyor; daha darında kayar, saklanmaz (scroll-x-hint). */
+.scroller { border-radius: var(--radius-lg); background: var(--surface-sunken); }
+.grid { width: 100%; min-width: 320px; border-collapse: collapse; }
+.grid th, .grid td { padding: 9px 10px; vertical-align: top; }
+.grid thead th {
+  padding-top: 11px; padding-bottom: 7px; border-bottom: 1px solid var(--line-soft);
+  font-size: var(--text-nano); font-weight: 650; line-height: 1.25; color: var(--text-muted); text-align: right; vertical-align: bottom;
+}
+.grid thead th:first-child, .grid tbody th { text-align: left; }
+.grid tbody tr + tr > * { border-top: 1px solid var(--line-soft); }
+.grid tbody tr[data-market] > * { color: var(--text-muted); }
+.grid td { text-align: right; }
+@media (min-width: 640px) { .grid th, .grid td { padding-inline: 16px; } }
+
+.symbol { display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: var(--text-small); font-weight: 750; color: var(--text-strong); white-space: nowrap; }
+tr[data-market] .symbol { font-family: inherit; font-weight: 650; color: var(--text-muted); }
+.swatch { width: 8px; height: 8px; flex: none; border-radius: 50%; }
+.since { display: block; margin-top: 2px; font-size: var(--text-nano); font-weight: 500; line-height: 1.3; color: var(--text-muted); }
+.value { display: block; font-size: var(--text-small); font-weight: 700; color: var(--text-strong); white-space: nowrap; }
+.value[data-tone="up"] { color: var(--up); }
+.value[data-tone="down"] { color: var(--down); }
+tr[data-market] .value:not([data-tone]) { color: var(--text-body); }
+
+.grid tbody tr { animation: cn-rise .5s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 70ms + 60ms); }
+@keyframes cn-rise { from { opacity: 0; translate: 0 6px; } }
+@media (prefers-reduced-motion: reduce) { .grid tbody tr { animation: none !important; } }
+
+.failed { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.retry {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px;
+  border: 1px solid var(--line); font-size: var(--text-small); font-weight: 650; color: var(--text-body);
+  transition: border-color .2s var(--ease-brand), color .2s var(--ease-brand);
+}
+.retry:hover { border-color: var(--line-strong); color: var(--text-strong); }
+@media (min-width: 640px) { .retry { min-height: 36px; } }
+
+/* İskelet notun ÖLÇÜLMÜŞ boyunda (18 Ekim, örnek notla, üç madde; başsız
+   Chrome, hareket azaltılmış): dolu panel 1280'de 499 (iki sembol) – 605
+   (dört sembol), 768'de 630–736, 390'da 885–1007 piksel; başlık ve dolgu
+   91 piksel. Gövde iskeleti aralığın ortasına: 460 / 590 / 855 — not
+   gelince sayfa en çok ~55 piksel oynar. Başarısızlık cümlesi kısa
+   (390'da panel 166, 1280'de 129); o hâlde panel küçülür, kalkmaz. */
+.loading { display: flex; flex-direction: column; gap: 9px; min-height: 460px; }
+@media (max-width: 899px) { .loading { min-height: 590px; } }
+@media (max-width: 639px) { .loading { min-height: 855px; } }

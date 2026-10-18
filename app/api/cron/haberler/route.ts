@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { checkBearer } from "@/lib/api-auth";
 import { getNewsBriefing } from "@/lib/news-insights";
 import { syncMarketNews } from "@/lib/news-sync";
+import { warmReleaseNotes } from "@/lib/release-notes";
 import { insightsConfigured, warmEarningsInsights, warmEarningsPreviews } from "@/lib/stock-insights";
 import { isTranslateConfigured, translatePendingNews } from "@/lib/translate";
 
@@ -19,7 +20,9 @@ import { isTranslateConfigured, translatePendingNews } from "@/lib/translate";
  * Aynı koşu son iki günde açıklanan büyük bilançoların Claude notunu da
  * önceden yazdırır (lib/stock-insights.ts → warmEarningsInsights) ve
  * dönemin "Günün Gündemi"ni ısıtır (lib/news-insights.ts): dönem nöbetle
- * aynı saatte başlıyor, okur gündemi hazır bulur.
+ * aynı saatte başlıyor, okur gündemi hazır bulur. Son iki günde açıklanan
+ * makro verilerin takvim notu da burada yazılır (lib/release-notes.ts →
+ * warmReleaseNotes; koşu başına en çok altı).
  */
 
 export const dynamic = "force-dynamic";
@@ -49,6 +52,11 @@ export async function GET(request: Request) {
     report.earningsPreviews = await warmEarningsPreviews(10);
   } catch (error) {
     report.earningsPreviews = `hata: ${error instanceof Error ? error.message : "?"}`;
+  }
+  try {
+    report.releaseNotes = await warmReleaseNotes(6);
+  } catch (error) {
+    report.releaseNotes = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
   try {
     report.briefing = insightsConfigured() ? ((await getNewsBriefing())?.themes.length ?? "yazılamadı") : "atlandı: anahtar yok";

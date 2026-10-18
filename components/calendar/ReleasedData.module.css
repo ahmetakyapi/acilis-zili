@@ -1,0 +1,65 @@
+/* Son Açıklanan Veriler (ReleasedData.tsx) ve kartın Claude notu
+   (ReleaseNote.tsx). Derinlik ton: kart `--surface-sunken`, gölge yok;
+   çubuk takvim satırının ince ölçek çubuğu (ScaleBar). Renk yalnız önem
+   noktalarında; kıyas rozeti nötr (yön söyler, yargı değil). */
+
+.panel { overflow: clip; }
+.meta { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+.icon { color: var(--brass); }
+
+/* KART SAYISINA GÖRE KOLON. Dört kart 2×2, üç kart tek satırda üç kolon:
+   sabit iki kolonda üçüncü kart satırı yalnız taşıyıp yanını boş
+   bırakırdı (geniş ekranda). 900 altında tek kolon. Satırdaki kartlar
+   ızgara satırıyla eşit gerilir; notlar farklı uzunlukta olsa da kartların
+   dibi aynı hatta. */
+.cards { display: grid; gap: 12px; margin: 0; padding: 16px 20px 18px; list-style: none; }
+@media (min-width: 900px) {
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .cards[data-count="1"] { grid-template-columns: minmax(0, 1fr); }
+  .cards[data-count="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 639px) { .cards { padding: 14px 16px 16px; } }
+
+.card { display: flex; min-width: 0; flex-direction: column; gap: 10px; padding: 14px 16px 16px; border-radius: var(--radius-lg); background: var(--surface-sunken); }
+.cardHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.when { font-size: 12px; font-weight: 600; line-height: 16px; color: var(--text-muted); white-space: nowrap; }
+.title { margin: -4px 0 0; font-size: 16px; line-height: 1.3; font-weight: 750; letter-spacing: -.01em; color: var(--text-strong); text-wrap: balance; }
+
+/* Üç satır: etiket · çubuk · değer. Değer sağda, çubuk değerin hemen
+   solunda biter (ScaleBar rayı sağa yaslı); satırlar aynı sütun hattında. */
+.figures { display: grid; gap: 6px; margin: 0; }
+.figure { display: grid; grid-template-columns: 88px minmax(0, 1fr) auto; align-items: center; column-gap: 10px; }
+.figureLabel { font-size: 12px; font-weight: 600; line-height: 16px; color: var(--text-muted); white-space: nowrap; }
+.figureValue { min-width: 64px; font-size: 14px; line-height: 18px; text-align: right; white-space: nowrap; color: var(--text-soft); }
+.figure[data-strong] .figureValue { font-size: 15px; font-weight: 700; color: var(--text-strong); }
+.figure[data-strong] .figureLabel { color: var(--text-body); }
+.lane { display: block; min-width: 0; }
+/* ScaleBar'ın Tailwind yardımcıları `utilities` katmanında; modül
+   katmansız, özgüllük yarışı yok. Kartta ray kolonun tamamı. */
+.bar { max-width: none; margin-top: 0; }
+
+.verdict {
+  align-self: flex-start; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; line-height: 16px;
+  background: var(--surface); color: var(--text-body);
+}
+
+/* Not: kartın değerlerinden hairline ile ayrılır (ekran düzeni 5 → metin). */
+.note { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
+.noteSummary { margin: 0; font-size: var(--text-read); line-height: 1.55; color: var(--text-strong); text-wrap: pretty; }
+.noteContext { margin: 0; font-size: var(--text-read); line-height: 1.55; color: var(--text-body); text-wrap: pretty; }
+.noteLabel { display: block; margin-bottom: 2px; font-size: 12px; font-weight: 700; line-height: 16px; color: var(--brass-ink); }
+.noteSummary, .noteContext { animation: rn-rise .55s var(--ease-brand) both; }
+.noteContext { animation-delay: 110ms; }
+@keyframes rn-rise { from { opacity: 0; translate: 0 6px; } }
+@media (prefers-reduced-motion: reduce) { .noteSummary, .noteContext { animation: none !important; } }
+
+/* İSKELET NOTUN ÖLÇÜLMÜŞ BOYUNDA (18 Ekim, örnek notla: özet ~20, genel
+   anlam ~25 kelime, reduced-motion taklidiyle). Not gövdesi 1280'de iki
+   kolonlu kartta 134, 390'da 178 piksel; ilk sürüm her genişlikte 150
+   ayırıyordu ve telefonda not gelince kart 28 piksel uzuyordu. 640–899
+   arası tek kolon, geniş kart: 768'de 91 piksel. Düzeltmeden sonra
+   iskelet ile not her üç genişlikte aynı boyda (kart 1280'de 340/316,
+   390'da 384/360 — not gelince sıçrama yok). */
+.noteLoading { display: flex; flex-direction: column; gap: 9px; min-height: 178px; }
+@media (min-width: 640px) { .noteLoading { min-height: 91px; } }
+@media (min-width: 900px) { .noteLoading { min-height: 134px; } }

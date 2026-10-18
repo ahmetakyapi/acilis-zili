@@ -530,6 +530,16 @@ const tr = {
     aheadHighlights: "Yüksek Etkili",
     aheadNoHigh: "Yüksek etkili açıklama yok.",
     thisWeek: "Bu Hafta",
+    // Son Açıklanan Veriler + Claude notu (18 Ekim; lib/release-notes.ts).
+    releasedTitle: "Son Açıklanan Veriler",
+    releasedWindow: "Son 10 Gün",
+    releasedVsForecast: { above: "Beklentinin Üstünde", below: "Beklentinin Altında", inline: "Beklentiyle Aynı" },
+    releasedVsPrevious: { above: "Öncekinin Üstünde", below: "Öncekinin Altında", inline: "Öncekiyle Aynı" },
+    releasedContext: "Genelde Ne Anlama Gelir",
+    releasedLoading: "Claude veriyi yorumluyor…",
+    releasedUnavailable: "Not şu an hazırlanamadı; birazdan yeniden dene.",
+    releasedDisclosure:
+      "Notlar yalnız açıklanan değerden, beklentiden ve önceki değerden Claude ile yazıldı. Piyasa için söylenen genel eğilimdir, bugünün fiyatı için tahmin değildir; yatırım tavsiyesi değildir.",
   },
 
   /* Takvim kapağının sol kolonu: bu ayın önemli açıklamaları (18 Ekim).
@@ -1563,6 +1573,22 @@ const tr = {
     netMargin: "Net Kâr Marjı",
     sector: "Sektör",
     compareFirstFour: "İlk Dördünü Karşılaştır",
+    /* Claude Karşılaştırma Notu (18 Ekim) — components/markets/CompareNoteCard.tsx. */
+    note: {
+      title: "Claude Karşılaştırma Notu",
+      window: "{range} · {dates}",
+      basis: "Dolar Bazında · Tamamlanmış Seanslar",
+      basisWeekly: "Dolar Bazında · Haftalık Kapanışlar",
+      columns: { symbol: "Sembol", return: "Getiri", drawdown: "En Derin Düşüş", volatility: "Yıllık Oynaklık" },
+      market: "S&P 500",
+      since: "Başlangıç {date}",
+      gridLabel: "Seçili aralıkta getiri, en derin düşüş ve yıllık oynaklık",
+      loading: "Claude karşılaştırmayı hazırlıyor…",
+      unavailable: "Not şu an hazırlanamadı; birazdan yeniden dene.",
+      retry: "Yeniden Dene",
+      disclosure:
+        "Bu not, seçili aralığın tamamlanmış seanslarından ve şirketlerin son on iki aylık ölçülerinden Claude ile yazıldı. Getiri, düşüş ve oynaklık kodda hesaplandı. Hangisinin alınacağını söylemez; yatırım tavsiyesi değildir.",
+    },
   },
 
   markets: {

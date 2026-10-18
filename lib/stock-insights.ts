@@ -154,7 +154,8 @@ const withoutUrl = (item: NewsInput) => ({ index: item.index, headline: item.hea
 const pct2 = (value: number) => ({ tr: formatPercent(value, "tr", 2), en: formatPercent(value, "en", 2) });
 const usd2 = (value: number) => ({ tr: formatPrice(value, "tr", { currency: true }), en: formatPrice(value, "en", { currency: true }) });
 
-/** Son TAMAMLANMIŞ seansın ET günü: seans sürerken dün, değilse ekranın seans günü. */
+/** Son TAMAMLANMIŞ seansın ET günü: seans sürerken dün, değilse ekranın seans günü.
+    Karşılaştırma notu da buradan okur (lib/compare-note.ts). */
 export async function expectedLastSession(): Promise<string> {
   const [status, holidays] = await Promise.all([getStatus(), getHolidays()]);
   const running = status.tradingToday && (status.session === "pre-market" || status.session === "regular");
@@ -224,13 +225,22 @@ const failures = new Map<string, { at: number; reason: string; detail?: string }
 const FAILURE_TTL = 20 * 60_000;
 export const insightFailure = (kind: string, symbol: string) => failures.get(`${kind}:${symbol}`) ?? null;
 
+/** Kendi sayı denetimini yapan not (karşılaştırma notu) eksik sayıları
+    hatanın içinde taşır; buradaki `lastMissing` yalnız bu dosyanın notları. */
+export class UngroundedError extends Error {
+  constructor(readonly missing: string[]) {
+    super("ungrounded");
+  }
+}
+
 /* UÇUŞTAKİ ÇAĞRI PAYLAŞILIR (18 Ekim): önbellek notu yazıldıktan SONRA
    dolar; ilk not 10–20 saniye sürerken aynı hisseye gelen her okur kendi
    Claude çağrısını başlatıyordu (sabah MU sayfasına ilk dakikada gelen on
    okur = on çağrı). Aynı süreçte aynı not için tek istek; ötekiler onu bekler. */
 const inflight = new Map<string, Promise<unknown>>();
 
-function remembered<T>(kind: string, symbol: string, run: () => Promise<T | null>): Promise<T | null> {
+/** Başarısızlık hafızası + uçuştaki çağrı — karşılaştırma notu da kullanır (anahtar `compare:{semboller}:{aralık}:{seans}`). */
+export function remembered<T>(kind: string, symbol: string, run: () => Promise<T | null>): Promise<T | null> {
   const key = `${kind}:${symbol}`;
   const pending = inflight.get(key) as Promise<T | null> | undefined;
   if (pending) return pending;
@@ -248,8 +258,9 @@ async function rememberedOnce<T>(key: string, run: () => Promise<T | null>): Pro
     return out;
   } catch (error) {
     const reason = error instanceof Error && ["ungrounded", "no-output"].includes(error.message) ? error.message : "error";
-    failures.set(key, { at: Date.now(), reason, detail: reason === "ungrounded" ? lastMissing.join(" ") : undefined });
-    console.error(`[içgörü] ${key}: ${reason}${reason === "ungrounded" ? ` (${lastMissing.join(" ")})` : ""}`);
+    const missing = error instanceof UngroundedError ? error.missing : lastMissing;
+    failures.set(key, { at: Date.now(), reason, detail: reason === "ungrounded" ? missing.join(" ") : undefined });
+    console.error(`[içgörü] ${key}: ${reason}${reason === "ungrounded" ? ` (${missing.join(" ")})` : ""}`);
     return null;
   }
 }

@@ -9,6 +9,7 @@ import { DayPicker } from "@/components/calendar/DayPicker";
 import { NextRelease } from "@/components/calendar/NextRelease";
 import { MonthReleases, type MonthItem } from "@/components/calendar/MonthReleases";
 import { WeekLookahead } from "@/components/calendar/WeekLookahead";
+import { ReleasedData } from "@/components/calendar/ReleasedData";
 import { buildLookahead, valueRatios } from "@/components/calendar/lookahead";
 import { ScaleBar } from "@/components/markets/CompareScale";
 import { GuideHint } from "@/components/article/GuideHint";
@@ -60,6 +61,8 @@ import {
 import type { EconomicEventRow } from "@/lib/schema";
 
 import { pageMetadata } from "@/lib/page-meta";
+import { RELEASED_WINDOW_DAYS, pickReleased } from "@/lib/release-notes-core";
+import { insightsConfigured } from "@/lib/stock-insights";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
@@ -342,10 +345,15 @@ export default async function CalendarPage(
      önceyse). Üst sınır 41 gün: ayın sonu her zaman içeride (en çok 30
      gün ileride). Geçmiş satırlar `all`a KARIŞMIYOR — sıradaki açıklama,
      sayaçlar, altı hafta ve FRED tazelemesi eskisi gibi bugünden başlıyor
-     (saatsiz geçmiş bir satır `isAhead`te "sırada" sayılırdı). */
+     (saatsiz geçmiş bir satır `isAhead`te "sırada" sayılırdı).
+     SON ON GÜN DE (18 Ekim): "Son Açıklanan Veriler" paneli ayın başından
+     geriye taşabiliyor (ayın 3'ünde pencere geçen ayın 23'ü). Alt sınır
+     ikisinin erkeni; ayın listesi zaten `monthKey` ile süzülüyor, fazladan
+     gelen satırlar oraya karışmaz. */
   const monthKey = start.slice(0, 7);
   const monthStart = `${monthKey}-01`;
-  const queryFrom = monthStart < today ? monthStart : today;
+  const releasedFrom = addEtDays(today, -RELEASED_WINDOW_DAYS);
+  const queryFrom = [monthStart, today, releasedFrom].sort()[0];
   const [result, holidayRows] = await Promise.all([
     getEventsBetweenResult(queryFrom, addEtDays(today, LOOKAHEAD_DAYS)),
     getHolidays(),
@@ -503,6 +511,9 @@ export default async function CalendarPage(
   const monthName = new Intl.DateTimeFormat(intlLocale, { month: "long", timeZone: "UTC" }).format(
     new Date(`${monthStart}T12:00:00Z`),
   );
+  /* Son açıklananlar HAM satırlardan: bugünkü FRED tazelemesi (`all`) notun
+     okuduğu veritabanı değerini değiştirmesin (lib/release-notes-core.ts). */
+  const released = result.ok ? pickReleased(result.rows, { from: releasedFrom, today }) : [];
   const lookahead = result.ok
     ? buildLookahead({ events: all, holidays, from: start, until: addEtDays(today, LOOKAHEAD_DAYS) })
     : [];
@@ -902,6 +913,12 @@ export default async function CalendarPage(
             bir "yükleniyor" olurdu. Takvimin altında, sayfanın ikinci
             görseli olarak (ekran düzeni 3). */}
         <WeekLookahead weeks={lookahead} hrefFor={hrefFor} locale={locale} t={t} />
+
+        {/* SON AÇIKLANANLAR İLERİYE BAKIŞIN ALTINDA (18 Ekim). Sayfa "ne
+            olacak"ı anlatıyor; "ne oldu" onun devamı, kapağı itmesin. Yoksa
+            panel hiç basılmaz (ReleasedData). Geçiş maskesinin DIŞINDA:
+            görünüm değişince içeriği değişmiyor. */}
+        <ReleasedData events={released} notes={insightsConfigured()} locale={locale} t={t} />
       </div>
 
       {/* HALKA ARZ TAKVİMİN ALTINDA, TAM GENİŞLİK (29 Eylül). Yan kolondu ve

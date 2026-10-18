@@ -4,6 +4,7 @@ import polish from "@/components/motion/UtilityExperience.module.css";
 import { Fragment } from "react";
 import { GuideHint } from "@/components/article/GuideHint";
 import { CompareEmpty, type ComparePreset } from "@/components/markets/CompareEmpty";
+import { CompareNoteCard } from "@/components/markets/CompareNoteCard";
 import {
   CompareChartPanel,
   ComparePeriodLabel,
@@ -1019,6 +1020,15 @@ export async function CompareBoard({
           </p>
         )}
       </Panel>
+
+      {/* ---- Claude Karşılaştırma Notu (18 Ekim) ----
+           ÖLÇÜ TABLOSUNDAN SONRA: ekran düzeninde metin ölçü ızgarasının
+           altında (CLAUDE.md "Ekran düzeni" 5) ve şerit grafiğin renk
+           anahtarı olarak grafiğe yapışık kalmak zorunda. Not seçili aralığı
+           sağlayıcıdan okur (istemci), aralık değişince yeniden istenir;
+           gerekçe components/markets/CompareNoteCard.tsx. Çift sayfasının
+           kendi metni (`children`) notun altında. */}
+      <CompareNoteCard labels={t.compare.note} rangeLongs={labels.rangeLongs} />
 
       {children}
 

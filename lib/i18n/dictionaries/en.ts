@@ -392,6 +392,15 @@ const en: typeof tr = {
     aheadHighlights: "High Impact",
     aheadNoHigh: "No high-impact releases.",
     thisWeek: "This Week",
+    releasedTitle: "Latest Releases",
+    releasedWindow: "Last 10 Days",
+    releasedVsForecast: { above: "Above Forecast", below: "Below Forecast", inline: "In Line with Forecast" },
+    releasedVsPrevious: { above: "Above Previous", below: "Below Previous", inline: "Same as Previous" },
+    releasedContext: "What It Usually Means",
+    releasedLoading: "Claude is reading the release…",
+    releasedUnavailable: "The note couldn't be prepared right now; try again shortly.",
+    releasedDisclosure:
+      "Notes are written with Claude from the released value, the forecast and the previous value only. What they say about markets is a general tendency, not a forecast for today's prices; not investment advice.",
   },
 
   calendarMonth: {
@@ -1210,6 +1219,21 @@ const en: typeof tr = {
     netMargin: "Net Margin",
     sector: "Sector",
     compareFirstFour: "Compare First Four",
+    note: {
+      title: "Claude Comparison Note",
+      window: "{range} · {dates}",
+      basis: "In Dollars · Completed Sessions",
+      basisWeekly: "In Dollars · Weekly Closes",
+      columns: { symbol: "Symbol", return: "Return", drawdown: "Deepest Drawdown", volatility: "Annual Volatility" },
+      market: "S&P 500",
+      since: "Since {date}",
+      gridLabel: "Return, deepest drawdown and annualized volatility over the selected range",
+      loading: "Claude is preparing the comparison…",
+      unavailable: "The note could not be prepared right now; try again shortly.",
+      retry: "Try Again",
+      disclosure:
+        "This note was written with Claude from the selected range's completed sessions and the companies' trailing twelve-month figures. Return, drawdown and volatility were computed in code. It does not say which to buy; it is not investment advice.",
+    },
     addSymbol: "Add Symbol",
     addPlaceholder: "Symbol or company name",
   },
