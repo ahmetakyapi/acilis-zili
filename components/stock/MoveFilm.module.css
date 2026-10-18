@@ -1,95 +1,135 @@
-/* Bekleme filmi (MoveFilm.tsx). Perde ton yüzey (surface-sunken), gölge ve
-   ışıma yok; film şeridi delikleri --line-soft. Her geçiş --ease-brand;
-   yay eğrisi yalnız tek küçük öğede (yıldız). Boy iskeletin içinde: perde
-   telefonda en çok ~230 piksel, kalan alt yazı + ilerleme ~60. */
+/* Bekleme filmi — kısa film (MoveFilm.tsx). Perde ton yüzey
+   (surface-sunken), gölge ve ışıma yok; film şeridi delikleri --line-soft.
+   Geçişler --ease-brand; hedefi aşıp oturan yay eğrisi yalnız tek küçük
+   öğede (ünlem, onay, iğne, dedektifin şaşırması). Oyma imler (ünlem,
+   onay, iğne kenarı) ve mercek --page-bg: --surface iki temada da yarı
+   saydam, ünlemi brass üstünde görünmez bırakıyordu (ölçüldü: alfa .03).
+
+   KURAL: her öğenin TEMEL konumu sahnenin SON karesi; keyframe yalnız
+   `from` (ya da ara kareler). Hareket kapanınca (prefers-reduced-motion)
+   animasyon düşer, sahne bitmiş hâliyle durur. */
 
 .film { display: flex; flex-direction: column; gap: 12px; }
 .screen {
   position: relative; display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; overflow: hidden;
   border-radius: var(--radius-lg); background: var(--surface-sunken);
 }
-/* Film şeridi: delikler sola akar (sonsuz — şerit "makine çalışıyor" işareti,
-   sahne değil; LoadingMark'ın zil döngüsüyle aynı istisna sınıfı). */
+/* Film şeridi akar (sonsuz — "makine çalışıyor" işareti, sahne değil). */
 .perf {
   height: 6px; border-radius: 2px;
   background-image: linear-gradient(90deg, var(--line-soft) 0 10px, transparent 10px 18px);
   background-size: 18px 6px; animation: mf-perf 1.2s linear infinite;
 }
 .perf[data-bottom] { animation-direction: reverse; }
-.stage { display: block; width: 100%; height: auto; max-height: 230px; animation: mf-cut .45s var(--ease-brand) both; }
+.stage { display: block; width: 100%; height: auto; max-height: 240px; animation: mf-cut .45s var(--ease-brand) both; }
 
 .caption { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
 .counter { flex: none; font-family: var(--font-mono); font-size: 11.5px; font-weight: 800; color: var(--brass-ink); }
 .title { min-width: 0; font-size: 15px; font-weight: 800; letter-spacing: -.01em; color: var(--text-strong); animation: mf-rise .45s var(--ease-brand) both; }
-.progress { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.progress { display: grid; grid-template-columns: repeat(var(--count, 6), minmax(0, 1fr)); gap: 6px; }
 .segment { position: relative; height: 4px; border-radius: 2px; overflow: hidden; background: var(--line-soft); }
-.segment::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--text-strong); transform-origin: left; scale: 0 1; }
-.segment[data-state="done"]::after { scale: 1 1; }
+.segment::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--text-strong); transform-origin: left; scale: 1 1; }
+.segment[data-state="next"]::after { scale: 0 1; }
 .segment[data-state="now"]::after { animation: mf-fill var(--ms) linear both; }
-/* Son sahne bekler: dolan çubuk yavaşça nefes alır (not hâlâ yazılıyor). */
 .segment:last-child[data-state="now"]::after { animation: mf-fill var(--ms) linear both, mf-breathe 1.6s var(--ease-brand) var(--ms) infinite; }
 
 /* ---- Ortak çizim ---- */
 .zero { stroke: var(--line-strong); stroke-width: 1.5; }
-.bar { transform-box: fill-box; animation: mf-grow .55s var(--ease-brand) both; animation-delay: var(--d); }
-.bar[data-dir="up"] { fill: var(--up); transform-origin: bottom; }
-.bar[data-dir="down"] { fill: var(--down); transform-origin: top; }
-.trace { fill: none; stroke: var(--text-strong); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100; animation: mf-draw 1.6s var(--ease-brand) .3s both; }
-.dot { fill: var(--surface); stroke: var(--text-strong); stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: mf-pop .4s var(--ease-spring-soft) both; animation-delay: var(--d); }
-
-.cardBox { fill: var(--surface); stroke: var(--line); stroke-width: 1; transition: stroke .3s var(--ease-brand); }
+.bar, .barStill { transform-box: fill-box; }
+.bar { animation: mf-grow .55s var(--ease-brand) both; animation-delay: var(--d); }
+.bar[data-dir="up"], .barStill[data-dir="up"] { fill: var(--up); transform-origin: bottom; }
+.bar[data-dir="down"], .barStill[data-dir="down"] { fill: var(--down); transform-origin: top; }
+.barStill[data-hero] { stroke: var(--brass); stroke-width: 3; animation: mf-glow .6s var(--ease-brand) .9s both; }
+.card { fill: var(--surface); stroke: var(--line); stroke-width: 1; }
+.card[data-matched] { stroke: var(--brass); stroke-width: 2; }
 .ink { fill: var(--text-strong); opacity: .8; }
 .inkSoft { fill: var(--text-muted); opacity: .45; }
-.badge { fill: var(--brass); opacity: .75; }
-.card { animation: mf-slide .6s var(--ease-brand) both; animation-delay: var(--d); }
-.card[data-still] { animation: none; }
 
-/* Büyüteç kartların üstünden geçer. */
-.glass { animation: mf-scan 2.2s var(--ease-brand) .5s both; }
-.lens { fill: color-mix(in srgb, var(--surface) 35%, transparent); stroke: var(--text-strong); stroke-width: 2.5; }
-.handle { stroke: var(--text-strong); stroke-width: 4; stroke-linecap: round; }
-.paperStack { animation: mf-rise .5s var(--ease-brand) both; }
+/* ---- Dedektif ---- */
+.lens { fill: var(--page-bg); stroke: var(--text-strong); stroke-width: 2.5; }
+.handle { stroke: var(--text-strong); stroke-width: 4.5; stroke-linecap: round; }
+.eyes { fill: var(--text-strong); transform-box: fill-box; transform-origin: center; }
+.smile { fill: none; stroke: var(--text-strong); stroke-width: 1.6; stroke-linecap: round; }
+/* Göz kırpar (tek küçük öğe, döngü serbest). */
+.eyes { animation: mf-blink 3.2s var(--ease-brand) 1s infinite; }
+.body[data-mood="walk"] { animation: mf-bob .36s var(--ease-brand) 4 alternate; }
+.body[data-mood="nod"] { transform-origin: 0 14px; animation: mf-nod .5s var(--ease-brand) .9s 3 alternate; }
+.body[data-mood="surprised"] .eyes { animation: mf-wide .4s var(--ease-spring) 1.5s both, mf-blink 3.2s var(--ease-brand) 3s infinite; }
+.body[data-mood="surprised"] { animation: mf-bob .3s var(--ease-brand) 4 alternate; }
 
-.settled { animation: mf-rise .5s var(--ease-brand) both; }
-.link { fill: none; stroke: var(--brass); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 100; animation: mf-draw .9s var(--ease-brand) both; animation-delay: var(--d); }
-.cardBox[data-hit] { animation: mf-hit .4s var(--ease-brand) 1.2s both; }
-.spark { fill: var(--brass); transform-box: fill-box; transform-origin: center; animation: mf-pop .45s var(--ease-spring-soft) both; animation-delay: var(--d); }
+/* 1 · Klaket çarpar; dedektif köşeden süzülür. */
+.boardBody { fill: var(--surface); stroke: var(--text-strong); stroke-width: 2; }
+.stripe { fill: var(--text-strong); }
+.boardText { font-family: var(--font-mono); font-size: 26px; font-weight: 800; fill: var(--text-strong); letter-spacing: .04em; animation: mf-rise .5s var(--ease-brand) .75s both; }
+.clapper { transform-box: fill-box; transform-origin: 0% 100%; animation: mf-clap .7s var(--ease-brand) .15s both; }
+.board { animation: mf-rise .5s var(--ease-brand) both; }
+.peek { animation: mf-peek .7s var(--ease-brand) 1.1s both; }
 
-.typed { fill: var(--text-muted); opacity: .55; transform-box: fill-box; transform-origin: left; animation: mf-type .5s var(--ease-brand) both; animation-delay: var(--d); }
-/* Yıldız satır sonlarını izler, sonra son satırda parıldar. */
-.star { fill: var(--brass); animation: mf-pen 2.8s var(--ease-brand) .2s both, mf-twinkle 1.4s var(--ease-spring-soft) 3s infinite; }
+/* 2 · Ünlem */
+.alert { transform-box: fill-box; transform-origin: center bottom; animation: mf-pop .45s var(--ease-spring) 1.35s both; }
+.alertDot { fill: var(--brass); }
+.alertMark { stroke: var(--page-bg); stroke-width: 2.4; stroke-linecap: round; }
+.alertPoint { fill: var(--page-bg); }
+
+/* 3 · Yürüyüş (soldan kahraman bara) */
+.walker { animation: mf-walk 1.45s var(--ease-brand) both; }
+
+/* 4 · Tanıklar düşer; eşleşmeyen soluklaşır, eşleşene onay. */
+.witness { animation: mf-drop .55s var(--ease-brand) both; animation-delay: var(--d); }
+.witness:not([data-match]) { opacity: .4; animation: mf-drop .55s var(--ease-brand) both, mf-dim .5s var(--ease-brand) 1.5s both; animation-delay: var(--d), 1.5s; }
+.witness[data-match] .card { stroke: var(--brass); stroke-width: 2; animation: mf-match .4s var(--ease-brand) 1.4s both; }
+.check { transform-box: fill-box; transform-origin: center; animation: mf-pop .45s var(--ease-spring) 1.6s both; }
+.checkDot { fill: var(--brass); }
+.checkMark { fill: none; stroke: var(--page-bg); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.hopper { animation: mf-hop 1.3s var(--ease-brand) .5s both; }
+
+/* 5 · İp gerilir, iğneler batar. */
+.thread { fill: none; stroke: var(--brass); stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 100; animation: mf-draw 1.1s var(--ease-brand) .25s both; }
+.pin { fill: var(--brass); stroke: var(--page-bg); stroke-width: 1.5; transform-box: fill-box; transform-origin: center; animation: mf-pop .4s var(--ease-spring) .1s both; }
+.pin[data-late] { animation-delay: 1.3s; }
+
+/* 6 · Defter, satırlar, kalem yıldız. */
+.notebook { animation: mf-rise .5s var(--ease-brand) both; }
+.typed { fill: var(--text-muted); opacity: .55; transform-box: fill-box; transform-origin: left; animation: mf-type .45s var(--ease-brand) both; animation-delay: var(--d); }
+.pen { fill: var(--brass); transform: translate(192px, 121px); animation: mf-pen 2.7s var(--ease-brand) .3s both, mf-twinkle 1.4s var(--ease-spring-soft) 3s infinite; }
 
 @keyframes mf-perf { to { background-position: -18px 0; } }
 @keyframes mf-cut { from { opacity: 0; scale: .98; } }
-@keyframes mf-rise { from { opacity: 0; translate: 0 6px; } }
-@keyframes mf-fill { from { scale: 0 1; } to { scale: 1 1; } }
+@keyframes mf-rise { from { opacity: 0; translate: 0 8px; } }
+@keyframes mf-fill { from { scale: 0 1; } }
 @keyframes mf-breathe { 50% { opacity: .45; } }
 @keyframes mf-grow { from { scale: 1 0; } }
-@keyframes mf-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@keyframes mf-glow { from { stroke-width: 0; } }
 @keyframes mf-pop { from { scale: 0; } }
-@keyframes mf-slide { from { opacity: 0; translate: 40px 0; } }
-@keyframes mf-scan {
-  0% { opacity: 0; transform: translate(150px, 28px); }
-  15% { opacity: 1; }
-  45% { transform: translate(240px, 70px); }
-  75% { transform: translate(160px, 116px); }
-  100% { opacity: 1; transform: translate(250px, 116px); }
-}
-@keyframes mf-hit { to { stroke: var(--brass); } }
+@keyframes mf-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
 @keyframes mf-type { from { scale: 0 1; } }
+@keyframes mf-blink { 0%, 92%, 100% { scale: 1 1; } 96% { scale: 1 .1; } }
+@keyframes mf-wide { from { scale: 1 1; } 60% { scale: 1.35 1.5; } to { scale: 1.15 1.25; } }
+@keyframes mf-bob { to { translate: 0 -3px; } }
+@keyframes mf-nod { to { rotate: 10deg; } }
+@keyframes mf-clap { from { rotate: -24deg; } 70% { rotate: 2deg; } }
+@keyframes mf-peek { from { transform: translate(340px, 110px); } }
+@keyframes mf-walk { from { transform: translate(14px, 76px); } 45% { transform: translate(120px, 70px); } }
+@keyframes mf-drop { from { opacity: 0; translate: 0 -26px; } }
+@keyframes mf-dim { from { opacity: 1; } to { opacity: .4; } }
+@keyframes mf-match { from { stroke-width: 1; stroke: var(--line); } }
+@keyframes mf-hop {
+  from { transform: translate(96px, 134px); }
+  30% { transform: translate(118px, 118px); }
+  60% { transform: translate(140px, 132px); }
+  80% { transform: translate(146px, 124px); }
+}
 @keyframes mf-pen {
-  0% { transform: translate(70px, 49px); }
-  20% { transform: translate(246px, 49px); }
-  40% { transform: translate(220px, 66px); }
-  60% { transform: translate(258px, 83px); }
-  80% { transform: translate(190px, 100px); }
-  100% { transform: translate(234px, 117px); }
+  0% { transform: translate(52px, 53px); }
+  20% { transform: translate(202px, 53px); }
+  40% { transform: translate(180px, 70px); }
+  60% { transform: translate(214px, 87px); }
+  80% { transform: translate(156px, 104px); }
+  100% { transform: translate(192px, 121px); }
 }
 @keyframes mf-twinkle { 50% { scale: 1.35; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .perf, .stage, .title, .segment::after, .bar, .trace, .dot, .card, .glass, .paperStack, .settled, .link, .cardBox, .spark, .typed, .star { animation: none !important; }
-  .star { transform: translate(234px, 117px); }
-  .glass { transform: translate(240px, 70px); }
+  .film *, .film *::after { animation: none !important; }
   .segment[data-state="now"]::after { scale: 1 1; }
 }

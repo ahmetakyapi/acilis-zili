@@ -412,7 +412,7 @@ export function StockInsightCard({
         <div className={styles.loading} data-kind={kind}>
           {kind === "move" ? (
             <>
-              <MoveFilm scenes={labels.film.scenes} sceneLabel={labels.film.scene} />
+              <MoveFilm scenes={labels.film.scenes} sceneLabel={labels.film.scene} symbol={symbol} />
               {/* Filmin altında notun iskeleti: kutu notun ölçülmüş boyunda
                   kalıyor (telefonda 720), film tek başına ~330 tutuyordu. */}
               <div className={styles.filmLines} aria-hidden>

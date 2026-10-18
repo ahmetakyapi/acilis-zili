@@ -2129,7 +2129,7 @@ const en: typeof tr = {
   stockInsight: {
     moveTitle: "Why It Moved This Week",
     film: {
-      scenes: ["Reading Five Sessions", "Scanning the News", "Matching the Move to the News", "Claude Is Writing the Note"],
+      scenes: ["Case File: {symbol}", "One Week, Five Sessions", "The Detective Follows the Trail", "The Witnesses Speak", "Connecting the Threads", "Claude Writes the Report"],
       scene: "{n}/{total}",
     },
     earningsTitle: "Latest Earnings, in Brief",
