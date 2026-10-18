@@ -8,13 +8,8 @@
 const NUMBER = /\d+(?:[.,]\d+)*/g;
 
 export function numbersGrounded(output: string, input: string): boolean {
-  return missingNumbers(output, input).length === 0;
-}
-
-/** Tanı için: girdide birebir geçmeyen sayılar. */
-export function missingNumbers(output: string, input: string): string[] {
   const allowed = new Set(input.match(NUMBER) ?? []);
-  return (output.match(NUMBER) ?? []).filter((n) => !allowed.has(n));
+  return (output.match(NUMBER) ?? []).every((n) => allowed.has(n));
 }
 
 /**

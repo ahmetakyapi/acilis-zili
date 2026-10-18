@@ -4,7 +4,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { and, desc, eq, gte, isNotNull, lte } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { z } from "zod";
-import { missingNumbers } from "@/lib/ai-grounding";
+import { ungroundedNumbers } from "@/lib/ai-grounding";
 import { selectNews } from "@/lib/ai-analysis-core";
 import { claudeKey } from "@/lib/claude-key";
 import { getHolidays, getStatus, getSymbolNames, guncelBilanco } from "@/lib/data";
@@ -209,7 +209,10 @@ function resolvePoints(lang: z.infer<typeof Lang>, news: NewsInput[]): InsightTe
 let lastMissing: string[] = [];
 function grounded(texts: { tr: InsightText; en: InsightText }, input: string): boolean {
   const all = [texts.tr, texts.en].flatMap((t) => [t.summary, ...t.points.flatMap((p) => [p.title, p.detail])]).join(" ");
-  lastMissing = missingNumbers(all, input);
+  /* Ayraç farkı sayıyı düşürmez (18 Ekim, canlıda NFLX önizlemesi): haber
+     metni İngilizce ("1,000"), Türkçe not "1.000" yazıyor. Rakam dizisi
+     yine birebir aynı olmak zorunda (lib/ai-grounding.ts). */
+  lastMissing = ungroundedNumbers(all, input);
   return lastMissing.length === 0;
 }
 
