@@ -16,7 +16,7 @@ import { getChartBars } from "@/lib/providers";
 import { getCompanyNews, getEarningsSurprises } from "@/lib/providers/finnhub";
 import type { Bar } from "@/lib/providers/types";
 import { earningsCalendar } from "@/lib/schema";
-import { formatPercent, formatPrice, safeExternalUrl } from "@/lib/utils";
+import { formatPercentText, formatPrice, safeExternalUrl } from "@/lib/utils";
 import { indexMemberOf } from "@/db/seed/indices";
 import { isSpotlight } from "@/lib/spotlight";
 
@@ -151,7 +151,7 @@ function newsInput(items: Awaited<ReturnType<typeof getCompanyNews>>, symbol: st
 const withoutUrl = (item: NewsInput) => ({ index: item.index, headline: item.headline, summary: item.summary, source: item.source, date: item.date });
 
 /** İki dilde biçimlenmiş yüzde — model dile göre kopyalar, denetim ikisini de tanır. */
-const pct2 = (value: number) => ({ tr: formatPercent(value, "tr", 2), en: formatPercent(value, "en", 2) });
+const pct2 = (value: number) => ({ tr: formatPercentText(value, "tr", 2), en: formatPercentText(value, "en", 2) });
 const usd2 = (value: number) => ({ tr: formatPrice(value, "tr", { currency: true }), en: formatPrice(value, "en", { currency: true }) });
 
 /** Son TAMAMLANMIŞ seansın ET günü: seans sürerken dün, değilse ekranın seans günü.
@@ -347,7 +347,7 @@ async function getMoveInsightOnce(symbol: string): Promise<MoveInsight | null> {
         if (!grounded(text, built.input)) throw new Error("ungrounded");
         return { ...built.meta, explained: out.explained, text, generatedAt: new Date().toISOString() };
       },
-      ["stock-move-v2", built.key],
+      ["stock-move-v3", built.key],
       { revalidate: 36 * 3600, tags: ["stock-insight"] },
     )();
     return { ...cached, ...built.meta };
@@ -450,7 +450,7 @@ async function getEarningsInsightOnce(symbol: string): Promise<EarningsInsight |
         };
       },
       /* Tepki seansı kapanınca not bir kez daha yazılır (anahtar değişir). */
-      ["stock-earnings-v2", symbol, row.reportDate, reactionDate ?? "pending"],
+      ["stock-earnings-v3", symbol, row.reportDate, reactionDate ?? "pending"],
       { revalidate: 36 * 3600, tags: ["stock-insight"] },
     )();
   } catch (error) {
@@ -596,7 +596,7 @@ async function getPreviewInsightOnce(symbol: string): Promise<PreviewInsight | n
           generatedAt: new Date().toISOString(),
         };
       },
-      ["stock-preview-v1", symbol, row.reportDate, todayEt()],
+      ["stock-preview-v2", symbol, row.reportDate, todayEt()],
       { revalidate: 24 * 3600, tags: ["stock-insight"] },
     )();
   } catch (error) {

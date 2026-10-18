@@ -9,7 +9,7 @@ import type { Locale } from "@/lib/i18n/config";
 import { barDate } from "@/lib/period-returns";
 import { getPortfolioPositions } from "@/lib/portfolio-data";
 import { callClaude, completedDailyBars, expectedLastSession, insightsConfigured, upcomingEarnings } from "@/lib/stock-insights";
-import { formatPercent } from "@/lib/utils";
+import { formatPercentText } from "@/lib/utils";
 
 /**
  * PORTFÖY NOTU (18 Ekim) — /portfoy'da okurun kendi pozisyonlarından kısa
@@ -82,7 +82,7 @@ export async function getPortfolioNote(userId: string, locale: Locale): Promise<
   try {
     return await unstable_cache(
       () => buildNote([...holdings], session, locale),
-      ["portfolio-note-v1", userId, session, fingerprint, locale],
+      ["portfolio-note-v2", userId, session, fingerprint, locale],
       { revalidate: 24 * 3600, tags: ["portfolio-note"] },
     )();
   } catch (error) {
@@ -120,7 +120,7 @@ async function buildNote(holdings: [string, { quantity: number; cost: number }][
   if (rows.length < 1 || rows.length * 2 < holdings.length) throw new Error("bars");
 
   const total = rows.reduce((sum, row) => sum + row.value, 0);
-  const pct = (value: number, digits = 1) => formatPercent(value, locale, digits);
+  const pct = (value: number, digits = 1) => formatPercentText(value, locale, digits);
   /* Ağırlık tam sayı yüzde: kesir hassasiyet uydurur, okur da ondalığa bakmaz. */
   const share = (value: number) => `${locale === "en" ? "" : "%"}${Math.round((value / total) * 100)}${locale === "en" ? "%" : ""}`;
   const bySector = new Map<string, number>();

@@ -451,6 +451,16 @@ function withPercent(formatted: string, locale: string, sign = "") {
 }
 
 /**
+ * METİN İÇİN yüzde (18 Ekim): işaret sayıya bitişik ("+%38,7"). Ekran
+ * figüründeki ince SIGN_GAP, Claude notlarının girdisinde kalınca model onu
+ * düz boşluğa çeviriyordu ("+ %38,68" — canlıda karşılaştırma notunda
+ * görüldü). Claude'a giden her yüzde bundan geçer; posta da (emailPercent).
+ */
+export function formatPercentText(value: number, locale: string, digits = 2): string {
+  return formatPercent(value, locale, digits).replace(new RegExp(`^([+\u2212])${SIGN_GAP}`, "u"), "$1");
+}
+
+/**
  * Değişim yüzdesi — işaret her zaman gösterilir.
  *
  * `digits` fiyat değişimi için 2'de kalır ama bilanço büyümeleri üç haneli

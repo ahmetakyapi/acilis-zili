@@ -10,7 +10,7 @@ import { getRawMetrics } from "@/lib/providers/finnhub-depth";
 import { storedMetricsFrom } from "@/lib/scorecard";
 import { industryLabel, sectorLabel } from "@/lib/sectors";
 import { callClaude, expectedLastSession, remembered, UngroundedError, type InsightText } from "@/lib/stock-insights";
-import { formatPercent, formatPercentPlain, peRatioOf } from "@/lib/utils";
+import { formatPercentPlain, formatPercentText, peRatioOf } from "@/lib/utils";
 
 /**
  * CLAUDE KARŞILAŞTIRMA NOTU (18 Ekim, sahibinin isteği) — /karsilastir'da
@@ -80,7 +80,7 @@ Rules:
 - Write the "en" object in plain English with the same content.`;
 
 const both = (format: (locale: "tr" | "en") => string) => ({ tr: format("tr"), en: format("en") });
-const pct = (value: number, digits = 2) => both((l) => formatPercent(value, l, digits));
+const pct = (value: number, digits = 2) => both((l) => formatPercentText(value, l, digits));
 const plainPct = (value: number, digits = 1) => both((l) => formatPercentPlain(value, l, digits));
 const num = (value: number, digits: number, l: "tr" | "en") =>
   new Intl.NumberFormat(l === "tr" ? "tr-TR" : "en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
@@ -211,7 +211,7 @@ export async function getCompareNote(symbols: string[], range: CompareRange): Pr
         if (!numbersGroundedAcrossLocales(all, b.input)) throw new UngroundedError(ungroundedNumbers(all, b.input));
         return { ...b.meta, text, generatedAt: new Date().toISOString() };
       },
-      ["compare-note-v1", b.key],
+      ["compare-note-v2", b.key],
       { revalidate: 36 * 3600, tags: ["stock-insight"] },
     )();
     /* Figürün sayıları her istekte aynı seans barlarından (hisse notuyla aynı). */
