@@ -85,9 +85,13 @@ export default async function TaxPage() {
   return (
     <MotionExperience className={polish.page}>
       <ScrollProgress />
+      {/* PAYLAŞ AÇIKLAMANIN ARDINDA (18 Ekim). Başlığın sağındayken
+          (`shareInTitle`) kapağın sağ kolonu üç bağlantıyla dolu olduğu için
+          düğme sol kolonun ortasında, başlıkla bağlantılar arasında boşlukta
+          yüzüyordu (sahibinin ekran görüntüsü). Görselli kapaklardaki gibi
+          (/tema/[slug]) açıklamanın altında, sola yaslı. */}
       <DirectoryHeader
-        shareInTitle
-        share={<PageShare compactOnMobile align="right" path="/vergi" title={L.title} locale={locale} t={t} />}
+        share={<PageShare path="/vergi" title={L.title} locale={locale} t={t} />}
         title={L.title}
         description={L.subtitle}
         visual={<TaxPaths labels={L} />}

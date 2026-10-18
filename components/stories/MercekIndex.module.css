@@ -1,0 +1,191 @@
+/* Mercek dizini (18 Ekim). Gerekçeler MercekIndex.tsx'te, ölçümler burada.
+   Derinlik tonla: kart `--premium-surface`, kadro zemini `--surface-sunken`;
+   gölge, cam, ışıma yok. Her geçiş `--ease-brand`. */
+
+/* ---------------------------------------------------------------- KAPAK */
+
+/* Izgara: geniş ekranda "başlık | paylaş" / "açıklama | çipler".
+   `.masthead.masthead` çift sınıf: globals.css'teki `header.page-masthead`
+   (0,1,1) kapağı sütun akışına zorluyor; modül sırası belirsiz olduğu için
+   özgüllükle eziliyor. Çerçeve, zemin ve iç boşluk ortak kapaktan
+   (`.page-masthead[data-embedded="false"]`) geliyor — öteki dizinlerle aynı
+   kutu. */
+.masthead.masthead {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"title share" "desc filters";
+  align-items:start;
+  gap:10px 40px;
+}
+.masthead[data-has-filters="false"] { grid-template-areas:"title share" "desc desc"; }
+.mastTitle { grid-area:title; }
+.mastShare { grid-area:share; justify-self:end; align-self:center; display:flex; }
+.masthead.masthead > .mastDesc { grid-area:desc; align-self:start; max-width:52ch; }
+.mastFilters { grid-area:filters; justify-self:end; align-self:end; min-width:0; max-width:440px; }
+@media(max-width:1023px) {
+  .masthead.masthead { grid-template-areas:"title share" "desc desc" "filters filters"; gap:10px 16px; }
+  .mastFilters { justify-self:stretch; max-width:none; margin-top:6px; }
+}
+
+/* Çip kümesi: geniş ekranda sağa yaslı, sarar; dar ekranda tek satır kayar
+   (ScrollEdges kenarı soldurur — kaydırma saklanmaz). */
+.filters { display:flex; min-width:0; flex-direction:column; gap:8px; }
+.filtersLabel { font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--text-muted); }
+.chips { display:flex; flex-wrap:nowrap; align-items:center; gap:8px; overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:none; scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent; padding-block:2px 7px; }
+.chips > * { flex-shrink:0; }
+.chips a { min-height:40px; font-size:12px; transition:color .2s var(--ease-brand),background-color .2s var(--ease-brand); }
+.chips a:not([aria-current]):hover { background:var(--primary-tint); }
+@media(min-width:1024px) {
+  .filters { align-items:flex-end; }
+  .chips { flex-wrap:wrap; justify-content:flex-end; overflow:visible; padding-block:0; }
+  .chips a { min-height:34px; }
+}
+
+/* --------------------------------------------------------------- MANŞET */
+
+.lead { display:block; min-width:0; border-radius:var(--radius-feature); }
+.leadCard {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  overflow:hidden;
+  border:1px solid var(--primary-faint);
+  border-radius:var(--radius-feature);
+  background:var(--premium-surface);
+  transition:border-color .3s var(--ease-brand),background-color .3s var(--ease-brand);
+}
+/* Kadro sütunu 360 piksel tabanlı: üç satırlık tablo (44'lük logo, ad,
+   21 puntoluk getiri + ölçek çizgisi) 320'nin altında adı kırpıyordu. */
+@media(min-width:1024px) { .leadCard[data-has-cast="true"] { grid-template-columns:minmax(0,1.5fr) minmax(360px,1fr); } }
+
+.leadCopy { display:flex; min-width:0; flex-direction:column; padding:40px 40px 30px; }
+.leadTitle {
+  max-width:24ch;
+  font-size:clamp(28px,3vw,42px);
+  line-height:1.1;
+  letter-spacing:-.04em;
+  font-weight:700;
+  color:var(--text-strong);
+  text-wrap:balance;
+}
+.leadDek { margin-top:20px; max-width:58ch; font-size:16px; line-height:1.72; color:var(--text-body); text-wrap:pretty; }
+/* Eylem satırı kartın DİBİNE yaslı (`margin-top:auto`): kadro sütunu metinden
+   uzun olduğunda boşluk başlıkla giriş arasına değil, girişle eylem arasına
+   düşüyor. */
+.leadFoot { display:flex; flex-wrap:wrap; align-items:center; gap:12px 20px; margin-top:auto; padding-top:28px; }
+.leadCta {
+  display:inline-flex; align-items:center; gap:8px;
+  min-height:40px; padding:0 18px;
+  border-radius:999px;
+  background:var(--primary); color:var(--on-primary);
+  font-size:14px; font-weight:600;
+  transition:background-color .25s var(--ease-brand);
+}
+.leadCta svg { transition:transform .26s var(--ease-brand); }
+.leadMeta { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; font-size:13px; color:var(--text-muted); }
+
+.leadAside {
+  display:flex; min-width:0; flex-direction:column; justify-content:center;
+  padding:28px;
+  border-top:1px solid var(--line-soft);
+  background:var(--surface-sunken);
+}
+@media(min-width:1024px) { .leadAside { border-top:0; border-left:1px solid var(--line-soft); } }
+
+@media(max-width:767px) {
+  .leadCopy { padding:24px 20px 22px; }
+  .leadTitle { font-size:28px; line-height:1.14; }
+  .leadDek { margin-top:14px; font-size:15px; line-height:1.68; }
+  .leadFoot { padding-top:20px; gap:12px; }
+  .leadCta { min-height:44px; }
+  .leadAside { padding:16px; }
+}
+
+/* ---------------------------------------------------------------- ARŞİV */
+
+.archive { display:flex; flex-direction:column; gap:36px; }
+.month { display:flex; min-width:0; flex-direction:column; gap:16px; }
+.monthHead { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding-top:14px; border-top:1px solid var(--line); }
+.monthTitle { font-size:22px; line-height:1.2; font-weight:650; letter-spacing:-.03em; color:var(--text-strong); }
+/* Başlık degrade için 0,12em yukarı açılıp geri kalkıyor; yanındaki sayı
+   aynı payı kalkmazsa 2-3 piksel aşağıda durur (CLAUDE.md, görsel dil). */
+.monthCount { translate:0 calc(22px * -.12); font-size:13px; font-weight:500; color:var(--text-muted); white-space:nowrap; }
+
+/* Izgara: 640'ta iki, 1180'de üç kolon. Üç kolon 1280 kapta 405 piksellik
+   kart veriyor; dört logo yığını (112) + rakam (≈110) şeride rahat sığıyor. */
+.grid { display:grid; grid-template-columns:minmax(0,1fr); gap:18px; }
+@media(min-width:640px) { .grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; } }
+@media(min-width:1180px) { .grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+
+.card {
+  display:flex; min-width:0; flex-direction:column;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:var(--radius-xl);
+  background:var(--premium-surface);
+  transition:border-color .3s var(--ease-brand),background-color .3s var(--ease-brand);
+}
+.cardBand {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  min-height:68px; padding:14px 18px;
+  border-bottom:1px solid var(--line-soft);
+  background:var(--surface-sunken);
+}
+.stack { display:flex; align-items:center; min-width:0; padding-left:8px; }
+.stackItem {
+  display:block; flex-shrink:0; margin-left:-8px;
+  border-radius:var(--radius-md);
+  outline:2px solid var(--premium-surface);
+}
+.stackMore {
+  display:flex; align-items:center; justify-content:center;
+  width:32px; height:32px;
+  background:var(--surface-elevated);
+  font-size:11px; font-weight:700; color:var(--text-muted);
+}
+.reading { display:flex; min-width:0; flex-direction:column; align-items:flex-end; gap:3px; text-align:right; }
+.readingCaption { font-size:12px; line-height:1.35; font-weight:500; color:var(--text-muted); }
+.readingValue { font-size:19px; line-height:1.1; font-weight:700; letter-spacing:-.02em; }
+
+.cardBody { display:flex; flex:1; flex-direction:column; padding:18px 20px 0; }
+.cardMeta { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; font-size:12px; color:var(--text-muted); }
+.cardTitle { margin-top:10px; font-size:20px; line-height:1.22; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); text-wrap:balance; }
+.cardDek { margin-top:10px; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; font-size:14px; line-height:1.62; color:var(--text-body); }
+.cardFoot {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  margin:18px 20px 0; padding:12px 0 14px;
+  border-top:1px solid var(--line-soft);
+}
+.cardSymbols { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--text-muted); }
+.cardCta { display:inline-flex; flex-shrink:0; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--primary); }
+.cardCta svg { transition:transform .26s var(--ease-brand); }
+
+.metaStrong { font-weight:600; color:var(--text-body); }
+.metaDot { color:var(--line-strong); }
+
+/* --------------------------------------------------------------- KÜNYE */
+
+.intro { display:flex; flex-direction:column; gap:8px; padding-top:16px; border-top:1px solid var(--line); font-size:12px; }
+
+/* ------------------------------------------------------- ETKİLEŞİM */
+
+/* Üzerine gelince kart tonla karşılık veriyor (`--primary-tint`) ve ok 3
+   piksel ilerliyor; kaldırma, gölge, ölçek yok — komşu kartlar kımıldamaz. */
+@media(hover:hover) and (pointer:fine) {
+  .lead:hover .leadCard { border-color:var(--primary); }
+  .lead:hover .leadCta { background:var(--primary-hover); }
+  .card:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
+  .card:hover .cardCta { color:var(--primary-hover); }
+}
+.lead:is(:hover,:focus-visible) .leadCta svg,
+.card:is(:hover,:focus-visible) .cardCta svg { transform:translateX(3px); }
+.lead:focus-visible,.card:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+
+@media(prefers-reduced-motion:reduce) {
+  .leadCard,.card,.leadCta,.leadCta svg,.cardCta svg,.chips a { transition:none; }
+  .lead:is(:hover,:focus-visible) .leadCta svg,
+  .card:is(:hover,:focus-visible) .cardCta svg { transform:none; }
+}
+
+/* Arşiv başlığı — sayfanın ikinci `h2`si; ay başlıklarından bir basamak büyük. */
+.archiveHeading { font-size:26px; line-height:1.2; font-weight:650; letter-spacing:-.035em; color:var(--text-strong); }
+@media(max-width:767px) { .archiveHeading { font-size:23px; } .archive { gap:28px; } .monthTitle { font-size:20px; } .monthCount { translate:0 calc(20px * -.12); } }

@@ -45,6 +45,69 @@ function idOf(title: string) {
   return `spark-${(hash >>> 0).toString(36)}`;
 }
 
+/**
+ * Eğrinin ölçeği, çizimden ayrı (18 Ekim, piyasalar endeks kartları).
+ * Kart, önceki kapanışın kesik çizgisine bir künye ("Önceki Kapanış
+ * 727,90") ve seans açılış/kapanış imleri oturtuyor; bunlar SVG dışındaki
+ * HTML öğeleri, çünkü `preserveAspectRatio="none"` SVG içindeki metni
+ * esnetir. Konumlarını tahminle değil eğrinin KENDİ ölçeğinden almaları
+ * için ölçek tek yerde: Sparkline da bunu kullanıyor. Kesirler kutunun
+ * genişlik/yükseklik payı (0–1); viewBox esnese de pay değişmez.
+ */
+export function sparkFrame({
+  points,
+  width = 200,
+  height = 40,
+  strokeWidth = 2,
+  baseline,
+  domain,
+}: {
+  points: Point[];
+  width?: number;
+  height?: number;
+  strokeWidth?: number;
+  baseline?: number | null;
+  domain?: [number, number];
+}) {
+  const timed = domain !== undefined && domain[1] > domain[0] && points.every((p) => p.time !== undefined);
+  const shown = timed
+    ? points.filter((p) => p.time! >= domain![0] && p.time! <= domain![1])
+    : points;
+  if (shown.length < 2) return null;
+
+  const values = shown.map((p) => p.value);
+  const anchored = typeof baseline === "number" && Number.isFinite(baseline);
+  const low = Math.min(...values, ...(anchored ? [baseline] : []));
+  const high = Math.max(...values, ...(anchored ? [baseline] : []));
+  const rawSpan = high - low || Math.abs(high) * 0.001 || 1;
+  const pad = anchored ? rawSpan * BASELINE_PAD : 0;
+  const min = low - pad;
+  const span = rawSpan + pad * 2;
+
+  const inset = strokeWidth + 2;
+  const innerW = width - inset * 2;
+  const innerH = height - inset * 2;
+  const xAt = (time: number) => inset + ((time - domain![0]) / (domain![1] - domain![0])) * innerW;
+  const xOf = (p: Point, i: number) =>
+    timed ? xAt(p.time!) : inset + (i / (shown.length - 1)) * innerW;
+  const yOf = (value: number) => inset + innerH - ((value - min) / span) * innerH;
+
+  return {
+    shown,
+    timed,
+    anchored,
+    inset,
+    innerW,
+    xOf,
+    yOf,
+    /** Bir anın yatay payı — yalnız zaman ekseninde ve alan içindeyse. */
+    xShare: (time: number) =>
+      timed && time > domain![0] && time < domain![1] ? xAt(time) / width : null,
+    /** Bir değerin dikey payı (0 üst kenar). */
+    yShare: (value: number) => yOf(value) / height,
+  };
+}
+
 export function Sparkline({
   points,
   width = 200,
@@ -81,30 +144,9 @@ export function Sparkline({
   split?: number;
   className?: string;
 }) {
-  const timed = domain !== undefined && domain[1] > domain[0] && points.every((p) => p.time !== undefined);
-  const shown = timed
-    ? points.filter((p) => p.time! >= domain![0] && p.time! <= domain![1])
-    : points;
-  if (shown.length < 2) return null;
-
-  const values = shown.map((p) => p.value);
-  const anchored = typeof baseline === "number" && Number.isFinite(baseline);
-  const low = Math.min(...values, ...(anchored ? [baseline] : []));
-  const high = Math.max(...values, ...(anchored ? [baseline] : []));
-  const rawSpan = high - low || Math.abs(high) * 0.001 || 1;
-  const pad = anchored ? rawSpan * BASELINE_PAD : 0;
-  const min = low - pad;
-  const span = rawSpan + pad * 2;
-
-  const inset = strokeWidth + 2;
-  const innerW = width - inset * 2;
-  const innerH = height - inset * 2;
-  const xOf = (p: Point, i: number) =>
-    inset +
-    (timed
-      ? ((p.time! - domain![0]) / (domain![1] - domain![0])) * innerW
-      : (i / (shown.length - 1)) * innerW);
-  const yOf = (value: number) => inset + innerH - ((value - min) / span) * innerH;
+  const frame = sparkFrame({ points, width, height, strokeWidth, baseline, domain });
+  if (!frame) return null;
+  const { shown, timed, anchored, inset, innerW, xOf, yOf } = frame;
 
   const coords = shown.map((p, i) => [xOf(p, i), yOf(p.value)] as const);
   const line = coords.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
@@ -120,7 +162,7 @@ export function Sparkline({
           ? "var(--flat)"
           : "var(--primary)";
 
-  const baseY = anchored ? yOf(baseline) : null;
+  const baseY = anchored ? yOf(baseline as number) : null;
   /* Taban varken dolgu İKİ poligon: çizginin tabanın üstünde kalan kısmı
      ile altında kalan kısmı. Her biri çizginin y'sini tabana KIRPARAK
      kuruluyor; kırpılmış iz tam olarak çizgi ile taban arasındaki alanı

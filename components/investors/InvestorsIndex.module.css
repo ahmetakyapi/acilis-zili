@@ -1,0 +1,259 @@
+/* ==========================================================================
+   Ünlü yatırımcılar dizini (18 Ekim) — kapak, kadro, sermaye haritası ve
+   hisse hisse alanlar/satanlar. Detay sayfası ve kartlar
+   `Investors.module.css`te kalıyor.
+
+   Sitenin dili: derinlik ton farkıyla (gölge yok), renk yalnız yönden
+   (`--up` / `--down`), mavi yalnız etkileşimde (üzerine gelme, odak).
+   Grafik ince: kulvar `--line-soft`, şerit 5 piksel, sıfır çizgisi
+   `--line-strong`. Geçişler `--ease-brand`.
+
+   HAREKET. İlk ekrandaki öğeler (kadro, harita) CSS ile, yalnızca dönüşüm
+   ve `clip-path` kullanarak giriyor — opaklık yok, LCP beklemiyor.
+   Aşağıdaki listeler `data-motion-stagger`, şeritler `data-motion-draw`
+   (MotionExperience). Hareketi azaltan okuyucu son kareyi görüyor.
+   ========================================================================== */
+
+/* ---- Kapak -------------------------------------------------------------- */
+
+.masthead { display:grid; gap:18px; }
+/* Başlığa ait bilgi başlığın ALTINDA (CLAUDE.md: üst künye yok). */
+.kunye { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin-top:-6px; font-size:13px; font-weight:600; color:var(--text-body); }
+.kunye > span + span::before { content:"·"; margin-right:10px; color:var(--text-muted); }
+
+/* ---- Kadro -------------------------------------------------------------- */
+
+.cast { display:grid; gap:14px; min-width:0; padding-top:18px; border-top:1px solid var(--line); }
+.castHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:6px 20px; }
+.castTitle { display:flex; align-items:baseline; gap:8px; font-size:14px; font-weight:650; color:var(--text-strong); }
+.castTitle span { font-size:13px; font-weight:550; color:var(--text-muted); }
+.castLegend { display:flex; flex-wrap:wrap; gap:4px 16px; font-size:12px; font-weight:550; color:var(--text-muted); }
+.castLegend > li { display:inline-flex; align-items:center; gap:6px; }
+.castLegend > li::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--up); }
+.castLegend > li[data-lean="down"]::before { background:var(--down); }
+/* 16 yüz: geniş ekranda TEK sıra, aksi hâlde 8 + 8. Kendiliğinden sarılan
+   ızgara 1280'de 14 + 2 diziyordu (ölçüldü 18 Ekim) ve ikinci sıra artık
+   gibi duruyordu. 1280'de kolon ~70 piksel: 48'lik yüz ve altında soyadı
+   ("Aschenbrenner" 12 puntoda ~84 piksel, üç noktayla kısalıyor). */
+.castList { display:grid; grid-template-columns:repeat(8, minmax(0,1fr)); gap:14px 6px; }
+@media(min-width:1100px) { .castList { grid-template-columns:repeat(16, minmax(0,1fr)); } }
+.castFace {
+  display:flex; min-width:0; flex-direction:column; align-items:center; gap:7px; padding:4px 2px; border-radius:12px;
+  outline:none; transition:background .2s var(--ease-brand);
+}
+.castPhoto { position:relative; display:block; transition:translate .35s var(--ease-brand); }
+/* Yön noktası: yüzün sağ alt köşesinde. Halka gölge değil, zeminle aynı
+   tonda bir kontur — nokta portreden ayrılsın diye. */
+.castFace[data-lean] .castPhoto::after {
+  content:""; position:absolute; right:-3px; bottom:-3px; width:12px; height:12px; border-radius:50%;
+  background:var(--up); outline:2.5px solid var(--premium-surface);
+}
+.castFace[data-lean="down"] .castPhoto::after { background:var(--down); }
+.castFace[data-closed] .castPhoto img { filter:grayscale(1) contrast(.95); }
+.castName { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:600; color:var(--text-body); }
+@media(hover:hover) and (pointer:fine) {
+  .castFace:hover .castPhoto { translate:0 -3px; }
+  .castFace:hover .castName { color:var(--primary-ink); }
+  .castFace:hover img { filter:none; }
+}
+.castFace:focus-visible { box-shadow:0 0 0 2px var(--line-focus); }
+/* Telefonda adlar gizli, sekiz kolon: 390'da iki sıra yüz (ölçüldü 18 Ekim,
+   kadro 88 piksel). Ad `aria-label` ve `title`da. */
+@media(max-width:639px) {
+  .castList { grid-template-columns:repeat(8, minmax(0,1fr)); gap:8px 4px; }
+  .castName { display:none; }
+  .castFace { padding:2px 0; }
+  .castPhoto { width:100%; max-width:40px; }
+  .castPhoto > span[data-size] { width:100%; border-radius:10px; }
+  .castFace[data-lean] .castPhoto::after { width:9px; height:9px; right:-2px; bottom:-2px; outline-width:2px; }
+}
+@media(prefers-reduced-motion:no-preference) {
+  .castList > li { animation:cast-rise .6s var(--ease-brand) calc(.12s + var(--i, 0) * 30ms) backwards; }
+}
+@keyframes cast-rise { from { translate:0 10px; } to { translate:none; } }
+
+/* ---- Sermaye haritası --------------------------------------------------- */
+
+.mapWrap { min-width:0; padding:16px 20px 18px; border-top:1px solid var(--line); }
+/* Oran `CapitalMap` → WIDE_ASPECT / NARROW_ASPECT ile aynı. -2 piksellik
+   kenar: karolar kendi içinde 2 piksel geri çekiliyor (4 piksel aralık),
+   dış kenar panelin dolgusuyla hizalı kalsın. */
+.map { position:relative; aspect-ratio:2.2; margin:-2px; }
+.tile {
+  position:absolute;
+  left:calc(var(--x) * 1% + 2px); top:calc(var(--y) * 1% + 2px);
+  width:calc(var(--w) * 1% - 4px); height:calc(var(--h) * 1% - 4px);
+  container:tile / size;
+  --tile-tone:color-mix(in oklab, var(--text-strong) 3.5%, var(--surface-sunken));
+}
+.tile[data-rank="0"] { --tile-tone:color-mix(in oklab, var(--text-strong) 11%, var(--surface-sunken)); }
+.tile[data-rank="1"] { --tile-tone:color-mix(in oklab, var(--text-strong) 8.5%, var(--surface-sunken)); }
+.tile[data-rank="2"] { --tile-tone:color-mix(in oklab, var(--text-strong) 6.5%, var(--surface-sunken)); }
+.tile[data-rank="3"] { --tile-tone:color-mix(in oklab, var(--text-strong) 5%, var(--surface-sunken)); }
+.tile[data-rest] { --tile-tone:var(--surface-sunken); }
+.tileBody {
+  --pad:clamp(8px, 6cqmin, 22px);
+  position:absolute; inset:0; display:block; overflow:hidden; padding:var(--pad);
+  border-radius:clamp(10px, 5cqmin, 18px); background:var(--tile-tone); outline:none;
+  transition:background .25s var(--ease-brand);
+}
+/* Portre karonun kısa kenarıyla büyüyor: Buffett'ın karosunda 150, en
+   küçük karoda 22 piksel. Görsel kutunun kendisi, çerçeve yok. */
+.tilePortrait { display:block; width:clamp(22px, 32cqmin, 150px); }
+.tilePortrait > span[data-size] { border-radius:clamp(6px, 4cqmin, 18px); }
+.tilePortrait img { transition:filter .45s var(--ease-brand), scale .6s var(--ease-brand); }
+.tileText { position:absolute; right:var(--pad); bottom:var(--pad); left:var(--pad); display:flex; min-width:0; flex-direction:column; gap:3px; }
+.tileShare { font-size:clamp(15px, 13cqmin, 64px); font-weight:700; line-height:.95; letter-spacing:-.05em; color:var(--text-strong); }
+.tileName, .tileValue, .tileTop { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tileName { margin-top:4px; font-size:clamp(12px, 5cqmin, 20px); font-weight:650; letter-spacing:-.015em; color:var(--text-strong); }
+.tileValue { font-size:clamp(11px, 3.4cqmin, 14px); font-weight:550; color:var(--text-muted); }
+.tileTop { font-size:clamp(11px, 3.4cqmin, 14px); font-weight:600; color:var(--text-body); }
+/* Karo küçüldükçe önce künyeler düşüyor, sonra portre; ad SON düşüyor
+   (soyadına kısalarak). 390'daki ilk denemede ad 92 pikselin altında
+   gizleniyordu ve telefonda beş karonun dördü yalnızca "%5,1" diyordu —
+   kimin payı olduğu okunmuyordu (ölçüldü 18 Ekim: o karolar 60×45 –
+   120×86 piksel). */
+.tileShort { display:none; }
+@container tile (max-height:190px) { .tileTop { display:none; } }
+@container tile (max-width:220px) { .tileFirm { display:none; } }
+@container tile (max-height:132px) { .tileValue { display:none; } }
+@container tile (max-width:160px) { .tileFull { display:none; } .tileShort { display:inline; } }
+@container tile (max-height:92px) { .tileName { margin-top:0; } }
+@container tile (max-height:76px) { .tilePortrait { display:none; } }
+@container tile (max-width:48px) or (max-height:38px) { .tileName { display:none; } }
+@media(hover:hover) and (pointer:fine) {
+  a.tileBody:hover { background:color-mix(in oklab, var(--primary) 9%, var(--tile-tone)); }
+  a.tileBody:hover img { filter:none; scale:1.04; }
+}
+a.tileBody:focus-visible { box-shadow:inset 0 0 0 2px var(--line-focus); }
+/* Grup karosundaki yüzler sarılıyor, taşan sıra kesilmiyor, hiç görünmüyor
+   (dar karoda altı yüz yan yana karonun dışına taşıyordu). */
+.restFaces { display:flex; max-height:51px; flex-wrap:wrap; gap:3px; overflow:hidden; }
+@container tile (max-height:120px) { .restFaces { max-height:24px; } }
+@container tile (max-height:76px) { .restFaces { display:none; } }
+@media(max-width:639px) {
+  .mapWrap { padding:14px 14px 16px; }
+  .map { aspect-ratio:.92; }
+  .tile {
+    left:calc(var(--nx) * 1% + 2px); top:calc(var(--ny) * 1% + 2px);
+    width:calc(var(--nw) * 1% - 4px); height:calc(var(--nh) * 1% - 4px);
+  }
+}
+/* KARO KARO AÇILIŞ: pay sırasıyla, sol üstten. Yalnızca `clip-path` ve
+   portrenin ölçeği; yerleşim oynamıyor. `backwards`: bitince kırpma kalkıyor. */
+@media(prefers-reduced-motion:no-preference) {
+  .tile { animation:tile-open .75s var(--ease-brand) calc(.18s + var(--i, 0) * 70ms) backwards; }
+  .tilePortrait { animation:tile-photo 1s var(--ease-brand) calc(.18s + var(--i, 0) * 70ms) backwards; }
+}
+@keyframes tile-open { from { clip-path:inset(0 100% 100% 0 round 16px); } to { clip-path:inset(0 0 0 0 round 0); } }
+@keyframes tile-photo { from { scale:.86; } to { scale:1; } }
+
+/* Grup karosunun üyeleri: adıyla, değeriyle, bağlantı olarak. */
+.tail { min-width:0; padding:0 20px 14px; }
+.tailTitle { margin:0 0 6px 8px; font-size:13px; font-weight:650; color:var(--text-strong); }
+.tailList { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:0 16px; }
+.tailItem {
+  display:grid; grid-template-columns:24px minmax(0,1fr) auto; align-items:center; gap:10px;
+  min-height:40px; padding:6px 8px; border-radius:10px; transition:background .2s var(--ease-brand);
+}
+.tailName { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:600; color:var(--text-strong); }
+.tailFigures { display:flex; align-items:baseline; gap:8px; white-space:nowrap; }
+.tailFigures b { font-size:13px; font-weight:700; color:var(--text-strong); }
+.tailFigures small { font-size:12px; color:var(--text-muted); }
+@media(hover:hover) and (pointer:fine) { .tailItem:hover { background:var(--primary-tint); } }
+@media(max-width:639px) { .tail { padding:0 14px 12px; } .tailList { grid-template-columns:minmax(0,1fr); } .tailItem { min-height:44px; } }
+
+/* Ölçü ızgarası: sayılar aynı taban çizgisinde biter (`align-items:end`,
+   etiket sayının altında ve hepsinde aynı punto). */
+.figures { display:flex; flex-wrap:wrap; align-items:flex-end; gap:16px 44px; margin:0; padding:18px 20px; border-top:1px solid var(--line); }
+.figures > div { display:flex; min-width:0; flex-direction:column; gap:4px; }
+.figures dt { order:2; font-size:12px; color:var(--text-muted); }
+.figures dd { font-size:22px; font-weight:650; line-height:1.1; letter-spacing:-.035em; color:var(--text-strong); white-space:nowrap; }
+.figures [data-lead] dd { font-size:clamp(34px, 4vw, 46px); letter-spacing:-.05em; }
+@media(max-width:639px) {
+  .figures { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px 16px; padding:16px; }
+  .figures [data-lead] { grid-column:1 / -1; }
+  .figures dd { font-size:19px; }
+}
+
+.note { padding:12px 20px; border-top:1px solid var(--line); font-size:12.5px; line-height:1.6; color:var(--text-muted); text-wrap:pretty; }
+@media(max-width:639px) { .note { padding:12px 16px; } }
+
+/* ---- Hisse hisse alanlar ve satanlar ------------------------------------
+   Gerekçe MoversBoard.tsx. Eksen ve satırlar TEK sütun tanımını paylaşıyor
+   (`--moves-cols`): sıfır çizgileri üst üste tek bir dikey hat. */
+.moves {
+  --moves-cols:minmax(0,220px) minmax(0,1fr) 52px;
+  min-width:0; padding:8px 12px 14px; border-top:1px solid var(--line);
+}
+.movesAxis { display:grid; grid-template-columns:var(--moves-cols); column-gap:16px; padding:6px 8px 4px; font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
+.movesAxisChart { grid-column:2; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+.movesAxisChart > span { display:inline-flex; align-items:center; gap:6px; }
+.movesAxisChart > [data-side="sell"] { justify-content:flex-end; padding-right:10px; }
+.movesAxisChart > [data-side="buy"] { padding-left:10px; }
+.movesAxisChart > [data-side="sell"]::after, .movesAxisChart > [data-side="buy"]::before {
+  content:""; width:8px; height:8px; border-radius:2px; background:var(--down);
+}
+.movesAxisChart > [data-side="buy"]::before { background:var(--up); }
+.movesAxisNet { grid-column:3; text-align:right; }
+.movesList { display:flex; flex-direction:column; }
+.movesList > li + li { border-top:1px solid var(--line-soft); }
+.moveRow {
+  display:grid; grid-template-columns:var(--moves-cols); align-items:center; column-gap:16px;
+  min-height:66px; padding:8px; border-radius:12px; transition:background .2s var(--ease-brand);
+}
+.moveId { display:flex; min-width:0; align-items:center; gap:10px; }
+.moveIdText { display:flex; min-width:0; flex-direction:column; }
+.moveIdText b { font-size:14px; font-weight:700; line-height:1.25; color:var(--text-strong); }
+.moveIdText small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
+.noLogo { display:block; width:26px; height:26px; flex-shrink:0; border-radius:7px; background:var(--surface-sunken); }
+.moveChart { display:grid; grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); align-items:stretch; height:46px; min-width:0; }
+.moveZero { background:var(--line-strong); }
+/* Yarının kendisi kap: birim (`--unit`) yarının genişliğinden ve ortak
+   ölçekten (`--peak`) — bir yüz en çok 28 piksel, ucta sayıya 30 piksel. */
+.moveSide {
+  --unit:min(28px, calc((100cqw - 30px) / var(--peak, 4)));
+  position:relative; display:flex; min-width:0; flex-direction:column; justify-content:flex-end; gap:6px;
+  container-type:inline-size;
+}
+.moveSide::before { content:""; position:absolute; right:0; bottom:0; left:0; height:5px; background:var(--line-soft); }
+.moveFaces { display:flex; align-items:center; padding-left:3px; }
+.moveSide[data-side="sell"] .moveFaces { flex-direction:row-reverse; padding-left:0; padding-right:3px; }
+.moveFace { display:flex; width:var(--unit); flex:none; justify-content:center; }
+.moveFace > span[data-size] { width:calc(var(--unit) - 3px); max-width:26px; border-radius:calc(var(--unit) / 4); }
+.moveCount { margin-inline:6px; font-size:13px; font-weight:700; line-height:1; color:var(--up); }
+.moveSide[data-side="sell"] .moveCount { color:var(--down); }
+.moveRail { position:relative; display:flex; width:calc(var(--n) * var(--unit)); height:5px; gap:1px; margin-left:3px; }
+.moveSide[data-side="sell"] .moveRail { flex-direction:row-reverse; margin-left:auto; margin-right:3px; }
+.moveRail i { display:block; flex-basis:0; height:100%; background:color-mix(in oklab, var(--up) 40%, transparent); }
+.moveRail i[data-strong] { background:var(--up); }
+.moveSide[data-side="sell"] .moveRail i { background:color-mix(in oklab, var(--down) 40%, transparent); }
+.moveSide[data-side="sell"] .moveRail i[data-strong] { background:var(--down); }
+.moveNet { text-align:right; font-size:15px; font-weight:700; letter-spacing:-.02em; }
+.moveNet[data-tone="up"] { color:var(--up); }
+.moveNet[data-tone="down"] { color:var(--down); }
+.moveNet[data-tone="flat"] { color:var(--flat); }
+@media(hover:hover) and (pointer:fine) {
+  a.moveRow:hover { background:var(--primary-tint); }
+}
+a.moveRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+/* Lejant: şeridin iki tonu, iki yönde. */
+.movesLegend { display:flex; flex-wrap:wrap; gap:6px 18px; padding:12px 8px 0; font-size:12px; font-weight:550; color:var(--text-muted); }
+.movesLegend > li { display:inline-flex; align-items:center; gap:7px; }
+.movesLegend > li::before { content:""; width:16px; height:5px; background:color-mix(in oklab, var(--up) 40%, transparent); }
+.movesLegend > li[data-strong]::before { background:var(--up); }
+.movesLegend > li[data-tone="down"]::before { background:color-mix(in oklab, var(--down) 40%, transparent); }
+.movesLegend > li[data-tone="down"][data-strong]::before { background:var(--down); }
+/* Telefonda iki hat: üstte kimlik ve net fark, altta tam genişlik grafik.
+   390'da yarı genişliği ~158 piksel: dört kişilik ölçekte yüz 28, sekiz
+   kişilikte 16 piksel. */
+@media(max-width:719px) {
+  .moves { --moves-cols:minmax(0,1fr) auto; padding:6px 8px 12px; }
+  .movesAxis { grid-template-columns:minmax(0,1fr); }
+  .movesAxisChart { grid-column:1; }
+  .movesAxisNet { display:none; }
+  .moveRow { grid-template-areas:"id net" "chart chart"; row-gap:8px; padding:10px 8px; }
+  .moveId { grid-area:id; }
+  .moveNet { grid-area:net; }
+  .moveChart { grid-area:chart; height:32px; }
+}

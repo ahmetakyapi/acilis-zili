@@ -266,7 +266,10 @@ export function BracketTable({
   sliceLabel,
   rangeLabel,
   rateLabel,
+  scale,
 }: {
+  /** Tarife merdiveni (`BracketScale`) — verilirse tablonun üstünde. */
+  scale?: BracketScaleLabels;
   title: string;
   hint: string;
   brackets: readonly { upTo: number | null; ratePct: number }[];
@@ -290,6 +293,9 @@ export function BracketTable({
   });
   return (
     <div className={styles.brackets}>
+      {scale && (
+        <BracketScale brackets={brackets} base={base} formatMoney={formatMoney} formatRate={formatRate} labels={scale} />
+      )}
       <p className={styles.figureLabel}>{title}</p>
       <table className={styles.bracketTable}>
         <thead>
@@ -318,3 +324,84 @@ export function BracketTable({
     </div>
   );
 }
+
+type BracketScaleLabels = {
+  title: string;
+  ariaLabel: string;
+  /** "%{rate} Dilimine {amount} Var" */
+  next: string;
+  top: string;
+};
+
+/**
+ * TARİFEDEKİ YERİN — beş dilim yan yana, matrah bir iğne (18 Ekim).
+ *
+ * Tablo dilimi söylüyordu ama okuyucu "bir sonraki dilime ne kadar var"ı
+ * iki sayıdan çıkarmak zorundaydı. Merdiven bunu bir bakışta gösteriyor.
+ *
+ * ÖLÇEK SIRA ÖLÇEĞİ, BÜYÜKLÜK DEĞİL: her dilim eşit genişlikte. Doğrusal
+ * ölçekte 2026 tarifesinin ilk dilimi (190.000 TL) 5,3 milyonluk dördüncü
+ * dilimin yanında %3,6'lık bir çentik oluyor ve iğne çoğu okuyucuda sıfıra
+ * yapışıyordu. Bu yüzden ÇUBUK BASILMIYOR (çubuk büyüklüktür — CLAUDE.md
+ * "CompareScale"): geçilen dilimler koyu şerit, içinde bulunulan dilim
+ * iğneye kadar dolu, kalanlar kulvar. İğnenin dilim İÇİNDEKİ yeri doğrusal
+ * (alt sınırdan üst sınıra); açık uçlu son dilimde alt sınırın iki katı
+ * dilimin sonu sayılıyor ve iğne %90'da duruyor. Tutarlar alttaki tabloda.
+ */
+function BracketScale({
+  brackets,
+  base,
+  formatMoney,
+  formatRate,
+  labels,
+}: {
+  brackets: readonly { upTo: number | null; ratePct: number }[];
+  base: number;
+  formatMoney: (value: number) => string;
+  formatRate: (value: number) => string;
+  labels: BracketScaleLabels;
+}) {
+  const count = brackets.length;
+  const index = brackets.findIndex((bracket) => bracket.upTo === null || base <= bracket.upTo);
+  const current = index === -1 ? count - 1 : index;
+  const lower = current === 0 ? 0 : (brackets[current - 1].upTo ?? 0);
+  const upper = brackets[current].upTo ?? Math.max(lower * 2, base);
+  const ceiling = brackets[current].upTo === null ? TOP_PIN : 1;
+  const within = Math.min(ceiling, Math.max(0, upper > lower ? (base - lower) / (upper - lower) : 0));
+  const next = brackets[current + 1];
+  const currentUpTo = brackets[current].upTo;
+  const nextText =
+    next && currentUpTo !== null
+      ? labels.next
+          .replace("{rate}", formatRate(next.ratePct).replace(/%/g, ""))
+          .replace("{amount}", formatMoney(currentUpTo - base))
+      : labels.top;
+  return (
+    <div className={styles.ladder}>
+      <p className={styles.figureLabel}>{labels.title}</p>
+      <div role="img" aria-label={labels.ariaLabel} className={styles.ladderBody}>
+        <div className={styles.ladderRates} style={{ "--n": count } as React.CSSProperties} aria-hidden>
+          {brackets.map((bracket, i) => (
+            <span key={i} data-current={i === current || undefined} data-past={i < current || undefined}>
+              {formatRate(bracket.ratePct)}
+            </span>
+          ))}
+        </div>
+        <div className={styles.ladderLane} style={{ "--n": count } as React.CSSProperties} aria-hidden>
+          {brackets.map((_, i) => (
+            <span key={i} className={styles.ladderStep} data-past={i < current || undefined}>
+              {i === current && (
+                <span className={styles.ladderFill} style={{ "--f": within } as React.CSSProperties} />
+              )}
+            </span>
+          ))}
+          <span className={styles.ladderPin} style={{ "--i": current, "--w": within } as React.CSSProperties} />
+        </div>
+      </div>
+      <p className={styles.ladderNext}>{nextText}</p>
+    </div>
+  );
+}
+
+/** Açık uçlu son dilimde iğnenin en sağ yeri (dilim genişliğinin oranı). */
+const TOP_PIN = 0.9;

@@ -3,6 +3,8 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import type { MarketHoliday } from "@/lib/market-hours";
 import type { EconomicEventRow } from "@/lib/schema";
 import { cn, etDateParts } from "@/lib/utils";
+import { byImportance } from "@/components/calendar/lookahead";
+import type { CSSProperties } from "react";
 
 /**
  * Tarih şeridi — hafta ve ay görünümünün "hangi gün ne var" özeti.
@@ -16,7 +18,7 @@ import { cn, etDateParts } from "@/lib/utils";
  * Pazartesi hücresi kayıyordu (308 > 284).
  *
  * Şimdi: iş günü iki birim, hafta sonu bir birim genişlikte — hafta sonu
- * açıklama taşımıyor, yeri de ona göre. Olay NOKTAYLA söyleniyor (önem
+ * açıklama taşımıyor, yeri de ona göre. Olay KULVARDA söyleniyor (önem
  * sırasıyla, en çok dört), tatil adıyla işaretli. Ay görünümü Pazartesi
  * başlayan gerçek bir yedi sütunlu ızgara; hiçbir şey kaydırmanın arkasına
  * saklanmıyor.
@@ -24,16 +26,16 @@ import { cn, etDateParts } from "@/lib/utils";
  * Boş iş günü hücresi YAZI TAŞIMIYOR. Bir süre "Açıklama Yok" diyordu ve
  * aynı cümle hemen altındaki ajandanın sessiz satırında ("22–23 Eylül ·
  * Açıklama Yok") ikinci kez duruyordu; şerit bir özet, boşluğu noktasızlık
- * ve soluk rakam zaten söylüyor. Olgu iddiası ajandada, bir kez.
+ * ve soluk rakam zaten söylüyor (18 Ekim: noktasızlığın yerini boş kulvar
+ * aldı). Olgu iddiası ajandada, bir kez.
  *
- * Nokta renkleri önem çiplerinin renkleri (kırmızı, sarı, gri): çipler
+ * Kulvar renkleri önem çiplerinin renkleri (kırmızı, sarı, gri): çipler
  * aynı panelin başında ve şeridin lejantı onlar. Ayrı bir biçim dili
  * (dolu / halka / küçük nokta) üçüncü bir sözlük açıyordu.
  */
 
-const IMPACT_RANK: Record<string, number> = { high: 0, medium: 1, low: 2 };
-/** En çok dört nokta, fazlası "+N". Telefonda da dört: 4×6 + 3×3 = 33 piksel, 320'deki ~37 piksellik iş günü hücresine sığıyor. */
-const MAX_DOTS = 4;
+/** Kulvarın yuva sayısı: en çok dört olay, fazlası "+N". */
+const LANE_SLOTS = 4;
 /** Pazartesi başlayan hafta: 2024-01-01 bir Pazartesi. */
 const MONDAY_ANCHOR = "2024-01-01";
 
@@ -61,17 +63,26 @@ function isWeekend(date: string) {
   return day === 0 || day === 6;
 }
 
-function Dots({ events }: { events: EconomicEventRow[] }) {
-  const sorted = [...events].sort(
-    (a, b) => (IMPACT_RANK[a.importance] ?? 3) - (IMPACT_RANK[b.importance] ?? 3),
-  );
-  const extra = sorted.length - MAX_DOTS;
+/**
+ * YOĞUNLUK KULVARI (18 Ekim). Nokta dizisi günün kaç olay taşıdığını
+ * söylüyordu ama boş gün hiçbir şey çizmiyordu: sessiz bir haftada şerit
+ * yedi soluk rakamdan ibaret kalıyor, "bu hafta boş mu, veri mi yok"
+ * sorusu açıkta kalıyordu (sahibinin ekran görüntüsü: beş iş gününün dördü
+ * boş). Şimdi her iş günü aynı dört yuvalı kulvarı taşıyor: dolu yuva bir
+ * olay, rengi önemi (yüksek önce). Boş gün de kulvarını çiziyor — boşluk
+ * artık bir ÖLÇÜ. Grafik dili sitenin geri kalanıyla aynı: `--line-soft`
+ * kulvar üstünde 5 piksellik şerit (CLAUDE.md, görsel dil). Yuva sayısı her
+ * günde aynı, yani günler arası yoğunluk çizginin uzunluğundan okunuyor.
+ */
+function Lane({ events, order }: { events: EconomicEventRow[]; order: number }) {
+  const sorted = byImportance(events);
+  const extra = sorted.length - LANE_SLOTS;
   return (
-    <span className={styles.dots} aria-hidden>
-      {sorted.slice(0, MAX_DOTS).map((event) => (
-        <span key={event.id} className={styles.dot} data-impact={event.importance} />
+    <span className={styles.lane} aria-hidden style={{ "--i": order } as CSSProperties}>
+      {Array.from({ length: LANE_SLOTS }, (_, slot) => (
+        <span key={slot} className={styles.laneSlot} data-impact={sorted[slot]?.importance} />
       ))}
-      {extra > 0 && <span className={styles.dotsMore}>+{extra}</span>}
+      {extra > 0 && <span className={styles.laneMore}>+{extra}</span>}
     </span>
   );
 }
@@ -99,14 +110,19 @@ export function CalendarStrip({ view, dates, byDay, holidays, today, locale, t }
       : null;
     const holidayName = holiday ? (locale === "tr" ? holiday.nameTr : holiday.nameEn) : null;
 
-    const foot = count ? (
-      <>
-        <Dots events={events} />
-        <span className={styles.cellCount}>{countLabel(count)}</span>
-      </>
+    /* Hafta sonu ve tatil kulvar çizmez: orada açıklama olmaması bir ölçü
+       değil (gündemdeki karar). Tatil adıyla duruyor, hafta sonu boş. */
+    const lane = !weekend && !holiday ? <Lane events={events} order={index} /> : null;
+    const note = count ? (
+      <span className={styles.cellCount}>{countLabel(count)}</span>
     ) : holidayLabel && !weekend ? (
       <span className={styles.cellNote}>{holidayLabel}</span>
     ) : null;
+    /* GÜNÜN ÖNE ÇIKANI (yalnız hafta, ≥768). Olaylı hücre "1 Olay"
+       diyordu; hangi olay olduğu ancak aşağıdaki listede okunuyordu. En
+       önemli olayın adı iki satırla kırpılmış olarak hücrede. Telefonda
+       hücre ~40 piksel, ad sığmıyor; orada gizli. */
+    const lead = view === "week" && count ? byImportance(events)[0] : null;
 
     const contents = (
       <>
@@ -121,7 +137,17 @@ export function CalendarStrip({ view, dates, byDay, holidays, today, locale, t }
           {showMonth ? <span>{month}</span> : <span className="sr-only">{month}</span>}
           {view === "month" && isToday && <span className="sr-only">{t.calendar.today}</span>}
         </span>
-        {foot && <span className={styles.cellFoot}>{foot}</span>}
+        {lead && (
+          <span className={styles.cellLead} data-high={lead.importance === "high" || undefined}>
+            {locale === "tr" ? lead.titleTr : lead.titleEn}
+          </span>
+        )}
+        {(lane || note) && (
+          <span className={styles.cellFoot}>
+            {lane}
+            {note}
+          </span>
+        )}
         {holidayName && <span className="sr-only">{holidayName}</span>}
       </>
     );

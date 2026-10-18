@@ -31,18 +31,14 @@
 .reading { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; margin-top:12px; }
 .price { font-size:28px; line-height:1.1; letter-spacing:-.04em; font-weight:600; color:var(--text-strong); }
 .reading > p:last-child { font-size:12px; }
-.spark { width:100%; flex:1 1 38px; min-height:38px; height:auto; margin-top:12px; }
+/* Eğri 18 Ekim'den beri `.chart` kabının içinde (taban künyesi ve seans
+   çizgileriyle); kabın boyu aşağıdaki "endeks kartları, ikinci nesil"
+   bloğunda. Kart uzayınca eğri yine kalan yüksekliği dolduruyor. */
 .indexCard :global(.spark-line) { animation-duration:1.1s; }
 /* Gün aralığı şeridi (17 Ekim) — 5 piksellik kulvar, fiyat noktası yön
    renginde; uçlarda günün dibi ve tepesi. Telefonda kart tek satır, gizli. */
 .dayRange { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:8px; margin-top:10px; color:var(--text-muted); font-size:11px; font-weight:600; }
 .rangeLane { position:relative; height:5px; border-radius:3px; background:var(--rail-track); }
-.rangeLane > b { position:absolute; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--text-muted); box-shadow:0 0 0 2px var(--premium-surface); animation:range-in .8s var(--ease-brand) both; animation-delay:.5s; }
-.rangeLane > b[data-tone="up"] { background:var(--up); }
-.rangeLane > b[data-tone="down"] { background:var(--down); }
-.indexLink[aria-current="true"] .rangeLane > b { box-shadow:0 0 0 2px var(--primary-tint); }
-@keyframes range-in { from { opacity:0; scale:.4; } }
-@media(prefers-reduced-motion:reduce) { .rangeLane > b { animation:none; } }
 .indexStamp { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:5px 12px; margin-top:9px; color:var(--text-muted); font-size:12px; }
 .indexSkeleton,.indexUnavailable { min-height:176px; border-radius:14px; }
 .indexUnavailable { display:grid; place-items:center; }
@@ -61,7 +57,7 @@
 .members tbody td { padding-block:11px; }
 .page :is(a,button):focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 @media(hover:hover) and (pointer:fine) { .indexLink:hover .indexCard { border-color:var(--primary); } }
-@media(max-width:1023px) { .marketHeader { grid-template-columns:minmax(0,1fr); grid-template-areas:"mast" "cards"; grid-template-rows:auto; gap:18px; } .masthead > header > p { max-width:60ch; } .spark { flex:none; height:38px; } }
+@media(max-width:1023px) { .marketHeader { grid-template-columns:minmax(0,1fr); grid-template-areas:"mast" "cards"; grid-template-rows:auto; gap:18px; } .masthead > header > p { max-width:60ch; } .chart { flex:none; height:44px; } }
 @media(max-width:767px) {
  .page { gap:16px; }
  .marketHeader { gap:16px; }
@@ -73,7 +69,6 @@
  .reading { margin-top:0; flex-direction:column; align-items:flex-end; gap:4px; }
  .price { font-size:24px; }
  .reading > p:last-child { font-size:12px; }
- .spark { height:32px; margin-top:0; }
  .dayRange { display:none; }
  .indexSkeleton,.indexUnavailable { min-height:296px; }
  .indexStamp { font-size:12px; }
@@ -177,14 +172,13 @@
    hiçbir TSX'te geçmiyordu (bugünkü künye `.heatLegend`). Degrade yalnız
    display başlık / birincil eylem / marka karosunda serbest; ölü kural
    canlandırılsaydı dil ihlali hazır bekliyordu. */
-.heatGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(18px, 1fr)); gap:3px; margin-top:14px; }
-.heatCell { display:block; aspect-ratio:1; border-radius:4px; transition:scale .18s var(--ease-brand), box-shadow .18s var(--ease-brand); }
-@media(hover:hover) and (pointer:fine) {
- /* Büyüteç 1,5 → 1,25 (12 Ekim): kimliği halka veriyor, büyüme komşuları örtüyordu. */
- .heatCell:hover { position:relative; z-index:1; scale:1.25; box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); }
-}
-@media(max-width:639px) { .heat { padding:14px 16px 16px; } .heatGrid { grid-template-columns:repeat(auto-fill, minmax(14px, 1fr)); gap:2px; } }
-@media(prefers-reduced-motion:reduce) { .heatCell { transition:none; } .heatCell:hover { scale:none; } }
+/* `.heatGrid` / `.heatCell` / `.heatLogo` / `.heatSymbol` / `.heatPct` SİLİNDİ
+   (18 Ekim): eşit karolu ızgaranın dört kuşağı (26 Eylül 18 piksel kare,
+   yoğunluk kademeleri, 10 sütun, 15 × 2) ağaç haritasına geçti — gerekçe
+   components/markets/IndexTreemap.tsx. Kararların özü yeni kurallarda
+   yaşıyor: büyüteç yerine halka (12 Ekim: "kimliği halka veriyor, büyüme
+   komşuları örtüyordu"), basışta kısa çöküş (BUTTON_BASE lehçesi). */
+@media(max-width:639px) { .heat { padding:14px 16px 16px; } }
 
 /* ---- Genişlik kartı, ikinci düzen (26 Eylül) ----
    Solda kimlik (endeks, fon fiyatı, kapsam, liste tarihi), sağda logolu
@@ -193,15 +187,6 @@
 .breadthOverview { grid-template-columns:minmax(220px, .7fr) minmax(0, 2fr); align-items:start; }
 .breadthIdentity .breadthCoverage { margin-top:8px; }
 .breadthOverview > .heat { padding:0 0 0 30px; border-top:0; border-left:1px solid var(--line); }
-.heatGrid { gap:4px; margin-top:12px; }
-.heatGrid[data-density="large"] { grid-template-columns:repeat(auto-fill, minmax(46px, 1fr)); gap:6px; }
-.heatGrid[data-density="medium"] { grid-template-columns:repeat(auto-fill, minmax(34px, 1fr)); }
-.heatGrid[data-density="small"] { grid-template-columns:repeat(auto-fill, minmax(22px, 1fr)); gap:3px; }
-.heatCell { display:grid; place-items:center; border-radius:8px; overflow:hidden; }
-.heatGrid[data-density="small"] .heatCell { border-radius:5px; }
-/* Logo karenin içinde, kenarda renk payı kalacak kadar küçük: renk okunur. */
-.heatLogo { width:68% !important; height:68% !important; border-radius:22% !important; }
-.heatGrid[data-density="small"] .heatLogo { width:72% !important; height:72% !important; }
 
 .tabsAside { flex:1 1 360px; min-width:0; max-width:520px; margin-left:auto; }
 .shareBox { display:flex; flex-direction:column; gap:8px; padding:12px 16px; border:1px solid var(--line); border-radius:16px; background:var(--premium-surface); }
@@ -227,22 +212,6 @@
    Panel kırpmıyor; alt künye bandı köşesini kendisi yuvarlıyor. */
 .breadth { overflow:visible; }
 .breadthStamp { border-radius:0 0 20px 20px; }
-.heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(10, minmax(0, 1fr)); gap:6px; margin-top:14px; }
-.heatCell { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; aspect-ratio:auto; min-height:74px; padding:8px 4px; border-radius:12px; overflow:visible; transition:scale .18s var(--ease-brand), box-shadow .18s var(--ease-brand); }
-.heatLogo { width:30px !important; height:30px !important; border-radius:9px !important; box-shadow:0 0 0 2px color-mix(in oklab, var(--premium-surface) 35%, transparent); }
-.heatSymbol { font-size:12px; font-weight:700; line-height:1.2; letter-spacing:.02em; color:var(--text-strong); }
-.heatPct { font-size:12px; font-weight:600; line-height:1.2; letter-spacing:-.01em; color:var(--text-strong); }
-.heatCell:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
-
-.heatCell:is(:hover, :focus-visible) { z-index:5; }
-@media(hover:hover) and (pointer:fine) { .heatCell:hover { scale:1.06; box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); } }
-/* Basış geri bildirimi (evin lehçesi, BUTTON_BASE): dokunmatikte hover yok,
-   karo basınca kısaca çöküyor. */
-.heatCell:active { scale:.97; }
-@media(max-width:639px) {
- .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(5, minmax(0, 1fr)); }
-}
-@media(prefers-reduced-motion:reduce) { .heatCell { transition:none; } .heatCell:is(:hover,:active) { scale:none; } }
 
 /* 27 Eylül: 1440/1280'de eski harita 405px, hareket listeleri y=979.
    Endeks kimliği seçicinin üstündeki boşluğa taşındı. Harita tüm paneli
@@ -262,33 +231,17 @@
 .heatSwatches { display:grid; grid-template-columns:repeat(9,1fr); gap:2px; height:7px; overflow:hidden; border-radius:3px; }
 .heatLegendLabels { display:flex; align-items:center; justify-content:space-between; margin-top:3px; font-size:12px; line-height:1.2; font-variant-numeric:tabular-nums; }
 .heatLegendHint { display:block; margin-top:3px; font-size:12px; line-height:1.3; }
-.heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(15,minmax(0,1fr)); gap:5px; margin-top:12px; }
-.heatCell { gap:3px; min-height:68px; padding:7px 3px; border-radius:10px; }
-.heatLogo { width:26px !important; height:26px !important; border-radius:8px !important; box-shadow:none; }
-.heatSymbol { font-size:12px; }
-.heatPct { font-size:12px; }
-.heatSymbol, .heatPct { color:inherit; }
 
 /* Mutlak, simetrik ölçek: <0,5 / 0,5–1,5 / 1,5–3 / ≥3. Basamakların
-   tonları globals.css → `--heat-mix-*` ve `--heat-deep-*`: tema haritası
-   aynı tokenları okuyor, iki ekranda aynı yüzde aynı tonda. */
-.heatCell, .heatSwatches > i { --heat-tone:var(--line); --heat-mix:0%; background:var(--surface-sunken); color:var(--text-strong); }
-:is(.heatCell,.heatSwatches > i)[data-heat-tone="up"] { --heat-tone:var(--up); }
-:is(.heatCell,.heatSwatches > i)[data-heat-tone="down"] { --heat-tone:var(--down); }
-:is(.heatCell,.heatSwatches > i)[data-heat-level="1"] { --heat-mix:var(--heat-mix-1); }
-:is(.heatCell,.heatSwatches > i)[data-heat-level="2"] { --heat-mix:var(--heat-mix-2); }
-:is(.heatCell,.heatSwatches > i)[data-heat-level="3"] { --heat-mix:var(--heat-mix-3); }
-:is(.heatCell,.heatSwatches > i):not([data-heat-level="0"]) { background:color-mix(in oklab,var(--heat-tone) var(--heat-mix),var(--premium-surface)); }
-:is(.heatCell,.heatSwatches > i)[data-heat-level="4"] { color:var(--heat-deep-ink); }
-:is(.heatCell,.heatSwatches > i)[data-heat-level="4"][data-heat-tone="up"] { background:var(--heat-deep-up); }
-:is(.heatCell,.heatSwatches > i)[data-heat-level="4"][data-heat-tone="down"] { background:var(--heat-deep-down); }
+   tonları globals.css → `--heat-mix-*` ve `--heat-deep-*`. 18 Ekim'den beri
+   karo, çip ve lejant tema haritasının `.heat` kuralını okuyor
+   (Themes.module.css); iki ekranda aynı yüzde aynı tonda, kural tek yerde. */
 
 .heatCoverage { color:var(--text-muted); font-size:12px; line-height:1.5; }
 .heatEmpty { padding:0 20px 16px; color:var(--text-body); }
 .breadthStamp { padding:8px 20px; }
 @media(max-width:1199px) {
   .toolbarIdentity .breadthQuote { flex-basis:100%; }
-  .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(10,minmax(0,1fr)); }
 }
 @media(max-width:767px) {
   .toolbarLayout { grid-template-columns:minmax(0,1fr); gap:12px; }
@@ -303,10 +256,6 @@
   .heatLegendHint { max-width:135px; font-size:12px; }
   .breadthStamp { padding:8px 14px; }
 }
-@media(max-width:639px) {
-  .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(5,minmax(0,1fr)); gap:5px; }
-  .heatCell { min-height:68px; }
-}
 
 /* Kapak ve hareket listesi: 1440×900'de önce listenin ilk satırı y=909'du.
    İçerik boyutlarını koruyup kapağın dikey dolgusunu ve bölüm aralığını
@@ -315,7 +264,6 @@
   .page .marketHeader:global(.page-frame.page-frame) { padding-block:16px; gap:16px; }
   .marketHeader .indexCard { min-height:124px; padding-block:12px; }
   .marketHeader .reading { margin-top:8px; }
-  .marketHeader .spark { min-height:28px; margin-top:8px; }
   .marketHeader .masthead > header { gap:8px; }
   .mover > div:first-child { padding-block:9px; }
 }
@@ -346,13 +294,13 @@
 .selectedIndexLabel { display:flex; align-items:center; gap:8px; color:var(--text-body); font-size:12px; line-height:1.2; font-weight:550; }
 .proxySymbol { padding:4px 7px; border-radius:5px; background:var(--primary-wash); color:var(--primary-ink); font-size:12px; font-weight:750; letter-spacing:.03em; }
 .selectedIndexReading { display:flex; align-items:center; gap:10px; white-space:nowrap; }
-.selectedIndexReading > strong { font-size:24px; line-height:1.1; font-weight:650; letter-spacing:-.035em; color:var(--text-strong); }
-.selectedIndexReading > :last-child:not(strong) { font-size:14px; font-weight:700; padding:4px 8px; }
+.selectedIndexReading > .medianPill { font-size:14px; font-weight:700; padding:4px 8px; }
 .selectedIndexEmpty { color:var(--text-muted); font-size:12px; }
-.reading > p.indexChange { border-radius:6px; padding:4px 7px; font-size:14px; line-height:1.2; letter-spacing:-.015em; white-space:nowrap; }
-.indexChange[data-tone="up"] { background:var(--up-wash); }
-.indexChange[data-tone="down"] { background:var(--down-wash); }
-.indexChange[data-tone="flat"] { background:var(--surface-sunken); }
+.reading > p.indexChange { display:inline-flex; align-items:baseline; gap:7px; font-size:14px; line-height:1.2; letter-spacing:-.015em; white-space:nowrap; }
+.indexPct { padding:4px 7px; border-radius:6px; font-weight:700; }
+.indexChange[data-tone="up"] .indexPct { background:var(--up-wash); }
+.indexChange[data-tone="down"] .indexPct { background:var(--down-wash); }
+.indexChange[data-tone="flat"] .indexPct { background:var(--surface-sunken); }
 @media(min-width:1200px) {
  .shareBox { padding:10px 14px; gap:6px; }
  .shareCounts dd { font-size:16px; }
@@ -369,9 +317,9 @@
  .toolbarIdentity { flex-direction:row; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:12px 0 0; border-left:0; border-top:1px solid var(--line); }
  .selectedIndexLabel { gap:6px; font-size:12px; }
  .selectedIndexReading { gap:8px; }
- .selectedIndexReading > strong { font-size:22px; }
- .selectedIndexReading > :last-child:not(strong) { font-size:13px; padding:3px 6px; }
- .reading > p.indexChange { font-size:12px; padding:3px 6px; }
+ .selectedIndexReading > .medianPill { font-size:13px; padding:3px 6px; }
+ .reading > p.indexChange { font-size:12px; }
+ .indexPct { padding:3px 6px; }
 }
 
 /* Yükleme kabuğu da gerçek harita ve beşli özetlerle aynı ızgarayı kullanır. */
@@ -395,14 +343,9 @@
 
 /* 390px ölçümü: 30 karo 5×6 dizilimde 456px tutuyordu. En az 375px
    genişlikte 6×5 ile bir satır kazanılıyor; en dar karonun eni ≥47px.
-   320–374px telefonlar okunabilir beş sütunlu düzeni korur. */
-@media(min-width:375px) and (max-width:639px) {
- .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(6,minmax(0,1fr)); }
-}
-@media(max-width:389px) {
- /* Yüzdeyi küçültmeden uzun sembol ve işaretlere yatay alan bırak. */
- .heatCell { padding-inline:1.5px; }
-}
+   320–374px telefonlar okunabilir beş sütunlu düzeni korur.
+   (18 Ekim: ızgara ağaç haritasına geçti; telefon yerleşimi artık
+   IndexTreemap → LAYOUTS "narrow", oran 0,8.) */
 
 /* 27 Eylül, piyasa ekranı görsel bütünü: Archivo + marka mavisi korunur.
    Yön renkleri yalnız veriyi anlatır. Açılış, harita ve liste aynı 16px
@@ -429,7 +372,6 @@
 .heatLegend { min-width:184px; }
 .heatLegendLabels { font-weight:600; }
 .heatSwatches { height:8px; gap:3px; }
-.heatSymbol { font-weight:750; letter-spacing:.015em; }
 .mover { border-radius:16px; }
 .moverHeading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 12px; padding:14px 18px; border-bottom:1px solid var(--line-soft); }
 .moverHeading h2 { display:flex; align-items:center; gap:8px; font-size:16px; line-height:1.35; font-weight:700; letter-spacing:-.03em; }
@@ -452,7 +394,6 @@
 @media(min-width:1200px) {
  .marketHeader .indexCard { min-height:132px; padding:14px 16px; }
  .marketHeader .reading { margin-top:10px; }
- .marketHeader .spark { min-height:34px; }
  .mover li a > div:first-child > span:last-child { font-size:21px; letter-spacing:-.035em; }
  .moverCompany > span:first-child { font-size:14px; }
 }
@@ -492,18 +433,160 @@
    yirmi şirket beş sütunda — dört satır, karolar bir kademe iri. Sunucu
    otuzu da basıyor (genişte 15 × 2), fazlası telefonda `display:none`;
    künye ekrandaki sayıyı söylüyor ("ilk 20 şirket").
+   18 Ekim: kesit kalktı — ağaç haritasına sığmayan küçükler haritanın
+   altında çip olarak; otuzu da her genişlikte var, künye tek.
    LEJANT BAŞLIĞIN ALTINDA: sağ sütunda 150 piksele sıkışıp "Kademeler:
    %0,5 · %1,5 · / %3" diye üç satıra sarıyordu; telefonda tam genişlik. */
-.heatHintPhone { display:none; }
 @media(max-width:639px) {
-  .heatGrid, .heatGrid[data-density] { grid-template-columns:repeat(5, minmax(0, 1fr)); }
-  .heatGrid > :nth-child(n+21) { display:none; }
-  .heatHintWide { display:none; }
-  .heatHintPhone { display:inline; }
   .heatHead { grid-template-columns:minmax(0,1fr); gap:8px; }
   .heatHead > * { grid-column:1; grid-row:auto; }
   .heatLegend { display:grid; grid-template-columns:minmax(0,180px) auto; align-items:center; column-gap:14px; min-width:0; max-width:none; }
   .heatLegend > .heatSwatches { grid-column:1; grid-row:1; }
   .heatLegend > .heatLegendLabels { grid-column:1; grid-row:2; }
   .heatLegend > .heatLegendHint { grid-column:2; grid-row:1 / 3; max-width:none; margin:0; }
+}
+
+/* ==========================================================================
+   18 Ekim — endeks kartları, ikinci nesil (components/markets/IndexCard.tsx)
+   Sahibinin isteği: "sağ üstteki endeks grafik kartlarını da geliştir".
+   Hiyerarşi: ad → fiyat (en iri) → yüzde + puan → eğri → gün aralığı.
+   Eğri kabı (`.chart`) kartın kalan boyunu dolduruyor; taban künyesi ve
+   seans çizgileri SVG dışında, eğrinin kendi ölçeğiyle yerleşiyor
+   (`sparkFrame`). Derinlik tonla: seçili kartın zemini `--primary-tint`,
+   üstte 3 piksellik mavi şerit; gölge yok.
+   ========================================================================== */
+.identity > .indexName { color:var(--text-strong); font-size:14px; font-weight:650; letter-spacing:-.02em; }
+.price { font-size:34px; line-height:1.05; }
+.indexDelta { font-size:12.5px; font-weight:600; letter-spacing:-.01em; }
+.chart { position:relative; flex:1 1 44px; min-height:44px; margin-top:12px; }
+.chart > .spark { position:absolute; inset:0; width:100%; height:100%; }
+/* Seans çizgileri: açılış zili ve kapanış — kulvar tonunda, eğrinin
+   ARKASINDA (DOM'da önce). Ön seans ile asıl seans eğrinin yarı tonundan
+   başka bir yerde de okunuyor. */
+.sessionTick { position:absolute; top:0; bottom:0; width:1px; margin-left:-.5px; background:var(--line-soft); }
+/* Taban künyesi kesik çizginin üstünde ya da altında (gerekçe IndexCard);
+   sağa yaslı, eğrinin son noktasının ters yanında. Zemini yarı saydam:
+   gün içi çizgi künyenin arkasından geçtiğinde (768'de ölçüldü) künye
+   okunur kalıyor ama çizgi SİLİNMİYOR — veri künyenin altında kaybolmaz. */
+.baseLabel { position:absolute; right:0; display:inline-flex; gap:4px; padding:0 4px; border-radius:4px; background:color-mix(in oklab, var(--premium-surface) 72%, transparent); color:var(--text-muted); font-size:11px; font-weight:550; line-height:1.3; white-space:nowrap; transform:translateY(calc(-100% - 2px)); pointer-events:none; }
+.baseLabel[data-side="below"] { transform:translateY(3px); }
+.baseLabel b { color:var(--text-body); font-weight:650; }
+.dayRange { margin-top:12px; }
+/* Kapanıştan fiyata uzanan dolgu ve kapanış çentiği — eğrinin tabanıyla
+   aynı referans; renk yalnız işaretten. */
+.rangeFill { position:absolute; top:0; bottom:0; border-radius:3px; background:color-mix(in oklab, var(--text-muted) 40%, transparent); transform-origin:left center; }
+.rangeFill[data-tone="up"] { background:color-mix(in oklab, var(--up) 42%, transparent); }
+.rangeFill[data-tone="down"] { background:color-mix(in oklab, var(--down) 42%, transparent); transform-origin:right center; }
+.rangeClose { position:absolute; top:-3px; bottom:-3px; width:2px; margin-left:-1px; border-radius:1px; background:var(--line-strong); }
+.rangeDot { position:absolute; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--text-muted); box-shadow:0 0 0 2px var(--premium-surface); }
+.rangeDot[data-tone="up"] { background:var(--up); }
+.rangeDot[data-tone="down"] { background:var(--down); }
+.indexLink[aria-current="true"] .rangeDot { box-shadow:0 0 0 2px color-mix(in oklab, var(--primary-tint), var(--premium-surface)); }
+/* GİRİŞ: kartlar sırayla (70 ms arayla) belirir, yalnız opaklıkla — panel
+   kaymaz (12 Ekim kararı, PremiumMotion). Hareketi veriyi çizen öğeler
+   taşıyor: eğri soldan çizilir (globals.css → .spark-line, kartın sırası
+   kadar gecikmeli), gün aralığının dolgusu kapanış çentiğinden fiyata
+   doğru açılır, fiyat noktası en son oturur. Sunucu HTML'i boyar boyamaz
+   başlıyor; hidrasyon ilk ekrana dokunmuyor. */
+@media(prefers-reduced-motion:no-preference) {
+ .indexLink { animation:index-in .5s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 70ms); }
+ .chart :global(.spark-line) { animation-duration:1.1s; animation-delay:calc(var(--i, 0) * 70ms + 120ms); }
+ .chart :global(.spark-area) { animation-delay:calc(var(--i, 0) * 70ms + 600ms); }
+ .chart :global(.spark-dot) { animation-delay:calc(var(--i, 0) * 70ms + 1000ms); }
+ .rangeFill { animation:range-fill .8s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 70ms + 400ms); }
+ .rangeDot { animation:range-in .5s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 70ms + 900ms); }
+}
+@keyframes index-in { from { opacity:0; } }
+@keyframes range-fill { from { transform:scaleX(0); } }
+@keyframes range-in { from { opacity:0; scale:.4; } }
+@media(min-width:1200px) {
+ .marketHeader .chart { min-height:40px; margin-top:10px; }
+ .marketHeader .dayRange { margin-top:10px; }
+}
+@media(max-width:767px) {
+ .price { font-size:24px; }
+ .indexDelta { display:none; }
+ .chart { flex:none; height:32px; min-height:0; margin-top:0; }
+ .baseLabel, .sessionTick { display:none; }
+}
+@media(max-width:359px) { .price { font-size:22px; } }
+
+/* Seçim şeridinde medyan hisse (gerekçe page.tsx → IndexDetail). Künye
+   ve hap aynı hatta, açıklama altta tek satır. */
+.selectedIndexReading { flex-wrap:wrap; row-gap:4px; }
+.medianLabel { color:var(--text-body); font-size:12.5px; font-weight:600; }
+.medianHint { flex-basis:100%; max-width:34ch; color:var(--text-muted); font-size:12px; line-height:1.45; white-space:normal; }
+@media(max-width:767px) { .medianHint { display:none; } }
+
+/* ==========================================================================
+   18 Ekim — ısı haritası, ağaç düzeni (components/markets/IndexTreemap.tsx)
+   Karonun iç kademeleri (logo / ad / büyük yüzde / dip satırı) ve giriş
+   koreografisi tema haritasının (Themes.module.css → `.tile*`); burada
+   yalnız kabın oranı, yerleşimlerin görünürlüğü, vurgu ve çipler.
+   ========================================================================== */
+.heatStage { margin-top:14px; }
+.heatLayout { display:none; }
+@media(min-width:1024px) { .heatLayout[data-layout="wide"] { display:block; } }
+@media(min-width:640px) and (max-width:1023px) { .heatLayout[data-layout="mid"] { display:block; } }
+@media(max-width:639px) { .heatLayout[data-layout="narrow"] { display:block; } }
+/* Oran TS'ten (`--aspect`, LAYOUTS ile tek sayı). Karonun 2 piksellik
+   dolgusu karolar arasında 4 piksellik oluk bırakıyor; kap iki yana 2
+   piksel taşıyor ki dış karolar panelin içerik kenarına otursun. */
+.heatMap { position:relative; width:calc(100% + 4px); margin:-2px; aspect-ratio:var(--aspect); }
+.heatSkeletonTile { position:absolute; padding:2px; }
+.heatTile:focus-visible { z-index:3; }
+@media(hover:hover) and (pointer:fine) {
+ /* Üzerine gelinen karo öne çıkıyor, ötekiler bir ton geri çekiliyor —
+    tema haritasının dili. `:has()` kökte değil, 30 karoluk kapta. */
+ .heatMap:has(.heatTile:hover) .heatFace { opacity:.55; }
+ .heatTile:hover { z-index:3; }
+ .heatTile:hover .heatFace { opacity:1; transform:scale(1.015); box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); }
+}
+.heatTile:active .heatFace { transform:scale(.985); }
+
+/* Lejant: dokuz kademe, aralarında 2 piksel; üzerine gelinen kademe
+   haritada vurgulanıyor (gerekçe IndexTreemap → HeatScale). */
+.heatSwatches { overflow:visible; }
+.heatSwatches > i { height:100%; border-radius:2px; transition:transform .2s var(--ease-brand); }
+.heatSwatches > i:first-child { border-radius:3px 2px 2px 3px; }
+.heatSwatches > i:last-child { border-radius:2px 3px 3px 2px; }
+@media(hover:hover) and (pointer:fine) {
+ .heatSwatches > i:hover { transform:scaleY(1.7); }
+ .heat:has(.heatSwatches > i:hover) :is(.heatFace, .heatChip) { opacity:.18; }
+ .heat:has(.heatSwatches > [data-heat-key="down-4"]:hover) [data-heat-key="down-4"],
+ .heat:has(.heatSwatches > [data-heat-key="down-3"]:hover) [data-heat-key="down-3"],
+ .heat:has(.heatSwatches > [data-heat-key="down-2"]:hover) [data-heat-key="down-2"],
+ .heat:has(.heatSwatches > [data-heat-key="down-1"]:hover) [data-heat-key="down-1"],
+ .heat:has(.heatSwatches > [data-heat-key="flat-0"]:hover) [data-heat-key="flat-0"],
+ .heat:has(.heatSwatches > [data-heat-key="up-1"]:hover) [data-heat-key="up-1"],
+ .heat:has(.heatSwatches > [data-heat-key="up-2"]:hover) [data-heat-key="up-2"],
+ .heat:has(.heatSwatches > [data-heat-key="up-3"]:hover) [data-heat-key="up-3"],
+ .heat:has(.heatSwatches > [data-heat-key="up-4"]:hover) [data-heat-key="up-4"] { opacity:1; }
+}
+
+/* Küçük kalanlar — çip. Tema haritasının satır listesi (44 piksel, ad
+   ile) Dow'da 14 satır tutuyordu; burada sembol + yüzde, akan sıra. */
+.heatRoster { margin-top:12px; padding-top:10px; border-top:1px solid var(--line-soft); }
+.heatRosterTitle { display:flex; align-items:baseline; gap:6px; margin-bottom:8px; color:var(--text-strong); font-size:12.5px; font-weight:650; }
+.heatRosterTitle span { color:var(--text-muted); font-weight:600; }
+.heatChips { display:flex; flex-wrap:wrap; gap:6px; }
+.heatChip { display:inline-flex; align-items:center; gap:7px; min-height:34px; padding:4px 10px; border-radius:9px; font-size:12px; line-height:1.2; transition:box-shadow .2s var(--ease-brand), opacity .2s var(--ease-brand); }
+.heatChip b { font-weight:750; letter-spacing:.01em; }
+.heatChip > span { font-weight:600; }
+@media(hover:hover) and (pointer:fine) { .heatChip:hover { box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); } }
+.heatChip:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+/* Telefonda üç eşit sütun: akan sıra 390'da sağ kenarı dişli bırakıyordu
+   (ölçüldü, 18 Ekim; 21 çip 7 satır). */
+@media(max-width:639px) {
+ .heatChips { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+ .heatChip { justify-content:space-between; min-height:44px; padding-inline:8px; gap:4px; }
+}
+/* 320'de üç sütunda "CRWD −%7,65" 12 puntoda çipe sığmıyor, komşuya
+   biniyordu (ölçüldü). İki sütun 21 çipte 11 satır (≈540 piksel) tuttu;
+   375'in altında üç sütun kalıyor, punto 11 ve iç boşluk 5 piksel. */
+@media(max-width:374px) { .heatChips { gap:4px; } .heatChip { padding-inline:5px; font-size:11px; } }
+@media(prefers-reduced-motion:reduce) {
+ .indexLink, .rangeFill, .rangeDot { animation:none; }
+ .heatSwatches > i, .heatChip { transition:none; }
+ .heatTile:is(:hover, :active) .heatFace { transform:none; }
 }

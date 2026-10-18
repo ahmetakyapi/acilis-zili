@@ -20,6 +20,7 @@
 }
 .portrait[data-size="chip"] { width:24px; border-radius:7px; }
 .portrait[data-size="sm"] { width:36px; border-radius:10px; }
+.portrait[data-size="cast"] { width:48px; border-radius:14px; }
 .portrait[data-size="card"] { width:88px; border-radius:18px; }
 .portrait[data-size="hero"] { width:168px; border-radius:26px; }
 .portrait[data-size="tile"] { width:100%; border-radius:18px; }
@@ -70,155 +71,12 @@
   font-size:clamp(8px, 7.5cqi, 12px); font-weight:600; color:var(--text-muted);
 }
 
-/* ---- Dizin kapağı ------------------------------------------------------- */
-
-.hero {
-  position:relative; isolation:isolate; display:grid; gap:28px; min-width:0;
-  padding:32px 34px 30px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface);
-}
-.heroCopy { display:grid; grid-template-columns:minmax(0,1fr); gap:0 40px; min-width:0; align-items:end; }
-.heroTitle {
-  margin:10px 0 12px; font-size:clamp(38px, 5.2vw, 64px); line-height:1; letter-spacing:-.055em;
-  font-weight:650; color:var(--text-strong);
-}
-.heroDek { max-width:46ch; font-size:15.5px; line-height:1.65; color:var(--text-body); text-wrap:pretty; }
-.heroStats { display:flex; flex-wrap:wrap; gap:18px 34px; margin-top:22px; }
-.heroStats > div { display:flex; flex-direction:column; gap:4px; min-width:0; }
-.heroStats dt { order:2; font-size:12px; color:var(--text-muted); }
-.heroStats dd { font-size:22px; line-height:1.15; letter-spacing:-.035em; font-weight:600; color:var(--text-strong); white-space:nowrap; }
-.heroStats .heroStatLead dd { font-size:clamp(34px, 4vw, 46px); letter-spacing:-.05em; }
-@media(min-width:1024px) {
-  .heroCopy { grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); }
-  .heroTitle, .heroDek { grid-column:1; }
-  .heroStats { grid-column:2; grid-row:1 / span 3; align-self:end; justify-content:flex-end; margin-top:0; }
-  .heroStats .heroStatLead { flex-basis:100%; align-items:flex-end; text-align:right; }
-}
-
-/* ---- Kapak: sermaye şeridi ve kadro (28 Eylül) --------------------------
-   Portre mozaiğinin yerine (gerekçe InvestorRoster.tsx). Şerit tek çizgi,
-   pay sırasına göre koyudan açığa tek renk ailesi — altı kademe, sonuncusu
-   "Diğer". Kadro satırları kutu değil ton: üzerine gelince hafif mavi. */
-.roster { display:grid; gap:26px; min-width:0; padding-top:24px; border-top:1px solid var(--line); }
-.capital { display:grid; gap:12px; min-width:0; margin:0; }
-.capitalTitle { font-size:12.5px; font-weight:650; color:var(--text-muted); }
-.capitalBar { display:flex; gap:3px; height:44px; min-width:0; }
-.capitalSegment {
-  position:relative; display:flex; min-width:4px; flex-basis:0; align-items:center;
-  border-radius:6px; background:var(--capital-tone); outline:none;
-  transition:opacity .25s var(--ease-brand), transform .3s var(--ease-brand), filter .25s var(--ease-brand);
-}
-.capitalSegment:first-child { border-radius:12px 6px 6px 12px; }
-/* `:last-child` değil: telefondaki "Diğer" dilimi kabın son çocuğu. */
-.capitalSegment:nth-last-child(1 of .capitalSegment) { border-radius:6px 12px 12px 6px; }
-/* Şeritteki ad: koyu dilimde beyaz, açık dilimde mürekkep. */
-.capitalInline {
-  display:flex; min-width:0; align-items:center; gap:8px; padding-inline:10px;
-  overflow:hidden; white-space:nowrap; font-size:13px; font-weight:650; color:var(--text-strong);
-}
-.capitalSegment[data-rank="0"] .capitalInline, .capitalSegment[data-rank="1"] .capitalInline { color:var(--on-primary); }
-.capitalInlineName { min-width:0; overflow:hidden; text-overflow:ellipsis; }
-.capitalInline b { font-weight:700; opacity:.85; }
-/* Bilgi kartı: dilimin üstünde, gölge yerine ton ve ince kenar. */
-.capitalTip {
-  position:absolute; bottom:calc(100% + 10px); left:50%; z-index:5;
-  display:flex; width:max-content; max-width:320px; align-items:center; gap:12px;
-  padding:10px 14px 10px 10px; border:1px solid var(--line); border-radius:14px;
-  background:var(--overlay-surface); box-shadow:var(--shadow-overlay);
-  pointer-events:none; visibility:hidden; transform:translate3d(-50%, 6px, 0) scale(.96); opacity:0;
-  transition:opacity .18s var(--ease-brand), transform .25s var(--ease-brand), visibility 0s linear .25s;
-}
-.capitalSegment[data-align="start"] .capitalTip { left:0; transform:translate3d(0, 6px, 0) scale(.96); transform-origin:bottom left; }
-.capitalSegment[data-align="end"] .capitalTip { left:auto; right:0; transform:translate3d(0, 6px, 0) scale(.96); transform-origin:bottom right; }
-.capitalTipId { display:flex; min-width:0; flex-direction:column; }
-.capitalTipId b { font-size:14px; font-weight:700; color:var(--text-strong); white-space:nowrap; }
-.capitalTipId small { font-size:12px; color:var(--text-muted); white-space:nowrap; }
-.capitalTipFigures { display:flex; flex-direction:column; align-items:flex-end; padding-left:12px; border-left:1px solid var(--line-soft); }
-.capitalTipFigures b { font-size:18px; font-weight:700; letter-spacing:-.03em; color:var(--primary-ink); }
-.capitalTipFigures small { font-size:12px; color:var(--text-muted); white-space:nowrap; }
-.capitalSegment:is(:hover, :focus-visible) { z-index:4; transform:scaleY(1.12); filter:saturate(1.15); }
-.capitalSegment:is(:hover, :focus-visible) .capitalTip {
-  visibility:visible; opacity:1; transform:translate3d(-50%, 0, 0) scale(1); transition:opacity .18s var(--ease-brand), transform .25s var(--ease-brand), visibility 0s var(--ease-brand);
-}
-.capitalSegment[data-align]:not([data-align="center"]):is(:hover, :focus-visible) .capitalTip { transform:translate3d(0, 0, 0) scale(1); }
-.capitalBar:has(.capitalSegment:is(:hover, :focus-visible)) .capitalSegment:not(:hover, :focus-visible) { opacity:.4; }
-.capitalSegment:focus-visible { box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 4px var(--line-focus); }
-.capitalRestSegment { display:none; }
-@media(max-width:639px) {
-  .capitalBar { height:30px; }
-  /* Dokunulan alan 44 (10 Ekim denetimi): çubuk 30 piksel, görünmez alan
-     yalnızca DİKEYDE büyüyor — yatayda komşu dilimin üstüne binseydi
-     dar dilime basmak bu kez komşuyu açardı. Dilim eni veriyle orantılı
-     (12–15 piksellikler var), o ölçü değişmiyor. */
-  .capitalSegment::after { content:""; position:absolute; inset:-7px 0; }
-  .capitalSegment:not([data-rank="0"]) .capitalInline { display:none; }
-  .capitalInline .portrait { display:none; }
-  /* Küçük fonlar tek "Diğer" diliminde (gerekçe InvestorRoster). */
-  .capitalSegment[data-rest] { display:none; }
-  .capitalRestSegment { display:block; min-width:10px; flex-basis:0; border-radius:6px 12px 12px 6px; background:var(--capital-tone); }
-  /* ADSIZ DİLİM DOKUNMAYA KAPALI. Telefonda üzerine gelme yok: bilgi kartı
-     hiç açılmıyor ve dokunuş doğrudan sayfaya gidiyor. Adını taşımayan
-     13 piksellik bir dilime basmak bilinmeyen bir yatırımcının sayfasını
-     açmak demekti. Adı yazan ilk dilim bağlantı olarak kalıyor; ötekilerin
-     bağlantısı hemen alttaki lejantta, adıyla. */
-  .capitalSegment:not([data-rank="0"]) { pointer-events:none; }
-}
-.capitalSegment, .capitalRestSegment, .capitalLegend > li { --capital-tone:color-mix(in oklab, var(--primary) 28%, var(--surface-sunken)); }
-.capitalSegment[data-rank="0"], .capitalLegend > li[data-rank="0"] { --capital-tone:var(--primary); }
-.capitalSegment[data-rank="1"], .capitalLegend > li[data-rank="1"] { --capital-tone:color-mix(in oklab, var(--primary) 78%, var(--surface-sunken)); }
-.capitalSegment[data-rank="2"], .capitalLegend > li[data-rank="2"] { --capital-tone:color-mix(in oklab, var(--primary) 62%, var(--surface-sunken)); }
-.capitalSegment[data-rank="3"], .capitalLegend > li[data-rank="3"] { --capital-tone:color-mix(in oklab, var(--primary) 48%, var(--surface-sunken)); }
-.capitalSegment[data-rank="4"], .capitalLegend > li[data-rank="4"] { --capital-tone:color-mix(in oklab, var(--primary) 36%, var(--surface-sunken)); }
-.capitalLegend { display:flex; flex-wrap:wrap; gap:8px 22px; }
-.capitalLegend > li[data-inline] { display:none; }
-.capitalItem { display:inline-flex; align-items:center; gap:8px; min-width:0; font-size:13px; color:var(--text-body); }
-.capitalItem::before { content:""; width:8px; height:8px; flex:none; border-radius:2px; background:var(--capital-tone); }
-.capitalRestDot { display:none; }
-.capitalName { font-weight:600; color:var(--text-strong); }
-.capitalItem b { font-weight:600; color:var(--text-muted); }
-a.capitalItem:hover .capitalName { color:var(--primary-ink); }
-/* DİLİM DİLİM (1 Ekim). Şerit tek bir perdeyle (`capital-draw`, bütün
-   şeride tek `clip-path`) açılıyordu: giriş "bir çubuk çizildi" diyordu,
-   "sermaye şu sırayla paylaşılmış" değil. Şimdi her dilim kendi sırasıyla
-   (`--i`, pay sırası; altıncıdan sonrası tek kademe) soldan açılıyor ve
-   içindeki portre/ad onunla birlikte kırpıktan çıkıyor. Hâlâ opaklık yok
-   (ilk ekran, LCP beklemiyor) ve yalnızca `clip-path`: yerleşim oynamıyor.
-   Toplam süre eskisiyle aynı bantta (~1,1 sn). `backwards`: bittiğinde
-   kırpma kalkıyor, dilimin üstünde açılan bilgi kartı kesilmiyor. */
-@media(prefers-reduced-motion:no-preference) {
-  .capitalSegment, .capitalRestSegment {
-    animation:capital-slice .7s var(--ease-brand) calc(.18s + var(--i, 0) * 70ms) backwards;
-  }
-  .capitalLegend > li { animation:capital-legend .6s var(--ease-brand) calc(.5s + var(--i, 0) * 40ms) backwards; }
-}
-@keyframes capital-slice { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0 0 0 0); } }
-/* Lejant dönüşümle, opaklıksız (ilk ekran): dilimin ardından yerine oturuyor. */
-@keyframes capital-legend { from { translate:0 6px; } to { translate:none; } }
+/* Dizin kapağı, sermaye haritası ve hisse hisse alanlar/satanlar 18 Ekim'den
+   beri `InvestorsIndex.module.css`te. */
 
 @media(hover:hover) and (pointer:fine) {
   .card:hover .initials { background:color-mix(in oklab, var(--primary) 16%, var(--surface-sunken)); }
 }
-@media(max-width:639px) {
-  .hero { padding:22px 18px 20px; border-radius:20px; gap:20px; }
-  .roster { gap:20px; padding-top:18px; }
-  .capitalLegend { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px 12px; }
-  .capitalLegend > li[data-inline]:not([data-rank="0"]) { display:block; }
-  .capitalLegend > li { min-width:0; }
-  /* LEJANT BİR BAĞLANTI LİSTESİ, SATIR 36 PİKSEL (30 Eylül). Satırlar 18
-     piksel ve 6–8 piksel arayla üst üste duruyordu; ıskalanan dokunuş
-     BAŞKA bir yatırımcının sayfasını açıyordu. Şeridin küçük dilimleri
-     artık dokunmaya kapalı olduğu için bağlantının asıl yeri burası. */
-  .capitalLegend { row-gap:0; }
-  .capitalItem { display:flex; width:100%; min-height:36px; font-size:12px; }
-  .capitalItem > .portrait { display:none; }
-  .capitalName { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-}
-/* 400'ün altında şeridin açıklaması tek sütun: iki sütunda 320'de adlar
-   kesiliyordu. */
-@media(max-width:399px) {
-  .capitalLegend { grid-template-columns:minmax(0,1fr); gap:0; }
-}
-
-
 /* ---- Bölüm başlığı ------------------------------------------------------ */
 
 .cardsSection { display:flex; flex-direction:column; gap:16px; min-width:0; }
@@ -227,90 +85,9 @@ a.capitalItem:hover .capitalName { color:var(--primary-ink); }
 }
 .sectionTitle span { font-size:13px; font-weight:550; letter-spacing:0; color:var(--text-muted); }
 
-/* ---- Çeyreğin hareketleri ---------------------------------------------- */
-
-.movers { display:grid; grid-template-columns:minmax(0,1fr); border-top:1px solid var(--line); }
-@media(min-width:900px) { .movers { grid-template-columns:repeat(2, minmax(0,1fr)); } .moverColumn + .moverColumn { border-left:1px solid var(--line); } }
-@media(max-width:899px) { .moverColumn + .moverColumn { border-top:1px solid var(--line); } }
-.moverColumn { --measure:120px; min-width:0; padding:12px 12px 10px; }
-@media(max-width:519px) { .moverColumn { --measure:84px; } }
-.moverHead { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:0 8px 4px; }
-.moverTitle {
-  display:flex; align-items:center; gap:8px; font-size:13px; font-weight:650; color:var(--text-strong);
-}
-.moverTitle::before { content:""; width:8px; height:8px; border-radius:2px; background:var(--up); }
-.moverColumn[data-tone="down"] .moverTitle::before { background:var(--down); }
-.moverTitle span { font-weight:550; color:var(--text-muted); }
-.moverTitle h3 { font:inherit; }
-.moverScale { min-width:var(--measure); flex-shrink:0; white-space:nowrap; text-align:right; font-size:12px; font-weight:550; color:var(--text-muted); }
-.moverList { display:flex; flex-direction:column; }
-.moverList > li + li { border-top:1px solid var(--line-soft); }
-/* İki hat, sabit yükseklik (64): üstte kimlik + ölçü, altta döküm +
-   portreler. Portre 24 piksel olduğu için alt hat onun boyunda; üst hat
-   14 puntoluk sembolün satırı. İki sütunun satırları aynı hatta.
-   Ölçüm (29 Eylül, /yatirimcilar, 6+6 satır): satır 94 → 64, pano 1440'ta
-   731 → 535, 390'da 1398 → 1007; iki sütunun satır üstleri arası fark 0. */
-.moverRow {
-  display:grid; grid-template-columns:32px minmax(0,1fr) var(--measure); grid-template-rows:20px 24px;
-  grid-template-areas:"logo id measure" "logo parts faces";
-  align-items:center; column-gap:12px; row-gap:4px; height:64px; padding:8px; border-radius:12px;
-  transition:background .2s var(--ease-brand), transform .25s var(--ease-brand);
-}
-.moverRow > :first-child { grid-area:logo; align-self:center; }
-.moverId { grid-area:id; display:flex; min-width:0; align-items:baseline; gap:8px; }
-.moverId b, .moveId b { font-size:14px; font-weight:700; line-height:1.25; color:var(--text-strong); }
-.moverId small, .moveId small { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
-/* SAĞ SÜTUN SABİT (30 Eylül, sahibinin bildirimi: "resimler alt satırla
-   aynı hizada durmuyor"). Her satır kendi ızgarası ve sağ sütun `auto`ydu:
-   beş portre + "+2" yığını (390'da ~110 piksel) ölçüden (76) geniş olan
-   satırda sütun genişliyor, o satırın çubuğu 40 piksel sola kayıyordu;
-   "+2" metni de yığının sağ ucunu içeri çekiyordu. Şimdi sütun her satırda
-   `--measure` genişliğinde: çubuklar aynı hattan başlıyor, sayılar ve
-   yığınlar aynı sağ hatta bitiyor. "+N" yığının içinde portre boyunda bir
-   karo, yığın en çok beş karo (MoversBoard → PORTRAIT_SLOTS); beş karo
-   telefonda 24 + 4×15 = 84 piksel, `--measure` ona göre. */
-.moverMeasure { grid-area:measure; display:flex; width:100%; align-items:center; gap:8px; }
-.moverMeasure b { min-width:14px; text-align:right; font-size:14px; font-weight:700; line-height:1; color:var(--up); }
-.moverColumn[data-tone="down"] .moverMeasure b { color:var(--down); }
-.moverTrack { display:block; flex:1; height:6px; border-radius:3px; background:var(--surface-sunken); overflow:hidden; }
-.moverFill { display:flex; height:100%; gap:1px; transform-origin:left center; }
-.moverFill i { display:block; height:100%; background:color-mix(in oklab, var(--up) 38%, transparent); }
-.moverFill i[data-strong] { background:var(--up); }
-.moverColumn[data-tone="down"] .moverFill i { background:color-mix(in oklab, var(--down) 38%, transparent); }
-.moverColumn[data-tone="down"] .moverFill i[data-strong] { background:var(--down); }
-/* SIĞMAYAN PARÇA YARIM KESİLMEZ, BÜTÜN DÜŞER. 320'de ikinci döküm
-   "5 A" diye harfin ortasından kırpılıyordu. Parçalar sarılıyor ve hat
-   24 piksel: sığmayan parça görünmeyen ikinci hatta iniyor (ekran okuyucu
-   yine okur); toplam sayı ve çubuğun iki tonu satırda kalıyor. */
-.moverParts { grid-area:parts; display:flex; height:24px; min-width:0; flex-wrap:wrap; align-items:center; align-content:flex-start; gap:24px 10px; overflow:hidden; white-space:nowrap; }
-/* Rozet değil, noktalı metin: nokta çubuğun iki tonunun lejantı. */
-.moverPart { display:inline-flex; height:24px; align-items:center; gap:5px; font-size:12px; font-weight:550; color:var(--text-muted); }
-.moverPart::before { content:""; width:6px; height:6px; border-radius:50%; background:color-mix(in oklab, var(--up) 38%, transparent); }
-.moverPart[data-strong] { font-weight:650; color:var(--up); }
-.moverPart[data-strong]::before { background:var(--up); }
-.moverColumn[data-tone="down"] .moverPart::before { background:color-mix(in oklab, var(--down) 38%, transparent); }
-.moverColumn[data-tone="down"] .moverPart[data-strong] { color:var(--down); }
-.moverColumn[data-tone="down"] .moverPart[data-strong]::before { background:var(--down); }
-.moverFaces { grid-area:faces; display:flex; justify-content:flex-end; align-items:center; }
-.moverFace { display:flex; border-radius:7px; box-shadow:0 0 0 2px var(--premium-surface); }
-.moverFace + .moverFace { margin-left:-6px; }
-.moverMore { position:relative; display:grid; width:24px; height:24px; margin-left:-6px; place-items:center; border-radius:7px; background:linear-gradient(var(--surface-elevated),var(--surface-elevated)),var(--premium-surface); box-shadow:0 0 0 2px var(--premium-surface); font-size:12px; font-weight:700; letter-spacing:-.02em; color:var(--text-body); font-variant-numeric:tabular-nums; }
-@media(max-width:519px) {
-  .moverRow { column-gap:10px; }
-  .moverFace + .moverFace, .moverMore { margin-left:-9px; }
-}
-@media(hover:hover) and (pointer:fine) {
-  a.moverRow:hover { background:var(--primary-tint); transform:translateX(2px); }
-}
-a.moverRow:active { scale:.99; }
-/* KARŞI YÖN (1 Ekim): aynı hisse öteki sütunda da varsa ("GOOGL: 7 alan,
-   5 satan") satırın dökümüne öteki yönün kalabalığı sessiz bir parça
-   olarak ekleniyor. Noktası karşı yönün rengi, metni sessiz: satırın yönü
-   değişmiyor, yalnızca tartışmalı olduğu söyleniyor. Son parça: dar
-   ekranda ilk o düşer (bkz. "SIĞMAYAN PARÇA… BÜTÜN DÜŞER"). */
-.moverPart[data-against] { font-weight:550; color:var(--text-muted); }
-.moverColumn[data-tone="up"] .moverPart[data-against]::before { background:var(--down); }
-.moverColumn[data-tone="down"] .moverPart[data-against]::before { background:var(--up); }
+/* Satır kimliği (detay sayfasının "Bu Çeyrek Ne Yaptı" listesi). */
+.moveId b { font-size:14px; font-weight:700; line-height:1.25; color:var(--text-strong); }
+.moveId small { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
 
 /* ---- Kim alıyor, kim satıyor (1 Ekim) ------------------------------------
    Gerekçe InvestorBalance.tsx. Eksen başlığı ve satırlar TEK sütun
@@ -736,9 +513,8 @@ a.company:hover b { color:var(--primary-ink); }
 .noteLink:hover { color:var(--primary-ink); }
 
 @media(prefers-reduced-motion:reduce) {
-  .portraitImg, .card, .cardArrow, .moverRow, .moveRow, .tickerRow { transition:none; }
-  .emblemIcon, .capitalSegment, .capitalTip { transition:none; }
-  .capitalSegment:is(:hover, :focus-visible) { transform:none; }
+  .portraitImg, .card, .cardArrow, .moveRow, .tickerRow { transition:none; }
+  .emblemIcon { transition:none; }
 }
 
 /* ---- Hisse sayfası paneli ----------------------------------------------- */
@@ -823,4 +599,4 @@ a.company:hover b { color:var(--primary-ink); }
 /* Paylaş düğmesi kapağın açıklama cümlesinin ardında (`PageShare`, 30 Eylül).
    Düğme kendi genişliğinde; kapağın dikey ritmine 14 piksellik payla
    giriyor, rakam satırı ondan sonra. */
-.heroShare, .detailShare { width:fit-content; margin:14px 0 0 -8px; }
+.detailShare { width:fit-content; margin:14px 0 0 -8px; }

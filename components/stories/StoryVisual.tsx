@@ -1,4 +1,6 @@
 import { LogoImage } from "@/components/ui/LogoImage";
+import { ScaleBar } from "@/components/markets/CompareScale";
+import { scaleRatios } from "@/lib/compare";
 import styles from "./StoryVisual.module.css";
 import { cn, directionOf, directionText, formatPercent, formatPrice, formatEtDateCompact } from "@/lib/utils";
 import type { StoryClose } from "@/lib/story-market";
@@ -210,6 +212,14 @@ export function StoryCast({
         : latest,
     null,
   );
+  /* GETİRİLER BİR DE ÇİZGİ OLARAK (18 Ekim). Manşet kadrosu iki-üç şirketin
+     olaydan bugüne getirisini yan yana basıyor; "hangisi daha çok etkilendi"
+     sorusu rakamları basamak basamak okuyarak cevaplanıyordu. Ölçek çizgisi
+     karşılaştırma ekranındakinin aynısı (`ScaleBar`, `scaleRatios`): renk
+     yalnız işaretten, eksi varsa sıfır ortada, karşılaştıracak ikinci sayı
+     yoksa hiç basılmıyor. Son kapanış satırına çizgi YOK — farklı hisselerin
+     fiyatı karşılaştırılabilir bir büyüklük değil (CLAUDE.md, ekran düzeni). */
+  const scale = scaleRatios(shown.map((member) => member.sinceEvent));
 
   return (
     <div className={`${styles.cast} overflow-hidden rounded-(--radius-lg) border border-primary-faint bg-surface-solid/70`}>
@@ -240,7 +250,7 @@ export function StoryCast({
         </span>
       </div>
       <ul data-motion-stagger>
-        {shown.map((member) => {
+        {shown.map((member, index) => {
           const tone = directionOf(member.sinceEvent);
           return (
             <li
@@ -275,6 +285,14 @@ export function StoryCast({
                     {!sharedCloseDate && <small className={styles.readingDate}>{formatEtDateCompact(member.lastClose.date, locale)}</small>}
                   </>
                 ) : member.sinceEvent === null ? null : formatPercent(member.sinceEvent, locale)}
+                {scale.ratios[index] != null && (
+                  <ScaleBar
+                    ratio={scale.ratios[index] ?? 0}
+                    signed={scale.signed}
+                    tone="signal"
+                    className="w-[88px]"
+                  />
+                )}
               </span>
             </li>
           );

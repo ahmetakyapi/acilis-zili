@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
 import type { SymbolMeta } from "@/lib/data";
@@ -7,36 +8,57 @@ import type { CrowdEntry } from "@/lib/investor-view";
 import { investorBySlug, type Investor } from "@/lib/investors";
 import { quarterLabel } from "./format";
 import { Portrait } from "./Portrait";
-import styles from "./Investors.module.css";
+import styles from "./InvestorsIndex.module.css";
 
 /**
- * "Bu Çeyreğin Hareketleri" — aynı hisseye aynı yönde giden yatırımcılar.
+ * "Hisse Hisse Alanlar ve Satanlar" — çeyreğin ortak hareketleri tek bir
+ * ayrışan grafikte (18 Ekim).
  *
- * İki sütun, iki yön: solda en çok alınanlar (yeni açan + artıran), sağda
- * en çok satılanlar (tamamen satan + azaltan). Her satırda kaç yatırımcının
- * ne yaptığı SAYI olarak, kimlerin yaptığı PORTRE olarak ve sayının
- * büyüklüğü bir ÇİZGİ olarak (CLAUDE.md: karşılaştırılan her büyüklük bir
- * de çizgi olarak okunur). Çizginin ölçeği iki sütunda ORTAK: soldaki 5
- * ile sağdaki 5 aynı uzunlukta.
+ * NEDEN İKİ SÜTUN DEĞİL. Pano iki listeydi ("En Çok Alınanlar" / "En Çok
+ * Satılanlar"), her satırda logo, sembol, ad, üç noktalı döküm ("1 Yeni
+ * Aldı · 5 Artırdı · Karşısında 5 Satıcı"), bir çubuk, sayı ve portre
+ * yığını: yoğun bir tablo gibi okunuyordu ve aynı hisse (GOOGL) iki sütunda
+ * iki ayrı satırdı. Şimdi HİSSE BAŞINA TEK SATIR, ortada sıfır çizgisi:
+ * sağa alanlar, sola satanlar. Kalabalığın yönü ve tartışmalı hisse bir
+ * bakışta okunuyor — iki yana da uzanan satır tartışmalı.
  *
- * Çizgi YATIRIMCI SAYISINI ölçer (alımda yeni açan + artıran, satışta
- * tamamen satan + azaltan), pozisyonun dolar değerini DEĞİL — veri
- * kişi sayısı. Bu yüzden sütun başında "Yatırımcı Sayısı" künyesi var.
+ * HER YÜZ BİR KİŞİ (isotype). Çubuk kişi sayısını ölçüyor; o yüzden çubuğun
+ * birimi bir portre: yüzler sıfır çizgisinden dışa doğru diziliyor, altındaki
+ * 5 piksellik şerit (kulvar üstünde, CLAUDE.md grafik dili) aynı birimle
+ * uzuyor. Koyu parça güçlü hareket (yeni alım / tamamen satış) ve o kişiler
+ * sıfır çizgisine en yakında; açık parça artıran / azaltan. Ölçek iki yanda
+ * ve bütün satırlarda ORTAK (`--peak`): soldaki 4 ile sağdaki 4 aynı boy.
  *
- * Satır düzeni (29 Eylül, ölçüldü): eski satır dört kattı (ad, rozet,
- * portre, altta tam genişlik çizgi) ve 94 pikseldi; çizgi ayrı bir satır
- * gibi duruyor, dolu yeşil/kırmızı haplar ekranın en ağır lekesi oluyordu.
- * Şimdi iki hat: üstte kimlik + ölçü (çizgi ve sayı yan yana), altta
- * hareketin dökümü + portreler. Rozet yok; güçlü hareket yön renginde
- * metin, zayıf olan sessiz metin. Satır sabit yükseklikte ki iki sütunun
- * satırları aynı hatta dursun.
+ * VERİ TAM. `CrowdEntry` dört listenin hepsini taşıyor (`crowdMoves`); alım
+ * listesinden gelen satırın satıcıları da eksiksiz. Liste iki yönün en
+ * kalabalık hisselerinin birleşimi (`topBuys` ∪ `topSells`, en az iki kişi);
+ * sıra net farka göre, en net alınan üstte.
+ *
+ * Satır bağlantı (hisse sitede biliniyorsa) ve `data-cc` ile şirket kartını
+ * açıyor. Ekran okuyucu satırı tek cümle olarak duyuyor (ad listesi dahil);
+ * grafiğin kendisi `aria-hidden`.
  */
-/* Yığında en çok BEŞ karo: kalabalıkta dört portre + "+N" karosu. "+N"
-   portreyle aynı boyda bir karo, yığının son elemanı — sağ sütun her
-   satırda aynı genişlikte ve yığınlar aynı sağ hatta biter (30 Eylül,
-   gerekçe Investors.module.css → "SAĞ SÜTUN SABİT"). "+1" hiç çıkmaz:
-   beş kişide beşinci karo portrenin kendisi. */
-const PORTRAIT_SLOTS = 5;
+
+/** Ölçeğin tabanı: tek satırlık "2 kişi" yarım şeridi doldurmasın. */
+const PEAK_FLOOR = 4;
+
+type Row = {
+  entry: CrowdEntry;
+  buyers: { investor: Investor; strong: boolean }[];
+  sellers: { investor: Investor; strong: boolean }[];
+};
+
+function people(strong: string[], light: string[]) {
+  return [
+    ...strong.map((slug) => ({ slug, strong: true })),
+    ...light.map((slug) => ({ slug, strong: false })),
+  ]
+    .map(({ slug, strong: isStrong }) => {
+      const investor = investorBySlug(slug);
+      return investor ? { investor, strong: isStrong } : null;
+    })
+    .filter((item): item is { investor: Investor; strong: boolean } => item !== null);
+}
 
 export function MoversBoard({
   movers,
@@ -49,193 +71,139 @@ export function MoversBoard({
   locale: string;
   t: Dictionary["investors"];
 }) {
-  const peak = Math.max(
-    1,
-    ...movers.buys.map((entry) => entry.opened.length + entry.added.length),
-    ...movers.sells.map((entry) => entry.exited.length + entry.trimmed.length),
-  );
-  const empty = movers.buys.length === 0 && movers.sells.length === 0;
-  /* KARŞI YÖN (1 Ekim). Aynı hisse iki sütunda birden duruyorsa (GOOGL'u
-     yedi yatırımcı alırken beşi satıyor) her satır ötekinin kalabalığını
-     da söylüyor. YALNIZCA iki listede de varsa: listeler kesik (en çok
-     `MOVERS_LIMIT`, en az iki kişi), yani öteki listede yokluk "karşı
-     yönde kimse yok" demek değil — orada hiçbir şey basılmıyor. */
-  const buyCrowd = new Map(movers.buys.map((entry) => [entry.key, entry.opened.length + entry.added.length]));
-  const sellCrowd = new Map(movers.sells.map((entry) => [entry.key, entry.exited.length + entry.trimmed.length]));
+  const byKey = new Map<string, CrowdEntry>();
+  for (const entry of [...movers.buys, ...movers.sells]) if (!byKey.has(entry.key)) byKey.set(entry.key, entry);
+  const rows: Row[] = [...byKey.values()]
+    .map((entry) => ({ entry, buyers: people(entry.opened, entry.added), sellers: people(entry.exited, entry.trimmed) }))
+    .sort(
+      (a, b) =>
+        b.buyers.length - b.sellers.length - (a.buyers.length - a.sellers.length) ||
+        b.buyers.length - a.buyers.length ||
+        a.entry.key.localeCompare(b.entry.key),
+    );
+  const peak = Math.max(PEAK_FLOOR, ...rows.map((row) => Math.max(row.buyers.length, row.sellers.length)));
+  const number = new Intl.NumberFormat(locale === "en" ? "en-US" : "tr-TR");
+  const signed = (value: number) => (value > 0 ? `+${number.format(value)}` : value < 0 ? `−${number.format(-value)}` : "0");
 
   return (
-    <Panel className={styles.moversPanel}>
+    <Panel>
       <PanelHeader
         title={t.moversTitle}
         meta={
           movers.period
-            ? t.moversMeta
-                .replace("{period}", quarterLabel(movers.period, t))
-                .replace("{count}", String(movers.investors))
+            ? t.moversMeta.replace("{period}", quarterLabel(movers.period, t)).replace("{count}", String(movers.investors))
             : undefined
         }
       />
-      {empty ? (
+      {rows.length === 0 ? (
         <p className="border-t border-line px-4 py-4 text-small text-muted sm:px-5">{t.moversEmpty}</p>
       ) : (
-        <div className={styles.movers}>
-          <MoverColumn
-            title={t.buysTitle}
-            tone="up"
-            entries={movers.buys}
-            parts={(entry) => [
-              { count: entry.opened.length, label: t.opened, strong: true },
-              { count: entry.added.length, label: t.added, strong: false },
-            ]}
-            who={(entry) => [...entry.opened, ...entry.added]}
-            against={(entry) => sellCrowd.get(entry.key) ?? 0}
-            againstLabel={t.moversAgainstBuy}
-            peak={peak}
-            known={known}
-            locale={locale}
-            scale={t.moversScale}
-          />
-          <MoverColumn
-            title={t.sellsTitle}
-            tone="down"
-            entries={movers.sells}
-            parts={(entry) => [
-              { count: entry.exited.length, label: t.exited, strong: true },
-              { count: entry.trimmed.length, label: t.trimmed, strong: false },
-            ]}
-            who={(entry) => [...entry.exited, ...entry.trimmed]}
-            against={(entry) => buyCrowd.get(entry.key) ?? 0}
-            againstLabel={t.moversAgainstSell}
-            peak={peak}
-            known={known}
-            locale={locale}
-            scale={t.moversScale}
-          />
+        <div className={styles.moves} style={{ "--peak": peak } as CSSProperties}>
+          {/* Eksen başlığı satırlarla AYNI ızgarada: "Satanlar" sol yarının,
+              "Alanlar" sağ yarının üstünde, lejant ortada değil başlığın
+              altında tek satır. */}
+          <div className={styles.movesAxis} aria-hidden>
+            <span className={styles.movesAxisChart}>
+              <span data-side="sell">{t.moversSellers}</span>
+              <span data-side="buy">{t.moversBuyers}</span>
+            </span>
+            <span className={styles.movesAxisNet}>{t.moversNet}</span>
+          </div>
+          <ol className={styles.movesList} data-motion-stagger>
+            {rows.map(({ entry, buyers, sellers }) => {
+              const meta = entry.ticker ? known[entry.ticker] : undefined;
+              const net = buyers.length - sellers.length;
+              const label = entry.ticker ?? entry.issuer;
+              const spoken = [
+                t.moversAria
+                  .replace("{ticker}", label)
+                  .replace("{buy}", number.format(buyers.length))
+                  .replace("{sell}", number.format(sellers.length)),
+                buyers.length > 0 ? t.moversWhoBuy.replace("{names}", buyers.map((b) => b.investor.name).join(", ")) : "",
+                sellers.length > 0 ? t.moversWhoSell.replace("{names}", sellers.map((s) => s.investor.name).join(", ")) : "",
+              ]
+                .filter(Boolean)
+                .join(" ");
+              const body = (
+                <>
+                  <span className={styles.moveId}>
+                    {entry.ticker ? (
+                      <LogoTile symbol={entry.ticker} logoUrl={meta?.logoUrl} size="md" />
+                    ) : (
+                      <span className={styles.noLogo} aria-hidden />
+                    )}
+                    <span className={styles.moveIdText} aria-hidden>
+                      <b className="numeral">{label}</b>
+                      <small>{meta?.name ?? entry.issuer}</small>
+                    </span>
+                  </span>
+                  <span className={styles.moveChart} aria-hidden>
+                    <Side side="sell" crowd={sellers} />
+                    <span className={styles.moveZero} />
+                    <Side side="buy" crowd={buyers} />
+                  </span>
+                  <b className={`${styles.moveNet} numeral`} data-tone={net > 0 ? "up" : net < 0 ? "down" : "flat"} aria-hidden>
+                    {signed(net)}
+                  </b>
+                  <span className="sr-only">{spoken}</span>
+                </>
+              );
+              return (
+                <li key={entry.key} className="min-w-0">
+                  {entry.ticker && meta ? (
+                    <Link href={`/hisse/${entry.ticker}`} prefetch={false} className={styles.moveRow} data-cc={entry.ticker}>
+                      {body}
+                    </Link>
+                  ) : (
+                    <div className={styles.moveRow}>{body}</div>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+          <ul className={styles.movesLegend} aria-hidden>
+            <li data-tone="up" data-strong>{t.moversOpened}</li>
+            <li data-tone="up">{t.moveIncreased}</li>
+            <li data-tone="down">{t.moveDecreased}</li>
+            <li data-tone="down" data-strong>{t.moveSoldOut}</li>
+          </ul>
         </div>
       )}
-      <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">{t.moversNote}</p>
+      <p className={styles.note}>{t.moversNote}</p>
     </Panel>
   );
 }
 
-function MoverColumn({
-  title,
-  tone,
-  entries,
-  parts,
-  who,
-  against,
-  againstLabel,
-  peak,
-  known,
-  scale,
-}: {
-  title: string;
-  tone: "up" | "down";
-  entries: CrowdEntry[];
-  parts: (entry: CrowdEntry) => { count: number; label: string; strong: boolean }[];
-  who: (entry: CrowdEntry) => string[];
-  against: (entry: CrowdEntry) => number;
-  againstLabel: string;
-  peak: number;
-  known: Record<string, SymbolMeta>;
-  locale: string;
-  scale: string;
-}) {
+/**
+ * Bir yarı: sıfır çizgisinden dışa doğru yüzler, altında aynı birimle uzayan
+ * şerit, ucunda sayı. Satış yarısı aynı ağacın aynası (`row-reverse`).
+ * Şerit sıfır çizgisinden açılıyor (`data-motion-draw="line"`, dönüşüm
+ * merkezi sıfır tarafı).
+ */
+function Side({ side, crowd }: { side: "buy" | "sell"; crowd: { investor: Investor; strong: boolean }[] }) {
+  const strong = crowd.filter((item) => item.strong).length;
   return (
-    <section className={styles.moverColumn} data-tone={tone}>
-      <header className={styles.moverHead}>
-        {/* Sayı başlığın DIŞINDA: `main h3` degrade mürekkebi alıyor ve
-            içindeki sayı da maviye boyanıp başlığın parçası gibi okunuyordu. */}
-        <span className={styles.moverTitle}>
-          <h3>{title}</h3>
-          <span className="numeral">{entries.length}</span>
-        </span>
-        {/* Çubuğun neyi ölçtüğü sütunun başında, çubuğun tam üstünde. */}
-        <span className={styles.moverScale}>{scale}</span>
-      </header>
-      <ol className={styles.moverList} data-motion-stagger>
-        {entries.map((entry) => {
-          const meta = entry.ticker ? known[entry.ticker] : undefined;
-          const counted = parts(entry).filter((part) => part.count > 0);
-          const total = counted.reduce((sum, part) => sum + part.count, 0);
-          const slugs = who(entry);
-          const opposite = against(entry);
-          const investors = slugs.map((slug) => investorBySlug(slug)).filter((investor): investor is Investor => investor !== null);
-          const shown = investors.slice(0, investors.length > PORTRAIT_SLOTS ? PORTRAIT_SLOTS - 1 : PORTRAIT_SLOTS);
-          const body = (
-            <>
-              {entry.ticker ? (
-                <LogoTile symbol={entry.ticker} logoUrl={meta?.logoUrl} size="md" />
-              ) : (
-                <span className={styles.noLogo} aria-hidden />
-              )}
-              <span className={styles.moverId}>
-                <b className="numeral">{entry.ticker ?? entry.issuer}</b>
-                <small>{meta?.name ?? entry.issuer}</small>
+    <span className={styles.moveSide} data-side={side} style={{ "--n": crowd.length } as CSSProperties}>
+      {crowd.length > 0 && (
+        <>
+          <span className={styles.moveFaces}>
+            {crowd.map(({ investor, strong: isStrong }) => (
+              <span key={investor.slug} className={styles.moveFace} data-strong={isStrong || undefined} title={investor.name}>
+                <Portrait investor={investor} size="chip" />
               </span>
-              {/* Sayı ve çizgi AYNI hücrede: çizgi satırın altında ayrı bir
-                  satır olarak durduğunda neyi ölçtüğü okunmuyordu. Çizginin
-                  ölçeği iki sütunda ortak; koyu parça güçlü hareket (yeni
-                  açan / tamamen satan), açık parça artıran / azaltan — altta
-                  aynı iki tonun noktası bu yüzden lejant görevi görüyor. */}
-              <span className={styles.moverMeasure} aria-hidden>
-                <span className={styles.moverTrack}>
-                  <span className={styles.moverFill} data-motion-draw="line" style={{ width: `${(total / peak) * 100}%` }}>
-                    {counted.map((part) => (
-                      <i key={part.label} data-strong={part.strong || undefined} style={{ flexGrow: part.count }} />
-                    ))}
-                  </span>
-                </span>
-                <b className="numeral">{total}</b>
-              </span>
-              <span className={styles.moverParts}>
-                {counted.map((part) => (
-                  <span key={part.label} className={styles.moverPart} data-strong={part.strong || undefined}>
-                    {part.label.replace("{count}", String(part.count))}
-                  </span>
-                ))}
-                {opposite > 0 && (
-                  <span className={styles.moverPart} data-against>
-                    {againstLabel.replace("{count}", String(opposite))}
-                  </span>
-                )}
-              </span>
-              <span className={styles.moverFaces}>
-                {/* "+1" YERİNE PORTRE (28 Eylül): tek bir yatırımcı artıyorsa
-                    çip onun portresine dönüşüyor. Portre 24 piksel ve
-                    öncekinin üstüne biniyor; "+1" çipi hiç yer kazandırmıyor.
-                    30 Eylül: "+N" artık yığının içinde portre boyunda bir
-                    karo (PORTRAIT_SLOTS).
-                    Ad, portrenin üzerine gelince `title` ile; ekran okuyucu
-                    tam listeyi gizli metinden duyar. */}
-                {shown.map((investor) => (
-                  <span key={investor.slug} className={styles.moverFace} title={investor.name} aria-hidden>
-                    <Portrait investor={investor} size="chip" />
-                  </span>
-                ))}
-                {investors.length > shown.length && (
-                  <span className={styles.moverMore} aria-hidden>
-                    +{investors.length - shown.length}
-                  </span>
-                )}
-                <span className="sr-only">{investors.map((investor) => investor.name).join(", ")}</span>
-              </span>
-            </>
-          );
-          return (
-            <li key={entry.key} className="min-w-0">
-              {entry.ticker && meta ? (
-                <Link href={`/hisse/${entry.ticker}`} prefetch={false} className={styles.moverRow} data-cc={entry.ticker}>
-                  {body}
-                </Link>
-              ) : (
-                <div className={styles.moverRow}>{body}</div>
-              )}
-            </li>
-          );
-        })}
-      </ol>
-    </section>
+            ))}
+            <b className={`${styles.moveCount} numeral`}>{crowd.length}</b>
+          </span>
+          <span
+            className={styles.moveRail}
+            data-motion-draw="line"
+            style={{ transformOrigin: side === "buy" ? "left center" : "right center" }}
+          >
+            {strong > 0 && <i data-strong style={{ flexGrow: strong }} />}
+            {crowd.length - strong > 0 && <i style={{ flexGrow: crowd.length - strong }} />}
+          </span>
+        </>
+      )}
+    </span>
   );
 }

@@ -1,4 +1,5 @@
 import type { Dictionary } from "@/lib/i18n";
+import type { CongressCard, FundCard } from "@/lib/investor-data";
 import type { Move, TradeDetail } from "@/lib/investor-view";
 import { formatCompact, formatEtDateMedium, formatPrice, withCurrency } from "@/lib/utils";
 
@@ -168,5 +169,26 @@ export function formatWeight(weight: number, locale: string): string {
     maximumFractionDigits: digits,
   }).format(pct);
   return locale === "tr" ? `%${body}` : `${body}%`;
+}
+
+/**
+ * Yatırımcının bu çeyrekteki YÖNÜ — pozisyon hareketlerinin sayısıyla
+ * (yeni + artırılan ile azaltılan + tamamen satılan; `InvestorBalance` ile
+ * aynı tanım). Kapanan fon, eski dönemi taşıyan fon, karşılaştırılamayan
+ * ilk bildirim ve Kongre üyesi `null`: o kişide "bu çeyrek" diye bir yön
+ * yok, kadroda nokta da basılmıyor (18 Ekim).
+ */
+export function quarterLean(card: FundCard | CongressCard, period: string | null, closed: boolean): MoveTone | null {
+  if (card.kind !== "13f" || closed || !period || card.period !== period || !card.compared) return null;
+  const buy = card.counts.new + card.counts.increased;
+  const sell = card.counts.decreased + card.counts.soldOut;
+  if (buy + sell === 0) return null;
+  return buy > sell ? "up" : sell > buy ? "down" : "flat";
+}
+
+/** Kadroda ve karoda kısa ad: soyadı; kısa adın tamamı ("Li Lu"). */
+export function shortName(name: string): string {
+  const SHORT = 8;
+  return name.length <= SHORT ? name : (name.split(" ").at(-1) ?? name);
 }
 

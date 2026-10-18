@@ -3,13 +3,16 @@ import { storySinceEvent } from "@/lib/story-market";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
 import { Suspense } from "react";
-import { SectionMasthead } from "@/components/motion/SectionMasthead";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/motion/EditorialExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
-import { StoryCard } from "@/components/stories/StoryCard";
-import { StoryCast, type CastMember } from "@/components/stories/StoryVisual";
+import type { CastMember } from "@/components/stories/StoryVisual";
+import {
+  ArchiveMonths,
+  LeadStory,
+  MercekMasthead,
+} from "@/components/stories/MercekIndex";
+import mercek from "@/components/stories/MercekIndex.module.css";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import {
   EmptyState,
@@ -28,7 +31,6 @@ import {
 } from "@/lib/data";
 import { getChartBarsMulti } from "@/lib/providers";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { formatEtDateLong, plural } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
@@ -119,11 +121,12 @@ export default async function StoriesPage(props: PageProps<"/mercek">) {
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
-      <SectionMasthead
+      {/* Paylaş kapağın sağ üst köşesinde; gerekçe `MercekMasthead`. */}
+      <MercekMasthead
         share={<PageShare compactOnMobile align="right" path="/mercek" title={t.stories.title} locale={locale} t={t} />}
         title={t.stories.title}
         description={t.stories.subtitle}
-        aside={
+        filters={
           chips.length > 1 ? (
             <StoryFilters chips={chips} active={symbolFilter} t={t} />
           ) : undefined
@@ -177,7 +180,7 @@ function IntroLine({ t }: { t: Dictionary }) {
      yetim kalmıyor (satır sonuna gelen ayraç `nowrap` ile önceki cümleye
      bağlı). */
   return (
-    <div className={`${styles.intro} flex flex-col gap-2 border-t border-line pt-4`}>
+    <div className={mercek.intro}>
       <p className="text-small leading-[18px] text-muted">
         {items.map((item, index) => (
           <span key={item.title}>
@@ -212,7 +215,7 @@ function IntroLine({ t }: { t: Dictionary }) {
 }
 
 /**
- * Şirkete göre süzme — kapağın sağ sütununda.
+ * Şirkete göre süzme — kapağın sağ sütununda, Paylaş'ın altında.
  *
  * Çipler arşivin TAMAMINDAN türer, ekrandaki listeden değil: bir sembole
  * süzdükten sonra diğerlerine geçebilmek gerekiyor ve sayının da gerçek
@@ -233,9 +236,9 @@ function StoryFilters({
   t: Dictionary;
 }) {
   return (
-    <div className={styles.filterAside}>
-      <span className={styles.filterAsideLabel}>{t.stories.filterLabel}</span>
-      <ScrollEdges className={`${styles.storyFilters} flex items-center gap-2`}>
+    <div className={mercek.filters}>
+      <span className={mercek.filtersLabel}>{t.stories.filterLabel}</span>
+      <ScrollEdges className={mercek.chips}>
         <FilterChip href="/mercek" active={!active}>
           {t.stories.filterAll}
         </FilterChip>
@@ -390,23 +393,17 @@ async function StoryBoard({
           </Suspense>
 
           {rows.length > 1 && (
-            <div className="flex flex-col gap-3">
-              <h2 className={styles.archiveHeading}>
+            <section className="flex flex-col gap-4" aria-labelledby="mercek-arsiv">
+              <h2 id="mercek-arsiv" className={mercek.archiveHeading}>
                 {t.stories.archive}
               </h2>
-              <div className={styles.archiveGrid} data-motion-stagger>
-                {rows.slice(1).map((story) => (
-                  <StoryCard
-                    key={story.slug}
-                    className={styles.archiveCard}
-                    story={story}
-                    cast={castOf(story, 5)}
-                    locale={locale}
-                    t={t}
-                  />
-                ))}
-              </div>
-            </div>
+              <ArchiveMonths
+                rows={rows.slice(1)}
+                castOf={(story) => castOf(story, 5)}
+                locale={locale}
+                t={t}
+              />
+            </section>
           )}
 
           {/* "Daha Fazla" — künyesiyle birlikte. `scroll={false}`: okuyucu
@@ -442,114 +439,6 @@ async function StoryBoard({
         </>
       )}
     </div>
-  );
-}
-
-/**
- * Manşet — arşivin en yeni yazısı.
- *
- * İki kolon: solda okunacak metin, sağda kapak. Kapak geniş ekranda yanda
- * durur çünkü manşet başlığı dar kolonda üç satıra kırılıyor; mobilde
- * metnin ÜSTÜNE geçer, orada kapak bir giriş görseli gibi okunuyor.
- */
-function LeadStory({
-  story,
-  cast,
-  locale,
-  t,
-}: {
-  story: StoryIndexRow;
-  cast: CastMember[];
-  locale: Locale;
-  t: Dictionary;
-}) {
-  const total = story.symbols?.length ?? 0;
-
-  return (
-    <Link href={`/mercek/${story.slug}`} prefetch className={styles.lead} data-motion-reveal>
-      <section className="panel-hover overflow-hidden rounded-xl border border-primary-faint bg-(--premium-surface) p-5 transition-colors sm:p-7">
-        {/* İki kolon: solda okunacak metin, sağda yazının kadrosu. Kadro
-            manşette bir tabloya dönüşüyor çünkü burada yer var ve bu
-            yazıların anlattığı olay çoğu zaman birkaç şirketi birlikte
-            vuruyor — "sonra ne oldu" sorusunun cevabı şirket şirket
-            değişiyor. Tek logo göstermek yazıyı tek firmalık gibi
-            okutuyordu. */}
-        <div className={styles.leadLayout}>
-          <div className="min-w-0 flex-1">
-            {/* "SON YAZI" KÜNYESİ KALKTI, TARİH ALT SATIRA İNDİ (9 Ekim 2026).
-                Manşetin üstünde solda "Son Yazı", sağda tarih duruyordu;
-                bölüm künyeleri sitenin her yerinden kalktı (`PageHeader`
-                yorumu). Tarih yazının bilgisi, silinmedi: okuma süresiyle
-                birlikte "Oku" satırının sağında. Manşetin en yeni yazı olduğu
-                yerinden okunuyor.
-                Yazı henüz bu dile çevrilmediyse orijinal gösterilir ve dili
-                rozetle söylenir — sessizce yanlış dilde metin sunmak seçenek
-                değil; rozet yalnızca o durumda basılıyor. */}
-            {story.locale !== locale && (
-              <span className="plate text-nano">
-                {story.locale.toUpperCase()}
-              </span>
-            )}
-
-            {/* MANŞET BİR BASAMAK KÜÇÜK VE ÖLÇÜLÜ GENİŞLİKTE.
-                32 punto + `w-fit` ile başlık doğal genişliğini alıyordu:
-                mercek başlıkları ortalama 59 karakter ("iddia: nitelik"
-                kalıbı) ve geniş ekranda tek satırda 930 piksele uzuyordu.
-                Uzun görünmesinin sebebi metnin kendisi değil, satırın hiç
-                kırılmamasıydı.
-                28 punto sitenin kendi ölçeğinde bir basamak aşağısı ve ana
-                sayfadaki mercek manşetiyle aynı; `max-w-[34ch]` başlığı iki
-                satıra indiriyor, `text-balance` da iki satırı eşitliyor —
-                tek kelimelik yetim satır kalmıyor. */}
-            <h2 className={styles.leadTitle} lang={story.locale}>
-              {story.title}
-            </h2>
-            <p className={styles.leadDek} lang={story.locale}>
-              {story.dek}
-            </p>
-
-            <p className="mt-5 flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-small font-semibold text-primary">
-              {t.guide.cardCta}
-              <ArrowRight weight="bold" size={13} />
-              {/* Arşiv kartındaki künyeyle aynı ağırlık — manşet yazının
-                  tarihi orada okunur, burada okunmaz olamaz. */}
-              <span className="numeral ml-auto flex flex-wrap items-center justify-end gap-x-2 font-normal text-muted">
-                <span className="font-semibold text-body">
-                  {formatEtDateLong(story.eventDate, locale)}
-                </span>
-                {story.readMinutes && (
-                  <>
-                    <span aria-hidden>·</span>
-                    <span>
-                      {story.readMinutes} {t.stories.readMinutes}
-                    </span>
-                  </>
-                )}
-              </span>
-            </p>
-          </div>
-
-          {cast.length > 0 && (
-            <div className={styles.leadCast}>
-              <StoryCast
-                cast={cast}
-                total={total}
-                title={t.stories.relatedSymbols}
-                sinceLabel={t.stories.sinceEvent}
-                closeLabel={t.stories.lastClose}
-                closeOnLabel={t.stories.closeOn}
-                moreLabel={plural(
-                  Math.max(0, total - cast.length),
-                  t.stories.moreCompaniesOne,
-                  t.stories.moreCompaniesMany,
-                )}
-                locale={locale}
-              />
-            </div>
-          )}
-        </div>
-      </section>
-    </Link>
   );
 }
 

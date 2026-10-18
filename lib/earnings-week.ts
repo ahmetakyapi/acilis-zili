@@ -340,6 +340,36 @@ export function tileTier(marketCap: number | null): TileTier {
   return "md";
 }
 
+/**
+ * Şeridin görünür payı, ızgara HÜCRESİ cinsinden (18 Ekim). Pano bir şeridi
+ * iki sütunlu ızgarada çiziyor: büyük karo (`xl`) satırın tamamını, öteki
+ * karolar yarısını kaplıyor. Eskiden şerit bütün seçilenleri alt alta
+ * diziyordu ve en kalabalık şerit beş günün HEPSİNİN o satırını uzatıyordu
+ * (şeritler `subgrid` ile aynı hatta) — 1280'de pano 915 piksel tutuyordu.
+ * Artık şerit en fazla `LANE_VISIBLE_CELLS` hücre gösterir, kalanı "+N"
+ * katlamasında; tek bir karo için katlama açılmaz ("+1" bir karodan daha
+ * çok yer tutardı), o zaman hepsi görünür.
+ */
+export const LANE_VISIBLE_CELLS = 6;
+
+export function splitLane<T extends { marketCap: number | null }>(
+  rows: readonly T[],
+  budget: number = LANE_VISIBLE_CELLS,
+): { visible: T[]; hidden: T[] } {
+  const cost = (row: T) => (tileTier(row.marketCap) === "xl" ? 2 : 1);
+  const total = rows.reduce((sum, row) => sum + cost(row), 0);
+  if (rows.length <= 1 || total <= budget) return { visible: [...rows], hidden: [] };
+  let used = 0;
+  let cut = 0;
+  while (cut < rows.length && used + cost(rows[cut]) <= budget) {
+    used += cost(rows[cut]);
+    cut += 1;
+  }
+  /* Tek karo kalıyorsa katlama yerine o karo da görünür. */
+  if (rows.length - cut <= 1) return { visible: [...rows], hidden: [] };
+  return { visible: rows.slice(0, cut), hidden: rows.slice(cut) };
+}
+
 /* ---------------------------------------------------------------------------
    Sürpriz — gerçekleşen EPS beklentiye göre
    --------------------------------------------------------------------------- */

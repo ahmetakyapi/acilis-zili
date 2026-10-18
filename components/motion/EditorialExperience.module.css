@@ -9,37 +9,11 @@
 .page { display:flex; flex-direction:column; min-width:0; gap:var(--page-section-gap); }
 .guidePage { display:flex; flex-direction:column; min-width:0; gap:36px; }
 .page :global(.panel),.guidePage :global(.panel) { animation:none; }
+/* Mercek dizininin manşet, arşiv ve çip kuralları 18 Ekim'de
+   components/stories/MercekIndex.module.css'e taşındı. */
 .masthead { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:end; gap:24px; padding:12px 0 23px; border-bottom:1px solid var(--line); }
 .masthead h1 { margin-top:9px; font-size:var(--heading-page); line-height:1.04; letter-spacing:-.05em; color:var(--text-strong); font-weight:600; }
 .mastheadDescription { max-width:52ch; padding-bottom:4px; font-size:15px; line-height:1.7; color:var(--text-body); text-wrap:pretty; }
-.intro { font-size:12px; }
-.intro li { font-size:12px; line-height:1.7; }
-.storyFilters { display:flex; flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:none; scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent; padding-block:2px 7px; }
-.storyFilters > * { flex-shrink:0; }
-.storyFilters a { min-height:40px; font-size:12px; }
-/* Kapağın sağ sütununda: genişlik dar, yükseklik bol. Çipler kaymak yerine
-   sarıyor — sekiz çip iki-üç satır, hepsi tek bakışta. Dar ekranda ızgara
-   tek kolona indiğinde kaydırma geri geliyor (bkz. 1023px kırılımı). */
-.filterAside { display:flex; min-width:0; flex-direction:column; gap:8px; max-width:420px; }
-.filterAsideLabel { font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--text-muted); }
-@media(min-width:1024px) {
- .filterAside .storyFilters { flex-wrap:wrap; overflow:visible; justify-content:flex-end; gap:8px; padding-block:0; }
- .filterAside { align-items:flex-end; }
-}
-.lead { display:block; min-width:0; border-radius:24px; }
-.lead > section { padding:30px; border-radius:24px; background:var(--premium-surface); transition:border-color .3s var(--ease-brand),background-color .3s var(--ease-brand); }
-.leadLayout { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:32px; align-items:center; }
-.leadTitle { max-width:30ch; margin-top:18px; font-size:clamp(25px,2.6vw,34px); line-height:1.13; letter-spacing:-.04em; font-weight:600; color:var(--text-strong); text-wrap:balance; }
-/* Manşet kartın ilk satırı (9 Ekim 2026 — üstündeki "Son Yazı" künyesi kalktı); çeviri rozeti varsa onun altında. */
-.leadTitle:first-child { margin-top:0; }
-.leadDek { margin-top:18px; max-width:58ch; font-size:15px; line-height:1.75; color:var(--text-body); }
-.leadCast { min-width:0; }
-.archiveHeading { font-size:24px; line-height:1.2; font-weight:600; letter-spacing:-.035em; color:var(--text-strong); }
-.archiveGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; }
-.archiveCard { min-width:0; border-radius:20px; }
-.archiveCard > div { border-radius:20px; transition:border-color .3s var(--ease-brand),background-color .3s var(--ease-brand); }
-.archiveCard h3 { font-size:20px; line-height:1.25; letter-spacing:-.035em; }
-.archiveCard h3 + p { font-size:14px; line-height:1.7; }
 .curriculum { padding:25px 28px; border:1px solid var(--line); border-radius:23px; background:var(--premium-surface); }
 .curriculum h2 { font-size:24px; font-weight:600; letter-spacing:-.035em; }
 .curriculum > p { font-size:14px; line-height:1.65; margin-top:0; }
@@ -74,15 +48,12 @@
 .article :global(.oku-blok) { border-radius:18px; }
 .page :is(a,button):focus-visible,.guidePage :is(a,button):focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 @media(hover:hover) and (pointer:fine) {
- .archiveCard:hover > div,.guideCard:hover > div,.lead:hover > section { border-color:var(--primary-faint); background:var(--primary-tint); }
+ .guideCard:hover > div { border-color:var(--primary-faint); background:var(--primary-tint); }
 }
-@media(max-width:1023px) { .leadLayout { grid-template-columns:minmax(0,1fr); gap:24px; } .leadTitle { max-width:36ch; } .archiveCard h3 { font-size:21px; } }
 @media(max-width:767px) {
  .page { gap:24px; } .guidePage { gap:30px; }
  .masthead { grid-template-columns:minmax(0,1fr); gap:15px; padding-top:4px; padding-bottom:20px; }
  .masthead h1 { font-size:var(--heading-page); } .mastheadDescription { font-size:14px; line-height:1.65; }
- .lead > section { padding:21px 20px; border-radius:20px; } .leadTitle { font-size:28px; line-height:1.16; margin-top:16px; } .leadDek { font-size:14px; line-height:1.7; margin-top:15px; }
- .archiveGrid { grid-template-columns:minmax(0,1fr); gap:18px; } .archiveCard h3 { font-size:22px; }
  .curriculum { padding:20px 18px; } .curriculum h2 { font-size:22px; } .curriculum > p { font-size:13px; }
  .topicHeading h2 { font-size:22px; } .topicHeading > div > span { font-size:23px; }
  .articleHeader { padding-top:16px; } .articleHeader > p { font-size:16px; }
@@ -94,4 +65,4 @@
  .curriculumGrid > a[href^="#"] > span:last-child { grid-column:2; min-width:0; padding:0; }
  .curriculumGrid > a[href^="#"] > span:last-child > span { display:inline; white-space:normal; }
 }
-@media(prefers-reduced-motion:reduce) { .archiveCard > div,.guideCard > div,.lead > section { transition:none; } }
+@media(prefers-reduced-motion:reduce) { .guideCard > div { transition:none; } }

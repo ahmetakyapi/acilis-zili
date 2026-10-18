@@ -282,6 +282,9 @@ const tr = {
     /* Sekme başlığında birimler açık yazılır (17 Ekim, sahibinin isteği:
        "Açılışa 1 Gün 14 Saat"); sayaçtaki kısa "g/sa/dk" dar yer içindi. */
     tabUnits: { day: "Gün", hour: "Saat", minute: "Dakika" },
+    /* Sekmede cümle "Kaldı" ile biter (18 Ekim, sahibinin isteği). */
+    tabToOpen: "Açılışa {d} Kaldı",
+    tabToClose: "Kapanışa {d} Kaldı",
     tabRangClose: "Kapanış Zili Çaldı",
     /* Kahraman zili düğmesinin adı (HeroBell). */
     ringBell: "Zili Çal",
@@ -512,6 +515,21 @@ const tr = {
     /* Önem süzgeci açıkken "açıklama yok" demek YANLIŞ olurdu: o gün başka
        önemde bir açıklama olabilir. Cümle süzgeci söylüyor. */
     emptyFiltered: "Seçili önemde bu aralıkta açıklama yok.",
+    /* Lejant cümlesi (panel künyesi): rengin ne demek olduğu. Cümle,
+       cümle düzeninde. */
+    impactNote:
+      "Yüksek etkili veriler (Fed kararı, enflasyon, istihdam) piyasayı en çok oynatan açıklamalardır; orta ve düşük etkililer daha sınırlı tepki görür.",
+    // Kapak kartının geri sayımı. Birim ekleri küçük harf (CLAUDE.md).
+    countdown: "Kalan Süre",
+    unitDay: "gün",
+    unitHour: "sa",
+    unitMinute: "dk",
+    unitSecond: "sn",
+    // Altı haftalık görünüm.
+    aheadTitle: "Önümüzdeki Altı Hafta",
+    aheadHighlights: "Yüksek Etkili",
+    aheadNoHigh: "Yüksek etkili açıklama yok.",
+    thisWeek: "Bu Hafta",
   },
 
   earnings: {
@@ -1559,9 +1577,20 @@ const tr = {
     advancingShare: "Yükselenlerin Payı",
     breadthCoverage: "{total} şirketin {known} tanesinde değişim verisi mevcut.",
     heatmap: "Isı Haritası",
-    heatmapHint: "Piyasa değerine göre ilk 30 şirket · Günlük değişim",
-    /* Telefonda harita 20 şirket (5 × 4) — künye ekrandakini söyler. */
-    heatmapHintPhone: "Piyasa değerine göre ilk 20 şirket · Günlük değişim",
+    /* 18 Ekim: harita ağaç düzeninde, karonun alanı piyasa değeri. Telefon
+       künyesi ("ilk 20") kalktı; otuzu da her genişlikte haritada. */
+    heatmapHint: "Piyasa değerine göre ilk 30 şirket; karonun alanı piyasa değerini, rengi günlük değişimi gösterir.",
+    heatLastClose: "Yüzdeler son kapanışa ait; yön rengi yalnızca bu seansın hareketinde kullanılır.",
+    heatMixed: "Şirketlerin yüzdeleri henüz aynı seansı anlatmıyor; yön rengi seans oturunca gelir.",
+    heatSmallTitle: "Haritada Küçük Kalanlar",
+    heatUnsized: "Piyasa Değeri Bilinmeyenler",
+    prevClose: "Önceki Kapanış",
+    /* Seçim şeridindeki okuma: üyelerin günlük değişiminin ortancası. */
+    medianStock: "Medyan Hisse",
+    medianPreMarket: "Açılış Öncesi Medyanı",
+    medianLastClose: "Son Kapanış Medyanı",
+    medianHint: "Endeks dev şirketlerin ağırlığıyla bundan ayrışabilir.",
+    medianMissing: "Üyelerin yüzdeleri henüz aynı seansı anlatmıyor.",
     heatScaleHint: "Renk yoğunluğu eşikleri: yüzde 0,5, 1,5 ve 3; yeşil yükseliş, kırmızı düşüş.",
     heatScaleSteps: "Kademeler: %0,5 · %1,5 · %3",
     heatDayRange: "Gün İçi Aralık",
@@ -1734,6 +1763,10 @@ const tr = {
     opensInNewTab: "yeni sekmede açılır",
     /* Rayın şirket künyesi: "olaydan bugüne" hangi kapanışa kadar. */
     closeOn: "{date} Kapanışı",
+    /* Mercek dizini (18 Ekim): manşetin eylem satırı ve künyesi. */
+    readStory: "Yazıyı Oku",
+    companyCountOne: "{count} Şirket",
+    companyCountMany: "{count} Şirket",
   },
 
   macro: {
@@ -2511,6 +2544,7 @@ const tr = {
   newsInsight: {
     briefingTitle: "Günün Gündemi",
     briefingWindow: "Son 24 Saat · {n} Haberden",
+    storyCount: "{n} Haber",
     briefingLoading: "Claude son 24 saatin haberlerini okuyor…",
     explainerTitle: "Bu Haber Ne Anlatıyor",
     explainerLoading: "Claude haberi sade dille açıyor…",
@@ -3183,6 +3217,17 @@ const tr = {
       rangeLabel: "Tahmini vergi aralığı: alt uç {low}, üst uç {high}",
       basisTitle: "Hesabın Dayanağı",
       basisRate: "TCMB Alış Kuru",
+      exampleFilled:
+        "Örnek işlem dolduruldu; sonuç gerçek TCMB kurlarıyla hesaplanıyor. Kendi işlemin için alanları değiştir.",
+      needTitle: "Sonuç İçin Gerekenler",
+      needBuy: "Alış: Sembol, Adet, Tarih, Fiyat",
+      needSell: "Satış: Tarih, Fiyat, Adet",
+      needRate: "İki Günün TCMB Kuru",
+      needDone: "Tamam",
+      scaleTitle: "Tarifedeki Yerin",
+      scaleLabel: "Matrahın tarifedeki yeri: {base}, %{rate} diliminde.",
+      nextBracket: "%{rate} Dilimine {amount} Var",
+      topBracket: "En Üst Dilimdesin",
       import: {
         open: "Ekstreden Aktar",
         formats: "Midas PDF · IBKR CSV ya da PDF",
@@ -3304,6 +3349,19 @@ const tr = {
         step6Link: "Takvim ve Belgeler",
         start: "Hesaplamaya Başla",
         tariffSource: "Kaynak: {source}.",
+        exampleTitle: "Örnek: {qty} Adet {symbol}",
+        exampleTag: "Varsayımsal Kur ve Endeks",
+        exampleLead:
+          "Bir satışın altı adımdan geçişi. Kurlar ve endeks yuvarlak, varsayımsal sayılar; aritmetik hesaplayıcının kullandığı kodla yapıldı.",
+        exampleSymbol: "ORNEK",
+        exTradeNote: "{qty} Adet × {price}",
+        exGainNote: "Endekslemesiz {amount} Olurdu",
+        exTaxNote: "%{rate} Dilim · Kazanç Tek Gelirse",
+        exFile: "Beyan ve Ödeme",
+        exFileValue: "Mart {filing}",
+        exFileNote: "İki Taksit · {half} + {half}",
+        exampleTry: "Örnekle Dene",
+        exampleTryHint: "Aynı işlemi hesaplayıcıya doldurur; sonuç gerçek TCMB kurlarıyla çıkar.",
       },
       filing: {
         title: "Ne Zaman, Nereye, Hangi Belgeyle",
@@ -3701,6 +3759,9 @@ const tr = {
     inline: "Beklentiye Eşit",
     pending: "Bekleniyor",
     analysis: "Analiz",
+    /* Şeridin "+N" katlaması (18 Ekim) — künye, Title Case. */
+    moreTiles: "+{count} Şirket Daha",
+    lessTiles: "Daha Az",
     /* Boş ve hata durumları — başlık Title Case, gövde cümle. */
     dayEmpty: "Bu gün takvimde bilanço yok.",
     errorTitle: "Takvim Alınamadı",
@@ -3709,7 +3770,7 @@ const tr = {
     noteCriterion:
       "Sıralama ölçütü piyasa değeri. Duyarlılık ya da ilgi puanı kullanmıyoruz: elimizde dürüstçe ölçebildiğimiz bir tane yok.",
     noteTiers:
-      "Büyük karo 500 milyar doların, orta karo 100 milyar doların üzerindeki şirketler; karonun altındaki çizgi haftanın en büyüğüne göre uzunluk.",
+      "Büyük karo 500 milyar doların, orta karo 100 milyar doların üzerindeki şirketler; karonun altındaki çizgi haftanın en büyüğüne göre uzunluk. Kalabalık bir şeritte en büyükler görünür, kalanlar şeridin altındaki “+N” katlamasında.",
     noteSchedule:
       "Her gün piyasa değeri 1 milyar doların üzerindeki şirketler adıyla listeleniyor, en fazla {max}; kalanlar günün altındaki açılır listede.",
     noteSurprise: "Gerçekleşen EPS'nin yanındaki yüzde, beklentiden sapma.",
@@ -3754,8 +3815,19 @@ const tr = {
     capitalAria: "Takip edilen hisse portföylerinin yatırımcılara göre payı",
     capitalRest: "Diğer {count} Yatırımcı",
     eyebrow: "Ünlü Yatırımcılar",
-    title: "Kim Ne Tutuyor",
-    subtitle: "Buffett'tan Pelosi'ye ünlü yatırımcıların portföyleri, bu çeyrek aldıkları ve sattıkları.",
+    title: "Ünlü Yatırımcılar Ne Tutuyor",
+    subtitle: "Buffett'tan Pelosi'ye ünlü yatırımcıların SEC bildirimlerindeki portföyleri: sermaye kimde toplanıyor, bu çeyrek neyi alıp neyi sattılar.",
+    castTitle: "Takip Edilen Yatırımcılar",
+    castBuyer: "Bu Çeyrek Net Alıcı",
+    castSeller: "Net Satıcı",
+    castAria: "{name}, {firm}",
+    castAriaUp: "{name}, {firm}; bu çeyrek net alıcı",
+    castAriaDown: "{name}, {firm}; bu çeyrek net satıcı",
+    capitalMeta: "{period} · Hisse Portföyü",
+    capitalTop: "En Büyük {ticker} {weight}",
+    capitalFunds: "Takip Edilen Fon",
+    capitalNote: "Karonun alanı fonun çeyrek sonundaki hisse portföyüyle orantılı; opsiyonlar dahil değil. Kapanan fon ve Kongre üyesi toplama girmiyor; payı {share} altında kalan fonlar tek karoda toplanıyor.",
+    lagNote: "13F çeyrek bitiminden 45 gün sonraya kadar verilebilir: buradaki portföyler {date} günündeki durumu anlatıyor, bugünü değil.",
     trackedValue: "Takip Edilen Hisse Portföyü",
     investorsCount: "{count} Yatırımcı",
     investorsCountOne: "{count} Yatırımcı",
@@ -3764,19 +3836,17 @@ const tr = {
     quarter: "{q}. Çeyrek {year}",
     asOf: "{date} İtibarıyla",
     filedOn: "{date} Bildirildi",
-    moversTitle: "Bu Çeyreğin Hareketleri",
+    moversTitle: "Hisse Hisse Alanlar ve Satanlar",
     moversMeta: "{period} · {count} Yatırımcı",
-    buysTitle: "En Çok Alınanlar",
-    sellsTitle: "En Çok Satılanlar",
-    moversScale: "Yatırımcı Sayısı",
-    opened: "{count} Yeni Aldı",
-    added: "{count} Artırdı",
-    trimmed: "{count} Azalttı",
-    exited: "{count} Tamamen Sattı",
+    moversSellers: "Satanlar",
+    moversBuyers: "Alanlar",
+    moversNet: "Net",
+    moversOpened: "Yeni Aldı",
+    moversAria: "{ticker}: {buy} yatırımcı aldı, {sell} yatırımcı sattı.",
+    moversWhoBuy: "Alanlar: {names}.",
+    moversWhoSell: "Satanlar: {names}.",
     moversEmpty: "Bu çeyrekte iki ya da daha çok yatırımcının aynı yöne gittiği bir hisse yok.",
-    moversNote: "Yalnızca bu çeyreği bildirmiş yatırımcılar sayılıyor; aynı hisseye en az iki yatırımcının aynı yönde gittiği satırlar listede.",
-    moversAgainstBuy: "Karşısında {count} Satıcı",
-    moversAgainstSell: "Karşısında {count} Alıcı",
+    moversNote: "Her yüz bir yatırımcı: sağda bu çeyrek hisseyi yeni alan ya da artıran, solda azaltan ya da tamamen satan; çizginin koyu parçası yeni alım ve tamamen satış. Satırlar net farka göre sıralı. Yalnızca bu çeyreği bildirmiş yatırımcılar sayılıyor ve listede en az iki yatırımcının aynı yöne gittiği hisseler var; ölçü dolar değil kişi sayısı.",
     balanceTitle: "Kim Alıyor, Kim Satıyor",
     balanceMeta: "{period} · Pozisyon Sayısı",
     balanceBuyers: "Net Alıcı",

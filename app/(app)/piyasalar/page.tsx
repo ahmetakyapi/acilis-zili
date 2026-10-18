@@ -1,5 +1,5 @@
 import { PageShare } from "@/components/article/PageShare";
-import { ArrowUpRight, SquaresFour, TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
+import { SquaresFour, TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
 import { HeroAccent } from "@/components/motion/HeroAccent";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
@@ -11,6 +11,10 @@ import { CommodityBoard, SectorPerformance, parseSectorSort } from "@/components
 import { SentimentPulse } from "@/components/markets/SentimentPulse";
 import boardStyles from "@/components/markets/MarketBoards.module.css";
 import { ScaleBar } from "@/components/markets/CompareScale";
+import { IndexCard } from "@/components/markets/IndexCard";
+import { HeatScale, HeatSkeleton, IndexTreemap } from "@/components/markets/IndexTreemap";
+import { median, sameSessionMoves, themePhase, type MoveSet, type ThemePhase } from "@/lib/theme-stats";
+import { themeRow, type ThemeRow } from "@/lib/themes-data";
 import { GuideHint } from "@/components/article/GuideHint";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { CompanyCards } from "@/components/ui/CompanyCards";
@@ -26,7 +30,6 @@ import {
   LogoTile,
   SkeletonRow,
 } from "@/components/ui/primitives";
-import { Sparkline } from "@/components/ui/Sparkline";
 import {
   DOW_MEMBERS,
   INDEX_COMPOSITION_DATE,
@@ -274,7 +277,7 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
         fallback={
           <>
             <IndexTabs tab={tab} locale={locale} t={t}
-              identity={<IndexIdentity tab={tab} proxy={active.proxy} proxyQuote={null} locale={locale} t={t} loading />}
+              identity={<IndexIdentity tab={tab} proxy={active.proxy} median={null} phase={null} locale={locale} t={t} loading />}
               aside={<div className={styles.shareBox} aria-hidden="true">
                 <div className={styles.shareHead}><Skeleton className="h-3 w-28" /><Skeleton className="h-6 w-12" /></div>
                 <Skeleton className="h-2 w-full" />
@@ -382,9 +385,9 @@ async function IndexCards({
 
   return (
     <div className={styles.indexOverview}>
-    <div className={styles.indexGrid} data-motion-stagger>
-      {orderedTabs.map((entry) => {
-        const quote = quotesResult.data[entry.proxy];
+    <div className={styles.indexGrid}>
+      {orderedTabs.map((entry, order) => {
+        const quote = quotesResult.data[entry.proxy] ?? null;
         /* ÇİZGİ SEANS EKSENİNDE, TABAN ÖNCEKİ KAPANIŞ (14 Ekim). Barlar
            yalnızca değerle eşlenip eksensiz çiziliyordu: %0,05'lik kıpırtı
            kartı dolduruyor, x ekseni bar SIRASI olunca ön seans günü yarım
@@ -392,88 +395,27 @@ async function IndexCards({
            ölçüp düzelttiği hata buradaydı. Ana sayfanın kuralının aynısı:
            zaman + `sessionDomain` + `prevClose` tabanı + açılışta yarım
            ton; sayı o seansa ait değilse (`quoteBasis === "lastClose"`)
-           şekil HİÇ çizilmiyor (veri dürüstlüğü 3-4). */
+           şekil HİÇ çizilmiyor (veri dürüstlüğü 3-4). Kartın kendisi
+           18 Ekim'den beri components/markets/IndexCard.tsx. */
         const points = (bars[entry.proxy] ?? []).map((bar) => ({
           time: bar.time,
           value: bar.close,
         }));
-        const sparkOk = quote ? quoteBasis(quote, status) !== "lastClose" : false;
-        const tone = directionOf(quote?.changePct);
-        const selected = entry.key === activeTab;
-
         return (
-          <Link
+          <IndexCard
             key={entry.key}
             href={`/piyasalar?endeks=${entry.key}&sirala=${sort}&yon=${dir}`}
-            scroll={false}
-            /* SEÇİLİ OLAN YALNIZCA RENKLE SÖYLENİYORDU. Kart seçildiğinde
-               accent kenarlık ve tint alıyor ama ekran okuyucuya hiçbir şey
-               ulaşmıyordu. Sektör çipleri (/sirketler) bunu zaten yapıyor. */
-            aria-current={selected ? "true" : undefined}
-            className={styles.indexLink}
-          >
-            <Panel
-              className={cn(
-                "panel-hover flex h-full flex-col", styles.indexCard,
-                selected && "border-primary-faint bg-primary-tint",
-              )}
-            >
-              <div className={styles.identity}>
-                <p className="text-sm font-semibold text-strong">{entry.label}</p>
-                <p className={styles.indexProxy}><span className="numeral">{entry.proxy}</span><ArrowUpRight size={14} aria-hidden /></p>
-              </div>
-              {quote ? (
-                <>
-                  <div className={styles.reading}>
-                    <p className={styles.price}>
-                      {formatPrice(quote.price, locale)}
-                    </p>
-                    <p
-                      data-tone={tone}
-                      className={cn(
-                        styles.indexChange, "numeral text-base font-bold",
-                        tone === "up"
-                          ? "text-up"
-                          : tone === "down"
-                            ? "text-down"
-                            : "text-muted",
-                      )}
-                    >
-                      {formatPercent(quote.changePct, locale)}
-                    </p>
-                  </div>
-                  {sparkOk && points.length > 1 && (
-                    <Sparkline
-                      points={points}
-                      title={`${entry.label} · ${locale === "tr" ? "1G" : "1D"}`}
-                      tone={tone}
-                      height={38}
-                      showLastDot
-                      strokeWidth={1.8}
-                      baseline={quote.prevClose}
-                      domain={rail.domain}
-                      split={rail.openAt}
-                      className={styles.spark}
-                    />
-                  )}
-                  {/* GÜN ARALIĞI (17 Ekim): kıvılcım şekli söylüyor, aralık
-                      ölçüyü — günün dibi ve tepesi arasında fiyat nerede.
-                      Kıvılcımla aynı kural: sayı bu seansa ait değilse yok. */}
-                  {sparkOk && quote.low !== null && quote.high !== null && quote.high > quote.low && (
-                    <div className={styles.dayRange} aria-label={`${t.markets.dayRange}: ${formatPrice(quote.low, locale)} – ${formatPrice(quote.high, locale)}`}>
-                      <span className="numeral">{formatPrice(quote.low, locale)}</span>
-                      <i className={styles.rangeLane} aria-hidden>
-                        <b data-tone={tone} style={{ left: `${Math.min(100, Math.max(0, ((quote.price - quote.low) / (quote.high - quote.low)) * 100))}%` }} />
-                      </i>
-                      <span className="numeral">{formatPrice(quote.high, locale)}</span>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <p className="mt-2 text-xs text-muted">{NO_VALUE}</p>
-              )}
-            </Panel>
-          </Link>
+            label={entry.label}
+            proxy={entry.proxy}
+            quote={quote}
+            points={points}
+            sparkOk={quote ? quoteBasis(quote, status) !== "lastClose" : false}
+            rail={rail}
+            selected={entry.key === activeTab}
+            order={order}
+            locale={locale}
+            t={t}
+          />
         );
       })}
     </div>
@@ -668,11 +610,24 @@ async function IndexDetail({
     }
     return facts.length > 0 ? { facts } : {};
   };
-  const cardRows = [
-    ...[...withChange].sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0)).slice(0, HEAT_MAX),
-    ...gainers,
-    ...losers,
-  ];
+  const heatSource = [...withChange].sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0)).slice(0, HEAT_MAX);
+  /* Harita tema haritasının satır tipini okuyor (`themeRow`: seans
+     temeli ve işlem günüyle); renk yalnız aynı seansı anlatan kümede
+     (`sameSessionMoves`, gerekçe IndexTreemap). */
+  const heatRows = heatSource.map((row) => themeRow(row.member.symbol, quotes, meta, status));
+  const heatMoves = sameSessionMoves(heatRows);
+  /* MEDYAN HİSSE (18 Ekim). Seçim şeridi seçili fonun fiyatını ve
+     yüzdesini İKİNCİ kez yazıyordu — hemen üstündeki kart aynı iki sayıyı
+     büyük puntoyla taşıyor. Yerine kartta OLMAYAN bir okuma geldi:
+     üyelerin günlük değişiminin ortancası. Piyasa değeri ağırlıklı
+     endeks birkaç dev şirketle "tipik hisse"den ayrışabiliyor; fonun
+     yüzdesiyle yan yana bu fark bir bakışta okunuyor. Medyan tema
+     ekranlarının kuralıyla kuruluyor: yalnız aynı seansı anlatan
+     yüzdelerden; karışık hâlde hiç basılmıyor (`sameSessionMoves`). */
+  const memberMoves = sameSessionMoves(members.map((member) => themeRow(member.symbol, quotes, meta, status)));
+  const medianMove = memberMoves ? median(memberMoves.values) : null;
+  const medianPhase = themePhase(memberMoves?.basis ?? null, status.session);
+  const cardRows = [...heatSource, ...gainers, ...losers];
   const carded = new Set(cardRows.map((row) => row.member.symbol));
   const cardContext = { quotes, stale: Boolean(stale), names: meta, status, facts: cardFacts };
 
@@ -690,7 +645,7 @@ async function IndexDetail({
         tab={tab}
         locale={locale}
         t={t}
-        identity={<IndexIdentity tab={tab} proxy={proxy} proxyQuote={proxyResult.ok ? (proxyResult.data[proxy] ?? null) : null} locale={locale} t={t} />}
+        identity={<IndexIdentity tab={tab} proxy={proxy} median={medianMove} phase={medianPhase} locale={locale} t={t} />}
         aside={
           withChange.length > 0 ? (
             <BreadthSummary
@@ -707,7 +662,8 @@ async function IndexDetail({
       <IndexToolbar
         total={withChange.length}
         memberCount={members.length}
-        heat={withChange}
+        heat={heatRows}
+        moves={heatMoves}
         locale={locale}
         t={t}
       >
@@ -868,28 +824,40 @@ function IndexTabs({ tab, aside, identity }: { tab: TabKey; locale: Locale; t: D
    birkaç ağır şirket, üyelerin çoğu düşerken endeksi yukarı taşıyabilir.
    Gösterilen fiyat endeks seviyesi değil onu izleyen fonun kotasyonudur;
    fon sembolü bu yüzden fiyatın yanında kalır. Eksik değişimler sayaca
-   katılmaz; gerçek kapsam toplam üye sayısıyla ayrıca gösterilir. */
-function IndexIdentity({ tab, proxy, proxyQuote, locale, t, loading = false }: {
-  tab: TabKey; proxy: string; proxyQuote: Quote | null; locale: Locale; t: Dictionary; loading?: boolean;
+   katılmaz; gerçek kapsam toplam üye sayısıyla ayrıca gösterilir.
+   18 Ekim: fonun fiyatı ve yüzdesi buradan kalktı (üstteki kartın tekrarı);
+   yerine üyelerin medyan değişimi — gerekçe IndexDetail → "MEDYAN HİSSE". */
+function IndexIdentity({ tab, proxy, median: medianMove, phase, locale, t, loading = false }: {
+  tab: TabKey; proxy: string; median: number | null; phase: ThemePhase | null;
+  locale: Locale; t: Dictionary; loading?: boolean;
 }) {
-  return <div className={styles.toolbarIdentity} aria-label={INDEX_TABS.find((entry) => entry.key === tab)?.label}>
+  const label = INDEX_TABS.find((entry) => entry.key === tab)?.label;
+  /* Medyanın künyesi pencereye göre (tema ekranlarının kuralı, `themePhase`):
+     açılış öncesinde "Günün" değil, piyasa kapalıyken "Son Kapanış". */
+  const medianLabel =
+    phase === "pre-market" ? t.markets.medianPreMarket : phase === "lastClose" ? t.markets.medianLastClose : t.markets.medianStock;
+  return <div className={styles.toolbarIdentity} aria-label={label}>
     <div className={styles.selectedIndexLabel}>
       <span className={styles.proxySymbol}>{proxy}</span>
-      <span>{INDEX_TABS.find((entry) => entry.key === tab)?.label}</span>
+      <span>{label}</span>
     </div>
-    {loading ? <Skeleton className="h-7 w-48 max-w-full" /> : proxyQuote ? (
+    {loading ? <Skeleton className="h-7 w-48 max-w-full" /> : medianMove !== null ? (
       <div className={styles.selectedIndexReading}>
-        <strong className="numeral">{formatPrice(proxyQuote.price, locale, { currency: true })}</strong>
-        {proxyQuote.changePct !== null && <ChangePill changePct={proxyQuote.changePct} locale={locale} />}
+        <span className={styles.medianLabel}>{medianLabel}</span>
+        <ChangePill changePct={medianMove} locale={locale} className={styles.medianPill} />
+        <p className={styles.medianHint}>{t.markets.medianHint}</p>
       </div>
-    ) : <span className={styles.selectedIndexEmpty}>{t.common.noData}</span>}
+    ) : <span className={styles.selectedIndexEmpty}>{t.markets.medianMissing}</span>}
   </div>;
 }
 
-function IndexToolbar({ total, memberCount, heat, locale, t, children }: {
-  total: number; memberCount: number; heat: Row[];
+function IndexToolbar({ total, memberCount, heat, moves, locale, t, children }: {
+  total: number; memberCount: number; heat: ThemeRow[]; moves: MoveSet | null;
   locale: Locale; t: Dictionary; children?: ReactNode;
 }) {
+  /* Künye haritanın hangi günü boyadığını söylüyor: renk yalnız bu
+     seansın kümesinde (gerekçe IndexTreemap). */
+  const hint = moves === null ? t.markets.heatMixed : moves.basis === "lastClose" ? t.markets.heatLastClose : t.markets.heatmapHint;
   return (
     <Panel id="market-reading" className={styles.breadth}>
       <div className={styles.breadthOverview}>
@@ -899,52 +867,29 @@ function IndexToolbar({ total, memberCount, heat, locale, t, children }: {
             logo ve günlük yüzde; renk karonun zemini, koyuluk hareketin
             büyüklüğü. Üzerine gelince sitenin ortak şirket kartı açılıyor
             (28 Eylül). Kareler klavyeyle de gezilebiliyor: 30 durak kabul
-            edilebilir. */}
+            edilebilir.
+            AĞAÇ DÜZENİ (18 Ekim): karonun alanı piyasa değeri — gerekçe
+            components/markets/IndexTreemap.tsx. Telefondaki "ilk 20" kesiti
+            (1 Ekim) kalktı: karoya sığmayan küçükler haritanın hemen altında
+            çip olarak duruyor; otuzu da her genişlikte var. */}
         {heat.length > 0 && (
           <div className={styles.heat}>
             <div className={styles.heatHead}>
               <h2 data-ink="solid"><SquaresFour size={21} weight="duotone" aria-hidden />{t.markets.heatmap}</h2>
-              <p className={styles.heatHint}>
-                <span className={styles.heatHintWide}>{t.markets.heatmapHint}</span>
-                <span className={styles.heatHintPhone}>{t.markets.heatmapHintPhone}</span>
-              </p>
-              <div className={styles.heatLegend} role="img" aria-label={t.markets.heatScaleHint}>
-                <div className={styles.heatSwatches} aria-hidden>
-                  {[-4, -3, -2, -1, 0, 1, 2, 3, 4].map((level) => (
-                    <i key={level} data-heat-tone={level < 0 ? "down" : level > 0 ? "up" : "flat"} data-heat-level={Math.abs(level)} />
-                  ))}
-                </div>
-                <div className={styles.heatLegendLabels}><span>{locale === "tr" ? "≤ −%3" : "≤ −3%"}</span><span>0</span><span>{locale === "tr" ? "≥ +%3" : "≥ +3%"}</span></div>
-                <span className={styles.heatLegendHint}>{t.markets.heatScaleSteps}</span>
-              </div>
+              <p className={styles.heatHint}>{hint}</p>
+              <HeatScale locale={locale} label={t.markets.heatScaleHint} steps={t.markets.heatScaleSteps} />
             </div>
-            <div className={styles.heatGrid} data-motion-stagger>
-              {[...heat]
-                .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
-                .slice(0, HEAT_MAX)
-                .map((row) => {
-                  const change = row.quote!.changePct!;
-                  const magnitude = Math.abs(change);
-                  const level = magnitude === 0 ? 0 : magnitude < 0.5 ? 1 : magnitude < 1.5 ? 2 : magnitude < 3 ? 3 : 4;
-                  const tone = change > 0 ? "up" : change < 0 ? "down" : "flat";
-                  return (
-                    <Link
-                      key={row.member.symbol}
-                      href={`/hisse/${row.member.symbol}`}
-                      prefetch={false}
-                      className={styles.heatCell}
-                      data-cc={row.member.symbol}
-                      aria-label={`${row.member.symbol} · ${row.member.name} · ${formatPercent(change, locale)}`}
-                      data-heat-tone={tone}
-                      data-heat-level={level}
-                    >
-                      <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="md" className={styles.heatLogo} />
-                      <span className={styles.heatSymbol}>{row.member.symbol}</span>
-                      <span className={cn("numeral", styles.heatPct)}>{formatPercent(change, locale)}</span>
-                    </Link>
-                  );
-                })}
-            </div>
+            <IndexTreemap
+              rows={heat}
+              moves={moves}
+              locale={locale}
+              labels={{
+                smallTitle: t.markets.heatSmallTitle,
+                unsized: t.markets.heatUnsized,
+                lastClose: t.market.lastClose,
+                cap: t.market.marketCap,
+              }}
+            />
           </div>
         )}
       </div>
@@ -1571,15 +1516,8 @@ function DetailSkeleton({ rows, contribution }: { rows: number; contribution: bo
               <Skeleton className={cn(styles.heatHint, "h-3 w-full max-w-72")} />
               <Skeleton className={cn(styles.heatLegend, "h-10")} />
             </div>
-            <div className={styles.heatGrid}>
-              {Array.from({ length: HEAT_MAX }, (_, i) => (
-                <div key={i} className={styles.heatCell} data-heat-level="0">
-                  <Skeleton className="size-[26px] rounded-lg" />
-                  <Skeleton className="h-3 w-7" />
-                  <Skeleton className="h-3 w-8" />
-                </div>
-              ))}
-            </div>
+            {/* 18 Ekim: ızgara yerine haritanın kendi ağaç geometrisi. */}
+            <HeatSkeleton />
           </div>
         </div>
         <div className={cn(styles.breadthStamp, styles.stampSkeleton)}>

@@ -338,8 +338,7 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 
 /* Vergi aralığı: dolu kısım alt uç, soluk kısım alt uçtan üst uca. */
 .range { margin-top:14px; }
-.rangeTrack { position:relative; height:12px; }
-.rangeTrack::before { content:""; position:absolute; left:0; right:0; top:50%; height:1px; background:var(--line); }
+.rangeTrack { position:relative; height:5px; border-radius:3px; background:var(--line-soft); }
 .rangeKey { display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 12px; margin-top:8px; font-size:12px; font-weight:600; color:var(--text-muted); }
 .rangeKey span { display:inline-flex; align-items:center; gap:6px; }
 .rangeKey i { display:inline-block; width:12px; height:6px; border-radius:2px; }
@@ -363,9 +362,12 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .flowName { font-size:13px; font-weight:600; color:var(--text-strong); }
 .flowValue { font-size:14px; font-weight:650; color:var(--text-strong); white-space:nowrap; }
 .flowNote { grid-column:1 / -1; font-size:12px; line-height:1.4; color:var(--text-muted); }
-.track { position:relative; grid-column:1 / -1; height:12px; }
-.track::before { content:""; position:absolute; left:0; right:0; top:50%; height:1px; background:var(--line); }
-.bar { position:absolute; inset:0; border-radius:4px; transform-origin:0 50%; transform:translateX(calc(var(--from, 0) * 100%)) scaleX(var(--span, 0)); transition:transform 700ms var(--ease-brand); }
+/* İNCE GRAFİK DİLİ (18 Ekim): kulvar `--line-soft` üstünde 5 piksellik şerit
+   (CLAUDE.md "Grafik dili ince"). Eskiden 12 piksellik dolu bloklar 1
+   piksellik bir çizginin üstündeydi; sonuç kartında dört blok üst üste
+   "tablo programı" gibi duruyordu. Şelale, aralık ve sınır ölçeği aynı. */
+.track { position:relative; grid-column:1 / -1; height:5px; margin:3px 0 1px; border-radius:3px; background:var(--line-soft); }
+.bar { position:absolute; inset:0; border-radius:3px; transform-origin:0 50%; transform:translateX(calc(var(--from, 0) * 100%)) scaleX(var(--span, 0)); transition:transform 700ms var(--ease-brand); }
 @starting-style { .bar { transform:translateX(calc(var(--from, 0) * 100%)) scaleX(0); } }
 .bar[data-tone="cost"] { background:var(--line-strong); }
 .bar[data-tone="index"] { background:var(--brass); }
@@ -377,9 +379,8 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 /* Çentik ve etiket `left` yerine `translate` ile kayar (12 Ekim): kap
    sorgusu birimi (cqw) rayın genişliğini verir, düzen her karede yeniden
    hesaplanmaz. */
-.meter { position:relative; height:14px; margin-top:14px; container-type:inline-size; }
-.meter::before { content:""; position:absolute; left:0; right:0; top:50%; height:1px; background:var(--line); }
-.meterTick { position:absolute; top:-6px; bottom:-6px; width:2px; margin-left:-1px; border-radius:2px; background:var(--text-strong); left:0; translate:calc(var(--at) * 100cqw) 0; transition:translate 700ms var(--ease-brand); }
+.meter { position:relative; height:5px; margin-top:18px; border-radius:3px; background:var(--line-soft); container-type:inline-size; }
+.meterTick { position:absolute; top:-5px; bottom:-5px; width:2px; margin-left:-1px; border-radius:2px; background:var(--text-strong); left:0; translate:calc(var(--at) * 100cqw) 0; transition:translate 700ms var(--ease-brand); }
 .meterScale { position:relative; container-type:inline-size; min-height:16px; margin-top:10px; font-size:12px; color:var(--text-muted); }
 .meterLimit { position:absolute; top:0; left:0; translate:calc(var(--at) * 100cqw) 0; transform:translateX(-50%); white-space:nowrap; font-weight:600; color:var(--text-strong); transition:translate 700ms var(--ease-brand); }
 
@@ -442,28 +443,58 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .inlineLink { display:inline-flex; align-items:center; gap:4px; min-height:32px; font-size:12px; font-weight:600; color:var(--primary-ink); transition:color .2s var(--ease-brand); }
 .inlineLink:hover { color:var(--primary-hover); }
 
-/* ---------- Nasıl hesaplanır (TaxHow, 29 Eylül) ----------
-   Numaralı adım şeridi. Kutu yok: düğüm + ince ray, hesaplayıcının
-   Alış/Satış adımlarıyla aynı dil (`.step`/`.node`) ama düğüm açık tonda,
-   çünkü burada "tamamlandı" durumu yok. Dar ekranda dikey liste (ray
-   solda), genişte altı sütunluk yatay şerit (ray düğümden düğüme). */
-.how { position:relative; display:grid; margin:22px 0 0; padding:0; list-style:none; }
-.howStep { position:relative; min-width:0; padding:0 0 18px 40px; }
+/* ---------- Nasıl hesaplanır (TaxHow, 29 Eylül; 18 Ekim yeniden) ----------
+   Solda simgeli dikey ray, sağda çalışılmış örnek. Eski altı sütunluk yatay
+   şerit 1280'de 150 piksellik sütunlarda beş-yedi satırlık gövdeler
+   üretiyordu; ray artık her genişlikte dikey ve gövde satırı ~60 karakter.
+   Kutu içinde kutu yok: ray panelin zemininde, örnek tek bir çukur tonda
+   (`--surface-sunken`, sonuç kartıyla aynı ton — "burada sayı var"). */
+.howGrid { display:grid; gap:24px; margin-top:24px; }
+/* İki kolon 1024'ten. Ölçüldü (18 Ekim, 1280, TR, açık tema): ilk denemede
+   ray 631, örnek kartı 753 piksel — kart 122 piksel aşağıda bitiyordu.
+   Adım arası 20 → 34, örnek satırı 7 → 5 piksel dolguyla ray 701, kart
+   715: iki kolon 14 piksel farkla aynı hatta. 390'da tek kolon (ray 817,
+   kart 802, alt alta); 320'de yatay taşma yok. */
+@media (min-width:1024px) { .howGrid { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:40px; align-items:start; } }
+.how { display:flex; flex-direction:column; margin:0; padding:0; list-style:none; }
+.howStep { position:relative; min-width:0; padding:0 0 34px 56px; }
 .howStep:last-child { padding-bottom:0; }
-.howStep::before { content:""; position:absolute; left:13px; top:32px; bottom:4px; width:2px; border-radius:2px; background:var(--line); }
+.howStep::before { content:""; position:absolute; left:19px; top:48px; bottom:6px; width:2px; border-radius:2px; background:var(--line-soft); }
 .howStep:last-child::before { display:none; }
-.howNode { position:absolute; left:0; top:0; display:grid; place-items:center; width:28px; height:28px; border-radius:999px; border:1.5px solid var(--primary-faint); background:var(--primary-tint); color:var(--primary-ink); font-size:12px; font-weight:700; }
-.howTitle { width:fit-content; max-width:100%; margin:4px 0 4px; font-size:15px; font-weight:650; line-height:1.3; letter-spacing:-.01em; color:var(--text-strong); }
-.howBody { margin:0; max-width:64ch; font-size:13px; line-height:1.55; color:var(--text-body); }
-/* Telefonda sıkı: altı adım ilk ölçümde 836 pikseldi (390, 29 Eylül). */
-@media (max-width:639px) { .howStep { padding-bottom:14px; } .howBody { line-height:1.5; } }
-@media (min-width:1200px) {
-  .how { grid-template-columns:repeat(6,minmax(0,1fr)); column-gap:22px; margin-top:28px; }
-  .howStep { padding:42px 0 0; }
-  .howStep::before { left:36px; right:-14px; top:13px; bottom:auto; width:auto; height:2px; }
-  .howTitle { margin-top:0; }
-}
-.howFoot { display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; margin-top:22px; padding-top:20px; border-top:1px solid var(--line-soft); }
+/* Düğüm: simge karosu, köşesinde adım numarası. Karo `--primary-tint`
+   (mavi etkileşim değil, anlatımın kimliği: hesaplayıcının adım düğümleriyle
+   aynı aile). Numara örnek kartındaki satır numaralarıyla eşleşiyor. */
+.howNode { position:absolute; left:0; top:0; display:grid; place-items:center; width:40px; height:40px; border-radius:12px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--primary-faint); color:var(--primary-ink); }
+.howNum { position:absolute; right:-6px; bottom:-6px; display:grid; place-items:center; min-width:20px; height:20px; padding:0 5px; border-radius:999px; background:var(--panel-fixed); box-shadow:inset 0 0 0 1px var(--line); font-size:12px; font-weight:700; line-height:1; color:var(--text-strong); }
+/* Başlık 40 piksellik karonun ortasında: 15 × 1,3 = 19,5 piksellik satır,
+   (40 − 19,5) / 2 ≈ 10. */
+.howTitle { width:fit-content; max-width:100%; margin:10px 0 4px; font-size:15px; font-weight:650; line-height:1.3; letter-spacing:-.01em; color:var(--text-strong); }
+.howBody { margin:0; max-width:62ch; font-size:13px; line-height:1.55; color:var(--text-body); }
+@media (max-width:639px) { .howStep { padding-bottom:16px; } .howBody { line-height:1.5; } }
+.howFoot { display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; margin-top:24px; padding-top:20px; border-top:1px solid var(--line-soft); }
+
+/* Çalışılmış örnek. Genişte kolonunda yapışkan: ray uzunken örnek göz
+   hizasında kalıyor. */
+.example { min-width:0; padding:20px 16px 16px; border-radius:20px; background:var(--surface-sunken); }
+@media (min-width:640px) { .example { padding:22px 24px 18px; } }
+@media (min-width:1024px) { .example { position:sticky; top:calc(var(--app-bar-h) + 16px); } }
+.exampleHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 12px; }
+.exampleTitle { margin:0; font-size:17px; font-weight:700; line-height:1.3; letter-spacing:-.015em; color:var(--text-strong); }
+/* "Varsayımsal" rozeti nötr: pirinç bu sayfada endeksleme demek, mavi eylem. */
+.exampleTag { display:inline-flex; align-items:center; min-height:24px; padding:0 10px; border-radius:999px; background:var(--panel-fixed); box-shadow:inset 0 0 0 1px var(--line); font-size:12px; font-weight:650; color:var(--text-body); }
+.exampleLead { margin:8px 0 0; max-width:60ch; font-size:12px; line-height:1.55; color:var(--text-muted); }
+.exampleRows { display:flex; flex-direction:column; margin:14px 0 0; padding:0; list-style:none; }
+.exampleRow { display:grid; grid-template-columns:24px minmax(0,1fr) auto; align-items:baseline; gap:3px 10px; padding:5px 0; }
+.exampleRow[data-first] { margin-top:4px; padding-top:10px; border-top:1px solid var(--line-soft); }
+.exampleRow > .track, .exampleRow > .flowNote { grid-column:2 / -1; }
+.exampleStep { display:grid; place-items:center; align-self:center; width:22px; height:22px; border-radius:999px; background:var(--panel-fixed); box-shadow:inset 0 0 0 1px var(--line); font-size:12px; font-weight:700; line-height:1; color:var(--text-strong); }
+.exampleStep:empty { visibility:hidden; }
+.exampleRow[data-strong] .flowValue { font-size:18px; letter-spacing:-.02em; }
+.exampleFoot { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin-top:14px; padding-top:14px; border-top:1px solid var(--line-soft); }
+.exampleFoot > .help { flex:1 1 220px; }
+/* Form örnekle dolunca formun tepesinde tek satır künye. */
+.exampleNote { display:flex; align-items:flex-start; gap:8px; margin:0 0 18px; font-size:12px; line-height:1.5; color:var(--text-body); animation:chip-in 420ms var(--ease-brand) both; }
+.exampleNote svg { flex-shrink:0; margin-top:1px; color:var(--primary-ink); }
 
 /* Durağan tarife: sayfanın dibinde, SSS'nin yanında. */
 .guideGrid { display:grid; gap:8px; }
@@ -533,4 +564,51 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
   .bracketTable tbody th, .bracketTable tbody td { padding:8px 6px; }
   .bracketTable tbody th { white-space:normal; line-height:1.35; }
   .bracketYours { display:block; width:max-content; margin:4px 0 0; }
+}
+
+/* ---- Boş satış sonucu (SaleEmpty, 18 Ekim) ----
+   Gerekenler listesi, şelalenin soluk taslağı ve "Örnekle Dene". */
+.emptySale { display:flex; flex-direction:column; gap:22px; }
+.needs { display:flex; flex-direction:column; gap:10px; margin:0; padding:0; list-style:none; }
+.needs li { display:flex; align-items:center; gap:10px; font-size:13px; font-weight:500; line-height:1.4; color:var(--text-muted); transition:color .3s var(--ease-brand); }
+.needs li[data-done] { color:var(--text-strong); }
+.needMark { display:grid; place-items:center; flex-shrink:0; width:20px; height:20px; border-radius:999px; box-shadow:inset 0 0 0 1.5px var(--line-strong); color:var(--on-primary); transition:background-color .3s var(--ease-brand), box-shadow .3s var(--ease-brand); }
+.needs li[data-done] .needMark { background:var(--primary); box-shadow:none; }
+/* Onay işareti tek küçük öğenin geri bildirimi: yay eğrisi yalnız burada. */
+.needs li[data-done] .needMark svg { animation:need-tick 420ms var(--ease-spring) both; }
+@keyframes need-tick { from { transform:scale(.4); opacity:0; } }
+.needs li[data-busy] .needMark { box-shadow:inset 0 0 0 1.5px var(--primary-faint); animation:chip-wait 1.2s var(--ease-loop) infinite alternate; }
+/* Taslak: dolu sonucun aynı satırları, aynı renkler, soluk ve sayısız. */
+.sketch, .flowBlock { padding-top:18px; border-top:1px solid var(--line-soft); }
+.sketch .bar { opacity:.38; }
+.sketch .flowName { color:var(--text-muted); }
+
+/* ---- Para birimi alanın içinde ($) ---- */
+.affix { position:relative; display:block; min-width:0; }
+.affixUnit { position:absolute; left:12px; top:0; bottom:0; display:flex; align-items:center; pointer-events:none; font-size:15px; font-weight:600; color:var(--text-muted); }
+.affix > .input { padding-left:28px; }
+
+/* ---- Tarifedeki yerin (BracketScale, 18 Ekim) ----
+   Beş eşit basamak (sıra ölçeği — gerekçe TaxResult.tsx). Oranlar üstte,
+   şeritler 5 piksel kulvar dilinde, iğne matrah. */
+.ladder { display:grid; gap:10px; margin-bottom:10px; }
+.ladderBody { display:grid; gap:8px; }
+.ladderRates { display:grid; grid-template-columns:repeat(var(--n, 5), minmax(0,1fr)); gap:4px; font-size:12px; font-weight:600; color:var(--text-muted); }
+.ladderRates span { text-align:center; }
+.ladderRates span[data-past] { color:var(--text-body); }
+.ladderRates span[data-current] { color:var(--primary-ink); font-weight:700; }
+.ladderLane { position:relative; display:grid; grid-template-columns:repeat(var(--n, 5), minmax(0,1fr)); gap:4px; height:5px; container-type:inline-size; }
+.ladderStep { position:relative; overflow:hidden; border-radius:3px; background:var(--line-soft); }
+.ladderStep[data-past] { background:var(--line-strong); }
+.ladderFill { position:absolute; inset:0; border-radius:3px; background:var(--primary); transform-origin:0 50%; transform:scaleX(var(--f, 0)); transition:transform 700ms var(--ease-brand); }
+@starting-style { .ladderFill { transform:scaleX(0); } }
+/* İğne `translate` + `cqw` ile kayar (meter ile aynı gerekçe). */
+.ladderPin { position:absolute; left:0; top:-5px; width:3px; height:15px; margin-left:-1.5px; border-radius:2px; background:var(--text-strong); translate:calc((var(--i, 0) + var(--w, 0)) * (100cqw - (var(--n, 5) - 1) * 4px) / var(--n, 5) + var(--i, 0) * 4px) 0; transition:translate 700ms var(--ease-brand); }
+.ladderNext { font-size:12px; font-weight:600; color:var(--text-body); }
+
+/* Bu dosyanın sonradan eklenen hareketleri; dosyanın ortasındaki blok
+   bunlardan ÖNCE geldiği için onları ezemezdi (aynı özgüllük). */
+@media (prefers-reduced-motion:reduce) {
+  .exampleNote, .needs li[data-done] .needMark svg, .needs li[data-busy] .needMark { animation:none; }
+  .needs li, .needMark, .ladderFill, .ladderPin { transition:none; }
 }

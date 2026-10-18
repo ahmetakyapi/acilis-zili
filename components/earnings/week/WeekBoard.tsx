@@ -13,6 +13,7 @@ import type { AnalysisBadge as AnalysisBadgeData } from "@/lib/data";
 import {
   dayLabel,
   epsSurprise,
+  splitLane,
   tileTier,
   WEEK_DAYS,
   type ScheduleRow,
@@ -43,8 +44,9 @@ import styles from "./WeekBoard.module.css";
  * pazar günü olduğu için bir iş haftasının saatleri beş günde aynı; sol
  * sütun ilk açık günün saatini yazıyor, hücreler yine kendi saatini taşıyor.
  *
- * Görseldeki karo tavanı (`LANE_CAP`) burada YOK: sayfa bütün seçilenleri
- * gösteriyor, görsel yer darlığından kırpıyor ve "+N" yazıyor.
+ * Görseldeki karo tavanı (`LANE_CAP`) burada YOK: görsel yer darlığından
+ * kırpıyor ve "+N" yazıyor; sayfa da kalabalık şeridi kısaltıyor
+ * (`splitLane`, 18 Ekim) ama kalanı atmıyor, "+N" katlamasında açıyor.
  */
 
 type LaneKey = "bmo" | "amc" | "other";
@@ -248,6 +250,14 @@ function DayColumn({
  * büyüklük: haftanın en büyüğüne göre uzunluk. Sıra şerit içinde büyükten
  * küçüğe (`buildWeek`).
  *
+ * KARO YATAY, ŞERİT TAVANLI (18 Ekim). Sahibinin isteği: "büyük ekranda
+ * haftayı kaydırmadan göreyim". Karo logonun ALTINA sembol ve değer dizen
+ * 90 piksellik bir kuleydi; artık logo solda, sembol ve değer yanında tek
+ * blok. Büyük karo (≥500 milyar) satırın tamamını alıp adını yazmaya devam
+ * ediyor — haftanın olayı hâlâ bir bakışta. Şerit en fazla altı hücre
+ * gösteriyor (`splitLane`); kalanı "+N" katlaması, özetinde gizlenen
+ * şirketlerin logoları. Ölçüm `WeekBoard.module.css` → `.tiles`.
+ *
  * Tıklama bilançonun analizine gider, analiz yoksa şirket sayfasına: haftanın
  * geçmiş günlerinde okuyucunun aradığı şey açıklamanın ne dediği.
  */
@@ -270,6 +280,20 @@ function Lane({
   locale: Locale;
   t: Dictionary;
 }) {
+  const e = t.earningsWeek;
+  const { visible, hidden } = splitLane(rows);
+  const tile = (row: ScheduleRow, order: number) => (
+    <Tile
+      key={row.symbol}
+      row={row}
+      order={order}
+      weekPeak={weekPeak}
+      badge={badges[`${row.symbol}:${row.reportDate}`]}
+      watched={watchSet.has(row.symbol)}
+      locale={locale}
+      t={t}
+    />
+  );
   return (
     <div className={styles.lane} data-lane={lane.key} data-filled={rows.length > 0 || undefined}>
       {/* Dar ekranda görünen şerit başlığı; geniş ekranda sol eksen aynı
@@ -287,29 +311,46 @@ function Lane({
           </>
         )}
       </p>
-      {rows.length > 0 && (
-        <ul className={styles.tiles}>
-          {rows.map((row) => (
-            <Tile
-              key={row.symbol}
-              row={row}
-              weekPeak={weekPeak}
-              badge={badges[`${row.symbol}:${row.reportDate}`]}
-              watched={watchSet.has(row.symbol)}
-              locale={locale}
-              t={t}
-            />
-          ))}
-        </ul>
+      {visible.length > 0 && (
+        <ul className={styles.tiles}>{visible.map((row, index) => tile(row, index))}</ul>
+      )}
+      {hidden.length > 0 && (
+        /* Katlama bastığın yerde açılır (`ExpandInPlace`): özet yerinde
+           kalıyor, gizli karolar altına iniyor, özetin yazısı "Daha Az"a
+           dönüyor. Yerel `details`: JavaScript'siz de açılıyor. */
+        <details className={styles.more}>
+          <summary className={styles.moreSummary}>
+            <span className={styles.moreLogos} aria-hidden>
+              {hidden.slice(0, 3).map((row) => (
+                <LogoTile
+                  key={row.symbol}
+                  symbol={row.symbol}
+                  logoUrl={row.logoUrl}
+                  size="xs"
+                  className={styles.moreLogo}
+                />
+              ))}
+            </span>
+            <span className={styles.moreOpen}>
+              {e.moreTiles.replace("{count}", String(hidden.length))}
+            </span>
+            <span className={styles.moreClose}>{e.lessTiles}</span>
+          </summary>
+          <ul className={styles.tiles}>{hidden.map((row, index) => tile(row, index))}</ul>
+        </details>
       )}
     </div>
   );
 }
 
-const TILE_LOGO: Record<TileTier, LogoTileSize> = { xl: "lg", lg: "md", md: "sm" };
+/* Logo basamağı karoyla birlikte küçüldü (18 Ekim): yatay karoda logo
+   satırın yüksekliğini belirliyor; 44 piksellik logo büyük karoyu yeniden
+   kuleye çevirirdi. */
+const TILE_LOGO: Record<TileTier, LogoTileSize> = { xl: "md", lg: "sm", md: "xs" };
 
 function Tile({
   row,
+  order,
   weekPeak,
   badge,
   watched,
@@ -317,6 +358,8 @@ function Tile({
   t,
 }: {
   row: ScheduleRow;
+  /** Şerit içindeki sıra — giriş kademesinin adımı. */
+  order: number;
   weekPeak: number;
   badge: AnalysisBadgeData | undefined;
   watched: boolean;
@@ -328,13 +371,16 @@ function Tile({
   const surprise = epsSurprise(row.epsActual, row.epsEstimate);
   const cap = row.marketCap !== null ? formatMoneyCompact(row.marketCap, locale) : null;
   const verdict = surprise ? e[surprise.direction] : null;
-  const label = [row.symbol, row.name, cap, verdict].filter(Boolean).join(" · ");
+  /* Yarım karoda "Analiz" yazısı sığmıyor, nokta oluyor; sözlü hâli burada. */
+  const label = [row.symbol, row.name, cap, verdict, badge ? e.analysis : null]
+    .filter(Boolean)
+    .join(" · ");
   /* Çizgi en az 4 piksel: 10 milyarlık bir şirket 1,2 trilyonluk haftada
      %0,8 — sıfır uzunluk "değeri yok" gibi okunurdu. */
   const ratio = row.marketCap !== null && weekPeak > 0 ? row.marketCap / weekPeak : 0;
 
   return (
-    <li className={styles.tileItem} data-tier={tier}>
+    <li className={styles.tileItem} data-tier={tier} style={{ "--j": order } as CSSProperties}>
       <Link
         href={badge ? analysisHref(badge.symbol, badge.period) : `/hisse/${row.symbol}`}
         prefetch={false}
@@ -359,16 +405,17 @@ function Tile({
             {row.symbol}
           </span>
           {tier === "xl" && row.name && <span className={styles.tileName}>{row.name}</span>}
-          {tier !== "md" && cap && <span className={`figure ${styles.tileCap}`}>{cap}</span>}
+          {cap && <span className={`figure ${styles.tileCap}`}>{cap}</span>}
         </span>
         {surprise && (
           /* Küçük karoda yüzde sığmıyor; sonuç 6 piksellik renkli NOKTAYDI
              ve beat/miss yalnız renkten okunuyordu (kırmızı-yeşil ayırt
              edemeyen okuyucuya hiçbir şey söylemiyordu). Nokta yön glifine
              döndü (14 Ekim): biçim + renk birlikte. `aria-hidden` duruyor —
-             sonucun sözlü hâli karonun kendi etiketinde (`verdict`). */
+             sonucun sözlü hâli karonun kendi etiketinde (`verdict`). Yarım
+             karo (18 Ekim'den beri orta basamak da) yalnız glif basıyor. */
           <span className={styles.tileResult} data-dir={surprise.direction} aria-hidden>
-            {tier !== "md" && surprise.ratio !== null
+            {tier === "xl" && surprise.ratio !== null
               ? formatPercent(surprise.ratio * 100, locale, 0)
               : surprise.direction === "beat" ? "▲" : surprise.direction === "miss" ? "▼" : "="}
           </span>
@@ -550,9 +597,13 @@ export function WeekBoardSkeleton() {
       </div>
       {Array.from({ length: WEEK_DAYS }, (_, index) => (
         <div key={index} className={styles.day}>
+          {/* Başlığın ızgara alanları gerçek başlığınkiler: yedek aynı
+              yükseklikte durur, veri inince şeritler kaymaz. */}
           <div className={styles.dayHead}>
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-8 w-9 [grid-area:number]" />
+            <Skeleton className="h-4 w-20 [grid-area:title]" />
+            <Skeleton className="h-3 w-12 [grid-area:month]" />
+            <span className={styles.density} />
           </div>
           {Array.from({ length: ROWS }, (_, lane) => (
             <div key={lane} className={styles.lane}>

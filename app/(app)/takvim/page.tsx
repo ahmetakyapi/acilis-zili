@@ -7,6 +7,9 @@ import styles from "@/components/calendar/CalendarExperience.module.css";
 import { CalendarStrip } from "@/components/calendar/CalendarStrip";
 import { DayPicker } from "@/components/calendar/DayPicker";
 import { NextRelease } from "@/components/calendar/NextRelease";
+import { WeekLookahead } from "@/components/calendar/WeekLookahead";
+import { buildLookahead, valueRatios } from "@/components/calendar/lookahead";
+import { ScaleBar } from "@/components/markets/CompareScale";
 import { GuideHint } from "@/components/article/GuideHint";
 import { IpoCalendar } from "@/components/markets/IpoCalendar";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -181,12 +184,17 @@ function ValueSlot({
   unit,
   locale,
   strong = false,
+  ratio,
+  signed = false,
 }: {
   label: string;
   value: string | null;
   unit: string | null;
   locale: Locale;
   strong?: boolean;
+  /** Satırın en büyük mutlak değerine oranı; karşılaştırma yoksa yok. */
+  ratio?: number | null;
+  signed?: boolean;
 }) {
   /* BOŞ YUVA BOŞ KALIR, TİRE BASILMAZ. Yuva yine de yerinde duruyor:
      üç sütun sabit sırada (Gerçekleşen · Beklenti · Önceki) ve bir satırda
@@ -197,6 +205,17 @@ function ValueSlot({
     <span className={styles.value} data-strong={strong || undefined}>
       <span>{label}</span>
       <span className="numeral">{shown}</span>
+      {/* AYNI SATIRIN ÜÇ SAYISI BİR DE ÇİZGİ (18 Ekim). "Gerçekleşen 4,3 ·
+          Beklenti 4,1 · Önceki 4,2" yan yana dururken hangisinin büyük
+          olduğu basamak basamak okunuyordu; CLAUDE.md'nin karşılaştırma
+          kuralı (CompareScale) burada da geçerli. Çubuk büyüklük, yargı
+          değil: renk nötr, "beklentiyi aştı" yorumu yok — yüksek işsizlik
+          başvurusu iyi mi kötü mü, ekran söylemiyor. Yalnızca satırda en az
+          iki DÜZ sayı varsa (`valueRatios`); "250K" gibi ekli metinde ölçek
+          uydurulmuyor. */}
+      {ratio !== undefined && ratio !== null && (
+        <ScaleBar ratio={ratio} signed={signed} className={styles.valueBar} />
+      )}
     </span>
   );
 }
@@ -236,6 +255,19 @@ export default async function CalendarPage(
     : null;
 
   const { locale, t } = await getI18n();
+  /* PAYLAŞ KAPAĞIN SAĞ ÜST KÖŞESİNDE (18 Ekim). Başlık satırının sağındaydı
+     ama bu kapak iki kolonlu: satır yalnız SOL kolonu kaplıyor ve düğme
+     sayfanın ortasında, başlıkla sağ kolon arasında asılı duruyordu
+     (sahibinin ekran görüntüsü). Öteki ekranlarda paylaş kapağın sağ üst
+     köşesi (`PageHeader share`, `DirectoryHeader shareInTitle`); burada o
+     köşe sağ kolonun tepesi, görünüm seçiminin yanı. Tek kolonlu
+     yerleşimde (≤767 ve yatay telefon) sağ kolon başlığın ALTINA iniyor;
+     orada düğme yine başlık satırının sağında, çünkü satır artık tam
+     genişlik. İki kopyadan biri her genişlikte `display: none` — görünüm
+     seçimiyle aynı yöntem, erişilebilirlik ağacında tek düğme. */
+  const share = (path: string, title: string) => (
+    <PageShare compactOnMobile align="right" path={path} title={title} locale={locale} t={t} />
+  );
   const kindLabels = {
     label: t.marketExtras.calendarKinds,
     economic: t.marketExtras.calendarEconomic,
@@ -255,7 +287,7 @@ export default async function CalendarPage(
               <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
                 {t.marketExtras.dividendTitle}
               </h1>
-              <div className="page-title-actions"><PageShare compactOnMobile align="right" path="/takvim?tur=temettu" title={t.marketExtras.dividendTitle} locale={locale} t={t} /></div>
+              <div className={cn("page-title-actions", styles.shareTitle)}>{share("/takvim?tur=temettu", t.marketExtras.dividendTitle)}</div>
             </div>
             <p>{t.marketExtras.dividendSubtitle}</p>
           </div>
@@ -263,6 +295,9 @@ export default async function CalendarPage(
               yerinde: sıradaki hak kesim ve son alım günü. Veriye bağlı,
               kendi Suspense sınırında; kapak ilk baytla geliyor. */}
           <div className={styles.heroSide}>
+            <div className={styles.heroControls}>
+              <span className={styles.shareSide}>{share("/takvim?tur=temettu", t.marketExtras.dividendTitle)}</span>
+            </div>
             <Suspense fallback={<DividendHeroSkeleton t={t} />}>
               <DividendHero locale={locale} t={t} />
             </Suspense>
@@ -398,13 +433,19 @@ export default async function CalendarPage(
       minutesOf(event.eventTimeEt) > nowMinutes);
   const nextHigh = all.find((event) => event.importance === "high" && isAhead(event));
   const next = nextHigh ?? all.find(isAhead);
-  const nextHref = !next
-    ? null
-    : renderedDays.has(next.eventDate)
-      ? `#gun-${next.eventDate}`
-      : daysBetweenEt(today, next.eventDate) <= VIEW_SPAN.month
-        ? `/takvim?g=month#gun-${next.eventDate}`
+  /* Bir tarihin gündemdeki yeri: ekrandaysa sayfa içi çapa (DayPicker
+     yakalıyor), ay penceresindeyse ay görünümü, ötesindeyse bağlantı yok.
+     Kapak kartı ve altı haftalık görünüm aynı kuralı kullanıyor. */
+  const hrefFor = (date: string) =>
+    renderedDays.has(date)
+      ? `#gun-${date}`
+      : daysBetweenEt(today, date) <= VIEW_SPAN.month
+        ? `/takvim?g=month#gun-${date}`
         : null;
+  const nextHref = next ? hrefFor(next.eventDate) : null;
+  const lookahead = result.ok
+    ? buildLookahead({ events: all, holidays, from: start, until: addEtDays(today, LOOKAHEAD_DAYS) })
+    : [];
 
   const impactLabel: Record<string, string> = {
     high: t.calendar.impactHigh,
@@ -434,6 +475,7 @@ export default async function CalendarPage(
     const times = event.eventTimeEt ? timePair(event.eventDate, event.eventTimeEt, locale) : null;
     const explainer = eventExplainer(event.slug, locale);
     const high = event.importance === "high";
+    const scale = hasValues ? valueRatios([event.actual, event.forecast, event.previous]) : null;
     return (
       <li key={event.id} className={styles.event} data-impact={event.importance}>
         {/* SAAT BİR KARO. Satırın solunda çıplak iki satır metin duruyordu
@@ -506,9 +548,9 @@ export default async function CalendarPage(
 
         {hasValues && (
           <span className={styles.values}>
-            <ValueSlot label={t.calendar.actual} value={event.actual} unit={event.unit} locale={locale} strong />
-            <ValueSlot label={t.calendar.forecast} value={event.forecast} unit={event.unit} locale={locale} />
-            <ValueSlot label={t.calendar.previous} value={event.previous} unit={event.unit} locale={locale} />
+            <ValueSlot label={t.calendar.actual} value={event.actual} unit={event.unit} locale={locale} strong ratio={scale?.ratios[0]} signed={scale?.signed} />
+            <ValueSlot label={t.calendar.forecast} value={event.forecast} unit={event.unit} locale={locale} ratio={scale?.ratios[1]} signed={scale?.signed} />
+            <ValueSlot label={t.calendar.previous} value={event.previous} unit={event.unit} locale={locale} ratio={scale?.ratios[2]} signed={scale?.signed} />
           </span>
         )}
       </li>
@@ -654,7 +696,7 @@ export default async function CalendarPage(
             <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
               {t.calendar.title}
             </h1>
-            <div className="page-title-actions"><PageShare compactOnMobile align="right" path="/takvim" title={t.calendar.title} locale={locale} t={t} /></div>
+            <div className={cn("page-title-actions", styles.shareTitle)}>{share("/takvim", t.calendar.title)}</div>
           </div>
           <p>{t.calendar.subtitle}</p>
         </div>
@@ -667,7 +709,10 @@ export default async function CalendarPage(
             geliyor; kolon her zaman dolu. Okuma başarısızsa kart yok, kolon
             yalnızca seçimi taşır. */}
         <div className={styles.heroSide}>
-          {viewSwitch(styles.heroSeg)}
+          <div className={styles.heroControls}>
+            {viewSwitch(styles.heroSeg)}
+            <span className={styles.shareSide}>{share("/takvim", t.calendar.title)}</span>
+          </div>
           {next && (
             <NextRelease
               event={next}
@@ -675,6 +720,7 @@ export default async function CalendarPage(
               away={readerDayOffset(next.eventDate, next.eventTimeEt, locale, now)}
               href={nextHref}
               inPage={nextHref?.startsWith("#") ?? false}
+              nowMs={now.getTime()}
               locale={locale}
               t={t}
             />
@@ -753,12 +799,34 @@ export default async function CalendarPage(
                     }
                   />
                 )}
-                <p className={styles.foot}>{t.calendar.timesNote}</p>
+                {/* LEJANT KENDİNİ ANLATIYOR (18 Ekim). Önem çipleri yalnızca
+                    "Yüksek / Orta / Düşük" diyordu; neyin yüksek olduğunu,
+                    kulvardaki rengin ne demek olduğunu okuyucu tahmin
+                    ediyordu. Künye panelin içinde, hairline altında düz
+                    paragraf (ekran düzeni 6): üç renkli şerit + tek cümle,
+                    ardından saat notu. */}
+                <div className={styles.foot}>
+                  <p className={styles.legend}>
+                    {IMPACTS.map((level) => (
+                      <span key={level} className={styles.legendItem}>
+                        <span className={styles.legendSwatch} data-impact={level} aria-hidden />
+                        {impactLabel[level]}
+                      </span>
+                    ))}
+                  </p>
+                  <p>{t.calendar.impactNote}</p>
+                  <p>{t.calendar.timesNote}</p>
+                </div>
               </>
             )}
           </Panel>
         </QueryTransition>
 
+        {/* ALTI HAFTA, GÖRÜNÜMDEN BAĞIMSIZ. Geçiş maskesinin DIŞINDA:
+            Gün/Hafta/Ay değişirken içeriği değişmiyor, örtülmesi yanlış
+            bir "yükleniyor" olurdu. Takvimin altında, sayfanın ikinci
+            görseli olarak (ekran düzeni 3). */}
+        <WeekLookahead weeks={lookahead} hrefFor={hrefFor} locale={locale} t={t} />
       </div>
 
       {/* HALKA ARZ TAKVİMİN ALTINDA, TAM GENİŞLİK (29 Eylül). Yan kolondu ve

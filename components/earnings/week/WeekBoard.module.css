@@ -11,7 +11,7 @@
 .board {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.6rem;
 }
 
 .axis {
@@ -27,8 +27,8 @@
   grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
   align-content: start;
   min-width: 0;
-  padding: 0.35rem;
-  border-radius: 1.1rem;
+  padding: 0.3rem;
+  border-radius: 1rem;
   background: var(--surface-sunken);
   /* Opaklık da geçişte (14 Ekim): geçmiş gün hover'da 0,62→1'e TEK karede
      atlıyordu — beş günlük duvarda çok görünür bir sıçrama. */
@@ -59,21 +59,36 @@
   grid-column: 1 / -1;
 }
 
+/* GÜN BAŞLIĞI İKİ SATIR, DÖRT DEĞİL (18 Ekim). Geniş ekranda başlık üst
+   üste dört parçaydı (gün adı, dev numara, sayı, çubuk) ve 1280'de 95
+   piksel tutuyordu; beş günün beşi de bu yüksekliği şeritlerden önce
+   ödüyordu. Numara artık solda iki satırı birden kaplıyor, gün adı ile
+   ay/sayı sağında: 70 piksel (ölçüm `.tiles` notunda). Dar ekranda tek
+   satır (aşağıdaki medya sorgusu). */
 .dayHead {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.7rem 0.75rem 0.8rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "number title tag"
+    "number month count"
+    "density density density";
+  align-items: center;
+  column-gap: 0.55rem;
+  row-gap: 1px;
+  padding: 0.55rem 0.6rem 0.6rem;
 }
 
-.dayTitle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+.dayTitle,
+.dayDate {
+  display: contents;
 }
 
 .dayName {
+  grid-area: title;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--text-strong);
   font-size: var(--text-small);
   font-weight: 650;
@@ -81,6 +96,8 @@
 }
 
 .todayTag {
+  grid-area: tag;
+  justify-self: end;
   padding: 1px 8px;
   border-radius: 999px;
   background: var(--primary);
@@ -90,37 +107,36 @@
   line-height: 18px;
 }
 
-.dayDate {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  color: var(--text-muted);
-}
-
 .dayNumber {
+  grid-area: number;
   color: var(--text-strong);
-  font-size: clamp(1.9rem, 2.6vw, 2.35rem);
+  font-size: 2rem;
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.05em;
 }
 
 .dayMonth {
+  grid-area: month;
+  color: var(--text-muted);
   font-size: var(--text-tiny);
   font-weight: 600;
 }
 
 .dayCount {
-  margin-left: auto;
+  grid-area: count;
+  justify-self: end;
+  color: var(--text-muted);
   font-size: var(--text-nano);
   font-weight: 600;
   white-space: nowrap;
 }
 
 .density {
+  grid-area: density;
   display: block;
   height: 3px;
-  margin-top: 0.2rem;
+  margin-top: 0.5rem;
   overflow: hidden;
   border-radius: 999px;
   background: var(--line-soft);
@@ -135,31 +151,14 @@
   transform-origin: left center;
 }
 
-/* Çubuk görünüme girerken sıfırdan uzuyor — kaydırma güdümlü, JavaScript
-   ve kaydırma dinleyicisi yok. Desteklemeyen tarayıcı son hâli görür. */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    @keyframes week-grow-x {
-      from {
-        transform: scaleX(0);
-      }
-    }
-
-    .densityFill {
-      animation: week-grow-x linear both;
-      animation-timeline: view();
-      animation-range: entry 10% cover 30%;
-    }
-  }
-}
-
 .lane {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 4px;
   min-width: 0;
-  padding: 0.55rem 0.4rem 0.45rem;
+  padding: 0.4rem 3px;
   border-top: 1px solid var(--line-soft);
+  container-type: inline-size;
 }
 
 /* Dar ekranda boş şerit hiç yer kaplamıyor; hizalama yalnızca duvarda
@@ -173,7 +172,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.25rem 0.5rem;
-  padding-inline: 0.35rem;
+  padding: 0.1rem 0.3rem 0.2rem;
   font-size: var(--text-tiny);
 }
 
@@ -187,54 +186,68 @@
   font-size: var(--text-nano);
 }
 
-/* ---- Mozaik (29 Eylül) ----
-   Şerit altı sütunluk bir ızgara: büyük karo altısını, orta karo üçünü,
-   küçük karo ikisini kaplıyor — satırlar karodan karoya kırılmıyor ve
-   aynı basamaktaki karolar günler arasında aynı genişlikte. `flex-wrap`
-   denendi: tek kalan küçük karo satırın tamamına yayılıyor ve basamağın
-   anlamı kayboluyordu. Karo gün sütununun zemininden bir ton açık
-   (`--surface-solid`): derinlik gölgeden değil tondan. */
+/* ---- Mozaik ----
+   29 Eylül: şerit altı sütunluk bir ızgaraydı, karolar logonun altına
+   sembol yazan kulelerdi. 18 Ekim: karo YATAY (logo solda, sembol ve değer
+   yanında) ve şerit iki sütunlu — büyük karo iki sütunu, öteki iki basamak
+   birer sütunu kaplıyor; basamak farkı logo boyunda ve büyük karonun
+   adında. `flex-wrap` denendi (29 Eylül): tek kalan küçük karo satırın
+   tamamına yayılıyor ve basamağın anlamı kayboluyordu, ızgara kalıyor.
+
+   YARIM KARONUN TABANI 90 PİKSEL. "320 Mr $" 49, "30,0 Mr $" 52 piksel;
+   logo (26/22), 4 piksellik ara ve 5'er piksellik iç boşlukla yarım karo
+   90 pikselin altında piyasa değerini kesiyor (ilk denemede 1280'de karo
+   89 piksel, 7 piksellik iç boşluk ve 7,75rem eksenle 26 karonun 26'sı
+   kesikti). Eksen 7rem'e, iç boşluk 5 piksele indi: 1280'de karo 92
+   piksel, kesik 0. Şerit 180 pikselden darsa (1100–1279 bandı ve
+   telefonda yan yana iki şerit) karo tek sütun.
+
+   ÖLÇÜM (18 Ekim, `.tmp-*` önizleme, 32 şirketlik dolu bir hafta,
+   hareketi azaltılmış): pano 1280'de 915 → 600 piksel (panel 998 → 683,
+   800'lük ekrana sığıyor), 1440'ta 919 → 600, 1100'de 913 → 848; 390'da
+   1806 → 1698, 320'de 2612 → 1808. Yatay taşma beş genişlikte de 0, iki
+   dilde.
+
+   Karo gün sütununun zemininden bir ton açık (`--surface-solid`): derinlik
+   gölgeden değil tondan. */
 .tiles {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 4px;
 }
 
+@container (min-width: 180px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tileItem[data-tier="xl"] {
+    grid-column: 1 / -1;
+  }
+}
+
 .tileItem {
-  grid-column: span 2;
   min-width: 0;
-}
-
-.tileItem[data-tier="lg"] {
-  grid-column: span 3;
-}
-
-.tileItem[data-tier="xl"] {
-  grid-column: 1 / -1;
 }
 
 .tile {
   position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   height: 100%;
   min-height: 44px;
-  padding: 0.55rem 0.3rem 0.7rem;
-  border-radius: 0.8rem;
+  padding: 6px 5px 9px;
+  border-radius: 0.7rem;
   background: var(--surface-solid);
-  text-align: center;
   transition:
     background-color 0.25s var(--ease-brand),
     transform 0.25s var(--ease-brand);
 }
 
 .tileItem[data-tier="xl"] .tile {
-  flex-direction: row;
-  gap: 0.65rem;
-  padding: 0.6rem 0.7rem 0.8rem;
-  text-align: left;
+  gap: 9px;
+  padding: 8px 9px 11px;
 }
 
 /* `.tileLogo` kuralı kalktı (14 Ekim): tek içeriği hover zoom'unun
@@ -244,13 +257,8 @@
 .tileText {
   display: flex;
   flex-direction: column;
-  align-items: inherit;
   min-width: 0;
   max-width: 100%;
-}
-
-.tileItem[data-tier="xl"] .tileText {
-  align-items: flex-start;
 }
 
 .tileSymbol {
@@ -261,18 +269,15 @@
   color: var(--text-strong);
   font-size: var(--text-tiny);
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.25;
   letter-spacing: -0.01em;
+  white-space: nowrap;
   transition: color 0.25s var(--ease-brand);
 }
 
 .tileItem[data-tier="xl"] .tileSymbol {
   font-size: var(--text-lead);
   letter-spacing: -0.02em;
-}
-
-.tileItem[data-tier="lg"] .tileSymbol {
-  font-size: var(--text-small);
 }
 
 .tileStar {
@@ -291,20 +296,26 @@
 }
 
 .tileCap {
-  color: var(--text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-muted);
   font-size: var(--text-nano);
   font-weight: 600;
   line-height: 1.3;
   white-space: nowrap;
 }
 
+.tileItem[data-tier="xl"] .tileCap {
+  color: var(--text-body);
+}
+
 /* Büyüklük çizgisi — karonun dibinde, haftanın en büyüğüne göre. En az
    4 piksel (gerekçe `Tile`). */
 .tileBar {
   position: absolute;
-  right: 0.55rem;
-  bottom: 0.3rem;
-  left: 0.55rem;
+  right: 5px;
+  bottom: 4px;
+  left: 5px;
   height: 2px;
   overflow: hidden;
   border-radius: 999px;
@@ -317,18 +328,24 @@
   height: 100%;
   border-radius: inherit;
   background: var(--primary);
+  transform-origin: left center;
 }
 
 /* Sonuç: gerçekleşen EPS beklentiye göre. Renk yalnızca yön (yukarı,
-   aşağı); eşitlik sessiz. Küçük karoda yüzde yok, yalnızca nokta. */
+   aşağı); eşitlik sessiz. Yarım karoda yüzde yok, yalnızca glif. */
 .tileResult {
   position: absolute;
-  top: 0.3rem;
-  right: 0.4rem;
+  top: 5px;
+  right: 6px;
   color: var(--text-muted);
   font-size: var(--text-nano);
   font-weight: 700;
   line-height: 1;
+}
+
+.tileItem[data-tier="xl"] .tileResult {
+  top: 8px;
+  right: 9px;
 }
 
 .tileResult[data-dir="beat"] {
@@ -342,21 +359,28 @@
 /* `:empty` nokta kuralı kalktı (14 Ekim): küçük karo artık yön glifi
    (▲/▼/=) basıyor — renk tek başına bilgi taşımıyor (WCAG 1.4.1). */
 
-/* Analizi yayımlanmış bilanço: karo analize gidiyor ve bunu söylüyor. */
+/* Analizi yayımlanmış bilanço: karo analize gidiyor ve bunu söylüyor.
+   Büyük karoda yazıyla sağ altta; yarım karoda yer yok, logonun köşesinde
+   nokta — sözlü hâli bağlantının etiketinde (`Tile`). */
 .tileBadge {
   position: absolute;
-  top: 0.3rem;
-  left: 0.4rem;
+  right: 9px;
+  bottom: 10px;
   color: var(--primary-ink);
   font-size: var(--text-nano);
   font-weight: 700;
   line-height: 1;
 }
 
-.tileItem[data-tier="md"] .tileBadge {
-  width: 6px;
-  height: 6px;
+.tileItem:not([data-tier="xl"]) .tileBadge {
+  top: 3px;
+  right: auto;
+  bottom: auto;
+  left: 3px;
+  width: 7px;
+  height: 7px;
   overflow: hidden;
+  border: 1.5px solid var(--surface-solid);
   border-radius: 999px;
   background: var(--primary);
   color: transparent;
@@ -386,55 +410,148 @@
   outline-offset: 1px;
 }
 
-/* DAR EKRANDA GÜN BAŞLIĞI TEK SATIR. Geniş ekranın dev gün numarası
-   (2,35rem) ve iki satırlık başlığı telefonda her gün kartına ~105 piksel
-   yazıyordu; beş gün alt alta dizildiğinde yalnızca başlıklar yarım ekran
-   ediyordu. Boş gün de 80 piksellik tarama yerine tek satır. */
+/* ---- "+N" katlaması (18 Ekim) ----
+   Özet bir karo değil, karonun yarı tonunda bir şerit: gizlenen ilk üç
+   şirketin logosu üst üste ve sayı. Açılınca yazı "Daha Az"a dönüyor;
+   gizli karolar özetin altına iniyor (globals.css `details` geçişi). */
+.more {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.moreSummary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 9px;
+  border: 1px dashed var(--line);
+  border-radius: 0.7rem;
+  color: var(--text-body);
+  font-size: var(--text-tiny);
+  font-weight: 650;
+  list-style: none;
+  cursor: pointer;
+  transition:
+    background-color 0.25s var(--ease-brand),
+    border-color 0.25s var(--ease-brand),
+    color 0.25s var(--ease-brand);
+}
+
+.moreSummary::-webkit-details-marker {
+  display: none;
+}
+
+.moreLogos {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+/* Logolar birbirinin üstüne biniyor; aradaki 2 piksellik kesik zeminin
+   tonu, gölge değil. */
+.moreLogo {
+  outline: 2px solid var(--surface-sunken);
+}
+
+.moreLogo + .moreLogo {
+  margin-left: -7px;
+}
+
+.moreClose,
+.more[open] .moreLogos,
+.more[open] .moreOpen {
+  display: none;
+}
+
+.more[open] .moreClose {
+  display: inline;
+}
+
+@media (hover: hover) {
+  .moreSummary:hover {
+    border-color: var(--primary-faint);
+    background: var(--surface-solid);
+    color: var(--primary-ink);
+  }
+}
+
+.moreSummary:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+/* ---- Giriş (18 Ekim) ----
+   Pano soldan sağa, gün gün ve şerit içinde büyükten küçüğe beliriyor:
+   gün adımı 70 ms, karo adımı 35 ms, toplam gecikme 0,9 saniyede kesik
+   (en kalabalık hafta da bir saniyede oturur). Karolar yalnızca
+   opaklıkla geliyor — okunacak kutu kaymaz (PremiumMotion, "PANEL VE
+   SATIR KAYMAZ"); hareket veriyi çizen öğede: karonun büyüklük çizgisi
+   ve günün yoğunluk çubuğu sıfırdan uzuyor. Katlamadan inen karolar
+   açıldıkları an aynı kademeyle. Hareketi azaltan okuyucu son hâli görür. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes week-tile-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes week-grow-x {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  .lane > .tiles > .tileItem,
+  .more[open] .tileItem {
+    --week-delay: min(0.9s, calc(0.08s + var(--i, 0) * 70ms + var(--j, 0) * 35ms));
+    animation: week-tile-in 0.5s var(--ease-brand) both;
+    animation-delay: var(--week-delay);
+  }
+
+  .more[open] .tileItem {
+    --week-delay: calc(var(--j, 0) * 35ms);
+  }
+
+  .lane > .tiles .tileBar > span,
+  .more[open] .tileBar > span {
+    animation: week-grow-x 0.8s var(--ease-brand) both;
+    animation-delay: calc(var(--week-delay) + 0.15s);
+  }
+
+  .densityFill {
+    animation: week-grow-x 0.9s var(--ease-brand) both;
+    animation-delay: calc(0.05s + var(--i, 0) * 70ms);
+  }
+
+  .moreSummary {
+    animation: week-tile-in 0.5s var(--ease-brand) both;
+    animation-delay: min(1s, calc(0.3s + var(--i, 0) * 70ms));
+  }
+}
+
+/* DAR EKRANDA GÜN BAŞLIĞI TEK SATIR. Geniş ekranın iki satırlık başlığı
+   telefonda her gün kartına fazladan yükseklik yazıyordu; beş gün alt alta
+   dizildiğinde yalnızca başlıklar yarım ekran ediyordu. Boş gün de 80
+   piksellik tarama yerine tek satır. */
 @media (max-width: 1099px) {
   .dayHead {
-    display: grid;
     grid-template-columns: auto auto minmax(0, 1fr) auto auto;
     grid-template-areas:
       "number month title tag count"
       "density density density density density";
-    align-items: center;
+    align-items: baseline;
     column-gap: 0.45rem;
     row-gap: 0.4rem;
-    padding: 0.55rem 0.6rem 0.6rem;
-  }
-
-  .dayTitle {
-    display: contents;
-  }
-
-  .dayName {
-    grid-area: title;
-  }
-
-  .todayTag {
-    grid-area: tag;
-  }
-
-  .dayDate {
-    display: contents;
+    padding: 0.5rem 0.55rem 0.55rem;
   }
 
   .dayNumber {
-    grid-area: number;
-    font-size: 1.6rem;
-  }
-
-  .dayMonth {
-    grid-area: month;
-  }
-
-  .dayCount {
-    grid-area: count;
-    margin-left: 0;
+    font-size: 1.5rem;
   }
 
   .density {
-    grid-area: density;
     margin-top: 0;
   }
 
@@ -454,9 +571,9 @@
   align-items: center;
   justify-content: center;
   min-height: 5rem;
-  margin: 0.2rem 0.35rem 0.35rem;
+  margin: 0.2rem 0.3rem 0.3rem;
   padding: 1rem;
-  border-radius: 0.8rem;
+  border-radius: 0.7rem;
   background: repeating-linear-gradient(
     -45deg,
     transparent 0 7px,
@@ -470,9 +587,9 @@
 @media (min-width: 1100px) {
   .board {
     display: grid;
-    grid-template-columns: 8.75rem repeat(5, minmax(0, 1fr));
+    grid-template-columns: 7rem repeat(5, minmax(0, 1fr));
     grid-template-rows: auto repeat(var(--lanes), auto);
-    column-gap: 0.5rem;
+    column-gap: 0.35rem;
     row-gap: 0;
   }
 
@@ -488,8 +605,8 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.35rem;
-    padding: 0.95rem 0.25rem 0.5rem 0;
+    gap: 0.3rem;
+    padding: 0.7rem 0.25rem 0.5rem 0;
     border-top: 1px solid var(--line-soft);
   }
 

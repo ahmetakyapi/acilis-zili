@@ -11,6 +11,7 @@ import {
   revenueSurprise,
   SCHEDULE_DAY_MAX,
   splitScheduleDay,
+  splitLane,
   tileTier,
   type ScheduleRow,
   mondayOf,
@@ -128,6 +129,22 @@ test("tileTier: üç basamak, eşik dahil, bilinmeyen en küçük", () => {
   assert.equal(tileTier(100e9), "lg");
   assert.equal(tileTier(12e9), "md");
   assert.equal(tileTier(null), "md");
+});
+
+test("splitLane: büyük karo iki hücre, tek kalan karo katlanmaz", () => {
+  const caps = (...values: (number | null)[]) => values.map((marketCap, i) => ({ id: i, marketCap }));
+  // Bütçenin içinde: hepsi görünür.
+  assert.deepEqual(splitLane(caps(600e9, 200e9, 150e9, 120e9, 20e9)).hidden, []);
+  // Yedi küçük karo: altısı + tek kalan → katlama açılmaz.
+  assert.equal(splitLane(caps(9e9, 8e9, 7e9, 6e9, 5e9, 4e9, 3e9)).visible.length, 7);
+  // İki büyük (4 hücre) + iki orta = 6, kalan üçü katlanır.
+  const split = splitLane(caps(1.8e12, 1.4e12, 300e9, 250e9, 200e9, 150e9, 120e9));
+  assert.deepEqual(split.visible.map((row) => row.id), [0, 1, 2, 3]);
+  assert.deepEqual(split.hidden.map((row) => row.id), [4, 5, 6]);
+  // Bütçe tek bir büyük karoyu bölmez: 5 hücre dolu, sıradaki büyükse durur.
+  const odd = splitLane(caps(1e12, 1e12, 30e9, 900e9, 20e9, 10e9), 6);
+  assert.deepEqual(odd.visible.map((row) => row.id), [0, 1, 2]);
+  assert.deepEqual(splitLane([]), { visible: [], hidden: [] });
 });
 
 test("epsSurprise: yön, negatif beklenti, yuvarlama payı ve sıfıra yakın payda", () => {

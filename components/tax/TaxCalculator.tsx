@@ -8,11 +8,13 @@ import { motion } from "motion/react";
 import {
   Calculator,
   ChartLineUp,
+  Check,
   Coins,
   DownloadSimple,
   FileArrowUp,
   LockSimple,
   Plus,
+  Sparkle,
   Trash,
   WarningCircle,
 } from "@phosphor-icons/react";
@@ -50,7 +52,7 @@ import type { Locale } from "@/lib/i18n/config";
 import { cn, directionOf, directionText, formatPrice, isValidSymbol } from "@/lib/utils";
 import { BracketTable, DividendMeter, Flow, ResultPreview, Rolling, TaxRange, VerdictBadge, type FlowStep, type Verdict } from "./TaxResult";
 import type { ImportPayload } from "./StatementImport";
-import { PANEL_TITLE, type DividendRow, type TradeRow } from "./tax-ui";
+import { PANEL_TITLE, TAX_EXAMPLE, type DividendRow, type TradeRow } from "./tax-ui";
 import styles from "./Tax.module.css";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { useMotionPreference } from "@/components/motion/useMotionPreference";
@@ -171,6 +173,8 @@ export function TaxCalculator({
   const [ratesFailed, setRatesFailed] = useState(false);
   const [pendingRates, setPendingRates] = useState(false);
   const [imported, setImported] = useState(0);
+  /* Form örnek işlemle mi dolu: künye bunu söylüyor, ilk düzenlemede kalkıyor. */
+  const [exampleOn, setExampleOn] = useState(false);
   /* Ekstreden aktarım: seçilen dosyalar önizlemeyi açar, onay kapatır. */
   const [importFiles, setImportFiles] = useState<File[] | null>(null);
   const [importNote, setImportNote] = useState<{ trades: number; dividends: number } | null>(null);
@@ -280,6 +284,33 @@ export function TaxCalculator({
     /* Yalnızca ilk yüklemede: dil sayfa boyunca değişmiyor. */
   }, [decimalText, locale]);
 
+  /* ---- Örnek işlem (18 Ekim) ----
+     "Nasıl Hesaplanır"daki çalışılmış örnekle AYNI işlem (`TAX_EXAMPLE`,
+     tax-ui.ts) tek alış ve satış görünümüne yazılıyor; okuyucunun girdiği
+     işlemlerin yerini alıyor (düğme boş sonuçta ve anlatımda, yani çoğu zaman
+     form zaten boş). Kurlar gerçek: tarihler girilince her zamanki akışla
+     TCMB'den geliyor. Vergi yılı satışın yılına geçiyor. */
+  const exampleSymbol = labels.how.exampleSymbol;
+  const fillExample = useCallback(() => {
+    const E = TAX_EXAMPLE;
+    const quantity = decimalText(E.quantity);
+    setTrades([
+      { ...emptyTrade(nextId("t"), "buy"), symbol: exampleSymbol, date: E.buyDate, quantity, price: decimalText(E.buyPrice) },
+      { ...emptyTrade(nextId("t"), "sell"), symbol: exampleSymbol, date: E.sellDate, quantity, price: decimalText(E.sellPrice) },
+    ]);
+    setSellQtyLinked(true);
+    setAdvanced(false);
+    setTab("sale");
+    setImported(0);
+    setYearNote(null);
+    const sellYear = Number(E.sellDate.slice(0, 4));
+    if (years[sellYear]) {
+      setYear(sellYear);
+      setThresholdInput(null);
+    }
+    setExampleOn(true);
+  }, [decimalText, exampleSymbol, years]);
+
   /* ---- Kapaktaki üç soru sekmeyi seçer ---- */
   useEffect(() => {
     const pick = (value: string | null | undefined) => {
@@ -295,12 +326,16 @@ export function TaxCalculator({
        YAZILMIYOR — sığ adres güncellemesi uçuştaki gezinmeyi öldürür
        (CLAUDE.md "İstemci ile sunucu sınırı"). */
     const onClick = (event: MouseEvent) => {
-      const link = (event.target as Element | null)?.closest?.("a[data-tax-path]");
+      const target = event.target as Element | null;
+      const link = target?.closest?.("a[data-tax-path]");
       pick(link?.getAttribute("data-tax-path"));
+      /* Anlatımdaki "Örnekle Dene" düz bir `#satis` çapası; kaydırma
+         tarayıcının, doldurma burada. */
+      if (target?.closest?.("a[data-tax-example]")) fillExample();
     };
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
-  }, []);
+  }, [fillExample]);
 
   const rateDateOf = useCallback(
     (date: string) => (rateDay === "same" ? date : addDays(date, -1)),
@@ -538,8 +573,10 @@ export function TaxCalculator({
     trades.filter((row) => row.side === "buy").length <= 1 && trades.filter((row) => row.side === "sell").length <= 1;
   const simple = !advanced && canSimple;
 
-  const updateTrade = (id: string, patch: Partial<TradeRow>) =>
+  const updateTrade = (id: string, patch: Partial<TradeRow>) => {
+    setExampleOn(false);
     setTrades((prev) => prev.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+  };
   const removeTrade = (id: string) => setTrades((prev) => prev.filter((row) => row.id !== id));
   const addTrade = (side: TradeSide) => setTrades((prev) => [...prev, emptyTrade(nextId("t"), side)]);
 
@@ -555,6 +592,7 @@ export function TaxCalculator({
 
   /** Tek alış ve satış görünümü: satır yoksa yaratılır, sembol ortak. */
   const editSimple = (side: TradeSide, patch: Partial<TradeRow>) => {
+    setExampleOn(false);
     setTrades((prev) => {
       let next = prev;
       if (!next.some((row) => row.side === side)) next = [...next, emptyTrade(nextId("t"), side)];
@@ -932,6 +970,12 @@ export function TaxCalculator({
                 {labels.yearMoved.replaceAll("{year}", String(yearNote))}
               </p>
             )}
+            {exampleOn && (
+              <p role="status" className={styles.exampleNote}>
+                <Sparkle size={16} weight="duotone" aria-hidden />
+                {labels.exampleFilled}
+              </p>
+            )}
 
             {simple ? (
               <ol className={styles.steps}>
@@ -971,7 +1015,7 @@ export function TaxCalculator({
                         locale={locale}
                       />
                     </Field>
-                    <Field label={labels.priceUsd} hint={readAs(buyRow?.price ?? "")} error={numberError(buyRow?.price ?? "", "nonNegative")}>
+                    <Field unit="$" label={labels.priceUsd} hint={readAs(buyRow?.price ?? "")} error={numberError(buyRow?.price ?? "", "nonNegative")}>
                       <input
                         aria-invalid={!!numberError(buyRow?.price ?? "", "nonNegative") || undefined}
                         inputMode="decimal"
@@ -1000,7 +1044,7 @@ export function TaxCalculator({
                         locale={locale}
                       />
                     </Field>
-                    <Field label={labels.priceUsd} hint={readAs(sellRow?.price ?? "")} error={numberError(sellRow?.price ?? "", "nonNegative")}>
+                    <Field unit="$" label={labels.priceUsd} hint={readAs(sellRow?.price ?? "")} error={numberError(sellRow?.price ?? "", "nonNegative")}>
                       <input
                         aria-invalid={!!numberError(sellRow?.price ?? "", "nonNegative") || undefined}
                         inputMode="decimal"
@@ -1028,7 +1072,7 @@ export function TaxCalculator({
                       {labels.commissionToggle}
                     </summary>
                     <div className={cn(styles.fields, "mt-1")}>
-                      <Field label={labels.buyCommission} hint={readAs(buyRow?.commission ?? "")} error={numberError(buyRow?.commission ?? "", "nonNegative")}>
+                      <Field unit="$" label={labels.buyCommission} hint={readAs(buyRow?.commission ?? "")} error={numberError(buyRow?.commission ?? "", "nonNegative")}>
                         <input
                           aria-invalid={!!numberError(buyRow?.commission ?? "", "nonNegative") || undefined}
                           inputMode="decimal"
@@ -1038,7 +1082,7 @@ export function TaxCalculator({
                           className={styles.input}
                         />
                       </Field>
-                      <Field label={labels.sellCommission} hint={readAs(sellRow?.commission ?? "")} error={numberError(sellRow?.commission ?? "", "nonNegative")}>
+                      <Field unit="$" label={labels.sellCommission} hint={readAs(sellRow?.commission ?? "")} error={numberError(sellRow?.commission ?? "", "nonNegative")}>
                         <input
                           aria-invalid={!!numberError(sellRow?.commission ?? "", "nonNegative") || undefined}
                           inputMode="decimal"
@@ -1123,7 +1167,7 @@ export function TaxCalculator({
                             className={styles.input}
                           />
                         </Field>
-                        <Field label={labels.priceUsd} hint={readAs(row.price)} error={numberError(row.price, "nonNegative")}>
+                        <Field unit="$" label={labels.priceUsd} hint={readAs(row.price)} error={numberError(row.price, "nonNegative")}>
                           <input
                             aria-invalid={!!numberError(row.price, "nonNegative") || undefined}
                             inputMode="decimal"
@@ -1133,7 +1177,7 @@ export function TaxCalculator({
                             className={styles.input}
                           />
                         </Field>
-                        <Field label={labels.commissionUsd} hint={readAs(row.commission)} error={numberError(row.commission, "nonNegative")}>
+                        <Field unit="$" label={labels.commissionUsd} hint={readAs(row.commission)} error={numberError(row.commission, "nonNegative")}>
                           <input
                             aria-invalid={!!numberError(row.commission, "nonNegative") || undefined}
                             inputMode="decimal"
@@ -1201,6 +1245,16 @@ export function TaxCalculator({
                     />
                   </div>
 
+                  {/* ŞELALE SAYININ HEMEN ALTINDA (18 Ekim). Kartın dibindeydi,
+                      dayanağın da altında; okuyucu büyük sayının nereden
+                      geldiğini görmek için matrah, vergi ve tarifeyi geçmek
+                      zorundaydı. Sıra artık okuma sırası: kazanç → nasıl
+                      oluştu → matrah ve dilim → vergi → tarifedeki yer →
+                      dayanak. */}
+                  <div className={styles.flowBlock}>
+                    <Flow title={labels.flowTitle} steps={flowSteps} />
+                  </div>
+
                   <div className={styles.figures} data-cols={taxable > 0 ? "2" : undefined}>
                     <div>
                       <p className={styles.figureLabel}>{labels.taxBase}</p>
@@ -1245,6 +1299,14 @@ export function TaxCalculator({
 
                   {taxable > 0 && (
                     <BracketTable
+                      scale={{
+                        title: labels.scaleTitle,
+                        ariaLabel: labels.scaleLabel
+                          .replace("{base}", lira(taxable))
+                          .replace("{rate}", String(bracketRate)),
+                        next: labels.nextBracket,
+                        top: labels.topBracket,
+                      }}
                       title={labels.bracketTableTitle.replace("{year}", String(year))}
                       hint={labels.bracketTableHint}
                       brackets={rules.brackets}
@@ -1262,16 +1324,22 @@ export function TaxCalculator({
                   )}
 
                   <Basis title={labels.basisTitle} items={saleBasis} />
-
-                  <Flow title={labels.flowTitle} steps={flowSteps} />
                 </div>
               ) : (
-                <ResultPreview
-                  rows={[
-                    { name: labels.netGain, size: "big" },
-                    { name: labels.taxBase, size: "mid" },
-                    { name: labels.estTax, size: "range" },
+                <SaleEmpty
+                  labels={labels}
+                  needs={[
+                    { text: labels.needBuy, done: simple ? buyDone : parsedTrades.some((t) => t.side === "buy") },
+                    { text: labels.needSell, done: simple ? sellDone : parsedTrades.some((t) => t.side === "sell") },
+                    {
+                      text: labels.needRate,
+                      done: simple
+                        ? [buyRow?.date, sellRow?.date].every((date) => !!date && dateUsable(date) && !!rates[rateDateOf(date)])
+                        : neededDates.length > 0 && neededDates.every((date) => !!rates[date]),
+                      busy: neededDates.some((date) => rates[date] === undefined) && neededDates.length > 0,
+                    },
                   ]}
+                  onExample={fillExample}
                 />
               )}
 
@@ -1353,7 +1421,7 @@ export function TaxCalculator({
                           className={cn(styles.input, styles.upper)}
                         />
                       </Field>
-                      <Field label={labels.grossUsd} hint={readAs(row.gross)} error={numberError(row.gross, "nonNegative")}>
+                      <Field unit="$" label={labels.grossUsd} hint={readAs(row.gross)} error={numberError(row.gross, "nonNegative")}>
                         <input
                           aria-invalid={!!numberError(row.gross, "nonNegative") || undefined}
                           inputMode="decimal"
@@ -1619,6 +1687,82 @@ function EmptyLead({ text }: { text: string }) {
   );
 }
 
+/** Boş sonuçtaki şelale taslağının biçimi: maliyet, endeks payı, satış, kazanç. */
+const SKETCH: { from: number; span: number; tone: FlowStep["tone"] }[] = [
+  { from: 0, span: 0.52, tone: "cost" },
+  { from: 0.52, span: 0.18, tone: "index" },
+  { from: 0, span: 0.92, tone: "proceeds" },
+  { from: 0.7, span: 0.22, tone: "up" },
+];
+
+/**
+ * BOŞ SATIŞ SONUCU (18 Ekim). Eski hâl üç gri bloktu (Net Kazanç, Matrah,
+ * Tahmini Vergi): okuyucu neyin eksik olduğunu ve sonucun neye benzeyeceğini
+ * göremiyordu. Şimdi üç parça:
+ *   1. SONUÇ İÇİN GEREKENLER — alış, satış ve iki günün kuru; her biri
+ *      girdi tamamlandıkça işaretleniyor (kur bekleniyorsa nabız atar).
+ *   2. Şelalenin TASLAĞI — dolu sonuçtaki "Kazanç Nasıl Oluştu"nun aynı
+ *      dört satırı, aynı renklerde ama soluk ve SAYISIZ. Biçim sabit bir
+ *      çizim (`SKETCH`), okuyucuya kapalı: sayı uydurulmuyor, yalnızca
+ *      sonucun neye benzeyeceği gösteriliyor.
+ *   3. "Örnekle Dene" — anlatımdaki örnek işlemi forma yazar.
+ */
+function SaleEmpty({
+  labels,
+  needs,
+  onExample,
+}: {
+  labels: TaxLabels;
+  needs: { text: string; done: boolean; busy?: boolean }[];
+  onExample: () => void;
+}) {
+  return (
+    <div className={styles.emptySale}>
+      <section aria-labelledby="vergi-gerekenler">
+        <h4 id="vergi-gerekenler" className={styles.basisTitle}>
+          {labels.needTitle}
+        </h4>
+        <ul className={styles.needs}>
+          {needs.map((need) => (
+            <li key={need.text} data-done={need.done || undefined} data-busy={(!need.done && need.busy) || undefined}>
+              <span className={styles.needMark} aria-hidden>
+                {need.done && <Check size={12} weight="bold" />}
+              </span>
+              {need.text}
+              {need.done && <span className="sr-only"> · {labels.needDone}</span>}
+            </li>
+          ))}
+        </ul>
+      </section>
+      <div className={styles.sketch} aria-hidden>
+        <p className={styles.flowTitle}>{labels.flowTitle}</p>
+        <ol className={styles.flow}>
+          {[labels.flowCostTl, labels.flowIndexed, labels.flowProceeds, labels.flowGain].map((name, index) => (
+            <li key={name} className={styles.flowRow}>
+              <span className={styles.flowName}>{name}</span>
+              <span className={styles.flowValue} />
+              <span className={styles.track}>
+                <span
+                  className={styles.bar}
+                  data-tone={SKETCH[index].tone}
+                  style={{ "--from": SKETCH[index].from, "--span": SKETCH[index].span } as React.CSSProperties}
+                />
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <div className={styles.exampleFoot}>
+        <button type="button" onClick={onExample} className={buttonClass({ variant: "ghost", size: "sm" })}>
+          <Sparkle size={14} weight="duotone" aria-hidden />
+          {labels.how.exampleTry}
+        </button>
+        <span className={styles.help}>{labels.how.exampleTryHint}</span>
+      </div>
+    </div>
+  );
+}
+
 /** Segmentin kayan parçası: marka eğrisi, portföy penceresiyle aynı süre. */
 const THUMB_TRANSITION = { duration: 0.3, ease: EASE_BRAND_POINTS } as const;
 
@@ -1688,18 +1832,31 @@ function Field({
   label,
   error,
   hint,
+  unit,
   children,
 }: {
   label: string;
   error?: string;
   /** Belirsiz sayı girişinin nasıl okunduğu (lib/decimal-input.ts). */
   hint?: string | null;
+  /** Alanın içinde, solda duran birim ("$"). Etiket birimi zaten söylüyor;
+   *  bu, yazarken gözün alanın içinde de görmesi için (18 Ekim). */
+  unit?: string;
   children: React.ReactNode;
 }) {
   return (
     <label className={styles.field}>
       <span className={styles.label}>{label}</span>
-      {children}
+      {unit ? (
+        <span className={styles.affix}>
+          <span className={styles.affixUnit} aria-hidden>
+            {unit}
+          </span>
+          {children}
+        </span>
+      ) : (
+        children
+      )}
       {error ? (
         <span className={styles.fieldError}>
           <WarningCircle size={14} weight="fill" aria-hidden />

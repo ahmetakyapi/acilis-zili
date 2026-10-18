@@ -1,6 +1,11 @@
 .day { min-width:0; scroll-margin-top:calc(var(--app-bar-h) + 20px); }
-.dateHeader { margin-bottom:18px; }
-.dateHeader > div { border-top:1px solid var(--line-strong); padding-block:17px; }
+/* GÜN BAŞLIĞI SIKI (18 Ekim, sahibinin isteği: "tarih başlığının altındaki
+   boşluk fazla"). Başlık 17'şer piksel iç boşluk ve 18 piksellik alt
+   payla tarihin dibinden ilk karta 38 piksel bırakıyordu; kartlar
+   başlığa değil bir sonraki güne ait gibi duruyordu. Üst 12, alt 8, pay 8:
+   1280 ve 390'da 19 piksel, başlık bloğu 81 → 67 (390'da 74 → 60). */
+.dateHeader { margin-bottom:8px; }
+.dateHeader > div { border-top:1px solid var(--line-strong); padding-block:12px 8px; }
 .dateHeader h2 { font-size:25px; font-weight:600; letter-spacing:-.04em; }
 /* DERİNLİK TONLA (24 Eylül). Kartlar köşeden açılan bir mavi ışıma, iki
    piksellik bir gölge ve imleç altında 4 piksellik bir kalkış taşıyordu;
