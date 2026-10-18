@@ -138,7 +138,7 @@ function timing(hour: string | null): DigestAheadItem["timing"] {
 }
 
 /** Sembollerin geride kalan haftası — endeks şeridi ve bilanço açıklayan hisseler aynı yoldan. */
-async function weeklyMoves(symbols: readonly string[], pastMonday: string, pastFriday: string, now: Date): Promise<DigestIndex[]> {
+export async function weeklyMoves(symbols: readonly string[], pastMonday: string, pastFriday: string, now: Date): Promise<DigestIndex[]> {
   if (symbols.length === 0) return [];
   const [status, holidays] = await Promise.all([getStatus(), getHolidays()]);
   const range = rangeCovering(pastMonday, todayEt(now));

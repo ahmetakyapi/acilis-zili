@@ -144,6 +144,22 @@ test("haftalık posta: bölümler, kaçış, kişisel satır", () => {
   assert.match(mail.text, /Tesla \(TSLA\)/);
 });
 
+test("haftalık posta: takip listesinin haftası ve notu", () => {
+  const week = { movers: [{ symbol: "NVDA", changePct: 6.42 }, { symbol: "AAPL", changePct: -2.1 }], note: "NVDA haftayı +%6,4 ile kapattı." };
+  const mail = weeklyEmailMessage(recipient, sampleDigest(), [{ symbol: "TSLA", date: "2026-10-21", timing: "amc" }], tr.emailNotify, week);
+  for (const part of ["Geride Kalan Hafta", "NVDA", "+%6,4", "−%2,1", "NVDA haftayı +%6,4 ile kapattı.", "Claude ile yazıldı", "Yeni Haftada Bilanço"]) {
+    assert.ok(plain(mail.html).includes(part), part);
+  }
+  /* Ortak ölçek: en büyük hareket tam şerit, AAPL oranında (33). */
+  assert.match(mail.html, /width:100%;height:5px/);
+  assert.match(mail.html, /width:33%;height:5px/);
+  assert.match(mail.text, /- NVDA: \+%6,4/);
+  /* Takvimde şirketi olmayan okur da hareket kutusunu alır. */
+  const only = weeklyEmailMessage(recipient, sampleDigest(), [], tr.emailNotify, { ...week, note: null });
+  assert.ok(plain(only.html).includes("Takip Listende Bu Hafta"));
+  assert.ok(!plain(only.html).includes("Yeni Haftada Bilanço"));
+});
+
 test("haftalık posta: her gönderimde ayrı iz, Gmail katlamasın", () => {
   const a = weeklyEmailMessage(recipient, sampleDigest(), [], tr.emailNotify);
   const b = weeklyEmailMessage(recipient, sampleDigest(), [], tr.emailNotify);

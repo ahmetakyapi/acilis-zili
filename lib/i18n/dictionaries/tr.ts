@@ -2571,6 +2571,14 @@ const tr = {
     briefingDisclosure: "Başlıklar ve özetler, listedeki haberlerden Claude ile yazıldı. Haberlerde olmayan bilgi eklemez; ayrıntı ve doğrulama için habere git. Yatırım tavsiyesi değildir.",
     explainerDisclosure: "Bu açıklama yalnız yukarıdaki haber metninden Claude ile yazıldı; habere bilgi eklemez. Ayrıntı için kaynağı oku. Yatırım tavsiyesi değildir.",
   },
+  portfolioNote: {
+    title: "Portföyünün Kısa Okuması",
+    loading: "Claude pozisyonlarını son seansın kapanışıyla okuyor…",
+    unavailable: "Not şu an hazırlanamadı; birazdan yeniden dene.",
+    session: "{date} Kapanışıyla",
+    partial: "{covered} pozisyonun {total} tanesi okunabildi; kalanın son seans verisi yok.",
+    disclosure: "Bu okuma, pozisyonlarından ve son tamamlanmış seansın kapanışından Claude ile yazıldı; ekrandaki canlı kâr/zarar notta yer almaz. Yatırım tavsiyesi değildir.",
+  },
   stockInsight: {
     moveTitle: "Bu Hafta Neden Hareket Etti",
     earningsTitle: "Son Bilançonun Kısa Notu",

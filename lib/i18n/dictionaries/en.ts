@@ -2094,6 +2094,14 @@ const en: typeof tr = {
     briefingDisclosure: "Headings and summaries were written with Claude from the stories listed. They add nothing the stories don't say; open a story for details and to verify. Not investment advice.",
     explainerDisclosure: "This explanation was written with Claude from the story text above only; it adds no information. Read the source for details. Not investment advice.",
   },
+  portfolioNote: {
+    title: "A Short Reading of Your Portfolio",
+    loading: "Claude is reading your positions at the last session's close…",
+    unavailable: "The note couldn't be prepared right now; try again shortly.",
+    session: "At the {date} Close",
+    partial: "{covered} of {total} positions could be read; the rest have no last-session data.",
+    disclosure: "This reading was written with Claude from your positions and the last completed session's close; the live profit/loss on screen is not part of it. Not investment advice.",
+  },
   stockInsight: {
     moveTitle: "Why It Moved This Week",
     earningsTitle: "Latest Earnings, in Brief",

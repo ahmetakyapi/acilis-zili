@@ -491,8 +491,34 @@ function eventsBlock(data: DigestData, W: Copy["weeklyMail"]): string {
 
 export type DigestPersonal = { symbol: string; date: string; timing: "bmo" | "amc" | "other" }[];
 
-function personalBlock(personal: DigestPersonal, locale: Locale, W: Copy["weeklyMail"]): string {
-  if (personal.length === 0) return "";
+/** Takip listesinin geride kalan haftası (18 Ekim) — ince yön şeridi, ortak ölçek.
+    Boyut ölçümü (örnek özetle): altı hareket + not + altı bilanço satırı
+    postayı 30,8'den 43,0 KB'a çıkarıyor; Gmail'in 102 KB kırpma sınırından uzak. */
+function watchMoversBlock(week: WatchWeekLike | undefined, locale: Locale, W: Copy["weeklyMail"]): string {
+  if (!week || week.movers.length === 0) return "";
+  const max = Math.max(...week.movers.map((m) => Math.abs(m.changePct)), 0.0001);
+  const rows = week.movers
+    .map((m, i) => {
+      const tone = TONE[toneOf(m.changePct)];
+      const pct = Math.max(3, Math.round((Math.abs(m.changePct) / max) * 100));
+      return `<tr>
+<td valign="middle" width="64" class="az-rule" style="padding:7px 10px 7px 0;${i ? `border-top:1px solid ${C.line};` : ""}"><a href="${escapeHtml(pathFor(`/hisse/${m.symbol}`, locale))}" target="_blank" style="text-decoration:none"><strong class="az-ink" style="font-family:${MONO};font-size:13px;line-height:18px;color:${C.ink}">${escapeHtml(m.symbol)}</strong></a></td>
+<td valign="middle" class="az-rule" style="padding:7px 0;${i ? `border-top:1px solid ${C.line};` : ""}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="az-lane" bgcolor="${LANE}" style="background:${LANE};border-radius:3px;height:5px;font-size:0;line-height:0"><div class="${tone.fill}" style="width:${pct}%;height:5px;border-radius:3px;background:${tone.ink};font-size:0;line-height:0">&nbsp;</div></td></tr></table></td>
+<td valign="middle" align="right" width="72" class="${tone.cls} az-rule" style="padding:7px 0 7px 10px;${i ? `border-top:1px solid ${C.line};` : ""}font-family:${FONT};font-size:13px;line-height:18px;font-weight:800;color:${tone.ink};white-space:nowrap">${escapeHtml(emailPercent(m.changePct, locale, 1))}</td>
+</tr>`;
+    })
+    .join("");
+  return `<p class="az-muted" style="margin:0 0 4px;font-family:${FONT};font-size:12px;line-height:16px;font-weight:700;color:${C.muted}">${escapeHtml(W.watchPastTitle)}</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>${
+    week.note ? `<p class="az-ink" style="margin:12px 0 0;font-family:${FONT};font-size:14px;line-height:22px;color:${C.ink}">${escapeHtml(week.note)}</p><p class="az-muted" style="margin:4px 0 0;font-family:${FONT};font-size:11px;line-height:15px;color:${C.muted}">${escapeHtml(W.watchNoteLabel)}</p>` : ""
+  }`;
+}
+
+type WatchWeekLike = { movers: { symbol: string; changePct: number }[]; note: string | null };
+
+function personalBlock(personal: DigestPersonal, locale: Locale, W: Copy["weeklyMail"], week?: WatchWeekLike): string {
+  const moversHtml = watchMoversBlock(week, locale, W);
+  if (personal.length === 0 && !moversHtml) return "";
   const rows = personal
     .slice(0, 8)
     .map(
@@ -504,8 +530,8 @@ function personalBlock(personal: DigestPersonal, locale: Locale, W: Copy["weekly
     .join("");
   const more = personal.length > 8 ? `<p class="az-muted" style="margin:8px 0 0;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted}">${escapeHtml(W.personalMore.replace("{n}", String(personal.length - 8)))}</p>` : "";
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 0"><tr><td class="az-note az-rise" style="${delay(100)}background:${C.sunken};border:1px solid ${C.line};border-left:3px solid ${C.primary};border-radius:14px;padding:16px 18px 12px">
-<p class="az-ink" style="margin:0 0 6px;font-family:${FONT};font-size:15px;line-height:20px;font-weight:800;color:${C.ink}">${escapeHtml(W.personalTitle)}</p>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>${more}
+<p class="az-ink" style="margin:0 0 8px;font-family:${FONT};font-size:15px;line-height:20px;font-weight:800;color:${C.ink}">${escapeHtml(W.personalTitle)}</p>
+${moversHtml}${personal.length ? `${moversHtml ? `<p class="az-muted" style="margin:14px 0 4px;font-family:${FONT};font-size:12px;line-height:16px;font-weight:700;color:${C.muted}">${escapeHtml(W.watchAheadTitle)}</p>` : ""}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>${more}` : ""}
 </td></tr></table>`;
 }
 
@@ -517,7 +543,7 @@ function commentaryBlock(text: string | undefined, W: Copy["weeklyMail"], last: 
   }`;
 }
 
-export function weeklyEmailMessage(recipient: Recipient, data: DigestData, personal: DigestPersonal, copy: Copy): Email {
+export function weeklyEmailMessage(recipient: Recipient, data: DigestData, personal: DigestPersonal, copy: Copy, week?: WatchWeekLike): Email {
   const W = copy.weeklyMail;
   const { locale } = recipient;
   const pastRange = weekRangeLabel(data.pastMonday, data.pastFriday, locale);
@@ -546,7 +572,7 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
       indicesBlock(data, W),
       chapter("2", W.aheadSection, thisRange),
       commentaryBlock(data.commentary?.ahead, W, true),
-      personalBlock(personal, locale, W),
+      personalBlock(personal, locale, W, week),
       aheadBlock(data, W),
       eventsBlock(data, W),
       `<div style="height:30px;line-height:30px;font-size:0">&nbsp;</div>`,
@@ -586,7 +612,10 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
   if (links.length) text.push("", W.newsTitle, ...links.map((l) => `- ${l.title} ${pathFor(l.path, locale)}`));
   text.push("", `== ${W.aheadSection} · ${thisRange} ==`);
   if (data.commentary) text.push("", data.commentary.ahead, `(${W.commentaryNote})`);
-  if (personal.length) text.push("", W.personalTitle, ...personal.map((p) => `- ${p.symbol}: ${dayLabel(p.date, locale)}`));
+  if (week?.movers.length || personal.length) text.push("", W.personalTitle);
+  if (week?.movers.length) text.push(...week.movers.map((m) => `- ${m.symbol}: ${emailPercent(m.changePct, locale, 1)}`));
+  if (week?.note) text.push("", week.note);
+  if (personal.length) text.push(...personal.map((p) => `- ${p.symbol}: ${dayLabel(p.date, locale)}`));
   text.push("", W.aheadEarnings);
   if (data.aheadFailed) text.push(W.aheadFailed);
   else

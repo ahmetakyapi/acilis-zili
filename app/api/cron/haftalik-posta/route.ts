@@ -9,6 +9,7 @@ import { addEtDays, todayEt } from "@/lib/market-hours";
 import { weeklyEmailMessage, type DigestPersonal } from "@/lib/notify-emails";
 import { weeklyCommentary } from "@/lib/weekly-commentary";
 import { digestWeek, gatherDigest, watchlistSymbols, type DigestData } from "@/lib/weekly-digest";
+import { moversFor, watchedMoves, watchlistNote, watchlistNoteCap, type WatchWeek } from "@/lib/watchlist-note";
 
 /**
  * PAZAR ÖZETİ (16 Ekim; 17 Ekim'de pazartesiden pazara, sahibinin isteği)
@@ -83,21 +84,46 @@ export async function GET(request: Request) {
   for (const digest of digests.values()) digest.commentary = await weeklyCommentary(digest);
 
   const watched = await watchlistSymbols(recipients.map((r) => r.userId));
+  /* Takip listesinin geride kalan haftası (18 Ekim): barlar dilden bağımsız,
+     tek sefer; Claude notu okurun dilinde, koşu başına tavanlı — gerekçe
+     lib/watchlist-note.ts. Notlar postadan ÖNCE, dörder dörder üretilir. */
+  const allWatched = new Set([...watched.values()].flatMap((set) => [...set]));
+  const anyDigest = [...digests.values()][0]!;
+  const moves = allWatched.size ? await watchedMoves(allWatched, anyDigest, now) : new Map<string, number>();
+  const personalOf = (recipient: (typeof recipients)[number], data: DigestData): DigestPersonal =>
+    [...(watched.get(recipient.userId) ?? [])]
+      .map((symbol) => ({ symbol, hit: data.aheadAll.get(symbol) }))
+      .filter((p): p is { symbol: string; hit: { date: string; timing: "bmo" | "amc" | "other" } } => p.hit !== undefined)
+      .map((p) => ({ symbol: p.symbol, date: p.hit.date, timing: p.hit.timing }))
+      .sort((a, b) => a.date.localeCompare(b.date) || a.symbol.localeCompare(b.symbol));
+  const weeks = new Map<string, WatchWeek>();
+  for (const recipient of recipients) {
+    const movers = moversFor(watched.get(recipient.userId) ?? [], moves);
+    if (movers.length) weeks.set(recipient.userId, { movers, note: null });
+  }
+  const noteQueue = [...weeks.keys()].slice(0, watchlistNoteCap());
+  const byId = new Map(recipients.map((r) => [r.userId, r]));
+  await Promise.all(
+    Array.from({ length: 4 }, async () => {
+      for (let id = noteQueue.shift(); id; id = noteQueue.shift()) {
+        const recipient = byId.get(id)!;
+        const data = digests.get(recipient.locale)!;
+        const week = weeks.get(id)!;
+        week.note = await watchlistNote(id, recipient.locale, data, week.movers, personalOf(recipient, data));
+      }
+    }),
+  );
+
   const counts = { sent: 0, duplicate: 0, failed: 0, skipped: 0 };
   let budgetHit = false;
 
   for (const recipient of recipients) {
     const data = digests.get(recipient.locale)!;
-    const mine = watched.get(recipient.userId) ?? new Set<string>();
-    const personal: DigestPersonal = [...mine]
-      .map((symbol) => ({ symbol, hit: data.aheadAll.get(symbol) }))
-      .filter((p): p is { symbol: string; hit: { date: string; timing: "bmo" | "amc" | "other" } } => p.hit !== undefined)
-      .map((p) => ({ symbol: p.symbol, date: p.hit.date, timing: p.hit.timing }))
-      .sort((a, b) => a.date.localeCompare(b.date) || a.symbol.localeCompare(b.symbol));
+    const personal = personalOf(recipient, data);
     const copy = getDictionary(recipient.locale).emailNotify;
     const dedupeKey = testTo ? `weekly-test:${data.thisMonday}:${recipient.userId}:${now.getTime()}` : `weekly:${data.thisMonday}:${recipient.userId}`;
     const result = await sendNotificationEmail(recipient, "weekly", dedupeKey, (r) => {
-      const mail = weeklyEmailMessage(r, data, personal, copy);
+      const mail = weeklyEmailMessage(r, data, personal, copy, weeks.get(recipient.userId));
       return testTo ? { ...mail, subject: `[Deneme] ${mail.subject}` } : mail;
     });
     if (result === "sent") counts.sent += 1;

@@ -11,6 +11,7 @@ import {
   ImportButton,
   PortfolioWorkbench,
 } from "@/components/portfolio/PortfolioWorkbench";
+import { PortfolioNote } from "@/components/portfolio/PortfolioNote";
 import { PortfolioTechnical, type TechnicalHolding } from "@/components/portfolio/PortfolioTechnical";
 import { PositionsTable, type PositionRow } from "@/components/portfolio/PositionsTable";
 import { RealizedPanel } from "@/components/portfolio/RealizedPanel";
@@ -360,6 +361,11 @@ async function PortfolioBody({
           <p>{L.notAdvice}</p>
         </div>
       </Panel>
+
+      {/* Claude'un portföy okuması (18 Ekim) — metin, ölçülerin altında
+          (CLAUDE.md "ekran düzeni" 5). Son seansın kapanışından; canlı kâr/zarar
+          notta yok (lib/portfolio-note.ts). */}
+      <PortfolioNote locale={locale} labels={t.portfolioNote} />
 
       <RealizedPanel data={realized} names={realizedNames} locale={locale} t={t} />
 

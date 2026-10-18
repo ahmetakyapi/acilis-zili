@@ -155,13 +155,13 @@ const pct2 = (value: number) => ({ tr: formatPercent(value, "tr", 2), en: format
 const usd2 = (value: number) => ({ tr: formatPrice(value, "tr", { currency: true }), en: formatPrice(value, "en", { currency: true }) });
 
 /** Son TAMAMLANMIŞ seansın ET günü: seans sürerken dün, değilse ekranın seans günü. */
-async function expectedLastSession(): Promise<string> {
+export async function expectedLastSession(): Promise<string> {
   const [status, holidays] = await Promise.all([getStatus(), getHolidays()]);
   const running = status.tradingToday && (status.session === "pre-market" || status.session === "regular");
   return running ? prevTradingDay(status.etDate, holidays) : status.sessionDate;
 }
 
-async function completedDailyBars(symbol: string): Promise<Bar[] | null> {
+export async function completedDailyBars(symbol: string): Promise<Bar[] | null> {
   const status = await getStatus();
   const result = await getChartBars(symbol, "3M", status);
   if (!result.ok || result.stale) return null;
