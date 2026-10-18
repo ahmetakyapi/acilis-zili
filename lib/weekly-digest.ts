@@ -20,6 +20,7 @@ import type { Locale } from "@/lib/i18n/config";
 import { addEtDays, etDateTimeToUtc, isTradingDay, prevTradingDay, todayEt } from "@/lib/market-hours";
 import { getChartBars } from "@/lib/providers";
 import type { Bar } from "@/lib/providers/types";
+import { logoSrc } from "@/lib/logos";
 import { news, watchlistItems, watchlists } from "@/lib/schema";
 import { timePair } from "@/lib/session-clock";
 import { isSpotlight } from "@/lib/spotlight";
@@ -78,7 +79,7 @@ export type DigestReport = {
 
 export type DigestLink = { title: string; meta: string | null; path: string; external?: boolean };
 
-export type DigestAheadItem = { symbol: string; name: string | null; timing: "bmo" | "amc" | "other" };
+export type DigestAheadItem = { symbol: string; name: string | null; timing: "bmo" | "amc" | "other"; logoUrl?: string | null; marketCap?: number | null };
 
 export type DigestAheadDay = {
   date: string;
@@ -290,7 +291,7 @@ export async function gatherDigest(locale: Locale, now: Date = new Date()): Prom
     const items = [...day.bmo, ...day.amc, ...day.other]
       .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
       .slice(0, MAX_AHEAD_PER_DAY)
-      .map((row) => ({ symbol: row.symbol, name: row.name, timing: timing(row.hour) }));
+      .map((row) => ({ symbol: row.symbol, name: row.name, timing: timing(row.hour), logoUrl: logoSrc(row.symbol, row.logoUrl), marketCap: row.marketCap }));
     return {
       date: day.date,
       closed: day.closed ? (locale === "tr" ? day.closed.nameTr : day.closed.nameEn) : null,

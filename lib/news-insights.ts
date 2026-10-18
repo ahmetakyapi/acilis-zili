@@ -39,6 +39,7 @@ export type BriefingItem = { id: string; headline: string; headlineTr: string | 
 export type BriefingTheme = { title: { tr: string; en: string }; summary: { tr: string; en: string }; items: BriefingItem[] };
 export type NewsBriefing = {
   kind: "briefing";
+  scope?: "day" | "week";
   slot: string;
   from: string;
   to: string;
@@ -64,9 +65,9 @@ const RULES = `Rules:
    Günün Gündemi
    --------------------------------------------------------------------------- */
 
-const BRIEFING_SYSTEM = `You build "Günün Gündemi" (Today's Agenda) for Açılış Zili, a Turkish site for individual investors following US markets: the main threads in the last 24 hours of market news.
+const briefingSystem = (scope: BriefingScope) => `You build "${scope === "week" ? "Haftanın Gündemi\" (This Week's Agenda" : "Günün Gündemi\" (Today's Agenda"})" for Açılış Zili, a Turkish site for individual investors following US markets: the main threads in the last ${scope === "week" ? "7 days" : "24 hours"} of market news.
 
-Group the supplied headlines into 3 to 5 themes. A theme is a real common thread (one company's story across several items, a sector move, a macro topic such as the Fed or inflation, a deal). Prefer themes with more items and bigger companies; leave out stray items that fit no theme. Each theme:
+Group the supplied headlines into ${scope === "week" ? "4 to 6" : "3 to 5"} themes. A theme is a real common thread (one company's story across several items, a sector move, a macro topic such as the Fed or inflation, a deal). Prefer themes with more items and bigger companies; leave out stray items that fit no theme. Each theme:
 - titleTr / titleEn: at most 6 words, names the thread (company or topic first).
 - summaryTr / summaryEn: one or two sentences, at most 40 words, saying what the items together report. Do not claim a cause the items do not state.
 - items: 2 to 5 supplied items that belong to it, each as { index, headlineTr }; each index used at most once across all themes. headlineTr is the item's headline in natural Turkish: copy the supplied headlineTr when there is one, otherwise translate the headline faithfully (same facts and numbers, newspaper style, no clickbait added).
@@ -84,6 +85,9 @@ const BriefingSchema = z.object({
     }),
   ),
 });
+
+/** Gündemin kapsamı (18 Ekim): son 24 saat ya da son 7 gün — kart iki sekme. */
+export type BriefingScope = "day" | "week";
 
 /** Haber nöbetiyle aynı dönemler (deploy/cron-news.sh: 05:35, 11:35, 17:35 UTC). */
 const SLOT_HOURS_UTC = [5, 11, 17];
@@ -107,17 +111,17 @@ function weight(symbols: readonly string[] | null): number {
   return 1;
 }
 
-const MAX_BRIEFING_INPUT = 50;
+const MAX_BRIEFING_INPUT = { day: 50, week: 70 } as const;
 const MIN_BRIEFING_INPUT = 8;
 
-async function briefingInput(slot: Date) {
-  const from = new Date(slot.getTime() - 24 * 3600_000);
+async function briefingInput(slot: Date, scope: BriefingScope) {
+  const from = new Date(slot.getTime() - (scope === "week" ? 7 : 1) * 24 * 3600_000);
   const rows = await db
     .select({ id: news.id, headline: news.headline, headlineTr: news.headlineTr, summary: news.summary, source: news.source, symbols: news.symbols, publishedAt: news.publishedAt })
     .from(news)
     .where(and(gte(news.publishedAt, from), lt(news.publishedAt, slot)))
     .orderBy(desc(news.publishedAt))
-    .limit(400);
+    .limit(scope === "week" ? 1500 : 400);
   /* Aynı başlık birden çok sağlayıcıdan gelebiliyor; ilk geçen kalır. */
   const seen = new Set<string>();
   const picked = rows
@@ -129,7 +133,7 @@ async function briefingInput(slot: Date) {
     })
     .map((row) => ({ row, w: weight(row.symbols) }))
     .sort((a, b) => b.w - a.w || b.row.publishedAt.getTime() - a.row.publishedAt.getTime())
-    .slice(0, MAX_BRIEFING_INPUT)
+    .slice(0, MAX_BRIEFING_INPUT[scope])
     .map(({ row }) => row);
   return { from, picked };
 }
@@ -144,9 +148,15 @@ const FAILURE_TTL = 20 * 60_000;
 let lastBriefingFailure: { reason: string; detail?: string } | null = null;
 export const briefingFailure = () => lastBriefingFailure;
 
-export async function getNewsBriefing(now: Date = new Date()): Promise<NewsBriefing | null> {
-  const slot = briefingSlot(now);
-  const key = slot.toISOString();
+/* Haftalık gündem günde BİR kez yazılır: dönem günün ilk nöbeti (05:30 UTC). */
+function weekSlot(now: Date): Date {
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), SLOT_HOURS_UTC[0], 30));
+  return today <= now ? today : new Date(today.getTime() - 24 * 3600_000);
+}
+
+export async function getNewsBriefing(now: Date = new Date(), scope: BriefingScope = "day"): Promise<NewsBriefing | null> {
+  const slot = scope === "week" ? weekSlot(now) : briefingSlot(now);
+  const key = `${scope}:${slot.toISOString()}`;
   const failed = failures.get(key);
   if (failed && Date.now() - failed.at < FAILURE_TTL) {
     lastBriefingFailure = { reason: failed.reason };
@@ -155,18 +165,18 @@ export async function getNewsBriefing(now: Date = new Date()): Promise<NewsBrief
   try {
     return await unstable_cache(
       async (): Promise<NewsBriefing> => {
-        const { from, picked } = await briefingInput(slot);
+        const { from, picked } = await briefingInput(slot, scope);
         if (picked.length < MIN_BRIEFING_INPUT) throw new Error("thin");
         const payload = picked.map((row, index) => ({
           index,
           headline: row.headline,
           headlineTr: row.headlineTr,
-          summary: (row.summary ?? "").slice(0, 280),
+          summary: (row.summary ?? "").slice(0, scope === "week" ? 160 : 280),
           source: row.source,
           symbols: (row.symbols ?? []).slice(0, 3),
         }));
         const input = JSON.stringify({ window: `${from.toISOString()} – ${slot.toISOString()}`, items: payload });
-        const out = await callClaude(BRIEFING_SYSTEM, BriefingSchema, input);
+        const out = await callClaude(briefingSystem(scope), BriefingSchema, input);
         if (!out) throw new Error("no-output");
         const used = new Set<number>();
         const themes: BriefingTheme[] = out.themes
@@ -189,17 +199,17 @@ export async function getNewsBriefing(now: Date = new Date()): Promise<NewsBrief
             };
           })
           .filter((theme) => theme.items.length >= 2 && theme.title.tr && theme.summary.tr)
-          .slice(0, 5);
+          .slice(0, scope === "week" ? 6 : 5);
         if (themes.length < 2) throw new Error("thin");
         const written = themes.flatMap((t) => [t.title.tr, t.title.en, t.summary.tr, t.summary.en, ...t.items.map((item) => item.headlineTr ?? "")]).join("\n");
         if (!numbersGroundedAcrossLocales(written, input)) {
           lastBriefingFailure = { reason: "ungrounded", detail: ungroundedNumbers(written, input).join(" ") };
           throw new Error("ungrounded");
         }
-        return { kind: "briefing", slot: slot.toISOString(), from: from.toISOString(), to: slot.toISOString(), considered: picked.length, themes, generatedAt: new Date().toISOString() };
+        return { kind: "briefing", scope, slot: slot.toISOString(), from: from.toISOString(), to: slot.toISOString(), considered: picked.length, themes, generatedAt: new Date().toISOString() };
       },
-      ["news-briefing-v2", slot.toISOString()],
-      { revalidate: 7 * 3600, tags: ["news-insight"] },
+      ["news-briefing-v2", scope, slot.toISOString()],
+      { revalidate: (scope === "week" ? 25 : 7) * 3600, tags: ["news-insight"] },
     )();
   } catch (error) {
     const reason = error instanceof Error && ["thin", "ungrounded", "no-output"].includes(error.message) ? error.message : "error";

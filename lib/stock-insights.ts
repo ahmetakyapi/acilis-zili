@@ -4,7 +4,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { and, desc, eq, gte, isNotNull, lte } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { z } from "zod";
-import { numbersGrounded } from "@/lib/ai-grounding";
+import { missingNumbers } from "@/lib/ai-grounding";
 import { selectNews } from "@/lib/ai-analysis-core";
 import { claudeKey } from "@/lib/claude-key";
 import { getHolidays, getStatus, getSymbolNames, guncelBilanco } from "@/lib/data";
@@ -205,9 +205,36 @@ function resolvePoints(lang: z.infer<typeof Lang>, news: NewsInput[]): InsightTe
   };
 }
 
+/* Son düşürülen notun eksik sayıları — tanı için uca geçer (aşağıda). */
+let lastMissing: string[] = [];
 function grounded(texts: { tr: InsightText; en: InsightText }, input: string): boolean {
   const all = [texts.tr, texts.en].flatMap((t) => [t.summary, ...t.points.flatMap((p) => [p.title, p.detail])]).join(" ");
-  return numbersGrounded(all, input);
+  lastMissing = missingNumbers(all, input);
+  return lastMissing.length === 0;
+}
+
+/* BAŞARISIZLIK DA HATIRLANIR (18 Ekim, canlıda görüldü: NFLX önizlemesi
+   her açılışta yeniden Claude'a gidip düşüyordu — unstable_cache hatayı
+   saklamıyor). Not başına son başarısızlık süreçte 20 dakika tutulur;
+   nedeni ve eksik sayılar uca tanı olarak geçer, metin içermez. */
+const failures = new Map<string, { at: number; reason: string; detail?: string }>();
+const FAILURE_TTL = 20 * 60_000;
+export const insightFailure = (kind: string, symbol: string) => failures.get(`${kind}:${symbol}`) ?? null;
+
+async function remembered<T>(kind: string, symbol: string, run: () => Promise<T | null>): Promise<T | null> {
+  const key = `${kind}:${symbol}`;
+  const failed = failures.get(key);
+  if (failed && Date.now() - failed.at < FAILURE_TTL) return null;
+  try {
+    const out = await run();
+    if (out) failures.delete(key);
+    return out;
+  } catch (error) {
+    const reason = error instanceof Error && ["ungrounded", "no-output"].includes(error.message) ? error.message : "error";
+    failures.set(key, { at: Date.now(), reason, detail: reason === "ungrounded" ? lastMissing.join(" ") : undefined });
+    console.error(`[içgörü] ${key}: ${reason}${reason === "ungrounded" ? ` (${lastMissing.join(" ")})` : ""}`);
+    return null;
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -272,7 +299,11 @@ async function buildMove(symbol: string): Promise<{ key: string; input: string; 
 const stepsOf = (window: Bar[]) =>
   window.slice(1).map((bar, i) => ({ date: barDate(bar), changePct: ((bar.close - window[i]!.close) / window[i]!.close) * 100 }));
 
-export async function getMoveInsight(symbol: string): Promise<MoveInsight | null> {
+export function getMoveInsight(symbol: string): Promise<MoveInsight | null> {
+  return remembered("move", symbol, () => getMoveInsightOnce(symbol));
+}
+
+async function getMoveInsightOnce(symbol: string): Promise<MoveInsight | null> {
   try {
     const built = await buildMove(symbol);
     if (!built) return null;
@@ -293,7 +324,7 @@ export async function getMoveInsight(symbol: string): Promise<MoveInsight | null
     )();
     return { ...cached, ...built.meta };
   } catch (error) {
-    if (error instanceof Error && error.message === "ungrounded") console.error(`[içgörü] ${symbol}: girdide olmayan sayı, not düşürüldü`);
+    if (error instanceof Error && ["ungrounded", "no-output"].includes(error.message)) throw error;
     return null;
   }
 }
@@ -326,7 +357,11 @@ export async function latestReportedEarnings(symbol: string) {
   }
 }
 
-export async function getEarningsInsight(symbol: string): Promise<EarningsInsight | null> {
+export function getEarningsInsight(symbol: string): Promise<EarningsInsight | null> {
+  return remembered("earnings", symbol, () => getEarningsInsightOnce(symbol));
+}
+
+async function getEarningsInsightOnce(symbol: string): Promise<EarningsInsight | null> {
   try {
     const row = await latestReportedEarnings(symbol);
     if (!row) return null;
@@ -391,7 +426,7 @@ export async function getEarningsInsight(symbol: string): Promise<EarningsInsigh
       { revalidate: 36 * 3600, tags: ["stock-insight"] },
     )();
   } catch (error) {
-    if (error instanceof Error && error.message === "ungrounded") console.error(`[içgörü] ${symbol}: bilanço notunda girdide olmayan sayı`);
+    if (error instanceof Error && ["ungrounded", "no-output"].includes(error.message)) throw error;
     return null;
   }
 }
@@ -478,7 +513,11 @@ export async function upcomingEarnings(symbol: string) {
   }
 }
 
-export async function getPreviewInsight(symbol: string): Promise<PreviewInsight | null> {
+export function getPreviewInsight(symbol: string): Promise<PreviewInsight | null> {
+  return remembered("preview", symbol, () => getPreviewInsightOnce(symbol));
+}
+
+async function getPreviewInsightOnce(symbol: string): Promise<PreviewInsight | null> {
   try {
     const row = await upcomingEarnings(symbol);
     if (!row) return null;
@@ -533,7 +572,7 @@ export async function getPreviewInsight(symbol: string): Promise<PreviewInsight 
       { revalidate: 24 * 3600, tags: ["stock-insight"] },
     )();
   } catch (error) {
-    if (error instanceof Error && error.message === "ungrounded") console.error(`[içgörü] ${symbol}: önizlemede girdide olmayan sayı`);
+    if (error instanceof Error && ["ungrounded", "no-output"].includes(error.message)) throw error;
     return null;
   }
 }

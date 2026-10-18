@@ -7,7 +7,7 @@ import type { emailNotifyTr } from "@/lib/i18n/dictionaries/email-notify";
 import type { Locale } from "@/lib/i18n/config";
 import { displayZone, formatInZone } from "@/lib/session-clock";
 import { SITE_URL } from "@/lib/site";
-import { formatPercent, formatPrice } from "@/lib/utils";
+import { formatMoneyCompact, formatPercent, formatPrice } from "@/lib/utils";
 
 /**
  * Postadaki yüzde — işaretle yüzde bitişik: "+%8,3", "−%1,97". Sitenin
@@ -412,6 +412,23 @@ function dayLong(date: string, locale: Locale): string {
   return new Intl.DateTimeFormat(intlLocale(locale), { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(utcDay(date));
 }
 
+function tile(item: DigestData["ahead"][number]["items"][number], locale: Locale): string {
+  const href = escapeHtml(pathFor(`/hisse/${item.symbol}`, locale));
+  const src = item.logoUrl ? (item.logoUrl.startsWith("/") ? `${SITE_URL}${item.logoUrl}` : item.logoUrl) : null;
+  const mark = src
+    ? `<img src="${escapeHtml(src)}" width="32" height="32" alt="" style="display:block;width:32px;height:32px;border:0;border-radius:8px;background:#ffffff">`
+    : `<span class="az-ink" style="display:block;width:32px;height:32px;border-radius:8px;background:${C.line};font-family:${MONO};font-size:13px;line-height:32px;font-weight:800;text-align:center;color:${C.ink}">${escapeHtml(item.symbol.slice(0, 1))}</span>`;
+  const name = item.name ? (item.name.length > 20 ? `${item.name.slice(0, 19)}…` : item.name) : "";
+  const cap = item.marketCap ? formatMoneyCompact(item.marketCap, locale) : "";
+  /* Ad ve piyasa değeri ayrı satırda: 390'da tek satır "Philip Morris
+     Inter… · 1,79 T $" ortasından kırılıyordu (ölçüldü). */
+  const sub = [name, cap].filter(Boolean).map((part) => escapeHtml(part)).join("<br>");
+  return `<td width="50%" valign="top" style="padding:3px"><a href="${href}" target="_blank" style="display:block;text-decoration:none"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="az-sunken" style="background:${C.sunken};border:1px solid ${C.line};border-radius:12px"><tr>
+<td width="42" valign="middle" style="padding:8px 0 8px 9px">${mark}</td>
+<td valign="middle" style="padding:7px 9px"><span class="az-ink" style="font-family:${MONO};font-size:14px;line-height:18px;font-weight:800;color:${C.ink}">${escapeHtml(item.symbol)}</span>${sub ? `<br><span class="az-muted" style="font-family:${FONT};font-size:11px;line-height:15px;color:${C.muted}">${sub}</span>` : ""}</td>
+</tr></table></a></td>`;
+}
+
 function aheadBlock(data: DigestData, W: Copy["weeklyMail"]): string {
   const head = emailSection(W.aheadEarnings, data.aheadFailed ? undefined : W.aheadNote);
   if (data.aheadFailed) return `${head}${emailText.paragraph(W.aheadFailed)}`;
@@ -425,14 +442,18 @@ function aheadBlock(data: DigestData, W: Copy["weeklyMail"]): string {
           if (items.length === 0) return "";
           const clock = timing === "bmo" ? day.bmoClock : timing === "amc" ? day.amcClock : "";
           const label = `${timing === "bmo" ? W.bmo : timing === "amc" ? W.amc : W.other}${clock ? ` · ${clock}` : ""}`;
-          const lines = items
-            .map(
-              (item) => `<tr><td style="padding:4px 10px 4px 0"><a href="${escapeHtml(pathFor(`/hisse/${item.symbol}`, data.locale))}" target="_blank" class="az-ink" style="font-family:${FONT};font-size:16px;line-height:22px;font-weight:700;color:${C.ink};text-decoration:none">${escapeHtml(item.name ?? item.symbol)}</a></td>
-<td align="right" valign="middle" class="az-muted" style="padding:4px 0;font-family:${MONO};font-size:12px;line-height:22px;font-weight:800;color:${C.muted};white-space:nowrap">${escapeHtml(item.symbol)}</td></tr>`,
-            )
-            .join("");
-          return `<p class="az-brass" style="margin:12px 0 2px;font-family:${FONT};font-size:12px;line-height:16px;font-weight:700;color:${BRASS_INK}">${escapeHtml(label)}</p>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${lines}</table>`;
+          /* LOGOLU YATAY KAROLAR (18 Ekim, sahibinin isteği: sitedeki haftalık
+             bilanço tablosunun görseli postada da olsun). İki sütun; karo
+             logo + sembol + ad · piyasa değeri. Zemin açık ton: Gmail iOS
+             koyu temada zemini ve yazıyı birlikte çeviriyor (bölüm bandı
+             dersi). Logo yoksa sembolün baş harfi. */
+          const tiles = items.map((item) => tile(item, data.locale));
+          const rowsHtml: string[] = [];
+          for (let k = 0; k < tiles.length; k += 2) {
+            rowsHtml.push(`<tr>${tiles[k]}${tiles[k + 1] ?? `<td width="50%" style="padding:3px"></td>`}</tr>`);
+          }
+          return `<p class="az-brass" style="margin:12px 0 4px;font-family:${FONT};font-size:12px;line-height:16px;font-weight:700;color:${BRASS_INK}">${escapeHtml(label)}</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 -3px">${rowsHtml.join("")}</table>`;
         })
         .join("");
       return `<tr><td class="az-rule" style="padding:18px 0 14px;${i ? `border-top:1px solid ${C.line};` : ""}">

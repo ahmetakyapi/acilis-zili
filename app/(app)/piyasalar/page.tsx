@@ -12,7 +12,7 @@ import { SentimentPulse } from "@/components/markets/SentimentPulse";
 import boardStyles from "@/components/markets/MarketBoards.module.css";
 import { ScaleBar } from "@/components/markets/CompareScale";
 import { IndexCard } from "@/components/markets/IndexCard";
-import { HeatScale, HeatSkeleton, IndexTreemap } from "@/components/markets/IndexTreemap";
+import { HeatScale } from "@/components/markets/IndexTreemap";
 import { median, sameSessionMoves, themePhase, type MoveSet, type ThemePhase } from "@/lib/theme-stats";
 import { themeRow, type ThemeRow } from "@/lib/themes-data";
 import { GuideHint } from "@/components/article/GuideHint";
@@ -868,10 +868,8 @@ function IndexToolbar({ total, memberCount, heat, moves, locale, t, children }: 
             büyüklüğü. Üzerine gelince sitenin ortak şirket kartı açılıyor
             (28 Eylül). Kareler klavyeyle de gezilebiliyor: 30 durak kabul
             edilebilir.
-            AĞAÇ DÜZENİ (18 Ekim): karonun alanı piyasa değeri — gerekçe
-            components/markets/IndexTreemap.tsx. Telefondaki "ilk 20" kesiti
-            (1 Ekim) kalktı: karoya sığmayan küçükler haritanın hemen altında
-            çip olarak duruyor; otuzu da her genişlikte var. */}
+            18 Ekim: bir gün ağaç düzeninde kaldı, eşit karolara geri döndü
+            (sahibinin isteği; gerekçe aşağıdaki ızgarada). */}
         {heat.length > 0 && (
           <div className={styles.heat}>
             <div className={styles.heatHead}>
@@ -879,17 +877,36 @@ function IndexToolbar({ total, memberCount, heat, moves, locale, t, children }: 
               <p className={styles.heatHint}>{hint}</p>
               <HeatScale locale={locale} label={t.markets.heatScaleHint} steps={t.markets.heatScaleSteps} />
             </div>
-            <IndexTreemap
-              rows={heat}
-              moves={moves}
-              locale={locale}
-              labels={{
-                smallTitle: t.markets.heatSmallTitle,
-                unsized: t.markets.heatUnsized,
-                lastClose: t.market.lastClose,
-                cap: t.market.marketCap,
-              }}
-            />
+            {/* EŞİT KAROLAR, PİYASA DEĞERİ SIRASI (18 Ekim, sahibinin isteği:
+                "eski hâline dönsün; her şirketin logosu olsun, aynı boyutta
+                olsun, piyasa değerine göre sıralansın"). Ağaç düzeni bir gün
+                yayında kaldı. Ondan kalan tek kural: renk yalnız bu seansın
+                yüzdesine — öteki karolar nötr (`moves.included`). */}
+            <div className={styles.heatGrid} data-motion-stagger>
+              {heat.map((row, i) => {
+                const change = row.changePct;
+                const fresh = moves !== null && moves.included[i] && change !== null;
+                const magnitude = fresh ? Math.abs(change) : 0;
+                const level = magnitude === 0 ? 0 : magnitude < 0.5 ? 1 : magnitude < 1.5 ? 2 : magnitude < 3 ? 3 : 4;
+                const tone = !fresh ? "flat" : change > 0 ? "up" : change < 0 ? "down" : "flat";
+                return (
+                  <Link
+                    key={row.symbol}
+                    href={`/hisse/${row.symbol}`}
+                    prefetch={false}
+                    className={styles.heatCell}
+                    data-cc={row.symbol}
+                    aria-label={`${row.symbol}${row.name ? ` · ${row.name}` : ""}${change !== null ? ` · ${formatPercent(change, locale)}` : ""}`}
+                    data-heat-tone={tone}
+                    data-heat-level={level}
+                  >
+                    <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="md" className={styles.heatLogo} />
+                    <span className={styles.heatSymbol}>{row.symbol}</span>
+                    <span className={cn("numeral", styles.heatPct)}>{change !== null ? formatPercent(change, locale) : NO_VALUE}</span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -1516,8 +1533,15 @@ function DetailSkeleton({ rows, contribution }: { rows: number; contribution: bo
               <Skeleton className={cn(styles.heatHint, "h-3 w-full max-w-72")} />
               <Skeleton className={cn(styles.heatLegend, "h-10")} />
             </div>
-            {/* 18 Ekim: ızgara yerine haritanın kendi ağaç geometrisi. */}
-            <HeatSkeleton />
+            <div className={styles.heatGrid}>
+              {Array.from({ length: HEAT_MAX }, (_, i) => (
+                <div key={i} className={styles.heatCell} data-heat-level="0">
+                  <Skeleton className="size-[26px] rounded-lg" />
+                  <Skeleton className="h-3 w-7" />
+                  <Skeleton className="h-3 w-8" />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         <div className={cn(styles.breadthStamp, styles.stampSkeleton)}>

@@ -25,8 +25,8 @@ import styles from "./NewsInsight.module.css";
 type Labels = Dictionary["newsInsight"];
 type Insight = NewsBriefing | NewsExplainer;
 
-function useInsight(url: string) {
-  const ref = useRef<HTMLElement>(null);
+function useInsight<T extends HTMLElement = HTMLElement>(url: string) {
+  const ref = useRef<T>(null);
   const [state, setState] = useState<{ status: "idle" | "loading" | "done" | "failed"; insight?: Insight }>({ status: "idle" });
   useEffect(() => {
     const el = ref.current;
@@ -73,14 +73,44 @@ function Loading({ text, kind }: { text: string; kind: "briefing" | "explainer" 
 }
 
 export function NewsBriefingCard({ locale, labels }: { locale: Locale; labels: Labels }) {
-  const { ref, state } = useInsight("/api/ai/haber-notu?tur=gundem");
+  /* İKİ KAPSAM, SEKMELİ (18 Ekim, sahibinin isteği: günlük ve haftalık).
+     Alt alta iki gündem sayfayı bir ekran uzatırdı; sekme aynı yeri
+     kullanıyor. Haftalık gündem yalnız sekmeye basılınca istenir. */
+  const [scope, setScope] = useState<"day" | "week">("day");
+  return (
+    <Panel className={base.card}>
+      <PanelHeader
+        title={scope === "week" ? labels.weekTitle : labels.briefingTitle}
+        action={
+          <div className={styles.scopeTabs} role="tablist" aria-label={labels.scopeLabel}>
+            {(["day", "week"] as const).map((key) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={scope === key}
+                className={styles.scopeTab}
+                onClick={() => setScope(key)}
+              >
+                {key === "day" ? labels.tabDay : labels.tabWeek}
+              </button>
+            ))}
+          </div>
+        }
+      />
+      <BriefingBody key={scope} scope={scope} locale={locale} labels={labels} />
+    </Panel>
+  );
+}
+
+function BriefingBody({ scope, locale, labels }: { scope: "day" | "week"; locale: Locale; labels: Labels }) {
+  const { ref, state } = useInsight<HTMLDivElement>(`/api/ai/haber-notu?tur=gundem${scope === "week" ? "&kapsam=hafta" : ""}`);
   const briefing = state.insight?.kind === "briefing" ? state.insight : null;
   return (
-    <Panel ref={ref} className={base.card} aria-busy={state.status === "loading" || state.status === "idle"}>
-      <PanelHeader title={labels.briefingTitle} action={<Sparkle className={base.icon} size={18} weight="duotone" aria-hidden />} />
+    <div ref={ref} className={styles.briefingBody} aria-busy={state.status === "loading" || state.status === "idle"}>
       {briefing ? (
         <>
-          <p className={styles.window}>{labels.briefingWindow.replace("{n}", String(briefing.considered))}</p>
+          <p className={styles.window}>{(scope === "week" ? labels.weekWindow : labels.briefingWindow).replace("{n}", String(briefing.considered))}</p>
           <ol className={styles.themes}>
             {briefing.themes.map((theme, i) => {
               /* Konunun şirketleri — logo şeridi (18 Ekim). Yalnız sitede
@@ -132,9 +162,9 @@ export function NewsBriefingCard({ locale, labels }: { locale: Locale; labels: L
       ) : state.status === "failed" ? (
         <p className={base.failed}>{labels.unavailable}</p>
       ) : (
-        <Loading text={labels.briefingLoading} kind="briefing" />
+        <Loading text={scope === "week" ? labels.weekLoading : labels.briefingLoading} kind="briefing" />
       )}
-    </Panel>
+    </div>
   );
 }
 

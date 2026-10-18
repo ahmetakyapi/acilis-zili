@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { isBot } from "@/lib/analytics";
 import { isKnownSymbol } from "@/lib/data";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
-import { getEarningsInsight, getMoveInsight, getPreviewInsight, insightsConfigured } from "@/lib/stock-insights";
+import { getEarningsInsight, getMoveInsight, getPreviewInsight, insightFailure, insightsConfigured } from "@/lib/stock-insights";
 import { isValidSymbol } from "@/lib/utils";
 
 /**
@@ -32,5 +32,6 @@ export async function GET(request: Request) {
   if (!isValidSymbol(symbol) || (kind !== "hareket" && kind !== "bilanco" && kind !== "onizleme")) return respond({ ok: false, reason: "bad-request" }, 400);
   if (!(await isKnownSymbol(symbol))) return respond({ ok: false, reason: "unknown" }, 404);
   const insight = kind === "hareket" ? await getMoveInsight(symbol) : kind === "bilanco" ? await getEarningsInsight(symbol) : await getPreviewInsight(symbol);
-  return respond(insight ? { ok: true, insight } : { ok: false, reason: "unavailable" });
+  const failureKind = kind === "hareket" ? "move" : kind === "bilanco" ? "earnings" : "preview";
+  return respond(insight ? { ok: true, insight } : { ok: false, reason: "unavailable", cause: insightFailure(failureKind, symbol) });
 }

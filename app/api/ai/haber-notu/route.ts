@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   if (!rateLimit(clientKey(request, "haber-notu"), 20, 60_000).allowed) return respond({ ok: false, reason: "rate" }, 429);
   const params = new URL(request.url).searchParams;
   if (params.get("tur") === "gundem") {
-    const briefing = await getNewsBriefing();
+    const briefing = await getNewsBriefing(new Date(), params.get("kapsam") === "hafta" ? "week" : "day");
     if (briefing) {
       /* Kartın logo şeridi (18 Ekim): sembol başına logo, gündem önbelleğinin
          dışında — logo tablosu değişince eski gündem de yeni logoyu alır. */

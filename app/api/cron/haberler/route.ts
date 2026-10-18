@@ -52,6 +52,7 @@ export async function GET(request: Request) {
   }
   try {
     report.briefing = insightsConfigured() ? ((await getNewsBriefing())?.themes.length ?? "yazılamadı") : "atlandı: anahtar yok";
+    if (insightsConfigured()) report.weekBriefing = (await getNewsBriefing(new Date(), "week"))?.themes.length ?? "yazılamadı";
   } catch (error) {
     report.briefing = `hata: ${error instanceof Error ? error.message : "?"}`;
   }

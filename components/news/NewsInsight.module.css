@@ -2,6 +2,15 @@
    notunun modülünden (StockInsightCard.module.css); burada yalnız gündemin
    başlık listesi. Ton yüzey, gölge yok; numara pirinç (sitenin dizin dili). */
 
+.briefingBody { display: flex; flex-direction: column; gap: 14px; }
+/* Bugün / Bu Hafta sekmesi — sitenin bölüm seçicisiyle aynı dil (ton, gölge yok). */
+.scopeTabs { display: inline-flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--surface-sunken); }
+.scopeTab {
+  min-height: 32px; padding: 0 14px; border-radius: 999px; font-size: var(--text-small); font-weight: 700; color: var(--text-muted);
+  transition: background-color .2s var(--ease-brand), color .2s var(--ease-brand);
+}
+.scopeTab[aria-selected="true"] { background: var(--surface); color: var(--text-strong); }
+.scopeTab:hover { color: var(--text-strong); }
 .window { margin: -10px 0 0; font-size: var(--text-base); font-weight: 650; color: var(--text-muted); }
 
 /* KARTLAR (18 Ekim, sahibinin isteği "daha görsel"): her konu ton yüzeyli

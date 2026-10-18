@@ -590,3 +590,29 @@
  .heatSwatches > i, .heatChip { transition:none; }
  .heatTile:is(:hover, :active) .heatFace { transform:none; }
 }
+
+/* ISI HARİTASI EŞİT KAROLAR (18 Ekim'de geri döndü — ağaç düzeni bir gün
+   yayında kaldı). 27 Eylül ölçüsü: genişte 15×2, tablette 10×3, telefonda
+   5×6; renk basamakları globals.css → --heat-mix-* / --heat-deep-*. */
+.heatGrid { display:grid; grid-template-columns:repeat(15,minmax(0,1fr)); gap:5px; margin-top:12px; }
+.heatCell { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; min-height:68px; padding:7px 3px; border-radius:10px; transition:scale .18s var(--ease-brand), box-shadow .18s var(--ease-brand); }
+.heatLogo { width:26px !important; height:26px !important; border-radius:8px !important; }
+.heatSymbol { font-size:12px; font-weight:700; line-height:1.2; letter-spacing:.02em; color:inherit; }
+.heatPct { font-size:12px; font-weight:600; line-height:1.2; letter-spacing:-.01em; color:inherit; }
+.heatCell:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.heatCell:is(:hover, :focus-visible) { z-index:5; }
+@media(hover:hover) and (pointer:fine) { .heatCell:hover { scale:1.06; box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); } }
+.heatCell:active { scale:.97; }
+.heatCell { --heat-tone:var(--line); --heat-mix:0%; background:var(--surface-sunken); color:var(--text-strong); }
+.heatCell[data-heat-tone="up"] { --heat-tone:var(--up); }
+.heatCell[data-heat-tone="down"] { --heat-tone:var(--down); }
+.heatCell[data-heat-level="1"] { --heat-mix:var(--heat-mix-1); }
+.heatCell[data-heat-level="2"] { --heat-mix:var(--heat-mix-2); }
+.heatCell[data-heat-level="3"] { --heat-mix:var(--heat-mix-3); }
+.heatCell:not([data-heat-level="0"]) { background:color-mix(in oklab,var(--heat-tone) var(--heat-mix),var(--premium-surface)); }
+.heatCell[data-heat-level="4"] { color:var(--heat-deep-ink); }
+.heatCell[data-heat-level="4"][data-heat-tone="up"] { background:var(--heat-deep-up); }
+.heatCell[data-heat-level="4"][data-heat-tone="down"] { background:var(--heat-deep-down); }
+@media(max-width:1023px) { .heatGrid { grid-template-columns:repeat(10,minmax(0,1fr)); } }
+@media(max-width:639px) { .heatGrid { grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; } }
+@media(prefers-reduced-motion:reduce) { .heatCell { transition:none; } .heatCell:is(:hover,:active) { scale:none; } }
