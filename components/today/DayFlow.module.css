@@ -29,8 +29,26 @@
 .toolbar { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:10px 24px; padding-bottom:10px; border-bottom:1px solid var(--line-soft); color:var(--text-body); font-size:13px; }
 .heading { min-width:0; }
 .toolbarMeta { display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:8px 16px; }
-.date { display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-weight:550; }
-.date small { font-size:12px; color:var(--text-muted); }
+/* GÜN SEÇİCİ (21 Ekim, sahibinin isteği: "geçmişe de gidebilsin, sağda
+   oklarla"). Tarih iki okun arasında tek bir kapsül; oklar pencerenin
+   ucunda pasifleşir ama YER DEĞİŞTİRMEZ — art arda basan parmak aynı
+   noktada kalsın. Kapsül tonla ayrışır (gölge yok, CLAUDE.md). */
+.dayNav { display:flex; align-items:center; min-width:0; border-radius:12px; background:var(--surface-sunken); }
+.dayArrow { display:grid; place-items:center; flex:none; width:36px; height:36px; border-radius:11px; color:var(--text-body); cursor:pointer; transition:background-color .2s var(--ease-brand), color .2s var(--ease-brand); }
+.dayArrow:hover:not(:disabled) { background:var(--primary-tint); color:var(--primary-ink); }
+.dayArrow:disabled { color:var(--text-muted); opacity:.45; cursor:default; }
+.date { display:flex; align-items:center; gap:7px; min-width:0; padding:0 6px; color:var(--text-strong); font-weight:600; white-space:nowrap; }
+.date > svg { flex:none; color:var(--text-muted); }
+.date small { font-size:12px; font-weight:500; color:var(--text-muted); }
+.dayShort { display:none; }
+.todayButton { display:inline-flex; align-items:center; gap:6px; min-height:34px; padding:0 12px; border-radius:10px; background:var(--primary-tint); color:var(--primary-ink); font-size:12px; font-weight:650; cursor:pointer; transition:background-color .2s var(--ease-brand); }
+.todayButton:hover { background:var(--primary-wash); }
+.dayError { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-top:12px; color:var(--text-body); font-size:13px; line-height:1.6; }
+.dayError button { color:var(--primary-ink); font-weight:650; cursor:pointer; }
+/* Gün yüklenirken eski gün bir ton sönük kalır — boş bir kutuya
+   zıplamaz, hedef gün künyede zaten yazılı. */
+.dayBody { transition:opacity .2s var(--ease-brand); }
+.dayBody[data-loading] { opacity:.45; pointer-events:none; }
 .marketDay { color:var(--text-muted); font-weight:450; }
 /* KÜNYE SIKILAŞTI (15 Ekim, sahibinin isteği: "takvim ve kaynak kısmı çok
    yer kaplıyor"). "Otomatik Güncelleme" ve "Son Kontrol" sözcükleri her
@@ -71,14 +89,24 @@
 .tlRow[data-past] .tlNode { background:var(--surface-sunken); border-color:var(--line); color:var(--text-muted); }
 .tlRow[data-open] .tlNode { background:var(--primary); border-color:var(--primary); color:var(--on-primary); }
 
-/* Satırlar arası kıl çizgi içerik sütununda — omurgayla kesişmesin. */
-.tlMain { min-width:0; border-top:1px solid var(--line-soft); }
+/* Satırlar arası kıl çizgi içerik sütununda — omurgayla kesişmesin.
+   AÇIK SATIR BİR KART (21 Ekim, sahibinin isteği: "görsel olarak daha iyi
+   duran bir şey"). Açık olay ile gövdesi düz zeminde akıp alttaki satıra
+   karışıyordu; şimdi başlık ve gövde tek bir gömülü yüzeyde, şirketler o
+   yüzeyin üstünde açık tonlu kartlar — derinlik tonla, gölgesiz. Açık
+   kartın üstündeki ve altındaki kıl çizgi silinir, kart kendi sınırıdır. */
+.tlMain { min-width:0; margin-left:4px; border-top:1px solid var(--line-soft); border-radius:16px; transition:background-color .28s var(--ease-brand); }
 .timeline > li:first-child .tlMain { border-top-color:transparent; }
 .nowMark + .tlRow .tlMain { border-top-color:transparent; }
+.tlRow[data-open] .tlMain,
+.tlRow[data-open] + .tlRow .tlMain,
+.tlRow[data-open] + .nowMark + .tlRow .tlMain { border-top-color:transparent; }
+.tlRow[data-open] .tlMain { background:var(--surface-sunken); }
 
 /* ---- Satır başı ---- */
-.tlHead { display:grid; width:100%; min-width:0; grid-template-columns:76px minmax(0,1fr) auto 18px; align-items:center; gap:8px 14px; min-height:56px; padding:9px 10px 9px 2px; border-radius:12px; text-align:left; color:var(--text-body); cursor:pointer; transition:background-color .2s var(--ease-brand); }
+.tlHead { display:grid; width:100%; min-width:0; grid-template-columns:76px minmax(0,1fr) auto 18px; align-items:center; gap:8px 14px; min-height:56px; padding:9px 12px; border-radius:16px; text-align:left; color:var(--text-body); cursor:pointer; transition:background-color .2s var(--ease-brand); }
 .tlHead:hover { background:var(--primary-tint); }
+.tlRow[data-open] .tlHead:hover { background:transparent; }
 .tlTime { display:flex; flex-direction:column; gap:1px; color:var(--text-strong); }
 .tlTime b { font-size:16px; line-height:1.2; font-weight:650; letter-spacing:-.03em; }
 .tlTime[data-unknown="true"] b { font-size:12px; font-weight:600; line-height:1.35; letter-spacing:0; overflow-wrap:anywhere; }
@@ -127,8 +155,8 @@
    tam kapanmazdı. */
 .tlDetail { display:grid; grid-template-rows:0fr; transition:grid-template-rows .28s var(--ease-brand); }
 .tlRow[data-open] .tlDetail { grid-template-rows:1fr; }
-.tlDetailInner { overflow:hidden; min-width:0; min-height:0; padding-right:10px; }
-.tlDetailInner > :last-child { margin-bottom:10px; }
+.tlDetailInner { overflow:hidden; min-width:0; min-height:0; padding:0 12px; }
+.tlDetailInner > :last-child { margin-bottom:12px; }
 
 .note { margin:4px 0 0; padding-left:11px; border-left:2px solid var(--primary-faint); color:var(--text-body); font-size:13px; line-height:1.65; text-wrap:pretty; }
 
@@ -136,19 +164,19 @@
    MemberList. Satır ~56 piksel: kimlik | ölçüler | bağlantı; dörtten çoğu
    katlı başlar, "+N Şirket Daha" yerinde açar. Kimlik sütunu sabit ki altı
    satırın ölçüleri AYNI HATTA başlasın (CLAUDE.md "ölçü ızgarası"). */
-.tlMembers { display:grid; margin:8px 0 0; padding:0; list-style:none; }
-.tlMemberRow { display:grid; min-width:0; grid-template-columns:150px minmax(0,1fr) auto; align-items:center; gap:6px 16px; padding:7px 0; border-top:1px solid var(--line-soft); }
-.tlMemberRow:first-child { border-top-color:transparent; }
+.tlMembers { display:grid; gap:6px; margin:4px 0 0; padding:0; list-style:none; }
+.tlMemberRow { display:grid; min-width:0; grid-template-columns:150px minmax(0,1fr) auto; align-items:center; gap:8px 16px; padding:10px 12px; border-radius:12px; background:var(--surface-solid); }
 .memberIdentity { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; min-width:0; }
 .memberIdentity strong { color:var(--text-strong); font-size:14px; font-weight:650; }
 /* Dip şeridi TEK SATIR: solda kaynak, ortada katlama, sağda takvim (15
    Ekim, sahibinin isteği — kaynak/takvim ayrı bir boşluk satırı açmasın). */
-.memberFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 14px; min-height:36px; margin-top:2px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:12px; }
+.memberFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 14px; min-height:36px; margin-top:4px; color:var(--text-muted); font-size:12px; }
 .memberFoot > a { display:flex; gap:6px; align-items:center; min-height:32px; color:var(--primary-ink); font-weight:600; }
 .moreMembers { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 10px; color:var(--primary-ink); font-size:13px; font-weight:600; cursor:pointer; transition:color .2s var(--ease-brand); }
 .moreMembers:hover { color:var(--primary-hover); }
-.tlMemberLink { display:inline-flex; align-items:center; gap:5px; margin-left:auto; min-height:36px; color:var(--text-body); font-size:12px; font-weight:600; white-space:nowrap; }
-.tlMemberLink[data-analysis] { color:var(--primary-ink); }
+.tlMemberLink { display:inline-flex; align-items:center; gap:5px; margin-left:auto; min-height:36px; padding:0 10px; border-radius:10px; color:var(--primary-ink); font-size:12px; font-weight:600; white-space:nowrap; transition:background-color .2s var(--ease-brand); }
+.tlMemberLink:hover { background:var(--primary-tint); }
+.tlMemberLink[data-analysis] { background:var(--primary-tint); }
 .tlMemberLink svg { flex-shrink:0; transition:transform .2s var(--ease-brand); }
 .tlMemberLink:hover svg { transform:translate(2px,-2px); }
 /* Şirketin sayıları `FlowFigures`ten; bileşenin kendi ızgarası. GENİŞLİK
@@ -191,7 +219,14 @@
   /* DOKUNMA HEDEFLERİ MOBİLDE 44 (WCAG 2.5.8); masaüstünde ölçü değişmiyor,
      fare için 32-36 yeterli. */
   .toolbar { gap:12px; padding-bottom:12px; }
-  .toolbarMeta { flex:1 1 100%; flex-wrap:nowrap; justify-content:space-between; }
+  .toolbarMeta { flex:1 1 100%; flex-wrap:nowrap; justify-content:space-between; gap:8px; }
+  /* Telefonda oklar 44'lük dokunma hedefi; tarih kısalırsa kırpılmaz, gün adı
+     ile ay tek satırda kalır (390'da ölçüldü). */
+  .dayArrow { width:44px; height:44px; }
+  .date { padding:0 2px; }
+  .dayLong { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  .dayShort { display:inline; }
+  .todayButton { min-height:44px; }
   .connection button { min-height:44px; }
   .detailFooter a { min-height:44px; }
   .tlMemberLink { min-height:44px; }
@@ -201,18 +236,25 @@
   /* Sözcük gizleme kuralları artık her genişlikte (yukarıda, "KÜNYE
      SIKILAŞTI"). */
   .timeline { --rail:32px; --node:26px; --node-top:15px; }
-  .tlHead { grid-template-columns:56px minmax(0,1fr) auto 14px; gap:6px 10px; padding-right:4px; }
+  .tlHead { grid-template-columns:56px minmax(0,1fr) auto 14px; gap:6px 10px; padding:9px 8px; }
+  .tlMain { margin-left:2px; }
   .tlTime b { font-size:15px; }
   .tlSummary > strong { font-size:14px; }
   .tlValue b { font-size:15px; }
-  .tlDetailInner { padding-right:0; }
+  .tlDetailInner { padding:0 8px; }
+  .tlMemberRow { padding:10px; gap:8px 10px; }
   /* Şirket satırı telefonda iki katlı: kimlik + bağlantı üstte, ölçüler
      altta tam genişlikte. Bağlantı açıkça ilk satıra: otomatik yerleşim onu
      ölçülerin altına üçüncü bir kat olarak atıyordu (390'da görüldü). */
   .tlMemberRow { grid-template-columns:minmax(0,1fr) auto; }
   .tlMemberLink { grid-row:1; grid-column:2; }
   .memberNumbers { grid-column:1 / -1; max-width:none; }
-  .moreMembers { min-height:44px; }
+  /* Dip şeridi telefonda iki kat (21 Ekim, 390'da ölçüldü): üç öğe tek
+     satıra sığmıyor, "Takvimde Gör" boşlukla yalnız bir satıra düşüyordu.
+     Katlama düğmesi tam genişlikte şirket kartlarının dilinde bir kart
+     (listenin devamı olduğu okunsun), kaynak ve takvim altında tek satır. */
+  .memberFoot { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:2px 12px; }
+  .moreMembers { grid-column:1 / -1; order:-1; justify-content:center; min-height:44px; margin-top:2px; border-radius:12px; background:var(--surface-solid); }
   .memberFoot > a { min-height:44px; }
   .results { gap:8px; }
   .results > div { padding-left:9px; }

@@ -2,8 +2,8 @@ import "server-only";
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "./db";
 import { economicEvents, earningsCalendar, earningsAnalyses, watchlistItems, watchlists } from "./schema";
-import { getStatus, getSymbolNames, guncelBilanco } from "./data";
-import { etDateTimeToUtc } from "./market-hours";
+import { getHolidays, getStatus, getSymbolNames, guncelBilanco } from "./data";
+import { addEtDays, closeMinutesFor, etDateTimeToUtc, isTradingDay, nextTradingDay, prevTradingDay } from "./market-hours";
 import { displayOffsets, displayZone, formatInZone, zoneTag } from "./session-clock";
 import { getEarningsFiling } from "./providers/sec-edgar";
 import { withTimeout } from "./providers/timeout";
@@ -22,10 +22,35 @@ const SURPRISE_DIGITS = 1;
 /** SEC bildirimini en çok bu kadar bekle — gerekçe `filings`te. */
 const SEC_FILING_WAIT_MS = 3_000;
 
+/* GEÇMİŞ VE GELECEK GÜNLER (21 Ekim, sahibinin isteği: "geçmişe de
+   gidebilsin, sağda oklarla"). Akış bugüne kilitliydi; dünün bilançolarının
+   ne çıktığını görmek için takvime gitmek gerekiyordu. Oklar bir önceki ya
+   da sonraki İŞLEM gününe gider (tatil ve hafta sonu atlanır). Pencere
+   sınırlı: geriye 60, ileriye 14 gün — uç rastgele tarihlerle veritabanını
+   taramaya açılmasın, takvimin dolu olduğu aralık da bu kadar.
+
+   Bugün DIŞINDAKİ gün yalnız VERİTABANINDAN okunur: sağlayıcı sonuç
+   takvimi, FRED'in anlık okuması ve SEC bildirimleri bugünün canlı
+   ayrıntısı; geçmiş günün sonucu zaten günlük senkronla tabloya yazılmış,
+   gelecek günün henüz sonucu yok. Yani gün değiştirmek sağlayıcı kotası
+   harcamaz. */
+export const DAY_FLOW_BACK_DAYS = 60;
+export const DAY_FLOW_AHEAD_DAYS = 14;
+
+/** Tarih gezinme penceresinde mi — uç ve yükleyici aynı sınırı okur. */
+export function dayFlowDateAllowed(date: string, today: string): boolean {
+  return date >= addEtDays(today, -DAY_FLOW_BACK_DAYS) && date <= addEtDays(today, DAY_FLOW_AHEAD_DAYS);
+}
+
 /** One source for SSR and polling. GET reads providers, never mutates the DB. */
-export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayFlowSnapshot> {
-  const status = await getStatus();
-  const date = status.etDate;
+export async function loadDayFlow(locale: Locale, userId?: string, requestedDate?: string): Promise<DayFlowSnapshot> {
+  const [status, holidays] = await Promise.all([getStatus(), getHolidays()]);
+  const today = status.etDate;
+  const date = requestedDate && dayFlowDateAllowed(requestedDate, today) ? requestedDate : today;
+  const isToday = date === today;
+  /* Başka günün "şimdi"si: geçmişte gün bitmiştir, gelecekte başlamamıştır. */
+  const etMinutes = isToday ? status.etMinutes : date < today ? 24 * 60 : 0;
+  const closeMinutes = isToday ? status.closeMinutes : closeMinutesFor(date, holidays);
   const now = new Date();
   const t = getDictionary(locale);
   // Critical DB errors propagate: the client retains its last successful
@@ -58,12 +83,12 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
   );
   // One shared request for the entire day, never one request per company.
   // On closed empty days there is no provider traffic.
-  const provider = earnings.length && status.etMinutes >= 240
+  const provider = isToday && earnings.length && status.etMinutes >= 240
     ? await getEarningsCalendar(date, date, undefined, "results") : null;
   const live = new Map(provider?.ok ? provider.data.filter((row) => row.reportDate === date).map((row) => [row.symbol, row]) : []);
   const eventItems: FlowEvent[] = await Promise.all(events.map(async (event) => {
     const scheduledAt = event.eventTimeEt ? etDateTimeToUtc(date, event.eventTimeEt).toISOString() : null;
-    const fresh = !hasActual(event.actual) && event.fredSeriesId && scheduledAt && new Date(scheduledAt) <= now
+    const fresh = isToday && !hasActual(event.actual) && event.fredSeriesId && scheduledAt && new Date(scheduledAt) <= now
       ? await getReleasedObservation(event.fredSeriesId, date) : null;
     const actual = fresh?.actual ?? event.actual;
     return {
@@ -122,7 +147,7 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
     const providerRow = live.get(row.symbol);
     return earningsStatus(providerRow?.epsActual ?? row.epsActual, providerRow?.revenueActual ?? row.revenueActual, analysisMap.has(row.symbol)) !== "scheduled";
   };
-  const filings = new Map(status.etMinutes >= 240
+  const filings = new Map(isToday && status.etMinutes >= 240
     ? await Promise.all(shown.map(async (row) => [
         row.symbol,
         await withTimeout(getEarningsFiling(row.symbol, date, settled(row)), SEC_FILING_WAIT_MS).catch(() => null),
@@ -181,7 +206,7 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
   }
   const windows: Record<string, { time: string | null; title: string }> = {
     bmo: { time: "08:00", title: t.earnings.beforeOpen },
-    amc: { time: `${Math.floor(status.closeMinutes / 60)}`.padStart(2, "0") + ":" + String(status.closeMinutes % 60).padStart(2, "0"), title: t.earnings.afterClose },
+    amc: { time: `${Math.floor(closeMinutes / 60)}`.padStart(2, "0") + ":" + String(closeMinutes % 60).padStart(2, "0"), title: t.earnings.afterClose },
     dmh: { time: "12:00", title: t.earnings.duringMarket },
     unknown: { time: null, title: t.dayFlow.timeUnknown },
   };
@@ -215,7 +240,10 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
   return {
     dateEt: date, asOf: now.toISOString(),
     events: [...eventItems, ...earningsItems].sort((a, b) => (a.timeEt ?? "99:99").localeCompare(b.timeEt ?? "99:99") || a.id.localeCompare(b.id)),
-    initialNowMinutes: status.etMinutes, tradingDay: status.tradingToday, closeMinutes: status.closeMinutes,
+    initialNowMinutes: etMinutes, tradingDay: isToday ? status.tradingToday : isTradingDay(date, holidays), closeMinutes,
+    today,
+    prevDate: (() => { const d = prevTradingDay(date, holidays); return dayFlowDateAllowed(d, today) ? d : null; })(),
+    nextDate: (() => { const d = nextTradingDay(date, holidays); return dayFlowDateAllowed(d, today) ? d : null; })(),
     offsets: displayOffsets(date, locale), tags: zoneTag(locale), pollAfterMs: 30_000,
     sourceDelayed: !!provider && !provider.ok,
     hiddenEarnings,
@@ -259,6 +287,27 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
    eski bir hatalı yükleme yerine geçen yenisini düşürmesin. */
 const SHARED_DAY_FLOW_MS = 30_000;
 const sharedDayFlow = new Map<Locale, { at: number; snapshot: Promise<DayFlowSnapshot> }>();
+
+/* BAŞKA GÜNÜN OTURUMSUZ GÖRÜNTÜSÜ (21 Ekim). Okla gezen okuyucu aynı
+   günleri ileri geri açıyor; geçmiş gün yalnız veritabanından okunduğu ve
+   gün içinde nadiren değiştiği için beş dakika paylaşılır. Not sınırlı
+   (en çok 64 gün × dil): rastgele tarih sorgusu belleği büyütemez, pencere
+   zaten `dayFlowDateAllowed` ile 75 günle sınırlı. Hata notun dışında. */
+const OTHER_DAY_MS = 5 * 60_000;
+const otherDays = new Map<string, { at: number; snapshot: Promise<DayFlowSnapshot> }>();
+
+export function loadSharedOtherDay(locale: Locale, date: string): Promise<DayFlowSnapshot> {
+  const key = `${locale}:${date}`;
+  const held = otherDays.get(key);
+  if (held && Date.now() - held.at < OTHER_DAY_MS) return held.snapshot;
+  if (otherDays.size >= 64) otherDays.delete(otherDays.keys().next().value!);
+  const entry = { at: Date.now(), snapshot: loadDayFlow(locale, undefined, date) };
+  otherDays.set(key, entry);
+  entry.snapshot.catch(() => {
+    if (otherDays.get(key) === entry) otherDays.delete(key);
+  });
+  return entry.snapshot;
+}
 
 /** Oturumsuz okuyucunun gün akışı — SSR ve yoklama aynı TÜRDEN 30 sn'lik
  *  notu okur, aynısını değil: sayfa ve `/api` ucu ayrı Turbopack çalışma

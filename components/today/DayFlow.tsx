@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useId, useRef, useState, useTransition, type ReactNode } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { ArrowRight, ArrowUpRight, Bell, CalendarBlank, CaretDown, Check, CircleNotch, Clock, TrendUp } from "@phosphor-icons/react";
+import { ArrowRight, ArrowUpRight, Bell, CalendarBlank, CaretDown, CaretLeft, CaretRight, Check, CircleNotch, Clock, TrendUp } from "@phosphor-icons/react";
 import { LogoTile } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { displayFlowStatus, flowResultSignature, preserveConfirmedResults, type DayFlowSnapshot, type FlowEvent, type FlowMember } from "@/lib/day-flow";
@@ -22,6 +22,12 @@ type Props = {
   heading?: ReactNode;
 };
 const minutesOf = (time: string) => { const [h, m] = time.split(":").map(Number); return h * 60 + m; };
+/** Okla açılan günlerin oturum içi notu en çok bu kadar gün tutar. */
+const DAY_CACHE_LIMIT = 30;
+const validSnapshot = (value: unknown): value is DayFlowSnapshot => {
+  const snap = value as DayFlowSnapshot | undefined;
+  return !!snap && Array.isArray(snap.events) && Number.isFinite(Date.parse(snap.asOf));
+};
 
 function Status({ event, nowMs, labels }: { event: Pick<FlowEvent, "status" | "scheduledAt">; nowMs: number; labels: Props["labels"] }) {
   const status = displayFlowStatus(event, nowMs);
@@ -129,6 +135,19 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
   const [autoTour, setAutoTour] = useState(true);
   const [connection, setConnection] = useState<"ready" | "checking" | "error">("ready");
   const [announcement, setAnnouncement] = useState("");
+  /* GÜN GEZİNMESİ (21 Ekim, sahibinin isteği: "geçmişe de gidebilsin,
+     sağda oklarla"). `view` okla açılmış BAŞKA bir günün görüntüsü; `null`
+     bugün demek. Bugünün görüntüsü (`snapshot`) arkada yoklanmaya devam
+     eder — "Bugüne Dön" anında taze açılır, kahramandaki zil şeridi de
+     hep bugünü okur (`publishFlow` yalnız `snapshot`ı yayımlar). Başka
+     günde yoklama, "şimdi" işareti ve otomatik tur yok: gün kapanmış ya da
+     başlamamış, değişen bir şey yok. Açılan günler oturum içinde notlanır;
+     ileri geri gezmek aynı günü yeniden istemez. Adres değişmiyor: sığ
+     adres güncellemesi uçuştaki gezinmeyi öldürüyor (CLAUDE.md). */
+  const [view, setView] = useState<DayFlowSnapshot | null>(null);
+  const [dayState, setDayState] = useState<{ phase: "idle" | "loading" | "error"; date: string | null }>({ phase: "idle", date: null });
+  const dayCache = useRef(new Map<string, DayFlowSnapshot>());
+  const dayAbort = useRef<AbortController | null>(null);
   const [, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
   const refresh = useRef<() => void>(() => {});
@@ -152,6 +171,10 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
      bir işarete basılınca seçim buraya geliyor. */
   useEffect(() => { publishFlow(snapshot); }, [snapshot]);
   useEffect(() => onFlowSelect((id) => {
+    /* Şerit hep bugünü gösterir: başka bir gündeyken seçim bugüne döndürür. */
+    dayAbort.current?.abort();
+    setView(null);
+    setDayState({ phase: "idle", date: null });
     setAllClosed(false);
     setAutoTour(false);
     setSelectedId(id);
@@ -268,9 +291,13 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
     };
   }, [locale]);
 
-  const events = snapshot.events;
+  const shown = view ?? snapshot;
+  const viewingToday = !view;
+  const events = shown.events;
   const nowEt = new Intl.DateTimeFormat("en-GB", { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(nowMs));
-  const now = minutesOf(nowEt);
+  /* Başka günün "şimdi"si: geçmiş gün bitmiştir (bütün satırlar geçmiş),
+     gelecek gün başlamamıştır (hiçbiri geçmiş değil). */
+  const now = viewingToday ? minutesOf(nowEt) : shown.dateEt < shown.today ? 24 * 60 : -1;
   /* "ŞİMDİ" İŞARETİ — çizelgenin neresindeyiz.
      Omurga zaten sıralı; işaret onu ikiye bölüyor ve "bunlar geçti, bunlar
      gelecek" tek bakışta okunuyor. Yalnızca GERÇEKTEN böldüğünde basılıyor:
@@ -279,18 +306,72 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
      hangi tarafta olduğu bilinmiyor. */
   const firstUpcoming = events.findIndex((event) => event.timeEt !== null && minutesOf(event.timeEt) > now);
   const hasPast = events.some((event) => event.timeEt !== null && minutesOf(event.timeEt) <= now);
-  const dividerAt = !hasPast ? null : firstUpcoming === -1 ? events.length : firstUpcoming;
+  const dividerAt = !viewingToday || !hasPast ? null : firstUpcoming === -1 ? events.length : firstUpcoming;
   /* OTOMATİK AÇIK SATIR SIRADAKİ OLAY: okuyucunun sorusu "şimdi ne olacak".
      Gün başlamadıysa ilk olay, gün bittiyse son olay (günün son cevabı). */
   const autoId = events.length === 0 ? null
     : (dividerAt === null ? events[0] : events[Math.min(dividerAt, events.length - 1)])!.id;
   const openId = allClosed ? null
     : selectedId && events.some((event) => event.id === selectedId) ? selectedId : autoId;
-  const primary = (minutes: number) => clockOf(minutes + snapshot.offsets.primary);
-  const nowLabel = `${railLabels.now} · ${primary(now)} ${snapshot.tags.primary}`;
+  const primary = (minutes: number) => clockOf(minutes + shown.offsets.primary);
+  const nowLabel = `${railLabels.now} · ${primary(now)} ${shown.tags.primary}`;
   const timeOf = (event: FlowEvent) => event.timeEt ? `${event.approx ? "~" : ""}${primary(minutesOf(event.timeEt))}` : labels.timeUnknown;
   const checked = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: displayZone(locale), hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(snapshot.asOf));
-  const dayLabel = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: "UTC", month: "long", day: "numeric", weekday: "long" }).format(new Date(snapshot.dateEt + "T12:00:00Z"));
+  const partsOf = (date: string) => new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: "UTC", month: "long", day: "numeric", weekday: "long" }).formatToParts(new Date(date + "T12:00:00Z"));
+  /* Yüklenirken künye HEDEF günü yazar: okun tepkisi anında görünsün.
+     Telefonda kısa biçim ("21 Eki Çar"): iki ok ve tazelik düğmesiyle uzun
+     ad tek satıra sığmıyor. Kısa ad Intl'in `short` biçiminden DEĞİL,
+     uzun adın ilk üç harfinden: Node ile tarayıcının ICU sürümleri en-GB
+     kısa biçimini farklı basıyor ve /en'de hidrasyon uyuşmazlığı çıktı
+     (21 Ekim, duman testinde ölçüldü); uzun biçim iki tarafta aynı. */
+  const labelDate = dayState.phase === "loading" && dayState.date ? dayState.date : shown.dateEt;
+  const parts = partsOf(labelDate);
+  const dayLabel = parts.map((part) => part.value).join("");
+  const dayLabelShort = parts.map((part) => part.type === "weekday" || part.type === "month" ? part.value.slice(0, 3) : part.value).join("").replace(/,/g, "");
+  const loadingDay = dayState.phase === "loading";
+
+  function goTo(date: string | null) {
+    dayAbort.current?.abort();
+    dayAbort.current = null;
+    setAutoTour(false);
+    setSelectedId(null);
+    setAllClosed(false);
+    if (!date || date === snapshot.today) {
+      setView(null);
+      setDayState({ phase: "idle", date: null });
+      return;
+    }
+    const held = dayCache.current.get(date);
+    if (held) {
+      setView(held);
+      setDayState({ phase: "idle", date: null });
+      return;
+    }
+    const controller = new AbortController();
+    dayAbort.current = controller;
+    setDayState({ phase: "loading", date });
+    const timeout = window.setTimeout(() => controller.abort(), 20_000);
+    fetch(`/api/day-flow?locale=${locale}&tarih=${date}`, { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        const result: { ok?: boolean; snapshot?: unknown } = response.ok ? await response.json() : {};
+        if (!result.ok || !validSnapshot(result.snapshot)) throw new Error("unavailable");
+        const next = result.snapshot;
+        if (dayCache.current.size >= DAY_CACHE_LIMIT) dayCache.current.delete(dayCache.current.keys().next().value!);
+        dayCache.current.set(date, next);
+        if (dayAbort.current !== controller) return;
+        setView(next);
+        setDayState({ phase: "idle", date: null });
+      })
+      .catch(() => {
+        if (dayAbort.current !== controller) return;
+        setDayState({ phase: "error", date });
+      })
+      .finally(() => {
+        window.clearTimeout(timeout);
+        if (dayAbort.current === controller) dayAbort.current = null;
+      });
+  }
+  useEffect(() => () => dayAbort.current?.abort(), []);
 
   /* OTOMATİK TUR (15 Ekim, sahibinin isteği: "üç sekme kendi aralarında
      geçsin; kullanıcı isterse eliyle de geçsin"). Açık olay sekiz saniyede
@@ -315,7 +396,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
      gerçek imleçli aygıtta sayılır; dokunmatikte dokunuştan sonra yapışık
      kalıp turu sonsuza dek durdururdu. */
   useEffect(() => {
-    if (!autoTour || allClosed || events.length < 2 || !openId) return;
+    if (!autoTour || !viewingToday || allClosed || events.length < 2 || !openId) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const el = ref.current;
     const canHover = window.matchMedia("(hover: hover)").matches;
@@ -332,7 +413,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
       window.clearInterval(timer);
       observer.disconnect();
     };
-  }, [autoTour, allClosed, events, openId]);
+  }, [autoTour, viewingToday, allClosed, events, openId]);
 
   function toggle(id: string) {
     setAutoTour(false);
@@ -354,14 +435,30 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
     <div className={styles.toolbar}>
       {heading && <div className={styles.heading}>{heading}</div>}
       <div className={styles.toolbarMeta}>
-      <span className={styles.date}><CalendarBlank size={16} /><span className={styles.marketDay}>{labels.marketDay}</span>{dayLabel}<small>NY</small></span>
-      <div className={styles.connection} data-state={connection}>
+      {/* GÜN SEÇİCİ (21 Ekim): tarih iki okun arasında; ok yoksa (pencerenin
+          ucu) düğme pasif kalır, yer değiştirmez. */}
+      <div className={styles.dayNav} role="group" aria-label={labels.dayNav} aria-busy={loadingDay || undefined}>
+        <button type="button" className={styles.dayArrow} onClick={() => shown.prevDate && goTo(shown.prevDate)} disabled={!shown.prevDate} aria-label={labels.prevDay} title={labels.prevDay}><CaretLeft size={16} weight="bold" /></button>
+        <span className={styles.date}>
+          {loadingDay ? <CircleNotch className={styles.spinner} size={15} aria-hidden /> : <CalendarBlank size={15} aria-hidden />}
+          <span className={styles.marketDay}>{labels.marketDay}</span>
+          <span aria-live="polite"><span className={styles.dayLong}>{dayLabel}</span><span className={styles.dayShort} aria-hidden="true">{dayLabelShort}</span></span>
+          <small>NY</small>
+        </span>
+        <button type="button" className={styles.dayArrow} onClick={() => shown.nextDate && goTo(shown.nextDate)} disabled={!shown.nextDate} aria-label={labels.nextDay} title={labels.nextDay}><CaretRight size={16} weight="bold" /></button>
+      </div>
+      {viewingToday && dayState.phase !== "error" ? <div className={styles.connection} data-state={connection}>
         {connection === "checking" ? <CircleNotch className={styles.spinner} size={14} /> : <span className={styles.connectionDot} />}
         <span>{connection === "error" ? labels.offline : labels.auto}</span>
         <button onClick={() => refresh.current()} disabled={connection === "checking"} aria-label={connection === "error" ? labels.retry : `${labels.checked}: ${checked} ${snapshot.tags.primary}`} title={labels.liveNote}><Clock size={15} /><span>{labels.checked}</span>{checked} {snapshot.tags.primary}</button>
-      </div>
+      </div> : <button type="button" className={styles.todayButton} onClick={() => goTo(null)}>{labels.backToToday}<ArrowRight size={13} weight="bold" aria-hidden /></button>}
       </div>
     </div>
+    {dayState.phase === "error" && dayState.date && (
+      <p className={styles.dayError} role="status">{labels.dayFailed}
+        <button type="button" onClick={() => goTo(dayState.date)}>{labels.retry}</button>
+      </p>
+    )}
 
     {/* ZAMAN ÇİZELGESİ (15 Ekim, sahibinin isteği: "hiç kompakt
         hissetmiyor, timeline gibi bir şey yapmalıyız"). Önceki düzen bir
@@ -376,6 +473,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
         Sıradaki olay kendiliğinden açık: okuyucunun sorusu "şimdi ne
         olacak". Satır yüksekliği ~56 piksel; altı olaylı gün ilk ekranda
         bütünüyle okunuyor. */}
+    <div className={styles.dayBody} data-loading={loadingDay || undefined} aria-busy={loadingDay || undefined}>
     {events.length > 0 ? <>
       <div className={styles.agendaHead}><h3>{labels.events}<span className="numeral">{events.length}</span></h3></div>
       <ol className={styles.timeline}>
@@ -396,7 +494,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
               <span className={styles.tlNode} aria-hidden="true"><b className="numeral">{String(index + 1).padStart(2, "0")}</b></span>
               <div className={styles.tlMain}>
                 <button type="button" className={styles.tlHead} onClick={() => toggle(event.id)} aria-expanded={open} aria-controls={bodyId}>
-                  <span className={styles.tlTime} data-unknown={!event.timeEt}><b className="numeral" aria-label={event.timeEt ? undefined : labels.timeUnknown}>{event.timeEt ? timeOf(event) : NO_VALUE}</b>{event.timeEt && <small>{snapshot.tags.primary}</small>}</span>
+                  <span className={styles.tlTime} data-unknown={!event.timeEt}><b className="numeral" aria-label={event.timeEt ? undefined : labels.timeUnknown}>{event.timeEt ? timeOf(event) : NO_VALUE}</b>{event.timeEt && <small>{shown.tags.primary}</small>}</span>
                   <span className={styles.tlSummary}>
                     <strong>{event.title}</strong>
                     <span className={styles.cardKind}>
@@ -450,12 +548,13 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
         })}
         {dividerAt === events.length && nowMark}
       </ol>
-    </> : snapshot.hiddenEarnings > 0 ? (
+    </> : shown.hiddenEarnings > 0 ? (
       /* Akış boş ama gün boş DEĞİL: eşiğin altındaki bilançolar var. "Açıklama
          yok" demek aynı sayfadaki bilanço paneliyle çelişirdi. */
-      <div className={styles.empty}><span><CalendarBlank size={32} weight="duotone" /></span><div><h3>{labels.emptyMajorTitle}</h3><p>{labels.emptyMajorHint.replace("{count}", String(snapshot.hiddenEarnings))}{" "}<Link href={withLocale("/bilancolar", locale)} prefetch={false} className={styles.emptyLink}>{labels.emptyMajorLink}<ArrowUpRight size={12} weight="bold" aria-hidden /></Link></p></div></div>
-    ) : <div className={styles.empty}><span><CalendarBlank size={32} weight="duotone" /></span><div><h3>{labels.emptyTitle}</h3><p>{labels.emptyHint}</p></div></div>}
-    {snapshot.sourceDelayed && <p className={styles.sourceDelay}>{labels.sourceDelayed}</p>}
+      <div className={styles.empty}><span><CalendarBlank size={32} weight="duotone" /></span><div><h3>{labels.emptyMajorTitle}</h3><p>{(viewingToday ? labels.emptyMajorHint : labels.emptyMajorDayHint).replace("{count}", String(shown.hiddenEarnings))}{" "}<Link href={withLocale("/bilancolar", locale)} prefetch={false} className={styles.emptyLink}>{labels.emptyMajorLink}<ArrowUpRight size={12} weight="bold" aria-hidden /></Link></p></div></div>
+    ) : <div className={styles.empty}><span><CalendarBlank size={32} weight="duotone" /></span><div><h3>{viewingToday ? labels.emptyTitle : labels.emptyDayTitle}</h3><p>{viewingToday ? labels.emptyHint : labels.emptyDayHint}</p></div></div>}
+    </div>
+    {viewingToday && snapshot.sourceDelayed && <p className={styles.sourceDelay}>{labels.sourceDelayed}</p>}
     <span className="sr-only" role="status" aria-live="polite">{announcement}</span>
   </div>;
 }

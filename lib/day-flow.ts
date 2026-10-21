@@ -61,6 +61,11 @@ export type DayFlowSnapshot = {
   /** Akışın 50 milyar dolar eşiğiyle göstermediği bugünkü bilanço sayısı.
       Boş akış bunu bilmeden "açıklama yok" diyemez (bkz. day-flow-data). */
   hiddenEarnings: number;
+  /** Bugünün ET tarihi — `dateEt` bundan farklıysa akış başka bir günü gösteriyor. */
+  today: string;
+  /** Okların gideceği önceki/sonraki işlem günü; pencere dışındaysa `null`. */
+  prevDate: string | null;
+  nextDate: string | null;
 };
 
 export function hasActual(value: string | number | null | undefined): boolean {
