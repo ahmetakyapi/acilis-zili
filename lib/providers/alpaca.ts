@@ -9,7 +9,7 @@ import {
   type Quote,
   responseDate,
 } from "./types";
-import { withTimeout } from "./timeout";
+import { withBody } from "./timeout";
 import { noteProviderResponse } from "./usage";
 
 /**
@@ -105,8 +105,10 @@ async function alpacaFetch<T>(
   const url = `${BASE}${path}?${new URLSearchParams(params).toString()}`;
 
   try {
-    /* Süre sınırı — gerekçe lib/providers/timeout.ts'te. */
-    const res = await withTimeout(
+    /* Süre sınırı gövdeyi de kapsıyor — gerekçe lib/providers/timeout.ts'te
+       (`withBody`). Hata gövdesi de yarışın içinde okunuyor; yanıt kaydı
+       gövdeden önce, başlıklar gelir gelmez. */
+    const { res, body } = await withBody(
       fetch(url, {
         headers: {
           "APCA-API-KEY-ID": creds.key,
@@ -117,9 +119,12 @@ async function alpacaFetch<T>(
           ? { cache: "no-store" as const }
           : { next: { revalidate: opts.revalidate, tags: opts.tags } }),
       }),
+      (r) => {
+        noteProviderResponse("alpaca", r);
+        return r.ok ? r.json() : safeText(r);
+      },
     );
 
-    noteProviderResponse("alpaca", res);
     if (res.status === 429) {
       return fail("alpaca", "rate-limited", "Alpaca istek limiti aşıldı");
     }
@@ -130,11 +135,11 @@ async function alpacaFetch<T>(
       return fail(
         "alpaca",
         "upstream-error",
-        `Alpaca ${res.status}: ${await safeText(res)}`,
+        `Alpaca ${res.status}: ${body}`,
       );
     }
 
-    return ok((await res.json()) as T, "alpaca", {
+    return ok(body as T, "alpaca", {
       fetchedAt: responseDate(res),
     });
   } catch (error) {
@@ -459,7 +464,14 @@ export async function getSnapshots(
       if (quote) quotes[symbol] = quote;
     }
 
-    if (!fetchedAt || result.fetchedAt > fetchedAt)
+    /* EN ESKİ paketin damgası (20 Ekim). En yenisi alınıyordu: paketler
+       paralel gittiğinden beri yanıt TEK bir çekim değil, ve
+       stale-while-revalidate tazelemesi düşmüş tek bir 200'lük paket, taze
+       üç paketin yanında `packCurrent`in yaş sorusundan geçiyordu — gün
+       sorusu da paketteki en yeni işleme baktığı için onu görmüyordu. Yaş
+       "en geride kalan ne kadar geride" sorusu; eski paket varsa çağıran
+       bir kez önbelleksiz tekrarlıyor. */
+    if (!fetchedAt || result.fetchedAt < fetchedAt)
       fetchedAt = result.fetchedAt;
   }
 
@@ -517,7 +529,10 @@ export async function getLatestIexBars(
       if (Number.isNaN(minute.getTime())) continue;
       out[symbol] = { close: bar.c, minute };
     }
-    if (!fetchedAt || result.fetchedAt > fetchedAt) fetchedAt = result.fetchedAt;
+    /* EN ESKİ paketin damgası (20 Ekim) — gerekçe `getSnapshots`teki
+       damgada: `overlayRealtime`in yaş sorusu tazelemesi düşmüş tek paketi
+       görmeli ki önbelleksiz tekrar o paketin sembollerini de kapsasın. */
+    if (!fetchedAt || result.fetchedAt < fetchedAt) fetchedAt = result.fetchedAt;
   }
   if (Object.keys(out).length === 0 && lastFailure) return lastFailure;
   return ok(out, "alpaca", { fetchedAt });
@@ -790,7 +805,12 @@ export async function getBarsMulti(
   if (symbols.length === 0) return ok({}, "alpaca");
 
   const spec = RANGE_SPECS[range];
-  const unique = [...new Set(symbols.map(canonicalSymbol))];
+  /* SIRALI (20 Ekim). Liste çağıranın sırasıyla adrese yazılıyordu ve Next'in
+     veri önbelleği o adresi anahtar alıyor: karşılaştırmada NVDA,AMD ile
+     AMD,NVDA aynı barlar için iki ayrı Alpaca çağrısıydı. Sonuç sembole göre
+     anahtarlı, sırayı geri kuran çağıran (seri rengi adresteki yerden
+     türüyor — app/api/karsilastir/route.ts). */
+  const unique = [...new Set(symbols.map(canonicalSymbol))].sort();
   const perRequest = Math.max(
     1,
     Math.min(BATCH_SIZE, Math.floor(MAX_BARS_PER_REQUEST / spec.limit)),
@@ -802,29 +822,46 @@ export async function getBarsMulti(
   let lastFailure: ProviderResult<Record<string, Bar[]>> | null = null;
   let fetchedAt: Date | undefined;
 
+  /* PAKETLER PARALEL (20 Ekim) — gerekçe `getSnapshots` içinde. Bu döngü
+     sıralı kalmıştı: ana sayfanın favori özeti (10 sembol, 1G'de paket
+     başına 5) ve piyasa panoları iki Alpaca turunu arka arkaya bekliyordu.
+     Sayfalama paketin İÇİNDE sıralı kalıyor (`fetchBarPages`); paketler
+     birbirinin sonucunu okumuyor. */
+  const batchList: string[][] = [];
   for (let i = 0; i < unique.length; i += perRequest) {
-    const batch = unique.slice(i, i + perRequest);
-    const result = await fetchBarPages(
-      {
-        symbols: batch.join(","),
-        timeframe: spec.timeframe,
-        start,
-        limit: String(
-          Math.min(MAX_BARS_PER_REQUEST, spec.limit * batch.length),
-        ),
-        adjustment: "split",
-        feed: BAR_FEED,
-        sort: "asc",
-      },
-      { revalidate, tags: ["bars", `bars:${range}`], fresh: opts.fresh },
-    );
+    batchList.push(unique.slice(i, i + perRequest));
+  }
+  const results = await Promise.all(
+    batchList.map((batch) =>
+      fetchBarPages(
+        {
+          symbols: batch.join(","),
+          timeframe: spec.timeframe,
+          start,
+          limit: String(
+            Math.min(MAX_BARS_PER_REQUEST, spec.limit * batch.length),
+          ),
+          adjustment: "split",
+          feed: BAR_FEED,
+          sort: "asc",
+        },
+        { revalidate, tags: ["bars", `bars:${range}`], fresh: opts.fresh },
+      ),
+    ),
+  );
 
+  for (const result of results) {
     if (!result.ok) {
       lastFailure = result;
       continue;
     }
     anyOk = true;
-    fetchedAt = result.fetchedAt;
+    /* EN ESKİ paketin damgası — son paketinki değil. Damga her turda
+       üzerine yazılıyordu ve `getChartBarsMulti`nin yaş sorusu
+       (`barsCurrent`) yalnız SON paketi görüyordu: tazelemesi düşmüş ilk
+       paketin saatler önceki gün içi serisi canlı fiyatın yanına çiziliyordu.
+       Gerekçe `getSnapshots`teki damgayla aynı. */
+    if (!fetchedAt || result.fetchedAt < fetchedAt) fetchedAt = result.fetchedAt;
 
     for (const [symbol, list] of Object.entries(result.data)) {
       let bars: Bar[] = list.map((b) => ({

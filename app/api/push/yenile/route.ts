@@ -5,6 +5,7 @@ import { getLocale } from "@/lib/i18n";
 import { pushConfigured, pushSubscriptionSchema, replaceSubscription } from "@/lib/push";
 import { deviceLabel } from "@/lib/push-device";
 import { rateLimit } from "@/lib/rate-limit";
+import { readTextCapped } from "@/lib/read-body";
 import { sameSite } from "@/lib/same-site";
 
 /**
@@ -36,9 +37,13 @@ export async function POST(request: Request) {
   if (!rateLimit(`push-sub:${id}`, 10, 60_000).allowed) {
     return NextResponse.json({ ok: false }, { status: 429 });
   }
+  /* Başlık denetimi yukarıda ucuz erken çıkış; parçalı gövdeyi ancak okurken
+     sayılan tavan durdurur (lib/read-body.ts, 20 Ekim). */
   let json: unknown;
   try {
-    json = await request.json();
+    const raw = await readTextCapped(request, 4096);
+    if (raw === null) return NextResponse.json({ ok: false }, { status: 413 });
+    json = JSON.parse(raw);
   } catch {
     return NextResponse.json({ ok: false }, { status: 400 });
   }

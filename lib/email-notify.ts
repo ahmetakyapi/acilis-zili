@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { cache } from "react";
-import { and, count, eq, gte, isNotNull, lt, ne, sql } from "drizzle-orm";
+import { and, count, eq, gte, isNotNull, lt, ne, notInArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { emailConfigured, emailProvider, sendEmail, type Email } from "@/lib/email";
 import { isLocale, type Locale } from "@/lib/i18n/config";
@@ -30,8 +30,8 @@ export const CONFIRM_TTL_MS = 48 * 3600_000;
 
 /**
  * Bildirim postasının günlük tavanı. Resend'in ücretsiz katmanı günde 100;
- * varsayılan 80 şifre sıfırlamaya 20 bırakır. Ücretli plana geçilirse
- * ortamdan yükseltilir.
+ * varsayılan 80 şifre sıfırlamaya 20 bırakır (o pay `resetShare`, ayrı
+ * sayılır). Ücretli plana geçilirse ortamdan yükseltilir.
  */
 export function dailyBudget(): number {
   const raw = Number(process.env.EMAIL_DAILY_BUDGET);
@@ -53,6 +53,28 @@ export const ALERT_EMAILS_PER_USER_DAY = 12;
  */
 export const CONFIRM_EMAILS_PER_USER_DAY = 3;
 const confirmShare = () => Math.max(5, Math.floor(dailyBudget() / 4));
+
+/**
+ * ŞİFRE SIFIRLAMA DA DEFTERDE (20 Ekim). Sıfırlama postası çıplak
+ * `sendEmail`le gidiyordu; yukarıdaki "20 bırakır" sözünü hiçbir şey
+ * tutmuyordu. Tek tavanı süreç belleğindeki oran sınırıydı (IP başına 10
+ * dakikada 5, adres başına saatte 3) ve her yayında sıfırlanıyordu: on
+ * sahte hesap açan biri tek IP'den saatte otuz sıfırlama isteyip servisin
+ * günlük kotasını üç buçuk saatte bitirebiliyordu. Defter bir şey
+ * görmüyordu; alarm postası "sahiplenildi" deyip serviste düşüyor, geri
+ * alınıyor ve kayboluyordu (alarm yeniden tetiklenmez).
+ *
+ * Artık iki pay AYRI: sıfırlama bildirim bütçesine sayılmaz, kendi günlük
+ * payına sayılır. Bildirim bütçesi dolduğunda sıfırlama yine gider;
+ * sıfırlama payı dolduğunda alarmlar etkilenmez. Pay, servisin ücretsiz
+ * katmanından (Resend 100, Brevo 300 — lib/email.ts) bildirim bütçesi
+ * düşülerek bulunur; ücretli planda bütçe yükseltilince taban 20.
+ * Bedeli bilerek kabul edildi: saldırgan artık yalnız sıfırlama payını
+ * tüketebilir.
+ */
+export const RESET_KIND = "reset";
+const providerDailyQuota = () => (emailProvider() === "brevo" ? 300 : 100);
+export const resetShare = () => Math.max(20, providerDailyQuota() - dailyBudget());
 
 export type EmailPrefsView = {
   /** false: tablo yok ya da e-posta servisi kapalı — panel basılmaz. */
@@ -389,17 +411,26 @@ export type ClaimResult = "claimed" | "duplicate" | "budget" | "user-cap" | "una
  */
 export async function claimSend(
   userId: string,
-  kind: "confirm" | "alert" | "weekly",
+  kind: "confirm" | "alert" | "weekly" | typeof RESET_KIND,
   dedupeKey: string,
   now: Date = new Date(),
 ): Promise<ClaimResult> {
   try {
     const since = startOfUtcDay(now);
-    const [today] = await db
-      .select({ n: count() })
-      .from(emailLog)
-      .where(and(gte(emailLog.sentAt, since), ne(emailLog.kind, ENROLL_KIND)));
-    if ((today?.n ?? 0) >= dailyBudget()) return "budget";
+    /* Sıfırlama ile bildirim birbirinin payını yemez — gerekçe `resetShare`. */
+    if (kind === RESET_KIND) {
+      const [resets] = await db
+        .select({ n: count() })
+        .from(emailLog)
+        .where(and(eq(emailLog.kind, RESET_KIND), gte(emailLog.sentAt, since)));
+      if ((resets?.n ?? 0) >= resetShare()) return "budget";
+    } else {
+      const [today] = await db
+        .select({ n: count() })
+        .from(emailLog)
+        .where(and(gte(emailLog.sentAt, since), notInArray(emailLog.kind, [ENROLL_KIND, RESET_KIND])));
+      if ((today?.n ?? 0) >= dailyBudget()) return "budget";
+    }
     if (kind === "confirm") {
       const [mine] = await db
         .select({ n: count() })

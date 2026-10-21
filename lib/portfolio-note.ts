@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { unstable_cache } from "next/cache";
 import { z } from "zod";
 import { ungroundedNumbers } from "@/lib/ai-grounding";
+import { memberClient } from "@/lib/claude-budget";
 import { companySector } from "@/lib/company-sector";
 import { getSymbolNames } from "@/lib/data";
 import type { Locale } from "@/lib/i18n/config";
@@ -27,6 +28,9 @@ import { formatPercentText } from "@/lib/utils";
  * seans günü + pozisyonların parmak izi (adet, maliyet): pozisyon eklenince
  * not tazelenir, sayfayı yeniden açmak ödemez. Okurun dilinde tek metin.
  * Not istemciden, panel görünüme girince istenir; uç oturum ister.
+ * Parmak izi her pozisyon değişikliğinde yeni anahtar demek: çağrı okurun
+ * kendi bütçe kimliğiyle gider (`memberClient`, günde
+ * `MEMBER_DAILY_CALLS` — gerekçe lib/claude-budget.ts, 20 Ekim).
  */
 
 export type PortfolioNote = {
@@ -81,7 +85,7 @@ export async function getPortfolioNote(userId: string, locale: Locale): Promise<
 
   try {
     return await unstable_cache(
-      () => buildNote([...holdings], session, locale),
+      () => buildNote([...holdings], session, locale, memberClient(userId)),
       ["portfolio-note-v2", userId, session, fingerprint, locale],
       { revalidate: 24 * 3600, tags: ["portfolio-note"] },
     )();
@@ -92,7 +96,7 @@ export async function getPortfolioNote(userId: string, locale: Locale): Promise<
   }
 }
 
-async function buildNote(holdings: [string, { quantity: number; cost: number }][], session: string, locale: Locale): Promise<PortfolioNote> {
+async function buildNote(holdings: [string, { quantity: number; cost: number }][], session: string, locale: Locale, client: string): Promise<PortfolioNote> {
   const symbols = holdings.map(([symbol]) => symbol);
   const [names, bars, ahead] = await Promise.all([
     getSymbolNames(symbols),
@@ -151,7 +155,7 @@ async function buildNote(holdings: [string, { quantity: number; cost: number }][
     earningsSoon: rows.filter((row) => row.earnings).map((row) => ({ symbol: row.symbol, day: day(row.earnings!.date), timing: row.earnings!.timing })),
   });
 
-  const out = await callClaude(SYSTEM[locale], Schema, input);
+  const out = await callClaude(SYSTEM[locale], Schema, input, client);
   if (!out || !out.summary.trim()) throw new Error("no-output");
   const points = out.points.slice(0, 3).map((p) => ({ title: p.title.trim(), detail: p.detail.trim() }));
   const text = [out.summary, ...points.flatMap((p) => [p.title, p.detail])].join(" ");

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isBot } from "@/lib/analytics";
+import { anonymousClient } from "@/lib/claude-budget";
 import { isCompareRange } from "@/lib/compare";
 import { getCompareNote } from "@/lib/compare-note";
 import { noteSymbols } from "@/lib/compare-note-core";
@@ -17,7 +18,9 @@ import { insightFailure, insightsConfigured } from "@/lib/stock-insights";
  * aralık değişiminde 800 ms bekleyip tek istek atıyor ve aynı anahtarı
  * istemcide hatırlıyor, yani okuyucu düğmeler arasında gezinirken de tavanın
  * altında kalır. Semboller 2–4, geçerli ve TANINAN (tek sorgu,
- * `getSymbolNames`); bilinmeyen sembol Claude'a hiç gitmez.
+ * `getSymbolNames`); bilinmeyen sembol Claude'a hiç gitmez. Bileşim sayısı
+ * yine de sınırsıza yakın: önbellekte olmayan not istemcinin günlük payından
+ * düşer (20 Ekim, lib/claude-budget.ts).
  */
 export const dynamic = "force-dynamic";
 export const maxDuration = 90;
@@ -35,6 +38,6 @@ export async function GET(request: Request) {
   if (!symbols || !isCompareRange(range)) return respond({ ok: false, reason: "bad-request" }, 400);
   const names = await getSymbolNames(symbols);
   if (symbols.some((symbol) => !names[symbol])) return respond({ ok: false, reason: "unknown" }, 404);
-  const { note, key } = await getCompareNote(symbols, range);
+  const { note, key } = await getCompareNote(symbols, range, anonymousClient(request));
   return respond(note ? { ok: true, note } : { ok: false, reason: "unavailable", cause: key ? insightFailure("compare", key) : null });
 }

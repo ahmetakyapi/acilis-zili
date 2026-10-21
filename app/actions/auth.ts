@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { compare, hash } from "bcryptjs";
 import { and, eq, isNull, or, sql } from "drizzle-orm";
 import { AuthError } from "next-auth";
@@ -10,8 +11,10 @@ import { DB_UNAVAILABLE, auth, forgetPasswordFingerprint, signIn, signOut } from
 import { db } from "@/lib/db";
 import { passwordResets, users, watchlists } from "@/lib/schema";
 import { emailConfigured, sendEmail } from "@/lib/email";
+import { RESET_KIND, claimSend, releaseSend } from "@/lib/email-notify";
 import { hashResetToken, issueResetToken, resetEmail, resetTokenOwner } from "@/lib/password-reset";
 import { withLocale } from "@/lib/i18n/routing";
+import { safeRedirectTarget } from "@/lib/safe-redirect";
 import { SITE_URL } from "@/lib/site";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { normalizeUsername } from "@/lib/utils";
@@ -48,45 +51,9 @@ export type AuthFormState = {
 /* Sınırlar lib/rate-limit.ts'te: aynı sayaç `authorize()` kapısında da
    okunuyor ve iki ayrı sabit er geç birbirinden ayrı düşerdi. */
 
-/**
- * Giriş sonrası dönülecek adres.
- *
- * `devam` parametresi proxy tarafından yazılıyordu ama hiç OKUNMUYORDU:
- * korumalı bir sayfadan giriş yapan kullanıcı işini bitirdiğinde ana
- * sayfaya düşüyordu. Artık okunuyor — ama körlemesine değil.
- *
- * Doğrulama şart: kullanıcıdan gelen bir adrese sorgusuz yönlendirmek açık
- * yönlendirme (open redirect) açığıdır ve kimlik avında kullanılır. Kabul
- * edilen tek biçim, tek eğik çizgiyle başlayan göreli yol.
- *
- * ÖN EK ELEMEK YETMEDİ. Önce yalnızca `//` ve `/\` ön ekleri eleniyordu;
- * `.trim()` de baş ve sondaki boşluğu attığı için ARADAKİ sekme hayatta
- * kalıyordu. Sonuç: `/<TAB>/evil.com` iki denetimden de geçiyordu ama
- * tarayıcı onu çözerken WHATWG kuralı gereği sekme, satır başı ve satır
- * sonunu AYRIŞTIRMADAN ÖNCE siliyor — geriye protokole göreli `//evil.com`
- * kalıyor ve kullanıcı https://evil.com'da açılıyordu. Açık yönlendirme
- * kapatıldı sanılıyordu, kapanmamıştı.
- *
- * Doğru yol dizeyi elemek değil ÇÖZMEK: adres, sitenin kendi kökü taban
- * alınarak ayrıştırılıyor ve çıkan `origin` tabanla aynı değilse
- * reddediliyor. Tarayıcı hangi kuralla çözüyorsa doğrulama da o kuralla
- * çözüyor, yani aradaki fark kapanıyor. `startsWith("/")` denetimi
- * ayrıştırmadan ÖNCE duruyor: `https://evil.com` mutlak bir adres ve
- * ayrıştırıcı onu sorunsuz çözerdi, oysa buraya hiç girmemeli.
- */
-const REDIRECT_BASE = "https://acilis-zili.local";
-
-function safeRedirectTarget(raw: FormDataEntryValue | null): string {
-  const value = typeof raw === "string" ? raw.trim() : "";
-  if (!value.startsWith("/")) return "/";
-  try {
-    const url = new URL(value, REDIRECT_BASE);
-    if (url.origin !== REDIRECT_BASE) return "/";
-    return `${url.pathname}${url.search}${url.hash}`;
-  } catch {
-    return "/";
-  }
-}
+/* `devam` doğrulaması (açık yönlendirme) lib/safe-redirect.ts'te — gerekçe
+   orada; "use server" dosyası yalnız async fonksiyon dışa verebildiği için
+   test edilebilsin diye taşındı (20 Ekim). */
 
 const usernameSchema = z
   .string()
@@ -441,6 +408,11 @@ export async function deleteAccountAction(
   }
 
   await db.delete(users).where(eq(users.id, userId));
+  /* Öteki cihazlardaki oturumlar da bir sonraki istekte düşsün (20 Ekim).
+     Yukarıdaki `auth()` parmak izini süreç önbelleğine yeni yazdı; silinmezse
+     silinmiş hesabın çerezleri beş dakika daha geçerli sayılıyor, hesap
+     arayüzü boş veriyle çiziliyor ve her yazma yabancı anahtarda patlıyordu. */
+  forgetPasswordFingerprint(userId);
 
   // signOut yönlendirmeyi kendi atar; buradan sonrası çalışmaz.
   await signOut({ redirectTo: "/" });
@@ -459,10 +431,11 @@ export async function deleteAccountAction(
    yok sayıyor), kullanıcı adını ya da e-postanın yerel kısmını içermesin.
    Yeni şifre eskisiyle aynı olamaz.
 
-   DİĞER OTURUMLAR AÇIK KALIYOR, bilerek ve ekranda yazılı. Oturumlar JWT;
-   eski çerezleri geçersiz kılmak `users`a bir oturum sürümü sütunu
-   eklemeyi gerektiriyor ve o sütun migration inene kadar her girişi
-   kırardı (CLAUDE.md → "Migration'lar deploy'da UYGULANMAZ").
+   DİĞER OTURUMLAR DÜŞER (16 Ekim'den beri; ekrandaki not da bunu söylüyor).
+   Önce açık kalıyorlardı: eski çerezleri geçersiz kılmak `users`a bir
+   oturum sürümü sütunu istiyordu ve o sütun migration inene kadar her
+   girişi kırardı (CLAUDE.md → "Migration'lar deploy'da UYGULANMAZ").
+   Çözüm sütunsuz — token'daki parola özeti parmak izi (auth.ts).
    -------------------------------------------------------------------------- */
 
 const PASSWORD_CHANGE_LIMIT = 5;
@@ -584,10 +557,20 @@ export async function requestPasswordResetAction(
      artık aynı noktada dönüyor; iş tamamı yanıttan sonra. */
   const found = user;
   after(async () => {
+    /* POSTA DEFTERE SAYILIR (20 Ekim) — gerekçe lib/email-notify.ts →
+       `resetShare`. Sahiplenme bağlantı ÜRETİLMEDEN önce: pay doluyken yeni
+       bağlantı yazılsaydı hesabın daha önce gönderilmiş geçerli bağlantısı
+       silinir, yerine posta gitmezdi. Defter okunamıyorsa ("unavailable":
+       tablo yok, Neon kesintisi) sıfırlama YİNE gider — hesabı kurtarmak
+       bütçe muhasebesinden önemli. */
+    const key = `${RESET_KIND}:${randomUUID()}`;
+    const claim = await claimSend(found.id, RESET_KIND, key);
+    if (claim === "budget") console.warn("[e-posta] şifre sıfırlamanın günlük payı doldu; bağlantı gönderilmedi");
+    if (claim !== "claimed" && claim !== "unavailable") return;
     const token = await issueResetToken(found.id);
-    if (!token) return;
-    const link = `${SITE_URL}${withLocale("/sifre-sifirla", locale)}?anahtar=${token}`;
-    await sendEmail(resetEmail({ to: found.email, username: found.username, link, lang: locale === "en" ? "en" : "tr", requestedAt: new Date(), copy: R.mail }));
+    const link = token ? `${SITE_URL}${withLocale("/sifre-sifirla", locale)}?anahtar=${token}` : null;
+    const ok = link !== null && (await sendEmail(resetEmail({ to: found.email, username: found.username, link, lang: locale === "en" ? "en" : "tr", requestedAt: new Date(), copy: R.mail })));
+    if (!ok && claim === "claimed") await releaseSend(key);
   });
   return sent;
 }

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { rateLimit } from "@/lib/rate-limit";
 import { watchlistItems, watchlists } from "@/lib/schema";
 import { isValidSymbol } from "@/lib/utils";
 import { getLocale } from "@/lib/i18n";
@@ -69,15 +70,73 @@ const MAX_REORDER_ITEMS = 200;
    çağrıyı sınırlıyordu.
 
    Sayılar gerçek kullanımın çok üstünde: en kalabalık kullanım bir avuç
-   liste, listede birkaç düzine sembol. Sınıra dayanan kullanıcı sessizce
-   dönmüyor; arayüz zaten sunucu eyleminden sonra sayfayı tazeliyor ve
-   eklenmeyen öğe görünmediği için durum kendini belli ediyor.
+   liste, listede birkaç düzine sembol. Sınıra dayanan kullanıcı sessiz
+   kalmıyor: eylem sonuç döndürüyor (`reason: "full"`, `full: true`; oran
+   kovasında `limit`) ve pano `listsFull` / `listFull` / `actionFailed`,
+   kalp `heartFull` sözlük iletisini gösteriyor. Tavan yolunda tazeleme
+   yok; arayüz de 20 Ekim'den beri başarı yollarında `router.refresh()`
+   çağırmıyor — sayfayı eylemin kendi `revalidatePath`i yeniden çizdiriyor.
    -------------------------------------------------------------------------- */
 const MAX_LISTS = 20;
 const MAX_ITEMS_PER_LIST = 200;
 
+/* ORAN KOVASI (20 Ekim). Alarm, portföy, avatar, gönderi ve bildirim
+   eylemlerinin hepsi kullanıcı başına bir kova taşıyordu; bu dosyanın sekiz
+   eylemi taşımıyordu. Tavanlar satır SAYISINI sınırlıyor, çağrı sayısını
+   değil: döngüyle sınırsız ad/not yazmak ya da kalbi açıp kapamak (her biri
+   bir tazeleme) mümkündü. Ad, not, ekleme, silme ve kalp tek kovada —
+   60/dk, art arda sembol ekleyen gerçek okuyucuya bol.
+
+   SIRALAMANIN KOVASI AYRI (20 Ekim). Dokunmatikte sıralamanın pratik yolu
+   Yukarı/Aşağı oklarıydı ve her dokunuş bir eylem çağrısıydı: 45. satırı
+   başa almak 44 çağrı. Ortak kovada bir listeyi düzenleyen okuyucu
+   dakikada 60'ı geçiyor, her dokunuş `{ ok: false }` alıyor ve pano sırayı
+   sessizce geri sarıyordu; ekleme/silme hakkını da sıralama yiyordu. Oklar
+   artık istemcide toplanıyor (WatchlistBoard → `nudge`, dokunuş dizisi son
+   dokunuştan 600 ms sonra TEK çağrı) ve sıralamanın kendi kovası var.
+   Kovasız bırakılmıyor: her çağrı `/favoriler`i tazeliyor.
+
+   GENİŞ DEĞİL (20 Ekim). Bu kova bir dönem 240/dk'ydı — her dokunuş ayrı
+   çağrıyken gereken pay. Toplama gelince o pay boşa kaldı ama tazeleme
+   tavanını büyütüyordu: hesap başına dakikada 60 + 240 = 300 tazeleme,
+   ortak kovanın beş katı. 60/dk saniyede bir kayıt demek; dokunuş dizisi
+   ancak 600 ms duraklamayla kapanıyor, sürükleme de bırakmada tek çağrı,
+   yani gerçek düzenleme bunun çok altında kalıyor. Tavan şimdi 60 + 60. */
+function overLimit(userId: string): boolean {
+  return !rateLimit(`watchlist:${userId}`, 60, 60_000).allowed;
+}
+
+function reorderOverLimit(userId: string): boolean {
+  return !rateLimit(`watchlist-reorder:${userId}`, 60, 60_000).allowed;
+}
+
+/**
+ * Bir sembolün takip durumu değişince yapılan tazeleme: YALNIZ `/favoriler`.
+ *
+ * SEMBOL SAYFALARI TAZELENMİYOR (20 Ekim). Kalp `/hisse/X`, `/teknik/x` ve
+ * `/hisse-secimi/X`'i de tazeliyordu. Her `revalidatePath` o sayfanın
+ * okuduğu bütün `fetch`/`unstable_cache` girdilerini bir sonraki çizimde
+ * ıskalatıyor: kalbi döngüyle açıp kapamak (kovayla bile hesap başına
+ * dakikada 60 kez) en işlek hisse sayfalarını her çizimde sağlayıcıya
+ * yeniden gönderiyordu (Finnhub ücretsiz katmanı dakikada 60 çağrı).
+ * Doğruluğa katkısı da yoktu: bu sayfalar dinamik (kök yerleşim
+ * `headers()` okuyor) ve kalbin durumu her istekte veritabanından okunuyor;
+ * eylemdeki HERHANGİ bir `revalidatePath` bulunulan sayfayı eylemin
+ * yanıtında zaten yeniden çiziyor (Next 16.3: yol eşleşmesine bakılmıyor,
+ * `revalidate.js` → "TODO: only revalidate if the path matches"; bu
+ * değişirse kalbin sayfalarında `refresh()` gerekir). Sembol sayfası
+ * tazelemesi kalkınca uydurma sembolün im tablosunu (`tagsManifest`)
+ * büyütmesi ve onu kesen `isKnownSymbol` sorgusu da kalktı. Tazeleme
+ * yalnız gerçek değişimde; mükerrerde ve tavanda yok. Alarmlarda aynı
+ * karar: `app/actions/alerts.ts` → `revalidate`.
+ */
+function revalidateFavorites() {
+  revalidatePath("/favoriler");
+}
+
 export async function createWatchlist(formData: FormData) {
   const userId = await requireUserIdOrRedirect();
+  if (overLimit(userId)) return { ok: false as const, reason: "limit" as const };
 
   const name = String(formData.get("name") ?? "").trim().slice(0, 40);
   const color = String(formData.get("color") ?? "primary");
@@ -110,6 +169,7 @@ export async function createWatchlist(formData: FormData) {
 
 export async function renameWatchlist(formData: FormData) {
   const userId = await requireUserIdOrRedirect();
+  if (overLimit(userId)) return { ok: false as const, reason: "limit" as const };
 
   const listId = String(formData.get("listId") ?? "");
   const name = String(formData.get("name") ?? "").trim().slice(0, 40);
@@ -133,11 +193,16 @@ export async function renameWatchlist(formData: FormData) {
   return { ok: true as const };
 }
 
-export async function deleteWatchlist(formData: FormData) {
+/* `{ ok }` DÖNÜYOR (20 Ekim): istemci artık `router.refresh()` çağırmıyor
+   (eylemin tazelemesi güncel ağacı zaten getiriyor), yani tazelemesiz
+   dönüşü — kova, boş kimlik — ayırt edebilmesi gerekiyor; yoksa onay
+   "bekliyor" hâlinde kalırdı. */
+export async function deleteWatchlist(formData: FormData): Promise<{ ok: boolean }> {
   const userId = await requireUserIdOrRedirect();
+  if (overLimit(userId)) return { ok: false };
 
   const listId = String(formData.get("listId") ?? "");
-  if (!listId) return;
+  if (!listId) return { ok: false };
 
   // ON DELETE CASCADE list öğelerini de siler.
   await db
@@ -145,10 +210,12 @@ export async function deleteWatchlist(formData: FormData) {
     .where(and(eq(watchlists.id, listId), eq(watchlists.userId, userId)));
 
   revalidatePath("/favoriler");
+  return { ok: true };
 }
 
 export async function addSymbolToList(formData: FormData) {
   const userId = await requireUserIdOrRedirect();
+  if (overLimit(userId)) return { ok: false, duplicate: false, full: false };
 
   const listId = String(formData.get("listId") ?? "");
   const symbol = String(formData.get("symbol") ?? "").trim().toUpperCase();
@@ -186,8 +253,8 @@ export async function addSymbolToList(formData: FormData) {
     .onConflictDoNothing()
     .returning({ id: watchlistItems.id });
 
-  revalidatePath("/favoriler");
-  revalidatePath(`/hisse/${symbol}`);
+  /* Mükerrerde hiçbir şey değişmedi: tazeleme yok (20 Ekim). */
+  if (inserted.length > 0) revalidateFavorites();
 
   return { ok: inserted.length > 0, duplicate: inserted.length === 0, full: false };
 }
@@ -214,6 +281,7 @@ export async function reorderWatchlistItems(
 ): Promise<{ ok: boolean }> {
   const userId = await requireUserId();
   if (!userId || !listId || !Array.isArray(orderedIds)) return { ok: false };
+  if (reorderOverLimit(userId)) return { ok: false };
   /* Sınırı AŞAN İSTEK KIRPILMAZ, HİÇ İŞLENMEZ. Kırpmak, gönderenin niyetini
      tahmin etmek olurdu: gerçek bir sürükle-bırak asla bu boyda olmaz, yani
      bu istek ya bozuk ya kasıtlı. İkisinde de doğru cevap dokunmamak. */
@@ -260,11 +328,14 @@ export async function reorderWatchlistItems(
   return { ok: true };
 }
 
-export async function removeSymbolFromList(formData: FormData) {
+/* `{ ok }` DÖNÜYOR (20 Ekim) — gerekçe `deleteWatchlist`: tazelemesiz dönüşte
+   satır "siliniyor" tonunda kalmasın. */
+export async function removeSymbolFromList(formData: FormData): Promise<{ ok: boolean }> {
   const userId = await requireUserIdOrRedirect();
+  if (overLimit(userId)) return { ok: false };
 
   const itemId = String(formData.get("itemId") ?? "");
-  if (!itemId) return;
+  if (!itemId) return { ok: false };
 
   // Öğenin sahibi doğrulanarak silinir.
   await db.delete(watchlistItems).where(
@@ -278,6 +349,7 @@ export async function removeSymbolFromList(formData: FormData) {
   );
 
   revalidatePath("/favoriler");
+  return { ok: true };
 }
 
 /**
@@ -290,6 +362,7 @@ const MAX_NOTE_LENGTH = 200;
 
 export async function setWatchlistNote(formData: FormData): Promise<{ ok: boolean }> {
   const userId = await requireUserIdOrRedirect();
+  if (overLimit(userId)) return { ok: false };
   const itemId = String(formData.get("itemId") ?? "");
   const note = String(formData.get("note") ?? "").trim().slice(0, MAX_NOTE_LENGTH);
   if (!itemId) return { ok: false };
@@ -321,6 +394,9 @@ export async function toggleSymbolFavorite(formData: FormData) {
   if (!isValidSymbol(symbol)) return;
 
   const userId = await requireUserIdOrRedirect(`/hisse/${symbol}`);
+  /* Kovada sessiz dönüş: tazeleme olmadığı için iyimser kalp kendiliğinden
+     geri sarılıyor (FavoriteToggle). */
+  if (overLimit(userId)) return;
 
   const existing = await db
     .select({ itemId: watchlistItems.id })
@@ -328,17 +404,24 @@ export async function toggleSymbolFavorite(formData: FormData) {
     .innerJoin(watchlists, eq(watchlistItems.watchlistId, watchlists.id))
     .where(and(eq(watchlists.userId, userId), eq(watchlistItems.symbol, symbol)));
 
+  /* Satır gerçekten eklendi ya da silindi mi — yalnız o zaman tazeleme
+     (20 Ekim, `revalidateFavorites`). */
+  let changed: boolean;
   if (existing.length > 0) {
     /* TEK İSTEK. Silme bir dönem döngüdeydi ve her öğe için ayrı bir
        neon-http gidiş dönüşü açıyordu; aynı sembol birden çok listede
        olabildiği için sayı birden büyük olabiliyor. `inArray` hepsini tek
        ifadede siliyor — dosyanın kendi `inArray` içe aktarımı zaten var. */
-    await db.delete(watchlistItems).where(
-      inArray(
-        watchlistItems.id,
-        existing.map((row) => row.itemId),
-      ),
-    );
+    const deleted = await db
+      .delete(watchlistItems)
+      .where(
+        inArray(
+          watchlistItems.id,
+          existing.map((row) => row.itemId),
+        ),
+      )
+      .returning({ id: watchlistItems.id });
+    changed = deleted.length > 0;
   } else {
     let [list] = await db
       .select({ id: watchlists.id })
@@ -373,17 +456,15 @@ export async function toggleSymbolFavorite(formData: FormData) {
        okuyucu neden olduğunu görmüyordu. Artık sonuç dönüyor (FavoriteToggle). */
     if (total >= MAX_ITEMS_PER_LIST) return { full: true as const };
 
-    await db
+    const inserted = await db
       .insert(watchlistItems)
       .values({ watchlistId: list.id, symbol })
-      .onConflictDoNothing();
+      .onConflictDoNothing()
+      .returning({ id: watchlistItems.id });
+    changed = inserted.length > 0;
   }
 
-  revalidatePath(`/hisse/${symbol}`);
-  /* Kalp artık teknik ve hisse seçimi detaylarında da var (FavoriteSlot). */
-  revalidatePath(`/teknik/${symbol.toLowerCase()}`);
-  revalidatePath(`/hisse-secimi/${symbol}`);
-  revalidatePath("/favoriler");
+  if (changed) revalidateFavorites();
 }
 
 /** Düz `<form action>` için (sunucu bileşeni, sonucu okuyamıyor): bilanço

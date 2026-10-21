@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { cache } from "react";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
@@ -7,7 +8,7 @@ import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
 import { normalizeUsername } from "@/lib/utils";
-import { AUTH_WINDOW_MS, SIGN_IN_LIMIT, rateLimit } from "@/lib/rate-limit";
+import { AUTH_WINDOW_MS, SIGN_IN_LIMIT, forwardedKey, rateLimit } from "@/lib/rate-limit";
 
 /**
  * Kullanıcı adı + şifre ile giriş.
@@ -39,18 +40,21 @@ import { AUTH_WINDOW_MS, SIGN_IN_LIMIT, rateLimit } from "@/lib/rate-limit";
  * Başlık istekte yoksa istek bağlamındaki başlıklara düşülüyor; ikisi de
  * yoksa tek bir ortak kovaya düşmemek için sabit bir ad kullanılıyor —
  * o durumda sınır paylaşılır ama sahte bir güvenlik iddiası da yok.
+ *
+ * Anahtarı `forwardedKey` kurar (20 Ekim): burada elle kurulduğunda IPv6
+ * /64 indirgemesi atlanıyordu — gerekçe lib/rate-limit.ts.
  */
 async function signInKey(request: unknown): Promise<string> {
   const fromRequest =
     request instanceof Request
       ? request.headers.get("x-forwarded-for")
       : null;
-  if (fromRequest) return `signin:${fromRequest.split(",")[0]?.trim()}`;
+  if (fromRequest) return forwardedKey("signin", fromRequest);
 
   try {
     const store = await headers();
     const forwarded = store.get("x-forwarded-for");
-    if (forwarded) return `signin:${forwarded.split(",")[0]?.trim()}`;
+    if (forwarded) return forwardedKey("signin", forwarded);
   } catch {
     /* İstek bağlamı yoksa (beklenmiyor) aşağıdaki ortak kovaya düşülür. */
   }
@@ -92,9 +96,11 @@ const DUMMY_HASH =
 
    MIGRATION YOK: token'a girişte parola özetinin kısa bir PARMAK İZİ
    yazılıyor; her okumada hesabın güncel parmak iziyle karşılaştırılıyor,
-   uyuşmazsa `null` → Auth.js çerezi siliyor. Özet bcrypt tuzlu olduğundan
-   her şifre değişikliği yeni bir iz demek. İz sır değil ama çerezden de
-   okunmuyor (JWT şifreli); 16 karakterlik SHA-256 öneki çakışmaya kapalı.
+   uyuşmazsa `null` → oturum yok sayılıyor (çerez tarayıcıda KALIYOR ama
+   artık hiçbir şey açmıyor — aşağıda `session` notu, 20 Ekim). Özet
+   bcrypt tuzlu olduğundan her şifre değişikliği yeni bir iz demek. İz sır
+   değil ama çerezden de okunmuyor (JWT şifreli); 16 karakterlik SHA-256
+   öneki çakışmaya kapalı.
 
    MALİYET: veritabanı her istekte değil, süreç içi önbellekle kullanıcı
    başına beş dakikada bir. Sıfırlama ve değiştirme eylemleri önbelleği
@@ -138,9 +144,15 @@ export function forgetPasswordFingerprint(userId: string): void {
   fingerprints.delete(userId);
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  // Oturum 180 gün yaşar ve aktif kullanımda kayarak yenilenir —
-  // kullanıcı her ziyarette yeniden giriş yapmak zorunda kalmaz.
+const nextAuth = NextAuth({
+  /* Oturum GİRİŞTEN 180 gün yaşar — kullanıcı her ziyarette yeniden giriş
+     yapmak zorunda kalmaz. KAYARAK YENİLENMİYOR (20 Ekim düzeltmesi; yorum
+     öyle diyordu): `updateAge` yenilenmiş çerezi üretiyor ama argümansız
+     `auth()` (next-auth lib/index.js) Auth.js'in `Set-Cookie` başlıklarını
+     atıyor ve sitede `/api/auth/session` çağıran istemci de yok. Aynı
+     sebeple geçersiz çerez (şifre değişti, hesap silindi) tarayıcıdan hiç
+     SİLİNMİYOR — o yüzden çerezin varlığına bakan hiçbir kapı "oturum açık"
+     dememeli (proxy.ts). */
   session: {
     strategy: "jwt",
     maxAge: 60 * 60 * 24 * 180,
@@ -238,8 +250,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.sub = user.id;
         /* Rol token'a giriş anında yazılır ve oturum boyunca orada kalır.
            GÖRÜNÜM İÇİN yeterli, YETKİ İÇİN değil: yetkisi alınan bir hesabın
-           token'ı yenilenene kadar (updateAge: 1 gün) hâlâ "admin" yazıyor
-           olabilir. Kapıyı tutan kontrol veritabanına bakar — lib/admin.ts */
+           token'ı yeniden girişe kadar (en fazla 180 gün; yenileme rolü
+           yeniden okumuyor) hâlâ "admin" yazıyor olabilir. Kapıyı tutan
+           kontrol veritabanına bakar — lib/admin.ts */
         token.role = (user as { role?: string }).role ?? "user";
         const pwv = (user as { pwv?: string }).pwv;
         if (pwv) token.pwv = pwv;
@@ -267,3 +280,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+
+export const { handlers, signIn, signOut } = nextAuth;
+
+/**
+ * Oturum — İSTEK BAŞINA BİR KEZ çözülür (20 Ekim). Her argümansız çağrı
+ * Auth.js'in bütün oturum hattını koşuyordu: JWE çöz, `jwt`/`session`
+ * callback'leri, yenilenmiş token'ı yeniden şifrele (çerezi zaten atılıyor —
+ * yukarıda). Ana sayfa bir çizimde bunu 4–6 kez yapıyordu (layout, portföy,
+ * izleme listesi, ray…); parmak izi önbelleği beş dakikada bir boşaldığında
+ * aynı `users` sorgusu da o kadar kez paralel gidiyordu.
+ *
+ * React `cache()` yalnız RSC çizimi içinde saklar; server action ve route
+ * handler gövdesinde çizim yok, çağrı doğrudan geçer — `signIn` sonrası
+ * okuma bayatlamaz, eylemin ardından gelen çizim yeni bir istek önbelleğidir.
+ * Bütün çağrı yerleri argümansız; istek sarmalayıcı biçimleri (`auth(req)`,
+ * `auth(handler)`) bilerek dışa verilmiyor.
+ */
+export const auth = cache(() => nextAuth.auth());

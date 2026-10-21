@@ -6,6 +6,7 @@ import { unstable_cache } from "next/cache";
 import { z } from "zod";
 import { ungroundedNumbers } from "@/lib/ai-grounding";
 import { selectNews } from "@/lib/ai-analysis-core";
+import { ClaudeBudgetError, refundCall, takeCall } from "@/lib/claude-budget";
 import { claudeKey } from "@/lib/claude-key";
 import { getHolidays, getStatus, getSymbolNames, guncelBilanco } from "@/lib/data";
 import { db } from "@/lib/db";
@@ -16,7 +17,7 @@ import { getChartBars } from "@/lib/providers";
 import { getCompanyNews, getEarningsSurprises } from "@/lib/providers/finnhub";
 import type { Bar } from "@/lib/providers/types";
 import { earningsCalendar } from "@/lib/schema";
-import { formatPercentText, formatPrice, safeExternalUrl } from "@/lib/utils";
+import { formatMoneyCompact, formatPercentText, formatPrice, safeExternalUrl } from "@/lib/utils";
 import { indexMemberOf } from "@/db/seed/indices";
 import { isSpotlight } from "@/lib/spotlight";
 
@@ -41,9 +42,14 @@ import { isSpotlight } from "@/lib/spotlight";
  *
  * MALİYET: not tek çağrıda İKİ DİLDE yazılır ve sembol + seans (bilançoda
  * sembol + rapor) anahtarıyla 36 saat önbellekte kalır — aynı hafta için
- * ikinci okuyucu Claude'a gitmez. Süreç başına günlük çağrı tavanı
- * (`INSIGHT_DAILY_CAP`, varsayılan 150); Sonnet 5.5'te çağrı ~0,01 $, yani
- * en kötü gün ~1,5 $. Botlar uca hiç ulaşmaz (app/api/ai/hisse-notu).
+ * ikinci okuyucu Claude'a gitmez. Önbellek 20 Ekim'den beri dağıtımdan da
+ * sağ çıkıyor (deploy/update.sh, ortak `fetch-cache`; geri çağrının
+ * derlenmiş metni değişen sürümde not bir kez yeniden yazılır). Süreç başına
+ * günlük çağrı tavanı (`INSIGHT_DAILY_CAP`, varsayılan 150); Sonnet 5.5'te
+ * çağrı ~0,01 $, yani süreç başına en kötü gün ~1,5 $ — sayaç bellekte, her
+ * dağıtım (yeniden başlatma) onu sıfırlıyor. Botlar uca hiç ulaşmaz
+ * (app/api/ai/hisse-notu).
+ * Tavanın istemci başına ve anonim uçlara düşen payı lib/claude-budget.ts.
  */
 
 export type InsightPoint = { title: string; detail: string; source: { headline: string; url: string; source: string | null } | null };
@@ -74,9 +80,11 @@ export type EarningsInsight = {
   period: string | null;
   reactionPct: number | null;
   reactionDate: string | null;
-  /** Kartın beklenti / gerçekleşen çubukları (ham sayılar; gelir dolar). */
+  /** Kartın beklenti / gerçekleşen çubukları (ham sayılar, `currency` parasında). */
   eps: EarningsFigure | null;
   revenue: EarningsFigure | null;
+  /** Bilanço rakamlarının para birimi (ISO); dolarsa null — `earningsCurrency`. */
+  currency: string | null;
   text: { tr: InsightText; en: InsightText };
   generatedAt: string;
 };
@@ -86,20 +94,6 @@ export type EarningsFigure = { actual: number; estimate: number; direction: "bea
 export const insightModel = () => process.env.CLAUDE_INSIGHT_MODEL?.trim() || "claude-sonnet-5-5";
 /* Reddetmede sunucu tarafı yedek model yalnız bu modellerde var. */
 const FALLBACK_MODELS = new Set(["claude-sonnet-5-5", "claude-opus-5-5", "claude-opus-5", "claude-fable-5-1"]);
-const dailyCap = () => {
-  const raw = Number(process.env.INSIGHT_DAILY_CAP);
-  return Number.isFinite(raw) && raw >= 0 ? Math.floor(raw) : 150;
-};
-
-let spent = { day: "", n: 0 };
-/** Günlük çağrı tavanından bir hak düşer; tavan doluysa false. */
-function takeCall(): boolean {
-  const day = new Date().toISOString().slice(0, 10);
-  if (spent.day !== day) spent = { day, n: 0 };
-  if (spent.n >= dailyCap()) return false;
-  spent.n += 1;
-  return true;
-}
 
 export const insightsConfigured = () => Boolean(claudeKey()) && process.env.INSIGHTS_DISABLED !== "1";
 
@@ -150,9 +144,27 @@ function newsInput(items: Awaited<ReturnType<typeof getCompanyNews>>, symbol: st
 /** Modele adres gitmez: kaynak bağlantısı yanıtta dizinden çözülür. */
 const withoutUrl = (item: NewsInput) => ({ index: item.index, headline: item.headline, summary: item.summary, source: item.source, date: item.date });
 
+/** Sayı denetiminin metni: girdinin kendisi, haberlerin `index` alanı hariç — gerekçe `grounded`. */
+const groundingOf = (payload: { news: ReturnType<typeof withoutUrl>[] }) =>
+  JSON.stringify({ ...payload, news: payload.news.map((item) => ({ headline: item.headline, summary: item.summary, source: item.source, date: item.date })) });
+
 /** İki dilde biçimlenmiş yüzde — model dile göre kopyalar, denetim ikisini de tanır. */
 const pct2 = (value: number) => ({ tr: formatPercentText(value, "tr", 2), en: formatPercentText(value, "en", 2) });
 const usd2 = (value: number) => ({ tr: formatPrice(value, "tr", { currency: true }), en: formatPrice(value, "en", { currency: true }) });
+
+/* BİLANÇO RAKAMI DOLAR DEĞİL (20 Ekim). `earnings_calendar`ın HBK ve gelir
+   rakamları şirketin ANA BORSASININ parasında (gerekçe
+   app/(app)/hisse/[symbol]/_panels/shared.tsx → paraSecenegi). Not ve kartı
+   hepsini `$` ile basıyordu: /hisse/TSM'de önizleme "1470,00 Mr $" ve
+   "$27,25" yazıyor, Claude "1.470 milyar $ gelir bekleniyor" diyordu; hemen
+   altındaki Yaklaşan Bilanço kartı aynı sayıyı TWD ile gösteriyor. Sayı
+   denetimi yalnız rakama baktığı için yanlış simge denetimden geçiyordu.
+   Rakamlar artık kartla AYNI biçimlendiricilerden ve sembolün parasıyla. */
+const earningsCurrency = (code: string | null | undefined) => (code && code !== "USD" ? code : null);
+const money2 = (value: number | null, currency: string | null) =>
+  value === null ? null : { tr: formatPrice(value, "tr", { currency: currency ?? true }), en: formatPrice(value, "en", { currency: currency ?? true }) };
+const compact2 = (value: number | null, currency: string | null) =>
+  value === null ? null : { tr: formatMoneyCompact(value, "tr", currency), en: formatMoneyCompact(value, "en", currency) };
 
 /** Son TAMAMLANMIŞ seansın ET günü: seans sürerken dün, değilse ekranın seans günü.
     Karşılaştırma notu da buradan okur (lib/compare-note.ts). */
@@ -172,19 +184,37 @@ export async function completedDailyBars(symbol: string): Promise<Bar[] | null> 
   return bars;
 }
 
-export async function callClaude<T extends z.ZodType>(system: string, schema: T, input: string): Promise<z.infer<T> | null> {
+/**
+ * `client`: isteğin bütçe kimliği (lib/claude-budget.ts) — anonim uçta
+ * `anonymousClient` (hisse, haber, veri, karşılaştırma notu), oturumlu notta
+ * `memberClient` (portföy notu); yalnız nöbet (ısıtmalar, takip postası)
+ * kimliksiz çağırır. Pay yoksa `ClaudeBudgetError` FIRLATIR — gerekçe orada.
+ */
+export async function callClaude<T extends z.ZodType>(system: string, schema: T, input: string, client?: string): Promise<z.infer<T> | null> {
   const apiKey = claudeKey();
-  if (!apiKey || !takeCall()) return null;
+  if (!apiKey) return null;
+  takeCall(client);
   const model = insightModel();
-  const client = new Anthropic({ apiKey, maxRetries: 1, timeout: 60_000 });
-  const response = await client.beta.messages.parse({
-    model,
-    max_tokens: 6000,
-    ...(FALLBACK_MODELS.has(model) ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
-    system,
-    output_config: { effort: "low", format: betaZodOutputFormat(schema) },
-    messages: [{ role: "user", content: input }],
-  });
+  const anthropic = new Anthropic({ apiKey, maxRetries: 1, timeout: 60_000 });
+  const response = await anthropic.beta.messages
+    .parse({
+      model,
+      max_tokens: 6000,
+      ...(FALLBACK_MODELS.has(model) ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
+      system,
+      output_config: { effort: "low", format: betaZodOutputFormat(schema) },
+      messages: [{ role: "user", content: input }],
+    })
+    .catch((error: unknown) => {
+      /* Aşırı yük ve kesinti (20 Ekim): sunucunun reddettiği istek
+         ücretlenmez, hakkı da yanmasın — yoksa bir kesinti saatinde açılan
+         sayfalar tavanı bitiriyor, API dönünce notlar gece yarısına dek
+         kapalı kalıyordu. İki sayaç birden döner: genel tavan ve
+         istemcinin günlük payı (lib/claude-budget.ts → refundCall). Zaman
+         aşımı geri verilmez: yanıt üretilmiş olabilir. */
+      if (error instanceof Anthropic.APIError && error.status !== undefined && (error.status === 429 || error.status >= 500)) refundCall(client);
+      throw error;
+    });
   if (response.stop_reason === "refusal") return null;
   return (response.parsed_output as z.infer<T> | null) ?? null;
 }
@@ -212,7 +242,11 @@ function grounded(texts: { tr: InsightText; en: InsightText }, input: string): b
   const all = [texts.tr, texts.en].flatMap((t) => [t.summary, ...t.points.flatMap((p) => [p.title, p.detail])]).join(" ");
   /* Ayraç farkı sayıyı düşürmez (18 Ekim, canlıda NFLX önizlemesi): haber
      metni İngilizce ("1,000"), Türkçe not "1.000" yazıyor. Rakam dizisi
-     yine birebir aynı olmak zorunda (lib/ai-grounding.ts). */
+     yine birebir aynı olmak zorunda (lib/ai-grounding.ts).
+     DİZİN SAYILMAZ (20 Ekim): denetim modele gidenle değil `groundingOf`la
+     yapılır. Haber dizini (`index` 0–9) de girdide geçtiği için uydurulmuş
+     "%3" ya da "7 banka" 3 ve 7 numaralı haber var diye geçiyordu — en sık
+     uydurulan küçük sayılar tam o aralıkta. */
   lastMissing = ungroundedNumbers(all, input);
   return lastMissing.length === 0;
 }
@@ -220,7 +254,12 @@ function grounded(texts: { tr: InsightText; en: InsightText }, input: string): b
 /* BAŞARISIZLIK DA HATIRLANIR (18 Ekim, canlıda görüldü: NFLX önizlemesi
    her açılışta yeniden Claude'a gidip düşüyordu — unstable_cache hatayı
    saklamıyor). Not başına son başarısızlık süreçte 20 dakika tutulur;
-   nedeni ve eksik sayılar uca tanı olarak geçer, metin içermez. */
+   nedeni ve eksik sayılar uca tanı olarak geçer, metin içermez.
+   API HATASI DA (20 Ekim): üç hisse notunun kendi `catch`i yalnız
+   "ungrounded" ve "no-output"u buraya bırakıp gerisini null'a çeviriyordu;
+   Claude'un aşırı yükü (429/529), 5xx'i ve zaman aşımı hiç hatırlanmıyor,
+   kesintide her açılış yeni bir çağrı ve tavandan bir hak yakıyordu. Notlar
+   artık her hatayı buraya bırakır. */
 const failures = new Map<string, { at: number; reason: string; detail?: string }>();
 const FAILURE_TTL = 20 * 60_000;
 export const insightFailure = (kind: string, symbol: string) => failures.get(`${kind}:${symbol}`) ?? null;
@@ -239,16 +278,29 @@ export class UngroundedError extends Error {
    okur = on çağrı). Aynı süreçte aynı not için tek istek; ötekiler onu bekler. */
 const inflight = new Map<string, Promise<unknown>>();
 
+/* PAY REDDİ DEVREDİLMEZ (20 Ekim). Uçuştaki söz İLK çağıranın bütçe
+   kimliğiyle kurulur (`run` onun `client`ını taşır). Paydan reddedilen bir
+   istemcinin (günlük 30'u dolmuş anonim okur ya da dolmuş %80'lik anonim
+   pay) null'u ona katılan herkese geçiyordu: dört IP'yle anonim payı
+   bitiren biri her popüler sayfada mahkûm bir çağrı başlatıyor, nöbetin
+   ısıtması (`warmEarningsInsights`) ya da payı olan okur ona katılıp null
+   alıyordu — ayrılan beşte bir tam bu durum için var. Ret artık söze
+   HATA olarak düşer: başlatan null'a çevirir, katılan kendi `run`ıyla
+   (kendi kimliğiyle) bir kez daha dener. Katılanlar yeni uçuşu yine
+   paylaşır; her turda başlatan düştüğü için döngü katılan sayısıyla sınırlı. */
+const refusedToNull = (error: unknown) => (error instanceof ClaudeBudgetError ? null : Promise.reject(error));
+
 /** Başarısızlık hafızası + uçuştaki çağrı — karşılaştırma notu da kullanır (anahtar `compare:{semboller}:{aralık}:{seans}`). */
 export function remembered<T>(kind: string, symbol: string, run: () => Promise<T | null>): Promise<T | null> {
   const key = `${kind}:${symbol}`;
   const pending = inflight.get(key) as Promise<T | null> | undefined;
-  if (pending) return pending;
+  if (pending) return pending.catch((error: unknown) => (error instanceof ClaudeBudgetError ? remembered(kind, symbol, run) : null));
   const promise = rememberedOnce(key, run).finally(() => inflight.delete(key));
   inflight.set(key, promise);
-  return promise;
+  return promise.catch(refusedToNull);
 }
 
+/** Pay reddini (`ClaudeBudgetError`) FIRLATIR — yalnız `remembered` çağırır, o çevirir. */
 async function rememberedOnce<T>(key: string, run: () => Promise<T | null>): Promise<T | null> {
   const failed = failures.get(key);
   if (failed && Date.now() - failed.at < FAILURE_TTL) return null;
@@ -257,6 +309,10 @@ async function rememberedOnce<T>(key: string, run: () => Promise<T | null>): Pro
     if (out) failures.delete(key);
     return out;
   } catch (error) {
+    /* Pay reddi notun başarısızlığı değil (lib/claude-budget.ts): hatırlansa
+       bir istemcinin reddi notu herkese 20 dakika kapatırdı. Hata olarak
+       yukarı çıkar ki uçuşa katılan onu devralmasın (`remembered`). */
+    if (error instanceof ClaudeBudgetError) throw error;
     const reason = error instanceof Error && ["ungrounded", "no-output"].includes(error.message) ? error.message : "error";
     const missing = error instanceof UngroundedError ? error.missing : lastMissing;
     failures.set(key, { at: Date.now(), reason, detail: reason === "ungrounded" ? missing.join(" ") : undefined });
@@ -275,7 +331,9 @@ const closeChange = (bars: Bar[], back: number) => {
   return base > 0 ? ((last - base) / base) * 100 : null;
 };
 
-async function buildMove(symbol: string): Promise<{ key: string; input: string; news: NewsInput[]; meta: Omit<MoveInsight, "text" | "explained" | "generatedAt"> } | null> {
+async function buildMove(
+  symbol: string,
+): Promise<{ key: string; input: string; grounding: string; news: NewsInput[]; meta: Omit<MoveInsight, "text" | "explained" | "generatedAt"> } | null> {
   const [bars, spy, names] = await Promise.all([completedDailyBars(symbol), completedDailyBars("SPY"), getSymbolNames([symbol])]);
   if (!bars) return null;
   const changePct = closeChange(bars, 5);
@@ -306,6 +364,7 @@ async function buildMove(symbol: string): Promise<{ key: string; input: string; 
   return {
     key: `${symbol}:${to}`,
     input: JSON.stringify(payload),
+    grounding: groundingOf(payload),
     news,
     meta: {
       kind: "move",
@@ -327,34 +386,30 @@ async function buildMove(symbol: string): Promise<{ key: string; input: string; 
 const stepsOf = (window: Bar[]) =>
   window.slice(1).map((bar, i) => ({ date: barDate(bar), changePct: ((bar.close - window[i]!.close) / window[i]!.close) * 100 }));
 
-export function getMoveInsight(symbol: string): Promise<MoveInsight | null> {
-  return remembered("move", symbol, () => getMoveInsightOnce(symbol));
+/** `client`: anonim uçtaki isteğin bütçe kimliği (`callClaude`); nöbet vermez. */
+export function getMoveInsight(symbol: string, client?: string): Promise<MoveInsight | null> {
+  return remembered("move", symbol, () => getMoveInsightOnce(symbol, client));
 }
 
-async function getMoveInsightOnce(symbol: string): Promise<MoveInsight | null> {
-  try {
-    const built = await buildMove(symbol);
-    if (!built) return null;
-    /* Figürün sayıları (seanslar, hacim, S&P çizgisi) önbelleğin DIŞINDA,
-       her istekte aynı seans barlarından: önbellekteki eski notta olmayan
-       alanlar Claude'u yeniden çağırmadan gelir, metinle aynı seansı anlatır
-       (anahtar sembol + son seans). */
-    const cached = await unstable_cache(
-      async (): Promise<MoveInsight> => {
-        const out = await callClaude(MOVE_SYSTEM, MoveSchema, built.input);
-        if (!out) throw new Error("no-output");
-        const text = { tr: resolvePoints(out.tr, built.news), en: resolvePoints(out.en, built.news) };
-        if (!grounded(text, built.input)) throw new Error("ungrounded");
-        return { ...built.meta, explained: out.explained, text, generatedAt: new Date().toISOString() };
-      },
-      ["stock-move-v3", built.key],
-      { revalidate: 36 * 3600, tags: ["stock-insight"] },
-    )();
-    return { ...cached, ...built.meta };
-  } catch (error) {
-    if (error instanceof Error && ["ungrounded", "no-output"].includes(error.message)) throw error;
-    return null;
-  }
+async function getMoveInsightOnce(symbol: string, client?: string): Promise<MoveInsight | null> {
+  const built = await buildMove(symbol);
+  if (!built) return null;
+  /* Figürün sayıları (seanslar, hacim, S&P çizgisi) önbelleğin DIŞINDA,
+     her istekte aynı seans barlarından: önbellekteki eski notta olmayan
+     alanlar Claude'u yeniden çağırmadan gelir, metinle aynı seansı anlatır
+     (anahtar sembol + son seans). */
+  const cached = await unstable_cache(
+    async (): Promise<MoveInsight> => {
+      const out = await callClaude(MOVE_SYSTEM, MoveSchema, built.input, client);
+      if (!out) throw new Error("no-output");
+      const text = { tr: resolvePoints(out.tr, built.news), en: resolvePoints(out.en, built.news) };
+      if (!grounded(text, built.grounding)) throw new Error("ungrounded");
+      return { ...built.meta, explained: out.explained, text, generatedAt: new Date().toISOString() };
+    },
+    ["stock-move-v3", built.key],
+    { revalidate: 36 * 3600, tags: ["stock-insight"] },
+  )();
+  return { ...cached, ...built.meta };
 }
 
 /* ---------------------------------------------------------------------------
@@ -385,78 +440,73 @@ export async function latestReportedEarnings(symbol: string) {
   }
 }
 
-export function getEarningsInsight(symbol: string): Promise<EarningsInsight | null> {
-  return remembered("earnings", symbol, () => getEarningsInsightOnce(symbol));
+export function getEarningsInsight(symbol: string, client?: string): Promise<EarningsInsight | null> {
+  return remembered("earnings", symbol, () => getEarningsInsightOnce(symbol, client));
 }
 
-async function getEarningsInsightOnce(symbol: string): Promise<EarningsInsight | null> {
-  try {
-    const row = await latestReportedEarnings(symbol);
-    if (!row) return null;
-    const [bars, names] = await Promise.all([completedDailyBars(symbol), getSymbolNames([symbol])]);
-    const company = names[symbol]?.name ?? symbol;
-    /* İlk tepki seansı: açılış öncesi açıklamada aynı gün, kapanış sonrasında
-       ertesi seans; saati bilinmiyorsa aynı gün (tepki o gün başlamış olabilir). */
-    let reactionPct: number | null = null;
-    let reactionDate: string | null = null;
-    if (bars) {
-      const index = bars.findIndex((bar) => (row.hour === "amc" ? barDate(bar) > row.reportDate : barDate(bar) >= row.reportDate));
-      if (index > 0) {
-        reactionDate = barDate(bars[index]!);
-        reactionPct = ((bars[index]!.close - bars[index - 1]!.close) / bars[index - 1]!.close) * 100;
-      }
+async function getEarningsInsightOnce(symbol: string, client?: string): Promise<EarningsInsight | null> {
+  const row = await latestReportedEarnings(symbol);
+  if (!row) return null;
+  const [bars, names] = await Promise.all([completedDailyBars(symbol), getSymbolNames([symbol])]);
+  const company = names[symbol]?.name ?? symbol;
+  const currency = earningsCurrency(names[symbol]?.currency);
+  /* İlk tepki seansı: açılış öncesi açıklamada aynı gün, kapanış sonrasında
+     ertesi seans; saati bilinmiyorsa aynı gün (tepki o gün başlamış olabilir). */
+  let reactionPct: number | null = null;
+  let reactionDate: string | null = null;
+  if (bars) {
+    const index = bars.findIndex((bar) => (row.hour === "amc" ? barDate(bar) > row.reportDate : barDate(bar) >= row.reportDate));
+    if (index > 0) {
+      reactionDate = barDate(bars[index]!);
+      reactionPct = ((bars[index]!.close - bars[index - 1]!.close) / bars[index - 1]!.close) * 100;
     }
-    const eps = epsSurprise(row.epsActual, row.epsEstimate);
-    const revenue = revenueSurprise(row.revenueActual, row.revenueEstimate);
-    const news = newsInput(await getCompanyNews(symbol, addEtDays(row.reportDate, -1), addEtDays(row.reportDate, 3)), symbol, company, 8);
-    const money = (value: number | null, digits = 2) =>
-      value === null ? null : { tr: formatPrice(value, "tr", { currency: true, digits }), en: formatPrice(value, "en", { currency: true, digits }) };
-    const billions = (value: number | null) =>
-      value === null ? null : { tr: `${(value / 1e9).toFixed(2).replace(".", ",")} milyar $`, en: `$${(value / 1e9).toFixed(2)} billion` };
-    const verdict = (s: ReturnType<typeof epsSurprise>) =>
-      s ? { direction: s.direction, surprise: s.ratio === null ? null : pct2(s.ratio * 100) } : null;
-    const payload = {
-      symbol,
-      company,
-      reportDate: row.reportDate,
-      timing: row.hour === "bmo" ? "before open" : row.hour === "amc" ? "after close" : "unknown",
-      fiscalPeriod: row.quarter && row.year ? `Q${row.quarter} ${row.year}` : null,
-      eps: { actual: money(row.epsActual), estimate: money(row.epsEstimate), verdict: verdict(eps) },
-      revenue: { actual: billions(row.revenueActual), estimate: billions(row.revenueEstimate), verdict: verdict(revenue) },
-      firstReaction: reactionPct === null ? null : { session: reactionDate, closeToClose: pct2(reactionPct) },
-      news: news.map(withoutUrl),
-    };
-    const input = JSON.stringify(payload);
-    const period = row.quarter && row.year ? `${row.year}q${row.quarter}` : null;
-    return await unstable_cache(
-      async (): Promise<EarningsInsight> => {
-        const out = await callClaude(EARNINGS_SYSTEM, EarningsSchema, input);
-        if (!out) throw new Error("no-output");
-        const text = { tr: resolvePoints(out.tr, news), en: resolvePoints(out.en, news) };
-        if (!grounded(text, input)) throw new Error("ungrounded");
-        const figure = (actual: number | null, estimate: number | null, s: ReturnType<typeof epsSurprise>): EarningsFigure | null =>
-          actual !== null && estimate !== null && s ? { actual, estimate, direction: s.direction, ratio: s.ratio } : null;
-        return {
-          kind: "earnings",
-          symbol,
-          reportDate: row.reportDate,
-          period,
-          reactionPct,
-          reactionDate,
-          eps: figure(row.epsActual, row.epsEstimate, eps),
-          revenue: figure(row.revenueActual, row.revenueEstimate, revenue),
-          text,
-          generatedAt: new Date().toISOString(),
-        };
-      },
-      /* Tepki seansı kapanınca not bir kez daha yazılır (anahtar değişir). */
-      ["stock-earnings-v3", symbol, row.reportDate, reactionDate ?? "pending"],
-      { revalidate: 36 * 3600, tags: ["stock-insight"] },
-    )();
-  } catch (error) {
-    if (error instanceof Error && ["ungrounded", "no-output"].includes(error.message)) throw error;
-    return null;
   }
+  const eps = epsSurprise(row.epsActual, row.epsEstimate);
+  const revenue = revenueSurprise(row.revenueActual, row.revenueEstimate);
+  const news = newsInput(await getCompanyNews(symbol, addEtDays(row.reportDate, -1), addEtDays(row.reportDate, 3)), symbol, company, 8);
+  const verdict = (s: ReturnType<typeof epsSurprise>) =>
+    s ? { direction: s.direction, surprise: s.ratio === null ? null : pct2(s.ratio * 100) } : null;
+  const payload = {
+    symbol,
+    company,
+    reportDate: row.reportDate,
+    timing: row.hour === "bmo" ? "before open" : row.hour === "amc" ? "after close" : "unknown",
+    fiscalPeriod: row.quarter && row.year ? `Q${row.quarter} ${row.year}` : null,
+    eps: { actual: money2(row.epsActual, currency), estimate: money2(row.epsEstimate, currency), verdict: verdict(eps) },
+    revenue: { actual: compact2(row.revenueActual, currency), estimate: compact2(row.revenueEstimate, currency), verdict: verdict(revenue) },
+    firstReaction: reactionPct === null ? null : { session: reactionDate, closeToClose: pct2(reactionPct) },
+    news: news.map(withoutUrl),
+  };
+  const input = JSON.stringify(payload);
+  const grounding = groundingOf(payload);
+  const period = row.quarter && row.year ? `${row.year}q${row.quarter}` : null;
+  return await unstable_cache(
+    async (): Promise<EarningsInsight> => {
+      const out = await callClaude(EARNINGS_SYSTEM, EarningsSchema, input, client);
+      if (!out) throw new Error("no-output");
+      const text = { tr: resolvePoints(out.tr, news), en: resolvePoints(out.en, news) };
+      if (!grounded(text, grounding)) throw new Error("ungrounded");
+      const figure = (actual: number | null, estimate: number | null, s: ReturnType<typeof epsSurprise>): EarningsFigure | null =>
+        actual !== null && estimate !== null && s ? { actual, estimate, direction: s.direction, ratio: s.ratio } : null;
+      return {
+        kind: "earnings",
+        symbol,
+        reportDate: row.reportDate,
+        period,
+        reactionPct,
+        reactionDate,
+        eps: figure(row.epsActual, row.epsEstimate, eps),
+        revenue: figure(row.revenueActual, row.revenueEstimate, revenue),
+        currency,
+        text,
+        generatedAt: new Date().toISOString(),
+      };
+    },
+    /* Tepki seansı kapanınca not bir kez daha yazılır (anahtar değişir).
+       v4 (20 Ekim): ADR notları dolar simgesiyle yazılmıştı. */
+    ["stock-earnings-v4", symbol, row.reportDate, reactionDate ?? "pending"],
+    { revalidate: 36 * 3600, tags: ["stock-insight"] },
+  )();
 }
 
 /**
@@ -509,6 +559,8 @@ export type PreviewInsight = {
   timing: "bmo" | "amc" | "other";
   epsEstimate: number | null;
   revenueEstimate: number | null;
+  /** Tahminlerin para birimi (ISO); dolarsa null — `earningsCurrency`. */
+  currency: string | null;
   /** Son dört çeyreğin HBK sürprizi, eskiden yeniye — kartın sürpriz şeridi. */
   quarters: PreviewQuarter[];
   /** Son yirmi tamamlanmış seansın değişimi; bar yoksa null. */
@@ -541,68 +593,64 @@ export async function upcomingEarnings(symbol: string) {
   }
 }
 
-export function getPreviewInsight(symbol: string): Promise<PreviewInsight | null> {
-  return remembered("preview", symbol, () => getPreviewInsightOnce(symbol));
+export function getPreviewInsight(symbol: string, client?: string): Promise<PreviewInsight | null> {
+  return remembered("preview", symbol, () => getPreviewInsightOnce(symbol, client));
 }
 
-async function getPreviewInsightOnce(symbol: string): Promise<PreviewInsight | null> {
-  try {
-    const row = await upcomingEarnings(symbol);
-    if (!row) return null;
-    const [bars, names, surprises] = await Promise.all([completedDailyBars(symbol), getSymbolNames([symbol]), getEarningsSurprises(symbol)]);
-    const company = names[symbol]?.name ?? symbol;
-    const quarters: PreviewQuarter[] = (surprises.ok ? surprises.data : [])
-      .filter((q) => q.epsActual !== null && q.epsEstimate !== null)
-      .sort((a, b) => a.period.localeCompare(b.period))
-      .slice(-4)
-      .flatMap((q) => {
-        const s = epsSurprise(q.epsActual, q.epsEstimate);
-        return s ? [{ period: q.period, quarter: q.quarter, year: q.year, direction: s.direction, ratio: s.ratio }] : [];
-      });
-    const monthPct = bars && bars.length > 21 ? closeChange(bars, 20) : null;
-    const news = newsInput(await getCompanyNews(symbol, addEtDays(todayEt(), -10), todayEt()), symbol, company, 8);
-    const money = (value: number | null) => (value === null ? null : usd2(value));
-    const billions = (value: number | null) =>
-      value === null ? null : { tr: `${(value / 1e9).toFixed(2).replace(".", ",")} milyar $`, en: `$${(value / 1e9).toFixed(2)} billion` };
-    const timing = row.hour === "bmo" ? "bmo" : row.hour === "amc" ? "amc" : "other";
-    const payload = {
-      symbol,
-      company,
-      reportDate: row.reportDate,
-      timing: timing === "bmo" ? "before open" : timing === "amc" ? "after close" : "unknown",
-      fiscalPeriod: row.quarter && row.year ? `Q${row.quarter} ${row.year}` : null,
-      consensus: { eps: money(row.epsEstimate), revenue: billions(row.revenueEstimate) },
-      recentQuarters: quarters.map((q) => ({ quarter: q.quarter && q.year ? `Q${q.quarter} ${q.year}` : q.period, epsVerdict: q.direction, surprise: q.ratio === null ? null : pct2(q.ratio * 100) })),
-      stockLast20Sessions: monthPct === null ? null : pct2(monthPct),
-      news: news.map(withoutUrl),
-    };
-    const input = JSON.stringify(payload);
-    return await unstable_cache(
-      async (): Promise<PreviewInsight> => {
-        const out = await callClaude(PREVIEW_SYSTEM, PreviewSchema, input);
-        if (!out) throw new Error("no-output");
-        const text = { tr: resolvePoints(out.tr, news), en: resolvePoints(out.en, news) };
-        if (!grounded(text, input)) throw new Error("ungrounded");
-        return {
-          kind: "preview",
-          symbol,
-          reportDate: row.reportDate,
-          timing,
-          epsEstimate: row.epsEstimate,
-          revenueEstimate: row.revenueEstimate,
-          quarters,
-          monthPct,
-          text,
-          generatedAt: new Date().toISOString(),
-        };
-      },
-      ["stock-preview-v2", symbol, row.reportDate, todayEt()],
-      { revalidate: 24 * 3600, tags: ["stock-insight"] },
-    )();
-  } catch (error) {
-    if (error instanceof Error && ["ungrounded", "no-output"].includes(error.message)) throw error;
-    return null;
-  }
+async function getPreviewInsightOnce(symbol: string, client?: string): Promise<PreviewInsight | null> {
+  const row = await upcomingEarnings(symbol);
+  if (!row) return null;
+  const [bars, names, surprises] = await Promise.all([completedDailyBars(symbol), getSymbolNames([symbol]), getEarningsSurprises(symbol)]);
+  const company = names[symbol]?.name ?? symbol;
+  const currency = earningsCurrency(names[symbol]?.currency);
+  const quarters: PreviewQuarter[] = (surprises.ok ? surprises.data : [])
+    .filter((q) => q.epsActual !== null && q.epsEstimate !== null)
+    .sort((a, b) => a.period.localeCompare(b.period))
+    .slice(-4)
+    .flatMap((q) => {
+      const s = epsSurprise(q.epsActual, q.epsEstimate);
+      return s ? [{ period: q.period, quarter: q.quarter, year: q.year, direction: s.direction, ratio: s.ratio }] : [];
+    });
+  const monthPct = bars && bars.length > 21 ? closeChange(bars, 20) : null;
+  const news = newsInput(await getCompanyNews(symbol, addEtDays(todayEt(), -10), todayEt()), symbol, company, 8);
+  const timing = row.hour === "bmo" ? "bmo" : row.hour === "amc" ? "amc" : "other";
+  const payload = {
+    symbol,
+    company,
+    reportDate: row.reportDate,
+    timing: timing === "bmo" ? "before open" : timing === "amc" ? "after close" : "unknown",
+    fiscalPeriod: row.quarter && row.year ? `Q${row.quarter} ${row.year}` : null,
+    consensus: { eps: money2(row.epsEstimate, currency), revenue: compact2(row.revenueEstimate, currency) },
+    recentQuarters: quarters.map((q) => ({ quarter: q.quarter && q.year ? `Q${q.quarter} ${q.year}` : q.period, epsVerdict: q.direction, surprise: q.ratio === null ? null : pct2(q.ratio * 100) })),
+    stockLast20Sessions: monthPct === null ? null : pct2(monthPct),
+    news: news.map(withoutUrl),
+  };
+  const input = JSON.stringify(payload);
+  const grounding = groundingOf(payload);
+  return await unstable_cache(
+    async (): Promise<PreviewInsight> => {
+      const out = await callClaude(PREVIEW_SYSTEM, PreviewSchema, input, client);
+      if (!out) throw new Error("no-output");
+      const text = { tr: resolvePoints(out.tr, news), en: resolvePoints(out.en, news) };
+      if (!grounded(text, grounding)) throw new Error("ungrounded");
+      return {
+        kind: "preview",
+        symbol,
+        reportDate: row.reportDate,
+        timing,
+        epsEstimate: row.epsEstimate,
+        revenueEstimate: row.revenueEstimate,
+        currency,
+        quarters,
+        monthPct,
+        text,
+        generatedAt: new Date().toISOString(),
+      };
+    },
+    /* v3 (20 Ekim): ADR önizlemeleri dolar simgesiyle yazılmıştı. */
+    ["stock-preview-v3", symbol, row.reportDate, todayEt()],
+    { revalidate: 24 * 3600, tags: ["stock-insight"] },
+  )();
 }
 
 /** Önümüzdeki iki gün açıklayacak büyük şirketlerin önizlemesini önceden yazdırır. */

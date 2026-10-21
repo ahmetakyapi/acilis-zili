@@ -3,11 +3,12 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { analysisAccess } from "@/lib/ai-analysis-access";
 import { reserveAnalysis, releaseAnalysis } from "@/lib/ai-analysis-quota";
 import { analysisModel, generateAnalysis } from "@/lib/ai-analysis";
-import { AnalysisInput } from "@/lib/ai-analysis-core";
+import { AnalysisInput } from "@/lib/ai-analysis-schema";
 import { db } from "@/lib/db";
 import { aiAnalysisRequests } from "@/lib/schema";
 import { getStatus, isKnownSymbol } from "@/lib/data";
 import { getQuotes } from "@/lib/providers";
+import { readTextCapped } from "@/lib/read-body";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -62,8 +63,9 @@ export async function POST(request: Request) {
     const access = await analysisAccess();
     if (!access) return respond({ error: "forbidden" }, 403);
     if (!configured()) return respond({ error: "unavailable" }, 503);
-    const raw = await request.text();
-    if (raw.length > 1024) return respond({ error: "invalid-input" }, 400);
+    // Tavan okurken sayılır: parçalı gövde Content-Length taşımaz (lib/read-body.ts, 20 Ekim).
+    const raw = await readTextCapped(request, 1024);
+    if (raw === null) return respond({ error: "invalid-input" }, 400);
     let input: unknown;
     try { input = JSON.parse(raw); } catch { return respond({ error: "invalid-input" }, 400); }
     const parsed = AnalysisInput.safeParse(input);

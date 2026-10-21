@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isBot } from "@/lib/analytics";
+import { anonymousClient } from "@/lib/claude-budget";
 import { briefingFailure, getNewsBriefing, getNewsExplainer } from "@/lib/news-insights";
 import { getSymbolNames } from "@/lib/data";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
@@ -10,6 +11,8 @@ import { insightsConfigured } from "@/lib/stock-insights";
  * `?id=<haber>` (Bu Haber Ne Anlatıyor). Gerekçe lib/news-insights.ts.
  * Hisse notlarıyla aynı kapı (app/api/ai/hisse-notu): istemciden, panel
  * görünüme girince; bot ve geçersiz kimlik geri çevrilir; IP başına dakikada 20.
+ * Önbellekte olmayan not istemcinin günlük payından düşer (20 Ekim,
+ * lib/claude-budget.ts): açıklanabilir her haber kimliği ayrı bir çağrı.
  */
 export const dynamic = "force-dynamic";
 export const maxDuration = 90;
@@ -24,8 +27,9 @@ export async function GET(request: Request) {
   if (isBot(request.headers.get("user-agent") ?? "")) return respond({ ok: false, reason: "bot" }, 403);
   if (!rateLimit(clientKey(request, "haber-notu"), 20, 60_000).allowed) return respond({ ok: false, reason: "rate" }, 429);
   const params = new URL(request.url).searchParams;
+  const client = anonymousClient(request);
   if (params.get("tur") === "gundem") {
-    const briefing = await getNewsBriefing(new Date(), params.get("kapsam") === "hafta" ? "week" : "day");
+    const briefing = await getNewsBriefing(new Date(), params.get("kapsam") === "hafta" ? "week" : "day", client);
     if (briefing) {
       /* Kartın logo şeridi (18 Ekim): sembol başına logo, gündem önbelleğinin
          dışında — logo tablosu değişince eski gündem de yeni logoyu alır. */
@@ -37,6 +41,6 @@ export async function GET(request: Request) {
   }
   const id = params.get("id") ?? "";
   if (!UUID.test(id)) return respond({ ok: false, reason: "bad-request" }, 400);
-  const explainer = await getNewsExplainer(id);
+  const explainer = await getNewsExplainer(id, client);
   return respond(explainer ? { ok: true, insight: explainer } : { ok: false, reason: "unavailable" });
 }

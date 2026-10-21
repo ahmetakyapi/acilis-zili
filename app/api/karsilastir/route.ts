@@ -7,6 +7,7 @@ import {
   type CompareSeries,
 } from "@/lib/compare";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
+import { allowCompareSet } from "@/lib/compare-limit";
 
 /* --------------------------------------------------------------------------
    Karşılaştırma serileri — TOPLU.
@@ -25,9 +26,17 @@ import { clientKey, rateLimit } from "@/lib/rate-limit";
    ---- Oran sınırı ----
 
    Kalıp `/api/chart/[symbol]` ile aynı ve ayrım kota değil KARDİNALİTE
-   üzerinden yapılıyor; gerekçenin tamamı orada yazılı. Kısaca: tanınan
-   sembol kapalı bir küme (~500 satır, her yanıtı önbellekli) ve tavanı var;
-   tanınmayan sembol sayım saldırısının tek girişi ve orası sonsuz bir uzay.
+   üzerinden yapılıyor; gerekçenin tamamı orada yazılı. Kısaca: tanınmayan
+   sembol sayım saldırısının girişi ve orası sonsuz bir uzay.
+
+   TANINAN KÜME KAPALI DEĞİL (20 Ekim). Bu paragraf "tanınan sembol kapalı
+   bir küme (~500 satır, her yanıtı önbellekli) ve tavanı var" diyordu; tek
+   sembolde doğru, ama bu uç sembolleri TEK sağlayıcı isteğinde taşıyor ve
+   önbellek anahtarı kümenin kendisi — bin sembolden seçilen dörtlülerin
+   sayısı fiilen sonsuz. Her kümeye — tanınmayan sembol taşıyana da —
+   ikinci kapı olarak YENİ küme sınırı kondu (gerekçe ve sayı
+   `lib/compare-limit.ts`te; sayfa aynı sayacı okuyor). Aşağıdaki 300 artık
+   yalnız tekrarların tavanı.
 
    SAYAÇ İSTEK BAŞINA, sembol başına değil — ve bu bilinçli: bir istek
    sağlayıcıya BİR gidişe karşılık geliyor (`getBarsMulti` toplu), yani
@@ -35,7 +44,8 @@ import { clientKey, rateLimit } from "@/lib/rate-limit";
    Sınırın koruduğu şey sağlayıcı kotası, sembol sayısı değil.
 
    Tanınırlık `getSymbolNames` ile tek sorguda ölçülüyor. `isKnownSymbol`
-   sembol başına ayrı bir `select ... limit 1` atıyor; dört sembol neon-http
+   sembol başına ayrı bir `select ... limit 1` atıyordu (20 Ekim'den beri
+   yalnız önbellekteki tabloda olmayan için); dört sembol neon-http
    üzerinde dört gidiş-dönüş demekti ve karşılaştırma sayfası zaten
    `getSymbolNames`i çağırıyor, yani sorgu isteğin içinde memoize.
 
@@ -93,10 +103,21 @@ export async function GET(request: Request) {
     taninmayanVar ? UNKNOWN_LIMIT : KNOWN_LIMIT,
     WINDOW_MS,
   );
-  if (!limited.allowed) {
+  /* YENİ KÜME KAPISI HER KÜMEYE (20 Ekim). Burada "tanınmayan küme zaten
+     dar kapıdan geçti" yazıyordu ve yeni küme sınırı yalnız tanınanlara
+     uygulanıyordu; ama tanınmayan kova daha dar değil, AYRI bir kapı. Üç
+     tanınan sembole bir uydurma eklemek her dörtlüyü `compare-new`
+     sayacının dışına çıkarıyordu ve her biri yine Alpaca'ya gerçek bir
+     istek: IP başına yeni kombinasyon tavanı 30 değil, sayfanın kovasıyla
+     ~70'ti. Tanınmayan küme artık iki kapıdan geçiyor — kendi kovası, sonra
+     herkesle ortak `compare-new` sayacı. */
+  const gate = limited.allowed
+    ? allowCompareSet(symbols, range, clientKey(request, "compare-new"))
+    : limited;
+  if (!gate.allowed) {
     return NextResponse.json<CompareBarsResponse>(
       { ok: false, reason: "rate-limited" },
-      { status: 429, headers: { "Retry-After": String(limited.retryAfter) } },
+      { status: 429, headers: { "Retry-After": String(gate.retryAfter) } },
     );
   }
 

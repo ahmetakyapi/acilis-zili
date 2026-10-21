@@ -51,6 +51,11 @@ export type SearchResponse = {
   hits: SearchHit[];
   writings: WritingHit[];
   error?: string;
+  /** Yanıt eksik: uzak genişletme gerekiyordu ama yapılamadı (kapı ya da
+      sağlayıcı), ya da yerel sorgulardan biri (sembol tablosu, mercek)
+      düştü. İstemci bunu önbelleğe YAZMAZ — gerekçe `SEARCH_REMOTE_LIMIT`
+      üstünde ve sembol sorgusunun `catch`inde (`GET`). */
+  partial?: boolean;
 };
 
 /** Yazı sonuçları listeyi boğmasın — sembol hâlâ paletin ana işi. */
@@ -91,8 +96,118 @@ function fold(value: string): string {
 const SEARCH_LIMIT = 40;
 const SEARCH_WINDOW_MS = 60_000;
 
+/* SAĞLAYICI DALININ KENDİ KAPISI, İKİ KATLI (20 Ekim). Uzak dal katalog
+   dışı her diziyle açılıyor ve Finnhub önbelleği sorgu başına: rastgele dizi
+   her seferinde yeni bir çağrı. Ücretsiz katman SİTENİN TAMAMI için dakikada
+   60 (profil, metrik, bilanço, haber ve gece senkronu aynı kotadan) ve
+   yukarıdaki 40'lık tavanla iki adres onu tek başına bitiriyordu. Süreç
+   başına 25: adres değiştiren betik bile kotanın yarısını geçemiyor — asıl
+   kota bekçisi bu. IP başına 10: tek adres o ortak bütçenin yarısını
+   yiyemesin. Sınır aşılınca hata yok — yalnızca uzak genişletme atlanıyor,
+   yerel sonuçlar dönüyor.
+
+   BEDEL ARAMA BAŞINA DEĞİL, TUŞ VURUŞU BAŞINA. Burada "tuşa basan insan
+   dakikada birkaç katalog dışı arama yapar" yazıyordu; ama palet 120 ms
+   bekleyip neredeyse her tuşta soruyor (SearchCommand) ve üç harften sonraki
+   her ön ek ayrı bir sorgu: katalog dışı "enflasyon" yazmak yedi hak
+   ("enf"…"enflasyon"). IP başına 10 böylece dakikada bir-iki katalog dışı
+   kelimeye denk düşüyor ve birkaç eşzamanlı okuyucu ortak 25'i bitiriyor.
+   İki önlem:
+   (1) Finnhub'ın önbelleğindeki sorgu kotaya mal olmuyor, o yüzden kapıdan
+       da geçmiyor (`remoteWarm`): silip yeniden yazan, geri alan, başka bir
+       okuyucunun ardından aynı sembolü arayan hak harcamıyor.
+   (2) Kapı ya da sağlayıcı uzak dalı düşürdüğünde yanıt `partial` taşıyor ve
+       palet onu oturum önbelleğine yazmıyor. Eskiden düşen yanıt sessizce
+       yerel-yalnız dönüyor, palet onu sayfalar arası yaşayan önbelleğine
+       koyuyordu: katalog dışı sembol çoğu zaman boş liste demek ve aynı
+       sembolü dakika dolduktan sonra yeniden yazan okuyucu oturum boyunca o
+       boş listeyi görüyor, sunucuya bir daha hiç sorulmuyordu. */
+const SEARCH_REMOTE_LIMIT = 10;
+const SEARCH_REMOTE_GLOBAL = 25;
+
+/* Finnhub'ın veri önbelleği sorguyu bir saat tutuyor (`searchSymbols`,
+   `revalidate: 3600`; Next yalnız 200 yanıtı saklıyor). Kaydın süresi
+   sağlayıcının `Date` başlığından sayılıyor — önbellekten gelen yanıtta o
+   başlık ilk çekimin saati — ve 55 dakika: bayatlayan kayıt yeniden çekilir,
+   o çekim kotaya yazılır; beş dakika saat farkına pay. Anahtar sorgunun
+   KENDİSİ, katlanmış hâli değil: sağlayıcı adresi `q`yu olduğu gibi taşıyor
+   ve "NVD" ile "nvd" iki ayrı önbellek kaydı. Süreç başına, en çok 500
+   sorgu, en eskisi düşüyor; yeniden başlayan süreç boş başlar — tek bedeli
+   birkaç fazladan hak. */
+const REMOTE_WARM_MS = 55 * 60_000;
+const REMOTE_WARM_MAX = 500;
+const remoteWarm = new Map<string, number>();
+
+function isRemoteWarm(query: string, now: number): boolean {
+  const until = remoteWarm.get(query);
+  if (until === undefined) return false;
+  if (until > now) return true;
+  remoteWarm.delete(query);
+  return false;
+}
+
+function markRemoteWarm(query: string, fetchedAt: Date, now: number): void {
+  const until = Math.min(fetchedAt.getTime(), now) + REMOTE_WARM_MS;
+  remoteWarm.delete(query);
+  if (until <= now) return;
+  remoteWarm.set(query, until);
+  if (remoteWarm.size > REMOTE_WARM_MAX) {
+    const oldest = remoteWarm.keys().next().value;
+    if (oldest !== undefined) remoteWarm.delete(oldest);
+  }
+}
+
 /** Sağlayıcıya giden en uzun sorgu — daha uzunu anlamlı sonuç üretmiyor. */
 const MAX_QUERY_LENGTH = 64;
+
+/** Mercek yarısı — çağıran beklemeden başlatıyor (gerekçe `GET` içinde).
+    Sorgu düşerse `null`, boş dizi DEĞİL (20 Ekim): "eşleşen yazı yok" ile
+    "bakılamadı" ayrı; ikincisinde yanıt `partial` olur ve palet onu
+    saklamaz. Eskiden ikisi de `[]` dönüyordu. */
+async function mercekAra(
+  needle: string,
+  locale: Awaited<ReturnType<typeof getLocale>>,
+  limit: number,
+) {
+  try {
+    /* MERCEK YARISI DA KATLANIYOR. Rehber yarısı `fold()` ile bellekte
+       eşleşiyor — Türkçe küçültme, aksan ayıklama ve noktasız "ı"nın
+       noktalıya inmesi orada var. Mercek yarısı ise ham `ILIKE` ile
+       gidiyordu ve ILIKE yalnızca büyük-küçük harfi eşitler: "sirket"
+       araması "Şirket" başlığını, "ucus" araması "Uçuş"u bulamıyordu.
+       Aynı arama kutusunda iki yarım iki farklı kurala göre çalışıyordu.
+
+       Katlama SQL tarafına `translate` ile taşındı: `stories` küçük bir
+       tablo, tam tarama önemsiz ve şema değişikliği gerekmiyor. Harf
+       eşlemesi `fold()` ile birebir aynı — ikisi ayrı düşerse arama
+       yeniden yarım çalışır, o yüzden aynı satırda tutuluyorlar.
+
+       Desen `needle`den kuruluyor, `escaped`ten değil: eşleşecek olan
+       katlanmış metin. `%` ve `_` kaçışı `escaped`te yapılıyordu, aynı
+       kaçış burada da gerekiyor. */
+    const foldedNeedle = needle.replace(/[\\%_]/g, (c) => `\\${c}`);
+    const pattern = `%${foldedNeedle}%`;
+    const katla = (kolon: AnyColumn) =>
+      sql`lower(translate(${kolon}, 'ıİşŞğĞüÜöÖçÇâÂîÎûÛ', 'iIsSgGuUoOcCaAiIuU'))`;
+    return await db
+      .select({ slug: stories.slug, title: stories.title, dek: stories.dek })
+      .from(stories)
+      .where(
+        and(
+          eq(stories.locale, locale),
+          or(
+            sql`${katla(stories.title)} like ${pattern}`,
+            sql`${katla(stories.dek)} like ${pattern}`,
+          ),
+        ),
+      )
+      .orderBy(desc(stories.eventDate))
+      .limit(limit);
+  } catch {
+    // Veritabanı yoksa arama sembol tarafıyla çalışmaya devam eder.
+    return null;
+  }
+}
 
 export async function GET(request: Request) {
   const limited = rateLimit(
@@ -116,8 +231,45 @@ export async function GET(request: Request) {
     return NextResponse.json({ hits: [], writings: [] } satisfies SearchResponse);
   }
 
+  /* ---- Yazılar — sembol aramasıyla AYNI ANDA ----
+     Rehber depoda ve durağan: eşleşme bellekte yapılıyor, sorgu yok. Mercek
+     veritabanında ve büyüyor: başlık ile giriş cümlesi katlanarak taranıyor.
+
+     PARALEL (20 Ekim). Burada "ikisi de sembol aramasından SONRA çalışıyor
+     ve yanıtı geciktirmiyor — mercek tek bir indeksli sorgu" yazıyordu; iki
+     iddia da yanlıştı. Mercek sorgusu sembol sorgusunu (gerekirse Finnhub'ı
+     da) bekliyor ve paletteki her aramaya sıralı bir Neon gidiş-dönüşü
+     ekliyordu; katlanmış `like` de indeks kullanmıyor (`mercekAra`). İki
+     sorgu hiçbir veri paylaşmıyor: mercek yalnız sorguyu, dili ve rehber
+     eşleşmelerinin sayısını istiyor, üçü de baştan belli. Sorgu burada
+     başlıyor, yanıttan hemen önce bekleniyor. */
+  const locale = await getLocale();
+  const needle = fold(query);
+  const writings: WritingHit[] = [];
+
+  if (query.length >= 2) {
+    for (const article of guideArticles(locale)) {
+      if (writings.length >= MAX_WRITINGS) break;
+      if (fold(article.title).includes(needle) || fold(article.dek).includes(needle)) {
+        writings.push({
+          kind: "rehber",
+          slug: article.slug,
+          title: article.title,
+          dek: article.dek,
+        });
+      }
+    }
+  }
+  const mercekler =
+    query.length >= 2 && writings.length < MAX_WRITINGS
+      ? mercekAra(needle, locale, MAX_WRITINGS - writings.length)
+      : Promise.resolve([]);
+
   const hits: SearchHit[] = [];
   const seen = new Set<string>();
+  /* Yanıt eksik mi — üç kaynaktan biri: yerel sembol sorgusu, sağlayıcı
+     dalı, mercek sorgusu (gerekçe `SearchResponse.partial`). */
+  let partial = false;
 
   /* Marka adı ↔ resmî ad köprüsü.
 
@@ -182,7 +334,15 @@ export async function GET(request: Request) {
       hits.push({ symbol: row.symbol, name: row.name, industry: row.industry, logo: logoSrc(row.symbol, row.logoUrl) });
     }
   } catch {
-    // Veritabanı yoksa arama yine de sağlayıcı üzerinden çalışsın.
+    /* Veritabanı yoksa arama yine de sağlayıcı üzerinden çalışsın — ama
+       yanıt EKSİK (20 Ekim). Bu dal hatayı yutup boş yerel sonuçla devam
+       ediyor; eskiden yanıt bunu söylemiyordu, `partial` yalnız sağlayıcı
+       dalını kapsıyordu: Neon'un bir anlık düşüşünde sağlayıcıya hiç
+       gidilmeyen bir-iki harflik ön ek ("nv") boş liste dönüyor, palet onu
+       oturum önbelleğine yazıyor ve okuyucu aynı ön eki oturum boyunca boş
+       görüyordu. Düşen yerel sorgu artık `partial`: palet yanıtı gösterir
+       ama saklamaz. */
+    partial = true;
   }
 
   /* FON KÜNYESİ DE ARANIYOR (4 Ekim). Sektör ve tema fonları (XLK, SMH,
@@ -211,91 +371,56 @@ export async function GET(request: Request) {
      yerelde 3'ten az sonuç varken, katalog dışı bir şey arandığında. */
   /* İki harfte sağlayıcıya gidilmiyor: Finnhub "mu" için VZ, ZM, BNY gibi
      alakasız semboller döndürüyordu (ölçüldü). */
+  /* Kapı sırası: önbellekteki sorgu kapısız; değilse önce IP, sonra süreç —
+     reddedilen adres ortak bütçeden hak düşürmesin. Uzak dal gerekip de
+     yapılamazsa yanıt `partial` (gerekçe `SEARCH_REMOTE_LIMIT` üstünde). */
   if (hits.length < 3 && query.length >= 3) {
-    const remote = await searchSymbols(query);
-    if (remote.ok) {
-      for (const item of remote.data) {
-        if (seen.has(item.symbol) || hits.length >= 10) continue;
-        seen.add(item.symbol);
-        hits.push({ symbol: item.symbol, name: item.description, logo: logoSrc(item.symbol, null) });
+    const gateOpen =
+      isRemoteWarm(query, Date.now()) ||
+      (rateLimit(clientKey(request, "search-remote"), SEARCH_REMOTE_LIMIT, SEARCH_WINDOW_MS).allowed &&
+        rateLimit("search-remote:global", SEARCH_REMOTE_GLOBAL, SEARCH_WINDOW_MS).allowed);
+    if (!gateOpen) {
+      partial = true;
+    } else {
+      const remote = await searchSymbols(query);
+      if (remote.ok) {
+        markRemoteWarm(query, remote.fetchedAt, Date.now());
+        for (const item of remote.data) {
+          if (seen.has(item.symbol) || hits.length >= 10) continue;
+          seen.add(item.symbol);
+          hits.push({ symbol: item.symbol, name: item.description, logo: logoSrc(item.symbol, null) });
+        }
+      } else {
+        /* Önbellekte sanılan kayıt düşmüş olabilir: hata, çağrının
+           sağlayıcıya gerçekten gittiğini söylüyor. Bir dahaki soru yine
+           kapıdan geçsin. */
+        remoteWarm.delete(query);
+        partial = true;
       }
     }
   }
 
-  /* ---- Yazılar ----
-     Rehber depoda ve durağan: eşleşme bellekte yapılıyor, sorgu yok. Mercek
-     veritabanında ve büyüyor: başlık ile giriş cümlesinde `ilike`. İkisi de
-     sembol aramasından SONRA çalışıyor ve yanıtı geciktirmiyor — paralel
-     değil çünkü rehber zaten senkron, mercek tek bir indeksli sorgu. */
-  const locale = await getLocale();
-  const needle = fold(query);
-  const writings: WritingHit[] = [];
-
-  if (query.length >= 2) {
-    for (const article of guideArticles(locale)) {
-      if (writings.length >= MAX_WRITINGS) break;
-      if (fold(article.title).includes(needle) || fold(article.dek).includes(needle)) {
-        writings.push({
-          kind: "rehber",
-          slug: article.slug,
-          title: article.title,
-          dek: article.dek,
-        });
-      }
-    }
-
-    if (writings.length < MAX_WRITINGS) {
-      try {
-        /* MERCEK YARISI DA KATLANIYOR. Rehber yarısı `fold()` ile bellekte
-           eşleşiyor — Türkçe küçültme, aksan ayıklama ve noktasız "ı"nın
-           noktalıya inmesi orada var. Mercek yarısı ise ham `ILIKE` ile
-           gidiyordu ve ILIKE yalnızca büyük-küçük harfi eşitler: "sirket"
-           araması "Şirket" başlığını, "ucus" araması "Uçuş"u bulamıyordu.
-           Aynı arama kutusunda iki yarım iki farklı kurala göre çalışıyordu.
-
-           Katlama SQL tarafına `translate` ile taşındı: `stories` küçük bir
-           tablo, tam tarama önemsiz ve şema değişikliği gerekmiyor. Harf
-           eşlemesi `fold()` ile birebir aynı — ikisi ayrı düşerse arama
-           yeniden yarım çalışır, o yüzden aynı satırda tutuluyorlar.
-
-           Desen `needle`den kuruluyor, `escaped`ten değil: eşleşecek olan
-           katlanmış metin. `%` ve `_` kaçışı `escaped`te yapılıyordu, aynı
-           kaçış burada da gerekiyor. */
-        const foldedNeedle = needle.replace(/[\\%_]/g, (c) => `\\${c}`);
-        const pattern = `%${foldedNeedle}%`;
-        const katla = (kolon: AnyColumn) =>
-          sql`lower(translate(${kolon}, 'ıİşŞğĞüÜöÖçÇâÂîÎûÛ', 'iIsSgGuUoOcCaAiIuU'))`;
-        const rows = await db
-          .select({ slug: stories.slug, title: stories.title, dek: stories.dek })
-          .from(stories)
-          .where(
-            and(
-              eq(stories.locale, locale),
-              or(
-                sql`${katla(stories.title)} like ${pattern}`,
-                sql`${katla(stories.dek)} like ${pattern}`,
-              ),
-            ),
-          )
-          .orderBy(desc(stories.eventDate))
-          .limit(MAX_WRITINGS - writings.length);
-        for (const row of rows) {
-          writings.push({
-            kind: "mercek",
-            slug: row.slug,
-            title: row.title,
-            dek: row.dek ?? "",
-          });
-        }
-      } catch {
-        // Veritabanı yoksa arama sembol tarafıyla çalışmaya devam eder.
-      }
-    }
+  /* Mercek sorgusu düştüyse (`null`) yanıt yine `partial` — aynı gerekçe:
+     rehber eşleşmesi olmayan bir sorguda boş yazı listesi oturum boyunca
+     saklanmasın. */
+  const mercekRows = await mercekler;
+  if (mercekRows === null) partial = true;
+  for (const row of mercekRows ?? []) {
+    writings.push({
+      kind: "mercek",
+      slug: row.slug,
+      title: row.title,
+      dek: row.dek ?? "",
+    });
   }
 
   /* Bayrak sunucuda ekleniyor: liste on iki sembollük sabit bir küme ve
      palete `lib/technical`i taşımak istemci demetine gösterge kodunu da
      çekerdi. */
   const flagged = hits.map((hit) => (isTechnicalSymbol(hit.symbol) ? { ...hit, technical: true } : hit));
-  return NextResponse.json({ hits: flagged, writings } satisfies SearchResponse);
+  return NextResponse.json({
+    hits: flagged,
+    writings,
+    ...(partial ? { partial: true } : {}),
+  } satisfies SearchResponse);
 }

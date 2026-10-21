@@ -5,6 +5,7 @@ import { todayEt } from "@/lib/market-hours";
 import { defaultWeekStart, parseWeekParam } from "@/lib/earnings-week";
 import { getEarningsWeek } from "@/lib/earnings-week-data";
 import { loadWeekLogos, WEEK_OG_SIZES, WeekOgCard, type WeekOgSize } from "@/lib/earnings-week-og";
+import { clientKey, rateLimit } from "@/lib/rate-limit";
 
 /**
  * Haftalık Bilanço Takvimi görseli — `?boyut=yatay|dikey&hafta=YYYY-MM-DD`.
@@ -30,6 +31,19 @@ function sizeOf(value: string | null): WeekOgSize {
 }
 
 export async function GET(request: Request) {
+  /* ORAN SINIRI (20 Ekim). Uç herkese açık ve her istek bir veritabanı
+     okuması, logo dönüşümü ve Satori/resvg çizimi; `?hafta=` her geçerli
+     tarihi kabul ettiği için yüz binlerce ayrı adres var ve her biri
+     önbellek ıskası (`Cache-Control: public` kökte işe yaramıyor: Caddy
+     önbelleklemiyor). Tek döngü tek Node sürecini çizime kilitleyebiliyordu.
+     Kardeşi `/gun/[tarih]/kart` aynı gerekçeyle sınırlı (15 Ekim); sayfanın
+     her görüntülenmesi İKİ görsel istediği için (yatay + dikey) sınır onun
+     30'unun üstünde: haftalar arasında gezinen okuyucuya bol. */
+  const gate = rateLimit(clientKey(request, "hafta-gorsel"), 40, 60_000);
+  if (!gate.allowed) {
+    return new Response(null, { status: 429, headers: { "Retry-After": String(gate.retryAfter) } });
+  }
+
   const url = new URL(request.url);
   const size = sizeOf(url.searchParams.get("boyut"));
   const monday = parseWeekParam(url.searchParams.get("hafta")) ?? defaultWeekStart(todayEt());

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isBot } from "@/lib/analytics";
+import { anonymousClient } from "@/lib/claude-budget";
 import { isKnownSymbol } from "@/lib/data";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { getEarningsInsight, getMoveInsight, getPreviewInsight, insightFailure, insightsConfigured } from "@/lib/stock-insights";
@@ -14,7 +15,9 @@ import { isValidSymbol } from "@/lib/utils";
  * (components/stocks/StockInsightCard.tsx): sunucu çiziminde istek olsaydı
  * her tarama botu her sembol için Claude çağrısı tetiklerdi. Uç da botu
  * (kullanıcı ajanı) ve bilinmeyen sembolü geri çeviriyor; IP başına
- * dakikada 20. Not önbellekte değilse yanıt birkaç saniye sürer.
+ * dakikada 20. Not önbellekte değilse yanıt birkaç saniye sürer ve çağrı
+ * istemcinin günlük payından düşer (20 Ekim, lib/claude-budget.ts — dört
+ * anonim not ucu tek pay).
  */
 export const dynamic = "force-dynamic";
 export const maxDuration = 90;
@@ -31,7 +34,9 @@ export async function GET(request: Request) {
   const kind = params.get("tur");
   if (!isValidSymbol(symbol) || (kind !== "hareket" && kind !== "bilanco" && kind !== "onizleme")) return respond({ ok: false, reason: "bad-request" }, 400);
   if (!(await isKnownSymbol(symbol))) return respond({ ok: false, reason: "unknown" }, 404);
-  const insight = kind === "hareket" ? await getMoveInsight(symbol) : kind === "bilanco" ? await getEarningsInsight(symbol) : await getPreviewInsight(symbol);
+  const client = anonymousClient(request);
+  const insight =
+    kind === "hareket" ? await getMoveInsight(symbol, client) : kind === "bilanco" ? await getEarningsInsight(symbol, client) : await getPreviewInsight(symbol, client);
   const failureKind = kind === "hareket" ? "move" : kind === "bilanco" ? "earnings" : "preview";
   return respond(insight ? { ok: true, insight } : { ok: false, reason: "unavailable", cause: insightFailure(failureKind, symbol) });
 }

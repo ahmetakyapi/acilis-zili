@@ -1,3 +1,4 @@
+import { ECDH } from "node:crypto";
 import webpush from "web-push";
 import { z } from "zod";
 import { and, eq, inArray } from "drizzle-orm";
@@ -72,16 +73,41 @@ export function pushEndpointAllowed(value: string): boolean {
 }
 
 /**
+ * Anahtarlar şifrelemeye yarar mı — 65 baytlık, P-256 eğrisi üstünde
+ * sıkıştırılmamış nokta ve en az 16 baytlık `auth` (20 Ekim taraması).
+ *
+ * Biçim denetimi (base64url + uzunluk) tek başına "AAAA"yı geçiriyordu;
+ * web-push böyle bir anahtarla şifrelerken EŞZAMANLI fırlatıyor ve hata
+ * `deliverPush` → `sendToUser` → `notifyUser` üzerinden alarm taramasını
+ * yarıda kesiyordu — her hesap kendi satırıyla herkesin alarmını
+ * geciktirebilirdi. Eğri denetimi `ECDH.convertKey` ile (eğri dışı nokta
+ * fırlatır; çağrı başına ~15 µs).
+ */
+export function pushKeysValid(p256dh: string, auth: string): boolean {
+  const key = Buffer.from(p256dh, "base64url");
+  if (key.length !== 65 || key[0] !== 0x04) return false;
+  if (Buffer.from(auth, "base64url").length < 16) return false;
+  try {
+    ECDH.convertKey(key, "prime256v1");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Tarayıcıdan gelen abonelik nesnesi — güvenilmez. Ayarlar eylemi
  * (app/actions/notifications.ts) ve service worker'ın yenileme ucu
  * (app/api/push/yenile) AYNI şemadan geçer.
  */
 export const pushSubscriptionSchema = z.object({
   endpoint: z.string().url().max(1000).refine(pushEndpointAllowed),
-  keys: z.object({
-    p256dh: z.string().regex(/^[A-Za-z0-9_-]+=*$/).max(200),
-    auth: z.string().regex(/^[A-Za-z0-9_-]+=*$/).max(100),
-  }),
+  keys: z
+    .object({
+      p256dh: z.string().regex(/^[A-Za-z0-9_-]+=*$/).max(200),
+      auth: z.string().regex(/^[A-Za-z0-9_-]+=*$/).max(100),
+    })
+    .refine((keys) => pushKeysValid(keys.p256dh, keys.auth)),
 });
 
 export function pushPublicKey(): string | null {
@@ -142,6 +168,14 @@ export async function getUserSubscriptions(
  * izlenmez) ve gövde OKUNMADAN kapatılıyor — durum kodu yeterli.
  *
  * Dönen değer HTTP durum kodu; ağ hatası ya da süre aşımı 0 (geçici sayılır).
+ *
+ * HİÇ FIRLATMAZ (20 Ekim taraması). Şifreleme `try`ın dışındaydı: bozuk
+ * anahtarlı tek satır `generateRequestDetails`te fırlatıyor, `sendToUser`ın
+ * `Promise.all`ı ölü satır temizliğini atlıyor ve hata cron döngüsüne kadar
+ * çıkıp taramanın geri kalanını durduruyordu; satır silinmediği için her
+ * bildirimde yeniden. Anahtarı kullanılamaz satır 410 sayılır (sendToUser
+ * siler); başka bir şifreleme hatası 0 — o bizim ayarımız da olabilir ve
+ * körü körüne silmek bütün cihazları düşürürdü (aşağıdaki 401/403 notu).
  */
 const PUSH_TIMEOUT_MS = 10_000;
 
@@ -150,18 +184,19 @@ export async function deliverPush(
   body: string,
 ): Promise<number> {
   if (!pushEndpointAllowed(subscription.endpoint)) return 410;
-  const details = webpush.generateRequestDetails(subscription, body, {
-    /* Bir saat içinde teslim edilemeyen fiyat bildirimi artık haber değil;
-       servis onu tutmasın. `urgency` telefonu uykudan uyandırmaya izin
-       veriyor. */
-    TTL: 3600,
-    urgency: "high",
-  });
-  const headers: Record<string, string> = {};
-  for (const [key, value] of Object.entries(details.headers)) {
-    if (key.toLowerCase() !== "content-length" && value != null) headers[key] = String(value);
-  }
+  if (!pushKeysValid(subscription.keys.p256dh, subscription.keys.auth)) return 410;
   try {
+    const details = webpush.generateRequestDetails(subscription, body, {
+      /* Bir saat içinde teslim edilemeyen fiyat bildirimi artık haber değil;
+         servis onu tutmasın. `urgency` telefonu uykudan uyandırmaya izin
+         veriyor. */
+      TTL: 3600,
+      urgency: "high",
+    });
+    const headers: Record<string, string> = {};
+    for (const [key, value] of Object.entries(details.headers)) {
+      if (key.toLowerCase() !== "content-length" && value != null) headers[key] = String(value);
+    }
     const response = await fetch(details.endpoint, {
       method: details.method,
       headers,

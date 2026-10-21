@@ -4,6 +4,11 @@
 #   sudo cp deploy/acilis-zili.service /etc/systemd/system/
 #   sudo systemctl daemon-reload && sudo systemctl enable --now acilis-zili
 #
+# Birim değişince (update.sh birimi KURMUYOR, yalnız bootstrap.sh):
+#   sudo install -m 0644 deploy/acilis-zili.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl restart acilis-zili
+#   systemd-analyze security acilis-zili   # puanı düşmeli
+#
 # NEDEN `next start`, `output: "standalone"` DEĞİL.
 # Standalone çıktısı node_modules'ü izleyerek buduyor ve `assets/fonts`
 # klasörünü izleyemiyor: paylaşım kartları o TTF'leri çalışma anında
@@ -54,6 +59,10 @@ TimeoutStopSec=30
 # `revalidatePath` oraya yazıyor, salt-okunur bir kökte yeniden doğrulama
 # sessizce başarısız olur. Yol, bağ üzerinden değil kökten veriliyor:
 # `current` her sürümde başka bir dizine döner, kök sabit.
+#
+# Paylaşılan veri önbelleği de kökün altında (`shared/fetch-cache`, bkz.
+# update.sh — 20 Ekim); yazma izni `current/.next`e daraltılırsa o bağın
+# hedefi salt-okunur kalır ve önbellek sessizce yazılamaz.
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
@@ -62,6 +71,30 @@ ProtectKernelTunables=true
 ProtectControlGroups=true
 RestrictSUIDSGID=true
 ReadWritePaths=/srv/acilis-zili
+
+# Ucuz kapılar (20 Ekim taraması): Node sürecini ele geçiren birinin ad
+# alanı açmasını, ham aygıta, çekirdek modülüne/günlüğüne, saate dokunmasını
+# keser. Hiçbiri uygulamanın kullandığı bir şeyi kapatmıyor: ad alanı
+# açılmıyor, aygıt olarak yalnız /dev/null ve /dev/urandom gerekiyor
+# (PrivateDevices ikisini de veriyor), ağda TCP + yerel soket + arayüz
+# listesi (AF_NETLINK, os.networkInterfaces) var. 3000 ayrıcalıksız bir
+# port, yetki kümesi bu yüzden boş. Bilerek EKLENMEYEN: MemoryDenyWriteExecute
+# — V8'in JIT'i ve WASM (OG kartlarının resvg'si) yazılabilir+çalıştırılabilir
+# bellek istiyor, Node o kapıyla çalışmaz. Birim elle yeniden kurulmadan
+# hiçbiri etkili olmaz (komut en üstte).
+ProtectProc=invisible
+PrivateDevices=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictRealtime=true
+LockPersonality=true
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+CapabilityBoundingSet=
+UMask=0027
 
 StandardOutput=journal
 StandardError=journal

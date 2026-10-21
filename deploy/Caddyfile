@@ -22,7 +22,23 @@ www.acilis-zili.ornek.com {
 }
 
 acilis-zili.ornek.com {
+	# TEK sıkıştırma katmanı: Next'te `compress: false` (20 Ekim, gerekçe
+	# next.config.ts). Bu satır kalkarsa site sıkıştırmasız gider.
 	encode zstd gzip
+
+	# GÖVDE TAVANI (20 Ekim taraması). Caddy varsayılanda gövdeyi sınırsız
+	# akıtıyor ve Next route handler'larında gövde sınırı yok; parçalı
+	# (`chunked`) ya da HTTP/2 gövdesi `Content-Length` taşımadığı için
+	# uçlardaki başlık denetimini de atlıyordu. Uçlar artık okurken sayıyor
+	# (lib/read-body.ts); bu, Auth.js'in form POST'u gibi o yardımcıdan
+	# geçmeyen yolları da kapsayan ikinci kat — `max_size` uzunluksuz gövdeyi
+	# de keser. 5 MB en büyük meşru yükün çok üstünde: Bearer içerik uçlarının
+	# (/api/mercek, /api/analiz, /api/brief) gövdesi en fazla ~200 KB, sunucu
+	# eylemleri Next'te zaten 1 MB'ta kesiliyor; portföy ve vergi içe aktarma
+	# dosyayı tarayıcıda okuyor, sunucuya dosya yüklenen yol yok.
+	request_body {
+		max_size 5MB
+	}
 
 	# Caddy `X-Forwarded-For`, `X-Forwarded-Proto` ve `X-Forwarded-Host`
 	# başlıklarını kendiliğinden ekliyor. İlki giriş kaba kuvvet sayacının

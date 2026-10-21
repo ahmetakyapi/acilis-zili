@@ -506,7 +506,9 @@ export const emailPrefs = pgTable(
  * posta ikinci kez gitmez, satır ÖNCE yazılır (sahiplenme), gönderim düşerse
  * silinir. (2) BÜTÇE — Resend'in ücretsiz katmanı günde 100 e-posta; bugünkü
  * satır sayısı `EMAIL_DAILY_BUDGET`ı aşınca bildirim postası durur, şifre
- * sıfırlamaya pay kalır (lib/email-notify.ts). Alıcı adresi YAZILMAZ.
+ * sıfırlamaya pay kalır (lib/email-notify.ts). 20 Ekim'den beri sıfırlama
+ * postası da buraya yazılıyor ve kendi payına sayılıyor (`resetShare`).
+ * Alıcı adresi YAZILMAZ.
  * 90 gün sonra günlük cron'la silinir.
  */
 export const emailLog = pgTable(
@@ -516,7 +518,7 @@ export const emailLog = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    /** confirm | alert | weekly */
+    /** confirm | alert | weekly | enroll (bütçe dışı işaret) | reset (20 Ekim: şifre sıfırlama, kendi payı) */
     kind: text("kind").notNull(),
     dedupeKey: text("dedupe_key").notNull(),
     sentAt: timestamp("sent_at", { withTimezone: true })

@@ -31,4 +31,8 @@ status=${response##*$'\n'}
 body=${response%$'\n'*}
 echo "http ${status}: ${body:0:600}"
 [[ "$status" == "200" ]] || exit 1
+# Uç tek koşu kilitli (20 Ekim) ve kilit denemeyi de kapsıyor: pazar ya da
+# telafi koşusu sürerken 200 `"skipped":"running"` döner. Aşağıdaki uyarı
+# operatörü adres ve tercihe yollardı; asıl neden kilit.
+[[ "$body" == *'"skipped":"running"'* ]] && { echo "UYARI: pazar özeti koşusu sürüyor, birkaç dakika sonra yeniden dene"; exit 1; }
 [[ "$body" == *'"sent":1'* ]] || { echo "UYARI: posta gönderilmedi (adres kayıtlı bir üyeye ait mi, pazar özeti açık mı?)"; exit 1; }

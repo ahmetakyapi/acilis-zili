@@ -3,10 +3,11 @@ import { and, desc, gte, lt } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { z } from "zod";
 import { numbersGroundedAcrossLocales, ungroundedNumbers } from "@/lib/ai-grounding";
+import { ClaudeBudgetError } from "@/lib/claude-budget";
 import { getNewsById } from "@/lib/data";
 import { db } from "@/lib/db";
 import { news } from "@/lib/schema";
-import { callClaude } from "@/lib/stock-insights";
+import { callClaude, remembered, UngroundedError } from "@/lib/stock-insights";
 import { indexMemberOf } from "@/db/seed/indices";
 import { isSpotlight } from "@/lib/spotlight";
 
@@ -154,7 +155,20 @@ function weekSlot(now: Date): Date {
   return today <= now ? today : new Date(today.getTime() - 24 * 3600_000);
 }
 
-export async function getNewsBriefing(now: Date = new Date(), scope: BriefingScope = "day"): Promise<NewsBriefing | null> {
+/* UÇUŞTAKİ ÇAĞRI PAYLAŞILIR (20 Ekim) — hisse notlarıyla aynı gerekçe
+   (lib/stock-insights.ts → remembered). Dönem :30'da başlıyor, nöbet onu
+   ancak haber çekme ve çeviriden sonra ısıtıyor; aradaki dakikalarda
+   /haberler'i açan her okur kendi 50–70 haberlik gündem çağrısını
+   başlatıyordu. Ortak yardımcı kullanılmadı: "thin" nedenini "error"a
+   çevirirdi; başarısızlık hafızası yukarıdaki `failures`ta kalıyor.
+   PAY REDDİ DEVREDİLMEZ — gerekçe `remembered`daki aynı başlık: payı dolmuş
+   okurun başlattığı uçuşa katılan nöbet null alıp dönemin gündemini
+   yazmadan geçiyordu. Ret söze hata olarak düşer; başlatan null'a çevirir,
+   katılan kendi kimliğiyle bir kez daha dener. */
+const inflight = new Map<string, Promise<NewsBriefing | null>>();
+
+/** `client`: anonim isteğin bütçe kimliği (lib/stock-insights.ts → callClaude); nöbet vermez. */
+export async function getNewsBriefing(now: Date = new Date(), scope: BriefingScope = "day", client?: string): Promise<NewsBriefing | null> {
   const slot = scope === "week" ? weekSlot(now) : briefingSlot(now);
   const key = `${scope}:${slot.toISOString()}`;
   const failed = failures.get(key);
@@ -162,21 +176,34 @@ export async function getNewsBriefing(now: Date = new Date(), scope: BriefingSco
     lastBriefingFailure = { reason: failed.reason };
     return null;
   }
+  const pending = inflight.get(key);
+  if (pending) return pending.catch((error: unknown) => (error instanceof ClaudeBudgetError ? getNewsBriefing(now, scope, client) : null));
+  const job = buildBriefing(slot, scope, key, client).finally(() => inflight.delete(key));
+  inflight.set(key, job);
+  return job.catch((error: unknown) => (error instanceof ClaudeBudgetError ? null : Promise.reject(error)));
+}
+
+/** Pay reddini (`ClaudeBudgetError`) FIRLATIR — yalnız `getNewsBriefing` çağırır, o çevirir. */
+async function buildBriefing(slot: Date, scope: BriefingScope, key: string, client: string | undefined): Promise<NewsBriefing | null> {
   try {
     return await unstable_cache(
       async (): Promise<NewsBriefing> => {
         const { from, picked } = await briefingInput(slot, scope);
         if (picked.length < MIN_BRIEFING_INPUT) throw new Error("thin");
-        const payload = picked.map((row, index) => ({
-          index,
+        const items = picked.map((row) => ({
           headline: row.headline,
           headlineTr: row.headlineTr,
           summary: (row.summary ?? "").slice(0, scope === "week" ? 160 : 280),
           source: row.source,
           symbols: (row.symbols ?? []).slice(0, 3),
         }));
-        const input = JSON.stringify({ window: `${from.toISOString()} – ${slot.toISOString()}`, items: payload });
-        const out = await callClaude(briefingSystem(scope), BriefingSchema, input);
+        const window = `${from.toISOString()} – ${slot.toISOString()}`;
+        const input = JSON.stringify({ window, items: items.map((item, index) => ({ index, ...item })) });
+        /* Sayı denetimi `index` OLMADAN (20 Ekim): gündem 50–70 haberi 0'dan
+           numaralıyor ve denetim girdinin tamamına bakıyordu — hiçbir
+           başlıkta geçmeyen "%12" 12 numaralı haber var diye geçiyordu. */
+        const grounding = JSON.stringify({ window, items });
+        const out = await callClaude(briefingSystem(scope), BriefingSchema, input, client);
         if (!out) throw new Error("no-output");
         const used = new Set<number>();
         const themes: BriefingTheme[] = out.themes
@@ -202,8 +229,8 @@ export async function getNewsBriefing(now: Date = new Date(), scope: BriefingSco
           .slice(0, scope === "week" ? 6 : 5);
         if (themes.length < 2) throw new Error("thin");
         const written = themes.flatMap((t) => [t.title.tr, t.title.en, t.summary.tr, t.summary.en, ...t.items.map((item) => item.headlineTr ?? "")]).join("\n");
-        if (!numbersGroundedAcrossLocales(written, input)) {
-          lastBriefingFailure = { reason: "ungrounded", detail: ungroundedNumbers(written, input).join(" ") };
+        if (!numbersGroundedAcrossLocales(written, grounding)) {
+          lastBriefingFailure = { reason: "ungrounded", detail: ungroundedNumbers(written, grounding).join(" ") };
           throw new Error("ungrounded");
         }
         return { kind: "briefing", scope, slot: slot.toISOString(), from: from.toISOString(), to: slot.toISOString(), considered: picked.length, themes, generatedAt: new Date().toISOString() };
@@ -212,6 +239,12 @@ export async function getNewsBriefing(now: Date = new Date(), scope: BriefingSco
       { revalidate: (scope === "week" ? 25 : 7) * 3600, tags: ["news-insight"] },
     )();
   } catch (error) {
+    /* Pay reddi hatırlanmaz — gerekçe lib/claude-budget.ts; uçuşa katılan
+       devralmasın diye yukarı çıkar (`getNewsBriefing`). */
+    if (error instanceof ClaudeBudgetError) {
+      lastBriefingFailure = { reason: "budget" };
+      throw error;
+    }
     const reason = error instanceof Error && ["thin", "ungrounded", "no-output"].includes(error.message) ? error.message : "error";
     if (reason !== "ungrounded") lastBriefingFailure = { reason };
     failures.set(key, { at: Date.now(), reason });
@@ -244,33 +277,41 @@ const tidy = (lang: z.infer<typeof ExplainerLang>): ExplainerText => ({
   points: lang.points.slice(0, 3).map((p) => ({ title: p.title.trim(), detail: p.detail.trim() })),
 });
 
-export async function getNewsExplainer(id: string): Promise<NewsExplainer | null> {
-  try {
-    const item = await getNewsById(id);
-    if (!item || !explainable(item.summary)) return null;
-    return await unstable_cache(
-      async (): Promise<NewsExplainer> => {
-        const input = JSON.stringify({
-          headline: item.headline,
-          headlineTr: item.headlineTr,
-          summary: (item.summary ?? "").slice(0, 1500),
-          summaryTr: item.summaryTr ? item.summaryTr.slice(0, 1500) : null,
-          source: item.source,
-          symbols: item.symbols ?? [],
-          published: item.publishedAt.toISOString().slice(0, 10),
-        });
-        const out = await callClaude(EXPLAINER_SYSTEM, ExplainerSchema, input);
-        if (!out) throw new Error("no-output");
-        const text = { tr: tidy(out.tr), en: tidy(out.en) };
-        const written = [text.tr, text.en].flatMap((t) => [t.summary, ...t.points.flatMap((p) => [p.title, p.detail])]).join("\n");
-        if (!text.tr.summary || !numbersGroundedAcrossLocales(written, input)) throw new Error("ungrounded");
-        return { kind: "explainer", id: item.id, text, generatedAt: new Date().toISOString() };
-      },
-      ["news-explainer-v1", item.id],
-      { revalidate: 30 * 24 * 3600, tags: ["news-insight"] },
-    )();
-  } catch (error) {
-    if (error instanceof Error && error.message === "ungrounded") console.error(`[haber notu] ${id}: girdide olmayan sayı, not düşürüldü`);
-    return null;
-  }
+/* BAŞARISIZLIK HATIRLANIR, UÇUŞTAKİ ÇAĞRI PAYLAŞILIR (20 Ekim). Not
+   `unstable_cache`i doğrudan çağırıyor, hatayı da kendi yutuyordu: sayı
+   denetimine takılan haber her açılışta yeniden Claude'a gidiyor ve tavandan
+   bir hak yakıyordu, aynı anda gelen okurlar da ayrı ayrı çağırıyordu — hisse
+   notlarının 18 Ekim'de kapattığı iki açık. Artık ortak yardımcıdan
+   (lib/stock-insights.ts → remembered): son başarısızlık 20 dakika, haber
+   başına tek uçuş; hata kaydı da orada. */
+/** `client`: anonim isteğin bütçe kimliği (lib/stock-insights.ts → callClaude). */
+export function getNewsExplainer(id: string, client?: string): Promise<NewsExplainer | null> {
+  return remembered("explainer", id, () => explainerOnce(id, client));
+}
+
+async function explainerOnce(id: string, client: string | undefined): Promise<NewsExplainer | null> {
+  const item = await getNewsById(id);
+  if (!item || !explainable(item.summary)) return null;
+  return await unstable_cache(
+    async (): Promise<NewsExplainer> => {
+      const input = JSON.stringify({
+        headline: item.headline,
+        headlineTr: item.headlineTr,
+        summary: (item.summary ?? "").slice(0, 1500),
+        summaryTr: item.summaryTr ? item.summaryTr.slice(0, 1500) : null,
+        source: item.source,
+        symbols: item.symbols ?? [],
+        published: item.publishedAt.toISOString().slice(0, 10),
+      });
+      const out = await callClaude(EXPLAINER_SYSTEM, ExplainerSchema, input, client);
+      if (!out) throw new Error("no-output");
+      const text = { tr: tidy(out.tr), en: tidy(out.en) };
+      if (!text.tr.summary) throw new Error("no-output");
+      const written = [text.tr, text.en].flatMap((t) => [t.summary, ...t.points.flatMap((p) => [p.title, p.detail])]).join("\n");
+      if (!numbersGroundedAcrossLocales(written, input)) throw new UngroundedError(ungroundedNumbers(written, input));
+      return { kind: "explainer", id: item.id, text, generatedAt: new Date().toISOString() };
+    },
+    ["news-explainer-v1", item.id],
+    { revalidate: 30 * 24 * 3600, tags: ["news-insight"] },
+  )();
 }

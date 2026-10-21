@@ -55,6 +55,14 @@ import { notifyUser } from "@/lib/notifications";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
+/**
+ * Tetik kuyruğunun eşzamanlı işçisi ve yeni tetik sahiplenme tavanı —
+ * gerekçe GET içinde. 55 sn: tavanda başlamış en uzun tetik (push 10 +
+ * posta 10 + 2 + 10 ≈ 32 sn) de biterse yanıt betiğin 90 sn'sine yetişir.
+ */
+const SWEEP_WORKERS = 6;
+const SWEEP_BUDGET_MS = 55_000;
+
 export async function GET(request: Request) {
   const auth = checkBearer(request, process.env.CRON_SECRET);
   if (!auth.ok) {
@@ -153,9 +161,37 @@ export async function GET(request: Request) {
   const hits = findHits(pending, prices);
   const pctHits = findPercentHits(pendingPct, changes);
 
+  /* HESAP BAŞINA KUYRUK, ALTI İŞÇİ (20 Ekim). Tetikler tek tek, sırayla
+     işleniyordu: her biri sahiplenme + gelen kutusu + push (cihaz başına 10
+     sn tavan) + alarm postası (10 sn; düşerse 2 sn ara ve bir tekrar). Sert
+     bir düşüşte çok sayıda tetik dakikalar sürebiliyor, sondaki okuyucu geç
+     haber alıyordu; asılı kalan bir push ucu kaydeden tek hesap (uç adres
+     okuyucudan geliyor) her tetiğinde 10 saniye yakıp ARKASINDAKİ herkesi
+     bekletiyordu. Şimdi tetikler hesaba göre gruplanır, altı işçi hesap
+     kuyruğunu boşaltır: bir hesabın tetikleri kendi içinde sırayla (alarm
+     postasının kullanıcı tavanı say-sonra-yaz, yarışmasın), yavaş hesap
+     yalnız kendi işçisini tutar. Neon HTTP sürücüsü durumsuz; altı
+     eşzamanlı sorgu güvenli. Günlük posta bütçesi de say-sonra-yaz: aynı
+     anda sahiplenen işçiler onu en çok beş posta aşabilir — kabul edildi
+     (bütçenin servis kotasına karşı payı lib/email-notify.ts → dailyBudget).
+
+     SÜRE TAVANI (`SWEEP_BUDGET_MS`): `maxDuration` VPS'te uygulanmıyor,
+     betik 90 sn'de bırakıyor, sonraki tarama beş dakika sonra. Tavandan
+     sonra YENİ tetik sahiplenilmez: alarm `triggeredAt IS NULL` kalır ve
+     sonraki tarama onu taze fiyatla yeniden değerlendirir. Bedeli bilerek
+     kabul edildi: o arada geri dönen kısa bir kesişim kaçabilir — aksi
+     hâlde koşular üst üste biniyordu. Sahiplenilmiş tetiğin bildirimi her
+     zaman tamamlanır; ertelenen sayı yanıtta `deferred`. */
   let triggered = 0;
   let delivered = 0;
-  for (const hit of hits) {
+  let deferred = 0;
+  const byUser = new Map<string, (() => Promise<void>)[]>();
+  const enqueue = (userId: string, job: () => Promise<void>) => {
+    const jobs = byUser.get(userId);
+    if (jobs) jobs.push(job);
+    else byUser.set(userId, [job]);
+  };
+  for (const hit of hits) enqueue(hit.userId, async () => {
     const claimed = await db
       .update(priceAlerts)
       .set({ triggeredAt: now, triggeredPrice: String(hit.price) })
@@ -165,11 +201,16 @@ export async function GET(request: Request) {
         console.error("[alarm] tetik yazılamadı", error);
         return [];
       });
-    if (claimed.length === 0) continue;
+    if (claimed.length === 0) return;
     triggered += 1;
     /* Gelen kutusu + push tek girişten (lib/notifications.ts): bildirimi
-       açmamış okuyucu da tetiği başlıktaki zilde görür. */
-    delivered += await notifyUser(
+       açmamış okuyucu da tetiği başlıktaki zilde görür. Tek hesabın hatası
+       taramayı durdurmaz (`.catch`, 20 Ekim): bozuk push anahtarlı bir satır
+       fırlatıp sonraki bütün tetikleri ve yüzde döngüsünü atlatıyordu —
+       gerekçe lib/push.ts → deliverPush. Önce bekle, SONRA topla (20 Ekim):
+       `delivered += await …` sol yanı bekleme ÖNCESİ okur; altı işçi
+       eşzamanlıyken üst üste binen iki tetikten biri sayaçtan düşüyordu. */
+    const sent = await notifyUser(
       hit.userId,
       "alert",
       (locale) => {
@@ -178,9 +219,10 @@ export async function GET(request: Request) {
       },
       withLocale,
       { alertId: hit.id, kind: "price", symbol: hit.symbol, direction: hit.direction, target: hit.target, price: hit.price, firedAt: now },
-    );
-  }
-  for (const hit of pctHits) {
+    ).catch(() => 0);
+    delivered += sent;
+  });
+  for (const hit of pctHits) enqueue(hit.userId, async () => {
     const claimed = await db
       .update(percentAlerts)
       .set({ triggeredAt: now, triggeredPct: String(hit.changePct) })
@@ -190,9 +232,10 @@ export async function GET(request: Request) {
         console.error("[alarm] tetik yazılamadı", error);
         return [];
       });
-    if (claimed.length === 0) continue;
+    if (claimed.length === 0) return;
     triggered += 1;
-    delivered += await notifyUser(
+    /* Önce bekle, sonra topla — gerekçe fiyat tetiğinde. */
+    const sent = await notifyUser(
       hit.userId,
       "percent",
       (locale) => {
@@ -201,8 +244,24 @@ export async function GET(request: Request) {
       },
       withLocale,
       { alertId: hit.id, kind: "percent", symbol: hit.symbol, direction: hit.direction, thresholdPct: hit.thresholdPct, changePct: hit.changePct, firedAt: now },
-    );
-  }
+    ).catch(() => 0);
+    delivered += sent;
+  });
+
+  const accounts = [...byUser.values()];
+  await Promise.all(
+    Array.from({ length: SWEEP_WORKERS }, async () => {
+      for (let jobs = accounts.shift(); jobs; jobs = accounts.shift()) {
+        for (const job of jobs) {
+          if (Date.now() - now.getTime() > SWEEP_BUDGET_MS) {
+            deferred += 1;
+            continue;
+          }
+          await job().catch((error) => console.error("[alarm] tetik işlenemedi", error));
+        }
+      }
+    }),
+  );
 
   return NextResponse.json({
     pending: pending.length,
@@ -210,5 +269,6 @@ export async function GET(request: Request) {
     symbols: symbols.length,
     triggered,
     delivered,
+    deferred,
   });
 }

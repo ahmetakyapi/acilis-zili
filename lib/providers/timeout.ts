@@ -23,7 +23,8 @@
 /** Sağlayıcı çağrıları için üst sınır. Kotasyon ve profil uçları saniyeler sürer. */
 export const PROVIDER_TIMEOUT_MS = 8_000;
 
-/** Cron ve çeviri gibi arka plan işleri daha sabırlı olabilir. */
+/** Cron gibi arka plan işleri daha sabırlı olabilir. (Çeviri 20 Ekim'den beri
+    süreyi SDK'ya veriyor — yarış ücretlenen yanıtı atıyordu, lib/translate.ts.) */
 export const BACKGROUND_TIMEOUT_MS = 20_000;
 
 export class TimeoutError extends Error {
@@ -48,4 +49,26 @@ export function withTimeout<T>(
   /* Zamanlayıcı her koşulda temizleniyor: temizlenmezse Node olay döngüsünü
      açık tutar ve sunucusuz fonksiyon boşuna saniyelerce yaşar. */
   return Promise.race([promise, guard]).finally(() => clearTimeout(timer));
+}
+
+/**
+ * Yanıtı GÖVDESİYLE BİRLİKTE süreye bağlar (20 Ekim).
+ *
+ * `fetch` başlıklar gelince çözülüyor, gövde ise hâlâ akıyor olabilir (Next
+ * önbelleğe yazarken okuyucuya akmakta olan bir kopya veriyor).
+ * `withTimeout(fetch(...))` yalnız başlığı sınırlıyordu: kaynak başlığı
+ * gönderip gövdenin ortasında durursa `res.json()` / `res.text()` undici'nin
+ * 300 saniyelik gövde süresine kadar bekliyor, 8 saniyelik tavan amacını
+ * kaybediyordu. Okuma (`read`) artık yarışın İÇİNDE; `fetch` seçeneklerine
+ * yine dokunulmuyor, yukarıdaki önbellek gerekçesi aynen geçerli.
+ */
+export function withBody<B>(
+  request: Promise<Response>,
+  read: (res: Response) => B | Promise<B>,
+  ms: number = PROVIDER_TIMEOUT_MS,
+): Promise<{ res: Response; body: B }> {
+  return withTimeout(
+    request.then(async (res) => ({ res, body: await read(res) })),
+    ms,
+  );
 }

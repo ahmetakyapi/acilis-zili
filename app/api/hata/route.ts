@@ -4,6 +4,7 @@ import { normalizePath, routeTemplate } from "@/lib/analytics";
 import { recordError } from "@/lib/error-log";
 import { ERROR_MESSAGE_MAX } from "@/lib/error-log-core";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
+import { readTextCapped } from "@/lib/read-body";
 import { sameSite } from "@/lib/same-site";
 
 /**
@@ -47,12 +48,11 @@ export async function POST(request: Request) {
   /* Geliştirmede kayıt yok — gerekçe instrumentation.ts'te. */
   if (process.env.NODE_ENV !== "production") return NO_CONTENT();
 
-  /* Gövde tavanı JSON.parse'tan önce — gerekçe app/api/olcum/route.ts. */
-  if (Number(request.headers.get("content-length") || 0) > 4096) return NO_CONTENT();
+  /* Gövde tavanı JSON.parse'tan önce, okurken — gerekçe app/api/olcum/route.ts. */
   let payload: z.infer<typeof BODY>;
   try {
-    const raw = await request.text();
-    if (raw.length > 4096) return NO_CONTENT();
+    const raw = await readTextCapped(request, 4096);
+    if (raw === null) return NO_CONTENT();
     payload = BODY.parse(JSON.parse(raw));
   } catch {
     return NO_CONTENT();

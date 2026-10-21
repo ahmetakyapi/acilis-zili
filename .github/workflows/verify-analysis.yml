@@ -59,6 +59,14 @@ jobs:
           printf '%s\n' "$SSH_KEY" > "$key_file"
           paid=0
           if [[ "$GENERATE_REPORT" == "true" ]]; then paid=1; fi
+          # Uygulama kullanıcısı olarak, root DEĞİL (20 Ekim). Betik ve içe
+          # aktardığı node_modules `acilis`in dosyaları ve canlı web süreci
+          # onları yazabiliyor (ReadWritePaths=/srv/acilis-zili); root'la
+          # koşmak, Node sürecini ele geçiren birine bir sonraki elle
+          # tetiklemede sunucunun tamamını veriyordu. Root gereken bir şey yok:
+          # ortam dosyası root:acilis 0640, betik yalnız 127.0.0.1 ve Neon'a
+          # gidiyor — öteki uzak adımlar da `-u acilis` ile koşuyor.
           ssh -i "$key_file" -o BatchMode=yes -o "StrictHostKeyChecking=$strict" -o ConnectTimeout=15 \
+            -o ServerAliveInterval=30 -o ServerAliveCountMax=4 \
             "ubuntu@$HOST" \
-            "sudo -n bash -c 'set +x; set -a; source /etc/acilis-zili.env; set +a; cd /srv/acilis-zili/current; VERIFY_PAID_ANALYSIS=$paid VERIFY_SYMBOL=$SYMBOL VERIFY_HORIZON=$HORIZON node deploy/verify-analysis.mjs'"
+            "sudo -n -u acilis -H bash -c 'set +x; set -a; source /etc/acilis-zili.env; set +a; cd /srv/acilis-zili/current; VERIFY_PAID_ANALYSIS=$paid VERIFY_SYMBOL=$SYMBOL VERIFY_HORIZON=$HORIZON node deploy/verify-analysis.mjs'"

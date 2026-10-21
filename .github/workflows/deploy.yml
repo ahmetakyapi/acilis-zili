@@ -36,6 +36,26 @@ permissions:
 # `ubuntu-24.04`e sabit: `ubuntu-latest` 19 Ekim'den itibaren Ubuntu 26'ya
 # geçiyor ve deploy hattının sessizce değişmesi istenmiyor — yükseltme
 # bilinçli bir commit olsun. Diğer iş akışları da aynı sürümlerde.
+#
+# Eylemler COMMIT'E sabit, etikete değil (20 Ekim). `@v5` yeniden
+# yönlendirilebilen bir etiket: her v5.x.y'yi commit'siz alıyordu, yani
+# yukarıdaki "bilinçli commit" sözü eylemler için tutmuyordu. Ve deploy
+# işinde checkout'un yazdığı `deploy/*.sh` bir sonraki adımda VPS anahtarıyla
+# (ubuntu@ + parolasız sudo = sunucuda root) koşuyor; taşınmış ya da ele
+# geçirilmiş bir etiket o betikleri değiştirebilirdi. Yanındaki `# v5.x.y`
+# yalnız okunsun diye; yükseltme = yeni etiketin commit'i
+# (`git ls-remote https://github.com/actions/checkout 'refs/tags/v5*'`).
+# Sabitlendiği gün `v5` etiketi de bu commit'lerdeydi — davranış aynı.
+
+# ZAMAN AŞIMI (20 Ekim). Sunucuya dokunan her iş `deploy-vps` grubunda sıra
+# bekliyor; süresiz bir iş GitHub varsayılanı olan 360 dakika boyunca
+# arkasındaki her push'u, env eşitlemesini ve düzeltmeyi bekletirdi. SSH'te
+# yalnız ConnectTimeout vardı: oturum kurulduktan sonra VPS donarsa ya da yol
+# koparsa ssh çekirdeğin ~2 saatlik TCP keepalive'ını bekliyordu.
+# `ServerAliveInterval=30` + `ServerAliveCountMax=4` ölü bağlantıyı iki
+# dakikada düşürür. Kesmek güvenli: update.sh SIGPIPE/SIGHUP'ta canlıya
+# çıkmamış sürümü temizliyor (cleanup). Süreler son koşumların (6-14 dk)
+# birkaç katı; VPS derlemesi ARM'de yavaşlayabilir diye deploy'da geniş.
 
 # `queue: max` (16 Ekim): onsuz grupta yalnız BİR koşum bekliyor ve yeni
 # gelen — ör. elle tetiklenen "Sync App Env" — bekleyen yayını sessizce
@@ -50,11 +70,12 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 24
           cache: npm
@@ -70,8 +91,9 @@ jobs:
   deploy:
     needs: verify
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
       # Sunucunun SSH host anahtarı biliniyorsa SABİTLENİR. Runner her
@@ -93,10 +115,17 @@ jobs:
           else
             echo "strict=accept-new" >> "$GITHUB_ENV"
           fi
+      # Servis burada yeniden başlatılmıyor, update.sh birazdan başlatıyor
+      # (20 Ekim). Başlatılıyordu ve her push, dakikalar süren derlemeden ÖNCE
+      # eski sürümü bir kez daha düşürüyordu — fazladan bir 502 penceresi ve
+      # yarıda kalan uzun istek (ücretli analiz, cron taraması). Derleme
+      # düşerse yeni anahtar bir sonraki başlatmaya kalır; acilse elle
+      # "Sync Claude Analysis Key" koşulur, o servisi başlatıyor.
       - name: Analiz anahtarını sunucuya aktar
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
           HOST: ${{ vars.VPS_HOST }}
+          RESTART: "0"
           CLAUDE_ANALYSIS_API_KEY: ${{ secrets.CLAUDE_ANALYSIS_API_KEY }}
         run: |
           if [[ -n "$CLAUDE_ANALYSIS_API_KEY" ]]; then
@@ -132,5 +161,6 @@ jobs:
           install -m 600 /dev/null /tmp/deploy_key
           printf '%s\n' "$SSH_KEY" > /tmp/deploy_key
           ssh -i /tmp/deploy_key -o "StrictHostKeyChecking=${strict:-accept-new}" -o ConnectTimeout=15 \
+            -o ServerAliveInterval=30 -o ServerAliveCountMax=4 \
             "ubuntu@${HOST}" \
             "sudo -u acilis -H bash /srv/acilis-zili/current/deploy/update.sh ${GITHUB_SHA}"

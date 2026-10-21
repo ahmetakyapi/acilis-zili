@@ -5,6 +5,7 @@ import { etDateTimeToUtc } from "@/lib/market-hours";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { SITE_URL } from "@/lib/site";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
+import { isIsoDate } from "@/lib/fx";
 
 /**
  * Takvime Ekle — tek bir olayın `.ics` dosyası.
@@ -42,12 +43,18 @@ const WINDOW_LABEL: Record<string, { tr: string; en: string }> = {
   dmh: { tr: "seans içinde", en: "during the session" },
 };
 
+/* YALNIZ CR DE SATIR SONU (20 Ekim). `\r?\n` tek başına duran CR'yi
+   geçiriyordu; Outlook gibi hoşgörülü okuyucular onu satır sonu sayıyor ve
+   sağlayıcıdan gelen bir şirket adındaki CR, DESCRIPTION'ı bölüp dosyaya
+   yeni bir özellik (URL, DTSTART…) sokabiliyordu. Öteki C0 denetim
+   karakterleri RFC 5545'te TEXT değerinde yasak; atılıyor. */
 function escapeText(value: string): string {
   return value
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
     .replace(/\\/g, "\\\\")
     .replace(/;/g, "\\;")
     .replace(/,/g, "\\,")
-    .replace(/\r?\n/g, "\\n");
+    .replace(/\r\n|\r|\n/g, "\\n");
 }
 
 /** UTC damgası: 20260827T203000Z */
@@ -196,27 +203,42 @@ export async function GET(request: Request) {
   if (tip === "bilanco") {
     const symbol = (params.get("sembol") ?? "").toUpperCase().slice(0, 12);
     const date = params.get("tarih") ?? "";
-    if (!/^[A-Z.\-]{1,12}$/.test(symbol) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    /* TAKVİMDE OLAN GÜN (20 Ekim). Desen `2026-02-30`u geçiriyordu,
+       Postgres `date` sütunu onu "date/time field value out of range" ile
+       reddediyor ve yakalanmayan hata 500 + `app_errors` satırı oluyordu —
+       tarayıcı ve bozuk bağlantı gürültüsü yönetim panelinin hata sayacına
+       yazılıyordu. Doğrulama takvime bakan ortak yardımcıda. */
+    if (!/^[A-Z.\-]{1,12}$/.test(symbol) || !isIsoDate(date)) {
       return new Response("bad-request", { status: 400 });
     }
 
-    const [row] = await db
-      .select({ hour: earningsCalendar.hour })
-      .from(earningsCalendar)
-      .where(
-        and(
-          eq(earningsCalendar.symbol, symbol),
-          eq(earningsCalendar.reportDate, date),
-        ),
-      )
-      .limit(1);
+    /* İki okuma birbirini beklemiyor; veritabanı düşerse 503 (aynı gürültü
+       gerekçesi). Kayıt yoksa ad sorgusu boşa gidiyor — bulunan kayıtta
+       kazanılan gidiş-dönüşün yanında ucuz. */
+    let found;
+    try {
+      found = await Promise.all([
+        db
+          .select({ hour: earningsCalendar.hour })
+          .from(earningsCalendar)
+          .where(
+            and(
+              eq(earningsCalendar.symbol, symbol),
+              eq(earningsCalendar.reportDate, date),
+            ),
+          )
+          .limit(1),
+        db
+          .select({ name: symbols.name })
+          .from(symbols)
+          .where(eq(symbols.symbol, symbol))
+          .limit(1),
+      ]);
+    } catch {
+      return new Response("unavailable", { status: 503 });
+    }
+    const [[row], [meta]] = found;
     if (!row) return new Response("not-found", { status: 404 });
-
-    const [meta] = await db
-      .select({ name: symbols.name })
-      .from(symbols)
-      .where(eq(symbols.symbol, symbol))
-      .limit(1);
 
     const company = meta?.name ?? symbol;
     const win = row.hour ? WINDOW_LABEL[row.hour] : undefined;
@@ -256,17 +278,23 @@ export async function GET(request: Request) {
       return new Response("bad-request", { status: 400 });
     }
 
-    const [row] = await db
-      .select({
-        eventDate: economicEvents.eventDate,
-        eventTimeEt: economicEvents.eventTimeEt,
-        titleTr: economicEvents.titleTr,
-        titleEn: economicEvents.titleEn,
-        importance: economicEvents.importance,
-      })
-      .from(economicEvents)
-      .where(eq(economicEvents.slug, slug))
-      .limit(1);
+    let found;
+    try {
+      found = await db
+        .select({
+          eventDate: economicEvents.eventDate,
+          eventTimeEt: economicEvents.eventTimeEt,
+          titleTr: economicEvents.titleTr,
+          titleEn: economicEvents.titleEn,
+          importance: economicEvents.importance,
+        })
+        .from(economicEvents)
+        .where(eq(economicEvents.slug, slug))
+        .limit(1);
+    } catch {
+      return new Response("unavailable", { status: 503 });
+    }
+    const [row] = found;
     if (!row) return new Response("not-found", { status: 404 });
 
     const title = tr ? row.titleTr : row.titleEn;

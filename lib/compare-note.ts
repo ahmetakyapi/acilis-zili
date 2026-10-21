@@ -40,7 +40,7 @@ import { formatPercentPlain, formatPercentText, peRatioOf } from "@/lib/utils";
  * MALİYET: anahtar sıralı semboller + aralık + son tamamlanmış seans
  * (`compareNoteKey`); 36 saat önbellekte. Aynı seçim ve aralığı soran ikinci
  * okur Claude'a gitmez; süreç içinde uçuştaki aynı anahtar da bir kez
- * çağrılır (`inflight`). Tavan hisse notlarıyla ortak (`INSIGHT_DAILY_CAP`).
+ * çağrılır (`remembered`). Tavan hisse notlarıyla ortak (`INSIGHT_DAILY_CAP`).
  */
 
 export type CompareNote = {
@@ -187,10 +187,13 @@ const toText = (lang: z.infer<typeof Lang>): InsightText => ({
   points: lang.points.slice(0, 4).map((p) => ({ title: p.title.trim(), detail: p.detail.trim(), source: null })),
 });
 
-const inflight = new Map<string, Promise<CompareNote | null>>();
-
-/** `symbols` sıralı ve tekrarsız gelir (`noteSymbols`, lib/compare-note-core.ts). */
-export async function getCompareNote(symbols: string[], range: CompareRange): Promise<{ note: CompareNote | null; key: string | null }> {
+/** `symbols` sıralı ve tekrarsız gelir (`noteSymbols`, lib/compare-note-core.ts);
+    `client` anonim isteğin bütçe kimliği (lib/stock-insights.ts → callClaude).
+    UÇUŞ TEK KATMAN (20 Ekim): önünde ayrı bir `inflight` haritası vardı;
+    `remembered` aynı anahtarı (`compare:{key}`) zaten paylaştırıyor, dış
+    katman ise ilk okurun pay reddini katılanlara null diye geçiriyordu —
+    `remembered`ın katılana kendi kimliğiyle yeniden deneme hakkını atlatarak. */
+export async function getCompareNote(symbols: string[], range: CompareRange, client?: string): Promise<{ note: CompareNote | null; key: string | null }> {
   let built: Built | null;
   try {
     built = await build(symbols, range);
@@ -199,12 +202,10 @@ export async function getCompareNote(symbols: string[], range: CompareRange): Pr
   }
   if (!built) return { note: null, key: null };
   const b = built;
-  const running = inflight.get(b.key);
-  if (running) return { note: await running, key: b.key };
-  const job = remembered("compare", b.key, async () => {
+  const note = await remembered("compare", b.key, async () => {
     const cached = await unstable_cache(
       async (): Promise<CompareNote> => {
-        const out = await callClaude(SYSTEM, NoteSchema, b.input);
+        const out = await callClaude(SYSTEM, NoteSchema, b.input, client);
         if (!out) throw new Error("no-output");
         const text = { tr: toText(out.tr), en: toText(out.en) };
         const all = [text.tr, text.en].flatMap((t) => [t.summary, ...t.points.flatMap((p) => [p.title, p.detail])]).join(" ");
@@ -216,7 +217,6 @@ export async function getCompareNote(symbols: string[], range: CompareRange): Pr
     )();
     /* Figürün sayıları her istekte aynı seans barlarından (hisse notuyla aynı). */
     return { ...cached, ...b.meta };
-  }).finally(() => inflight.delete(b.key));
-  inflight.set(b.key, job);
-  return { note: await job, key: b.key };
+  });
+  return { note, key: b.key };
 }

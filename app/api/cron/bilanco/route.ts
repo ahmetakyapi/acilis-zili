@@ -3,7 +3,7 @@ import { and, eq, gte, inArray } from "drizzle-orm";
 import { checkBearer } from "@/lib/api-auth";
 import { db } from "@/lib/db";
 import { notificationPrefs, notifications, watchlistItems, watchlists } from "@/lib/schema";
-import { getEarningsBetweenResult } from "@/lib/data";
+import { getEarningsWithOverrides } from "@/lib/earnings-overrides";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { notifyUser } from "@/lib/notifications";
 import { getDictionary } from "@/lib/i18n";
@@ -14,9 +14,13 @@ import { withLocale } from "@/lib/i18n/routing";
  * bir çağırır. Tercihi açan hesaplara, takip listelerindeki şirketlerden
  * YARIN (ET) bilanço açıklayacak olanları tek bildirimde gönderir.
  *
- * - Takvim `getEarningsBetween`den okunur, HAM tablodan değil: elle tarih
- *   düzeltmeleri (earnings_overrides) oradan geçiyor; ham sorgu revize
- *   edilmiş eski tarihleri de getirirdi.
+ * - Takvim `getEarningsWithOverrides`tan okunur, HAM tablodan değil: elle
+ *   tarih düzeltmeleri (earnings_overrides) sağlayıcının önüne geçiyor ve
+ *   revize edilmiş eski tarihler `guncelBilanco` ile düşüyor. 20 Ekim'e
+ *   kadar bu satır `getEarningsBetween` diyordu ama o yalnız sağlayıcı
+ *   tablosunu okuyor: düzeltmenin tam da var olma sebebi olan şirkette
+ *   (NVDA, 13 Ekim) hatırlatma ya hiç gitmiyor ya sağlayıcının yanlış
+ *   gününe gidiyordu.
  * - Satır-başına-alarm değil GÜNLÜK İŞ: tekrar gönderimi engelleyen şey
  *   kadans (günde tek koşum) + gün-kapsamlı tag (aynı gün ikinci koşum
  *   öncekinin yerine geçer ama yeniden titreştirir — o yüzden crontab'da
@@ -69,12 +73,16 @@ export async function GET(request: Request) {
 async function run(): Promise<NextResponse> {
 
   const tomorrow = addEtDays(todayEt(), 1);
-  const calendar = await getEarningsBetweenResult(tomorrow, tomorrow);
-  if (!calendar.ok) {
-    console.error("[bilanço] takvim okunamadı", tomorrow);
+  /* Sağlayıcı sorgusu hatayı FIRLATIYOR (okunamayan takvim boş takvim
+     değil — 503 ve yeniden deneme); yalnız düzeltme tablosu okunamazsa
+     sağlayıcı satırlarına sessizce düşülüyor (`loadOpenOverrides`). */
+  let rows: Awaited<ReturnType<typeof getEarningsWithOverrides>>;
+  try {
+    rows = await getEarningsWithOverrides(tomorrow, tomorrow);
+  } catch (error) {
+    console.error("[bilanço] takvim okunamadı", tomorrow, error);
     return NextResponse.json({ date: tomorrow, error: "calendar" }, { status: 503 });
   }
-  const rows = calendar.rows;
   if (rows.length === 0) return NextResponse.json({ date: tomorrow, earnings: 0 });
   const reporting = new Set(rows.map((row) => row.symbol));
 
@@ -156,7 +164,9 @@ async function run(): Promise<NextResponse> {
         };
       },
       withLocale,
-    );
+      /* Tek hesabın hatası sonrakilerin hatırlatmasını düşürmez (20 Ekim) —
+         gerekçe lib/push.ts → deliverPush. */
+    ).catch(() => 0);
   }
 
   return NextResponse.json({

@@ -25,8 +25,10 @@ concurrency:
 jobs:
   migrate:
     runs-on: ubuntu-24.04
+    # Zaman aşımı, ServerAlive ve commit'e sabit eylem — gerekçe deploy.yml (20 Ekim).
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
       - name: Sunucuda migration
@@ -48,5 +50,6 @@ jobs:
           umask 077
           key=$(mktemp); trap 'rm -f "$key"' EXIT
           printf '%s\n' "$SSH_KEY" > "$key"
-          ssh -i "$key" -o BatchMode=yes -o "StrictHostKeyChecking=$strict" -o ConnectTimeout=15 "ubuntu@${HOST}" \
+          ssh -i "$key" -o BatchMode=yes -o "StrictHostKeyChecking=$strict" -o ConnectTimeout=15 \
+            -o ServerAliveInterval=30 -o ServerAliveCountMax=4 "ubuntu@${HOST}" \
             "sudo -n -u acilis -H bash -s -- $MODE" < deploy/remote-migrate.sh

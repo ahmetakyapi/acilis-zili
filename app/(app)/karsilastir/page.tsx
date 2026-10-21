@@ -16,12 +16,16 @@ import {
 } from "@/components/markets/CompareLive";
 import {
   DataStamp,
+  EmptyState,
   PageHeader,
   Panel,
   PanelHeader,
 } from "@/components/ui/primitives";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { seriesColorOf } from "@/lib/chart-series";
 import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
+import { allowCompareSet } from "@/lib/compare-limit";
+import { rateLimit, requestKey } from "@/lib/rate-limit";
 import { CompareAdd } from "@/components/markets/CompareAdd";
 import { RangeTrack, ScaleBar } from "@/components/markets/CompareScale";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
@@ -122,6 +126,51 @@ export const generateMetadata = pageMetadata({
   },
 });
 
+/* --------------------------------------------------------------------------
+   Sağlayıcı kotasını koruyan süzgeç (20 Ekim)
+
+   Hisse sayfası ve toplu bar ucu tanınmayan sembolü dar kapıdan geçiriyordu,
+   bu sayfa hiç geçirmiyordu: `?semboller=` biçimi geçen her diziyi kabul
+   ediyor ve sütun başına bir Finnhub metrik çağrısı yapıyor; Alpaca boş
+   dönünce kotasyonlar da sembol başına Finnhub'a düşüyor. Uydurma dört
+   sembol sayfa başına sekiz Finnhub çağrısıydı ve ücretsiz katman bütün site
+   için dakikada 60. Kapı hisse sayfasınınkiyle aynı (dakikada 10, gerekçesi
+   app/(app)/hisse/[symbol]/page.tsx başında); kapsam ayrı, çünkü bar ucunun
+   30'luk kovası ucuz aralık isteklerini sayıyor, buradaki her geçiş pahalı.
+
+   Metrik çağrısı tanınmayan sembolde KESİLMİYOR: tabloda henüz olmayan gerçek
+   bir hisse (yeni halka arz) ölçülerini kaybederdi ve bu sayfa, hisse
+   sayfasının aksine, profili tabloya yazmıyor — sembol hiç tanınan tarafa
+   geçmezdi. Tavan tek başına bedeli sınırlıyor.
+
+   Yeni küme kapısı bar ucuyla ORTAK (`lib/compare-limit.ts`) ve tanınmayan
+   kümeye de, kovasından sonra uygulanıyor: sayfa aynı barları ve üstüne
+   kotasyon paketini istiyor, yalnız uca konan sınır saldırıyı buraya
+   taşırdı. Küratörlü çift sayfaları (`/karsilastir/[pair]`)
+   kapının dışında: kümeleri sabit ve sayılı.
+   -------------------------------------------------------------------------- */
+const UNKNOWN_LIMIT = 10;
+const WINDOW_MS = 60_000;
+
+async function allowCompareRender(
+  symbols: string[],
+  range: CompareRange,
+): Promise<boolean> {
+  /* Ek sorgu yok: tahta aynı listeyi soruyor ve `getSymbolNames` istek
+     içinde önbellekli. */
+  const names = await getSymbolNames(symbols);
+  /* Tanınmayan küme İKİ kapıdan geçiyor: kendi kovası, sonra ortak yeni
+     küme sayacı. Yalnız kovasından geçseydi bir uydurma sembol her kümeyi
+     o sayacın dışına çıkarırdı (gerekçe app/api/karsilastir/route.ts). */
+  if (
+    symbols.some((symbol) => !names[symbol]) &&
+    !rateLimit(await requestKey("compare-page-unknown"), UNKNOWN_LIMIT, WINDOW_MS).allowed
+  ) {
+    return false;
+  }
+  return allowCompareSet(symbols, range, await requestKey("compare-new")).allowed;
+}
+
 export default async function ComparePage(props: PageProps<"/karsilastir">) {
   const search = await props.searchParams;
   const { locale, t } = await getI18n();
@@ -131,11 +180,28 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
     ? search.aralik
     : DEFAULT_COMPARE_RANGE;
   const { currency, realAvailable } = resolveCompareCurrency(search.para);
+  const allowed = symbols.length === 0 || (await allowCompareRender(symbols, range));
 
   return (
     <MotionExperience className={`${polish.page} ${polish.compare}`}>
       <ScrollProgress />
-      {symbols.length === 0 ? (
+      {!allowed ? (
+        /* Hisse sayfasının kota ekranı, aynı çıkış yoluyla: aynı adrese
+           giden bağlantı — sınır dakikalık. */
+        <EmptyState
+          title={t.stock.throttled}
+          hint={t.stock.throttledHint}
+          scene="mishap"
+          action={
+            <Link
+              href={compareHref(symbols, range, currency)}
+              className="text-sm font-semibold text-primary hover:text-primary-hover"
+            >
+              {t.common.retry}
+            </Link>
+          }
+        />
+      ) : symbols.length === 0 ? (
         <>
           {/* ARAMA KAPAĞIN SAĞINDA (23 Eylül). Kapağın sağ yarısı boştu,
               arama kutusu ise hemen altında kendi panelinde duruyordu: bir

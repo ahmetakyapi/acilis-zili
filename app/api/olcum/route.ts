@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { recordPageView, shouldRecord } from "@/lib/analytics";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
+import { readTextCapped } from "@/lib/read-body";
 import { sameSite } from "@/lib/same-site";
 
 /**
@@ -43,17 +44,15 @@ export async function POST(request: Request) {
   }
 
   /* GÖVDE TAVANI JSON.parse'TAN ÖNCE (15 Ekim taraması). Zod'un max(300)'ü
-     ancak gövdenin TAMAMI belleğe okunduktan sonra çalışır; Content-Length
-     ve okunan metin uzunluğu denetlenmeyince kimliksiz bir döngü yüzlerce
-     MB'lık gövdelerle süreci OOM'a sürükleyebiliyordu. Kalıp
-     app/api/ai/analysis'teki tavanın aynısı; 4 KB meşru yüke bol bol yeter. */
-  if (Number(request.headers.get("content-length") || 0) > 4096) {
-    return new NextResponse(null, { status: 204 });
-  }
+     ancak gövdenin TAMAMI belleğe okunduktan sonra çalışır; kimliksiz bir
+     döngü yüzlerce MB'lık gövdelerle süreci OOM'a sürükleyebiliyordu. Tavan
+     20 Ekim'den beri OKURKEN sayılıyor — Content-Length + okuduktan sonra
+     uzunluk, parçalı gövdede hiç devreye girmiyordu (lib/read-body.ts).
+     4 KB meşru yüke bol bol yeter. */
   let payload: z.infer<typeof BODY>;
   try {
-    const raw = await request.text();
-    if (raw.length > 4096) return new NextResponse(null, { status: 204 });
+    const raw = await readTextCapped(request, 4096);
+    if (raw === null) return new NextResponse(null, { status: 204 });
     payload = BODY.parse(JSON.parse(raw));
   } catch {
     return new NextResponse(null, { status: 204 });

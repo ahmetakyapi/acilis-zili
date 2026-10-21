@@ -3,13 +3,14 @@ import { and, eq, gte, inArray, isNotNull, lte } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { z } from "zod";
 import { ungroundedNumbers } from "@/lib/ai-grounding";
+import { ClaudeBudgetError } from "@/lib/claude-budget";
 import { db } from "@/lib/db";
 import { eventExplainer } from "@/lib/event-explainers";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { RELEASED_WINDOW_DAYS, compareReleased, pickReleased, releaseNoteKey } from "@/lib/release-notes-core";
 import { economicEvents, type EconomicEventRow } from "@/lib/schema";
 import { callClaude, insightsConfigured } from "@/lib/stock-insights";
-import { formatEventValue } from "@/lib/utils";
+import { formatEventValue, SIGN_GAP } from "@/lib/utils";
 
 /**
  * VERİ AÇIKLANINCA CLAUDE NOTU (18 Ekim, sahibinin isteği) — /takvim'in
@@ -55,9 +56,16 @@ Rules:
 const Lang = z.object({ summary: z.string(), context: z.string() });
 const ReleaseSchema = z.object({ tr: Lang, en: Lang });
 
+/* Eksi işareti sayıya bitişik (20 Ekim): ekran biçimi işaretten sonra dar
+   SIGN_GAP bırakıyor ve model onu düz boşluğa çeviriyor — `formatPercentText`
+   gerekçesi (lib/utils.ts). */
+const LEAD_GAP = new RegExp(`^−${SIGN_GAP}`, "u");
+const textValue = (value: string, unit: string | null, locale: "tr" | "en") =>
+  (formatEventValue(value, unit, locale) ?? value.trim()).replace(LEAD_GAP, "−");
+
 const both = (value: string | null, unit: string | null) => {
   if (value === null || value.trim() === "") return null;
-  return { tr: formatEventValue(value, unit, "tr") ?? value.trim(), en: formatEventValue(value, unit, "en") ?? value.trim() };
+  return { tr: textValue(value, unit, "tr"), en: textValue(value, unit, "en") };
 };
 
 function releaseInput(row: EconomicEventRow): string {
@@ -94,7 +102,8 @@ const failures = new Map<string, { at: number; reason: string; detail?: string }
 const FAILURE_TTL = 20 * 60_000;
 export const releaseNoteFailure = (id: string) => failures.get(id) ?? null;
 
-export async function getReleaseNote(id: string): Promise<ReleaseNote | null> {
+/** `client`: anonim isteğin bütçe kimliği (lib/stock-insights.ts → callClaude); nöbet vermez. */
+export async function getReleaseNote(id: string, client?: string): Promise<ReleaseNote | null> {
   const failed = failures.get(id);
   if (failed && Date.now() - failed.at < FAILURE_TTL) return null;
   let missing: string[] = [];
@@ -104,7 +113,7 @@ export async function getReleaseNote(id: string): Promise<ReleaseNote | null> {
     const input = releaseInput(row);
     const note = await unstable_cache(
       async (): Promise<ReleaseNote> => {
-        const out = await callClaude(RELEASE_SYSTEM, ReleaseSchema, input);
+        const out = await callClaude(RELEASE_SYSTEM, ReleaseSchema, input, client);
         if (!out) throw new Error("no-output");
         const tidy = (lang: z.infer<typeof Lang>): ReleaseNoteText => ({ summary: lang.summary.trim(), context: lang.context.trim() });
         const text = { tr: tidy(out.tr), en: tidy(out.en) };
@@ -119,6 +128,8 @@ export async function getReleaseNote(id: string): Promise<ReleaseNote | null> {
     failures.delete(id);
     return note;
   } catch (error) {
+    /* Pay reddi hatırlanmaz — gerekçe lib/claude-budget.ts. */
+    if (error instanceof ClaudeBudgetError) return null;
     const reason = error instanceof Error && ["ungrounded", "no-output"].includes(error.message) ? error.message : "error";
     failures.set(id, { at: Date.now(), reason, detail: reason === "ungrounded" ? missing.join(" ") : undefined });
     console.error(`[veri notu] ${id}: ${reason}${reason === "ungrounded" ? ` (${missing.join(" ")})` : ""}`);

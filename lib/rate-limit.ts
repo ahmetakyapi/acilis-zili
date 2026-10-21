@@ -118,6 +118,17 @@ export function peekRateLimit(key: string, limit: number): RateLimitResult {
 }
 
 /**
+ * Sayaçtan bir hak GERİ verir (20 Ekim) — `rateLimit`in aldığı hak işe
+ * yaramadıysa. Claude bütçesi için var (lib/claude-budget.ts → `refundCall`):
+ * sunucunun reddettiği, ücretlenmeyen çağrı istemcinin günlük payından da
+ * düşmesin. Süresi dolmuş ya da boş kovaya dokunmaz.
+ */
+export function refundRateLimit(key: string): void {
+  const bucket = buckets.get(key);
+  if (bucket && bucket.resetAt > Date.now() && bucket.count > 0) bucket.count -= 1;
+}
+
+/**
  * İstemci kimliği.
  *
  * Vercel `x-forwarded-for` başlığını kendisi yazar ve istemcinin gönderdiği
@@ -125,7 +136,7 @@ export function peekRateLimit(key: string, limit: number): RateLimitResult {
  * kötü ihtimalle sınır paylaşılır — sahte bir güvenlik iddiası yok.
  */
 export function clientKey(request: Request, scope: string): string {
-  return `${scope}:${ipFrom(request.headers.get("x-forwarded-for"))}`;
+  return forwardedKey(scope, request.headers.get("x-forwarded-for"));
 }
 
 /**
@@ -134,7 +145,19 @@ export function clientKey(request: Request, scope: string): string {
  */
 export async function requestKey(scope: string): Promise<string> {
   const store = await headers();
-  return `${scope}:${ipFrom(store.get("x-forwarded-for"))}`;
+  return forwardedKey(scope, store.get("x-forwarded-for"));
+}
+
+/**
+ * Anahtarın TEK kurucusu — ham `x-forwarded-for` değerinden. Dışa açık
+ * (20 Ekim): giriş sayacı (`auth.ts` → `signInKey`) anahtarı kendisi
+ * kuruyordu ve aşağıdaki IPv6 /64 indirgemesini atlıyordu. Sayacın tek
+ * arttığı yer orası olduğu için IPv6'da kova yine adres başınaydı, form da
+ * hiç artmayan /64 kovasını okuyup "çok fazla deneme" yerine "şifre
+ * hatalı" diyordu.
+ */
+export function forwardedKey(scope: string, forwarded: string | null): string {
+  return `${scope}:${ipFrom(forwarded)}`;
 }
 
 function ipFrom(forwarded: string | null): string {

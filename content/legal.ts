@@ -15,7 +15,7 @@
    ========================================================================== */
 
 /** Metnin son güncellendiği tarih — sayfa künyesinde görünür (ET/TR farkı önemsiz). */
-export const LEGAL_UPDATED = "2026-10-16";
+export const LEGAL_UPDATED = "2026-10-20";
 
 const PRIVACY_TR = `Açılış Zili kişisel bir projedir ve ABD borsalarını Türkçe takip etmek için yapılmıştır. Bu sayfa, 6698 sayılı **Kişisel Verilerin Korunması Kanunu** (KVKK) kapsamında hangi verinin neden işlendiğini, nereye gittiğini ve senin hangi haklara sahip olduğunu anlatır.
 
@@ -83,7 +83,7 @@ Hukuki sebep: meşru menfaat (m. 5/2-f) — ürünün hangi bölümünün kullan
 | Topluluk yazıların (başlık, giriş, metin, semboller, durum ve moderasyon notu) — yalnızca yazarsan | Onaylanan yazıyı \`/topluluk\`ta ve profilinde kullanıcı adınla yayımlamak | Açık rıza (m. 5/1) — editördeki "Kuyruğa Gönder" düğmesi |
 | Bildirim aboneliğin (tarayıcının verdiği bildirim adresi ve şifreleme anahtarları, cihaz adı, dil) — yalnızca Ayarlar'da bildirimleri açarsan | Alarmın tetiklendiğini cihazına bildirmek | Açık rıza (m. 5/1) — tarayıcının izin penceresi ve "Bu Cihazda Aç" düğmesi |
 | E-posta bildirim tercihlerin (alarm postası ve haftanın özeti açık/kapalı, onaylanan adres ve onay anı) | Tetiklenen alarmı ve her pazar haftanın özetini e-postayla göndermek | Alarm postası: açık rıza (m. 5/1) — Ayarlar'daki anahtar ve e-postadaki onay bağlantısı. Haftanın özeti: üyelik hizmetinin ifası (m. 5/2-c) — bütün üyelere varsayılan açık, her an kapatılabilir |
-| E-posta gönderim kaydı (hangi bildirim postasının ne zaman gittiği; adres ve içerik yazılmaz) | Aynı postayı iki kez göndermemek ve günlük gönderim sınırını korumak; 90 gün sonra silinir | Meşru menfaat (m. 5/2-f) |
+| E-posta gönderim kaydı (hangi bildirim ya da şifre sıfırlama postasının ne zaman gittiği; adres ve içerik yazılmaz) | Aynı postayı iki kez göndermemek ve günlük gönderim sınırını korumak; 90 gün sonra silinir | Meşru menfaat (m. 5/2-f) |
 | Tema ve dil tercihi | Arayüzü hatırlamak | Meşru menfaat (m. 5/2-f) |
 | Seçtiğin profil ikonu | Hesabını arayüzde göstermek | Meşru menfaat (m. 5/2-f) |
 | Profil tanıtımın ve görünürlük tercihlerin (profil açık mı; takip listelerin ve portföy dağılımın görünsün mü) — yalnızca profil ayarlarına dokunursan | Profilini \`/u/kullanıcı-adın\` adresinde senin seçtiğin kapsamla göstermek | Açık rıza (m. 5/1) — Ayarlar'daki "Profilim Herkese Açık" anahtarı |
@@ -291,7 +291,7 @@ Legal basis: legitimate interest (Art. 5/2-f) — seeing which part of the produ
 | Your community posts (title, intro, body, symbols, status and review note) — only if you write them | To publish approved posts under your username on \`/topluluk\` and your profile | Explicit consent (Art. 5/1) — the "Submit for Review" button in the editor |
 | Your notification subscription (the push address and encryption keys your browser issues, device name, language) — only if you turn notifications on in Settings | To tell your device an alert has fired | Explicit consent (Art. 5/1) — the browser's permission prompt and the "Turn On for This Device" button |
 | Your email notification preferences (alert emails and the weekly recap on/off, the confirmed address and when it was confirmed) | To email you when an alert fires and to send the weekly recap every Sunday | Alert emails: explicit consent (Art. 5/1) — the switch in Settings and the confirmation link in the email. Weekly recap: performance of the membership service (Art. 5/2-c) — on by default for every member, can be turned off at any time |
-| Email delivery log (which notification email was sent when; no address or content is stored) | To never send the same email twice and to keep within the daily sending limit; deleted after 90 days | Legitimate interest (Art. 5/2-f) |
+| Email delivery log (which notification or password-reset email was sent when; no address or content is stored) | To never send the same email twice and to keep within the daily sending limit; deleted after 90 days | Legitimate interest (Art. 5/2-f) |
 | Theme and language preference | To remember the interface | Legitimate interest (Art. 5/2-f) |
 | The profile icon you picked | To show your account in the interface | Legitimate interest (Art. 5/2-f) |
 | Your profile intro and visibility preferences (whether the profile is public; whether your watchlists and portfolio weights are shown) — only if you touch the profile settings | To show your profile at \`/u/your-username\` with the scope you chose | Explicit consent (Art. 5/1) — the "My Profile Is Public" switch in Settings |

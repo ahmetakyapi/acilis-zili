@@ -18,7 +18,14 @@ export const alt = "Teknik Analiz · Açılış Zili";
  * nesneyi derin birleştirmiyor: segmentte görsel dosyası yokken üst
  * segmentlerden gelen görseller siliniyor, paylaşımda hiç görsel çıkmıyordu.
  * Kart sayfanın kendi manşetini taşıyor: sembol, görüş, yayın ve başlık
- * cümlesi. Analiz yoksa yalnızca sembol ve bölüm adı.
+ * cümlesi. Listedeki sembolün analizi henüz yoksa yalnızca sembol ve bölüm
+ * adı.
+ *
+ * LİSTE DIŞI SEMBOL 404 (20 Ekim). Sayfa 404 verirken kart adresteki HAM
+ * metni başlık olarak basıp 200 dönüyordu: `/teknik/<herhangi bir metin>/
+ * opengraph-image` sitenin "Teknik Analiz" çerçevesinde, istenen cümleyle
+ * bir görsel üretiyordu — ve her biri istek başına bir Satori çizimi.
+ * Hisse kartıyla aynı kural (`hisse/[symbol]/opengraph-image`).
  */
 export default async function TechnicalOgImage({
   params,
@@ -27,8 +34,9 @@ export default async function TechnicalOgImage({
 }) {
   const { symbol: raw } = await params;
   const symbol = raw.toUpperCase();
+  if (!isTechnicalSymbol(symbol)) return new Response(null, { status: 404 });
   const t = getDictionary(DEFAULT_LOCALE);
-  const detail = isTechnicalSymbol(symbol) ? await getTechnicalDetail(symbol) : null;
+  const detail = await getTechnicalDetail(symbol);
   const row = detail?.row ?? null;
 
   return new ImageResponse(

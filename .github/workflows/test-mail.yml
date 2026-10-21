@@ -31,20 +31,31 @@ concurrency:
 jobs:
   send:
     runs-on: ubuntu-24.04
+    # Zaman aşımı, ServerAlive ve commit'e sabit eylem — gerekçe deploy.yml
+    # (20 Ekim). Uzak curl 290 saniyeye kadar bekleyebiliyor.
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
+      # ADRES `env:`E KONMAZ (20 Ekim). GitHub adımın env bloğunu DEĞERLERİYLE
+      # günlüğün "Run" başlığına basıyor ve yalnız secret'ları maskeliyor;
+      # depo herkese açık, günlük de. `yeniden` türü başka bir üyenin adresini
+      # böylece kalıcı olarak yayımlıyordu (KVKK) — betiğin adresi basmaması
+      # başlığı kurtarmıyordu. Adres olay dosyasından okunur ve biçim
+      # denetiminden (tek satır) geçince maskelenir; aynı adımın env'ine
+      # konup sonra maskelemek işe yaramaz, başlık komutlardan önce basılıyor.
       - name: Sunucudan deneme postası
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
           HOST: ${{ vars.VPS_HOST }}
           VPS_HOST_KEY: ${{ vars.VPS_HOST_KEY }}
-          ADDRESS: ${{ inputs.email }}
           KIND: ${{ inputs.kind }}
         run: |
           set -euo pipefail
+          ADDRESS=$(jq -r '.inputs.email // empty' "$GITHUB_EVENT_PATH")
           [[ "$ADDRESS" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]] || { echo "geçersiz adres"; exit 1; }
+          echo "::add-mask::$ADDRESS"
           [[ "$HOST" =~ ^[a-zA-Z0-9.-]+$ ]] || { echo "geçersiz host"; exit 1; }
           [[ "$KIND" == "deneme" || "$KIND" == "yeniden" ]] || { echo "geçersiz tür"; exit 1; }
           strict=accept-new
@@ -56,5 +67,6 @@ jobs:
           umask 077
           key=$(mktemp); trap 'rm -f "$key"' EXIT
           printf '%s\n' "$SSH_KEY" > "$key"
-          ssh -i "$key" -o BatchMode=yes -o "StrictHostKeyChecking=$strict" -o ConnectTimeout=15 "ubuntu@${HOST}" \
+          ssh -i "$key" -o BatchMode=yes -o "StrictHostKeyChecking=$strict" -o ConnectTimeout=15 \
+            -o ServerAliveInterval=30 -o ServerAliveCountMax=4 "ubuntu@${HOST}" \
             "sudo -n -u acilis -H bash -s -- $ADDRESS $KIND" < deploy/remote-test-mail.sh
