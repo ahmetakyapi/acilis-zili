@@ -76,5 +76,15 @@
 @media (max-width: 899px) { .loading { min-height: 420px; } .loading[data-kind="briefing"] { min-height: 1150px; } }
 @media (max-width: 639px) { .loading { min-height: 500px; } .loading[data-kind="briefing"] { min-height: 1400px; } }
 
+/* Filmin altında notun iskeleti (21 Ekim; StockInsightCard'daki gibi). */
+.filmLines { display: flex; flex-direction: column; gap: 9px; margin-top: 10px; }
+/* Geniş ekranda haber notu (760'lık sütun) yalnız ~300 piksel: film orada
+   kısalır ve iskelet çizgileri düşer, yoksa kutu notun 120 piksel üstünde
+   kalıyor, not gelince panel küçülüyordu (21 Ekim, ölçüldü: 517 / 397). */
+@media (min-width: 900px) {
+  .loading[data-kind="explainer"] { --film-h: 196px; }
+  .loading[data-kind="explainer"] .filmLines { display: none; }
+}
+
 @keyframes nb-rise { from { opacity: 0; translate: 0 8px; } }
 @media (prefers-reduced-motion: reduce) { .theme { animation: none !important; } }

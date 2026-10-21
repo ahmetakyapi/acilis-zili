@@ -129,8 +129,9 @@ değil); küçültürken `toLocaleLowerCase("tr-TR")`.
   Cam, blur, ışıma YOK.
 - **Renk anlam taşır, süs değil:** mavi etkileşim, `up`/`down` yön. Veri
   panelinde mavi sayı ya da yeşil başlık gördüysen hata vardır.
-- **Degrade yalnız üç yerde:** kısa display başlık (`.display-ink`), birincil
-  eylem, marka karosu. Veri panelleri ve gövde metni taşımaz.
+- **Degrade:** kısa display başlık (`.display-ink`), birincil eylem, marka
+  karosu ve bekleme filmleri/sahneleri (21 Ekim, sahibinin isteği: filmler
+  sitenin mavi degrade dilinde). Veri panelleri ve gövde metni taşımaz.
 - **Grafik dili ince:** kulvar (`--line-soft`) üstünde 5 piksellik şerit,
   sıfır çizgisi `--line-strong`; dolu ağır bloklar "tablo programı" gibi
   duruyor (10 Ekim, sahibinin itirazı — `MarketTexture.module.css`).
@@ -176,8 +177,10 @@ değil); küçültürken `toLocaleLowerCase("tr-TR")`.
   (`overflow-hidden` + yarıçap). Kenarlık yalnız yer tutucularda.
 - **Mürekkep sahneleri** (`lib/ink/scenes.ts` → `INK_SCENES`,
   `components/ink/`): Canvas 2D, tohumlu, deterministik, saf `render(ctx, t)`;
-  hareketi azaltana son kare. Renk temadan (`--text-strong`, `--brass`; mavi
-  YOK). Sahne DÖNMEZ, bir kez oynar — tek istisna `LoadingMark`'ın `ringing`
+  hareketi azaltana son kare. Renk temadan, sitenin mavi degrade dilinde
+  (`--mark-gradient`, `--display-gradient`, `--primary*`, `--brass` vurgusu);
+  "mavi yok" kuralı 21 Ekim'de sahibinin isteğiyle kalktı. Açık temada film
+  açık kalır, koyu ekran olmaz; koyu temada tersi. Sahne DÖNMEZ, bir kez oynar — tek istisna `LoadingMark`'ın `ringing`
   döngüsü. Rota beklemesi `lib/ink/route-scenes.ts`; sayfa düzeyi boş durum
   `EmptyState scene=`; panel içi tek satırlık boş duruma sahne konmaz. Yeni
   sahneyi `.tmp-*` önizlemede kare kare, iki temada gözle kontrol et.

@@ -2612,6 +2612,13 @@ const tr = {
     briefingLoading: "Claude son 24 saatin haberlerini okuyor…",
     explainerTitle: "Bu Haber Ne Anlatıyor",
     explainerLoading: "Claude haberi sade dille açıyor…",
+    /* Bekleme filmi (components/news/NewsFilm.tsx): sahne adları Title Case,
+       her biri en çok 16 harf (16/15 + 1,5 sn okunur; sahne 3,1 sn). */
+    film: {
+      scene: "{n}/{total}",
+      explainer: ["Haber Masada", "Haber Okunuyor", "Türkçeye Geçiyor", "Öz Çıkarılıyor", "Claude Notu Yazıyor"],
+      briefing: ["Haberler Masada", "Haberler Okunuyor", "Türkçeye Geçiyor", "Konular Ayrılıyor", "Claude Gündemi Yazıyor"],
+    },
     unavailable: "Not şu an hazırlanamadı; birazdan yeniden dene.",
     briefingDisclosure: "Başlıklar ve özetler, listedeki haberlerden Claude ile yazıldı. Haberlerde olmayan bilgi eklemez; ayrıntı ve doğrulama için habere git. Yatırım tavsiyesi değildir.",
     explainerDisclosure: "Bu açıklama yalnız yukarıdaki haber metninden Claude ile yazıldı; habere bilgi eklemez. Ayrıntı için kaynağı oku. Yatırım tavsiyesi değildir.",

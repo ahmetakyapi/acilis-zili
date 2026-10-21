@@ -1,0 +1,242 @@
+/* Haber notu bekleme filmi (NewsFilm.tsx).
+
+   MAVİ DEGRADE DİL (21 Ekim, sahibinin isteği, üç film için: "çok daha
+   görsel, bizim mavi gradient tema tarzında, siteye uygun; dark modu da
+   öyle"). Bekleme filmleri bu yüzden "degrade yalnız üç yerde" kuralının
+   belgeli istisnası: perde açık temada havadar açık mavi (lacivert ekran
+   DEĞİL), koyu temada derin mavi; karakter marka karosu gibi (150° gök →
+   mavi → lacivert, üst yarıda beyaz parıltı, beyaz yüz); etiket, madde
+   imi, sekme mavi degrade çip; vurgu marka mavisi. Pirinç yalnız küçük
+   sıcak vurgu (yanak, çay, kalem, kıvılcım). Gölge, ışıma, bulanıklık yok.
+   Duraklar token'dan türetilir (--primary ailesi, --mark-ink beyazı,
+   --page-bg / --text-strong ile karışım); elle renk yok. Kâğıt OPAK
+   (--premium-surface): üst üste binen kâğıtlar birbirini göstermesin.
+   Geçişler --ease-brand; hedefi aşıp oturan yay yalnız tek küçük öğede
+   (etiket, im, sekme, madde imi, kıvılcım).
+
+   KURAL: her öğenin TEMEL konumu sahnenin SON karesi; keyframe yalnız
+   `from` ya da ara kareler. Hareket kapanınca animasyon düşer, sahne
+   bitmiş hâliyle durur. Başta görünmeyen öğenin (toz) ilk karesi de
+   görünmez, yoksa `both` onu gecikme boyunca ekranda tutar. */
+
+.film {
+  display: flex; flex-direction: column; gap: 12px;
+  --nf-sky: color-mix(in srgb, var(--primary-soft) 72%, var(--mark-ink));
+  --nf-blue: var(--primary);
+  --nf-navy: color-mix(in srgb, var(--primary-deep) 70%, var(--text-strong));
+  --nf-ink: var(--nf-navy);
+  --nf-line: var(--nf-navy);
+  --nf-lip: var(--nf-navy);
+  --nf-paper: var(--premium-surface);
+  --nf-stage: linear-gradient(172deg, color-mix(in srgb, var(--primary) 5%, var(--premium-surface)) 0%, color-mix(in srgb, var(--primary) 15%, var(--premium-surface)) 100%);
+}
+/* Koyu tema: perde derin mavi, karakter açık gökten maviye; ağız çubuğu
+   ve tokmak BellMark'taki gibi beyaz. */
+:global(:root[data-theme="dark"]) .film {
+  --nf-sky: var(--primary-soft);
+  --nf-blue: color-mix(in srgb, var(--primary) 72%, var(--page-bg));
+  --nf-navy: color-mix(in srgb, var(--primary) 34%, var(--page-bg));
+  --nf-ink: var(--text-strong);
+  --nf-line: var(--primary-soft);
+  --nf-lip: var(--mark-ink);
+  --nf-stage: linear-gradient(172deg, color-mix(in srgb, var(--primary) 20%, var(--page-bg)) 0%, color-mix(in srgb, var(--primary) 8%, var(--page-bg)) 100%);
+}
+.stopSky { stop-color: var(--nf-sky); }
+.stopBlue { stop-color: var(--nf-blue); }
+.stopNavy { stop-color: var(--nf-navy); }
+.stopSheen { stop-color: var(--mark-ink); stop-opacity: .26; }
+.stopClear { stop-color: var(--mark-ink); stop-opacity: 0; }
+.screen {
+  position: relative; display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; overflow: hidden;
+  border-radius: var(--radius-lg); background: var(--nf-stage); border: 1px solid var(--primary-faint);
+}
+.perf {
+  height: 6px; border-radius: 2px;
+  background-image: linear-gradient(90deg, var(--primary-faint) 0 10px, transparent 10px 18px);
+  background-size: 18px 6px; animation: nf-perf 1.2s linear infinite;
+}
+.perf[data-bottom] { animation-direction: reverse; }
+.stage { display: block; width: 100%; height: auto; max-height: var(--film-h, 240px); animation: nf-cut .45s var(--ease-brand) both; }
+
+.caption { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.counter { flex: none; font-family: var(--font-mono); font-size: 11.5px; font-weight: 800; color: var(--primary-ink); }
+.title { min-width: 0; font-size: 15px; font-weight: 800; letter-spacing: -.01em; color: var(--text-strong); animation: nf-rise .45s var(--ease-brand) both; }
+/* Sahne adı manşet mürekkebiyle (küçük punto aile: -tight, 13–16 pikselde AA). */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .title { background-image: var(--display-gradient-tight); -webkit-background-clip: text; background-clip: text; color: transparent; }
+}
+.progress { display: grid; grid-template-columns: repeat(var(--count, 5), minmax(0, 1fr)); gap: 6px; }
+.segment { position: relative; height: 4px; border-radius: 2px; overflow: hidden; background: var(--primary-wash); }
+.segment::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(90deg, var(--nf-sky), var(--nf-blue)); transform-origin: left; scale: 1 1; }
+.segment[data-state="next"]::after { scale: 0 1; }
+.segment[data-state="now"]::after { animation: nf-fill var(--ms) linear both; }
+.segment:last-child[data-state="now"]::after { animation: nf-fill var(--ms) linear both, nf-breathe 1.6s var(--ease-brand) var(--ms) infinite; }
+
+/* ---- Ortak çizim ---- */
+.desk { stroke: var(--primary-faint); stroke-width: 1.5; stroke-linecap: round; }
+.paper { fill: var(--nf-paper); stroke: var(--primary-faint); stroke-width: 1.2; }
+.fold { fill: var(--primary-wash); stroke: var(--primary-faint); stroke-width: 1; stroke-linejoin: round; }
+.ink { fill: var(--nf-ink); opacity: .85; }
+.inkSoft { fill: var(--primary-soft); opacity: .38; }
+.inkFaint { fill: var(--primary-soft); opacity: .24; }
+.rule { stroke: var(--primary-wash); stroke-width: 1; }
+.letter { fill: var(--nf-ink); opacity: .88; transform-box: fill-box; transform-origin: center; }
+.mark { fill: var(--nf-ink); opacity: .88; }
+.hook { fill: none; stroke: var(--nf-ink); stroke-width: .9; stroke-linecap: round; opacity: .88; }
+.tagBox { fill: var(--g-chip); }
+.tagInk { fill: none; stroke: var(--mark-ink); stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
+.tool { pointer-events: none; }
+.late { animation: nf-fade .3s var(--ease-brand) .35s both; }
+
+/* ---- Zil ---- */
+.bellBody { fill: var(--g-bell); }
+.bellSheen { fill: var(--g-sheen); }
+.bellLine { fill: var(--g-bell); }
+.lip { fill: var(--nf-lip); }
+.clapper { fill: var(--nf-lip); }
+.cheek { fill: var(--brass-bright); opacity: .7; }
+.eyes { fill: var(--mark-ink); transform-box: fill-box; transform-origin: center; animation: nf-blink 3.4s var(--ease-brand) 1.2s infinite; }
+.smile { fill: none; stroke: var(--mark-ink); stroke-width: 1.5; stroke-linecap: round; }
+.glasses { fill: none; stroke: var(--mark-ink); stroke-width: 1.3; stroke-linecap: round; }
+.glasses[data-pos="up"] { translate: 0 -9px; }
+.glasses[data-pos="slide"] { animation: nf-slide .75s var(--ease-brand) .25s both; }
+.glint { fill: var(--mark-ink); stroke: none; opacity: 0; transform-box: fill-box; transform-origin: center; animation: nf-glint .7s var(--ease-brand) 1s both; }
+
+/* 1 · İrkilir, çalar: gövde askıdan sallanır, tokmak geriden izler,
+   iki yanda "çın" kavisleri. */
+.bell[data-mood="ring"] { transform-origin: 0 -48.5px; animation: nf-ring 1.25s var(--ease-brand) var(--rd) both; }
+.bell[data-mood="ring"] .clapper { animation: nf-clap 1.25s var(--ease-brand) calc(var(--rd) + 90ms) both; }
+.bell[data-mood="ring"] .eyes { animation: nf-wide .5s var(--ease-spring) var(--rd) both, nf-blink 3.4s var(--ease-brand) calc(var(--rd) + 1.4s) infinite; }
+.ding { fill: none; stroke: var(--primary); stroke-width: 1.6; stroke-linecap: round; opacity: 0; transform-origin: 0 -41px; animation: nf-ding 1s var(--ease-brand) calc(var(--rd) + 60ms) both; }
+
+/* 2 · Okur: kâğıda doğru eğilir, gözler satır satır gezer. */
+.bell[data-mood="read"] { transform-origin: 0 0; rotate: -5deg; animation: nf-lean .6s var(--ease-brand) .1s both; }
+.bell[data-mood="read"] .gaze { translate: -2px 1px; animation: nf-scan 1.88s var(--ease-loop) .95s both; }
+.readInk { fill: var(--nf-blue); opacity: .8; transform-box: fill-box; transform-origin: left; animation: nf-type .47s var(--ease-loop) var(--d) both; }
+
+/* 3 · Sözlüğe bakar, kâğıda döner. */
+.bell[data-mood="look"] .gaze { translate: -2.6px -.4px; animation: nf-look 2.6s var(--ease-brand) .2s both; }
+.tag[data-pop] { animation: nf-pop .45s var(--ease-spring) calc(var(--d) + 1000ms) both; }
+.tag[data-flip] { animation: nf-flip .7s var(--ease-brand) .25s both; }
+.tagOut { opacity: 0; animation: nf-out-half .7s linear .25s both; }
+.tagIn { animation: nf-in-half .7s linear .25s both; }
+.letterOut { scale: 1 0; animation: nf-shut .22s var(--ease-brand-in) var(--d) both; }
+.letterIn { animation: nf-open .24s var(--ease-brand) var(--d) both; }
+.markIn { animation: nf-dot .4s var(--ease-spring) var(--d) both; }
+.rewrite { transform-box: fill-box; transform-origin: left; animation: nf-retype .55s var(--ease-brand) var(--d) both; }
+.bookPage { fill: var(--nf-paper); stroke: var(--nf-line); stroke-width: 1.1; stroke-linejoin: round; }
+.bookSpine { stroke: var(--nf-line); stroke-width: 1.6; stroke-linecap: round; }
+.flip { fill: var(--g-chip); stroke: var(--nf-line); stroke-width: 1; stroke-linejoin: round; scale: -1 1; animation: nf-page .5s var(--ease-brand) var(--d) both; }
+
+/* 1 · Düşüş: düşerken uzar, değince yayvanlaşır, oturur. */
+.drop { transform-box: fill-box; transform-origin: 50% 100%; animation: nf-drop .75s var(--ease-brand) var(--d) both; }
+.curl { animation: nf-pop .5s var(--ease-brand) calc(var(--d) + 640ms) both; }
+.dust { fill: var(--primary-soft); opacity: 0; transform-box: fill-box; transform-origin: center; animation: nf-dust .6s var(--ease-brand) var(--d) both; }
+
+/* 4a · Fosforlu kalem boyar, pirinç alt çizgiler, kalan soluklaşır. */
+.highlight { fill: var(--primary); opacity: .24; animation: nf-swipe .77s var(--ease-loop) .38s both; }
+.keep { fill: var(--nf-ink); opacity: .7; animation: nf-fade .4s var(--ease-brand) 1.15s both; }
+.keep + .keep { animation-delay: 1.6s; }
+.dim { fill: var(--nf-paper); opacity: .72; animation: nf-fade .5s var(--ease-brand) var(--d) both; }
+.underline { fill: none; stroke: var(--primary); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 100; animation: nf-draw var(--ms, .45s) var(--ease-loop) var(--d) both; }
+.markerBody { fill: var(--nf-line); }
+.markerTip { fill: var(--primary); }
+.bell[data-mood="nod"] { transform-origin: 0 0; animation: nf-nod .42s var(--ease-brand) 1.2s 4 alternate; }
+.bell[data-mood="nod"] .gaze { translate: -2.6px .6px; }
+
+/* 4b · Kâğıtlar kavisle yığınlara uçar, yığınlara sekme takılır. */
+.sort { transform-box: fill-box; transform-origin: center; animation: nf-sort .7s var(--ease-brand) var(--d) both; }
+.tab { animation: nf-pop .45s var(--ease-spring) var(--d) both; }
+.tabBox { fill: var(--g-chip); }
+.tabDot { fill: var(--mark-ink); }
+.bell[data-mood="watch"] { transform-origin: 0 0; animation: nf-hop .6s var(--ease-brand) 2.45s both; }
+.bell[data-mood="watch"] .gaze { translate: -2.4px .4px; animation: nf-follow 1.7s var(--ease-loop) .35s both; }
+
+/* 5 · Not: kaynak solda soluk, kart yükselir, satırlar kalemle yazılır. */
+.source { opacity: .7; animation: nf-fade .5s var(--ease-brand) both; }
+.arrow { fill: none; stroke: var(--primary-soft); stroke-width: 1.2; stroke-linecap: round; stroke-dasharray: 2 2.6; }
+.noteCard { animation: nf-rise .5s var(--ease-brand) .1s both; }
+.band { fill: var(--g-bell); }
+.bandInk { fill: var(--mark-ink); opacity: .92; }
+.spark { fill: var(--mark-ink); }
+.bullet { fill: var(--g-chip); transform-box: fill-box; transform-origin: center; animation: nf-pop .4s var(--ease-spring) var(--d) both; }
+.typed { transform-box: fill-box; transform-origin: left; animation: nf-type var(--ms) var(--ease-loop) var(--d) both; }
+.pencilTip { fill: var(--nf-line); }
+.pencilBody { fill: var(--brass-bright); }
+.pencilEnd { fill: var(--primary-soft); }
+/* Satırlar bitince kalem ucuyla tıkırdar: not gelene kadar dönen tek küçük öğe. */
+.pencilTap { transform-origin: 0 0; animation: nf-tap .55s var(--ease-loop) 3s infinite alternate; }
+.twinkle { fill: var(--brass); transform-box: fill-box; animation: nf-pop .45s var(--ease-spring) var(--d) both, nf-twinkle 1.8s var(--ease-loop) calc(var(--d) + .6s) infinite; }
+.teaGlass { fill: var(--nf-paper); }
+.tea { fill: var(--brass); opacity: .85; }
+.teaLine { fill: none; stroke: var(--nf-line); stroke-width: 1.1; stroke-linejoin: round; }
+.saucer { fill: var(--nf-paper); stroke: var(--nf-line); stroke-width: 1.1; }
+.steam { fill: none; stroke: var(--primary-soft); stroke-width: 1.1; stroke-linecap: round; opacity: 0; animation: nf-steam 2.1s var(--ease-loop) var(--d) infinite; }
+
+@keyframes nf-perf { to { background-position: -18px 0; } }
+@keyframes nf-cut { from { opacity: 0; scale: .98; } }
+@keyframes nf-rise { from { opacity: 0; translate: 0 8px; } }
+@keyframes nf-fill { from { scale: 0 1; } }
+@keyframes nf-breathe { 50% { opacity: .45; } }
+@keyframes nf-fade { from { opacity: 0; } }
+@keyframes nf-pop { from { scale: 0; } }
+@keyframes nf-type { from { scale: 0 1; } }
+@keyframes nf-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@keyframes nf-blink { 0%, 92%, 100% { scale: 1 1; } 96% { scale: 1 .1; } }
+@keyframes nf-wide { 40% { scale: 1.3 1.45; } }
+@keyframes nf-drop {
+  0% { translate: 0 -150px; scale: .97 1.05; opacity: 0; animation-timing-function: var(--ease-brand-in); }
+  10% { opacity: 1; }
+  62% { translate: 0 0; scale: 1.05 .93; animation-timing-function: var(--ease-brand); }
+  82% { scale: .99 1.02; }
+}
+@keyframes nf-dust {
+  0% { opacity: 0; translate: 0 0; scale: .4; }
+  12% { opacity: .65; }
+  100% { opacity: 0; translate: var(--dx) var(--dy); scale: 1.25; }
+}
+@keyframes nf-ring { 12% { rotate: -13deg; } 32% { rotate: 10deg; } 52% { rotate: -6deg; } 72% { rotate: 3deg; } }
+@keyframes nf-clap { 12% { translate: 3.2px 0; } 32% { translate: -3px 0; } 52% { translate: 2px 0; } 72% { translate: -1px 0; } }
+@keyframes nf-ding { 0% { opacity: 0; scale: .6; } 20% { opacity: 1; scale: 1; } 70% { opacity: 1; } 100% { opacity: 0; scale: 1.18; } }
+@keyframes nf-slide { 0% { translate: 0 -9px; } 35% { translate: 0 -10.6px; } }
+@keyframes nf-glint { 0% { opacity: 0; scale: .2; } 30% { opacity: 1; scale: 1.25; } 100% { opacity: 0; scale: .8; } }
+@keyframes nf-lean { from { rotate: 0deg; } }
+@keyframes nf-scan {
+  0% { translate: -3.4px -.6px; } 23% { translate: -.4px -.6px; }
+  25% { translate: -3.4px 0; } 48% { translate: -.4px 0; }
+  50% { translate: -3.4px .6px; } 73% { translate: -.4px .6px; }
+  75% { translate: -3.4px 1.2px; } 98% { translate: -.4px 1.2px; }
+}
+@keyframes nf-look {
+  0% { translate: -2.6px -.4px; } 14% { translate: -1.6px 1.8px; } 48% { translate: -1.6px 1.8px; }
+  58% { translate: -2.6px -.4px; } 80% { translate: -3px -.8px; }
+}
+@keyframes nf-flip { 0% { scale: 1 1; animation-timing-function: var(--ease-brand-in); } 45%, 55% { scale: 0 1; } }
+@keyframes nf-out-half { 0%, 49.9% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes nf-in-half { 0%, 49.9% { opacity: 0; } 50%, 100% { opacity: 1; } }
+@keyframes nf-shut { from { scale: 1 1; } }
+@keyframes nf-open { from { scale: 1 0; } }
+@keyframes nf-dot { from { opacity: 0; translate: 0 -4px; } }
+@keyframes nf-retype { 40% { scale: 0 1; } }
+@keyframes nf-page { from { scale: 1 1; } 50% { scale: 0 1; translate: 0 -2px; } }
+@keyframes nf-swipe { from { scale: 0 1; } }
+@keyframes nf-nod { to { rotate: -6deg; } }
+@keyframes nf-sort { 0% { translate: var(--fx) var(--fy); rotate: var(--r); } 50% { translate: var(--mx) var(--my); } }
+@keyframes nf-follow {
+  0% { translate: -3.6px .6px; } 30% { translate: -1px .2px; } 50% { translate: -3.6px .6px; }
+  75% { translate: -.6px .2px; }
+}
+@keyframes nf-hop {
+  25% { scale: 1.07 .9; translate: 0 0; animation-timing-function: var(--ease-brand); }
+  55% { scale: .96 1.05; translate: 0 -7px; animation-timing-function: var(--ease-brand-in); }
+  78% { scale: 1.05 .94; translate: 0 0; }
+}
+@keyframes nf-tap { from { rotate: 0deg; } to { rotate: -9deg; } }
+@keyframes nf-twinkle { 50% { scale: 1.35; } }
+@keyframes nf-steam { 0% { opacity: 0; translate: 0 3px; } 35% { opacity: .55; } 100% { opacity: 0; translate: 0 -7px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .film *, .film *::after { animation: none !important; }
+  .segment[data-state="now"]::after { scale: 1 1; }
+  .steam { opacity: .4; }
+}

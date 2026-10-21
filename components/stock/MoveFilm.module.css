@@ -1,135 +1,376 @@
-/* Bekleme filmi — kısa film (MoveFilm.tsx). Perde ton yüzey
-   (surface-sunken), gölge ve ışıma yok; film şeridi delikleri --line-soft.
-   Geçişler --ease-brand; hedefi aşıp oturan yay eğrisi yalnız tek küçük
-   öğede (ünlem, onay, iğne, dedektifin şaşırması). Oyma imler (ünlem,
-   onay, iğne kenarı) ve mercek --page-bg: --surface iki temada da yarı
-   saydam, ünlemi brass üstünde görünmez bırakıyordu (ölçüldü: alfa .03).
+/* Bekleme filmi — kısa film (MoveFilm.tsx).
 
-   KURAL: her öğenin TEMEL konumu sahnenin SON karesi; keyframe yalnız
+   MAVİ MARKA DİLİ (21 Ekim, sahibinin isteği: "çok daha görsel, bizim mavi
+   gradient tema tarzında, siteye uygun; dark modu da öyle"). Bu bekleme
+   filmleri için "mavi yok" ve "degrade yalnız üç yerde" kuralları kalktı:
+   perde açık temada havadar açık mavi (`--primary-tint` → `--primary-wash`,
+   `--premium-surface` üstünde), koyu temada derin mavi (aynı token'lar koyu
+   yüzeyde); hiçbir temada lacivert ekran yok. Marka karosu degradesi
+   (dedektifin sapı ve şapkası, klaket kolu, defter kapağı, ünlem, onay,
+   kalem) iki temada AYNI, karo gibi. Yön renkleri (`--up`/`--down`) yalnız
+   barlarda; ip, raptiye, kahraman bar halkası marka mavisi. Pirinç yalnız
+   yanaklarda (sıcak, tatlı). Gölge, ışıma, bulanıklık yine YOK.
+   Eski hâl: perde `--surface-sunken`, vurgu pirinç.
+   Girişler --ease-brand; kamera ve ekran boyu taşıma --ease-move (kamera
+   eğrisi, globals.css); küçük döngüler --ease-loop. Hedefi aşıp oturan yay
+   eğrisi yalnız tek küçük öğede (ünlem, onay, iğne, kalem, ataş). Dolgular
+   OPAK (`--premium-surface`): --surface iki temada da yarı saydam, üst üste
+   binen kart ve mercek arkasını gösteriyordu (ölçüldü: alfa .03). Karo
+   üstündeki imler (ünlem, onay, klaket çizgileri) karo gibi beyaz
+   (`--mark-ink`).
+
+   KURAL: her öğenin TEMEL konumu o sahnenin SON karesi; keyframe yalnız
    `from` (ya da ara kareler). Hareket kapanınca (prefers-reduced-motion)
-   animasyon düşer, sahne bitmiş hâliyle durur. */
+   animasyon ve geçiş düşer, sahne bitmiş hâliyle durur.
+
+   SAHNE SEÇİCİSİ: kök `data-scene` taşır; bir öğenin o sahnedeki oyunu
+   `.film[data-scene="N"] .öğe`. Seçici değişince animasyon adı değişir ve
+   yeniden başlar — art arda iki sahnede AYNI ad aynı öğeye verilmez (yeniden
+   başlamaz). Karakterin iç ağacı zaten sahne başına kurulur (`key`). */
 
 .film { display: flex; flex-direction: column; gap: 12px; }
 .screen {
   position: relative; display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; overflow: hidden;
-  border-radius: var(--radius-lg); background: var(--surface-sunken);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(172deg, var(--primary-tint) 0%, var(--primary-wash) 100%), var(--premium-surface);
+  border: 1px solid var(--primary-faint);
 }
+/* Marka karosunun ve manşet mürekkebinin durakları globals.css'te ayrı token
+   (`--mark-stop-*`, `--display-stop-*`): SVG dolgusu CSS degradesini
+   okuyamaz, `<linearGradient>` durakları onları okur. Manşet durakları koyu
+   temada ters yönde açılır (globals.css). */
+.film {
+  --mf-t1: var(--mark-stop-1); --mf-t2: var(--mark-stop-2); --mf-t3: var(--mark-stop-3);
+  --mf-d1: var(--display-stop-1); --mf-d2: var(--display-stop-2); --mf-d3: var(--display-stop-3);
+  --mf-limb: var(--primary-deep);
+  --mf-line: var(--text-strong);
+}
+:root[data-theme="dark"] .film {
+  --mf-limb: var(--primary-soft);
+}
+.tile1 { stop-color: var(--mf-t1); }
+.tile2 { stop-color: var(--mf-t2); }
+.tile3 { stop-color: var(--mf-t3); }
+.ink1 { stop-color: var(--mf-d1); }
+.ink2 { stop-color: var(--mf-d2); }
+.ink3 { stop-color: var(--mf-d3); }
+.sheenTop { stop-color: var(--mark-ink); stop-opacity: .3; }
+.sheenEnd { stop-color: var(--mark-ink); stop-opacity: 0; }
+.sheen { fill: var(--mf-sheen); pointer-events: none; }
+
 /* Film şeridi akar (sonsuz — "makine çalışıyor" işareti, sahne değil). */
 .perf {
   height: 6px; border-radius: 2px;
-  background-image: linear-gradient(90deg, var(--line-soft) 0 10px, transparent 10px 18px);
+  background-image: linear-gradient(90deg, var(--primary-faint) 0 10px, transparent 10px 18px);
   background-size: 18px 6px; animation: mf-perf 1.2s linear infinite;
 }
 .perf[data-bottom] { animation-direction: reverse; }
-.stage { display: block; width: 100%; height: auto; max-height: 240px; animation: mf-cut .45s var(--ease-brand) both; }
+/* Kadraj tam 2:1. SVG geniş kutuda ortalanıp yanlara taşarsa kadraj
+   dışındaki dünya (sonraki sahnenin panosu, masası) yanlarda görünürdü. */
+.stage { display: block; width: 100%; max-width: 480px; aspect-ratio: 2 / 1; height: auto; margin-inline: auto; overflow: hidden; }
 
 .caption { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
-.counter { flex: none; font-family: var(--font-mono); font-size: 11.5px; font-weight: 800; color: var(--brass-ink); }
-.title { min-width: 0; font-size: 15px; font-weight: 800; letter-spacing: -.01em; color: var(--text-strong); animation: mf-rise .45s var(--ease-brand) both; }
+.counter { flex: none; font-family: var(--font-mono); font-size: 11.5px; font-weight: 800; color: var(--primary-ink); }
+/* Başlık küçük puntoda manşet mürekkebi: `--display-gradient-tight` 13–16
+   pikselde AA için kurulmuş aile (globals.css). */
+.title {
+  min-width: 0; font-size: 15px; font-weight: 800; letter-spacing: -.01em; color: var(--text-strong);
+  background-image: var(--display-gradient-tight); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  animation: mf-rise .45s var(--ease-brand) both;
+}
 .progress { display: grid; grid-template-columns: repeat(var(--count, 6), minmax(0, 1fr)); gap: 6px; }
-.segment { position: relative; height: 4px; border-radius: 2px; overflow: hidden; background: var(--line-soft); }
-.segment::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--text-strong); transform-origin: left; scale: 1 1; }
+.segment { position: relative; height: 4px; border-radius: 2px; overflow: hidden; background: var(--primary-wash); }
+.segment::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--primary); transform-origin: left; scale: 1 1; }
 .segment[data-state="next"]::after { scale: 0 1; }
 .segment[data-state="now"]::after { animation: mf-fill var(--ms) linear both; }
-.segment:last-child[data-state="now"]::after { animation: mf-fill var(--ms) linear both, mf-breathe 1.6s var(--ease-brand) var(--ms) infinite; }
+.segment:last-child[data-state="now"]::after { animation: mf-fill var(--ms) linear both, mf-breathe 1.6s var(--ease-loop) var(--ms) infinite; }
 
 /* ---- Ortak çizim ---- */
-.zero { stroke: var(--line-strong); stroke-width: 1.5; }
-.bar, .barStill { transform-box: fill-box; }
-.bar { animation: mf-grow .55s var(--ease-brand) both; animation-delay: var(--d); }
-.bar[data-dir="up"], .barStill[data-dir="up"] { fill: var(--up); transform-origin: bottom; }
-.bar[data-dir="down"], .barStill[data-dir="down"] { fill: var(--down); transform-origin: top; }
-.barStill[data-hero] { stroke: var(--brass); stroke-width: 3; animation: mf-glow .6s var(--ease-brand) .9s both; }
-.card { fill: var(--surface); stroke: var(--line); stroke-width: 1; }
-.card[data-matched] { stroke: var(--brass); stroke-width: 2; }
-.ink { fill: var(--text-strong); opacity: .8; }
-.inkSoft { fill: var(--text-muted); opacity: .45; }
+.zero { stroke: var(--primary-faint); stroke-width: 1.5; }
+.bar { transform-box: fill-box; }
+.bar[data-dir="up"] { fill: var(--up); transform-origin: bottom; }
+.bar[data-dir="down"] { fill: var(--down); transform-origin: top; }
+.card { fill: var(--premium-surface); stroke: var(--primary-faint); stroke-width: 1; }
+.ink { fill: var(--mf-limb); opacity: .85; }
+.inkSoft { fill: var(--primary-soft); opacity: .4; }
+.cork { fill: var(--primary-wash); stroke: var(--primary-faint); stroke-width: 1; }
+/* Pano kadraja girerken belirir, masaya geçince kalkar: kadraj kenarında
+   kesik bir çizgi gibi duruyordu (3. ve 6. sahne). Eşleşen kart deftere taşınır. */
+.cork { transition: opacity .4s var(--ease-brand); }
+.film:is([data-scene="0"], [data-scene="1"], [data-scene="2"]) .cork { opacity: 0; transition: none; }
+.needle { stroke: var(--mf-limb); stroke-width: 1.2; stroke-linecap: round; }
+.pinHead { fill: var(--mf-tile); }
 
 /* ---- Dedektif ---- */
-.lens { fill: var(--page-bg); stroke: var(--text-strong); stroke-width: 2.5; }
-.handle { stroke: var(--text-strong); stroke-width: 4.5; stroke-linecap: round; }
+.lens { fill: var(--premium-surface); stroke: var(--mf-tile); stroke-width: 2.8; }
+.rimSheen { fill: none; stroke: var(--mark-ink); stroke-width: 1.1; stroke-linecap: round; opacity: .85; }
+.handle { stroke: var(--mf-tile-u); stroke-width: 4.5; stroke-linecap: round; }
+.leg { stroke: var(--mf-limb); stroke-width: 2.2; stroke-linecap: round; }
+.foot { fill: var(--mf-limb); }
+.shadow { fill: var(--primary-faint); transform-box: fill-box; transform-origin: center; }
 .eyes { fill: var(--text-strong); transform-box: fill-box; transform-origin: center; }
+.cheek { fill: var(--brass); opacity: .3; }
 .smile { fill: none; stroke: var(--text-strong); stroke-width: 1.6; stroke-linecap: round; }
-/* Göz kırpar (tek küçük öğe, döngü serbest). */
-.eyes { animation: mf-blink 3.2s var(--ease-brand) 1s infinite; }
-.body[data-mood="walk"] { animation: mf-bob .36s var(--ease-brand) 4 alternate; }
-.body[data-mood="nod"] { transform-origin: 0 14px; animation: mf-nod .5s var(--ease-brand) .9s 3 alternate; }
-.body[data-mood="surprised"] .eyes { animation: mf-wide .4s var(--ease-spring) 1.5s both, mf-blink 3.2s var(--ease-brand) 3s infinite; }
-.body[data-mood="surprised"] { animation: mf-bob .3s var(--ease-brand) 4 alternate; }
+.sleep { fill: none; stroke: var(--text-strong); stroke-width: 1.5; stroke-linecap: round; opacity: 0; }
+.gasp { fill: none; stroke: var(--text-strong); stroke-width: 1.4; opacity: 0; }
+.face { transition: translate .3s var(--ease-brand); }
+.hat { fill: var(--mf-tile); rotate: -8deg; transform-origin: 0 -37px; }
+.hatPop { transform-origin: 0 -37px; }
+.band { stroke: var(--mark-ink); stroke-width: 1.4; opacity: .9; }
+.glint { stroke: var(--primary-soft); stroke-width: 3; stroke-linecap: round; opacity: .5; translate: 26px 0; }
+.glint [data-thin] { stroke-width: 1.4; }
+.bang { fill: var(--mf-tile); transform-box: fill-box; transform-origin: 0% 100%; scale: 0; }
+.bangMark { stroke: var(--mark-ink); stroke-width: 2.2; stroke-linecap: round; }
+.bangPoint { fill: var(--mark-ink); }
+.sweat { fill: var(--premium-surface); stroke: var(--primary-soft); stroke-width: 1; opacity: 0; }
+.dust circle { fill: none; stroke: var(--primary-soft); stroke-width: 1.4; transform-box: fill-box; transform-origin: center; opacity: 0; }
 
-/* 1 · Klaket çarpar; dedektif köşeden süzülür. */
-.boardBody { fill: var(--surface); stroke: var(--text-strong); stroke-width: 2; }
-.stripe { fill: var(--text-strong); }
-.boardText { font-family: var(--font-mono); font-size: 26px; font-weight: 800; fill: var(--text-strong); letter-spacing: .04em; animation: mf-rise .5s var(--ease-brand) .75s both; }
-.clapper { transform-box: fill-box; transform-origin: 0% 100%; animation: mf-clap .7s var(--ease-brand) .15s both; }
-.board { animation: mf-rise .5s var(--ease-brand) both; }
-.peek { animation: mf-peek .7s var(--ease-brand) 1.1s both; }
+/* Yolculuk: N sekiş, gölge tepede küçülür, şapka geriden gelir, inişte toz. */
+[data-travel] .hop { animation: mf-hop var(--hop) linear var(--hops); }
+[data-travel] .shadow { animation: mf-shadow var(--hop) linear var(--hops); }
+[data-travel] .hat { animation: mf-hat-lag var(--hop) linear var(--hops); }
+[data-travel] .dust circle { animation: mf-dust .5s var(--ease-brand) var(--land) both; }
+[data-travel] .dust circle:last-child { animation-name: mf-dust-r; }
+/* Yolda ileri (sağa) bakar; varınca sahnenin bakışına döner. */
+[data-travel] .face { animation: mf-look-ahead .35s var(--ease-brand) var(--land) both; }
 
-/* 2 · Ünlem */
-.alert { transform-box: fill-box; transform-origin: center bottom; animation: mf-pop .45s var(--ease-spring) 1.35s both; }
-.alertDot { fill: var(--brass); }
-.alertMark { stroke: var(--page-bg); stroke-width: 2.4; stroke-linecap: round; }
-.alertPoint { fill: var(--page-bg); }
+/* 1 · Klaket çarpar, uyuklayan dedektif sıçrar, şapkası uçar. */
+.boardBody { fill: var(--premium-surface); stroke: var(--primary-faint); stroke-width: 1.5; }
+.clapArm { fill: var(--mf-tile); }
+.stripe { fill: var(--mark-ink); opacity: .92; }
+.boardText { font-family: var(--font-mono); font-size: 26px; font-weight: 800; fill: var(--mf-ink); letter-spacing: .04em; }
+.clapper { transform-box: fill-box; transform-origin: 0% 100%; }
+.film[data-scene="0"] .slate { animation: mf-rise .5s var(--ease-brand) both; }
+.film[data-scene="0"] .clapper { animation: mf-clap .7s var(--ease-brand) .15s both; }
+.film[data-scene="0"] .boardText { animation: mf-rise .5s var(--ease-brand) 1s both; }
+.film[data-scene="0"] .sleep { animation: mf-on .85s step-end both; }
+.film[data-scene="0"] .eyes { animation: mf-off .85s step-end both, mf-wide-once .5s var(--ease-spring) .85s both; }
+.film[data-scene="0"] .pose { animation: mf-startle .6s linear .85s both; }
+.film[data-scene="0"] .hatPop { animation: mf-hat-fly .8s linear .9s both; }
+.film[data-scene="0"] .shadow { animation: mf-shadow .6s linear .85s both; }
+.film[data-scene="0"] .dust circle { animation: mf-dust .5s var(--ease-brand) 1.33s both; }
+.film[data-scene="0"] .dust circle:last-child { animation-name: mf-dust-r; }
+.film[data-scene="0"] .face { translate: -3px 0; animation: mf-from-center .45s var(--ease-brand) 1.6s both; }
 
-/* 3 · Yürüyüş (soldan kahraman bara) */
-.walker { animation: mf-walk 1.45s var(--ease-brand) both; }
+/* 2 · Hafta: dedektif grafiğin sağına seker, gözleri bardan bara gider. */
+.film[data-scene="0"] .bar { scale: 1 0; }
+.film[data-scene="1"] .bar { animation: mf-grow .5s var(--ease-brand) var(--d) both; }
+.film[data-scene="1"] .face { translate: -3px -1.5px; animation: mf-look-bars 2.6s linear both; }
+.film[data-scene="1"] .eyes { animation: mf-blink-once .22s var(--ease-brand) 2.55s; }
 
-/* 4 · Tanıklar düşer; eşleşmeyen soluklaşır, eşleşene onay. */
-.witness { animation: mf-drop .55s var(--ease-brand) both; animation-delay: var(--d); }
-.witness:not([data-match]) { opacity: .4; animation: mf-drop .55s var(--ease-brand) both, mf-dim .5s var(--ease-brand) 1.5s both; animation-delay: var(--d), 1.5s; }
-.witness[data-match] .card { stroke: var(--brass); stroke-width: 2; animation: mf-match .4s var(--ease-brand) 1.4s both; }
-.check { transform-box: fill-box; transform-origin: center; animation: mf-pop .45s var(--ease-spring) 1.6s both; }
-.checkDot { fill: var(--brass); }
-.checkMark { fill: none; stroke: var(--page-bg); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.hopper { animation: mf-hop 1.3s var(--ease-brand) .5s both; }
+/* 3 · İz: iki küçük adım, eğilme, parıltı, bar çizilir, "!" ve şapka. */
+.heroRing { fill: none; stroke: var(--primary); stroke-width: 2.2; stroke-dasharray: 100 120; stroke-dashoffset: 0; }
+.film:is([data-scene="0"], [data-scene="1"]) .heroRing { opacity: 0; }
+.film[data-scene="2"] .heroRing { animation: mf-draw .65s var(--ease-brand) 1.15s both; }
+.film[data-scene="2"] .pose { rotate: -9deg; animation: mf-lean .5s var(--ease-brand) .75s both; }
+.film[data-scene="2"] .face { translate: -4px -1.5px; animation: mf-look-ahead .3s var(--ease-brand) .6s both; }
+.film[data-scene="2"] .glint { animation: mf-glint .6s var(--ease-brand) 1s both; }
+.film[data-scene="2"] .eyes { scale: 1.15 1.2; animation: mf-wide .45s var(--ease-spring) 1.55s both; }
+.film[data-scene="2"] .smile { opacity: 0; animation: mf-on 1.55s step-end both; }
+.film[data-scene="2"] .gasp { opacity: 1; animation: mf-off 1.55s step-end both; }
+.film[data-scene="2"] .bang { scale: 1; animation: mf-pop .45s var(--ease-spring) 1.6s both; }
+.film[data-scene="2"] .hatPop { animation: mf-hat-fly .8s linear 1.6s both; }
 
-/* 5 · İp gerilir, iğneler batar. */
-.thread { fill: none; stroke: var(--brass); stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 100; animation: mf-draw 1.1s var(--ease-brand) .25s both; }
-.pin { fill: var(--brass); stroke: var(--page-bg); stroke-width: 1.5; transform-box: fill-box; transform-origin: center; animation: mf-pop .4s var(--ease-spring) .1s both; }
-.pin[data-late] { animation-delay: 1.3s; }
+/* 4 · Tanıklar: kartlar raptiyesinden sallanarak düşer; eşleşen onaylanır,
+   ötekiler soluklaşır; dedektif kartlara tek tek bakar, başını sallar. */
+.cardDrop { transform-box: view-box; }
+.film:is([data-scene="0"], [data-scene="1"], [data-scene="2"]) .cardDrop { opacity: 0; }
+.film[data-scene="3"] .cardDrop { animation: mf-flutter .75s var(--ease-brand) var(--d) both; }
+.film:is([data-scene="3"], [data-scene="4"], [data-scene="5"]) .cardMove:not([data-match]) { opacity: .4; }
+.film[data-scene="3"] .cardMove:not([data-match]) { animation: mf-dim .5s var(--ease-brand) 2.4s both; }
+.film:is([data-scene="3"], [data-scene="4"], [data-scene="5"]) .cardMove[data-match] .card { stroke: var(--primary); stroke-width: 2; }
+.film[data-scene="3"] .cardMove[data-match] .card { animation: mf-match .35s var(--ease-brand) 2.15s both; }
+.check { transform-box: fill-box; transform-origin: center; }
+.checkDot { fill: var(--mf-tile); }
+.checkMark { fill: none; stroke: var(--mark-ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.film:is([data-scene="0"], [data-scene="1"], [data-scene="2"]) .check { scale: 0; }
+.film[data-scene="3"] .check { animation: mf-pop .45s var(--ease-spring) 2.25s both; }
+.film[data-scene="3"] .pose { animation: mf-unlean .3s var(--ease-brand) both; }
+.film[data-scene="3"] .face { translate: 3.5px -.5px; animation: mf-look-cards 2.3s linear both; }
+.nod { transform-origin: 0 -24px; }
+.film[data-scene="3"] .nod { animation: mf-nod .8s var(--ease-loop) 2.45s; }
 
-/* 6 · Defter, satırlar, kalem yıldız. */
-.notebook { animation: mf-rise .5s var(--ease-brand) both; }
-.typed { fill: var(--text-muted); opacity: .55; transform-box: fill-box; transform-origin: left; animation: mf-type .45s var(--ease-brand) both; animation-delay: var(--d); }
-.pen { fill: var(--brass); transform: translate(192px, 121px); animation: mf-pen 2.7s var(--ease-brand) .3s both, mf-twinkle 1.4s var(--ease-spring-soft) 3s infinite; }
+/* 5 · İpler: kamera geri çekilir; ip sarkarak gelir, gerilir, iğneler sallanır. */
+.thread { fill: none; stroke: var(--primary); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 100 120; }
+.threads, .threadPin { opacity: 0; transition: opacity .3s var(--ease-brand-in); }
+.film[data-scene="4"] :is(.threads, .threadPin) { opacity: 1; transition: none; }
+.threadPin { transform-box: fill-box; transform-origin: 50% 100%; }
+.film[data-scene="4"] .thread { animation: mf-draw .9s var(--ease-brand) .4s both, mf-tighten .45s var(--ease-brand) 1.35s both; }
+.film[data-scene="4"] .threadPin { animation: mf-pop .4s var(--ease-spring) .3s both; }
+.film[data-scene="4"] .threadPin[data-late] { animation-delay: 1.25s; }
+.pin { transform-box: view-box; }
+.film[data-scene="4"] .threadPin .pin { animation: mf-wobble .7s var(--ease-brand) 1.7s; }
+.film[data-scene="4"] .threadPin[data-late] .pin { animation-delay: 1.78s; }
+.film[data-scene="4"] .face { translate: 3px -2.5px; animation: mf-look-thread 1.5s var(--ease-brand) .3s both; }
+.film[data-scene="4"] .pose { animation: mf-joy .55s linear 1.9s; }
+
+/* 6 · Masa: sayfa çevrilir, kart deftere uçup ataşlanır, kalem yazar.
+   Not gelene kadar yalnız küçük öğeler döner. */
+.desk { opacity: 0; transition: opacity .3s var(--ease-brand); }
+.film[data-scene="5"] .desk { opacity: 1; }
+.deskTop { stroke: var(--primary-faint); stroke-width: 2; stroke-linecap: round; }
+.deskLeg { stroke: var(--primary-faint); stroke-width: 3; }
+.cover { fill: var(--mf-tile); }
+.page { fill: var(--premium-surface); stroke: var(--primary-faint); stroke-width: 1; }
+.pageText { font-family: var(--font-mono); font-size: 9px; font-weight: 800; fill: var(--mf-ink); letter-spacing: .04em; }
+.sketchZero { stroke: var(--primary-faint); stroke-width: 1; }
+.sketchBar { stroke: var(--primary-soft); stroke-width: 3; stroke-linecap: round; opacity: .8; }
+.typed { fill: var(--mf-limb); opacity: .55; transform-box: fill-box; transform-origin: left; }
+.flip { opacity: 0; transform-box: view-box; transform-origin: 884px 0; }
+.cardMove[data-match] { transition: transform 1.2s var(--ease-move) .7s; }
+.clip { fill: none; stroke: var(--primary); stroke-width: 2.4; stroke-linecap: round; transform-box: fill-box; transform-origin: 50% 100%; scale: 0; }
+.film[data-scene="5"] .clip { scale: 1; animation: mf-pop .4s var(--ease-spring) 2s both; }
+/* Sıra: sayfa çevrilir (0,75–1,35), sonra kart iner (0,7–1,9), sonra ataş. */
+.film[data-scene="5"] .flip { animation: mf-flip .6s var(--ease-move) .75s both; }
+.film[data-scene="5"] .leftPage { animation: mf-fade .25s var(--ease-brand) 1.3s both; }
+.film[data-scene="5"] .typed { animation: mf-type .45s linear var(--d) both; }
+.pen { translate: 944px 121px; opacity: 0; }
+.penTap { transform-box: view-box; }
+.penBody { fill: var(--mf-tile); }
+.penNib { fill: var(--mf-limb); }
+.film[data-scene="5"] .pen { opacity: 1; animation: mf-write 2.69s linear 2.1s both; }
+.film[data-scene="5"] .penTap { animation: mf-pen-in .4s var(--ease-brand) 1.7s both, mf-tap 1.8s var(--ease-loop) 5.2s infinite; }
+.cup { fill: var(--premium-surface); stroke: var(--mf-limb); stroke-width: 2; stroke-linejoin: round; }
+.cupHandle { fill: none; stroke: var(--mf-limb); stroke-width: 2; stroke-linecap: round; }
+.steam { fill: none; stroke: var(--primary-soft); stroke-width: 1.5; stroke-linecap: round; opacity: .45; }
+.film[data-scene="5"] .steam { animation: mf-steam 2.6s var(--ease-loop) infinite; }
+.film[data-scene="5"] .steam[data-late] { animation-delay: 1.3s; }
+.film[data-scene="5"] .face { translate: -3.5px 0; }
+.film[data-scene="5"] .eyes { animation: mf-blink 3.4s var(--ease-brand) 2.4s infinite; }
+.film[data-scene="5"] .sweat { opacity: 1; animation: mf-sweat 3.2s var(--ease-loop) 5.6s infinite both; }
+
+/* Masaya geçince pano ve öteki kartlar kalkar (bkz. `.cork`); bu kural sahne 4–6 soluklaştırmasından sonra gelmeli. */
+.film[data-scene="5"] :is(.cork, .cardMove:not([data-match])) { opacity: 0; transition: opacity .4s var(--ease-brand-in) 1.1s; }
 
 @keyframes mf-perf { to { background-position: -18px 0; } }
-@keyframes mf-cut { from { opacity: 0; scale: .98; } }
 @keyframes mf-rise { from { opacity: 0; translate: 0 8px; } }
+@keyframes mf-fade { from { opacity: 0; } }
 @keyframes mf-fill { from { scale: 0 1; } }
 @keyframes mf-breathe { 50% { opacity: .45; } }
 @keyframes mf-grow { from { scale: 1 0; } }
-@keyframes mf-glow { from { stroke-width: 0; } }
 @keyframes mf-pop { from { scale: 0; } }
-@keyframes mf-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@keyframes mf-draw { from { stroke-dashoffset: 100; } }
 @keyframes mf-type { from { scale: 0 1; } }
-@keyframes mf-blink { 0%, 92%, 100% { scale: 1 1; } 96% { scale: 1 .1; } }
-@keyframes mf-wide { from { scale: 1 1; } 60% { scale: 1.35 1.5; } to { scale: 1.15 1.25; } }
-@keyframes mf-bob { to { translate: 0 -3px; } }
-@keyframes mf-nod { to { rotate: 10deg; } }
+@keyframes mf-on { from { opacity: 1; } }
+@keyframes mf-off { from { opacity: 0; } }
+@keyframes mf-dim { from { opacity: 1; } }
+@keyframes mf-match { from { stroke: var(--primary-faint); stroke-width: 1; } }
 @keyframes mf-clap { from { rotate: -24deg; } 70% { rotate: 2deg; } }
-@keyframes mf-peek { from { transform: translate(340px, 110px); } }
-@keyframes mf-walk { from { transform: translate(14px, 76px); } 45% { transform: translate(120px, 70px); } }
-@keyframes mf-drop { from { opacity: 0; translate: 0 -26px; } }
-@keyframes mf-dim { from { opacity: 1; } to { opacity: .4; } }
-@keyframes mf-match { from { stroke-width: 1; stroke: var(--line); } }
+
+/* Sekiş: hazırlık ezilmesi → uzayarak kalkış (ease-out) → düşüş (ease-in) → iniş ezilmesi. */
 @keyframes mf-hop {
-  from { transform: translate(96px, 134px); }
-  30% { transform: translate(118px, 118px); }
-  60% { transform: translate(140px, 132px); }
-  80% { transform: translate(146px, 124px); }
+  0% { translate: 0 0; scale: 1 1; animation-timing-function: var(--ease-brand); }
+  14% { translate: 0 0; scale: 1.14 .84; animation-timing-function: var(--ease-brand); }
+  48% { translate: 0 -13px; scale: .95 1.07; animation-timing-function: var(--ease-brand-in); }
+  84% { translate: 0 0; scale: 1.12 .86; animation-timing-function: var(--ease-brand); }
+  100% { translate: 0 0; scale: 1 1; }
 }
-@keyframes mf-pen {
-  0% { transform: translate(52px, 53px); }
-  20% { transform: translate(202px, 53px); }
-  40% { transform: translate(180px, 70px); }
-  60% { transform: translate(214px, 87px); }
-  80% { transform: translate(156px, 104px); }
-  100% { transform: translate(192px, 121px); }
+@keyframes mf-shadow {
+  0%, 14% { scale: 1.1 1; animation-timing-function: var(--ease-brand); }
+  48% { scale: .6 .8; opacity: .6; animation-timing-function: var(--ease-brand-in); }
+  84% { scale: 1.12 1; opacity: 1; }
 }
-@keyframes mf-twinkle { 50% { scale: 1.35; } }
+@keyframes mf-hat-lag {
+  14% { translate: 0 1px; }
+  36% { translate: 0 2px; }
+  60% { translate: 0 -2.5px; }
+  86% { translate: 0 -1.5px; }
+}
+@keyframes mf-dust { from { opacity: .9; scale: .3; translate: 4px 0; } to { opacity: 0; scale: 1.3; translate: -3px -2px; } }
+@keyframes mf-dust-r { from { opacity: .9; scale: .3; translate: -4px 0; } to { opacity: 0; scale: 1.3; translate: 3px -2px; } }
+@keyframes mf-look-ahead { from { translate: 2.8px 0; } }
+@keyframes mf-from-center { from { translate: 0 0; } }
+
+/* Uyanış: ezilme, sıçrama, iniş; şapka daha yükseğe uçar ve geç oturur. */
+@keyframes mf-startle {
+  0% { scale: 1 1; translate: 0 0; animation-timing-function: var(--ease-brand); }
+  15% { scale: 1.12 .84; translate: 0 0; animation-timing-function: var(--ease-brand); }
+  45% { scale: .92 1.1; translate: 0 -15px; animation-timing-function: var(--ease-brand-in); }
+  78% { scale: 1.1 .88; translate: 0 0; animation-timing-function: var(--ease-brand); }
+  100% { scale: 1 1; translate: 0 0; }
+}
+@keyframes mf-hat-fly {
+  0% { translate: 0 0; rotate: 0deg; animation-timing-function: var(--ease-brand); }
+  40% { translate: 0 -13px; rotate: 18deg; animation-timing-function: var(--ease-brand-in); }
+  72% { translate: 0 1.5px; rotate: -6deg; animation-timing-function: var(--ease-brand); }
+  86% { translate: 0 0; rotate: 3deg; }
+  100% { translate: 0 0; rotate: 0deg; }
+}
+@keyframes mf-wide-once { 40% { scale: 1.35 1.45; } }
+@keyframes mf-wide { from { scale: 1 1; } 60% { scale: 1.35 1.45; } }
+@keyframes mf-blink-once { 50% { scale: 1 .1; } }
+@keyframes mf-blink { 0%, 92%, 100% { scale: 1 1; } 96% { scale: 1 .1; } }
+
+/* Gözler bardan bara: yolda ileri, sonra her bar büyürken ona. */
+@keyframes mf-look-bars {
+  0%, 36% { translate: 2.8px 0; }
+  42% { translate: -4.6px .6px; }
+  50% { translate: -4.3px 1.4px; }
+  57% { translate: -3.8px .2px; }
+  65% { translate: -3.2px -2px; }
+  73%, 84% { translate: -2.6px 1.2px; }
+  92% { translate: -3px -1.5px; }
+}
+@keyframes mf-lean { from { rotate: 0deg; } }
+@keyframes mf-unlean { from { rotate: -9deg; } }
+@keyframes mf-glint { from { translate: -26px 0; } }
+
+/* Kart raptiyesinden sallanarak iner; kâğıt hafif, çırpınarak oturur. */
+@keyframes mf-flutter {
+  0% { opacity: 0; translate: 0 -46px; rotate: -12deg; animation-timing-function: var(--ease-brand); }
+  45% { opacity: 1; translate: 0 0; rotate: 7deg; animation-timing-function: var(--ease-loop); }
+  70% { rotate: -4deg; animation-timing-function: var(--ease-loop); }
+  88% { rotate: 1.5deg; }
+}
+@keyframes mf-look-cards {
+  0%, 52% { translate: 2.8px 0; }
+  60% { translate: 3.4px -3px; }
+  72% { translate: 3.6px -.6px; }
+  84% { translate: 3.4px 2px; }
+  94% { translate: 3.5px -.5px; }
+}
+@keyframes mf-nod { 25%, 75% { translate: 0 2.6px; } 50% { translate: 0 0; } }
+
+@keyframes mf-tighten { from { d: path("M 508 48 Q 585 118 662 75"); } }
+@keyframes mf-wobble { 20% { rotate: -16deg; } 45% { rotate: 10deg; } 70% { rotate: -4deg; } 88% { rotate: 1.5deg; } }
+@keyframes mf-look-thread { from { translate: -3.5px -3.2px; } }
+@keyframes mf-joy {
+  0% { scale: 1 1; translate: 0 0; animation-timing-function: var(--ease-brand); }
+  18% { scale: 1.1 .88; translate: 0 0; animation-timing-function: var(--ease-brand); }
+  50% { scale: .95 1.06; translate: 0 -8px; animation-timing-function: var(--ease-brand-in); }
+  82% { scale: 1.08 .92; translate: 0 0; animation-timing-function: var(--ease-brand); }
+  100% { scale: 1 1; translate: 0 0; }
+}
+
+@keyframes mf-flip {
+  0% { opacity: 1; scale: 1 1; }
+  96% { opacity: 1; scale: -1 1; }
+  100% { opacity: 0; scale: -1 1; }
+}
+@keyframes mf-pen-in { from { opacity: 0; translate: 6px -8px; } }
+/* Kalem satır satır: yazarken sabit hız, satır başına dönüşte ease. */
+@keyframes mf-write {
+  0% { translate: 894px 77.8px; }
+  16.7% { translate: 946px 77.8px; }
+  20.8% { translate: 894px 89.8px; }
+  37.5% { translate: 938px 89.8px; }
+  41.6% { translate: 894px 101.8px; }
+  58.4% { translate: 952px 101.8px; }
+  62.5% { translate: 894px 113.8px; }
+  79.2% { translate: 930px 113.8px; }
+  83.3% { translate: 894px 125.8px; }
+  97% { translate: 942px 125.8px; }
+}
+@keyframes mf-tap { 0%, 40%, 100% { translate: 0 0; } 10%, 26% { translate: 0 -3px; } 18%, 34% { translate: 0 0; } }
+@keyframes mf-steam { 0% { opacity: 0; translate: 0 3px; } 40% { opacity: .55; } 100% { opacity: 0; translate: 0 -5px; } }
+@keyframes mf-sweat {
+  0% { opacity: 0; translate: 0 -2px; }
+  15% { opacity: 1; translate: 0 0; }
+  70% { opacity: 1; translate: 0 5px; }
+  85%, 100% { opacity: 0; translate: 0 7px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .film *, .film *::after { animation: none !important; }
+  .film *, .film *::after { animation: none !important; transition: none !important; }
   .segment[data-state="now"]::after { scale: 1 1; }
 }

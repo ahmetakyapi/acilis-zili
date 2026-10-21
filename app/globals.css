@@ -174,7 +174,12 @@
      karo: sekme ve ana ekran ikonu temayı bilemiyor, iki işaret bir yerde
      mutlaka yan yana düşerdi (components/brand/BellMark). Yalnızca kenar ve
      gölge temaya uyuyor. */
-  --mark-gradient: linear-gradient(180deg, rgb(255 255 255 / 0.22) 0%, rgb(255 255 255 / 0) 50%), linear-gradient(150deg, #5cc4ff 0%, #1f86e0 48%, #0b3f86 100%);
+  /* Durakları ayrı token: SVG `<linearGradient>` CSS degradesini okuyamaz,
+     bekleme filmleri (MoveFilm, NewsFilm) durakları buradan alır. */
+  --mark-stop-1: #5cc4ff;
+  --mark-stop-2: #1f86e0;
+  --mark-stop-3: #0b3f86;
+  --mark-gradient: linear-gradient(180deg, rgb(255 255 255 / 0.22) 0%, rgb(255 255 255 / 0) 50%), linear-gradient(150deg, var(--mark-stop-1) 0%, var(--mark-stop-2) 48%, var(--mark-stop-3) 100%);
   --mark-edge: rgb(255 255 255 / 0.18);
   /* PROFİL KAROLARI (26 Eylül) — marka işaretinin dilinde: üstte parlaklık,
      altında çapraz degrade. Marka karosu gibi İKİ TEMADA DA AYNI: kimlik
@@ -196,12 +201,15 @@
      Lacivertten accent maviye; koyu tema karşılığı ters yönde açılır, yoksa
      koyu zeminde okunmaz. Açık uç %100'e değil %92'ye çekildi: en soluk ton
      harfin son pikseline denk gelince kelime sonu sönük görünüyordu. */
+  --display-stop-1: #0a2140;
+  --display-stop-2: #0e4a8f;
+  --display-stop-3: #2493dd;
   --display-gradient: linear-gradient(
     112deg,
-    #0a2140 0%,
-    #0e4a8f 44%,
+    var(--display-stop-1) 0%,
+    var(--display-stop-2) 44%,
     #1272c9 76%,
-    #2493dd 100%
+    var(--display-stop-3) 100%
   );
 
   /* Küçük puntoda (13–16px) aynı aile, iki durak: lacivert → accent mavi.
@@ -345,12 +353,15 @@
      kademe açık. */
   --mark-edge: rgb(255 255 255 / 0.24);
 
+  --display-stop-1: #f2f7fc;
+  --display-stop-2: #b6e2ff;
+  --display-stop-3: #3fbcff;
   --display-gradient: linear-gradient(
     112deg,
-    #f2f7fc 0%,
-    #b6e2ff 44%,
+    var(--display-stop-1) 0%,
+    var(--display-stop-2) 44%,
     #74caff 76%,
-    #3fbcff 100%
+    var(--display-stop-3) 100%
   );
 
   --display-gradient-tight: linear-gradient(100deg, #eef5fc 0%, #58c4ff 100%);

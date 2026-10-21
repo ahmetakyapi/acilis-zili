@@ -19,7 +19,7 @@ export type Point = { x: number; y: number };
 export type InkPalette = {
   /** Fırçanın rengi — temanın en koyu metin tonu. */
   ink: string;
-  /** Kıvılcım — zilin pirinci. Mavi yalnızca etkileşime ait. */
+  /** Kıvılcım — zilin pirinci; sahneler mavi degradeyi de kullanabilir (21 Ekim, CLAUDE.md). */
   spark: string;
   /** Kâğıt — sayfa zemini; silme ve "kuruma" için. */
   paper: string;

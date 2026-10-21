@@ -1,7 +1,13 @@
-/* Mürekkep filmi: kâğıt zemin (`--surface-sunken`), çizgi tuvalde, altyazı DOM'da.
-   Cam/ışıma yok; her geçiş `--ease-brand`. Sel ekranı kaplayınca (`data-inverted`)
-   altyazı ve ilerleme kâğıt rengine döner: mürekkebin üstünde mürekkep okunmaz. */
-.stage { position:relative; overflow:hidden; aspect-ratio:16 / 8; min-height:320px; border-radius:24px; background:var(--surface-sunken); }
+/* Bekleme filmi: zemin ve çizim tuvalde, altyazı DOM'da. Cam/ışıma yok; her geçiş `--ease-brand`.
+   21 Ekim, iki adım. (1) `data-inverted` kalktı: sel mürekkeple dolup altyazıyı
+   kâğıt rengine çeviriyordu — açık temada sayfanın ortasında koyu bir film.
+   (2) Aynı gün sahibinin yönü: film sitenin MAVİ marka dilinde (kâğıt + pirinç
+   değil). Tuval zemini `--premium-surface` üstüne `--primary-wash`/`-tint`
+   derinliği, sel `--primary-faint` → `--primary-wash` dalgası; perde numarası ve
+   çipler mavi, etkin çubuk marka karosunun degradesi. Altyazı en kötü zeminde
+   (yüzey + wash + tint) AA: açık temada başlık 14,15 / gövde 4,79 / mavi 4,71;
+   koyuda 10,71 / 4,94 / 5,49 (`tests/analysis-film.test.ts` ölçer). */
+.stage { position:relative; overflow:hidden; aspect-ratio:16 / 8; min-height:320px; border-radius:24px; background:var(--premium-surface); box-shadow:inset 0 0 0 1px var(--line-soft); }
 .canvas { position:absolute; inset:0; width:100%; height:100%; }
 /* Altyazı solda, canlı künye sağda (anatomy figür kartı: ipucu sol alt, künye sağ alt). */
 .caption { position:absolute; left:32px; right:32px; bottom:62px; display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:24px; row-gap:4px; align-items:end; animation:caption-in 700ms var(--ease-brand) both; }
@@ -13,30 +19,25 @@
 .stage[data-final] .caption { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 .stage[data-final] .progress { opacity:0; transition:opacity 300ms var(--ease-brand); }
 .caption strong, .caption > span, .bar::after, .chip { transition:color 300ms var(--ease-brand), background-color 300ms var(--ease-brand); }
-.stage[data-inverted] .caption strong, .stage[data-inverted] .line, .stage[data-inverted] .readout, .stage[data-inverted] .chip { color:var(--page-bg); }
-.stage[data-inverted] .sceneNo { color:var(--brass); }
-.stage[data-inverted] .bar { background:var(--page-bg); }
-.stage[data-inverted] [data-state="done"] .bar, .stage[data-inverted] [data-state="active"] .bar::after { background:var(--page-bg); }
-.sceneNo { font-size:12px; font-weight:700; letter-spacing:.08em; color:var(--brass-ink); }
+.sceneNo { font-size:12px; font-weight:700; letter-spacing:.08em; color:var(--primary-ink); }
 @keyframes caption-in { from { opacity:0; translate:0 10px; } to { opacity:1; translate:0 0; } }
 /* Adlı perde çipleri: ad üstte, çizgi altta. Gelecek perde soluk, geçmiş dolu. */
 .progress { position:absolute; left:32px; right:32px; bottom:20px; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:0; padding:0; list-style:none; }
 .progress li { display:grid; gap:7px; min-width:0; opacity:.5; transition:opacity 400ms var(--ease-brand); }
 .progress li[data-state="done"], .progress li[data-state="active"], .progress li[data-state="open"] { opacity:1; }
-.chip { display:flex; align-items:baseline; gap:6px; min-width:0; font-size:11.5px; font-weight:650; color:var(--text-muted); white-space:nowrap; }
-.chip b { font-size:10.5px; font-weight:750; letter-spacing:.06em; color:var(--brass-ink); }
+/* Çip metni `--text-body`: `--text-muted` koyu temanın mavi zemininde 4,06 kalıyordu. */
+.chip { display:flex; align-items:baseline; gap:6px; min-width:0; font-size:11.5px; font-weight:650; color:var(--text-body); white-space:nowrap; }
+.chip b { font-size:10.5px; font-weight:750; letter-spacing:.06em; color:var(--primary-ink); }
 .chip em { font-style:normal; overflow:hidden; text-overflow:ellipsis; }
 [data-state="active"] .chip, [data-state="open"] .chip { color:var(--text-strong); }
 .bar { position:relative; display:block; height:3px; border-radius:999px; background:var(--line-strong); overflow:hidden; transition:background-color 300ms var(--ease-brand); }
-[data-state="done"] .bar { background:var(--text-strong); }
+[data-state="done"] .bar { background:var(--primary); }
 /* Doğrusal BİLEREK: süre göstergesi; yavaşlayan dolum geçen zamanı yanlış anlatır. */
-[data-state="active"] .bar::after { content:""; position:absolute; inset:0; background:var(--text-strong); transform-origin:left; animation:fill var(--act-ms, 5000ms) linear both; }
+[data-state="active"] .bar::after { content:""; position:absolute; inset:0; background:var(--mark-gradient); transform-origin:left; animation:fill var(--act-ms, 5000ms) linear both; }
 /* IV açık uçlu (süresi bilinmiyor): dolan çizgi yerine gidip gelen kısa parça.
    Dolu çizgi "bitti" derdi; bu yalnız "sürüyor" der. Döngü eğrisi token'lı. */
-[data-state="open"] .bar::after { content:""; position:absolute; inset:0 auto 0 0; width:28%; border-radius:inherit; background:var(--text-strong); animation:shuttle 1600ms var(--ease-loop) infinite alternate; }
-.stage[data-inverted] [data-state="open"] .bar::after { background:var(--page-bg); }
+[data-state="open"] .bar::after { content:""; position:absolute; inset:0 auto 0 0; width:28%; border-radius:inherit; background:var(--mark-gradient); animation:shuttle 1600ms var(--ease-loop) infinite alternate; }
 @keyframes shuttle { from { translate:0 0; } to { translate:257% 0; } }
-.stage[data-inverted] .chip b { color:var(--brass); }
 @keyframes fill { from { scale:0 1; } to { scale:1 1; } }
 @media(max-width:639px) {
   .stage { aspect-ratio:4 / 5; min-height:0; border-radius:20px; }

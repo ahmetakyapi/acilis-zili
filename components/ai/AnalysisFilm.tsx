@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { ACTS, CURTAIN_S, renderFilm, type FilmData, type FilmPalette, type FilmText } from "@/lib/ink/analysis-film";
+import { ACTS, CURTAIN_S, filmPalette, renderFilm, type FilmData, type FilmPalette, type FilmText } from "@/lib/ink/analysis-film";
 import type { Point } from "@/lib/ink/engine";
 import { formatPrice } from "@/lib/utils";
 import styles from "./AnalysisFilm.module.css";
@@ -22,8 +22,6 @@ const NUMERALS = ["I", "II", "III", "IV"] as const;
  *  künyedeki "Geçen" süresinde. */
 const ACT_MS = ACTS.slice(1).map((end, i) => (end - ACTS[i]) * 1000);
 const OPEN_ACT = ACTS.length - 1;
-/** Sel ekranın bu kadarını kapladıysa altyazı kâğıt rengine döner. */
-const INVERT_AT = 0.72;
 const MAX_DPR = 2;
 /** Ekran dışını erken sezmek için kenar payı (anatomy: rootMargin 120px). */
 const VIEW_MARGIN = "120px 0px";
@@ -60,23 +58,19 @@ function readoutOf(act: number, bars: FilmBar[], headlines: string[], seconds: n
   return R.elapsed.replace("{t}", `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
 }
 
+/** Palet token'lardan, `filmPalette`in tek okuyucusuyla (analysis-film.ts; tema değişince yeniden okunur). */
 function readPalette(): FilmPalette {
   const css = getComputedStyle(document.documentElement);
-  const v = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
-  return {
-    // Kâğıt OPAK sayfa zemini: selin içindeki yazı onunla çizilir; `--surface-sunken` yarı saydam.
-    ink: v("--text-strong", "#101c2b"), spark: v("--brass", "#a4720f"), paper: v("--page-bg", "#f7f9fb"),
-    up: v("--up", "#0f8a5f"), down: v("--down", "#c2353b"), muted: v("--text-muted", "#5b6878"),
-    brassInk: v("--brass-ink", "#8a5f0c"), plate: v("--logo-plate", "#ffffff"), font: getComputedStyle(document.body).fontFamily || "sans-serif",
-  };
+  return filmPalette(name => css.getPropertyValue(name).trim(), getComputedStyle(document.body).fontFamily || "sans-serif");
 }
 
 /**
  * Bekleme filmi: tek mürekkep çizgisinin kesilmeyen planı (`lib/ink/analysis-film.ts`).
  * Tuval süs (`aria-hidden`); ne olduğu altyazıda ve `role="status"` ile söylenir.
- * Sel ekranı kapladığında altyazı kâğıt rengine döner (`data-inverted`); son
- * perdede "Rapor Hazır" tuvalde dev yazıyla çizildiği için altyazı yalnız
- * ekran okuyucuda kalır.
+ * Son perdede "Rapor Hazır" tuvalde dev yazıyla çizildiği için altyazı yalnız
+ * ekran okuyucuda kalır. Sel ekranı kaplarken altyazı rengini ÇEVİRMEZ (21 Ekim):
+ * sel artık temanın kendi ailesinde bir mavi dalga (açıkta açık, koyuda koyu);
+ * eski `data-inverted` hâli açık temada sayfanın içinde koyu bir film açıyordu.
  */
 export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage, done, t, locale, minHeight, origin }: {
   bars: FilmBar[]; headlines: string[]; symbol: string; name: string; logoUrl: string | null; done: boolean; t: T; locale: Locale;
@@ -93,7 +87,6 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
   /** Filmin başladığı an (performance.now); bitiş anı buna göre saniye. */
   const startedRef = useRef(0);
   const [act, setAct] = useState(0);
-  const [inverted, setInverted] = useState(false);
   /** Geçen tam saniye: IV. perdenin künyesi (saniyede bir yazılır, her karede değil). */
   const [seconds, setSeconds] = useState(0);
   const S = t.claude.scenes;
@@ -125,8 +118,7 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
     const draw = (time: number) => {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const doneAt = doneRef.current;
-      const cover = renderFilm(ctx, { t: time, doneAt: doneAt === null ? null : Math.min(doneAt, time) }, pal, data, text, { w, h });
-      setInverted(cover >= INVERT_AT);
+      renderFilm(ctx, { t: time, doneAt: doneAt === null ? null : Math.min(doneAt, time) }, pal, data, text, { w, h });
     };
     const actOf = (time: number) => doneRef.current !== null ? 4 : ACTS.findLastIndex(start => time >= start);
     /* EKRAN DIŞINDA DURUR (anatomy, motion.md). Film zamana bağlı bir öykü:
@@ -184,7 +176,7 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
   const caption = act === 4 ? { title: t.claude.ready, line: "" } : S[act];
   const readout = act < 4 ? readoutOf(act, bars, headlines, seconds, t.claude.film.readout, t.claude.film, locale) : "";
   return <div className={styles.stage} role="status" aria-live="polite" aria-label={`${t.claude.stage}: ${caption.title}`}
-    data-inverted={inverted ? "" : undefined} data-final={act === 4 ? "" : undefined} style={minHeight ? { minHeight, aspectRatio: "auto" } : undefined}>
+    data-final={act === 4 ? "" : undefined} style={minHeight ? { minHeight, aspectRatio: "auto" } : undefined}>
     <canvas ref={canvasRef} className={styles.canvas} aria-hidden />
     <div className={styles.caption} key={act}>
       {act < 4 && <span className={styles.sceneNo}>{NUMERALS[act]}</span>}

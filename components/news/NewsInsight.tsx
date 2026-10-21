@@ -9,6 +9,7 @@ import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import type { NewsBriefing, NewsExplainer } from "@/lib/news-insights";
 import { cn } from "@/lib/utils";
+import { NewsFilm } from "./NewsFilm";
 import styles from "./NewsInsight.module.css";
 
 /**
@@ -57,17 +58,24 @@ function useInsight<T extends HTMLElement = HTMLElement>(url: string) {
   return { ref, state };
 }
 
-function Loading({ text, kind }: { text: string; kind: "briefing" | "explainer" }) {
+/* BEKLEME FİLMİ (21 Ekim): iskelet çizgilerinin yerinde serinin üçüncü
+   filmi (NewsFilm — haber gelir, okunur, Türkçeye geçer, özü çıkar, not
+   yazılır). Film ekran okuyucudan gizli; yerine duran satır DÜZ sr-only
+   metin, canlı bölge değil (gerekçe MoveFilm ve StockInsightCard'da).
+   Kutunun boyu notun ölçülmüş boyunda kalır: filmin altında notun
+   iskeleti (.loading min-height, NewsInsight.module.css). Önizleme
+   rotası da bunu çizdiği için dışa açık. */
+export function NewsInsightLoading({ text, kind, labels }: { text: string; kind: "briefing" | "explainer"; labels: Labels }) {
   return (
     <div className={styles.loading} data-kind={kind}>
-      <p className={base.loadingText}>
-        <Sparkle className={base.loadingIcon} size={15} weight="fill" aria-hidden />
-        {text}
-      </p>
-      <Skeleton className={cn(base.line, "w-[92%]")} />
-      <Skeleton className={cn(base.line, "w-[78%]")} />
-      <Skeleton className={cn(base.line, "w-[85%]")} />
-      <Skeleton className={cn(base.line, "w-[60%]")} />
+      <p className="sr-only">{text}</p>
+      <NewsFilm kind={kind} scenes={labels.film[kind]} sceneLabel={labels.film.scene} />
+      <div className={styles.filmLines} aria-hidden>
+        <Skeleton className={cn(base.line, "w-[92%]")} />
+        <Skeleton className={cn(base.line, "w-[78%]")} />
+        <Skeleton className={cn(base.line, "w-[85%]")} />
+        <Skeleton className={cn(base.line, "w-[60%]")} />
+      </div>
     </div>
   );
 }
@@ -162,7 +170,7 @@ function BriefingBody({ scope, locale, labels }: { scope: "day" | "week"; locale
       ) : state.status === "failed" ? (
         <p className={base.failed}>{labels.unavailable}</p>
       ) : (
-        <Loading text={scope === "week" ? labels.weekLoading : labels.briefingLoading} kind="briefing" />
+        <NewsInsightLoading text={scope === "week" ? labels.weekLoading : labels.briefingLoading} kind="briefing" labels={labels} />
       )}
     </div>
   );
@@ -198,7 +206,7 @@ export function NewsExplainerCard({ id, locale, labels }: { id: string; locale: 
       ) : state.status === "failed" ? (
         <p className={base.failed}>{labels.unavailable}</p>
       ) : (
-        <Loading text={labels.explainerLoading} kind="explainer" />
+        <NewsInsightLoading text={labels.explainerLoading} kind="explainer" labels={labels} />
       )}
     </Panel>
   );

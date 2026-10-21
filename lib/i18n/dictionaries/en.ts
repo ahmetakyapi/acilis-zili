@@ -2128,6 +2128,11 @@ const en: typeof tr = {
     briefingLoading: "Claude is reading the last 24 hours of news…",
     explainerTitle: "What This Story Means",
     explainerLoading: "Claude is explaining the story in plain words…",
+    film: {
+      scene: "{n}/{total}",
+      explainer: ["A Story Arrives", "Reading Closely", "Into Plain Words", "Finding the Gist", "Claude Writes the Note"],
+      briefing: ["Stories Pile Up", "Reading Them All", "Into Plain Words", "Sorting by Theme", "Claude Writes the Agenda"],
+    },
     unavailable: "The note couldn't be prepared right now; try again shortly.",
     briefingDisclosure: "Headings and summaries were written with Claude from the stories listed. They add nothing the stories don't say; open a story for details and to verify. Not investment advice.",
     explainerDisclosure: "This explanation was written with Claude from the story text above only; it adds no information. Read the source for details. Not investment advice.",
@@ -2143,7 +2148,7 @@ const en: typeof tr = {
   stockInsight: {
     moveTitle: "Why It Moved This Week",
     film: {
-      scenes: ["Case File: {symbol}", "One Week, Five Sessions", "The Detective Follows the Trail", "The Witnesses Speak", "Connecting the Threads", "Claude Writes the Report"],
+      scenes: ["Case File: {symbol}", "One Week, Five Sessions", "On the Trail", "The Witnesses Speak", "Tying the Threads", "Claude Writes the Report"],
       scene: "{n}/{total}",
     },
     earningsTitle: "Latest Earnings, in Brief",
