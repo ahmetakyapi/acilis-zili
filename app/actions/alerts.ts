@@ -21,10 +21,10 @@ import { isValidSymbol, parseDecimalInput } from "@/lib/utils";
 /**
  * Fiyat alarmı eylemleri. Her eylem oturumu kendisi doğrular.
  *
- * DURUM DÖNDÜRÜYOR, SESSİZ DEĞİL. Favori eylemleri tavana dayanınca sessiz
- * dönüyor ve sayfa tazelenince eklenmeyen öğe kendini belli ediyor; burada
- * öyle bir iz yok — reddedilen hedef formda kalırdı ve okuyucu neden
- * kurulmadığını bilemezdi. Hata kodu forma dönüyor, metni sözlükte.
+ * DURUM DÖNDÜRÜYOR, SESSİZ DEĞİL. Reddedilen hedef formda kalırdı ve
+ * okuyucu neden kurulmadığını bilemezdi. Hata kodu forma dönüyor, metni
+ * sözlükte — favori eylemlerinin tavan sonuçlarıyla (`full`, `limit`) aynı
+ * kalıp.
  *
  * TAVAN: hesap başına 50, sembol başına 5. Gerçek kullanımın çok üstünde;
  * amaç tek bir hesabın döngüyle tabloyu şişirmesini engellemek (aynı
@@ -41,10 +41,20 @@ export type AlertActionState = {
 /** Hedefin makul aralığı — yazım hatasıyla (fazladan sıfır) kurulan alarmı keser. */
 const MAX_TARGET = 10_000_000;
 
-function revalidate(symbol: string) {
+/* KÖK DE SEMBOL SAYFASI DA TAZELENMİYOR (20 Ekim). `revalidatePath("/")`
+   ana sayfanın imlerini (`_N_T_/`, `_N_T_/index`), `/hisse/${symbol}` de
+   hisse sayfasınınkini düşürüyordu: her alarm yazması (hesap başına
+   dakikada 30) o sayfanın piyasa panolarını ve kotasyonlarını bir sonraki
+   çizimde sağlayıcıdan yeniden çektiriyordu — en işlek hisselerde
+   sürekli. Doğruluğa katkısı yoktu: sayfalar dinamik (kök yerleşim
+   `headers()` okuyor), ana sayfadaki alarm özeti (WatchlistSummary) ve
+   hisse sayfasındaki alarmlar istek içinde okunuyor, önbellekte değil;
+   eylemdeki herhangi bir `revalidatePath` bulunulan sayfayı yanıtta zaten
+   yeniden çiziyor. Gerekçenin tamamı `app/actions/watchlist.ts` →
+   `revalidateFavorites`. Tazeleme yalnız satır gerçekten yazıldı ya da
+   silindiyse. */
+function revalidate() {
   revalidatePath("/favoriler");
-  revalidatePath(`/hisse/${symbol}`);
-  revalidatePath("/");
 }
 
 /** "245,50" ve "245.50" iki dilde de geçerli; binlik ayırıcı DİLE GÖRE
@@ -128,25 +138,30 @@ export async function createPriceAlert(
     return { status: "error", error: "unavailable", at };
   }
 
-  revalidate(symbol);
+  revalidate();
   return { status: "ok", at };
 }
 
+/* Silme de aynı kovada (20 Ekim): kovasızken rastgele bir kimlikle döngü
+   hiçbir şey silmeden her çağrıda tazeleme yaptırıyordu. Tazeleme yalnız
+   satır gerçekten silindiyse. */
 export async function deletePriceAlert(formData: FormData) {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return;
   const id = String(formData.get("id") ?? "");
-  const symbol = String(formData.get("symbol") ?? "").toUpperCase();
   if (!id) return;
+  if (!rateLimit(`alerts:${userId}`, 30, 60_000).allowed) return;
+  let row: { id: string } | undefined;
   try {
-    await db
+    [row] = await db
       .delete(priceAlerts)
-      .where(and(eq(priceAlerts.id, id), eq(priceAlerts.userId, userId)));
+      .where(and(eq(priceAlerts.id, id), eq(priceAlerts.userId, userId)))
+      .returning({ id: priceAlerts.id });
   } catch {
     return;
   }
-  revalidate(isValidSymbol(symbol) ? symbol : "");
+  if (row) revalidate();
 }
 
 /* --------------------------------------------------------------------------
@@ -215,7 +230,7 @@ export async function createPercentAlert(
     return { status: "error", error: "unavailable", at };
   }
 
-  revalidate(symbol);
+  revalidate();
   return { status: "ok", at };
 }
 
@@ -224,16 +239,18 @@ export async function deletePercentAlert(formData: FormData) {
   const userId = session?.user?.id;
   if (!userId) return;
   const id = String(formData.get("id") ?? "");
-  const symbol = String(formData.get("symbol") ?? "").toUpperCase();
   if (!id) return;
+  if (!rateLimit(`alerts:${userId}`, 30, 60_000).allowed) return;
+  let row: { id: string } | undefined;
   try {
-    await db
+    [row] = await db
       .delete(percentAlerts)
-      .where(and(eq(percentAlerts.id, id), eq(percentAlerts.userId, userId)));
+      .where(and(eq(percentAlerts.id, id), eq(percentAlerts.userId, userId)))
+      .returning({ id: percentAlerts.id });
   } catch {
     return;
   }
-  revalidate(isValidSymbol(symbol) ? symbol : "");
+  if (row) revalidate();
 }
 
 /**
@@ -274,8 +291,8 @@ export async function rearmPercentAlert(formData: FormData) {
       .update(percentAlerts)
       .set({ createdAt: armAt, triggeredAt: null, triggeredPct: null })
       .where(and(eq(percentAlerts.id, id), eq(percentAlerts.userId, userId)))
-      .returning({ symbol: percentAlerts.symbol });
-    if (row) revalidate(row.symbol);
+      .returning({ id: percentAlerts.id });
+    if (row) revalidate();
   } catch {
     return;
   }
@@ -323,7 +340,7 @@ export async function rearmPriceAlert(formData: FormData) {
         triggeredPrice: null,
       })
       .where(and(eq(priceAlerts.id, id), eq(priceAlerts.userId, userId)));
-    revalidate(row.symbol);
+    revalidate();
   } catch {
     return;
   }

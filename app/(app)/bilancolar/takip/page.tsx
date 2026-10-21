@@ -104,24 +104,25 @@ export default async function WatchedEarningsPage(
   /* Değişkene çıkarıldı: aralığın bitiş günü başlıktaki künyede de yazıyor. */
   const rangeEnd = addEtDays(today, RANGES[range]);
 
-  const [analyses, allRows] = await Promise.all([
+  const [analyses, allRows, badges] = await Promise.all([
     userSymbols.length > 0
       ? getAnalyses(locale, { limit: 20, symbols: userSymbols })
       : Promise.resolve([]),
     getEarningsBetween(today, rangeEnd),
+    /* Aralık VERİLMİYOR: bu ekranda rozet hem takvim satırlarına hem de
+       geçmiş analiz listesine bağlanıyor, ikincisi takvim penceresinin
+       dışında kalıyor. Sembol sayısı zaten takip listesiyle sınırlı.
+       TAKİP LİSTESİYLE, TAKVİMİN SEMBOLLERİYLE DEĞİL (20 Ekim): iki liste
+       de takip listesinin alt kümesi, yani rozet sorgusu onları beklemeden
+       aynı turda koşuyor — bir Neon turu (~120 ms) ilk bayttan düştü. */
+    getAnalysisBadges(userSymbols, locale),
   ]);
 
   const rows = allRows.filter((row) => watchSet.has(row.symbol));
   const symbolList = [
     ...new Set([...rows.map((r) => r.symbol), ...analyses.map((r) => r.symbol)]),
   ];
-  const [meta, badges] = await Promise.all([
-    getSymbolNames(symbolList),
-    /* Aralık VERİLMİYOR: bu ekranda rozet hem takvim satırlarına hem de
-       geçmiş analiz listesine bağlanıyor, ikincisi takvim penceresinin
-       dışında kalıyor. Sembol sayısı zaten takip listesiyle sınırlı. */
-    getAnalysisBadges(symbolList, locale),
-  ]);
+  const meta = await getSymbolNames(symbolList);
 
   const analysisRows = analyses.map((analysis) =>
     toAnalysisRowView(analysis, meta[analysis.symbol], locale, t),

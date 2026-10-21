@@ -53,3 +53,9 @@ fi
 if [[ "$body" == *'"triggered":'[1-9]* ]]; then
 	logger -t acilis-alarm -p user.info "tetiklendi: ${body:0:400}"
 fi
+# Süre tavanına takılıp sonraki taramaya kalan tetik (20 Ekim — gerekçe
+# app/api/cron/alarmlar/route.ts). Tek tük olur; sürekliyse yavaş bir push
+# ucu ya da posta servisi taramayı tıkıyor.
+if [[ "$body" == *'"deferred":'[1-9]* ]]; then
+	logger -t acilis-alarm -p user.warning "sure tavani, tetikler sonraki taramaya kaldi: ${body:0:400}"
+fi

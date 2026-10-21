@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { alertCrossed, alertDistancePct, alertProgress, isDirection } from "../lib/price-alerts";
 
 /** Fiyat alarmının saf hesapları (lib/price-alerts.ts). */
@@ -40,4 +42,19 @@ test("yön yalnızca iki değer", () => {
   assert.equal(isDirection("below"), true);
   assert.equal(isDirection("up"), false);
   assert.equal(isDirection(null), false);
+});
+
+/* İSTEMCİ SINIRI (20 Ekim): hisse sayfasındaki alarm düğmesi saf çekirdeği
+   içe aktarır, çekirdek hiçbir modüle (db, şema, React `cache`) dokunmaz —
+   yoksa Neon sürücüsü ve bütün şema tarayıcı paketine giriyordu. */
+test("istemci alarm düğmesi yalnız veritabansız çekirdeği içe aktarır", () => {
+  const read = (file: string) => readFileSync(join(__dirname, "..", file), "utf8");
+  for (const core of ["lib/price-alerts-core.ts", "lib/percent-alerts-core.ts"]) {
+    assert.doesNotMatch(read(core), /^\s*import\s/m, `${core} içe aktarma yapmamalı`);
+  }
+  assert.doesNotMatch(
+    read("components/alerts/PriceAlertButton.tsx"),
+    /from "@\/lib\/(price|percent)-alerts"/,
+    "düğme db içe aktaran okuma modülünden değil, çekirdekten okumalı",
+  );
 });

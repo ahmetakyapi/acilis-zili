@@ -197,6 +197,11 @@ export function MarketTicker({
   /** Okuyucunun açık tercihi — imleç ayrıldığında geri açılmaz. */
   const [elleDurduruldu, setElleDurduruldu] = useState(false);
   const [azHareket, setAzHareket] = useState(false);
+  /* ARKA PLAN SEKMESİ DÖNMEZ (20 Ekim). Temizlik notu aşağıda "sekmenin
+     görünürden çıkması"nı bir duraklatma sebebi sayıyordu ama
+     `visibilitychange` dinlenmiyordu: arka plandaki her masaüstü sekmesi
+     altı saniyede bir uyanıp görünmeyen şeridi yeniden çiziyordu. */
+  const [gizliSekme, setGizliSekme] = useState(false);
 
   useEffect(() => {
     const query = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -207,7 +212,14 @@ export function MarketTicker({
   }, []);
 
   useEffect(() => {
-    if (pageCount <= 1 || !onScreen || durduruldu || elleDurduruldu || azHareket)
+    const apply = () => setGizliSekme(document.hidden);
+    apply();
+    document.addEventListener("visibilitychange", apply);
+    return () => document.removeEventListener("visibilitychange", apply);
+  }, []);
+
+  useEffect(() => {
+    if (pageCount <= 1 || !onScreen || gizliSekme || durduruldu || elleDurduruldu || azHareket)
       return;
     /* İÇTEKİ ZAMANLAYICI DA TEMİZLENİYOR. Kimliği tutulmuyordu: `pageCount`
        değiştiğinde (ekran döndürme, veri güncellemesi) askıda kalan geri
@@ -239,7 +251,7 @@ export function MarketTicker({
         setVisible(true);
       }
     };
-  }, [pageCount, onScreen, durduruldu, elleDurduruldu, azHareket]);
+  }, [pageCount, onScreen, gizliSekme, durduruldu, elleDurduruldu, azHareket]);
 
   if (pages.length === 0) return null;
 

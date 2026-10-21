@@ -166,34 +166,46 @@ export default async function StockPage(
      sayfası altı ayrı Finnhub ucuna gidiyor (profil, metrik, tavsiye, bilanço
      sürprizi, takvim, haber) ve Finnhub ücretsiz katmanı dakikada 60 istek
      kabul ediyor — yani dakikada ~10 yeni sembol kotayı bitiriyordu. Grafik
-     ucundaki iki kademeli sınırın aynısı, aynı gerekçeyle. */
-  if (!(await allowStockRender(symbol))) {
-    return (
-      /* ÇIKIŞ YOLU VAR. Ekran çıplak iki cümleydi: sembol geçerli, veri
-         birazdan gelecek ama "tekrar dene" bile yoktu. Aynı adrese giden
-         bağlantı sayfayı yeniden çizdiriyor — sınır dakikalık olduğu için
-         bekleyen okuyucunun ihtiyacı tam olarak bu. */
-      <EmptyState
-        title={t.stock.throttled}
-        hint={t.stock.throttledHint}
-        action={
-          <Link
-            href={`/hisse/${symbol}`}
-            className="text-sm font-semibold text-primary hover:text-primary-hover"
-          >
-            {t.common.retry}
-          </Link>
-        }
-      />
-    );
-  }
+     ucundaki iki kademeli sınırın aynısı, aynı gerekçeyle.
+
+     KAPI KABUĞUN YEREL OKUMALARIYLA AYNI TURDA (20 Ekim). Kapı önce tek
+     başına bekleniyor, kabuğun okumaları ancak ondan sonra başlıyordu: her
+     şirket sayfası iki SIRALI Neon turu ödüyordu. Tanınan sembol artık
+     önbellekteki tablodan yanıtlanıyor (bkz. `isKnownSymbol`); tabloda
+     olmayanın Neon turu da okumalarla birlikte başlıyor ve karar, okumalar
+     dönünce veriliyor. Bedeli: sınırlanan tanınmayan sembol de üç ucuz
+     yerel okuma (mercek, analiz, takvim) yapıp atıyor — kapının koruduğu
+     SAĞLAYICI kotası, oraya giden hiçbir şey kapıdan önce başlamıyor.
+     Ünlü yatırımcılar kapının ARKASINDA
+     kalıyor: `unstable_cache`i sembol başına kayıt açıyor ve uydurma
+     sembol taşkını veri önbelleğini doldurmasın. */
+  const allowed = allowStockRender(symbol);
+  /* ÇIKIŞ YOLU VAR. Ekran çıplak iki cümleydi: sembol geçerli, veri
+     birazdan gelecek ama "tekrar dene" bile yoktu. Aynı adrese giden
+     bağlantı sayfayı yeniden çizdiriyor — sınır dakikalık olduğu için
+     bekleyen okuyucunun ihtiyacı tam olarak bu. */
+  const throttled = (
+    <EmptyState
+      title={t.stock.throttled}
+      hint={t.stock.throttledHint}
+      action={
+        <Link
+          href={`/hisse/${symbol}`}
+          className="text-sm font-semibold text-primary hover:text-primary-hover"
+        >
+          {t.common.retry}
+        </Link>
+      }
+    />
+  );
 
   /* Fon sayfası ayrı kurgudur: metrikler, analist tavsiyeleri, katılım taraması
      ve sektör benzerleri bir ETF için anlamsızdır — sağlayıcı da bu uçlarda
      boş döner. Yerine fonun künyesi ve izlediği piyasa anlatılır. */
   const fund = fundMetaOf(symbol);
   if (fund) {
-    const fundStatus = await getStatus();
+    const [fundAllowed, fundStatus] = await Promise.all([allowed, getStatus()]);
+    if (!fundAllowed) return throttled;
     const fundOffSession =
       fundStatus.session === "pre-market" || fundStatus.session === "after-hours";
     return (
@@ -270,8 +282,9 @@ export default async function StockPage(
   /* Mercek satırları ve analizler AKIŞTAN ÖNCE — gerekçesi blokların kendi
      yorumlarında. İkisi de yerel veritabanı okuması, sağlayıcıya gitmiyor.
      TEK TURDA: ardışık beklenirlerse kabuk iki Neon gidiş dönüşü bekler ve
-     kazanılan CLS, gecikmeye geri verilir. */
-  const [storyRows, analysisRows, status, nextReport, names, famousInvestors] = await Promise.all([
+     kazanılan CLS, gecikmeye geri verilir. Kapı da bu turda (yukarıda). */
+  const [companyAllowed, storyRows, analysisRows, status, nextReport, names, famousInvestors] = await Promise.all([
+    allowed,
     getStoriesForSymbol(symbol, locale, 3),
     getAnalyses(locale, { symbols: [symbol], limit: 6 }),
     /* Yalnızca başlık iskeleti için: seans dışındaysa gerçek başlıkta bir
@@ -287,9 +300,11 @@ export default async function StockPage(
     getSymbolNames([symbol]),
     /* ÜNLÜ YATIRIMCILAR PANELİ AÇILACAK MI — aynı gerekçe: yerel ve
        önbellekli okuma (lib/investor-data.ts); kayıt yoksa panel hiç
-       basılmıyor, geç gelip altındaki haberleri itmiyor. */
-    getStockInvestors(symbol),
+       basılmıyor, geç gelip altındaki haberleri itmiyor. Kapıdan SONRA
+       başlıyor (gerekçe kapının yorumunda). */
+    allowed.then((ok) => (ok ? getStockInvestors(symbol) : null)),
   ]);
+  if (!companyAllowed) return throttled;
   const expectedMoveDue =
     nextReport !== null && daysBetweenEt(status.etDate, nextReport.date) <= EXPECTED_MOVE_HORIZON_DAYS;
   const companyName = names[symbol]?.name ?? symbol;

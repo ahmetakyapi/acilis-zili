@@ -8,7 +8,8 @@ import { getCompanyNews } from "./providers/finnhub";
 import { loadScreen } from "./screening-data";
 import { completedBars, computeSnapshot, type TechnicalSnapshot } from "./technical";
 import { evaluate } from "./screening";
-import { AnalysisOutput, FOCUS_OF, pricePath, repairNewsCitations, safeSourceUrl, selectNews, snapLevel, type PricePath, type StoredAnalysisResult } from "./ai-analysis-core";
+import { FOCUS_OF, pricePath, repairNewsCitations, safeSourceUrl, selectNews, snapLevel, type PricePath, type StoredAnalysisResult } from "./ai-analysis-core";
+import { AnalysisOutput } from "./ai-analysis-schema";
 
 export type SavedAnalysis = {
   output: StoredAnalysisResult;

@@ -98,9 +98,13 @@ export async function GET(
     );
   }
 
-  /* Sınır sağlayıcıya gitmeden ÖNCE uygulanır; tek maliyeti tanınan sembol
-     listesine bakan bir veritabanı sorgusu ve o istek başına önbellekli. */
-  const known = await isKnownSymbol(symbol);
+  /* Sınır sağlayıcıya gitmeden ÖNCE uygulanır. Tanınırlık önbellekteki
+     sembol tablosundan okunuyor, Neon'a yalnız tabloda olmayan sembol
+     soruluyor (20 Ekim, gerekçe `isKnownSymbol`): grafik seans boyunca
+     dakikada bir yoklanıyor ve her yoklama bu sorguyu sıralı ödüyordu.
+     Seans durumu da aynı turda — tatil takvimi önbellekli, sağlayıcıya
+     gitmiyor; sınırlanan istekte okunup atılması ucuz. */
+  const [known, status] = await Promise.all([isKnownSymbol(symbol), getStatus()]);
   const limited = rateLimit(
     clientKey(request, known ? "chart" : "chart-unknown"),
     known ? KNOWN_LIMIT : UNKNOWN_LIMIT,
@@ -113,7 +117,6 @@ export async function GET(
     );
   }
 
-  const status = await getStatus();
   const [result, quoteResult] = await Promise.all([
     getChartBars(symbol, range, status),
     range === "1D" ? getQuote(symbol, status) : Promise.resolve(null),

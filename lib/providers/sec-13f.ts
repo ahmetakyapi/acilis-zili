@@ -1,6 +1,7 @@
 import { secUserAgent } from "@/lib/investors";
 import { fail, ok, type ProviderResult } from "./types";
 import { BACKGROUND_TIMEOUT_MS, withTimeout } from "./timeout";
+import { secTurn } from "./sec-gate";
 
 /**
  * SEC EDGAR — kurumsal yöneticilerin 13F bildirimleri (28 Eylül).
@@ -16,7 +17,9 @@ import { BACKGROUND_TIMEOUT_MS, withTimeout } from "./timeout";
  *
  * KİMLİK ŞART. SEC başlıksız ve tarayıcı kimliğiyle gelen isteğe 403
  * dönüyor; `User-Agent` bir kurum adı ve iletişim adresi istiyor. Sınır
- * saniyede 10 istek; burada istekler arasına en az 125 ms konuyor (≤ 8/sn).
+ * saniyede 10 istek; istekler arasına en az `SEC_MIN_GAP_MS` (275 ms,
+ * çalışma zamanı başına ≤ 4/sn) konuyor — sıra 20 Ekim'den beri bütün SEC
+ * çağrılarıyla ortak, hız iki çalışma zamanına bölünmüş (`sec-gate.ts`).
  *
  * AYRIŞTIRMA ÖNEKTEN BAĞIMSIZ. Bilgi tablosunun etiketleri kimi dosyada
  * `ns1:infoTable`, kimisinde `infoTable`; ad alanı öneki fondan fona
@@ -24,13 +27,8 @@ import { BACKGROUND_TIMEOUT_MS, withTimeout } from "./timeout";
  * düz ve derinliği sabit, düzenli ifade yetiyor.
  */
 
-const SEC_MIN_GAP_MS = 125;
-let lastSecCall = 0;
-
 async function secFetch(url: string): Promise<Response> {
-  const wait = lastSecCall + SEC_MIN_GAP_MS - Date.now();
-  if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
-  lastSecCall = Date.now();
+  await secTurn();
   return withTimeout(
     fetch(url, {
       headers: { "User-Agent": secUserAgent(), Accept: "application/json, application/xml, text/xml" },

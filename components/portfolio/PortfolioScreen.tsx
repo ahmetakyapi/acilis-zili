@@ -35,6 +35,7 @@ import { orderPositions, sectorWeights } from "@/lib/portfolio";
 import { getPortfolioOrder, MAX_POSITIONS } from "@/lib/portfolio-data";
 import { loadPortfolio } from "@/lib/portfolio-snapshot";
 import { istanbulToday } from "@/lib/providers/fx-history";
+import { getTechnicalBoard } from "@/lib/technical-data";
 
 /**
  * PORTFÖY — "neyim var ve lirada ne kazandırdı".
@@ -190,6 +191,13 @@ async function PortfolioBody({
   t: Dictionary;
 }) {
   const L = t.lira.portfolio;
+  /* Pozisyona bağlı olmayan iki okuma BAŞTA başlatılır (20 Ekim): elle
+     sıra ve teknik pano (`PortfolioTechnical`ın kendi Suspense'i yok).
+     Kotasyon ve kurdan sonra sırayla soruluyorlardı; ana gövde üç Neon
+     gidiş-dönüşü geç akıyordu. İkisi de `cache()`li ve hatayı kendisi
+     yutuyor — erken çağrı aynı sözü paylaşır, reddedilmiş söz kalmaz. */
+  const orderPromise = getPortfolioOrder(userId);
+  void getTechnicalBoard();
   const data = await loadPortfolio(userId);
 
   if (!data.ok) {
@@ -288,7 +296,7 @@ async function PortfolioBody({
   }));
   /* Varsayılan en ağır pozisyon üstte (halkanın lejantıyla aynı sıra);
      okuyucu elle sıra verdiyse o sıra (`orderPositions`, lib/portfolio.ts). */
-  const savedOrder = await getPortfolioOrder(userId);
+  const savedOrder = await orderPromise;
   const orderedRows = orderPositions(rows, savedOrder);
 
   /* Teknik plan için sembol başına tek satır: aynı hissenin lotları

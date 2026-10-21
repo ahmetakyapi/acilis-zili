@@ -267,16 +267,21 @@ async function WeekBody({
   const w = t.earningsExtra.week;
   const e = t.earningsWeek;
   const friday = addEtDays(monday, WEEK_DAYS - 1);
-  const [week, session] = await Promise.all([loadWeek(monday, locale), auth()]);
+  /* ÜÇ OKUMA TEK TURDA (20 Ekim). Rozetler ve takip listesi haftanın
+     okumasını bekliyordu; ikisi de ona bağlı değil — rozet aralıkla
+     yetiniyor (`getAnalysisBadges` künyesi), takip listesi oturumla. */
+  const [week, userSymbols, badges] = await Promise.all([
+    loadWeek(monday, locale),
+    auth().then((session) =>
+      session?.user?.id ? getUserSymbols(session.user.id) : ([] as string[]),
+    ),
+    getAnalysisBadges(null, locale, { from: monday, to: friday }),
+  ]);
   const listedSymbols = week.schedule.flatMap((day) => day.listed.map((row) => row.symbol));
   const tileSymbols = week.days.flatMap((day) =>
     [...day.bmo, ...day.amc, ...day.other].map((row) => row.symbol),
   );
   const allSymbols = [...new Set([...tileSymbols, ...listedSymbols])];
-  const [badges, userSymbols] = await Promise.all([
-    getAnalysisBadges(allSymbols, locale, { from: monday, to: friday }),
-    session?.user?.id ? getUserSymbols(session.user.id) : Promise.resolve<string[]>([]),
-  ]);
   const watchSet = new Set(userSymbols);
 
   /* OKUNAMAYAN TAKVİM BOŞ BİR HAFTA DEĞİL (gerekçe `getEarningsBetweenResult`):

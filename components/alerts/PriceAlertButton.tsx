@@ -18,8 +18,11 @@ import { PortfolioSheet } from "@/components/portfolio/PortfolioSheet";
 import sheet from "@/components/portfolio/Workbench.module.css";
 import { buttonClass } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { MAX_THRESHOLD_PCT, MIN_THRESHOLD_PCT, thresholdDigits, type PercentAlert } from "@/lib/percent-alerts";
-import { alertDistancePct, alertProgress, type PriceAlert } from "@/lib/price-alerts";
+/* ÇEKİRDEKTEN, okuma modülünden DEĞİL (20 Ekim): lib/price-alerts.ts ve
+   lib/percent-alerts.ts `db`yi içe aktarıyor ve onu bu paketle tarayıcıya
+   taşıyordu — gerekçe lib/price-alerts-core.ts. */
+import { MAX_THRESHOLD_PCT, MIN_THRESHOLD_PCT, thresholdDigits, type PercentAlert } from "@/lib/percent-alerts-core";
+import { alertDistancePct, alertProgress, type PriceAlert } from "@/lib/price-alerts-core";
 import { displayZone, formatInZone, zoneDateKey } from "@/lib/session-clock";
 import { cn, formatPercent, formatPercentPlain, formatPrice, parseDecimalInput } from "@/lib/utils";
 import styles from "./PriceAlerts.module.css";
@@ -525,9 +528,10 @@ export function AlertRow({
             </button>
           </form>
         )}
+        {/* Sembol formdan gitmiyor (20 Ekim): eylem silinen satırınkini
+            kullanır — app/actions/alerts.ts. */}
         <form action={deletePriceAlert}>
           <input type="hidden" name="id" value={alert.id} />
-          <input type="hidden" name="symbol" value={alert.symbol} />
           <button type="submit" className={cn(styles.iconAction, styles.iconDanger)} aria-label={labels.delete} title={labels.delete}>
             <Trash size={16} weight="bold" aria-hidden />
           </button>
@@ -619,7 +623,6 @@ export function PercentAlertRow({
         )}
         <form action={deletePercentAlert}>
           <input type="hidden" name="id" value={alert.id} />
-          <input type="hidden" name="symbol" value={alert.symbol} />
           <button
             type="submit"
             className={cn(styles.iconAction, styles.iconDanger)}

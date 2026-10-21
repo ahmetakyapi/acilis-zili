@@ -23,15 +23,23 @@ export async function UpcomingEarnings({
   locale: Locale;
   t: Dictionary;
 }) {
-  const paraOpt = await paraSecenegi(symbol);
   const today = todayEt();
-  /* Tüm takvim satırları TEK SORGUDA: hem sıradaki bilanço hem son açıklanan
-     aynı listeden çıkıyor, sağlayıcıya ikinci tur yok. */
-  const tumu = await symbolEarnings(symbol);
-  let next: EarningsItem | null = await getNextEarnings(symbol);
+  /* ÜÇ KAYNAK TEK TURDA, SAĞLAYICI TAKVİMİ YALNIZ YEDEK (20 Ekim). Para birimi,
+     sağlayıcının sembol takvimi, yerel takvim satırı ve sürpriz geçmişi
+     sırayla bekleniyordu; soğuk önbellekte kart iki Finnhub ve bir Neon
+     turunu art arda ödüyordu. Sağlayıcının takvimi yalnız YEDEK — yerel
+     satır yoksa soruluyor; Geçmiş Bilançolar aynı çağrıyı aynı
+     argümanlarla yaptığı için o zaman da yeni bir tur açmıyor. */
+  const [paraOpt, dbNext, surpriz] = await Promise.all([
+    paraSecenegi(symbol),
+    getNextEarnings(symbol),
+    /* KAYNAK SÜRPRİZ GEÇMİŞİ, TAKVİM DEĞİL — gerekçesi karnenin yorumunda. */
+    getEarningsSurprises(symbol),
+  ]);
+  let next: EarningsItem | null = dbNext;
   if (!next) {
     next =
-      tumu
+      (await symbolEarnings(symbol))
         .filter((row) => row.reportDate >= today)
         .sort((a, b) => a.reportDate.localeCompare(b.reportDate))[0] ?? null;
   }
@@ -54,8 +62,8 @@ export async function UpcomingEarnings({
      bir çeyrekten karne kurulamaz. `getEarningsSurprises` dört çeyreği
      birden veriyor ve sayfanın Geçmiş Bilançolar tablosu da zaten onu
      kullanıyor; `finnhubFetch` altı saatlik `revalidate` ile önbelleklediği
-     için ikinci bileşenden çağırmak yeni bir tur açmıyor. */
-  const surpriz = await getEarningsSurprises(symbol);
+     için ikinci bileşenden çağırmak yeni bir tur açmıyor. (Çağrı yukarıda,
+     öteki okumalarla aynı turda.) */
   const karneler = (surpriz.ok ? surpriz.data : [])
     .filter((row) => row.epsActual !== null && row.epsEstimate !== null)
     .sort((a, b) => b.period.localeCompare(a.period))

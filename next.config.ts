@@ -101,6 +101,15 @@ const nextConfig: NextConfig = {
      node_modules'tan olduğu gibi yükleniyor. Vergi hesaplayıcının
      tarayıcıdaki PDF okuması bundan etkilenmiyor. */
   serverExternalPackages: ["pdfjs-dist"],
+  /* SIKIŞTIRMA CADDY'DE (20 Ekim). Varsayılan `true`da `next start` her
+     yanıtı — HTML, RSC, `/_next/static` parçaları — tek Node sürecinde,
+     önbelleksiz ve yalnız gzip ile sıkıştırıyordu; Caddy'nin `encode zstd
+     gzip`i (deploy/Caddyfile, sitenin TEK bloğu, bütün yollar) zaten
+     `Content-Encoding` taşıyan yanıta dokunmadığı için zstd hiç
+     kullanılmıyordu. Next'in belgesi de vekil sıkıştırıyorsa kapatmayı
+     söylüyor (compress.md). Vercel bu ayarı yok sayıyor. Vekilsiz
+     `next start` (yerel, duman testi) artık sıkıştırmasız döner. */
+  compress: false,
   async headers() {
     return [
       { source: NOT_EMBED_SOURCE, headers: SECURITY_HEADERS },

@@ -46,7 +46,9 @@ bölgesine EN YAKIN olandan seç; ölçmeden "yeterince yakın" deme.
 sondaki sağlıklı sürümü gösteriyor.** Her `deploy/update.sh` koşumu yeni bir
 klasöre klonlayıp orada derliyor, ancak sağlık kontrolü geçince bağı çeviriyor
 — derleme dakikalarca sürerken canlı sunucu asla yarım bir sürümün üstünde
-durmuyor. Sağlık geçmezse bağ öncekine döner.
+durmuyor. Sağlık geçmezse bağ öncekine döner. Next'in veri önbelleği
+(`.next/cache/fetch-cache`) ise sürümler arasında ORTAK: `shared/fetch-cache`e
+bağ, 31 günden eski kayıtları gece cron budar (gerekçe `update.sh`, 20 Ekim).
 
 ---
 
@@ -192,4 +194,4 @@ Bu aktarım analiz özelliğini veya veritabanı migration'ını yayınlamaz.
 | Cron 3 saat erken/geç | crontab'da `CRON_TZ=UTC` yok |
 | Sayfalar yavaş | Neon bölgesi uzak (§ 0) — `journalctl` değil, sorgu turunu ölç |
 | `update.sh` "AYAĞA KALKMADI" diyip geri alıyor | `journalctl -u acilis-zili -n 40` çıktısı zaten basılıyor, oradan devam et |
-| Disk doluyor | `du -sh /srv/acilis-zili/releases/*` — yalnızca canlıya çıkmış son 2 sürüm kalmalı; kalmıyorsa `update.sh`'ın budama adımını kontrol et |
+| Disk doluyor | `du -sh /srv/acilis-zili/releases/* /srv/acilis-zili/shared/*` — yalnızca canlıya çıkmış son 2 sürüm kalmalı; kalmıyorsa `update.sh`'ın budama adımını kontrol et. Ortak önbellek büyüyorsa crontab'da `fetch-cache` budama satırı var mı bak (`deploy/cron-install.sh`) |

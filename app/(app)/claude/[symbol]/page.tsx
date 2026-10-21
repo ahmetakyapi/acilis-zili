@@ -52,10 +52,15 @@ export default async function ClaudePage(props: PageProps<"/claude/[symbol]">) {
 
   const session = await auth();
   const viewerId = session?.user?.id ?? null;
-  let access: Awaited<ReturnType<typeof analysisAccess>> = null;
-  try { access = viewerId && process.env.CLAUDE_ANALYSIS_API_KEY && process.env.CLAUDE_ANALYSIS_DISABLED !== "1" ? await analysisAccess() : null; } catch { access = null; }
-
-  const [reports, names] = await Promise.all([listSymbolReports(symbol, viewerId), getSymbolNames([symbol]).catch(() => ({} as Awaited<ReturnType<typeof getSymbolNames>>))]);
+  // Erişim, rapor listesi ve piyasa durumu birbirine bağlı değil: aynı turda (20 Ekim). Sırayla
+  // bekleniyorlardı ve rapor sorgusu başlamadan önce ~5 ardışık Neon turu birikiyordu.
+  const accessP = viewerId && process.env.CLAUDE_ANALYSIS_API_KEY && process.env.CLAUDE_ANALYSIS_DISABLED !== "1"
+    ? analysisAccess().catch(() => null) : Promise.resolve(null);
+  const [access, [reports, names], status] = await Promise.all([
+    accessP,
+    Promise.all([listSymbolReports(symbol, viewerId), getSymbolNames([symbol]).catch(() => ({} as Awaited<ReturnType<typeof getSymbolNames>>))]),
+    getStatus(),
+  ]);
   const meta = names[symbol];
   const logoUrl = meta?.logoUrl ?? logoSrc(symbol, null);
   const wantedId = typeof params.rapor === "string" ? params.rapor : null;
@@ -73,7 +78,6 @@ export default async function ClaudePage(props: PageProps<"/claude/[symbol]">) {
     return `/claude/${encodeURIComponent(symbol)}?odak=${f === "technical" ? "teknik" : "secim"}&sekme=${next.tab ?? tab}${next.id ? `&rapor=${next.id}` : ""}`;
   };
 
-  const status = await getStatus();
   // Teknik odakta, sitenin yazılı teknik analizi olan hissede sıradaki yayın (günde üç kez): Claude'dan önce beklenebilir.
   const edition = tab === "yeni" && focus === "technical" ? await editionNote(symbol, locale) : null;
   const nowAt = new Date();

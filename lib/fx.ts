@@ -134,8 +134,10 @@ export function monthDiff(a: IsoMonth, b: IsoMonth): number {
  *
  * HAFTA SONU ATLANMIYOR, dosya dosya soruluyor. Atlamak iki istek
  * kazandırırdı ama TCMB'nin bayram öncesi telafi cumartesilerinde bülten
- * yayımladığı günler var; atlayan bir liste o günü cumaya düşürürdü. Arşiv
- * dosyaları değişmediği için her deneme bir kez gidiyor, sonra önbellekte.
+ * yayımladığı günler var; atlayan bir liste o günü cumaya düşürürdü. Bulunan
+ * dosya Next'in veri önbelleğinde kalıyor; 404'ü o önbellek SAKLAMIYOR, onu
+ * `getUsdTryOn`un süreç içi hafızası tutuyor (lib/providers/tcmb.ts, 20 Ekim)
+ * — her deneme böylece bir kez gidiyor.
  */
 export function bulletinCandidates(date: IsoDate, maxLookback: number): IsoDate[] {
   const out: IsoDate[] = [];

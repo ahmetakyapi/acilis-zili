@@ -82,6 +82,15 @@ async function readFilingIndex(): Promise<IndexedFiling[]> {
   return rows.map((row) => ({ ...row, longValue: Number(row.longValue), longCount: Number(row.longCount) }));
 }
 
+/* İNDEKS AYRI `unstable_cache`E SARILMAZ (20 Ekim). Denendi: üç çağıranı
+   (`loadOverview`, `loadFundDetail`, `loadStockInvestors`) zaten
+   `unstable_cache` içinde ve Next 16'da iç içe `unstable_cache` önbelleği
+   hiç OKUMAZ (`isNestedUnstableCache`, unstable-cache.js) — her seferinde
+   sorguyu koşup kimsenin okuyamayacağı bir kayıt yazıyordu. Sembolden
+   bağımsız paylaşım istenirse indeks her önbellek kapsamının DIŞINDA
+   okunmalı (ör. `getStockInvestors` içinde, sembol verisiyle paralel) ve
+   önbelleğe argüman olarak geçmemeli (argümanlar anahtara dizilir). */
+
 async function readHoldings(filingIds: string[]): Promise<Map<string, HoldingRecord[]>> {
   const map = new Map<string, HoldingRecord[]>();
   if (filingIds.length === 0) return map;
@@ -475,10 +484,25 @@ export type StockInvestors = { holders: StockHolder[]; trades: (TradeRow & { mem
 
 const loadStockInvestors = unstable_cache(
   async function loadStockInvestors(ticker: string): Promise<StockInvestors> {
-    const cusipRows = await db
-      .select({ cusip: cusipTickers.cusip })
-      .from(cusipTickers)
-      .where(eq(cusipTickers.ticker, ticker));
+    /* BİRBİRİNİ BEKLEMEYEN İKİ OKUMA BİRLİKTE (20 Ekim). Kabuk bu sonucu
+       bekliyor ve dört Neon turu sırayla gidiyordu; Kongre işlemleri hiçbir
+       şeye bağlı değildi ama en sona kalıyordu. CUSIP ile işlemler paralel;
+       indeks (bütün `investor_holdings` üstünde bağıntılı toplam) yalnız
+       CUSIP'i olan sembolde sorulur — fonların tutmadığı sembol o bedeli
+       ödemez. İndeks burada önbellekten gelmiyor: bkz. `readFilingIndex`
+       altındaki not. */
+    const [cusipRows, trades] = await Promise.all([
+      db
+        .select({ cusip: cusipTickers.cusip })
+        .from(cusipTickers)
+        .where(eq(cusipTickers.ticker, ticker)),
+      db
+        .select({ ...TRADE_COLUMNS, member: congressTrades.member })
+        .from(congressTrades)
+        .where(eq(congressTrades.ticker, ticker))
+        .orderBy(desc(congressTrades.txDate))
+        .limit(6),
+    ]);
     const cusips = new Set(cusipRows.map((row) => row.cusip));
 
     const holders: StockHolder[] = [];
@@ -570,13 +594,6 @@ const loadStockInvestors = unstable_cache(
         });
       }
     }
-
-    const trades = await db
-      .select({ ...TRADE_COLUMNS, member: congressTrades.member })
-      .from(congressTrades)
-      .where(eq(congressTrades.ticker, ticker))
-      .orderBy(desc(congressTrades.txDate))
-      .limit(6);
 
     holders.sort((a, b) => Number(a.exited) - Number(b.exited) || b.value - a.value);
     return { holders, trades };

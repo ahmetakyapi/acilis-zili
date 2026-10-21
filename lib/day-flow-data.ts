@@ -6,6 +6,7 @@ import { getStatus, getSymbolNames, guncelBilanco } from "./data";
 import { etDateTimeToUtc } from "./market-hours";
 import { displayOffsets, displayZone, formatInZone, zoneTag } from "./session-clock";
 import { getEarningsFiling } from "./providers/sec-edgar";
+import { withTimeout } from "./providers/timeout";
 import { getDictionary, type Locale } from "./i18n";
 import { withLocale } from "./i18n/routing";
 import { analysisHref } from "./analysis";
@@ -18,6 +19,8 @@ import { earningsStatus, eventFamily, groupStatus, hasActual, type DayFlowSnapsh
 
 /** Sürprizin yazımı haftalık takvimle aynı: bir ondalık (`WeekSchedule`). */
 const SURPRISE_DIGITS = 1;
+/** SEC bildirimini en çok bu kadar bekle — gerekçe `filings`te. */
+const SEC_FILING_WAIT_MS = 3_000;
 
 /** One source for SSR and polling. GET reads providers, never mutates the DB. */
 export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayFlowSnapshot> {
@@ -98,11 +101,32 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
      8-K / 2.02 kaydı EDGAR'da; Finnhub'ın EPS'i dakikalar-saatler sonra
      geliyor. Kayıt bulunursa satır "Açıklandı" oluyor ve bildirime
      bağlanıyor (gerekçe `lib/providers/sec-edgar.ts`). Yalnızca akışta
-     GÖSTERİLEN şirketler, yalnızca 04:00 ET'den sonra ve paralel; SEC
-     düşerse akış eskisi gibi Finnhub'ı bekliyor. */
+     GÖSTERİLEN şirketler, yalnızca 04:00 ET'den sonra; sorular aynı anda
+     açılır ama ağa çıkan her biri ortak SEC sırasından geçer (`sec-gate.ts`,
+     ≤ 4/sn — soğuk turda N × 275 ms). SEC düşerse akış eskisi gibi Finnhub'ı
+     bekliyor. Sonucu zaten gelmiş satır (`settled`, 20 Ekim) yalnız
+     bağlantısı için on dakikada bir sorulur, dakikada bir yoklanmaz: yoklama
+     SEC'in saniyede on istek sınırına karşı sıraya giriyor ve 6-K yatıran
+     yabancı şirketlerde (TSM, ASML) 8-K hiç gelmiyor.
+
+     BEKLEME SINIRLI (20 Ekim). `Promise.all`in süresi yoktu; sıra uzadığında
+     (gün dönümünde her anahtar yeni, dağıtımdan sonra hafıza boş, ya da
+     Form 4 dalgası) akışın tamamı arkasında bekliyordu — 6 sn'lik
+     `AbortSignal` ancak sıra gelince başlıyor. Her soru en çok
+     `SEC_FILING_WAIT_MS` beklenir; aşan satır o turda bildirimsiz çıkar,
+     yoklama arkada sürer ve sonucu hafızaya düştüğü için sonraki turda
+     gelir. Bulunmuş bildirim ve önceki tur hafızadan anında döndüğü için
+     süre yalnız ilk soruyu keser. */
   const shown = [...combined.values()].filter((row) => analysisMap.has(row.symbol) || watchedSet.has(row.symbol) || isSpotlight(row.symbol) || (meta[row.symbol]?.marketCap ?? 0) >= 50e9);
+  const settled = (row: (typeof shown)[number]) => {
+    const providerRow = live.get(row.symbol);
+    return earningsStatus(providerRow?.epsActual ?? row.epsActual, providerRow?.revenueActual ?? row.revenueActual, analysisMap.has(row.symbol)) !== "scheduled";
+  };
   const filings = new Map(status.etMinutes >= 240
-    ? await Promise.all(shown.map(async (row) => [row.symbol, await getEarningsFiling(row.symbol, date)] as const))
+    ? await Promise.all(shown.map(async (row) => [
+        row.symbol,
+        await withTimeout(getEarningsFiling(row.symbol, date, settled(row)), SEC_FILING_WAIT_MS).catch(() => null),
+      ] as const))
     : []);
   const zone = displayZone(locale);
   const zoneTags = zoneTag(locale);
@@ -196,4 +220,56 @@ export async function loadDayFlow(locale: Locale, userId?: string): Promise<DayF
     sourceDelayed: !!provider && !provider.ok,
     hiddenEarnings,
   };
+}
+
+/* OTURUMSUZ ANLIK GÖRÜNTÜ PAYLAŞIMLI (15 Ekim taraması; 20 Ekim'de buraya
+   taşındı). `/api/day-flow` sitenin en sık çağrılan ucu: açık her sekme 30
+   saniyede bir yokluyor ve kullanıcıya özel tek parça favori işaretleri —
+   oturumsuz görüntü locale başına birebir aynı. Yine de her anonim çağrı 4
+   paralel DB sorgusu + sembol adları + (seans içinde) sağlayıcı yolunu
+   baştan koşuyordu. Tazelik yoklama aralığına eşit (30 sn), yani ekrandaki
+   veri eskimiyor.
+
+   İKİ ÇAĞIRAN, İKİ AYRI NOT (20 Ekim). Paylaşım yalnız uçtaydı; misafirin
+   ana sayfası (`RailSection`) aynı görüntüyü her çizimde baştan kuruyordu,
+   yani en sık çağıran önbelleksiz olandı. İkisi de buradan geçer — ama
+   AYNI notu okumazlar: Turbopack üretim derlemesi bu modülü iki ayrı
+   grafiğe koyuyor (sayfa `chunks/ssr/[turbopack]_runtime.js`, `/api` ucu
+   `chunks/[turbopack]_runtime.js`; her çalışma zamanının kendi
+   `moduleCache`i var), yani tek süreçte iki modül örneği ve iki bağımsız
+   30 saniyelik not. Her biri locale başına 30 saniyede en çok bir kez
+   yükler; bedel en fazla bir fazla `loadDayFlow`. SSR görüntüsü ile ilk
+   yoklama farklı kayıtlardan gelebilir; ilk yoklama daha eski bir `asOf`
+   taşırsa istemci onu zaten atıyor (`DayFlow.tsx`). Gerçek paylaşım
+   gerekirse Map `globalThis`e asılır; bugün buna dayanan kod yok.
+
+   `unstable_cache` DEĞİL, süreç içi not (20 Ekim). `unstable_cache` geri
+   çağrısının içindeki her `fetch`i `no-store`a çeviriyor ve iç içe
+   `unstable_cache`i atlıyor (next/dist/server/lib/patch-fetch.js,
+   "Inside unstable-cache we treat it the same as force-no-store"). Sarmal
+   bütün `loadDayFlow`u kapsadığı için her yeniden hesapta Finnhub sonuç
+   takvimi (60 sn), FRED'in iki okuması (önceki gün sürümü 24 sa), SEC
+   bildirimleri ve `loadSymbolTable` birleşimi kendi önbelleklerini
+   atlayıp sağlayıcıya gidiyordu: iş azalmıyor, sağlayıcıya kayıyordu.
+   VPS tek süreç (`lib/stock-insights.ts` → `remembered` aynı kalıp); not
+   uçuştaki yüklemeyi de paylaştırıyor ve SWR penceresi yok, yani sessiz bir
+   gecenin ardından ilk okuyucuya dünün görüntüsü gitmiyor. HATA NOTUN
+   DIŞINDA: `loadDayFlow` fırlatırsa kayıt silinir, boş sonuç saklanmaz
+   (CLAUDE.md "İstekler arası önbellek"); silmeden önce kimlik sorulur ki
+   eski bir hatalı yükleme yerine geçen yenisini düşürmesin. */
+const SHARED_DAY_FLOW_MS = 30_000;
+const sharedDayFlow = new Map<Locale, { at: number; snapshot: Promise<DayFlowSnapshot> }>();
+
+/** Oturumsuz okuyucunun gün akışı — SSR ve yoklama aynı TÜRDEN 30 sn'lik
+ *  notu okur, aynısını değil: sayfa ve `/api` ucu ayrı Turbopack çalışma
+ *  zamanında, her biri kendi not örneğini tutar (gerekçe yukarıda). */
+export function loadSharedDayFlow(locale: Locale): Promise<DayFlowSnapshot> {
+  const held = sharedDayFlow.get(locale);
+  if (held && Date.now() - held.at < SHARED_DAY_FLOW_MS) return held.snapshot;
+  const entry = { at: Date.now(), snapshot: loadDayFlow(locale, undefined) };
+  sharedDayFlow.set(locale, entry);
+  entry.snapshot.catch(() => {
+    if (sharedDayFlow.get(locale) === entry) sharedDayFlow.delete(locale);
+  });
+  return entry.snapshot;
 }

@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
  * seans anlatısının değişeceği İLK an (04:00 / 09:30 / kapanış / gece), yani
  * geri sayımın kendi hedefinden hiçbir zaman geç değil.
  *
- * ÜÇ AYRINTI, üçü de bilinçli:
+ * DÖRT AYRINTI, dördü de bilinçli:
  *
  * 1. BEKLEME PARÇALANIR. Hafta sonu hedef 60 saat ötede olabiliyor; tek bir
  *    uzun `setTimeout` arka plan sekmesinde kısılıyor ve makine uyuyup
@@ -31,6 +31,15 @@ import { useRouter } from "next/navigation";
  *    tazeleme AYNI hedefi geri döndürür ve döngü kurulurdu. Her başarısız
  *    turda bekleme ikiye katlanıyor (15 sn → 5 dk tavan); sunucu sınırı
  *    geçtiği anda yeni hedef gelir ve sayaç kendiliğinden sıfırlanır.
+ *
+ * 4. SEKMELER AYNI SANİYEDE TAZELENMEZ (20 Ekim). Her açık sekme sınır+1
+ *    sn'de tazeliyordu; zili bekleyen okuyucular 09:30:01'de aynı anda tam
+ *    ana sayfa çiziyor, önbellek kayıtları da tam o sınırda eskidiği için
+ *    (`boundedTtl`) her çizim kendi sağlayıcı turunu açıyordu. Sekme başına
+ *    rastgele 0–2,5 sn kaydırılıyor: ilk çizimin tazelediği önbelleği
+ *    sonrakiler okuyor. Toplam gecikme Countdown'ın 4 saniyelik zil
+ *    çalışının (`RING_MS`) içinde kalıyor, zil gecikmeyi örtüyor. Sekmeye
+ *    dönüş yolu kaydırılmaz.
  */
 
 /** İlk yeniden deneme aralığı ve tavanı. */
@@ -38,6 +47,8 @@ const RETRY_BASE_MS = 15_000;
 const RETRY_CAP_MS = 300_000;
 /** Uzun beklemenin tek adımı — daha uzun zamanlayıcılara güvenilmiyor. */
 const STEP_MS = 30_000;
+/** Sınır sonrası tazelemenin sekme başına en fazla kayması (madde 4). */
+const SPREAD_MS = 2_500;
 
 export function SessionRefresh({ atIso }: { atIso: string }) {
   const router = useRouter();
@@ -48,9 +59,10 @@ export function SessionRefresh({ atIso }: { atIso: string }) {
 
     let timer = 0;
     let attempt = 0;
+    const fireAt = atMs + Math.random() * SPREAD_MS;
 
     const tick = () => {
-      const remaining = atMs - Date.now();
+      const remaining = fireAt - Date.now();
       if (remaining > 0) {
         timer = window.setTimeout(tick, Math.min(remaining + 1_000, STEP_MS));
         return;

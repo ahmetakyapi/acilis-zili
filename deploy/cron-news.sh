@@ -14,7 +14,9 @@
 # HER GÜN ÜÇ KEZ: 08:35, 14:35, 20:35 TR — sabah bülteninden önce, ABD
 # açılışından önce ve akşam. Hafta sonu da koşuyor (hafta sonu haberleri
 # pazartesiye kadar İngilizce kalıyordu). Tekrar zararsız, bu yüzden curl
-# yeniden deniyor. Günlük kaydı sessiz: yalnızca hata yazılıyor.
+# yeniden deniyor; zaman aşımı tekrarı ilk koşu sürerken gelirse uç
+# `"skipped":"running"` ile 200 döner (tek koşu kilidi, 20 Ekim — gerekçe
+# uçta), ilk koşu işi bitiriyor. Günlük kaydı sessiz: yalnızca hata yazılıyor.
 
 set -uo pipefail
 

@@ -24,9 +24,11 @@ import { clientKey, rateLimit } from "@/lib/rate-limit";
 
    ORAN SINIRI İSTEK BAŞINA ve dar tutuldu (dakikada 30): her gün arka
    planda TCMB'ye en fazla on bir dosya isteği açabiliyor (hafta sonu ve
-   bayram geri adımları). Geçmiş dosyalar otuz gün önbellekte kaldığı için
-   aynı günün ikinci sorusu TCMB'ye gitmiyor; sınırın koruduğu şey
-   önbelleğe henüz girmemiş günlerle TCMB'yi taramak.
+   bayram geri adımları). Bulunan dosya otuz gün veri önbelleğinde; geri
+   adımların 404'ünü o önbellek saklamıyor, `getUsdTryOn`un süreç içi
+   hafızası tutuyor (20 Ekim'e dek tutulmuyordu, bayram günleri her soruda
+   yeniden taranıyordu). Böylece aynı günün ikinci sorusu TCMB'ye gitmiyor;
+   sınırın koruduğu şey henüz sorulmamış günlerle TCMB'yi taramak.
    -------------------------------------------------------------------------- */
 
 const MAX_DATES = 40;

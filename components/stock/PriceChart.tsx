@@ -1500,11 +1500,22 @@ export function PriceChart({
                   ~150 ms'de beyaza dönüyor, gösterge 280 ms'de varıyordu —
                   arada yazı çökük zeminde beyaz, neredeyse okunmaz kalıyordu.
                   Üç segmentte de renk süresi SELECTION_TRANSITION ile aynı
-                  (`duration-[280ms]`), eğri varsayılandan (--ease-brand). */}
+                  (`duration-[280ms]`), eğri varsayılandan (--ease-brand).
+                  ÖLÇÜM YALNIZ SEÇİM DEĞİŞİNCE (20 Ekim): grafiğin üstünde
+                  gezinmek her işaretçi hareketinde bileşeni yeniden çiziyor
+                  (`setHover`) ve `layoutDependency` verilmemiş `layoutId`
+                  öğesi HER çizimde düzen fotoğrafı alıyor
+                  (`getBoundingClientRect`, zorunlu yeniden akış; kabuktaki
+                  `LayoutGroup` yüzünden gruptaki bütün düğümler için). Bağımlılık
+                  seçimin kendisi: gösterge tam o değiştiğinde yer
+                  değiştiriyor, kayma aynı kalıyor — giden gösterge sökülürken
+                  kendi fotoğrafını alıyor, yenisi oradan devralıyor. Üç
+                  segmentte de aynı. */}
               {range === r && (
                 <motion.span
                   aria-hidden
                   layoutId={`${thumbId}-range`}
+                  layoutDependency={range}
                   className={cn("absolute inset-0 -z-10 rounded-(--radius-sm) bg-primary", styles.segmentThumb)}
                   transition={SELECTION_TRANSITION}
                 />
@@ -1547,6 +1558,7 @@ export function PriceChart({
                     <motion.span
                       aria-hidden
                       layoutId={`${thumbId}-currency`}
+                      layoutDependency={currency}
                       className={cn("absolute inset-0 -z-10 rounded-(--radius-sm) bg-primary-wash", styles.segmentThumbSoft)}
                       transition={SELECTION_TRANSITION}
                     />
@@ -1577,6 +1589,7 @@ export function PriceChart({
                   <motion.span
                     aria-hidden
                     layoutId={`${thumbId}-mode`}
+                    layoutDependency={mode}
                     className={cn("absolute inset-0 -z-10 rounded-(--radius-sm) bg-primary-wash", styles.segmentThumbSoft)}
                     transition={SELECTION_TRANSITION}
                   />

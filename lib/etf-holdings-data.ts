@@ -17,6 +17,7 @@ import {
   type HoldingsFile,
 } from "./providers/etf-holdings";
 import type { ProviderResult } from "./providers/types";
+import { PROVIDER_TIMEOUT_MS, withTimeout } from "./providers/timeout";
 
 /**
  * Fonun içindekiler — ETF detayının "hangi hisseler, ne ağırlıkla" paneli.
@@ -157,14 +158,34 @@ const loadHoldings = unstable_cache(
   { revalidate: 6 * 3600 },
 );
 
+/* SAYFA BAŞINA YENİDEN TARAMA YOK (20 Ekim). Panel hisse sayfasının
+   çiziminde çağrılıyor ama kaynaklar arka plan sabrıyla yazılmış: istek
+   başına 20 sn (`BACKGROUND_TIMEOUT_MS`), Roundhill ve Global X'te yedi güne
+   kadar sıralı deneme (Roundhill'in olmayan günü 200 + sitenin HTML'i, her
+   deneme bir sayfa indiriyor), VanEck'te beş sıçrama. Başarısızlık önbelleğe
+   girmediği için (yukarıda) soğuk önbellekte ya da dosya adı değişmiş bir
+   kaynakta HER görüntüleme döngüyü baştan koşuyordu. İki sınır: çizim
+   `RENDER_BUDGET_MS`ten fazla beklemez (yükleme arkada sürer, biterse
+   önbelleğe girer ve hafızayı siler); düşen fon `RETRY_AFTER_MS` boyunca
+   kaynağa gitmeden "alınamadı" der. Süreç içi hafıza CLAUDE.md'deki "hata
+   önbelleğin dışında" kuralıyla çelişmiyor: o kural istekler arası önbelleğe
+   boş sonuç yazmamak için. */
+const RENDER_BUDGET_MS = 2 * PROVIDER_TIMEOUT_MS;
+const RETRY_AFTER_MS = 10 * 60_000;
+const failedUntil = new Map<string, number>();
+
 /** Kapsam dışı fonda `null`; kaynak düştüğünde `"error"`. */
 export const getEtfHoldings = cache(async function getEtfHoldings(
   symbol: string,
 ): Promise<EtfHoldings | "error" | null> {
   if (!HOLDINGS_SOURCES[symbol]) return null;
+  if ((failedUntil.get(symbol) ?? 0) > Date.now()) return "error";
   try {
-    return await loadHoldings(symbol);
+    const load = loadHoldings(symbol);
+    void load.then(() => failedUntil.delete(symbol), () => {});
+    return await withTimeout(load, RENDER_BUDGET_MS);
   } catch (error) {
+    failedUntil.set(symbol, Date.now() + RETRY_AFTER_MS);
     yutuldu("getEtfHoldings", error);
     return "error";
   }

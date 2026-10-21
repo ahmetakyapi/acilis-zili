@@ -2,6 +2,7 @@ import { cache } from "react";
 import { secUserAgent } from "@/lib/investors";
 import { matchOwner, parseForm4Owners, type OwnerRelationship } from "@/lib/insider-people";
 import { withTimeout } from "./timeout";
+import { SEC_MIN_GAP_MS, secTurn } from "./sec-gate";
 
 /**
  * SEC EDGAR — Form 4 dosyasından bildirim sahibinin görevi (28 Eylül).
@@ -23,7 +24,8 @@ import { withTimeout } from "./timeout";
  * MALİYET: kişi başına bir dosya (tablodaki en yeni), en fazla tablo satırı
  * kadar. Dosyalar DEĞİŞMEZ (düzeltme yeni bir dosya numarasıyla gelir), o
  * yüzden veri önbelleğinde uzun tutuluyor; soğuk önbellekte istekler beşerli
- * gruplarla gidiyor, SEC'in saniyede on istek sınırının altında.
+ * gruplarla ve ortak SEC sırasından, bekleme bütçesiyle gidiyor
+ * (`filingOwners`, 20 Ekim) — SEC'in saniyede on istek sınırının altında.
  *
  * DÜŞERSE: görev bir süs değil ama sayfanın taşıyıcısı da değil. Herhangi bir
  * hata ya da süre aşımında sonuç boş eşleme — satırlar yalnızca isimle kalır,
@@ -83,18 +85,72 @@ async function issuerCik(symbol: string): Promise<number | null> {
   return table?.get(symbol.toUpperCase().replace(/\./g, "-")) ?? null;
 }
 
-async function filingOwners(cik: number, accession: string): Promise<OwnerRelationship[]> {
+/* SIRA VE HAFIZA (20 Ekim). Beşerli gruplar arka arkaya, aralıksız
+   gidiyordu: soğuk önbellekte hız ~5/gidiş-dönüş, yani sınırın altında
+   ancak her grup yarım saniyeden uzun sürerse. Her dosya isteği artık ortak
+   SEC sırasından geçiyor (`sec-gate.ts`, ≤ 4/sn). Sıra, veri önbelleğinden
+   dönecek okumayı da bekletir; o yüzden önce süreç hafızasına bakılıyor —
+   dosya değişmez, sahipleri bir kez alındıktan sonra sırasız döner (aynı
+   anda açılan iki sayfa da tek istek bekler). Başarısız okuma saklanmaz.
+
+   BÜTÇE VE SON TARİH (20 Ekim). Hafıza her dağıtımda boş ve sıra veri
+   önbelleği isabetini ayırt edemiyor; sınırsız sırada soğuk hisse sayfası
+   dalgası (tarayıcı) sıranın boşalttığından hızlı boşluk ayırıp gün
+   akışını ve 13F'i arkasında bekletiyordu (gerekçe `sec-gate.ts`). Dosya
+   isteği sırayı en çok `FILING_WAIT_MS` bekler; sıra daha uzunsa boşluk
+   ayrılmadan boş döner ve SAKLANMAZ — görev bir sonraki görüntülemede
+   yeniden sorulur. `loadRoles` da süre dolunca yeni grup başlatmıyor:
+   `withTimeout` yalnız beklemeyi bırakıyor, döngü arkada boşluk ayırmayı
+   sürdürüyordu.
+
+   Hafıza tavana gelince EN ESKİ kayıt düşer (eklenme sırası). Önceden
+   tamamı siliniyordu ve ~800 sembol × 10'a dek kişi ≈ 8 bin dosya, 2 binlik
+   tavanı durmadan boşaltıp sırayı yeniden dolduruyordu; kayıtlar küçük
+   (birkaç sahip nesnesi), tavan 10 bin. */
+const OWNERS_MEMO_MAX = 10_000;
+/** Dosya isteğinin ortak SEC sırasında en uzun bekleyişi — görev süresinin
+    (`ROLES_TIMEOUT_MS`) içinde, iki tam grubun sığacağı pay. Aralıktan
+    türüyor (20 Ekim): sabit 1,5 sn 125 ms'lik aralıkta 12 boşluktu, 275
+    ms'de 5'e düşüp önde tek bir grup varken ilk dosyadan sonrasını geri
+    çevirirdi. 275 ms'de 2,75 sn. */
+const FILING_WAIT_MS = 2 * FILING_BATCH * SEC_MIN_GAP_MS;
+const ownersMemo = new Map<string, Promise<OwnerRelationship[]>>();
+
+/** Dosyanın sahipleri; sıra dolu, okuma ya da ayrıştırma başarısızsa null. */
+async function readOwners(cik: number, accession: string): Promise<OwnerRelationship[] | null> {
+  if (!(await secTurn(FILING_WAIT_MS))) return null;
   const folder = accession.replace(/-/g, "");
   const text = await secGet(
     `https://www.sec.gov/Archives/edgar/data/${cik}/${folder}/${accession}.txt`,
     FILING_REVALIDATE_S,
   );
-  return text ? parseForm4Owners(text) : [];
+  if (!text) return null;
+  try {
+    return parseForm4Owners(text);
+  } catch {
+    /* Ayrıştırılamayan dosya da başarısız okuma: saklanmaz. */
+    return null;
+  }
+}
+
+function filingOwners(cik: number, accession: string): Promise<OwnerRelationship[]> {
+  const held = ownersMemo.get(accession);
+  if (held) return held;
+  const pending: Promise<OwnerRelationship[]> = readOwners(cik, accession).then((owners) => {
+    if (owners) return owners;
+    /* Saklanmaz. Kimlik sorulur ki tavandan düşüp yeniden açılmış kaydı silmesin. */
+    if (ownersMemo.get(accession) === pending) ownersMemo.delete(accession);
+    return [];
+  });
+  if (ownersMemo.size >= OWNERS_MEMO_MAX) ownersMemo.delete(ownersMemo.keys().next().value!);
+  ownersMemo.set(accession, pending);
+  return pending;
 }
 
 async function loadRoles(
   symbol: string,
   people: readonly { name: string; filing: string | null }[],
+  deadline: number,
 ): Promise<Map<string, OwnerRelationship>> {
   const roles = new Map<string, OwnerRelationship>();
   /* Kişi başına tek dosya: listedeki ilk (en yeni) geçişi. */
@@ -110,6 +166,8 @@ async function loadRoles(
 
   const entries = [...byName.entries()];
   for (let i = 0; i < entries.length; i += FILING_BATCH) {
+    /* Süre dolduysa çağıran gitti: yeni grup sıraya boşluk ayırmasın. */
+    if (Date.now() >= deadline) break;
     const batch = entries.slice(i, i + FILING_BATCH);
     const owners = await Promise.all(batch.map(([, filing]) => filingOwners(cik, filing)));
     batch.forEach(([name], index) => {
@@ -129,7 +187,7 @@ export async function getInsiderRoles(
   people: readonly { name: string; filing: string | null }[],
 ): Promise<Map<string, OwnerRelationship>> {
   try {
-    return await withTimeout(loadRoles(symbol, people), ROLES_TIMEOUT_MS);
+    return await withTimeout(loadRoles(symbol, people, Date.now() + ROLES_TIMEOUT_MS), ROLES_TIMEOUT_MS);
   } catch {
     return new Map();
   }

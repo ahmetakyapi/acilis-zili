@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { AnalysisInput, AnalysisOutput, istanbulDay, remainingAnalyses, safeSourceUrl } from "../lib/ai-analysis-core";
+import { istanbulDay, remainingAnalyses, safeSourceUrl } from "../lib/ai-analysis-core";
+import { AnalysisInput, AnalysisOutput } from "../lib/ai-analysis-schema";
 test("daily quota resets at Istanbul midnight rather than UTC midnight", () => {
   assert.equal(istanbulDay(new Date("2026-10-10T20:59:59Z")),"2026-10-10");
   assert.equal(istanbulDay(new Date("2026-10-10T21:00:00Z")),"2026-10-11");
@@ -94,4 +95,13 @@ test("scenario status and trigger math read the report's own levels", async () =
   assert.equal(m.upPct, 6); assert.equal(m.downPct, -3); assert.equal(m.upAtr, 3); assert.equal(m.downAtr, 1.5); assert.equal(m.ratio, 2);
   assert.equal(triggerMath(100, null, 97, 2), null);
   assert.equal(daysSince("2026-10-01T00:00:00Z", new Date("2026-10-11T12:00:00Z")), 10);
+});
+
+/* İSTEMCİ SINIRI (20 Ekim): çekirdeği dört "use client" bileşeni içe aktarıyor;
+   zod ya da şema modülünden DEĞER alırsa /claude paketine zod'un tamamı iner. */
+test("client-shared core imports no zod values", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const core = readFileSync(join(__dirname, "..", "lib/ai-analysis-core.ts"), "utf8");
+  assert.doesNotMatch(core, /^import\s+(?!type\s)[^;]*from\s+"(zod|\.\/ai-analysis-schema)"/m);
 });

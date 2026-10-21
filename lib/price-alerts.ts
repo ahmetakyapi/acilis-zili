@@ -2,6 +2,7 @@ import { cache } from "react";
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { isSessionTrade, type MarketStatus } from "@/lib/market-hours";
+import { isDirection, type PriceAlert } from "@/lib/price-alerts-core";
 import type { Quote } from "@/lib/providers/types";
 import { priceAlerts } from "@/lib/schema";
 
@@ -13,65 +14,14 @@ import { priceAlerts } from "@/lib/schema";
  * alarm, okuyucunun güncel bir kotasyon gördüğü sayfada değerlendiriliyor
  * ve tetik anı "hedefin geçildiğinin GÖRÜLDÜĞÜ kontrol".
  *
- * Bu modül `"use client"` DEĞİL: `alertCrossed` ve `alertProgress` hem
- * sunucuda (değerlendirme) hem istemcide (hisse sayfasındaki düğmenin
- * listesi) okunuyor (CLAUDE.md → İstemci ile sunucu sınırı).
+ * SUNUCU TARAFI. Tipler, tavanlar ve `alertCrossed`/`alertProgress` gibi saf
+ * değerlendiriciler lib/price-alerts-core.ts'te ve buradan yeniden dışa
+ * aktarılıyor (20 Ekim); istemci bileşeni ÇEKİRDEĞİ içe aktarır, bu modülü
+ * değil — bu modülün `db` içe aktarımı tarayıcı paketine Neon sürücüsünü
+ * taşıyordu (gerekçe çekirdeğin künyesinde).
  */
 
-export type AlertDirection = "above" | "below";
-
-export type PriceAlert = {
-  id: string;
-  symbol: string;
-  direction: AlertDirection;
-  target: number;
-  refPrice: number | null;
-  createdAt: string;
-  triggeredAt: string | null;
-  triggeredPrice: number | null;
-};
-
-/** Hesap başına ve sembol başına tavan — gerekçe `app/actions/alerts.ts`. */
-export const MAX_ALERTS = 50;
-export const MAX_ALERTS_PER_SYMBOL = 5;
-
-export function isDirection(value: unknown): value is AlertDirection {
-  return value === "above" || value === "below";
-}
-
-/** Fiyat hedefi geçti mi — eşitlik de geçmiş sayılır. */
-export function alertCrossed(
-  alert: Pick<PriceAlert, "direction" | "target">,
-  price: number,
-): boolean {
-  return alert.direction === "above" ? price >= alert.target : price <= alert.target;
-}
-
-/**
- * Hedefe kalan yol, yüzde olarak ve FİYATA göre: "hedefe %4,2". Negatif
- * değer yok; geçilmişse 0.
- */
-export function alertDistancePct(
-  alert: Pick<PriceAlert, "direction" | "target">,
-  price: number,
-): number {
-  if (price <= 0) return 0;
-  const gap = alert.direction === "above" ? alert.target - price : price - alert.target;
-  return Math.max(0, (gap / price) * 100);
-}
-
-/**
- * Kurulduğu fiyattan hedefe giden yolun ne kadarı alındı (0–1). Kuruluş
- * fiyatı yoksa ya da fiyat ters yöne gittiyse 0.
- */
-export function alertProgress(
-  alert: Pick<PriceAlert, "direction" | "target" | "refPrice">,
-  price: number,
-): number {
-  if (alert.refPrice == null || alert.refPrice === alert.target) return 0;
-  const done = (price - alert.refPrice) / (alert.target - alert.refPrice);
-  return Math.min(1, Math.max(0, done));
-}
+export * from "@/lib/price-alerts-core";
 
 /** Değerlendirmenin bir kotasyondan okuduğu üç alan. */
 export type SessionQuote = Pick<Quote, "price" | "changePct" | "tradedAt">;

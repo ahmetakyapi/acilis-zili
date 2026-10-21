@@ -1,5 +1,6 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { symbolMetrics, symbols as symbolsTable } from "@/lib/schema";
@@ -51,15 +52,19 @@ export type SectorMetricsRow = {
 export type ScreenerMetricsRow = SectorMetricsRow & { sector: string };
 
 /**
- * Tablonun TAMAMI — hisse tarayıcısı (/tarama) için (15 Ekim).
- *
- * Skor kartı tek sektör soruyor (`getSectorMetrics`); tarayıcı bütün
- * evreni sıralıyor ve 11 ayrı sorgu yerine tek okuma. Evren zaten tavanlı
- * (~500 GICS'li endeks üyesi), satır başına tek jsonb — tek sorgu ucuz.
- * Tablo yokken null: sayfa "Hazırlanıyor" der (avatar-data kalıbı).
+ * İSTEKLER ARASI ÖNBELLEK, ON DAKİKA (20 Ekim). /tarama `searchParams`
+ * okuyor: her sıralama başlığı ve hazır süzgeç bağlantısı yeni bir sunucu
+ * çizimi ve her çizim tablonun tamamını (~500 satır, satır başına jsonb)
+ * Neon'dan yeniden çekiyordu — aynı sonucu. Satırlar en çok günde bir
+ * değişiyor (cron günde 15 sembol, sayfa ziyareti 24 saatte bir); bunlar
+ * temel ölçüler, fiyat değil (fiyat `getQuotes`ten), yani on dakikalık
+ * gecikme veri dürüstlüğüne dokunmuyor. `loadSymbolTable` kalıbı: hata
+ * önbelleğin DIŞINDA yakalanıyor ki tablonun olmadığı anın boşluğu
+ * saklanmasın. `unstable_cache` sonucu JSON'dan geçiriyor; `Date` dize
+ * olarak saklanıp okurken diriltiliyor.
  */
-export async function getAllMetrics(): Promise<ScreenerMetricsRow[] | null> {
-  try {
+const loadAllMetrics = unstable_cache(
+  async () => {
     const rows = await db
       .select({
         symbol: symbolMetrics.symbol,
@@ -69,11 +74,32 @@ export async function getAllMetrics(): Promise<ScreenerMetricsRow[] | null> {
         updatedAt: symbolMetrics.updatedAt,
       })
       .from(symbolMetrics);
+    return rows.map((row) => ({ ...row, updatedAt: row.updatedAt.toISOString() }));
+  },
+  /* Sürümlü anahtar (20 Ekim): önbellek dağıtımlar arası ortak; `metrics`
+     jsonb'sinin ya da satırın şekli değişirse sürüm artar (bkz. CLAUDE.md). */
+  ["symbol-metrics-all-v1"],
+  { revalidate: 600 },
+);
+
+/**
+ * Tablonun TAMAMI — hisse tarayıcısı (/tarama) için (15 Ekim).
+ *
+ * Skor kartı tek sektör soruyor (`getSectorMetrics`); tarayıcı bütün
+ * evreni sıralıyor ve 11 ayrı sorgu yerine tek okuma. Evren zaten tavanlı
+ * (~500 GICS'li endeks üyesi), satır başına tek jsonb — tek sorgu ucuz.
+ * Tablo yokken null: sayfa "Hazırlanıyor" der (avatar-data kalıbı).
+ */
+export async function getAllMetrics(): Promise<ScreenerMetricsRow[] | null> {
+  try {
+    const rows = await loadAllMetrics();
     return rows.flatMap((row) => {
       const metrics = parseStoredMetrics(row.metrics);
       /* Sektörsüz satır evrende zaten yok (rememberOwnMetrics yazmıyor);
          sütun tipi gevşek diye tarayıcıya null sektör sızdırılmaz. */
-      return metrics && row.sector ? [{ ...row, sector: row.sector, metrics }] : [];
+      return metrics && row.sector
+        ? [{ ...row, sector: row.sector, metrics, updatedAt: new Date(row.updatedAt) }]
+        : [];
     });
   } catch {
     return null;

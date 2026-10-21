@@ -13,6 +13,7 @@ import { EarningsCalendar } from "@/components/earnings/EarningsCalendar";
 import { EarningsTabs } from "@/components/earnings/EarningsTabs";
 import { RecentAnalysesStrip } from "@/components/earnings/RecentAnalysesStrip";
 import {
+  getAnalyses,
   getAnalysisBadges,
   getEarningsBetween,
   getSymbolNames,
@@ -56,6 +57,9 @@ const RANGES = {
 } as const;
 type RangeKey = keyof typeof RANGES;
 
+/** Takvimin üstündeki "son yazılan analizler" şeridinin çip sayısı. */
+const RECENT_ANALYSES = 8;
+
 export default async function EarningsPage(props: PageProps<"/bilancolar">) {
   const search = await props.searchParams;
   const range: RangeKey = search.aralik === "ay" ? "ay" : "hafta";
@@ -72,17 +76,25 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
 
   /* İki sorgu BİRBİRİNE BAĞLI DEĞİL ama sıralı bekleniyordu: takvim
      dönmeden takip listesi istenmiyordu ve sayfada Suspense sınırı da
-     olmadığı için iki ardışık Neon turu doğrudan ilk bayta biniyordu. */
+     olmadığı için iki ardışık Neon turu doğrudan ilk bayta biniyordu.
+
+     DÖRT OKUMA TEK TURDA (20 Ekim). Aynı zincir iki tur daha taşıyordu:
+     rozetler takvimin sembol listesini bekliyordu (oysa aralık verilince
+     sembol süzgeci gereksiz — `getAnalysisBadges` künyesi) ve şeridin
+     `getAnalyses`i ancak sayfa gövdesi döndükten sonra başlıyordu (şerit
+     kendi verisini çeken bir sunucu bileşeniydi). Neon'a her tur ~120 ms;
+     kritik yol üç turdan bire indi. Adlar önbellekli tablodan, tek listeyle. */
   const rangeEnd = addEtDays(today, RANGES[range]);
-  const [rows, userSymbols] = await Promise.all([
+  const [rows, userSymbols, badges, recent] = await Promise.all([
     getEarningsBetween(today, rangeEnd),
     session?.user?.id ? getUserSymbols(session.user.id) : Promise.resolve([]),
+    getAnalysisBadges(null, locale, { from: today, to: rangeEnd }),
+    getAnalyses(locale, { limit: RECENT_ANALYSES }),
   ]);
 
-  const symbolList = [...new Set(rows.map((r) => r.symbol))];
-  const [meta, badges] = await Promise.all([
-    getSymbolNames(symbolList),
-    getAnalysisBadges(symbolList, locale, { from: today, to: rangeEnd }),
+  const meta = await getSymbolNames([
+    ...rows.map((r) => r.symbol),
+    ...recent.map((r) => r.symbol),
   ]);
 
   const rangeHref = (key: RangeKey) =>
@@ -135,7 +147,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           kaldırıldı, liste bir satır yukarı çıktı. */}
       {/* Analizler geçmiş bilançolara ait, takvim ise ileriye bakıyor:
           son yazılanlar sekmeye tıklanmadan burada görünüyor. */}
-      <RecentAnalysesStrip locale={locale} t={t} />
+      <RecentAnalysesStrip rows={recent} meta={meta} t={t} />
 
       <QueryTransition label={t.common.loading}>
       {rows.length === 0 ? (

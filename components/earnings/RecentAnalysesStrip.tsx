@@ -5,8 +5,8 @@ import {
   verdictOf,
   verdictPillClass,
 } from "@/lib/analysis";
-import { getAnalyses, getSymbolNames } from "@/lib/data";
-import type { Dictionary, Locale } from "@/lib/i18n";
+import type { AnalysisIndexRow, SymbolMeta } from "@/lib/data";
+import type { Dictionary } from "@/lib/i18n";
 import { LogoTile } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
@@ -23,20 +23,23 @@ import { ScrollEdges } from "@/components/ui/ScrollEdges";
  * Şerit tek satır: takvimle yarışmıyor, yalnızca "burada okunacak bir şey
  * var" diyor. Analiz yoksa hiçbir şey basmaz — boş bir kart, henüz analiz
  * yazılmamış bir sitede her gün tekrar eden bir vaat olurdu.
+ *
+ * VERİ SAYFADAN GELİYOR (20 Ekim). Şerit kendi `getAnalyses`ini çeken bir
+ * sunucu bileşeniydi ve üstünde Suspense yok: sorgusu ancak sayfa gövdesi
+ * döndükten SONRA başlıyor, ilk bayta üçüncü bir sıralı Neon turu
+ * ekliyordu. Sayfa artık onu takvimle aynı turda soruyor
+ * (`app/(app)/bilancolar/page.tsx`); `SymbolAnalyses`in kalıbı.
  */
-export async function RecentAnalysesStrip({
-  locale,
+export function RecentAnalysesStrip({
+  rows,
+  meta,
   t,
-  limit = 8,
 }: {
-  locale: Locale;
+  rows: AnalysisIndexRow[];
+  meta: Record<string, SymbolMeta>;
   t: Dictionary;
-  limit?: number;
 }) {
-  const rows = await getAnalyses(locale, { limit });
   if (rows.length === 0) return null;
-
-  const meta = await getSymbolNames([...new Set(rows.map((r) => r.symbol))]);
 
   return (
     <section

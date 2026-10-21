@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
@@ -30,11 +30,13 @@ export async function setAvatarAction(
   const userId = session?.user?.id;
   if (!userId) return { status: "failed" };
 
-  /* Kova (15 Ekim taraması): aşağıdaki `revalidatePath("/", "layout")`
-     kökten aşağı TÜM rotaların önbelleğini boşaltıyor — sınırsız bir döngü
-     siteyi kalıcı cache-miss'te çizdirip Neon ve sağlayıcı yükünü her
-     ziyaretçiye yansıtabiliyordu. 30/dk seçicide gezinen gerçek kullanıcıya
-     bol; sınırda kayıt da düşmez, seçici hatayı gösterir. */
+  /* Kova (15 Ekim taraması): o gün aşağıdaki tazeleme
+     `revalidatePath("/", "layout")` idi ve kökten aşağı TÜM rotaların
+     önbelleğini boşaltıyordu — sınırsız bir döngü siteyi kalıcı
+     cache-miss'te çizdirebiliyordu. 20 Ekim'den beri tazeleme `refresh()`
+     (aşağıda) ve önbelleğe dokunmuyor; kova artık yazma tavanı: döngü
+     Neon'a sınırsız UPSERT yollamasın. 30/dk seçicide gezinen gerçek
+     kullanıcıya bol; sınırda kayıt da düşmez, seçici hatayı gösterir. */
   if (!rateLimit(`avatar:${userId}`, 30, 60_000).allowed) return { status: "failed" };
 
   const rawIcon = formData.has("next-icon") ? formData.get("next-icon") : formData.get("icon");
@@ -44,8 +46,8 @@ export async function setAvatarAction(
   if (!isAvatarColor(rawColor)) return { status: "failed" };
 
   try {
-    /* Aynı değere ikinci basış site genelinde bir purge'a mal olmasın:
-       satır zaten bu hâldeyse yazmadan ve TAZELEMEDEN dön. */
+    /* Aynı değere ikinci basış bir yazmaya ve sayfanın yeniden çizimine
+       mal olmasın: satır zaten bu hâldeyse yazmadan ve TAZELEMEDEN dön. */
     const [current] = await db
       .select({ icon: userAvatars.icon, color: userAvatars.color })
       .from(userAvatars)
@@ -64,8 +66,11 @@ export async function setAvatarAction(
   } catch {
     return { status: "failed" };
   }
-  /* Başlıktaki hesap düğmesi her sayfanın düzeninde: düzen katmanından
-     tazeleniyor ki yeni karo gezinmeden görünsün. */
-  revalidatePath("/", "layout");
+  /* Başlıktaki hesap düğmesi her sayfanın düzeninde; yeni karo gezinmeden
+     görünsün diye istemci yönlendiricisi tazeleniyor. `refresh()`, düzen
+     katmanı `revalidatePath`i DEĞİL (20 Ekim): o, sunucudaki bütün veri
+     önbelleğini düşürüyordu; avatar zaten istek içi okunuyor ve düzen
+     dinamik — gerekçe app/actions/inbox.ts. */
+  refresh();
   return { status: "saved" };
 }

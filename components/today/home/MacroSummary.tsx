@@ -1,6 +1,6 @@
 import { Panel, PanelLink } from "@/components/ui/primitives";
 import { formatMacroValue } from "@/components/macro/macro-format";
-import { getMacroRows } from "@/lib/data";
+import { getMacroSummaryRows } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import {
   cn,
@@ -20,7 +20,11 @@ import {
    Sıralama bir sunum niyeti taşımıyor; taşıdığını sanmak da seri listesine
    yeni bir slug eklendiği gün paneli sessizce değiştirirdi. Seçim artık
    editoryal: enflasyondan bir ölçü, fiyat tercihinden bir ölçü, iş gücünden
-   bir ölçü, politikadan bir ölçü. Kalıp TODAY_YIELDS ile aynı. */
+   bir ölçü, politikadan bir ölçü. Kalıp TODAY_YIELDS ile aynı.
+
+   20 Ekim'den beri panel yalnız bu dört seriyi ve basılan alanları soruyor
+   (`getMacroSummaryRows`, gerekçe orada); gösterim sırası yine aşağıdaki
+   `map`ten, sorgunun sırası önemsiz. */
 const MACRO_HOME_SLUGS = [
   "cpi",
   "core-pce",
@@ -37,7 +41,7 @@ const MACRO_HOME_SLUGS = [
  * okuyucuya "bu iyi haber" demiş oluruz. Etiket metni nötr gri kalır.
  */
 export async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const rows = await getMacroRows();
+  const rows = await getMacroSummaryRows(MACRO_HOME_SLUGS);
   if (rows.length === 0) return null;
 
   /* Listede olmayan bir slug sessizce atlanır; tohumlama eksikse panel

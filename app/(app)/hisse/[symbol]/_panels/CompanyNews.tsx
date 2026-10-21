@@ -59,36 +59,52 @@ export async function CompanyNews({
      gösteriyoruz — yoksa liste, akış sayfasında Türkçe olan bir haberi
      burada İngilizce göstermeye devam ederdi. */
   let trByProvider = new Map<string, string>();
+  /* ÖNCE OKU, YALNIZ EKSİĞİ YAZ (20 Ekim). Her görüntüleme sekiz satırı
+     `on conflict do nothing` ile yeniden yazıyor, sonra okuyor, en sonda
+     jenerik görselleri sayıyordu — günün ilk ziyaretinden sonra hiçbir şey
+     değiştirmeyen bir yazma ve üç SIRALI Neon turu. Artık okuma ile sayım
+     aynı turda; yazma yalnız tabloda olmayan haber varken. Yazma `after()`a
+     ertelenmedi: yeni haberin kalıcı id'si bu çizimin bağlantısı ve
+     çevirisi için gerekiyor, sayım da yeni satırları görmeli (iki yeni
+     haber aynı kaynak logosunu taşıyorsa logo ancak yazmadan sonra
+     jenerik sayılıyor) — o yüzden yazma olunca sayım yeniden yapılıyor.
+     `getGenericImageUrls` hatayı kendisi yutuyor; erken başlatmak güvenli. */
+  const providerIds = shown.map((item) => item.providerId);
+  const imageUrls = shown.map((item) => item.imageUrl);
+  let genericImagesP = getGenericImageUrls(imageUrls);
   try {
-    await db
-      .insert(news)
-      .values(
-        shown.map((item) => ({
-          providerId: item.providerId,
-          headline: item.headline,
-          summary: item.summary,
-          url: item.url,
-          imageUrl: item.imageUrl,
-          source: item.source,
-          category: item.category,
-          symbols: item.symbols,
-          publishedAt: item.publishedAt,
-        })),
-      )
-      .onConflictDoNothing();
-    const rows = await db
-      .select({
-        id: news.id,
-        providerId: news.providerId,
-        headlineTr: news.headlineTr,
-      })
-      .from(news)
-      .where(
-        inArray(
-          news.providerId,
-          shown.map((item) => item.providerId),
-        ),
-      );
+    const readRows = () =>
+      db
+        .select({
+          id: news.id,
+          providerId: news.providerId,
+          headlineTr: news.headlineTr,
+        })
+        .from(news)
+        .where(inArray(news.providerId, providerIds));
+    let rows = await readRows();
+    const stored = new Set(rows.map((row) => row.providerId));
+    const fresh = shown.filter((item) => !stored.has(item.providerId));
+    if (fresh.length > 0) {
+      await db
+        .insert(news)
+        .values(
+          fresh.map((item) => ({
+            providerId: item.providerId,
+            headline: item.headline,
+            summary: item.summary,
+            url: item.url,
+            imageUrl: item.imageUrl,
+            source: item.source,
+            category: item.category,
+            symbols: item.symbols,
+            publishedAt: item.publishedAt,
+          })),
+        )
+        .onConflictDoNothing();
+      genericImagesP = getGenericImageUrls(imageUrls);
+      rows = await readRows();
+    }
     idByProvider = new Map(rows.map((row) => [row.providerId, row.id]));
     trByProvider = new Map(
       rows
@@ -122,7 +138,8 @@ export async function CompanyNews({
      bozuyor. */
   // Görseli olmayan haber şirketin logosunu alır — bu listede hepsi aynı
   // şirketin haberi, o yüzden tek sembol yetiyor (`meta` yukarıda).
-  const genericImages = await getGenericImageUrls(shown.map((item) => item.imageUrl));
+  // Sayım yukarıda, tablo okumasıyla aynı turda başladı.
+  const genericImages = await genericImagesP;
   const logoUrl = meta[symbol]?.logoUrl ?? null;
 
   return (

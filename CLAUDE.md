@@ -155,19 +155,22 @@ değil); küçültürken `toLocaleLowerCase("tr-TR")`.
   **Tek belgeli istisna:** yatırımcı portreleri (`public/investors/`, özgür
   lisanslı; kaynak ve lisans `lib/investors.ts` → `PORTRAITS`). Yeni fotoğraf
   ancak o kadar sağlam bir lisans kaydıyla.
-  Bloklar `components/article/ArticleBody.tsx`: `sayilar` · `bar` · `pay` ·
+  Bloklar `components/article/parse-blocks.ts` (ayrıştırma) +
+  `ArticleBody.tsx` (çizim): `sayilar` · `bar` · `pay` ·
   `akis` · `oncesi` · `zaman` · `grafik` + metin kutuları `ornek` · `dikkat` ·
   `ozet` · `tanim`. Kutuda `**Etiket:**` ile başlayan satır tanım listesine
   dönüşür (yapıdır, süs değil).
-- **Yeni blok = DÖRT yer:** çizici (`ArticleBody.tsx`), editoryal stil
+- **Yeni blok = BEŞ yer:** ayrıştırıcı (`components/article/parse-blocks.ts`
+  → `Block`, `parseBlocks`, kutuda `CALLOUT_LABELS`; testi
+  `tests/article-parse.test.ts`), çizici (`ArticleBody.tsx`), editoryal stil
   (`components/article/ArticleEditorial.module.css`), rutin prompt'u
   (`docs/claude-rutinler.md` § 3) ve editör çipleri
   (`lib/article-blocks.ts` → `BLOKLAR`; StoryEditor ve topluluk
   PostEditor'ü aynı listeyi basar).
 - Mercek ve rehber `variant="editorial"` ile çizilir; KVKK ve panel önizlemesi
   varsayılanla, piksel piksel aynı kalır. Blok rolleri CSS `:has()` ile değil
-  TS'te `blockRoles` ile. Okuma ızgarası iki hat: yüzeyler 1040'lık kartın
-  kenarında, metin `--read-inset` (36 / telefonda 20) içeride. Metni ayrı dar
+  TS'te `blockRoles` ile (`parse-blocks.ts`). Okuma ızgarası iki hat:
+  yüzeyler 1040'lık kartın kenarında, metin `--read-inset` (36 / telefonda 20) içeride. Metni ayrı dar
   sütuna almak denendi ve geri alındı (`components/stories/StoryDetail.module.css`).
 - **Görselin etrafında çerçeve yok** — görsel kutunun kendisi
   (`overflow-hidden` + yarıçap). Kenarlık yalnız yer tutucularda.
@@ -234,6 +237,11 @@ yazın 16:30, kışın 17:30 TR). ET↔UTC aritmetiği yalnız `lib/market-hours
 - **İstekler arası önbellek = `unstable_cache`**; hata önbelleğin DIŞINDA
   yakalanır ki düşen veritabanının boş sonucu saklanmasın
   (`grep -rn "unstable_cache(" lib`; örnek `loadSymbolTable`, `lib/data.ts`).
+  **20 Ekim'den beri önbellek dağıtımlar arası ORTAK** (`shared/fetch-cache`,
+  `deploy/update.sh`): anahtar geri çağrının metni + keyParts, yani dönen
+  ŞEKİL değişip metin aynı kalırsa (çağırdığı yardımcı, şema sütun tipi)
+  eski şekil yeni koda gider. Şekli değiştiren, o önbelleğin keyParts
+  sürümünü artırır (`"investors-overview-v3"` → `-v4`); her anahtar sürümlü.
 
 ## İçerik ve rutin köprüsü
 

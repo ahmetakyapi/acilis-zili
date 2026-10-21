@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 /*
  * "YENİ" İŞARETİ İLK ÇİZİMDE KİLİTLİ (16 Ekim). /bildirimler açılınca
- * `MarkInboxRead` kutuyu okundu sayıyor ve eylemin `revalidatePath`i sayfayı
+ * `MarkInboxRead` kutuyu okundu sayıyor ve eylemin `refresh()`i sayfayı
  * yeniden çiziyor: bütün öğeler okunmuş geliyor, "Yeni" rozetleri ve zemin
  * tonu açılıştan birkaç yüz milisaniye sonra sönüyordu — okuyucu hangisinin
  * yeni olduğunu göremiyordu. React aynı anahtarlı istemci bileşeninin

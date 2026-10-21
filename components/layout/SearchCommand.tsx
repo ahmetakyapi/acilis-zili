@@ -3,6 +3,8 @@
 import { EASE_BRAND_POINTS, exitOf } from "@/lib/motion";
 
 import { startRouteProgress } from "./RouteProgress";
+import { useLocaleHref } from "./useLocaleHref";
+import { withLocale } from "@/lib/i18n/routing";
 
 import {
   useCallback,
@@ -185,6 +187,7 @@ export function SearchCommand({
   shortcut?: string;
 }) {
   const router = useRouter();
+  const { locale } = useLocaleHref();
 
   /* Sahiplik ilk bağlanan örneğe verilir ve bileşen sökülene kadar onda
      kalır. Kimlik `useRef` ile örneğe özel bir sembol. */
@@ -446,9 +449,18 @@ export function SearchCommand({
         setHits(data.hits ?? []);
         setWritings(data.writings ?? []);
         setActive(0);
-        SEARCH_CACHE.set(key, data);
-        if (SEARCH_CACHE.size > SEARCH_CACHE_MAX) {
-          SEARCH_CACHE.delete(SEARCH_CACHE.keys().next().value as string);
+        /* YARIM YANIT ÖNBELLEĞE GİRMİYOR (20 Ekim). Sunucu sağlayıcı
+           genişletmesini kota ya da sağlayıcı hatası yüzünden atladıysa
+           ya da yerel sorgulardan biri (sembol tablosu, mercek) düştüyse
+           (`partial`) yanıt eksik ve çoğu zaman boş; önbelleğe girseydi aynı
+           sembolü sonra yeniden yazan okuyucu oturum boyunca o boş listeyi
+           görürdü (gerekçe app/api/search/route.ts → `SEARCH_REMOTE_LIMIT`
+           ve sembol sorgusunun `catch`i). */
+        if (!data.partial) {
+          SEARCH_CACHE.set(key, data);
+          if (SEARCH_CACHE.size > SEARCH_CACHE_MAX) {
+            SEARCH_CACHE.delete(SEARCH_CACHE.keys().next().value as string);
+          }
         }
       } catch {
         // İptal edilen istekler sessizce geçilir.
@@ -468,10 +480,15 @@ export function SearchCommand({
       if (remember) pushRecent(remember);
       navigatingRef.current = true;
       close();
-      startRouteProgress(href);
-      router.push(href);
+      /* Hedef DİLİ TAŞIR (20 Ekim): sonuçlar öneksiz yol veriyor ve /en
+         sayfasında her seçim proxy'de çerez yönlendirmesine (307) gidip
+         geliyordu; çerez engelliyse okuyucu Türkçeye düşüyordu. Son
+         seçimler öneksiz saklanıyor, dil burada ekleniyor. */
+      const target = withLocale(href, locale);
+      startRouteProgress(target);
+      router.push(target);
     },
-    [router, close],
+    [router, close, locale],
   );
 
   // Kutu boşaltıldığında eski sonuçlar gösterilmez — türetilmiş görünüm.

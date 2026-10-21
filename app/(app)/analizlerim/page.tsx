@@ -44,6 +44,10 @@ export default async function AnalysesPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/giris?devam=/analizlerim");
   const userId = session.user.id;
+  /* Kendi yazıları erişime bağlı değil: erişim denetiminden (bir `auth()` ve
+     Neon turları) ÖNCE başlıyor, sayfada Suspense yok (20 Ekim).
+     `getOwnPosts` hatayı kendisi yutuyor, reddedilmiyor. */
+  const ownPromise = getOwnPosts(userId);
   const { locale, t } = await getI18n();
   const A = t.aiAnalysis;
   const P = A.page;
@@ -53,7 +57,7 @@ export default async function AnalysesPage() {
 
   /* Raporun tamamı değil, kartın ihtiyacı: jsonb'den beş alan. */
   const [own, rows] = await Promise.all([
-    getOwnPosts(userId),
+    ownPromise,
     access
       ? db.select({
         id: aiAnalysisRequests.id, symbol: aiAnalysisRequests.symbol, horizon: aiAnalysisRequests.horizon,

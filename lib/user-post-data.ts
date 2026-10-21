@@ -160,15 +160,41 @@ export const getPublishedPost = cache(async (slug: string): Promise<PublishedPos
   }
 });
 
-/** Bir üyenin yayındaki yazıları — profil sayfasının Yazılar bloğu. */
-export const getPublishedPostsByUser = cache(async (userId: string): Promise<OwnPost[]> => {
+/** Gövdesiz yazı satırı — listeler için. */
+export type PostSummary = Omit<OwnPost, "bodyMd" | "reviewNote">;
+
+/**
+ * Bir üyenin yayındaki yazıları — profil sayfasının Yazılar bloğu.
+ *
+ * GÖVDESİZ (20 Ekim). Bütün satırı, yani yazı başına 40 bine varan
+ * `body_md`yi sınırsız sayıda çekiyordu; çağıranların ikisi de (profil,
+ * `lib/report-data.ts`) yalnız başlık, adres, tarih ve sayıya bakıyor.
+ * Akış (`getPublishedPosts`) gövdeyi okuma süresi için hâlâ çekiyor:
+ * süreyi SQL'de saymak kartla yazı sayfasının farklı dakika göstermesini
+ * göze almak olurdu (veri dürüstlüğü 3).
+ */
+export const getPublishedPostsByUser = cache(async (userId: string): Promise<PostSummary[]> => {
   try {
     const rows = await db
-      .select()
+      .select({
+        id: userPosts.id,
+        slug: userPosts.slug,
+        locale: userPosts.locale,
+        title: userPosts.title,
+        dek: userPosts.dek,
+        symbols: userPosts.symbols,
+        status: userPosts.status,
+        createdAt: userPosts.createdAt,
+        updatedAt: userPosts.updatedAt,
+        submittedAt: userPosts.submittedAt,
+        publishedAt: userPosts.publishedAt,
+      })
       .from(userPosts)
       .where(and(eq(userPosts.userId, userId), eq(userPosts.status, "published")))
       .orderBy(desc(userPosts.publishedAt));
-    return rows.map(toOwnPost).filter((post): post is OwnPost => post !== null);
+    return rows.flatMap(({ status, symbols, ...row }) =>
+      isPostStatus(status) ? [{ ...row, status, symbols: symbolsOf(symbols) }] : [],
+    );
   } catch {
     return [];
   }
@@ -176,19 +202,39 @@ export const getPublishedPostsByUser = cache(async (userId: string): Promise<Own
 
 export type QueuePost = OwnPost & { author: string };
 
-/** Moderasyon kuyruğu — bekleyenler, eskiden yeniye (ilk gelen ilk okunur). */
-export async function getPendingPosts(): Promise<QueuePost[] | null> {
+/** Kuyruğun bir satırı — listede basılan kadarı. */
+export type QueueRow = {
+  id: string;
+  title: string;
+  dek: string;
+  author: string;
+  submittedAt: Date | null;
+};
+
+/**
+ * Moderasyon kuyruğu — bekleyenler, eskiden yeniye (ilk gelen ilk okunur).
+ *
+ * GÖVDE ÇEKİLMİYOR (20 Ekim denetimi). Satırın tamamı okunuyordu: liste
+ * yalnız başlık, giriş, yazar ve saati basarken her bekleyen yazının 40.000
+ * karakterlik gövdesi de Neon'dan geliyordu — bir spam dalgasında (hesap
+ * başına 50 yazı) her kuyruk açılışı megabaytlar demekti. Gövde detayda,
+ * tek yazı için okunuyor (`getPostForReview`). Liste KESİLMİYOR: izdüşüm
+ * küçük ve kuyruğun boyu da moderatör için bilgi.
+ */
+export async function getPendingPosts(): Promise<QueueRow[] | null> {
   try {
-    const rows = await db
-      .select({ post: userPosts, username: users.username })
+    return await db
+      .select({
+        id: userPosts.id,
+        title: userPosts.title,
+        dek: userPosts.dek,
+        author: users.username,
+        submittedAt: userPosts.submittedAt,
+      })
       .from(userPosts)
       .innerJoin(users, eq(users.id, userPosts.userId))
       .where(eq(userPosts.status, "pending"))
       .orderBy(userPosts.submittedAt);
-    return rows.flatMap((row) => {
-      const own = toOwnPost(row.post);
-      return own ? [{ ...own, author: row.username }] : [];
-    });
   } catch {
     return null;
   }

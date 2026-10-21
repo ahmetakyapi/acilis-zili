@@ -146,6 +146,40 @@ fi
 
 npm run build
 
+# VERİ ÖNBELLEĞİ SÜRÜMLER ARASI ORTAK (20 Ekim). Next, `fetch`in
+# `next.revalidate`li yanıtlarını ve `unstable_cache` girdilerini
+# `.next/cache/fetch-cache`e yazıyor (file-system-cache.js: "dağıtımlar
+# arası saklanabilsin diye"). Her sürüm kendi dizininde derlendiği için o
+# dizin her push'ta BOŞ başlıyordu: günde birkaç dağıtımda Finnhub'ın 24
+# saatlik profil/ölçü kayıtları, SEC, FRED, TCMB arşivi ve Claude notları
+# (36 saat – 30 gün) her seferinde soğuktu — ilk dakikalarda Finnhub'ın
+# dakikadaki 60 hakkı birkaç okurla bitiyor, notlar yeniden yazılıyordu.
+#
+# `fetch` anahtarı URL + istekten türüyor, derleme kimliği içermiyor;
+# sağlayıcı kayıtları her derlemede geçerli. `unstable_cache` anahtarı geri
+# çağrının DERLENMİŞ metnini de içeriyor: metin değişirse kayıt ıskalanır
+# (fazladan bir çağrı, yanlış veri değil). Dönen ŞEKİL değişip anahtar aynı
+# kalırsa eski şekil yeni koda gider — keyParts bu yüzden sürümlü
+# ("stock-move-v3"); şekli değiştiren sürümü artırır.
+#
+# Bedeli: `revalidateTag` kaydı süreç belleğinde. Gece işinin geçersiz
+# kıldığı (makro, yatırımcılar, vergi tarifesi) ama arada kimsenin okumadığı
+# bir kayıt yeniden başlatmadan sonra kendi `revalidate` süresi (en çok bir
+# gün) dolana dek geri gelebilir; aynı sürümde yeniden başlatmada da öyleydi.
+#
+# Derlemenin kendi çektiği kayıtlar ortağa taşınır (`-u`: yalnız oradakinden
+# yeniyse) — derlemede basılan sayfalar o veriyle çizildi. Bağın hedefi
+# kökün altında, servisin yazma izni içinde (acilis-zili.service). Disk
+# budaması cron-install.sh'ta.
+shared_cache="$APP_ROOT/shared/fetch-cache"
+mkdir -p "$shared_cache" "$release/.next/cache"
+if [[ -d "$release/.next/cache/fetch-cache" && ! -L "$release/.next/cache/fetch-cache" ]]; then
+	cp -a -u "$release/.next/cache/fetch-cache/." "$shared_cache/" ||
+		warn "derleme önbelleği ortak dizine kopyalanamadı"
+	rm -rf "$release/.next/cache/fetch-cache"
+fi
+ln -sfn "$shared_cache" "$release/.next/cache/fetch-cache"
+
 # `readlink -f` SON BİLEŞENİN VAR OLMASINI İSTEMİYOR: `current` henüz yokken
 # (ilk kurulum) bağın kendi yolunu basıp 0 dönüyordu. Sonuç, sağlık kontrolü
 # geçmeyen bir ilk dağıtımda `current`ı KENDİNE bağlamaktı — ELOOP, servis
