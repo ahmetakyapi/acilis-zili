@@ -13,9 +13,9 @@ import { type Dictionary, type Locale } from "@/lib/i18n";
  * biri locale başına 30 saniyede en çok bir kez yükler. Gerekçe
  * `loadSharedDayFlow`.
  */
-export async function RailSection({ t, locale, heading }: { t: Dictionary; locale: Locale; heading: React.ReactNode }) {
+export async function RailSection({ t, locale, heading, otherHeadings }: { t: Dictionary; locale: Locale; heading: React.ReactNode; otherHeadings?: { past: React.ReactNode; future: React.ReactNode } }) {
   const session = await auth();
   const userId = session?.user?.id;
   const initial = await (userId ? loadDayFlow(locale, userId) : loadSharedDayFlow(locale)).catch(() => null);
-  return <DayFlowLoader key={locale} initial={initial} locale={locale} labels={t.dayFlow} railLabels={t.dayRail} heading={heading} />;
+  return <DayFlowLoader key={locale} initial={initial} locale={locale} labels={t.dayFlow} railLabels={t.dayRail} heading={heading} otherHeadings={otherHeadings} />;
 }

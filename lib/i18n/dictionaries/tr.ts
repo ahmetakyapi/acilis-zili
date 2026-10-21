@@ -315,6 +315,12 @@ const tr = {
     experienceNews: "Haber Akışı",
     experienceIndexNote: "ABD Endekslerini İzleyen Fonlar",
     experienceFlowNote: "Veriler, bilançolar ve seansın dönüm noktaları.",
+    /* Gün akışında okla başka güne geçilince başlık (21 Ekim): "Bugünün
+       Akışı" dünü gösterirken yanlış söylüyordu; tarih kapsülde yazılı. */
+    pastFlow: "Geride Kalan Gün",
+    pastFlowNote: "Seçtiğin günün verileri, bilançoları ve sonuçları.",
+    futureFlow: "Yaklaşan Gün",
+    futureFlowNote: "Seçtiğin gün için planlanan veriler ve bilançolar.",
     title: "Bugün",
     briefTitle: "Günün Özeti",
     briefWeeklyTitle: "Haftanın Özeti",

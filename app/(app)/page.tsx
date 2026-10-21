@@ -119,12 +119,19 @@ export default async function TodayPage() {
      ekseni okuyor — `sessionDomain`, gerekçe index-feed.ts'te. */
   const rail = sessionDomain(status);
   const tags = zoneTag(locale);
-  const flowHeading = (
+  const flowHeadingOf = (title: string, note: string) => (
     <div className={styles.sectionHeading}>
-      <h2>{t.today.todayFlow}</h2>
-      <p>{t.today.experienceFlowNote}</p>
+      <h2>{title}</h2>
+      <p>{note}</p>
     </div>
   );
+  const flowHeading = flowHeadingOf(t.today.todayFlow, t.today.experienceFlowNote);
+  /* Okla açılan başka günün başlıkları da sunucuda, aynı kalıpta çizilir;
+     istemci yalnız hangisinin görüneceğini seçer (DayFlow → `headings`). */
+  const flowHeadings = {
+    past: flowHeadingOf(t.today.pastFlow, t.today.pastFlowNote),
+    future: flowHeadingOf(t.today.futureFlow, t.today.futureFlowNote),
+  };
   const sessionState =
     status.session === "regular" ? "regular" : status.session === "closed" ? "closed" : "extended";
   /* Kahramanın zili seansı anlatıyor: kapalıyken uyukluyor, ön ve akşam
@@ -323,7 +330,7 @@ export default async function TodayPage() {
             </>
           }
         >
-          <RailSection t={t} locale={locale} heading={flowHeading} />
+          <RailSection t={t} locale={locale} heading={flowHeading} otherHeadings={flowHeadings} />
         </Suspense>
       </section>
 

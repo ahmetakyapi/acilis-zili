@@ -20,6 +20,8 @@ type Props = {
   railLabels: Dictionary["dayRail"];
   /** Bölümün başlığı (sunucuda çizilir) — künye satırının solunda durur. */
   heading?: ReactNode;
+  /** Okla açılan geçmiş/gelecek günün başlığı — sunucuda aynı kalıpla çizilir. */
+  otherHeadings?: { past: ReactNode; future: ReactNode };
 };
 const minutesOf = (time: string) => { const [h, m] = time.split(":").map(Number); return h * 60 + m; };
 /** Okla açılan günlerin oturum içi notu en çok bu kadar gün tutar. */
@@ -124,7 +126,7 @@ function MemberList({ members, scheduledAt, nowMs, labels, openEventId, onEngage
   </>;
 }
 
-export function DayFlow({ initial, locale, labels, railLabels, heading }: Props) {
+export function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings }: Props) {
   const [snapshot, setSnapshot] = useState(initial);
   const [nowMs, setNowMs] = useState(() => new Date(initial.asOf).getTime());
   /* `null` = seçim OTOMATİK (sıradaki olay açık); `allClosed` = okuyucu açık
@@ -433,7 +435,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
         başlamadan önce 120 piksel. Geniş ekranda ikisi yan yana, başlık
         solda künye sağda; dar ekranda eskisi gibi alt alta. */}
     <div className={styles.toolbar}>
-      {heading && <div className={styles.heading}>{heading}</div>}
+      {heading && <div className={styles.heading}>{viewingToday || !otherHeadings ? heading : shown.dateEt < shown.today ? otherHeadings.past : otherHeadings.future}</div>}
       <div className={styles.toolbarMeta}>
       {/* GÜN SEÇİCİ (21 Ekim): tarih iki okun arasında; ok yoksa (pencerenin
           ucu) düğme pasif kalır, yer değiştirmez. */}
