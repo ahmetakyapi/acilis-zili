@@ -108,7 +108,13 @@ export function AppShell({
      `usePathname()` yeniden yazılmış yolu (`/piyasalar`) veriyor: canlı /en
      HTML'inde kabuğun bütün bağlantıları öneksiz geliyordu (curl ile
      görüldü). Hidrasyon öznitelik farkını düzeltmediği için bağlantılar
-     tarayıcıda da öyle kalıyordu. */
+     tarayıcıda da öyle kalıyordu.
+
+     Bu düzeltme 20 Ekim'e kadar İŞLEMİYORDU: bağlantılar `LocaleLink`ten
+     geçiyor ve o, dili sunucuda yine adresten okuyup `withLocale(href, "tr")`
+     ile buradaki `/en` önekini siliyordu. Kanca artık önek yoksa kök düzenin
+     dilini kullanıyor (`LocaleProvider`); `L` yine de kalıyor, kabuk dili
+     zaten prop olarak taşıyor. */
   const L = (path: string) => withLocale(path, locale);
 
   /* Alt çubuk: Piyasa · Bilanço · Mercek · Menü.

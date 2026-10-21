@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   MIN_COMPONENTS,
   MIN_HISTORY,
+  breadthCounts,
   breadthReading,
   deviationFromAverage,
   fearLevelReading,
@@ -17,6 +18,7 @@ import {
   type DatedValue,
   type SentimentReading,
 } from "../lib/sentiment";
+import { getMarketStatus } from "../lib/market-hours";
 
 /**
  * Piyasa Nabzı'nın kuralları — ekranda "nasıl hesaplandı" diye yazdığımız
@@ -105,4 +107,34 @@ test("bantlar", () => {
   assert.equal(sentimentBand(50).key, "neutral");
   assert.equal(sentimentBand(55).key, "greed");
   assert.equal(sentimentBand(100).key, "extremeGreed");
+});
+
+test("genişlik açılış öncesinde dünün yüzdesini bugünün okumasına katmaz", () => {
+  // Salı 05:00 ET (12:00 TR): ön seans, anlatılan seans bugün.
+  const status = getMarketStatus(new Date("2026-10-20T09:00:00Z"));
+  assert.equal(status.session, "pre-market");
+  assert.equal(status.sessionDate, "2026-10-20");
+  const yesterday = new Date("2026-10-19T19:59:00Z");
+  const thisMorning = new Date("2026-10-20T08:55:00Z");
+  const symbols = Array.from({ length: 10 }, (_, i) => `S${i}`);
+  // Dokuzu dün düştü ve bugün henüz işlem görmedi; biri bu sabah yükseldi.
+  const quotes = Object.fromEntries(symbols.map((symbol, i) => [symbol, i === 0
+    ? { changePct: 1.2, tradedAt: thisMorning }
+    : { changePct: -2, tradedAt: yesterday }]));
+  assert.deepEqual(breadthCounts(symbols, quotes, status), { advancing: 1, known: 1 });
+  // Kapsam eşiğin altında: bileşen düşer, dünün %10'u bugünün tarihiyle basılmaz.
+  assert.equal(breadthReading(1, 1, symbols.length, status.sessionDate), null);
+});
+
+test("genişlik seans içinde bilinmeyen değişimi saymaz, işlem anı olmayanı da", () => {
+  const status = getMarketStatus(new Date("2026-10-20T15:00:00Z"));
+  assert.equal(status.session, "regular");
+  const now = new Date("2026-10-20T14:58:00Z");
+  const quotes = {
+    A: { changePct: 0.5, tradedAt: now },
+    B: { changePct: -0.5, tradedAt: now },
+    C: { changePct: null, tradedAt: now },
+    D: { changePct: 1, tradedAt: null },
+  };
+  assert.deepEqual(breadthCounts(["A", "B", "C", "D", "E"], quotes, status), { advancing: 1, known: 2 });
 });

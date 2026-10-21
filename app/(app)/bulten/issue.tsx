@@ -24,7 +24,10 @@ import { BriefArchiveView } from "./BriefArchiveView";
  */
 async function loadIssue(tarih: string, period: BriefPeriod, locale: Locale) {
   if (!BRIEF_DATE.test(tarih)) return null;
-  const rows = await getBriefIssue(tarih, period);
+  /* OKUNAMAYAN sayı 404 değil (20 Ekim): okuma hatası hata sınırına gider,
+     yalnız gerçekten olmayan sayı 404 — gerekçe `lib/data.ts` →
+     `ReadOptions`. Künye ve gövde ikisi de buradan geçiyor. */
+  const rows = await getBriefIssue(tarih, period, { throwOnError: true });
   const brief = rows.find((row) => row.locale === locale) ?? rows[0];
   if (!brief) return null;
   const locales = rows.map((row) => row.locale).filter(isLocale);

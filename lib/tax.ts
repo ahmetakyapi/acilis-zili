@@ -277,7 +277,11 @@ export function matchFifo(trades: readonly TradeInput[]): {
       continue;
     }
     let toSell = trade.quantity;
-    while (toSell > 0 && queue.length > 0) {
+    /* Döngü de artığı sıfır sayıyor (20 Ekim): `> 0` iken 0,3'lük partiden
+       0,1 + 0,2 satışında kalan 2,8e-17 sıradaki partiden "satılıyor",
+       adedi 0 görünen hayalet bir satır ve fazladan bir Yİ-ÜFE ayı
+       çıkıyordu. */
+    while (toSell > QUANTITY_EPSILON && queue.length > 0) {
       const head = queue[0];
       const take = Math.min(head.remaining, toSell);
       lots.push({

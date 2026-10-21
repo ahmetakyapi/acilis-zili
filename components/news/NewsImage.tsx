@@ -58,6 +58,7 @@ export function NewsImage({
   logoUrl,
   className,
   sizeClass = "size-20",
+  priority = false,
 }: {
   src?: string | null;
   /**
@@ -68,6 +69,14 @@ export function NewsImage({
   logoUrl?: string | null;
   className?: string;
   sizeClass?: string;
+  /**
+   * Görsel ilk ekranda ve büyükse (haber detayının 16:9 görseli, sayfanın
+   * olası LCP öğesi): tembel değil, yüksek öncelikle iner. `lazy` isteği
+   * yerleşim görünürlüğü doğrulayana kadar erteliyor ve ön yükleme
+   * tarayıcısının dışında bırakıyordu (20 Ekim). Listeler ve ana sayfa
+   * kartı tembel kalır — ana sayfada kart zil ve sayacın altında.
+   */
+  priority?: boolean;
 }) {
   const [broken, setBroken] = useState<readonly string[]>([]);
   const fail = useCallback(
@@ -115,7 +124,8 @@ export function NewsImage({
           ref={watch(src)}
           src={src}
           alt=""
-          loading="lazy"
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : undefined}
           onError={() => fail(src)}
           className="block size-full object-cover"
         />

@@ -3,7 +3,7 @@ import { and, asc, gte, lte } from "drizzle-orm";
 import { checkBearer } from "@/lib/api-auth";
 import { db } from "@/lib/db";
 import { dailyBriefs } from "@/lib/schema";
-import { BRIEF_DATE } from "@/lib/brief";
+import { isIsoDay } from "@/lib/date-input";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 
 /**
@@ -26,8 +26,8 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const toParam = url.searchParams.get("to");
   const fromParam = url.searchParams.get("from");
-  const to = toParam && BRIEF_DATE.test(toParam) ? toParam : todayEt();
-  const from = fromParam && BRIEF_DATE.test(fromParam) ? fromParam : addEtDays(to, -DEFAULT_SPAN);
+  const to = toParam && isIsoDay(toParam) ? toParam : todayEt();
+  const from = fromParam && isIsoDay(fromParam) ? fromParam : addEtDays(to, -DEFAULT_SPAN);
   if (from > to || from < addEtDays(to, -MAX_SPAN)) {
     return NextResponse.json(
       { error: "invalid-range", detail: `from ≤ to ve aralık en çok ${MAX_SPAN} gün` },

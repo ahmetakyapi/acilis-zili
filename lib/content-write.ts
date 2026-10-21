@@ -1,10 +1,12 @@
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { and, desc, eq, lt } from "drizzle-orm";
 import { dailyBriefs, stories, storyRevisions } from "@/lib/schema";
 import { todayEt } from "@/lib/market-hours";
 import { weekAnchor } from "@/lib/data";
-import { isLocale } from "@/lib/i18n/config";
+import { LOCALES } from "@/lib/i18n/config";
+import { isIsoDay } from "@/lib/date-input";
 
 /**
  * İçeriğin TEK yazma yolu — hem rutin hem panel buradan geçer.
@@ -28,6 +30,43 @@ const SourceSchema = z.object({
   url: z.string().trim().url().max(500).optional(),
 });
 
+/**
+ * Dil DOĞRULANIR, "tr"ye ÇEVRİLMEZ (20 Ekim denetimi). Alan serbest dizeydi
+ * ve yazma yolu tanımadığı her değeri "tr" sayıyordu: rutinin "EN" ya da
+ * "en-US" diye gönderdiği çeviri TÜRKÇE satırın üzerine yazılıyor, yanıt
+ * yine `ok: true, locale: "tr"` diyordu. Büyük/küçük harf ve boşluk
+ * hoşgörülüyor (model kaçamağı); başka her değer 400 `invalid-body` —
+ * rutin o yanıttan kendini düzeltiyor. Varsayılan "tr" yalnızca alan
+ * YOKKEN. Bilanço ucu (`app/api/analiz`) aynı şemayı kullanıyor.
+ */
+export const localeInputSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .pipe(z.enum(LOCALES));
+
+/**
+ * Takvim günü — biçim DE gün DE denetlenir (20 Ekim denetimi). Yalnız
+ * `\d{4}-\d{2}-\d{2}` aranıyordu: "2026-09-31" geçip Postgres'in `date`
+ * sütununda düşüyor, rutin gerekçesiz bir 500 alıyordu; haftalık bültende
+ * "2026-02-30" ise sessizce 2 Mart haftasına çapalanıyordu.
+ *
+ * GÖVDE VE SORGU TEK KURAL: `isIsoDay` (lib/date-input.ts — saf modül,
+ * tarih seçici de onu kullanıyor). Bülten uçlarının sorgu parametresi
+ * (`/api/brief`, `/list`, `/context`) yalnız `BRIEF_DATE` ile
+ * denetleniyordu: "2026-02-30" `weekAnchor`da 2 Mart haftasına
+ * yuvarlanıyor, "2026-13-01" `toISOString`te RangeError'la 500 veriyordu.
+ * Onlar için `lib/brief.ts`te açılan ayrı bir `isIsoDate` üçüncü bir gün
+ * denetimi olmuştu ve `z.iso.date()` gibi "0000-01-01"i de geçiriyordu —
+ * Postgres `date`inde sıfır yılı yok, yine 500. Kaldırıldı; `isIsoDay`
+ * yılı 1900–2999'a bağlıyor. `when`: biçim zaten düştüyse yıl iletisi
+ * ikinci, yanıltıcı bir hata olarak eklenmesin.
+ */
+export const isoDateSchema = z.iso.date().refine(isIsoDay, {
+  message: "yıl 1900–2999 aralığında olmalı",
+  when: (payload) => payload.issues.length === 0,
+});
+
 export const storyInputSchema = z.object({
   /** URL'de görünen kimlik: küçük harf, tire. "leopold-tasfiyesi" gibi. */
   slug: z
@@ -40,12 +79,9 @@ export const storyInputSchema = z.object({
   /** Başlığın altındaki tek cümlelik giriş. */
   dek: z.string().trim().min(1).max(400),
   body_md: z.string().trim().min(200).max(40000),
-  /** Olayın yaşandığı gün (ET). Boşsa bugün. */
-  event_date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .optional(),
-  locale: z.string().optional(),
+  /** Olayın yaşandığı gün (ET). Boşsa kayıttaki gün, kayıt yoksa bugün. */
+  event_date: isoDateSchema.optional(),
+  locale: localeInputSchema.optional(),
   symbols: z.array(z.string().trim().min(1).max(12)).max(12).optional(),
   sources: z.array(SourceSchema).max(20).optional(),
 });
@@ -58,7 +94,8 @@ export const STORY_INPUT_SHAPE = {
   title: "string (≤160)",
   dek: "string (≤400) — tek cümlelik giriş",
   body_md: "markdown (200-40000)",
-  event_date: "YYYY-MM-DD (opsiyonel, varsayılan bugün ET)",
+  event_date:
+    "YYYY-MM-DD (opsiyonel; yoksa var olan kaydın günü, yeni yazıda bugün ET)",
   locale: "tr | en (opsiyonel, varsayılan tr)",
   symbols: "['NVDA', 'MU'] (opsiyonel)",
   sources: "[{ label, url }] (opsiyonel)",
@@ -144,25 +181,41 @@ export function briefRevisionKey(date: string, period: BriefPeriodInput) {
 }
 
 /**
+ * Panelin sürüm denetimi tutmadı: editör açıkken kayda başkası yazmış.
+ *
+ * NEDEN VAR (20 Ekim denetimi): panel kaydı, editörün açıldığı hâle
+ * bakmadan upsert ediyordu. Mercek rutini aynı slug'ı güncelleyebiliyor
+ * (11:30 ve 23:30) ve aynı kayıt iki sekmede açık olabiliyor; 23:20'de
+ * açılmış editörden yapılan bir yazım düzeltmesi rutinin 23:30 güncellemesini
+ * sessizce geri alıyordu. Moderasyondaki `seen` denetiminin aynısı. Denetim
+ * yalnız panel girişinde (`beklenen` verilince) — rutinin sözleşmesi
+ * "aynı slug üzerine yazar" olarak kalıyor.
+ */
+export class SurumCakismasi extends Error {
+  constructor() {
+    super("content-version-conflict");
+    this.name = "SurumCakismasi";
+  }
+}
+
+/**
  * Mercek yazısını yazar ya da üstüne yazar.
  *
  * `generatedBy` YALNIZCA İLK YAZIMDA konuyor: panelden yapılan bir düzeltme
  * künyeyi değiştirmemeli — yazıyı yine rutin yazdı, insan yalnızca elden
  * geçirdi. Upsert'ün `set` bloğunda o alan yok.
+ *
+ * `beklenen`: editörün açtığı hâlin `updatedAt`i (ISO) — gerekçe
+ * `SurumCakismasi`nda. KARŞILAŞTIRMA JS'TE: ilk yazımın damgası
+ * `defaultNow()`dan mikrosaniyeyle geliyor, Drizzle milisaniyeye kırpıyor;
+ * SQL'de `updated_at = $1` hiç tutmazdı.
  */
-export async function saveStory(input: StoryInput, source: WriteSource) {
-  const locale = isLocale(input.locale) ? input.locale : "tr";
-  const values = {
-    slug: input.slug,
-    locale,
-    title: input.title,
-    dek: input.dek,
-    bodyMd: input.body_md,
-    eventDate: input.event_date ?? todayEt(),
-    symbols: input.symbols?.map((symbol) => symbol.toUpperCase()) ?? null,
-    sources: input.sources ?? null,
-    readMinutes: readingMinutes(input.body_md),
-  };
+export async function saveStory(
+  input: StoryInput,
+  source: WriteSource,
+  beklenen?: string,
+) {
+  const locale = input.locale ?? "tr";
 
   /* ÜZERİNE YAZMADAN ÖNCE FOTOĞRAF. Upsert gövdeyi geçmişsiz eziyordu ve
      panelden düzenleme açıldığı anda bu bir kayıp riski oldu. Fotoğraf
@@ -172,12 +225,43 @@ export async function saveStory(input: StoryInput, source: WriteSource) {
 
      İÇERİK DEĞİŞMEDİYSE FOTOĞRAF YOK: rutin aynı metni yeniden gönderdiğinde
      (sık oluyor) geçmiş birbirinin aynı on satırla dolar ve gerçek bir
-     önceki sürüm listeden düşerdi. */
-  const [mevcut] = await db
+     önceki sürüm listeden düşerdi.
+
+     SLUG'IN İKİ DİLİ BİRDEN okunuyor (20 Ekim): olay tarihi gelmezse gün
+     kayıttan alınıyor — aşağıda. */
+  const satirlar = await db
     .select()
     .from(stories)
-    .where(and(eq(stories.slug, values.slug), eq(stories.locale, locale)))
-    .limit(1);
+    .where(eq(stories.slug, input.slug));
+  const mevcut = satirlar.find((row) => row.locale === locale);
+
+  if (
+    beklenen !== undefined &&
+    (mevcut?.updatedAt?.toISOString() ?? "") !== beklenen
+  ) {
+    throw new SurumCakismasi();
+  }
+
+  const values = {
+    slug: input.slug,
+    locale,
+    title: input.title,
+    dek: input.dek,
+    bodyMd: input.body_md,
+    /* TARİH GELMEZSE KAYDIN GÜNÜ KALIR (20 Ekim denetimi). "Boşsa bugün"
+       yeni yazı için doğru; ama değer upsert'ün `set`ine de gidiyordu ve
+       tarihsiz gelen bir güncelleme ya da İngilizce çeviri, 2 Eylül'ün
+       yazısını arşivde bugüne taşıyordu. Sıra: bu dilin satırı, öteki dilin
+       satırı (çeviri aynı olayı anlatır), en son bugün. */
+    eventDate:
+      input.event_date ??
+      mevcut?.eventDate ??
+      satirlar[0]?.eventDate ??
+      todayEt(),
+    symbols: input.symbols?.map((symbol) => symbol.toUpperCase()) ?? null,
+    sources: input.sources ?? null,
+    readMinutes: readingMinutes(input.body_md),
+  };
 
   const degisti =
     mevcut &&
@@ -199,7 +283,7 @@ export async function saveStory(input: StoryInput, source: WriteSource) {
       set: { ...values, updatedAt: new Date() },
     });
 
-  return { slug: values.slug, locale };
+  return { slug: values.slug, locale, eventDate: values.eventDate };
 }
 
 /* --------------------------------------------------------------------------
@@ -218,12 +302,9 @@ export async function saveStory(input: StoryInput, source: WriteSource) {
 export const briefInputSchema = z.object({
   headline: z.string().trim().min(1).max(200),
   body_md: z.string().trim().min(1).max(8000),
-  locale: z.string().optional(),
+  locale: localeInputSchema.optional(),
   /** "YYYY-MM-DD" (ET). Boşsa bugünün ET tarihi. */
-  date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .optional(),
+  date: isoDateSchema.optional(),
   /**
    * "daily" | "weekly". Haftalıkta `date` dönemin PAZARTESİsi olmalı —
    * /api/brief/context yanıtındaki `brief_date` alanı zaten onu veriyor.
@@ -242,6 +323,18 @@ export const BRIEF_INPUT_SHAPE = {
   date: "YYYY-MM-DD (opsiyonel, varsayılan bugünün ET tarihi)",
   period: "daily | weekly (opsiyonel, varsayılan daily)",
 } as const;
+
+/**
+ * Bülten satırının sürüm imi — panelin sürüm denetimi bununla.
+ *
+ * DAMGA DEĞİL İÇERİK ÖZETİ (20 Ekim): `generatedAt` panel düzeltmesinde
+ * ilerlemiyor (aşağıda, `saveBrief`) ve ayrı bir `updated_at` migration
+ * isterdi. Manşet ile gövdenin özeti, değişen her şeyi yakalıyor; editöre
+ * 8000 karakterlik gövdenin ikinci kopyası yerine 64 karakter gidiyor.
+ */
+export function briefSurumu(headline: string, bodyMd: string): string {
+  return createHash("sha256").update(`${headline}\0${bodyMd}`).digest("hex");
+}
 
 /**
  * Bülteni yazar ya da üstüne yazar.
@@ -268,9 +361,16 @@ export const BRIEF_INPUT_SHAPE = {
  * sürümün `replacedAt`inde duruyor ve editör başlığı onu ayrıca yazıyor
  * ("Panelde Düzeltildi"). Ayrı bir `updated_at` sütunu yeni bir migration
  * isterdi; aynı bilgi zaten o tabloda.
+ *
+ * `beklenen`: editörün açtığı hâlin `briefSurumu` özeti — gerekçe
+ * `SurumCakismasi`nda.
  */
-export async function saveBrief(input: BriefInput, source: WriteSource) {
-  const locale = isLocale(input.locale) ? input.locale : "tr";
+export async function saveBrief(
+  input: BriefInput,
+  source: WriteSource,
+  beklenen?: string,
+) {
+  const locale = input.locale ?? "tr";
   const period: BriefPeriodInput = input.period ?? "daily";
   const briefDate =
     period === "weekly"
@@ -288,6 +388,13 @@ export async function saveBrief(input: BriefInput, source: WriteSource) {
       ),
     )
     .limit(1);
+
+  if (
+    beklenen !== undefined &&
+    (mevcut ? briefSurumu(mevcut.headline, mevcut.bodyMd) : "") !== beklenen
+  ) {
+    throw new SurumCakismasi();
+  }
 
   /* İÇERİK DEĞİŞMEDİYSE FOTOĞRAF YOK: rutin aynı metni yeniden gönderdiğinde
      geçmiş birbirinin aynı on satırla dolar ve gerçek bir önceki sürüm

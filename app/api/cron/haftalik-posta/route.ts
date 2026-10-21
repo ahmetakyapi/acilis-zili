@@ -1,7 +1,11 @@
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
+import { and, eq, like } from "drizzle-orm";
 import { checkBearer } from "@/lib/api-auth";
+import { db } from "@/lib/db";
 import { emailConfigured } from "@/lib/email";
-import { enrollWeeklyDefault, sendNotificationEmail, weeklyRecipients } from "@/lib/email-notify";
+import { dailyBudget, enrollWeeklyDefault, sendNotificationEmail, weeklyRecipients } from "@/lib/email-notify";
+import { emailLog } from "@/lib/schema";
 import { getDictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import { refreshEarningsResults } from "@/lib/earnings-refresh";
@@ -28,17 +32,86 @@ import { moversFor, watchedMoves, watchlistNote, watchlistNoteCap, type WatchWee
  * genellikle yok; bölüm yalnız varsa basılıyor.
  *
  * TEKRAR DENENEBİLİR. Her alıcı `weekly:<pazartesi>:<kullanıcı>` anahtarıyla
- * sahiplenilir: ikinci koşu gidenleri atlar, bütçeye takılanları ya da
- * gönderimi düşenleri tamamlar. Takvimin İKİ yarısı da okunamazsa 503 —
- * içi boş posta yerine bir saat sonra yeniden dener.
+ * sahiplenilir: ikinci koşu gidenleri atlar, gönderimi düşenleri tamamlar.
+ * Takvimin İKİ yarısı da okunamazsa 503 — içi boş posta yerine bir saat
+ * sonra yeniden dener.
+ *
+ * BÜTÇEYE TAKILANLAR PAZARTESİ (20 Ekim). Burada "bütçeye takılanları ...
+ * tamamlar" yazıyordu ama günlük bütçe (lib/email-notify.ts → claimSend)
+ * UTC GÜNÜNE göre ve beş pazar koşusu aynı günde: ilk koşu bütçeyi
+ * bitirince sonrakiler ilk alıcıda "budget" alıp hiç ilerlemiyordu, betik
+ * de "kalanlar sonraki saatte" diye yazıyordu; sırasız sorgu yüzünden
+ * dışarıda kalan her hafta aynı üyelerdi. Şimdi:
+ * - Sıra hafta başına karılır (`rotate`): tavana takılan hep aynı üye olmaz.
+ * - Tek adrese gitmeyen HER koşu (pazar, telafi, `zorla`) önce defteri
+ *   okur ve bu haftanın satırı olan alıcıyı listeden düşer (`sentThisWeek`;
+ *   `digestWeek` pazartesi de aynı haftayı, yani aynı anahtarı verir).
+ *   Kimse kalmadıysa pahalı adımlara (tazeleme, takvim, yorum, notlar) hiç
+ *   girmeden `skipped: "complete"` döner. Süzgeç önce yalnız telafideydi:
+ *   pazarın ikinci–beşinci koşusu bütçe ilk alıcıda bitince BÜTÜN listeyi
+ *   `unsent` sayıyordu (120 üye, 80 bütçe → dört kez "120", eksik 40).
+ *   Pazar defteri okuyamazsa süzgeçsiz sürer (`dedupeKey` gideni yine
+ *   atlar); telafi okuyamazsa 503.
+ * - Pazartesi 07:00 UTC TELAFİ koşusu (cron-install.sh) bütçenin EN ÇOK
+ *   YARISINI kullanır: kalanı günün alarm postalarına — alarm bekleyemez,
+ *   özet bekleyebilir. Yeni üye kaydı telafide yapılmaz; ilk özetleri pazar.
+ * - Yanıttaki `unsent` bütçe yüzünden denenmeyen, defterde satırı olmayan
+ *   alıcı sayısı — süzgeç sayesinde her koşuda kesin; betik onu uyarı
+ *   olarak yazar. Kalıcı çözüm bütçeyi büyütmek (EMAIL_DAILY_BUDGET:
+ *   ücretli plan ya da Brevo).
  */
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
+/**
+ * TEK KOŞU KİLİDİ (20 Ekim) — app/api/cron/bilanco/route.ts'teki kilidin
+ * aynısı. Betik `curl --max-time 290 --retry 2` ile çağırıyor; Opus yorumu
+ * (dil başına 90 sn'ye kadar), 60'a kadar not ve gönderim 290 saniyeyi
+ * aşınca curl yeniden deniyor ama ilk istek sunucuda SÜRÜYOR (`maxDuration`
+ * VPS'te uygulanmıyor). Takip notu yalnız `unstable_cache`li — süren çağrıyı
+ * birleştirmiyor — ve ikinci koşu bitmemiş notları yeniden ödüyor, ortak
+ * günlük Claude tavanını hisse notlarının elinden alıyordu; gönderim
+ * döngüleri de yarışıp bütçeyi birkaç posta aşabiliyordu. Uygulama tek
+ * süreç; süreç içi bayrak yeter. Kilitliyken 200 (curl 2xx'i yeniden denemez).
+ */
+let running = false;
+
 export async function GET(request: Request) {
   const auth = checkBearer(request, process.env.CRON_SECRET);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  if (running) return NextResponse.json({ skipped: "running" });
+  running = true;
+  try {
+    return await run(request);
+  } finally {
+    running = false;
+  }
+}
+
+/** Bu haftanın postası defterde olan hesaplar; okunamazsa null. */
+async function sentThisWeek(thisMonday: string): Promise<Set<string> | null> {
+  try {
+    const rows = await db
+      .select({ userId: emailLog.userId })
+      .from(emailLog)
+      .where(and(eq(emailLog.kind, "weekly"), like(emailLog.dedupeKey, `weekly:${thisMonday}:%`)));
+    return new Set(rows.map((row) => row.userId));
+  } catch {
+    return null;
+  }
+}
+
+/** Hafta başına karılmış, haftanın içinde sabit sıra — gerekçe başlıkta. */
+function rotate<T extends { userId: string }>(list: readonly T[], thisMonday: string): T[] {
+  const key = (userId: string) => createHash("sha1").update(`${thisMonday}:${userId}`).digest("hex");
+  return list
+    .map((item) => ({ item, key: key(item.userId) }))
+    .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
+    .map(({ item }) => item);
+}
+
+async function run(request: Request): Promise<NextResponse> {
   if (!emailConfigured()) return NextResponse.json({ skipped: "email-off" });
 
   const now = new Date();
@@ -59,22 +132,46 @@ export async function GET(request: Request) {
      şartı denemeyle aynı. */
   const resendTo = params.get("yeniden")?.trim().toLowerCase() || null;
   const single = testTo ?? resendTo;
-  if (weekday !== 0 && !force && !single) return NextResponse.json({ skipped: "not-sunday" });
+  /* Pazartesi kendiliğinden gelen çağrı TELAFİ koşusu — gerekçe başlıkta. */
+  const catchUp = weekday === 1 && !force && !single;
+  if (weekday !== 0 && !catchUp && !force && !single) return NextResponse.json({ skipped: "not-sunday" });
 
   /* Varsayılan açık: henüz kaydedilmemiş üyeler (yeni kayıtlar dahil) önce
      özete eklenir — gerekçe lib/email-notify.ts → enrollWeeklyDefault. */
-  const enrolled = await enrollWeeklyDefault(now);
+  const enrolled = catchUp ? "skipped" : ((await enrollWeeklyDefault(now)) ?? "failed");
   const all = await weeklyRecipients();
-  const recipients = single && all ? all.filter((r) => r.email.trim().toLowerCase() === single) : all;
-  if (recipients === null) {
+  const chosen = single && all ? all.filter((r) => r.email.trim().toLowerCase() === single) : all;
+  if (chosen === null) {
     console.error("[haftalık posta] alıcılar okunamadı");
     return NextResponse.json({ error: "db" }, { status: 503 });
   }
-  if (recipients.length === 0) return NextResponse.json({ recipients: 0, sent: 0 });
+  const { pastMonday, thisMonday } = digestWeek(now);
+  let recipients = rotate(chosen, thisMonday);
+  let unsent = 0;
+  /* DEFTER SÜZGECİ tek adrese gitmeyen HER koşuda — gerekçe başlıkta. */
+  if (!single) {
+    const sent = await sentThisWeek(thisMonday);
+    if (sent === null) {
+      console.error("[haftalık posta] defter okunamadı");
+      /* Telafi kimin eksik olduğunu bilmeden bütçeye girmez. Pazar (ve
+         `zorla`) süzgeçsiz sürer: `dedupeKey` gideni yine atlar, defter
+         okunamadı diye haftanın ilk gönderimi durmaz. */
+      if (catchUp) return NextResponse.json({ error: "db" }, { status: 503 });
+    } else {
+      const missing = recipients.filter((r) => !sent.has(r.userId));
+      if (missing.length === 0) return NextResponse.json({ skipped: "complete", recipients: recipients.length });
+      recipients = missing;
+    }
+    if (catchUp) {
+      const capped = recipients.slice(0, Math.floor(dailyBudget() / 2));
+      unsent = recipients.length - capped.length;
+      recipients = capped;
+    }
+  }
+  if (recipients.length === 0) return NextResponse.json({ recipients: 0, sent: 0, unsent });
 
-  /* Sonraki saatlik koşular da tazeler: beş istek, ve ilk koşuda sağlayıcı
-     düştüyse ikinci koşu boşluğu kapatır. */
-  const { pastMonday } = digestWeek(now);
+  /* Eksik alıcı kaldıkça sonraki saatlik koşular da tazeler: beş istek, ve
+     ilk koşuda sağlayıcı düştüyse ikinci koşu boşluğu kapatır. */
   const refreshed = await refreshEarningsResults(pastMonday, addEtDays(pastMonday, 4));
   if (!refreshed.ok) console.error("[haftalık posta] bilanço gerçekleşenleri tazelenemedi");
 
@@ -125,7 +222,7 @@ export async function GET(request: Request) {
   const counts = { sent: 0, duplicate: 0, failed: 0, skipped: 0 };
   let budgetHit = false;
 
-  for (const recipient of recipients) {
+  for (const [index, recipient] of recipients.entries()) {
     const data = digests.get(recipient.locale)!;
     const personal = personalOf(recipient, data);
     const copy = getDictionary(recipient.locale).emailNotify;
@@ -143,6 +240,7 @@ export async function GET(request: Request) {
     else if (result === "failed") counts.failed += 1;
     else if (result === "budget") {
       budgetHit = true;
+      unsent += recipients.length - index;
       break;
     } else counts.skipped += 1;
   }
@@ -150,8 +248,10 @@ export async function GET(request: Request) {
   return NextResponse.json({
     recipients: recipients.length,
     ...counts,
+    unsent,
     budget: budgetHit ? "exhausted" : "ok",
+    catchUp,
     earningsRefreshed: refreshed.ok ? refreshed.rows : "failed",
-    enrolled: enrolled ?? "failed",
+    enrolled,
   });
 }

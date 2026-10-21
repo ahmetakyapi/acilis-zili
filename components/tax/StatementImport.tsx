@@ -104,6 +104,11 @@ export function StatementImport({
   const L = labels.import;
   const reduced = useMotionPreference();
   const [password, setPassword] = useState<string | undefined>(undefined);
+  /* Her "Kilidi Aç" yeni bir deneme (20 Ekim): yanlış şifreden sonra aynı
+     şifre yeniden gönderilince `setPassword` aynı dizeyi görüp güncellemeyi
+     atlıyor, okuma etkisi hiç koşmuyor ve ekran vazgeçme düğmesi olmayan
+     "okunuyor" hâlinde kalıyordu. Etki bu sayaca da bağlı. */
+  const [attempt, setAttempt] = useState(0);
   const [draft, setDraft] = useState("");
   const [phase, setPhase] = useState<Phase>({ kind: "reading", file: files[0]?.name ?? "", page: 0, pages: 0 });
   const [broker, setBroker] = useState<Broker | null>(null);
@@ -198,7 +203,7 @@ export function StatementImport({
     return () => {
       cancelled = true;
     };
-  }, [files, password, today, L, locale]);
+  }, [files, password, attempt, today, L, locale]);
 
   const selectedTrades = trades.filter((t) => t.selected);
   const selectedDividends = dividends.filter((d) => d.selected);
@@ -265,6 +270,7 @@ export function StatementImport({
               event.preventDefault();
               setPhase({ kind: "reading", file: files[0]?.name ?? "", page: 0, pages: 0 });
               setPassword(draft);
+              setAttempt((n) => n + 1);
             }}
           >
             <h3 id="ekstre-baslik" className={styles.importTitle}>{L.passwordTitle}</h3>

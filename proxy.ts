@@ -20,13 +20,20 @@ import { LOCALE_HEADER, splitLocale, withLocale } from "@/lib/i18n/routing";
  *
  * 2. OTURUM ÖN ELEMESİ. Yalnızca çerezin VARLIĞINA bakar — ucuz bir kapı.
  *    Gerçek doğrulama sayfa ve server action'larda `auth()` ile yapılır.
+ *    Tek yönlü (20 Ekim): çerezi OLMAYANI korumalı sayfadan girişe yollar,
+ *    çerezi OLANI giriş sayfalarından geri çevirmez. Geri çeviriyordu ve
+ *    ölü çerez (şifre başka cihazda değişti, sıfırlandı, hesap silindi,
+ *    AUTH_SECRET döndü) tarayıcıdan hiç silinmediği için (auth.ts →
+ *    `session` notu) okuyucu 180 gün boyunca o cihazda giriş yapamıyordu:
+ *    başlık "Giriş Yap" diyor, /giris ana sayfaya atıyordu. "Zaten girmiş"
+ *    yönlendirmesi artık sayfada, gerçek `auth()` ile.
  */
 
-/** Dil çerezinin ömrü — `app/actions/preferences.ts` ile aynı. */
+/** Dil çerezinin ömrü — `components/layout/preference-controls.tsx` →
+    `writePreference` ile aynı (tercih eylemleri 20 Ekim'de kalktı). */
 const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 const PROTECTED = ["/favoriler", "/ayarlar", "/portfoy"];
-const AUTH_ROUTES = ["/giris", "/kayit", "/sifremi-unuttum"];
 
 /* `/admin` BİLEREK BU LİSTEDE DEĞİL. Buradaki koruma girişe yönlendiriyor ve
    "giriş yap, sonra /admin'e devam edeceksin" demek, olmayan bir kapının VAR
@@ -64,12 +71,11 @@ export function proxy(request: NextRequest) {
 
   if (!signedIn && PROTECTED.some((route) => path.startsWith(route))) {
     const url = new URL(`${prefix}/giris`, request.url);
-    url.searchParams.set("devam", `${prefix}${path}`);
+    /* SORGU DA TAŞINIR (20 Ekim): misafirin "Portföye Ekle"si
+       `/portfoy?ekle=NVDA`; `devam` yalnız yolu taşıyınca giriş sonrası
+       sembol kayboluyordu. Değeri yine `safeRedirectTarget` doğruluyor. */
+    url.searchParams.set("devam", `${prefix}${path}${request.nextUrl.search}`);
     return NextResponse.redirect(url);
-  }
-
-  if (signedIn && AUTH_ROUTES.some((route) => path.startsWith(route))) {
-    return NextResponse.redirect(new URL(prefix || "/", request.url));
   }
 
   if (!locale) {

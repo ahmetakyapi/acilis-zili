@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { and, desc, eq } from "drizzle-orm";
 import { checkBearer, type AuthOutcome } from "@/lib/api-auth";
 import { db } from "@/lib/db";
 import { dailyBriefs, storyRevisions } from "@/lib/schema";
 import { isLocale } from "@/lib/i18n/config";
 import { weekAnchor } from "@/lib/data";
-import { BRIEF_DATE } from "@/lib/brief";
+import { isIsoDay } from "@/lib/date-input";
 import {
   BRIEF_INPUT_SHAPE,
   briefInputSchema,
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
   const dateParam = url.searchParams.get("date");
   const localeParam = url.searchParams.get("locale");
   const period = url.searchParams.get("period") === "weekly" ? "weekly" : "daily";
-  if (!dateParam || !BRIEF_DATE.test(dateParam)) {
+  if (!dateParam || !isIsoDay(dateParam)) {
     return NextResponse.json(
       { error: "missing-params", detail: "?date=YYYY-MM-DD zorunlu; locale=tr|en, period=daily|weekly opsiyonel. Liste: /api/brief/list" },
       { status: 400 },
@@ -101,12 +102,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
+  /* `detail`: hangi alanın düştüğü (20 Ekim). Şema artık takvimde olmayan
+     günü ve tanınmayan dili de reddediyor; "2026-09-31" `expected`taki
+     "YYYY-MM-DD" biçimini zaten tutuyor, sorun listesi olmadan rutin neyi
+     düzelteceğini göremiyordu. Biçim `/api/mercek` ile aynı. */
   let parsed;
   try {
     parsed = briefInputSchema.parse(await request.json());
-  } catch {
+  } catch (error) {
     return NextResponse.json(
-      { error: "invalid-body", expected: BRIEF_INPUT_SHAPE },
+      {
+        error: "invalid-body",
+        detail: error instanceof z.ZodError ? error.issues : undefined,
+        expected: BRIEF_INPUT_SHAPE,
+      },
       { status: 400 },
     );
   }

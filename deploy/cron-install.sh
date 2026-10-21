@@ -18,7 +18,19 @@ LINES=(
 	"*/5 * * * * /bin/bash $APP_ROOT/current/deploy/cron-alerts.sh"
 	"20 16 * * * /bin/bash $APP_ROOT/current/deploy/cron-bilanco.sh"
 	"0 7-11 * * 0 /bin/bash $APP_ROOT/current/deploy/cron-weekly-mail.sh"
+	# Pazar özetinin telafisi: pazar bütçeye takılanlar (20 Ekim — gerekçe
+	# app/api/cron/haftalik-posta/route.ts). Alarm taraması ön seansla
+	# (08:00 UTC'den sonra) başlamadan önce.
+	"0 7 * * 1 /bin/bash $APP_ROOT/current/deploy/cron-weekly-mail.sh"
 	"35 5,11,17 * * * /bin/bash $APP_ROOT/current/deploy/cron-news.sh"
+	# Ortak veri önbelleğinin budaması (20 Ekim — gerekçe update.sh). Next
+	# diskteki kaydı hiç silmiyor; sürüm dizinleri budanırken önbellek de
+	# gidiyordu, ortak dizinde biriken tarihli adresler (gün başlangıçlı
+	# barlar, haber pencereleri) artık kendiliğinden gitmiyor. Kayıt her
+	# tazelemede yeniden yazılıyor, yani mtime son yazım; 31 gün en uzun
+	# `revalidate`in (30 gün: haber ve veri notu, TCMB arşivi) ötesi — daha
+	# kısası taze notu silip fazladan Claude çağrısı yaptırır.
+	"50 4 * * * /usr/bin/find $APP_ROOT/shared/fetch-cache -type f -mtime +31 -delete"
 )
 # EMEKLİ SATIRLAR — saati değişen iş eski satırıyla kalmasın. Ekleme
 # yalnız eksik satırı yazıyordu; pazartesi özeti pazara taşınınca (17 Ekim)

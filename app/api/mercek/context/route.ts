@@ -49,8 +49,14 @@ export async function GET(request: Request) {
         updatedAt: stories.updatedAt,
       })
       .from(stories)
-      .orderBy(desc(stories.eventDate))
-      .limit(400),
+      /* SINIR YOK (20 Ekim denetimi). `.limit(400)` SATIR sayıyordu — iki
+         dille ~200 yazı — ve arşiv onu aşınca eski slug'lar rutine
+         görünmez oluyordu: geçen yılın "fed-faiz-karari-eylul"u listede
+         yokken aynı slug'la gelen POST onu sessizce eziyordu, pencere
+         sınırında dillerinden biri kesilen yazı da gereksiz çeviriye
+         düşüyordu. İzdüşüm küçük; yük büyürse KISALTILIR (eski yazıda
+         yalnız slug + gün + diller), kesilmez. */
+      .orderBy(desc(stories.eventDate)),
     db
       .select({
         headline: news.headline,

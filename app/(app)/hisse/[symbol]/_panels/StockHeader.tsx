@@ -78,6 +78,21 @@ export async function NavLead({ symbol, locale }: { symbol: string; locale: Loca
    Başlık: fiyat + favori yıldızı
    ========================================================================== */
 
+async function isOnWatchlist(userId: string, symbol: string): Promise<boolean> {
+  try {
+    const rows = await db
+      .select({ id: watchlistItems.id })
+      .from(watchlistItems)
+      .innerJoin(watchlists, eq(watchlistItems.watchlistId, watchlists.id))
+      .where(and(eq(watchlists.userId, userId), eq(watchlistItems.symbol, symbol)))
+      .limit(1);
+    return rows.length > 0;
+  } catch {
+    // veri yoksa yıldız pasif kalır
+    return false;
+  }
+}
+
 export async function StockHeader({
   symbol,
   locale,
@@ -91,14 +106,29 @@ export async function StockHeader({
   chip?: React.ReactNode;
 }) {
   const status = await getStatus();
-  const [quoteResult, profileResult, session, metricsForBand, names] = await Promise.all([
+  /* ÜYE OKUMALARI OTURUMA BAĞLI, KOTASYONA DEĞİL (20 Ekim). Favori ve
+     alarm sorguları sağlayıcı turunun BİTMESİNİ bekliyordu, sonra kendi
+     aralarında da sıralı koşuyordu: giriş yapmış okuyucu, sitenin asıl
+     kitlesi, fiyatı anonimden iki Neon turu sonra görüyordu. Üçü yalnız
+     kullanıcı kimliğini istiyor; oturum çözülür çözülmez sağlayıcı
+     çağrılarıyla birlikte başlıyorlar. Kotasyonu isteyen tek adım
+     (`settleAlerts`) aşağıda kalıyor. Üçü de hatayı kendisi yutuyor. */
+  const sessionP = auth();
+  const memberP = sessionP.then((current) => {
+    const userId = current?.user?.id;
+    return userId
+      ? Promise.all([isOnWatchlist(userId, symbol), getUserAlerts(userId), getUserPercentAlerts(userId)])
+      : null;
+  });
+  const [quoteResult, profileResult, session, metricsForBand, names, member] = await Promise.all([
     getQuote(symbol, status),
     getCompanyProfile(symbol),
-    auth(),
+    sessionP,
     /* 52 hafta bandı — profil kartıyla AYNI çağrılar (altı saat ve istek
        içi önbellekli), yeni tur yok; gerekçe Week52Band.tsx. */
     getKeyMetrics(symbol),
     getSymbolNames([symbol]),
+    memberP,
   ]);
   const band = week52Band(
     metricsForBand.ok ? metricsForBand.data : null,
@@ -120,25 +150,7 @@ export async function StockHeader({
     </span>
   );
 
-  let isFavorite = false;
-  if (session?.user?.id) {
-    try {
-      const rows = await db
-        .select({ id: watchlistItems.id })
-        .from(watchlistItems)
-        .innerJoin(watchlists, eq(watchlistItems.watchlistId, watchlists.id))
-        .where(
-          and(
-            eq(watchlists.userId, session.user.id),
-            eq(watchlistItems.symbol, symbol),
-          ),
-        )
-        .limit(1);
-      isFavorite = rows.length > 0;
-    } catch {
-      // veri yoksa yıldız pasif kalır
-    }
-  }
+  const isFavorite = member?.[0] ?? false;
 
   /* FİYAT ALARMLARI — bu sembolünkiler, başlığın kotasyonuyla
      değerlendiriliyor (aynı sayı, aynı kaynak: veri dürüstlüğü 3). Tablo
@@ -149,11 +161,8 @@ export async function StockHeader({
      taramasında (gerekçe lib/schema.ts → percentAlerts). */
   let percentAvailable = false;
   let symbolPercentAlerts: PercentAlert[] = [];
-  if (session?.user?.id) {
-    const [{ available, alerts }, pct] = await Promise.all([
-      getUserAlerts(session.user.id),
-      getUserPercentAlerts(session.user.id),
-    ]);
+  if (member && session?.user?.id) {
+    const [, { available, alerts }, pct] = member;
     alertsAvailable = available;
     const own = alerts.filter((alert) => alert.symbol === symbol);
     symbolAlerts = quoteResult.ok
@@ -279,7 +288,10 @@ export async function StockHeader({
             )}
             {/* PORTFÖYE EKLE (9 Ekim) — ekleme penceresini bu sembol seçili
                 açıyor (`/portfoy?ekle=`); girişsiz okuyucu girişten sonra
-                aynı pencereye dönüyor (portfoy/page.tsx). */}
+                aynı pencereye dönüyor (portfoy/page.tsx). Ad görünür yazıyı
+                bölmeden İÇERİYOR (20 Ekim, WCAG 2.5.3): İngilizce ad "Add
+                NVDA to Portfolio" idi ve sesli komutla "Add to Portfolio"
+                denince düğme bulunmuyordu; sözlükte sembol sona alındı. */}
             <Link
               href={`/portfoy?ekle=${symbol}`}
               aria-label={t.lira.portfolio.addFromStock.replace("{symbol}", symbol)}

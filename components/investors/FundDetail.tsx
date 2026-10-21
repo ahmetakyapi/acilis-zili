@@ -3,6 +3,7 @@ import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import type { CompanyCardExtra } from "@/lib/company-card";
 import type { SymbolMeta } from "@/lib/data";
 import type { Dictionary } from "@/lib/i18n";
@@ -11,8 +12,10 @@ import type { HoldingRecord, Move, PositionView, SoldView } from "@/lib/investor
 import type { Investor } from "@/lib/investors";
 import { secFilingUrl } from "@/lib/providers/sec-13f";
 import { cn, formatEtDateMedium, formatMoneyCompact, formatPercent, plural } from "@/lib/utils";
-import { asOfLabel, formatShares, formatWeight, moveLabel, moveTone, quarterLabel } from "./format";
+import { asOfLabel, formatShares, formatWeight, moveLabel, positionRowView, quarterLabel } from "./format";
 import { InvestorTreemap, MAP_MAX, type MapPosition } from "./InvestorTreemap";
+import { CompanyInner, PositionRow } from "./PositionRow";
+import { PositionsMore } from "./PositionsMore";
 import styles from "./Investors.module.css";
 
 /**
@@ -367,93 +370,33 @@ function PositionsTable({
       </tr>
     </thead>
   );
-  const row = (position: MapPosition, index: number) => (
-    <tr key={position.cusip}>
-      <td className={cn("numeral", styles.colRank)}>{index + 1}</td>
-      <th scope="row" className={styles.companyCell}>
-        {position.linkable && position.ticker ? (
-          <Link href={`/hisse/${position.ticker}`} prefetch={false} className={styles.company} data-cc={position.ticker}>
-            <CompanyInner position={position} />
-          </Link>
-        ) : (
-          <span className={styles.company}>
-            <CompanyInner position={position} />
-          </span>
-        )}
-      </th>
-      <td className={cn("numeral", styles.num, styles.colShares)}>
-        {formatShares(position.amount, locale)}
-      </td>
-      <td className={cn("numeral", styles.num, styles.colValue)}>{formatMoneyCompact(position.value, locale)}</td>
-      <td className={styles.colWeight}>
-        <span className={styles.weightCell}>
-          <span className="numeral">{formatWeight(position.weight, locale)}</span>
-          <span className={styles.weightTrack} aria-hidden>
-            <i style={{ width: `${(position.weight / peak) * 100}%` }} />
-          </span>
-        </span>
-      </td>
-      {compared && (
-        <td className={cn(styles.num, styles.colChange)}>
-          <span className={styles.moveChip} data-tone={moveTone(position.move)}>
-            {moveLabel(position.move, t)}
-            {position.changePct !== null && position.move !== "unchanged" && (
-              <b className="numeral">{formatPercent(position.changePct, locale, 0)}</b>
-            )}
-          </span>
-          {position.split && (
-            <small className={styles.cellNote}>
-              {/* TERS BÖLÜNME (28 Eylül denetimi): `detectSplit` ters
-                  bölünmede 1/k veriyor ve metin "0.3333333333333333-for-1"
-                  basıyordu. Oran her zaman tam sayı olarak yazılıyor. */}
-              {position.split >= 1
-                ? t.splitNote.replace("{ratio}", String(position.split))
-                : t.reverseSplitNote.replace("{ratio}", String(Math.round(1 / position.split)))}
-            </small>
-          )}
-        </td>
-      )}
-    </tr>
+  /* Satırın hücreleri sunucuda biçimleniyor (`positionRowView`), çizim
+     ortak satırda (`PositionRow`). Açılır kalan da aynı görünümü veri
+     olarak alıyor — gerekçe `PositionsMore` başında. */
+  const rows = positions.map((position, index) =>
+    positionRowView(position, index, peak, compared, locale, t),
   );
-  const first = positions.slice(0, TABLE_ROWS);
-  const rest = positions.slice(TABLE_ROWS);
+  const first = rows.slice(0, TABLE_ROWS);
+  const rest = rows.slice(TABLE_ROWS);
   return (
     <Panel className={styles.tablePanel}>
       <PanelHeader title={t.tableTitle} meta={plural(positions.length, t.positionsOne, t.positions).replace("{count}", String(positions.length))} />
       <div className={styles.tableScroll}>
         <table className={cn(styles.table, styles.positions)} data-compared={compared || undefined}>
           {head}
-          <tbody>{first.map(row)}</tbody>
+          <tbody>
+            {first.map((row) => (
+              <PositionRow key={row.cusip} row={row} />
+            ))}
+          </tbody>
         </table>
       </div>
-      {rest.length > 0 && (
-        <details className={styles.tableMore}>
-          <summary>{t.tableRest.replace("{count}", String(rest.length))}</summary>
-          <div className={styles.tableScroll}>
-            <table className={cn(styles.table, styles.positions)} data-compared={compared || undefined}>
-              {head}
-              <tbody>{rest.map((position, index) => row(position, index + TABLE_ROWS))}</tbody>
-            </table>
-          </div>
-        </details>
-      )}
+      <PositionsMore
+        rows={rest}
+        label={t.tableRest.replace("{count}", String(rest.length))}
+        compared={compared}
+      />
     </Panel>
-  );
-}
-
-function CompanyInner({ position }: { position: { ticker: string | null; logoUrl: string | null; issuer: string } }) {
-  return (
-    <>
-      {position.ticker ? (
-        <LogoTile symbol={position.ticker} logoUrl={position.logoUrl} size="sm" />
-      ) : (
-        <span className={styles.noLogo} aria-hidden />
-      )}
-      <span className={styles.companyText}>
-        <b className="numeral">{position.ticker ?? position.issuer}</b>
-        <small>{position.issuer}</small>
-      </span>
-    </>
   );
 }
 
@@ -474,46 +417,56 @@ function OptionsTable({
     <Panel className={styles.tablePanel}>
       <PanelHeader title={t.optionsTitle} />
       <p className="border-t border-line px-4 py-3 text-small text-body sm:px-5">{t.optionsNote}</p>
-      <div className={styles.tableScroll}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th scope="col">{t.colCompany}</th>
-              <th scope="col">{t.colType}</th>
-              <th scope="col" className={styles.num}>{t.colShares}</th>
-              <th scope="col" className={styles.num}>{t.colUnderlying}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {options.map((option) => {
-              const ticker = tickerOf(option.cusip);
-              const meta = ticker ? known[ticker] : undefined;
-              const position = { ticker, logoUrl: meta?.logoUrl ?? null, issuer: meta?.name ?? option.issuer };
-              return (
-                <tr key={`${option.cusip}-${option.position}`}>
-                  <th scope="row" className={styles.companyCell}>
-                    {meta && ticker ? (
-                      <Link href={`/hisse/${ticker}`} prefetch={false} className={styles.company}>
-                        <CompanyInner position={position} />
-                      </Link>
-                    ) : (
-                      <span className={styles.company}>
-                        <CompanyInner position={position} />
+      {/* "DEVAMI VAR" İŞARETİ VE KLAVYE (20 Ekim): gerekçe Kongre'nin
+          işlem tablosunda (`CongressDetail` → `TradeTable`). */}
+      <div className={styles.tableRule}>
+        <ScrollEdges
+          fixedStart
+          className={styles.tableScroll}
+          tabIndex={0}
+          role="region"
+          aria-label={t.optionsTitle}
+        >
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th scope="col">{t.colCompany}</th>
+                <th scope="col">{t.colType}</th>
+                <th scope="col" className={styles.num}>{t.colShares}</th>
+                <th scope="col" className={styles.num}>{t.colUnderlying}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {options.map((option) => {
+                const ticker = tickerOf(option.cusip);
+                const meta = ticker ? known[ticker] : undefined;
+                const position = { ticker, logoUrl: meta?.logoUrl ?? null, issuer: meta?.name ?? option.issuer };
+                return (
+                  <tr key={`${option.cusip}-${option.position}`}>
+                    <th scope="row" className={styles.companyCell}>
+                      {meta && ticker ? (
+                        <Link href={`/hisse/${ticker}`} prefetch={false} className={styles.company}>
+                          <CompanyInner position={position} />
+                        </Link>
+                      ) : (
+                        <span className={styles.company}>
+                          <CompanyInner position={position} />
+                        </span>
+                      )}
+                    </th>
+                    <td>
+                      <span className={styles.moveChip} data-tone={option.position === "call" ? "up" : "down"}>
+                        {option.position === "call" ? t.optionCall : t.optionPut}
                       </span>
-                    )}
-                  </th>
-                  <td>
-                    <span className={styles.moveChip} data-tone={option.position === "call" ? "up" : "down"}>
-                      {option.position === "call" ? t.optionCall : t.optionPut}
-                    </span>
-                  </td>
-                  <td className={cn("numeral", styles.num)}>{formatShares(option.amount, locale)}</td>
-                  <td className={cn("numeral", styles.num)}>{formatMoneyCompact(option.value, locale)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                    <td className={cn("numeral", styles.num)}>{formatShares(option.amount, locale)}</td>
+                    <td className={cn("numeral", styles.num)}>{formatMoneyCompact(option.value, locale)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </ScrollEdges>
       </div>
     </Panel>
   );

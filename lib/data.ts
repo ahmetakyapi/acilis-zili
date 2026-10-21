@@ -37,11 +37,16 @@ import {
   type MarketStatus,
 } from "./market-hours";
 import type { BriefPeriod } from "./brief";
+import { isIsoDay } from "./date-input";
 
 /**
  * Sayfaların kullandığı okuma fonksiyonları.
  * Hepsi hata durumunda boş değer döner — sayfa hiçbir zaman DB hatasıyla
  * çökmez, ilgili kart "veri yok" gösterir.
+ *
+ * Tek istisna, kaydın KENDİSİ olan detay sayfaları: orada boş değer "böyle
+ * bir sayfa yok" iddiası; `throwOnError` ile hata sınırına gider (20 Ekim,
+ * gerekçe `ReadOptions`).
  */
 
 /* React `cache()`: bir istek boyunca ilk çağrı sonucu paylaşılır.
@@ -80,7 +85,9 @@ const loadHolidays = unstable_cache(
       earlyCloseEt: r.earlyCloseEt,
     }));
   },
-  ["market-holidays"],
+  /* Sürümlü anahtar (20 Ekim): önbellek artık dağıtımlar arası ortak
+     (deploy/update.sh); dönen şekli değiştiren sürümü artırır. */
+  ["market-holidays-v1"],
   { revalidate: 86_400, tags: [HOLIDAYS_TAG] },
 );
 
@@ -116,6 +123,42 @@ export const getStatus = cache(async function getStatus(): Promise<MarketStatus>
 function yutuldu(kaynak: string, error: unknown): void {
   const mesaj = error instanceof Error ? error.message : String(error);
   console.error(`[veri] ${kaynak} okunamadı: ${mesaj}`);
+}
+
+/**
+ * TEK KAYDIN SAYFASINDA YUTMA YOK (20 Ekim).
+ *
+ * Yutma liste kartları için doğru, ama haber, mercek yazısı, analiz ve
+ * bülten sayısı sayfalarında `null` bir İDDİA: sayfa onu `notFound()`a
+ * çeviriyor. Neon'un kısa bir kesintisinde var olan her yazı 404 ve
+ * "bulunamadı" ekranı veriyordu — okuyucuya yazının olmadığı söyleniyor,
+ * tarayıcı botu adresi silinmiş sayıyordu ("okunamadı ≠ boş",
+ * `getEventsBetweenResult` ile aynı ayrım).
+ *
+ * Detay sayfası (künye ve gövde) `throwOnError` geçer: okunamayan kayıt hata
+ * sınırına (`error.tsx`, yeniden dene) gider, yalnız GERÇEKTEN olmayan kayıt
+ * 404'tür. Aynı okuyucuları kullanan paneller, OG görselleri ve yönetim
+ * ekranı yutan yolda kalıyor — tek istisna bilanço analizinin paylaşım
+ * kartı: kayıt yoksa 404 verdiği için o da `throwOnError` geçer ve okunamayan
+ * kayıtta 404 yerine sembollü çerçeve basar
+ * (`app/(app)/bilancolar/[symbol]/[period]/opengraph-image.tsx`, 20 Ekim).
+ * Karar önbelleğin DIŞINDA (`getSymbolNames` deseni): `cache()` reddi de
+ * paylaştığı için künye ile gövde yine tek sorgu.
+ * Biçimi bozuk adres (uuid olmayan haber kimliği, takvimde olmayan gün,
+ * NUL baytı taşıyan mercek slug'ı ya da analiz sembolü/dönemi) sorgudan
+ * ÖNCE `null`: Postgres'in sözdizimi hatası 404'ü 500'e çevirmesin.
+ */
+type ReadOptions = { throwOnError?: boolean };
+
+/* NUL BAYTI SORGUYA GİTMEZ (20 Ekim). Next dinamik segmenti
+   `decodeURIComponent` ile çözüyor: `/mercek/%00` anahtara `\u0000` olarak
+   geliyor ve Postgres `text` parametresinde onu reddediyor (22021,
+   "invalid byte sequence for encoding UTF8: 0x00"). `throwOnError`lı
+   detay sayfasında bu çöp adres 404 yerine 500 ve hata kaydı üretiyordu.
+   Sıkı slug/sembol kalıbı yerine yalnız NUL: veritabanına ulaşıp hata
+   veren tek çözülmüş karakter o; kalıp gerçek bir slug'ı da reddedebilir. */
+function nulBaytli(...keys: string[]): boolean {
+  return keys.some((key) => key.includes("\u0000"));
 }
 
 /* ---- Ekonomik takvim ---- */
@@ -440,7 +483,18 @@ export async function getUpcomingEarnings(
   }
 }
 
-export async function getNextEarnings(
+/* ELLE DÜZELTME BURADAN GEÇMİYOR (20 Ekim): `earnings_overrides`
+   birleştirmesi (`lib/earnings-overrides.ts` → `getEarningsWithOverrides`)
+   yalnız rutin bağlam uçlarında ve "bilanço yarın" hatırlatmasında. Hisse
+   ve analiz sayfasının "sıradaki bilanço"su sağlayıcının tarihidir; buraya
+   taşımak `earnings-overrides` ↔ `data` arasında döngüsel içe aktarma
+   demek (o modül `guncelBilanco`yu buradan alıyor). */
+/* İSTEK İÇİNDE TEK SORGU (20 Ekim). Hisse sayfası aynı satırı dört yerden
+   istiyordu — künye (`summaryFacts`), kabuk (`getNextReport`), özet paneli
+   ve Yaklaşan Bilanço kartı — ve her biri ayrı bir Neon turuydu. Anahtar
+   düz dize (büyük harfli sembol), `cache()` kimlikle eşlediği için isabet
+   ediyor; istek dışında (tarama, cron) doğrudan çağırır. */
+export const getNextEarnings = cache(async function getNextEarnings(
   symbol: string,
 ): Promise<EarningsRow | null> {
   try {
@@ -461,7 +515,7 @@ export async function getNextEarnings(
     yutuldu("getNextEarnings", error);
     return null;
   }
-}
+});
 
 /**
  * Sıradaki bilanço GÜNÜ — yalnızca takvimin yazdığı ve bugünden ileri.
@@ -524,20 +578,30 @@ function haberiTemizle(row: NewsRow): NewsRow {
   };
 }
 
+const UUID_BICIMI = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /* `cache()`: haber detayı aynı satırı İKİ KEZ istiyor — bir kez künye için
    (`generateMetadata`), bir kez sayfa gövdesi için. İkisi aynı istekte
    çalıştığı için tek sorguya iniyor. */
-export const getNewsById = cache(async function getNewsById(
+const newsById = cache(async function newsById(id: string): Promise<NewsRow | null> {
+  // Kimlik `uuid` sütunu; biçimsiz kimlik olmayan haberdir (`ReadOptions`).
+  if (!UUID_BICIMI.test(id)) return null;
+  const [row] = await db.select().from(news).where(eq(news.id, id)).limit(1);
+  return row ? haberiTemizle(row) : null;
+});
+
+export async function getNewsById(
   id: string,
+  options: ReadOptions = {},
 ): Promise<NewsRow | null> {
   try {
-    const [row] = await db.select().from(news).where(eq(news.id, id)).limit(1);
-    return row ? haberiTemizle(row) : null;
+    return await newsById(id);
   } catch (error) {
+    if (options.throwOnError) throw error;
     yutuldu("getNewsById", error);
     return null;
   }
-});
+}
 
 /**
  * Görsel gerçekten habere mi ait?
@@ -654,13 +718,18 @@ export async function getNewsForSymbol(
   limit = 60,
 ): Promise<NewsRow[]> {
   try {
+    /* AYNI GÜN TEKİLLEŞTİRMESİ BURADA DA (20 Ekim). Çift kayıt aynı yazının
+       iki sağlayıcı kimliği, yani sembol etiketi de aynı: süzülmüş liste
+       (`/haberler?sembol=`, Claude filmi) aynı manşeti iki kez basıyordu,
+       süzülmemiş liste bir kez. Pencere `getLatestNews`teki gerekçeyle
+       geniş çekiliyor. */
     const rows = await db
       .select()
       .from(news)
       .where(sql`${news.symbols} @> ARRAY[${symbol}]::text[]`)
       .orderBy(desc(news.publishedAt))
-      .limit(limit);
-    return rows.map(haberiTemizle);
+      .limit(limit + 12);
+    return ayniGunTekille(rows).slice(0, limit).map(haberiTemizle);
   } catch (error) {
     yutuldu("getNewsForSymbol", error);
     return [];
@@ -722,21 +791,32 @@ export async function getBriefByDate(
  * gösterilecek satırı (istenen dil, yoksa yazılan dil) hem de hreflang için
  * var olan dilleri veriyor.
  */
-export const getBriefIssue = cache(async function getBriefIssue(
+const briefIssueRows = cache(async function briefIssueRows(
   date: string,
   period: BriefPeriod,
 ): Promise<DailyBriefRow[]> {
+  // `date` sütunu; takvimde olmayan gün (2026-02-30) olmayan sayıdır.
+  if (!isIsoDay(date)) return [];
+  return db
+    .select()
+    .from(dailyBriefs)
+    .where(and(eq(dailyBriefs.briefDate, date), eq(dailyBriefs.period, period)))
+    .limit(4);
+});
+
+export async function getBriefIssue(
+  date: string,
+  period: BriefPeriod,
+  options: ReadOptions = {},
+): Promise<DailyBriefRow[]> {
   try {
-    return await db
-      .select()
-      .from(dailyBriefs)
-      .where(and(eq(dailyBriefs.briefDate, date), eq(dailyBriefs.period, period)))
-      .limit(4);
+    return await briefIssueRows(date, period);
   } catch (error) {
+    if (options.throwOnError) throw error;
     yutuldu("getBriefIssue", error);
     return [];
   }
-});
+}
 
 export type BriefIndexRow = {
   briefDate: string;
@@ -877,6 +957,44 @@ export async function getMacroRows(): Promise<MacroSeriesRow[]> {
     return await db.select().from(macroSeries).orderBy(asc(macroSeries.slug));
   } catch (error) {
     yutuldu("getMacroRows", error);
+    return [];
+  }
+}
+
+export type MacroSummaryRow = Pick<
+  MacroSeriesRow,
+  "seriesId" | "slug" | "titleTr" | "titleEn" | "latestValue" | "prevValue" | "unit" | "periodLabel"
+>;
+
+/**
+ * Ana sayfanın makro özeti için DAR okuma (20 Ekim).
+ *
+ * `getMacroRows` her seriyi 60 gözlemlik `observations` jsonb'siyle
+ * getiriyor (/makro grafiği ve bülten bağlamı için gerekli); ana sayfa ise
+ * dört serinin birkaç skaler alanını basıyor. Sitenin en kalabalık sayfası her
+ * görüntülemede ~20 KB'lık atılacak jsonb'yi Neon'dan çekiyordu. Sıra
+ * çağıranın listesinden gelir, sorgu sıralamaz.
+ */
+export async function getMacroSummaryRows(
+  slugs: readonly string[],
+): Promise<MacroSummaryRow[]> {
+  if (slugs.length === 0) return [];
+  try {
+    return await db
+      .select({
+        seriesId: macroSeries.seriesId,
+        slug: macroSeries.slug,
+        titleTr: macroSeries.titleTr,
+        titleEn: macroSeries.titleEn,
+        latestValue: macroSeries.latestValue,
+        prevValue: macroSeries.prevValue,
+        unit: macroSeries.unit,
+        periodLabel: macroSeries.periodLabel,
+      })
+      .from(macroSeries)
+      .where(inArray(macroSeries.slug, [...slugs]));
+  } catch (error) {
+    yutuldu("getMacroSummaryRows", error);
     return [];
   }
 }
@@ -1127,9 +1245,22 @@ const loadSymbolTable = unstable_cache(
         eq(quotesCacheTable.symbol, symbolsTable.symbol),
       );
   },
-  ["symbol-table"],
+  /* Sürümlü anahtar (20 Ekim): önbellek dağıtımlar arası ortak; seçilen
+     sütunlar ya da tipleri değişirse sürüm artar (bkz. CLAUDE.md). */
+  ["symbol-table-v1"],
   { revalidate: 300 },
 );
+
+/* İSTEK İÇİNDE TEK AYRIŞTIRMA (20 Ekim). `unstable_cache` her çağrıda kaydı
+   önbellekten okuyup gövdeyi yeniden `JSON.parse` ediyor (Next 16,
+   unstable-cache.js) — 1.034 satırlık tablo için her seferinde. Hisse
+   sayfası `getSymbolNames`i birkaç FARKLI listeyle soruyor (sembol,
+   benzerler, mercek kadrosu); `symbolNamesForKey` yalnız aynı listeyi
+   eşlediği için her liste tabloyu baştan ayrıştırıyordu ve `isKnownSymbol`
+   da artık buradan okuyor. `cache()` istek başına tek okuma bırakıyor. Okuyucular
+   satırları yalnız süzüp eşliyor, paylaşılan diziyi değiştiren yok. İstek
+   dışında (cron, betik) `cache()` doğrudan çağırır, davranış aynı. */
+const symbolTable = cache(() => loadSymbolTable());
 
 async function loadSymbolNames(
   list: string[],
@@ -1137,7 +1268,7 @@ async function loadSymbolNames(
   if (list.length === 0) return {};
   try {
     const wanted = new Set(list);
-    const rows = (await loadSymbolTable()).filter((r) => wanted.has(r.symbol));
+    const rows = (await symbolTable()).filter((r) => wanted.has(r.symbol));
     return Object.fromEntries(
       rows.map((r) => [
         r.symbol,
@@ -1207,7 +1338,7 @@ export type CompanyRow = {
 /** Endeks ETF'leri hariç, profili bilinen şirketler. */
 export async function getCompanies(): Promise<CompanyRow[]> {
   try {
-    const rows = (await loadSymbolTable()).filter((r) => !r.isIndexProxy);
+    const rows = (await symbolTable()).filter((r) => !r.isIndexProxy);
     // USD dışı piyasa değeri (ör. TWD) USD ile sıralanamaz — yok sayılır.
     return rows.map((r) => {
       const usd = r.currency === "USD";
@@ -1302,11 +1433,24 @@ export async function getEarningsSymbolsMissingProfile(
    duvara çarpmamalı. Tanınmayanlar yalnızca çok daha dar bir oran sınırına
    tabi tutuluyor (bkz. app/api/chart/[symbol]/route.ts). Keşif çalışmaya
    devam ediyor, sayım saldırısı ilk saniyede duruyor.
-   -------------------------------------------------------------------------- */
+
+   ÖNCE ÖNBELLEKTEKİ TABLO, NEON YALNIZ ISKALAYANA (20 Ekim). Soru her
+   istekte ayrı bir `select … limit 1` idi ve en sıcak iki yolun önünde
+   SIRALI bekleniyordu: hisse sayfasının kabuğu (`allowStockRender`) ve
+   grafiğin dakikalık canlı yoklaması (/api/chart). Neon turu ~120 ms,
+   soğuk bağlantıda 350-450 ms (ölçüm `loadSymbolTable` yorumunda). Aynı
+   küme beş dakikalık sembol tablosunda zaten duruyor ve künye aynı istekte
+   onu okuyor. Tabloda olan sembol orada yanıtlanıyor; olmayan yine
+   veritabanına soruluyor — profili BU dakika yazılmış sembol beş dakika
+   beklemeden tanınan tarafa geçiyor (hisse sayfasındaki "kendi kendini
+   onaran" yol) ve /api/hedef az önce eklenen sembolü reddetmiyor.
+   Veritabanı düştüyse sıcak tablo tanınanı yine tanıyor; tablo da
+   okunamıyorsa sonuç eskisi gibi `false`. */
 export const isKnownSymbol = cache(async function isKnownSymbol(
   symbol: string,
 ): Promise<boolean> {
   try {
+    if ((await symbolTable()).some((r) => r.symbol === symbol)) return true;
     const [row] = await db
       .select({ symbol: symbolsTable.symbol })
       .from(symbolsTable)
@@ -1604,22 +1748,33 @@ export async function getStories(
    de aynı istekte ve birebir aynı SQL iki kez Neon'a gidiyordu (ölçüldü).
    İstek içi tekilleştirme ikinci turu düşürüyor. Argümanlar ilkel olduğu
    için anahtar doğrudan (slug, locale) çifti. */
-export const getStoryBySlug = cache(async function getStoryBySlug(
+const storyBySlug = cache(async function storyBySlug(
   slug: string,
   locale: string,
 ): Promise<StoryRow | null> {
+  if (nulBaytli(slug)) return null; // `ReadOptions`
+  const rows = await db
+    .select()
+    .from(stories)
+    .where(eq(stories.slug, slug))
+    .limit(4);
+  return rows.find((row) => row.locale === locale) ?? rows[0] ?? null;
+});
+
+/** `throwOnError`: detay sayfası için — gerekçe `ReadOptions`. */
+export async function getStoryBySlug(
+  slug: string,
+  locale: string,
+  options: ReadOptions = {},
+): Promise<StoryRow | null> {
   try {
-    const rows = await db
-      .select()
-      .from(stories)
-      .where(eq(stories.slug, slug))
-      .limit(4);
-    return rows.find((row) => row.locale === locale) ?? rows[0] ?? null;
+    return await storyBySlug(slug, locale);
   } catch (error) {
+    if (options.throwOnError) throw error;
     yutuldu("getStoryBySlug", error);
     return null;
   }
-});
+}
 
 /**
  * Bir mercek yazısının GERÇEKTEN yazıldığı diller.
@@ -1641,6 +1796,7 @@ export const getStoryBySlug = cache(async function getStoryBySlug(
 export const getStoryLocales = cache(async function getStoryLocales(
   slug: string,
 ): Promise<Locale[]> {
+  if (nulBaytli(slug)) return [];
   try {
     const rows = await db
       .select({ locale: stories.locale })
@@ -1767,31 +1923,67 @@ export async function getAnalyses(
   }
 }
 
+/**
+ * Analizi olan bütün semboller, en son analiz edileni önce (20 Ekim).
+ *
+ * Analizler arşivinin süzgeç çipleri (sektörler, "Takip") ve süzgecin
+ * kendisi en son 60 analizden türüyordu: arşiv 60'ı geçince eski analizler
+ * süzgeçten sessizce düşüyor, analizlerinin hepsi eski olan sektörün çipi
+ * hiç basılmıyordu. Çip kümesi artık arşivin tamamından; satır başına tek
+ * sembol, gövde yok — hafif bir sorgu.
+ */
+export async function getAnalyzedSymbols(): Promise<string[]> {
+  try {
+    const latest = sql<string>`max(${earningsAnalyses.reportDate})`;
+    const rows = await db
+      .select({ symbol: earningsAnalyses.symbol, latest })
+      .from(earningsAnalyses)
+      .groupBy(earningsAnalyses.symbol)
+      .orderBy(desc(latest));
+    return rows.map((row) => row.symbol);
+  } catch (error) {
+    yutuldu("getAnalyzedSymbols", error);
+    return [];
+  }
+}
+
 /** İstenen dil yoksa analizin orijinali döner — sayfa dil notunu kendi basar. */
 /* `cache()` SARMALI — gerekçe `getStoryBySlug` künyesinde; analiz detay
    sayfası da aynı satırı künye ve gövde için iki kez istiyor. */
-export const getAnalysis = cache(async function getAnalysis(
+const analysisRow = cache(async function analysisRow(
   symbol: string,
   period: string,
   locale: string,
 ): Promise<EarningsAnalysisRow | null> {
+  if (nulBaytli(symbol, period)) return null; // `ReadOptions`
+  const rows = await db
+    .select()
+    .from(earningsAnalyses)
+    .where(
+      and(
+        eq(earningsAnalyses.symbol, symbol.toUpperCase()),
+        eq(earningsAnalyses.period, period),
+      ),
+    )
+    .limit(4);
+  return rows.find((row) => row.locale === locale) ?? rows[0] ?? null;
+});
+
+/** `throwOnError`: detay sayfası için — gerekçe `ReadOptions`. */
+export async function getAnalysis(
+  symbol: string,
+  period: string,
+  locale: string,
+  options: ReadOptions = {},
+): Promise<EarningsAnalysisRow | null> {
   try {
-    const rows = await db
-      .select()
-      .from(earningsAnalyses)
-      .where(
-        and(
-          eq(earningsAnalyses.symbol, symbol.toUpperCase()),
-          eq(earningsAnalyses.period, period),
-        ),
-      )
-      .limit(4);
-    return rows.find((row) => row.locale === locale) ?? rows[0] ?? null;
+    return await analysisRow(symbol, period, locale);
   } catch (error) {
+    if (options.throwOnError) throw error;
     yutuldu("getAnalysis", error);
     return null;
   }
-});
+}
 
 /**
  * Şirketin en son analizindeki ORTALAMA ANALİST HEDEF FİYATI (30 Eylül).
@@ -1864,6 +2056,7 @@ export const getAnalysisLocales = cache(async function getAnalysisLocales(
   symbol: string,
   period: string,
 ): Promise<Locale[]> {
+  if (nulBaytli(symbol, period)) return [];
   try {
     const rows = await db
       .select({ locale: earningsAnalyses.locale })
@@ -1899,7 +2092,14 @@ export type AnalysisBadge = {
 };
 
 export async function getAnalysisBadges(
-  symbols: string[],
+  /* `null` = SEMBOL SÜZGECİ YOK, yalnızca tarih aralığı (20 Ekim). Takvim
+     ekranları sembol listesini takvim satırlarından çıkarıyordu, yani rozet
+     sorgusu takvim sorgusunu bekliyordu: ilk bayta ikinci bir sıralı Neon
+     turu. Aralık verildiğinde sembol süzgeci gereksiz — rozet yalnızca
+     takvim satırının SEMBOL:TARİH anahtarıyla aranıyor, fazladan anahtar
+     zararsız — ve sorgu takvimle AYNI TURDA koşabiliyor. Aralıksız `null`
+     arşivin tamamı demek; o yüzden boş döner. */
+  symbols: string[] | null,
   locale: string,
   /* TARİH ARALIĞI ŞART DEĞİL AMA OLMALI. Süzgeç yokken fonksiyon verilen
      sembollerin TÜM analiz arşivini çekiyordu — takvim ekranı bunu 30 günlük
@@ -1910,9 +2110,9 @@ export async function getAnalysisBadges(
      süzgeci karşılıyor. */
   range?: { from: string; to: string },
 ): Promise<Record<string, AnalysisBadge>> {
-  if (symbols.length === 0) return {};
+  if (symbols ? symbols.length === 0 : !range) return {};
   try {
-    const bySymbol = inArray(earningsAnalyses.symbol, [...new Set(symbols)]);
+    const bySymbol = symbols ? inArray(earningsAnalyses.symbol, [...new Set(symbols)]) : undefined;
     const rows = await db
       .select({
         symbol: earningsAnalyses.symbol,

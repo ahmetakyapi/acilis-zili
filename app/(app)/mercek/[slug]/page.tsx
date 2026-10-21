@@ -55,7 +55,8 @@ export async function generateMetadata(props: PageProps<"/mercek/[slug]">) {
   const { slug } = await props.params;
   const { locale } = await getI18n();
   const [story, diller] = await Promise.all([
-    getStoryBySlug(slug, locale),
+    // Okunamayan yazı 404 değil hata (gerekçe `lib/data.ts` → `ReadOptions`).
+    getStoryBySlug(slug, locale, { throwOnError: true }),
     getStoryLocales(slug),
   ]);
   if (!story) return missingMetadata(locale);
@@ -263,9 +264,10 @@ function StoryToc({
 export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
   const { slug } = await props.params;
   const { locale, t } = await getI18n();
-  const story = await getStoryBySlug(slug, locale);
+  const story = await getStoryBySlug(slug, locale, { throwOnError: true });
 
-  /* Olmayan yazı 404 DÖNER — ekran `not-found.tsx` dosyasında. */
+  /* Olmayan yazı 404 DÖNER — ekran `not-found.tsx` dosyasında. OKUNAMAYAN
+     yazı ise 404 değil: okuma hatası hata sınırına gider (20 Ekim). */
   if (!story) notFound();
 
   const minutes = story.readMinutes ?? readingMinutes(story.bodyMd);

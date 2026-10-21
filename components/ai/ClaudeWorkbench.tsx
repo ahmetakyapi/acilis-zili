@@ -66,7 +66,22 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGe
   const now = useNow(serverNow);
   const early = !!next && new Date(next.at).getTime() > now;
   const span = (ms: number) => formatSpan(ms, T.units);
-  useEffect(() => () => clearTimeout(launchTimer.current), []);
+  /* SÖKÜLÜNCE GEZİNME YOK (20 Ekim). Üretim filmin açık uçlu son perdesi
+     boyunca sürüyor ve okuyucu o arada başka sayfaya geçebiliyor; istek
+     bitince kurulan perde zamanlayıcısı bileşen gitmiş olsa da
+     `router.push` yapıyor ve okuyucuyu okuduğu sayfadan rapora geri
+     çekiyordu. İstek KESİLMİYOR: rapor sunucuda yine kaydediliyor, dönen
+     okuyucu onu sekmede buluyor. */
+  const alive = useRef(true);
+  const curtainTimer = useRef(0);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+      clearTimeout(launchTimer.current);
+      clearTimeout(curtainTimer.current);
+    };
+  }, []);
   // Logo filme ÖNCEDEN hazır: sahne açılırken indirilip çözülür, film aynı görüntüyü
   // çizer. Yoksa film başladığında logo daha inmemiş oluyor, damga anında harfli karo
   // ("NV") görünüp sonradan logoya dönüyordu.
@@ -100,13 +115,15 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, canGe
         body: JSON.stringify({ requestId: requestId.current, symbol, horizon: HORIZON_OF[focus], locale }),
       });
       const body = await response.json().catch(() => ({}));
+      if (!alive.current) return;
       if (!response.ok) { requestId.current = null; throw new Error(typeof body.error === "string" ? body.error : ""); }
       requestId.current = null;
       setBusy(true);
       setDone(true);
       const target = withLocale(`/claude/${encodeURIComponent(symbol)}?odak=${focus === "technical" ? "teknik" : "secim"}&sekme=rapor&rapor=${body.id}&yeni=1`, locale);
-      setTimeout(() => router.push(target, { scroll: true }), CURTAIN_MS);
+      curtainTimer.current = window.setTimeout(() => router.push(target, { scroll: true }), CURTAIN_MS);
     } catch (e) {
+      if (!alive.current) return;
       clearTimeout(launchTimer.current);
       const code = e instanceof Error ? e.message : "";
       setError(code === "quota" ? t.errors.quota : code === "busy" ? t.errors.busy : code === "data-unavailable" ? t.errors.data : code === "analysis-failed" ? t.errors.failed : t.errors.connection);

@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Schibsted_Grotesk } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
-import Script from "next/script";
 import { headers } from "next/headers";
-import { InkSplash, INK_SPLASH_SCRIPT } from "@/components/ink/InkSplash";
+import { InkSplash, InkSplashScript } from "@/components/ink/InkSplash";
 import { SiteJsonLd } from "@/components/seo/JsonLd";
 import { ExpandInPlace } from "@/components/layout/ExpandInPlace";
+import { LocaleProvider } from "@/components/layout/LocaleProvider";
 import { getI18n, getTheme } from "@/lib/i18n";
 import { LOCALES } from "@/lib/i18n/config";
 import { ogLocale } from "@/lib/page-meta";
@@ -218,16 +218,17 @@ export default async function RootLayout({
     >
       <body className="min-h-full antialiased">
         {/* Açılışın kararı boyamadan önce: içerik bir kare görünüp sonra
-            örtülmesin. Gerekçeler `components/ink/InkSplash.tsx`te.
-            `beforeInteractive`: çıplak `<script>` kök düzen istemcide
-            yeniden çizildiğinde (segment 404'leri) React uyarısı basıyordu. */}
-        <Script id="ink-splash" strategy="beforeInteractive">
-          {INK_SPLASH_SCRIPT}
-        </Script>
+            örtülmesin. Gövdenin İLK çocuğu, ayrıştırılırken koşar.
+            `next/script` + `beforeInteractive` kararı hidrasyonun hemen
+            önüne itiyordu (20 Ekim); gerekçeler `InkSplash.tsx`te. */}
+        <InkSplashScript />
         <InkSplash name={t.brand.name} />
         {/* Kuruluş + site künyesi; sayfa bazlı künyeler kendi rotalarında. */}
         <SiteJsonLd locale={locale} />
-        {children}
+        {/* İstemci bağlantıları dili buradan da okur: sunucu çiziminde
+            `/en` yeniden yazıldığı için adres önek taşımıyor (20 Ekim,
+            gerekçe `components/layout/useLocaleHref.tsx`). */}
+        <LocaleProvider locale={locale}>{children}</LocaleProvider>
         {/* Katlama açılınca sayfa bastığın yerde kalsın — gerekçe bileşende. */}
         <ExpandInPlace />
         {/* Vercel Analytics YALNIZCA Vercel'de basılır. Başka bir barındırmada

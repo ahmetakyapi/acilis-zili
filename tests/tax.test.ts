@@ -58,6 +58,17 @@ test("aynı gün alış satıştan önce işlenir", () => {
   assert.equal(lots[0].buyId, "b1");
 });
 
+test("kesirli satışın kayan nokta artığı sıradaki partiden hayalet satır açmaz", () => {
+  const { lots, shortfalls } = matchFifo([
+    trade({ id: "b1", side: "buy", date: "2024-01-10", quantity: 0.3, priceUsd: 100 }),
+    trade({ id: "b2", side: "buy", date: "2024-02-10", quantity: 5, priceUsd: 110 }),
+    trade({ id: "s1", side: "sell", date: "2024-03-10", quantity: 0.1, priceUsd: 120 }),
+    trade({ id: "s2", side: "sell", date: "2024-04-10", quantity: 0.2, priceUsd: 130 }),
+  ]);
+  assert.deepEqual(lots.map((lot) => [lot.sellId, lot.buyId]), [["s1", "b1"], ["s2", "b1"]]);
+  assert.equal(shortfalls.length, 0);
+});
+
 test("endeks ayları: alıştan ve satıştan ÖNCEKİ ay (GİB Örnek 13)", () => {
   assert.deepEqual(indexMonthsFor("2021-11-15", "2024-09-23"), { buy: "2021-10", sell: "2024-08" });
   assert.deepEqual(indexMonthsFor("2025-01-05", "2025-06-01"), { buy: "2024-12", sell: "2025-05" });

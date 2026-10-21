@@ -31,7 +31,7 @@ export default async function EditPostPage(props: PageProps<"/yazilarim/[id]">) 
   /* İlk çizim sunucudan, sayfayla birlikte (useOnizleme sözleşmesi).
      Eylem artık sınırda FIRLATIYOR; sayfa düşmesin, editör boş önizlemeyle
      açılsın — ilk duraklamada yeniden çizilir. */
-  const ilkOnizleme = await previewUserPostBody(post.bodyMd).catch(() => null);
+  const ilkOnizleme = await previewUserPostBody(post.bodyMd, post.locale).catch(() => null);
 
   return (
     <MotionExperience className={polish.page}>

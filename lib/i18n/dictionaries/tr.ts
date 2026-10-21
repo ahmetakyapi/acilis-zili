@@ -1453,6 +1453,9 @@ const tr = {
     notePlaceholder: "Neden takip ediyorsun? Örn. 230 altında alım düşün",
     noteSave: "Kaydet",
     noteFailed: "Not kaydedilemedi; tekrar dene.",
+    /* Liste açma, adlandırma ve sembol ekleme düşünce (20 Ekim) — sürüm
+       sonrası bayat sekme, ağ ya da oran kovası. Sessiz donma yerine bu. */
+    actionFailed: "Değişiklik kaydedilemedi; tekrar dene.",
     moveUp: "Yukarı Taşı",
     dragHint: "Sürükleyerek sırala",
     moveDown: "Aşağı Taşı",

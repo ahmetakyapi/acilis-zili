@@ -32,7 +32,7 @@ export default async function NewPostPage(props: PageProps<"/yazilarim/yeni">) {
   const { sablon } = await props.searchParams;
   const template = findPostTemplate(sablon);
   const ilkOnizleme = template
-    ? await previewUserPostBody(template.content[dil].body).catch(() => null)
+    ? await previewUserPostBody(template.content[dil].body, dil).catch(() => null)
     : null;
 
   return (

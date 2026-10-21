@@ -11,7 +11,7 @@ import {
   type SymbolSearchResult,
   responseDate,
 } from "./types";
-import { withTimeout } from "./timeout";
+import { withBody } from "./timeout";
 import { saglayiciMetni } from "@/lib/text";
 import { noteProviderResponse } from "./usage";
 
@@ -50,15 +50,19 @@ export async function finnhubFetch<T>(
 
   try {
     /* Süre sınırı: sağlayıcı yanıt vermeyi bırakırsa sayfa kilitlenmesin.
-       Gerekçesi ve iptal edilmemesinin sebebi lib/providers/timeout.ts'te. */
-    const res = await withTimeout(
+       Gerekçesi ve iptal edilmemesinin sebebi lib/providers/timeout.ts'te;
+       sınır gövde okumasını da kapsıyor (`withBody`, 20 Ekim). */
+    const { res, body } = await withBody(
       fetch(url, {
         headers: { "X-Finnhub-Token": key, accept: "application/json" },
         next: { revalidate: opts.revalidate, tags: opts.tags },
       }),
+      (r) => {
+        noteProviderResponse("finnhub", r);
+        return r.ok ? r.json() : null;
+      },
     );
 
-    noteProviderResponse("finnhub", res);
     if (res.status === 429) {
       return fail("finnhub", "rate-limited", "Finnhub istek limiti aşıldı");
     }
@@ -73,7 +77,7 @@ export async function finnhubFetch<T>(
       return fail("finnhub", "upstream-error", `Finnhub ${res.status}`);
     }
 
-    return ok((await res.json()) as T, "finnhub", {
+    return ok(body as T, "finnhub", {
       fetchedAt: responseDate(res),
     });
   } catch (error) {

@@ -1,5 +1,5 @@
 import { fail, ok, type ProviderResult, responseDate } from "./types";
-import { withTimeout } from "./timeout";
+import { withBody } from "./timeout";
 import type { IsoMonth, MonthlyValue } from "@/lib/fx";
 
 /**
@@ -109,13 +109,17 @@ export async function getEvdsMonthly(
 
   const code = EVDS_SERIES[kind];
   let res: Response;
+  let text: string | null;
   try {
-    res = await withTimeout(
+    /* Gövde de süre sınırının içinde (`withBody`, 20 Ekim); metin olarak
+       okunuyor ki bozuk JSON aşağıda ağ hatasından ayrı söylensin. */
+    ({ res, body: text } = await withBody(
       fetch(evdsUrl(code, from, to), {
         headers: { accept: "application/json", key },
         next: { revalidate: REVALIDATE_SECONDS, tags: ["fx", `evds:${kind}`] },
       }),
-    );
+      (r) => (r.ok ? r.text() : null),
+    ));
   } catch (error) {
     return fail(
       "evds",
@@ -130,7 +134,7 @@ export async function getEvdsMonthly(
 
   let json: unknown;
   try {
-    json = await res.json();
+    json = JSON.parse(text ?? "");
   } catch {
     return fail("evds", "upstream-error", "EVDS yanıtı okunamadı");
   }

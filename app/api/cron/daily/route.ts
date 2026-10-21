@@ -116,6 +116,16 @@ const INVESTOR_BUDGET_MS = 15_000;
 /** ARK adımının tavanı — altı küçük CSV normalde iki-üç saniye; gerekçe
     `syncArk` üzerinde. */
 const ARK_BUDGET_MS = 15_000;
+/**
+ * Çeviri adımının (2c) tavanı (20 Ekim). Paket başına SDK sınırı 45 sn ve
+ * iki deneme (lib/translate.ts); kırk haberlik koşu tavansız ~3 dakika
+ * sürebiliyordu — 100 saniyelik bütçeyi ve betiğin 180 saniyelik curl
+ * sınırını aşıp sonraki adımları (profiller, makro, gerçekleşenler)
+ * atlatıyordu. Burada yeniden deneme kapalı ve adım en geç bu sürede, her
+ * hâlde bütçe + 20 saniyede biter; yetişmeyen paket haber nöbetine kalır
+ * (günde üç koşu, deploy/cron-news.sh).
+ */
+const TRANSLATE_BUDGET_MS = 45_000;
 const INVESTOR_MAX_FILINGS = 6;
 const INVESTOR_FIGI_REQUESTS = 4;
 
@@ -177,6 +187,18 @@ const ACTUALS_LOOKBACK_DAYS = 45;
 export const maxDuration = 120;
 
 /**
+ * TEK KOŞU KİLİDİ (20 Ekim) — app/api/cron/haberler ve bilanco'daki kilidin
+ * aynısı. Betik `curl --max-time 180 --retry 3` ile çağırıyor (deploy/
+ * cron-daily.sh); bütçe adımları yalnız BAŞLAMADAN denetliyor, yani geç
+ * başlayan bir adım koşuyu 180 saniyenin üstüne itebilir. O zaman curl
+ * yeniden deniyor ama ilk istek sunucuda SÜRÜYOR (`maxDuration` VPS'te
+ * uygulanmıyor): ikinci koşu bütün günlük tazelemeyi baştan yapıyor, henüz
+ * yazılmamış çevirileri bir kez daha ücretliyordu. Uygulama tek süreç;
+ * süreç içi bayrak yeter. Kilitliyken 200 (curl 2xx'i yeniden denemez).
+ */
+let running = false;
+
+/**
  * Günlük senkron — Vercel Cron her sabah 06:00 ET civarı çağırır.
  * Sıra: bilanço takvimi → haberler → makro seriler → gerçekleşen değerler →
  * günlük özet. Her adım kendi hatasını yutar; biri düşse diğerleri çalışır.
@@ -190,7 +212,16 @@ export async function GET(request: Request) {
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
+  if (running) return NextResponse.json({ skipped: "running" });
+  running = true;
+  try {
+    return await run();
+  } finally {
+    running = false;
+  }
+}
 
+async function run(): Promise<NextResponse> {
   const report: Record<string, string | number> = {};
   const today = todayEt();
   const startedAt = Date.now();
@@ -489,7 +520,10 @@ export async function GET(request: Request) {
   } else
   try {
     if (isTranslateConfigured()) {
-      report.translate = await translatePendingNews(40);
+      report.translate = await translatePendingNews(40, {
+        deadline: Math.min(Date.now() + TRANSLATE_BUDGET_MS, startedAt + BUDGET_MS + 20_000),
+        maxRetries: 0,
+      });
     } else {
       report.translate = "atlandı: DEEPL_API_KEY, ANTHROPIC_API_KEY ya da CLAUDE_ANALYSIS_API_KEY yok";
     }
@@ -583,7 +617,7 @@ export async function GET(request: Request) {
   } else
   try {
     const sync = await syncCalendar(today);
-    report.calendar = `+${sync.inserted} yayın, +${sync.rolling} haftalık`;
+    report.calendar = `+${sync.inserted} yayın, +${sync.rolling} haftalık${sync.removed > 0 ? `, -${sync.removed} silinen` : ""}`;
     if (sync.problems.length > 0) {
       report.calendarProblems = sync.problems.join(" | ");
     }

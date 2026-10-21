@@ -8,7 +8,7 @@ import {
   type ProviderResult,
   responseDate,
 } from "./types";
-import { withTimeout } from "./timeout";
+import { withBody } from "./timeout";
 import { noteProviderResponse } from "./usage";
 
 /**
@@ -191,17 +191,21 @@ async function fredFetch<T>(
   }).toString()}`;
 
   try {
-    /* Süre sınırı — gerekçe lib/providers/timeout.ts'te. */
-    const res = await withTimeout(
+    /* Süre sınırı gövdeyi de kapsıyor — gerekçe lib/providers/timeout.ts'te
+       (`withBody`). */
+    const { res, body } = await withBody(
       fetch(url, {
         headers: { accept: "application/json" },
         ...(opts.forceRefresh
           ? { cache: "no-store" as const }
           : { next: { revalidate: opts.revalidate, tags: opts.tags } }),
       }),
+      (r) => {
+        noteProviderResponse("fred", r);
+        return r.ok ? r.json() : null;
+      },
     );
 
-    noteProviderResponse("fred", res);
     if (res.status === 429) {
       return fail("fred", "rate-limited", "FRED istek limiti aşıldı");
     }
@@ -209,7 +213,7 @@ async function fredFetch<T>(
       return fail("fred", "upstream-error", `FRED ${res.status}`);
     }
 
-    return ok((await res.json()) as T, "fred", {
+    return ok(body as T, "fred", {
       fetchedAt: responseDate(res),
     });
   } catch (error) {

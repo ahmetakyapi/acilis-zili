@@ -97,6 +97,8 @@ export type BoardLabels = {
   notePlaceholder: string;
   noteSave: string;
   noteFailed: string;
+  /** Eylem düştü ya da fırladı (create/rename/add) — sessiz donma yerine. */
+  actionFailed: string;
   renameList: string;
   save: string;
   /* Tutamağın fare balonu — sabit Türkçe yazılıydı; görsel arayüzde
@@ -191,19 +193,30 @@ function RenameListForm({
   labels: BoardLabels;
   onDone: () => void;
 }) {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
   return (
     <form
+      /* FIRLAYAN EYLEM YAKALANIYOR (20 Ekim). Form eylemindeki yakalanmamış
+         hata en yakın hata sınırına gidip bütün /favoriler sayfasını
+         değiştiriyordu — her sürümden sonra açık kalan sekmede "Failed to
+         find Server Action" (kalıp PortfolioWorkbench → `settle`). Başarıda
+         `router.refresh()` YOK: eylemin `revalidatePath`i güncel ağacı
+         yanıtla getiriyor, ikinci çağrı sayfayı sunucuda bir kez daha
+         çizdiriyordu. */
       action={async (formData: FormData) => {
-        const result = await renameWatchlist(formData);
+        let result: Awaited<ReturnType<typeof renameWatchlist>>;
+        try {
+          result = await renameWatchlist(formData);
+        } catch {
+          setError(labels.actionFailed);
+          return;
+        }
         if (!result.ok) {
-          setError(result.reason === "empty" ? labels.listNameEmpty : null);
+          setError(result.reason === "empty" ? labels.listNameEmpty : labels.actionFailed);
           return;
         }
         onDone();
-        router.refresh();
       }}
       className="flex flex-wrap items-end gap-3 border-b border-line-soft px-4 py-3 sm:px-5"
     >
@@ -287,10 +300,23 @@ function NewListForm({ labels }: { labels: BoardLabels }) {
   return (
     <section className="panel p-4 sm:p-5">
       <form
+        /* Fırlayan eylem yakalanıyor — gerekçe RenameListForm (20 Ekim). */
         action={async (formData: FormData) => {
-          const result = await createWatchlist(formData);
+          let result: Awaited<ReturnType<typeof createWatchlist>>;
+          try {
+            result = await createWatchlist(formData);
+          } catch {
+            setError(labels.actionFailed);
+            return;
+          }
           if (!result.ok) {
-            setError(result.reason === "full" ? labels.listsFull : labels.listNameEmpty);
+            setError(
+              result.reason === "full"
+                ? labels.listsFull
+                : result.reason === "empty"
+                  ? labels.listNameEmpty
+                  : labels.actionFailed,
+            );
             return;
           }
           setError(null);
@@ -431,11 +457,16 @@ function DeleteListConfirm({
             setPending(true);
             const fd = new FormData();
             fd.set("listId", list.id);
+            /* Eylem düştüyse ya da tazelemeden döndüyse (kova, 20 Ekim)
+               liste yerinde duruyor; onay açık kalıyor ki okuyucu yeniden
+               deneyebilsin ya da vazgeçebilsin. */
+            let ok = false;
             try {
-              await deleteWatchlist(fd);
+              ok = (await deleteWatchlist(fd)).ok;
             } catch {
-              /* Eylem düştüyse liste yerinde duruyor; onay açık kalıyor ki
-                 okuyucu yeniden deneyebilsin ya da vazgeçebilsin. */
+              ok = false;
+            }
+            if (!ok) {
               setPending(false);
               return;
             }
@@ -469,7 +500,6 @@ function ListPanel({
   locale: Locale;
   labels: BoardLabels;
 }) {
-  const router = useRouter();
   const [renaming, setRenaming] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const renameTriggerRef = useRef<HTMLButtonElement>(null);
@@ -497,7 +527,8 @@ function ListPanel({
             const panel = document.getElementById(`liste-${list.id}`);
             const next = (panel?.nextElementSibling ?? panel?.previousElementSibling) as HTMLElement | null;
             (next?.querySelector<HTMLElement>("button, a") ?? document.querySelector<HTMLElement>("[data-new-list]"))?.focus({ preventScroll: true });
-            router.refresh();
+            /* `router.refresh()` yok (20 Ekim): eylemin `revalidatePath`i
+               güncel ağacı zaten getirdi — gerekçe RenameListForm. */
           }}
         />
       ) : renaming ? (
@@ -604,6 +635,10 @@ function applyOrder(items: BoardItem[], order: string[] | null): BoardItem[] {
   return [...inOrder, ...rest];
 }
 
+/** Yukarı/Aşağı dokunuş dizisinin kaydı, son dokunuştan bu kadar sonra
+    gider (gerekçe `SortableRows` → `bekleyen`). */
+const NUDGE_SETTLE_MS = 600;
+
 function SortableRows({
   list,
   quotes,
@@ -674,6 +709,62 @@ function SortableRows({
     [ordered],
   );
 
+  /* OKLAR TOPLANIYOR (20 Ekim). Her Yukarı/Aşağı dokunuşu ayrı bir eylem
+     çağrısıydı: 45. satırı başa almak 44 çağrı, her biri `/favoriler`i
+     tazeleyip sayfayı yeniden çizdiriyordu; dokunmatikte (oklar orada hep
+     açık) listeyi düzenleyen okuyucu oran kovasına dayanıyor ve sırası
+     sessizce geri sarılıyordu (kova: app/actions/watchlist.ts → "ORAN
+     KOVASI"). Dokunuş yerelde hemen uygulanıyor, kayıt son dokunuştan
+     `NUDGE_SETTLE_MS` sonra TEK çağrıyla gidiyor. Geri alma hedefi dizinin
+     İLK dokunuşundaki sıra: her dokunuşta alınsaydı başarısız kayıt yalnız
+     son adımı geri alırdı. Sürükleme başlarken ve bileşen kalkarken
+     bekleyen kayıt hemen gönderiliyor — sürüklemenin kaydını sonradan gelip
+     ezmesin, uygulama içinde başka sayfaya geçen okuyucunun sırası
+     kaybolmasın. Next eylemleri istemcide sırayla işliyor
+     (app-router-instance → `runRemainingActions`), yani iki kayıt
+     karışmıyor.
+
+     SEKME GİDERKEN DE (20 Ekim). Bileşenin kalkması yalnız uygulama içi
+     gezinmeyi yakalıyordu: sekmeyi kapatan ya da yenileyen okuyucuda React
+     ağacı sökülmüyor, zamanlayıcı hiç ateşlenmiyor ve son 600 ms'nin
+     dokunuşları kayboluyordu. Bekleyen kayıt artık `visibilitychange`
+     (hidden) ve `pagehide`da da gönderiliyor; hangisi önce gelirse o.
+     `hidden` sekme değiştirmede, mobilde uygulamadan çıkışta ve sekme
+     kapanırken sayfa hâlâ canlıyken gelir — mobilde çoğu zaman son
+     güvenilir an. Yenilemede ve aynı sekmede dış adrese gidişte sayfa
+     görünürken söküldüğü için önce `pagehide` gelir. `unload` değil: o
+     geri/ileri önbelleğini kapatıyor. Eylem `keepalive`sız bir `fetch`
+     (Next'in eylem istemcisi), yani tam söküm anında isteğin varması
+     garanti değil — en iyi çaba. Çift gönderim yok: `flushNudges` bekleyeni
+     göndermeden ÖNCE boşaltıyor, iki olay + kalkma + zamanlayıcı aynı kaydı
+     bir kez yolluyor. */
+  const bekleyen = useRef<{
+    ids: string[];
+    previous: string[] | null;
+    timer: ReturnType<typeof setTimeout>;
+  } | null>(null);
+
+  const flushNudges = useCallback(() => {
+    const pending = bekleyen.current;
+    if (!pending) return;
+    bekleyen.current = null;
+    clearTimeout(pending.timer);
+    persist(pending.ids, pending.previous);
+  }, [persist]);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") flushNudges();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", flushNudges);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", flushNudges);
+      flushNudges();
+    };
+  }, [flushNudges]);
+
   const nudge = useCallback(
     (id: string, delta: -1 | 1) => {
       const ids = ordered.map((item) => item.id);
@@ -681,9 +772,18 @@ function SortableRows({
       const to = from + delta;
       if (from === -1 || to < 0 || to >= ids.length) return;
       ids.splice(to, 0, ...ids.splice(from, 1));
-      const onceki = order;
+      const pending = bekleyen.current;
+      if (pending) clearTimeout(pending.timer);
+      const previous = pending ? pending.previous : order;
       setOrder(ids);
-      persist(ids, onceki);
+      bekleyen.current = {
+        ids,
+        previous,
+        timer: setTimeout(() => {
+          bekleyen.current = null;
+          persist(ids, previous);
+        }, NUDGE_SETTLE_MS),
+      };
     },
     [order, ordered, persist],
   );
@@ -741,6 +841,7 @@ function SortableRows({
               <div
                 draggable
                 onDragStart={(event) => {
+                  flushNudges();
                   dragId.current = item.id;
                   dragOncesi.current = order;
                   event.dataTransfer.effectAllowed = "move";
@@ -928,18 +1029,22 @@ function SortableRows({
                     setRemoving((current) => new Set(current).add(item.id));
                     const fd = new FormData();
                     fd.set("itemId", item.id);
+                    let ok = false;
                     try {
-                      await removeSymbolFromList(fd);
+                      ok = (await removeSymbolFromList(fd)).ok;
                     } catch {
+                      ok = false;
+                    }
+                    if (!ok) {
                       // Silinemedi: satır tonuna geri dönüyor, liste yerinde.
                       setRemoving((current) => {
                         const next = new Set(current);
                         next.delete(item.id);
                         return next;
                       });
-                      return;
                     }
-                    router.refresh();
+                    /* Başarıda `router.refresh()` yok (20 Ekim): eylemin
+                       `revalidatePath`i güncel ağacı zaten getirdi. */
                   }}
                   aria-label={`${labels.removeSymbol}: ${item.symbol}`}
                   className="inline-flex size-10 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted/70 opacity-100 transition hover:bg-down-wash hover:text-down opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100 sm:size-7"
@@ -985,7 +1090,6 @@ function AddSymbolRow({
   listId: string;
   labels: BoardLabels;
 }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   /* ARAMA DURUMU TÜRETİLİYOR — gerekçe ve lint kısıtı
@@ -1054,7 +1158,19 @@ function AddSymbolRow({
       const fd = new FormData();
       fd.set("listId", listId);
       fd.set("symbol", symbol);
-      const result = await addSymbolToList(fd);
+      /* FIRLAYAN EYLEM KUTUYU DONDURMUYOR (20 Ekim). Çağrı yakalanmıyordu:
+         sürüm sonrası bayat sekmede eylem fırlayınca `busy` açık kalıyor,
+         kutu salt okunur, sonuç ve hızlı seçim düğmeleri tıklamayı
+         yutuyordu. Sonucu olmayan dönüş (geçersiz sembol, başka sekmede
+         silinmiş liste) ve kova da başarı sayılmıyor. Başarıda
+         `router.refresh()` yok: eylemin `revalidatePath`i güncel ağacı
+         zaten getirdi. */
+      let result: Awaited<ReturnType<typeof addSymbolToList>>;
+      try {
+        result = await addSymbolToList(fd);
+      } catch {
+        result = undefined;
+      }
       /* Zaten ekliyse kutu KAPANMIYOR: okuyucu ne olduğunu görsün ve
          isterse başka bir sembol arasın. */
       if (result?.duplicate) {
@@ -1067,10 +1183,14 @@ function AddSymbolRow({
         setNotice(labels.listFull);
         return;
       }
+      if (!result?.ok) {
+        setBusy(false);
+        setNotice(labels.actionFailed);
+        return;
+      }
       reset();
-      router.refresh();
     },
-    [labels.alreadyInList, labels.listFull, listId, reset, router],
+    [labels.actionFailed, labels.alreadyInList, labels.listFull, listId, reset],
   );
 
   if (!open) {
@@ -1245,7 +1365,6 @@ function ItemNote({
   onEdit: () => void;
   onDone: () => void;
 }) {
-  const router = useRouter();
   const [value, setValue] = useState(item.note ?? "");
   const [failed, setFailed] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -1279,8 +1398,9 @@ function ItemNote({
             return;
           }
           setFailed(false);
+          /* `router.refresh()` yok (20 Ekim): eylemin `revalidatePath`i
+             güncel ağacı zaten getirdi. */
           close();
-          router.refresh();
         }}
       >
         <input

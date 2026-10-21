@@ -3,6 +3,7 @@ import {
   findDate,
   normalizeSymbol,
   parseAmount,
+  splitCsvLine,
   toLines,
   type ImportedTrade,
   type ImportResult,
@@ -27,7 +28,31 @@ export function importCsv(text: string): ImportResult {
   /* Önce kendi dökümümüz: geri yüklenen yedek tahminle değil biçimiyle okunsun. */
   if (looksLikeOwnCsv(text)) return parseOwnCsv(text);
   if (looksLikeIbkrCsv(text)) return parseIbkrCsv(text);
-  return parseGenericLines(toLines(text).map((line) => line.replace(/[,;]/g, " ")));
+  /* Hücreler GERÇEK ayraçtan bölünüyor (20 Ekim). Eskiden her virgül ve
+     noktalı virgül boşluğa çevriliyordu: TR Excel dökümünde (noktalı
+     virgül + ondalık virgül) "174,50" iki sayıya ayrılıp fiyat 174
+     okunuyor, "0,5" adetli satır "Adet Okunamadı"ya düşüyordu; EN'de
+     tırnaklı "1,000" da bölünüyordu. Hücre bütün kalınca ondalığı
+     `guessDecimal` görüyor. */
+  const lines = toLines(text);
+  const sep = csvSeparator(lines);
+  return parseGenericLines(lines.map((line) => splitCsvLine(line, sep).join(" ")));
+}
+
+/**
+ * Dosyanın ayracı: BÜTÜN satırlarda en sık geçen. Yalnızca başlığa ya da
+ * "bir satırda ; var mı"ya bakmak, başlıksız dosyada ya da bir hücresinde
+ * noktalı virgül geçen EN dosyasında yanlış ayraç seçip satırları sessizce
+ * düşürürdü. Eşitlikte noktalı virgül: TR satırında noktalı virgül (hücre
+ * sayısı − 1) ondalık virgülden nadiren az, EN dosyasında ise hiç geçmiyor.
+ */
+function csvSeparator(lines: readonly string[]): "," | ";" | "\t" {
+  const count = (ch: string) => lines.reduce((sum, line) => sum + line.split(ch).length - 1, 0);
+  const comma = count(",");
+  const semicolon = count(";");
+  const tab = count("\t");
+  if (semicolon > 0 && semicolon >= comma && semicolon >= tab) return ";";
+  return tab > comma ? "\t" : ",";
 }
 
 export function importPdfLines(lines: readonly string[]): ImportResult {
@@ -121,14 +146,23 @@ function guessDecimal(lines: readonly string[]): "," | "." {
 /**
  * Dosyaların sonucunu birleştirir ve TEKRARI ayıklar. Midas ekstresi aylık:
  * yılın tamamı on iki PDF ve ay sonundaki işlem iki PDF'te birden
- * görünebiliyor. Anahtar zaman damgası + sembol + yön + adet + fiyat; aynı
- * saniyede aynı fiyattan aynı adet iki ayrı emir gerçekte çok nadir ve
- * ayrıştırıcı onu ayırt edemez — bu bilinçli bir tercih.
+ * görünebiliyor. Anahtar zaman damgası + sembol + yön + adet + fiyat.
+ *
+ * TEKRAR YALNIZCA DOSYALAR ARASINDA (20 Ekim). Tek dosyanın içinde aynı
+ * anahtarlı iki satır iki ayrı işlemdir ve ikisi de kalır; sonraki dosya
+ * bir anahtarı ancak önceki dosyalardan birinde gördüğü SAYI kadar düşürür
+ * (çoklu küme). Eskiden tek bir küme dosyanın içinde de ayıklıyordu ve
+ * damga her satırda saat taşımıyor (genel tanıyıcı, saati alt satıra
+ * kırılan Midas ya da IBKR PDF satırı): aynı gün aynı fiyattan aynı
+ * adetteki iki emirden biri sessizce düşüyor, FIFO maliyeti ve beyan
+ * edilen kazanç kayıyordu. Dosyalar arasında ise aynı damgada aynı fiyattan
+ * aynı adet iki ayrı emir gerçekte çok nadir ve ayrıştırıcı onu ayırt
+ * edemez — bilinçli tercih.
  */
 export function mergeResults(results: readonly ImportResult[]): ImportResult {
   const brokers = new Set(results.map((r) => r.broker));
-  const tradeKeys = new Set<string>();
-  const dividendKeys = new Set<string>();
+  const tradeSeen = new Map<string, number>();
+  const dividendSeen = new Map<string, number>();
   const merged: ImportResult = {
     broker: brokers.size === 1 ? [...brokers][0] : null,
     trades: [],
@@ -136,23 +170,29 @@ export function mergeResults(results: readonly ImportResult[]): ImportResult {
     skipped: [],
   };
   for (const result of results) {
-    for (const trade of result.trades) {
-      const key = [trade.stamp || trade.date, trade.symbol, trade.side, trade.quantity, trade.priceUsd].join("|");
-      if (tradeKeys.has(key)) continue;
-      tradeKeys.add(key);
-      merged.trades.push(trade);
-    }
-    for (const dividend of result.dividends) {
-      const key = [dividend.date, dividend.symbol, dividend.grossUsd].join("|");
-      if (dividendKeys.has(key)) continue;
-      dividendKeys.add(key);
-      merged.dividends.push(dividend);
-    }
-    merged.skipped.push(...result.skipped);
+    /* Satır satır `push` (20 Ekim): `push(...dosya)` bütün satırları
+       argüman olarak geçiriyordu; JavaScriptCore'da 65.536, V8'de ~120 bin
+       argümanda fırlatıyor ve 20 MB'lık yıllık IBKR dökümü oraya varabilir. */
+    unseen(result.trades, tradeSeen, (t) => [t.stamp || t.date, t.symbol, t.side, t.quantity, t.priceUsd].join("|"), merged.trades);
+    unseen(result.dividends, dividendSeen, (d) => [d.date, d.symbol, d.grossUsd].join("|"), merged.dividends);
+    for (const row of result.skipped) merged.skipped.push(row);
   }
   /* Damga kurumun kendi biçiminde ("02/03/26 13:21"), sıralama ISO günle;
      aynı gün içinde damga sırası ekstrenin sırasını koruyor. */
   merged.trades.sort((a, b) => a.date.localeCompare(b.date));
   merged.dividends.sort((a, b) => a.date.localeCompare(b.date));
   return merged;
+}
+
+/** Bir dosyanın, önceki dosyaların karşılamadığı satırlarını `out`a ekler;
+ *  `seen` her anahtarın bir dosyada görülen en büyük sayısını tutar. */
+function unseen<T>(rows: readonly T[], seen: Map<string, number>, keyOf: (row: T) => string, out: T[]): void {
+  const local = new Map<string, number>();
+  for (const row of rows) {
+    const key = keyOf(row);
+    const n = (local.get(key) ?? 0) + 1;
+    local.set(key, n);
+    if (n > (seen.get(key) ?? 0)) out.push(row);
+  }
+  for (const [key, n] of local) seen.set(key, Math.max(n, seen.get(key) ?? 0));
 }

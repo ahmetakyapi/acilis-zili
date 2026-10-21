@@ -93,8 +93,11 @@ export function PushSettings({
   function toggleEarnings(next: boolean) {
     setFlash(null);
     setEarningsOn(next);
+    /* Fırlayan eylem de "düştü" sayılır (20 Ekim): geçişteki yakalanmamış
+       hata hata sınırına gidip Ayarlar sayfasını değiştiriyordu — sürüm
+       sonrası bayat sekmede "Failed to find Server Action". */
     startPref(async () => {
-      const result = await setEarningsReminderAction(next);
+      const result = await setEarningsReminderAction(next).catch(() => ({ ok: false }));
       if (!result.ok) {
         setEarningsOn(!next);
         setFlash({ kind: "error", text: labels.earningsPrefFailed });
@@ -189,7 +192,7 @@ export function PushSettings({
   function test() {
     setFlash(null);
     startTest(async () => {
-      const result = await sendTestPushAction();
+      const result = await sendTestPushAction().catch(() => ({ ok: false }));
       setFlash(result.ok ? { kind: "ok", text: labels.testSent } : { kind: "error", text: labels.testFailed });
     });
   }

@@ -3,6 +3,7 @@ import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import type { SymbolMeta } from "@/lib/data";
 import type { Dictionary } from "@/lib/i18n";
 import { isBuy, isSell, type CongressDetail as CongressDetailData, type TradeRow } from "@/lib/investor-data";
@@ -167,78 +168,95 @@ export function TradeTable({
   locale: string;
   t: Labels;
 }) {
+  /* "DEVAMI VAR" İŞARETİ VE KLAVYE (20 Ekim). Tablonun tabanı 900 piksel ve
+     390'da yalnızca tarih, varlık ve tür görünüyordu; tutar, sahip, ayrıntı
+     ve bildirim sütunlarının sağda durduğunu söyleyen hiçbir şey yoktu —
+     telefonda kaydırma çubuğu duruşta çizilmiyor (gerekçe `ScrollEdges`).
+     Kap artık sağ kenarı soldurarak söylüyor; şirket sütunu solda sabit,
+     yani sol kenar solmuyor (`fixedStart`). Kap odaklanabilir bir bölge:
+     Safari kaydırıcıyı kendiliğinden sekme sırasına almıyor ve sembolsüz
+     satırlarda odaklanacak bağlantı yok (`AnalysisTable` ile aynı karar).
+     Hairline kabın DIŞINDA (`.tableRule`): maske kenarlığı da soldururdu. */
   return (
-    <div className={styles.tableScroll}>
-      <table className={cn(styles.table, styles.tradeTable)}>
-        <thead>
-          <tr>
-            <th scope="col">{t.colDate}</th>
-            <th scope="col">{t.colAsset}</th>
-            <th scope="col">{t.colType}</th>
-            <th scope="col" className={styles.num}>{t.colAmount}</th>
-            <th scope="col">{t.colOwner}</th>
-            <th scope="col">{t.colDetail}</th>
-            <th scope="col">{t.colNotified}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {trades.map((trade) => {
-            const meta = trade.ticker ? known[trade.ticker] : undefined;
-            const detail = tradeDetailText(parseTradeDetail(trade.description), locale, t);
-            const company = (
-              <>
-                {trade.ticker ? (
-                  <LogoTile symbol={trade.ticker} logoUrl={meta?.logoUrl} size="sm" />
-                ) : (
-                  <span className={styles.noLogo} aria-hidden />
-                )}
-                <span className={styles.companyText}>
-                  <b className="numeral">{trade.ticker ?? trade.asset}</b>
-                  <small>{trade.asset}</small>
-                </span>
-              </>
-            );
-            return (
-              <tr key={`${trade.docId}-${trade.rowNo}`}>
-                <td className="numeral whitespace-nowrap">{formatEtDateMedium(trade.txDate, locale)}</td>
-                <th scope="row" className={styles.companyCell}>
-                  {trade.ticker && meta ? (
-                    <Link href={`/hisse/${trade.ticker}`} prefetch={false} className={styles.company} data-cc={trade.ticker}>
-                      {company}
-                    </Link>
+    <div className={styles.tableRule}>
+      <ScrollEdges
+        fixedStart
+        className={styles.tableScroll}
+        tabIndex={0}
+        role="region"
+        aria-label={t.tradesTitle}
+      >
+        <table className={cn(styles.table, styles.tradeTable)}>
+          <thead>
+            <tr>
+              <th scope="col">{t.colDate}</th>
+              <th scope="col">{t.colAsset}</th>
+              <th scope="col">{t.colType}</th>
+              <th scope="col" className={styles.num}>{t.colAmount}</th>
+              <th scope="col">{t.colOwner}</th>
+              <th scope="col">{t.colDetail}</th>
+              <th scope="col">{t.colNotified}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {trades.map((trade) => {
+              const meta = trade.ticker ? known[trade.ticker] : undefined;
+              const detail = tradeDetailText(parseTradeDetail(trade.description), locale, t);
+              const company = (
+                <>
+                  {trade.ticker ? (
+                    <LogoTile symbol={trade.ticker} logoUrl={meta?.logoUrl} size="sm" />
                   ) : (
-                    <span className={styles.company}>{company}</span>
+                    <span className={styles.noLogo} aria-hidden />
                   )}
-                </th>
-                <td>
-                  <span className={styles.moveChip} data-tone={txTone(trade.txType)}>
-                    {txLabel(trade.txType, t)}
+                  <span className={styles.companyText}>
+                    <b className="numeral">{trade.ticker ?? trade.asset}</b>
+                    <small>{trade.asset}</small>
                   </span>
-                  {trade.assetType === "OP" && <small className={styles.cellNote}>{t.optionShort}</small>}
-                </td>
-                <td className={cn("numeral whitespace-nowrap", styles.num)}>
-                  {amountRange(trade.amountLow, trade.amountHigh, locale, t)}
-                </td>
-                <td className="whitespace-nowrap">{ownerLabel(trade.owner, t)}</td>
-                <td className={styles.detailCell}>
-                  {detail ? (
-                    detail.original ? (
-                      <span lang="en" title={t.detailOriginal}>
-                        {detail.text}
-                      </span>
+                </>
+              );
+              return (
+                <tr key={`${trade.docId}-${trade.rowNo}`}>
+                  <td className="numeral whitespace-nowrap">{formatEtDateMedium(trade.txDate, locale)}</td>
+                  <th scope="row" className={styles.companyCell}>
+                    {trade.ticker && meta ? (
+                      <Link href={`/hisse/${trade.ticker}`} prefetch={false} className={styles.company} data-cc={trade.ticker}>
+                        {company}
+                      </Link>
                     ) : (
-                      detail.text
-                    )
-                  ) : null}
-                </td>
-                <td className="numeral whitespace-nowrap text-muted">
-                  {trade.notifiedDate ? formatEtDateMedium(trade.notifiedDate, locale) : null}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                      <span className={styles.company}>{company}</span>
+                    )}
+                  </th>
+                  <td>
+                    <span className={styles.moveChip} data-tone={txTone(trade.txType)}>
+                      {txLabel(trade.txType, t)}
+                    </span>
+                    {trade.assetType === "OP" && <small className={styles.cellNote}>{t.optionShort}</small>}
+                  </td>
+                  <td className={cn("numeral whitespace-nowrap", styles.num)}>
+                    {amountRange(trade.amountLow, trade.amountHigh, locale, t)}
+                  </td>
+                  <td className="whitespace-nowrap">{ownerLabel(trade.owner, t)}</td>
+                  <td className={styles.detailCell}>
+                    {detail ? (
+                      detail.original ? (
+                        <span lang="en" title={t.detailOriginal}>
+                          {detail.text}
+                        </span>
+                      ) : (
+                        detail.text
+                      )
+                    ) : null}
+                  </td>
+                  <td className="numeral whitespace-nowrap text-muted">
+                    {trade.notifiedDate ? formatEtDateMedium(trade.notifiedDate, locale) : null}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </ScrollEdges>
     </div>
   );
 }

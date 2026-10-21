@@ -1078,11 +1078,14 @@ export async function getEditableStories(
        eşleşmeyebiliyor. Aranan sözcük genelde bir şirket adı ("nvidia",
        "gümrük") ve orada sorun çıkmıyor; çıktığında slug dalı yakalıyor. */
     const aranan = filters.search?.trim();
-    const where = aranan
-      ? or(
-          ilike(stories.title, `%${aranan}%`),
-          ilike(stories.slug, `%${aranan}%`),
-        )
+    /* `%` VE `_` KAÇIRILIYOR (20 Ekim denetimi): yüzde Türkçede önde
+       yazılıyor ("%50") ve joker sayılınca içinde "50" geçen her başlık,
+       "_" ile de bütün arşiv eşleşiyordu — "N Eşleşen Yazı" sayımı dahil.
+       Kaçış `app/admin/ai/page.tsx`teki ile aynı; Postgres'in LIKE kaçış
+       karakteri varsayılan olarak ters bölü. */
+    const kalip = aranan ? `%${aranan.replace(/[\\%_]/g, "\\$&")}%` : null;
+    const where = kalip
+      ? or(ilike(stories.title, kalip), ilike(stories.slug, kalip))
       : undefined;
 
     const [rows, [sayim]] = await Promise.all([

@@ -46,11 +46,46 @@ import { InkCanvas } from "./InkCanvas";
    örtülürdü. `self!==top` çerçeveyi yakalıyor (çapraz kökende de
    karşılaştırma serbest); yol denetimi parçanın doğrudan açıldığı hâli.
    Yol denetimi düzenli ifade DEĞİL: şablon dizesinde `\/` kaçışı düşüyor ve
-   betik sözdizimi hatasıyla hiç çalışmıyordu (ölçüldü, konsolda hata). */
-export const INK_SPLASH_SCRIPT = `try{var d=document.documentElement,s=sessionStorage,p=location.pathname;if(p.indexOf("/en/")===0)p=p.slice(3);if(window.self===window.top&&(p+"/").indexOf("/gomulu/")!==0&&!s.getItem("az-ink")&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&!/bot|crawl|spider|slurp|lighthouse|headless|preview/i.test(navigator.userAgent)){s.setItem("az-ink","1");d.classList.add("ink-splash")}}catch(e){}`;
+   betik sözdizimi hatasıyla hiç çalışmıyordu (ölçüldü, konsolda hata).
+
+   DIŞA AKTARILMIYOR (20 Ekim): dize bir dönem buradan kök düzene (sunucu)
+   veriliyordu; "use client" modülün dışa aktardığı değer sunucuya dize
+   değil istemci referansı olarak varıyor ve yalnız tesadüfen, yine bir
+   istemci bileşenine (`next/script`) geçtiği için çalışıyordu. Düzen artık
+   betiği aşağıdaki `InkSplashScript` bileşeniyle basıyor. */
+const INK_SPLASH_SCRIPT = `try{var d=document.documentElement,s=sessionStorage,p=location.pathname;if(p.indexOf("/en/")===0)p=p.slice(3);if(window.self===window.top&&(p+"/").indexOf("/gomulu/")!==0&&!s.getItem("az-ink")&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&!/bot|crawl|spider|slurp|lighthouse|headless|preview/i.test(navigator.userAgent)){s.setItem("az-ink","1");d.classList.add("ink-splash")}}catch(e){}`;
 
 /* Sıra önemli: önce işaret, sonra sınıf. `setItem` kota yüzünden fırlatırsa
    sınıf hiç eklenmiyor; tersinde açılış her yüklemede gösterilirdi. */
+
+/**
+ * Kararı veren betik — kök düzende `<body>`nin İLK çocuğu, HTML ayrıştırılırken
+ * eşzamanlı koşar, yani gövde boyanmadan önce.
+ *
+ * `next/script` + `beforeInteractive` DEĞİL (20 Ekim). 15 Ekim'de ona
+ * geçilmişti ama App Router'da satır içi `beforeInteractive` çalıştırılabilir
+ * kod basmıyor: `self.__next_s` kuyruğuna yazıyor ve kod ancak Next'in
+ * çalışma zamanı açılınca (`app-bootstrap` → `loadScriptsInSequence`), ana
+ * parçalar indikten sonra koşuyor (node_modules/next/dist/client/script.js).
+ * Akan sayfa o arada boyanıyor ve katman üstüne sonradan iniyordu — tam da
+ * yukarıdaki notun önlediğini söylediği kare.
+ *
+ * O geçişin gerekçesi (kök düzen istemcide yeniden çizilince — segment
+ * 404'leri — React'in `<script>` uyarısı) yalnız geliştirme yapısında var.
+ * Next'in kendi kılavuzundaki yardımcı onu da susturuyor: sunucuda
+ * `text/javascript`, istemcide `text/plain`; tür farkını
+ * `suppressHydrationWarning` kabul ediyor, DOM'a eklenen betik zaten koşmuyor
+ * (node_modules/next/dist/docs/01-app/02-guides/preventing-flash-before-hydration.md).
+ */
+export function InkSplashScript() {
+  return (
+    <script
+      type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: INK_SPLASH_SCRIPT }}
+    />
+  );
+}
 
 /** Açılış, gezinmenin başlangıcından bu ana kadar BİTER. 3400'dü; 12 Ekim'de
  *  kapanış girişin yarısına inince (420 → 240, ease-in) tavan da 3000'e indi. */

@@ -2,6 +2,7 @@ import "server-only";
 
 import { and, eq, lt } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { guncelBilanco } from "@/lib/data";
 import { earningsAnalyses, earningsCalendar } from "@/lib/schema";
 import { addEtDays, type MarketStatus } from "@/lib/market-hours";
 import { getQuote } from "@/lib/providers";
@@ -33,13 +34,19 @@ import {
  * İkisi birleşiyor, aynı gün tek satır (saati bilinen kazanır). Tablo
  * zamanla doldukça panel sekiz rapora kendiliğinden ulaşıyor; bugün çoğu
  * sembolde bir iki satır var ve ekran bunu olduğu gibi söylüyor.
+ *
+ * REVİZE EDİLMİŞ TARİHİN ÖLÜ SATIRI SAYILMAZ (20 Ekim). Takvim okuması
+ * `guncelBilanco`dan geçiyor: günlük cron ölü satırları yalnız İLERİ
+ * pencerede siliyor, tarihi geçmiş olanlar tabloda kalıyor. Süzgeçsiz
+ * okuma, raporun OLMADIĞI bir günün hareketini geçmiş ortalamaya katıyor
+ * ve `HISTORY_LIMIT` yüzünden gerçek bir raporu listeden itebiliyordu.
  */
 async function pastReportEvents(symbol: string, today: string): Promise<ReportEvent[]> {
   const [calendar, analyses] = await Promise.all([
     db
       .select({ date: earningsCalendar.reportDate, hour: earningsCalendar.hour })
       .from(earningsCalendar)
-      .where(and(eq(earningsCalendar.symbol, symbol), lt(earningsCalendar.reportDate, today)))
+      .where(and(eq(earningsCalendar.symbol, symbol), lt(earningsCalendar.reportDate, today), guncelBilanco))
       .catch(() => []),
     db
       .selectDistinct({ date: earningsAnalyses.reportDate, timing: earningsAnalyses.timing })

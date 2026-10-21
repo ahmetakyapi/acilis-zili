@@ -4,7 +4,6 @@ import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { stories } from "@/lib/schema";
-import { todayEt } from "@/lib/market-hours";
 import { isLocale } from "@/lib/i18n/config";
 import {
   STORY_INPUT_SHAPE,
@@ -120,8 +119,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const { locale } = await saveStory(parsed, "claude");
-  const eventDate = parsed.event_date ?? todayEt();
+  /* YAZILAN GÜN geri yansıtılıyor, gövdedeki değil: tarih gelmezse gün
+     kayıttan alınıyor (`saveStory`) ve yanıt bir dönem `bugün` diyordu. */
+  const { locale, eventDate } = await saveStory(parsed, "claude");
 
   return NextResponse.json({
     ok: true,

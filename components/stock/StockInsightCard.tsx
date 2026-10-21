@@ -6,7 +6,7 @@ import { ChangePill, Panel, PanelHeader, Skeleton } from "@/components/ui/primit
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import type { EarningsFigure, EarningsInsight, InsightText, MoveInsight, PreviewInsight } from "@/lib/stock-insights";
-import { cn, formatPercent, formatPrice } from "@/lib/utils";
+import { cn, formatMoneyCompact, formatPercent, formatPrice } from "@/lib/utils";
 import { MoveFilm } from "./MoveFilm";
 import styles from "./StockInsightCard.module.css";
 
@@ -177,16 +177,17 @@ function MoveFigure({ insight, locale, labels }: { insight: MoveInsight; locale:
   );
 }
 
-/** Bilanço figürü — her ölçüde beklenti ve gerçekleşen, kendi ölçeğinde iki çizgi. */
+/** Bilanço figürü — her ölçüde beklenti ve gerçekleşen, kendi ölçeğinde iki çizgi.
+    Rakamlar sembolün parasında (20 Ekim, gerekçe lib/stock-insights.ts →
+    `earningsCurrency`): TSM'nin TWD geliri "1470,00 Mr $" yazıyordu. */
 function EarningsFigureView({ insight, locale, labels }: { insight: EarningsInsight; locale: Locale; labels: Labels }) {
   const items = [
-    insight.eps && { key: "eps", label: labels.eps, figure: insight.eps, format: (v: number) => formatPrice(v, locale, { currency: true }) },
+    insight.eps && { key: "eps", label: labels.eps, figure: insight.eps, format: (v: number) => formatPrice(v, locale, { currency: insight.currency ?? true }) },
     insight.revenue && {
       key: "revenue",
       label: labels.revenue,
       figure: insight.revenue,
-      format: (v: number) =>
-        locale === "tr" ? `${(v / 1e9).toFixed(2).replace(".", ",")} Mr $` : `$${(v / 1e9).toFixed(2)}B`,
+      format: (v: number) => formatMoneyCompact(v, locale, insight.currency),
     },
   ].filter(Boolean) as { key: string; label: string; figure: EarningsFigure; format: (v: number) => string }[];
   if (items.length === 0) return null;
@@ -233,7 +234,6 @@ function EarningsFigureView({ insight, locale, labels }: { insight: EarningsInsi
  */
 function PreviewFigure({ insight, locale, labels }: { insight: PreviewInsight; locale: Locale; labels: Labels }) {
   const maxRatio = Math.max(...insight.quarters.map((q) => Math.abs(q.ratio ?? 0)), 0.0001);
-  const revenue = (v: number) => (locale === "tr" ? `${(v / 1e9).toFixed(2).replace(".", ",")} Mr $` : `$${(v / 1e9).toFixed(2)}B`);
   return (
     <div className={styles.figure} data-kind="preview">
       <div className={styles.previewEstimates}>
@@ -242,13 +242,13 @@ function PreviewFigure({ insight, locale, labels }: { insight: PreviewInsight; l
           {insight.epsEstimate !== null && (
             <div className={styles.previewTile} style={{ "--i": 0 } as CSSProperties}>
               <span className={styles.metricRowLabel}>{labels.eps}</span>
-              <span className={styles.previewValue}>{formatPrice(insight.epsEstimate, locale, { currency: true })}</span>
+              <span className={styles.previewValue}>{formatPrice(insight.epsEstimate, locale, { currency: insight.currency ?? true })}</span>
             </div>
           )}
           {insight.revenueEstimate !== null && (
             <div className={styles.previewTile} style={{ "--i": 1 } as CSSProperties}>
               <span className={styles.metricRowLabel}>{labels.revenue}</span>
-              <span className={styles.previewValue}>{revenue(insight.revenueEstimate)}</span>
+              <span className={styles.previewValue}>{formatMoneyCompact(insight.revenueEstimate, locale, insight.currency)}</span>
             </div>
           )}
           {insight.monthPct !== null && (
@@ -412,6 +412,13 @@ export function StockInsightCard({
         <div className={styles.loading} data-kind={kind}>
           {kind === "move" ? (
             <>
+              {/* Film ekran okuyucudan gizli (gerekçe MoveFilm'de); yerine
+                  duran bu satır DÜZ sr-only metin, canlı bölge değil: tarama
+                  kipinde okunur, duyurulmaz (20 Ekim). Bilerek: kart görüş
+                  alanına yaklaşınca kendiliğinden yükleniyor, duyuru gürültü
+                  olurdu; panel de bu satır durdukça `aria-busy`, içindeki
+                  canlı güncelleme zaten bastırılırdı. */}
+              <p className="sr-only">{labels.loading}</p>
               <MoveFilm scenes={labels.film.scenes} sceneLabel={labels.film.scene} symbol={symbol} />
               {/* Filmin altında notun iskeleti: kutu notun ölçülmüş boyunda
                   kalıyor (telefonda 720), film tek başına ~330 tutuyordu. */}

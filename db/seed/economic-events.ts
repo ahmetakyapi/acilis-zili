@@ -6,8 +6,9 @@
  *   - Employment Situation, BLS'in yayımladığı takvimden (kural "ayın ilk
  *     Cuma günü" ama istisnası var: 2027 Ocak'ta ilk Cuma yılbaşına denk
  *     geldiği için yayın 8'ine kaydı. Bu yüzden üretilmiyor, işleniyor.)
- *   - İşsizlik başvuruları, "her Perşembe 08:30 ET" kuralından — tek
- *     ÜRETİLEN seri bu, her tohum koşumunda bugünden bir yıl ileri dolar.
+ *   - İşsizlik başvuruları, "her Perşembe 08:30 ET; perşembe federal
+ *     tatilse çarşamba" kuralından — tek ÜRETİLEN seri bu, her tohum
+ *     koşumunda bugünden bir yıl ileri dolar.
  *
  * Tahmin edilen tarih yazılmaz.
  *
@@ -195,9 +196,35 @@ function payrollEvents(): EconomicEventSeed[] {
 }
 
 /**
- * Haftalık İşsizlik Başvuruları — her Perşembe 08:30 ET.
- * Tatile denk gelen haftalarda BLS bir gün kaydırır; FRED senkronizasyonu
- * bu istisnaları düzeltir.
+ * Perşembe federal tatil mi — o hafta başvurular ÇARŞAMBA açıklanır (DOL:
+ * Şükran Günü her yıl; 1 Ocak, 19 Haziran, 4 Temmuz, 11 Kasım ve 25 Aralık
+ * perşembeye denk geldiğinde — ör. 3 Temmuz 2024, 18 Haziran ve 31 Aralık
+ * 2025). Gözlenen gün kayması (cumartesi → cuma, pazar → pazartesi)
+ * perşembeye hiç düşmediği için takvim tarihi yeter. Yalnız perşembe için
+ * çağrılır: kasımın 22–28'i arasındaki perşembe dördüncü perşembedir.
+ */
+function federalHolidayThursday(date: string): boolean {
+  const [, month, day] = date.split("-").map(Number);
+  if (month === 11 && day >= 22 && day <= 28) return true;
+  return [
+    [1, 1],
+    [6, 19],
+    [7, 4],
+    [11, 11],
+    [12, 25],
+  ].some(([m, d]) => m === month && d === day);
+}
+
+/**
+ * Haftalık İşsizlik Başvuruları — her Perşembe 08:30 ET; perşembe federal
+ * tatilse bir gün önce (`federalHolidayThursday`).
+ *
+ * 20 Ekim'e kadar burada "FRED senkronizasyonu bu istisnaları düzeltir"
+ * yazıyordu ama düzelten yoktu: senkron (lib/calendar-sync.ts →
+ * `finishWithRolling`) aynı üreteci çağırıp yalnız ekliyordu ve ICSA için
+ * FRED'e hiç sormuyor. 26 Kasım 2026 Şükran Günü satırı takvimde, bülten
+ * bağlamında yayın günü olarak duruyordu. Kayma artık burada; senkron da
+ * üretilmeyen gelecek satırları siliyor.
  */
 export function joblessClaimsEvents(from: string, weeks: number): EconomicEventSeed[] {
   const events: EconomicEventSeed[] = [];
@@ -209,7 +236,10 @@ export function joblessClaimsEvents(from: string, weeks: number): EconomicEventS
   }
 
   for (let i = 0; i < weeks; i++) {
-    const date = cursor.toISOString().slice(0, 10);
+    const thursday = cursor.toISOString().slice(0, 10);
+    const date = federalHolidayThursday(thursday)
+      ? new Date(cursor.getTime() - 86_400_000).toISOString().slice(0, 10)
+      : thursday;
     events.push({
       eventDate: date,
       eventTimeEt: "08:30",

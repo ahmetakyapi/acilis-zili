@@ -250,6 +250,14 @@ test("a stock split is not a purchase", () => {
   assert.equal(diff.positions[0].split, 10);
 });
 
+test("a zero-share previous row makes the position new, as on the stock page", () => {
+  /* 20 Ekim: 0 → 100 adet "Değişmedi %0" çıkıyor ve yeni sayımına girmiyordu. */
+  const diff = diffPeriods([holding("A", 100, 1000)], [holding("A", 0, 0)]);
+  assert.equal(diff.positions[0].move, "new");
+  assert.equal(diff.positions[0].changePct, null);
+  assert.equal(diff.counts.new, 1);
+});
+
 test("merged period holdings add up amendments", () => {
   const merged = mergeHoldings([[holding("A", 1, 10)], [holding("A", 2, 20), holding("B", 1, 5)]]);
   assert.deepEqual(merged.map((h) => [h.cusip, h.amount, h.value]), [["A", 3, 30], ["B", 1, 5]]);

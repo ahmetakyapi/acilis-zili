@@ -15,7 +15,7 @@ import { isTranslateConfigured, translatePendingNews } from "@/lib/translate";
  * (Türkçe arayüz çevirisi olmayan haberi ana sayfa seçicisinden düşürüyor).
  * Çeviri tabloda kalır ("önbellek"): her koşu yalnız `headline_tr` boş olan
  * satırları çevirir, aynı haber ikinci kez ücretlenmez. Koşu başına en çok
- * 40 haber — Claude çağrısı BACKGROUND_TIMEOUT_MS'e sığsın.
+ * 40 haber (iki paket); paket başına süre sınırı lib/translate.ts'te.
  *
  * Aynı koşu son iki günde açıklanan büyük bilançoların Claude notunu da
  * önceden yazdırır (lib/stock-insights.ts → warmEarningsInsights) ve
@@ -28,10 +28,31 @@ import { isTranslateConfigured, translatePendingNews } from "@/lib/translate";
 export const dynamic = "force-dynamic";
 export const maxDuration = 280;
 
+/**
+ * TEK KOŞU KİLİDİ (20 Ekim) — app/api/cron/bilanco/route.ts'teki kilidin
+ * aynısı. Betik `curl --max-time 290 --retry 2` ile çağırıyor; soğuk
+ * önbellekli bir gün (sırayla 12 bilanço notu, 10 önizleme, 6 yayın notu,
+ * iki gündem, her biri 60 sn'ye kadar) 290 saniyeyi aşınca curl yeniden
+ * deniyor ama ilk istek sunucuda SÜRÜYOR (`maxDuration` VPS'te uygulanmıyor):
+ * ikinci koşu bitmemiş çeviri, yayın notu ve gündem çağrılarını yeniden
+ * ödüyor, ortak günlük Claude tavanından yiyordu. Uygulama tek süreç; süreç
+ * içi bayrak yeter. Kilitliyken 200 (curl 2xx'i yeniden denemez).
+ */
+let running = false;
+
 export async function GET(request: Request) {
   const auth = checkBearer(request, process.env.CRON_SECRET);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  if (running) return NextResponse.json({ skipped: "running" });
+  running = true;
+  try {
+    return await run();
+  } finally {
+    running = false;
+  }
+}
 
+async function run(): Promise<NextResponse> {
   const report: Record<string, number | string> = {};
   try {
     report.news = await syncMarketNews();

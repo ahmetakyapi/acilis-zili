@@ -1,4 +1,8 @@
-"use client";
+/* SUNUCU BİLEŞENİ (20 Ekim) — `AnalysisVisuals` ve `PriceMap` de. "use client"
+   taşıyordu ama ne kanca ne olay ne tarayıcı API'si var; hareketli parçalar
+   (`Reveal`, `InView`, `CountUp`) zaten kendi istemci yapraklarında. Yönerge
+   bütün rapor ağacını tarayıcıya indirip hidrate ettiriyor, `result`ı ve
+   sözlüğü prop olarak ikinci kez gönderiyordu. */
 import type { SavedAnalysis } from "@/lib/ai-analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { formatPercentPlain, formatPrice } from "@/lib/utils";

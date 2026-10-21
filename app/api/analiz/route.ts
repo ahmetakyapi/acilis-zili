@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { earningsAnalyses } from "@/lib/schema";
 import { isLocale } from "@/lib/i18n/config";
 import { periodSlug } from "@/lib/analysis";
+import { isoDateSchema, localeInputSchema } from "@/lib/content-write";
 import {
   EXTRAS_INPUT_SHAPE,
   counterpartSegmentCount,
@@ -113,11 +114,15 @@ const BodySchema = z.object({
     .max(40)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "yalnızca küçük harf, rakam ve tire")
     .nullish(),
-  locale: z.string().nullish(),
+  /* Dil ve gün DOĞRULANIYOR — gerekçe lib/content-write.ts'te (20 Ekim).
+     Burada bedeli en ağır olanı: "EN" diye gelen çeviri Türkçe analizin
+     üzerine yazılıyordu ve analizin sürüm geçmişi yok, ek alanları da aynı
+     satır kimliğine bağlı — orijinal geri gelmiyordu. */
+  locale: localeInputSchema.nullish(),
   company: z.string().trim().min(1).max(120),
   exchange: z.string().trim().max(20).nullish(),
   sector: z.string().trim().max(120).nullish(),
-  report_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  report_date: isoDateSchema,
   timing: z.enum(["bmo", "amc", "dmh"]).nullish(),
   next_period_label: z.string().trim().max(40).nullish(),
   next_report_estimate: z.string().trim().max(40).nullish(),
@@ -369,7 +374,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const locale = isLocale(parsed.locale) ? parsed.locale : "tr";
+  const locale = parsed.locale ?? "tr";
   const period = parsed.period ?? periodSlug(parsed.period_label);
   if (!period) {
     return NextResponse.json(

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin";
 import {
+  SurumCakismasi,
   briefInputSchema,
   briefRevisionKey,
   saveBrief,
@@ -159,6 +160,23 @@ function alanHatalari(
   return out;
 }
 
+/**
+ * Kaydın yazılamamasının iki nedeni ayrı cümle (20 Ekim): sürüm denetimi
+ * tutmadıysa sorun veritabanında değil — editör açılalı kayda başkası
+ * (rutin, öteki sekme, geri yükleme) yazmış. Sayfa BİLEREK tazelenmiyor:
+ * tazelenen taslak alanlardaki düzeltmeyi silerdi; yazar onu alıp öyle
+ * yeniler. Gerekçe `SurumCakismasi`nda (lib/content-write.ts).
+ */
+function yazmaHatasi(error: unknown): EditorState {
+  return {
+    error:
+      error instanceof SurumCakismasi
+        ? "Kaydedilemedi: kayıt sen düzenlerken değişti. Değişikliğini sakla, sayfayı yenileyip yeniden uygula."
+        : "Kaydedilemedi: veritabanı yazmayı reddetti.",
+    at: new Date().toISOString(),
+  };
+}
+
 /** Durum yuvasının hata cümlesi — kaç alanın kurala uymadığını söyler. */
 function kuralHatasi(alanlar: Record<string, string>): EditorState {
   const n = Object.keys(alanlar).length;
@@ -205,11 +223,15 @@ export async function saveStoryFromAdmin(
   const { input, kaynakSatirlari } = toInput(formData);
   const parsed = storyInputSchema.safeParse(input);
 
-  /* OLAY TARİHİ PANELDE ZORUNLU. Şema onu isteğe bağlı tutuyor — rutin
-     tarih göndermezse gün bugün sayılıyor (`saveStory`) ve o kural rutin
-     için doğru. Panelde ise alanı temizleyen yazar yazıyı SESSİZCE bugüne
-     taşıyordu: hata yok, uyarı yok, arşivde yeri değişmiş bir yazı. Kural
-     yalnızca bu girişte; şemaya koymak rutinin sözleşmesini değiştirirdi. */
+  /* OLAY TARİHİ PANELDE ZORUNLU. Şema onu rutin için isteğe bağlı
+     tutuyor: tarih gelmezse kayıt KENDİ gününde kalıyor, bugün yalnız yeni
+     slug'a veriliyor (`saveStory`). 20 Ekim'e dek tarihsiz güncelleme
+     yazıyı bugüne taşıyordu; panelde alanı temizleyen yazar da yazıyı
+     SESSİZCE bugüne taşıyordu — hata yok, uyarı yok, arşivde yeri değişmiş
+     bir yazı. O kayma artık yok, ama zorunluluk kalıyor: temizlenen alan
+     sessizce yok sayılıp eski gün korunursa yazar istediğinin olmadığını
+     bilmez; hata görür. Kural yalnızca bu girişte; şemaya koymak rutinin
+     sözleşmesini değiştirirdi. */
   const alanlar = parsed.success ? {} : alanHatalari(parsed.error, kaynakSatirlari);
   if (!input.event_date && !alanlar.event_date) {
     alanlar.event_date = "Olay tarihi boş bırakılamaz.";
@@ -218,13 +240,11 @@ export async function saveStoryFromAdmin(
     return kuralHatasi(alanlar);
   }
 
+  /* `seen`: editörün açtığı hâlin damgası — sürüm denetimi `saveStory`de. */
   try {
-    await saveStory(parsed.data, "admin");
-  } catch {
-    return {
-      error: "Kaydedilemedi: veritabanı yazmayı reddetti.",
-      at: new Date().toISOString(),
-    };
+    await saveStory(parsed.data, "admin", String(formData.get("seen") ?? ""));
+  } catch (error) {
+    return yazmaHatasi(error);
   }
 
   mercegiTazele(parsed.data.slug);
@@ -435,13 +455,11 @@ export async function saveBriefFromAdmin(
   });
   if (!parsed.success) return kuralHatasi(alanHatalari(parsed.error));
 
+  /* `seen`: editörün açtığı hâlin içerik özeti (`briefSurumu`). */
   try {
-    await saveBrief(parsed.data, "admin");
-  } catch {
-    return {
-      error: "Kaydedilemedi: veritabanı yazmayı reddetti.",
-      at: new Date().toISOString(),
-    };
+    await saveBrief(parsed.data, "admin", String(formData.get("seen") ?? ""));
+  } catch (error) {
+    return yazmaHatasi(error);
   }
 
   bulteniTazele(parsed.data.date);

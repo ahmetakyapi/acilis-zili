@@ -41,8 +41,13 @@ export function MoveFilm({ scenes, sceneLabel, symbol }: { scenes: readonly stri
 
   const total = scenes.length;
   const title = (scenes[scene] ?? "").replace("{symbol}", symbol);
+  /* FİLM EKRAN OKUYUCUDAN GİZLİ (20 Ekim). Altyazı `aria-live` taşıyordu ve
+     her 2,4 saniyede bir sahne adı okunuyordu ("2/6 Bir Hafta, Beş
+     Seans"…): süs olan bir hikâye, okuyucunun sayfada okuduğu şeyi beş kez
+     bölüyordu. Filmin yerinde kart düz bir sr-only "yükleniyor" satırı
+     taşıyor; tarama kipinde okunur, bilerek duyurulmaz (StockInsightCard). */
   return (
-    <div className={styles.film} style={{ "--count": total } as CSSProperties}>
+    <div className={styles.film} style={{ "--count": total } as CSSProperties} aria-hidden>
       <div className={styles.screen}>
         <span className={styles.perf} aria-hidden />
         <svg key={scene} viewBox="0 0 320 160" className={styles.stage} aria-hidden>
@@ -55,7 +60,7 @@ export function MoveFilm({ scenes, sceneLabel, symbol }: { scenes: readonly stri
         </svg>
         <span className={styles.perf} data-bottom aria-hidden />
       </div>
-      <div className={styles.caption} aria-live="polite">
+      <div className={styles.caption}>
         <span className={styles.counter}>{sceneLabel.replace("{n}", String(scene + 1)).replace("{total}", String(total))}</span>
         <span key={scene} className={styles.title}>{title}</span>
       </div>

@@ -132,6 +132,8 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
   const [, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
   const refresh = useRef<() => void>(() => {});
+  /** Yoklama saatinin ilk dayanağı — elimizdeki görüntünün yaşı (aşağıda). */
+  const mountedAsOf = useRef(initial.asOf);
   const announcedResults = useRef(flowResultSignature(initial.events));
   const detailId = useId();
 
@@ -182,12 +184,30 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
     return () => window.clearTimeout(timer);
   }, [snapshot.events, labels.updatedAnnouncement, locale]);
 
+  /* YOKLAMA SAATE BAĞLI, GÖRÜNÜRLÜĞE DEĞİL (20 Ekim). Gözlemci `observe()`
+     anında bir kez ateşliyor ve bölüm kahramanın hemen altında, 200
+     piksellik payın içinde: hidrasyonun ardından ilk iş, sunucunun bir an
+     önce çizdiği görüntüyü yeniden istemekti. Bölüm görünüme her
+     dönüşünde de 30 saniye beklenmeden bir istek daha gidiyordu; oturumlu
+     okuyucuda her biri önbelleksiz `loadDayFlow`. Artık görünürlük ve
+     sekmeye dönüş yalnız SIRADAKİ yoklamayı kurar: son görüntüden bu yana
+     aralık dolduysa hemen, dolmadıysa kalan sürede. İlk dayanak
+     görüntünün kendi `asOf`u (istemci saati sunucunun gerisindeyse şimdiki
+     an; yoksa ilk yoklama dakikalarca ertelenirdi): geri tuşuyla gelen eski
+     bir görüntü yine hemen tazelenir. Elle tazeleme düğmesi beklemez. */
   useEffect(() => {
     let timer = 0;
     let abort: AbortController | null = null;
     let active = true;
     let visible = true;
     let failures = 0;
+    let lastAt = Math.min(Date.parse(mountedAsOf.current) || Date.now(), Date.now());
+    let nextDelay = 30_000;
+    function due() {
+      window.clearTimeout(timer);
+      if (!active || document.hidden || !visible || abort) return;
+      timer = window.setTimeout(poll, Math.max(0, lastAt + nextDelay - Date.now()));
+    }
     async function poll() {
       window.clearTimeout(timer);
       if (!active || document.hidden || !visible || abort) return;
@@ -223,16 +243,17 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
       } finally {
         window.clearTimeout(timeout);
         abort = null;
+        lastAt = Date.now();
+        nextDelay = delay;
         if (active && visible && !document.hidden) timer = window.setTimeout(poll, delay);
       }
     }
     function onVisibility() {
-      window.clearTimeout(timer);
-      if (!document.hidden && visible) void poll();
+      if (document.hidden) window.clearTimeout(timer); else due();
     }
     const observer = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
-      if (visible) void poll(); else window.clearTimeout(timer);
+      if (visible) due(); else window.clearTimeout(timer);
     }, { rootMargin: "200px" });
     if (ref.current) observer.observe(ref.current);
     document.addEventListener("visibilitychange", onVisibility);
@@ -278,33 +299,38 @@ export function DayFlow({ initial, locale, labels, railLabels, heading }: Props)
      azaltanda bekler; okuyucu bir olayı ELİYLE seçtiği ya da katlı listeyi
      açtığı an kendini tamamen kapatır (WCAG 2.2.2 — durdurma yolu,
      etkileşimin kendisi). Tur sayfayı KAYDIRMAZ; kaydırma yalnızca elle
-     seçimde ve kahraman şeridinden gelen seçimde. */
+     seçimde ve kahraman şeridinden gelen seçimde.
+     BEKLEME DOM'DAN OKUNUR, HER TIKTA (20 Ekim). Efekt her yoklamada
+     yeniden kuruluyor (`events` her başarılı yoklamada yeni dizi) ve
+     `paused` false başlıyordu; imleç ya da odak zaten içerideyken
+     `pointerenter`/`focusin` yeniden ateşlenmediği için bekleme
+     kayboluyordu. Kurulurken DOM'u okumak da yetmedi: imleç ve odak TEK
+     bayrağı paylaşıyordu, biri bitince öbürü de düşüyordu — klavyeyle
+     gezinen okuyucunun altından sayfa kayıp imleç çıkınca `pointerleave`
+     odaklı beklemeyi siliyor, sekiz saniye sonra tur ilerliyor ve odaklı
+     bağlantının gövdesi `inert` olup odak `<body>`ye düşüyordu (WCAG
+     2.4.3); tersine odak çıkınca tur imlecin altında sürüyordu. Artık
+     bayrak yok: her tikte `:hover` ve `activeElement` sorulur, ikisi
+     birbirini silemez ve yeniden kurulmanın önemi kalmaz. `:hover` yalnız
+     gerçek imleçli aygıtta sayılır; dokunmatikte dokunuştan sonra yapışık
+     kalıp turu sonsuza dek durdururdu. */
   useEffect(() => {
     if (!autoTour || allClosed || events.length < 2 || !openId) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const el = ref.current;
-    let paused = false;
+    const canHover = window.matchMedia("(hover: hover)").matches;
     let visible = true;
-    const hold = () => { paused = true; };
-    const release = () => { paused = false; };
-    el?.addEventListener("pointerenter", hold);
-    el?.addEventListener("pointerleave", release);
-    el?.addEventListener("focusin", hold);
-    el?.addEventListener("focusout", release);
     const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; });
     if (el) observer.observe(el);
     const timer = window.setInterval(() => {
-      if (document.hidden || paused || !visible) return;
+      if (document.hidden || !visible) return;
+      if (el && ((canHover && el.matches(":hover")) || el.contains(document.activeElement))) return;
       const at = events.findIndex((event) => event.id === openId);
       setSelectedId(events[(at + 1) % events.length]!.id);
     }, 8_000);
     return () => {
       window.clearInterval(timer);
       observer.disconnect();
-      el?.removeEventListener("pointerenter", hold);
-      el?.removeEventListener("pointerleave", release);
-      el?.removeEventListener("focusin", hold);
-      el?.removeEventListener("focusout", release);
     };
   }, [autoTour, allClosed, events, openId]);
 

@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, lt } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, lt, sql } from "drizzle-orm";
 import { indexMemberOf } from "@/db/seed/indices";
 import { INDEX_STRIP } from "@/db/seed/symbols";
 import { analysisHref } from "@/lib/analysis";
@@ -18,7 +18,7 @@ import { epsSurprise, revenueSurprise, type Surprise } from "@/lib/earnings-week
 import { getEarningsWeek } from "@/lib/earnings-week-data";
 import type { Locale } from "@/lib/i18n/config";
 import { addEtDays, etDateTimeToUtc, isTradingDay, prevTradingDay, todayEt } from "@/lib/market-hours";
-import { getChartBars } from "@/lib/providers";
+import { getChartBarsMulti } from "@/lib/providers";
 import type { Bar } from "@/lib/providers/types";
 import { logoSrc } from "@/lib/logos";
 import { news, watchlistItems, watchlists } from "@/lib/schema";
@@ -137,24 +137,35 @@ function timing(hour: string | null): DigestAheadItem["timing"] {
   return hour === "bmo" ? "bmo" : hour === "amc" ? "amc" : "other";
 }
 
-/** Sembollerin geride kalan haftası — endeks şeridi ve bilanço açıklayan hisseler aynı yoldan. */
+/**
+ * Sembollerin geride kalan haftası — endeks şeridi, bilanço açıklayan
+ * hisseler ve takip listeleri aynı yoldan.
+ *
+ * TOPLU İSTEK (20 Ekim). Sembol başına `getChartBars` vardı: takip
+ * listelerinin birleşimi (150'ye kadar) aynı anda 150–300 Alpaca isteği
+ * (eski önbellek yanıtına bir de taze tekrar) ve 150 ayrı Neon yazması
+ * demekti — ücretsiz katmanın dakikada ~200 sınırına takılan sembol okurun
+ * kutusundan sessizce düşüyordu. `getChartBarsMulti` 3A aralığında 20
+ * sembolü tek istekte alıp tek upsert'le yazıyor. `allowCache: false`:
+ * posta geri alınamaz (yazma katmanı); yedek yol seans içinde çekilmiş
+ * yarım cuma barını kapanış diye verebilirdi.
+ */
 export async function weeklyMoves(symbols: readonly string[], pastMonday: string, pastFriday: string, now: Date): Promise<DigestIndex[]> {
   if (symbols.length === 0) return [];
   const [status, holidays] = await Promise.all([getStatus(), getHolidays()]);
   const range = rangeCovering(pastMonday, todayEt(now));
   if (!range) return [];
   const lastSession = isTradingDay(pastFriday, holidays) ? pastFriday : prevTradingDay(pastFriday, holidays);
-  const moves = await Promise.all(
-    symbols.map(async (symbol): Promise<DigestIndex | null> => {
-      try {
-        const result = await getChartBars(symbol, range, status);
-        return result.ok ? indexMoveFromBars(symbol, result.data, pastMonday, pastFriday, lastSession) : null;
-      } catch {
-        return null;
-      }
-    }),
-  );
-  return moves.filter((move): move is DigestIndex => move !== null);
+  let bars: Record<string, Bar[]>;
+  try {
+    bars = await getChartBarsMulti([...symbols], range, status, { allowCache: false });
+  } catch {
+    return [];
+  }
+  return symbols.flatMap((symbol) => {
+    const move = bars[symbol] ? indexMoveFromBars(symbol, bars[symbol], pastMonday, pastFriday, lastSession) : null;
+    return move ? [move] : [];
+  });
 }
 
 /**
@@ -208,7 +219,20 @@ async function weeklyNews(locale: Locale, pastMonday: string, thisMonday: string
         publishedAt: news.publishedAt,
       })
       .from(news)
-      .where(and(gte(news.publishedAt, etDateTimeToUtc(pastMonday, "00:00")), lt(news.publishedAt, etDateTimeToUtc(thisMonday, "00:00"))))
+      /* SIRA TAVANDAN ÖNCE (20 Ekim). `limit(800)` sırasızdı: Postgres
+         satırları indeks ya da ekleme sırasıyla, yani haftanın BAŞINDAN
+         veriyordu ve yoğun bir haftada cuma bilançolarının haberleri puana
+         hiç ulaşmıyordu. Puan alamayacak satırlar (sembolsüz; Türkçede
+         çevirisiz — aşağıdaki süzgeçle aynı) tavanı da harcamıyor. */
+      .where(
+        and(
+          gte(news.publishedAt, etDateTimeToUtc(pastMonday, "00:00")),
+          lt(news.publishedAt, etDateTimeToUtc(thisMonday, "00:00")),
+          sql`cardinality(${news.symbols}) > 0`,
+          locale === "tr" ? isNotNull(news.headlineTr) : undefined,
+        ),
+      )
+      .orderBy(desc(news.publishedAt))
       .limit(800);
     const scored = rows
       .map((row) => ({ row, score: important(row.symbols, reportedSet) }))

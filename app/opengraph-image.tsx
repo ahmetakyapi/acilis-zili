@@ -15,6 +15,15 @@ import { clockOf, timePair } from "@/lib/session-clock";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 export const alt = "Açılış Zili · ABD Piyasa Takibi";
+/* SAATTE BİR YENİDEN ÇİZİLİYOR (20 Ekim). Rota istek zamanı API'si
+   kullanmadığı için Next onu derlemede BİR KEZ çiziyordu
+   (`prerender-manifest.json`: statik, `revalidate` yok) — `todayEt()` derleme
+   gününde donuyordu ve ABD yaz saati derlemeden sonra değişirse kart,
+   sonraki yayına kadar bir saat yanlış açılış/kapanış basıyordu. Bu rota
+   dinamik segmentli değil, yani `revalidate` burada işliyor (dinamik
+   kardeşlerindeki ölü yapılandırma notu `lib/og.tsx`te). Saat farkı gün
+   sınırında değişiyor; saatlik tazeleme fazlasıyla yetiyor. */
+export const revalidate = 3600;
 
 /* Rayın penceresi: ön seansın başından uzatılmış seansın sonuna (ET 04:00 →
    20:00, on altı saat). Açılış ve kapanış bu pencerenin içindeki GERÇEK
@@ -70,8 +79,9 @@ function DigitTile({ digit, accent }: { digit: string; accent?: boolean }) {
  * sayacın rakam karolarıyla duruyor. KALAN SÜRE bilerek basılmıyor:
  * paylaşım kartları WhatsApp ve X tarafından günlerce önbellekte tutuluyor
  * ve donmuş bir "2g 3sa" yanlış bir sayı olurdu ("uydurma kesinlik yok").
- * Açılış saati ise her gün doğru; kart her istekte o günün tarihiyle
- * hesaplıyor, çünkü ABD yaz saatinde açılış 16:30, kışın 17:30 TR.
+ * Açılış saati ise her gün doğru; kart o günün tarihiyle hesaplıyor ve
+ * saatte bir yeniden çiziliyor (`revalidate`, yukarıda), çünkü ABD yaz
+ * saatinde açılış 16:30, kışın 17:30 TR.
  *
  * Başlık ve künyeler Title Case, açıklama cümle (CLAUDE.md). Eski kart
  * başlığı cümle düzeninde, künyeleri büyük harfle basıyordu.

@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useSyncExternalStore, useTransition } from "react";
-import { usePathname } from "next/navigation";
+import { useSyncExternalStore } from "react";
 import { withLocale } from "@/lib/i18n/routing";
 import {
-  setLocalePreference,
-  setThemePreference,
-} from "@/app/actions/preferences";
-import { LOCALES, type Locale, type Theme } from "@/lib/i18n/config";
+  LOCALES,
+  LOCALE_COOKIE,
+  THEME_COOKIE,
+  type Locale,
+  type Theme,
+} from "@/lib/i18n/config";
 import {
   startRouteProgress,
   stopRouteProgress,
@@ -29,6 +30,25 @@ import { cn } from "@/lib/utils";
    önce yazar, seçim doğrudan DOM'a yazar, bileşen özniteliği dinleyerek
    çizer. Tercih arka planda çereze kaydedilir — tıklama anında görsel değişir.
    -------------------------------------------------------------------------- */
+
+/**
+ * Tercih çerezini TARAYICIDA yazar — server action DEĞİL (20 Ekim).
+ *
+ * İkisi de `app/actions/preferences.ts`teki eylemlerle yazılıyordu. Next 16'da
+ * eylem içinde çerez yazmak isteği "yeniden doğrulandı" sayıyor: yanıt O ANKİ
+ * sayfayı bütün düzenleriyle sunucuda yeniden çiziyor (hisse sayfasında
+ * kotasyon, veritabanı, sağlayıcılar) ve istemci yönlendirici önbelleğini
+ * siliyor — yalnız bir çerez için. Üst üste iki tema tıklamasında ilk eylemin
+ * ağacı `data-theme`i eski değere çekip ekranı bir an geri çeviriyordu; dil
+ * değişimi de tam sayfa yüklemesinden önce eski dildeki bu boş çizimi
+ * bekliyordu. İki çerez de `httpOnly` değil (proxy ve `global-error` okuyor),
+ * yani tarayıcıda yazmak eşdeğer. Ömür proxy'nin yazdığıyla aynı, bir yıl
+ * (`LOCALE_COOKIE_MAX_AGE`, `proxy.ts`).
+ */
+function writePreference(name: string, value: string) {
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${name}=${value}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax${secure}`;
+}
 
 function subscribeTheme(callback: () => void) {
   const observer = new MutationObserver(callback);
@@ -77,10 +97,20 @@ export function useThemePreference(initialTheme: Theme) {
   ) => {
     if (next === readTheme()) return;
     const root = document.documentElement;
-    // Görsel değişim tıklama anında, çerez arka planda. Sunucuyu beklersek
-    // tema geç dönüyor ve düğme donmuş gibi duruyor.
-    const apply = () => root.setAttribute("data-theme", next);
-    void setThemePreference(next);
+    // Görsel değişim tıklama anında, çerez tarayıcıda; sunucu hiç
+    // beklenmiyor. Beklersek tema geç dönüyor ve düğme donmuş gibi duruyor.
+    const apply = () => {
+      root.setAttribute("data-theme", next);
+      /* Tarayıcı çubuğu da ürünün temasını izler (`generateViewport`,
+         app/layout.tsx). Eylemin sunucu çizimi bu etiketi yan etkiyle
+         tazeliyordu; eylem kalkınca (20 Ekim) değer yeni temanın
+         `--page-bg`sinden okunuyor — iki yerde yaşayan renge üçüncü bir
+         kopya eklemeden. */
+      document
+        .querySelector('meta[name="theme-color"]')
+        ?.setAttribute("content", getComputedStyle(root).getPropertyValue("--page-bg").trim());
+    };
+    writePreference(THEME_COOKIE, next);
 
     /* YENİ TEMA TIKLANAN YERDEN YAYILIYOR. İki tema arasında anlık geçiş
        bütün ekranı tek karede çeviriyordu — göz neyin değiştiğini değil
@@ -121,24 +151,12 @@ export function useThemePreference(initialTheme: Theme) {
 
 /** Dil seçimi — çerezi yazar, sonra aynı sayfanın öteki diline gider. */
 export function useLocalePreference(initialLocale: Locale) {
-  const [pending, startTransition] = useTransition();
-  const pathname = usePathname();
-
-  /* Dil değişimi bir gezinme DEĞİL — adres aynı kalıyor, çerez yazılıyor ve
-     sunucu ağacı yeniden çiziliyor. `RouteProgress` tıklamaları dinleyerek
-     çalıştığı için bunu göremiyor; göstergeyi geçişin kendisine bağlıyoruz. */
-  useEffect(() => {
-    if (pending) startRouteProgress();
-    else stopRouteProgress();
-  }, [pending]);
-
   const pickLocale = (next: Locale) => {
     if (next === initialLocale) return;
-    /* Geçiş gövdesi ASENKRON. `startTransition(() => void action())` yazılırsa
-       gövde `undefined` döndürdüğü için React geçişi o anda bitmiş sayıyor:
-       `pending` bir kare true olup hemen false'a düşüyor ve gösterge hiç
-       görünmüyordu. Söz döndürülünce geçiş sunucu eylemi bitene kadar açık
-       kalıyor — React 19'un asenkron geçişleri. */
+    /* Gösterge elle açılıyor: `RouteProgress` bağlantı tıklamalarını
+       dinliyor, bir düğmeden çıkan `location.assign`i görmüyor. Eskiden
+       sunucu eyleminin geçişine (`useTransition`) bağlıydı; eylem kalkınca
+       (20 Ekim, bkz. `writePreference`) bekleyecek bir geçiş de kalmadı. */
     /* TAM SAYFA GEZİNMESİ — `router.push` DEĞİL.
        Dil değişimi bir rota değişimi değil, BÜTÜN AĞACIN değişimi: `<html
        lang>` ve masthead kök düzende çiziliyor ve App Router istemci
@@ -152,14 +170,33 @@ export function useLocalePreference(initialLocale: Locale) {
 
        Tam gezinme bir tur ağ maliyeti demek ama dil değişimi ender ve
        bilinçli bir eylem; doğruluk hızdan önce gelir. Çerez de yazılıyor ama
-       ikincil: önekSİZ adreslerde tercihi hatırlatan şey o. */
-    startTransition(async () => {
-      await setLocalePreference(next);
-      window.location.assign(withLocale(pathname, next));
-    });
+       ikincil: önekSİZ adreslerde tercihi hatırlatan şey o.
+
+       O ANKİ adres TAZELENMEZ, doğrudan yeni dilin adresine gidilir:
+       `/en/...`te kalıp tazelemek proxy'de çerezi sessizce `en`e geri
+       yazıyordu ("önekli adrese gelmek de bir dil seçimidir", proxy.ts).
+
+       SORGU VE ÇAPA TAŞINIR (20 Ekim): ekran durumu adreste yaşıyor
+       (karşılaştırmanın sembolleri ve aralığı, dizinin süzgeci ve sıralaması)
+       ve yalnız yol taşınınca dil değişimi o durumu sıfırlıyordu. Sorgu
+       değerleri dilden bağımsız kodlar; öteki dilde olmayan bir çapa
+       yok sayılıyor. */
+    writePreference(LOCALE_COOKIE, next);
+    startRouteProgress();
+    /* Geri tuşu sayfayı bfcache'ten dondurulmuş hâliyle getirirse gösterge
+       açık kalır ve sayfa 10 saniyelik frene kadar soluk durur. */
+    window.addEventListener(
+      "pageshow",
+      (event) => {
+        if (event.persisted) stopRouteProgress();
+      },
+      { once: true },
+    );
+    const { pathname, search, hash } = window.location;
+    window.location.assign(withLocale(pathname, next) + search + hash);
   };
 
-  return { pending, pickLocale };
+  return { pickLocale };
 }
 
 /**

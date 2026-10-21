@@ -96,7 +96,10 @@ export const loadBellReport = cache(
         loadShowcase(userId, locale, otherSectorLabel),
       ]);
 
-    const joinedDay = row.joinedAt.toISOString().slice(0, 10);
+    /* Üyelik günü de ET günü (20 Ekim): `toISOString()` UTC gününü veriyordu
+       ve 20:00–24:00 ET (yazın; kışın 19:00) kaydı ertesi güne kayıyordu —
+       ET gece yarısına dek seans sayısı 0, sonra kayıt günü hep eksik. */
+    const joinedDay = todayEt(row.joinedAt);
     const today = todayEt();
     const memberDays = Math.max(
       1,

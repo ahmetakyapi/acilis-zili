@@ -197,12 +197,24 @@ export function StoryEditor({
 
   /* Sunucudan YENİ taslak geldiyse (kaydetme, geri yükleme) alanlar onunla
      yenilenir. Render içinde ve koşullu: React bunu aynı geçişte işleyip
-     etkisiz ikinci bir çizimle bitiriyor. */
+     etkisiz ikinci bir çizimle bitiriyor.
+
+     KAYIT SÜRERKEN YAZILAN KORUNUR (20 Ekim denetimi). Kaydet yalnızca
+     düğmeyi kilitliyor, kutular açık; kayıt ~1 sn sürüyor ve dönen taslak,
+     o arada yazılan cümleyi gönderilen hâlle eziyordu — üstelik kirlilik de
+     sıfırlandığı için çıkış uyarısı da susuyordu. Taslak artık yalnızca
+     alanlar GÖNDERİLEN hâldeyse benimseniyor; geri yükleme `null` bırakıp
+     her zaman yeniliyor. Ref değil durum: render'da ref okumak
+     `react-hooks/refs` kuralına takılıyor. */
+  const [gonderilen, setGonderilen] = useState<string | null>(null);
   const imza = JSON.stringify([draft.updatedAt, alanlarOf(draft)]);
   const [taban, setTaban] = useState(imza);
   if (imza !== taban) {
     setTaban(imza);
-    setAlanlar(alanlarOf(draft));
+    if (gonderilen === null || kayitHali(alanlar) === gonderilen) {
+      setAlanlar(alanlarOf(draft));
+    }
+    setGonderilen(null);
   }
 
   const kirli = kayitHali(alanlar) !== kayitHali(alanlarOf(draft));
@@ -260,6 +272,7 @@ export function StoryEditor({
     }
     const fd = new FormData();
     fd.set("revisionId", id);
+    setGonderilen(null);
     startTransition(() => geriYukleEylemi(fd));
   };
 
@@ -282,12 +295,18 @@ export function StoryEditor({
       onSubmit={(event) => {
         event.preventDefault();
         const fd = new FormData(event.currentTarget);
+        setGonderilen(kayitHali(alanlar));
         startTransition(() => kaydet(fd));
       }}
       className="flex flex-col"
     >
       <input type="hidden" name="slug" value={draft.slug} />
       <input type="hidden" name="locale" value={draft.locale} />
+      {/* SÜRÜM DENETİMİ (20 Ekim): editörün açtığı hâlin damgası. Kayıt bu
+          arada değiştiyse eylem yazmıyor — gerekçe lib/content-write.ts →
+          `SurumCakismasi`. Taslak her kayıttan sonra tazelendiği için değer
+          kendi kaydını izliyor. */}
+      <input type="hidden" name="seen" value={draft.updatedAt ?? ""} />
 
       <div className="grid gap-x-6 gap-y-6 lg:grid-cols-2">
         {/* SIRA İŞE GÖRE: başlık, giriş, sonra GÖVDE. Gövde bir dönem beş

@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { canonicalSymbol } from "@/lib/symbols";
 import { fail, ok, responseDate, type ProviderResult } from "./types";
-import { withTimeout } from "./timeout";
+import { withBody } from "./timeout";
 
 /**
  * Alpaca kurumsal işlemler — nakit temettüler.
@@ -77,7 +77,8 @@ async function fetchPage(
 ): Promise<ProviderResult<RawPage>> {
   const url = `${BASE}?${new URLSearchParams(params).toString()}`;
   try {
-    const res = await withTimeout(
+    /* Süre sınırı gövdeyi de kapsıyor (`withBody`, lib/providers/timeout.ts). */
+    const { res, body } = await withBody(
       fetch(url, {
         headers: {
           "APCA-API-KEY-ID": creds.key,
@@ -86,10 +87,11 @@ async function fetchPage(
         },
         next: { revalidate: DIVIDEND_REVALIDATE_SECONDS, tags: ["dividends"] },
       }),
+      (r) => (r.ok ? r.json() : null),
     );
     if (res.status === 429) return fail("alpaca", "rate-limited", "Alpaca istek limiti aşıldı");
     if (!res.ok) return fail("alpaca", "upstream-error", `Alpaca kurumsal işlemler ${res.status}`);
-    return ok((await res.json()) as RawPage, "alpaca", { fetchedAt: responseDate(res) });
+    return ok(body as RawPage, "alpaca", { fetchedAt: responseDate(res) });
   } catch (error) {
     return fail("alpaca", "network", error instanceof Error ? error.message : "Alpaca'ya ulaşılamadı");
   }

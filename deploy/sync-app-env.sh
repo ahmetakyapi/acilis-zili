@@ -36,8 +36,9 @@ import pathlib, shlex, sys
 print("sudo -n python3 -c " + shlex.quote(pathlib.Path(sys.argv[1]).read_text()))
 PY
 )
-# Host anahtarı sabitlemesi — gerekçe deploy.yml (15 Ekim).
-ssh_args=(-i "$key_file" -o BatchMode=yes -o "StrictHostKeyChecking=${strict:-accept-new}" -o ConnectTimeout=15 "ubuntu@$HOST")
+# Host anahtarı sabitlemesi — gerekçe deploy.yml (15 Ekim). ServerAlive:
+# ölü oturum iki dakikada düşer (gerekçe deploy.yml, 20 Ekim).
+ssh_args=(-i "$key_file" -o BatchMode=yes -o "StrictHostKeyChecking=${strict:-accept-new}" -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=4 "ubuntu@$HOST")
 printf '%s' "$payload" | ssh "${ssh_args[@]}" "$remote_command"
 if [[ "${RESTART:-1}" != "0" ]]; then
   ssh "${ssh_args[@]}" 'sudo -n systemctl restart acilis-zili && sudo -n systemctl is-active --quiet acilis-zili'

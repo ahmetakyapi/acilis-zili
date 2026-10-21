@@ -73,10 +73,10 @@ export async function generateMetadata(props: PageProps<"/u/[username]">) {
       };
     }
   }
-  /* Yazar görünümü (gövdedeki düşüşün aynısı): yayını olan üyenin sayfası
-     gerçek başlığıyla açılır. */
+  /* Yazar görünümü (gövdedeki düşüşün aynısı, `hasAuthorView`): yayını ya
+     da raporu olan üyenin sayfası gerçek başlığıyla açılır. */
   const author = await getAuthorProfile(username);
-  if (author && (await getPublishedPostsByUser(author.userId)).length > 0) {
+  if (author && (await hasAuthorView(author.userId))) {
     return {
       title: `${author.username} · ${t.profile.title}`,
       description: metaDescription(t.profile.subtitle),
@@ -84,6 +84,18 @@ export async function generateMetadata(props: PageProps<"/u/[username]">) {
     };
   }
   return missingMetadata(locale);
+}
+
+/* Gizli profilde yazar görünümünün TEK ölçüsü: yayında yazı ya da Claude
+   raporu. Gövde ile `generateMetadata` koşulu ayrı yazıyordu ve rapor
+   yalnız gövdeye eklenmişti: yalnız raporu olan üyenin sayfası 200 dönüp
+   "Bulunamadı" başlığı ve noindex taşıyordu (20 Ekim). İki okuma da
+   `cache()`li; gövde ikinci kez sorgu ödemiyor. */
+async function hasAuthorView(userId: string): Promise<boolean> {
+  return (
+    (await getPublishedPostsByUser(userId)).length > 0 ||
+    (await listUserReports(userId)).length > 0
+  );
 }
 
 function Badge({ children }: { children: React.ReactNode }) {
@@ -106,18 +118,13 @@ export default async function ProfilePage(props: PageProps<"/u/[username]">) {
 
   let profile: PublicProfile | null =
     isOwner && viewer?.id ? await getOwnerProfile(viewer.id) : await getPublicProfile(raw);
-  /* Gizli profil ama yayında yazısı var: yazar görünümü — yalnız künye ve
-     yazılar (gerekçe lib/profile-data.ts → getAuthorProfile). Yazısız
-     hesap yine 404: sayım orakülü yazarlar dışında kapalı kalır. */
+  /* Gizli profil ama yayında yazısı ya da raporu var: yazar görünümü —
+     yalnız künye, yazılar ve raporlar (gerekçe lib/profile-data.ts →
+     getAuthorProfile). Yazısız ve raporsuz hesap yine 404: sayım orakülü
+     yazarlar dışında kapalı kalır. */
   if (!profile && !isOwner) {
     const author = await getAuthorProfile(raw);
-    if (
-      author &&
-      ((await getPublishedPostsByUser(author.userId)).length > 0 ||
-        (await listUserReports(author.userId)).length > 0)
-    ) {
-      profile = author;
-    }
+    if (author && (await hasAuthorView(author.userId))) profile = author;
   }
   if (!profile) notFound();
 

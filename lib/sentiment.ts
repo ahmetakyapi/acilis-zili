@@ -29,6 +29,9 @@
  * 52 hafta bandı gelmiyor; bu ekran için ucuza türetilemiyor.
  */
 
+import { isSessionTrade, type MarketStatus } from "./market-hours";
+import type { Quote } from "./providers/types";
+
 /** Yüzdelik sıranın bakıldığı pencere — ~6 ay işlem günü. */
 export const SENTIMENT_LOOKBACK = 126;
 /** Sıranın anlamlı sayıldığı en az gözlem; altında bileşen "eksik". */
@@ -202,6 +205,30 @@ export function breadthReading(
   if (members <= 0 || known <= 0 || known / members < MIN_BREADTH_COVERAGE) return null;
   const share = (advancing / known) * PERCENT;
   return { key: "breadth", score: share, value: share, reference: null, date };
+}
+
+/**
+ * Genişliğin sayımı — `breadthReading`in girdisi. Değişimi bilinmeyen satır
+ * "yatay" sayılmıyor, hiç sayılmıyor; seansı KANITLAMAYAN satır da (20
+ * Ekim): açılış öncesinde henüz işlem görmemiş üyenin yüzdesi dünün tam
+ * günü ve bugünün tarihli okumasına giremez (gerekçe
+ * `lib/sentiment-data.ts` → `breadth`).
+ */
+export function breadthCounts(
+  symbols: readonly string[],
+  quotes: Readonly<Record<string, Pick<Quote, "changePct" | "tradedAt"> | undefined>>,
+  status: MarketStatus,
+): { advancing: number; known: number } {
+  let known = 0;
+  let advancing = 0;
+  for (const symbol of symbols) {
+    const quote = quotes[symbol];
+    if (!quote || quote.changePct === null || quote.changePct === undefined) continue;
+    if (!isSessionTrade(quote.tradedAt, status)) continue;
+    known += 1;
+    if (quote.changePct > 0) advancing += 1;
+  }
+  return { advancing, known };
 }
 
 export const SENTIMENT_BANDS = [

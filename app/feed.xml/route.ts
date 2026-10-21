@@ -40,8 +40,19 @@ import { SITE_URL, INDEXABLE } from "@/lib/site";
 /** Beslemede taşınan en yeni kayıt sayısı — okuyucular zaten geçmişi tutar. */
 const FEED_LIMIT = 30;
 
+/* XML 1.0'IN İZİN VERDİĞİ KARAKTERLER DIŞINDAKİ HER ŞEY ATILIR (20 Ekim).
+   Kaçış yalnız & < > " biliyordu; rutin JSON'undaki bir `\f` ya da `\b`,
+   panele yapışan bir dikey sekme metne C0 denetim karakteri olarak giriyor
+   ve katı okuyucular (Feedly, NetNewsWire) beslemenin TAMAMINI bozuk sayıp
+   reddediyordu — öğe 30'luk pencereden düşene kadar. `GET`teki "veritabanı
+   hatası beslemeyi çökertmiyor" gerekçesinin aynısı: ayrıştırılamayan
+   gövde de okuyucu için başarısız bir çekim. Küme XML'in
+   `Char` tanımı; `u` bayrağıyla eşsiz vekil (surrogate) de düşer. */
+const XML_ILLEGAL = /[^\t\n\r -퟿-�\u{10000}-\u{10FFFF}]/gu;
+
 function escapeXml(value: string): string {
   return value
+    .replace(XML_ILLEGAL, "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")

@@ -17,8 +17,14 @@ import { rateLimit } from "@/lib/rate-limit";
  * `chartPlaceholder`: ::: grafik bloğunun istemci bileşeni sunucu eyleminin
  * istemci manifestinde yok — gerçek grafik "Client Manifest" hatasıyla
  * düşer (content-preview'daki tuzak kaydı).
+ *
+ * `locale` YAZININ dili (20 Ekim). Sabit "tr" çiziliyordu, yayındaki sayfa
+ * ise `post.locale` ile: İngilizce yazıda etiketsiz `::: ozet` önizlemede
+ * "Özet", yayında "Summary" oluyor, tablo başlıklarının büyük harfi de
+ * Türkçe kuralla (i → İ) çiziliyordu. Eylem dışarıdan çağrılabildiği için
+ * değer süzülür.
  */
-export async function previewUserPostBody(markdown: string) {
+export async function previewUserPostBody(markdown: string, locale: unknown) {
   const session = await auth();
   /* Sessiz null DEĞİL fırlatma: useOnizleme hatayı yakalayıp "Çizilemedi"
      yazıyor; null dönseydi panel boşalır ve durum "Güncel" derdi
@@ -30,7 +36,7 @@ export async function previewUserPostBody(markdown: string) {
   return (
     <ArticleBody
       markdown={markdown}
-      locale="tr"
+      locale={locale === "en" ? "en" : "tr"}
       chartPlaceholder
       variant="editorial"
       className={editorial.prose}

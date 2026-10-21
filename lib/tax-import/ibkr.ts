@@ -260,6 +260,12 @@ export function parseIbkrText(lines: readonly string[]): ImportResult {
         continue;
       }
       const before = line.slice(0, date.index).trim();
+      const day = line.slice(date.index, date.index + date.length);
+      /* Saat damgaya da giriyor (20 Ekim), CSV yolundaki biçimle ("2024-03-15,
+         10:30:12"): dosyalar arası ayıklama (`mergeResults`) aynı gün aynı
+         adet ve fiyattaki iki emri saatinden ayırt ediyor. Eskiden damga
+         yalnız gündü. Saat alt satıra kırıldıysa yine yalnız gün. */
+      const time = /^,?\s*(\d{1,2}:\d{2}(?::\d{2})?)/.exec(line.slice(date.index + date.length))?.[1];
       const after = line
         .slice(date.index + date.length)
         .replace(/^,?\s*\d{1,2}:\d{2}(:\d{2})?/, "")
@@ -275,7 +281,7 @@ export function parseIbkrText(lines: readonly string[]): ImportResult {
       }
       const trade = ibkrTrade({
         symbol: before,
-        dateTime: line.slice(date.index, date.index + date.length),
+        dateTime: time ? `${day}, ${time}` : day,
         quantity: numbers[0],
         price: numbers[1],
         proceeds: numbers[3] ?? "",

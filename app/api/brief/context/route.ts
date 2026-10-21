@@ -26,6 +26,7 @@ import {
 } from "@/lib/brief-indices";
 import { fillEventActuals } from "@/lib/calendar-sync";
 import { getEarningsWithOverrides, sourceFields } from "@/lib/earnings-overrides";
+import { isIsoDay } from "@/lib/date-input";
 
 /**
  * Bülten için ham veri paketi.
@@ -49,8 +50,6 @@ function authorized(request: Request): AuthOutcome {
   return checkBearer(request, process.env.BRIEF_SECRET);
 }
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
 /** O günün tatil kaydı — yarım gün de kayıt, `early_close_et` dolu. */
 function holidayOf(date: string, holidays: MarketHoliday[]): MarketHoliday | null {
   return holidays.find((holiday) => holiday.date === date) ?? null;
@@ -67,7 +66,9 @@ export async function GET(request: Request) {
   const period = periodParam === "weekly" ? "weekly" : "daily";
   const dateParam = url.searchParams.get("date");
   const today = todayEt();
-  const date = dateParam && DATE_RE.test(dateParam) ? dateParam : today;
+  /* Takvimde olmayan gün de bugüne düşer — gerekçe `isoDateSchema`da
+     (lib/content-write.ts). */
+  const date = dateParam && isIsoDay(dateParam) ? dateParam : today;
 
   const anchor = period === "weekly" ? weekAnchor(date) : date;
   const from = anchor;

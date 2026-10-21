@@ -1,6 +1,9 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { signInAction } from "@/app/actions/auth";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { getI18n } from "@/lib/i18n";
+import { withLocale } from "@/lib/i18n/routing";
 import { emailConfigured } from "@/lib/email";
 
 import { pageMetadata } from "@/lib/page-meta";
@@ -17,7 +20,10 @@ export const generateMetadata = pageMetadata({
 });
 
 export default async function SignInPage(props: PageProps<"/giris">) {
-  const [{ t }, search] = await Promise.all([getI18n(), props.searchParams]);
+  const [{ t, locale }, search, session] = await Promise.all([getI18n(), props.searchParams, auth()]);
+  /* Girmiş okuyucu ana sayfaya — proxy'de değil burada, gerçek oturumla
+     (20 Ekim): çerezin varlığı yetmez, ölü çerez kalıcı (proxy.ts, 2. iş). */
+  if (session?.user) redirect(withLocale("/", locale));
   const continueTo =
     typeof search.devam === "string" ? search.devam : undefined;
 

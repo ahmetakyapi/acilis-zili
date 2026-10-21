@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
+import { PAREN_STOPLIST } from "./autolink";
 
 /**
  * Kendi punto adlarımız — `--text-*` tokenlarının ölçü olanları.
@@ -393,6 +394,35 @@ export function withCurrency(
 }
 
 /**
+ * Intl BİÇİMLENDİRİCİLERİ BİR KEZ KURULUR (20 Ekim). Buradaki her sayı ve
+ * tarih yardımcısı her çağrıda yeni bir `Intl.NumberFormat` /
+ * `DateTimeFormat` kuruyordu: Node 22'de kurmak ~35 / ~80 µs, hazırını
+ * kullanmak ~0,7 µs. Ölçüm (Node 22): /sirketler'in 60 satırlık tablosunun
+ * biçimlendirmesi 9,6 → 2,2 ms, 100 tarih künyesi 7,5 → 0,25 ms — her SSR'da,
+ * tek VPS'in tek iş parçacığında, istemci tablolarında bir kez daha.
+ * Seçenekler dil × hane sayısıyla sınırlı, anahtar ikisinden kurulur; çıktı
+ * bayt bayt aynı (eski sürümle 630 bin karşılaştırma, fark 0;
+ * tests/format-cache.test.ts). Desen lib/session-clock.ts'in KEYS/CLOCKS'u.
+ */
+const intlTag = (locale: string) => (locale === "tr" ? "tr-TR" : "en-US");
+
+const NUMBER_FORMATS = new Map<string, Intl.NumberFormat>();
+
+/** Sabit ondalıklı sayı biçimi: `digits` hem alt hem üst sınır. */
+function numberFormat(locale: string, digits: number): Intl.NumberFormat {
+  const key = `${intlTag(locale)}|${digits}`;
+  let format = NUMBER_FORMATS.get(key);
+  if (!format) {
+    format = new Intl.NumberFormat(intlTag(locale), {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    });
+    NUMBER_FORMATS.set(key, format);
+  }
+  return format;
+}
+
+/**
  * EKSİ İŞARETİ SİMGENİN ÖNÜNDE — "−$0.19" / "−0,19 $", "$-0.19" değil.
  *
  * İşaret sayının parçası olarak biçimlendirilip başına dolar konunca ortaya
@@ -410,10 +440,7 @@ export function formatPrice(
 ) {
   if (value === null || value === undefined || Number.isNaN(value)) return NO_VALUE;
   const { currency = false, digits = 2 } = opts;
-  const nf = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  });
+  const nf = numberFormat(locale, digits);
   if (!currency) return nf.format(value);
   const body = withCurrency(
     nf.format(Math.abs(value)),
@@ -472,10 +499,7 @@ export function formatPercent(
   digits = 2,
 ) {
   if (value === null || value === undefined || Number.isNaN(value)) return NO_VALUE;
-  const formatted = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  }).format(Math.abs(value));
+  const formatted = numberFormat(locale, digits).format(Math.abs(value));
   const sign = value > 0 ? "+" : value < 0 ? "−" : "";
   return withPercent(formatted, locale, sign);
 }
@@ -493,20 +517,14 @@ export function formatPercentPlain(
   digits = 1,
 ) {
   if (value === null || value === undefined || Number.isNaN(value)) return NO_VALUE;
-  const formatted = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  }).format(Math.abs(value));
+  const formatted = numberFormat(locale, digits).format(Math.abs(value));
   return withPercent(formatted, locale);
 }
 
 /** Mutlak değişim — 2.41 → "+2,41" */
 export function formatChange(value: number | null | undefined, locale: string) {
   if (value === null || value === undefined || Number.isNaN(value)) return NO_VALUE;
-  const formatted = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Math.abs(value));
+  const formatted = numberFormat(locale, 2).format(Math.abs(value));
   const sign = value > 0 ? "+" : value < 0 ? "−" : "";
   return sign ? `${sign}${SIGN_GAP}${formatted}` : formatted;
 }
@@ -592,11 +610,7 @@ export function formatCompact(
     if (size >= 10) return 1;
     return 2;
   };
-  const nf = (digits: number) =>
-    new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
-      minimumFractionDigits: digits,
-      maximumFractionDigits: digits,
-    });
+  const nf = (digits: number) => numberFormat(locale, digits);
 
   for (let i = 0; i < units.length; i += 1) {
     if (abs < units[i]!.v) continue;
@@ -622,9 +636,9 @@ export function formatCompact(
 /** Hacim — tam sayı, binlik ayraçlı */
 export function formatVolume(value: number | null | undefined, locale: string) {
   if (value === null || value === undefined || Number.isNaN(value)) return NO_VALUE;
-  return new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
-    maximumFractionDigits: 0,
-  }).format(value);
+  /* Eski `{ maximumFractionDigits: 0 }` ile aynı biçim: alt sınır verilmeyince
+     0'a iner (ECMA-402), yani `numberFormat(locale, 0)`. */
+  return numberFormat(locale, 0).format(value);
 }
 
 /** "az önce" / "3 dk önce" — veri tazeliği damgası için. */
@@ -762,22 +776,39 @@ export function safeExternalUrl(
    olarak gösterilir.
    -------------------------------------------------------------------------- */
 
+const DATE_FORMATS = new Map<string, Intl.DateTimeFormat>();
+
+/**
+ * Tarih biçimi bir kez kurulur — gerekçe `numberFormat` üzerinde (20 Ekim).
+ * Anahtar etiket + seçeneklerin kendisi: her çağıran sabit bir seçenek
+ * nesnesi veriyor, iki ayrı yerin aynı seçeneği aynı biçimi paylaşır.
+ */
+function dateFormat(tag: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const key = `${tag}|${JSON.stringify(options)}`;
+  let format = DATE_FORMATS.get(key);
+  if (!format) {
+    format = new Intl.DateTimeFormat(tag, options);
+    DATE_FORMATS.set(key, format);
+  }
+  return format;
+}
+
 /** "2026-08-06" → "6 Ağustos Perşembe" / "Thursday, August 6" */
 export function formatEtDateLong(dateStr: string, locale: string): string {
   const date = new Date(`${dateStr}T12:00:00Z`);
   if (locale === "tr") {
-    const day = new Intl.DateTimeFormat("tr-TR", {
+    const day = dateFormat("tr-TR", {
       day: "numeric",
       month: "long",
       timeZone: "UTC",
     }).format(date);
-    const weekday = new Intl.DateTimeFormat("tr-TR", {
+    const weekday = dateFormat("tr-TR", {
       weekday: "long",
       timeZone: "UTC",
     }).format(date);
     return `${day} ${weekday}`;
   }
-  return new Intl.DateTimeFormat("en-US", {
+  return dateFormat("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -819,14 +850,14 @@ export function staleMark(
 ): string {
   if (!at || !Number.isFinite(at.getTime())) return label;
   const day = (value: Date) =>
-    new Intl.DateTimeFormat("en-CA", {
+    dateFormat("en-CA", {
       timeZone: "Europe/Istanbul",
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
     }).format(value);
   if (day(at) === day(now)) return label;
-  const date = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+  const date = dateFormat(intlTag(locale), {
     timeZone: "Europe/Istanbul",
     day: "numeric",
     month: "short",
@@ -846,7 +877,7 @@ export function staleMark(
  */
 export function formatEtDateMedium(dateStr: string, locale: string): string {
   const date = new Date(`${dateStr}T12:00:00Z`);
-  return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+  return dateFormat(intlTag(locale), {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -856,7 +887,7 @@ export function formatEtDateMedium(dateStr: string, locale: string): string {
 
 export function formatEtDateCompact(dateStr: string, locale: string): string {
   const date = new Date(`${dateStr}T12:00:00Z`);
-  return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+  return dateFormat(intlTag(locale), {
     day: "numeric",
     month: "short",
     timeZone: "UTC",
@@ -870,7 +901,7 @@ export function formatEtDateCompact(dateStr: string, locale: string): string {
  * `formatEtDateCompact` ile aynı çapa: öğlen UTC, saat dilimi kayması yok.
  */
 export function etDateParts(dateStr: string, locale: string): { day: string; month: string } {
-  const parts = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+  const parts = dateFormat(intlTag(locale), {
     day: "numeric",
     month: "short",
     timeZone: "UTC",
@@ -912,19 +943,110 @@ export function relativeDayLabel(
  * sembolün kendisi ya da şirket adının ilk kelimesi ("Micron Technology Inc"
  * → "micron"). Geçmiyorsa nötr sembol karosu kalır — eksik bilgi, yanlış
  * bilgiden iyidir.
+ *
+ * EŞLEŞME SIKI (20 Ekim). Sembol küçük harfe indirilip `\b` ile, ad düz
+ * `includes` ile aranıyordu ve ikisi de neredeyse her başlıkta tutuyordu:
+ * "Stocks rally on Fed…" ON, "why it matters now" NOW, "don't" T, "precious
+ * metals" META, "deliver relief" LLY ("eli"), "Texas heat wave" TXN; adı
+ * "The Goldman Sachs Group" olan GS'nin ilk kelimesi "the" idi. Kural artık:
+ * - Sembol BÜYÜK HARFLE ve tek başına geçer ("NVDA", "NVDA's"). `$SYM` her
+ *   zaman sayılır; çıplak biçim tek harfli sembolde ("Is Nvidia A Buy?") ve
+ *   `PAREN_STOPLIST` kısaltmalarında (AI, IT, ON, NOW…) sayılmaz —
+ *   lib/autolink.ts'in kuralı.
+ * - Ad kelime sınırıyla aranır ("Meta'nın" tutar, "metals" tutmaz); baştaki
+ *   "The" atlanır. İlk kelime genel bir sözcükse (`GENERIC_NAME_WORDS`) ilk
+ *   iki kelime istenir, araya bağlaç giriyorsa üç: "texas instruments",
+ *   "bank of america". Adın o kadar kelimesi yoksa ("Dow") ad eşleşme
+ *   üretmez, yalnız sembol kalır.
+ * - MARKA İSTİSNASI (20 Ekim). Liste genişleyince Visa, Target, Travelers,
+ *   Progressive, Block ve Strategy'nin adı da hiç eşleşmez oldu: "Visa
+ *   Inc." iki kelime istiyordu ve başlık "Visa beats…" diyor. V tek harf
+ *   olduğu için Visa yalnız "$V" ile tanınıyor, hisse sayfasındaki "adı
+ *   geçen önce" haber sırası da Visa'da çalışmıyordu. Kurumsal son ekler
+ *   ve parantezli künyeler atılınca ("Inc.", "Companies (The)",
+ *   "(MicroStrategy)") geriye TEK kelime kalan ve `BRAND_NAMES`te duran
+ *   adlar o kelimeyle eşleşir — ama yalnız özel ad yazımıyla ("Visa",
+ *   "VISA"): "student visa", "price target", "holiday travelers" küçük
+ *   harfle geçen genel sözcük. Başlık düzeninde ("Analyst Lifts Price
+ *   Target…") büyük harf ayırt etmediği için bilinen kalıp ayrıca silinir
+ *   (`generic`). Tek kelimesi marka olmayan ad ("Dow Inc.") eski kuralda
+ *   kalır: "Dow jumps" endeks haberidir. İkinci kelimesi gerçek ad olan
+ *   ("State Street") hep iki kelime ister — "state" de "street" de tek
+ *   başına eşleşmez.
+ *
+ * Liste `db/seed/indices.ts` → `ALL_MEMBERS` adlarının ilk kelimeleri
+ * taranarak genişletildi (20 Ekim): ilk liste "price target" → TGT, "trade
+ * talks" → TTD, "S&P 500" → SPGI, "best stocks" → BBY, "Dow jumps" → DOW,
+ * "Federal Reserve" → FRT eşleşmelerini bırakıyordu. İlk kelimesini başka
+ * bir üyeyle paylaşanlar da burada (Charles River / Charles Schwab, Johnson
+ * Controls / Johnson & Johnson): tek kelime yanlış şirketin logosunu basıyordu.
+ * "s&p" bölmeden tek parça çıkar, `&` kaçışsız kalır → "s&p global".
  */
+const GENERIC_NAME_WORDS: ReadonlySet<string> = new Set([
+  "advanced", "air", "american", "applied", "bank", "best", "block",
+  "booking", "capital", "carrier", "charles", "constellation", "delta",
+  "digital", "dollar", "dow", "equity", "expand", "extra", "fair", "federal",
+  "fidelity", "first", "gen", "general", "global", "home", "host", "international",
+  "iron", "johnson", "live", "monster", "morgan", "news", "northern", "old",
+  "principal", "progressive", "public", "quest", "regions", "republic",
+  "rocket", "royal", "s&p", "southern", "southwest", "state", "steel",
+  "strategy", "super", "taiwan", "target", "texas", "trade", "travelers",
+  "union", "united", "universal", "visa", "waste", "wells", "west", "western",
+  "williams",
+]);
+const NAME_JOINERS: ReadonlySet<string> = new Set(["of", "&", "and"]);
+/** Adın sonundaki künye — marka denetiminde atılır ("Visa Inc." → visa). */
+const CORPORATE_SUFFIXES: ReadonlySet<string> = new Set([
+  "co", "companies", "company", "corp", "corporation", "group", "holdings",
+  "inc", "llc", "ltd", "plc",
+]);
+/** İlk kelimesi `GENERIC_NAME_WORDS`te olup gündelik adı o tek kelime olan
+    şirketler: özel ad yazımıyla eşleşir (gerekçe yukarıda, "MARKA
+    İSTİSNASI"). `generic`: büyük harfle de yazılan bilinen genel kalıp. */
+const BRAND_NAMES: ReadonlyMap<string, { proper: string; generic?: RegExp }> = new Map([
+  ["block", { proper: "Block" }],
+  ["progressive", { proper: "Progressive" }],
+  ["strategy", { proper: "Strategy" }],
+  ["target", { proper: "Target", generic: /price\s+target|target\s+prices?/gi }],
+  ["travelers", { proper: "Travelers" }],
+  ["visa", { proper: "Visa" }],
+]);
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 export function headlineMentions(
   headline: string,
   symbol: string,
   name?: string | null,
 ): boolean {
-  const text = headline.toLowerCase();
-  const escaped = symbol.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  if (new RegExp(`\\b${escaped}\\b`).test(text)) return true;
+  const ticker = escapeRegExp(symbol.toUpperCase());
+  if (new RegExp(`(?<![A-Za-z0-9])\\$${ticker}(?![A-Za-z0-9])`).test(headline)) return true;
+  if (
+    symbol.length >= 2 &&
+    !PAREN_STOPLIST.has(symbol.toUpperCase()) &&
+    new RegExp(`(?<![A-Za-z0-9$])${ticker}(?![A-Za-z0-9])`).test(headline)
+  ) {
+    return true;
+  }
 
   // Şirket adının ilk kelimesi — "Inc", "Corp" gibi son ekler eşleşme üretmez.
-  const first = (name ?? "").trim().split(/[\s,.]+/)[0]?.toLowerCase();
-  return Boolean(first && first.length >= 3 && text.includes(first));
+  const words = (name ?? "").trim().toLowerCase().split(/[\s,.]+/).filter(Boolean);
+  if (words[0] === "the") words.shift();
+  const first = words[0];
+  if (!first || first.length < 3) return false;
+  const core = [...words];
+  while (core.length > 1 && (CORPORATE_SUFFIXES.has(core.at(-1)!) || core.at(-1)!.startsWith("("))) core.pop();
+  const brand = core.length === 1 ? BRAND_NAMES.get(first) : undefined;
+  if (brand) {
+    const text = brand.generic ? headline.replace(brand.generic, " ") : headline;
+    const forms = [brand.proper, brand.proper.toUpperCase()].map(escapeRegExp).join("|");
+    return new RegExp(`(?<![\\p{L}\\p{M}\\p{N}])(?:${forms})(?![\\p{L}\\p{M}\\p{N}])`, "u").test(text);
+  }
+  const take = !GENERIC_NAME_WORDS.has(first) ? 1 : NAME_JOINERS.has(words[1] ?? "") ? 3 : 2;
+  if (words.length < take) return false;
+  const phrase = words.slice(0, take).map(escapeRegExp).join("\\s+");
+  return new RegExp(`(?<![\\p{L}\\p{M}\\p{N}])${phrase}(?![\\p{L}\\p{M}\\p{N}])`, "u").test(
+    headline.toLowerCase(),
+  );
 }
 
 
@@ -944,7 +1066,7 @@ export function formatPeriodLabel(
   if (!period) return NO_VALUE;
   const match = /^(\d{4})-(\d{2})$/.exec(period);
   if (!match) return period;
-  return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+  return dateFormat(intlTag(locale), {
     month: "long",
     year: "numeric",
     timeZone: "UTC",
@@ -971,6 +1093,13 @@ export function formatPeriodLabel(
  * Yalnızca dizge baştan sona sayıysa ondalık ayracı yerelleşir; "%" işareti
  * dile göre yerleşir, öteki birimler sayının ardına yazılır. Sayı olmayan
  * her şey olduğu gibi basılır.
+ *
+ * EKSİ İŞARETİ AYRI YAZILIR (20 Ekim). İşaretli sayı doğrudan biçimlenince
+ * Intl düz tire basıyordu ve "%" onun da önüne geçiyordu: eksi bir GSYH
+ * okuması "%-0,3", eksi bir istihdam değişimi "-23 bin" çıkıyordu; aynı
+ * ekrandaki öteki yüzdeler "−%0,37" (U+2212 + SIGN_GAP, `formatPercent`).
+ * Artık mutlak değer biçimlenir, işaret `formatPercent`'in kuralıyla başa
+ * konur: "−%0,3", "−0.3%", "−23 bin".
  */
 const PLAIN_NUMBER_VALUE = /^-?\d+(\.\d+)?$/;
 
@@ -990,11 +1119,14 @@ export function formatEventValue(
      yalnızca tavan konuyor. */
   const rawDigits = trimmed.includes(".") ? trimmed.split(".")[1].length : 0;
   const digits = Math.min(rawDigits, 2);
-  const shown = formatPrice(Number(trimmed), locale, { digits });
-  if (unit === "%") return withPercent(shown, locale);
+  const value = Number(trimmed);
+  const sign = value < 0 ? "−" : "";
+  const shown = formatPrice(Math.abs(value), locale, { digits });
+  if (unit === "%") return withPercent(shown, locale, sign);
+  const lead = sign ? `${sign}${SIGN_GAP}` : "";
   const yazi = unitLabel(unit, locale);
-  if (!yazi) return shown;
-  return `${shown}${MONEY_GAP}${yazi}`;
+  if (!yazi) return `${lead}${shown}`;
+  return `${lead}${shown}${MONEY_GAP}${yazi}`;
 }
 
 /**

@@ -66,9 +66,19 @@ export function FavoriteToggle({
         </span>
       )}
       <input type="hidden" name="symbol" value={symbol} />
+      {/* ERİŞİLEBİLİR AD DURUMLA ÇELİŞMİYOR (20 Ekim). Ad, `aria-pressed`
+          ile birlikte "Favorilerden Çıkar"a dönüyordu: ekran okuyucu
+          "Favorilerden Çıkar, basılı" diyordu — iki ayrı durum iddiası.
+          Görünür yazının adda geçmemesi de (İngilizcede "On Watchlist" ↔
+          "Remove from Watchlist") sesli komutu kırıyordu (WCAG 2.5.3).
+          Yazılı düğmede ad görünür yazının kendisi;
+          yalnız ikonlu düğmede SABİT ekleme adı, durumu `aria-pressed`
+          söylüyor (APG düğme deseni). İpucu (`title`) eylemi söylemeye
+          devam ediyor. `aria-label` kalıyor: dar ekranda yazı gizli. */}
       <HeartButton
         active={shown}
-        label={shown ? removeLabel : addLabel}
+        label={text ? text[shown ? 1 : 0] : addLabel}
+        hint={shown ? removeLabel : addLabel}
         text={text ? text[shown ? 1 : 0] : undefined}
       />
     </form>
@@ -79,7 +89,7 @@ export function FavoriteToggle({
  * Düğme AYRI bir bileşen: `useFormStatus` yalnızca kendisini saran formun
  * ALTINDAKİ bir bileşenden okunabiliyor, formu render eden bileşenden değil.
  */
-function HeartButton({ active, label, text }: { active: boolean; label: string; text?: string }) {
+function HeartButton({ active, label, hint, text }: { active: boolean; label: string; hint: string; text?: string }) {
   const { pending } = useFormStatus();
   /* Kutlama TIKLAMAYA bağlı: sayfa açıldığında favori olan kalp oynamaz.
      Sayaç her tıklamada artıyor ve anahtar olarak kullanılıyor — art arda
@@ -109,7 +119,7 @@ function HeartButton({ active, label, text }: { active: boolean; label: string; 
         }));
       }}
       aria-label={label}
-      title={label}
+      title={hint}
       /* `aria-pressed` durumu ekran okuyucuya da söylüyor: ikonun dolu mu
          boş mu olduğu yalnızca görene bilgi veriyordu. */
       aria-pressed={active}

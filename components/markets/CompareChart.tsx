@@ -264,10 +264,17 @@ export function CompareChart({
                 const i = indexAt(richest, fraction);
                 return i === null ? undefined : richest.times?.[i];
               })();
+          /* UTC'DE OKUNUR (20 Ekim). Günlük barın damgası ET gece yarısı
+             (04:00/05:00Z); okuyucunun diliminde UTC−5…−8'de bir ÖNCEKİ
+             güne kayıyor ve kart, hemen altındaki kapsam künyesinden
+             (`coverageNote`, lib/compare.ts — aynı ders) bir gün geri
+             yazıyordu. Karşılaştırma aralıklarının hepsi günlük ya da
+             haftalık bar. */
           return {
             values,
             date: stamp
               ? new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+                  timeZone: "UTC",
                   day: "numeric",
                   month: "short",
                   year: "numeric",

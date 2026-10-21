@@ -214,10 +214,20 @@ export function diffPeriods(current: readonly HoldingRecord[], previous: readonl
         } else {
           split = detectSplit(prev, holding);
           const base = prev.amount * (split ?? 1);
-          const change = base > 0 ? holding.amount / base - 1 : 0;
-          if (Math.abs(change) < UNCHANGED_EPSILON) move = "unchanged";
-          else move = change > 0 ? "increased" : "decreased";
-          changePct = change * 100;
+          /* SIFIR TABAN YENİ POZİSYONDUR (20 Ekim). `parseInfoTable` 0
+             adetli satırı kabul ediyor; burada oran 0'a sabitleniyordu ve
+             0 → 100.000 adet "Değişmedi %0" görünüyor, `counts.new` ile
+             çeyreğin hareketlerinden düşüyordu — hisse sayfası
+             (`loadStockInvestors`) aynı satıra "Yeni" derken. Kural artık
+             ikisinde aynı. */
+          if (base > 0) {
+            const change = holding.amount / base - 1;
+            if (Math.abs(change) < UNCHANGED_EPSILON) move = "unchanged";
+            else move = change > 0 ? "increased" : "decreased";
+            changePct = change * 100;
+          } else {
+            move = "new";
+          }
         }
         if (move === "new" || move === "increased" || move === "decreased") counts[move] += 1;
       }

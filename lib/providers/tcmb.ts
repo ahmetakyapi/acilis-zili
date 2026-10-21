@@ -1,5 +1,5 @@
 import { fail, ok, type ProviderResult, responseDate } from "./types";
-import { withTimeout } from "./timeout";
+import { withBody } from "./timeout";
 import {
   bulletinCandidates,
   dayNumber,
@@ -94,15 +94,24 @@ export function parseUsdBulletin(xml: string): UsdTryRate | null {
  * Günün USD/TRY kuru.
  */
 export async function getUsdTry(): Promise<ProviderResult<UsdTryRate>> {
+  /* GÖVDE OKUMASI DA SARMAL İÇİNDE. Bir süre dışarıdaydı ve tek başına
+     bütün siteyi düşürebiliyordu: `fetch` başlıkları aldıktan sonra dönüyor,
+     gövde ise akmaya devam ediyor. TCMB bağlantıyı gövde ortasında keserse
+     (`socket hang up` / `TypeError: terminated`) hata buradan yukarı
+     fırlıyor, sunucu bileşeni çöküyor ve okuyucu kur kartı yerine
+     global-error ekranını görüyordu — kartın "sessizce düşmesi" gereken bir
+     durumda. 20 Ekim'den beri süre sınırının da içinde (`withBody`):
+     kesilmeyip ortada DURAN bir gövde sınırsız bekletiyordu. */
   let res: Response;
+  let xml: string | null;
   try {
-    /* Süre sınırı — gerekçe lib/providers/timeout.ts'te. */
-    res = await withTimeout(
+    ({ res, body: xml } = await withBody(
       fetch(TODAY_URL, {
         headers: { accept: "application/xml" },
         next: { revalidate: REVALIDATE_SECONDS, tags: ["fx"] },
       }),
-    );
+      (r) => (r.ok ? r.text() : null),
+    ));
   } catch (error) {
     return fail(
       "tcmb",
@@ -111,26 +120,8 @@ export async function getUsdTry(): Promise<ProviderResult<UsdTryRate>> {
     );
   }
 
-  if (!res.ok) {
+  if (!res.ok || xml === null) {
     return fail("tcmb", "upstream-error", `TCMB ${res.status}`);
-  }
-
-  /* GÖVDE OKUMASI DA SARMAL İÇİNDE. Bir süre dışarıdaydı ve tek başına
-     bütün siteyi düşürebiliyordu: `fetch` başlıkları aldıktan sonra dönüyor,
-     gövde ise akmaya devam ediyor. TCMB bağlantıyı gövde ortasında keserse
-     (`socket hang up` / `TypeError: terminated`) hata buradan yukarı
-     fırlıyor, sunucu bileşeni çöküyor ve okuyucu kur kartı yerine
-     global-error ekranını görüyordu — kartın "sessizce düşmesi" gereken bir
-     durumda. */
-  let xml: string;
-  try {
-    xml = await res.text();
-  } catch (error) {
-    return fail(
-      "tcmb",
-      "network",
-      error instanceof Error ? error.message : "TCMB yanıtı okunamadı",
-    );
   }
 
   const parsed = parseUsdBulletin(xml);
@@ -155,9 +146,21 @@ export async function getUsdTry(): Promise<ProviderResult<UsdTryRate>> {
    bulunana dek. Dönen kayıt bültenin KENDİ gününü taşır; ekran "25 Eylül
    Bülteni" yazar, istenen günmüş gibi davranmaz.
 
-   ÖNBELLEK UZUN, çünkü geçmiş bülten değişmez. Son birkaç gün hariç: bugünün
-   dosyası 15:30'dan önce yok ve o saatte alınan 404 bir ay önbellekte
-   kalsaydı bugünün kuru ay boyunca "yok" görünürdü.
+   ÖNBELLEK UZUN, çünkü geçmiş bülten değişmez. Son birkaç gün kısa: bugünün
+   dosyası 15:30'dan önce yok.
+
+   YOKLUK AYRICA HATIRLANIYOR (20 Ekim). Next'in veri önbelleği yalnız 200
+   yanıtı saklıyor (patch-fetch: `res.status === 200`); 404 hiç önbelleğe
+   girmiyor. Hafta sonu, bayram ve henüz yayımlanmamış bugün her çağrıda
+   TCMB'ye yeniden soruluyordu: pazar başlangıçlı bir TL grafiği her
+   çizimde iki, bayram içindeki bir gün dokuz önbelleksiz istek; `/api/kur`un
+   kırk günlük toplu sorusu bunu yüzlerce isteğe çeviriyordu. 404 süreç
+   içinde `missingUntil`e yazılıyor: geçmiş gün için otuz gün (arşiv
+   değişmez), son günler için yirmi dakika — bir ay "yok" saymak bugünün
+   kurunu ay boyunca gizlerdi. Yalnız geri adım bir bülten BULDUĞUNDA
+   yazılıyor: on bir günün hepsi 404 ise bu tatil değil kesintidir (en uzun
+   tatil dokuz gün) ve bir ay hatırlanırsa o günler ay boyu "yok" kalırdı.
+   Anahtarlar 2005'ten bugüne günlerle sınırlı.
    -------------------------------------------------------------------------- */
 
 const ARCHIVE_BASE = "https://www.tcmb.gov.tr/kurlar/";
@@ -171,6 +174,11 @@ const ARCHIVE_REVALIDATE_SECONDS = 30 * 24 * 3600;
 /** Bugüne bu kadar yakın günlerin dosyası henüz yayımlanmamış olabilir. */
 const RECENT_DAYS = 3;
 
+/** 404'ün hatırlanma süresi — gerekçe yukarıdaki blokta. */
+const MISSING_ARCHIVE_MS = ARCHIVE_REVALIDATE_SECONDS * 1000;
+const MISSING_RECENT_MS = 20 * 60_000;
+const missingUntil = new Map<IsoDate, number>();
+
 export type UsdTryOnDate = UsdTryRate & {
   /** Sorulan gün — bülten günü bundan önce olabilir. */
   requestedDate: IsoDate;
@@ -181,23 +189,27 @@ export async function getUsdTryOn(
   today: IsoDate,
 ): Promise<ProviderResult<UsdTryOnDate>> {
   const recentFrom = dayNumber(today) - RECENT_DAYS;
+  /* Bu turda 404 alan günler; bülten bulunursa hafızaya geçer. */
+  const gaps: { day: IsoDate; ttl: number }[] = [];
   for (const candidate of bulletinCandidates(date, MAX_BULLETIN_LOOKBACK_DAYS)) {
-    /* Gelecek gün sorulmuyor: yarının dosyası yok ve 404 önbelleğe girerdi. */
+    /* Gelecek gün sorulmuyor: yarının dosyası yok, istek boşa gider. */
     if (candidate > today) continue;
+    if ((missingUntil.get(candidate) ?? 0) > Date.now()) continue;
+    const recent = dayNumber(candidate) >= recentFrom;
     let res: Response;
+    let xml: string | null;
     try {
-      res = await withTimeout(
+      /* Gövde de süre sınırının içinde — `getUsdTry`deki gerekçe. */
+      ({ res, body: xml } = await withBody(
         fetch(`${ARCHIVE_BASE}${tcmbArchivePath(candidate)}`, {
           headers: { accept: "application/xml" },
           next: {
-            revalidate:
-              dayNumber(candidate) >= recentFrom
-                ? REVALIDATE_SECONDS
-                : ARCHIVE_REVALIDATE_SECONDS,
+            revalidate: recent ? REVALIDATE_SECONDS : ARCHIVE_REVALIDATE_SECONDS,
             tags: ["fx"],
           },
         }),
-      );
+        (r) => (r.ok ? r.text() : null),
+      ));
     } catch (error) {
       return fail(
         "tcmb",
@@ -205,21 +217,15 @@ export async function getUsdTryOn(
         error instanceof Error ? error.message : "TCMB'ye ulaşılamadı",
       );
     }
-    if (res.status === 404) continue;
-    if (!res.ok) return fail("tcmb", "upstream-error", `TCMB ${res.status}`);
-
-    let xml: string;
-    try {
-      xml = await res.text();
-    } catch (error) {
-      return fail(
-        "tcmb",
-        "network",
-        error instanceof Error ? error.message : "TCMB yanıtı okunamadı",
-      );
+    if (res.status === 404) {
+      gaps.push({ day: candidate, ttl: recent ? MISSING_RECENT_MS : MISSING_ARCHIVE_MS });
+      continue;
     }
+    if (!res.ok || xml === null) return fail("tcmb", "upstream-error", `TCMB ${res.status}`);
+
     const parsed = parseUsdBulletin(xml);
     if (!parsed) return fail("tcmb", "empty", "Bülten beklenen alanları taşımıyor");
+    for (const gap of gaps) missingUntil.set(gap.day, Date.now() + gap.ttl);
     return ok({ ...parsed, requestedDate: date }, "tcmb", {
       fetchedAt: responseDate(res),
     });

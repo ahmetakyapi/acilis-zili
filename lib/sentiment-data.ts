@@ -1,7 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
-import { SPX_MEMBERS, primaryOnly } from "@/db/seed/indices";
+import { ALL_MEMBERS, SPX_MEMBERS, primaryOnly } from "@/db/seed/indices";
 import { getStatus } from "@/lib/data";
 import { loadBoardBars } from "@/lib/market-boards";
 import { barDate } from "@/lib/period-returns";
@@ -13,6 +13,7 @@ import {
   FEAR_MA_DAYS,
   SENTIMENT_KEYS,
   SENTIMENT_LOOKBACK,
+  breadthCounts,
   breadthReading,
   fearLevelReading,
   momentumReading,
@@ -52,30 +53,40 @@ function closesOf(bars: readonly Bar[] | undefined) {
 }
 
 /**
- * S&P 500 genişliği — /piyasalar'ın S&P 500 sekmesiyle AYNI anahtar.
+ * S&P 500 genişliği — ana sayfanın endeks evreniyle AYNI anahtar.
  *
- * Liste `primaryOnly(SPX_MEMBERS)`: sekme de onu soruyor, yani o sekme
- * açıkken kotasyon turu istek içinde tek (getQuotes sıralı anahtarla
- * tekilleştiriyor). Sayım da sekmenin kuralıyla: değişimi bilinmeyen
- * satır "yatay" sayılmıyor, hiç sayılmıyor.
+ * Kotasyonlar `primaryOnly(ALL_MEMBERS)` ile soruluyor, SAYIM yalnız S&P
+ * üyeleri üzerinden (20 Ekim). Liste eskiden `primaryOnly(SPX_MEMBERS)`ti,
+ * gerekçe /piyasalar'ın S&P 500 sekmesiyle anahtar paylaşmaktı; 17 Ekim'den
+ * beri o sayfanın açılış sekmesi Nasdaq, paylaşım yalnız `?endeks=sp500`te
+ * kalıyordu. Nabız ise misafirin ana sayfasında (PortfolioSlot) her
+ * görüntülemede çiziliyor ve orada Günün Hareketleri ile teknik panel
+ * ALL'ı soruyor (`components/today/home/index-snapshot.ts`): ikinci ~500
+ * sembollük paket, ikinci sağlayıcı turu demekti. ALL, S&P'yi kapsıyor;
+ * getQuotes sıralı anahtarla tekilleştirdiği için tur artık istek içinde
+ * tek. Bedel yalnız S&P sekmesinde bir paket fazlası. Sayım sekmenin
+ * kuralıyla: değişimi bilinmeyen satır "yatay" sayılmıyor, hiç sayılmıyor.
  *
  * BAYAT PAKET SAYILMIYOR. Sağlayıcı düşünce kotasyonlar Neon önbelleğinden
  * geliyor ve orada önceki seansın yüzdeleri duruyor (CLAUDE.md "Veri
  * dürüstlüğü" 4); nabız bir "bugün" iddiası taşıyor.
+ *
+ * SEANSI KANITLAMAYAN SEMBOL DE SAYILMIYOR (20 Ekim). Paketin taze olması
+ * sembolün taze olması değil: açılış öncesinde (04:00–09:30 ET) üyelerin
+ * çoğu henüz işlem görmemiş ve yüzdesi DÜNÜN tam günü, yalnız işlem görmüş
+ * birkaçınınki bu sabahın. Hepsinin yüzdesi var, kapsam eşiği geçiyordu ve
+ * dünün genişliği bugünün tarihiyle nabza giriyordu. Ölçü `isSessionTrade`
+ * (DayMovers ve alarmlarla aynı; sayım `breadthCounts`, lib/sentiment.ts);
+ * kapsam eşiğin altına inerse bileşen düşer ve "Hesaplanamayan bileşenler"
+ * notunda yazılır. /piyasalar'ın sekmesi değişmiyor: orada her satır kendi
+ * künyesiyle görünüyor (`extendedNote`), burada tek bir tarihli toplam var.
  */
 async function breadth(): Promise<{ reading: SentimentReading | null; session: SentimentSnapshot["breadthSession"] }> {
   const status = await getStatus();
   const members = primaryOnly(SPX_MEMBERS);
-  const result = await getQuotes(members.map((member) => member.symbol), status);
+  const result = await getQuotes(primaryOnly(ALL_MEMBERS).map((member) => member.symbol), status);
   if (!result.ok || result.stale) return { reading: null, session: null };
-  let known = 0;
-  let advancing = 0;
-  for (const member of members) {
-    const change = result.data[member.symbol]?.changePct;
-    if (change === null || change === undefined) continue;
-    known += 1;
-    if (change > 0) advancing += 1;
-  }
+  const { advancing, known } = breadthCounts(members.map((member) => member.symbol), result.data, status);
   const reading = breadthReading(advancing, known, members.length, status.sessionDate);
   const extended = status.session === "pre-market" || status.session === "after-hours";
   return { reading, session: reading ? (extended ? "extended" : "regular") : null };

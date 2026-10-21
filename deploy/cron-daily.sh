@@ -49,7 +49,17 @@ fi
 # koşum boyunca /proc/<pid>/cmdline'da dünya-okunur duruyordu — ortam
 # dosyasının 0640 izniyle kurulan korumayı deliyordu. Başlık stdin'den
 # (-H @-): /proc'ta yalnızca "@-" görünür.
-response=$(curl -sS --max-time 180 -w '\n%{http_code}' \
+# YENİDEN DENER (20 Ekim): bilanço, haber ve pazar postası işleri
+# `--retry-connrefused` almıştı, günün en önemli işi tek denemeydi —
+# 10:30'a denk gelen bir sürüm (`systemctl restart`) bilanço takvimini ve
+# makroyu bir iş günü bayat bırakıyordu (gerekçe cron-bilanco.sh). Adımlar
+# tazeleme, tekrar zararsız. 100 saniyelik bütçe adımı yalnız BAŞLAMADAN
+# denetliyor; geç başlayan adım koşuyu 180'in üstüne itebilir (20 Ekim:
+# çeviri tek başına ~3 dakika sürebiliyordu — artık kendi tavanı var,
+# TRANSLATE_BUDGET_MS). Zaman aşımında curl yeniden dener ama ilk koşu
+# sunucuda sürer; üstüne binmeyi uçtaki tek koşu kilidi önler (kilitliyken
+# 200 + "skipped", curl 2xx'i yeniden denemez — app/api/cron/daily/route.ts).
+response=$(curl -sS --max-time 180 --retry 3 --retry-delay 30 --retry-connrefused -w '\n%{http_code}' \
 	-H @- \
 	"$ENDPOINT" <<<"Authorization: Bearer ${CRON_SECRET}" 2>&1)
 

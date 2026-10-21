@@ -1,4 +1,4 @@
-import { neon } from "@neondatabase/serverless";
+import { neon, neonConfig } from "@neondatabase/serverless";
 import { drizzle, type NeonHttpDatabase } from "drizzle-orm/neon-http";
 import * as schema from "./schema";
 
@@ -11,6 +11,21 @@ import * as schema from "./schema";
 type Database = NeonHttpDatabase<typeof schema>;
 
 let instance: Database | null = null;
+
+/* SORGUYA SÜRE SINIRI (20 Ekim). HTTP sürücüsü her sorguyu sinyalsiz bir
+   POST olarak atıyor; Neon bağlantıyı kabul edip durursa (bölgesel arıza,
+   uyanamayan hesaplama) her çizim undici'nin ~300 sn'lik varsayılanına dek
+   bekliyor ve tek süreçli VPS'te istekler üst üste yığılıyordu. Tasarımın
+   geri kalanı ("kart veri yok der") sorgunun hızlı DÜŞTÜĞÜNÜ varsayıyor;
+   sağlayıcı çağrılarındaki `withTimeout`un veritabanı karşılığı bu.
+   `AbortSignal` burada güvenli: lib/providers/timeout.ts'teki çekince Next
+   veri önbelleği içindi, bu istekler önbelleğe girmeyen POST. Sinyal her
+   çağrıda YENİ (tek bir sinyal bir kez dolunca hep iptal kalırdı); süre
+   cömert, çünkü tohumlama ve cron'un toplu yazımları da bu modülden geçiyor.
+   Çağıranın kendi sinyali varsa o kazanır. */
+const DB_TIMEOUT_MS = 25_000;
+neonConfig.fetchFunction = (input: RequestInfo | URL, init?: RequestInit) =>
+  fetch(input, { ...init, signal: init?.signal ?? AbortSignal.timeout(DB_TIMEOUT_MS) });
 
 function connect(): Database {
   const url = process.env.DATABASE_URL;

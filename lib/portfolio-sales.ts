@@ -1,10 +1,10 @@
 /**
  * Portföy satışları — saf hesaplar. Okuma `lib/portfolio-sales-data.ts`,
- * yazma `app/actions/portfolio.ts` → `sellPositionAction`.
+ * yazma `app/actions/portfolio.ts` → `sellPositionAction`, `undoSaleAction`.
  *
  * Gerekçe şemada (`lib/schema.ts` → portfolioSales). Bu modül veritabanına
- * dokunmuyor: FIFO planı ve kâr/zarar hesabı birim testinde sınanıyor
- * (`tests/portfolio-sales.test.ts`).
+ * dokunmuyor: FIFO planı, geri alma planı ve kâr/zarar hesabı birim
+ * testinde sınanıyor (`tests/portfolio-sales.test.ts`).
  */
 
 /** Adet sütununun ölçeği `numeric(20,8)` — karşılaştırmada bu kadar pay. */
@@ -55,6 +55,42 @@ export function planFifoSale(lots: readonly SaleLot[], quantity: number, soldAt:
     left -= take;
   }
   return { ok: true, steps };
+}
+
+/** Partinin kimliği alış günü ve maliyet — geri alma bu ikisiyle eşleştiriyor. */
+type LotKey = { costUsd: number; boughtAt: string };
+
+export type UndoPlan<P> = {
+  /** Hâlâ duran partiye eklenecek adet, parti başına TEK toplam. */
+  restore: { lotId: string; quantity: number }[];
+  /** Eşi kalmamış parçalar: parti yeniden açılır. */
+  reopen: P[];
+};
+
+/**
+ * Satışı geri almanın planı (`undoSaleAction`). Aynı alış günü ve
+ * maliyette bir parti hâlâ duruyorsa (kısmi satış) parçanın adedi ona
+ * eklenir; yoksa parça yeni parti olarak açılır.
+ *
+ * Eklenen adet parti başına TOPLANIR (20 Ekim): aynı gün aynı fiyattan iki
+ * dolum (ekstre içe aktarması her işlemi ayrı parti açıyor) bir satışta iki
+ * parça bırakır ve ikisi de kalan TEK partiye eşleşir. Parça başına
+ * "okunan adet + parça" yazmak son yazanı kazandırıyordu: A(5) ve B(5)'ten
+ * 7 satılıp geri alınınca B 10 yerine 5'te kalıyor, satış kaydı da aynı
+ * batch'te silindiği için 5 adet iz bırakmadan kayboluyordu.
+ */
+export function planSaleUndo<P extends LotKey & { quantity: number }>(
+  parts: readonly P[],
+  lots: readonly (LotKey & { id: string })[],
+): UndoPlan<P> {
+  const add = new Map<string, number>();
+  const reopen: P[] = [];
+  for (const part of parts) {
+    const lot = lots.find((row) => row.boughtAt === part.boughtAt && Math.abs(row.costUsd - part.costUsd) < 1e-9);
+    if (lot) add.set(lot.id, (add.get(lot.id) ?? 0) + part.quantity);
+    else reopen.push(part);
+  }
+  return { restore: [...add].map(([lotId, quantity]) => ({ lotId, quantity })), reopen };
 }
 
 export type SalePart = {

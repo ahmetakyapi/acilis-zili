@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/ui/primitives";
 import { AdminEmpty, AdminPanel, AdminPanelError, AdminPanelTitle } from "@/components/admin/AdminUI";
 import { ADMIN_SECTIONS, adminDocTitle } from "@/lib/admin-sections";
 import { requireAdmin } from "@/lib/admin";
+import { adminStamp } from "@/lib/admin-format";
 import { getPendingPosts } from "@/lib/user-post-data";
 
 /**
@@ -15,13 +16,6 @@ import { getPendingPosts } from "@/lib/user-post-data";
  */
 
 export const metadata = { title: adminDocTitle(ADMIN_SECTIONS.moderation.title) };
-
-const TARIH = new Intl.DateTimeFormat("tr-TR", {
-  day: "numeric",
-  month: "short",
-  hour: "2-digit",
-  minute: "2-digit",
-});
 
 export default async function ModerationPage() {
   await requireAdmin();
@@ -62,7 +56,10 @@ export default async function ModerationPage() {
                       dateTime={post.submittedAt.toISOString()}
                       className="numeral shrink-0 text-tiny text-muted"
                     >
-                      {TARIH.format(post.submittedAt)}
+                      {/* İSTANBUL SAATİ (20 Ekim): dilimsiz biçimleyici
+                          sunucunun UTC'siyle basıp paneldeki öteki her
+                          damgadan üç saat geri kalıyordu. */}
+                      {adminStamp(post.submittedAt)}
                     </time>
                   )}
                 </Link>

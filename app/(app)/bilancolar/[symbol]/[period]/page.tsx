@@ -105,7 +105,8 @@ export async function generateMetadata(
   const { symbol, period } = await props.params;
   const { locale } = await getI18n();
   const [row, diller] = await Promise.all([
-    getAnalysis(symbol.toUpperCase(), period, locale),
+    // Okunamayan analiz 404 değil hata (gerekçe `lib/data.ts` → `ReadOptions`).
+    getAnalysis(symbol.toUpperCase(), period, locale, { throwOnError: true }),
     getAnalysisLocales(symbol.toUpperCase(), period),
   ]);
   if (!row) return missingMetadata(locale);
@@ -146,7 +147,9 @@ export default async function AnalysisDetailPage(
   const period = params.period;
 
   const { locale, t } = await getI18n();
-  const row = await getAnalysis(symbol, period, locale);
+  /* Olmayan analiz 404; OKUNAMAYAN analiz 404 değil, hata sınırına gider
+     (20 Ekim, gerekçe `lib/data.ts` → `ReadOptions`). */
+  const row = await getAnalysis(symbol, period, locale, { throwOnError: true });
   if (!row) notFound();
   /* Metindeki sözlük terimleri ve "(AMD)" gibi semboller bağlanıyor; tek
      nesne bütün alanlara geçiyor ki her hedef analiz boyunca bir kez

@@ -1,6 +1,7 @@
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/news/NewsExperience.module.css";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { notFound } from "next/navigation";
 import { NewsImage } from "@/components/news/NewsImage";
@@ -48,7 +49,8 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { id } = await props.params;
   const { locale } = await getI18n();
-  const item = await getNewsById(id);
+  // Okunamayan haber 404 değil hata (gerekçe `lib/data.ts` → `ReadOptions`).
+  const item = await getNewsById(id, { throwOnError: true });
   if (!item) return missingMetadata(locale);
 
   const headline =
@@ -73,9 +75,11 @@ export default async function NewsDetailPage(
 ) {
   const { id } = await props.params;
   const { locale, t } = await getI18n();
-  const item = await getNewsById(id);
+  const item = await getNewsById(id, { throwOnError: true });
 
-  /* Olmayan haber 404 DÖNER, 200 değil — ekran `not-found.tsx` dosyasında. */
+  /* Olmayan haber 404 DÖNER, 200 değil — ekran `not-found.tsx` dosyasında.
+     OKUNAMAYAN haber ise 404 değil: okuma hatası hata sınırına gider
+     (20 Ekim). */
   if (!item) notFound();
 
   const useTr = locale === "tr" && item.headlineTr;
@@ -83,20 +87,22 @@ export default async function NewsDetailPage(
   const summary =
     locale === "tr" && item.summaryTr ? item.summaryTr : item.summary;
 
-  // Kaynak logosu olan görseller gösterilmez — bilgi taşımaz, sayfayı bozar.
-  const showImage = item.imageUrl
-    ? !(await isGenericNewsImage(item.imageUrl))
-    : false;
-
   const sourceHref = safeExternalUrl(item.url);
 
   /* HABERDE GEÇEN ŞİRKETLER BİR KEZ HESAPLANIYOR (9 Ekim): hem başlığın
      altındaki şeritte hem aşağıdaki fiyat panelinde aynı liste. Sağlayıcı
      etiketi haberin konusunu değil çekildiği beslemeyi söyleyebiliyor;
      yalnızca metinde adı ya da sembolü geçenler (`headlineMentions`).
-     `getSymbolNames` istek içinde önbellekli, panel aynı anahtarı soruyor. */
+     `getSymbolNames` istek içinde önbellekli, panel aynı anahtarı soruyor.
+     Görsel denetimiyle birbirinden bağımsız: iki Neon turu sırayla değil
+     birlikte (20 Ekim). */
   const tagged = (item.symbols ?? []).slice(0, MENTIONED_MAX);
-  const names = tagged.length ? await getSymbolNames(tagged) : {};
+  const [genericImage, names] = await Promise.all([
+    // Kaynak logosu olan görseller gösterilmez — bilgi taşımaz, sayfayı bozar.
+    item.imageUrl ? isGenericNewsImage(item.imageUrl) : Promise.resolve(true),
+    tagged.length ? getSymbolNames(tagged) : Promise.resolve({} as Awaited<ReturnType<typeof getSymbolNames>>),
+  ]);
+  const showImage = !genericImage;
   const context = `${item.headline} ${item.summary ?? ""}`;
   const mentioned = tagged.filter((symbol) => headlineMentions(context, symbol, names[symbol]?.name));
 
@@ -201,6 +207,7 @@ export default async function NewsDetailPage(
           src={item.imageUrl}
           className="rounded-xl"
           sizeClass="aspect-[16/9] w-full"
+          priority
         />
       )}
 
@@ -251,16 +258,24 @@ export default async function NewsDetailPage(
       </Panel>
       )}
 
+      {/* KENDİ ADALARINDA (20 Ekim). İkisi de gövdenin altında ve
+          sağlayıcıya (kotasyon, barlar) ya da son haberlere gidiyor;
+          sınırsızken başlık ve özet en yavaş çağrı dönene kadar
+          akmıyordu. `notFound()` yukarıda, 404 durumu etkilenmiyor. */}
       {mentioned.length > 0 && (
-        <MentionedSymbols symbols={mentioned} names={names} locale={locale} t={t} />
+        <Suspense fallback={null}>
+          <MentionedSymbols symbols={mentioned} names={names} locale={locale} t={t} />
+        </Suspense>
       )}
 
-      <RelatedNews
-        currentId={item.id}
-        symbols={item.symbols ?? []}
-        locale={locale}
-        title={t.news.related}
-      />
+      <Suspense fallback={null}>
+        <RelatedNews
+          currentId={item.id}
+          symbols={item.symbols ?? []}
+          locale={locale}
+          title={t.news.related}
+        />
+      </Suspense>
     </article>
     </MotionExperience>
   );

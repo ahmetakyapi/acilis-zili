@@ -8,6 +8,7 @@ import { approvePostAction, rejectPostAction } from "@/app/actions/moderation";
 import { buttonClass, PageHeader } from "@/components/ui/primitives";
 import { ADMIN_SECTIONS, adminDocTitle } from "@/lib/admin-sections";
 import { requireAdmin } from "@/lib/admin";
+import { adminStamp } from "@/lib/admin-format";
 import { getPostForReview } from "@/lib/user-post-data";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +56,8 @@ export default async function ModerationDetailPage(props: PageProps<"/admin/mode
           <>
             {" · "}
             <time dateTime={post.submittedAt.toISOString()} className="numeral">
-              {new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short" }).format(post.submittedAt)}
+              {/* İstanbul saati — gerekçe kuyruk sayfasında (20 Ekim). */}
+              {adminStamp(post.submittedAt)}
             </time>
           </>
         )}
@@ -95,7 +97,8 @@ export default async function ModerationDetailPage(props: PageProps<"/admin/mode
             <form action={approvePostAction}>
               <input type="hidden" name="id" value={post.id} />
               {/* Onay OKUNAN sürüme bağlanır (TOCTOU) — eylem damga
-                  eşleşmezse hiçbir şey yazmaz, sayfa yenilenip yeniden okunur. */}
+                  eşleşmezse hiçbir şey yazmaz, sayfayı tazeler (`refresh`)
+                  ve moderatör yeni metni okur. Red de aynı damgayı taşır. */}
               <input type="hidden" name="seen" value={post.updatedAt.toISOString()} />
               <button type="submit" className={buttonClass({})}>
                 <CheckCircle weight="duotone" size={16} aria-hidden />
@@ -103,6 +106,10 @@ export default async function ModerationDetailPage(props: PageProps<"/admin/mode
               </button>
             </form>
             <form action={rejectPostAction} className="flex flex-col gap-2 border-t border-line-soft pt-4">
+              {/* Kimlik bu formda YOKTU (20 Ekim): eylem boş `id` görüp
+                  sessizce dönüyor, hiçbir red yazılmıyordu. */}
+              <input type="hidden" name="id" value={post.id} />
+              <input type="hidden" name="seen" value={post.updatedAt.toISOString()} />
               <label className="flex flex-col gap-1.5">
                 <span className="text-small font-semibold text-body">Red Gerekçesi</span>
                 <textarea

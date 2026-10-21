@@ -493,6 +493,27 @@ export function swingLevels(
   };
 }
 
+/**
+ * Fotoğrafa girecek kotasyon — SEMBOLÜN KENDİ SEANSI kanıtlanmadan yüzde,
+ * önceki kapanış ve hacim girmez (20 Ekim).
+ *
+ * Yazma yolu kotasyonu yalnız PAKETİN tazeliğiyle süzüyordu ve paket,
+ * içindeki EN YENİ işlemle güncel sayılıyor (`packCurrent`, lib/providers).
+ * Ön seans yayınında (12:45 UTC — kışın 07:45 ET) NVDA işlem görmüşken
+ * henüz işlem görmemiş ONDS'nin kotasyonu DÜNÜN hareketini, iki seans önceki
+ * kapanışı ve dünün hacmini taşıyordu; üçü de `technical_analyses.snapshot`
+ * olarak kalıcı yazılıyor ve rutine "bugün" diye veriliyordu. Kural CLAUDE.md
+ * "Veri dürüstlüğü" 4 ve alarmdaki `sessionReadings`in aynısı, tek farkla:
+ * FİYAT kalıyor. Paket bu an çekildi, son işlem gerçekten son fiyat; onu
+ * atmak sembolü ön seans yayınından düşürürdü (`data_ok` fiyata bakıyor).
+ * Önceki kapanış böylece son tamamlanmış barın kapanışına, yani dünkü
+ * kapanışa düşüyor (`computeSnapshot`).
+ */
+export function sessionQuote(quote: Quote | null, status: MarketStatus): Quote | null {
+  if (!quote || isSessionTrade(quote.tradedAt, status)) return quote;
+  return { ...quote, change: null, changePct: null, prevClose: null, volume: null };
+}
+
 /** Barlar + kotasyon → fotoğraf. Bar yoksa çağıran null kullanır. */
 export function computeSnapshot(
   bars: readonly Bar[],

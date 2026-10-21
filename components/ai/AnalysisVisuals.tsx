@@ -1,4 +1,4 @@
-"use client";
+/* Sunucu bileşeni (20 Ekim); gerekçe `AnalysisReport.tsx`in başında. */
 import type { SavedAnalysis } from "@/lib/ai-analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { formatPercent, formatPrice } from "@/lib/utils";

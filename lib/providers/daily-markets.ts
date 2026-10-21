@@ -2,7 +2,7 @@ import { cache } from "react";
 import { todayEt } from "@/lib/market-hours";
 import { getSeries, type SeriesRequest } from "./fred";
 import { fail, ok, responseDate, type MacroObservation, type MacroSeriesData, type ProviderResult } from "./types";
-import { withTimeout } from "./timeout";
+import { withBody } from "./timeout";
 
 const CBOE_URL = "https://cdn-api.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv";
 const TREASURY_URL = "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml";
@@ -61,12 +61,15 @@ const directRead = cache(async (
   const isVix = seriesId === "VIXCLS";
   const source = isVix ? "cboe" : "treasury";
   try {
+    /* Gövde de süre sınırının içinde (`withBody`, 20 Ekim): Cboe CSV'si
+       ~460 KB ve başlıktan sonra durursa sınır yalnız başlığı tutuyordu. */
     const fetchText = async (url: string) => {
-      const res = await withTimeout(fetch(url, forceRefresh
+      const { res, body } = await withBody(fetch(url, forceRefresh
         ? { cache: "no-store" }
-        : { next: { revalidate: 3600, tags: isVix ? ["macro:vix"] : YIELD_TAGS } }));
-      if (!res.ok) throw new Error("source-unavailable");
-      return { text: await res.text(), at: responseDate(res) };
+        : { next: { revalidate: 3600, tags: isVix ? ["macro:vix"] : YIELD_TAGS } }),
+        (r) => (r.ok ? r.text() : null));
+      if (!res.ok || body === null) throw new Error("source-unavailable");
+      return { text: body, at: responseDate(res) };
     };
     const year = Number(asOf.slice(0, 4));
     const url = (y: number) => `${TREASURY_URL}?data=daily_treasury_yield_curve&field_tdr_date_value=${y}`;

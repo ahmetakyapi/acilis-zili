@@ -48,9 +48,9 @@ export async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }
 
   const vixLevel = vixResult.ok ? vixResult.data.latestValue : null;
   const vixPrev = vixResult.ok ? vixResult.data.prevValue : null;
-  /* VIX'İN KENDİ TARİHİ. Panelin tek "FRED · tarih" künyesi tahvil
-     serilerine ait ve VIX satırının ÜSTÜNDE duruyor; VIX ise tarihsiz
-     basılıyordu. Aynı gün olduklarında sorun görünmüyor ama tahvil
+  /* VIX'İN KENDİ TARİHİ. Panelin "kaynak · tarih" künyesi (normalde
+     "U.S. Treasury", yedekte FRED) tahvil serilerine ait ve VIX satırının
+     ÜSTÜNDE duruyor; VIX ise tarihsiz basılıyordu. Aynı gün olduklarında sorun görünmüyor ama tahvil
      piyasasının kapalı, borsanın açık olduğu günlerde (Columbus Day,
      Veterans Day) ikisi farklı günlere işaret ediyor ve okuyucu üstteki
      tarihi VIX'e de ait sanıyor. Aynı gerekçe faiz künyesinin yazılma
@@ -144,8 +144,9 @@ export async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }
            Kendi kartı vardı ve o kart Brent'le eşleşmişti; Brent düşünce
            (FRED'in spot serisi günlerce geriden geliyor) VIX tek başına
            kaldı. Yeri burası: faiz de VIX de hisse tarafının arka planını
-           okuyan, tek sayıdan ibaret ölçüler ve ikisi de aynı FRED
-           beslemesinden günlük geliyor. Bantlı tam göstergesi
+           okuyan, tek sayıdan ibaret ölçüler ve ikisi de günlük kapanış:
+           faiz Hazine'den, VIX Cboe'den doğrudan, ikisinin de yedeği FRED
+           (`lib/providers/daily-markets.ts`). Bantlı tam göstergesi
            /piyasalar'da — eşikler oradan, tek yerden okunuyor. */}
       {/* İKİ KAT, TEK SATIR DEĞİL. Etiket, değer, bant, tarih ve değişim
           aynı esnek satırda ve beşi de `shrink-0` idi: 348 piksellik yan
@@ -177,9 +178,13 @@ export async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }
             </span>
             {(vixDate || (vixDelta !== null && vixDelta !== 0)) && (
               <span className="flex flex-wrap items-baseline justify-end gap-x-2">
-                {/* Tarih yalnızca faiz künyesinden FARKLIYSA yazılıyor: aynı
-                    günse üstteki künye zaten söylüyor ve tekrar etmek satırı
-                    gereksiz kalabalıklaştırır. */}
+                {/* VIX satırı KENDİ kaynağını ve tarihini her zaman yazar
+                    (20 Ekim'de düzeltilen not: burada "yalnız faiz
+                    künyesinden farklıysa" yazıyordu, kod hiç öyle
+                    davranmadı). Yayıncı farklı (Cboe / Hazine) ve iki
+                    piyasanın kapalı günleri ayrı (Columbus, Veterans Day),
+                    üstteki künye VIX'in yerine geçemez; aynı "FRED · tarih"
+                    ancak ikisi birden yedeğe düşünce tekrarlanır. */}
                 {vixDate && vixResult.ok && (
                   <span className="numeral text-tiny text-muted">
                     {vixResult.ok && dailySourceLabel(vixResult.source)} · {formatEtDateCompact(vixDate, locale)}

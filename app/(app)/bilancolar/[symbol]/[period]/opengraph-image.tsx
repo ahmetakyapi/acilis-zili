@@ -32,9 +32,28 @@ export const alt = "Bilanço Analizi · Açılış Zili";
  * skor) ve çeyreğin tek cümlelik manşeti. Eskiden buraya sitenin genel
  * tanıtım görseli düşüyordu — link nereye giderse gitsin aynı kart.
  *
- * Kayıt bulunamazsa (silinmiş analiz, yanlış dönem) çerçeve yine basılıyor
- * ama sembolle: boş bir kart yerine en azından doğru şirketin adı görünür.
+ * KAYIT YOKSA 404 (20 Ekim). Kayıt bulunamazsa (silinmiş analiz, yanlış
+ * dönem) çerçeve yine basılıyordu, adresteki sembolle: "boş bir kart yerine
+ * en azından doğru şirketin adı" diye. Ama sayfanın kendisi aynı durumda
+ * 404 veriyor, yani kartın anlatacağı bir sayfa yok; üstelik sembol adresin
+ * HAM metniydi — `/bilancolar/<herhangi bir metin>/x/opengraph-image`
+ * sitenin "Bilanço Analizi" çerçevesinde istenen cümleyle 200 dönüyor ve
+ * her biri bir sorgu + Satori çizimi harcıyordu. Biçimi tutmayan sembol
+ * sorguya hiç gitmiyor; kalıp yazma ucununkiyle aynı (`/api/analiz` →
+ * `BodySchema.symbol`), yani var olabilecek her analiz geçiyor.
+ *
+ * OKUNAMADI ≠ YOK (20 Ekim). 404 yalnız okuma BAŞARILI olup kayıt
+ * çıkmadığında. Kart önce yutan yoldan okuyordu: Neon'un kısa bir
+ * kesintisinde `null` da "kayıt yok" sayılıp 404 dönüyordu — sayfa aynı
+ * anda `throwOnError` ile hata sınırına giderken. Tarayıcı botu sayfayı
+ * veritabanı ayaktayken alıp görseli kesinti anında isterse 404'ü saklıyor
+ * ve WhatsApp/X o önizlemeyi günlerce tutuyor: link kesinti bittikten sonra
+ * da görselsiz kalıyordu. Şimdi okuma `throwOnError` ile; okunamazsa eski
+ * sembollü çerçeve basılır (sembol kalıptan geçmiş; adresin keyfi metni
+ * basılmıyor) ve `no-store` taşır ki kesinti kartı hiçbir ara önbellekte kalmasın
+ * (`ReadOptions`, lib/data.ts).
  */
+const ANALYSIS_SYMBOL = /^[A-Z.-]{1,12}$/;
 
 /** Görüş rengi — sitedeki `verdictTextClass` ile aynı eşleme, sabit renkle. */
 function verdictTone(v: VerdictKey) {
@@ -84,22 +103,32 @@ export default async function AnalysisOgImage({
 }) {
   const { symbol: rawSymbol, period } = await params;
   const symbol = rawSymbol.toUpperCase();
+  if (!ANALYSIS_SYMBOL.test(symbol)) return new Response(null, { status: 404 });
   const locale = DEFAULT_LOCALE;
   const t = getDictionary(locale);
-  const row = await getAnalysis(symbol, period, locale);
-
-  const fonts = await ogFonts();
-
-  if (!row) {
+  let row: Awaited<ReturnType<typeof getAnalysis>>;
+  try {
+    row = await getAnalysis(symbol, period, locale, { throwOnError: true });
+  } catch (error) {
+    // Okunamadı: 404 değil, sembollü çerçeve (yukarıdaki "OKUNAMADI ≠ YOK").
+    const mesaj = error instanceof Error ? error.message : String(error);
+    console.error(`[veri] getAnalysis (paylaşım kartı) okunamadı: ${mesaj}`);
     return new ImageResponse(
       (
         <OgFrame eyebrow={t.analysis.ogEyebrow} locale={locale}>
           <OgTitle>{symbol}</OgTitle>
         </OgFrame>
       ),
-      { ...size, fonts },
+      {
+        ...size,
+        fonts: await ogFonts(),
+        headers: { "Cache-Control": "no-store" },
+      },
     );
   }
+  if (!row) return new Response(null, { status: 404 });
+
+  const fonts = await ogFonts();
 
   const verdict = verdictOf(row.verdict);
   const tone = verdictTone(verdict);

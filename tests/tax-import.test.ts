@@ -200,6 +200,38 @@ test("birden fazla ekstre: ay sonundaki işlem iki dosyada olsa da bir kez", () 
   assert.equal(merged.trades.at(-1)?.date, "2026-04-02");
 });
 
+test("tek dosyada aynı gün, aynı adet ve fiyattaki iki emir ikisi de kalır", () => {
+  /* Genel tanıyıcının damgası saatsiz: iki emir aynı anahtarı taşıyor. */
+  const generic = parseGenericLines(["15.03.2024 Alış AAPL 10 170,00 1.700,00", "15.03.2024 Alış AAPL 10 170,00 1.700,00"]);
+  assert.equal(mergeResults([generic]).trades.length, 2);
+  /* Aynı dosya iki kez seçildiyse ise tekrar: ikinci kopya düşer. */
+  assert.equal(mergeResults([generic, generic]).trades.length, 2);
+  /* Sonraki dosya, öncekinin karşılamadığı fazlasını getirir. */
+  const longer = parseGenericLines([
+    "15.03.2024 Alış AAPL 10 170,00 1.700,00",
+    "15.03.2024 Alış AAPL 10 170,00 1.700,00",
+    "15.03.2024 Alış AAPL 10 170,00 1.700,00",
+  ]);
+  assert.equal(mergeResults([generic, longer]).trades.length, 3);
+});
+
+test("IBKR PDF: damga saati taşır, aynı gün aynı adet ve fiyattaki iki emir ayrı kalır", () => {
+  const ib = importPdfLines([
+    "Interactive Brokers LLC",
+    "Activity Statement",
+    "Trades",
+    "Stocks",
+    "USD",
+    "AAPL 2024-03-15, 10:30:12 10 170.00 171.00 -1,700.00 -1.00 1,701.00 0.00 10.00 O",
+    "AAPL 2024-03-15, 14:05:40 10 170.00 171.00 -1,700.00 -1.00 1,701.00 0.00 10.00 O",
+  ]);
+  assert.deepEqual(ib.trades.map((t) => [t.date, t.stamp]), [
+    ["2024-03-15", "2024-03-15, 10:30:12"],
+    ["2024-03-15", "2024-03-15, 14:05:40"],
+  ]);
+  assert.equal(mergeResults([ib]).trades.length, 2);
+});
+
 /* --------------------------------------------------------------------------
    IBKR CSV
    -------------------------------------------------------------------------- */
@@ -311,6 +343,35 @@ test("genel tanıyıcı: tutarla doğrulanan satır temiz, doğrulanamayan işar
     ],
   );
   assert.deepEqual(result.skipped.map((s) => s.reason), ["noSymbol"]);
+});
+
+test("genel CSV: TR noktalı virgül dökümünde ondalık virgül ve kesirli adet bozulmaz", () => {
+  const result = importCsv(
+    [
+      "Tarih;Sembol;İşlem;Adet;Fiyat;Tutar",
+      "15.03.2024;AAPL;Alış;10;174,50;1.745,00",
+      "16.03.2024;MSFT;Alış;0,5;410,20;205,10",
+    ].join("\r\n"),
+  );
+  assert.equal(result.broker, null);
+  assert.deepEqual(
+    result.trades.map((t) => [t.symbol, t.date, t.quantity, t.priceUsd, t.flags]),
+    [
+      ["AAPL", "2024-03-15", 10, 174.5, ["noCommission"]],
+      ["MSFT", "2024-03-16", 0.5, 410.2, ["noCommission"]],
+    ],
+  );
+  assert.deepEqual(result.skipped, []);
+});
+
+test("genel CSV: EN dökümünde tırnaklı binlik hücre bölünmez", () => {
+  const result = importCsv(
+    ["Date,Symbol,Side,Quantity,Price,Amount", '2024-03-15,AAPL,Buy,"1,000",174.50,"174,500.00"'].join("\n"),
+  );
+  assert.deepEqual(
+    result.trades.map((t) => [t.symbol, t.quantity, t.priceUsd, t.flags]),
+    [["AAPL", 1000, 174.5, ["noCommission"]]],
+  );
 });
 
 /* --------------------------------------------------------------------------

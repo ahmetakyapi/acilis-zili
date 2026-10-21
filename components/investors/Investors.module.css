@@ -364,6 +364,12 @@ a.balanceRow:active { scale:.99; }
 /* KAYDIRMA SAKLANMAZ (CLAUDE.md): dar ekranda tablo kabına zorlanmıyor,
    tabana bir genişlik veriliyor ve şirket sütunu solda sabit kalıyor. */
 .tableScroll { overflow-x:auto; border-top:1px solid var(--line); overscroll-behavior-x:contain; }
+/* HAIRLINE MASKENİN DIŞINDA (20 Ekim). Kongre işlem tablosu ve opsiyon
+   tablosu artık `ScrollEdges` içinde kayıyor ve kenar maskesi kabın
+   TAMAMINA uygulanıyor, kenarlık dahil: kabın üst çizgisi sağ uçta 34
+   piksel solardı. Çizgi bir üst kutuda, maske yalnızca kayan kapta. */
+.tableRule { border-top:1px solid var(--line); }
+.tableRule > .tableScroll { border-top:0; }
 .table { width:100%; min-width:640px; border-collapse:collapse; font-size:13.5px; }
 .table th, .table td { padding:11px 12px; border-top:1px solid var(--line-soft); text-align:left; vertical-align:middle; }
 .table thead th { border-top:0; background:var(--surface-sunken); font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
@@ -383,15 +389,16 @@ a.company:hover b { color:var(--primary-ink); }
 .weightCell { display:flex; flex-direction:column; gap:5px; }
 .weightTrack { display:block; height:4px; }
 .weightTrack i { display:block; height:100%; border-radius:2px; background:var(--primary); }
+/* Açılır kalan bir `<details>` idi, artık düğme (gerekçe `PositionsMore`);
+   görünüşü aynı. Kalanın tablosu başlık satırı taşımıyor — sütunlar hemen
+   üstteki tablonunkiyle aynı. */
 .tableMore { border-top:1px solid var(--line); }
-.tableMore summary {
-  display:flex; align-items:center; min-height:48px; padding:0 20px; cursor:pointer; list-style:none;
+.tableMoreToggle {
+  display:flex; align-items:center; width:100%; min-height:48px; padding:0 20px; cursor:pointer; text-align:left;
   font-size:13px; font-weight:650; color:var(--primary-ink);
 }
-.tableMore summary::-webkit-details-marker { display:none; }
-.tableMore summary::after { content:"+"; margin-left:8px; font-weight:700; }
-.tableMore[open] summary::after { content:"\2212"; }
-.tableMore .table thead { display:none; }
+.tableMoreToggle::after { content:"+"; margin-left:8px; font-weight:700; }
+.tableMoreToggle[aria-expanded="true"]::after { content:"\2212"; }
 .tradeTable { min-width:900px; }
 .detailCell { min-width:240px; max-width:360px; font-size:12.5px; line-height:1.5; color:var(--text-body); }
 @media(max-width:767px) { .company { max-width:200px; } }

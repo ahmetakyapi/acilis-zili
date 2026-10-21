@@ -111,7 +111,13 @@ export function aliasSymbols(query: string): string[] {
   const key = normalizeAlias(query);
   if (key.length < 2) return [];
 
-  const exact = SYMBOL_ALIASES[key];
+  /* YALNIZ KENDİ ANAHTARI (20 Ekim). Düz nesne literali `Object.prototype`
+     miras alıyor: "constructor" sorgusu normalleşince aynen kalıyor ve
+     `SYMBOL_ALIASES[key]` dizi değil `Object` fonksiyonunu dönüyordu —
+     /sirketler?q=constructor `new Set(fonksiyon)`da hata ekranına düşüyordu.
+     Ön ek döngüsü `Object.entries` ile zaten yalnız kendi anahtarlarını
+     geziyor. */
+  const exact = Object.hasOwn(SYMBOL_ALIASES, key) ? SYMBOL_ALIASES[key] : undefined;
   if (exact) return exact;
 
   const hits = new Set<string>();

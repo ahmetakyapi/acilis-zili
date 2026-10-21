@@ -105,6 +105,8 @@ const RATE_DIGITS = 4;
 const PCT_DIGITS = 2;
 /** Hisse adedinde gösterilen en fazla ondalık (kesirli hisse). */
 const QUANTITY_DIGITS = 8;
+/** CSV'nin blob adresi bu kadar sonra bırakılır — gerekçe `downloadCsv`. */
+const CSV_URL_TTL_MS = 40_000;
 
 let rowSeq = 0;
 function nextId(prefix: string): string {
@@ -710,8 +712,15 @@ export function TaxCalculator({
     const link = document.createElement("a");
     link.href = url;
     link.download = labels.csvName.replace("{year}", String(year));
+    /* Bağlantı belgeye takılıp tıklanır, adres GECİKMELİ bırakılır (20
+       Ekim): WebKit (Safari, iOS) blob indirmesini tıklamadan sonra
+       başlatıyor; aynı adımda `revokeObjectURL` indirmeyi düşürebiliyordu
+       ("WebKitBlobResource error 1"). Bu dosya oturumu geri yüklemenin tek
+       yolu (lib/tax-import/own.ts). 40 sn, FileSaver'ın da beklediği süre. */
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), CSV_URL_TTL_MS);
   };
   const csvDisabled = results.length === 0 && dividendResults.length === 0;
 

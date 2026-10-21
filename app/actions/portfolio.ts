@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, exists, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/auth";
@@ -13,7 +13,7 @@ import { getChartBars, getQuotes } from "@/lib/providers";
 import { getUsdTryAt, istanbulToday } from "@/lib/providers/fx-history";
 import { rateLimit } from "@/lib/rate-limit";
 import { portfolioOrder, portfolioPositions, portfolioSales } from "@/lib/schema";
-import { planFifoSale } from "@/lib/portfolio-sales";
+import { planFifoSale, planSaleUndo } from "@/lib/portfolio-sales";
 import { isValidSymbol } from "@/lib/utils";
 
 /**
@@ -527,9 +527,15 @@ export async function sellPositionAction(
         ? db
             .delete(portfolioPositions)
             .where(and(eq(portfolioPositions.id, step.lot.id), eq(portfolioPositions.userId, userId)))
-        : db
+        : /* Düşüm göreli (20 Ekim; geri almayla simetrik): iki sekmeden
+             aynı partiye düşen iki satışın ikisi de adetten iner — mutlak
+             "okunan − satılan" ikincisini kayıtlı ama adetten düşülmemiş
+             bırakıyordu. Elde olandan fazlasını satan yarışı bu da
+             durdurmaz (etkileşimli işlem ister); adet o zaman sessizce
+             fazla kalmak yerine eksiye iner, görünür olur. */
+          db
             .update(portfolioPositions)
-            .set({ quantity: String(step.lot.quantity - step.take) })
+            .set({ quantity: sql`${portfolioPositions.quantity} - ${String(step.take)}::numeric` })
             .where(and(eq(portfolioPositions.id, step.lot.id), eq(portfolioPositions.userId, userId))),
       db.insert(portfolioSales).values({
         userId,
@@ -555,7 +561,8 @@ export async function sellPositionAction(
 /**
  * Satışı geri alır: partiler pozisyonlara geri döner. Aynı sembol, alış
  * günü ve maliyette bir parti hâlâ duruyorsa (kısmi satış) adedi ona
- * ekleniyor; yoksa parti yeniden açılıyor. Kayıtlar siliniyor. Tek `batch`.
+ * ekleniyor; yoksa parti yeniden açılıyor (`planSaleUndo` — aynı partiye
+ * düşen parçalar toplanıyor). Kayıtlar siliniyor. Tek `batch`.
  */
 export async function undoSaleAction(saleId: string): Promise<PortfolioActionState> {
   const userId = await sessionUser();
@@ -575,34 +582,56 @@ export async function undoSaleAction(saleId: string): Promise<PortfolioActionSta
       .select()
       .from(portfolioPositions)
       .where(and(eq(portfolioPositions.userId, userId), eq(portfolioPositions.symbol, symbol)));
-    const opened = parts.filter(
-      (part) => !lots.some((lot) => lot.boughtAt === part.boughtAt && Math.abs(Number(lot.costUsd) - Number(part.costUsd)) < 1e-9),
-    ).length;
+    const plan = planSaleUndo(
+      parts.map((row) => ({ row, quantity: Number(row.quantity), costUsd: Number(row.costUsd), boughtAt: row.boughtAt })),
+      lots.map((row) => ({ id: row.id, costUsd: Number(row.costUsd), boughtAt: row.boughtAt })),
+    );
+    const opened = plan.reopen.length;
     if (opened > 0 && (await countPositions(userId)) + opened > MAX_POSITIONS) return { status: "error", error: "limit" };
 
-    const statements = parts.map((part) => {
-      const lot = lots.find(
-        (row) => row.boughtAt === part.boughtAt && Math.abs(Number(row.costUsd) - Number(part.costUsd)) < 1e-9,
-      );
-      return lot
-        ? db
-            .update(portfolioPositions)
-            .set({ quantity: String(Number(lot.quantity) + Number(part.quantity)) })
-            .where(and(eq(portfolioPositions.id, lot.id), eq(portfolioPositions.userId, userId)))
-        : db.insert(portfolioPositions).values({
-            userId,
-            symbol: part.symbol,
-            quantity: part.quantity,
-            costUsd: part.costUsd,
-            boughtAt: part.boughtAt,
-            note: part.note,
-          });
-    });
-    const [first, ...rest] = [
-      ...statements,
-      db.delete(portfolioSales).where(and(eq(portfolioSales.saleId, saleId), eq(portfolioSales.userId, userId))),
-    ];
-    await db.batch([first, ...rest]);
+    /* Ekleme göreli (20 Ekim): okunan adede değil satırın yazım anındaki
+       adedine — arada başka bir sekmeden satış düştüyse o da korunuyor.
+       Göreli ekleme kendiliğinden tekrarsız DEĞİL: aynı satışı iki sekme
+       aynı anda geri alırsa ikinci batch adedi bir kez daha eklerdi (eski
+       mutlak yazım ikisinde de aynı sayıyı yazıyordu). Bu yüzden her geri
+       yükleme satış satırlarının HÂLÂ durmasına bağlı: batch önce o
+       satırları kilitliyor (`for update`; ikinci sekme ilki bitene dek
+       bekliyor), sonraki her deyim READ COMMITTED'da taze görüntüyle
+       `exists` soruyor, yeniden açılan parti de satış satırının kendisinden
+       seçiliyor. Kilit şart: kilitsiz `exists`, partinin satır kilidinde
+       bekleyen deyimde eski görüntüyle değerlendirilip yine doğru çıkardı.
+       Eşzamanlı satışlar korunuyor, çifte geri alma etkisiz kalıyor. */
+    const ofSale = and(eq(portfolioSales.saleId, saleId), eq(portfolioSales.userId, userId));
+    const saleStillThere = exists(db.select({ one: sql`1` }).from(portfolioSales).where(ofSale));
+    await db.batch([
+      db.select({ id: portfolioSales.id }).from(portfolioSales).where(ofSale).for("update"),
+      ...plan.restore.map(({ lotId, quantity }) =>
+        db
+          .update(portfolioPositions)
+          .set({ quantity: sql`${portfolioPositions.quantity} + ${String(quantity)}::numeric` })
+          .where(and(eq(portfolioPositions.id, lotId), eq(portfolioPositions.userId, userId), saleStillThere)),
+      ),
+      /* Sütun sırası tablonunki (drizzle'ın insert-select şartı); kimlik
+         ve zaman şemadaki varsayılanların aynısı. */
+      ...plan.reopen.map(({ row: part }) =>
+        db.insert(portfolioPositions).select(
+          db
+            .select({
+              id: sql<string>`gen_random_uuid()`.as("id"),
+              userId: portfolioSales.userId,
+              symbol: portfolioSales.symbol,
+              quantity: portfolioSales.quantity,
+              costUsd: portfolioSales.costUsd,
+              boughtAt: portfolioSales.boughtAt,
+              note: portfolioSales.note,
+              createdAt: sql<Date>`now()`.as("created_at"),
+            })
+            .from(portfolioSales)
+            .where(and(eq(portfolioSales.id, part.id), eq(portfolioSales.userId, userId))),
+        ),
+      ),
+      db.delete(portfolioSales).where(ofSale),
+    ]);
   } catch {
     return { status: "error", error: "failed" };
   }

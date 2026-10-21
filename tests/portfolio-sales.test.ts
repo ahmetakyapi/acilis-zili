@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { planFifoSale, saleViews, yearTotals, type SaleLot, type SalePart } from "../lib/portfolio-sales";
+import { planFifoSale, planSaleUndo, saleViews, yearTotals, type SaleLot, type SalePart } from "../lib/portfolio-sales";
 
 /** Portföy satışı: FIFO planı ve gerçekleşen kâr (lib/portfolio-sales.ts). */
 
@@ -71,4 +71,34 @@ test("satışlar yeniden eskiye, yıllar yeniden eskiye", () => {
   );
   assert.deepEqual(views.map((v) => v.saleId), ["b", "a"]);
   assert.deepEqual(yearTotals(views).map((y) => y.year), ["2026", "2025"]);
+});
+
+test("geri alma: aynı gün ve maliyetteki iki partinin parçaları kalan partiye TOPLANIR", () => {
+  /* A(5) ve B(5) aynı gün, aynı fiyat; 7 satılınca A tükenir, B 3'e iner. */
+  const lots = [lot("a", 5, 100, "2025-03-03"), lot("b", 5, 100, "2025-03-03")];
+  const plan = planFifoSale(lots, 7, "2025-06-01");
+  assert.ok(plan.ok);
+  if (!plan.ok) return;
+  const remaining = plan.steps
+    .filter((step) => !step.exhausted)
+    .map((step) => ({ ...step.lot, quantity: step.lot.quantity - step.take }));
+  assert.deepEqual(remaining.map((l) => [l.id, l.quantity]), [["b", 3]]);
+
+  const parts = plan.steps.map((step) => ({ quantity: step.take, costUsd: step.lot.costUsd, boughtAt: step.lot.boughtAt }));
+  const undo = planSaleUndo(parts, remaining);
+  /* İki parça da B'ye düşer; tek güncelleme, 5 + 2 — eldeki toplam yine 10. */
+  assert.deepEqual(undo.restore, [{ lotId: "b", quantity: 7 }]);
+  assert.deepEqual(undo.reopen, []);
+  assert.equal(remaining[0].quantity + undo.restore[0].quantity, 10);
+});
+
+test("geri alma: eşi kalmamış parça yeniden açılır, maliyeti farklı parti eşleşmez", () => {
+  const parts = [
+    { quantity: 2, costUsd: 100, boughtAt: "2025-03-03" },
+    { quantity: 1.5, costUsd: 120, boughtAt: "2025-03-03" },
+    { quantity: 4, costUsd: 90, boughtAt: "2025-01-02" },
+  ];
+  const undo = planSaleUndo(parts, [lot("b", 3, 100, "2025-03-03"), lot("c", 1, 90, "2025-01-03")]);
+  assert.deepEqual(undo.restore, [{ lotId: "b", quantity: 2 }]);
+  assert.deepEqual(undo.reopen, [parts[1], parts[2]]);
 });

@@ -30,6 +30,7 @@ import { FillList } from "@/components/earnings/FillList";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
 import {
   getAnalyses,
+  getAnalyzedSymbols,
   getUpcomingEarnings,
   getSymbolNames,
   getUserSymbols,
@@ -84,7 +85,11 @@ import {
  * Bilançolar · Analizler sekmesi.
  *
  * Takvim "ne zaman", bu ekran "ne çıktı" sorusunu yanıtlıyor. Üst sıra tek
- * bakışta günün hikâyesini veriyor, altındaki tablo arşivin tamamı.
+ * bakışta günün hikâyesini veriyor, altındaki tablo arşiv: süzgeçsiz hâli en
+ * son 60 analiz ("Son Bilanço Analizleri"), takip ve sektör süzgeci ise
+ * sorguda çalışıyor ve o dilimin tamamını getiriyor (20 Ekim; gerekçe
+ * aşağıda, "SÜZGEÇ SORGUDA"). Tablonun arama kutusu yalnızca basılan
+ * satırları tarar.
  *
  * Sektör filtresi analizin kendi `sector` metninden DEĞİL, sembolün
  * `industry` alanından türeyen mevcut sektör taksonomisinden geliyor
@@ -113,6 +118,11 @@ const WEEK_BASE = 5;
 /* Bir haftanın içindeki gün "yakın": dar panelde göreli gün yalnızca bu
    eşiğin içinde kalıyor. */
 const NEAR_DAYS = 7;
+/* Süzgeçsiz arşiv: en son analizler. */
+const ARCHIVE_LIMIT = 60;
+/* Süzülmüş arşivin tavanı. Süzgeç sorguda çalıştığı için dilim (takip
+   listesi, tek sektör) zaten dar; tavan yalnızca bir sigorta. */
+const FILTERED_LIMIT = 200;
 
 function isSort(value: string | undefined): value is AnalysisSort {
   return SORTS.includes(value as AnalysisSort);
@@ -164,15 +174,58 @@ export default async function AnalysesPage(
   const userSymbolsP: Promise<string[]> = session?.user?.id
     ? getUserSymbols(session.user.id)
     : Promise.resolve([]);
-  const [byDate, userSymbols, upcoming] = await Promise.all([
-    getAnalyses(locale, { limit: 60, sort: "tarih" }),
+
+  /* SÜZGEÇ SORGUDA (20 Ekim). Takip ve sektör süzgeci, sektör çipleri ve
+     "Takip" çipi en son 60 analizin İÇİNDEN bellekte hesaplanıyordu. 60
+     sıralama için konmuş bir tavandı (yukarıdaki not), süzgeç için değil:
+     arşiv 60'ı geçince takip listesindeki şirketin eski analizi "Takip"
+     süzgecinde görünmüyor, analizlerinin hepsi eski olan sektörün çipi hiç
+     basılmıyordu (bilanço sezonunda arşiv tam bu eşikte). Artık çip kümesi
+     arşivin tamamından (`getAnalyzedSymbols`), süzülmüş liste de o dilimin
+     sembolleriyle sorgudan geliyor — `/bilancolar/takip` ile aynı yol.
+     Sektörün sembolleri çiplerle AYNI eşlemeden (`sectorGroupOf` +
+     önbellekli sembol tablosu), yani çip ile süzgeç aynı kümeyi görüyor.
+     İkisi de ilk turda zincirleniyor; süzgeçsiz görünümde fazladan tur yok.
+
+     "Bu Hafta" süzgeci bellekte kalıyor: tarih sıralı kümenin başı, tek
+     haftada 60'tan fazla analiz yazılmadıkça eksiksiz. */
+  const analyzedP = getAnalyzedSymbols();
+  const filteredP: Promise<AnalysisIndexRow[] | null> =
+    !filter || filter === "hafta"
+      ? Promise.resolve(null)
+      : filter === "takip"
+        ? userSymbolsP.then((watched) =>
+            watched.length > 0
+              ? getAnalyses(locale, { symbols: watched, limit: FILTERED_LIMIT, sort: "tarih" })
+              : [],
+          )
+        : analyzedP.then(async (analyzed) => {
+            const names = await getSymbolNames(analyzed);
+            const picked = analyzed.filter(
+              (symbol) => sectorGroupOf(names[symbol]?.industry).key === filter,
+            );
+            return picked.length > 0
+              ? getAnalyses(locale, { symbols: picked, limit: FILTERED_LIMIT, sort: "tarih" })
+              : [];
+          });
+  const [byDate, userSymbols, upcoming, analyzed, filtered] = await Promise.all([
+    getAnalyses(locale, { limit: ARCHIVE_LIMIT, sort: "tarih" }),
     userSymbolsP,
     userSymbolsP.then((preferred) =>
       getUpcomingEarnings(today, addEtDays(today, 30), UPCOMING_POOL, { preferred }),
     ),
+    analyzedP,
+    filteredP,
   ]);
-  const all = sortAnalyses(byDate, sort);
   const watchSet = new Set(userSymbols);
+  /* Sembol sorgusu düşerse çipler eldeki kümeden — eski davranış. */
+  const chipSymbols =
+    analyzed.length > 0 ? analyzed : [...new Set(byDate.map((row) => row.symbol))];
+
+  const weekAgo = addEtDays(today, -7);
+  const sorted = sortAnalyses(filtered ?? byDate, sort);
+  const rows =
+    filter === "hafta" ? sorted.filter((row) => row.reportDate >= weekAgo) : sorted;
 
   /* YAKLAŞANLAR SORGUDA SÜZÜLÜYOR. Burada bir dönem 30 günlük takvimin
      TAMAMI çekilip (bilanço sezonunda birkaç bin satır) bellekte
@@ -185,30 +238,29 @@ export default async function AnalysesPage(
      İkisi birbirinden bağımsız — biri takvime ve takip listesine, öteki
      yalnızca analiz listesine bakıyor — yani sayfanın kritik yolunda
      gereksiz bir Neon turu duruyordu. Zincir üç kademeden ikiye indi. */
-  /* İpuçları künyeyle AYNI TURDA: öne çıkan kart süzgece bağlı (sektör
-     künyeden okunuyor), yani hangi kartın ipucu gerektiğini beklemek bir
-     tur daha demekti. Kümenin tamamı için sormak tek sorgu. */
+  /* İpuçları künyeyle AYNI TURDA. Öne çıkan kart süzülmüş listenin ilk
+     satırı ve süzgeç artık sorguda çalıştığı için o satır bu turdan önce
+     belli (20 Ekim): ipucu yalnızca onun için soruluyor. Künye listesi
+     arşivin sembolleriyle aynı — sektör süzgecinin sorduğu liste, istek
+     içinde tek okuma. */
   const [meta, teasers] = await Promise.all([
-    getSymbolNames([...new Set(all.map((row) => row.symbol))]),
-    getTakeawayTeasers(all),
+    getSymbolNames([
+      ...chipSymbols,
+      ...byDate.map((row) => row.symbol),
+      ...rows.map((row) => row.symbol),
+    ]),
+    getTakeawayTeasers(rows.slice(0, 1)),
   ]);
 
   /* Filtre çipleri yalnızca ELDE OLAN sektörleri gösterir: hiçbir analizi
-     olmayan bir sektör çipi tıklanınca boş ekran veriyordu. */
+     olmayan bir sektör çipi tıklanınca boş ekran veriyordu. Sıra en son
+     analiz edilen şirketin sektörü önce; sıralama değişince çipler yer
+     değiştirmiyor. */
   const groups = new Map<string, SectorGroup>();
-  for (const row of all) {
-    const group = sectorGroupOf(meta[row.symbol]?.industry);
+  for (const symbol of chipSymbols) {
+    const group = sectorGroupOf(meta[symbol]?.industry);
     groups.set(group.key, group);
   }
-
-  const weekAgo = addEtDays(today, -7);
-
-  const rows = all.filter((row) => {
-    if (!filter) return true;
-    if (filter === "hafta") return row.reportDate >= weekAgo;
-    if (filter === "takip") return watchSet.has(row.symbol);
-    return sectorGroupOf(meta[row.symbol]?.industry).key === filter;
-  });
 
   /* ÖNE ÇIKAN KART LİSTENİN İLK SATIRI — ve artık öyle olduğunu söylüyor.
      Kart `all[0]`dan geliyordu, yani filtreyi hiç görmüyordu: okuyucu
@@ -267,7 +319,7 @@ export default async function AnalysesPage(
         share={<PageShare compactOnMobile align="right" path="/bilancolar/analizler" title={t.analysis.symbolPanelTitle} locale={locale} t={t} />}
         title={t.analysis.symbolPanelTitle}
         description={t.directory.analysisDescription}
-        visual={all.length > 0 && (
+        visual={byDate.length > 0 && (
           <div className={analysisStyles.overview}>
             <div className={analysisStyles.overviewHeading}>
               <span>{t.analysis.filteredReports}</span>
@@ -290,7 +342,7 @@ export default async function AnalysesPage(
 
       <EarningsTabs active="analyses" t={t} className="-mt-1" />
 
-      {all.length === 0 ? (
+      {byDate.length === 0 ? (
         <Panel>
           <EmptyState title={t.analysis.empty} hint={t.analysis.emptyHint} scene="chart" />
         </Panel>
@@ -419,7 +471,7 @@ export default async function AnalysesPage(
                     {t.analysis.filterThisWeek}
                   </FilterChip>
                 )}
-                {session?.user && all.some((row) => watchSet.has(row.symbol)) && (
+                {session?.user && chipSymbols.some((symbol) => watchSet.has(symbol)) && (
                   <FilterChip
                     href={filterHref("takip")}
                     active={filter === "takip"}

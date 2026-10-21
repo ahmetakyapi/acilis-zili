@@ -1125,6 +1125,7 @@ const en: typeof tr = {
     notePlaceholder: "Why are you watching it? E.g. consider buying below 230",
     noteSave: "Save",
     noteFailed: "The note couldn't be saved; try again.",
+    actionFailed: "The change couldn't be saved; try again.",
     moveUp: "Move Up",
     dragHint: "Drag to reorder",
     moveDown: "Move Down",
@@ -3009,7 +3010,7 @@ const en: typeof tr = {
       notAdviceFoot: "Every figure on this page is an estimate based on Turkish Revenue Administration guides; ask your accountant before you file.",
     },
     portfolio: {
-      addFromStock: "Add {symbol} to Portfolio",
+      addFromStock: "Add to Portfolio ({symbol})",
       eyebrow: "My Account",
       title: "Portfolio",
       subtitle: "Dollar and lira profit and loss on your positions; lira cost uses the rate of the buy date, today's value uses today's rate.",

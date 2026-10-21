@@ -11,6 +11,7 @@ import { adminDayYear, adminStamp, adminWeekRange } from "@/lib/admin-format";
 import { adminDocTitle } from "@/lib/admin-sections";
 import { withLocale } from "@/lib/i18n/routing";
 import { briefHref } from "@/lib/brief";
+import { briefSurumu } from "@/lib/content-write";
 
 /**
  * Bülten editörü.
@@ -144,6 +145,7 @@ export default async function BriefEditorPage(
             bodyMd: row.bodyMd,
             generatedBy: row.generatedBy,
             generatedAt: row.generatedAt.toISOString(),
+            surum: briefSurumu(row.headline, row.bodyMd),
           }}
         />
       </AdminPanel>

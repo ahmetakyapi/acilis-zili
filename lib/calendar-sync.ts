@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import { and, eq, gt, gte, inArray, lte, notInArray, sql } from "drizzle-orm";
 import { db } from "./db";
 import { economicEvents } from "./schema";
 import { getReleaseDates, getReleasedObservation, getSeriesRelease } from "./providers/fred";
@@ -78,6 +78,8 @@ export type CalendarSyncReport = {
   inserted: number;
   /** Yuvarlanan kurallı seriden eklenen olay sayısı. */
   rolling: number;
+  /** Kaynağı artık vermediği için silinen GELECEK olay sayısı (ertelenen yayın, düzelen kural). */
+  removed: number;
   /** Sorun yaşanan yayınlar — sessizce yutulmaz, cron raporunda görünür. */
   problems: string[];
 };
@@ -94,6 +96,7 @@ export async function syncCalendar(
   const report: CalendarSyncReport = {
     inserted: 0,
     rolling: 0,
+    removed: 0,
     problems: [],
   };
   const horizon = addEtDays(today, HORIZON_DAYS);
@@ -144,9 +147,35 @@ export async function syncCalendar(
         continue;
       }
 
-      const rows = dates.data
-        // FRED geçmiş tarihleri de dönebiliyor; takvim ileriye bakar.
-        .filter((date) => date >= today && date <= horizon)
+      // FRED geçmiş tarihleri de dönebiliyor; takvim ileriye bakar.
+      const listed = dates.data.filter((date) => date >= today && date <= horizon);
+
+      /* ERTELENEN YAYIN (20 Ekim). Slug tarihi taşıyor ve satırlar yalnız
+         ekleniyordu: BLS/BEA bir yayını kaydırınca (2025 kapanmasında TÜFE)
+         yeni tarih ekleniyor, eskisi yüksek önemli olay olarak kalıyordu —
+         takvimde, pazar postasında ve Claude yorumunun girdisinde, yani
+         yazma katmanında. FRED'in listesinde artık olmayan GELECEK tarihli
+         KENDİ satırlarımız (`fred-release`) silinir; elle işlenmiş kayıtlar
+         ve bugünün satırı (gerçekleşeni yazılmış olabilir) dokunulmaz.
+         Pencerede tarih yoksa silme de yok: boş `notInArray` her satırı
+         seçerdi. */
+      if (listed.length > 0) {
+        const removed = await db
+          .delete(economicEvents)
+          .where(
+            and(
+              eq(economicEvents.source, "fred-release"),
+              eq(economicEvents.fredSeriesId, release.seriesId),
+              gt(economicEvents.eventDate, today),
+              lte(economicEvents.eventDate, horizon),
+              notInArray(economicEvents.eventDate, listed),
+            ),
+          )
+          .returning({ id: economicEvents.id });
+        report.removed += removed.length;
+      }
+
+      const rows = listed
         .filter((date) => !claimed.has(`${release.seriesId}|${date}`))
         .map((date) => ({
           eventDate: date,
@@ -178,8 +207,15 @@ export async function syncCalendar(
 /**
  * Kurala bağlı seriler — haftalık işsizlik başvuruları.
  *
- * Bunlar için FRED'e gitmeye gerek yok: "her Perşembe 08:30 ET" bir kural.
- * Tohumdaki üreteç burada da kullanılıyor ki tek bir tanım olsun.
+ * Bunlar için FRED'e gitmeye gerek yok: "her Perşembe 08:30 ET, perşembe
+ * federal tatilse çarşamba" bir kural. Tohumdaki üreteç burada da
+ * kullanılıyor ki tek bir tanım olsun.
+ *
+ * KENDİ KENDİNİ ONARIR (20 Ekim): ekleme `onConflictDoNothing`, yani üreteç
+ * düzelince eski satır kalırdı (tatil kayması eklenince 26 Kasım 2026
+ * perşembesi). Bugünden üretilen son haftaya kadar, üretilmeyen `dol-rule`
+ * satırı silinir; geçmiş (gerçekleşeni yazılmış) satırlar pencerenin
+ * dışında, bugünün doğru satırı üretilenlerin içinde.
  */
 async function finishWithRolling(
   report: CalendarSyncReport,
@@ -202,6 +238,25 @@ async function finishWithRolling(
       target: [economicEvents.slug, economicEvents.eventDate],
     });
     report.rolling = rows.length;
+
+    const last = rows.at(-1)?.eventDate;
+    if (last) {
+      const removed = await db
+        .delete(economicEvents)
+        .where(
+          and(
+            eq(economicEvents.source, "dol-rule"),
+            gte(economicEvents.eventDate, today),
+            lte(economicEvents.eventDate, last),
+            notInArray(
+              economicEvents.slug,
+              rows.map((row) => row.slug),
+            ),
+          ),
+        )
+        .returning({ id: economicEvents.id });
+      report.removed += removed.length;
+    }
   } catch (error) {
     report.problems.push(`işsizlik başvuruları: ${message(error)}`);
   }

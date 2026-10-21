@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import {
   ArrowUpRight,
@@ -126,7 +126,10 @@ export function PostEditor({
      KİMLİĞİYLE veriyor; her render'da yeni nesne kurmak setState döngüsüne
      sokuyordu (15 Ekim incelemesi — bloker). */
   const [ilk] = useState(() => ({ metin: post?.bodyMd ?? start?.body ?? "", cizim: ilkOnizleme }));
-  const onizleme = useOnizleme(body, previewUserPostBody, ilk);
+  /* Önizleme yazının diliyle çizilir (gerekçe `previewUserPostBody`);
+     useOnizleme `ciz`in kimliğine bağlı, o yüzden sabit tutuluyor. */
+  const ciz = useCallback((metin: string) => previewUserPostBody(metin, locale), [locale]);
+  const onizleme = useOnizleme(body, ciz, ilk);
   const takip = useOnizlemeTakibi(bodyRef, previewRef);
   useEffect(() => takip(), [onizleme.cizilen, takip]);
 

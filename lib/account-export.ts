@@ -7,7 +7,7 @@ import { exportEmailPrefs } from "./email-notify";
 import { getUserPercentAlerts } from "./percent-alerts";
 import { getProfileSettings } from "./profile-data";
 import { getOwnPosts } from "./user-post-data";
-import { getInbox } from "./notifications";
+import { exportInbox } from "./notifications";
 import { getPortfolioPositions } from "./portfolio-data";
 import { getUserAlerts } from "./price-alerts";
 import { getPortfolioSales } from "./portfolio-sales-data";
@@ -57,7 +57,9 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
     getUserPercentAlerts(userId),
     getNotificationPrefs(userId),
     getOwnPosts(userId),
-    getInbox(userId),
+    /* Ekranın 50'lik okuyucusu değil, tavansız olanı — gerekçe
+       `exportInbox`ta (20 Ekim). */
+    exportInbox(userId),
     exportEmailPrefs(userId),
   ]);
   const items = lists.length

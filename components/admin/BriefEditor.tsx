@@ -74,6 +74,8 @@ export type BriefDraft = {
   bodyMd: string;
   generatedBy: string;
   generatedAt: string;
+  /** Manşet + gövdenin özeti (lib/content-write.ts → `briefSurumu`). */
+  surum: string;
 };
 
 const BOS: EditorState = {};
@@ -123,13 +125,19 @@ export function BriefEditor({
   const [body, setBody] = useState(draft.bodyMd);
 
   /* Sunucudan yeni taslak geldiyse (kaydetme, geri yükleme) alanlar onunla
-     yenilenir — gerekçe dosya başında. */
+     yenilenir — gerekçe dosya başında. Kayıt sürerken yazılanı ezmemek için
+     yalnızca alanlar GÖNDERİLEN hâldeyse (20 Ekim; gerekçe StoryEditor'da). */
+  const [gonderilen, setGonderilen] = useState<string | null>(null);
+  const gonderimHali = JSON.stringify([headline.trim(), body.trim()]);
   const imza = JSON.stringify([draft.generatedAt, draft.headline, draft.bodyMd]);
   const [taban, setTaban] = useState(imza);
   if (imza !== taban) {
     setTaban(imza);
-    setHeadline(draft.headline);
-    setBody(draft.bodyMd);
+    if (gonderilen === null || gonderimHali === gonderilen) {
+      setHeadline(draft.headline);
+      setBody(draft.bodyMd);
+    }
+    setGonderilen(null);
   }
 
   /* Kirlilik kaydedilince yazılacak hâlle ölçülüyor: şema iki metni de
@@ -183,6 +191,7 @@ export function BriefEditor({
     }
     const fd = new FormData();
     fd.set("revisionId", id);
+    setGonderilen(null);
     startTransition(() => geriYukleEylemi(fd));
   };
 
@@ -201,6 +210,7 @@ export function BriefEditor({
       onSubmit={(event) => {
         event.preventDefault();
         const fd = new FormData(event.currentTarget);
+        setGonderilen(gonderimHali);
         startTransition(() => kaydet(fd));
       }}
       className="flex flex-col"
@@ -208,6 +218,9 @@ export function BriefEditor({
       <input type="hidden" name="date" value={draft.date} />
       <input type="hidden" name="locale" value={draft.locale} />
       <input type="hidden" name="period" value={draft.period} />
+      {/* Sürüm denetimi (20 Ekim) — gerekçe StoryEditor'da; bültende damga
+          değil içerik özeti (`surum`). */}
+      <input type="hidden" name="seen" value={draft.surum} />
 
       <div className="grid gap-x-6 gap-y-6 lg:grid-cols-2">
         <div className="min-w-0 lg:col-span-2">

@@ -150,6 +150,7 @@ export default async function WatchlistPage() {
     notePlaceholder: t.watchlist.notePlaceholder,
     noteSave: t.watchlist.noteSave,
     noteFailed: t.watchlist.noteFailed,
+    actionFailed: t.watchlist.actionFailed,
     renameList: t.watchlist.renameList,
     save: t.common.save,
     dragHint: t.watchlist.dragHint,

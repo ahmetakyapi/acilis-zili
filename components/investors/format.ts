@@ -1,7 +1,9 @@
 import type { Dictionary } from "@/lib/i18n";
 import type { CongressCard, FundCard } from "@/lib/investor-data";
 import type { Move, TradeDetail } from "@/lib/investor-view";
-import { formatCompact, formatEtDateMedium, formatPrice, withCurrency } from "@/lib/utils";
+import { formatCompact, formatEtDateMedium, formatMoneyCompact, formatPercent, formatPrice, withCurrency } from "@/lib/utils";
+import type { MapPosition } from "./InvestorTreemap";
+import type { PositionRowView } from "./PositionRow";
 
 /**
  * Ünlü yatırımcılar ekranlarının dize biçimleri — saf, sunucu ve istemci
@@ -169,6 +171,54 @@ export function formatWeight(weight: number, locale: string): string {
     maximumFractionDigits: digits,
   }).format(pct);
   return locale === "tr" ? `%${body}` : `${body}%`;
+}
+
+/**
+ * 13F pozisyon tablosunun satır görünümü: hücre metinleri burada, sunucuda
+ * biçimleniyor; çizim `PositionRow`da (20 Ekim). Açılır kalan bu görünümü
+ * istemciye veri olarak alıyor — gerekçe `PositionsMore` başında.
+ * `peak`: portföyün en büyük ağırlığı (çubuk ona göre). `index` sıfırdan.
+ */
+export function positionRowView(
+  position: MapPosition,
+  index: number,
+  peak: number,
+  compared: boolean,
+  locale: string,
+  t: T,
+): PositionRowView {
+  return {
+    cusip: position.cusip,
+    rank: index + 1,
+    ticker: position.ticker,
+    issuer: position.issuer,
+    logoUrl: position.logoUrl,
+    linkable: position.linkable,
+    shares: formatShares(position.amount, locale),
+    value: formatMoneyCompact(position.value, locale),
+    weight: formatWeight(position.weight, locale),
+    /* Onda birlik yüzde: çubuk 170 pikselde 0,17 piksel; kalan yüzlerce
+       satırın yükünde uzun ondalıklar taşınmıyor. */
+    bar: Math.round((position.weight / peak) * 1000) / 10,
+    move: compared
+      ? {
+          tone: moveTone(position.move),
+          label: moveLabel(position.move, t),
+          change:
+            position.changePct !== null && position.move !== "unchanged"
+              ? formatPercent(position.changePct, locale, 0)
+              : null,
+          /* TERS BÖLÜNME (28 Eylül denetimi): `detectSplit` ters
+             bölünmede 1/k veriyor ve metin "0.3333333333333333-for-1"
+             basıyordu. Oran her zaman tam sayı olarak yazılıyor. */
+          note: position.split
+            ? position.split >= 1
+              ? t.splitNote.replace("{ratio}", String(position.split))
+              : t.reverseSplitNote.replace("{ratio}", String(Math.round(1 / position.split)))
+            : null,
+        }
+      : null,
+  };
 }
 
 /**

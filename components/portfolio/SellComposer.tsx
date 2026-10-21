@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useId, useState } from "react";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { CircleNotch, Sparkle } from "@phosphor-icons/react";
 import {
   sellPositionAction,
@@ -76,8 +76,16 @@ export function SellComposer({
   const qty = parseDecimalInput(quantity, locale);
   const perShare = parseDecimalInput(price, locale);
 
+  /* Her kayıt BİR kez bildirilir (20 Ekim; ekleme formundaki `savedRef`in
+     aynısı): `onSaved` her Workbench çiziminde yeni kimlikle geliyor ve
+     bildirim (`notify`) Workbench'i yeniden çiziyor — koruma yokken etki,
+     pencere kapanıp form sökülene dek döngüde bildirim basıyordu. */
+  const savedRef = useRef<PortfolioActionState | null>(null);
   useEffect(() => {
-    if (state.status === "saved" && state.id) onSaved(state.id, symbol);
+    if (state.status === "saved" && state.id && savedRef.current !== state) {
+      savedRef.current = state;
+      onSaved(state.id, symbol);
+    }
   }, [state, onSaved, symbol]);
 
   /* ---- Fiyat önerisi (ekleme formuyla aynı) ---- */

@@ -273,7 +273,16 @@ export function AnalysisTable({
 
                    Artık satır `div[role="row"]`, tıklama alanı ise sembol
                    hücresindeki gerçek bağlantının mutlak konumlu kaplaması.
-                   Bağlantı satırın tamamını kaplıyor, görünüm değişmiyor. */
+                   Bağlantı satırın tamamını kaplıyor, görünüm değişmiyor.
+
+                   BAĞLANTI HÜCRENİN İÇİNDE (20 Ekim). Yorum böyle diyordu
+                   ama bağlantı `role="row"`un doğrudan çocuğuydu, hücrelerin
+                   kardeşi: satırın sahip olabileceği çocuklar yalnızca
+                   hücre rolleri (axe `aria-required-children` her satırda
+                   düşüyordu) ve tablo komutlarıyla hücreden hücreye gezen
+                   ekran okuyucu bağlantıya hiç uğramıyordu. Sembol hücresi
+                   konumlu değil, yani `absolute inset-0` yine `relative`
+                   satıra göre yerleşiyor; görünüm ve tıklama alanı aynı. */
                 <div
                   key={row.key}
                   role="row"
@@ -283,15 +292,6 @@ export function AnalysisTable({
                     filtered && "filter-settle",
                   )}
                 >
-                  <Link
-                    href={row.href}
-                    prefetch={false}
-                    aria-label={row.linkLabel}
-                    className="absolute inset-0 z-10 rounded-(--radius-sm)"
-                    /* Şirket kartı (components/ui/CompanyCard); kaydı
-                       sayfa bırakıyor. */
-                    data-cc={row.symbol}
-                  />
                   {/* Logo + sembol tek hücrede: tablo satırı yalnızca sayı
                       dizisiyken hepsi birbirinin aynıydı, logo satırı bir
                       bakışta tanınır kılıyor. */}
@@ -299,6 +299,15 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(COLS.symbol, "flex items-center gap-2.5")}
                   >
+                    <Link
+                      href={row.href}
+                      prefetch={false}
+                      aria-label={row.linkLabel}
+                      className="absolute inset-0 z-10 rounded-(--radius-sm)"
+                      /* Şirket kartı (components/ui/CompanyCard); kaydı
+                         sayfa bırakıyor. */
+                      data-cc={row.symbol}
+                    />
                     <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
                     <span className="flex min-w-0 flex-col">
                       <span

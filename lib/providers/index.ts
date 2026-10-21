@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { after } from "next/server";
 import { inArray, eq, and, sql } from "drizzle-orm";
 import { db } from "../db";
 import { candlesCache, quotesCache, symbols as symbolsTable } from "../schema";
@@ -71,9 +72,18 @@ const QUOTE_WRITE_BATCH = 500;
  * Artık çok satırlı tek upsert: 513 istek → 2 istek. `excluded.*` ile her
  * satır kendi yeni değerini alır.
  *
- * Beklenerek çağrılır. Eskiden `void` ile bırakılıyordu ve sunucusuz
- * fonksiyon yanıtı döndükten sonra donduğunda yazma yarıda kesilebiliyordu;
- * tek gidiş-dönüşün maliyeti (~20ms) bu belirsizliğe değmez.
+ * Yanıttan SONRA çalışır (`persistLater`, 20 Ekim). Eskiden `void` ile
+ * bırakılıyordu ve sunucusuz fonksiyon yanıtı döndükten sonra donduğunda
+ * yazma yarıda kesilebiliyordu; bu yüzden beklenmeye başlandı. Ama beklemek
+ * yazmayı çizimin yoluna koydu: seans açıkken `tradedAt` her TTL penceresinde
+ * değiştiği için aşağıdaki "değişmeyen satır" atlaması işlemiyor ve dizin
+ * her pencerenin ilk görüntülemesinde iki upsert'i bekliyordu (ölçüm
+ * aşağıda: 3,2 saniyelik yanıtın yarısı). `after()` iki derdi birden
+ * çözüyor — yazma yanıtı bekletmiyor, süreç de onu bitirmeden kapanmıyor
+ * (`next start` kapanırken bekleyen `after` işlerini tamamlıyor). Aynı
+ * istekte `quotes_cache`i geri okuyan yok: tek okuyan `quotesFromCache`,
+ * o da yalnız sağlayıcı düştüğünde, yani hiçbir şey yazılmamışken.
+ * Paketler de artık paralel; birbirlerinin satırına dokunmuyorlar.
  */
 /**
  * En son yazılan işlem damgası — sembol → `tradedAt` (ms).
@@ -120,33 +130,57 @@ async function persistQuotes(quotes: Quote[]): Promise<void> {
     updatedAt: now,
   }));
 
+  const chunks: (typeof rows)[] = [];
+  for (let i = 0; i < rows.length; i += QUOTE_WRITE_BATCH) {
+    chunks.push(rows.slice(i, i + QUOTE_WRITE_BATCH));
+  }
+
   try {
-    for (let i = 0; i < rows.length; i += QUOTE_WRITE_BATCH) {
-      await db
-        .insert(quotesCache)
-        .values(rows.slice(i, i + QUOTE_WRITE_BATCH))
-        .onConflictDoUpdate({
-          target: quotesCache.symbol,
-          set: {
-            price: sql`excluded.price`,
-            change: sql`excluded.change`,
-            changePct: sql`excluded.change_pct`,
-            open: sql`excluded.open`,
-            high: sql`excluded.high`,
-            low: sql`excluded.low`,
-            prevClose: sql`excluded.prev_close`,
-            volume: sql`excluded.volume`,
-            tradedAt: sql`excluded.traded_at`,
-            updatedAt: sql`excluded.updated_at`,
-          },
-        });
-    }
+    await Promise.all(
+      chunks.map((chunk) =>
+        db
+          .insert(quotesCache)
+          .values(chunk)
+          .onConflictDoUpdate({
+            target: quotesCache.symbol,
+            set: {
+              price: sql`excluded.price`,
+              change: sql`excluded.change`,
+              changePct: sql`excluded.change_pct`,
+              open: sql`excluded.open`,
+              high: sql`excluded.high`,
+              low: sql`excluded.low`,
+              prevClose: sql`excluded.prev_close`,
+              volume: sql`excluded.volume`,
+              tradedAt: sql`excluded.traded_at`,
+              updatedAt: sql`excluded.updated_at`,
+            },
+          }),
+      ),
+    );
     for (const q of fresh) {
       const stamp = q.tradedAt?.getTime();
       if (stamp) lastPersisted.set(q.symbol, stamp);
     }
   } catch {
     // Önbellek yazımı ürünün çalışması için zorunlu değil.
+  }
+}
+
+/**
+ * Önbellek yazmasını yanıttan sonraya bırakır — gerekçesi `persistQuotes`
+ * üzerinde. Kotasyon ve bar yazmaları bundan geçiyor; profil yazması
+ * geçmiyor (gerekçesi `getCompanyProfile`te).
+ *
+ * İstek kapsamı dışında (betik, test) `after` hata atıyor; orada yazma
+ * eskisi gibi beklenir, düşmez. Dönen söz `after` yolunda hemen çözülür.
+ */
+function persistLater(write: () => Promise<void>): Promise<void> {
+  try {
+    after(write);
+    return Promise.resolve();
+  } catch {
+    return write();
   }
 }
 
@@ -201,10 +235,12 @@ async function quotesFromCache(
 /**
  * Paketteki EN YENİ son işlem anı — hiçbirinde yoksa null.
  *
- * İki soruya birden cevap veriyor: paketin yaşı (damga) ve paketin hangi
- * seansa ait olduğu (tazelik kararı). İkisi de "en yeni"yi istiyor çünkü
- * paket tek bir çekimden geliyor; likiditesi düşük semboller günler öncesini
- * taşıyabilir ve paketin yaşını onlar tayin etmez.
+ * İki soruya birden cevap veriyor: ekrandaki damga ve paketin hangi seansa
+ * ait olduğu (tazelik kararı). İkisi de "en yeni"yi istiyor: likiditesi
+ * düşük semboller günler öncesini taşıyabilir ve paketin gününü onlar tayin
+ * etmez. Yanıtın YAŞI burada sorulmuyor — paket 200'lük paralel paketlerden
+ * birleşiyor ve yaş, en ESKİ paketin `Date` başlığından geliyor (20 Ekim,
+ * `alpaca.getSnapshots`).
  */
 function newestTrade(quotes: Record<string, Quote>): Date | null {
   let newest: Date | null = null;
@@ -342,7 +378,12 @@ async function overlayRealtime(
      yanıt eskiyse bir kez önbelleksiz soruluyor (kotasyondaki kuralın eşi). */
   let iex = await alpaca.getLatestIexBars(Object.keys(pack.data), ttl);
   if (iex.ok && Date.now() - iex.fetchedAt.getTime() > (ttl + RESPONSE_AGE_SLACK_SECONDS) * 1000) {
-    iex = await alpaca.getLatestIexBars(Object.keys(pack.data), ttl, { fresh: true });
+    /* Tekrar düşerse önbellekteki yanıt kalır (20 Ekim). Damga artık EN
+       ESKİ paketin (`getLatestIexBars`), yani tek bayat paket tekrarı
+       tetikliyor; tekrarın 429'u taze paketlerin gerçek zamanlı fiyatını da
+       silmesin. Bayat sembolü `mergeRealtime`in üç dakikalık sınırı eler. */
+    const retry = await alpaca.getLatestIexBars(Object.keys(pack.data), ttl, { fresh: true });
+    if (retry.ok) iex = retry;
   }
   if (!iex.ok) return { quotes: pack.data, live: 0 };
   return mergeRealtime(pack.data, iex.data, Date.now());
@@ -442,10 +483,11 @@ async function fetchQuotes(
        Yerine yükün KENDİ zaman damgası konuyor: paketteki EN YENİ son işlem
        anı. Önbellek yolunda en ESKİSİ alınıyor çünkü orada her satırın ayrı
        bir yazılma zamanı var ve soru "en geride kalan ne kadar geride";
-       burada bütün satırlar tek bir çekimden geliyor, sembollerin son işlem
-       anları ise likiditeye göre farklı — o yüzden paketin ön ucu, yani en
-       yenisi, o çekimin gerçek yaşını veriyor. Hiçbirinde işlem anı yoksa
-       eski davranış sürüyor. */
+       burada bütün satırlar aynı anda atılan paketlerden geliyor (yaşları
+       `packCurrent`te en eski paketle ölçülüp eskisi tekrarlanmış), sembollerin
+       son işlem anları ise likiditeye göre farklı — o yüzden paketin ön ucu,
+       yani en yenisi, o çekimin gerçek yaşını veriyor. Hiçbirinde işlem anı
+       yoksa eski davranış sürüyor. */
     const enYeni = newestTrade(primary.data);
 
     /* Doğru damga yetmedi — İDDİA DA DÜZELTİLİYOR.
@@ -460,7 +502,7 @@ async function fetchQuotes(
     if (guncel) {
       const { quotes, live } = await overlayRealtime(primary, status, ttl, opts.fresh);
       if (live > 0) {
-        await persistQuotes(Object.values(quotes));
+        await persistLater(() => persistQuotes(Object.values(quotes)));
         const source = live === Object.keys(quotes).length ? "alpaca-live" : "alpaca-mixed";
         return ok(quotes, source, { fetchedAt: newestTrade(quotes) ?? enYeni ?? undefined });
       }
@@ -471,7 +513,10 @@ async function fetchQuotes(
        tarafından "bu sayıyı ne zaman öğrendik" diye okunuyor: eski bir
        paketi yazmak, son bilinen değer tablosuna hiçbir yeni bilgi katmadan
        oradaki yaşı sıfırlamak olurdu. */
-    if (guncel) await persistQuotes(Object.values(primary.data));
+    if (guncel) {
+      const rows = Object.values(primary.data);
+      await persistLater(() => persistQuotes(rows));
+    }
 
     if (!enYeni) return guncel ? primary : { ...primary, stale: true };
     return ok(primary.data, "alpaca", { fetchedAt: enYeni, stale: !guncel });
@@ -514,12 +559,20 @@ async function fetchQuotes(
          Önbelleksiz tekrar burada YOK: yol sembol başına ayrı istek atıyor ve
          yalnızca sekiz sembole kadar deneniyor, yani kazancı küçük, bedeli
          (sekiz ek istek, 60 istek/dk sınırı) büyük. İddia yine de
-         düzeltiliyor: eski paket kendini eski ilan ediyor. */
+         düzeltiliyor: eski paket kendini eski ilan ediyor.
+
+         KAPALI PİYASA DALI `true` DİYORDU (20 Ekim). Alpaca dalı 3 Ekim'de
+         alt sınırını aldı (`packCurrent` → `closedResponseCurrent`), yedek
+         yol almamıştı: cumartesi Alpaca düşükken seyrek açılan bir sembolün
+         cuma sabahından kalma Finnhub kaydı stale-while-revalidate ile bir
+         kez daha geliyor, perşembenin kapanışı güncel diye basılıp
+         önbelleğe `updated_at = now` ile yazılıyordu. Ölçü en ESKİ çekim:
+         sembol başına ayrı `fetch` var, en geride kalan karar verir. */
       const damga = enYeniIslem ?? enEskiCekim ?? undefined;
       const guncel = expectsSessionData(status)
         ? isSessionTrade(enYeniIslem, status)
-        : true;
-      if (guncel) await persistQuotes(Object.values(quotes));
+        : closedResponseCurrent(enEskiCekim ?? new Date(0), status, new Date());
+      if (guncel) await persistLater(() => persistQuotes(Object.values(quotes)));
       return ok(quotes, "finnhub", { fetchedAt: damga, stale: !guncel });
     }
   }
@@ -639,10 +692,17 @@ function barImzasi(bars: Bar[]): string {
   return `${bars.length}:${bars.length > 0 ? bars[bars.length - 1]!.time : 0}`;
 }
 
+/* `fetchedAt` SAĞLAYICININ YANIT ANI (20 Ekim), yazma anı değil. Satırın
+   damgası `new Date()` idi: önbellekten gelmiş bir seri "az önce çekildi"
+   diye yazılıyor, yedek yolun yaş kontrolü (`cachedBarsUsable`) ve künyesi
+   ("önbellek · <saat>") verinin değil yazmanın saatini okuyordu —
+   kotasyonda `quotesFromCache` başındaki hatanın bardaki eşi. Seansa ait
+   olmayan yanıt hiç yazılmıyor; kural çağıranlarda. */
 async function persistBars(
   symbol: string,
   range: ChartRange,
   bars: Bar[],
+  fetchedAt: Date,
 ): Promise<void> {
   const anahtar = `${symbol}:${range}`;
   const imza = barImzasi(bars);
@@ -650,10 +710,10 @@ async function persistBars(
   try {
     await db
       .insert(candlesCache)
-      .values({ symbol, timeframe: range, bars, fetchedAt: new Date() })
+      .values({ symbol, timeframe: range, bars, fetchedAt })
       .onConflictDoUpdate({
         target: [candlesCache.symbol, candlesCache.timeframe],
-        set: { bars, fetchedAt: new Date() },
+        set: { bars, fetchedAt },
       });
     sonBarImzasi.set(anahtar, imza);
   } catch {
@@ -665,13 +725,13 @@ async function persistBars(
 async function persistBarsMulti(
   range: ChartRange,
   bySymbol: Record<string, Bar[]>,
+  fetchedAt: Date,
 ): Promise<void> {
   const entries = Object.entries(bySymbol).filter(
     ([symbol, bars]) => sonBarImzasi.get(`${symbol}:${range}`) !== barImzasi(bars),
   );
   if (entries.length === 0) return;
   try {
-    const now = new Date();
     await db
       .insert(candlesCache)
       .values(
@@ -679,7 +739,7 @@ async function persistBarsMulti(
           symbol,
           timeframe: range,
           bars,
-          fetchedAt: now,
+          fetchedAt,
         })),
       )
       .onConflictDoUpdate({
@@ -775,6 +835,15 @@ export async function getChartBarsMulti(
   const primary = await alpaca.getBarsMulti(unique, range, ttl, { fresh: options.fresh });
   const out: Record<string, Bar[]> = primary.ok ? { ...primary.data } : {};
   let fetchedAt = primary.ok ? primary.fetchedAt : null;
+  /* Önbelleğe YAZILABİLECEK seriler — yalnızca güncel bir yanıttan gelenler
+     (20 Ekim). Yazılan `primary.data` idi: önbellekten eski gelip taze
+     tekrarla DEĞİŞTİRİLMİŞ seri `candles_cache`e yine yazılıyor, tekrar da
+     düştüyse eski seri `fetched_at = now` ile kalıcılaşıyordu. Kotasyondaki
+     kuralın aynısı (`fetchQuotes` → "SEANSA AİT OLMAYAN PAKET ÖNBELLEĞE
+     YAZILMIYOR"): eski yanıtı yazmak yeni bilgi katmadan satırın yaşını
+     sıfırlamak, sonraki bir sağlayıcı kesintisinde de o seriyi bugünün
+     grafiği diye çizdirmek olurdu. */
+  let guncel: Record<string, Bar[]> = {};
 
   /* Tek sembollük yolla aynı tazelik kuralı (`barsCurrent`): önbellekten
      eski gelen semboller bir kez önbelleksiz, yalnızca onlar. */
@@ -782,9 +851,10 @@ export async function getChartBarsMulti(
     /* Yanıt yaşı paketin tamamı için tek ölçü; eskiyse bütün semboller bir
        kez önbelleksiz. */
     const stale = barsCurrent(primary.fetchedAt, status, ttl) ? [] : unique.filter((symbol) => out[symbol]);
-    if (stale.length > 0) {
+    if (stale.length === 0) guncel = primary.data;
+    else {
       const retry = await alpaca.getBarsMulti(stale, range, ttl, { fresh: true });
-      if (retry.ok && barsCurrent(retry.fetchedAt, status, ttl)) { Object.assign(out, retry.data); fetchedAt = retry.fetchedAt; }
+      if (retry.ok && barsCurrent(retry.fetchedAt, status, ttl)) { Object.assign(out, retry.data); fetchedAt = retry.fetchedAt; guncel = retry.data; }
       else if (options.allowCache === false) for (const symbol of stale) delete out[symbol];
     }
   }
@@ -796,8 +866,12 @@ export async function getChartBarsMulti(
     }
   }
 
-  if (primary.ok && Object.keys(primary.data).length > 0) {
-    await persistBarsMulti(range, options.allowCache === false ? out : primary.data);
+  /* `out` yazılıyor, yalnızca güncel yanıttan gelen sembolleri: `allowCache:
+     false` süzgecinden geçmiş hâli de bu, yedek satırlar ise henüz eklenmedi. */
+  const yazilacak = Object.fromEntries(Object.entries(out).filter(([symbol]) => symbol in guncel));
+  if (fetchedAt && Object.keys(yazilacak).length > 0) {
+    const at = fetchedAt;
+    await persistLater(() => persistBarsMulti(range, yazilacak, at));
   }
 
   const missing = unique.filter((symbol) => !out[symbol]);
@@ -825,9 +899,6 @@ export async function getChartBarsMulti(
 
   return out;
 }
-
-/** SIP'in gecikmesi — gerçek zamanlı kuyruğun "eski" eşiği. */
-const SIP_DELAY_SECONDS = 15 * 60;
 
 /**
  * KAPALI PİYASADA YANIT GÜNCEL Mİ — fiyat paketi ve bar serisi için tek kural.
@@ -925,11 +996,17 @@ export async function getChartBars(
   }
 
   if (primary.ok) {
-    // Beklenerek çağrılır: tek gidiş-dönüş, ve `void` bırakıldığında
-    // sunucusuz fonksiyon donunca yazma yarıda kesilebiliyordu.
+    // Yanıttan sonra yazılır (`persistLater` — gerekçe `persistQuotes`
+    // üzerinde). Kendini eski ilan etmiş seri YAZILMIYOR (20 Ekim): tekrar
+    // düştüyse elimizde yalnız eski yanıt var ve onu yazmak satırın yaşını
+    // sıfırlamak olurdu (`getChartBarsMulti` → `guncel`).
     // Önbelleğe YALNIZCA SIP serisi yazılıyor; gerçek zamanlı kuyruk her
     // istekte yeniden ekleniyor, saklanan seri tek kaynaklı kalıyor.
-    await persistBars(symbol, range, primary.data);
+    if (!primary.stale) {
+      const series = primary.data;
+      const at = primary.fetchedAt;
+      await persistLater(() => persistBars(symbol, range, series, at));
+    }
 
     /* GERÇEK ZAMANLI KUYRUK — seans açıkken gün içi aralıklarda. Kuyruk
        alınamazsa SIP serisi tek başına çiziliyor (15 dakika geriden). */
@@ -941,11 +1018,14 @@ export async function getChartBars(
     if ((range === "1D" || range === "1W") && status.session === "regular") {
       const lastSip = primary.data[primary.data.length - 1]?.time ?? 0;
       let tail = await alpaca.getIexBarsSince(symbol, range, lastSip, TAIL_TTL_SECONDS);
-      /* Kuyruğun kendisi de önbellekten eski gelebilir: son barı beş
-         dakikadan eskiyse (ve SIP ucundan sonra bir şey vermediyse) bir kez
-         önbelleksiz. */
-      const tailLast = tail.ok ? tail.data[tail.data.length - 1]?.time ?? 0 : 0;
-      if (tail.ok && Date.now() / 1000 - Math.max(tailLast, lastSip) > SIP_DELAY_SECONDS) {
+      /* Kuyruğun kendisi de önbellekten eski gelebilir: YANITIN yaşı TTL +
+         paydan büyükse bir kez önbelleksiz (`overlayRealtime`teki kuralın
+         eşi). Ölçü son barın saati DEĞİL (20 Ekim): ücretsiz SIP serisi hep
+         15 dakika geriden bittiği için "son bar 15 dakikadan eski" sınaması
+         IEX'te seyrek işlem gören her sembolde — 1H'nin yarım saatlik
+         kovalarında likit olanlarda da — her çizimi önbelleksiz tekrara
+         zorluyordu; `barsCurrent`in bıraktığı hatanın aynısı. */
+      if (tail.ok && Date.now() - tail.fetchedAt.getTime() > (TAIL_TTL_SECONDS + RESPONSE_AGE_SLACK_SECONDS) * 1000) {
         const retry = await alpaca.getIexBarsSince(symbol, range, lastSip, TAIL_TTL_SECONDS, { fresh: true });
         if (retry.ok) tail = retry;
       }
@@ -999,45 +1079,72 @@ export async function getChartBars(
    kez koşup AYNI upsert'i dört ayrı Neon gidiş-dönüşü olarak atıyordu —
    kotasyonlarda ölçülüp düzeltilen desenin (yukarıda "tek satırlık aynı
    upsert dört kez") profildeki eşi. Anahtar tek string, kimlik sorunu yok. */
+/**
+ * En son yazılan profil yanıtının damgası — sembol → Finnhub `Date` (ms).
+ *
+ * DEĞİŞMEYEN PROFİL YENİDEN YAZILMIYOR (20 Ekim). `cache()` upsert'i istek
+ * başına teke indirmişti ama HER hisse sayfası görüntülemesi yine bir
+ * `symbols` upsert'ini bekliyordu — profil 24 saatlik veri önbelleğinden
+ * birebir aynı gelirken. Kotasyondaki `lastPersisted` ve bardaki
+ * `sonBarImzasi` ile aynı gerekçe. Damga sağlayıcının `Date` başlığı
+ * (`responseDate`): önbellek isabetinde değişmiyor, yalnızca Finnhub gerçekten
+ * yeniden sorulunca değişiyor. Yeni sembolün kendini onarması (hisse
+ * sayfası) ve günlük nöbetin "en eski önce" dönüşü bozulmuyor: damga başına
+ * ilk yanıt yine yazılıyor, atlanan yalnızca bu sürecin AYNI damgayla zaten
+ * yazdığı — o yazma `updated_at`i çoktan ilerletti. Başlık yoksa `ok()`
+ * damgayı `new Date()` koyuyor, yani yazma her seferinde yapılıyor.
+ *
+ * Yazma `persistLater`e taşınmadı: günlük nöbet profilleri tazeledikten
+ * sonra aynı koşumda sektör ölçülerine geçiyor ve yeni sembolün sektörünü
+ * o adımda okuyabilmeli; damga atlaması görüntülemedeki bedeli zaten
+ * kaldırıyor.
+ */
+const lastProfileStamp = new Map<string, number>();
+
 export const getCompanyProfile = cache(async function getCompanyProfile(
   symbol: string,
 ): Promise<ProviderResult<CompanyProfile>> {
   const live = await finnhub.getProfile(symbol);
 
   if (live.ok) {
-    try {
-      const profile = live.data;
-      await db
-        .insert(symbolsTable)
-        .values({
-          symbol: profile.symbol,
-          name: profile.name,
-          exchange: profile.exchange,
-          industry: profile.industry,
-          logoUrl: profile.logoUrl,
-          country: profile.country,
-          currency: profile.currency,
-          marketCap: profile.marketCap,
-          shareOutstanding: profile.shareOutstanding,
-          ipoDate: profile.ipoDate,
-          weburl: profile.weburl,
-          updatedAt: new Date(),
-        })
-        .onConflictDoUpdate({
-          target: symbolsTable.symbol,
-          set: {
+    const profile = live.data;
+    const stamp = live.fetchedAt.getTime();
+    if (lastProfileStamp.get(profile.symbol) !== stamp) {
+      try {
+        await db
+          .insert(symbolsTable)
+          .values({
+            symbol: profile.symbol,
             name: profile.name,
             exchange: profile.exchange,
             industry: profile.industry,
             logoUrl: profile.logoUrl,
+            country: profile.country,
+            currency: profile.currency,
             marketCap: profile.marketCap,
             shareOutstanding: profile.shareOutstanding,
+            ipoDate: profile.ipoDate,
             weburl: profile.weburl,
             updatedAt: new Date(),
-          },
-        });
-    } catch {
-      // yoksay
+          })
+          .onConflictDoUpdate({
+            target: symbolsTable.symbol,
+            set: {
+              name: profile.name,
+              exchange: profile.exchange,
+              industry: profile.industry,
+              logoUrl: profile.logoUrl,
+              marketCap: profile.marketCap,
+              shareOutstanding: profile.shareOutstanding,
+              weburl: profile.weburl,
+              updatedAt: new Date(),
+            },
+          });
+        // Yalnız başarılı yazmadan sonra: düşen yazma bir sonrakinde denenir.
+        lastProfileStamp.set(profile.symbol, stamp);
+      } catch {
+        // yoksay
+      }
     }
     /* Veritabanına KAYNAK adresi yazılıyor (indirme betiği onu okuyor),
        ekrana dönen ise yerel dosya. İkisi ayrı: biri kaynak kaydı, öteki

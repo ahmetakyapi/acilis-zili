@@ -65,8 +65,11 @@ const SYMBOL_MIN = 2;
  * geçmeyen kısaltmalar. "(AI)" C3.ai'ın, "(IT)" Gartner'ın, "(ON)" onsemi'nin
  * sembolü; Türkçe metinde üçü de başka bir şey demek. Liste yalnızca
  * parantez kalıbına uygulanıyor: `$AI` yazan yazar sembolü kastetmiştir.
+ * Haber başlığının logo denetimi (`headlineMentions`, lib/utils.ts) aynı
+ * listeyi çıplak büyük harfe de uygular (20 Ekim) — "AI chip demand" C3.ai
+ * haberi değil.
  */
-const PAREN_STOPLIST: ReadonlySet<string> = new Set([
+export const PAREN_STOPLIST: ReadonlySet<string> = new Set([
   "AI", "IT", "ON", "ALL", "ARE", "NOW", "BE", "CAN", "SO", "GO", "HE", "IS",
   "ABD", "USA", "US", "EU", "AB", "UK", "IMF", "ECB", "BOJ", "FED", "SEC",
   "CEO", "CFO", "CTO", "IPO", "EPS", "ETF", "GDP", "CPI", "PCE", "PPI",

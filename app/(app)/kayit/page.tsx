@@ -1,6 +1,9 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { signUpAction } from "@/app/actions/auth";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { getI18n } from "@/lib/i18n";
+import { withLocale } from "@/lib/i18n/routing";
 
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -16,7 +19,9 @@ export const generateMetadata = pageMetadata({
 });
 
 export default async function SignUpPage(props: PageProps<"/kayit">) {
-  const [{ t }, search] = await Promise.all([getI18n(), props.searchParams]);
+  const [{ t, locale }, search, session] = await Promise.all([getI18n(), props.searchParams, auth()]);
+  /* Girmiş okuyucu ana sayfaya — gerekçe giris/page.tsx (20 Ekim). */
+  if (session?.user) redirect(withLocale("/", locale));
   const continueTo =
     typeof search.devam === "string" ? search.devam : undefined;
 

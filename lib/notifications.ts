@@ -103,6 +103,18 @@ export const getUnreadCount = cache(async (userId: string): Promise<number> => {
   }
 });
 
+function inboxItemOf(row: typeof notifications.$inferSelect): InboxItem {
+  return {
+    id: row.id,
+    kind: row.kind as NotificationKind,
+    title: row.title,
+    body: row.body,
+    url: row.url,
+    createdAt: row.createdAt,
+    read: row.readAt !== null,
+  };
+}
+
 /** Son bildirimler; `available: false` tablo yok. */
 export const getInbox = cache(
   async (userId: string): Promise<{ available: boolean; items: InboxItem[] }> => {
@@ -113,32 +125,49 @@ export const getInbox = cache(
         .where(eq(notifications.userId, userId))
         .orderBy(desc(notifications.createdAt))
         .limit(INBOX_LIMIT);
-      return {
-        available: true,
-        items: rows.map((row) => ({
-          id: row.id,
-          kind: row.kind as NotificationKind,
-          title: row.title,
-          body: row.body,
-          url: row.url,
-          createdAt: row.createdAt,
-          read: row.readAt !== null,
-        })),
-      };
+      return { available: true, items: rows.map(inboxItemOf) };
     } catch {
       return { available: false, items: [] };
     }
   },
 );
 
-export async function markAllRead(userId: string): Promise<void> {
+/**
+ * Hesabın TUTULAN bütün bildirimleri — KVKK dışa aktarımı için.
+ *
+ * TAVANSIZ (20 Ekim denetimi). Dışa aktarım ekranın okuyucusunu
+ * (`getInbox`, 50 satır) kullanıyordu; satırlar ise 90 gün tutuluyor.
+ * Doksan günde 50'den fazla alarm alan üyenin indirdiği "hesabın tuttuğu
+ * her şey" dosyası, sunucuda duran satırların bir kısmını sessizce
+ * dışarıda bırakıyordu. Boyu zaten 90 günlük temizlik sınırlıyor.
+ */
+export async function exportInbox(
+  userId: string,
+): Promise<{ available: boolean; items: InboxItem[] }> {
   try {
-    await db
+    const rows = await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt));
+    return { available: true, items: rows.map(inboxItemOf) };
+  } catch {
+    return { available: false, items: [] };
+  }
+}
+
+/** Okundu sayılan satır sayısı (20 Ekim): sıfırsa eylem tazeleme istemez. */
+export async function markAllRead(userId: string): Promise<number> {
+  try {
+    const rows = await db
       .update(notifications)
       .set({ readAt: new Date() })
-      .where(and(eq(notifications.userId, userId), isNull(notifications.readAt)));
+      .where(and(eq(notifications.userId, userId), isNull(notifications.readAt)))
+      .returning({ id: notifications.id });
+    return rows.length;
   } catch {
     /* tablo yok */
+    return 0;
   }
 }
 

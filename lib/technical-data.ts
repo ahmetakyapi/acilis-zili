@@ -15,6 +15,7 @@ import {
   distancePct,
   isTechnicalSymbol,
   rsiZone,
+  sessionQuote,
   technicalHref,
   type TechnicalCopy,
   type TechnicalSlot,
@@ -75,7 +76,9 @@ export async function getTechnicalSnapshots(
   /* BAYAT KOTASYON FOTOĞRAFA GİRMEZ. Sağlayıcı düşünce kotasyon veritabanı
      önbelleğinden geliyor (`stale: true`) ve saatler önceki bir fiyat
      işaretsiz olarak "analiz anındaki fiyat" oluyordu. Bayatsa hiç
-     kullanılmıyor: fiyat null olur, sembol atlanır (bkz. computeSnapshot). */
+     kullanılmıyor: fiyat null olur, sembol atlanır (bkz. computeSnapshot).
+     Paket güncel olsa da SEMBOL kendi seansını kanıtlamalı — kanıtlamazsa
+     yüzde, önceki kapanış ve hacim girmiyor (20 Ekim, `sessionQuote`). */
   const quoteMap = quotes.ok && !quotes.stale ? quotes.data : {};
   const now = new Date();
   return {
@@ -85,7 +88,7 @@ export async function getTechnicalSnapshots(
         return [
           symbol,
           series && series.length > 0
-            ? computeSnapshot(series, quoteMap[symbol] ?? null, status, now)
+            ? computeSnapshot(series, sessionQuote(quoteMap[symbol] ?? null, status), status, now)
             : null,
         ];
       }),
