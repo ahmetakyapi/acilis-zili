@@ -20,6 +20,7 @@ import {
   isGenericNewsImage,
 } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { translateMissingLater } from "@/lib/translate";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
@@ -81,6 +82,8 @@ export default async function NewsDetailPage(
      OKUNAMAYAN haber ise 404 değil: okuma hatası hata sınırına gider
      (20 Ekim). */
   if (!item) notFound();
+  // Çevirisiz manşet yanıttan sonra çevrilir — gerekçe `translateMissingLater`.
+  translateMissingLater([item], locale);
 
   const useTr = locale === "tr" && item.headlineTr;
   const headline = useTr ? item.headlineTr! : item.headline;

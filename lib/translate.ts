@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { after } from "next/server";
 import { z } from "zod";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
@@ -106,13 +107,46 @@ async function translateAndStore(backend: TranslateBackend, pending: PendingItem
  */
 export async function translateNewsByIds(ids: string[]): Promise<Map<string, string>> {
   const backend = activeTranslateBackend();
-  if (!backend || ids.length === 0) return new Map();
-  const pending: PendingItem[] = await db
-    .select({ id: news.id, headline: news.headline, summary: news.summary })
-    .from(news)
-    .where(and(isNull(news.headlineTr), inArray(news.id, ids)));
-  if (pending.length === 0) return new Map();
-  return translateAndStore(backend, pending);
+  /* UÇUŞTAKİLER ATLANIR (22 Ekim): /haberler ve hisse sayfası aynı
+     başlıkları aynı saniyede isteyebiliyor; tablo okuması ikisine de "boş"
+     diyor ve aynı haber iki kez ücretleniyordu. Süreç içi küme yeter —
+     sunucu tek süreç (deploy/acilis-zili.service, tek `next start`). */
+  const fresh = ids.filter((id) => !inFlight.has(id));
+  if (!backend || fresh.length === 0) return new Map();
+  for (const id of fresh) inFlight.add(id);
+  try {
+    const pending: PendingItem[] = await db
+      .select({ id: news.id, headline: news.headline, summary: news.summary })
+      .from(news)
+      .where(and(isNull(news.headlineTr), inArray(news.id, fresh)));
+    if (pending.length === 0) return new Map();
+    return await translateAndStore(backend, pending);
+  } finally {
+    for (const id of fresh) inFlight.delete(id);
+  }
+}
+
+const inFlight = new Set<string>();
+
+/**
+ * Ekrandaki çevirisiz manşetleri YANITTAN SONRA çevirir (22 Ekim).
+ *
+ * /haberler'de, ana sayfanın haber panelinde ve haber detayında İngilizce
+ * kalan başlıklar vardı: hisse sayfaları şirket haberlerini tabloya yazıp
+ * yalnız ekranda göreni çeviriyor, gerisi nöbetin en yeni 40'lık kuyruğuna
+ * kalıyor ve kuyruk taştığında aradaki satır sonraki koşularda da geride
+ * kalıyordu. Okuyucu beklemez (`after`, ilk bayt değişmez); bir sonraki
+ * açılış Türkçe görür. Hisse sayfası bunu kendi 4 saniyelik yarışıyla
+ * yapıyor (CompanyNews) — orada liste kısa ve şirket sayfası yavaş zaten.
+ */
+export function translateMissingLater(
+  items: readonly { id: string; headlineTr: string | null }[],
+  locale: string,
+): void {
+  if (locale !== "tr" || !isTranslateConfigured()) return;
+  const missing = items.filter((item) => !item.headlineTr).map((item) => item.id);
+  if (missing.length === 0) return;
+  after(() => translateNewsByIds(missing).catch(() => undefined));
 }
 
 type Translated = { id: string; headlineTr: string; summaryTr: string | null };
@@ -194,13 +228,18 @@ const TranslationSchema = z.object({
    burada yoktu; oysa çeviri kalıcı saklanıyor, /haberler'de basılıyor ve
    gündeme "kopyala" talimatıyla giriyor (lib/news-insights.ts). Çıktıya sayı
    denetimi bilinçli olarak konmadı: "two" → "2" gibi meşru çeviri düşer,
-   satır boş kalır ve her koşuda yeniden ücretlenirdi. */
+   satır boş kalır ve her koşuda yeniden ücretlenirdi.
+   KAYNAĞIN BÜYÜK HARF DÜZENİ (22 Ekim): Yahoo/Simply Wall St başlıkları Her
+   Kelimesi Büyük geliyor ve model bunu çoğu zaman taşıyordu — /haberler'de
+   iki düzen yan yana duruyor, "Ilk"/"Firmasi" gibi noktasız harfler de
+   çıkıyordu. Kural örnekle sabitlendi; eski satırlar olduğu gibi kalır. */
 const CLAUDE_SYSTEM = `Açılış Zili (ABD borsalarını Türkçe takip eden bir site) için finans haberlerinin başlık ve özetlerini Türkçeye çeviriyorsun.
 
 Kurallar:
 - Anlamı birebir koru. Yorum, tahmin, ekleme ya da süsleme yapma; kaynakta olmayan bilgi yazma.
 - Şirket, ürün, kişi adları ve borsa sembolleri olduğu gibi kalır (Nvidia, iPhone, $NVDA, NVDA).
-- Başlık doğal bir Türkçe haber başlığı olsun: kısa, etken, cümle düzeninde (her kelime büyük harfle BAŞLAMAZ). Sonuna nokta koyma.
+- Başlık doğal bir Türkçe haber başlığı olsun: kısa, etken, cümle düzeninde (her kelime büyük harfle BAŞLAMAZ). Kaynak başlık Her Kelimesi Büyük yazılmış olsa bile bu düzeni KOPYALAMA: yalnız ilk kelime, özel adlar ve semboller büyük başlar. Örnek: "Why Nvidia Stock Is Soaring Today" → "Nvidia hisseleri bugün neden yükseliyor". Sonuna nokta koyma.
+- Türkçe harfleri eksiksiz kullan (ı, İ, ş, ğ, ü, ö, ç): "Ilk" değil "İlk", "firmasi" değil "firması".
 - Sayılar Türkçe biçimde: ondalık virgül (3,5), binlik nokta (1.250), yüzde işareti önde (%12), para birimi sonda (4,2 milyar dolar). "bn/billion" milyar, "m/million" milyon, "trillion" trilyon.
 - Yerleşik karşılıklar: earnings = bilanço, EPS = hisse başına kâr (HBK), revenue = gelir, guidance = beklenti/öngörü, beats estimates = beklentiyi aştı, misses = beklentinin altında kaldı, shares rise/fall = hisseleri yükseldi/düştü, rate cut = faiz indirimi, Fed = Fed, CPI = TÜFE, PCE = PCE, jobs report = istihdam raporu, IPO = halka arz, buyback = hisse geri alımı, downgrade/upgrade = not indirimi/artırımı, price target = hedef fiyat, Wall Street = Wall Street.
 - Özet akıcı Türkçe olsun, kaynak özetten uzun olmasın. Özet boşsa boş dize döndür.

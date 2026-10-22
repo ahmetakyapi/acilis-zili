@@ -4,6 +4,7 @@ import { LoadingFallback } from "@/components/ui/LoadingState";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/news/NewsExperience.module.css";
 import { Suspense } from "react";
+import { translateMissingLater } from "@/lib/translate";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { EmptyState, PageHeader } from "@/components/ui/primitives";
 import { InkCanvas } from "@/components/ink/InkCanvas";
@@ -130,6 +131,9 @@ async function NewsList({ symbolFilter }: { symbolFilter: string | null }) {
   const items = symbolFilter
     ? await getNewsForSymbol(symbolFilter, 60)
     : await getLatestNews(60);
+
+  /* Çevirisiz manşet yanıttan sonra çevrilir — gerekçe `translateMissingLater`. */
+  translateMissingLater(items, locale);
 
   /* Kaynak logoları elenir; kalan makale görselleri küçük resim olarak durur.
      Görseli olmayan habere şirketin logosu konuyor — künye kutusunda sembol

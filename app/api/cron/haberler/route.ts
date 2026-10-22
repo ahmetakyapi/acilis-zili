@@ -60,7 +60,18 @@ async function run(): Promise<NextResponse> {
     report.news = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
   try {
-    report.translate = isTranslateConfigured() ? await translatePendingNews(40) : "atlandı: çeviri anahtarı yok";
+    /* 80 HABER, 120 SANİYELİK PAYLA (22 Ekim). 40'lık parti kuyruğu
+       eritmiyordu: hisse sayfaları şirket haberlerini tabloya yazıp yalnız
+       ekranda göreni çeviriyor, kalan yığın üç koşuya sığmıyor ve /haberler'de
+       İngilizce manşet kalıyordu. Sıklığı artırmak yerine parti büyüdü (Haiku,
+       paket başına kuruşlar) ve SÜRE PAYI eklendi: süre yetmeyen paket
+       gönderilmez, sonraki koşuya kalır — betiğin 290 saniyelik curl payı
+       ve ardından gelen adımlar korunuyor (günlük nöbetteki `TranslateBudget`
+       kalıbı). Ekranda görünüp hâlâ çevrilmemiş olanı okuma yolu yanıttan
+       sonra çeviriyor (`translateMissingLater`). */
+    report.translate = isTranslateConfigured()
+      ? await translatePendingNews(80, { deadline: Date.now() + 120_000 })
+      : "atlandı: çeviri anahtarı yok";
   } catch (error) {
     report.translate = `hata: ${error instanceof Error ? error.message : "?"}`;
   }
