@@ -998,6 +998,7 @@ const en: typeof tr = {
     addToPortfolio: "Add to Portfolio",
     metaWithSector: "{ad}, {sektor}. Price, chart, earnings history and news.",
     metaPlain: "{ad} stock: price, chart, earnings history and news.",
+    metaFund: "{ad} ({sembol}): {izledigi}. Price, chart and fund profile.",
     notFound: "Symbol Not Found",
     notFoundHint: "Check the symbol or search for it again.",
     throttled: "Slow Down a Little",

@@ -142,6 +142,10 @@ function renderInline(
      GEÇİRİLMİYOR: `<a>` içinde `<a>` geçersiz HTML ve yazarın bağlantısı
      zaten bir hedef. Kod da dışarıda — kod verbatim. */
   linker?: AutoLinker | null,
+  /* Kullanıcı içeriği (topluluk yazısı): dış bağlantı `ugc nofollow`
+     taşır — Google'ın kullanıcı bağlantıları için istediği işaret; spam
+     bağlantısının siteye iliştirilmesini de boşa çıkarır. */
+  ugc = false,
 ): React.ReactNode[] {
   return text.split(INLINE_PATTERN).map((part, index) => {
     const key = `${keyPrefix}-${index}`;
@@ -154,14 +158,14 @@ function renderInline(
            komşu kalın etiketlerden bir kademe ince duruyordu. Torun
            seçici özgüllükte kazanıyor, yani bağlantı hem mavi hem kalın. */
         <strong key={key} className="font-semibold text-strong [&_a]:font-semibold">
-          {renderInline(part.slice(2, -2), key, linker)}
+          {renderInline(part.slice(2, -2), key, linker, ugc)}
         </strong>
       );
     }
     if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
       return (
         <em key={key} className="italic">
-          {renderInline(part.slice(1, -1), key, linker)}
+          {renderInline(part.slice(1, -1), key, linker, ugc)}
         </em>
       );
     }
@@ -197,7 +201,7 @@ function renderInline(
       if (internal) {
         return (
           <Link key={key} href={href} className={className}>
-            {renderInline(label!, key)}
+            {renderInline(label!, key, null, ugc)}
           </Link>
         );
       }
@@ -207,17 +211,17 @@ function renderInline(
          geçer — href öznitelikleri kaçışın kapsamı dışında. Şema
          süzülmezse bağlantı düz metne düşer. */
       const external = safeExternalUrl(href);
-      if (!external) return <span key={key}>{renderInline(label!, key)}</span>;
+      if (!external) return <span key={key}>{renderInline(label!, key, null, ugc)}</span>;
 
       return (
         <a
           key={key}
           href={external}
           target="_blank"
-          rel="noreferrer noopener"
+          rel={ugc ? "ugc nofollow noreferrer noopener" : "noreferrer noopener"}
           className={className}
         >
-          {renderInline(label!, key)}
+          {renderInline(label!, key, null, ugc)}
         </a>
       );
     }
@@ -324,6 +328,7 @@ export function ArticleBody({
   skipIndex,
   afterLead,
   autoLink,
+  ugc = false,
 }: {
   markdown: string;
   /** Etiketi yazılmamış `:::` kutularının varsayılan başlığı bundan gelir. */
@@ -381,6 +386,8 @@ export function ArticleBody({
    * `articleAutoLinker`); iki yazı aynı nesneyi paylaşmamalı.
    */
   autoLink?: AutoLinker | null;
+  /** Gövde okuyucunun yazdığı metin (topluluk): dış bağlantılar `ugc nofollow`. */
+  ugc?: boolean;
 }) {
   const blocks = blocksProp ?? parseBlocks(markdown, locale);
   /* Yazarın elle verdiği sözlük ve hisse bağlantıları hedefi tüketiyor:
@@ -451,7 +458,7 @@ export function ArticleBody({
                 data-role={role}
                 className="text-read leading-[28px] text-body"
               >
-                {renderInline(block.text, key, autoLink)}
+                {renderInline(block.text, key, autoLink, ugc)}
               </p>
             );
 
@@ -483,7 +490,7 @@ export function ArticleBody({
                         <span className="block size-1.5 rounded-full bg-primary-faint" />
                       )}
                     </span>
-                    <span>{renderInline(item, `${key}-${itemIndex}`, autoLink)}</span>
+                    <span>{renderInline(item, `${key}-${itemIndex}`, autoLink, ugc)}</span>
                   </li>
                 ))}
               </ul>
@@ -498,7 +505,7 @@ export function ArticleBody({
               >
                 {block.lines.map((line, lineIndex) => (
                   <p key={lineIndex}>
-                    {renderInline(line, `${key}-${lineIndex}`, autoLink)}
+                    {renderInline(line, `${key}-${lineIndex}`, autoLink, ugc)}
                   </p>
                 ))}
               </blockquote>
@@ -570,7 +577,7 @@ export function ArticleBody({
                                 (`tieFigures`): dar hücrede "50,6–51,9 Mr" /
                                 "$" diye kırılıyordu (sahibinin ekran
                                 görüntüsü, 390). */}
-                            {renderInline(tieFigures(cell), `${key}-${rowIndex}-${cellIndex}`, autoLink)}
+                            {renderInline(tieFigures(cell), `${key}-${rowIndex}-${cellIndex}`, autoLink, ugc)}
                           </td>
                         ))}
                       </tr>
@@ -659,7 +666,7 @@ export function ArticleBody({
                             {item.when}
                           </span>
                           <span data-part="text" className="mt-1 block text-read leading-[24px] text-body">
-                            {renderInline(item.text, `${key}-${itemIndex}`, autoLink)}
+                            {renderInline(item.text, `${key}-${itemIndex}`, autoLink, ugc)}
                           </span>
                         </span>
                       </li>
@@ -990,7 +997,7 @@ export function ArticleBody({
                             !line.term && "sm:ml-0",
                           )}
                         >
-                          {renderInline(line.text, `${key}-${lineIndex}`, autoLink)}
+                          {renderInline(line.text, `${key}-${lineIndex}`, autoLink, ugc)}
                         </dd>
                       </div>
                     ))}
@@ -1010,7 +1017,7 @@ export function ArticleBody({
                         }
                         className="text-read leading-[25px] text-body"
                       >
-                        {renderInline(line.text, `${key}-${lineIndex}`, autoLink)}
+                        {renderInline(line.text, `${key}-${lineIndex}`, autoLink, ugc)}
                       </p>
                     ))}
                   </div>

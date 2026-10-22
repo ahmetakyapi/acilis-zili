@@ -248,6 +248,7 @@ export async function StockHeader({
                  sonrası okuyucu aynı hisseye dönüyor. */
               <Link
                 href={`/giris?devam=${encodeURIComponent(`/hisse/${symbol}`)}`}
+                rel="nofollow"
                 aria-label={t.stock.addToWatchlist}
                 title={t.stock.addToWatchlist}
                 data-labeled=""
@@ -277,6 +278,7 @@ export async function StockHeader({
             ) : (
               <Link
                 href={`/giris?devam=${encodeURIComponent(`/hisse/${symbol}`)}`}
+                rel="nofollow"
                 aria-label={t.priceAlerts.loginHint}
                 title={t.priceAlerts.loginHint}
                 data-labeled=""
@@ -286,6 +288,11 @@ export async function StockHeader({
                 <span data-action-text>{t.priceAlerts.button}</span>
               </Link>
             )}
+            {/* NOFOLLOW (22 Ekim): giriş ve portföy bağlantıları her hissede
+                AYRI bir `noindex` adres üretiyordu (`/giris?devam=/hisse/X`,
+                `/portfoy?ekle=X`, iki dilde) ve Search Console'un "noindex"
+                listesini yüzlerce kişisel ekranla dolduruyordu. Sayfalar yine
+                `noindex`; bağlantı artık taranmaya çağırmıyor. */}
             {/* PORTFÖYE EKLE (9 Ekim) — ekleme penceresini bu sembol seçili
                 açıyor (`/portfoy?ekle=`); girişsiz okuyucu girişten sonra
                 aynı pencereye dönüyor (portfoy/page.tsx). Ad görünür yazıyı
@@ -294,6 +301,7 @@ export async function StockHeader({
                 denince düğme bulunmuyordu; sözlükte sembol sona alındı. */}
             <Link
               href={`/portfoy?ekle=${symbol}`}
+              rel="nofollow"
               aria-label={t.lira.portfolio.addFromStock.replace("{symbol}", symbol)}
               title={t.lira.portfolio.addFromStock.replace("{symbol}", symbol)}
               data-labeled=""

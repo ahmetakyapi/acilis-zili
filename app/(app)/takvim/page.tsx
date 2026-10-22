@@ -608,6 +608,7 @@ export default async function CalendarPage(
                    künyesinde: bu uç dosya indiriyor, gezinme olmuyor ve
                    `RouteProgress` şeridi kendiliğinden durmuyordu. */
                 download
+                rel="nofollow"
                 className={cn(styles.addCal, "tap-44")}
               >
                 <CalendarPlus weight="duotone" size={14} aria-hidden />

@@ -114,24 +114,39 @@ export async function generateMetadata(
   if (!isValidSymbol(symbol)) return missingMetadata(locale);
   const meta = await getSymbolNames([symbol]);
   const info = meta[symbol];
+  /* FONLAR SEMBOL TABLOSUNDA YOK (22 Ekim). Finnhub'ın profil ucu fonlara
+     boş nesne döndüğü için XLK, EWJ, TUR gibi fonların adı yalnız elle
+     tutulan künyede (`fundMetaOf`); sayfa o künyeyi basıyor ama başlık ve
+     dizin kararı tabloya bakıyordu. Sonuç: 32 dolu fon sayfası (iki dilde)
+     "XLK · Açılış Zili" başlığıyla `noindex` düşüyor ve Search Console'un
+     "noindex ile hariç tutuldu" listesini şişiriyordu. Ad artık künyeden de
+     geliyor; tanınmayan sembolün dizin dışı kalması değişmedi. */
+  const fund = fundMetaOf(symbol);
+  const name = info?.name ?? fund?.name;
   const sector = industryLabel(info?.industry, locale);
   /* Açıklama SÖZLÜKTEN. Sabit Türkçe yazılıydı: İngilizce okuyan birinin
      arama sonucunda ve paylaşım kartında Türkçe cümle çıkıyordu — üstelik
      hemen yanındaki sektör etiketi çevrilmiş olarak. */
+  /* Fona "hissesi: … bilanço geçmişi" yazmak yanlış: fonun bilançosu yok. */
   const base = sector
     ? t.stock.metaWithSector
         .replace("{ad}", info?.name ?? symbol)
         .replace("{sektor}", sector)
-    : t.stock.metaPlain.replace("{ad}", symbol);
+    : fund
+      ? t.stock.metaFund
+          .replace("{ad}", fund.name)
+          .replace("{sembol}", symbol)
+          .replace("{izledigi}", locale === "en" ? fund.tracksEn : fund.tracksTr)
+      : t.stock.metaPlain.replace("{ad}", symbol);
   /* ENDEKS VE SONRAKİ BİLANÇO DA AÇIKLAMADA (28 Eylül). Açıklama sektör
      dışında her hisse için aynı cümleydi; arama sonucunda sayfayı
      ayırt eden hiçbir şey taşımıyordu. İki parça da yerel okuma (endeks
      tohumu, takvim tablosu) ve ikisi de fiyat gibi eskimiyor: rapor tarihi
      değişirse takvim onu zaten güncelliyor. Tanınmayan sembolde eklenmiyor. */
-  const extras = info?.name ? metaExtras(await summaryFacts(symbol, locale), locale, t) : "";
+  const extras = name ? metaExtras(await summaryFacts(symbol, locale), locale, t) : "";
   const description = extras ? `${base} ${extras}` : base;
   return {
-    title: info?.name ? `${info.name} (${symbol})` : symbol,
+    title: name ? `${name} (${symbol})` : symbol,
     description,
     /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
        `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
@@ -147,7 +162,7 @@ export async function generateMetadata(
        yine izlensin. Gerçek ama HENÜZ tanınmayan bir sembol bu ziyarette
        profilini yazıyor (allowStockRender yorumuna bak), yani bir sonraki
        taramada tanınan tarafa geçip dizine giriyor. */
-    ...(info?.name ? {} : { robots: { index: false, follow: true } }),
+    ...(name ? {} : { robots: { index: false, follow: true } }),
   };
 }
 

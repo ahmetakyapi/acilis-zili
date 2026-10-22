@@ -13,6 +13,10 @@ import { editionClock, isTechnicalSymbol, nextEdition } from "@/lib/technical";
 import styles from "./Claude.module.css";
 
 const odakOf = (focus: AnalysisFocus) => (focus === "technical" ? "teknik" : "secim");
+/* Bağlantılar `rel="nofollow"`: /claude/* kişisel, `noindex` bir ekran
+   (next.config.ts → NOINDEX_PATHS) ve her hisse × odak × sekme ayrı adres
+   — taranmaya çağırmak tarama bütçesini dizine hiç girmeyecek sayfalara
+   harcıyordu (22 Ekim, Search Console). */
 const claudeHref = (symbol: string, focus: AnalysisFocus, tab: "rapor" | "yeni") =>
   `/claude/${encodeURIComponent(symbol)}?odak=${odakOf(focus)}&sekme=${tab}`;
 
@@ -82,7 +86,7 @@ export async function ClaudeCta({ symbol, locale, focus }: { symbol: string; loc
           <div className={styles.ctaBody}>
             {focus === "both" && <span className={styles.ctaFocus}>{f === "technical" ? t.focus.technical : t.focus.selection}</span>}
             {latest ? <>
-              <Link href={claudeHref(symbol, f, "rapor")} className={styles.ctaVerdict}>{t.verdicts[latest.verdict]}</Link>
+              <Link href={claudeHref(symbol, f, "rapor")} rel="nofollow" className={styles.ctaVerdict}>{t.verdicts[latest.verdict]}</Link>
               <span className={styles.ctaMeta}>
                 <span>{date(latest.generatedAt)} · TR</span>
                 {latest.author && <span className={styles.ctaAuthor}>
@@ -93,8 +97,8 @@ export async function ClaudeCta({ symbol, locale, focus }: { symbol: string; loc
             </> : <span className={styles.ctaNone}>{t.cta.none}</span>}
           </div>
           <div className={styles.ctaActions}>
-            {latest && <ButtonLink href={claudeHref(symbol, f, "rapor")} variant="ghost" size="sm">{t.cta.open}</ButtonLink>}
-            {canAsk && <ButtonLink href={claudeHref(symbol, f, "yeni")} variant="primary" size="sm">{latest ? t.cta.newAnalysis : t.cta.create}</ButtonLink>}
+            {latest && <ButtonLink href={claudeHref(symbol, f, "rapor")} rel="nofollow" variant="ghost" size="sm">{t.cta.open}</ButtonLink>}
+            {canAsk && <ButtonLink href={claudeHref(symbol, f, "yeni")} rel="nofollow" variant="primary" size="sm">{latest ? t.cta.newAnalysis : t.cta.create}</ButtonLink>}
           </div>
         </li>;
       })}
@@ -128,7 +132,7 @@ export async function ClaudeAction({ symbol, locale, focus, className, block = f
   if (!block && !canGenerate && !latest) return null;
   const t = getDictionary(locale).aiAnalysis;
   const openReport = !canGenerate && !!latest;
-  return <Link href={claudeHref(symbol, focus, openReport ? "rapor" : "yeni")}
+  return <Link href={claudeHref(symbol, focus, openReport ? "rapor" : "yeni")} rel="nofollow"
     className={[styles.ctaAction, block && styles.ctaActionBlock, className].filter(Boolean).join(" ")}>
     <svg className={styles.ctaSpark} viewBox="0 0 24 24" aria-hidden><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.5 2.5M15.2 15.2l2.5 2.5M6.3 17.7l2.5-2.5M15.2 8.8l2.5-2.5" /></svg>
     <span className={styles.ctaActionText}>{openReport ? t.cta.actionOpen : label ?? t.cta.create}</span>

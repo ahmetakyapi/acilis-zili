@@ -1317,6 +1317,7 @@ const tr = {
        `{ad}` şirket adı ya da sembol, `{sektor}` varsa sektör. */
     metaWithSector: "{ad}, {sektor}. Fiyat, grafik, bilanço geçmişi ve haberler.",
     metaPlain: "{ad} hissesi: fiyat, grafik, bilanço geçmişi ve haberler.",
+    metaFund: "{ad} ({sembol}): {izledigi}. Fiyat, grafik ve fon künyesi.",
     notFound: "Bu Sembol Bulunamadı",
     notFoundHint: "Sembolü kontrol et veya arama kutusundan tekrar dene.",
     throttled: "Biraz Yavaşla",

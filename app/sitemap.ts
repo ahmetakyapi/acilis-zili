@@ -12,6 +12,7 @@ import { withLocale } from "@/lib/i18n/routing";
 import { analysisHref } from "@/lib/analysis";
 import { technicalHref } from "@/lib/technical";
 import { getTechnicalBoard } from "@/lib/technical-data";
+import { allFunds } from "@/db/seed/symbols";
 
 type Locale = (typeof LOCALES)[number];
 type SitemapItem = { path: string; locale: Locale; modified: Date };
@@ -314,6 +315,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .slice(0, COMPANY_SITEMAP_LIMIT);
   for (const company of companies) {
     entries.push(...bothLocales(`/hisse/${company.symbol}`, 0.5, "daily", false));
+  }
+
+  /* FONLAR AYRICA (22 Ekim). Piyasa değeri sırası fonu hiç görmüyor:
+     fonun piyasa değeri yok, sektör ve ülke fonlarının çoğu sembol
+     tablosunda bile yok (`fundMetaOf` gerekçesi). Sayfaları ise elle
+     yazılmış künye taşıyor — sektör panosundan ve Dünya Piyasaları'ndan
+     tıklanan adresler bunlar. Liste kısa ve kapalı (~40). */
+  const listed = new Set(companies.map((company) => company.symbol));
+  for (const fund of allFunds()) {
+    if (listed.has(fund.symbol)) continue;
+    entries.push(...bothLocales(`/hisse/${fund.symbol}`, 0.5, "daily", false));
   }
 
   return entries;

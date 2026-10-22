@@ -138,6 +138,7 @@ export default async function CommunityPostPage(props: PageProps<"/topluluk/[slu
                 variant="editorial"
                 className={editorial.prose}
                 autoLink={autoLink}
+                ugc
               />
             </div>
 

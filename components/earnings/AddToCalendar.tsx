@@ -50,6 +50,7 @@ export function AddToCalendar({
       <a
         href={href}
         download
+        rel="nofollow"
         /* Erişilebilir ad sembolü TAŞIR, balon taşımaz. Ekran okuyucu
            düğmeleri bağlamından koparıp liste hâlinde okuyabiliyor; orada
            "Takvime Ekle" tek başına hangi şirket olduğunu söylemiyor. Balon
@@ -82,6 +83,7 @@ export function AddToCalendar({
     <a
       href={href}
       download
+      rel="nofollow"
       className={cn(
         /* Adıyla yazılı sürüm de aynı eşiğe tabi; yükseklik negatif kenar
            boşluğuyla emiliyor. */
