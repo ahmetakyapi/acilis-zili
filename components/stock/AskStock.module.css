@@ -1,0 +1,65 @@
+/* Bu Hisseye Sor (AskStock.tsx). Kart dili hisse notundan
+   (StockInsightCard.module.css → base). Derinlik tonla: girdi ve yanıt
+   `--surface-sunken`, gölge yok. Renk yalnız etkileşimde (odak, çip
+   üzerine gelme) ve Claude imindeki pirinçte. */
+
+.panel { gap: 12px; }
+.intro { margin: -6px 0 0; font-size: var(--text-read); line-height: 1.5; color: var(--text-body); text-wrap: pretty; }
+
+.form { display: flex; gap: 8px; align-items: stretch; }
+.input {
+  flex: 1; min-width: 0; min-height: 44px; resize: vertical; max-height: 160px;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--page-bg);
+  font: inherit; font-size: var(--text-read); line-height: 1.45; color: var(--text-strong);
+  transition: border-color .2s var(--ease-brand);
+}
+.input::placeholder { color: var(--text-muted); }
+.input:focus { outline: none; border-color: var(--line-focus); }
+.input:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 1px; }
+.input:disabled { opacity: .6; }
+.submit { align-self: flex-end; flex: none; }
+
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.chip {
+  display: inline-flex; align-items: center;
+  min-height: 44px; padding: 6px 12px; border-radius: 999px; background: var(--surface-sunken);
+  font-size: var(--text-small); line-height: 1.35; color: var(--text-body); text-align: left; cursor: pointer;
+  transition: background-color .2s var(--ease-brand), color .2s var(--ease-brand);
+}
+.chip:hover:not(:disabled), a.chip:hover { background: var(--primary-tint); color: var(--text-strong); }
+.chip:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+.chip:disabled { cursor: default; opacity: .6; }
+@media (min-width: 640px) { .chip { min-height: 34px; } }
+
+/* ---- Oturumsuz önizleme (24 Ekim düzeltmesi) ----
+   Yanıt kutusunun (`.exchange`) tonunda, ama yanıt değil tarif: metin
+   gövde renginde (yanıt metni `--text-strong`), künye çipleri aynı. Uydurma
+   sayı yok. Giriş satırı: birincil eylem + yanında künye. */
+.preview {
+  display: flex; flex-direction: column; gap: 6px; padding: 14px 16px 16px; border-radius: var(--radius-lg); background: var(--surface-sunken);
+  animation: as-rise .45s var(--ease-brand) both; animation-delay: 80ms;
+}
+.previewText { margin: 0; font-size: var(--text-read); line-height: 1.55; color: var(--text-body); text-wrap: pretty; }
+.signIn { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.memberQuota { font-size: var(--text-small); font-weight: 650; color: var(--text-muted); }
+
+.error { margin: 0; font-size: var(--text-small); font-weight: 650; color: var(--down); }
+
+.exchange {
+  display: flex; flex-direction: column; gap: 8px; padding: 14px 16px 16px; border-radius: var(--radius-lg); background: var(--surface-sunken);
+  animation: as-rise .45s var(--ease-brand) both;
+}
+.askedLabel { margin: 0; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
+.asked { margin: -4px 0 4px; font-size: var(--text-read); font-weight: 650; color: var(--text-strong); overflow-wrap: anywhere; }
+.answerHead { display: flex; align-items: center; gap: 8px; }
+.badge { padding: 2px 9px; border-radius: 999px; font-size: var(--text-small); font-weight: 700; background: var(--brass-wash); color: var(--brass-ink); }
+.unanswerable { color: var(--text-body); }
+.sources { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 0; }
+.sourcesLabel { margin: 0; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
+.source { padding: 2px 9px; border-radius: 999px; font-size: var(--text-small); font-weight: 650; background: var(--surface); color: var(--text-body); }
+.news ul { display: grid; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; }
+.stamp { margin: 2px 0 0; font-size: var(--text-small); color: var(--text-muted); }
+
+@keyframes as-rise { from { opacity: 0; translate: 0 6px; } }
+@media (prefers-reduced-motion: reduce) { .exchange, .preview { animation: none !important; } }

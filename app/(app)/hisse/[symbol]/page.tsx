@@ -57,6 +57,7 @@ import { InvestorsPanel } from "./_panels/InvestorsPanel";
 import { StockSummary, metaExtras, summaryFacts } from "./_panels/StockSummary";
 import { StockJsonLd } from "./_panels/StockJsonLd";
 import { EarningsInsight, MoveInsight } from "./_panels/StockInsights";
+import { AskStockSlot } from "./_panels/AskStockPanel";
 import depth from "./_panels/depth.module.css";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { EXPECTED_MOVE_HORIZON_DAYS } from "@/lib/expected-move";
@@ -502,6 +503,13 @@ export default async function StockPage(
           "bu hafta ne oldu" diye soruyor. Claude notu; gerekçe
           lib/stock-insights.ts. */}
       <MoveInsight symbol={symbol} locale={locale} t={t} />
+
+      {/* BU HİSSEYE SOR (24 Ekim, "sayfanın içinde Claude"): genel bakışın
+          metin bölgesinde, haftanın notunun hemen ardında — okur notu
+          okuyup aklına takılanı burada sorar. Yanıt yalnız bu sayfanın
+          verisinden (lib/stock-question.ts). Suspense yedeği oturum
+          durumuna göre, ölçülmüş boylarda (AskStockSlot). */}
+      <AskStockSlot symbol={symbol} locale={locale} t={t} />
 
       {/* ÜNLÜ YATIRIMCILAR BURADAN GÜNDEM'E İNDİ (28 Eylül, sahibinin
           isteği: "burası çok üstte olmuş"). Özetin hemen altında 423–851

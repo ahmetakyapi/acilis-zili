@@ -1,0 +1,66 @@
+/* Takip Listem Bugün (WatchlistToday.tsx). Notun gövde dili hisse notundan
+   (StockInsightCard.module.css → base); burada yalnız şerit, takvim ve
+   ana sayfadaki kısa biçim. Derinlik tonla, gölge yok; renk yalnız
+   işaretten (yön) ve Claude imindeki pirinçten. */
+
+/* ---- Kısa biçim: ana sayfa paneli içinde, listenin altında ----
+   Kabuk yüksekliği içeriğinden ölçülür (WatchlistToday.tsx → CompactNote);
+   geçiş marka eğrisiyle, düşüşte üst boşluk ve saydamlık da kapanır. */
+.compactShell {
+  margin-top: 12px; overflow: hidden;
+  transition: height .45s var(--ease-brand), margin-top .45s var(--ease-brand), opacity .3s var(--ease-brand);
+}
+.compactShell[data-gone] { margin-top: 0; opacity: 0; visibility: hidden; transition: height .45s var(--ease-brand), margin-top .45s var(--ease-brand), opacity .3s var(--ease-brand), visibility 0s linear .45s; }
+.compact { padding: 12px 14px 13px; border-radius: var(--radius-lg); background: var(--surface-sunken); }
+.credit { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
+.compactText { margin: 0; font-size: var(--text-read); line-height: 1.55; color: var(--text-strong); text-wrap: pretty; animation: wt-rise .5s var(--ease-brand) both; }
+/* İnce iskelet: künye + kulvar (--line-soft) üstünde 5 piksellik şerit —
+   sitenin grafik dili. Şerit kulvarda soldan sağa süzülür; hareketi
+   azaltana durur. */
+.compactLoading { display: grid; gap: 9px; }
+.lane { position: relative; display: block; height: 5px; border-radius: 3px; background: var(--line-soft); overflow: hidden; }
+.lane::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 34%; border-radius: 3px; background: var(--line-strong); animation: wt-lane 1.6s var(--ease-brand) infinite; }
+@keyframes wt-lane { from { translate: -100% 0; } to { translate: 300% 0; } }
+
+/* ---- Tam panel ---- */
+.label { margin: 0; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
+.movers { display: grid; gap: 8px; padding: 12px 14px 14px; border-radius: var(--radius-lg); background: var(--surface-sunken); }
+.moversHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.market { font-size: var(--text-small); font-weight: 700; color: var(--text-body); }
+.market[data-tone="up"] { color: var(--up); }
+.market[data-tone="down"] { color: var(--down); }
+.moverList { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.mover { animation: wt-rise .45s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 70ms); }
+.moverLink {
+  display: grid; gap: 2px; min-height: 44px; padding: 8px 10px; border-radius: var(--radius-md, 10px); background: var(--surface);
+  transition: background-color .2s var(--ease-brand);
+}
+.moverLink:hover { background: var(--primary-tint); }
+.moverLink:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+.symbol { font-family: var(--font-mono); font-size: var(--text-small); font-weight: 700; color: var(--text-strong); }
+.change { font-size: var(--text-lead, 16px); font-weight: 800; letter-spacing: -.01em; color: var(--text-strong); white-space: nowrap; }
+.change[data-tone="up"] { color: var(--up); }
+.change[data-tone="down"] { color: var(--down); }
+.versus { font-size: var(--text-tiny); line-height: 1.3; font-weight: 650; color: var(--text-muted); }
+
+.earnings { display: grid; gap: 8px; }
+.earningsList { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.earningsChip {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px; border-radius: 999px;
+  background: var(--surface-sunken); font-size: var(--text-small); color: var(--text-body); transition: background-color .2s var(--ease-brand);
+}
+.earningsChip:hover { background: var(--primary-tint); }
+.earningsChip:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+.earningsChip b { font-family: var(--font-mono); font-weight: 700; color: var(--text-strong); }
+.timing { color: var(--brass-ink); font-weight: 700; }
+@media (min-width: 640px) { .earningsChip { min-height: 36px; } .moverList { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); } }
+
+/* Tam panelin iskeleti — şerit + not; ölçüm bileşenin yorumunda. */
+.fullLoading { display: flex; flex-direction: column; gap: 9px; min-height: 360px; }
+.stripSkeleton { height: 112px; margin-bottom: 6px; border-radius: var(--radius-lg); }
+
+@keyframes wt-rise { from { opacity: 0; translate: 0 6px; } }
+@media (prefers-reduced-motion: reduce) {
+  .compactText, .mover, .lane::after { animation: none !important; }
+  .compactShell, .compactShell[data-gone] { transition: none; }
+}

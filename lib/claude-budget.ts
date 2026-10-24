@@ -87,6 +87,18 @@ const MEMBER = "claude-member:";
 /** Oturumlu okurun bütçe kimliği (portföy notu) — kendi günlük sayacı; üyeler birlikte tavanın %90'ında durur. */
 export const memberClient = (userId: string) => `${MEMBER}${userId}`;
 
+/**
+ * YALNIZ ÖNBELLEK (24 Ekim, sayfanın içindeki Claude). Takip listesi notu ve
+ * hisse sorusu, hissenin VAR OLAN Claude notlarını (hareket, bilanço,
+ * önizleme) girdi olarak kullanır ama onları yazdırmaz: önbellekte yoksa
+ * not yok sayılır. Notların önbellek anahtarı geri çağrının metni olduğu
+ * için (lib/stock-insights.ts) aynı geri çağrı bu kimlikle çağrılır;
+ * `takeCall` burada hak vermeden reddeder, ret null'a döner ve hafızaya
+ * yazılmaz (`remembered`). Böylece bir okurun sorusu yirmi hissenin notunu
+ * birden yazdırıp bütçeyi bitiremez.
+ */
+export const CACHE_ONLY = "claude-cache-only";
+
 let spent = { day: "", n: 0 };
 
 /**
@@ -97,6 +109,7 @@ let spent = { day: "", n: 0 };
  * tavanın tamamını kullanabilir.
  */
 export function takeCall(client?: string): void {
+  if (client === CACHE_ONLY) throw new ClaudeBudgetError();
   const day = new Date().toISOString().slice(0, 10);
   if (spent.day !== day) spent = { day, n: 0 };
   const cap = dailyCap();

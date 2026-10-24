@@ -3,6 +3,7 @@ import { emailNotifyTr } from "./email-notify";
 import { datePickerTr } from "./date-picker";
 import { screenQueryTr } from "./screen-query";
 import { stockPuzzleTr } from "./stock-puzzle";
+import { askStockTr, watchlistTodayTr } from "./page-claude";
 
 const tr = {
   brand: {
@@ -4722,6 +4723,9 @@ const tr = {
     stampSource: "Kurumların Resmî Tarifeleri",
     stampChecked: "{date} Doğrulandı",
   },
+  /* Sayfanın içinde Claude (24 Ekim) — metin ayrı dosyada, gerekçesi orada. */
+  watchlistToday: watchlistTodayTr,
+  askStock: askStockTr,
 };
 
 export default tr;

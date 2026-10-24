@@ -4,6 +4,7 @@ import { emailNotifyEn } from "./email-notify";
 import { datePickerEn } from "./date-picker";
 import { screenQueryEn } from "./screen-query";
 import { stockPuzzleEn } from "./stock-puzzle";
+import { askStockEn, watchlistTodayEn } from "./page-claude";
 
 const en: typeof tr = {
   brand: {
@@ -4173,6 +4174,9 @@ const en: typeof tr = {
     stampSource: "Brokers' Official Fee Schedules",
     stampChecked: "Verified {date}",
   },
+  /* Sayfanın içinde Claude (24 Ekim) — metin ayrı dosyada, gerekçesi orada. */
+  watchlistToday: watchlistTodayEn,
+  askStock: askStockEn,
 };
 
 export default en;

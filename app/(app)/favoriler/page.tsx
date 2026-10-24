@@ -23,6 +23,9 @@ import { getUsdTry } from "@/lib/providers/tcmb";
 import { formatIsoDate, formatRate } from "@/lib/fx";
 
 import { pageMetadata } from "@/lib/page-meta";
+import { WatchlistToday } from "@/components/watchlist/WatchlistToday";
+import { insightsConfigured } from "@/lib/stock-insights";
+import { WATCH_TODAY_MIN_COVERED } from "@/lib/watchlist-today-core";
 
 /* KİŞİSEL/OTURUM SAYFASI — DİZİNE GİRMEZ. robots.txt'te `Disallow` vardı ama
    o yalnızca taramayı engelliyor, indekslemeyi değil; üstelik engellenen bir
@@ -174,6 +177,13 @@ export default async function WatchlistPage() {
         locale={locale}
         labels={labels}
       />
+
+      {/* TAKİP LİSTEM BUGÜN (24 Ekim) listelerin hemen altında: önce
+          liste, sonra onun son seans okuması (ekran düzeni: ölçü, sonra
+          metin). Gerekçe lib/watchlist-today.ts. */}
+      {listSymbols.length >= WATCH_TODAY_MIN_COVERED && insightsConfigured() && (
+        <WatchlistToday locale={locale} labels={t.watchlistToday} variant="full" />
+      )}
 
       {alertData.available && (
         <Panel id="alarmlar" aria-label={t.priceAlerts.panelTitle} className="scroll-mt-28">

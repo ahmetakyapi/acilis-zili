@@ -20,6 +20,9 @@ import { getUserAlerts, type PriceAlert } from "@/lib/price-alerts";
 import { settleAlerts } from "@/lib/alert-settle";
 import { BellSimpleRinging, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import alertStyles from "@/components/alerts/PriceAlerts.module.css";
+import { WatchlistToday } from "@/components/watchlist/WatchlistToday";
+import { insightsConfigured } from "@/lib/stock-insights";
+import { WATCH_TODAY_MIN_COVERED } from "@/lib/watchlist-today-core";
 
 /**
  * Hedefe ulaşmış alarmların şeridi — favoriler panelinin başında, yalnızca
@@ -210,6 +213,14 @@ export async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dicti
               );
             })}
           </ul>
+          {/* TAKİP LİSTEM BUGÜN (24 Ekim): listenin son seans okuması, liste
+              ile damga arasında — ekran düzeninde ölçüden sonra metin. Not
+              istemciden istenir, yazılamazsa blok hiç kalmaz (gerekçe
+              components/watchlist/WatchlistToday.tsx). Tek hisselik listede
+              basılmaz: "listenin bugünü" iki hisseden başlar. */}
+          {insightsConfigured() && userSymbols.length >= WATCH_TODAY_MIN_COVERED && (
+            <WatchlistToday locale={locale} labels={t.watchlistToday} variant="compact" />
+          )}
           <DataStamp
             labels={t.data}
             source={result.source}
