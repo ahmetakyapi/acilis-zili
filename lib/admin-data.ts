@@ -337,9 +337,10 @@ async function breakdownBy(
  * yeniden yazmak yerine sorgu eski satırları da şablona indiriyor: yeni
  * satırlar zaten şablonlu geliyor, ifade onlara dokunmuyor.
  *
- * TEK PARÇALI `/bilancolar/[symbol]` YOK ve bilerek: `app/(app)/bilancolar/
- * [symbol]` altında yalnızca `[period]` var, öyle bir sayfa açılmıyor.
- * Denetim bu deseni önermişti; sayfası olmayan bir şablon uydurmak olurdu.
+ * TEK PARÇALI `/bilancolar/[symbol]` 24 Ekim'e kadar YOKTU (şirket bazlı
+ * bilanço sayfası o gün geldi); yazma tarafı onu artık şablonluyor
+ * (lib/analytics.ts). Okumada eski satır yok — sayfa yeni, ham kalmış
+ * satır birikmedi; buraya desen eklenmiyor.
  */
 const ROUTE_READ = sql<string>`regexp_replace(${pageViews.route}, '^(/en)?/teknik/[^/]+$', '\\1/teknik/[symbol]')`;
 

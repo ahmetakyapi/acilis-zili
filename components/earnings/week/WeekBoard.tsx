@@ -24,6 +24,7 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { zoneTag, type TimePair } from "@/lib/session-clock";
 import { etDateParts, formatMoneyCompact, formatPercent } from "@/lib/utils";
 import styles from "./WeekBoard.module.css";
+import { earningsHref } from "@/lib/earnings-company";
 
 /**
  * Beş günlük takvim duvarı ve kahramandaki yoğunluk nabzı.
@@ -382,7 +383,8 @@ function Tile({
   return (
     <li className={styles.tileItem} data-tier={tier} style={{ "--j": order } as CSSProperties}>
       <Link
-        href={badge ? analysisHref(badge.symbol, badge.period) : `/hisse/${row.symbol}`}
+        /* Analizi yoksa şirketin bilanço sayfası (24 Ekim) — gerekçe EarningsCalendar. */
+        href={badge ? analysisHref(badge.symbol, badge.period) : earningsHref(row.symbol)}
         prefetch={false}
         className={styles.tile}
         aria-label={label}

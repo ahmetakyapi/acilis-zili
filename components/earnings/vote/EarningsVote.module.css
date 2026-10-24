@@ -1,0 +1,59 @@
+/* "Beklentiyi Geçer mi?" — derinlik tonla (CLAUDE.md "Görsel dil"): kutu
+   yok, düğmeler `--surface-sunken` zeminde, seçili düğme etkileşimin
+   rengiyle (`--primary-wash`). Yön renkleri yalnız işarette (▲ ▼) ve
+   dağılımın parçalarında. */
+.vote { position:relative; z-index:10; display:flex; flex-direction:column; gap:10px; min-width:0; }
+.panel { gap:12px; }
+.card { gap:8px; }
+
+.choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.panel .choices { max-width:360px; }
+/* Hero kartında satır 1158 piksele kadar uzuyor (1280, ölçüldü); iki düğme
+   o genişlikte "evet/hayır" değil bir şerit gibi okunuyordu. */
+.card .choices, .card .distribution { max-width:320px; }
+.choice {
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  min-height:44px; padding:0 14px; border-radius:var(--radius-md);
+  border:1px solid var(--line); background:var(--surface-sunken);
+  font-size:var(--text-small); font-weight:700; color:var(--text-strong);
+  transition:background-color .2s var(--ease-brand), border-color .2s var(--ease-brand), color .2s var(--ease-brand);
+}
+/* 44 piksel dokunma hedefi kartta da (ekosistem kuralı). */
+.card .choice { padding:0 8px; font-size:12.5px; }
+.choice[aria-pressed="true"] { border-color:var(--primary); background:var(--primary-wash); color:var(--primary-ink); }
+.choice[aria-disabled="true"] { cursor:progress; }
+.choice:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+@media(hover:hover) and (pointer:fine) { .choice:hover { border-color:var(--primary-faint); } }
+
+.up { color:var(--up); }
+.down { color:var(--down); }
+
+/* Giriş çağrısı sitenin birincil düğmesi (`ButtonLink variant="primary"`,
+   AskStock'un giriş düğmesiyle aynı) — burada ayrı stil YOK. */
+
+.status, .mine { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; font-size:var(--text-small); color:var(--text-body); }
+.card .status, .card .mine { font-size:12px; gap:2px 8px; }
+.statusLabel { color:var(--text-muted); }
+.outcome { font-weight:700; }
+.hit { display:inline-flex; align-items:center; gap:4px; font-weight:600; }
+
+.distribution { display:flex; flex-direction:column; gap:6px; }
+.panel .distribution { max-width:420px; }
+/* İKİ YÖNLÜ ÇİZGİ — kulvar (`--line-soft`) üstünde 5 piksel, sıfır ortada
+   (`--line-strong` dikey çentik, sitenin sıfır çizgisi). Kaçırır sola,
+   geçer sağa açılıyor; iki parça sıfırda buluşuyor, aralarındaki sınırı
+   çentik çiziyor. */
+.lane { position:relative; display:block; height:11px; }
+.lane::before { content:""; position:absolute; inset:3px 0; border-radius:999px; background:var(--line-soft); }
+.missBar, .beatBar { position:absolute; top:3px; height:5px; }
+.missBar { right:50%; border-radius:999px 0 0 999px; background:var(--down); }
+.beatBar { left:50%; border-radius:0 999px 999px 0; background:var(--up); }
+.zero { position:absolute; left:50%; top:0; width:1px; height:11px; margin-left:-.5px; background:var(--line-strong); }
+.legend { display:flex; align-items:baseline; justify-content:space-between; gap:2px 12px; font-size:12px; color:var(--text-body); }
+.card .legend { font-size:11.5px; gap:2px 8px; }
+.count { color:var(--text-muted); }
+
+.meta { font-size:12px; line-height:1.5; color:var(--text-muted); }
+.error { font-size:12px; line-height:1.5; color:var(--down); }
+
+@media(prefers-reduced-motion:reduce) { .choice { transition:none; } }

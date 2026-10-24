@@ -23,13 +23,16 @@ import {
   getAnalyses,
   getAnalysisBadges,
   getEarningsBetween,
+  getHolidays,
   getSymbolNames,
   getUserSymbols,
 } from "@/lib/data";
+import { accuracyPercent } from "@/lib/earnings-vote";
+import { getVoteAccuracy, getVoteBoard } from "@/lib/earnings-vote-data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
-import { formatEtDateCompact } from "@/lib/utils";
+import { formatEtDateCompact, formatPercentPlain } from "@/lib/utils";
 
 /* Künye yoktu. Sayfa okuyucunun KENDİ listesine bağlı, yani herkese aynı
    şeyi göstermiyor: dizine girmesi anlamsız, `robots` kapalı. Başlık yine
@@ -104,7 +107,12 @@ export default async function WatchedEarningsPage(
   /* Değişkene çıkarıldı: aralığın bitiş günü başlıktaki künyede de yazıyor. */
   const rangeEnd = addEtDays(today, RANGES[range]);
 
-  const [analyses, allRows, badges] = await Promise.all([
+  /* Oy tahtası ve yılın isabeti aynı turda (24 Ekim): ikisi de takvimi
+     beklemiyor. İsabet künyesi kapağın ölçü ızgarasına üçüncü ölçü olarak
+     giriyor — "okurun bu yılki bilanço tahmin karnesi" bu sekmenin
+     kişisel sorusu. Tablo yoksa ya da hiç puanlanmış oy yoksa basılmıyor. */
+  const year = Number(today.slice(0, 4));
+  const [analyses, allRows, badges, voteBoard, holidays, record] = await Promise.all([
     userSymbols.length > 0
       ? getAnalyses(locale, { limit: 20, symbols: userSymbols })
       : Promise.resolve([]),
@@ -116,7 +124,12 @@ export default async function WatchedEarningsPage(
        de takip listesinin alt kümesi, yani rozet sorgusu onları beklemeden
        aynı turda koşuyor — bir Neon turu (~120 ms) ilk bayttan düştü. */
     getAnalysisBadges(userSymbols, locale),
+    getVoteBoard(session.user.id, today, rangeEnd),
+    getHolidays(),
+    getVoteAccuracy(session.user.id, year),
   ]);
+  const accuracy = record.available ? record.accuracy : null;
+  const accuracyPct = accuracy ? accuracyPercent(accuracy) : null;
 
   const rows = allRows.filter((row) => watchSet.has(row.symbol));
   const symbolList = [
@@ -166,6 +179,23 @@ export default async function WatchedEarningsPage(
               <dt>{t.directory.scheduledReports}</dt>
               <dd className="numeral">{rows.length}</dd>
             </div>
+            {/* İSABET KÜNYESİ (24 Ekim) — puanlanmış oy varsa. Sayı kesir
+                ("7/10"); yüzde ancak beş puanlanmış oyda (gerekçe
+                `ACCURACY_MIN_FOR_PERCENT`). Bekleyen oylar sayının
+                dışında; sayısı şirketin bilanço sayfasındaki künyede. */}
+            {accuracy && accuracy.scored > 0 && (
+              <div>
+                <dt>{t.earningsSeason.vote.accuracy.replace("{year}", String(year))}</dt>
+                <dd className="numeral">
+                  {t.earningsSeason.vote.accuracyValue
+                    .replace("{correct}", String(accuracy.correct))
+                    .replace("{scored}", String(accuracy.scored))}
+                  {accuracyPct !== null && (
+                    <span className="text-small text-muted"> · {formatPercentPlain(accuracyPct, locale, 0)}</span>
+                  )}
+                </dd>
+              </div>
+            )}
             {/* ÜÇÜNCÜ ÖLÇÜ KALDIRILDI. `analyses` bir LİSTE ve tavanı yirmi:
                 yirmiden fazla analizi olan bir takip listesinde sayı yirmide
                 donup kalırdı ve kapakta bir TOPLAM gibi okunurdu. Gerçek
@@ -252,6 +282,7 @@ export default async function WatchedEarningsPage(
                 today={today}
                 locale={locale}
                 t={t}
+                vote={voteBoard.available ? { board: voteBoard, holidays, now: new Date() } : undefined}
               />
             )}
           </section>

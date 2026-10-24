@@ -21,9 +21,11 @@ test("bilanço rotaları: sabit sayfalar sabit, analiz detayı şablonda", () =>
   assert.equal(routeTemplate("/bilancolar/analizler"), "/bilancolar/analizler");
   assert.equal(routeTemplate("/bilancolar/takip"), "/bilancolar/takip");
   assert.equal(routeTemplate("/bilancolar/nvda/4c-fy2026"), "/bilancolar/[symbol]/[period]");
-  /* Tek parçalı `/bilancolar/[symbol]` diye bir sayfa YOK (app/(app)/bilancolar
-     altında yalnızca [symbol]/[period] var) — desen de yok. */
-  assert.equal(routeTemplate("/bilancolar/NVDA"), "/bilancolar/NVDA");
+  /* Tek parçalı `/bilancolar/[symbol]` 24 Ekim'den beri bir sayfa (şirket
+     bazlı bilanço); sabit sekmeler ondan önce eşleşiyor. */
+  assert.equal(routeTemplate("/bilancolar/NVDA"), "/bilancolar/[symbol]");
+  assert.equal(routeTemplate("/bilancolar/hafta"), "/bilancolar/hafta");
+  assert.equal(routeTemplate("/en/bilancolar/nvda/4c-fy2026/hikaye"), "/en/bilancolar/[symbol]/[period]/hikaye");
 });
 
 test("sembollü yol sitenin kendi yazımına iniyor", () => {
@@ -32,6 +34,8 @@ test("sembollü yol sitenin kendi yazımına iniyor", () => {
   assert.equal(normalizePath("/teknik/MU"), "/teknik/mu");
   assert.equal(normalizePath("/en/bilancolar/NVDA/4c-fy2026"), "/en/bilancolar/nvda/4c-fy2026");
   assert.equal(normalizePath("/bilancolar/analizler"), "/bilancolar/analizler");
+  assert.equal(normalizePath("/bilancolar/NVDA"), "/bilancolar/nvda");
+  assert.equal(normalizePath("/bilancolar/NVDA/4c-fy2026/hikaye"), "/bilancolar/nvda/4c-fy2026/hikaye");
   assert.equal(normalizePath("/hisse/MU/?sekme=haber#ust"), "/hisse/MU");
   assert.equal(normalizePath("//baska.site/x"), null);
 });

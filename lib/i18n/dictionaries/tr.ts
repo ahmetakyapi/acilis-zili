@@ -5,6 +5,7 @@ import { screenQueryTr } from "./screen-query";
 import { stockPuzzleTr } from "./stock-puzzle";
 import { askStockTr, watchlistTodayTr } from "./page-claude";
 import { daySignatureTr } from "./day-signature";
+import { earningsSeasonTr } from "./earnings-season";
 
 const tr = {
   brand: {
@@ -4729,6 +4730,8 @@ const tr = {
   askStock: askStockTr,
   /* Zil ve Günün İmzası (24 Ekim) — metin ayrı dosyada. */
   daySignature: daySignatureTr,
+  /* Bilanço Sezonu (24 Ekim) — metin ayrı dosyada, gerekçesi orada. */
+  earningsSeason: earningsSeasonTr,
 };
 
 export default tr;

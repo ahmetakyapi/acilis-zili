@@ -267,6 +267,13 @@
       "when": 1792874072916,
       "tag": "0037_telegram_posts",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1792874073339,
+      "tag": "0038_earnings_votes",
+      "breakpoints": true
     }
   ]
 }

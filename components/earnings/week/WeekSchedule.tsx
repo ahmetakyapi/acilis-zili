@@ -15,6 +15,7 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { zoneTag } from "@/lib/session-clock";
 import { cn, formatEtDateLong, formatMoneyCompact, formatPercent, formatPrice, NO_VALUE } from "@/lib/utils";
 import styles from "./WeekSchedule.module.css";
+import { earningsHref } from "@/lib/earnings-company";
 
 /**
  * Haftanın Takvimi — `/bilancolar/hafta` sekmesinin ikinci paneli.
@@ -208,7 +209,8 @@ function Row({
   return (
     <li className={styles.row} data-sched-row>
       <Link
-        href={`/hisse/${row.symbol}`}
+        /* Şirketin bilanço sayfası (24 Ekim) — gerekçe EarningsCalendar. */
+        href={earningsHref(row.symbol)}
         prefetch={false}
         className={styles.cover}
         aria-label={row.name ? `${row.symbol} · ${row.name}` : row.symbol}

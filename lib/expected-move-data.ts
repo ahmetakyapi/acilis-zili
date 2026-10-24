@@ -41,7 +41,10 @@ import {
  * okuma, raporun OLMADIĞI bir günün hareketini geçmiş ortalamaya katıyor
  * ve `HISTORY_LIMIT` yüzünden gerçek bir raporu listeden itebiliyordu.
  */
-async function pastReportEvents(symbol: string, today: string): Promise<ReportEvent[]> {
+/* Dışa açık (24 Ekim): bilanço hikâyesinin tepki kartı aynı geçmişten
+   "önceki raporların ortalamasını" kuruyor (lib/earnings-story-data.ts);
+   iki ekranın aynı raporları sayması için kaynak tek. */
+export async function pastReportEvents(symbol: string, today: string): Promise<ReportEvent[]> {
   const [calendar, analyses] = await Promise.all([
     db
       .select({ date: earningsCalendar.reportDate, hour: earningsCalendar.hour })
@@ -63,7 +66,7 @@ async function pastReportEvents(symbol: string, today: string): Promise<ReportEv
 /** Vade penceresi: raporu kapsayan ilk vade genellikle aynı haftanın cuması. */
 const EXPIRY_WINDOW_DAYS = 14;
 /** Geçmiş hareket için kaç gün geri — sekiz çeyrek + pay. */
-const HISTORY_LOOKBACK_DAYS = 800;
+export const HISTORY_LOOKBACK_DAYS = 800;
 
 export type ExpectedMoveData = {
   next: { date: string; timing: ReportTiming };

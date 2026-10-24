@@ -16,9 +16,11 @@ import {
   getAnalyses,
   getAnalysisBadges,
   getEarningsBetween,
+  getHolidays,
   getSymbolNames,
   getUserSymbols,
 } from "@/lib/data";
+import { getVoteBoard } from "@/lib/earnings-vote-data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n } from "@/lib/i18n";
 
@@ -85,11 +87,18 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
      kendi verisini çeken bir sunucu bileşeniydi). Neon'a her tur ~120 ms;
      kritik yol üç turdan bire indi. Adlar önbellekli tablodan, tek listeyle. */
   const rangeEnd = addEtDays(today, RANGES[range]);
-  const [rows, userSymbols, badges, recent] = await Promise.all([
+  /* OY TAHTASI AYNI TURDA (24 Ekim). Okurun oyları ve dağılımlar takvimin
+     satırlarını beklemiyor: oy satırı kendi rapor tarihini taşıyor, aralık
+     yetiyor (`getVoteBoard`). Yalnız oturum açıkken; kartta oy düğmesi
+     üyeye özel. Tablo yoksa `available: false` ve kartlar eski hâliyle. */
+  const userId = session?.user?.id ?? null;
+  const [rows, userSymbols, badges, recent, voteBoard, holidays] = await Promise.all([
     getEarningsBetween(today, rangeEnd),
-    session?.user?.id ? getUserSymbols(session.user.id) : Promise.resolve([]),
+    userId ? getUserSymbols(userId) : Promise.resolve([]),
     getAnalysisBadges(null, locale, { from: today, to: rangeEnd }),
     getAnalyses(locale, { limit: RECENT_ANALYSES }),
+    userId ? getVoteBoard(userId, today, rangeEnd) : Promise.resolve(null),
+    userId ? getHolidays() : Promise.resolve([]),
   ]);
 
   const meta = await getSymbolNames([
@@ -163,6 +172,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           today={today}
           locale={locale}
           t={t}
+          vote={voteBoard?.available ? { board: voteBoard, holidays, now: new Date() } : undefined}
         />
       )}
 

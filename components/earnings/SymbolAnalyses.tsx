@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { Panel, PanelHeader, PanelLink } from "@/components/ui/primitives";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
@@ -35,10 +36,17 @@ export function SymbolAnalyses({
   rows,
   locale,
   t,
+  footer,
 }: {
   rows: AnalysisIndexRow[];
   locale: Locale;
   t: Dictionary;
+  /**
+   * Panelin son satırı — şirketin bilanço sayfası buraya en yeni analizin
+   * hikâye girişini koyuyor (24 Ekim). Satır ayırıcısı listeninkiyle aynı
+   * (`border-t`); hisse sayfası vermiyor, panel eski hâliyle.
+   */
+  footer?: ReactNode;
 }) {
   if (rows.length === 0) return null;
 
@@ -113,6 +121,7 @@ export function SymbolAnalyses({
           );
         })}
       </ul>
+      {footer && <div className="border-t border-line">{footer}</div>}
     </Panel>
   );
 }

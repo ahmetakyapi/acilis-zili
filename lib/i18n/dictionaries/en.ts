@@ -6,6 +6,7 @@ import { screenQueryEn } from "./screen-query";
 import { stockPuzzleEn } from "./stock-puzzle";
 import { askStockEn, watchlistTodayEn } from "./page-claude";
 import { daySignatureEn } from "./day-signature";
+import { earningsSeasonEn } from "./earnings-season";
 
 const en: typeof tr = {
   brand: {
@@ -4180,6 +4181,8 @@ const en: typeof tr = {
   askStock: askStockEn,
   /* Zil ve Günün İmzası (24 Ekim) — metin ayrı dosyada. */
   daySignature: daySignatureEn,
+  /* Bilanço Sezonu (24 Ekim) — metin ayrı dosyada, gerekçesi orada. */
+  earningsSeason: earningsSeasonEn,
 };
 
 export default en;

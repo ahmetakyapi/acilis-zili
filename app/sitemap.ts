@@ -4,7 +4,10 @@ import { GLOSSARY_SLUGS } from "@/content/glossary";
 import { THEME_SLUGS } from "@/content/themes";
 import { INVESTOR_SLUGS } from "@/lib/investors";
 import { COMPARE_PAIR_SLUGS } from "@/content/compare-pairs";
-import { getAnalyses, getBriefArchive, getCompanies, getStories } from "@/lib/data";
+import { getAnalyses, getAnalyzedSymbols, getBriefArchive, getCompanies, getStories } from "@/lib/data";
+import { earningsHref } from "@/lib/earnings-company";
+import { getReportingSymbols } from "@/lib/earnings-company-data";
+import { addEtDays, todayEt } from "@/lib/market-hours";
 import { briefHref, type BriefPeriod } from "@/lib/brief";
 import { SITE_URL } from "@/lib/site";
 import { DEFAULT_LOCALE, LOCALES } from "@/lib/i18n/config";
@@ -68,6 +71,9 @@ const SITEMAP_LIMIT = 2000;
  * haritayla öne itilmiyorlar.
  */
 const COMPANY_SITEMAP_LIMIT = 300;
+
+/** Şirket bazlı bilanço sayfası için takvim penceresi — gerekçe aşağıda. */
+const EARNINGS_PAGE_HORIZON_DAYS = 100;
 
 /**
  * 28 Eylül paketlerinin getirdiği ekranlar. Durağanlar bu listede; dinamik
@@ -318,6 +324,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .slice(0, COMPANY_SITEMAP_LIMIT);
   for (const company of companies) {
     entries.push(...bothLocales(`/hisse/${company.symbol}`, 0.5, "daily", false));
+  }
+
+  /* ŞİRKET BAZLI BİLANÇO SAYFALARI (24 Ekim) — `/bilancolar/[symbol]`.
+     Ölçüt sayfanın dizin ölçütüyle AYNI: sıradaki raporu takvimde olan ya
+     da okunmuş çeyreği olan şirket (öteki sayfalar `noindex`, gerekçe
+     sayfanın `generateMetadata`ı). Takvim tarafı yukarıdaki şirket
+     listesiyle (piyasa değerinde ilk 300) sınırlı — ince sayfa kuralı;
+     analizi olan her şirket ayrıca giriyor. Pencere bir çeyrek ve biraz
+     (`EARNINGS_PAGE_HORIZON_DAYS`): daha uzağı sağlayıcının tahmini. */
+  const today = todayEt();
+  const [reporting, analyzed] = await Promise.all([
+    getReportingSymbols(today, addEtDays(today, EARNINGS_PAGE_HORIZON_DAYS)),
+    getAnalyzedSymbols(),
+  ]);
+  const earningsPages = new Set([
+    ...companies.filter((company) => reporting.has(company.symbol)).map((company) => company.symbol),
+    ...analyzed,
+  ]);
+  for (const symbol of earningsPages) {
+    entries.push(...bothLocales(earningsHref(symbol), 0.6, "daily", false));
   }
 
   /* FONLAR AYRICA (22 Ekim). Piyasa değeri sırası fonu hiç görmüyor:

@@ -1801,3 +1801,46 @@ export const telegramPosts = pgTable(
     index("telegram_posts_created_idx").on(t.createdAt),
   ],
 );
+
+/* ---- Bilanço Sezonu: "Beklentiyi Geçer mi?" oylaması ---- */
+
+/**
+ * Okurun bilanço oyu — yaklaşan raporun EPS beklentisini geçip geçmeyeceği
+ * (24 Ekim). Mantık `lib/earnings-vote.ts`, okuma/yazma
+ * `lib/earnings-vote-data.ts`, eylem `app/actions/earnings-vote.ts`.
+ *
+ * KİMLİK `(user, symbol, period)`: `period` sağlayıcının mali çeyreği
+ * ("2026Q3"), çeyreği bilinmeyen satırda rapor günü ("d2026-11-19").
+ * Rapor tarihi revize edilebildiği için tarihe değil çeyreğe bağlı
+ * (gerekçe `votePeriodKey`). `report_date` oyun verildiği gün bilinen
+ * tarih: dönem penceresi sorgularının ve "aynı gün" yedeğinin dayanağı.
+ *
+ * SONUÇ SAKLANMIYOR. Gerçekleşen EPS takvim satırına (`earnings_calendar`)
+ * zaten düşüyor ve geçmiş satırlar silinmiyor; burada bir kopyası, aynı
+ * bilançonun iki yerde iki sonucu olabilmesi demekti.
+ *
+ * KENDİ TABLOSU — migration'lar deploy'da uygulanmıyor; tablo yokken
+ * okuma `available: false` döner ve bileşen hiç basılmaz.
+ */
+export const earningsVotes = pgTable(
+  "earnings_votes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    symbol: text("symbol").notNull(),
+    period: text("period").notNull(),
+    reportDate: date("report_date").notNull(),
+    /** "beat" | "miss" */
+    choice: text("choice").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("earnings_votes_user_target_key").on(t.userId, t.symbol, t.period),
+    index("earnings_votes_target_idx").on(t.symbol, t.period),
+    index("earnings_votes_report_idx").on(t.reportDate),
+    index("earnings_votes_user_report_idx").on(t.userId, t.reportDate),
+  ],
+);

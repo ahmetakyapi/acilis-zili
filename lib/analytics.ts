@@ -32,8 +32,13 @@ import { technicalHref } from "./technical";
  * ikisi karışırdı.
  */
 const ROUTE_PATTERNS: [RegExp, string][] = [
-  [/^\/bilancolar\/(analizler|takip)$/, "/bilancolar/$1"],
+  /* `hafta` sabit desende (24 Ekim): tek parçalı `/bilancolar/[symbol]`
+     deseni geldi ve sabit sekmeler ondan ÖNCE eşleşmeli. Hikâye üç
+     parçalı, analiz deseninden önce. */
+  [/^\/bilancolar\/(analizler|takip|hafta)$/, "/bilancolar/$1"],
+  [/^\/bilancolar\/[^/]+\/[^/]+\/hikaye$/, "/bilancolar/[symbol]/[period]/hikaye"],
   [/^\/bilancolar\/[^/]+\/[^/]+$/, "/bilancolar/[symbol]/[period]"],
+  [/^\/bilancolar\/[^/]+$/, "/bilancolar/[symbol]"],
   [/^\/hisse\/[^/]+$/, "/hisse/[symbol]"],
   /* TEKNİK DETAY EKSİKTİ. `/teknik/[symbol]` rotası sonradan geldi ve
      buraya eklenmedi: panelin "Bölümler" listesi (açıklaması "Dinamik
@@ -283,5 +288,11 @@ function canonicalCase(path: string): string {
   if (teknik) return `${prefix}${technicalHref(teknik[1])}`;
   const analiz = bare.match(/^\/bilancolar\/([^/]+)\/([^/]+)$/);
   if (analiz) return `${prefix}${analysisHref(analiz[1], analiz[2])}`;
+  /* Şirket bazlı bilanço sayfası ve hikâye küçük harf (`earningsHref`,
+     `analysisHref` + "/hikaye"); sabit sekmeler zaten küçük harf. */
+  const hikaye = bare.match(/^\/bilancolar\/([^/]+)\/([^/]+)\/hikaye$/);
+  if (hikaye) return `${prefix}${analysisHref(hikaye[1], hikaye[2])}/hikaye`;
+  const sirket = bare.match(/^\/bilancolar\/([^/]+)$/);
+  if (sirket) return `${prefix}/bilancolar/${sirket[1].toLowerCase()}`;
   return path;
 }

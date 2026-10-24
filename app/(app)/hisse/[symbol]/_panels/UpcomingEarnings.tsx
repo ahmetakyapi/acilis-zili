@@ -1,4 +1,6 @@
-import { CalendarBlank } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, CalendarBlank } from "@phosphor-icons/react/dist/ssr";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { earningsHref } from "@/lib/earnings-company";
 import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import styles from "../stock.module.css";
 import { Panel } from "@/components/ui/primitives";
@@ -97,6 +99,16 @@ export async function UpcomingEarnings({
         label={t.earnings.addToCalendar}
         className="mt-3 mb-0 w-fit self-start sm:mt-3 sm:mb-0"
       />
+      {/* ŞİRKETİN BİLANÇO SAYFASI (24 Ekim) — tarihin TR saatiyle
+          cevabı, okur oylaması ve okunan çeyrekler orada
+          (`/bilancolar/[symbol]`); takvim kartları da oraya gidiyor. */}
+      <Link
+        href={earningsHref(symbol)}
+        className="tap-44 mt-2 inline-flex min-h-8 w-fit items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover"
+      >
+        {t.earningsSeason.company.pageLink}
+        <ArrowUpRight size={12} weight="bold" aria-hidden />
+      </Link>
       {(next.epsEstimate !== null || next.revenueEstimate !== null) && (
         /* İKİ ÖLÇÜ AYNI HATTA. Etiketler 84 piksellik hücrede iki
            satıra düşüyor (768'de ölçüldü) ve İkisi aynı anda düşmezse

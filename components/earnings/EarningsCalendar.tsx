@@ -10,9 +10,13 @@ import {
 import { AnalysisBadge } from "@/components/earnings/AnalysisBadge";
 import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { AlsoReporting } from "@/components/earnings/AlsoReporting";
+import { EarningsVote } from "@/components/earnings/vote/EarningsVote";
 import type { AnalysisBadge as AnalysisBadgeData, SymbolMeta } from "@/lib/data";
+import { earningsHref } from "@/lib/earnings-company";
+import { boardFor, buildVoteView, type VoteView } from "@/lib/earnings-vote";
+import type { VoteBoard } from "@/lib/earnings-vote-data";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { daysBetweenEt } from "@/lib/market-hours";
+import { daysBetweenEt, type MarketHoliday } from "@/lib/market-hours";
 import { isSpotlight } from "@/lib/spotlight";
 import { cn, formatMoneyCompact, formatEtDateLong, formatPrice, plural } from "@/lib/utils";
 import type { EarningsRow } from "@/lib/schema";
@@ -164,7 +168,25 @@ export type CalendarProps = {
   today: string;
   locale: Locale;
   t: Dictionary;
+  /**
+   * "Beklentiyi Geçer mi?" oylaması (24 Ekim) — yalnızca oturum açık ve
+   * tablo varken (`board.available`). Verilmezse kartlar eski hâliyle.
+   */
+  vote?: { board: VoteBoard; holidays: MarketHoliday[]; now: Date };
 };
+
+/**
+ * Kartın oy görünümü. Takvim kartında oy düğmesi YALNIZCA açıkken; kapanmış
+ * bir oylama kartta ancak okur oy verdiyse (kendi oyu ve dağılım) kalıyor.
+ * Oy vermediği kapanmış oylamayı kartta göstermek, günün kartlarına
+ * okurun hiç dokunmadığı bir satır eklemek olurdu — o satırın yeri şirketin
+ * bilanço sayfası.
+ */
+function cardVote(row: EarningsRow, vote: CalendarProps["vote"]): VoteView | null {
+  if (!vote?.board.available) return null;
+  const view = buildVoteView({ row, holidays: vote.holidays, now: vote.now, ...boardFor(vote.board, row) });
+  return view.phase === "open" || view.mine !== null ? view : null;
+}
 
 export function EarningsCalendar({
   rows,
@@ -174,6 +196,7 @@ export function EarningsCalendar({
   today,
   locale,
   t,
+  vote,
 }: CalendarProps) {
   const byDay = new Map<string, EarningsRow[]>();
   for (const row of rows) {
@@ -206,6 +229,7 @@ export function EarningsCalendar({
           badges={badges}
           locale={locale}
           t={t}
+          vote={vote}
         />
       ))}
     </>
@@ -266,6 +290,7 @@ function DaySection({
   badges,
   locale,
   t,
+  vote,
 }: {
   date: string;
   today: string;
@@ -275,6 +300,7 @@ function DaySection({
   badges: Record<string, AnalysisBadgeData>;
   locale: Locale;
   t: Dictionary;
+  vote: CalendarProps["vote"];
 }) {
   const { heroes, mid, heroSet, midSet } = dayTiers(rows, meta);
   const rest = rows.filter(
@@ -285,6 +311,23 @@ function DaySection({
   const other = rest.filter((row) => row.hour !== "bmo" && row.hour !== "amc");
 
   const badgeOf = (row: EarningsRow) => badges[`${row.symbol}:${row.reportDate}`];
+  /* Oy satırı orta kartlarda ALT IZGARANIN BEŞİNCİ SATIRI: satırdaki bir
+     kartta bile oy varsa hepsi beş satırlı, oysuz kart o satırı boş
+     taşıyor — rozet satırının kuralı (aşağıda). */
+  const voteOf = (row: EarningsRow) => cardVote(row, vote);
+  const midVotes = mid.map(voteOf);
+  const midHasVote = midVotes.some((view) => view !== null);
+  const voteNode = (view: VoteView) => (
+    <EarningsVote
+      view={view}
+      signedIn
+      labels={t.earningsSeason.vote}
+      lock=""
+      variant="card"
+      signInHref="/giris"
+      locale={locale}
+    />
+  );
   const away = daysBetweenEt(today, date);
   const watched = rows.filter((row) => watchSet.has(row.symbol)).length;
 
@@ -373,16 +416,26 @@ function DaySection({
           const timing = timingOf(row.hour, t);
           const { headline, rest } = cardFigures(row, m, locale, t, false);
           const badge = badgeOf(row);
+          const heroVote = voteOf(row);
           return (
             /* Kart bir <a> DEĞİL, içinde yüzeyi kaplayan bir <a> taşıyan
                kutu: analiz rozeti kendi bağlantısını taşıyor ve iç içe
                bağlantı geçersiz HTML. Görünüm birebir aynı kalıyor. */
+            /* `sm:flex-wrap`: oy satırı (varsa) geniş ekranda kimlik ve
+               ölçü sütununun ALTINDA tam genişlik bir satır; oysuz kartta
+               sarma hiçbir şeyi değiştirmiyor. */
             <div
               key={row.id}
-              className={cn("panel-hover relative flex flex-col gap-3 rounded-lg border border-line bg-surface-solid px-4 py-4 transition-colors sm:flex-row sm:items-center sm:gap-4 sm:px-5", styles.heroCard)}
+              className={cn("panel-hover relative flex flex-col gap-3 rounded-lg border border-line bg-surface-solid px-4 py-4 transition-colors sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 sm:px-5", styles.heroCard)}
             >
+              {/* KART ŞİRKETİN BİLANÇO SAYFASINA (24 Ekim). Takvim bir
+                  bilanço sorusu soruyor ("ne zaman") ve kartın gittiği yer
+                  hisse sayfasıydı; cevabın tamamı (tarih, TR saati, oy,
+                  okunan çeyrekler) artık `/bilancolar/[symbol]`ta ve o sayfa
+                  hisseye ilk satırında bağlanıyor. Şirket kartı (`data-cc`)
+                  hisse bağlantısını taşımaya devam ediyor. */}
               <Link
-                href={`/hisse/${row.symbol}`}
+                href={earningsHref(row.symbol)}
                 prefetch={false}
                 aria-label={`${row.symbol} ${m?.name ?? ""}`}
                 className="absolute inset-0 rounded-lg"
@@ -482,6 +535,9 @@ function DaySection({
                   </dl>
                 )}
               </div>
+              {heroVote && (
+                <div className={styles.voteRow}>{voteNode(heroVote)}</div>
+              )}
             </div>
           );
         })}
@@ -519,8 +575,9 @@ function DaySection({
               : "grid-cols-[repeat(auto-fit,minmax(9.5rem,15rem))] justify-start",
           )}
         >
-          {mid.map((row) => {
+          {mid.map((row, index) => {
             const m = meta[row.symbol];
+            const midVote = midVotes[index];
             const timing = timingOf(row.hour, t);
             const { headline, rest, capNote } = cardFigures(
               row,
@@ -543,10 +600,11 @@ function DaySection({
                    aynı satıra bağlıyor; rozet satırı rozetsiz kartta da
                    duruyor, boş. Dolgu bütün kartlarda aynı olduğu için
                    hizayı bozmuyor. */
-                className={cn("panel-hover relative row-span-4 grid h-full min-w-0 grid-rows-subgrid gap-[11px] rounded-lg border border-line bg-surface-solid p-3.5 transition-colors", styles.miniCard)}
+                className={cn("panel-hover relative grid h-full min-w-0 grid-rows-subgrid gap-[11px] rounded-lg border border-line bg-surface-solid p-3.5 transition-colors", midHasVote ? "row-span-5" : "row-span-4", styles.miniCard)}
               >
+                {/* Bilanço sayfasına — gerekçe hero kartında. */}
                 <Link
-                  href={`/hisse/${row.symbol}`}
+                  href={earningsHref(row.symbol)}
                   prefetch={false}
                   aria-label={`${row.symbol} ${m?.name ?? ""}`}
                   className="absolute inset-0 rounded-lg"
@@ -692,6 +750,12 @@ function DaySection({
                     </p>
                   )}
                 </div>
+                {midHasVote &&
+                  (midVote ? (
+                    <div className={styles.voteRow}>{voteNode(midVote)}</div>
+                  ) : (
+                    <span aria-hidden />
+                  ))}
               </div>
             );
           })}

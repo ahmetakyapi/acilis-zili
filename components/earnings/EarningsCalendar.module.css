@@ -30,3 +30,7 @@
 @media(hover:hover) and (pointer:fine) { .miniCard:hover,.heroCard:hover { border-color:var(--primary-faint); } }
 @media(max-width:639px) { .dateHeader h2 { font-size:21px; } .dateHeader > div { gap:8px; } .miniGrid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } .miniCard { padding:13px; gap:12px; } .miniCard :global(.text-lead) { font-size:19px; } .heroCard { padding:18px; } .miniIdentity > :last-child { font-size:12px; } }
 @media(prefers-reduced-motion:reduce) { .miniCard,.heroCard { transition:none; } }
+/* OY SATIRI (24 Ekim) — kartın dibinde hairline ile ayrılmış tam genişlik
+   satır. Hero kartında `flex-basis:100%` onu geniş ekranda kimlik ve ölçü
+   sütununun altına indiriyor; mini kartta alt ızgaranın beşinci satırı. */
+.voteRow { flex-basis:100%; min-width:0; border-top:1px solid var(--line); padding-top:10px; }

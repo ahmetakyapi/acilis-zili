@@ -1,3 +1,4 @@
+import { Cards } from "@phosphor-icons/react/dist/ssr";
 import { PageShare } from "@/components/article/PageShare";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { notFound } from "next/navigation";
@@ -34,6 +35,7 @@ import {
 import { getQuotes } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { estimateIsPast } from "@/lib/earnings-report";
+import { storyGuaranteed } from "@/lib/earnings-story";
 import { getAnalysisExtras } from "@/lib/earnings-extras";
 import { getConsensusTarget } from "@/lib/analyst-target-data";
 import { addEtDays, etParts, todayEt } from "@/lib/market-hours";
@@ -629,13 +631,28 @@ export default async function AnalysisDetailPage(
           {row.company} · {row.periodLabel}
         </span>
       </nav>
-      <PageShare
-        path={analysisHref(symbol, period)}
-        title={`${row.company} ${row.periodLabel} · ${t.analysis.ogEyebrow}`}
-        locale={row.locale as Locale}
-        t={t}
-        align="right"
-      />
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        {/* HİKÂYE KARTLARI (24 Ekim) — çeyreğin paylaşılabilir kart hâli.
+            Bağlantı yalnız en az üç kartı bu sayfanın elindeki alanlarla
+            GARANTİ eden analizde (`storyGuaranteed`): hikâye sayfası üçten az
+            kartta 404 veriyor, bağlantı oraya hiç götürmemeli. */}
+        {storyGuaranteed(row) && (
+          <Link
+            href={`${analysisHref(symbol, period)}/hikaye`}
+            className="tap-44 -my-2 inline-flex min-h-8 items-center gap-1.5 py-2 text-small font-semibold text-primary hover:text-primary-hover"
+          >
+            <Cards size={15} weight="duotone" aria-hidden />
+            {t.earningsSeason.story.link}
+          </Link>
+        )}
+        <PageShare
+          path={analysisHref(symbol, period)}
+          title={`${row.company} ${row.periodLabel} · ${t.analysis.ogEyebrow}`}
+          locale={row.locale as Locale}
+          t={t}
+          align="right"
+        />
+      </div>
       </div>
 
       <ReportCover

@@ -1,0 +1,82 @@
+/* Şirket bazlı bilanço sayfası — `app/(app)/bilancolar/[symbol]/page.tsx`.
+   Derinlik tonla, gölge yok; paneller sitenin `.panel`i. Aralık her yerde
+   `gap-5` karşılığı (CLAUDE.md "İki kolona justify-between konmaz"). */
+.page { display:flex; flex-direction:column; min-width:0; gap:var(--page-section-gap, 20px); }
+
+/* Künye şeridi: logo, sembol ve ad; sağda hisse sayfası. Kutu değil, düz
+   satır — kimlik bilgisi, panel değil. */
+.identity { display:flex; align-items:center; gap:12px; min-width:0; }
+.stockLink { margin-left:auto; flex-shrink:0; gap:6px; }
+
+.body { display:flex; flex-direction:column; gap:16px; padding:0 20px 20px; min-width:0; }
+
+.when { display:flex; flex-direction:column; gap:8px; }
+.date { font-size:var(--text-title); font-weight:700; letter-spacing:-.03em; line-height:1.15; color:var(--text-strong); }
+.windowRow { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
+
+/* Ölçü ızgarası — üç ölçü aynı hatta biter (CLAUDE.md "Ölçü ızgarası");
+   ton farkıyla ayrılmış hücreler, kenarlık yok. */
+.figures { display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:8px; }
+.figures > div { display:grid; grid-template-rows:subgrid; grid-row:span 2; row-gap:4px; padding:12px 14px; border-radius:var(--radius-md); background:var(--surface-sunken); }
+.figures dt { font-size:12px; color:var(--text-muted); }
+.figures dd { align-self:end; font-size:var(--text-lead); font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
+
+.lead { max-width:68ch; font-size:var(--text-read); line-height:1.65; color:var(--text-body); }
+
+/* Künyeler panelin içinde, hairline ile ayrılmış düz paragraf. */
+.notes { border-top:1px solid var(--line-soft); padding-top:12px; }
+.notes p { max-width:72ch; font-size:12px; line-height:1.6; color:var(--text-muted); }
+.notes strong { font-weight:600; color:var(--text-body); }
+
+.previous { border-top:1px solid var(--line-soft); padding-top:14px; display:flex; flex-direction:column; gap:10px; }
+.previousTitle { font-size:12px; font-weight:600; color:var(--text-muted); }
+.record { font-size:var(--text-small); }
+
+/* Oy + karne. Karne sağda dar bir sütun; aralık `gap-5` karşılığı 20 px
+   (CLAUDE.md "İki kolona justify-between konmaz"). Telefonda alt alta. */
+.voteGrid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,15rem); gap:20px; align-items:start; }
+.voteMain { display:flex; flex-direction:column; gap:16px; min-width:0; }
+
+/* Beklenti karnesi — ton farkıyla ayrılmış hücre (ölçü ızgarasının
+   hücresiyle aynı dil), kutu/kenarlık yok. Şeritler kulvar üstünde 5 px:
+   geçti `--up`, kaçırdı `--down`, denk `--line-strong` (yön yok). */
+.karne { display:flex; flex-direction:column; gap:6px; padding:12px 14px; border-radius:var(--radius-md); background:var(--surface-sunken); }
+.karneLabel { font-size:12px; color:var(--text-muted); }
+.karneValue { font-size:var(--text-lead); font-weight:700; letter-spacing:-.02em; line-height:1.15; color:var(--text-strong); }
+.karnePips { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:4px; }
+.karnePip { display:block; height:5px; border-radius:999px; background:var(--line-strong); transform-origin:left center; }
+.karnePip[data-mark="beat"] { background:var(--up); }
+.karnePip[data-mark="miss"] { background:var(--down); }
+.karneNote { font-size:12px; line-height:1.5; color:var(--text-muted); }
+
+/* Hikâye girişi — Bilanço Analizleri panelinin son satırı, listenin
+   satırlarıyla aynı iç boşluk ve aynı üzerine gelme tonu. Solda destenin
+   minyatürü: üç dikey kart (4:5, hikâye kartının oranı) TON basamağıyla
+   üst üste — gölge yok, derinlik `surface-sunken` → `premium-surface`. */
+.storyEntry { display:flex; align-items:center; gap:14px; min-height:44px; padding:14px 20px; transition:background-color .2s var(--ease-brand); }
+.storyEntry:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+@media(hover:hover) and (pointer:fine) { .storyEntry:hover { background:var(--primary-tint); } }
+.storyStack { position:relative; flex-shrink:0; width:44px; height:44px; }
+.storyStack > span { position:absolute; top:0; width:28px; height:35px; border-radius:6px; border:1px solid var(--line); }
+.storyStack > span:nth-child(1) { left:16px; top:6px; height:31px; background:var(--surface-sunken); }
+.storyStack > span:nth-child(2) { left:8px; top:3px; height:33px; background:var(--surface-sunken); }
+.storyStack > span:nth-child(3) { left:0; top:0; background:var(--premium-surface); border-color:var(--line-strong); }
+/* Ön kartın içi: başlık ve gövde satırı, nötr tonda — kartın
+   kendisi gibi, süs değil. */
+.storyStack > span:nth-child(3)::before,
+.storyStack > span:nth-child(3)::after { content:""; position:absolute; left:5px; height:3px; border-radius:999px; background:var(--line-strong); }
+.storyStack > span:nth-child(3)::before { top:7px; right:9px; }
+.storyStack > span:nth-child(3)::after { top:14px; right:5px; opacity:.6; }
+.storyText { display:flex; flex:1; flex-direction:column; gap:2px; min-width:0; }
+.storyTitle { font-size:var(--text-read); font-weight:700; color:var(--text-strong); }
+.storyHint { font-size:var(--text-small); color:var(--text-body); }
+.storyArrow { flex-shrink:0; color:var(--primary-ink); }
+
+@media(max-width:639px) {
+  .body { padding:0 16px 16px; }
+  .date { font-size:22px; }
+  .figures { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .voteGrid { grid-template-columns:minmax(0,1fr); }
+  .storyEntry { padding:14px 16px; }
+}
+@media(prefers-reduced-motion:reduce) { .storyEntry { transition:none; } }

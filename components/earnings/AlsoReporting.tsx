@@ -5,6 +5,7 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { CaretDown } from "@phosphor-icons/react/dist/ssr";
 import { Panel } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
+import { earningsHref } from "@/lib/earnings-company";
 
 /* --------------------------------------------------------------------------
    "Ayrıca bugün açıklayanlar" — açılana kadar ÇİZİLMEYEN sembol kalabalığı.
@@ -93,7 +94,9 @@ export function AlsoReporting({
                     {group.symbols.map((item) => (
                       <Link
                         key={item.symbol}
-                        href={`/hisse/${item.symbol}`}
+                        /* Takvimin bütün girişleri şirketin bilanço sayfasına
+                           (24 Ekim, gerekçe EarningsCalendar hero kartı). */
+                        href={earningsHref(item.symbol)}
                         prefetch={false}
                         className={cn(
                           // min-h-8: sembol çipleri 26px'lik dokunma hedefi
