@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { X } from "@phosphor-icons/react/dist/ssr";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
@@ -10,6 +11,7 @@ import { FilterChip } from "@/components/ui/FilterChip";
 import { LoadingFallback } from "@/components/ui/LoadingState";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import { LinkedRows } from "@/components/companies/LinkedRows";
+import { ScreenQueryBox } from "@/components/screener/ScreenQueryBox";
 import {
   DataStamp,
   EmptyState,
@@ -20,12 +22,25 @@ import {
   Skeleton,
   SkeletonRow,
 } from "@/components/ui/primitives";
-import { primaryOnly } from "@/db/seed/indices";
+import { indexMemberOf, primaryOnly } from "@/db/seed/indices";
 import { getCompanies, getStatus, liveMarketCap, type CompanyRow } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
 import { getQuotes } from "@/lib/providers";
-import { sectorLabel } from "@/lib/sectors";
+import {
+  EMPTY_FILTERS,
+  GICS_SECTORS,
+  hasFilters,
+  SCREEN_SORTS,
+  matchesScreenFilters,
+  parseScreenParams,
+  sectorSlug,
+  withoutFilter,
+  writeScreenParams,
+  type ScreenCondition,
+  type ScreenFilters,
+} from "@/lib/screen-query";
+import { sectorGroupByKey, sectorGroupLabel, sectorGroupOf, sectorLabel } from "@/lib/sectors";
 import type { StoredMetrics } from "@/lib/scorecard";
 import { getAllMetrics, type ScreenerMetricsRow } from "@/lib/symbol-metrics";
 import {
@@ -68,9 +83,16 @@ export const generateMetadata = pageMetadata({
  * şirkette; bayat kotasyonun fiyatı ORANA GİRMEZ (ScorecardPanel kuralı) —
  * o turda F/K ve canlı piyasa değeri hesaplanmaz ve künye bunu söyler.
  * Kapsam sınırlı ve panelin dibinde yazılı: dizindeki her şirket burada yok.
+ *
+ * DÜZ CÜMLEYLE TARAMA (24 Ekim): kutuya yazılan cümleyi Claude bu sayfanın
+ * süzgeçlerine çevirir (lib/screen-query.ts); sonuç adrese yazılır
+ * (`grup`, `karli`, `fkmax`, `buyumemin`… ve görüntü için `cumle`) ve süzme
+ * yine BURADA, aynı satırlar üzerinde yapılır. Etkin süzgeçler tek tek
+ * kaldırılabilen çiplerdir; süzgeç değişince `cumle` düşer (çipler artık o
+ * cümlenin çevirisi değil), sıralama ve "Daha Fazla" onu korur.
  */
 
-const SORT_KEYS = ["cap", "fk", "buyume", "marj", "roe", "borc"] as const;
+const SORT_KEYS = SCREEN_SORTS;
 type SortKey = (typeof SORT_KEYS)[number];
 type SortDir = "asc" | "desc";
 
@@ -83,6 +105,7 @@ type PresetKey = (typeof PRESETS)[number];
 type Row = {
   symbol: string;
   sector: string;
+  group: string;
   company: CompanyRow;
   metrics: StoredMetrics;
   /** Canlı fiyattan kurulmuş F/K; kurulamıyorsa null (gerekçe üstte). */
@@ -110,10 +133,22 @@ function presetTest(key: PresetKey, row: Row): boolean {
   }
 }
 
-/** GICS sektör adı → adres anahtarı ("Information Technology" → "information-technology"). */
-function sectorSlug(sector: string): string {
-  return sector.toLocaleLowerCase("en-US").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+/** Koşulun eşiği — yüzdeler "%15" / "15%", oranlar sayı, piyasa değeri para. */
+function conditionValue(c: ScreenCondition, locale: Locale): string {
+  if (c.field === "marketCap") return formatMoneyCompact(c.value * 1e9, locale);
+  const n = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", { maximumFractionDigits: 2 }).format(c.value);
+  if (c.field === "pe" || c.field === "debtToEquity" || c.field === "currentRatio") return n;
+  return locale === "tr" ? `%${n}` : `${n}%`;
 }
+
+type ParamsOver = {
+  sort?: SortKey;
+  dir?: SortDir;
+  preset?: PresetKey | null;
+  sector?: string | null;
+  filters?: ScreenFilters;
+  adet?: number;
+};
 
 /** Oran biçimi — "18,4" (tr) / "18.4" (en); null → —. */
 function formatRatio(value: number | null, locale: Locale): string {
@@ -176,7 +211,9 @@ export default async function ScreenerPage(props: PageProps<"/tarama">) {
   const preset: PresetKey | null = PRESETS.includes(search.suzgec as PresetKey)
     ? (search.suzgec as PresetKey)
     : null;
-  const sectorParam = typeof search.sektor === "string" ? search.sektor : null;
+  const filters = parseScreenParams(search);
+  const sectorParam = filters.sector;
+  const sentence = typeof search.cumle === "string" && search.cumle.trim() ? search.cumle.trim().slice(0, 200) : null;
 
   const requested = Number(typeof search.adet === "string" ? search.adet : PAGE_STEP);
   const limit =
@@ -184,13 +221,7 @@ export default async function ScreenerPage(props: PageProps<"/tarama">) {
       ? Math.ceil(requested / PAGE_STEP) * PAGE_STEP
       : PAGE_STEP;
 
-  const paramsFor = (over: {
-    sort?: SortKey;
-    dir?: SortDir;
-    preset?: PresetKey | null;
-    sector?: string | null;
-    adet?: number;
-  }) => {
+  const paramsFor = (over: ParamsOver) => {
     const params = new URLSearchParams({
       sirala: over.sort ?? sort,
       yon: over.dir ?? dir,
@@ -198,8 +229,11 @@ export default async function ScreenerPage(props: PageProps<"/tarama">) {
     const p = over.preset === undefined ? preset : over.preset;
     const s = over.sector === undefined ? sectorParam : over.sector;
     if (p) params.set("suzgec", p);
-    if (s) params.set("sektor", s);
+    writeScreenParams(params, { ...(over.filters ?? filters), sector: s });
     if (over.adet) params.set("adet", String(over.adet));
+    /* Süzgeç değişirse çipler artık cümlenin çevirisi değil: cümle düşer. */
+    const touches = over.preset !== undefined || over.sector !== undefined || over.filters !== undefined;
+    if (sentence && !touches) params.set("cumle", sentence);
     return `/tarama?${params.toString()}`;
   };
   const sortHref = (key: SortKey) =>
@@ -214,13 +248,26 @@ export default async function ScreenerPage(props: PageProps<"/tarama">) {
       <ScrollProgress />
       <PageHeader title={L.title} subtitle={L.subtitle} />
       <div className="flex flex-col gap-4">
+        <ScreenQueryBox
+          labels={t.screenQuery}
+          sentence={sentence}
+          fieldLabels={t.screenQuery.fields}
+          scrollLabels={{ prev: t.common.scrollPrev, next: t.common.scrollNext }}
+        />
+        <ActiveFilters filters={filters} paramsFor={paramsFor} locale={locale} t={t} />
         {/* Hazır süzgeç şeridi — ölçütü çip değil künye söyler. */}
         <ChipStrip
           activeKey={preset}
           scrollLabels={{ prev: t.common.scrollPrev, next: t.common.scrollNext }}
           className="scroll-x flex items-center gap-1.5 sm:gap-2"
         >
-          <FilterChip href={paramsFor({ preset: null })} active={preset === null} label={L.presetAll} />
+          {/* "Süzgeçsiz" gerçekten süzgeçsiz: cümleden gelen süzgeçler de
+              açıkken seçili görünmez, basınca hepsi kalkar. */}
+          <FilterChip
+            href={paramsFor({ preset: null, sector: null, filters: EMPTY_FILTERS })}
+            active={preset === null && !hasFilters(filters)}
+            label={L.presetAll}
+          />
           {PRESETS.map((key) => (
             <FilterChip
               key={key}
@@ -234,7 +281,7 @@ export default async function ScreenerPage(props: PageProps<"/tarama">) {
 
       <QueryTransition label={t.common.loading}>
         <Suspense
-          key={`${sectorParam ?? "hepsi"}:${preset ?? "yok"}:${sort}:${dir}`}
+          key={`${writeScreenParams(new URLSearchParams(), filters).toString() || "hepsi"}:${preset ?? "yok"}:${sort}:${dir}`}
           fallback={
             <LoadingFallback label={t.common.loading}>
               <ScreenerSkeleton />
@@ -246,6 +293,7 @@ export default async function ScreenerPage(props: PageProps<"/tarama">) {
             dir={dir}
             preset={preset}
             sectorParam={sectorParam}
+            filters={filters}
             limit={limit}
             paramsFor={paramsFor}
             sortHref={sortHref}
@@ -270,6 +318,7 @@ async function ScreenerTable({
   dir,
   preset,
   sectorParam,
+  filters,
   limit,
   paramsFor,
   sortHref,
@@ -280,14 +329,9 @@ async function ScreenerTable({
   dir: SortDir;
   preset: PresetKey | null;
   sectorParam: string | null;
+  filters: ScreenFilters;
   limit: number;
-  paramsFor: (over: {
-    sort?: SortKey;
-    dir?: SortDir;
-    preset?: PresetKey | null;
-    sector?: string | null;
-    adet?: number;
-  }) => string;
+  paramsFor: (over: ParamsOver) => string;
   sortHref: (key: SortKey) => string;
   locale: Locale;
   t: Dictionary;
@@ -337,7 +381,10 @@ async function ScreenerTable({
             price,
           ) ?? company.marketCap
         : company.marketCap;
-    return { symbol: row.symbol, sector: row.sector, company, metrics: m, fk, cap };
+    /* Alt sektör grubu sağlayıcının GICS alt sektöründen; yoksa endeks
+       tohumundaki alt sektörden (/sirketler'in şeridiyle aynı eşleme). */
+    const group = sectorGroupOf(company.industry ?? indexMemberOf(row.symbol)?.sub).key;
+    return { symbol: row.symbol, sector: row.sector, group, company, metrics: m, fk, cap };
   });
 
   /* Sektör çipleri VERİDEN: 11 GICS sektörü, boş olan hiç görünmez. */
@@ -351,7 +398,8 @@ async function ScreenerTable({
   const filtered = rows.filter(
     (row) =>
       (activeSector === null || row.sector === activeSector) &&
-      (preset === null || presetTest(preset, row)),
+      (preset === null || presetTest(preset, row)) &&
+      matchesScreenFilters(row, filters),
   );
 
   const valueOf = (row: Row): number | null => {
@@ -388,12 +436,19 @@ async function ScreenerTable({
   const peakCap = Math.max(...filtered.map((row) => row.cap ?? 0), 1);
 
   const presetNote = preset ? L.presetHints[preset] : null;
+  const activeGroup = sectorGroupByKey(filters.group);
 
   return (
     <>
       <Panel className={styles.tablePanel}>
         <PanelHeader
-          title={activeSector ? sectorLabel(activeSector, locale) ?? activeSector : L.allSectors}
+          title={
+            activeGroup
+              ? sectorGroupLabel(activeGroup, locale)
+              : activeSector
+                ? sectorLabel(activeSector, locale) ?? activeSector
+                : L.allSectors
+          }
           meta={(() => {
             const parts = [
               presetNote,
@@ -654,6 +709,89 @@ async function ScreenerTable({
         />
       )}
     </>
+  );
+}
+
+/**
+ * Etkin süzgeç çipleri — sektör, alt sektör grubu, kârlılık ve sayısal
+ * koşullar; her çip TEK süzgeç ve tıklayınca o süzgeç kalkar. Adresten
+ * çizilir: cümleden de gelse elle yazılmış adresten de gelse aynı çipler.
+ * Hazır süzgeç burada yok — kendi şeridinde zaten seçili görünüyor.
+ *
+ * SAKİN (24 Ekim düzeltmesi): çipler dolu mavi tonla (`primary-tint`) hazır
+ * süzgeç şeridindeki SEÇİLİ çiple aynı görünüyor, üç satır üst üste aynı
+ * vurguyla bağırıyordu. Etkin süzgeç bir DURUM, eylem değil: çökük zemin,
+ * ince çizgi, koyu metin; kaldırma imi soluk, üzerine gelince koyulaşır.
+ * Mavi yalnız hazır süzgeç şeridinde, seçilide kalıyor.
+ */
+function ActiveFilters({
+  filters,
+  paramsFor,
+  locale,
+  t,
+}: {
+  filters: ScreenFilters;
+  paramsFor: (over: ParamsOver) => string;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const Q = t.screenQuery;
+  const sectorName = filters.sector ? GICS_SECTORS.find((name) => sectorSlug(name) === filters.sector) ?? null : null;
+  const group = sectorGroupByKey(filters.group);
+  const chips: { key: string; label: string; href: string }[] = [];
+  if (sectorName) {
+    chips.push({ key: "sector", label: sectorLabel(sectorName, locale) ?? sectorName, href: paramsFor({ sector: null }) });
+  }
+  if (group) {
+    chips.push({
+      key: "group",
+      label: sectorGroupLabel(group, locale),
+      href: paramsFor({ filters: withoutFilter(filters, { kind: "group" }) }),
+    });
+  }
+  if (filters.profitable) {
+    chips.push({
+      key: "profitable",
+      label: Q.profitable,
+      href: paramsFor({ filters: withoutFilter(filters, { kind: "profitable" }) }),
+    });
+  }
+  for (const c of filters.conditions) {
+    chips.push({
+      key: `${c.field}:${c.op}`,
+      label: `${Q.fields[c.field]} ${c.op === "min" ? "≥" : "≤"} ${conditionValue(c, locale)}`,
+      href: paramsFor({ filters: withoutFilter(filters, { kind: "condition", field: c.field, op: c.op }) }),
+    });
+  }
+  if (chips.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <span className="mr-1 text-tiny font-semibold text-muted">{Q.activeLabel}</span>
+        {chips.map((chip) => (
+          <Link
+            key={chip.key}
+            href={chip.href}
+            scroll={false}
+            aria-label={Q.remove.replace("{label}", chip.label)}
+            className="group inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-surface-sunken pl-3.5 pr-2.5 text-small font-semibold text-strong transition-colors hover:border-line-strong sm:min-h-[34px]"
+          >
+            <span className="numeral">{chip.label}</span>
+            <X aria-hidden size={13} weight="bold" className="text-muted transition-colors group-hover:text-strong" />
+          </Link>
+        ))}
+        {chips.length > 1 && (
+          <Link
+            href={paramsFor({ sector: null, filters: EMPTY_FILTERS })}
+            scroll={false}
+            className="inline-flex min-h-11 items-center px-2 text-small font-semibold text-muted transition-colors hover:text-primary sm:min-h-[34px]"
+          >
+            {Q.clearAll}
+          </Link>
+        )}
+      </div>
+      {filters.conditions.length > 0 && <p className="text-tiny leading-relaxed text-muted">{Q.periodNote}</p>}
+    </div>
   );
 }
 

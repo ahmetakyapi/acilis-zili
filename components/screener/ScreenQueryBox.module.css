@@ -1,0 +1,57 @@
+/* Düz cümleyle tarama kutusu — /tarama seçim şeridi (24 Ekim).
+   Alan dizin aramasının dilinde (components/companies/CompanyDirectory.module.css
+   → .searchField): hap biçimi, çökük zemin, odakta ince halka. Kapakta bir
+   ARAÇ; doldurulacak bir form kutusu değil. */
+
+.box { display:flex; min-width:0; flex-direction:column; gap:8px; }
+
+.field { display:flex; min-width:0; max-width:680px; align-items:center; gap:10px; padding:4px 4px 4px 14px; border:1px solid var(--line); border-radius:999px; background:var(--surface-sunken); transition:border-color .2s var(--ease-brand),background .2s var(--ease-brand); }
+.field:hover { border-color:var(--line-strong); background:var(--surface-solid); }
+/* Odak halkası 2 piksel (ekosistem kuralı; eski 3 piksellik açık mavi
+   gölge halkası değildi, gölgeydi). Halka alan odaktayken hapın kendisinde;
+   düğme kendi halkasını taşır, iki halka üst üste binmez. */
+.field:focus-within { border-color:var(--line-focus); }
+.field:has(input:focus) { outline:2px solid var(--line-focus); outline-offset:2px; }
+.mark { flex-shrink:0; color:var(--primary-ink); }
+.field input { min-width:0; width:100%; height:38px; color:var(--text-strong); background:transparent; font-size:14px; outline:none; }
+.field input::placeholder { color:var(--text-muted); }
+/* Dokunma hedefi görsel kutudan büyük — ::after ile 44 piksele. */
+.field button { position:relative; display:grid; place-items:center; flex-shrink:0; width:36px; height:36px; border-radius:999px; background:var(--primary-tint); color:var(--primary-ink); cursor:pointer; transition:background .2s var(--ease-brand),color .2s var(--ease-brand); }
+.field button::after { content:""; position:absolute; inset:-4px; }
+.field button:hover:not(:disabled), .field button:active:not(:disabled) { background:var(--primary); color:var(--on-primary); }
+.field button:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.field button:disabled { cursor:progress; opacity:.6; }
+
+/* Durum satırı: künye diliyle küçük ve soluk. HER ZAMAN AĞAÇTA (24 Ekim
+   düzeltmesi): `display:none` aria-live bölgesini erişilebilirlik ağacından
+   çıkarıyordu; bölge görünür olduğu anda doğan içerik ekran okuyucuya
+   duyurulmuyordu. Boşken yalnız kutunun 8 piksellik aralığını geri alır. */
+.status { display:flex; flex-direction:column; gap:2px; max-width:680px; padding-inline:14px; font-size:12px; line-height:1.5; color:var(--text-muted); }
+.status:empty { margin-top:-8px; }
+.unsupported { color:var(--text-body); }
+.pending { color:var(--text-body); }
+
+/* Örnekler açılır/kapanır (ScreenQueryBox.tsx): satır yüksekliği 0fr ↔ 1fr,
+   marka eğrisiyle. Kapalıyken kutunun aralığı da kapanır. */
+.examplesShell { display:grid; grid-template-rows:0fr; margin-top:-8px; opacity:0; transition:grid-template-rows .4s var(--ease-brand), margin-top .4s var(--ease-brand), opacity .25s var(--ease-brand); }
+.examplesShell[data-open] { grid-template-rows:1fr; margin-top:0; opacity:1; }
+.examples { display:flex; min-width:0; min-height:0; overflow:hidden; align-items:center; gap:10px; }
+.examplesLabel { flex-shrink:0; font-size:12px; font-weight:600; color:var(--text-muted); }
+.examples > :global(.chip-strip) { flex:1; }
+.exampleRow { display:flex; min-width:0; gap:6px; padding-block:4px; }
+.example { flex-shrink:0; min-height:34px; padding:0 12px; border:1px solid var(--line); border-radius:999px; background:var(--surface); color:var(--text-body); font-size:12px; white-space:nowrap; cursor:pointer; transition:border-color .2s var(--ease-brand),color .2s var(--ease-brand); }
+.example:hover:not(:disabled) { border-color:var(--line-strong); color:var(--text-strong); }
+.example:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.example:disabled { cursor:progress; opacity:.6; }
+
+@media(max-width:767px) {
+  .field { padding-left:12px; gap:8px; }
+  /* 16 px: iOS odakta sayfayı büyütmesin. */
+  .field input { font-size:16px; height:40px; }
+  .field button { width:40px; height:40px; }
+  .field button::after { inset:-2px; }
+  .examples { flex-direction:column; align-items:stretch; gap:6px; }
+  .example { min-height:44px; }
+}
+
+@media(prefers-reduced-motion:reduce) { .field, .field button, .example, .examplesShell { transition:none; } }

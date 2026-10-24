@@ -1,6 +1,7 @@
 import { aiAnalysisTr } from "./ai-analysis";
 import { emailNotifyTr } from "./email-notify";
 import { datePickerTr } from "./date-picker";
+import { screenQueryTr } from "./screen-query";
 
 const tr = {
   brand: {
@@ -4606,6 +4607,7 @@ const tr = {
   aiAnalysis: aiAnalysisTr,
   datePicker: datePickerTr,
   emailNotify: emailNotifyTr,
+  screenQuery: screenQueryTr,
 };
 
 export default tr;

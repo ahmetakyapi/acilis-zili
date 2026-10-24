@@ -2,6 +2,7 @@ import { aiAnalysisEn } from "./ai-analysis";
 import type tr from "./tr";
 import { emailNotifyEn } from "./email-notify";
 import { datePickerEn } from "./date-picker";
+import { screenQueryEn } from "./screen-query";
 
 const en: typeof tr = {
   brand: {
@@ -4061,6 +4062,7 @@ const en: typeof tr = {
   aiAnalysis: aiAnalysisEn,
   datePicker: datePickerEn,
   emailNotify: emailNotifyEn,
+  screenQuery: screenQueryEn,
 };
 
 export default en;
