@@ -101,7 +101,7 @@ export default async function AppLayout({
         : [],
     ),
     more: t.nav.more,
-    moreGroups: { analyze: t.nav.moreGroupAnalyze, mine: t.nav.moreGroupMine, data: t.nav.moreGroupData, learn: t.nav.moreGroupLearn, read: t.nav.moreGroupRead },
+    moreGroups: { analyze: t.nav.moreGroupAnalyze, mine: t.nav.moreGroupMine, data: t.nav.moreGroupData, learn: t.nav.moreGroupLearn, read: t.nav.moreGroupRead, daily: t.stockPuzzle.menuGroup },
     mainNav: t.nav.mainNav,
     bottomNav: t.nav.bottomNav,
     skipToContent: t.nav.skipToContent,

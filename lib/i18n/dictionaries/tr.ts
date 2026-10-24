@@ -2,6 +2,7 @@ import { aiAnalysisTr } from "./ai-analysis";
 import { emailNotifyTr } from "./email-notify";
 import { datePickerTr } from "./date-picker";
 import { screenQueryTr } from "./screen-query";
+import { stockPuzzleTr } from "./stock-puzzle";
 
 const tr = {
   brand: {
@@ -4638,6 +4639,8 @@ const tr = {
     channelLink: "Telegram Kanalı",
     channelHint: "Açılıştan önce bülten ve takvim, kapanıştan sonra seansın özeti kanala da düşer.",
   },
+  /* Hisseyi Bil — günlük bulmaca (24 Ekim); metin ayrı dosyada. */
+  stockPuzzle: stockPuzzleTr,
 };
 
 export default tr;

@@ -1,0 +1,38 @@
+/* Ana sayfa bulmaca girişi — gerekçe PuzzleTeaser.tsx.
+   Telefonda iki satır: [siluet | başlık + durum], altında [noktalar ... bağlantı].
+   640 üstünde tek satır: siluet, metin, noktalar ve bağlantı. Derinlik tonla:
+   siluet `surface-sunken` karoda; gölge, cam, degrade yok. */
+.teaser { display:grid; grid-template-columns:6rem minmax(0,1fr); align-items:center; gap:.75rem 1rem; padding:1rem; }
+@media (min-width: 640px) {
+  .teaser { grid-template-columns:clamp(10rem, 22vw, 17.5rem) minmax(0,1fr) auto; padding:1rem 1.25rem; }
+}
+
+.thumb { display:flex; align-items:center; justify-content:center; height:3.5rem; border-radius:var(--radius-lg); background:var(--surface-sunken); overflow:hidden; }
+@media (min-width: 640px) {
+  .thumb { height:4rem; }
+}
+.icon { color:var(--text-muted); }
+/* Maske yalnız alfa (rengin kendisi görünmez; opak bir token yeter): yılın son çeyreği soluyor (renk değil, degrade süsü
+   değil — bkz. CLAUDE.md "Degrade"). */
+.mini { display:block; box-sizing:border-box; width:100%; height:100%; padding:.5rem .625rem; overflow:visible;
+  -webkit-mask-image:linear-gradient(to right, var(--text-strong) 62%, transparent 92%);
+  mask-image:linear-gradient(to right, var(--text-strong) 62%, transparent 92%); }
+.lane { stroke:var(--line-soft); stroke-width:1; }
+.path { fill:none; stroke:var(--text-strong); stroke-width:1.75; stroke-linejoin:round; stroke-linecap:round; }
+@media (prefers-reduced-motion: no-preference) {
+  .mini { animation:mini-in 520ms var(--ease-brand) both; }
+}
+@keyframes mini-in {
+  from { opacity:0; }
+  to { opacity:1; }
+}
+
+.copy { min-width:0; }
+.title { margin:0; font-size:var(--text-lead); font-weight:700; line-height:1.3; color:var(--text-strong); }
+.line { margin:.125rem 0 0; font-size:var(--text-read); line-height:1.45; color:var(--text-body); }
+
+.foot { grid-column:1 / -1; display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+@media (min-width: 640px) {
+  .foot { grid-column:auto; justify-content:flex-end; gap:1.25rem; }
+}
+.action { min-height:44px; white-space:nowrap; }

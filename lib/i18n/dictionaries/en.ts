@@ -3,6 +3,7 @@ import type tr from "./tr";
 import { emailNotifyEn } from "./email-notify";
 import { datePickerEn } from "./date-picker";
 import { screenQueryEn } from "./screen-query";
+import { stockPuzzleEn } from "./stock-puzzle";
 
 const en: typeof tr = {
   brand: {
@@ -4091,6 +4092,8 @@ const en: typeof tr = {
     channelLink: "Telegram Channel",
     channelHint: "The brief and calendar also land on the channel before the open, and the session recap after the close.",
   },
+  /* Hisseyi Bil — günlük bulmaca (24 Ekim); metin ayrı dosyada. */
+  stockPuzzle: stockPuzzleEn,
 };
 
 export default en;

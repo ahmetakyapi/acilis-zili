@@ -18,6 +18,7 @@ import {
   Newspaper,
   FileText,
   Percent,
+  PuzzlePiece,
   Scroll,
   TrendUp,
   UsersThree,
@@ -25,7 +26,7 @@ import {
 import { stripLocale } from "@/lib/i18n/routing";
 import type { Dictionary } from "@/lib/i18n";
 
-export type MoreGroup = "analyze" | "mine" | "data" | "learn" | "read";
+export type MoreGroup = "analyze" | "mine" | "data" | "learn" | "read" | "daily";
 
 /**
  * Panelde grupların sırası — taşan şerit sekmeleri "data"nın başına iner.
@@ -44,7 +45,12 @@ export type MoreGroup = "analyze" | "mine" | "data" | "learn" | "read";
  * hesap ekranları, 2) ve "Piyasa Verisi" (3) — iki sütun artık satır satır
  * aynı hatta. Taşan şerit sekmeleri "data"ya iner (yalnız büyütülmüş yazıda).
  */
-export const MORE_GROUPS: readonly MoreGroup[] = ["analyze", "mine", "data", "learn", "read"];
+/*
+ * "daily" (24 Ekim): panelin DİBİNDE, iki sütuna yayılan tek satırlık
+ * bant — günlük bulmaca. Sütunlardan birine girseydi sol ve sağ sütun
+ * satır satır aynı hatta durmazdı (17 Ekim kararı, `tests/nav-items.test.ts`).
+ */
+export const MORE_GROUPS: readonly MoreGroup[] = ["analyze", "mine", "data", "learn", "read", "daily"];
 
 /** Masthead şeridinde taşma önceliği — 1 en son taşar. */
 export type StripRank = 1 | 2 | 3 | 4 | 5 | 6;
@@ -340,6 +346,16 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: false,
     more: "read",
     hint: (t) => t.menu.hintNews,
+  },
+  {
+    /* HİSSEYİ BİL (24 Ekim) — günlük bulmaca, panelin dibindeki "daily"
+       bandında (gerekçe MORE_GROUPS'ta). */
+    href: "/bulmaca",
+    label: (t) => t.stockPuzzle.title,
+    icon: PuzzlePiece,
+    inBottomBar: false,
+    more: "daily",
+    hint: (t) => t.stockPuzzle.menuHint,
   },
   {
     /* Masaüstünde yalnızca alt bilgide duruyordu. */

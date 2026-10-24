@@ -21,6 +21,7 @@ import {
   Briefcase,
   Receipt,
   SquaresFour,
+  PuzzlePiece,
   TextAa,
   Newspaper,
   Percent,
@@ -136,6 +137,8 @@ export default async function MenuPage() {
         { href: "/topluluk", icon: ChatsCircle, title: t.community.feed.title, hint: t.menu.hintCommunity },
         { href: "/rehber", icon: BookOpen, title: t.nav.guide, hint: t.menu.hintGuide },
         { href: "/sozluk", icon: TextAa, title: t.glossary.title, hint: t.menu.hintGlossary },
+        /* Günlük bulmaca (24 Ekim) — öğrenme ekranlarının yanında. */
+        { href: "/bulmaca", icon: PuzzlePiece, title: t.stockPuzzle.title, hint: t.stockPuzzle.menuHint },
         { href: "/haberler", icon: Newspaper, title: t.nav.news, hint: t.menu.hintNews },
         { href: "/bulten", icon: Envelope, title: t.footer.briefArchive, hint: t.menu.hintBrief },
       ],

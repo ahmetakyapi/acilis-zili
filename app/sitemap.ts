@@ -83,6 +83,7 @@ const COMPANY_SITEMAP_LIMIT = 300;
 const FEATURE_STATIC_ROUTES: StaticRoute[] = [
   { path: "/vergi", priority: 0.7, frequency: "monthly", stamp: false },
   { path: "/sozluk", priority: 0.8, frequency: "weekly", stamp: false },
+  { path: "/bulmaca", priority: 0.6, frequency: "daily", stamp: false },
   { path: "/tema", priority: 0.7, frequency: "daily" },
   { path: "/yatirimcilar", priority: 0.7, frequency: "weekly", stamp: false },
   /* 9 Ekim: dizine açık, menüde ve README'de var ama haritada yoktu. */

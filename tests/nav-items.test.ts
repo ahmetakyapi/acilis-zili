@@ -16,7 +16,7 @@ test("strip ranks are exactly 1..n, each used once", () => {
 });
 
 test("every more item belongs to a panel group", () => {
-  for (const item of more) assert.ok(["analyze", "mine", "data", "learn", "read"].includes(item.more!), item.href);
+  for (const item of more) assert.ok(["analyze", "mine", "data", "learn", "read", "daily"].includes(item.more!), item.href);
 });
 
 /* Panelin iki sütunu satır satır aynı hatta (17 Ekim): sol "mine" + "data",

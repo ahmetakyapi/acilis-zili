@@ -368,6 +368,43 @@ export function MastheadNav({
                   </div>
                 ))}
               </div>
+              {(() => {
+                /* GÜNLÜK BANT (24 Ekim): iki sütunun altında, tam genişlikte
+                   tek satır — günlük bulmaca. Gerekçe nav-items.ts →
+                   MORE_GROUPS. Satır, sütun satırlarıyla aynı kalıp. */
+                const daily = rows.filter((row) => row.group === "daily");
+                if (daily.length === 0) return null;
+                return (
+                  <section aria-label={groups.daily} className="mt-1.5 border-t border-line-soft pt-1.5">
+                    <ul className="flex flex-col">
+                      {daily.map((row) => {
+                        const current = activeRow?.href === row.href;
+                        const Icon = NAV_ITEMS.find((item) => item.href === row.href)?.icon;
+                        return (
+                          <li key={row.href}>
+                            <Link
+                              href={withLocale(row.href, locale)}
+                              prefetch={false}
+                              aria-current={current ? "page" : undefined}
+                              onClick={() => setOpenedAt(null)}
+                              className="masthead-row relative flex min-h-(--more-row) items-center gap-3 rounded-xl px-3 py-1.5 hover:bg-surface focus-visible:bg-surface"
+                            >
+                              {Icon && <span className="masthead-row-icon" aria-hidden><Icon size={19} weight="duotone" /></span>}
+                              <span className="min-w-0 flex-1">
+                                <span className={cn("block truncate text-base font-semibold", current ? "text-primary-ink" : "text-strong")}>
+                                  {row.label}
+                                </span>
+                                <span className="mt-0.5 block text-tiny leading-snug text-muted">{row.hint}</span>
+                              </span>
+                              <ArrowUpRight className="masthead-row-arrow" size={14} aria-hidden />
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </section>
+                );
+              })()}
             </motion.div>
           )}
         </AnimatePresence>

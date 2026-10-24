@@ -41,6 +41,8 @@ import {
 import textureStyles from "@/components/today/home/MarketTexture.module.css";
 
 import { pageMetadata } from "@/lib/page-meta";
+import { PuzzleTeaser } from "@/components/puzzle/PuzzleTeaser";
+import { puzzleDayKey, puzzleNumber } from "@/lib/stock-puzzle";
 
 /* Canonical yalnızca BURADA. Kökte durduğu sürece bütün alt sayfalara miras
    kalıyor ve hepsi arama motoruna "asıl adresim ana sayfa" diyordu; gerekçe
@@ -102,6 +104,7 @@ export default async function TodayPage() {
   const countdownTarget = trading ? status.nextClose : status.nextOpen;
   const countdownLabel = trading ? t.today.countdownClose : t.today.countdownOpen;
   const nowMs = getPageTimestamp();
+  const puzzleDay = puzzleDayKey(new Date(nowMs));
   const readerZone = displayZone(locale);
   const dateFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
     timeZone: readerZone, day: "numeric", month: "long", weekday: "long",
@@ -343,6 +346,11 @@ export default async function TodayPage() {
         <PanelHeader title={t.sessionBell.title} />
         <SessionBellFigure status={status} nowMs={nowMs} locale={locale} t={t} />
       </Panel>
+
+      {/* HİSSEYİ BİL (24 Ekim): günlük bulmacanın girişi — tek satır, ızgaranın
+          DIŞINDA (seans zili ile aynı gerekçe: kolon dengesi). Gerekçe
+          `components/puzzle/PuzzleTeaser.tsx`. */}
+      <PuzzleTeaser day={puzzleDay} number={puzzleNumber(puzzleDay)} labels={t.stockPuzzle} />
 
     <div className={styles.dashboard}>
       {/* Seans sınırında sayfa kendini tazeler. Hiçbir şey çizmez, ızgarada yer
