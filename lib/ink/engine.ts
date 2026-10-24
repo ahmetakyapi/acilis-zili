@@ -23,6 +23,17 @@ export type InkPalette = {
   spark: string;
   /** Kâğıt — sayfa zemini; silme ve "kuruma" için. */
   paper: string;
+  /**
+   * VERİ TAŞIYAN SAHNELERİN renkleri (24 Ekim, Günün Posteri). Süs
+   * sahneleri bunları okumuyor; poster yönü `--up`/`--down`la, kulvarı
+   * `--line-soft`, sıfır çizgisini `--line-strong`la çiziyor (grafik dili,
+   * CLAUDE.md "Görsel dil"). İsteğe bağlı: eski çağıranların paleti eksik
+   * kalmasın diye `InkCanvas` hepsini dolduruyor.
+   */
+  up?: string;
+  down?: string;
+  lane?: string;
+  rule?: string;
 };
 
 /* ----------------------------------------------------------------------- */

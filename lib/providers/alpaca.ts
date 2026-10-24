@@ -1,5 +1,5 @@
 import { canonicalSymbol } from "../symbols";
-import { etParts, todayEt } from "../market-hours";
+import { FEED_DELAY_MINUTES, etParts, todayEt } from "../market-hours";
 import {
   fail,
   ok,
@@ -894,4 +894,82 @@ function lastTradingDayOnly(bars: Bar[]): Bar[] {
   const dayOf = (bar: Bar) => etParts(new Date(bar.time * 1000)).dateStr;
   const lastDay = dayOf(bars[bars.length - 1]);
   return bars.filter((b) => dayOf(b) === lastDay);
+}
+
+/* --------------------------------------------------------------------------
+   Belirli bir günün kapanışları (Günün Posteri, 24 Ekim)
+   -------------------------------------------------------------------------- */
+
+/**
+ * `[start, end]` aralığındaki GÜNLÜK barlar — yüzlerce sembol, birkaç istek.
+ *
+ * Günün Posteri geçmiş bir seansı anlatıyor (`lib/day-poster-data.ts`):
+ * S&P 500'ün ~500 üyesinin o günkü ve bir önceki seanstaki kapanışı lazım,
+ * yani sembol başına iki-üç bar. `getBarsMulti` aralığı "bugünden geriye"
+ * kuruyor; bir yıl önceki bir gün için 500 sembolün yıllık serisi çekilirdi.
+ *
+ * `end` BURADA VERİLİYOR, dosya başındaki tuzağa rağmen: kural "şimdiyi
+ * kapsayan aralıkta `sip` 403 döner". Çağıran yalnızca TAMAMLANMIŞ bir
+ * seansı soruyor (`posterComplete`, kapanış + gecikme + pay geçmiş) ve
+ * `end` o günün kapanışına bağlı; yine de güvence olarak beslemenin
+ * verebildiği andan (`now − gecikme − 1 dk`) ileriye taşmıyor.
+ *
+ * Ölçüldü (24 Ekim, SPY, 23 Ekim seansı): günlük barın kapanışı 759,97 —
+ * 16:00 ET dakika barının kapanışıyla aynı; akşam seansının son işlemi
+ * 761,11. Yani gün barı ASIL SEANSIN kapanışı, akşam işlemleri girmiyor.
+ */
+export async function getDailyBarsBetween(
+  symbols: string[],
+  start: string,
+  end: Date,
+  revalidate: number,
+): Promise<ProviderResult<Record<string, Bar[]>>> {
+  if (symbols.length === 0) return ok({}, "alpaca");
+  const unique = [...new Set(symbols.map(canonicalSymbol))].sort();
+  /* Beslemenin verebildiği en yeni an, bir dakika payla. */
+  const latest = Date.now() - (FEED_DELAY_MINUTES + 1) * 60_000;
+  const endIso = new Date(Math.min(end.getTime(), latest)).toISOString();
+
+  const results = await Promise.all(
+    batches(unique).map((batch) =>
+      fetchBarPages(
+        {
+          symbols: batch.join(","),
+          timeframe: "1Day",
+          start,
+          end: endIso,
+          limit: String(MAX_BARS_PER_REQUEST),
+          adjustment: "split",
+          feed: BAR_FEED,
+          sort: "asc",
+        },
+        { revalidate, tags: ["bars", "bars:day"] },
+      ),
+    ),
+  );
+
+  /* YARIM PAKET YOK: `getBarsMulti` bir paket düşünce kalanını döndürüyor;
+     burada düşen paket, genişliği üyelerin üçte ikisiyle saymak ya da bir
+     sektörü eksik basmak demek. Biri düşerse hepsi hata. */
+  const out: Record<string, Bar[]> = {};
+  let fetchedAt: Date | undefined;
+  for (const result of results) {
+    if (!result.ok) return result;
+    if (!fetchedAt || result.fetchedAt < fetchedAt) fetchedAt = result.fetchedAt;
+    for (const [symbol, list] of Object.entries(result.data)) {
+      out[symbol] = list.map((b) => ({
+        time: Math.floor(new Date(b.t).getTime() / 1000),
+        open: b.o,
+        high: b.h,
+        low: b.l,
+        close: b.c,
+        volume: b.v,
+      }));
+    }
+  }
+  for (const symbol of symbols) {
+    const bars = out[canonicalSymbol(symbol)];
+    if (bars) out[symbol] = bars;
+  }
+  return ok(out, "alpaca", { fetchedAt });
 }

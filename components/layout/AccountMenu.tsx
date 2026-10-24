@@ -17,6 +17,7 @@ import {
   UserCircle,
 } from "@phosphor-icons/react/dist/ssr";
 import { withLocale } from "@/lib/i18n/routing";
+import { BellSoundToggle } from "@/components/sound/BellSoundToggle";
 import type { Locale, Theme } from "@/lib/i18n/config";
 import {
   LocaleSegment,
@@ -96,6 +97,7 @@ export function AccountMenu({
   initialTheme,
   initialLocale,
   labels,
+  soundLabel,
   className,
 }: {
   signedIn: boolean;
@@ -110,6 +112,11 @@ export function AccountMenu({
   initialTheme: Theme;
   initialLocale: Locale;
   labels: AccountMenuLabels;
+  /** Zil sesi anahtarının adı (24 Ekim) — tercihler bölgesinin son
+      satırı; misafirin Ayarlar sayfası olmadığı için burada da
+      (components/sound/BellSoundToggle.tsx). Verilmezse satır yok.
+      Yalnız ad: menüdeki satır ipucusuz. */
+  soundLabel?: string;
   className?: string;
 }) {
   /* Açıklık, açıldığı ADRESE bağlı tutuluyor: `openedAt === pathname`.
@@ -373,6 +380,7 @@ export function AccountMenu({
                 </span>
                 <LocaleSegment current={initialLocale} onPick={pickLocale} />
               </div>
+              {soundLabel && <BellSoundToggle compact labels={{ title: soundLabel }} />}
             </div>
           </motion.div>
         )}

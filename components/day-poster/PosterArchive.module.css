@@ -1,0 +1,120 @@
+/* Günün Posteri sayfası (/gun) — gerekçe PosterArchive.tsx.
+   Derinlik tonla, gölge ve cam yok; her geçiş `--ease-brand`. Renk yalnız
+   işaretten (`directionText`): veri panelinde mavi sayı yok. */
+
+/* ------------------------------------------------------------ SON SEANS
+   Sahne solda (480'de tavan — poster sayfasında 520; burada yanındaki
+   okuma daha kısa ve sahnenin boyu ona yaklaşsın diye bir tık dar),
+   okunan karşılığı sağda; 900'ün altında alt alta. */
+.latest {
+  display: grid;
+  gap: 20px;
+  padding: 4px 16px 18px;
+}
+@media (min-width: 640px) {
+  .latest { padding: 4px 20px 20px; }
+}
+@media (min-width: 900px) {
+  .latest {
+    grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
+    align-items: start;
+    gap: 28px;
+  }
+}
+.figure { margin: 0; min-width: 0; }
+.readout { display: grid; gap: 20px; min-width: 0; align-content: start; }
+
+/* Dört endeks 2×2; rakamlar satırın dibinde AYNI HATTA (ekran düzeni 4). */
+.indices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+  margin: 0;
+  align-items: end;
+}
+.measure dt { color: var(--text-muted); font-size: var(--text-small); font-weight: 600; }
+.measure dd { margin: 2px 0 0; color: var(--text-strong); font-size: var(--text-title); font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
+
+.breadth { display: grid; gap: 8px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+.label { color: var(--text-muted); font-size: var(--text-small); font-weight: 600; }
+.counts { color: var(--text-body); font-size: var(--text-small); font-weight: 600; letter-spacing: -0.02em; white-space: nowrap; }
+.sep { margin-inline: 6px; color: var(--text-muted); }
+
+.sectors { display: grid; gap: 8px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+/* Sıra yukarıdan aşağı akıyor (`grid-auto-flow: column`): sol sütun 1–6,
+   sağ sütun 7–11; telefonda tek sütun. */
+.ranking {
+  display: grid;
+  gap: 6px 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: rank;
+  font-size: var(--text-small);
+}
+@media (min-width: 480px) {
+  .ranking { grid-template-rows: repeat(6, auto); grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+}
+.ranking > li {
+  display: grid;
+  grid-template-columns: 1.4rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 8px;
+  counter-increment: rank;
+}
+.ranking > li::before { content: counter(rank); color: var(--text-muted); }
+.rankName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-strong); font-weight: 600; }
+.rankValue { font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
+
+/* ---------------------------------------------------------------- ARŞİV
+   Izgara Günün Grafiği arşiviyle aynı kalıp (DailyChart.module.css):
+   390'da tek sütun, 640'ta iki, 1100'de üç. 1280'de eski satır listesi
+   iki yanda ~600 piksel boş bırakıyordu; üç sütunda kart 360 piksel ve
+   kulvarlar kartı dolduruyor. */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin: 0;
+  padding: 0 16px 16px;
+  list-style: none;
+}
+@media (min-width: 640px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0 20px 20px; }
+}
+@media (min-width: 1100px) {
+  .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.grid > li { min-width: 0; }
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 44px;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text-body);
+  transition: background-color 0.2s var(--ease-brand), border-color 0.2s var(--ease-brand);
+}
+.card:hover { background: var(--primary-tint); border-color: var(--primary-faint); }
+.card:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+
+.cardHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; }
+.cardDate { color: var(--text-strong); font-size: var(--text-base); font-weight: 700; line-height: 1.3; }
+.cardAnchor { display: inline-flex; align-items: baseline; gap: 6px; font-size: var(--text-small); font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
+.cardAnchorName { color: var(--text-muted); font-weight: 600; letter-spacing: 0; }
+
+.cardBreadth { display: grid; gap: 6px; }
+
+.cardFoot { display: grid; gap: 3px; padding-top: 10px; border-top: 1px solid var(--line-soft); font-size: var(--text-tiny); line-height: 1.35; }
+.cardFoot > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-strong); font-weight: 600; }
+.footLabel { display: inline-block; min-width: 4.75rem; color: var(--text-muted); }
+.footValue { font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  .card { transition: none; }
+}

@@ -4,6 +4,8 @@ import styles from "@/components/today/TodayExperience.module.css";
 import { Countdown } from "@/components/today/Countdown";
 import { TabCountdown } from "@/components/today/TabCountdown";
 import { HeroBell } from "@/components/today/HeroBell";
+import { DaySeal } from "@/components/today/DaySeal";
+import sealStyles from "@/components/today/DaySeal.module.css";
 import { SessionBellFigure } from "@/components/figures/session-bell/figure";
 import { BellLedger } from "@/components/today/BellLedger";
 import { SessionRefresh } from "@/components/today/SessionRefresh";
@@ -234,7 +236,15 @@ export default async function TodayPage() {
                 başlık satırı dolduruyor (3–25 piksel kalıyor). Çipin sağı
                 her dilde ve genişlikte boş; ölçü CSS'te. */}
             <div className={styles.heroTopRow}>
-              <div className={styles.heroSession} data-state={sessionState}><span aria-hidden="true" />{sessionLabel[status.session]}</div>
+              {/* KAPANIŞ KÜNYESİ ÇİPİN ALTINDA (24 Ekim): seans bitince zil
+                  günün sonucunu taşıyor — genişlik şeridi ve posterin
+                  bağlantısı; gerekçe DaySeal.tsx. Kendi sınırında akıyor. */}
+              <div className={sealStyles.lead}>
+                <div className={styles.heroSession} data-state={sessionState}><span aria-hidden="true" />{sessionLabel[status.session]}</div>
+                <Suspense fallback={null}>
+                  <DaySeal status={status} locale={locale} t={t} />
+                </Suspense>
+              </div>
               {/* Zil bir düğme: tıklanınca çalıyor ("Zili Çal", 14 Ekim) —
                   gerekçe HeroBell.tsx. Açılış sahnesi yine seanstan. */}
               <HeroBell scene={heroScene} label={t.today.ringBell} className={styles.heroBell} />

@@ -5,6 +5,7 @@ import { datePickerEn } from "./date-picker";
 import { screenQueryEn } from "./screen-query";
 import { stockPuzzleEn } from "./stock-puzzle";
 import { askStockEn, watchlistTodayEn } from "./page-claude";
+import { daySignatureEn } from "./day-signature";
 
 const en: typeof tr = {
   brand: {
@@ -4177,6 +4178,8 @@ const en: typeof tr = {
   /* Sayfanın içinde Claude (24 Ekim) — metin ayrı dosyada, gerekçesi orada. */
   watchlistToday: watchlistTodayEn,
   askStock: askStockEn,
+  /* Zil ve Günün İmzası (24 Ekim) — metin ayrı dosyada. */
+  daySignature: daySignatureEn,
 };
 
 export default en;

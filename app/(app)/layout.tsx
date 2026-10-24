@@ -168,6 +168,7 @@ export default async function AppLayout({
               themeDark: t.settings.themeDark,
               language: t.settings.language,
             }}
+            soundLabel={t.daySignature.sound.title}
           />
           </>
         }

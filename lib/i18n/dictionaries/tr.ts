@@ -4,6 +4,7 @@ import { datePickerTr } from "./date-picker";
 import { screenQueryTr } from "./screen-query";
 import { stockPuzzleTr } from "./stock-puzzle";
 import { askStockTr, watchlistTodayTr } from "./page-claude";
+import { daySignatureTr } from "./day-signature";
 
 const tr = {
   brand: {
@@ -4726,6 +4727,8 @@ const tr = {
   /* Sayfanın içinde Claude (24 Ekim) — metin ayrı dosyada, gerekçesi orada. */
   watchlistToday: watchlistTodayTr,
   askStock: askStockTr,
+  /* Zil ve Günün İmzası (24 Ekim) — metin ayrı dosyada. */
+  daySignature: daySignatureTr,
 };
 
 export default tr;

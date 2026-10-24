@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { InkCanvas } from "@/components/ink/InkCanvas";
-import type { InkSceneName } from "@/lib/ink/scenes";
+import { playBellSound, primeBellSound } from "@/components/sound/bell-sound";
+import { makeHeroTap, type InkSceneName } from "@/lib/ink/scenes";
 import { cn } from "@/lib/utils";
 import { BELL_RANG_EVENT } from "./bell-event";
+import { readBellEnergy } from "./bell-energy";
 import styles from "./HeroBell.module.css";
 
 /**
@@ -30,6 +32,22 @@ import styles from "./HeroBell.module.css";
  * - SAYAÇ SIFIRA VARINCA da aynı zil çalıyor: Countdown `BELL_RANG_EVENT`
  *   yayınlıyor (gerekçe bell-event.ts) ve zil anında markanın karakteri
  *   kendisi vuruyor — yanda beliren ikinci bir zil yok.
+ * - ŞİDDET GÜNDEN (24 Ekim): kapanıştan sonra künye (DaySeal) o günün
+ *   tek yönlülüğünü yazıyor (`bellEnergy`, lib/day-poster.ts; köprü
+ *   `bell-energy.ts`) ve vuruş sahnesi onunla kuruluyor (`makeHeroTap`).
+ *   Sıfırken kayıttaki `heroTap` ile birebir aynı sahne.
+ *   ŞİDDET BASIŞ ANINDA DONDURULUYOR (25 Ekim): ilk sürüm şiddete abone
+ *   olup sahneyi `energy`ye bağlı kuruyordu; okur zile bastıktan SONRA
+ *   künye gelip şiddeti yazınca yeni sahne nesnesi InkCanvas'ın etkisini
+ *   yeniden kuruyor ve vuruş kendiliğinden bir daha oynuyordu ("sahne bir
+ *   kez oynar"). Şimdi değer basışta okunup `tap`e yazılıyor; sahne yalnız
+ *   yeni bir basışla değişiyor. Abonelik de gereksizleşti: şiddet bir
+ *   çizim girdisi değil, basışın girdisi.
+ * - SES (24 Ekim, varsayılan kapalı — components/sound/bell-sound.ts):
+ *   basınca tıklamanın içinde çalıyor; sayaç sıfırlanınca yalnızca bu
+ *   sayfada bir etkileşimle açılmış bağlam varsa. Sayfadaki ilk dokunuş ya
+ *   da tuş, ayar açıksa bağlamı açıyor ki zil anı da duyulsun. Ayar
+ *   kapalıyken bağlam hiç kurulmuyor (`primeBellSound` önce tercihe bakıyor).
  */
 export function HeroBell({
   scene,
@@ -41,11 +59,31 @@ export function HeroBell({
   label: string;
   className?: string;
 }) {
-  const [taps, setTaps] = useState(0);
+  /* Basış sayısı ve O BASIŞTAKİ şiddet (0…1; yalnız tamamlanmış seansın
+     künyesi yazar). Sahne yalnız bu ikiliden kuruluyor. */
+  const [tap, setTap] = useState({ count: 0, energy: 0 });
+  const taps = tap.count;
+  const tapScene = useMemo(() => (tap.energy > 0 ? makeHeroTap(tap.energy) : undefined), [tap]);
   useEffect(() => {
-    const ring = () => setTaps((count) => count + 1);
+    const ring = () => {
+      const energy = readBellEnergy();
+      setTap((current) => ({ count: current.count + 1, energy }));
+      playBellSound({ gesture: false, energy });
+    };
     window.addEventListener(BELL_RANG_EVENT, ring);
     return () => window.removeEventListener(BELL_RANG_EVENT, ring);
+  }, []);
+  useEffect(() => {
+    const prime = () => {
+      primeBellSound();
+    };
+    const options = { once: true, capture: true } as const;
+    window.addEventListener("pointerdown", prime, options);
+    window.addEventListener("keydown", prime, options);
+    return () => {
+      window.removeEventListener("pointerdown", prime, options);
+      window.removeEventListener("keydown", prime, options);
+    };
   }, []);
   return (
     <button
@@ -53,11 +91,16 @@ export function HeroBell({
       aria-label={label}
       title={label}
       className={cn(styles.button, className)}
-      onClick={() => setTaps((count) => count + 1)}
+      onClick={() => {
+        const energy = readBellEnergy();
+        setTap((current) => ({ count: current.count + 1, energy }));
+        playBellSound({ gesture: true, energy });
+      }}
     >
       <InkCanvas
         key={taps}
         scene={taps ? "heroTap" : scene}
+        def={taps ? tapScene : undefined}
         seed={taps ? 11 + (taps % 5) : 11}
         delay={taps ? 0 : 0.55}
         className={styles.canvas}

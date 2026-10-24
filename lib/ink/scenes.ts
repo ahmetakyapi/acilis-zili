@@ -1570,41 +1570,63 @@ const heroRing: InkScene = {
    3. Çalma: heroRing'in dili — iki vuruş, çınlama yayları, pirinç kıvılcım —
       ve gülümseyerek oturma. Son kare heroRing'inkiyle aynı.
    Kullanıcının başlattığı hareket; kendiliğinden oynamaz (WCAG 2.2.2 notu
-   dosya başında kendiliğinden başlayan sahneler için). */
-const heroTap: InkScene = {
-  box: HERO_BOX,
-  end: 2.1,
-  render(ctx, t, pal, seed) {
-    heroShadow(ctx, pal, 1, seed);
-    const wake = span(t, 0, 0.18);
-    const blinkT = t - 1.72;
-    const blink = t < 0.18
-      ? 1 - ease.out(wake)
-      : blinkT > 0 && blinkT < 0.16 ? Math.sin((blinkT / 0.16) * Math.PI) : 0;
-    /* Kurulma eğrisi sinüs yarım dalgası: sıfırdan kalkıp sıfıra iner,
-       sönümlü sallanma tam o anda devralır — hız sıçraması yok. */
-    const windup = -0.085 * Math.sin(Math.PI * span(t, 0.04, 0.3));
-    drawBell(ctx, pal, {
-      x: HERO_X,
-      y: HERO_Y,
-      s: HERO_S,
-      swing: windup + 0.3 * damped(t - 0.3, 1.6, 1.25),
-      outline: 1,
-      lip: 1,
-      hanger: 1,
-      wash: 1,
-      clapper: 1,
-      eyes: 1,
-      blink,
-      smile: 1,
-      seed,
-    });
-    ringArcs(ctx, pal, HERO_X, HERO_Y - 2, (t - 0.36) / 0.75, HERO_S);
-    ringArcs(ctx, pal, HERO_X, HERO_Y - 2, (t - 0.68) / 0.75, HERO_S);
-    spark(ctx, pal, HERO_X + 26, HERO_Y + 22, (t - 0.42) / 0.55, 0.95, seed + 80);
-    spark(ctx, pal, HERO_X - 26, HERO_Y + 22, (t - 0.74) / 0.55, 0.95, seed + 81);
-  },
-};
+   dosya başında kendiliğinden başlayan sahneler için).
+
+   ŞİDDET GÜNDEN (24 Ekim, `energy` 0…1). Kapanıştan sonra zil o günün ne
+   kadar TEK YÖNLÜ geçtiğini taşıyor (genişlik, `bellEnergy` —
+   lib/day-poster.ts): sıradan günde bu sahnenin kendisi (0), yükselenlerin
+   ya da düşenlerin ezici çoğunlukta olduğu günde salınım %40'a kadar geniş,
+   çınlama yayları %15'e kadar büyük ve 0,5'in üstünde üçüncü bir yay.
+   Abartısız: karakter aynı, vuruş sayısı aynı, son kare neredeyse aynı
+   (kalan salınım 0,02 → 0,03 radyan). Ölçü sahnenin dışında, sahne yalnız
+   sayıyı alıyor; `heroTap` kayıttaki sıfır şiddetli hâli. */
+const HERO_TAP_SWING = 0.3;
+const HERO_TAP_SWING_GAIN = 0.4;
+const HERO_TAP_ARC_GAIN = 0.15;
+const HERO_TAP_THIRD_ARC = 0.5;
+
+export function makeHeroTap(energy = 0): InkScene {
+  const e = clamp(energy);
+  const swingAmp = HERO_TAP_SWING * (1 + HERO_TAP_SWING_GAIN * e);
+  const arcScale = HERO_S * (1 + HERO_TAP_ARC_GAIN * e);
+  return {
+    box: HERO_BOX,
+    end: 2.1,
+    render(ctx, t, pal, seed) {
+      heroShadow(ctx, pal, 1, seed);
+      const wake = span(t, 0, 0.18);
+      const blinkT = t - 1.72;
+      const blink = t < 0.18
+        ? 1 - ease.out(wake)
+        : blinkT > 0 && blinkT < 0.16 ? Math.sin((blinkT / 0.16) * Math.PI) : 0;
+      /* Kurulma eğrisi sinüs yarım dalgası: sıfırdan kalkıp sıfıra iner,
+         sönümlü sallanma tam o anda devralır — hız sıçraması yok. */
+      const windup = -0.085 * Math.sin(Math.PI * span(t, 0.04, 0.3));
+      drawBell(ctx, pal, {
+        x: HERO_X,
+        y: HERO_Y,
+        s: HERO_S,
+        swing: windup + swingAmp * damped(t - 0.3, 1.6, 1.25),
+        outline: 1,
+        lip: 1,
+        hanger: 1,
+        wash: 1,
+        clapper: 1,
+        eyes: 1,
+        blink,
+        smile: 1,
+        seed,
+      });
+      ringArcs(ctx, pal, HERO_X, HERO_Y - 2, (t - 0.36) / 0.75, arcScale);
+      ringArcs(ctx, pal, HERO_X, HERO_Y - 2, (t - 0.68) / 0.75, arcScale);
+      if (e >= HERO_TAP_THIRD_ARC) ringArcs(ctx, pal, HERO_X, HERO_Y - 2, (t - 1.0) / 0.75, arcScale);
+      spark(ctx, pal, HERO_X + 26, HERO_Y + 22, (t - 0.42) / 0.55, 0.95, seed + 80);
+      spark(ctx, pal, HERO_X - 26, HERO_Y + 22, (t - 0.74) / 0.55, 0.95, seed + 81);
+    },
+  };
+}
+
+const heroTap = makeHeroTap(0);
 
 export const INK_SCENES = { intro, searching, chart, press, lens, ledger, hello, lost, mishap, dayStrip, glyphHeart, glyphLedger, glyphPress, glyphFree, ringing, cardFrame, storyEnd, heroSleep, heroWait, heroRing, heroTap } satisfies Record<string, InkScene>;
 export type InkSceneName = keyof typeof INK_SCENES;

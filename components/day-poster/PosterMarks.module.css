@@ -1,0 +1,66 @@
+/* Posterin küçük izleri — gerekçe PosterMarks.tsx. */
+
+/* GENİŞLİK ŞERİDİ. 5 piksel, kulvar `--line-soft` (sitenin grafik dili).
+   Eni çağırandan (künyede `clamp`, kartta tam satır). */
+.strip {
+  display: flex;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--line-soft);
+}
+.ink { display: flex; width: 100%; height: 100%; }
+.ink > span { display: block; height: 100%; flex: 0 0 calc(var(--part) * 100%); }
+.up { background: var(--up); }
+.flat { background: var(--line-strong); }
+.down { background: var(--down); }
+
+/* GİRİŞ: şerit soldan doluyor, kulvar baştan yerinde (yer kaymaz, CLS 0).
+   `clip-path` yalnız boyamayı keser; ölçü ve yerleşim ilk karede son
+   hâlinde. Başsız Chrome çalışan animasyonu başa sarılmış karede çeker
+   (CLAUDE.md "Düzen: ölçmeden değiştirme"): yerleşim hareketi azaltma
+   taklidiyle, animasyon `getAnimations()` ile ölçülür. */
+.fill > .ink { animation: strip-fill 0.9s var(--ease-brand) 0.15s both; }
+@keyframes strip-fill {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+/* SEKTÖR KULVARLARI — sahnenin statik küçük hâli. Kulvar 5 piksel
+   (`--line-soft`), sıfır çizgisi ortada `--line-strong`, şerit sıfırdan
+   uzanıyor; arası 4 piksel: on bir kulvar 95 piksel. */
+.lanes {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  width: 100%;
+}
+.lanes::after {
+  content: "";
+  position: absolute;
+  inset: -3px auto -3px 50%;
+  width: 1.5px;
+  translate: -50% 0;
+  background: var(--line-strong);
+}
+.lane {
+  position: relative;
+  display: block;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line-soft);
+}
+.bar {
+  position: absolute;
+  inset-block: 0;
+  width: max(1.5px, var(--len));
+  border-radius: 999px;
+}
+.barUp { left: 50%; background: var(--up); }
+.barDown { right: 50%; background: var(--down); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fill > .ink { animation: none; }
+}

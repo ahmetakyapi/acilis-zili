@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { InkPalette } from "@/lib/ink/engine";
-import { INK_SCENES, sceneTime, type InkSceneName } from "@/lib/ink/scenes";
+import { INK_SCENES, sceneTime, type InkScene, type InkSceneName } from "@/lib/ink/scenes";
 import { cn } from "@/lib/utils";
 
 /**
@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
  */
 export function InkCanvas({
   scene,
+  def: custom,
   seed = 7,
   rate = 1,
   delay = 0,
@@ -35,6 +36,15 @@ export function InkCanvas({
   onDone,
 }: {
   scene: InkSceneName;
+  /**
+   * ÇAĞIRANIN KURDUĞU SAHNE (24 Ekim) — verilirse `scene`in yerine geçer.
+   * Veriyle tohumlanan sahneler (Günün Posteri, şiddeti günün genişliğinden
+   * gelen zil vuruşu) kayıttaki sabit sahnelerden biri değil, veriden
+   * kurulan bir `InkScene`. İstemcide `useMemo` ile kurulmalı: her çizimde
+   * yeni nesne, sahneyi baştan oynatır. `scene` yine verilir; künye ve
+   * tür denetimi için kayıttaki en yakın sahnenin adı.
+   */
+  def?: InkScene;
   seed?: number;
   /** Sahne saatinin çarpanı: 1 yazıldığı hız, 1,4 aynı sahne %40 kısa. */
   rate?: number;
@@ -55,7 +65,7 @@ export function InkCanvas({
     const canvas = ref.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
-    const def = INK_SCENES[scene];
+    const def = custom ?? INK_SCENES[scene];
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     let reduce = preference.matches;
     const speed = rate > 0 ? rate : 1;
@@ -187,7 +197,7 @@ export function InkCanvas({
       document.removeEventListener("visibilitychange", onVisibility);
       preference.removeEventListener("change", onPreference);
     };
-  }, [scene, seed, rate, delay]);
+  }, [scene, custom, seed, rate, delay]);
 
   return (
     <canvas
@@ -205,5 +215,9 @@ function readPalette(): InkPalette {
     ink: v("--text-strong", "#101c2b"),
     spark: v("--brass", "#a4720f"),
     paper: v("--page-bg", "#f7f9fb"),
+    up: v("--up", "#0c7350"),
+    down: v("--down", "#c01a3d"),
+    lane: v("--line-soft", "rgb(16 32 52 / 0.06)"),
+    rule: v("--line-strong", "rgb(16 32 52 / 0.17)"),
   };
 }

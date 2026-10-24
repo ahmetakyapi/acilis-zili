@@ -3,6 +3,7 @@ import polish from "@/components/motion/UtilityExperience.module.css";
 import { Suspense } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { BriefBody } from "@/components/today/BriefBody";
+import { BriefPosterLink } from "@/components/day-poster/BriefPosterLink";
 import { PageShare } from "@/components/article/PageShare";
 import {
   EmptyState,
@@ -226,6 +227,14 @@ async function ArchiveBoard({
                 size="page"
               />
             </div>
+
+            {/* GÜNÜN POSTERİ (24 Ekim): günlük sayının günü kapandıysa o
+                seansın posteri — gerekçe BriefPosterLink.tsx. */}
+            {period === "daily" && (
+              <Suspense fallback={null}>
+                <BriefPosterLink date={brief.briefDate} t={t} />
+              </Suspense>
+            )}
 
             {/* Takvim tahmin değildir — "bu hafta" bölümünün sınırı. */}
             {period === "weekly" && (

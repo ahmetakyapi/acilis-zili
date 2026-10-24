@@ -24,6 +24,7 @@ import { getEmailPrefs } from "@/lib/email-notify";
 import { getNotificationPrefs } from "@/lib/notification-prefs";
 import { getUserSubscriptions, pushPublicKey } from "@/lib/push";
 import { PreferenceSettings } from "@/components/layout/preference-controls";
+import { BellSoundToggle } from "@/components/sound/BellSoundToggle";
 import { Panel, PanelHeader, PageHeader } from "@/components/ui/primitives";
 import { getI18n, getTheme } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
@@ -159,6 +160,16 @@ export default async function SettingsPage() {
               language: t.settings.language,
             }}
           />
+        </div>
+      </Panel>
+
+      {/* SES (24 Ekim) — zil sesi, varsayılan kapalı. Tercih tarayıcıda
+          (oturumsuz okuyucu hesap menüsünden açıyor); gerekçe
+          components/sound/bell-sound.ts. */}
+      <Panel>
+        <PanelHeader title={t.daySignature.sound.panelTitle} />
+        <div className="px-4 py-4 sm:px-5">
+          <BellSoundToggle labels={t.daySignature.sound} />
         </div>
       </Panel>
 
