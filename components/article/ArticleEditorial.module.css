@@ -241,6 +241,24 @@
   .prose [data-block="bars"] [data-part="track"] { grid-column: 2; grid-row: 1; }
   .prose [data-block="bars"] [data-part="value"] { grid-column: 3; grid-row: 1; text-align: right; }
 }
+/* Nötr kip (`::: bar notr`) renklerini çizici sınıfla veriyor (`bg-flat`,
+   `text-strong`); burada ayrı kural yok, `data-tone="flat"` yalnız iz.
+   ÖLÇEKSİZ blok (`data-unscaled`, birimler karışık — `parse-blocks.ts` →
+   `barValues`): kulvar yok, ad · değer satırları hairline ile ayrılan bir
+   değer listesi. Geniş ekranda iki sütun; üç sütunlu ızgara kalsaydı
+   ortada çubuğun boş yeri dururdu. */
+.prose [data-block="bars"][data-unscaled] > div { gap: 0; }
+.prose [data-block="bars"][data-unscaled] [data-part="row"] { padding: 9px 0; }
+.prose [data-block="bars"][data-unscaled] [data-part="row"] + [data-part="row"] {
+  border-top: 1px solid var(--line-soft);
+}
+@media (min-width: 640px) {
+  .prose [data-block="bars"][data-unscaled] [data-part="row"] {
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 0;
+  }
+  .prose [data-block="bars"][data-unscaled] [data-part="value"] { grid-column: 2; }
+}
 
 /* Pay dağılımı */
 .prose [data-block="share"] [data-part="track"] { height: 16px; border-radius: 4px; }
@@ -283,6 +301,69 @@
   background: var(--premium-surface);
 }
 .prose [data-block="flow"] [data-part="name"] { font-size: 16px; font-weight: 650; }
+
+/* --------------------------------------------------------------------------
+   ADIM KİPİ — `::: akis adim`, `::: oncesi adim` (24 Ekim)
+
+   Davranış `StepMode.tsx`te; burası yalnız durumların görünüşü. TABAN SON
+   HÂL: aşağıdaki `[data-armed]` kuralları yalnız hareket tercih eden
+   okuyucuda ve yalnız JS kabı kurduğunda devreye giriyor. Renk anlam
+   taşıyor: mavi ŞİMDİ okunan halka (etkileşim rengi, okuma imleci gibi);
+   yanmış halka sıradan mürekkep, bekleyen halka soluk. Süs degradesi yok.
+   -------------------------------------------------------------------------- */
+
+/* Akış halkası bu kipte kart değil, satır: kart görünüşü içteki
+   `card`a geçiyor, solda numara ve kulvar. */
+.prose [data-block="flow"][data-stepped] [data-part="step"] {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.prose [data-block="flow"][data-stepped] [data-part="card"] {
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--premium-surface);
+}
+/* Kulvar ince (2 px) ve sitenin grafik dilinde: `--line-soft` üstünde,
+   ulaşılan aralık `--primary-faint`. Taban hâlde bütün yol ulaşılmış. */
+.prose [data-block="flow"][data-stepped] [data-part="lane"] { background: var(--primary-faint); }
+.prose [data-block="flow"][data-stepped] [data-part="num"] { font-size: 11px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .prose [data-stepped] :is([data-part="card"], [data-part="num"], [data-part="lane"], [data-part="name"], [data-part="note"]) {
+    transition:
+      color 0.45s var(--ease-brand),
+      background-color 0.45s var(--ease-brand),
+      border-color 0.45s var(--ease-brand);
+  }
+  /* Bekleyen halka: soluk ama okunur — `--text-muted` her iki temada
+     4,5:1'in üstünde; saydamlıkla söndürmek kontrastı düşürürdü. */
+  .prose [data-stepped][data-armed] [data-step="next"] [data-part="card"] { border-color: var(--line-soft); background: none; }
+  .prose [data-stepped][data-armed] [data-step="next"] [data-part="name"] { color: var(--text-muted); }
+  .prose [data-stepped][data-armed] [data-step="next"] [data-part="num"] { border-color: var(--line); color: var(--text-muted); }
+  .prose [data-stepped][data-armed] :is([data-step="next"], [data-step="current"]) [data-part="lane"] { background: var(--line-soft); }
+  .prose [data-stepped][data-armed] [data-step="current"] [data-part="card"] { border-color: var(--primary); background: var(--primary-tint); }
+  .prose [data-stepped][data-armed] [data-step="current"] [data-part="num"] { border-color: var(--primary); background: var(--primary); color: var(--on-primary); }
+
+  /* Öncesi: "önce" hâlinde sonraki değer ve rozet yok, ok bekliyor.
+     Geçiş yalnız opaklık ve 8 piksellik kayma — yerleşim kımıldamıyor,
+     kutular baştan son hâlin yerini tutuyor. */
+  .prose [data-block="shift"][data-stepped] :is([data-side="to"], [data-part="delta"], [data-arrow]) {
+    transition:
+      opacity 0.5s var(--ease-brand),
+      translate 0.5s var(--ease-brand);
+  }
+  .prose [data-block="shift"][data-stepped] [data-part="delta"] { transition-delay: 0.16s; }
+  .prose [data-block="shift"][data-armed][data-phase="before"] :is([data-side="to"], [data-part="delta"]) {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  .prose [data-block="shift"][data-armed][data-phase="before"] [data-arrow] {
+    opacity: 0.35;
+  }
+}
 
 /* Kronoloji — dar ekranda üst üste; 640'tan sonra tarih solda sağa yaslı,
    eksen ortada, olay sağda: tarih sütunu taranabiliyor. */

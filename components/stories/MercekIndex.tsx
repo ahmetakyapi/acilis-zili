@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { StoryCast, type CastMember } from "@/components/stories/StoryVisual";
+import { StorySignature } from "@/components/stories/StorySignature";
+import type { SignatureBlock } from "@/lib/story-signature";
 import { LogoTile } from "@/components/ui/primitives";
 import type { StoryIndexRow } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -213,14 +215,20 @@ function monthLabel(key: string, locale: Locale): string {
  * Gruplama EKRANDAKİ listeden: "Daha Fazla Göster" bir sonraki ayı ekliyor,
  * yarım kalan ay da kendi başlığının altında büyüyor.
  */
+/** Kartın imza minyatürü ve (yalnız `grafik` imzası için) kapanış serisi. */
+export type ArchiveSignature = { block: SignatureBlock; series?: readonly number[] | null };
+
 export function ArchiveMonths({
   rows,
   castOf,
+  signatureOf,
   locale,
   t,
 }: {
   rows: StoryIndexRow[];
   castOf: (story: StoryIndexRow) => CastMember[];
+  /** Yoksa ya da yazının imzası yoksa kart bugünkü logo şeridini basar. */
+  signatureOf?: (story: StoryIndexRow) => ArchiveSignature | null;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -254,6 +262,7 @@ export function ArchiveMonths({
                 key={story.slug}
                 story={story}
                 cast={castOf(story)}
+                signature={signatureOf?.(story) ?? null}
                 locale={locale}
                 t={t}
               />
@@ -285,11 +294,13 @@ export function ArchiveMonths({
 function ArchiveCard({
   story,
   cast,
+  signature,
   locale,
   t,
 }: {
   story: StoryIndexRow;
   cast: CastMember[];
+  signature: ArchiveSignature | null;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -299,49 +310,67 @@ function ArchiveCard({
   const rest = total - shown.length;
   const lead = shown[0];
   const tone = directionOf(lead?.sinceEvent ?? null);
+  /* İMZA VARSA ŞERİT ONUN (24 Ekim). Şeridin görseli yazının kendi bloğu
+     (gerekçe `lib/story-signature.ts`); logolar ve rakam kartın dibine,
+     sembol satırının yerine iniyor — kadro kaybolmuyor, yalnız kartı
+     tanıtan şey olmaktan çıkıyor. Minyatür çizilemiyorsa (grafik imzası
+     ama seri yok) kart bugünkü düzende kalıyor. */
+  const figure = signature ? (
+    <StorySignature block={signature.block} series={signature.series} locale={story.locale} />
+  ) : null;
+  const reading =
+    lead && (lead.sinceEvent !== null || lead.lastClose) ? (
+      <span className={styles.reading}>
+        <span className={styles.readingCaption}>
+          {lead.symbol} ·{" "}
+          {lead.sinceEvent !== null ? t.stories.sinceEvent : t.stories.lastClose}
+        </span>
+        <span
+          className={cn(
+            "numeral",
+            styles.readingValue,
+            lead.sinceEvent !== null ? directionText(tone) : "text-strong",
+          )}
+        >
+          {lead.sinceEvent !== null
+            ? formatPercent(lead.sinceEvent, locale)
+            : formatPrice(lead.lastClose?.price, locale, { currency: true })}
+        </span>
+        {lead.sinceEvent === null && lead.lastClose && (
+          <span className={styles.readingCaption}>
+            {formatEtDateCompact(lead.lastClose.date, locale)}
+          </span>
+        )}
+      </span>
+    ) : null;
+  const stack = (logo: "md" | "xs") => (
+    <span className={styles.stack} data-size={logo}>
+      {shown.map((member) => (
+        <span key={member.symbol} className={styles.stackItem}>
+          <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size={logo} card />
+        </span>
+      ))}
+      {rest > 0 && (
+        <span className={cn("numeral", styles.stackItem, styles.stackMore)}>
+          +{rest}
+        </span>
+      )}
+    </span>
+  );
 
   return (
     <Link href={`/mercek/${story.slug}`} prefetch={false} className={styles.card}>
-      {shown.length > 0 && (
-        <div className={styles.cardBand}>
-          <span className={styles.stack}>
-            {shown.map((member) => (
-              <span key={member.symbol} className={styles.stackItem}>
-                <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="md" card />
-              </span>
-            ))}
-            {rest > 0 && (
-              <span className={cn("numeral", styles.stackItem, styles.stackMore)}>
-                +{rest}
-              </span>
-            )}
-          </span>
-
-          {lead && (lead.sinceEvent !== null || lead.lastClose) && (
-            <span className={styles.reading}>
-              <span className={styles.readingCaption}>
-                {lead.symbol} ·{" "}
-                {lead.sinceEvent !== null ? t.stories.sinceEvent : t.stories.lastClose}
-              </span>
-              <span
-                className={cn(
-                  "numeral",
-                  styles.readingValue,
-                  lead.sinceEvent !== null ? directionText(tone) : "text-strong",
-                )}
-              >
-                {lead.sinceEvent !== null
-                  ? formatPercent(lead.sinceEvent, locale)
-                  : formatPrice(lead.lastClose?.price, locale, { currency: true })}
-              </span>
-              {lead.sinceEvent === null && lead.lastClose && (
-                <span className={styles.readingCaption}>
-                  {formatEtDateCompact(lead.lastClose.date, locale)}
-                </span>
-              )}
-            </span>
-          )}
+      {figure ? (
+        <div className={styles.cardBand} data-signature="">
+          {figure}
         </div>
+      ) : (
+        shown.length > 0 && (
+          <div className={styles.cardBand}>
+            {stack("md")}
+            {reading}
+          </div>
+        )
       )}
 
       <div className={styles.cardBody}>
@@ -372,9 +401,16 @@ function ArchiveCard({
       </div>
 
       <div className={styles.cardFoot}>
-        <span className={cn("numeral", styles.cardSymbols)}>
-          {shown.map((member) => member.symbol).join(" · ")}
-        </span>
+        {figure && shown.length > 0 ? (
+          <span className={styles.footCast}>
+            {stack("xs")}
+            {reading}
+          </span>
+        ) : (
+          <span className={cn("numeral", styles.cardSymbols)}>
+            {shown.map((member) => member.symbol).join(" · ")}
+          </span>
+        )}
         <span className={styles.cardCta}>
           {t.guide.cardCta}
           <ArrowRight weight="bold" size={13} aria-hidden />

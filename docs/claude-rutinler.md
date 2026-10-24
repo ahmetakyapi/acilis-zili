@@ -457,6 +457,25 @@ her temada tutarlı ve her açılışta güncel.
     örnekte "düşüş piyasa geneline değil, tam olarak fonun durduğu yere
     geldi" cümlesini görselleştiriyor. Rastgele sayı listesi yapma.
 
+  ::: bar notr Çeyrek Geliri Nereden Geldi
+  Bulut Altyapısı | 7,4 Mr $
+  Lisans ve Destek | 5,5 Mr $
+  Uygulamalar | 4,2 Mr $
+  :::
+
+  → NÖTR KİP: `bar` sözcüğünün HEMEN ARDINA `notr` (küçük harf, şapkasız;
+    etiket ondan sonra). Değer bir YÖN değil BÜYÜKLÜK taşıyorsa kullan:
+    gelir ve kâr kalemleri, değerleme, kesinti/vergi/komisyon oranı, gün
+    sayısı, kapasite, pay. Kipsiz bar her pozitif değeri yükseliş yeşiliyle
+    çizer — "%30 stopaj kesilir" yeşil çizilince okur kaybı kazanç sanır.
+    Kipte çubuk ve değer metin tonunda çizilir. Getiri, fiyat değişimi,
+    faiz değişimi gibi yönü olan değerde KULLANMA; orada renk anlam taşır.
+  → BİRİM: bir bloktaki bütün değerleri AYNI birimde yaz (hepsi "Mr $",
+    hepsi "%", hepsi "bp"); site birimi ayıklayıp çubuğu sayıdan çizer,
+    etiketi yazdığın gibi basar. Birimler karışırsa ("%7" ile "-1,3 Mr $")
+    ya da değer aralık/metinse ("20–30 bp", "yatay") çubuk çizilmez, blok
+    düz bir değer listesine döner — o zaman ::: sayilar daha doğru blok.
+
   ::: zaman Kronoloji
   24 Temmuz | Aschenbrenner yatırımcılara mektup yazar. Fonun satış dalgasından muaf olmadığını kabul eder ama bunu **en iyi alım fırsatlarından biri** olarak niteler.
   29 Temmuz | Üç prime broker fonun pozisyonlarını piyasada alıcılara pazarlamaya başlar.
@@ -524,6 +543,31 @@ her temada tutarlı ve her açılışta güncel.
     Değişim yüzdesini site kendisi hesaplar — ama yalnızca iki değerin
     birimi AYNIYSA ("Mr $" ile "Mr $"). Birim tutmuyorsa yüzde yazılmaz,
     bu yüzden karşılaştırdığın iki sayıyı aynı birimde yaz.
+
+  ::: akis adim Bir Faiz Kararı Hisseye Nasıl Ulaşır
+  Fed Kararı | Politika faizi 25 baz puan iniyor
+  Tahvil Getirisi | 10 yıllık getiri düşüyor
+  İskonto Oranı | Gelecek kârın bugünkü değeri artıyor
+  Hisse Fiyatı | Uzun vadeli büyüme hisseleri öne çıkıyor
+  :::
+
+  → ADIM KİPİ: `akis` ya da `oncesi` sözcüğünün HEMEN ARDINA `adim`
+    yazarsın (küçük harf, şapkasız; etiket ondan sonra gelir). Yeni bir blok
+    değil, aynı bloğun okunma ritmi: akışın halkaları alt alta dizilir ve
+    okuyucu kaydırdıkça sırayla yanar; `oncesi adim` önce ilk değeri
+    gösterir, blok ekranın ortasına gelince ikinci değer ve değişim belirir.
+    Ne zaman kullan:
+      · Akışta her halka bir öncekinin SONUCUYSA (A olduğu için B oldu):
+        bir kararın piyasaya iletim zinciri, bir krizin yayılma sırası,
+        bir anlaşmanın adım adım işleyişi. Okuyucu halkayı tek tek
+        okumalı, bir bakışta değil.
+      · `oncesi adim`: yazının tezi TEK BİR değişimse ve o değişim yazının
+        doruk noktasıysa (çöküş, sıçrama). Okuyucunun önce eski hâli görüp
+        sonra yenisiyle karşılaşması anlatının parçası.
+    Ne zaman kullanma: tedarik zinciri gibi aynı anda var olan halkalar
+    (sıra var ama nedensellik yok) — orada düz `akis` daha hızlı taranır.
+    Yazı başına EN FAZLA BİR adım kipi; her blok sırayla yanarsa hiçbiri
+    öne çıkmaz. Tek halkalı akışta kip açılmaz.
 
   ::: ornek 100 Birim Öz Sermaye, 4x Kaldıraç
   Elinde 100 birim öz sermaye var ve 4x brüt maruziyetle 400 birimlik pozisyon taşıyorsun. Varlıkların **%25 düşerse** kaybın 100 birim — yani öz sermayenin tamamı.
@@ -657,7 +701,9 @@ title, dek ve body_md İngilizce olur.
   - Sayı biçimi İngilizceye döner: ondalıkta NOKTA (0.1), $ önde ($45B),
     % SONDA (10%). Türkçedeki "45 Mr $" İngilizcede "$45B" yazılır.
   - ::: blok adları SÖZDİZİMİDİR, çevrilmez: sayilar, bar, pay, akis,
-    oncesi, zaman, grafik, ornek, dikkat, ozet, tanim aynen kalır.
+    oncesi, zaman, grafik, ornek, dikkat, ozet, tanim aynen kalır; adım
+    kipinin `adim` ve nötr kipin `notr` sözcüğü de ("::: akis adim How a
+    Rate Cut Travels", "::: bar notr Where Revenue Came From").
     Blok adının YANINDAKİ başlık metni İngilizce yazılır.
   - Bağlantı adresleri değişmez (/rehber/kaldirac, /hisse/MU aynı);
     bağlantının görünen metni İngilizce olur.

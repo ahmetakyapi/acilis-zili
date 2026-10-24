@@ -477,3 +477,134 @@ export function sectionOg({
     </OgFrame>
   );
 }
+
+/* ==========================================================================
+   Veri taşıyan parçalar (24 Ekim) — hisse grafiği, yazının rakamları
+   ========================================================================== */
+
+/** Yön rengi — renk yalnız işaretten; sıfır ya da bilinmeyen nötr. */
+export function signColor(value: number | null | undefined): string {
+  if (value === null || value === undefined || value === 0 || Number.isNaN(value)) return C.body;
+  return value > 0 ? C.up : C.down;
+}
+
+/**
+ * Mini grafik — kapanış serisi, sitenin ince grafik dilinde.
+ *
+ * Kulvar `--line-soft` tonunda (`C.lineSoft`), üstünde 4 piksellik çizgi;
+ * kesikli yatay çizgi serinin İLK kapanışı (karşılaştırmanın sıfırı,
+ * sitedeki `--line-strong` sıfır çizgisinin karşılığı). Renk yalnız
+ * dönemin işaretinden: yükseldiyse yeşil, düştüyse kırmızı. Alan dolgusu,
+ * degrade, ızgara yok — kartın 1200 pikselinde bile çizgi tek başına
+ * okunuyor. Satori SVG'yi görüntüye çeviriyor: `polyline` ve `circle`
+ * destekleniyor, CSS değişkeni desteklenmiyor (renkler `C`den).
+ */
+export function OgTrend({
+  series,
+  width = 380,
+  height = 132,
+}: {
+  series: readonly number[];
+  width?: number;
+  height?: number;
+}) {
+  const pad = 14;
+  const min = Math.min(...series);
+  const max = Math.max(...series);
+  const span = max - min || 1;
+  const x = (index: number) => pad + (index / (series.length - 1)) * (width - pad * 2);
+  const y = (value: number) => pad + (1 - (value - min) / span) * (height - pad * 2);
+  const points = series.map((value, index) => `${x(index).toFixed(1)},${y(value).toFixed(1)}`).join(" ");
+  const color = signColor(series[series.length - 1] - series[0]);
+  const base = y(series[0]);
+  const last = series.length - 1;
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <rect x={0} y={0} width={width} height={height} rx={18} fill={C.lineSoft} />
+      <line x1={pad} x2={width - pad} y1={base} y2={base} stroke={C.line} strokeWidth={2} strokeDasharray="6 6" />
+      <polyline points={points} fill="none" stroke={color} strokeWidth={4} strokeLinejoin="round" strokeLinecap="round" />
+      <circle cx={x(last)} cy={y(series[last])} r={7} fill={color} stroke={C.surface} strokeWidth={3} />
+    </svg>
+  );
+}
+
+/** Künye — Title Case kısa etiket, kartın küçük gri satırı. */
+export function OgKicker({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ display: "flex", fontSize: 20, fontWeight: 700, color: C.muted, letterSpacing: "-0.005em" }}>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Yazının rakam şeridi — `::: sayilar` bloğunun ilk dört hücresi.
+ * Değer büyük, künyesi altında; hücreler eşit genişlikte, aralarında
+ * saç teli. Değer ve künye metinden geldiği gibi (`titleCaseLabel`
+ * çağıran tarafta — sitedeki çizimle aynı biçim).
+ */
+export function OgStats({ items }: { items: { value: string; note: string }[] }) {
+  const size = items.length > 3 ? 40 : 46;
+  return (
+    <div style={{ display: "flex", gap: 0 }}>
+      {items.map((item, index) => (
+        <div
+          key={index}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            flex: 1,
+            minWidth: 0,
+            gap: 8,
+            paddingLeft: index === 0 ? 0 : 24,
+            paddingRight: 16,
+            borderLeft: index === 0 ? "none" : `2px solid ${C.line}`,
+          }}
+        >
+          <span style={{ fontSize: size, lineHeight: 1, fontWeight: 700, letterSpacing: "-0.035em", color: C.strong }}>
+            {clip(item.value, 14)}
+          </span>
+          <span style={{ fontSize: 19, lineHeight: 1.3, color: C.body }}>{clip(item.note, 46)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Yazının çubukları — `::: bar` bloğunun ilk üç satırı. Ad ve değer üstte,
+ * altında kulvar (`C.lineSoft`) ve işaret renginde şerit; ölçek gösterilen
+ * satırların en büyüğü (sitedeki blokla aynı kural).
+ */
+/** `neutral`: `::: bar notr` — değer büyüklük, yön değil; renk işaretten gelmez. */
+export function OgBars({
+  items,
+  neutral = false,
+}: {
+  items: { name: string; value: number; display: string }[];
+  neutral?: boolean;
+}) {
+  const peak = Math.max(...items.map((item) => Math.abs(item.value)), 0.01);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {items.map((item, index) => (
+        <div key={index} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: 22 }}>
+            <span style={{ color: C.body }}>{clip(item.name, 48)}</span>
+            <span style={{ fontWeight: 700, color: neutral ? C.strong : signColor(item.value) }}>{item.display}</span>
+          </div>
+          <div style={{ display: "flex", height: 8, borderRadius: 99, background: C.lineSoft }}>
+            <div
+              style={{
+                width: `${(Math.abs(item.value) / peak) * 100}%`,
+                height: 8,
+                borderRadius: 99,
+                background: neutral ? C.body : signColor(item.value),
+              }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}

@@ -30,6 +30,8 @@ import {
   type StoryIndexRow,
 } from "@/lib/data";
 import { getChartBarsMulti } from "@/lib/providers";
+import { getStorySignatures } from "@/lib/story-signature-data";
+import { chartSignatureSeries } from "@/lib/story-signature";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 
 import { pageMetadata } from "@/lib/page-meta";
@@ -334,9 +336,13 @@ async function StoryBoard({
 
   /* On iki sembole kadar çıkabilen bu liste sembol başına ayrı istek
      atıyordu; tek çağrıda çıkıyor. */
-  const [meta, barsBySymbol] = await Promise.all([
+  /* İmza blokları (24 Ekim) — arşiv kartlarının şeridi; manşet kadro
+     tablosunu taşıdığı için imza istemiyor. Gövde değil yalnız aday
+     bloklar iniyor (gerekçe `getStorySignatures`). */
+  const [meta, barsBySymbol, signatures] = await Promise.all([
     getSymbolNames(shownSymbols),
     getChartBarsMulti(curveSymbols, "1Y", status),
+    getStorySignatures(rows.slice(1)),
   ]);
 
 
@@ -401,6 +407,13 @@ async function StoryBoard({
               <ArchiveMonths
                 rows={rows.slice(1)}
                 castOf={(story) => castOf(story, 5)}
+                signatureOf={(story) => {
+                  const block = signatures.get(`${story.slug}:${story.locale}`);
+                  if (!block) return null;
+                  return block.kind === "chart"
+                    ? { block, series: chartSignatureSeries(barsBySymbol[block.symbol], block.range) }
+                    : { block };
+                }}
                 locale={locale}
                 t={t}
               />

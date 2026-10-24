@@ -8,7 +8,7 @@
  * karar kaydı). Düz modül, "use client" değil: veri her iki istemci
  *bileşenine de sorunsuz gider.
  *
- * YENİ BLOK = DÖRT YER kuralı (CLAUDE.md) değişmedi; bu liste o dört
+ * YENİ BLOK = BEŞ YER kuralı (CLAUDE.md) değişmedi; bu liste o beş
  * yerden biri (eskiden StoryEditor'daki kopyaydı).
  *
  * SATIRLAR BELGEDEKİ SÖZDİZİMİYLE: örnekler "- " ile başlamaz, ayrıştırıcı
@@ -27,6 +27,15 @@ export const BLOKLAR = [
     tr: "::: bar Karşılaştırma\nEtiket | 58,4\n:::",
     en: "::: bar Comparison\nLabel | 58.4\n:::",
   },
+  /* NÖTR KİP (25 Ekim) — `bar`ın bayrağı (`parse-blocks.ts` →
+     `NEUTRAL_FLAG`): yön taşımayan büyüklükte (kesinti, gelir, değerleme)
+     çubuk yeşil/kırmızı değil metin tonunda çizilir. */
+  {
+    ad: "bar-notr",
+    etiket: "Nötr Çubuk",
+    tr: "::: bar notr Büyüklük\nEtiket | 7,4 Mr $\nEtiket | 5,5 Mr $\n:::",
+    en: "::: bar notr Size\nLabel | $7.4B\nLabel | $5.5B\n:::",
+  },
   {
     ad: "pay",
     etiket: "Pay",
@@ -44,6 +53,22 @@ export const BLOKLAR = [
     etiket: "Önce ve Sonra",
     tr: "::: oncesi Piyasa Değeri\n52,5 Mr $ | 12 Haziran\n19 Mr $ | 29 Temmuz\n:::",
     en: "::: oncesi Market Value\n$52.5B | June 12\n$19B | July 29\n:::",
+  },
+  /* ADIM KİPİ (24 Ekim) — ayrı blok değil, `akis`/`oncesi`nin bayrağı
+     (`parse-blocks.ts` → `STEP_FLAG`). Çip ayrı, çünkü yazar kipin
+     sözdizimini ezberlemek zorunda kalmasın; `ad` React anahtarı olarak
+     da kullanılıyor, tekil kalmalı. */
+  {
+    ad: "akis-adim",
+    etiket: "Adım Adım Akış",
+    tr: "::: akis adim Zincir\nAdım | Oyuncu\nSonraki Adım | Oyuncu\n:::",
+    en: "::: akis adim Chain\nStep | Player\nNext Step | Player\n:::",
+  },
+  {
+    ad: "oncesi-adim",
+    etiket: "Adım Adım Önce ve Sonra",
+    tr: "::: oncesi adim Piyasa Değeri\n52,5 Mr $ | 12 Haziran\n19 Mr $ | 29 Temmuz\n:::",
+    en: "::: oncesi adim Market Value\n$52.5B | June 12\n$19B | July 29\n:::",
   },
   {
     ad: "zaman",

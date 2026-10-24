@@ -10,6 +10,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import type { Icon } from "@phosphor-icons/react";
 import { ArticleChart } from "./ArticleChart";
+import { StepMode } from "./StepMode";
 import { cn, safeExternalUrl, tieFigures, titleCaseLabel } from "@/lib/utils";
 import type { AutoLinker } from "@/lib/autolink";
 import {
@@ -70,7 +71,9 @@ export type { Block, BlockRole, Magnitude, SectionItem } from "./parse-blocks";
    grubun en büyüğüne göre ölçekler ve işaretine göre renklendirir; `pay`
    bütünü yüzdeye çevirip tek bir yığın çubuğa böler; `akis` bir zinciri
    kutu-ok olarak çizer; `oncesi` tek bir büyüklüğün iki hâlini yan yana
-   koyar ve arasındaki değişimi kendisi hesaplar.
+   koyar ve arasındaki değişimi kendisi hesaplar. `akis` ve `oncesi`
+   isteğe bağlı ADIM KİPİ taşır (`::: akis adim Etiket`): kaydırdıkça
+   sırayla vurgu — `parse-blocks.ts` → `STEP_FLAG`, `StepMode.tsx`.
 
    NEDEN FOTOĞRAF YOK: bu blok ailesi, yazılara görsel katmanın telifsiz ve
    bakımsız yolu. Model yalnızca metin yazıyor, çizimi site yapıyor; hiçbir
@@ -276,12 +279,16 @@ function formatShare(value: number): string {
 function Side({
   value,
   tone,
+  side,
 }: {
   value: Magnitude;
   tone?: "up" | "down" | "flat";
+  /** Adım kipinin kancası (ArticleEditorial → ADIM KİPİ). `data-part`
+      değil: editoryal stil iki yanı `span:not([data-part])` ile seçiyor. */
+  side: "from" | "to";
 }) {
   return (
-    <span className="flex min-w-0 flex-1 flex-col">
+    <span data-side={side} className="flex min-w-0 flex-1 flex-col">
       <span
         data-part="value"
         className={cn(
@@ -403,6 +410,20 @@ export function ArticleBody({
   const legacyIds = legacyHeadingIds(blocks, ids);
   const editorial = variant === "editorial";
   const roles = editorial ? blockRoles(blocks) : null;
+  /* Adım kipinin kabı. ÖNİZLEMEDE DÜZ KAP: önizleme bir sunucu eyleminin
+     döndürdüğü JSX ve oradaki istemci bileşeni panelin istemci manifestinde
+     bulunmayabiliyor (`chartPlaceholder` notundaki arızanın aynısı). Panel
+     metni denetliyor, kaydırma ritmini değil — son hâl yeter. */
+  const stepShell = (kind: "flow" | "shift", key: string, children: ReactNode) =>
+    chartPlaceholder ? (
+      <div key={key} data-block={kind} data-stepped="" className="oku-blok flex flex-col gap-2.5">
+        {children}
+      </div>
+    ) : (
+      <StepMode key={key} kind={kind} className="oku-blok flex flex-col gap-2.5">
+        {children}
+      </StepMode>
+    );
   const leadAfterFirst = blocks[0]?.kind === "callout";
 
   const rendered = blocks.map((block, index) => {
@@ -677,14 +698,35 @@ export function ArticleBody({
             );
 
           /* Yatay çubuk — yüzde karşılaştırmaları. Ölçek grubun en büyüğüne
-             göre; renk yönü söyler, uzunluk büyüklüğü. */
+             göre; renk yönü söyler, uzunluk büyüklüğü.
+             NÖTR KİP (`::: bar notr`): değer yön değil büyüklükse (kesinti,
+             gelir) renk de yön söylemez — çubuk `--flat`, değer metnin
+             güçlü tonunda. ÖLÇEKSİZ blok (`unscaled`, birimler karışık):
+             çubuk YOK, ad ve değer listesi; boş kulvar "0" diye okunuyordu.
+             Gerekçeler `parse-blocks.ts` → `NEUTRAL_FLAG`, `barValues`. */
           case "bars": {
+            const tone = (value: number) => (block.neutral ? "flat" : value < 0 ? "down" : "up");
+            /* Değerin metin rengi. Ölçeksiz blokta değer sayıya çevrilmedi;
+               yön yalnız YAZILI işaretten okunur ("+%27,1", "-1,3 Mr $"),
+               işaretsiz değer ("105 bp", "yatay") nötr kalır. */
+            const valueTone = (item: { value: number; display: string }) => {
+              if (block.neutral) return "text-strong";
+              if (block.unscaled) return /^[-\u2212]/.test(item.display) ? "text-down" : item.display.startsWith("+") ? "text-up" : "text-strong";
+              return item.value < 0 ? "text-down" : "text-up";
+            };
             const peak = Math.max(
               ...block.items.map((item) => Math.abs(item.value)),
               0.01,
             );
             return (
-              <figure key={key} data-block="bars" className="oku-blok flex flex-col gap-2.5" data-article-visual="bars">
+              <figure
+                key={key}
+                data-block="bars"
+                data-tone={block.neutral ? "flat" : undefined}
+                data-unscaled={block.unscaled ? "" : undefined}
+                className="oku-blok flex flex-col gap-2.5"
+                data-article-visual="bars"
+              >
                 {block.label && (
                   <figcaption data-part="label" className="plate text-nano">
                     {block.label}
@@ -714,24 +756,26 @@ export function ArticleBody({
                           data-part="value"
                           className={cn(
                             "numeral shrink-0 font-semibold",
-                            item.value < 0 ? "text-down" : "text-up",
+                            valueTone(item),
                           )}
                         >
                           {item.display}
                         </span>
                       </div>
-                      <span data-part="track" className="h-2.5 overflow-hidden rounded-full bg-surface-sunken">
-                        <span
-                          data-motion-draw="line"
-                          className={cn(
-                            "oku-bar block h-full rounded-full",
-                            item.value < 0 ? "bg-down" : "bg-up",
-                          )}
-                          style={{
-                            width: `${(Math.abs(item.value) / peak) * 100}%`,
-                          }}
-                        />
-                      </span>
+                      {!block.unscaled && (
+                        <span data-part="track" className="h-2.5 overflow-hidden rounded-full bg-surface-sunken">
+                          <span
+                            data-motion-draw="line"
+                            className={cn(
+                              "oku-bar block h-full rounded-full",
+                              { up: "bg-up", down: "bg-down", flat: "bg-flat" }[tone(item.value)],
+                            )}
+                            style={{
+                              width: `${(Math.abs(item.value) / peak) * 100}%`,
+                            }}
+                          />
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -803,6 +847,61 @@ export function ArticleBody({
              ve aralarında ok; dar ekranda alt alta ve ok aşağı bakar. Ok bir
              yön işareti, süs değil: sıra bilgiyi taşıyor. */
           case "flow":
+            /* ADIM KİPİ — `::: akis adim`. Halkalar HER GENİŞLİKTE alt alta:
+               yan yana dizilen halkalar aynı yükseklikte durur ve okuma
+               hattını aynı anda geçer, sıra kaydırmayla okunamaz. Sol
+               sütunda numara ve onları bağlayan ince kulvar; kaydırınca
+               yanma `StepMode`ta, renk durumu editoryal stilde (ADIM KİPİ).
+               Sunucu son hâli basar: hepsi yanmış. */
+            if (block.stepped) {
+              return stepShell(
+                "flow",
+                key,
+                <>
+                    {block.label && (
+                      <p data-part="label" className="plate text-nano">
+                        {block.label}
+                      </p>
+                    )}
+                    <ol className="flex flex-col">
+                      {block.items.map((item, itemIndex) => {
+                        const last = itemIndex === block.items.length - 1;
+                        return (
+                          <li key={itemIndex} data-part="step" className="relative flex gap-3.5">
+                            <span aria-hidden data-part="rail" className="relative flex w-7 shrink-0 justify-center">
+                              <span
+                                data-part="num"
+                                className="numeral relative z-10 mt-3 flex size-7 items-center justify-center rounded-full border border-primary-faint bg-surface text-nano font-bold text-primary-ink"
+                              >
+                                {String(itemIndex + 1).padStart(2, "0")}
+                              </span>
+                              {!last && (
+                                <span data-part="lane" className="absolute bottom-0 left-1/2 top-10 w-0.5 -translate-x-1/2 rounded-full bg-line-soft" />
+                              )}
+                            </span>
+                            <span
+                              data-part="card"
+                              className={cn(
+                                "flex min-w-0 flex-1 flex-col rounded-(--radius-lg) border border-line bg-surface px-3.5 py-3",
+                                !last && "mb-2",
+                              )}
+                            >
+                              <span data-part="name" className="text-base font-bold leading-tight text-strong">
+                                {item.name}
+                              </span>
+                              {item.note && (
+                                <span data-part="note" className="mt-1 text-small leading-[17px] text-muted">
+                                  {item.note}
+                                </span>
+                              )}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                </>,
+              );
+            }
             return (
               <div key={key} data-block="flow" className="oku-blok flex flex-col gap-2.5">
                 {block.label && (
@@ -856,25 +955,29 @@ export function ArticleBody({
                   : block.deltaPct < 0
                     ? "down"
                     : "flat";
-            return (
-              <div key={key} data-block="shift" className="oku-blok flex flex-col gap-2.5">
+            /* ADIM KİPİ — `::: oncesi adim`: blok "önce" hâliyle girer,
+               okuma hattını geçince sonraki değer ve değişim rozeti belirir
+               (`StepMode`). Taban yine son hâl. */
+            const shiftBody = (
+              <>
                 {block.label && (
                   <p data-part="label" className="plate text-nano">
                     {block.label}
                   </p>
                 )}
                 <div data-part="panel" className="flex flex-col gap-3 rounded-(--radius-lg) border border-line bg-surface px-4 py-4 sm:flex-row sm:items-center sm:gap-4">
-                  <Side value={block.from} />
+                  <Side value={block.from} side="from" />
 
                   <span
                     aria-hidden
+                    data-arrow=""
                     className="select-none text-read leading-none text-primary-soft sm:shrink-0 sm:text-lead"
                   >
                     <ArrowDown size={18} weight="bold" aria-hidden className="sm:hidden" />
                     <ArrowRight size={22} weight="bold" aria-hidden className="hidden sm:block" />
                   </span>
 
-                  <Side value={block.to} tone={tone} />
+                  <Side value={block.to} tone={tone} side="to" />
 
                   {block.deltaPct !== null && (
                     <span
@@ -893,6 +996,13 @@ export function ArticleBody({
                     </span>
                   )}
                 </div>
+              </>
+            );
+            return block.stepped ? (
+              stepShell("shift", key, shiftBody)
+            ) : (
+              <div key={key} data-block="shift" className="oku-blok flex flex-col gap-2.5">
+                {shiftBody}
               </div>
             );
           }

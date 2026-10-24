@@ -186,6 +186,19 @@
 .readingCaption { font-size:12px; line-height:1.35; font-weight:500; color:var(--text-muted); }
 .readingValue { font-size:19px; line-height:1.1; font-weight:700; letter-spacing:-.02em; }
 
+/* İMZA ŞERİDİ (24 Ekim). Şerit yazının imza bloğunu taşıyınca tek çocuk,
+   tam genişlik; yüksekliği minyatürün sabit kutusundan (StorySignature).
+   Logolar ve rakam kartın dibine iniyor (`.footCast`): xs karo, 6 piksel
+   bindirme, rakam künyesiyle iki satır. */
+.cardBand[data-signature] { display:block; padding:14px 18px; }
+.stack[data-size="xs"] { padding-left:6px; }
+.stack[data-size="xs"] .stackItem { margin-left:-6px; border-radius:var(--radius-sm); }
+.stack[data-size="xs"] .stackMore { width:22px; height:22px; font-size:10px; }
+.footCast { display:flex; min-width:0; align-items:center; gap:10px; }
+.footCast .reading { align-items:flex-start; gap:1px; text-align:left; }
+.footCast .readingCaption { overflow:hidden; max-width:100%; font-size:11px; text-overflow:ellipsis; white-space:nowrap; }
+.footCast .readingValue { font-size:14px; }
+
 .cardBody { display:flex; flex:1; flex-direction:column; padding:18px 20px 0; }
 .cardMeta { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; font-size:12px; color:var(--text-muted); }
 .cardTitle { margin-top:10px; font-size:20px; line-height:1.22; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); text-wrap:balance; }

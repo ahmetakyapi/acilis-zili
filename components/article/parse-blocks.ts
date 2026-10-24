@@ -296,13 +296,25 @@ export type Block =
       kind: "bars";
       label: string;
       items: { name: string; value: number; display: string }[];
+      /** Nötr kip (`::: bar notr …`) — gerekçe `NEUTRAL_FLAG`. */
+      neutral?: true;
+      /** Değerler ortak ölçeğe oturmuyor: çubuksuz değer listesi çizilir,
+          `value` hepsinde 0 — gerekçe `barValues`. */
+      unscaled?: true;
     }
   | {
       kind: "share";
       label: string;
       items: { name: string; value: number; display: string }[];
     }
-  | { kind: "flow"; label: string; items: { name: string; note: string }[] }
+  | {
+      kind: "flow";
+      label: string;
+      items: { name: string; note: string }[];
+      /** Adım kipi (`::: akis adim …`) — gerekçe `STEP_FLAG`. Yalnız
+          açıkken var; eski bloklar birebir aynı şekli taşıyor. */
+      stepped?: true;
+    }
   | {
       kind: "shift";
       label: string;
@@ -310,6 +322,8 @@ export type Block =
       to: Magnitude;
       /** İki değer aynı birimdeyse hesaplanan değişim; değilse null. */
       deltaPct: number | null;
+      /** Adım kipi (`::: oncesi adim …`) — gerekçe `STEP_FLAG`. */
+      stepped?: true;
     }
   | { kind: "chart"; symbol: string; range: ChartRange; caption?: string };
 
@@ -355,6 +369,112 @@ function splitRow(line: string): string[] {
    bütün dizilerde (~960 bin) eskisiyle aynı sonucu veriyor. */
 export function isTableDivider(line: string): boolean {
   return /^[\s:|-]+$/.test(line) && line.indexOf("|", 1) !== -1 && line.includes("-");
+}
+
+/**
+ * ADIM KİPİ (24 Ekim) — `akis` ve `oncesi` için isteğe bağlı bayrak.
+ *
+ * `::: akis adim Bellekten Sunucuya` ya da `::: oncesi adim Piyasa Değeri`:
+ * blok türünden hemen sonra gelen `adim` sözcüğü kipi açar, geri kalanı
+ * yine etiket. Kipte akış adımları okuyucu kaydırdıkça SIRAYLA vurgulanır,
+ * öncesi bloğu "önce" hâlinden "sonra"ya geçer (çizim ve gerekçe
+ * `components/article/StepMode.tsx`). YENİ BLOK TÜRÜ DEĞİL: veri aynı, yalnız
+ * okunma ritmi değişiyor; bu yüzden ayrı bir sözcük açmak yerine var olan
+ * bloğa bayrak.
+ *
+ * NEDEN DÜZ ASCII, KÜÇÜK HARF `adim`: etiketler Title Case yazılıyor
+ * ("Adım Adım Kriz"); tam eşleşme `Adım`la başlayan bir etiketi bayrak
+ * sanmıyor. Canlı arşivde (322 satır, 24 Ekim) `akis`/`oncesi`
+ * etiketlerinden hiçbiri `ad` ile başlamıyor — eski içerik etkilenmiyor.
+ * Sözdizimi çevrilmez: İngilizce yazıda da `adim`.
+ */
+export const STEP_FLAG = "adim";
+
+/** Başlık sözcüklerinin başındaki adım bayrağını ayıklar. */
+function takeStepFlag(words: string[]): { stepped: boolean; label: string } {
+  if (words[0] === STEP_FLAG) return { stepped: true, label: words.slice(1).join(" ") };
+  return { stepped: false, label: words.join(" ") };
+}
+
+/**
+ * NÖTR KİP (25 Ekim) — `bar` için isteğe bağlı bayrak: `::: bar notr Etiket`.
+ *
+ * Çubuğun rengi işaretten geliyor (eksi kırmızı, artı yeşil). Bu, getiri
+ * gibi YÖN taşıyan değerde doğru; ama kesinti, gelir, değerleme gibi yalnız
+ * BÜYÜKLÜK olan değerde yanlış: "100 $ Brüt Temettüden Yolda Kesilen"
+ * bloğu %30/%20/%15'lik kesintiyi yükseliş yeşiliyle çiziyordu — okur
+ * kaybı kazanç sanıyor. Kipte çubuk ve değer metin tonunda çizilir (mavi
+ * DEĞİL: mavi sitede etkileşim rengi). `adim` gibi blok türünden hemen
+ * sonra gelir, düz ASCII ve küçük harf; tam eşleşme "Nötr…" diye başlayan
+ * Title Case etiketi bayrak sanmıyor. Canlı arşivde (324 satır, 25 Ekim)
+ * `notr` ile başlayan `bar` etiketi yok — eski içerik etkilenmiyor.
+ */
+export const NEUTRAL_FLAG = "notr";
+
+/** "2.190" → 2190 (tr), "2,190" → 2190 (en); gruplama bozuksa null. */
+function localeNumber(text: string, locale: string): number | null {
+  const [group, decimal] = locale === "en" ? [",", "."] : [".", ","];
+  const g = group === "." ? "\\." : ",";
+  const d = decimal === "." ? "\\." : ",";
+  const pattern = new RegExp(`^(?:\\d{1,3}(?:${g}\\d{3})+|\\d+)(?:${d}\\d+)?$`);
+  if (!pattern.test(text)) return null;
+  const value = Number(text.split(group).join("").replace(decimal, "."));
+  return Number.isFinite(value) ? value : null;
+}
+
+/**
+ * Birimli değer: "$2.3B" → { value: 2.3, unit: "$b" }, "−1,0 Mr $" →
+ * { value: -1, unit: "mr$" }, "~49 gün" → { value: 49, unit: "gün" }.
+ * Aralık ("20–30 bp"), sayısız metin ("yatay") ve ek rakam taşıyan değer
+ * null döner. `~` yaklaşık demek, değeri değiştirmiyor: metin onu zaten
+ * basıyor, çubuk yazılı sayıyı çiziyor.
+ */
+function unitValue(raw: string, locale: string): { value: number; unit: string } | null {
+  const match = /^~?\s*([+\-\u2212])?\s*~?\s*([^\d\s+\-\u2212~]*)\s*(\d[\d.,]*)\s*(.*)$/u.exec(raw.trim());
+  if (!match) return null;
+  const [, sign, prefix, digits, suffix] = match;
+  if (/\d/.test(suffix)) return null;
+  const magnitude = localeNumber(digits, locale);
+  if (magnitude === null) return null;
+  const unit = `${prefix}${suffix}`.replace(/\s+/g, "").toLocaleLowerCase(locale === "en" ? "en-US" : "tr-TR");
+  return { value: sign && sign !== "+" ? -magnitude : magnitude, unit };
+}
+
+/**
+ * `bar` satırlarının değerleri — ORTAK ÖLÇEK yoksa çubuk yok (25 Ekim).
+ *
+ * Eskiden her değer `Number`a verilip çevrilemeyen 0 sayılıyordu: canlı
+ * arşivde (324 satır, 25 Ekim) 30 bloktaki 86 değer ("$2.3B", "105 bp",
+ * "1,5 kat", "yatay") çevrilemiyor ve o satırlar BOŞ çubukla çiziliyordu —
+ * grafikte olmayan bir sıfır, uydurma kesinlik. Üç kademe:
+ *   1. Hepsi AYNI BİRİMDE ve dilin sayı yazımıyla okunuyorsa (hepsi
+ *      "Mr $", hepsi "bp", hepsi yalın) birim ayıklanır, çubuk sayıdan
+ *      çizilir, etiket yazıldığı gibi birimiyle basılır. Binlik ayıracı
+ *      dile göre: "2.190 Mn $" (tr) ile "$2,190M" (en) 2190. Bu kademe
+ *      eski okumanın sessiz bir ölçek hatasını da düzeltiyor: "4.580"
+ *      (tr) `Number`la 4,58 okunuyordu ve 848'in yanında görünmez bir
+ *      çubuk çiziyordu (cloudflare-karisik-amacli-tarayici-15-eylul).
+ *   2. Değilse eski okuma (ilk virgül ondalık, `%` atılır): dile uymayan
+ *      yazım ("-28,6%" İngilizce yazıda) ve "%7" ile "7" karışımı burada
+ *      eskisi gibi okunur.
+ *   3. O da olmazsa — birimler karışık ya da bir değer sayı değil ("%7"
+ *      ile "-1,3 Mr $", "20–30 bp", "yatay") — ölçek kurulamaz:
+ *      `unscaled`, değerler 0 ve çizici çubuksuz değer listesi basar.
+ */
+function barValues(raws: readonly string[], locale: string): { values: number[]; scaled: boolean } {
+  const units = raws.map((raw) => unitValue(raw, locale));
+  const first = units[0];
+  if (first && units.every((item) => item !== null && item.unit === first.unit)) {
+    return { values: units.map((item) => (item as { value: number }).value), scaled: true };
+  }
+  // "-28,6" ya da "-28.6%" — virgül ondalık ayırıcı olabiliyor.
+  /* TİPOGRAFİK EKSİ (24 Ekim). Rutin bazen "−%11,64" yazıyor (U+2212,
+     sitenin kendi biçimi); `Number` onu tanımıyor ve değer 0'a iniyordu:
+     lam-research-tedarik-kisiti yazısında (iki dil, 8 satır) dört çubuk da
+     boş, renksiz çiziliyordu. Eksi işareti ASCII'ye çevrilip okunuyor. */
+  const plain = raws.map((raw) => (raw.trim() ? Number(raw.replace("%", "").replace(",", ".").replace(/\u2212/g, "-")) : NaN));
+  if (plain.every(Number.isFinite)) return { values: plain, scaled: true };
+  return { values: raws.map(() => 0), scaled: false };
 }
 
 export function parseBlocks(markdown: string, locale: string): Block[] {
@@ -464,7 +584,15 @@ export function parseBlocks(markdown: string, locale: string): Block[] {
           const [name, ...rest] = row.split("|").map((c) => c.trim());
           return { name, note: rest.join(" · ") };
         });
-        if (items.length > 0) blocks.push({ kind: "flow", label, items });
+        const flag = takeStepFlag(header);
+        /* Tek halkalı akışta sıra yok; kip açılmaz. */
+        if (items.length > 0)
+          blocks.push({
+            kind: "flow",
+            label: flag.label,
+            items,
+            ...(flag.stepped && items.length > 1 ? { stepped: true as const } : {}),
+          });
         continue;
       }
 
@@ -484,9 +612,10 @@ export function parseBlocks(markdown: string, locale: string): Block[] {
             to.value !== null &&
             from.value !== 0 &&
             from.unit.toLocaleLowerCase("tr") === to.unit.toLocaleLowerCase("tr");
+          const flag = takeStepFlag(header);
           blocks.push({
             kind: "shift",
-            label,
+            label: flag.label,
             from,
             to,
             deltaPct: comparable
@@ -494,25 +623,25 @@ export function parseBlocks(markdown: string, locale: string): Block[] {
                 Math.abs(from.value as number) *
                 100
               : null,
+            ...(flag.stepped ? { stepped: true as const } : {}),
           });
         }
         continue;
       }
 
       if (kindWord === "bar") {
+        const neutral = header[0] === NEUTRAL_FLAG;
+        const rows = body.map((row) => {
+          const [name, raw = ""] = row.split("|").map((c) => c.trim());
+          return { name, raw };
+        });
+        const { values, scaled } = barValues(rows.map((row) => row.raw), locale);
         blocks.push({
           kind: "bars",
-          label,
-          items: body.map((row) => {
-            const [name, raw = ""] = row.split("|").map((c) => c.trim());
-            // "-28,6" ya da "-28.6%" — virgül ondalık ayırıcı olabiliyor.
-            const value = Number(raw.replace("%", "").replace(",", "."));
-            return {
-              name,
-              value: Number.isFinite(value) ? value : 0,
-              display: raw,
-            };
-          }),
+          label: neutral ? header.slice(1).join(" ") : label,
+          items: rows.map((row, index) => ({ name: row.name, value: values[index], display: row.raw })),
+          ...(neutral ? { neutral: true as const } : {}),
+          ...(scaled ? {} : { unscaled: true as const }),
         });
         continue;
       }

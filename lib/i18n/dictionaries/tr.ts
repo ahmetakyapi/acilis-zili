@@ -4641,6 +4641,10 @@ const tr = {
   },
   /* Hisseyi Bil — günlük bulmaca (24 Ekim); metin ayrı dosyada. */
   stockPuzzle: stockPuzzleTr,
+  /* Paylaşım kartı (24 Ekim) — `lib/og.tsx` künyeleri. Title Case. */
+  ogCard: {
+    monthTrend: "Son 1 Ay",
+  },
 };
 
 export default tr;

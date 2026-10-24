@@ -1,0 +1,126 @@
+/* Arşiv kartının imza minyatürü — gerekçe StorySignature.tsx.
+   Ton ve renk yalnız token'lardan; zemin kartın şeridi (`.cardBand`,
+   `--surface-sunken`), burada ikinci bir kutu açılmıyor. */
+
+/* SABİT YÜKSEKLİK. Izgara satırındaki kartların başlığı aynı hatta
+   başlasın diye her tür aynı kutuyu dolduruyor; içerik dikeyde ortada. */
+.sig {
+  display: flex;
+  min-width: 0;
+  /* 96: en uzun tür üç satırlı çubuk — künye 16 + aralık 7 + 3 × (14 ad
+     + 2 + 5 şerit) + 2 × 4 = 94 (ölçüldü: 88'de künye kutunun üstünden
+     taştı, 1280 ve 390). */
+  height: 96px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;
+}
+.caption {
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--text-body);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Akış ---- */
+.flow { display: flex; min-width: 0; gap: 0; }
+.flowStep { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 6px; }
+.flowRail { display: flex; align-items: center; }
+.flowNum {
+  display: flex; flex-shrink: 0; align-items: center; justify-content: center;
+  width: 18px; height: 18px;
+  border: 1px solid var(--primary-faint);
+  border-radius: 999px;
+  background: var(--premium-surface);
+  font-size: 10px; font-weight: 700; color: var(--primary-ink);
+}
+/* Kulvar: halkadan halkaya ince çizgi, sitenin grafik kulvarı. */
+.flowLane { flex: 1; height: 2px; margin-inline: 4px; border-radius: 999px; background: var(--line-strong); }
+.flowName {
+  display: -webkit-box;
+  overflow: hidden;
+  padding-right: 8px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 12.5px; line-height: 15px; font-weight: 650; color: var(--text-strong);
+  overflow-wrap: anywhere;
+}
+
+/* ---- Öncesi–sonrası ---- */
+.shift { display: flex; min-width: 0; flex-direction: column; gap: 5px; }
+.shiftRow { display: flex; min-width: 0; align-items: center; gap: 8px; }
+.shiftValue {
+  overflow: hidden;
+  font-size: 19px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em;
+  color: var(--text-strong);
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.shiftArrow { flex-shrink: 0; color: var(--primary-soft); }
+.shiftDelta {
+  flex-shrink: 0; margin-left: auto;
+  padding: 3px 8px; border-radius: 999px;
+  background: var(--surface-elevated);
+  font-size: 12px; font-weight: 700; color: var(--text-body);
+}
+.shiftDelta[data-tone="up"] { background: var(--up-wash); color: var(--up); }
+.shiftDelta[data-tone="down"] { background: var(--down-wash); color: var(--down); }
+.shiftLabels {
+  overflow: hidden;
+  font-size: 12px; line-height: 16px; color: var(--text-muted);
+  text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ---- Çubuk ---- */
+.bars { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+.barRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 10px;
+  row-gap: 2px;
+}
+.barName { overflow: hidden; font-size: 12px; line-height: 14px; color: var(--text-body); text-overflow: ellipsis; white-space: nowrap; }
+.barValue { font-size: 12px; line-height: 14px; font-weight: 650; }
+/* 5 piksellik şerit, kulvar `--line-soft` — sitenin ince grafik dili
+   (MarketTexture.module.css). */
+.barLane { grid-column: 1 / -1; height: 5px; overflow: hidden; border-radius: 999px; background: var(--line-soft); }
+.barFill { display: block; height: 100%; border-radius: 999px; background: var(--line-strong); }
+.barFill[data-tone="up"] { background: var(--up); }
+.barFill[data-tone="down"] { background: var(--down); }
+/* Nötr kip (`::: bar notr`): büyüklük, yön değil — metin tonu, mavi değil. */
+.barFill[data-tone="flat"] { background: var(--flat); }
+/* Üç satırlı çubukta künye bir satır yer kaplıyor; satırlar sıkışmasın diye
+   künye düşmüyor, satır aralığı daralıyor. */
+.sig[data-kind="bars"] { gap: 7px; }
+
+/* ---- Rakam ---- */
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 0; }
+.stats[data-count="1"] { grid-template-columns: minmax(0, 1fr); }
+.stat { display: flex; min-width: 0; flex-direction: column-reverse; gap: 4px; }
+.statValue {
+  overflow: hidden;
+  margin: 0;
+  font-size: 19px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em;
+  color: var(--text-strong);
+  text-overflow: ellipsis; white-space: nowrap;
+}
+/* İKİ SATIR (25 Ekim). Tek satırda "Huang'ın Öne Sürdüğü Çip…" diye
+   kesiliyordu ve rakamın neyi saydığı okunmuyordu. Kutu buna yer veriyor:
+   künye 16 + 10 + rakam 21 + 4 + 2 × 15 = 81 < 96 (`.sig` yüksekliği). */
+.statNote {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 11.5px; line-height: 15px; color: var(--text-muted);
+}
+
+/* ---- Grafik ---- */
+.line { display: block; width: 100%; height: 40px; overflow: visible; }
+.line polyline { stroke: var(--line-strong); stroke-width: 2px; stroke-linejoin: round; stroke-linecap: round; }
+.line[data-tone="up"] polyline { stroke: var(--up); }
+.line[data-tone="down"] polyline { stroke: var(--down); }

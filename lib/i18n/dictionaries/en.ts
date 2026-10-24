@@ -4094,6 +4094,10 @@ const en: typeof tr = {
   },
   /* Hisseyi Bil — günlük bulmaca (24 Ekim); metin ayrı dosyada. */
   stockPuzzle: stockPuzzleEn,
+  /* Share card (24 October) — `lib/og.tsx` labels. Title Case. */
+  ogCard: {
+    monthTrend: "Past Month",
+  },
 };
 
 export default en;
