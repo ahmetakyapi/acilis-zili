@@ -22,6 +22,9 @@ import type { DailyBriefRow } from "@/lib/schema";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { TELEGRAM_URL } from "@/lib/site";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { getDailyChart } from "@/lib/daily-chart-data";
+import { dailyChartHref } from "@/lib/daily-chart";
 
 /**
  * Bülten arşivi — solda seçili günün/haftanın tam metni, sağda tarih listesi.
@@ -112,6 +115,11 @@ async function ArchiveBoard({
     getBriefArchive(locale, period),
     issue ?? getLatestBrief(locale, period),
   ]);
+  /* GÜNÜN GRAFİĞİ BAĞLANTISI (24 Ekim): günlük sayının günü için grafik
+     yazıldıysa metnin altında. Bülten 16:10'da bugünü, grafik ertesi sabah
+     dünkü kapanışı anlatıyor; bağlantı yalnız AYNI GÜNÜN grafiği varsa. */
+  const dayChart =
+    period === "daily" && brief ? await getDailyChart(brief.briefDate, locale) : null;
 
   if (archive.length === 0) {
     return (
@@ -234,6 +242,16 @@ async function ArchiveBoard({
               <Suspense fallback={null}>
                 <BriefPosterLink date={brief.briefDate} t={t} />
               </Suspense>
+            )}
+
+            {dayChart && (
+              <Link
+                href={dailyChartHref(dayChart.row.chartDate)}
+                className="mt-6 flex min-h-11 w-fit items-center gap-2 border-t border-primary-faint pt-3 text-small font-semibold text-primary transition-colors hover:text-primary-hover"
+              >
+                {t.dailyChart.briefLink}: <span className="font-normal text-body">{dayChart.row.title}</span>
+                <ArrowRight size={14} weight="bold" aria-hidden />
+              </Link>
             )}
 
             {/* Takvim tahmin değildir — "bu hafta" bölümünün sınırı. */}

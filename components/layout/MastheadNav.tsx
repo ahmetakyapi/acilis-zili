@@ -369,25 +369,32 @@ export function MastheadNav({
                 ))}
               </div>
               {(() => {
-                /* GÜNLÜK BANT (24 Ekim): iki sütunun altında, tam genişlikte
-                   tek satır — günlük bulmaca. Gerekçe nav-items.ts →
-                   MORE_GROUPS. Satır, sütun satırlarıyla aynı kalıp. */
+                /* "HER GÜN" BANDI (24 Ekim): iki sütunun altında, sütunlarla
+                   aynı ızgarada — Günün Grafiği solda, Günün Posteri sağda,
+                   satırlar üstteki sütunların hizasında. Gerekçe nav-items.ts
+                   → MORE_GROUPS. Satır, sütun satırlarıyla aynı kalıp.
+                   İKİ SATIR EŞİT BOYDA (25 Ekim düzeltmesi): ipuçlarından biri
+                   iki satıra sarınca satırlar 58/67 piksel ölçülüyordu; bağlantı
+                   artık ızgara hücresini dolduruyor (`h-full`). */
                 const daily = rows.filter((row) => row.group === "daily");
                 if (daily.length === 0) return null;
                 return (
                   <section aria-label={groups.daily} className="mt-1.5 border-t border-line-soft pt-1.5">
-                    <ul className="flex flex-col">
+                    <h3 className="masthead-more-head flex h-8 items-end px-3 pb-1.5 text-tiny font-semibold text-muted">
+                      {groups.daily}
+                    </h3>
+                    <ul className="masthead-more-grid grid grid-cols-2">
                       {daily.map((row) => {
                         const current = activeRow?.href === row.href;
                         const Icon = NAV_ITEMS.find((item) => item.href === row.href)?.icon;
                         return (
-                          <li key={row.href}>
+                          <li key={row.href} className="masthead-more-col min-w-0">
                             <Link
                               href={withLocale(row.href, locale)}
                               prefetch={false}
                               aria-current={current ? "page" : undefined}
                               onClick={() => setOpenedAt(null)}
-                              className="masthead-row relative flex min-h-(--more-row) items-center gap-3 rounded-xl px-3 py-1.5 hover:bg-surface focus-visible:bg-surface"
+                              className="masthead-row relative flex h-full min-h-(--more-row) items-center gap-3 rounded-xl px-3 py-1.5 hover:bg-surface focus-visible:bg-surface"
                             >
                               {Icon && <span className="masthead-row-icon" aria-hidden><Icon size={19} weight="duotone" /></span>}
                               <span className="min-w-0 flex-1">

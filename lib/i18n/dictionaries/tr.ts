@@ -6,6 +6,7 @@ import { stockPuzzleTr } from "./stock-puzzle";
 import { askStockTr, watchlistTodayTr } from "./page-claude";
 import { daySignatureTr } from "./day-signature";
 import { earningsSeasonTr } from "./earnings-season";
+import { dailyChartTr } from "./daily-chart";
 
 const tr = {
   brand: {
@@ -24,10 +25,11 @@ const tr = {
     taxTool: "Vergi Hesaplayıcı",
     themes: "Temalar",
     moreGroupAnalyze: "Analiz Araçları",
-    moreGroupMine: "Portföy ve Vergi",
+    moreGroupMine: "Portföy ve Maliyet",
     moreGroupData: "Piyasa Verisi",
     moreGroupLearn: "Öğren",
     moreGroupRead: "Oku",
+    moreGroupDaily: "Her Gün",
     tickerPause: "Şeridi Duraklat",
     tickerResume: "Şeridi Sürdür",
     /* Alttaki sabit şeridin işaret noktası adı (ekran okuyucunun bölge
@@ -1999,8 +2001,6 @@ const tr = {
     subtitle:
       "Ürünün bütün ekranları burada. Alt çubukta yer olmayan bölümlere de tek dokunuşla ulaşırsın.",
     groupMarket: "Piyasa",
-    groupAnalyze: "Analiz ve Araçlar",
-    groupRead: "Okuma",
     groupAccount: "Hesap ve Site",
     guestTitle: "Misafir",
     guestHint: "Takip listesi tutmak için hesap açman yeterli.",
@@ -4732,6 +4732,8 @@ const tr = {
   daySignature: daySignatureTr,
   /* Bilanço Sezonu (24 Ekim) — metin ayrı dosyada, gerekçesi orada. */
   earningsSeason: earningsSeasonTr,
+  /* Günün Grafiği (24 Ekim) — metin ayrı dosyada. */
+  dailyChart: dailyChartTr,
 };
 
 export default tr;

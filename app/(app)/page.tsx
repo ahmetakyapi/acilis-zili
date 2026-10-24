@@ -32,6 +32,7 @@ import { NewsGridSkeleton, TOP_NEWS_FILL_POOL, TopNews } from "@/components/toda
 import { ListSkeleton } from "@/components/today/home/ListSkeleton";
 import { SpotlightSkeleton, StoriesSpotlight } from "@/components/today/home/StoriesSpotlight";
 import { TechnicalPanel } from "@/components/today/home/TechnicalPanel";
+import { DailyChartPanel } from "@/components/today/home/DailyChartPanel";
 import { LatestAnalyses } from "@/components/today/home/LatestAnalyses";
 import { PortfolioSlot } from "@/components/today/home/PortfolioSlot";
 import {
@@ -555,6 +556,15 @@ export default async function TodayPage() {
         <div data-home-section="technical">
           <Suspense fallback={null}>
             <TechnicalPanel locale={locale} t={t} />
+          </Suspense>
+        </div>
+
+        {/* ---- Günün Grafiği (24 Ekim) ----
+             Teknik panelin altında: ikisi de sitenin yazdığı, ölçü dilinde
+             bir içerik. Kayıt yoksa panel basılmıyor (yedek `null`). */}
+        <div data-home-section="daily-chart">
+          <Suspense fallback={null}>
+            <DailyChartPanel locale={locale} t={t} />
           </Suspense>
         </div>
 

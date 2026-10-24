@@ -7,6 +7,7 @@ import { stockPuzzleEn } from "./stock-puzzle";
 import { askStockEn, watchlistTodayEn } from "./page-claude";
 import { daySignatureEn } from "./day-signature";
 import { earningsSeasonEn } from "./earnings-season";
+import { dailyChartEn } from "./daily-chart";
 
 const en: typeof tr = {
   brand: {
@@ -21,10 +22,11 @@ const en: typeof tr = {
     taxTool: "Tax Calculator",
     themes: "Themes",
     moreGroupAnalyze: "Analysis Tools",
-    moreGroupMine: "Portfolio and Tax",
+    moreGroupMine: "Portfolio and Costs",
     moreGroupData: "Market Data",
     moreGroupLearn: "Learn",
     moreGroupRead: "Read",
+    moreGroupDaily: "Every Day",
     tickerPause: "Pause Ticker",
     tickerResume: "Resume Ticker",
     tickerRegion: "Market Ticker",
@@ -1584,8 +1586,6 @@ const en: typeof tr = {
     subtitle:
       "Every screen in the product. Sections that do not fit the tab bar are one tap away here.",
     groupMarket: "Market",
-    groupAnalyze: "Analysis & Tools",
-    groupRead: "Reading",
     groupAccount: "Account & Site",
     guestTitle: "Guest",
     guestHint: "Create an account to keep watchlists.",
@@ -4183,6 +4183,8 @@ const en: typeof tr = {
   daySignature: daySignatureEn,
   /* Bilanço Sezonu (24 Ekim) — metin ayrı dosyada, gerekçesi orada. */
   earningsSeason: earningsSeasonEn,
+  /* Günün Grafiği (24 Ekim) — metin ayrı dosyada. */
+  dailyChart: dailyChartEn,
 };
 
 export default en;

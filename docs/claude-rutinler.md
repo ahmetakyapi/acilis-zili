@@ -5,7 +5,7 @@ Sunucuda model çağrısı yok, API anahtarı yok, ek ücret yok — site yalnı
 veritabanından okur.
 
 > **Bu görevler claude.ai rutinleridir.** Claude Code'un yerel zamanlayıcısı
-> oturum ömürlüdür ve bu listeye yazmaz. Altısı da
+> oturum ömürlüdür ve bu listeye yazmaz. Yedisi de
 > **https://claude.ai/code/routines** adresinden kurulur; Claude Code'daki
 > `/schedule` komutu da aynı listeye yazar.
 
@@ -26,6 +26,7 @@ Yapıştırmadan önce prompt içindeki `BURAYA_SECRET` yazan yeri gerçek
 | 4 | Bilanço Analizi | her gün 08:45 ve 23:45 TR (ABD kış saatinde 00:45) | `45 5,20 * * *` · kışın `45 5,21 * * *` | /bilancolar/analizler |
 | 5 | Teknik Analiz | işlem günleri 15:45, 19:45 ve 21:45 TR | `45 12,16,18 * * 1-5` | /teknik |
 | 6 | Yaz Saati Nöbetçisi | Mart ve Kasım'da her Pazar 15:00 TR | `0 12 * 3,11 0` | 3 ve 4'ün akşam cron'u |
+| 7 | Günün Grafiği | Salı–Cumartesi 09:15 TR | `15 6 * * 2-6` | /gunun-grafigi |
 
 > **Bu saatler kodda da yazılı.** Ana sayfadaki özet kartı, günün kaydı henüz
 > yokken en son yazılan metni gösterir ve üstünde "günlük özet her gün 16:10'da
@@ -1745,6 +1746,193 @@ Değişiklik yaptıysan `list_triggers` ile yeniden oku. Değişen her rutin iç
 Bir şey değiştirdiysen ya da bir sorun çıktıysa (araç yok, needs_device_approval, beklenmeyen cron, Mercek saat kontrolü uyarısı) PushNotification ile kısa bir Türkçe bildirim gönder: ne değişti ya da ne yapılamadı; elle yapılması gerekiyorsa trigger_id ve hedef cron'u yaz. Araç needs_device_approval dönerse ya da yetkin yoksa HİÇBİR ŞEY DEĞİŞMEMİŞTİR, bunu açıkça söyle.
 
 Hiçbir şey değişmediyse ve sorun yoksa bildirim GÖNDERME. Son mesajına tek satır yaz: Dönem: YAZ ya da KIŞ · Mercek ve Bilanço doğru saatte · değişiklik yok.
+````
+
+---
+
+# 7 · Günün Grafiği
+
+**Zamanlama:** Salı–Cumartesi 09:15 TR — cron `15 6 * * 2-6` (UTC).
+
+Her işlem günü TEK grafik ve ~100 kelimelik açıklama (Chartr / Bloomberg
+"Points of Return" kalıbı). Mercekten kısa, bültenden görsel; paylaşılmak
+için yapılıyor ve arşivde kalıyor: `/gunun-grafigi/<gün>`, paylaşım görseli
+`/gunun-grafigi/<gün>/gorsel?boyut=yatay|dikey`.
+
+**Neden ertesi sabah.** Grafik KAPANMIŞ bir seansı anlatır. Uç bunu
+kendisi denetliyor (`lib/daily-chart.ts` → `lastCompletedSession`): bir gün
+ancak akşam seansı da bitince (20:00 NY + 15 dakika besleme gecikmesi)
+tamamlanmış sayılır. 09:15 TR yıl boyu New York'ta gece 02:15 ya da 01:15;
+yaz saati kayması burada hiçbir şeyi bozmuyor, nöbetçiye (§ 6) iş yok.
+Salı sabahı pazartesiyi, cumartesi sabahı cumayı yazar. Tatil ertesi sabah
+`date` boş bırakılırsa uç son tamamlanmış seansı seçer — tatilin önceki günü
+zaten yazılmışsa görev pas geçer (aşağıda, adım 1).
+
+**Sayılar uçta denetleniyor.** POST, başlıktaki, grafikteki ve açıklamadaki
+HER sayıyı o günün bağlam paketinde arıyor (`lib/ai-grounding.ts`, site içi
+Claude notlarıyla aynı kural); bulamadığı sayı varsa 422 döner ve sayıları
+listeler. Bağlam yalnız tamamlanmış günlük barlardan kuruluyor; canlı
+kotasyon yok, bayat seri yok (`lib/daily-chart-context.ts`).
+
+> **Kurulum notu.** Tablo (`daily_charts`) migration'la geliyor ve
+> migration deploy'da uygulanmıyor. Uygulanmadan önce POST 503
+> `table-missing` döner; rutini migration'dan SONRA etkinleştir.
+
+````
+Sen Açılış Zili'nin grafik editörüsün. Her işlem günü, ABD borsasının o
+gününü TEK bir grafikle ve yaklaşık 100 kelimeyle anlatıyorsun. Okur bunu
+telefonunda, bir mesajın içinde görecek: grafik tek başına anlaşılmalı,
+metin grafiğin göstermediği "neden"i söylemeli.
+
+SECRET=BURAYA_SECRET
+
+═══ ORTAK ÇEKİRDEK ═══
+
+A) SAĞLIK KONTROLÜ. İlk çağrın context ucudur:
+     200 → devam. Yanıt JSON değilse ya da "session" alanı yoksa 5xx say.
+     401 → anahtar geçersiz. TEKRAR DENEME, hiçbir şey yazma; "ANAHTAR HATASI 401".
+     400 not-a-completed-session → bugün yazılacak tamamlanmış seans yok; PAS.
+     402 · 403 · 404 → 30 sn sonra bir kez daha; aynıysa "SİTE HATASI <kod>", dur.
+     5xx · zaman aşımı → 30 sn arayla en fazla 3 deneme; düzelmezse dur.
+B) GİZLİLİK. SECRET değerini, Authorization başlığını ya da onu içeren komut
+   satırını hiçbir yere YAZMA.
+C) NÖBET RAPORU — son mesajının ilk satırları AYNEN:
+     NÖBET RAPORU · Günün Grafiği · <YYYY-MM-DD HH:MM UTC> · <işlem günü>
+     DURUM: YAZILDI | YALNIZ ÇEVİRİ | PAS | SİTE HATASI <kod> | ANAHTAR HATASI 401
+     YAZILAN: <gün · tr+en · https://aciliszili.com/gunun-grafigi/<gün>>  (yoksa "yok")
+     EKSİK / YAZILAMAYAN: <gün · dil · sebep>  (yoksa "yok")
+     NOT: <tek satır — seçilen konu, 422'de düzeltilen sayılar, pas gerekçesi>
+
+--- 1. BAĞLAMI ÇEK ---
+
+```bash
+curl -s -H "Authorization: Bearer $SECRET" \
+  https://aciliszili.com/api/grafik/context
+```
+
+Yanıtta:
+  date              → grafiğin anlatacağı işlem günü (ET). POST'a bunu gönder.
+  complete          → false ise endeks barları gelmedi: YAZMA, PAS ("veri eksik").
+  existing_locales  → o gün yazılmış diller. ["tr","en"] ise PAS. ["tr"] ise
+                      yalnız İngilizceyi yaz (adım 5).
+  indices / sectors / commodities / crypto
+                    → her satırda d1 (o gün), d5 (5 seans), d21 (21 seans):
+                      pct.tr / pct.en (işaretli yüzde), close, base, base_date.
+                      null → o sembolün barı yok; o sembolü KULLANMA.
+  indices_tally / sectors_tally → kaç tanesi artıda, kaç tanesi ekside.
+  breadth           → S&P 500 + Nasdaq 100 + Dow evreninde yükselen/düşen
+                      sayısı ve yükselenlerin payı (advancing_share). null
+                      ise kapsam yetersiz; genişlikten söz etme.
+  movers            → evrenin en çok yükselen ve düşen 8'er hissesi.
+  economic_events   → o gün takvimdeki veriler; actual null ise açıklanmamış
+                      ya da yazılmamış: o veriyi kullanma.
+  earnings          → o gün bilanço açıklayan büyük şirketler; gelir milyar
+                      dolar (_bn); session_move o günün kapanış hareketi.
+  macro_latest      → makro serilerin son değeri ve dönemi (günlük değil).
+  recent_charts     → son grafiklerin başlıkları — aynı konuyu üst üste seçme.
+  missing           → barı gelmeyen semboller.
+
+--- 2. KONUYU SEÇ: GÜNÜ EN İYİ HANGİ KARŞILAŞTIRMA ANLATIYOR? ---
+
+Bir grafik, bir fikir. Sırayla sor:
+  · Sektörler arasında belirgin bir ayrışma var mı (biri +2, öteki −2)? →
+    sektör çubukları.
+  · Günü tek bir veri ya da bilanço mu taşıdı? → o olaydan etkilenen
+    fonlar/hisseler, çubuk.
+  · Endeksler arasında makas mı var (küçük şirketler ile Nasdaq ters yönde)?
+    → d1, d5 ya da d21 çubukları.
+  · Emtia ya da kripto mu öne çıktı? → o grup.
+  · Hiçbiri belirgin değilse: 21 seanslık tablo ("bir ayda kim önde") her
+    zaman yazılabilir.
+recent_charts'ta dün aynı grup (ör. sektörler) kullanıldıysa bugün başka bir
+açı dene; zorunlu değil ama arşiv tekdüze görünmesin.
+
+--- 3. GRAFİĞİ YAZ (chart_md) ---
+
+Tam olarak TEK blok. Üç biçimden biri:
+
+  ::: bar Sektörler, 23 Ekim
+  Teknoloji | +1,23
+  Enerji | -0,85
+  :::
+
+  ::: pay <bütünün dağılımı — toplamı anlamlı olan bir pay>
+  Ad | 34
+  Diğerleri | 66
+  :::
+
+  ::: oncesi <tek büyüklüğün iki hâli>
+  6.712,46 | 22 Eylül
+  6.801,12 | 23 Ekim
+  :::
+
+Kurallar:
+  · bar 2–12 satır; her değer SAYI ve paketteki yazılışın AYNISI (tr metinde
+    pct.tr, en metinde pct.en). Sıralama büyükten küçüğe ya da anlamlı bir
+    düzende; site ölçeği en büyüğe göre kurar, rengi işaret verir.
+  · Etiket (blok başlığı) neyi ölçtüğünü söyler: "Sektör Fonları, Günlük
+    Değişim %" gibi. Title Case.
+  · `::: grafik`, `sayilar`, `zaman`, `akis` ve metin kutuları KABUL EDİLMEZ
+    (400). Canlı fiyat serisi arşivde değişir; günün grafiği o günün fotoğrafı.
+  · Ad sütununda fonun adını yaz (paketteki name_tr / name_en), sembol değil.
+
+--- 4. BAŞLIK VE AÇIKLAMA ---
+
+title: grafiğin söylediği TEK fikir, ≤140 karakter, mercek başlıkları gibi
+  Title Case ("Teknoloji Yükselirken Enerji Geride Kaldı"); bağlaçlar (ve,
+  ile, için, de/da) başta değilse küçük. Büyük harfe çevirirken "i" → "İ".
+body_md: 50–160 kelime (hedef ~100), DÜZ PARAGRAF — başlık, liste, `:::`
+  yok. İlk cümle grafiğin ana bulgusu; sonra neden (o günün verisi,
+  bilançosu); son cümle neye bakılacağı. Abartı ve tahmin yok, yatırım
+  tavsiyesi yok.
+
+SAYI KURALI — UÇ BUNU DENETLİYOR:
+  · Başlıkta, grafikte ve metinde yazdığın HER sayı (yüzde, fiyat, adet,
+    tarih günü, yıl) bağlam paketinde AYNI rakamlarla geçmeli.
+  · Paketteki yazılışı KOPYALA: "+1,23" ise "%1,23" yaz; "%1,2"ye yuvarlama.
+  · Kendin hesaplama (iki yüzdenin farkı, toplam, ortalama): pakette yoksa
+    yazma. "11 sektörün 9'u" için sectors_tally'deki sayıları kullan.
+  · Paket dışı kaynaktan sayı alma. Haberden bir bağlam cümlesi gerekiyorsa
+    sayısız yaz.
+  · Yanıt 422 "ungrounded-numbers" ise `numbers` listesindeki her sayıyı ya
+    paketteki yazılışıyla değiştir ya da cümleden çıkar, tekrar gönder
+    (en fazla 2 düzeltme turu).
+
+sources: yalnız metinde dayandığın haber varsa [{ label, url }] — en fazla 3.
+Grafik verisi zaten künyede yazıyor; onu kaynak olarak ekleme.
+
+--- 5. GÖNDER ---
+
+Türkçe:
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $SECRET" \
+  -H "Content-Type: application/json" \
+  https://aciliszili.com/api/grafik \
+  -d @- <<'JSON'
+{ "date": "<context.date>", "locale": "tr", "title": "...", "chart_md": "...", "body_md": "...", "sources": [] }
+JSON
+```
+
+Sonra İngilizce: AYNI grafik, ad sütunu name_en, değerler pct.en; başlık ve
+metin çeviri değil, İngilizce okura yazılmış aynı fikir. "locale": "en".
+
+Var olanı düzeltmek için önce oku:
+
+```bash
+curl -s -H "Authorization: Bearer $SECRET" \
+  "https://aciliszili.com/api/grafik?date=<gün>&locale=tr"
+```
+
+Yanıt POST'la aynı alan adlarını taşıyor; düzenleyip geri gönder. Aynı gün +
+dil ikinci kez gelirse üzerine yazılır, önceki hâl sürüm geçmişine düşer.
+
+Hata kodları:
+  400 invalid-body → detail'deki alanı düzelt (blok, kelime sayısı).
+  400 not-a-completed-session → date'i context.date ile değiştir.
+  422 ungrounded-numbers → adım 4, SAYI KURALI.
+  503 context-incomplete → veri eksik; PAS, raporda yaz.
+  503 table-missing → tablo kurulmamış; dur, "SİTE HATASI 503 table-missing".
 ````
 
 ---

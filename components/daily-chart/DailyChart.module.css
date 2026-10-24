@@ -1,0 +1,65 @@
+/* Günün Grafiği (24 Ekim). Gerekçeler bileşenlerde; burada ölçüler.
+   Derinlik tonla (`--surface-sunken` kulvar), gölge ve cam yok, her geçiş
+   `--ease-brand`. Renk yalnız işaretten: çubuk artıda `--up`, ekside
+   `--down` — yargı değil yön (CLAUDE.md "Çubuk büyüklüktür"). */
+
+/* ---------------------------------------------------------- KÜÇÜK GRAFİK
+   Arşiv kartı ve ana sayfa paneli: grafiğin şekli, okunacak sayılar değil.
+   Kulvar 5 piksel `--line-soft` üstünde — sitenin ince grafik dili
+   (MarketTexture.module.css). */
+.thumb { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.thumbRow { display: grid; grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: var(--text-tiny); line-height: 1.2; }
+.thumbName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-body); }
+.thumbValue { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text-strong); }
+.thumbValue[data-tone="up"] { color: var(--up); }
+.thumbValue[data-tone="down"] { color: var(--down); }
+.lane { position: relative; height: 5px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
+.bar { position: absolute; inset-block: 0; border-radius: 999px; background: var(--up); }
+.bar[data-tone="down"] { background: var(--down); }
+/* Pay şeridi tek yığın; dilimler arasında 2 piksel zemin (ArticleBody `pay`). */
+.shareStrip { display: flex; gap: 2px; height: 10px; border-radius: 999px; overflow: hidden; }
+.shareStrip > span { display: block; height: 100%; }
+.more { font-size: var(--text-tiny); color: var(--text-muted); }
+
+/* ---------------------------------------------------------------- ARŞİV
+   Izgara: 390'da tek sütun, 768'de iki, 1280'de üç. Kart tıklanabilir
+   bütün; başlık iki satırda kesilir (tarih ve şekil kartın kimliği). */
+.grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 0 16px 16px; }
+@media (min-width: 768px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0 20px 20px; } }
+@media (min-width: 1280px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.card { display: flex; flex-direction: column; gap: 12px; min-height: 44px; height: 100%; padding: 14px 16px 16px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); transition: background-color 200ms var(--ease-brand), border-color 200ms var(--ease-brand); }
+.card:hover { background: var(--primary-tint); border-color: var(--primary-faint); }
+.card:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+.cardDate { display: flex; align-items: center; gap: 8px; font-size: var(--text-tiny); color: var(--text-muted); }
+.cardTitle { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: var(--text-base); font-weight: 700; line-height: 1.3; color: var(--text-strong); }
+.lang { margin-left: auto; }
+
+/* ---------------------------------------------------------------- DETAY */
+.figure { padding: 4px 16px 20px; }
+@media (min-width: 640px) { .figure { padding: 4px 20px 24px; } }
+.text { display: flex; flex-direction: column; gap: 12px; padding: 18px 16px 20px; border-top: 1px solid var(--line); }
+@media (min-width: 640px) { .text { padding: 20px 20px 24px; } }
+/* Okuma ölçüsü: paragraf 68ch'de kalıyor, panel tam genişlik (bülten
+   arşivinin "kutunun içinde yarım metin" dersi: ölçü panelde değil metinde). */
+.body { max-width: 68ch; font-size: var(--text-read); line-height: 1.65; color: var(--text-body); }
+.notes { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px 18px; border-top: 1px solid var(--line); font-size: var(--text-small); color: var(--text-muted); line-height: 1.55; }
+@media (min-width: 640px) { .notes { padding: 14px 20px 20px; } }
+.sourceList { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.sourceList a { color: var(--primary-ink); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: var(--primary-faint); }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.dayNav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.navLink { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: var(--text-small); font-weight: 600; color: var(--text-muted); transition: color 200ms var(--ease-brand); }
+.navLink:hover { color: var(--primary); }
+.fallback { width: fit-content; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-sunken); padding: 6px 14px; font-size: var(--text-small); color: var(--text-muted); }
+
+/* Ana sayfa paneli. */
+.homeBody { display: flex; flex-direction: column; gap: 10px; padding: 0 16px 16px; }
+@media (min-width: 640px) { .homeBody { padding: 0 20px 18px; } }
+.homeTitle { font-size: var(--text-base); font-weight: 700; line-height: 1.3; color: var(--text-strong); transition: color 200ms var(--ease-brand); }
+.homeTitle:hover { color: var(--primary); }
+
+/* Eğri her geçişte açıkça `--ease-brand` (25 Ekim düzeltmesi: üç geçiş
+   eğrisizdi); hareketi azaltan okuyucuda renk değişimi anında. */
+@media (prefers-reduced-motion: reduce) {
+  .card, .navLink, .homeTitle { transition: none; }
+}

@@ -16,6 +16,8 @@ import { analysisHref } from "@/lib/analysis";
 import { technicalHref } from "@/lib/technical";
 import { getTechnicalBoard } from "@/lib/technical-data";
 import { allFunds } from "@/db/seed/symbols";
+import { getDailyChartArchive } from "@/lib/daily-chart-data";
+import { dailyChartHref } from "@/lib/daily-chart";
 
 type Locale = (typeof LOCALES)[number];
 type SitemapItem = { path: string; locale: Locale; modified: Date };
@@ -102,6 +104,8 @@ const FEATURE_STATIC_ROUTES: StaticRoute[] = [
      gerekcesi) burada da gecerli; akis sayfasi listeliyor. */
   { path: "/topluluk", priority: 0.6, frequency: "daily" },
   { path: "/bilancolar/hafta", priority: 0.7, frequency: "daily" },
+  /* Günün Grafiği (24 Ekim): dizin; günler aşağıda dile göre. */
+  { path: "/gunun-grafigi", priority: 0.7, frequency: "daily" },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -293,6 +297,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       0.5,
     );
   }
+
+  /* GÜNÜN GRAFİĞİ (24 Ekim) — bülten kalıbı: her dil kendi yazdıklarıyla;
+     tablo yoksa okuyucu boş liste döner, bölüm eksik kalır. */
+  await section(
+    (locale) => getDailyChartArchive(locale, SITEMAP_LIMIT),
+    (row, locale) => ({ path: dailyChartHref(row.chartDate), locale, modified: row.updatedAt }),
+    0.5,
+  );
 
   /* TEKNİK ANALİZ SAYFALARI yazılmış metin taşıyor, hisse sayfası gibi
      yalnızca sağlayıcı verisi değil — o yüzden haritada. Dil kuralı mercekle

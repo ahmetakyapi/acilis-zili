@@ -1844,3 +1844,58 @@ export const earningsVotes = pgTable(
     index("earnings_votes_user_report_idx").on(t.userId, t.reportDate),
   ],
 );
+/* ---- Günün Grafiği ---- */
+
+/**
+ * Günün Grafiği — her işlem günü TEK grafik ve ~100 kelimelik açıklama
+ * (24 Ekim). Chartr / Bloomberg "Points of Return" kalıbı: paylaşılmak için
+ * yapılmış, arşivli; mercekten kısa, bültenden görsel.
+ *
+ * NEDEN `stories` DEĞİL, KENDİ TABLOSU. Kayıt `stories`in alanlarına
+ * oturmuyor: kimliği slug değil SEANS GÜNÜ (gün + dil başına tek kayıt),
+ * grafik metinden AYRI bir alan (paylaşım görseli yalnız grafiği çiziyor,
+ * ana sayfa kartı yalnız onu küçültüyor) ve `dek` / `symbols` / okuma
+ * süresi burada anlamsız. `stories`e sığdırmak iki yol isterdi: ya bir
+ * `kind` sütunu — var olan tabloya sütun eklemek, ki yeni özellik bunu
+ * yapmıyor (migration deploy'da uygulanmıyor, kod önce iner) — ya da slug
+ * öneki ("gunun-grafigi-2026-10-23"): o zaman Mercek arşivi, sayaçları,
+ * site haritası, rutin bağlamı ve panel listesi her sorguda öneki süzmek
+ * zorunda kalırdı; birini unutan sorgu grafiği mercek yazısı diye basardı.
+ *
+ * TABLO YOKKEN SESSİZCE DÜŞER: okuyucular (`lib/daily-chart-data.ts`) hatayı
+ * yutup "kayıt yok" der, yazma ucu 503 `table-missing` döner. Migration
+ * birleştirmede üretilecek.
+ *
+ * Sürüm geçmişi ayrı tablo AÇMIYOR: `story_revisions`ta `grafik:{gün}`
+ * anahtarıyla (bültenin `bulten:` kalıbı; slug şeması iki nokta kabul
+ * etmediği için mercekle çakışamaz).
+ */
+export const dailyCharts = pgTable(
+  "daily_charts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** Grafiğin anlattığı İŞLEM GÜNÜ (ET) — yayın günü değil. */
+    chartDate: date("chart_date").notNull(),
+    locale: text("locale").notNull().default("tr"),
+    title: text("title").notNull(),
+    /** Tek `:::` bloğu (bar · pay · oncesi) — `lib/daily-chart.ts` denetler. */
+    chartMd: text("chart_md").notNull(),
+    /** ~100 kelimelik açıklama; düz paragraf, blok yok. */
+    bodyMd: text("body_md").notNull(),
+    /** [{ label, url }] — künyede kaynak listesi. */
+    sources: jsonb("sources").$type<{ label: string; url?: string }[]>(),
+    generatedBy: text("generated_by").notNull().default("claude"),
+    publishedAt: timestamp("published_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("daily_charts_date_locale_key").on(t.chartDate, t.locale),
+    index("daily_charts_date_idx").on(t.chartDate),
+  ],
+);
+
+export type DailyChartRow = typeof dailyCharts.$inferSelect;

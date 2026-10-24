@@ -36,6 +36,7 @@ import { analysisHref } from "@/lib/analysis";
 import { GUNLER, PublishGrid, PublishGridSkeleton } from "@/components/admin/PublishGrid";
 import { cn } from "@/lib/utils";
 import { briefHref } from "@/lib/brief";
+import { DailyChartHealth } from "@/components/admin/DailyChartHealth";
 
 /**
  * İçerik — yayının SAĞLIK PANOSU.
@@ -97,6 +98,11 @@ export default async function ContentPage() {
           sıçrıyordu. Şimdi aynı panel, aynı satırlar, veri yerine iskelet. */}
       <Suspense fallback={<GapsSkeleton />}>
         <Gaps />
+      </Suspense>
+
+      {/* Günün Grafiği (24 Ekim) — kendi panelinde; gerekçe bileşende. */}
+      <Suspense fallback={null}>
+        <DailyChartHealth />
       </Suspense>
 
       <Suspense fallback={<RhythmSkeleton />}>

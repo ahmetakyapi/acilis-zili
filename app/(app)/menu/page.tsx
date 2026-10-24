@@ -8,6 +8,7 @@ import {
   Buildings,
   CalendarBlank,
   ChartBar,
+  ChartBarHorizontal,
   Funnel,
   FunnelSimple,
   ChatsCircle,
@@ -22,6 +23,7 @@ import {
   Briefcase,
   Receipt,
   SquaresFour,
+  Palette,
   PuzzlePiece,
   TextAa,
   Newspaper,
@@ -88,19 +90,24 @@ export default async function MenuPage() {
   const username = session?.user?.name ?? null;
   const avatar = session?.user?.id ? await getUserAvatar(session.user.id) : null;
 
-  /* DÖRT GRUP (11 Ekim, sahibinin isteği: Hisse Seçimi "mantıklı, güzel bir
-     yere"). Hisse Seçimi "Piyasa"nın on bir karosunun dokuzuncusuydu ve
-     ekranın altında, alt çubuğun arkasında kalıyordu. Artık ayrı bir
-     "Analiz ve Araçlar" grubu: bir hisseyi sınayan ve okuyan ekranlar
-     (Teknik Analiz, Hisse Seçimi — Claude analizinin iki odağı —,
-     Karşılaştır), kendi hesabını tutan iki araç (Portföy, Vergi). "Piyasa"
-     yalnız piyasayı ölçen ekranlar. Masaüstünde aynı ayrım "Daha Fazla"nın
-     üst bandı (nav-items.ts → MORE_GROUPS). Telefonda grup EN ÜSTTE:
-     Piyasalar ve Bilançolar zaten alt çubukta, menüyü açan okuyucu çoğunlukla
-     çubukta olmayanı arıyor. */
+  /* GRUPLAR MASAÜSTÜNÜN "DAHA FAZLA" PANELİYLE AYNI (25 Ekim düzeltmesi).
+     Telefon dizini kendi gruplarını taşıyordu: Portföy ve Vergi analiz
+     araçlarının içinde, Rehber/Sözlük/Hisseyi Bil okumanın içinde, Günün
+     Grafiği ile Günün Posteri okuma listesinin dibinde. Masaüstünde aynı
+     ekranlar başka başlıklar altındaydı ve iki cihazı kullanan okur aynı
+     ekranı iki farklı yerde arıyordu. Sıra ve başlıklar artık
+     `MORE_GROUPS` sırası ve aynı sözlük anahtarları (`t.nav.moreGroup*`):
+     Analiz Araçları, Portföy ve Maliyet, Piyasa, Öğren, Oku, Her Gün;
+     sonda Hesap. Şeritteki ekranlar (Piyasalar, Şirketler, Bilançolar,
+     Teknik, Mercek, Temalar) masaüstünde panelde değil şeritte; telefonda
+     şerit yok, o yüzden anlamca ait oldukları gruba giriyorlar.
+
+     Analiz EN ÜSTTE (11 Ekim, sahibinin isteği: Hisse Seçimi "mantıklı,
+     güzel bir yere"): Piyasalar ve Bilançolar zaten alt çubukta, menüyü
+     açan okuyucu çoğunlukla çubukta olmayanı arıyor. */
   const groups: { title: string; entries: Entry[] }[] = [
     {
-      title: t.menu.groupAnalyze,
+      title: t.nav.moreGroupAnalyze,
       entries: [
         { href: "/teknik", icon: ChartLineUp, title: t.technical.title, hint: t.menu.hintTechnical },
         /* Hisse Seçimi telefonda bir dönem yalnız hisse panelinden açılıyordu:
@@ -109,11 +116,16 @@ export default async function MenuPage() {
         { href: "/hisse-secimi", icon: Funnel, title: t.screening.title, hint: t.menu.hintScreening },
         { href: "/tarama", icon: FunnelSimple, title: t.screener.title, hint: t.menu.hintScreener },
         { href: "/karsilastir", icon: ChartBar, title: t.compare.title, hint: t.menu.hintCompare },
-        /* Portföy teknik planla birlikte okunuyor (4 Ekim): en alttaki Hesap
-           grubundaydı ve okuyucu onu yalnız profil menüsünde buluyordu. */
+      ],
+    },
+    {
+      /* Kişisel hesap ekranları ve getiriden düşen maliyetler (vergi,
+         komisyon) — masaüstünde de bu üçü. */
+      title: t.nav.moreGroupMine,
+      entries: [
         { href: "/portfoy", icon: Briefcase, title: t.lira.portfolio.title, hint: t.menu.hintPortfolio },
-        /* Vergi bir hesaplayıcı, okuma değil: "Okuma"dan buraya. */
         { href: "/vergi", icon: Receipt, title: t.nav.taxTool, hint: t.menu.hintTax },
+        { href: "/araci-kurumlar", icon: Bank, title: t.brokers.title, hint: t.brokers.menuHint },
       ],
     },
     {
@@ -129,20 +141,33 @@ export default async function MenuPage() {
       ],
     },
     {
-      title: t.menu.groupRead,
+      /* Durağan müfredat ve günlük bulmaca: Hisseyi Bil oyun ama öğrettiği
+         şey şirketlerin kimliği (nav-items.ts, "learn"). */
+      title: t.nav.moreGroupLearn,
       entries: [
-        /* Mercek başta: sitenin kendi yazdığı ve başka hiçbir yerde
-           bulunmayan içerik bu. Rehber durağan bir müfredat — bir kez
-           okunuyor, sonra referans kalıyor. */
-        { href: "/mercek", icon: Scroll, title: t.nav.stories, hint: t.menu.hintStories },
-        { href: "/topluluk", icon: ChatsCircle, title: t.community.feed.title, hint: t.menu.hintCommunity },
         { href: "/rehber", icon: BookOpen, title: t.nav.guide, hint: t.menu.hintGuide },
         { href: "/sozluk", icon: TextAa, title: t.glossary.title, hint: t.menu.hintGlossary },
-        /* Günlük bulmaca (24 Ekim) — öğrenme ekranlarının yanında. */
         { href: "/bulmaca", icon: PuzzlePiece, title: t.stockPuzzle.title, hint: t.stockPuzzle.menuHint },
-        { href: "/araci-kurumlar", icon: Bank, title: t.brokers.title, hint: t.brokers.menuHint },
+      ],
+    },
+    {
+      title: t.nav.moreGroupRead,
+      entries: [
+        /* Mercek başta: sitenin kendi yazdığı ve başka hiçbir yerde
+           bulunmayan içerik bu. */
+        { href: "/mercek", icon: Scroll, title: t.nav.stories, hint: t.menu.hintStories },
+        { href: "/topluluk", icon: ChatsCircle, title: t.community.feed.title, hint: t.menu.hintCommunity },
         { href: "/haberler", icon: Newspaper, title: t.nav.news, hint: t.menu.hintNews },
         { href: "/bulten", icon: Envelope, title: t.footer.briefArchive, hint: t.menu.hintBrief },
+      ],
+    },
+    {
+      /* Her seansın sonunda yenilenen iki parça (24 Ekim) — masaüstünde
+         panelin dibindeki "Her Gün" bandı. */
+      title: t.nav.moreGroupDaily,
+      entries: [
+        { href: "/gunun-grafigi", icon: ChartBarHorizontal, title: t.dailyChart.title, hint: t.dailyChart.menuHint },
+        { href: "/gun", icon: Palette, title: t.daySignature.poster.title, hint: t.daySignature.archive.menuHint },
       ],
     },
     {

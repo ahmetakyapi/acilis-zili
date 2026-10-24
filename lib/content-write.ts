@@ -2,11 +2,16 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { and, desc, eq, lt } from "drizzle-orm";
-import { dailyBriefs, stories, storyRevisions } from "@/lib/schema";
+import { dailyBriefs, dailyCharts, stories, storyRevisions } from "@/lib/schema";
 import { todayEt } from "@/lib/market-hours";
 import { weekAnchor } from "@/lib/data";
 import { LOCALES } from "@/lib/i18n/config";
 import { isIsoDay } from "@/lib/date-input";
+import {
+  bodyProblem,
+  checkChartBlock,
+  dailyChartRevisionKey,
+} from "@/lib/daily-chart";
 
 /**
  * İçeriğin TEK yazma yolu — hem rutin hem panel buradan geçer.
@@ -433,4 +438,106 @@ export async function saveBrief(
     });
 
   return { date: briefDate, locale, period };
+}
+
+/* --------------------------------------------------------------------------
+   Günün Grafiği (24 Ekim)
+   -------------------------------------------------------------------------- */
+
+/**
+ * Günün grafiğinin doğrulaması da BURADA — mercek ve bültenle aynı gerekçe:
+ * doğrulama bir, yazma bir. Uç (`/api/grafik`) yalnız yetki, gün ve sayı
+ * denetimini (`lib/ai-grounding.ts`) ekleyen bir kabuk.
+ *
+ * Grafik ve açıklama AYRI ALAN: paylaşım görseli yalnız grafiği çiziyor,
+ * ana sayfa kartı onu küçültüyor; gövdenin içinden bloğu ayıklamak her
+ * okuyucuda ikinci bir ayrıştırma olurdu. Blok kuralı ve kelime aralığı
+ * saf modülde (`lib/daily-chart.ts`), test edilebilsin diye.
+ */
+export const dailyChartInputSchema = z
+  .object({
+    title: z.string().trim().min(1).max(140),
+    /** Tek `:::` bloğu: `::: bar`, `::: pay` ya da `::: oncesi`. */
+    chart_md: z.string().trim().min(10).max(2000),
+    /** ~100 kelime, düz paragraf. */
+    body_md: z.string().trim().min(1).max(1600),
+    /** Grafiğin anlattığı işlem günü (ET). Boşsa son tamamlanmış seans. */
+    date: isoDateSchema.optional(),
+    locale: localeInputSchema.optional(),
+    sources: z.array(SourceSchema).max(10).optional(),
+  })
+  .superRefine((input, ctx) => {
+    const chart = checkChartBlock(input.chart_md, input.locale ?? "tr");
+    if (!chart.ok) ctx.addIssue({ code: "custom", path: ["chart_md"], message: chart.reason });
+    const body = bodyProblem(input.body_md);
+    if (body) ctx.addIssue({ code: "custom", path: ["body_md"], message: body });
+  });
+
+export type DailyChartInput = z.infer<typeof dailyChartInputSchema>;
+
+/** Girdinin beklenen şekli — uç hata yanıtında bunu basıyor. */
+export const DAILY_CHART_INPUT_SHAPE = {
+  title: "string (≤140) — grafiğin söylediği tek cümle",
+  chart_md: "tek ::: bloğu — ::: bar | ::: pay | ::: oncesi (2-12 satır, her değer sayı)",
+  body_md: "düz paragraf, 50-160 kelime (blok, başlık, tablo yok)",
+  date: "YYYY-MM-DD (opsiyonel; yoksa son tamamlanmış seans, ET)",
+  locale: "tr | en (opsiyonel, varsayılan tr)",
+  sources: "[{ label, url }] (opsiyonel, ≤10)",
+} as const;
+
+/**
+ * Günün grafiğini yazar ya da üstüne yazar. `date` burada ZORUNLU: hangi
+ * günün son tamamlanmış seans olduğuna uç karar veriyor (tatil takvimi ve
+ * saat orada), yazma yolu takvim bilmiyor.
+ *
+ * Mercekle aynı üç kural: içerik değiştiyse önce fotoğraf
+ * (`story_revisions`, anahtar `grafik:{gün}`), `generatedBy` ve
+ * `publishedAt` yalnız ilk yazımda, `beklenen` verilirse sürüm denetimi.
+ */
+export async function saveDailyChart(
+  input: DailyChartInput & { date: string },
+  source: WriteSource,
+  beklenen?: string,
+) {
+  const locale = input.locale ?? "tr";
+  const [mevcut] = await db
+    .select()
+    .from(dailyCharts)
+    .where(and(eq(dailyCharts.chartDate, input.date), eq(dailyCharts.locale, locale)))
+    .limit(1);
+
+  if (
+    beklenen !== undefined &&
+    (mevcut?.updatedAt?.toISOString() ?? "") !== beklenen
+  ) {
+    throw new SurumCakismasi();
+  }
+
+  const values = {
+    chartDate: input.date,
+    locale,
+    title: input.title,
+    chartMd: input.chart_md,
+    bodyMd: input.body_md,
+    sources: input.sources ?? null,
+  };
+
+  if (
+    mevcut &&
+    (mevcut.title !== values.title ||
+      mevcut.chartMd !== values.chartMd ||
+      mevcut.bodyMd !== values.bodyMd)
+  ) {
+    await fotografAl(dailyChartRevisionKey(input.date), locale, mevcut, source);
+  }
+
+  await db
+    .insert(dailyCharts)
+    .values({ ...values, generatedBy: source === "admin" ? "admin" : "claude" })
+    .onConflictDoUpdate({
+      target: [dailyCharts.chartDate, dailyCharts.locale],
+      set: { ...values, updatedAt: new Date() },
+    });
+
+  return { date: input.date, locale };
 }

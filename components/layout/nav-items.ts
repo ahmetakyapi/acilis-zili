@@ -4,6 +4,7 @@ import {
   ChatsCircle,
   Briefcase,
   ChartBar,
+  ChartBarHorizontal,
   BookOpen,
   Buildings,
   CalendarBlank,
@@ -19,6 +20,7 @@ import {
   Newspaper,
   FileText,
   Percent,
+  Palette,
   PuzzlePiece,
   Scroll,
   TrendUp,
@@ -47,8 +49,8 @@ export type MoreGroup = "analyze" | "mine" | "data" | "learn" | "read" | "daily"
  * aynı hatta. Taşan şerit sekmeleri "data"ya iner (yalnız büyütülmüş yazıda).
  */
 /*
- * "daily" (24 Ekim): panelin DİBİNDE, iki sütuna yayılan tek satırlık
- * bant — günlük bulmaca. Sütunlardan birine girseydi sol ve sağ sütun
+ * "daily" (24 Ekim): panelin DİBİNDE, iki sütunlu "Her Gün" bandı — Günün
+ * Grafiği ve Günün Posteri. Sütunlardan birine girselerdi sol ve sağ sütun
  * satır satır aynı hatta durmazdı (17 Ekim kararı, `tests/nav-items.test.ts`).
  */
 export const MORE_GROUPS: readonly MoreGroup[] = ["analyze", "mine", "data", "learn", "read", "daily"];
@@ -319,16 +321,15 @@ export const NAV_ITEMS: NavItem[] = [
     hint: (t) => t.menu.hintGlossary,
   },
   {
-    /* ARACI KURUM KARŞILAŞTIRMASI (24 Ekim) — "Öğren"de, Sözlük'ün ardında:
-       bir başvuru tablosu, rehberin "Aracı Kurum Seçimi" yazısının
-       ölçülmüş karşılığı. Grup üç satıra çıktı ve sol sütunla satır satır
-       hizası bozuldu (bkz. tests/nav-items.test.ts); dengelemek birleştirme
-       sırasında, öteki yeni satırlar da görülünce yapılacak. */
+    /* ARACI KURUM KARŞILAŞTIRMASI (24 Ekim) — "Portföy ve Maliyet"te,
+       Vergi'nin ardında: komisyon da vergi gibi getiriden düşen bir maliyet.
+       Grup böylece üç satır; karşısındaki "Öğren" de (Rehber, Sözlük,
+       Hisseyi Bil) üç — satır satır hiza korunuyor (tests/nav-items.test.ts). */
     href: "/araci-kurumlar",
     label: (t) => t.brokers.title,
     icon: Bank,
     inBottomBar: false,
-    more: "learn",
+    more: "mine",
     hint: (t) => t.brokers.menuHint,
   },
   {
@@ -362,13 +363,13 @@ export const NAV_ITEMS: NavItem[] = [
     hint: (t) => t.menu.hintNews,
   },
   {
-    /* HİSSEYİ BİL (24 Ekim) — günlük bulmaca, panelin dibindeki "daily"
-       bandında (gerekçe MORE_GROUPS'ta). */
+    /* HİSSEYİ BİL (24 Ekim) — "Öğren"de: oyun ama öğrettiği şey şirketlerin
+       kimliği (sektör, büyüklük, büyüme). */
     href: "/bulmaca",
     label: (t) => t.stockPuzzle.title,
     icon: PuzzlePiece,
     inBottomBar: false,
-    more: "daily",
+    more: "learn",
     hint: (t) => t.stockPuzzle.menuHint,
   },
   {
@@ -379,6 +380,25 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: false,
     more: "read",
     hint: (t) => t.menu.hintBrief,
+  },
+  {
+    /* GÜNÜN GRAFİĞİ ve GÜNÜN POSTERİ (24 Ekim) — panelin dibindeki "Her
+       Gün" bandı: ikisi de her seansın sonunda yenilenen tek parça. Bant
+       iki sütunlu; satırlar üstteki sütunlarla aynı hizada. */
+    href: "/gunun-grafigi",
+    label: (t) => t.dailyChart.title,
+    icon: ChartBarHorizontal,
+    inBottomBar: false,
+    more: "daily",
+    hint: (t) => t.dailyChart.menuHint,
+  },
+  {
+    href: "/gun",
+    label: (t) => t.daySignature.poster.title,
+    icon: Palette,
+    inBottomBar: false,
+    more: "daily",
+    hint: (t) => t.daySignature.archive.menuHint,
   },
   {
     /* ŞERİTTE DEĞİL, HESAP PANELİNDE — mobildeki karar. Misafir için sayfa
