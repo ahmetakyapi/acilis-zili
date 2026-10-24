@@ -1,6 +1,7 @@
 import { aiAnalysisEn } from "./ai-analysis";
 import type tr from "./tr";
 import { emailNotifyEn } from "./email-notify";
+import { portfolioAnalysisEn } from "./portfolio-analysis";
 import { datePickerEn } from "./date-picker";
 import { screenQueryEn } from "./screen-query";
 import { stockPuzzleEn } from "./stock-puzzle";
@@ -4185,6 +4186,8 @@ const en: typeof tr = {
   earningsSeason: earningsSeasonEn,
   /* Günün Grafiği (24 Ekim) — metin ayrı dosyada. */
   dailyChart: dailyChartEn,
+  /* Portföy analizi (24 Ekim) — metin ayrı dosyada, gerekçesi orada. */
+  portfolioAnalysis: portfolioAnalysisEn,
 };
 
 export default en;

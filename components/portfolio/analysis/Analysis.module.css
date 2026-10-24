@@ -1,0 +1,635 @@
+/* Portföy Analizi (24 Ekim) — components/portfolio/analysis/AnalysisScreen.tsx.
+   Derinlik tonla (surface-sunken), gölge yok. Grafik dili ince: kulvar
+   --line-soft, şerit 5 piksel, gösterge çentiği --line-strong. Renk yalnız
+   işaretten (getiri, düşüş); ağırlık ve fark çubukları nötr mavi. */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0 1rem 1.1rem;
+}
+
+@media (min-width: 640px) {
+  .body {
+    padding: 0 1.25rem 1.25rem;
+  }
+}
+
+/* Künyeler panelin içinde, hairline ile (CLAUDE.md ekran düzeni 6). */
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 1rem 0.9rem;
+  border-top: 1px solid var(--line);
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  line-height: 1.55;
+}
+
+@media (min-width: 640px) {
+  .notes {
+    padding: 0.75rem 1.25rem 0.95rem;
+  }
+}
+
+.notes p {
+  margin: 0;
+}
+
+.lead {
+  margin: 0;
+  color: var(--text-body);
+  font-size: var(--text-read);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+/* ---- Sektör dağılımı ---- */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  font-weight: 650;
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.swatchBar {
+  width: 16px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.swatchTick {
+  width: 2px;
+  height: 12px;
+  border-radius: 1px;
+  background: var(--text-strong);
+}
+
+.sectorList {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sectorRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 12px;
+  align-items: baseline;
+  padding: 10px 0 11px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.sectorRow:first-child {
+  border-top: 0;
+}
+
+@media (min-width: 900px) {
+  .sectorRow {
+    grid-template-columns: minmax(150px, 0.8fr) minmax(0, 1.5fr) 300px;
+    align-items: center;
+  }
+}
+
+.sectorName {
+  min-width: 0;
+  color: var(--text-strong);
+  font-size: var(--text-read);
+  font-weight: 650;
+}
+
+.sectorFigures {
+  display: grid;
+  grid-template-columns: 3.6rem 6.6rem 7.2rem;
+  align-items: baseline;
+  justify-content: end;
+  gap: 8px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sectorShare {
+  color: var(--text-strong);
+  font-size: var(--text-read);
+  font-weight: 750;
+}
+
+.sectorBench {
+  color: var(--text-muted);
+  font-size: var(--text-small);
+}
+
+.sectorDiff {
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  font-weight: 650;
+}
+
+/* Kulvar + portföy şeridi + S&P çentiği. Telefonda tam satır. */
+.track {
+  position: relative;
+  grid-column: 1 / -1;
+  height: 12px;
+}
+
+@media (min-width: 900px) {
+  .track {
+    grid-column: auto;
+    grid-row: 1;
+    grid-column-start: 2;
+  }
+}
+
+.track::before {
+  position: absolute;
+  inset: 3.5px 0;
+  border-radius: 999px;
+  background: var(--line-soft);
+  content: "";
+}
+
+.trackFill {
+  position: absolute;
+  top: 3.5px;
+  left: 0;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--primary);
+  transform-origin: left center;
+  animation: pa-grow 0.7s var(--ease-brand) both;
+}
+
+.trackTick {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 12px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--text-strong);
+}
+
+@keyframes pa-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* ---- Ölçü ızgarası: sayılar aynı hatta biter ---- */
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+}
+
+@media (min-width: 900px) {
+  .metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.metrics[data-cols="2"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.metrics[data-cols="3"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 479px) {
+  .metrics[data-cols="3"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Üçüncü kart telefonda iki sütunun altında yalnız kalıyordu (390'da
+     sağında 155 piksellik boş hücre); tam satıra yayılır. */
+  .metrics[data-cols="3"] > :nth-child(3):last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.metric {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.8rem 0.85rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+}
+
+.metricLabel {
+  margin: 0;
+  color: var(--text-body);
+  font-size: var(--text-small);
+  font-weight: 650;
+}
+
+/* Değer dibe iner: farklı uzunluktaki etiketlere rağmen sayılar aynı hatta. */
+.metricValue {
+  margin: auto 0 0;
+  color: var(--text-strong);
+  font-size: clamp(1.15rem, 4.4vw, 1.6rem);
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.metricValue[data-tone="up"] {
+  color: var(--up);
+}
+
+.metricValue[data-tone="down"] {
+  color: var(--down);
+}
+
+.metricSub {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  line-height: 1.4;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  letter-spacing: 0;
+}
+
+/* İki panel yan yana; aralık gap-5, justify-between yok (CLAUDE.md). */
+.pair {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  .pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Kur ve Temettü aynı satırda: paneller satır boyunca, künye dipte.
+     `align-items: start` iken diplerin farkı 40 pikseldi (1280, ölçüldü);
+     kartlar artık eşit boyda, kalan fark yalnız künye satırı kadar ve o da
+     künyenin üstünde toplanıyor, kutuların içine dağılmıyor. */
+  .pair > * {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pair > * > .notes {
+    margin-top: auto;
+  }
+}
+
+/* ---- Korelasyon ---- */
+
+.pairGroups {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .pairGroups {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+.groupTitle {
+  margin: 0 0 4px;
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.pairList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pairRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.pairRow:first-child {
+  border-top: 0;
+}
+
+.pairNames {
+  min-width: 0;
+  color: var(--text-strong);
+  font-size: var(--text-read);
+  font-weight: 650;
+}
+
+.pairValue {
+  color: var(--text-strong);
+  font-size: var(--text-read);
+  font-weight: 750;
+}
+
+.pairRow > :last-child {
+  grid-column: 1 / -1;
+}
+
+/* ---- Bilanço haftaları ---- */
+
+.weeks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.week {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 12px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.week:first-child {
+  border-top: 0;
+}
+
+.weekName {
+  color: var(--text-strong);
+  font-size: var(--text-read);
+  font-weight: 650;
+}
+
+.weekShare {
+  color: var(--text-strong);
+  font-size: var(--text-read);
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Telefonda 44 piksel dokunma hedefi, geniş ekranda 32 (FilterChip'in
+   kuralı, components/ui/primitives.tsx): 2rem'lik çip telefonda eşiğin
+   altındaydı (25 Ekim incelemesi). */
+.chip {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--text-body);
+  font-size: var(--text-small);
+  font-weight: 650;
+  transition: color 0.2s var(--ease-brand), background-color 0.2s var(--ease-brand);
+}
+
+@media (min-width: 640px) {
+  .chip {
+    min-height: 2rem;
+  }
+}
+
+a.chip:hover {
+  color: var(--primary);
+}
+
+.chip b {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+/* ---- Eksik sektörler ---- */
+
+.gaps {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 900px) {
+  .gaps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.gap {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.85rem 0.9rem 0.95rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+}
+
+.gapHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 10px;
+}
+
+.gapName {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: var(--text-read);
+  font-weight: 750;
+}
+
+.gapRow {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  white-space: nowrap;
+}
+
+.gapLabel {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  font-weight: 700;
+}
+
+.gap .chip {
+  background: var(--surface);
+}
+
+/* ---- Senaryo ---- */
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.controlRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.controlLabel {
+  margin: 0 6px 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+/* Önce/sonra: `oncesi` blok dilinin tablo hâli — iki sütun aynı hatta. */
+.compare {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.compare th,
+.compare td {
+  padding: 9px 12px;
+  border-top: 1px solid var(--line-soft);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.compare thead th,
+.compare thead td {
+  border-top: 0;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  font-weight: 700;
+}
+
+.compare tbody th {
+  width: 100%;
+  color: var(--text-body);
+  font-size: var(--text-small);
+  font-weight: 650;
+  text-align: left;
+  white-space: normal;
+}
+
+.compare tbody td {
+  color: var(--text-muted);
+  font-size: var(--text-read);
+  font-weight: 650;
+}
+
+.compare tbody td[data-after] {
+  color: var(--text-strong);
+  font-weight: 800;
+}
+
+/* Fark küçük ve nötr (yargı değil büyüklük). Telefonda sonranın altında,
+   geniş ekranda soluna aynı satırda: değer sütunun sağ kenarında kalır ve
+   "Bugün" ile aynı satır yüksekliği korunur (1280'de iki satıra inen fark
+   satırı 42'den 62 piksele çıkarıyordu, ölçüldü). */
+.afterCell {
+  display: inline-flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.delta {
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  font-weight: 650;
+}
+
+@media (min-width: 640px) {
+  .afterCell {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 12px;
+  }
+}
+
+@media (min-width: 640px) {
+  .compare th,
+  .compare td {
+    padding: 10px 18px;
+  }
+}
+
+/* ---- Claude okuması ---- */
+
+.paragraphs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.paragraphs p {
+  margin: 0;
+  color: var(--text-body);
+  font-size: 15px;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.paragraphs p:first-child {
+  color: var(--text-strong);
+}
+
+.noteLoading {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  /* Ölçüldü (24 Ekim, fixture notuyla): panel 1280'de 417–441, 390'da
+     1006–1081 piksel; iskelet gövdesi buna göre. */
+  min-height: 350px;
+}
+
+@media (max-width: 639px) {
+  .noteLoading {
+    min-height: 920px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trackFill {
+    animation: none;
+  }
+}

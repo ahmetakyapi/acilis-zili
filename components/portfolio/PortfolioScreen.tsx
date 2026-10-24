@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { ChartPieSlice } from "@phosphor-icons/react/dist/ssr";
 import { GuideHint } from "@/components/article/GuideHint";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import directory from "@/components/motion/DirectoryExperience.module.css";
@@ -26,7 +27,7 @@ import {
   shareAccents,
   TotalsBand,
 } from "@/components/portfolio/PortfolioVisuals";
-import { DataStamp, EmptyState, Panel, PanelHeader, PanelSkeleton } from "@/components/ui/primitives";
+import { ButtonLink, DataStamp, EmptyState, Panel, PanelHeader, PanelLink, PanelSkeleton } from "@/components/ui/primitives";
 import { companySector } from "@/lib/company-sector";
 import { cn, directionOf, directionText, formatPercent, formatPrice } from "@/lib/utils";
 import { formatIsoDate, formatRate, TCMB_MIN_DATE } from "@/lib/fx";
@@ -101,6 +102,12 @@ export async function PortfolioScreen({ userId, preset = null }: { userId: strin
             <Suspense fallback={<ExportToTaxButton label={L.exportToTax} positions={[]} />}>
               <HeroExport userId={userId} label={L.exportToTax} />
             </Suspense>
+            {/* Portföy analizi (24 Ekim) — ayrı rota, gerekçe
+                components/portfolio/analysis/AnalysisScreen.tsx. */}
+            <ButtonLink href="/portfoy/analiz" variant="ghost">
+              <ChartPieSlice size={16} weight="duotone" aria-hidden />
+              {t.portfolioAnalysis.openFromPortfolio}
+            </ButtonLink>
           </div>
         </DirectoryHeader>
 
@@ -383,7 +390,11 @@ async function PortfolioBody({
 
       {weights.length > 0 && (
         <Panel>
-          <PanelHeader title={L.sectorTitle} meta={L.sectorHint} />
+          <PanelHeader
+            title={L.sectorTitle}
+            meta={L.sectorHint}
+            action={<PanelLink href="/portfoy/analiz#sektorler">{t.portfolioAnalysis.compareLink}</PanelLink>}
+          />
           <SectorStrip weights={weights} locale={locale} />
         </Panel>
       )}

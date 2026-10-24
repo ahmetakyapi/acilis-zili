@@ -1,5 +1,6 @@
 import { aiAnalysisTr } from "./ai-analysis";
 import { emailNotifyTr } from "./email-notify";
+import { portfolioAnalysisTr } from "./portfolio-analysis";
 import { datePickerTr } from "./date-picker";
 import { screenQueryTr } from "./screen-query";
 import { stockPuzzleTr } from "./stock-puzzle";
@@ -4734,6 +4735,8 @@ const tr = {
   earningsSeason: earningsSeasonTr,
   /* Günün Grafiği (24 Ekim) — metin ayrı dosyada. */
   dailyChart: dailyChartTr,
+  /* Portföy analizi (24 Ekim) — metin ayrı dosyada, gerekçesi orada. */
+  portfolioAnalysis: portfolioAnalysisTr,
 };
 
 export default tr;
