@@ -89,6 +89,8 @@ const ROUTES = [
   "/vergi",
   "/bulmaca",
   "/araci-kurumlar",
+  "/yenilikler",
+  "/yenilikler?tur=duzeltme",
   "/hakkinda",
   "/portfoy",
 ];

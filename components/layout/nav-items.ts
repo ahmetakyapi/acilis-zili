@@ -23,6 +23,7 @@ import {
   Palette,
   PuzzlePiece,
   Scroll,
+  Sparkle,
   TrendUp,
   UsersThree,
 } from "@phosphor-icons/react/dist/ssr";
@@ -409,6 +410,22 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Heart,
     inBottomBar: false,
     hint: (t) => t.menu.hintWatchlist,
+  },
+  {
+    /* YENİLİKLER (25 Ekim) — ŞERİTTE DE PANEL GRUPLARINDA DA DEĞİL. Panelin
+       sol ve sağ sütunu satır satır aynı hatta (17 Ekim kararı,
+       tests/nav-items.test.ts) ve dibindeki "Her Gün" bandı iki sütunlu:
+       bir gruba girseydi ya bir sütun bir satır uzardı ya da bant üç
+       satırla tek kalırdı. Sitenin kendisi hakkında bir sayfa, bir ekran
+       grubu değil; panelin EN DİBİNDE, hairline altında tam genişlikte tek
+       satır (MastheadNav), /menu'de de en altta "Site" bölümünde. Okurun
+       görmediği giriş varsa "Daha Fazla" ve Menü sekmesinde nokta,
+       satırda "Yeni" hapı (components/changelog/ChangelogBadge.tsx). */
+    href: "/yenilikler",
+    label: (t) => t.changelog.title,
+    icon: Sparkle,
+    inBottomBar: false,
+    hint: (t) => t.changelog.menuHint,
   },
   {
     href: "/menu",

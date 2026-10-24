@@ -9,6 +9,7 @@ import { askStockEn, watchlistTodayEn } from "./page-claude";
 import { daySignatureEn } from "./day-signature";
 import { earningsSeasonEn } from "./earnings-season";
 import { dailyChartEn } from "./daily-chart";
+import { changelogEn } from "./changelog";
 
 const en: typeof tr = {
   brand: {
@@ -4188,6 +4189,8 @@ const en: typeof tr = {
   dailyChart: dailyChartEn,
   /* Portföy analizi (24 Ekim) — metin ayrı dosyada, gerekçesi orada. */
   portfolioAnalysis: portfolioAnalysisEn,
+  /* Yenilikler (25 Ekim) — metin ayrı dosyada; girişler content/changelog.ts. */
+  changelog: changelogEn,
 };
 
 export default en;

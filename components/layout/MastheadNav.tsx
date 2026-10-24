@@ -10,6 +10,7 @@ import { ArrowUpRight, CaretDown } from "@phosphor-icons/react/dist/ssr";
 import type { Locale } from "@/lib/i18n/config";
 import { withLocale } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
+import { ChangelogBadge } from "@/components/changelog/ChangelogBadge";
 import { isActive, MORE_GROUPS, NAV_ITEMS, type MoreGroup } from "./nav-items";
 import { usePriorityStrip } from "./usePriorityStrip";
 
@@ -25,6 +26,19 @@ export type MastheadStripItem = {
 };
 
 export type MastheadMoreItem = { href: string; label: string; hint: string; group: MoreGroup };
+
+/** Yenilikler satırı ve rozeti — sunucuda çözülen metinler ve en son giriş günü. */
+export type ChangelogNavLabels = {
+  href: string;
+  label: string;
+  hint: string;
+  /** Satırdaki hap: "Yeni". */
+  badge: string;
+  /** Noktanın ekran okuyucu metni. */
+  badgeLabel: string;
+  /** En son girişin günü ("2026-10-25"). */
+  latest: string;
+};
 
 /** Panelin genişliği rem cinsinden — sınıftaki `w-[44rem]` ile aynı sayı. */
 const PANEL_REM = 44;
@@ -65,6 +79,7 @@ export function MastheadNav({
   strip,
   more,
   groups,
+  changelog,
 }: {
   locale: Locale;
   label: string;
@@ -72,6 +87,7 @@ export function MastheadNav({
   strip: readonly MastheadStripItem[];
   more: readonly MastheadMoreItem[];
   groups: Record<MoreGroup, string>;
+  changelog: ChangelogNavLabels;
 }) {
   const pathname = usePathname();
   const navRef = useRef<HTMLElement>(null);
@@ -243,6 +259,16 @@ export function MastheadNav({
             className={cn("translate-y-0.5 transition-transform", open && "rotate-180")}
           />
           {activeRow && <span aria-hidden className="masthead-mark" />}
+          {/* OKUNMAMIŞ YENİLİK NOKTASI (25 Ekim). Yazı değil nokta: şerit
+              1280'de 58 piksel boşlukla sığıyor (nav-items.ts ölçüsü),
+              "Yeni" hapı sekmeleri aramanın altına iterdi. Okur panelde
+              satırdaki hapı görüyor. */}
+          <ChangelogBadge
+            latest={changelog.latest}
+            label={changelog.badgeLabel}
+            variant="dot"
+            className="right-[calc(var(--masthead-tab-px)-6px)] top-[calc(50%-7px)]"
+          />
         </button>
 
         <AnimatePresence>
@@ -410,6 +436,36 @@ export function MastheadNav({
                       })}
                     </ul>
                   </section>
+                );
+              })()}
+              {/* YENİLİKLER SATIRI (25 Ekim) — panelin en dibinde, hairline
+                  altında, tam genişlikte tek satır. Bir gruba girmiyor:
+                  gerekçe nav-items.ts → "/yenilikler". Satır kalıbı sütun
+                  satırlarınınki; ipucunun yanında görmediğin giriş varsa
+                  "Yeni" hapı. Klavye sırası belge sırası, son bağlantı. */}
+              {(() => {
+                const current = isActive(pathname, changelog.href);
+                const Icon = NAV_ITEMS.find((item) => item.href === changelog.href)?.icon;
+                return (
+                  <div className="mt-1.5 border-t border-line-soft pt-1.5">
+                    <Link
+                      href={withLocale(changelog.href, locale)}
+                      prefetch={false}
+                      aria-current={current ? "page" : undefined}
+                      onClick={() => setOpenedAt(null)}
+                      className="masthead-row relative flex min-h-(--more-row) items-center gap-3 rounded-xl px-3 py-1.5 hover:bg-surface focus-visible:bg-surface"
+                    >
+                      {Icon && <span className="masthead-row-icon" aria-hidden><Icon size={19} weight="duotone" /></span>}
+                      <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-3 gap-y-0.5">
+                        <span className={cn("text-base font-semibold", current ? "text-primary-ink" : "text-strong")}>
+                          {changelog.label}
+                        </span>
+                        <span className="text-tiny leading-snug text-muted">{changelog.hint}</span>
+                      </span>
+                      <ChangelogBadge latest={changelog.latest} label={changelog.badge} variant="pill" />
+                      <ArrowUpRight className="masthead-row-arrow" size={14} aria-hidden />
+                    </Link>
+                  </div>
                 );
               })()}
             </motion.div>

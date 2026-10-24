@@ -15,6 +15,7 @@ import { getUserAvatar } from "@/lib/avatar-data";
 import { getUnreadCount } from "@/lib/notifications";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { hasAnalysisAccess } from "@/lib/ai-analysis-access";
+import { LATEST_CHANGE_DATE } from "@/lib/changelog";
 
 /* --------------------------------------------------------------------------
    BU SEGMENTTE `loading.tsx` YOK — ve bu bilinçli.
@@ -102,6 +103,16 @@ export default async function AppLayout({
     ),
     more: t.nav.more,
     moreGroups: { analyze: t.nav.moreGroupAnalyze, mine: t.nav.moreGroupMine, data: t.nav.moreGroupData, learn: t.nav.moreGroupLearn, read: t.nav.moreGroupRead, daily: t.nav.moreGroupDaily },
+    /* Yenilikler (25 Ekim): panelin dibindeki satır ve rozet. En son giriş
+       günü sunucudan — içerik demeti istemci paketine inmiyor. */
+    changelog: {
+      href: "/yenilikler",
+      label: t.changelog.title,
+      hint: t.changelog.menuHint,
+      badge: t.changelog.badge,
+      badgeLabel: t.changelog.badgeLabel,
+      latest: LATEST_CHANGE_DATE,
+    },
     mainNav: t.nav.mainNav,
     bottomNav: t.nav.bottomNav,
     skipToContent: t.nav.skipToContent,

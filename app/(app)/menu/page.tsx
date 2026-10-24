@@ -30,12 +30,15 @@ import {
   Percent,
   Scroll,
   ShieldCheck,
+  Sparkle,
   SignIn,
   SignOut,
   TrendUp,
   UsersThree,
 } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
+import { ChangelogBadge } from "@/components/changelog/ChangelogBadge";
+import { LATEST_CHANGE_DATE } from "@/lib/changelog";
 import { AvatarTile } from "@/components/brand/AvatarIcon";
 import { getUserAvatar } from "@/lib/avatar-data";
 import { SignOutForm } from "@/components/auth/SignOutForm";
@@ -82,6 +85,8 @@ type Entry = {
   icon: typeof Bell;
   title: string;
   hint: string;
+  /** Yenilikler karosu: okurun görmediği giriş varsa "Yeni" hapı. */
+  changelog?: boolean;
 };
 
 export default async function MenuPage() {
@@ -180,6 +185,17 @@ export default async function MenuPage() {
         { href: "/kvkk", icon: ShieldCheck, title: t.footer.privacy, hint: t.menu.hintPrivacy },
       ],
     },
+    {
+      /* YENİLİKLER EN ALTTA, KENDİ BÖLÜMÜNDE (25 Ekim). Masaüstünde panelin
+         dibindeki tam genişlik satırın karşılığı: bir ekran grubu değil,
+         sitenin kendisi hakkında (gerekçe nav-items.ts → "/yenilikler").
+         Telefonda tek karo tam genişlik (`.menuTiles` tek kalan son karo
+         kuralı). Alt çubuktaki Menü sekmesinin noktası buraya çağırıyor. */
+      title: t.changelog.menuGroup,
+      entries: [
+        { href: "/yenilikler", icon: Sparkle, title: t.changelog.title, hint: t.changelog.menuHint, changelog: true },
+      ],
+    },
   ];
 
   return (
@@ -270,7 +286,17 @@ export default async function MenuPage() {
                         <Icon weight="duotone" size={20} />
                       </span>
                       <span className={polish.menuTileText}>
-                        <b>{entry.title}</b>
+                        <b>
+                          {entry.title}
+                          {entry.changelog && (
+                            <ChangelogBadge
+                              latest={LATEST_CHANGE_DATE}
+                              label={t.changelog.badge}
+                              variant="pill"
+                              className="ml-2 align-[2px]"
+                            />
+                          )}
+                        </b>
                         <small>{entry.hint}</small>
                       </span>
                       <ArrowUpRight className={polish.menuArrow} size={15} weight="bold" aria-hidden />

@@ -8,7 +8,8 @@ import type { Locale } from "@/lib/i18n/config";
 import { stripLocale, withLocale } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
 import { MorphRecorder } from "@/components/motion/Morph";
-import { MastheadNav, type MastheadMoreItem, type MastheadStripItem } from "./MastheadNav";
+import { ChangelogBadge } from "@/components/changelog/ChangelogBadge";
+import { MastheadNav, type ChangelogNavLabels, type MastheadMoreItem, type MastheadStripItem } from "./MastheadNav";
 import type { MoreGroup } from "./nav-items";
 import { RouteProgress } from "./RouteProgress";
 import { NAV_ITEMS, isActive } from "./nav-items";
@@ -27,6 +28,8 @@ export type ShellLabels = {
   more: string;
   /** Panel gruplarının başlıkları. */
   moreGroups: Record<MoreGroup, string>;
+  /** Yenilikler — panelin dibindeki satır ve "Yeni" rozeti (25 Ekim). */
+  changelog: ChangelogNavLabels;
   mainNav: string;
   bottomNav: string;
   skipToContent: string;
@@ -258,6 +261,7 @@ export function AppShell({
             strip={labels.strip}
             more={labels.moreItems}
             groups={labels.moreGroups}
+            changelog={labels.changelog}
           />
 
           <div className="flex h-full items-center gap-2">
@@ -404,6 +408,18 @@ export function AppShell({
                   globals.css → "Alt sekme çubuğu". */}
               <Icon weight={active ? "fill" : "duotone"} size={21} className="tab-icon" />
               <span className="truncate">{item.text}</span>
+              {/* Menü sekmesinde okunmamış yenilik noktası (25 Ekim): mobilde
+                  Yenilikler yalnız /menu'den açılıyor. İkon `a`nın doğrudan
+                  çocuğu kalıyor (globals.css → `.tab-bar a > .tab-icon`);
+                  nokta bağlantıya göre mutlak, ikonun sağ üst köşesinde. */}
+              {item.href === "/menu" && (
+                <ChangelogBadge
+                  latest={labels.changelog.latest}
+                  label={labels.changelog.badgeLabel}
+                  variant="dot"
+                  className="left-[calc(50%+7px)] top-[11px]"
+                />
+              )}
             </Link>
           );
         })}

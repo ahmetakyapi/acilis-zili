@@ -200,6 +200,15 @@ export async function SiteFooter() {
         >
           {t.about.footerLink}
         </Link>
+        {/* Yenilikler (25 Ekim) Hakkında'nın yanında: ikisi de bir ekran
+            değil, sitenin kendisi hakkında. Masaüstünde panelin dibinde,
+            telefonda /menu'nün sonunda da var. */}
+        <Link
+          href="/yenilikler"
+          className="tap-44 -my-2 inline-flex min-h-8 items-center py-2 transition-colors hover:text-primary"
+        >
+          {t.changelog.title}
+        </Link>
         <a
           href={`mailto:${CONTACT_EMAIL}`}
           className="tap-44 -my-2 inline-flex min-h-8 items-center py-2 transition-colors hover:text-primary"

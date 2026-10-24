@@ -10,7 +10,7 @@
 > rota eksikti ve okuyan onu güncel sanıyordu. İki yerde tutulan bir liste er geç
 > birbirinden ayrı düşer. Rota tablosu artık yalnızca README'de.
 
-**Son güncelleme:** 2026-10-15
+**Son güncelleme:** 2026-10-25
 **Durum:** 🟢 CANLI — https://aciliszili.com
 
 ---
@@ -39,6 +39,32 @@ gerçek değerlerin bulunduğu `docs/rutinler.local.md` gitignore'da.
 ## Açık işler
 
 Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
+
+- [x] **Migration 0037–0039 üretimde uygulandı (24 Ekim):** `telegram_posts`,
+      `earnings_votes`, `daily_charts`. Üçü de yalnız yeni tablo; kod tablo
+      yokken sessizce düşüyor.
+- [x] **Günün Grafiği rutini claude.ai'de kurulu (24 Ekim):** "Açılış Zili ·
+      Günün Grafiği", `CRON_TZ=Europe/Istanbul 15 9 * * 2-6`, Opus, öteki
+      rutinlerle aynı ortam ve anahtar kalıbı (`/tmp/.azh`); prompt
+      `docs/claude-rutinler.md` § 7. İlk koşu 27 Ekim Salı 09:15 TR.
+- [x] **Görev Kontrolü (eski adıyla Koşu Bekçisi, 25 Ekim'de yeniden
+      adlandırıldı) Günün Grafiği'ni de izliyor** (düşerse yeniden çalıştırır).
+- [ ] **Telegram kanalı kurulmadı.** BotFather'da bot aç, kanala yönetici
+      yap; `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHANNEL_ID` (isteğe bağlı
+      `TELEGRAM_CHANNEL_ID_EN`) ve `NEXT_PUBLIC_TELEGRAM_URL` GitHub
+      ortamına ve sunucuya (Sync App Env). Değişkenler yokken gönderici uyur,
+      sitede kanal bağlantısı basılmaz. Crontab satırı `deploy/cron-install.sh`
+      ile ikinci dağıtımda iner.
+- [ ] **Mercek arşivinde ~38 yazı (iki dilde ~76 `bar` bloğu) yön taşımayan
+      büyüklüğü yeşil çiziyor.** 24 Ekim'den beri `::: bar notr` kipi var;
+      bu bloklara bayrak panelden ya da bir kerelik rutinle eklenmeli.
+- [x] **Geliştirme kipindeki "unique key … AppShell" uyarısı giderildi (25
+      Ekim):** kök kabuğa verilen `ticker` Suspense öğesi RSC yükü büyüyünce
+      ayrı parçaya çıkıp geç çözülüyordu; `key="ticker"` ile kapandı.
+- [ ] **Sayfa içi `notFound()` yanıtları sunucuda boş HTML.** Next 16
+      kabuğu istemcide kuruyor; stil kapısı (`globals.css` sonu) stilsiz
+      kareyi gizliyor ama arama motoru 404 gövdesini boş görüyor. Çerçeve
+      düzeyinde çözüm bekliyor.
 
 - [x] **Migration 0035 (`notifications`) üretimde uygulanmalı.** Bildirim
       kutusu. Tablo yokken zil sıfır sayar, /bildirimler "şu an açılamıyor"

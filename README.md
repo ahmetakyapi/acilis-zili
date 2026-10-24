@@ -562,8 +562,8 @@ Rota listesinin **tek kaynağı** burası. 61 sayfa var: 50'si herkese açık
 | `/` | Zil çalmadan önce bugün ne var: geri sayım, endeksler, gün akışı, bülten, Mercek, teknik görünüm, bilançolar, favoriler, haberler |
 | `/piyasalar` | Piyasanın nabzı: endeksler, tahvil faizleri, VIX, piyasa genişliği ve ısı haritası, gün içi hareket, endeks bileşenleri; Piyasa Nabzı (bileşenleri ve ham değerleri ekranda duran 0–100 bileşik ölçü, ağırlıksız), Sektör Performansı (on bir SPDR sektör fonu), Emtia (altın, gümüş, petrol, doğal gaz, bakır, tarım ve Bitcoin/Ether fonları) |
 | `/sirketler` | Hangi şirket hangi sektörde, ne kadar ediyor: sektör şeridi + sıralanabilir dizin (`?sektor=` ile süzülür) |
-| `/tarama` | Hangi hisse şu süzgeçten geçiyor: GICS'li endeks üyeleri temel ölçülerle (canlı fiyattan kurulan F/K, gelir büyümesi, net marj, ROE, borç/özkaynak) süzülüp sıralanır; hazır süzgeçler (Değer, Büyüme, Kârlılık, Sağlam Bilanço) ölçütünü künyede söyler |
-| `/hisse/[symbol]` | Bu şirket nasıl gidiyor: canlı grafik (USD · TL · Reel TL), profil, metrikler, analistler, haber, beklenti ile gerçekleşeni aynı sütunda gösteren geçmiş bilançolar. Yeni paneller: Hisse Skor Kartı (beş eksende sektör yüzdeliği; yalnızca GICS sektörü bilinen endeks üyelerinde), Analist Dağılımı Değişimi (dört aylık dağılımın farkı), Teknik Fotoğraf (teknik analiz listesinde olmayan hisselerde, yorumsuz göstergeler), Temettü (hak kesim, yıl toplamları, stopaj künyesi), Beklenen Hareket (sonraki rapora yakınken opsiyonların fiyatladığı hareket ve geçmiş rapor ertesi hareketler), İçeriden İşlemler |
+| `/tarama` | Hangi hisse şu süzgeçten geçiyor: GICS'li endeks üyeleri temel ölçülerle (canlı fiyattan kurulan F/K, gelir büyümesi, net marj, ROE, borç/özkaynak) süzülüp sıralanır; hazır süzgeçler (Değer, Büyüme, Kârlılık, Sağlam Bilanço) ölçütünü künyede söyler. **Düz cümleyle tarama:** okurun cümlesini Claude tarayıcının süzgeç modeline çevirir (`lib/screen-query.ts`); belirsiz sözcüklerin eşiği koddaki tablodan gelir, model yalnız cümlede geçen sayıyı kullanabilir, süzülemeyen istek okura gösterilir; sonuç adrese yazılır |
+| `/hisse/[symbol]` | Bu şirket nasıl gidiyor: canlı grafik (USD · TL · Reel TL), profil, metrikler, analistler, haber, beklenti ile gerçekleşeni aynı sütunda gösteren geçmiş bilançolar. Yeni paneller: Hisse Skor Kartı (beş eksende sektör yüzdeliği; yalnızca GICS sektörü bilinen endeks üyelerinde), Analist Dağılımı Değişimi (dört aylık dağılımın farkı), Teknik Fotoğraf (teknik analiz listesinde olmayan hisselerde, yorumsuz göstergeler), Temettü (hak kesim, yıl toplamları, stopaj künyesi), Beklenen Hareket (sonraki rapora yakınken opsiyonların fiyatladığı hareket ve geçmiş rapor ertesi hareketler), İçeriden İşlemler. **Bu Hisseye Sor:** yalnız sayfanın verisinden yanıt veren soru kutusu; sayı ve tavsiye denetiminden geçmeyen yanıt basılmaz, üyeye günde 10 soru (`lib/stock-question.ts`) |
 | `/karsilastir` | İki ile dört hisseden hangisi: aynı ölçekte normalize grafik + tek tablo; getiri USD, TL ya da Reel TL |
 | `/karsilastir/[pair]` | Yirmi küratörlü çift (`/karsilastir/nvda-amd`): aynı tahta, başlık ve "neden bu ikisi" paragrafıyla; canonical adres bu (`content/compare-pairs.ts`) |
 | `/hisse-secimi` | Bir hisse nasıl seçilir: eleme, büyüme, kârlılık, sağlık, fiyat gücü, sahiplik ve katalizör kuralları, kullanım adımları, teknik analiz listesinin puanları; sembol formu JS'siz (GET → yönlendirme) |
@@ -574,6 +574,9 @@ Rota listesinin **tek kaynağı** burası. 61 sayfa var: 50'si herkese açık
 | `/makro` | ABD ekonomisi nerede: on bir FRED serisi (haftalık işsizlik başvuruları, perakende satışlar, M2, Sahm kuralı ve 10Y–3A faiz farkı eklendi), sonraki açıklama, Sonraki FOMC Kararı kartı |
 | `/takvim` | Hangi makro veri ne zaman: gün/hafta/ay, önem süzgeci, halka arz takvimi. `?tur=temettu` aynı sayfada temettü takvimi görünümü (Alpaca kurumsal işlemler) |
 | `/haberler` · `/haberler/[id]` | Bugün ne konuşuluyor: akış + siteden çıkmadan okuma |
+| `/gun` · `/gun/[tarih]` | Günün Posteri: tamamlanmış bir seansın sektörleri, S&P 500 genişliği ve endeksleri tek mürekkep sahnesinde, Alpaca gün barlarından; arşivde her kart genişlik şeridi ve on bir sektör kulvarı. Kapanıştan sonra ana sayfa kahramanı o seansın genişlik şeridini ve posterin bağlantısını taşır (`lib/day-poster*.ts`) |
+| `/gunun-grafigi` · `/gunun-grafigi/[tarih]` | Günün Grafiği: her işlem günü tek grafik ve ~100 kelime; rutin `/api/grafik` ile yazar (`docs/claude-rutinler.md` § 7), metindeki her sayı bağlam paketinde geçmek zorunda |
+| `/bulmaca` | Hisseyi Bil: günlük hisse bulmacası, altı tahmin, ipuçları zordan kolaya (siluet, sektör, piyasa değeri bandı, halka arz yılı, 12 ay gelir büyümesi, baş harf). Cevap sunucuda gizli bir sırayla seçilir, istemci yalnız açılmış ipuçlarını görür; seri tarayıcıda (`lib/stock-puzzle*.ts`) |
 
 ### Bilançolar
 
@@ -588,7 +591,9 @@ etkin görünür.
 | `/bilancolar/analizler` | Okunmuş çeyrekler: skor, görüş, hedef fiyat |
 | `/bilancolar/takip` | Benim izlediklerimin bilançoları |
 | `/bilancolar/hafta` | Haftalık sekme (`?hafta=YYYY-MM-DD`): En Çok Beklenenler ızgarası (günler × açılış öncesi/kapanış sonrası, karo boyu piyasa değeri), altında gün gün tam takvim — beklenti, gerçekleşen EPS ve sapma; paylaşım görselleri |
+| `/bilancolar/[symbol]` | Şirketin sıradaki bilançosu ne zaman: tarih ve Türkiye saatiyle pencere, Beklenti Karnesi, okunmuş çeyrekler. **Beklentiyi Geçer mi?** üyelerin EPS oyu (`earnings_votes`); oy açıklama anında kilitlenir, dağılım yalnız oy verene görünür, sonuç takvimdeki gerçekleşenden |
 | `/bilancolar/[symbol]/[period]` | Bu çeyrek ne anlattı: tam analiz; rutin yazdıysa başında "30 Saniyede" özeti, sonunda Segment ve KPI Verisi |
+| `/bilancolar/[symbol]/[period]/hikaye` | Analizin beş kartlık paylaşım hâli (beklenti ve gerçekleşen, rehberlik, rapor ertesi tepkiler, 30 Saniyede, skor); her kartın dikey ve yatay görseli |
 
 ### Teknik Analiz
 
@@ -604,9 +609,10 @@ Başlıkta Piyasalar'dan hemen sonra; mobilde Menü'den.
 | Rota | Soru |
 |---|---|
 | `/mercek` · `/mercek/[slug]` | Olayın arkasındaki mekanizma neydi |
-| `/rehber` · `/rehber/[slug]` | Borsayı nereden öğrenirim: sıralı müfredat (Türkiye'den yatırım için pratik yazılar dahil: W-8BEN, aracı kurum, vergi, kesirli hisse) |
+| `/rehber` · `/rehber/[slug]` | Borsayı nereden öğrenirim: sıralı müfredat (Türkiye'den yatırım için pratik yazılar dahil: W-8BEN, aracı kurum, vergi, kesirli hisse, SPK'nın 17 Haziran 2026 kararıyla bankadan aracı kuruma geçiş, İrlanda ETF'i mi ABD ETF'i mi) |
 | `/sozluk` · `/sozluk/[terim]` | Bu terim ne demek: yüz elli terim, sekiz kategoride, iki dilde. Mercek, rehber ve bilanço analizlerinde terimin ilk geçişi buraya kendiliğinden bağlanıyor |
 | `/bulten` · `/bulten/[tarih]` · `/bulten/haftalik` · `/bulten/haftalik/[tarih]` | Dünkü ya da geçen haftaki bülten; her sayının kalıcı adresi var |
+| `/yenilikler` | Sitede ne değişti: okura dönük değişiklik geçmişi, en yenisi üstte; her yeni özellik "Dene" bağlantısıyla açılır. İçerik `content/changelog.ts`te (TR'ye eklenen giriş EN'de de yazılmazsa derleme kırılır); görülmemiş giriş varsa menüde "Yeni" rozeti, ayrı RSS `/yenilikler/feed.xml` |
 
 ### Topluluk
 
@@ -632,6 +638,8 @@ yazıları kim yazıyor; gömme kodları da burada)
 | Rota | Soru |
 |---|---|
 | `/vergi` | Yurt dışı hisse kazancım için ne kadar vergi: satış kazancı (alış ve satış günlerinin TCMB kuru), Yİ-ÜFE endekslemesi, temettü beyan sınırı, ABD stopajının mahsubu. Hesap tümüyle tarayıcıda; kurallar ve kaynaklar `lib/tax.ts` |
+| `/araci-kurumlar` | Hangi aracı kurum ne alıyor: ABD tarifeleri yan yana, her hücre kurumun resmî kaynağına ve okunduğu güne bağlı (`content/brokers.ts`); bulunamayan bilgi "Belirtilmemiş" yazar. Kurum önermez, yönlendirme bağlantısı yok |
+| `/portfoy/analiz` | Portföyüm ne kadar riskli: sektör dağılımı S&P 500 ile, yoğunlaşma (HHI, etkin pozisyon sayısı), bugünkü ağırlıklarla geçen yılın oynaklığı, betası, korelasyonu ve en büyük düşüşü, kur etkisi, temettü tahmini, bilanço haftaları; sektör fonu senaryosu ve Claude'un risk okuması. Al/sat önermez; tavsiye ve sayı denetiminden geçmeyen metin basılmaz (`lib/portfolio-risk.ts`, `lib/advice-guard.ts`). Oturum ister |
 | `/portfoy` | Neyim var ve lirada ne kazandırdı: pozisyon başına alış günü kuruyla TL maliyet, bugünün kuruyla TL değer, sektör ağırlığı; seansı kanıtlanan kotasyondan günlük değişim; FIFO ile satış kaydı ve Gerçekleşen Kâr/Zarar (dolar ve iki günün kuruyla lira, yıl toplamları; vergi hesaplayıcısına satışlarıyla aktarılır). `?ekle=SEMBOL` ekleme penceresini o sembolle açar (hisse sayfasındaki çanta). Oturum ister, dizine girmez |
 
 ### Gömülü Parçalar ve Görseller
@@ -671,6 +679,10 @@ ve yazma uçları ayrıca oturum, admin tarafından atanmış erişim ve günlü
 | `/api/cron/haftalik-posta` | Pazar özeti postası: pazar 07:00–11:00 UTC (ilk koşu 10:00 TR) saatte bir, göndermeden önce geçen haftanın bilanço gerçekleşenlerini tazeler; geçen haftanın endeksleri, bilançoları ve öne çıkanları, bu haftanın bilanço ve veri takvimi. Her alıcı defterle sahiplenilir, ikinci koşu yalnız eksikleri tamamlar; günlük bütçe `EMAIL_DAILY_BUDGET` (UTC günü — pazar bütçeye takılanları pazartesi 07:00 UTC telafi koşusu, bütçenin en çok yarısıyla gönderir; tek koşu kilitli) (`CRON_SECRET`) |
 | `/api/ai/hisse-notu` | Hisse sayfasının Claude notları: `?sembol=&tur=hareket` (Bu Hafta Neden Hareket Etti — son beş tamamlanmış seans, S&P 500 ve haberler) ve `tur=bilanco` (son 10 günde açıklanan bilançonun kısa notu). Panel görünüme girince istemci ister; botlar ve bilinmeyen sembol geri çevrilir, not sembol + seans anahtarıyla 36 saat önbellekte, günlük çağrı tavanı `INSIGHT_DAILY_CAP` (`lib/stock-insights.ts`) |
 | `/api/cron/haberler` | Haber tazeleme + Türkçeleştirme: her gün 05:35, 11:35, 17:35 UTC; piyasa haberlerini çeker, çevrilmemişleri Claude ile çevirir (`ANTHROPIC_API_KEY`, yoksa `CLAUDE_ANALYSIS_API_KEY`; DeepL anahtarı varsa önce o). Çeviri tabloda kalır (`CRON_SECRET`) |
+| `/api/ai/tarama-cumlesi` · `/api/ai/takip-notu` · `/api/ai/hisse-sor` · `/api/ai/portfoy-analizi` | Sayfanın içindeki Claude: düz cümleyle tarama (köken denetimi, 2 KB gövde tavanı), Takip Listem Bugün, Bu Hisseye Sor, portföy risk okuması. Botlara kapalı, oran ve günlük sınırlı, ortak Claude bütçesinden düşer |
+| `/api/bulmaca` | Hisseyi Bil: GET günün siluetini, POST tahmini değerlendirip açılan ipucunu döndürür; cevap yalnız oyun bitince |
+| `/api/grafik` (+ `/context`) | Günün Grafiği'nin yazma ve geri okuma ucu (`BRIEF_SECRET`); POST yalnız tamamlanmış seansı ve bağlamda geçen sayıları kabul eder |
+| `/api/cron/telegram` | Telegram kanalı: beş dakikada bir; açılış öncesi bülten ve takvim, kapanış özeti, yeni Mercek, büyük makro veri. Tekrarı `telegram_posts` defteri önler; `TELEGRAM_BOT_TOKEN` ve `TELEGRAM_CHANNEL_ID` yoksa uyur (`CRON_SECRET`) |
 | `/api/e-posta/ayril` | Tek tıkla çıkış (RFC 8058, `List-Unsubscribe-Post`): yalnız POST, girişsiz, IP başına sınırlı |
 | `/api/cron/bilanco` | "Bilanço yarın" hatırlatması: günde bir, tercihi açan hesaplara takip listelerindeki yarınki bilançoları tek bildirimde gönderir (`CRON_SECRET`) |
 

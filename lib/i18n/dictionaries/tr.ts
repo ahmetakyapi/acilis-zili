@@ -8,6 +8,7 @@ import { askStockTr, watchlistTodayTr } from "./page-claude";
 import { daySignatureTr } from "./day-signature";
 import { earningsSeasonTr } from "./earnings-season";
 import { dailyChartTr } from "./daily-chart";
+import { changelogTr } from "./changelog";
 
 const tr = {
   brand: {
@@ -4737,6 +4738,8 @@ const tr = {
   dailyChart: dailyChartTr,
   /* Portföy analizi (24 Ekim) — metin ayrı dosyada, gerekçesi orada. */
   portfolioAnalysis: portfolioAnalysisTr,
+  /* Yenilikler (25 Ekim) — metin ayrı dosyada; girişler content/changelog.ts. */
+  changelog: changelogTr,
 };
 
 export default tr;
