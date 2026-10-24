@@ -260,6 +260,13 @@
       "when": 1792185682723,
       "tag": "0036_sleepy_sandman",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1792874072916,
+      "tag": "0037_telegram_posts",
+      "breakpoints": true
     }
   ]
 }

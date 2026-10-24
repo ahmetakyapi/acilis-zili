@@ -29,6 +29,7 @@ import { addEtDays, ET_ZONE } from "@/lib/market-hours";
 import { cn } from "@/lib/utils";
 import { getErrorGroups } from "@/lib/error-log";
 import { ErrorGroupsPanel } from "@/components/admin/ErrorGroupsPanel";
+import { TelegramPanel } from "@/components/admin/TelegramPanel";
 
 /**
  * Sistem — verinin durumu.
@@ -80,6 +81,12 @@ export default async function SystemPage() {
           Özet'in Dikkat satırı buraya iniyor (#hatalar). */}
       <Suspense fallback={<AdminPanelSkeleton rows={4} rowHeight={72} />}>
         <ErrorsPanel />
+      </Suspense>
+
+      {/* Telegram kanalının son gönderimleri (24 Ekim) — gerekçe
+          components/admin/TelegramPanel.tsx. */}
+      <Suspense fallback={<AdminPanelSkeleton rows={3} rowHeight={61} />}>
+        <TelegramPanel />
       </Suspense>
 
       {/* Okunduğu an, İstanbul saatiyle (AdminUI → `AdminReadStamp`). Saat

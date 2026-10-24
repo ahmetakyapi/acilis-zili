@@ -21,6 +21,16 @@ import styles from "./RollingFigure.module.css";
  * Ekran okuyucu sayının tamamını düz metin olarak duyuyor; şeritler
  * `aria-hidden`. Hareketi azaltan okuyucu son kareyi görüyor (CSS).
  *
+ * GÖRSEL RAKAMLAR DOM METNİ DEĞİL (24 Ekim). `aria-hidden` erişilebilirlik
+ * ağacını temiz tutuyordu ama METİN ÇIKARIMINI değil: şeritler HTML'de
+ * yirmişer rakamlık düz metindi ve `textContent` /bilancolar'daki GOOGL
+ * kartında "Gelir Beklentisi132 Mr $1012345678901234567893…" okuyordu
+ * (sayfada 18 tane 12+ haneli dizi, ölçüldü); `innerText` de duran kopyayı
+ * ikinci kez veriyordu ("132 Mr $ 1 3 2 M r $"). Botlar, önizlemeler, okuma
+ * modu ve dış incelemeler bu metni okuyor. Şimdi şeridin, duran kopyanın ve
+ * ayraçların glifi CSS `content`ten geliyor (`data-c`, `::before`);
+ * belgede sayının tek metni `sr-only` kopya. Ölçü: 12+ haneli dizi 0.
+ *
  * YALNIZCA İLK EKRANDA. Animasyon yüklemede oynuyor, görünüme girişte
  * değil; ekranın altındaki bir sayıya konursa okuyucu oraya indiğinde
  * dönüş çoktan bitmiş olur.
@@ -34,8 +44,6 @@ import styles from "./RollingFigure.module.css";
  * karşılaştırıldı). Değer DEĞİŞİNCE sayan sayaçlar (vergi sonucu, makro
  * seçimi) üçüncü bir iş ve kendi bileşenlerinde.
  */
-const DIGIT_CYCLE = Array.from({ length: 20 }, (_, index) => index % 10);
-
 export function RollingFigure({
   value,
   className,
@@ -57,9 +65,7 @@ export function RollingFigure({
         {chars.map((char, index) => {
           if (char < "0" || char > "9") {
             return (
-              <span key={index} className={styles.glyph}>
-                {char}
-              </span>
+              <span key={index} className={styles.glyph} data-c={char} />
             );
           }
           /* Sağdaki rakam önce durur, soldaki en uzun döner: sayaç
@@ -78,12 +84,8 @@ export function RollingFigure({
                 } as CSSProperties
               }
             >
-              <span className={styles.sizer}>{char}</span>
-              <span className={styles.strip}>
-                {DIGIT_CYCLE.map((digit, step) => (
-                  <span key={step}>{digit}</span>
-                ))}
-              </span>
+              <span className={styles.sizer} data-c={char} />
+              <span className={styles.strip} />
             </span>
           );
         })}

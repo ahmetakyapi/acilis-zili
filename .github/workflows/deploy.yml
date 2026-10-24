@@ -149,6 +149,12 @@ jobs:
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
           SITE_INDEXABLE: ${{ vars.SITE_INDEXABLE }}
+          # Telegram kanalı (24 Ekim): belirteç secret; kanal kimlikleri ve
+          # kanal adresi repo DEĞİŞKENİ (gizli değil, sitede basılıyor).
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL_ID: ${{ vars.TELEGRAM_CHANNEL_ID }}
+          TELEGRAM_CHANNEL_ID_EN: ${{ vars.TELEGRAM_CHANNEL_ID_EN }}
+          NEXT_PUBLIC_TELEGRAM_URL: ${{ vars.NEXT_PUBLIC_TELEGRAM_URL }}
         run: bash deploy/sync-app-env.sh
       # Sunucu verify'ın geçtiği commit'i derler, dal ucunu değil
       # (`GITHUB_SHA`, gerekçe update.sh başında).

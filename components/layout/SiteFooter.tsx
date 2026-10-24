@@ -1,10 +1,10 @@
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { ArrowRight, GithubLogo } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, ArrowUpRight, GithubLogo, TelegramLogo } from "@phosphor-icons/react/dist/ssr";
 import { BellMark } from "@/components/brand/BellMark";
 import { getI18n } from "@/lib/i18n";
 import { emailConfigured } from "@/lib/email";
-import { CONTACT_EMAIL } from "@/lib/site";
+import { CONTACT_EMAIL, TELEGRAM_URL } from "@/lib/site";
 
 /**
  * Sayfa altı — künye ve bölüm dizini.
@@ -99,6 +99,21 @@ export async function SiteFooter() {
                 <ArrowRight weight="bold" size={13} aria-hidden />
               </Link>
             </div>
+          ) : null}
+          {/* Telegram kanalı (24 Ekim): adres tanımlıysa, marka bloğunun
+              son satırı — pazar özetinin yanında ikinci "takip et" yolu.
+              Dış bağlantı: yeni sekme ve köşe oku. */}
+          {TELEGRAM_URL ? (
+            <a
+              href={TELEGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tap-44 inline-flex w-fit items-center gap-1.5 text-base font-semibold text-primary"
+            >
+              <TelegramLogo weight="fill" size={15} aria-hidden />
+              {t.telegram.channelLink}
+              <ArrowUpRight weight="bold" size={12} aria-hidden />
+            </a>
           ) : null}
         </div>
 

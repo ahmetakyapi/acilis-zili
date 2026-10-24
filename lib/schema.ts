@@ -1760,3 +1760,44 @@ export const aiAnalysisAudit = pgTable("ai_analysis_audit", {
   dailyLimit: integer("daily_limit"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/* ---- Telegram kanalı ---- */
+
+/**
+ * TELEGRAM GÖNDERİM DEFTERİ (24 Ekim) — kanala giden her mesajın satırı.
+ *
+ * Gönderici (`lib/telegram.ts`, `/api/cron/telegram`) beş dakikada bir koşan
+ * bir durum makinesi; aynı mesajı iki kez atmaması bu tablonun benzersiz
+ * `dedupeKey`ine bağlı (`telegram:{tür}:{anahtar}:{dil}` — tür `acilis`,
+ * `kapanis`, `mercek`, `makro`). Satır GÖNDERİMDEN ÖNCE yazılır
+ * (sahiplenme; e-posta defteri `email_log` ile aynı kalıp), gönderim düşerse
+ * silinir ki sonraki koşu yeniden denesin.
+ *
+ * KENDİ TABLOSU, VE TABLO YOKKEN HİÇ GÖNDERİLMEZ: migration deploy'da
+ * uygulanmıyor ve defter yokken gönderici neyi attığını bilemez — beş
+ * dakikada bir aynı mesajı kanala basardı. Kanal sessizliği tekrardan iyi.
+ *
+ * `messageId` Telegram'ın verdiği kimlik (yönetim ekranında iz, ileride
+ * düzeltme için `editMessageText`); `status` `claimed` → `sent`.
+ */
+export const telegramPosts = pgTable(
+  "telegram_posts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    dedupeKey: text("dedupe_key").notNull(),
+    /** acilis | kapanis | mercek | makro */
+    kind: text("kind").notNull(),
+    locale: text("locale").notNull(),
+    /** claimed | sent */
+    status: text("status").notNull().default("claimed"),
+    messageId: integer("message_id"),
+    /** Yönetim ekranındaki satırın adı — mesajın ilk satırı, kısaltılmış. */
+    summary: text("summary"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("telegram_posts_dedupe_key").on(t.dedupeKey),
+    index("telegram_posts_created_idx").on(t.createdAt),
+  ],
+);

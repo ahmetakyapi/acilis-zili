@@ -23,6 +23,9 @@ LINES=(
 	# (08:00 UTC'den sonra) başlamadan önce.
 	"0 7 * * 1 /bin/bash $APP_ROOT/current/deploy/cron-weekly-mail.sh"
 	"35 5,11,17 * * * /bin/bash $APP_ROOT/current/deploy/cron-news.sh"
+	# Telegram kanalı (24 Ekim — gerekçe deploy/cron-telegram.sh). Beş
+	# dakikada bir; uç kanal tanımlı değilse hiçbir şey okumadan döner.
+	"*/5 * * * * /bin/bash $APP_ROOT/current/deploy/cron-telegram.sh"
 	# Ortak veri önbelleğinin budaması (20 Ekim — gerekçe update.sh). Next
 	# diskteki kaydı hiç silmiyor; sürüm dizinleri budanırken önbellek de
 	# gidiyordu, ortak dizinde biriken tarihli adresler (gün başlangıçlı

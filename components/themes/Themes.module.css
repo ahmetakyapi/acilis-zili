@@ -25,11 +25,16 @@
    → `.sizer`). Durağan hâlde görünen akıştaki kopya; şerit ve kırpma
    yalnızca kök `data-rolling` taşırken, yani dönüş sürerken. */
 .rollColumn { position:relative; }
-.rollStrip { position:absolute; inset:0 0 auto; display:flex; flex-direction:column; align-items:center; visibility:hidden; }
+.rollStrip { position:absolute; inset:0 0 auto; visibility:hidden; }
 [data-rolling] .rollColumn { clip-path:inset(0 -50%); }
 [data-rolling] .rollSizer { visibility:hidden; }
 [data-rolling] .rollStrip { visibility:visible; }
-.rollStrip > span { display:block; height:1.1em; }
+/* Glifler CSS'ten (24 Ekim) — gerekçe ui/RollingFigure.tsx, "GÖRSEL
+   RAKAMLAR DOM METNİ DEĞİL". Şerit on satır; `translateY(-rakam × 10%)`
+   adımı eski `span` dizisiyle aynı. */
+.rollGlyph::before,
+.rollSizer::before { content:attr(data-c); white-space:pre; }
+.rollStrip::before { content:"0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9"; display:block; white-space:pre; line-height:1.1em; text-align:center; }
 
 /* --------------------------------------------------------------------------
    Kapak sıralaması

@@ -32,6 +32,14 @@ ALLOWED = {
     "VAPID_PUBLIC_KEY": re.compile(r"[A-Za-z0-9_-]{40,128}"),
     "VAPID_PRIVATE_KEY": re.compile(r"[A-Za-z0-9_-]{20,128}"),
     "VAPID_SUBJECT": re.compile(r"(?:mailto:[^\s\"\\$`]{3,200}|https://[^\s\"\\$`]{3,200})"),
+    # Telegram kanalı (24 Ekim, lib/telegram.ts): bot belirteci
+    # ("123456:ABC…"), kanal "@ad" ya da "-100…" kimliği; EN kanalı isteğe
+    # bağlı. NEXT_PUBLIC_TELEGRAM_URL DERLEMEDE gömülür (sitedeki bağlantı):
+    # değişince deploy gerekir.
+    "TELEGRAM_BOT_TOKEN": re.compile(r"[0-9]{5,16}:[A-Za-z0-9_-]{30,64}"),
+    "TELEGRAM_CHANNEL_ID": re.compile(r"@[A-Za-z0-9_]{5,32}|-?[0-9]{5,20}"),
+    "TELEGRAM_CHANNEL_ID_EN": re.compile(r"@[A-Za-z0-9_]{5,32}|-?[0-9]{5,20}"),
+    "NEXT_PUBLIC_TELEGRAM_URL": re.compile(r"https://t\.me/[A-Za-z0-9_]{5,32}"),
 }
 
 

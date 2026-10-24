@@ -19,6 +19,8 @@ import { cn, formatEtDateCompact, formatEtDateLong } from "@/lib/utils";
 import { briefHref, briefSummary, type BriefPeriod } from "@/lib/brief";
 import type { DailyBriefRow } from "@/lib/schema";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
+import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { TELEGRAM_URL } from "@/lib/site";
 
 /**
  * Bülten arşivi — solda seçili günün/haftanın tam metni, sağda tarih listesi.
@@ -229,6 +231,25 @@ async function ArchiveBoard({
             {period === "weekly" && (
               <p className="mt-6 border-t border-primary-faint pt-3 text-tiny leading-relaxed text-muted">
                 {t.brief.weeklyNotForecast}
+              </p>
+            )}
+
+            {/* Telegram kanalı (24 Ekim): bülten her işlem günü açılıştan
+                önce kanala da düşüyor. Künye panelin içinde, hairline'la —
+                yeni kutu açılmaz. Adres tanımlı değilse hiç basılmaz
+                (lib/site.ts → TELEGRAM_URL). */}
+            {TELEGRAM_URL && (
+              <p className="mt-6 border-t border-primary-faint pt-3 text-small leading-relaxed text-muted">
+                {t.telegram.channelHint}{" "}
+                <a
+                  href={TELEGRAM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="tap-44 inline-flex items-center gap-1 font-semibold text-primary"
+                >
+                  {t.telegram.channelLink}
+                  <ArrowUpRight size={12} weight="bold" aria-hidden />
+                </a>
               </p>
             )}
           </>

@@ -17,7 +17,7 @@ set +x
 
 payload=$(python3 - <<'PY'
 import json, os
-names = ["RESEND_API_KEY", "BREVO_API_KEY", "EMAIL_PROVIDER", "EMAIL_FROM", "VAPID_PUBLIC_KEY", "VAPID_PRIVATE_KEY", "VAPID_SUBJECT", "SITE_INDEXABLE"]
+names = ["RESEND_API_KEY", "BREVO_API_KEY", "EMAIL_PROVIDER", "EMAIL_FROM", "VAPID_PUBLIC_KEY", "VAPID_PRIVATE_KEY", "VAPID_SUBJECT", "SITE_INDEXABLE", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHANNEL_ID", "TELEGRAM_CHANNEL_ID_EN", "NEXT_PUBLIC_TELEGRAM_URL"]
 print(json.dumps({n: os.environ[n] for n in names if os.environ.get(n, "").strip()}))
 PY
 )

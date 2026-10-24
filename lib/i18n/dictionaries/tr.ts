@@ -4608,6 +4608,36 @@ const tr = {
   datePicker: datePickerTr,
   emailNotify: emailNotifyTr,
   screenQuery: screenQueryTr,
+  /* Telegram kanalı (24 Ekim) — mesaj etiketleri (lib/telegram-format.ts)
+     ve sitedeki kanal bağlantısı. Mesaj başlıkları ve bağlantı adları Title
+     Case; cümleler (boş takvim, evren notu, ipucu) cümle düzeninde. */
+  telegram: {
+    preOpenTitle: "Açılış {time}",
+    briefTitle: "Günün Bülteni",
+    readBrief: "Bülteni Oku",
+    calendarTitle: "Bugünün Takvimi",
+    calendarEmpty: "Bugün takvimde açıklama yok.",
+    openCalendar: "Takvimi Aç",
+    earnings: "Bilanço",
+    timeUnknown: "Saat Belirtilmedi",
+    more: "+{n} Satır Daha",
+    closeTitle: "Kapanış {time}",
+    indicesTitle: "Endeksler · Fon Fiyatı",
+    gainersTitle: "En Çok Yükselenler",
+    losersTitle: "En Çok Düşenler",
+    moversUniverse: "S&P 500, Nasdaq 100 ve Dow üyesi {n} şirket arasında.",
+    afterCloseTitle: "Kapanış Sonrası Bilançolar",
+    openEarnings: "Bilançoları Aç",
+    openMarkets: "Piyasaları Aç",
+    storyKicker: "Mercek",
+    readStory: "Yazıyı Oku",
+    actual: "Gerçekleşen",
+    forecast: "Beklenti",
+    previous: "Önceki",
+    disclaimer: "Yatırım Tavsiyesi Değildir",
+    channelLink: "Telegram Kanalı",
+    channelHint: "Açılıştan önce bülten ve takvim, kapanıştan sonra seansın özeti kanala da düşer.",
+  },
 };
 
 export default tr;

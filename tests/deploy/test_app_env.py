@@ -56,6 +56,26 @@ class AppEnvTest(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     helper.update_env(target, {"SITE_INDEXABLE": value})
 
+    def test_telegram_values(self):
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "app.env"
+            target.write_text("")
+            helper.update_env(target, {
+                "TELEGRAM_BOT_TOKEN": "123456789:AAH" + "x" * 32,
+                "TELEGRAM_CHANNEL_ID": "@aciliszili",
+                "TELEGRAM_CHANNEL_ID_EN": "-1001234567890",
+                "NEXT_PUBLIC_TELEGRAM_URL": "https://t.me/aciliszili",
+            })
+            self.assertIn('TELEGRAM_CHANNEL_ID="@aciliszili"\n', target.read_text())
+            for values in [
+                {"TELEGRAM_CHANNEL_ID": "@a b"},
+                {"TELEGRAM_CHANNEL_ID": "@aciliszili\nX=1"},
+                {"NEXT_PUBLIC_TELEGRAM_URL": "https://evil.example/aciliszili"},
+                {"TELEGRAM_BOT_TOKEN": "notatoken"},
+            ]:
+                with self.assertRaises(ValueError):
+                    helper.update_env(target, values)
+
     def test_refuses_symlink_target(self):
         with tempfile.TemporaryDirectory() as folder:
             target = Path(folder) / "app.env"

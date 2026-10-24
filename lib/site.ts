@@ -144,3 +144,14 @@ export function absoluteUrl(
  * adres ve postada bunu açıkça söylüyor (lib/password-reset.ts).
  */
 export const CONTACT_EMAIL = "hello@aciliszili.com";
+
+/**
+ * Sitenin Telegram kanalı (24 Ekim) — alt bilgi ve bülten sayfası basar.
+ * Tanımlı değilse (ya da `https://t.me/` adresi değilse) bağlantı HİÇ
+ * basılmaz: var olmayan bir kanala götüren bağlantı tıklamayı yutar.
+ * `NEXT_PUBLIC_` önekli, yani derlemede gömülür (gerekçe .env.example).
+ */
+export const TELEGRAM_URL: string | null = (() => {
+  const raw = process.env.NEXT_PUBLIC_TELEGRAM_URL?.trim();
+  return raw && /^https:\/\/t\.me\/[A-Za-z0-9_]{5,32}$/.test(raw) ? raw : null;
+})();

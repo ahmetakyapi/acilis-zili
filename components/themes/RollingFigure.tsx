@@ -27,7 +27,10 @@ const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
  * gösterirdi. Görünmez bir yer tutucu rakam sütunun enini veriyor; şerit
  * onun üstünde ortalı kayıyor.
  *
- * Ekran okuyucu şeritleri değil düz metni okuyor (`sr-only`).
+ * Ekran okuyucu şeritleri değil düz metni okuyor (`sr-only`). Şeridin,
+ * duran kopyanın ve ayraçların glifi CSS `content`ten (24 Ekim): belgede
+ * sayının tek metni o kopya — gerekçe ui/RollingFigure.tsx, "GÖRSEL
+ * RAKAMLAR DOM METNİ DEĞİL".
  *
  * İLK EKRANDAKİ KAHRAMAN SAYISI İÇİN `components/ui/RollingFigure` var:
  * JS'siz, yalnızca yüklemede dönüyor. Bu bileşen onun tamamlayıcısı,
@@ -93,23 +96,17 @@ export function RollingFigure({ value, className }: { value: string; className?:
           const digit = DIGITS.indexOf(char as (typeof DIGITS)[number]);
           if (digit === -1) {
             return (
-              <span key={index} className={styles.rollGlyph}>
-                {char}
-              </span>
+              <span key={index} className={styles.rollGlyph} data-c={char} />
             );
           }
           return (
             <span key={index} className={styles.rollColumn}>
-              <span className={styles.rollSizer}>{char}</span>
+              <span className={styles.rollSizer} data-c={char} />
               <span
                 data-roll-strip
                 className={styles.rollStrip}
                 style={{ transform: `translateY(-${digit * 10}%)` }}
-              >
-                {DIGITS.map((d) => (
-                  <span key={d}>{d}</span>
-                ))}
-              </span>
+              />
             </span>
           );
         })}

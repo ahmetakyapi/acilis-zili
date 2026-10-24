@@ -22,6 +22,15 @@
   height: 1.1em;
 }
 
+/* GLİFLER CSS'TEN (24 Ekim) — gerekçe RollingFigure.tsx'te: belgede sayının
+   tek metni `sr-only` kopya. `pre`: ayraç olarak gelen boşluk tek başına
+   bir satır içi blokta çöküp genişliksiz kalmasın. */
+.glyph::before,
+.sizer::before {
+  content: attr(data-c);
+  white-space: pre;
+}
+
 /* PENCERE NEFES ALIYOR (28 Eylül). Pencere tam 1.1em ve taşanı kesiyordu;
    kalın puntoda rakamın üst ve alt ucu bazı tarayıcıların yazı ölçüsünde
    pencereye sığmıyor ve sayı "kırpılmış" görünüyordu (SNDK, sahibinin
@@ -56,16 +65,18 @@
 .strip {
   position: absolute;
   inset: 0.12em -0.2em auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   transform: translate3d(0, calc((10 + var(--digit)) * -1.1em), 0);
   visibility: hidden;
+  text-align: center;
 }
 
-.strip > span {
+/* Şeridin yirmi satırı tek `content`te, satır başına bir rakam: satır
+   yüksekliği 1.1em, yani adım eski `span` dizisiyle aynı. */
+.strip::before {
+  content: "0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9\A 0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9";
   display: block;
-  height: 1.1em;
+  white-space: pre;
+  line-height: 1.1em;
 }
 
 @keyframes figure-roll {
