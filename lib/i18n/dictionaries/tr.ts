@@ -3482,6 +3482,8 @@ const tr = {
         docCsv: "Bu Sayfanın Dökümü",
         docCsvBody: "CSV olarak indir: kurlar ve hesap satır satır.",
         readW8: "W-8BEN Rehberi",
+        /* 24 Ekim: hesap taşıyan okuyucu ekstrede alış tarihini kaybetmesin. */
+        readTransfer: "Hesap Taşırken Ekstre",
         readGuide: "Yurt Dışı Hisse Vergisi Rehberi",
       },
       guideTitle: "Bilmen Gerekenler",
@@ -4644,6 +4646,81 @@ const tr = {
   /* Paylaşım kartı (24 Ekim) — `lib/og.tsx` künyeleri. Title Case. */
   ogCard: {
     monthTrend: "Son 1 Ay",
+  },
+  /* Aracı kurum karşılaştırması (24 Ekim) — /araci-kurumlar. Veri ve
+     kaynaklar `content/brokers.ts`; burada yalnız arayüz metni. */
+  brokers: {
+    title: "Aracı Kurum Karşılaştırması",
+    subtitle:
+      "Türkiye'den ABD hissesi alınabilen kurumların ücretleri; her hücre kurumun kendi tarifesinden, kaynağıyla.",
+    menuHint: "ABD Hissesi Ücretleri, Kaynağıyla",
+    tableTitle: "Kurum Kurum ABD Tarifesi",
+    tableMeta: "{count} Kurum",
+    tableLead:
+      "Satır sırası bir sıralama değil: yerli kurumlar önce, yabancı kurum sonda. Köşeli sayı hücrenin kaynağına götürür; kurumun resmî sayfasında bulunamayan bilgi için \"Belirtilmemiş\" yazar, tahmin yazılmaz.",
+    tableRegion: "Aracı kurum tarifeleri tablosu; yana kaydırılabilir",
+    columns: {
+      broker: "Kurum",
+      commission: "ABD İşlem Komisyonu",
+      minimum: "Asgari Ücret",
+      custody: "Saklama ve ADR",
+      fractional: "Kesirli Hisse",
+      data: "Anlık Veri",
+      w8ben: "W-8BEN",
+      options: "ABD Opsiyonu",
+      license: "Lisans",
+    },
+    unspecified: "Belirtilmemiş",
+    sourceRef: "Kaynak {n}: {title}",
+    counterparty: "Yurt Dışında: {name}",
+    foreign: "Yurt Dışı Kurum",
+    scenarioTitle: "Tek Alımın Komisyonu",
+    scenarioLead:
+      "Aynı alım, her kurumun tarifesindeki komisyonla. Adet başına ücret alan kurumlarda hisse fiyatı {price} varsayıldı.",
+    scenarioRegion: "Senaryo tablosu; yana kaydırılabilir",
+    scenarioTrade: "{amount} Alım",
+    notPriced: "Hesaplanmadı",
+    scenarioIncluded:
+      "Hesaba yalnız tarifedeki işlem komisyonu girdi. Kur farkı, saklama ücreti, borsa ve SEC ücretleri dahil değil. BSMV Garanti BBVA Yatırım'ın oranına dahil, Gedik'te %5 ayrıca ekleniyor, öteki kurumların tarifesi bunu belirtmiyor.",
+    scenarioPrice:
+      "Hisse fiyatı değişirse yalnız adet başına ücret alan kurumların (Gedik, Interactive Brokers) sonucu değişir. Çubuk yalnız büyüklüğü gösterir; bir kurumun iyi ya da kötü olduğunu söylemez. Her sütunun çubukları o sütunun en yüksek ücretine göre çizilir, iki sütunun çubuk boyları birbiriyle karşılaştırılmaz.",
+    outsideTitle: "Tabloda Olmayanlar",
+    outside: [
+      {
+        term: "Döviz Çevirme Farkı",
+        body: "Liradan dolara geçerken kurun içinde ödenen fark çoğu tarifede yazmıyor ve çoğu zaman komisyondan büyük. Garanti BBVA Yatırım binde 5 yazıyor, QNB Invest yalnız farklı para biriminde işlemde %0,5. Hesap açmadan önce hangi kurdan çevrildiğini sor.",
+      },
+      {
+        term: "Hisseyi Başka Kuruma Taşımak",
+        body: "Yurt dışı hisseyi başka kuruma göndermek ücretli olabilir; QNB Invest'in sayfası talimat başına 1.500 TL + BSMV yazıyor. Taşırken alış tarihlerini ve maliyetini nasıl koruyacağın rehberde.",
+      },
+      {
+        term: "Yatırımcı Koruması",
+        body: "Yerli kurumda Yatırımcı Tazmin Merkezi, yabancı kurumda o ülkenin programı geçerli. İkisi de kurumun batmasına karşıdır, fiyatın düşmesine karşı değil.",
+      },
+      {
+        term: "Kampanyalar",
+        body: "Süreli indirimler tabloya alınmadı; süreleri bittiğinde tablo yanlış kalırdı.",
+      },
+      {
+        term: "Listede Olmayan Kurumlar",
+        body: "Ak Yatırım ve Deniz Yatırım gibi SPK listesinde olan başka kurumlar da ABD hissesine aracılık ediyor; resmî ABD tarifeleri bulunamadığı için eklenmedi.",
+      },
+    ],
+    guideLink: "Aracı Kurum Seçerken Nelere Bakılır?",
+    transferLink: "Bankadan Aracı Kuruma Geçiş",
+    taxLink: "Vergi Hesaplayıcı",
+    neutralityTitle: "Tarafsızlık Notu",
+    neutrality:
+      "Bu sayfa hiçbir kurumu önermez ve sıralamaz. Bağlantılar yalnız kurumların tarife sayfalarına gider; hiçbiri yönlendirme ya da ortaklık kodu taşımaz, hiçbiri hesap açma sayfasına gitmez. Tarifeler sık değişir: işlem yapmadan önce kurumun güncel tarifesini kendin oku.",
+    notAdvice: "Yatırım Tavsiyesi Değildir",
+    sourcesTitle: "Kaynaklar",
+    sourcesLead:
+      "Her kaynak kurumun kendi sayfası ya da tarife belgesi. Lisans durumu SPK'nın aracı kurum faaliyet izinleri listesinden.",
+    checkedOn: "{date} Okundu",
+    docDate: "Belge: {date}",
+    stampSource: "Kurumların Resmî Tarifeleri",
+    stampChecked: "{date} Doğrulandı",
   },
 };
 

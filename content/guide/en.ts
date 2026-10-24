@@ -1589,7 +1589,7 @@ Find the company you're looking for through the search box at the top or the [Co
   "araci-kurum-secimi": {
     title: "What to Look for in a Broker",
     dek: "Commission can be zero; cost never is. A line-by-line way to compare brokers.",
-    bodyMd: `Your broker is the only door between you and the exchange. When choosing one, most people look at a single number: commission per trade. But what a broker costs you is the sum of five or six items, and the most visible one is often the smallest. This article names no firms and quotes no fees; fee schedules change often, and the current one lives on the broker's own pricing page and in the contract annex.
+    bodyMd: `Your broker is the only door between you and the exchange. When choosing one, most people look at a single number: commission per trade. But what a broker costs you is the sum of five or six items, and the most visible one is often the smallest. This article names no firms and quotes no fees; fee schedules change often, and the current one lives on the broker's own pricing page and in the contract annex. US fee schedules broker by broker, every cell with its source, are on a separate page: [Broker Comparison](/araci-kurumlar)
 
 ## The Cost Items
 
@@ -1647,7 +1647,9 @@ Compare a broker not by its commission but by its **total annual cost**, its acc
 
 ## Where You'll See It on This Site
 
-This site isn't a broker, you can't place orders here, and it doesn't recommend any firm. When comparing the price in your broker's app with a stock page here, check the page's timestamp: the gap usually comes from delay.`,
+This site isn't a broker, you can't place orders here, and it doesn't recommend any firm. The [Broker Comparison](/araci-kurumlar) page sets side by side the commission, minimum fee, custody, data and licence details of the brokers that let Turkish residents buy US stocks, taken from their official fee schedules with the source and the date each was read, and prices a single $1,000 and $10,000 purchase under each schedule. If you're moving your account from a bank to a broker: [Moving From a Bank to a Broker](/rehber/bankadan-araci-kuruma-gecis)
+
+When comparing the price in your broker's app with a stock page here, check the page's timestamp: the gap usually comes from delay.`,
   },
 
   /* ---------------------------------------------------------------------- */
@@ -1862,6 +1864,194 @@ Gains on foreign shares are calculated in lira, the exchange rate rise is part o
 :::
 
 *This article is based on the relevant articles of the Turkish Income Tax Law, the communiqué setting the 2026 thresholds and GİB rulings. It is general information, not tax advice, and reflects the rules as of 2026; regulations can change.*`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar tr.ts'teki aynı yazının üstünde (SPK Bülteni 2026/39,
+     i-SPK.37.9, QNB Invest virman ücreti, 257 Seri No. GVGT). */
+  "bankadan-araci-kuruma-gecis": {
+    title: "Moving From a Bank to a Broker: Türkiye's 17 June 2026 Ruling",
+    dek: "Turkish banks can no longer route orders for foreign shares themselves. What the ruling says, what it leaves out, and how to keep your purchase records when you move.",
+    bodyMd: `On 17 June 2026, Türkiye's Capital Markets Board (SPK) published a principle decision in its weekly bulletin: deposit and participation banks may no longer act as intermediaries routing orders for foreign shares and share-based derivatives. A bank can now do this only through an authorised brokerage firm. If you buy US stocks through your bank's app, the question is where your account actually sits and, if it has to move, what happens to your purchase records. This article covers the text of the ruling, what it leaves out and the tax side of moving.
+
+::: tanim Terms in This Article
+**Principle Decision:** An SPK ruling that applies to the whole market rather than a single firm. This one added a new clause to the SPK's guidebook for investment firms.
+**Order Routing:** Taking a client's order and passing it to the firm that executes it. Not the executing firm, the link in between.
+**Transfer In Kind (Virman):** Moving shares from an account at one firm to an account at another without selling them.
+**First In, First Out (FIFO):** A cost method that treats the shares you sell as coming from your oldest purchase.
+:::
+
+## The Text of the Ruling
+
+The decision was published in SPK bulletin 2026/39 under the number i-SPK.37.9. The new clause added to the brokerage section of the investment firms guidebook opens like this (our translation):
+
+> Deposit or participation banks may not engage in order routing for shares, or derivatives based on shares and share indices, abroad.
+
+The clause's second sentence leaves banks two routes. A bank may help a client open an account at a brokerage firm that the SPK has authorised to deal abroad and that has signed a routing agreement with the bank, or it may pass the client's orders to that firm. In other words, the bank can stay the front door; the party responsible for the order becomes the brokerage firm.
+
+::: akis How a US Stock Order Travels After the Ruling
+You | The bank's app or branch
+Bank | Opens the account or passes the order
+Authorised Broker | Licensed by the SPK to deal abroad
+Foreign Broker | Takes the order to the US exchange
+:::
+
+The same bulletin carries a second announcement: trading in exchange-traded funds listed on foreign exchanges may be carried out by investment firms under the rules for order routing or dealing. That announcement explicitly keeps in place the SPK's 2017 ruling on not conducting "spot or derivative transactions based on crypto assets". More: [Crypto ETFs](/rehber/kripto-etf)
+
+## What the Text Leaves Out
+
+The three things a reader most wants to know are not in the ruling:
+
+- **Transition period and effective date.** The ruling gives no separate date, and no new clause was added to the guidebook's transition section for it.
+- **Existing positions.** Nothing says whether shares already held through a bank must be moved, sold or can stay.
+- **Reasoning.** The bulletin does not explain why the decision was taken.
+
+At the time of writing, no bank announcement specific to this ruling could be found either. Some banks already run their foreign stock service through their own brokerage arm: Garanti BBVA's page says orders go through Garanti BBVA Yatırım's channels, and Yapı Kredi's page says the platform is offered through Yapı Kredi Yatırım. Your bank is the one that can say what the ruling changes for your account; ask for the answer in writing.
+
+## Two Ways to Move
+
+If your account moves to another firm, the shares go one of two ways, and for tax purposes they are not the same thing.
+
+| | Transfer In Kind | Sell and Buy Again |
+|---|---|---|
+| **Shares** | Move to the new firm unsold | Sold at the old firm, bought at the new one |
+| **Tax** | No sale, so no gain arises | A capital gain arises and must be declared |
+| **Purchase Date** | Unchanged; you keep the record | A new purchase date starts |
+| **Cost** | A transfer fee, possibly per instruction | Commission, spread and FX margin, twice |
+
+A transfer can carry a fee too; QNB Invest's page, for example, lists outgoing transfers of foreign shares at 1,500 TL plus BSMV tax per instruction. Fractional shares usually can't be transferred and are sold for cash instead; small as it is, that is a sale. More: [What Are Fractional Shares?](/rehber/kesirli-hisse)
+
+## Why the Purchase Record Matters So Much
+
+In Türkiye, gains on foreign shares are calculated in lira, and both halves of the calculation hang on the purchase date. The first is the exchange rate: cost is converted at the central bank's buying rate on the day you bought. The second is indexation: if domestic producer prices (Yİ-ÜFE) rose 10% or more between the month before you bought and the month before you sold, your cost is scaled up by that rise. Lose the purchase date and you lose both. More: [Taxation of Foreign Stock Gains](/rehber/yurt-disi-hisse-vergisi)
+
+If you bought the same stock on different days, one more rule applies: the shares you sell come out of your oldest purchase first (first in, first out). Without records of your first purchases at the old firm, there's no way to tell which purchase a sale at the new firm matches.
+
+None of the broker pages read for this article say whether a transferred holding arrives on the new statement with its original purchase date and cost. The new firm may show it at the transfer day's price, or with no cost at all. Both give the wrong result on a tax return.
+
+::: ornek Mistaking the Transfer Day for a Purchase
+Figures are hypothetical.
+Actual purchase: 10 shares in 2023 at $150, rate 25. Cost **TL 37,500**.
+Transfer day: share at $200, rate 40. If the new statement shows this as a purchase, cost appears as TL 80,000.
+Sale: 10 shares at $210, rate 42. Proceeds **TL 88,200**.
+The unindexed gain is TL 50,700 against the actual purchase and TL 8,200 against the transfer day. The return is filed with the actual purchase date, and indexation is worked out from that date too.
+:::
+
+::: dikkat Download Statements Before the Account Closes
+Once the old account is closed you may lose access to past statements. Before moving, download the full trade history from the day the account opened, dividend records and every 1042-S. Include years with no sales: the cost of your next sale sits in those years' purchases.
+:::
+
+## Checklist Before You Move
+
+1. Ask your bank: is your account held at the bank or at a brokerage firm today, and what does the ruling change for it? Get the answer in writing.
+2. Download every statement, dividend record and 1042-S since the account opened.
+3. Find out whether the move is a transfer in kind or a sale. If it's a sale, it creates a tax filing for that year.
+4. Ask what happens to fractional shares; they are usually sold for cash.
+5. Get the outgoing and incoming transfer fees from both firms.
+6. Compare the new firm's US fees: [Broker Comparison](/araci-kurumlar)
+7. File a new W-8BEN with the new firm. The form is a declaration given to a firm; a new firm asks for its own. More: [W-8BEN and 1042-S](/rehber/w-8ben)
+8. Once the move is done, check the share counts and purchase dates on the new statement line by line against the old one.
+
+## Bringing It Together in the Tax Calculator
+
+This site's [tax calculator](/vergi#satis) can import statements: it recognises Midas and Interactive Brokers statements and reads several files at once. Rows in a format it doesn't recognise show up in the preview but unticked; every row needs your confirmation. It matches sales to purchases first in, first out, and if a sale exceeds the purchases you loaded it doesn't fill the gap with a made-up cost; it shows the shortfall.
+
+If you're moving accounts, load the old firm's and the new firm's statements together. If the new firm shows the transfer day as a purchase, leave that row unticked; the real purchase for those shares is on the old firm's statement.
+
+::: ozet Summary
+Since the SPK's 17 June 2026 ruling, banks may not route orders for foreign shares and share-based derivatives themselves; they can refer clients to an authorised brokerage firm. The ruling says nothing about a transition period or existing positions, so that is a question for your bank. If you move your account, tell a transfer in kind apart from a sale, download your statements before the account closes and keep your purchase dates: the exchange rate and indexation both depend on them.
+:::
+
+*This article is based on SPK bulletin 2026/39 and the investment firms guidebook as amended by the ruling, using sources read as of 24 October 2026. It is general information, not tax or legal advice.*`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar tr.ts'teki aynı yazının üstünde (IRS Table 1, Irish Revenue
+     TDM 27-01a-02, IRS 706-NA, fon yöneticilerinin ürün sayfaları). */
+  "irlanda-etf-mi-abd-etf-mi": {
+    title: "Irish ETF or US ETF?",
+    dek: "Two funds tracking the same index differ, for a Turkish resident, in dividend tax, estate tax exposure and expense ratio.",
+    bodyMd: `Some funds tracking the S&P 500 are domiciled in the US (such as VOO), others in Ireland (such as CSPX and VUAA). The basket is the same and the price moves almost identically. Where they differ is the country the fund is set up in: that decides where and at what rate dividends are taxed, whether the US estate tax reaches the fund, and whether the fund pays dividends out at all. This article looks at the differences from the point of view of an investor resident in Türkiye; it doesn't recommend a fund.
+
+::: tanim Terms in This Article
+**UCITS:** The European Union's common rulebook for investment funds. Most Ireland-domiciled ETFs are set up under it.
+**Accumulating (Acc):** A share class that reinvests dividends inside the fund instead of paying them out.
+**Distributing (Dist):** A share class that pays dividends to holders in cash.
+**Expense Ratio:** The fund's yearly running cost. No bill arrives; it's taken out of the price a little each day.
+:::
+
+## Dividends: Where the Tax Is Taken
+
+In both funds the dividends come from the same US companies. The difference is on whose behalf the tax is withheld and under which treaty.
+
+**In a US-domiciled fund**, the US withholds tax when the fund pays the dividend on to you. For an individual resident in Türkiye who has filed a W-8BEN the rate is 20%; without the form, 30%. More: [W-8BEN and 1042-S](/rehber/w-8ben)
+
+**In an Ireland-domiciled fund**, the tax is taken one step earlier, when the company pays the dividend to the fund. The US–Ireland treaty cuts that rate to 15%. Ireland then takes nothing further from the fund's payments to holders: the Irish Revenue's manual says a fund does not deduct exit tax on ETF units held in a recognised clearing system.
+
+::: akis How a Dividend Travels Through an Irish Fund
+US Company | Pays the dividend
+Irish Fund | US withholds 15%
+Fund | Reinvests or pays out; Ireland takes nothing
+You | No cash if accumulating, gross if distributing
+:::
+
+::: bar notr Withheld on the Way From a $100 Gross Dividend
+US Fund, No Form | 30%
+US Fund, With W-8BEN | 20%
+Irish Fund, Inside the Fund | 15%
+:::
+
+For many countries this gap is large: 15 points for someone with no form or whose treaty leaves the rate at 30%. For a Turkish resident it's 5 points, because the US–Türkiye treaty already gives 20%. Five points move the yearly return very little, about as much as the gap in expense ratios.
+
+::: ornek One Year on $10,000
+A 1.5% dividend yield is assumed; the real yield changes year to year.
+Gross dividends for the year: 10,000 × 1.5% = **$150**.
+US fund (VOO): 20% withheld $30, 0.03% expenses $3. Total **$33**.
+Irish fund (CSPX): 15% withheld $22.50, 0.07% expenses $7. Total **$29.50**.
+The difference is $3.50 a year, about 0.035% of the money.
+:::
+
+::: dikkat On Whose Behalf the Tax Is Paid
+The 20% withheld by a US fund is withheld in your name and shows on your 1042-S. If your dividends exceed Türkiye's filing threshold, that amount can be credited against the tax you owe, provided it's documented and doesn't exceed the Turkish tax on that income. The 15% paid inside an Irish fund is the fund's tax; there's no document in your name and it can't be credited in Türkiye. So for someone who files, the $3.50 gap above can shrink. More: [Taxation of Foreign Stock Gains](/rehber/yurt-disi-hisse-vergisi)
+:::
+
+## Estate Tax: The $60,000 Threshold
+
+When someone who is neither a US citizen nor a US resident dies, the heirs must file a US estate tax return (Form 706-NA) if the person's US-situated assets are worth more than $60,000. The IRS notes that this threshold is not adjusted for inflation. The US and Türkiye have no treaty on estate tax.
+
+Which assets count as "US-situated" is set out in the IRS form instructions: shares of corporations organised under US law are US property wherever the certificates are kept, and shares of other corporations are property outside the US. A share of a US-domiciled ETF is therefore a US asset; a share of an Ireland-domiciled fund, under that definition, is not.
+
+For a portfolio under $60,000 this makes no difference today. It starts to matter as the portfolio grows, and individual US stocks count as US assets too; an Irish fund only takes the fund part out of the definition. Ireland's own inheritance rules are a separate question that this article doesn't cover; a large portfolio calls for a specialist.
+
+## Accumulating or Distributing
+
+US funds such as VOO and QQQ pay dividends out in cash. Irish funds often come in two share classes for the same index: one pays dividends out, the other reinvests them inside the fund. The "Use of Income" line on the fund page tells you which; CSPX, VUAA and CNDX are accumulating classes.
+
+For a Turkish tax return the difference is this: with a distributing class, dividends arrive every year and count toward the filing threshold like any foreign dividend. With an accumulating class no cash arrives during the year; the return stays inside the fund's price and shows up when you sell. How Türkiye classifies the gain on selling a foreign fund, and whether the cost can be indexed, is less clear-cut than for a single stock. Talk to a tax adviser before selling an accumulating fund.
+
+## Expense Ratios and Example Fund Pairs
+
+Irish funds cost a little more than US funds tracking the same index. Figures from the fund managers' product pages, as of 24 October 2026:
+
+| Index | US Fund | Expense Ratio | Irish Fund | Expense Ratio |
+|---|---|---|---|---|
+| **S&P 500** | VOO | 0.03% | CSPX (accumulating) | 0.07% |
+| **S&P 500** | VOO | 0.03% | VUAA (accumulating) | 0.07% |
+| **Nasdaq 100** | QQQ | 0.18% | CNDX (accumulating) | 0.30% |
+
+The expense gap comes off the whole investment every year; the withholding gap only off the dividends. In a low-yield index such as the Nasdaq 100, the withholding gap is worth less while the expense gap stays the same.
+
+## Which Brokers Carry Them
+
+Irish funds trade not on US exchanges but on European ones such as London and Frankfurt. The same fund can have several lines on different exchanges in different currencies; Vanguard's all-world fund trades in dollars in London as VWRA and in euros on Xetra as VWCE. Buying the euro line adds another currency layer on top of dollar assets.
+
+A broker that only routes to US exchanges won't offer these funds. Check whether the broker's fee schedule has a London or German line, and read the commission there separately: minimum fees on European exchanges often differ from US ones. US fee schedules broker by broker, with sources: [Broker Comparison](/araci-kurumlar)
+
+::: ozet Summary
+For a Turkish resident, an Irish fund's dividend advantage is 5 points (15% instead of 20%), worth a few hundredths of a percent a year, and the expense ratio gap largely eats it. The Irish fund's real difference is on the estate side: a share of a US-domiciled ETF counts as a US asset, an Irish fund doesn't. An accumulating class removes the yearly dividend filing, but its treatment on sale is less clear-cut than a single stock's. The choice depends on the size of the portfolio and which exchanges your broker can reach.
+:::
+
+*This article is based on the IRS tax treaty table and Form 706-NA instructions, the Irish Revenue's manual on investment undertakings and the fund managers' product pages, using sources read as of 24 October 2026. It is general information, not tax advice or investment advice.*`,
   },
 
   /* ---------------------------------------------------------------------- */

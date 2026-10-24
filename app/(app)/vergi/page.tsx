@@ -89,7 +89,7 @@ export default async function TaxPage() {
       <GuideHint
         label={t.guide.contextLabel}
         locale={locale}
-        slugs={["yurt-disi-hisse-vergisi", "w-8ben", "kur-riski"]}
+        slugs={["yurt-disi-hisse-vergisi", "w-8ben", "kur-riski", "bankadan-araci-kuruma-gecis"]}
         className="pt-1"
       />
     </MotionExperience>

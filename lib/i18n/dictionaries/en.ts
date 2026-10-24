@@ -2980,6 +2980,7 @@ const en: typeof tr = {
         docCsv: "This Page's Breakdown",
         docCsvBody: "Download it as CSV: rates and the math, row by row.",
         readW8: "W-8BEN Guide",
+        readTransfer: "Statements When Moving Accounts",
         readGuide: "Foreign Stock Tax Guide",
       },
       guideTitle: "What to Know",
@@ -4097,6 +4098,80 @@ const en: typeof tr = {
   /* Share card (24 October) — `lib/og.tsx` labels. Title Case. */
   ogCard: {
     monthTrend: "Past Month",
+  },
+  /* Broker comparison (24 October) — /araci-kurumlar. */
+  brokers: {
+    title: "Broker Comparison",
+    subtitle:
+      "Fees at the brokers that let Turkish residents buy US stocks; every cell comes from the broker's own fee schedule, with its source.",
+    menuHint: "US Stock Fees With Sources",
+    tableTitle: "US Fees, Broker by Broker",
+    tableMeta: "{count} Brokers",
+    tableLead:
+      "Row order is not a ranking: domestic brokers first, the foreign broker last. Bracketed numbers lead to each cell's source; anything not found on the broker's official pages reads \"Not Stated\" instead of a guess.",
+    tableRegion: "Broker fee table; scrolls sideways",
+    columns: {
+      broker: "Broker",
+      commission: "US Trade Commission",
+      minimum: "Minimum Fee",
+      custody: "Custody and ADR",
+      fractional: "Fractional Shares",
+      data: "Real-Time Data",
+      w8ben: "W-8BEN",
+      options: "US Options",
+      license: "Licence",
+    },
+    unspecified: "Not Stated",
+    sourceRef: "Source {n}: {title}",
+    counterparty: "Abroad: {name}",
+    foreign: "Foreign Broker",
+    scenarioTitle: "Commission on a Single Purchase",
+    scenarioLead:
+      "The same purchase at each broker's listed commission. For per-share pricing, a share price of {price} is assumed.",
+    scenarioRegion: "Scenario table; scrolls sideways",
+    scenarioTrade: "{amount} Purchase",
+    notPriced: "Not Priced",
+    scenarioIncluded:
+      "Only the listed trade commission is counted. FX spread, custody, exchange and SEC fees are left out. Turkish BSMV tax is included in Garanti BBVA Yatırım's rate, added at 5% by Gedik, and not stated by the others.",
+    scenarioPrice:
+      "If the share price changes, only the per-share brokers (Gedik, Interactive Brokers) change. The bar shows size only; it does not say a broker is good or bad. Each column is scaled to its own highest fee, so bar lengths are not comparable across the two columns.",
+    outsideTitle: "What the Table Leaves Out",
+    outside: [
+      {
+        term: "FX Spread",
+        body: "The margin paid inside the lira-to-dollar rate is missing from most fee tables and is often bigger than the commission. Garanti BBVA Yatırım lists 0.5%; QNB Invest lists 0.5% only for trades in another currency. Ask which rate is used before opening an account.",
+      },
+      {
+        term: "Moving Shares to Another Broker",
+        body: "Sending foreign shares to another broker can cost money; QNB Invest's page lists 1,500 TL plus BSMV per instruction. How to keep purchase dates and cost basis while moving is covered in the guide.",
+      },
+      {
+        term: "Investor Protection",
+        body: "A domestic broker is covered by Türkiye's Investor Compensation Center, a foreign one by its own country's scheme. Both cover a broker's failure, not a falling price.",
+      },
+      {
+        term: "Promotions",
+        body: "Time-limited discounts are left out; the table would be wrong once they end.",
+      },
+      {
+        term: "Brokers Not Listed",
+        body: "Other licensed brokers such as Ak Yatırım and Deniz Yatırım also offer US stocks; they are not listed because no official US fee schedule could be found.",
+      },
+    ],
+    guideLink: "How to Choose a Broker",
+    transferLink: "Moving From a Bank to a Broker",
+    taxLink: "Tax Calculator",
+    neutralityTitle: "Neutrality Note",
+    neutrality:
+      "This page recommends and ranks no broker. Links go only to the brokers' fee pages; none carries a referral or affiliate code and none leads to an account-opening page. Fees change often: read the broker's current schedule yourself before trading.",
+    notAdvice: "Not Investment Advice",
+    sourcesTitle: "Sources",
+    sourcesLead:
+      "Every source is the broker's own page or fee document. Licence status comes from the Capital Markets Board's register of brokerage licences.",
+    checkedOn: "Read {date}",
+    docDate: "Document: {date}",
+    stampSource: "Brokers' Official Fee Schedules",
+    stampChecked: "Verified {date}",
   },
 };
 

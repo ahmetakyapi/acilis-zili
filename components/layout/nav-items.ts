@@ -1,4 +1,5 @@
 import {
+  Bank,
   Bell,
   ChatsCircle,
   Briefcase,
@@ -316,6 +317,19 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: false,
     more: "learn",
     hint: (t) => t.menu.hintGlossary,
+  },
+  {
+    /* ARACI KURUM KARŞILAŞTIRMASI (24 Ekim) — "Öğren"de, Sözlük'ün ardında:
+       bir başvuru tablosu, rehberin "Aracı Kurum Seçimi" yazısının
+       ölçülmüş karşılığı. Grup üç satıra çıktı ve sol sütunla satır satır
+       hizası bozuldu (bkz. tests/nav-items.test.ts); dengelemek birleştirme
+       sırasında, öteki yeni satırlar da görülünce yapılacak. */
+    href: "/araci-kurumlar",
+    label: (t) => t.brokers.title,
+    icon: Bank,
+    inBottomBar: false,
+    more: "learn",
+    hint: (t) => t.brokers.menuHint,
   },
   {
     href: "/vergi",

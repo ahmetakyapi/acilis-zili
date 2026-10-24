@@ -82,6 +82,8 @@ const COMPANY_SITEMAP_LIMIT = 300;
  */
 const FEATURE_STATIC_ROUTES: StaticRoute[] = [
   { path: "/vergi", priority: 0.7, frequency: "monthly", stamp: false },
+  /* 24 Ekim: aracı kurum karşılaştırması — veri depoda, tarih damgası yok. */
+  { path: "/araci-kurumlar", priority: 0.7, frequency: "monthly", stamp: false },
   { path: "/sozluk", priority: 0.8, frequency: "weekly", stamp: false },
   { path: "/bulmaca", priority: 0.6, frequency: "daily", stamp: false },
   { path: "/tema", priority: 0.7, frequency: "daily" },

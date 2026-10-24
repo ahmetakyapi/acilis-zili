@@ -148,7 +148,7 @@ export const GUIDE_META = [
     slug: "etf",
     topic: "temel",
     glyph: "ETF",
-    related: ["endeks", "temettu", "endeks-fonu-mu-tek-hisse-mi", "kripto-etf"],
+    related: ["endeks", "temettu", "endeks-fonu-mu-tek-hisse-mi", "kripto-etf", "irlanda-etf-mi-abd-etf-mi"],
   },
   {
     /* ETF'ten hemen sonra: o yazı fonun ne olduğunu anlatıyor, bu yazı
@@ -221,7 +221,20 @@ export const GUIDE_META = [
     topic: "strateji",
     level: "temel", // hesap açmadan önce okunuyor
     glyph: "SIPC",
-    related: ["abd-hisse-nasil-alinir", "spread-likidite", "kesirli-hisse", "kur-riski"],
+    related: ["abd-hisse-nasil-alinir", "bankadan-araci-kuruma-gecis", "kesirli-hisse", "kur-riski"],
+  },
+  {
+    /* Aracı kurum seçiminin ardından (24 Ekim): SPK'nın 17 Haziran 2026
+       ilke kararıyla bankalar yurt dışı pay emrine aracılık edemiyor ve
+       bankadaki hesabını taşıyan okuyucu tam da "hangi kurum" sorusuyla
+       karşılaşıyor. Vergi tarafı (FIFO, endeksleme) vergi yazısına
+       yaslanıyor ama orada anlatılan kuralların burada ön koşulu yok;
+       seviye konunun varsayılanı. */
+    slug: "bankadan-araci-kuruma-gecis",
+    topic: "strateji",
+    glyph: "SPK",
+    glyphEn: "CMB",
+    related: ["araci-kurum-secimi", "yurt-disi-hisse-vergisi", "kesirli-hisse", "w-8ben"],
   },
   {
     slug: "emir-tipleri",
@@ -256,6 +269,17 @@ export const GUIDE_META = [
     glyph: "Beyan",
     glyphEn: "Tax",
     related: ["w-8ben", "kur-riski", "temettu", "abd-hisse-nasil-alinir"],
+  },
+  {
+    /* Vergi çiftinin ÜÇÜNCÜSÜ (24 Ekim): W-8BEN'in %20'si ve Türkiye'deki
+       beyan okunmuş olmalı, çünkü yazı ikisini İrlanda fonunun içeride
+       ödediği %15 ile karşılaştırıyor. ETF yazısı da ön koşul; `related`
+       oraya bağlıyor. Orta: anlaşma oranı, veraset eşiği ve pay sınıfı üç
+       ayrı kavram ama hesap tek. */
+    slug: "irlanda-etf-mi-abd-etf-mi",
+    topic: "strateji",
+    glyph: "IE↔US",
+    related: ["etf", "w-8ben", "yurt-disi-hisse-vergisi", "temettu"],
   },
   {
     slug: "risk-yonetimi",

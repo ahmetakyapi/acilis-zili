@@ -88,6 +88,7 @@ const ROUTES = [
   "/sozluk/fk",
   "/vergi",
   "/bulmaca",
+  "/araci-kurumlar",
   "/hakkinda",
   "/portfoy",
 ];

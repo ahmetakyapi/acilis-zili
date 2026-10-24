@@ -1621,7 +1621,7 @@ Aradığın şirketi üstteki arama kutusundan ya da [Şirketler](/sirketler) di
   "araci-kurum-secimi": {
     title: "Aracı Kurum Seçerken Nelere Bakılır?",
     dek: "Komisyon sıfır olabilir; maliyet sıfır olmaz. Bir kurumu karşılaştırmanın kalem kalem yolu.",
-    bodyMd: `Aracı kurum, seninle borsa arasındaki tek kapıdır. Seçerken çoğu kişi tek bir sayıya bakar: işlem başına komisyon. Oysa bir kurumun sana maliyeti beş altı kalemin toplamıdır ve en görünür kalem çoğu zaman en küçüğüdür. Bu yazı kurum adı vermez ve ücret rakamı yazmaz; tarifeler sık değişir ve güncel olanı kurumun kendi fiyat sayfasında ve sözleşme ekinde durur.
+    bodyMd: `Aracı kurum, seninle borsa arasındaki tek kapıdır. Seçerken çoğu kişi tek bir sayıya bakar: işlem başına komisyon. Oysa bir kurumun sana maliyeti beş altı kalemin toplamıdır ve en görünür kalem çoğu zaman en küçüğüdür. Bu yazı kurum adı vermez ve ücret rakamı yazmaz; tarifeler sık değişir ve güncel olanı kurumun kendi fiyat sayfasında ve sözleşme ekinde durur. Kurum kurum ABD tarifeleri, her hücresi kaynağıyla, ayrı bir sayfada: [Aracı Kurum Karşılaştırması](/araci-kurumlar)
 
 ## Maliyetin Kalemleri
 
@@ -1679,7 +1679,9 @@ Bir aracı kurumu komisyonuyla değil, **yıllık toplam maliyetiyle**, ihtiyac�
 
 ## Bu Sitede Nerede Görürsün
 
-Bu site aracı kurum değildir ve buradan emir verilmez; herhangi bir kurumu önermez. Kurumunun uygulamasında gördüğün fiyatı buradaki hisse sayfasıyla karşılaştırırken sayfadaki zaman damgasına bak: aradaki fark çoğu zaman gecikmeden gelir.`,
+Bu site aracı kurum değildir ve buradan emir verilmez; herhangi bir kurumu önermez. [Aracı Kurum Karşılaştırması](/araci-kurumlar) sayfası Türkiye'den ABD hissesi alınabilen kurumların komisyon, asgari ücret, saklama, veri ve lisans bilgilerini kurumların resmî tarifelerinden, kaynağı ve okunduğu günle birlikte yan yana koyar ve 1.000 ile 10.000 dolarlık tek bir alımın komisyonunu her tarifeyle hesaplar. Bankadaki hesabını bir aracı kuruma taşıyorsan: [Bankadan Aracı Kuruma Geçiş](/rehber/bankadan-araci-kuruma-gecis)
+
+Kurumunun uygulamasında gördüğün fiyatı buradaki hisse sayfasıyla karşılaştırırken sayfadaki zaman damgasına bak: aradaki fark çoğu zaman gecikmeden gelir.`,
   },
 
   /* ---------------------------------------------------------------------- */
@@ -1927,6 +1929,224 @@ Yurt dışı hisse kazancı lira üzerinden hesaplanır, kur artışı da kazanc
 :::
 
 *Bu yazı Gelir Vergisi Kanunu'nun ilgili maddelerine, 2026 had ve tutarlarını belirleyen tebliğe ve Gelir İdaresi özelgelerine dayanır. Genel bilgi verir, vergi danışmanlığı değildir ve 2026 itibarıyla geçerlidir; düzenlemeler değişebilir.*`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar (24 Ekim 2026'da okundu): SPK Bülteni 2026/39, 17.06.2026,
+     "E. Duyuru ve İlke Kararları" 1. ve 2. maddeler —
+     spk.gov.tr/data/6a3300ca8f95db19fcfc205f/2026-39.pdf. i-SPK.37.9
+     (17/06/2026 tarih ve 37/1118 s.k.) İlke Kararı, "Yatırım Hizmet ve
+     Faaliyetleri ile Yatırım Kuruluşlarına İlişkin Rehber" G.4; Rehber'in
+     güncel sürümü (i-SPK.37.9) spk.gov.tr'de. Karar metninde geçiş süresi,
+     ayrı bir yürürlük tarihi, mevcut pozisyonlar ve gerekçe YOK; Rehber'in
+     "R. Geçiş Süresi" bölümüne yeni madde eklenmedi. Resmî Gazete kaydı
+     bulunamadı. Bankaların bu karara özgü müşteri duyurusu bulunamadı
+     (Garanti BBVA, Yapı Kredi, Akbank, Enpara, İş Bankası, QNB sayfaları
+     okundu); Garanti BBVA ve Yapı Kredi'nin yurt dışı hisse sayfaları
+     hizmeti zaten iştirak aracı kurum üzerinden anlatıyor. Virman ücreti:
+     qnbinvest.com.tr/yurt-disi-yatirim-islemleri (talimat başına 1.500 TL
+     + BSMV). Alış maliyetinin virmanla taşınıp taşınmadığını okunan hiçbir
+     kurum sayfası yazmıyor — metin bunu açıkça söylüyor. FIFO: 257 Seri
+     No. GVGT, kesinlik notu lib/tax.ts → matchFifo. Endeksleme: GVK mük.
+     81. Örnekteki rakamlar VARSAYIMSAL. */
+  "bankadan-araci-kuruma-gecis": {
+    title: "Bankadan Aracı Kuruma Geçiş: SPK'nın 17 Haziran 2026 Kararı",
+    dek: "Bankalar yurt dışı pay emrine artık aracılık edemiyor. Kararın ne dediği, ne demediği ve hesabını taşırken alış kayıtlarını nasıl koruyacağın.",
+    bodyMd: `SPK, 17 Haziran 2026 tarihli bülteninde bir ilke kararı yayımladı: mevduat ve katılım bankaları yurt dışındaki paylar ve paya dayalı türev araçlarda emir iletimine aracılık edemeyecek. Bankalar bu işi artık ancak yetkili bir aracı kurum üzerinden yapabiliyor. ABD hissesini bankanın uygulamasından alan biri için soru şu: hesabım nerede duruyor ve taşınacaksa alış kayıtlarım ne olacak? Bu yazı kararın metnini, metinde olmayanları ve taşımanın vergi tarafını anlatır.
+
+::: tanim Bu Yazıdaki Terimler
+**İlke Kararı:** SPK'nın tek bir kuruma değil bütün piyasaya uygulanan kararı. Bu karar, SPK'nın yatırım kuruluşları rehberine yeni bir madde ekledi.
+**Emir İletimine Aracılık:** Müşterinin emrini alıp işlemi yapacak kuruma iletmek. Emri yürüten değil, aradaki halka.
+**Virman:** Hissenin satılmadan bir kurumdaki hesaptan başka bir kurumdaki hesaba aktarılması.
+**İlk Giren İlk Çıkar (FIFO):** Satılan hissenin en eski alıştan düşüldüğünü kabul eden maliyet yöntemi.
+:::
+
+## Kararın Metni
+
+Karar, SPK'nın 2026/39 sayılı bülteninde i-SPK.37.9 numarasıyla yayımlandı. Yatırım kuruluşları rehberinin alım satım aracılığı bölümüne eklenen yeni madde şöyle başlıyor:
+
+> Mevduat veya katılım bankaları yurt dışında paylar, paya ve pay endekslerine dayalı türev araçlar için emir iletimine aracılık faaliyetinde bulunamazlar.
+
+Maddenin ikinci cümlesi bankalara iki yol bırakıyor. Banka, yurt dışında işlem aracılığı için SPK'dan yetki almış ve kendisiyle sözleşme imzalamış bir aracı kurumda müşterinin hesap açmasına aracılık edebilir ya da emri o aracı kuruma iletebilir. Yani banka kapı olarak kalabiliyor; emrin muhatabı aracı kurum oluyor.
+
+::: akis Kararın Ardından Bir ABD Hissesi Emrinin Yolu
+Sen | Bankanın uygulaması ya da şubesi
+Banka | Hesap açtırır ya da emri iletir
+Yetkili Aracı Kurum | SPK'dan yurt dışı işlem yetkisi var
+Yurt Dışı Aracı | Emri ABD borsasına taşır
+:::
+
+Aynı bülten bir duyuru daha içeriyor: yabancı borsalarda işlem gören borsa yatırım fonlarının alım satımının yatırım kuruluşlarınca, emir iletimine aracılık ya da işlem aracılığı kurallarına uygun olarak yapılabileceği. Duyuru, SPK'nın 2017 tarihli ve "kripto varlıklara dayalı spot veya türev işlemler yapılmamasına" ilişkin kararını ayrıca saklı tutuyor. Ayrıntı: [Kripto ETF'leri](/rehber/kripto-etf)
+
+## Metinde Olmayanlar
+
+Bülteni okuyan birinin en çok merak ettiği üç şey kararda yazmıyor:
+
+- **Geçiş süresi ve yürürlük tarihi.** Kararda ayrı bir tarih yok. Rehberin geçiş hükümleri bölümüne de bu karar için yeni bir madde eklenmedi.
+- **Mevcut pozisyonlar.** Bankada duran hisselerin taşınması, satılması ya da beklemesi hakkında bir hüküm yok.
+- **Gerekçe.** Bülten kararın neden alındığını açıklamıyor.
+
+Bu yazının hazırlandığı tarihte bankaların bu karara özgü bir müşteri duyurusu da bulunamadı. Bazı bankalar yurt dışı hisse hizmetini zaten kendi aracı kurumları üzerinden veriyor: Garanti BBVA'nın sayfası emirlerin Garanti BBVA Yatırım kanallarından iletildiğini, Yapı Kredi'nin sayfası platformun Yapı Kredi Yatırım aracılığıyla sunulduğunu yazıyor. Kararın senin hesabın için neyi değiştirdiğini en doğru bankan söyler; cevabı yazılı iste.
+
+## Taşımanın İki Yolu
+
+Hesap başka bir kuruma geçecekse hisseler iki yoldan biriyle gider ve vergi açısından ikisi aynı şey değildir.
+
+| | Virman | Sat ve Yeniden Al |
+|---|---|---|
+| **Hisse** | Satılmadan yeni kuruma geçer | Eski kurumda satılır, yenisinde alınır |
+| **Vergi** | Satış olmadığı için kazanç doğmaz | Satış kazancı doğar, beyana girer |
+| **Alış Tarihi** | Değişmez; kaydını sen korursun | Yeni alışın tarihi başlar |
+| **Maliyet** | Virman ücreti; kurum talimat başına alabilir | Komisyon, spread ve kur farkı iki kez |
+
+Virmanın da bir ücreti olabiliyor; örneğin QNB Invest'in sayfası yurt dışı hisse için giden virmanı talimat başına 1.500 TL + BSMV olarak yazıyor. Kesirli paylar çoğu zaman virmanla taşınamaz ve satılıp nakde çevrilir; bu küçük de olsa bir satıştır. Ayrıntı: [Kesirli Hisse Nedir?](/rehber/kesirli-hisse)
+
+## Alış Kaydı Neden Bu Kadar Önemli
+
+Türkiye'de yurt dışı hisse kazancı lira üzerinden hesaplanır ve hesabın iki ayağı alış tarihine bağlıdır. Birincisi kur: maliyet, alış gününün TCMB döviz alış kuruyla liraya çevrilir. İkincisi endeksleme: alış ayından önceki ay ile satış ayından önceki ay arasındaki Yİ-ÜFE artışı %10'u geçerse maliyet o oranda büyütülür. Alış tarihi kaybolursa iki ayak da kaybolur. Ayrıntı: [Yurt Dışı Hisse Kazancının Vergilendirilmesi](/rehber/yurt-disi-hisse-vergisi)
+
+Aynı hisseyi farklı günlerde aldıysan bir kural daha devreye girer: satılan adet en eski alıştan düşülür (ilk giren ilk çıkar). Eski kurumdaki ilk alışların kaydı elinde yoksa yeni kurumdaki satışın hangi alışa denk geldiği hesaplanamaz.
+
+Bu yazı için okunan kurum sayfalarının hiçbiri, virmanla gelen hissenin alış tarihini ve maliyetini yeni ekstreye taşıyıp taşımadığını yazmıyor. Yeni kurum hisseyi taşıma gününün fiyatıyla ya da maliyetsiz gösterebilir. İkisi de beyanda yanlış sonuç verir.
+
+::: ornek Taşıma Gününü Alış Sanmak
+Rakamlar varsayımsaldır.
+Gerçek alış: 2023'te 10 hisse, 150 $'dan, kur 25. Maliyet **37.500 TL**.
+Taşıma günü: hisse 200 $, kur 40. Yeni ekstre bunu alış gibi gösterirse maliyet 80.000 TL görünür.
+Satış: 10 hisse, 210 $'dan, kur 42. Satış bedeli **88.200 TL**.
+Gerçek alışla endekssiz kazanç 50.700 TL, taşıma gününe göre 8.200 TL. Beyan gerçek alış tarihiyle yapılır; endeksleme de o tarihe göre hesaplanır.
+:::
+
+::: dikkat Ekstreyi Hesap Kapanmadan İndir
+Eski kurumdaki hesap kapandığında geçmiş ekstrelere erişim kalmayabilir. Taşımadan önce hesabın açıldığı günden bugüne bütün alım satım dökümünü, temettü kayıtlarını ve 1042-S belgelerini indir. Satış yapmadığın yıllar dahil: bir sonraki satışın maliyeti o yılların alışlarındadır.
+:::
+
+## Taşımadan Önce Kontrol Listesi
+
+1. Bankana sor: hesabın bugün bankada mı, bir aracı kurumda mı duruyor ve karar senin hesabın için neyi değiştiriyor? Cevabı yazılı al.
+2. Hesabın açıldığı günden bu yana bütün ekstreleri, temettü kayıtlarını ve 1042-S belgelerini indir.
+3. Taşımanın virmanla mı, satışla mı yapılacağını öğren. Satışsa o yıl beyan doğar.
+4. Kesirli paylarının ne olacağını sor; çoğu zaman satılıp nakde çevrilir.
+5. Giden ve gelen virman ücretlerini iki kurumdan da öğren.
+6. Yeni kurumun ABD ücretlerini karşılaştır: [Aracı Kurum Karşılaştırması](/araci-kurumlar)
+7. Yeni kurumda W-8BEN'i yeniden ver. Form kuruma verilen bir beyandır; kurum değişince yenisi istenir. Ayrıntı: [W-8BEN ve 1042-S](/rehber/w-8ben)
+8. Taşıma bitince yeni ekstredeki adetleri ve alış tarihlerini eski ekstreyle tek tek karşılaştır.
+
+## Hesabı Vergi Hesaplayıcısında Birleştirmek
+
+Sitedeki [vergi hesaplayıcısı](/vergi#satis) ekstreden aktarım yapabiliyor: Midas ve Interactive Brokers ekstrelerini tanıyor, birden fazla dosyayı birlikte okuyabiliyor. Tanımadığı biçimdeki satırları önizlemede gösteriyor ama seçili getirmiyor; her satırı senin onaylaman gerekiyor. Satışları alışlarla ilk giren ilk çıkar sırasıyla eşleştiriyor ve bir satış yüklediğin alışlardan fazlaysa eksik adedi uydurma bir maliyetle doldurmuyor, eksik diye gösteriyor.
+
+Hesap taşıyorsan eski kurumun ve yeni kurumun ekstrelerini birlikte yükle. Taşıma gününü yeni kurumda alış gibi gösteren bir satır varsa onu seçme; o hisselerin alışı eski kurumun ekstresinde.
+
+::: ozet Özet
+SPK'nın 17 Haziran 2026 kararıyla bankalar yurt dışı pay ve paya dayalı türev emrine aracılık edemiyor; müşteriyi yetkili bir aracı kuruma yönlendirebiliyor. Kararda geçiş süresi ve mevcut pozisyonlar hakkında hüküm yok, bunu bankandan öğrenmen gerekiyor. Hesabı taşıyorsan virman ile satışı ayır, ekstreleri hesap kapanmadan indir ve alış tarihlerini koru: kur da endeksleme de o tarihe bağlı.
+:::
+
+*Bu yazı SPK'nın 2026/39 sayılı bültenine ve kararla güncellenen yatırım kuruluşları rehberine dayanır; 24 Ekim 2026 itibarıyla okunan kaynaklarla yazıldı. Genel bilgi verir, vergi ya da hukuk danışmanlığı değildir.*`,
+  },
+
+  /* ---------------------------------------------------------------------- */
+  /* Kaynaklar (24 Ekim 2026'da okundu): IRS Tax Treaty Table 1 (Rev. May
+     2023), irs.gov/pub/irs-lbi/tax-treaty-table-1.pdf — ABD şirketlerinin
+     ödediği temettüde genel oran İrlanda 15, Türkiye 20 (lib/tax.ts →
+     US_WITHHOLDING ile aynı). Irish Revenue, Tax and Duty Manual Part
+     27-01a-02 (Ocak 2026), 4.2.3: tanınmış takas sistemindeki ETF
+     paylarında fon çıkış vergisi kesmez. IRS, "Estate tax for nonresidents
+     not citizens of the United States" (son inceleme 28.06.2026): Form
+     706-NA eşiği 60.000 $, enflasyona endeksli değil. IRS, Instructions for
+     Form 706-NA (Rev. 09-2025): ABD'de kurulu şirket payı ABD'de bulunan
+     varlık, öteki şirket payları ABD dışında. Gider oranları: VOO %0,03
+     (investor.vanguard.com, 28.04.2026 itibarıyla), QQQ %0,18
+     (invesco.com/qqq-etf), CSPX %0,07 ve CNDX %0,30 (ishares.com/uk, ikisi
+     de İrlanda, birikimli), VUAA %0,07 (vanguard.co.uk, ürün 9694).
+     Temettü verimi örneği VARSAYIMSAL. Yurt dışı fon payının Türkiye'deki
+     gelir türü ve endeksleme bilerek kesin yazılmadı: kaynaklarda net
+     değil. İrlanda'nın kendi veraset vergisi incelenmedi, metin bunu
+     söylüyor. */
+  "irlanda-etf-mi-abd-etf-mi": {
+    title: "İrlanda ETF'i mi, ABD ETF'i mi?",
+    dek: "Aynı endeksi izleyen iki fon, Türkiye'de yerleşik biri için temettü vergisinde, veraset riskinde ve gider oranında ayrışıyor.",
+    bodyMd: `S&P 500'ü izleyen fonların bir kısmı ABD'de kurulu (VOO gibi), bir kısmı İrlanda'da (CSPX ve VUAA gibi). Sepet aynı, fiyat hareketi neredeyse aynı. Ayrıştıkları yer fonun hangi ülkede kurulduğu: temettünün nerede ve ne oranda vergilendiği, ABD'nin veraset vergisinin fona uzanıp uzanmadığı ve fonun temettüyü dağıtıp dağıtmadığı buna bağlı. Bu yazı farkları Türkiye'de yerleşik bir yatırımcının gözünden anlatır; bir fonu önermez.
+
+::: tanim Bu Yazıdaki Terimler
+**UCITS:** Avrupa Birliği'nin yatırım fonları için koyduğu ortak kurallar. İrlanda'da kurulu ETF'lerin çoğu bu çerçevede.
+**Birikimli (Acc):** Temettüyü dağıtmayıp fona yeniden yatıran pay sınıfı.
+**Dağıtımlı (Dist):** Temettüyü pay sahiplerine nakit olarak ödeyen pay sınıfı.
+**Gider Oranı:** Fonun yıllık işletme maliyeti. Fatura gelmez; fiyatın içinden her gün azar azar düşülür.
+:::
+
+## Temettü: Kesinti Nerede Yapılıyor
+
+İki fonda da temettünün kaynağı aynı ABD şirketleri. Fark, kesintinin kimin adına ve hangi anlaşmayla yapıldığında.
+
+**ABD'de kurulu fonda** temettü fondan sana dağıtılırken ABD vergi keser. Türkiye'de yerleşik bir gerçek kişi W-8BEN vermişse oran %20, vermemişse %30. Ayrıntı: [W-8BEN ve 1042-S](/rehber/w-8ben)
+
+**İrlanda'da kurulu fonda** kesinti bir adım önce, şirket temettüyü fona öderken yapılır. ABD ile İrlanda arasındaki anlaşma bu oranı %15'e indiriyor. İrlanda ise fonun pay sahibine yaptığı ödemeden ayrıca vergi kesmiyor: İrlanda gelir idaresinin rehberi, tanınmış bir takas sisteminde işlem gören ETF paylarında fonun çıkış vergisi kesmediğini yazıyor.
+
+::: akis İrlanda Fonunda Temettünün Yolu
+ABD Şirketi | Temettüyü öder
+İrlanda Fonu | ABD %15 keser
+Fon | Biriktirir ya da dağıtır; İrlanda kesinti yapmaz
+Sen | Birikimlide nakit gelmez, dağıtımlıda brüt gelir
+:::
+
+::: bar notr 100 $ Brüt Temettüden Yolda Kesilen
+ABD Fonu, Formsuz | %30
+ABD Fonu, W-8BEN ile | %20
+İrlanda Fonu, Fonun İçinde | %15
+:::
+
+Bu fark birçok ülke için büyük; formu olmayan ya da anlaşması %30'da kalan biri için 15 puan. Türkiye'de yerleşik biri için ise 5 puan, çünkü ABD-Türkiye anlaşması zaten %20 veriyor. Beş puanın yıllık getiriye etkisi küçük ve gider oranı farkıyla aynı büyüklükte.
+
+::: ornek 10.000 Dolarlık Bir Yılın Hesabı
+Temettü verimi %1,5 varsayıldı; gerçek verim yıldan yıla değişir.
+Yıllık brüt temettü: 10.000 × %1,5 = **150 $**.
+ABD fonu (VOO): %20 kesinti 30 $, %0,03 gider 3 $. Toplam **33 $**.
+İrlanda fonu (CSPX): %15 kesinti 22,50 $, %0,07 gider 7 $. Toplam **29,50 $**.
+Fark yılda 3,50 $, yani paranın yaklaşık on binde 3,5'i.
+:::
+
+::: dikkat Kesintinin Kimin Adına Yapıldığı
+ABD fonunda kesilen %20 senin adına kesilir ve 1042-S'te görünür. Türkiye'de temettü beyan sınırını aşıyorsan bu tutar, belgelenmek ve o gelire düşen vergiyi aşmamak kaydıyla hesaplanan vergiden mahsup edilebilir. İrlanda fonunun içeride ödediği %15 ise fonun vergisidir; senin adına bir belge yoktur ve Türkiye'de mahsup edilemez. Yani yukarıdaki 3,50 dolarlık fark, beyan veren biri için daralabilir. Ayrıntı: [Yurt Dışı Hisse Kazancının Vergilendirilmesi](/rehber/yurt-disi-hisse-vergisi)
+:::
+
+## Veraset: 60.000 Dolarlık Eşik
+
+ABD vatandaşı ve yerleşiği olmayan biri öldüğünde, ABD'de bulunan varlıklarının değeri 60.000 doları aşıyorsa mirasçıların ABD'ye veraset beyannamesi (Form 706-NA) vermesi gerekiyor. IRS bu eşiğin enflasyona göre güncellenmediğini yazıyor. ABD ile Türkiye arasında veraset vergisine ilişkin bir anlaşma yok.
+
+Hangi varlığın "ABD'de bulunduğu" sorusunun cevabı IRS'in form talimatında: ABD'de kurulmuş şirketlerin payları, belgeleri nerede durursa dursun ABD'de bulunan varlık sayılıyor; öteki şirketlerin payları ABD dışında. ABD'de kurulu bir ETF'in payı bu yüzden ABD varlığı; İrlanda'da kurulu fonun payı bu tanıma göre değil.
+
+Portföyü 60.000 doların altında olan biri için bu fark bugün bir şey değiştirmiyor. Portföy büyüdükçe değişiyor ve tek hisseler de ABD varlığı sayılıyor; İrlanda fonu yalnız fon kısmını bu tanımın dışına çıkarıyor. İrlanda'nın kendi veraset kuralları ayrı bir konu ve bu yazı onu incelemiyor; büyük bir portföy için bir uzmana danışmak gerekiyor.
+
+## Birikimli mi, Dağıtımlı mı
+
+VOO ve QQQ gibi ABD fonları temettüyü nakit olarak dağıtır. İrlanda fonlarında aynı endeks için çoğu zaman iki pay sınıfı bulunur: biri temettüyü dağıtır, öteki fonun içinde yeniden yatırır. Fon sayfasında "Use of Income" satırı hangisi olduğunu söyler; CSPX, VUAA ve CNDX birikimli sınıflar.
+
+Türkiye'deki beyan açısından fark şu: dağıtımlı sınıfta her yıl eline temettü gelir ve yurt dışı temettü gibi beyan sınırına girer. Birikimli sınıfta yıl içinde eline nakit gelmez; getiri fon fiyatının içinde kalır ve sen sattığında ortaya çıkar. Yurt dışı fon payının satış kazancının Türkiye'de hangi gelir türü sayılacağı ve maliyetin endekslenip endekslenmeyeceği, tek hisseye göre daha az net bir konu. Birikimli bir fonu satmadan önce bir mali müşavire danış.
+
+## Gider Oranı ve Örnek Fon Çiftleri
+
+İrlanda fonları aynı endeksi izleyen ABD fonlarından biraz daha pahalı. Oranlar fon yöneticilerinin ürün sayfalarından, 24 Ekim 2026 itibarıyla:
+
+| Endeks | ABD Fonu | Gider Oranı | İrlanda Fonu | Gider Oranı |
+|---|---|---|---|---|
+| **S&P 500** | VOO | %0,03 | CSPX (birikimli) | %0,07 |
+| **S&P 500** | VOO | %0,03 | VUAA (birikimli) | %0,07 |
+| **Nasdaq 100** | QQQ | %0,18 | CNDX (birikimli) | %0,30 |
+
+Gider oranı farkı her yıl paranın tamamından düşülür, temettü kesintisi farkı yalnız temettüden. Temettü verimi düşük bir endekste (Nasdaq 100 gibi) kesinti farkının değeri küçülür, gider farkı aynı kalır.
+
+## Hangi Aracı Kurumda Var
+
+İrlanda fonları ABD borsalarında değil, Londra ve Frankfurt gibi Avrupa borsalarında işlem görür. Aynı fonun birden fazla borsada, farklı para birimlerinde işlem gören hatları olabilir; Vanguard'ın tüm dünya fonu Londra'da dolarla VWRA, Xetra'da avroyla VWCE adıyla işlem görüyor. Avro hattını alırsan dolar varlıklara bir kur katmanı daha eklenir.
+
+Yalnız ABD borsalarına aracılık eden bir kurumda bu fonlar yoktur. Kurumun tarifesinde Londra ya da Almanya satırı olup olmadığına bak ve oradaki komisyonu ayrıca oku: Avrupa borsalarındaki asgari ücretler çoğu zaman ABD'dekinden farklıdır. Kurumların ABD tarifeleri, kaynağıyla: [Aracı Kurum Karşılaştırması](/araci-kurumlar)
+
+::: ozet Özet
+Türkiye'de yerleşik biri için İrlanda fonunun temettü avantajı 5 puan (%20 yerine %15) ve bu fark yılda paranın on binde birkaçına denk geliyor; gider oranı farkı onu büyük ölçüde götürüyor. İrlanda fonunun asıl farkı veraset tarafında: ABD'de kurulu ETF payı ABD varlığı sayılıyor, İrlanda fonu sayılmıyor. Birikimli sınıf yıllık temettü beyanını ortadan kaldırıyor ama satıştaki vergi muamelesi tek hisse kadar net değil. Seçim, portföyün büyüklüğüne ve kurumunun hangi borsalara eriştiğine bağlı.
+:::
+
+*Bu yazı IRS'in vergi anlaşması tablosuna ve Form 706-NA talimatına, İrlanda gelir idaresinin yatırım fonları rehberine ve fon yöneticilerinin ürün sayfalarına dayanır; 24 Ekim 2026 itibarıyla okunan kaynaklarla yazıldı. Genel bilgi verir, vergi danışmanlığı ya da yatırım tavsiyesi değildir.*`,
   },
 
   /* ---------------------------------------------------------------------- */

@@ -147,7 +147,7 @@ export function TaxFiling({
   const todayText = formatIsoDate(today, locale);
 
   const docs = [
-    { icon: Receipt, name: F.docStatement, body: F.docStatementBody },
+    { icon: Receipt, name: F.docStatement, body: F.docStatementBody, href: "/rehber/bankadan-araci-kuruma-gecis", link: F.readTransfer },
     { icon: FileText, name: F.docForm, body: F.docFormBody },
     { icon: IdentificationCard, name: F.docW8, body: F.docW8Body, href: "/rehber/w-8ben", link: F.readW8 },
     { icon: FileCsv, name: F.docCsv, body: F.docCsvBody },

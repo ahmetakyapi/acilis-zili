@@ -1,0 +1,51 @@
+/* /araci-kurumlar — aracı kurum karşılaştırması (24 Ekim).
+   Renk yalnız token'dan; mavi yalnız etkileşimde (kaynak numarası,
+   bağlantı). Hücreler boyanmıyor: renk bir yargı olurdu. */
+
+/* KAYNAK NUMARALARI. Hücrenin altında küçük, yuvarlak köşeli numaralar;
+   aynı sayfadaki kaynak listesine çapa. Görünür ölçü 18 piksel ama dokunma
+   hedefi 32: telefonda tablo hücresinde parmakla seçiliyor. Negatif
+   kenar boşluğu satır yüksekliğini büyütmüyor. */
+.refs { display:flex; flex-wrap:wrap; gap:2px; margin-top:4px; }
+.ref {
+  position:relative;
+  display:inline-grid; place-items:center;
+  min-width:18px; height:18px; padding:0 4px;
+  border-radius:5px;
+  background:var(--surface);
+  color:var(--primary-ink);
+  font-size:11px; font-weight:700; line-height:1;
+  font-variant-numeric:tabular-nums;
+  transition:background-color .2s var(--ease-brand), color .2s var(--ease-brand);
+}
+.ref::after { content:""; position:absolute; inset:-7px -3px; }
+.ref:hover { background:var(--primary-tint); color:var(--primary-hover); }
+
+/* Çapayla gelinen kaynak satırı bir an belirsin: okuyucu yüz satırlık
+   listede hangisine indiğini görsün. Yapışkan başlığın altında kalmasın
+   diye kaydırma payı. */
+.source {
+  display:grid; grid-template-columns:auto minmax(0,1fr); gap:10px; align-items:start;
+  scroll-margin-top:calc(var(--app-bar-h, 64px) + 24px);
+  border-radius:8px;
+  transition:background-color .6s var(--ease-brand);
+}
+.source:target { background:var(--primary-tint); }
+.sourceNo {
+  display:inline-grid; place-items:center;
+  min-width:20px; height:20px; margin-top:1px;
+  border-radius:6px;
+  background:var(--surface);
+  color:var(--text-muted);
+  font-size:11px; font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+
+.inlineLink {
+  display:inline-flex; align-items:center; gap:4px;
+  min-height:44px;
+  font-size:13px; font-weight:600;
+  color:var(--primary-ink);
+  transition:color .2s var(--ease-brand);
+}
+.inlineLink:hover { color:var(--primary-hover); }
