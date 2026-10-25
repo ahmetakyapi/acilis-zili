@@ -21,19 +21,18 @@
   --sky-glow: color-mix(in oklab, var(--brass-bright) 12%, transparent);
   --water-hz: color-mix(in oklab, var(--primary) 11%, transparent);
   --water-deep: color-mix(in oklab, var(--primary) 3%, transparent);
-  /* Penceredeki üst pay ve mahalle tabelalarının yüksekliği: iki satır
-     ad + değer (ad satır atlayabiliyor; kesilmiyor). */
+  /* Penceredeki üst pay. */
   --sky-pad: 10px;
-  --dh: calc(var(--text-nano) * 1.25 * 2 + var(--text-nano) * 1.3 + 16px);
 }
-/* Tek sıralı geniş düzenlerde en dar mahalle (120–140 birim) en uzun adı
-   da tek satırda taşıyor (1280–1920'de ölçüldü): tabela bir satır kısa. */
-@container (min-width: 980px) {
-  .root[data-variant="poster"] .scene { --dh: calc(var(--text-nano) * 1.25 + var(--text-nano) * 1.3 + 16px); }
-}
-@container (min-width: 1080px) {
-  .root[data-variant="strip"] .scene { --dh: calc(var(--text-nano) * 1.25 + var(--text-nano) * 1.3 + 16px); }
-}
+/* ŞERİT SIKI (25 Ekim gece; sahibi: "bir tık daha kompakt"): gökte üst pay
+   ve tabelanın dolgusu daraldı. Ad ve yüzde YAN YANA denendi, sığmıyor:
+   1440'ta mahalle tabelası 123 piksel, "İsteğe Bağlı Tüketim −%1,03" 169,
+   "Temel Tüketim −%1,40" 136 (EN "Communication Services" 196); yedi
+   mahallenin beşi taşıyordu. Tabelayı genişletmek binaları daraltırdı;
+   ad üstte, yüzde altta kaldı, satır yüksekliği ve dolgu kısaldı. */
+.root[data-variant="strip"] { --sky-pad: 6px; }
+.root[data-variant="strip"] .district { padding: 4px 2px 2px; }
+.root[data-variant="strip"] :is(.districtName, .districtValue) { line-height: 1.2; }
 .root[data-tone="up"] {
   --sky-top: color-mix(in oklab, var(--primary) 3%, transparent);
   --sky-mid: color-mix(in oklab, var(--primary-soft) 9%, transparent);
@@ -115,8 +114,7 @@
 }
 .water {
   top: calc(var(--sky-pad) + var(--hz) * (100% - var(--sky-pad)));
-  bottom: calc(-1 * var(--dh));
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  bottom: 0;
   background: linear-gradient(to bottom, var(--water-hz) 0%, var(--water-deep) 100%);
 }
 .svg {
@@ -140,35 +138,56 @@
 
 /* Gök ve su girişte bir kez belirir (binalardan önce). */
 @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
-  .root:not([data-in]) :is(.sky, .water) { opacity: 0; }
-  .root[data-in] :is(.sky, .water) { animation: sky-tone 0.5s var(--ease-brand) backwards; }
+  .root:not([data-in]) :is(.sky, .water),
+  .root:not([data-in]) .districts::before { opacity: 0; }
+  .root[data-in] :is(.sky, .water),
+  .root[data-in] .districts::before { animation: sky-tone 0.5s var(--ease-brand) backwards; }
 }
 @keyframes sky-tone { from { opacity: 0; } }
 
 /* ------------------------------------------------------------ MAHALLELER
    Suyun içinde ince tabelalar: mahallenin enince ince bir çizgi, altında
-   adı ve değişimi. Konum yerleşimden (yüzde); ad sığmazsa satır atlıyor,
-   kesilmiyor (en dar mahalle `minDistrictW` ile adına göre genişliyor).
-   Üzerine gelince o mahalle öne çıkıyor (SkyMarks.module.css). */
+   adı ve değişimi. Ad sığmazsa satır atlıyor, kesilmiyor (en dar mahalle
+   `minDistrictW` ile adına göre genişliyor). Üzerine gelince o mahalle öne
+   çıkıyor (SkyMarks.module.css).
+   YÜKSEKLİK İÇERİKTEN (25 Ekim gece). Tabelalar mutlak konumluydu ve
+   satırın yüksekliği sabit bir tahmindi (`--dh`: ad bir ya da iki satır);
+   tahmin tutmayınca (1280 şerit, "İsteğe Bağlı Tüketim" iki satır) yüzde
+   panelin kenarında kesiliyordu. Şimdi ızgara: sütunlar yerleşimden
+   (yüzde: sokak, mahalle, sokak…), satır en uzun tabelanın boyunda. Su
+   tabelaların arkasında `::before` ile devam ediyor (suyun dip tonu). */
 .districts {
   position: relative;
-  height: var(--dh);
+  display: grid;
+  align-items: start;
   margin: 0;
-  padding: 0;
+  padding: 0 0 4px;
   list-style: none;
 }
-.district {
+.districts::before {
+  content: "";
   position: absolute;
-  top: 6px;
+  inset: 0;
+  z-index: -1;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  background: var(--water-deep);
+  pointer-events: none;
+}
+.row { isolation: isolate; }
+.district {
+  grid-row: 1;
   display: grid;
   justify-items: center;
   align-content: start;
   gap: 1px;
+  min-width: 0;
+  margin-top: 6px;
   padding: 6px 2px 4px;
   border-top: 1px solid var(--line-strong);
   text-align: center;
   transition: opacity 0.2s var(--ease-brand), border-color 0.2s var(--ease-brand);
 }
+.root[data-variant="strip"] .district { margin-top: 3px; }
 .district[data-on] { border-top-color: var(--text-strong); }
 .district[data-off] { opacity: 0.45; }
 /* METİN 12 PİKSEL (`--text-nano`): 8 piksel künye puntosu metin için
@@ -251,4 +270,33 @@
 @media (prefers-reduced-motion: reduce) {
   .tip { animation: none; }
   .district { transition: none; }
+}
+
+/* ------------------------------------------------------------ DEĞER ETİKETİ
+   Etiketsiz binanın ucunda sembol + yüzde (gerekçe SkyScene.tsx →
+   `ValueTag`). Kart yok: metnin çevresinde panel zemininde ince hale
+   (`paint-order`), binanın ve göğün üstünde de okunuyor. */
+.valueTag { pointer-events: none; animation: tip-in 0.16s var(--ease-brand) both; }
+.tagText {
+  paint-order: stroke;
+  stroke: var(--premium-surface);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+.tagSymbol { fill: var(--text-strong); }
+.tagValue { letter-spacing: -0.02em; }
+.tagValue.up { fill: var(--up); }
+.tagValue.down { fill: var(--down); }
+.tagValue.flat { fill: var(--flat); }
+.tagLeader { stroke: var(--text-strong); stroke-width: 1.25px; }
+.tagAnchor {
+  fill: var(--text-strong);
+  stroke: var(--page-bg);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+@media (prefers-reduced-motion: reduce) {
+  .valueTag { animation: none; }
 }

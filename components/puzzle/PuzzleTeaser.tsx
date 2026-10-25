@@ -14,12 +14,25 @@ import { progressSnapshot, statsSnapshot, subscribeStorage } from "./puzzle-stor
 import styles from "./PuzzleTeaser.module.css";
 
 /**
- * Ana sayfadaki bulmaca şeridi (24 Ekim; 25 Ekim'de iki kez yeniden
+ * Ana sayfadaki bulmaca kartı (24 Ekim; 25 Ekim'de üç kez yeniden
  * kuruldu).
  *
- * İKİ KOLONLU IZGARANIN DIŞINDA (seans zili figürünün ardında): kolonlar
- * ölçülü bir dengede (`FillColumn`) ve araya giren bir panel ötekinde kendi
- * boyu kadar boşluk açardı.
+ * YAN KOLONDA, KOMPAKT KART (25 Ekim, üçüncü kurulum). Önce seans zili
+ * figürünün altında, iki kolonlu ızgaranın DIŞINDA tam genişlik bir
+ * şeritti: pano başlamadan önce masaüstünde 102, telefonda 142–156
+ * piksel. Sahibinin isteği: "daha aşağılara, daha az yer kaplayan
+ * kompakt bir yere". Şimdi yan kolonda Günün Grafiği'nin altında; telefonda
+ * bilanço analizlerinin ardında. Yerleşim ekran değil KART genişliğine
+ * göre (kapsayıcı sorgusu, PuzzleTeaser.module.css): yan kolonda ve
+ * telefonda iki satır, tablette tam genişlikte tek satır.
+ * Ölçüldü (TR/EN, iki tema, dört durum, indirgenmiş hareket):
+ * - pano başı 1280'de 1900 → 1774, 390'da 2694 → 2527 (Günün Grafiği'nin
+ *   telefon sırası da düzeldi, TodayExperience.module.css);
+ * - kart 350 / 420 piksel kolonda 130 (sürüyor hâli 350'de 143) piksel;
+ * - kolon dipleri farkı önce −39…−1, sonra −18…59 piksel (FillColumn
+ *   analizlerin yedek satırlarıyla kapatıyor; fark o günün verisiyle
+ *   oynar);
+ * - taşma 0, konsol hatası 0, CLS 0.
  *
  * OYUNSU ŞERİT (25 Ekim, ikinci kurulum). Sahibinin itirazı (1440): tam
  * genişlik ince kartta solda soluk bir çizgi, bir cümle, altı nokta ve bir
@@ -30,8 +43,10 @@ import styles from "./PuzzleTeaser.module.css";
  *   karşılaştırma karosu (oyundaki renklerle), "Devam Et".
  * - Bitti: cevabın logosu ve adı, renkli sonuç ızgarası, gece yarısına
  *   geri sayım; "Sonucu Gör".
- * Geniş ekranda sağda seri ve altı sütunluk dağılım (oyundaki şeritle
- * aynı dil). Telefonda iki satır: [siluet | başlık], [durum ... eylem].
+ * Geniş kartta (≥ 56rem) sağda seri ve altı sütunluk dağılım (oyundaki
+ * şeritle aynı dil). Dar kartta iki satır: [siluet | başlık + durum
+ * cümlesi], [noktalar / son tahmin / cevap ... eylem]; davetin ikinci
+ * başlığı ve renkli sonuç ızgarası orada düşer.
  *
  * GÜVENLİK MODELİ AYNI: sayfanın HTML'i bulmacayla ilgili hiçbir veri
  * taşımıyor. Siluet `/api/bulmaca` GET'inden (zaten herkese açık ilk
@@ -120,69 +135,71 @@ export function PuzzleTeaser({ day, number, labels }: { day: string; number: num
 
   return (
     <Panel data-home-section="puzzle" data-durum={finished ? status : used > 0 ? "playing" : "idle"} className={styles.teaser}>
-      <span className={styles.thumb} aria-hidden>
-        {points ? <Mini points={points} /> : points === null ? <PuzzlePiece size={24} weight="duotone" className={styles.icon} /> : null}
-      </span>
+      <div className={styles.body}>
+        <span className={styles.thumb} aria-hidden>
+          {points ? <Mini points={points} /> : points === null ? <PuzzlePiece size={24} weight="duotone" className={styles.icon} /> : null}
+        </span>
 
-      <div className={styles.copy}>
-        <h2 className={styles.title}>{fill(labels.homeTitle, { n: number })}</h2>
-        {used === 0 && !finished && <p className={styles.headline}>{labels.homeWaiting}</p>}
-        <p className={styles.line}>{line}</p>
-      </div>
+        <div className={styles.copy}>
+          <h2 className={styles.title}>{fill(labels.homeTitle, { n: number })}</h2>
+          {used === 0 && !finished && <p className={styles.headline}>{labels.homeWaiting}</p>}
+          <p className={styles.line}>{line}</p>
+        </div>
 
-      <div className={styles.state} data-son={!finished && lastGuess ? "" : undefined}>
-        {finished && state?.answer ? (
-          <span className={styles.answer}>
-            <LogoTile symbol={state.answer.symbol} logoUrl={state.answer.logoUrl} size="sm" />
-            <span className={styles.answerNames}>
-              <span className={styles.answerName}>{state.answer.name}</span>
-              <span className={styles.answerSymbol}>{state.answer.symbol}</span>
-            </span>
-          </span>
-        ) : null}
-        {finished ? (
-          <ResultGrid rows={state?.guesses ?? null} count={used} label={fill(labels.guessCount, { n: used })} />
-        ) : (
-          <span className={styles.meter}>
-            <GuessDots results={results} label={fill(labels.guessCount, { n: used })} />
-            <span className={styles.chips}>
-              <span className={styles.chip}>{fill(labels.homeLeft, { n: MAX_GUESSES - used })}</span>
-              <span className={styles.chip}>
-                {state ? fill(labels.homeClues, { n: state.clues.length, total: state.clues.length + state.upcoming.length }) : labels.homeFirstClue}
+        <div className={styles.state} data-son={!finished && lastGuess ? "" : undefined}>
+          {finished && state?.answer ? (
+            <span className={styles.answer}>
+              <LogoTile symbol={state.answer.symbol} logoUrl={state.answer.logoUrl} size="sm" />
+              <span className={styles.answerNames}>
+                <span className={styles.answerName}>{state.answer.name}</span>
+                <span className={styles.answerSymbol}>{state.answer.symbol}</span>
               </span>
             </span>
-          </span>
-        )}
-        {!finished && lastGuess && <LastGuess row={lastGuess} labels={labels} />}
-      </div>
-
-      <div className={styles.record} title={labels.statsNote}>
-        <span className={styles.streak}>
-          <span className={cn(styles.streakValue, "numeral")}>{streak}</span>
-          <span className={styles.streakLabel}>{labels.streak}</span>
-        </span>
-        <ol className={styles.dist} aria-label={labels.distribution}>
-          {Array.from({ length: MAX_GUESSES }, (_, i) => {
-            const count = stats.distribution[i] ?? 0;
-            const max = Math.max(1, ...stats.distribution);
-            return (
-              <li key={i} data-today={status === "won" && used === i + 1 ? "" : undefined} title={`${labels.distribution}: ${i + 1} → ${count}`}>
-                <span aria-hidden className={styles.col}>
-                  <span className={styles.bar} style={{ transform: `scaleY(${count / max})` }} />
+          ) : null}
+          {finished ? (
+            <ResultGrid rows={state?.guesses ?? null} count={used} label={fill(labels.guessCount, { n: used })} />
+          ) : (
+            <span className={styles.meter}>
+              <GuessDots results={results} label={fill(labels.guessCount, { n: used })} />
+              <span className={styles.chips}>
+                <span className={styles.chip}>{fill(labels.homeLeft, { n: MAX_GUESSES - used })}</span>
+                <span className={styles.chip}>
+                  {state ? fill(labels.homeClues, { n: state.clues.length, total: state.clues.length + state.upcoming.length }) : labels.homeFirstClue}
                 </span>
-                <span aria-hidden className={styles.key}>{i + 1}</span>
-                <span className="sr-only">{`${i + 1}: ${count}`}</span>
-              </li>
-            );
-          })}
-        </ol>
-        {finished && <Countdown day={day} labels={labels} />}
-      </div>
+              </span>
+            </span>
+          )}
+          {!finished && lastGuess && <LastGuess row={lastGuess} labels={labels} />}
+        </div>
 
-      <ButtonLink href="/bulmaca" variant="ghost" prefetch={false} className={styles.action}>
-        {action}
-        <ArrowRight aria-hidden size={15} weight="bold" />
-      </ButtonLink>
+        <div className={styles.record} title={labels.statsNote}>
+          <span className={styles.streak}>
+            <span className={cn(styles.streakValue, "numeral")}>{streak}</span>
+            <span className={styles.streakLabel}>{labels.streak}</span>
+          </span>
+          <ol className={styles.dist} aria-label={labels.distribution}>
+            {Array.from({ length: MAX_GUESSES }, (_, i) => {
+              const count = stats.distribution[i] ?? 0;
+              const max = Math.max(1, ...stats.distribution);
+              return (
+                <li key={i} data-today={status === "won" && used === i + 1 ? "" : undefined} title={`${labels.distribution}: ${i + 1} → ${count}`}>
+                  <span aria-hidden className={styles.col}>
+                    <span className={styles.bar} style={{ transform: `scaleY(${count / max})` }} />
+                  </span>
+                  <span aria-hidden className={styles.key}>{i + 1}</span>
+                  <span className="sr-only">{`${i + 1}: ${count}`}</span>
+                </li>
+              );
+            })}
+          </ol>
+          {finished && <Countdown day={day} labels={labels} />}
+        </div>
+
+        <ButtonLink href="/bulmaca" variant="ghost" prefetch={false} className={styles.action}>
+          {action}
+          <ArrowRight aria-hidden size={15} weight="bold" />
+        </ButtonLink>
+      </div>
     </Panel>
   );
 }

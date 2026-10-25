@@ -20,9 +20,11 @@ import styles from "./PosterBoard.module.css";
  * gözüküyor; noktaların ne olduğunu insan anlamaz. Daha görsel, daha
  * anlaşılabilir ve benzersiz bir tasarım." Pano artık Nasdaq 100'ün
  * silüetini anlatıyor; okuma sırası CLAUDE.md ekran düzeni:
- *   1. GÜNÜN CÜMLESİ — panelin `h2`si, display ölçekte (kısa başlık
- *      degrade, ayrıntı düz); yanında tek büyük künye, Nasdaq 100'ün
- *      değişimi (künye şeridi).
+ *   1. GÜNÜN CÜMLESİ — panelin `h2`si (kısa başlık degrade, ayrıntı düz);
+ *      yanında tek büyük künye, Nasdaq 100'ün değişimi ve yükselen/düşen
+ *      şeridi. 25 Ekim gece TEK BLOK oldu (sahibi: "yazı başlığın yanına
+ *      gelerek, alan daha doğru kullanılarak"): ad, cümle ve künye aynı
+ *      satırda; gerekçe ve ölçüm PosterBoard.module.css.
  *   2. ANA GÖRSEL — siluet (`Skyline`), üstünde ne anlattığını söyleyen
  *      üç parçalı lejant: genişlik, yükseklik, ufuk.
  *   3. ÖLÇÜ IZGARASI — yükselen/düşen (genişlik şeridiyle), en güçlü ve en
@@ -89,27 +91,28 @@ export function PosterBoard({
   return (
     <div className={styles.board}>
       <header className={styles.head}>
-        <div className={styles.headText}>
-          {/* `data-ink="plain"`: sitenin `main h2` degradesi bütün kutuya
-              yayılıp ayrıntıyı da maviye boyuyordu. Degrade yalnız kısa
-              başlıkta (`display-ink`), ayrıntı düz. */}
-          <h2 className={styles.story} data-ink="plain" data-poster-story="">
-            <span className={cn("display-ink", styles.storyTitle)}>{story.title}</span>
-            <span className="sr-only">: </span>
-            <span className={styles.storyDetail}>{tieFigures(story.detail)}</span>
-          </h2>
-          <div className={styles.headMeta}>
-            <span>{S.close.replace("{date}", dateShort)}</span>
-            {action}
-          </div>
+        {/* `data-ink="plain"`: sitenin `main h2` degradesi bütün kutuya
+            yayılıp ayrıntıyı da maviye boyuyordu. Degrade yalnız kısa
+            başlıkta (`display-ink`), ayrıntı düz. */}
+        <h2 className={styles.story} data-ink="plain" data-poster-story="">
+          <span className={cn("display-ink", styles.storyTitle)}>{story.title}</span>
+          <span className="sr-only">: </span>
+          <span className={styles.storyDetail}>{tieFigures(story.detail)}</span>
+        </h2>
+        <div className={styles.headMeta}>
+          <span>{S.close.replace("{date}", dateShort)}</span>
+          {action}
         </div>
         {anchor && (
-          <p className={styles.anchor}>
-            <span className={styles.anchorName}>{K.figIndex}</span>
-            <span className={cn(styles.anchorValue, directionText(directionOf(anchor.change)))}>
-              <RollingFigure value={pct(anchor.change)} />
-            </span>
-          </p>
+          <div className={styles.anchor}>
+            <p className={styles.anchorFigure}>
+              <span className={styles.anchorName}>{K.figIndex}</span>
+              <span className={cn(styles.anchorValue, directionText(directionOf(anchor.change)))}>
+                <RollingFigure value={pct(anchor.change)} />
+              </span>
+            </p>
+            {breadth && <BreadthStrip breadth={breadth} label={stripLabel} className={styles.anchorStrip} />}
+          </div>
         )}
       </header>
 

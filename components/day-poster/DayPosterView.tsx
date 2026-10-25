@@ -7,7 +7,7 @@ import { DataStamp, PageHeader, Panel, PanelLink } from "@/components/ui/primiti
 import type { DayPoster } from "@/lib/day-poster";
 import type { PosterSkyline } from "@/lib/day-poster-data";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { formatEtDateLong } from "@/lib/utils";
+import { cn, formatEtDateLong } from "@/lib/utils";
 import { PosterBoard } from "./PosterBoard";
 import styles from "./DayPoster.module.css";
 
@@ -49,7 +49,7 @@ export function DayPosterView({
     <MotionExperience className={polish.page}>
       <ScrollProgress />
       <PageHeader
-        className={styles.masthead}
+        className={cn(styles.masthead, styles.band)}
         title={L.title}
         subtitle={L.subtitle.replace("{date}", dateLong)}
         action={

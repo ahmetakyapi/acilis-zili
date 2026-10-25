@@ -8,6 +8,44 @@
    kuralı katmansız, panelin `overflow-hidden` yardımcısını eziyor. */
 .panel { overflow: clip; }
 
+/* KOMPAKT BAŞLIK BANDI (25 Ekim gece, sahibinin isteği: "Burası da daha
+   kompakt olabilir; yazı başlığın yanına gelerek"). Ortak kapak 1440'ta 156
+   piksel tutuyordu (56 piksellik başlık, altında tek satır açıklama, 24'er
+   piksel dolgu) ve siluet ilk ekranın altında kalıyordu. Burada başlık
+   solda 30–36 piksel, açıklama AYNI SATIRDA hairline'ın ardında, oklar
+   sağda; dar ekranda açıklama başlığın altına iner. Arşiv (`/gun`) aynı
+   bandı kullanıyor. Özgüllük: ezdiği kapak kuralları globals.css'te üç-
+   dört sınıflık (`.page-masthead.page-masthead[data-embedded]`). */
+.band.band.band[data-embedded] {
+  --band-title: clamp(1.875rem, 1.4rem + 0.9vw, 2.25rem);
+  align-items: center;
+  padding-block: 16px;
+}
+.band.band :global(.page-heading-copy.page-heading-copy) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 20px;
+}
+.band.band :global(.page-heading-copy.page-heading-copy) h1 { font-size: var(--band-title); }
+/* Display başlığın yanındaki metin 0,12em kalkar (CLAUDE.md, gerekçe
+   globals.css "ÜSTTEKİ İMLER"). */
+.band.band :global(.page-heading-copy.page-heading-copy) > p:not(:global(.page-backlink)) {
+  max-width: none;
+  margin: 0;
+  padding-left: 20px;
+  border-left: 1px solid var(--line-strong);
+  translate: 0 calc(var(--band-title) * -0.12);
+}
+@media (max-width: 767px) {
+  .band.band :global(.page-heading-copy.page-heading-copy) { flex-direction: column; align-items: stretch; }
+  .band.band :global(.page-heading-copy.page-heading-copy) > p:not(:global(.page-backlink)) {
+    padding-left: 0;
+    border-left: 0;
+    translate: none;
+  }
+}
+
 /* TELEFONDA OKLAR BAŞLIĞIN SAĞINDA (25 Ekim, son inceleme). Kapak
    `flex-wrap` ve açıklama satırı kabın tam enini aldığı için oklar
    başlığın altına, kendi 44 piksellik satırına düşüyordu; poster ilk

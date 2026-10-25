@@ -1,19 +1,24 @@
-/* Ana sayfa bulmaca şeridi — gerekçe PuzzleTeaser.tsx.
-   Telefonda iki satır: [siluet | başlık + durum cümlesi], altında
-   [hak/karolar/ızgara ... eylem]. 768 üstünde tek satır; 1024 üstünde
-   sağda seri ve dağılım. Derinlik tonla: siluet ve karolar
-   `surface-sunken` / yumuşak tonlarda; gölge, cam, degrade yok.
-   Renkler oyunla aynı anlamda: yeşil tutuyor, pirinç yakın, nötr uzak;
-   dağılım yumuşak mavi, bugünün sütunu yeşil.
+/* Ana sayfa bulmaca kartı — gerekçe PuzzleTeaser.tsx.
+   YERLEŞİM KAPSAYICIYA GÖRE, EKRANA GÖRE DEĞİL (25 Ekim): kart yan
+   kolonda (350 / 420 piksel) da tablette tam genişlikte de duruyor; ekran
+   genişliği hangi dizilişin sığacağını söylemiyor. Kart kendi enini
+   soruyor (`container-type: inline-size`):
+   - dar (< 40rem, yan kolon ve telefon): iki satır — [siluet | başlık +
+     durum cümlesi], altında [noktalar / son tahmin / cevap ... eylem];
+   - orta (≥ 40rem, tablette tam genişlik): tek satır;
+   - geniş (≥ 56rem): sağda seri ve dağılım; ≥ 70rem geri sayım da.
+   Derinlik tonla: siluet ve karolar `surface-sunken` / yumuşak tonlarda;
+   gölge, cam, degrade yok. Renkler oyunla aynı anlamda: yeşil tutuyor,
+   pirinç yakın, nötr uzak; dağılım yumuşak mavi, bugünün sütunu yeşil.
    SAYILARDA `tabular-nums` YOK (virgülü rakam genişliğine çekiyor). */
 
-.teaser {
+.teaser { container-type:inline-size; padding:.875rem 1rem; }
+.body {
   display:grid;
-  grid-template-columns:5.5rem minmax(0,1fr) auto;
+  grid-template-columns:4.5rem minmax(0,1fr) auto;
   grid-template-areas:"thumb copy copy" "state state action";
   align-items:center;
   gap:.75rem 1rem;
-  padding:.875rem 1rem;
 }
 .thumb { grid-area:thumb; }
 .copy { grid-area:copy; min-width:0; }
@@ -21,20 +26,21 @@
 .action { grid-area:action; justify-self:end; }
 .record { display:none; }
 
-@media (min-width: 768px) {
-  .teaser {
-    grid-template-columns:minmax(8rem,1fr) minmax(12rem,1.25fr) auto auto;
+@container (min-width: 40rem) {
+  .body {
+    /* Durum `max-content`, tabanlar 6 / 10rem: `auto` ve 8 / 12rem iken
+       768'de bitmiş oyunun cevabı 110 piksele sıkışıp "Morgan Sta…" diye
+       kırpılıyordu (ölçüldü). */
+    grid-template-columns:minmax(6rem,1fr) minmax(10rem,1.25fr) max-content auto;
     grid-template-areas:"thumb copy state action";
     gap:1rem 1.5rem;
-    padding:.875rem 1.25rem;
   }
 }
-@media (min-width: 1024px) {
-  .teaser {
+@container (min-width: 56rem) {
+  .body {
     /* Siluet ve metin kalan genişliği paylaşır (durum, seri ve eylem
        içerik boyunda, tek satır). Siluete sabit tavan verilince 1440 EN
-       devam hâlinde metin 14rem'e sıkışıp durum iki satıra iniyordu
-       (şerit 112 piksel); şimdi her durumda 102. */
+       devam hâlinde metin 14rem'e sıkışıp durum iki satıra iniyordu. */
     grid-template-columns:minmax(9rem,1fr) minmax(13rem,1.25fr) auto auto auto;
     grid-template-areas:"thumb copy state record action";
   }
@@ -42,10 +48,11 @@
 }
 
 /* ---- Siluet: tonlu karo, alan + çizgi, uçta nokta ---- */
-.thumb { display:flex; align-items:center; justify-content:center; height:3.5rem; border-radius:var(--radius-lg); background:var(--surface-sunken); overflow:hidden; }
-@media (min-width: 768px) { .thumb { height:4.5rem; } }
+.thumb { display:flex; align-items:center; justify-content:center; height:2.75rem; border-radius:var(--radius-lg); background:var(--surface-sunken); overflow:hidden; }
+@container (min-width: 40rem) { .thumb { height:4.5rem; } }
 .icon { color:var(--text-muted); }
-.mini { display:block; box-sizing:border-box; width:100%; height:100%; padding:.5rem .75rem; overflow:visible; }
+.mini { display:block; box-sizing:border-box; width:100%; height:100%; padding:.375rem .5rem; overflow:visible; }
+@container (min-width: 40rem) { .mini { padding:.5rem .75rem; } }
 .lane { stroke:var(--line-soft); stroke-width:1; stroke-dasharray:2 4; }
 .area { fill:var(--primary-wash); }
 .path { fill:none; stroke:var(--text-strong); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
@@ -115,21 +122,27 @@
 
 .action { min-height:44px; white-space:nowrap; }
 
-/* Telefon ve tablet: durum TEK satır, dar. Son tahmin varsa künyeler
-   yerine onun karoları (kalan hak noktalarda zaten okunuyor), karonun
-   başlığı gizli; 768'de künyelerle karolar yan yana eylemin altına
-   taşıyordu. Telefonda noktalar ve tek künye yan yana (kart iki satır). */
-@media (max-width: 1023.98px) {
+/* Dar ve orta kart: durum TEK satır. Son tahmin varsa künyeler yerine
+   onun karoları (kalan hak noktalarda zaten okunuyor), karonun başlığı
+   gizli; orta boyda künyelerle karolar yan yana eylemin altına taşıyordu. */
+@container (max-width: 55.99rem) {
   .state[data-son] .chips, .lastHead { display:none; }
   .answer { max-width:9.5rem; }
 }
-@media (max-width: 767.98px) {
+/* Dar kart (yan kolon, telefon): iki satır, ~130 piksel. Davetin ikinci
+   başlığı ("Bugünün Hissesi Seni Bekliyor") düşer — başlık ve cümle
+   yeterli; noktalar ve tek künye yan yana. Bitmiş oyunda renkli ızgara da
+   düşer (altı satırda 58 piksel, cevapla ve butonla 310 piksele sığmıyor):
+   kısa sonuç cevabın kendisi, ızgara oyunun sonuç bloğunda. */
+@container (max-width: 39.99rem) {
+  .headline, .grid { display:none; }
+  .title { font-size:var(--text-read); }
   .state { gap:.75rem; }
   .meter { flex-direction:row; align-items:center; gap:.625rem; }
   .chip + .chip { display:none; }
 }
-/* 1024-1279: geri sayım yer açar (seri ve dağılım kalır); yoksa cevabın
-   adı "M…" diye kırpılıyordu. Saat oyunun sonuç bloğunda da var. */
-@media (min-width: 1024px) and (max-width: 1279.98px) {
+/* Geniş ama 70rem altı: geri sayım yer açar (seri ve dağılım kalır); yoksa
+   cevabın adı "M…" diye kırpılıyordu. Saat oyunun sonuç bloğunda da var. */
+@container (max-width: 69.99rem) {
   .next { display:none; }
 }

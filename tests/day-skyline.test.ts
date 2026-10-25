@@ -21,6 +21,9 @@ import {
   districtsOf,
   labelBox,
   labelPicks,
+  tagCovers,
+  valueTag,
+  valueTagBox,
   partitionRows,
   pctChars,
   rowSplits,
@@ -288,9 +291,13 @@ test("etiketler sahne genelinde seçiliyor: en büyükler ve uçlar, sıra sayı
   }
 });
 
-test("etiket punto ve karo ölçüsü: masaüstünde karo 28–32, metin okunur", () => {
-  for (const mode of ["wide", "xwide", "stripWide", "stripXwide"] as const) {
+test("etiket punto ve karo ölçüsü: masaüstünde karo 26–32, metin okunur", () => {
+  for (const mode of ["wide", "xwide"] as const) {
     assert.ok(SKY_MODES[mode].logo >= 28 && SKY_MODES[mode].logo <= 32, mode);
+  }
+  /* Ana sayfanın şeridi kompakt (25 Ekim gece): karo 26–28. */
+  for (const mode of ["stripWide", "stripXwide"] as const) {
+    assert.ok(SKY_MODES[mode].logo >= 26 && SKY_MODES[mode].logo <= 28, mode);
   }
   /* Telefonda sahne ~0,85 ölçekte: 13 birim ≈ 11 piksel. */
   for (const mode of ["narrow", "stripNarrow"] as const) assert.ok(SKY_MODES[mode].font >= 13, mode);
@@ -449,4 +456,54 @@ test("etiket kutusu bugünün yüzdesine göre: '+%2,31' yedi karakterlik kutuda
   assert.ok(labelBox("full", "MU", spec, 2.31).w < labelBox("full", "MU", spec).w);
   /* Uzun sembol yüzdeden genişse sembol belirliyor. */
   assert.equal(labelBox("full", "GOOGLXX", spec, 1).w, labelBox("full", "GOOGLXX", spec).w);
+});
+
+test("değer etiketi binanın ucunda: eksende, kenar içinde, kayma ≤ eşik", () => {
+  const { sky, districts } = realDay();
+  for (const mode of ["stripNarrow", "stripMedium", "stripWide", "stripXwide"] as const) {
+    const spec = SKY_MODES[mode];
+    const layout = skylineLayout({ stocks: sky, districts, mode });
+    for (const row of layout.rows) {
+      for (const b of row.buildings) {
+        const tag = valueTag(b, sky[b.i], spec);
+        const axis = b.x + b.w / 2;
+        const box = valueTagBox(tag);
+        /* Eksen etiketin içinden geçiyor ve kayma eşiği aşmıyor. */
+        assert.ok(Math.abs(tag.cx - axis) <= LABEL_MAX_SHIFT + 1e-9, `${mode} ${sky[b.i].symbol}`);
+        assert.ok(axis > box.x && axis < box.x + box.w, `${mode} ${sky[b.i].symbol}: eksen dışında`);
+        /* Kaydıysa bağ var; kaymadıysa yok. */
+        assert.equal(tag.leader !== null, Math.abs(tag.cx - axis) >= 0.5, `${mode} ${sky[b.i].symbol}: bağ`);
+        /* Yükselende çatının üstünde, düşende dibinin altında. */
+        if (b.dir === 1) assert.ok(box.y + box.h <= -b.h, `${mode} ${sky[b.i].symbol}: çatının üstünde değil`);
+        if (b.dir === -1) assert.ok(box.y >= b.h, `${mode} ${sky[b.i].symbol}: dibin altında değil`);
+        /* Kenarın içinde (eşik yetiyorsa — gerçek günde hep yetiyor). */
+        assert.ok(box.x >= 0 && box.x + box.w <= spec.width, `${mode} ${sky[b.i].symbol}: kenar dışında`);
+      }
+    }
+  }
+});
+
+test("değer etiketi kenarda iki satıra dönüyor, kayma yine ≤ eşik", () => {
+  const spec = SKY_MODES.stripWide;
+  const b = { i: 0, x: 4, w: 3, h: 20, dir: 1 as const, clip: false, delay: 0 };
+  const tag = valueTag(b, { symbol: "GOOGL", change: 12.34 }, spec);
+  assert.equal(tag.lines, 2);
+  assert.ok(tag.leader !== null);
+  assert.ok(Math.abs(tag.cx - 5.5) <= LABEL_MAX_SHIFT + 1e-9);
+  /* Ortadaki binada tek satır, kayma yok, bağ yok, çatıdan 4 birim yukarıda. */
+  const mid = valueTag({ ...b, x: 600 }, { symbol: "AMD", change: 1.74 }, spec);
+  assert.equal(mid.lines, 1);
+  assert.equal(mid.cx, 601.5);
+  assert.equal(mid.leader, null);
+  assert.ok(Math.abs(mid.y + mid.h + 24) < 1e-9);
+});
+
+test("değer etiketinin altında kalan çatı etiketi söner", () => {
+  const spec = SKY_MODES.stripWide;
+  const b = { i: 0, x: 600, w: 3, h: 20, dir: -1 as const, clip: false, delay: 0 };
+  const tag = valueTag(b, { symbol: "AVGO", change: -0.48 }, spec);
+  const box = valueTagBox(tag);
+  const under = { i: 7, x: box.x + 10, y: box.y + 2, w: 30, h: 40, dir: -1 as const, tier: 0, leader: null };
+  const away = { ...under, i: 8, x: box.x + box.w + 30 };
+  assert.deepEqual(tagCovers(tag, [under, away]), [7]);
 });

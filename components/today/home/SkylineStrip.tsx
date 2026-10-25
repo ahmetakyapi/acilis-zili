@@ -44,7 +44,15 @@ import styles from "./SkylineStrip.module.css";
  * BAŞLIK SADELEŞTİ. Tek satırda altı künye vardı (tarih, endeks, yükselen,
  * düşen, cümle, bağlantı). Şimdi solda ad ve tarih; sağda Nasdaq 100'ün
  * yüzdesi büyük puntoyla ve yükselen/düşen oranı kulvar şeridinde (renk
- * yalnız yön); günün cümlesi sahnenin üstünde tek ince satır.
+ * yalnız yön).
+ *
+ * KOMPAKT (25 Ekim gece; sahibi: "Burası bir tık daha kompakt ve daha az
+ * yer kaplayabilir"). Panel 1440'ta 447 piksel tutuyordu: başlık 45, ayrı
+ * satırda günün cümlesi, sahne 321. Şimdi ad, tarih ve günün cümlesi AYNI
+ * satırda (hairline'larla ayrılmış; dar kapta cümle alta iner), Nasdaq 100
+ * yüzdesi tek satırda; sahne alçaldı (`SKY_MODES` strip*: `half`, logo),
+ * mahalle tabelaları sıkıştı. Ölçüler `SkyScene.module.css` ve
+ * `lib/day-skyline.ts`te.
  *
  * HER SEANSTA en yeni TAMAMLANMIŞ seans (`getLatestPosterDate`); künye
  * tarihi söylüyor ("23 Ekim Kapanışı"), seans sürerken bile hangi günü
@@ -108,6 +116,12 @@ export async function SkylineStrip({ status, locale, t }: { status: MarketStatus
             </Link>
           </h2>
           <p className={styles.close}>{close}</p>
+          <p className={styles.story}>
+            <span className={styles.storyTitle} data-tone={tone}>
+              {story.title}
+            </span>
+            <span className={styles.storyDetail}>{tieFigures(story.detail)}</span>
+          </p>
         </div>
         <div className={styles.figures}>
           {anchor && (
@@ -142,13 +156,6 @@ export async function SkylineStrip({ status, locale, t }: { status: MarketStatus
           <ArrowRight weight="bold" size={13} aria-hidden />
         </Link>
       </header>
-
-      <p className={styles.story}>
-        <span className={styles.storyTitle} data-tone={tone}>
-          {story.title}
-        </span>
-        <span className={styles.storyDetail}>{tieFigures(story.detail)}</span>
-      </p>
 
       <SkyScene
         variant="strip"

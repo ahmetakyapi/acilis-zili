@@ -6,8 +6,11 @@ import { useRouter } from "next/navigation";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { useLocaleHref } from "@/components/layout/useLocaleHref";
 import {
+  SKY_MODES,
   buildingPath,
   skylineLayout,
+  tagCovers,
+  valueTag,
   type District,
   type SkyBuilding,
   type SkyLabel,
@@ -15,6 +18,7 @@ import {
   type SkyModeName,
   type SkyRow,
   type SkyStock,
+  type SkyValueTag,
 } from "@/lib/day-skyline";
 import type { StoryTone } from "@/lib/day-poster-story";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -47,22 +51,28 @@ import styles from "./SkyScene.module.css";
  *   - Keşif: binaya gel ya da dokun → bina aydınlanır (öteki binalar söner,
  *     binanın sütununda ince bir ışık), ipucunda logo, ad, yüzde, sektör ve
  *     piyasa değeri. Mahalle adına gel → o mahalle öne çıkar.
- *   - ŞERİTTE YALNIZ ETİKETLİ BİNALAR (25 Ekim, "Silüet: etiket" turu).
- *     Sahibi: ipucu logolu şirketlerde olsun, etiketsiz binada şeritte
- *     ipucu yok, ayrıntılar posterde. Şeritte etiketsiz binaya gelmek hiçbir
- *     şey yakmıyor; tıklaması boşluk gibi posteri açıyor. Posterde
- *     (ayrıntı ekranı) her bina etkileşimli kalıyor.
+ *   - ŞERİTTE BÜYÜK KART YALNIZ LOGOLU BİNADA (25 Ekim, "Silüet: etiket"
+ *     turu; sahibi: ipucu logolu şirketlerde olsun). ETİKETSİZ BİNANIN
+ *     DEĞERİ (25 Ekim gece, "Silüet: değer" turu; sahibi: "Artık diğer
+ *     çubuklardaki değerler de yazabilir"): şeritte etiketsiz binaya gelince
+ *     binanın TAM ucunda küçük bir değer etiketi (sembol + yüzde, logo ve
+ *     kart yok; yerleşimi `valueTag`, lib/day-skyline.ts). Şehir sönmüyor,
+ *     mahalle öne çıkmıyor: bina yalnız hafifçe aydınlanıyor (ışık sütunu
+ *     ve kontur); etiketin altında kalan çatı etiketi o an sönüyor
+ *     (`tagCovers`), iki yazı üst üste binmiyor. Posterde (ayrıntı ekranı)
+ *     her binada büyük kart kalıyor.
  *   - İpucu ETİKETİN hizasında: yükselende etiketin üstünde, düşende
  *     altında (etiket yoksa çatıda). Eskiden çatıya açılıyordu; yana
  *     kaymış etiketle bina arasında kalıp ikisinden de kopuk duruyordu.
- *   - Tıklama: binada o şirketin sayfası; şeritte BOŞLUKTA poster (şeridin
- *     başlığındaki "Posteri Aç" bağlantısı aynı yere gidiyor: klavye ve
- *     ekran okuyucu için asıl yol o). Dokunmatikte ilk dokunuş ipucunu
- *     açar, ipucundaki bağlantı sayfayı.
- *   - Klavye: sahne odaklanabilir; ok tuşları binaları okuma sırasıyla
- *     geziyor (ipucu ve canlı bölge birlikte), Enter şirketin sayfası, Esc
- *     kapatır. Şeritte yalnız GÖRÜNEN düzenin etiketli binaları arasında
- *     (düzenler etiketi farklı seçiyor; görüneni kap sorgusu belirliyor).
+ *   - Tıklama: HER binada o şirketin sayfası (logolu ve logosuz tutarlı);
+ *     şeritte BOŞLUKTA poster (şeridin başlığındaki "Posteri Aç" bağlantısı
+ *     aynı yere gidiyor: klavye ve ekran okuyucu için asıl yol o).
+ *     Dokunmatikte ilk dokunuş değeri (ipucunu) açar, aynı binaya ikinci
+ *     dokunuş sayfayı; ipucundaki bağlantı da sayfayı.
+ *   - Klavye: sahne tek sekme durağı (Tab sahneye girer, bir sonraki Tab
+ *     sahneden çıkar); ok tuşları BÜTÜN binaları okuma sırasıyla geziyor
+ *     (logoluda kart, ötekinde değer etiketi; canlı bölge her binada
+ *     "SEMBOL, Ad, yüzde"), Enter şirketin sayfası, Esc kapatır.
  *
  * HAREKET (bir kez, ekrana girince): gök tonu belirir, mahalleler ufuktan
  * sırayla yükselir, yansıma ardından suya iner, logolar en son oturur
@@ -125,19 +135,6 @@ export function SkyScene({
   /* Soldan sağa okuma sırası: bütün düzenlerde aynı (sıralar mahalle
      sırasının bitişik parçaları). */
   const order = useMemo(() => districts.flatMap((d) => d.members), [districts]);
-  /* Düzen başına etkileşimli binalar: şeritte yalnız etiketliler (okuma
-     sırasıyla), posterde hepsi (`null`). */
-  const labelsOnly = variant === "strip";
-  const interactive = useMemo(
-    () =>
-      layouts.map((layout) => {
-        if (!labelsOnly) return null;
-        const labelled = new Set(layout.rows.flatMap((row) => row.labels.map((label) => label.i)));
-        return order.filter((i) => labelled.has(i));
-      }),
-    [layouts, labelsOnly, order],
-  );
-
   /* GİRİŞ — sahne ekrana girince bir kez. */
   useEffect(() => {
     const root = rootRef.current;
@@ -172,7 +169,7 @@ export function SkyScene({
   const announce = useCallback(
     (i: number | null) => {
       if (!liveRef.current) return;
-      liveRef.current.textContent = i === null ? "" : `${stocks[i].symbol}, ${stocks[i].name}: ${pct(stocks[i].change)}`;
+      liveRef.current.textContent = i === null ? "" : `${stocks[i].symbol}, ${stocks[i].name}, ${pct(stocks[i].change)}`;
     },
     [stocks, pct],
   );
@@ -182,17 +179,7 @@ export function SkyScene({
     if (emptyHref) router.push(href(emptyHref));
   }, [router, href, emptyHref]);
 
-  /* Klavyenin gezdiği sıra: görünen düzenin etkileşimli binaları. */
-  const keyOrder = (): readonly number[] => {
-    const shown = rootRef.current
-      ? [...rootRef.current.querySelectorAll<HTMLElement>("[data-mode]")].find((el) => el.getClientRects().length > 0)
-      : undefined;
-    const index = shown ? modes.indexOf(shown.dataset.mode as SkyModeName) : -1;
-    return (index >= 0 ? interactive[index] : null) ?? order;
-  };
-
   const onKey = (event: KeyboardEvent<HTMLDivElement>) => {
-    const order = keyOrder();
     if (order.length === 0) return;
     const at = active === null ? -1 : order.indexOf(active);
     let next: number | null = null;
@@ -214,9 +201,6 @@ export function SkyScene({
     announce(next ?? null);
   };
 
-  /* Etkin binanın mahallesi de öne çıkıyor (klavyeyle gezerken nerede
-     olduğun belli). */
-  const focusDistrict = district ?? (active !== null ? stocks[active].district : null);
 
   return (
     <div ref={rootRef} className={styles.root} data-variant={variant} data-tone={tone} data-sky-scene="">
@@ -230,7 +214,7 @@ export function SkyScene({
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setActive(null);
         }}
       >
-        {layouts.map((layout, m) => (
+        {layouts.map((layout) => (
           <div key={layout.mode} className={styles.mode} data-mode={layout.mode}>
             {layout.rows.map((row, r) => (
               <SkyRowView
@@ -242,8 +226,8 @@ export function SkyScene({
                 names={names}
                 logos={logos}
                 active={active}
-                interactive={interactive[m]}
-                focusDistrict={focusDistrict}
+                tags={variant === "strip"}
+                hoverDistrict={district}
                 onActive={setActive}
                 onDistrict={setDistrict}
                 onOpen={openStock}
@@ -272,8 +256,8 @@ function SkyRowView({
   names,
   logos,
   active,
-  interactive,
-  focusDistrict,
+  tags,
+  hoverDistrict,
   onActive,
   onDistrict,
   onOpen,
@@ -290,9 +274,10 @@ function SkyRowView({
   names: Record<string, string>;
   logos: Record<string, string>;
   active: number | null;
-  /** Etkileşimli binalar (şeritte etiketliler); `null` hepsi. */
-  interactive: readonly number[] | null;
-  focusDistrict: string | null;
+  /** Etiketsiz binada büyük kart yerine değer etiketi (şerit). */
+  tags: boolean;
+  /** Fareyle üzerine gelinen mahalle adı. */
+  hoverDistrict: string | null;
   onActive: (i: number | null) => void;
   onDistrict: (key: string | null) => void;
   onOpen: (i: number) => void;
@@ -303,18 +288,14 @@ function SkyRowView({
   locale: Locale;
 }) {
   const height = row.bottom - row.top;
-  const pointer = useRef<{ type: string; hadTip: boolean }>({ type: "mouse", hadTip: false });
+  const pointer = useRef<{ type: string; was: number | null }>({ type: "mouse", was: null });
   /* İSABET. Fare binanın SÜTUNUNU tutuyor (bina 2 birim de olsa dikey
      şeridin tamamı hedef; dataviz: isabet alanı işaretten büyük); çatı
      etiketi (logo karosu) de binasının hedefi. Şeritte boşluk tıklaması
      posteri açtığı için sütun gökte sonsuza uzanmıyor: binanın ucundan
-     `REACH` birim ötesi boşluk. Şeritte yalnız etiketli binalar hedef;
-     etiketsiz bina boşluk sayılıyor (tıklaması posteri açıyor). */
-  const targets = useMemo(() => {
-    if (!interactive) return row.buildings;
-    const allowed = new Set(interactive);
-    return row.buildings.filter((b) => allowed.has(b.i));
-  }, [row.buildings, interactive]);
+     `REACH` birim ötesi boşluk. Her bina hedef (25 Ekim gece; etiket
+     turunda şeritte yalnız etiketliler hedefti). */
+  const targets = row.buildings;
   const hit = (event: PointerEvent<SVGSVGElement>): SkyBuilding | null => {
     const box = event.currentTarget.getBoundingClientRect();
     const x = ((event.clientX - box.left) / box.width) * layout.width;
@@ -340,8 +321,24 @@ function SkyRowView({
   };
   const activeB = active === null ? null : (targets.find((b) => b.i === active) ?? null);
   const activeLabel = activeB ? (row.labels.find((label) => label.i === activeB.i) ?? null) : null;
+  /* Şeritte etiketsiz binanın değer etiketi; altında kalan çatı etiketleri
+     o an sönüyor. */
+  const tag = useMemo<SkyValueTag | null>(
+    () => (tags && activeB && !activeLabel ? valueTag(activeB, stocks[activeB.i], SKY_MODES[layout.mode]) : null),
+    [tags, activeB, activeLabel, stocks, layout.mode],
+  );
+  const covered = useMemo(() => (tag ? new Set(tagCovers(tag, row.labels)) : null), [tag, row.labels]);
+  /* Etkin binanın mahallesi de öne çıkıyor (klavyeyle gezerken nerede
+     olduğun belli); değer etiketinde öne çıkmıyor (hafif dokunuş). */
+  const focusDistrict = hoverDistrict ?? (activeB && !tag ? stocks[activeB.i].district : null);
   /* Ufkun sahnedeki yeri (kesir): gök üstünde, su altında. */
   const horizon = -row.top / height;
+  /* Tabela ızgarası: sokak, mahalle, sokak … (sahne eninin yüzdesi). */
+  const pctW = (w: number) => `${((Math.max(0, w) / layout.width) * 100).toFixed(4)}%`;
+  const columns = row.districts
+    .flatMap((span, j) => [pctW(span.x0 - (j === 0 ? 0 : row.districts[j - 1].x1)), pctW(span.x1 - span.x0)])
+    .concat(pctW(layout.width - (row.districts.at(-1)?.x1 ?? 0)))
+    .join(" ");
 
   return (
     <div className={styles.row} style={{ "--hz": horizon.toFixed(4) } as CSSProperties}>
@@ -362,7 +359,7 @@ function SkyRowView({
             if (event.pointerType === "mouse") onActive(null);
           }}
           onPointerDown={(event) => {
-            pointer.current = { type: event.pointerType, hadTip: active !== null };
+            pointer.current = { type: event.pointerType, was: active };
             if (event.pointerType === "mouse") return;
             const b = hit(event);
             onActive(b ? b.i : null);
@@ -374,9 +371,11 @@ function SkyRowView({
               else onEmpty?.();
               return;
             }
-            /* Dokunmatik: binaya dokunuş ipucunu açtı; boşluğa dokunuş
-               açık bir ipucunu kapatıyor, ipucu yokken posteri açıyor. */
-            if (!b && !pointer.current.hadTip) onEmpty?.();
+            /* Dokunmatik: binaya ilk dokunuş değeri (ipucunu) açtı, AYNI
+               binaya ikinci dokunuş sayfasını açıyor; boşluğa dokunuş açık
+               bir ipucunu kapatıyor, ipucu yokken posteri açıyor. */
+            if (b && pointer.current.was === b.i) onOpen(b.i);
+            else if (!b && pointer.current.was === null) onEmpty?.();
           }}
         >
           <SkyDefs layout={layout} row={row} rowIndex={rowIndex} />
@@ -390,7 +389,7 @@ function SkyRowView({
               rx={BEAM_PAD}
             />
           )}
-          <SkyCity layout={layout} row={row} rowIndex={rowIndex} stocks={stocks} district={focusDistrict} dimmed={activeB !== null} />
+          <SkyCity layout={layout} row={row} rowIndex={rowIndex} stocks={stocks} district={focusDistrict} dimmed={activeB !== null && !tag} />
           {activeB && (
             <path
               d={buildingPath(activeB)}
@@ -407,9 +406,11 @@ function SkyRowView({
             pct={pct}
             district={focusDistrict}
             active={active}
+            muted={covered}
           />
+          {tag && <ValueTag tag={tag} stock={stocks[tag.i]} font={SKY_MODES[layout.mode].font} pct={pct} />}
         </svg>
-        {activeB && (
+        {activeB && !tag && (
           <Tip
             b={activeB}
             label={activeLabel}
@@ -425,15 +426,15 @@ function SkyRowView({
           />
         )}
       </div>
-      <ul className={styles.districts} aria-hidden>
-        {row.districts.map((span) => (
+      <ul className={styles.districts} style={{ gridTemplateColumns: columns }} aria-hidden>
+        {row.districts.map((span, j) => (
           <li
             key={span.key}
             className={styles.district}
             data-sky-district=""
             data-on={focusDistrict === span.key || undefined}
             data-off={focusDistrict !== null && focusDistrict !== span.key ? "" : undefined}
-            style={{ left: `${(span.x0 / layout.width) * 100}%`, width: `${((span.x1 - span.x0) / layout.width) * 100}%` }}
+            style={{ gridColumn: j * 2 + 2 }}
             onPointerEnter={(event) => {
               if (event.pointerType === "mouse") onDistrict(span.key);
             }}
@@ -447,6 +448,60 @@ function SkyRowView({
         ))}
       </ul>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------ DEĞER ETİKETİ */
+
+/** Bağ çizgisinin çatıdaki noktası (birim) — çatı etiketininkiyle aynı. */
+const TAG_ANCHOR_R = 2.4;
+/** Sembol ile yüzde arası (punto katı) ve taban çizgisi (satırın kesri). */
+const TAG_SPACE = 0.35;
+const TAG_BASELINE = 0.8;
+
+/**
+ * Etiketsiz binanın değeri: sembol (metin mürekkebi) ve yüzde (yön
+ * renginde), binanın ucunda. Kart yok; metnin çevresinde panelin zemin
+ * tonunda ince bir hale var, binaların üstünde de okunuyor. Yeri
+ * `valueTag`ten (lib/day-skyline.ts).
+ */
+function ValueTag({ tag, stock, font, pct }: { tag: SkyValueTag; stock: SkyStock; font: number; pct: (value: number) => string }) {
+  const tone = stock.change > 0 ? styles.up : stock.change < 0 ? styles.down : styles.flat;
+  const line = tag.h / tag.lines;
+  const base = (n: number) => tag.y + line * n + line * TAG_BASELINE;
+  return (
+    <g className={styles.valueTag} data-sky-tag="">
+      {tag.leader && (
+        <>
+          <line
+            className={styles.tagLeader}
+            x1={tag.leader.x}
+            x2={tag.leader.x}
+            y1={tag.leader.y1}
+            y2={tag.leader.y2}
+            vectorEffect="non-scaling-stroke"
+          />
+          <circle className={styles.tagAnchor} cx={tag.leader.x} cy={tag.leader.y1} r={TAG_ANCHOR_R} />
+        </>
+      )}
+      {tag.lines === 1 ? (
+        <text className={styles.tagText} x={tag.cx} y={base(0)} fontSize={font} textAnchor="middle">
+          <tspan className={styles.tagSymbol}>{stock.symbol}</tspan>
+          <tspan className={cn(styles.tagValue, tone)} dx={font * TAG_SPACE}>
+            {pct(stock.change)}
+          </tspan>
+        </text>
+      ) : (
+        <>
+          <text className={cn(styles.tagText, styles.tagSymbol)} x={tag.cx} y={base(0)} fontSize={font} textAnchor="middle">
+            {stock.symbol}
+          </text>
+          <text className={cn(styles.tagText, styles.tagValue, tone)} x={tag.cx} y={base(1)} fontSize={font} textAnchor="middle">
+            {pct(stock.change)}
+          </text>
+        </>
+      )}
+    </g>
   );
 }
 

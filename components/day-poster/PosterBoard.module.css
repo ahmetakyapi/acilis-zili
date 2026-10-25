@@ -7,44 +7,48 @@
 .board { padding-bottom: 4px; }
 
 /* ---------------------------------------------------------- GÜNÜN CÜMLESİ
-   Cümle solda, Nasdaq 100'ün değişimi sağda tabana oturuyor (künye şeridi).
-   Telefonda alt alta, künye cümlenin altında tek satır. */
+   TEK BLOK (25 Ekim gece, sahibinin isteği: "Burası da daha kompakt
+   olabilir; yazı başlığın yanına gelerek, alan daha doğru kullanılarak").
+   Eskiden 92 piksellik başlık kendi satırında, cümle altında, künye onun
+   altında, Nasdaq 100 sağda tabanda: blok 1440'ta 308–448 ve siluet ancak
+   632'de başlıyordu (ilk ekran 862'de, alt şerit 38 piksel). Şimdi geniş
+   ekranda üç sütun: solda günün adı (40–48 piksel), ortada hairline'ın
+   ardında cümle ve künye, sağda Nasdaq 100 ve yükselen/düşen şeridi.
+   Orta sütun başlıkla aynı iki satırı paylaşıyor (`subgrid`): cümle üstte,
+   künye altta, ikisi başlığın ortasına dayanıyor. Telefonda ve tablette alt
+   alta (eski düzen, telefon ölçüsü aşağıda).
+   ÖLÇÜM (23 Ekim posteri, kompakt başlık bandıyla birlikte): 1440×900'de
+   siluet 632 → 394'te başlıyor, mahalle tabelalarının dibi 1079 → 841
+   (EN 856; ilk ekranın sınırı 862). 1280×800'de 390–815: sahnenin çoğu
+   ilk ekranda. */
 .head {
+  --title: clamp(2.25rem, 1.6rem + 1.4vw, 3rem);
   display: grid;
-  gap: 14px;
+  gap: 12px;
   padding: 22px 16px 4px;
 }
 @media (min-width: 640px) {
-  .head { padding: 34px 28px 4px; }
+  .head { padding: 22px 28px 4px; }
 }
-@media (min-width: 900px) {
-  .head {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-    column-gap: 48px;
-  }
-}
-.headText { display: grid; gap: 12px; min-width: 0; }
 .story {
   display: grid;
-  gap: 12px;
+  gap: 8px;
   margin: 0;
 }
-/* Kısa başlık kendi satırında; yanında metin yok, 0,12em kaldırma
-   (CLAUDE.md "Display başlığın yanındaki metin") burada gerekmiyor. */
 .storyTitle {
   width: fit-content;
-  font-size: clamp(2.75rem, 1.35rem + 4.6vw, 5.75rem);
+  font-size: var(--title);
   font-weight: 850;
-  line-height: 1.02;
+  line-height: 1.04;
   letter-spacing: -0.045em;
+  white-space: nowrap;
 }
 .storyDetail {
-  max-width: 38ch;
+  max-width: 44ch;
   color: var(--text-strong);
-  font-size: clamp(1.125rem, 0.95rem + 0.75vw, 1.625rem);
+  font-size: clamp(1.0625rem, 0.95rem + 0.4vw, 1.3125rem);
   font-weight: 650;
-  line-height: 1.28;
+  line-height: 1.3;
   letter-spacing: -0.02em;
   text-wrap: pretty;
 }
@@ -52,42 +56,89 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px 16px;
+  gap: 2px 16px;
   color: var(--text-muted);
   font-size: var(--text-small);
 }
 .anchor {
   display: grid;
   justify-items: start;
+  gap: 8px;
+  min-width: 0;
+}
+.anchorFigure {
+  display: grid;
+  justify-items: inherit;
   gap: 2px;
   margin: 0;
-  padding-bottom: 4px;
-}
-@media (min-width: 900px) {
-  .anchor { justify-items: end; }
 }
 .anchorName {
   color: var(--text-strong);
-  font-size: var(--text-read);
+  font-size: var(--text-small);
   font-weight: 700;
 }
 .anchorValue {
-  font-size: clamp(2.25rem, 1.5rem + 2.6vw, 4rem);
+  font-size: clamp(2rem, 1.5rem + 1.3vw, 2.75rem);
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.045em;
   white-space: nowrap;
 }
+.anchorStrip { width: 100%; min-width: 9rem; }
+
+@media (min-width: 900px) {
+  .head {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    column-gap: 24px;
+    row-gap: 0;
+    align-items: center;
+  }
+  .story {
+    grid-column: 1 / 3;
+    grid-row: 1 / 3;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
+    gap: 0;
+    column-gap: 24px;
+  }
+  .storyTitle { grid-column: 1; grid-row: 1 / 3; align-self: center; }
+  /* Başlığın yanındaki sütun hairline ile ayrılıyor (`MarketTexture`
+     `.bandHead` kalıbı). Başlık ortalanmış duruyor, taban çizgisine
+     hizalı değil; ama degrade başlık kutusu imler için 0,12em yukarı
+     açıldığından (CLAUDE.md "Display başlığın yanındaki metin") görünen
+     ortası kutununkinden 0,06em aşağıda; orta sütun o kadar kalkıyor
+     (ortalı hizada payın yarısı; 1440'ta gözle ve ölçüyle denetlendi). */
+  .storyDetail,
+  .headMeta {
+    grid-column: 2;
+    padding-left: 24px;
+    border-left: 1px solid var(--line-strong);
+    translate: 0 calc(var(--title) * -0.06);
+  }
+  .storyDetail { grid-row: 1; align-self: end; padding-bottom: 4px; }
+  .headMeta { grid-row: 2; align-self: start; }
+  .anchor { grid-column: 3; grid-row: 1 / 3; justify-items: end; }
+}
 
 /* ----------------------------------------------------------------- SİLUET */
 .stage {
   min-width: 0;
-  padding: 28px 16px 0;
+  padding: 24px 16px 0;
 }
 @media (min-width: 640px) {
-  .stage { padding: 34px 28px 0; }
+  .stage { padding: 22px 28px 0; }
 }
-.stageHead { display: grid; gap: 8px; margin-bottom: 14px; }
+/* BAŞLIK VE LEJANT TEK SATIRDA, açıklama tek satır altında (25 Ekim gece):
+   eskiden başlık, lejant ve iki satır açıklama üst üste 118 piksel
+   tutuyordu. */
+.stageHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 28px;
+  margin-bottom: 12px;
+}
 .stageHead h3 {
   margin: 0;
   color: var(--text-strong);
@@ -96,7 +147,7 @@
   letter-spacing: -0.02em;
 }
 .hint {
-  max-width: 70ch;
+  flex-basis: 100%;
   margin: 0;
   color: var(--text-body);
   font-size: var(--text-small);
@@ -221,9 +272,9 @@
 @media (max-width: 639px) {
   .head { gap: 10px; padding: 16px 16px 2px; }
   .story { gap: 8px; }
-  .storyTitle { font-size: 2.25rem; }
+  .head { --title: 2.25rem; }
   .storyDetail { font-size: 1rem; line-height: 1.3; }
-  .anchor { grid-auto-flow: column; align-items: baseline; gap: 10px; }
+  .anchorFigure { grid-auto-flow: column; align-items: baseline; gap: 10px; }
   .anchorValue { font-size: 1.75rem; }
   .stage { padding-top: 20px; }
 }

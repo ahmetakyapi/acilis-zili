@@ -413,11 +413,18 @@
   .dashboard [data-home-section="world"] { order:3; }
   .dashboard [data-home-section="movers"] { order:4; }
   .dashboard [data-home-section="technical"] { order:5; }
+  /* Günün Grafiği teknik görünümün ardında (eşit sıra, belge sırası).
+     Sırası yazılmamıştı ve `order:0` ile günün özetinin ÜSTÜNE çıkıyordu:
+     390'da pano başı 2527 = grafiğin tepesi, özet 2795 (25 Ekim, ölçüldü). */
+  .dashboard [data-home-section="daily-chart"] { order:5; }
   .dashboard [data-home-section="stories"] { order:6; }
   /* Portföy ya da Nabız yuvası Mercek'in ardında, masaüstündeki sırayla aynı. */
   .dashboard [data-home-section="portfolio"] { order:7; }
   .dashboard [data-home-section="earnings"] { order:8; }
   .dashboard [data-home-section="analyses"] { order:9; }
+  /* Hisseyi Bil analizlerin ardında (eşit sırada belge sırası: ana kolon
+     önce). Telefonda bir oyun daveti sayfanın asıl içeriğinin önüne geçmez. */
+  .dashboard [data-home-section="puzzle"] { order:9; }
   .dashboard [data-home-section="yields"] { order:10; }
   .dashboard [data-home-section="macro"] { order:11; }
   .dashboard [data-home-section="schedule"] { order:12; }
@@ -473,7 +480,7 @@
      dibinde. Tam genişlik bölümler satırı yalnız tuttuğu için etkilenmiyor. */
   .dashboard :is([data-home-section="world"],[data-home-section="movers"],[data-home-section="yields"],[data-home-section="macro"],[data-home-section="schedule"],[data-home-section="week"],[data-home-section="technical"],[data-home-section="watchlist"]) { align-self:stretch; display:flex; flex-direction:column; }
   .dashboard :is([data-home-section="world"],[data-home-section="movers"],[data-home-section="yields"],[data-home-section="macro"],[data-home-section="technical"],[data-home-section="watchlist"]) > :last-child { flex:1 0 auto; }
-  .dashboard :is([data-home-section="brief"],[data-home-section="stories"],[data-home-section="portfolio"],[data-home-section="earnings"],[data-home-section="analyses"],[data-home-section="texture"],[data-home-section="news"],[data-home-section="sources"]) { grid-column:1 / -1; }
+  .dashboard :is([data-home-section="brief"],[data-home-section="stories"],[data-home-section="portfolio"],[data-home-section="earnings"],[data-home-section="analyses"],[data-home-section="texture"],[data-home-section="news"],[data-home-section="sources"],[data-home-section="puzzle"],[data-home-section="daily-chart"]) { grid-column:1 / -1; }
   /* Teknik görünüm tablette favorilerle eş: yerleşim sırası öyle kuruluyor
      (yan yana duracak iki panel ardışık olmalı). */
   .dashboard [data-home-section="technical"] { order:14; }

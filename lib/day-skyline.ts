@@ -265,6 +265,13 @@ export type SkyMode = {
  * karo + sembol + yüzde; masaüstünde karo 28–32 piksel. Etiket sayısı da
  * SAHNE GENELİNDE (`labelCaps` en büyük şirket, `labelExtremes` iki yönün
  * uçları): telefonda en büyük altı ve birer uç, 1920'de on dört ve üçer.
+ *
+ * ŞERİT ALÇALDI (25 Ekim gece; sahibi: "Burası bir tık daha kompakt ve daha
+ * az yer kaplayabilir"). Ana sayfa şeridinin masaüstü düzenlerinde ölçeğin
+ * tavanı (`half`) 58 → 42 ve 72 → 52, karo 28 → 26 ve 32 → 28, ufkun iki
+ * yanının taban payı (`minSide`) 0,24 → 0,2: düşüşlerin derinliği gerçek
+ * ölçekte kalıyor, boş su payı azalıyor. 1440'ta panel 447 → 358 piksel
+ * (TR, 23 Ekim). Posterin düzenlerine dokunulmadı.
  */
 export const SKY_MODES = {
   narrow: { width: 400, rows: 3, gap: 1.2, districtGap: 10, minW: 1.8, minDistrictW: 92, half: 52, minSide: 0.22, label: "full", labelCaps: 8, labelExtremes: 1, font: 13, logo: 26 },
@@ -272,9 +279,9 @@ export const SKY_MODES = {
   wide: { width: 1200, rows: 1, gap: 2, districtGap: 18, minW: 3, minDistrictW: 120, half: 124, minSide: 0.18, label: "full", labelCaps: 12, labelExtremes: 3, font: 12, logo: 30 },
   xwide: { width: 1680, rows: 1, gap: 2.4, districtGap: 24, minW: 3.6, minDistrictW: 140, half: 160, minSide: 0.18, label: "full", labelCaps: 14, labelExtremes: 3, font: 13, logo: 32 },
   stripNarrow: { width: 400, rows: 2, gap: 1.2, districtGap: 10, minW: 1.8, minDistrictW: 86, half: 34, minSide: 0.25, label: "full", labelCaps: 6, labelExtremes: 1, font: 13, logo: 26 },
-  stripMedium: { width: 900, rows: 1, gap: 1.6, districtGap: 14, minW: 2.4, minDistrictW: 96, half: 50, minSide: 0.24, label: "full", labelCaps: 10, labelExtremes: 2, font: 15, logo: 32 },
-  stripWide: { width: 1200, rows: 1, gap: 2, districtGap: 18, minW: 3, minDistrictW: 120, half: 58, minSide: 0.24, label: "full", labelCaps: 12, labelExtremes: 3, font: 11, logo: 28 },
-  stripXwide: { width: 1680, rows: 1, gap: 2.4, districtGap: 24, minW: 3.6, minDistrictW: 140, half: 72, minSide: 0.24, label: "full", labelCaps: 14, labelExtremes: 3, font: 13, logo: 32 },
+  stripMedium: { width: 900, rows: 1, gap: 1.6, districtGap: 14, minW: 2.4, minDistrictW: 96, half: 44, minSide: 0.2, label: "full", labelCaps: 10, labelExtremes: 2, font: 15, logo: 30 },
+  stripWide: { width: 1200, rows: 1, gap: 2, districtGap: 18, minW: 3, minDistrictW: 120, half: 42, minSide: 0.2, label: "full", labelCaps: 12, labelExtremes: 3, font: 11, logo: 26 },
+  stripXwide: { width: 1680, rows: 1, gap: 2.4, districtGap: 24, minW: 3.6, minDistrictW: 140, half: 52, minSide: 0.2, label: "full", labelCaps: 14, labelExtremes: 3, font: 13, logo: 28 },
   og: { width: 1080, rows: 1, gap: 2, districtGap: 16, minW: 2.6, minDistrictW: 96, half: 118, minSide: 0.2, label: "full", labelCaps: 6, labelExtremes: 2, font: 15, logo: 26 },
   ogTall: { width: 960, rows: 2, gap: 2, districtGap: 16, minW: 2.6, minDistrictW: 120, half: 110, minSide: 0.2, label: "full", labelCaps: 10, labelExtremes: 2, font: 19, logo: 32 },
   mini: { width: 320, rows: 1, gap: 0.6, districtGap: 5, minW: 0.9, minDistrictW: 0, half: 52, minSide: 0.2, label: "none", labelCaps: 0, labelExtremes: 0, font: 0, logo: 0 },
@@ -864,6 +871,103 @@ export function skylineLayout({
   });
 
   return { mode: modeName, width: mode.width, domain, rows };
+}
+
+/* --------------------------------------------------------------------------
+   Değer etiketi (25 Ekim gece, "Silüet: değer" turu)
+   -------------------------------------------------------------------------- */
+
+/**
+ * ETİKETSİZ BİNANIN DEĞERİ. Sahibi etiket turundan sonra: "Artık diğer
+ * çubuklardaki değerler de yazabilir." Şeritte logo karosu yalnız en büyük
+ * şirketlerde ve günün uçlarında; öteki binaya gelince (dokununca, klavyeyle
+ * seçince) binanın TAM UCUNDA küçük bir değer etiketi beliriyor: sembol ve
+ * yüzde, logo yok, kart yok. Yükselende çatının üstünde, düşende dibinin
+ * altında, değişmeyende ortasının üstünde; binanın ekseninde ortalı.
+ *
+ * Etiket önce tek satır ("AMD +%1,74"). Sahnenin kenarından taşıyorsa
+ * kenarın içine kayıyor, ama en çok `LABEL_MAX_SHIFT` kadar (çatı
+ * etiketleriyle aynı eşik: binanın ekseni her zaman etiketin içinden
+ * geçiyor). Tek satır o payla sığmıyorsa iki satıra (sembol üstte, yüzde
+ * altta; çatı etiketinin logosuz hâli) dönüyor; kenar payı (`labelSide`)
+ * zaten o ene göre ayrılmış. Kaydıysa çatıdan etikete ince bir bağ çizgisi
+ * (`leader`) ve etiket çatıdan biraz daha uzakta, bağ görünsün diye.
+ *
+ * Kutu ölçüsü üstten tahmin: çatı etiketinin `CHAR_EM`i (0,62) burada
+ * yetmedi, tek satırda "MPWR −%2,38" 1440 şeritte 82 piksel çıktı (tahmin
+ * 75; W geniş harf, araya sembolle yüzde arası giriyor) ve kutu komşu
+ * etiketin 1,4 piksel içine düştü. `TAG_EM` 0,7 + hale payı; tarayıcıda
+ * ölçüldü, gerçek metin kutuya sığıyor.
+ */
+export type SkyValueTag = {
+  i: number;
+  /** Metnin ekseni (birim) — binanın ekseninden en çok `LABEL_MAX_SHIFT` uzak. */
+  cx: number;
+  /** Kutunun üstü ve ölçüsü, sıranın koordinatında (ufuk y=0). */
+  y: number;
+  w: number;
+  h: number;
+  lines: 1 | 2;
+  /** Kaydıysa çatıdan (x, y1) etikete (x, y2) dik bağ. */
+  leader: { x: number; y1: number; y2: number } | null;
+};
+
+/** Değer etiketinin karakter eni ve satır yüksekliği (punto katı), hale payı,
+ *  çatıya uzaklığı (birim). */
+const TAG_EM = 0.7;
+const TAG_LINE = 1.2;
+const TAG_HALO = 2;
+const TAG_GAP = 4;
+/** Kaymış etiketin çatıya uzaklığı: bağ çizgisi görünsün. */
+const TAG_LEAD = 9;
+
+export function valueTag(b: SkyBuilding, stock: Pick<SkyStock, "symbol" | "change">, mode: Pick<SkyMode, "width" | "font">): SkyValueTag {
+  const unit = mode.font * TAG_EM;
+  const axis = b.x + b.w / 2;
+  const sym = stock.symbol.length;
+  const pct = pctChars(stock.change);
+  /* Kenarın içine kalması için gereken kayma (işaretli). */
+  const shiftFor = (w: number) => {
+    const x = axis - w / 2;
+    const lo = EDGE;
+    const hi = Math.max(lo, mode.width - EDGE - w);
+    return Math.min(Math.max(x, lo), hi) - x;
+  };
+  let lines: 1 | 2 = 1;
+  let w = (sym + 1 + pct) * unit + TAG_HALO;
+  let shift = shiftFor(w);
+  if (Math.abs(shift) > LABEL_MAX_SHIFT) {
+    lines = 2;
+    w = Math.max(sym, pct) * unit + TAG_HALO;
+    shift = shiftFor(w);
+  }
+  shift = Math.max(-LABEL_MAX_SHIFT, Math.min(LABEL_MAX_SHIFT, shift));
+  const h = mode.font * TAG_LINE * lines;
+  const shifted = Math.abs(shift) >= ATTACH_SHIFT;
+  const gap = shifted ? TAG_LEAD : TAG_GAP;
+  const down = b.dir === -1;
+  const tip = down ? b.h : b.dir === 1 ? -b.h : -b.h / 2;
+  const y = down ? tip + gap : tip - gap - h;
+  return {
+    i: b.i,
+    cx: axis + shift,
+    y,
+    w,
+    h,
+    lines,
+    leader: shifted ? { x: axis, y1: tip, y2: down ? y : y + h } : null,
+  };
+}
+
+/** Değer etiketinin kutusu (kesişme denetimi için). */
+export function valueTagBox(tag: SkyValueTag): Box {
+  return { x: tag.cx - tag.w / 2, y: tag.y, w: tag.w, h: tag.h };
+}
+
+/** Değer etiketinin üstüne düşen çatı etiketleri: etiket görünürken sönüyor. */
+export function tagCovers(tag: SkyValueTag, labels: readonly SkyLabel[]): number[] {
+  const box = valueTagBox(tag);
+  return labels.filter((label) => overlaps(box, label, LABEL_PAD)).map((label) => label.i);
 }
 
 /* --------------------------------------------------------------------------

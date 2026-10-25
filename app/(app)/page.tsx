@@ -364,11 +364,6 @@ export default async function TodayPage() {
         <SessionBellFigure status={status} nowMs={nowMs} locale={locale} t={t} />
       </Panel>
 
-      {/* HİSSEYİ BİL (24 Ekim): günlük bulmacanın girişi — tek satır, ızgaranın
-          DIŞINDA (seans zili ile aynı gerekçe: kolon dengesi). Gerekçe
-          `components/puzzle/PuzzleTeaser.tsx`. */}
-      <PuzzleTeaser day={puzzleDay} number={puzzleNumber(puzzleDay)} labels={t.stockPuzzle} />
-
     <div className={styles.dashboard}>
       {/* Seans sınırında sayfa kendini tazeler. Hiçbir şey çizmez, ızgarada yer
           kaplamaz. Geri sayım sıfıra inince orada kilitleniyor ve yeni güne
@@ -573,6 +568,17 @@ export default async function TodayPage() {
             <DailyChartPanel locale={locale} t={t} />
           </Suspense>
         </div>
+
+        {/* ---- Hisseyi Bil (24 Ekim; 25 Ekim'de buraya indi) ----
+             Bir dönem seans zilinin altında, ızgaranın DIŞINDA tam genişlik
+             bir şeritti: sayfanın üst kısmında pano başlamadan 102 piksel
+             (telefonda 142–156) bir oyun daveti duruyordu. Sahibinin isteği:
+             "daha aşağılara, daha az yer kaplayan kompakt bir yere". Yan
+             kolonda, sitenin kendi ürettiği içerikle (teknik görünüm, günün
+             grafiği) yan yana; kart kapsayıcısına göre iki satıra iniyor.
+             Telefonda bilanço analizlerinin ardında (sıra
+             TodayExperience.module.css). Ölçümler `PuzzleTeaser.tsx`. */}
+        <PuzzleTeaser day={puzzleDay} number={puzzleNumber(puzzleDay)} labels={t.stockPuzzle} />
 
         <div data-home-section="yields">
           <Suspense fallback={<PanelSkeleton rows={3} footer />}>

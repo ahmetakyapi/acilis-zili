@@ -13,6 +13,7 @@ import { cn, directionOf, directionText, formatEtDateLong, formatPercent } from 
 import { PosterBoard } from "./PosterBoard";
 import { BreadthStrip } from "./PosterMarks";
 import { posterName, posterStoryText } from "./story";
+import dayStyles from "./DayPoster.module.css";
 import styles from "./PosterArchive.module.css";
 
 /**
@@ -44,7 +45,7 @@ export function PosterArchive({ locale, t }: { locale: Locale; t: Dictionary }) 
   return (
     <MotionExperience className={polish.page}>
       <ScrollProgress />
-      <PageHeader title={t.daySignature.poster.title} subtitle={t.daySignature.archive.subtitle} />
+      <PageHeader className={dayStyles.band} title={t.daySignature.poster.title} subtitle={t.daySignature.archive.subtitle} />
       <Suspense fallback={<ArchiveSkeleton />}>
         <ArchiveBody locale={locale} t={t} />
       </Suspense>

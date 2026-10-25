@@ -163,6 +163,7 @@ export function SkyLabels({
   pct,
   district,
   active,
+  muted,
 }: {
   layout: SkyLayout;
   row: SkyRow;
@@ -172,6 +173,8 @@ export function SkyLabels({
   pct?: (value: number) => string;
   district?: string | null;
   active?: number | null;
+  /** Bir değer etiketinin altında kalan etiketler (o an sönük). */
+  muted?: ReadonlySet<number> | null;
 }) {
   if (row.labels.length === 0) return null;
   const mode = SKY_MODES[layout.mode];
@@ -190,7 +193,7 @@ export function SkyLabels({
             key={label.i}
             className={styles.label}
             data-sky-label=""
-            data-off={district && district !== stock.district ? "" : undefined}
+            data-off={(district && district !== stock.district) || muted?.has(label.i) ? "" : undefined}
             data-on={active === label.i || undefined}
           >
             {label.leader && (

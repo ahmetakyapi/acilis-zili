@@ -7,11 +7,11 @@
 .panel {
   container-type: inline-size;
   display: grid;
-  gap: 12px;
-  padding: 16px 16px 14px;
+  gap: 10px;
+  padding: 14px 16px 12px;
 }
 @media (min-width: 640px) {
-  .panel { padding: 20px 24px 18px; }
+  .panel { padding: 16px 24px 14px; }
 }
 
 /* BAŞLIK: solda ad + tarih, sağda endeks yüzdesi, kulvar ve bağlantı.
@@ -32,7 +32,16 @@
     column-gap: 28px;
   }
 }
-.titleBlock { grid-area: title; display: grid; gap: 2px; min-width: 0; }
+/* Ad, tarih ve günün cümlesi tek satırda; araları hairline. Dar kapta
+   cümle kendi satırına iner (tam en). */
+.titleBlock {
+  grid-area: title;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 14px;
+  min-width: 0;
+}
 .title {
   margin: 0;
   font-size: var(--text-title);
@@ -48,6 +57,7 @@
 .titleLink:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: 4px; }
 .close {
   margin: 0;
+  white-space: nowrap;
   color: var(--text-muted);
   font-size: var(--text-small);
   font-weight: 600;
@@ -61,18 +71,21 @@
   min-width: 0;
 }
 .figure {
-  display: grid;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   margin: 0;
   line-height: 1;
 }
 .figureLabel {
   color: var(--text-muted);
+  white-space: nowrap;
   font-size: var(--text-nano);
   font-weight: 650;
   line-height: 1.3;
 }
 .figureValue {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.035em;
   line-height: 1.05;
@@ -115,17 +128,23 @@
 .open svg { transition: translate 0.2s var(--ease-brand); }
 .open:hover svg { translate: 3px 0; }
 .open:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: 4px; }
+/* 44 piksellik dokunma hedefi satırı uzatmasın: dikey dolgu eksi payla
+   satırın içine katlanıyor (hedef aynı, satır 44 → ~28 piksel). */
 @container (min-width: 700px) {
-  .open { margin-top: 0; }
+  .open { margin-block: -9px; }
 }
 
-/* GÜNÜN CÜMLESİ — sahnenin üstünde tek ince satır. */
+/* GÜNÜN CÜMLESİ — başlığın satırında, dar kapta altında tek ince satır. */
 .story {
+  flex: 1 1 100%;
   margin: 0;
   min-width: 0;
   color: var(--text-body);
   font-size: var(--text-small);
   line-height: 1.45;
+}
+@container (min-width: 1080px) {
+  .story { flex: 1 1 24rem; padding-left: 14px; border-left: 1px solid var(--line-strong); }
 }
 .storyTitle { color: var(--text-strong); font-weight: 750; }
 .storyTitle::after { content: ": "; }
@@ -137,14 +156,19 @@
    ETİKET BİNASININ ÜSTÜNDE turundan sonra (25 Ekim, aynı veri; etiket
    yana kaçmıyor, gerekirse ikinci kata çıkıyor): 320 → 469 (telefonda
    Apple ve T-Mobile ikinci katta), 670 → 280, 1150 → 296, 1270 → 321,
-   1550 → 312. */
-.skeleton { display: grid; gap: 12px; }
-.skeletonHead { height: 129px; width: 100%; }
+   1550 → 312.
+   KOMPAKT TURDAN SONRA (25 Ekim gece, aynı veri; başlık tek satır, sahne
+   alçak, kap içi en → başlık / sahne): 320 → 120 / 468, 670 → 82 / 277,
+   926 → 43 / 338, 1150 → 29 / 279, 1270 → 29 / 287, 1550 → 29 / 262,
+   1790 → 29 / 295. */
+.skeleton { display: grid; gap: 10px; }
+.skeletonHead { height: 120px; width: 100%; }
 .skeletonScene { width: 100%; height: 146cqw; }
-@container (min-width: 600px) { .skeletonScene { height: 42cqw; } }
-@container (min-width: 700px) { .skeletonHead { height: 75px; } }
-@container (min-width: 1080px) { .skeletonScene { height: 25.5cqw; } }
-@container (min-width: 1500px) { .skeletonScene { height: 20cqw; } }
+@container (min-width: 600px) { .skeletonScene { height: 39cqw; } }
+@container (min-width: 700px) { .skeletonHead { height: 82px; } }
+@container (min-width: 900px) { .skeletonHead { height: 43px; } }
+@container (min-width: 1080px) { .skeletonHead { height: 29px; } .skeletonScene { height: 23.5cqw; } }
+@container (min-width: 1500px) { .skeletonScene { height: 17cqw; } }
 
 @media (prefers-reduced-motion: reduce) {
   .titleLink, .open svg { transition: none; }
