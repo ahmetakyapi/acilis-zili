@@ -31,6 +31,9 @@
    mahallenin beşi taşıyordu. Tabelayı genişletmek binaları daraltırdı;
    ad üstte, yüzde altta kaldı, satır yüksekliği ve dolgu kısaldı. */
 .root[data-variant="strip"] { --sky-pad: 6px; }
+/* Telefon şeridinde üç pencere: üst pay 4 piksel (etiket zaten payın
+   içinde, `row.top`). */
+@container (max-width: 599.98px) { .root[data-variant="strip"] { --sky-pad: 4px; } }
 .root[data-variant="strip"] .district { padding: 4px 2px 2px; }
 .root[data-variant="strip"] :is(.districtName, .districtValue) { line-height: 1.2; }
 .root[data-tone="up"] {
@@ -299,4 +302,103 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .valueTag { animation: none; }
+}
+
+/* ------------------------------------------------------------ TELEFON
+   Gerekçe SkyScene.tsx, "TELEFON". Tabela tek satır kısa ad, yüzde hemen
+   altında: iki satırı geçmiyor. En dar mahalle adını taşıyacak kadar geniş
+   (`signWidth`, lib/day-skyline.ts); daha dar kapta ad üç noktayla
+   kesiliyor, satır atlamıyor. */
+.districts[data-compact] { padding-bottom: 3px; }
+.districts[data-compact] .district { margin-top: 2px; padding: 3px 1px 0; }
+/* Sıralar arası: tabela zaten ayırıyor, pencereler birbirine yakın. */
+.root .mode[data-mode="stripNarrow"] { gap: 6px; }
+.root[data-variant="poster"] .mode[data-mode="narrow"] { gap: 8px; }
+.districts[data-compact] .districtName {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  hyphens: manual;
+  line-height: 1.2;
+}
+.districts[data-compact] .districtValue { line-height: 1.2; }
+
+/* OKUMA SATIRI — telefonda seçili binanın kartı sahnenin ALTINDA, akışın
+   içinde: hiçbir şeyi örtmüyor. Kart değil ton: panelin gömük zemini, gölge
+   yok. İki satır: karo + sembol/ad + yüzde + kapat; mahalle ve piyasa
+   değeri + şirket sayfası. */
+.readout {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "logo id value close"
+    "meta meta link link";
+  align-items: center;
+  column-gap: 10px;
+  padding: 6px 0 0 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  animation: tip-in 0.16s var(--ease-brand) both;
+}
+.readoutLogo {
+  grid-area: logo;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--logo-plate);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.readoutInitials {
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  font-weight: 750;
+}
+.readoutId { grid-area: id; display: grid; min-width: 0; }
+.readoutValue {
+  grid-area: value;
+  font-size: var(--text-title);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.readoutClose {
+  grid-area: close;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: var(--text-muted);
+  border-radius: var(--radius-md);
+  transition: color 0.2s var(--ease-brand);
+}
+.readoutClose:hover { color: var(--text-strong); }
+.readoutClose:focus-visible,
+.readoutLink:focus-visible { outline: 2px solid var(--line-focus); outline-offset: -2px; border-radius: var(--radius-sm); }
+.readoutMeta {
+  grid-area: meta;
+  display: grid;
+  min-width: 0;
+  padding-block: 4px 8px;
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  line-height: 1.35;
+}
+.readoutLink {
+  grid-area: link;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 12px;
+  color: var(--primary);
+  font-size: var(--text-small);
+  font-weight: 700;
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .readout { animation: none; }
+  .readoutClose { transition: none; }
 }

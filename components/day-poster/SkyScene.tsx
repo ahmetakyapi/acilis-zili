@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import Image from "next/image";
+import { X } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { useLocaleHref } from "@/components/layout/useLocaleHref";
@@ -15,6 +16,7 @@ import {
   type SkyBuilding,
   type SkyLabel,
   type SkyLayout,
+  type SkyMode,
   type SkyModeName,
   type SkyRow,
   type SkyStock,
@@ -74,6 +76,21 @@ import styles from "./SkyScene.module.css";
  *     (logoluda kart, ötekinde değer etiketi; canlı bölge her binada
  *     "SEMBOL, Ad, yüzde"), Enter şirketin sayfası, Esc kapatır.
  *
+ * TELEFON (25 Ekim, "Silüet: mobil" turu; sahibi iPhone ekranlarıyla:
+ * "Mobilde buralar daha iyi olmalı"). Telefon düzenleri (`compact`,
+ * lib/day-skyline.ts) üç şeyi farklı yapıyor:
+ *   - BİLGİ KARTI SAHNENİN ALTINDA. Kart binanın yanında açılınca telefonda
+ *     sahnenin ortasına düşüp alt sırayı ve mahalle tabelalarını örtüyordu
+ *     (390'da Apple kartı). Şimdi sahnenin altında sabit bir okuma satırı
+ *     (`Readout`): logo, sembol, ad, yüzde, mahalle, piyasa değeri ve
+ *     "Hisseye Git"; hiçbir şeyi örtmüyor, başka binaya dokununca
+ *     değişiyor, çarpıyla kapanıyor. Masaüstü kartı (`Tip`) aynen.
+ *   - ETİKET YA TAM GÖRÜNÜR YA HİÇ. Bina seçilince öteki mahallelerin
+ *     etiketleri %20'ye sönüyordu (390'da SPCX "sönmüş" duruyordu);
+ *     telefonda mahalle odağı yok, değer etiketinin altında kalan çatı
+ *     etiketi sönmek yerine o an gizleniyor.
+ *   - TABELA KISA ADLA TEK SATIR (`signs`, sözlükte `shortDistricts`).
+ *
  * HAREKET (bir kez, ekrana girince): gök tonu belirir, mahalleler ufuktan
  * sırayla yükselir, yansıma ardından suya iner, logolar en son oturur
  * (`SkyMarks.module.css`, zaman çizelgesi `RISE_*`). Hareketi azaltana
@@ -97,6 +114,7 @@ export function SkyScene({
   stocks,
   districts,
   names,
+  signs,
   logos,
   sized,
   locale,
@@ -111,6 +129,8 @@ export function SkyScene({
   districts: District[];
   /** Mahalle anahtarı → okunur ad. */
   names: Record<string, string>;
+  /** Mahalle anahtarı → telefondaki tabela adı (kısa; yoksa `names`). */
+  signs: Record<string, string>;
   /** Sembol → logo adresi (yalnız depoda olanlar). */
   logos: Record<string, string>;
   sized: boolean;
@@ -131,7 +151,19 @@ export function SkyScene({
   const [district, setDistrict] = useState<string | null>(null);
   const pct = useCallback((value: number) => formatPercent(value, locale, PERCENT_DIGITS), [locale]);
 
-  const layouts = useMemo(() => modes.map((mode) => skylineLayout({ stocks, districts, mode })), [modes, stocks, districts]);
+  const layouts = useMemo(
+    () => modes.map((mode) => skylineLayout({ stocks, districts, mode, signs })),
+    [modes, stocks, districts, signs],
+  );
+  /* Telefonda bilgi kartı sahnenin altında: şeritte yalnız logolu binada
+     (ötekinde değer etiketi), posterde her binada. */
+  const readout = useMemo(() => {
+    if (active === null) return null;
+    const phone = layouts.find((layout) => specOf(layout).compact);
+    if (!phone) return null;
+    if (variant === "poster") return active;
+    return phone.rows.some((row) => row.labels.some((l) => l.i === active)) ? active : null;
+  }, [active, layouts, variant]);
   /* Soldan sağa okuma sırası: bütün düzenlerde aynı (sıralar mahalle
      sırasının bitişik parçaları). */
   const order = useMemo(() => districts.flatMap((d) => d.members), [districts]);
@@ -219,6 +251,7 @@ export function SkyScene({
             {layout.rows.map((row, r) => (
               <SkyRowView
                 key={r}
+                signs={signs}
                 layout={layout}
                 row={row}
                 rowIndex={r}
@@ -238,6 +271,22 @@ export function SkyScene({
                 locale={locale}
               />
             ))}
+            {specOf(layout).compact && readout !== null && (
+              <Readout
+                stock={stocks[readout]}
+                logo={logos[stocks[readout].symbol]}
+                district={names[stocks[readout].district] ?? ""}
+                clip={layout.rows.some((row) => row.buildings.some((b) => b.i === readout && b.clip))}
+                pct={pct}
+                text={text}
+                sized={sized}
+                locale={locale}
+                onClose={() => {
+                  setActive(null);
+                  announce(null);
+                }}
+              />
+            )}
           </div>
         ))}
       </div>
@@ -254,6 +303,7 @@ function SkyRowView({
   rowIndex,
   stocks,
   names,
+  signs,
   logos,
   active,
   tags,
@@ -272,6 +322,7 @@ function SkyRowView({
   rowIndex: number;
   stocks: SkyStock[];
   names: Record<string, string>;
+  signs: Record<string, string>;
   logos: Record<string, string>;
   active: number | null;
   /** Etiketsiz binada büyük kart yerine değer etiketi (şerit). */
@@ -288,6 +339,7 @@ function SkyRowView({
   locale: Locale;
 }) {
   const height = row.bottom - row.top;
+  const compact = specOf(layout).compact === true;
   const pointer = useRef<{ type: string; was: number | null }>({ type: "mouse", was: null });
   /* İSABET. Fare binanın SÜTUNUNU tutuyor (bina 2 birim de olsa dikey
      şeridin tamamı hedef; dataviz: isabet alanı işaretten büyük); çatı
@@ -330,7 +382,7 @@ function SkyRowView({
   const covered = useMemo(() => (tag ? new Set(tagCovers(tag, row.labels)) : null), [tag, row.labels]);
   /* Etkin binanın mahallesi de öne çıkıyor (klavyeyle gezerken nerede
      olduğun belli); değer etiketinde öne çıkmıyor (hafif dokunuş). */
-  const focusDistrict = hoverDistrict ?? (activeB && !tag ? stocks[activeB.i].district : null);
+  const focusDistrict = hoverDistrict ?? (activeB && !tag && !compact ? stocks[activeB.i].district : null);
   /* Ufkun sahnedeki yeri (kesir): gök üstünde, su altında. */
   const horizon = -row.top / height;
   /* Tabela ızgarası: sokak, mahalle, sokak … (sahne eninin yüzdesi). */
@@ -407,10 +459,11 @@ function SkyRowView({
             district={focusDistrict}
             active={active}
             muted={covered}
+            hideMuted={compact}
           />
           {tag && <ValueTag tag={tag} stock={stocks[tag.i]} font={SKY_MODES[layout.mode].font} pct={pct} />}
         </svg>
-        {activeB && !tag && (
+        {activeB && !tag && !compact && (
           <Tip
             b={activeB}
             label={activeLabel}
@@ -426,7 +479,7 @@ function SkyRowView({
           />
         )}
       </div>
-      <ul className={styles.districts} style={{ gridTemplateColumns: columns }} aria-hidden>
+      <ul className={styles.districts} data-compact={compact || undefined} style={{ gridTemplateColumns: columns }} aria-hidden>
         {row.districts.map((span, j) => (
           <li
             key={span.key}
@@ -442,7 +495,9 @@ function SkyRowView({
               if (event.pointerType === "mouse") onDistrict(null);
             }}
           >
-            <span className={styles.districtName}>{names[span.key] ?? span.key}</span>
+            <span className={styles.districtName} title={compact ? names[span.key] : undefined}>
+              {(compact ? signs[span.key] : undefined) ?? names[span.key] ?? span.key}
+            </span>
             <span className={cn(styles.districtValue, directionText(directionOf(span.change)))}>{pct(span.change)}</span>
           </li>
         ))}
@@ -450,6 +505,9 @@ function SkyRowView({
     </div>
   );
 }
+
+/** Düzenin ölçüleri, isteğe bağlı alanlarıyla (`compact`, `tiers`). */
+const specOf = (layout: SkyLayout): SkyMode => SKY_MODES[layout.mode];
 
 /* ------------------------------------------------------------ DEĞER ETİKETİ */
 
@@ -561,6 +619,70 @@ function Tip({
       {b.clip && <span className={styles.tipMeta}>{text.tipClip}</span>}
       <Link href={`/hisse/${stock.symbol}`} className={styles.tipLink}>
         {stock.symbol} →
+      </Link>
+    </div>
+  );
+}
+
+/* ----------------------------------------------------------- OKUMA SATIRI */
+
+/** Logosu olmayan şirkette karoda sembolün baş harfleri. */
+const READOUT_INITIALS = 2;
+const READOUT_LOGO = 32;
+
+/**
+ * Telefonda seçili binanın okuma satırı — sahnenin ALTINDA, akışın içinde
+ * (gerekçe dosyanın başında, "TELEFON"). İki satır: kimlik ve yüzde;
+ * mahalle, piyasa değeri ve şirket sayfası. Kapatma 44 piksellik hedef.
+ */
+function Readout({
+  stock,
+  logo,
+  district,
+  clip,
+  pct,
+  text,
+  sized,
+  locale,
+  onClose,
+}: {
+  stock: SkyStock;
+  logo: string | undefined;
+  district: string;
+  /** Bina ölçeğin dışında, tavanda kesik. */
+  clip: boolean;
+  pct: (value: number) => string;
+  text: SkyText;
+  sized: boolean;
+  locale: Locale;
+  onClose: () => void;
+}) {
+  return (
+    <div className={styles.readout} data-sky-readout="">
+      {logo ? (
+        <Image src={logo} alt="" width={READOUT_LOGO} height={READOUT_LOGO} unoptimized className={styles.readoutLogo} />
+      ) : (
+        <span className={cn(styles.readoutLogo, styles.readoutInitials)} aria-hidden>
+          {stock.symbol.slice(0, READOUT_INITIALS)}
+        </span>
+      )}
+      <span className={styles.readoutId}>
+        <span className={styles.tipSymbol}>{stock.symbol}</span>
+        <span className={styles.tipName}>{stock.name}</span>
+      </span>
+      <span className={cn(styles.readoutValue, directionText(directionOf(stock.change)))}>{pct(stock.change)}</span>
+      <button type="button" className={styles.readoutClose} aria-label={text.readoutClose} onClick={onClose}>
+        <X size={16} weight="bold" aria-hidden />
+      </button>
+      {/* Mahalle ve piyasa değeri alt alta: yan yana "Piyasa / Değeri"
+          arasından kırılıyordu (390, bağlantının yanında ~190 piksel). */}
+      <span className={styles.readoutMeta}>
+        <span>{district}</span>
+        {stock.cap !== null && sized && <span>{text.tipCap.replace("{cap}", formatMoneyCompact(stock.cap, locale))}</span>}
+        {clip && <span>{text.tipClip}</span>}
+      </span>
+      <Link href={`/hisse/${stock.symbol}`} className={styles.readoutLink}>
+        {text.readoutOpen} →
       </Link>
     </div>
   );

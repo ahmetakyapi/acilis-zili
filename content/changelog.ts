@@ -108,9 +108,12 @@ export const CHANGELOG_TR = [
   {
     date: "2026-10-25",
     from: "2026-10-24",
-    title: "Sayfada Claude, Her Güne Yeni Bir Parça",
+    /* Başlık ve özet piyasa ile bilançodan açılıyor, Claude sonda (25 Ekim,
+       mobil turu — sahibinin sözü: "ilk giren kullanıcı sadece Claude ile
+       karşılaşmasın"). */
+    title: "Her Güne Yeni Bir Parça",
     summary:
-      "Claude artık tarayıcıda, hisse sayfasında ve takip listende sayfanın kendi verisiyle çalışıyor. Bilanço sezonu için şirket sayfaları, her seans yenilenen poster, grafik ve bulmaca da bu sürümle geldi; ekranların çoğu daha görsel hâle geldi.",
+      "Her seans yenilenen poster, grafik ve bulmaca, bilanço sezonu için şirket sayfaları ve portföy analizi bu sürümle geldi; ekranların çoğu daha görsel hâle geldi. Claude da artık tarayıcıda, hisse sayfasında ve takip listende sayfanın kendi verisiyle çalışıyor.",
     items: [
       // a44d8b4c, d2d18282
       { kind: "yeni", area: "claude", short: "Cümleni Claude süzgeçlere çeviriyor", title: "Cümleyle Tarama", body: "Tarayıcıya “borcu az, kârlı yarı iletkenler” gibi bir cümle yazınca Claude onu süzgeçlere çeviriyor; hisseleri Claude değil, sayfanın kendi süzgeçleri seçiyor.", href: "/tarama" },
@@ -718,9 +721,9 @@ export const CHANGELOG_EN: Translation<typeof CHANGELOG_TR> = [
   /* ---- 24-25 Ekim ---- */
   {
     date: "2026-10-25",
-    title: "Claude on the Page, Something New Every Day",
+    title: "Something New Every Day",
     summary:
-      "Claude now works inside the screener, the stock page and your watchlist, using only the page's own data. Company earnings pages and a poster, chart and puzzle that renew every session arrived with this release, and most screens became more visual.",
+      "A poster, chart and puzzle that renew every session, company earnings pages and portfolio analysis arrived with this release, and most screens became more visual. Claude now also works inside the screener, the stock page and your watchlist, using only the page's own data.",
     items: [
       { title: "Screen With a Sentence", short: "Your sentence becomes filters", body: "Type a sentence like “profitable chipmakers with little debt” into the screener and Claude turns it into filters; the page's own filters, not Claude, pick the stocks." },
       { title: "Ask About This Stock", short: "Answers from the page's own data", body: "Claude answers your question on a stock page using only that page's data; when the data is not enough it says so, and it never tells you to buy or sell." },

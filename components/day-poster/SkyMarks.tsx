@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { REFLECTION_SCALE, SKY_MODES, cityInk, type SkyLayout, type SkyRow, type SkyStock } from "@/lib/day-skyline";
+import { CHIP_BASELINES, CHIP_GAP, CHIP_LINES, REFLECTION_SCALE, SKY_MODES, cityInk, type SkyLayout, type SkyMode, type SkyRow, type SkyStock } from "@/lib/day-skyline";
 import { cn } from "@/lib/utils";
 import styles from "./SkyMarks.module.css";
 
@@ -141,6 +141,8 @@ export function SkyCity({
 const INITIALS = 2;
 /** Bağ çizgisinin çatıdaki noktası (birim). */
 const ANCHOR_R = 2.4;
+/** Tam etikette sembol ve yüzdenin taban çizgileri (karonun altından, punto katı). */
+const FULL_BASELINES = [0.95, 2.1] as const;
 
 /**
  * Çatı etiketleri. Yeri ve ölçüsü yerleşimden (`placeLabels`,
@@ -153,6 +155,12 @@ const ANCHOR_R = 2.4;
  * `public/logos/`, zemini `--logo-plate`: koyu temada da beyaz plaka),
  * altında sembol ve yüzde (yön renginde). Logosu depoda olmayan şirkette
  * sembolün iki harfi.
+ *
+ * TELEFONDA ÇİP (`label: "chip"`, 25 Ekim "Silüet: mobil" turu): karo
+ * solda, sembol ve yüzde sağında iki satır. Logo-üstte etiket 58 birim
+ * boyundaydı ve telefonun üç sırasında her sıraya iki kat etiket boyu
+ * ekliyordu; çip 31 birim, sahne ~%30 alçak. Bedeli en: yan yana iki çip
+ * daha geniş aralık istiyor, sığmayan düşüyor (öncelik `labelPicks`).
  */
 export function SkyLabels({
   layout,
@@ -164,6 +172,7 @@ export function SkyLabels({
   district,
   active,
   muted,
+  hideMuted,
 }: {
   layout: SkyLayout;
   row: SkyRow;
@@ -175,17 +184,28 @@ export function SkyLabels({
   active?: number | null;
   /** Bir değer etiketinin altında kalan etiketler (o an sönük). */
   muted?: ReadonlySet<number> | null;
+  /** Telefonda sönük değil, gizli: etiket ya tam görünür ya hiç. */
+  hideMuted?: boolean;
 }) {
   if (row.labels.length === 0) return null;
-  const mode = SKY_MODES[layout.mode];
+  const mode: SkyMode = SKY_MODES[layout.mode];
   const size = mode.logo;
-  const full = mode.label === "full";
+  const chip = mode.label === "chip";
+  const full = mode.label === "full" || chip;
   const radius = size * TILE_RADIUS;
   return (
     <g className={styles.labels}>
       {row.labels.map((label) => {
         const stock = stocks[label.i];
         const cx = label.x + label.w / 2;
+        /* Karonun sol üstü ve yazının ekseni/taban çizgileri: çipte karo
+           solda dikey ortalı, yazı sağında; tam etikette karo üstte ortalı. */
+        const tx = chip ? label.x : cx - size / 2;
+        const ty = chip ? label.y + (label.h - size) / 2 : label.y;
+        const textX = chip ? label.x + size + CHIP_GAP : cx;
+        const anchor = chip ? "start" : "middle";
+        const top = chip ? label.y + (label.h - mode.font * CHIP_LINES) / 2 : label.y + size + 2;
+        const [line1, line2] = chip ? CHIP_BASELINES : FULL_BASELINES;
         const logo = logos[stock.symbol];
         const tone = stock.change > 0 ? styles.up : stock.change < 0 ? styles.down : styles.flat;
         return (
@@ -193,7 +213,8 @@ export function SkyLabels({
             key={label.i}
             className={styles.label}
             data-sky-label=""
-            data-off={(district && district !== stock.district) || muted?.has(label.i) ? "" : undefined}
+            data-off={(district && district !== stock.district) || (!hideMuted && muted?.has(label.i)) ? "" : undefined}
+            data-hidden={(hideMuted && muted?.has(label.i)) || undefined}
             data-on={active === label.i || undefined}
           >
             {label.leader && (
@@ -210,29 +231,29 @@ export function SkyLabels({
               </>
             )}
             <g className={styles.mark} data-sky-mark="">
-              <rect className={styles.tile} x={cx - size / 2} y={label.y} width={size} height={size} rx={radius} ry={radius} />
+              <rect className={styles.tile} x={tx} y={ty} width={size} height={size} rx={radius} ry={radius} />
               {logo ? (
                 <image
                   href={logo}
-                  x={cx - size / 2}
-                  y={label.y}
+                  x={tx}
+                  y={ty}
                   width={size}
                   height={size}
                   clipPath={`url(#${idOf(layout, rowIndex, "tile")})`}
                   preserveAspectRatio="xMidYMid slice"
                 />
               ) : (
-                <text className={styles.initials} x={cx} y={label.y + size / 2} fontSize={size * 0.36} dy="0.35em" textAnchor="middle">
+                <text className={styles.initials} x={tx + size / 2} y={ty + size / 2} fontSize={size * 0.36} dy="0.35em" textAnchor="middle">
                   {stock.symbol.slice(0, INITIALS)}
                 </text>
               )}
               {full && (
-                <text className={styles.symbol} x={cx} y={label.y + size + 2 + mode.font * 0.95} fontSize={mode.font} textAnchor="middle">
+                <text className={styles.symbol} x={textX} y={top + mode.font * line1} fontSize={mode.font} textAnchor={anchor}>
                   {stock.symbol}
                 </text>
               )}
               {full && pct && (
-                <text className={cn(styles.value, tone)} x={cx} y={label.y + size + 2 + mode.font * 2.1} fontSize={mode.font} textAnchor="middle">
+                <text className={cn(styles.value, tone)} x={textX} y={top + mode.font * line2} fontSize={mode.font} textAnchor={anchor}>
                   {pct(stock.change)}
                 </text>
               )}

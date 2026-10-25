@@ -138,45 +138,67 @@ export function dominantArea(entry: ChangeEntry): ChangeArea {
   return CHANGE_AREAS.reduce((best, area) => (counts[area] > counts[best] ? area : best), CHANGE_AREAS[0]);
 }
 
-/** Öne çıkan kart sayısının tavanı — 1440'ta tek sıra, telefonda iki sıra iki sütun. */
+/** Öne çıkan kart sayısının tavanı — 1440'ta tek sıra, telefonda dört satır. */
 export const FEATURED_MAX = 4;
 
 /**
- * ÖNE ÇIKANLAR (25 Ekim kompakt düzen): son sürümün en çok üç-dört
- * maddesi büyük kart, kalanı kompakt ızgara.
+ * Alanların GÖSTERİM sırası (25 Ekim, mobil turu): süzgeç çipleri ve öne
+ * çıkan kartlar bu sırayla. Claude sonda: sahibinin sözü, "ilk giren
+ * kullanıcı sadece Claude ile karşılaşmasın". İçerikteki `CHANGE_AREAS`
+ * sırası (baskın alanın eşitlik kuralı) değişmedi.
+ */
+export const AREA_DISPLAY_ORDER: readonly ChangeArea[] = ["piyasa", "bilanco", "kisisel", "icerik", "claude"];
+
+/** Claude maddelerinin kendi küçük grubu ("Claude ile") — bu alan öne çıkan karta girmez. */
+export const CLAUDE_AREA: ChangeArea = "claude";
+
+export type LatestSplit = {
+  /** Büyük kartlar: her alandan en çok BİR, `AREA_DISPLAY_ORDER` sırasıyla. */
+  featured: ChangeItem[];
+  /** "Claude ile" grubu: öne çıkan kart başka alanlardan seçildiyse Claude maddeleri. */
+  claude: ChangeItem[];
+  /** "Bu Sürümde Ayrıca": kalanlar, girişteki sırasıyla. */
+  rest: ChangeItem[];
+};
+
+/**
+ * ÖNE ÇIKANLAR — ALAN ÇEŞİTLİLİĞİ (25 Ekim, mobil turu). Önceki kural
+ * alan turunu `CHANGE_AREAS` sırasıyla yapıp kartları girişteki sıraya
+ * diziyordu; son sürümün ilk üç maddesi Claude olduğu için ilk kart hep
+ * Claude'du ve telefonda ilk ekran yalnız Claude gösteriyordu.
  *
  * Seçim içerikten: bir maddede `featured: true` varsa yalnız işaretliler
- * (sırasıyla, tavana kadar). İşaret yoksa KURAL — yazarın sırası önemi
- * taşıyor (her alanın ilk maddesi o alanın en büyük işi):
- *   1. her ALANIN ilk "yeni" ve denenebilir (bağlantılı) maddesi,
- *      `CHANGE_AREAS` sırasıyla — kartlar tek konuya yığılmasın;
- *   2. tavan dolmadıysa kalan "yeni" ve bağlantılı maddeler, girişteki
- *      sırayla (alan süzgeci açıkken tek alan kalır).
- * Kartın işi "Dene" demek: bağlantısız madde kart olmaz. Kalanlar girişteki
- * sırasını korur.
+ * (sırasıyla, tavana kadar). İşaret yoksa KURAL:
+ *   1. her alanın ilk "yeni" ve denenebilir (bağlantılı) maddesi, alan
+ *      başına EN ÇOK BİR, `AREA_DISPLAY_ORDER` sırasıyla (Piyasa,
+ *      Bilanço, Kişisel, İçerik); kart sırası da bu;
+ *   2. Claude kart olmaz, kendi grubunda toplanır — TEK İSTİSNA başka
+ *      alandan aday yoksa (süzgeç `?alan=claude`): o zaman Claude'un ilk
+ *      maddesi kart, grup açılmaz.
+ * Kartın işi "Dene" demek: bağlantısız madde kart olmaz. Grup ve kalanlar
+ * girişteki sırasını korur.
  */
-export function splitFeatured(
-  items: readonly ChangeItem[],
-  max: number = FEATURED_MAX,
-): { featured: ChangeItem[]; rest: ChangeItem[] } {
-  let picked: ChangeItem[];
+export function splitLatest(items: readonly ChangeItem[], max: number = FEATURED_MAX): LatestSplit {
+  let featured: ChangeItem[];
   if (items.some((item) => item.featured)) {
-    picked = items.filter((item) => item.featured).slice(0, max);
+    featured = items.filter((item) => item.featured).slice(0, max);
   } else {
     const candidates = items.filter((item) => item.kind === "yeni" && item.href);
-    picked = [];
-    for (const area of CHANGE_AREAS) {
-      const first = candidates.find((item) => item.area === area);
-      if (first && picked.length < max) picked.push(first);
+    const others = candidates.filter((item) => item.area !== CLAUDE_AREA);
+    const pool = others.length > 0 ? others : candidates;
+    featured = [];
+    for (const area of AREA_DISPLAY_ORDER) {
+      const first = pool.find((item) => item.area === area);
+      if (first && featured.length < max) featured.push(first);
     }
-    for (const item of candidates) {
-      if (picked.length >= max) break;
-      if (!picked.includes(item)) picked.push(item);
-    }
-    /* Kart sırası girişteki sıra: alan turu sırayı bozmasın. */
-    picked.sort((a, b) => items.indexOf(a) - items.indexOf(b));
   }
-  return { featured: picked, rest: items.filter((item) => !picked.includes(item)) };
+  const groupClaude = featured.some((item) => item.area !== CLAUDE_AREA);
+  const left = items.filter((item) => !featured.includes(item));
+  return {
+    featured,
+    claude: groupClaude ? left.filter((item) => item.area === CLAUDE_AREA) : [],
+    rest: groupClaude ? left.filter((item) => item.area !== CLAUDE_AREA) : left,
+  };
 }
 
 /** Etiket başına madde sayısı — süzgeç çiplerinin künyesi. */

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { MAX_GUESSES, TILE_KINDS, isClose, isJoker, type GuessRow, type GuessTile, type TileKind } from "@/lib/stock-puzzle";
 import type { Locale } from "@/lib/i18n/config";
 import type { StockPuzzleLabels } from "@/lib/i18n/dictionaries/stock-puzzle";
-import { tileValue } from "./puzzle-format";
+import { fill, tileValue } from "./puzzle-format";
 import styles from "./GuessList.module.css";
 
 /**
@@ -61,7 +61,7 @@ export function GuessList({
 }) {
   const empty = Math.max(0, MAX_GUESSES - guesses.length);
   return (
-    <div className={styles.list}>
+    <div className={styles.list} data-bos={guesses.length === 0 ? "" : undefined}>
       <div aria-hidden className={styles.head}>
         <span />
         <span className={styles.tiles}>
@@ -129,13 +129,33 @@ export function GuessList({
           </li>
         ))}
       </ol>
+      {/* Telefon ve tablette kalan hak tek ince satır: altı "?" satırı
+          390'da 150 piksel boş yer tutuyordu ve giriş ile ilk tahmin ilk
+          ekrana sığmıyordu. Masaüstünde yuvalar yerinde (tek ekran
+          bütçesi en kötü durumu altı satırla ölçüyor). */}
+      {empty > 0 && (
+        <p className={styles.left}>
+          <span aria-hidden className={styles.leftSlots}>
+            {Array.from({ length: empty }, (_, i) => <span key={i} />)}
+          </span>
+          {fill(labels.slotsLeft, { n: empty })}
+        </p>
+      )}
 
-      <ul className={styles.legend}>
+      <ul className={styles.legend} aria-label={labels.legendLabel}>
         <li><span aria-hidden className={styles.swatch} data-grade="match" />{labels.legendMatch}</li>
         <li><span aria-hidden className={styles.swatch} data-grade="near" />{labels.legendNear}</li>
         <li><span aria-hidden className={styles.swatch} data-grade="far" />{labels.legendFar}</li>
-        <li><ArrowFatUp aria-hidden size={12} weight="fill" />{labels.legendArrow}</li>
-        <li><ArrowFatLinesUp aria-hidden size={12} weight="fill" />{labels.legendFarArrow}</li>
+        <li>
+          <ArrowFatUp aria-hidden size={12} weight="fill" />
+          <span className={styles.legendLong}>{labels.legendArrow}</span>
+          <span aria-hidden className={styles.legendShort}>{labels.legendArrowShort}</span>
+        </li>
+        <li>
+          <ArrowFatLinesUp aria-hidden size={12} weight="fill" />
+          <span className={styles.legendLong}>{labels.legendFarArrow}</span>
+          <span aria-hidden className={styles.legendShort}>{labels.legendFarArrowShort}</span>
+        </li>
       </ul>
     </div>
   );

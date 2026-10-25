@@ -26,6 +26,13 @@ export function posterName(symbol: string, locale: Locale): string {
   return CARD_INDEX_NAMES[symbol] ?? symbol;
 }
 
+/** Mahallenin telefondaki tabela adı (`skyline.shortDistricts`); kısa adı
+ *  yoksa tam adı. Gerekçe sözlükte. */
+export function posterShortName(key: string, locale: Locale): string {
+  const short: Readonly<Record<string, string | undefined>> = (locale === "tr" ? daySignatureTr : daySignatureEn).skyline.shortDistricts;
+  return short[key] ?? posterName(key, locale);
+}
+
 export function posterStoryOf(poster: DayPoster, districts: readonly District[]): PosterStory {
   return posterStory({ indices: poster.indices, breadth: poster.breadth, sectors: districtMoves(districts) });
 }

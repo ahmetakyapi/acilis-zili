@@ -66,6 +66,21 @@ export const daySignatureTr = {
     sizeMissing: "Piyasa değerleri okunamadı; binalar bu kez eşit genişlikte, sektörlerin değişimi eşit ağırlıklı.",
     clipNote: "Yükseklik ölçeği ±{hi}; bunu aşan binalar tavanda kesik çiziliyor, gerçek değerleri etiketinde ve listede.",
     districtNote: "Mahalleler GICS sektörleri; beşten az şirketi olan sektörler Diğer Sektörler'de birleşiyor. Bir mahallenin değişimi, şirketlerinin piyasa değeriyle ağırlıklı ortalaması.",
+    /** TELEFON TABELASI (25 Ekim, "Silüet: mobil" turu): tabela telefonda
+     *  tek satır. Uzun adlar anlamı değiştirmeden kısalıyor: ortak sözcük
+     *  düşüyor ("Hizmetleri", "Sektörler"), iki tüketim mahallesinde
+     *  ayırt eden sözcük kalıyor (İngilizce piyasa dilindeki
+     *  "Discretionary" / "Staples" gibi). Listede olmayan mahalle tam
+     *  adıyla. Tam ad bilgi kartında ve tabloda. */
+    shortDistricts: {
+      XLY: "İsteğe Bağlı",
+      XLP: "Temel Tüketim",
+      XLC: "İletişim",
+      OTHER: "Diğer",
+    },
+    /** Telefonda sahnenin altındaki okuma satırı. */
+    readoutOpen: "Hisseye Git",
+    readoutClose: "Kartı kapat",
   },
   /** Ana sayfanın son seans şeridi (`components/today/home/SkylineStrip.tsx`). */
   strip: {
@@ -180,6 +195,14 @@ export const daySignatureEn: typeof daySignatureTr = {
     sizeMissing: "Market values couldn't be read; the buildings are equal in width this time and the sectors' changes equally weighted.",
     clipNote: "The height scale runs to ±{hi}; buildings beyond it are cut at the top, with their real values in their labels and in the list.",
     districtNote: "Districts are GICS sectors; sectors with fewer than five companies are grouped as Other Sectors. A district's change is its companies' average weighted by market value.",
+    shortDistricts: {
+      XLY: "Discretionary",
+      XLP: "Staples",
+      XLC: "Communication",
+      OTHER: "Other",
+    },
+    readoutOpen: "Go to Stock",
+    readoutClose: "Close card",
   },
   strip: {
     title: "The Last Session's Skyline",

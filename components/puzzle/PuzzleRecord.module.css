@@ -65,6 +65,18 @@
   .stats { gap:.125rem .5rem; }
 }
 
+/* Boş şerit (telefon ve tablet): başlık + tek cümle. */
+.empty { display:none; }
+@media (max-width: 1023.98px) {
+  .record[data-bos] { grid-template-columns:minmax(0,1fr); grid-template-areas:"title" "empty"; gap:.125rem; padding-block:.5rem .625rem; }
+  .record[data-bos] .stats, .record[data-bos] .dist { display:none; }
+  .empty { display:block; grid-area:empty; margin:0; font-size:var(--text-small); line-height:1.45; color:var(--text-muted); }
+}
+@media (max-width: 479.98px) {
+  .col { height:1.5rem; }
+  .dist { margin-top:.75rem; }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .bar { transition:height 700ms var(--ease-brand); }
 }

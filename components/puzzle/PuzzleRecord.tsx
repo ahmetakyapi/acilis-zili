@@ -51,6 +51,10 @@ import styles from "./PuzzleRecord.module.css";
  *     çubuğun üstünde, tahmin numarası altında. Bugünün sonucu yeşil ve
  *     altı çizili; boş sütun (sıfır) yalnız kulvar.
  * Yükseklik bütçesi aynı ölçüde (1280 kaybetme, StockPuzzle.module.css).
+ *
+ * MOBİL TURU (25 Ekim): telefonda (< 1024) hiç oynanmamışken şerit tek
+ * satır ("Henüz oynanmadı…"); oynanmışsa dağılım çubukları 40 → 24
+ * piksel. Masaüstü değişmedi.
  */
 /** Hücrelerin simgeleri. */
 const FIGURE_ICONS: Record<string, Icon> = {
@@ -94,8 +98,12 @@ export function PuzzleRecord({
   ];
 
   return (
-    <section className={cn(styles.record, className)} aria-labelledby="bulmaca-seri" title={labels.statsNote} data-tahta="seri">
+    <section className={cn(styles.record, className)} aria-labelledby="bulmaca-seri" title={labels.statsNote} data-tahta="seri" data-bos={played === 0 ? "" : undefined}>
       <h2 id="bulmaca-seri" className={styles.title}>{labels.statsTitle}</h2>
+      {/* Telefonda hiç oynanmamışken altı sıfır ve boş dağılım (~200
+          piksel) yerine tek cümle; masaüstünde şerit aynı (tek ekran
+          bütçesi). */}
+      {played === 0 && <p className={styles.empty}>{labels.statsEmpty}</p>}
       <dl className={styles.stats}>
         {figures.map((figure) => {
           const Glyph = FIGURE_ICONS[figure.key];

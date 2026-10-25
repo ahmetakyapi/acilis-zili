@@ -33,6 +33,7 @@ export function Skyline({
   stocks,
   districts,
   names,
+  signs,
   logos,
   sized,
   locale,
@@ -45,6 +46,8 @@ export function Skyline({
   districts: District[];
   /** Mahalle anahtarı → okunur ad. */
   names: Record<string, string>;
+  /** Mahalle anahtarı → telefondaki tabela adı (kısa). */
+  signs: Record<string, string>;
   /** Sembol → logo adresi (yalnız depoda olanlar). */
   logos: Record<string, string>;
   sized: boolean;
@@ -66,6 +69,7 @@ export function Skyline({
         stocks={stocks}
         districts={districts}
         names={names}
+        signs={signs}
         logos={logos}
         sized={sized}
         locale={locale}

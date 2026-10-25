@@ -1,6 +1,6 @@
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { SkyScene } from "@/components/day-poster/SkyScene";
-import { posterName, posterStoryOf, posterStoryText } from "@/components/day-poster/story";
+import { posterName, posterShortName, posterStoryOf, posterStoryText } from "@/components/day-poster/story";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { Skeleton } from "@/components/ui/primitives";
 import { POSTER_ANCHOR, bellEnergy } from "@/lib/day-poster";
@@ -54,6 +54,17 @@ import styles from "./SkylineStrip.module.css";
  * mahalle tabelaları sıkıştı. Ölçüler `SkyScene.module.css` ve
  * `lib/day-skyline.ts`te.
  *
+ * TELEFON (25 Ekim, "Silüet: mobil" turu; sahibinin iPhone ekranları:
+ * "Mobilde buralar daha iyi olmalı"). 390'da panel 626 piksel tutuyordu:
+ * iki sırada etiketler ikinci kata ve ufkun çok altına iniyordu (Apple'ın
+ * bağı ~55 piksel), seçili binanın kartı alt sıranın üstüne açılıyordu,
+ * mahalle adları üç satıra kırılıyordu. Şimdi üç kısa sıra (her sıra
+ * kendi boyunda), çip etiket tek katta, kart sahnenin altında, tabela tek
+ * satır kısa adla (`signs`; kurallar `lib/day-skyline.ts` ve
+ * `SkyScene.tsx`): 390'da 626 → 543 piksel, 360'ta 596 → 533 (TR, 23
+ * Ekim). 360'ta başlığın kulvar sayıları panelin dışına taşıyordu; endeks
+ * adı yüzdenin üstüne çıktı.
+ *
  * HER SEANSTA en yeni TAMAMLANMIŞ seans (`getLatestPosterDate`); künye
  * tarihi söylüyor ("23 Ekim Kapanışı"), seans sürerken bile hangi günü
  * anlattığı belli (CLAUDE.md "Veri dürüstlüğü" 4). Zilin şiddeti yalnız
@@ -100,6 +111,7 @@ export async function SkylineStrip({ status, locale, t }: { status: MarketStatus
     }),
   );
   const names = Object.fromEntries(districts.map((district) => [district.key, posterName(district.key, locale)]));
+  const signs = Object.fromEntries(districts.map((district) => [district.key, posterShortName(district.key, locale)]));
   const posterHref = `/gun/${poster.date}`;
   /* Sahnenin ekran okuyucu adındaki sayılar künyedekiyle aynı kaynaktan
      (posterin genişliği); yoksa binalardan sayılıyor. */
@@ -163,6 +175,7 @@ export async function SkylineStrip({ status, locale, t }: { status: MarketStatus
         stocks={stocks}
         districts={districts}
         names={names}
+        signs={signs}
         logos={logos}
         sized={sized}
         locale={locale}

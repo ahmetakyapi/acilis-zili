@@ -191,16 +191,45 @@ a.feature:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 
 .featureCta svg { transition: translate .2s var(--ease-brand); }
 a.feature:hover .featureCta { border-color: var(--primary-faint); background: var(--primary-tint); }
 @media (hover: hover) { a.feature:hover .featureCta svg { translate: 2px 0; } }
+/* TELEFON: TEK SÜTUN YATAY SATIR (25 Ekim, mobil turu). İki sütunlu
+   kartlar 390×844'te ilk ekrana iki kart (iki alan) sokuyordu; ilk sıra
+   iki Claude maddesiydi. Şimdi kart bir satır: ikon | başlık + tek satır
+   özet | "Yeni" ve "Dene". `featureTop` içerik olarak açılır (ızgara
+   alanları), alan adı ekran okuyucuda. Ölçüldü (390×844, TR/EN, açık/koyu):
+   ilk ekranda alanlar ÖNCE Claude + Kişisel (2), SONRA dört kart dört alan;
+   sayılar raporda ve `app/(app)/yenilikler/page.tsx` başında. */
 @media (max-width: 39.99rem) {
-  .feature { padding: 10px 10px 10px; gap: 5px; }
-  .featureTop { margin-bottom: 0; }
-  .featureIcon { width: 32px; height: 32px; }
-  /* Alan adı telefonda yok: 160 piksellik kartta rozetle yan yana "Perso…"
-     diye kesiliyordu; alanı ikonun rengi ve kart zemini zaten söylüyor,
-     süzgeç çipleri de lejant. Ekran okuyucu için metin yerinde. */
+  .featureGrid { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+  .featureGrid > li:last-child:nth-child(odd) { grid-column: auto; }
+  .feature {
+    display: grid; grid-template-columns: 34px minmax(0, 1fr) auto;
+    grid-template-areas: "icon title pill" "icon short cta";
+    align-items: center; gap: 0 10px; padding: 6px 8px 6px 7px; border-radius: var(--radius-lg);
+  }
+  .featureTop { display: contents; }
+  .featureIcon { grid-area: icon; width: 34px; height: 34px; border-radius: var(--radius-md); }
+  .featureIcon svg { width: 18px; height: 18px; }
+  /* Alan adı telefonda yok: alanı ikonun rengi ve kart zemini söylüyor,
+     süzgeç çipleri lejant. Ekran okuyucu için metin yerinde. */
   .featureArea { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .featureTitle { font-size: var(--text-read); line-height: 18px; }
-  .featureCta { height: 28px; padding-inline: 10px; }
+  .feature .kind { display: none; }
+  .featurePill { grid-area: pill; justify-self: end; margin-left: 0; }
+  .featureTitle { grid-area: title; min-width: 0; font-size: var(--text-read); line-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .featureShort { grid-area: short; min-width: 0; font-size: var(--text-small); line-height: 16px; -webkit-line-clamp: 1; }
+  .featureCta { grid-area: cta; justify-self: end; margin-top: 0; height: 24px; padding-inline: 8px; font-size: var(--text-small); }
+  .latestHead { padding-top: 10px; }
+}
+/* 360'ta üçüncü kart 20 piksel kadar ilk ekranın altında kalıyordu: dar
+   telefonda akışın açıklama satırı yalnız ekran okuyucuda (çubuğun
+   balonu ve süzgeç çipleri aynı bilgiyi veriyor). */
+@media (max-width: 379.98px) {
+  .stripHint { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .latestHead { padding-top: 8px; }
+  .bars { --bar-range: 26px; height: 32px; }
+  .section { padding-top: 4px; }
+  .sectionHead { margin-bottom: 4px; }
+  .feature { padding-block: 5px; }
+  .featureGrid { gap: 4px; }
 }
 
 /* Kalanlar: kompakt ızgara 1/2/3/4 sütun. */
@@ -324,3 +353,6 @@ a.tile:hover .tileArrow { translate: 2px 0; color: var(--primary-ink); }
   .tile, .feature, .barFill { animation: none; }
   .tile, .feature, .featureCta, .featureCta svg, .tileArrow, .barFill, .tip, .tryLink, .tryLink svg, .entryRow, .entryIcon { transition: none; }
 }
+
+/* "Claude ile" grubunun başlığındaki alan imi: başlık aralığı yeter. */
+.sectionHead .chipSwatch { margin-right: 0; }

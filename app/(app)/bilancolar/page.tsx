@@ -9,6 +9,7 @@ import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMot
 import { EarningsActivity } from "@/components/earnings/EarningsActivity";
 import { EarningsHorizon } from "@/components/earnings/horizon/EarningsHorizon";
 import styles from "@/components/motion/DirectoryExperience.module.css";
+import takvim from "./takvim.module.css";
 import { cn } from "@/lib/utils";
 import { EarningsCalendar } from "@/components/earnings/EarningsCalendar";
 import { EarningsTabs } from "@/components/earnings/EarningsTabs";
@@ -149,6 +150,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           taşıyor; alt başlık bu sekmenin ne gösterdiğini anlatmaya devam
           ediyor. */}
       <DirectoryHeader
+        className={takvim.head}
         shareInTitle
         share={<PageShare compactOnMobile align="right" path="/bilancolar" title={t.analysis.title} locale={locale} t={t} />}
         title={t.analysis.title}
@@ -177,6 +179,17 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           (`EarningsHorizon.module.css` sonu). Ölçüldü (TR/EN, açık/koyu):
           başlık 979–1021, 22 piksel payla ilk ekranda. 1440 ve 1280 aynı
           (şerit 971 / 966, ufuk tamamı ilk ekranda), 390 değişmedi.
+
+          MOBİL TURU (25 Ekim, sahibinin iPhone ekranları). Telefonda
+          kapak açıklaması tek satır ve anahtar dar (`takvim.module.css`),
+          tepe cümlesi kısa ("Bu hafta 963 bilanço var; …", iki satır),
+          gün seçici karoları 88 → 62 piksel, okuma şeridi sıkı
+          (`EarningsHorizon.module.css`). Ölçüldü (TR/EN, açık/koyu, ilk
+          ekran 390×844'te 765): kapak 85–245 → 85–220; cümle üç satır →
+          iki (390: 319–392 → 294–339); Açılış Öncesi 491–605 → 417–532,
+          Kapanış Sonrası 605–720 → 532–647; 360×780'de Kapanış Sonrası
+          605–794 → 529–717 (ilk karo sırası ilk ekranda). Masaüstü
+          değişmedi. Yatay taşma 0, CLS 0.
 
           KART TURU (25 Ekim, üçüncü tur; gerekçe
           `EarningsHorizon.module.css` başında). Ufuk paneli (TR/EN,

@@ -63,6 +63,25 @@
   .tabs { display:none; }
 }
 
+/* ---- MOBİL TURU (25 Ekim, sahibinin iPhone ekranları) ----
+   Telefonda başlık bandı tek satır künye + tek cümle (PuzzleScreen),
+   kullanılmamış hak altı "?" satırı yerine tek ince satır ve lejant tek
+   satır (GuessList), boş seri tek cümle (PuzzleRecord), "Nasıl Oynanır"
+   katlı. Kazanılan yer siluete: grafik 148 → ~172 piksel (390'da kart
+   ~255). ÖLÇÜM (başsız Chrome, hareket azaltılmış, iki tema × TR/EN;
+   ilk ekran 360×780'de 701, 390×844'te 765, 430×932'de 853):
+     siluet kartı                 390: 232 → 255 · 360: 224 → 242
+     giriş kutusunun dibi         360: 611 → 573 · 390: 619 → 586 · 430: 634 → 604
+     ilk tahmin satırı (3 yanlış) 360: 647–717 → 609–679 · 390: 656–726 → 623–693
+     tahtanın dibi (başlangıç)    390: 1031 → 733 (seri dahil tamamı ilk ekranda)
+     tahtanın dibi (3 yanlış)     390: 1181 → 976
+   Masaüstü (1280/1440/1920 × dört durum) tek ekran hedefi korunuyor:
+   1280×800 başlangıç 694 · üç yanlış 708 · kazanma 735 · kaybetme 752
+   (sınır 763). Yatay taşma 0, konsol hatası 0, CLS ≤ 0,0001. */
+@media (max-width: 1023.98px) {
+  .board { --chart-h:clamp(150px, 44vw, 200px); }
+}
+
 /* ---- Masaüstü: tek ekranlık tahta ----
    Grafik yüksekliği görünür alandan: tahtanın geri kalanı (başlık,
    ipucu ızgarası, panel başlıkları) sabit boyda, kalan dikey alan

@@ -62,6 +62,8 @@ export const changelogTr = {
   },
   unseenLabel: "görmediğin yenilik",
   latestBadge: "Son Sürüm",
+  /* Mobil turu (25 Ekim): son sürümde Claude maddelerinin kendi grubu. */
+  claudeTitle: "Claude ile",
 };
 
 export const changelogEn: typeof changelogTr = {
@@ -118,6 +120,7 @@ export const changelogEn: typeof changelogTr = {
   },
   unseenLabel: "an update you haven't seen",
   latestBadge: "Latest",
+  claudeTitle: "With Claude",
 };
 
 export type ChangelogLabels = typeof changelogTr;

@@ -12,24 +12,49 @@
 @media (max-width: 639.98px) {
   .head { --heading-page:1.625rem; }
 }
-.head :global(.page-heading-copy) > p { margin-top:.25rem; }
+/* Açıklama başlığın DIŞINDA (telefonda yalnız ilk cümlesi): başlıkla
+   arası eski `mt-[7px]` kadar, ekranın bölüm aralığı geri alınarak. */
+.subtitle { margin:-.625rem 0 0; max-width:48rem; font-size:var(--text-read); line-height:1.55; color:var(--text-body); }
 
-.tools { display:flex; align-items:center; gap:.25rem 1rem; }
-.stamp { display:none; gap:0 .625rem; margin:0; font-size:var(--text-small); color:var(--text-muted); white-space:nowrap; }
-.stampMobile { display:flex; gap:0 .625rem; margin:-.5rem 0 0; font-size:var(--text-small); color:var(--text-muted); }
-@media (min-width: 640px) {
-  .stamp { display:flex; }
-  .stampMobile { display:none; }
-}
+.tools { display:flex; align-items:center; gap:.25rem .875rem; min-width:0; }
+.stamp { display:flex; gap:0 .5rem; margin:0; font-size:var(--text-small); color:var(--text-muted); white-space:nowrap; }
 .links { display:flex; gap:0 .875rem; }
 /* 44 px dokunma hedefi, görseli büyütmeden. */
-.link { display:inline-flex; align-items:center; gap:.375rem; min-height:44px; font-size:var(--text-small); font-weight:600; color:var(--primary-ink); white-space:nowrap; }
+.link { display:inline-flex; align-items:center; justify-content:center; gap:.375rem; min-width:44px; min-height:44px; font-size:var(--text-small); font-weight:600; color:var(--primary-ink); white-space:nowrap; }
 .link:hover { text-decoration:underline; text-underline-offset:3px; }
+.narrow { display:none; }
+@media (max-width: 639.98px) {
+  .subtitle { margin-top:-.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .subRest { display:none; }
+  .tools { gap:0 .375rem; }
+  .links { gap:0; }
+  .stamp { gap:0 .3125rem; }
+  .narrow { display:inline; }
+  .wide { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  /* Başlık satırı: ad, künye, simgeler; ad sığmazsa künye değil ad
+     küçülür (`--heading-page` zaten 26). */
+  .head :global(.page-title-row) { gap:.5rem; }
+}
+/* 360'ta EN başlık ("Guess the Stock") künyeyle sığmıyordu: başlık 24
+   piksele iner, künyede tarih kalkar (numara kalır; tarih ekran
+   okuyucuda). */
+@media (max-width: 379.98px) {
+  .head { --heading-page:1.5rem; }
+  .stamp time { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+}
 @media (max-width: 479.98px) {
   .linkText { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 }
 
 /* Nasıl Oynanır: ikonlu kısa satırlar; geniş ekranda üç sütun. */
+.how > summary { list-style:none; }
+.how > summary::-webkit-details-marker { display:none; }
+.howSummary { display:flex; align-items:center; justify-content:space-between; gap:.75rem; min-height:44px; padding:.625rem 1rem; cursor:pointer; border-radius:var(--radius-panel); }
+@media (min-width: 640px) { .howSummary { padding-inline:1.25rem; } }
+.howCaret { flex:none; color:var(--text-muted); transition:rotate 280ms var(--ease-brand); }
+.how[open] .howCaret { rotate:180deg; }
+.howSummary:hover .howCaret { color:var(--primary-ink); }
+.howSummary:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
 .rules { display:grid; gap:.625rem 1.5rem; margin:0; padding:0 1rem 1rem; list-style:none; }
 @media (min-width: 640px) { .rules { grid-template-columns:repeat(2,minmax(0,1fr)); padding:0 1.25rem 1.125rem; } }
 @media (min-width: 1024px) { .rules { grid-template-columns:repeat(3,minmax(0,1fr)); } }

@@ -21,7 +21,8 @@ import {
   parseKind,
   releaseTimeline,
   resolveHref,
-  splitFeatured,
+  splitLatest,
+  AREA_DISPLAY_ORDER,
   type ChangeItem,
 } from "../lib/changelog";
 import { isUnseen } from "../components/changelog/seen-store";
@@ -265,24 +266,39 @@ const item = (over: Partial<ChangeItem>): ChangeItem => ({
   kind: "yeni", area: "piyasa", title: "T", short: null, body: "B", href: "/x", featured: false, ...over,
 });
 
-test("featured: up to four new, linked items, one per area first, rest keeps order", () => {
+test("featured: one card per area, Claude never first, Claude items grouped", () => {
   const [latest] = changelogEntries("tr", null);
-  const { featured, rest } = splitFeatured(latest.items);
+  const { featured, claude, rest } = splitLatest(latest.items);
   assert.ok(featured.length > 0 && featured.length <= FEATURED_MAX);
   assert.ok(featured.every((i) => i.kind === "yeni" && i.href));
   assert.equal(new Set(featured.map((i) => i.area)).size, featured.length, "one card per area");
-  assert.equal(featured.length + rest.length, latest.items.length);
+  assert.ok(featured.every((i) => i.area !== "claude"), "Claude is not a card while other areas have one");
+  /* Kart sırası alan gösterim sırası: ilk kart Piyasa. */
+  const rank = (i: ChangeItem) => AREA_DISPLAY_ORDER.indexOf(i.area);
+  assert.deepEqual(featured.map(rank), [...featured.map(rank)].sort((a, b) => a - b));
+  assert.equal(featured[0].area, "piyasa");
+  /* İlk ekranda en az üç farklı alan: dört kartın üçü ayrı alan. */
+  assert.ok(new Set(featured.slice(0, 3).map((i) => i.area)).size === 3);
+  assert.ok(claude.length > 0 && claude.every((i) => i.area === "claude"));
+  assert.ok(rest.every((i) => i.area !== "claude"));
+  assert.equal(featured.length + claude.length + rest.length, latest.items.length);
   const order = (list: ChangeItem[]) => list.map((i) => latest.items.indexOf(i));
-  assert.deepEqual(order(featured), [...order(featured)].sort((a, b) => a - b));
+  assert.deepEqual(order(claude), [...order(claude)].sort((a, b) => a - b));
   assert.deepEqual(order(rest), [...order(rest)].sort((a, b) => a - b));
-  /* Tek alana süzülünce tavan o alanın sıradaki maddeleriyle dolar. */
+  /* Tek alana süzülünce: alan başına bir kart, kalanı ızgarada. */
   const one = [item({ title: "a" }), item({ title: "b", kind: "duzeltme" }), item({ title: "c" }), item({ title: "d", href: null })];
-  assert.deepEqual(splitFeatured(one).featured.map((i) => i.title), ["a", "c"]);
+  assert.deepEqual(splitLatest(one).featured.map((i) => i.title), ["a"]);
+  assert.deepEqual(splitLatest(one).rest.map((i) => i.title), ["b", "c", "d"]);
+  /* Yalnız Claude kaldıysa (süzgeç): Claude kart olur, grup açılmaz. */
+  const onlyClaude = [item({ title: "x", area: "claude" }), item({ title: "y", area: "claude" })];
+  assert.deepEqual(splitLatest(onlyClaude).featured.map((i) => i.title), ["x"]);
+  assert.equal(splitLatest(onlyClaude).claude.length, 0);
+  assert.deepEqual(splitLatest(onlyClaude).rest.map((i) => i.title), ["y"]);
   /* İçerikte elle işaret varsa yalnız işaretliler. */
   const flagged = [item({ title: "a" }), item({ title: "b", kind: "iyilestirme", featured: true })];
-  assert.deepEqual(splitFeatured(flagged).featured.map((i) => i.title), ["b"]);
-  assert.deepEqual(splitFeatured(flagged).rest.map((i) => i.title), ["a"]);
-  assert.equal(splitFeatured([]).featured.length, 0);
+  assert.deepEqual(splitLatest(flagged).featured.map((i) => i.title), ["b"]);
+  assert.deepEqual(splitLatest(flagged).rest.map((i) => i.title), ["a"]);
+  assert.equal(splitLatest([]).featured.length, 0);
 });
 
 test("unseen: compares with the visit baseline; empty storage only marks a fresh latest", () => {

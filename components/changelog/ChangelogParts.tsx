@@ -22,13 +22,13 @@ import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { FilterChip, Panel, PanelHeader } from "@/components/ui/primitives";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import {
-  CHANGE_AREAS,
+  AREA_DISPLAY_ORDER,
   CHANGE_KINDS,
   entryAnchor,
   entryAreas,
   entryDateLabel,
   monthAnchor,
-  splitFeatured,
+  splitLatest,
   type ChangeArea,
   type ChangeEntry,
   type ChangeItem,
@@ -62,7 +62,17 @@ import styles from "./Changelog.module.css";
      açıklaması (lejant ayrı basılmıyor), seçim akışta eşleşmeyen çubukları
      soldurur;
    - son sürüm: en çok dört "Öne Çıkan" büyük kart (ikon, başlık, tek satır,
-     "Dene" butonu), kalanı kompakt ızgara. Seçim kuralı `splitFeatured`. */
+     "Dene" butonu), kalanı kompakt ızgara. Seçim kuralı `splitLatest`.
+
+   ALAN ÇEŞİTLİLİĞİ (25 Ekim, mobil turu; sahibinin sözü: "Claude çok yer
+   kaplıyor, ilk giren kullanıcı sadece Claude ile karşılaşmasın"). Son
+   sürümün ilk üç maddesi Claude'du; öne çıkan ilk kart, sürüm başlığı ve
+   telefonda ilk ekran yalnız Claude'u gösteriyordu. Şimdi kartlar her
+   alandan bir tane (Piyasa, Bilanço, Kişisel, İçerik), Claude maddeleri
+   kartların altında kendi küçük grubunda ("Claude ile"), süzgeç
+   çiplerinde Claude sonda ve ötekilerle aynı ağırlıkta. Telefonda kartlar
+   tek sütun yatay satır (ikon, başlık, tek satır, "Dene"): 390×844'te ilk
+   ekranda dört alan. Ölçüm Changelog.module.css → "Öne çıkanlar". */
 
 /** "{n} Madde" / "1 Item" — İngilizcede tekil ayrı. */
 function countLabel(n: number, many: string, one: string): string {
@@ -310,7 +320,7 @@ export function FilterBar({
           {L.filterAll} <span className={styles.count}>{total}</span>
         </FilterChip>
         <span role="group" aria-label={L.areaFilterLabel} className={styles.chipGroup}>
-          {CHANGE_AREAS.map((value) => (
+          {AREA_DISPLAY_ORDER.map((value) => (
             <FilterChip key={value} href={hrefFor(kind, area === value ? null : value)} active={area === value}>
               <span className={`${styles.chipSwatch} ${styles.tone}`} data-area={value} aria-hidden />
               {L.areaShort[value]} <span className={styles.count}>{areaCount[value]}</span>
@@ -435,13 +445,13 @@ function Tile({ item, locale, L, index }: { item: ChangeItem; locale: Locale; L:
  */
 export function LatestRelease({ entry, latest, locale, L }: { entry: ChangeEntry; latest: string; locale: Locale; L: ChangelogLabels }) {
   const headingId = "yenilikler-son-surum";
-  const { featured, rest } = splitFeatured(entry.items);
+  const { featured, claude, rest } = splitLatest(entry.items);
   const seen = { date: entry.date, latest };
   return (
     <Panel id={entryAnchor(entry.date)} aria-labelledby={headingId} className={styles.latest}>
       <div className={styles.latestHead}>
         {/* Çok satırlı manşet: degrade satır satır (`data-ink="lines"`). */}
-        <h2 id={headingId} data-ink="lines" className="text-title font-bold tracking-[-0.02em] sm:text-heading">
+        <h2 id={headingId} data-ink="lines" className="text-lead font-bold tracking-[-0.02em] sm:text-heading">
           <span className="ink-line">{entry.title}</span>
         </h2>
         <p className={styles.latestMeta}>
@@ -462,6 +472,22 @@ export function LatestRelease({ entry, latest, locale, L }: { entry: ChangeEntry
           </ul>
         </section>
       )}
+      {claude.length > 0 && (
+        <section aria-labelledby="yenilikler-claude" className={styles.section}>
+          <h3 id="yenilikler-claude" className={styles.sectionHead} data-ink="plain">
+            <span className={`${styles.chipSwatch} ${styles.tone}`} data-area="claude" aria-hidden />
+            {L.claudeTitle}
+            <span className={styles.sectionCount}>{claude.length}</span>
+          </h3>
+          <ul className={styles.restGrid} data-group="claude">
+            {claude.map((item, index) => (
+              <li key={item.title}>
+                <Tile item={item} locale={locale} L={L} index={index + featured.length} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {rest.length > 0 && (
         <section aria-labelledby="yenilikler-ayrica" className={styles.section}>
           <h3 id="yenilikler-ayrica" className={styles.sectionHead} data-ink="plain">
@@ -471,7 +497,7 @@ export function LatestRelease({ entry, latest, locale, L }: { entry: ChangeEntry
           <ul className={styles.restGrid}>
             {rest.map((item, index) => (
               <li key={item.title}>
-                <Tile item={item} locale={locale} L={L} index={index + featured.length} />
+                <Tile item={item} locale={locale} L={L} index={index + featured.length + claude.length} />
               </li>
             ))}
           </ul>

@@ -92,6 +92,15 @@
   white-space: nowrap;
 }
 
+/* EN DAR TELEFON (360): endeksin adı ve yüzdesi yan yana 180 piksel
+   tutuyordu, kulvarın sayıları ("33 Yükseldi 66 Düştü") panelin dışına
+   taşıp kesiliyordu (25 Ekim, ölçüldü: kap içi 292 piksel). Ad yüzdenin
+   üstüne çıkıyor; sayılar sığıyor. */
+@container (max-width: 319.98px) {
+  .figure { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .figures { gap: 8px 16px; }
+}
+
 /* Yükselen / değişmeyen / düşen oranı: tek kulvar, yön renginde parçalar,
    aralarında 2 piksellik zemin boşluğu (dataviz). */
 .breadth { display: grid; flex: 1 1 9.5rem; gap: 6px; min-width: 0; max-width: 14rem; }
@@ -160,10 +169,14 @@
    KOMPAKT TURDAN SONRA (25 Ekim gece, aynı veri; başlık tek satır, sahne
    alçak, kap içi en → başlık / sahne): 320 → 120 / 468, 670 → 82 / 277,
    926 → 43 / 338, 1150 → 29 / 279, 1270 → 29 / 287, 1550 → 29 / 262,
-   1790 → 29 / 295. */
+   1790 → 29 / 295.
+   TELEFON TURUNDAN SONRA (25 Ekim, "Silüet: mobil"; üç kısa sıra, çip
+   etiket; kap içi en → başlık / sahne, TR): 292 → 135 / 362 (360 ekran,
+   endeks adı yüzdenin üstünde), 322 → 122 / 385, 362 → 122 / 415.
+   Sahne ≈ 140 piksel + 76cqw. */
 .skeleton { display: grid; gap: 10px; }
 .skeletonHead { height: 120px; width: 100%; }
-.skeletonScene { width: 100%; height: 146cqw; }
+.skeletonScene { width: 100%; height: calc(140px + 76cqw); }
 @container (min-width: 600px) { .skeletonScene { height: 39cqw; } }
 @container (min-width: 700px) { .skeletonHead { height: 82px; } }
 @container (min-width: 900px) { .skeletonHead { height: 43px; } }

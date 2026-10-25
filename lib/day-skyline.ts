@@ -217,8 +217,9 @@ export function skyDomain(changes: readonly number[]): SkyDomain {
    Düzenler
    -------------------------------------------------------------------------- */
 
-/** Etiketin türü: tam (logo + sembol + yüzde), yalnız logo, ya da yok. */
-export type LabelKind = "full" | "logo" | "none";
+/** Etiketin türü: tam (logo üstte, sembol ve yüzde altında), çip (logo
+ *  solda, sembol ve yüzde sağında; telefon), yalnız logo, ya da yok. */
+export type LabelKind = "full" | "chip" | "logo" | "none";
 
 export type SkyMode = {
   /** Sıranın eni (birim). */
@@ -242,6 +243,18 @@ export type SkyMode = {
   /** Etiketin punto ve logo çapı (birim). */
   font: number;
   logo: number;
+  /** TELEFON DÜZENİ (`PHONE_*`, aşağıda): sıranın göğü ve suyu kendi
+   *  binalarından, mahalle tabelası kısa adla tek satır (en dar mahalle
+   *  adına göre), bilgi kartı sahnenin altında. */
+  compact?: boolean;
+  /** Etiket katı (varsayılan `LABEL_TIERS`) ve bağ çizgisinin en uzun boyu
+   *  (birim; yoksa sınırsız). */
+  tiers?: number;
+  maxLift?: number;
+  /** Etiket merkezinin binanın ekseninden en çok kayması (birim; varsayılan
+   *  `LABEL_MAX_SHIFT`). Hep etiketin yarı eninden küçük: eksen etiketin
+   *  içinden geçiyor. */
+  maxShift?: number;
 };
 
 /**
@@ -250,11 +263,11 @@ export type SkyMode = {
  * görünmeyen `display:none`. `width` o aralıkta birim ≈ piksel olacak
  * biçimde: punto 11–13 piksel, logo karosu 22–32.
  *
- *   narrow  kap < 560 (telefon) — üç sıra
+ *   narrow  kap < 560 (telefon) — üç sıra, çip etiket (aşağıda "TELEFON")
  *   medium  560–979 (tablet, dar masaüstü) — iki sıra
  *   wide    980–1499 — tek sıra
  *   xwide   ≥ 1500 (1920, 2560) — tek sıra, alanı dolduruyor
- *   strip*  ana sayfanın şeridi: posterden alçak; dar < 600 (iki sıra),
+ *   strip*  ana sayfanın şeridi: posterden alçak; dar < 600 (üç sıra),
  *           orta 600–1079 (tablet: 768'de birim ≈ 0,75 piksel), geniş
  *           1080–1499, çok geniş ≥ 1500
  *   og*     paylaşım görseli; mini arşiv kartı (etiketsiz)
@@ -272,13 +285,26 @@ export type SkyMode = {
  * yanının taban payı (`minSide`) 0,24 → 0,2: düşüşlerin derinliği gerçek
  * ölçekte kalıyor, boş su payı azalıyor. 1440'ta panel 447 → 358 piksel
  * (TR, 23 Ekim). Posterin düzenlerine dokunulmadı.
+ *
+ * TELEFON (25 Ekim, "Silüet: mobil" turu; sahibinin iPhone ekranları:
+ * "Mobilde buralar daha iyi olmalı"). `narrow` ve `stripNarrow` artık
+ * `compact`: birim ≈ piksel olsun diye en 400 → 330 (360–430 ekranda
+ * birim 0,88–1,1 piksel; punto 13 birim ≈ 11,5–14 piksel, eskiden 9,5–
+ * 11,5), etiket ÇİP (karo solda, yazı sağında; 58 yerine 31 birim boy),
+ * tek kat, bağ ≤ 24 birim (`maxLift`), kayma payı 28 (`maxShift`), her
+ * sıranın göğü ve suyu kendi binalarından, en dar mahalle tabelasının
+ * adına göre (`signWidth`). Şerit iki sıradan üçe çıktı: dört mahalle
+ * kısa adlarıyla bile bir sıraya sığmıyordu. Ölçüler (TR, 23 Ekim, 390):
+ * şerit paneli 626 → 543 piksel, posterin sahnesi 631 → 460; etiket
+ * çakışması 0, en uzun bağ ~17 piksel (önce 55 ve iki kat), tabela tek
+ * satır (önce üç).
  */
 export const SKY_MODES = {
-  narrow: { width: 400, rows: 3, gap: 1.2, districtGap: 10, minW: 1.8, minDistrictW: 92, half: 52, minSide: 0.22, label: "full", labelCaps: 8, labelExtremes: 1, font: 13, logo: 26 },
+  narrow: { width: 330, rows: 3, gap: 1, districtGap: 10, minW: 1.6, minDistrictW: 52, half: 46, minSide: 0.16, label: "chip", labelCaps: 8, labelExtremes: 1, font: 13, logo: 24, compact: true, tiers: 1, maxLift: 24, maxShift: 28 },
   medium: { width: 760, rows: 2, gap: 1.6, districtGap: 14, minW: 2.4, minDistrictW: 112, half: 82, minSide: 0.2, label: "full", labelCaps: 10, labelExtremes: 2, font: 12, logo: 26 },
   wide: { width: 1200, rows: 1, gap: 2, districtGap: 18, minW: 3, minDistrictW: 120, half: 124, minSide: 0.18, label: "full", labelCaps: 12, labelExtremes: 3, font: 12, logo: 30 },
   xwide: { width: 1680, rows: 1, gap: 2.4, districtGap: 24, minW: 3.6, minDistrictW: 140, half: 160, minSide: 0.18, label: "full", labelCaps: 14, labelExtremes: 3, font: 13, logo: 32 },
-  stripNarrow: { width: 400, rows: 2, gap: 1.2, districtGap: 10, minW: 1.8, minDistrictW: 86, half: 34, minSide: 0.25, label: "full", labelCaps: 6, labelExtremes: 1, font: 13, logo: 26 },
+  stripNarrow: { width: 330, rows: 3, gap: 1, districtGap: 10, minW: 1.6, minDistrictW: 52, half: 30, minSide: 0.16, label: "chip", labelCaps: 6, labelExtremes: 1, font: 13, logo: 24, compact: true, tiers: 1, maxLift: 24, maxShift: 28 },
   stripMedium: { width: 900, rows: 1, gap: 1.6, districtGap: 14, minW: 2.4, minDistrictW: 96, half: 44, minSide: 0.2, label: "full", labelCaps: 10, labelExtremes: 2, font: 15, logo: 30 },
   stripWide: { width: 1200, rows: 1, gap: 2, districtGap: 18, minW: 3, minDistrictW: 120, half: 42, minSide: 0.2, label: "full", labelCaps: 12, labelExtremes: 3, font: 11, logo: 26 },
   stripXwide: { width: 1680, rows: 1, gap: 2.4, districtGap: 24, minW: 3.6, minDistrictW: 140, half: 52, minSide: 0.2, label: "full", labelCaps: 14, labelExtremes: 3, font: 13, logo: 28 },
@@ -423,6 +449,18 @@ const PCT_CHARS = 7;
 /** Yüzdenin sabit karakterleri: işaret, "%" ve ondalık ayıracı + iki hane. */
 const PCT_FIXED_CHARS = 5;
 const LABEL_GAP = 3;
+/**
+ * Çipte logo ile yazı arası (birim), iki satır yazının boyu ve satırların
+ * taban çizgileri (punto katı). Yüzdenin kutusu çipte ayrıca 0,3em pay
+ * alıyor: işaretle "%" arasındaki dar boşluk (U+202F) karakter sayımına
+ * girmiyordu, "−%0,59" 360 telefonda tahminden 1,5 birim geniş ölçüldü.
+ * Satırlar: kalın Schibsted'in yazı kutusu taban çizgisinin 0,95em üstü ve
+ * 0,27em altı (tarayıcıda ölçüldü), iki satır 2,4em'e sığıyor.
+ */
+export const CHIP_GAP = 3;
+export const CHIP_LINES = 2.4;
+export const CHIP_BASELINES = [0.97, 2.12] as const;
+const CHIP_PCT_PAD = 0.2;
 
 /**
  * Yüzdenin karakter sayısı: işaret + "%" + tam kısmın haneleri + ",dd".
@@ -446,6 +484,10 @@ export function labelBox(
   if (kind === "none") return { w: 0, h: 0 };
   if (kind === "logo") return { w: mode.logo, h: mode.logo };
   const text = Math.max(symbol.length, pctChars(change)) * mode.font * CHAR_EM;
+  if (kind === "chip") {
+    const chipText = Math.max(symbol.length * CHAR_EM, pctChars(change) * CHAR_EM + CHIP_PCT_PAD) * mode.font;
+    return { w: mode.logo + CHIP_GAP + chipText, h: Math.max(mode.logo, mode.font * CHIP_LINES) };
+  }
   return { w: Math.max(mode.logo, text), h: mode.logo + 2 + mode.font * 2.3 };
 }
 
@@ -457,6 +499,8 @@ const overlaps = (a: Box, b: Box, pad = 0) =>
 const LABEL_HEAD_CAPS = 3;
 /** Öncelik başının boyu (`labelPicks`in ilk öğeleri): üç şirket + iki uç. */
 export const LABEL_HEAD = LABEL_HEAD_CAPS + 2;
+/** Telefonda uçlardan önce gelen büyük şirket sayısı (`labelPicks` → `lead`). */
+export const PHONE_LABEL_LEAD = 1;
 
 /**
  * Çatısında etiket olacak binalar, ÖNCELİK SIRASIYLA. Yerleşim etiketleri bu
@@ -464,8 +508,20 @@ export const LABEL_HEAD = LABEL_HEAD_CAPS + 2;
  * en büyük üç şirket, günün en çok yükseleni ve en çok düşeni, kalan büyük
  * şirketler (büyükten küçüğe), kalan uçlar. Siluetin tanınır binaları ve
  * günün iki ucu böylece hiçbir düzende düşmüyor.
+ *
+ * TELEFONDA UÇLAR ÖNE (`lead` = 1; 25 Ekim, "Silüet: mobil"). Tek katlı,
+ * kısa bağlı telefonda öncelik başının ikisi aynı yere düşerse sonraki
+ * düşüyor: gerçek 23 Ekim'de Alphabet'in etiketi T-Mobile'ın (günün en çok
+ * düşeni, −%7,71) yerini alıyordu. Telefonda sıra en büyük şirket, günün
+ * iki ucu, sonra öteki büyükler; küme aynı, yalnız sıra.
  */
-export function labelPicks(stocks: readonly SkyStock[], members: readonly number[], caps: number, extremes: number): number[] {
+export function labelPicks(
+  stocks: readonly SkyStock[],
+  members: readonly number[],
+  caps: number,
+  extremes: number,
+  lead: number = LABEL_HEAD_CAPS,
+): number[] {
   const set = new Set(members);
   const pool = [...set];
   const byCap = pool
@@ -482,9 +538,10 @@ export function labelPicks(stocks: readonly SkyStock[], members: readonly number
     .slice(0, extremes);
   return [
     ...new Set([
-      ...byCap.slice(0, LABEL_HEAD_CAPS),
+      ...byCap.slice(0, Math.min(lead, LABEL_HEAD_CAPS)),
       ...ups.slice(0, 1),
       ...downs.slice(0, 1),
+      ...byCap.slice(Math.min(lead, LABEL_HEAD_CAPS), LABEL_HEAD_CAPS),
       ...byCap.slice(LABEL_HEAD_CAPS),
       ...ups.slice(1),
       ...downs.slice(1),
@@ -520,6 +577,13 @@ export function labelPicks(stocks: readonly SkyStock[], members: readonly number
  * binanın (en güçlü mahallenin en çok yükseleni: çoğu gün bir uç) etiketi
  * kabın dışına taşmadan ortalanamazdı.
  *
+ * TELEFONDA PAY 28 (`maxShift`; 25 Ekim, "Silüet: mobil"). Çip 84 birim
+ * geniş; 16'lık payla yan yana iki büyük binanın (gerçek 23 Ekim'de Apple
+ * ile Nvidia, eksenleri 33 birim arada) çipleri tek katta sığmıyordu ve
+ * en kenardaki binanın (çoğu gün günün en çok yükseleni) çipi kenar payı
+ * olmadan ortalanamıyordu. 28'de eksen yine çipin içinden, kenarından en
+ * az 14 birim içeride geçiyor.
+ *
  * Sonuç testli (`tests/day-skyline.test.ts`): gerçek 23 Ekim verisiyle ve
  * tohumlu kalabalık şehirle her düzende kayma ≤ eşik, kutular kesişmiyor,
  * binalara ve bağ çizgilerine binmiyor, en büyük üç şirket ve iki uç
@@ -541,9 +605,9 @@ const ATTACH_LIFT = 2;
 const LABEL_PAD = 2;
 
 /** Düzenin etiket için ayırdığı ek kenar payı (birim). */
-export function labelSide(mode: Pick<SkyMode, "label" | "font" | "logo">): number {
+export function labelSide(mode: Pick<SkyMode, "label" | "font" | "logo" | "maxShift">): number {
   if (mode.label === "none") return 0;
-  return Math.max(0, labelBox(mode.label, "", mode).w / 2 - LABEL_MAX_SHIFT);
+  return Math.max(0, labelBox(mode.label, "", mode).w / 2 - (mode.maxShift ?? LABEL_MAX_SHIFT));
 }
 
 type Segment = { x: number; y1: number; y2: number };
@@ -554,7 +618,7 @@ export function placeLabels(
   buildings: readonly SkyBuilding[],
   picks: readonly number[],
   stocks: readonly SkyStock[],
-  mode: Pick<SkyMode, "width" | "font" | "logo" | "label" | "gap">,
+  mode: Pick<SkyMode, "width" | "font" | "logo" | "label" | "gap" | "tiers" | "maxLift" | "maxShift">,
 ): SkyLabel[] {
   if (mode.label === "none") return [];
   const byI = new Map(buildings.map((b) => [b.i, b] as const));
@@ -563,7 +627,8 @@ export function placeLabels(
   const segmentOf = (label: SkyLabel): Segment | null =>
     label.leader ? { x: label.leader.x1, y1: label.leader.y1, y2: label.leader.y2 } : null;
   const shifts: number[] = [0];
-  for (let k = LABEL_SHIFT_STEP; k <= LABEL_MAX_SHIFT + 1e-9; k += LABEL_SHIFT_STEP) shifts.push(-k, k);
+  const maxShift = mode.maxShift ?? LABEL_MAX_SHIFT;
+  for (let k = LABEL_SHIFT_STEP; k <= maxShift + 1e-9; k += LABEL_SHIFT_STEP) shifts.push(-k, k);
 
   /** `i`nin geçerli yerleri, ucuzdan pahalıya; `maxTier` kata kadar, kutu `[top, bottom]` içinde. */
   const candidates = (i: number, maxTier: number, top: number, bottom: number) => {
@@ -602,6 +667,9 @@ export function placeLabels(
       const box = { x, y, w, h };
       const near = dir === 1 ? y + h : y;
       const lift = Math.abs(near - roof) - LABEL_GAP;
+      /* Telefonda bağ çizgisi kısa (`maxLift`): uzun bağ etiketi binasından
+         koparıyor (sahibinin 390 ekranında Apple'ın bağı ~230 piksel). */
+      if (mode.maxLift !== undefined && lift > mode.maxLift) continue;
       const attached = Math.abs(dx) < ATTACH_SHIFT && lift < ATTACH_LIFT;
       const segment: Segment | null = attached ? null : { x: cx, y1: roof, y2: near };
       /* Bağ çizgisi başka etiketin içinden geçmez; etiket başka bağın üstüne oturmaz. */
@@ -622,7 +690,9 @@ export function placeLabels(
   const commit = (best: { label: SkyLabel }) => placed.push(best.label);
   const remove = (label: SkyLabel) => placed.splice(placed.indexOf(label), 1);
 
-  /* Birinci geçiş: herkes ZEMİNDE, öncelik sırasıyla. */
+  /* Birinci geçiş: herkes ZEMİNDE, öncelik sırasıyla. Tek katlı düzende
+     (telefon, `tiers: 1`) ikinci geçiş yalnız ONARIM: öncelik başı yer
+     bulamazsa komşuları kaydırılıp yeniden deneniyor, kat çıkılmıyor. */
   const waiting: number[] = [];
   for (const i of picks) {
     const best = tryPlace(i, 0, -Infinity, Infinity);
@@ -636,12 +706,13 @@ export function placeLabels(
      uç için şerit 70 birim uzuyordu (gerçek 23 Ekim, 1920 şerit: 277 →
      352); sınır herkese konunca da günün en çok düşeni (TMUS) 1440 şeritte
      düşüyordu. */
-  if (LABEL_TIERS > 1 && waiting.length > 0) {
+  const tiers = mode.tiers ?? LABEL_TIERS;
+  if (waiting.length > 0) {
     const top = Math.min(0, ...buildings.map((b) => (b.dir === 1 ? -b.h : 0)), ...placed.map((l) => l.y));
     const bottom = Math.max(0, ...buildings.map((b) => (b.dir === -1 ? b.h : 0)), ...placed.map((l) => l.y + l.h));
     const head = new Set(picks.slice(0, LABEL_HEAD));
     const options = (i: number) =>
-      head.has(i) ? candidates(i, LABEL_TIERS - 1, -Infinity, Infinity) : candidates(i, LABEL_TIERS - 1, top, bottom);
+      head.has(i) ? candidates(i, tiers - 1, -Infinity, Infinity) : candidates(i, tiers - 1, top, bottom);
     const place = (i: number) => options(i)[0] ?? null;
     for (const i of waiting) {
       const best = place(i);
@@ -661,7 +732,7 @@ export function placeLabels(
       const b = byI.get(i)!;
       const cx = b.x + b.w / 2;
       const { w } = labelBox(mode.label, stocks[i].symbol, mode, stocks[i].change);
-      const reach = w + LABEL_MAX_SHIFT * 2 + LABEL_PAD;
+      const reach = w + maxShift * 2 + LABEL_PAD;
       const blockers = placed
         .filter((p) => p.dir === (b.dir === -1 ? -1 : 1) && p.x < cx + reach && p.x + p.w > cx - reach)
         .sort((p, q) => picks.indexOf(p.i) - picks.indexOf(q.i));
@@ -725,11 +796,15 @@ export function skylineLayout({
   districts,
   mode: modeName,
   domain = skyDomain(stocks.map((stock) => stock.change)),
+  signs,
 }: {
   stocks: readonly SkyStock[];
   districts: readonly District[];
   mode: SkyModeName;
   domain?: SkyDomain;
+  /** Telefon düzeninde mahalle tabelasının (kısa) adı: en dar mahalle bu
+   *  adı tek satırda taşıyacak kadar geniş (`signWidth`). */
+  signs?: Readonly<Record<string, string>>;
 }): SkyLayout {
   const mode: SkyMode = SKY_MODES[modeName];
   const floor = capFloor(stocks);
@@ -737,10 +812,15 @@ export function skylineLayout({
   const spanOf = (d: District, k: number) =>
     d.members.reduce((s, i) => s + mode.minW + k * weight(i), 0) + Math.max(0, d.members.length - 1) * mode.gap;
   const rowFixed = (set: number[]) => Math.max(0, set.length - 1) * mode.districtGap;
-  /* Sıranın eni `Σ max(minDistrictW, span(k)) + sokaklar`: k'de monoton
+  /* Mahallenin taban eni: düzenin tabanı, telefonda tabelanın adı da. */
+  const floorOf = (d: District) => {
+    const sign = mode.compact ? signs?.[d.key] : undefined;
+    return sign ? Math.max(mode.minDistrictW, signWidth(sign, mode)) : mode.minDistrictW;
+  };
+  /* Sıranın eni `Σ max(taban, span(k)) + sokaklar`: k'de monoton
      artıyor ama kırıklı (k küçüldükçe daha çok mahalle tabana dayanıyor). */
   const rowWidth = (set: number[], kk: number) =>
-    set.reduce((acc, index) => acc + Math.max(mode.minDistrictW, spanOf(districts[index], kk)), 0) + rowFixed(set);
+    set.reduce((acc, index) => acc + Math.max(floorOf(districts[index]), spanOf(districts[index], kk)), 0) + rowFixed(set);
   /* Bir sıranın sığdırabildiği en büyük `k`, ikiye bölmeyle. Önceki sabit
      nokta döngüsü kırıklarda salınıp fazla büyük bir k'de kalıyordu:
      medium düzende ikinci sıra 760'lık enin 26 birim dışına taşıyordu.
@@ -822,11 +902,12 @@ export function skylineLayout({
     districts.flatMap((d) => d.members),
     mode.labelCaps,
     mode.labelExtremes,
+    mode.compact ? PHONE_LABEL_LEAD : LABEL_HEAD_CAPS,
   );
   const delayOf = (index: number) => RISE_START + (districts.length > 1 ? index / (districts.length - 1) : 0) * RISE_SPREAD;
 
   const rows: SkyRow[] = rowSets.map((set) => {
-    const spans = set.map((index) => Math.max(spanOf(districts[index], k), mode.minDistrictW));
+    const spans = set.map((index) => Math.max(spanOf(districts[index], k), floorOf(districts[index])));
     const used = spans.reduce((a, b) => a + b, 0) + rowFixed(set);
     const spare = Math.max(0, usable - used);
     const stretch = set.length > 1 ? Math.min(spare / (set.length - 1), mode.districtGap * (MAX_GAP_STRETCH - 1)) : 0;
@@ -865,12 +946,40 @@ export function skylineLayout({
       stocks,
       mode,
     );
-    const top = Math.min(-upH, ...labels.map((label) => label.y)) - 2;
-    const bottom = Math.max(downH, ...labels.map((label) => label.y + label.h)) + 2;
-    return { top, bottom, upH, downH, buildings, labels, districts: spansOut };
+    /* TELEFONDA SIRA KENDİ BOYUNDA (`compact`). Göğün ve suyun payı bütün
+       sıralarda günün en uzun binasındandı: gerçek 23 Ekim'de CrowdStrike
+       (+%8,25) birinci sıradaydı ama ikinci ve üçüncü sıranın göğü de onun
+       boyundaydı (390 poster: ortadaki sıra ~120 piksel boş gök). Şimdi
+       her sıranın payı kendi en uzun binası (ve tabanı `minSide`); ÖLÇEK
+       ortak kalıyor, aynı yüzde her sırada aynı boyda. */
+    const ownUp = Math.max(minSide, ...buildings.map((b) => (b.dir === 1 ? b.h : b.dir === 0 ? b.h / 2 : 0)));
+    const ownDown = Math.max(minSide, ...buildings.map((b) => (b.dir === -1 ? b.h : b.dir === 0 ? b.h / 2 : 0)));
+    const rowUp = mode.compact ? ownUp : upH;
+    const rowDown = mode.compact ? ownDown : downH;
+    const top = Math.min(-rowUp, ...labels.map((label) => label.y)) - 2;
+    const bottom = Math.max(rowDown, ...labels.map((label) => label.y + label.h)) + 2;
+    return { top, bottom, upH: rowUp, downH: rowDown, buildings, labels, districts: spansOut };
   });
 
   return { mode: modeName, width: mode.width, domain, rows };
+}
+
+/**
+ * TELEFON TABELASI TEK SATIR. Mahalle tabelası telefonda kısa adla
+ * (`shortDistricts`, sözlük) tek satır, yüzde hemen altında; en dar mahalle
+ * adını taşıyacak kadar geniş. Eni tahmin ÜSTTEN: 12 piksellik kalın
+ * Schibsted'de harf ~0,62em, iki yanda dolgu; piksel → birim en dar
+ * telefonda (360 ekran: sahne ~290 piksel). Daha dar kapta ad yine tek
+ * satır kalıyor, sığmazsa CSS üç noktayla kesiyor.
+ */
+export const SIGN_PX = 12;
+const SIGN_EM = 0.62;
+const SIGN_PAD_PX = 6;
+export const PHONE_MIN_PX = 290;
+
+export function signWidth(name: string, mode: Pick<SkyMode, "width">): number {
+  const chars = Math.max([...name].length, PCT_CHARS);
+  return (chars * SIGN_PX * SIGN_EM + SIGN_PAD_PX) * (mode.width / PHONE_MIN_PX);
 }
 
 /* --------------------------------------------------------------------------
@@ -921,7 +1030,12 @@ const TAG_GAP = 4;
 /** Kaymış etiketin çatıya uzaklığı: bağ çizgisi görünsün. */
 const TAG_LEAD = 9;
 
-export function valueTag(b: SkyBuilding, stock: Pick<SkyStock, "symbol" | "change">, mode: Pick<SkyMode, "width" | "font">): SkyValueTag {
+export function valueTag(
+  b: SkyBuilding,
+  stock: Pick<SkyStock, "symbol" | "change">,
+  mode: Pick<SkyMode, "width" | "font" | "maxShift">,
+): SkyValueTag {
+  const maxShift = mode.maxShift ?? LABEL_MAX_SHIFT;
   const unit = mode.font * TAG_EM;
   const axis = b.x + b.w / 2;
   const sym = stock.symbol.length;
@@ -936,12 +1050,12 @@ export function valueTag(b: SkyBuilding, stock: Pick<SkyStock, "symbol" | "chang
   let lines: 1 | 2 = 1;
   let w = (sym + 1 + pct) * unit + TAG_HALO;
   let shift = shiftFor(w);
-  if (Math.abs(shift) > LABEL_MAX_SHIFT) {
+  if (Math.abs(shift) > maxShift) {
     lines = 2;
     w = Math.max(sym, pct) * unit + TAG_HALO;
     shift = shiftFor(w);
   }
-  shift = Math.max(-LABEL_MAX_SHIFT, Math.min(LABEL_MAX_SHIFT, shift));
+  shift = Math.max(-maxShift, Math.min(maxShift, shift));
   const h = mode.font * TAG_LINE * lines;
   const shifted = Math.abs(shift) >= ATTACH_SHIFT;
   const gap = shifted ? TAG_LEAD : TAG_GAP;

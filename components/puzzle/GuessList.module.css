@@ -97,3 +97,27 @@
 .sparks span:nth-child(2) { right:-2px; top:-2px; --dx:5px; --dy:-5px; }
 .sparks span:nth-child(3) { left:-2px; bottom:-2px; --dx:-5px; --dy:5px; }
 .sparks span:nth-child(4) { right:-2px; bottom:-2px; --dx:5px; --dy:5px; }
+
+/* ---- Telefon ve tablet (tek kolon, < 1024): kalan hak tek satır ----
+   Yuvalar gizli, yerinde "6 Hak Kaldı" ve kalan hak kadar küçük kesik
+   kare; sütun başlıkları ilk tahmine kadar yok (başlıkları okunacak
+   karo henüz yok). Lejant tek satır: ok etiketleri kısa adıyla. */
+.left { display:none; }
+.legendShort { display:none; }
+@media (max-width: 1023.98px) {
+  .slot { display:none; }
+  .list[data-bos] .head { display:none; }
+  .left { display:flex; align-items:center; gap:.5rem; margin:.375rem 0 0; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
+  .list[data-bos] .left { margin-top:0; }
+  .leftSlots { display:inline-flex; gap:3px; }
+  .leftSlots span { width:.875rem; height:.875rem; border-radius:3px; outline:1px dashed var(--line-strong); outline-offset:-1px; }
+  .legend { gap:.25rem .625rem; margin-top:.5rem; }
+  .legend li { gap:.25rem; }
+}
+@media (max-width: 379.98px) {
+  .legend { gap:.25rem .5rem; }
+}
+@media (max-width: 639.98px) {
+  .legendLong { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  .legendShort { display:inline; }
+}

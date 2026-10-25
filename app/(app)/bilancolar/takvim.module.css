@@ -1,0 +1,14 @@
+/* Bilançolar · Takvim kapağı, yalnız telefonda (25 Ekim, mobil turu —
+   gerekçe ve ölçüm `page.tsx` → "MOBİL TURU"). Kompakt bandın kendisi
+   `DirectoryExperience.module.css`te; burada yalnız bu sekmenin kapağı
+   sıkılaşıyor, öteki dizinler değişmiyor. Özgüllük bandın
+   `.hero.hero.hero.hero[data-compact]` kuralını aşmak için. */
+@media (max-width: 639.98px) {
+  .head.head.head.head.head[data-compact] { padding-top: 12px; row-gap: 2px; }
+  /* Açıklama tek satır; tamamı `title`da değil, arama motoru ve ekran
+     okuyucu için metin yerinde (yalnız görsel kesim). */
+  .head :global(.page-heading-copy) p { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  /* Hafta/Ay anahtarı başlık satırında küçük: hap dolgusu dar, dokunma
+     hedefi 44 piksel kalır. */
+  .head [data-header-control] a { padding-inline: 12px; }
+}

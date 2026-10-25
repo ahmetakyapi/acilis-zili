@@ -9,7 +9,7 @@ import { logoSrc } from "@/lib/logos";
 import { cn, directionOf, directionText, formatEtDateCompact, formatPercent, formatPercentPlain, tieFigures } from "@/lib/utils";
 import { BreadthStrip } from "./PosterMarks";
 import { Skyline } from "./Skyline";
-import { posterName, posterStoryOf, posterStoryText } from "./story";
+import { posterName, posterShortName, posterStoryOf, posterStoryText } from "./story";
 import styles from "./PosterBoard.module.css";
 
 /**
@@ -71,6 +71,7 @@ export function PosterBoard({
   const strongest = districts[0];
   const weakest = districts[districts.length - 1];
   const names = Object.fromEntries(districts.map((district) => [district.key, posterName(district.key, locale)]));
+  const signs = Object.fromEntries(districts.map((district) => [district.key, posterShortName(district.key, locale)]));
   const logos = Object.fromEntries(
     stocks.flatMap((stock) => {
       const src = logoSrc(stock.symbol, null);
@@ -140,6 +141,7 @@ export function PosterBoard({
             stocks={stocks}
             districts={districts}
             names={names}
+            signs={signs}
             logos={logos}
             sized={sized}
             locale={locale}

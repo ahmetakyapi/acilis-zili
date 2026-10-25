@@ -53,6 +53,11 @@ export const generateMetadata = pageMetadata({
  *   son sürüm (ana görsel: öne çıkan kartlar, kalanı kompakt ızgara; dibinde
  *   özet ve kapsam künyesi) → aylar (her giriş tek satır, katlı).
  *   Gerekçe ChangelogParts.tsx başı.
+ *   Alan çeşitliliği (25 Ekim, mobil turu): öne çıkan kartlar her alandan
+ *   bir (Piyasa önce), Claude maddeleri "Claude ile" grubunda
+ *   (`splitLatest`). Ölçüldü (TR/EN, açık/koyu): ilk ekranda görünen
+ *   alanlar 390×844'te Claude + Kişisel → Piyasa + Bilanço + Kişisel,
+ *   360×780'de hiç kart yok → üç alan, 430×932'de dört alan.
  *   DataStamp yok: veri değil, yazılı geçmiş — tarih her girişin kendisinde.
  *   GuideHint yok: rehberde bu sayfanın sorusunu açan yazı yok.
  *

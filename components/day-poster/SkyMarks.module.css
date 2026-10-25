@@ -87,6 +87,9 @@
   font-weight: 750;
 }
 .label[data-off] { opacity: 0.2; }
+/* Telefonda değer etiketinin altında kalan çatı etiketi: sönük değil, yok
+   (gerekçe SkyScene.tsx, "TELEFON"). */
+.label[data-hidden] { opacity: 0; }
 .label[data-on] .tile { stroke: var(--text-strong); stroke-width: 1.5px; }
 
 /* ------------------------------------------------------------ GİRİŞ

@@ -160,6 +160,12 @@ export const stockPuzzleTr = {
   shortcutsNote: "Klavyede Enter tahmini gönderir, J joker kullanır.",
   distToday: "bugünkü sonuç",
   nextLeft: "kalan süre",
+  /* Mobil sıkılaştırma (25 Ekim). */
+  slotsLeft: "{n} Hak Kaldı",
+  statsEmpty: "Henüz oynanmadı; ilk bulmacandan sonra serin burada.",
+  legendLabel: "Karoların Anlamı",
+  legendArrowShort: "Yön",
+  legendFarArrowShort: "Çok Uzak",
 };
 
 export const stockPuzzleEn: typeof stockPuzzleTr = {
@@ -312,6 +318,11 @@ export const stockPuzzleEn: typeof stockPuzzleTr = {
   shortcutsNote: "On a keyboard, Enter sends the guess and J plays the joker.",
   distToday: "today's result",
   nextLeft: "time left",
+  slotsLeft: "{n} Guesses Left",
+  statsEmpty: "Not played yet; your record starts after your first puzzle.",
+  legendLabel: "What the Tiles Mean",
+  legendArrowShort: "Direction",
+  legendFarArrowShort: "Far Off",
 };
 
 export type StockPuzzleLabels = typeof stockPuzzleTr;

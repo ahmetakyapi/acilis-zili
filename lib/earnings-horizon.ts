@@ -183,8 +183,10 @@ export type LeadWords = {
 };
 
 /**
- * Tepedeki tek cümle. "Bu hafta 963 şirket bilanço açıklıyor; en büyükleri
- * Çarşamba kapanış sonrası: MSFT, GOOGL ve META." Hafta henüz başlamadıysa
+ * Tepedeki tek cümle. "Bu hafta 963 bilanço var; en büyükleri Çarşamba
+ * kapanış sonrası: MSFT, GOOGL ve META." (Mobil turu, 25 Ekim: "963 şirket
+ * bilanço açıklıyor" telefonda cümleyi üç satıra taşıyordu; kısa hâli iki
+ * satır.) Hafta henüz başlamadıysa
  * (hafta sonu, sekme gelecek haftayı gösteriyor) "Önümüzdeki hafta".
  * Sayı haftanın TÜM açıklayanları (ikinci hisse sınıfı hariç) — karolar
  * yalnız kayda değer olanlar, künye bunu ayrıca söylüyor.

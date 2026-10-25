@@ -1,14 +1,14 @@
 import { cookies } from "next/headers";
-import { ArrowLeft, CalendarDots, Cards, ChartBar, ChartLineUp, Database, Keyboard, LockSimpleOpen, Swatches } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, CalendarDots, Cards, CaretDown, ChartBar, ChartLineUp, Database, Keyboard, LockSimpleOpen, Swatches } from "@phosphor-icons/react/dist/ssr";
 import { PageShare } from "@/components/article/PageShare";
 import { GuideHint } from "@/components/article/GuideHint";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
-import { EmptyState, PageHeader, Panel, PanelHeader } from "@/components/ui/primitives";
+import { EmptyState, PageHeader, Panel } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
 import { absoluteUrl } from "@/lib/site";
-import { ARCHIVE_COOKIE, PROGRESS_COOKIE, PUZZLE_ZONE, parseProgressCookie, puzzleNumber } from "@/lib/stock-puzzle";
+import { ARCHIVE_COOKIE, PROGRESS_COOKIE, PUZZLE_ZONE, firstSentence, parseProgressCookie, puzzleNumber } from "@/lib/stock-puzzle";
 import { evaluatePuzzle } from "@/lib/stock-puzzle-data";
 import { StockPuzzle } from "./StockPuzzle";
 import styles from "./PuzzleScreen.module.css";
@@ -29,8 +29,12 @@ import styles from "./PuzzleScreen.module.css";
  * görünür alanın 260 pikselini alıyordu (69-330) ve oyun ilk ekranın
  * altında başlıyordu. Şimdi çerçevesiz `PageHeader` (embedded), başlık
  * 30 piksel; numara ve tarih, arşiv bağlantısı ve paylaş başlık
- * satırının sağında (telefonda numara ve tarih başlığın altına iner).
- * Üst künye yok (CLAUDE.md, `PageHeader`).
+ * satırının sağında. Üst künye yok (CLAUDE.md, `PageHeader`).
+ *
+ * MOBİL TURU (25 Ekim, sahibinin iPhone ekranları): telefonda başlık
+ * bandı üç satırdı (başlık; iki satır açıklama; numara ve tarih). Şimdi
+ * numara ve tarih kısa hâliyle başlık satırında ("#2 · 25 Eki"), arşiv
+ * bağlantısı simge, açıklama tek cümle. Ölçüm StockPuzzle.module.css'te.
  *
  * Tahtanın ALTINDA "Nasıl Oynanır": oyunun kuralları, lejantın uzun
  * açıklaması, havuz ve serinin nerede tutulduğu. Tahtada her biri kendi
@@ -54,12 +58,30 @@ export async function PuzzleScreen({ day, archive }: { day: string; archive: boo
   const path = archive ? `/bulmaca/${day}` : "/bulmaca";
   const title = archive ? `${L.title} #${number}` : L.title;
 
+  const shortDate = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "tr-TR", {
+    day: "numeric",
+    month: "short",
+    timeZone: PUZZLE_ZONE,
+  }).format(new Date(`${day}T12:00:00Z`));
+  /* Telefonda kısa künye ("#2 · 25 Eki"): başlıkla aynı satıra sığsın.
+     Tam hâli ekran okuyucuda; geniş ekranda tam hâli görünür. */
   const stamp = (
     <>
-      <span className="numeral font-semibold text-strong">{L.number.replace("{n}", String(number))}</span>
-      <time dateTime={day}>{dateLabel}</time>
+      <span className="numeral font-semibold text-strong">
+        <span className={styles.wide}>{L.number.replace("{n}", String(number))}</span>
+        <span aria-hidden className={styles.narrow}>#{number}</span>
+      </span>
+      <time dateTime={day}>
+        <span className={styles.wide}>{dateLabel}</span>
+        <span aria-hidden className={styles.narrow}>{shortDate}</span>
+      </time>
     </>
   );
+  /* Açıklama iki cümle; telefonda yalnız ilki (tek satır). İkincisi
+     "Nasıl Oynanır"ın ilk maddesiyle aynı bilgi. */
+  const subtitle = archive ? L.archiveDayNote : L.subtitle;
+  const subtitleLead = firstSentence(subtitle);
+  const subtitleRest = subtitle.slice(subtitleLead.length).trim();
   const rules = [
     { key: "ladder", icon: LockSimpleOpen, text: L.ladderNote },
     { key: "silhouette", icon: ChartLineUp, text: L.silhouetteNote },
@@ -80,7 +102,6 @@ export async function PuzzleScreen({ day, archive }: { day: string; archive: boo
         embedded
         className={styles.head}
         title={title}
-        subtitle={archive ? L.archiveDayNote : L.subtitle}
         share={
           <div className={styles.tools}>
             <p className={styles.stamp}>{stamp}</p>
@@ -93,14 +114,17 @@ export async function PuzzleScreen({ day, archive }: { day: string; archive: boo
               )}
               <Link href="/bulmaca/arsiv" className={styles.link}>
                 <CalendarDots aria-hidden size={14} weight="bold" />
-                {L.archiveLink}
+                <span className={styles.linkText}>{L.archiveLink}</span>
               </Link>
             </nav>
             <PageShare compactOnMobile align="right" path={path} title={title} locale={locale} t={t} />
           </div>
         }
       />
-      <p className={styles.stampMobile}>{stamp}</p>
+      <p className={styles.subtitle}>
+        {subtitleLead}
+        {subtitleRest && <span className={styles.subRest}> {subtitleRest}</span>}
+      </p>
 
       {result.ok ? (
         <StockPuzzle
@@ -116,16 +140,26 @@ export async function PuzzleScreen({ day, archive }: { day: string; archive: boo
         <EmptyState title={L.unavailableTitle} hint={L.unavailable} />
       )}
 
+      {/* KATLI (25 Ekim, mobil turu): yedi kural telefonda 330 piksellik
+          bir liste olarak tahtanın altını dolduruyordu; oynarken bakılmayan
+          metin. Başlık satırı katlamanın düğmesi (`<details>`, JS'siz;
+          açılınca `ExpandInPlace` bastığın yerde uzatıyor). Kapalıyken de
+          metin sunucu HTML'inde. */}
       <Panel>
-        <PanelHeader title={L.howTitle} />
-        <ul className={styles.rules}>
-          {rules.map(({ key, icon: Icon, text }) => (
-            <li key={key}>
-              <Icon aria-hidden size={16} weight="bold" className={styles.ruleIcon} />
-              <span>{text}</span>
-            </li>
-          ))}
-        </ul>
+        <details className={styles.how}>
+          <summary className={styles.howSummary}>
+            <h2 className="display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.015em]">{L.howTitle}</h2>
+            <CaretDown aria-hidden size={14} weight="bold" className={styles.howCaret} />
+          </summary>
+          <ul className={styles.rules}>
+            {rules.map(({ key, icon: Icon, text }) => (
+              <li key={key}>
+                <Icon aria-hidden size={16} weight="bold" className={styles.ruleIcon} />
+                <span>{text}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
       </Panel>
 
       <GuideHint label={t.guide.contextLabel} locale={locale} slugs={["piyasa-degeri", "hisse-senedi"]} />

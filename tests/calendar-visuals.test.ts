@@ -114,15 +114,15 @@ test("tepe cümlesi: şablon + veri, iki dil", () => {
   const peak = peakCell(ROWS);
   assert.equal(
     horizonLead({ count: 963, upcoming: false, peak, weekday: "Çarşamba", words: calendarVisualsTr.horizon, listFormat: listTr, formatCount: (n) => n.toLocaleString("tr-TR") }),
-    "Bu hafta 963 şirket bilanço açıklıyor; en büyükleri Çarşamba kapanış sonrası: MSFT, GOOGL ve META.",
+    "Bu hafta 963 bilanço var; en büyükleri Çarşamba kapanış sonrası: MSFT, GOOGL ve META.",
   );
   assert.equal(
     horizonLead({ count: 34, upcoming: true, peak: { date: "2026-10-27", lane: "bmo", symbols: ["KO"] }, weekday: "Tuesday", words: calendarVisualsEn.horizon, listFormat: listEn, formatCount: String }),
-    "34 companies report earnings next week; the largest comes Tuesday before the open: KO.",
+    "34 reports next week; the largest comes Tuesday before the open: KO.",
   );
   assert.equal(
     horizonLead({ count: 1200, upcoming: false, peak: null, weekday: null, words: calendarVisualsTr.horizon, listFormat: listTr, formatCount: (n) => n.toLocaleString("tr-TR") }),
-    "Bu hafta 1.200 şirket bilanço açıklıyor.",
+    "Bu hafta 1.200 bilanço var.",
   );
 });
 

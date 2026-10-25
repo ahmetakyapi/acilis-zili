@@ -4,6 +4,10 @@ import fs from "node:fs";
 import {
   LABEL_HEAD,
   LABEL_MAX_SHIFT,
+  PHONE_LABEL_LEAD,
+  CHIP_GAP,
+  CHIP_LINES,
+  signWidth,
   LABEL_TIERS,
   MIN_DISTRICT_SIZE,
   OTHER_DISTRICT,
@@ -31,6 +35,7 @@ import {
   skylineLayout,
   skylineStocks,
   type SkyLayout,
+  type SkyMode,
   type SkyModeName,
   type SkyStock,
 } from "../lib/day-skyline";
@@ -283,10 +288,13 @@ test("etiketler sahne genelinde seçiliyor: en büyükler ve uçlar, sıra sayı
     const spec = SKY_MODES[mode];
     const layout = skylineLayout({ stocks: sky, districts, mode });
     const shown = new Set(layout.rows.flatMap((row) => row.labels.map((label) => label.i)));
-    const picks = labelPicks(sky, districts.flatMap((d) => d.members), spec.labelCaps, spec.labelExtremes);
-    /* Yer kalmazsa sondakiler düşüyor; öncelik başı hiç düşmüyor. */
+    const phone = (spec as SkyMode).compact === true;
+    const picks = labelPicks(sky, districts.flatMap((d) => d.members), spec.labelCaps, spec.labelExtremes, phone ? PHONE_LABEL_LEAD : undefined);
+    /* Yer kalmazsa sondakiler düşüyor; öncelik başı hiç düşmüyor. Telefonda
+       (tek kat, kısa bağ) baştan yalnız en büyük şirket ve günün iki ucu
+       kesin; öteki büyükler sığmazsa düşebiliyor. */
     for (const i of shown) assert.ok(picks.includes(i), `${mode}: ${sky[i].symbol} seçilmemişti`);
-    for (const i of picks.slice(0, LABEL_HEAD)) assert.ok(shown.has(i), `${mode}: ${sky[i].symbol} düştü`);
+    for (const i of picks.slice(0, phone ? PHONE_LABEL_LEAD + 2 : LABEL_HEAD)) assert.ok(shown.has(i), `${mode}: ${sky[i].symbol} düştü`);
     assert.ok(shown.size <= spec.labelCaps + spec.labelExtremes * 2);
   }
 });
@@ -299,7 +307,7 @@ test("etiket punto ve karo ölçüsü: masaüstünde karo 26–32, metin okunur"
   for (const mode of ["stripWide", "stripXwide"] as const) {
     assert.ok(SKY_MODES[mode].logo >= 26 && SKY_MODES[mode].logo <= 28, mode);
   }
-  /* Telefonda sahne ~0,85 ölçekte: 13 birim ≈ 11 piksel. */
+  /* Telefonda en 330 birim: 360–430 ekranda 13 birim ≈ 11,5–14 piksel. */
   for (const mode of ["narrow", "stripNarrow"] as const) assert.ok(SKY_MODES[mode].font >= 13, mode);
 });
 
@@ -357,16 +365,18 @@ function crowdedDay(seed: number) {
 function checkLabels(name: string, layout: SkyLayout, sky: readonly SkyStock[], picks: readonly number[], strict = true): number {
   let worst = 0;
   const shown = new Set<number>();
+  const mode: SkyMode = SKY_MODES[layout.mode];
+  const maxShift = mode.maxShift ?? LABEL_MAX_SHIFT;
   for (const row of layout.rows) {
     for (const [j, label] of row.labels.entries()) {
       shown.add(label.i);
       const b = row.buildings.find((x) => x.i === label.i)!;
       const shift = Math.abs(label.x + label.w / 2 - (b.x + b.w / 2));
       worst = Math.max(worst, shift);
-      assert.ok(shift <= LABEL_MAX_SHIFT + 1e-9, `${name}: ${sky[label.i].symbol} binasından ${shift.toFixed(1)} birim uzak`);
+      assert.ok(shift <= maxShift + 1e-9, `${name}: ${sky[label.i].symbol} binasından ${shift.toFixed(1)} birim uzak`);
       /* Binanın ekseni etiketin içinden geçiyor. */
       assert.ok(b.x + b.w / 2 > label.x && b.x + b.w / 2 < label.x + label.w);
-      assert.ok(label.tier >= 0 && label.tier < LABEL_TIERS);
+      assert.ok(label.tier >= 0 && label.tier < (mode.tiers ?? LABEL_TIERS));
       for (const other of row.labels.slice(j + 1)) {
         assert.ok(!intersects(label, other), `${name}: ${sky[label.i].symbol} ile ${sky[other.i].symbol} çakışıyor`);
       }
@@ -376,6 +386,8 @@ function checkLabels(name: string, layout: SkyLayout, sky: readonly SkyStock[], 
         assert.equal(x1, x2);
         assert.equal(y1, b.dir === -1 ? b.h : -b.h);
         assert.equal(y2, label.dir === 1 ? label.y + label.h : label.y);
+        /* Telefonda bağ kısa: kalkış ≤ `maxLift` (+ çatı ile etiket arası 3 birim). */
+        if (mode.maxLift !== undefined) assert.ok(Math.abs(y2 - y1) <= mode.maxLift + 3 + 1e-9, `${name}: ${sky[label.i].symbol} bağı ${Math.abs(y2 - y1).toFixed(1)}`);
         for (const other of row.labels) {
           if (other === label) continue;
           const crosses = x1 > other.x && x1 < other.x + other.w && Math.max(y1, y2) > other.y && Math.min(y1, y2) < other.y + other.h;
@@ -398,7 +410,11 @@ function checkLabels(name: string, layout: SkyLayout, sky: readonly SkyStock[], 
       return b.x + b.w / 2;
     };
     const w = labelBox(spec.label, sky[i].symbol, spec, sky[i].change).w;
-    const rival = row.labels.find((l) => head.includes(l.i) && Math.abs(axis(l.i) - axis(i)) < w + 2 * LABEL_MAX_SHIFT);
+    /* Telefonda (kısa bağ) uzun bir komşu bina da yer kapatabiliyor: rakip
+       öncelik başından herhangi bir etiket. */
+    const rival = row.labels.find(
+      (l) => (head.includes(l.i) || mode.maxLift !== undefined) && Math.abs(axis(l.i) - axis(i)) < w + 2 * maxShift,
+    );
     assert.ok(rival, `${name}: öncelik başı ${sky[i].symbol} zorunluluk olmadan düştü`);
   }
   return worst;
@@ -412,8 +428,15 @@ test("gerçek 23 Ekim: her etiket binasının üstünde (kayma ≤ eşik), çak�
   for (const mode of LABELLED_MODES) {
     const spec = SKY_MODES[mode];
     const layout = skylineLayout({ stocks: sky, districts, mode });
-    const picks = labelPicks(sky, districts.flatMap((d) => d.members), spec.labelCaps, spec.labelExtremes);
-    checkLabels(`23 Ekim ${mode}`, layout, sky, picks);
+    const phone = (spec as SkyMode).compact === true;
+    const picks = labelPicks(sky, districts.flatMap((d) => d.members), spec.labelCaps, spec.labelExtremes, phone ? PHONE_LABEL_LEAD : undefined);
+    checkLabels(`23 Ekim ${mode}`, layout, sky, picks, !phone);
+    /* Telefonda en büyük şirket ve günün iki ucu kesin; Apple da (Nvidia'nın
+       yanında, 28'lik payla). */
+    if (phone) {
+      const shown = new Set(layout.rows.flatMap((row) => row.labels.map((label) => sky[label.i].symbol)));
+      for (const symbol of ["NVDA", "AAPL", "CRWD", "TMUS"]) assert.ok(shown.has(symbol), `${mode}: ${symbol} düştü`);
+    }
   }
   /* Şikâyetin kendisi: 1440 şeritte (stripWide) Micron etiketi Micron'un üstünde. */
   const strip = skylineLayout({ stocks: sky, districts, mode: "stripWide" });
@@ -469,7 +492,7 @@ test("değer etiketi binanın ucunda: eksende, kenar içinde, kayma ≤ eşik", 
         const axis = b.x + b.w / 2;
         const box = valueTagBox(tag);
         /* Eksen etiketin içinden geçiyor ve kayma eşiği aşmıyor. */
-        assert.ok(Math.abs(tag.cx - axis) <= LABEL_MAX_SHIFT + 1e-9, `${mode} ${sky[b.i].symbol}`);
+        assert.ok(Math.abs(tag.cx - axis) <= ((spec as SkyMode).maxShift ?? LABEL_MAX_SHIFT) + 1e-9, `${mode} ${sky[b.i].symbol}`);
         assert.ok(axis > box.x && axis < box.x + box.w, `${mode} ${sky[b.i].symbol}: eksen dışında`);
         /* Kaydıysa bağ var; kaymadıysa yok. */
         assert.equal(tag.leader !== null, Math.abs(tag.cx - axis) >= 0.5, `${mode} ${sky[b.i].symbol}: bağ`);
@@ -506,4 +529,81 @@ test("değer etiketinin altında kalan çatı etiketi söner", () => {
   const under = { i: 7, x: box.x + 10, y: box.y + 2, w: 30, h: 40, dir: -1 as const, tier: 0, leader: null };
   const away = { ...under, i: 8, x: box.x + box.w + 30 };
   assert.deepEqual(tagCovers(tag, [under, away]), [7]);
+});
+
+/* ------------------------------------------------------------------
+   "Silüet: mobil" turu (25 Ekim): telefon düzenleri (`compact`).
+   ------------------------------------------------------------------ */
+
+const PHONE_MODES = MODES.filter((mode) => (SKY_MODES[mode] as SkyMode).compact === true);
+const SIGNS: Record<string, string> = {
+  XLI: "Industrials",
+  XLK: "Technology",
+  OTHER: "Other",
+  XLV: "Health Care",
+  XLY: "Discretionary",
+  XLC: "Communication",
+  XLP: "Staples",
+};
+
+test("telefon düzenleri: poster ve şerit, çip etiket, tek kat, kısa bağ", () => {
+  assert.deepEqual([...PHONE_MODES].sort(), ["narrow", "stripNarrow"]);
+  for (const mode of PHONE_MODES) {
+    const spec: SkyMode = SKY_MODES[mode];
+    assert.equal(spec.label, "chip");
+    assert.equal(spec.tiers, 1);
+    assert.ok(spec.maxLift !== undefined && spec.maxLift <= 24);
+    /* Eksen çipin içinden geçiyor: pay yarı enden küçük. */
+    const box = labelBox("chip", "GOOGL", spec, -10.25);
+    assert.ok((spec.maxShift ?? LABEL_MAX_SHIFT) < box.w / 2);
+  }
+});
+
+test("çip: karo solda, iki satır yazı sağında", () => {
+  const spec: SkyMode = SKY_MODES.stripNarrow;
+  const box = labelBox("chip", "NVDA", spec, -0.59);
+  assert.equal(box.h, Math.max(spec.logo, spec.font * CHIP_LINES));
+  assert.ok(box.w > spec.logo + CHIP_GAP + pctChars(-0.59) * spec.font * 0.62);
+  /* Logo-üstte etiketten alçak: telefonda sıra başına bir etiket boyu kazanç. */
+  assert.ok(box.h < labelBox("full", "NVDA", spec, -0.59).h * 0.6);
+});
+
+test("telefonda uçlar öne: en büyük şirket, günün iki ucu, sonra öteki büyükler", () => {
+  const { sky, districts } = realDay();
+  const members = districts.flatMap((d) => d.members);
+  const desk = labelPicks(sky, members, 6, 1);
+  const phone = labelPicks(sky, members, 6, 1, PHONE_LABEL_LEAD);
+  assert.deepEqual(new Set(desk.slice(0, LABEL_HEAD)), new Set(phone.slice(0, LABEL_HEAD)));
+  assert.deepEqual(phone.slice(0, 3).map((i) => sky[i].symbol), ["NVDA", "CRWD", "TMUS"]);
+});
+
+test("gerçek 23 Ekim telefonda: sıra kendi boyunda, etiket tek kat ve bağ ≤ 27 birim", () => {
+  const { sky, districts } = realDay();
+  for (const mode of PHONE_MODES) {
+    const spec: SkyMode = SKY_MODES[mode];
+    const layout = skylineLayout({ stocks: sky, districts, mode, signs: SIGNS });
+    const minSide = spec.half * spec.minSide;
+    for (const [r, row] of layout.rows.entries()) {
+      /* Göğün ve suyun payı sıranın kendi en uzun binası. */
+      const up = Math.max(minSide, ...row.buildings.map((b) => (b.dir === 1 ? b.h : b.dir === 0 ? b.h / 2 : 0)));
+      const down = Math.max(minSide, ...row.buildings.map((b) => (b.dir === -1 ? b.h : b.dir === 0 ? b.h / 2 : 0)));
+      assert.equal(row.upH, up, `${mode} sıra ${r}`);
+      assert.equal(row.downH, down, `${mode} sıra ${r}`);
+      for (const label of row.labels) {
+        assert.equal(label.tier, 0);
+        if (label.leader) assert.ok(Math.abs(label.leader.y2 - label.leader.y1) <= (spec.maxLift ?? 0) + 3 + 1e-9);
+      }
+      /* Tabela adı sığıyor: mahalle en az adının eni. */
+      for (const span of row.districts) {
+        assert.ok(span.x1 - span.x0 >= signWidth(SIGNS[span.key], spec) - 1e-6, `${mode}: ${span.key} tabelası`);
+      }
+    }
+    /* CrowdStrike'ın (+%8,25) sırası dışında gök alçak: boş gök yok. */
+    const crwd = sky.findIndex((stock) => stock.symbol === "CRWD");
+    const own = layout.rows.find((row) => row.buildings.some((b) => b.i === crwd))!;
+    for (const row of layout.rows) if (row !== own) assert.ok(row.upH < own.upH * 0.7, `${mode}: gök payı`);
+    /* Masaüstü düzeni ortak payını koruyor. */
+    const wide = skylineLayout({ stocks: sky, districts, mode: "medium", signs: SIGNS });
+    assert.equal(new Set(wide.rows.map((row) => row.upH)).size, 1);
+  }
 });
