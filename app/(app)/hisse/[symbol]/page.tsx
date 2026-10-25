@@ -18,6 +18,7 @@ import { getStockInvestors } from "@/lib/investor-data";
 import { rateLimit, requestKey } from "@/lib/rate-limit";
 import { getI18n } from "@/lib/i18n";
 import type { Metadata } from "next";
+import { stockTitle } from "@/lib/seo-titles";
 import { missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
 import { industryLabel } from "@/lib/sectors";
@@ -149,7 +150,9 @@ export async function generateMetadata(
   const extras = name ? metaExtras(await summaryFacts(symbol, locale), locale, t) : "";
   const description = extras ? `${base} ${extras}` : base;
   return {
-    title: name ? `${name} (${symbol})` : symbol,
+    /* "… Hissesi: Fiyat, Grafik ve Bilanço" / "… Stock: …" (25 Ekim);
+       fonda "ETF: Fiyat ve Grafik". Gerekçe `lib/seo-titles.ts`. */
+    title: name ? stockTitle(name, symbol, locale, { fund: Boolean(fund) }) : symbol,
     description,
     /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
        `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık

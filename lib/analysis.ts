@@ -70,7 +70,9 @@ export function verdictStroke(verdict: VerdictKey): string {
 }
 
 export function analysisHref(symbol: string, period: string): string {
-  return `/bilancolar/${symbol.toLowerCase()}/${period}`;
+  /* Dönem tek kalıba iner: eski biçimli satırdan üretilen bağlantı da
+     sayfanın canonical'ını yazsın, yönlendirmeden geçmesin. */
+  return `/bilancolar/${symbol.toLowerCase()}/${canonicalPeriod(period)}`;
 }
 
 /**
@@ -80,16 +82,87 @@ export function analysisHref(symbol: string, period: string): string {
  * adres: `Ç` yüzdelik kaçışla yazılınca bağlantı paylaşılamaz hâle geliyor.
  */
 export function periodSlug(label: string): string {
-  return label
-    .toLocaleLowerCase("tr-TR")
-    .replace(/ç/g, "c")
-    .replace(/ğ/g, "g")
-    .replace(/ı/g, "i")
-    .replace(/ö/g, "o")
-    .replace(/ş/g, "s")
-    .replace(/ü/g, "u")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+  return canonicalPeriod(
+    label
+      /* İngilizce etiket ("Q3 2026", "Q4 FY2026") Türkçe kalıba çevrilir;
+         adres dile bağlı değil — gerekçe `canonicalPeriod`. */
+      .trim()
+      .replace(/^q([1-4])(?=[\s-])/i, "$1Ç")
+      .toLocaleLowerCase("tr-TR")
+      .replace(/ç/g, "c")
+      .replace(/ğ/g, "g")
+      .replace(/ı/g, "i")
+      .replace(/ö/g, "o")
+      .replace(/ş/g, "s")
+      .replace(/ü/g, "u")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, ""),
+  );
+}
+
+/**
+ * DÖNEM ADRESİ TEK KALIPTA: "3c-2026", "4c-fy2026" (25 Ekim).
+ *
+ * Bir analizin iki dili AYNI satır anahtarını (sembol + dönem) paylaşıyor;
+ * adres dilden bağımsız. Rutin İngilizce gövdeyi `period` vermeden
+ * gönderdiğinde parça "Q3 2026" etiketinden "q3-2026" türüyordu ve
+ * META ile TXN için 21 Ekim'de ayrı birer satır açıldı: aynı metin
+ * `/en/bilancolar/txn/3c-2026` ve `/en/bilancolar/txn/q3-2026` adresinde,
+ * ikisi de site haritasında (kopya içerik). Hem türetilen hem açıkça
+ * verilen parça buradan geçer.
+ */
+export function canonicalPeriod(period: string): string {
+  return period.replace(/^q([1-4])-/, "$1c-");
+}
+
+/**
+ * Bir dönem adresinin veritabanında karşılık gelebileceği İKİ yazım:
+ * tek kalıp ("3c-2026") ve eski biçim ("q3-2026") (25 Ekim).
+ *
+ * Adres her zaman tek kalıp; satır ise iki yazımdan birinde durabilir.
+ * Bir dilde yalnız `q3-…`, ötekinde yalnız `3c-…` satırı varsa iki sayfa
+ * aynı adresi paylaşmalı ve birbirini hreflang ile göstermeli; okuma bu
+ * yüzden iki yazımı birden sorar. 25 Ekim'de canlıda eski biçimli satır
+ * sayısı 0'dı (salt okuma sayımı); bu, rutinin yine `period` vermeden
+ * yazdığı güne karşı.
+ */
+export function periodVariants(period: string): string[] {
+  const canon = canonicalPeriod(period);
+  const legacy = canon.replace(/^([1-4])c-/, "q$1-");
+  return legacy === canon ? [canon] : [canon, legacy];
+}
+
+/**
+ * İki yazımdan dönen satırlar arasından okuyucuya gösterilecek olan:
+ * önce okuyucunun dili, dil içinde tek kalıplı satır; dil yoksa tek kalıp,
+ * o da yoksa ilk satır (sayfa "orijinal dil" notunu kendi basar).
+ */
+export function pickAnalysisRow<T extends { period: string; locale: string }>(
+  rows: readonly T[],
+  locale: string,
+): T | null {
+  const isCanon = (row: T) => canonicalPeriod(row.period) === row.period;
+  return (
+    rows.find((row) => row.locale === locale && isCanon(row)) ??
+    rows.find((row) => row.locale === locale) ??
+    rows.find(isCanon) ??
+    rows[0] ??
+    null
+  );
+}
+
+/**
+ * Listede tek kalıplı ikizi olan eski biçimli dönemleri düşürür — site
+ * haritası ikisini birden yazmasın. İkizi yoksa satır kalır (adresi tek).
+ */
+export function dropShadowedPeriods<T extends { symbol: string; period: string }>(
+  rows: readonly T[],
+): T[] {
+  const keys = new Set(rows.map((row) => `${row.symbol.toUpperCase()}|${row.period}`));
+  return rows.filter((row) => {
+    const canon = canonicalPeriod(row.period);
+    return canon === row.period || !keys.has(`${row.symbol.toUpperCase()}|${canon}`);
+  });
 }
 
 /* --------------------------------------------------------------------------

@@ -15,7 +15,7 @@ import { DataStamp, EmptyState, Panel, PanelHeader } from "@/components/ui/primi
 import { getSymbolNames } from "@/lib/data";
 import { getArkActivity } from "@/lib/ark-data";
 import { ArkTrades } from "@/components/investors/ArkTrades";
-import { getI18n, type Dictionary } from "@/lib/i18n";
+import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getInvestorDetail } from "@/lib/investor-data";
 import { INVESTOR_SLUGS, investorBySlug, investorFirm, investorPortrait, type Investor } from "@/lib/investors";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
@@ -46,13 +46,36 @@ export async function generateMetadata(props: PageProps<"/yatirimcilar/[slug]">)
   if (!investor) return missingMetadata(locale);
   const firm = investorFirm(investor, locale);
   return {
+    /* Kongre üyesinin "portföyü" ve "kurumu" yok: başlık "Nancy Pelosi
+       Portfolio: U.S. House of Representatives Holdings" (93 karakter)
+       çıkıyordu. Bildirilen işlemler (25 Ekim). */
     title:
-      locale === "en"
-        ? `${investor.name} Portfolio: ${firm} Holdings, Buys and Sells`
-        : `${investor.name} Portföyü: ${firm} Hisseleri, Alım ve Satışlar`,
-    description: metaDescription(locale === "en" ? investor.tagline.en : investor.tagline.tr),
+      investor.kind === "congress"
+        ? locale === "en"
+          ? `${investor.name} Stock Trades: Disclosed Buys and Sells`
+          : `${investor.name} Hisse İşlemleri: Bildirilen Alım ve Satışlar`
+        : locale === "en"
+          ? `${investor.name} Portfolio: ${firm} Holdings, Buys and Sells`
+          : `${investor.name} Portföyü: ${firm} Hisseleri, Alım ve Satışlar`,
+    /* İLK CÜMLE SAYFANIN NE OLDUĞU (25 Ekim). Sorgular "warren buffett
+       portfolio", "li lu portfolio", "carl icahn portfolio" (EN, sıra
+       55-80); açıklama yalnız yatırımcının tanıtım cümlesiydi. Veri
+       kaynağı adıyla söyleniyor: 13F ya da Kongre işlem bildirimi. */
+    description: metaDescription(`${investorLead(investor, firm, locale)} ${locale === "en" ? investor.tagline.en : investor.tagline.tr}`),
     alternates: pageAlternates(`/yatirimcilar/${investor.slug}`, locale),
   };
+}
+
+/** Açıklamanın ilk cümlesi — sayfanın verisi hangi bildirimden geliyor. */
+function investorLead(investor: Investor, firm: string, locale: Locale): string {
+  if (investor.kind === "congress") {
+    return locale === "en"
+      ? `Stock trades disclosed by ${investor.name}: purchases and sales.`
+      : `${investor.name} adına bildirilen hisse işlemleri: alımlar ve satışlar.`;
+  }
+  return locale === "en"
+    ? `${firm} portfolio from its latest 13F filing: holdings and the quarter's buys and sells.`
+    : `Son 13F bildirimine göre ${firm} portföyü: elindeki hisseler, çeyreğin alımları ve satışları.`;
 }
 
 /** Günlük ETF dosyaları olan tek yatırımcı. */

@@ -28,18 +28,24 @@ import { pageMetadata } from "@/lib/page-meta";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
-   paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
+   paylaşılıyordu. OG kartının kısa cümlesi ayrı duruyor (kartta). */
 export const generateMetadata = pageMetadata({
   path: "/bilancolar",
+  /* ARAMA NİYETİ (25 Ekim). Search Console'da sayfanın sorguları
+     "bugün gelen bilançolar" (24 gösterim, sıra 56), "şirket bilançoları",
+     "yeni açıklanan bilançolar"; başlık yalnız "Bilançolar" diyordu.
+     Başlık ekranın gerçekten gösterdiğini söylüyor: bugünden başlayan
+     haftalık takvim, açılış öncesi / kapanış sonrası penceresi ve
+     beklentiler. Ekrandaki h1 değişmedi. */
   tr: {
-    title: "Bilançolar",
+    title: "Bilanço Takvimi: Bugün ve Bu Hafta Gelen Bilançolar",
     description:
-      "Şirketlerin finansal sonuç tarihleri ve okunmuş çeyrek analizleri.",
+      "ABD'de bugün ve bu hafta bilanço açıklayan şirketler: açılış öncesi mi kapanış sonrası mı, gelir ve hisse başına kâr beklentileriyle.",
   },
   en: {
-    title: "Earnings",
+    title: "Earnings Calendar: Who Reports Today and This Week",
     description:
-      "When companies report, plus written analyses of the quarters we read.",
+      "US companies reporting earnings today and this week: before the open or after the close, with revenue and EPS estimates.",
   },
 });
 

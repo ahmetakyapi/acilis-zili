@@ -96,6 +96,9 @@
 .companyName > span + span { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:12px; line-height:1.35; color:var(--text-muted); }
 .companyValue { display:flex; flex-direction:column; align-items:flex-end; font-size:14px; line-height:1.25; font-weight:650; }
 .companyValue > small { font-size:12px; font-weight:500; color:var(--text-muted); }
+/* Yüzdenin çizgisi: kulvar kalınlığı tek ölçü (`--lane-h`), genişlik
+   sabit ki beş satırın çubukları aynı ölçekte ve aynı hatta bitsin. */
+.companyBar { width:clamp(88px, 24vw, 160px); max-width:none; height:var(--lane-h, 5px); }
 .companiesMore { padding-top:8px; font-size:12px; color:var(--text-muted); }
 
 /* İçindekiler — özetin altında, kapalı bir kutu, her genişlikte.

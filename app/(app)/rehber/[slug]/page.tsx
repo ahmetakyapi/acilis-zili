@@ -1,4 +1,5 @@
 import { InkCanvas } from "@/components/ink/InkCanvas";
+import { guideSearchCopy } from "@/content/guide/search";
 import { MotionExperience, ScrollProgress, SpotlightCard } from "@/components/motion/PremiumMotion";
 import experience from "@/components/motion/EditorialExperience.module.css";
 import editorial from "@/components/article/ArticleEditorial.module.css";
@@ -81,9 +82,12 @@ export async function generateMetadata(props: PageProps<"/rehber/[slug]">) {
   const { locale } = await getI18n();
   const article = guideArticle(slug, locale);
   if (!article) return {};
+  /* Arama künyesi soruyu cevaplar (25 Ekim); tanımsızsa başlık + dek.
+     Gerekçe ve seçilen yazılar `content/guide/search.ts`. */
+  const search = guideSearchCopy(article.slug, locale, article);
   return {
-    title: article.title,
-    description: metaDescription(article.dek),
+    title: search.title,
+    description: metaDescription(search.description),
     /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
        `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
        adresleri (yüzlerce hisse, her yazı, her analiz) canonical'sız ve

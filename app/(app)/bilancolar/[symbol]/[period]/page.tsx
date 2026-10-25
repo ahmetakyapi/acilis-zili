@@ -1,8 +1,11 @@
 import { Cards } from "@phosphor-icons/react/dist/ssr";
 import { PageShare } from "@/components/article/PageShare";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
+import { withLocale } from "@/lib/i18n/routing";
+import { earningsHref } from "@/lib/earnings-company";
 import type { Metadata } from "next";
+import { analysisTitle } from "@/lib/seo-titles";
 import { LogoTile } from "@/components/ui/primitives";
 import { quarterGaps } from "@/components/earnings/quarter-gaps";
 import type { RailMark } from "@/components/ui/PriceRail";
@@ -49,6 +52,7 @@ import { pageAlternates } from "@/lib/site";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import {
   analysisHref,
+  canonicalPeriod,
   verdictLabel,
   verdictOf,
   verdictTextClass,
@@ -113,7 +117,9 @@ export async function generateMetadata(
   ]);
   if (!row) return missingMetadata(locale);
   return {
-    title: `${row.company} ${row.periodLabel} (${row.symbol})`,
+    /* Arama niyetiyle: "… Bilanço Sonuçları" / "… Earnings Results"
+       (25 Ekim) — gerekçe ve uzunluk kuralı `lib/seo-titles.ts`. */
+    title: analysisTitle(row.company, row.symbol, row.periodLabel, locale),
     description: metaDescription(row.headline),
     /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
        `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
@@ -149,6 +155,16 @@ export default async function AnalysisDetailPage(
   const period = params.period;
 
   const { locale, t } = await getI18n();
+  /* ESKİ BİÇİMLİ DÖNEM HER ZAMAN TEK KALIBA YÖNLENİR (25 Ekim): adres
+     "3c-2026", satır hangi yazımda durursa dursun oradan okunuyor
+     (`periodVariants`, `lib/analysis.ts`). Önceki kural "ikizi varsa
+     yönlen" idi; okuma dile düşmediği için TR'de yalnız `q3-…` satırı,
+     EN'de yalnız `3c-…` satırı olduğunda TR sayfası İngilizce ikize
+     gidiyor, iki dil birbirini hreflang ile hiç göstermiyordu. */
+  const canon = canonicalPeriod(period);
+  if (canon !== period) {
+    permanentRedirect(withLocale(analysisHref(symbol, canon), locale));
+  }
   /* Olmayan analiz 404; OKUNAMAYAN analiz 404 değil, hata sınırına gider
      (20 Ekim, gerekçe `lib/data.ts` → `ReadOptions`). */
   const row = await getAnalysis(symbol, period, locale, { throwOnError: true });
@@ -632,8 +648,15 @@ export default async function AnalysisDetailPage(
           {sectorGroupLabel(group, locale)}
         </Link>
         <span aria-hidden>›</span>
+        {/* ŞİRKET ADI ŞİRKETİN BİLANÇO SAYFASINA GİDER (25 Ekim). Canlı
+            taramada 15 şirket bilanço sayfasına (`/bilancolar/axp` …)
+            sitenin hiçbir sayfasından bağlantı yoktu, 171'ine yalnız hisse
+            sayfasından; analiz, o sayfanın doğal üst halkası. */}
         <span className="font-semibold text-strong">
-          {row.company} · {row.periodLabel}
+          <Link href={earningsHref(symbol)} className="tap-44 transition-colors hover:text-primary">
+            {row.company}
+          </Link>{" "}
+          · {row.periodLabel}
         </span>
       </nav>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1">

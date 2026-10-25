@@ -3,6 +3,7 @@ import { cache } from "react";
    basıyordu — halka arz takvimindeki hatanın aynısı. */
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import styles from "./StoryDetail.module.css";
+import { ScaleBar } from "@/components/markets/CompareScale";
 import { LogoTile } from "@/components/ui/primitives";
 import { getStatus, getSymbolNames } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -158,6 +159,15 @@ function CompaniesView({
       row.value && (!latest || row.value.close.date > latest) ? row.value.close.date : latest,
     null,
   );
+  /* YÜZDE BİR DE ÇİZGİ (25 Ekim). Beş şirketin "olaydan bugüne"si yan
+     yana ama yalnız rakamdı; "hangisi en çok düştü" sorusu basamak
+     okuyarak cevaplanıyordu (CLAUDE.md: karşılaştırılan büyüklük bir de
+     çizgi olarak okunur). Ölçek bloğun en büyük mutlak yüzdesi, renk
+     yalnız işaretten (`ScaleBar` `signal`). Son kapanış satırlarında çubuk
+     YOK: farklı hisselerin fiyatı karşılaştırılabilir bir ölçü değil. */
+  const sinceValues = valued.flatMap((row) => (row.value?.kind === "since" ? [row.value.pct] : []));
+  const maxAbs = Math.max(0, ...sinceValues.map(Math.abs));
+  const signed = sinceValues.some((pct) => pct < 0) && sinceValues.some((pct) => pct > 0);
   const rest = total - rows.length;
   /* Hiç değer yoksa künye bir ölçü ADI da yazmıyor ("Olaydan Bugüne"
      boş bir sütunun başlığı olurdu); yer tutucu iki satır yüksekliği
@@ -212,6 +222,14 @@ function CompaniesView({
                     </>
                   )}
                   {ownDate && <small>{ownDate}</small>}
+                  {value?.kind === "since" && maxAbs > 0 && (
+                    <ScaleBar
+                      ratio={value.pct / maxAbs}
+                      signed={signed}
+                      tone="signal"
+                      className={styles.companyBar}
+                    />
+                  )}
                 </span>
               </Link>
             </li>

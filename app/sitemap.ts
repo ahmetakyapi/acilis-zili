@@ -12,7 +12,7 @@ import { briefHref, type BriefPeriod } from "@/lib/brief";
 import { SITE_URL } from "@/lib/site";
 import { DEFAULT_LOCALE, LOCALES } from "@/lib/i18n/config";
 import { withLocale } from "@/lib/i18n/routing";
-import { analysisHref } from "@/lib/analysis";
+import { analysisHref, dropShadowedPeriods } from "@/lib/analysis";
 import { technicalHref } from "@/lib/technical";
 import { getTechnicalBoard } from "@/lib/technical-data";
 import { allFunds } from "@/db/seed/symbols";
@@ -280,7 +280,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   /* Adres `analysisHref`ten geliyor: sayfanın canonical'ı ve JSON-LD'si de
      aynı yardımcıyı kullanıyor, yani harita ile sayfa aynı adresi yazıyor. */
   await section(
-    (locale) => getAnalyses(locale, { limit: SITEMAP_LIMIT }),
+    /* Eski biçimli dönem ("q3-2026") tek kalıplı adrese iner: liste
+       anahtarı tek kalıplı dönem (`dedupeAnalyses`), adres `analysisHref`
+       (25 Ekim). Bir dilde `q3-…`, ötekinde `3c-…` satırı olsa da iki
+       kayıt aynı yolu yazar ve haritada birbirinin hreflang eşi olur.
+       `dropShadowedPeriods` aynı dilde iki yazım kalırsa ikincisini düşürür. */
+    async (locale) => dropShadowedPeriods(await getAnalyses(locale, { limit: SITEMAP_LIMIT })),
     (analysis, locale) => ({
       path: analysisHref(analysis.symbol, analysis.period),
       locale,

@@ -52,13 +52,19 @@ import { pageMetadata } from "@/lib/page-meta";
    başlığıyla, yani ana sayfayla birebir aynı künyeyle çıkıyordu. */
 export const generateMetadata = pageMetadata({
   path: "/bilancolar/analizler",
+  /* ARAMA NİYETİ (25 Ekim): sorgu "hisse senedi bilanço analizi". Açıklama
+     okuyucunun bulacağı soruları sayıyor; "görüş ve hedef fiyat" arama
+     sonucunda tavsiye vaadi gibi okunuyordu, sayfada duruyorlar ama
+     künyeye taşınmıyor. */
   tr: {
-    title: "Bilanço Analizleri",
-    description: "Okunmuş çeyrek sonuçları: skor, görüş ve hedef fiyatla.",
+    title: "Bilanço Analizleri: ABD Şirketlerinin Çeyrek Sonuçları",
+    description:
+      "Açıklanan ABD çeyrek sonuçlarının Türkçe okuması: gelir ve kâr beklentiyi aştı mı, şirket sonraki dönem için ne dedi, hisse nasıl tepki verdi.",
   },
   en: {
-    title: "Earnings Analyses",
-    description: "Quarters we read: score, verdict and price target.",
+    title: "Earnings Analyses: US Quarterly Results Explained",
+    description:
+      "Plain-language reads of US quarterly results: did revenue and EPS beat estimates, what did guidance say, and how did the stock react.",
   },
 });
 import {

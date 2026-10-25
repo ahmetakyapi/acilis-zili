@@ -26,18 +26,20 @@ import { pageMetadata } from "@/lib/page-meta";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
-   paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
+   paylaşılıyordu. OG kartının kısa cümlesi ayrı duruyor (kartta). */
 export const generateMetadata = pageMetadata({
   path: "/haberler",
+  /* ARAMA NİYETİ (25 Ekim): "Haberler" tek başına aranmıyor; başlık
+     sayfanın ne olduğunu söylüyor. Ekrandaki başlık (h1) aynı kalıyor. */
   tr: {
-    title: "Haberler",
+    title: "ABD Borsası Haberleri",
     description:
-      "ABD piyasalarından haberler — Türkçe künyeleriyle.",
+      "ABD borsalarında işlem gören şirketlerin haberleri, Türkçe başlık ve özetle; her haberde adı geçen hisseler ve kaynağı.",
   },
   en: {
-    title: "News",
+    title: "US Stock Market News",
     description:
-      "Headlines from US markets, with their sources.",
+      "Headlines on US-listed companies with their sources and the stocks each story mentions.",
   },
 });
 

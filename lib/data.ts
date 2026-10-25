@@ -3,6 +3,7 @@ import { isLocale, type Locale } from "./i18n/config";
 import { saglayiciMetni } from "@/lib/text";
 import { unstable_cache } from "next/cache";
 import { and, asc, desc, eq, gte, inArray, isNull, lte, sql, type SQL } from "drizzle-orm";
+import { canonicalPeriod, periodVariants, pickAnalysisRow } from "./analysis";
 import { db } from "./db";
 import { logoSrc } from "./logos";
 import { indexMemberOf } from "../db/seed/indices";
@@ -1871,11 +1872,16 @@ function dedupeAnalyses<T extends { symbol: string; period: string; locale: stri
 ): T[] {
   const byKey = new Map<string, T>();
   for (const row of rows) {
-    const key = `${row.symbol}:${row.period}`;
+    /* Anahtar tek kalıplı dönem: "q3-2026" ile "3c-2026" aynı analiz,
+       aynı adres (`periodVariants`). */
+    const key = `${row.symbol}:${canonicalPeriod(row.period)}`;
     const held = byKey.get(key);
     if (!held) {
       byKey.set(key, row);
-    } else if (held.locale !== locale && row.locale === locale) {
+    } else if (
+      (held.locale !== locale && row.locale === locale) ||
+      (held.locale === row.locale && canonicalPeriod(held.period) !== held.period)
+    ) {
       /* Map sıra korur: değeri değiştirmek satırın yerini oynatmaz. */
       byKey.set(key, row);
     }
@@ -1962,11 +1968,12 @@ const analysisRow = cache(async function analysisRow(
     .where(
       and(
         eq(earningsAnalyses.symbol, symbol.toUpperCase()),
-        eq(earningsAnalyses.period, period),
+        /* İki yazım birden — gerekçe `periodVariants`. */
+        inArray(earningsAnalyses.period, periodVariants(period)),
       ),
     )
-    .limit(4);
-  return rows.find((row) => row.locale === locale) ?? rows[0] ?? null;
+    .limit(8);
+  return pickAnalysisRow(rows, locale);
 });
 
 /** `throwOnError`: detay sayfası için — gerekçe `ReadOptions`. */
@@ -2064,12 +2071,13 @@ export const getAnalysisLocales = cache(async function getAnalysisLocales(
       .where(
         and(
           eq(earningsAnalyses.symbol, symbol.toUpperCase()),
-          eq(earningsAnalyses.period, period),
+          /* Bir dilde `q3-…`, ötekinde `3c-…` satırı olsa da iki dil aynı
+             adreste eşleşir — gerekçe `periodVariants`. */
+          inArray(earningsAnalyses.period, periodVariants(period)),
         ),
       )
-      .limit(4);
-    return rows
-      .map((row) => row.locale)
+      .limit(8);
+    return [...new Set(rows.map((row) => row.locale))]
       .filter((value): value is Locale => isLocale(value));
   } catch (error) {
     yutuldu("getAnalysisLocales", error);

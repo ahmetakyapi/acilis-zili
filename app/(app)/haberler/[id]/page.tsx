@@ -22,7 +22,6 @@ import {
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { translateMissingLater } from "@/lib/translate";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
-import { pageAlternates } from "@/lib/site";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
 import { displayZone, zoneTag } from "@/lib/session-clock";
 import { directionOf, formatPrice, headlineMentions, safeExternalUrl, timeAgo, titleCaseLabel, NO_VALUE } from "@/lib/utils";
@@ -61,13 +60,29 @@ export async function generateMetadata(
   return {
     title: headline,
     description: metaDescription(summary),
-    /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
-       `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
-       adresleri (yüzlerce hisse, her yazı, her analiz) canonical'sız ve
-       "öteki dildeki karşılığı şu" bilgisi olmadan yayımlanıyordu. Kök
-       layout canonical yazmıyor (orada gerekçesi var), yani miras da yok.
-       `pageAlternates` RSS keşif etiketini de birlikte taşıyor. */
-    alternates: pageAlternates(`/haberler/${id}`, locale),
+    /* CANONICAL VE HREFLANG YOK (25 Ekim). Sayfa aşağıda `noindex`;
+       dizine kapalı bir sayfanın kendini canonical göstermesi ve öteki
+       dildeki eşine hreflang yazması çelişik sinyal (canonical "dizine al
+       beni" der, robots "alma" der) ve Google hreflang kümesini yalnız
+       dizindeki sayfalar arasında kurar. `alternates` hiç verilmeyince kök
+       layout'un bloğu miras kalır: yalnız RSS keşif etiketi (gerekçe
+       `lib/site.ts` → `pageAlternates`). */
+    /* HABER DETAYI DİZİNE KAPALI, BAĞLANTILARI AÇIK (25 Ekim). Sayfanın
+       HTML'deki metni sağlayıcının başlığı ve ortalama 164 karakterlik
+       özeti: İngilizcede birebir kopya, Türkçede o metnin otomatik
+       çevirisi (Claude notu istemciden geliyor, botlara açılmıyor). Tablo
+       25 Ekim'de 52.573 satırdı, iki dilde ~105 bin adres; sitenin
+       yazılmış sayfaları ~2.400. Google'ın "ölçekli içerik" ilkesi tam bu
+       kalıbı sayıyor (besleme metnini, çeviriyle de olsa, az katkıyla çok
+       sayfaya dökmek) ve değerlendirme site düzeyinde: rehber, sözlük ve
+       analiz sayfalarının sırası da bu oranla birlikte okunuyor.
+       Bedeli ölçüldü: 14–24 Ekim'de 16 tıkın 12'si haber detayından
+       geldi (637 adres, 1.350 gösterim). Kazanç ölçülmedi, gerekçe ilke;
+       Search Console'da 4-6 hafta sonra bakılacaklar raporda. Liste
+       sayfası (`/haberler`) ve hisse sayfalarındaki haber şeridi dizinde
+       kalıyor; `follow` açık, haberden hisseye giden bağlantılar
+       izleniyor. */
+    robots: { index: false, follow: true },
   };
 }
 

@@ -5,7 +5,7 @@ import { checkBearer, type AuthOutcome } from "@/lib/api-auth";
 import { db } from "@/lib/db";
 import { earningsAnalyses } from "@/lib/schema";
 import { isLocale } from "@/lib/i18n/config";
-import { periodSlug } from "@/lib/analysis";
+import { canonicalPeriod, periodSlug } from "@/lib/analysis";
 import { isoDateSchema, localeInputSchema } from "@/lib/content-write";
 import {
   EXTRAS_INPUT_SHAPE,
@@ -375,7 +375,9 @@ export async function POST(request: Request) {
   }
 
   const locale = parsed.locale ?? "tr";
-  const period = parsed.period ?? periodSlug(parsed.period_label);
+  /* Açıkça verilen parça da tek kalıba iner ("q3-2026" → "3c-2026"):
+     iki dilin aynı satıra yazması buna bağlı — `canonicalPeriod`. */
+  const period = parsed.period ? canonicalPeriod(parsed.period) : periodSlug(parsed.period_label);
   if (!period) {
     return NextResponse.json(
       {

@@ -28,12 +28,12 @@ import { CompanyCards } from "@/components/ui/CompanyCards";
 import { LogoTile } from "@/components/ui/primitives";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import {
-  getStories,
   getStoryBySlug,
   getStoryLocales,
   getSymbolNames,
 } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { getStoryNeighbors } from "@/lib/story-neighbors";
 import {
   articleOpenGraph,
   metaDescription,
@@ -142,19 +142,21 @@ async function StorySymbols({ symbols }: { symbols: string[] }) {
  * Bir dosyayı bitiren okuyucunun tek çıkışı geri tuşuydu; arşivde ikinci bir
  * yazıya geçmenin yolu yoktu. Üç komşu kayıt burada duruyor — kart değil
  * satır, çünkü sayfanın işi hâlâ okumak, yeni bir vitrin açmak değil.
+ *
+ * KOMŞU GERÇEKTEN KOMŞU (25 Ekim): bir yeni, iki eski yazı. Önceden arşivin
+ * en yeni üç yazısıydı ve 162 yazının 65'i hiçbir sayfadan bağlantı
+ * almıyordu; gerekçe `lib/story-neighbors.ts`.
  */
 async function MoreStories({
-  slug,
+  story,
   locale,
   t,
 }: {
-  slug: string;
+  story: { slug: string; eventDate: string; publishedAt: Date };
   locale: Locale;
   t: Dictionary;
 }) {
-  const rows = (await getStories(locale, 8))
-    .filter((story) => story.slug !== slug)
-    .slice(0, 3);
+  const rows = await getStoryNeighbors(story, locale);
 
   if (rows.length === 0) return null;
 
@@ -511,7 +513,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
             <p className={detail.disclaimer}>{t.stories.disclaimer}</p>
           </footer>
 
-          <MoreStories slug={slug} locale={locale} t={t} />
+          <MoreStories story={story} locale={locale} t={t} />
         </div>
 
       </div>
