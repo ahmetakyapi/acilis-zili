@@ -106,6 +106,8 @@ export const CHANGELOG_TR = [
       { kind: "yeni", title: "Kapanış Künyesi ve Zil Sesi", body: "Seans kapanınca ana sayfadaki zilin altında o gün yükselen ve düşen hisse sayısı duruyor; istersen Ayarlar'dan zile ses de açabiliyorsun.", href: "/" },
       // 01f10d1f, 09dcab86
       { kind: "yeni", title: "Günün Grafiği", body: "Her işlem günü tek bir grafik ve yüz kelimelik bir açıklama yayımlanıyor; önceki günler arşivde duruyor.", href: "/gunun-grafigi" },
+      // feat/olasiliklar
+      { kind: "yeni", title: "Olasılıklar", body: "Piyasanın Fed'in sıradaki kararına, 3 Kasım ara seçiminde Kongre'nin kontrolüne ve resesyona biçtiği olasılıklar, son 30 günün çizgisi ve kaynağıyla tek ekranda.", href: "/olasiliklar" },
       // 7825f6ab, 0003573e
       { kind: "yeni", title: "Hisseyi Bil", body: "Her gün tek gizli hisse ve altı tahmin hakkı var; her yanlış tahmin fiyat silueti, sektör ya da piyasa değeri gibi yeni bir ipucu açıyor.", href: "/bulmaca" },
       // c19fb604, 2c477e68
@@ -705,6 +707,7 @@ export const CHANGELOG_EN: Translation<typeof CHANGELOG_TR> = [
       { title: "The Day's Poster", body: "Every completed session is drawn as a single scene: each dot an S&P 500 stock, eleven sectors ranked from strongest to weakest, with past sessions in the archive." },
       { title: "Closing Line and Bell Sound", body: "After the close, the bell on the home page shows how many stocks rose and fell that day; you can also turn on a bell sound in Settings." },
       { title: "Chart of the Day", body: "Every trading day brings one chart and a hundred-word note, with earlier days kept in the archive." },
+      { title: "Probabilities", body: "What markets are pricing for the Fed's next decision, control of Congress in the November 3 midterms and a recession, with the last 30 days and the source on one screen." },
       { title: "Guess the Stock", body: "One hidden stock a day and six guesses; every miss opens a new clue such as the price silhouette, the sector or the market cap." },
       { title: "Broker Comparison", body: "Commission, custody fees and fractional shares at eight brokers that sell US stocks to residents of Türkiye, in one table with every cell linked to the broker's official fee schedule." },
       { title: "Two New Guides", body: "The Capital Markets Board decision that ends banks' role in foreign share orders, and the tax gap between Irish and US ETFs, explained from primary sources." },

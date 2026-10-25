@@ -5,6 +5,7 @@ import {
   Briefcase,
   ChartBar,
   ChartBarHorizontal,
+  ChartPieSlice,
   BookOpen,
   Buildings,
   CalendarBlank,
@@ -412,6 +413,18 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: false,
     more: "daily",
     hint: (t) => t.daySignature.archive.menuHint,
+  },
+  {
+    /* OLASILIKLAR (25 Ekim) — "Her Gün" bandında: günde bir yenilenen
+       anlık görüntü. "Piyasa Verisi"ne girseydi karşısındaki "Oku" ile satır
+       satır hiza bozulurdu (tests/nav-items.test.ts); bant iki sütunlu,
+       üçüncü satır sol sütunun hizasında. */
+    href: "/olasiliklar",
+    label: (t) => t.probabilities.title,
+    icon: ChartPieSlice,
+    inBottomBar: false,
+    more: "daily",
+    hint: (t) => t.probabilities.menuHint,
   },
   {
     /* ŞERİTTE DEĞİL, HESAP PANELİNDE — mobildeki karar. Misafir için sayfa

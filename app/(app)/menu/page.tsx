@@ -9,6 +9,7 @@ import {
   CalendarBlank,
   ChartBar,
   ChartBarHorizontal,
+  ChartPieSlice,
   Funnel,
   FunnelSimple,
   ChatsCircle,
@@ -167,12 +168,14 @@ export default async function MenuPage() {
       ],
     },
     {
-      /* Her seansın sonunda yenilenen iki parça (24 Ekim) — masaüstünde
+      /* Her seansın sonunda yenilenen iki parça (24 Ekim) ve günde bir
+         yenilenen Olasılıklar (25 Ekim) — masaüstünde
          panelin dibindeki "Her Gün" bandı. */
       title: t.nav.moreGroupDaily,
       entries: [
         { href: "/gunun-grafigi", icon: ChartBarHorizontal, title: t.dailyChart.title, hint: t.dailyChart.menuHint },
         { href: "/gun", icon: Palette, title: t.daySignature.poster.title, hint: t.daySignature.archive.menuHint },
+        { href: "/olasiliklar", icon: ChartPieSlice, title: t.probabilities.title, hint: t.probabilities.menuHint },
       ],
     },
     {

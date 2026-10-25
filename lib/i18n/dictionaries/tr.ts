@@ -8,6 +8,7 @@ import { askStockTr, watchlistTodayTr } from "./page-claude";
 import { daySignatureTr } from "./day-signature";
 import { earningsSeasonTr } from "./earnings-season";
 import { dailyChartTr } from "./daily-chart";
+import { probabilitiesTr } from "./probabilities";
 import { changelogTr } from "./changelog";
 import { stockEntryTr } from "./stock-entry";
 
@@ -4753,6 +4754,8 @@ const tr = {
   changelog: changelogTr,
   /* Şirket ekranlarının kısa yolları (25 Ekim UX turu) — metin ayrı dosyada. */
   stockEntry: stockEntryTr,
+  /* Olasılıklar (25 Ekim) — metin ayrı dosyada. */
+  probabilities: probabilitiesTr,
 };
 
 export default tr;

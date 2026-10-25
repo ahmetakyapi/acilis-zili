@@ -62,6 +62,7 @@ const ROUTES = [
   "/hisse/NVDA",
   "/karsilastir?semboller=NVDA,AMD",
   "/makro",
+  "/olasiliklar",
   "/takvim",
   "/haberler",
   "/bilancolar",

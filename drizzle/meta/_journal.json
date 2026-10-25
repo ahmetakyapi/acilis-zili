@@ -281,6 +281,13 @@
       "when": 1792874073763,
       "tag": "0039_daily_charts",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1792923700076,
+      "tag": "0040_probability_snapshots",
+      "breakpoints": true
     }
   ]
 }

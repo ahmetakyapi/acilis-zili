@@ -26,6 +26,9 @@ LINES=(
 	# Telegram kanalı (24 Ekim — gerekçe deploy/cron-telegram.sh). Beş
 	# dakikada bir; uç kanal tanımlı değilse hiçbir şey okumadan döner.
 	"*/5 * * * * /bin/bash $APP_ROOT/current/deploy/cron-telegram.sh"
+	# Olasılıklar (25 Ekim — gerekçe deploy/cron-olasiliklar.sh). Saatte
+	# bir çağrılır, uç günde bir yazar (seçim gecesi ve Fed saatinde sık).
+	"7 * * * * /bin/bash $APP_ROOT/current/deploy/cron-olasiliklar.sh"
 	# Ortak veri önbelleğinin budaması (20 Ekim — gerekçe update.sh). Next
 	# diskteki kaydı hiç silmiyor; sürüm dizinleri budanırken önbellek de
 	# gidiyordu, ortak dizinde biriken tarihli adresler (gün başlangıçlı

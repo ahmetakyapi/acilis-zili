@@ -18,6 +18,7 @@ import {
    adlarını çözmeden yüklüyor, yani buradan bir DEĞER içe aktarılamaz. */
 import type { TechnicalCopy, TechnicalSnapshot } from "./technical";
 import type { StoredMetrics } from "./scorecard";
+import type { ProbabilitySnapshot } from "./probabilities";
 
 /* ==========================================================================
    Kullanıcı ve takip listeleri
@@ -1899,3 +1900,34 @@ export const dailyCharts = pgTable(
 );
 
 export type DailyChartRow = typeof dailyCharts.$inferSelect;
+/* ---- Olasılıklar ---- */
+
+/**
+ * Olasılıklar (25 Ekim) — tahmin piyasasının günlük anlık görüntüsü.
+ *
+ * NEDEN TABLO. Sayfa okuyucu isteğiyle sağlayıcıya gitmiyor: anlık görüntüyü
+ * günde bir (`/api/cron/olasiliklar`, `deploy/cron-olasiliklar.sh`; seçim
+ * gecesi ve Fed karar saatinde saatte bir) uç alıp buraya yazıyor, sayfa en
+ * son satırı okuyor. Bir de sağlayıcı ileride kapanırsa ya da erişim
+ * kesilirse son iyi görüntü (künyesindeki tarihiyle, 36 saate kadar)
+ * ekranda kalır; daha eskisi gösterilmez (veri dürüstlüğü 2).
+ *
+ * ŞEKİL TEK SÜTUNDA. `payload` lib/probabilities.ts → `ProbabilitySnapshot`
+ * (sürümlü, `v`); olay sayısı ve türü kaynağa bağlı, ilişkisel sütunlara
+ * bölmek her yeni olayda migration isterdi.
+ *
+ * TABLO YOKKEN SESSİZCE DÜŞER: okuma (`lib/probability-data.ts`) hatayı
+ * yutup önbellekli canlı okumaya iner; yazma ucu 503 `table-missing` döner.
+ * Migration birleştirmede üretilecek.
+ */
+export const probabilitySnapshots = pgTable(
+  "probability_snapshots",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    takenAt: timestamp("taken_at", { withTimezone: true }).notNull(),
+    source: text("source").notNull(),
+    payload: jsonb("payload").$type<ProbabilitySnapshot>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("probability_snapshots_taken_idx").on(t.takenAt)],
+);

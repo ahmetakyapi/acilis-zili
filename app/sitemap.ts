@@ -109,6 +109,8 @@ const FEATURE_STATIC_ROUTES: StaticRoute[] = [
   { path: "/bilancolar/hafta", priority: 0.7, frequency: "daily" },
   /* Günün Grafiği (24 Ekim): dizin; günler aşağıda dile göre. */
   { path: "/gunun-grafigi", priority: 0.7, frequency: "daily" },
+  /* Olasılıklar (25 Ekim): günde bir yenilenen anlık görüntü. */
+  { path: "/olasiliklar", priority: 0.7, frequency: "daily" },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

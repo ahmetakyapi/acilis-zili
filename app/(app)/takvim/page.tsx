@@ -33,6 +33,7 @@ import {
   TabItem,
 } from "@/components/ui/primitives";
 import { CalendarPlus } from "@phosphor-icons/react/dist/ssr";
+import { FedOddsTag, fedOddsFor } from "@/components/probabilities/FedOddsTag";
 import { eventExplainer } from "@/lib/event-explainers";
 import { getEventsBetweenResult, getHolidays } from "@/lib/data";
 import {
@@ -63,6 +64,9 @@ import type { EconomicEventRow } from "@/lib/schema";
 import { pageMetadata } from "@/lib/page-meta";
 import { RELEASED_WINDOW_DAYS, pickReleased } from "@/lib/release-notes-core";
 import { insightsConfigured } from "@/lib/stock-insights";
+
+/** Faiz kararı satırlarının slug öneki (lib/macro-data.ts ile aynı). */
+const FOMC_RATE_PREFIX = "fomc-rate-";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
@@ -397,6 +401,17 @@ export default async function CalendarPage(
     if (event.importance in counts) counts[event.importance as Impact] += 1;
   }
   const listed = inRange.filter(matches);
+  /* FOMC SATIRINDA PİYASA FİYATLAMASI (25 Ekim): /olasiliklar'ın aynı
+     kaydından, yalnız takvimin toplantı günü kaynaktakiyle eşleşirse
+     (`fedOddsFor`). Faiz kararı satırları birkaç tane; kayıt istek içinde
+     önbellekli, sağlayıcıya gidilmez. */
+  const fomcOdds = new Map(
+    await Promise.all(
+      [...new Set(listed.filter((event) => event.slug.startsWith(FOMC_RATE_PREFIX)).map((event) => event.eventDate))].map(
+        async (date) => [date, await fedOddsFor(date).catch(() => null)] as const,
+      ),
+    ),
+  );
 
   const byDay = new Map<string, EconomicEventRow[]>();
   for (const event of listed) {
@@ -601,6 +616,9 @@ export default async function CalendarPage(
                   ? t.dayFlow.awaiting
                   : t.calendar.scheduled}
             </span>
+            {event.slug.startsWith(FOMC_RATE_PREFIX) && (
+              <FedOddsTag odds={fomcOdds.get(event.eventDate)} locale={locale} t={t} />
+            )}
             {high && (
               <a
                 href={`/api/takvim?tip=olay&slug=${event.slug}`}

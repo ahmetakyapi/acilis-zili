@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { DataStamp } from "@/components/ui/primitives";
+import { FedOddsTag, fedOddsFor } from "@/components/probabilities/FedOddsTag";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getNextFomc } from "@/lib/macro-data";
@@ -15,13 +16,15 @@ import styles from "./MacroExperience.module.css";
 /**
  * Sonraki FOMC — tarih, saat ve bugünkü hedef aralık.
  *
- * PİYASA FİYATLAMASI YOK ve olmaması bilinçli: "Ekim'de indirim olasılığı
- * %72" gibi bir satır vadeli faiz kontratlarından hesaplanıyor ve elimizde
- * o kontratların fiyatını veren bir kaynak yok. Başka bir sitenin
- * sayısını kopyalamak ya da kendi tahminimizi yazmak, ekranda nereden
- * geldiğini söyleyemediğimiz bir sayı olurdu. Kart bu yüzden yalnızca
- * bildiğini yazıyor: takvimdeki tarih (federalreserve.gov, elle tohumlanan
- * takvim) ve FRED'in yayımladığı hedef aralık.
+ * PİYASA FİYATLAMASI ARTIK KAYNAĞIYLA (25 Ekim). Kart önceden fiyatlama
+ * basmıyordu: elimizde kontrat fiyatı veren bir kaynak yoktu ve başka bir
+ * sitenin sayısını kopyalamak nereden geldiğini söyleyemediğimiz bir sayı
+ * olurdu. /olasiliklar ile Kalshi'nin karar kontratları geldi; künye o
+ * sayfanın AYNI kaydından okunuyor ve yalnız takvimdeki toplantı günü
+ * kaynaktakiyle eşleşirse basılıyor (`fedOddsFor`). Eşleşmezse ya da
+ * kaynak düşmüşse eski not ("fiyatlama yok") yerinde. Kart geri kalanında
+ * yalnızca bildiğini yazıyor: takvimdeki tarih (federalreserve.gov, elle
+ * tohumlanan takvim) ve FRED'in yayımladığı hedef aralık.
  *
  * Hedef aralık TOPLANTIDAN SONRA değişir; gözlem tarihi künyede.
  */
@@ -52,6 +55,7 @@ export async function FomcCard({ locale, t }: { locale: Locale; t: Dictionary })
   const x = t.marketExtras;
   const next = await getNextFomc();
   if (!next) return null;
+  const odds = await fedOddsFor(next.date);
   const times = next.timeEt ? timePair(next.date, next.timeEt, locale) : null;
   const tags = zoneTag(locale);
   const away = readerDayOffset(next.date, next.timeEt, locale);
@@ -120,7 +124,11 @@ export async function FomcCard({ locale, t }: { locale: Locale; t: Dictionary })
         </div>
       )}
 
-      <p className={styles.fomcNote}>{x.fomcNoPricing}</p>
+      {odds ? (
+        <FedOddsTag odds={odds} locale={locale} t={t} className={styles.fomcNote} />
+      ) : (
+        <p className={styles.fomcNote}>{x.fomcNoPricing}</p>
+      )}
     </section>
   );
 }

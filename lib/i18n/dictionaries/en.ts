@@ -9,6 +9,7 @@ import { askStockEn, watchlistTodayEn } from "./page-claude";
 import { daySignatureEn } from "./day-signature";
 import { earningsSeasonEn } from "./earnings-season";
 import { dailyChartEn } from "./daily-chart";
+import { probabilitiesEn } from "./probabilities";
 import { changelogEn } from "./changelog";
 import { stockEntryEn } from "./stock-entry";
 
@@ -4204,6 +4205,8 @@ const en: typeof tr = {
   changelog: changelogEn,
   /* Şirket ekranlarının kısa yolları (25 Ekim UX turu) — metin ayrı dosyada. */
   stockEntry: stockEntryEn,
+  /* Olasılıklar (25 Ekim) — metin ayrı dosyada. */
+  probabilities: probabilitiesEn,
 };
 
 export default en;
