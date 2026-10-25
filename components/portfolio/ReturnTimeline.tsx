@@ -118,14 +118,17 @@ export async function ReturnTimeline({
   }
 
   return (
-    <Panel id="alistan-bugune" className="scroll-mt-28">
+    /* `flex-col` + künyede `mt-auto`: geniş ekranda Getiri ile yan yana
+       ve ızgara satırı iki paneli eşit geriyor; künye şeritleri aynı hatta
+       (PortfolioScreen → `.returnsPair`). */
+    <Panel id="alistan-bugune" className="flex scroll-mt-28 flex-col">
       <PanelHeader title={L.title} />
       <div className="flex flex-col gap-3 px-4 pb-4 sm:px-5">
         <p className="max-w-3xl text-read leading-relaxed text-strong">{sentence}</p>
         {chart}
       </div>
       {/* Künye panelin İÇİNDE, hairline ile (ekran düzeni 6). */}
-      <div className="flex flex-col gap-1.5 border-t border-line px-4 py-3 text-small leading-relaxed text-muted sm:px-5">
+      <div className="mt-auto flex flex-col gap-1.5 border-t border-line px-4 py-3 text-small leading-relaxed text-muted sm:px-5">
         {notes.map((note) => (
           <p key={note}>{note}</p>
         ))}
@@ -137,15 +140,15 @@ export async function ReturnTimeline({
 /** Akış sürerken yer tutucu — grafikle aynı boy, inince alttaki hiçbir şey kaymıyor. */
 export function ReturnTimelineSkeleton({ title }: { title: string }) {
   return (
-    <Panel aria-busy>
+    <Panel aria-busy className="flex flex-col">
       <PanelHeader title={title} />
       {/* Boylar gerçek panelin ölçüsü: cümle 27, grafik 200 + eksen 14 +
           lejant 20 + iki 10'luk aralık, künye şeridi. */}
       <div className="flex flex-col gap-3 px-4 pb-4 sm:px-5">
         <Skeleton className="h-7 w-3/4" />
-        <Skeleton className="h-[254px] w-full" />
+        <Skeleton className="h-[calc(var(--duo-chart-h,200px)+54px)] w-full" />
       </div>
-      <div className="border-t border-line px-4 py-3 sm:px-5">
+      <div className="mt-auto border-t border-line px-4 py-3 sm:px-5">
         <Skeleton className="h-10 w-full" />
       </div>
     </Panel>

@@ -75,7 +75,7 @@ export function ProfileSettings({
       <label className="flex flex-col gap-1.5">
         <span className="flex items-baseline justify-between gap-3">
           <span className="text-small font-semibold text-body">{labels.bioLabel}</span>
-          <span className="text-tiny tabular-nums text-muted" aria-hidden>
+          <span className="text-tiny text-muted" aria-hidden>
             {bio.length}/{BIO_MAX}
           </span>
         </span>

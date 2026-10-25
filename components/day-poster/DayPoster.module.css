@@ -2,8 +2,9 @@
    taşma kuralı; panonun stili PosterBoard.module.css'te. */
 
 /* `overflow: clip`, `hidden` değil: `hidden` bir kaydırma kabı açıyor ve
-   sahnenin yapışkan ekseni (PosterStage.module.css → `.axisBar`) panelin
-   içine hapsoluyordu. `clip` köşe yuvarlamasını yine kesiyor. Modül
+   önceki sahnenin yapışkan ekseni (PosterStage, 25 Ekim'de kalktı) panelin
+   içine hapsoluyordu; siluet yapışkan öğe taşımıyor ama `clip` kaydırma
+   kabı açmadan köşe yuvarlamasını kesmeye devam ediyor. Modül
    kuralı katmansız, panelin `overflow-hidden` yardımcısını eziyor. */
 .panel { overflow: clip; }
 

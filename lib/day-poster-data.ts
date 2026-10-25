@@ -2,8 +2,8 @@ import "server-only";
 
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
-import { SPX_MEMBERS, primaryOnly } from "@/db/seed/indices";
-import { INDEX_STRIP, SECTOR_FUNDS } from "@/db/seed/symbols";
+import { NDX_MEMBERS, primaryOnly } from "@/db/seed/indices";
+import { INDEX_STRIP } from "@/db/seed/symbols";
 import { getHolidays, getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import {
   archivePosters,
@@ -18,34 +18,36 @@ import {
   posterRetryable,
   type DayPoster,
 } from "@/lib/day-poster";
-import { sceneStocks, type SceneStock } from "@/lib/day-poster-scene";
+import { districtsOf, skylineStocks, type District, type SkyStock } from "@/lib/day-skyline";
 import { addEtDays, prevTradingDay, todayEt, type MarketStatus } from "@/lib/market-hours";
 import { alpaca } from "@/lib/providers";
 
 /**
  * Günün Posteri'nin veri tarafı — kararların kendisi `lib/day-poster.ts`te.
  *
- * TEK KAYNAK, ÜÇ YÜZEY. Poster sayfası (`/gun/[tarih]`), paylaşım görseli
- * (`/gun/[tarih]/gorsel`) ve ana sayfanın kapanış künyesi (`DaySeal`) aynı
- * `getDayPoster` çağrısını yapıyor: kahramandaki "312 Yükseldi" ile
- * posterdeki aynı sayı (CLAUDE.md "Veri dürüstlüğü" 3).
+ * TEK KAYNAK, DÖRT YÜZEY. Poster sayfası (`/gun/[tarih]`), paylaşım görseli
+ * (`/gun/[tarih]/gorsel`), arşiv minyatürü ve ana sayfanın siluet şeridi
+ * (`SkylineStrip`) aynı `getDayPoster` çağrısını yapıyor: şeritteki "38
+ * Yükseldi" ile posterdeki aynı sayı (CLAUDE.md "Veri dürüstlüğü" 3).
  *
  * Kaynak Alpaca'nın gün barları — o günün ve önceki işlem gününün
- * kapanışları, ~530 sembol için üç istek (`getDailyBarsBetween`). Kotasyon
+ * kapanışları, Nasdaq 100 üyeleri ve dört endeks fonu (~105 sembol, tek
+ * istek; `getDailyBarsBetween`). Kotasyon
  * DEĞİL: kapanıştan sonra kotasyonun yüzdesi akşam seansının işlemini de
  * taşıyabiliyor (`quoteBasis` → "after-hours"), poster ise asıl seansı
  * anlatıyor.
  *
  * GENİŞLİK BUGÜNKÜ ÜYE LİSTESİYLE. Geçmiş bileşim elimizde yok
- * (`db/seed/indices.ts` tek liste); bir yıl önceki bir günde o gün endekste
+ * (`db/seed/indices.ts` → `NDX_MEMBERS`, tek liste); bir yıl önceki bir günde o gün endekste
  * olmayan birkaç şirket sayılıyor, çıkmış olanlar sayılmıyor. Künye bunu
  * yazıyor (sözlük `daySignature.poster.breadthNote`).
  */
 
-const SECTOR_SYMBOLS = SECTOR_FUNDS.map((fund) => fund.symbol);
-const MEMBERS = primaryOnly(SPX_MEMBERS);
+/* Aynı şirketin ikinci sınıfı (GOOG) düşüyor: siluette Alphabet iki bina
+   olmasın, genişlik sayımında iki kez sayılmasın. */
+const MEMBERS = primaryOnly(NDX_MEMBERS);
 const MEMBER_SYMBOLS = MEMBERS.map((member) => member.symbol);
-const POSTER_SYMBOLS = [...new Set([...SECTOR_SYMBOLS, ...INDEX_STRIP, ...MEMBER_SYMBOLS])];
+const POSTER_SYMBOLS = [...new Set([...INDEX_STRIP, ...MEMBER_SYMBOLS])];
 
 /** Önceki işlem gününden bu kadar takvim günü geri başlanıyor: barın
  *  tarihi sağlayıcıda bir gün kaysa da aralığın içinde kalsın. */
@@ -77,7 +79,8 @@ const POSTER_PENDING = "PosterPending";
    gün sonra yeniden sorulur. YENİ bir seans için değil (`posterRetryable`):
    o pencerede `null` fırlatılıyor ve önbelleğe girmiyor, ham istek de
    yalnız on beş dakika tutuluyor. Anahtar sürümlü: `-v3` (25 Ekim) posterin
-   hisse başına değişimi (`stocks`) eklendiğinde; şekil değişirse `-v4`. */
+   hisse başına değişimi (`stocks`) eklendiğinde; `-v4` poster Nasdaq 100'e
+   geçip `sectors` alanı kalktığında (aynı gün); şekil değişirse `-v5`. */
 const loadPoster = unstable_cache(
   async function loadPoster(date: string, prevDate: string, readyIso: string, retryable: boolean) {
     const result = await alpaca.getDailyBarsBetween(
@@ -91,7 +94,6 @@ const loadPoster = unstable_cache(
       date,
       prevDate,
       bars: result.data,
-      sectorSymbols: SECTOR_SYMBOLS,
       indexSymbols: INDEX_STRIP,
       memberSymbols: MEMBER_SYMBOLS,
     });
@@ -102,7 +104,7 @@ const loadPoster = unstable_cache(
     }
     return poster ? { poster, fetchedAt: result.fetchedAt.toISOString() } : null;
   },
-  ["day-poster-v3"],
+  ["day-poster-v4"],
   { revalidate: POSTER_REVALIDATE_SECONDS },
 );
 
@@ -142,7 +144,11 @@ export async function getLatestPosterDate(status?: MarketStatus): Promise<string
  *  sınırının yarısını geçiyordu. Ölçüm (25 Ekim, 23 Ekim'de biten arşiv,
  *  514 sembol × 31 gün, kaydın `JSON.stringify` uzunluğu): eski kayıt
  *  918.158 bayt, yenisi 107.940; kapanışlardan yeniden kurulan otuz poster
- *  eskisiyle bire bir aynı. Kayıt şekli değişti → `-v3`. */
+ *  eskisiyle bire bir aynı. Kayıt şekli değişti → `-v3`. Nasdaq 100'e
+ *  geçince sembol kümesi değişti (aynı kapanış şekli, başka semboller)
+ *  ve kayıt küçüldü → `-v4`. Ölçüm (25 Ekim, aynı yöntem, 23 Ekim'de
+ *  biten arşiv, 106 sembol × 31 gün): 23.117 bayt, S&P 500 kaydının
+ *  beşte biri. */
 const archiveLoad = unstable_cache(
   async function archiveLoad(latest: string, readyIso: string, start: string, sessionsJson: string) {
     const sessions = JSON.parse(sessionsJson) as { date: string; prevDate: string }[];
@@ -159,7 +165,7 @@ const archiveLoad = unstable_cache(
     }
     return { closes, fetchedAt: result.fetchedAt.toISOString() };
   },
-  ["day-poster-archive-v3"],
+  ["day-poster-archive-v4"],
   { revalidate: POSTER_REVALIDATE_SECONDS },
 );
 
@@ -167,7 +173,6 @@ function buildArchive(sessions: readonly { date: string; prevDate: string }[], c
   return archivePosters({
     sessions,
     bars: unpackArchiveBars(closes),
-    sectorSymbols: SECTOR_SYMBOLS,
     indexSymbols: INDEX_STRIP,
     memberSymbols: MEMBER_SYMBOLS,
   });
@@ -181,7 +186,7 @@ export type PosterArchiveRead =
  * Arşiv — son `POSTER_ARCHIVE_SESSIONS` seansın TAM posterleri (gerekçe
  * `archivePosters`, lib/day-poster.ts); önbellekteki kapanışlardan her
  * istekte yeniden kuruluyor (React `cache` ile istek başına bir kez). Bir
- * tur: ~530 sembolün altı haftalık gün barı. En yeni seans henüz eksikse
+ * tur: ~105 sembolün altı haftalık gün barı. En yeni seans henüz eksikse
  * bir önceki seanstan başlıyor (o liste önbelleğe girebilir); sağlayıcı düşerse `error`.
  */
 export const getPosterArchive = cache(async function getPosterArchive(): Promise<PosterArchiveRead> {
@@ -210,24 +215,27 @@ export const getPosterArchive = cache(async function getPosterArchive(): Promise
 });
 
 /**
- * SAHNENİN HİSSELERİ (25 Ekim) — posterin hisse başına değişimi, adı,
- * sektörü ve piyasa değeri (`lib/day-poster-scene.ts` → `sceneStocks`).
+ * SİLUETİN BİNALARI (25 Ekim) — posterin hisse başına değişimi, adı,
+ * mahallesi ve piyasa değeri (`lib/day-skyline.ts` → `skylineStocks`),
+ * ve mahalleler güçlüden zayıfa (`districtsOf`).
  *
  * PİYASA DEĞERİ O GÜNÜN KAPANIŞIYLA: hisse sayısı × posterin gününün
  * kapanışı (`liveMarketCap`, aynı mertebe denetimiyle). Bugünkü fiyatla
- * çizilse bir yıl önceki bir günün noktaları bugünün boyunu taşırdı. Hisse
+ * çizilse bir yıl önceki bir günün binaları bugünün enini taşırdı. Hisse
  * sayısı bugünkü (geçmiş sayı elimizde yok); geri alım yılda birkaç yüzde
- * oynatıyor, noktanın boyunda görünmez. Ölçüldü (25 Ekim): 499 üyenin
- * 499'unun hisse sayısı ve sektörü var.
+ * oynatıyor, binanın eninde görünmez.
  *
- * Sembol tablosu okunamazsa (veritabanı düştü) boylar EŞİT: konum ve renk
- * yine doğru, yalnız boy bilgisi yok; künye bunu söylüyor (`sized: false`).
+ * Sembol tablosu okunamazsa (veritabanı düştü) binalar EŞİT genişlikte ve
+ * mahallelerin değişimi eşit ağırlıklı: konum, boy ve renk yine doğru;
+ * künye bunu söylüyor (`sized: false`). React `cache`: aynı posterin
+ * binaları bir istekte bir kez kuruluyor (sayfa, meta ve şerit aynı
+ * çağrıyı yapıyor); `getSymbolNames` zaten istek içi önbellekli.
  */
-export async function getPosterSceneStocks(
-  poster: DayPoster,
-): Promise<{ stocks: SceneStock[]; unplaced: number; sized: boolean }> {
+export type PosterSkyline = { stocks: SkyStock[]; districts: District[]; sized: boolean };
+
+export const getPosterSkyline = cache(async function getPosterSkyline(poster: DayPoster): Promise<PosterSkyline> {
   const meta = await getSymbolNames(MEMBER_SYMBOLS);
   const sized = Object.keys(meta).length > 0;
-  const result = sceneStocks(poster.stocks, MEMBERS, (symbol, close) => liveMarketCap(meta[symbol], close));
-  return { ...result, sized };
-}
+  const stocks = skylineStocks(poster.stocks, MEMBERS, (symbol, close) => (sized ? liveMarketCap(meta[symbol], close) : null));
+  return { stocks, districts: districtsOf(stocks), sized };
+});

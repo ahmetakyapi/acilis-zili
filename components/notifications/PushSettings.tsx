@@ -248,7 +248,7 @@ export function PushSettings({
             </Button>
           )}
           {devices > 0 && (
-            <span className="text-small text-muted tabular-nums">
+            <span className="text-small text-muted">
               {(devices === 1 ? labels.devicesOne : labels.devices).replace("{n}", String(devices))}
             </span>
           )}

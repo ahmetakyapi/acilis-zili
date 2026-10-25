@@ -102,7 +102,10 @@ export default async function AppLayout({
         : [],
     ),
     more: t.nav.more,
-    moreGroups: { analyze: t.nav.moreGroupAnalyze, mine: t.nav.moreGroupMine, data: t.nav.moreGroupData, learn: t.nav.moreGroupLearn, read: t.nav.moreGroupRead, daily: t.nav.moreGroupDaily },
+    moreGroups: { tools: t.nav.moreGroupTools, daily: t.nav.moreGroupDaily, market: t.nav.moreGroupMarket, mine: t.nav.moreGroupMine, learn: t.nav.moreGroupLearn },
+    /* "Her Gün" sütununda Hisseyi Bil satırının künyesi: bugünün bulmaca
+       numarası istemcide, panel açılırken hesaplanıyor (MastheadNav). */
+    puzzleNumber: t.stockPuzzle.number,
     /* Yenilikler (25 Ekim): panelin dibindeki satır ve rozet. En son giriş
        günü sunucudan — içerik demeti istemci paketine inmiyor. */
     changelog: {

@@ -31,6 +31,13 @@ export const guideVisualsTr = {
   segmentsLabel: "{chapter} bölümünün yazıları; bu yazı {index}. sırada",
   stepMeta: "{level} · {minutes} Dk",
   chapterStart: "Yeni Bölüm",
+
+  /* Kapak ve duraklar (25 Ekim, rehberin görsel turu): "Nereden Başlamalı"
+     panelinin başlığı ve açıklaması kapağa katlandı; tek cümle ikisini de
+     söylüyor. */
+  heroLead: "Borsayı kolaydan zora dört bölümde anlatan yazılar; baştan sona bir müfredat gibi okunur.",
+  levelBarLabel: "Seviye aralığı: {span}",
+  chapterNow: "Sıradaki",
 };
 
 export const guideVisualsEn: typeof guideVisualsTr = {
@@ -56,4 +63,8 @@ export const guideVisualsEn: typeof guideVisualsTr = {
   segmentsLabel: "Articles in {chapter}; this is number {index}",
   stepMeta: "{level} · {minutes} Min",
   chapterStart: "New Chapter",
+
+  heroLead: "Articles that explain the market in four chapters, easy to hard; read them start to finish like a curriculum.",
+  levelBarLabel: "Level range: {span}",
+  chapterNow: "Up Next",
 };

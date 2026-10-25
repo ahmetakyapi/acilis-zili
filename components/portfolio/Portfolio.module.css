@@ -509,16 +509,164 @@
   font-size: clamp(1.15rem, 3.2vw, 1.45rem);
 }
 
-/* Sebep cümlesi: geniş ekranda fişin yanında ince bir çizgiyle ayrılmış
-   alıntı gibi; telefonda fişin altında. `pretty`: son satıra tek kelime
-   düşmüyor. */
+/* Kur cümlesi: panelin dibinde künye şeridi (25 Ekim). Panel `flex-col`,
+   `margin-top: auto` cümleyi dibe indiriyor; yan yana düzende Alıştan
+   Bugüne'nin künye şeridiyle aynı hatta biter. Çizgi ve iç boşluk o
+   şeridin aynısı (border-line, px-4 py-3 / sm:px-5). */
 .story {
-  padding-left: 0.9rem;
-  border-left: 2px solid var(--brass);
-  color: var(--text-body);
+  margin-top: auto;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--line);
+  color: var(--text-muted);
   font-size: var(--text-small);
-  line-height: 1.6;
+  line-height: 1.625;
   text-wrap: pretty;
+}
+
+@media (min-width: 640px) {
+  .story {
+    padding-inline: 1.25rem;
+  }
+}
+
+/* 900'den itibaren fiş üç yan yana hücre: Hisseden, Kurdan, Lira Getirisi.
+   Etiket ve ipucu üstte, tutar hücrenin dibinde (üç tutar aynı hatta).
+   Hücreler hairline ile, toplam kesik çizgiyle ayrılıyor — telefondaki
+   fişin yatay hâli. Ölçüm `.returnsPair`te. */
+@media (min-width: 900px) {
+  .breakdownBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .receipt {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .receipt > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.1rem 1rem 0.1rem 0;
+  }
+
+  .receipt > div + div {
+    padding-left: 1rem;
+    border-top: 0;
+    border-left: 1px solid var(--line-soft);
+  }
+
+  .receipt dd {
+    margin-top: auto;
+  }
+
+  .receipt > .receiptTotal {
+    margin-top: 0;
+    padding-top: 0.1rem;
+    border-top: 0;
+    border-left: 1px dashed var(--line-strong);
+  }
+}
+
+/* ---- Getiri ve Alıştan Bugüne yan yana (25 Ekim) ----
+   Sahibinin isteği: iki panel yan yana, pozisyonlar yukarı çıksın.
+   1280'den itibaren iki eşit kolon, aralık gap-5 (1,25rem); ızgara satırı
+   iki paneli eşit geriyor, panellerin künye şeritleri `mt-auto` ile aynı
+   hatta. Altında dikey aralık sayfanınki.
+
+   ÖLÇÜM (yerel geliştirme, beş pozisyonlu gerçek portföy, TR açık):
+     önce   1440x900: Getiri 373-861, Alıştan Bugüne 885-1291, Pozisyonlar
+            başlığı y=1340 (ilk ekranın 440 piksel altında).
+            1280x800: Alıştan Bugüne'nin dibi 1311 (ekranın 548 altında).
+     sonra  1280x800: iki panel 373-760, ekranın altındaki piyasa şeridinin
+            (763) üstünde, ikisi de tam görünür; Pozisyonlar başlığı 809.
+            1440x900: panel dipleri 763 (EN 791), Pozisyonlar başlığı 811
+            (EN 839) — ilk ekranda. 1920x1080: 768 / 817.
+            İki panelin dibi her ölçümde aynı piksel; yatay taşma 0, CLS 0.
+     Yan yana sığması için grafik 1280-1439'da 118, 1440'tan itibaren 150
+     piksel (tek kolonda 200) ve Getiri'nin aralıkları sıkı. */
+.returnsPair {
+  display: grid;
+  min-width: 0;
+  gap: var(--page-section-gap) 1.25rem;
+}
+
+.returnsSkeleton {
+  min-height: 420px;
+}
+
+@media (min-width: 1280px) {
+  .returnsPair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    /* Grafiğin boyu (DuoLineChart → `--duo-chart-h`); 1440'tan itibaren
+       150, aşağıda. */
+    --duo-chart-h: 118px;
+  }
+
+  /* Alıştan Bugüne çizilemediyse Getiri tek başına tam genişlik. */
+  .returnsPair > :only-child {
+    grid-column: 1 / -1;
+  }
+
+  .returnsSkeleton {
+    min-height: 0;
+  }
+
+  /* Getiri yarım genişlikte: toplam solda, iki kart sağda kalıyor; sayılar
+     kendi kutularının genişliğine göre (cqi) küçülüyor, büyük portföyde de
+     taşmıyor. */
+  .returnsPair .totals {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 2fr);
+    gap: 0.6rem 1.25rem;
+    padding: 0 1.25rem 0.6rem;
+  }
+
+  .returnsPair .totalLead {
+    container-type: inline-size;
+    align-self: center;
+  }
+
+  .returnsPair .totalValue {
+    font-size: clamp(1.25rem, 15cqi, 2.4rem);
+  }
+
+  .returnsPair .totalTl {
+    font-size: var(--text-small);
+  }
+
+  .returnsPair .basisCard {
+    container-type: inline-size;
+    gap: 0.3rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .returnsPair .basisValue {
+    font-size: clamp(1rem, 11cqi, 1.6rem);
+  }
+
+  .returnsPair .breakdown {
+    gap: 0.4rem;
+    padding-top: 0.6rem;
+  }
+
+  .returnsPair .receipt > div {
+    padding-block: 0;
+  }
+
+  .returnsPair .story {
+    padding-block: 0.6rem;
+  }
+
+  .returnsPair .receiptTotal dd {
+    font-size: var(--text-read);
+  }
+}
+
+@media (min-width: 1440px) {
+  .returnsPair {
+    --duo-chart-h: 150px;
+  }
 }
 
 /* ---- Sektör şeridi ---- */

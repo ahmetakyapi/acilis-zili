@@ -41,12 +41,13 @@ const tr = {
   nav: {
     taxTool: "Vergi Hesaplayıcı",
     themes: "Temalar",
-    moreGroupAnalyze: "Analiz Araçları",
-    moreGroupMine: "Portföy ve Maliyet",
-    moreGroupData: "Piyasa Verisi",
-    moreGroupLearn: "Öğren",
-    moreGroupRead: "Oku",
+    /* "Daha Fazla" panelinin ve /menu'nün grupları, niyete göre (25 Ekim;
+       gerekçe components/layout/nav-items.ts → MORE_GROUPS). */
+    moreGroupTools: "Araçlar",
     moreGroupDaily: "Her Gün",
+    moreGroupMarket: "Piyasa",
+    moreGroupMine: "Portföy ve Maliyet",
+    moreGroupLearn: "Öğren ve Oku",
     tickerPause: "Şeridi Duraklat",
     tickerResume: "Şeridi Sürdür",
     /* Alttaki sabit şeridin işaret noktası adı (ekran okuyucunun bölge
@@ -94,7 +95,6 @@ const tr = {
        kırılım noktasına göre değişse de ikisi de DOM da duruyor. */
     bottomNav: "Alt gezinme",
     skipToContent: "İçeriğe Geç",
-    groupMarket: "Piyasa",
     signIn: "Giriş Yap",
     signUp: "Kayıt Ol",
     signOut: "Çıkış Yap",

@@ -327,7 +327,7 @@ export function PostEditor({
         <Panel className={cn(view === "preview" && "max-lg:hidden")}>
           <PanelHeader
             title={labels.writeTitle}
-            meta={<span className="tabular-nums">{body.length.toLocaleString(locale === "tr" ? "tr-TR" : "en-US")}</span>}
+            meta={<span>{body.length.toLocaleString(locale === "tr" ? "tr-TR" : "en-US")}</span>}
           />
           <div className="flex flex-col gap-4 px-4 pb-5 sm:px-5">
             <label className="flex flex-col gap-1.5">
@@ -440,7 +440,7 @@ export function PostEditor({
                     ) : (
                       <Circle size={15} className="shrink-0 text-muted" aria-hidden />
                     )}
-                    <span className="tabular-nums">{check.text}</span>
+                    <span>{check.text}</span>
                   </li>
                 ))}
               </ul>

@@ -2,7 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
+  arcSegments,
   change24h,
+  headlineOdds,
   composeLead,
   cpiLadder,
   eventProbabilities,
@@ -282,4 +284,48 @@ test("no links to trading or betting pages anywhere in the feature", () => {
   const provider = readFileSync("lib/providers/kalshi.ts", "utf8");
   const urls = provider.match(/https?:\/\/[^\s"'`]+/g) ?? [];
   assert.deepEqual([...new Set(urls)], ["https://api.elections.kalshi.com/trade-api/v2"]);
+});
+
+/* Tepe şeridi (görsel tur): kadranın sayısı kartın künyesiyle aynı
+   `percentShares` kuralından, dilimler sabit sırada. */
+test("headline odds: Fed, both chambers and the recession in a fixed order", () => {
+  const recession = event("recession", [outcome("yes", 0.2, 0.21, 0.2, { prevBid: 0.21, prevAsk: 0.22, prevLast: 0.21 })], { eventTicker: "KXRECSSNBER-27" });
+  const tiles = headlineOdds({ ...snapshot, macro: [recession] }, new Date("2026-10-25T13:00:00Z"));
+  assert.deepEqual(tiles.map((t) => t.kind), ["fed", "house", "senate", "recession"]);
+  const [fed, house, senate, rec] = tiles;
+  assert.equal(fed.key, "hold");
+  assert.equal(fed.share, 93);
+  assert.deepEqual(fed.segments.map((s) => s.key), ["cut50", "cut25", "hold", "hike25", "hike50"]);
+  assert.equal(fed.delta, 2);
+  assert.equal(house.key, "dem");
+  assert.equal(house.share, 91);
+  assert.equal(senate.share, 63);
+  assert.equal(senate.delta, -4);
+  assert.equal(rec.key, "yes");
+  /* 0,205 / 0,795: kalan eşitliğinde büyük dilim alır, kart künyesi "Evet %20 · Hayır %80". */
+  assert.equal(rec.share, 20);
+  assert.deepEqual(rec.segments.map((s) => s.key), ["yes", "no"]);
+});
+
+test("headline odds: a settled chamber shows the winner, a hidden one is left out", () => {
+  const settled = { ...house, outcomes: house.outcomes.map((o) => ({ ...o, result: o.key === "dem" ? ("yes" as const) : ("no" as const) })) };
+  const hidden = { ...senate, outcomes: senate.outcomes.map((o) => ({ ...o, openInterest: 100 })) };
+  const tiles = headlineOdds({ ...snapshot, fed: [], congress: [settled, hidden] });
+  assert.equal(tiles.length, 1);
+  assert.equal(tiles[0].resolved, true);
+  assert.equal(tiles[0].key, "dem");
+  assert.equal(tiles[0].share, 100);
+});
+
+test("arc segments keep order, leave gaps and skip invisible slices", () => {
+  const parts = arcSegments([0.9, 0.1], 0.02);
+  assert.equal(parts[0].start, 0);
+  assert.ok(Math.abs(parts[1].start - parts[0].end - 0.02) < 1e-9);
+  assert.ok(Math.abs(parts[1].end - 1) < 1e-9);
+  const fed = arcSegments([0.001, 0.01, 0.93, 0.055, 0.004], 0.01);
+  assert.equal(fed[0].end - fed[0].start, 0);
+  assert.equal(fed[4].end - fed[4].start, 0);
+  assert.ok(Math.abs(fed[3].end - 1) < 1e-9);
+  assert.ok(fed[2].start > fed[1].end);
+  assert.deepEqual(arcSegments([0, 0]), [{ start: 0, end: 0 }, { start: 0, end: 0 }]);
 });

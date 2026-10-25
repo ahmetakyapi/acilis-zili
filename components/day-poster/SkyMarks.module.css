@@ -1,0 +1,30 @@
+/* Çatı etiketleri — gerekçe SkyMarks.tsx. Logonun halkası zeminin tonunda
+   (logo binanın rengine karışmasın), sembol metin mürekkebinde, yüzde yön
+   renginde; bağ çizgisi ince ve sessiz (`--line-strong`). */
+.labels { pointer-events: none; }
+.ring {
+  fill: var(--premium-surface);
+  stroke: var(--line);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+.leader {
+  stroke: var(--line-strong);
+  stroke-width: 1px;
+}
+.symbol {
+  fill: var(--text-strong);
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+.value {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.up { fill: var(--up); }
+.down { fill: var(--down); }
+.flat { fill: var(--flat); }
+.initials {
+  fill: var(--text-muted);
+  font-weight: 750;
+}

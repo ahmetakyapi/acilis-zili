@@ -49,6 +49,47 @@ export function tileScale(marketCap: number | null, weekMax: number): number {
   return Math.sqrt(Math.min(1, marketCap / weekMax));
 }
 
+/* --------------------------------------------------------------------------
+   Kompakt ufuk (25 Ekim, ikinci tur — sahibinin isteği: "hepsi tek
+   seferde görüntülensin")
+   -------------------------------------------------------------------------- */
+
+/**
+ * Karo İKİ BOY: büyük (56 piksel) ve taban (40). Sürekli ölçekte en büyük
+ * karo 96 pikseldi ve Çarşamba kapanış sonrası hücresi tek başına 1280×800
+ * ekranın yarısını tutuyordu; iki satır beş gün ilk ekrana sığmıyordu.
+ * Büyük boy, kenar oranı yarıyı geçenler: alanı haftanın en büyüğünün
+ * dörtte birinden fazla olanlar. "En büyükleri nerede" sorusunu bu iki boy
+ * da bir bakışta cevaplıyor; kesin değer okuma satırında.
+ */
+export const BIG_TILE_SCALE = 0.5;
+
+export type TileTier = "big" | "base";
+
+export function tileTierOf(scale: number): TileTier {
+  return scale >= BIG_TILE_SCALE ? "big" : "base";
+}
+
+/**
+ * Bir hücrede en çok bu kadar YUVA (karo + "+N" çipi). Geniş ekranda gün
+ * sütunu ~190 piksel: üç-dört taban karo yan yana, yani altı yuva iki
+ * satır. Hücre iki satırı geçmeyince iki pencere beş günde ilk ekrana
+ * sığıyor (ölçüm `EarningsHorizon.module.css` başında).
+ */
+export const CELL_MAX_SLOTS = 6;
+
+/**
+ * Hücreye sığan karolar ve sığmayanların sayısı. Karolar zaten büyükten
+ * küçüğe sıralı (`buildWeek`), kesilen kuyruk en küçükler. Sığmıyorsa son
+ * yuva "+N" çipine kalır; çip o günün tam listesine bağlanıyor.
+ */
+export function capCell<T>(tiles: readonly T[], max: number = CELL_MAX_SLOTS): { shown: T[]; more: number } {
+  if (max < 1) return { shown: [], more: tiles.length };
+  if (tiles.length <= max) return { shown: [...tiles], more: 0 };
+  const keep = max - 1;
+  return { shown: tiles.slice(0, keep), more: tiles.length - keep };
+}
+
 export type PeakCell = { date: string; lane: WeekLane; symbols: string[] };
 
 /**

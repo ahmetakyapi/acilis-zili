@@ -5,7 +5,7 @@ import { LINE_DEFAULT_USD, LINE_STEPS_USD } from "@/lib/broker-line";
  * Aracı kurum ekranının PAYLAŞILAN İSTEMCİ DURUMU (25 Ekim).
  *
  * Üç ayrı istemci adası aynı alım tutarını okuyor: tepedeki cümle
- * (`BrokerLead`), maliyet çizgisi (`BrokerCostLine`) ve kartlar
+ * (`BrokerLead`), komisyon panosu (`BrokerBoard`) ve kartlar
  * (`BrokerCards`). Aralarında sunucu panelleri durduğu için tek bir istemci
  * ağacına sokmak sayfanın tamamını istemciye çekerdi; bunun yerine modül
  * düzeyinde küçük bir depo ve `useSyncExternalStore`. Sunucu çiziminde ve

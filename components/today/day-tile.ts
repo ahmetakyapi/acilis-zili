@@ -1,10 +1,13 @@
 import type { MarketStatus } from "@/lib/market-hours";
 
 /**
- * Son seans karosunun kararları — saf, `tests/day-tile.test.ts` (25 Ekim).
- * Bileşen `DaySeal.tsx`; burada yalnız "zil bu karodan şiddet alır mı".
+ * Son seans şeridinin kararları — saf, `tests/day-tile.test.ts` (25 Ekim).
+ * Bileşen `home/SkylineStrip.tsx` ("Son Seansın Silueti"; kahramandaki
+ * karo DaySeal aynı gün kalktı, kural şeride taşındı); burada yalnız "zil
+ * bu şeritten şiddet alır mı". Ad tarihsel: dosya ve fonksiyon adı karo
+ * döneminden.
  *
- * Karo HER SEANSTA basılıyor ve her zaman en yeni TAMAMLANMIŞ seansı
+ * Şerit HER SEANSTA basılıyor ve her zaman en yeni TAMAMLANMIŞ seansı
  * anlatıyor (`getLatestPosterDate`): ön seansta ve asıl seansta dünkü
  * (pazartesi sabahı cumanın) seans, kapanıştan sonra o günün. Künye
  * tarihi yazıyor ("23 Eki Kapanışı"), yani hangi seansı anlattığı her

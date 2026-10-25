@@ -1,4 +1,4 @@
-import { advanceShare, type DayPoster, type PosterMove } from "./day-poster";
+import { POSTER_ANCHOR, advanceShare, type DayPoster, type PosterMove } from "./day-poster";
 
 /**
  * GÜNÜN CÜMLESİ (25 Ekim, sahibinin itirazı: "daha anlaşılabilir,
@@ -6,12 +6,18 @@ import { advanceShare, type DayPoster, type PosterMove } from "./day-poster";
  *
  * Poster önce yalnız sahneydi: noktalar ve etiketsiz kulvarlar. Okuyucu
  * günün NE OLDUĞUNU sahneyi çözerek bulmak zorundaydı. Şimdi sahnenin
- * üstünde tek cümle var: "Geniş Satış: S&P 500'de 363 Hisse Düştü; Yalnız
- * Enerji, Teknoloji ve Gayrimenkul Yükseldi".
+ * üstünde tek cümle var: "Geniş Satış: Nasdaq 100'de 74 Hisse Düştü; Yalnız
+ * Teknoloji Yükseldi".
+ *
+ * NASDAQ 100 (25 Ekim, üçüncü kurulum): endeks Nasdaq 100 fonu (QQQ),
+ * genişlik yüz üye, "sektörler" siluetin mahalleleri — üyelerin kendi
+ * değişimlerinin piyasa değeriyle ağırlıklı ortalaması
+ * (`lib/day-skyline.ts` → `districtsOf`). Kurallar ve eşikler aynı; cümle
+ * yalnız neye baktığını değiştirdi.
  *
  * CLAUDE YOK, ŞABLON + VERİ. Cümlenin her parçası posterin kendi
- * sayılarından (S&P 500 fonunun değişimi, genişlik, sektör sırası) kural
- * kuralına seçiliyor; aynı gün her yerde aynı cümle (sayfa, paylaşım
+ * sayılarından (Nasdaq 100 fonunun değişimi, genişlik, mahalle sırası)
+ * kural kuralına seçiliyor; aynı gün her yerde aynı cümle (sayfa, paylaşım
  * görseli, arşiv kartı). Uydurma yok: cümle bir NEDEN söylemiyor ("teknoloji
  * taşıdı" değil "en çok teknoloji yükseldi"), yalnız sahnede görüneni.
  *
@@ -20,8 +26,9 @@ import { advanceShare, type DayPoster, type PosterMove } from "./day-poster";
  */
 
 /**
- * ENDEKSİN "YERİNDE SAYDIĞI" BANT (yüzde puan). S&P 500 fonu ±%0,10
- * içinde kapandıysa günün yönü endeksten okunmuyor. Bir piyasa kuralı
+ * ENDEKSİN "YERİNDE SAYDIĞI" BANT (yüzde puan). Endeks fonu ±%0,10
+ * içinde kapandıysa günün yönü endeksten okunmuyor. Aşağıdaki ölçüm S&P
+ * 500 dönemindendi (SPY); Nasdaq 100'e geçerken bant aynı kaldı. Bir piyasa kuralı
  * değil, bu sitenin eşiği: 24 Ağustos–23 Ekim arasındaki 43 seansın
  * beşi bu bantta (Alpaca gün barları, 25 Ekim ölçümü) — ±%0,02'lik bir
  * güne "Yükseliş Günü" demek abartı olurdu. Aynı 43 seansın dağılımı:
@@ -40,8 +47,8 @@ export const STORY_BROAD_SHARE = 0.7;
 
 /**
  * "HİSSELERİN ÇOĞU" PAYI — ayrışma (endeks bir yöne, hisselerin çoğu öbür
- * yöne) ancak hareket edenlerin en az %55'i öbür yöndeyse. 16 Ekim'de 247
- * hisse yükseldi, 246 düştü ve S&P 500 %1,11 düştü: bire bir eşitliğe
+ * yöne) ancak hareket edenlerin en az %55'i öbür yöndeyse. 16 Ekim'de (S&P 500
+ * dönemi) 247 hisse yükseldi, 246 düştü ve endeks %1,11 düştü: bire bir eşitliğe
  * "hisselerin çoğu yükseldi" demek uydurma kesinlik olurdu.
  */
 export const STORY_MAJORITY_SHARE = 0.55;
@@ -49,6 +56,15 @@ export const STORY_MAJORITY_SHARE = 0.55;
 /** Sektör cümlesinde "Yalnız A, B ve C" için en fazla ad; fazlası
  *  önde/geride kalıbına döner (dört adlı liste başlığı uzatıyor). */
 export const STORY_MAX_EXCEPTIONS = 3;
+
+/**
+ * "YALNIZ" AZINLIK İÇİN (25 Ekim, Nasdaq 100 kurulumu). On bir sektörde üç
+ * istisna açık bir azınlıktı; Nasdaq 100'ün yedi mahallesinde üç istisna
+ * neredeyse yarı ("Yalnız Teknoloji, İletişim ve Tüketici Ürünleri
+ * Yükseldi" dört mahalle düşmüşken abartı). İstisnalar mahallelerin en
+ * fazla üçte biri olabilir: yedide iki, on birde üç (eski davranış aynı).
+ */
+export const STORY_MAX_EXCEPTION_SHARE = 1 / 3;
 
 export type StoryKind =
   | "broadRally"
@@ -74,7 +90,7 @@ export type PosterStory = {
   kind: StoryKind;
   /** Başlığın tonu — yalnız işaretin rengi için (renk = yön). */
   tone: StoryTone;
-  /** S&P 500 fonunun değişimi (yüzde puan). */
+  /** Endeks fonunun (Nasdaq 100, QQQ) değişimi (yüzde puan). */
   anchor: number;
   advancing: number | null;
   declining: number | null;
@@ -83,8 +99,6 @@ export type PosterStory = {
   /** Ayrışma günlerinde anılan sektör (en güçlü ya da en zayıf). */
   focus: PosterMove | null;
 };
-
-const ANCHOR = "SPY";
 
 /**
  * Sektörlerin cümlesi, günün yönüne göre. Yön verilmezse (yatay gün)
@@ -110,15 +124,23 @@ export function sectorClause(sectors: readonly PosterMove[], dir: "up" | "down" 
   const against = sectors.filter((move) => (dir === "up" ? move.change < 0 : move.change > 0));
   if (withDay.length + against.length !== sectors.length) return leadLag;
   if (against.some((move) => Math.abs(move.change) <= STORY_FLAT_BAND)) return leadLag;
-  if (against.length > 0 && against.length <= STORY_MAX_EXCEPTIONS) {
+  if (
+    against.length > 0 &&
+    against.length <= STORY_MAX_EXCEPTIONS &&
+    against.length <= sectors.length * STORY_MAX_EXCEPTION_SHARE
+  ) {
     return { kind: "only", dir: dir === "up" ? "down" : "up", symbols: against.map((move) => move.symbol) };
   }
   return leadLag;
 }
 
+/** Cümlenin girdisi: posterin endeksleri ve genişliği, ve "sektörler" —
+ *  siluetin mahalleleri, güçlüden zayıfa (`districtMoves`). */
+export type StoryInput = Pick<DayPoster, "indices" | "breadth"> & { sectors: readonly PosterMove[] };
+
 /** Günün sınıfı ve cümlenin parçaları. Kurallar YUKARIDAN AŞAĞI. */
-export function posterStory(poster: Pick<DayPoster, "sectors" | "indices" | "breadth">): PosterStory {
-  const anchor = poster.indices.find((move) => move.symbol === ANCHOR)?.change ?? 0;
+export function posterStory(poster: StoryInput, anchorSymbol: string = POSTER_ANCHOR): PosterStory {
+  const anchor = poster.indices.find((move) => move.symbol === anchorSymbol)?.change ?? 0;
   const indexDir = anchor > STORY_FLAT_BAND ? "up" : anchor < -STORY_FLAT_BAND ? "down" : null;
   const breadth = poster.breadth;
   const share = breadth ? advanceShare(breadth) : null;
@@ -210,7 +232,7 @@ export type StoryLabels = {
 export type StoryText = {
   /** Kısa başlık: "Geniş Satış" (arşiv kartı, başlığın ilk satırı). */
   title: string;
-  /** Ayrıntı: "S&P 500'de 363 Hisse Düştü; Yalnız … Yükseldi". */
+  /** Ayrıntı: "Nasdaq 100'de 74 Hisse Düştü; Yalnız … Yükseldi". */
   detail: string;
   /** Tam cümle: "Geniş Satış: …" (paylaşım görseli, meta açıklaması). */
   sentence: string;
@@ -221,7 +243,7 @@ function fill(template: string, values: Record<string, string>): string {
 }
 
 /**
- * Cümleyi kurar. `name` sembolden sektör adı, `percent` işaretsiz yüzde
+ * Cümleyi kurar. `name` mahalle anahtarından ad, `percent` işaretsiz yüzde
  * ("%0,52"), `list` ad listesini dile göre bağlar ("A, B ve C").
  */
 export function storyText(
@@ -249,7 +271,7 @@ export function storyText(
   const values = {
     adv: String(story.advancing ?? ""),
     dec: String(story.declining ?? ""),
-    spy: percent(Math.abs(story.anchor)),
+    index: percent(Math.abs(story.anchor)),
     /* Odak yalnız işareti günün anlattığıyla uyuşuyorsa anılıyor: "en
        çok yükselen" sektör o gün düşmüşse cümleden düşüyor. */
     focus:

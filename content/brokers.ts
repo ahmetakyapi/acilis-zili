@@ -86,6 +86,23 @@ export type CommissionModel =
   | { kind: "perShare"; usd: number; minUsd: number; maxPctOfTrade?: number }
   | { kind: "none"; reason: Bi };
 
+/**
+ * Yıllık maliyet hesabına giren SAKLAMA modeli (25 Ekim, kurum logoları
+ * turu). Hücredeki (`cells.custody`) bilginin hesaplanabilir hâli; aynı
+ * kaynaktan, aynı değerle — çelişmemesi testte (tests/broker-board.test.ts).
+ *
+ * `free`: kaynak ABD hissesinde saklama ücreti olmadığını AÇIKÇA yazıyor.
+ * `unknown`: kaynakta bulunamadı; hesap bu kurumda saklamayı SIFIR saymaz,
+ * "belirtilmemiş" diye işaretler. `floorEurMonth`: oranın yanında avro
+ * cinsinden aylık asgari var; sayfa kur varsaymadığı için hesaba girmiyor,
+ * ekranda ayrıca yazıyor.
+ */
+export type CustodyModel =
+  | { kind: "free" }
+  | { kind: "pctYear"; pct: number; floorEurMonth?: number }
+  | { kind: "pctMonth"; pct: number }
+  | { kind: "unknown" };
+
 export const BROKER_COLUMNS = [
   "commission",
   "minimum",
@@ -118,6 +135,7 @@ export type Broker = {
   licence: "full" | "partial" | "foreign";
   cells: Record<BrokerColumn, BrokerCell>;
   commission: CommissionModel;
+  custodyModel: CustodyModel;
   sources: Record<string, BrokerSource>;
 };
 
@@ -170,6 +188,7 @@ export const BROKERS: readonly Broker[] = [
       src: ["owner"],
     },
     commission: { kind: "flat", usd: 1.5 },
+    custodyModel: { kind: "free" },
     sources: {
       fees: {
         url: "https://www.getmidas.com/ucretler/",
@@ -232,6 +251,7 @@ export const BROKERS: readonly Broker[] = [
     domestic: true,
     licence: "full",
     commission: { kind: "percent", pct: 0.25, minUsd: 1 },
+    custodyModel: { kind: "pctMonth", pct: 0.0042 },
     sources: {
       tariff: {
         url: "https://trademaster.com.tr/media/nwjheyia/yurtdisi-islemler-komisyon-masraf-tablosu.pdf",
@@ -281,6 +301,7 @@ export const BROKERS: readonly Broker[] = [
     domestic: true,
     licence: "full",
     commission: { kind: "percent", pct: 0.3, minUsd: 0 },
+    custodyModel: { kind: "pctYear", pct: 0.06 },
     sources: {
       fees: {
         url: "https://www.garantibbvayatirim.com.tr/tr/ucret-ve-komisyonlar",
@@ -335,6 +356,7 @@ export const BROKERS: readonly Broker[] = [
         en: "Three official pages give three different US fee schedules; confirm with the broker which applies.",
       },
     },
+    custodyModel: { kind: "unknown" },
     sources: {
       fees: {
         url: "https://www.ykyatirim.com.tr/urunler/hisse-senedi/komisyon-ve-ucretler",
@@ -403,6 +425,7 @@ export const BROKERS: readonly Broker[] = [
     domestic: true,
     licence: "full",
     commission: { kind: "percent", pct: 0.2, minUsd: 25 },
+    custodyModel: { kind: "pctYear", pct: 0.06, floorEurMonth: 6 },
     sources: {
       faq: {
         url: "https://www.qnbinvest.com.tr/yurt-disi-yatirim-islemleri",
@@ -451,6 +474,7 @@ export const BROKERS: readonly Broker[] = [
        "1 ile 20 adet ... 1 USD" (20 × 0,05 = 1) ve "30 x 0,05 = 1,5 USD".
        Hesap bu iki bilgiyle yapılıyor; hücre çelişkiyi ayrıca söylüyor. */
     commission: { kind: "perShare", usd: 0.05, minUsd: 1 },
+    custodyModel: { kind: "free" },
     sources: {
       tariff: {
         url: "https://cdn.gedik.com/media/media/o1modse2/ydb-komisyon.pdf",
@@ -512,6 +536,7 @@ export const BROKERS: readonly Broker[] = [
         en: "The fee table only lists minimums and says the applied fee may be higher.",
       },
     },
+    custodyModel: { kind: "unknown" },
     sources: {
       tariff: {
         url: "https://cdn.infoyatirim.com/Content/UploadedFile/infoglobe-infox-ucretvekomisyonlar.pdf",
@@ -566,6 +591,7 @@ export const BROKERS: readonly Broker[] = [
        Fixed'le yapılabiliyor. Fixed'e yalnız düzenleyici ücretler ekleniyor;
        onlar da senaryoda yok (satışta doğuyorlar, senaryo alım). */
     commission: { kind: "perShare", usd: 0.005, minUsd: 1, maxPctOfTrade: 1 },
+    custodyModel: { kind: "unknown" },
     sources: {
       stocks: {
         url: "https://www.interactivebrokers.com/en/pricing/commissions-stocks.php",

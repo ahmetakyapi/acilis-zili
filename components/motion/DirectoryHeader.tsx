@@ -8,7 +8,7 @@ import styles from "./DirectoryExperience.module.css";
  * takviminin Hafta/Ay anahtarı bir dönem açıklamanın altında kendi
  * satırındaydı ve telefonda başlık kartını 24 + 44 piksel uzatıyordu;
  * ekran düzeni kuralı (CLAUDE.md) denetimi başlığın sağına koyuyor. */
-export function DirectoryHeader({ title, description, children, visual, control, share, shareInTitle = false, lead, byline, className = "" }: {
+export function DirectoryHeader({ title, description, children, visual, control, share, shareInTitle = false, lead, byline, tabs, className = "" }: {
   title: string; description?: string; children?: ReactNode; visual?: ReactNode; control?: ReactNode;
   /** Başlığın SOLUNDA duran kimlik (şirket logosu). Başlığa ait olduğu için
    *  ayrı bir kimlik şeridi açmaz; o şerit kapağı 60+ piksel uzatıyordu. */
@@ -20,8 +20,35 @@ export function DirectoryHeader({ title, description, children, visual, control,
   share?: ReactNode;
   /** Dizinlerde başlığın sağı; dar ekranda ek denetim bir alt satıra iner. */
   shareInTitle?: boolean;
+  /** Bölümün sekme çubuğu: verilirse kapak KOMPAKT BANT olur (aşağıda). */
+  tabs?: ReactNode;
   className?: string;
 }) {
+  /* KOMPAKT BANT (25 Ekim, sahibinin isteği: "hepsi tek seferde
+     görüntülensin"). Sekmeli bölümlerde (Bilançolar) kapak ve sekme çubuğu
+     iki ayrı karttı: 1280×800'de kapak 156, sekme kartı 60 piksel ve
+     ikisinin arasında 24 piksel; ekranın asıl işi (Bilanço Ufku) y=457'de
+     başlıyor, Kapanış Sonrası satırı ilk ekranın dışında kalıyordu.
+     Sekmeler artık kapağın içinde, alt kenarına oturan çubuk; başlık daha
+     küçük puntoda ve açıklama başlığın yanında tek satır, denetimler sağda.
+     Ölçüm `app/(app)/bilancolar/page.tsx` başlığında. */
+  if (tabs) {
+    return <header className={`${styles.hero} page-frame ${className}`} data-compact data-has-visual={!!visual}>
+      <div className={`${styles.heroCopy} page-heading-copy`}>
+        <div className={styles.compactTitle} data-wide-actions={children ? true : undefined}>
+          <h1>{title}</h1>
+          {description && <p className={styles.compactDescription}>{description}</p>}
+          {(control || share || children) && <div className={`page-title-actions ${styles.compactActions}`}>
+            {control && <div data-header-control>{control}</div>}
+            {children}
+            {share}
+          </div>}
+        </div>
+      </div>
+      {visual && <div className={styles.compactVisual}>{visual}</div>}
+      <div className={styles.compactTabs}>{tabs}</div>
+    </header>;
+  }
   return <header className={`${styles.hero} page-frame ${className}`} data-has-visual={!!visual}>
     {/* Sağ sütunda görsel varken yay YOK (10 Ekim): verinin arkasından
         geçiyordu (tasarım denetimi, /bilancolar ve /teknik). */}

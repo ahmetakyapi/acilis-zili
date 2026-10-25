@@ -155,16 +155,25 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
            künyenin sağına koyuyor. Telefonda başlık kartı 68 piksel
            kısalıyor. */
         control={anahtar}
+        tabs={<EarningsTabs active="calendar" t={t} inHeader />}
       />
 
-      {/* SEKME ÇUBUĞU BAŞLIĞIN HEMEN ALTINDA (25 Ekim). Kapak yoğunluk
+      {/* SEKME ÇUBUĞU KAPAĞIN İÇİNDE (25 Ekim, ikinci tur). Kapakla sekme
+          kartı tek kompakt bantta birleşti (`DirectoryHeader` → `tabs`) ve
+          ufuk sıkılaştı (gerekçe `EarningsHorizon.module.css` başında).
+          Ölçüldü (TR/EN, açık/koyu): kapak + sekme 156 + 24 + 60 → 114
+          piksellik bant; ufuk ızgarası 1280×800'de 457–1150 → 312–746,
+          1440×900'de 460–1011 → 317–751 (iki pencere beş gün ilk ekranda);
+          390'da ızgara 603 → 488. 1920×1080'de takvim listesinin üst kenarı
+          y=1034 (ilk ekranın alt sınırı piyasa şeridiyle 1043).
+
+          Önceki tur: SEKME ÇUBUĞU BAŞLIĞIN HEMEN ALTINDA. Kapak yoğunluk
           grafiğini ve öne çıkanları da taşıyordu: telefonda 735 piksel ve
           sekme çubuğu y=836'da, yani dört görünüm arasındaki geçiş ilk
           ekranda hiç görünmüyordu (1280'de 462). İkisi kapaktan çıkıp
           sekmenin altına, kendi `PanelHeader`lı panellerine indi; kapak
           yalnız başlık, tek denetim ve açıklama. Ölçüldü (TR, açık/koyu):
           390'da kapak 199, sekme 836 → 300; 1280'de sekme 462 → 265. */}
-      <EarningsTabs active="calendar" t={t} className="-mt-2" />
 
       {/* HAFTANIN BİLANÇO UFKU SEKMENİN ALTINDA (25 Ekim). Burada iki
           panel vardı: takvim yoğunluğu (gün başına bilanço sayısı) ve
@@ -179,6 +188,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
         today={today}
         watchSet={new Set(userSymbols)}
         badges={badges}
+        listedDays={new Set(rows.map((row) => row.reportDate))}
         locale={locale}
         t={t}
       />

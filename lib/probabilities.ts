@@ -519,6 +519,131 @@ export function percentShares(values: readonly number[]): number[] {
   return out;
 }
 
+/* ---- Tepe şeridi (25 Ekim, görsel tur) ---- */
+
+export type HeadlineKind = "fed" | "house" | "senate" | "recession";
+
+/**
+ * Tepedeki bir kadran: öne çıkan sonuç, onun TAM SAYI payı (panelin
+ * künyesiyle aynı `percentShares` kuralı, aynı sayı iki yerde aynı
+ * hesaptan) ve kadranın sabit sıralı dilimleri.
+ */
+export type HeadlineOdds = {
+  kind: HeadlineKind;
+  /** Fed hamlesi, parti ya da resesyonda hep "yes". */
+  key: string;
+  share: number;
+  segments: { key: string; p: number }[];
+  /** 24 saatlik değişim, yüzde puanı (öne çıkan sonucun). */
+  delta: number | null;
+  strikeAt: string | null;
+  /** Kaynak sonuçlandırdı: kadran kazananla dolu, sayı yerine sonuç yazılır. */
+  resolved: boolean;
+  thin: boolean;
+};
+
+const PARTY_ORDER = ["dem", "rep"] as const;
+
+/**
+ * Şeridin kadranları, sabit sırada: Fed, Temsilciler Meclisi, Senato,
+ * resesyon. Gizli (çok az işlem gören) ya da okunamayan olay şeritte de
+ * yer almaz; resesyonda öne çıkan hep "Evet" — en olası sonuç "Hayır"
+ * olsa da sorulan şey resesyon olasılığı.
+ */
+export function headlineOdds(snapshot: ProbabilitySnapshot, now: Date = new Date()): HeadlineOdds[] {
+  const out: HeadlineOdds[] = [];
+  const shareOf = (probs: Record<string, number>, order: readonly string[], key: string) =>
+    percentShares(order.map((k) => probs[k] ?? 0))[order.indexOf(key)];
+  const meeting = nextMeeting(snapshot.fed, now);
+  const liquidity = meeting ? liquidityOf(meeting) : "hidden";
+  const fedProbs = meeting && liquidity !== "hidden" ? eventProbabilities(meeting) : null;
+  const fedTop = fedProbs ? topOutcome(fedProbs) : null;
+  if (meeting && fedProbs && fedTop) {
+    out.push({
+      kind: "fed",
+      key: fedTop.key,
+      share: shareOf(fedProbs, FED_MOVES, fedTop.key),
+      segments: FED_MOVES.map((key) => ({ key, p: fedProbs[key] ?? 0 })),
+      delta: change24h(meeting, fedTop.key),
+      strikeAt: meeting.strikeAt,
+      resolved: false,
+      thin: liquidity === "thin",
+    });
+  }
+  for (const kind of ["house", "senate"] as const) {
+    const event = snapshot.congress.find((e) => e.kind === kind);
+    if (!event) continue;
+    const eventLiquidity = liquidityOf(event);
+    if (eventLiquidity === "hidden") continue;
+    const winner = resolvedOutcome(event);
+    if (winner) {
+      out.push({ kind, key: winner, share: 100, segments: [{ key: winner, p: 1 }], delta: null, strikeAt: event.strikeAt, resolved: true, thin: false });
+      continue;
+    }
+    const probs = eventProbabilities(event);
+    const top = probs ? topOutcome(probs) : null;
+    if (!probs || !top) continue;
+    out.push({
+      kind,
+      key: top.key,
+      share: shareOf(probs, PARTY_ORDER, top.key),
+      segments: PARTY_ORDER.map((key) => ({ key, p: probs[key] ?? 0 })),
+      delta: change24h(event, top.key),
+      strikeAt: event.strikeAt,
+      resolved: false,
+      thin: eventLiquidity === "thin",
+    });
+  }
+  const recession = snapshot.macro.find((e) => e.kind === "recession");
+  const recessionLiquidity = recession ? liquidityOf(recession) : "hidden";
+  const recessionProbs = recession && recessionLiquidity !== "hidden" && !resolvedOutcome(recession) ? eventProbabilities(recession) : null;
+  if (recession && recessionProbs) {
+    out.push({
+      kind: "recession",
+      key: "yes",
+      share: shareOf(recessionProbs, ["yes", "no"], "yes"),
+      segments: [
+        { key: "yes", p: recessionProbs.yes ?? 0 },
+        { key: "no", p: recessionProbs.no ?? 0 },
+      ],
+      delta: change24h(recession, "yes"),
+      strikeAt: recession.strikeAt,
+      resolved: false,
+      thin: recessionLiquidity === "thin",
+    });
+  }
+  return out;
+}
+
+/** Kadranda görünmeyecek kadar küçük dilim (yığın çubuktaki eşikle aynı). */
+export const ARC_MIN_SHARE = 0.005;
+
+/**
+ * Yarım daire kadranın dilimleri, 0–1 arası yay kesirleri (saf, testli).
+ * Görünür dilimlerin arasında `gap` kadar zemin kalır (yığın çubuktaki
+ * 2 piksellik aralığın yaydaki karşılığı); eşiğin altındaki dilim çizilmez,
+ * yeri kalan dilimlere orantıyla dağılır. Sıra verilen sıra: renk varlığa
+ * bağlı, büyüklüğe değil.
+ */
+export function arcSegments(values: readonly number[], gap = 0.012): { start: number; end: number }[] {
+  const clean = values.map((v) => Math.max(0, v));
+  const total = clean.reduce((a, b) => a + b, 0);
+  const visible = clean.map((v) => total > 0 && v / total >= ARC_MIN_SHARE);
+  const shownTotal = clean.reduce((sum, v, i) => sum + (visible[i] ? v : 0), 0);
+  const count = visible.filter(Boolean).length;
+  const room = Math.max(0, 1 - gap * Math.max(0, count - 1));
+  let cursor = 0;
+  let seen = 0;
+  return clean.map((v, i) => {
+    if (!visible[i] || shownTotal <= 0) return { start: cursor, end: cursor };
+    if (seen > 0) cursor += gap;
+    seen += 1;
+    const start = cursor;
+    cursor += (v / shownTotal) * room;
+    return { start, end: cursor };
+  });
+}
+
 /* ---- Tazeleme kararı (cron) ---- */
 
 /** Günde bir: bir önceki kayıt bu kadar eskiyse yenisi alınır. */

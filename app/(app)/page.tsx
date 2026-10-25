@@ -4,8 +4,7 @@ import styles from "@/components/today/TodayExperience.module.css";
 import { Countdown } from "@/components/today/Countdown";
 import { TabCountdown } from "@/components/today/TabCountdown";
 import { HeroBell } from "@/components/today/HeroBell";
-import { DaySeal } from "@/components/today/DaySeal";
-import sealStyles from "@/components/today/DaySeal.module.css";
+import { SkylineStrip, SkylineStripSkeleton } from "@/components/today/home/SkylineStrip";
 import { SessionBellFigure } from "@/components/figures/session-bell/figure";
 import { BellLedger } from "@/components/today/BellLedger";
 import { SessionRefresh } from "@/components/today/SessionRefresh";
@@ -237,16 +236,12 @@ export default async function TodayPage() {
                 başlık satırı dolduruyor (3–25 piksel kalıyor). Çipin sağı
                 her dilde ve genişlikte boş; ölçü CSS'te. */}
             <div className={styles.heroTopRow}>
-              {/* SON SEANS KAROSU ÇİPİN ALTINDA (24 Ekim künye, 25 Ekim
-                  karo): en yeni tamamlanmış seansın posteri, sahnesinin
-                  minyatürü, günün cümlesi ve genişliği; her seansta, tarihi
-                  künyesinde. Gerekçe DaySeal.tsx. Kendi sınırında akıyor. */}
-              <div className={sealStyles.lead}>
-                <div className={styles.heroSession} data-state={sessionState}><span aria-hidden="true" />{sessionLabel[status.session]}</div>
-                <Suspense fallback={null}>
-                  <DaySeal status={status} locale={locale} t={t} />
-                </Suspense>
-              </div>
+              {/* SON SEANS KAROSU KAHRAMANDAN ÇIKTI (25 Ekim, sahibinin
+                  itirazı: "kötü gözüküyor, görsel bütünlüğü bozuyor"). Çipin
+                  altındaki karo geri sayımı aşağı itiyor ve kahramanın tek
+                  okumasıyla yarışıyordu; son seans artık kahramanın hemen
+                  altında kendi şeridinde (`SkylineStrip`). */}
+              <div className={styles.heroSession} data-state={sessionState}><span aria-hidden="true" />{sessionLabel[status.session]}</div>
               {/* Zil bir düğme: tıklanınca çalıyor ("Zili Çal", 14 Ekim) —
                   gerekçe HeroBell.tsx. Açılış sahnesi yine seanstan. */}
               <HeroBell scene={heroScene} label={t.today.ringBell} className={styles.heroBell} />
@@ -322,6 +317,16 @@ export default async function TodayPage() {
           kaydırırken beliren bu yapıyı sevmedi. Bölüm çapaları (`id`)
           yerinde: bağlantılar ve adres çubuğundaki #çapa çalışmaya devam
           ediyor. */}
+
+      {/* SON SEANSIN SİLUETİ (25 Ekim): kahramanın hemen altında, tam
+          genişlik ince şerit — Günün Posteri'nin Nasdaq 100 siluetinin alçak
+          hâli; panelin tamamı posterin bağlantısı. Kahramanın ızgarasının
+          dışında (seans zili ve bulmaca ile aynı gerekçe: kolon dengesi).
+          Gerekçe ve veri `SkylineStrip.tsx`; kendi sınırında akıyor, yer
+          tutucusu ölçüsünü ayırıyor. */}
+      <Suspense fallback={<SkylineStripSkeleton />}>
+        <SkylineStrip status={status} locale={locale} t={t} />
+      </Suspense>
 
       <section id="gunun-akisi" data-rise-scope className={styles.flowPanel}>
         {/* İSKELET GERÇEK ÖLÇÜYÜ AYIRIYOR. `h-28` yazıyordu, yani 112 piksel,

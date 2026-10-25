@@ -1,5 +1,6 @@
 import { C, OgFrame, OgTitle, clip } from "@/lib/og";
 import type { DailyChartBlock } from "@/lib/daily-chart";
+import { barSpan, divergingScale, type DivergingScale } from "@/lib/daily-chart-figure";
 
 /* ==========================================================================
    Günün Grafiği paylaşım görseli (24 Ekim) — `lib/og.tsx` çerçevesiyle.
@@ -40,31 +41,88 @@ function headAndTail<T>(items: readonly T[], max: number): { head: T[]; tail: T[
   return { head: items.slice(0, headCount), tail: items.slice(items.length - (max - headCount)) };
 }
 
-function RowList({ rows, peak, size }: { rows: Row[]; peak: number; size: DailyChartOgSize }) {
+/** Çubuğun kalınlığı (25 Ekim, görsel tur): akışta küçük görünen kartta
+ *  10/14 piksel ince kalıyordu; paylaşım görseli bir bakışta okunmalı.
+ *  Dikeyde satır aralığı 22'den 14'e indi ki on iki satır yine sığsın:
+ *  24 piksellik çubuk ve 22 aralıkla 11 satırlık 23 Ekim kartı alttan
+ *  taşıyordu (ölçüldü); 22 + 14 ile eski toplam yükseklikte (~822 piksel). */
+const BAR_HEIGHT: Record<DailyChartOgSize, number> = { landscape: 18, portrait: 22 };
+const ROW_GAP: Record<DailyChartOgSize, number> = { landscape: 12, portrait: 10 };
+
+/**
+ * Dikeyde açıklamanın ilk cümlesi en çok bu kadar satırlı grafikte sığıyor.
+ * Ölçüldü (25 Ekim, 23 Ekim kartı): on bir satırda cümle kartın dışına
+ * taşıyor ve kesik görünüyordu (canlıdaki eski kartta da). Kalabalık
+ * grafikte cümle basılmıyor; grafik ve etiket tam görünüyor.
+ */
+const PORTRAIT_LEAD_MAX_ROWS = 8;
+
+function rowCount(block: DailyChartBlock): number {
+  return block.kind === "shift" ? 2 : block.items.length;
+}
+
+/**
+ * `scale` verilirse çubuk SIFIRDAN İKİ YÖNE, sayfadaki çizimle aynı ölçekte
+ * (`divergingScale`, lib/daily-chart-figure.ts): eksiler sıfırın solunda,
+ * artılar sağında, sıfır çizgisi koyu. Verilmezse soldan, `peak`e göre
+ * (`oncesi` ve nötr blok — onlarda sıfırın iki yanı yok).
+ */
+function RowList({ rows, peak, size, scale }: { rows: Row[]; peak: number; size: DailyChartOgSize; scale?: DivergingScale }) {
   const big = size === "portrait";
   const { head, tail } = headAndTail(rows, MAX_ROWS[size]);
   const font = big ? 28 : 22;
+  const height = BAR_HEIGHT[size];
   const line = (row: Row, key: string) => (
     <div key={key} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: font, lineHeight: 1.2 }}>
         <span style={{ display: "flex", color: C.strong }}>{clip(row.name, big ? 40 : 30)}</span>
         <span style={{ display: "flex", color: row.ink ?? row.color, fontWeight: 700 }}>{ascii(row.display)}</span>
       </div>
-      <div style={{ display: "flex", height: big ? 14 : 10, borderRadius: 99, background: C.lineSoft }}>
-        <div
-          style={{
-            display: "flex",
-            width: `${Math.max((Math.abs(row.value) / peak) * 100, 1)}%`,
-            height: "100%",
-            borderRadius: 99,
-            background: row.color,
-          }}
-        />
-      </div>
+      {scale ? (
+        <div style={{ display: "flex", position: "relative", height, borderRadius: 99, background: C.lineSoft }}>
+          <div
+            style={{
+              display: "flex",
+              position: "absolute",
+              top: 0,
+              left: `${barSpan(row.value, scale).start}%`,
+              width: `${Math.max(barSpan(row.value, scale).size, 0.5)}%`,
+              height: "100%",
+              borderRadius: 99,
+              background: row.color,
+            }}
+          />
+          <div
+            style={{
+              display: "flex",
+              position: "absolute",
+              top: -5,
+              left: `${scale.zero}%`,
+              width: 3,
+              height: height + 10,
+              marginLeft: -1.5,
+              borderRadius: 2,
+              background: C.strong,
+            }}
+          />
+        </div>
+      ) : (
+        <div style={{ display: "flex", height, borderRadius: 99, background: C.lineSoft }}>
+          <div
+            style={{
+              display: "flex",
+              width: `${Math.max((Math.abs(row.value) / peak) * 100, 1)}%`,
+              height: "100%",
+              borderRadius: 99,
+              background: row.color,
+            }}
+          />
+        </div>
+      )}
     </div>
   );
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: big ? 22 : 12, width: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: ROW_GAP[size], width: "100%" }}>
       {head.map((row, i) => line(row, `h${i}`))}
       {tail.length > 0 && (
         <div style={{ display: "flex", gap: 6, paddingLeft: 2 }}>
@@ -85,7 +143,14 @@ function Bars({ block, size }: { block: Extract<DailyChartBlock, { kind: "bars" 
     ...item,
     color: block.neutral ? C.primary : item.value < 0 ? C.down : C.up,
   }));
-  return <RowList rows={rows} peak={peak} size={size} />;
+  return (
+    <RowList
+      rows={rows}
+      peak={peak}
+      size={size}
+      scale={block.neutral || block.unscaled ? undefined : divergingScale(block.items.map((item) => item.value))}
+    />
+  );
 }
 
 function Share({ block, size }: { block: Extract<DailyChartBlock, { kind: "share" }>; size: DailyChartOgSize }) {
@@ -173,7 +238,9 @@ export function DailyChartOgCard({
         {block.label && (
           <div style={{ display: "flex", fontSize: 22, color: C.muted, marginTop: 6 }}>{clip(block.label, 60)}</div>
         )}
-        <div style={{ display: "flex", fontSize: 26, lineHeight: 1.4, color: C.body, marginTop: 20 }}>{clip(lead, 220)}</div>
+        {rowCount(block) <= PORTRAIT_LEAD_MAX_ROWS && (
+          <div style={{ display: "flex", fontSize: 26, lineHeight: 1.4, color: C.body, marginTop: 20 }}>{clip(lead, 220)}</div>
+        )}
       </OgFrame>
     );
   }

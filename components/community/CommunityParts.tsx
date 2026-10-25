@@ -53,7 +53,7 @@ function AuthorLine({
         {post.author.username}
       </Link>
       <span aria-hidden>·</span>
-      <time dateTime={post.publishedAt.toISOString().slice(0, 10)} className="tabular-nums">
+      <time dateTime={post.publishedAt.toISOString().slice(0, 10)}>
         {dateFormat.format(post.publishedAt)}
       </time>
     </div>
@@ -142,7 +142,7 @@ export function PostCard({
           satırları aynı hatta biter (ölçü ızgarası kuralı). */}
       <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-1">
         <SymbolChips symbols={post.symbols} max={lead ? 6 : 3} names={names} label={labels.symbolsLabel} />
-        <span className="ml-auto inline-flex items-center gap-1 text-tiny tabular-nums text-muted">
+        <span className="ml-auto inline-flex items-center gap-1 text-tiny text-muted">
           {readingMinutes(post.bodyMd)} {labels.readMinutes}
           <ArrowRight
             size={12}

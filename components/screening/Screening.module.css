@@ -30,7 +30,7 @@
 .dialLabel { font-size:12px; font-weight:600; letter-spacing:0; color:var(--text-muted); }
 .flagCounts { display:flex; flex-wrap:wrap; gap:10px 28px; }
 .flagCounts > span { display:flex; align-items:baseline; gap:8px; color:var(--text-body); font-size:13px; font-weight:550; }
-.flagCounts b { color:var(--st); font-size:40px; line-height:1; font-weight:650; letter-spacing:-.05em; font-variant-numeric:tabular-nums; }
+.flagCounts b { color:var(--st); font-size:40px; line-height:1; font-weight:650; letter-spacing:-.05em; }
 .flagList { list-style:none; margin:0; padding:0; display:grid; gap:6px; }
 .flagList li { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:34px; padding:6px 12px; border-radius:10px; background:var(--st-wash); }
 .flagName { position:relative; min-width:0; padding-left:14px; color:var(--text-strong); font-size:13.5px; font-weight:600; }
@@ -95,7 +95,7 @@
 .cat { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 14px; align-items:baseline; }
 .catName { color:var(--text-strong); font-size:15px; font-weight:600; }
 .catMeta { grid-column:1; font-size:12px; color:var(--text-muted); }
-.catScore { grid-row:1 / span 2; grid-column:2; align-self:center; font-size:24px; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); font-variant-numeric:tabular-nums; }
+.catScore { grid-row:1 / span 2; grid-column:2; align-self:center; font-size:24px; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
 .catScore[data-empty="true"] { font-size:13px; font-weight:500; letter-spacing:0; color:var(--text-muted); }
 .track { grid-column:1 / -1; height:8px; border-radius:999px; background:var(--surface-sunken); overflow:hidden; }
 .track > span { display:block; height:100%; border-radius:inherit; background:var(--st); }
@@ -205,7 +205,7 @@
 
 .weights { display:grid; gap:13px; }
 .weight { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 12px; font-size:13px; color:var(--text-body); }
-.weight b { color:var(--text-strong); font-weight:600; font-variant-numeric:tabular-nums; }
+.weight b { color:var(--text-strong); font-weight:600; }
 .weight .track { height:6px; }
 /* Kapak girişi kardeş kapaklarla aynı kalıpta (9 Ekim deseni, 14 Ekim'de
    buraya): MotionExperience ilk ekrandaki öğeye dokunmadığı için giriş
@@ -228,7 +228,7 @@
 .mini svg { display:block; width:100%; height:100%; transform:rotate(-90deg); }
 .mini .dialTrack,.mini .dialFill,.mini .dialSlice { stroke-width:5; }
 .dialSlice { fill:none; stroke:var(--band); }
-.mini b { position:absolute; inset:0; display:grid; place-items:center; color:var(--text-strong); font-size:14px; font-weight:650; font-variant-numeric:tabular-nums; }
+.mini b { position:absolute; inset:0; display:grid; place-items:center; color:var(--text-strong); font-size:14px; font-weight:650; }
 .quickNote { margin:0 20px; padding:14px 0 18px; border-top:1px solid var(--line); color:var(--text-muted); font-size:13px; line-height:1.6; }
 @media (min-width:900px) { .quickNote { margin:0 24px; } }
 

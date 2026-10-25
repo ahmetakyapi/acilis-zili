@@ -93,8 +93,7 @@
   border-radius: 999px;
   animation: bar-grow 0.7s var(--ease-brand) both;
   animation-delay: calc(0.15s + var(--i, 0) * 0.045s);
-  /* Posterin dördüncü perdesi (künye kartı) kendi anında oynatıyor
-     (`PosterAct`); başka çağıranlarda varsayılan: hemen. */
+  /* Çağıran kendi anında oynatabilir (`--lanes-play`); varsayılan: hemen. */
   animation-play-state: var(--lanes-play, running);
 }
 .barUp { left: 50%; background: var(--up); transform-origin: left center; }
@@ -108,7 +107,7 @@
 .mini {
   position: relative;
   display: block;
-  height: 5px;
+  height: var(--lane-h, 5px);
   border-radius: 999px;
   background: var(--line-soft);
 }

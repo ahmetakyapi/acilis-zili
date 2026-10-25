@@ -4,7 +4,7 @@ import { DayPosterView } from "@/components/day-poster/DayPosterView";
 import { posterStoryText } from "@/components/day-poster/story";
 import { getHolidays } from "@/lib/data";
 import { POSTER_OG_SIZE, parsePosterDate } from "@/lib/day-poster";
-import { getDayPoster, getLatestPosterDate, getPosterSceneStocks } from "@/lib/day-poster-data";
+import { getDayPoster, getLatestPosterDate, getPosterSkyline } from "@/lib/day-poster-data";
 import { getDictionary, getI18n, getLocale } from "@/lib/i18n";
 import { LOCALES } from "@/lib/i18n/config";
 import { nextTradingDay, todayEt } from "@/lib/market-hours";
@@ -42,6 +42,7 @@ export async function generateMetadata(props: PageProps<"/gun/[tarih]">): Promis
   const t = getDictionary(locale);
   const L = t.daySignature.poster;
   const label = formatEtDateLong(date, locale);
+  const { districts } = await getPosterSkyline(read.poster);
   const image = absoluteUrl(`${posterPath(date)}/gorsel`, locale);
   return {
     title: L.metaTitle.replace("{date}", label),
@@ -49,7 +50,7 @@ export async function generateMetadata(props: PageProps<"/gun/[tarih]">): Promis
        tarih değil, o gün ne olduğu okunuyor. */
     description: L.metaDescription
       .replace("{date}", label)
-      .replace("{sentence}", posterStoryText(read.poster, locale, t).sentence),
+      .replace("{sentence}", posterStoryText(read.poster, districts, locale, t).sentence),
     alternates: pageAlternates(posterPath(date), locale),
     /* Paylaşım kartı posterin kendi görseli (`gorsel/route.tsx`). `openGraph`
        kökle derin birleşmiyor; marka satırı elle (bkz. `articleOpenGraph`). */
@@ -76,7 +77,7 @@ export default async function DayPosterPage(props: PageProps<"/gun/[tarih]">) {
   if (read.state === "missing") notFound();
 
   const { poster, fetchedAt } = read;
-  const [holidays, latest, scene] = await Promise.all([getHolidays(), getLatestPosterDate(), getPosterSceneStocks(poster)]);
+  const [holidays, latest, skyline] = await Promise.all([getHolidays(), getLatestPosterDate(), getPosterSkyline(poster)]);
   /* Önceki seans pencerenin içindeyse; sonraki yalnızca tamamlanmışsa. */
   const prevHref = parsePosterDate(poster.prevDate, today) ? posterPath(poster.prevDate) : null;
   const nextDate = date < latest ? nextTradingDay(date, holidays) : null;
@@ -85,7 +86,7 @@ export default async function DayPosterPage(props: PageProps<"/gun/[tarih]">) {
   return (
     <DayPosterView
       poster={poster}
-      scene={scene}
+      skyline={skyline}
       fetchedAt={fetchedAt}
       prevHref={prevHref}
       nextHref={nextHref}

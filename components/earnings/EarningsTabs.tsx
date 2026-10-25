@@ -28,10 +28,14 @@ export function EarningsTabs({
   active,
   t,
   className,
+  inHeader = false,
 }: {
   active: EarningsTab;
   t: Dictionary;
   className?: string;
+  /** Kapağın içinde (`DirectoryHeader` → `tabs`, 25 Ekim): kendi kartı yok,
+      kapağın alt kenarına oturuyor. Dört sekme de böyle basıyor. */
+  inHeader?: boolean;
 }) {
   const tabs: { key: EarningsTab; href: string; label: string }[] = [
     { key: "calendar", href: "/bilancolar", label: t.earnings.tabCalendar },
@@ -50,7 +54,7 @@ export function EarningsTabs({
      üç sekmede de aynı etiket duyuruluyordu — Analizler sekmesindeyken ekran
      okuyucu "Bilanço Takvimi, sekme listesi" diyordu. */
   return (
-    <TabBar label={t.analysis.title} className={`${styles.tabs} ${className ?? ""}`}>
+    <TabBar label={t.analysis.title} className={`${inHeader ? "" : styles.tabs} ${className ?? ""}`}>
       {tabs.map((tab) => (
         <TabItem
           key={tab.key}

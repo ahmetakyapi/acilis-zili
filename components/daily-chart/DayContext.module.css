@@ -1,0 +1,66 @@
+/* Günün bağlamı — gerekçe DayContext.tsx.
+   Kartlar ton farkıyla (`--surface-sunken`), çerçevesiz ve gölgesiz.
+   Izgara: 390'da tek sütun, 768'de iki; ızgara satırı kartları eşit gerer,
+   yan yana kartlar aynı hatta biter (CLAUDE.md ekran düzeni 4). */
+.grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 0 16px 16px; }
+@media (min-width: 768px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0 20px 20px; } }
+
+.card { display: flex; flex-direction: column; gap: 14px; min-width: 0; padding: 16px; border-radius: var(--radius-lg); background: var(--surface-sunken); }
+.cardTitle { font-size: var(--text-base); font-weight: 700; line-height: 1.3; color: var(--text-strong); }
+
+.headLink { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: var(--text-small); font-weight: 600; color: var(--primary-ink); transition: color 200ms var(--ease-brand); }
+.headLink:hover { color: var(--primary); }
+
+/* Endeks kulvarları: posterin `PosterLanes`i; kart zemini koyu olduğu için
+   kulvar tonu kartın zeminiyle karışmasın diye bir basamak koyu. */
+.card .lanes { --line-soft: var(--line); }
+
+/* Genişlik: iki iri sayı, aralarında şerit (poster perde 1'in küçük hâli). */
+.breadthFigures { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.breadthSide { display: flex; align-items: baseline; gap: 8px; }
+.breadthRight { justify-content: flex-end; }
+.breadthNumber { font-size: clamp(2rem, 1.5rem + 2vw, 2.75rem); font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
+.breadthWord { font-size: var(--text-small); font-weight: 600; color: var(--text-muted); }
+.strip { --line-soft: var(--line); }
+.flat { font-size: var(--text-tiny); color: var(--text-muted); }
+
+/* Öne çıkanlar: iki sütun, dar kartta alt alta. Satır bütün bir bağlantı,
+   44 piksel. */
+.movers { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+@media (min-width: 1100px) { .movers { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.moverCol { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.moverTitle { font-size: var(--text-small); font-weight: 600; color: var(--text-muted); }
+.moverList { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.mover { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 44px; padding: 4px 8px; margin-inline: -8px; border-radius: var(--radius-md); transition: background-color 200ms var(--ease-brand); }
+.mover:hover { background: var(--primary-tint); }
+.mover:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 0; }
+.moverName { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.moverSymbol { font-family: var(--font-mono); font-size: var(--text-small); font-weight: 600; color: var(--text-strong); }
+.moverCompany { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-tiny); color: var(--text-muted); }
+.moverValue { font-size: var(--text-base); font-weight: 700; white-space: nowrap; }
+
+/* Takvim. */
+.events { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.event { display: grid; grid-template-columns: 3.25rem minmax(0, 1fr); gap: 10px; align-items: baseline; font-size: var(--text-small); line-height: 1.4; }
+.eventTime { font-weight: 600; color: var(--text-muted); }
+.eventTitle { min-width: 0; color: var(--text-strong); }
+.more { font-size: var(--text-tiny); font-weight: 600; color: var(--text-muted); }
+.earnings { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+.earningsTitle { font-size: var(--text-small); font-weight: 600; color: var(--text-strong); }
+.logos { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.logo { display: grid; place-items: center; min-width: 44px; min-height: 44px; border-radius: var(--radius-md); transition: background-color 200ms var(--ease-brand); }
+.logo:hover { background: var(--primary-tint); }
+.logo:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 0; }
+.empty { font-size: var(--text-small); color: var(--text-muted); line-height: 1.5; }
+
+/* Künye panelin içinde, hairline ile (ekran düzeni 6). */
+.note { padding: 14px 16px 18px; border-top: 1px solid var(--line); font-size: var(--text-small); line-height: 1.55; color: var(--text-muted); }
+@media (min-width: 768px) { .note { padding: 14px 20px 20px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .headLink, .mover, .logo { transition: none; }
+}
+
+/* Endeks kulvarları sırasız (`ranked={false}`): boş sıra sütunu adları
+   içeri itiyordu (390'da 20 piksel, ölçüldü). Kart içinde sütun sıfır. */
+.card .lanes { --rank-w: 0px; }

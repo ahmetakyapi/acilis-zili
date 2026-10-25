@@ -156,7 +156,7 @@ export default async function InboxPage() {
                           <span className="mt-0.5 block text-small leading-relaxed text-body [overflow-wrap:anywhere]">
                             {item.body}
                           </span>
-                          <span className="mt-1 block text-tiny tabular-nums text-muted">
+                          <span className="mt-1 block text-tiny text-muted">
                             {L.kinds[item.kind]} · {formatInZone(item.createdAt, zone)}
                           </span>
                         </span>

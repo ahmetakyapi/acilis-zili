@@ -7,6 +7,17 @@
    (hisse sayfasının karnesiyle aynı; kırmızı değil, "kaçırdı" bir yargı
    gibi okunurdu). Geniş ekranda (≥1180) beş sütun ve solda şerit ekseni,
    altında gün seçici ve tek gün, şeritler yan yana.
+
+   KOMPAKT TUR (25 Ekim, ikinci tur — sahibinin isteği: "yine alt satıra
+   kaymamız gerekiyor, hepsi tek seferde görüntülensin"). Ölçüldü (TR,
+   açık, ızgaranın üst/alt kenarı): 1280×800'de 457–1150 (Kapanış Sonrası
+   satırı ve Saati Belirsiz ilk ekranın dışında), 1440×900'de 460–1011.
+   Değişenler: kapak ile sekme tek bant (`DirectoryHeader` → `tabs`); gün
+   başlığı tek satır; karo iki boy (56 / 40, `tileTierOf`) ve hücre en
+   çok altı yuva, sığmayan "+N" çipiyle günün listesine (`capCell`); karne
+   çentikleri karonun İÇİNDE alt şerit; eksen 112 → 104 piksel ve saat
+   künyesi tek satır; hücre ve okuma satırı boşlukları sıkı. Sonuç
+   sayfanın başındaki ölçüm yorumunda (`app/(app)/bilancolar/page.tsx`).
    ========================================================================== */
 
 .panel { overflow: clip; }
@@ -15,9 +26,9 @@
 /* Tepedeki tek cümle — veriden (`horizonLead`). Gövde puntosunun bir üstü:
    ekranın ilk okunan satırı bu. */
 .lead {
-  max-width: 72ch;
-  margin: -6px 0 0;
-  padding: 0 20px 14px;
+  max-width: 120ch;
+  margin: -8px 0 0;
+  padding: 0 20px 10px;
   font-size: var(--text-read);
   line-height: 1.5;
   color: var(--text-body);
@@ -34,11 +45,11 @@
    Beş sütun 1180'den başlıyor: 1024'te sütun iki taban karoya darlaşıyor
    ve panel 1.230 piksel uzuyordu (ölçüldü); altında gün seçici. */
 .grid {
-  --tile-min: 44px;
-  --tile-max: clamp(72px, 20vw, 104px);
+  --tile-big: 56px;
+  --tile-base: 40px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   padding: 0 20px;
 }
 @media (max-width: 639px) { .grid { padding-inline: 16px; } }
@@ -50,37 +61,39 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-content: start;
   min-width: 0;
-  padding: 4px;
+  padding: 3px;
   border-radius: var(--radius-xl, 1rem);
   background: var(--surface-sunken);
 }
 .day[data-state="today"] { background: var(--primary-tint); box-shadow: inset 0 0 0 1px var(--primary-faint); }
 
+/* Tek satır: "26 Pazartesi ······ 102 Şirket", altında yoğunluk çizgisi. */
 .dayHead {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
-    "number title"
-    "number date"
+    "title count"
     "density density";
   align-items: center;
-  column-gap: 10px;
-  padding: 8px 10px 8px;
+  gap: 6px 8px;
+  padding: 7px 9px 8px;
 }
 .dayName {
   grid-area: title;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: baseline;
+  gap: 6px;
   min-width: 0;
   margin: 0;
   font-size: var(--text-small);
   font-weight: 650;
   letter-spacing: -0.01em;
   color: var(--text-strong);
+  white-space: nowrap;
 }
-.day[data-state="past"] .dayName { color: var(--text-body); }
+.dayWeekday { overflow: hidden; min-width: 0; text-overflow: ellipsis; }
+.day[data-state="past"] :is(.dayName, .dayNumber, .dayCount) { color: var(--text-muted); }
 .todayTag {
   padding: 1px 8px;
   border-radius: 999px;
@@ -89,14 +102,13 @@
   font-size: var(--text-nano);
   font-weight: 650;
   line-height: 18px;
+  align-self: center;
 }
-.dayDate { display: contents; margin: 0; }
-.dayDate > :nth-child(2) { grid-area: date; font-size: var(--text-tiny); font-weight: 600; color: var(--text-muted); }
-.dayNumber { grid-area: number; font-size: 1.75rem; font-weight: 600; line-height: 1; letter-spacing: -0.05em; color: var(--text-strong); }
-/* Sayı ay adının yanında, aynı satırda: "Eki · 356 Şirket". */
-.dayCount { grid-area: date; justify-self: end; font-size: var(--text-nano); font-weight: 600; white-space: nowrap; color: var(--text-muted); }
+.dayNumber { font-size: 1.25rem; font-weight: 650; line-height: 1; letter-spacing: -0.04em; color: var(--text-strong); }
+/* Sayı okunur: gövde rengi ve kalın; "Şirket" künyesi aynı satırda. */
+.dayCount { grid-area: count; margin: 0; font-size: var(--text-tiny); font-weight: 700; white-space: nowrap; color: var(--text-strong); }
 
-.density { grid-area: density; display: block; height: var(--lane-h, 5px); margin-top: 8px; overflow: hidden; border-radius: 999px; background: var(--line-soft); }
+.density { grid-area: density; display: block; height: var(--lane-h, 5px); overflow: hidden; border-radius: 999px; background: var(--line-soft); }
 .density > span {
   display: block;
   height: 100%;
@@ -113,7 +125,7 @@
   min-width: 0;
   flex-direction: column;
   gap: 6px;
-  padding: 8px 6px 10px;
+  padding: 7px 6px 8px;
   border-top: 1px solid var(--line-soft);
 }
 .lane[data-lane="other"] { grid-column: 1 / -1; }
@@ -158,22 +170,25 @@
 /* ---- Karolar ----
    Kare kenar `--side`; altta sembol ve dört çentik. Sıra şerit içinde
    büyükten küçüğe (`buildWeek`), sarma soldan. */
-.tiles { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px 8px; margin: 0; padding: 0; list-style: none; }
+.tiles { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 6px; margin: 0; padding: 0; list-style: none; }
 .tileItem {
-  --side: max(var(--tile-min), calc(var(--s) * var(--tile-max)));
+  --side: var(--tile-base);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   min-width: var(--side);
 }
+.tileItem[data-tier="big"] { --side: var(--tile-big); }
+/* Karo 40 piksel; dokunma alanı `tap-44` ile görünmeden 44. */
 .tile {
   position: relative;
   display: grid;
   place-items: center;
   width: var(--side);
   height: var(--side);
-  border-radius: calc(8px + var(--s) * 6px);
+  padding-bottom: 4px;
+  border-radius: 10px;
   background: var(--surface-solid);
   cursor: pointer;
   transition: background-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand);
@@ -189,13 +204,35 @@
 .result[data-dir="beat"] { color: var(--up); }
 .result[data-dir="miss"] { color: var(--down); }
 
+.tileItem[data-tier="big"] .tile { border-radius: 13px; }
+
 .tileSymbol { font-size: var(--text-nano); font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; color: var(--text-strong); white-space: nowrap; }
+
+/* "+N": hücreye sığmayanlar. Karo boyunda ama dolu değil, saç teli
+   halkalı: veri değil, bir bağlantı. */
+.more {
+  display: grid;
+  place-items: center;
+  width: var(--tile-base);
+  height: var(--tile-base);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: var(--text-tiny);
+  font-weight: 700;
+  color: var(--text-body);
+  transition: background-color .2s var(--ease-brand), color .2s var(--ease-brand);
+}
+@media (hover: hover) { .more:hover { background: var(--surface-solid); color: var(--primary-ink); } }
+.more:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 /* Çentikler: 4 × 8 piksel, 3 piksel boy; dolu = aşıldı. Yükleniyorken dört
    sönük yuva (aynı yükseklik: veri gelince satır kaymaz). Eşli çeyrek
    ikiden azsa çentik yok, yükseklik yine ayrılı. */
 .notches { display: flex; gap: 2px; height: 3px; }
 .notches > i { display: block; width: 8px; height: 3px; border-radius: 2px; background: var(--line-strong); }
+/* Karonun içinde: alt kenarda, iki yandan 6 piksel içeride ince şerit. */
+.tile > .notches { position: absolute; right: 6px; bottom: 4px; left: 6px; height: 2px; }
+.tile > .notches > i { flex: 1; width: auto; height: 2px; border-radius: 1px; }
 .notches > i[data-beat] { background: var(--up); }
 .notches[data-pending] > i { background: var(--line-soft); }
 /* Okuma satırının karnesi bir kulvar: site geneli tek kalınlık 5 piksel
@@ -224,9 +261,9 @@
 .readout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 14px;
-  margin: 14px 20px 0;
-  padding: 14px 16px;
+  gap: 12px;
+  margin: 10px 20px 0;
+  padding: 10px 14px;
   border-radius: var(--radius-lg);
   background: var(--surface-sunken);
 }
@@ -239,7 +276,7 @@
 .readoutFacts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; margin: 0; }
 .readoutFacts > div { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
 .readoutFacts dt { font-size: var(--text-tiny); font-weight: 600; color: var(--text-muted); white-space: nowrap; }
-.readoutFacts dd { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.25; color: var(--text-strong); white-space: nowrap; }
+.readoutFacts dd { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.25; color: var(--text-strong); white-space: nowrap; }
 .readoutFacts dd[data-dir="beat"] { color: var(--up); }
 .readoutFacts dd[data-dir="miss"] { color: var(--down); }
 
@@ -261,7 +298,7 @@
 @media (hover: hover) { .readoutLink:hover { color: var(--primary-hover); } }
 .readoutHint { margin: 0; font-size: var(--text-small); color: var(--text-muted); }
 
-.foot { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; padding: 14px 20px; border-top: 1px solid var(--line-soft); font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+.foot { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; padding: 10px 20px 12px; border-top: 1px solid var(--line-soft); font-size: 12px; line-height: 1.5; color: var(--text-muted); }
 .foot > p { max-width: 90ch; margin: 0; }
 @media (max-width: 639px) { .foot { padding-inline: 16px; } }
 
@@ -276,16 +313,16 @@
    kuralı). */
 @media (min-width: 1180px) {
   .grid {
-    --tile-max: clamp(64px, 6.6vw, 96px);
     display: grid;
-    grid-template-columns: 112px repeat(5, minmax(0, 1fr));
+    grid-template-columns: 104px repeat(5, minmax(0, 1fr));
     grid-template-rows: auto repeat(var(--lanes), auto);
     gap: 0 8px;
   }
   .picker { display: none; }
   .axis { display: grid; grid-row: 1 / -1; grid-template-rows: subgrid; }
-  .axisLane { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 10px 0 0; border-top: 1px solid var(--line-soft); }
-  .axisClock { display: flex; flex-direction: column; font-size: var(--text-tiny); font-weight: 700; line-height: 1.3; color: var(--text-strong); }
+  .axisLane { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px 0 0; border-top: 1px solid var(--line-soft); }
+  /* Saat künyesi tek satır: "~15:00 ~08:00 NY". */
+  .axisClock { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 5px; font-size: var(--text-tiny); font-weight: 700; line-height: 1.3; color: var(--text-strong); white-space: nowrap; }
   .axisClockAlt { font-size: var(--text-nano); font-weight: 600; color: var(--text-muted); }
 
   .day { grid-row: 1 / -1; grid-template-columns: minmax(0, 1fr); grid-template-rows: subgrid; }
@@ -305,6 +342,9 @@
 
   .readout {
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.9fr) minmax(0, 1fr) auto;
-    gap: 24px;
+    gap: 20px;
   }
+  /* Künye iki sütun: lejant ve seçim notu yan yana (1920×1080'de takvim
+     listesinin başı ilk ekrana yaklaşsın diye; ölçüm sayfada). */
+  .foot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 32px; }
 }

@@ -525,106 +525,6 @@ async function ScreenerTable({
 
   return (
     <>
-      {/* SONUCUN GÖRÜNÜMÜ — ana görsel, tablonun ÜSTÜNDE (ekran düzeni 3):
-          tablo 60 satırı sırayla söylüyordu; kümenin şekli ve hangi
-          sektörlerden oluştuğu hiçbir satırdan okunmuyordu. */}
-      {filtered.length > 0 && (
-        <Panel className={visual.summary}>
-          <PanelHeader title={V.summaryTitle} meta={`${V.sortedBy}: ${sortLabels[sort]}`} />
-          <div className={visual.summaryBody}>
-            <p className={visual.lead}>{lead}</p>
-
-            {sectorMix.length > 1 && (
-              <section className={visual.block} aria-labelledby="tarama-sektor">
-                <h3 id="tarama-sektor" className={visual.blockTitle}>{V.sectorMix}</h3>
-                <div className={visual.strip} data-motion-stagger>
-                  {sectorMix.map(({ sector, count, label }) => {
-                    const share = count / filtered.length;
-                    const p = sharePercent(share);
-                    return (
-                      <Link
-                        key={sector}
-                        href={paramsFor({ sector: sector === activeSector ? null : sectorSlug(sector) })}
-                        scroll={false}
-                        className={visual.segment}
-                        data-active={sector === activeSector || undefined}
-                        style={{ flexGrow: count }}
-                        aria-label={V.sectorAria.replace("{sector}", label).replace("{n}", String(count)).replace("{p}", String(p))}
-                        title={`${label} · ${count}`}
-                      >
-                        {share >= SEGMENT_LABEL_MIN && (
-                          <span aria-hidden className={visual.segmentLabel}>
-                            <span className={visual.segmentName}>{label}</span>
-                            <b className="numeral">{count}</b>
-                          </span>
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-                <ul className={visual.legend}>
-                  {sectorMix.slice(0, LEGEND_LIMIT).map(({ sector, count, label }) => (
-                    <li key={sector}>
-                      <span className={visual.legendName}>{label}</span>
-                      <span className="numeral">{count}</span>
-                      <span className="numeral text-muted">{t.toolVisuals.companies.sharePct.replace("{p}", String(sharePercent(count / filtered.length)))}</span>
-                    </li>
-                  ))}
-                  {sectorMix.length > LEGEND_LIMIT && (
-                    <li className={visual.legendRest}>{V.other.replace("{n}", String(sectorMix.length - LEGEND_LIMIT))}</li>
-                  )}
-                </ul>
-              </section>
-            )}
-
-            <section className={visual.block} aria-labelledby="tarama-kume">
-              <div className={visual.blockHead}>
-                <h3 id="tarama-kume" className={visual.blockTitle}>{V.swarmTitle.replace("{metric}", sortLabels[sort])}</h3>
-                <ChipStrip
-                  activeKey={sort}
-                  scrollLabels={{ prev: t.common.scrollPrev, next: t.common.scrollNext }}
-                  className="scroll-x flex items-center gap-1.5"
-                >
-                  {SORT_KEYS.map((key) => (
-                    <FilterChip
-                      key={key}
-                      href={paramsFor({ sort: key, dir: key === sort ? dir : "desc" })}
-                      active={key === sort}
-                      label={sortLabels[key]}
-                    />
-                  ))}
-                </ChipStrip>
-              </div>
-              {swarmPoints.length === 0 ? (
-                <p className={visual.empty}>{V.swarmEmpty}</p>
-              ) : (
-                <MetricSwarm
-                  points={swarmPoints}
-                  /* F/K da log: yalnız pozitif (zarar edende boş) ve sağa çok
-                     çarpık — doğrusalda büyüme süzgecinin kümesi sol kenara
-                     yığılıyordu (25 Ekim ekran görüntüsü). */
-                  scale={sort === "cap" || sort === "fk" ? "log" : "linear"}
-                  kind={METRIC_KIND[sort]}
-                  universeMedian={isFiltered ? median(universe) : null}
-                  missing={filtered.length - swarmPoints.length}
-                  locale={locale}
-                  labels={{
-                    aria: V.swarmAria.replace("{metric}", sortLabels[sort]).replace("{n}", String(swarmPoints.length)),
-                    hint: V.swarmHint,
-                    median: V.swarmMedian,
-                    universe: V.swarmUniverse,
-                    log: V.swarmLog,
-                    clipped: V.swarmClipped,
-                    missing: V.swarmMissing,
-                    open: V.open,
-                  }}
-                />
-              )}
-            </section>
-          </div>
-        </Panel>
-      )}
-
       <Panel className={styles.tablePanel}>
         <PanelHeader
           action={<ViewSwitch view={view} paramsFor={paramsFor} labels={t.toolVisuals.screener} />}
@@ -661,6 +561,9 @@ async function ScreenerTable({
             );
           })()}
         />
+
+        {/* Veriden tek cümle tablonun başında (özet paneli tablonun altına indi). */}
+        {filtered.length > 0 && <p className={visual.tableLead}>{lead}</p>}
 
         {/* Sektör şeridi panelin içinde, başlığın altında: süzgecin
             değiştirdiği liste ile aynı kutuda. */}
@@ -904,6 +807,112 @@ async function ScreenerTable({
           {L.coverage.replace("{n}", String(rows.length))}
         </p>
       </Panel>
+
+      {/* SONUCUN GÖRÜNÜMÜ — kümenin şekli (sektör şeridi + dağılım) TABLONUN
+          ALTINDA (25 Ekim, ikinci tur). İlk hâlinde tablonun üstündeydi:
+          tablo 60 satırı sırayla söylüyordu, kümenin şekli hiçbir satırdan
+          okunmuyordu. Ama 1280×800'de panel ilk ekranın kalanını kaplıyor ve
+          ekranın asıl işi olan sonuç tablosu ilk ekranda hiç görünmüyordu
+          (sahibinin isteği: "kaydırılmadan da görünebilsin"; teknik ve
+          şirketlerdeki taşımayla aynı karar). Tepe cümlesi tablonun başında
+          kaldı (`visual.tableLead`); şekil tablonun ardında. Ölçüldü:
+          tablo panelinin üst kenarı 1280×800'de 961 → 465, 1440×900'de
+          944 → 468. */}
+      {filtered.length > 0 && (
+        <Panel className={visual.summary}>
+          <PanelHeader title={V.summaryTitle} meta={`${V.sortedBy}: ${sortLabels[sort]}`} />
+          <div className={visual.summaryBody}>
+
+            {sectorMix.length > 1 && (
+              <section className={visual.block} aria-labelledby="tarama-sektor">
+                <h3 id="tarama-sektor" className={visual.blockTitle}>{V.sectorMix}</h3>
+                <div className={visual.strip} data-motion-stagger>
+                  {sectorMix.map(({ sector, count, label }) => {
+                    const share = count / filtered.length;
+                    const p = sharePercent(share);
+                    return (
+                      <Link
+                        key={sector}
+                        href={paramsFor({ sector: sector === activeSector ? null : sectorSlug(sector) })}
+                        scroll={false}
+                        className={visual.segment}
+                        data-active={sector === activeSector || undefined}
+                        style={{ flexGrow: count }}
+                        aria-label={V.sectorAria.replace("{sector}", label).replace("{n}", String(count)).replace("{p}", String(p))}
+                        title={`${label} · ${count}`}
+                      >
+                        {share >= SEGMENT_LABEL_MIN && (
+                          <span aria-hidden className={visual.segmentLabel}>
+                            <span className={visual.segmentName}>{label}</span>
+                            <b className="numeral">{count}</b>
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+                <ul className={visual.legend}>
+                  {sectorMix.slice(0, LEGEND_LIMIT).map(({ sector, count, label }) => (
+                    <li key={sector}>
+                      <span className={visual.legendName}>{label}</span>
+                      <span className="numeral">{count}</span>
+                      <span className="numeral text-muted">{t.toolVisuals.companies.sharePct.replace("{p}", String(sharePercent(count / filtered.length)))}</span>
+                    </li>
+                  ))}
+                  {sectorMix.length > LEGEND_LIMIT && (
+                    <li className={visual.legendRest}>{V.other.replace("{n}", String(sectorMix.length - LEGEND_LIMIT))}</li>
+                  )}
+                </ul>
+              </section>
+            )}
+
+            <section className={visual.block} aria-labelledby="tarama-kume">
+              <div className={visual.blockHead}>
+                <h3 id="tarama-kume" className={visual.blockTitle}>{V.swarmTitle.replace("{metric}", sortLabels[sort])}</h3>
+                <ChipStrip
+                  activeKey={sort}
+                  scrollLabels={{ prev: t.common.scrollPrev, next: t.common.scrollNext }}
+                  className="scroll-x flex items-center gap-1.5"
+                >
+                  {SORT_KEYS.map((key) => (
+                    <FilterChip
+                      key={key}
+                      href={paramsFor({ sort: key, dir: key === sort ? dir : "desc" })}
+                      active={key === sort}
+                      label={sortLabels[key]}
+                    />
+                  ))}
+                </ChipStrip>
+              </div>
+              {swarmPoints.length === 0 ? (
+                <p className={visual.empty}>{V.swarmEmpty}</p>
+              ) : (
+                <MetricSwarm
+                  points={swarmPoints}
+                  /* F/K da log: yalnız pozitif (zarar edende boş) ve sağa çok
+                     çarpık — doğrusalda büyüme süzgecinin kümesi sol kenara
+                     yığılıyordu (25 Ekim ekran görüntüsü). */
+                  scale={sort === "cap" || sort === "fk" ? "log" : "linear"}
+                  kind={METRIC_KIND[sort]}
+                  universeMedian={isFiltered ? median(universe) : null}
+                  missing={filtered.length - swarmPoints.length}
+                  locale={locale}
+                  labels={{
+                    aria: V.swarmAria.replace("{metric}", sortLabels[sort]).replace("{n}", String(swarmPoints.length)),
+                    hint: V.swarmHint,
+                    median: V.swarmMedian,
+                    universe: V.swarmUniverse,
+                    log: V.swarmLog,
+                    clipped: V.swarmClipped,
+                    missing: V.swarmMissing,
+                    open: V.open,
+                  }}
+                />
+              )}
+            </section>
+          </div>
+        </Panel>
+      )}
 
       {quotesResult.ok && (
         <DataStamp

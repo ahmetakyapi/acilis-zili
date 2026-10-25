@@ -6,7 +6,6 @@ import { INTL_LOCALE } from "@/lib/i18n/config";
 import type { NextFomc } from "@/lib/macro-data";
 import { etDateTimeToUtc } from "@/lib/market-hours";
 import {
-  change24h,
   cpiLadder,
   ELECTION_DAY_ET,
   eventProbabilities,
@@ -22,7 +21,6 @@ import {
   ratePath,
   resolvedOutcome,
   topOutcome,
-  type FedMove,
   type FedSide,
   type ProbabilitySnapshot,
   type ProbEvent,
@@ -30,16 +28,19 @@ import {
 import { readerDayOffset, TR_ZONE, formatInZone, zoneDateKey } from "@/lib/session-clock";
 import { formatEtDateCompact, formatPercentPlain, formatPrice, relativeDayLabel } from "@/lib/utils";
 import { ProbabilityLine, type LineRow, type LineSeries } from "./ProbabilityLine";
-import { ProbabilityStack, RatePath, etOf, pct, shareMap, shareText, signedPoints } from "./ProbabilityParts";
+import { ProbabilityStack, RatePath, etOf, pct, shareMap, shareText } from "./ProbabilityParts";
 import styles from "./Probabilities.module.css";
 
 /**
  * Olasılıklar sayfasının panelleri (25 Ekim). Her panel kendi `h2`siyle;
- * sıra CLAUDE.md "Ekran düzeni": başlık → ana görsel (büyük sayı + çubuk) →
- * çizgi → künye. Sayılar `lib/probabilities.ts`ten; burada yalnız biçim.
+ * sıra CLAUDE.md "Ekran düzeni": başlık → ana görsel (çubuk) → çizgi →
+ * künye. Sayılar `lib/probabilities.ts`ten; burada yalnız biçim.
+ *
+ * GÖRSEL TUR (25 Ekim): büyük sayı kartlardan tepe şeridine çıktı
+ * (`OddsStrip`); kartlar artık ölçü ızgarasının üç sütunu (Fed, ara seçim,
+ * resesyon) ve her biri çubuk + 30 günlük çizgi + tek satır künye. Aynı
+ * sayı iki yerde: şeritteki ile kartın ölçeğindeki aynı `percentShares`.
  */
-
-type P = Dictionary["probabilities"];
 
 const NY_ZONE = "America/New_York";
 const DAY_MONTH = new Map<string, Intl.DateTimeFormat>();
@@ -110,17 +111,15 @@ function endTexts(rows: LineRow[], keys: readonly string[], locale: Locale): Rec
   return Object.fromEntries(keys.map((key, i) => [key, shareText(shares[i], locale, values[i])]));
 }
 
-function DeltaFact({ points, p, locale }: { points: number | null; p: P; locale: Locale }) {
-  if (points === null) return null;
-  return (
-    <div>
-      <dt>{p.change24h}</dt>
-      <dd className={`${styles.delta} numeral`}>
-        {points === 0 ? p.noChange : p.points.replace("{n}", signedPoints(points, locale))}
-      </dd>
-    </div>
-  );
-}
+/* Kartların çizgi yükseklikleri (piksel). Kartlar ilk ekrana sığsın diye
+   112'den indi; Fed ve resesyon tek ana çizgi (kartın kalanını doldurur),
+   meclisler iki küçük çizgi. Meclis çizgisi 44'ün altına inmez: kutunun
+   tamamı dokunma hedefi. Ölçüm (TR, açık): üç kartın dibi 1280×800'de
+   759, 1440×900'de 766; görünür alan 763 / 863'te bitiyor. */
+const LINE_H = { main: 76, chamber: 44 } as const;
+
+/** Kartların ızgara içindeki çapası (tepe şeridindeki kadranlar buraya iner). */
+export const CARD_ANCHORS = { fed: "fed-karari", election: "ara-secim", recession: "resesyon" } as const;
 
 /* ------------------------------------------------------------------ FED */
 
@@ -143,7 +142,7 @@ export function FedPanel({
   const probs = meeting && liquidity !== "hidden" ? eventProbabilities(meeting) : null;
   if (!meeting || !probs) {
     return (
-      <Panel>
+      <Panel id={CARD_ANCHORS.fed} className={styles.card}>
         <PanelHeader title={p.fedTitle} />
         <p className={`${styles.note} px-4 pb-5 sm:px-5`}>{p.panelEmpty}</p>
       </Panel>
@@ -153,7 +152,6 @@ export function FedPanel({
   const at = meeting.strikeAt ? etOf(meeting.strikeAt) : null;
   const clocks = at ? clockPair(at.date, at.time, locale) : null;
   const days = at ? readerDayOffset(at.date, at.time, locale) : null;
-  const delta = change24h(meeting, top.key);
   /* Takvimle aynı toplantı mı: aynı ET günü. Değilse bağlantı basılmaz;
      kaynağın tarihi yine görünür (karar kaydı: aynı olay iki yerde aynı
      günü söylemeli, söylemiyorsa okuyucuyu çelişkiye götürmeyiz). */
@@ -172,46 +170,24 @@ export function FedPanel({
   );
   const sides = fedSides(probs);
   const series: LineSeries[] = FED_SIDES.map((side) => ({ key: side, label: p.fedSides[side], tone: side }));
-  const segments = FED_MOVES.map((move) => ({ key: move, label: p.fedOutcomes[move], p: probs[move] ?? 0 }));
+  /* Ölçek kısa adla (−25 bp), çubuğun aria'sı tam adla. */
+  const segments = FED_MOVES.map((move) => ({ key: move, label: p.fedScale[move], p: probs[move] ?? 0 }));
   const shares = shareMap(segments);
+  const fullList = FED_MOVES.map((move) => `${p.fedOutcomes[move]} ${shareText(shares[move], locale, probs[move] ?? 0)}`).join(", ");
 
   return (
-    <Panel>
+    <Panel id={CARD_ANCHORS.fed} className={styles.card}>
       <PanelHeader
         title={p.fedTitle}
         meta={at && clocks ? p.fedMeta.replace("{date}", dayMonth(at.date, locale)).replace("{time}", clocks.primary) : undefined}
       />
       <div className={styles.body}>
-        <div className={styles.hero}>
-          <div className={styles.figure}>
-            <span className={styles.figureLabel}>{p.fedLeadLabel}</span>
-            <span className={styles.figureValue}>
-              <b>{shareText(shares[top.key], locale)}</b>
-              <span>{p.fedOutcomes[top.key as FedMove]}</span>
-            </span>
-          </div>
-          <dl className={styles.facts}>
-            <DeltaFact points={delta} p={p} locale={locale} />
-            {days !== null && days >= 0 && (
-              <div>
-                <dt>{p.fedCountdown}</dt>
-                <dd className="numeral">{relativeDayLabel(days, t.calendar)}</dd>
-              </div>
-            )}
-            {target && (
-              <div>
-                <dt>{p.fedTarget}</dt>
-                <dd className="numeral">{`${formatPercentPlain(target.lower, locale, 2)} - ${formatPercentPlain(target.upper, locale, 2)}`}</dd>
-              </div>
-            )}
-          </dl>
-        </div>
-
         <ProbabilityStack
           segments={segments}
           lead={top.key}
           locale={locale}
-          ariaLabel={p.fedBarLabel.replace("{list}", segments.map((s) => `${s.label} ${shareText(shares[s.key], locale, s.p)}`).join(", "))}
+          legend="scale"
+          ariaLabel={p.fedBarLabel.replace("{list}", fullList)}
         />
 
         {rows.length >= 2 && (
@@ -222,17 +198,35 @@ export function FedPanel({
             percent={locale}
             midLabel={p.mid}
             hint={p.lineHint}
+            height={LINE_H.main}
+            grow
             ariaLabel={`${p.fedLineLabel}: ${FED_SIDES.map((side) => `${p.fedSides[side]} ${pct(sides[side], locale)}`).join(", ")}`}
           />
         )}
 
-        {liquidity === "thin" && <span className={styles.thin}>{p.thin}</span>}
-        {sameMeeting && (
-          <Link href="/takvim" prefetch={false} className={`${styles.calLink} tap-44`}>
-            {p.fedLinkCalendar}
-            <ArrowRight size={13} weight="bold" aria-hidden />
-          </Link>
-        )}
+        <div className={styles.cardFoot}>
+          <dl className={styles.facts}>
+            {target && (
+              <div>
+                <dt>{p.fedTarget}</dt>
+                <dd className="numeral">{`${formatPercentPlain(target.lower, locale, 2)} - ${formatPercentPlain(target.upper, locale, 2)}`}</dd>
+              </div>
+            )}
+            {days !== null && days >= 0 && (
+              <div>
+                <dt>{p.fedCountdown}</dt>
+                <dd className="numeral">{relativeDayLabel(days, t.calendar)}</dd>
+              </div>
+            )}
+          </dl>
+          {liquidity === "thin" && <span className={styles.thin}>{p.thin}</span>}
+          {sameMeeting && (
+            <Link href="/takvim" prefetch={false} className={`${styles.calLink} tap-44`}>
+              {p.fedLinkCalendar}
+              <ArrowRight size={13} weight="bold" aria-hidden />
+            </Link>
+          )}
+        </div>
       </div>
     </Panel>
   );
@@ -291,6 +285,12 @@ export function PathPanel({
 
 const PARTIES = ["dem", "rep"] as const;
 
+/**
+ * Bir meclis tek satır: adı ve iki partinin payı aynı hatta, altında
+ * çoğunluk çentikli iki uçlu çubuk, altında 30 günün küçük çizgisi.
+ * Eskiden parti adları ve 34 piksellik sayılar çubuğun üstünde ayrı bir
+ * blok tutuyordu ve iki meclis kartı 1300 piksele uzatıyordu.
+ */
 function Chamber({
   event,
   kind,
@@ -322,7 +322,6 @@ function Chamber({
   const probs = eventProbabilities(event);
   if (!probs) return null;
   const top = topOutcome(probs)!;
-  const delta = change24h(event, top.key);
   const rows = lineRows(event, PARTIES.map((party) => ({ key: party, keys: [party] })), locale, takenAt);
   const segments = PARTIES.map((party) => ({ key: party, label: p.parties[party], p: probs[party] ?? 0 }));
   const shares = shareMap(segments);
@@ -331,25 +330,21 @@ function Chamber({
     <section className={styles.chamber} aria-label={name}>
       <div className={styles.chamberHead}>
         <h3>{name}</h3>
-        {delta !== null && (
-          <span className="text-tiny text-muted numeral">
-            {p.change24h} {delta === 0 ? p.noChange : `${p.parties[top.key as "dem" | "rep"]} ${p.points.replace("{n}", signedPoints(delta, locale))}`}
-          </span>
-        )}
-      </div>
-      <div className={styles.chamberEnds}>
-        {segments.map((s) => (
-          <div key={s.key} className={styles.chamberEnd} data-tone={s.key} data-trail={s.key !== top.key || undefined}>
-            <span><i aria-hidden />{s.label}</span>
-            <b>{shareText(shares[s.key], locale)}</b>
-          </div>
-        ))}
+        <span className={styles.chamberShares} aria-hidden>
+          {segments.map((s) => (
+            <span key={s.key} data-tone={s.key} data-trail={s.key !== top.key || undefined}>
+              <i />
+              <b className="numeral">{shareText(shares[s.key], locale)}</b>
+            </span>
+          ))}
+        </span>
       </div>
       <ProbabilityStack
         segments={segments}
         lead={top.key}
         locale={locale}
         midline={p.majority}
+        midlineLabel={false}
         legend={false}
         ariaLabel={p.chamberBarLabel.replace("{chamber}", name).replace("{list}", list)}
       />
@@ -361,6 +356,7 @@ function Chamber({
           percent={locale}
           midLabel={p.mid}
           hint={p.lineHint}
+          height={LINE_H.chamber}
           ariaLabel={`${p.chamberLineLabel.replace("{chamber}", name)}: ${list}`}
         />
       )}
@@ -377,40 +373,93 @@ export function ElectionPanel({ snapshot, locale, t }: { snapshot: ProbabilitySn
   const started = pollsClosed();
   const clocks = clockPair(ELECTION_DAY_ET, FIRST_POLLS_CLOSE_ET, locale);
   const hasAny = [house, senate].some((e) => e && liquidityOf(e) !== "hidden");
+  /* "9 Gün Kaldı" kutusu künyeye indi (başlığın sağında). Sandık saati
+     seçimden bir gün önce karta çıkar; o güne kadar künyeler panelinde
+     (kart ilk ekrana sığsın: 1280×800'de bu satır 30 piksel aşıyordu). */
+  const pollsSoon = started || days <= 1;
+  const meta = started ? p.electionMeta : days > 0 ? p.electionMetaDays.replace("{n}", String(days)) : p.electionMetaToday;
   return (
-    <Panel>
-      <PanelHeader title={p.electionTitle} meta={p.electionMeta} />
+    <Panel id={CARD_ANCHORS.election} className={styles.card}>
+      <PanelHeader title={p.electionTitle} meta={meta} />
       <div className={styles.body}>
-        {!started ? (
-          <div className={styles.countdown}>
-            {days > 0 ? (
-              <>
-                <b>{days}</b>
-                <span>{p.electionDaysLeft}</span>
-              </>
-            ) : (
-              <span>{p.electionToday}</span>
-            )}
-            <small>{p.electionPolls.replace("{primary}", clocks.primary).replace("{secondary}", clocks.secondary)}</small>
-          </div>
-        ) : (
-          <p className={styles.note}>{p.electionAfter}</p>
-        )}
         {hasAny ? (
           <>
+            <ul className={styles.legend} aria-hidden>
+              {PARTIES.map((party) => (
+                <li key={party} data-tone={party}>
+                  <i />
+                  {p.parties[party]}
+                </li>
+              ))}
+              {/* Çubuktaki çentiğin adı: her çubuğun üstüne ayrı ayrı yazılmıyor. */}
+              <li className={styles.legendMajority}>
+                <i />
+                {p.majority}
+              </li>
+            </ul>
             <Chamber event={house} kind="house" takenAt={snapshot.takenAt} locale={locale} t={t} />
             <Chamber event={senate} kind="senate" takenAt={snapshot.takenAt} locale={locale} t={t} />
-            <p className={styles.note}>{p.partyNote}</p>
           </>
         ) : (
           <p className={styles.note}>{p.panelEmpty}</p>
+        )}
+        {pollsSoon && (
+          <p className={`${styles.note} ${styles.cardFoot}`}>
+            {started ? p.electionAfter : p.electionPolls.replace("{primary}", clocks.primary).replace("{secondary}", clocks.secondary)}
+          </p>
         )}
       </div>
     </Panel>
   );
 }
 
-/* ---------------------------------------------------------------- DİĞER */
+/* ------------------------------------------------------------ RESESYON */
+
+export function RecessionPanel({ snapshot, locale, t }: { snapshot: ProbabilitySnapshot; locale: Locale; t: Dictionary }) {
+  const p = t.probabilities;
+  const recession = snapshot.macro.find((e) => e.kind === "recession");
+  const shown = recession && liquidityOf(recession) !== "hidden" ? recession : null;
+  const probs = shown ? eventProbabilities(shown) : null;
+  if (!shown || !probs) return null;
+  const rows = lineRows(shown, [{ key: "yes", keys: ["yes"] }], locale, snapshot.takenAt);
+  const segments = [
+    { key: "yes", label: p.yes, p: probs.yes },
+    { key: "no", label: p.no, p: probs.no },
+  ];
+  const shares = shareMap(segments);
+  return (
+    <Panel id={CARD_ANCHORS.recession} className={styles.card}>
+      <PanelHeader title={p.recessionTitle} />
+      <div className={styles.body}>
+        <ProbabilityStack
+          segments={segments}
+          lead="yes"
+          locale={locale}
+          ariaLabel={`${p.recessionTitle}: ${p.yes} ${shareText(shares.yes, locale)}`}
+        />
+        {rows.length >= 2 && (
+          <ProbabilityLine
+            series={[{ key: "yes", label: p.yes, tone: "yes" }]}
+            rows={rows}
+            endText={endTexts(rows, ["yes"], locale)}
+            percent={locale}
+            midLabel={p.mid}
+            hint={p.lineHint}
+            height={LINE_H.main}
+            grow
+            ariaLabel={`${p.recessionLineLabel}: ${pct(probs.yes, locale)}`}
+          />
+        )}
+        <div className={styles.cardFoot}>
+          {liquidityOf(shown) === "thin" && <span className={styles.thin}>{p.thin}</span>}
+          <p className={styles.note}>{p.recessionNote}</p>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+/* ---------------------------------------------------------------- TÜFE */
 
 const MONTHS: Record<string, number> = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 };
 
@@ -425,92 +474,37 @@ function cpiMonth(eventTicker: string, locale: Locale): string | null {
 /** Merdivende gösterilen basamaklar: kesinliğe yakın uçlar okunacak bir şey söylemiyor. */
 const LADDER_SHOW = { min: 0.03, max: 0.97 } as const;
 
-export function OtherPanel({ snapshot, locale, t }: { snapshot: ProbabilitySnapshot; locale: Locale; t: Dictionary }) {
+export function CpiPanel({ snapshot, locale, t }: { snapshot: ProbabilitySnapshot; locale: Locale; t: Dictionary }) {
   const p = t.probabilities;
-  const recession = snapshot.macro.find((e) => e.kind === "recession");
   const cpi = snapshot.macro.find((e) => e.kind === "cpi");
-  const recessionShown = recession && liquidityOf(recession) !== "hidden" ? recession : null;
-  const recessionProbs = recessionShown ? eventProbabilities(recessionShown) : null;
   const ladder = cpi ? cpiLadder(cpi) : [];
   const median = ladderMedian(ladder);
   const steps = ladder.filter((s) => s.above >= LADDER_SHOW.min && s.above <= LADDER_SHOW.max);
-  if (!recessionProbs && steps.length < 2) return null;
-  const month = cpi ? cpiMonth(cpi.eventTicker, locale) : null;
-  const cpiAt = cpi?.strikeAt ? etOf(cpi.strikeAt).date : null;
-  const recessionRows = recessionShown ? lineRows(recessionShown, [{ key: "yes", keys: ["yes"] }], locale, snapshot.takenAt) : [];
-  const recessionDelta = recessionShown ? change24h(recessionShown, "yes") : null;
-  const recessionSegments = recessionProbs
-    ? [
-        { key: "yes", label: p.yes, p: recessionProbs.yes },
-        { key: "no", label: p.no, p: recessionProbs.no },
-      ]
-    : [];
-  const recessionShares = shareMap(recessionSegments);
-
+  if (!cpi || steps.length < 2) return null;
+  const month = cpiMonth(cpi.eventTicker, locale);
+  const cpiAt = cpi.strikeAt ? etOf(cpi.strikeAt).date : null;
   return (
     <Panel>
-      <PanelHeader title={p.otherTitle} />
-      <div className={`${styles.body} ${styles.trio}`}>
-        {recessionShown && recessionProbs && (
-          <section className={styles.block} aria-label={p.recessionTitle}>
-            <div className={styles.blockHead}>
-              <h3>{p.recessionTitle}</h3>
-              <p>{p.recessionNote}</p>
-            </div>
-            <div className={styles.hero}>
-              <div className={styles.figure}>
-                <span className={styles.figureValue}>
-                  <b>{shareText(recessionShares.yes, locale)}</b>
-                  <span>{p.yes}</span>
-                </span>
-              </div>
-              <dl className={styles.facts}>
-                <DeltaFact points={recessionDelta} p={p} locale={locale} />
-              </dl>
-            </div>
-            <ProbabilityStack
-              segments={recessionSegments}
-              lead="yes"
-              locale={locale}
-              ariaLabel={`${p.recessionTitle}: ${p.yes} ${shareText(recessionShares.yes, locale)}`}
-            />
-            {recessionRows.length >= 2 && (
-              <ProbabilityLine
-                series={[{ key: "yes", label: p.yes, tone: "yes" }]}
-                rows={recessionRows}
-                endText={endTexts(recessionRows, ["yes"], locale)}
-                percent={locale}
-                midLabel={p.mid}
-                hint={p.lineHint}
-                ariaLabel={`${p.recessionLineLabel}: ${pct(recessionProbs.yes, locale)}`}
-              />
-            )}
-            {liquidityOf(recessionShown) === "thin" && <span className={styles.thin}>{p.thin}</span>}
-          </section>
-        )}
-        {cpi && steps.length >= 2 && (
-          <section className={styles.block} aria-label={p.cpiTitle}>
-            <div className={styles.blockHead}>
-              <h3>{p.cpiTitle}</h3>
-              {month && cpiAt && <p>{p.cpiMeta.replace("{month}", month).replace("{date}", dayMonth(cpiAt, locale))}</p>}
-            </div>
-            <ol className={styles.ladder} aria-label={p.cpiAria}>
-              {steps.map((step) => (
-                <li key={step.threshold}>
-                  <span>{p.cpiAbove.replace("{n}", formatPrice(step.threshold, locale, { digits: 1 }))}</span>
-                  <span className={styles.lane} aria-hidden>
-                    <span data-motion-draw="line" style={{ width: `${step.above * 100}%` }} />
-                    <i className={styles.ladderMid} />
-                  </span>
-                  <b>{pct(step.above, locale)}</b>
-                </li>
-              ))}
-            </ol>
-            <p className={styles.note}>
-              {median !== null ? p.cpiMedian.replace("{value}", formatPercentPlain(median, locale, 2)) : p.cpiNoMedian} {p.cpiNote}
-            </p>
-          </section>
-        )}
+      <PanelHeader
+        title={p.cpiTitle}
+        meta={month && cpiAt ? p.cpiMeta.replace("{month}", month).replace("{date}", dayMonth(cpiAt, locale)) : undefined}
+      />
+      <div className={styles.body}>
+        <ol className={styles.ladder} aria-label={p.cpiAria}>
+          {steps.map((step) => (
+            <li key={step.threshold}>
+              <span>{p.cpiAbove.replace("{n}", formatPrice(step.threshold, locale, { digits: 1 }))}</span>
+              <span className={styles.lane} aria-hidden>
+                <span data-motion-draw="line" style={{ width: `${step.above * 100}%` }} />
+                <i className={styles.ladderMid} />
+              </span>
+              <b>{pct(step.above, locale)}</b>
+            </li>
+          ))}
+        </ol>
+        <p className={styles.note}>
+          {median !== null ? p.cpiMedian.replace("{value}", formatPercentPlain(median, locale, 2)) : p.cpiNoMedian} {p.cpiNote}
+        </p>
       </div>
     </Panel>
   );
@@ -518,8 +512,9 @@ export function OtherPanel({ snapshot, locale, t }: { snapshot: ProbabilitySnaps
 
 /* ---------------------------------------------------------------- KÜNYE */
 
-export function NotesPanel({ t }: { t: Dictionary }) {
+export function NotesPanel({ t, locale }: { t: Dictionary; locale: Locale }) {
   const p = t.probabilities;
+  const clocks = clockPair(ELECTION_DAY_ET, FIRST_POLLS_CLOSE_ET, locale);
   return (
     <Panel>
       <PanelHeader title={p.notesTitle} />
@@ -528,6 +523,8 @@ export function NotesPanel({ t }: { t: Dictionary }) {
         <p>{p.noteSource}</p>
         <p>{p.noteNoBetting}</p>
         <p>{p.noteThin} {p.noteDaily}</p>
+        <p>{p.partyNote}</p>
+        {!pollsClosed() && <p>{p.electionPolls.replace("{primary}", clocks.primary).replace("{secondary}", clocks.secondary)}</p>}
         <p>{p.disclaimer}</p>
       </div>
     </Panel>

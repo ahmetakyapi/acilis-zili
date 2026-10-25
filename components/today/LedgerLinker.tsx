@@ -29,7 +29,7 @@ import styles from "./BriefLedger.module.css";
  * açıyor, metnin dışına dokunuş hiçbir şey yapmıyordu (`click` kabın
  * dışında hiç gelmiyor). Artık aynı geçişe ikinci dokunuş kapatıyor,
  * geçiş dışındaki her dokunuş da belge düzeyindeki `pointerdown`la
- * (PosterStage kalıbı, components/day-poster/PosterStage.tsx).
+ * (siluetin kalıbı, components/day-poster/Skyline.tsx).
  */
 
 type Tip = { key: string; text: string; x: number; y: number; below: boolean };

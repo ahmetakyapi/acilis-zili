@@ -86,29 +86,28 @@ test("genişlik: sayım ve kapsam eşiği", () => {
   assert.equal(breadthOf(thin, members), null);
 });
 
-test("poster: on bir sektörün hepsi ve SPY şart; sıra güçlüden zayıfa", () => {
+test("poster: Nasdaq 100 fonu ve genişlik şart; sektör fonu yok", () => {
   const date = "2026-10-23";
   const prev = "2026-10-22";
-  const sectors = ["XLA", "XLB", "XLC"];
+  const members = Array.from({ length: 10 }, (_, i) => `M${i}`);
   const bars: Record<string, Bar[]> = {
-    XLA: [bar(prev, 100), bar(date, 99)],
-    XLB: [bar(prev, 100), bar(date, 102)],
-    XLC: [bar(prev, 100), bar(date, 100.5)],
-    SPY: [bar(prev, 100), bar(date, 100.2)],
-    M1: [bar(prev, 10), bar(date, 11)],
+    QQQ: [bar(prev, 100), bar(date, 100.2)],
+    SPY: [bar(prev, 100), bar(date, 98)],
+    ...Object.fromEntries(members.map((m, i) => [m, [bar(prev, 10), bar(date, i < 7 ? 11 : 9)]])),
   };
-  const poster = buildPoster({ date, prevDate: prev, bars, sectorSymbols: sectors, indexSymbols: ["QQQ", "SPY"], memberSymbols: ["M1"] });
+  const poster = buildPoster({ date, prevDate: prev, bars, indexSymbols: ["QQQ", "SPY", "DIA"], memberSymbols: members });
   assert.ok(poster);
-  assert.deepEqual(poster.sectors.map((m) => m.symbol), ["XLB", "XLC", "XLA"]);
-  assert.deepEqual(poster.indices.map((m) => m.symbol), ["SPY"], "QQQ verisi yok, düşer");
-  assert.equal(poster.breadth?.advancing, 1);
-  assert.deepEqual(poster.stocks, [{ symbol: "M1", change: 10, close: 11 }], "hisse: o günün kapanışı ve değişimi");
-  assert.equal(posterScale(poster), 2, "en büyük hareket, taban 1");
+  assert.deepEqual(poster.indices.map((m) => m.symbol), ["QQQ", "SPY"], "DIA verisi yok, düşer");
+  assert.equal(poster.breadth?.advancing, 7);
+  assert.deepEqual(poster.stocks[0], { symbol: "M0", change: 10, close: 11 }, "hisse: o günün kapanışı ve değişimi");
+  assert.equal(posterScale(poster.indices), 2, "en büyük hareket, taban 1");
+  assert.equal(posterScale([{ symbol: "QQQ", change: 0.2 }]), 1, "taban");
 
-  const missingSector = buildPoster({ date, prevDate: prev, bars: { ...bars, XLA: [bar(prev, 100)] }, sectorSymbols: sectors, indexSymbols: ["SPY"], memberSymbols: [] });
-  assert.equal(missingSector, null);
-  const missingAnchor = buildPoster({ date, prevDate: prev, bars: { ...bars, SPY: [] }, sectorSymbols: sectors, indexSymbols: ["SPY"], memberSymbols: [] });
-  assert.equal(missingAnchor, null);
+  const missingAnchor = buildPoster({ date, prevDate: prev, bars: { ...bars, QQQ: [] }, indexSymbols: ["QQQ"], memberSymbols: members });
+  assert.equal(missingAnchor, null, "Nasdaq 100 fonu yoksa poster yok");
+  /* Üyelerin üçü eksik: kapsam %70 < %90, boşluklu siluet basılmıyor. */
+  const thin = buildPoster({ date, prevDate: prev, bars: { ...bars, M0: [], M1: [], M2: [] }, indexSymbols: ["QQQ"], memberSymbols: members });
+  assert.equal(thin, null, "genişlik yoksa poster yok");
 });
 
 test("zilin şiddeti: %70'e kadar sıfır, %95'te tam, iki yön simetrik", () => {
@@ -129,13 +128,12 @@ test("arşiv: seanslar en yeniden geriye, tatil atlanıyor; kurulamayan gün dü
     { date: "2026-11-27", prevDate: "2026-11-25" },
     { date: "2026-11-25", prevDate: "2026-11-24" },
   ]);
-  const spy = [bar("2026-10-20", 100), bar("2026-10-21", 101), bar("2026-10-23", 102)];
+  const qqq = [bar("2026-10-20", 100), bar("2026-10-21", 101), bar("2026-10-23", 102)];
   const posters = archivePosters({
     sessions: archiveSessions("2026-10-23", HOLIDAYS, 3),
-    bars: { SPY: spy, XLK: spy },
-    sectorSymbols: ["XLK"],
-    indexSymbols: ["SPY"],
-    memberSymbols: [],
+    bars: { QQQ: qqq, M1: qqq },
+    indexSymbols: ["QQQ"],
+    memberSymbols: ["M1"],
   });
   // 23'ün öncesi 22 (işlem günü) ama bar yok → 23 düşer; 22'nin kendisi yok; 21 20'ye kıyasla.
   assert.deepEqual(posters.map((p) => p.date), ["2026-10-21"]);
@@ -145,12 +143,12 @@ test("arşiv: seanslar en yeniden geriye, tatil atlanıyor; kurulamayan gün dü
 test("arşivin önbellek kaydı: kapanışlardan kurulan poster ham barlardan kurulanla aynı", () => {
   const sessions = archiveSessions("2026-10-23", HOLIDAYS, 3);
   const raw = {
-    SPY: [bar("2026-10-19", 99), bar("2026-10-20", 100), bar("2026-10-21", 101), bar("2026-10-22", 100.5), bar("2026-10-23", 102.37)],
-    XLK: [bar("2026-10-20", 50), bar("2026-10-21", 49.5), bar("2026-10-22", 49.75), bar("2026-10-23", 51.13)],
+    QQQ: [bar("2026-10-19", 99), bar("2026-10-20", 100), bar("2026-10-21", 101), bar("2026-10-22", 100.5), bar("2026-10-23", 102.37)],
+    NVDA: [bar("2026-10-20", 50), bar("2026-10-21", 49.5), bar("2026-10-22", 49.75), bar("2026-10-23", 51.13)],
     AAPL: [bar("2026-10-20", 230.12), bar("2026-10-22", 231.4), bar("2026-10-23", 229.99)],
     MSFT: [bar("2026-10-01", 400)],
   };
-  const args = { sectorSymbols: ["XLK"], indexSymbols: ["SPY"], memberSymbols: ["AAPL", "MSFT"] };
+  const args = { indexSymbols: ["QQQ"], memberSymbols: ["AAPL", "NVDA"] };
   const pack = packArchiveCloses(sessions, raw);
   // Yalnız seans günleri; arşive girmeyen bar (19 Ekim, 1 Ekim) taşınmıyor.
   assert.deepEqual(pack.dates, ["2026-10-20", "2026-10-21", "2026-10-22", "2026-10-23"]);

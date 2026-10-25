@@ -6,6 +6,11 @@ import styles from "./PosterLanes.module.css";
 /**
  * POSTERİN KULVARLARI — etiketli (25 Ekim).
  *
+ * POSTERDEN KALKTI, BİLEŞEN KALDI (25 Ekim, Nasdaq 100 silueti): poster
+ * artık sektörleri siluetin mahallelerinde gösteriyor; kulvarları Günün
+ * Grafiği'nin bağlam paneli (`components/daily-chart/DayContext.tsx`,
+ * ayrı dalda) yeniden kullanıyor, o yüzden dışa aktarım ve imza aynı.
+ *
  * İlk sürümde kulvarlar mürekkep tuvalindeydi ve hiçbirinin adı yoktu
  * (sahibinin 390 piksellik ekran görüntüsü: on beş çizgi, tek etiket yok).
  * Şimdi her kulvar bir liste satırı: sırası, adı, fonu, şeridi ve değeri
@@ -86,7 +91,8 @@ export function PosterLanes({
  * Ölçü ızgarasındaki tek şerit — sayının altında aynı ölçekle çizgisi
  * (sahibinin 25 Ekim ilkesi: "sayıyı yalnız yazma, çiz"). Kulvarlarla aynı
  * ölçek ve aynı dil; S&P 500'ün −%0,52'si ile en zayıf sektörün −%1,92'si
- * yan yana boyla karşılaştırılıyor.
+ * yan yana boyla karşılaştırılıyor. Bülten künyesi
+ * (`components/today/BriefLedger.tsx`) de kullanıyor.
  */
 export function MiniLane({ change, scale, className }: { change: number; scale: number; className?: string }) {
   const length = (Math.min(Math.abs(change), scale) / scale) * 50;

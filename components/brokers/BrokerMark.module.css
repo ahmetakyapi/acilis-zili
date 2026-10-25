@@ -1,0 +1,29 @@
+/* Kurum logo karosu — gerekçe BrokerMark.tsx. Yarıçap boyla ölçekli
+   (karo ≈ %25): 44'te 11, 20'de 5 piksel. */
+
+.wrap { display: inline-flex; flex: none; }
+
+.mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--mark, 40px);
+  height: var(--mark, 40px);
+  overflow: hidden;
+  border-radius: calc(var(--mark, 40px) * 0.25);
+  background: var(--surface-solid);
+}
+[data-size="xs"] > .mark, .mark[data-size="xs"] { --mark: 20px; }
+[data-size="sm"] > .mark, .mark[data-size="sm"] { --mark: 24px; }
+[data-size="md"] > .mark, .mark[data-size="md"] { --mark: 32px; }
+[data-size="lg"] > .mark, .mark[data-size="lg"] { --mark: 40px; }
+[data-size="xl"] > .mark, .mark[data-size="xl"] { --mark: 44px; }
+
+.mono {
+  background: var(--primary-wash);
+  color: var(--primary-ink);
+  font-size: calc(var(--mark, 40px) * 0.34);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}

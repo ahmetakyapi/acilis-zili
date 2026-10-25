@@ -308,6 +308,7 @@ export function TotalsBand({
   ];
 
   return (
+    <>
     <div className={styles.totals}>
       <div className={styles.totalLead}>
         <p className={styles.totalLabel}>{labels.totalValue}</p>
@@ -360,9 +361,13 @@ export function TotalsBand({
           {/* FİŞ DÜZENİ (2 Ekim). Denklem bir süre yatay duruyordu
               ("Hisseden + Kurdan = Lira Getirisi"); geniş ekranda "=" işareti
               iki sayının ortasında 600 piksel boşlukta asılı kalıyor,
-              telefonda ipuçları tek kelimeyle alt satıra düşüyordu. Şimdi
+              telefonda ipuçları tek kelimeyle alt satıra düşüyordu. Telefonda
               alt alta: iki parça, çizgi, toplam — bir hesap fişi gibi.
-              Geniş ekranda sağında sebep cümlesi. */}
+              900'den itibaren (25 Ekim) fiş üç yan yana hücre, toplam
+              kesik çizgiyle ayrılmış son hücre: Getiri paneli Alıştan
+              Bugüne ile yan yana sığsın diye çözümleme ~200 pikselden ~110'a
+              indi. Sebep cümlesi fişin yanından panelin dibine, künye
+              şeridine indi (aşağıda). */}
           <div className={styles.breakdownBody}>
             <dl className={styles.receipt}>
               <div>
@@ -392,11 +397,19 @@ export function TotalsBand({
                 <dd className="figure" data-tone={directionOf(totals.pnlTl)}>{tl(totals.pnlTl, true)}</dd>
               </div>
             </dl>
-            {story && <p className={styles.story}>{story}</p>}
           </div>
         </div>
       )}
     </div>
+    {/* KUR CÜMLESİ PANELİN DİBİNDE, KÜNYE ŞERİDİNDE (25 Ekim). Fişin
+        yanında pirinç çizgili bir alıntıydı; yan yana düzende fişin
+        altında 70 piksellik ayrı bir kat açıyordu. Artık panelin içinde
+        hairline ile ayrılmış düz paragraf (ekran düzeni 6) ve `mt-auto`
+        ile dipte: yanındaki Alıştan Bugüne'nin künyesiyle aynı hatta. */}
+    {story && stockPart !== null && fxPart !== null && totals.pnlTl !== null && (
+      <p className={styles.story}>{story}</p>
+    )}
+    </>
   );
 }
 

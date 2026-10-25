@@ -169,7 +169,7 @@
 .activityBars { display:flex; align-items:stretch; gap:6px; margin-top:10px; }
 .activityBars > li { display:flex; flex:1 1 0; min-width:0; }
 .activityBars > li > :is(a,span) { display:flex; flex:1; flex-direction:column; align-items:stretch; gap:4px; min-width:0; border-radius:var(--radius-sm); color:inherit; text-decoration:none; }
-.activityCount { height:14px; font-size:12px; font-weight:650; line-height:14px; text-align:center; color:var(--text-soft); font-variant-numeric:tabular-nums; }
+.activityCount { height:14px; font-size:12px; font-weight:650; line-height:14px; text-align:center; color:var(--text-soft); }
 .activityTrack { display:flex; align-items:flex-end; height:44px; border-bottom:1px solid var(--line); }
 /* Yalnız `transition-property` süre 0'a düşüyordu: hover rengi tek karede
    basılıyordu (14 Ekim). Yalnız renk — reduce bloğu gerekmez. */
@@ -220,3 +220,41 @@
 @keyframes activity-rise { from { transform:scaleY(0); } }
 @keyframes activity-count { from { opacity:0; transform:translate3d(0,4px,0); } }
 @media(prefers-reduced-motion:reduce) { .activityTrack i, .activityCount { animation:none; } }
+
+/* ---- Kompakt bant (DirectoryHeader `tabs`) ----
+   Başlık + açıklama + denetimler tek satırda, sekme çubuğu kartın alt
+   kenarına oturuyor (çubuğun kendi saç teli kartın kenarıyla çakışmasın
+   diye saydam). Dolgu `.page-frame` üçlü sınıfını geçmek için dört katlı.
+   Başlık puntosu sayfa başlığının ~%65'i: kimlik (degrade, ağırlık, harf
+   aralığı) aynı, yer kaplamıyor. */
+.hero.hero.hero.hero[data-compact] { grid-template-columns:minmax(0,1fr); gap:6px 28px; padding:16px 24px 0; }
+.hero.hero.hero.hero[data-compact][data-has-visual="true"] { grid-template-columns:minmax(0,1fr) minmax(0,auto); align-items:center; }
+.compactTitle { display:grid; grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:"title desc actions"; align-items:center; gap:4px 20px; min-width:0; }
+.hero[data-compact] .compactTitle h1 { grid-area:title; margin:0; font-size:clamp(28px,2.5vw,36px); line-height:1.12; letter-spacing:-.045em; }
+.compactDescription { grid-area:desc; min-width:0; max-width:72ch; margin:0; font-size:14px; line-height:1.45; color:var(--text-body); text-wrap:pretty; }
+.compactActions { grid-area:actions; display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:8px; }
+.compactActions.compactActions > :global(*) { margin:0; }
+.compactVisual { min-width:0; padding-left:28px; border-left:1px solid var(--line); }
+.compactVisual > :global(*) { margin-block:0; }
+.compactTabs { grid-column:1 / -1; min-width:0; margin:4px -18px 0; }
+.compactTabs :global(nav) { margin:0; }
+.compactTabs :global(nav > div) { border-bottom-color:transparent; }
+/* Görselli kapakta (Analizler) başlık ile açıklama alt alta: sağda görsel var. */
+.hero[data-has-visual="true"] .compactTitle { grid-template-columns:auto minmax(0,1fr); grid-template-areas:"title actions" "desc desc"; }
+@media(max-width:1023px) {
+ .compactTitle { grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"title actions" "desc desc"; }
+ .hero.hero.hero.hero[data-compact][data-has-visual="true"] { grid-template-columns:minmax(0,1fr); }
+ .compactVisual { padding:10px 0 2px; border-left:0; border-top:1px solid var(--line-soft); }
+}
+@media(max-width:767px) {
+ .hero.hero.hero.hero[data-compact] { padding:14px 20px 0; border-radius:20px; }
+ .hero[data-compact] .compactTitle h1 { font-size:28px; }
+ .compactDescription { font-size:13px; }
+ .compactTabs { margin:2px 0 0; }
+}
+/* Telefonda geniş eylem grubu (Haftalık'ın indirme düğmeleri) başlığın
+   yanına sığmıyor: kendi satırına iner, başlığı daraltmaz. */
+@media(max-width:639px) {
+ .compactTitle[data-wide-actions] { grid-template-columns:minmax(0,1fr); grid-template-areas:"title" "desc" "actions"; }
+ .compactTitle[data-wide-actions] > .compactActions { justify-content:flex-start; margin-top:6px; }
+}

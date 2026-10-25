@@ -1,16 +1,16 @@
 import { parsePosterDate, type DayPoster } from "@/lib/day-poster";
-import { getDayPoster, getPosterArchive, getPosterSceneStocks } from "@/lib/day-poster-data";
-import { swarmDomain, swarmLayout, swarmSvg, type SwarmInk } from "@/lib/day-poster-scene";
+import { getDayPoster, getPosterArchive, getPosterSkyline } from "@/lib/day-poster-data";
+import { skylineLayout, skylineSvg, type SkyInk } from "@/lib/day-skyline";
 import { todayEt } from "@/lib/market-hours";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 
 /**
  * GÜNÜN POSTERİ — arşiv kartının minyatürü, `/gun/2026-10-23/minyatur/acik`
- * (25 Ekim). Sahnenin durağan küçük kopyası: aynı yerleşim
- * (`lib/day-poster-scene.ts`, `mini` düzeni), metinsiz SVG.
+ * (25 Ekim). Siluetin durağan küçük kopyası: aynı yerleşim
+ * (`lib/day-skyline.ts`, `mini` düzeni), metinsiz SVG.
  *
  * NEDEN AYRI ADRES, SAYFAYA GÖMÜLÜ DEĞİL: arşivde 29 kart var ve her
- * sahne ~500 nokta; gömülü SVG sayfanın HTML'ine ~15.000 `circle` koyardı.
+ * siluet yüz bina; gömülü SVG sayfanın HTML'ine ~3.000 yol koyardı.
  * `img` + `loading="lazy"` ile kart ekrana yaklaşınca, önbellekli tek
  * dosya iniyor. Veri arşivin kendi önbelleğinden (`getPosterArchive`: bir
  * tur, otuz seans); arşivde yoksa günün posterinden.
@@ -19,13 +19,13 @@ import { clientKey, rateLimit } from "@/lib/rate-limit";
  * adreste sorguyu ayrıca yapılandırma istiyor): `img` içindeki SVG sayfanın
  * CSS değişkenlerini okuyamıyor; kart iki dosyayı da basıp temaya göre birini
  * gösteriyor (`PosterArchive.module.css`). Renkler globals.css'teki
- * `--up`, `--down`, `--flat`, `--line-strong`, `--line-soft` token'larının
- * iki temadaki değerleri — tek kopya burası.
+ * `--up`, `--down`, `--flat`, `--line-strong`, `--primary-tint` (su)
+ * token'larının iki temadaki değerleri — tek kopya burası.
  */
 
-const INK: Record<"light" | "dark", SwarmInk> = {
-  light: { up: "#0c7350", down: "#c01a3d", flat: "#586a7c", zero: "rgb(16 32 52 / 0.17)", lane: "rgb(16 32 52 / 0.06)" },
-  dark: { up: "#3ddc97", down: "#ff5c7a", flat: "#8497a9", zero: "rgb(255 255 255 / 0.2)", lane: "rgb(255 255 255 / 0.07)" },
+const INK: Record<"light" | "dark", SkyInk> = {
+  light: { up: "#0c7350", down: "#c01a3d", flat: "#586a7c", horizon: "rgb(16 32 52 / 0.17)", water: "rgb(13 116 196 / 0.045)" },
+  dark: { up: "#3ddc97", down: "#ff5c7a", flat: "#8497a9", horizon: "rgb(255 255 255 / 0.2)", water: "rgb(53 184 255 / 0.06)" },
 };
 
 /** Geçmiş bir seansın minyatürü değişmiyor: bir gün. */
@@ -57,14 +57,9 @@ export async function GET(request: Request, context: RouteContext<"/gun/[tarih]/
   if (!poster) return new Response("Not Found", { status: 404 });
 
   const theme = tema === "koyu" ? "dark" : "light";
-  const { stocks } = await getPosterSceneStocks(poster);
-  const layout = swarmLayout({
-    stocks,
-    sectorOrder: poster.sectors.map((move) => move.symbol),
-    mode: "mini",
-    domain: swarmDomain(stocks.map((stock) => stock.change)),
-  });
-  return new Response(swarmSvg(layout, stocks, INK[theme]), {
+  const { stocks, districts } = await getPosterSkyline(poster);
+  const layout = skylineLayout({ stocks, districts, mode: "mini" });
+  return new Response(skylineSvg(layout, INK[theme]), {
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
       "Cache-Control": `public, max-age=${CACHE_SECONDS}`,

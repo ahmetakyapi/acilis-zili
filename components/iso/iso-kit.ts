@@ -821,7 +821,7 @@ export const ISO_CSS = `
 .iso-plate-corner[data-corner="fig"]{top:0;left:0;color:var(--anatomy-text)}
 .iso-plate-corner[data-corner="title"]{top:0;right:0;text-transform:uppercase;letter-spacing:.1em}
 .iso-plate-corner[data-corner="hint"]{bottom:0;left:0;text-transform:uppercase;letter-spacing:.1em}
-.iso-plate-corner[data-corner="readout"]{right:0;bottom:0;color:var(--anatomy-text);font-variant-numeric:tabular-nums}
+.iso-plate-corner[data-corner="readout"]{right:0;bottom:0;color:var(--anatomy-text);}
 .iso-plate .iso-svg{margin:0 auto}
 .iso-legend{display:grid;gap:8px;margin-top:12px;color:var(--anatomy-muted);font-size:13px;line-height:1.55}
 .iso-keys{display:flex;flex-wrap:wrap;gap:6px 18px}

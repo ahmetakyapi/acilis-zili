@@ -107,7 +107,7 @@ export default async function MyPostsPage() {
                     </span>
                     <time
                       dateTime={post.updatedAt.toISOString().slice(0, 10)}
-                      className="shrink-0 text-tiny tabular-nums text-muted"
+                      className="shrink-0 text-tiny text-muted"
                     >
                       {dateFormat.format(post.updatedAt)}
                     </time>

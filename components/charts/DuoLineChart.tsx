@@ -172,7 +172,13 @@ export function DuoLineChart({
       <div
         ref={frameRef}
         className={styles.frame}
-        style={{ height }}
+        /* BOY DIŞARIDAN DA AYARLANIR (25 Ekim): `--duo-chart-h` verilmezse
+           `height`. Portföyde geniş ekranda grafik Getiri paneliyle yan yana
+           ve daha kısa (Portfolio.module.css → `.returnsPair`); sunucu
+           genişliği bilmediği için boy CSS'te. Çizim `preserveAspectRatio=
+           "none"` ve kalemler `non-scaling-stroke`: dikeyde esnemek çizgiyi
+           kalınlaştırmıyor, noktalar yüzdeyle (`shareY`) konumlanıyor. */
+        style={{ height: `var(--duo-chart-h, ${height}px)` }}
         tabIndex={0}
         role="group"
         aria-label={title}
@@ -203,7 +209,7 @@ export function DuoLineChart({
         <svg
           viewBox={`0 0 ${WIDTH} ${height}`}
           width="100%"
-          height={height}
+          height="100%"
           preserveAspectRatio="none"
           aria-hidden
           className="block"

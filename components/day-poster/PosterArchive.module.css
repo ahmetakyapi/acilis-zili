@@ -4,8 +4,7 @@
 
 /* ------------------------------------------------------------ SON SEANS
    Panonun kendisi `PosterBoard.module.css`te; burada iskeleti ve panelin
-   taşma kuralı (`clip`: sahnenin yapışkan ekseni, gerekçe
-   DayPoster.module.css). */
+   taşma kuralı (`clip`, gerekçe DayPoster.module.css). */
 .latest { overflow: clip; }
 .skeleton { display: grid; gap: 16px; padding: 18px 16px; }
 @media (min-width: 640px) {
@@ -69,11 +68,10 @@
 /* Günün sahnesinin minyatürü — kutu sabit oranlı, sahne içine sığıyor
    (`contain`): dosya gelince kart kaymıyor. Tema iki dosya. */
 .cardScene {
+  /* Siluetin minyatürü kendi suyunu ve ufkunu taşıyor: kutu zeminsiz,
+     oranı minyatürün tavanı (320 × 110, PosterArchive.tsx → MINI_H). */
   display: block;
-  aspect-ratio: 320 / 150;
-  padding: 8px 6px;
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken);
+  aspect-ratio: 320 / 110;
 }
 .cardScene img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .cardScene .sceneDark { display: none; }
@@ -91,7 +89,7 @@
 /* TELEFONDA İKİ SÜTUN, KÜÇÜK KART (25 Ekim, son inceleme). Tek sütunda
    29 kart ~470'er piksel tutuyordu ve /gun 390'da 14.600 piksele
    uzuyordu; arşivin işi "hangi gün neydi"yi taramak, her kartı tek tek
-   okutmak değil. Kart minyatürün kendisine iniyor: tarih ve S&P 500,
+   okutmak değil. Kart minyatürün kendisine iniyor: tarih ve endeks (Nasdaq 100'den beri QQQ),
    günün kısa başlığı, sahne minyatürü, genişlik şeridi. En güçlü/en
    zayıf sektör satırı ve sayılar telefonda gizli; kartın bağlandığı
    poster ikisini de ilk ekranında söylüyor. Ölçüm (390, 23 Ekim'de biten
@@ -102,7 +100,6 @@
   .cardHead { flex-direction: column; align-items: flex-start; gap: 0; }
   .cardDate { font-size: var(--text-small); }
   .cardStory { font-size: var(--text-base); line-height: 1.25; }
-  .cardScene { padding: 4px 3px; }
   .counts,
   .cardFoot { display: none; }
 }

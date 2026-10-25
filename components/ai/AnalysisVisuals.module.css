@@ -27,7 +27,7 @@
 /* Gizleme yalnız betikle (25 Ekim): `scale:0` / `opacity:0` tabandaydı ve
    JS kapalıyken `InView` hiç `data-inview` vermediği için eksen boş
    kalıyordu (Teknik'in senaryo rayı da bu sınıfları kullanıyor). Taban hâl
-   son kare; `PosterStage.module.css` kalıbı. */
+   son kare; `day-poster/Skyline.module.css` kalıbı; ilk örneği 25 Ekim'de kalkan PosterStage. */
 @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
   .axisBear,.axisBull { scale:0 1; }
   [data-inview] .axisBear,[data-inview] .axisBull { animation:grow-x 800ms var(--ease-brand) 200ms forwards; }

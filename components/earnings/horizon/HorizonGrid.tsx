@@ -4,7 +4,7 @@ import { Suspense, use, useState, type CSSProperties } from "react";
 import { ArrowUpRight } from "@phosphor-icons/react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile, TimingChip, type LogoTileSize, type TimingTone } from "@/components/ui/primitives";
-import type { KarneMark } from "@/lib/earnings-horizon";
+import type { KarneMark, TileTier } from "@/lib/earnings-horizon";
 import type { WeekLane } from "@/lib/earnings-week";
 import { NO_VALUE } from "@/lib/utils";
 import styles from "./EarningsHorizon.module.css";
@@ -31,6 +31,8 @@ export type HorizonTile = {
   logoUrl: string | null;
   /** Kenar oranı 0…1 — alan piyasa değeriyle orantılı (`tileScale`). */
   scale: number;
+  /** Çizilen boy: büyük 56, taban 40 piksel (`tileTierOf`). */
+  tier: TileTier;
   capText: string | null;
   revenueText: string | null;
   epsText: string | null;
@@ -60,6 +62,12 @@ export type HorizonDay = {
   /** Günün tüm açıklayanları / haftanın en kalabalık günü. */
   density: number;
   lanes: Record<WeekLane, HorizonTile[]>;
+  /** Hücreye sığmayan şirket sayısı (`capCell`). */
+  more: Record<WeekLane, number>;
+  /** "+N" çipinin gittiği yer: o günün tam listesi. */
+  moreHref: string;
+  /** Çipin ekran okuyucu etiketi; `{count}` çizimde dolar. */
+  moreLabel: string;
 };
 
 export type HorizonLane = {
@@ -89,18 +97,14 @@ type Labels = {
   today: string;
   hint: string;
   pickDay: string;
+  more: string;
 };
 
 type Karne = Promise<Record<string, KarneMark[]>>;
 
-/* Logo basamağı karonun hesaplanan kenarına göre (geniş ekran ölçüsüyle):
-   logo karonun yarısı kadar kalsın, küçük karoda kenara dayanmasın. */
-function logoSize(scale: number): LogoTileSize {
-  if (scale >= 0.72) return "xl";
-  if (scale >= 0.5) return "lg";
-  if (scale >= 0.32) return "md";
-  return "sm";
-}
+/* Logo karonun ~%60'ı: büyük karoda 32, tabanda 26 piksel. Karonun alt
+   şeridinde karne çentikleri duruyor, logo onlara binmesin. */
+const LOGO_SIZE: Record<TileTier, LogoTileSize> = { big: "md", base: "sm" };
 
 const READOUT_ID = "bilanco-ufku-ayrinti";
 
@@ -188,16 +192,17 @@ export function HorizonGrid({
             data-active={activeDay === day.date || undefined}
             aria-labelledby={`ufuk-${day.date}`}
           >
+            {/* GÜN BAŞLIĞI TEK SATIR (25 Ekim, ikinci tur): gün numarası ve
+                adı solda, günün tüm açıklayanları sağda, altında yoğunluk
+                çizgisi. Ay adı panelin künyesinde ("26–30 Ekim 2026"); iki
+                satırlık başlık sütun başına 24 piksel tutuyordu. */}
             <header className={styles.dayHead}>
               <h3 id={`ufuk-${day.date}`} className={styles.dayName}>
-                {day.weekday}
+                <span className={`figure ${styles.dayNumber}`}>{day.dayNumber}</span>
+                <span className={styles.dayWeekday}>{day.weekday}</span>
                 {day.state === "today" && <span className={styles.todayTag}>{labels.today}</span>}
               </h3>
-              <p className={styles.dayDate}>
-                <span className={`figure ${styles.dayNumber}`}>{day.dayNumber}</span>
-                <span>{day.month}</span>
-                <span className={`figure ${styles.dayCount}`}>{day.countText}</span>
-              </p>
+              <p className={`figure ${styles.dayCount}`}>{day.closed ? NO_VALUE : day.countText}</p>
               {/* Günün yoğunluğu bir UZUNLUK: en kalabalık gün tam. */}
               <span className={styles.density} aria-hidden>
                 <span style={{ "--ratio": day.density } as CSSProperties} />
@@ -208,6 +213,7 @@ export function HorizonGrid({
             ) : (
               lanes.map((lane) => {
                 const tiles = day.lanes[lane.key];
+                const more = day.more[lane.key];
                 return (
                   <div key={lane.key} className={styles.lane} data-lane={lane.key} data-empty={tiles.length === 0 || undefined}>
                     <p className={styles.laneHead}>
@@ -227,6 +233,19 @@ export function HorizonGrid({
                             karne={karne}
                           />
                         ))}
+                        {more > 0 && (
+                          <li className={styles.tileItem} data-tier="base" style={{ "--i": order.size } as CSSProperties}>
+                            {day.moreHref.startsWith("#") ? (
+                              <a href={day.moreHref} className={`tap-44 ${styles.more}`} aria-label={day.moreLabel.replace("{count}", String(more))}>
+                                {labels.more.replace("{count}", String(more))}
+                              </a>
+                            ) : (
+                              <Link href={day.moreHref} prefetch={false} className={`tap-44 ${styles.more}`} aria-label={day.moreLabel.replace("{count}", String(more))}>
+                                {labels.more.replace("{count}", String(more))}
+                              </Link>
+                            )}
+                          </li>
+                        )}
                       </ul>
                     ) : (
                       <span className={styles.laneEmpty}>{labels.emptyLane}</span>
@@ -258,10 +277,10 @@ function Tile({
   karne: Karne;
 }) {
   return (
-    <li className={styles.tileItem} style={{ "--s": tile.scale, "--i": order } as CSSProperties}>
+    <li className={styles.tileItem} data-tier={tile.tier} style={{ "--i": order } as CSSProperties}>
       <button
         type="button"
-        className={styles.tile}
+        className={`tap-44 ${styles.tile}`}
         aria-pressed={pressed}
         aria-label={tile.label}
         aria-controls={READOUT_ID}
@@ -271,7 +290,7 @@ function Tile({
         onFocus={onSelect}
         onClick={onSelect}
       >
-        <LogoTile symbol={tile.symbol} logoUrl={tile.logoUrl} size={logoSize(tile.scale)} />
+        <LogoTile symbol={tile.symbol} logoUrl={tile.logoUrl} size={LOGO_SIZE[tile.tier]} />
         {tile.watched && (
           <span aria-hidden className={styles.star}>
             ★
@@ -283,13 +302,16 @@ function Tile({
             {tile.surprise === "beat" ? "▲" : tile.surprise === "miss" ? "▼" : "="}
           </span>
         )}
+        {/* KARNE KARONUN İÇİNDE (25 Ekim, ikinci tur): alt kenarda ince
+            şerit. Karonun altında ayrı satırdı ve her karoya 7 piksel
+            ekliyordu. */}
+        <Suspense fallback={<Notches marks={null} />}>
+          <TileNotches karne={karne} symbol={tile.symbol} />
+        </Suspense>
       </button>
       <span aria-hidden className={styles.tileSymbol}>
         {tile.symbol}
       </span>
-      <Suspense fallback={<Notches marks={null} />}>
-        <TileNotches karne={karne} symbol={tile.symbol} />
-      </Suspense>
     </li>
   );
 }
@@ -335,7 +357,7 @@ function Readout({ tile, karne, labels }: { tile: HorizonTile | null; karne: Kar
       {tile ? (
         <>
           <div className={styles.readoutWho}>
-            <LogoTile symbol={tile.symbol} logoUrl={tile.logoUrl} size="lg" />
+            <LogoTile symbol={tile.symbol} logoUrl={tile.logoUrl} size="md" />
             <div className="min-w-0">
               <p className={styles.readoutSymbol}>
                 {tile.symbol}

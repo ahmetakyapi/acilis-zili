@@ -12,7 +12,7 @@
 /* Altyazı solda, canlı künye sağda (anatomy figür kartı: ipucu sol alt, künye sağ alt). */
 .caption { position:absolute; left:32px; right:32px; bottom:62px; display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:24px; row-gap:4px; align-items:end; animation:caption-in 700ms var(--ease-brand) both; }
 .caption > :not(.readout) { grid-column:1; }
-.readout { grid-column:2; grid-row:1 / span 3; align-self:end; justify-self:end; font-family:var(--font-mono); font-size:12.5px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--text-body); white-space:nowrap; }
+.readout { grid-column:2; grid-row:1 / span 3; align-self:end; justify-self:end; font-family:var(--font-mono); font-size:12.5px; font-weight:600; color:var(--text-body); white-space:nowrap; }
 .caption strong { font-size:clamp(1.25rem,2.2vw,1.65rem); font-weight:750; letter-spacing:-.035em; color:var(--text-strong); }
 .line { font-size:14px; color:var(--text-body); }
 /* Son perdede "Rapor Hazır" tuvalde dev yazı; altyazı yalnız ekran okuyucuya. */

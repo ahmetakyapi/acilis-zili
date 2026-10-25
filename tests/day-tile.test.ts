@@ -2,9 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { tileFeedsBell } from "../components/today/day-tile";
 
-/* Son seans karosu (components/today/DaySeal.tsx): karo her seansta en
-   yeni tamamlanmış seansı gösteriyor, zile şiddeti yalnız bitmiş seansın
-   kendi karosu veriyor. */
+/* Son seans şeridi (components/today/home/SkylineStrip.tsx; önce
+   kahramandaki DaySeal karosu): şerit her seansta en yeni tamamlanmış
+   seansı gösteriyor, zile şiddeti yalnız bitmiş seansın kendi şeridi
+   veriyor. */
 
 const FRIDAY = "2026-10-23";
 const MONDAY = "2026-10-26";

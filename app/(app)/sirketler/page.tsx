@@ -434,20 +434,6 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
 
       </DirectoryHeader>
 
-      {/* Ana görsel: sektör dağılımı — şirket sayısı ve piyasa değeri
-          (25 Ekim görsel turu, gerekçe bileşende). Arama yokken: bir
-          aramanın sonucu "dağılım" değil, tek tek şirketler. */}
-      {!query && (
-        <SectorDistribution
-          companies={companies}
-          activeKey={activeGroup?.key ?? null}
-          hrefFor={sectorHref}
-          locale={locale}
-          t={t}
-        />
-      )}
-
-
       {/* Tablo AYRI AKIYOR. Eskiden kotasyonlar ve haftalık değişim sayfanın
           gövdesinde arka arkaya bekleniyordu: 514 sembol için altı ardışık
           Alpaca turu demek ve o süre boyunca sektör çipleri bile boyanmıyordu,
@@ -506,6 +492,21 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
         />
       </Suspense>
       </QueryTransition>
+
+      {/* SEKTÖR DAĞILIMI TABLONUN ALTINDA (25 Ekim, sahibinin isteği):
+          başlığın hemen altındaydı ve 1440'ta ilk ekranın tamamını
+          kaplıyordu; "şirketler direkt gözüksün". Sayfanın işi şirket
+          listesi; dağılım listeyi okuduktan sonra bakılan özet. Arama
+          yokken: bir aramanın sonucu "dağılım" değil, tek tek şirketler. */}
+      {!query && (
+        <SectorDistribution
+          companies={companies}
+          activeKey={activeGroup?.key ?? null}
+          hrefFor={sectorHref}
+          locale={locale}
+          t={t}
+        />
+      )}
 
       <GuideHint
         label={t.guide.contextLabel}

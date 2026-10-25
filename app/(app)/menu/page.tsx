@@ -4,38 +4,14 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import {
   Bell,
   ArrowUpRight,
-  BookOpen,
-  Buildings,
-  CalendarBlank,
-  ChartBar,
-  ChartBarHorizontal,
-  ChartPieSlice,
-  Funnel,
-  FunnelSimple,
-  ChatsCircle,
   PencilSimpleLine,
   BellRinging,
-  ChartLineUp,
-  Envelope,
-  FileText,
   Gear,
   Heart,
-  Bank,
-  Briefcase,
-  Receipt,
-  SquaresFour,
-  Palette,
-  PuzzlePiece,
-  TextAa,
-  Newspaper,
-  Percent,
-  Scroll,
   ShieldCheck,
   Sparkle,
   SignIn,
   SignOut,
-  TrendUp,
-  UsersThree,
 } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { ChangelogBadge } from "@/components/changelog/ChangelogBadge";
@@ -44,7 +20,9 @@ import { AvatarTile } from "@/components/brand/AvatarIcon";
 import { getUserAvatar } from "@/lib/avatar-data";
 import { SignOutForm } from "@/components/auth/SignOutForm";
 import { PageHeader, Panel, ButtonLink } from "@/components/ui/primitives";
-import { getI18n } from "@/lib/i18n";
+import { getI18n, type Dictionary } from "@/lib/i18n";
+import { MORE_GROUPS, NAV_ITEMS, menuGroupOf, type MoreGroup } from "@/components/layout/nav-items";
+import { puzzleDayKey, puzzleNumber } from "@/lib/stock-puzzle";
 import { withLocale } from "@/lib/i18n/routing";
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -88,7 +66,18 @@ type Entry = {
   hint: string;
   /** Yenilikler karosu: okurun görmediği giriş varsa "Yeni" hapı. */
   changelog?: boolean;
+  /** Adın yanındaki canlı künye ("Bulmaca #2"). */
+  live?: string;
 };
+
+/** Grup başlığının sözlük anahtarı — panelle aynı (`app/(app)/layout.tsx`). */
+const GROUP_TITLE = {
+  tools: "moreGroupTools",
+  daily: "moreGroupDaily",
+  market: "moreGroupMarket",
+  mine: "moreGroupMine",
+  learn: "moreGroupLearn",
+} as const satisfies Record<MoreGroup, keyof Dictionary["nav"]>;
 
 export default async function MenuPage() {
   const { t, locale } = await getI18n();
@@ -96,88 +85,32 @@ export default async function MenuPage() {
   const username = session?.user?.name ?? null;
   const avatar = session?.user?.id ? await getUserAvatar(session.user.id) : null;
 
-  /* GRUPLAR MASAÜSTÜNÜN "DAHA FAZLA" PANELİYLE AYNI (25 Ekim düzeltmesi).
-     Telefon dizini kendi gruplarını taşıyordu: Portföy ve Vergi analiz
-     araçlarının içinde, Rehber/Sözlük/Hisseyi Bil okumanın içinde, Günün
-     Grafiği ile Günün Posteri okuma listesinin dibinde. Masaüstünde aynı
-     ekranlar başka başlıklar altındaydı ve iki cihazı kullanan okur aynı
-     ekranı iki farklı yerde arıyordu. Sıra ve başlıklar artık
-     `MORE_GROUPS` sırası ve aynı sözlük anahtarları (`t.nav.moreGroup*`):
-     Analiz Araçları, Portföy ve Maliyet, Piyasa, Öğren, Oku, Her Gün;
-     sonda Hesap. Şeritteki ekranlar (Piyasalar, Şirketler, Bilançolar,
-     Teknik, Mercek, Temalar) masaüstünde panelde değil şeritte; telefonda
-     şerit yok, o yüzden anlamca ait oldukları gruba giriyorlar.
+  /* GRUPLAR MASAÜSTÜNÜN "DAHA FAZLA" PANELİYLE AYNI — ARTIK AYNI KAYNAKTAN
+     (25 Ekim). 25 Ekim sabahı başlıklar eşitlenmişti ama liste yine elle
+     yazılıydı: panel yeniden kurulunca iki liste ayrı düşecekti. Gruplar,
+     sıraları ve satırların ikon/ad/ipucu artık `NAV_ITEMS`ten:
+     `menuGroupOf` panel satırının grubunu, şerit sekmesinin `menu`
+     alanını okuyor (telefonda şerit yok; Piyasalar "Piyasa"da, Teknik
+     "Araçlar"da, Mercek "Öğren ve Oku"da). Grup sırası `MORE_GROUPS`:
+     Araçlar, Her Gün, Piyasa, Portföy ve Maliyet, Öğren ve Oku; sonda
+     Hesap ve Site.
 
-     Analiz EN ÜSTTE (11 Ekim, sahibinin isteği: Hisse Seçimi "mantıklı,
+     Araçlar EN ÜSTTE (11 Ekim, sahibinin isteği: Hisse Seçimi "mantıklı,
      güzel bir yere"): Piyasalar ve Bilançolar zaten alt çubukta, menüyü
      açan okuyucu çoğunlukla çubukta olmayanı arıyor. */
+  const puzzle = t.stockPuzzle.number.replace("{n}", String(puzzleNumber(puzzleDayKey())));
   const groups: { title: string; entries: Entry[] }[] = [
-    {
-      title: t.nav.moreGroupAnalyze,
-      entries: [
-        { href: "/teknik", icon: ChartLineUp, title: t.technical.title, hint: t.menu.hintTechnical },
-        /* Hisse Seçimi telefonda bir dönem yalnız hisse panelinden açılıyordu:
-           masaüstü "Daha Fazla"da (nav-items.ts) ama bu elle yazılmış
-           listede yoktu ve `hintScreening` hiçbir yerde basılmıyordu. */
-        { href: "/hisse-secimi", icon: Funnel, title: t.screening.title, hint: t.menu.hintScreening },
-        { href: "/tarama", icon: FunnelSimple, title: t.screener.title, hint: t.menu.hintScreener },
-        { href: "/karsilastir", icon: ChartBar, title: t.compare.title, hint: t.menu.hintCompare },
-      ],
-    },
-    {
-      /* Kişisel hesap ekranları ve getiriden düşen maliyetler (vergi,
-         komisyon) — masaüstünde de bu üçü. */
-      title: t.nav.moreGroupMine,
-      entries: [
-        { href: "/portfoy", icon: Briefcase, title: t.lira.portfolio.title, hint: t.menu.hintPortfolio },
-        { href: "/vergi", icon: Receipt, title: t.nav.taxTool, hint: t.menu.hintTax },
-        { href: "/araci-kurumlar", icon: Bank, title: t.brokers.title, hint: t.brokers.menuHint },
-      ],
-    },
-    {
-      title: t.menu.groupMarket,
-      entries: [
-        { href: "/piyasalar", icon: TrendUp, title: t.nav.markets, hint: t.menu.hintMarkets },
-        { href: "/sirketler", icon: Buildings, title: t.nav.companies, hint: t.menu.hintCompanies },
-        { href: "/bilancolar", icon: FileText, title: t.nav.earnings, hint: t.menu.hintEarnings },
-        { href: "/makro", icon: Percent, title: t.nav.macro, hint: t.menu.hintMacro },
-        { href: "/takvim", icon: CalendarBlank, title: t.nav.calendar, hint: t.menu.hintCalendar },
-        { href: "/tema", icon: SquaresFour, title: t.themes.eyebrow, hint: t.menu.hintThemes },
-        { href: "/yatirimcilar", icon: UsersThree, title: t.investors.eyebrow, hint: t.menu.hintInvestors },
-      ],
-    },
-    {
-      /* Durağan müfredat ve günlük bulmaca: Hisseyi Bil oyun ama öğrettiği
-         şey şirketlerin kimliği (nav-items.ts, "learn"). */
-      title: t.nav.moreGroupLearn,
-      entries: [
-        { href: "/rehber", icon: BookOpen, title: t.nav.guide, hint: t.menu.hintGuide },
-        { href: "/sozluk", icon: TextAa, title: t.glossary.title, hint: t.menu.hintGlossary },
-        { href: "/bulmaca", icon: PuzzlePiece, title: t.stockPuzzle.title, hint: t.stockPuzzle.menuHint },
-      ],
-    },
-    {
-      title: t.nav.moreGroupRead,
-      entries: [
-        /* Mercek başta: sitenin kendi yazdığı ve başka hiçbir yerde
-           bulunmayan içerik bu. */
-        { href: "/mercek", icon: Scroll, title: t.nav.stories, hint: t.menu.hintStories },
-        { href: "/topluluk", icon: ChatsCircle, title: t.community.feed.title, hint: t.menu.hintCommunity },
-        { href: "/haberler", icon: Newspaper, title: t.nav.news, hint: t.menu.hintNews },
-        { href: "/bulten", icon: Envelope, title: t.footer.briefArchive, hint: t.menu.hintBrief },
-      ],
-    },
-    {
-      /* Her seansın sonunda yenilenen iki parça (24 Ekim) ve günde bir
-         yenilenen Olasılıklar (25 Ekim) — masaüstünde
-         panelin dibindeki "Her Gün" bandı. */
-      title: t.nav.moreGroupDaily,
-      entries: [
-        { href: "/gunun-grafigi", icon: ChartBarHorizontal, title: t.dailyChart.title, hint: t.dailyChart.menuHint },
-        { href: "/gun", icon: Palette, title: t.daySignature.poster.title, hint: t.daySignature.archive.menuHint },
-        { href: "/olasiliklar", icon: ChartPieSlice, title: t.probabilities.title, hint: t.probabilities.menuHint },
-      ],
-    },
+    ...MORE_GROUPS.map((group) => ({
+      title: t.nav[GROUP_TITLE[group]],
+      entries: NAV_ITEMS.filter((item) => menuGroupOf(item) === group).map((item) => ({
+        href: item.href,
+        icon: item.icon,
+        title: item.label(t),
+        hint: item.hint?.(t) ?? "",
+        /* Panelle aynı canlı künye: bugünün bulmaca numarası (saf hesap). */
+        live: item.href === "/bulmaca" ? puzzle : undefined,
+      })),
+    })),
     {
       title: t.menu.groupAccount,
       entries: [
@@ -291,6 +224,7 @@ export default async function MenuPage() {
                       <span className={polish.menuTileText}>
                         <b>
                           {entry.title}
+                          {entry.live && <span className={polish.menuLive}>{entry.live}</span>}
                           {entry.changelog && (
                             <ChangelogBadge
                               latest={LATEST_CHANGE_DATE}

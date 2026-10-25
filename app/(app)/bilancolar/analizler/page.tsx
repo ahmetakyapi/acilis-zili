@@ -330,11 +330,12 @@ export default async function AnalysesPage(
         share={<PageShare compactOnMobile align="right" path="/bilancolar/analizler" title={t.analysis.symbolPanelTitle} locale={locale} t={t} />}
         title={t.analysis.symbolPanelTitle}
         description={t.directory.analysisDescription}
+        tabs={<EarningsTabs active="analyses" t={t} inHeader />}
         visual={byDate.length > 0 && (
           <div className={analysisStyles.overview}>
             <div className={analysisStyles.overviewHeading}>
               <span>{t.analysis.filteredReports}</span>
-              <a href="#analysis-archive" className="inline-flex items-center gap-1">{rows.length} {plural(rows.length, t.analysis.colCard, t.analysis.colCardMany)} <ArrowDown size={12} weight="bold" aria-hidden /></a>
+              <a href="#analysis-archive" className="tap-44 inline-flex items-center gap-1">{rows.length} {plural(rows.length, t.analysis.colCard, t.analysis.colCardMany)} <ArrowDown size={12} weight="bold" aria-hidden /></a>
             </div>
             <div className={analysisStyles.distribution}>
               {distribution.map(({ key, count }) => (
@@ -351,8 +352,6 @@ export default async function AnalysesPage(
           </div>
         )}
       />
-
-      <EarningsTabs active="analyses" t={t} className="-mt-1" />
 
       {byDate.length === 0 ? (
         <Panel>

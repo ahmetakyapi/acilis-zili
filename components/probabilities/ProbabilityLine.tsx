@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useCallback, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import styles from "./Probabilities.module.css";
 
 /**
@@ -16,13 +16,22 @@ import styles from "./Probabilities.module.css";
  * değerleri künyede. Klavyede ←/→ gün gün, Esc bırakır (kutu odaklanabilir,
  * dokunma hedefi kutunun tamamı — 44 pikselden büyük). Çizgi metin değil:
  * değerler HTML künyede, SVG esnediği için içinde yazı yok.
+ *
+ * KOMPAKT (25 Ekim, görsel tur). Okuma künyesi artık çizginin ALTINDA
+ * kendi satırını tutmuyor: boştayken ipucu yalnız ekran okuyucuya, okuma
+ * sırasında o satır günün değerlerini, boştayken çizginin ilk ve son
+ * gününü (eksen) gösteriyor. Dört çizgi dört ayrı "üzerine gelin" cümlesi
+ * basıyordu ve tarih ekseni hiç yoktu; kartlar ilk ekrana sığmıyordu
+ * (ölçüldü, 1440×900'de seçim kartının dibi 1307). Yükseklik çağıranın.
  */
 
 export type LineSeries = { key: string; label: string; tone: string };
 export type LineRow = { label: string; values: Record<string, number> };
 
-/** İki uç künyesi bundan yakınsa (eksen yüzdesi) alttaki aşağı itilir. */
-const LABEL_MIN_GAP = 13;
+/** İki uç künyesi arasında en az bu kadar piksel (künye satırı 16). Yüzde
+    sabit 13 iken 76 piksellik çizgide "Artış" ile "İndirim" üst üste
+    biniyordu (ölçüldü); aralık artık çizginin boyuna göre. */
+const LABEL_MIN_GAP_PX = 16;
 /** Künye sütununda adın dışındaki pay: işaret, boşluk ve "%100". */
 const END_EXTRA_CH = 7;
 
@@ -31,17 +40,17 @@ const END_EXTRA_CH = 7;
  * aşağı iter; dibe taşan olursa aşağıdan yukarı geri iter — ikisi de
  * %0'a yakın iki seri (indirim ve artış) dipte üst üste biniyordu.
  */
-function placeEnds<T extends { y: number }>(items: T[]): (T & { top: number })[] {
+function placeEnds<T extends { y: number }>(items: T[], gap: number): (T & { top: number })[] {
   const tops: number[] = [];
   let floor = -Infinity;
   for (const item of items) {
-    const top = Math.max(item.y, floor + LABEL_MIN_GAP);
+    const top = Math.max(item.y, floor + gap);
     tops.push(top);
     floor = top;
   }
-  let ceiling = 100 + LABEL_MIN_GAP;
+  let ceiling = 100 + gap;
   for (let i = tops.length - 1; i >= 0; i--) {
-    tops[i] = Math.min(tops[i], ceiling - LABEL_MIN_GAP);
+    tops[i] = Math.min(tops[i], ceiling - gap);
     ceiling = tops[i];
   }
   return items.map((item, i) => ({ ...item, top: tops[i] }));
@@ -55,6 +64,8 @@ export function ProbabilityLine({
   midLabel,
   hint,
   endText,
+  height = 112,
+  grow = false,
 }: {
   series: LineSeries[];
   rows: LineRow[];
@@ -65,6 +76,11 @@ export function ProbabilityLine({
   hint: string;
   /** Uç künyesinin metni (sunucu panelin büyük sayısıyla aynı paydan verir). */
   endText?: Record<string, string>;
+  /** Çizim yüksekliği (piksel); telefonda %86'sı. */
+  height?: number;
+  /** Kartın kalan boyunu doldurur (`height` en az boy): satırdaki kartlar
+      eşit boyda, kısa kartın boşluğu ortada kalmasın. */
+  grow?: boolean;
 }) {
   const [active, setActive] = useState<number | null>(null);
   const plot = useRef<HTMLDivElement>(null);
@@ -107,13 +123,14 @@ export function ProbabilityLine({
     .filter((s): s is LineSeries & { value: number } => typeof s.value === "number")
     .sort((a, b) => b.value - a.value);
   const endWidth = Math.max(...series.map((s) => s.label.length)) + END_EXTRA_CH;
-  const placed = placeEnds(ends.map((s) => ({ ...s, y: yOf(s.value) })));
+  /* Büyüyen çizgide gerçek boy en az `height`: aralık ona göre güvenli. */
+  const placed = placeEnds(ends.map((s) => ({ ...s, y: yOf(s.value) })), (LABEL_MIN_GAP_PX / height) * 100);
 
   const shown = active ?? null;
   const row = shown !== null ? rows[shown] : null;
 
   return (
-    <figure className={styles.line}>
+    <figure className={styles.line} data-grow={grow || undefined} style={{ "--plot-h": `${height}px` } as CSSProperties}>
       <div
         className={styles.lineBox}
         role="img"
@@ -164,7 +181,10 @@ export function ProbabilityLine({
           ))}
         </div>
       </div>
-      <figcaption id={`${id}-read`} className={styles.lineRead} aria-live="polite">
+      {/* Alt satır tek yer: boştayken ilk ve son gün (eksen), okurken o
+          günün değerleri. İpucu yalnız ekran okuyucuya. Yükseklik sabit,
+          okuma başlayınca hiçbir şey kaymıyor. */}
+      <figcaption id={`${id}-read`} className={styles.lineRead} aria-live="polite" data-reading={row ? "" : undefined}>
         {row ? (
           <>
             <span className="numeral">{row.label}</span>
@@ -178,7 +198,13 @@ export function ProbabilityLine({
             )}
           </>
         ) : (
-          <span>{hint}</span>
+          <>
+            <span className="sr-only">{hint}</span>
+            <span className={styles.lineAxis} aria-hidden style={{ marginRight: `calc(${endWidth}ch + 10px)` }}>
+              <span className="numeral">{rows[0].label}</span>
+              <span className="numeral">{rows[n - 1].label}</span>
+            </span>
+          </>
         )}
       </figcaption>
     </figure>

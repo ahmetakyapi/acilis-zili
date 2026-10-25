@@ -18,7 +18,7 @@ export const brokerCardsTr = {
   title: "Kurum Kurum ABD Tarifesi",
   meta: "{count} Kurum",
   intro:
-    "Her kart bir kurum. Rakam kaydırıcıda seçtiğin alımın komisyonu; altındaki çizgide nokta bu kurum, gri çentikler öteki kurumlar. Küçük numara değerin kaynağına götürür.",
+    "Her kart bir kurum. Rakam yukarıda seçtiğin alımın komisyonu; çizgide renkli nokta bu kurum, gri çentikler öteki kurumlar. Notlar ve kaynak numaraları Ayrıntı'da.",
   sortLabel: "Kart Sırası",
   sorts: { ad: "Ada Göre", komisyon: "Komisyona Göre" },
   sortNote: {
@@ -73,6 +73,55 @@ export const brokerCardsTr = {
     lineMore: "Varsayımlar ve Ölçek",
     lineLess: "Kısalt",
   },
+  /* Alımına göre komisyon panosu: üç kart (25 Ekim, kurum logoları turu). */
+  board: {
+    cheapest: {
+      title: "Bu Tutarda En Ucuz",
+      podiumLabel: "{amount} alımda komisyonu en düşük üç kurum",
+      restLabel: "Öteki kurumlar, komisyona göre",
+      rank: "{rank}.",
+    },
+    curves: {
+      title: "Tutar Büyüdükçe",
+      chartLabel: "Kurumların komisyon eğrileri, 100 $ ile 50.000 $ arasında; iki eksen de logaritmik.",
+      same: "En düşük komisyon {lo} ile {hi} arasındaki her alımda {first}.",
+      change: "En düşük komisyon {to} altındaki alımda {first}, {from} üstündeki alımda {last}; aradaki tutarlar alttaki şeritte.",
+      stripTitle: "En Düşük Komisyon",
+      stripLabel: "{from} ile {to} arası: {names}",
+      scaleNote: "İki Eksen Logaritmik",
+      pick: "Grafiğe dokunarak tutar seçebilirsin.",
+    },
+    yearly: {
+      title: "Yıllık Maliyet",
+      freqLabel: "Ayda Alım",
+      freq: "{n} Alım",
+      freqAria: "Ayda {n} alım",
+      commission: "Komisyon",
+      custody: "Saklama",
+      custodyFree: "Saklama Yok",
+      custodyUnknown: "Saklama Belirtilmemiş",
+      custodyFloor: "Saklama En Az {eur}/Yıl",
+      rowLabel: "{name}: yılda {total}; komisyon {commission}, saklama {custody}",
+      custodyNone: "belirtilmemiş",
+      assumption:
+        "Her ay {n} kez {amount} alım, fiyat sabit; saklama ay sonu bakiyesinden. Kur farkı, BSMV, ADR ve veri ücreti dahil değil.",
+    },
+    unpriced: {
+      title: "Hesaplanamayanlar",
+      more: "Nedenleri",
+      less: "Kısalt",
+    },
+  },
+  rank: "{amount} Alımda Sıra {rank}/{total}",
+  tileLabels: {
+    fractional: "Kesirli Hisse",
+    data: "Anlık Veri",
+    w8ben: "W-8BEN",
+    options: "Opsiyon",
+    custody: "Saklama",
+    minimum: "Asgari Ücret",
+  },
+  unspecifiedShort: "Belirtilmemiş",
   details: {
     title: "Tüm Tarife Ayrıntıları",
     meta: "{count} Kurum, {columns} Kalem",
@@ -91,7 +140,7 @@ export const brokerCardsEn: typeof brokerCardsTr = {
   title: "US Fees, Broker by Broker",
   meta: "{count} Brokers",
   intro:
-    "Each card is one broker. The figure is the commission on the trade picked with the slider; on the line below, the dot is this broker and the grey ticks are the others. The small number leads to the value's source.",
+    "Each card is one broker. The figure is the commission on the trade picked above; on the line, the coloured dot is this broker and the grey ticks are the others. Notes and source numbers are under Details.",
   sortLabel: "Card Order",
   sorts: { ad: "By Name", komisyon: "By Commission" },
   sortNote: {
@@ -145,6 +194,54 @@ export const brokerCardsEn: typeof brokerCardsTr = {
     lineMore: "Assumptions and Scale",
     lineLess: "Show Less",
   },
+  board: {
+    cheapest: {
+      title: "Cheapest at This Size",
+      podiumLabel: "The three lowest commissions on {amount}",
+      restLabel: "Other brokers, by commission",
+      rank: "#{rank}",
+    },
+    curves: {
+      title: "As the Trade Grows",
+      chartLabel: "Each broker's commission from $100 to $50,000; both axes are logarithmic.",
+      same: "The lowest commission on every trade from {lo} to {hi} is at {first}.",
+      change: "Below {to} the lowest commission is at {first}; above {from}, at {last}. The strip below shows the sizes in between.",
+      stripTitle: "Lowest Commission",
+      stripLabel: "{from} to {to}: {names}",
+      scaleNote: "Both Axes Logarithmic",
+      pick: "Tap the chart to pick a trade size.",
+    },
+    yearly: {
+      title: "Cost Over a Year",
+      freqLabel: "Trades a Month",
+      freq: "{n} Trades",
+      freqAria: "{n} trades a month",
+      commission: "Commission",
+      custody: "Custody",
+      custodyFree: "No Custody Fee",
+      custodyUnknown: "Custody Not Stated",
+      custodyFloor: "Custody at Least {eur} a Year",
+      rowLabel: "{name}: {total} a year; commission {commission}, custody {custody}",
+      custodyNone: "not stated",
+      assumption:
+        "{n} buys of {amount} every month at a flat price; custody on the month-end balance. FX spread, BSMV tax, ADR and data fees not included.",
+    },
+    unpriced: {
+      title: "Not Priced",
+      more: "Reasons",
+      less: "Show Less",
+    },
+  },
+  rank: "Rank {rank} of {total} at {amount}",
+  tileLabels: {
+    fractional: "Fractional",
+    data: "Live Data",
+    w8ben: "W-8BEN",
+    options: "Options",
+    custody: "Custody",
+    minimum: "Minimum Fee",
+  },
+  unspecifiedShort: "Not Stated",
   details: {
     title: "Full Fee Details",
     meta: "{count} Brokers, {columns} Items",

@@ -2,7 +2,7 @@ import { Panel, PanelHeader } from "@/components/ui/primitives";
 import { analysisHref } from "@/lib/analysis";
 import type { AnalysisBadge } from "@/lib/data";
 import { earningsHref } from "@/lib/earnings-company";
-import { horizonLead, peakCell, tileScale } from "@/lib/earnings-horizon";
+import { capCell, horizonLead, peakCell, tileScale, tileTierOf } from "@/lib/earnings-horizon";
 import { loadHorizonKarne } from "@/lib/earnings-horizon-data";
 import { dayLabel, epsSurprise, laneOf, WEEK_MAX_NAMES, weekRangeLabel, type ScheduleRow, type WeekLane } from "@/lib/earnings-week";
 import type { EarningsWeek } from "@/lib/earnings-week-data";
@@ -45,12 +45,17 @@ export function EarningsHorizon({
   today,
   watchSet,
   badges,
+  listedDays,
   locale,
   t,
 }: {
   week: EarningsWeek;
   /** ET takvim günü. */
   today: string;
+  /** Aynı sayfadaki listenin kapsadığı günler: "+N" çipi o günün
+      bölümüne (`#earnings-day-…`) iner; listede olmayan gün (haftanın
+      geçmiş günleri) Haftalık sekmenin gün gün takvimine gider. */
+  listedDays?: ReadonlySet<string>;
   watchSet: ReadonlySet<string>;
   /** `SEMBOL:TARİH` → yayımlanmış analiz. */
   badges: Record<string, AnalysisBadge>;
@@ -78,6 +83,7 @@ export function EarningsHorizon({
       name: row.name ?? row.symbol,
       logoUrl: row.logoUrl,
       scale: tileScale(row.marketCap, weekMax),
+      tier: tileTierOf(tileScale(row.marketCap, weekMax)),
       capText: row.marketCap !== null ? formatMoneyCompact(row.marketCap, locale) : null,
       revenueText: row.revenueEstimate !== null ? formatMoneyCompact(row.revenueEstimate, locale, row.currency) : null,
       epsText: row.epsEstimate !== null ? formatPrice(row.epsEstimate, locale, { currency }) : null,
@@ -98,6 +104,8 @@ export function EarningsHorizon({
     };
   };
 
+  /* Hücre en çok altı yuva (`capCell`): sığmayan küçükler "+N" çipinde. */
+  const cap = (rows: ScheduleRow[]) => capCell(rows).shown.map(tile);
   const days: HorizonDay[] = week.days.map((day) => {
     const label = dayLabel(day.date, locale);
     const parts = etDateParts(day.date, locale);
@@ -113,7 +121,10 @@ export function EarningsHorizon({
       closed: day.closed !== null,
       countText: h.countCompanies.replace("{count}", String(total)),
       density: total / peakTotal,
-      lanes: { bmo: day.bmo.map(tile), amc: day.amc.map(tile), other: day.other.map(tile) },
+      lanes: { bmo: cap(day.bmo), amc: cap(day.amc), other: cap(day.other) },
+      more: { bmo: capCell(day.bmo).more, amc: capCell(day.amc).more, other: capCell(day.other).more },
+      moreHref: listedDays?.has(day.date) ? `#earnings-day-${day.date}` : `/bilancolar/hafta#week-schedule-${day.date}`,
+      moreLabel: h.moreLabel.replace("{day}", label.weekday),
     };
   });
 
@@ -148,7 +159,9 @@ export function EarningsHorizon({
   });
   /* Başlangıçta seçili karo: haftanın en büyüğü (cümlenin ilk adı). */
   const initial = peak?.symbols[0] ?? picked[0]?.symbol ?? null;
-  const karne = loadHorizonKarne(picked.map((row) => row.symbol));
+  /* Karne yalnız ÇİZİLEN karolar için: "+N"e düşenler okuma satırına
+     gelemiyor ve sağlayıcı kotası (Finnhub) boşa harcanmasın. */
+  const karne = loadHorizonKarne(days.flatMap((day) => [...day.lanes.bmo, ...day.lanes.amc, ...day.lanes.other].map((tile) => tile.symbol)));
 
   return (
     <Panel className={styles.panel} data-motion-reveal>
@@ -179,6 +192,7 @@ export function EarningsHorizon({
           today: t.calendar.today,
           hint: h.readoutHint,
           pickDay: h.pickDay,
+          more: h.more,
         }}
       />
       <div className={styles.foot}>

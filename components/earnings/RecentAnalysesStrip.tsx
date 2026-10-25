@@ -59,8 +59,10 @@ export function RecentAnalysesStrip({
          ağırlığa değişmek olmazdı.
          Kalan kaldıraçlar metni etkilemiyor: kenarlık bir kademe koyu,
          dolgu 3.5 → 4, köşe yarıçapı panellerinkiyle aynı (`xl`). Şerit
-         artık sayfadaki öteki kutularla aynı dilde ve kenarı belirgin. */
-      className="flex flex-col gap-3 rounded-xl border border-primary-soft/45 bg-(--premium-surface) px-4 py-4.5 sm:flex-row sm:items-center sm:gap-5 sm:px-6 sm:py-5"
+         artık sayfadaki öteki kutularla aynı dilde ve kenarı belirgin.
+         Geniş ekranda dikey dolgu 5 → 3.5 (25 Ekim, ilk ekran turu): çipler
+         44 piksel, şerit 84 → 72 ve altındaki takvim listesi yukarı çıkıyor. */
+      className="flex flex-col gap-3 rounded-xl border border-primary-soft/45 bg-(--premium-surface) px-4 py-4.5 sm:flex-row sm:items-center sm:gap-5 sm:px-6 sm:py-3.5"
     >
       <div className="flex shrink-0 items-center justify-between gap-3">
         {/* ETİKET YÜZEYİN KENDİ MÜREKKEBİNDE. `plate` künyeyi `--text-muted`

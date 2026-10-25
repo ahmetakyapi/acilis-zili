@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Cards, LockSimple } from "@phosphor-icons/react/dist/ssr";
 import { Button, Panel, PanelHeader } from "@/components/ui/primitives";
@@ -12,6 +12,7 @@ import type { PuzzleResponse } from "@/app/api/bulmaca/route";
 import {
   AXIS_AFTER_MISSES,
   JOKER,
+  MAX_GUESSES,
   dayNumberOf,
   isClose,
   isJoker,
@@ -40,8 +41,9 @@ import { GuessBox } from "./GuessBox";
 import { GuessDots } from "./GuessDots";
 import { GuessList } from "./GuessList";
 import { PuzzleChart } from "./PuzzleChart";
-import { PuzzleCover } from "./PuzzleCover";
+import { PuzzleCover, PuzzleResult } from "./PuzzleCover";
 import { PuzzleRecord } from "./PuzzleRecord";
+import { cn } from "@/lib/utils";
 import { clueValue, fill } from "./puzzle-format";
 import styles from "./StockPuzzle.module.css";
 
@@ -53,11 +55,22 @@ import styles from "./StockPuzzle.module.css";
  * bilmez — bitmiş bulmacada yanıtla gelir. Karşılaştırma karoları da
  * sunucuda hesaplanır (`compareGuess`); istemciye yalnız sınıf ve yön iner.
  *
+ * TEK EKRANLIK TAHTA (25 Ekim, ikinci kurulum). Sahibinin itirazı:
+ * "Kaydırılmadan da görünebilsin; detaylar, ipuçları hepsi kolay okunsun
+ * ve tek ekranda her şey net belli olsun." Ölçü: 1280×800, 1440×900 ve
+ * 1920×1080'de oyunun dört durumunda (başlangıç, üç yanlış, kazanma,
+ * kaybetme) siluet/cevap, on bir ipucunun hepsi, giriş, altı tahmin yuvası
+ * ve seri, üst gezinmenin altından alt fiyat şeridinin üstüne kadar
+ * kaydırmasız (sayılar StockPuzzle.module.css başında). İkincil metin
+ * (kurallar, havuz, lejantın uzun açıklaması) tahtanın altındaki "Nasıl
+ * Oynanır"da (PuzzleScreen).
+ *
  * EKRAN DÜZENİ (CLAUDE.md sırası): başlık sayfada; sol kolonda ANA GÖRSEL
- * (oynanırken siluet paneli, bitince onun yerine kapak kartı) ve ipucu
- * yolu; sağ kolonda tahminler ve seri. Telefonda tek kolon, sıra `order`
- * ile: ana görsel, tahminler, ipuçları, seri — siluet ve tahmin kutusu
- * ilk ekranda (390×844'te ölçüldü, StockPuzzle.module.css).
+ * (oynanırken siluet, bitince aynı kutuda cevap) ve altında ipucu
+ * ızgarası; sağ kolonda tahminler (giriş kutusu, bitince onun yerinde
+ * sonuç ve paylaşım) ve seri şeridi. Telefonda tek kolon, sıra `order`
+ * ile: ana görsel, yapışkan Tahminler/İpuçları anahtarı, seçili bölüm,
+ * seri.
  *
  * DOĞRU TAHMİNDE ZİL (25 Ekim): sitenin imza anı. Sayfada ikinci bir zil
  * bileşeni yok; kapak kartı kahraman zilinin `heroTap` sahnesini bir kez
@@ -138,6 +151,13 @@ export function StockPuzzle({ initial, options, labels, locale, shareUrl, archiv
   const [freshSymbol, setFreshSymbol] = useState<string | null>(null);
   /* Bu oturumda, bu tıklamayla kazanıldı mı — zil yalnız o zaman çalar. */
   const [rang, setRang] = useState(false);
+  /* Telefonda yapışkan anahtar: Tahminler mi İpuçları mı. `seen`, okurun
+     İpuçları'nı en son açtığında kaç ipucu gördüğü — anahtarda "yeni"
+     noktası buradan. */
+  const [tab, setTab] = useState<"guesses" | "clues">("guesses");
+  const [seen, setSeen] = useState(initial.clues.length);
+  const leadRef = useRef<HTMLElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   const hydrated = useSyncExternalStore(subscribeNothing, () => true, () => false);
   const progressRaw = useSyncExternalStore(subscribeStorage, progressSnapshot, () => null);
@@ -260,31 +280,59 @@ export function StockPuzzle({ initial, options, labels, locale, shareUrl, archiv
   const silhouette = state.clues.find((clue) => clue.kind === "silhouette");
   const silhouetteKnown = Boolean(silhouette) || state.upcoming.includes("silhouette");
   const guessLabel = fill(labels.guessCount, { n: state.guesses.length });
+  const unseen = tab === "clues" ? 0 : Math.max(0, state.clues.length - seen);
+  const cluesLabel = fill(labels.cluesOpen, { n: state.clues.length, total: state.clues.length + state.upcoming.length });
+
+  /* Anahtar yapışmışken bölüm değişince sayfa, seçilen panelin başına
+     (anahtarın hemen altına) döner; yapışmamışken yerinde kalır. Yeni
+     yerleşim çizildikten SONRA ölçülür: tıklamanın içinde kaydırınca
+     tarayıcının kaydırma çapası panel değişiminde sayfayı yeniden
+     oynatıyordu (390'da ölçüldü: ipuçları anahtarın 67 piksel altında
+     kalıyordu). */
+  const jumpRef = useRef(false);
+  const choose = (next: "guesses" | "clues") => {
+    if (next === "clues") setSeen(state.clues.length);
+    if (next === tab) return;
+    jumpRef.current = true;
+    setTab(next);
+  };
+  useLayoutEffect(() => {
+    if (!jumpRef.current) return;
+    jumpRef.current = false;
+    const bar = tabsRef.current;
+    const lead = leadRef.current;
+    if (!bar || !lead) return;
+    const stuckAt = parseFloat(getComputedStyle(bar).top) || 0;
+    const gap = parseFloat(getComputedStyle(bar.parentElement ?? bar).rowGap) || 0;
+    const target = window.scrollY + lead.getBoundingClientRect().bottom + gap - stuckAt;
+    if (window.scrollY > target) window.scrollTo({ top: target });
+  }, [tab]);
 
   return (
-    <div className={styles.board}>
+    <div className={styles.board} data-tahta-kok>
       <p aria-live="polite" className="sr-only">{announce}</p>
 
       <div className={styles.main}>
-        {/* ---- Ana görsel: oynanırken siluet, bitince kapak kartı ---- */}
+        {/* ---- Ana görsel: oynanırken siluet, bitince aynı kutuda cevap ---- */}
         {finished && state.answer ? (
-          <PuzzleCover className={styles.lead} state={state} labels={labels} locale={locale} rang={rang} shareUrl={shareUrl} archive={archive} />
+          <PuzzleCover ref={leadRef} className={styles.lead} state={state} labels={labels} locale={locale} rang={rang} />
         ) : silhouette?.kind === "silhouette" ? (
-          <Panel className={styles.lead}>
+          <Panel ref={leadRef} className={styles.lead}>
             <PanelHeader
+              className="py-2.5"
               title={labels.clue.silhouette}
               meta={
                 state.axis ? (
                   labels.axisOpen
                 ) : (
-                  <span className={styles.axisLock}>
+                  <span className={styles.axisLock} title={labels.silhouetteNote}>
                     <LockSimple aria-hidden size={12} weight="bold" />
                     {fill(labels.axisLocked, { n: AXIS_AFTER_MISSES })}
                   </span>
                 )
               }
             />
-            <div className="px-4 pb-5 sm:px-5">
+            <div className={styles.leadBody}>
               <PuzzleChart
                 points={silhouette.points}
                 axis={state.axis ? { kind: "pct", spreadPct: state.axis.spreadPct } : { kind: "shape" }}
@@ -292,18 +340,18 @@ export function StockPuzzle({ initial, options, labels, locale, shareUrl, archiv
                 locale={locale}
                 label={`${labels.clue.silhouette}. ${labels.silhouetteNote}`}
               />
-              {/* "Eksen ve fiyat yok" notu yalnız eksensizken doğru; eksen
-                  açılınca ölçüler onun yerini alıyor (telefonda kutuyu da
-                  ilk ekranda tutuyor: 390'da tahmin kutusu 731 → 696). */}
-              {!state.axis && <p className={styles.note}>{labels.silhouetteNote}</p>}
             </div>
           </Panel>
         ) : null}
 
-        {/* ---- İpucu yolu ve kartları ---- */}
-        <Panel className={styles.clues}>
-          <PanelHeader title={labels.cluesTitle} meta={<span className="numeral">{`${state.clues.length}/${state.clues.length + state.upcoming.length}`}</span>} />
-          <div className="px-4 pb-5 sm:px-5">
+        {/* ---- İpuçları: on eşit karo, basamak sırasıyla ---- */}
+        <Panel className={styles.clues} data-gizli={tab === "clues" ? undefined : ""}>
+          <PanelHeader
+            className="py-2.5"
+            title={labels.cluesTitle}
+            meta={<span className="numeral">{cluesLabel}</span>}
+          />
+          <div className={styles.cluesBody}>
             {!silhouetteKnown && <p className={styles.missing}>{labels.silhouetteMissing}</p>}
             <ClueBoard
               clues={state.clues}
@@ -315,15 +363,39 @@ export function StockPuzzle({ initial, options, labels, locale, shareUrl, archiv
               labels={labels}
               locale={locale}
             />
-            <p className={styles.pool}>{labels.poolNote}</p>
           </div>
         </Panel>
       </div>
 
+      {/* ---- Telefon: yapışkan Tahminler / İpuçları anahtarı ----
+          Tek kolonda dört panel alt alta 390×844'te üç ekran boyu
+          kaydırma istiyordu ve giriş kutusu ile ipuçları hiçbir zaman
+          aynı anda görünmüyordu. Anahtar siluetin altında yapışıyor; bir
+          dokunuşla öbür bölüme geçiliyor. Masaüstünde gizli, iki panel
+          yan yana. Sekme değil düğme grubu (`aria-pressed`): masaüstünde
+          paneller hep görünür, sekme paneli ilan etmek yanlış olurdu. */}
+      <div ref={tabsRef} role="group" aria-label={labels.tabsLabel} className={styles.tabs}>
+        <button type="button" aria-pressed={tab === "guesses"} onClick={() => choose("guesses")} className={styles.tab}>
+          {labels.guessesTitle}
+          <span className={cn(styles.tabMeta, "numeral")}>{state.guesses.length}/{MAX_GUESSES}</span>
+        </button>
+        <button type="button" aria-pressed={tab === "clues"} onClick={() => choose("clues")} className={styles.tab}>
+          {labels.cluesTitle}
+          <span className={cn(styles.tabMeta, "numeral")}>{state.clues.length}/{state.clues.length + state.upcoming.length}</span>
+          {unseen > 0 && (
+            <span className={styles.tabNew}>
+              <span aria-hidden>+{unseen}</span>
+              <span className="sr-only">{fill(labels.newClues, { n: unseen })}</span>
+            </span>
+          )}
+        </button>
+      </div>
+
       <div className={styles.side}>
-        {/* ---- Tahminler ---- */}
-        <Panel className={styles.guesses} aria-busy={restoring || pending}>
+        {/* ---- Tahminler: giriş (bitince sonuç), altı yuva, lejant ---- */}
+        <Panel className={styles.guesses} data-gizli={tab === "guesses" ? undefined : ""} aria-busy={restoring || pending}>
           <PanelHeader
+            className="py-2.5"
             title={labels.guessesTitle}
             meta={
               <span className={styles.progress}>
@@ -332,9 +404,11 @@ export function StockPuzzle({ initial, options, labels, locale, shareUrl, archiv
               </span>
             }
           />
-          <div className="px-4 pb-5 sm:px-5">
-            {!finished && (
-              <div className={styles.box}>
+          <div className={styles.guessesBody}>
+            {finished && state.answer ? (
+              <PuzzleResult state={state} labels={labels} shareUrl={shareUrl} archive={archive} />
+            ) : (
+              <div className={styles.box} data-tahta="giris">
                 <GuessBox
                   options={options}
                   guessed={guessed}
@@ -343,23 +417,26 @@ export function StockPuzzle({ initial, options, labels, locale, shareUrl, archiv
                   disabled={!hydrated || restoring || pending}
                   pending={pending}
                   onGuess={submit}
+                  extra={
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="lg"
+                      title={labels.jokerHint}
+                      aria-describedby="bulmaca-joker-not"
+                      disabled={!hydrated || restoring || pending || !jokerAllowed(state.guesses.length, state.upcoming.length)}
+                      onClick={() => void submit(JOKER)}
+                    >
+                      <Cards aria-hidden size={16} weight="bold" />
+                      <span className={styles.jokerText}>{labels.jokerButton}</span>
+                    </Button>
+                  }
                 />
-                <div className={styles.joker}>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    disabled={!hydrated || restoring || pending || !jokerAllowed(state.guesses.length, state.upcoming.length)}
-                    onClick={() => void submit(JOKER)}
-                  >
-                    <Cards aria-hidden size={16} weight="bold" />
-                    {labels.jokerButton}
-                  </Button>
-                  <p className={styles.jokerHint}>{labels.jokerHint}</p>
-                </div>
+                <span id="bulmaca-joker-not" className="sr-only">{labels.jokerHint}</span>
               </div>
             )}
             {failureText && <p role="alert" className={styles.error}>{failureText}</p>}
-            <GuessList guesses={state.guesses} status={state.status} freshSymbol={freshSymbol} labels={labels} locale={locale} />
+            <GuessList guesses={state.guesses} freshSymbol={freshSymbol} labels={labels} locale={locale} />
           </div>
         </Panel>
 
@@ -372,7 +449,6 @@ export function StockPuzzle({ initial, options, labels, locale, shareUrl, archiv
           locale={locale}
         />
       </div>
-
     </div>
   );
 }

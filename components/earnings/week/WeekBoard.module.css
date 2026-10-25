@@ -703,6 +703,9 @@
   transform: translateX(2px);
 }
 
+/* Haftalık gövdenin yedeği bir ekran boyu (gerekçe hafta/page.tsx). */
+.bodyFallback { min-height: 100vh; }
+
 /* ---- Kahraman: eylemler ---- */
 .heroActions {
   display: flex;

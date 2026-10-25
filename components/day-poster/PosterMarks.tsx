@@ -4,15 +4,15 @@ import { cn } from "@/lib/utils";
 import styles from "./PosterMarks.module.css";
 
 /**
- * Posterin küçük izi — kapanış künyesi (`DaySeal`), poster sayfası ve
- * arşiv kartı AYNI çizimi kullanıyor (25 Ekim). Önceden üçü kendi şeridini
+ * Posterin küçük izi — poster sayfası ve arşiv kartı AYNI çizimi
+ * (kapanış künyesi `DaySeal` 25 Ekim'de kalktı) kullanıyor (25 Ekim). Önceden üçü kendi şeridini
  * ayrı CSS'le basıyordu ve arşiv bambaşka bir dil konuşuyordu (dolu
  * bloklu histogram, sahibinin 10 Ekim "tablo programı" itirazı).
  *
- * - `BreadthStrip`: S&P 500 genişliği, 5 piksellik şerit `--line-soft`
+ * - `BreadthStrip`: Nasdaq 100 genişliği, 5 piksellik şerit `--line-soft`
  *   kulvarı üstünde; parçaların boyu üye sayısı, renk yalnız işaretten.
- *   `animate` verilirse girişte soldan `--ease-brand` ile doluyor (künye
- *   ve poster sayfası; arşivin otuz kartında değil, orası sayfa açılınca
+ *   `animate` verilirse girişte soldan `--ease-brand` ile doluyor (poster
+ *   sayfası; arşivin otuz kartında değil, orası sayfa açılınca
  *   ekranda olmayan kartlarla dolu). Hareketi azaltana son kare.
  * Arşiv kartının on bir sektör kulvarı (`SectorLanes`) 25 Ekim'de kalktı:
  * kart artık günün sahnesinin minyatürünü taşıyor (`/gun/[tarih]/minyatur`).

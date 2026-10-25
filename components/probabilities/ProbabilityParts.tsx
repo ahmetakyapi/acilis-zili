@@ -49,6 +49,13 @@ export function shareText(n: number, locale: Locale, p?: number): string {
  * verdiği sabit sıra (renk varlığa bağlı, büyüklüğe değil). `midline` iki
  * sonuçlu olayda %50 çizgisi: çoğunluğun nerede olduğunu çubuğun kendisi
  * söylesin.
+ *
+ * `legend="scale"` (Fed): künye beş eşit sütunlu bir ölçek, her sütunda
+ * kısa ad ve altında sayı; sıra çubuğun sırası. Beş uzun ad ("25 bp'den
+ * Büyük İndirim") iki-üç satıra dökülüp kartı uzatıyordu.
+ *
+ * Çubuk girişte bir kez soldan dolar (CSS, `--ease-brand`, ilk boyamadan);
+ * hareketi azaltana son kare.
  */
 export function ProbabilityStack({
   segments,
@@ -56,6 +63,7 @@ export function ProbabilityStack({
   locale,
   lead,
   midline,
+  midlineLabel = true,
   legend = true,
 }: {
   segments: StackSegment[];
@@ -63,14 +71,16 @@ export function ProbabilityStack({
   locale: Locale;
   lead?: string | null;
   midline?: string;
-  legend?: boolean;
+  /** Çentiğin adı çubuğun üstünde mi (kartın künyesi açıklıyorsa hayır). */
+  midlineLabel?: boolean;
+  legend?: boolean | "scale";
 }) {
   const shown = segments.filter((s) => s.p >= 0.005);
   const shares = shareMap(segments);
   return (
     <div className={styles.stack}>
       <div className={styles.stackBar} role="img" aria-label={ariaLabel}>
-        <div className={styles.stackTrack} data-motion-draw="line">
+        <div className={styles.stackTrack}>
           {shown.map((s) => (
             <span key={s.key} data-tone={s.key} style={{ flexGrow: s.p, flexBasis: 0 }} />
           ))}
@@ -78,11 +88,21 @@ export function ProbabilityStack({
         {midline && (
           <>
             <i className={styles.stackMid} aria-hidden />
-            <span className={styles.stackMidLabel} aria-hidden>{midline}</span>
+            {midlineLabel && <span className={styles.stackMidLabel} aria-hidden>{midline}</span>}
           </>
         )}
       </div>
-      {legend && (
+      {legend === "scale" && (
+        <ul className={styles.scale} aria-hidden style={{ "--cols": segments.length } as CSSProperties}>
+          {segments.map((s) => (
+            <li key={s.key} data-tone={s.key} data-lead={lead === s.key || undefined}>
+              <span><i />{s.label}</span>
+              <b className="numeral">{shareText(shares[s.key], locale, s.p)}</b>
+            </li>
+          ))}
+        </ul>
+      )}
+      {legend === true && (
         <ul className={styles.legend} aria-hidden>
           {segments.map((s) => (
             <li key={s.key} data-tone={s.key} data-lead={lead === s.key || undefined}>

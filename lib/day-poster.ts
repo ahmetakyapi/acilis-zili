@@ -17,8 +17,17 @@ import { clockOf } from "./session-clock";
  *
  * Bu dosya SAF: veritabanına ve sağlayıcıya dokunmuyor, ki her karar test
  * edilebilsin (tests/day-poster.test.ts). Veri tarafı
- * `lib/day-poster-data.ts`, sahnenin yerleşimi `lib/day-poster-scene.ts`,
- * sayfa `/gun/[tarih]`.
+ * `lib/day-poster-data.ts`, sahnenin (Günün Silueti) yerleşimi
+ * `lib/day-skyline.ts`, sayfa `/gun/[tarih]`.
+ *
+ * NASDAQ 100 ÜZERİNDEN (25 Ekim, üçüncü kurulum). Poster önce S&P 500'ün
+ * ~500 hissesini ve on bir SPDR sektör fonunu anlatıyordu; sahne yüzlerce
+ * adsız noktaya dönüştü ve sahibi "noktaların ne olduğunu insan anlamaz"
+ * dedi. Nasdaq 100'ün yüz şirketinin her biri tanınır: sahne her birini
+ * logosuyla bir bina olarak çizebiliyor. Günün yönü artık Nasdaq 100
+ * fonundan (QQQ), genişlik yüz üyeden, sektör sırası da üyelerin kendi
+ * mahallelerinden (`lib/day-skyline.ts` → `districtsOf`); sektör fonları
+ * posterden çıktı.
  *
  * Posterin sözü tek cümle: "bu sahnede gördüğün her şey O GÜNÜN kapanışı".
  * O yüzden kararların hepsi aynı soruya bakıyor — bu sayı gerçekten bu
@@ -113,7 +122,7 @@ export type PosterMove = { symbol: string; change: number };
 
 /**
  * Bir üyenin o günkü değişimi VE kapanışı (25 Ekim, sahne). Kapanış
- * noktanın boyu için: piyasa değeri o günün kapanışı × hisse sayısı
+ * binanın genişliği için: piyasa değeri o günün kapanışı × hisse sayısı
  * (`lib/day-poster-data.ts`), bugünkü fiyat değil.
  */
 export type PosterStock = { symbol: string; change: number; close: number };
@@ -131,7 +140,7 @@ export type PosterBreadth = {
   unchanged: number;
   /** Değişimi hesaplanabilen üye sayısı. */
   known: number;
-  /** Listedeki üye sayısı (bugünkü S&P 500 bileşimi). */
+  /** Listedeki üye sayısı (bugünkü Nasdaq 100 bileşimi). */
   members: number;
 };
 
@@ -166,50 +175,44 @@ export type DayPoster = {
   date: string;
   /** Yüzdelerin tabanı olan önceki işlem günü. */
   prevDate: string;
-  /** On bir sektör fonu, günün değişimine göre GÜÇLÜDEN ZAYIFA. */
-  sectors: PosterMove[];
   /** Endeks fonları, `INDEX_STRIP` sırasında; değişimi olmayan düşer. */
   indices: PosterMove[];
   breadth: PosterBreadth | null;
   /**
-   * Değişimi bilinen her üye, sembol sırasıyla (25 Ekim). Sahne bunları
-   * sektör sektör dizer (`lib/day-poster-scene.ts`); genişlik de aynı
-   * kümeden sayılıyor, yani "130 Yükseldi" ile sahnedeki yeşil noktalar
+   * Değişimi bilinen her üye, sembol sırasıyla (25 Ekim). Siluet bunları
+   * mahalle mahalle dizer (`lib/day-skyline.ts`); genişlik de aynı
+   * kümeden sayılıyor, yani "38 Yükseldi" ile ufkun üstündeki binalar
    * aynı sayım.
    */
   stocks: PosterStock[];
 };
 
+/** Posterin endeksi: Nasdaq 100'ü izleyen fon. */
+export const POSTER_ANCHOR = "QQQ";
+
 /**
- * Posteri kurar ya da `null` döner (sayfa 404). Şartlar: on bir sektörün
- * TAMAMI ve S&P 500 fonu. Eksik sektörlü bir poster sıralamada boşluk
- * bırakırdı ve okuyucu eksik kulvarı "yatay" sanardı.
+ * Posteri kurar ya da `null` döner (sayfa 404). Şartlar: Nasdaq 100 fonu ve
+ * GENİŞLİK — üyelerin en az %90'ının iki kapanışı (`breadthOf`). Eksik
+ * üyeli bir siluet boşluklu bir şehir olurdu ve okuyucu eksik binayı
+ * "yerinde saydı" sanardı (ilk sürümde aynı gerekçe on bir sektör fonu
+ * içindi).
  */
 export function buildPoster({
   date,
   prevDate,
   bars,
-  sectorSymbols,
   indexSymbols,
   memberSymbols,
-  anchor = "SPY",
+  anchor = POSTER_ANCHOR,
 }: {
   date: string;
   prevDate: string;
   bars: Readonly<Record<string, Bar[]>>;
-  sectorSymbols: readonly string[];
   indexSymbols: readonly string[];
   memberSymbols: readonly string[];
   anchor?: string;
 }): DayPoster | null {
   const change = (symbol: string) => dayChange(bars[symbol], date, prevDate);
-  const sectors: PosterMove[] = [];
-  for (const symbol of sectorSymbols) {
-    const value = change(symbol);
-    if (value === null) return null;
-    sectors.push({ symbol, change: value });
-  }
-  sectors.sort((a, b) => b.change - a.change || a.symbol.localeCompare(b.symbol, "en"));
   const indices = indexSymbols.flatMap((symbol) => {
     const value = change(symbol);
     return value === null ? [] : [{ symbol, change: value }];
@@ -224,7 +227,9 @@ export function buildPoster({
     stocks.push({ symbol, change: value, close });
   }
   stocks.sort((a, b) => a.symbol.localeCompare(b.symbol, "en"));
-  return { date, prevDate, sectors, indices, breadth: breadthOf(memberChanges, memberSymbols), stocks };
+  const breadth = breadthOf(memberChanges, memberSymbols);
+  if (!breadth) return null;
+  return { date, prevDate, indices, breadth, stocks };
 }
 
 /* --------------------------------------------------------------------------
@@ -235,13 +240,13 @@ export function buildPoster({
  * ÖLÇEĞİN TABANI (yüzde puan) — sektör siluetiyle aynı (MarketTexture.tsx →
  * `SECTOR_SCALE_FLOOR`): ±%0,2'lik sakin bir günün en uzun şeridi %3'lük
  * bir günün şeridiyle aynı boyda durmasın. Şekil sakinliği kendisi söylüyor.
+ * Bülten künyesinin kulvarları da bu tabanı kullanıyor (lib/brief-ledger.ts).
  */
 export const POSTER_SCALE_FLOOR = 1;
 
-/** Kulvar şeritlerinin ortak ölçeği: günün en büyük mutlak hareketi, tabanlı. */
-export function posterScale(poster: Pick<DayPoster, "sectors" | "indices">): number {
-  const moves = [...poster.sectors, ...poster.indices].map((move) => Math.abs(move.change));
-  return Math.max(POSTER_SCALE_FLOOR, ...moves);
+/** Endeks kulvarlarının ortak ölçeği: günün en büyük mutlak hareketi, tabanlı. */
+export function posterScale(moves: readonly PosterMove[]): number {
+  return Math.max(POSTER_SCALE_FLOOR, ...moves.map((move) => Math.abs(move.change)));
 }
 
 /** Yükselenlerin payı (0…1), yatay kalanlar dışarıda. Karşı taraf yoksa `null`. */
@@ -253,7 +258,9 @@ export function advanceShare(breadth: PosterBreadth): number | null {
 /**
  * ZİLİN ŞİDDETİ (0…1) — günün TEK YÖNLÜLÜĞÜ, büyüklüğü değil.
  *
- * Ölçü genişlik: yükselenlerin payı yarıdan ne kadar uzak. %70/%30'a kadar
+ * Ölçü genişlik: yükselenlerin payı yarıdan ne kadar uzak. 25 Ekim'den
+ * beri Nasdaq 100'ün yüz üyesinden (posterin genişliği); eşikler pay
+ * üzerinden, üye sayısından bağımsız. %70/%30'a kadar
  * sıradan bir gün (0); oradan %95/%5'e doğrusal olarak tam şiddete çıkıyor.
  * Eşikler bir piyasa kuralı DEĞİL, bu sitenin seçimi: amaç her gün değil,
  * yalnız belirgin biçimde tek yöne gitmiş günlerde zilin fark edilir
@@ -307,30 +314,25 @@ export function archiveSessions(
 }
 
 /**
- * ARŞİVİN POSTERLERİ (25 Ekim) — her seans için TAM poster: sektörler,
- * endeksler VE genişlik. İlk sürüm arşivde /piyasalar'ın bir yıllık fon
- * barlarını okuyordu ve genişlik yoktu ("30 ayrı tur" gerekçesiyle); oysa
- * ~530 sembolün altı haftalık gün barı da posterin kendisi gibi ÜÇ istek
- * (200'lük paket × ~35 bar = 7.000 < 10.000 sayfa sınırı). Böylece arşiv
- * kartı posterin küçük hâlini taşıyabiliyor: genişlik şeridi ve on bir
- * kulvar, posterle AYNI `buildPoster`dan. Kurulamayan gün (sektörü eksik)
- * listeden düşüyor, boşluk bırakmıyor.
+ * ARŞİVİN POSTERLERİ (25 Ekim) — her seans için TAM poster: endeksler,
+ * genişlik ve her üyenin değişimi; posterle AYNI `buildPoster`dan. Nasdaq
+ * 100'e geçince istek de küçüldü: ~105 sembolün altı haftalık gün barı
+ * tek paket. Kurulamayan gün (endeks fonu ya da genişlik eksik) listeden
+ * düşüyor, boşluk bırakmıyor.
  */
 export function archivePosters({
   sessions,
   bars,
-  sectorSymbols,
   indexSymbols,
   memberSymbols,
 }: {
   sessions: readonly { date: string; prevDate: string }[];
   bars: Readonly<Record<string, Bar[]>>;
-  sectorSymbols: readonly string[];
   indexSymbols: readonly string[];
   memberSymbols: readonly string[];
 }): DayPoster[] {
   return sessions.flatMap(({ date, prevDate }) => {
-    const poster = buildPoster({ date, prevDate, bars, sectorSymbols, indexSymbols, memberSymbols });
+    const poster = buildPoster({ date, prevDate, bars, indexSymbols, memberSymbols });
     return poster ? [poster] : [];
   });
 }
@@ -340,7 +342,7 @@ export function archivePosters({
  * onları kuran KAPANIŞLAR.
  *
  * İlk sürüm önbelleğe otuz tam posteri koyuyordu: her birinde ~500
- * hissenin `{symbol, change, close}` nesnesi, ~920 KB. Next'in veri
+ * hissenin `{symbol, change, close}` nesnesi, ~920 KB (S&P 500 dönemi). Next'in veri
  * önbelleği 2 MB'ı aşan kaydı saklamıyor (sessizce, her istek sağlayıcıya
  * gider); daha uzun bir arşiv ya da posterde yeni bir alan bu sınırı
  * geçirirdi. Değişimi yuvarlayıp küçültmek de olmaz: yuvarlanmış yüzde,
@@ -350,8 +352,8 @@ export function archivePosters({
  * Kayıt artık sembol başına, arşivin günlerine hizalı kapanış dizisi
  * (sağlayıcının verdiği sayı, dokunulmamış). Posterler önbellekten
  * çıkınca AYNI `archivePosters` ile yeniden kuruluyor; sonuç ham barlardan
- * kurulanla bire bir aynı (tests/day-poster.test.ts). Kayıt ~108 KB
- * (ölçüm notu `lib/day-poster-data.ts` → `archiveLoad`).
+ * kurulanla bire bir aynı (tests/day-poster.test.ts). Ölçüm notu
+ * `lib/day-poster-data.ts` → `archiveLoad`.
  */
 export type ArchiveCloses = {
   /** Arşivin günleri, eskiden yeniye: en eski seansın önceki günü dahil. */
@@ -399,7 +401,7 @@ export function unpackArchiveBars(pack: ArchiveCloses): Record<string, Bar[]> {
 
 /**
  * YENİ SEANSIN EKSİĞİ GEÇİCİDİR (25 Ekim). Kapanıştan hemen sonra bir
- * sektör fonunun gün barı sağlayıcıda birkaç dakika geç belirebiliyor;
+ * fonun ya da üyenin gün barı sağlayıcıda birkaç dakika geç belirebiliyor;
  * `buildPoster`ın `null`u o an "veri yok" değil "henüz yok" demek. Bu
  * pencerede `null` ÖNBELLEĞE GİRMEZ (bkz. `lib/day-poster-data.ts`): ilk
  * sürüm onu 86.400 sn tutuyordu ve o akşam künye, poster ve görsel 24 saat

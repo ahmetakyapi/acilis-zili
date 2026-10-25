@@ -21,7 +21,7 @@
 [data-status="published"] .status { color:var(--up); }
 [data-status="rejected"] .status { color:var(--down); }
 [data-status="pending"] .status { color:var(--brass-ink); }
-.noteDate { font-size:12px; color:var(--text-muted); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.noteDate { font-size:12px; color:var(--text-muted); white-space:nowrap; }
 .noteTitle {
   font-size:16px; line-height:1.35; font-weight:800; letter-spacing:-.01em; color:var(--text-strong); text-wrap:balance;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; transition:color .2s var(--ease-brand);
@@ -60,7 +60,7 @@
 .report[data-verdict="buy"] .ringFill { stroke:var(--verdict-buy); }
 .report[data-verdict="hold"] .ringFill { stroke:var(--verdict-hold); }
 .report[data-verdict="sell"] .ringFill { stroke:var(--verdict-sell); }
-.ringValue { position:absolute; inset:0; display:grid; place-items:center; font-size:13px; font-weight:800; color:var(--text-strong); font-variant-numeric:tabular-nums; }
+.ringValue { position:absolute; inset:0; display:grid; place-items:center; font-size:13px; font-weight:800; color:var(--text-strong); }
 
 .reportMid { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .verdict { padding:4px 10px; border-radius:8px; font-size:13px; font-weight:850; letter-spacing:.02em; background:var(--surface); color:var(--text-strong); }
@@ -74,7 +74,7 @@
 .report[data-verdict="insufficient"] .verdict { background:transparent; color:var(--text-muted); font-weight:700; box-shadow:inset 0 0 0 1px var(--line); }
 .focus { font-size:12.5px; font-weight:650; color:var(--text-muted); }
 
-.reportFoot { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-top:auto; padding-top:10px; border-top:1px solid var(--line-soft); font-size:13px; color:var(--text-body); font-variant-numeric:tabular-nums; }
+.reportFoot { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-top:auto; padding-top:10px; border-top:1px solid var(--line-soft); font-size:13px; color:var(--text-body); }
 .footCell { display:grid; gap:3px; min-width:0; }
 .footCell[data-end] { justify-items:end; }
 .footCell small { font-size:11.5px; color:var(--text-muted); }
@@ -119,18 +119,18 @@
 .mixLegend li[data-empty] { opacity:.55; }
 .mixSwatch { width:10px; height:10px; border-radius:3px; }
 .mixName { font-weight:700; color:var(--text-body); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.mixCount { font-weight:800; color:var(--text-strong); font-variant-numeric:tabular-nums; }
-.mixShare { color:var(--text-muted); font-variant-numeric:tabular-nums; text-align:right; }
+.mixCount { font-weight:800; color:var(--text-strong); }
+.mixShare { color:var(--text-muted); text-align:right; }
 /* Getiri kovaları: altı sütun, taban çizgisinde yaslanır; sıfır çizgisi
    ortada (`--line-strong`). */
 .bins { position:relative; display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:6px; align-items:end; height:96px; border-bottom:1px solid var(--line-strong); }
 .bins::after { content:""; position:absolute; left:50%; top:0; bottom:0; width:1px; background:var(--line-strong); }
 .bin { display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:3px; height:100%; min-width:0; }
-.binCount { font-size:12px; font-weight:800; color:var(--text-strong); font-variant-numeric:tabular-nums; min-height:15px; }
+.binCount { font-size:12px; font-weight:800; color:var(--text-strong); min-height:15px; }
 .binBar { display:block; width:100%; max-width:44px; height:calc(var(--h, 0) * 70px); min-height:0; border-radius:4px 4px 0 0; transform-origin:bottom center; animation:an-rise-y .7s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 60ms + 160ms); }
 .bin[data-side="down"] .binBar { background:var(--down); }
 .bin[data-side="up"] .binBar { background:var(--up); }
-.binAxis { position:relative; height:16px; font-size:11px; color:var(--text-muted); font-variant-numeric:tabular-nums; }
+.binAxis { position:relative; height:16px; font-size:11px; color:var(--text-muted); }
 .binAxis span { position:absolute; top:2px; translate:-50% 0; white-space:nowrap; }
 .binAxis span[data-zero] { color:var(--text-strong); font-weight:700; }
 

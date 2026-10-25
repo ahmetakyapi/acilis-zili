@@ -65,3 +65,16 @@ export function nextUnread<T extends ProgressArticle>(articles: readonly T[], re
   if (read.size === 0) return null;
   return articles.find((article) => !read.has(article.slug)) ?? null;
 }
+
+/**
+ * Bölümün seviye aralığı, sıra numarası olarak — yol haritasındaki üç
+ * basamaklı seviye çubuğu (Temel · Orta · İleri) hangi basamakların dolu
+ * çizileceğini buradan okur. `order` kolaydan zora tüm seviyeler, `levels`
+ * bölümde gerçekten geçenler. Bölümde tanınan seviye yoksa `null`: çubuk
+ * basılmaz, boş bir çubuk "seviyesiz" diye yanlış okunurdu.
+ */
+export function levelRange(levels: readonly string[], order: readonly string[]): [number, number] | null {
+  const indexes = levels.map((level) => order.indexOf(level)).filter((index) => index >= 0);
+  if (indexes.length === 0) return null;
+  return [Math.min(...indexes), Math.max(...indexes)];
+}

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { guideArticles, GUIDE_SLUGS } from "../content/guide";
-import { nextUnread, parseReadList, READ_LIST_CAP, topicProgress, withRead } from "../lib/guide-progress";
+import { guideArticles, GUIDE_SLUGS, GUIDE_TOPICS } from "../content/guide";
+import { chapterTone } from "../components/guide/chapter-tone";
+import { levelRange, nextUnread, parseReadList, READ_LIST_CAP, topicProgress, withRead } from "../lib/guide-progress";
 import { guideVisualsEn, guideVisualsTr } from "../lib/i18n/dictionaries/guide-visuals";
 
 test("bozuk ya da eski depo hiç okunmamış sayılır", () => {
@@ -46,4 +47,22 @@ test("ad alanı iki dilde aynı anahtarlar, uzun tire yok", () => {
   for (const value of [...Object.values(guideVisualsTr), ...Object.values(guideVisualsEn)]) {
     assert.ok(!/[—–]/.test(value), value);
   }
+});
+
+test("seviye aralığı kolaydan zora sıra numarasıyla; tanınmayan seviye atılır", () => {
+  const order = ["temel", "orta", "ileri"];
+  assert.deepEqual(levelRange(["temel", "orta"], order), [0, 1]);
+  assert.deepEqual(levelRange(["ileri", "orta"], order), [1, 2]);
+  assert.deepEqual(levelRange(["orta"], order), [1, 1]);
+  assert.equal(levelRange([], order), null);
+  assert.equal(levelRange(["uzman"], order), null);
+});
+
+test("her bölümün kendi tonu ve ikonu var; dört ton birbirinden ayrı", () => {
+  const tones = GUIDE_TOPICS.map((topic) => chapterTone(topic.key));
+  assert.equal(new Set(tones).size, GUIDE_TOPICS.length);
+  for (const tone of tones) assert.match(tone, /^var\(--(chart-[acd]|share-1)\)$/);
+  // Pirinç (`--chart-b`) "TUT" görüşüyle karışır; bölüm tonu olamaz.
+  assert.ok(!tones.includes("var(--chart-b)"));
+  assert.equal(chapterTone("yok-boyle-bolum"), "var(--primary-soft)");
 });

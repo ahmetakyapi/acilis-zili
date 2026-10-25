@@ -13,7 +13,12 @@ import { pageMetadata } from "@/lib/page-meta";
 import { getDailyChartArchive } from "@/lib/daily-chart-data";
 import { DAILY_CHART_STAMP_SOURCE, dailyChartHref } from "@/lib/daily-chart";
 import { getLatestPosterDate } from "@/lib/day-poster-data";
-import { formatEtDateLong } from "@/lib/utils";
+import { formatEtDateLong, tieFigures } from "@/lib/utils";
+import { ChartFigure } from "@/components/daily-chart/ChartFigure";
+import { DayContext } from "@/components/daily-chart/DayContext";
+import { checkChartBlock } from "@/lib/daily-chart";
+import { getChartDayContext } from "@/lib/daily-chart-day";
+import { chartSummary, summaryText } from "@/lib/daily-chart-figure";
 import { dailyChartTr, dailyChartEn } from "@/lib/i18n/dictionaries/daily-chart";
 
 export const generateMetadata = pageMetadata({
@@ -47,6 +52,9 @@ export default async function DailyChartIndexPage() {
   /* Boş durumun bağlantısı: son tamamlanmış seansın posteri. Okunamazsa
      arşiv sayfası (poster kendi tarihini orada seçtiriyor). */
   const posterHref = latest ? null : await getLatestPosterDate().then((date) => `/gun/${date}`, () => "/gun");
+  const context = latest ? await getChartDayContext(latest.chartDate) : null;
+  const check = latest ? checkChartBlock(latest.chartMd, latest.locale) : null;
+  const summary = check?.ok ? chartSummary(check.block) : null;
 
   return (
     <MotionExperience className={polish.page}>
@@ -80,8 +88,23 @@ export default async function DailyChartIndexPage() {
           {latest.locale !== locale && (
             <p className={`${styles.fallback} mx-4 mb-3 sm:mx-5`}>{d.fallbackNote}</p>
           )}
+          {summary && (
+            <p className={styles.summary} lang={latest.locale}>
+              {tieFigures(summaryText(summary, d.summary))}
+            </p>
+          )}
           <div className={styles.figure} lang={latest.locale}>
-            <ArticleBody markdown={latest.chartMd} locale={latest.locale} />
+            {check?.ok ? (
+              <ChartFigure
+                block={check.block}
+                chartMd={latest.chartMd}
+                locale={latest.locale}
+                label={check.block.label || d.chartHeading}
+                caption={check.block.label || undefined}
+              />
+            ) : (
+              <ArticleBody markdown={latest.chartMd} locale={latest.locale} />
+            )}
           </div>
           <div className={styles.text} lang={latest.locale}>
             <ArticleBody markdown={latest.bodyMd} locale={latest.locale} className={styles.body} />
@@ -92,6 +115,9 @@ export default async function DailyChartIndexPage() {
           </div>
         </Panel>
       )}
+
+      {/* Ölçü ızgarası: grafiğin günü (CLAUDE.md "Ekran düzeni" 4). */}
+      {context && <DayContext context={context} locale={locale} labels={d} />}
 
       {/* Damga ana görselin künyesi: veri kaynağı ve kaydın son yazıldığı an. */}
       {latest && <DataStamp source={DAILY_CHART_STAMP_SOURCE} at={latest.updatedAt} locale={locale} labels={t.data} />}

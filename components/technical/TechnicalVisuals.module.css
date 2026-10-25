@@ -189,7 +189,7 @@
    `opacity:0` ile başlayıp `[data-inview]`i bekliyordu; JS kapalıyken
    `InView` hiç çalışmadığı için ray boş kalıyordu. Taban hâl son kare,
    gizleme yalnız betik varken ve hareketi azaltmayan okuyucuda
-   (`PosterStage.module.css` kalıbı). */
+   (`day-poster/Skyline.module.css` kalıbı; ilk örneği 25 Ekim'de kalkan PosterStage). */
 @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
   .railSeg { scale:0 1; }
   [data-inview] .railSeg { animation:rail-grow 800ms var(--ease-brand) 200ms forwards; }

@@ -49,7 +49,8 @@ import { getTechnicalBoard } from "@/lib/technical-data";
  * taraf ve aynı kaynak (`lib/portfolio.ts`, `lib/fx.ts`).
  *
  * Ekran sırası kurala göre: kapak (sağında dağılım halkası) → getiri
- * (toplam, dolar/lira kartları, lira getirisinin çözümlemesi) → pozisyon
+ * (toplam, dolar/lira kartları, lira getirisinin çözümlemesi; 1280'den
+ * itibaren yanında Alıştan Bugüne) → pozisyon
  * listesi (telefonda kart, geniş ekranda hizalı satır) → teknik plan (yalnızca kapsamdaki
  * pozisyonlar) → sektör şeridi → ekleme paneli → künyeler
  * panelin içinde → damga → rehber.
@@ -132,8 +133,11 @@ export async function PortfolioScreen({ userId, preset = null }: { userId: strin
              gövde inerken görünen alanda kayan öğe kalmıyor. */
           fallback={
             <>
-              <PanelSkeleton rows={2} className="min-h-[420px]" />
-              <ReturnTimelineSkeleton title={t.personalVisuals.timeline.title} />
+              {/* İskelet de çiftte: geniş ekranda gövdeyle aynı iki kolon. */}
+              <div className={styles.returnsPair}>
+                <PanelSkeleton rows={2} className={styles.returnsSkeleton} />
+                <ReturnTimelineSkeleton title={t.personalVisuals.timeline.title} />
+              </div>
               <PanelSkeleton rows={4} className="min-h-svh" />
             </>
           }
@@ -346,40 +350,50 @@ async function PortfolioBody({
 
   return (
     <>
-      {/* ---- Toplam şeridi ---- */}
-      <Panel>
-        <PanelHeader
-          title={L.returnsTitle}
-          action={
-            /* GÜNÜN DEĞİŞİMİ başlığın sağında, künyesiyle: hangi seansı
-               anlattığı adıyla yazılı; hiçbir pozisyon kanıtlanmıyorsa
-               (bayat paket, önceki seans) hiç basılmıyor. */
-            basisLabel && day.covered > 0 ? (
-              <span className="numeral inline-flex flex-wrap items-baseline gap-x-2 text-small">
-                <span className="text-muted">{t.portfolioDay.title} · {basisLabel}</span>
-                <span className={cn("font-bold", directionText(directionOf(day.changeUsd)))}>
-                  {`${day.changeUsd > 0 ? "+" : ""}${formatPrice(day.changeUsd, locale, { currency: true })}`}
+      {/* GETİRİ VE ALIŞTAN BUGÜNE YAN YANA (25 Ekim, sahibinin isteği:
+          "Alıştan Bugüne ile Getiri'yi yan yana koyalım; böyle alttaki
+          hisseler daha üstte çıkar"). 1280'den itibaren iki kolon, aralık
+          gap-5; telefonda ve dar ekranda sıra aynı, alt alta. Kolonlarda tek
+          panel var, yani kolonun dibi panelin dibi: ızgara satırı iki paneli
+          eşit geriyor, iki panelin künye şeridi `mt-auto` ile aynı hatta
+          iniyor. Alıştan Bugüne çizilemezse (`null`) Getiri tam genişliğe
+          yayılıyor (`:only-child`). Ölçüm Portfolio.module.css →
+          `.returnsPair`. */}
+      <div className={styles.returnsPair}>
+        <Panel className="flex flex-col">
+          <PanelHeader
+            title={L.returnsTitle}
+            action={
+              /* GÜNÜN DEĞİŞİMİ başlığın sağında, künyesiyle: hangi seansı
+                 anlattığı adıyla yazılı; hiçbir pozisyon kanıtlanmıyorsa
+                 (bayat paket, önceki seans) hiç basılmıyor. */
+              basisLabel && day.covered > 0 ? (
+                <span className="numeral inline-flex flex-wrap items-baseline gap-x-2 text-small">
+                  <span className="text-muted">{t.portfolioDay.title} · {basisLabel}</span>
+                  <span className={cn("font-bold", directionText(directionOf(day.changeUsd)))}>
+                    {`${day.changeUsd > 0 ? "+" : ""}${formatPrice(day.changeUsd, locale, { currency: true })}`}
+                  </span>
+                  <span className={cn("font-semibold", directionText(directionOf(day.changeUsd)))}>{formatPercent(day.changePct, locale)}</span>
                 </span>
-                <span className={cn("font-semibold", directionText(directionOf(day.changeUsd)))}>{formatPercent(day.changePct, locale)}</span>
-              </span>
-            ) : undefined
-          }
-        />
-        <TotalsBand
-          totals={totals}
-          todayRate={todayRate}
-          locale={locale}
-          labels={L}
-        />
-      </Panel>
+              ) : undefined
+            }
+          />
+          <TotalsBand
+            totals={totals}
+            todayRate={todayRate}
+            locale={locale}
+            labels={L}
+          />
+        </Panel>
 
-      {/* ALIŞTAN BUGÜNE (25 Ekim): Getiri paneli bugünü söylüyor, bu çizgi
-          farkın NE ZAMAN açıldığını — aynı günlerde SPY'a karşı, yalnız
-          yüzde. Ana görsel olarak ölçülerin hemen altında; barlar ayrı
-          istek olduğu için kendi Suspense'inde, iskelet aynı boyda. */}
-      <Suspense fallback={<ReturnTimelineSkeleton title={t.personalVisuals.timeline.title} />}>
-        <ReturnTimeline userId={userId} quoteKey="portfolio" locale={locale} t={t} />
-      </Suspense>
+        {/* ALIŞTAN BUGÜNE (25 Ekim): Getiri paneli bugünü söylüyor, bu çizgi
+            farkın NE ZAMAN açıldığını — aynı günlerde SPY'a karşı, yalnız
+            yüzde. Ana görsel olarak ölçülerin hemen altında; barlar ayrı
+            istek olduğu için kendi Suspense'inde, iskelet aynı boyda. */}
+        <Suspense fallback={<ReturnTimelineSkeleton title={t.personalVisuals.timeline.title} />}>
+          <ReturnTimeline userId={userId} quoteKey="portfolio" locale={locale} t={t} />
+        </Suspense>
+      </div>
 
       {/* `overflow-clip`, `hidden` DEĞİL: sıra şeridi düzenlemede başlığın
           altına yapışıyor ve `overflow: hidden` paneli bir kaydırma kabına

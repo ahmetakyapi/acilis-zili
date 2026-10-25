@@ -1,4 +1,6 @@
+import type { CSSProperties } from "react";
 import { checkChartBlock } from "@/lib/daily-chart";
+import { barSpan, divergingScale } from "@/lib/daily-chart-figure";
 import styles from "./DailyChart.module.css";
 
 /**
@@ -72,6 +74,10 @@ export function ChartThumb({
   /* `oncesi` yön taşımıyor (iki hâlin büyüklüğü): iki çubuk da nötr ton.
      `::: bar notr` de öyle (parse-blocks.ts → NEUTRAL_FLAG). */
   const signed = block.kind === "bars" && !block.neutral;
+  /* İşaretli blok sayfadaki çizimle AYNI ölçekte: sıfırdan iki yöne, alan
+     bütün satırlardan (gösterilmeyenler dahil) — `divergingScale`. Nötr
+     blok ve `oncesi` soldan, grubun en büyüğüne göre. */
+  const scale = signed ? divergingScale(items.map((item) => item.value)) : null;
 
   return (
     <div className={styles.thumb} aria-hidden>
@@ -81,15 +87,15 @@ export function ChartThumb({
         return (
           <div key={index} className={styles.thumbRow}>
             <span className={styles.thumbName}>{item.name}</span>
-            <span className={styles.lane}>
+            <span className={styles.lane} data-zero={scale && scale.zero > 0 && scale.zero < 100 ? "" : undefined} style={scale ? ({ "--zero": `${scale.zero}%` } as CSSProperties) : undefined}>
               <span
                 className={styles.bar}
                 data-tone={signed ? tone : undefined}
-                style={{
-                  left: 0,
-                  width: `${(Math.abs(item.value) / peak) * 100}%`,
-                  ...(signed ? {} : { background: "var(--primary)" }),
-                }}
+                style={
+                  scale
+                    ? { left: `${barSpan(item.value, scale).start}%`, width: `${barSpan(item.value, scale).size}%` }
+                    : { left: 0, width: `${(Math.abs(item.value) / peak) * 100}%`, background: "var(--primary)" }
+                }
               />
             </span>
             <span className={styles.thumbValue} data-tone={signed ? tone : undefined}>

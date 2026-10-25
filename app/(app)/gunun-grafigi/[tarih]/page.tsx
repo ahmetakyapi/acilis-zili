@@ -15,10 +15,14 @@ import { isLocale, type Locale } from "@/lib/i18n/config";
 import { withLocale } from "@/lib/i18n/routing";
 import { articleOpenGraph, metaDescription, missingMetadata } from "@/lib/page-meta";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
-import { formatEtDateLong, safeExternalUrl } from "@/lib/utils";
+import { formatEtDateLong, safeExternalUrl, tieFigures } from "@/lib/utils";
 import { DAILY_CHART_STAMP_SOURCE, checkChartBlock, dailyChartHref, dailyChartImageHref, firstSentence } from "@/lib/daily-chart";
 import { getDailyChart, getDailyChartArchive } from "@/lib/daily-chart-data";
 import { DAILY_CHART_OG_SIZES } from "@/lib/daily-chart-og";
+import { getChartDayContext } from "@/lib/daily-chart-day";
+import { chartSummary, summaryText } from "@/lib/daily-chart-figure";
+import { ChartFigure } from "@/components/daily-chart/ChartFigure";
+import { DayContext } from "@/components/daily-chart/DayContext";
 
 /**
  * Günün Grafiği — tek gün (24 Ekim). Adres grafiğin anlattığı İŞLEM GÜNÜ;
@@ -72,11 +76,13 @@ export default async function DailyChartPage(props: PageProps<"/gunun-grafigi/[t
   const [issue, archive] = await Promise.all([load(tarih, locale), getDailyChartArchive(locale, 400)]);
   if (!issue) notFound();
   const { row } = issue;
+  const context = await getChartDayContext(row.chartDate);
   const rowLocale = isLocale(row.locale) ? row.locale : locale;
   const path = dailyChartHref(row.chartDate);
   const date = formatEtDateLong(row.chartDate, locale);
   const check = checkChartBlock(row.chartMd, row.locale);
   const label = check.ok && check.block.label ? check.block.label : d.chartHeading;
+  const summary = check.ok ? chartSummary(check.block) : null;
 
   /* Komşu günler arşivin sırasından (yeniden eskiye). */
   const index = archive.findIndex((entry) => entry.chartDate === row.chartDate);
@@ -157,17 +163,33 @@ export default async function DailyChartPage(props: PageProps<"/gunun-grafigi/[t
         <p className={styles.fallback}>{d.fallbackNote}</p>
       )}
 
-      {/* ---- Ana görsel, metin ve künye TEK panelde ----
-          Künye ve uyarı panelin içinde, hairline ile ayrılmış düz paragraf
-          (CLAUDE.md "Ekran düzeni" 6). Gövde kendi dilini söylüyor. */}
+      {/* ---- Ana görsel → ölçü ızgarası → metin (CLAUDE.md "Ekran düzeni") ----
+          25 Ekim görsel tur: grafik, açıklama ve künye önceden tek paneldeydi.
+          Şimdi grafiğin altına o günün bağlamı (`DayContext`) giriyor; metin
+          ve künyeler kendi panelinde, sıranın sonunda. Künye ve uyarı yine
+          panelin içinde, hairline ile ayrılmış düz paragraf (madde 6). */}
       <Panel>
         <PanelHeader title={label} />
+        {summary && (
+          <p className={styles.summary} lang={row.locale}>
+            {tieFigures(summaryText(summary, d.summary))}
+          </p>
+        )}
         <div className={styles.figure} lang={row.locale}>
           {/* Etiket başlıkta; blok etiketsiz çizilir ki iki kez basılmasın. */}
-          <ArticleBody markdown={stripLabel(row.chartMd)} locale={row.locale} />
+          {check.ok ? (
+            <ChartFigure block={check.block} chartMd={stripLabel(row.chartMd)} locale={row.locale} label={label} />
+          ) : (
+            <ArticleBody markdown={stripLabel(row.chartMd)} locale={row.locale} />
+          )}
         </div>
-        <div className={styles.text} lang={row.locale}>
-          <h3 className="text-read font-bold text-strong">{d.aboutHeading}</h3>
+      </Panel>
+
+      <DayContext context={context} locale={locale} labels={d} />
+
+      <Panel>
+        <PanelHeader title={d.aboutHeading} />
+        <div className={styles.about} lang={row.locale}>
           <ArticleBody markdown={row.bodyMd} locale={row.locale} className={styles.body} />
         </div>
         <div className={styles.notes}>

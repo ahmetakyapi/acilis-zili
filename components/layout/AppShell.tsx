@@ -29,6 +29,8 @@ export type ShellLabels = {
   more: string;
   /** Panel gruplarının başlıkları. */
   moreGroups: Record<MoreGroup, string>;
+  /** Hisseyi Bil satırının künyesi: "Bulmaca #{n}" (sayı istemcide). */
+  puzzleNumber: string;
   /** Yenilikler — panelin dibindeki satır ve "Yeni" rozeti (25 Ekim). */
   changelog: ChangelogNavLabels;
   mainNav: string;
@@ -263,6 +265,7 @@ export function AppShell({
             strip={labels.strip}
             more={labels.moreItems}
             groups={labels.moreGroups}
+            puzzleNumber={labels.puzzleNumber}
             changelog={labels.changelog}
           />
 

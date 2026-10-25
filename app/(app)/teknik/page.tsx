@@ -220,23 +220,6 @@ export default async function TechnicalPage() {
         )}
       </DirectoryHeader>
 
-      {/* ANA GÖRSEL: on altı plan tek haritada (25 Ekim). Başlığın hemen
-          altında, kartlardan önce — ekran düzeninin üçüncü adımı. Kartlar
-          ayrıntı; harita "hangisine bakmalıyım" sorusunun cevabı. */}
-      {board.length > 0 && latest && (
-        <PlanAtlas
-          items={board.map(({ row }) => ({
-            row,
-            quote: quoteMap[row.symbol] ?? null,
-            company: meta[row.symbol]?.name ?? null,
-            priceLabel: labelFor(row.symbol),
-          }))}
-          summary={summary}
-          locale={locale}
-          t={t}
-        />
-      )}
-
       {board.length === 0 || !latest ? (
         <Panel>
           <EmptyState title={t.technical.empty} hint={t.technical.emptyHint} scene="chart" />
@@ -346,6 +329,25 @@ export default async function TechnicalPage() {
             </p>
           )}
         </TechnicalBoard>
+      )}
+
+      {/* HARİTA KARTLARIN ALTINDA (25 Ekim, sahibinin isteği): önce
+          başlığın hemen altında, kartlardan önceydi; 1440'ta ilk ekranı
+          tümüyle kaplıyor ve okur sayfayı açınca planları değil haritayı
+          görüyordu ("ilk açılışta hisse planlarını görelim"). Kartlar
+          ana içerik; harita on altı planı yan yana okumak isteyene özet. */}
+      {board.length > 0 && latest && (
+        <PlanAtlas
+          items={board.map(({ row }) => ({
+            row,
+            quote: quoteMap[row.symbol] ?? null,
+            company: meta[row.symbol]?.name ?? null,
+            priceLabel: labelFor(row.symbol),
+          }))}
+          summary={summary}
+          locale={locale}
+          t={t}
+        />
       )}
 
       {/* Kartlar görüşü tek kelimeyle söylüyor; o kelimenin anlamı

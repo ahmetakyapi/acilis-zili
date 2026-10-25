@@ -774,7 +774,6 @@
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.02em;
-    font-variant-numeric: tabular-nums;
   }
   .prose > [data-block="table"]:not([data-cols="1"], [data-cols="2"]) td + td {
     display: flex;

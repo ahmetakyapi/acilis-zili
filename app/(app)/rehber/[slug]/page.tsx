@@ -19,6 +19,8 @@ import { LevelBadge } from "@/components/article/LevelBadge";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { Panel } from "@/components/ui/primitives";
 import { GuideArticleProgress } from "@/components/guide/GuideArticleProgress";
+import { chapterToneStyle } from "@/components/guide/chapter-tone";
+import guideStyles from "@/components/guide/GuideExperience.module.css";
 import {
   GUIDE_SLUGS,
   GUIDE_TOPICS,
@@ -242,6 +244,7 @@ export default async function GuideArticlePage(
           — gövdenin bittiği yer orası. */}
       <GuideArticleProgress
         slug={article.slug}
+        chapterKey={article.topic}
         chapter={guideTopicLabel(article.topic, locale)}
         chapterNumber={chapterNumber}
         articles={chapterArticles}
@@ -332,6 +335,11 @@ export default async function GuideArticlePage(
  * artık yazının karosunu, seviyesini ve okuma süresini taşıyor — "sıradaki
  * yazıya geçmeye hazır mıyım" sorusunun iki parçası, kapaktaki künyenin
  * aynısı. Sıradaki kart tonla öne çıkıyor: müfredatın asıl yönü ileri.
+ *
+ * BÖLÜM TONU (25 Ekim, ikinci tur): kart, hedef yazının bölüm rengini
+ * taşıyor (`chapter-tone.ts`): üstte 3 piksellik şerit, sıradaki kartta
+ * tonun hafif zemini. Sıradaki yazı yeni bir bölümü açıyorsa kartın rengi
+ * de değişiyor; "Yeni Bölüm" etiketini renk de söylüyor.
  */
 function CurriculumStep({
   article,
@@ -351,9 +359,9 @@ function CurriculumStep({
     .replace("{level}", guideLevelLabel(article.level, locale))
     .replace("{minutes}", String(readingMinutes(article.bodyMd)));
   return (
-    <Link href={`/rehber/${article.slug}`} prefetch className="group min-w-0">
+    <Link href={`/rehber/${article.slug}`} prefetch className="group min-w-0" style={chapterToneStyle(article.topic)}>
       <Panel
-        className={`panel-hover flex h-full items-center gap-3 p-4 ${next ? "border-primary-faint bg-primary-tint text-right" : ""}`}
+        className={`panel-hover flex h-full items-center gap-3 p-4 ${guideStyles.step} ${next ? `${guideStyles.stepNext} text-right` : ""}`}
       >
         {!next && (
           <>

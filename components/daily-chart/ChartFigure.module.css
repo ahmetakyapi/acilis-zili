@@ -1,0 +1,147 @@
+/* Günün Grafiği'nin çizicisi — gerekçe ChartFigure.tsx.
+
+   İKİ DÜZEN, KABIN ENİNE GÖRE (container query; poster kulvarlarının
+   kalıbı, PosterLanes.module.css):
+   - Dar kap (< 520): [simge | ad … değer] üstte, kulvar altında tam en.
+   - Geniş kap: [simge | ad | kulvar | değer | ok] tek satır.
+   Eksen künyesi kulvarın sütununda, sıfır çizgisi her kulvarda aynı yerde
+   (`--zero`, figürde bir kez). Renk yalnız işaretten: `--up` / `--down`. */
+.figure {
+  --mark-w: 32px;
+  --value-w: 4.75rem;
+  --go-w: 14px;
+  --gap: 12px;
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.caption { width: fit-content; margin: 0 0 12px 8px; }
+
+.axis,
+.row {
+  display: grid;
+  grid-template-columns: var(--mark-w) minmax(0, 1fr) auto;
+  grid-template-areas:
+    "mark name value"
+    "lane lane lane";
+  column-gap: var(--gap);
+  align-items: center;
+}
+.axis { grid-template-areas: "lane lane lane"; margin: 0 0 6px; padding-inline: 8px; }
+.axisTrack {
+  grid-area: lane;
+  position: relative;
+  display: block;
+  height: 1.1rem;
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tick { position: absolute; top: 0; left: var(--at); translate: -50% 0; }
+.tick[data-edge="start"] { translate: 0 0; }
+.tick[data-edge="end"] { translate: -100% 0; }
+
+.rows { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+
+.row {
+  row-gap: 8px;
+  min-height: 44px;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  transition: background-color 200ms var(--ease-brand);
+}
+.row[data-link]:hover { background: var(--primary-tint); }
+.row[data-link]:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 0; background: var(--primary-tint); }
+
+/* Simge karosu: ton farkıyla (`--surface-sunken`), çerçevesiz. Simgesiz
+   satırda karo boş kalır ki adlar aynı hatta başlasın. */
+.mark {
+  grid-area: mark;
+  display: grid;
+  place-items: center;
+  width: var(--mark-w);
+  height: var(--mark-w);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-body);
+  transition: color 200ms var(--ease-brand);
+}
+.mark:empty { background: transparent; }
+.row[data-link]:hover .mark { color: var(--primary); }
+
+.name {
+  grid-area: name;
+  min-width: 0;
+  color: var(--text-strong);
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.3;
+}
+.symbol {
+  margin-left: 6px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-nano);
+  font-weight: 500;
+}
+.value {
+  grid-area: value;
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-align: right;
+  white-space: nowrap;
+}
+.go { display: none; color: var(--text-muted); transition: color 200ms var(--ease-brand), translate 200ms var(--ease-brand); }
+
+.lane {
+  grid-area: lane;
+  position: relative;
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line-soft);
+}
+/* Sıfır çizgisi: kulvarın üstüne ve altına taşıyor ki satırlar arasında
+   bir hat gibi okunsun. */
+.lane::after {
+  content: "";
+  position: absolute;
+  inset: -5px auto -5px var(--zero);
+  width: 2px;
+  translate: -50% 0;
+  border-radius: 1px;
+  background: var(--line-strong);
+}
+.bar {
+  position: absolute;
+  inset-block: 0;
+  left: var(--start);
+  width: max(2px, var(--size));
+  border-radius: 999px;
+  animation: grow 0.8s var(--ease-brand) both;
+  animation-delay: calc(0.1s + var(--i, 0) * 0.05s);
+}
+.bar[data-dir="up"] { background: var(--up); transform-origin: left center; }
+.bar[data-dir="down"] { background: var(--down); transform-origin: right center; }
+@keyframes grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@container (min-width: 520px) {
+  .axis,
+  .row {
+    grid-template-columns: var(--mark-w) min(15rem, 32cqi) minmax(0, 1fr) var(--value-w) var(--go-w);
+    grid-template-areas: "mark name lane value go";
+  }
+  .axis { grid-template-areas: ". . lane . ."; }
+  .go { display: block; grid-column: 5; }
+  .row[data-link]:hover .go { color: var(--primary); translate: 2px -2px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar { animation: none; }
+  .row, .mark, .go { transition: none; }
+}

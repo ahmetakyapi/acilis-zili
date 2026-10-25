@@ -4,12 +4,22 @@ import { GuideHint } from "@/components/article/GuideHint";
 import { PageShare } from "@/components/article/PageShare";
 import { DataStamp, EmptyState, PageHeader, Panel } from "@/components/ui/primitives";
 import styles from "@/components/probabilities/Probabilities.module.css";
-import { ElectionPanel, FedPanel, NotesPanel, OtherPanel, PathPanel, dayMonth } from "@/components/probabilities/ProbabilityPanels";
+import { OddsStrip, type StripTile } from "@/components/probabilities/OddsStrip";
+import {
+  CARD_ANCHORS,
+  CpiPanel,
+  ElectionPanel,
+  FedPanel,
+  NotesPanel,
+  PathPanel,
+  RecessionPanel,
+  dayMonth,
+} from "@/components/probabilities/ProbabilityPanels";
 import { etOf, shareText } from "@/components/probabilities/ProbabilityParts";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getNextFomc } from "@/lib/macro-data";
 import { pageMetadata } from "@/lib/page-meta";
-import { composeLead, leadFacts, type FedMove, type ProbabilitySnapshot } from "@/lib/probabilities";
+import { composeLead, headlineOdds, leadFacts, type FedMove, type ProbabilitySnapshot } from "@/lib/probabilities";
 import { getProbabilityBoard } from "@/lib/probability-data";
 import { probabilitiesEn, probabilitiesTr } from "@/lib/i18n/dictionaries/probabilities";
 
@@ -25,11 +35,17 @@ export const generateMetadata = pageMetadata({
  * alan"). Piyasaların Fed kararına, 2026 ara seçimine ve büyük makro
  * olaylara biçtiği olasılıklar — kaynak ve saatiyle.
  *
- * EKRAN SIRASI (CLAUDE.md): başlık → veriden tek cümle (+ olasılık ≠
- * kesinlik) ve damga → Fed ile seçim yan yana (büyük sayı, yığın çubuk,
- * 30 günlük çizgi) → beklenen faiz patikası → diğer olaylar → künyeler
- * paneli (ne olduğu, kaynak, bahis bağlantısı yok kuralı) → damga →
- * rehber ipucu.
+ * EKRAN SIRASI (CLAUDE.md): başlık → tepe şeridi (dört kadran; veriden
+ * cümle ekran okuyucuya) + olasılık ≠ kesinlik ve damga → ölçü ızgarası:
+ * Fed, ara seçim, resesyon (yığın çubuk + 30 günlük çizgi) → beklenen faiz
+ * patikası → aylık enflasyon → künyeler paneli (ne olduğu, kaynak, bahis
+ * bağlantısı yok kuralı, renk anahtarı) → damga → rehber ipucu.
+ *
+ * GÖRSEL TUR (25 Ekim, sahibinin sözü: "üstteki yazı ve alttaki kartlar
+ * daha görsel olmalı ve kompakt hissettirmeli"). Hedef: 1440×900 ve
+ * 1280×800'de başlık + şerit + üç kartın tamamı kaydırmasız (önce seçim
+ * kartının dibi 1307'deydi, görünür alan 863'te bitiyor; ölçüm commit
+ * mesajında). Üç satırlık kalın cümle şeride dönüştü.
  *
  * VERİ: `lib/probability-data.ts` (günlük tablo; yoksa altı saatlik
  * önbellekli canlı okuma). Hedef aralık ve FOMC günü makro kartıyla aynı
@@ -45,6 +61,7 @@ export default async function ProbabilitiesPage() {
   const [board, fomc] = await Promise.all([getProbabilityBoard(), getNextFomc().catch(() => null)]);
   const snapshot = board?.snapshot ?? null;
   const lead = snapshot ? leadOf(snapshot, locale, t) : null;
+  const tiles = snapshot ? stripTiles(snapshot, locale, t) : [];
   const stamp = snapshot ? (
     <DataStamp labels={t.data} source={p.sourceLabel} at={snapshot.takenAt} locale={locale} note={p.daily} />
   ) : null;
@@ -64,19 +81,22 @@ export default async function ProbabilitiesPage() {
         </Panel>
       ) : (
         <>
-          <div className={styles.lead}>
-            {lead && <p className={styles.leadText}>{lead}</p>}
-            <p className={styles.leadNote}>{p.certainty}</p>
-            {stamp}
+          <div className={styles.top}>
+            <OddsStrip tiles={tiles} summary={lead} locale={locale} t={t} />
+            <div className={styles.topNote}>
+              <p>{p.certainty}</p>
+              {stamp}
+            </div>
           </div>
 
-          <div className={styles.duo}>
+          <div className={styles.cards} data-probe="cards">
             <FedPanel snapshot={snapshot} fomc={fomc} locale={locale} t={t} />
             <ElectionPanel snapshot={snapshot} locale={locale} t={t} />
+            <RecessionPanel snapshot={snapshot} locale={locale} t={t} />
           </div>
           <PathPanel snapshot={snapshot} fomc={fomc} locale={locale} t={t} />
-          <OtherPanel snapshot={snapshot} locale={locale} t={t} />
-          <NotesPanel t={t} />
+          <CpiPanel snapshot={snapshot} locale={locale} t={t} />
+          <NotesPanel t={t} locale={locale} />
           {stamp}
         </>
       )}
@@ -86,7 +106,24 @@ export default async function ProbabilitiesPage() {
   );
 }
 
-/** Tepedeki tek cümle — şablon + veri (`composeLead`, testli). */
+/** Şeridin kadranları: veri `headlineOdds`ten (testli), burada yalnız ad ve çapa. */
+function stripTiles(snapshot: ProbabilitySnapshot, locale: Locale, t: Dictionary): StripTile[] {
+  const p = t.probabilities;
+  return headlineOdds(snapshot).map((tile) => {
+    const label =
+      tile.kind === "fed"
+        ? tile.strikeAt
+          ? p.stripFed.replace("{date}", dayMonth(etOf(tile.strikeAt).date, locale))
+          : p.fedTitle
+        : tile.kind === "recession"
+          ? p.stripRecession
+          : p[tile.kind];
+    const anchor = tile.kind === "fed" ? CARD_ANCHORS.fed : tile.kind === "recession" ? CARD_ANCHORS.recession : CARD_ANCHORS.election;
+    return { ...tile, label, href: `#${anchor}` };
+  });
+}
+
+/** Şeridin ekran okuyucu özeti — şablon + veri (`composeLead`, testli). */
 function leadOf(snapshot: ProbabilitySnapshot, locale: Locale, t: Dictionary): string | null {
   const p = t.probabilities;
   const facts = leadFacts(snapshot);

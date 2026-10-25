@@ -899,7 +899,6 @@ a.chip:hover {
   background: color-mix(in srgb, var(--primary-soft) calc(var(--heat) * var(--heat-cap)), transparent);
   color: var(--text-strong);
   font-size: var(--text-tiny);
-  font-variant-numeric: tabular-nums;
   font-weight: 700;
   outline: 0;
   transition: box-shadow 0.18s var(--ease-brand);

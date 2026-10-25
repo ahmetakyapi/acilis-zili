@@ -1,9 +1,11 @@
-.overview { display: grid; gap: 20px; }
+/* Kapak kompakt bandın sağ sütunu (25 Ekim, ikinci tur): aralıklar ve
+   sayı puntosu bandın boyuna göre; 1280'de kapak 197 → ölçüm sayfada. */
+.overview { display: grid; gap: 8px; }
 .overviewHeading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 18px; color: var(--text-muted); font-size: 12px; }
-.overviewHeading a { color: var(--primary-ink); font-weight: 600; padding-block: 8px; }
-.distribution { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
-.distribution > div { display: grid; gap: 8px; font-size: 12px; font-weight: 600; }
-.distribution b { color: var(--text-strong); font-size: 32px; line-height: 1; letter-spacing: -.05em; font-weight: 550; }
+.overviewHeading a { color: var(--primary-ink); font-weight: 600; padding-block: 4px; }
+.distribution { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.distribution > div { display: grid; gap: 5px; font-size: 12px; font-weight: 600; }
+.distribution b { color: var(--text-strong); font-size: 26px; line-height: 1; letter-spacing: -.05em; font-weight: 550; }
 .distributionTrack { height: var(--lane-h, 5px); overflow: hidden; border-radius: 999px; background: var(--rail-track); }
 /* Kapak görseli KARDEŞLERİ GİBİ kendini çiziyor (14 Ekim): takvim
    sekmesinin yoğunluk çubukları ve hafta nabzı yüklemede kademeyle

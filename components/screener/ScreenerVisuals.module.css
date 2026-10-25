@@ -18,6 +18,20 @@
 }
 @media (min-width: 640px) { .lead { font-size: 19px; } }
 
+/* Tablonun başındaki cümle (25 Ekim, ikinci tur): özet paneli tablonun
+   altına indi, cümle tablonun ilk satırı oldu. Gövde puntosunun bir üstü,
+   panel başlığının hemen altında. */
+.tableLead {
+  max-width: 90ch;
+  margin: -6px 0 0;
+  padding: 0 16px 12px;
+  color: var(--text-body);
+  font-size: var(--text-read);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+@media (min-width: 640px) { .tableLead { padding-inline: 20px; } }
+
 .block { display: grid; gap: 10px; align-content: start; min-width: 0; }
 .blockHead { display: grid; gap: 8px; min-width: 0; }
 @media (min-width: 640px) { .blockHead { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; } }

@@ -248,6 +248,24 @@
   --share-4: #6fb0e0;
   --share-rest: #75879a;
 
+  /* OLASILIKLAR (25 Ekim) — veri renkleri, sitenin yön ve etkileşim
+     renklerinden AYRI. Gerekçe components/probabilities/Probabilities.module.css.
+     Fed kararı iki kutuplu: indirim mor aile, sabit markanın yumuşak mavisi
+     (doygun `--primary` değil), artış pirinç ailesi; komşu dilimler
+     dataviz doğrulayıcısından geçti (renk körlüğünde ΔE ≥ 10,5, normal
+     görüşte ≥ 19,9; açık uçlar zeminde 2,2–2,9:1, kimlik hep adıyla ve
+     sayısıyla yazılı). Partiler ABD alışkanlığı: Demokrat çivit mavisi,
+     Cumhuriyetçi kiremit kırmızısı; `--down` gül kırmızısından normal
+     görüşte ΔE 15,1 uzak, `--primary`den ton olarak ayrı. */
+  --fed-cut-50: #c27fd4;
+  --fed-cut: #8a3a9e;
+  --fed-hold: #4f97d6;
+  --fed-hike: #94640c;
+  --fed-hike-50: #d9a03a;
+  --party-dem: #3554c8;
+  --party-rep: #dd6420;
+  --odds-yes: #4f97d6;
+
   color-scheme: light;
 }
 
@@ -383,6 +401,19 @@
   --share-3: #1d87c4;
   --share-4: #135f8c;
   --share-rest: #8497a9;
+
+  /* Olasılıklar — koyu zeminin kendi basamakları (otomatik çevirme değil);
+     doğrulayıcıda açıklık bandı 0,48–0,67, komşu dilimler renk körlüğünde
+     ΔE ≥ 15,3. Cumhuriyetçi tonu `--down` pembesinden ayrı: daha turuncu
+     ve daha koyu (ΔE 12,9; ikisi bu sayfada aynı çizimde hiç durmuyor). */
+  --fed-cut-50: #a37ad9;
+  --fed-cut: #7646b4;
+  --fed-hold: #4497dc;
+  --fed-hike: #bb8a30;
+  --fed-hike-50: #8a5a0c;
+  --party-dem: #6f87ee;
+  --party-rep: #d0612a;
+  --odds-yes: #4497dc;
 
   color-scheme: dark;
 }

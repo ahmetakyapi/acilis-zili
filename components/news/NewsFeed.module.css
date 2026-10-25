@@ -6,16 +6,22 @@
 .feed { display: flex; flex-direction: column; gap: var(--page-section-gap, 20px); min-width: 0; }
 
 /* ---- Tepe cümlesi + konuşulan şirketler ---- */
+/* SIKI (25 Ekim, ikinci tur — sahibinin isteği: "kaydırılmadan da
+   görünebilsin"). Şerit 1280×800'de ilk ekranın yarısını tutuyordu ve
+   haber akışının ilk kartı y=596'da başlıyordu. Kartın 104 piksellik
+   taban yüksekliği boş alan taşıyordu; içerik (logo, sayı, kulvar) aynı,
+   dolgu ve aralıklar sıkı. Ölçüldü: ilk haber kartı 1280×800'de
+   596 → 530, 1440×900'de 599 → 533. */
 .pulse { min-width: 0; }
 .sentence {
-  margin-top: -6px; padding: 0 20px 14px; max-width: 72ch;
+  margin-top: -6px; padding: 0 20px 10px; max-width: 110ch;
   font-size: var(--text-read); line-height: 22px; color: var(--text-body); text-wrap: pretty;
 }
 /* Telefonda kayan şerit (kart 152 px), 768'de üç, 1280'de altı sütun.
    Kaydırma saklanmaz: şerit ucundan kesik, okur devamı olduğunu görüyor. */
 .companies {
   display: grid; grid-auto-flow: column; grid-auto-columns: 152px; gap: 10px;
-  margin: 0; padding: 0 20px 16px; list-style: none;
+  margin: 0; padding: 0 20px 12px; list-style: none;
   overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity;
   scroll-padding-inline: 20px;
 }
@@ -25,8 +31,8 @@
 @media (min-width: 80rem) { .companies { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 .companyItem { min-width: 0; scroll-snap-align: start; animation: nf-rise .5s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 50ms + 40ms); }
 .company {
-  position: relative; display: flex; flex-direction: column; gap: 10px; height: 100%;
-  min-height: 104px; padding: 12px 12px 14px;
+  position: relative; display: flex; flex-direction: column; gap: 7px; height: 100%;
+  padding: 10px 12px 11px;
   border-radius: var(--radius-lg); background: var(--surface-sunken); border: 1px solid transparent;
   transition: border-color .25s var(--ease-brand), background-color .25s var(--ease-brand);
 }
@@ -37,7 +43,7 @@
 .companySymbol { font-family: var(--font-mono); font-size: 13px; font-weight: 800; color: var(--text-strong); }
 .companyName { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .companyFoot { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin-top: auto; }
-.companyCount { font-size: 15px; font-weight: 750; color: var(--text-strong); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.companyCount { font-size: 15px; font-weight: 750; color: var(--text-strong); white-space: nowrap; }
 /* Sayım kulvarı — 5 px şerit (site geneli kulvar ölçüsü). */
 .countLane { display: block; height: var(--lane-h, 5px); border-radius: 999px; background: var(--line-soft); overflow: hidden; }
 .countBar {
@@ -45,7 +51,7 @@
   transform-origin: left center; animation: nf-grow .7s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 50ms + 160ms);
 }
 .hint {
-  border-top: 1px solid var(--line-soft); padding: 12px 20px 14px; max-width: 90ch;
+  border-top: 1px solid var(--line-soft); padding: 9px 20px 10px;
   font-size: var(--text-tiny); line-height: 18px; color: var(--text-muted);
 }
 @media (max-width: 47.99rem) {
@@ -70,11 +76,11 @@
   display: flex; align-items: baseline; gap: 10px; padding: 18px 2px 4px;
   border-bottom: 1px solid var(--line);
 }
-.hourClock { font-size: var(--text-title, 20px); line-height: 1.1; font-weight: 800; letter-spacing: -.02em; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+.hourClock { font-size: var(--text-title, 20px); line-height: 1.1; font-weight: 800; letter-spacing: -.02em; color: var(--text-strong); }
 .hourClock[data-range] { font-size: var(--text-lead); }
 .hourTo { color: var(--text-muted); font-weight: 650; }
 .hourDay { font-size: var(--text-small); font-weight: 650; color: var(--text-body); }
-.hourCount { margin-left: auto; font-size: var(--text-tiny); color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hourCount { margin-left: auto; font-size: var(--text-tiny); color: var(--text-muted); white-space: nowrap; }
 @media (min-width: 64rem) {
   .hour { grid-template-columns: 104px minmax(0, 1fr); column-gap: 28px; }
   .hour::before {
@@ -93,7 +99,6 @@
   }
   .hourCount { margin-left: 0; }
 }
-.clock { font-variant-numeric: tabular-nums; }
 .source { font-weight: 650; color: var(--text-body); }
 /* Haber kartındaki sembol rozeti: sembol + son seans yönü. */
 .symbols { display: inline-flex; flex-wrap: wrap; gap: 4px; }

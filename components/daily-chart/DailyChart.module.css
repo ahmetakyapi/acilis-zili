@@ -10,12 +10,15 @@
 .thumb { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
 .thumbRow { display: grid; grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: var(--text-tiny); line-height: 1.2; }
 .thumbName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-body); }
-.thumbValue { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text-strong); }
+.thumbValue { font-weight: 600; color: var(--text-strong); }
 .thumbValue[data-tone="up"] { color: var(--up); }
 .thumbValue[data-tone="down"] { color: var(--down); }
 .lane { position: relative; height: 5px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
 .bar { position: absolute; inset-block: 0; border-radius: 999px; background: var(--up); }
 .bar[data-tone="down"] { background: var(--down); }
+/* İki yönlü küçük hâlde sıfır çizgisi (25 Ekim): kulvar `overflow: hidden`
+   olduğu için çizgi kulvarın içinde, çubuğun üstünde. */
+.lane[data-zero]::after { content: ""; position: absolute; inset-block: 0; left: var(--zero); width: 1.5px; translate: -50% 0; background: var(--line-strong); }
 /* Pay şeridi tek yığın; dilimler arasında 2 piksel zemin (ArticleBody `pay`). */
 .shareStrip { display: flex; gap: 2px; height: 10px; border-radius: 999px; overflow: hidden; }
 .shareStrip > span { display: block; height: 100%; }
@@ -35,6 +38,13 @@
 .lang { margin-left: auto; }
 
 /* ---------------------------------------------------------------- DETAY */
+/* Grafiğin tek cümlesi (25 Ekim): panel başlığının altında, okuma
+   puntosunda ve güçlü tonda; sayılar bloktan (`summaryText`). */
+.summary { max-width: 62ch; padding: 0 16px 12px; font-size: var(--text-read); font-weight: 600; line-height: 1.5; color: var(--text-strong); text-wrap: pretty; }
+@media (min-width: 640px) { .summary { padding: 0 20px 14px; } }
+/* Metin paneli: başlık panelin h2'si, gövde altında (çizgi yok, ayrı panel). */
+.about { padding: 0 16px 20px; }
+@media (min-width: 640px) { .about { padding: 0 20px 24px; } }
 .figure { padding: 4px 16px 20px; }
 @media (min-width: 640px) { .figure { padding: 4px 20px 24px; } }
 .text { display: flex; flex-direction: column; gap: 12px; padding: 18px 16px 20px; border-top: 1px solid var(--line); }

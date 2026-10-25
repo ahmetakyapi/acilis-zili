@@ -2,7 +2,7 @@ import { commissionFor, SCENARIO_SHARE_PRICE, type Broker } from "@/content/brok
 
 /**
  * Aracı kurum MALİYET ÇİZGİSİ — saf hesap (25 Ekim). Test
- * `tests/broker-line.test.ts`; çizim `components/brokers/BrokerCostLine.tsx`.
+ * `tests/broker-line.test.ts`; çizim `components/brokers/BrokerBoard.tsx`.
  *
  * Senaryo iki sabit tutardı (1.000 $ ve 10.000 $) ve iki ayrı ölçekle
  * çiziliyordu. Kaydırıcı okuyucunun KENDİ alım tutarını soruyor; her

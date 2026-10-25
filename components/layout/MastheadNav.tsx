@@ -11,7 +11,9 @@ import type { Locale } from "@/lib/i18n/config";
 import { withLocale } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
 import { ChangelogBadge } from "@/components/changelog/ChangelogBadge";
+import { puzzleDayKey, puzzleNumber } from "@/lib/stock-puzzle";
 import { isActive, MORE_GROUPS, NAV_ITEMS, type MoreGroup } from "./nav-items";
+import styles from "./MastheadMore.module.css";
 import { usePriorityStrip } from "./usePriorityStrip";
 
 export type MastheadStripItem = {
@@ -40,8 +42,14 @@ export type ChangelogNavLabels = {
   latest: string;
 };
 
-/** Panelin genişliği rem cinsinden — sınıftaki `w-[44rem]` ile aynı sayı. */
-const PANEL_REM = 44;
+/** Panelin genişliği rem cinsinden — MastheadMore.module.css `.panel` ile aynı sayı. */
+const PANEL_REM = 64;
+/** Panelin pencere kenarına en az uzaklığı, rem. */
+const EDGE_REM = 1;
+/** Araçlar bandının altındaki sütunlar, sırayla (MORE_GROUPS'tan "tools" dışı). */
+const COLUMNS = MORE_GROUPS.filter((group) => group !== "tools");
+/** Satırın yanında canlı künye taşıyan hedef: bugünün bulmaca numarası. */
+const PUZZLE_HREF = "/bulmaca";
 
 /**
  * Masaüstü şeridi — yedi sekme ve "Daha Fazla".
@@ -71,6 +79,16 @@ const PANEL_REM = 44;
  * 11 Ekim: üstte bir bant daha — "Analiz Araçları" (Hisse Seçimi,
  * Karşılaştır), iki sütuna yayılan iki büyük kart. Gerekçe nav-items.ts →
  * MORE_GROUPS.
+ *
+ * 25 EKİM: MEGA PANEL. Sahibinin ekran görüntüsünde panel 736 piksel
+ * genişlik, ~860 piksel boydu (ölçüldü: içerik 864) ve 900 piksellik
+ * ekranda kaydırılıyordu; gruplar ekranın türüne göreydi ve Olasılıklar
+ * cümle düzeninde bir ipucuyla "Her Gün"ün dibinde tek başına duruyordu.
+ * Şimdi: üstte üç yatay araç karosu, altında NİYETE göre dört sütun (Her
+ * Gün, Piyasa, Portföy ve Maliyet, Öğren ve Oku), dipte Yenilikler. Her
+ * grubun ikon karosu kendi tonunda (renkler /yenilikler'in alan renkleriyle
+ * aynı anlamda: piyasa `--chart-a`, kişisel `--chart-b`). Ölçüm
+ * MastheadMore.module.css başında.
  */
 export function MastheadNav({
   locale,
@@ -79,6 +97,7 @@ export function MastheadNav({
   strip,
   more,
   groups,
+  puzzleNumber: puzzleLabel,
   changelog,
 }: {
   locale: Locale;
@@ -87,6 +106,8 @@ export function MastheadNav({
   strip: readonly MastheadStripItem[];
   more: readonly MastheadMoreItem[];
   groups: Record<MoreGroup, string>;
+  /** "Bulmaca #{n}" — Hisseyi Bil satırının künyesi. */
+  puzzleNumber: string;
   changelog: ChangelogNavLabels;
 }) {
   const pathname = usePathname();
@@ -106,24 +127,37 @@ export function MastheadNav({
     if (focusTrigger) buttonRef.current?.focus();
   }, []);
 
-  /* SAĞA TAŞARSA SAĞDAN HİZALANIR. Panel etiketin sol kenarından açılıyor;
-     büyütülmüş yazıda (24px kök, 1024) genişliği 360 piksele çıkıyor ve
-     düğme sağa kaydığı için panelin sağ yarısı pencerenin dışında
-     kalıyordu (ölçüldü). Karar açılış anında veriliyor, efektte değil. */
-  const [alignEnd, setAlignEnd] = useState(false);
-  const openPanel = () => {
+  /* PANEL PENCEREYE SIĞDIRILIR (25 Ekim). Eskiden etiketin sol
+     kenarından açılıyor, sağa taşarsa sağdan hizalanıyordu; 64rem'lik mega
+     panel 1280'de iki yöne de sığmıyor (düğmenin solu ~808). Şimdi panel
+     düğmenin altında başlamak ister; sağ kenarı başlığın kabını (logo ile
+     hesap düğmesi arası) aşacaksa sola kaydırılır ve kabın sağ kenarına
+     hizalanır, sol kenarı pencereden 1rem içeride kalır; büyütülmüş yazıda
+     genişlik pencereye iner (CSS `min()`). Hesap açılış anında ve pencere
+     boyu değişince, efektte değil. `origin`: ölçek girişinin merkezi
+     düğmenin hizası — panel düğmeden "açılıyor". */
+  const [place, setPlace] = useState<{ left: number; origin: number } | null>(null);
+  const measurePlace = useCallback(() => {
     const more = moreRef.current;
-    if (more) {
-      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
-      const right = more.getBoundingClientRect().left + PANEL_REM * rem;
-      setAlignEnd(right > document.documentElement.clientWidth - rem);
-    }
+    if (!more) return;
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const viewport = document.documentElement.clientWidth;
+    const width = Math.min(PANEL_REM * rem, viewport - 2 * EDGE_REM * rem);
+    const box = more.getBoundingClientRect();
+    const edge = EDGE_REM * rem;
+    const frame = navRef.current?.parentElement?.getBoundingClientRect();
+    const right = Math.min(viewport - edge, frame ? frame.right : viewport - edge);
+    const left = Math.max(edge, Math.min(box.left - edge, right - width));
+    setPlace({ left: left - box.left, origin: box.left + box.width / 2 - left });
+  }, []);
+  const openPanel = () => {
+    measurePlace();
     setOpenedAt(pathname);
   };
 
   const overflow = strip.filter((item) => hidden.has(item.href));
   const rows: MastheadMoreItem[] = [
-    ...overflow.map((item) => ({ href: item.href, label: item.full, hint: item.hint, group: "data" as const })),
+    ...overflow.map((item) => ({ href: item.href, label: item.full, hint: item.hint, group: "market" as const })),
     ...more,
   ];
   const activeRow = rows.find((row) => isActive(pathname, row.href)) ?? null;
@@ -145,11 +179,13 @@ export function MastheadNav({
     };
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", measurePlace);
     return () => {
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("resize", measurePlace);
     };
-  }, [open, close]);
+  }, [open, close, measurePlace]);
 
   const rowLinks = () => [...(panelRef.current?.querySelectorAll<HTMLAnchorElement>("a") ?? [])];
 
@@ -286,39 +322,24 @@ export function MastheadNav({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.97, transition: exitOf(0.16) }}
               transition={{ duration: 0.16, ease: EASE_BRAND_POINTS }}
-              style={{ transformOrigin: alignEnd ? "top right" : "top left" }}
+              style={{ left: place?.left ?? 0, transformOrigin: `${place?.origin ?? 0}px 0` }}
               onKeyDown={onPanelKeyDown}
               className={cn(
-                "masthead-dropdown absolute outline-none top-[calc(100%+0.75rem)] z-40 w-[44rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-overlay-surface p-2.5 shadow-(--shadow-overlay)",
-                alignEnd
-                  ? "right-[calc(var(--masthead-tab-px)-1rem)]"
-                  : "left-[calc(var(--masthead-tab-px)-1rem)]",
+                "masthead-dropdown absolute outline-none top-[calc(100%+0.75rem)] z-40 rounded-2xl border border-line bg-overlay-surface shadow-(--shadow-overlay)",
+                styles.panel,
               )}
             >
-              {/* PANEL 38 → 44rem, ÜÇ KARTLIK BANT (15 Ekim; sahibi: "Daha
-                  Fazla görsel olarak daha iyi olsun"). Ekran görüntüsünde üç
-                  kusur vardı: (1) analiz bandı iki sütunluydu ve Tarayıcı
-                  gelince üçüncü kart ikinci satırda tek başına kaldı; (2) sağ
-                  sütunun ikinci grup başlığı TAM SATIR boyundaydı (28 Eylül'ün
-                  hat hizalama çözümü) ve "Oku"nun önünde 58 piksellik boşluk
-                  açıyordu — grupların sayısı değişince hizalama zaten
-                  tutmuyordu (sol 5, sağ 2 + 3 satır); (3) 38rem'de satır
-                  ipuçları kesiliyordu ("Pozisyonların, Dolar ve Lira…").
-                  Şimdi bant üç eşit dikey kart, ikinci grup başlığı ilkiyle
-                  aynı boyda (üstünde hairline ile ayrılır), ipuçları sarar,
-                  kesilmez. Klavye sırası belge sırası: bant, sol, sağ. */}
               {(() => {
-                /* ANALİZ ARAÇLARI ÜST BANTTA, İKİ SÜTUNA YAYILIR (11 Ekim;
-                   gerekçe nav-items.ts → MORE_GROUPS). Klavye sırası belge
-                   sırası: önce bant, sonra sol ve sağ sütun. */
-                const featured = rows.filter((row) => row.group === "analyze");
+                /* ARAÇLAR BANDI ÜSTTE (11 Ekim; 25 Ekim'den beri üç YATAY
+                   karo, ~64 piksel: dikey kartlar 136 piksel boy alıyordu).
+                   Klavye sırası belge sırası: önce bant, sonra sütunlar
+                   soldan sağa, en son Yenilikler. */
+                const featured = rows.filter((row) => row.group === "tools");
                 if (featured.length === 0) return null;
                 return (
-                  <section aria-label={groups.analyze} className="masthead-feature">
-                    <h3 className="masthead-more-head flex h-8 items-end px-3 pb-1.5 text-tiny font-semibold text-muted">
-                      {groups.analyze}
-                    </h3>
-                    <ul className="grid grid-cols-3 gap-2 px-1">
+                  <section aria-label={groups.tools} className={styles.tools}>
+                    <h3 className={styles.head}>{groups.tools}</h3>
+                    <ul className={styles.toolList}>
                       {featured.map((row) => {
                         const current = activeRow?.href === row.href;
                         const Icon = NAV_ITEMS.find((item) => item.href === row.href)?.icon;
@@ -329,105 +350,12 @@ export function MastheadNav({
                               prefetch={false}
                               aria-current={current ? "page" : undefined}
                               onClick={() => setOpenedAt(null)}
-                              className="masthead-feature-card"
+                              className={cn("masthead-feature-card", styles.tool)}
                             >
                               {Icon && <span className="masthead-feature-icon" aria-hidden><Icon size={20} weight="duotone" /></span>}
-                              <span className="min-w-0">
-                                <span className="block text-read font-bold leading-snug text-strong">{row.label}</span>
-                                <span className="mt-1 block text-small leading-snug text-muted">{row.hint}</span>
-                              </span>
-                              <ArrowUpRight className="masthead-row-arrow" size={14} aria-hidden />
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </section>
-                );
-              })()}
-              <div className="masthead-more-grid grid grid-cols-2">
-                {[["mine", "data"], ["learn", "read"]].map((column) => (
-                  <div key={column.join("-")} className="masthead-more-col flex min-w-0 flex-col">
-                    {MORE_GROUPS.filter((group) => column.includes(group)).map((group, groupIndex) => {
-                      const groupRows = rows.filter((row) => row.group === group);
-                      if (groupRows.length === 0) return null;
-                      return (
-                        <section key={group} aria-label={groups[group]}>
-                          <h3
-                            className={cn(
-                              "masthead-more-head flex h-8 items-end px-3 pb-1.5 text-tiny font-semibold text-muted",
-                              groupIndex > 0 && "masthead-more-head-next",
-                            )}
-                          >
-                            {groups[group]}
-                          </h3>
-                          <ul className="flex flex-col">
-                            {groupRows.map((row) => {
-                              const current = activeRow?.href === row.href;
-                              const Icon = NAV_ITEMS.find((item) => item.href === row.href)?.icon;
-                              const lastOverflow = overflow.length > 0 && row.href === overflow[overflow.length - 1].href;
-                              return (
-                                <li key={row.href} data-divider={lastOverflow || undefined}>
-                                  <Link
-                                    href={withLocale(row.href, locale)}
-                                    prefetch={false}
-                                    aria-current={current ? "page" : undefined}
-                                    onClick={() => setOpenedAt(null)}
-                                    className="masthead-row relative flex min-h-(--more-row) items-center gap-3 rounded-xl px-3 py-1.5 hover:bg-surface focus-visible:bg-surface"
-                                  >
-                                    {Icon && <span className="masthead-row-icon" aria-hidden><Icon size={19} weight="duotone" /></span>}
-                                    <span className="min-w-0 flex-1">
-                                      <span className={cn("block truncate text-base font-semibold", current ? "text-primary-ink" : "text-strong")}>
-                                        {row.label}
-                                      </span>
-                                      <span className="mt-0.5 block text-tiny leading-snug text-muted">{row.hint}</span>
-                                    </span>
-                                    <ArrowUpRight className="masthead-row-arrow" size={14} aria-hidden />
-                                  </Link>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </section>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-              {(() => {
-                /* "HER GÜN" BANDI (24 Ekim): iki sütunun altında, sütunlarla
-                   aynı ızgarada — Günün Grafiği solda, Günün Posteri sağda,
-                   satırlar üstteki sütunların hizasında. Gerekçe nav-items.ts
-                   → MORE_GROUPS. Satır, sütun satırlarıyla aynı kalıp.
-                   İKİ SATIR EŞİT BOYDA (25 Ekim düzeltmesi): ipuçlarından biri
-                   iki satıra sarınca satırlar 58/67 piksel ölçülüyordu; bağlantı
-                   artık ızgara hücresini dolduruyor (`h-full`). */
-                const daily = rows.filter((row) => row.group === "daily");
-                if (daily.length === 0) return null;
-                return (
-                  <section aria-label={groups.daily} className="mt-1.5 border-t border-line-soft pt-1.5">
-                    <h3 className="masthead-more-head flex h-8 items-end px-3 pb-1.5 text-tiny font-semibold text-muted">
-                      {groups.daily}
-                    </h3>
-                    <ul className="masthead-more-grid grid grid-cols-2">
-                      {daily.map((row) => {
-                        const current = activeRow?.href === row.href;
-                        const Icon = NAV_ITEMS.find((item) => item.href === row.href)?.icon;
-                        return (
-                          <li key={row.href} className="masthead-more-col min-w-0">
-                            <Link
-                              href={withLocale(row.href, locale)}
-                              prefetch={false}
-                              aria-current={current ? "page" : undefined}
-                              onClick={() => setOpenedAt(null)}
-                              className="masthead-row relative flex h-full min-h-(--more-row) items-center gap-3 rounded-xl px-3 py-1.5 hover:bg-surface focus-visible:bg-surface"
-                            >
-                              {Icon && <span className="masthead-row-icon" aria-hidden><Icon size={19} weight="duotone" /></span>}
                               <span className="min-w-0 flex-1">
-                                <span className={cn("block truncate text-base font-semibold", current ? "text-primary-ink" : "text-strong")}>
-                                  {row.label}
-                                </span>
-                                <span className="mt-0.5 block text-tiny leading-snug text-muted">{row.hint}</span>
+                                <span className="block text-read font-bold leading-snug text-strong">{row.label}</span>
+                                <span className="mt-0.5 block text-small leading-snug text-muted">{row.hint}</span>
                               </span>
                               <ArrowUpRight className="masthead-row-arrow" size={14} aria-hidden />
                             </Link>
@@ -438,6 +366,62 @@ export function MastheadNav({
                   </section>
                 );
               })()}
+              <div className={styles.columns}>
+                {COLUMNS.map((group) => {
+                  const groupRows = rows.filter((row) => row.group === group);
+                  if (groupRows.length === 0) return null;
+                  return (
+                    <section key={group} aria-label={groups[group]} className={styles.column} data-group={group}>
+                      <h3 className={styles.head}>
+                        <span className={styles.swatch} aria-hidden />
+                        {groups[group]}
+                      </h3>
+                      <ul className="flex flex-col">
+                        {groupRows.map((row) => {
+                          const current = activeRow?.href === row.href;
+                          const Icon = NAV_ITEMS.find((item) => item.href === row.href)?.icon;
+                          const lastOverflow = overflow.length > 0 && row.href === overflow[overflow.length - 1].href;
+                          /* CANLI KÜNYE: bugünün bulmaca numarası. Saf
+                             hesap (TR takvimi, lib/stock-puzzle.ts), veri
+                             isteği yok; panel yalnız istemcide açıldığı
+                             için sunucu çizimiyle çelişmiyor ve sekme gece
+                             yarısını geçse de açılış anının numarası. */
+                          const live =
+                            row.href === PUZZLE_HREF
+                              ? puzzleLabel.replace("{n}", String(puzzleNumber(puzzleDayKey())))
+                              : null;
+                          return (
+                            <li key={row.href} data-divider={lastOverflow || undefined}>
+                              <Link
+                                href={withLocale(row.href, locale)}
+                                prefetch={false}
+                                aria-current={current ? "page" : undefined}
+                                onClick={() => setOpenedAt(null)}
+                                className={cn(
+                                  "masthead-row relative flex items-center gap-2.5 rounded-xl hover:bg-surface focus-visible:bg-surface",
+                                  styles.row,
+                                )}
+                              >
+                                {Icon && <span className="masthead-row-icon" aria-hidden><Icon size={18} weight="duotone" /></span>}
+                                <span className="min-w-0 flex-1">
+                                  <span className="flex min-w-0 items-baseline gap-1.5">
+                                    <span className={cn("text-base font-semibold leading-snug", current ? "text-primary-ink" : "text-strong")}>
+                                      {row.label}
+                                    </span>
+                                    {live && <span className={styles.live}>{live}</span>}
+                                  </span>
+                                  <span className="mt-0.5 block text-tiny leading-snug text-muted">{row.hint}</span>
+                                </span>
+                                <ArrowUpRight className={cn("masthead-row-arrow", styles.rowArrow)} size={14} aria-hidden />
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </section>
+                  );
+                })}
+              </div>
               {/* YENİLİKLER SATIRI (25 Ekim) — panelin en dibinde, hairline
                   altında, tam genişlikte tek satır. Bir gruba girmiyor:
                   gerekçe nav-items.ts → "/yenilikler". Satır kalıbı sütun
@@ -447,15 +431,18 @@ export function MastheadNav({
                 const current = isActive(pathname, changelog.href);
                 const Icon = NAV_ITEMS.find((item) => item.href === changelog.href)?.icon;
                 return (
-                  <div className="mt-1.5 border-t border-line-soft pt-1.5">
+                  <div className={styles.footer}>
                     <Link
                       href={withLocale(changelog.href, locale)}
                       prefetch={false}
                       aria-current={current ? "page" : undefined}
                       onClick={() => setOpenedAt(null)}
-                      className="masthead-row relative flex min-h-(--more-row) items-center gap-3 rounded-xl px-3 py-1.5 hover:bg-surface focus-visible:bg-surface"
+                      className={cn(
+                        "masthead-row relative flex items-center gap-2.5 rounded-xl hover:bg-surface focus-visible:bg-surface",
+                        styles.row,
+                      )}
                     >
-                      {Icon && <span className="masthead-row-icon" aria-hidden><Icon size={19} weight="duotone" /></span>}
+                      {Icon && <span className="masthead-row-icon" aria-hidden><Icon size={18} weight="duotone" /></span>}
                       <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-3 gap-y-0.5">
                         <span className={cn("text-base font-semibold", current ? "text-primary-ink" : "text-strong")}>
                           {changelog.label}

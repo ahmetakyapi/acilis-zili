@@ -1,80 +1,56 @@
 import type { ReactNode } from "react";
-import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { RollingFigure } from "@/components/ui/RollingFigure";
-import { advanceShare, posterScale, type DayPoster } from "@/lib/day-poster";
-import {
-  posterActs,
-  swarmDomain,
-  swarmExtremes,
-  type SceneStock,
-} from "@/lib/day-poster-scene";
+import { POSTER_ANCHOR, type DayPoster } from "@/lib/day-poster";
+import type { PosterSkyline } from "@/lib/day-poster-data";
+import { skyDomain } from "@/lib/day-skyline";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
-import {
-  cn,
-  directionOf,
-  directionText,
-  formatEtDateCompact,
-  formatPercent,
-  formatPercentPlain,
-  tieFigures,
-} from "@/lib/utils";
-import { PosterAct } from "./PosterAct";
-import { MiniLane, PosterLanes } from "./PosterLanes";
+import { logoSrc } from "@/lib/logos";
+import { cn, directionOf, directionText, formatEtDateCompact, formatPercent, formatPercentPlain, tieFigures } from "@/lib/utils";
 import { BreadthStrip } from "./PosterMarks";
-import { PosterStage } from "./PosterStage";
+import { Skyline } from "./Skyline";
 import { posterName, posterStoryText } from "./story";
 import styles from "./PosterBoard.module.css";
 
 /**
  * POSTERİN PANOSU — `/gun/[tarih]` ve `/gun`un en son seansı (25 Ekim,
- * üçüncü kurulum).
+ * dördüncü kurulum: Günün Silueti).
  *
- * SAHİBİNİN İSTEĞİ (canlıdaki ikinci sürümün ekran görüntüsü üzerine):
- * "Burası hiç görsel değil; çok daha görsel, çok daha iyi ve çok daha
- * anlaşılır." İkinci sürüm düzgün bir panoydu (dört ölçü, etiketli
- * kulvarlar, oran noktaları) ama poster değildi: ekranın en büyük öğesi
- * 28 piksellik bir başlıktı, sahne hissenin kendisini göstermiyordu.
+ * SAHİBİNİN İTİRAZI (canlıdaki "S&P 500, Hisse Hisse" sahnesi): "Çok kötü
+ * gözüküyor; noktaların ne olduğunu insan anlamaz. Daha görsel, daha
+ * anlaşılabilir ve benzersiz bir tasarım." Pano artık Nasdaq 100'ün
+ * silüetini anlatıyor; okuma sırası CLAUDE.md ekran düzeni:
+ *   1. GÜNÜN CÜMLESİ — panelin `h2`si, display ölçekte (kısa başlık
+ *      degrade, ayrıntı düz); yanında tek büyük künye, Nasdaq 100'ün
+ *      değişimi (künye şeridi).
+ *   2. ANA GÖRSEL — siluet (`Skyline`), üstünde ne anlattığını söyleyen
+ *      üç parçalı lejant: genişlik, yükseklik, ufuk.
+ *   3. ÖLÇÜ IZGARASI — yükselen/düşen (genişlik şeridiyle), en güçlü ve en
+ *      zayıf sektör, öteki endeksler. Hepsi aynı hatta biter.
+ *   4. Paylaşım görseli ve künyeler panelin içinde, hairline ile.
  *
- * Şimdi okuma sırası bir posterin sırası:
- *   1. GÜNÜN CÜMLESİ — panelin `h2`si, display ölçekte: kısa başlık degrade
- *      ("Geniş Satış"), ayrıntı düz. Veriden kurallarla
- *      (`lib/day-poster-story.ts`).
- *   2. PERDE 1, GENİŞLİK — "130 Yükseldi / 363 Düştü" iri, aralarında şerit.
- *   3. SAHNE — her hisse bir nokta, sektör sektör (`PosterStage`): perde 2
- *      satırlar, perde 3 uç hisselerin etiketleri.
- *   4. KÜNYE KARTI (perde 4) — sahnenin kenarında: S&P 500, yükselen payı,
- *      endeksler, günün uçları, paylaşım görseli. Geniş ekranda sahnenin
- *      sağında, dar ekranda altında.
- *   5. Künyeler panelin içinde, hairline ile (CLAUDE.md ekran düzeni 6).
- *
- * İkinci sürümün sektör kulvarları kalktı: her sektörün değişimi artık
- * satırının başında ve satırda fonun işareti var; kulvar listesi aynı on
- * bir sayının ikinci kopyası olurdu.
+ * Eski sahnenin "Günün Uçları" listesi ayrıca basılmıyor: uç hisseler
+ * siluette logolarıyla etiketli, tam liste "Tüm Şirketler"de.
  */
 
-/** Yüzde basamağı — ana sayfanın endeks kartları ve sektör siluetiyle aynı. */
+/** Yüzde basamağı — ana sayfanın endeks kartlarıyla aynı. */
 const PERCENT_DIGITS = 2;
-/** Yükselen payı tam sayı: "%26". */
-const SHARE_DIGITS = 0;
-/** Eksen künyesi tek ondalık. */
+/** Ölçek künyesi tek ondalık. */
 const SCALE_DIGITS = 1;
 /** İki sayaç sırayla dönsün. */
 const FIGURE_STAGGER_MS = 120;
+/** Öteki endeksler — posterin endeksi dışındakiler, `INDEX_STRIP` sırası. */
+const OTHER_INDICES = ["SPY", "DIA", "IWM"] as const;
 
 export function PosterBoard({
   poster,
-  stocks,
-  sized,
-  unplaced,
+  skyline,
   locale,
   t,
   action,
 }: {
   poster: DayPoster;
-  stocks: SceneStock[];
-  sized: boolean;
-  unplaced: number;
+  skyline: PosterSkyline;
   locale: Locale;
   t: Dictionary;
   /** Başlığın sağındaki bağlantı (Poster Arşivi / Posteri Aç). */
@@ -82,244 +58,162 @@ export function PosterBoard({
 }) {
   const L = t.daySignature.poster;
   const S = t.daySignature.seal;
-  const G = t.daySignature.stage;
-  const story = posterStoryText(poster, locale, t);
-  const name = (symbol: string) => posterName(symbol, locale);
+  const K = t.daySignature.skyline;
+  const { stocks, districts, sized } = skyline;
+  const story = posterStoryText(poster, districts, locale, t);
   const pct = (value: number) => formatPercent(value, locale, PERCENT_DIGITS);
   const breadth = poster.breadth;
-  const share = breadth ? advanceShare(breadth) : null;
-  const anchor = poster.indices.find((move) => move.symbol === "SPY");
-  const scale = posterScale(poster);
-  const scaleText = formatPercentPlain(scale, locale, SCALE_DIGITS);
-  const acts = posterActs({
-    breadth: breadth !== null,
-    stocks: stocks.length,
-    indices: poster.indices.length,
-  });
-  const extremes = swarmExtremes(stocks);
-  const domain =
-    stocks.length > 0 ? swarmDomain(stocks.map((stock) => stock.change)) : null;
-  const signedPct = (value: number) =>
-    value === 0
-      ? "0"
-      : `${value > 0 ? "+" : "−"}${formatPercentPlain(value, locale, value % 1 === 0 ? 0 : 1)}`;
+  const anchor = poster.indices.find((move) => move.symbol === POSTER_ANCHOR);
+  const others = OTHER_INDICES.flatMap((symbol) => poster.indices.filter((move) => move.symbol === symbol));
+  const strongest = districts[0];
+  const weakest = districts[districts.length - 1];
+  const names = Object.fromEntries(districts.map((district) => [district.key, posterName(district.key, locale)]));
+  const logos = Object.fromEntries(
+    stocks.flatMap((stock) => {
+      const src = logoSrc(stock.symbol, null);
+      return src ? [[stock.symbol, src] as const] : [];
+    }),
+  );
+  const domain = skyDomain(stocks.map((stock) => stock.change));
+  const clipped = stocks.some((stock) => Math.abs(stock.change) > domain.hi);
   const stripLabel = breadth
     ? S.stripLabel
         .replace("{adv}", String(breadth.advancing))
         .replace("{dec}", String(breadth.declining))
         .replace("{flat}", String(breadth.unchanged))
     : "";
-  const sectors = poster.sectors.map((move) => ({
-    symbol: move.symbol,
-    name: name(move.symbol),
-    change: move.change,
-  }));
-  const imageHref = (query = "") =>
-    withLocale(`/gun/${poster.date}/gorsel${query}`, locale);
+  const imageHref = (query = "") => withLocale(`/gun/${poster.date}/gorsel${query}`, locale);
   const dateShort = formatEtDateCompact(poster.date, locale);
 
   return (
     <div className={styles.board}>
-      {/* Geniş ekranda cümle ile genişlik yan yana: sahne ilk ekrana
-          giriyor (1440×900'de sahnenin üstü 795 → 623; PosterBoard.module.css). */}
-      <div className={styles.top}>
-        <header className={styles.head}>
+      <header className={styles.head}>
+        <div className={styles.headText}>
           {/* `data-ink="plain"`: sitenin `main h2` degradesi bütün kutuya
-            yayılıp ayrıntıyı da maviye boyuyordu. Degrade yalnız kısa
-            başlıkta (`display-ink`), ayrıntı düz. */}
+              yayılıp ayrıntıyı da maviye boyuyordu. Degrade yalnız kısa
+              başlıkta (`display-ink`), ayrıntı düz. */}
           <h2 className={styles.story} data-ink="plain" data-poster-story="">
-            <span className={cn("display-ink", styles.storyTitle)}>
-              {story.title}
-            </span>
+            <span className={cn("display-ink", styles.storyTitle)}>{story.title}</span>
             <span className="sr-only">: </span>
-            <span className={styles.storyDetail}>
-              {tieFigures(story.detail)}
-            </span>
+            <span className={styles.storyDetail}>{tieFigures(story.detail)}</span>
           </h2>
           <div className={styles.headMeta}>
             <span>{S.close.replace("{date}", dateShort)}</span>
             {action}
           </div>
-        </header>
-
-        {acts.includes("breadth") && breadth && (
-          <PosterAct act="breadth" className={styles.breadth}>
-            <div className={styles.breadthFigures} aria-hidden>
-              <span className={styles.breadthSide}>
-                <span className={cn(styles.breadthNumber, "text-up")}>
-                  <RollingFigure value={String(breadth.advancing)} />
-                </span>
-                <span className={styles.breadthWord}>{G.axisUp}</span>
-              </span>
-              <span className={cn(styles.breadthSide, styles.breadthRight)}>
-                <span className={styles.breadthWord}>{G.axisDown}</span>
-                <span className={cn(styles.breadthNumber, "text-down")}>
-                  <RollingFigure
-                    value={String(breadth.declining)}
-                    delayMs={FIGURE_STAGGER_MS}
-                  />
-                </span>
-              </span>
-            </div>
-            <BreadthStrip
-              breadth={breadth}
-              label={stripLabel}
-              animate
-              className={styles.breadthStrip}
-            />
-            {breadth.unchanged > 0 && (
-              <span className={styles.breadthFlat} aria-hidden>
-                {L.flatCount.replace("{n}", String(breadth.unchanged))}
-              </span>
-            )}
-          </PosterAct>
+        </div>
+        {anchor && (
+          <p className={styles.anchor}>
+            <span className={styles.anchorName}>{K.figIndex}</span>
+            <span className={cn(styles.anchorValue, directionText(directionOf(anchor.change)))}>
+              <RollingFigure value={pct(anchor.change)} />
+            </span>
+          </p>
         )}
-      </div>
+      </header>
 
-      <div className={styles.scene}>
-        <section
-          className={styles.stageCol}
-          aria-labelledby={`${poster.date}-stage`}
-        >
-          <div className={styles.stageHead}>
-            <h3 id={`${poster.date}-stage`}>{G.title}</h3>
-            <p>{G.hint}</p>
+      <section className={styles.stage} aria-labelledby={`${poster.date}-skyline`}>
+        <div className={styles.stageHead}>
+          <h3 id={`${poster.date}-skyline`}>{K.title}</h3>
+          <ul className={styles.legend}>
+            <li>
+              <span aria-hidden className={cn(styles.key, styles.keyWidth)} />
+              {K.legendWidth}
+            </li>
+            <li>
+              <span aria-hidden className={cn(styles.key, styles.keyHeight)} />
+              {K.legendHeight}
+            </li>
+            <li>
+              <span aria-hidden className={cn(styles.key, styles.keyHorizon)} />
+              {K.legendHorizon}
+            </li>
+          </ul>
+          <p className={styles.hint}>{K.hint}</p>
+        </div>
+        {stocks.length > 0 && breadth && (
+          <Skyline
+            stocks={stocks}
+            districts={districts}
+            names={names}
+            logos={logos}
+            sized={sized}
+            locale={locale}
+            text={K}
+            adv={breadth.advancing}
+            dec={breadth.declining}
+          />
+        )}
+      </section>
+
+      <dl className={styles.figures}>
+        {breadth && (
+          <div className={styles.measure}>
+            <dt>{K.figBreadth}</dt>
+            <dd className={styles.counts}>
+              <span className="text-up">
+                <RollingFigure value={String(breadth.advancing)} />
+              </span>
+              <span className={styles.slash} aria-hidden>
+                /
+              </span>
+              <span className="text-down">
+                <RollingFigure value={String(breadth.declining)} delayMs={FIGURE_STAGGER_MS} />
+              </span>
+            </dd>
+            <dd className={styles.figVisual}>
+              <BreadthStrip breadth={breadth} label={stripLabel} />
+              {breadth.unchanged > 0 && <span className={styles.flatCount}>{L.flatCount.replace("{n}", String(breadth.unchanged))}</span>}
+            </dd>
           </div>
-          {stocks.length > 0 ? (
-            <PosterStage
-              stocks={stocks}
-              sectors={sectors}
-              locale={locale}
-              text={G}
-              sized={sized}
-            />
-          ) : (
-            <p className={styles.empty}>{L.breadthMissing}</p>
-          )}
-        </section>
-
-        <PosterAct act="indices" className={styles.card}>
-          <h3 className={styles.cardTitle}>
-            {S.close.replace("{date}", dateShort)}
-          </h3>
-          <dl className={styles.figures}>
-            {anchor && (
-              <div className={styles.measure}>
-                <dt>{name("SPY")}</dt>
-                <dd className={directionText(directionOf(anchor.change))}>
-                  <RollingFigure value={pct(anchor.change)} />
-                </dd>
-                <dd className={styles.figVisual}>
-                  <MiniLane change={anchor.change} scale={scale} />
-                </dd>
-              </div>
-            )}
-            {breadth && share !== null && (
-              <div className={styles.measure}>
-                <dt>{L.figBreadth}</dt>
-                <dd className={styles.neutral}>
-                  <RollingFigure
-                    value={formatPercentPlain(
-                      share * 100,
-                      locale,
-                      SHARE_DIGITS,
-                    )}
-                    delayMs={FIGURE_STAGGER_MS}
-                  />
-                </dd>
-                <dd className={styles.figVisual}>
-                  <BreadthStrip breadth={breadth} label={stripLabel} />
-                </dd>
-              </div>
-            )}
-          </dl>
-
-          {acts.includes("indices") && (
-            <div className={styles.cardBlock}>
-              <h4>{L.indicesTitle}</h4>
-              <PosterLanes
-                moves={poster.indices}
-                scale={scale}
-                name={name}
-                percent={pct}
-                axis={[`−${scaleText}`, "0", `+${scaleText}`]}
-                ranked={false}
-                label={L.indicesTitle}
-              />
-            </div>
-          )}
-
-          {acts.includes("extremes") &&
-            (extremes.up.length > 0 || extremes.down.length > 0) && (
-              <div className={styles.cardBlock}>
-                <h4>{G.extremesTitle}</h4>
-                <ul className={styles.extremes}>
-                  {[...extremes.up, ...extremes.down].map((i) => {
-                    const stock = stocks[i];
-                    return (
-                      <li key={stock.symbol}>
-                        <Link
-                          href={`/hisse/${stock.symbol}`}
-                          className={styles.extreme}
-                        >
-                          <span className={styles.extremeSymbol}>
-                            {stock.symbol}
-                          </span>
-                          <span className={styles.extremeName}>
-                            {stock.name}
-                          </span>
-                          <span
-                            className={cn(
-                              styles.extremeValue,
-                              directionText(directionOf(stock.change)),
-                            )}
-                          >
-                            {pct(stock.change)}
-                          </span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
-
-          <div className={styles.share}>
-            <span>{G.shareTitle}</span>
-            <a href={imageHref()} target="_blank" rel="noopener">
-              {G.shareWide}
-            </a>
-            <a href={imageHref("?bicim=dikey")} target="_blank" rel="noopener">
-              {G.shareTall}
-            </a>
+        )}
+        {strongest && (
+          <div className={styles.measure}>
+            <dt>{K.figStrongest}</dt>
+            <dd className={cn(styles.figValue, directionText(directionOf(strongest.change)))}>{pct(strongest.change)}</dd>
+            <dd className={styles.figName}>{names[strongest.key]}</dd>
           </div>
-        </PosterAct>
+        )}
+        {weakest && weakest !== strongest && (
+          <div className={styles.measure}>
+            <dt>{K.figWeakest}</dt>
+            <dd className={cn(styles.figValue, directionText(directionOf(weakest.change)))}>{pct(weakest.change)}</dd>
+            <dd className={styles.figName}>{names[weakest.key]}</dd>
+          </div>
+        )}
+        {others.length > 0 && (
+          <div className={styles.measure}>
+            <dt>{K.otherIndices}</dt>
+            <dd className={styles.indexList}>
+              {others.map((move) => (
+                <span key={move.symbol} className={styles.indexRow}>
+                  <span>{posterName(move.symbol, locale)}</span>
+                  <span className={directionText(directionOf(move.change))}>{pct(move.change)}</span>
+                </span>
+              ))}
+            </dd>
+          </div>
+        )}
+      </dl>
+
+      <div className={styles.share}>
+        <span>{K.shareTitle}</span>
+        <a href={imageHref()} target="_blank" rel="noopener">
+          {K.shareWide}
+        </a>
+        <a href={imageHref("?bicim=dikey")} target="_blank" rel="noopener">
+          {K.shareTall}
+        </a>
       </div>
 
       <div className={styles.notes}>
         <p>{L.storyNote}</p>
-        <p>
-          {L.basisNote
-            .replace("{date}", dateShort)
-            .replace("{prev}", formatEtDateCompact(poster.prevDate, locale))}
-        </p>
-        {stocks.length > 0 && (
-          <p>
-            {sized ? G.sizeNote.replace("{date}", dateShort) : G.sizeMissing}
-          </p>
-        )}
-        {domain && (
-          <p>
-            {G.clipNote
-              .replace("{lo}", signedPct(domain.lo))
-              .replace("{hi}", signedPct(domain.hi))}
-          </p>
-        )}
-        {unplaced > 0 && (
-          <p>{G.unplacedNote.replace("{n}", String(unplaced))}</p>
-        )}
+        <p>{L.basisNote.replace("{date}", dateShort).replace("{prev}", formatEtDateCompact(poster.prevDate, locale))}</p>
+        <p>{sized ? K.sizeNote.replace("{date}", dateShort) : K.sizeMissing}</p>
+        {clipped && <p>{K.clipNote.replace("{hi}", formatPercentPlain(domain.hi, locale, SCALE_DIGITS))}</p>}
+        <p>{K.districtNote}</p>
         <p>{L.proxyNote}</p>
-        {breadth && <p>{L.breadthNote}</p>}
+        <p>{L.breadthNote}</p>
       </div>
     </div>
   );

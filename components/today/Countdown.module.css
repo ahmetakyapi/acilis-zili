@@ -95,10 +95,26 @@
    giriş, bir tık büyüyüp oturma. Sayaç "yaklaşıyor" demeye başlıyor.
    Gerekçe Countdown.tsx → "ZİL ANI". */
 .countdown[data-phase="final"] .group:last-child .digitIn { animation:digit-beat 520ms var(--ease-spring) both; }
+/* GİDEN RAKAM ATIŞA KENETLİ (25 Ekim). Yukarıdaki "tam yol, aynı eğri"
+   kuralı son on saniyede bozuluyordu: gelen rakam 520 ms `--ease-spring`
+   ile yolun %55'inde varıyor, giden ise 420 ms `--ease-spring-soft` ile
+   ayrı yürüyordu. Ölçüm (Chrome 155, 390, `getAnimations()` duraklatılıp
+   20 ms adımla, kutuların dikey aralığı): normal fazda aralık her karede
+   +0,172em; son on saniyede 40–140 ms arasında −0,13em'e kadar üst üste
+   ve ikisi birden pencerede — 25 Ekim'de kapatılan soluk ikinci rakam.
+   Giden artık aynı süre, eğri ve anahtar karelerle yürüyor (eğri her
+   anahtar kare aralığına ayrı uygulanıyor, yani %0–55 iki tarafta aynı
+   ilerleme): aralık her karede ≥ +0,125em (gelen rakamın 1,1 büyümesi payın bir kısmını yiyor; aynı ölçüm). */
+.countdown[data-phase="final"] .group:last-child .digitOut { animation:digit-out-beat 520ms var(--ease-spring) both; }
 @keyframes digit-beat {
   from { transform:translateY(120%) scale(1); }
   55% { transform:translateY(0) scale(1.1); }
   to { transform:translateY(0) scale(1); }
+}
+@keyframes digit-out-beat {
+  from { transform:translateY(0); }
+  55% { transform:translateY(-120%); }
+  to { transform:translateY(-120%); }
 }
 /* SIFIR — rakamlar PİRİNCE döner; çalan şey kahramanın kendi zili
    (HeroBell, BELL_RANG_EVENT — gerekçe Countdown.tsx "ZİL ANI"). Pirinç

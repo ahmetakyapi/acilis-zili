@@ -5,7 +5,7 @@ import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMot
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { DataStamp, PageHeader, Panel, PanelLink } from "@/components/ui/primitives";
 import type { DayPoster } from "@/lib/day-poster";
-import type { SceneStock } from "@/lib/day-poster-scene";
+import type { PosterSkyline } from "@/lib/day-poster-data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { formatEtDateLong } from "@/lib/utils";
 import { PosterBoard } from "./PosterBoard";
@@ -16,9 +16,9 @@ import styles from "./DayPoster.module.css";
  * yeniden kuruldu).
  *
  * Ekran düzeni CLAUDE.md sırasıyla: başlık (sağda tek denetim: önceki /
- * sonraki seans) → tek panelde posterin panosu (günün cümlesi, genişlik,
- * her hissenin noktası sektör sektör, künye kartı, künyeler; gerekçe
- * `PosterBoard.tsx`) → damga → rehber.
+ * sonraki seans) → tek panelde posterin panosu (günün cümlesi, Nasdaq
+ * 100'ün silueti, ölçüler, künyeler; gerekçe `PosterBoard.tsx`) → damga →
+ * rehber.
  *
  * İLK SÜRÜMÜN AYRI TABLOSU KALKTI (25 Ekim): sahnenin yanında sektör ve
  * endeks tablosu duruyordu, çünkü sahnedeki kulvarların adı yoktu. Artık
@@ -27,7 +27,7 @@ import styles from "./DayPoster.module.css";
  */
 export function DayPosterView({
   poster,
-  scene,
+  skyline,
   fetchedAt,
   prevHref,
   nextHref,
@@ -35,7 +35,7 @@ export function DayPosterView({
   t,
 }: {
   poster: DayPoster;
-  scene: { stocks: SceneStock[]; unplaced: number; sized: boolean };
+  skyline: PosterSkyline;
   fetchedAt: string;
   prevHref: string | null;
   nextHref: string | null;
@@ -79,9 +79,7 @@ export function DayPosterView({
       <Panel className={styles.panel}>
         <PosterBoard
           poster={poster}
-          stocks={scene.stocks}
-          sized={scene.sized}
-          unplaced={scene.unplaced}
+          skyline={skyline}
           locale={locale}
           t={t}
           action={<PanelLink href="/gun">{L.archiveLink}</PanelLink>}

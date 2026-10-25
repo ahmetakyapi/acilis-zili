@@ -39,6 +39,41 @@ export const dailyChartTr = {
   landscapeAlt: "{title} · {date} · Günün Grafiği",
   portraitAlt: "{title} · {date} · Günün Grafiği, dikey",
   metaDescription: "Her işlem günü ABD borsasından tek grafik ve kısa bir açıklama; arşivli ve paylaşılabilir.",
+  /* Grafiğin tek cümlesi — şablon burada, sayılar bloktan
+     (`lib/daily-chart-figure.ts` → `summaryText`). */
+  summary: {
+    signed: "{total} kalemin {up} tanesi artıda, {down} tanesi ekside.",
+    allUp: "{total} kalemin hepsi artıda.",
+    allDown: "{total} kalemin hepsi ekside.",
+    extremes: "En yüksek {top} ({topValue}), en düşük {bottom} ({bottomValue}).",
+    ranked: "En büyük {top} ({topValue}), en küçük {bottom} ({bottomValue}).",
+    share: "En büyük pay {top}: {topValue}.",
+    shift: "{from} {fromValue}, {to} {toValue}.",
+  },
+  /* Günün bağlamı paneli (`components/daily-chart/DayContext.tsx`). */
+  context: {
+    title: "O Gün Piyasa",
+    meta: "{date} Kapanışı",
+    indices: "Endeksler",
+    breadth: "Nasdaq 100 Genişliği",
+    advancing: "Yükseldi",
+    declining: "Düştü",
+    flatCount: "{n} Yatay",
+    breadthLabel: "{adv} hisse yükseldi, {dec} hisse düştü, {flat} hisse yatay kaldı.",
+    movers: "Öne Çıkanlar",
+    gainers: "En Çok Yükselen",
+    losers: "En Çok Düşen",
+    calendar: "Takvim",
+    eventsMore: "+{n} Veri Daha",
+    noEvents: "O gün takvimde ekonomik veri yoktu.",
+    eventsMissing: "Ekonomik takvim şu an okunamadı.",
+    earnings: "{n} Şirket Bilanço Açıkladı",
+    earningsMore: "+{n}",
+    noEarnings: "O gün bilanço açıklayan şirket yoktu.",
+    posterLink: "Günün Posteri",
+    note:
+      "Endeksler, genişlik ve öne çıkanlar Günün Posteri'yle aynı kaynaktan: o günün ve önceki işlem gününün kapanış barları. Endeksler onları izleyen fonlarla (QQQ, SPY, DIA, IWM) gösteriliyor; genişlik ve öne çıkanlar bugünkü Nasdaq 100 üye listesiyle sayılıyor.",
+  },
 };
 
 export const dailyChartEn: typeof dailyChartTr = {
@@ -71,6 +106,38 @@ export const dailyChartEn: typeof dailyChartTr = {
   landscapeAlt: "{title} · {date} · Chart of the Day",
   portraitAlt: "{title} · {date} · Chart of the Day, portrait",
   metaDescription: "One chart from the US market and a short note every trading day; archived and shareable.",
+  summary: {
+    signed: "{up} of {total} items are up, {down} are down.",
+    allUp: "All {total} items are up.",
+    allDown: "All {total} items are down.",
+    extremes: "Highest: {top} ({topValue}); lowest: {bottom} ({bottomValue}).",
+    ranked: "Largest: {top} ({topValue}); smallest: {bottom} ({bottomValue}).",
+    share: "Largest share: {top} at {topValue}.",
+    shift: "{from} {fromValue}, {to} {toValue}.",
+  },
+  context: {
+    title: "The Market That Day",
+    meta: "{date} Close",
+    indices: "Indices",
+    breadth: "Nasdaq 100 Breadth",
+    advancing: "Advanced",
+    declining: "Declined",
+    flatCount: "{n} Unchanged",
+    breadthLabel: "{adv} stocks advanced, {dec} declined, {flat} were unchanged.",
+    movers: "Top Movers",
+    gainers: "Biggest Gainers",
+    losers: "Biggest Losers",
+    calendar: "Calendar",
+    eventsMore: "+{n} More Releases",
+    noEvents: "There were no economic releases that day.",
+    eventsMissing: "The economic calendar couldn't be read right now.",
+    earnings: "{n} Companies Reported",
+    earningsMore: "+{n}",
+    noEarnings: "No company reported earnings that day.",
+    posterLink: "Day's Poster",
+    note:
+      "Indices, breadth and top movers come from the same source as the Day's Poster: closing bars for that day and the previous session. Indices are shown through the funds that track them (QQQ, SPY, DIA, IWM); breadth and top movers use today's Nasdaq 100 member list.",
+  },
 };
 
 export type DailyChartLabels = typeof dailyChartTr;

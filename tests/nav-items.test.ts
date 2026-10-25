@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { NAV_ITEMS, isActive } from "../components/layout/nav-items";
+import { MORE_GROUPS, NAV_ITEMS, isActive, menuGroupOf } from "../components/layout/nav-items";
 
 /* Masthead'in iki listesi (şerit ve "Daha Fazla") ile mobil alt çubuk aynı
    diziden okunuyor. Bu sınamalar modelin sözleşmesini tutuyor: bir öğe iki
@@ -16,17 +16,27 @@ test("strip ranks are exactly 1..n, each used once", () => {
 });
 
 test("every more item belongs to a panel group", () => {
-  for (const item of more) assert.ok(["analyze", "mine", "data", "learn", "read", "daily"].includes(item.more!), item.href);
+  for (const item of more) assert.ok(MORE_GROUPS.includes(item.more!), item.href);
 });
 
-/* Panelin iki sütunu satır satır aynı hatta (17 Ekim): sol "mine" + "data",
-   sağ "learn" + "read" — grup boyları eşleşmeli. 24 Ekim'de dört yeni
-   satır (Aracı Kurumlar, Hisseyi Bil, Günün Grafiği, Günün Posteri) gelince
-   eşitlik gruplar yeniden dengelenerek korundu; gevşetilmedi. */
-test("panel columns pair up row for row", () => {
+/* 25 Ekim mega paneli: üstte üç araç karosu, altında dört sütun. Panel 900
+   piksellik ekranda taşmasın diye (ölçüm MastheadMore.module.css) en uzun
+   sütun beş satır; araç bandı tek sıra üç karo. Sütunların eşit boyda
+   olması GEREKMİYOR — eski iki sütunlu panelin satır hizası kuralı
+   grupları anlamına göre değil boyuna göre dağıtıyordu. */
+test("tools band is three tiles and no column runs past five rows", () => {
   const count = (group: string) => more.filter((item) => item.more === group).length;
-  assert.equal(count("mine"), count("learn"));
-  assert.equal(count("data"), count("read"));
+  assert.equal(count("tools"), 3);
+  for (const group of MORE_GROUPS.filter((entry) => entry !== "tools")) {
+    assert.ok(count(group) >= 1 && count(group) <= 5, `${group}: ${count(group)}`);
+  }
+});
+
+/* Telefondaki /menu aynı diziden kuruluyor: şerit sekmeleri de bir gruba
+   düşmeli, yoksa telefonda hiçbir yerde görünmezler. */
+test("every strip and more item lands in a mobile menu group", () => {
+  for (const item of [...strip, ...more]) assert.ok(menuGroupOf(item), item.href);
+  for (const item of more) assert.equal(item.menu, undefined, item.href);
 });
 
 test("strip and more never share a destination", () => {

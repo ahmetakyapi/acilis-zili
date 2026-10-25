@@ -40,7 +40,7 @@ export const calendarVisualsTr = {
     windowAmc: "kapanış sonrası",
     windowOther: "(saati belirsiz)",
     caption:
-      "Karo alanı piyasa değeriyle orantılı; en küçük boy tabandır (dokunma hedefi), o boydaki karolar paylarından büyük görünür. Karonun altındaki dört çentik son dört çeyrek: dolu olan çeyrekte EPS beklentisi aşıldı.",
+      "Büyük karo, piyasa değeri haftanın en büyüğünün dörtte birini geçen şirket; ötekiler taban boyda. Karonun alt kenarındaki dört çentik son dört çeyrek: dolu olan çeyrekte EPS beklentisi aşıldı. Hücreye sığmayanlar +N ile o günün listesinde.",
     countCompanies: "{count} Şirket",
     marketClosed: "Piyasa Kapalı",
     emptyLane: "Yok",
@@ -53,6 +53,9 @@ export const calendarVisualsTr = {
     readoutHint: "Bir karonun üstüne gel ya da dokun; gelir ve EPS beklentisi burada.",
     karneLoading: "Karne yükleniyor",
     noKarne: "Karne için yeterli çeyrek yok",
+    /** Hücreye sığmayanların çipi ve ekran okuyucu etiketi. */
+    more: "+{count}",
+    moreLabel: "{day} listesinde {count} şirket daha",
   },
   dividends: {
     highlights: "Öne Çıkanlar",
@@ -94,7 +97,7 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     windowAmc: "after the close",
     windowOther: "(time not set)",
     caption:
-      "Tile area is proportional to market cap; the smallest size is a floor (a touch target), so tiles at that size look larger than their share. The four notches under a tile are the last four quarters: a filled one means EPS beat the estimate.",
+      "A large tile is a company worth more than a quarter of the week's largest; the rest are base size. The four notches along a tile's bottom edge are the last four quarters: a filled one means EPS beat the estimate. Companies that don't fit are under +N in that day's list.",
     countCompanies: "{count} Companies",
     marketClosed: "Market Closed",
     emptyLane: "None",
@@ -106,6 +109,8 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     readoutHint: "Hover or tap a tile to see its revenue and EPS estimates here.",
     karneLoading: "Loading track record",
     noKarne: "Not enough quarters for a track record",
+    more: "+{count}",
+    moreLabel: "{count} more companies in the {day} list",
   },
   dividends: {
     highlights: "Highlights",

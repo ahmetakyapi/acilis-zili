@@ -96,13 +96,24 @@ export function PuzzleChart({
       ? [dateText(axis.range.from, locale), dateText(axis.range.to, locale)]
       : [labels.axisStart, labels.axisMid, labels.axisEnd];
 
+  /* Son değerin künyesi uç noktanın yanında; nokta üst kenara yakınsa
+     altına iner (grafiğin içine taşmasın). */
+  const endFigure = figures.find((figure) => figure.key === "end");
+  const endAbove = yOf(last) > 24;
+
   return (
-    <figure className={cn(styles.chart, className)} data-bulmaca="siluet">
+    <figure className={cn(styles.chart, className)} data-bulmaca="siluet" data-tahta="siluet">
       <div className={cn(styles.frame, gutter && styles.withGutter)}>
         {gutter && (
-          <div aria-hidden className={styles.gutter}>
-            <span className="numeral" style={{ top: `${yOf(1)}%` }}>{top}</span>
-            <span className="numeral" style={{ top: `${yOf(0)}%` }}>{bottom}</span>
+          <div aria-hidden className={styles.gutter} data-w={top.length >= bottom.length ? top : bottom}>
+            <span className={styles.gutterTop} style={{ top: `${yOf(1)}%` }} title={labels.chartHigh}>
+              {top}
+              <span className={styles.gutterKey}>{labels.chartHigh}</span>
+            </span>
+            <span className={styles.gutterBottom} style={{ top: `${yOf(0)}%` }} title={labels.chartLow}>
+              <span className={styles.gutterKey}>{labels.chartLow}</span>
+              {bottom}
+            </span>
           </div>
         )}
         <div className={styles.plot}>
@@ -121,25 +132,36 @@ export function PuzzleChart({
           </svg>
           {/* Uç nokta HTML: `preserveAspectRatio="none"` daireyi eziyordu. */}
           <span aria-hidden className={styles.dot} style={{ left: "100%", top: `${yOf(last)}%` }} />
+          {endFigure && (
+            <span
+              aria-hidden
+              className={cn(styles.endTag, endAbove ? styles.endAbove : styles.endBelow, endFigure.tone === "up" && styles.up, endFigure.tone === "down" && styles.down)}
+              style={{ top: `${yOf(last)}%` }}
+            >
+              <span className={styles.endKey}>{endFigure.label}</span>
+              {endFigure.value}
+            </span>
+          )}
           {axis.kind === "pct" && (
             <span aria-hidden className={styles.startLabel} style={{ top: `${yOf(first)}%` }}>{labels.startLine}</span>
           )}
         </div>
-      </div>
-      <div aria-hidden className={cn(styles.ticks, gutter && styles.withGutter)}>
-        {gutter && <span />}
-        <span className={styles.tickRow}>
+        {gutter && <span aria-hidden />}
+        <span aria-hidden className={styles.tickRow}>
           {ticks.map((tick) => (
             <span key={tick}>{tick}</span>
           ))}
         </span>
       </div>
+      {/* Ölçüler ekranda grafiğin üstünde (eksen ve uç künyesi); burada
+          ekran okuyucu için düz liste. Eskiden grafiğin altında ayrı bir
+          satırdı ve tek ekranlık tahtadan 60 piksel yiyordu. */}
       {figures.length > 0 && (
-        <dl className={styles.figures}>
+        <dl className="sr-only">
           {figures.map((figure) => (
             <div key={figure.key}>
               <dt>{figure.label}</dt>
-              <dd className={cn("numeral", figure.tone === "up" && styles.up, figure.tone === "down" && styles.down)}>{figure.value}</dd>
+              <dd>{figure.value}</dd>
             </div>
           ))}
         </dl>

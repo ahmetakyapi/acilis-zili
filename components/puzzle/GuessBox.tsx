@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Button, LogoTile } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 import { foldForSearch } from "@/lib/search-fold";
@@ -15,6 +15,8 @@ const MAX_OPTIONS = 8;
  * üzerinde, tarayıcıda. Uç sorulmuyor: havuz 200 şirket ve sayfayla geldi.
  * Seçmek göndermek değil: listeden seçilen şirket kutuya oturur, "Tahmin
  * Et" ya da ikinci Enter gönderir; yanlışlıkla bir hak yanmasın.
+ * Joker düğmesi aynı satırda (`extra`): tek ekranlık tahtada ayrı bir
+ * satır ve açıklama paragrafı 70 piksel yiyordu (25 Ekim).
  */
 export function GuessBox({
   options,
@@ -24,6 +26,7 @@ export function GuessBox({
   disabled,
   pending,
   onGuess,
+  extra,
 }: {
   options: PoolOption[];
   guessed: ReadonlySet<string>;
@@ -32,6 +35,8 @@ export function GuessBox({
   disabled: boolean;
   pending: boolean;
   onGuess: (symbol: string) => Promise<boolean>;
+  /** Gönder düğmesinin yanındaki ikincil denetim (joker) — aynı satırda. */
+  extra?: ReactNode;
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -171,6 +176,7 @@ export function GuessBox({
       <Button type="submit" size="lg" disabled={disabled} className={styles.submit}>
         {pending ? labels.pending : labels.submit}
       </Button>
+      {extra}
       {/* Canlı bölge HEP yerinde: sonradan eklenen bir `aria-live` öğesinin
           ilk içeriği ekran okuyucuda duyurulmuyor. Boşken yer kaplamıyor. */}
       <p aria-live="polite" className={styles.hint}>{hint ?? ""}</p>

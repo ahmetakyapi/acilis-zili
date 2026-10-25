@@ -1,8 +1,9 @@
 import { ImageResponse } from "next/og";
 import { posterName, posterStoryText } from "@/components/day-poster/story";
-import { POSTER_OG_SIZE, parsePosterDate, type DayPoster } from "@/lib/day-poster";
-import { getDayPoster, getPosterSceneStocks } from "@/lib/day-poster-data";
-import { SWARM_MODES, fitSwarm, swarmDomain, swarmExtremes, type SceneStock, type SwarmLayout } from "@/lib/day-poster-scene";
+import { POSTER_ANCHOR, POSTER_OG_SIZE, parsePosterDate, type DayPoster } from "@/lib/day-poster";
+import { getDayPoster, getPosterSkyline, type PosterSkyline } from "@/lib/day-poster-data";
+import { loadWeekLogos } from "@/lib/earnings-week-og";
+import { SKY_MODES, buildingPath, skylineLayout, type SkyLayout, type SkyStock } from "@/lib/day-skyline";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { todayEt } from "@/lib/market-hours";
 import { C, OG_CONTENT_TYPE, OgFrame, OgTitle, Tri, ogFonts } from "@/lib/og";
@@ -11,18 +12,23 @@ import { formatEtDateLong, formatPercentPlain } from "@/lib/utils";
 
 /**
  * GÜNÜN POSTERİ — paylaşım görseli, `/gun/2026-10-23/gorsel` (24 Ekim;
- * 25 Ekim'de sahneyle yeniden kuruldu).
+ * 25 Ekim'de siluetle yeniden kuruldu).
  *
- * GÖRSEL SAHNENİN DURAĞAN KOPYASI: sayfadaki gibi her hisse bir nokta,
- * sektör sektör, aynı yerleşimle (`lib/day-poster-scene.ts`; satori SVG
- * `circle` basabiliyor). Yanında günün cümlesi ve genişlik. Önceki kart on
- * bir sektör kulvarıydı; paylaşılan görselde sahnenin kendisi yoktu.
+ * GÖRSEL SİLUETİN DURAĞAN KOPYASI: sayfadaki gibi Nasdaq 100'ün yüz
+ * şirketi birer bina, aynı yerleşimle (`lib/day-skyline.ts`, `og` ve
+ * `ogTall` düzenleri); büyük şirketlerin ve günün uçlarının çatısında
+ * logo, sembol ve yüzde. Üstünde günün cümlesi, Nasdaq 100'ün değişimi
+ * ve genişlik; altında mahalle adları.
+ *
+ * ETİKETLER SVG'NİN DIŞINDA, HTML. Satori SVG'yi resme çevirirken içindeki
+ * `<text>`e yazı tipi vermiyor; binalar SVG, etiket ve mahalle adları aynı
+ * ölçekle (`k`) üstüne konan kutular. Logolar depodaki webp'lerin PNG
+ * veri adresi (`loadWeekLogos`; satori webp çözmüyor).
  *
  * İKİ BİÇİM: varsayılan 1200×630 (bağlantı kartı; sayfanın `og:image`i) ve
  * `?bicim=dikey` 1080×1350 (telefonda paylaşılan dikey kart, Instagram
- * gönderi oranı). Sahne kutuya `fitSwarm` ile sığıyor: yarıçaplar adım adım
- * küçülüyor, x'ler (yani değişimler) hiç oynamıyor. Etiket yok: uç hisseler
- * yanda adıyla yazılı, satırların adı solda.
+ * gönderi oranı). Siluet kutuya oranıyla sığıyor: en dar boyut seçiliyor
+ * (`k`), şekil hiç bozulmuyor.
  *
  * Route Handler, dosya tabanlı `opengraph-image` değil: dili adresin
  * önekinden okuyabilsin diye (gerekçe `bilancolar/hafta/gorsel/route.tsx`;
@@ -41,12 +47,19 @@ const TALL_SIZE = { width: 1080, height: 1350 } as const;
 
 const PERCENT_DIGITS = 2;
 
-/** Biçimlerin sahne kutusu (piksel): sektör adı sütunu + nokta alanı. */
+/** Biçimlerin siluet kutusu (piksel) ve yazı ölçüleri. Kutu kartın iç
+ *  alanından: 1200 − 2×40 çerçeve − 2×52 dolgu = 1016; yükseklik başlık ve
+ *  mahalle adlarından artan. */
 const FORMATS = {
-  wide: { mode: "og", label: 150, swarm: 500, height: 392, labelSize: 12, extremes: 2 },
-  tall: { mode: "ogTall", label: 200, swarm: 690, height: 800, labelSize: 17, extremes: 3 },
+  wide: { mode: "og", boxW: 1016, boxH: 236, district: 15, gap: 8 },
+  tall: { mode: "ogTall", boxW: 896, boxH: 760, district: 20, gap: 14 },
 } as const;
 type Format = keyof typeof FORMATS;
+
+/** Satori renkleri — açık tema (`C`), su `--primary-tint` karşılığı. */
+const INK = { up: C.up, down: C.down, flat: C.muted, horizon: "#c9d2dc", water: C.primaryTint };
+/** Mahalle tabelasının yüksekliği (piksel, ad + değer). */
+const DISTRICT_ROW = { wide: 40, tall: 54 } as const;
 
 function percent(value: number, locale: Locale) {
   return formatPercentPlain(value, locale, PERCENT_DIGITS);
@@ -58,172 +71,227 @@ function signed(value: number, locale: Locale) {
 
 const tone = (change: number) => (change > 0 ? C.up : change < 0 ? C.down : C.muted);
 
-/** Ölçek dışı noktanın dış halkasıyla arasındaki boşluk (sahne birimi). */
-const CLIP_RING_GAP = 2.2;
-
-/** Sahne: satır satır — adı solda, noktaları kendi SVG'sinde (sayfadaki
- *  satırın aynısı). Satırın boyu yerleşimden, ad ortada ve tek satır. */
+/** Siluet: sıra sıra — binalar SVG, etiketler ve mahalle adları üstünde. */
 function Scene({
   layout,
   stocks,
   names,
+  logos,
   format,
+  locale,
 }: {
-  layout: SwarmLayout;
-  stocks: SceneStock[];
-  names: (symbol: string) => string;
+  layout: SkyLayout;
+  stocks: SkyStock[];
+  names: (key: string) => string;
+  logos: Map<string, string>;
   format: Format;
+  locale: Locale;
 }) {
   const f = FORMATS[format];
-  const k = f.swarm / layout.width;
+  const mode = SKY_MODES[layout.mode];
+  const total = layout.rows.reduce((acc, row) => acc + row.bottom - row.top, 0);
+  const districtH = DISTRICT_ROW[format] * layout.rows.length;
+  const k = Math.min(f.boxW / layout.width, (f.boxH - districtH - f.gap * (layout.rows.length - 1)) / total);
+  const w = layout.width * k;
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
-      {layout.rows.map((row, index) => (
-        <div
-          key={row.sector}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            height: row.height * k,
-            borderTop: index === 0 ? "none" : `1px solid ${C.lineSoft}`,
-          }}
-        >
-          <span
-            style={{
-              display: "flex",
-              width: f.label,
-              fontSize: f.labelSize,
-              fontWeight: 700,
-              color: C.strong,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {names(row.sector)}
-          </span>
-          <svg width={f.swarm} height={row.height * k} viewBox={`0 0 ${layout.width} ${row.height}`}>
-            <line x1={layout.zeroX} x2={layout.zeroX} y1={0} y2={row.height} stroke={C.muted} strokeWidth={1.5 / k} />
-            {/* Ölçek dışı: sayfadaki gibi tam opak nokta + nötr mürekkep
-                halka (PosterStage.module.css → `.clipRing`). */}
-            {row.dots.map((dot) =>
-              dot.clip === 0 ? (
-                <circle key={dot.i} cx={dot.x} cy={dot.y} r={dot.r} fill={tone(stocks[dot.i].change)} fillOpacity={0.88} />
-              ) : (
-                <g key={dot.i}>
-                  <circle cx={dot.x} cy={dot.y} r={dot.r} fill={tone(stocks[dot.i].change)} />
-                  <circle cx={dot.x} cy={dot.y} r={dot.r + CLIP_RING_GAP} fill="none" stroke={C.strong} strokeWidth={1.5 / k} />
-                </g>
-              ),
-            )}
-          </svg>
-        </div>
-      ))}
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: f.gap }}>
+      {layout.rows.map((row, r) => {
+        const h = (row.bottom - row.top) * k;
+        return (
+          <div key={r} style={{ display: "flex", flexDirection: "column", width: w }}>
+            <div style={{ display: "flex", position: "relative", width: w, height: h }}>
+              <svg width={w} height={h} viewBox={`0 ${row.top} ${layout.width} ${row.bottom - row.top}`}>
+                <rect x={0} y={0} width={layout.width} height={row.downH} fill={INK.water} />
+                {row.buildings.map((b) => (
+                  <path
+                    key={b.i}
+                    d={buildingPath(b)}
+                    fill={b.dir === 1 ? INK.up : b.dir === -1 ? INK.down : INK.flat}
+                    fillOpacity={b.dir === -1 ? 0.84 : 1}
+                  />
+                ))}
+                <line x1={0} x2={layout.width} y1={0} y2={0} stroke={INK.horizon} strokeWidth={1.4 / k} />
+                {row.labels.flatMap((label) =>
+                  label.leader
+                    ? [
+                        <line
+                          key={`l${label.i}`}
+                          x1={label.leader.x1}
+                          y1={label.leader.y1}
+                          x2={label.leader.x2}
+                          y2={label.leader.y2}
+                          stroke={INK.horizon}
+                          strokeWidth={1.2 / k}
+                        />,
+                      ]
+                    : [],
+                )}
+              </svg>
+              {row.labels.map((label) => {
+                const stock = stocks[label.i];
+                const logo = logos.get(stock.symbol);
+                const size = mode.logo * k;
+                return (
+                  <div
+                    key={label.i}
+                    style={{
+                      position: "absolute",
+                      left: label.x * k,
+                      top: (label.y - row.top) * k,
+                      width: label.w * k,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      fontSize: mode.font * k,
+                      lineHeight: 1.15,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {logo ? (
+                      /* `<img>` değil zemin görseli — gerekçe
+                         `lib/earnings-week-og.tsx` (lint kuralı Satori
+                         ağacını da tarıyor). */
+                      <div
+                        style={{
+                          display: "flex",
+                          width: size,
+                          height: size,
+                          borderRadius: size,
+                          overflow: "hidden",
+                          backgroundColor: C.surface,
+                          border: `1px solid ${C.line}`,
+                          backgroundImage: `url(${logo})`,
+                          backgroundSize: `${size}px ${size}px`,
+                          backgroundRepeat: "no-repeat",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: size,
+                          height: size,
+                          borderRadius: size,
+                          background: C.lineSoft,
+                          color: C.muted,
+                          fontSize: size * 0.38,
+                        }}
+                      >
+                        {stock.symbol.slice(0, 2)}
+                      </div>
+                    )}
+                    <span style={{ display: "flex", marginTop: 2, color: C.strong }}>{stock.symbol}</span>
+                    <span style={{ display: "flex", color: tone(stock.change) }}>{signed(stock.change, locale)}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", position: "relative", width: w, height: DISTRICT_ROW[format] }}>
+              {row.districts.map((span) => (
+                <div
+                  key={span.key}
+                  style={{
+                    position: "absolute",
+                    left: span.x0 * k,
+                    width: (span.x1 - span.x0) * k,
+                    top: 6,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    borderTop: `1px solid ${INK.horizon}`,
+                    paddingTop: 4,
+                    fontSize: f.district,
+                    lineHeight: 1.15,
+                    fontWeight: 700,
+                  }}
+                >
+                  <span style={{ display: "flex", color: C.strong, textAlign: "center" }}>{names(span.key)}</span>
+                  <span style={{ display: "flex", color: tone(span.change) }}>{signed(span.change, locale)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 function PosterCard({
   poster,
-  stocks,
+  skyline,
+  logos,
   format,
   locale,
   t,
 }: {
   poster: DayPoster;
-  stocks: SceneStock[];
+  skyline: PosterSkyline;
+  logos: Map<string, string>;
   format: Format;
   locale: Locale;
   t: Dictionary;
 }) {
   const S = t.daySignature;
   const f = FORMATS[format];
-  const story = posterStoryText(poster, locale, t);
-  const anchor = poster.indices.find((move) => move.symbol === "SPY");
+  const story = posterStoryText(poster, skyline.districts, locale, t);
+  const anchor = poster.indices.find((move) => move.symbol === POSTER_ANCHOR);
   const b = poster.breadth;
-  const names = (symbol: string) => posterName(symbol, locale);
-  const layout = fitSwarm(
-    {
-      stocks,
-      sectorOrder: poster.sectors.map((move) => move.symbol),
-      mode: f.mode,
-      domain: swarmDomain(stocks.map((stock) => stock.change)),
-    },
-    f.height / (f.swarm / SWARM_MODES[f.mode].width),
-  );
-  const ext = swarmExtremes(stocks, f.extremes);
+  const names = (key: string) => posterName(key, locale);
+  const layout = skylineLayout({ stocks: skyline.stocks, districts: skyline.districts, mode: f.mode });
   const tall = format === "tall";
 
-  const breadth = b && (
-    <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
-      <span style={{ display: "flex", fontSize: tall ? 54 : 40, fontWeight: 800, letterSpacing: "-0.04em", color: C.up }}>
-        {b.advancing}
-      </span>
-      <span style={{ display: "flex", fontSize: tall ? 24 : 18, fontWeight: 700, color: C.strong }}>{S.stage.axisUp}</span>
-      <span style={{ display: "flex", width: 10 }} />
-      <span style={{ display: "flex", fontSize: tall ? 54 : 40, fontWeight: 800, letterSpacing: "-0.04em", color: C.down }}>
-        {b.declining}
-      </span>
-      <span style={{ display: "flex", fontSize: tall ? 24 : 18, fontWeight: 700, color: C.strong }}>{S.stage.axisDown}</span>
-    </div>
-  );
-  const spy = anchor && (
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <span style={{ display: "flex", fontSize: tall ? 24 : 17, fontWeight: 700, color: C.muted }}>{posterName("SPY", locale)}</span>
-      <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: tall ? 30 : 22, fontWeight: 800, color: tone(anchor.change) }}>
-        {anchor.change !== 0 && <Tri up={anchor.change > 0} color={tone(anchor.change)} />}
-        {percent(anchor.change, locale)}
-      </span>
-    </div>
-  );
-  /* Günün uçları iki sütun: yükselenler | düşenler. */
-  const column = (list: number[]) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: tall ? 6 : 4 }}>
-      {list.map((i) => (
-        <div key={stocks[i].symbol} style={{ display: "flex", gap: 10, fontSize: tall ? 21 : 15, fontWeight: 700 }}>
-          <span style={{ display: "flex", color: C.strong, width: tall ? 76 : 54 }}>{stocks[i].symbol}</span>
-          <span style={{ display: "flex", color: tone(stocks[i].change) }}>{signed(stocks[i].change, locale)}</span>
+  const figures = (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: tall ? "flex-start" : "flex-end", gap: 6 }}>
+      {anchor && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ display: "flex", fontSize: tall ? 26 : 18, fontWeight: 700, color: C.strong }}>{S.skyline.figIndex}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: tall ? 44 : 34, fontWeight: 800, letterSpacing: "-0.04em", color: tone(anchor.change) }}>
+            {anchor.change !== 0 && <Tri up={anchor.change > 0} color={tone(anchor.change)} />}
+            {percent(anchor.change, locale)}
+          </span>
         </div>
-      ))}
+      )}
+      {b && (
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, fontSize: tall ? 24 : 18, fontWeight: 700 }}>
+          <span style={{ display: "flex", color: C.up }}>{S.seal.advancing.replace("{n}", String(b.advancing))}</span>
+          <span style={{ display: "flex", color: C.down }}>{S.seal.declining.replace("{n}", String(b.declining))}</span>
+        </div>
+      )}
     </div>
   );
-  const extremes = (
-    <div style={{ display: "flex", gap: tall ? 48 : 28 }}>
-      {ext.up.length > 0 && column(ext.up)}
-      {ext.down.length > 0 && column(ext.down)}
-    </div>
+  const legend = (
+    <span style={{ display: "flex", fontSize: tall ? 18 : 14, color: C.muted, fontWeight: 600 }}>
+      {`${S.skyline.legendWidth} · ${S.skyline.legendHeight}`}
+    </span>
   );
+  const scene = <Scene layout={layout} stocks={skyline.stocks} names={names} logos={logos} format={format} locale={locale} />;
 
   if (tall) {
     return (
-      <OgFrame eyebrow={`${S.poster.title} · ${formatEtDateLong(poster.date, locale)}`} rail={<div style={{ display: "flex" }} />}>
+      <OgFrame eyebrow={`${S.poster.title} · ${formatEtDateLong(poster.date, locale)}`} rail={legend}>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <OgTitle size={64}>{story.title}</OgTitle>
           <span style={{ display: "flex", fontSize: 28, lineHeight: 1.3, fontWeight: 700, color: C.body }}>{story.detail}</span>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-          {breadth}
-          {spy}
-        </div>
-        <Scene layout={layout} stocks={stocks} names={names} format={format} />
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-          {extremes}
-          <span style={{ display: "flex", fontSize: 18, color: C.muted, fontWeight: 600 }}>{S.stage.legendSize}</span>
-        </div>
+        {figures}
+        {scene}
       </OgFrame>
     );
   }
 
   return (
     <OgFrame eyebrow={`${S.poster.title} · ${formatEtDateLong(poster.date, locale)}`} rail={<div style={{ display: "flex" }} />}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 32 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, width: 340 }}>
-          <OgTitle size={44}>{story.title}</OgTitle>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 32 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, width: 640 }}>
+          <OgTitle size={42}>{story.title}</OgTitle>
           <span style={{ display: "flex", fontSize: 19, lineHeight: 1.3, fontWeight: 700, color: C.body }}>{story.detail}</span>
-          {breadth}
-          {spy}
-          {extremes}
         </div>
-        <Scene layout={layout} stocks={stocks} names={names} format={format} />
+        {figures}
       </div>
+      {scene}
     </OgFrame>
   );
 }
@@ -241,9 +309,12 @@ export async function GET(request: Request, context: RouteContext<"/gun/[tarih]/
   if (read.state === "error") return new Response(null, { status: 503 });
 
   const format: Format = new URL(request.url).searchParams.get("bicim") === "dikey" ? "tall" : "wide";
-  const [{ locale, t }, scene] = await Promise.all([getI18n(), getPosterSceneStocks(read.poster)]);
+  const [{ locale, t }, skyline] = await Promise.all([getI18n(), getPosterSkyline(read.poster)]);
+  /* Logolar yalnız etiketli binalar için (en çok ~10). */
+  const layout = skylineLayout({ stocks: skyline.stocks, districts: skyline.districts, mode: FORMATS[format].mode });
+  const logos = await loadWeekLogos(layout.rows.flatMap((row) => row.labels.map((label) => skyline.stocks[label.i].symbol)));
   const image = new ImageResponse(
-    <PosterCard poster={read.poster} stocks={scene.stocks} format={format} locale={locale} t={t} />,
+    <PosterCard poster={read.poster} skyline={skyline} logos={logos} format={format} locale={locale} t={t} />,
     { ...(format === "tall" ? TALL_SIZE : POSTER_OG_SIZE), fonts: await ogFonts() },
   );
   image.headers.set("Cache-Control", `public, max-age=${CACHE_SECONDS}`);

@@ -1,0 +1,152 @@
+/* "Daha Fazla" mega paneli (25 Ekim). Gerekçe MastheadNav.tsx başında,
+   gruplar nav-items.ts → MORE_GROUPS.
+
+   Satır ve karo kalıbı globals.css'teki `.masthead-row`,
+   `.masthead-feature-card` (üzerine gelme, odak, "buradasın" işareti,
+   zorunlu renk modu) — burada yalnız yerleşim ve grup tonu.
+
+   ÖLÇÜM (yerel geliştirme, oturumlu, 1280x800 / 1440x900 / 1920x1080, iki
+   tema): önce 704x~866 piksel, içerik 864 — 800 ve 900 piksellik ekranda
+   kaydırılıyordu. Sonra 1024 piksel genişlik, boy TR 491 / EN 474, iç
+   kaydırma yok, panel başlık kabının içinde, yatay taşma 0; 19 bağlantının
+   hepsi ≥ 44 piksel; ok tuşları, Home/End ve Escape (odak düğmeye döner)
+   sınandı. */
+
+/* Genişlik MastheadNav → PANEL_REM ile aynı sayı (64rem). Büyütülmüş
+   yazıda pencereye iner; sütunlar o zaman alt satıra sarar ve boy
+   `.masthead-dropdown`ın tavanında kayar (globals.css). */
+.panel {
+  width: min(64rem, calc(100vw - 2rem));
+  padding: 0.625rem;
+}
+
+/* Grup başlığı: sütunun h3'ü, kutu değil; renkli küçük im grubun tonu. */
+.head {
+  display: flex;
+  height: 1.75rem;
+  align-items: center;
+  gap: 0.45rem;
+  padding-inline: 0.625rem;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  font-weight: 600;
+}
+
+.swatch {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: none;
+  border-radius: 3px;
+  background: var(--group);
+}
+
+/* ---- Araçlar bandı: üç yatay karo ---- */
+.tools {
+  padding-bottom: 0.625rem;
+  margin-bottom: 0.375rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.toolList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+  gap: 0.5rem;
+  padding-inline: 0.25rem;
+}
+
+/* Global kart dikey (ikon üstte, 136 piksel); burada yatay ve kısa.
+   Özgüllük iki sınıf: global `.masthead-feature-card` kuralını yerleşimde
+   aşıyor, üzerine gelme/odak/güncel kuralları (aynı özgüllükte, ton)
+   yerinde kalıyor. */
+.tools .tool {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 4rem;
+  padding: 0.625rem 2rem 0.625rem 0.75rem;
+}
+
+.tools .tool :global(.masthead-row-arrow) {
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+/* ---- Dört niyet sütunu ---- */
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(13.5rem, 100%), 1fr));
+  gap: 0.25rem 0.375rem;
+}
+
+.column {
+  min-width: 0;
+}
+
+/* Grubun tonu: ikon karosu, başlık imi. Renkler /yenilikler'in alan
+   renkleriyle aynı anlamda (Changelog.module.css): piyasa `--chart-a`,
+   kişisel `--chart-b`; günlük parçalar `--chart-d`, öğrenme ve okuma
+   `--chart-c`. Doygun etkileşim mavisi yalnız araçlarda ve güncel satırda. */
+.column[data-group="daily"] { --group: var(--chart-d); }
+.column[data-group="market"] { --group: var(--chart-a); }
+.column[data-group="mine"] { --group: var(--chart-b); }
+.column[data-group="learn"] { --group: var(--chart-c); }
+
+/* İkon karosu grubun tonunda. Güncel satırın dolu mavi karosu (global,
+   üç sınıf) bu iki sınıfı aştığı için korunuyor. */
+.column :global(.masthead-row-icon) {
+  width: 2rem;
+  height: 2rem;
+  border-color: color-mix(in srgb, var(--group) 22%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--group) 11%, transparent);
+  color: var(--group);
+}
+
+@media (hover: hover) {
+  .column :global(.masthead-row:hover) :global(.masthead-row-icon) {
+    border-color: color-mix(in srgb, var(--group) 40%, transparent);
+    background: color-mix(in srgb, var(--group) 18%, transparent);
+  }
+}
+
+.column :global(.masthead-row[aria-current="page"]) :global(.masthead-row-icon) {
+  border-color: transparent;
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+/* Satır: en az 44 piksel dokunma hedefi; ipucu sararsa uzar. Ok yer
+   kaplamıyor (mutlak), ipucuna 26 piksel daha kalıyor: dört sütunda
+   ipuçlarının çoğu tek satır. */
+.row {
+  min-height: 2.75rem;
+  padding: 0.375rem 1.5rem 0.375rem 0.625rem;
+}
+
+.rowArrow {
+  position: absolute;
+  top: 0.625rem;
+  right: 0.5rem;
+}
+
+/* Canlı künye: bugünün bulmaca numarası, adın yanında mono. */
+.live {
+  flex: none;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-nano);
+  font-weight: 600;
+}
+
+/* ---- Yenilikler: dipte tam genişlik ---- */
+.footer {
+  margin-top: 0.375rem;
+  padding-top: 0.375rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.footer :global(.masthead-row-icon) {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+}

@@ -6,8 +6,8 @@ import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMot
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { DataError, DataStamp, EmptyState, PageHeader, Panel, PanelHeader, PanelLink, Skeleton } from "@/components/ui/primitives";
 import { CARD_INDEX_NAMES } from "@/lib/day-card";
-import type { DayPoster } from "@/lib/day-poster";
-import { getPosterArchive, getPosterSceneStocks } from "@/lib/day-poster-data";
+import { POSTER_ANCHOR, type DayPoster } from "@/lib/day-poster";
+import { getPosterArchive, getPosterSkyline, type PosterSkyline } from "@/lib/day-poster-data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn, directionOf, directionText, formatEtDateLong, formatPercent } from "@/lib/utils";
 import { PosterBoard } from "./PosterBoard";
@@ -27,12 +27,12 @@ import styles from "./PosterArchive.module.css";
  * seansın mürekkep sahnesi, yanında okunan karşılığı) → arşiv ızgarası →
  * damga → rehber (CLAUDE.md ekran sırası).
  *
- * ARŞİV KARTI POSTERİN KÜÇÜK HÂLİ (25 Ekim): günün sahnesinin minyatürü
- * — her hisse bir nokta, sektör sektör, posterle aynı yerleşim — ve
- * genişlik şeridi. Minyatür statik bir SVG dosyası (`/gun/[tarih]/minyatur`,
+ * ARŞİV KARTI POSTERİN KÜÇÜK HÂLİ (25 Ekim): günün silüetinin minyatürü
+ * — Nasdaq 100'ün yüz binası, posterle aynı yerleşim — ve genişlik
+ * şeridi. Minyatür statik bir SVG dosyası (`/gun/[tarih]/minyatur`,
  * gerekçesi orada): kartlar `img` ile tembel yükleniyor, sayfanın HTML'i
- * otuz sahnenin 15.000 noktasını taşımıyor. Kutunun oranı sabit
- * (`object-fit: contain`), yani dosya gelince kart kaymıyor. Sahnenin
+ * otuz siluetin 3.000 binasını taşımıyor. Kutunun oranı sabit
+ * (`object-fit: contain`), yani dosya gelince kart kaymıyor. Siluetin
  * hareketli hâli yalnız en üstteki seansta oynuyor.
  *
  * AD TEK: menü ve sayfa "Günün Posteri", arşiv bölümü ve posterden dönüş
@@ -54,10 +54,11 @@ export function PosterArchive({ locale, t }: { locale: Locale; t: Dictionary }) 
 }
 
 const SKELETON_CARDS = 6;
-/** Minyatürün kutusu (sahne birimi; `mini` düzeni 320 en). Sahnenin boyu
- *  güne göre değişiyor, kutu sabit ve dosya içine sığıyor. */
+/** Minyatürün kutusu (sahne birimi; `mini` düzeni 320 en). Siluetin boyu
+ *  güne göre değişiyor (en çok 2 × 52 + pay), kutu sabit ve dosya içine
+ *  sığıyor. */
 const MINI_W = 320;
-const MINI_H = 150;
+const MINI_H = 110;
 
 function ArchiveSkeleton() {
   return (
@@ -102,14 +103,16 @@ async function ArchiveBody({ locale, t }: { locale: Locale; t: Dictionary }) {
     );
   }
   const [latest, ...rest] = read.posters;
-  const scene = latest ? await getPosterSceneStocks(latest) : null;
-  if (!latest || !scene) {
+  if (!latest) {
     return (
       <Panel>
         <EmptyState title={A.empty} scene="chart" />
       </Panel>
     );
   }
+  /* Kartın cümlesi ve en güçlü/zayıf sektörü mahallelerden; sembol
+     tablosu istek başına bir kez okunuyor (`getSymbolNames` önbellekli). */
+  const [skyline, ...skylines] = await Promise.all(read.posters.map((poster) => getPosterSkyline(poster)));
 
   return (
     <>
@@ -119,9 +122,7 @@ async function ArchiveBody({ locale, t }: { locale: Locale; t: Dictionary }) {
       <Panel className={styles.latest}>
         <PosterBoard
           poster={latest}
-          stocks={scene.stocks}
-          sized={scene.sized}
-          unplaced={scene.unplaced}
+          skyline={skyline}
           locale={locale}
           t={t}
           action={<PanelLink href={`/gun/${latest.date}`}>{A.openPoster}</PanelLink>}
@@ -132,9 +133,9 @@ async function ArchiveBody({ locale, t }: { locale: Locale; t: Dictionary }) {
         <Panel>
           <PanelHeader title={A.title} meta={A.listMeta.replace("{n}", String(rest.length))} />
           <ul className={styles.grid}>
-            {rest.map((poster) => (
+            {rest.map((poster, index) => (
               <li key={poster.date}>
-                <ArchiveCard poster={poster} locale={locale} t={t} />
+                <ArchiveCard poster={poster} skyline={skylines[index]} locale={locale} t={t} />
               </li>
             ))}
           </ul>
@@ -146,14 +147,14 @@ async function ArchiveBody({ locale, t }: { locale: Locale; t: Dictionary }) {
   );
 }
 
-function ArchiveCard({ poster, locale, t }: { poster: DayPoster; locale: Locale; t: Dictionary }) {
+function ArchiveCard({ poster, skyline, locale, t }: { poster: DayPoster; skyline: PosterSkyline; locale: Locale; t: Dictionary }) {
   const A = t.daySignature.archive;
   const S = t.daySignature.seal;
   const sectorName = (symbol: string) => posterName(symbol, locale);
-  const story = posterStoryText(poster, locale, t);
-  const anchor = poster.indices.find((move) => move.symbol === "SPY");
-  const strongest = poster.sectors[0];
-  const weakest = poster.sectors[poster.sectors.length - 1];
+  const story = posterStoryText(poster, skyline.districts, locale, t);
+  const anchor = poster.indices.find((move) => move.symbol === POSTER_ANCHOR);
+  const strongest = skyline.districts[0];
+  const weakest = skyline.districts[skyline.districts.length - 1];
   const date = formatEtDateLong(poster.date, locale);
   const pct = (value: number) => formatPercent(value, locale);
   return (
@@ -166,7 +167,7 @@ function ArchiveCard({ poster, locale, t }: { poster: DayPoster; locale: Locale;
         <span className={styles.cardDate}>{date}</span>
         {anchor && (
           <span className={styles.cardAnchor}>
-            <span className={styles.cardAnchorName}>{CARD_INDEX_NAMES.SPY}</span>
+            <span className={styles.cardAnchorName}>{CARD_INDEX_NAMES[POSTER_ANCHOR]}</span>
             <span className={directionText(directionOf(anchor.change))}>{pct(anchor.change)}</span>
           </span>
         )}
@@ -183,7 +184,7 @@ function ArchiveCard({ poster, locale, t }: { poster: DayPoster; locale: Locale;
           </span>
         </span>
       )}
-      {/* Günün sahnesi, küçük ve durağan. İki tema iki dosya; görünmeyen
+      {/* Günün silueti, küçük ve durağan. İki tema iki dosya; görünmeyen
           `display: none` ve tembel olduğu için hiç inmiyor. Kartın adı
           `aria-label`da, minyatür süs (`alt=""`). */}
       <span className={styles.cardScene}>
@@ -201,16 +202,18 @@ function ArchiveCard({ poster, locale, t }: { poster: DayPoster; locale: Locale;
           />
         ))}
       </span>
-      <span className={styles.cardFoot}>
-        <span>
-          <span className={styles.footLabel}>{A.strongest}</span> {sectorName(strongest.symbol)}{" "}
-          <span className={cn(styles.footValue, directionText(directionOf(strongest.change)))}>{pct(strongest.change)}</span>
+      {strongest && weakest && (
+        <span className={styles.cardFoot}>
+          <span>
+            <span className={styles.footLabel}>{A.strongest}</span> {sectorName(strongest.key)}{" "}
+            <span className={cn(styles.footValue, directionText(directionOf(strongest.change)))}>{pct(strongest.change)}</span>
+          </span>
+          <span>
+            <span className={styles.footLabel}>{A.weakest}</span> {sectorName(weakest.key)}{" "}
+            <span className={cn(styles.footValue, directionText(directionOf(weakest.change)))}>{pct(weakest.change)}</span>
+          </span>
         </span>
-        <span>
-          <span className={styles.footLabel}>{A.weakest}</span> {sectorName(weakest.symbol)}{" "}
-          <span className={cn(styles.footValue, directionText(directionOf(weakest.change)))}>{pct(weakest.change)}</span>
-        </span>
-      </span>
+      )}
     </Link>
   );
 }

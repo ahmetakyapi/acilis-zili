@@ -31,31 +31,34 @@ import {
 import { stripLocale } from "@/lib/i18n/routing";
 import type { Dictionary } from "@/lib/i18n";
 
-export type MoreGroup = "analyze" | "mine" | "data" | "learn" | "read" | "daily";
+export type MoreGroup = "tools" | "daily" | "market" | "mine" | "learn";
 
 /**
- * Panelde grupların sırası — taşan şerit sekmeleri "data"nın başına iner.
+ * Gruplar KULLANICININ NİYETİNE göre (25 Ekim, sahibinin isteği: "çok daha
+ * iyi, daha mantıklı ve görsel"). Eski altı grup ekranın TÜRÜNE göreydi
+ * (Analiz Araçları, Portföy ve Maliyet, Piyasa Verisi, Öğren, Oku, Her
+ * Gün) ve iki sütunun satır satır hizası için gruplar dengeleniyordu:
+ * Olasılıklar "Piyasa Verisi"ne değil "Her Gün"e, Hisseyi Bil "Öğren"e
+ * girmişti; "Her Gün" bandında üçüncü satır tek başına kalıyordu. Panel 736
+ * piksel genişlik, ~860 piksel boydu ve 900 piksellik ekranda taşıyordu.
  *
- * "analyze" panelin ÜSTÜNDE iki sütuna yayılan bant (11 Ekim, sahibinin
- * isteği: Hisse Seçimi "mantıklı, güzel bir yere"). Hisse Seçimi "Veri ve
- * Araçlar"ın altıncı satırıydı; oysa Teknik Analiz ile birlikte Claude
- * analizinin iki odağından biri ve bir başvuru ekranı değil, bir araç.
- * Bantta Karşılaştır da var: ikisi de "bir hisseyi sına/oku" işi. Sol sütun
- * böylece 1 başlık + 5 satır, sağ 1 + 2 + 1 + 2 — iki sütun yine aynı dipte.
+ * Şimdi beş niyet:
+ * - "tools"  Araçlar — bir hisseyi sına, evreni süz, yan yana koy. Panelin
+ *            ÜSTÜNDE üç büyük karo (11 Ekim kararı: Hisse Seçimi "mantıklı,
+ *            güzel bir yere").
+ * - "daily"  Her Gün — her gün yenilenen parçalar: poster, grafik,
+ *            bulmaca, bülten.
+ * - "market" Piyasa — veriye bakılan ekranlar: makro, takvim, olasılıklar,
+ *            ünlü yatırımcılar, haberler. Şeritten taşan sekmeler buraya,
+ *            grubun başına iner (yalnız büyütülmüş yazıda).
+ * - "mine"   Portföy ve Maliyet — kendi hesabın ve getiriden düşenler.
+ * - "learn"  Öğren ve Oku — rehber, sözlük, topluluk.
  *
- * 17 Ekim (sahibinin ekran görüntüsü: "eşit sayıda satır varken sağ ve sol
- * eşit hizada olmalı"): sağ sütun 1 + 2 + 1 + 3, sol 1 + 5'ti; sağdaki
- * ikinci başlık yüzünden üçüncü satırdan sonra her satır 38 piksel kayık
- * duruyordu. Sol da iki gruba bölündü — "Portföy ve Vergi" (kişisel
- * hesap ekranları, 2) ve "Piyasa Verisi" (3) — iki sütun artık satır satır
- * aynı hatta. Taşan şerit sekmeleri "data"ya iner (yalnız büyütülmüş yazıda).
+ * Geniş ekranda araçlar bandının altında dört sütun (MastheadNav); /menu
+ * aynı sırayı ve başlıkları kullanır (`menuGroupOf`). Satır sırası grubun
+ * içinde dizi sırası.
  */
-/*
- * "daily" (24 Ekim): panelin DİBİNDE, iki sütunlu "Her Gün" bandı — Günün
- * Grafiği ve Günün Posteri. Sütunlardan birine girselerdi sol ve sağ sütun
- * satır satır aynı hatta durmazdı (17 Ekim kararı, `tests/nav-items.test.ts`).
- */
-export const MORE_GROUPS: readonly MoreGroup[] = ["analyze", "mine", "data", "learn", "read", "daily"];
+export const MORE_GROUPS: readonly MoreGroup[] = ["tools", "daily", "market", "mine", "learn"];
 
 /** Masthead şeridinde taşma önceliği — 1 en son taşar. */
 export type StripRank = 1 | 2 | 3 | 4 | 5 | 6;
@@ -78,14 +81,25 @@ export type NavItem = {
    */
   strip?: { rank: StripRank; label?: (t: Dictionary) => string };
   /**
-   * Masaüstünde "Daha Fazla" panelinin sabit satırı ve grubu. Panel iki
-   * sütun: solda veri ekranları, sağda öğrenme ve okuma (28 Eylül; tek
-   * sütunda on satır 900 piksellik bir liste oluyordu).
+   * Masaüstünde "Daha Fazla" panelinin sabit satırı ve grubu. Panel 28
+   * Eylül'den beri sütunlu (tek sütunda on satır 900 piksellik bir liste
+   * oluyordu); 25 Ekim'den beri araçlar bandı ve dört niyet sütunu
+   * (MORE_GROUPS).
    */
   more?: MoreGroup;
   /** Paneldeki ikinci satır — /menu ile aynı sözlük anahtarı. */
   hint?: (t: Dictionary) => string;
+  /**
+   * Şerit sekmesinin telefondaki /menu grubu. Telefonda şerit yok; sekme
+   * anlamca ait olduğu grupta durur (Piyasalar → Piyasa, Teknik → Araçlar).
+   */
+  menu?: MoreGroup;
 };
+
+/** /menu'de satırın grubu: panel satırıysa paneldeki grup, sekmeyse `menu`. */
+export function menuGroupOf(item: NavItem): MoreGroup | undefined {
+  return item.more ?? item.menu;
+}
 
 /**
  * Mobil alt çubuk dört sekme: Piyasa · Bilanço · Mercek · Menü.
@@ -180,6 +194,7 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: true,
     shortLabel: (t) => t.nav.marketsShort,
     strip: { rank: 1 },
+    menu: "market",
     hint: (t) => t.menu.hintMarkets,
   },
   {
@@ -196,6 +211,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: ChartLineUp,
     inBottomBar: false,
     strip: { rank: 4, label: (t) => t.nav.technical },
+    menu: "tools",
     hint: (t) => t.menu.hintTechnical,
   },
   {
@@ -206,10 +222,11 @@ export const NAV_ITEMS: NavItem[] = [
     /* Taşma sırasında İLK iner (6): 500+ satırlık dizin bir başvuru
        ekranı ve aramadan da açılıyor; Temalar (5) her gün bakılan ekran. */
     strip: { rank: 6 },
+    menu: "market",
     hint: (t) => t.menu.hintCompanies,
   },
   {
-    /* PORTFÖY "DAHA FAZLA"DA, veri grubunun başında (4 Ekim, sahibinin
+    /* PORTFÖY "DAHA FAZLA"DA, "Portföy ve Maliyet"in başında (4 Ekim, sahibinin
        isteği: "yalnız profil kısmında görünmesin"). Favoriler'in hesap
        panelinde kalma gerekçesi (misafire duvar gösteren sekme) burada da
        geçerli, ama portföy teknik planla birlikte her gün bakılan bir ekran
@@ -228,7 +245,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.macro,
     icon: Percent,
     inBottomBar: false,
-    more: "data",
+    more: "market",
     hint: (t) => t.menu.hintMacro,
   },
   {
@@ -238,6 +255,7 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: true,
     shortLabel: (t) => t.nav.earningsShort,
     strip: { rank: 2 },
+    menu: "market",
     hint: (t) => t.menu.hintEarnings,
   },
   {
@@ -245,7 +263,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.nav.calendar,
     icon: CalendarBlank,
     inBottomBar: false,
-    more: "data",
+    more: "market",
     hint: (t) => t.menu.hintCalendar,
   },
   {
@@ -258,6 +276,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Scroll,
     inBottomBar: true,
     strip: { rank: 3 },
+    menu: "learn",
     hint: (t) => t.menu.hintStories,
   },
   {
@@ -270,7 +289,20 @@ export const NAV_ITEMS: NavItem[] = [
     icon: SquaresFour,
     inBottomBar: false,
     strip: { rank: 5, label: (t) => t.nav.themes },
+    menu: "market",
     hint: (t) => t.menu.hintThemes,
+  },
+  {
+    /* OLASILIKLAR (25 Ekim) — "Piyasa"da, Takvim'in ardında: Fed kararı
+       ve seçim için piyasanın fiyatladığı olasılık bir piyasa verisi. İlk
+       gün "Her Gün" bandına konmuştu; yalnız iki sütunun satır hizası
+       öyle istiyordu (gerekçe MORE_GROUPS, 25 Ekim yeniden kuruluş). */
+    href: "/olasiliklar",
+    label: (t) => t.probabilities.title,
+    icon: ChartPieSlice,
+    inBottomBar: false,
+    more: "market",
+    hint: (t) => t.probabilities.menuHint,
   },
   {
     /* 29 Eylül: panelde Karşılaştır'ın ÜSTÜNDE (sahibinin isteği). 28 Eylül:
@@ -281,11 +313,11 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.investors.eyebrow,
     icon: UsersThree,
     inBottomBar: false,
-    more: "data",
+    more: "market",
     hint: (t) => t.menu.hintInvestors,
   },
   {
-    /* 11 Ekim: Daha Fazla'nın üst bandında, ilk kart ("analyze", gerekçe
+    /* 11 Ekim: Daha Fazla'nın üst bandında, ilk kart ("tools", gerekçe
        MORE_GROUPS'ta). 3 Ekim'den beri "Veri ve Araçlar"ın altıncı
        satırıydı. Şeritte değil: şerit ölçüsü (yukarıda) 1280'de 58 piksel
        bırakıyor, sekme sığmıyor. */
@@ -293,17 +325,17 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.screening.title,
     icon: Funnel,
     inBottomBar: false,
-    more: "analyze",
+    more: "tools",
     hint: (t) => t.menu.hintScreening,
   },
   {
-    /* HİSSE TARAYICI (15 Ekim) — analiz bandında Hisse Seçimi'nin yanı:
+    /* HİSSE TARAYICI (15 Ekim) — araçlar bandında Hisse Seçimi'nin yanı:
        biri tek hisseyi kurallarla sınıyor, öteki evreni ölçülerle süzüyor. */
     href: "/tarama",
     label: (t) => t.screener.title,
     icon: FunnelSimple,
     inBottomBar: false,
-    more: "analyze",
+    more: "tools",
     hint: (t) => t.menu.hintScreener,
   },
   {
@@ -311,10 +343,9 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.compare.title,
     icon: ChartBar,
     inBottomBar: false,
-    more: "analyze",
+    more: "tools",
     hint: (t) => t.menu.hintCompare,
   },
-
   {
     /* DAHA FAZLA'DA. Bir dönem yalnızca 1280 üstünde sekmeydi: aynı ekran
        dizüstünde menüde, masaüstünde şeritte duruyordu. Durağan bir
@@ -336,9 +367,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     /* ARACI KURUM KARŞILAŞTIRMASI (24 Ekim) — "Portföy ve Maliyet"te,
-       Vergi'nin ardında: komisyon da vergi gibi getiriden düşen bir maliyet.
-       Grup böylece üç satır; karşısındaki "Öğren" de (Rehber, Sözlük,
-       Hisseyi Bil) üç — satır satır hiza korunuyor (tests/nav-items.test.ts). */
+       Portföy'ün ardında: komisyon da vergi gibi getiriden düşen bir maliyet. */
     href: "/araci-kurumlar",
     label: (t) => t.brokers.title,
     icon: Bank,
@@ -358,55 +387,29 @@ export const NAV_ITEMS: NavItem[] = [
     hint: (t) => t.menu.hintTax,
   },
   {
-    /* TOPLULUK (15 Ekim) — okuma grubunda: üyelerin yazdığı, moderasyondan
+    /* TOPLULUK (15 Ekim) — "Öğren ve Oku"da: üyelerin yazdığı, moderasyondan
        geçmiş yazılar. Şeritte değil; akış dolup her gün bakılan bir ekran
        olursa sıra yeniden tartılır (Temalar'ın izlediği yol). */
     href: "/topluluk",
     label: (t) => t.community.feed.title,
     icon: ChatsCircle,
     inBottomBar: false,
-    more: "read",
+    more: "learn",
     hint: (t) => t.menu.hintCommunity,
   },
   {
+    /* Haberler "Piyasa"da (25 Ekim): okuyucu habere piyasada ne olduğunu
+       anlamak için bakıyor, okuma listesi olarak değil. */
     href: "/haberler",
     label: (t) => t.nav.news,
     icon: Newspaper,
     inBottomBar: false,
-    more: "read",
+    more: "market",
     hint: (t) => t.menu.hintNews,
   },
   {
-    /* HİSSEYİ BİL (24 Ekim) — "Öğren"de: oyun ama öğrettiği şey şirketlerin
-       kimliği (sektör, büyüklük, büyüme). */
-    href: "/bulmaca",
-    label: (t) => t.stockPuzzle.title,
-    icon: PuzzlePiece,
-    inBottomBar: false,
-    more: "learn",
-    hint: (t) => t.stockPuzzle.menuHint,
-  },
-  {
-    /* Masaüstünde yalnızca alt bilgide duruyordu. */
-    href: "/bulten",
-    label: (t) => t.footer.briefArchive,
-    icon: EnvelopeSimple,
-    inBottomBar: false,
-    more: "read",
-    hint: (t) => t.menu.hintBrief,
-  },
-  {
-    /* GÜNÜN GRAFİĞİ ve GÜNÜN POSTERİ (24 Ekim) — panelin dibindeki "Her
-       Gün" bandı: ikisi de her seansın sonunda yenilenen tek parça. Bant
-       iki sütunlu; satırlar üstteki sütunlarla aynı hizada. */
-    href: "/gunun-grafigi",
-    label: (t) => t.dailyChart.title,
-    icon: ChartBarHorizontal,
-    inBottomBar: false,
-    more: "daily",
-    hint: (t) => t.dailyChart.menuHint,
-  },
-  {
+    /* GÜNÜN POSTERİ ve GÜNÜN GRAFİĞİ (24 Ekim) — "Her Gün"ün başında:
+       ikisi de her seansın sonunda yenilenen tek parça. */
     href: "/gun",
     label: (t) => t.daySignature.poster.title,
     icon: Palette,
@@ -415,16 +418,33 @@ export const NAV_ITEMS: NavItem[] = [
     hint: (t) => t.daySignature.archive.menuHint,
   },
   {
-    /* OLASILIKLAR (25 Ekim) — "Her Gün" bandında: günde bir yenilenen
-       anlık görüntü. "Piyasa Verisi"ne girseydi karşısındaki "Oku" ile satır
-       satır hiza bozulurdu (tests/nav-items.test.ts); bant iki sütunlu,
-       üçüncü satır sol sütunun hizasında. */
-    href: "/olasiliklar",
-    label: (t) => t.probabilities.title,
-    icon: ChartPieSlice,
+    href: "/gunun-grafigi",
+    label: (t) => t.dailyChart.title,
+    icon: ChartBarHorizontal,
     inBottomBar: false,
     more: "daily",
-    hint: (t) => t.probabilities.menuHint,
+    hint: (t) => t.dailyChart.menuHint,
+  },
+  {
+    /* HİSSEYİ BİL (24 Ekim) — "Her Gün"de (25 Ekim; önce "Öğren"deydi):
+       her gün TR gece yarısı yeni bir hisse; okuyucu ona günlük bir parça
+       olarak dönüyor. Panelde yanında bugünün bulmaca numarası. */
+    href: "/bulmaca",
+    label: (t) => t.stockPuzzle.title,
+    icon: PuzzlePiece,
+    inBottomBar: false,
+    more: "daily",
+    hint: (t) => t.stockPuzzle.menuHint,
+  },
+  {
+    /* Masaüstünde yalnızca alt bilgide duruyordu. "Her Gün"de (25 Ekim):
+       bülten her seansın sabahı ve akşamı yazılıyor. */
+    href: "/bulten",
+    label: (t) => t.footer.briefArchive,
+    icon: EnvelopeSimple,
+    inBottomBar: false,
+    more: "daily",
+    hint: (t) => t.menu.hintBrief,
   },
   {
     /* ŞERİTTE DEĞİL, HESAP PANELİNDE — mobildeki karar. Misafir için sayfa
@@ -437,12 +457,8 @@ export const NAV_ITEMS: NavItem[] = [
     hint: (t) => t.menu.hintWatchlist,
   },
   {
-    /* YENİLİKLER (25 Ekim) — ŞERİTTE DE PANEL GRUPLARINDA DA DEĞİL. Panelin
-       sol ve sağ sütunu satır satır aynı hatta (17 Ekim kararı,
-       tests/nav-items.test.ts) ve dibindeki "Her Gün" bandı iki sütunlu:
-       bir gruba girseydi ya bir sütun bir satır uzardı ya da bant üç
-       satırla tek kalırdı. Sitenin kendisi hakkında bir sayfa, bir ekran
-       grubu değil; panelin EN DİBİNDE, hairline altında tam genişlikte tek
+    /* YENİLİKLER (25 Ekim) — ŞERİTTE DE PANEL GRUPLARINDA DA DEĞİL.
+       Sitenin kendisi hakkında bir sayfa, bir ekran grubu değil; panelin EN DİBİNDE, hairline altında tam genişlikte tek
        satır (MastheadNav), /menu'de de en altta "Site" bölümünde. Okurun
        görmediği giriş varsa "Daha Fazla" ve Menü sekmesinde nokta,
        satırda "Yeni" hapı (components/changelog/ChangelogBadge.tsx). */

@@ -81,8 +81,7 @@ export default async function WatchedEarningsPage(
     return (
       <MotionExperience className={styles.page}>
         <ScrollProgress />
-        <DirectoryHeader title={t.analysis.title} description={t.directory.analysisDescription} />
-        <EarningsTabs active="watchlist" t={t} className="-mt-1" />
+        <DirectoryHeader title={t.analysis.title} description={t.directory.analysisDescription} tabs={<EarningsTabs active="watchlist" t={t} inHeader />} />
         {/* PANELİN BAŞLIĞI VAR (25 Ekim): her panelin h2'si kuralı. Sayfada
             tek `h1` ve bu panel vardı; ekran okuyucunun başlık listesinde
             sekmenin içeriği hiç görünmüyordu. Başlık sekmenin adı, boş
@@ -161,6 +160,7 @@ export default async function WatchedEarningsPage(
       <DirectoryHeader
         title={t.analysis.title}
         description={t.directory.analysisDescription}
+        tabs={<EarningsTabs active="watchlist" t={t} inHeader />}
         /* Anahtar takvim sekmesiyle aynı yerde: başlığın sağ üstünde. */
         control={
           <Segment>
@@ -219,8 +219,6 @@ export default async function WatchedEarningsPage(
           </p>
         }
       </DirectoryHeader>
-
-      <EarningsTabs active="watchlist" t={t} className="-mt-1" />
 
       {userSymbols.length === 0 ? (
         <Panel>

@@ -12,7 +12,7 @@
    kendi "İKİYE BÖLÜNMÜŞTÜ" dersi).
 
    TABULAR FİGÜR KALDIRILDI — ve bu bir hata düzeltmesiydi. Dosya altı yerde
-   `font-variant-numeric: tabular-nums` yazıyordu; Schibsted Grotesk'te bu ayar
+   `tabular-nums` yazıyordu; Schibsted Grotesk'te bu ayar
    virgülü ve iki noktayı da rakam genişliğine çekiyor, yani ekranda
    "%0 , 6" ve "16 : 30" çıkıyordu (ekran görüntüsünde ölçüldü). Gerekçenin
    tamamı globals.css → "Sayısal okumalar". Sayılar sitenin geri kalanı gibi

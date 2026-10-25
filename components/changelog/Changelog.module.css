@@ -32,7 +32,7 @@
 /* DOM sırası dt → dd (geçerli `dl`); görsel sıra sayı önce. */
 .stats > div { display: flex; flex-direction: row-reverse; align-items: baseline; gap: 6px; }
 .stats dt { font-size: var(--text-small); color: var(--text-muted); }
-.stats dd { margin: 0; font-size: var(--text-lead); font-weight: 800; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+.stats dd { margin: 0; font-size: var(--text-lead); font-weight: 800; color: var(--text-strong); }
 @media (max-width: 39.99rem) {
   .stats { width: 100%; justify-content: space-between; gap: 10px; }
   .stats > div { flex-direction: column-reverse; align-items: flex-start; gap: 0; }
@@ -105,7 +105,7 @@
   font-size: var(--text-small); font-weight: 750; color: var(--text-strong);
 }
 .areaSwatch { width: 8px; height: 8px; border-radius: 3px; background: var(--area); }
-.areaCount { margin-left: auto; font-size: var(--text-tiny); font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.areaCount { margin-left: auto; font-size: var(--text-tiny); font-weight: 600; color: var(--text-muted); }
 .tiles { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
 .tile {
   position: relative; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 10px;
@@ -142,7 +142,7 @@ a.tile:hover .tileArrow { translate: 2px 0; color: var(--primary-ink); }
   gap: 10px 20px;
 }
 .toolGroup { display: flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; }
-.count { margin-left: 5px; font-variant-numeric: tabular-nums; opacity: .8; }
+.count { margin-left: 5px; opacity: .8; }
 
 /* ---- Eski sürümler: ay paneli, giriş başına tek satır ---- */
 .month { scroll-margin-top: calc(var(--app-bar-h, 64px) + 20px); }
@@ -157,11 +157,11 @@ a.tile:hover .tileArrow { translate: 2px 0; color: var(--primary-ink); }
 .entryRow::-webkit-details-marker { display: none; }
 .entryRow:hover { background: var(--primary-tint); }
 .entryRow:focus-visible { outline: 2px solid var(--line-focus); outline-offset: -2px; }
-.whenDay { font-size: var(--text-small); font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.whenDay { font-size: var(--text-small); font-weight: 700; color: var(--text-strong); white-space: nowrap; }
 .entryTitle { min-width: 0; font-size: var(--text-read); font-weight: 650; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .entryDots { display: inline-flex; gap: 4px; }
 .entryDot { width: 8px; height: 8px; border-radius: 999px; background: var(--area); }
-.entryCount { font-size: var(--text-tiny); color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.entryCount { font-size: var(--text-tiny); color: var(--text-muted); white-space: nowrap; }
 .entryIcon { color: var(--text-muted); transition: rotate .28s var(--ease-brand); }
 .entry[open] .entryIcon { rotate: 180deg; }
 @media (max-width: 39.99rem) {

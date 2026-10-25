@@ -4,6 +4,7 @@ import { useEffect, useRef, type CSSProperties } from "react";
 import { CheckCircle } from "@phosphor-icons/react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import type { Dictionary } from "@/lib/i18n";
+import { ChapterIcon, chapterToneStyle } from "./chapter-tone";
 import { markRead } from "./guide-progress-store";
 import { useGuideRead } from "./useGuideRead";
 import styles from "./GuideArticleProgress.module.css";
@@ -21,6 +22,12 @@ import styles from "./GuideArticleProgress.module.css";
  * okundu sayılır ve tarayıcıya yazılır (`guide-progress-store.ts`). Sayfayı
  * açıp kapatmak okumak değil; sonuna inmek en dürüst yaklaşık ölçü.
  * Gözlemci bir kez çalışıp kendini kapatıyor.
+ *
+ * BÖLÜMÜN TONUNDA (25 Ekim, ikinci tur): panel rehberdeki durak kartıyla
+ * aynı rengi ve ikonu taşıyor (`chapter-tone.ts`). Okunan dilimler tonun
+ * yarısı, bu yazı tonun tamamı ve kalın, kalanlar kulvar. Önceki tur bu
+ * yazıyı metin renginde, okunanları sitenin mavisinde çiziyordu; rehber
+ * sayfasında mor görünen bölüm burada mavi görünüyordu.
  */
 
 type Labels = Dictionary["guideVisuals"];
@@ -31,6 +38,7 @@ function fill(template: string, values: Record<string, string | number>): string
 
 export function GuideArticleProgress({
   slug,
+  chapterKey,
   chapter,
   chapterNumber,
   articles,
@@ -39,6 +47,8 @@ export function GuideArticleProgress({
   labels,
 }: {
   slug: string;
+  /** Bölümün anahtarı — ton ve ikon (`chapter-tone.ts`). */
+  chapterKey: string;
   chapter: string;
   chapterNumber: number;
   articles: { slug: string; title: string }[];
@@ -66,11 +76,16 @@ export function GuideArticleProgress({
   }, [slug]);
 
   return (
-    <section ref={ref} className={styles.progress} aria-labelledby="rehber-yerin">
+    <section ref={ref} className={styles.progress} aria-labelledby="rehber-yerin" style={chapterToneStyle(chapterKey)}>
       <div className={styles.head}>
-        <h2 id="rehber-yerin" className={styles.title}>
-          {labels.progressTitle}
-        </h2>
+        <span className={styles.titleRow}>
+          <span className={styles.icon} aria-hidden>
+            <ChapterIcon chapter={chapterKey} size={18} weight="duotone" />
+          </span>
+          <h2 id="rehber-yerin" className={styles.title}>
+            {labels.progressTitle}
+          </h2>
+        </span>
         <span className={`numeral ${styles.position}`}>
           {fill(labels.curriculumPosition, { index: curriculumIndex, total: curriculumTotal })}
         </span>

@@ -1,8 +1,14 @@
 /* Aracı kurum kartları ve yan yana karşılaştırma (25 Ekim görsel turu).
    Renk yalnız token'dan. Mavi yalnız etkileşimde (karşılaştır düğmesi,
-   kaynak numarası, seçili kartın halkası); veri tarafında renk YOK: ✓ ve ✗
-   mürekkep, ölçek nötr. Derinlik tonla: kart `--surface` panelin üstünde,
-   ücret bloğu `--surface-sunken`. Gölge, cam, ışıma yok. */
+   kaynak numarası, seçili kartın halkası). Kurum rengi (`--brand`, kayıt
+   lib/broker-brand.ts) YALNIZ İŞARETTE: kartın üst şeridi ve ölçekteki
+   nokta; metin hiçbir yerde kurum renginden gelmez. ✓ ve ✗ mürekkep.
+   Derinlik tonla: kart `--surface` panelin üstünde, ücret bloğu ve karolar
+   `--surface-sunken`. Gölge, cam, ışıma yok. */
+
+/* Kurum rengi temaya göre; kayıtta olmayan kurumda mürekkep. */
+.brand { --brand: var(--brand-l, var(--text-strong)); }
+:global(:root[data-theme="dark"]) .brand { --brand: var(--brand-d, var(--text-strong)); }
 
 /* ------------------------------------------------------------ ızgara */
 
@@ -29,14 +35,19 @@
   min-width: 0;
   height: 100%;
   border-radius: var(--radius-xl);
-  background: var(--surface);
+  background-color: var(--surface);
+  /* Üst şerit: kurum renginde 4 piksel. Arka plan resmi olarak çizildiği
+     için kartın yarıçapını kendiliğinden izliyor; tek renk, degrade değil. */
+  background-image: linear-gradient(var(--brand), var(--brand));
+  background-size: 100% 4px;
+  background-repeat: no-repeat;
   outline: 2px solid transparent;
   outline-offset: -2px;
   scroll-margin-top: calc(var(--app-bar-h, 69px) + 16px);
   transition: outline-color 0.28s var(--ease-brand), background-color 0.28s var(--ease-brand);
 }
 .card[data-selected] { outline-color: var(--primary); }
-.card:target { background: var(--primary-tint); }
+.card:target { background-color: var(--primary-tint); }
 
 /* Sahneli giriş: kartlar bir kez, sırayla (40 ms aralık, sekiz kartta
    280 ms bütçe). Hareketi azaltana son kare. */
@@ -55,7 +66,7 @@
   grid-template-columns: 44px minmax(0, 1fr);
   gap: 4px 12px;
   align-items: start;
-  padding: 16px 16px 12px;
+  padding: 18px 16px 12px;
 }
 .mono {
   display: grid;
@@ -134,14 +145,6 @@
   font-size: 12px;
   font-weight: 600;
 }
-.badgeNote {
-  grid-column: 1 / -1;
-  margin: 2px 0 0;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--text-muted);
-}
-
 /* ------------------------------------------------------------ ücret */
 
 .fee {
@@ -176,7 +179,7 @@
 
 /* Küçük ölçek: sıfırdan bu tutardaki en yüksek komisyona. Nokta bu kurum,
    gri çentikler öteki kurumlar — kartın "nerede durduğu" çizgiden okunur.
-   Yer değiştirme TRANSFORM ile (BrokerCostLine ile aynı gerekçe). */
+   Yer değiştirme TRANSFORM ile (BrokerBoard.module.css ile aynı gerekçe: düzen yeniden hesaplanmıyor). */
 /* Kayan raylar kutunun dışına uzanıyor (transform taşması): dış kap
    kırpıyor, 6 piksellik iç dolgu uçtaki noktanın yarısını kurtarıyor.
    Kırpılmazsa yan yana görünümün kaydırma kabı taşmayı "devamı var" diye
@@ -215,8 +218,8 @@
   height: 12px;
   translate: -50% -50%;
   border-radius: 50%;
-  background: var(--text-strong);
-  border: 2px solid var(--premium-surface);
+  background: var(--brand, var(--text-strong));
+  border: 2px solid var(--surface-sunken);
 }
 .scaleEnds {
   display: flex;
@@ -229,38 +232,87 @@
 @media (prefers-reduced-motion: reduce) {
   .tickRail, .dotRail { transition: none; }
 }
-
-.tariff {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
-  align-items: start;
-  margin-top: 10px;
-  padding-top: 10px;
+/* Sıra satırı: hairline'ın altında, mürekkep. Birinci sıra yalnız kalınlıkla
+   ayrılıyor (renk yargı taşımasın: sıra öneri değil). */
+.rank {
+  display: block;
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px solid var(--line-soft);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-body);
 }
+.rank[data-first] { font-weight: 800; color: var(--text-strong); }
 
-/* ------------------------------------------------------------ satırlar */
+/* ------------------------------------------------------------ karolar */
 
-.rows {
+/* ALTI KALEM, 3×2 KARO (telefonda 2×3). Karo en az 56 piksel (etiket + değer), değer tek
+   satır: sığmayan üç noktayla, tamamı Ayrıntı'da ve `title`da. */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 8px 8px 0;
+  padding: 0;
+  list-style: none;
+}
+.tile {
   display: flex;
   flex-direction: column;
-  margin: 0;
-  padding: 6px 16px 4px;
-  list-style: none;
-  flex: 1;
+  justify-content: space-between;
+  gap: 4px;
+  min-width: 0;
+  min-height: 56px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--surface-sunken);
 }
+.tileLabel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-muted);
+}
+.tileLabel svg { flex: none; }
+.tileValue {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text-strong);
+}
+.tileValue svg { flex: none; }
+.tileText { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile[data-mark="unspecified"] .tileValue { font-weight: 500; color: var(--text-muted); }
+/* 480 altında iki sütun: 390'da üç sütunlu karo 104 piksele düşüyor,
+   etiket iki satıra kırılıyor ve "Belirtilmemiş" bile üç noktaya
+   kesiliyordu (25 Ekim, ölçüldü). Bir karo satırı daha, okunur değer. */
+@media (max-width: 479px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ------------------------------------------------------------ ayrıntı */
+
+.details { display: flex; flex-direction: column; padding: 0 16px; }
 /* [ikon][etiket / değer / not][kaynak numaraları]. Satır en az 44 piksel:
    numaraların dokunma alanı komşu satıra binmesin. */
-.row {
+.detailRow {
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr) auto;
   gap: 0 12px;
   align-items: start;
   min-height: 44px;
   padding: 8px 0;
+  border-top: 1px solid var(--line-soft);
 }
-.row + .row { border-top: 1px solid var(--line-soft); }
 .rowIcon { padding-top: 1px; color: var(--text-muted); }
 .rowLabel { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); }
 .rowValue {
@@ -314,7 +366,6 @@
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
-  font-variant-numeric: tabular-nums;
   transition: background-color 0.2s var(--ease-brand), color 0.2s var(--ease-brand);
 }
 .ref::after { content: ""; position: absolute; inset: -10px -8px; }
@@ -329,8 +380,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0 12px;
-  margin-top: auto;
-  padding: 2px 16px 4px;
+  padding: 2px 0 4px;
   border-top: 1px solid var(--line-soft);
   font-size: 12px;
   color: var(--text-muted);
@@ -370,10 +420,10 @@
 @media (min-width: 640px) { .chip { min-height: 36px; } }
 .chip:hover { color: var(--text-strong); }
 .chip[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
-.chip[aria-pressed="true"] .mono { background: color-mix(in srgb, var(--on-primary) 22%, transparent); color: var(--on-primary); }
 .chip[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
 .chip:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
-.chip .mono { width: 26px; height: 26px; border-radius: 999px; font-size: 10.5px; }
+.chipMark { border-radius: 999px; }
+.chip[aria-pressed="true"] .chipMark { outline: 2px solid var(--on-primary); outline-offset: -1px; }
 
 /* ------------------------------------------------------------ yan yana */
 
@@ -395,7 +445,10 @@
   gap: 8px;
   padding: 12px;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-  background: var(--surface);
+  background-color: var(--surface);
+  background-image: linear-gradient(var(--brand), var(--brand));
+  background-size: 100% 4px;
+  background-repeat: no-repeat;
 }
 .cmpName { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .cmpName h4 { margin: 0; font-size: 15px; font-weight: 800; line-height: 1.2; color: var(--text-strong); overflow-wrap: anywhere; }
@@ -440,19 +493,14 @@
   padding: 2px 0 10px;
 }
 
-/* ------------------------------------------------------------ telefon kartı */
+/* ------------------------------------------------------------ katlama */
 
-/* TELEFONDA KART ÖZETİ (25 Ekim, koordinatör kararı). Uzun kart 390'da
-   sayfayı 7.410'dan 13.755 piksele çıkarıyordu. 640 altında kart katlı
-   açılıyor: kimlik, lisans rozeti, seçilen tutarın komisyonu ve ölçek,
-   kalem başına TEK SATIR (etiket solda, ✓/halka/✗ ve kısa değer sağda,
-   sığmayan değer üç noktayla). Notlar, kaynak numaraları ve dürüstlük
-   notları `data-fold` ile FoldToggle'ın altında; dürüstlük notu olan
-   kartta düğmenin yanında "Not Var". 640 ve üstünde hiçbir şey değişmiyor
-   (FoldToggle `phone`). Seçici FoldToggle'ın gizli onay kutusunu okuyor:
-   kutu `.foldHost`un içindeki tek checkbox. */
+/* "AYRINTI" HER GENİŞLİKTE KATLI (25 Ekim, kurum logoları turu; önceki
+   sürümde yalnız telefonda katlıydı ve kart 1440'ta 994 piksel uzuyordu).
+   Kökü kartın esnek sütununda büyüyor: katlama düğmesi hep dipte. */
 .foldHost { display: contents; }
-.badgeNoteWrap { grid-column: 1 / -1; }
+.foldHost > * { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: flex-end; min-width: 0; margin-top: 4px; }
+.foldHost label { align-self: flex-start; padding-inline: 16px; }
 .valueText { min-width: 0; }
 .rowMain { min-width: 0; }
 .caveat {
@@ -467,54 +515,21 @@
   font-size: 11.5px;
   font-weight: 650;
 }
+
 @media (max-width: 639px) {
-  .foldHost input[type="checkbox"]:not(:checked) ~ * .rowMain {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .foldHost input[type="checkbox"]:not(:checked) ~ * .rowMain .rowLabel { flex: none; }
-  .foldHost input[type="checkbox"]:not(:checked) ~ * .rowMain .rowValue {
-    flex: 1 1 auto;
-    justify-content: flex-end;
-    align-items: center;
-    min-width: 0;
-    margin: 0;
-    font-size: 13px;
-  }
-  .foldHost input[type="checkbox"]:not(:checked) ~ * .rowMain .rowValue svg { margin-top: 0; }
-  .foldHost input[type="checkbox"]:not(:checked) ~ * .valueText {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .foldHost input[type="checkbox"]:not(:checked) ~ * .row { min-height: 0; padding: 7px 0; align-items: center; }
-  .foldHost input[type="checkbox"]:not(:checked) ~ * .rowIcon { padding-top: 0; }
-  .foldHost input[type="checkbox"]:not(:checked) ~ * .tariff { margin-top: 8px; padding-top: 8px; }
-  .foldHost input[type="checkbox"]:not(:checked) ~ * .row { padding: 6px 0; }
+  .head { padding: 16px 14px 10px; }
   .fee { padding: 10px 10px 8px; }
   .scale { margin-top: 8px; }
-  /* Künye ile katlama düğmesi aynı hatta: künye solda, düğme sağda. */
-  .foot { min-height: 36px; padding: 0 0 0 14px; border-top: 1px solid var(--line-soft); margin-top: 6px; }
-  .foldHost input[type="checkbox"]:not(:checked) ~ label { position: absolute; right: 0; bottom: -4px; }
-  .head { padding: 14px 14px 10px; }
-  .rows { padding: 2px 14px 0; }
   .feeValue { font-size: 26px; }
-  /* Başlık tek satır: harf karosu 36, ad, sağda yalnız ikonlu 44 piksellik
+  .details { padding: 0 14px; }
+  .foldHost label { padding-inline: 14px; }
+  /* Başlık tek satır: logo, ad, sağda yalnız ikonlu 44 piksellik
      karşılaştır düğmesi. Rozet satırı `contents` olup başlık ızgarasına
-     dağılıyor; düğme ikinci satırdan birinci satırın sağına çıkıyor (390'da
-     kart başına 44 piksel). */
-  .head { grid-template-columns: 36px minmax(0, 1fr) 44px; align-items: center; }
-  .head > .mono { width: 36px; height: 36px; border-radius: 10px; font-size: 13px; }
+     dağılıyor; düğme ikinci satırdan birinci satırın sağına çıkıyor. */
+  .head { grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; }
   .badgeRow { display: contents; }
   .badgeRow > .badge { grid-column: 1 / -1; justify-self: start; margin-top: 8px; }
-  .badgeRow > [data-fold] { grid-column: 1 / -1; justify-self: start; margin-top: 8px; }
   .pickSlot { grid-column: 3; grid-row: 1; margin-left: 0; }
   .pick { width: 44px; padding: 0; justify-content: center; }
   .pickText { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  /* Katlama düğmesi kartın iç kenarından. */
-  .foldHost label { padding-inline: 14px; }
 }
-/* FoldToggle'ın kökü kartın esnek sütununda büyüyor: künye hep dipte. */
-.foldHost > * { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; }
-.foldHost label { align-self: flex-start; }

@@ -171,6 +171,7 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
       <DirectoryHeader
         title={t.analysis.title}
         description={t.earningsWeek.description}
+        tabs={<EarningsTabs active="week" t={t} inHeader />}
       >
         {/* EYLEMLER KAHRAMANDA. Görseller sayfanın en altındaydı ve indirme
             bağlantısı ancak iki panel aşağıda bulunuyordu; oysa bu sayfanın
@@ -199,7 +200,6 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
         </div>
       </DirectoryHeader>
 
-      <EarningsTabs active="week" t={t} className="-mt-2" />
 
       {/* ---- Seçim şeridi: hangi hafta, öteki haftalar ----
           Bağlantılar `scroll={false}`: hafta değiştiren okuyucu sayfanın
@@ -237,14 +237,22 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
         </Suspense>
       </Panel>
 
+      {/* YEDEK BİR EKRAN BOYU YER TUTUYOR (25 Ekim, ikinci tur). Kapak
+          kompakt banda inince yedeğin altındaki rehber ipucu ve alt bilgi
+          ilk ekrana girdi; gerçek gövde (pano + gün gün tam takvim) her
+          zaman ekrandan uzun ve indiğinde ikisini ekran dışına itiyordu:
+          1920×1080'de CLS 0,17 (ölçüldü). Yer tutucu bir ekran boyu;
+          gövde ondan kısa kalmıyor. */}
       <Suspense
         fallback={
-          <Panel>
-            <PanelHeader title={t.earningsWeek.anticipatedTitle} meta={t.earningsWeek.anticipatedMeta} />
-            <div className={board.boardPanel}>
-              <WeekBoardSkeleton />
-            </div>
-          </Panel>
+          <div className={board.bodyFallback}>
+            <Panel>
+              <PanelHeader title={t.earningsWeek.anticipatedTitle} meta={t.earningsWeek.anticipatedMeta} />
+              <div className={board.boardPanel}>
+                <WeekBoardSkeleton />
+              </div>
+            </Panel>
+          </div>
         }
       >
         <WeekBody monday={monday} range={range} today={today} locale={locale} t={t} />

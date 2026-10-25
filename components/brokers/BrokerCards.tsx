@@ -46,6 +46,8 @@ import { ChipStrip } from "@/components/ui/ChipStrip";
 import { FoldToggle } from "@/components/ui/FoldToggle";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import { Segment, SegmentItem } from "@/components/ui/primitives";
+import { brandVars } from "@/lib/broker-brand";
+import { BrokerMark } from "./BrokerMark";
 import { useAmountIndex, useSearchString, writeSearch } from "./broker-view-state";
 import styles from "./BrokerCards.module.css";
 
@@ -58,12 +60,16 @@ import styles from "./BrokerCards.module.css";
  * döndü; matris kaynak katmanı olarak "Tüm Tarife Ayrıntıları" altında
  * katlı duruyor (BrokerTable).
  *
- * KART: baş harf rozeti (kurum logoları depoda ve lisans kaydında yok),
- * lisans rozeti, kaydırıcının tutarında komisyon (büyük rakam) ve altında
- * küçük ölçek — nokta bu kurum, gri çentikler ötekiler, ölçek maliyet
- * çizgisiyle AYNI (sıfırdan bu tutardaki en yüksek komisyona; aynı sayı aynı
- * kaynaktan: `costLine`). Sonra kalem başına ikon + etiket satırı, her
- * değerin yanında kaynak numarası, dipte okunduğu gün.
+ * KART (25 Ekim, kurum logoları turu): kurumun logosu ve kimlik renginde
+ * üst şerit (`lib/broker-brand.ts`), lisans rozeti, kaydırıcının tutarında
+ * komisyon (büyük rakam), altında küçük ölçek — renkli nokta bu kurum, gri
+ * çentikler ötekiler, ölçek maliyet çizgisiyle AYNI (sıfırdan bu tutardaki en
+ * yüksek komisyona; aynı sayı aynı kaynaktan: `costLine`) — ve sıra satırı.
+ * Sonra altı kalem 3×2 KARO: ikon, kısa etiket, ✓/✗/halka ve kısa değer.
+ * Tarifenin yazılışı, notlar, kaynak numaraları ve okunduğu gün her
+ * genişlikte katlı "Ayrıntı"da. En uzun kart 1440'ta 994 pikseldi; karo
+ * ızgarasıyla 459 (390'da 490, 768'de 509; iki tema, iki dil, taşma ve CLS
+ * sıfır — 25 Ekim, ölçüldü).
  *
  * SIRA ÖNERİ DEĞİL: varsayılan ad sırası; komisyon sırası okuyucunun seçimi
  * ve panelin dibindeki künye hangi tutarın komisyonu olduğunu söylüyor.
@@ -76,6 +82,9 @@ import styles from "./BrokerCards.module.css";
  */
 
 const CARD_MOTION = { type: "tween", duration: 0.42, ease: EASE_BRAND_POINTS } as const;
+
+/** Karo ızgarasının kalemleri, okuma sırasıyla (3×2). Komisyon ve lisans karoda değil: ikisi kartın başında. */
+const TILE_ORDER = ["fractional", "data", "w8ben", "options", "custody", "minimum"] as const satisfies readonly BrokerColumn[];
 
 type IconComponent = typeof Coins;
 
@@ -211,6 +220,14 @@ export function BrokerCards({
           <span>{usd(0, 0)}</span>
           <span>{usd(max)}</span>
         </span>
+        {!compact && (
+          <span className={cn("numeral", styles.rank)} data-first={entry.rank === 1 || undefined}>
+            {labels.rank
+              .replace("{amount}", amount)
+              .replace("{rank}", String(entry.rank))
+              .replace("{total}", String(line.priced.length))}
+          </span>
+        )}
       </>
     );
   };
@@ -310,7 +327,7 @@ export function BrokerCards({
                     if (!blocked) choose(card.id);
                   }}
                 >
-                  <span aria-hidden className={styles.mono}>{card.monogram}</span>
+                  <BrokerMark id={card.id} name={card.name} size="sm" className={styles.chipMark} />
                   {card.name}
                 </button>
               );
@@ -342,11 +359,9 @@ export function BrokerCards({
           >
             <div className={styles.cmpGrid} style={{ "--n": shown.length } as React.CSSProperties}>
               {shown.map((card) => (
-                <div key={card.id} className={styles.cmpHead}>
+                <div key={card.id} className={cn(styles.cmpHead, styles.brand)} style={brandVars(card.id) as React.CSSProperties}>
                   <div className={styles.cmpName}>
-                    <span aria-hidden className={styles.mono} data-size="sm">
-                      {card.monogram}
-                    </span>
+                    <BrokerMark id={card.id} name={card.name} size="md" />
                     <h4>{card.name}</h4>
                     <button
                       type="button"
@@ -403,94 +418,89 @@ export function BrokerCards({
                 data-broker-card
                 data-selected={on || undefined}
                 aria-labelledby={`kurum-${card.id}-ad`}
-                className={styles.card}
-                style={{ "--i": index } as React.CSSProperties}
+                className={cn(styles.card, styles.brand)}
+                style={{ "--i": index, ...brandVars(card.id) } as React.CSSProperties}
               >
-                <div className={styles.foldHost}>
-                <FoldToggle
-                  id={`kurum-not-${card.id}`}
-                  hiddenCount={1}
-                  phone
-                  more={labels.fold.more}
-                  less={labels.fold.less}
-                  mark={
-                    card.caveat ? (
-                      <span className={styles.caveat}>
-                        <Info size={13} weight="bold" aria-hidden />
-                        {labels.fold.caveat}
-                      </span>
-                    ) : undefined
-                  }
-                >
                 <div className={styles.head}>
-                  <span aria-hidden className={styles.mono}>
-                    {card.monogram}
-                  </span>
+                  <BrokerMark id={card.id} name={card.name} size="xl" />
                   <div className="min-w-0">
                     <h3 id={`kurum-${card.id}-ad`} className={styles.name}>
                       {card.name}
                     </h3>
                     {card.channel && <span className={styles.sub}>{card.channel}</span>}
-                    {card.counterparty && (
-                      <span className={styles.sub}>
-                        {labels.counterparty.replace("{name}", card.counterparty.name)}
-                      </span>
-                    )}
                   </div>
                   <div className={styles.badgeRow}>
                     <LicenceBadge card={card} labels={labels} />
-                    <Refs refs={card.licenceRefs} row />
                     <span className={styles.pickSlot}>{pickButton(card)}</span>
                   </div>
-                  {card.licenceNote && (
-                    <div data-fold className={styles.badgeNoteWrap}>
-                      <p className={styles.badgeNote}>{card.licenceNote}</p>
-                    </div>
-                  )}
                 </div>
 
                 <div className={styles.fee}>
                   <span className={styles.feeLabel}>{labels.feeLabel.replace("{amount}", amount)}</span>
                   {feeBlock(card, false)}
-                  <div className={styles.tariff}>
-                    <div className={styles.rowMain}>
-                      <span className={styles.rowLabel}>{labels.tariff}</span>
-                      <RowValue row={card.tariff} labels={labels} />
-                    </div>
-                    <Refs refs={card.tariff.refs} />
-                  </div>
                 </div>
 
-                <ul className={styles.rows}>
-                  {card.rows.map((row) => {
-                    const Icon = FEATURE_ICON[row.column];
-                    return (
-                      <li key={row.column} className={styles.row}>
-                        <span className={styles.rowIcon} aria-hidden>
-                          <Icon size={18} />
-                        </span>
-                        <div className={styles.rowMain}>
-                          <span className={styles.rowLabel}>{labels.columns[row.column]}</span>
-                          <RowValue row={row} labels={labels} />
-                        </div>
-                        <Refs refs={row.refs} />
-                      </li>
-                    );
+                <ul className={styles.tiles} aria-label={labels.tariff}>
+                  {TILE_ORDER.map((column) => {
+                    const row = card.rows.find((item) => item.column === column);
+                    return row ? <Tile key={column} row={row} labels={labels} /> : null;
                   })}
                 </ul>
 
-                {/* Künye katlamanın İÇİNDE: telefonda okunduğu gün açık,
-                    kaynak listesine giden bağlantı katlı (kaynak satırı). */}
-                <div className={styles.foot}>
-                  <span>{card.checked}</span>
-                  <div data-fold>
-                    <a href={`#kaynaklar-${card.id}`} className={styles.footLink}>
-                      {labels.sourcesLink.replace("{n}", String(card.sourceCount))}
-                      <ArrowDown size={12} weight="bold" aria-hidden />
-                    </a>
-                  </div>
-                </div>
-                </FoldToggle>
+                {/* AYRINTI, HER GENİŞLİKTE KATLI (25 Ekim, kurum logoları
+                    turu): kartın ilk bakışı kimlik, komisyon ve altı karo;
+                    tarife yazılışı, notlar, kaynak numaraları ve okunduğu
+                    gün açılınca. Kaynak çapaları (`#kaynak-…`) aynı. */}
+                <div className={styles.foldHost}>
+                  <FoldToggle
+                    id={`kurum-not-${card.id}`}
+                    hiddenCount={1}
+                    narrow={false}
+                    more={labels.fold.more}
+                    less={labels.fold.less}
+                    mark={
+                      card.caveat ? (
+                        <span className={styles.caveat}>
+                          <Info size={13} weight="bold" aria-hidden />
+                          {labels.fold.caveat}
+                        </span>
+                      ) : undefined
+                    }
+                  >
+                    {/* Katlama kuralı kutunun KARDEŞİNİN İÇİNDEKİ `data-fold`u
+                        arıyor (FoldToggle.module.css); bu yüzden iki kat. */}
+                    <div>
+                      <div data-fold className={styles.details}>
+                        <DetailRow icon={Receipt} label={labels.tariff} row={card.tariff} labels={labels} />
+                        {card.rows.map((row) => (
+                          <DetailRow key={row.column} icon={FEATURE_ICON[row.column]} label={labels.columns[row.column]} row={row} labels={labels} />
+                        ))}
+                        <div className={styles.detailRow}>
+                          <span className={styles.rowIcon} aria-hidden>
+                            <ShieldCheck size={16} />
+                          </span>
+                          <div className={styles.rowMain}>
+                            <span className={styles.rowLabel}>{labels.columns.license}</span>
+                            <span className={styles.rowValue}>{labels.licence[card.licence]}</span>
+                            {card.licenceNote && <span className={styles.rowNote}>{card.licenceNote}</span>}
+                            {card.counterparty && (
+                              <span className={styles.rowNote}>
+                                {labels.counterparty.replace("{name}", card.counterparty.name)}
+                              </span>
+                            )}
+                          </div>
+                          <Refs refs={[...card.licenceRefs, ...(card.counterparty?.refs ?? [])].filter((ref, i, all) => all.findIndex((other) => other.n === ref.n) === i)} />
+                        </div>
+                        <div className={styles.foot}>
+                          <span>{card.checked}</span>
+                          <a href={`#kaynaklar-${card.id}`} className={styles.footLink}>
+                            {labels.sourcesLink.replace("{n}", String(card.sourceCount))}
+                            <ArrowDown size={12} weight="bold" aria-hidden />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </FoldToggle>
                 </div>
               </article>
             </motion.li>
@@ -550,6 +560,58 @@ function RowValue({ row, labels }: { row: CardRow; labels: BrokerCardsLabels }) 
         </div>
       )}
     </>
+  );
+}
+
+/** Karo: ikon, kısa etiket, işaret ve kısa değer. Uzun değer üç noktayla; tamamı Ayrıntı'da. */
+function Tile({ row, labels }: { row: CardRow; labels: BrokerCardsLabels }) {
+  const Icon = FEATURE_ICON[row.column];
+  const label = (labels.tileLabels as Partial<Record<BrokerColumn, string>>)[row.column] ?? labels.columns[row.column];
+  const text =
+    row.mark === "unspecified"
+      ? labels.unspecifiedShort
+      : row.mark === "no"
+        ? (row.value ?? labels.no)
+        : (row.value ?? labels.yes);
+  return (
+    <li className={styles.tile} data-mark={row.mark}>
+      <span className={styles.tileLabel}>
+        <Icon size={14} weight="bold" aria-hidden />
+        {label}
+      </span>
+      <span className={styles.tileValue} title={text}>
+        {row.mark === "yes" && <CheckCircle size={16} weight="fill" aria-hidden />}
+        {row.mark === "no" && <XCircle size={16} weight="bold" aria-hidden />}
+        {row.mark === "unspecified" && <CircleDashed size={16} weight="bold" aria-hidden />}
+        <span className={styles.tileText}>{text}</span>
+      </span>
+    </li>
+  );
+}
+
+/** Ayrıntıdaki satır: ikon, etiket, değer ve not, kaynak numaraları. */
+function DetailRow({
+  icon: Icon,
+  label,
+  row,
+  labels,
+}: {
+  icon: IconComponent;
+  label: string;
+  row: CardRow;
+  labels: BrokerCardsLabels;
+}) {
+  return (
+    <div className={styles.detailRow}>
+      <span className={styles.rowIcon} aria-hidden>
+        <Icon size={16} />
+      </span>
+      <div className={styles.rowMain}>
+        <span className={styles.rowLabel}>{label}</span>
+        <RowValue row={row} labels={labels} />
+      </div>
+      <Refs refs={row.refs} />
+    </div>
   );
 }
 

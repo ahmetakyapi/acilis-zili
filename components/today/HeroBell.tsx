@@ -32,7 +32,8 @@ import styles from "./HeroBell.module.css";
  * - SAYAÇ SIFIRA VARINCA da aynı zil çalıyor: Countdown `BELL_RANG_EVENT`
  *   yayınlıyor (gerekçe bell-event.ts) ve zil anında markanın karakteri
  *   kendisi vuruyor — yanda beliren ikinci bir zil yok.
- * - ŞİDDET GÜNDEN (24 Ekim): kapanıştan sonra künye (DaySeal) o günün
+ * - ŞİDDET GÜNDEN (24 Ekim): kapanıştan sonra ana sayfanın siluet şeridi
+ *   (`home/SkylineStrip.tsx`; 25 Ekim'e kadar künye DaySeal) o günün
  *   tek yönlülüğünü yazıyor (`bellEnergy`, lib/day-poster.ts; köprü
  *   `bell-energy.ts`) ve vuruş sahnesi onunla kuruluyor (`makeHeroTap`).
  *   Sıfırken kayıttaki `heroTap` ile birebir aynı sahne.

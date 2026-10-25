@@ -10,12 +10,12 @@
 
 export const probabilitiesTr = {
   title: "Olasılıklar",
-  subtitle: "Piyasaların Fed kararına, ABD ara seçimine ve büyük makro olaylara biçtiği olasılıklar; günde bir güncellenir.",
+  subtitle: "Fed kararı, ara seçim ve resesyon için piyasa olasılıkları.",
   metaDescription:
     "Fed'in sıradaki faiz kararı, 2026 ABD ara seçimi ve resesyon için tahmin piyasasında fiyatlanan olasılıklar: kaynağı ve saatiyle.",
-  menuHint: "Fed kararı ve ara seçim için piyasa olasılıkları",
+  menuHint: "Fed Kararı ve Ara Seçim Olasılıkları",
 
-  /* Tepedeki tek cümle — şablon + veri (lib/probabilities.ts → composeLead). */
+  /* Veriden tek cümle — şablon + veri (lib/probabilities.ts → composeLead); görsel turdan beri tepe şeridinin ekran okuyucu özeti. */
   leadPrefix: "Piyasa fiyatlarına göre ",
   leadFed: "{date} Fed toplantısında {move} olasılığı {p}",
   leadCongressSame: "{party} Temsilciler Meclisi'ni kazanma olasılığı {house}, Senato'yu kazanma olasılığı {senate}",
@@ -37,6 +37,18 @@ export const probabilitiesTr = {
   /* Olasılık kesinlik değildir — cümlenin altında, kısa. */
   certainty: "Olasılık kesinlik değildir: %70 olasılık biçilen bir olay, on seferden üçünde gerçekleşmez.",
 
+  /* Tepe şeridi: dört kadran (Fed, iki meclis, resesyon). */
+  stripAria: "Öne çıkan olasılıklar",
+  stripFed: "Fed · {date}",
+  stripRecession: "Resesyon 2027",
+  stripMove: { cut50: "Büyük İndirim", cut25: "İndirim", hold: "Sabit", hike25: "Artış", hike50: "Büyük Artış" },
+  stripParty: { dem: "Demokrat", rep: "Cumhuriyetçi" },
+  stripChance: "Olasılık",
+  stripWon: "Kazandı",
+  stripDelta: "24 Saatte {n}",
+  stripNoChange: "24 Saatte Değişmedi",
+  stripJump: "{label} kartına git",
+
   /* Fed paneli */
   fedTitle: "Fed'in Sıradaki Kararı",
   fedMeta: "{date} · {time}",
@@ -49,6 +61,8 @@ export const probabilitiesTr = {
     hike50: "25 bp'den Büyük Artış",
   },
   fedSides: { cut: "İndirim", hold: "Sabit", hike: "Artış" },
+  /* Yığının altındaki ölçek: kısa adlar; tam adlar `fedOutcomes`te (aria). */
+  fedScale: { cut50: "−50+ bp", cut25: "−25 bp", hold: "Sabit", hike25: "+25 bp", hike50: "+50+ bp" },
   fedBarLabel: "Karar seçeneklerinin olasılıkları: {list}",
   fedLineTitle: "Son 30 Gün",
   fedLineLabel: "Son 30 günde indirim, sabit ve artış olasılıkları",
@@ -76,6 +90,8 @@ export const probabilitiesTr = {
   /* Seçim */
   electionTitle: "2026 Ara Seçimi",
   electionMeta: "3 Kasım 2026",
+  electionMetaDays: "3 Kasım · {n} Gün Kaldı",
+  electionMetaToday: "3 Kasım · Seçim Günü",
   electionDaysLeft: "Gün Kaldı",
   electionToday: "Seçim Günü",
   electionPolls: "İlk sandıklar kapanıyor: {primary} · {secondary}",
@@ -91,7 +107,7 @@ export const probabilitiesTr = {
   chamberBarLabel: "{chamber}: {list}",
   chamberLineLabel: "{chamber} için son 30 günde parti olasılıkları",
   partyNote:
-    "Partiler sitenin yön renkleriyle (yeşil/kırmızı) çizilmez: o renkler burada yükseliş ve düşüş demek. İki parti aynı tonlu ailede, adıyla ve hep aynı tarafta.",
+    "Renkler: partiler ABD'deki alışkanlıkla çizilir, Demokratlar mavi, Cumhuriyetçiler kırmızı; bu kırmızı sitenin düşüş renginden ayrı bir tondur. Fed kararında yön renkleri kullanılmaz: indirim mor, sabit mavi, artış pirinç tonunda.",
 
   /* Diğer olaylar */
   otherTitle: "Diğer Olaylar",
@@ -137,10 +153,10 @@ export const probabilitiesTr = {
 
 export const probabilitiesEn: typeof probabilitiesTr = {
   title: "Probabilities",
-  subtitle: "What markets are pricing for the Fed's next decision, the US midterms and major macro events; updated daily.",
+  subtitle: "What markets price for the Fed, the midterms and a recession.",
   metaDescription:
     "Prediction-market probabilities for the Fed's next rate decision, the 2026 US midterms and a recession, with source and time.",
-  menuHint: "Market odds for the Fed and the midterms",
+  menuHint: "Fed and Midterm Odds",
 
   leadPrefix: "Market prices put ",
   leadFed: "the odds of {move} at the {date} Fed meeting at {p}",
@@ -161,6 +177,17 @@ export const probabilitiesEn: typeof probabilitiesTr = {
   leadChamber: { house: "House", senate: "Senate" },
   certainty: "A probability is not a certainty: an event priced at 70% fails to happen three times out of ten.",
 
+  stripAria: "Headline probabilities",
+  stripFed: "Fed · {date}",
+  stripRecession: "Recession 2027",
+  stripMove: { cut50: "Big Cut", cut25: "Cut", hold: "Hold", hike25: "Hike", hike50: "Big Hike" },
+  stripParty: { dem: "Democrat", rep: "Republican" },
+  stripChance: "Chance",
+  stripWon: "Won",
+  stripDelta: "{n} in 24h",
+  stripNoChange: "Unchanged in 24h",
+  stripJump: "Go to the {label} card",
+
   fedTitle: "The Fed's Next Decision",
   fedMeta: "{date} · {time}",
   fedLeadLabel: "Most Likely Outcome",
@@ -172,6 +199,7 @@ export const probabilitiesEn: typeof probabilitiesTr = {
     hike50: "Hike Above 25 bp",
   },
   fedSides: { cut: "Cut", hold: "Hold", hike: "Hike" },
+  fedScale: { cut50: "−50+ bp", cut25: "−25 bp", hold: "Hold", hike25: "+25 bp", hike50: "+50+ bp" },
   fedBarLabel: "Probabilities of the decision options: {list}",
   fedLineTitle: "Last 30 Days",
   fedLineLabel: "Probabilities of a cut, hold and hike over the last 30 days",
@@ -198,6 +226,8 @@ export const probabilitiesEn: typeof probabilitiesTr = {
 
   electionTitle: "2026 Midterm Elections",
   electionMeta: "November 3, 2026",
+  electionMetaDays: "November 3 · {n} Days Left",
+  electionMetaToday: "November 3 · Election Day",
   electionDaysLeft: "Days Left",
   electionToday: "Election Day",
   electionPolls: "First polls close: {primary} · {secondary}",
@@ -213,7 +243,7 @@ export const probabilitiesEn: typeof probabilitiesTr = {
   chamberBarLabel: "{chamber}: {list}",
   chamberLineLabel: "Party probabilities for the {chamber} over the last 30 days",
   partyNote:
-    "Parties are not drawn in the site's direction colors (green/red): here those mean up and down. Both parties share one tonal family, named and always on the same side.",
+    "Colors: parties follow the US convention, Democrats blue and Republicans red; this red is a different shade from the site's down color. The Fed decision avoids direction colors: cuts are purple, a hold is blue, hikes are brass.",
 
   otherTitle: "Other Events",
   recessionTitle: "US Recession in 2027",

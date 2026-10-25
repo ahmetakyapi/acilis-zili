@@ -1,40 +1,81 @@
-/* "Hisseyi Bil" yerleşimi (24 Ekim; 25 Ekim'de yeniden kuruldu). Parçaların
+/* "Hisseyi Bil" tahtası (24 Ekim; 25 Ekim'de iki kez yeniden kuruldu,
+   ikincisi tek ekran için — gerekçe StockPuzzle.tsx başında). Parçaların
    kendi stilleri kendi dosyalarında: PuzzleChart, ClueBoard, GuessList,
    GuessBox, PuzzleCover, PuzzleRecord. Derinlik tonla; gölge, cam,
    degrade yok (veri paneli). */
 
-.board { display:grid; gap:1.25rem; align-items:start; min-width:0; }
-@media (min-width: 1024px) {
-  .board { grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); }
+.board { display:grid; gap:.75rem; align-items:start; min-width:0; overflow-anchor:none; }
+
+/* Panel içi dolgu: başlıkla aynı yatay hat (px-4 / sm:px-5), alt dolgu
+   sıkı — tahtada her panelin dibindeki 20 piksel toplamda bir satır
+   ipucu ediyordu. */
+.leadBody, .cluesBody, .guessesBody { padding:0 1rem .875rem; }
+@media (min-width: 640px) {
+  .leadBody, .cluesBody, .guessesBody { padding:0 1.25rem 1rem; }
 }
 
-.note { margin:.75rem 0 0; font-size:var(--text-tiny); line-height:1.5; color:var(--text-muted); }
-.missing { margin:0 0 .875rem; font-size:var(--text-small); line-height:1.5; color:var(--text-muted); }
-.pool { margin:1rem 0 0; padding-top:.75rem; border-top:1px solid var(--line-soft); font-size:var(--text-tiny); line-height:1.5; color:var(--text-muted); }
+.missing { margin:0 0 .625rem; font-size:var(--text-small); line-height:1.5; color:var(--text-muted); }
 .axisLock { display:inline-flex; align-items:center; gap:.3125rem; }
 
 /* Tahminler başlığının künyesi: altı nokta ve "2/6 Tahmin". */
 .progress { display:inline-flex; align-items:center; gap:.5rem; }
-.box { margin-bottom:1rem; }
-.error { margin:0 0 .75rem; font-size:var(--text-small); color:var(--down); }
-
-/* ---- Kolonlar ve telefon sırası ----
-   TELEFON SIRASI (25 Ekim, 390×844'te ölçüldü): ana görsel (siluet ya da
-   kapak), TAHMİNLER, ipuçları, seri. Siluet ve tahmin kutusu ilk ekranda;
-   ipucu yolu kutunun altında. Masaüstünde sol kolon ana görsel + ipuçları,
-   sağ kolon tahminler + seri: bitince kapak kartı siluetin yerine geçtiği
-   için kolonlar oynanırken de bitince de dengede (ölçüm StockPuzzle.tsx
-   başındaki düzende). */
-.main, .side { display:contents; }
-.lead { order:0; min-width:0; }
-.guesses { order:1; min-width:0; }
-.clues { order:2; min-width:0; }
-.record { order:3; min-width:0; }
-@media (min-width: 1024px) {
-  .main, .side { display:flex; flex-direction:column; gap:1.25rem; min-width:0; }
-  .lead, .clues, .guesses, .record { order:0; }
+.box { margin-bottom:.625rem; }
+.error { margin:0 0 .5rem; font-size:var(--text-small); color:var(--down); }
+/* Dar satırda joker yalnız simge (adı `title` ve ekran okuyucuda). */
+@media (max-width: 419.98px) {
+  .jokerText { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 }
 
-/* Joker: tahmin kutusunun altında ikincil düğme ve tek satır açıklama. */
-.joker { display:flex; flex-wrap:wrap; align-items:center; gap:.25rem .75rem; margin-top:.625rem; }
-.jokerHint { flex:1 1 12rem; margin:0; font-size:var(--text-tiny); line-height:1.45; color:var(--text-muted); }
+/* ---- Kolonlar ve telefon sırası ----
+   TELEFON SIRASI: ana görsel (siluet ya da cevap), TAHMİNLER (giriş ve
+   yuvalar), ipuçları, seri. Masaüstünde sol kolon ana görsel + ipucu
+   ızgarası, sağ kolon tahminler + seri. */
+.main, .side { display:contents; }
+.lead { order:0; min-width:0; }
+.tabs { order:1; }
+.guesses { order:2; min-width:0; }
+.clues { order:2; min-width:0; }
+.record { order:3; min-width:0; }
+
+/* ---- Telefon ve tablet: yapışkan Tahminler / İpuçları anahtarı ----
+   Sitenin ray + hap dili (BriefSwitch, `Segment`), iki eşit düğme, 44 px.
+   Üst çubuğun hemen altına yapışır (`--app-bar-h`); zemin sayfa tonu,
+   altından kayan panel görünmesin (cam yok). Seçili olmayan bölüm yalnız
+   bu genişlikte gizli. */
+@media (max-width: 1023.98px) {
+  .tabs { position:sticky; top:var(--app-bar-h); z-index:5; display:grid; grid-template-columns:1fr 1fr; gap:3px; margin:-.375rem -.25rem; padding:.375rem .25rem; background:var(--page-bg); }
+  .tabs::before { content:""; position:absolute; inset:.375rem .25rem; z-index:-1; border-radius:999px; background:var(--surface-elevated); }
+  .tab { display:inline-flex; align-items:center; justify-content:center; gap:.4375rem; min-height:44px; margin:3px 0; border-radius:999px; font-size:var(--text-small); font-weight:600; color:var(--text-body); transition:background-color 200ms, color 200ms; }
+  .tab:first-child { margin-left:3px; }
+  .tab:last-child { margin-right:3px; }
+  .tab[aria-pressed="true"] { background:var(--primary); color:var(--on-primary); }
+  .tabMeta { font-weight:500; opacity:.8; }
+  .tabNew { padding:0 .375rem; border-radius:999px; background:var(--brass-wash); color:var(--brass-ink); font-size:var(--text-tiny); font-weight:700; line-height:1.5; }
+  .guesses[data-gizli], .clues[data-gizli] { display:none; }
+}
+@media (min-width: 1024px) {
+  .tabs { display:none; }
+}
+
+/* ---- Masaüstü: tek ekranlık tahta ----
+   Grafik yüksekliği görünür alandan: tahtanın geri kalanı (başlık,
+   ipucu ızgarası, panel başlıkları) sabit boyda, kalan dikey alan
+   siluete gidiyor. 1280×800 en dar ölçü.
+   ÖLÇÜM (25 Ekim, iki tema × TR/EN, başsız Chrome, hareket azaltılmış):
+   tahtanın en alt öğesi / görünür alanın dibi (üst çubuk 69'da biter,
+   piyasa şeridi altta).
+     1280×800  başlangıç 684 · üç yanlış 698 · kazanma 717 (EN 733) ·
+               kaybetme 756 / 763
+     1440×900  başlangıç 774 · üç yanlış 788 · kazanma/kaybetme 807 / 863
+     1920×1080 başlangıç 774 · kazanma/kaybetme 844 / 1043
+   Önceki hâlde tahta 1280'de 330'da başlıyor, kaybetmede 1987'ye
+   iniyordu. Yatay taşma 0, CLS ≤ 0,001, konsol hatası 0. */
+@media (min-width: 1024px) {
+  .board { grid-template-columns:minmax(0,1.42fr) minmax(0,1fr); gap:.75rem; }
+  .main, .side { display:flex; flex-direction:column; gap:.75rem; min-width:0; }
+  .lead, .clues, .guesses, .record { order:0; }
+  .board {
+    --chart-h:clamp(150px, calc(100dvh - 590px), 300px);
+    --cover-chart-h:clamp(120px, calc(100dvh - 690px), 280px);
+  }
+}

@@ -507,7 +507,7 @@
 /* Eşik çizgisi metin renginde: bölgenin nerede başladığını söyleyen tek keskin işaret. */
 .dialCut { stroke:var(--text-strong); stroke-width:1.6; stroke-linecap:round; }
 .dialHub { fill:var(--text-strong); }
-.dialTick { fill:var(--text-muted); font-size:7.5px; font-weight:600; font-variant-numeric:tabular-nums; }
+.dialTick { fill:var(--text-muted); font-size:7.5px; font-weight:600; }
 .dial[data-size="md"] svg { width:84%; }
 .dial[data-size="plate"] { display:flex; width:min(100%,240px); aspect-ratio:auto; flex-direction:column; align-items:center; gap:12px; }
 .dial[data-size="plate"] .dialBand { stroke-width:10; }
@@ -522,3 +522,19 @@
 .networkCenter > .networkFormula { max-width:100%; white-space:normal; font-size:12px; text-wrap:balance; }
 @media(max-width:639px) { .networkCenter > .networkFormula { display:none; } }
 @media(prefers-reduced-motion:reduce) { .cardFormula { transition:none; } }
+
+/* İLK EKRAN (25 Ekim, ikinci tur — sahibinin isteği: "kaydırılmadan da
+   görünebilsin"). 1280×800'de kapak 272 piksel ve terim kartları y≈760'ta,
+   ilk ekranın son 40 pikselinde başlıyordu (ölçüldü). Geniş ekranda günün
+   terimi levhası ve ölçüler sıkı: levha taban yüksekliği kalktı (satırı
+   kapağın metni belirliyor), dolgu ve sayı puntosu küçük. İçerik aynı.
+   Ölçüldü: kapak 272 → 252, sonuç alanı 626 → 606 (1280 ve 1440). */
+@media(min-width:1024px) {
+  .hero { gap:28px; }
+  .heroCopy h1 { margin:4px 0 8px; }
+  .metrics { margin-top:14px; }
+  .metrics dd { font-size:24px; }
+  .spotlightPlate { min-height:0; padding:14px; }
+  .spotlightCopy { gap:6px; padding:16px 20px 16px; }
+  .spotlightMeta { padding-top:6px; }
+}
