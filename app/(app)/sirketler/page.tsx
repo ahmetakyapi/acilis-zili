@@ -9,7 +9,9 @@ import { LinkedRows } from "@/components/companies/LinkedRows";
 import companyStyles from "@/components/companies/CompanyDirectory.module.css";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
-import { ScaleBar } from "@/components/markets/CompareScale";
+import { DirectionLane, SizeBar } from "@/components/screener/Lanes";
+import { SectorDistribution } from "@/components/companies/SectorDistribution";
+import visual from "@/components/screener/ScreenerVisuals.module.css";
 import { RollingFigure } from "@/components/ui/RollingFigure";
 import styles from "@/components/motion/DirectoryExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
@@ -121,6 +123,9 @@ const PAGE_STEP = 60;
 
 /** Piyasa değeri sırasında canlı verisi çekilen fazladan satır — gerekçe tabloda. */
 const CAP_CANDIDATE_MARGIN = 40;
+
+/** Günlük değişim kulvarının tam kolu (yüzde) — bütün sayfalarda aynı ölçek. */
+const CHANGE_LANE_SPAN = 5;
 
 /** Kategori çipi — etiket + o gruptaki şirket sayısı. */
 function SectorChip({
@@ -428,6 +433,19 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
         )}
 
       </DirectoryHeader>
+
+      {/* Ana görsel: sektör dağılımı — şirket sayısı ve piyasa değeri
+          (25 Ekim görsel turu, gerekçe bileşende). Arama yokken: bir
+          aramanın sonucu "dağılım" değil, tek tek şirketler. */}
+      {!query && (
+        <SectorDistribution
+          companies={companies}
+          activeKey={activeGroup?.key ?? null}
+          hrefFor={sectorHref}
+          locale={locale}
+          t={t}
+        />
+      )}
 
 
       {/* Tablo AYRI AKIYOR. Eskiden kotasyonlar ve haftalık değişim sayfanın
@@ -870,6 +888,7 @@ async function CompaniesTable({
                       </td>
                       <td className="px-1 py-3 text-right sm:px-3">
                         {quote ? (
+                          <>
                           <ChangePill
                             changePct={quote.changePct}
                             locale={locale}
@@ -879,6 +898,12 @@ async function CompaniesTable({
                                ekranda sayı bir bakışta okunacak boya çıkıyor. */
                             className="px-1 sm:px-2 sm:text-small"
                           />
+                          {/* Yön bir de çizgi: sıfır ortada, ölçek sabit
+                              ±%5 (gerekçe DirectionLane). */}
+                          {quote.changePct !== null && (
+                            <DirectionLane value={quote.changePct} span={CHANGE_LANE_SPAN} className="[--lane-max:64px] sm:[--lane-max:84px]" />
+                          )}
+                          </>
                         ) : (
                           <span className="text-xs text-muted">{NO_VALUE}</span>
                         )}
@@ -919,7 +944,7 @@ async function CompaniesTable({
                           return cap ? (
                             <>
                               {formatMoneyCompact(cap, locale)}
-                              <ScaleBar ratio={cap / peakCap} signed={false} className="max-w-[96px]" />
+                              <SizeBar ratio={cap / peakCap} />
                             </>
                           ) : NO_VALUE;
                         })()}
@@ -967,10 +992,10 @@ async function CompaniesTable({
                   .replace("{n}", String(rows.length))
                   .replace("{total}", String(total))}
               </p>
-              <span aria-hidden className="mt-1.5 block h-[3px] w-28 overflow-hidden rounded-full bg-(--line-soft)">
+              <span aria-hidden className="mt-1.5 block h-[var(--lane-h,5px)] w-28 overflow-hidden rounded-full bg-(--line-soft)">
                 <span
                   data-motion-draw="line"
-                  className="block h-full rounded-full bg-primary/60"
+                  className={cn("block h-full rounded-full", visual.progressFill)}
                   style={{ width: `${Math.min(100, (rows.length / Math.max(1, total)) * 100)}%` }}
                 />
               </span>

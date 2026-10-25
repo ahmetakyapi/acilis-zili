@@ -1,3 +1,4 @@
+import type { VerdictKey } from "@/lib/analysis";
 import type { Locale } from "@/lib/i18n";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -94,6 +95,25 @@ export const C = {
   line: "#e5eaf0",
   lineSoft: "#eef2f6",
 } as const;
+
+/**
+ * GÖRÜŞ ÜÇLÜSÜ, sabit renkle (25 Ekim, site geneli renk kararı). Satori CSS
+ * değişkeni okumuyor; değerler sitenin AÇIK temasındaki karşılıkları:
+ * - `ink`: halka/şerit — `--verdict-*` (app/globals.css) beyaz zeminde
+ *   çözülmüş hâli (AL `--up` %74, TUT `--brass` %85, SAT `--down` %74).
+ * - `fg`: kelime — `verdictTextClass` (AL/SAT kartın yön mürekkebi `C.up` /
+ *   `C.down`, TUT `--brass-ink`).
+ * - `wash`: rozet zemini — `--up-wash` / `--brass-wash` / `--down-wash`.
+ * Önceden bilanço görseli TUT'u gri, hikâye görseli MAVİ, teknik görseli
+ * görüş çipini mavi basıyordu. Görüş sabiti yalnız burada.
+ * Ölçüldü (beyaz zemin): `fg` AL 4,09, TUT 5,64, SAT 5,36 (≥ 22 piksel
+ * kalın, büyük metin); `ink` AL 3,47, TUT 3,28, SAT 4,01.
+ */
+export const VERDICT_OG: Record<VerdictKey, { fg: string; ink: string; wash: string }> = {
+  buy: { fg: C.up, ink: "#4b977e", wash: C.upWash },
+  hold: { fg: "#8a5f0c", ink: "#b28733", wash: "#f4eee2" },
+  sell: { fg: C.down, ink: "#d0566f", wash: C.downWash },
+};
 
 /** Accent degradesi — kartın altındaki gün şeridinin seans bandı. */
 export const BRAND_GRADIENT =
@@ -275,13 +295,17 @@ export function Chip({
   tone = "neutral",
 }: {
   children: React.ReactNode;
-  tone?: "neutral" | "primary" | "up" | "down";
+  tone?: "neutral" | "primary" | "up" | "down" | VerdictKey;
 }) {
   const map = {
     neutral: { bg: C.surface, fg: C.body, bd: C.line },
     primary: { bg: C.primaryWash, fg: C.primary, bd: C.primaryFaint },
     up: { bg: C.upWash, fg: C.up, bd: C.upWash },
     down: { bg: C.downWash, fg: C.down, bd: C.downWash },
+    /* Görüş rozeti — sitedeki `verdictPillClass` (wash zemin, metin tonu). */
+    buy: { bg: VERDICT_OG.buy.wash, fg: VERDICT_OG.buy.fg, bd: VERDICT_OG.buy.wash },
+    hold: { bg: VERDICT_OG.hold.wash, fg: VERDICT_OG.hold.fg, bd: VERDICT_OG.hold.wash },
+    sell: { bg: VERDICT_OG.sell.wash, fg: VERDICT_OG.sell.fg, bd: VERDICT_OG.sell.wash },
   }[tone];
   return (
     <div
@@ -451,11 +475,14 @@ export function sectionOg({
   title,
   dek,
   chips,
+  leadVerdict,
 }: {
   eyebrow: string;
   title: string;
   dek: string;
   chips?: string[];
+  /** İlk çip bir görüşse (teknik): mavi değil görüş üçlüsünün rozeti. */
+  leadVerdict?: VerdictKey;
 }) {
   return (
     <OgFrame
@@ -464,7 +491,7 @@ export function sectionOg({
         chips && chips.length > 0 ? (
           <>
             {chips.map((c, i) => (
-              <Chip key={c} tone={i === 0 ? "primary" : "neutral"}>
+              <Chip key={c} tone={i === 0 ? (leadVerdict ?? "primary") : "neutral"}>
                 {c}
               </Chip>
             ))}

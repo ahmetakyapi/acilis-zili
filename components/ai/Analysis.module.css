@@ -20,10 +20,17 @@
 /* ---- Kapak: karar · giriş · künye. Açılışta sahnelenir. ---- */
 /* İki satır: karar | künye, altında tam genişlikte giriş. `auto` sütun anlam cümlesinin tek satırlık
    max-content genişliğini alıp girişi 50 px'e eziyordu (1280 ölçümü). */
-.cover { --tone:var(--primary); --lag:0ms; position:relative; display:grid; grid-template-columns:minmax(0,1fr) minmax(240px,320px); gap:clamp(1.25rem,3vw,2rem) clamp(1.25rem,3vw,2.5rem); align-items:center; padding:clamp(1.25rem,3vw,2.25rem); border-radius:22px; background:var(--surface-sunken); overflow:hidden; }
-.cover[data-verdict="buy"] { --tone:var(--up); }
-.cover[data-verdict="sell"] { --tone:var(--down); }
-.cover[data-verdict="insufficient"] { --tone:var(--line-strong); }
+.cover { --tone:var(--verdict-hold); --tone-ink:var(--brass-ink); --lag:0ms; position:relative; display:grid; grid-template-columns:minmax(0,1fr) minmax(240px,320px); gap:clamp(1.25rem,3vw,2rem) clamp(1.25rem,3vw,2.5rem); align-items:center; padding:clamp(1.25rem,3vw,2.25rem); border-radius:22px; background:var(--surface-sunken); overflow:hidden; }
+/* Kapakta görüş üçlüsü (25 Ekim, site geneli renk kararı): TUT maviydi —
+   mavi sitede etkileşim; artık pirinç (gerekçe `verdictTextClass`,
+   lib/analysis.ts). İki değişken, sitenin her yerindeki ayrımla: çizim
+   (fırça çizgisi, üst şerit, güven çubuğu) `--tone` = `--verdict-*`, kart
+   zeminiyle karışık yumuşak ton; KELİME `--tone-ink` = metin tonu (`--up`,
+   `--brass-ink`, `--down`; AA ölçülü). Önceden ikisi de doygun `--up`
+   idi — bilanço ve teknik ekranlarındaki halkadan bir basamak sert. */
+.cover[data-verdict="buy"] { --tone:var(--verdict-buy); --tone-ink:var(--up); }
+.cover[data-verdict="sell"] { --tone:var(--verdict-sell); --tone-ink:var(--down); }
+.cover[data-verdict="insufficient"] { --tone:var(--line-strong); --tone-ink:var(--text-strong); }
 .cover::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--tone); transform-origin:left; animation:grow-x 900ms var(--ease-brand) var(--lag) both; }
 /* Filmden gelince (`data-fresh`): filmin son karesi mürekkep seliydi; kapak o
    selin altından açılır — sel karar halkasının yerine doğru çekilir, kapağın
@@ -35,13 +42,11 @@
 .coverRing { --score-ring-size:112px; }
 .coverWord { display:grid; gap:6px; min-width:0; }
 /* Kelime kendi kutusundan yükselir: üst 0,12em pay İ/Ü imleri için (globals.css "ÜSTTEKİ İMLER"). */
-.verdict { position:relative; display:block; justify-self:start; padding-bottom:.18em; font-size:clamp(2.6rem,5vw,4rem); line-height:1; font-weight:800; letter-spacing:-.055em; color:var(--tone); }
-.cover[data-verdict="hold"] .verdict { color:var(--primary-ink); }
+.verdict { position:relative; display:block; justify-self:start; padding-bottom:.18em; font-size:clamp(2.6rem,5vw,4rem); line-height:1; font-weight:800; letter-spacing:-.055em; color:var(--tone-ink); }
 .cover[data-verdict="insufficient"] .verdict { color:var(--text-strong); font-size:clamp(1.9rem,3.4vw,2.6rem); }
 /* Fırça çizgisi: kelimenin altında, kararın renginde; harfler oturduktan sonra soldan çekilir. */
 .verdictInk { position:absolute; left:0; bottom:0; width:100%; height:.2em; overflow:visible; }
 .verdictInk path { fill:none; stroke:var(--tone); stroke-width:4.5; stroke-linecap:round; stroke-dasharray:1; stroke-dashoffset:1; animation:ink-line 720ms var(--ease-brand) calc(var(--lag) + 760ms) forwards; }
-.cover[data-verdict="hold"] .verdictInk path { stroke:var(--primary-ink); }
 @keyframes ink-line { to { stroke-dashoffset:0; } }
 .verdictMeaning { max-width:24em; font-size:14px; line-height:1.55; color:var(--text-body); animation:fade-up 600ms var(--ease-brand) calc(var(--lag) + 520ms) both; }
 .lead { grid-column:1 / -1; max-width:40em; padding-left:18px; border-left:3px solid var(--primary); font-size:clamp(1.08rem,1.45vw,1.28rem); line-height:1.6; font-weight:450; color:var(--text-strong); text-wrap:pretty; animation:write-on 1200ms var(--ease-brand) calc(var(--lag) + 420ms) both; }
@@ -63,8 +68,7 @@
 .confidence { display:flex; align-items:center; gap:10px; }
 .meter { display:inline-flex; gap:3px; }
 .meter > span { width:18px; height:5px; border-radius:999px; background:var(--line-strong); opacity:.45; }
-.meter > span[data-on] { background:var(--tone, var(--primary)); opacity:1; transform-origin:left; animation:grow-x 420ms var(--ease-brand) calc(var(--lag) + 760ms + var(--i,0) * 120ms) both; }
-.cover[data-verdict="hold"] .meter > span[data-on] { background:var(--primary); }
+.meter > span[data-on] { background:var(--tone, var(--verdict-hold)); opacity:1; transform-origin:left; animation:grow-x 420ms var(--ease-brand) calc(var(--lag) + 760ms + var(--i,0) * 120ms) both; }
 @keyframes grow-x { from { scale:0 1; } to { scale:1 1; } }
 @keyframes fade-up { from { opacity:0; translate:0 10px; } to { opacity:1; translate:0 0; } }
 

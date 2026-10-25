@@ -1,0 +1,54 @@
+/* ==========================================================================
+   Rehberdeki Yerin — yazı sonundaki bölüm şeridi (25 Ekim). Gerekçe
+   GuideArticleProgress.tsx başında.
+
+   Dilim 5 px (`var(--lane-h, 5px)`, sitenin kulvar ölçüsü) ama bağlantının
+   tıklama alanı 44 px: dilim kutunun DİKEY ortasında bir çizgi, kutunun
+   kendisi şerit yüksekliği. Renk: bu yazı metin rengi (seçili konum),
+   okunanlar yumuşak mavi (ilerleme), kalanlar kulvar.
+   Kutu kapakla aynı kenarda, içi metnin hattında (`--read-inset`): okuma
+   ızgarasının iki hattı (StoryDetail.module.css).
+   ========================================================================== */
+
+.progress { display:flex; flex-direction:column; gap:8px; padding:18px var(--read-inset, 20px) 14px; border:1px solid var(--line); border-radius:var(--radius-xl); background:var(--premium-surface, var(--surface-solid)); }
+.head { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 16px; }
+.title { font-size:17px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
+.position { font-size:12px; font-weight:650; color:var(--text-muted); }
+.chapter { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; font-size:13px; color:var(--text-body); }
+.readNote { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:650; color:var(--text-strong); }
+.readNote > svg { color:var(--primary-soft); }
+
+.segments { display:grid; grid-template-columns:repeat(var(--n, 1), minmax(0, 1fr)); gap:4px; margin:2px 0 0; padding:0; list-style:none; }
+.segments > li { min-width:0; }
+.segment { position:relative; display:block; height:44px; border-radius:6px; }
+.segment::before { content:""; position:absolute; inset:calc(50% - var(--lane-h, 5px) / 2) 0 auto; height:var(--lane-h, 5px); border-radius:999px; background:var(--rail-track); transition-property:background-color,transform; transition-duration:.25s; transition-timing-function:var(--ease-brand); }
+.segment[data-state="read"]::before { background:var(--primary-soft); }
+.segment[data-state="current"]::before { background:var(--text-strong); }
+a.segment:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+@media (hover:hover) and (pointer:fine) {
+  a.segment:hover::before { transform:scaleY(1.8); background:var(--primary-faint); }
+  a.segment[data-state="read"]:hover::before { background:var(--primary-soft); }
+}
+
+.legend { display:flex; flex-wrap:wrap; gap:4px 16px; margin-top:-6px; font-size:11px; font-weight:600; color:var(--text-muted); }
+.legend > span { display:inline-flex; align-items:center; gap:6px; }
+.legend i { display:inline-block; width:14px; height:var(--lane-h, 5px); border-radius:999px; background:var(--rail-track); }
+.legend i[data-state="read"] { background:var(--primary-soft); }
+.legend i[data-state="current"] { background:var(--text-strong); }
+.legend b { font-weight:700; color:var(--text-strong); }
+
+/* Sahneli giriş: şerit görünüme girerken dilimler soldan sağa dolar.
+   Panel yazının dibinde, yani yükleme anına bağlı bir animasyon okuyucu
+   oraya inmeden biterdi; bu yüzden kaydırmaya bağlı (`view()`), ve yalnız
+   destekleyen tarayıcıda — desteklemeyende şerit baştan dolu. Hareketi
+   azaltana yok. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion:no-preference) {
+    .segment::before { transform-origin:left center; animation:segIn var(--ease-brand) both; animation-timeline:view(); animation-range:entry 20% entry 100%; }
+  }
+}
+@keyframes segIn { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+
+@media (max-width:639px) {
+  .segments { gap:3px; }
+}

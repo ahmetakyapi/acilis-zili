@@ -53,16 +53,20 @@
 .categoryTile > svg { flex-shrink:0; transition:rotate .45s var(--ease-brand),scale .45s var(--ease-brand); }
 .categoryName { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:2.6em; font-size:13px; line-height:1.3; font-weight:600; color:var(--text-strong); }
 .categoryCount { font-size:12px; font-weight:500; color:var(--text-muted); }
-.categoryBar { display:block; width:100%; height:3px; margin-top:2px; overflow:hidden; border-radius:2px; background:var(--rail-track); }
+/* Çubuk bir BÜYÜKLÜK (kategorinin terim sayısı): mavi ailenin yumuşak
+   tonu, kulvarın tek ölçüsü 5 piksel (25 Ekim, site geneli renk kararı —
+   güncel hâli: büyüklük yumuşak mavi, doygun mavi yalnız seçimde). */
+.categoryBar { display:block; width:100%; height:var(--lane-h, 5px); margin-top:2px; overflow:hidden; border-radius:2px; background:var(--rail-track); }
 /* "Tümü" kutucuğunun çubuğu bir PAY: sekiz kategori, terim sayısıyla
    orantılı ve aralarında ince boşluk. Tek bir dolu çubuk ötekilerle
    karşılaştırılamazdı (en kalabalık kategoriye göre ölçeklenmiş). */
 .categoryBar[data-share] { display:flex; gap:2px; background:transparent; }
 .categoryBar[data-share] > span { flex:none; }
-.categoryBar > span { display:block; height:100%; border-radius:inherit; background:var(--primary); transform-origin:left center; animation:bar-grow .9s var(--ease-brand) both; animation-delay:calc(var(--tile, 0) * 55ms + 120ms); }
+.categoryBar > span { display:block; height:100%; border-radius:inherit; background:var(--bar-soft); transform-origin:left center; animation:bar-grow .9s var(--ease-brand) both; animation-delay:calc(var(--tile, 0) * 55ms + 120ms); }
 @keyframes bar-grow { from { transform:scaleX(0); } }
 .categoryTile[aria-pressed="true"] { border-color:var(--primary-faint); background:var(--primary-wash); }
 .categoryTile[aria-pressed="true"] .categoryCount { color:var(--primary-ink); }
+.categoryTile[aria-pressed="true"] .categoryBar > span { background:var(--primary); }
 .categoryTile:active { scale:.98; }
 .categoryTile:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 @media(hover:hover) and (pointer:fine) {
@@ -324,12 +328,12 @@
 .conceptBand rect { fill:var(--surface-sunken); }
 .conceptBand text { fill:var(--text-muted); font-size:10px; font-weight:600; }
 .conceptBand[data-on] rect { fill:var(--primary-wash); }
-.conceptBand[data-on] text { fill:var(--primary-ink); }
+.conceptBand[data-on] text { fill:var(--text-strong); }
 .conceptTick { fill:var(--text-muted); font-size:10px; font-weight:500; }
 .conceptAxis { fill:none; stroke:var(--line-strong); stroke-width:1.2; }
 .conceptAxisLabel { fill:var(--text-body); font-size:12px; font-weight:600; }
-.conceptLine { fill:none; stroke:var(--primary); stroke-width:2.5; stroke-linecap:round; stroke-dasharray:1; }
-.conceptDot { fill:var(--premium-surface); stroke:var(--primary); stroke-width:2; }
+.conceptLine { fill:none; stroke:var(--primary-soft); stroke-width:2.5; stroke-linecap:round; stroke-dasharray:1; }
+.conceptDot { fill:var(--premium-surface); stroke:var(--primary-soft); stroke-width:2; }
 
 /* İlişki ağı. Kap boyut kabı: çizgiler `cqw`/`cqh` ile boylanıyor. */
 .networkWrap { padding:0 20px 22px; }
@@ -341,7 +345,7 @@
 .networkArm > span { display:block; height:100%; border-radius:1px; background:linear-gradient(90deg,var(--primary-faint),var(--primary-soft)); transition:background-color .3s var(--ease-brand),scale .3s var(--ease-brand); }
 .networkNodes > li:hover .networkArm > span,.networkNodes > li:focus-within .networkArm > span { background:var(--primary); scale:1 2; }
 .networkCenter { position:absolute; left:50%; top:50%; z-index:2; display:flex; max-width:210px; flex-direction:column; align-items:center; gap:9px; padding:14px 18px; border:1px solid var(--primary-faint); border-radius:18px; background:var(--premium-surface); translate:-50% -50%; text-align:center; }
-.networkCenter > span:last-child { font-size:15px; line-height:1.3; font-weight:650; letter-spacing:-.015em; color:var(--text-strong); text-wrap:balance; }
+.networkCenter > span:nth-child(2) { font-size:15px; line-height:1.3; font-weight:650; letter-spacing:-.015em; color:var(--text-strong); text-wrap:balance; }
 .networkNodes { position:absolute; inset:0; }
 .networkNodes > li { position:absolute; z-index:1; left:var(--x); top:var(--y); width:max-content; max-width:min(36%,230px); translate:-50% -50%; }
 .networkNode { display:flex; align-items:center; gap:10px; padding:6px 13px 6px 6px; border:1px solid var(--line); border-radius:14px; background:var(--premium-surface); transition:background-color .25s var(--ease-brand),border-color .25s var(--ease-brand),scale .15s var(--ease-brand); }
@@ -468,3 +472,53 @@
  .spotlightPlate { padding:8px; }
  .spotlightPlate .mark { width:84px; }
 }
+
+/* ==========================================================================
+   Formül ve kadran (25 Ekim) — bileşen TermFormula.tsx, veri
+   content/glossary/formulas.ts. Renk dengesi (güncel karar): zeminler ve
+   dilimler mavi ailenin yumuşak tonları, kesir çizgisi ve eşikler metin
+   rengi; doygun `--primary` görselde yok.
+   ========================================================================== */
+/* Kartta başlıkla tanım arasındaki şerit: zeminden bir basamak koyu, kenarsız. */
+.cardFormula { display:flex; min-width:0; align-items:center; padding:9px 12px; border-radius:12px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--primary-wash); transition:background-color .3s var(--ease-brand); }
+@media(hover:hover) and (pointer:fine) { .card:hover .cardFormula { background:var(--premium-surface); } }
+.formula { display:inline-flex; min-width:0; max-width:100%; align-items:center; gap:10px; color:var(--text-strong); }
+.formula[data-size="card"] { font-size:12.5px; line-height:1.3; font-weight:600; }
+.formulaLhs { display:inline-flex; flex-shrink:0; align-items:center; gap:8px; font-weight:750; letter-spacing:.01em; }
+.formulaEq { font-weight:500; color:var(--text-muted); }
+.fraction { display:inline-grid; min-width:0; justify-items:center; gap:3px; text-align:center; }
+.fractionTerm { min-width:0; overflow-wrap:anywhere; text-wrap:balance; }
+.fractionBar { display:block; width:100%; height:1.5px; border-radius:1px; background:var(--text-strong); }
+.formulaInline { display:inline-flex; min-width:0; flex-wrap:wrap; align-items:center; gap:4px 8px; }
+.formulaOp { display:inline-grid; flex-shrink:0; place-items:center; width:20px; height:20px; border-radius:999px; background:var(--premium-surface); box-shadow:inset 0 0 0 1px var(--line); font-weight:700; color:var(--text-body); }
+.formulaPercent { flex-shrink:0; padding:1px 6px; border-radius:6px; box-shadow:inset 0 0 0 1px var(--line); font-size:11px; font-weight:650; white-space:nowrap; color:var(--text-muted); }
+/* Levha: kısaltma üstte iri, eşitlik altında. Kap genişliğine göre punto. */
+.formula[data-size="plate"] { flex-direction:column; gap:12px; font-size:clamp(15px,1.5vw,18px); line-height:1.3; font-weight:650; text-align:center; letter-spacing:-.01em; }
+.formula[data-size="plate"] .formulaLhs { font-size:1.9em; letter-spacing:-.03em; }
+.formula[data-size="plate"] .fraction { gap:7px; }
+.formula[data-size="plate"] .fractionBar { height:2px; }
+.formula[data-size="plate"] .formulaOp { width:28px; height:28px; }
+.termPlate .formula,.spotlightPlate .formula { max-width:min(100%,260px); }
+
+/* Kadran — karo hâli TermMark'ın karosunu (`.mark`) paylaşıyor. */
+.dial svg { overflow:visible; }
+.dialBand { fill:none; stroke-width:9; stroke-dasharray:1; stroke:var(--primary-faint); }
+.dialBand[data-tone="edge"],.dialBand[data-tone="on"] { stroke:var(--primary-soft); }
+/* Eşik çizgisi metin renginde: bölgenin nerede başladığını söyleyen tek keskin işaret. */
+.dialCut { stroke:var(--text-strong); stroke-width:1.6; stroke-linecap:round; }
+.dialHub { fill:var(--text-strong); }
+.dialTick { fill:var(--text-muted); font-size:7.5px; font-weight:600; font-variant-numeric:tabular-nums; }
+.dial[data-size="md"] svg { width:84%; }
+.dial[data-size="plate"] { display:flex; width:min(100%,240px); aspect-ratio:auto; flex-direction:column; align-items:center; gap:12px; }
+.dial[data-size="plate"] .dialBand { stroke-width:10; }
+.dialLegend { display:flex; flex-wrap:wrap; justify-content:center; gap:4px 12px; font-size:12px; line-height:1.4; font-weight:600; color:var(--text-body); }
+.dialLegend > span { display:inline-flex; align-items:center; gap:6px; }
+.dialLegend i { display:block; width:12px; height:var(--lane-h, 5px); border-radius:2px; background:var(--primary-faint); }
+.dialLegend [data-tone="edge"] i,.dialLegend [data-tone="on"] i { background:var(--primary-soft); }
+.dialLegend [data-tone="on"] { color:var(--text-strong); }
+
+/* Ağda formülün tek satırı. */
+.networkFormula { display:block; margin-top:2px; overflow:hidden; font-size:11.5px; line-height:1.4; font-weight:500; white-space:nowrap; text-overflow:ellipsis; color:var(--text-muted); }
+.networkCenter > .networkFormula { max-width:100%; white-space:normal; font-size:12px; text-wrap:balance; }
+@media(max-width:639px) { .networkCenter > .networkFormula { display:none; } }
+@media(prefers-reduced-motion:reduce) { .cardFormula { transition:none; } }

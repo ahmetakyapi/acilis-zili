@@ -106,12 +106,14 @@ export function MetricNote({
   note,
   tone,
   locale,
-  neutralClass = "text-primary",
+  neutralClass = "text-body",
 }: {
   note: string;
   tone?: string | null;
   locale: string;
-  /** Tonsuz satırın rengi: kartta `text-primary`, kapakta mürekkep tonu. */
+  /** Tonsuz satırın rengi. Metin tonu (25 Ekim, site geneli renk kararı):
+      "Beklentinin %0,3 Altında" doygun etkileşim mavisiyle basılıyordu —
+      sayı metni mavi olmaz (mavi bağlantı/düğme); sayı ya metin ya yön rengi. */
   neutralClass?: string;
 }) {
   const parts = titleCaseLabel(note, locale)

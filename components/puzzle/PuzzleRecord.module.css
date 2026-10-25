@@ -1,0 +1,37 @@
+/* Seri paneli — gerekçe PuzzleRecord.tsx. Kulvar 5 px, çubuk yumuşak
+   mavi, bugünün satırı yeşil. Çubuklar `scaleX` ile: genişlik değişimi
+   yerleşimi oynatmıyor, depo okununca kayma yok. */
+
+.stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.75rem; margin:0; }
+.stats div { display:flex; flex-direction:column; min-width:0; }
+.stats dt { font-size:var(--text-tiny); color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.stats dd { margin:.125rem 0 0; font-size:var(--text-title); font-weight:700; color:var(--text-strong); font-variant-numeric:tabular-nums; }
+.lane { position:relative; display:block; height:var(--lane-h, 5px); margin-top:.375rem; border-radius:999px; background:var(--line-soft); overflow:hidden; }
+.fill { position:absolute; inset:0; border-radius:999px; background:var(--primary-soft); transform-origin:0 50%; }
+
+.distHead { margin:1.125rem 0 .5rem; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
+.dist { display:flex; flex-direction:column; gap:.4375rem; margin:0; padding:0; list-style:none; }
+.dist li { display:grid; grid-template-columns:1rem minmax(0,1fr) 2rem; align-items:center; gap:.625rem; }
+.key { font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
+.distLane { position:relative; height:var(--lane-h, 5px); border-radius:999px; background:var(--line-soft); overflow:hidden; }
+.bar { position:absolute; inset:0; border-radius:999px; background:var(--primary-soft); transform-origin:0 50%; }
+.dist li[data-today] .bar { background:var(--up); }
+.dist li[data-today] .key,
+.dist li[data-today] .count { color:var(--up); }
+.count { text-align:right; font-size:var(--text-tiny); font-weight:600; color:var(--text-body); font-variant-numeric:tabular-nums; }
+/* Hiç oynanmamış: kulvarlar soluk ama yerinde. */
+.idle .count, .idle .key { color:var(--text-muted); opacity:.7; }
+
+.note { margin:.75rem 0 0; font-size:var(--text-tiny); line-height:1.5; color:var(--text-muted); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .bar, .fill { transition:transform 700ms var(--ease-brand); }
+}
+@media (max-width: 379.98px) {
+  .stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
+/* Seriye girmeyen iki sayaç: arşivden çözülen ve "Saf Bilgi". */
+.extras { display:flex; flex-wrap:wrap; gap:.5rem; margin:1rem 0 0; padding:0; list-style:none; }
+.extras li { display:inline-flex; align-items:baseline; gap:.375rem; padding:.375rem .75rem; border-radius:999px; background:var(--surface-sunken); font-size:var(--text-tiny); font-weight:600; color:var(--text-body); }
+.extraValue { font-size:var(--text-small); font-weight:700; color:var(--text-strong); }

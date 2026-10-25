@@ -1,9 +1,11 @@
 import { FoldToggle } from "@/components/ui/FoldToggle";
 import type { Dictionary } from "@/lib/i18n";
 import type { Band, CheckId, ScreenResult } from "@/lib/screening";
+import { dialSlices, type DialSlice } from "@/lib/screening-gauge";
 import styles from "./Screening.module.css";
 
 type T = Dictionary["screening"];
+type V = Dictionary["stockVisuals"];
 
 const MINI = 2 * Math.PI * 20;
 /** Kapakta adıyla yazılan bayrak sayısı; fazlası "+N Daha". */
@@ -26,6 +28,7 @@ export function FlagSummary({
   names,
   statusOf,
   t,
+  v,
   fold,
 }: {
   result: ScreenResult;
@@ -36,6 +39,8 @@ export function FlagSummary({
   /** Kontrolün durum etiketi ("Baz Etkisi" dahil) — rapordaki tablonun aynısı. */
   statusOf: (id: CheckId) => string;
   t: T;
+  /** Halka dilimlerinin künyesi (`stockVisuals`). */
+  v: V;
 }) {
   const byId = new Map(result.checks.map((check) => [check.id, check]));
   const flags = result.cons.map((id) => byId.get(id)!);
@@ -88,16 +93,30 @@ export function FlagSummary({
       ) : (
         <p className={styles.flagEmpty}>{t.noFlags}</p>
       )}
-      <ScoreLine result={result} t={t} />
+      <ScoreLine result={result} t={t} v={v} />
     </div>
   );
 }
 
 /** Puan: küçük halka, bant ve tek cümlelik ipucu. */
-function ScoreLine({ result, t }: { result: ScreenResult; t: T }) {
+function ScoreLine({ result, t, v }: { result: ScreenResult; t: T; v: V }) {
+  /* HALKA KATEGORİ DİLİMLERİNE AYRILIYOR (25 Ekim). "86" tek bir dolu yay
+     olarak hangi kategoriden geldiğini söylemiyordu; dilimler boyu ağırlık,
+     dolu kısmı puan olarak gösteriyor — büyüme dilimi yarım dolu bir 86 ile
+     her yeri dolu bir 86 artık aynı görünmüyor. Toplam dolu kısım puanın
+     kendisi (lib/screening-gauge.ts → dialSlices, testli). Elenen hissede
+     puan tavanlı, dilim yok. */
+  const slices = dialSlices(result.categories, result.eliminated);
+  const titles = slices?.map((slice) => {
+    const entry = result.categories.find((c) => c.category === slice.category)!;
+    return v.sliceTitle
+      .replace("{name}", t.categories[entry.category])
+      .replace("{score}", String(Math.round(entry.score ?? 0)))
+      .replace("{w}", String(Math.round(slice.length * 100)));
+  });
   return (
     <div className={styles.scoreLine}>
-      <MiniDial score={result.score} band={result.band} />
+      <MiniDial score={result.score} band={result.band} slices={slices} titles={titles} />
       <div className={styles.scoreCopy}>
         <p className={styles.scoreHead}>
           <span>{t.scoreLabel}</span>
@@ -108,16 +127,75 @@ function ScoreLine({ result, t }: { result: ScreenResult; t: T }) {
           )}
         </p>
         {result.band && <p className={styles.dialHint}>{t.bandHints[result.band]}</p>}
-        <p className={styles.dialCoverage}>{t.coverage.replace("{n}", String(result.coverage))}</p>
+        <p className={styles.dialCoverage}>
+          {t.coverage.replace("{n}", String(result.coverage))}
+          {slices && slices.length > 1 ? ` · ${v.dialCaption}` : ""}
+        </p>
       </div>
     </div>
   );
 }
 
+/** Dilimler arası boşluk, çevrenin payı olarak (1,2 px 48'lik halkada). */
+const SLICE_GAP = 0.03;
+
 /** Küçük puan halkası. Rengi PUANDAN değil BANTTAN: eleme kuralına takılan
     45 puanlık hisse ile kuralların çoğunda geride kalan 45 puanlık hisse aynı
-    sayıyı taşıyor ama aynı hüküm değil; "Veri Yetersiz" sessiz renkte. */
-export function MiniDial({ score, band }: { score: number | null; band: Band | null }) {
+    sayıyı taşıyor ama aynı hüküm değil; "Veri Yetersiz" sessiz renkte.
+    `slices` verilirse halka kategori dilimleriyle çizilir (kapak); liste
+    kartlarında tek yay kalır. */
+export function MiniDial({
+  score,
+  band,
+  slices,
+  titles,
+}: {
+  score: number | null;
+  band: Band | null;
+  slices?: DialSlice[] | null;
+  titles?: string[];
+}) {
+  if (slices && slices.length > 1 && score !== null) {
+    return (
+      <span className={styles.mini} data-band={band ?? "none"} aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          {/* Dilimler `arc` sözleşmesiyle çiziliyor (AnalystCard halkası):
+              `pathLength=1`, başlangıç açısı sarmalayıcı `<g>`nin `rotate`ında,
+              nihai dashoffset 0 — her dilim kendi başından dolar. */}
+          <g>
+            {slices.map((slice, i) => {
+              const slot = Math.max(0, slice.length - SLICE_GAP);
+              const filled = slot * slice.fill;
+              const rotate = `rotate(${(slice.start + SLICE_GAP / 2) * 360} 24 24)`;
+              return (
+                /* Açı SARMALAYICIDA, dairede değil: hareketi azaltan
+                   kipte `[data-motion-draw]` `transform:none!important`
+                   alıyor (PremiumMotion.module.css) ve dairenin kendi
+                   `transform` özniteliğini eziyordu — dilimlerin hepsi
+                   tepeye, üst üste çiziliyordu (ölçüldü, 25 Ekim). */
+                <g key={slice.category} transform={rotate}>
+                  {titles?.[i] && <title>{titles[i]}</title>}
+                  <circle className={styles.dialTrack} cx="24" cy="24" r="20" pathLength={1} strokeDasharray={`${slot} ${2 - slot}`} />
+                  {filled > 0 && (
+                    <circle
+                      className={styles.dialSlice}
+                      data-motion-draw="arc"
+                      cx="24"
+                      cy="24"
+                      r="20"
+                      pathLength={1}
+                      strokeDasharray={`${filled} ${2 - filled}`}
+                    />
+                  )}
+                </g>
+              );
+            })}
+          </g>
+        </svg>
+        <b>{score}</b>
+      </span>
+    );
+  }
   return (
     <span className={styles.mini} data-band={band ?? "none"} aria-hidden="true">
       <svg viewBox="0 0 48 48">

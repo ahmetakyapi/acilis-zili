@@ -1,0 +1,62 @@
+/* Sektör dağılımı — gerekçe SectorDistribution.tsx başında. */
+.body { display: grid; gap: 16px; padding: 4px 16px 18px; }
+@media (min-width: 640px) { .body { padding: 4px 20px 20px; } }
+@media (min-width: 1024px) { .body { padding: 6px 24px 22px; } }
+
+.lead { max-width: 64ch; color: var(--text-strong); font-size: 17px; line-height: 1.45; font-weight: 560; letter-spacing: -0.01em; text-wrap: pretty; }
+@media (min-width: 640px) { .lead { font-size: 19px; } }
+
+.figure { display: grid; gap: 6px; }
+.axisLabel { color: var(--text-muted); font-size: 12px; font-weight: 600; }
+.chart { position: relative; }
+.svg { display: block; width: 100%; height: 98px; overflow: visible; }
+
+/* Büyüklük: yumuşak mavi aile; şirket sayısı açık, değer koyu ton. */
+.count { fill: var(--primary-faint); }
+.ribbon { fill: var(--primary-wash); }
+.value { fill: var(--bar-soft); }
+.group :is(.count, .ribbon, .value) { transition: fill .2s var(--ease-brand); }
+.group:hover .ribbon, .group:focus-visible .ribbon { fill: var(--primary-faint); }
+.group:hover :is(.count, .value), .group:focus-visible :is(.count, .value) { fill: color-mix(in srgb, var(--primary) 78%, transparent); }
+.group[data-active] :is(.count, .value) { fill: var(--primary); }
+.group[data-active] .ribbon { fill: var(--primary-faint); }
+.group:focus-visible { outline: none; }
+.group:focus-visible .value { stroke: var(--line-focus); stroke-width: 2px; vector-effect: non-scaling-stroke; }
+
+.pct { position: absolute; display: flex; align-items: center; height: 26px; color: var(--text-strong); font-size: 12px; font-weight: 650; white-space: nowrap; pointer-events: none; }
+.pctValue[data-active] { color: var(--on-primary); }
+
+/* Ölçü ızgarası — grup başına sayı ve iki pay (şirket → değer). */
+.legend { display: grid; gap: 2px 20px; }
+@media (min-width: 640px) { .legend { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .legend { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.legendLink {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  gap: 12px;
+  min-height: 44px;
+  align-content: center;
+  padding: 0 8px;
+  margin: 0 -8px;
+  border-radius: 10px;
+  transition: background-color .2s var(--ease-brand);
+}
+@media (min-width: 640px) { .legendLink { min-height: 36px; } }
+.legendLink:hover { background: var(--primary-tint); }
+.legendLink:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 0; }
+.legendLink[data-active] .legendName { color: var(--primary-ink); }
+.legendName { overflow: hidden; color: var(--text-strong); font-size: 13.5px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
+.legendCount { color: var(--text-body); font-size: 13px; }
+.legendShares { color: var(--text-muted); font-size: 12.5px; white-space: nowrap; }
+.legendShares b { color: var(--text-strong); font-weight: 650; }
+@media (max-width: 639.98px) { .wideOnly { display: none; } }
+.phoneMore { color: var(--text-muted); font-size: 12.5px; }
+@media (min-width: 640px) { .phoneMore { display: none; } }
+.note { padding-top: 12px; border-top: 1px solid var(--line-soft); color: var(--text-muted); font-size: 12.5px; line-height: 1.55; }
+
+/* Sahneli giriş: şerit bir kez, soldan sağa açılır. */
+@media (prefers-reduced-motion: no-preference) {
+  .svg { animation: dist-in 700ms var(--ease-brand) 120ms backwards; }
+}
+@keyframes dist-in { from { opacity: 0; clip-path: inset(0 100% 0 0); } }

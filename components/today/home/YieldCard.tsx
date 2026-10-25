@@ -3,6 +3,8 @@ import { type Dictionary, type Locale } from "@/lib/i18n";
 import { cn, formatEtDateCompact, formatPrice, NO_VALUE } from "@/lib/utils";
 import { getDailyMarketSeries as getSeries, dailySourceLabel } from "@/lib/providers/daily-markets";
 import { VIX_SERIES, vixBand } from "@/lib/vix";
+import { buildYieldCurve, CURVE_OBSERVATIONS } from "@/lib/macro-visual";
+import { curveCaption, YieldCurve } from "@/components/macro/YieldCurve";
 
 /**
  * ABD tahvil faizleri — 2, 5 ve 10 yıllık.
@@ -20,7 +22,7 @@ const TODAY_YIELDS = [
 export async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }) {
   const [vixResult, ...results] = await Promise.all([
     getSeries(VIX_SERIES, 2),
-    ...TODAY_YIELDS.map((series) => getSeries(series, 2)),
+    ...TODAY_YIELDS.map((series) => getSeries(series, CURVE_OBSERVATIONS)),
   ]);
 
   const values = TODAY_YIELDS.map((series, index) => {
@@ -32,8 +34,15 @@ export async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }
       latest: result.ok ? result.data.latestValue : null,
       prev: result.ok ? result.data.prevValue : null,
       date: result.ok ? (result.data.observations.at(-1)?.date ?? null) : null,
+      observations: result.ok ? result.data.observations : [],
     };
   });
+  /* EĞRİ MİNYATÜRÜ (25 Ekim) — /makro kapağıyla aynı bileşen ve aynı
+     kural (karar kaydı components/macro/YieldCurve.tsx). Üç vade yan
+     kolonda kalıyor: dört sütun 348 piksellik kartta değerleri 55
+     piksele sıkıştırıyordu; 30 yıllık /makro'da. */
+  const curve = buildYieldCurve(values.map((value) => ({ key: value.key, observations: value.observations })));
+  const caption = curve ? curveCaption(curve, values.map((value) => value.label), locale, t) : null;
 
   if (values.every((value) => value.latest === null)) return null;
 
@@ -87,52 +96,50 @@ export async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }
         tone="title"
         action={<PanelLink href="/makro">{t.common.showAll}</PanelLink>}
       />
-      <div className="grid grid-cols-3 border-t border-line">
-        {values.map((value, index) => {
-          const delta =
-            value.latest !== null && value.prev !== null
-              ? value.latest - value.prev
-              : null;
-          return (
-            <div
-              key={value.key}
-              className={cn(
-                "px-4 py-3.5",
-                index > 0 && "border-l border-line",
-              )}
-            >
-              <p className="plate text-nano">{value.label}</p>
-              {/* İşaret küçük ve sessiz kalıyor (birim künyesi gibi) ama YERİ
-                  dile bağlı: Türkçede sayıdan önce, İngilizcede sonra. Kural
-                  artık primitives → PercentReading içinde tek yerde; burada
-                  ve /piyasalar'da ayrı ayrı yazılıyken ikisi ayrışmıştı. */}
-              <PercentReading
-                value={value.latest}
-                locale={locale}
-                className="tote mt-1 block text-lg"
-                signClassName="mx-0.5 text-xs text-muted"
-              />
-              <p className="numeral mt-0.5 text-tiny text-muted">
-                {/* `null` ile `0` AYRI ŞEYLER: biri "önceki gözlemi
-                    bilmiyoruz", öteki "faiz gerçekten değişmedi". İkisini de
-                    "değişmedi" diye yazmak, olmayan bir ölçümü ölçülmüş gibi
-                    göstermek oluyordu. Bilinmeyende tire basılıyor. */}
-                {delta === null ? (
-                  NO_VALUE
-                ) : delta === 0 ? (
-                  t.macro.unchanged
-                ) : (
-                  <>
+      {curve && caption ? (
+        <div className="border-t border-line px-3 pb-3 pt-1 sm:px-4">
+          <YieldCurve
+            compact
+            curve={curve}
+            chartLabel={caption.chartLabel}
+            legend={caption.legend}
+            shape={caption.shape}
+            shapeLabel={caption.shapeLabel}
+            shapeNote={caption.shapeNote}
+            columns={values.map((value, index) => {
+              /* Değer EĞRİNİN gününden; değişim yalnız serinin son gözlemi o
+                 günse (başka günün hareketi bu değerin altına yazılmaz).
+                 `null` ile `0` ayrı: biri "önceki gözlemi bilmiyoruz",
+                 öteki "faiz gerçekten değişmedi"; bilinmeyende tire. */
+              const delta = value.latest !== null && value.prev !== null ? value.latest - value.prev : null;
+              const sameDay = value.date === curve.date;
+              return {
+                key: value.key,
+                label: value.label,
+                value: (
+                  <PercentReading value={curve.points[index].value} locale={locale} signClassName="mx-0.5 text-xs text-muted" />
+                ),
+                delta: !sameDay || delta === null ? NO_VALUE : delta === 0 ? t.macro.unchanged : (
+                  <span className={delta > 0 ? "text-up" : "text-down"}>
                     <span aria-hidden>{delta > 0 ? "▲" : "▼"}</span>{" "}
-                    {formatPrice(Math.abs(delta), locale, { digits: 2 })}{" "}
-                    {t.markets.point}
-                  </>
-                )}
-              </p>
+                    {formatPrice(Math.abs(delta), locale, { digits: 2 })} {t.markets.point}
+                  </span>
+                ),
+                ...caption.ghostOf(index),
+              };
+            })}
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 border-t border-line">
+          {values.map((value, index) => (
+            <div key={value.key} className={cn("px-4 py-3.5", index > 0 && "border-l border-line")}>
+              <p className="plate text-nano">{value.label}</p>
+              <PercentReading value={value.latest} locale={locale} className="tote mt-1 block text-lg" signClassName="mx-0.5 text-xs text-muted" />
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
       {observedAt && (
         <p className="border-t border-line-soft px-4 py-2 text-tiny text-muted sm:px-5">
@@ -163,10 +170,11 @@ export async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }
             <span
               className={cn(
                 "rounded-full px-2 py-0.5 text-tiny font-semibold",
-                vixTone.band.tone === "up" && "bg-up-wash text-up",
-                vixTone.band.tone === "flat" && "bg-surface-elevated text-body",
-                vixTone.band.tone === "warn" && "bg-brass-wash text-brass-ink",
-                vixTone.band.tone === "down" && "bg-down-wash text-down",
+                // Band bir değerlendirme, yön değil (25 Ekim, /makro ile
+                // aynı kural): sakin/normal nötr, gergin ve üstü pirinç uyarı.
+                vixTone.band.tone === "up" || vixTone.band.tone === "flat"
+                  ? "bg-surface-elevated text-body"
+                  : "bg-brass-wash text-brass-ink",
               )}
             >
               {vixTone.label}
@@ -194,9 +202,8 @@ export async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }
                   <span
                     className={cn(
                       "numeral text-tiny font-semibold",
-                      // Yükselen VIX gerginlik demek — yön rengi hisse
-                      // sözlüğünün tersine kurulu.
-                      vixDelta > 0 ? "text-down" : "text-up",
+                      // Ok yalnız yön (25 Ekim): gerginlik yargısı bandın adında.
+                      vixDelta > 0 ? "text-up" : "text-down",
                     )}
                   >
                     <span aria-hidden>{vixDelta > 0 ? "▲" : "▼"}</span>{" "}

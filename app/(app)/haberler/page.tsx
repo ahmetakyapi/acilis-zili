@@ -20,7 +20,15 @@ import {
 } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { insightsConfigured } from "@/lib/stock-insights";
-import { cn, headlineMentions, timeAgo, titleCaseLabel } from "@/lib/utils";
+import { headlineMentions, timeAgo, titleCaseLabel } from "@/lib/utils";
+import feed from "@/components/news/NewsFeed.module.css";
+import { DirectionFigure, HourHead, NewsPulseStrip } from "@/components/news/NewsFeedParts";
+import { getStatus } from "@/lib/data";
+import { groupByHour, newsPulse, pulseSentence } from "@/lib/feed-visuals";
+import type { Locale } from "@/lib/i18n/config";
+import { isSessionTrade } from "@/lib/market-hours";
+import { getQuotes } from "@/lib/providers";
+import { displayZone, formatInZone } from "@/lib/session-clock";
 
 import { pageMetadata } from "@/lib/page-meta";
 
@@ -62,6 +70,25 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
     getI18n(),
     headers().then((h) => h.get("user-agent") ?? ""),
   ]);
+  /* GÜNÜN GÜNDEMİ (17 Ekim): uzun akışın üstünde "bugün ne konuşuluyor"
+     özeti; sembol süzgecinde basılmaz (süzülen liste zaten tek konu).
+     Gerekçe lib/news-insights.ts.
+
+     BOTA BASILMAZ (25 Ekim, CLS ölçümü). Kart yüklenirken notun
+     ölçülmüş boyunu ayırıyor (`.loading`, 1280'de 780 piksel) ve uç
+     (`/api/ai/haber-notu`) botu 403 ile geri çeviriyor: bot, başsız
+     Chrome ve Lighthouse kutunun 780'den tek satırlık "alınamadı"ya
+     çöktüğünü, altındaki listenin 759 piksel yukarı sıçradığını
+     görüyordu. Üretimde 1280'de CLS 0,2634 (her üç ölçümde aynı,
+     kaynak liste iskeleti 1180 → 421). Uç zaten vermeyeceği notun
+     kutusunu açmıyoruz; kalıp ucun kendi `isBot` denetimi.
+
+     Liste katmanına prop olarak iner: tepe şeridinin altında (25 Ekim,
+     ekran düzeni sırası — gerekçe NewsList). */
+  const briefing = !symbolFilter && insightsConfigured() && !isBot(userAgent)
+    ? <NewsBriefingCard locale={locale} labels={t.newsInsight} />
+    : null;
+
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
@@ -94,23 +121,9 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
         }
       />
 
-      {/* GÜNÜN GÜNDEMİ (17 Ekim): uzun akışın üstünde "bugün ne konuşuluyor"
-          özeti; sembol süzgecinde basılmaz (süzülen liste zaten tek konu).
-          Gerekçe lib/news-insights.ts.
-
-          BOTA BASILMAZ (25 Ekim, CLS ölçümü). Kart yüklenirken notun
-          ölçülmüş boyunu ayırıyor (`.loading`, 1280'de 780 piksel) ve uç
-          (`/api/ai/haber-notu`) botu 403 ile geri çeviriyor: bot, başsız
-          Chrome ve Lighthouse kutunun 780'den tek satırlık "alınamadı"ya
-          çöktüğünü, altındaki listenin 759 piksel yukarı sıçradığını
-          görüyordu. Üretimde 1280'de CLS 0,2634 (her üç ölçümde aynı,
-          kaynak liste iskeleti 1180 → 421). Uç zaten vermeyeceği notun
-          kutusunu açmıyoruz; kalıp ucun kendi `isBot` denetimi. */}
-      {!symbolFilter && insightsConfigured() && !isBot(userAgent) && <NewsBriefingCard locale={locale} labels={t.newsInsight} />}
-
       <QueryTransition label={t.common.loading}>
-      <Suspense key={symbolFilter ?? "all"} fallback={<LoadingFallback label={t.common.loading}><NewsSkeleton /></LoadingFallback>}>
-        <NewsList symbolFilter={symbolFilter} />
+      <Suspense key={symbolFilter ?? "all"} fallback={<LoadingFallback label={t.common.loading}><NewsSkeleton pulse={!symbolFilter} /></LoadingFallback>}>
+        <NewsList symbolFilter={symbolFilter} briefing={briefing} />
       </Suspense>
       </QueryTransition>
     </MotionExperience>
@@ -118,9 +131,11 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
 }
 
 /** Liste iskeleti — gerçek satırla aynı yükseklik, düzen zıplamasın. */
-function NewsSkeleton() {
+function NewsSkeleton({ pulse }: { pulse: boolean }) {
   return (
-    <div>
+    <div className={feed.feed}>
+      {/* Tepe şeridinin yeri (ölçüldü: 1440'ta ~250, 390'da ~290 piksel). */}
+      {pulse && <span className="skeleton block h-[250px] rounded-(--radius-panel) max-md:h-[290px]" />}
       <ul className={styles.list}>
         {Array.from({ length: 8 }).map((_, index) => (
           <li key={index} className={styles.row}>
@@ -137,8 +152,34 @@ function NewsSkeleton() {
   );
 }
 
-async function NewsList({ symbolFilter }: { symbolFilter: string | null }) {
+type NewsRow = Awaited<ReturnType<typeof getLatestNews>>[number];
+type Names = Awaited<ReturnType<typeof getSymbolNames>>;
+
+/**
+ * AKIŞ ZAMAN ÇİZGİSİ (25 Ekim, sahibinin isteği: "liste hâlindeki yazılar
+ * görsel olarak eksik ve okunamıyor"). Liste üç katmana ayrıldı:
+ *
+ *   1. Tepe cümlesi + "En Çok Konuşulan Şirketler" şeridi — akışın kaç
+ *      haberi ve ne kadar zamanı kapsadığı, en çok hangi şirketlerin geçtiği
+ *      (sayım `headlineMentions` süzgecinden geçen sembollerle; besleme
+ *      üyeliği bir şirketten bahsetmek sayılmıyor, rozetle aynı ölçü).
+ *   2. Öne çıkan haber — en yenisi, kendi bandında.
+ *   3. Saat durakları — kalan haberler okurun dilimindeki saat başlıklarının
+ *      altında (TR'de İstanbul, EN'de New York: `displayZone`).
+ *
+ * Kart künyesi: kaynak · saat (göreli "3 Saat Önce" yalnız öne çıkan
+ * haberde; saat başlığı zaten zamanı söylüyor). Sembol rozeti son seansın
+ * yüzdesini taşır — YALNIZ kotasyon bu seansa aitse ve paket tazeyse
+ * (CLAUDE.md "Veri dürüstlüğü" 4: `isSessionTrade`; bayat paket hiç
+ * yüzde basmaz). Sembol süzgecinde şerit ve cümle basılmaz: süzülen liste
+ * zaten tek konu.
+ *
+ * Briefing (Claude'un "Günün Gündemi" notu) şeridin ALTINA indi: ekran
+ * düzeni sırası başlık → künye şeridi → … → metin.
+ */
+async function NewsList({ symbolFilter, briefing }: { symbolFilter: string | null; briefing?: React.ReactNode }) {
   const { locale, t } = await getI18n();
+  const F = t.feedVisuals.news;
 
   /* Sembol süzgeci VERİTABANINDA. Bir dönem en yeni 60 haber çekilip bellekte
      süzülüyordu ve sembol o pencerede geçmiyorsa sayfa "haber yok" diyordu —
@@ -155,115 +196,160 @@ async function NewsList({ symbolFilter }: { symbolFilter: string | null }) {
      Görseli olmayan habere şirketin logosu konuyor — künye kutusunda sembol
      yazmaktansa haberin konusu olan şirketi göstermek listeyi taranabilir
      kılıyor. */
-  const [genericImages, logos] = await Promise.all([
+  const [genericImages, logos, status] = await Promise.all([
     getGenericImageUrls(items.map((item) => item.imageUrl)),
-    getSymbolNames([
-      ...new Set(
-        items.flatMap((item) => item.symbols ?? []),
-      ),
-    ]),
+    getSymbolNames([...new Set(items.flatMap((item) => item.symbols ?? []))]),
+    getStatus(),
   ]);
 
-  return (
-      <div>
-        {items.length === 0 ? (
-          <EmptyState title={t.news.empty} scene="press" />
-        ) : (
-          <ul className={styles.list} data-motion-stagger>
-            {items.map((item) => {
-              // Feed membership alone is not a company mention. Apply the
-              // same textual subject check already used for company logos.
-              const shownSymbols = (item.symbols ?? []).filter((symbol) => headlineMentions(`${item.headline} ${item.summary ?? ""}`, symbol, logos[symbol]?.name));
-              const symbol = item.symbols?.[0];
-              const company = symbol ? logos[symbol] : null;
-              const hasVisual = Boolean((item.imageUrl && !genericImages.has(item.imageUrl)) || (company?.logoUrl && symbol && headlineMentions(item.headline, symbol, company.name)));
-              return <li key={item.id} className={styles.cell}>
-                <Link
-                  href={`/haberler/${item.id}`}
-                  prefetch={false}
-                  className={styles.row}
-                >
-                  <div className={styles.copy}>
-                  {/* ÇEVRİLMEMİŞ SATIR KENDİ DİLİNİ TAŞIR. Türkçe sayfada
-                      çevirisi henüz gelmemiş haber orijinal İngilizce
-                      başlığıyla görünüyor (çeviri cron'da ve sağlayıcı
-                      anahtarı yoksa atlanıyor — lib/translate.ts). `lang`
-                      olmadan ekran okuyucu İngilizce cümleyi Türkçe
-                      sesletmeye çalışıyordu. Mercek yazılarında aynı kural
-                      zaten uygulanıyor. */}
-                  <h2
-                    lang={locale === "tr" && !item.headlineTr ? "en" : undefined}
-                    className={styles.title}
-                  >
-                    {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
-                  </h2>
-                  {/* ÖZET SATIRI HER ZAMAN BASILIYOR — özeti olmayan
-                      haberde boş. Liste iki sütunlu bir ızgara ve satırlar
-                      kardeş haberle paylaşılıyor (bkz. CSS `.list`/`.cell`
-                      alt ızgarası); bir haberde özet hiç basılmazsa onun
-                      künye satırı bir satır yukarı çıkar ve yan yana duran
-                      iki haber aynı hattı paylaşmaz. */}
-                  <p
-                    lang={locale === "tr" && !item.summaryTr ? "en" : undefined}
-                    className={styles.summary}
-                  >
-                    {locale === "tr" && item.summaryTr ? item.summaryTr : item.summary}
-                  </p>
-                  <p className={styles.meta}>
-                    {item.source && <span>{item.source}</span>}
-                    <span aria-hidden>·</span>
-                    <span>{titleCaseLabel(timeAgo(item.publishedAt, locale), locale)}</span>
-                    {shownSymbols.length > 0 && (
-                      <>
-                        <span aria-hidden>·</span>
-                        <span className="flex gap-1">
-                          {shownSymbols.slice(0, 4).map((symbol) => (
-                            <span
-                              key={symbol}
-                              className={cn(
-                                "numeral rounded bg-surface-sunken px-1.5 py-0.5 text-nano font-medium text-soft",
-                              )}
-                            >
-                              {symbol}
-                            </span>
-                          ))}
-                        </span>
-                      </>
-                    )}
-                  </p>
-                  </div>
+  /* Feed membership alone is not a company mention. Apply the same textual
+     subject check already used for company logos. */
+  const mentions = new Map(
+    items.map((item) => [
+      item.id,
+      (item.symbols ?? []).filter((symbol) => headlineMentions(`${item.headline} ${item.summary ?? ""}`, symbol, logos[symbol]?.name)),
+    ]),
+  );
+  const pulse = newsPulse(items.map((item) => ({ publishedAt: item.publishedAt, mentions: mentions.get(item.id) ?? [] })));
+  const quoted = [...new Set([...mentions.values()].flatMap((list) => list.slice(0, 4)))];
+  const quotes = quoted.length ? await getQuotes(quoted, status).catch(() => null) : null;
+  const dayChange: Record<string, number> = {};
+  if (quotes?.ok && !quotes.stale) {
+    for (const [symbol, quote] of Object.entries(quotes.data)) {
+      if (quote && quote.changePct !== null && isSessionTrade(quote.tradedAt, status)) dayChange[symbol] = quote.changePct;
+    }
+  }
 
-                  {/* Mobilde de görünür. Ana sayfadaki haber listesi küçük
-                      resmi telefonda zaten gösteriyordu; burada gizlemek iki
-                      listeyi birbirinden farklı kılıyordu ve küçük resim
-                      listeyi taranabilir yapan asıl şey. */}
-                  {/* No repeated empty image tile: a story without a real
-                      image or verified subject logo keeps an editorial text layout. */}
-                  {hasVisual && <NewsImage
-                    className={styles.thumb}
-                    src={
-                      item.imageUrl && !genericImages.has(item.imageUrl)
-                        ? item.imageUrl
-                        : null
-                    }
-                    logoUrl={(() => {
-                      /* Logo yalnızca haber gerçekten o şirketle ilgiliyse:
-                         `symbols` alanı bazen haberin konusunu değil,
-                         çekildiği beslemeyi söylüyor. */
-                      const symbol = item.symbols?.[0];
-                      const meta = symbol ? logos[symbol] : null;
-                      if (!symbol || !meta?.logoUrl) return null;
-                      return headlineMentions(item.headline, symbol, meta.name)
-                        ? meta.logoUrl
-                        : null;
-                    })()}
-                    sizeClass=""
-                  />}
-                </Link>
-              </li>;
-            })}
-          </ul>
-        )}
-      </div>
+  if (items.length === 0) {
+    return <div className={feed.feed}>{briefing}<EmptyState title={t.news.empty} scene="press" /></div>;
+  }
+
+  const zone = displayZone(locale);
+  const [lead, ...rest] = items;
+  const groups = groupByHour(rest, zone);
+  const dayLabel = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", { timeZone: "UTC", day: "numeric", month: "short" });
+  const card = { locale, logos, genericImages, mentions, dayChange, zone };
+
+  return (
+    <div className={feed.feed}>
+      {!symbolFilter && (
+        <NewsPulseStrip
+          pulse={pulse}
+          sentence={pulseSentence(pulse, F)}
+          names={logos}
+          dayChange={dayChange}
+          labels={F}
+          locale={locale}
+        />
+      )}
+      {briefing}
+      <ul className={styles.list}>
+        <NewsCard item={lead} lead {...card} />
+      </ul>
+      {groups.length > 0 && (
+        <div className={feed.timeline} aria-label={F.timelineLabel} role="group" data-motion-stagger>
+          {groups.map((group) => {
+            const id = `saat-${group.key.replace(/[^0-9T]/g, "")}`;
+            return (
+              <section key={group.key} aria-labelledby={id} className={feed.hour}>
+                <HourHead
+                  id={id}
+                  from={group.from}
+                  to={group.to}
+                  dayOffset={group.dayOffset}
+                  dayLabel={dayLabel.format(new Date(`${group.day}T12:00:00Z`))}
+                  count={group.items.length}
+                  labels={F}
+                />
+                <ul className={styles.list}>
+                  {group.items.map((item) => <NewsCard key={item.id} item={item} {...card} />)}
+                </ul>
+              </section>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NewsCard({
+  item,
+  lead = false,
+  locale,
+  logos,
+  genericImages,
+  mentions,
+  dayChange,
+  zone,
+}: {
+  item: NewsRow;
+  lead?: boolean;
+  locale: Locale;
+  logos: Names;
+  genericImages: Set<string>;
+  mentions: Map<string, string[]>;
+  dayChange: Record<string, number>;
+  zone: string;
+}) {
+  const shownSymbols = mentions.get(item.id) ?? [];
+  const symbol = item.symbols?.[0];
+  const company = symbol ? logos[symbol] : null;
+  /* Logo yalnızca haber gerçekten o şirketle ilgiliyse: `symbols` alanı
+     bazen haberin konusunu değil, çekildiği beslemeyi söylüyor. */
+  const logoUrl = symbol && company?.logoUrl && headlineMentions(item.headline, symbol, company.name) ? company.logoUrl : null;
+  const imageUrl = item.imageUrl && !genericImages.has(item.imageUrl) ? item.imageUrl : null;
+  const hasVisual = Boolean(imageUrl || logoUrl);
+  const Title = lead ? "h2" : "h3";
+  return (
+    <li className={lead ? `${styles.cell} ${styles.lead}` : styles.cell}>
+      <Link href={`/haberler/${item.id}`} prefetch={false} className={styles.row}>
+        <div className={styles.copy}>
+          {/* ÇEVRİLMEMİŞ SATIR KENDİ DİLİNİ TAŞIR. Türkçe sayfada çevirisi
+              henüz gelmemiş haber orijinal İngilizce başlığıyla görünüyor
+              (çeviri cron'da ve sağlayıcı anahtarı yoksa atlanıyor —
+              lib/translate.ts). `lang` olmadan ekran okuyucu İngilizce
+              cümleyi Türkçe sesletmeye çalışıyordu. */}
+          <Title lang={locale === "tr" && !item.headlineTr ? "en" : undefined} className={styles.title}>
+            {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
+          </Title>
+          {/* ÖZET SATIRI HER ZAMAN BASILIYOR — özeti olmayan haberde boş.
+              Liste iki sütunlu bir ızgara ve satırlar kardeş haberle
+              paylaşılıyor (CSS `.list`/`.cell` alt ızgarası); bir haberde
+              özet hiç basılmazsa onun künye satırı bir satır yukarı çıkar ve
+              yan yana duran iki haber aynı hattı paylaşmaz. */}
+          <p lang={locale === "tr" && !item.summaryTr ? "en" : undefined} className={styles.summary}>
+            {locale === "tr" && item.summaryTr ? item.summaryTr : item.summary}
+          </p>
+          <p className={styles.meta}>
+            {item.source && <span className={feed.source}>{item.source}</span>}
+            {item.source && <span aria-hidden>·</span>}
+            <time dateTime={item.publishedAt.toISOString()} className={feed.clock}>
+              {formatInZone(item.publishedAt, zone)}
+            </time>
+            {lead && (
+              <>
+                <span aria-hidden>·</span>
+                <span>{titleCaseLabel(timeAgo(item.publishedAt, locale), locale)}</span>
+              </>
+            )}
+            {shownSymbols.length > 0 && (
+              <span className={feed.symbols}>
+                {shownSymbols.slice(0, 4).map((sym) => (
+                  <span key={sym} className={feed.sym}>
+                    <span className={feed.symName}>{sym}</span>
+                    <DirectionFigure pct={dayChange[sym]} locale={locale} />
+                  </span>
+                ))}
+              </span>
+            )}
+          </p>
+        </div>
+        {/* Mobilde de görünür: küçük resim listeyi taranabilir yapan asıl
+            şey. Görseli ya da doğrulanmış konu logosu olmayan haber düz
+            metin düzeninde kalır (tekrarlanan boş karo yok). */}
+        {hasVisual && <NewsImage className={styles.thumb} src={imageUrl} logoUrl={logoUrl} sizeClass="" />}
+      </Link>
+    </li>
   );
 }

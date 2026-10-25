@@ -1,0 +1,161 @@
+/* Posterin etiketli kulvarları — gerekçe PosterLanes.tsx.
+
+   Dar kap (< 440): [sıra | ad … değer] üstte, şerit altında tam en.
+   Geniş kap: [sıra | ad | şerit | değer] tek satır. Eksen künyesi şeridin
+   sütununda; sıfır çizgisi her şeridin ortasında (`::after`) ve geniş
+   düzende satırlar arasında kesintisiz (`.lanes::before`). */
+.wrap {
+  --rank-w: 1.25rem;
+  --value-w: 4.25rem;
+  --name-w: 0px;
+  --col-gap: 10px;
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.axis,
+.row {
+  display: grid;
+  grid-template-columns: var(--rank-w) minmax(0, 1fr) auto;
+  grid-template-areas:
+    "rank name value"
+    "track track track";
+  column-gap: var(--col-gap);
+  align-items: baseline;
+}
+.axis { grid-template-areas: "track track track"; margin-bottom: 4px; }
+.axisTrack {
+  grid-area: track;
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.lanes {
+  position: relative;
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.row { row-gap: 5px; }
+.rank { grid-area: rank; color: var(--text-muted); font-size: var(--text-small); letter-spacing: -0.02em; }
+.name {
+  grid-area: name;
+  min-width: 0;
+  color: var(--text-strong);
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.3;
+}
+.symbol {
+  margin-left: 6px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-nano);
+  font-weight: 500;
+}
+.value {
+  grid-area: value;
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.track {
+  grid-area: track;
+  position: relative;
+  display: block;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line-soft);
+  align-self: center;
+}
+.track::after {
+  content: "";
+  position: absolute;
+  inset: -3px auto -3px 50%;
+  width: 1.5px;
+  translate: -50% 0;
+  background: var(--line-strong);
+}
+.bar {
+  position: absolute;
+  inset-block: 0;
+  width: max(1.5px, var(--len));
+  border-radius: 999px;
+  animation: bar-grow 0.7s var(--ease-brand) both;
+  animation-delay: calc(0.15s + var(--i, 0) * 0.045s);
+  /* Posterin dördüncü perdesi (künye kartı) kendi anında oynatıyor
+     (`PosterAct`); başka çağıranlarda varsayılan: hemen. */
+  animation-play-state: var(--lanes-play, running);
+}
+.barUp { left: 50%; background: var(--up); transform-origin: left center; }
+.barDown { right: 50%; background: var(--down); transform-origin: right center; }
+@keyframes bar-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Ölçü ızgarasının tek şeridi (`MiniLane`). */
+.mini {
+  position: relative;
+  display: block;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line-soft);
+}
+.mini::after {
+  content: "";
+  position: absolute;
+  inset: -3px auto -3px 50%;
+  width: 1.5px;
+  translate: -50% 0;
+  background: var(--line-strong);
+}
+
+/* GENİŞ KAP: tek satır. Ad sütunu en uzun Türkçe sektör adını
+   ("İsteğe Bağlı Tüketim" + fon) taşıyacak kadar; İngilizce "Consumer
+   Discretionary" dar kapta iki satıra kırılıyor, kesilmiyor. */
+@container (min-width: 440px) {
+  /* Kap kendi sorgusunda stillenemiyor: değişken çocuklarda. Ad sütunu
+     kabın üçte birini geçmiyor: 1280'de sağ sütundaki endeks kulvarları
+     sabit 200 piksellik ad sütunuyla 160 piksele iniyordu (ölçüldü). */
+  .axis,
+  .lanes { --name-w: min(12.5rem, 34cqi); }
+  .axis,
+  .row {
+    grid-template-columns: var(--rank-w) var(--name-w) minmax(0, 1fr) var(--value-w);
+    grid-template-areas: "rank name track value";
+    align-items: center;
+  }
+  .axis { grid-template-areas: ". . track ."; }
+  .lanes { gap: 0; }
+  .row { min-height: 30px; }
+  .track::after { content: none; }
+  /* Kesintisiz sıfır çizgisi: şerit sütununun ortası. */
+  .lanes::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: calc(
+      var(--rank-w) + var(--name-w) + 2 * var(--col-gap) +
+        (100% - var(--rank-w) - var(--name-w) - var(--value-w) - 3 * var(--col-gap)) / 2
+    );
+    width: 1.5px;
+    translate: -50% 0;
+    background: var(--line-strong);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar { animation: none; }
+}

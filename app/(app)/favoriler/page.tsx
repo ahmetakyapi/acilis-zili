@@ -18,12 +18,17 @@ import { getUserSubscriptions, pushPublicKey } from "@/lib/push";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { getStatus, getSymbolNames, getUserWatchlists } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
-import { getQuotes } from "@/lib/providers";
+import { getChartBarsMulti, getQuotes } from "@/lib/providers";
+import type { Bar } from "@/lib/providers/types";
+import { isSessionTrade } from "@/lib/market-hours";
+import { listPulse, yearRange } from "@/lib/watchlist-visuals";
+import { formatPercent } from "@/lib/utils";
 import { getUsdTry } from "@/lib/providers/tcmb";
 import { formatIsoDate, formatRate } from "@/lib/fx";
 
 import { pageMetadata } from "@/lib/page-meta";
 import { WatchlistToday } from "@/components/watchlist/WatchlistToday";
+import pulseStyles from "@/components/watchlist/WatchlistVisuals.module.css";
 import { insightsConfigured } from "@/lib/stock-insights";
 import { WATCH_TODAY_MIN_COVERED } from "@/lib/watchlist-today-core";
 
@@ -37,6 +42,9 @@ export const generateMetadata = pageMetadata({
   tr: { title: "Favorilerim", description: "Kategorilere ayrılmış takip listelerin." },
   en: { title: "My Watchlists", description: "Your watchlists, grouped the way you want." },
 });
+
+/** Liste boşken bar isteği yok; boş eşleme aynı tipte. */
+const NO_BARS: Record<string, Bar[]> = {};
 
 export default async function WatchlistPage() {
   const session = await auth();
@@ -63,7 +71,7 @@ export default async function WatchlistPage() {
     ...new Set([...listSymbols, ...alertData.alerts.map((alert) => alert.symbol)]),
   ];
   const status = await getStatus();
-  const [quotesResult, names, fx] = await Promise.all([
+  const [quotesResult, names, fx, dayBars, yearBars] = await Promise.all([
     allSymbols.length > 0
       ? getQuotes(allSymbols, status)
       : Promise.resolve(null),
@@ -73,21 +81,70 @@ export default async function WatchlistPage() {
        toplam `/portfoy`ta. Burada her fiyatın lira karşılığı var, bugünün
        TCMB döviz alış kuruyla — kur ve bülten günü sayfanın altında. */
     allSymbols.length > 0 ? getUsdTry() : Promise.resolve(null),
+    /* SATIR GÖRSELLERİ (25 Ekim). Ana sayfanın takip listesi özeti
+       (`WatchlistSummary`) aynı listeyi günün minyatür çizgisiyle çiziyordu;
+       bu sayfa ise dokuz satırda yalnız fiyat ve rozet basıyordu. İki toplu
+       istek: günün 5 dakikalık barları (çizgi) ve bir yıllık günlük barlar
+       (52 hafta rayı). Yalnız LİSTE sembolleri; alarm sembolü satır değil. */
+    listSymbols.length > 0 ? getChartBarsMulti(listSymbols, "1D", status) : Promise.resolve(NO_BARS),
+    listSymbols.length > 0 ? getChartBarsMulti(listSymbols, "1Y", status) : Promise.resolve(NO_BARS),
   ]);
   const usdTry = fx?.ok ? fx.data.buying : null;
 
+  /* Çizgi sayıyla AYNI SEANSI anlatmalı: bayat paketle günün çizgisi
+     basılmıyor (gerekçe `WatchlistSummary` → `sparkOk`). */
+  const sparkOk = Boolean(quotesResult?.ok && !quotesResult.stale);
   const quotes: Record<string, BoardQuote> = {};
   if (quotesResult?.ok) {
     for (const [symbol, quote] of Object.entries(quotesResult.data)) {
       if (quote) {
+        const spark = sparkOk ? dayBars[symbol]?.map((bar) => bar.close) : undefined;
         quotes[symbol] = {
           price: quote.price,
           changePct: quote.changePct,
           priceTl: usdTry ? quote.price * usdTry : null,
+          spark: spark && spark.length > 1 ? spark : null,
+          range: yearRange(yearBars[symbol] ?? [], quote.price),
         };
       }
     }
   }
+
+  /* TEPE CÜMLESİ — listenin bugünü tek cümlede, veriden. Yüzde hangi
+     seansı anlattığını kanıtlıyor (`listPulse`, lib/watchlist-visuals.ts). */
+  const pulse = listPulse(
+    listSymbols,
+    Object.fromEntries(
+      listSymbols.flatMap((symbol) => {
+        const quote = quotesResult?.ok ? quotesResult.data[symbol] : null;
+        return quote ? [[symbol, { changePct: quote.changePct, session: isSessionTrade(quote.tradedAt, status) }]] : [];
+      }),
+    ),
+  );
+  const PV = t.personalVisuals.favorites;
+  const pulseText =
+    listSymbols.length === 0
+      ? null
+      : `${(pulse.total === 1 ? PV.totalOne : PV.total).replace("{n}", String(pulse.total))}; ${
+          pulse.scope === "none"
+            ? PV.none
+            : /* "BUGÜN" YALNIZ SEANS BUGÜNSE: hafta sonu ve tatilde seans
+                 günü cuma; yüzdeler onu anlatıyor ama "bugün" cumartesi. */
+              (pulse.scope === "last" || status.sessionDate !== status.etDate
+                ? PV.last
+                : pulse.scope === "today"
+                  ? PV.today
+                  : PV.partial)
+                .replace("{count}", String(pulse.counted))
+                .replace("{down}", String(pulse.down))
+                .replace("{up}", String(pulse.up))
+        }.${
+          pulse.lead
+            ? ` ${(pulse.lead.direction === "down" ? PV.leadDown : PV.leadUp)
+                .replace("{symbol}", pulse.lead.symbol)
+                .replace("{pct}", formatPercent(pulse.lead.changePct, locale))}`
+            : ""
+        }`;
 
   const prices: Record<string, number> = {};
   for (const [symbol, quote] of Object.entries(quotes)) prices[symbol] = quote.price;
@@ -157,12 +214,29 @@ export default async function WatchlistPage() {
     renameList: t.watchlist.renameList,
     save: t.common.save,
     dragHint: t.watchlist.dragHint,
+    rangeTitle: PV.rangeTitle,
+    sparkTitle: PV.sparkTitle,
+    edit: PV.edit,
+    editDone: PV.editDone,
+    editLabel: PV.editLabel,
   };
 
   return (
     <MotionExperience className={`${polish.page} ${polish.watchlist}`}>
       <ScrollProgress />
       <PageHeader title={t.watchlist.title} subtitle={t.watchlist.subtitle} />
+
+      {/* Listenin bugünü tek cümlede ve satır görsellerinin anahtarı —
+          ekran düzeninde başlığın altındaki künye katmanı (CLAUDE.md, 2). */}
+      {pulseText && (
+        <div className={pulseStyles.pulse}>
+          <p className={pulseStyles.pulseText}>{pulseText}</p>
+          <p className={pulseStyles.legend} aria-hidden>
+            <span><i data-key="spark" />{PV.legendSpark}</span>
+            <span><i data-key="range" />{PV.legendRange}</span>
+          </p>
+        </div>
+      )}
 
       <WatchlistBoard
         lists={lists.map((list) => ({

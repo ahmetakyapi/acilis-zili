@@ -45,8 +45,8 @@
 .reading dt { color:var(--text-muted); font-size:12px; font-weight:500; }
 .readingValue { color:var(--text-strong); font-size:clamp(22px,2vw,28px); font-weight:600; line-height:1.15; letter-spacing:-.035em; }
 /* Okuma çubuğu sayının altında, soldan dolar: iki okuma aynı eksende. */
-.readingTrack { position:relative; width:100%; max-width:200px; height:3px; margin-top:6px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
-.readingTrack > i { position:absolute; inset-block:0; left:0; border-radius:999px; background:color-mix(in srgb, var(--primary) 58%, transparent); }
+.readingTrack { position:relative; width:100%; max-width:200px; height:var(--lane-h,5px); margin-top:6px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
+.readingTrack > i { position:absolute; inset-block:0; left:0; border-radius:999px; background:var(--bar-soft); }
 .readingMeta { color:var(--text-muted); font-size:var(--text-nano); line-height:1.45; }
 
 /* Tablolar — dar ekranda kendi kabında kayar, etiket sütunu sabit
@@ -171,10 +171,13 @@
    "ince": kulvar üstünde 5 piksellik şerit. Dolu kısım yüzdelik; medyan
    kulvarı aşan tek ince çizgi; işaret konunun kendisi. */
 .strip { grid-area:strip; position:relative; display:block; height:18px; margin-inline:6px; container-type:inline-size; }
-.stripRail { position:absolute; inset-inline:0; top:50%; height:5px; margin-top:-2.5px; border-radius:999px; background:var(--rail-track,var(--line-soft)); }
-.stripRail > i { display:block; height:100%; border-radius:999px; background:color-mix(in srgb, var(--primary) 55%, transparent); }
+.stripRail { position:absolute; inset-inline:0; top:50%; height:var(--lane-h,5px); translate:0 -50%; border-radius:999px; background:var(--rail-track,var(--line-soft)); }
+/* Renk kararı (25 Ekim son düzeltme): yüzdelik bir büyüklük, etkileşim
+   değil; şerit sitenin tek büyüklük tonu `--bar-soft` (önce doygun
+   `--primary` %55, sonra `--primary-soft` %60 idi), nokta en koyu mürekkep. */
+.stripRail > i { display:block; height:100%; border-radius:999px; background:var(--bar-soft); }
 .stripMedian { position:absolute; top:1px; bottom:1px; width:2px; margin-left:-1px; border-radius:1px; background:var(--line-strong); }
-.stripDot { position:absolute; top:50%; width:13px; height:13px; margin:-6.5px 0 0 -6.5px; border:2.5px solid var(--premium-surface,var(--surface-solid)); border-radius:999px; background:var(--primary); box-sizing:border-box; }
+.stripDot { position:absolute; top:50%; width:13px; height:13px; margin:-6.5px 0 0 -6.5px; border:2.5px solid var(--premium-surface,var(--surface-solid)); border-radius:999px; background:var(--text-strong); box-sizing:border-box; }
 /* Ölçek başlığı: satırla aynı üç sütun; yazılar şerit sütununun solunda,
    ortasında ve sağında (şeridin `margin-inline`i kadar içeride). */
 /* 12 PİKSEL (14 Ekim): 11,5 sitenin metin tabanının altındaydı (globals.css
@@ -212,7 +215,7 @@
 .techSub { display:block; color:var(--text-muted); font-size:var(--text-nano); font-weight:500; }
 .rsiRail { position:relative; grid-column:1 / -1; height:6px; margin-top:4px; border-radius:3px; background:var(--rail-track,var(--line-soft)); }
 .rsiRail > span { position:absolute; top:-2px; bottom:-2px; width:1px; background:var(--line-strong); }
-.rsiRail > i { position:absolute; top:-3px; width:12px; height:12px; margin-left:-6px; border:2px solid var(--surface-solid); border-radius:999px; background:var(--primary); }
+.rsiRail > i { position:absolute; top:-3px; width:12px; height:12px; margin-left:-6px; border:2px solid var(--surface-solid); border-radius:999px; background:var(--text-strong); }
 .pivots { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; margin-top:4px; padding-top:10px; border-top:1px solid var(--line-soft); }
 .pivots > div { display:flex; min-width:0; flex-direction:column; align-items:center; gap:3px; }
 .pivots dt { color:var(--text-muted); font-size:12px; text-align:center; }

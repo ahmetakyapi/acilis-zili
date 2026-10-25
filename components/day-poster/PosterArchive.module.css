@@ -3,68 +3,17 @@
    işaretten (`directionText`): veri panelinde mavi sayı yok. */
 
 /* ------------------------------------------------------------ SON SEANS
-   Sahne solda (480'de tavan — poster sayfasında 520; burada yanındaki
-   okuma daha kısa ve sahnenin boyu ona yaklaşsın diye bir tık dar),
-   okunan karşılığı sağda; 900'ün altında alt alta. */
-.latest {
-  display: grid;
-  gap: 20px;
-  padding: 4px 16px 18px;
-}
+   Panonun kendisi `PosterBoard.module.css`te; burada iskeleti ve panelin
+   taşma kuralı (`clip`: sahnenin yapışkan ekseni, gerekçe
+   DayPoster.module.css). */
+.latest { overflow: clip; }
+.skeleton { display: grid; gap: 16px; padding: 18px 16px; }
 @media (min-width: 640px) {
-  .latest { padding: 4px 20px 20px; }
+  .skeleton { padding: 22px 20px; }
 }
-@media (min-width: 900px) {
-  .latest {
-    grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
-    align-items: start;
-    gap: 28px;
-  }
-}
-.figure { margin: 0; min-width: 0; }
-.readout { display: grid; gap: 20px; min-width: 0; align-content: start; }
 
-/* Dört endeks 2×2; rakamlar satırın dibinde AYNI HATTA (ekran düzeni 4). */
-.indices {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 16px;
-  margin: 0;
-  align-items: end;
-}
-.measure dt { color: var(--text-muted); font-size: var(--text-small); font-weight: 600; }
-.measure dd { margin: 2px 0 0; color: var(--text-strong); font-size: var(--text-title); font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
-
-.breadth { display: grid; gap: 8px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
-.label { color: var(--text-muted); font-size: var(--text-small); font-weight: 600; }
 .counts { color: var(--text-body); font-size: var(--text-small); font-weight: 600; letter-spacing: -0.02em; white-space: nowrap; }
 .sep { margin-inline: 6px; color: var(--text-muted); }
-
-.sectors { display: grid; gap: 8px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
-/* Sıra yukarıdan aşağı akıyor (`grid-auto-flow: column`): sol sütun 1–6,
-   sağ sütun 7–11; telefonda tek sütun. */
-.ranking {
-  display: grid;
-  gap: 6px 24px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  counter-reset: rank;
-  font-size: var(--text-small);
-}
-@media (min-width: 480px) {
-  .ranking { grid-template-rows: repeat(6, auto); grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-}
-.ranking > li {
-  display: grid;
-  grid-template-columns: 1.4rem minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 8px;
-  counter-increment: rank;
-}
-.ranking > li::before { content: counter(rank); color: var(--text-muted); }
-.rankName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-strong); font-weight: 600; }
-.rankValue { font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
 
 /* ---------------------------------------------------------------- ARŞİV
    Izgara Günün Grafiği arşiviyle aynı kalıp (DailyChart.module.css):
@@ -84,6 +33,13 @@
 }
 @media (min-width: 1100px) {
   .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+/* Geniş ekranda dört sütun (25 Ekim): çerçeve büyüyünce (`components/
+   layout/frame.ts`) üç sütunlu kart 1920'de ~500 piksele çıkıyordu;
+   dördüncü sütun kartı 1440'taki boyuna yakın tutuyor ve bir satırda
+   bir seans daha okunuyor. */
+@media (min-width: 1800px) {
+  .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 .grid > li { min-width: 0; }
 
@@ -110,10 +66,46 @@
 
 .cardBreadth { display: grid; gap: 6px; }
 
+/* Günün sahnesinin minyatürü — kutu sabit oranlı, sahne içine sığıyor
+   (`contain`): dosya gelince kart kaymıyor. Tema iki dosya. */
+.cardScene {
+  display: block;
+  aspect-ratio: 320 / 150;
+  padding: 8px 6px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+.cardScene img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.cardScene .sceneDark { display: none; }
+:global(:root[data-theme="dark"]) .cardScene .sceneDark { display: block; }
+:global(:root[data-theme="dark"]) .cardScene .sceneLight { display: none; }
+/* Günün kısa başlığı ("Geniş Satış") — kartın ilk okunan sözü. Degrade
+   yok: kart bir veri kartı, degrade yalnız posterin kendi başlığında. */
+.cardStory { color: var(--text-strong); font-size: var(--text-title); font-weight: 750; line-height: 1.2; letter-spacing: -0.02em; }
+
 .cardFoot { display: grid; gap: 3px; padding-top: 10px; border-top: 1px solid var(--line-soft); font-size: var(--text-tiny); line-height: 1.35; }
 .cardFoot > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-strong); font-weight: 600; }
 .footLabel { display: inline-block; min-width: 4.75rem; color: var(--text-muted); }
 .footValue { font-weight: 700; }
+
+/* TELEFONDA İKİ SÜTUN, KÜÇÜK KART (25 Ekim, son inceleme). Tek sütunda
+   29 kart ~470'er piksel tutuyordu ve /gun 390'da 14.600 piksele
+   uzuyordu; arşivin işi "hangi gün neydi"yi taramak, her kartı tek tek
+   okutmak değil. Kart minyatürün kendisine iniyor: tarih ve S&P 500,
+   günün kısa başlığı, sahne minyatürü, genişlik şeridi. En güçlü/en
+   zayıf sektör satırı ve sayılar telefonda gizli; kartın bağlandığı
+   poster ikisini de ilk ekranında söylüyor. Ölçüm (390, 23 Ekim'de biten
+   arşiv): sayfa 14.658 → 7.321 piksel, kart ~170 piksel. */
+@media (max-width: 639px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .card { gap: 8px; padding: 10px 10px 12px; border-radius: var(--radius-md); }
+  .cardHead { flex-direction: column; align-items: flex-start; gap: 0; }
+  .cardDate { font-size: var(--text-small); }
+  .cardStory { font-size: var(--text-base); line-height: 1.25; }
+  .cardScene { padding: 4px 3px; }
+  .counts,
+  .cardFoot { display: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .card { transition: none; }

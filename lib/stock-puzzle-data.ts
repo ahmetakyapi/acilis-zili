@@ -2,7 +2,7 @@ import "server-only";
 
 import { createHmac } from "node:crypto";
 import { unstable_cache } from "next/cache";
-import { eq } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { symbols as symbolsTable } from "@/lib/schema";
 import { ALL_MEMBERS, indexMemberOf, primaryOnly } from "@/db/seed/indices";
@@ -10,6 +10,9 @@ import { SYMBOL_ALIASES } from "@/db/seed/aliases";
 import { describeSymbol } from "@/db/seed/descriptions";
 import { getCompanies, getStatus } from "@/lib/data";
 import { getChartBars } from "@/lib/providers";
+import { getKeyMetrics } from "@/lib/providers/finnhub";
+import { SUB_INDUSTRIES } from "@/db/seed/sub-industries";
+import { etParts } from "@/lib/market-hours";
 import { getAllMetrics } from "@/lib/symbol-metrics";
 import { sectorLabel } from "@/lib/sectors";
 import { foldForSearch } from "@/lib/search-fold";
@@ -17,9 +20,13 @@ import type { Locale } from "@/lib/i18n/config";
 import {
   MAX_GUESSES,
   POOL_SIZE,
+  SILHOUETTE_POINTS,
+  axisFor,
   cluesFor,
   compareGuess,
   dayNumberOf,
+  isJoker,
+  jokerFeedback,
   firstSentence,
   pickDaily,
   puzzleNumber,
@@ -32,6 +39,7 @@ import {
   type PuzzleFacts,
   type PuzzleRank,
   type PuzzleState,
+  type SilhouetteRange,
 } from "@/lib/stock-puzzle";
 
 /**
@@ -55,6 +63,21 @@ import {
  * serisini şişirir. Sunucuda skor tutulursa bu kabul geçersiz olur; o gün
  * tahminler sunucuda oturum başına sırayla kaydedilmeli.
  *
+ * İPUCU KAYNAKLARI VE KAPSAMA (25 Ekim, havuzun 200 şirketinde salt
+ * okumayla ölçüldü):
+ *   siluet ............ Alpaca günlük barları (`getChartBars` 1Y)  200/200
+ *   sektör, endüstri .. endeks tohumu GICS (`db/seed/indices.ts`)  200/200
+ *   piyasa değeri ..... `getCompanies` (fiyat × hisse sayısı)       200/200
+ *   beta, temettü ..... Finnhub `/stock/metric` (`getKeyMetrics`)   200 / 153
+ *   halka arz yılı .... `symbols.ipo_date`, 1980 ve sonrası         139/200
+ *   gelir büyümesi .... `symbol_metrics` revenueGrowthTTMYoy        198/200
+ *   net kâr marjı ..... `symbol_metrics` netProfitMarginTTM         199/200
+ *   harf kutuları, baş harf  sembol ve görünen ad                   200/200
+ * Temettü veriminin BOŞ olduğu 47 şirket büyük ölçüde ödemeyenler (AMZN,
+ * BRK.B) ama boş alan "ödemiyor" demek değil; ipucu o zaman atlanıyor.
+ * Merkez eyaleti ve çalışan sayısı sitenin hiçbir kaynağında yok; logo
+ * ipucu da yok: logo adresi (`/logos/SEMBOL.webp`) cevabı açık yazıyor.
+ *
  * YARININ CEVABI HESAPLANAMAZ: günün seçimi gizli sırdan türetilen
  * anahtarla (`secretRank`); hiçbir veritabanı yazması yok.
  */
@@ -69,9 +92,12 @@ import {
  * Yerelde ikisi de boşsa sabit bir geliştirme dizesine düşer — o zaman
  * sıra yine tahmin edilebilir; üretimde bu dala düşülmez (next-auth
  * sırsız açılmıyor). Sır değişirse günün cevabı da değişir; önbellek
- * (`cachedAnswer`) günün ilk seçimini iki gün tuttuğu için o gün oynayan
+ * (`cachedAnswer`) günün ilk seçimini saklı tuttuğu için o gün oynayan
  * okur etkilenmez, ertesi günden yeni sıra başlar.
  */
+/** Günün cevabı ve siluetinin önbellek ömrü — arşivin ufku kadar. */
+const ARCHIVE_CACHE_SECONDS = 400 * 24 * 60 * 60;
+
 let derivedKey: Buffer | null = null;
 function puzzleKey(): Buffer {
   if (!derivedKey) {
@@ -143,7 +169,10 @@ const cachedAnswer = unstable_cache(
   /* v2: seçim gizli anahtara geçti (25 Ekim); v1'in tuttuğu cevap
      herkesin hesaplayabildiği sıradandı. */
   ["stock-puzzle-answer-v2"],
-  { revalidate: 2 * 24 * 60 * 60 },
+  /* ARŞİV İÇİN UZUN (25 Ekim): geçmiş günler oynanabiliyor ve bir günün
+     cevabı sonradan değişmemeli. İki günlük ömürde, havuz piyasa değeriyle
+     kaydıkça dünkü bulmaca bir hafta sonra başka bir hisseye dönebilirdi. */
+  { revalidate: ARCHIVE_CACHE_SECONDS },
 );
 
 export async function dailyAnswer(day: string): Promise<string | null> {
@@ -177,26 +206,66 @@ async function poolWith(answer: string): Promise<PoolEntry[]> {
  * saklanıyor ki gün içinde herkes AYNI şekli görsün (son bar seans
  * boyunca oynuyor). Barlar alınamazsa fırlatır: önbelleğe yazılmaz, ipucu
  * o istekte atlanır (uydurulmaz).
+ *
+ * v2 (25 Ekim): şekille birlikte ÖLÇÜSÜ de saklanıyor (örneklenen
+ * kapanışların en düşüğü/en yükseği, ilk ve son barın günü): üç yanlıştan
+ * sonra yüzde ekseni, bitmiş bulmacada fiyat ve tarih ekseni bundan
+ * çiziliyor. Ölçü istemciye ancak o zaman iner (`axisFor`, `answer.chart`).
+ *
+ * ŞEKİL BULMACANIN GÜNÜNDE BİTER: yalnız ET günü bulmacanın gününden
+ * ÖNCE olan barlar. Bulmaca TR gece yarısı başlıyor (ET 16:00/17:00, ABD
+ * kapanışında ya da sonrasında), yani o günün süren seansı hiç girmiyor:
+ * kapak kartı yarım bir günü "kapanış" diye yazmıyor (CLAUDE.md, veri
+ * dürüstlüğü 4). Arşiv günü de aynı kuralla o güne kadar çizilir; aradan
+ * çok zaman geçtiyse pencerenin başı kısalır (sağlayıcı son bir yılı
+ * veriyor), şekil yine o günün son kapanışında biter.
  */
+type SilhouetteData = { points: number[]; range: SilhouetteRange };
+
+const etDay = (seconds: number) => etParts(new Date(seconds * 1000)).dateStr;
+
 const cachedSilhouette = unstable_cache(
   /* `day` önbellek anahtarına girsin diye argüman (unstable_cache
      argümanları anahtara katıyor); gövdede kullanılmıyor. */
-  async (symbol: string, day: string) => {
+  async (symbol: string, day: string): Promise<SilhouetteData> => {
     if (!day) throw new Error("gün yok");
     const status = await getStatus();
     const bars = await getChartBars(symbol, "1Y", status);
     if (!bars.ok) throw new Error("bar yok");
-    const points = silhouetteOf(bars.data.map((bar) => bar.close));
-    if (!points) throw new Error("siluet çıkmadı");
-    return points;
+    const done = bars.data.filter((bar) => etDay(bar.time) < day);
+    const picked = sampleBars(done);
+    const points = silhouetteOf(picked.map((bar) => bar.close));
+    if (!points || picked.length < 2) throw new Error("siluet çıkmadı");
+    const closes = picked.map((bar) => bar.close);
+    return {
+      points,
+      range: {
+        low: Math.min(...closes),
+        high: Math.max(...closes),
+        last: closes[closes.length - 1],
+        from: etDay(picked[0].time),
+        to: etDay(picked[picked.length - 1].time),
+      },
+    };
   },
-  ["stock-puzzle-silhouette-v1"],
-  { revalidate: 2 * 24 * 60 * 60 },
+  /* v2: dönen şekil `number[]` → `{ points, range }` (CLAUDE.md: şekli
+     değiştiren keyParts sürümünü artırır). */
+  ["stock-puzzle-silhouette-v2"],
+  /* Arşiv günü de ilk hesaplandığı şekliyle kalsın (cevapla aynı gerekçe). */
+  { revalidate: ARCHIVE_CACHE_SECONDS },
 );
+
+/** `silhouetteOf`un seçtiği barların aynısı — ölçü şekille aynı noktalardan. */
+function sampleBars<T extends { close: number }>(bars: readonly T[]): T[] {
+  const clean = bars.filter((bar) => Number.isFinite(bar.close) && bar.close > 0);
+  if (clean.length < 2) return [];
+  const count = Math.min(SILHOUETTE_POINTS, clean.length);
+  return Array.from({ length: count }, (_, i) => clean[Math.round((i * (clean.length - 1)) / (count - 1))]);
+}
 
 /**
  * Ana sayfa girişinin minyatürü (25 Ekim) — YALNIZ siluet, yani bulmacanın
- * zaten herkese açık İLK ipucu. Ad, sembol, sektör gelmez. Sayfanın
+ * zaten herkese açık İLK ipucu. Ad, sembol, sektör, ölçü gelmez. Sayfanın
  * HTML'ine girmiyor; giriş onu `/api/bulmaca` GET'inden istiyor
  * (`PuzzleTeaser`), ki ana sayfanın kaynağı bulmacayla ilgili hiçbir veri
  * taşımasın. Siluet alınamazsa null; uydurulmaz.
@@ -204,44 +273,81 @@ const cachedSilhouette = unstable_cache(
 export async function dailySilhouette(day: string): Promise<number[] | null> {
   const answer = await dailyAnswer(day);
   if (!answer) return null;
-  return cachedSilhouette(answer, day).catch(() => null);
+  return cachedSilhouette(answer, day)
+    .then((data) => data.points)
+    .catch(() => null);
 }
 
-async function ipoYearOf(symbol: string): Promise<number | null> {
-  try {
-    const [row] = await db
-      .select({ ipoDate: symbolsTable.ipoDate })
+/**
+ * Halka arz yılı ve gelir büyümesi — cevap VE tahminler için tek sorguda
+ * (25 Ekim: karşılaştırma karoları tahmin edilen şirketin de değerini
+ * istiyor). Okuma düşerse boş harita: karo "bilinmiyor" olur, uydurulmaz.
+ */
+type Extras = { ipoYear: number | null; revenueGrowth: number | null; netMargin: number | null };
+
+async function extrasFor(symbolList: readonly string[]): Promise<Map<string, Extras>> {
+  const out = new Map<string, Extras>(symbolList.map((symbol) => [symbol, { ipoYear: null, revenueGrowth: null, netMargin: null }]));
+  if (symbolList.length === 0) return out;
+  const [rows, metrics] = await Promise.all([
+    db
+      .select({ symbol: symbolsTable.symbol, ipoDate: symbolsTable.ipoDate })
       .from(symbolsTable)
-      .where(eq(symbolsTable.symbol, symbol))
-      .limit(1);
-    const year = row?.ipoDate ? Number(String(row.ipoDate).slice(0, 4)) : NaN;
-    return Number.isInteger(year) ? year : null;
-  } catch {
-    return null;
+      .where(inArray(symbolsTable.symbol, [...symbolList]))
+      .catch(() => []),
+    getAllMetrics().catch(() => null),
+  ]);
+  for (const row of rows) {
+    const year = row.ipoDate ? Number(String(row.ipoDate).slice(0, 4)) : NaN;
+    const entry = out.get(row.symbol);
+    if (entry && Number.isInteger(year)) entry.ipoYear = year;
   }
+  for (const row of metrics ?? []) {
+    const entry = out.get(row.symbol);
+    const growth = row.metrics.revenueGrowthTTMYoy;
+    if (entry && typeof growth === "number" && Number.isFinite(growth)) entry.revenueGrowth = growth;
+    const margin = row.metrics.netProfitMarginTTM;
+    if (entry && typeof margin === "number" && Number.isFinite(margin)) entry.netMargin = margin;
+  }
+  return out;
 }
 
-async function factsFor(entry: PoolEntry, day: string): Promise<PuzzleFacts> {
-  const [silhouette, ipoYear, metrics] = await Promise.all([
-    cachedSilhouette(entry.symbol, day).catch(() => null),
-    ipoYearOf(entry.symbol),
-    getAllMetrics(),
-  ]);
-  const growth = metrics?.find((row) => row.symbol === entry.symbol)?.metrics.revenueGrowthTTMYoy ?? null;
+/**
+ * Yalnız CEVABIN temettü verimi ve betası — Finnhub `/stock/metric`
+ * (`getKeyMetrics`, 24 saat önbellekte; gün başına tek çağrı). Alınamazsa
+ * iki ipucu da atlanır.
+ */
+async function answerMarketFacts(symbol: string): Promise<{ dividendYield: number | null; beta: number | null }> {
+  const result = await getKeyMetrics(symbol).catch(() => null);
+  if (!result?.ok) return { dividendYield: null, beta: null };
+  return { dividendYield: result.data.dividendYield, beta: result.data.beta };
+}
+
+function factsFor(
+  entry: PoolEntry,
+  extras: Extras,
+  market: { dividendYield: number | null; beta: number | null },
+  silhouette: number[] | null,
+): PuzzleFacts {
   return {
     symbol: entry.symbol,
     name: entry.name,
     sector: entry.sector,
     marketCap: entry.marketCap,
-    ipoYear,
-    revenueGrowth: growth,
+    ipoYear: extras.ipoYear,
+    revenueGrowth: extras.revenueGrowth,
     silhouette,
+    dividendYield: market.dividendYield,
+    beta: market.beta,
+    industry: indexMemberOf(entry.symbol)?.sub ?? null,
+    netMargin: extras.netMargin,
   };
 }
 
-/** Sektör ipucu ekrana dilin adıyla iner. */
+/** Sektör ve endüstri ipucu ekrana dilin adıyla iner. */
 function localizeClue(clue: Clue, locale: Locale): Clue {
-  return clue.kind === "sector" ? { ...clue, sector: sectorLabel(clue.sector, locale) ?? clue.sector } : clue;
+  if (clue.kind === "sector") return { ...clue, sector: sectorLabel(clue.sector, locale) ?? clue.sector };
+  if (clue.kind === "industry" && locale === "tr") return { ...clue, industry: SUB_INDUSTRIES[clue.industry]?.tr ?? clue.industry };
+  return clue;
 }
 
 /** Arama kutusunun seçenekleri — alfabetik, cevaptan hiçbir iz taşımadan. */
@@ -286,21 +392,39 @@ export async function evaluatePuzzle(day: string, guesses: readonly string[], lo
   if (!target) return { ok: false, error: "unavailable" };
 
   if (guesses.length > MAX_GUESSES) return { ok: false, error: "too-many" };
-  if (new Set(guesses).size !== guesses.length) return { ok: false, error: "duplicate" };
+  const real = guesses.filter((symbol) => !isJoker(symbol));
+  if (new Set(real).size !== real.length) return { ok: false, error: "duplicate" };
 
-  const rows: GuessRow[] = [];
-  for (const symbol of guesses) {
+  for (const symbol of guesses) if (!isJoker(symbol) && !bySymbol.has(symbol)) return { ok: false, error: "unknown-symbol" };
+  /* Doğru tahminden sonrası yok sayılır — oyun orada bitti. */
+  const hit = guesses.indexOf(answer);
+  const played = hit >= 0 ? guesses.slice(0, hit + 1) : [...guesses];
+
+  const [extras, silhouette, market] = await Promise.all([
+    extrasFor([answer, ...played.filter((symbol) => !isJoker(symbol))]),
+    cachedSilhouette(target.symbol, day).catch(() => null),
+    answerMarketFacts(target.symbol),
+  ]);
+  const none: Extras = { ipoYear: null, revenueGrowth: null, netMargin: null };
+  const briefOf = (entry: PoolEntry) => ({ ...entry, ...(extras.get(entry.symbol) ?? none) });
+  const answerBrief = briefOf(target);
+
+  const rows: GuessRow[] = played.map((symbol) => {
     const entry = bySymbol.get(symbol);
-    if (!entry) return { ok: false, error: "unknown-symbol" };
-    rows.push({ ...compareGuess(entry, target), name: entry.name, logoUrl: entry.logoUrl });
-    /* Doğru tahminden sonrası yok sayılır — oyun orada bitti. */
-    if (rows[rows.length - 1].correct) break;
-  }
+    if (!entry) return { ...jokerFeedback(), name: "", logoUrl: null };
+    const feedback = compareGuess(briefOf(entry), answerBrief);
+    return {
+      ...feedback,
+      /* Sektör karosu tahminin sektörünü dilin adıyla yazar. */
+      values: { ...feedback.values, sector: sectorLabel(feedback.values.sector, locale) },
+      name: entry.name,
+      logoUrl: entry.logoUrl,
+    };
+  });
 
   const status = statusOf(rows);
   const finished = status !== "playing";
-  const facts = await factsFor(target, day);
-  const all = cluesFor(facts);
+  const all = cluesFor(factsFor(target, answerBrief, market, silhouette?.points ?? null));
   const wrong = rows.filter((row) => !row.correct).length;
   const shown = visibleClues(all, wrong, finished);
   const upcoming = all.slice(shown.length).map((clue) => clue.kind);
@@ -312,6 +436,7 @@ export async function evaluatePuzzle(day: string, guesses: readonly string[], lo
     clues: shown.map((clue) => localizeClue(clue, locale)),
     upcoming,
     guesses: rows,
+    axis: shown.some((clue) => clue.kind === "silhouette") ? axisFor(silhouette?.range ?? null, wrong, finished) : null,
   };
 
   if (finished) {
@@ -321,6 +446,7 @@ export async function evaluatePuzzle(day: string, guesses: readonly string[], lo
       name: target.name,
       logoUrl: target.logoUrl,
       blurb: description ? firstSentence(description) : null,
+      chart: silhouette?.range ?? null,
     };
   }
 

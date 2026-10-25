@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
@@ -106,8 +107,16 @@ export async function getAllMetrics(): Promise<ScreenerMetricsRow[] | null> {
   }
 }
 
-/** Sektördeki bütün satırlar; tablo yoksa null. */
-export async function getSectorMetrics(sector: string): Promise<SectorMetricsRow[] | null> {
+/**
+ * Sektördeki bütün satırlar; tablo yoksa null.
+ *
+ * İSTEK İÇİ ÖNBELLEK (25 Ekim): hisse sayfasında iki panel aynı sektörü
+ * soruyor — Hisse Skor Kartı ve Temel Göstergeler'in sektör kulvarı
+ * (`_panels/peer-spreads.ts`). Argüman dize, `cache()` kimlikle eşlediği
+ * için anahtar sorunu yok; ikinci panel aynı satırları ek sorgu olmadan
+ * alıyor ve iki panelin evreni ayrışamıyor.
+ */
+export const getSectorMetrics = cache(async function getSectorMetrics(sector: string): Promise<SectorMetricsRow[] | null> {
   try {
     const rows = await db
       .select({
@@ -125,7 +134,7 @@ export async function getSectorMetrics(sector: string): Promise<SectorMetricsRow
   } catch {
     return null;
   }
-}
+});
 
 async function upsert(symbol: string, sector: string, currency: string | null, metrics: StoredMetrics): Promise<boolean> {
   try {

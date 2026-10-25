@@ -13,6 +13,11 @@ import styles from "@/components/earnings/EarningsReport.module.css";
  *
  * Renk tek başına anlam taşımasın diye halka hiçbir yerde yalnız durmuyor —
  * yanında ya da altında daima AL/TUT/SAT yazısı var.
+ *
+ * Halka her yerde görüşün çizim tonunda (`verdictStroke` → `--verdict-*`).
+ * Görüş turunda bilanço karnesi için mürekkep seçeneği (`tone="ink"`)
+ * eklenmişti; 25 Ekim renk kararıyla kalktı — aynı skor teknik ekranda
+ * renkli, bilançoda gri duruyordu.
  */
 export function ScoreRing({
   score,

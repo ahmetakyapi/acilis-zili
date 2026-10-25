@@ -33,6 +33,12 @@ test("splitLeadingDate: yalnızca tarih gibi okunan baş ayrılır", () => {
     text: "Next report",
   });
   assert.equal(splitLeadingDate("Yapay zekâ: talep güçlü"), null);
+  /* MU 4Ç FY2026 kaydındaki uzun çizgili kalıp. */
+  assert.deepEqual(splitLeadingDate("Ekim sonu — SK Hynix 3. çeyrek sonuçları"), {
+    date: "Ekim sonu",
+    text: "SK Hynix 3. çeyrek sonuçları",
+  });
+  assert.equal(splitLeadingDate("Yapay zekâ — talep güçlü"), null);
 });
 
 test("formatGuidanceRange: hane sayısı şirketin verdiği sayıdan çıkar", () => {

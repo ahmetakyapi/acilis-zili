@@ -9,8 +9,21 @@ import { daySignatureTr } from "./day-signature";
 import { earningsSeasonTr } from "./earnings-season";
 import { dailyChartTr } from "./daily-chart";
 import { probabilitiesTr } from "./probabilities";
+import { guideVisualsTr } from "./guide-visuals";
+import { glossaryVisualsTr } from "./glossary-visuals";
+import { taxVisualsTr } from "./tax-visuals";
+import { portfolioAnalysisVisualsTr } from "./portfolio-analysis-visuals";
 import { changelogTr } from "./changelog";
 import { stockEntryTr } from "./stock-entry";
+import { briefLedgerTr } from "./brief-ledger";
+import { macroVisualTr } from "./macro-visual";
+import { stockVisualsTr } from "./stock-visuals";
+import { calendarVisualsTr } from "./calendar-visuals";
+import { personalVisualsTr } from "./personal-visuals";
+import { analysisVisualsTr } from "./analysis-visuals";
+import { brokerCardsTr } from "./broker-cards";
+import { feedVisualsTr } from "./feed-visuals";
+import { toolVisualsTr } from "./tool-visuals";
 
 const tr = {
   brand: {
@@ -4167,7 +4180,7 @@ const tr = {
       returnLabel: "Doğrulanmış Getiri",
       returnHint: "Kayıtlı alış günlerinden site hesaplar.",
       spyLabel: "Aynı Dönemde SPY",
-      spyHint: "Aynı günlerde aynı tutar SPY'a yatırılsaydı.",
+      spyHint: "Aynı aylarda aynı tutar SPY'a yatırılsaydı.",
       weightsTitle: "Ağırlıklar",
       sectorsTitle: "Sektör Dağılımı",
       otherSector: "Diğer",
@@ -4223,35 +4236,87 @@ const tr = {
     rejectedTitle: "Yazın Geri Gönderildi",
     rejectedBody: "\u201C{title}\u201D için moderasyon notu var; düzeltip yeniden gönderebilirsin.",
   },
-  /* ZİL RAPORU (15 Ekim) — /raporum; gerekçe lib/report-data.ts. */
+  /* ZİL RAPORU (15 Ekim; 25 Ekim karne düzeni) — /raporum; gerekçe lib/report-data.ts ve components/report/BellReport.tsx. */
   bellReport: {
     title: "Zil Raporu",
-    intro: "{name}, Açılış Zili'nde geçirdiğin zamanın kaydı — her sayı senin verinden, hiçbiri tahmin değil.",
-    days: "gün",
-    memberTitle: "Üyelik",
-    memberLine: "{date} tarihinden beri buradasın; bu sürede New York'ta {sessions} seans açılıp kapandı.",
-    sessionsNote: "Seans sayısı NYSE tatil takvimiyle hesaplanır; yarım günler seans sayılır.",
-    symbols: "sembol",
-    watchTitle: "Takip Ettiklerin",
-    watchLine: "{lists} ayrı listede izlediğin şirketler.",
-    watchLineOne: "Tek listende izlediğin şirketler.",
-    alertsTitle: "Alarmlar",
-    alertsLine: "Kurduğun alarmlardan hedefe ulaşanlar: fiyat hedefleri ve günlük değişim eşikleri birlikte.",
+    subtitle: "Açılış Zili'ndeki kaydının özeti; her sayı senin verinden, hiçbiri tahmin değil.",
+    memberLine: "{date} tarihinden beri üyesin; bu sürede New York'ta {sessions} seans açılıp kapandı.",
+    moodRing: "Zil çalıyor: izlediğin, kurduğun ve yazdığın şeyler aşağıda tek sayfada.",
+    moodWait: "Zil uyandı: ilk adım atıldı, eksik kalanları Sıradaki paneli gösteriyor.",
+    moodSleep: "Zil uyuyor: henüz liste, alarm ya da portföy yok; Sıradaki panelinden başlayabilirsin.",
+    figuresLabel: "Rapor Ölçüleri",
+    memberLabel: "Üyelik",
+    memberValue: "{n} Gün",
+    memberSub: "Başlangıç {date}",
+    sessionsLabel: "Geçen Seans",
+    sessionsSub: "Haftalık · NYSE Takvimi",
+    watchLabel: "Takip",
+    watchValue: "{n} Sembol",
+    watchSubOne: "Tek Listede",
+    watchSub: "{n} Listede",
+    returnLabel: "Portföy Getirisi",
+    returnSubSpy: "SPY {spy}",
+    returnSub: "Maliyete Göre",
+    youShort: "Sen",
+    alertsLabel: "Çalan Alarm",
+    /* Bölünmez boşluk: oran satır sonunda "3 /" ile "5" diye kopmasın. */
+    alertsValue: "{hit}\u00a0/\u00a0{total}",
+    alertsSub: "Kurulanlardan",
+    postsLabel: "Yazı",
+    postsSub: "Toplulukta Yayında",
+    sessionsNote: "Seans sayısı NYSE tatil takvimiyle hesaplanır; yarım günler seans sayılır. Gün sayısı kayıt gününü de içerir.",
     portfolioTitle: "Portföyün",
-    portfolioLine: "Kayıtlı alış günlerinden site tarafından hesaplanan getirin.",
-    portfolioLineSpy: "Kayıtlı alış günlerinden hesaplanan getirin; aynı günlerde aynı tutar SPY'a gitseydi {spy} olurdu.",
-    best: "En İyi Pozisyon",
-    worst: "En Zayıf Pozisyon",
-    portfolioNote: "USD üzerinden, temettü hariç; tutar gösterilmez. Profilindeki vitrinle aynı hesap. Yatırım tavsiyesi değildir.",
-    posts: "yazı",
-    postsTitle: "Yazdıkların",
-    postsLine: "Toplulukta yayında duran yazıların.",
+    portfolioMeta: "{n} Sembol · Başlangıç {month}",
+    portfolioMetaOne: "1 Sembol · Başlangıç {month}",
+    yoursLabel: "Senin Getirin",
+    spyLabel: "Aynı Aylarda SPY",
+    gapAhead: "Aynı aylarda aynı tutarı SPY'a yatırsaydın ulaşacağın getirinin {gap} puan önündesin.",
+    gapBehind: "Aynı aylarda aynı tutarı SPY'a yatırsaydın ulaşacağın getirinin {gap} puan gerisindesin.",
+    gapLevel: "Aynı aylarda aynı tutarı SPY'a yatırsaydın ulaşacağın getiriyle başa baştasın.",
+    noSpy: "SPY kıyası kurulamadı; getiri yalnız kendi alışlarından.",
+    extremesTitle: "Uçlar",
+    mostGain: "En Çok Kazandıran",
+    leastGain: "En Az Kazandıran",
+    leastLoss: "En Az Düşen",
+    mostLoss: "En Çok Düşen",
+    flat: "Yatay Kalan",
+    portfolioNote: "Getiri kayıtlı alış günlerinden sitenin kendisi tarafından hesaplanır; USD üzerinden, temettü hariç. Tutar, adet ve maliyet gösterilmez; profilindeki vitrinle aynı hesap. Yatırım tavsiyesi değildir.",
+    spyPartial: "SPY kıyası maliyetin %{pct} kadarını kapsıyor; serinin indiği tarihten eski alışlar kıyasa giremiyor.",
+    excluded: "{n} pozisyonun güncel fiyatı alınamadı; getiri onlarsız kuruldu.",
+    toPortfolio: "Portföye Git",
+    watchTitle: "Takip Ettiklerin",
+    watchMeta: "{n} Sembol · {lists} Liste",
+    watchMore: "+{n} Sembol",
+    watchHint: "En son eklediğin önde; her sembol kendi sayfasına gider.",
+    toWatchlists: "Listelere Git",
+    alertsTitle: "Alarmların",
+    alertsLine: "Kurduğun {total} alarmdan {hit} tanesi çaldı, {waiting} tanesi bekliyor.",
+    alertsLineAll: "Kurduğun {total} alarmın hepsi çaldı.",
+    alertsLineNone: "Kurduğun {total} alarmdan henüz hiçbiri çalmadı.",
+    alertsNote: "Fiyat hedefleri ve günlük değişim eşikleri birlikte sayılır; her alarm tek seferlik çalar ve durur.",
+    toAlerts: "Alarmlara Git",
+    postsTitle: "Yazıların",
+    postsMeta: "{n} Yazı",
+    postsMetaOne: "1 Yazı",
+    toPosts: "Tümünü Gör",
     nextTitle: "Sıradaki",
-    nextLine: "Profilin şimdilik gizli; açarsan bu yolculuğun bir kısmı başkalarına da görünür.",
-    nextLinePublic: "Profilin herkese açık; yazıların ve seçtiğin bloklar orada duruyor.",
+    nextPublic: "Profilin herkese açık; yazıların ve seçtiğin bloklar orada duruyor.",
+    nextPrivate: "Profilin şimdilik gizli; açarsan bu kaydın seçtiğin kısmı başkalarına da görünür.",
     toProfile: "Profiline Git",
-    toWrite: "Bir Yazı Yaz",
-    toScreener: "Hisse Tarayıcı",
+    stepWatch: "Takip Listesi Kur",
+    stepWatchHint: "İzlediğin şirketler raporda logolarıyla görünür.",
+    stepAlert: "Alarm Kur",
+    stepAlertHint: "Fiyat ya da günlük değişim eşiği; çalanlar burada sayılır.",
+    stepPortfolio: "Portföyünü Ekle",
+    stepPortfolioHint: "Getirin aynı aylardaki SPY ile yan yana ölçülür.",
+    stepWrite: "Bir Yazı Yaz",
+    stepWriteHint: "Toplulukta yayımlanan yazıların burada listelenir.",
+    memberValueOne: "{n} Gün",
+    watchValueOne: "{n} Sembol",
+    watchMetaOneList: "{n} Sembol · 1 Liste",
+    alertsLineOneWaiting: "Kurduğun tek alarm henüz çalmadı.",
+    alertsLineOneRang: "Kurduğun tek alarm çaldı.",
+    privateNote: "Bu rapor yalnız sana görünür ve paylaşım bağlantısı yok; başkalarına açmak istediğin kısmı profilinden seçersin.",
   },
   /* TOPLULUK (15 Ekim) — kullanıcı yazıları: /topluluk, /yazilarim,
      editör. Moderasyon ekranı admin'de ve yalnızca Türkçe (AdminUI kuralı).
@@ -4754,8 +4819,80 @@ const tr = {
   changelog: changelogTr,
   /* Şirket ekranlarının kısa yolları (25 Ekim UX turu) — metin ayrı dosyada. */
   stockEntry: stockEntryTr,
+  /* Teknik analiz görselleri (25 Ekim, görsel zirve turu): /teknik tepesindeki
+     plan atlası ve detay sayfasındaki senaryo rayı. Cümle şablonları
+     `lib/technical-visuals.ts` → `atlasSentence`. */
+  technicalVisuals: {
+    atlasTitle: "{n} Hisse, Tek Harita",
+    atlasLabel: "Planların ortak ölçekte haritası",
+    sentenceZoneSome: "{total} alım planının {n} tanesinde fiyat bölgede",
+    sentenceZoneNone: "{total} alım planının hiçbirinde fiyat bölgede değil",
+    sentenceNearOne: "{n} tanesi bölgeye %1'den yakın",
+    sentenceNearMany: "{n} tanesi bölgeye %1'den yakın",
+    sentenceStopOne: "{n} tanesi stopa %3'ten yakın",
+    sentenceStopMany: "{n} tanesi stopa %3'ten yakın",
+    sentenceStopNone: "hiçbiri stopa %3'ten yakın değil",
+    sentenceBelowOne: "{n} tanesi stopun altında",
+    sentenceBelowMany: "{n} tanesi stopun altında",
+    scaleNote: "Her satır kendi planının ölçeğinde: stop 0, ilk hedef 1. Satırlar fiyatın plandaki yerine göre sıralı.",
+    priceBasis: "Fiyat",
+    legendZone: "Alım Bölgesi",
+    legendPrice: "Fiyat",
+    legendSnapshot: "Analiz Anındaki Fiyat",
+    legendStop: "Stop",
+    legendTarget: "Hedef",
+    legendLevel: "Destek / Direnç",
+    axisStop: "Stop",
+    axisTarget: "1. Hedef",
+    axisSupport: "Destek",
+    axisSell: "Satış Seviyesi",
+    columnPlan: "Bölgeye Göre",
+    columnLevels: "Seviyeye Göre",
+    sellScaleNote: "Satış görüşünde alım planı yok: 0 en yakın destek, 1 en yakın satış seviyesi.",
+    inZone: "Bölgede",
+    belowStop: "Stop Altı",
+    noLevels: "Bu yayında çizilecek seviye yok",
+    noPlan: "Bu yayında alım planı yok",
+    details: "Ayrıntı",
+    openPlan: "Planı Aç",
+    hint: "Satırın üzerine gelin; ayrıntı burada görünür.",
+    distanceStop: "Stopa Uzaklık",
+    distanceSell: "Satış Seviyesine",
+    distanceSupport: "Desteğe",
+    railTitle: "Senaryolar Fiyat Ekseninde",
+    railBullTrigger: "Yükseliş Tetiği",
+    railBearTrigger: "Düşüş Tetiği",
+    railNearestResistance: "En Yakın Direnç",
+    railNearestSupport: "En Yakın Destek",
+    railRatio: "Yukarı / Aşağı",
+    railPath: "Sonraki Duraklar",
+    railNote: "Seviyeler senaryo metninden; yalnız kayıttaki bir seviyeyle eşleşen sayılar çizilir. Uzaklıklar rayın üstündeki fiyattan ölçülür.",
+  },
+  /* Bültenin Kayıt Defteri bandı (25 Ekim görsel zirve) — metin ayrı dosyada. */
+  briefLedger: briefLedgerTr,
+  /* Makro ve piyasa görselleri (25 Ekim görsel turu) — metin ayrı dosyada. */
+  macroVisual: macroVisualTr,
+  /* Hisse sayfası ve kural kontrolünün görsel katmanı (25 Ekim) — metin ayrı dosyada. */
+  stockVisuals: stockVisualsTr,
+  /* Takvim görselleri (25 Ekim görsel turu) — metin ayrı dosyada. */
+  calendarVisuals: calendarVisualsTr,
+  /* Kişisel ekranların görsel turu (25 Ekim) — metin ayrı dosyada. */
+  personalVisuals: personalVisualsTr,
   /* Olasılıklar (25 Ekim) — metin ayrı dosyada. */
   probabilities: probabilitiesTr,
+  /* Bilanço karnesinin görsel turu (25 Ekim) — metin ayrı dosyada. */
+  analysisVisuals: analysisVisualsTr,
+  /* Aracı kurum kartları ve yan yana karşılaştırma (25 Ekim görsel turu) — metin ayrı dosyada. */
+  brokerCards: brokerCardsTr,
+  /* Öğrenme ve hesap araçlarının görsel turu (25 Ekim) — metin ayrı dosyalarda. */
+  guideVisuals: guideVisualsTr,
+  glossaryVisuals: glossaryVisualsTr,
+  taxVisuals: taxVisualsTr,
+  portfolioAnalysisVisuals: portfolioAnalysisVisualsTr,
+  /* Akış ve liste ekranlarının görsel turu (25 Ekim) — metin ayrı dosyada. */
+  feedVisuals: feedVisualsTr,
+  /* Araç ekranlarının görsel turu (25 Ekim) — metin ayrı dosyada. */
+  toolVisuals: toolVisualsTr,
 };
 
 export default tr;

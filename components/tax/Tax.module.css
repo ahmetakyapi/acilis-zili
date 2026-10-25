@@ -346,7 +346,7 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .rangeKey { display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 12px; margin-top:8px; font-size:12px; font-weight:600; color:var(--text-muted); }
 .rangeKey span { display:inline-flex; align-items:center; gap:6px; }
 .rangeKey i { display:inline-block; width:12px; height:6px; border-radius:2px; }
-.rangeKey i[data-tone="proceeds"] { background:var(--primary); }
+.rangeKey i[data-tone="proceeds"] { background:var(--primary-soft); }
 .rangeKey i[data-tone="spread"], .bar[data-tone="spread"] { background:var(--primary-wash); box-shadow:inset 0 0 0 1px var(--primary-faint); }
 
 /* Hesabın dayanağı: künye ızgarası. Değer üstte, bülten günü altında. */
@@ -375,7 +375,10 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 @starting-style { .bar { transform:translateX(calc(var(--from, 0) * 100%)) scaleX(0); } }
 .bar[data-tone="cost"] { background:var(--line-strong); }
 .bar[data-tone="index"] { background:var(--brass); }
-.bar[data-tone="proceeds"] { background:var(--primary); }
+/* Satış bedeli bir BÜYÜKLÜK: mavi ailenin yumuşak tonu (25 Ekim, site
+   geneli renk kararı — doygun `--primary` yalnız etkileşim). Maliyet nötr,
+   endeksleme pirinç. */
+.bar[data-tone="proceeds"] { background:var(--primary-soft); }
 .bar[data-tone="up"] { background:var(--up); }
 .bar[data-tone="down"] { background:var(--down); }
 
@@ -404,10 +407,10 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .timeline { position:relative; margin:0; padding:0; list-style:none; }
 .mile { position:relative; }
 .mileDot { display:block; width:14px; height:14px; border-radius:999px; border:2px solid var(--line-strong); background:var(--panel-fixed); }
-.mile[data-done="true"] .mileDot { border-color:var(--primary); background:var(--primary); }
+.mile[data-done="true"] .mileDot { border-color:var(--primary-soft); background:var(--primary-soft); }
 .mileName { display:block; font-size:14px; font-weight:650; line-height:1.3; color:var(--text-strong); }
 .mileDate { display:block; margin-top:2px; font-size:12px; line-height:1.4; color:var(--text-muted); }
-.todayPin { font-size:12px; font-weight:700; color:var(--primary-ink); }
+.todayPin { font-size:12px; font-weight:700; color:var(--text-strong); }
 
 /* Telefonda dikey: ray solda, "Bugün" sırasına göre bir satır. */
 @media (max-width:767px) {
@@ -416,7 +419,7 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
   .mileDot { position:absolute; left:-26px; top:3px; }
   .rail, .todayFloat { display:none; }
   .todayRow { position:relative; display:flex; align-items:center; gap:8px; }
-  .todayRow::before { content:""; position:absolute; left:-24px; top:50%; width:10px; height:10px; margin-top:-5px; border-radius:999px; background:var(--primary); box-shadow:0 0 0 4px var(--primary-wash); }
+  .todayRow::before { content:""; position:absolute; left:-24px; top:50%; width:10px; height:10px; margin-top:-5px; border-radius:999px; background:var(--primary-soft); box-shadow:0 0 0 4px var(--primary-wash); }
 }
 /* Genişte yatay: sütunlar tarihlerin SIRASINI taşır (işlem yılı iki
    birim, öbürleri birer). "Bugün" iğnesi düğüm tarihleri arasında doğrusal
@@ -427,9 +430,9 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
   .mileDot { margin:-7px 0 14px -1px; position:relative; z-index:1; }
   .todayRow { display:none; }
   .rail { position:absolute; left:0; right:calc(100% / 6); top:44px; height:2px; margin-top:-1px; border-radius:2px; background:var(--line); }
-  .railFill { position:absolute; inset:0 auto 0 0; width:calc(var(--today) * 100% * 6 / 5); max-width:100%; border-radius:2px; background:var(--primary); transform-origin:left center; }
+  .railFill { position:absolute; inset:0 auto 0 0; width:calc(var(--today) * 100% * 6 / 5); max-width:100%; border-radius:2px; background:var(--primary-soft); transform-origin:left center; }
   .todayFloat { position:absolute; top:0; left:calc(var(--today) * 100%); transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:4px; }
-  .todayFloat::after { content:""; width:2px; height:22px; border-radius:2px; background:var(--primary); }
+  .todayFloat::after { content:""; width:2px; height:22px; border-radius:2px; background:var(--text-strong); }
 }
 
 .filingGrid { display:grid; gap:26px; }
@@ -709,27 +712,106 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 .affixUnit { position:absolute; left:12px; top:0; bottom:0; display:flex; align-items:center; pointer-events:none; font-size:15px; font-weight:600; color:var(--text-muted); }
 .affix > .input { padding-left:28px; }
 
-/* ---- Tarifedeki yerin (BracketScale, 18 Ekim) ----
-   Beş eşit basamak (sıra ölçeği — gerekçe TaxResult.tsx). Oranlar üstte,
-   şeritler 5 piksel kulvar dilinde, iğne matrah. */
-.ladder { display:grid; gap:10px; margin-bottom:10px; }
-.ladderBody { display:grid; gap:8px; }
-.ladderRates { display:grid; grid-template-columns:repeat(var(--n, 5), minmax(0,1fr)); gap:4px; font-size:12px; font-weight:600; color:var(--text-muted); }
-.ladderRates span { text-align:center; }
-.ladderRates span[data-past] { color:var(--text-body); }
-.ladderRates span[data-current] { color:var(--primary-ink); font-weight:700; }
-.ladderLane { position:relative; display:grid; grid-template-columns:repeat(var(--n, 5), minmax(0,1fr)); gap:4px; height:5px; container-type:inline-size; }
-.ladderStep { position:relative; overflow:hidden; border-radius:3px; background:var(--line-soft); }
-.ladderStep[data-past] { background:var(--line-strong); }
-.ladderFill { position:absolute; inset:0; border-radius:3px; background:var(--primary); transform-origin:0 50%; transform:scaleX(var(--f, 0)); transition:transform 700ms var(--ease-brand); }
-@starting-style { .ladderFill { transform:scaleX(0); } }
-/* İğne `translate` + `cqw` ile kayar (meter ile aynı gerekçe). */
-.ladderPin { position:absolute; left:0; top:-5px; width:3px; height:15px; margin-left:-1.5px; border-radius:2px; background:var(--text-strong); translate:calc((var(--i, 0) + var(--w, 0)) * (100cqw - (var(--n, 5) - 1) * 4px) / var(--n, 5) + var(--i, 0) * 4px) 0; transition:translate 700ms var(--ease-brand); }
 .ladderNext { font-size:12px; font-weight:600; color:var(--text-body); }
 
 /* Bu dosyanın sonradan eklenen hareketleri; dosyanın ortasındaki blok
    bunlardan ÖNCE geldiği için onları ezemezdi (aynı özgüllük). */
 @media (prefers-reduced-motion:reduce) {
   .exampleNote, .needs li[data-done] .needMark svg, .needs li[data-busy] .needMark { animation:none; }
-  .needs li, .needMark, .ladderFill, .ladderPin { transition:none; }
+  .needs li, .needMark { transition:none; }
+}
+
+/* ==========================================================================
+   Kazançtan matraha şelalesi, dilim bandı ve takvimin ay ölçeği
+   (25 Ekim, görsel tur — gerekçeler TaxResult.tsx / TaxFiling.tsx).
+   Büyüklükler mavi ailenin YUMUŞAK tonlarında (güncel renk kararı, 25
+   Ekim): maliyet en açık, satış orta, matrah en dolu (sonucun kendisi);
+   doygun `--primary` yok. Yön rengi yalnız kazanç/zarar, endeksleme pirinç.
+   ========================================================================== */
+
+/* ---- Şelale ---- */
+.wf { display:grid; }
+/* Sütun tepesindeki tutarlar için üstte pay; sıfır çizgisi koyu. Kap
+   sorgusu: bağlayıcıların ve tutar etiketlerinin genişliği kabın kendisi. */
+.wfChart { position:relative; display:grid; grid-template-columns:repeat(var(--n, 5), minmax(0,1fr)); height:172px; margin-top:26px; border-bottom:1px solid var(--line-strong); container-type:inline-size; --half:min(28cqw / var(--n, 5), 22px); }
+.wfCol { position:relative; height:100%; }
+/* Sütun tam yükseklikte bir öğe; tabanı ve boyu yalnız `transform`la
+   (`--from`, `--span` 0-1). Sahneli giriş: sırayla, bir kez (@starting-style),
+   değer değişince aynı eğriyle yeni yerine kayar. */
+.wfBar { position:absolute; left:50%; bottom:0; width:calc(var(--half) * 2); height:100%; margin-left:calc(var(--half) * -1); border-radius:2px; transform-origin:50% 100%; transform:translateY(calc(var(--from, 0) * -100%)) scaleY(var(--span, 0)); transition:transform 700ms var(--ease-brand), opacity 180ms var(--ease-brand); transition-delay:calc(var(--i, 0) * 70ms), 0ms; }
+@starting-style { .wfBar { transform:translateY(calc(var(--from, 0) * -100%)) scaleY(0); } }
+.wfBar[data-tone="cost"], .wfSwatch[data-tone="cost"] { background:var(--primary-wash); box-shadow:inset 0 0 0 1px var(--primary-faint); }
+.wfBar[data-tone="index"], .wfSwatch[data-tone="index"] { background:repeating-linear-gradient(135deg, var(--brass) 0 2px, transparent 2px 5px); box-shadow:inset 0 0 0 1px var(--brass); }
+.wfBar[data-tone="proceeds"], .wfSwatch[data-tone="proceeds"] { background:var(--primary-faint); box-shadow:inset 0 0 0 1px var(--primary-faint); }
+.wfBar[data-tone="up"], .wfSwatch[data-tone="up"] { background:var(--up); }
+.wfBar[data-tone="down"], .wfSwatch[data-tone="down"] { background:var(--down); }
+.wfBar[data-tone="base"], .wfSwatch[data-tone="base"] { background:var(--primary-soft); }
+.wfTop { position:absolute; left:-6px; right:-6px; bottom:calc(var(--top, 0) * 100%); padding-bottom:5px; text-align:center; font-size:11.5px; font-weight:650; line-height:1; white-space:nowrap; color:var(--text-strong); transition:bottom 700ms var(--ease-brand), opacity 180ms var(--ease-brand); }
+/* Kesik bağlayıcı: a sütununun sağ kenarından b sütununun sol kenarına,
+   aynı tutarın yüksekliğinde. Aradaki sütunun üstünden geçerse o tutarın
+   orada da durduğunu gösterir (satış bedelinin içindeki maliyet). */
+.wfLink { position:absolute; z-index:1; bottom:calc(var(--level, 0) * 100%); left:calc((var(--a) + .5) * 100cqw / var(--n, 5) + var(--half)); width:calc((var(--b) - var(--a)) * 100cqw / var(--n, 5) - var(--half) * 2); border-top:1px dashed var(--text-muted); pointer-events:none; transition:bottom 700ms var(--ease-brand); }
+.wfAxis { display:grid; grid-template-columns:repeat(var(--n, 5), minmax(0,1fr)); margin:8px 0 0; padding:0; list-style:none; }
+.wfAxis li { display:flex; justify-content:center; }
+.wfNum { display:grid; place-items:center; width:20px; height:20px; border-radius:999px; background:var(--panel-fixed); box-shadow:inset 0 0 0 1px var(--line); font-size:11px; font-weight:700; line-height:1; color:var(--text-strong); font-variant-numeric:tabular-nums; transition:box-shadow 180ms var(--ease-brand); }
+.wfAxis li[data-on] .wfNum, .wfRow[data-on] .wfNum { box-shadow:inset 0 0 0 1.5px var(--primary-soft); }
+.wfList { display:flex; flex-direction:column; margin:14px 0 0; padding:0; list-style:none; }
+.wfRow { display:grid; grid-template-columns:20px 10px minmax(0,1fr) auto; align-items:center; gap:2px 10px; padding:8px 0; border-top:1px solid var(--line-soft); transition:opacity 180ms var(--ease-brand); }
+.wfRow:first-child { border-top:0; }
+.wfSwatch { width:10px; height:10px; border-radius:2px; }
+.wfNote { grid-column:3 / -1; font-size:12px; line-height:1.4; color:var(--text-muted); }
+.wfRow[data-tone="base"] .flowValue { font-size:16px; }
+.wf[data-active] .wfCol:not([data-on]) .wfBar, .wf[data-active] .wfCol:not([data-on]) .wfTop { opacity:.32; }
+.wf[data-active] .wfRow:not([data-on]) { opacity:.5; }
+/* Dar kapta tutarlar sütunların üstüne sığmıyor: yalnız dökümde. */
+@container (max-width:439px) { .wfTop { display:none; } }
+@media (max-width:519px) { .wfChart { height:140px; margin-top:12px; } }
+/* Boş sonuçtaki taslak: aynı çizim, soluk ve sayısız. */
+.wf[data-sketch] .wfBar { opacity:.38; }
+.wf[data-sketch] .flowName { color:var(--text-muted); }
+.wf[data-sketch] .wfList { margin-top:10px; }
+.wf[data-sketch] .wfRow { padding:5px 0; }
+
+/* ---- Dilim bandı ---- */
+.band { display:grid; gap:10px; margin-bottom:10px; }
+.bandGrid { display:grid; column-gap:3px; }
+.bandSlice, .bandMerged { display:grid; grid-template-rows:16px var(--lane-h, 5px) 16px; row-gap:7px; min-width:0; }
+.bandRate { align-self:end; font-size:12px; font-weight:700; line-height:1; white-space:nowrap; color:var(--text-strong); }
+.bandTax { font-size:12px; font-weight:600; line-height:1; white-space:nowrap; color:var(--text-muted); }
+.bandSlice:not([data-labeled]) .bandRate, .bandSlice:not([data-labeled]) .bandTax { visibility:hidden; }
+.bandMerged { z-index:1; pointer-events:none; }
+.bandMerged b { grid-row:1; align-self:end; font-size:12px; font-weight:700; line-height:1; white-space:nowrap; color:var(--text-strong); }
+.bandMergedTax { grid-row:3; font-size:12px; font-weight:600; line-height:1; white-space:nowrap; color:var(--text-muted); }
+/* Şerit kulvar dilinde (5 piksel): dolu kısım dilimin tonu, kalanı kulvar.
+   Ton yumuşak mavide oranla yoğunlaşıyor; iğne matrahın yeri (metin rengi). */
+.bandStrip { position:relative; border-radius:3px; background:var(--line-soft); }
+.bandFill { position:absolute; inset:0; border-radius:3px; background:color-mix(in srgb, var(--primary-soft) calc(30% + var(--tone, 0) * 70%), transparent); transform-origin:0 50%; transform:scaleX(var(--fill, 0)); transition:transform 700ms var(--ease-brand); transition-delay:calc(var(--i, 0) * 90ms); }
+@starting-style { .bandFill { transform:scaleX(0); } }
+.bandSlice[data-state="current"] .bandStrip::after { content:""; position:absolute; top:50%; left:calc(var(--fill, 0) * 100%); width:3px; height:15px; margin:-7.5px 0 0 -1.5px; border-radius:2px; background:var(--text-strong); }
+.bandGhostKey { display:inline-block; width:14px; height:var(--lane-h, 5px); margin-right:7px; border-radius:3px; background:var(--line-soft); vertical-align:middle; }
+
+/* ---- Takvimin ay ölçeği ---- */
+.mscale { margin-top:32px; padding-top:18px; border-top:1px solid var(--line-soft); }
+.msTitle { margin:0 0 6px; font-size:12px; font-weight:600; color:var(--text-muted); }
+.msLane { position:relative; height:var(--lane-h, 5px); margin-top:20px; border-radius:3px; background:var(--line-soft); }
+.msPassed { position:absolute; inset:0; border-radius:3px; background:var(--primary-faint); transform-origin:0 50%; transform:scaleX(var(--at, 0)); transition:transform 900ms var(--ease-brand); }
+@starting-style { .msPassed { transform:scaleX(0); } }
+/* İşlem yılı şeridin üstünde ince bir köşeli parantez. */
+.msYear { position:absolute; bottom:calc(100% + 4px); left:calc(var(--a) * 100%); width:calc((var(--b) - var(--a)) * 100%); height:6px; border:1px solid var(--primary-faint); border-bottom:0; border-radius:2px 2px 0 0; }
+.msWindow { position:absolute; top:-3px; bottom:-3px; left:calc(var(--a) * 100%); width:max(5px, calc((var(--b) - var(--a)) * 100%)); border-radius:2px; background:var(--primary-soft); }
+.msTick { position:absolute; top:-5px; bottom:-5px; left:calc(var(--at) * 100%); width:3px; margin-left:-3px; border-radius:2px; background:var(--text-strong); }
+.msNow { position:absolute; top:50%; left:calc(var(--at) * 100%); width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:999px; background:var(--panel-fixed); box-shadow:inset 0 0 0 3px var(--text-strong); }
+.msAxis { display:grid; grid-template-columns:repeat(var(--n, 19), minmax(0,1fr)); margin:6px 0 0; padding:0; list-style:none; }
+.msAxis li { display:flex; flex-direction:column; gap:3px; min-width:0; padding:4px 0 0 3px; border-left:1px solid var(--line-soft); font-size:10.5px; font-weight:600; line-height:1; color:var(--text-muted); }
+.msAxis li[data-jan] { border-left-color:var(--line-strong); }
+.msAxis li b { font-size:11px; font-weight:700; color:var(--text-strong); }
+.msKey { display:flex; flex-wrap:wrap; gap:6px 16px; margin:12px 0 0; font-size:12px; font-weight:600; color:var(--text-body); }
+.msKey span { display:inline-flex; align-items:center; gap:7px; }
+.msKey i { display:inline-block; flex-shrink:0; }
+.msKey i[data-k="window"] { width:12px; height:11px; border-radius:2px; background:var(--primary-soft); }
+.msKey i[data-k="tick"] { width:3px; height:13px; border-radius:2px; background:var(--text-strong); }
+.msKey i[data-k="now"] { width:11px; height:11px; border-radius:999px; box-shadow:inset 0 0 0 3px var(--text-strong); }
+
+@media (prefers-reduced-motion:reduce) {
+  .wfBar, .wfTop, .wfLink, .wfRow, .wfNum, .bandFill, .msPassed { transition:none; }
 }

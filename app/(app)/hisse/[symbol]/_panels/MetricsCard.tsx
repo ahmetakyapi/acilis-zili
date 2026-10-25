@@ -4,7 +4,15 @@ import { getStatus } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { getCompanyProfile, getQuote } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
+import { peerSpread, type PeerMetric } from "@/lib/peer-spread";
+import { trAblative } from "@/lib/scorecard";
 import { formatPercentPlain, formatPrice, formatVolume, NO_VALUE, bandFiyatiKapsiyorMu, peRatioOf } from "@/lib/utils";
+import { sectorPeerValues } from "./peer-spreads";
+import { PeerStrip } from "./PeerStrip";
+import depth from "./depth.module.css";
+
+/** Kulvar alan ölçü: kartta yazan SAYI (biçimlenmeden önce) ve biçimleyicisi. */
+type PeerCell = { metric: PeerMetric; value: number | null; format: (v: number) => string };
 
 export async function MetricsCard({
   symbol,
@@ -16,7 +24,7 @@ export async function MetricsCard({
   t: Dictionary;
 }) {
   const status = await getStatus();
-  const [metricsResult, quoteResult, profileResult] = await Promise.all([
+  const [metricsResult, quoteResult, profileResult, sectorPeers] = await Promise.all([
     getKeyMetrics(symbol),
     getQuote(symbol, status),
     /* PARA BİRİMİ ŞART. Finnhub'ın metrik ucu EPS ve 52 hafta bandını
@@ -27,6 +35,9 @@ export async function MetricsCard({
        altında sanıyordu. Depoda 21 sembol USD dışı (TSM, ASML, PDD,
        NTES, SKHY…). */
     getCompanyProfile(symbol),
+    /* Sektör kulvarının komşuları — Hisse Skor Kartı'yla aynı satırlar ve
+       aynı kotasyon isteği (istek içi önbellek, `peer-spreads.ts`). */
+    sectorPeerValues(symbol, status),
   ]);
 
   if (!metricsResult.ok) {
@@ -55,7 +66,12 @@ export async function MetricsCard({
   const hisseBasi = <T,>(value: T): T | null =>
     olculerTutarli ? value : null;
 
-  const rows: [string, string][] = [
+  /* Üçüncü öğe sektör kulvarı: yalnız kaynağı olan üç ölçüde (F/K, net
+     marj, borç/özsermaye — gerekçe lib/peer-spread.ts). */
+  const fmtRatio = (v: number) => formatPrice(v, locale);
+  const signedMargin = (v: number) => `${v < 0 ? "−" : ""}${formatPercentPlain(v, locale, 1)}`;
+  const peValue = hisseBasi(homeCurrency ? null : peRatioOf(quote?.price, m.eps));
+  const rows: [string, string, PeerCell?][] = [
     /* F/K sağlayıcının hazır alanından değil, sayfanın gösterdiği fiyattan
        kuruluyor — o alan geriden gelen bir fiyatla hesaplanmış oluyor ve
        tablonun hemen üstündeki kotasyonla çelişiyordu. Bkz. `peRatioOf`.
@@ -69,6 +85,10 @@ export async function MetricsCard({
         hisseBasi(homeCurrency ? m.peRatio : peRatioOf(quote?.price, m.eps)),
         locale,
       ),
+      /* Kulvar yalnız F/K CANLI fiyattan kurulduğunda: ADR'de sağlayıcının
+         ana borsa oranı yazıyor, sektör tablosunun F/K'si ise dolar fiyatı /
+         dolar EPS — iki ayrı taban yan yana konmaz. */
+      { metric: "pe", value: peValue, format: fmtRatio },
     ],
     /* İLERİ F/K sağlayıcının kendi oranı — TTM F/K'nin aksine yeniden
        KURULMUYOR, çünkü ileri EPS elimizde yok (gerekçe
@@ -142,8 +162,17 @@ export async function MetricsCard({
        bir sayı, "bilinmiyor" değil (DKNG %-2,68, SOFI %-19,79). */
     ...(m.netMarginPct !== null && m.netMarginPct !== undefined
       ? ([
-          [t.stock.netMargin, formatPercentPlain(m.netMarginPct, locale, 1)],
-        ] as [string, string][])
+          [
+            t.stock.netMargin,
+            /* EKSİ MARJ İŞARETİYLE (25 Ekim). `formatPercentPlain` mutlak
+               değer basıyor; zarardaki şirketin marjı (SOFI %-19,79) kartta
+               "%19,8" diye, KÂRLI gibi okunuyordu. Kulvar eklenince nokta
+               sektörün sol ucuna düşüp sayıyla çelişecekti — ikisi artık
+               aynı işareti taşıyor. */
+            signedMargin(m.netMarginPct),
+            { metric: "netMargin", value: m.netMarginPct, format: signedMargin },
+          ],
+        ] as [string, string, PeerCell][])
       : []),
     /* BORÇ / ÖZSERMAYE — kartın tek KALDIRAÇ ölçüsü, marjın kâr tarafına
        karşılık bilanço tarafı. Marjla aynı gerekçelerle güvenli: oran
@@ -160,8 +189,12 @@ export async function MetricsCard({
        "bilinmiyor"dan farklı — temettü satırındaki aynı ayrım. */
     ...(m.debtToEquity !== null && m.debtToEquity !== undefined
       ? ([
-          [t.stock.debtToEquity, formatPrice(m.debtToEquity, locale)],
-        ] as [string, string][])
+          [
+            t.stock.debtToEquity,
+            formatPrice(m.debtToEquity, locale),
+            { metric: "debtToEquity", value: m.debtToEquity >= 0 ? m.debtToEquity : null, format: fmtRatio },
+          ],
+        ] as [string, string, PeerCell][])
       : []),
     [t.market.volume, quote?.volume ? formatVolume(quote.volume, locale) : NO_VALUE],
   ];
@@ -196,6 +229,13 @@ export async function MetricsCard({
      ADR'de dolar/TWD karışımı verir, BRK.B'de 0,002 basar. Yani ne olduğu
      gibi alınabiliyor ne yeniden kurulabiliyor. */
 
+  const cells = rows.map(([label, value, cell]) => ({
+    label,
+    value,
+    cell,
+    spread: cell && cell.value !== null && sectorPeers ? peerSpread(cell.value, sectorPeers.values[cell.metric]) : null,
+  }));
+
   return (
     /* LİSTE KUTUYU DOLDURUYOR. Izgara satırının boyunu orta sütun kuruyor
        ve bu kartın içeriği 156 piksel erken bitiyordu: son satırın altında
@@ -207,14 +247,27 @@ export async function MetricsCard({
     <div className={styles.metricsBody}>
       {/* `data-count`: sütun sayısı ölçü sayısına göre (stock.module.css) —
           dokuz ölçü dört sütunda son satırda tek başına kalıyordu. */}
-      <dl data-motion-stagger data-count={rows.length} className={styles.metricsList}>
-        {rows.map(([label, value]) => (
-          <div key={label}>
-            <dt>{label}</dt>
-            <dd className="numeral">{value}</dd>
-          </div>
-        ))}
+      <dl data-motion-stagger data-count={cells.length} className={styles.metricsList}>
+        {cells.map(({ label, value, cell, spread }) => {
+          return (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd className="numeral">{value}</dd>
+              {spread && cell && <PeerStripFor label={label} value={value} spread={spread} format={cell.format} locale={locale} t={t} />}
+            </div>
+          );
+        })}
       </dl>
+      {/* Kulvarın okunuşu KATLAMADA (Analist eğilimi panelinin "Nasıl
+          Okunur"u ile aynı kalıp). Açık paragraf 1440'ta kartı 70 piksel
+          uzatıyor ve aynı ızgara satırındaki Hareketli Ortalamalar'ın
+          altında boşluk açıyordu (ölçüldü, 25 Ekim). */}
+      {sectorPeers && cells.some((c) => c.spread) && (
+        <details className={depth.how}>
+          <summary>{t.stockDepth.howRead}</summary>
+          <p>{t.stockVisuals.peerNote.replace("{n}", String(sectorPeers.companies))}</p>
+        </details>
+      )}
       {/* Para birimi başlıktaki dolar fiyatından farklıysa sebebi yazılır —
           yoksa okuyucu iki sayıyı yan yana koyup birini yanlış sanıyor. */}
       {homeCurrency && (
@@ -231,5 +284,44 @@ export async function MetricsCard({
         </p>
       )}
     </div>
+  );
+}
+
+function PeerStripFor({
+  label,
+  value,
+  spread,
+  format,
+  locale,
+  t,
+}: {
+  label: string;
+  value: string;
+  spread: NonNullable<ReturnType<typeof peerSpread>>;
+  format: (v: number) => string;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const v = t.stockVisuals;
+  /* Yüzdelik yarıdan büyükse "yüksek", değilse "düşük" ve tümleyeni:
+     "%30'undan yüksek" yerine "%70'inden düşük" — okuyucu büyük sayıyı
+     okuyor. Tam sayıya yuvarlanıyor; eşit yarı "yüksek" tarafında. */
+  const above = spread.below >= 50;
+  const p = Math.round(above ? spread.below : 100 - spread.below);
+  const position = (above ? v.peerAbove : v.peerBelow)
+    .replace("{p}", String(p))
+    .replace("{ek}", locale === "tr" ? trAblative(p) : "");
+  const median = format(spread.median);
+  return (
+    <PeerStrip
+      spread={spread}
+      position={position}
+      aria={v.peerAria
+        .replace("{metric}", label)
+        .replace("{v}", value)
+        .replace("{m}", median)
+        .replace("{n}", String(spread.peers))
+        .replace("{pos}", position.toLocaleLowerCase(locale === "tr" ? "tr-TR" : "en-US"))}
+    />
   );
 }

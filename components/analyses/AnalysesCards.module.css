@@ -1,6 +1,6 @@
 /* ANALİZLERİM (18 Ekim) — iki kart ızgarası. Derinlik tonla (surface-sunken
-   kart, panelin içinde), gölge yok; renk yalnız anlamdan: görüşün AL/SAT
-   tonu, yazının durumu. Puan halkası büyüklük, mürekkep rengi. */
+   kart, panelin içinde), gölge yok; renk yalnız anlamdan: görüşün AL/TUT/SAT
+   üçlüsü, yazının durumu, getirinin yönü. Puan halkası büyüklük, mürekkep rengi. */
 
 /* ---- Kendi analizlerim: not kartları ---- */
 .notes { display:grid; gap:10px; margin:0; padding:0 16px 16px; list-style:none; }
@@ -55,13 +55,23 @@
   stroke:var(--text-strong); stroke-linecap:round; stroke-dasharray:var(--score) 100;
   animation:an-ring .9s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 70ms + 220ms);
 }
+/* Halka görüşün rengini taşır (aynı üçlü, `--verdict-*` — bilanço ve teknik
+   halkalarıyla aynı ton); puanın kendisi metin renginde. */
+.report[data-verdict="buy"] .ringFill { stroke:var(--verdict-buy); }
+.report[data-verdict="hold"] .ringFill { stroke:var(--verdict-hold); }
+.report[data-verdict="sell"] .ringFill { stroke:var(--verdict-sell); }
 .ringValue { position:absolute; inset:0; display:grid; place-items:center; font-size:13px; font-weight:800; color:var(--text-strong); font-variant-numeric:tabular-nums; }
 
 .reportMid { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .verdict { padding:4px 10px; border-radius:8px; font-size:13px; font-weight:850; letter-spacing:.02em; background:var(--surface); color:var(--text-strong); }
-[data-verdict="buy"] .verdict { color:var(--up); }
-[data-verdict="sell"] .verdict { color:var(--down); }
-[data-verdict="insufficient"] .verdict { color:var(--text-muted); font-weight:700; }
+/* GÖRÜŞ RENGİ (25 Ekim, site geneli renk kararı — güncel): görüşler her
+   ekranda aynı üçlüyle; AL yeşilin yumuşak tonu, TUT pirinç, SAT kırmızının
+   yumuşak tonu. Zemin wash, yazı ailenin koyusu (kontrast wash üzerinde
+   ölçülü: globals.css). Mavi görüş rengi değil. */
+.report[data-verdict="buy"] .verdict { background:var(--up-wash); color:var(--up); }
+.report[data-verdict="hold"] .verdict { background:var(--brass-wash); color:var(--brass-ink); }
+.report[data-verdict="sell"] .verdict { background:var(--down-wash); color:var(--down); }
+.report[data-verdict="insufficient"] .verdict { background:transparent; color:var(--text-muted); font-weight:700; box-shadow:inset 0 0 0 1px var(--line); }
 .focus { font-size:12.5px; font-weight:650; color:var(--text-muted); }
 
 .reportFoot { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-top:auto; padding-top:10px; border-top:1px solid var(--line-soft); font-size:13px; color:var(--text-body); font-variant-numeric:tabular-nums; }
@@ -69,6 +79,63 @@
 .footCell[data-end] { justify-items:end; }
 .footCell small { font-size:11.5px; color:var(--text-muted); }
 
+/* ---- Fiyat haritası minyatürü ---- */
+.map { position:relative; display:block; height:44px; margin:-2px 0 0; }
+.map svg { display:block; width:100%; height:100%; overflow:visible; }
+.mapLine { fill:none; stroke-width:1.75; stroke-linejoin:round; stroke-linecap:round; }
+.mapLine[data-tone="up"] { stroke:var(--up); }
+.mapLine[data-tone="down"] { stroke:var(--down); }
+.mapLevel { stroke-width:1; stroke-dasharray:3 3; opacity:.75; }
+.mapLevel[data-tone="up"] { stroke:var(--up); }
+.mapLevel[data-tone="down"] { stroke:var(--down); }
+/* Rapor fiyatı: çizginin sağ ucunda halka, zemin rengiyle oyulmuş. */
+.mapDot { position:absolute; right:-4px; width:9px; height:9px; margin-top:-4.5px; border-radius:999px; background:var(--page-bg); box-shadow:inset 0 0 0 2px currentColor; }
+.mapDot[data-tone="up"] { color:var(--up); }
+.mapDot[data-tone="down"] { color:var(--down); }
+
+/* ---- Raporların özeti ---- */
+.overview { padding:0 16px 16px; }
+.overviewSentence { margin-top:-6px; max-width:72ch; font-size:var(--text-read); line-height:22px; color:var(--text-body); text-wrap:pretty; }
+.overviewGrid { display:grid; gap:10px; margin-top:12px; }
+@media(min-width:768px) { .overviewGrid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.mix, .since { display:flex; flex-direction:column; gap:10px; min-width:0; margin:0; padding:14px 16px; border-radius:var(--radius-lg); background:var(--surface-sunken); }
+.figTitle { font-size:var(--text-read); font-weight:750; color:var(--text-strong); }
+.figHint { margin-top:auto; font-size:var(--text-tiny); line-height:17px; color:var(--text-muted); }
+/* Görüş çubuğu: tek şerit, parçalar arasında 2 px zemin boşluğu. */
+.mixBar { display:flex; gap:2px; height:12px; border-radius:999px; overflow:hidden; }
+.mixSeg { flex:var(--share) 1 0; min-width:4px; transform-origin:left center; animation:an-grow .7s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 80ms + 120ms); }
+/* Dağılımda aynı üçlü, sitenin görüş çizim tonu (`--verdict-*`). Önceden
+   burada kendi oranları vardı (%62/%70/%58, saydam): aynı "Al" Analizlerim'de
+   teknik ekranındaki dilimden açık çıkıyordu. */
+.mixSeg[data-verdict="buy"], [data-verdict="buy"] > .mixSwatch, [data-verdict="buy"] > .mixLane > span { background:var(--verdict-buy); }
+.mixSeg[data-verdict="hold"], [data-verdict="hold"] > .mixSwatch, [data-verdict="hold"] > .mixLane > span { background:var(--verdict-hold); }
+.mixSeg[data-verdict="sell"], [data-verdict="sell"] > .mixSwatch, [data-verdict="sell"] > .mixLane > span { background:var(--verdict-sell); }
+.mixSeg[data-verdict="insufficient"], [data-verdict="insufficient"] > .mixSwatch, [data-verdict="insufficient"] > .mixLane > span { background:var(--line-strong); }
+/* Anahtar dört satır: ad · adet · pay; satırın dibinde payın kulvar şeridi. */
+.mixLegend { display:grid; gap:9px; margin:2px 0 0; padding:0; list-style:none; }
+.mixLegend li { display:grid; grid-template-columns:auto minmax(0,1fr) auto 3.2em; align-items:center; column-gap:8px; row-gap:5px; min-width:0; font-size:13px; }
+.mixLane { grid-column:1/-1; display:block; height:var(--lane-h, 5px); border-radius:999px; background:var(--line-soft); overflow:hidden; }
+.mixLane > span { display:block; height:100%; width:calc(var(--share, 0) * 100%); border-radius:inherit; transform-origin:left center; animation:an-grow .7s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 80ms + 160ms); }
+.mixLegend li[data-empty] { opacity:.55; }
+.mixSwatch { width:10px; height:10px; border-radius:3px; }
+.mixName { font-weight:700; color:var(--text-body); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mixCount { font-weight:800; color:var(--text-strong); font-variant-numeric:tabular-nums; }
+.mixShare { color:var(--text-muted); font-variant-numeric:tabular-nums; text-align:right; }
+/* Getiri kovaları: altı sütun, taban çizgisinde yaslanır; sıfır çizgisi
+   ortada (`--line-strong`). */
+.bins { position:relative; display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:6px; align-items:end; height:96px; border-bottom:1px solid var(--line-strong); }
+.bins::after { content:""; position:absolute; left:50%; top:0; bottom:0; width:1px; background:var(--line-strong); }
+.bin { display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:3px; height:100%; min-width:0; }
+.binCount { font-size:12px; font-weight:800; color:var(--text-strong); font-variant-numeric:tabular-nums; min-height:15px; }
+.binBar { display:block; width:100%; max-width:44px; height:calc(var(--h, 0) * 70px); min-height:0; border-radius:4px 4px 0 0; transform-origin:bottom center; animation:an-rise-y .7s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 60ms + 160ms); }
+.bin[data-side="down"] .binBar { background:var(--down); }
+.bin[data-side="up"] .binBar { background:var(--up); }
+.binAxis { position:relative; height:16px; font-size:11px; color:var(--text-muted); font-variant-numeric:tabular-nums; }
+.binAxis span { position:absolute; top:2px; translate:-50% 0; white-space:nowrap; }
+.binAxis span[data-zero] { color:var(--text-strong); font-weight:700; }
+
+@keyframes an-grow { from { transform:scaleX(0); } }
+@keyframes an-rise-y { from { transform:scaleY(0); } }
 @keyframes an-rise { from { opacity:0; translate:0 8px; } }
 @keyframes an-ring { from { stroke-dasharray:0 100; } }
-@media (prefers-reduced-motion: reduce) { .noteItem, .reportItem, .ringFill { animation:none !important; } .note, .report { transition:none; } }
+@media (prefers-reduced-motion: reduce) { .noteItem, .reportItem, .ringFill, .mixSeg, .binBar, .mixLane > span { animation:none !important; } .note, .report { transition:none; } }

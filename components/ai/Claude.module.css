@@ -33,9 +33,11 @@
 .focusText span { font-size:13px; line-height:1.45; color:var(--text-muted); }
 .focusVerdict { display:flex; align-items:center; gap:7px; }
 .focusVerdict b { font-size:14px; font-weight:800; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
+/* Görüş üçlüsü (25 Ekim, site geneli renk kararı; gerekçe `verdictTextClass`,
+   lib/analysis.ts): AL yeşil, TUT PİRİNÇ (maviydi; mavi etkileşim), SAT kırmızı. */
 [data-verdict="buy"] .focusVerdict b { color:var(--up); }
 [data-verdict="sell"] .focusVerdict b { color:var(--down); }
-[data-verdict="hold"] .focusVerdict b { color:var(--primary-ink); }
+[data-verdict="hold"] .focusVerdict b { color:var(--brass-ink); }
 
 /* ---- Rapor sekmesi ---- */
 .reportWrap { display:grid; gap:16px; min-width:0; }
@@ -62,9 +64,28 @@
    damlasına büzülür. Hepsi `--ease-brand`; taşan eğri yalnız düğmenin okunda. */
 .workbench { display:grid; gap:20px; min-width:0; }
 .desk { --desk-pad:clamp(18px,2.6vw,28px); position:relative; isolation:isolate; display:grid; gap:18px; padding:var(--desk-pad); border-radius:24px; background:var(--surface-sunken); overflow:clip; }
-/* Silik fiyat çizgisi: kırpmayla açılır (pathLength + non-scaling-stroke kesik ölçüsünü kaydırıyordu, Analysis.module.css → .chartLine). */
-.stageLine { position:absolute; z-index:-1; left:0; right:0; bottom:6%; width:100%; height:46%; overflow:visible; clip-path:inset(0 100% 0 0); animation:line-draw 1600ms var(--ease-brand) 300ms forwards; }
-.stageLine path { fill:none; stroke:var(--text-strong); stroke-width:2.4; stroke-linejoin:round; stroke-linecap:round; opacity:.06; }
+/* BİR BAKIŞTA: başlığın satırında fiyat şeridi (adı ve uçlarıyla) + son rapor. Çizgi
+   kırpmayla açılır (pathLength + non-scaling-stroke kesik ölçüsünü kaydırıyordu,
+   Analysis.module.css → .chartLine). Markanın yumuşak mavisi (`--primary-soft`): nötr
+   veri çizimi; doygun etkileşim mavisi ve mavi sayı değil (renk kararı).
+   Ölçüm, 390×844, düğmenin akıştaki ALT kenarı (yapışkan kapalı; ilk ekran 765'te
+   biter): şerit kendi satırındayken TR 741 → 825; başlığın satırında TR teknik 762
+   (akışta sığıyor). Başlığı uzun olanda (EN, TR seçim odağı) şerit alt satıra iniyor,
+   799–818: düğmeyi orada yapışkan eylem satırı ilk ekranda tutuyor (696–756). 768 ve
+   1440'ta akışta sığıyor (en geç 719).
+   25 Ekim son düzeltme: yapışkan satır o hâlde ikinci odak kartının altını örtüyordu
+   (TR seçim kart 650–711 / satır 686; EN 650–730 / 686). Telefonda şerit kendi
+   satırında tek hat, odak satırı tek satır, kart aralığı 14 (aşağıda): dört durumda
+   da eylem satırı AKIŞTA — TR teknik 665–745 (kart 651'de biter), TR seçim ve EN iki
+   odak 676–756 (kart 662'de biter); ilk ekran 766'da bitiyor, örtüşme 0. */
+.deskSpark { display:flex; flex:1 1 auto; align-items:center; gap:14px; min-width:0; margin:0; }
+.deskSpark svg { flex:0 1 200px; min-width:80px; height:36px; overflow:visible; clip-path:inset(0 100% 0 0); animation:line-draw 1200ms var(--ease-brand) 300ms forwards; }
+.deskSpark path { fill:none; stroke:var(--primary-soft); stroke-width:1.75; stroke-linejoin:round; stroke-linecap:round; }
+.deskSpark figcaption { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; min-width:0; font-size:12.5px; color:var(--text-muted); }
+.deskSpark figcaption > * { white-space:nowrap; }
+.deskSpark figcaption b { font-size:13.5px; font-weight:650; color:var(--text-strong); }
+.deskSpark figcaption b[data-tone="up"] { color:var(--up); }
+.deskSpark figcaption b[data-tone="down"] { color:var(--down); }
 @keyframes line-draw { to { clip-path:inset(0 0 0 0); } }
 
 .deskHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 16px; }
@@ -104,13 +125,13 @@
 .latest b { font-weight:800; color:var(--text-strong); }
 .latest[data-verdict="buy"] b { color:var(--up); }
 .latest[data-verdict="sell"] b { color:var(--down); }
-.latest[data-verdict="hold"] b { color:var(--primary-ink); }
+.latest[data-verdict="hold"] b { color:var(--brass-ink); }
 .latest small { font-size:11.5px; font-weight:500; color:var(--text-muted); }
 
 /* Çıkış: önce soru ve seçenekler yukarı kaçar, sonra durum ve hak; düğmenin
    yazısı kapanır, ok dairesi mürekkep damlasına döner ve kâğıda oturur.
    Filmin ilk karesi boş kâğıt: kesme okunmaz. */
-.desk[data-launching] :is(.deskHead,.deskOptions,.deskNote,.quota,.deskDuration,.stageLine) { animation:stage-out 240ms var(--ease-brand-in) both; }
+.desk[data-launching] :is(.deskHead,.deskOptions,.deskNote,.quota,.deskDuration) { animation:stage-out 240ms var(--ease-brand-in) both; }
 .desk[data-launching] :is(.deskNote,.quota,.deskDuration) { animation-delay:60ms; }
 @keyframes stage-out { to { opacity:0; translate:0 -18px; } }
 .desk[data-launching] .go { gap:0; padding:8px; opacity:1; cursor:default; }
@@ -150,7 +171,7 @@
 .historyVerdict { font-size:16px; font-weight:800; letter-spacing:-.03em; color:var(--text-strong); }
 [data-verdict="buy"] > .historyVerdict { color:var(--up); }
 [data-verdict="sell"] > .historyVerdict { color:var(--down); }
-[data-verdict="hold"] > .historyVerdict { color:var(--primary-ink); }
+[data-verdict="hold"] > .historyVerdict { color:var(--brass-ink); }
 [data-verdict="insufficient"] > .historyVerdict { color:var(--text-muted); }
 .historyAuthor { display:flex; align-items:center; gap:7px; min-width:0; font-size:13px; font-weight:600; color:var(--text-body); }
 .historyAuthor > span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:12em; }
@@ -171,7 +192,7 @@
 .ctaVerdict:hover { text-decoration:underline; text-underline-offset:3px; }
 .ctaRow[data-verdict="buy"] .ctaVerdict { color:var(--up); }
 .ctaRow[data-verdict="sell"] .ctaVerdict { color:var(--down); }
-.ctaRow[data-verdict="hold"] .ctaVerdict { color:var(--primary-ink); }
+.ctaRow[data-verdict="hold"] .ctaVerdict { color:var(--brass-ink); }
 .ctaMeta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 14px; font-size:13px; color:var(--text-muted); }
 .ctaAuthor { display:inline-flex; align-items:center; gap:6px; font-weight:600; color:var(--text-body); }
 .ctaNone { font-size:14.5px; color:var(--text-body); }
@@ -195,7 +216,7 @@
 .companyVerdict { font-size:18px; font-weight:800; letter-spacing:-.03em; color:var(--text-strong); }
 .companyCard[data-verdict="buy"] .companyVerdict { color:var(--up); }
 .companyCard[data-verdict="sell"] .companyVerdict { color:var(--down); }
-.companyCard[data-verdict="hold"] .companyVerdict { color:var(--primary-ink); }
+.companyCard[data-verdict="hold"] .companyVerdict { color:var(--brass-ink); }
 .companyHint { min-height:48px; font-size:14px; line-height:1.55; color:var(--text-body); }
 
 /* Kart içi Claude düğmesi (ClaudeAction). Birincil düğmenin dili: düz mavi
@@ -242,6 +263,35 @@
   .focusOption { min-height:58px; padding:9px 12px; }
   /* Son rapor kısayolu telefonda başlığın altına ikinci satır açıyordu (44 px); aynı rapor kartın altındaki Son Raporlar'da. */
   .deskHead .latest { display:none; }
+  /* Telefonda şerit başlığın yanında tek parça: çizgi, altında ad ve değişim; uçların
+     fiyatı (`data-range`) yer yok diye düşer, değişim onların özeti. */
+  /* Başlık uzunsa (EN "Where Price Is Heading") şerit kendi satırına iner;
+     kısaysa (TR) başlığın yanında kalır — sıkışıp kırpılmaz. */
+  .deskHead { row-gap:6px; }
+  .deskTitle { flex:none; max-width:100%; }
+  .deskSpark { display:grid; flex:1 1 128px; grid-template-columns:minmax(0,1fr); gap:2px; justify-items:end; container-type:inline-size; }
+  .deskSpark svg { width:100%; height:30px; }
+  .deskSpark figcaption { gap:0 6px; font-size:11.5px; }
+  .deskSpark figcaption b { font-size:12px; }
+  .deskSpark figcaption [data-range] { display:none; }
+  /* ŞERİT KENDİ SATIRINDA TEK HAT (25 Ekim son düzeltme). Başlık uzunken (EN iki
+     odak, TR "Sahip Olmaya Değer mi?") şerit alt satıra iniyor ve çizgi + altında
+     künye 50 px tutuyordu; yapışkan eylem satırı ikinci odak kartının altını
+     örtüyordu (390×844 ölçüldü: TR seçim 25 px, EN 44 px örtüşme). Şerit tam
+     genişliğe inince (kap ≥ 240 px) çizgi solda, künye sağda tek satır: 26 px.
+     Başlığın yanındaki dar hâli (TR teknik, ~130 px) eskisi gibi alt alta. */
+  @container (min-width: 240px) {
+    .deskSpark svg { grid-column:1; grid-row:1; height:26px; }
+    .deskSpark figcaption { grid-column:2; grid-row:1; align-self:center; margin-left:12px; flex-wrap:nowrap; }
+  }
+  /* Telefonda kart aralığı 14 px ve odak satırı TEK satır: "vade · ne verdiği"
+     iki satıra kırılınca kart 61'den 80 px'e çıkıyordu. Metnin tamamı DOM'da
+     (ekran okuyucu tamamını okur); odağın uzun açıklaması kartın altındaki
+     "Raporun Yolu" panelinde. Dört durumda (TR/EN × iki odak) Analizi Başlat
+     akışta ve ilk ekranda; yapışkan satır hiçbir kartı örtmüyor (ölçüm
+     .deskSpark notunda). */
+  .desk { gap:14px; }
+  .focusText span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .deskAction { gap:10px 12px; }
   .deskNote { padding:6px 6px 6px 12px; font-size:13px; }
   .go { flex:1 1 0; min-width:0; min-height:56px; justify-content:space-between; padding-left:22px; font-size:16px; }
@@ -249,7 +299,7 @@
 }
 @media(max-width:420px) { .program { grid-template-columns:minmax(0,1fr); } }
 @media (prefers-reduced-motion: reduce) {
-  .stageLine { animation:none; clip-path:none; }
+  .deskSpark svg { animation:none; clip-path:none; }
   .deskOptions,.deskNote,.deskAction,.ctaEdition[data-stage] { animation:none; }
   .goLabel > span,.goIcon svg,.regen svg,.focusMark::after { transition:none; }
 }
@@ -274,7 +324,7 @@ a.tlRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px
 .tlVerdict b { font-size:15px; font-weight:800; letter-spacing:-.02em; line-height:1.15; color:var(--text-strong); overflow-wrap:anywhere; }
 [data-verdict="buy"] .tlVerdict b { color:var(--up); }
 [data-verdict="sell"] .tlVerdict b { color:var(--down); }
-[data-verdict="hold"] .tlVerdict b { color:var(--primary-ink); }
+[data-verdict="hold"] .tlVerdict b { color:var(--brass-ink); }
 [data-verdict="insufficient"] .tlVerdict b { color:var(--text-muted); }
 .tlRingEmpty { flex:none; width:30px; height:30px; border-radius:50%; border:2px solid var(--line); box-sizing:border-box; }
 .tlBy { display:flex; align-items:center; gap:8px; min-width:0; font-size:12.5px; font-weight:600; color:var(--text-body); }

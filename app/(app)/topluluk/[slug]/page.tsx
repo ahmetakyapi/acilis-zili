@@ -14,6 +14,8 @@ import { isLocale } from "@/lib/i18n/config";
 import { articleOpenGraph, metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
 import { getPublishedPost } from "@/lib/user-post-data";
+import { SymbolChips } from "@/components/community/CommunityParts";
+import { getSymbolNames } from "@/lib/data";
 
 /**
  * Topluluk yazısı — okuma sayfası. Gövde Mercek'le AYNI çiziciden geçiyor
@@ -54,7 +56,12 @@ export default async function CommunityPostPage(props: PageProps<"/topluluk/[slu
   if (!post) notFound();
 
   const blocks = parseBlocks(post.bodyMd, post.locale);
-  const autoLink = await articleAutoLinker(post.locale);
+  const [autoLink, names] = await Promise.all([
+    articleAutoLinker(post.locale),
+    post.symbols.length
+      ? getSymbolNames(post.symbols.slice(0, 8)).catch(() => ({}) as Awaited<ReturnType<typeof getSymbolNames>>)
+      : Promise.resolve({} as Awaited<ReturnType<typeof getSymbolNames>>),
+  ]);
   const minutes = readingMinutes(post.bodyMd);
   const dateFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
     day: "numeric",
@@ -110,20 +117,8 @@ export default async function CommunityPostPage(props: PageProps<"/topluluk/[slu
                 </span>
               </div>
               <p className={detail.dek}>{post.dek}</p>
-              {post.symbols.length > 0 && (
-                <ul className="flex flex-wrap gap-1.5">
-                  {post.symbols.slice(0, 8).map((symbol) => (
-                    <li key={symbol}>
-                      <Link
-                        href={`/hisse/${symbol}`}
-                        className="numeral inline-flex min-h-11 items-center rounded-full border border-line bg-surface-sunken px-2.5 text-tiny font-semibold text-body transition-colors hover:border-line-focus hover:text-strong sm:min-h-7"
-                      >
-                        {symbol}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              {/* Semboller logolu rozet (25 Ekim) — akış kartıyla aynı bileşen. */}
+              <SymbolChips symbols={post.symbols} max={8} names={names} label={t.feedVisuals.community.symbolsLabel} />
             </div>
           </header>
         </SpotlightCard>

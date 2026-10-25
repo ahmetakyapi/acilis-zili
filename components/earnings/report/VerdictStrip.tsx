@@ -43,6 +43,12 @@ export function VerdictStrip({
     <section className={styles.verdictPanel} aria-labelledby="report-verdict" data-has-target={targetText !== null}>
       <div className={styles.verdictScore}>
       {/* `roll`: kapak halkası ilk ekranda — sayı halkayla birlikte oturur. */}
+      {/* GÖRÜŞ RENGİ (25 Ekim son düzeltme, site geneli renk kararı).
+          Görüş turunda halka ve karar mürekkebe çekilmişti; sahibi
+          ekranların renksiz kalmasını istemedi ("renkli olabilir, dengesini
+          tutturalım"). Artık sitenin her yerindeki üçlü: halka çizim tonu
+          (`--verdict-*`, yön yeşilinden yumuşak), kelime metin tonu
+          (`verdictTextClass`). Teknik, Claude ve Analizlerim ile aynı. */}
       <ScoreRing score={row.score} verdict={verdict} size={80} showDenominator roll />
       <div className={styles.verdictDecision}>
         {/* Etiket, manşet değil — sayfanın üç başlık düzeyinden en küçüğü

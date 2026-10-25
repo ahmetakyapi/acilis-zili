@@ -15,7 +15,8 @@ import { Panel } from "@/components/ui/primitives";
 import { dayNumber, formatIsoDate } from "@/lib/fx";
 import type { Locale } from "@/lib/i18n/config";
 import { taxYearList, type TaxYearRules } from "@/lib/tax";
-import type { TaxLabels } from "./TaxCalculator";
+import { monthStarts, timeShare } from "@/lib/tax-waterfall";
+import type { TaxLabels, TaxVisualLabels } from "./TaxCalculator";
 import { PANEL_TITLE } from "./tax-ui";
 import styles from "./Tax.module.css";
 
@@ -121,11 +122,13 @@ export function dayMonth(date: string, locale: Locale): string {
  */
 export function TaxFiling({
   labels,
+  visuals,
   locale,
   today,
   years,
 }: {
   labels: TaxLabels;
+  visuals: TaxVisualLabels;
   locale: Locale;
   today: string;
   years: Record<number, TaxYearRules>;
@@ -189,7 +192,15 @@ export function TaxFiling({
               )}
             </ol>
           </div>
-          <p className="mt-6 text-small leading-relaxed text-muted">{F.installments}</p>
+          <MonthScale
+            year={year}
+            filing={filing}
+            today={today}
+            todayLabel={`${F.today} · ${todayText}`}
+            locale={locale}
+            labels={visuals.timeline}
+          />
+          <p className="mt-4 text-small leading-relaxed text-muted">{F.installments}</p>
         </section>
 
         <div className={styles.filingGrid}>
@@ -245,6 +256,86 @@ export function TaxFiling({
         </div>
       </div>
     </Panel>
+  );
+}
+
+/**
+ * TAKVİMİN AY ÖLÇEĞİ (25 Ekim, görsel tur). Üstteki düğüm sırası okunurluk
+ * için SIRA ölçeğinde (Mart'taki üç tarih yan yana sığsın diye); bu şerit
+ * aynı takvimi GERÇEK gün ölçeğinde gösteriyor: işlem yılı on iki aylık
+ * uzun bir dilim, beyan ayı tek bir dar pencere, ikinci taksit dört ay
+ * sonra bir çentik. Okuyucunun "ne kadar vaktim var" sorusu ilk ölçekte
+ * görünmüyordu: Mart, Temmuz'a dört düğümlük bir uzaklıkta değil.
+ * Bugün iğnesi aynı hesaptan (`timeShare`, lib/tax-waterfall.ts) — geçen
+ * kısım yumuşak mavi, kalan kulvar; işaretler metin rengi (zaman bir yön
+ * değil, yeşil/kırmızı almaz).
+ */
+function MonthScale({
+  year,
+  filing,
+  today,
+  todayLabel,
+  locale,
+  labels,
+}: {
+  year: number;
+  filing: number;
+  today: string;
+  todayLabel: string;
+  locale: Locale;
+  labels: TaxVisualLabels["timeline"];
+}) {
+  const start = `${year}-01-01`;
+  const end = `${filing}-07-31`;
+  const at = (date: string) => timeShare(date, start, end);
+  const months = monthStarts(start, end);
+  const narrow = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", { month: "narrow", timeZone: "UTC" });
+  const now = at(today);
+  return (
+    <div className={styles.mscale} aria-label={labels.scaleLabel} role="group">
+      <p className={styles.msTitle} aria-hidden>
+        {labels.scaleLabel}
+      </p>
+      <div className={styles.msLane} aria-hidden>
+        <span className={styles.msPassed} style={{ "--at": now } as React.CSSProperties} />
+        <span
+          className={styles.msYear}
+          style={{ "--a": at(start), "--b": at(`${year}-12-31`) } as React.CSSProperties}
+        />
+        <span
+          className={styles.msWindow}
+          style={{ "--a": at(`${filing}-03-01`), "--b": at(`${filing}-03-31`) } as React.CSSProperties}
+        />
+        <span className={styles.msTick} style={{ "--at": at(`${filing}-07-31`) } as React.CSSProperties} />
+        {today >= start && today <= end && (
+          <span className={styles.msNow} style={{ "--at": now } as React.CSSProperties} />
+        )}
+      </div>
+      <ol className={styles.msAxis} aria-hidden style={{ "--n": months.length } as React.CSSProperties}>
+        {months.map((month) => (
+          <li key={month} data-jan={month.endsWith("-01-01") || undefined}>
+            <span>{narrow.format(new Date(`${month}T00:00:00Z`))}</span>
+            {month.endsWith("-01-01") && <b>{month.slice(0, 4)}</b>}
+          </li>
+        ))}
+      </ol>
+      <p className={styles.msKey}>
+        <span>
+          <i data-k="window" aria-hidden />
+          {labels.window}
+        </span>
+        <span>
+          <i data-k="tick" aria-hidden />
+          {labels.installment}
+        </span>
+        {today >= start && today <= end && (
+          <span>
+            <i data-k="now" aria-hidden />
+            {todayLabel}
+          </span>
+        )}
+      </p>
+    </div>
   );
 }
 

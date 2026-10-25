@@ -24,7 +24,11 @@ import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { TELEGRAM_URL } from "@/lib/site";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { getDailyChart } from "@/lib/daily-chart-data";
+import { BriefLedger, ledgerRefs } from "@/components/today/BriefLedger";
+import { LedgerLinker } from "@/components/today/LedgerLinker";
+import { getBriefLedger } from "@/lib/brief-ledger-data";
 import { dailyChartHref } from "@/lib/daily-chart";
+import { ledgerWindow } from "@/lib/brief-ledger";
 
 /**
  * Bülten arşivi — solda seçili günün/haftanın tam metni, sağda tarih listesi.
@@ -91,7 +95,10 @@ export function BriefArchiveView({
         }
       />
 
-      <Suspense key={`${period}:${issue?.briefDate ?? ""}`} fallback={<ArchiveSkeleton />}>
+      <Suspense
+        key={`${period}:${issue?.briefDate ?? ""}`}
+        fallback={<ArchiveSkeleton band={ledgerExpected(issue?.briefDate, period)} />}
+      >
         <ArchiveBoard period={period} issue={issue} locale={locale} t={t} />
       </Suspense>
     </MotionExperience>
@@ -118,8 +125,13 @@ async function ArchiveBoard({
   /* GÜNÜN GRAFİĞİ BAĞLANTISI (24 Ekim): günlük sayının günü için grafik
      yazıldıysa metnin altında. Bülten 16:10'da bugünü, grafik ertesi sabah
      dünkü kapanışı anlatıyor; bağlantı yalnız AYNI GÜNÜN grafiği varsa. */
-  const dayChart =
-    period === "daily" && brief ? await getDailyChart(brief.briefDate, locale) : null;
+  /* KAYIT DEFTERİ (25 Ekim görsel zirve): sayının anlattığı tamamlanmış
+     seansın (haftalıkta haftanın) bandı — gerekçe lib/brief-ledger.ts.
+     Grafikle paralel; bant okunamazsa yalnız bant kalkar. */
+  const [dayChart, ledger] = await Promise.all([
+    period === "daily" && brief ? getDailyChart(brief.briefDate, locale) : null,
+    brief ? getBriefLedger(brief.briefDate, period, brief.bodyMd, true) : null,
+  ]);
 
   if (archive.length === 0) {
     return (
@@ -135,7 +147,9 @@ async function ArchiveBoard({
   const currentAnchor = period === "weekly" ? weekAnchor(today) : today;
 
   return (
-    /* KOLON TAM GENİŞLİKTE, DARALTILMIYOR.
+    <LedgerLinker className="grid gap-6">
+    {ledger && <BriefLedger data={ledger} locale={locale} t={t} />}
+    {/* KOLON TAM GENİŞLİKTE, DARALTILMIYOR.
        Ölçü sınırı iki kez denendi ve ikisi de geri alındı; ikisinin de
        gerekçesi burada dursun ki üçüncü bir deneme yapılmasın.
        Önce paragrafa `max-w-[62ch]` konmuştu: kolon 1050 piksele açılıyor,
@@ -152,8 +166,13 @@ async function ArchiveBoard({
        yok); aradaki fark sayfanın kenarına değil ARŞİV kolonuna gidiyor
        (1440'ta 300 → ~500 piksel). Arşiv o genişlikte her bültenin ilk
        cümlesini de gösteriyor, yani genişleyen kolon boş değil, bir okuma
-       dizini. Sayfa yine iki kenarı dolu; gövde 18 puntoda ~90 harf. */
-    <div className={`${polish.bulletinGrid} grid gap-6 lg:grid-cols-[minmax(0,50rem)_minmax(300px,1fr)]`}>
+       dizini. Sayfa yine iki kenarı dolu; gövde 18 puntoda ~90 harf.
+
+       42rem (25 Ekim görsel zirve). ~90 harf rahat ölçünün (50–75) hâlâ
+       üstündeydi. Aynı üçüncü yol bir basamak daha: panel 42rem'de tavan
+       yapıyor, fark yine arşive gidiyor; gövde 18 puntoda satır başına ~75
+       harf (ölçüm commit'te). Panel içinde boş yarı yok, kenarlar dolu. */}
+    <div className={`${polish.bulletinGrid} grid gap-6 lg:grid-cols-[minmax(0,42rem)_minmax(300px,1fr)]`}>
       {/* ---- Seçili kayıt ---- */}
       <article className={`${polish.bulletinArticle} order-2 border border-primary-faint p-5 sm:p-8 lg:order-1`} data-motion-article>
         {brief ? (
@@ -233,6 +252,8 @@ async function ArchiveBoard({
                 markdown={brief.bodyMd}
                 collapsible={false}
                 size="page"
+                refs={ledger ? ledgerRefs(ledger) : undefined}
+                tocLabel={t.briefLedger.tocLabel}
               />
             </div>
 
@@ -376,6 +397,7 @@ async function ArchiveBoard({
         </ScrollEdges>
       </Panel>
     </div>
+    </LedgerLinker>
   );
 }
 
@@ -394,11 +416,32 @@ async function ArchiveBoard({
  * `svh` seçildi: mobil tarayıcıların adres çubuğu açıkken/kapalıyken
  * değişen `vh` değeri yer tutucunun boyunu oynatıyordu.
  */
-function ArchiveSkeleton() {
+/**
+ * İskelette bandın yeri ayrılacak mı. Bant, sayının anlattığı dönem
+ * kapandıktan sonra basılıyor (`ledgerComplete`); son seansı henüz bugün ya
+ * da ileride olan sayı (bu haftanın haftalığı) bandsız gelir. Tatil
+ * listesi istemeden, takvim günüyle bakılıyor — iskelet bir tahmin; tarihi
+ * bilinmeyen "en yeni" sayıda bant var sayılıyor (hemen her gün öyle).
+ */
+function ledgerExpected(briefDate: string | undefined, period: BriefPeriod): boolean {
+  if (!briefDate) return true;
+  const window = ledgerWindow(briefDate, period, []);
+  return window !== null && window.session < todayEt();
+}
+
+function ArchiveSkeleton({ band }: { band: boolean }) {
   return (
-    <div className={`${polish.bulletinGrid} grid gap-6 lg:grid-cols-[minmax(0,50rem)_minmax(300px,1fr)]`}>
-      <Skeleton className="h-[80svh] w-full rounded-xl" />
-      <Skeleton className="h-[420px] w-full rounded-(--radius-xl) lg:h-[80svh]" />
+    <div className="grid gap-6">
+      {/* Kayıt Defteri'nin yeri — gerçek bant 390'da 430–468 (telefonda
+          ayrıntı katlı), 1440'ta 669–702 piksel (25 Ekim son düzeltme
+          ölçümü, günlük ve haftalık). Bant gelmeyecekse yer ayrılmıyor:
+          940 piksellik boş blok bandsız sayıda metni ikinci ekrana
+          itiyordu. */}
+      {band && <Skeleton className="h-[440px] w-full rounded-(--radius-xl) sm:h-[640px]" />}
+      <div className={`${polish.bulletinGrid} grid gap-6 lg:grid-cols-[minmax(0,42rem)_minmax(300px,1fr)]`}>
+        <Skeleton className="h-[80svh] w-full rounded-xl" />
+        <Skeleton className="h-[420px] w-full rounded-(--radius-xl) lg:h-[80svh]" />
+      </div>
     </div>
   );
 }

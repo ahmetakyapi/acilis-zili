@@ -1,4 +1,6 @@
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, FileText } from "@phosphor-icons/react/dist/ssr";
+import { sourceHost } from "@/lib/analysis-visuals";
+import visuals from "./ReportVisuals.module.css";
 import styles from "@/components/earnings/EarningsReport.module.css";
 import type { Dictionary } from "@/lib/i18n";
 import type { EarningsAnalysisRow } from "@/lib/schema";
@@ -42,33 +44,39 @@ export function ReportFooter({
             <h2 className="plate text-read text-muted">
               {t.analysis.sourcesLabel}
             </h2>
-            <ul className="flex flex-wrap gap-x-4 text-tiny text-muted">
+            {/* KAYNAK KARTLARI (25 Ekim görsel zirve). Sekiz bağlantı tek
+                paragraf gibi akıyordu; her kaynak artık kendi kartında: belge
+                adı, altında alan adı (nereye gideceğini bağlantıya basmadan
+                söylüyor), 56 piksel dokunma yüksekliği. Adres süzgeci aynı. */}
+            <ul className={visuals.sources}>
               {sources.map((source, index) => {
                 /* ADRES SÜZGEÇTEN GEÇER. Kaynak listesi `/api/analiz` POST
                    gövdesinden geliyor ve oradaki `z.string().url()` yetmiyor:
                    doğrulama `new URL()` tabanlı olduğu için
                    `javascript:alert(1)` de geçerli bir adres sayılıyor.
-                   React'in JSX kaçışı `href` özniteliğini kapsamaz, yani
-                   tıklanan bağlantı çalışan bir betiğe dönüşürdü. Aynı süzgeç
-                   mercek sayfasında zaten vardı; burası o düzeltmenin dışında
-                   kalmıştı. */
+                   React'in JSX kaçışı `href` özniteliğini kapsamaz. */
                 const href = safeExternalUrl(source.url);
+                const host = sourceHost(href);
+                const body = (
+                  <>
+                    <span aria-hidden className={visuals.sourceIcon}>
+                      <FileText weight="duotone" size={15} />
+                    </span>
+                    <span className={visuals.sourceText}>
+                      <b>{source.label}</b>
+                      <span>{host ?? t.analysisVisuals.sourceDocument}</span>
+                    </span>
+                  </>
+                );
                 return (
-                  <li key={`${source.label}-${index}`}>
+                  <li key={`${source.label}-${index}`} className="min-w-0">
                     {href ? (
-                      <a
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer nofollow"
-                        className="inline-flex min-h-11 items-center text-primary hover:text-primary-hover sm:min-h-8"
-                      >
-                        {source.label}
+                      <a href={href} target="_blank" rel="noopener noreferrer nofollow" className={visuals.source}>
+                        {body}
                         <ArrowUpRight aria-hidden size={14} />
                       </a>
                     ) : (
-                      <span className="inline-flex min-h-11 items-center sm:min-h-8">
-                        {source.label}
-                      </span>
+                      <span className={visuals.source}>{body}</span>
                     )}
                   </li>
                 );

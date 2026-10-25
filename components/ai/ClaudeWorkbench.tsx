@@ -9,9 +9,11 @@ import { useMotionPreference } from "@/components/motion/useMotionPreference";
 import { HORIZON_OF, formatSpan, type AnalysisFocus, type NextReport } from "@/lib/ai-analysis-core";
 import { deskState } from "@/lib/ai-analysis-desk";
 import { AnalysisFilm, CURTAIN_MS, type FilmBar } from "./AnalysisFilm";
+import { FILM_SESSIONS } from "@/lib/ink/analysis-film";
 import { FocusOptions, type FocusOption } from "./FocusOptions";
 import { KineticText } from "./KineticText";
 import { useNow } from "./useNow";
+import { formatPercent, formatPrice } from "@/lib/utils";
 import styles from "./Claude.module.css";
 
 /** Düğme damlaya büzülür, kart boşalır, film başlar (ms). İstek basıldığı an gider; bu yalnız görüntü. */
@@ -22,7 +24,7 @@ const NUMERALS = ["I", "II", "III", "IV"] as const;
 
 export type LatestReport = { href: string; verdict: "buy" | "hold" | "sell" | "insufficient"; score: number | null; when: string };
 
-/** Son 60 kapanıştan kartın arkasındaki silik çizgi (viewBox 0–100 × 0–40). */
+/** Son 60 kapanıştan kartın fiyat şeridi (viewBox 0–100 × 0–40). */
 function sparkPath(bars: FilmBar[]) {
   if (bars.length < 2) return "";
   const closes = bars.map(b => b.c), lo = Math.min(...closes), hi = Math.max(...closes);
@@ -163,7 +165,12 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, optio
     </div>
   </div>;
 
-  const spark = sparkPath(bars);
+  // Sayfa ortalamalar için 60 seansın öncesini de veriyor; kartın çizgisi filmin çizdiği pencere.
+  const sparkBars = bars.slice(-FILM_SESSIONS);
+  const spark = sparkPath(sparkBars);
+  const sparkFirst = sparkBars[0]?.c ?? null, sparkLast = sparkBars.at(-1)?.c ?? null;
+  const sparkChange = sparkFirst && sparkLast !== null ? ((sparkLast - sparkFirst) / sparkFirst) * 100 : null;
+  const money = (v: number) => formatPrice(v, locale, { currency: true });
   const { note: noteKind, label: labelKind, disabled, retry } = deskState({ errorCode: error?.code ?? null, inProgress, remaining, early });
   const pips = remaining !== null && limit !== null && limit > 0 && limit <= MAX_PIPS;
 
@@ -188,16 +195,28 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, optio
 
   return <div className={styles.workbench}>
     <section ref={stageRef} className={styles.desk} data-launching={launching ? "" : undefined} aria-labelledby="claude-launch-title" aria-busy={launching || undefined}>
-      {/* Kartın arkasında hissenin kendi son 60 kapanışı: filmde kalemin çizeceği çizgi, silik. */}
-      {spark && <svg className={styles.stageLine} viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden>
-        <path d={spark} pathLength={1} vectorEffect="non-scaling-stroke" />
-      </svg>}
-
       <div className={styles.deskHead}>
         {/* `data-ink="plain"`: başlıkların varsayılan degradesi `background-clip: text` ile
             çiziliyor ve harfleri ayrı taşınan kutulara (kinetik yazı) uygulanmıyor — başlık
             saydam kalıyordu (1280 ölçümü). */}
         <h2 id="claude-launch-title" className={styles.deskTitle} data-ink="plain"><KineticText key={focus} text={L.title[focus]} delay={80} stagger={22} /></h2>
+        {/* BİR BAKIŞTA (25 Ekim): hissenin son 60 kapanışı, başlığın satırında. Çizgi
+            kartın arkasında silik bir süstü: telefonda "Hisse Seçimi Odağı" kartının
+            içinden geçip yapışkan eylem satırının zemininde sert kenarla kesiliyordu ve
+            etiketi yoktu (veri süs değil). Şimdi adı ve uçlarıyla; filmde kalemin
+            çizeceği çizgi aynı seanslar (`FILM_SESSIONS`). Başlığın satırında, çünkü
+            kendi satırı 390'da düğmeyi ilk ekranın dışına itiyordu (ölçüm Claude.module.css
+            → .deskSpark). */}
+        {spark && sparkFirst !== null && sparkLast !== null && <figure className={styles.deskSpark}>
+          <svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden>
+            <path d={spark} vectorEffect="non-scaling-stroke" />
+          </svg>
+          <figcaption>
+            <span>{L.spark.replace("{n}", String(sparkBars.length))}</span>
+            <b className="figure" data-range>{money(sparkFirst)} → {money(sparkLast)}</b>
+            {sparkChange !== null && <b className="figure" data-tone={sparkChange > 0 ? "up" : sparkChange < 0 ? "down" : undefined}>{formatPercent(sparkChange, locale)}</b>}
+          </figcaption>
+        </figure>}
         {latest && <ButtonLink href={latest.href} variant="ghost" size="sm" scroll={false} className={styles.latest} data-verdict={latest.verdict}>
           {latest.score !== null && <ScoreRing score={latest.score} verdict={latest.verdict === "insufficient" ? "hold" : latest.verdict} size={26} />}
           <span>{L.latest}</span><b>{t.verdicts[latest.verdict]}</b><small>{latest.when}</small>

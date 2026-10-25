@@ -16,6 +16,7 @@ import { PlanHistory } from "@/components/technical/PlanHistory";
 import { PlanStrip } from "@/components/technical/PlanStrip";
 import { BalanceNotes } from "@/components/technical/BalanceNotes";
 import { PriceMap, PriceMapNotes } from "@/components/technical/PriceMap";
+import { ScenarioRail } from "@/components/technical/ScenarioRail";
 import { SignalStrip } from "@/components/technical/SignalStrip";
 import { STANCE_GUIDE_SLUG, StanceGuide } from "@/components/technical/StanceGuide";
 import {
@@ -503,6 +504,21 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           </section>
           <section className={styles.block}>
             <h2 className={styles.sectionTitle}>{t.technical.scenarios}</h2>
+            {/* SENARYOLAR ÖNCE ÇİZGİ, SONRA METİN (25 Ekim). İki kutu metin
+                vardı ve tetik seviyelerinin fiyata uzaklığı okuyucunun
+                kafasında kuruluyordu; ray aynı sayıları fiyat ekseninde
+                gösteriyor. Gerekçe ve eşleşme kuralı `ScenarioRail`de. */}
+            <ScenarioRail
+              bull={copy.bull}
+              bear={copy.bear}
+              lang={copyLang}
+              price={price}
+              priceLabel={priceLabel}
+              levels={levelProps}
+              snapshot={row.snapshot}
+              locale={locale}
+              t={t}
+            />
             <div className={styles.scenarios} data-motion-stagger>
               {/* Başlıklar düz mürekkep (`data-ink="plain"`): rengi yön
                   taşıyor, degrade onu silerdi (globals.css).

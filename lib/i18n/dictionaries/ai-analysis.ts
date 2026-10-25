@@ -2,7 +2,7 @@ export const aiAnalysisTr = {
   title: "Claude ile Hisse Analizi",
   hint: "Güncel fiyat, günlük teknik göstergeler, şirket verileri ve son 7 günün haberleri birlikte değerlendirilir.",
   quotaHint: "Her yeni rapor 1 analiz hakkı kullanır. Haklar İstanbul saatiyle 00:00’da yenilenir; kayıtlı raporları okumak ücretsizdir.",
-  horizon: "Vade", short: "1–2 Hafta", medium: "3–6 Ay", generate: "Yeni Analiz Oluştur", generating: "Analiz Hazırlanıyor…",
+  horizon: "Vade", short: "1⁠–⁠2 Hafta", medium: "3⁠–⁠6 Ay", generate: "Yeni Analiz Oluştur", generating: "Analiz Hazırlanıyor…",
   pending: "Hesabında bir analiz hazırlanıyor. Bu sırada yeni bir analiz başlatılamaz.",
   remaining: "Kalan Hak", unlimited: "Sınırsız", history: "Kayıtlı Raporlar", choose: "Rapor Seç", saved: "Kayıtlı Rapor",
   overall: "Genel Puan", technical: "Teknik Puan", news: "Haber Puanı", business: "Hisse Seçim Puanı",
@@ -37,7 +37,7 @@ export const aiAnalysisTr = {
   watch: "Takip Edilecekler", citedNews: "Raporda Kullanılan Haberler", otherNews: "Diğer Haberler",
   allIndicators: "Tüm Göstergeler",
   steps: ["Fiyat ve Mumlar Toplanıyor", "Göstergeler Hesaplanıyor", "Haberler Taranıyor", "Claude Değerlendiriyor"],
-  stepsHint: "Rapor genellikle 20–40 saniyede hazır olur. Sayfadan ayrılırsan rapor yine kaydedilir.",
+  stepsHint: "Rapor genellikle 20⁠–⁠40 saniyede hazır olur. Sayfadan ayrılırsan rapor yine kaydedilir.",
   allReports: "Tüm Raporlarım",
   page: {
     title: "Analizlerim",
@@ -64,8 +64,8 @@ export const aiAnalysisTr = {
   toBull: "Olumlu Tetiğe", toBear: "Olumsuz Tetiğe",
   focus: {
     technical: "Teknik Odak", selection: "Hisse Seçimi Odağı",
-    technicalHint: "1–2 hafta. Fiyatın yönü, yakın destek ve dirençler, momentum; görüşün hangi seviyede değişeceği.",
-    selectionHint: "3–6 ay. Şirketin sahip olmaya değer olup olmadığı: büyüme, kârlılık, bilanço, değerleme; teknik yalnız zamanlama.",
+    technicalHint: "1⁠–⁠2 hafta. Fiyatın yönü, yakın destek ve dirençler, momentum; görüşün hangi seviyede değişeceği.",
+    selectionHint: "3⁠–⁠6 ay. Şirketin sahip olmaya değer olup olmadığı: büyüme, kârlılık, bilanço, değerleme; teknik yalnız zamanlama.",
     label: "Analiz Odağı",
   },
   claude: {
@@ -114,14 +114,21 @@ export const aiAnalysisTr = {
     launch: {
       title: { technical: "Fiyatın Yönü", selection: "Sahip Olmaya Değer mi?" },
       start: "Analizi Başlat", startAnyway: "Yine de Başlat", program: "Raporun Yolu",
-      duration: "Rapor genellikle 20–40 saniyede hazır olur; sayfadan ayrılsan da kaydedilir.",
+      duration: "Rapor genellikle 20⁠–⁠40 saniyede hazır olur; sayfadan ayrılsan da kaydedilir.",
       latest: "Son Rapor",
+      spark: "Son {n} Seans",
     },
     film: {
-      last: "Son Kapanış", high: "Zirve", low: "Dip", ma20: "20 Günlük", ma50: "50 Günlük", news: "Manşetler",
+      last: "Son Kapanış", first: "İlk Seans", high: "Zirve", low: "Dip", ma20: "20 Günlük", ma50: "50 Günlük",
+      strongest: "En Sert Gün", cross: "Ortalamalar Kesişti",
       /* Filmin canlı künyesi (AnalysisFilm): çizimle aynı veriden, birim sayıdan kopmaz. */
       readout: { sessions: "{n} Seans", headlines: "{n} Manşet", elapsed: "Geçen {t}" },
-      weighing: ["Riskler", "Fırsatlar", "Değerleme", "Momentum", "Seviyeler", "Senaryolar", "Kanıtlar"],
+      /* Perdelerin altyazısı (25 Ekim, kısa film): sayılar mumlardan; ortalama yoksa sahnenin sabit cümlesi. */
+      story: {
+        journey: "{n} seansta fiyat {from} iken {to} oldu ({pct}).",
+        trend: "Son kapanış 20 günlük ortalamanın {a}, 50 günlüğün {b}.",
+        above: "üstünde", below: "altında",
+      },
     },
     /** Analiz masası (25 Ekim yeniden kuruluşu): eylem kartı, odak seçenekleri, durum satırları, rapor dizini. */
     desk: {
@@ -132,7 +139,7 @@ export const aiAnalysisTr = {
       quotaOut: "Bugünkü hakların bitti; İstanbul saatiyle 00:00’da yenilenir.",
       refresh: "Durumu Yenile", retry: "Tekrar Dene", checkHistory: "Geçmiş Raporlara Bak",
       openLatest: "Son Raporu Aç",
-      filmNote: "Genellikle 20–40 saniye sürer. Sayfadan ayrılsan da rapor kaydedilir; Geçmiş Raporlar sekmesinde bulursun.",
+      filmNote: "Genellikle 20⁠–⁠40 saniye sürer. Sayfadan ayrılsan da rapor kaydedilir; Geçmiş Raporlar sekmesinde bulursun.",
       guestTitle: "Rapor Oluşturmak İçin Giriş Yap",
       guestHint: "Hazırlanmış raporları herkes okuyabilir; yeni rapor, yönetici tarafından açılan hesaplarda oluşturulur.",
       signIn: "Giriş Yap",
@@ -184,7 +191,7 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
   title: "Stock Research with Claude",
   hint: "Current quotes, daily technical indicators, company data and news from the past 7 days are assessed together.",
   quotaHint: "Each new report uses 1 analysis credit. Credits reset at midnight Istanbul time; reopening saved reports is free.",
-  horizon: "Horizon", short: "1–2 Weeks", medium: "3–6 Months", generate: "Generate New Analysis", generating: "Generating Analysis…",
+  horizon: "Horizon", short: "1⁠–⁠2 Weeks", medium: "3⁠–⁠6 Months", generate: "Generate New Analysis", generating: "Generating Analysis…",
   pending: "An analysis is running on your account. A new one can start after it finishes.",
   remaining: "Credits Left", unlimited: "Unlimited", history: "Saved Reports", choose: "Choose a Report", saved: "Saved Report",
   overall: "Overall Score", technical: "Technical Score", news: "News Score", business: "Stock Selection Score",
@@ -219,7 +226,7 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
   watch: "What to Watch", citedNews: "News Used in the Report", otherNews: "Other News",
   allIndicators: "All Indicators",
   steps: ["Collecting Quotes and Candles", "Computing Indicators", "Scanning News", "Claude Is Assessing"],
-  stepsHint: "Reports usually take 20–40 seconds. If you leave the page, the report is still saved.",
+  stepsHint: "Reports usually take 20⁠–⁠40 seconds. If you leave the page, the report is still saved.",
   allReports: "All My Reports",
   page: {
     title: "My Analyses",
@@ -246,8 +253,8 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
   toBull: "To Bull Trigger", toBear: "To Bear Trigger",
   focus: {
     technical: "Technical Focus", selection: "Stock Selection Focus",
-    technicalHint: "1–2 weeks. Price direction, nearby support and resistance, momentum; the level at which the view changes.",
-    selectionHint: "3–6 months. Whether the company is worth owning: growth, profitability, balance sheet, valuation; technicals only for timing.",
+    technicalHint: "1⁠–⁠2 weeks. Price direction, nearby support and resistance, momentum; the level at which the view changes.",
+    selectionHint: "3⁠–⁠6 months. Whether the company is worth owning: growth, profitability, balance sheet, valuation; technicals only for timing.",
     label: "Analysis Focus",
   },
   claude: {
@@ -291,13 +298,19 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
     launch: {
       title: { technical: "Where Price Is Heading", selection: "Worth Owning?" },
       start: "Start the Analysis", startAnyway: "Start Anyway", program: "How the Report Is Built",
-      duration: "Reports are usually ready in 20–40 seconds and are saved even if you leave the page.",
+      duration: "Reports are usually ready in 20⁠–⁠40 seconds and are saved even if you leave the page.",
       latest: "Latest Report",
+      spark: "Last {n} Sessions",
     },
     film: {
-      last: "Last Close", high: "High", low: "Low", ma20: "20-Day", ma50: "50-Day", news: "Headlines",
+      last: "Last Close", first: "First Session", high: "High", low: "Low", ma20: "20-Day", ma50: "50-Day",
+      strongest: "Biggest Day", cross: "Averages Crossed",
       readout: { sessions: "{n} Sessions", headlines: "{n} Headlines", elapsed: "Elapsed {t}" },
-      weighing: ["Risks", "Upside", "Valuation", "Momentum", "Levels", "Scenarios", "Evidence"],
+      story: {
+        journey: "Over {n} sessions the price went from {from} to {to} ({pct}).",
+        trend: "The last close is {a} the 20-day average and {b} the 50-day.",
+        above: "above", below: "below",
+      },
     },
     desk: {
       gives: { technical: "Direction, support and resistance, momentum", selection: "Growth, profitability, valuation" },
@@ -306,7 +319,7 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
       quotaOut: "You have used today’s credits; they reset at midnight Istanbul time.",
       refresh: "Refresh Status", retry: "Try Again", checkHistory: "Check Past Reports",
       openLatest: "Open the Latest Report",
-      filmNote: "This usually takes 20–40 seconds. The report is saved even if you leave the page; you will find it under Past Reports.",
+      filmNote: "This usually takes 20⁠–⁠40 seconds. The report is saved even if you leave the page; you will find it under Past Reports.",
       guestTitle: "Sign In to Generate a Report",
       guestHint: "Anyone can read the existing reports; new ones are generated on accounts enabled by an administrator.",
       signIn: "Sign In",

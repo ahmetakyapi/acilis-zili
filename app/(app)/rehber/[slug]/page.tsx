@@ -18,9 +18,12 @@ import { articleAutoLinker } from "@/lib/autolink-data";
 import { LevelBadge } from "@/components/article/LevelBadge";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { Panel } from "@/components/ui/primitives";
+import { GuideArticleProgress } from "@/components/guide/GuideArticleProgress";
 import {
   GUIDE_SLUGS,
+  GUIDE_TOPICS,
   guideArticle,
+  guideLevelLabel,
   guideArticles,
   guideTopicLabel,
   type GuideArticle,
@@ -123,6 +126,11 @@ export default async function GuideArticlePage(
   const position = all.findIndex((entry) => entry.slug === article.slug);
   const prev = position > 0 ? all[position - 1] : null;
   const next = position < all.length - 1 ? all[position + 1] : null;
+  /* Bölümün yazıları — "Rehberdeki Yerin" şeridi (GuideArticleProgress). */
+  const chapterArticles = all
+    .filter((entry) => entry.topic === article.topic)
+    .map((entry) => ({ slug: entry.slug, title: entry.title }));
+  const chapterNumber = GUIDE_TOPICS.findIndex((topic) => topic.key === article.topic) + 1;
 
   const blocks = parseBlocks(article.bodyMd, locale);
   const sections = sectionIndex(blocks);
@@ -229,6 +237,19 @@ export default async function GuideArticlePage(
         <InkCanvas scene="storyEnd" seed={13} className="mx-auto mt-8 block h-15 w-60" />
       </div>
 
+      {/* Yazının hemen arkasında: bölümdeki yer ve okundu işareti. İlgili
+          yazılardan ÖNCE, çünkü panel görünüme girince yazı okundu sayılıyor
+          — gövdenin bittiği yer orası. */}
+      <GuideArticleProgress
+        slug={article.slug}
+        chapter={guideTopicLabel(article.topic, locale)}
+        chapterNumber={chapterNumber}
+        articles={chapterArticles}
+        curriculumIndex={position + 1}
+        curriculumTotal={all.length}
+        labels={t.guideVisuals}
+      />
+
       {related.length > 0 && (
         <section className="flex flex-col gap-3">
           {/* Başlık metnin hattında (kartın iç payı kadar içeride); kartlar
@@ -276,6 +297,8 @@ export default async function GuideArticlePage(
               article={prev}
               label={t.guide.prevArticle}
               direction="prev"
+              locale={locale}
+              t={t}
             />
           ) : (
             <span aria-hidden className="hidden sm:block" />
@@ -283,8 +306,16 @@ export default async function GuideArticlePage(
           {next && (
             <CurriculumStep
               article={next}
-              label={t.guide.nextArticle}
+              /* Sıradaki yazı yeni bir bölümü açıyorsa kart bunu söylüyor:
+                 okuyucu bir bölümü bitirdiğini başka yerden bilemiyor. */
+              label={
+                next.topic !== article.topic
+                  ? `${t.guideVisuals.chapterStart}: ${guideTopicLabel(next.topic, locale)}`
+                  : t.guide.nextArticle
+              }
               direction="next"
+              locale={locale}
+              t={t}
             />
           )}
         </nav>
@@ -296,35 +327,53 @@ export default async function GuideArticlePage(
   );
 }
 
+/**
+ * Önceki / sıradaki kartı (25 Ekim). Eskiden yalnız ok ve başlıktı; kart
+ * artık yazının karosunu, seviyesini ve okuma süresini taşıyor — "sıradaki
+ * yazıya geçmeye hazır mıyım" sorusunun iki parçası, kapaktaki künyenin
+ * aynısı. Sıradaki kart tonla öne çıkıyor: müfredatın asıl yönü ileri.
+ */
 function CurriculumStep({
   article,
   label,
   direction,
+  locale,
+  t,
 }: {
   article: GuideArticle;
-  label: Dictionary["guide"]["prevArticle"];
+  label: string;
   direction: "prev" | "next";
+  locale: string;
+  t: Dictionary;
 }) {
   const next = direction === "next";
+  const meta = t.guideVisuals.stepMeta
+    .replace("{level}", guideLevelLabel(article.level, locale))
+    .replace("{minutes}", String(readingMinutes(article.bodyMd)));
   return (
-    <Link href={`/rehber/${article.slug}`} prefetch className="min-w-0">
+    <Link href={`/rehber/${article.slug}`} prefetch className="group min-w-0">
       <Panel
-        className={`panel-hover flex h-full items-center gap-3 p-4 ${next ? "text-right" : ""}`}
+        className={`panel-hover flex h-full items-center gap-3 p-4 ${next ? "border-primary-faint bg-primary-tint text-right" : ""}`}
       >
         {!next && (
-          <ArrowLeft weight="bold" size={14} className="shrink-0 text-primary" />
+          <>
+            <ArrowLeft weight="bold" size={14} className="shrink-0 text-primary transition-transform group-hover:-translate-x-0.5" />
+            <GlyphTile glyph={article.glyph} size={40} />
+          </>
         )}
         <span className={`min-w-0 flex-1 ${next ? "order-first" : ""}`}>
           <span className="plate text-nano">{label}</span>
           <span className="mt-1 block truncate text-base font-bold text-strong">
             {article.title}
           </span>
+          <span className="numeral mt-0.5 block text-tiny text-muted">{meta}</span>
         </span>
+        {next && <GlyphTile glyph={article.glyph} size={40} />}
         {next && (
           <ArrowRight
             weight="bold"
             size={14}
-            className="shrink-0 text-primary"
+            className="shrink-0 text-primary transition-transform group-hover:translate-x-0.5"
           />
         )}
       </Panel>

@@ -34,40 +34,62 @@ export function verdictLabel(verdict: VerdictKey, t: Dictionary): string {
       : t.analysis.verdictHold;
 }
 
-/** Metin ve halka rengi — AL yükseliş yeşili, SAT düşüş kırmızısı, TUT nötr. */
+/**
+ * GÖRÜŞ RENKLERİ — tek üçlü, her ekranda aynı (25 Ekim, site geneli renk kararı;
+ * sahibi: "renkli olabilir ekranlar, hep renksiz de olmasın; dengesini tutturalım").
+ *
+ * AL yeşil ailesi, TUT PİRİNÇ (`--brass` ailesi), SAT kırmızı ailesi. TUT mavi
+ * boyanıyordu: mavi sitede etkileşimin rengi, TUT'u tıklanır bir öğe gibi
+ * okutuyordu; pirinç "bekle" diyen sıcak bir ara ton ve sitede zaten "dikkat"
+ * anlamında. Rozet, halka, şerit ve dağılım hep bu üçlüden; çizimdeki yumuşak
+ * tonlar `VERDICT_INK`. Bilanço, teknik ve Claude ekranları aynı fonksiyonları
+ * çağırıyor, yani renk tek yerden döner.
+ */
+const VERDICT_TEXT: Record<VerdictKey, string> = { buy: "text-up", hold: "text-brass-ink", sell: "text-down" };
 export function verdictTextClass(verdict: VerdictKey): string {
-  return verdict === "buy"
-    ? "text-up"
-    : verdict === "sell"
-      ? "text-down"
-      : "text-primary";
+  return VERDICT_TEXT[verdict];
 }
 
 /**
- * Rozet zemini — aynı üçlü, yıkanmış hâli.
- *
- * "Tut" dalı `text-primary` değil `text-primary-ink` kullanıyor: accent
- * mürekkep accent wash'ın üstünde açık temada 4,14:1 çıkıyor ve AA eşiğinin
- * (4,5) altında kalıyordu. `--primary-ink` tam bu çift için var ve koyu
- * temada zaten `--primary`e eşit, yani orada hiçbir şey değişmiyor. Depoda
- * wash + `text-primary` çifti başka hiçbir yerde kalmadı.
+ * Rozet zemini — aynı üçlü, yıkanmış hâli. TUT `--brass-ink` (`--brass` değil):
+ * mürekkep kendi yıkaması üstünde iki temada AA'yı geçen ton bu çift için var.
  */
+const VERDICT_PILL: Record<VerdictKey, string> = {
+  buy: "bg-up-wash text-up",
+  hold: "bg-brass-wash text-brass-ink",
+  sell: "bg-down-wash text-down",
+};
 export function verdictPillClass(verdict: VerdictKey): string {
-  return verdict === "buy"
-    ? "bg-up-wash text-up"
-    : verdict === "sell"
-      ? "bg-down-wash text-down"
-      : "bg-primary-wash text-primary-ink";
+  return VERDICT_PILL[verdict];
 }
 
 /** SVG halkasının `stroke` değeri — CSS değişkeni doğrudan verilir. */
 export function verdictStroke(verdict: VerdictKey): string {
-  return verdict === "buy"
-    ? "var(--up)"
-    : verdict === "sell"
-      ? "var(--down)"
-      : "var(--primary)";
+  return VERDICT_INK[verdict];
 }
+
+/**
+ * Görüşün çizimdeki YUMUŞAK tonu (halka, dağılım şeridi, kart üst çizgisi): yön
+ * renginin kendisi değil, kart zeminiyle karışmış hâli — "+%2,1"in doygun
+ * yeşiliyle yan yana durunca görüş bir fiyat hareketi gibi okunmasın.
+ *
+ * TEK KAYNAK `--verdict-*` (app/globals.css, oranlar ve ölçülen kontrastlar
+ * orada). Burada ve CSS modüllerinde yüzde yazılmaz: önceden burada %72/%85,
+ * analist kovalarında %74/%58, analiz kartlarında %62/%70 vardı — aynı "Al"
+ * üç ekranda üç ton çıkıyordu. Analist kovaları (`BUCKET_INK`) bu nesneyi
+ * çağırır; yalnız ara "Al"/"Sat" kovası `-soft` basamağını kullanır.
+ */
+export const VERDICT_INK: Record<VerdictKey, string> = {
+  buy: "var(--verdict-buy)",
+  hold: "var(--verdict-hold)",
+  sell: "var(--verdict-sell)",
+};
+
+/** Analist kovalarının ara basamağı (Al/Sat): güçlü uçtan bir ton açık. */
+export const VERDICT_INK_SOFT: Record<Exclude<VerdictKey, "hold">, string> = {
+  buy: "var(--verdict-buy-soft)",
+  sell: "var(--verdict-sell-soft)",
+};
 
 export function analysisHref(symbol: string, period: string): string {
   /* Dönem tek kalıba iner: eski biçimli satırdan üretilen bağlantı da
@@ -195,6 +217,16 @@ export type AnalysisRowView = {
   score: number;
   verdict: VerdictKey;
   verdictText: string;
+  /* Kart görünümünün HAM sayıları (25 Ekim görsel zirve): tepki şeridi
+     ortak ölçekte çiziliyor, oran istemcide kuruluyor. Biçimli metinler
+     yukarıdaki alanlarda, sunucuda. */
+  reactionPct: number | null;
+  revenueYoyPct: number | null;
+  epsSurprisePct: number | null;
+  /** "▲ %26" — yalnız yüzde; gelir tutarı kartta yok. */
+  revenueYoyText: string | null;
+  /** "−%30" / "+%7,8" — işaretli sürpriz. */
+  epsSurpriseText: string | null;
   /** Aramanın taradığı alan — küçültülmüş sembol + şirket + dönem. */
   search: string;
   /**
@@ -291,6 +323,14 @@ export function toAnalysisRowView(
     score: row.score,
     verdict,
     verdictText: verdictLabel(verdict, t),
+    reactionPct: row.reactionPct,
+    revenueYoyPct: row.revenueYoyPct,
+    epsSurprisePct: row.epsSurprisePct,
+    revenueYoyText:
+      row.revenueYoyPct !== null
+        ? `${row.revenueYoyPct >= 0 ? "▲" : "▼"} ${formatPercentPlain(row.revenueYoyPct, locale, 0)}`
+        : null,
+    epsSurpriseText: row.epsSurprisePct !== null ? formatPercent(row.epsSurprisePct, locale, 1) : null,
     search: foldForSearch(
       `${row.symbol} ${row.company} ${row.periodLabel} ${row.sector ?? ""}`,
     ),
@@ -300,7 +340,7 @@ export function toAnalysisRowView(
   };
 }
 
-/** Tablonun ihtiyaç duyduğu on beş dize — sözlüğün tamamı yerine bu gider. */
+/** Tablonun (ve kart görünümünün) ihtiyaç duyduğu dizeler — sözlüğün tamamı yerine bu gider. */
 export function analysisTableLabels(t: Dictionary) {
   return {
     tableRegion: t.analysis.tableRegion,
@@ -319,5 +359,16 @@ export function analysisTableLabels(t: Dictionary) {
     searchClear: t.analysis.searchClear,
     resultCountOne: t.analysis.resultCountOne,
     resultCountMany: t.analysis.resultCountMany,
+    verdictLabel: t.analysis.verdictLabel,
+    viewLabel: t.analysisVisuals.list.view,
+    viewCards: t.analysisVisuals.list.cards,
+    viewRows: t.analysisVisuals.list.rows,
+    reactionLabel: t.analysisVisuals.list.reaction,
+    revenueLabel: t.analysisVisuals.list.revenue,
+    epsLabel: t.analysisVisuals.list.eps,
+    noReaction: t.analysisVisuals.list.noReaction,
+    more: t.analysisVisuals.list.more,
+    scale: t.analysisVisuals.list.scale,
+    shown: t.analysisVisuals.list.shown,
   };
 }

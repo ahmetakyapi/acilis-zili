@@ -1,5 +1,6 @@
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { FoldToggle } from "@/components/ui/FoldToggle";
 import { Panel, PanelHeader } from "@/components/ui/primitives";
 import { formatIsoDate } from "@/lib/fx";
 import type { Locale } from "@/lib/i18n/config";
@@ -14,6 +15,9 @@ import styles from "./Brokers.module.css";
  * hairline ile ayrılmış düz paragraf — uyarı için yeni kutu açılmıyor
  * (CLAUDE.md ekran düzeni 6).
  */
+/** Telefonda açık kalan "Tabloda Olmayanlar" kalemi sayısı. */
+const NOTES_OPEN = 1;
+
 export function BrokerNotes({ t }: { t: Dictionary }) {
   const L = t.brokers;
   const links = [
@@ -24,14 +28,25 @@ export function BrokerNotes({ t }: { t: Dictionary }) {
   return (
     <Panel id="tabloda-olmayanlar" aria-label={L.outsideTitle}>
       <PanelHeader title={L.outsideTitle} />
-      <dl className="flex max-w-3xl flex-col gap-3 px-4 pb-4 sm:px-5">
-        {L.outside.map((item) => (
-          <div key={item.term}>
+      {/* Telefonda ilk kalem açık, kalanı katlı (25 Ekim, sayfa boyu). */}
+      <div className="px-4 pb-4 sm:px-5">
+      <FoldToggle
+        id="tabloda-olmayanlar-devam"
+        hiddenCount={Math.max(0, L.outside.length - NOTES_OPEN)}
+        phone
+        more={t.brokerCards.panelFolds.notesMore}
+        less={t.brokerCards.panelFolds.notesLess}
+      >
+      <dl className="flex max-w-3xl flex-col gap-3">
+        {L.outside.map((item, index) => (
+          <div key={item.term} data-fold={index >= NOTES_OPEN || undefined}>
             <dt className="text-sm font-bold text-strong">{item.term}</dt>
             <dd className="mt-0.5 text-sm leading-relaxed text-body">{item.body}</dd>
           </div>
         ))}
       </dl>
+      </FoldToggle>
+      </div>
       <ul className="flex flex-wrap gap-x-5 px-4 pb-4 sm:px-5">
         {links.map((link) => (
           <li key={link.href}>
@@ -82,9 +97,26 @@ export function BrokerSources({
     <Panel id="kaynaklar" aria-label={L.sourcesTitle}>
       <PanelHeader title={L.sourcesTitle} />
       <p className="max-w-3xl px-4 pb-4 text-sm leading-relaxed text-body sm:px-5">{L.sourcesLead}</p>
-      <div className="grid gap-x-8 gap-y-5 px-4 pb-5 sm:px-5 lg:grid-cols-2">
+      {/* Telefonda kaynak listesi katlı (25 Ekim, sayfa boyu: 390'da 2.192
+          piksel). Çapayla gelen okur için katlama kendiliğinden açılıyor
+          (`RevealFoldAnchor`); JS'siz düğmeyle açılıyor. */}
+      <div className="px-4 pb-5 sm:px-5">
+      <FoldToggle
+        id="kaynaklar-tumu"
+        hiddenCount={brokers.length}
+        phone
+        more={t.brokerCards.panelFolds.sourcesMore}
+        less={t.brokerCards.panelFolds.sourcesLess}
+      >
+      <div className="grid gap-x-8 gap-y-5 lg:grid-cols-2">
         {brokers.map((broker) => (
-          <section key={broker.id} aria-label={broker.name} className="min-w-0">
+          <section
+            key={broker.id}
+            data-fold
+            id={`kaynaklar-${broker.id}`}
+            aria-label={broker.name}
+            className="min-w-0 scroll-mt-28"
+          >
             <h3 className="text-sm font-bold text-strong">{broker.name}</h3>
             <ol className="mt-1.5 flex flex-col gap-1.5">
               {Object.values(broker.sources).map((source, index) => (
@@ -117,6 +149,8 @@ export function BrokerSources({
             </ol>
           </section>
         ))}
+      </div>
+      </FoldToggle>
       </div>
     </Panel>
   );

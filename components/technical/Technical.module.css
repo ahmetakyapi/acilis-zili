@@ -53,9 +53,13 @@
 .pulseSlice:focus-visible { outline:none; }
 .pulseSlice:focus-visible > span[data-motion-draw] { outline:2px solid var(--line-focus); outline-offset:2px; }
 .pulseSlice[data-open] > span[data-motion-draw] { filter:brightness(1.12) saturate(1.1); box-shadow:0 0 0 2px var(--surface), 0 0 0 3px currentColor; }
-.pulseSlice[data-verdict="buy"] { color:var(--up); }
-.pulseSlice[data-verdict="hold"] { color:var(--primary); }
-.pulseSlice[data-verdict="sell"] { color:var(--down); }
+/* GÖRÜŞ ÜÇLÜSÜ (25 Ekim, site geneli renk kararı): AL yumuşak yeşil, TUT
+   PİRİNÇ, SAT yumuşak kırmızı — her ekranda aynı (`VERDICT_INK`,
+   lib/analysis.ts). TUT maviydi; mavi sitede etkileşim. Yön renginin
+   kendisi değil kart zeminiyle karışmış tonu: yanındaki "+%2,1" doygun. */
+.pulseSlice[data-verdict="buy"] { color:var(--verdict-buy); }
+.pulseSlice[data-verdict="hold"] { color:var(--verdict-hold); }
+.pulseSlice[data-verdict="sell"] { color:var(--verdict-sell); }
 .pulseSlice[data-verdict="pending"] { color:var(--line-strong); }
 /* BALON dilimin ortasında, çubuğun üstünde; ilk ve son dilimde kenara
    yaslanıyor ki dar ekranda kabın dışına taşmasın. Girişi kısa bir solma
@@ -65,16 +69,16 @@
 .pulseTip { animation:pulse-tip-in 160ms var(--ease-brand) both; position:absolute; bottom:calc(100% - 4px); left:50%; z-index:5; display:inline-flex; align-items:baseline; gap:8px; padding:6px 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel-fixed); box-shadow:0 6px 18px -8px color-mix(in srgb, var(--text-strong) 35%, transparent); font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap; translate:-50% 0; pointer-events:none; }
 .pulseTip b { font-size:12.5px; font-weight:750; letter-spacing:.03em; color:var(--text-muted); }
 .pulseSlice[data-verdict="buy"] .pulseTip b { color:var(--up); }
-.pulseSlice[data-verdict="hold"] .pulseTip b { color:var(--primary-ink); }
+.pulseSlice[data-verdict="hold"] .pulseTip b { color:var(--brass-ink); }
 .pulseSlice[data-verdict="sell"] .pulseTip b { color:var(--down); }
 .pulseTip > span:first-of-type { color:var(--text-strong); }
 .pulseSlice[data-edge="start"] .pulseTip { left:0; translate:none; }
 .pulseSlice[data-edge="end"] .pulseTip { left:auto; right:0; translate:none; }
-.pulseBar > .pulseSlice[data-verdict="buy"] > span[data-motion-draw] { background:var(--up); }
+.pulseBar > .pulseSlice[data-verdict="buy"] > span[data-motion-draw] { background:var(--verdict-buy); }
 /* Opaklık DEĞİL karışım: dilim bir hareket kancası ve azaltılmış harekette
    ortak kural opaklığı !important ile 1'e eziyor, TUT tam doygun kalıyordu. */
-.pulseBar > .pulseSlice[data-verdict="hold"] > span[data-motion-draw] { background:color-mix(in srgb, var(--primary) 55%, transparent); }
-.pulseBar > .pulseSlice[data-verdict="sell"] > span[data-motion-draw] { background:var(--down); }
+.pulseBar > .pulseSlice[data-verdict="hold"] > span[data-motion-draw] { background:var(--verdict-hold); }
+.pulseBar > .pulseSlice[data-verdict="sell"] > span[data-motion-draw] { background:var(--verdict-sell); }
 /* BEKLEYEN DİLİM RENKSİZ. Bir görüş değil, henüz olmayan bir görüş —
    yeşil/mavi/kırmızının yanında dördüncü bir renk, olmayan bir kararı
    varmış gibi gösterirdi. */
@@ -335,7 +339,12 @@
 @media (max-width:639px) {
   .cell { display:block; }
   .card { display:flex; flex-direction:column; gap:14px; }
-  .card:has(> .cardFoldInput:not(:checked)) :is(.rail, .cardThesis, .gaugeBox) { display:none; }
+  /* RAY KATLANMAZ (25 Ekim). Ray da katlının içindeydi ve telefonda kart
+     yalnız rakam kalıyordu ("Nereden Alınır 858,00 – 871,35 $"): sayıların
+     fiyata göre NEREDE durduğu görünmüyordu. Ray planın tek geometrisi —
+     her genişlikte açık; katlanan yalnız gerekçe cümlesi ve gösterge
+     şeridi (okuma, çizim değil). */
+  .card:has(> .cardFoldInput:not(:checked)) :is(.cardThesis, .gaugeBox) { display:none; }
   /* Kartı kaplayan bağlantının (z-1) üstünde; dokunma hedefi 44. */
   .cardFold { position:relative; z-index:3; display:inline-flex; align-self:flex-start; align-items:center; gap:6px; min-height:44px; margin-block:-10px -12px; color:var(--primary-ink); font-size:12.5px; font-weight:650; cursor:pointer; }
   .cardFold svg { transition:transform var(--default-transition-duration) var(--ease-brand); }
@@ -345,7 +354,7 @@
   /* "Devamı" tek karede patlamıyor (14 Ekim): display:none'dan çıkan üç
      bölüm kısa bir solmayla girer — animasyon her açılışta baştan oynar,
      yalnız ok dönüyordu. */
-  .card:has(> .cardFoldInput:checked) :is(.rail, .cardThesis, .gaugeBox) { animation:fold-in 220ms var(--ease-brand) backwards; }
+  .card:has(> .cardFoldInput:checked) :is(.cardThesis, .gaugeBox) { animation:fold-in 220ms var(--ease-brand) backwards; }
 }
 .card:has(.cardLink:focus-visible) { outline:2px solid var(--line-focus); outline-offset:3px; }
 .cardLink { color:inherit; }
@@ -413,8 +422,12 @@
 /* Plan konumu: fiyatın alım planına göre yeri, tek kısa etiket. Ton
    anlamdan: bölgede yükseliş, stop altında düşüş, dışında nötr. */
 .plan { display:inline-flex; align-self:flex-start; align-items:center; gap:6px; padding:3px 10px; border-radius:var(--radius-sm); font-size:12px; font-weight:700; letter-spacing:.01em; }
+/* Konum rozeti (25 Ekim): "Bölgenin %2,3 Üstünde" bir uzaklık; zemini
+   markanın yumuşak mavisi, yazısı mürekkep — doygun etkileşim mavisi sayı
+   metninde yok (rozet düğme gibi okunuyordu). Bölgede olmak alım bölgesinin
+   yeşilinde (bölge her ekranda aynı yeşil), stopun altı yön kırmızısında. */
 .plan[data-kind="inZone"] { background:var(--up-wash); color:var(--up); }
-.plan[data-kind="above"], .plan[data-kind="below"] { background:var(--primary-tint); color:var(--primary-ink); }
+.plan[data-kind="above"], .plan[data-kind="below"] { background:var(--primary-wash); color:var(--text-strong); }
 .plan[data-kind="belowStop"] { background:var(--down-wash); color:var(--down); }
 .quoteGrid > .plan { padding:3px 8px; font-size:12px; }
 /* 10 → 16: risk çubuğu geldikten sonra kartta ALT ALTA İKİ YATAY ÇİZİM
@@ -537,6 +550,7 @@
    karışık ama yine düz; yarıçap `--radius-lg`. */
 .planCells { display:flex; flex-direction:column; gap:8px; margin:0; padding:10px 14px; border-radius:var(--radius-lg); background:var(--surface-sunken); }
 .cardPlan[data-verdict="sell"] .planCells { background:color-mix(in srgb, var(--down-wash) 45%, var(--surface-sunken)); }
+
 /* SAYI SATIRIN EN YÜKSEK SESİ, ARADA KILAVUZ ÇİZGİ (23 Eylül). Etiket
    12/700, sayı 14/600 idi — neredeyse eşit ağırlık, üç satır bir form gibi
    okunuyordu. 1024'te "Nerede Vazgeçilir" ile "1.012,57 $" arasında ~200,
@@ -721,7 +735,7 @@
    kendisinden (bant, bacaklar) daha dikkat çekiyordu. Düz, eksenle aynı
    kalınlıkta, soluk düşüş tonu. */
 .trackVoid { position:absolute; left:0; top:11px; height:2px; border-radius:1px 0 0 1px; background:var(--down); opacity:.28; }
-.trackSeg { position:absolute; top:10px; height:4px; border-radius:2px; }
+.trackSeg { position:absolute; top:12px; height:var(--lane-h, 5px); translate:0 -50%; border-radius:999px; }
 .trackSeg[data-tone="down"] { background:var(--down); }
 .trackSeg[data-tone="up"] { background:var(--up); }
 /* Opaklık değil karışım: çizgi bir hareket kancası ve azaltılmış harekette
@@ -1405,9 +1419,9 @@
 .pulse[data-variant="directory"] > div:first-child { grid-column:1/-1; }
 .pulseDial { position:relative; width:128px; grid-column:1; grid-row:2; }
 .pulseDial svg { width:100%; stroke-width:7; }
-.pulseDial path { stroke:var(--primary); stroke-dasharray:1; stroke-linecap:round; }
-.pulseDial path[data-verdict="buy"] { stroke:var(--up); }
-.pulseDial path[data-verdict="sell"] { stroke:var(--down); }
+.pulseDial path { stroke:var(--verdict-hold); stroke-dasharray:1; stroke-linecap:round; }
+.pulseDial path[data-verdict="buy"] { stroke:var(--verdict-buy); }
+.pulseDial path[data-verdict="sell"] { stroke:var(--verdict-sell); }
 .pulseDial path[data-verdict="pending"] { stroke:var(--line-strong); }
 .pulseDialGuide { stroke:var(--line-soft); stroke-width:1; }
 .pulseDialCore { fill:var(--primary-tint); stroke:var(--primary-faint); stroke-width:.5; }
@@ -1675,8 +1689,15 @@
    sıkı: kart aralığı 20 → 16, dağılımın üst dolgusu 16 → 14, oran
    çubuğuyla başlığı arası 12 → 10. */
 .pulsePendingCount { display:none; }
+.pulseKey { display:none; flex-wrap:wrap; gap:4px 16px; font-size:12px; font-weight:700; letter-spacing:.03em; color:var(--text-body); }
+.pulseKey li { display:inline-flex; align-items:center; gap:6px; }
+.pulseKey li::before { content:""; width:8px; height:8px; border-radius:999px; background:var(--verdict-hold); }
+.pulseKey li[data-verdict="buy"]::before { background:var(--verdict-buy); }
+.pulseKey li[data-verdict="sell"]::before { background:var(--verdict-sell); }
+.pulseKey b { font-weight:650; letter-spacing:0; color:var(--text-strong); }
 @media (max-width: 767px) {
   .directoryHeader .pulse[data-variant="directory"] > .pulseRows { display:none; }
+  .directoryHeader .pulse[data-variant="directory"] > .pulseKey { display:flex; }
   .pulsePendingCount { display:inline; }
   .directoryHeader.directoryHeader:global(.page-frame) { gap:16px; }
   .directoryHeader > :last-child { padding-top:14px; }
@@ -1748,7 +1769,7 @@
 .riskComparison dl > div { display:grid; grid-template-columns:1fr auto; gap:4px 10px; font-size:12px; color:var(--text-muted); }
 .riskComparison dd { display:flex; gap:7px; align-items:baseline; }
 .riskComparison dd b { font-size:12px; font-weight:600; color:var(--text-strong); }
-.riskComparisonTrack { grid-column:1/-1; height:4px; border-radius:2px; background:var(--rail-track); overflow:hidden; }
+.riskComparisonTrack { grid-column:1/-1; height:var(--lane-h, 5px); border-radius:999px; background:var(--rail-track); overflow:hidden; }
 .riskComparisonTrack i { display:block; height:100%; border-radius:inherit; background:var(--up); }
 .riskComparison [data-leg="risk"] .riskComparisonTrack i { background:var(--down); }
 .riskComparison small { display:block; margin-top:9px; font-size:12px; line-height:1.4; color:var(--text-muted); }
@@ -1762,8 +1783,8 @@
 .levelDistance { display:flex; flex-direction:column; gap:7px; text-align:right; font-size:12px; color:var(--text-muted); }
 .levelDistance[data-dir="up"] { color:var(--up); }
 .levelDistance[data-dir="down"] { color:var(--down); }
-.levelDistanceTrack { position:relative; display:block; height:4px; background:var(--rail-track); border-radius:2px; }
-.levelDistanceTrack::after { content:""; position:absolute; left:50%; top:-2px; width:1px; height:8px; background:var(--line-strong); }
+.levelDistanceTrack { position:relative; display:block; height:var(--lane-h, 5px); background:var(--rail-track); border-radius:999px; }
+.levelDistanceTrack::after { content:""; position:absolute; left:50%; top:50%; translate:0 -50%; width:1px; height:9px; background:var(--line-strong); }
 .levelDistanceTrack b { position:absolute; top:0; height:100%; background:currentColor; border-radius:2px; }
 .levelRow:is([data-kind="price"],[data-kind="entry"],[data-kind="stop"]) { border-bottom-color:transparent; border-radius:10px; }
 .levelRow[data-kind="price"] { background:var(--primary-wash); }
@@ -1923,9 +1944,9 @@
 .pulseLegend li:last-child { border-bottom:0; }
 .pulseLegend li > span { display:flex; align-items:center; gap:8px; }
 /* Lejant noktası halkadaki dilimin rengi — göz ikisini eşleştiriyor. */
-.pulseLegend li > span::before { content:""; width:8px; height:8px; flex-shrink:0; border-radius:999px; background:var(--primary); }
-.pulseLegend li[data-verdict="buy"] > span::before { background:var(--up); }
-.pulseLegend li[data-verdict="sell"] > span::before { background:var(--down); }
+.pulseLegend li > span::before { content:""; width:8px; height:8px; flex-shrink:0; border-radius:999px; background:var(--verdict-hold); }
+.pulseLegend li[data-verdict="buy"] > span::before { background:var(--verdict-buy); }
+.pulseLegend li[data-verdict="sell"] > span::before { background:var(--verdict-sell); }
 .pulseLegend li[data-verdict="pending"] > span::before { background:var(--line-strong); }
 .pulseLegend b { font-size:22px; font-weight:600; line-height:1; letter-spacing:-.04em; color:var(--text-strong); }
 .pulseLegend small { text-align:right; font-size:12px; font-weight:600; letter-spacing:0; color:var(--text-muted); }
@@ -1958,9 +1979,10 @@
 /* Köşelere değmiyor: düz bir çizgi yuvarlak köşeden taşıp iki uçta çıkıntı
    yapıyordu (ölçüldü, 1440). Kenarın içinde, altı yuvarlatılmış bir sekme
    işareti gibi duruyor. */
-.card::before { content:""; position:absolute; z-index:1; top:-1px; left:28px; right:28px; height:3px; border-radius:0 0 3px 3px; background:var(--primary); transform-origin:left center; animation:card-accent 720ms var(--ease-brand) 120ms both; }
-.card[data-verdict="buy"]::before { background:var(--up); }
-.card[data-verdict="sell"]::before { background:var(--down); }
+/* 25 Ekim: şerit görüş üçlüsünün yumuşak tonunda; TUT pirinç, mavi değil (pano başı gerekçe). */
+.card::before { content:""; position:absolute; z-index:1; top:-1px; left:28px; right:28px; height:3px; border-radius:0 0 3px 3px; background:var(--verdict-hold); transform-origin:left center; animation:card-accent 720ms var(--ease-brand) 120ms both; }
+.card[data-verdict="buy"]::before { background:var(--verdict-buy); }
+.card[data-verdict="sell"]::before { background:var(--verdict-sell); }
 @keyframes card-accent { from { transform:scaleX(0); } }
 .card { transition:border-color var(--default-transition-duration) var(--ease-brand), translate .28s var(--ease-brand); }
 .card .cardHead > :first-child { transition:scale .28s var(--ease-brand); }
@@ -1990,9 +2012,9 @@
    ayrı kutu açmıyor (ekranın kuralı: bir açıklama için yeni kutu yok);
    aralarında hairline, başlıkları küçük künye. */
 .stanceGuide { gap:18px; }
-.stanceGuide[data-tone="up"] { box-shadow:inset 3px 0 var(--up); }
-.stanceGuide[data-tone="down"] { box-shadow:inset 3px 0 var(--down); }
-.stanceGuide[data-tone="flat"] { box-shadow:inset 3px 0 var(--primary); }
+.stanceGuide[data-tone="up"] { box-shadow:inset 3px 0 var(--verdict-buy); }
+.stanceGuide[data-tone="down"] { box-shadow:inset 3px 0 var(--verdict-sell); }
+.stanceGuide[data-tone="flat"] { box-shadow:inset 3px 0 var(--verdict-hold); }
 .stanceGuideLink { display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:650; color:var(--primary); }
 .stanceGuideLink:hover { color:var(--primary-hover); }
 .stanceLead { max-width:72ch; color:var(--text-strong); font-size:16px; line-height:1.65; text-wrap:pretty; }
@@ -2023,9 +2045,9 @@
 /* Üst işaret kartlardaki gibi kenarın İÇİNDE: düz bir gölge çizgisi
    yuvarlak köşeden taşıp iki uçta kıvrılıyordu (görüldü, 1440). */
 .stanceColumn { position:relative; display:flex; min-width:0; flex-direction:column; gap:12px; padding:18px 18px 18px; border-radius:14px; background:var(--surface-sunken); }
-.stanceColumn::before { content:""; position:absolute; top:0; left:18px; right:18px; height:3px; border-radius:0 0 3px 3px; background:var(--primary); }
-.stanceColumn[data-tone="up"]::before { background:var(--up); }
-.stanceColumn[data-tone="down"]::before { background:var(--down); }
+.stanceColumn::before { content:""; position:absolute; top:0; left:18px; right:18px; height:3px; border-radius:0 0 3px 3px; background:var(--verdict-hold); }
+.stanceColumn[data-tone="up"]::before { background:var(--verdict-buy); }
+.stanceColumn[data-tone="down"]::before { background:var(--verdict-sell); }
 .stanceMeaning { color:var(--text-strong); font-size:14.5px; line-height:1.65; text-wrap:pretty; }
 .stanceCases { display:grid; gap:12px; padding-top:12px; border-top:1px solid var(--line-soft); }
 .stanceCases > div { display:grid; gap:4px; }
@@ -2050,12 +2072,15 @@
 .historyScale { display:flex; justify-content:space-between; gap:12px; }
 .historyScale > .numeral { font-weight:600; letter-spacing:0; }
 .historyCount { margin-left:8px; font-size:12px; font-weight:600; color:var(--text-muted); }
-.historyTrack { position:relative; display:block; height:10px; }
-.historyTrack::before { content:""; position:absolute; left:0; right:0; top:4px; height:2px; border-radius:1px; background:var(--rail-track); }
-.historyTrack b { position:absolute; top:1px; height:8px; border-radius:4px; background:var(--primary); }
-.historyTrack[data-verdict="buy"] b { background:var(--up); }
-.historyTrack[data-verdict="sell"] b { background:var(--down); }
-.historyTrack i { position:absolute; top:0; width:2px; height:10px; margin-left:-1px; border-radius:1px; background:var(--down); }
+/* Planın Seyri Tek Harita'nın dilinde (25 Ekim): 5 piksellik kulvar, alım
+   bölgesi Tek Harita'daki bantla AYNI sınıf (`TechnicalVisuals.module.css`
+   → `.zoneBand`, alım planının yumuşak yeşili), stop kırmızı çentik. Bant
+   görüşe göre yeşil/mavi/kırmızı boyanıyordu: aynı bölge iki ekranda iki
+   renkti. */
+.historyTrack { position:relative; display:block; height:14px; }
+.historyTrack::before { content:""; position:absolute; left:0; right:0; top:50%; height:var(--lane-h, 5px); translate:0 -50%; border-radius:999px; background:var(--line-soft); }
+.historyTrack b { position:absolute; top:1px; height:12px; }
+.historyTrack i { position:absolute; top:0; width:2px; height:14px; margin-left:-1px; border-radius:1px; background:var(--down); }
 .historyTable + .footHint, .tableWrap + .footHint { margin-top:10px; }
 @media (max-width: 767px) {
   /* TELEFONDA ÜÇ SATIR, İKİ DEĞİL DÖRT DEĞİL: üstte tarih, yayın, görüş;
@@ -2124,5 +2149,5 @@
 }
 @media (prefers-reduced-motion:reduce) {
   .pulseTip { animation:none; }
-  .card:has(> .cardFoldInput:checked) :is(.rail, .cardThesis, .gaugeBox) { animation:none; }
+  .card:has(> .cardFoldInput:checked) :is(.cardThesis, .gaugeBox) { animation:none; }
 }

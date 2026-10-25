@@ -1,0 +1,471 @@
+/* Bilanço karnesinin görsel katmanı (25 Ekim görsel zirve).
+   Derinlik tonla: kart `--surface-solid`, çukur `--surface-sunken`; gölge,
+   cam, ışıma yok. Renk yalnız yön (beklenti çizgisinin bandı, tepki
+   şeridi); görüş, güçlü yön ve risk mürekkep tonunda. Her giriş bir kez ve
+   `--ease-brand`; hareketi azaltana son kare. */
+
+/* ---- Tepe cümlesi ---- */
+.lede {
+  max-width: 68ch;
+  margin: 0;
+  font-size: var(--text-read);
+  line-height: 1.55;
+  font-weight: 550;
+  color: var(--text-strong);
+  text-wrap: pretty;
+}
+
+/* ---- Beklenti çizgisi ---- */
+.expectation {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  max-width: 260px;
+  margin-top: 4px;
+}
+
+.expectationTrack {
+  position: relative;
+  display: block;
+  height: 14px;
+}
+
+.expectationTrack::before {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: 4px;
+  translate: 0 -50%;
+  border-radius: 999px;
+  background: var(--line-soft);
+  content: "";
+}
+
+.expectationBand {
+  position: absolute;
+  top: 50%;
+  height: 4px;
+  translate: 0 -50%;
+  border-radius: 999px;
+  background: var(--up);
+  transform-origin: var(--from) center;
+}
+
+.expectation[data-outcome="miss"] .expectationBand { background: var(--down); }
+.expectation[data-outcome="inline"] .expectationBand { background: var(--line-strong); }
+
+.expectationNotch {
+  position: absolute;
+  top: 0;
+  left: var(--e);
+  width: 2px;
+  height: 14px;
+  translate: -50% 0;
+  border-radius: 1px;
+  background: var(--text-body);
+}
+
+.expectationDot {
+  position: absolute;
+  top: 50%;
+  left: var(--a);
+  width: 10px;
+  height: 10px;
+  translate: -50% -50%;
+  border: 2px solid var(--surface-solid);
+  border-radius: 999px;
+  background: var(--text-strong);
+  box-sizing: content-box;
+}
+
+.expectationLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  white-space: nowrap;
+  font-size: var(--text-nano);
+  font-weight: 550;
+  color: var(--text-muted);
+}
+
+.expectationLegend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.expectationLegend > [data-key="expected"]::before {
+  width: 2px;
+  height: 9px;
+  border-radius: 1px;
+  background: var(--text-body);
+  content: "";
+}
+
+.expectationLegend > [data-key="actual"]::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--text-strong);
+  content: "";
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .expectationBand { animation: band-open 900ms var(--ease-brand) 420ms backwards; }
+  .expectationDot { animation: dot-travel 900ms var(--ease-brand) 420ms backwards; }
+}
+
+@keyframes band-open { from { scale: 0 1; } }
+@keyframes dot-travel { from { left: var(--e); } }
+
+/* ---- Ortak kart başlığı ---- */
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.cardHead h2 {
+  font-size: var(--text-read);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-strong);
+}
+
+.cardIcon {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--surface-elevated);
+  color: var(--text-strong);
+}
+
+.cardMeta {
+  margin-left: auto;
+  font-size: var(--text-tiny);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* ---- Güçlü yönler / riskler ---- */
+.balance,
+.upcoming {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: var(--surface-solid);
+}
+
+.balanceGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .balanceGrid[data-columns="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.balanceColumn {
+  min-width: 0;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+}
+
+/* Ton farkı: güçlü yönler kartın kendi zemininde ince kenarla, riskler
+   çukurda. İkisi de mürekkep; yeşil/kırmızı yok. */
+.balanceColumn[data-kind="strength"] {
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.balanceColumn[data-kind="risk"] {
+  border: 1px solid transparent;
+  background: var(--surface-sunken);
+}
+
+.balanceTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.balanceGlyph {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-strong);
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+}
+
+.balanceColumn[data-kind="risk"] .balanceGlyph {
+  background: var(--surface-elevated);
+  border-color: transparent;
+}
+
+.balanceCount {
+  margin-left: auto;
+  font-size: var(--text-tiny);
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.balanceList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.balanceList > li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.balanceBullet {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-body);
+}
+
+.balanceText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--text-small);
+  line-height: 1.6;
+  color: var(--text-body);
+  text-wrap: pretty;
+}
+
+.balanceText > b {
+  font-weight: 650;
+  color: var(--text-strong);
+}
+
+/* ---- Beklenen gelişmeler: yatay zaman çizgisi ---- */
+.track {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  padding-left: 22px;
+}
+
+.track::before {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 5px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--line);
+  content: "";
+}
+
+.trackStop {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.trackDot {
+  position: absolute;
+  top: 4px;
+  left: -22px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--surface-solid);
+  border-radius: 999px;
+  background: var(--text-strong);
+  box-sizing: content-box;
+}
+
+.trackDate {
+  font-size: var(--text-tiny);
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.trackText {
+  font-size: var(--text-small);
+  line-height: 1.55;
+  color: var(--text-body);
+  text-wrap: pretty;
+}
+
+/* Geniş ekranda duraklar aynı hatta: çizgi yatay, her durak bir sütun.
+   Dörtten fazla madde ikinci satıra sarar (çizgi her satırın tepesinde). */
+@media (min-width: 1024px) {
+  .track {
+    grid-template-columns: repeat(var(--stops), minmax(0, 1fr));
+    gap: 22px 20px;
+    padding-left: 0;
+  }
+
+  .track::before { content: none; }
+
+  .trackStop {
+    padding-top: 22px;
+  }
+
+  .trackStop::before {
+    position: absolute;
+    top: 5px;
+    left: 0;
+    right: -20px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--line);
+    content: "";
+  }
+
+  .trackStop:nth-child(4n)::before,
+  .trackStop:last-child::before { right: 0; }
+
+  .trackDot { top: 0; left: 0; }
+}
+
+.upcomingFooter {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+/* ---- Okuma dizini ---- */
+.readingIndex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+
+.readingIndex a {
+  display: inline-flex;
+  min-height: 36px;
+  max-width: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--text-strong);
+  transition: border-color 160ms, background-color 160ms;
+}
+
+.readingIndex a:hover { border-color: var(--line-strong); background: var(--surface-elevated); }
+
+.readingIndex a > span:first-child {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  background: var(--surface-elevated);
+  font-size: var(--text-tiny);
+  font-weight: 700;
+}
+
+.readingIndex a > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 639px) {
+  .readingIndex { flex-direction: column; }
+  .readingIndex a { min-height: 44px; }
+}
+
+/* ---- Kaynak kartları ---- */
+.sources {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+@media (min-width: 640px) { .sources { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .sources { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+.source {
+  display: flex;
+  min-width: 0;
+  min-height: 56px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-solid);
+  transition: border-color 160ms, background-color 160ms;
+}
+
+a.source:hover { border-color: var(--line-strong); background: var(--surface-elevated); }
+
+.sourceIcon {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--surface-elevated);
+  color: var(--text-body);
+}
+
+.sourceText {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.sourceText > b {
+  overflow: hidden;
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--text-strong);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sourceText > span {
+  overflow: hidden;
+  font-size: var(--text-nano);
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+a.source > svg:last-child { flex: none; color: var(--primary-ink); }

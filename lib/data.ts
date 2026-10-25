@@ -965,7 +965,17 @@ export async function getMacroRows(): Promise<MacroSeriesRow[]> {
 export type MacroSummaryRow = Pick<
   MacroSeriesRow,
   "seriesId" | "slug" | "titleTr" | "titleEn" | "latestValue" | "prevValue" | "unit" | "periodLabel"
->;
+> & {
+  /** Son `MACRO_TRAIL` gözlem, tarih sırasıyla — panelin kıvılcımları. */
+  trail: { date: string; value: number }[] | null;
+};
+
+/**
+ * Kıvılcım için gözlem sayısı (25 Ekim): iki yılın aylık gözlemi. Bütün
+ * jsonb (60 gözlem) değil, son 24'ü veritabanında kesiliyor; dar okumanın
+ * gerekçesi (aşağıda) korunuyor: dört seride ~2 KB.
+ */
+export const MACRO_TRAIL = 24;
 
 /**
  * Ana sayfanın makro özeti için DAR okuma (20 Ekim).
@@ -991,6 +1001,14 @@ export async function getMacroSummaryRows(
         prevValue: macroSeries.prevValue,
         unit: macroSeries.unit,
         periodLabel: macroSeries.periodLabel,
+        trail: sql<{ date: string; value: number }[] | null>`(
+          select jsonb_agg(e order by e->>'date')
+          from (
+            select e from jsonb_array_elements(coalesce(${macroSeries.observations}, '[]'::jsonb)) as e
+            order by e->>'date' desc
+            limit ${MACRO_TRAIL}
+          ) as son
+        )`,
       })
       .from(macroSeries)
       .where(inArray(macroSeries.slug, [...slugs]));

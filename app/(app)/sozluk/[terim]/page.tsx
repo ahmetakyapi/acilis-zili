@@ -23,6 +23,8 @@ import {
 } from "@/content/glossary";
 import { GLOSSARY_VISUALS } from "@/content/glossary/visuals";
 import { GLOSSARY_MARKS } from "@/content/glossary/marks";
+import { GLOSSARY_FORMULAS } from "@/content/glossary/formulas";
+import { TermPlateVisual } from "@/components/glossary/TermFormula";
 import { getI18n } from "@/lib/i18n";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
@@ -139,7 +141,17 @@ export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]
         </div>
         <div className={styles.termPlate}>
           <CategoryIcon aria-hidden size={150} weight="thin" className={styles.plateWatermark} />
-          <TermMark motif={GLOSSARY_MARKS[term.slug]} size="plate" draw />
+          {/* FORMÜL LEVHASI (25 Ekim). Oran terimlerinin levhası soyut bir
+              "pay ve payda" çizimiydi; tanımı bir işlem olan terimde levha
+              artık işlemin kendisi, eşikli göstergede kadran. Gerekçe
+              content/glossary/formulas.ts. */}
+          <TermPlateVisual
+            formula={GLOSSARY_FORMULAS[term.slug]}
+            lang={lang}
+            labels={t.glossaryVisuals}
+            term={term.term}
+            fallback={<TermMark motif={GLOSSARY_MARKS[term.slug]} size="plate" draw />}
+          />
         </div>
         <div className={styles.termDefinition}>
           <p className={styles.lede}>{lede}</p>
@@ -188,12 +200,16 @@ export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]
           />
           <nav aria-label={t.glossary.related} className={styles.networkWrap}>
             <TermNetwork
+              lang={lang}
+              labels={t.glossaryVisuals}
               center={term.term}
               motif={GLOSSARY_MARKS[term.slug]}
+              formula={GLOSSARY_FORMULAS[term.slug]}
               nodes={related.map((entry) => ({
                 slug: entry.slug,
                 term: entry.term,
                 motif: GLOSSARY_MARKS[entry.slug],
+                formula: GLOSSARY_FORMULAS[entry.slug],
                 category:
                   entry.category === term.category
                     ? null

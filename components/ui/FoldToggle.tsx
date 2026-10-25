@@ -35,6 +35,7 @@ export function FoldToggle({
   less,
   narrow = true,
   phone = false,
+  mark,
   children,
 }: {
   /** Sayfada tekil olmalı: etiket kutuyu bununla buluyor. */
@@ -46,6 +47,11 @@ export function FoldToggle({
   narrow?: boolean;
   /** Katlama yalnızca telefonda (<640). `narrow`ın yerine geçer. */
   phone?: boolean;
+  /**
+   * Etiketin yanındaki küçük işaret (25 Ekim, aracı kurum kartı: "Not
+   * Var"). Etiketin İÇİNDE: anahtar gizlendiği genişlikte o da gizli.
+   */
+  mark?: ReactNode;
   children: ReactNode;
 }) {
   if (hiddenCount <= 0) return <>{children}</>;
@@ -56,6 +62,7 @@ export function FoldToggle({
       <label htmlFor={id} className={styles.foldButton}>
         <span className={styles.foldMore}>{more}</span>
         <span className={styles.foldLess}>{less}</span>
+        {mark}
         <CaretDown className={styles.foldIcon} size={14} weight="bold" aria-hidden />
       </label>
     </div>

@@ -1,0 +1,108 @@
+/* /favoriler görsel katmanı (25 Ekim): tepe cümlesi, anahtar ve satır
+   görselleri. Renk yalnız token'dan; çizginin rengi yönden (Sparkline),
+   ray nötr (RangeTrack). */
+
+.pulse {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pulseText {
+  max-width: 72ch;
+  font-size: 17px;
+  line-height: 1.45;
+  font-weight: 600;
+  color: var(--text-strong);
+  text-wrap: pretty;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.legend i {
+  display: inline-block;
+  flex-shrink: 0;
+}
+/* Anahtarın örnekleri satırdaki görselin küçük kopyası: kırık çizgi ve ray. */
+.legend i[data-key="spark"] {
+  width: 16px;
+  height: 8px;
+  background:
+    linear-gradient(to top right, transparent calc(50% - 1px), var(--text-muted) 50%, transparent calc(50% + 1px)) 0 0 / 8px 8px no-repeat,
+    linear-gradient(to bottom right, transparent calc(50% - 1px), var(--text-muted) 50%, transparent calc(50% + 1px)) 8px 0 / 8px 8px no-repeat;
+}
+.legend i[data-key="range"] {
+  position: relative;
+  width: 18px;
+  height: var(--lane-h, 5px);
+  border-radius: 999px;
+  background: var(--line-strong);
+}
+.legend i[data-key="range"]::after {
+  content: "";
+  position: absolute;
+  left: 62%;
+  top: 50%;
+  width: 3px;
+  height: 9px;
+  translate: -50% -50%;
+  border-radius: 999px;
+  background: var(--text-strong);
+}
+
+/* Satırın görseli: çizgi üstte, ray altta, sabit genişlikte. Telefonda
+   kimlik sütununun üçüncü satırı (64 piksel; yan yana dizildiğinde ray
+   90 piksellik sütunda 15 piksele eziliyordu, ölçüldü), geniş ekranda
+   sağa yaslı ayrı sütun (96 piksel). */
+.rowVisual {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 64px;
+  margin-top: 4px;
+}
+.spark,
+.sparkGap {
+  display: block;
+  width: 100%;
+  height: 16px;
+}
+/* RangeTrack sağa yaslı ve 128 tavanlı; burada sütun genişliğinde. */
+.rowVisual > span[aria-hidden] {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+/* Düzenle kipinde telefonda görsel çekilir; yer düğmelerin (WatchlistBoard).
+   Modül kuralı katmansız olduğu için Tailwind `max-sm:hidden` onu ezemiyordu. */
+@media (max-width: 639.98px) {
+  .rowVisual[data-editing] { display: none; }
+}
+
+/* GENİŞTE AD İLE FİYAT ARASINI GÖRSEL DOLDURUYOR (25 Ekim). Sütun 96
+   pikselde sabitti ve 1440'ta ad ile çizgi arasında ~600 piksel boşluk
+   kalıyordu, çizgi 90 pikselde ezik duruyordu (ölçüldü). Ad sütunu
+   `clamp(180px, 26%, 300px)` (768'de 140 pikselde ad kesiliyordu), görsel kalan yeri alıyor; tavan 640 piksel
+   ki çizgi bir fiyat grafiği gibi uzayıp satırı ikiye bölmesin. Dokuz
+   satırın görselleri yine aynı genişlikte: hepsi aynı sütundan. */
+@media (min-width: 640px) {
+  .rowVisual {
+    flex: 1 1 96px;
+    gap: 4px;
+    width: auto;
+    min-width: 96px;
+    max-width: 640px;
+    margin: 0 16px 0 12px;
+  }
+  .spark,
+  .sparkGap { height: 22px; }
+}

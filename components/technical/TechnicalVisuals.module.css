@@ -1,0 +1,204 @@
+/* ---- Plan atlası: "16 Hisse, Tek Harita" (25 Ekim) ----
+   Gerekçe `PlanAtlas.tsx` ve `lib/technical-visuals.ts`. Grafik dili sitenin
+   kulvarı: `--line-soft` üstünde 5 piksellik şerit, ince çentikler; renk
+   yalnız yön (hedef `--up`, stop ve satış `--down`), nokta mürekkep.
+   ALIM BÖLGESİ TEK SINIF (25 Ekim): `.zoneBand` — alım planının yumuşak
+   yeşili. `/teknik/[symbol]` Görüş Geçmişi'nin "Planın Seyri" şeridi aynı
+   sınıfı kullanıyor; orada bölge görüşe göre maviydi, aynı bölge iki
+   ekranda iki renkti. Görüş başlıkları görüş üçlüsünde (AL yeşil, TUT
+   pirinç, SAT kırmızı — `verdictTextClass`, lib/analysis.ts).
+   Derinlik tonla: okuma paneli `--surface-sunken`, gölge yok. */
+
+.atlas { display:grid; gap:18px; padding:24px 24px 20px; }
+
+.head { display:grid; gap:8px; }
+.title { font-size:clamp(22px, 1.1vw + 12px, 28px); line-height:1.15; font-weight:650; letter-spacing:-.03em; }
+/* Ekranın tek cümlesi — veriden (şablon + sayı, `atlasSentence`). */
+.sentence { max-width:62ch; font-size:clamp(16px, .45vw + 13.5px, 19px); line-height:1.4; font-weight:600; letter-spacing:-.01em; color:var(--text-strong); text-wrap:pretty; }
+.meta { display:flex; flex-wrap:wrap; gap:2px 14px; max-width:90ch; font-size:12.5px; line-height:1.45; color:var(--text-muted); }
+.basis { font-weight:650; color:var(--text-body); white-space:nowrap; }
+
+.legend { display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:2px; font-size:12px; color:var(--text-muted); }
+.legend li { display:inline-flex; align-items:center; gap:6px; }
+.legendZone, .zoneBand { border-radius:3px; background:color-mix(in srgb, var(--up) 30%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--up) 55%, transparent); }
+.legendZone { width:18px; height:10px; }
+.legendDot { width:10px; height:10px; border-radius:50%; background:var(--text-strong); }
+.legendDot[data-snapshot] { background:transparent; box-shadow:inset 0 0 0 2px var(--text-strong); }
+.legendTick { width:2px; height:12px; border-radius:1px; background:var(--text-muted); }
+.legendTick[data-kind="stop"] { background:var(--down); }
+.legendTick[data-kind="target"] { background:var(--up); }
+.legendTick[data-kind="level"] { width:1px; height:9px; opacity:.6; }
+
+.body { display:grid; gap:20px; align-items:start; }
+
+/* SÜTUNLAR: sembol, iz, uzaklık, (dar kipte) ayrıntı düğmesi. Grup başlığı
+   ve satırlar aynı şablonu paylaşıyor — eksen adları izin üstüne tam
+   oturuyor. */
+.groups { --cols:46px minmax(0,1fr) 58px 44px; --gap:10px; display:grid; gap:16px; margin-inline:-8px; }
+.group { display:grid; }
+.groupHead { display:grid; grid-template-columns:var(--cols); column-gap:var(--gap); align-items:end; row-gap:2px; padding:0 8px 6px; border-bottom:1px solid var(--line-soft); }
+.groupTitle { grid-column:1 / -1; display:flex; align-items:baseline; gap:6px; font-size:13px; font-weight:800; letter-spacing:.06em; color:var(--text-strong); }
+.groupTitle[data-verdict="buy"] { color:var(--up); }
+.groupTitle[data-verdict="hold"] { color:var(--brass-ink); }
+.groupTitle[data-verdict="sell"] { color:var(--down); }
+.groupTitle b { font-weight:600; letter-spacing:0; color:var(--text-muted); }
+.axisNames { grid-column:2; position:relative; height:15px; font-size:11px; line-height:15px; color:var(--text-muted); }
+.axisNames > span { position:absolute; bottom:0; translate:-50% 0; white-space:nowrap; }
+.axisNames > [data-end="start"] { left:calc(var(--zero) * 100%); }
+.axisNames > [data-end="end"] { left:calc(var(--one) * 100%); }
+.columnName { grid-column:3; text-align:right; font-size:11px; line-height:1.2; color:var(--text-muted); }
+.groupNote { padding:6px 8px 0; font-size:11.5px; line-height:1.4; color:var(--text-muted); }
+
+.rows { display:grid; }
+.row { display:grid; grid-template-columns:var(--cols); column-gap:var(--gap); align-items:center; padding-inline:8px; border-radius:8px; transition:background-color var(--default-transition-duration) var(--ease-brand); }
+.rowLink { grid-column:1 / 4; display:grid; grid-template-columns:subgrid; align-items:center; min-height:44px; color:inherit; border-radius:6px; }
+.rowLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.symbol { font-family:var(--font-mono); font-size:12.5px; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); }
+
+/* İz: 24 piksel; kılavuz çizgileri satır boyunca uzanıp alt alta satırlarda
+   kesintisiz iki dikey hat kuruyor (0 ve 1). */
+.track { position:relative; height:24px; }
+.guide { position:absolute; top:-10px; bottom:-10px; left:calc(var(--zero) * 100%); width:1px; background:var(--line-soft); }
+.guide[data-at="one"] { left:calc(var(--one) * 100%); }
+.lane { position:absolute; inset:50% 0 auto; height:var(--lane-h, 5px); translate:0 -50%; border-radius:999px; background:var(--line-soft); }
+/* Planın kendisi (0 → 1) kulvarın içinde bir ton koyu. */
+.lane::after { content:""; position:absolute; inset:0 calc((1 - var(--one)) * 100%) 0 calc(var(--zero) * 100%); border-radius:inherit; background:var(--line); }
+.zone { position:absolute; top:50%; left:calc(var(--from) * 100%); width:calc((var(--to) - var(--from)) * 100%); min-width:3px; height:12px; margin-top:-6px; }
+.tick { position:absolute; top:50%; left:calc(var(--at) * 100%); width:2px; height:14px; margin:-7px 0 0 -1px; border-radius:1px; background:var(--text-muted); }
+.tick[data-kind="stop"], .tick[data-kind="sell"] { background:var(--down); }
+.tick[data-kind="target"] { background:var(--up); }
+.tick[data-kind="target2"] { height:10px; margin-top:-5px; background:var(--up); opacity:.55; }
+.tick[data-kind="sell2"] { height:10px; margin-top:-5px; background:var(--down); opacity:.55; }
+.tick[data-kind="level"] { width:1px; height:8px; margin:-4px 0 0; opacity:.5; }
+/* Taşıyıcı izin tam genişliği; `translateX(%)` kendi genişliğine göre,
+   yani izin genişliğine göre — nokta `left` değil `transform` ile yürüyor. */
+.carrier { position:absolute; inset:0; pointer-events:none; transform:translateX(calc(var(--at) * 100%)); }
+.dot { position:absolute; top:50%; left:0; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--text-strong); box-shadow:0 0 0 2px var(--premium-surface); }
+.dot[data-tone="up"] { background:var(--up); }
+.dot[data-tone="down"] { background:var(--down); }
+.dot[data-snapshot] { background:var(--premium-surface); box-shadow:inset 0 0 0 2px var(--text-strong), 0 0 0 2px var(--premium-surface); }
+.noLevels { position:absolute; inset:0; display:flex; align-items:center; font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.distance { text-align:right; font-size:12.5px; font-weight:650; color:var(--text-body); white-space:nowrap; }
+.distance[data-tone="up"] { color:var(--up); }
+.distance[data-tone="down"] { color:var(--down); }
+
+/* Dar kipte ayrıntı düğmesi: 44 × 44 (25 Ekim; 32 piksellik genişlik
+   dokunma hedefinin altındaydı). Sütun 44, iz 12 piksel daraldı. */
+.toggle { grid-column:4; display:grid; place-items:center; width:44px; height:44px; border-radius:8px; color:var(--primary-ink); }
+.toggle svg { transition:transform var(--default-transition-duration) var(--ease-brand); }
+.toggle[aria-expanded="true"] svg { transform:rotate(180deg); }
+.toggle:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+.row[data-open] { background:var(--surface-sunken); }
+.inline { grid-column:1 / -1; padding:2px 0 14px; animation:atlas-fold 220ms var(--ease-brand) backwards; }
+@keyframes atlas-fold { from { opacity:0; transform:translateY(-4px); } }
+
+.readout { display:none; }
+
+/* ---- Ayrıntı (okuma paneli ve satır içi aynı bileşen) ---- */
+.detail { display:grid; gap:8px; }
+.detailHead { display:flex; align-items:center; gap:8px; font-size:17px; line-height:1.2; }
+.detailHead b { font-weight:750; letter-spacing:-.02em; color:var(--text-strong); }
+.pill { display:inline-flex; padding:2px 8px; border-radius:var(--radius-sm); font-size:12px; font-weight:800; letter-spacing:.06em; }
+.detailCompany { margin-top:-4px; font-size:12.5px; color:var(--text-muted); }
+.detailPrice { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 10px; }
+.detailPrice span { font-size:12px; color:var(--text-muted); }
+.detailPrice strong { font-size:22px; line-height:1.15; font-weight:600; letter-spacing:-.035em; color:var(--text-strong); }
+.detailPosition { font-size:12.5px; font-weight:700; color:var(--text-body); }
+.detailPosition[data-tone="up"] { color:var(--up); }
+.detailPosition[data-tone="down"] { color:var(--down); }
+.facts { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px 16px; padding-top:10px; border-top:1px solid var(--line-soft); }
+.facts > div { display:grid; gap:1px; min-width:0; }
+.facts dt { font-size:11.5px; color:var(--text-muted); }
+.facts dd { margin:0; font-size:14px; font-weight:650; color:var(--text-strong); white-space:nowrap; }
+.facts dd[data-tone="up"] { color:var(--up); }
+.facts dd[data-tone="down"] { color:var(--down); }
+.openPlan { display:inline-flex; align-self:start; justify-self:start; align-items:center; gap:4px; min-height:44px; font-size:13px; font-weight:650; color:var(--primary-ink); }
+.openPlan:hover { color:var(--primary-hover); }
+.hint { font-size:11.5px; line-height:1.4; color:var(--text-muted); }
+
+/* ---- Geniş ekran, ince imleç: okuma paneli sağda, düğme yok ---- */
+@media (hover:hover) and (pointer:fine) and (min-width:1024px) {
+  .body { grid-template-columns:minmax(0,1fr) 272px; gap:28px; }
+  .groups { --cols:60px minmax(0,1fr) 84px; --gap:14px; }
+  /* İnce imleçte 44 piksel kuralı satırı değil imleci bağlar: 32 piksellik
+     satırla on altı hisse 1440×900 ekranın içine sığıyor. */
+  .rowLink { min-height:32px; }
+  .toggle, .inline { display:none; }
+  .row[data-open] { background:none; }
+  .row[data-active] { background:var(--surface-sunken); }
+  .readout { position:sticky; top:96px; display:grid; gap:12px; padding:18px; border-radius:14px; background:var(--surface-sunken); }
+}
+@media (max-width:639px) {
+  .atlas { gap:14px; padding:18px 16px 14px; }
+  .groups { --gap:8px; }
+  .legend { gap:4px 12px; font-size:11.5px; }
+}
+
+/* ---- Giriş: bir kez; nokta stoptan (0) bugünkü yerine yürür ----
+   Satır başına 28 ms kademe (16 satırda 448 ms, bütçe 500 ms altı). */
+@media (prefers-reduced-motion: no-preference) {
+  .lane, .zone { animation:atlas-in 480ms var(--ease-brand) calc(var(--i, 0) * 28ms) backwards; }
+  .zone { transform-origin:center; }
+  .tick { animation:atlas-fade 360ms var(--ease-brand) calc(120ms + var(--i, 0) * 28ms) backwards; }
+  .carrier { animation:atlas-travel 760ms var(--ease-brand) calc(180ms + var(--i, 0) * 28ms) backwards; }
+}
+@keyframes atlas-in { from { opacity:0; transform:scaleX(.2); } }
+@keyframes atlas-fade { from { opacity:0; } }
+@keyframes atlas-travel { from { opacity:0; transform:translateX(calc(var(--from) * 100%)); } 25% { opacity:1; } }
+@media (prefers-reduced-motion: reduce) {
+  .inline { animation:none; }
+}
+
+/* ---- Senaryo rayı (/teknik/[symbol]) ----
+   Kap, iz, nokta ve uzaklık satırı Claude ekranının senaryo ekseninden
+   (`components/ai/AnalysisVisuals.module.css` → `.axis*`); burada yalnız
+   iki uçlu kulvar parçaları, sonraki durak çentikleri ve zincir. */
+.rail { display:grid; gap:8px; margin:0; }
+.railCaption { font-size:13px; font-weight:650; color:var(--text-body); }
+.railSeg { position:absolute; top:50%; left:calc(var(--from) * 100%); width:calc((var(--to) - var(--from)) * 100%); height:var(--lane-h, 5px); translate:0 -50%; border-radius:999px; }
+.railSeg[data-tone="down"] { background:var(--down-wash); box-shadow:inset 3px 0 0 var(--down); transform-origin:right; }
+.railSeg[data-tone="up"] { background:var(--up-wash); box-shadow:inset -3px 0 0 var(--up); transform-origin:left; }
+@keyframes rail-grow { to { scale:1 1; } }
+.railTick { position:absolute; top:50%; left:calc(var(--x) * 100%); width:2px; height:10px; margin:-5px 0 0 -1px; border-radius:1px; opacity:var(--tick-opacity, 1); }
+.railTick[data-tone="down"] { background:var(--down); }
+.railTick[data-tone="up"] { background:var(--up); }
+.railTick[data-trigger] { height:16px; margin-top:-8px; }
+/* TETİK NOKTANIN ALTINDA KALMASIN (25 Ekim). Fiyat noktası 16 piksel + 4
+   piksellik halka; AAPL'de yükseliş tetiği fiyattan %0,2 uzaktaydı ve 390'da
+   aralarında 9 piksel vardı — çentik noktanın altında kayboluyordu. Kap bir
+   kapsayıcı (`.railTrack`), uzaklık `cqw` ile piksele çevriliyor: çentik
+   noktanın kenarına (13 piksel) yetmiyorsa dışarı itiliyor. Geniş ekranda
+   (aynı plan 1440'ta 15 piksel) kıpırdamıyor, 390'da 5 piksel itiliyor; en fazla 13
+   ve sayı künyede tam. */
+.railTrack { container-type:inline-size; }
+.railTick[data-trigger][data-tone="up"] { translate:max(0px, 13px - (var(--x) - var(--at)) * 100cqw) 0; }
+.railTick[data-trigger][data-tone="down"] { translate:min(0px, (var(--at) - var(--x)) * 100cqw - 13px) 0; }
+.railTick:not([data-trigger]) { --tick-opacity:.55; }
+@keyframes rail-tick { to { opacity:var(--tick-opacity, 1); } }
+/* Fiyat etiketi kenara yaklaşınca içeri döner: sol uçta sola, sağ uçta
+   sağa hizalı (eksenin ortasında ortalı). */
+.rail .railNowLabel { left:0; translate:calc(var(--at) * -100% + 8px) 0; }
+.railPaths { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+.railPaths > div { display:grid; gap:2px; }
+.railPaths > div[data-tone="up"] { text-align:right; }
+.railPaths dt { font-size:11.5px; color:var(--text-muted); }
+.railPaths dd { margin:0; font-size:13px; font-weight:600; color:var(--text-strong); }
+.railNote { font-size:12px; line-height:1.45; color:var(--text-muted); }
+/* GİZLEME YALNIZ BETİKLE (25 Ekim): şerit ve çentikler `scale:0` /
+   `opacity:0` ile başlayıp `[data-inview]`i bekliyordu; JS kapalıyken
+   `InView` hiç çalışmadığı için ray boş kalıyordu. Taban hâl son kare,
+   gizleme yalnız betik varken ve hareketi azaltmayan okuyucuda
+   (`PosterStage.module.css` kalıbı). */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .railSeg { scale:0 1; }
+  [data-inview] .railSeg { animation:rail-grow 800ms var(--ease-brand) 200ms forwards; }
+  .railTick { opacity:0; }
+  [data-inview] .railTick { animation:rail-tick 360ms var(--ease-brand) 640ms forwards; }
+}
+.railSeg[data-path] { opacity:.5; box-shadow:none; }
+.rail dt b { display:block; font-weight:650; color:var(--text-strong); white-space:nowrap; }
+.railGroup { white-space:nowrap; }
+/* Künyeler hücrenin tepesinden: ızgara satırı hücreleri eşit gerdiği için tek satırlık
+   orta künye ("Yukarı / Aşağı") iki satırlık yanlarının ortasına düşüyordu. */
+.rail dl > div { align-content:start; }

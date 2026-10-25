@@ -21,9 +21,12 @@ import {
   directionText,
   formatEtDateMedium,
   formatPercent,
+  formatPercentPlain,
   formatPrice,
   NO_VALUE,
 } from "@/lib/utils";
+import { heatCeiling, heatShare, sectorLeaders } from "@/lib/macro-visual";
+import type { CSSProperties } from "react";
 import styles from "./MarketBoards.module.css";
 
 /**
@@ -150,6 +153,56 @@ function ReturnCell({
   );
 }
 
+/**
+ * ISI HÜCRESİ (25 Ekim, sektör matrisi). Sektör panosu 5 dönem × 11 satır
+ * sayıydı, her sayının altında ince bir ölçek çubuğu: elli beş ayrı küçük
+ * çizgiden "hangi sektör hangi dönemde öne çıktı" okunmuyordu. Artık her
+ * hücre bir karo: TON yön (yükseliş yeşil, düşüş kırmızı — hisse
+ * fiyatlarının dili; makroda olduğu gibi yargı riski yok, fonun fiyatı),
+ * KOYULUK büyüklük, o sütunun en büyük mutlak hareketinin yuvarlak
+ * tavanına göre (`heatShare` + `heatCeiling`; sütun başına ölçek ve
+ * tavanın lejantta YAZILMASI gerekçesi orada). Sayı karonun içinde
+ * metin mürekkebiyle; işaret (+/−) renge ek ikinci kodlama, renk körü
+ * okur yönü işaretten alır. Tablo YAPISI aynen duruyor: matris bir
+ * `<table>`, satır başlığı, sıralanabilir sütunlar; ekran okuyucu ve
+ * klavye için ayrı bir alternatif gerekmiyor, alternatifin kendisi bu.
+ *
+ * 1G bu seansa ait değilse (son kapanış) karo tonsuz: yön rengi bugünün
+ * hareketi gibi okunurdu (veri dürüstlüğü 4).
+ */
+function HeatCell({
+  value,
+  peak,
+  locale,
+  lastClose = false,
+  lastCloseLabel,
+}: {
+  value: number | null;
+  peak: number;
+  locale: Locale;
+  lastClose?: boolean;
+  lastCloseLabel?: string;
+}) {
+  const tone = lastClose ? "flat" : directionOf(value);
+  return (
+    <td className={styles.heatCell}>
+      <span className={styles.heat} data-tone={value === null ? undefined : tone} style={{ "--heat": lastClose ? 0 : heatShare(value, peak) } as CSSProperties}>
+        <span className="numeral">{formatPercent(value, locale)}</span>
+      </span>
+      {lastClose && lastCloseLabel && <span className={styles.basis}>{lastCloseLabel}</span>}
+    </td>
+  );
+}
+
+/** Lejant karoları: iki uçta tam koyuluk, ortada boş (yön yok). */
+const LEGEND_STEPS = [
+  { tone: "down", share: 1 },
+  { tone: "down", share: 0.5 },
+  { tone: "flat", share: 0 },
+  { tone: "up", share: 0.5 },
+  { tone: "up", share: 1 },
+] as const;
+
 function BoardStamp({
   quotes,
   lastDate,
@@ -227,7 +280,15 @@ export async function SectorPerformance({
     if (vb === null) return -1;
     return dir === "asc" ? va - vb : vb - va;
   });
-  const peak = peaks(rows, SECTOR_COLUMNS);
+  /* Tam ton sütunun yuvarlak tavanı; lejant aynı sayıyı yazıyor
+     ("1G ±%3 · 1A ±%20"), okur koyuluğu sayıya bağlayabilsin. */
+  const raw = peaks(rows, SECTOR_COLUMNS);
+  const peak = Object.fromEntries(SECTOR_COLUMNS.map((key) => [key, heatCeiling(raw[key])])) as Record<ColumnKey, number>;
+  /* MATRİSİN CÜMLESİ: son bir ayın (1A sütunu) en iyisi, en kötüsü ve
+     artıdakilerin sayısı; şablon + veri (`sectorLeaders`, testli). Dönem
+     barlardan, künyesi panelin dibinde ("{tarih} kapanışına kadar"). */
+  const leaders = sectorLeaders(rows.map((row) => ({ name: row.name, value: row.returns.m1 })));
+  const v = t.macroVisual;
   const nextDir = (key: SectorSort): SortDir => (sort === key && dir === "desc" ? "asc" : "desc");
 
   const head = (key: SectorSort, label: string, long: string | null, className?: string) => (
@@ -264,6 +325,32 @@ export async function SectorPerformance({
         <EmptyState compact title={t.common.noData} hint={t.common.noDataHint} />
       ) : (
         <>
+          <div className={styles.heatHead}>
+            {leaders && (
+              <p className={styles.heatLead}>
+                {v.sectorLead
+                  .replace("{best}", leaders.best.name)
+                  .replace("{bestValue}", formatPercent(leaders.best.value, locale))
+                  .replace("{worst}", leaders.worst.name)
+                  .replace("{worstValue}", formatPercent(leaders.worst.value, locale))
+                  .replace("{total}", String(leaders.total))
+                  .replace("{up}", String(leaders.up))}
+              </p>
+            )}
+            <div className={styles.heatKey}>
+              <p className={styles.heatLegend} aria-hidden>
+                <span>{v.heatLegendDown}</span>
+                {LEGEND_STEPS.map((step, i) => (
+                  <i key={i} className={styles.heat} data-tone={step.tone} style={{ "--heat": step.share } as CSSProperties} />
+                ))}
+                <span>{v.heatLegendUp}</span>
+              </p>
+              <p className={cn("numeral", styles.heatScale)}>
+                <span>{v.heatScale}</span>{" "}
+                {SECTOR_COLUMNS.map((key) => `${labels[key].short} ±${formatPercentPlain(peak[key], locale, 0)}`).join(" · ")}
+              </p>
+            </div>
+          </div>
           {/* Sabit etiket sütunu + kaydırma (CLAUDE.md "Kaydırma saklanmaz"):
               beş yüzde sütunu 390 pikselde sığmıyor. Tablo `table-fixed` ile
               kaba zorlanmıyor, tabana genişlik veriliyor ve kap kayıyor. */}
@@ -274,7 +361,7 @@ export async function SectorPerformance({
             role="region"
             aria-label={x.sectorsTitle}
           >
-            <table className={styles.table}>
+            <table className={cn(styles.table, styles.heatTable)}>
               <caption className="sr-only">{x.sectorsTitle}</caption>
               <thead>
                 <tr>
@@ -292,7 +379,7 @@ export async function SectorPerformance({
                       </Link>
                     </th>
                     {SECTOR_COLUMNS.map((key) => (
-                      <ReturnCell
+                      <HeatCell
                         key={key}
                         value={valueOf(row, key)}
                         peak={peak[key]}
@@ -307,6 +394,7 @@ export async function SectorPerformance({
             </table>
           </ScrollEdges>
           <div className={styles.notes}>
+            <p>{v.heatNote}</p>
             <p>{x.sectorsProxyNote}</p>
             <p>{x.dayNote}</p>
             <p>{x.periodNote}</p>

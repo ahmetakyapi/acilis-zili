@@ -71,7 +71,7 @@ export function ScaleBar({
       aria-hidden
       data-motion-track
       className={cn(
-        "mt-1.5 ml-auto block h-[3px] w-full max-w-[128px] rounded-full bg-(--line-soft)",
+        "mt-1.5 ml-auto block h-[var(--lane-h,5px)] w-full max-w-[128px] rounded-full bg-(--line-soft)",
         className,
       )}
     >
@@ -96,7 +96,11 @@ export function ScaleBar({
                 : "var(--up)"
               : emphasis
                 ? "var(--primary)"
-                : "color-mix(in srgb, var(--primary) 58%, transparent)",
+                : /* BÜYÜKLÜK YUMUŞAK MAVİDE (25 Ekim, site geneli renk
+                     kararı): piyasa değeri, F/K, ağırlık gibi büyüklükler
+                     `--bar-soft`; doygun `--primary` yalnız etkileşim ve
+                     seçili satır (`emphasis`). Kalınlık `--lane-h`. */
+                  "var(--bar-soft)",
         }}
       />
     </span>
@@ -126,7 +130,7 @@ export function RangeTrack({ position }: { position: number | null }) {
          çubukların çok solundan başlıyordu: aynı sütunda iki ayrı sol
          kenar. Ray da sağa yaslı ve aynı tavanda. */
       className={cn(
-        "relative mt-1.5 ml-auto block h-[3px] w-full max-w-[128px] rounded-full",
+        "relative mt-1.5 ml-auto block h-[var(--lane-h,5px)] w-full max-w-[128px] rounded-full",
         /* İŞARETÇİSİZ RAY DAHA KOYU. Boş bir ölçek çubuğuyla aynı tonda
            duruyordu ve ADR satırında (işaretçi yok, gerekçesi yukarıda)
            "veri gelmemiş" ya da "sıfır" gibi okunuyordu. Bant orada ve
@@ -140,8 +144,8 @@ export function RangeTrack({ position }: { position: number | null }) {
             className="absolute inset-y-0 left-0 rounded-full"
             style={{
               width: `${yer * 100}%`,
-              background:
-                "color-mix(in srgb, var(--primary) 45%, transparent)",
+              /* Konum bir büyüklük, yargı değil: yumuşak mavi (25 Ekim renk kararı). */
+              background: "var(--bar-soft)",
             }}
           />
           <span

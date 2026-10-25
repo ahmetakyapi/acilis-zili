@@ -128,8 +128,11 @@
   height: 14px;
   margin-left: -7px;
   border-radius: 50%;
-  background: var(--primary);
-  box-shadow: 0 0 0 3px var(--rail-ground), 0 0 0 4px var(--primary);
+  /* `--rail-live`: çağıran noktanın rengini değiştirebilir (25 Ekim; hisse
+     sayfasının Hareketli Ortalamalar kartında fiyat noktası veri, nötr
+     mürekkep). Varsayılan aynı: marka mavisi. */
+  background: var(--rail-live, var(--primary));
+  box-shadow: 0 0 0 3px var(--rail-ground), 0 0 0 4px var(--rail-live, var(--primary));
 }
 
 /* ---- Etiketler ----

@@ -15,7 +15,7 @@ import { pageMetadata } from "@/lib/page-meta";
 import { getQuotes } from "@/lib/providers";
 import { aiAnalysisRequests } from "@/lib/schema";
 import { getOwnPosts } from "@/lib/user-post-data";
-import { ClaudeReports, MoreLink, OwnNotes } from "@/components/analyses/AnalysesCards";
+import { ClaudeReports, MoreLink, OwnNotes, ReportsOverview, type ReportCard } from "@/components/analyses/AnalysesCards";
 
 /* KİŞİSEL SAYFA — DİZİNE GİRMEZ (next.config.ts → NOINDEX_PATHS da). */
 export const generateMetadata = pageMetadata({
@@ -65,6 +65,11 @@ export default async function AnalysesPage() {
         score: sql<number | null>`(${aiAnalysisRequests.result}->'output'->>'overallScore')::int`,
         reportPrice: sql<number | null>`coalesce((${aiAnalysisRequests.result}->>'quotePrice')::float8, (${aiAnalysisRequests.result}->'snapshot'->>'price')::float8)`,
         generatedAt: sql<string>`${aiAnalysisRequests.result}->>'generatedAt'`,
+        /* Kart minyatürü (25 Ekim): yalnız kapanışlar ve iki tetik; raporun
+           geri kalanı (metin, haber) karta gelmez. */
+        bullLevel: sql<number | null>`(${aiAnalysisRequests.result}->'output'->>'bullLevel')::float8`,
+        bearLevel: sql<number | null>`(${aiAnalysisRequests.result}->'output'->>'bearLevel')::float8`,
+        closes: sql<number[] | null>`(select jsonb_agg((p->>'close')::float8) from jsonb_array_elements(${aiAnalysisRequests.result}->'pricePath'->'chart') p)`,
       }).from(aiAnalysisRequests)
         .where(and(eq(aiAnalysisRequests.userId, access.userId), eq(aiAnalysisRequests.status, "completed")))
         .orderBy(desc(aiAnalysisRequests.createdAt)).limit(PAGE_LIMIT).catch(() => [])
@@ -81,6 +86,15 @@ export default async function AnalysesPage() {
   ]);
   // Bayat kotasyonla "Rapordan Bugüne" yazılmaz (veri dürüstlüğü 2).
   const live = quotes?.ok && !quotes.stale ? quotes.data : {};
+
+  const cards: ReportCard[] = rows.map(row => {
+    const now = live[row.symbol]?.price;
+    return {
+      id: row.id, symbol: row.symbol, horizon: row.horizon, verdict: row.verdict, score: row.score, generatedAt: row.generatedAt,
+      since: now && row.reportPrice ? (now / row.reportPrice - 1) * 100 : null,
+      closes: row.closes, bullLevel: row.bullLevel, bearLevel: row.bearLevel, reportPrice: row.reportPrice,
+    };
+  });
 
   const newPost = <Link href="/yazilarim/yeni" className={PRIMARY_LINK}>
     <PencilSimpleLine weight="duotone" size={16} aria-hidden />{P.mineNew}
@@ -109,10 +123,12 @@ export default async function AnalysesPage() {
       <PanelHeader title={P.claudeTitle} meta={rows.length ? `${rows.length} ${P.count}` : P.claudeHint} />
       {!access ? <EmptyState title={P.noAccessTitle} hint={P.noAccessHint} compact />
         : !rows.length ? <EmptyState title={P.emptyTitle} hint={P.emptyHint} compact />
-        : <ClaudeReports rows={rows.map(row => {
-          const now = live[row.symbol]?.price;
-          return { id: row.id, symbol: row.symbol, horizon: row.horizon, verdict: row.verdict, score: row.score, generatedAt: row.generatedAt, since: now && row.reportPrice ? (now / row.reportPrice - 1) * 100 : null };
-        })} names={names} labels={A} locale={locale} />}
+        : <>
+          {/* Panelin tepesinde özet: tek cümle, görüş dağılımı, rapordan
+              bugüne getiri kovaları (25 Ekim — gerekçe ReportsOverview). */}
+          <ReportsOverview rows={cards} labels={A} L={t.feedVisuals.analyses} locale={locale} />
+          <ClaudeReports rows={cards} names={names} labels={A} mapAria={t.feedVisuals.analyses.mapAria} locale={locale} />
+        </>}
     </Panel>
     {quotes?.ok && reportSymbols.length > 0 && <DataStamp labels={t.data} source={quotes.source} at={quotes.fetchedAt} stale={quotes.stale} locale={locale} />}
   </MotionExperience>;

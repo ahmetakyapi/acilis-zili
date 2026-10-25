@@ -1,114 +1,187 @@
-/* /yenilikler — değişiklik geçmişi (25 Ekim).
+/* /yenilikler — değişiklik geçmişi (25 Ekim; yeniden düzen aynı gün,
+   gerekçe ChangelogParts.tsx başı).
 
-   Derinlik tonla: öne çıkan sürümün maddeleri `--surface` zemininde blok,
-   zaman çizelgesindeki maddeler zeminsiz. Cam, gölge, degrade yok; degrade
-   yalnız öne çıkan girişin kısa display başlığında (`display-ink`). Renk
-   anlam taşır: mavi yalnız "Dene" bağlantısında ve odakta; etiketler nötr
-   tonla ayrışır, renkle değil (renk "iyi/kötü" yargısı gibi okunurdu). */
+   Derinlik tonla: karolar `--surface` zemininde, gölge/cam/ışıma yok;
+   degrade yalnız öne çıkan sürümün kısa display başlığında. RENK DENGESİ
+   (site geneli karar): her ALAN kendi rengini taşır ve her yerde aynıdır
+   (ikon karosu, grup imi, eski girişin noktası); renkler sitenin grafik
+   token'larından (`--chart-a..d`) yumuşatılmış tonlar. Mavi doygun hâliyle
+   yalnız etkileşimde (bağlantı, odak). Etiketler (Yeni/İyileştirme/
+   Düzeltme) ton farkıyla, renksiz. */
 
-/* ---- Öne çıkan sürüm ---- */
-.latestHead { padding: 20px 20px 4px; }
+/* Alanın rengi — tek tanım; öğeler `data-area` ile seçer (modül saf
+   seçici ister, o yüzden sınıflar tek tek). */
+.area[data-area="claude"], .tile[data-area="claude"], .entryDot[data-area="claude"], .item[data-area="claude"] { --area: var(--chart-c); }
+.area[data-area="piyasa"], .tile[data-area="piyasa"], .entryDot[data-area="piyasa"], .item[data-area="piyasa"] { --area: var(--chart-a); }
+.area[data-area="bilanco"], .tile[data-area="bilanco"], .entryDot[data-area="bilanco"], .item[data-area="bilanco"] { --area: var(--chart-d); }
+.area[data-area="kisisel"], .tile[data-area="kisisel"], .entryDot[data-area="kisisel"], .item[data-area="kisisel"] { --area: var(--chart-b); }
+.area[data-area="icerik"], .tile[data-area="icerik"], .entryDot[data-area="icerik"], .item[data-area="icerik"] { --area: var(--flat); }
+
+/* ---- Başlık kartı: daha az dikey boşluk (özgüllük globals.css'teki
+   `.page-masthead.page-masthead[data-embedded]` kuralını aşmak için) ---- */
+.masthead.masthead.masthead[data-embedded="false"] { padding-block: 22px 20px; }
+/* Alt başlık genişte tek satır (globals.css'teki 64ch tavanı burada iki
+   satıra kırıyordu: 1440'ta 23 piksel). */
+.masthead.masthead.masthead p { max-width: 96ch; }
+
+/* ---- Sürüm şeridi ---- */
+.strip { padding: 14px 20px 12px; }
+.stripHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+.stripTitle { font-size: var(--text-lead); font-weight: 750; letter-spacing: -.015em; color: var(--text-strong); }
+.stats { display: flex; gap: 22px; margin: 0; }
+/* DOM sırası dt → dd (geçerli `dl`); görsel sıra sayı önce. */
+.stats > div { display: flex; flex-direction: row-reverse; align-items: baseline; gap: 6px; }
+.stats dt { font-size: var(--text-small); color: var(--text-muted); }
+.stats dd { margin: 0; font-size: var(--text-lead); font-weight: 800; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+@media (max-width: 39.99rem) {
+  .stats { width: 100%; justify-content: space-between; gap: 10px; }
+  .stats > div { flex-direction: column-reverse; align-items: flex-start; gap: 0; }
+  .dot { width: calc(var(--s) * .7); height: calc(var(--s) * .7); }
+}
+/* Kulvar: noktaların merkezinden geçen 5 px şerit; uçlarda nokta yarıçapı
+   kadar pay (ilk ve son nokta kutudan taşmasın). */
+.laneWrap { position: relative; margin-top: 8px; padding: 0 12px; }
+.lane { position: relative; height: 48px; margin: 0; padding: 0; list-style: none; }
+.lane::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 50%; height: var(--lane-h, 5px); translate: 0 -50%;
+  border-radius: 999px; background: var(--primary-wash);
+}
+.point { position: absolute; top: 50%; left: calc(var(--x) * 100%); translate: -50% -50%; }
+.pointLink {
+  position: relative; display: grid; place-items: center; width: max(24px, var(--s)); height: 44px;
+  border-radius: 999px; outline-offset: 2px;
+}
+.dot {
+  display: block; width: var(--s); height: var(--s); border-radius: 999px;
+  background: var(--primary-faint); box-shadow: inset 0 0 0 1.5px var(--primary-soft);
+  transition: scale .18s var(--ease-brand), background-color .18s var(--ease-brand);
+  animation: cl-pop .5s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 18ms + 80ms);
+}
+.point[data-latest] .dot { background: var(--primary-soft); }
+.pointLink:hover .dot, .pointLink:focus-visible .dot { scale: 1.25; background: var(--primary-soft); }
+.pointLink:focus-visible { outline: 2px solid var(--line-focus); }
+/* İmleç/odak balonu: tarih + sürüm adı. Dokunmatikte bağlantının kendisi iş görür. */
+.tip {
+  position: absolute; bottom: calc(100% - 2px); left: 50%; translate: -50% 4px; z-index: 2;
+  width: max-content; max-width: 240px; padding: 6px 9px; border-radius: var(--radius-md);
+  background: var(--overlay-surface); border: 1px solid var(--line); color: var(--text-body);
+  font-size: var(--text-small); line-height: 16px; text-align: left; white-space: normal;
+  opacity: 0; pointer-events: none; transition: opacity .16s var(--ease-brand), translate .16s var(--ease-brand);
+}
+.tip strong { color: var(--text-strong); font-weight: 750; }
+.pointLink:hover .tip, .pointLink:focus-visible .tip { opacity: 1; translate: -50% 0; }
+.point:first-child .tip { left: 0; translate: -10% 4px; }
+.point:first-child .pointLink:hover .tip, .point:first-child .pointLink:focus-visible .tip { translate: -10% 0; }
+.point:last-child .tip { left: auto; right: 0; translate: 10% 4px; }
+.point:last-child .pointLink:hover .tip, .point:last-child .pointLink:focus-visible .tip { translate: 10% 0; }
+.ticks { position: relative; height: 16px; margin: 0; padding: 0; list-style: none; }
+.ticks li {
+  position: absolute; left: calc(var(--x) * 100%); top: 0;
+  font-size: var(--text-tiny); color: var(--text-muted); white-space: nowrap;
+}
+.ticks li::before { content: ""; position: absolute; left: 0; top: -9px; width: 1px; height: 6px; background: var(--line-strong); }
+
+/* ---- Son sürüm ---- */
+.latestHead { padding: 16px 20px 4px; }
 .latestMeta {
-  margin-top: 8px;
+  margin-top: 6px;
   display: flex; flex-wrap: wrap; gap: 4px 12px;
   font-size: var(--text-small); line-height: 18px; color: var(--text-muted);
 }
 .latestSummary {
-  margin-top: 10px; max-width: 68ch;
-  font-size: var(--text-read); line-height: 22px; color: var(--text-body);
+  padding: 2px 20px 14px; max-width: calc(100ch + 40px);
+  font-size: var(--text-base); line-height: 20px; color: var(--text-body);
 }
-/* Maddeler blok ızgarası: telefonda tek sütun, 768'de iki, 1280'de üç.
-   Bloklar aynı satırda aynı boyda (ızgara satırı gerer), "Dene" bloğun
-   dibine iner — bağlantılar satır satır aynı hatta. */
-.latestGrid {
-  display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px;
-  padding: 16px 20px 20px;
-}
-@media (min-width: 48rem) { .latestGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 80rem) { .latestGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.block {
-  display: flex; flex-direction: column; gap: 6px;
-  min-width: 0; padding: 14px 16px 6px;
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  scroll-margin-top: calc(var(--app-bar-h, 64px) + 24px);
-}
-.block .tryLink { margin-top: auto; }
-/* Telefon katlaması — gerekçe ChangelogParts.tsx → LatestRelease. */
-.moreButton { margin: -6px 20px 4px; }
 @media (max-width: 39.99rem) {
-  .moreToggle:not(:checked) ~ .latestGrid > [data-more] { display: none; }
+  .latestHead, .areas, .strip, .latestSummary { padding-inline: 16px; }
 }
-@media (min-width: 40rem) {
-  .moreToggle, .moreButton { display: none; }
+/* Alanlar çok sütunlu akışta; grup bölünmez. Telefonda tek sütun. */
+.areas { columns: 1; column-gap: 14px; padding: 12px 20px 8px; }
+@media (min-width: 48rem) { .areas { columns: 2; } }
+@media (min-width: 80rem) { .areas { columns: 4; } }
+.area { break-inside: avoid; padding-bottom: 12px; }
+.areaHead {
+  display: flex; align-items: center; gap: 7px; padding: 0 2px 6px;
+  font-size: var(--text-small); font-weight: 750; color: var(--text-strong);
 }
-.blockTitle { font-size: var(--text-read); line-height: 20px; font-weight: 700; color: var(--text-strong); }
-.blockBody { font-size: var(--text-base); line-height: 20px; color: var(--text-body); }
+.areaSwatch { width: 8px; height: 8px; border-radius: 3px; background: var(--area); }
+.areaCount { margin-left: auto; font-size: var(--text-tiny); font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.tiles { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.tile {
+  position: relative; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  min-height: 48px; padding: 6px 10px 6px 7px; border-radius: var(--radius-lg);
+  background: var(--surface); border: 1px solid transparent;
+  transition: border-color .2s var(--ease-brand), background-color .2s var(--ease-brand);
+  animation: cl-rise .45s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 28ms + 60ms);
+}
+a.tile:hover { border-color: color-mix(in srgb, var(--area) 35%, transparent); background: color-mix(in srgb, var(--area) 6%, var(--surface)); }
+a.tile:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+.tileIcon {
+  display: grid; place-items: center; width: 34px; height: 34px; border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--area) 14%, transparent); color: var(--area);
+}
+.tileCopy { display: grid; gap: 1px; min-width: 0; }
+.tileTitle { display: flex; align-items: baseline; gap: 6px; min-width: 0; font-size: var(--text-base); line-height: 18px; font-weight: 700; color: var(--text-strong); }
+.tileKind { flex: none; font-size: 11px; font-weight: 650; color: var(--text-muted); }
+/* Tek satır: kısa özet bu satıra sığacak uzunlukta yazıldı (test: 36
+   karakter); yine de dar sütunda kesilir, satır kırılmaz. Tamamı `title`ta
+   ve ekran okuyucuda. */
+.tileShort { font-size: var(--text-small); line-height: 16px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tileArrow { color: var(--text-muted); transition: translate .2s var(--ease-brand), color .2s var(--ease-brand); }
+a.tile:hover .tileArrow { translate: 2px 0; color: var(--primary-ink); }
 .note {
   border-top: 1px solid var(--line-soft);
-  padding: 14px 20px 16px;
-  max-width: 80ch;
+  padding: 12px 20px 14px;
+  max-width: 100ch;
   font-size: var(--text-tiny); line-height: 18px; color: var(--text-muted);
 }
 
-/* ---- Araç satırı: süzgeç + ay dizini ---- */
+/* ---- Araç satırı: süzgeç ---- */
 .toolbar {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
   gap: 10px 20px;
 }
 .toolGroup { display: flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; }
-.toolLabel { font-size: var(--text-small); font-weight: 600; color: var(--text-muted); white-space: nowrap; }
 .count { margin-left: 5px; font-variant-numeric: tabular-nums; opacity: .8; }
-/* Ay çapası — süzgeç çipinin pasif hâliyle aynı dil, ama bir sayfa içi
-   bağlantı: seçili hâli yok. Telefonda 44, masaüstünde 32 piksel. */
-.monthLink {
-  display: inline-flex; align-items: center; min-height: 44px;
-  padding: 5px 11px; border-radius: 999px;
-  background: var(--surface-elevated); color: var(--text-body);
-  font-size: var(--text-tiny); white-space: nowrap;
-  transition: color .2s var(--ease-brand), background-color .2s var(--ease-brand);
-}
-.monthLink:hover { color: var(--text-strong); }
-@media (min-width: 40rem) { .monthLink { min-height: 32px; } }
 
-/* ---- Zaman çizelgesi ---- */
+/* ---- Eski sürümler: ay paneli, giriş başına tek satır ---- */
 .month { scroll-margin-top: calc(var(--app-bar-h, 64px) + 20px); }
-.entries { display: flex; flex-direction: column; }
-/* Giriş: telefonda gün başlığın üstünde tek satır; 640'tan itibaren solda
-   gün sütunu, sağında içerik. Sütunun sağ kenarı ince bir hat — çizelgenin
-   omurgası, süs değil: girişleri gün sırasına bağlıyor. Girişler arasında
-   tek hairline (yalnız üstte, ilk girişte yok). */
-.entry {
-  display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px 0;
-  padding: 18px 16px 20px;
-  scroll-margin-top: calc(var(--app-bar-h, 64px) + 20px);
+.entries { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.entries > li + li { border-top: 1px solid var(--line-soft); }
+.entry { scroll-margin-top: calc(var(--app-bar-h, 64px) + 20px); }
+.entryRow {
+  display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) auto auto 14px; align-items: center; gap: 12px;
+  min-height: 48px; padding: 6px 20px; cursor: pointer; list-style: none;
+  transition: background-color .2s var(--ease-brand);
 }
-.entry + .entry { border-top: 1px solid var(--line-soft); }
-@media (min-width: 40rem) {
-  .entry { grid-template-columns: 7.5rem minmax(0, 1fr); padding: 20px 20px 22px 0; }
-  .when { padding-left: 20px; border-right: 1px solid var(--line-soft); margin-right: 20px; }
+.entryRow::-webkit-details-marker { display: none; }
+.entryRow:hover { background: var(--primary-tint); }
+.entryRow:focus-visible { outline: 2px solid var(--line-focus); outline-offset: -2px; }
+.whenDay { font-size: var(--text-small); font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.entryTitle { min-width: 0; font-size: var(--text-read); font-weight: 650; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.entryDots { display: inline-flex; gap: 4px; }
+.entryDot { width: 8px; height: 8px; border-radius: 999px; background: var(--area); }
+.entryCount { font-size: var(--text-tiny); color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.entryIcon { color: var(--text-muted); transition: rotate .28s var(--ease-brand); }
+.entry[open] .entryIcon { rotate: 180deg; }
+@media (max-width: 39.99rem) {
+  .entryRow { grid-template-columns: 3.6rem minmax(0, 1fr) auto 14px; gap: 10px; padding-inline: 16px; }
+  .entryCount { display: none; }
 }
-.when { display: flex; align-items: baseline; gap: 8px; }
-@media (min-width: 40rem) { .when { flex-direction: column; gap: 2px; } }
-.whenDay {
-  font-size: var(--text-lead); line-height: 20px; font-weight: 700; color: var(--text-strong);
-  font-variant-numeric: tabular-nums; white-space: nowrap;
-}
-.whenWeek { font-size: var(--text-small); line-height: 16px; color: var(--text-muted); white-space: nowrap; }
-.entryTitle { font-size: var(--text-title); line-height: 26px; font-weight: 700; letter-spacing: -0.01em; color: var(--text-strong); text-wrap: balance; }
-.entrySummary { margin-top: 4px; max-width: 72ch; font-size: var(--text-read); line-height: 22px; color: var(--text-body); }
-/* Maddeler 1024'ten itibaren iki sütun: altı maddelik giriş tek sütunda
-   telefon boyunda bir liste oluyordu. */
-.items { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px 28px; margin-top: 14px; }
+.entryBody { padding: 4px 20px 18px calc(4.5rem + 32px); }
+@media (max-width: 39.99rem) { .entryBody { padding: 4px 16px 16px; } }
+.whenWeek { font-weight: 650; color: var(--text-muted); }
+.entrySummary { max-width: 80ch; font-size: var(--text-base); line-height: 20px; color: var(--text-body); }
+.items { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px 28px; margin: 12px 0 0; padding: 0; list-style: none; }
 @media (min-width: 64rem) { .items { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.item { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.item { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding-left: 10px; border-left: 2px solid color-mix(in srgb, var(--area) 45%, transparent); }
 .itemHead { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
 .itemTitle { font-size: var(--text-read); line-height: 20px; font-weight: 700; color: var(--text-strong); }
 .itemBody { font-size: var(--text-base); line-height: 20px; color: var(--text-body); }
 
 /* ---- Etiket: ton farkıyla, renksiz ---- */
 .kind {
-  flex: none; display: inline-flex; align-items: center;
+  flex: none; display: inline-flex; align-items: center; gap: 4px;
   height: 20px; padding: 0 7px; border-radius: var(--radius-xs);
   font-size: 11px; line-height: 1; font-weight: 700; white-space: nowrap;
   translate: 0 -1px;
@@ -126,25 +199,8 @@
 }
 .tryLink:hover { color: var(--primary-hover); }
 .tryLink svg { transition: translate .2s var(--ease-brand); }
-@media (hover: hover) { .tryLink:hover svg { translate: 2px 0; } }
-
-/* ---- "Daha Eski" katlaması ---- */
-.older > summary {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  min-height: 56px; padding: 10px 20px;
-  border-radius: var(--radius-panel, var(--radius-xl));
-  border: 1px solid var(--line);
-  background: var(--premium-surface);
-  cursor: pointer; list-style: none;
-  transition: border-color .2s var(--ease-brand);
-}
-.older > summary::-webkit-details-marker { display: none; }
-.older > summary:hover { border-color: var(--line-strong); }
-.olderTitle { font-size: var(--text-lead); font-weight: 700; color: var(--text-strong); }
-.olderMeta { display: block; margin-top: 2px; font-size: var(--text-small); color: var(--text-muted); }
-.olderIcon { flex: none; color: var(--text-muted); transition: rotate .28s var(--ease-brand); }
-.older[open] .olderIcon { rotate: 180deg; }
-.olderBody { display: flex; flex-direction: column; gap: var(--page-section-gap, 20px); padding-top: var(--page-section-gap, 20px); }
+@media (hover: hover) { .tryLink:hover svg:last-child { translate: 2px 0; } }
+.tryIcon { margin-right: 2px; color: var(--text-muted); }
 
 /* ---- Rozet (menü, şerit, alt çubuk) ---- */
 .badgePill {
@@ -160,6 +216,10 @@
   pointer-events: none;
 }
 
+@keyframes cl-rise { from { opacity: 0; translate: 0 6px; } }
+@keyframes cl-pop { from { opacity: 0; scale: .4; } }
+
 @media (prefers-reduced-motion: reduce) {
-  .tryLink, .tryLink svg, .monthLink, .older > summary, .olderIcon { transition: none; }
+  .tile, .dot { animation: none; }
+  .tile, .tileArrow, .dot, .tip, .tryLink, .tryLink svg, .entryRow, .entryIcon { transition: none; }
 }

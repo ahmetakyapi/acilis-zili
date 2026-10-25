@@ -1,4 +1,5 @@
-import { Panel, PanelHeader } from "@/components/ui/primitives";
+import { CaretDown } from "@phosphor-icons/react/dist/ssr";
+import { Panel } from "@/components/ui/primitives";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import {
   BROKER_COLUMNS,
@@ -12,7 +13,15 @@ import { cn } from "@/lib/utils";
 import styles from "./Brokers.module.css";
 
 /**
- * KURUM KURUM ABD TARİFESİ — sayfanın ana görseli.
+ * TÜM TARİFE AYRINTILARI — kaynak katmanı (25 Ekim'e kadar sayfanın ana
+ * görseliydi).
+ *
+ * KATLI (25 Ekim görsel turu). Sahibi matrisi "görsel olarak eksik ve çok
+ * okunamıyor" buldu; okuma işi kartlara geçti (BrokerCards). Tablo
+ * SİLİNMEDİ: ekran okuyucuyla satır/sütun gezmek ve bir hücreyi kaynağıyla
+ * doğrulamak için en doğru biçim hâlâ bu. Yerli `<details>`: JavaScript'siz
+ * açılıyor, açılış geçişi globals.css'te (`::details-content`).
+ * Satır çapası `#tarife-{id}` — `#kurum-{id}` artık kartın.
  *
  * Satır kurum, sütun ücret kalemi. Kurum adı yapışkan: sekiz sütun 1280'de
  * de sığmıyor (taban genişlik aşağıda) ve kayan bir tabloda hangi satırın
@@ -49,6 +58,7 @@ export function BrokerTable({
   t: Dictionary;
 }) {
   const L = t.brokers;
+  const D = t.brokerCards.details;
   const pick = (bi: { tr: string; en: string }) => (locale === "en" ? bi.en : bi.tr);
   const sticky = "sticky left-0 z-10 bg-(--premium-surface)";
 
@@ -88,9 +98,21 @@ export function BrokerTable({
   );
 
   return (
-    <Panel id="tarifeler" aria-label={L.tableTitle}>
-      <PanelHeader title={L.tableTitle} meta={L.tableMeta.replace("{count}", String(brokers.length))} />
-      <p className="max-w-3xl px-4 pb-4 text-sm leading-relaxed text-body sm:px-5">{L.tableLead}</p>
+    <Panel id="tarifeler" aria-labelledby="tarifeler-h">
+      <details className={styles.fold}>
+      <summary className={styles.foldSummary}>
+        <h2 id="tarifeler-h" className="display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.015em]">
+          {D.title}
+        </h2>
+        <span className={styles.foldMeta}>
+          {D.meta.replace("{count}", String(brokers.length)).replace("{columns}", String(BROKER_COLUMNS.length))}
+          <CaretDown size={14} weight="bold" aria-hidden className={styles.foldCaret} />
+        </span>
+      </summary>
+      <div className="flex max-w-3xl flex-col gap-2 px-4 pb-4 text-sm leading-relaxed text-body sm:px-5">
+        <p>{D.lead}</p>
+        <p>{L.tableLead}</p>
+      </div>
       <ScrollEdges
         className="scroll-x-hint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
         tabIndex={0}
@@ -116,7 +138,7 @@ export function BrokerTable({
           </thead>
           <tbody className="divide-y divide-line-soft">
             {brokers.map((broker) => (
-              <tr key={broker.id} id={`kurum-${broker.id}`}>
+              <tr key={broker.id} id={`tarife-${broker.id}`}>
                 <th scope="row" className={cn(sticky, "px-4 py-3 text-left align-top font-normal sm:px-5")}>
                   <span className="block text-small font-bold text-strong">{broker.name}</span>
                   {broker.channel && <span className="block text-tiny text-muted">{pick(broker.channel)}</span>}
@@ -138,6 +160,7 @@ export function BrokerTable({
           </tbody>
         </table>
       </ScrollEdges>
+      </details>
     </Panel>
   );
 }

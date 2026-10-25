@@ -1,11 +1,13 @@
 import { Suspense } from "react";
-import { X } from "@phosphor-icons/react/dist/ssr";
+import { Rows, SquaresFour, X } from "@phosphor-icons/react/dist/ssr";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/motion/DirectoryExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
-import { ScaleBar } from "@/components/markets/CompareScale";
+import { SizeBar, UniverseLane } from "@/components/screener/Lanes";
+import { MetricSwarm, type SwarmKind } from "@/components/screener/MetricSwarm";
+import visual from "@/components/screener/ScreenerVisuals.module.css";
 import { ChipStrip } from "@/components/ui/ChipStrip";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { LoadingFallback } from "@/components/ui/LoadingState";
@@ -53,6 +55,7 @@ import {
   staleMark,
   NO_VALUE,
 } from "@/lib/utils";
+import { median, percentileRank, screenerSentence, sharePercent } from "@/lib/tool-visuals";
 
 export const generateMetadata = pageMetadata({
   path: "/tarama",
@@ -98,6 +101,11 @@ type SortDir = "asc" | "desc";
 
 const PAGE_STEP = 60;
 
+/** Sektör şeridinde parçanın içine sayı yazılan en küçük pay (ad, CSS kap sorgusuyla sığınca). */
+const SEGMENT_LABEL_MIN = 0.05;
+/** Şeridin altındaki künyede adıyla yazılan sektör sayısı; fazlası "Diğer". */
+const LEGEND_LIMIT = 5;
+
 /** Hazır süzgeçler — ölçüt çipte değil panel künyesinde yazılır (dürüstlük). */
 const PRESETS = ["deger", "buyume", "karlilik", "saglam"] as const;
 type PresetKey = (typeof PRESETS)[number];
@@ -141,7 +149,27 @@ function conditionValue(c: ScreenCondition, locale: Locale): string {
   return locale === "tr" ? `%${n}` : `${n}%`;
 }
 
+/**
+ * Görünüm — `?gorunum=kart|tablo` (25 Ekim). Adreste yoksa "auto": telefonda
+ * kart, 640 pikselden genişte tablo; ikisi de basılır, CSS seçer (sunucu
+ * ekranı bilmiyor, istemcide seçmek ilk karede yanlış görünümü gösterip
+ * zıplatırdı). Anahtar seçilince yalnız o görünüm basılır.
+ */
+const VIEWS = ["kart", "tablo"] as const;
+type ViewKey = (typeof VIEWS)[number] | "auto";
+
+/** Ölçünün kümede nasıl çizildiği: piyasa değeri log ölçekte para, oranlar sayı. */
+const METRIC_KIND: Record<SortKey, SwarmKind> = {
+  cap: "money",
+  fk: "ratio",
+  buyume: "percent",
+  marj: "percent",
+  roe: "percent",
+  borc: "ratio",
+};
+
 type ParamsOver = {
+  view?: ViewKey;
   sort?: SortKey;
   dir?: SortDir;
   preset?: PresetKey | null;
@@ -213,6 +241,9 @@ export default async function ScreenerPage(props: PageProps<"/tarama">) {
     : null;
   const filters = parseScreenParams(search);
   const sectorParam = filters.sector;
+  const view: ViewKey = VIEWS.includes(search.gorunum as (typeof VIEWS)[number])
+    ? (search.gorunum as (typeof VIEWS)[number])
+    : "auto";
   const sentence = typeof search.cumle === "string" && search.cumle.trim() ? search.cumle.trim().slice(0, 200) : null;
 
   const requested = Number(typeof search.adet === "string" ? search.adet : PAGE_STEP);
@@ -231,6 +262,8 @@ export default async function ScreenerPage(props: PageProps<"/tarama">) {
     if (p) params.set("suzgec", p);
     writeScreenParams(params, { ...(over.filters ?? filters), sector: s });
     if (over.adet) params.set("adet", String(over.adet));
+    const v = over.view ?? view;
+    if (v !== "auto") params.set("gorunum", v);
     /* Süzgeç değişirse çipler artık cümlenin çevirisi değil: cümle düşer. */
     const touches = over.preset !== undefined || over.sector !== undefined || over.filters !== undefined;
     if (sentence && !touches) params.set("cumle", sentence);
@@ -297,6 +330,7 @@ export default async function ScreenerPage(props: PageProps<"/tarama">) {
             limit={limit}
             paramsFor={paramsFor}
             sortHref={sortHref}
+            view={view}
             locale={locale}
             t={t}
           />
@@ -322,9 +356,11 @@ async function ScreenerTable({
   limit,
   paramsFor,
   sortHref,
+  view,
   locale,
   t,
 }: {
+  view: ViewKey;
   sort: SortKey;
   dir: SortDir;
   preset: PresetKey | null;
@@ -402,8 +438,8 @@ async function ScreenerTable({
       matchesScreenFilters(row, filters),
   );
 
-  const valueOf = (row: Row): number | null => {
-    switch (sort) {
+  const metricOf = (row: Row, key: SortKey): number | null => {
+    switch (key) {
       case "fk":
         return row.fk;
       case "buyume":
@@ -421,6 +457,7 @@ async function ScreenerTable({
         return row.cap;
     }
   };
+  const valueOf = (row: Row) => metricOf(row, sort);
 
   /* Boşlar her yönde SONDA — /sirketler'deki -Infinity dersi. */
   const sorted = [...filtered].sort((a, b) => {
@@ -437,11 +474,160 @@ async function ScreenerTable({
 
   const presetNote = preset ? L.presetHints[preset] : null;
   const activeGroup = sectorGroupByKey(filters.group);
+  const V = t.toolVisuals.screener;
+  const sortLabels: Record<SortKey, string> = {
+    cap: L.colCap,
+    fk: L.colFk,
+    buyume: L.colGrowth,
+    marj: L.colMargin,
+    roe: L.colRoe,
+    borc: L.colDebt,
+  };
+
+  /* EVREN İÇİNDEKİ YER (25 Ekim). Satırın ve kartın kulvarı sıralanan
+     ölçünün TARAMA EVRENİNDEKİ (süzgeçten önceki bütün satırlar) yüzdeliği:
+     süzgeçten geçen bir F/K'nın "düşük" olup olmadığı ancak evrene göre
+     okunur. Piyasa değeri sırasında kulvar yok — orada büyüklük çubuğu var. */
+  const universe = rows
+    .map((row) => valueOf(row))
+    .filter((v): v is number => v !== null && Number.isFinite(v))
+    .sort((a, b) => a - b);
+  const laneOf = (row: Row) => {
+    const value = valueOf(row);
+    if (sort === "cap" || value === null || universe.length < 2) return null;
+    const p = percentileRank(universe, value);
+    return { p, title: V.laneTitle.replace("{p}", String(Math.round(p * 100))) };
+  };
+
+  /* Tepe cümlesi ve sektör şeridi SONUÇ KÜMESİNDEN (dilimden değil). */
+  const resultSectors = new Map<string, number>();
+  for (const row of filtered) resultSectors.set(row.sector, (resultSectors.get(row.sector) ?? 0) + 1);
+  const sectorMix = [...resultSectors.entries()]
+    .map(([sector, count]) => ({ sector, count, label: sectorLabel(sector, locale) ?? sector }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, locale));
+  const isFiltered = filtered.length < rows.length;
+  const lead = screenerSentence(
+    {
+      count: filtered.length,
+      filtered: isFiltered,
+      sectors: sectorMix.map(({ label, count }) => ({ label, count })),
+      fkValues: filtered.map((row) => row.fk),
+      formatFk: (value) => formatRatio(value, locale),
+    },
+    V.sentence,
+  );
+  const swarmPoints = filtered.flatMap((row) => {
+    const v = valueOf(row);
+    return v === null || !Number.isFinite(v) || (sort === "cap" && v <= 0)
+      ? []
+      : [{ s: row.symbol, n: row.company.name, v }];
+  });
 
   return (
     <>
+      {/* SONUCUN GÖRÜNÜMÜ — ana görsel, tablonun ÜSTÜNDE (ekran düzeni 3):
+          tablo 60 satırı sırayla söylüyordu; kümenin şekli ve hangi
+          sektörlerden oluştuğu hiçbir satırdan okunmuyordu. */}
+      {filtered.length > 0 && (
+        <Panel className={visual.summary}>
+          <PanelHeader title={V.summaryTitle} meta={`${V.sortedBy}: ${sortLabels[sort]}`} />
+          <div className={visual.summaryBody}>
+            <p className={visual.lead}>{lead}</p>
+
+            {sectorMix.length > 1 && (
+              <section className={visual.block} aria-labelledby="tarama-sektor">
+                <h3 id="tarama-sektor" className={visual.blockTitle}>{V.sectorMix}</h3>
+                <div className={visual.strip} data-motion-stagger>
+                  {sectorMix.map(({ sector, count, label }) => {
+                    const share = count / filtered.length;
+                    const p = sharePercent(share);
+                    return (
+                      <Link
+                        key={sector}
+                        href={paramsFor({ sector: sector === activeSector ? null : sectorSlug(sector) })}
+                        scroll={false}
+                        className={visual.segment}
+                        data-active={sector === activeSector || undefined}
+                        style={{ flexGrow: count }}
+                        aria-label={V.sectorAria.replace("{sector}", label).replace("{n}", String(count)).replace("{p}", String(p))}
+                        title={`${label} · ${count}`}
+                      >
+                        {share >= SEGMENT_LABEL_MIN && (
+                          <span aria-hidden className={visual.segmentLabel}>
+                            <span className={visual.segmentName}>{label}</span>
+                            <b className="numeral">{count}</b>
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+                <ul className={visual.legend}>
+                  {sectorMix.slice(0, LEGEND_LIMIT).map(({ sector, count, label }) => (
+                    <li key={sector}>
+                      <span className={visual.legendName}>{label}</span>
+                      <span className="numeral">{count}</span>
+                      <span className="numeral text-muted">{t.toolVisuals.companies.sharePct.replace("{p}", String(sharePercent(count / filtered.length)))}</span>
+                    </li>
+                  ))}
+                  {sectorMix.length > LEGEND_LIMIT && (
+                    <li className={visual.legendRest}>{V.other.replace("{n}", String(sectorMix.length - LEGEND_LIMIT))}</li>
+                  )}
+                </ul>
+              </section>
+            )}
+
+            <section className={visual.block} aria-labelledby="tarama-kume">
+              <div className={visual.blockHead}>
+                <h3 id="tarama-kume" className={visual.blockTitle}>{V.swarmTitle.replace("{metric}", sortLabels[sort])}</h3>
+                <ChipStrip
+                  activeKey={sort}
+                  scrollLabels={{ prev: t.common.scrollPrev, next: t.common.scrollNext }}
+                  className="scroll-x flex items-center gap-1.5"
+                >
+                  {SORT_KEYS.map((key) => (
+                    <FilterChip
+                      key={key}
+                      href={paramsFor({ sort: key, dir: key === sort ? dir : "desc" })}
+                      active={key === sort}
+                      label={sortLabels[key]}
+                    />
+                  ))}
+                </ChipStrip>
+              </div>
+              {swarmPoints.length === 0 ? (
+                <p className={visual.empty}>{V.swarmEmpty}</p>
+              ) : (
+                <MetricSwarm
+                  points={swarmPoints}
+                  /* F/K da log: yalnız pozitif (zarar edende boş) ve sağa çok
+                     çarpık — doğrusalda büyüme süzgecinin kümesi sol kenara
+                     yığılıyordu (25 Ekim ekran görüntüsü). */
+                  scale={sort === "cap" || sort === "fk" ? "log" : "linear"}
+                  kind={METRIC_KIND[sort]}
+                  universeMedian={isFiltered ? median(universe) : null}
+                  missing={filtered.length - swarmPoints.length}
+                  locale={locale}
+                  labels={{
+                    aria: V.swarmAria.replace("{metric}", sortLabels[sort]).replace("{n}", String(swarmPoints.length)),
+                    hint: V.swarmHint,
+                    median: V.swarmMedian,
+                    universe: V.swarmUniverse,
+                    log: V.swarmLog,
+                    clipped: V.swarmClipped,
+                    missing: V.swarmMissing,
+                    open: V.open,
+                  }}
+                />
+              )}
+            </section>
+          </div>
+        </Panel>
+      )}
+
       <Panel className={styles.tablePanel}>
         <PanelHeader
+          action={<ViewSwitch view={view} paramsFor={paramsFor} labels={t.toolVisuals.screener} />}
           title={
             activeGroup
               ? sectorGroupLabel(activeGroup, locale)
@@ -463,14 +649,6 @@ async function ScreenerTable({
               .join(" · ");
             /* Telefonda gizli sütuna göre sıralanmış olabilir — künye söyler
                (/sirketler kalıbı). */
-            const sortLabels: Record<SortKey, string> = {
-              cap: L.colCap,
-              fk: L.colFk,
-              buyume: L.colGrowth,
-              marj: L.colMargin,
-              roe: L.colRoe,
-              borc: L.colDebt,
-            };
             const sortNote = `${sortLabels[sort]} ${dir === "asc" ? "▲" : "▼"}`;
             return (
               <>
@@ -518,9 +696,24 @@ async function ScreenerTable({
         {shown.length === 0 ? (
           <EmptyState title={L.empty} hint={L.emptyHint} compact />
         ) : (
+          <>
+          {view !== "tablo" && (
+            <ScreenerCards
+              rows={shown}
+              sort={sort}
+              auto={view === "auto"}
+              peakCap={peakCap}
+              laneOf={laneOf}
+              sortLabels={sortLabels}
+              locale={locale}
+              t={t}
+            />
+          )}
+          {view !== "kart" && (
           <ScrollEdges
             className={cn(
               styles.tableScroll,
+              view === "auto" && visual.autoTable,
               "scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)",
             )}
             tabIndex={0}
@@ -586,6 +779,11 @@ async function ScreenerTable({
               <LinkedRows data-motion-stagger className="divide-y divide-line-soft">
                 {shown.map((row, index) => {
                   const m = row.metrics;
+                  const lane = laneOf(row);
+                  /* Kulvar yalnız SIRALANAN sütunda: altı sütunun hepsinde
+                     ray, satırı çizgi yığınına çeviriyordu. */
+                  const laneFor = (key: SortKey) =>
+                    key === sort && lane ? <UniverseLane position={lane.p} title={lane.title} className="[--lane-max:72px]" /> : null;
                   return (
                     <tr key={row.symbol} className="cursor-pointer transition-colors hover:bg-primary-tint">
                       <td className="numeral hidden px-4 py-3 text-xs text-muted sm:table-cell sm:px-5">
@@ -617,6 +815,7 @@ async function ScreenerTable({
                       </td>
                       <td className="numeral px-1.5 py-3 text-right text-read font-semibold text-strong sm:px-3">
                         {formatRatio(row.fk, locale)}
+                        {laneFor("fk")}
                       </td>
                       {/* Büyüme bir DEĞİŞİM — yön rengi meşru. Marj, ROE ve
                           borç seviye ölçüleri: renk yok, işaret sayının içinde. */}
@@ -633,26 +832,30 @@ async function ScreenerTable({
                         ) : (
                           <span className="text-xs text-muted">{NO_VALUE}</span>
                         )}
+                        {laneFor("buyume")}
                       </td>
                       <td className="numeral hidden px-3 py-3 text-right text-read text-body sm:table-cell">
                         {m.netProfitMarginTTM !== null
                           ? formatPercent(m.netProfitMarginTTM, locale, 1)
                           : NO_VALUE}
+                        {laneFor("marj")}
                       </td>
                       <td className="numeral hidden px-3 py-3 text-right text-read text-body md:table-cell">
                         {m.roeTTM !== null ? formatPercent(m.roeTTM, locale, 1) : NO_VALUE}
+                        {laneFor("roe")}
                       </td>
                       <td className="numeral hidden px-3 py-3 text-right text-read text-body lg:table-cell">
                         {formatRatio(
                           m.debtToEquity !== null && m.debtToEquity >= 0 ? m.debtToEquity : null,
                           locale,
                         )}
+                        {laneFor("borc")}
                       </td>
                       <td className="numeral py-3 pl-1 pr-3 text-right text-small font-semibold text-body sm:px-3 sm:pr-5 sm:text-base">
                         {row.cap ? (
                           <>
                             {formatMoneyCompact(row.cap, locale)}
-                            <ScaleBar ratio={row.cap / peakCap} signed={false} className="max-w-[96px]" />
+                            <SizeBar ratio={row.cap / peakCap} />
                           </>
                         ) : (
                           NO_VALUE
@@ -664,6 +867,9 @@ async function ScreenerTable({
               </LinkedRows>
             </table>
           </ScrollEdges>
+          )}
+          <p className={visual.laneLegend}>{t.toolVisuals.screener.laneLegend}</p>
+          </>
         )}
 
         {hasMore && (
@@ -674,11 +880,11 @@ async function ScreenerTable({
               </p>
               <span
                 aria-hidden
-                className="mt-1.5 block h-[3px] w-28 overflow-hidden rounded-full bg-(--line-soft)"
+                className="mt-1.5 block h-[var(--lane-h,5px)] w-28 overflow-hidden rounded-full bg-(--line-soft)"
               >
                 <span
                   data-motion-draw="line"
-                  className="block h-full rounded-full bg-primary/60"
+                  className={cn("block h-full rounded-full", visual.progressFill)}
                   style={{ width: `${Math.min(100, (shown.length / Math.max(1, total)) * 100)}%` }}
                 />
               </span>
@@ -797,7 +1003,21 @@ function ActiveFilters({
 
 /** Süzgeç değişiminde anında görünen iskelet. */
 function ScreenerSkeleton() {
+  /* Özet paneli de iskelette (25 Ekim): yalnız tablo iskeleti basılınca
+     gelen özet (~420 piksel) tabloyu aşağı itiyordu. */
   return (
+    <>
+    <Panel>
+      <div className="flex min-h-12 items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
+        <Skeleton className="h-3 w-36" />
+        <Skeleton className="h-2.5 w-24" />
+      </div>
+      <div className={visual.summarySkeleton}>
+        <Skeleton className="h-4 w-full max-w-xl" />
+        <Skeleton className="h-4 w-2/3 max-w-md" />
+        <Skeleton className="mt-3 h-11 w-full" />
+      </div>
+    </Panel>
     <Panel>
       <div className="flex min-h-12 items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
         <Skeleton className="h-3 w-36" />
@@ -815,5 +1035,144 @@ function ScreenerSkeleton() {
         ))}
       </div>
     </Panel>
+    </>
+  );
+}
+
+/** Ölçünün satırdaki yazımı — tablo hücresiyle aynı biçim. */
+function formatMetric(row: Row, key: SortKey, locale: Locale): string {
+  const m = row.metrics;
+  switch (key) {
+    case "fk":
+      return formatRatio(row.fk, locale);
+    case "buyume":
+      return formatPercent(m.revenueGrowthTTMYoy, locale, 1);
+    case "marj":
+      return formatPercent(m.netProfitMarginTTM, locale, 1);
+    case "roe":
+      return formatPercent(m.roeTTM, locale, 1);
+    case "borc":
+      return formatRatio(m.debtToEquity !== null && m.debtToEquity >= 0 ? m.debtToEquity : null, locale);
+    default:
+      return row.cap ? formatMoneyCompact(row.cap, locale) : NO_VALUE;
+  }
+}
+
+/**
+ * Kart / tablo anahtarı (25 Ekim). "auto"da iki düğme de seçili GÖRÜNMEZ:
+ * hangisinin seçili olduğu ekrana bağlı ve onu CSS işaretliyor (telefonda
+ * kart, genişte tablo); `aria-current` yalnız açık seçimde.
+ */
+function ViewSwitch({
+  view,
+  paramsFor,
+  labels,
+}: {
+  view: ViewKey;
+  paramsFor: (over: ParamsOver) => string;
+  labels: Dictionary["toolVisuals"]["screener"];
+}) {
+  const items = [
+    { key: "kart" as const, label: labels.viewCards, Icon: SquaresFour },
+    { key: "tablo" as const, label: labels.viewTable, Icon: Rows },
+  ];
+  return (
+    <div className={visual.viewSwitch} role="group" aria-label={labels.viewLabel} data-view={view}>
+      {items.map(({ key, label, Icon }) => (
+        <Link
+          key={key}
+          href={paramsFor({ view: key })}
+          scroll={false}
+          className={visual.viewButton}
+          data-key={key}
+          aria-current={view === key ? "true" : undefined}
+        >
+          <Icon aria-hidden size={16} weight="bold" />
+          <span>{label}</span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * KART GÖRÜNÜMÜ (25 Ekim). Telefonda tablo dört sütuna sıkışıyor, marj/ROE/
+ * borç gizli kalıyordu; kart her hisseyi bir bakışta okutuyor: sıralanan
+ * ölçü büyük puntoyla ve evren içindeki yeriyle, öteki ölçüler altta ızgara,
+ * piyasa değeri büyüklük çubuğuyla. Kartın tamamı hissenin bağlantısı.
+ */
+function ScreenerCards({
+  rows,
+  sort,
+  auto,
+  peakCap,
+  laneOf,
+  sortLabels,
+  locale,
+  t,
+}: {
+  rows: Row[];
+  sort: SortKey;
+  auto: boolean;
+  peakCap: number;
+  laneOf: (row: Row) => { p: number; title: string } | null;
+  sortLabels: Record<SortKey, string>;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  /* Izgarada sıralanan ölçü tekrar edilmez; dört hücre her zaman dolu. */
+  const figures = (["fk", "buyume", "marj", "roe", "borc"] as SortKey[]).filter((key) => key !== sort).slice(0, 3);
+  return (
+    <ul className={cn(visual.cards, auto && visual.autoCards)} data-motion-stagger>
+      {rows.map((row) => {
+        const lane = laneOf(row);
+        const growth = row.metrics.revenueGrowthTTMYoy;
+        /* Yön rengi öznitelikle: modül CSS'i katmansız ve `text-up` gibi
+           yardımcıları eziyor (CLAUDE.md, Tailwind v4 katman notu). */
+        const growthDir = growth === null || growth === 0 ? undefined : growth > 0 ? "up" : "down";
+        return (
+          <li key={row.symbol}>
+            <Link href={`/hisse/${row.symbol}`} prefetch={false} className={visual.card}>
+              <span className={visual.cardHead}>
+                <LogoTile symbol={row.symbol} logoUrl={row.company.logoUrl} className="size-[34px]" />
+                <span className="min-w-0">
+                  <b className={visual.cardSymbol}>{row.symbol}</b>
+                  <span className={visual.cardName}>{row.company.name}</span>
+                </span>
+                <span className={visual.cardSector}>{sectorLabel(row.sector, locale) ?? row.sector}</span>
+              </span>
+              <span className={visual.cardMain}>
+                <span className={visual.cardLabel}>{sortLabels[sort]}</span>
+                <span className={cn("numeral", visual.cardValue)} data-dir={sort === "buyume" ? growthDir : undefined}>
+                  {formatMetric(row, sort, locale)}
+                </span>
+                {sort === "cap"
+                  ? row.cap
+                    ? <SizeBar ratio={row.cap / peakCap} className={visual.cardLane} />
+                    : null
+                  : lane && <UniverseLane position={lane.p} title={lane.title} className={visual.cardLane} />}
+              </span>
+              <span className={visual.cardFigures}>
+                {figures.map((key) => (
+                  <span key={key}>
+                    <span className={visual.cardLabel}>{sortLabels[key]}</span>
+                    <b className="numeral" data-dir={key === "buyume" ? growthDir : undefined}>
+                      {formatMetric(row, key, locale)}
+                    </b>
+                  </span>
+                ))}
+                {sort !== "cap" && (
+                  <span>
+                    <span className={visual.cardLabel}>{t.screener.colCap}</span>
+                    <b className="numeral">{formatMetric(row, "cap", locale)}</b>
+                    {row.cap ? <SizeBar ratio={row.cap / peakCap} className={visual.cardBar} /> : null}
+                  </span>
+                )}
+              </span>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

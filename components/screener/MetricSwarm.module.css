@@ -1,0 +1,82 @@
+/* Ölçü kümesi — gerekçe MetricSwarm.tsx başında. */
+.wrap { display: grid; gap: 8px; min-width: 0; }
+
+/* YÜKSEKLİK SABİT: sunucu karesi ile istemci karesi aynı kutuyu tutar. */
+.plot {
+  position: relative;
+  height: 132px;
+  border-radius: 12px;
+  touch-action: pan-y;
+  cursor: crosshair;
+}
+@media (min-width: 640px) { .plot { height: 168px; } }
+.plot:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 4px; }
+
+.axisLine { position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--line-soft); }
+.zero, .tick, .median, .universe { position: absolute; top: 0; bottom: 0; width: 0; translate: -0.5px 0; }
+.zero { border-left: 1px solid var(--line-strong); }
+.tick { border-left: 1px dashed var(--line); }
+.median { border-left: 2px solid var(--text-strong); opacity: .55; translate: -1px 0; }
+.universe { border-left: 1px dashed var(--text-muted); }
+
+/* Nokta: yumuşak mavi veri tonu; seçili nokta doygun etkileşim mavisi. */
+.dot {
+  position: absolute;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: var(--bar-soft);
+  box-shadow: 0 0 0 1px var(--surface-solid);
+  pointer-events: none;
+}
+.dot[data-clipped] { background: var(--surface-solid); box-shadow: inset 0 0 0 1.5px var(--primary-soft); }
+.dot[data-active] { background: var(--primary); box-shadow: 0 0 0 2px var(--surface-solid), 0 0 0 3.5px var(--primary); z-index: 2; }
+
+/* Sahneli giriş: noktalar soldan sağa, değerin sırasıyla bir kez açılır. */
+@media (prefers-reduced-motion: no-preference) {
+  .dot { animation: dot-in 520ms var(--ease-brand) calc(var(--t, 0) * 560ms) backwards; }
+}
+@keyframes dot-in { from { opacity: 0; scale: .2; } }
+
+.tip {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  gap: 2px;
+  min-width: 150px;
+  max-width: 220px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-solid);
+  box-shadow: var(--shadow-overlay);
+  translate: 14px -50%;
+  pointer-events: auto;
+}
+.tip[data-side="left"] { translate: calc(-100% - 14px) -50%; }
+.tip[data-side="top"] { width: 220px; translate: -50% calc(-100% - 14px); }
+.tipHead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; color: var(--text-strong); font-size: 14px; }
+.tipHead b { font-weight: 700; }
+.tipHead span { font-weight: 650; }
+.tipName { overflow: hidden; color: var(--text-muted); font-size: 12px; white-space: nowrap; text-overflow: ellipsis; }
+.tipLink {
+  display: none;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 4px;
+  color: var(--primary-ink);
+  font-size: 13px;
+  font-weight: 650;
+}
+/* Bağlantı yalnız dokunmatikte: imleçte nokta zaten satıra götürmüyor,
+   balon geçici; dokunuşta balon kalıyor ve oradan açılıyor. */
+@media (hover: none) { .tipLink { display: inline-flex; } }
+
+.axis { position: relative; display: flex; justify-content: space-between; color: var(--text-muted); font-size: 12px; }
+.tickLabel { position: absolute; top: 0; translate: -50% 0; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--text-body); font-size: 12.5px; font-weight: 600; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legendMedian, .legendUniverse { display: inline-block; width: 14px; height: 0; }
+.legendMedian { border-top: 2px solid var(--text-strong); opacity: .55; }
+.legendUniverse { border-top: 1px dashed var(--text-muted); }
+.note { color: var(--text-muted); font-size: 12.5px; line-height: 1.55; }

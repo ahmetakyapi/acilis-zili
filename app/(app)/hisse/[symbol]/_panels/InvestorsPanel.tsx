@@ -10,6 +10,8 @@ import { cn, formatEtDateMedium, formatMoneyCompact, formatPercent } from "@/lib
 import type { CSSProperties } from "react";
 import depth from "./depth.module.css";
 import { FoldToggle } from "@/components/ui/FoldToggle";
+import { ScaleBar } from "@/components/markets/CompareScale";
+import visuals from "./visuals.module.css";
 
 /**
  * "Ünlü Yatırımcılar" — bu hisseyi son bildirimlerinde tutan yatırımcılar
@@ -36,6 +38,14 @@ const FOLD_INSET = "18px";
 export function InvestorsPanel({ data, locale, t }: { data: StockInvestors; locale: Locale; t: Dictionary }) {
   const ti = t.investors;
   const holders = data.holders.slice(0, MAX_HOLDERS);
+  /* PORTFÖY PAYI ŞERİDİ (25 Ekim). "Portföyde %22,4" ile "Portföyde %0,3"
+     aynı puntoda yan yana duruyordu; biri yatırımcının en büyük bahsi,
+     öteki kenarda bir kalem. Şerit aynı sayıyı uzunluk olarak söylüyor.
+     Ölçek listedeki en büyük pay (künyede yazılı): mutlak %0–100 ölçeğinde
+     yüzde birlik paylar görünmez bir piksele iniyordu. Çıkılan pozisyonda
+     şerit yok — pay sıfır, "çıktı" yazıyor. Renk nötr: büyük pay iyi ya da
+     kötü değil (CompareScale → ScaleBar `neutral`). */
+  const peak = Math.max(0, ...holders.filter((h) => !h.exited).map((h) => h.weight));
   return (
     <Panel>
       <PanelHeader title={ti.panelTitle} action={<PanelLink href="/yatirimcilar">{ti.panelAll}</PanelLink>} />
@@ -79,10 +89,15 @@ export function InvestorsPanel({ data, locale, t }: { data: StockInvestors; loca
                         ? ti.panelExited
                         : ti.panelWeight.replace("{weight}", formatWeight(holder.weight, locale))}
                     </small>
+                    {!holder.exited && peak > 0 && (
+                      <ScaleBar ratio={holder.weight / peak} signed={false} className={visuals.weightBar} />
+                    )}
                   </span>
                   <span className={cn("numeral", styles.holderValue)}>
                     <b>{formatMoneyCompact(holder.value, locale)}</b>
-                    <small>{formatShares(holder.amount, locale)}</small>
+                    {/* Birim yazılı (25 Ekim son düzeltme): "228 Mn" tek başına
+                        dolar mı hisse mi okunmuyordu. */}
+                    <small>{t.stockVisuals.sharesUnit.replace("{n}", formatShares(holder.amount, locale))}</small>
                   </span>
                 </Link>
               </li>
@@ -90,6 +105,9 @@ export function InvestorsPanel({ data, locale, t }: { data: StockInvestors; loca
           })}
         </ul>
         </FoldToggle>
+        {peak > 0 && (
+          <p className={visuals.weightNote}>{t.stockVisuals.weightNote.replace("{max}", formatWeight(peak, locale))}</p>
+        )}
         </div>
       )}
       {data.trades.length > 0 && (

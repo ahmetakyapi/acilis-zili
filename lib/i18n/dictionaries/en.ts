@@ -10,8 +10,21 @@ import { daySignatureEn } from "./day-signature";
 import { earningsSeasonEn } from "./earnings-season";
 import { dailyChartEn } from "./daily-chart";
 import { probabilitiesEn } from "./probabilities";
+import { guideVisualsEn } from "./guide-visuals";
+import { glossaryVisualsEn } from "./glossary-visuals";
+import { taxVisualsEn } from "./tax-visuals";
+import { portfolioAnalysisVisualsEn } from "./portfolio-analysis-visuals";
 import { changelogEn } from "./changelog";
 import { stockEntryEn } from "./stock-entry";
+import { briefLedgerEn } from "./brief-ledger";
+import { macroVisualEn } from "./macro-visual";
+import { stockVisualsEn } from "./stock-visuals";
+import { calendarVisualsEn } from "./calendar-visuals";
+import { personalVisualsEn } from "./personal-visuals";
+import { analysisVisualsEn } from "./analysis-visuals";
+import { brokerCardsEn } from "./broker-cards";
+import { feedVisualsEn } from "./feed-visuals";
+import { toolVisualsEn } from "./tool-visuals";
 
 const en: typeof tr = {
   brand: {
@@ -3635,7 +3648,7 @@ const en: typeof tr = {
       returnLabel: "Verified Return",
       returnHint: "Computed by the site from recorded buy dates.",
       spyLabel: "SPY Over the Same Span",
-      spyHint: "If the same amounts had gone into SPY on the same days.",
+      spyHint: "If the same amounts had gone into SPY in the same months.",
       weightsTitle: "Weights",
       sectorsTitle: "Sector Mix",
       otherSector: "Other",
@@ -3692,32 +3705,84 @@ const en: typeof tr = {
   },
   bellReport: {
     title: "Bell Report",
-    intro: "{name}, a record of your time on Opening Bell — every number comes from your own data, none is an estimate.",
-    days: "days",
-    memberTitle: "Membership",
-    memberLine: "You've been here since {date}; in that time New York opened and closed {sessions} sessions.",
-    sessionsNote: "Sessions are counted with the NYSE holiday calendar; half days count as sessions.",
-    symbols: "symbols",
-    watchTitle: "What You Follow",
-    watchLine: "Companies you watch across {lists} lists.",
-    watchLineOne: "Companies you watch in a single list.",
-    alertsTitle: "Alerts",
-    alertsLine: "Alerts you set that reached their mark: price targets and daily change thresholds together.",
+    subtitle: "A summary of your record on Opening Bell; every number comes from your own data, none is an estimate.",
+    memberLine: "You've been a member since {date}; New York opened and closed {sessions} sessions in that time.",
+    moodRing: "The bell is ringing: what you follow, set up and write is all on one page below.",
+    moodWait: "The bell is awake: the first step is taken, and the What's Next panel shows what's missing.",
+    moodSleep: "The bell is asleep: no lists, alerts or portfolio yet; start from the What's Next panel.",
+    figuresLabel: "Report Figures",
+    memberLabel: "Membership",
+    memberValue: "{n} Days",
+    memberSub: "Since {date}",
+    sessionsLabel: "Sessions Passed",
+    sessionsSub: "Weekly · NYSE Calendar",
+    watchLabel: "Following",
+    watchValue: "{n} Symbols",
+    watchSubOne: "In One List",
+    watchSub: "Across {n} Lists",
+    returnLabel: "Portfolio Return",
+    returnSubSpy: "SPY {spy}",
+    returnSub: "On Cost",
+    youShort: "You",
+    alertsLabel: "Alerts Rung",
+    /* Bölünmez boşluk: oran satır sonunda "3 /" ile "5" diye kopmasın. */
+    alertsValue: "{hit}\u00a0/\u00a0{total}",
+    alertsSub: "Of Those Set",
+    postsLabel: "Posts",
+    postsSub: "Live in the Community",
+    sessionsNote: "Sessions are counted with the NYSE holiday calendar; half days count as sessions. The day count includes the day you joined.",
     portfolioTitle: "Your Portfolio",
-    portfolioLine: "Your return, computed by the site from recorded buy dates.",
-    portfolioLineSpy: "Your return from recorded buy dates; the same amounts in SPY on the same days would be {spy}.",
-    best: "Best Position",
-    worst: "Weakest Position",
-    portfolioNote: "In USD, excluding dividends; no amounts shown. Same computation as your profile showcase. Not investment advice.",
-    posts: "posts",
-    postsTitle: "What You Wrote",
-    postsLine: "Your posts live in the community.",
+    portfolioMeta: "{n} Symbols · Since {month}",
+    portfolioMetaOne: "1 Symbol · Since {month}",
+    yoursLabel: "Your Return",
+    spyLabel: "SPY in the Same Months",
+    gapAhead: "You are {gap} points ahead of what the same amounts in SPY in the same months would have returned.",
+    gapBehind: "You are {gap} points behind what the same amounts in SPY in the same months would have returned.",
+    gapLevel: "You are level with what the same amounts in SPY in the same months would have returned.",
+    noSpy: "The SPY comparison couldn't be built; the return comes from your own buys only.",
+    extremesTitle: "Extremes",
+    mostGain: "Top Gainer",
+    leastGain: "Smallest Gain",
+    leastLoss: "Smallest Loss",
+    mostLoss: "Biggest Loss",
+    flat: "Flat",
+    portfolioNote: "The return is computed by the site from your recorded buy dates; in USD, excluding dividends. Amounts, share counts and cost are never shown; same computation as your profile showcase. Not investment advice.",
+    spyPartial: "The SPY comparison covers {pct}% of cost; buys older than the series can't enter it.",
+    excluded: "{n} positions had no current price; the return was built without them.",
+    toPortfolio: "Go to Portfolio",
+    watchTitle: "What You Follow",
+    watchMeta: "{n} Symbols · {lists} Lists",
+    watchMore: "+{n} Symbols",
+    watchHint: "Most recently added first; each symbol opens its own page.",
+    toWatchlists: "Go to Lists",
+    alertsTitle: "Your Alerts",
+    alertsLine: "{hit} of your {total} alerts rang; {waiting} still waiting.",
+    alertsLineAll: "All {total} alerts you set have rung.",
+    alertsLineNone: "None of the {total} alerts you set has rung yet.",
+    alertsNote: "Price targets and daily change thresholds are counted together; each alert rings once and stops.",
+    toAlerts: "Go to Alerts",
+    postsTitle: "Your Posts",
+    postsMeta: "{n} Posts",
+    postsMetaOne: "1 Post",
+    toPosts: "See All",
     nextTitle: "What's Next",
-    nextLine: "Your profile is private for now; open it and part of this journey becomes visible to others.",
-    nextLinePublic: "Your profile is public; your posts and the blocks you chose live there.",
+    nextPublic: "Your profile is public; your posts and the blocks you chose live there.",
+    nextPrivate: "Your profile is private for now; open it and the parts of this record you choose become visible to others.",
     toProfile: "Go to Your Profile",
-    toWrite: "Write a Post",
-    toScreener: "Stock Screener",
+    stepWatch: "Build a Watchlist",
+    stepWatchHint: "Companies you follow show up here with their logos.",
+    stepAlert: "Set an Alert",
+    stepAlertHint: "A price or daily change threshold; the ones that ring are counted here.",
+    stepPortfolio: "Add Your Portfolio",
+    stepPortfolioHint: "Your return is measured side by side with SPY over the same months.",
+    stepWrite: "Write a Post",
+    stepWriteHint: "Posts published in the community are listed here.",
+    memberValueOne: "{n} Day",
+    watchValueOne: "{n} Symbol",
+    watchMetaOneList: "{n} Symbols · 1 List",
+    alertsLineOneWaiting: "The one alert you set hasn't rung yet.",
+    alertsLineOneRang: "The one alert you set has rung.",
+    privateNote: "This report is visible only to you and has no share link; you choose what others see from your profile.",
   },
   community: {
     feed: {
@@ -4205,8 +4270,77 @@ const en: typeof tr = {
   changelog: changelogEn,
   /* Şirket ekranlarının kısa yolları (25 Ekim UX turu) — metin ayrı dosyada. */
   stockEntry: stockEntryEn,
+  /* Teknik analiz görselleri (25 Ekim) — Türkçesinin yanında gerekçe. */
+  technicalVisuals: {
+    atlasTitle: "{n} Stocks, One Map",
+    atlasLabel: "Map of every plan on a shared scale",
+    sentenceZoneSome: "Price sits inside the entry zone in {n} of {total} buy plans",
+    sentenceZoneNone: "Price sits inside the entry zone in none of the {total} buy plans",
+    sentenceNearOne: "{n} is within 1% of it",
+    sentenceNearMany: "{n} are within 1% of it",
+    sentenceStopOne: "{n} is within 3% of its stop",
+    sentenceStopMany: "{n} are within 3% of their stop",
+    sentenceStopNone: "none is within 3% of its stop",
+    sentenceBelowOne: "{n} trades below its stop",
+    sentenceBelowMany: "{n} trade below their stop",
+    scaleNote: "Each row uses its own plan as the scale: stop is 0, first target is 1. Rows are sorted by where price sits in the plan.",
+    priceBasis: "Price",
+    legendZone: "Entry Zone",
+    legendPrice: "Price",
+    legendSnapshot: "Price at Analysis",
+    legendStop: "Stop",
+    legendTarget: "Target",
+    legendLevel: "Support / Resistance",
+    axisStop: "Stop",
+    axisTarget: "Target 1",
+    axisSupport: "Support",
+    axisSell: "Sell Level",
+    columnPlan: "vs. Zone",
+    columnLevels: "vs. Level",
+    sellScaleNote: "Sell calls carry no entry plan: 0 is the nearest support, 1 the nearest sell level.",
+    inZone: "In Zone",
+    belowStop: "Below Stop",
+    noLevels: "No levels to draw in this edition",
+    noPlan: "No entry plan in this edition",
+    details: "Details",
+    openPlan: "Open Plan",
+    hint: "Hover a row to see its details here.",
+    distanceStop: "To Stop",
+    distanceSell: "To Sell Level",
+    distanceSupport: "To Support",
+    railTitle: "Scenarios on the Price Axis",
+    railBullTrigger: "Upside Trigger",
+    railBearTrigger: "Downside Trigger",
+    railNearestResistance: "Nearest Resistance",
+    railNearestSupport: "Nearest Support",
+    railRatio: "Up / Down",
+    railPath: "Next Stops",
+    railNote: "Levels come from the scenario text; only figures that match a recorded level are drawn. Distances are measured from the price above the rail.",
+  },
+  /* Bültenin Kayıt Defteri bandı (25 Ekim görsel zirve) — metin ayrı dosyada. */
+  briefLedger: briefLedgerEn,
+  macroVisual: macroVisualEn,
+  /* Hisse sayfası ve kural kontrolünün görsel katmanı (25 Ekim) — metin ayrı dosyada. */
+  stockVisuals: stockVisualsEn,
+  /* Takvim görselleri (25 Ekim görsel turu) — metin ayrı dosyada. */
+  calendarVisuals: calendarVisualsEn,
+  /* Kişisel ekranların görsel turu (25 Ekim) — metin ayrı dosyada. */
+  personalVisuals: personalVisualsEn,
   /* Olasılıklar (25 Ekim) — metin ayrı dosyada. */
   probabilities: probabilitiesEn,
+  /* Bilanço karnesinin görsel turu (25 Ekim) — metin ayrı dosyada. */
+  analysisVisuals: analysisVisualsEn,
+  /* Aracı kurum kartları ve yan yana karşılaştırma (25 Ekim görsel turu) — metin ayrı dosyada. */
+  brokerCards: brokerCardsEn,
+  /* Öğrenme ve hesap araçlarının görsel turu (25 Ekim) — metin ayrı dosyalarda. */
+  guideVisuals: guideVisualsEn,
+  glossaryVisuals: glossaryVisualsEn,
+  taxVisuals: taxVisualsEn,
+  portfolioAnalysisVisuals: portfolioAnalysisVisualsEn,
+  /* Akış ve liste ekranlarının görsel turu (25 Ekim) — metin ayrı dosyada. */
+  feedVisuals: feedVisualsEn,
+  /* Araç ekranlarının görsel turu (25 Ekim) — metin ayrı dosyada. */
+  toolVisuals: toolVisualsEn,
 };
 
 export default en;

@@ -13,6 +13,11 @@ import { ThemeTable } from "@/components/themes/ThemeTable";
 import { ThemeTreemap } from "@/components/themes/ThemeTreemap";
 import styles from "@/components/themes/Themes.module.css";
 import { HeatLegend, LogoGroup } from "@/components/themes/ThemeVisuals";
+import { ThemeTimelineChart, type ThemeTimelineView } from "@/components/themes/ThemeTimelineChart";
+import { evenTicks } from "@/lib/duo-chart";
+import { gapVerdict } from "@/lib/return-timeline";
+import { THEME_TIMELINE_RANGES, type ThemeTimelineRange } from "@/lib/theme-timeline";
+import { loadThemeTimeline } from "@/lib/theme-timeline-data";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import {
   ButtonLink,
@@ -259,7 +264,7 @@ async function LiveStamp({ slug, locale, t }: { slug: string; locale: Locale; t:
 }
 
 async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t: Dictionary }) {
-  const { rows, moves, phase, benchmark, quotesResult, quotes, names, status } = await loadTheme(slug);
+  const { theme, rows, moves, phase, benchmark, quotesResult, quotes, names, status } = await loadTheme(slug);
 
   /* İlk dört, piyasa değerine göre — karşılaştırma ekranının sembol sınırı. */
   const compareSet = rows.slice(0, MAX_COMPARE_SYMBOLS).map((row) => row.symbol);
@@ -362,6 +367,22 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
         }}
       />
 
+      {/* ZAMAN İÇİNDE (25 Ekim): ölçü ızgarası bugünü söylüyor; çizgi
+          temanın 1A/3A/YBB seyrini ölçüt fonuyla. Ana görsel harita,
+          ikinci görsel ölçü ızgarasının altında (CLAUDE.md ekran düzeni 3).
+          Barlar ayrı istek: kendi Suspense'inde, iskelet aynı boyda. */}
+      {rows.length >= 2 && (
+        <Suspense fallback={<TimelineSkeleton title={t.personalVisuals.themeChart.title} />}>
+          <ThemeTimeline
+            symbols={rows.map((row) => row.symbol)}
+            benchmark={benchmark ? { symbol: benchmark.symbol } : null}
+            path={`/tema/${slug}`}
+            title={themeTitle(theme, locale)}
+            locale={locale}
+            t={t}
+          />
+        </Suspense>
+      )}
       <Panel>
         <PanelHeader title={t.themes.tableTitle} />
         {rows.length > 0 ? (
@@ -396,6 +417,118 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
         )}
       </Panel>
     </>
+  );
+}
+
+/** Gün etiketi: okuma kartında tam tarih, eksende kısa. */
+function timelineDay(day: string, locale: Locale, style: "card" | "axis" | "month") {
+  return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    timeZone: "UTC",
+    ...(style === "card"
+      ? { day: "numeric", month: "short", year: "numeric" }
+      : style === "axis"
+        ? { day: "numeric", month: "short" }
+        : { month: "short" }),
+  }).format(new Date(`${day}T12:00:00Z`));
+}
+
+/**
+ * Temanın zaman çizgisi — üç aralık sunucuda kuruluyor, istemci yalnız
+ * seçiyor (gerekçe lib/theme-timeline-data.ts). Cümle ve künyeler burada,
+ * şablon + veri; uydurma yok.
+ */
+async function ThemeTimeline({
+  symbols,
+  benchmark,
+  path,
+  title,
+  locale,
+  t,
+}: {
+  symbols: string[];
+  benchmark: { symbol: string } | null;
+  path: string;
+  title: string;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const L = t.personalVisuals.themeChart;
+  const data = await loadThemeTimeline([...symbols].sort().join(","), benchmark?.symbol ?? null);
+  const views = {} as Record<ThemeTimelineRange, ThemeTimelineView | null>;
+  for (const range of THEME_TIMELINE_RANGES) {
+    const series = data?.[range];
+    if (!series || series.points.length < 2) {
+      views[range] = null;
+      continue;
+    }
+    const days = series.points.map((p) => p.day);
+    const last = series.points[series.points.length - 1];
+    const pct = (value: number) => formatPercent(value, locale, 1);
+    const verdict = gapVerdict(last.median, last.bench);
+    const sentence = (verdict === "none" ? L.solo : L[verdict])
+      .replace("{range}", t.chart.rangeLabels[range])
+      .replace("{median}", pct(last.median))
+      .replace("{bench}", benchmark?.symbol ?? "")
+      .replace("{benchPct}", last.bench === null ? "" : pct(last.bench))
+      .replace("{gap}", last.bench === null ? "" : formatPrice(Math.abs(last.median - last.bench), locale, { digits: 1 }));
+    views[range] = {
+      points: series.points.map((p) => ({
+        label: timelineDay(p.day, locale, "card"),
+        a: p.median,
+        b: p.bench,
+        notes: [
+          ...(p.best ? [{ label: L.best.replace("{symbol}", p.best.symbol), value: p.best.pct }] : []),
+          ...(p.worst && p.worst.symbol !== p.best?.symbol
+            ? [{ label: L.worst.replace("{symbol}", p.worst.symbol), value: p.worst.pct }]
+            : []),
+        ],
+      })),
+      axis: evenTicks(days.length, 4).map((index) => ({
+        index,
+        label: timelineDay(days[index], locale, range === "YTD" ? "month" : "axis"),
+      })),
+      sentence,
+      excluded: series.excluded.length > 0 ? L.excluded.replace("{symbols}", series.excluded.join(", ")) : null,
+    };
+  }
+  if (THEME_TIMELINE_RANGES.every((range) => views[range] === null)) {
+    return (
+      <Panel>
+        <PanelHeader title={L.title} />
+        <p className="border-t border-line px-4 py-4 text-small text-muted sm:px-5">{L.unavailable}</p>
+      </Panel>
+    );
+  }
+  return (
+    <Panel id="zaman" className="flex scroll-mt-28 flex-col gap-3 px-4 py-4 sm:px-5">
+      <ThemeTimelineChart
+        views={views}
+        path={path}
+        benchName={benchmark?.symbol ?? null}
+        medianName={L.median}
+        title={L.title}
+        rangeLabel={L.rangeLabel}
+        ranges={{ "1M": t.chart.ranges["1M"], "3M": t.chart.ranges["3M"], YTD: t.chart.ranges.YTD }}
+        rangeLongs={{ "1M": t.chart.rangeLabels["1M"], "3M": t.chart.rangeLabels["3M"], YTD: t.chart.rangeLabels.YTD }}
+        announce={L.announce}
+        chartLabels={{ gap: L.gap, points: L.points, hint: L.hint }}
+        chartTitle={L.chartLabel.replace("{title}", title)}
+        locale={locale}
+      />
+      {/* Künye panelin İÇİNDE, hairline ile (ekran düzeni 6). */}
+      <p className="border-t border-line pt-3 text-small leading-relaxed text-muted">{L.lead}</p>
+    </Panel>
+  );
+}
+
+function TimelineSkeleton({ title }: { title: string }) {
+  return (
+    <Panel aria-busy className="flex flex-col gap-3 px-4 py-4 sm:px-5">
+      <h2 className="display-ink display-ink-tight w-fit text-read font-bold">{title}</h2>
+      <Skeleton className="h-6 w-3/4" />
+      <Skeleton className="h-[200px] w-full" />
+      <Skeleton className="h-4 w-1/2" />
+    </Panel>
   );
 }
 

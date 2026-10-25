@@ -1,7 +1,7 @@
 import { ArrowUpRight, CaretDown, CaretUp } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile } from "@/components/ui/primitives";
-import { verdictLabel, verdictOf, verdictPillClass, type VerdictKey } from "@/lib/analysis";
+import { verdictLabel, verdictOf, verdictPillClass, verdictTextClass, type VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { Quote } from "@/lib/providers/types";
 import type { TechnicalAnalysisRow } from "@/lib/schema";
@@ -28,9 +28,10 @@ import { PlanRail } from "./PlanRail";
 import { PlanStrip } from "./PlanStrip";
 import styles from "./Technical.module.css";
 
-/** Değişim rozetinin rengi — yeni görüşün rengi. */
+/** Değişim rozetinin rengi — yeni görüşün rengi, tek kaynaktan (25 Ekim:
+ *  TUT mavi değil pirinç; gerekçe `verdictTextClass`, lib/analysis.ts). */
 export function changeToneClass(verdict: VerdictKey): string {
-  return verdict === "buy" ? "text-up" : verdict === "sell" ? "text-down" : "text-primary-ink";
+  return verdictTextClass(verdict);
 }
 
 /** Plan konumunun etiketi; uzaklık işaretsiz, yönü cümle söylüyor. */
@@ -221,7 +222,9 @@ export function TechnicalCard({
           rayı, gerekçe cümlesi ve gösterge şeridi bu anahtarla açılıyor;
           kartın tamamı zaten detay sayfasına gidiyor. JS'siz onay kutusu
           (`FoldToggle` ile aynı gerekçe: satırlar sunucuda, ilk karede son
-          hâlinde). 640 ve üstünde anahtar yok, kart olduğu gibi. */}
+          hâlinde). 640 ve üstünde anahtar yok, kart olduğu gibi.
+          25 Ekim: risk rayı katlamadan çıktı, her genişlikte açık —
+          gerekçe CSS'te (`.card:has(... :not(:checked))`). */}
       <input type="checkbox" id={`kart-${row.symbol}`} className={cn("sr-only", styles.cardFoldInput)} />
       <div className={styles.cardHead}>
         {/* Kimlik balonu 22 Eylül'de dağılım logolarına taşındı: kart

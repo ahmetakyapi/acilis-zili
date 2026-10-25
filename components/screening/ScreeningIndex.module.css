@@ -1,0 +1,123 @@
+/* /hisse-secimi giriş sayfası — kural kartları ve puan kulvarı.
+   Gerekçe ScreeningIndex.tsx başında. Görüş renkleri (güncel karar):
+   güçlü/değer yeşil, karışık pirinç, zayıf/elenen kırmızı. */
+
+.dot[data-band="strong"], .dot[data-band="worth"] { --band: var(--up); }
+.dot[data-band="mixed"] { --band: var(--brass); }
+.dot[data-band="weak"], .dot[data-band="eliminated"] { --band: var(--down); }
+.dot[data-band="limited"] { --band: var(--text-muted); }
+
+/* Kapaktaki ağırlık çubukları: büyüklük → yumuşak mavi (pirinç bir görüş
+   rengi; ağırlık bir görüş değil). Screening.module.css'teki kural paylaşılan
+   dosyada, burada daha özgül seçiciyle eziliyor. */
+.weights span[data-total] { background: var(--bar-soft); }
+
+/* ---- Kural kartları ---- */
+.rules { display: grid; gap: 12px; padding: 4px 16px 18px; }
+@media (min-width: 700px) { .rules { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 4px 20px 20px; } }
+@media (min-width: 1100px) { .rules { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 4px 24px 24px; } }
+.rule {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  background: var(--surface-sunken);
+}
+/* Eleme bir KAPI: tam genişlik, kuralları yan yana. */
+.rule[data-gate] { grid-column: 1 / -1; background: var(--primary-tint); border-color: var(--primary-wash); }
+@media (min-width: 700px) {
+  .rule[data-gate] { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 28px; }
+  .rule[data-gate] .ruleHead { grid-column: 1 / -1; }
+  .rule[data-gate] .list { grid-template-columns: repeat(3, minmax(0, 1fr)); align-self: start; margin-top: 0; }
+}
+.ruleHead { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+.icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--primary-wash);
+  color: var(--primary-ink);
+}
+.ruleTitle { display: grid; gap: 1px; min-width: 0; }
+.ruleTitle h3 { justify-self: start; color: var(--text-strong); font-size: 16px; font-weight: 650; }
+.ruleTitle span { color: var(--text-muted); font-size: 12.5px; }
+.why { color: var(--text-body); font-size: 13.5px; line-height: 1.6; }
+.list { display: grid; gap: 8px; margin-top: 2px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.list li { display: grid; gap: 1px; color: var(--text-muted); font-size: 13px; line-height: 1.5; }
+.list b { color: var(--text-strong); font-weight: 600; }
+
+.ring { position: relative; display: grid; place-items: center; width: 44px; height: 44px; }
+.ring svg { position: absolute; inset: 0; width: 100%; height: 100%; rotate: -90deg; }
+.ringTrack { fill: none; stroke: var(--line-soft); stroke-width: 4; }
+.ringFill { fill: none; stroke: var(--bar-soft); stroke-width: 4; stroke-linecap: round; }
+.ring b { color: var(--text-strong); font-size: 13px; font-weight: 700; }
+
+/* ---- Puan kulvarı ---- */
+.lane { display: grid; gap: 10px; margin: 0 16px 6px; padding: 4px 0 16px; border-bottom: 1px solid var(--line-soft); }
+@media (min-width: 900px) { .lane { margin: 0 24px 8px; } }
+.laneHead { display: grid; gap: 2px; color: var(--text-strong); font-size: 14px; font-weight: 650; }
+.laneHint { color: var(--text-muted); font-size: 12.5px; font-weight: 450; line-height: 1.5; }
+.laneTrack { --rail-top: 78px; position: relative; height: calc(var(--rail-top) + 42px); margin: 0 10px; }
+@media (max-width: 639.98px) { .laneTrack { --rail-top: 96px; } }
+.rail { position: absolute; left: 0; right: 0; top: var(--rail-top); height: var(--lane-h, 5px); border-radius: 999px; background: var(--line-soft); }
+.notch { position: absolute; top: calc(var(--rail-top) - 8px); bottom: 0; width: 0; border-left: 1px dashed var(--line-strong); }
+.notchValue, .notchLabel { position: absolute; left: 0; translate: -50% 0; white-space: nowrap; color: var(--text-muted); font-size: 11.5px; }
+.notchValue { top: 18px; font-weight: 650; }
+.notchLabel { top: 33px; }
+@media (max-width: 639.98px) { .notchLabel { display: none; } }
+.dot {
+  position: absolute;
+  top: calc(var(--rail-top) + 2.5px);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--band);
+  box-shadow: 0 0 0 2px var(--surface-solid);
+  translate: -50% -50%;
+}
+.dotLabel {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 4px + var(--row-offset, 0px));
+  translate: -50% 0;
+  color: var(--text-strong);
+  font-size: 11.5px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.dotLabel::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  height: var(--row-offset, 0px);
+  border-left: 1px solid var(--line);
+}
+@media (min-width: 640px) {
+  .dot[data-row="1"] { --row-offset: 16px; }
+  .dot[data-row="2"] { --row-offset: 32px; }
+  .dot[data-row="3"] { --row-offset: 48px; }
+}
+@media (max-width: 639.98px) {
+  .dot[data-row-phone="1"] { --row-offset: 15px; }
+  .dot[data-row-phone="2"] { --row-offset: 30px; }
+  .dot[data-row-phone="3"] { --row-offset: 45px; }
+  .dot[data-row-phone="4"] { --row-offset: 60px; }
+}
+.laneEnds { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 11.5px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .dot { animation: lane-dot 560ms var(--ease-brand) calc(200ms + var(--i, 0) * 30ms) backwards; }
+}
+@keyframes lane-dot { from { opacity: 0; scale: .3; } }
+
+/* Hızlı bakış iskeleti — gerçek kulvar ve kart ölçüleriyle (gerekçe page.tsx). */
+.laneSkeleton { display: grid; align-content: start; gap: 8px; height: 257px; margin: 0 16px 6px; padding-top: 4px; border-bottom: 1px solid var(--line-soft); }
+@media (min-width: 640px) { .laneSkeleton { height: 220px; } }
+@media (min-width: 900px) { .laneSkeleton { margin: 0 24px 8px; } }
+.cardSkeleton { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 95px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; }

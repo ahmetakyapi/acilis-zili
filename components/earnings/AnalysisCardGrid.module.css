@@ -1,0 +1,219 @@
+/* Analiz karne kartları (25 Ekim görsel zirve). Derinlik tonla; renk yalnız
+   tepki ve beklenti karnesinin işaretinde. Giriş bir kez, kartlar 28 ms
+   arayla yalnız opaklık + 6 piksel; hareketi azaltana son kare. */
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 640px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface-solid);
+  transition: border-color 160ms, background-color 160ms;
+}
+
+.card:hover { border-color: var(--line-strong); }
+.card:focus-within { border-color: var(--line-focus); background: var(--surface-elevated); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .card { animation: card-in 420ms var(--ease-brand) backwards; animation-delay: calc(var(--i) * 28ms); }
+}
+
+@keyframes card-in { from { opacity: 0; translate: 0 6px; } }
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.identity {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.symbol {
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+/* Bağlantı kartın tamamını kaplıyor; adı kısa ("META · 3Ç 2026 analizini aç"). */
+.link::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  content: "";
+}
+
+.link:focus-visible { outline: none; }
+.link:focus-visible::after { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+
+.company {
+  overflow: hidden;
+  font-size: var(--text-tiny);
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.verdict {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.verdictText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.verdictText > span {
+  font-size: var(--text-nano);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.verdictText > b {
+  /* Renk burada YOK: görüş üçlüsü sınıfla gelir (`verdictTextClass`);
+     katmansız modül kuralı Tailwind sınıfını ezerdi. */
+  font-size: var(--text-read);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.reaction {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: 6px 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.metricLabel {
+  font-size: var(--text-tiny);
+  font-weight: 600;
+  color: var(--text-body);
+}
+
+.reactionValue {
+  justify-self: end;
+  font-size: var(--text-read);
+  font-weight: 700;
+}
+
+.muted {
+  justify-self: end;
+  font-size: var(--text-tiny);
+  color: var(--text-muted);
+}
+
+/* Sıfır ortada; kulvar ince, sıfır çizgisi koyu (sitenin grafik dili). */
+.strip {
+  position: relative;
+  grid-column: 1 / -1;
+  display: block;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line-soft);
+}
+
+.strip::after {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  left: 50%;
+  width: 1px;
+  background: var(--line-strong);
+  content: "";
+}
+
+.stripFill {
+  position: absolute;
+  inset-block: 0;
+  border-radius: 999px;
+  background: var(--up);
+}
+
+.stripFill[data-tone="down"] { background: var(--down); }
+
+.scorecard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.scorecard > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scorecard dt {
+  font-size: var(--text-nano);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.scorecard dd {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 700;
+}
+
+.date {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+  font-size: var(--text-tiny);
+  color: var(--text-muted);
+}
+
+/* Görünüm seçici */
+.toggle {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.toggle button {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--text-body);
+  transition: background-color 160ms, color 160ms;
+}
+
+.toggle button:hover { color: var(--text-strong); }
+.toggle button[aria-pressed="true"] { background: var(--surface-solid); color: var(--text-strong); border-color: var(--line); }
+
+@media (pointer: coarse) { .toggle button { min-height: 44px; } }

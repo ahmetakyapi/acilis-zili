@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { INDEX_EVENT, type IndexTickerPatch } from "@/components/today/index-event";
 import { Pause, Play } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/lib/utils";
+import { FRAME_MAX } from "./frame";
 
 /**
  * Alt bilgi şeridi — her ekranın en altında duran ince bant.
@@ -313,9 +314,12 @@ export function MarketTicker({
              GÖRÜNDÜĞÜ eşikle aynı, `WIDE_QUERY` ise 640. Yani şerit
              göründüğü her an zaten `wide` ve sayfa başına dört endeks
              basıyor; "aralık büyümüş ama öğe de çoğalmış" diye bir bant yok.
-             1280'den sonra kap 1400'de sabitlendiği için aralık 40'a
-             çıkıyor; orada pay 260 pikselin altına hiç inmiyor. */
-          "mx-auto flex h-9 max-w-[1400px] items-center gap-3 overflow-hidden px-[18px] text-small motion-reduce:transition-none sm:gap-5 sm:px-6 sm:text-base lg:gap-8 xl:gap-10 xl:px-10",
+             1280'den sonra aralık 40'a çıkıyor; kap 1400'den başlayıp geniş
+             ekranda büyüdüğü için (`frame.ts`) pay 260 pikselin altına hiç
+             inmiyor. */
+          "mx-auto flex h-9 items-center gap-3 overflow-hidden px-[18px] text-small motion-reduce:transition-none sm:gap-5 sm:px-6 sm:text-base lg:gap-8 xl:gap-10 xl:px-10",
+          /* Eni içerik çerçevesiyle aynı sabitten (`./frame.ts`, geniş ekran). */
+          FRAME_MAX,
           /* TABELA GİBİ DÖNÜYOR (26 Eylül). Gruplar yerinde soluklaşıp
              yeniden yanıyordu; şimdi eski grup yukarı kayıp sönüyor, yenisi
              aşağıdan geliyor — kalkış tabelasının satır değiştirmesi. İki

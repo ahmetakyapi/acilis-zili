@@ -11,6 +11,7 @@ import {
 import { cn, formatEtDateCompact, formatPrice, NO_VALUE } from "@/lib/utils";
 import { changeToneClass } from "./TechnicalCard";
 import styles from "./Technical.module.css";
+import visuals from "./TechnicalVisuals.module.css";
 
 /* Çok dar bir bölge (tek fiyat ya da ölçeğin binde biri) çizgide kaybolmasın. */
 const MIN_ZONE_PCT = 1.5;
@@ -114,8 +115,10 @@ export function PlanHistory({
                       {/* Bölge kapsülü soldan çizilir, stop çentiği yerine
                           oturur (14 Ekim) — sayfadaki öteki karşılaştırma
                           çubuklarıyla aynı giriş dili. */}
-                      <span className={styles.historyTrack} data-verdict={stance}>
-                        {zone && <b data-motion-draw="line" style={{ left: `${zoneLeft}%`, width: `${zoneWidth}%` }} />}
+                      {/* Bölge Tek Harita'daki bantla aynı sınıf (`zoneBand`): bir fiyat
+                          aralığı, görüşün rengi değil (25 Ekim). */}
+                      <span className={styles.historyTrack}>
+                        {zone && <b className={visuals.zoneBand} data-motion-draw="line" style={{ left: `${zoneLeft}%`, width: `${zoneWidth}%` }} />}
                         {entry.stop !== null && <i className="spark-dot" style={{ left: `${pct(entry.stop)}%` }} />}
                       </span>
                     </td>

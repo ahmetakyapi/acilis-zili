@@ -51,7 +51,8 @@ import {
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import { cn, directionOf, directionText, formatPrice, isValidSymbol } from "@/lib/utils";
-import { BracketTable, DividendMeter, Flow, ResultPreview, Rolling, TaxRange, VerdictBadge, type FlowStep, type Verdict } from "./TaxResult";
+import { BracketTable, DividendMeter, ResultPreview, Rolling, TaxRange, VerdictBadge, Waterfall, type Verdict, type WaterfallStep } from "./TaxResult";
+import { waterfallOf, type Waterfall as WaterfallGeometry } from "@/lib/tax-waterfall";
 import type { ImportPayload } from "./StatementImport";
 import { PANEL_TITLE, TAX_EXAMPLE, type DividendRow, type TradeRow } from "./tax-ui";
 import styles from "./Tax.module.css";
@@ -91,6 +92,7 @@ const StatementImport = dynamic(() => import("./StatementImport").then((m) => m.
  */
 
 export type TaxLabels = Dictionary["lira"]["tax"];
+export type TaxVisualLabels = Dictionary["taxVisuals"];
 
 type Tab = "sale" | "dividend";
 
@@ -144,6 +146,7 @@ export function TaxCalculator({
   indexAuto,
   today,
   years,
+  visuals,
 }: {
   labels: TaxLabels;
   locale: Locale;
@@ -156,6 +159,8 @@ export function TaxCalculator({
    * (lib/tax-data.ts → getTaxYears). Sunucu çözüyor, prop olarak geliyor.
    */
   years: Record<number, TaxYearRules>;
+  /** Şelale ve dilim bandının metni (`taxVisuals` ad alanı). */
+  visuals: TaxVisualLabels;
 }) {
   const yearList = taxYearList(years);
   const reduced = useMotionPreference();
@@ -761,14 +766,16 @@ export function TaxCalculator({
   /* ---- Satış sonucu ---- */
   const saleReady = complete.length > 0;
   const saleVerdict: Verdict = !saleReady ? "wait" : totals.gainTl > 0 ? "yes" : "no";
-  const flowSteps = buildFlow({
+  const flow = buildFlow({
     labels,
+    visuals,
     locale,
     results: complete,
     rawCostTl,
     taxCostTl: totals.costTl,
     proceedsTl: totals.proceedsTl,
     gainTl: totals.gainTl,
+    baseTl: Math.max(0, totals.gainTl),
     ready: saleReady,
     indexPending: indexMode === "auto" && indexMonths.some((month) => autoIndex[month] === undefined),
     usd,
@@ -1262,7 +1269,13 @@ export function TaxCalculator({
                       oluştu → matrah ve dilim → vergi → tarifedeki yer →
                       dayanak. */}
                   <div className={styles.flowBlock}>
-                    <Flow title={labels.flowTitle} steps={flowSteps} />
+                    <Waterfall
+                      title={visuals.waterfall.title}
+                      steps={flow.steps}
+                      geometry={flow.geometry}
+                      ariaLabel={flow.ariaLabel}
+                      scaleNote={visuals.waterfall.scaleNote}
+                    />
                   </div>
 
                   <div className={styles.figures} data-cols={taxable > 0 ? "2" : undefined}>
@@ -1310,12 +1323,12 @@ export function TaxCalculator({
                   {taxable > 0 && (
                     <BracketTable
                       scale={{
-                        title: labels.scaleTitle,
-                        ariaLabel: labels.scaleLabel
-                          .replace("{base}", lira(taxable))
-                          .replace("{rate}", String(bracketRate)),
+                        title: visuals.band.title,
+                        ariaLabel: visuals.band.ariaLabel,
                         next: labels.nextBracket,
                         top: labels.topBracket,
+                        merged: visuals.band.merged,
+                        hint: visuals.band.hint,
                       }}
                       title={labels.bracketTableTitle.replace("{year}", String(year))}
                       hint={labels.bracketTableHint}
@@ -1338,6 +1351,7 @@ export function TaxCalculator({
               ) : (
                 <SaleEmpty
                   labels={labels}
+                  visuals={visuals}
                   needs={[
                     { text: labels.needBuy, done: simple ? buyDone : parsedTrades.some((t) => t.side === "buy") },
                     { text: labels.needSell, done: simple ? sellDone : parsedTrades.some((t) => t.side === "sell") },
@@ -1709,13 +1723,11 @@ function EmptyLead({ text, how }: { text: string; how: string }) {
   );
 }
 
-/** Boş sonuçtaki şelale taslağının biçimi: maliyet, endeks payı, satış, kazanç. */
-const SKETCH: { from: number; span: number; tone: FlowStep["tone"] }[] = [
-  { from: 0, span: 0.52, tone: "cost" },
-  { from: 0.52, span: 0.18, tone: "index" },
-  { from: 0, span: 0.92, tone: "proceeds" },
-  { from: 0.7, span: 0.22, tone: "up" },
-];
+/**
+ * Boş sonuçtaki şelale taslağının biçimi: sabit bir çizim, sayı değil
+ * (maliyet, endeks payı, satış, kazanç, matrah). Okuyucuya kapalı.
+ */
+const SKETCH: WaterfallGeometry = waterfallOf({ costTl: 52, indexedCostTl: 66, proceedsTl: 100, gainTl: 34, baseTl: 34 });
 
 /**
  * BOŞ SATIŞ SONUCU (18 Ekim). Eski hâl üç gri bloktu (Net Kazanç, Matrah,
@@ -1731,10 +1743,12 @@ const SKETCH: { from: number; span: number; tone: FlowStep["tone"] }[] = [
  */
 function SaleEmpty({
   labels,
+  visuals,
   needs,
   onExample,
 }: {
   labels: TaxLabels;
+  visuals: TaxVisualLabels;
   needs: { text: string; done: boolean; busy?: boolean }[];
   onExample: () => void;
 }) {
@@ -1757,22 +1771,12 @@ function SaleEmpty({
         </ul>
       </section>
       <div className={styles.sketch} aria-hidden>
-        <p className={styles.flowTitle}>{labels.flowTitle}</p>
-        <ol className={styles.flow}>
-          {[labels.flowCostTl, labels.flowIndexed, labels.flowProceeds, labels.flowGain].map((name, index) => (
-            <li key={name} className={styles.flowRow}>
-              <span className={styles.flowName}>{name}</span>
-              <span className={styles.flowValue} />
-              <span className={styles.track}>
-                <span
-                  className={styles.bar}
-                  data-tone={SKETCH[index].tone}
-                  style={{ "--from": SKETCH[index].from, "--span": SKETCH[index].span } as React.CSSProperties}
-                />
-              </span>
-            </li>
-          ))}
-        </ol>
+        <Waterfall
+          sketch
+          title={visuals.waterfall.title}
+          geometry={SKETCH}
+          steps={[labels.flowCostTl, visuals.waterfall.indexStep, labels.flowProceeds, labels.flowGain, labels.taxBase].map((name) => ({ name, value: "" }))}
+        />
       </div>
       <div className={styles.exampleFoot}>
         <button type="button" onClick={onExample} className={buttonClass({ variant: "ghost", size: "sm" })}>
@@ -2060,37 +2064,50 @@ const PERCENT = 100;
 
 function buildFlow({
   labels,
+  visuals,
   locale,
   results,
   rawCostTl,
   taxCostTl,
   proceedsTl,
   gainTl,
+  baseTl,
   ready,
   indexPending,
   usd,
 }: {
   labels: TaxLabels;
+  visuals: TaxVisualLabels;
   locale: Locale;
   results: LotResult[];
   rawCostTl: number;
   taxCostTl: number;
   proceedsTl: number;
   gainTl: number;
+  baseTl: number;
   ready: boolean;
   indexPending: boolean;
   usd: (value: number) => string;
-}): FlowStep[] {
-  const dash = formatLira(null, locale);
+}): { steps: WaterfallStep[]; geometry: WaterfallGeometry; ariaLabel: string } {
+  const geometry = waterfallOf({
+    costTl: ready ? rawCostTl : 0,
+    indexedCostTl: ready ? taxCostTl : 0,
+    proceedsTl: ready ? proceedsTl : 0,
+    gainTl: ready ? gainTl : 0,
+    baseTl: ready ? baseTl : 0,
+  });
+  const gainUp = gainTl >= 0;
+  const gainName = gainUp ? labels.flowGain : labels.flowLoss;
   if (!ready) {
-    return [
-      { name: labels.flowCostTl, value: dash, from: 0, span: 0, tone: "cost" },
-      { name: labels.flowIndexed, value: dash, from: 0, span: 0, tone: "index" },
-      { name: labels.flowProceeds, value: dash, from: 0, span: 0, tone: "proceeds" },
-      { name: labels.flowGain, value: dash, from: 0, span: 0, tone: "up" },
-    ];
+    const dash = formatLira(null, locale);
+    return {
+      geometry,
+      ariaLabel: "",
+      steps: [labels.flowCostTl, visuals.waterfall.indexStep, labels.flowProceeds, labels.flowGain, labels.taxBase].map(
+        (name) => ({ name, value: dash }),
+      ),
+    };
   }
-  const scale = Math.max(rawCostTl, taxCostTl, proceedsTl) || 1;
   const single = results.length === 1 ? results[0] : null;
   const costUsd = results.reduce((sum, r) => sum + r.costUsd, 0);
   const proceedsUsd = results.reduce((sum, r) => sum + r.proceedsUsd, 0);
@@ -2118,38 +2135,30 @@ function buildFlow({
             : labels.flowIndexNoGain;
   }
 
-  const gainUp = gainTl >= 0;
-  return [
+  /* Endeksleme sütununun değeri EKLENEN pay (+12.345 ₺); endeksli maliyetin
+     tamamı notta. Eski şeridin değeri endeksli maliyetin kendisiydi ve
+     yanındaki TL maliyetle neredeyse aynı sayı iki kez okunuyordu. */
+  const indexAdd = Math.max(0, taxCostTl - rawCostTl);
+  const lira = (value: number) => formatLira(value, locale);
+  const steps: WaterfallStep[] = [
+    { name: labels.flowCostTl, value: lira(rawCostTl), note: rateNote(costUsd, single?.buyRate ?? null) },
     {
-      name: labels.flowCostTl,
-      value: formatLira(rawCostTl, locale),
-      note: rateNote(costUsd, single?.buyRate ?? null),
-      from: 0,
-      span: rawCostTl / scale,
-      tone: "cost",
+      name: visuals.waterfall.indexStep,
+      value: indexAdd > 0 ? formatLira(indexAdd, locale, 2, true) : lira(0),
+      note: indexAdd > 0 ? `${indexNote} · ${labels.flowIndexed} ${lira(taxCostTl)}` : indexNote,
     },
-    {
-      name: labels.flowIndexed,
-      value: formatLira(taxCostTl, locale),
-      note: indexNote,
-      from: rawCostTl / scale,
-      span: Math.max(0, taxCostTl - rawCostTl) / scale,
-      tone: "index",
-    },
-    {
-      name: labels.flowProceeds,
-      value: formatLira(proceedsTl, locale),
-      note: rateNote(proceedsUsd, single?.sellRate ?? null),
-      from: 0,
-      span: proceedsTl / scale,
-      tone: "proceeds",
-    },
-    {
-      name: gainUp ? labels.flowGain : labels.flowLoss,
-      value: formatLira(gainTl, locale, 2, true),
-      from: (gainUp ? taxCostTl : proceedsTl) / scale,
-      span: Math.abs(gainTl) / scale,
-      tone: gainUp ? "up" : "down",
-    },
+    { name: labels.flowProceeds, value: lira(proceedsTl), note: rateNote(proceedsUsd, single?.sellRate ?? null) },
+    { name: gainName, value: formatLira(gainTl, locale, 2, true) },
+    /* Matrahın açıklaması hemen alttaki "Matrah" ölçüsünde; burada tekrar
+       edilmiyor. */
+    { name: labels.taxBase, value: lira(baseTl) },
   ];
+  const ariaLabel = visuals.waterfall.ariaLabel
+    .replace("{cost}", lira(rawCostTl))
+    .replace("{indexed}", lira(taxCostTl))
+    .replace("{proceeds}", lira(proceedsTl))
+    .replace("{gainName}", gainName.toLocaleLowerCase(locale === "tr" ? "tr-TR" : "en-US"))
+    .replace("{gain}", formatLira(gainTl, locale, 2, true))
+    .replace("{base}", lira(baseTl));
+  return { steps, geometry, ariaLabel };
 }

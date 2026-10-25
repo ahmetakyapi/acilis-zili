@@ -2,7 +2,9 @@ import styles from "./MacroExperience.module.css";
 import { getDailyMarketSeries as getSeries, dailySourceLabel } from "@/lib/providers/daily-markets";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { VIX_SERIES, vixBand } from "@/lib/vix";
-import { formatEtDateCompact, formatPercentPlain, formatPrice, NO_VALUE } from "@/lib/utils";
+import { buildYieldCurve, CURVE_OBSERVATIONS } from "@/lib/macro-visual";
+import { formatEtDateCompact, formatPercentPlain, formatPrice } from "@/lib/utils";
+import { curveCaption, YieldCurve } from "./YieldCurve";
 
 const YIELD_SERIES = [
   { seriesId: "DGS2", slug: "yield-2y", units: "lin", labelKey: "yieldY2" },
@@ -47,7 +49,7 @@ const FLAT_DELTA = 0.001;
 export async function MarketPulse({ locale, t }: { locale: Locale; t: Dictionary }) {
   const [vix, ...yields] = await Promise.all([
     getSeries(VIX_SERIES, 2),
-    ...YIELD_SERIES.map((series) => getSeries(series, 10)),
+    ...YIELD_SERIES.map((series) => getSeries(series, CURVE_OBSERVATIONS)),
   ]);
 
   const rows = YIELD_SERIES.map((series, index) => {
@@ -61,6 +63,7 @@ export async function MarketPulse({ locale, t }: { locale: Locale; t: Dictionary
       latest,
       delta: latest !== null && prev !== null ? latest - prev : null,
       date: result.ok ? (result.data.observations.at(-1)?.date ?? null) : null,
+      observations: result.ok ? result.data.observations : [],
     };
   });
 
@@ -71,10 +74,13 @@ export async function MarketPulse({ locale, t }: { locale: Locale; t: Dictionary
 
   if (rows.every((row) => row.latest === null) && vixLevel === null) return null;
 
-  const y2 = rows[0].latest;
-  const y10 = rows[2].latest;
-  const spread = y2 !== null && y10 !== null && rows[0].date === rows[2].date && rows[0].source === rows[2].source ? y10 - y2 : null;
-  const inverted = spread !== null && spread < 0;
+  /* EĞRİ (25 Ekim): dört vade aynı günün kapanışıyla tek çizgi, bir ay
+     önceki eğri soluk iz (karar kaydı YieldCurve.tsx). Eğri farkı ve
+     biçimi de eğrinin GÜNÜNDEN: önce iki serinin son tarihi eşitse
+     hesaplanıyordu; artık aynı kural `buildYieldCurve`te tek yerde. */
+  const curve = buildYieldCurve(rows.map((row) => ({ key: row.key, observations: row.observations })));
+  const caption = curve ? curveCaption(curve, rows.map((row) => row.label), locale, t) : null;
+  const spread = caption?.spread ?? null;
   const band = vixLevel !== null ? vixBand(vixLevel) : null;
   const bandLabel: Record<string, string> = {
     calm: t.markets.fearCalm,
@@ -99,64 +105,79 @@ export async function MarketPulse({ locale, t }: { locale: Locale; t: Dictionary
         {stamp && <span className="numeral">{stamp}</span>}
       </div>
 
-      <dl className={styles.pulseGrid}>
-        {rows.map((row) => (
-          <div key={row.key}>
-            <dt>{row.label}</dt>
-            <dd className="numeral">
-              <b>{row.latest !== null ? formatPercentPlain(row.latest, locale, 2) : NO_VALUE}</b>
-              {row.delta === null ? (
-                /* Yer tutucu: satır basılmayınca sütun sekiz piksel yukarıda
-                   bitiyordu; sayılar aynı hatta dursun. */
-                <small aria-hidden>{"\u00a0"}</small>
-              ) : Math.abs(row.delta) < FLAT_DELTA ? (
-                <small>{t.macro.unchanged}</small>
-              ) : (
-                <small data-tone={row.delta > 0 ? "up" : "down"}>
-                  <span aria-hidden>{row.delta > 0 ? "▲" : "▼"}</span>
-                  {formatPrice(Math.abs(row.delta), locale)}
-                </small>
-              )}
-            </dd>
+      <div className={styles.pulseGrid}>
+        {curve && caption && (
+          <div data-curve>
+            <YieldCurve
+              curve={curve}
+              chartLabel={caption.chartLabel}
+              legend={caption.legend}
+              shape={caption.shape}
+              shapeLabel={caption.shapeLabel}
+              shapeNote={caption.shapeNote}
+              columns={rows.map((row, index) => {
+                /* Değişim yalnız serinin son gözlemi eğrinin günüyse: başka
+                   bir günün hareketi bu günün değerinin altına yazılmaz. */
+                const sameDay = row.date === curve.date;
+                return {
+                  key: row.key,
+                  label: row.label,
+                  value: curve.points[index].value !== null ? formatPercentPlain(curve.points[index].value, locale, 2) : "",
+                  delta: !sameDay || row.delta === null ? undefined : Math.abs(row.delta) < FLAT_DELTA ? (
+                    t.macro.unchanged
+                  ) : (
+                    <span data-tone={row.delta > 0 ? "up" : "down"}>
+                      <span aria-hidden>{row.delta > 0 ? "▲" : "▼"}</span> {formatPrice(Math.abs(row.delta), locale)}
+                    </span>
+                  ),
+                  ...caption.ghostOf(index),
+                };
+              })}
+            />
           </div>
-        ))}
+        )}
         {spread !== null && (
-          <div data-wide>
+          <dl data-wide>
             <dt>{t.markets.curveShort}</dt>
             <dd className="numeral">
-              <b data-tone={inverted ? "down" : "up"}>
+              {/* Fark bir seviye, yön değil: nötr mürekkep (25 Ekim son
+                  düzeltme; önce artıda yeşil, eksi farkta kırmızıydı).
+                  Ters eğrinin uyarısı eğrinin künyesinde, pirinç rozet. */}
+              <b>
                 {spread >= 0 ? "+" : "−"}
                 {formatPrice(Math.abs(spread), locale)} {t.markets.point}
               </b>
               {/* Farkın hangi iki vadeden kurulduğu yazılıyor: "Getiri
                   Eğrisi" tek başına 10−2 mi 10−3 ay mı demiyor. */}
+              {/* Biçim adı ("Normal Eğri") eğrinin künyesinde; burada yalnız
+                  farkın hangi iki vadeden kurulduğu. */}
               <small>
-                <span>{inverted ? t.markets.curveInverted : t.markets.curveNormal}</span>
                 <span data-basis>{t.markets.curveBasis}</span>
               </small>
             </dd>
-          </div>
+          </dl>
         )}
         {vixLevel !== null && band && (
-          <div data-wide>
+          <dl data-wide>
             <dt>VIX</dt>
             <dd className="numeral">
               <b>{formatPrice(vixLevel, locale, { digits: 2 })}</b>
               <small>
                 <span className={styles.pulseBand} data-tone={band.tone}>{bandLabel[band.key]}</span>
                 {vixDelta !== null && vixDelta !== 0 && (
-                  /* Yükselen VIX gerginlik demek: yön rengi hisse
-                     sözlüğünün tersine kurulu. */
-                  <span data-tone={vixDelta > 0 ? "down" : "up"}>
+                  /* Ok yalnız YÖN (25 Ekim son düzeltme): önce yükselen
+                     VIX kırmızıydı, sayfanın öteki oklarının tersine.
+                     Gerginlik yargısı yanındaki bandın adında. */
+                  <span data-tone={vixDelta > 0 ? "up" : "down"}>
                     <span aria-hidden>{vixDelta > 0 ? "▲" : "▼"}</span>{" "}
                     {formatPrice(Math.abs(vixDelta), locale, { digits: 2 })}
                   </span>
                 )}
               </small>
             </dd>
-          </div>
+          </dl>
         )}
-      </dl>
+      </div>
     </section>
   );
 }

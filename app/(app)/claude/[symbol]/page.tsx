@@ -23,10 +23,10 @@ import { getI18n } from "@/lib/i18n";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
 import { logoSrc } from "@/lib/logos";
 import { completedBars } from "@/lib/technical";
+/* Film: son 3 ayın 60 seansı çizilir; öncesindeki 50 seans yalnız ortalamaların gerçek
+   penceresi için (25 Ekim; 6 aylık seri zaten iniyordu). Manşet üç: beşi okunmuyordu. */
+import { FILM_HEADLINES, FILM_SESSIONS, MA_LEAD } from "@/lib/ink/analysis-film";
 
-/** Film: son 3 ayın en fazla bu kadar seansı (mum genişliği okunur kalsın). */
-const FILM_SESSIONS = 60;
-const FILM_HEADLINES = 5;
 /** Zaman çizelgesinde en fazla bu kadar rapor; fazlası Geçmiş sekmesinde. */
 const TIMELINE_REPORTS = 3;
 const TABS = ["rapor", "yeni", "gecmis"] as const;
@@ -227,7 +227,7 @@ async function loadFilm(symbol: string, status: Awaited<ReturnType<typeof getSta
   ]);
   const { locale } = await getI18n();
   return {
-    bars: completedBars(bars[symbol] ?? [], status).slice(-FILM_SESSIONS).map(b => ({ o: b.open, h: b.high, l: b.low, c: b.close })),
+    bars: completedBars(bars[symbol] ?? [], status).slice(-(FILM_SESSIONS + MA_LEAD)).map(b => ({ o: b.open, h: b.high, l: b.low, c: b.close })),
     headlines: news.map(n => (locale === "tr" && n.headlineTr) || n.headline).filter(Boolean).slice(0, FILM_HEADLINES),
   };
 }

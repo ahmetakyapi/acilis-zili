@@ -931,7 +931,8 @@
   display: block;
   flex: 1;
   min-width: 1.5rem;
-  height: 4px;
+  /* Kulvar tek ölçü (25 Ekim): `--lane-h`, globals.css. */
+  height: var(--lane-h, 5px);
   overflow: hidden;
   border-radius: 999px;
   background: color-mix(in oklab, var(--text-muted) 18%, transparent);

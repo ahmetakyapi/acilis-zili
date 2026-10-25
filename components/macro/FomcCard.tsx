@@ -35,7 +35,9 @@ const SUNDAY = 0;
 
 /**
  * Bugünden toplantıya kadar her ET günü bir çizgi: hafta sonları kısa,
- * toplantı günü marka renginde ve tam boy. Tarih UYDURULMUYOR; şerit
+ * bugün ve toplantı günü tam boy (bugün soluk mürekkep, toplantı
+ * markanın yumuşak mavisi; 25 Ekim'e dek doygun etkileşim mavisiydi ve
+ * şeridin anahtarı yoktu). Tarih UYDURULMUYOR; şerit
  * takvimdeki tarihle bugünün arasındaki günlerden başka bir şey çizmiyor.
  * Dökülme (sağa doğru sırayla uzama) CSS'te, hareketi azaltana düz basılır.
  */
@@ -53,6 +55,7 @@ function dayStrip(today: string, meeting: string) {
 
 export async function FomcCard({ locale, t }: { locale: Locale; t: Dictionary }) {
   const x = t.marketExtras;
+  const v = t.macroVisual;
   const next = await getNextFomc();
   if (!next) return null;
   const odds = await fedOddsFor(next.date);
@@ -122,6 +125,15 @@ export async function FomcCard({ locale, t }: { locale: Locale; t: Dictionary })
             <span key={day.date} data-kind={day.kind} style={{ "--i": i } as CSSProperties} />
           ))}
         </div>
+      )}
+      {/* Şeridin anahtarı (25 Ekim son düzeltme): renkler etiketsizdi.
+          Hafta sonu yalnız şeritte varsa yazılıyor. */}
+      {strip.length > 1 && (
+        <p className={styles.fomcKey} aria-hidden>
+          <span><i data-kind="today" />{v.fomcToday}</span>
+          {strip.some((day) => day.kind === "weekend") && <span><i data-kind="weekend" />{v.fomcWeekend}</span>}
+          <span><i data-kind="meeting" />{v.fomcMeeting}</span>
+        </p>
       )}
 
       {odds ? (

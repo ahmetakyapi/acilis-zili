@@ -153,17 +153,27 @@ export function SessionBellLive({
 
   const liveMinutes = React.useCallback(() => nowMinutes + (Date.now() - nowMs) / 60000, [nowMinutes, nowMs]);
 
-  /** Zil anı bildirimi: "Açılış Zili · 16:30 TR". Sahnenin üstünde 2,4 sn. */
+  /** Zil anı bildirimi: "Açılış Zili · 16:30 TR". Geri sayım hapında 2,4 sn. */
   const toast = React.useCallback(
     (hit: Strike) => {
       const el = root.current;
       const note = el?.querySelector("[data-toast]");
       if (!el || !note) return;
       // Yalnız birincil saat (TR'de İstanbul): iki saat bildirimi iki satıra taşıyordu.
-      note.textContent = `${hit.bell === "open" ? labels.openBell : labels.closeBell} · ${clockOf(hit.at, day, text).split(" · ")[0]}`;
+      /* Saat ayrı parçada: telefonda (380–639) hap seans rozetiyle aynı
+         satırda ve saatle birlikte sığmıyor, orada yalnız zilin adı kalıyor
+         (bell.css → "Zil bildirimi"). Saat hemen altındaki iri saatte. */
+      const time = document.createElement("span");
+      time.dataset.toastTime = "";
+      time.textContent = ` · ${clockOf(hit.at, day, text).split(" · ")[0]}`;
+      note.replaceChildren(hit.bell === "open" ? labels.openBell : labels.closeBell, time);
       el.setAttribute("data-toasting", "");
       window.clearTimeout(toastTimer.current);
-      toastTimer.current = window.setTimeout(() => el.removeAttribute("data-toasting"), TOAST_MS);
+      toastTimer.current = window.setTimeout(() => {
+        el.removeAttribute("data-toasting");
+        // Boşalır: ekran okuyucu hapta eski zilin adını okumasın.
+        note.textContent = "";
+      }, TOAST_MS);
     },
     [day, text, labels],
   );
@@ -477,14 +487,32 @@ export function SessionBellLive({
           <b data-clock-a="">{clockOf(nowMinutes, day, text).split(" · ")[0]}</b>
           <span data-clock-b="">{clockOf(nowMinutes, day, text).split(" · ")[1] ?? ""}</span>
         </span>
+        {/* ZİL BİLDİRİMİ BU HAPIN İÇİNDE (25 Ekim). Bildirim sahnenin sol
+            üstünde çizimin üstüne biniyordu: 390'da kutusunun altında 307
+            boyalı piksel (travers ve çanın halesi), 320'de kadrana da
+            değiyordu; sahibinin isteği "Kapanış Zili görselin üstüne
+            gelmesin". Sahnede çizimin bırakmadığı boş köşe yok (ibre kadranı
+            genişliğe göre ölçekleniyor), sahnenin üstüne bildirim için şerit
+            açmak da 2,4 saniyelik bir mesaj için her zaman boş duran ~40
+            piksel demek. Bu hap zaten "sıradaki zile kalan"ı söylüyor;
+            zil çalınca aynı hap zilin ADINI söylüyor ve simgesi sallanıyor:
+            sayım ile sonucu aynı yerde, kadranın hemen üstündeki başlık
+            satırında (ölçüm bell.css → "Zil bildirimi"). */}
         <span className="sb-count">
           <BellIcon />
           <span data-count="" aria-live="polite">
             {countdownOf(nowMs, nowMinutes, day, nextOpenMs, nextCloseMs, text)}
           </span>
+          <span data-toast="" aria-live="polite" />
         </span>
+        {/* Simge 320–379'da tek başına kalıyor: orada rozet ve bu düğme aynı
+            satırda ve yazılı düğme "Akşam Seansı" rozetine biniyordu
+            (237 piksellik satıra 128 + 8 + 114, ölçüldü 25 Ekim). */}
         <button type="button" className="sb-back" onClick={goLive}>
-          {labels.back}
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M4.2 7.6A6.2 6.2 0 1 1 3.8 11M4 3.6v4h4" />
+          </svg>
+          <span className="sb-back-label">{labels.back}</span>
         </button>
       </div>
 
@@ -521,10 +549,6 @@ export function SessionBellLive({
             {front}
           </g>
         </IsoFigure>
-        <span className="sb-toast" aria-live="polite">
-          <BellIcon />
-          <span data-toast="" />
-        </span>
       </div>
 
       {chips.length > 0 ? (

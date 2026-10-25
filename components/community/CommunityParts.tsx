@@ -2,6 +2,7 @@ import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { readingMinutes } from "@/components/article/ArticleBody";
 import { AvatarTile } from "@/components/brand/AvatarIcon";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { LogoTile } from "@/components/ui/primitives";
 import { initialsOf } from "@/lib/avatars";
 import type { Locale } from "@/lib/i18n/config";
 import { POST_TEMPLATES, type PostTemplateKey } from "@/lib/post-templates";
@@ -24,7 +25,7 @@ export const PRIMARY_LINK =
   "inline-flex min-h-11 items-center gap-1.5 rounded-(--radius-md) bg-primary px-3.5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover sm:min-h-10";
 
 
-type CardLabels = { readMinutes: string };
+type CardLabels = { readMinutes: string; symbolsLabel?: string };
 
 function AuthorLine({
   post,
@@ -59,16 +60,28 @@ function AuthorLine({
   );
 }
 
-function SymbolChips({ symbols, max }: { symbols: string[]; max: number }) {
+export type SymbolNames = Record<string, { logoUrl?: string | null; name?: string | null } | undefined>;
+
+/**
+ * Yazıda geçen semboller — logolu rozet, hissenin sayfasına bağlantı
+ * (25 Ekim, görsel tur: düz yazı çip "hangi şirket" sorusunu logoyla
+ * cevaplamıyordu). Kart bütünüyle tek hedef olduğu için rozetler `z-10`
+ * ile örtünün üstünde; dokunma alanı 44 (`tap-44`).
+ */
+export function SymbolChips({ symbols, max, names, label }: { symbols: string[]; max: number; names?: SymbolNames; label?: string }) {
   if (symbols.length === 0) return null;
   return (
-    <ul className="flex flex-wrap gap-1.5">
+    <ul aria-label={label} className="relative z-10 flex flex-wrap gap-1.5">
       {symbols.slice(0, max).map((symbol) => (
-        <li
-          key={symbol}
-          className="numeral rounded-full border border-line bg-surface px-2 py-0.5 text-tiny font-semibold text-body"
-        >
-          {symbol}
+        <li key={symbol}>
+          <Link
+            href={`/hisse/${symbol}`}
+            prefetch={false}
+            className="tap-44 numeral inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-0.5 pl-0.5 pr-2.5 text-tiny font-semibold text-body transition-colors hover:border-primary-faint hover:text-strong"
+          >
+            <LogoTile symbol={symbol} logoUrl={names?.[symbol]?.logoUrl} size="xs" className="rounded-full" />
+            {symbol}
+          </Link>
         </li>
       ))}
     </ul>
@@ -85,12 +98,14 @@ export function PostCard({
   dateFormat,
   labels,
   lead = false,
+  names,
 }: {
   post: PublishedPost;
   locale: Locale;
   dateFormat: Intl.DateTimeFormat;
   labels: CardLabels;
   lead?: boolean;
+  names?: SymbolNames;
 }) {
   return (
     <article
@@ -126,7 +141,7 @@ export function PostCard({
       {/* Künye kartın dibine yaslanır: ızgarada yan yana kartların alt
           satırları aynı hatta biter (ölçü ızgarası kuralı). */}
       <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-1">
-        <SymbolChips symbols={post.symbols} max={lead ? 6 : 3} />
+        <SymbolChips symbols={post.symbols} max={lead ? 6 : 3} names={names} label={labels.symbolsLabel} />
         <span className="ml-auto inline-flex items-center gap-1 text-tiny tabular-nums text-muted">
           {readingMinutes(post.bodyMd)} {labels.readMinutes}
           <ArrowRight

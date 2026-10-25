@@ -44,6 +44,7 @@ export default async function TechnicalOgImage({
       eyebrow: t.technical.title,
       title: symbol,
       dek: row ? clip(row.copy.tr.headline, 150) : t.technical.description,
+      leadVerdict: row ? verdictOf(row.stance) : undefined,
       chips: row
         ? [
             verdictLabel(verdictOf(row.stance), t),

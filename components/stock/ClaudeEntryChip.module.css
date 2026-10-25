@@ -32,6 +32,8 @@
 .verdict { color: var(--text-strong); font-weight: 750; letter-spacing: .01em; }
 .chip[data-verdict="buy"] .verdict { color: var(--up); }
 .chip[data-verdict="sell"] .verdict { color: var(--down); }
+/* TUT pirinç (site geneli görüş üçlüsü, `verdictTextClass`); metin tonu `-ink`. */
+.chip[data-verdict="hold"] .verdict { color: var(--brass-ink); }
 .go { color: var(--text-strong); }
 .chip:hover .go { color: var(--primary-ink); }
 .arrow { flex: none; color: var(--text-muted); transition: translate 320ms var(--ease-brand); }

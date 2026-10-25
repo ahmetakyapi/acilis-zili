@@ -1,88 +1,184 @@
-/* Kapanış künyesi — gerekçe DaySeal.tsx.
+/* Son seans karosu — gerekçe DaySeal.tsx.
 
    YER: kahramanın üst satırında, seans çipinin ALTINDA, zilin solunda.
-   Satır zilin boyu kadar (telefonda 64, 1440'ta 104 piksel) ve çipin
-   üstünde o kadar boş hava vardı; künye o havaya giriyor. `.lead` çip ile
-   künyeyi alt alta dizen kolon: satır `align-items:flex-end` olduğu için
-   kolonun dibi zilin dibiyle aynı hatta kalıyor. */
+   `.lead` çip ile karoyu alt alta dizen kolon: satır `align-items:flex-end`
+   olduğu için kolonun dibi zilin dibiyle aynı hatta kalıyor. Kolon artık
+   satırın kalanını alıyor (`flex:1`): karo bir kutu, eni içerikten değil
+   kolondan gelmeli. */
 .lead {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  /* Karonun düzeni KOLONUN enine bakıyor, görünümün değil: 768'de
+     kahraman iki kolonlu ve sol kolon telefondakiyle aynı ~240 piksel. */
+  container: day-tile / inline-size;
+}
+
+/* KARO. Derinlik tonla (`surface-sunken`, seans çipiyle aynı ton), gölge
+   ve kenarlık degradesi yok; üzerine gelince sitenin tek hover dili
+   (`primary-tint` zemin, `primary-faint` kenar — arşiv kartıyla aynı).
+
+   TELEFON BÜTÇESİ (390×844, ölçüldü): eski künye 79 piksel tutuyordu
+   (tarih satırı + şerit + iki satırlık "Sonraki Açılış") ve geri sayım
+   437. pikselde başlıyordu. Karo aynı bütçede: 7 + 16 + 5 + 26 + 3 + 15
+   + 7 = 79, kolon aralığı 8 → 6; ölçüm: geri sayım 437 → 440 (iki tema,
+   iki dil), yatay taşma 0. 768'de 370 → 376. Düzen üç satır:
+     ad + künye + ok        (tam satır)
+     sahne  | günün başlığı
+     şerit  | yükselen / düşen
+   Şerit sahnenin altında, sayılar onun yanında: çubuk etiketiyle aynı
+   satırda okunuyor. Günün cümlesinin ayrıntısı telefonda yok (karo
+   kolonu 236 piksel); karo onun posterine bağlanıyor. */
+.tile {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-areas:
+    "head head"
+    "scene title"
+    "strip counts";
+  align-items: center;
+  gap: 5px 8px;
+  width: 100%;
+  max-width: 34rem;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  color: var(--text-body);
+  transition: background-color 0.2s var(--ease-brand), border-color 0.2s var(--ease-brand);
+}
+.tile:hover { background: var(--primary-tint); border-color: var(--primary-faint); }
+.tile:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+.tile > .story,
+.tile > .breadth { display: contents; }
+
+.head {
+  grid-area: head;
+  display: flex;
+  align-items: baseline;
   gap: 8px;
   min-width: 0;
+  font-size: var(--text-small);
+  line-height: 16px;
+  white-space: nowrap;
 }
+.name { color: var(--primary-ink); font-weight: 650; }
+.close { overflow: hidden; text-overflow: ellipsis; color: var(--text-muted); font-weight: 600; }
+.arrow {
+  flex: none;
+  margin-left: auto;
+  align-self: center;
+  color: var(--primary-ink);
+  transition: translate 0.2s var(--ease-brand);
+}
+.tile:hover .arrow { translate: 2px 0; }
 
-.seal {
+/* SAHNE MİNYATÜRÜ — arşiv kartıyla aynı dosya (`/gun/[tarih]/minyatur`),
+   kutu sabit oranlı (`contain`): dosya gelince karo kaymıyor. */
+.scene {
+  grid-area: scene;
+  display: block;
+  aspect-ratio: 320 / 150;
+  width: 100%;
+  border-radius: 4px;
+  background: var(--surface);
+}
+.scene img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.scene .sceneDark { display: none; }
+:global(:root[data-theme="dark"]) .scene .sceneDark { display: block; }
+:global(:root[data-theme="dark"]) .scene .sceneLight { display: none; }
+
+/* Günün kısa başlığı ("Geniş Satış"). Metin rengi metin; YÖN yalnız
+   önündeki işarette (renk = yön, CLAUDE.md "Renk anlam taşır"). */
+.title {
+  grid-area: title;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 5px;
   min-width: 0;
-  max-width: 100%;
+  overflow: hidden;
+  color: var(--text-strong);
+  font-size: var(--text-read);
+  font-weight: 750;
+  line-height: 18px;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
-.line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 2px 10px;
-  margin: 0;
-  font-size: var(--text-small);
-  line-height: 1.35;
-}
-.close { color: var(--text-muted); font-weight: 600; }
-/* `tabular-nums` YOK: bu fontun tablo rakamlarında iki nokta "16 : 30"
-   gibi açık duruyordu (ölçüldü, 1280 ekran görüntüsü). */
-.next { color: var(--text-body); font-weight: 600; }
-.link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--primary);
-  font-weight: 600;
-  transition: color 0.2s var(--ease-brand);
-}
-.link:hover { color: var(--primary-hover); }
-/* DOKUNMA HEDEFİ 44 PİKSEL (25 Ekim): bağlantı satırın yazı boyu kadardı
-   (~18 piksel). Görünür satır yüksekliği değişmesin diye hedef bir
-   `::before` ile genişliyor; komşusu yalnız sola düşen künye metni,
-   üstte ve altta tıklanabilir bir şey yok (seans çipi 8, şerit 5 piksel
-   uzakta ama tıklanamaz). */
-.link { position: relative; }
-.link::before {
-  content: "";
-  position: absolute;
-  inset: 50% -6px auto;
-  min-height: 44px;
-  translate: 0 -50%;
-}
+.mark { flex: none; color: var(--text-muted); }
+.title[data-tone="up"] .mark { color: var(--up); }
+.title[data-tone="down"] .mark { color: var(--down); }
+.detail { display: none; }
 
-/* GENİŞLİK ŞERİDİ. 5 piksel, kulvar `--line-soft` (sitenin grafik dili);
-   parçaların boyu üye sayısı, renk yalnız işaret. Eni görünüme bağlı
-   (`18vw`, 64–200): 390'da kolon 236 piksel (satır 316 − zil − aralık) ve
-   şerit 70 + sayılar 147 + aralık 10 = 227 ile TEK satıra sığıyor
-   (ölçüldü); 320'de sayılar alta iner. Kolonun eni içerikten geldiği için
-   yüzde değil `vw`: yüzde kolonu genişletemezdi. */
-.breadth {
+/* GENİŞLİK ŞERİDİ — 5 piksel, kulvar `--line-soft`; çizimi ve girişi
+   ortak (`PosterMarks`). Seçici iki sınıflı: iki modülün CSS sırası
+   garanti değil, ortak `.strip { width:100% }`u özgüllük yensin. */
+.tile .strip { grid-area: strip; width: 100%; }
+.counts {
+  grid-area: counts;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 10px;
+  gap: 0 10px;
   min-width: 0;
-}
-/* Şeridin çizimi ve giriş hareketi ortak (`components/day-poster/
-   PosterMarks`); burada yalnız eni. Seçici iki sınıflı: iki modülün CSS
-   sırası garanti değil, ortak `.strip { width: 100% }`u sıra değil
-   özgüllük yensin. */
-.breadth .strip { width: clamp(64px, 18vw, 200px); }
-.counts {
-  color: var(--text-body);
   font-size: var(--text-small);
-  font-weight: 600;
+  font-weight: 650;
+  line-height: 15px;
   letter-spacing: -0.02em;
   white-space: nowrap;
 }
-.sep { margin-inline: 6px; color: var(--text-muted); }
+.up { color: var(--up); }
+.down { color: var(--down); }
+
+/* GENİŞ KOLON (kolon 420+ piksel; 1024'te ~430, 1440'ta ~590): sahne solda üç satır boyunca, sağda ad + künye,
+   günün CÜMLESİ (başlık + ayrıntı, en çok iki satır) ve etiketli şerit.
+   1440'ta kolon ~590 piksel; karo 34rem'de duruyor ki cümle satırı
+   okunur boyda kalsın. Bedeli ölçüldü: karo 81 piksel, kolon zilden 20
+   piksel uzun ve geri sayım 1440'ta 395 → 414, 1024'te 397 → 407.
+   Sahneyi ve cümleyi taşıyan bir karo için kabul edilen takas. */
+@container day-tile (min-width: 420px) {
+  .tile {
+    grid-template-columns: 128px minmax(0, 1fr);
+    grid-template-areas:
+      "scene head"
+      "scene story"
+      "scene breadth";
+    gap: 3px 14px;
+    padding: 6px 12px 6px 6px;
+  }
+  .tile > .story { display: -webkit-box; }
+  .tile > .breadth { display: flex; }
+  .head { line-height: 15px; }
+  /* Sahne satırların boyunda: kendi boyu satırları gerip karoyu
+     uzatmasın diye görsel mutlak konumda (yükseklik satırlardan). */
+  .scene { position: relative; align-self: stretch; aspect-ratio: auto; }
+  .scene img { position: absolute; inset: 0; }
+  .story {
+    grid-area: story;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    font-size: var(--text-base);
+    line-height: 16px;
+  }
+  .title { display: inline; overflow: visible; font-size: inherit; line-height: inherit; white-space: normal; }
+  .mark { display: inline-block; margin-right: 4px; vertical-align: -1px; }
+  .title::after { content: ": "; }
+  .detail { display: inline; color: var(--text-body); font-weight: 500; }
+  .breadth {
+    grid-area: breadth;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .counts { flex-wrap: nowrap; line-height: 14px; }
+  .tile .strip { flex: 0 1 160px; min-width: 64px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .link { transition: none; }
+  .tile, .arrow { transition: none; }
+  .tile:hover .arrow { translate: none; }
 }

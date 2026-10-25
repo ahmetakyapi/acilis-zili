@@ -28,6 +28,7 @@ import {
 } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
+import { composeMacroLead, curveShape, FED_INFLATION_TARGET, macroLeadFacts } from "@/lib/macro-visual";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
@@ -120,18 +121,86 @@ function seriesNote(row: MacroBoardRow, locale: Locale, t: Dictionary): { status
   }
   if (row.definition.seriesId === "T10Y3M") {
     return {
-      status: latest === null ? null : latest < 0 ? x.curveInvertedStatus : x.curveNormalStatus,
+      /* Biçim tepedeki cümleyle AYNI kuraldan (`curveShape`, düz bandı
+         dahil): cümle "düz" derken rozet "Normal" demesin. */
+      status: latest === null ? null : { inverted: x.curveInvertedStatus, flat: t.macroVisual.shapeFlat, normal: x.curveNormalStatus }[curveShape(latest)],
       text: x.curveNote,
     };
   }
+  /* ENFLASYON VE FED HEDEFİ (25 Ekim). "%3,72 çok mu" sorusunun cevabı
+     hedefe uzaklık; künye sayıyı veriden yazıyor ("Hedefin 1,72 Puan
+     Üstünde"), not hedefin hangi endeks için tanımlı olduğunu söylüyor. */
+  if (INFLATION_SERIES.has(row.definition.seriesId)) {
+    const v = t.macroVisual;
+    const gap = latest === null ? null : latest - FED_INFLATION_TARGET;
+    const gapText = gap === null ? "" : formatPrice(Math.abs(gap), locale, { digits: 2 });
+    return {
+      status: gap === null ? null : Math.abs(gap) < FLAT_GAP ? v.atTarget : (gap > 0 ? v.aboveTarget : v.belowTarget).replace("{gap}", gapText),
+      text: v.targetNote,
+    };
+  }
+  if (BAR_SERIES.has(row.definition.seriesId)) return { status: null, text: t.macroVisual.barsNote };
   return null;
 }
 
-/** Eşik çizgisi olan seriler: Sahm (0,50 puan) ve 10Y-3A (sıfır: ters eğri sınırı). */
-function thresholdOf(row: MacroBoardRow, locale: Locale, t: Dictionary, format: MacroValueFormat) {
-  const value = row.definition.seriesId === "SAHMREALTIME" ? SAHM_THRESHOLD : row.definition.seriesId === "T10Y3M" ? 0 : null;
-  if (value === null) return null;
-  return { value, label: `${t.macro.threshold} ${formatMacroValue(value, format)}` };
+/** Fed'in %2 hedef çizgisini taşıyan seriler: yıllık TÜFE, çekirdek TÜFE, çekirdek PCE. */
+const INFLATION_SERIES = new Set(["CPIAUCSL", "CPILFESL", "PCEPILFE"]);
+/**
+ * AYLIK DEĞİŞİM SERİLERİ ÇUBUKLA (25 Ekim). Tarım dışı istihdamın ve
+ * perakende satışların değeri bir SEVİYE değil bir ayın değişimi; çizgi
+ * ardışık ayları birleştirip olmayan bir süreklilik çiziyordu ve sıfırın
+ * altına inen aylar çizginin bir kıvrımı gibi okunuyordu. Sıfır ekseninden
+ * her ay bir çubuk: işaret yön, boy büyüklük.
+ */
+const BAR_SERIES = new Set(["PAYEMS", "RSAFS"]);
+/** Hedefe bu kadar yakınsa "Hedefte" (FRED iki hane yayımlar). */
+const FLAT_GAP = 0.005;
+
+/**
+ * Eşik çizgisi olan seriler: Sahm (0,50 puan, üstü uyarı), 10Y-3A (sıfır,
+ * altı ters eğri) ve enflasyon (Fed'in %2 hedefi, üstü uyarı tonunda —
+ * yön değil, hedefe göre konum).
+ */
+function thresholdOf(row: MacroBoardRow, locale: Locale, t: Dictionary, format: MacroValueFormat): BoardSeries["threshold"] {
+  const id = row.definition.seriesId;
+  if (INFLATION_SERIES.has(id)) {
+    return { value: FED_INFLATION_TARGET, label: t.macroVisual.target.replace("{value}", formatMacroValue(FED_INFLATION_TARGET, { ...format, digits: 0 })), alertWhen: "above" };
+  }
+  if (id === "SAHMREALTIME") return { value: SAHM_THRESHOLD, label: `${t.macro.threshold} ${formatMacroValue(SAHM_THRESHOLD, format)}`, alertWhen: "above" };
+  if (id === "T10Y3M") return { value: 0, label: `${t.macro.threshold} ${formatMacroValue(0, format)}`, alertWhen: "below" };
+  return null;
+}
+
+/**
+ * Sayfanın tepesindeki tek cümle (25 Ekim): TÜFE'nin hedefe uzaklığı,
+ * işsizliğin son ayı, eğrinin biçimi. Şablon + veri (`lib/macro-visual.ts`,
+ * testli); her serinin dönemi cümlenin altındaki künyede, çünkü üçü aynı
+ * günün verisi değil (TÜFE bir ay geriden, faiz farkı günlük).
+ */
+function leadOf(series: BoardSeries[], locale: Locale, t: Dictionary): BoardData["lead"] {
+  const facts = macroLeadFacts(series);
+  if (!facts) return null;
+  const v = t.macroVisual;
+  const percent = { locale, percent: true, digits: 2, unit: "" };
+  const points = (value: number) => formatPrice(value, locale, { digits: 2 });
+  const text = composeMacroLead(facts, {
+    inflationAbove: v.leadInflationAbove,
+    inflationBelow: v.leadInflationBelow,
+    inflationAt: v.leadInflationAt,
+    unemploymentUp: v.leadUnemploymentUp,
+    unemploymentDown: v.leadUnemploymentDown,
+    unemploymentFlat: v.leadUnemploymentFlat,
+    curve: { normal: v.leadCurveNormal, flat: v.leadCurveFlat, inverted: v.leadCurveInverted },
+    and: v.leadAnd,
+  }, {
+    locale,
+    percent: (value) => formatMacroValue(value, percent),
+    points,
+    signedPoints: (value) => `${value > 0 ? "+" : value < 0 ? "−" : ""}${points(Math.abs(value))}`,
+  });
+  const used = [facts.inflation && "CPIAUCSL", facts.unemployment && "UNRATE", facts.curve && "T10Y3M"].filter(Boolean);
+  const stamp = series.filter((item) => used.includes(item.id)).map((item) => `${item.title} ${item.period}`).join(" · ");
+  return { text, stamp };
 }
 
 /**
@@ -166,6 +235,7 @@ function toBoard(rows: MacroBoardRow[], locale: Locale, t: Dictionary): BoardDat
         next: row.nextReleaseAt ? formatEtDateLong(row.nextReleaseAt, locale) : null,
         nextShort: row.nextReleaseAt ? formatEtDateMedium(row.nextReleaseAt, locale) : null,
         threshold: thresholdOf(row, locale, t, format),
+        chart: BAR_SERIES.has(row.definition.seriesId) ? "bars" : "line",
         status: note?.status ?? null,
         note: note?.text ?? null,
         points: row.observations.map((point) => {
@@ -182,7 +252,7 @@ function toBoard(rows: MacroBoardRow[], locale: Locale, t: Dictionary): BoardDat
         stamp: <DataStamp labels={t.data} source="fred" at={row.updatedAt} locale={locale} />,
       };
     });
-  return { series };
+  return { series, lead: leadOf(series, locale, t) };
 }
 
 /**
@@ -266,12 +336,15 @@ const SUMMARY_SKELETON_TILES = 11;
 
 function SummarySkeleton() {
   return (
+    <>
+    <Skeleton className={styles.skLead} />
     <div className={styles.summary} aria-hidden>
       <Skeleton className={styles.skSummaryTitle} />
       <div className={styles.summaryGrid}>
         {Array.from({ length: SUMMARY_SKELETON_TILES }, (_, i) => <Skeleton key={i} className={styles.tileSkeleton} />)}
       </div>
     </div>
+    </>
   );
 }
 

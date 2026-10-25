@@ -247,6 +247,22 @@ export function TechnicalPulse({
         }))}
       />
 
+      {/* ÇUBUĞUN ANAHTARI (25 Ekim). Telefonda satırlar gizli ve çubuğun hangi
+          diliminin hangi görüş olduğunu yalnız renk ve dokunma balonu söylüyordu;
+          renk tek başına anlam taşımaz (renk körlüğü, TUT'un rengi bu turda
+          değişti). Anahtar dilimlerin sırasıyla ve aynı tonla; yalnız satırların
+          gizli olduğu yerde görünür (CSS). */}
+      {filterable && total > 0 && (
+        <ul className={styles.pulseKey} aria-hidden="true">
+          {groups
+            .filter((group) => group.rows.length > 0)
+            .map((group) => (
+              <li key={group.verdict} data-verdict={group.verdict}>
+                {verdictLabel(group.verdict, t)} <b className="numeral">{group.rows.length}</b>
+              </li>
+            ))}
+        </ul>
+      )}
       <div className={styles.pulseRows} data-motion-stagger>
         {groups
           .filter((group) => group.rows.length > 0)

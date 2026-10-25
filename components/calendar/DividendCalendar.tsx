@@ -1,4 +1,7 @@
 import { cache, type CSSProperties } from "react";
+import { CaretDown } from "@phosphor-icons/react/dist/ssr";
+import { auth } from "@/auth";
+import { DividendDayOpener } from "@/components/calendar/DividendDayOpener";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { RollingFigure } from "@/components/ui/RollingFigure";
 import {
@@ -9,7 +12,9 @@ import {
   PanelHeader,
   Skeleton,
 } from "@/components/ui/primitives";
-import { getDividendCalendar, DIVIDEND_WINDOW_DAYS, type DividendCalendarDay } from "@/lib/dividend-data";
+import { getDividendCalendar, DIVIDEND_WINDOW_DAYS, type DividendCalendarDay, type DividendCalendarRow } from "@/lib/dividend-data";
+import { getUserSymbols } from "@/lib/data";
+import { buyWindowPassed, dividendHighlights, firstBuyableDay, orderDayRows } from "@/lib/dividend-groups";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { readerDayOffset } from "@/lib/session-clock";
@@ -94,12 +99,19 @@ function amountText(rate: number, locale: Locale): string {
  * zamana kadar vaktim var" ve cevabı listenin ilk grubunun başlığında
  * gömülüydü. Burada büyük puntoyla: son alım günü, hak kesim günü ve o gün
  * kimin ödediği logolarla.
+ *
+ * Gösterilen gün hâlâ ALINABİLEN ilk hak kesim (`firstBuyableDay`, 25
+ * Ekim): hafta sonu, hak kesimi pazartesi olan günün son alım günü geçen
+ * cumaydı ve kahraman geçmiş bir tarihi büyük puntoyla basıyordu. Hiçbiri
+ * alınamıyorsa (pencerenin tamamı geçmiş, pratikte olmaz) ilk gün "Kaçtı"
+ * rozetiyle.
  */
 export async function DividendHero({ locale, t }: { locale: Locale; t: Dictionary }) {
   const x = t.marketExtras;
   const result = await loadCalendar();
   if (!result.ok || result.days.length === 0) return null;
-  const next = result.days[0];
+  const next = firstBuyableDay(result.days, todayEt()) ?? result.days[0];
+  const passed = buyWindowPassed(next, todayEt());
   const lastBuy = next.lastBuy;
   const away = lastBuy ? readerDayOffset(lastBuy, null, locale, new Date()) : null;
   const shown = next.rows.slice(0, HERO_LOGOS);
@@ -119,8 +131,10 @@ export async function DividendHero({ locale, t }: { locale: Locale; t: Dictionar
         <a href={`#temettu-${next.exDate}`} className={styles.heroLastBuy}>
           <span className={styles.heroLastBuyLabel}>{x.lastBuy}</span>
           <span className={styles.heroLastBuyDate}>{formatEtDateLong(lastBuy, locale)}</span>
-          {away !== null && away >= 0 && (
-            <span className={styles.heroRel}>{relativeDayLabel(away, t.calendar)}</span>
+          {passed ? (
+            <span className={styles.heroRel} data-missed>{t.calendarVisuals.dividends.missed}</span>
+          ) : (
+            away !== null && away >= 0 && <span className={styles.heroRel}>{relativeDayLabel(away, t.calendar)}</span>
           )}
         </a>
       )}
@@ -266,10 +280,27 @@ function DividendStrip({
    Zaman çizelgesi
    --------------------------------------------------------------------------- */
 
+/** Katlanmış günün özetinde gösterilen en fazla logo. */
+const SUMMARY_LOGOS = 5;
+/** Çapa öneki — şerit, kahraman ve öne çıkanlar aynı çapaya gidiyor. */
+const DAY_ANCHOR = "temettu-";
+
+/**
+ * Takip listesi okuyucunun kendi listesi: oturum yoksa boş. Takvimle aynı
+ * turda soruluyor (biri ötekini beklemiyor).
+ */
+async function loadWatchSet(): Promise<Set<string>> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  return new Set(userId ? await getUserSymbols(userId) : []);
+}
+
 export async function DividendCalendar({ locale, t }: { locale: Locale; t: Dictionary }) {
   const x = t.marketExtras;
-  const result = await loadCalendar();
+  const v = t.calendarVisuals.dividends;
+  const [result, watched] = await Promise.all([loadCalendar(), loadWatchSet()]);
   const now = new Date();
+  const today = todayEt();
   /* Getiri çubuğunun ölçeği pencerenin en yüksek getirisi: sayı hücrede
      yazılı, çubuk yalnızca "hangisi daha yüksek" sorusunu okumadan
      cevaplıyor. Bir BÜYÜKLÜK, yargı değil — yüksek getiri "iyi" demek değil,
@@ -299,84 +330,82 @@ export async function DividendCalendar({ locale, t }: { locale: Locale; t: Dicti
       ) : (
         <>
           <DividendStrip days={result.days} locale={locale} t={t} />
+          <DividendHighlights days={result.days} watched={watched} maxYield={maxYield} locale={locale} t={t} />
+          {/* GÜNLER KATLANIR (25 Ekim). Seksen ödemenin hepsi açıkken liste
+              1440'ta 9.242 piksel tutuyordu ve okuyucunun iki sorusu (benim
+              takip ettiklerim, en yüksek getiri) içinde gömülüydü. İlk gün
+              (sıradaki hak kesim) açık, ötekiler özetiyle kapalı: tarih, son
+              alım günü, ödeme sayısı, ilk beş şirketin logosu, günün en
+              yüksek getirisi. Gün içinde önce takip listesi, sonra getiri
+              (`orderDayRows`). Şerit ve öne çıkanlar çapayla günü açıyor
+              (`DividendDayOpener`); katlama yerel `details`, JS'siz de açılır,
+              bastığın yerde uzar (`ExpandInPlace`, kökte). */}
+          <DividendDayOpener prefix={DAY_ANCHOR} />
           <ol className={styles.timeline}>
-            {result.days.map((day) => {
+            {result.days.map((day, dayIndex) => {
               const away = readerDayOffset(day.exDate, null, locale, now);
               const parts = etDateParts(day.exDate, locale);
               const weekday = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
                 weekday: "long",
                 timeZone: "UTC",
               }).format(new Date(`${day.exDate}T12:00:00Z`));
+              const rows = orderDayRows(day.rows, watched);
+              const top = Math.max(-1, ...rows.map((row) => row.yieldPct ?? -1));
+              const mine = rows.filter((row) => watched.has(row.dividend.symbol)).length;
               return (
-                <li key={day.exDate} className={styles.day} id={`temettu-${day.exDate}`}>
+                <li key={day.exDate} className={styles.day} id={`${DAY_ANCHOR}${day.exDate}`}>
                   {/* Sol ray: tarih karosu ve çizelgenin çizgisi. */}
                   <div className={styles.rail} aria-hidden>
                     <span className={`figure ${styles.railDay}`}>{parts.day}</span>
                     <span className={styles.railMonth}>{parts.month}</span>
                   </div>
-                  <section className={styles.dayBody} aria-labelledby={`temettu-h-${day.exDate}`}>
-                    <header className={styles.dayHead}>
+                  <details className={styles.fold} open={dayIndex === 0 || undefined}>
+                    <summary className={styles.foldSummary}>
+                      {/* Özetin içeriği düz öğeler (başlık + satır içi):
+                          `summary` blok kap almıyor; dizilişi CSS kuruyor. */}
                       <h3 id={`temettu-h-${day.exDate}`} className={styles.dayTitle}>
                         {formatEtDateLong(day.exDate, locale)}
                       </h3>
                       <span className={styles.dayTag}>{x.exDate}</span>
                       {away >= 0 && <span className={styles.rel}>{relativeDayLabel(away, t.calendar)}</span>}
                       <span className="sr-only">{weekday}</span>
-                    </header>
-                    {day.lastBuy && (
-                      <p className={styles.lastBuy}>
-                        <span>{x.lastBuy}</span>
-                        <strong>{formatEtDateLong(day.lastBuy, locale)}</strong>
-                      </p>
-                    )}
+                      <span aria-hidden className={styles.foldBreak} />
+                      {day.lastBuy && (
+                        /* Son alım günü geçmişse rozet sönük ve "Kaçtı" der:
+                           hak kesimi yarın olan gün listede, ama o temettü
+                           artık alınamıyor (`buyWindowPassed`). */
+                        <span className={styles.lastBuy} data-missed={buyWindowPassed(day, today) || undefined}>
+                          <span>{x.lastBuy}</span>
+                          <strong>{formatEtDateLong(day.lastBuy, locale)}</strong>
+                          {buyWindowPassed(day, today) && <span className={styles.missedTag}>{v.missed}</span>}
+                        </span>
+                      )}
+                      <span className={styles.foldMeta}>
+                        <span className={styles.foldLogos} aria-hidden>
+                          {rows.slice(0, SUMMARY_LOGOS).map((row) => (
+                            <LogoTile key={`${row.dividend.symbol}-${row.dividend.rate}`} symbol={row.dividend.symbol} logoUrl={row.logoUrl} size="xs" className={styles.foldLogo} />
+                          ))}
+                        </span>
+                        <span className={`figure ${styles.foldCount}`}>{v.payments.replace("{n}", String(rows.length))}</span>
+                        {mine > 0 && (
+                          <span className={styles.watchTag}>
+                            <span aria-hidden>★</span> {v.watchedTag} {mine}
+                          </span>
+                        )}
+                        {top >= 0 && (
+                          <span className={`figure ${styles.foldYield}`}>
+                            {v.maxYield.replace("{value}", formatPercentPlain(top, locale, 1))}
+                          </span>
+                        )}
+                        <CaretDown aria-hidden size={14} weight="bold" className={styles.foldCaret} />
+                      </span>
+                    </summary>
                     <ul className={styles.rows}>
-                      {day.rows.map((row) => {
-                        const freq = frequencyLabel(row.frequency, t);
-                        return (
-                          <li key={`${row.dividend.symbol}-${row.dividend.exDate}-${row.dividend.rate}`} className={styles.row}>
-                            <Link href={`/hisse/${row.dividend.symbol}`} prefetch={false} className={styles.company}>
-                              <LogoTile symbol={row.dividend.symbol} logoUrl={row.logoUrl} size="md" className={styles.logo} />
-                              <span className="min-w-0">
-                                <span className={styles.symbol}>{row.dividend.symbol}</span>
-                                <span className={styles.name}>{row.name}</span>
-                              </span>
-                            </Link>
-                            <span className={styles.amount}>
-                              <span className={`numeral ${styles.amountValue}`}>{amountText(row.dividend.rate, locale)}</span>
-                              <span className={styles.amountUnit}>
-                                {x.perShare}
-                                {row.dividend.special && <span className={styles.badge}>{x.special}</span>}
-                              </span>
-                            </span>
-                            <span className={styles.yield}>
-                              {row.yieldPct !== null ? (
-                                <>
-                                  <span className={styles.yieldText}>
-                                    <span className={styles.yieldLabel}>{x.yieldEstimate}</span>
-                                    <b className="numeral">~{formatPercentPlain(row.yieldPct, locale, 1)}</b>
-                                  </span>
-                                  <span className={styles.yieldBar} aria-hidden>
-                                    <span
-                                      className={styles.yieldFill}
-                                      style={{ "--ratio": maxYield > 0 ? row.yieldPct / maxYield : 0 } as CSSProperties}
-                                    />
-                                  </span>
-                                </>
-                              ) : null}
-                            </span>
-                            <span className={styles.meta}>
-                              {row.dividend.payableDate && (
-                                <span>
-                                  {x.payable} <b className="numeral">{formatEtDateCompact(row.dividend.payableDate, locale)}</b>
-                                </span>
-                              )}
-                              {freq && <span>{freq}</span>}
-                            </span>
-                          </li>
-                        );
-                      })}
+                      {rows.map((row) => (
+                        <DividendRow key={`${row.dividend.symbol}-${row.dividend.exDate}-${row.dividend.rate}`} row={row} watched={watched.has(row.dividend.symbol)} maxYield={maxYield} locale={locale} t={t} />
+                      ))}
                     </ul>
-                  </section>
+                  </details>
                 </li>
               );
             })}
@@ -400,6 +429,160 @@ export async function DividendCalendar({ locale, t }: { locale: Locale; t: Dicti
         <DataStamp labels={t.data} source={x.dividendSource} at={result.fetchedAt} locale={locale} className={styles.stamp} />
       )}
     </Panel>
+  );
+}
+
+/** Bir ödeme satırı — şirket, tutar, getiri çubuğu, ödeme günü ve sıklık. */
+function DividendRow({
+  row,
+  watched,
+  maxYield,
+  locale,
+  t,
+}: {
+  row: DividendCalendarRow;
+  watched: boolean;
+  maxYield: number;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const x = t.marketExtras;
+  const freq = frequencyLabel(row.frequency, t);
+  return (
+    <li className={styles.row} data-watched={watched || undefined}>
+      <Link href={`/hisse/${row.dividend.symbol}`} prefetch={false} className={styles.company}>
+        <LogoTile symbol={row.dividend.symbol} logoUrl={row.logoUrl} size="md" className={styles.logo} />
+        <span className="min-w-0">
+          <span className={styles.symbol}>
+            {watched && (
+              <span aria-hidden className={styles.star}>
+                ★
+              </span>
+            )}
+            {row.dividend.symbol}
+            {watched && <span className="sr-only"> ({t.calendarVisuals.dividends.watchedTag})</span>}
+          </span>
+          <span className={styles.name}>{row.name}</span>
+        </span>
+      </Link>
+      <span className={styles.amount}>
+        <span className={`numeral ${styles.amountValue}`}>{amountText(row.dividend.rate, locale)}</span>
+        <span className={styles.amountUnit}>
+          {x.perShare}
+          {row.dividend.special && <span className={styles.badge}>{x.special}</span>}
+        </span>
+      </span>
+      <span className={styles.yield}>
+        {row.yieldPct !== null ? (
+          <>
+            <span className={styles.yieldText}>
+              <span className={styles.yieldLabel}>{x.yieldEstimate}</span>
+              <b className="numeral">~{formatPercentPlain(row.yieldPct, locale, 1)}</b>
+            </span>
+            <span className={styles.yieldBar} aria-hidden>
+              <span
+                className={styles.yieldFill}
+                style={{ "--ratio": maxYield > 0 ? row.yieldPct / maxYield : 0 } as CSSProperties}
+              />
+            </span>
+          </>
+        ) : null}
+      </span>
+      <span className={styles.meta}>
+        {row.dividend.payableDate && (
+          <span>
+            {x.payable} <b className="numeral">{formatEtDateCompact(row.dividend.payableDate, locale)}</b>
+          </span>
+        )}
+        {freq && <span>{freq}</span>}
+      </span>
+    </li>
+  );
+}
+
+/**
+ * ÖNE ÇIKANLAR (25 Ekim) — listenin üstünde iki kısa liste: okuyucunun
+ * takip listesindeki ödemeler (oturum açıksa ve varsa) ve pencerenin en
+ * yüksek getiri tahminleri (`dividendHighlights`). Her satır: logo, sembol,
+ * getiri (sayı + pencerenin en yükseğine göre çizgi, takvim satırıyla aynı
+ * ölçek) ve son alım günü; satır o günün katlamasına gider ve onu açar.
+ * Getiri bir büyüklük, yargı değil: çizgi nötr (takvim satırının rengi).
+ */
+function DividendHighlights({
+  days,
+  watched,
+  maxYield,
+  locale,
+  t,
+}: {
+  days: DividendCalendarDay[];
+  watched: ReadonlySet<string>;
+  maxYield: number;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const v = t.calendarVisuals.dividends;
+  const today = todayEt();
+  const lastBuyOf = new Map(days.map((day) => [day.exDate, day.lastBuy]));
+  const { watched: mine, topYield } = dividendHighlights(days, watched);
+  if (mine.length === 0 && topYield.length === 0) return null;
+
+  const list = (rows: DividendCalendarRow[]) => (
+    <ol className={styles.hlList}>
+      {rows.map((row, index) => {
+        const lastBuy = lastBuyOf.get(row.dividend.exDate) ?? null;
+        const missed = buyWindowPassed({ exDate: row.dividend.exDate, lastBuy }, today);
+        return (
+          <li key={`${row.dividend.symbol}-${row.dividend.exDate}`} style={{ "--i": index } as CSSProperties}>
+            <a href={`#${DAY_ANCHOR}${row.dividend.exDate}`} className={styles.hlRow}>
+              <LogoTile symbol={row.dividend.symbol} logoUrl={row.logoUrl} size="sm" />
+              <span className={styles.hlWho}>
+                <span className={styles.hlSymbol}>{row.dividend.symbol}</span>
+                <span className={styles.hlWhen}>
+                  {missed
+                    ? v.lastBuyMissed
+                    : v.lastBuyShort.replace("{date}", formatEtDateCompact(lastBuy ?? row.dividend.exDate, locale))}
+                </span>
+              </span>
+              {row.yieldPct !== null ? (
+                <span className={styles.hlYield}>
+                  <b className="numeral">~{formatPercentPlain(row.yieldPct, locale, 1)}</b>
+                  <span className={styles.yieldBar} aria-hidden>
+                    <span
+                      className={styles.yieldFill}
+                      style={{ "--ratio": maxYield > 0 ? row.yieldPct / maxYield : 0 } as CSSProperties}
+                    />
+                  </span>
+                </span>
+              ) : (
+                <span className={`numeral ${styles.hlYield}`}>{amountText(row.dividend.rate, locale)}</span>
+              )}
+            </a>
+          </li>
+        );
+      })}
+    </ol>
+  );
+
+  return (
+    <section className={styles.highlights} aria-label={v.highlights}>
+      {mine.length > 0 && (
+        <div className={styles.hlGroup}>
+          <h3 className={styles.hlTitle}>
+            <span aria-hidden className={styles.star}>★</span>
+            {v.watchlist}
+          </h3>
+          {list(mine)}
+        </div>
+      )}
+      {topYield.length > 0 && (
+        <div className={styles.hlGroup}>
+          <h3 className={styles.hlTitle}>{v.topYield}</h3>
+          {list(topYield)}
+          <p className={styles.hlHint}>{v.topYieldHint}</p>
+        </div>
+      )}
+    </section>
   );
 }
 

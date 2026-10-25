@@ -1,4 +1,5 @@
 import { UsersThree } from "@phosphor-icons/react/dist/ssr";
+import { BUCKET_INK } from "./analyst-tones";
 import styles from "../stock.module.css";
 import { DataError, Panel, PanelHeader } from "@/components/ui/primitives";
 import { type Dictionary, type Locale } from "@/lib/i18n";
@@ -56,12 +57,14 @@ export async function AnalystCard({
   const kotasyon = latest.symbol?.toUpperCase();
   const alimTarafi = latest.strongBuy + latest.buy;
 
+  /* Renk tek kaynaktan, sitenin görüş üçlüsü (yumuşak yeşil, pirinç,
+     yumuşak kırmızı): `analyst-tones.ts`. */
   const segments = [
-    { label: t.stock.strongBuy, value: latest.strongBuy, cls: "bg-up", color: "var(--up)" },
-    { label: t.stock.buy, value: latest.buy, cls: "bg-up/60", color: "color-mix(in srgb, var(--up) 60%, var(--surface-solid))" },
-    { label: t.stock.hold, value: latest.hold, cls: "bg-flat", color: "var(--flat)" },
-    { label: t.stock.sell, value: latest.sell, cls: "bg-down/60", color: "color-mix(in srgb, var(--down) 60%, var(--surface-solid))" },
-    { label: t.stock.strongSell, value: latest.strongSell, cls: "bg-down", color: "var(--down)" },
+    { label: t.stock.strongBuy, value: latest.strongBuy, color: BUCKET_INK.strongBuy },
+    { label: t.stock.buy, value: latest.buy, color: BUCKET_INK.buy },
+    { label: t.stock.hold, value: latest.hold, color: BUCKET_INK.hold },
+    { label: t.stock.sell, value: latest.sell, color: BUCKET_INK.sell },
+    { label: t.stock.strongSell, value: latest.strongSell, color: BUCKET_INK.strongSell },
   ];
 
   /* KART KOMŞUSUNUN RİTMİNE OTURUYOR.
@@ -129,25 +132,34 @@ export async function AnalystCard({
               periyodun 1'i aşması dash'in başlangıç ofsetinde (1) tümüyle
               gizlenebilmesi için şart (SentimentPulse bantlarıyla aynı
               kalıp). Son kare eski çizimle piksel piksel aynı. */}
-          <g data-motion-stagger>
+          {/* Kademe (`data-motion-stagger`) KALKTI (25 Ekim): kademeli çocuk
+              hareketi azaltan kipte `transform:none` alıyor ve dilimin
+              açısını taşıyan sarmalayıcıyı da sıfırlıyordu. Dilimler
+              birlikte çiziliyor. */}
+          <g>
             {segments.map((segment, index) => {
               const circumference = 2 * Math.PI * 47;
               const len = Math.max(0, (segment.value / total) * circumference - 2) / circumference;
               const start = segments.slice(0, index).reduce((sum, item) => sum + item.value, 0) / total;
+              /* AÇI SARMALAYICIDA (25 Ekim). Hareketi azaltan kipte
+                 `[data-motion-draw]` `transform:none!important` alıyor
+                 (PremiumMotion.module.css) ve dairenin `transform`
+                 özniteliğini eziyordu: beş dilim de tepeden başlayıp üst
+                 üste biniyordu, halka yalnız ilk kovayı gösteriyordu. */
               return segment.value > 0 ? (
-                <circle
-                  key={segment.label}
-                  data-motion-draw="arc"
-                  pathLength={1}
-                  cx="60"
-                  cy="60"
-                  r="47"
-                  fill="none"
-                  stroke={segment.color}
-                  strokeWidth="8"
-                  strokeDasharray={`${len} ${2 - len}`}
-                  transform={`rotate(${-90 + start * 360} 60 60)`}
-                />
+                <g key={segment.label} transform={`rotate(${-90 + start * 360} 60 60)`}>
+                  <circle
+                    data-motion-draw="arc"
+                    pathLength={1}
+                    cx="60"
+                    cy="60"
+                    r="47"
+                    fill="none"
+                    stroke={segment.color}
+                    strokeWidth="8"
+                    strokeDasharray={`${len} ${2 - len}`}
+                  />
+                </g>
               ) : null;
             })}
           </g>
@@ -168,7 +180,8 @@ export async function AnalystCard({
             <dt className="flex min-w-0 flex-1 items-center gap-2 text-xs font-semibold text-strong">
               <span
                 aria-hidden
-                className={cn("size-2 shrink-0 rounded-full", segment.cls)}
+                className="size-2 shrink-0 rounded-full"
+                style={{ background: segment.color }}
               />
               {segment.label}
             </dt>

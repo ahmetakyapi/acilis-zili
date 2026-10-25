@@ -32,6 +32,10 @@ import type { SearchHit } from "@/app/api/search/route";
 import type { Locale } from "@/lib/i18n/config";
 import { cn, formatPrice, NO_VALUE } from "@/lib/utils";
 import { formatLira } from "@/lib/fx";
+import { Sparkline } from "@/components/ui/Sparkline";
+import { RangeTrack } from "@/components/markets/CompareScale";
+import type { YearRange } from "@/lib/watchlist-visuals";
+import visualStyles from "@/components/watchlist/WatchlistVisuals.module.css";
 
 /**
  * Favoriler panosu.
@@ -57,6 +61,11 @@ export type BoardQuote = {
   /** Fiyatın lira karşılığı — TCMB döviz alış kuruyla, sunucuda çevrilmiş.
    *  Kur alınamadıysa yok; satır yalnızca doları yazar. */
   priceTl?: number | null;
+  /** Günün 5 dakikalık kapanışları — satırın minyatür çizgisi (25 Ekim).
+   *  Paket bayatsa ya da bar yoksa null: çizgi sayıyla aynı seansı anlatmalı. */
+  spark?: number[] | null;
+  /** 52 haftalık aralık ve fiyatın oradaki yeri (`yearRange`). */
+  range?: YearRange | null;
 };
 
 export type BoardLabels = {
@@ -104,6 +113,14 @@ export type BoardLabels = {
   /* Tutamağın fare balonu — sabit Türkçe yazılıydı; görsel arayüzde
      çevrilmiş metinlerin yanında durduğu için gözden kaçmıştı. */
   dragHint: string;
+  /** "{low}", "{high}", "{pos}" — 52 hafta rayının balonu ve ekran okuyucu metni. */
+  rangeTitle: string;
+  /** "{symbol}" — günün çizgisinin erişilebilir adı. */
+  sparkTitle: string;
+  /** Düzenle kipinin düğmesi: "Düzenle" / "Bitti"; "{name}" erişilebilir ad. */
+  edit: string;
+  editDone: string;
+  editLabel: string;
 };
 
 const LIST_COLOR_CLASS: Record<string, string> = {
@@ -502,6 +519,12 @@ function ListPanel({
 }) {
   const [renaming, setRenaming] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  /* DÜZENLE KİPİ (25 Ekim). Sıralama okları, not, çıkarma ve listenin
+     adını değiştirme/silme her satırda duruyordu: 390'da düğmeler satırın
+     ~%45'ini alıp şirket adını "S…"ye düşürüyordu (ölçüldü). Okuma kipinde
+     satır yalnız kimlik, çizgi ve fiyat; düzenleme düğmeleri kipe girince
+     açılıyor ve orada hep görünür (imleç beklemiyor, 44 piksel). */
+  const [editing, setEditing] = useState(false);
   const renameTriggerRef = useRef<HTMLButtonElement>(null);
   const deleteTriggerRef = useRef<HTMLButtonElement>(null);
 
@@ -569,6 +592,8 @@ function ListPanel({
             ikonu panel kenarından eskisi gibi ~30 piksel uzakta tutuyor
             (32 → 30). 640 üstünde imleç hassas, kutu 32 kalıyor. */}
         <div className="flex shrink-0 items-center gap-0.5 max-sm:-mr-2 max-sm:gap-0">
+        {editing && (
+          <>
         {/* YIKICI OLMAYAN DÜZELTMENİN YOLU. `renameWatchlist` eylemi ve
             sözlük anahtarı yazılıydı ama onu çağıran hiçbir düğme yoktu:
             liste adını yanlış yazan ya da kapsamı değişen kullanıcının tek
@@ -580,7 +605,7 @@ function ListPanel({
           onClick={() => setRenaming(true)}
           aria-label={`${labels.renameList}: ${list.name}`}
           title={labels.renameList}
-          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted opacity-0 transition max-sm:-my-1.5 max-sm:size-11 hover:bg-primary-wash hover:text-primary-ink group-focus-within/list:opacity-100 group-hover/list:opacity-100 [@media(hover:none)]:opacity-100"
+          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted transition max-sm:-my-1.5 max-sm:size-11 hover:bg-primary-wash hover:text-primary-ink [@media(hover:none)]:size-11"
         >
           <PencilSimple weight="duotone" size={14} />
         </button>
@@ -600,10 +625,28 @@ function ListPanel({
              sıraya bağlıydı: silme düğmesi hep görünürken yanına eklenen
              kalem düğmesi yalnızca imleçle çıkıyordu — aynı yerdeki iki
              düğme farklı davranıyordu. Tek kural: ikisi de imleçle çıkar. */
-          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted opacity-0 transition max-sm:-my-1.5 max-sm:size-11 hover:bg-down-wash hover:text-down group-focus-within/list:opacity-100 group-hover/list:opacity-100 [@media(hover:none)]:opacity-100"
+          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted transition max-sm:-my-1.5 max-sm:size-11 hover:bg-down-wash hover:text-down [@media(hover:none)]:size-11"
         >
           <Trash weight="duotone" size={14} />
         </button>
+          </>
+        )}
+        {list.items.length > 0 || editing ? (
+          <button
+            type="button"
+            onClick={() => setEditing((current) => !current)}
+            aria-pressed={editing}
+            title={labels.editLabel.replace("{name}", list.name)}
+            className={cn(
+              "inline-flex min-h-8 items-center rounded-(--radius-sm) px-3 text-small font-semibold transition-colors max-sm:-my-1.5 max-sm:min-h-11 [@media(hover:none)]:min-h-11",
+              editing
+                ? "bg-primary text-on-primary hover:bg-primary-hover"
+                : "text-primary-ink hover:bg-primary-wash",
+            )}
+          >
+            {editing ? labels.editDone : labels.edit}
+          </button>
+        ) : null}
         </div>
       </div>
       )}
@@ -621,6 +664,7 @@ function ListPanel({
           logos={logos}
           locale={locale}
           labels={labels}
+          editing={editing}
         />
       )}
     </section>
@@ -652,6 +696,7 @@ function SortableRows({
   logos,
   locale,
   labels,
+  editing,
 }: {
   list: BoardList;
   quotes: Record<string, BoardQuote>;
@@ -659,6 +704,8 @@ function SortableRows({
   logos: Record<string, string>;
   locale: Locale;
   labels: BoardLabels;
+  /** Düzenle kipi — sıralama, not ve çıkarma düğmeleri yalnız burada (ListPanel). */
+  editing: boolean;
 }) {
   const router = useRouter();
   const [order, setOrder] = useState<string[] | null>(null);
@@ -845,8 +892,9 @@ function SortableRows({
                 transition={ROW_LANDED}
               />
               <div
-                draggable
+                draggable={editing}
                 onDragStart={(event) => {
+                  if (!editing) return;
                   flushNudges();
                   dragId.current = item.id;
                   dragOncesi.current = order;
@@ -874,13 +922,15 @@ function SortableRows({
                 {/* Tutamak yalnızca imleç satırın üstündeyken görünür. Dokuz
                     satırın hepsinde sürekli duran gri bir nokta ızgarası, listenin
                     sol kenarında ikinci bir sütun gibi okunuyordu. */}
-                <span
-                  aria-hidden
-                  className="hidden cursor-grab touch-none text-muted/60 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-hover:text-muted [@media(hover:none)]:opacity-100 sm:block"
-                  title={labels.dragHint}
-                >
-                  <DotsSixVertical weight="duotone" size={15} />
-                </span>
+                {editing && (
+                  <span
+                    aria-hidden
+                    className="hidden cursor-grab touch-none text-muted sm:block"
+                    title={labels.dragHint}
+                  >
+                    <DotsSixVertical weight="duotone" size={15} />
+                  </span>
+                )}
 
                 <Link
                   href={`/hisse/${item.symbol}`}
@@ -906,9 +956,74 @@ function SortableRows({
                     <span className="numeral shrink-0 text-sm font-semibold text-strong sm:w-14">
                       {item.symbol}
                     </span>
-                    <span className="min-w-0 truncate text-xs text-soft">
+                    {/* Düzenle kipinde telefonda ad iki satıra iner ve görsel
+                        çekilir: düğmeler yer alınca ad 100 piksele düşüp
+                        kesiliyordu (ölçüldü). */}
+                    <span
+                      className={cn(
+                        "min-w-0 truncate text-xs text-soft sm:w-[clamp(180px,26%,300px)] sm:flex-none",
+                        editing && "max-sm:line-clamp-2 max-sm:whitespace-normal",
+                      )}
+                    >
                       {names[item.symbol] ?? ""}
                     </span>
+                    {/* SATIR GÖRSELLERİ (25 Ekim): günün çizgisi ve altında 52
+                        haftalık ray — ana sayfanın takip özetiyle aynı dil
+                        (`WatchlistSummary`), aynı veriden. Sütun SABİT GENİŞLİKTE
+                        (geniş ekranda 96) ki dokuz satırın çizgileri
+                        alt alta karşılaştırılabilsin. Çizgi yönün rengini taşıyor
+                        (yüzdeyle aynı işaret), ray nötr. Ne anlattıkları sayfanın
+                        tepesindeki anahtarda yazılı.
+                        TELEFONDA KİMLİK SÜTUNUNUN ÜÇÜNCÜ SATIRI: ayrı bir
+                        sütun olarak 390 pikselde sembolü 40 piksele sıkıştırıp
+                        çizgiyle çakıştırıyordu (ölçüldü), şirket adı "S…"ye
+                        düşüyordu. Geniş ekranda `sm:contents` kimliği açınca
+                        sağa yaslı ayrı sütun. */}
+                    {quote && (quote.spark || quote.range) && (
+                      <span
+                        className={visualStyles.rowVisual}
+                        data-editing={editing || undefined}
+                        title={
+                          quote.range
+                            ? labels.rangeTitle
+                                .replace("{low}", formatPrice(quote.range.low, locale))
+                                .replace("{high}", formatPrice(quote.range.high, locale))
+                                .replace("{pos}", String(Math.round(quote.range.position * 100)))
+                            : undefined
+                        }
+                      >
+                        {quote.spark ? (
+                          <Sparkline
+                            points={quote.spark.map((value) => ({ value }))}
+                            title={labels.sparkTitle.replace("{symbol}", item.symbol)}
+                            tone={
+                              quote.changePct === null || quote.changePct === 0
+                                ? "flat"
+                                : quote.changePct > 0
+                                  ? "up"
+                                  : "down"
+                            }
+                            width={96}
+                            height={24}
+                            showArea={false}
+                            className={visualStyles.spark}
+                          />
+                        ) : (
+                          <span className={visualStyles.sparkGap} />
+                        )}
+                        {quote.range && (
+                          <>
+                            <RangeTrack position={quote.range.position} />
+                            <span className="sr-only">
+                              {labels.rangeTitle
+                                .replace("{low}", formatPrice(quote.range.low, locale))
+                                .replace("{high}", formatPrice(quote.range.high, locale))
+                                .replace("{pos}", String(Math.round(quote.range.position * 100)))}
+                            </span>
+                          </>
+                        )}
+                      </span>
+                    )}
                   </span>
                 </Link>
 
@@ -924,7 +1039,9 @@ function SortableRows({
                     şirket adı sıfır genişliğe düşüyordu. Alt alta almak seksen
                     piksel kazandırıyor ve iki sayı zaten aynı şeyin iki yüzü —
                     sağ kenarda hizalı bir blok olarak da doğru okunuyor. */}
-                <span className="flex shrink-0 flex-col items-end gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+                {/* Düzenle kipinde telefonda fiyat yerini düğmelere bırakır:
+                    sıralarken okunan şey sembol, fiyat değil. */}
+                <span className={cn("flex shrink-0 flex-col items-end gap-0.5 sm:flex-row sm:items-center sm:gap-2", editing && "max-sm:hidden")}>
                   {/* LİRA KARŞILIĞI DOLARIN ALTINDA, küçük puntoda. Fiyat
                       sütununun genişliği değişmiyor (92 piksel; en uzun
                       tutar "₺1.234.567,00" ~80 piksel) ve satırın ana
@@ -974,7 +1091,8 @@ function SortableRows({
 
                     Klavyeyle gezen okuyucu için `group-focus-within` var: sekme
                     tuşu satıra girdiğinde hepsi görünür oluyor. */}
-                <span className="flex shrink-0 flex-col transition-opacity opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+                {editing && (
+                <span className="flex shrink-0 flex-row sm:flex-col">
                   <button
                     type="button"
                     onClick={() => {
@@ -986,7 +1104,7 @@ function SortableRows({
                        düşürüyordu (FavoriteToggle'daki aynı tuzak). */
                     aria-disabled={index === 0}
                     aria-label={`${labels.moveUp}: ${item.symbol}`}
-                    className="flex size-9 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong aria-disabled:opacity-25 sm:h-5 sm:w-6"
+                    className="flex size-11 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong aria-disabled:opacity-25 sm:h-5 sm:w-6 [@media(hover:none)]:size-11"
                   >
                     <CaretUp weight="duotone" size={13} />
                   </button>
@@ -1001,23 +1119,25 @@ function SortableRows({
                        düşürüyordu (FavoriteToggle'daki aynı tuzak). */
                     aria-disabled={index === ordered.length - 1}
                     aria-label={`${labels.moveDown}: ${item.symbol}`}
-                    className="flex size-9 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong aria-disabled:opacity-25 sm:h-5 sm:w-6"
+                    className="flex size-11 items-center justify-center rounded text-muted transition-colors hover:bg-surface-elevated hover:text-strong aria-disabled:opacity-25 sm:h-5 sm:w-6 [@media(hover:none)]:size-11"
                   >
                     <CaretDown weight="duotone" size={13} />
                   </button>
                 </span>
+                )}
 
-                {!item.note && (
+                {editing && !item.note && (
                   <button
                     type="button"
                     onClick={() => setNoting(item.id)}
                     aria-label={`${labels.noteAdd}: ${item.symbol}`}
                     title={labels.noteAdd}
-                    className="inline-flex size-10 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted/70 opacity-0 transition hover:bg-surface-elevated hover:text-strong group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100 sm:size-7"
+                    className="inline-flex size-11 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted transition hover:bg-surface-elevated hover:text-strong sm:size-7 [@media(hover:none)]:size-11"
                   >
                     <NotePencil weight="duotone" size={13} />
                   </button>
                 )}
+                {editing && (
                 <button
                   type="button"
                   onClick={async (event) => {
@@ -1053,10 +1173,11 @@ function SortableRows({
                        `revalidatePath`i güncel ağacı zaten getirdi. */
                   }}
                   aria-label={`${labels.removeSymbol}: ${item.symbol}`}
-                  className="inline-flex size-10 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted/70 opacity-100 transition hover:bg-down-wash hover:text-down opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100 sm:size-7"
+                  className="inline-flex size-11 shrink-0 items-center justify-center rounded-(--radius-sm) text-muted transition hover:bg-down-wash hover:text-down sm:size-7 [@media(hover:none)]:size-11"
                 >
                   <Trash weight="duotone" size={13} />
                 </button>
+                )}
               </div>
               <ItemNote
                 item={item}

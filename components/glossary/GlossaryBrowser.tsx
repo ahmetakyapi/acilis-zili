@@ -13,9 +13,11 @@ import { PortfolioSheet } from "@/components/portfolio/PortfolioSheet";
 import { glossaryPeekAction } from "@/app/actions/glossary";
 import type { GlossaryCategoryKey } from "@/content/glossary";
 import type { GlossaryMotif } from "@/content/glossary/marks";
+import type { GlossaryFormula } from "@/content/glossary/formulas";
 import { foldForSearch } from "@/lib/search-fold";
 import { GLOSSARY_ALL_ICON, GLOSSARY_CATEGORY_ICONS } from "./category-icons";
 import { TermMark } from "./TermMark";
+import { splitTerm, TermDial, TermFormula, type FormulaLabels } from "./TermFormula";
 import styles from "./Glossary.module.css";
 
 /**
@@ -89,6 +91,8 @@ export type GlossaryBrowserItem = {
   rank: number;
   /** Kartın kavram çizimi (`GLOSSARY_MARKS`). */
   motif: GlossaryMotif;
+  /** Formül ya da kadran (`GLOSSARY_FORMULAS`) — yalnız tanımı bir işlem ya da eşikli ölçek olan terimlerde. */
+  formula?: GlossaryFormula;
 };
 
 export type GlossaryBrowserGroup = {
@@ -138,6 +142,8 @@ export function GlossaryBrowser({
     close: string;
     peekError: string;
     openFull: string;
+    /** Kartlardaki kesir ve kadranın kelimeleri (`glossaryVisuals`). */
+    formula: FormulaLabels;
   };
 }) {
   const [query, setQuery] = useState("");
@@ -233,6 +239,7 @@ export function GlossaryBrowser({
   };
 
   const countLabel = (count: number) => labels.count.replace("{count}", String(count));
+  const visual: CardVisual = { lang: locale === "en" ? "en" : "tr", labels: labels.formula };
   const AllIcon = GLOSSARY_ALL_ICON;
 
   /* ---- Terim penceresi (29 Eylül, sahibinin isteği) ----
@@ -454,6 +461,7 @@ export function GlossaryBrowser({
                 <CategorySection
                   key={group.key}
                   group={group}
+                  visual={visual}
                   order={index}
                   countLabel={countLabel}
                   openLabel={labels.openCategory}
@@ -484,7 +492,7 @@ export function GlossaryBrowser({
             >
               <AnimatePresence initial={false} mode="popLayout">
                 {byGroup.map((group) => (
-                  <ResultSection key={group.key} group={group} countLabel={countLabel} />
+                  <ResultSection key={group.key} group={group} countLabel={countLabel} visual={visual} />
                 ))}
               </AnimatePresence>
             </motion.div>
@@ -534,49 +542,29 @@ type Group = GlossaryBrowserGroup & {
   total: number;
 };
 
-/**
- * Adın sonundaki kısaltma ya da öteki ad ("Aktif Kârlılığı (ROA)",
- * "Halka Açıklık (Free Float)") rozete ayrılıyor: tarayan göz terimi çoğu
- * zaman o adıyla arıyor. Sınır en çok iki kelime ve 18 harf — TR'de 150
- * terimin 43'ü rozet alıyor (EN 36); parantezli kalan dördü bir AÇILIM
- * taşıyor ("ADR (Amerikan Depo Sertifikası)", JOLTS, SEC) ya da üç
- * kelimelik bir açıklama ("Federal Fon Oranı") ve adın parçası kalıyor.
- */
-const TRAILING_ALIAS = /^(.+?)\s+\(([^()]{1,18})\)$/u;
+/* Adın sonundaki kısaltmayı rozete ayıran `splitTerm` artık TermFormula.tsx'te
+   (25 Ekim): sunucudaki kapak levhası da kullanıyor ve "use client" bir
+   modülden dışa aktarılan değer sunucuya gerçek değer olarak gelmez. */
 
-function splitTerm(term: string): { name: string; abbr: string | null } {
-  const match = TRAILING_ALIAS.exec(term);
-  if (!match || match[2].trim().split(/\s+/).length > 2) return { name: term, abbr: null };
-  return { name: match[1], abbr: match[2] };
-}
+type CardVisual = { lang: "tr" | "en"; labels: FormulaLabels };
 
-/**
- * Terim kartı (29 Eylül, yedinci tur; sahibinin isteği: "tıklanabilir
- * olduğu gözükmüyor, görsel kart ve ikon olsun"). Altıncı turun sözlük
- * satırları sakindi ama bir bağlantı gibi okunmuyordu: çerçevesiz metin,
- * ok yalnızca üzerine gelince. Kart şimdi üç katlı: solda terimin kavram
- * çizimi (`TermMark`, görünüme girince uçtan uca çiziliyor), yanında ad ve
- * kısaltma rozeti, sağ üstte HEP GÖRÜNEN yuvarlak bir ok, altında tanımın
- * ilk cümlesi. Ok kartın bir düğme olduğunu dokunmatikte de söylüyor;
- * üzerine gelmeyi bekleyen bir ipucu değil. İlk denemede ok dipte
- * "Tanımı Oku" yazılı ayrı bir satırdaydı: kartı 213 pikselden ~160'a
- * çıkarıyordu (1440'ta sayfa 11.181 piksel, ölçüldü) — aynı işareti başlık
- * satırı bedavaya taşıyor.
- *
- * Beşinci turda kaldırılan işaretin gerekçesi (42 piksellik karo tanımdan
- * satır yiyordu) karo AD'ın yanına alınarak karşılandı: ad ile karo aynı
- * satırı paylaşıyor, tanım tam genişlikte.
- *
- * Kartın tamamı detaya giden bağlantı; düz tıklama sayfadan ayrılmadan
- * terim penceresini açıyor (yukarıda, `onPeekClick`). Kısa tanım en çok
- * üç satır; kırpılan kart tam cümlesini `title`da taşıyor.
- */
-function TermCard({ item }: { item: GlossaryBrowserItem }) {
+/* FORMÜL ŞERİDİ VE KADRAN (25 Ekim, öğrenme araçlarının görsel turu). Oran
+   terimlerinin hepsi aynı "pay ve payda" karosunu taşıyordu: F/K ile PD/DD,
+   Cari Oran ile Borç/Özsermaye kartta ayırt edilmiyordu. Şimdi tanımı bir
+   işlem olan terimde başlıkla tanım arasında formülün kendisi (pay üstte,
+   payda altta), eşikli göstergede (RSI, PMI) karo bir kadran. Veri ve
+   gerekçe `content/glossary/formulas.ts`. */
+function TermCard({ item, visual }: { item: GlossaryBrowserItem; visual: CardVisual }) {
   const { name, abbr } = splitTerm(item.term);
+  const formula = item.formula;
   return (
     <Link href={`/sozluk/${item.slug}`} prefetch={false} className={styles.card} data-card data-peek={item.slug}>
       <span className={styles.cardHead}>
-        <TermMark motif={item.motif} size="md" draw className={styles.cardMark} />
+        {formula?.kind === "dial" ? (
+          <TermDial dial={formula} labels={visual.labels} size="md" className={styles.cardMark} />
+        ) : (
+          <TermMark motif={item.motif} size="md" draw className={styles.cardMark} />
+        )}
         <span className={styles.cardName} data-name>
           <span>{name}</span>
           {abbr && <span className={`${styles.cardAbbr} numeral`}>{abbr}</span>}
@@ -585,6 +573,11 @@ function TermCard({ item }: { item: GlossaryBrowserItem }) {
           <ArrowUpRight size={13} weight="bold" />
         </span>
       </span>
+      {formula?.kind === "formula" && (
+        <span className={styles.cardFormula}>
+          <TermFormula formula={formula} lang={visual.lang} labels={visual.labels} abbr={abbr} size="card" />
+        </span>
+      )}
       <span className={styles.cardShort} data-short>
         {item.short}
       </span>
@@ -629,12 +622,14 @@ function SectionHead({
  */
 function CategorySection({
   group,
+  visual,
   order,
   countLabel,
   openLabel,
   onOpen,
 }: {
   group: Group;
+  visual: CardVisual;
   order: number;
   countLabel: (count: number) => string;
   openLabel: string;
@@ -657,7 +652,7 @@ function CategorySection({
       <ul className={styles.cards} data-rail data-motion-stagger>
         {group.members.map((item) => (
           <li key={item.slug} className={styles.cardItem} style={{ "--rank": item.rank } as CSSProperties}>
-            <TermCard item={item} />
+            <TermCard item={item} visual={visual} />
           </li>
         ))}
       </ul>
@@ -669,9 +664,11 @@ function CategorySection({
 function ResultSection({
   group,
   countLabel,
+  visual,
 }: {
   group: Group;
   countLabel: (count: number) => string;
+  visual: CardVisual;
 }) {
   return (
     <motion.section
@@ -696,7 +693,7 @@ function ResultSection({
               transition={{ duration: 0.28, ease: EASE }}
               className={styles.cardItem}
             >
-              <TermCard item={item} />
+              <TermCard item={item} visual={visual} />
             </motion.li>
           ))}
         </AnimatePresence>

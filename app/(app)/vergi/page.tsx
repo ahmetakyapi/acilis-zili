@@ -87,11 +87,11 @@ export default async function TaxPage() {
         visual={<TaxPaths labels={L} />}
       />
 
-      <TaxCalculator labels={L} locale={locale} indexAuto={isEvdsConfigured()} today={today} years={years} />
+      <TaxCalculator labels={L} visuals={t.taxVisuals} locale={locale} indexAuto={isEvdsConfigured()} today={today} years={years} />
 
       <TaxHow labels={L} locale={locale} today={today} years={years} />
 
-      <TaxFiling labels={L} locale={locale} today={today} years={years} />
+      <TaxFiling labels={L} visuals={t.taxVisuals} locale={locale} today={today} years={years} />
 
       {/* BİLMEN GEREKENLER (18 Ekim): tarife merdiveni + üç kart. Eski
           hâl (düz tablo ve üç kapalı açılır satır) ve yeni kurgunun

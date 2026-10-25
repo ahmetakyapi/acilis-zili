@@ -10,6 +10,7 @@ import {
   concentrationOf,
   correlation,
   maxDrawdown,
+  MATRIX_SIZE,
   scenarioOf,
   sectorGaps,
   weekStartOf,
@@ -218,4 +219,34 @@ test("hizalama gösterge ızgarasında; kısa seri girmez", () => {
   assert.equal(aligned.returns.get("NVDA")!.length, 252);
   const gap = { ...input().closes, NVDA: series(nvda).filter((_, i) => i % 5 !== 0) };
   assert.equal(alignReturns(gap, "SPY", ["NVDA"], SESSION)!.returns.has("NVDA"), false);
+});
+
+test("korelasyon ısı matrisi: ağırlık sırasında, simetrik, listeyle aynı sayılar", () => {
+  const risk = analyzePortfolio(input())!;
+  const matrix = risk.correlation!.matrix;
+  assert.deepEqual(matrix.symbols, risk.rows.slice(0, MATRIX_SIZE).map((row) => row.symbol));
+  const n = matrix.symbols.length;
+  for (let i = 0; i < n; i += 1) {
+    assert.equal(matrix.values[i]![i], 1);
+    for (let j = 0; j < n; j += 1) assert.equal(matrix.values[i]![j], matrix.values[j]![i]);
+  }
+  /* Listedeki en yüksek çiftin değeri matristeki hücreyle birebir aynı. */
+  const top = risk.correlation!.top[0]!;
+  const at = (s: string) => matrix.symbols.indexOf(s);
+  assert.equal(matrix.values[at(top.a)]![at(top.b)], top.value);
+});
+
+test("ısı matrisi en büyük MATRIX_SIZE pozisyonla sınırlı", () => {
+  const extra = ["AAA", "BBB", "CCC", "DDD", "EEE"];
+  const closes = { ...input().closes };
+  extra.forEach((symbol, i) => {
+    closes[symbol] = series(market.map((m, k) => m + noise(10 + i, 0.01)[k]!), 20 + i);
+  });
+  const holdings = [
+    ...input().holdings,
+    ...extra.map((symbol) => ({ symbol, quantity: 1, sector: "Industrials" })),
+  ];
+  const risk = analyzePortfolio(input({ holdings, closes }))!;
+  assert.equal(risk.correlation!.covered, 8);
+  assert.equal(risk.correlation!.matrix.symbols.length, MATRIX_SIZE);
 });

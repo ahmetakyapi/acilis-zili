@@ -1,0 +1,116 @@
+/* ==========================================================================
+   Rehberin yol haritası (25 Ekim). Gerekçe GuideRoadmap.tsx başında.
+
+   Ölçüler:
+   - düğüm 52 px (telefonda 44): ikon kutusu, aynı zamanda dokunma hedefinin
+     yarısı; bağlantı kartın tamamı, yani hedef 44 pikselin hep üstünde.
+   - kulvar 5 px (`var(--lane-h, 5px)`, sitenin tek kulvar ölçüsü), düğümün
+     dikey ortasından geçiyor.
+   - İlerleme ve okunan noktalar mavi ailenin YUMUŞAK tonu; doygun mavi
+     yalnız bağlantı metninde ("Kaldığın Yerden Devam Et").
+   ========================================================================== */
+
+.roadmap { --node: 52px; --lane: var(--lane-h, 5px); display:flex; flex-direction:column; gap:14px; }
+
+/* ---- toplam satırı ---- */
+.summary { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 20px; min-height:44px; }
+.summaryFigure { display:flex; flex-direction:column; gap:6px; min-width:min(260px, 100%); font-size:12px; font-weight:650; color:var(--text-muted); }
+.summaryLane { position:relative; display:block; height:var(--lane); width:100%; max-width:260px; border-radius:999px; background:var(--rail-track); overflow:hidden; }
+.summaryFill { position:absolute; inset:0 auto 0 0; width:calc(var(--p, 0) * 100%); border-radius:inherit; background:var(--primary-soft); transition:width .6s var(--ease-brand); }
+.continue { display:inline-grid; grid-template-columns:auto 14px; align-items:center; column-gap:8px; min-height:44px; max-width:100%; padding:6px 14px; border:1px solid var(--primary-faint); border-radius:var(--radius-lg); background:var(--primary-tint); color:var(--primary-ink); text-decoration:none; transition-property:background-color,border-color; }
+.continue > svg { grid-row:1 / span 2; grid-column:2; transition:transform 200ms var(--ease-brand); }
+.continueLabel { font-size:11px; font-weight:650; color:var(--text-muted); }
+.continueTitle { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14px; font-weight:650; }
+.continue:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+.allDone { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:650; color:var(--text-strong); }
+.allDone > svg { color:var(--primary-soft); }
+@media (hover:hover) { .continue:hover { background:var(--primary-wash); border-color:var(--primary-soft); } .continue:hover > svg { transform:translateX(2px); } }
+
+/* ---- patika ---- */
+.path { position:relative; display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:0; margin:0; padding:0; list-style:none; }
+.station { position:relative; min-width:0; }
+
+/* Kulvar düğümün ortasından bir sonraki düğüme. Masaüstünde yatay: düğümün
+   sağ kenarından istasyonun sağ kenarına (sonraki istasyon tam orada başlıyor). */
+.lane { position:absolute; top:calc(var(--node) / 2 - var(--lane) / 2); left:calc(var(--node) + 6px); right:6px; height:var(--lane); border-radius:999px; background:var(--rail-track); overflow:hidden; }
+.laneFill { position:absolute; inset:0 auto 0 0; width:calc(var(--p, 0) * 100%); border-radius:inherit; background:var(--primary-soft); transition:width .6s var(--ease-brand); }
+.station:last-child .lane { right:30px; }
+.finish { position:absolute; top:calc(var(--node) / 2 - 12px); right:0; display:grid; place-items:center; width:24px; height:24px; border-radius:50%; background:var(--surface-sunken); color:var(--text-muted); }
+.station[data-complete] .finish { color:var(--text-strong); }
+
+.stop { display:flex; flex-direction:column; gap:12px; padding:0 14px 6px 0; color:inherit; text-decoration:none; border-radius:var(--radius-lg); }
+.stop:focus-visible { outline:2px solid var(--line-focus); outline-offset:4px; }
+
+.node { position:relative; z-index:1; display:grid; place-items:center; width:var(--node); height:var(--node); flex-shrink:0; border-radius:50%; background:var(--primary-tint); color:var(--text-strong); transition-property:background-color,border-color,transform; transition-duration:.25s; transition-timing-function:var(--ease-brand); }
+.station[data-complete] .node { background:var(--primary-wash); }
+/* Halka düğümün kenarı: iz `--line`, dolu kısım yumuşak mavi, saat 12'den. */
+.ring { position:absolute; inset:0; width:100%; height:100%; rotate:-90deg; overflow:visible; }
+.ring circle { fill:none; }
+.ringTrack { stroke:var(--line); stroke-width:1.5; }
+.ringFill { stroke:var(--primary-soft); stroke-width:3; stroke-linecap:round; transition:stroke-dasharray .6s var(--ease-brand); }
+.nodeCheck { position:absolute; right:-3px; bottom:-3px; display:grid; place-items:center; border-radius:50%; background:var(--page-bg); color:var(--primary-soft); }
+
+.copy { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.chapterNo { font-size:11px; font-weight:650; color:var(--text-muted); }
+.chapterName { font-size:17px; font-weight:700; line-height:1.25; letter-spacing:-.02em; color:var(--text-strong); }
+.chapterMeta { font-size:12px; color:var(--text-muted); }
+.level { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-body); }
+.dots { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; max-width:200px; }
+.dots > span { width:8px; height:8px; border-radius:50%; border:1px solid var(--line-strong); background:transparent; transition-property:background-color,border-color; transition-duration:.3s; transition-timing-function:var(--ease-brand); }
+.dots > span[data-read] { border-color:var(--primary-soft); background:var(--primary-soft); }
+.status { min-height:16px; font-size:12px; font-weight:650; color:var(--text-strong); }
+
+@media (hover:hover) and (pointer:fine) {
+  .stop:hover .node { background:var(--primary-wash); transform:translateY(-2px); }
+  .stop:hover .chapterName { color:var(--primary-ink); }
+}
+
+.note { font-size:11px; line-height:1.5; color:var(--text-muted); }
+
+/* ---- Okundu işareti (kart köşesi) ---- */
+.readMark { display:inline-grid; place-items:center; color:var(--primary-soft); }
+
+/* ---- sahneli giriş: yol bir kez çiziliyor, düğümler sırayla ----
+   Yalnız hareketi azaltmayan okuyucuda; azaltanda son kare (hiç
+   hazırlanmıyor). Kulvar `scaleX` ile çiziliyor, genişlik değil. */
+@media (prefers-reduced-motion:no-preference) {
+  .lane { transform-origin:left center; animation:roadLane .7s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 140ms + 120ms); }
+  .node { animation:roadNode .5s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 140ms); }
+  .finish { animation:roadNode .4s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 140ms + 700ms); }
+}
+@keyframes roadLane { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+@keyframes roadNode { from { opacity:0; scale:.7; } to { opacity:1; scale:1; } }
+
+/* ---- 768 altı: dikey patika ----
+   Dört bölüm adı ("Makro ve Merkez Bankası") dar sütunda iki-üç satıra
+   kırılıyordu; dikeyde her bölüm tam genişlik alıyor ve kulvar düğümden
+   aşağı, bir sonraki düğüme iniyor. */
+@media (max-width:767px) {
+  .roadmap { --node: 44px; }
+  .path { grid-template-columns:minmax(0, 1fr); }
+  .stop { flex-direction:row; gap:14px; padding:0 0 12px; }
+  .station:last-child .stop { padding-bottom:4px; }
+  .lane { top:calc(var(--node) + 6px); bottom:6px; left:calc(var(--node) / 2 - var(--lane) / 2); right:auto; width:var(--lane); height:auto; }
+  .laneFill { inset:0 0 auto 0; width:auto; height:calc(var(--p, 0) * 100%); transition-property:height; }
+  .station:last-child .lane { display:none; }
+  .finish { display:none; }
+  .chapterName { font-size:16px; }
+  /* Telefonda istasyon dört satır: ad, kapsam, noktalar, durum. Bölüm
+     numarası düğümün sırasından, seviye aralığı hemen aşağıdaki bölüm
+     başlığının bandından okunuyor; ikisi burada yüksekliği ikiye
+     katlıyordu (390'da şerit 800 piksel tutuyordu). */
+  .chapterNo, .level { display:none; }
+  .copy { gap:3px; }
+  .dots { margin-top:4px; }
+  .dots { max-width:none; }
+  /* Devam bağlantısı toplamın YANINDA, altında değil: yalnız istemcide
+     (depoda okunan varsa) geliyor ve alt satıra düşünce altındaki her şeyi
+     kaydırıyordu (390'da CLS 0,017). Satır sunucuda da 44 piksel. */
+  .summary { flex-wrap:nowrap; }
+  .summaryFigure { flex:1 1 auto; min-width:0; }
+  .continue { flex:0 1 auto; max-width:58%; padding-inline:10px; }
+  @media (prefers-reduced-motion:no-preference) {
+    .lane { transform-origin:center top; animation-name:roadLaneY; }
+  }
+}
+@keyframes roadLaneY { from { transform:scaleY(0); } to { transform:scaleY(1); } }

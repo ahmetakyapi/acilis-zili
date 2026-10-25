@@ -4,10 +4,13 @@ import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { SPX_MEMBERS, primaryOnly } from "@/db/seed/indices";
 import { INDEX_STRIP, SECTOR_FUNDS } from "@/db/seed/symbols";
-import { getHolidays, getStatus } from "@/lib/data";
+import { getHolidays, getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import {
   archivePosters,
   archiveSessions,
+  packArchiveCloses,
+  unpackArchiveBars,
+  type ArchiveCloses,
   buildPoster,
   latestPosterDate,
   posterComplete,
@@ -15,6 +18,7 @@ import {
   posterRetryable,
   type DayPoster,
 } from "@/lib/day-poster";
+import { sceneStocks, type SceneStock } from "@/lib/day-poster-scene";
 import { addEtDays, prevTradingDay, todayEt, type MarketStatus } from "@/lib/market-hours";
 import { alpaca } from "@/lib/providers";
 
@@ -39,7 +43,8 @@ import { alpaca } from "@/lib/providers";
  */
 
 const SECTOR_SYMBOLS = SECTOR_FUNDS.map((fund) => fund.symbol);
-const MEMBER_SYMBOLS = primaryOnly(SPX_MEMBERS).map((member) => member.symbol);
+const MEMBERS = primaryOnly(SPX_MEMBERS);
+const MEMBER_SYMBOLS = MEMBERS.map((member) => member.symbol);
 const POSTER_SYMBOLS = [...new Set([...SECTOR_SYMBOLS, ...INDEX_STRIP, ...MEMBER_SYMBOLS])];
 
 /** Önceki işlem gününden bu kadar takvim günü geri başlanıyor: barın
@@ -71,7 +76,8 @@ const POSTER_PENDING = "PosterPending";
    Eksik veri (`null`) eski bir gün için bir sonuç — o gün veri yok, bir
    gün sonra yeniden sorulur. YENİ bir seans için değil (`posterRetryable`):
    o pencerede `null` fırlatılıyor ve önbelleğe girmiyor, ham istek de
-   yalnız on beş dakika tutuluyor. Anahtar sürümlü: şekil değişirse `-v3`. */
+   yalnız on beş dakika tutuluyor. Anahtar sürümlü: `-v3` (25 Ekim) posterin
+   hisse başına değişimi (`stocks`) eklendiğinde; şekil değişirse `-v4`. */
 const loadPoster = unstable_cache(
   async function loadPoster(date: string, prevDate: string, readyIso: string, retryable: boolean) {
     const result = await alpaca.getDailyBarsBetween(
@@ -96,7 +102,7 @@ const loadPoster = unstable_cache(
     }
     return poster ? { poster, fetchedAt: result.fetchedAt.toISOString() } : null;
   },
-  ["day-poster-v2"],
+  ["day-poster-v3"],
   { revalidate: POSTER_REVALIDATE_SECONDS },
 );
 
@@ -130,31 +136,42 @@ export async function getLatestPosterDate(status?: MarketStatus): Promise<string
   return latestPosterDate(current.etDate, holidays, new Date());
 }
 
-/** Arşivin bar aralığı: en eski seansın önceki işlem gününden pay kadar geri. */
+/** Arşivin bar aralığı: en eski seansın önceki işlem gününden pay kadar
+ *  geri. Önbelleğe posterler değil KAPANIŞLAR giriyor (`ArchiveCloses`,
+ *  gerekçesi lib/day-poster.ts): otuz tam poster Next'in 2 MB'lık kayıt
+ *  sınırının yarısını geçiyordu. Ölçüm (25 Ekim, 23 Ekim'de biten arşiv,
+ *  514 sembol × 31 gün, kaydın `JSON.stringify` uzunluğu): eski kayıt
+ *  918.158 bayt, yenisi 107.940; kapanışlardan yeniden kurulan otuz poster
+ *  eskisiyle bire bir aynı. Kayıt şekli değişti → `-v3`. */
 const archiveLoad = unstable_cache(
   async function archiveLoad(latest: string, readyIso: string, start: string, sessionsJson: string) {
     const sessions = JSON.parse(sessionsJson) as { date: string; prevDate: string }[];
     const result = await alpaca.getDailyBarsBetween(POSTER_SYMBOLS, start, new Date(readyIso), POSTER_RETRY_SECONDS);
     if (!result.ok) throw new PosterFetchError(`${result.reason}: ${result.message}`);
-    const posters = archivePosters({
-      sessions,
-      bars: result.data,
-      sectorSymbols: SECTOR_SYMBOLS,
-      indexSymbols: INDEX_STRIP,
-      memberSymbols: MEMBER_SYMBOLS,
-    });
+    const closes = packArchiveCloses(sessions, result.data);
     /* En yeni seans eksikse liste önbelleğe girmiyor: `getDayPoster` ile
        aynı gerekçe, o seans birazdan tamamlanacak. */
-    if (posters[0]?.date !== latest) {
+    const newest = buildArchive(sessions, closes)[0];
+    if (newest?.date !== latest) {
       const pending = new Error(`${latest} arşivde henüz eksik`);
       pending.name = POSTER_PENDING;
       throw pending;
     }
-    return { posters, fetchedAt: result.fetchedAt.toISOString() };
+    return { closes, fetchedAt: result.fetchedAt.toISOString() };
   },
-  ["day-poster-archive-v1"],
+  ["day-poster-archive-v3"],
   { revalidate: POSTER_REVALIDATE_SECONDS },
 );
+
+function buildArchive(sessions: readonly { date: string; prevDate: string }[], closes: ArchiveCloses): DayPoster[] {
+  return archivePosters({
+    sessions,
+    bars: unpackArchiveBars(closes),
+    sectorSymbols: SECTOR_SYMBOLS,
+    indexSymbols: INDEX_STRIP,
+    memberSymbols: MEMBER_SYMBOLS,
+  });
+}
 
 export type PosterArchiveRead =
   | { state: "ok"; latest: string; posters: DayPoster[]; fetchedAt: string }
@@ -162,9 +179,10 @@ export type PosterArchiveRead =
 
 /**
  * Arşiv — son `POSTER_ARCHIVE_SESSIONS` seansın TAM posterleri (gerekçe
- * `archivePosters`, lib/day-poster.ts). Bir tur: ~530 sembolün altı
- * haftalık gün barı. En yeni seans henüz eksikse bir önceki seanstan
- * başlıyor (o liste önbelleğe girebilir); sağlayıcı düşerse `error`.
+ * `archivePosters`, lib/day-poster.ts); önbellekteki kapanışlardan her
+ * istekte yeniden kuruluyor (React `cache` ile istek başına bir kez). Bir
+ * tur: ~530 sembolün altı haftalık gün barı. En yeni seans henüz eksikse
+ * bir önceki seanstan başlıyor (o liste önbelleğe girebilir); sağlayıcı düşerse `error`.
  */
 export const getPosterArchive = cache(async function getPosterArchive(): Promise<PosterArchiveRead> {
   const status = await getStatus();
@@ -175,7 +193,7 @@ export const getPosterArchive = cache(async function getPosterArchive(): Promise
     const oldest = sessions[sessions.length - 1];
     const start = addEtDays(oldest.prevDate, -START_PAD_DAYS);
     const loaded = await archiveLoad(latest, posterReadyAt(latest, holidays).toISOString(), start, JSON.stringify(sessions));
-    return { state: "ok" as const, latest, ...loaded };
+    return { state: "ok" as const, latest, posters: buildArchive(sessions, loaded.closes), fetchedAt: loaded.fetchedAt };
   };
   try {
     try {
@@ -190,3 +208,26 @@ export const getPosterArchive = cache(async function getPosterArchive(): Promise
     return { state: "error" };
   }
 });
+
+/**
+ * SAHNENİN HİSSELERİ (25 Ekim) — posterin hisse başına değişimi, adı,
+ * sektörü ve piyasa değeri (`lib/day-poster-scene.ts` → `sceneStocks`).
+ *
+ * PİYASA DEĞERİ O GÜNÜN KAPANIŞIYLA: hisse sayısı × posterin gününün
+ * kapanışı (`liveMarketCap`, aynı mertebe denetimiyle). Bugünkü fiyatla
+ * çizilse bir yıl önceki bir günün noktaları bugünün boyunu taşırdı. Hisse
+ * sayısı bugünkü (geçmiş sayı elimizde yok); geri alım yılda birkaç yüzde
+ * oynatıyor, noktanın boyunda görünmez. Ölçüldü (25 Ekim): 499 üyenin
+ * 499'unun hisse sayısı ve sektörü var.
+ *
+ * Sembol tablosu okunamazsa (veritabanı düştü) boylar EŞİT: konum ve renk
+ * yine doğru, yalnız boy bilgisi yok; künye bunu söylüyor (`sized: false`).
+ */
+export async function getPosterSceneStocks(
+  poster: DayPoster,
+): Promise<{ stocks: SceneStock[]; unplaced: number; sized: boolean }> {
+  const meta = await getSymbolNames(MEMBER_SYMBOLS);
+  const sized = Object.keys(meta).length > 0;
+  const result = sceneStocks(poster.stocks, MEMBERS, (symbol, close) => liveMarketCap(meta[symbol], close));
+  return { ...result, sized };
+}

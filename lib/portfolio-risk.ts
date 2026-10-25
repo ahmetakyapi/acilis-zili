@@ -52,6 +52,8 @@ export const EARNINGS_WINDOW_DAYS = 30;
 export const TOP_PAIRS = 5;
 /** En az birlikte hareket eden çift sayısı. */
 export const LOW_PAIRS = 2;
+/** Isı matrisi minyatüründe en büyük ağırlıklı kaç pozisyon (25 Ekim). */
+export const MATRIX_SIZE = 6;
 /** Temettü: son 12 ay. */
 export const DIVIDEND_LOOKBACK_DAYS = 365;
 
@@ -130,6 +132,15 @@ export type RiskBlock = {
 
 export type CorrelationPair = { a: string; b: string; value: number };
 
+/**
+ * Korelasyon ISI MATRİSİ (25 Ekim, görsel tur): en büyük `MATRIX_SIZE`
+ * pozisyon, ağırlık sırasıyla; `values[i][j]` iki serinin korelasyonu,
+ * köşegen 1. Liste en çok/en az birlikte hareket eden çiftleri söylüyor ama
+ * "portföyün ağır kısmı birbirine ne kadar bağlı" sorusunu tek bakışta
+ * matris cevaplıyor. Değerler `pairs` ile aynı hesaptan, ayrı yol yok.
+ */
+export type CorrelationMatrix = { symbols: string[]; values: number[][] };
+
 export type PortfolioRisk = {
   session: string;
   total: number;
@@ -139,7 +150,7 @@ export type PortfolioRisk = {
   concentration: Concentration;
   sectors: { asOf: string; rows: SectorRow[]; unclassified: number } | null;
   risk: RiskBlock | null;
-  correlation: { covered: number; average: number; top: CorrelationPair[]; low: CorrelationPair[] } | null;
+  correlation: { covered: number; average: number; top: CorrelationPair[]; low: CorrelationPair[]; matrix: CorrelationMatrix } | null;
   fx: {
     returnUsd: number;
     returnTl: number;
@@ -399,7 +410,15 @@ export function analyzePortfolio(input: AnalysisInput): PortfolioRisk | null {
       const byValue = [...pairs].sort((x, y) => y.value - x.value);
       const top = byValue.slice(0, TOP_PAIRS);
       const low = byValue.slice(top.length).slice(-LOW_PAIRS).reverse();
-      correlationBlock = { covered: riskRows.length, average: mean(pairs.map((pair) => pair.value)), top, low };
+      /* Matris çiftlerin AYNI değerlerinden kurulur: liste ile matris
+         aynı sayıyı iki yerde gösteriyor (CLAUDE.md veri dürüstlüğü 3).
+         `riskRows` ağırlık sırasında, ilk N en büyükler. */
+      const pairValue = new Map(pairs.map((pair) => [`${pair.a}|${pair.b}`, pair.value]));
+      const symbols = riskRows.slice(0, MATRIX_SIZE).map((row) => row.symbol);
+      const values = symbols.map((a, i) =>
+        symbols.map((b, j) => (i === j ? 1 : (pairValue.get(`${a}|${b}`) ?? pairValue.get(`${b}|${a}`) ?? 0))),
+      );
+      correlationBlock = { covered: riskRows.length, average: mean(pairs.map((pair) => pair.value)), top, low, matrix: { symbols, values } };
     }
     const { start, end } = input.fx;
     if (start && end && start > 0 && end > 0) {

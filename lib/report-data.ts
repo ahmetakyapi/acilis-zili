@@ -1,11 +1,12 @@
 import { cache } from "react";
-import { eq, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { percentAlerts, priceAlerts, users, watchlistItems, watchlists } from "@/lib/schema";
 import { getUserAvatar } from "@/lib/avatar-data";
 import type { Avatar } from "@/lib/avatars";
 import { getHolidays } from "@/lib/data";
-import { addEtDays, isTradingDay, todayEt } from "@/lib/market-hours";
+import { isTradingDay, todayEt } from "@/lib/market-hours";
+import { sessionWeeks, type SessionWeek } from "@/lib/report-summary";
 import { getProfileSettings } from "@/lib/profile-data";
 import { loadShowcase, type Showcase } from "@/lib/profile-showcase";
 import type { Locale } from "@/lib/i18n";
@@ -31,26 +32,28 @@ export type BellReport = {
   memberDays: number;
   /** Üyelikten bugüne NYSE seans günü — tatil takvimiyle sayılır. */
   tradingDays: number;
+  /** Aynı sayımın haftalık şeridi (lib/report-summary.ts → sessionWeeks). */
+  weeks: SessionWeek[];
   lists: number;
   listSymbols: number;
+  /** Takip listelerindeki tekil semboller, en son ekleneni önde; tavan
+   *  `WATCH_STRIP_MAX` — rapordaki logo şeridi için (tamamı /favoriler'de). */
+  watchSymbols: string[];
   alertsTotal: number;
+  /** Çalan alarm. İki tür de tek seferlik: tetiklenen alarm durur, yani
+   *  sayı "kaç alarm çaldı" ile "kaç kez çaldı"yı birlikte söyler. */
   alertsHit: number;
   posts: number;
+  /** Yayındaki son yazılar (en yenisi önde), tavan `RECENT_POSTS_MAX`. */
+  recentPosts: { slug: string; title: string; publishedAt: Date | null }[];
   profilePublic: boolean;
   showcase: Showcase | null;
 };
 
-/** İki ET günü arasındaki seans günü sayısı (uçlar dahil). */
-function countTradingDays(fromDay: string, toDay: string, holidays: Parameters<typeof isTradingDay>[1]): number {
-  let count = 0;
-  let day = fromDay;
-  /* Üyelik en fazla birkaç yıl: gün döngüsü ucuz; emniyet tavanı 20 yıl. */
-  for (let i = 0; i < 7400 && day <= toDay; i += 1) {
-    if (isTradingDay(day, holidays)) count += 1;
-    day = addEtDays(day, 1);
-  }
-  return count;
-}
+/** Rapordaki logo şeridinin tavanı: 390'da üç satır, fazlası "+N" ile /favoriler'e. */
+export const WATCH_STRIP_MAX = 12;
+/** Rapordaki yazı listesinin tavanı; tamamı profilde. */
+export const RECENT_POSTS_MAX = 3;
 
 export const loadBellReport = cache(
   async (userId: string, locale: Locale, otherSectorLabel: string): Promise<BellReport | null> => {
@@ -62,7 +65,7 @@ export const loadBellReport = cache(
       .catch(() => []);
     if (!row) return null;
 
-    const [avatar, holidays, listRows, priceStats, pctStats, posts, profile, showcase] =
+    const [avatar, holidays, listRows, symbolRows, priceStats, pctStats, posts, profile, showcase] =
       await Promise.all([
         getUserAvatar(userId),
         getHolidays(),
@@ -75,6 +78,17 @@ export const loadBellReport = cache(
           .leftJoin(watchlistItems, eq(watchlistItems.watchlistId, watchlists.id))
           .where(eq(watchlists.userId, userId))
           .catch(() => [] as { lists: number; symbols: number }[]),
+        /* Sembol başına EN SON ekleniş: aynı sembol iki listedeyse bir kez,
+           yeni eklenen önde (okurun şu an baktığı şey). */
+        db
+          .select({ symbol: watchlistItems.symbol, added: sql<Date>`max(${watchlistItems.addedAt})` })
+          .from(watchlistItems)
+          .innerJoin(watchlists, eq(watchlistItems.watchlistId, watchlists.id))
+          .where(eq(watchlists.userId, userId))
+          .groupBy(watchlistItems.symbol)
+          .orderBy(desc(sql`max(${watchlistItems.addedAt})`))
+          .limit(WATCH_STRIP_MAX)
+          .catch(() => [] as { symbol: string; added: Date }[]),
         db
           .select({
             total: sql<number>`count(*)::int`,
@@ -101,6 +115,10 @@ export const loadBellReport = cache(
        ET gece yarısına dek seans sayısı 0, sonra kayıt günü hep eksik. */
     const joinedDay = todayEt(row.joinedAt);
     const today = todayEt();
+    const sessions =
+      joinedDay <= today
+        ? sessionWeeks(joinedDay, today, (day) => isTradingDay(day, holidays))
+        : { total: 0, weeks: [] };
     const memberDays = Math.max(
       1,
       Math.floor((Date.now() - row.joinedAt.getTime()) / (24 * 3600 * 1000)) + 1,
@@ -111,12 +129,17 @@ export const loadBellReport = cache(
       avatar,
       joinedAt: row.joinedAt,
       memberDays,
-      tradingDays: joinedDay <= today ? countTradingDays(joinedDay, today, holidays) : 0,
+      tradingDays: sessions.total,
+      weeks: sessions.weeks,
       lists: listRows[0]?.lists ?? 0,
       listSymbols: listRows[0]?.symbols ?? 0,
+      watchSymbols: symbolRows.map((row) => row.symbol),
       alertsTotal: (priceStats[0]?.total ?? 0) + (pctStats[0]?.total ?? 0),
       alertsHit: (priceStats[0]?.hit ?? 0) + (pctStats[0]?.hit ?? 0),
       posts: posts.length,
+      recentPosts: posts
+        .slice(0, RECENT_POSTS_MAX)
+        .map((post) => ({ slug: post.slug, title: post.title, publishedAt: post.publishedAt })),
       profilePublic: profile?.isPublic === true,
       showcase,
     };

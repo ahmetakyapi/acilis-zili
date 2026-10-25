@@ -3,7 +3,7 @@
    Geometri markanın ağız çubuğu: 8 piksel boy, tam yuvarlak uç. Derinlik
    tonla: ön seans ve kapanış sonrası çukur ton (`--surface-sunken`), asıl
    seans mavinin %30'u, geçen kısım düz mavi. Gölge ve parıltı yok. */
-.rail { position:relative; min-width:0; margin-top:14px; }
+.rail { position:relative; min-width:0; margin-top:14px; container-type:inline-size; }
 /* Zil adları çentiğin üstünde, ortalı. Sayacın saydığı zil koyu, öteki
    soluk — çentiklerin kendi renk kuralıyla aynı. */
 .bells { position:relative; height:18px; margin-bottom:4px; }
@@ -90,11 +90,20 @@
 .mark { animation:rail-mark-in 300ms var(--ease-brand) calc(200ms + var(--x, 0) * 700ms) backwards; }
 @keyframes rail-mark-in { from { opacity:0; } }
 
+/* BANT ADLARI ŞERİDİN ENİNE BAĞLI, EKRANINKİNE DEĞİL (25 Ekim, son
+   inceleme). Gizleme yalnız telefonda (<768) yapılıyordu; oysa 768–1023
+   arasında kahraman kolonu daralıyor ve şerit 323–435 piksele iniyor:
+   768'de "Kapanış 23:00" ile "Akşam Seansı" 38 piksel üst üste biniyordu
+   (EN'de 16). Ölçüm (320–1600, 32 piksel adım, TR/EN): çakışma şerit
+   ~475 pikselin altında başlıyor, 522'de 0. Kap sorgusu 500'ün altında
+   bant adlarını düşürüyor; zil adları ve saatleri kalıyor. */
+@container (max-width:499px) {
+  .bandLabel { display:none; }
+}
 /* Telefonda rozet yok, çentik var — gerekçe bileşende. */
 @media (max-width:767px) {
   .rail { margin-top:12px; }
   .marker { display:none; }
-  .bandLabel { display:none; }
   .lane { min-height:0; margin-top:4px; }
 }
 

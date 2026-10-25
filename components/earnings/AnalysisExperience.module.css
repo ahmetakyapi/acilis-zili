@@ -4,14 +4,20 @@
 .distribution { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
 .distribution > div { display: grid; gap: 8px; font-size: 12px; font-weight: 600; }
 .distribution b { color: var(--text-strong); font-size: 32px; line-height: 1; letter-spacing: -.05em; font-weight: 550; }
-.distributionTrack { height: 4px; overflow: hidden; border-radius: 4px; background: var(--rail-track); }
+.distributionTrack { height: var(--lane-h, 5px); overflow: hidden; border-radius: 999px; background: var(--rail-track); }
 /* Kapak görseli KARDEŞLERİ GİBİ kendini çiziyor (14 Ekim): takvim
    sekmesinin yoğunluk çubukları ve hafta nabzı yüklemede kademeyle
    büyürken bu üç çubuk tek karede basılıyordu; filtre değişince genişlik
    de sıçrıyordu. Büyüme soldan, 90 ms kademeli; genişlik değişimi geçişli. */
-.distributionTrack i { display: block; height: 100%; border-radius: inherit; background: var(--primary); transform-origin: left center; transition: width 300ms var(--ease-brand); }
-.distributionTrack i[data-verdict="buy"] { background: var(--up); }
-.distributionTrack i[data-verdict="sell"] { background: var(--down); }
+/* Görüş rengi (25 Ekim son düzeltme, site geneli renk kararı): görüş
+   turunda üç çubuk mürekkep tonuna çekilmişti; sahibi ekranların renksiz
+   kalmasını istemedi. Çubuk görüşün çizim tonunu taşır (`--verdict-*`,
+   globals.css) — doygun yön yeşili değil, kart zeminiyle karışık hâli,
+   teknik ve Analizlerim dağılımıyla aynı. Ad ve adet yanında yazılı. */
+.distributionTrack i[data-verdict="buy"] { background: var(--verdict-buy); }
+.distributionTrack i[data-verdict="hold"] { background: var(--verdict-hold); }
+.distributionTrack i[data-verdict="sell"] { background: var(--verdict-sell); }
+.distributionTrack i { display: block; height: 100%; border-radius: inherit; background: var(--verdict-hold); transform-origin: left center; transition: width 300ms var(--ease-brand); }
 @media (prefers-reduced-motion: no-preference) {
   .distributionTrack i { animation: dist-grow 700ms var(--ease-brand) backwards; }
   .distribution > div:nth-child(2) .distributionTrack i { animation-delay: 90ms; }

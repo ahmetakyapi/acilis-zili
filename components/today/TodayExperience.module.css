@@ -570,3 +570,21 @@
   .storyRow:hover .storyRowMeta svg { transform:none; }
   .storyRow::before { transition:none; }
 }
+
+/* ---- GENİŞ EKRAN (25 Ekim) ----
+   İçerik çerçevesi 1640 pikselden sonra büyüyor (`components/layout/
+   frame.ts`: 1920'de 1600, 2560'ta 1840 piksel içerik). Pano yan kolonu
+   350'de sabit kalınca bütün kazanç ana kolona gidiyordu: 2560'ta ana
+   kolon 1466 piksel ve günün özetinin maddeleri ~230 karakterlik
+   satırlara uzuyordu (ölçüldü). Yan kolon da büyüyor (ölçü panelleri:
+   iki sütunlu makro, tahvil eğrisi, teknik dağılım ferahlıyor) ve özetin
+   paragrafları 1440'taki satır boyunda (ana kolon orada 946 piksel)
+   kalıyor. 1640 ve altında hiçbir kural devreye girmiyor. Kolon dengesi
+   yine `FillColumn`ın işi: o panelleri ölçüyor, kolon enine bakmıyor. */
+@media (min-width:1800px) {
+  .dashboard { grid-template-columns:minmax(0,1fr) 420px; column-gap:28px; }
+  .brief > section p { max-width:62rem; }
+}
+@media (min-width:2240px) {
+  .dashboard { grid-template-columns:minmax(0,1fr) 480px; }
+}

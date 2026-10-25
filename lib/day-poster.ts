@@ -17,7 +17,8 @@ import { clockOf } from "./session-clock";
  *
  * Bu dosya SAF: veritabanına ve sağlayıcıya dokunmuyor, ki her karar test
  * edilebilsin (tests/day-poster.test.ts). Veri tarafı
- * `lib/day-poster-data.ts`, çizim `lib/ink/poster.ts`, sayfa `/gun/[tarih]`.
+ * `lib/day-poster-data.ts`, sahnenin yerleşimi `lib/day-poster-scene.ts`,
+ * sayfa `/gun/[tarih]`.
  *
  * Posterin sözü tek cümle: "bu sahnede gördüğün her şey O GÜNÜN kapanışı".
  * O yüzden kararların hepsi aynı soruya bakıyor — bu sayı gerçekten bu
@@ -110,6 +111,20 @@ export function dayChange(bars: readonly Bar[] | undefined, date: string, prevDa
 
 export type PosterMove = { symbol: string; change: number };
 
+/**
+ * Bir üyenin o günkü değişimi VE kapanışı (25 Ekim, sahne). Kapanış
+ * noktanın boyu için: piyasa değeri o günün kapanışı × hisse sayısı
+ * (`lib/day-poster-data.ts`), bugünkü fiyat değil.
+ */
+export type PosterStock = { symbol: string; change: number; close: number };
+
+/** Gün barının kapanışı — `dayChange`in okuduğu barın kendisi. */
+function closeOn(bars: readonly Bar[] | undefined, date: string): number | null {
+  if (!bars) return null;
+  for (const bar of bars) if (barDate(bar) === date) return bar.close;
+  return null;
+}
+
 export type PosterBreadth = {
   advancing: number;
   declining: number;
@@ -156,6 +171,13 @@ export type DayPoster = {
   /** Endeks fonları, `INDEX_STRIP` sırasında; değişimi olmayan düşer. */
   indices: PosterMove[];
   breadth: PosterBreadth | null;
+  /**
+   * Değişimi bilinen her üye, sembol sırasıyla (25 Ekim). Sahne bunları
+   * sektör sektör dizer (`lib/day-poster-scene.ts`); genişlik de aynı
+   * kümeden sayılıyor, yani "130 Yükseldi" ile sahnedeki yeşil noktalar
+   * aynı sayım.
+   */
+  stocks: PosterStock[];
 };
 
 /**
@@ -194,7 +216,15 @@ export function buildPoster({
   });
   if (!indices.some((move) => move.symbol === anchor)) return null;
   const memberChanges = new Map(memberSymbols.map((symbol) => [symbol, change(symbol)] as const));
-  return { date, prevDate, sectors, indices, breadth: breadthOf(memberChanges, memberSymbols) };
+  const stocks: PosterStock[] = [];
+  for (const symbol of memberSymbols) {
+    const value = memberChanges.get(symbol);
+    const close = closeOn(bars[symbol], date);
+    if (value === null || value === undefined || close === null) continue;
+    stocks.push({ symbol, change: value, close });
+  }
+  stocks.sort((a, b) => a.symbol.localeCompare(b.symbol, "en"));
+  return { date, prevDate, sectors, indices, breadth: breadthOf(memberChanges, memberSymbols), stocks };
 }
 
 /* --------------------------------------------------------------------------
@@ -303,6 +333,68 @@ export function archivePosters({
     const poster = buildPoster({ date, prevDate, bars, sectorSymbols, indexSymbols, memberSymbols });
     return poster ? [poster] : [];
   });
+}
+
+/**
+ * ARŞİVİN ÖNBELLEK KAYDI (25 Ekim, son inceleme) — posterler değil,
+ * onları kuran KAPANIŞLAR.
+ *
+ * İlk sürüm önbelleğe otuz tam posteri koyuyordu: her birinde ~500
+ * hissenin `{symbol, change, close}` nesnesi, ~920 KB. Next'in veri
+ * önbelleği 2 MB'ı aşan kaydı saklamıyor (sessizce, her istek sağlayıcıya
+ * gider); daha uzun bir arşiv ya da posterde yeni bir alan bu sınırı
+ * geçirirdi. Değişimi yuvarlayıp küçültmek de olmaz: yuvarlanmış yüzde,
+ * posterin kendi sayfasındaki yuvarlanmamış yüzdeyle sınırda farklı
+ * okunabilirdi (CLAUDE.md "Veri dürüstlüğü" 3).
+ *
+ * Kayıt artık sembol başına, arşivin günlerine hizalı kapanış dizisi
+ * (sağlayıcının verdiği sayı, dokunulmamış). Posterler önbellekten
+ * çıkınca AYNI `archivePosters` ile yeniden kuruluyor; sonuç ham barlardan
+ * kurulanla bire bir aynı (tests/day-poster.test.ts). Kayıt ~108 KB
+ * (ölçüm notu `lib/day-poster-data.ts` → `archiveLoad`).
+ */
+export type ArchiveCloses = {
+  /** Arşivin günleri, eskiden yeniye: en eski seansın önceki günü dahil. */
+  dates: string[];
+  /** Sembol → `dates`e hizalı kapanışlar; o gün barı yoksa `null`. */
+  closes: Record<string, (number | null)[]>;
+};
+
+/** Ham barlardan arşivin ihtiyacı olan kapanışlar (yalnız seans günleri). */
+export function packArchiveCloses(
+  sessions: readonly { date: string; prevDate: string }[],
+  bars: Readonly<Record<string, readonly Bar[]>>,
+): ArchiveCloses {
+  const dates = [...new Set(sessions.flatMap(({ date, prevDate }) => [date, prevDate]))].sort();
+  const position = new Map(dates.map((date, index) => [date, index] as const));
+  const closes: Record<string, (number | null)[]> = {};
+  for (const [symbol, series] of Object.entries(bars)) {
+    const row: (number | null)[] = dates.map(() => null);
+    let any = false;
+    for (const bar of series) {
+      const index = position.get(barDate(bar));
+      if (index === undefined) continue;
+      row[index] = bar.close;
+      any = true;
+    }
+    if (any) closes[symbol] = row;
+  }
+  return { dates, closes };
+}
+
+const SECONDS_PER_MS = 1 / 1000;
+
+/** Paketten `buildPoster`in okuduğu bar biçimi: yalnız tarih ve kapanış
+ *  anlamlı (öteki alanlar kapanışın kopyası; arşiv onları okumuyor). */
+export function unpackArchiveBars(pack: ArchiveCloses): Record<string, Bar[]> {
+  const times = pack.dates.map((date) => Date.parse(`${date}T00:00:00Z`) * SECONDS_PER_MS);
+  const bars: Record<string, Bar[]> = {};
+  for (const [symbol, row] of Object.entries(pack.closes)) {
+    bars[symbol] = row.flatMap((close, index) =>
+      close === null ? [] : [{ time: times[index], open: close, high: close, low: close, close, volume: 0 }],
+    );
+  }
+  return bars;
 }
 
 /**

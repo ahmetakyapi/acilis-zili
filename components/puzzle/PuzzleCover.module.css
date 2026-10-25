@@ -1,0 +1,81 @@
+/* Kapak kartı — gerekçe PuzzleCover.tsx. Derinlik tonla; degrade, gölge,
+   cam yok. Yeşil yalnız "bildin" (skor, ızgaranın tutan kareleri). */
+
+.cover { min-width:0; }
+
+.identity { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:.875rem; }
+.names { min-width:0; }
+.name { margin:0; font-size:var(--text-title); font-weight:800; line-height:1.15; color:var(--text-strong); overflow-wrap:anywhere; }
+.symbol { margin:.125rem 0 0; font-family:var(--font-mono); font-size:var(--text-small); color:var(--text-muted); }
+
+.score { position:relative; display:flex; flex-direction:column; align-items:flex-end; text-align:right; }
+.scoreValue { font-size:var(--text-heading); font-weight:800; line-height:1; color:var(--text-strong); font-variant-numeric:tabular-nums; }
+.score[data-won] .scoreValue { color:var(--up); }
+.scoreLabel { margin-top:.25rem; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); white-space:nowrap; }
+/* Kahraman zilinin vuruşu (heroTap, kutusu 160×150) skorun solunda,
+   metni itmeden; 64 piksellik genişlikte zil gövdesi skor puntosuyla
+   aynı ağırlıkta. */
+.bell { position:absolute; right:100%; top:50%; width:64px; height:60px; margin-right:.25rem; transform:translateY(-50%); pointer-events:none; }
+
+.chart { margin-top:1.25rem; }
+.chartCaption { margin:0 0 .5rem; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
+
+.blurb { margin:1rem 0 0; font-size:var(--text-read); line-height:1.55; color:var(--text-body); }
+
+.share { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:1rem; margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--line-soft); }
+.gridBlock { min-width:0; }
+.gridTitle { margin:0 0 .5rem; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
+.grid { display:flex; flex-direction:column; gap:4px; }
+.gridRow { display:flex; gap:4px; }
+.square { width:18px; height:18px; border-radius:4px; background:var(--surface-sunken); border:1px solid var(--line); }
+.square[data-grade="match"] { background:var(--up); border-color:var(--up); }
+.square[data-grade="near"] { background:var(--brass-bright); border-color:var(--brass-bright); }
+.square[data-grade="none"] { background:transparent; border-style:dashed; }
+.gridNote { margin:.5rem 0 0; font-size:var(--text-micro); color:var(--text-muted); }
+.actions { display:flex; flex-wrap:wrap; gap:.5rem; }
+
+.shareNote { min-height:1.25rem; margin:.5rem 0 0; font-size:var(--text-tiny); color:var(--text-muted); }
+.sharePreview { margin:.25rem 0 0; padding:.625rem .75rem; border-radius:var(--radius-md); background:var(--surface-sunken); font-size:var(--text-base); white-space:pre-wrap; overflow-wrap:anywhere; user-select:all; color:var(--text-strong); }
+
+.next { margin-top:.75rem; padding-top:.75rem; border-top:1px solid var(--line-soft); }
+.nextLine { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:.25rem 1rem; margin:0; font-size:var(--text-small); color:var(--text-muted); }
+.nextTime { font-size:var(--text-lead); font-weight:700; font-variant-numeric:tabular-nums; color:var(--text-strong); }
+.nextLane { position:relative; display:block; height:var(--lane-h, 5px); margin-top:.5rem; border-radius:999px; background:var(--line-soft); overflow:hidden; }
+.nextFill { position:absolute; inset:0; border-radius:999px; background:var(--primary-soft); transform-origin:0 50%; transition:transform 900ms linear; }
+
+/* ---- Giriş: kart açılır, kareler sırayla dolar ---- */
+@media (prefers-reduced-motion: no-preference) {
+  .identity { animation:cover-in 520ms var(--ease-brand) both; }
+  .square { animation:square-in 320ms var(--ease-brand) both; }
+  .gridRow:nth-child(2) .square { animation-delay:80ms; }
+  .gridRow:nth-child(3) .square { animation-delay:160ms; }
+  .gridRow:nth-child(4) .square { animation-delay:240ms; }
+  .gridRow:nth-child(5) .square { animation-delay:320ms; }
+  .gridRow:nth-child(6) .square { animation-delay:400ms; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nextFill { transition:none; }
+}
+@keyframes cover-in {
+  from { opacity:0; transform:translateY(8px); }
+  to { opacity:1; transform:none; }
+}
+@keyframes square-in {
+  from { opacity:0; transform:scale(.6); }
+  to { opacity:1; transform:none; }
+}
+
+/* Telefonda skor adın altına değil yanına sığmıyorsa satır atlar. */
+@media (max-width: 479.98px) {
+  .identity { grid-template-columns:auto minmax(0,1fr); }
+  .score { grid-column:1 / -1; flex-direction:row; align-items:baseline; justify-content:flex-start; gap:.5rem; text-align:left; }
+  .bell { right:auto; left:calc(100% - 64px); }
+}
+
+/* "Saf Bilgi" rozeti: yeşil, kazanmanın rengi; tek satır açıklama. */
+.pure { display:flex; flex-wrap:wrap; align-items:center; gap:.375rem .625rem; margin:.875rem 0 0; font-size:var(--text-tiny); color:var(--text-muted); }
+.pureBadge { display:inline-flex; align-items:center; gap:.3125rem; padding:.25rem .625rem; border-radius:999px; background:var(--up-wash); color:var(--up); font-size:var(--text-small); font-weight:700; }
+@media (prefers-reduced-motion: no-preference) {
+  .pureBadge { animation:square-in 420ms var(--ease-spring-soft) 300ms both; }
+}
+.jokerSquare { display:inline-flex; align-items:center; height:18px; padding:0 .5rem; border-radius:4px; border:1px dashed var(--line-strong); font-size:var(--text-micro); font-weight:600; color:var(--text-muted); }

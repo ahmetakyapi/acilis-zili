@@ -2,10 +2,11 @@
 
 import { EASE_BRAND_POINTS } from "@/lib/motion";
 
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { animate } from "motion/react";
 import { CheckCircle, Info } from "@phosphor-icons/react";
 import { useMotionPreference } from "@/components/motion/useMotionPreference";
+import { bracketBand, type Waterfall as WaterfallGeometry } from "@/lib/tax-waterfall";
 import styles from "./Tax.module.css";
 
 /** Sayının yeni değerine yuvarlanma süresi, saniye. */
@@ -87,46 +88,119 @@ export function VerdictBadge({ verdict, text }: { verdict: Verdict; text: string
   );
 }
 
-export type FlowStep = {
-  name: string;
-  value: string;
-  note?: string;
-  /** Çubuğun başladığı yer ve boyu, ölçeğin oranı olarak (0-1). */
-  from: number;
-  span: number;
-  tone: "cost" | "index" | "proceeds" | "up" | "down";
-};
+export type WaterfallStep = { name: string; value: string; note?: string };
 
 /**
- * KAZANÇ NASIL OLUŞTU — dört çubuk, aynı TL ölçeğinde.
+ * KAZANÇTAN MATRAHA — beş sütunlu şelale ve altında numaralı döküm (25
+ * Ekim, görsel tur).
  *
- * Eski ekran aynı bilgiyi on bir sütunlu bir tabloda veriyordu; okuyucu
- * maliyetin nasıl endekslendiğini ve kazancın nereden geldiğini sütun sütun
- * çıkarıyordu. Şelalede her adım bir öncekinin üstüne oturuyor: TL maliyet,
- * endekslemenin eklediği dilim (pirinç), satış bedeli ve aradaki fark
- * (yönüyle yeşil ya da kırmızı). Çubuk bir BÜYÜKLÜK; iz yok, yalnızca bir
- * taban çizgisi.
+ * Önceki `Flow` dört yatay şeritti: okuyucu maliyetin endekslemeyle nasıl
+ * büyüdüğünü ve kazancın satış bedelinin hangi parçası olduğunu şeritlerin
+ * başlangıç noktalarını karşılaştırarak çıkarıyordu, matrah ise ayrı bir
+ * sayıydı. Şelalede her sütun bir öncekinin bıraktığı yerden başlıyor:
+ * maliyetin tepesi endekslemenin tabanı, endeksli maliyetle satış bedeli
+ * arasındaki boşluk kazancın kendisi, ve kesik çizgiler aynı tutardaki
+ * uçları birbirine bağlıyor (geometri `lib/tax-waterfall.ts`, testli).
+ *
+ * RENK (site geneli renk kararı, güncel hâli): büyüklükler mavi ailenin
+ * YUMUŞAK tonlarında, yoğunluk sırayla artıyor (maliyet en açık, satış
+ * orta, matrah en dolu: sonucun kendisi); doygun etkileşim mavisi veri
+ * çiziminde ve sayı metninde yok. Endeksleme payı sayfanın pirinci (aynı
+ * anlam "Nasıl Hesaplanır"daki örnekte de), kazanç ya da zarar yön rengiyle.
+ *
+ * Sütun ile satır birbirini vurgular (üzerine gelince ötekiler söner);
+ * döküm satırları sayıların tamamını yazılı taşıdığı için çizim ekran
+ * okuyucuya tek cümlelik bir özetle açılıyor, klavyede ayrıca odak durağı
+ * açılmıyor (hesaplayıcıdaki sekme sırası kalabalıklaşmasın).
  */
-export function Flow({ title, steps }: { title: string; steps: FlowStep[] }) {
+export function Waterfall({
+  title,
+  steps,
+  geometry,
+  ariaLabel,
+  scaleNote,
+  sketch = false,
+}: {
+  title: string;
+  steps: WaterfallStep[];
+  geometry: WaterfallGeometry;
+  ariaLabel?: string;
+  scaleNote?: string;
+  /** Boş sonuçtaki taslak: sayısız, soluk, okuyucuya kapalı. */
+  sketch?: boolean;
+}) {
+  const [active, setActive] = useState<number | null>(null);
+  const count = geometry.columns.length;
   return (
-    <section>
+    <section className={styles.wf} data-sketch={sketch || undefined} data-active={active ?? undefined}>
       <h3 className={styles.flowTitle}>{title}</h3>
-      <ol className={styles.flow}>
-        {steps.map((step) => (
-          <li key={step.name} className={styles.flowRow}>
-            <span className={styles.flowName}>{step.name}</span>
-            <span className={styles.flowValue}>{step.value}</span>
-            <span className={styles.track} aria-hidden>
+      <div
+        className={styles.wfChart}
+        role={sketch ? undefined : "img"}
+        aria-label={sketch ? undefined : ariaLabel}
+        aria-hidden={sketch || undefined}
+        style={{ "--n": count } as React.CSSProperties}
+        onPointerLeave={() => setActive(null)}
+      >
+        {geometry.connectors.map((line) => (
+          <span
+            key={`${line.from}-${line.to}`}
+            className={styles.wfLink}
+            style={{ "--a": line.from, "--b": line.to, "--level": line.level } as React.CSSProperties}
+          />
+        ))}
+        {geometry.columns.map((column, index) => (
+          <span
+            key={column.key}
+            className={styles.wfCol}
+            data-on={active === index || undefined}
+            style={{ "--i": index } as React.CSSProperties}
+            onPointerEnter={() => setActive(index)}
+          >
+            <span
+              className={styles.wfBar}
+              data-tone={column.tone}
+              style={{ "--from": column.from, "--span": column.span } as React.CSSProperties}
+            />
+            {!sketch && steps[index] && column.span > 0 && (
               <span
-                className={styles.bar}
-                data-tone={step.tone}
-                style={{ "--from": clamp01(step.from), "--span": clamp01(step.span) } as React.CSSProperties}
-              />
-            </span>
-            {step.note && <span className={styles.flowNote}>{step.note}</span>}
+                className={`numeral ${styles.wfTop}`}
+                style={{ "--top": Math.min(1, column.from + column.span) } as React.CSSProperties}
+              >
+                {steps[index].value}
+              </span>
+            )}
+          </span>
+        ))}
+      </div>
+      <ol className={styles.wfAxis} aria-hidden style={{ "--n": count } as React.CSSProperties}>
+        {geometry.columns.map((column, index) => (
+          <li key={column.key} data-on={active === index || undefined}>
+            <span className={styles.wfNum}>{index + 1}</span>
           </li>
         ))}
       </ol>
+      <ol className={styles.wfList} aria-hidden={sketch || undefined}>
+        {steps.map((step, index) => (
+          <li
+            key={step.name}
+            className={styles.wfRow}
+            data-on={active === index || undefined}
+            data-tone={geometry.columns[index]?.tone}
+            onPointerEnter={() => setActive(index)}
+            onPointerLeave={() => setActive(null)}
+          >
+            <span className={styles.wfNum} aria-hidden>
+              {index + 1}
+            </span>
+            <span className={styles.wfSwatch} data-tone={geometry.columns[index]?.tone} aria-hidden />
+            <span className={styles.flowName}>{step.name}</span>
+            <span className={`numeral ${styles.flowValue}`}>{sketch ? "" : step.value}</span>
+            {step.note && !sketch && <span className={styles.wfNote}>{step.note}</span>}
+          </li>
+        ))}
+      </ol>
+      {scaleNote && !sketch && <p className={styles.figureHint}>{scaleNote}</p>}
     </section>
   );
 }
@@ -327,26 +401,33 @@ export function BracketTable({
 
 type BracketScaleLabels = {
   title: string;
+  /** "{base}; {count} dilime yayılıyor, son dilim %{rate}" */
   ariaLabel: string;
   /** "%{rate} Dilimine {amount} Var" */
   next: string;
   top: string;
+  /** Dar dilimlerin birleşik oranı: "%{from}-%{to}" */
+  merged: string;
+  hint: string;
 };
 
 /**
- * TARİFEDEKİ YERİN — beş dilim yan yana, matrah bir iğne (18 Ekim).
+ * MATRAHIN DİLİMLERE DAĞILIMI — tek şerit, dilim dilim (25 Ekim; 18 Ekim'in
+ * eşit basamaklı "Tarifedeki Yerin" merdiveninin yerine).
  *
- * Tablo dilimi söylüyordu ama okuyucu "bir sonraki dilime ne kadar var"ı
- * iki sayıdan çıkarmak zorundaydı. Merdiven bunu bir bakışta gösteriyor.
+ * Merdiven matrahın HANGİ dilimde olduğunu söylüyordu ama verginin nasıl
+ * biriktiğini değil: okuyucu "%15'lik dilimden ne ödedim, %20'likten ne"
+ * sorusunu tablodan satır satır topluyordu. Bant bunu tek bakışta gösteriyor:
+ * her geçilen dilim kendi TL genişliğinde dolu bir parça, üstünde oranı,
+ * altında o dilimden ödenen vergi; içinde bulunulan dilim matraha kadar
+ * dolu, kalanı kesik çizgili hayalet (sonraki dilime kalan yol). "%20
+ * Dilimine X Var" cümlesi hayaletin altında kaldı.
  *
- * ÖLÇEK SIRA ÖLÇEĞİ, BÜYÜKLÜK DEĞİL: her dilim eşit genişlikte. Doğrusal
- * ölçekte 2026 tarifesinin ilk dilimi (190.000 TL) 5,3 milyonluk dördüncü
- * dilimin yanında %3,6'lık bir çentik oluyor ve iğne çoğu okuyucuda sıfıra
- * yapışıyordu. Bu yüzden ÇUBUK BASILMIYOR (çubuk büyüklüktür — CLAUDE.md
- * "CompareScale"): geçilen dilimler koyu şerit, içinde bulunulan dilim
- * iğneye kadar dolu, kalanlar kulvar. İğnenin dilim İÇİNDEKİ yeri doğrusal
- * (alt sınırdan üst sınıra); açık uçlu son dilimde alt sınırın iki katı
- * dilimin sonu sayılıyor ve iğne %90'da duruyor. Tutarlar alttaki tabloda.
+ * ÖLÇEK BÜYÜKLÜK: genişlik TL aralığıyla orantılı, o yüzden ulaşılmamış
+ * dilimler çizilmiyor (açık uçlu son dilim bandı sonsuza uzatırdı). Dar
+ * dilimin etiketi sığmıyorsa basılmıyor; dar dilimler bir arada sığıyorsa
+ * tek etikette birleşiyor ("%15-%27"). Tutarların tamamı alttaki tabloda.
+ * Ton yumuşak mavide oranla yoğunlaşıyor: oran bir büyüklük, yön değil.
  */
 function BracketScale({
   brackets,
@@ -361,47 +442,62 @@ function BracketScale({
   formatRate: (value: number) => string;
   labels: BracketScaleLabels;
 }) {
-  const count = brackets.length;
-  const index = brackets.findIndex((bracket) => bracket.upTo === null || base <= bracket.upTo);
-  const current = index === -1 ? count - 1 : index;
-  const lower = current === 0 ? 0 : (brackets[current - 1].upTo ?? 0);
-  const upper = brackets[current].upTo ?? Math.max(lower * 2, base);
-  const ceiling = brackets[current].upTo === null ? TOP_PIN : 1;
-  const within = Math.min(ceiling, Math.max(0, upper > lower ? (base - lower) / (upper - lower) : 0));
-  const next = brackets[current + 1];
-  const currentUpTo = brackets[current].upTo;
+  const band = bracketBand(brackets, base);
+  if (!band) return null;
+  const current = band.slices[band.slices.length - 1];
+  const rateDigits = (rate: number) => formatRate(rate).replace(/%/g, "");
   const nextText =
-    next && currentUpTo !== null
-      ? labels.next
-          .replace("{rate}", formatRate(next.ratePct).replace(/%/g, ""))
-          .replace("{amount}", formatMoney(currentUpTo - base))
+    band.toNext !== null && band.nextRate !== null
+      ? labels.next.replace("{rate}", rateDigits(band.nextRate)).replace("{amount}", formatMoney(band.toNext))
       : labels.top;
+  const top = Math.max(1, ...brackets.map((bracket) => bracket.ratePct));
   return (
-    <div className={styles.ladder}>
+    <div className={styles.band}>
       <p className={styles.figureLabel}>{labels.title}</p>
-      <div role="img" aria-label={labels.ariaLabel} className={styles.ladderBody}>
-        <div className={styles.ladderRates} style={{ "--n": count } as React.CSSProperties} aria-hidden>
-          {brackets.map((bracket, i) => (
-            <span key={i} data-current={i === current || undefined} data-past={i < current || undefined}>
-              {formatRate(bracket.ratePct)}
+      <div
+        role="img"
+        aria-label={labels.ariaLabel
+          .replace("{base}", formatMoney(base))
+          .replace("{count}", String(band.slices.length))
+          .replace("{rate}", rateDigits(current.ratePct))}
+        className={styles.bandBody}
+      >
+        {/* Üst satır oranlar, orta şerit, alt satır dilim vergisi: üçü aynı
+            ızgara sütunlarında, yani etiket hep kendi diliminin üstünde. */}
+        <div className={styles.bandGrid} style={{ gridTemplateColumns: band.slices.map((slice) => `${slice.width}fr`).join(" ") }} aria-hidden>
+          {band.merged && (
+            <span className={styles.bandMerged} style={{ gridColumn: `1 / span ${band.slices.filter((x) => !x.labeled && x.state === "past").length}`, gridRow: 1 }}>
+              <b>
+                {labels.merged
+                  .replace("{from}", rateDigits(band.merged.fromRate))
+                  .replace("{to}", rateDigits(band.merged.toRate))}
+              </b>
+              <span className={`numeral ${styles.bandMergedTax}`}>{formatMoney(band.merged.tax)}</span>
+            </span>
+          )}
+          {band.slices.map((slice, i) => (
+            <span
+              key={slice.index}
+              className={styles.bandSlice}
+              data-state={slice.state}
+              data-labeled={slice.labeled || undefined}
+              data-merged={(band.merged && !slice.labeled && slice.state === "past") || undefined}
+              style={{ "--i": i, "--tone": slice.ratePct / top, "--fill": slice.fill, gridColumn: i + 1, gridRow: 1 } as React.CSSProperties}
+            >
+              <span className={styles.bandRate}>{formatRate(slice.ratePct)}</span>
+              <span className={styles.bandStrip}>
+                <span className={styles.bandFill} />
+              </span>
+              <span className={`numeral ${styles.bandTax}`}>{formatMoney(slice.tax)}</span>
             </span>
           ))}
-        </div>
-        <div className={styles.ladderLane} style={{ "--n": count } as React.CSSProperties} aria-hidden>
-          {brackets.map((_, i) => (
-            <span key={i} className={styles.ladderStep} data-past={i < current || undefined}>
-              {i === current && (
-                <span className={styles.ladderFill} style={{ "--f": within } as React.CSSProperties} />
-              )}
-            </span>
-          ))}
-          <span className={styles.ladderPin} style={{ "--i": current, "--w": within } as React.CSSProperties} />
         </div>
       </div>
-      <p className={styles.ladderNext}>{nextText}</p>
+      <p className={styles.ladderNext}>
+        {band.toNext !== null && <span className={styles.bandGhostKey} aria-hidden />}
+        {nextText}
+      </p>
+      <p className={styles.figureHint}>{labels.hint}</p>
     </div>
   );
 }
-
-/** Açık uçlu son dilimde iğnenin en sağ yeri (dilim genişliğinin oranı). */
-const TOP_PIN = 0.9;

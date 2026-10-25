@@ -8,6 +8,17 @@
    -------------------------------------------------------------------------- */
 .hero.hero { grid-template-columns:minmax(0,1fr); }
 
+/* ---- Tek cümle ----
+   Başlığın altında, ızgaranın üstünde: sayfanın ne dediği tek bakışta.
+   Gövde puntosundan büyük ama display değil (degrade yok); dönemler
+   altında soluk künye. */
+.lead { display:flex; flex-direction:column; gap:6px; min-width:0; max-width:72ch; }
+.lead > p:first-child { font-size:17px; line-height:1.5; font-weight:550; letter-spacing:-.01em; color:var(--text-strong); text-wrap:pretty; }
+.lead > p + p { font-size:12px; line-height:1.4; color:var(--text-muted); }
+@media(max-width:767px) { .lead > p:first-child { font-size:15.5px; } }
+.skLead { width:min(640px,100%); height:74px; border-radius:8px; }
+@media(max-width:767px) { .skLead { height:133px; } }
+
 /* ---- Özet ızgarası ----
    Kart üç satırı alt ızgara olarak paylaşıyor (başlık/künye, değer,
    mini çizgi): aynı satırdaki kartlarda değerler aynı hatta biter.
@@ -70,6 +81,8 @@
 .readingMain h3.inkTight { background-image:var(--display-gradient-tight); }
 .readingMain h3 { font-size:18px; line-height:1.3; font-weight:650; letter-spacing:-.015em; color:var(--text-strong); }
 .readingMain > p { font-size:12.5px; line-height:1.35; font-weight:500; color:var(--text-muted); }
+.readingMeta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; }
+.readingMeta .status { padding:0 8px; line-height:18px; }
 .figure { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin-top:6px; }
 .figure strong { font-size:clamp(44px, 6vw, 64px); line-height:1; font-weight:700; letter-spacing:-.045em; color:var(--text-strong); }
 .readingSide { display:grid; grid-template-columns:auto auto; gap:0 28px; padding-bottom:6px; }
@@ -80,7 +93,12 @@
 
 .delta { display:inline-flex; align-items:center; gap:4px; padding:2px 9px; border-radius:999px; background:var(--surface-sunken); font-size:12px; font-weight:600; color:var(--text-body); white-space:nowrap; }
 .delta > span { font-size:.8em; }
-.delta[data-tone="up"] > span { color:var(--primary); }
+/* Ok YÖNÜN rengi, sayfanın her yerinde aynı kural (25 Ekim son düzeltme):
+   yükseliş `--up`, düşüş `--down`. Önce kartta yükseliş maviydi, eğri
+   sütununda yeşil, VIX'te kırmızı: aynı ▲ üç renkti. "İyi mi kötü mü"
+   ok rengiyle değil metinle söyleniyor (Hedefin Üstünde, Eşiğin Altında,
+   Gergin). */
+.delta[data-tone="up"] > span { color:var(--up); }
 .delta[data-tone="down"] > span { color:var(--down); }
 .status { display:inline-flex; width:fit-content; padding:2px 9px; border-radius:999px; background:var(--surface-elevated); font-size:12px; font-weight:650; line-height:17px; color:var(--text-body); white-space:nowrap; }
 .status[data-alert] { background:var(--brass-wash); color:var(--brass-ink); }
@@ -103,9 +121,23 @@
 .gridLine[data-zero] { stroke:var(--line-strong); }
 .thresholdLine { stroke:var(--brass); stroke-width:1.25; stroke-dasharray:5 5; }
 .chartLine { fill:none; stroke:var(--primary); stroke-width:2.25; stroke-linejoin:round; stroke-linecap:round; }
+/* Aylık değişim çubukları (25 Ekim; renk 25 Ekim son düzeltmede): YÖN
+   rengi, sitenin her yerindeki gibi — artış `--up`, azalış `--down`. Önce
+   artış marka mavisiydi: mavi sitede etkileşimin rengi ve aynı sayfada
+   tahvilin ▲'i yeşildi. Renk yön, yargı değil (istihdamda azalış "kötü"
+   diye kırmızı değil, azaldığı için kırmızı); bu iki seride eşik yok,
+   eşikli serilerde değerlendirme rozetin metni (`.status[data-alert]`).
+   Seçili ay tam ton, öteki aylar bir tık geride ki imleç okunsun. */
+.bar { fill:var(--up); }
+.bar[data-tone="down"] { fill:var(--down); }
+.bar[data-tone="flat"] { fill:var(--line-strong); }
+.history .bar { fill-opacity:.72; transition:fill-opacity .16s var(--ease-brand); }
+.history .bar[data-active] { fill-opacity:1; }
 .cursorLine { stroke:var(--primary); stroke-opacity:.28; stroke-width:1; }
 .tick { position:absolute; left:0; width:calc(var(--gutter) - 10px); transform:translateY(-50%); font-size:12px; line-height:1; text-align:right; color:var(--text-muted); pointer-events:none; }
-.thresholdTag { position:absolute; right:0; transform:translateY(-100%); padding-bottom:4px; font-size:12px; font-weight:650; line-height:1; color:var(--brass-ink); pointer-events:none; }
+/* Künye SOLDA (25 Ekim): sağda son gözlemin okuma künyesiyle ve
+   enflasyonda hedefe inen son ayların çizgisiyle üst üste biniyordu. */
+.thresholdTag { position:absolute; left:6px; transform:translateY(-100%); padding-bottom:4px; font-size:12px; font-weight:650; line-height:1; color:var(--brass-ink); pointer-events:none; }
 .cursorDot { position:absolute; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 3px var(--surface-solid); pointer-events:none; }
 /* Okuma künyesi imlecin yanında; sağ yarıda imlecin soluna geçiyor ki
    kenardan taşmasın. */
@@ -145,13 +177,25 @@
 .fomcDate { font-size:13px; line-height:1.4; font-weight:650; color:var(--text-strong); }
 .fomcDate > span { font-weight:600; color:var(--text-body); }
 .fomcDate small { font-size:12px; font-weight:500; color:var(--text-muted); }
-/* Takvim şeridi: her gün bir çizgi. Hafta sonu kısa, bugün koyu, toplantı
-   tam boy mavi. Çizgiler sırayla uzuyor; 120 güne kadar sığıyor. */
+/* Takvim şeridi: her gün bir çizgi. Hafta sonu kısa, bugün soluk, toplantı
+   yumuşak mavi (ikisi tam boy). Çizgiler sırayla uzuyor; 120 güne kadar sığıyor. */
 .fomcStrip { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); align-items:end; gap:2px; height:12px; }
 .fomcStrip span { height:62%; border-radius:2px; background:var(--line-strong); transform-origin:bottom; animation:macro-tick .5s var(--ease-brand) calc(var(--i) * 14ms) both; }
 .fomcStrip span[data-kind="weekend"] { height:34%; background:var(--line); }
-.fomcStrip span[data-kind="today"] { height:62%; background:var(--text-strong); }
-.fomcStrip span[data-kind="meeting"] { height:100%; background:var(--primary); }
+.fomcStrip span[data-kind="today"] { height:100%; background:var(--text-muted); }
+.fomcStrip span[data-kind="meeting"] { height:100%; background:var(--primary-soft); }
+/* Şeridin anahtarı (25 Ekim son düzeltme): dört parçalı şerit (siyah,
+   gri, gri, mavi) etiketsizdi ve karar günü doygun etkileşim mavisiydi.
+   Uç parçalar tam boy: bugün soluk mürekkep, karar günü markanın
+   YUMUŞAK mavisi (kutunun mavi yıkamasıyla aynı aile); altında örnekli
+   anahtar: Bugün, Hafta Sonu (şeritte varsa), Karar Günü. */
+.fomcKey { display:flex; flex-wrap:wrap; align-items:center; gap:2px 14px; margin-top:-2px; font-size:12px; line-height:1.3; font-weight:600; color:var(--text-muted); }
+.fomcKey > span { display:inline-flex; align-items:center; gap:5px; white-space:nowrap; }
+.fomcKey > span:last-child { color:var(--text-strong); }
+.fomcKey i { display:inline-block; width:4px; height:12px; border-radius:2px; }
+.fomcKey i[data-kind="today"] { background:var(--text-muted); }
+.fomcKey i[data-kind="weekend"] { height:5px; background:var(--line); box-shadow:inset 0 0 0 1px var(--line-strong); }
+.fomcKey i[data-kind="meeting"] { background:var(--primary-soft); }
 @keyframes macro-tick { from { transform:scaleY(0); } }
 /* Hedef aralık ve gözlem tarihi: satırın sağında iki küçük ölçü. */
 .fomcTarget { display:flex; gap:16px; margin-left:auto; }
@@ -230,6 +274,7 @@
 }
 @media(prefers-reduced-motion:reduce) {
   .reading[data-enter], .draw[data-enter], .cursorDot[data-enter], .fomcStrip span { animation:none; }
+  .history .bar { transition:none; }
   .tile, .chips button { transition:none; }
   .tile:hover, .tile:active { translate:none; }
 }
@@ -247,43 +292,50 @@
 .pulseHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; }
 .pulseHead h2 { font-size:13px; line-height:1.35; font-weight:650; letter-spacing:-.01em; color:var(--text-strong); }
 .pulseHead > span { font-size:12px; line-height:1.35; color:var(--text-muted); }
-.pulseGrid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); row-gap:10px; }
-.pulseGrid > div { min-width:0; padding:0 10px; border-left:1px solid var(--line-soft); }
-.pulseGrid > div:first-child { padding-left:0; border-left:0; }
-.pulseGrid > div[data-wide] { grid-column:span 2; padding-top:10px; border-top:1px solid var(--line-soft); }
-.pulseGrid > div[data-wide]:nth-child(5) { padding-left:0; border-left:0; }
+/* 25 Ekim: dört vade yalın rakam değil, getiri eğrisi minyatürü
+   (YieldCurve.tsx); eğri farkı ve VIX yanında iki ölçü. Dar kapta eğri
+   tam satır, iki ölçü altında yan yana. */
+.pulseGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); row-gap:10px; }
+.pulseGrid > [data-curve] { grid-column:1 / -1; min-width:0; }
+.pulseGrid > dl { min-width:0; padding:10px 10px 0; border-top:1px solid var(--line-soft); border-left:1px solid var(--line-soft); }
+.pulseGrid > [data-curve] + dl { padding-left:0; border-left:0; }
+.pulseGrid [data-tone="up"] { color:var(--up); }
+.pulseGrid [data-tone="down"] { color:var(--down); }
 .pulseGrid dt { font-size:12px; line-height:1.3; font-weight:600; color:var(--text-muted); white-space:nowrap; }
 .pulseGrid dd { display:flex; flex-direction:column; gap:2px; margin-top:3px; }
 .pulseGrid dd b { font-size:19px; line-height:1.15; font-weight:650; letter-spacing:-.03em; color:var(--text-strong); white-space:nowrap; }
 
 .pulseGrid dd small { display:flex; flex-wrap:wrap; align-items:center; gap:2px 4px; font-size:12px; line-height:1.3; font-weight:600; color:var(--text-muted); white-space:nowrap; }
-/* Yön rengi öznitelikte: modül kuralı katmansız ve Tailwind'in `text-up`
-   yardımcısını eziyordu (değişimler gri basılıyordu). */
-.pulseGrid [data-tone="up"] { color:var(--up); }
-.pulseGrid [data-tone="down"] { color:var(--down); }
+/* Yön rengi öznitelikte (yukarıda): modül kuralı katmansız ve Tailwind'in
+   `text-up` yardımcısını eziyordu (değişimler gri basılıyordu). */
 /* Ayraç nokta yok: dar hücrede alt satır kırılınca satır sonunda asılı
    kalıyordu (320). İki parça aralık ve tonla ayrışıyor. */
 .pulseGrid [data-basis] { font-weight:500; }
 .pulseBand { padding:0 7px; border-radius:999px; font-size:12px; font-weight:650; line-height:17px; }
-.pulseBand[data-tone="up"] { background:var(--up-wash); color:var(--up); }
-.pulseBand[data-tone="flat"] { background:var(--surface-elevated); color:var(--text-body); }
-.pulseBand[data-tone="warn"] { background:var(--brass-wash); color:var(--brass-ink); }
-.pulseBand[data-tone="down"] { background:var(--down-wash); color:var(--down); }
+/* VIX bandı bir DEĞERLENDİRME, fiyat yönü değil (25 Ekim son düzeltme):
+   yeşil/kırmızı yön renkleriydi ve yanındaki ▲ ile aynı dili konuşuyordu.
+   Sakin ve Normal nötr ton, Gergin ve üstü pirinç uyarı tonu; anlamı
+   bandın adı taşıyor. `lib/vix.ts` tonları ana sayfada da kullanılıyor,
+   eşleme burada. */
+.pulseBand { background:var(--surface-elevated); color:var(--text-body); }
+.pulseBand:is([data-tone="warn"], [data-tone="down"]) { background:var(--brass-wash); color:var(--brass-ink); }
 /* Eşik 760'tan 900'e (28 Eylül): kapak tek sütuna geçince nabız 900
    genişlikte ~850 piksellik kaba düştü ve altı sütunda eğri farkı ile VIX
    bitişti ("+0,36 Puan14,87", ölçüldü). */
 @container (min-width:900px) {
   .pulse { flex-direction:row; align-items:center; gap:24px; }
-  .pulseHead { flex:none; flex-direction:column; align-items:flex-start; gap:2px; }
-  .pulseGrid { flex:1; grid-template-columns:repeat(6,minmax(0,1fr)); }
-  .pulseGrid > div[data-wide] { grid-column:auto; padding-top:0; border-top:0; }
-  .pulseGrid > div[data-wide]:nth-child(5) { padding-left:10px; border-left:1px solid var(--line-soft); }
+  .pulseHead { flex:none; flex-direction:column; align-items:flex-start; gap:2px; max-width:200px; }
+  .pulseGrid { flex:1; grid-template-columns:minmax(0,4fr) minmax(0,1fr) minmax(0,1fr); align-items:center; }
+  .pulseGrid > [data-curve] { grid-column:auto; }
+  .pulseGrid > dl, .pulseGrid > [data-curve] + dl { align-self:stretch; display:flex; flex-direction:column; justify-content:center; padding:0 0 0 16px; border-top:0; border-left:1px solid var(--line-soft); }
 }
 /* 320'lik telefon: dört vade ~55 piksellik hücreye iniyor. */
 @container (max-width:300px) {
-  .pulseGrid > div { padding:0 7px; }
   .pulseGrid dt, .pulseGrid dd small { font-size:12px; }
   .pulseGrid dd b { font-size:16px; }
 }
-.pulseSkeleton { min-height:74px; border-radius:var(--radius-lg); }
-@media(max-width:1023px) { .pulseSkeleton { min-height:150px; } }
+/* Yer tutucu son hâlin boyunda (25 Ekim, eğri minyatürüyle ölçüldü):
+   kap 900 ve üstünde 177, tablette 288, telefonda 326 piksel. */
+.pulseSkeleton { min-height:326px; border-radius:var(--radius-lg); }
+@container (min-width:600px) { .pulseSkeleton { min-height:288px; } }
+@container (min-width:900px) { .pulseSkeleton { min-height:177px; } }

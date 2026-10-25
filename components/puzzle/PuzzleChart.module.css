@@ -1,0 +1,58 @@
+/* Siluet grafiği — gerekçe PuzzleChart.tsx. Kutu yok, panelin zemini;
+   ızgara `--line-soft`, alan yumuşak mavi (`--primary-wash`), çizgi
+   mürekkep. */
+
+.chart { margin:0; min-width:0; }
+.frame { position:relative; display:grid; grid-template-columns:minmax(0,1fr); }
+.withGutter { grid-template-columns:3.25rem minmax(0,1fr); column-gap:.5rem; }
+.plot { position:relative; min-width:0; height:clamp(150px, 30vw, 280px); }
+.svg { display:block; width:100%; height:100%; overflow:visible; }
+.grid { stroke:var(--line-soft); stroke-width:1; }
+.gridV { stroke:var(--line-soft); stroke-width:1; stroke-dasharray:2 4; }
+.start { stroke:var(--line-strong); stroke-width:1; stroke-dasharray:4 4; }
+.area { fill:var(--primary-wash); }
+.line { fill:none; stroke:var(--text-strong); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
+
+/* Uç nokta: son kapanışın yeri. Halkalı, panel zemininden ayrılsın. */
+.dot { position:absolute; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:999px; background:var(--text-strong); outline:3px solid var(--premium-surface); }
+.startLabel { position:absolute; left:.25rem; transform:translateY(-120%); font-size:var(--text-micro); font-weight:600; color:var(--text-muted); }
+
+.gutter { position:relative; }
+.gutter span { position:absolute; right:0; transform:translateY(-50%); font-size:var(--text-tiny); font-weight:600; color:var(--text-body); white-space:nowrap; }
+
+.ticks { display:grid; grid-template-columns:minmax(0,1fr); margin-top:.375rem; }
+.ticks.withGutter { grid-template-columns:3.25rem minmax(0,1fr); column-gap:.5rem; }
+.tickRow { display:flex; justify-content:space-between; gap:.5rem; font-size:var(--text-tiny); color:var(--text-muted); }
+
+/* Ölçü ızgarası: aynı hatta biten üç ölçü (CLAUDE.md ekran düzeni 4). */
+.figures { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.5rem; margin:.875rem 0 0; padding-top:.75rem; border-top:1px solid var(--line-soft); }
+.figures div { min-width:0; }
+.figures dt { font-size:var(--text-tiny); color:var(--text-muted); }
+.figures dd { margin:.125rem 0 0; font-size:var(--text-lead); font-weight:700; color:var(--text-strong); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.figures dd.up { color:var(--up); }
+.figures dd.down { color:var(--down); }
+
+/* ---- Giriş: bir kez çizilir (hareketi azaltana son kare) ---- */
+@media (prefers-reduced-motion: no-preference) {
+  /* Soldan sağa SİLME, çizgi kesiği değil: `stroke-dasharray` +
+     `pathLength` `vector-effect: non-scaling-stroke` ile Chrome'da boyu
+     ekran ölçüsünde hesaplıyor ve bitmiş çizgide boşluklar kalıyordu
+     (1440'ta ölçüldü). Kırpma aynı "çiziliyor" hissini ölçüden bağımsız
+     veriyor. */
+  .svg { animation:chart-draw 1200ms var(--ease-brand) both; }
+  .area { animation:chart-fade 600ms var(--ease-brand) 700ms both; }
+  .dot { animation:chart-dot 420ms var(--ease-spring-soft) 1150ms both; }
+  .gutter span, .startLabel, .figures div { animation:chart-fade 420ms var(--ease-brand) both; }
+}
+@keyframes chart-draw {
+  from { clip-path:inset(-10% 100% -10% 0); }
+  to { clip-path:inset(-10% 0 -10% 0); }
+}
+@keyframes chart-fade {
+  from { opacity:0; }
+  to { opacity:1; }
+}
+@keyframes chart-dot {
+  from { transform:scale(0); }
+  to { transform:scale(1); }
+}

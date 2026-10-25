@@ -1,13 +1,13 @@
 import { PageShare } from "@/components/article/PageShare";
 import { QueryTransition } from "@/components/layout/QueryTransition";
-import { TopicDiagram } from "@/components/guide/TopicDiagram";
+import { GuideRoadmap, ReadMark } from "@/components/guide/GuideRoadmap";
 import guideStyles from "@/components/guide/GuideExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { SectionMasthead } from "@/components/motion/SectionMasthead";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/motion/EditorialExperience.module.css";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
-import { LevelBadge, LevelDots } from "@/components/article/LevelBadge";
+import { LevelBadge } from "@/components/article/LevelBadge";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { readingMinutes } from "@/components/article/ArticleBody";
 import { EmptyState, Panel } from "@/components/ui/primitives";
@@ -161,7 +161,7 @@ export default async function GuidePage(props: PageProps<"/rehber">) {
         />
       ) : (
         <>
-          <CurriculumStrip groupOf={groupOf} locale={locale} t={t} />
+          <CurriculumStrip groupOf={groupOf} minutesOf={minutesOf} locale={locale} t={t} />
 
           {GUIDE_TOPICS.map((topic, index) => {
             const group = groupOf(topic.key);
@@ -206,78 +206,48 @@ function levelsIn(articles: GuideArticle[]): GuideLevel[] {
 }
 
 /**
- * Müfredat şeridi — dört konu, sıra numarası ve zorluk aralığıyla.
+ * Müfredat — yol haritası (25 Ekim). Dört konu bir patika üzerinde,
+ * okunan yazılar tarayıcıdan (`components/guide/GuideRoadmap.tsx`).
  *
- * Karolar filtrelemez, sayfa içinde ilgili bölüme götürür: yeni gelen
- * okuyucunun sorusu "bu konudaki yazıları süz" değil "nereden başlayayım".
- *
- * Karo, bölüm başlığının SÖYLEMEDİĞİNİ söyler. Bir süre ikisi de aynı üç
- * şeyi yazıyordu — ad, yazı sayısı, okuma süresi — ve şerit, hemen altındaki
- * başlığın kırk piksel yukarıdaki kopyası gibi duruyordu. Artık karoda
- * zorluk aralığı var (bu blok nerede başlayıp nerede bitiyor), başlıkta
- * kapsam (kaç yazı, ne kadar okuma). Kapsamın toplamı şeridin künyesinde.
+ * Eski şerit dört eş karoydu: sıra yalnız köşedeki numaradan, ilerleme hiç
+ * okunmuyordu. Karo yine bölüm başlığının SÖYLEMEDİĞİNİ söylüyor — zorluk
+ * aralığı ve okuma durumu; kapsam (yazı, süre) iki yerde de var ama burada
+ * ölçek, başlıkta künye olarak. Bölümler hâlâ sayfa içi çapalara gidiyor:
+ * yeni gelen okuyucunun sorusu "nereden başlayayım", süzgeç değil.
  */
 function CurriculumStrip({
   groupOf,
+  minutesOf,
   locale,
   t,
 }: {
   groupOf: (key: GuideTopicKey) => GuideArticle[];
+  minutesOf: (articles: GuideArticle[]) => number;
   locale: Locale;
   t: Dictionary;
 }) {
+  const chapters = GUIDE_TOPICS.map((topic) => {
+    const group = groupOf(topic.key);
+    const levels = levelsIn(group);
+    return {
+      key: topic.key,
+      label: guideTopicLabel(topic.key, locale),
+      minutes: minutesOf(group),
+      levelSpan: levelSpan(levels, locale),
+      topLevel: levels[levels.length - 1] ?? ("temel" as const),
+      articles: group.map((article) => ({ slug: article.slug, title: article.title })),
+    };
+  }).filter((chapter) => chapter.articles.length > 0);
+  const totalMinutes = chapters.reduce((sum, chapter) => sum + chapter.minutes, 0);
   return (
     <section className={`${styles.curriculum} ${guideStyles.curriculum} flex flex-col gap-3`}>
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
-          {t.guide.curriculum}
-        </h2>
-        {/* Müfredatın toplamı ve ilk durağı kapağın sağındaki kartta. */}
-      </div>
+      <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
+        {t.guide.curriculum}
+      </h2>
       <p className="-mt-1.5 max-w-[72ch] text-small leading-[19px] text-muted">
         {t.guide.curriculumHint}
       </p>
-
-      {/* ŞERİT TELEFONDA SATIR, MASAÜSTÜNDE DÖRTLÜ IZGARA. İki sütunlu
-          ızgarada konu adları ("Makro ve Merkez Bankası") iki satıra
-          kırılıyor, seviye künyesi `truncate` yiyordu ve dört karo dikeyde
-          bir duvar kuruyordu. Dar ekranda müfredat zaten SIRALI bir liste —
-          satır düzeni o sırayı da gösteriyor. */}
-      <Panel className={`${styles.curriculumGrid} ${guideStyles.chapters} flex flex-col sm:grid sm:grid-cols-4`} data-motion-stagger>
-        {GUIDE_TOPICS.map((topic, index) => {
-          const group = groupOf(topic.key);
-          const levels = levelsIn(group);
-          return (
-            <a
-              key={topic.key}
-              href={`#konu-${topic.key}`}
-              className="group flex min-h-12 min-w-0 items-center gap-2 px-4 transition-colors hover:bg-primary-tint sm:min-h-0 sm:flex-col sm:items-start sm:gap-1 sm:py-3.5"
-            >
-              <span className="numeral shrink-0 text-tiny font-bold text-primary">
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <TopicDiagram index={index} />
-              </span>
-              <span className="display-ink display-ink-tight min-w-0 flex-1 text-read font-bold tracking-[-0.02em] sm:w-fit sm:flex-none">
-                {guideTopicLabel(topic.key, locale)}
-              </span>
-              <span className="flex shrink-0 items-center gap-1.5 text-tiny text-muted sm:mt-auto sm:w-full sm:pt-2">
-                <LevelDots level={levels[levels.length - 1] ?? "temel"} />
-                {/* 320 pikselde seviye aralığı satırı taşırıyor; orada
-                    yalnızca noktalar kalıyor. */}
-                <span className="hidden min-w-0 truncate min-[360px]:inline">
-                  {levelSpan(levels, locale)}
-                </span>
-                <ArrowRight
-                  weight="bold"
-                  size={11}
-                  className="ml-auto hidden shrink-0 text-primary opacity-0 transition-opacity group-hover:opacity-100 sm:block"
-                  aria-hidden
-                />
-              </span>
-            </a>
-          );
-        })}
-      </Panel>
+      <GuideRoadmap chapters={chapters} totalMinutes={totalMinutes} labels={t.guideVisuals} />
     </section>
   );
 }
@@ -581,7 +551,8 @@ function ArticleGrid({
                 <span className="block min-w-0 text-read font-bold leading-[19px] text-strong">
                   {article.title}
                 </span>
-                <span className="numeral shrink-0 text-tiny text-muted">
+                <span className="numeral flex shrink-0 items-center gap-1.5 text-tiny text-muted">
+                  <ReadMark slug={article.slug} label={t.guideVisuals.readMark} />
                   {readingMinutes(article.bodyMd)} {t.guide.readMinutes}
                 </span>
               </span>
@@ -631,7 +602,8 @@ function ArticleGrid({
                   piksellik karo bu satırı zaten iki satır yüksekliğinde
                   tutuyor, süre buraya hiç yer harcamadan sığıyor. */}
               <span className="flex shrink-0 flex-col items-end gap-0.5 text-right">
-                <span className="numeral text-tiny font-bold text-muted">
+                <span className="numeral flex items-center gap-1 text-tiny font-bold text-muted">
+                  <ReadMark slug={article.slug} label={t.guideVisuals.readMark} />
                   {String(startIndex + index + 1).padStart(2, "0")}
                 </span>
                 <span className={`numeral ${styles.guideMinutes}`}>

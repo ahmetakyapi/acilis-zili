@@ -339,6 +339,7 @@ export default async function AnalysesPage(
             <div className={analysisStyles.distribution}>
               {distribution.map(({ key, count }) => (
                 <div key={key}>
+                  {/* Görüş renkli (25 Ekim son düzeltme) — gerekçe `verdictTextClass`. */}
                   <span className={verdictTextClass(key)}>{verdictLabel(key, t)}</span>
                   <b className="numeral">{count}</b>
                   <span className={analysisStyles.distributionTrack} aria-hidden>
@@ -436,10 +437,7 @@ export default async function AnalysesPage(
                           {row.periodLabel}
                         </span>
                         <span
-                          className={cn(
-                            "figure shrink-0 text-tiny font-bold",
-                            verdictTextClass(verdict),
-                          )}
+                          className="figure shrink-0 text-tiny font-bold text-strong"
                         >
                           {verdictLabel(verdict, t)} · {row.score}
                         </span>

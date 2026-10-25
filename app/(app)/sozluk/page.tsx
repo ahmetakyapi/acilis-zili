@@ -19,6 +19,8 @@ import {
   glossaryTerms,
 } from "@/content/glossary";
 import { GLOSSARY_MARKS } from "@/content/glossary/marks";
+import { GLOSSARY_FORMULAS } from "@/content/glossary/formulas";
+import { TermPlateVisual } from "@/components/glossary/TermFormula";
 import { displayZone, zoneDateKey } from "@/lib/session-clock";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
@@ -135,6 +137,7 @@ export default async function GlossaryIndexPage() {
     letter: letterOf(term.term),
     rank: rank.get(term.slug) ?? 0,
     motif: GLOSSARY_MARKS[term.slug],
+    formula: GLOSSARY_FORMULAS[term.slug],
   }));
 
   /* Alfabe + alfabe dışında kalan baş harfler (Türkçede W: "W-8BEN"). */
@@ -188,7 +191,14 @@ export default async function GlossaryIndexPage() {
         spotlight={
           <aside key="spotlight" aria-labelledby="sozluk-gunun-terimi" className={styles.spotlight}>
             <div className={styles.spotlightPlate}>
-              <TermMark motif={GLOSSARY_MARKS[today.slug]} size="plate" draw />
+              {/* Formülü olan terimde levha formülün kendisi (25 Ekim). */}
+              <TermPlateVisual
+                formula={GLOSSARY_FORMULAS[today.slug]}
+                lang={lang}
+                labels={t.glossaryVisuals}
+                term={today.term}
+                fallback={<TermMark motif={GLOSSARY_MARKS[today.slug]} size="plate" draw />}
+              />
             </div>
             <div className={styles.spotlightCopy}>
               <h2 id="sozluk-gunun-terimi" className={styles.spotlightKicker}>
@@ -226,6 +236,7 @@ export default async function GlossaryIndexPage() {
           close: t.glossary.close,
           peekError: t.glossary.peekError,
           openFull: t.glossary.openFull,
+          formula: t.glossaryVisuals,
         }}
       />
       <GuideHint

@@ -29,6 +29,9 @@ import {
 import { FactRail } from "./FactRail";
 import { VerdictStrip } from "./VerdictStrip";
 import { PLATE_LABEL, type Upside } from "./shared";
+import { ExpectationLine } from "./ExpectationLine";
+import visuals from "./ReportVisuals.module.css";
+import { expectationReading } from "@/lib/analysis-visuals";
 
 /**
  * KAPAK ETİKETİ: AD ÜSTTE, AYRINTI ALTTA (30 Eylül, sahibinin ekran
@@ -101,6 +104,7 @@ export function ReportCover({
   targetText,
   closeText,
   ladderMarks,
+  lede,
   marketCap,
   marketCapNote,
   peRatio,
@@ -136,6 +140,8 @@ export function ReportCover({
   targetText: string | null;
   closeText: string | null;
   ladderMarks: RailMark[];
+  /** Tepedeki veri cümlesi — sayfada `reportLede` ile kurulur; yoksa `null`. */
+  lede: string | null;
   marketCap: number | null;
   marketCapNote: string;
   peRatio: number | null;
@@ -415,7 +421,11 @@ export function ReportCover({
           )}
         </div>
 
-
+        {/* TEPEDE VERİDEN TEK CÜMLE (25 Ekim görsel zirve) — çeyreğin üç
+            sayısı tek okumada: gelir, beklentiye göre kâr, ilk tepki.
+            Kayıttaki rutin manşeti (`headline`) görüş şeridinde duruyor;
+            bu cümle yorum değil, sayıların özeti. */}
+        {lede && <p className={visuals.lede}>{lede}</p>}
 
         {/* İlk kapakta dönem büyük bir manşetti; kullanıcı geri bildirimiyle
             görsel ağırlık çeyreğin sonuçlarına geçti. Etiketler ve notlar
@@ -428,7 +438,15 @@ export function ReportCover({
             data-has-metrics={coverMetrics.length > 0}
           >
             {coverMetrics.length > 0 && (
-              <dl data-motion-stagger className={styles.coverLeadFacts}>
+              /* BEKLENTİ ÇİZGİSİ dördüncü satır (25 Ekim): künyede açık bir
+                 beklenti sayısı varsa değer ile beklenti ortak eksende
+                 (`ExpectationLine`). Satır ızgarası `subgrid`; dört satır
+                 yalnızca en az bir ölçüde çizgi varsa açılıyor. */
+              <dl
+                data-motion-stagger
+                className={styles.coverLeadFacts}
+                data-rows={coverMetrics.some((metric) => expectationReading(metric.value, metric.note)) ? 4 : 3}
+              >
                 {coverMetrics.map((metric) => (
                   <div key={metric.label}>
                     {(() => {
@@ -443,9 +461,20 @@ export function ReportCover({
                     <dd className="figure">{tieCurrency(metric.value)}</dd>
                     {metric.note && (
                       <dd className={styles.coverMetricNote}>
-                        <MetricNote note={metric.note} tone={metric.tone} locale={locale} neutralClass="text-primary-ink" />
+                        <MetricNote note={metric.note} tone={metric.tone} locale={locale} />
                       </dd>
                     )}
+                    {(() => {
+                      const reading = expectationReading(metric.value, metric.note);
+                      return reading ? (
+                        <dd className={styles.coverExpectation}>
+                          <ExpectationLine
+                            reading={reading}
+                            labels={{ expected: t.analysisVisuals.expected, actual: t.analysisVisuals.actual }}
+                          />
+                        </dd>
+                      ) : null;
+                    })()}
                   </div>
                 ))}
               </dl>

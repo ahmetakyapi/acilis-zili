@@ -9,6 +9,7 @@ import {
   Tri,
   clip,
   ogFonts,
+  VERDICT_OG,
 } from "@/lib/og";
 import { getAnalysis } from "@/lib/data";
 import { DEFAULT_LOCALE, getDictionary } from "@/lib/i18n";
@@ -55,11 +56,10 @@ export const alt = "Bilanço Analizi · Açılış Zili";
  */
 const ANALYSIS_SYMBOL = /^[A-Z.-]{1,12}$/;
 
-/** Görüş rengi — sitedeki `verdictTextClass` ile aynı eşleme, sabit renkle. */
+/** Görüş rengi — sitedeki üçlünün sabit karşılığı (`VERDICT_OG`, lib/og.tsx).
+    TUT burada gri basılıyordu; sitede pirinç. */
 function verdictTone(v: VerdictKey) {
-  if (v === "buy") return { fg: C.up, bg: C.upWash };
-  if (v === "sell") return { fg: C.down, bg: C.downWash };
-  return { fg: C.body, bg: C.primaryTint };
+  return VERDICT_OG[v];
 }
 
 /** Skor halkası — sitedeki `ScoreRing`in Satori'de çizilebilen hâli. */
@@ -174,7 +174,7 @@ export default async function AnalysisOgImage({
                 {verdictLabel(verdict, t)}
               </span>
             </div>
-            <ScoreDisc score={row.score} tone={tone.fg} />
+            <ScoreDisc score={row.score} tone={tone.ink} />
           </div>
         }
         footer={

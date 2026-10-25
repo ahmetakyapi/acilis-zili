@@ -66,10 +66,13 @@
 .sb[data-previewing] .sb-count { background: var(--brass-wash); color: var(--brass-ink); }
 .sb[data-previewing] .sb-count svg { stroke: var(--brass); }
 .sb-back {
-  display: none; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--primary-faint);
+  position: relative; display: none; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--primary-faint);
   background: var(--primary-tint); color: var(--primary-ink); font-size: 14px; font-weight: 650; cursor: pointer;
 }
-.sb[data-previewing] .sb-back { display: inline-flex; align-items: center; }
+.sb[data-previewing] .sb-back { display: inline-flex; align-items: center; gap: 6px; }
+/* Yazılı düğmede dokunma alanı 44 piksele görseli büyütmeden tamamlanıyor. */
+.sb-back::after { content: ""; position: absolute; inset: 50% 0 auto; height: 44px; translate: 0 -50%; }
+.sb-back svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
 
 /* ---- Figür ---- */
 .sb-stage { position: relative; border-radius: 14px; background: var(--anatomy-card); padding: 6px 4px; cursor: crosshair; touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
@@ -99,20 +102,32 @@
 @keyframes sb-pulse { to { stroke-dashoffset: -16; } }
 
 /* ---- Zil bildirimi ----
-   Zil çaldığında sahnenin sol üstünde "Açılış Zili · 16:30 TR": çanın
-   neden vurulduğunu söyleyen tek satır. Pirinç, çünkü zil anı pirinç
-   (kontak ve çan kenarı da o renge döner). */
-.sb-toast {
-  position: absolute; top: 10px; left: 10px; z-index: 2; display: inline-flex; align-items: center; gap: 7px;
-  padding: 7px 13px 7px 10px; border-radius: 999px; pointer-events: none;
-  background: var(--brass-wash); color: var(--brass-ink); font-size: 14px; font-weight: 750; white-space: nowrap;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brass) 35%, transparent);
-  opacity: 0; transform: translateY(-6px) scale(.96);
-  transition: opacity 260ms var(--ease-brand), transform 360ms var(--ease-brand);
+   Zil çaldığında geri sayım hapı 2,4 saniye "Açılış Zili · 16:30 TR"
+   der: çanın neden vurulduğunu söyleyen tek satır. Pirinç, çünkü zil anı
+   pirinç (kontak ve çan kenarı da o renge döner). Eskiden sahnenin sol
+   üstünde ayrı bir haptı ve çizimin üstüne biniyordu — gerekçe ve ölçüm
+   live.tsx → "ZİL BİLDİRİMİ BU HAPIN İÇİNDE". Bildirim yokken metin
+   görünmez ama erişilebilirlik ağacında: `aria-live` bölgesi metin
+   yazıldığı anda duyursun diye (display:none'dan açılan bölge duyurmuyor). */
+.sb-count { position: relative; transition: background-color 200ms var(--ease-brand), color 200ms var(--ease-brand); }
+.sb-count svg { transition: stroke 200ms var(--ease-brand); }
+.sb:not([data-toasting]) [data-toast] {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
 }
-.sb-toast svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
-.sb[data-toasting] .sb-toast { opacity: 1; transform: none; }
-.sb[data-toasting][data-ringing] .sb-toast svg { animation: sb-swing 300ms var(--ease-brand) 4 alternate; transform-origin: 50% 15%; }
+.sb[data-toasting] .sb-count [data-count] { display: none; }
+.sb[data-toasting] .sb-count { background: var(--brass-wash); color: var(--brass-ink); }
+.sb[data-toasting] .sb-count svg { stroke: var(--brass); }
+.sb[data-toasting] [data-toast] { animation: sb-toast-in 320ms var(--ease-brand) both; }
+@keyframes sb-toast-in { from { opacity: 0; translate: 0 5px; } }
+/* ÖLÇÜM (25 Ekim, WebKit 26.6, Günü Oynat, iki tema, TR/EN): hap sahnenin
+   dışında, çizimle kesişim 0 piksel (önce 217–307 boyalı piksel). 380–639
+   arasında başlık "rozet + hap" tek satır: saatli bildirim (TR 188, EN 195
+   piksel) 390'da seans rozetine biniyordu; orada saat düşüyor, zilin adı
+   kalıyor. 320'de hap kendi satırında, 768 ve 1280'de geniş; saat duruyor. */
+@media (min-width: 380px) and (max-width: 639px) {
+  [data-toast-time] { display: none; }
+}
+.sb[data-toasting][data-ringing] .sb-count svg { animation: sb-swing 300ms var(--ease-brand) 4 alternate; transform-origin: 50% 15%; }
 @keyframes sb-swing { from { rotate: -14deg; } to { rotate: 14deg; } }
 
 /* ---- Seans çizelgesi ----
@@ -229,6 +244,10 @@
    biniyordu), kart saatleri komşu karta taşıyordu — ölçüldü. */
 @media (max-width: 379px) {
   .sb-head { grid-template-areas: "badge back" "clock clock" "count count"; }
+  /* Düğme yalnız simge (gerekçe live.tsx); ad ekran okuyucuda kalıyor. */
+  /* Yalnız simge kalan düğme 44 × 44 (son inceleme, 25 Ekim: 44 × 36'ydı). */
+  .sb[data-previewing] .sb-back { width: 44px; min-height: 44px; padding: 0; justify-content: center; }
+  .sb-back-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .sb-count { justify-self: start; }
   .sb-seg { padding: 9px 5px 24px; }
   .sb-seg-bar { left: 7px; right: 7px; }
@@ -237,8 +256,8 @@
   .sb-seg-sub { font-size: 9.5px; letter-spacing: -.02em; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sb-wire[data-pulse] .iso-line, .sb[data-ringing] .sb-badge::before, .sb-toast svg, .sb-play svg { animation: none !important; }
-  .sb-toast, .sb-seg, .sb-mark, .sb-marker, .sb-play { transition: none; }
+  .sb-wire[data-pulse] .iso-line, .sb[data-ringing] .sb-badge::before, .sb-count svg, .sb-play svg, [data-toast] { animation: none !important; }
+  .sb-count, .sb-count svg, .sb-seg, .sb-mark, .sb-marker, .sb-play { transition: none; }
 }
 
 /* ---- Renk (17 Ekim, üçüncü sürüm) ----

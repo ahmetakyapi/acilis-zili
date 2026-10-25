@@ -2,11 +2,12 @@ import { cache } from "react";
 import { getStatus, getSymbolNames } from "@/lib/data";
 import { etDateOf } from "@/lib/fx";
 import { addEtDays } from "@/lib/market-hours";
-import { companySector } from "@/lib/company-sector";
+import { companyMajorSector } from "@/lib/company-sector";
 import type { Locale } from "@/lib/i18n";
 import { sectorWeights } from "@/lib/portfolio";
 import { getPortfolioPositions } from "@/lib/portfolio-data";
 import { getChartBars, getQuotes } from "@/lib/providers";
+import { spyAnchorDay } from "@/lib/return-timeline";
 import type { Bar } from "@/lib/providers/types";
 
 /**
@@ -14,7 +15,8 @@ import type { Bar } from "@/lib/providers/types";
  *
  * Sahibin BEYANI değil, sitenin kendi kayıtlarından HESABI: getiri,
  * pozisyonların kayıtlı alış günleri ve bugünkü kotasyonla kurulur; SPY
- * kıyası "aynı günlerde aynı tutar SPY'a yatırılsaydı" sorusunun cevabıdır.
+ * kıyası "aynı aylarda aynı tutar SPY'a yatırılsaydı" sorusunun cevabıdır
+ * (25 Ekime kadar "aynı günlerde"ydi; neden değişti: `spyAnchorDay`).
  *
  * TUTAR DIŞARI SIZMAZ. `loadPortfolio`nun görünümleri dolar tutarlarını da
  * taşıyor; bu modül profil sayfasına yalnızca YÜZDE (ağırlık, getiri) ve
@@ -68,8 +70,11 @@ export type Showcase = {
  * bir parti kendi haftasının barını atlayıp BİR SONRAKİ haftanın kapanışına
  * düşüyordu ve SPY tabanı sistematik geç (çoğunlukla sahibin lehine)
  * alınıyordu (15 Ekim incelemesinde yakalandı).
+ *
+ * Dışa açık (25 Ekim): "Alıştan Bugüne" çizgisi (`lib/return-timeline-data.ts`)
+ * SPY tabanını AYNI kuralla alıyor; iki ayrı kopya ayrı tabana düşebilirdi.
  */
-function closeOnOrAfter(
+export function closeOnOrAfter(
   bars: readonly Bar[],
   day: string,
   fallback: number | null,
@@ -130,17 +135,21 @@ export const loadShowcase = cache(
       costBySymbol.set(position.symbol, (costBySymbol.get(position.symbol) ?? 0) + cost);
       sectorItems.push({
         sector:
-          companySector(position.symbol, names[position.symbol]?.industry, locale) ??
+          companyMajorSector(position.symbol, names[position.symbol]?.industry, locale) ??
           otherSectorLabel,
         valueUsd: value,
       });
       if (sinceDay === null || position.boughtAt < sinceDay) sinceDay = position.boughtAt;
 
       /* Önce günlük seri (son 1 yıl), sonra haftalık (5 yıl); ikisi de o
-         güne inmiyorsa parti kıyasın dışında kalır ve kapsam düşer. */
+         güne inmiyorsa parti kıyasın dışında kalır ve kapsam düşer.
+         Taban alış AYININ ilk kapanışı (25 Ekim): gün kapanışı profildeki
+         SPY yüzdesinden geri hesaplanıp alış gününü veriyordu (gerekçe
+         `spyAnchorDay`, lib/return-timeline.ts). */
+      const anchor = spyAnchorDay(position.boughtAt);
       const spyClose =
-        closeOnOrAfter(daily, position.boughtAt, spyPrice, 0) ??
-        closeOnOrAfter(weekly, position.boughtAt, spyPrice, 6);
+        closeOnOrAfter(daily, anchor, spyPrice, 0) ??
+        closeOnOrAfter(weekly, anchor, spyPrice, 6);
       if (spyPrice !== null && spyPrice > 0 && spyClose !== null && spyClose > 0) {
         spyValue += (cost / spyClose) * spyPrice;
         spyCost += cost;

@@ -15,14 +15,14 @@
    ========================================================================== */
 
 /** Metnin son güncellendiği tarih — sayfa künyesinde görünür (ET/TR farkı önemsiz). */
-export const LEGAL_UPDATED = "2026-10-20";
+export const LEGAL_UPDATED = "2026-10-25";
 
 const PRIVACY_TR = `Açılış Zili kişisel bir projedir ve ABD borsalarını Türkçe takip etmek için yapılmıştır. Bu sayfa, 6698 sayılı **Kişisel Verilerin Korunması Kanunu** (KVKK) kapsamında hangi verinin neden işlendiğini, nereye gittiğini ve senin hangi haklara sahip olduğunu anlatır.
 
 Kısa cevap peşindeysen: hesap açmadan siteyi kullanabilirsin ve o durumda seni tanımlayan hiçbir kayıt oluşmaz. Reklam ağı, izleme çerezi ve üçüncü taraf piksel bu sitede **yok**. Hangi sayfanın kaç kez okunduğu sayılır ama bu sayım kimliksizdir ve aşağıda satır satır anlatılmıştır.
 
 ::: ozet Üç Cümlede
-Hesap açmazsan yalnızca tema ve dil tercihin tarayıcında saklanır; sunucuda seni tanımlayan bir kayıt oluşmaz. Hesap açarsan kullanıcı adın, e-postan, şifrenin geri döndürülemez özeti, takip listen, portföyüne eklediğin pozisyonlar ve kurduğun fiyat alarmları saklanır. Bu veriler kimseye satılmaz, pazarlama amacıyla kullanılmaz.
+Hesap açmazsan yalnızca tema ve dil tercihin (bulmaca oynarsan bir de o günün tahminlerin) tarayıcında saklanır; sunucuda seni tanımlayan bir kayıt oluşmaz. Hesap açarsan kullanıcı adın, e-postan, şifrenin geri döndürülemez özeti, takip listen, portföyüne eklediğin pozisyonlar ve kurduğun fiyat alarmları saklanır. Bu veriler kimseye satılmaz, pazarlama amacıyla kullanılmaz.
 :::
 
 ## Veri Sorumlusu
@@ -41,12 +41,13 @@ Site iki farklı durumda çalışır ve ikisi arasında ciddi bir fark vardır.
 
 ### Hesap Açmadan Kullanırken
 
-Sunucuda seni tanımlayan bir kayıt oluşmaz. Yalnızca tarayıcında iki tercih çerezi tutulur:
+Sunucuda seni tanımlayan bir kayıt oluşmaz. Tarayıcında yalnızca iki tercih çerezi ve, Hisseyi Bil bulmacasını oynarsan, bulmacanın ilerleme çerezleri tutulur:
 
 - **Tema tercihi** (\`az-theme\`) — açık ya da koyu.
 - **Dil tercihi** (\`az-locale\`) — Türkçe ya da İngilizce.
+- **Bulmaca ilerlemesi** (\`az-bulmaca\`, \`az-bulmaca-arsiv\`) — o günün bulmacasında denediğin hisse sembolleri; sayfa yeniden açıldığında oyunun kaldığı yerden başlaması için. Serin ve geçmiş bulmacaların yalnız tarayıcının yerel deposunda durur, sunucuya gönderilmez.
 
-Bu ikisi kimlik bilgisi taşımaz, bir kullanıcı kimliğine bağlanmaz ve başka bir siteyle paylaşılmaz. Tarayıcı ayarlarından sildiğinde site varsayılanlara döner.
+Bunlar kimlik bilgisi taşımaz, bir kullanıcı kimliğine bağlanmaz ve başka bir siteyle paylaşılmaz. Tarayıcı ayarlarından sildiğinde site varsayılanlara döner.
 
 ### Sayfa Sayımı
 
@@ -113,15 +114,16 @@ Bu bölüm bilinçli olarak ayrı: çoğu gizlilik metni ne topladığını yaza
 
 ## Çerezler
 
-Sitede yalnızca üç çerez vardır ve üçü de işlevseldir:
+Sitede yalnızca işlevsel çerezler vardır:
 
 | Çerez | İşlevi | Ömrü |
 |---|---|---|
 | \`authjs.session-token\` | Oturumu açık tutar. Sadece hesap açanlarda oluşur. | 180 gün |
 | \`az-theme\` | Açık/koyu tema tercihi | 1 yıl |
 | \`az-locale\` | Arayüz dili | 1 yıl |
+| \`az-bulmaca\`, \`az-bulmaca-arsiv\` | Hisseyi Bil'de o günün tahminleri (yalnız oynayanlarda) | 2 gün |
 
-Üçü de \`SameSite\` koruması ile ve oturum çerezi ek olarak \`HttpOnly\` bayrağıyla yazılır; JavaScript ile okunamaz. Onay bandı gösterilmemesinin sebebi bu: kanunen açık rıza gerektiren pazarlama çerezi kullanılmıyor.
+Hepsi \`SameSite\` koruması ile ve oturum çerezi ek olarak \`HttpOnly\` bayrağıyla yazılır; JavaScript ile okunamaz. Onay bandı gösterilmemesinin sebebi bu: kanunen açık rıza gerektiren pazarlama çerezi kullanılmıyor.
 
 ## Verilerin Aktarımı
 
@@ -230,7 +232,7 @@ const PRIVACY_EN = `Opening Bell is a personal project built to follow US market
 If you want the short answer: you can use the site without an account, and in that case no record identifying you is created. There are **no** ad networks, tracking cookies or third-party pixels on this site. Page reads are counted, but that count is anonymous and is explained line by line below.
 
 ::: ozet In Three Sentences
-Without an account, only your theme and language preferences are stored in your browser; no record identifying you is created on the server. With an account, your username, email address, an irreversible digest of your password, your watchlists, the positions you add to your portfolio and the price alerts you set are stored. This data is never sold and never used for marketing.
+Without an account, only your theme and language preferences (plus that day's guesses if you play the puzzle) are stored in your browser; no record identifying you is created on the server. With an account, your username, email address, an irreversible digest of your password, your watchlists, the positions you add to your portfolio and the price alerts you set are stored. This data is never sold and never used for marketing.
 :::
 
 ## Data Controller
@@ -249,12 +251,13 @@ The site works in two different modes, and the difference between them matters.
 
 ### Using It Without an Account
 
-No record identifying you is created on the server. Only two preference cookies are kept in your browser:
+No record identifying you is created on the server. Your browser keeps only two preference cookies and, if you play the Guess the Stock puzzle, the puzzle's progress cookies:
 
 - **Theme preference** (\`az-theme\`) — light or dark.
 - **Language preference** (\`az-locale\`) — Turkish or English.
+- **Puzzle progress** (\`az-bulmaca\`, \`az-bulmaca-arsiv\`) — the stock symbols you tried in that day's puzzle, so the game reopens where you left it. Your streak and past puzzles stay in your browser's local storage only and are never sent to the server.
 
-Neither carries identifying information, neither is tied to a user id, and neither is shared with another site. Clear them in your browser settings and the site returns to its defaults.
+None of them carries identifying information, none is tied to a user id, and none is shared with another site. Clear them in your browser settings and the site returns to its defaults.
 
 ### Page Counts
 
@@ -321,15 +324,16 @@ This section is deliberately separate: most privacy texts state what they collec
 
 ## Cookies
 
-There are only three cookies on the site, and all three are functional:
+The site uses functional cookies only:
 
 | Cookie | Function | Lifetime |
 |---|---|---|
 | \`authjs.session-token\` | Keeps the session open. Created only for account holders. | 180 days |
 | \`az-theme\` | Light/dark theme preference | 1 year |
 | \`az-locale\` | Interface language | 1 year |
+| \`az-bulmaca\`, \`az-bulmaca-arsiv\` | That day's guesses in Guess the Stock (players only) | 2 days |
 
-All three are written with \`SameSite\` protection, and the session cookie additionally carries the \`HttpOnly\` flag; it cannot be read by JavaScript. That is why no consent banner is shown: no marketing cookie requiring explicit consent is used.
+All of them are written with \`SameSite\` protection, and the session cookie additionally carries the \`HttpOnly\` flag; it cannot be read by JavaScript. That is why no consent banner is shown: no marketing cookie requiring explicit consent is used.
 
 ## Data Transfers
 

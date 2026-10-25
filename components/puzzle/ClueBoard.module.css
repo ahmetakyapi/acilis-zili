@@ -1,0 +1,90 @@
+/* İpucu yolu ve kartları — gerekçe ClueBoard.tsx. Derinlik tonla
+   (`surface-sunken`), gölge/cam/degrade yok. Kulvar 5 px (`--lane-h`). */
+
+.board { container-type:inline-size; min-width:0; }
+
+/* ---- Yol ---- */
+.ladder { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); margin:0; padding:0; list-style:none; }
+.step { position:relative; display:flex; flex-direction:column; align-items:center; gap:.375rem; min-width:0; }
+/* Basamaktan önceki kulvar: bir önceki basamağın ortasından bunun
+   ortasına (yarım sütun sola taşar). */
+.link { position:absolute; top:calc(1.125rem - var(--lane-h, 5px) / 2); right:50%; width:100%; height:var(--lane-h, 5px); border-radius:999px; background:var(--line-soft); }
+.link[data-link="miss"] { background:var(--primary-soft); }
+.link[data-link="hit"] { background:var(--up); }
+.node { position:relative; z-index:1; display:grid; place-items:center; width:2.25rem; height:2.25rem; border-radius:999px; border:1.5px solid var(--line); background:var(--premium-surface); color:var(--text-muted); transition:background-color 320ms var(--ease-brand), border-color 320ms var(--ease-brand), color 320ms var(--ease-brand); }
+.step[data-step="start"] .node,
+.step[data-step="opened"] .node { border-color:var(--primary-faint); background:var(--primary-wash); color:var(--primary-ink); }
+.step[data-step="revealed"] .node { border-color:var(--line); background:var(--surface-sunken); color:var(--text-body); }
+.step[data-step="next"] .node { border-style:dashed; border-color:var(--primary-faint); color:var(--primary-ink); }
+.step[data-step="locked"] .node { border-style:dashed; }
+.stepLabel { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--text-micro); font-weight:600; color:var(--text-muted); }
+.step[data-step="start"] .stepLabel,
+.step[data-step="opened"] .stepLabel { color:var(--text-body); }
+/* Dar panelde basamak adları sığmıyor: yalnız simge (kart adı zaten yazıyor). */
+@container (max-width: 459.98px) {
+  .stepLabel { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+}
+.note { margin:.625rem 0 0; font-size:var(--text-tiny); line-height:1.5; color:var(--text-muted); }
+
+/* ---- Kartlar ---- */
+.cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.625rem; margin:1rem 0 0; padding:0; list-style:none; perspective:900px; }
+@container (min-width: 560px) {
+  .cards { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+.card { display:flex; flex-direction:column; gap:.375rem; min-width:0; min-height:6.5rem; padding:.75rem .875rem; border-radius:var(--radius-lg); background:var(--surface-sunken); transform-origin:50% 0; }
+.cardHead { display:flex; align-items:center; gap:.375rem; min-width:0; }
+.cardIcon { display:grid; place-items:center; flex:none; width:1.375rem; height:1.375rem; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); }
+.cardLabel { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
+.value { font-size:var(--text-lead); font-weight:700; line-height:1.25; color:var(--text-strong); overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+.initial { display:grid; place-items:center; width:2.75rem; height:2.75rem; border-radius:var(--radius-md); background:var(--premium-surface); border:1px solid var(--line); font-size:var(--text-heading); line-height:1; }
+.up { color:var(--up); }
+.down { color:var(--down); }
+
+.visual { display:flex; flex-direction:column; gap:.25rem; margin-top:auto; }
+.caption { font-size:var(--text-micro); color:var(--text-muted); }
+.bands { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:3px; }
+.band { height:var(--lane-h, 5px); border-radius:999px; background:var(--line-soft); }
+.band[data-below] { background:var(--primary-wash); }
+.band[data-on] { background:var(--primary-soft); }
+.lane { position:relative; display:block; height:var(--lane-h, 5px); border-radius:999px; background:var(--line-soft); }
+.laneFill { position:absolute; inset-block:0; left:0; border-radius:999px; background:var(--primary-wash); }
+.laneDot { position:absolute; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:999px; background:var(--primary-soft); outline:2px solid var(--premium-surface); }
+.laneEnds { display:flex; justify-content:space-between; font-size:var(--text-micro); color:var(--text-muted); font-variant-numeric:tabular-nums; }
+.centered::after { content:""; position:absolute; left:50%; top:-3px; bottom:-3px; width:1px; background:var(--line-strong); }
+.growthBar { position:absolute; inset-block:0; border-radius:999px; }
+.growthUp { background:var(--up); }
+.growthDown { background:var(--down); }
+
+/* Kapalı kart: sırtı dönük. Kesik çerçeve, kilit, kaç yanlış kaldığı. */
+.locked { background:transparent; border:1px dashed var(--line); }
+.lockIcon { background:var(--surface-sunken); color:var(--text-muted); }
+.lockLine { font-size:var(--text-small); font-weight:600; color:var(--text-body); }
+.pips { display:flex; gap:5px; margin-top:auto; }
+.pip { width:8px; height:8px; border-radius:999px; border:1.5px solid var(--line-strong); }
+
+/* ---- Giriş ---- */
+@media (prefers-reduced-motion: no-preference) {
+  /* Kart yukarıdan menteşeli çevrilir; panel girişi değil tek kart, yine
+     de yaysız (`--ease-brand`). */
+  .fresh { animation:card-flip 560ms var(--ease-brand) both; }
+  .fresh .cardIcon { animation:icon-pop 420ms var(--ease-spring-soft) 320ms both; }
+  .nodeFresh { animation:icon-pop 420ms var(--ease-spring-soft) both; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .node { transition:none; }
+}
+@keyframes card-flip {
+  from { opacity:0; transform:rotateX(-80deg); }
+  to { opacity:1; transform:none; }
+}
+@keyframes icon-pop {
+  from { transform:scale(.5); }
+  to { transform:scale(1); }
+}
+
+/* Beta kulvarında piyasa çizgisi (beta 1). */
+.marked::after { content:""; position:absolute; left:var(--mark); top:-3px; bottom:-3px; width:1px; background:var(--line-strong); }
+/* Harf kutuları: sembolün kalıbı, Wordle'ın boş satırı gibi. */
+.letterBoxes { display:flex; flex-wrap:wrap; align-items:flex-end; gap:4px; }
+.letterBox { width:1.125rem; height:1.375rem; border-radius:4px; border:1.5px solid var(--line-strong); background:var(--premium-surface); }
+.letterMark { font-weight:700; color:var(--text-muted); line-height:1; }

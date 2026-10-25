@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import styles from "../stock.module.css";
+import visuals from "./visuals.module.css";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { ChangePill, EmptyValue, Panel, PanelHeader, PanelLink } from "@/components/ui/primitives";
 import { ScaleBar } from "@/components/markets/CompareScale";
@@ -10,6 +11,7 @@ import { getQuotes } from "@/lib/providers";
 import { indexMemberOf, peersOf } from "@/db/seed/indices";
 import { subIndustryName } from "@/db/seed/sub-industries";
 import { formatMoneyCompact, formatPrice, NO_VALUE } from "@/lib/utils";
+import { logScale } from "@/lib/peer-spread";
 import { FoldToggle } from "@/components/ui/FoldToggle";
 
 /** Telefonda açık gelen satır (28 Eylül, Gündem'i kısaltma işi). Dokuz satır
@@ -71,7 +73,9 @@ export async function PeersCard({
       cap: liveMarketCap(meta[row.symbol], quotes[row.symbol]?.price ?? null),
     }))
     .sort((a, b) => (b.cap ?? -1) - (a.cap ?? -1));
-  const maxCap = Math.max(0, ...rows.map((row) => row.cap ?? 0));
+  /* Log ölçek (25 Ekim son düzeltme; gerekçe `logScale`): doğrusalda
+     en büyük şirketin dışındakiler nokta kadar kalıyordu. */
+  const capScale = logScale(rows.map((row) => row.cap ?? 0));
   const folded = (index: number, self: boolean) => index >= PEER_FOLD && !self;
   const foldCount = rows.filter((row, index) => folded(index, row.self)).length;
 
@@ -124,8 +128,8 @@ export async function PeersCard({
                 <span className="numeral block text-xs font-semibold text-strong">
                   {row.cap !== null ? formatMoneyCompact(row.cap, locale) : NO_VALUE}
                 </span>
-                {row.cap !== null && maxCap > 0 && (
-                  <ScaleBar ratio={row.cap / maxCap} signed={false} emphasis={row.self} />
+                {row.cap !== null && capScale && (
+                  <ScaleBar ratio={capScale.ratio(row.cap)} signed={false} emphasis={row.self} />
                 )}
               </span>
               <span className={styles.peerQuote}>
@@ -158,6 +162,11 @@ export async function PeersCard({
         })}
       </ol>
       </FoldToggle>
+      {capScale && (
+        <p className={visuals.weightNote}>
+          {t.stockVisuals.capLogNote.replace("{floor}", formatMoneyCompact(capScale.floor, locale))}
+        </p>
+      )}
       {/* ŞİRKET KARTI — bu listenin satırları VE Şirket Özeti'ndeki logo
           şeridi (StockSummary: aynı sıralamanın ilk beşi, yani bu sekizin
           alt kümesi). Kayıt burada çünkü paket burada: kart satırın

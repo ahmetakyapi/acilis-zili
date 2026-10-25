@@ -1,0 +1,520 @@
+/* Aracı kurum kartları ve yan yana karşılaştırma (25 Ekim görsel turu).
+   Renk yalnız token'dan. Mavi yalnız etkileşimde (karşılaştır düğmesi,
+   kaynak numarası, seçili kartın halkası); veri tarafında renk YOK: ✓ ve ✗
+   mürekkep, ölçek nötr. Derinlik tonla: kart `--surface` panelin üstünde,
+   ücret bloğu `--surface-sunken`. Gölge, cam, ışıma yok. */
+
+/* ------------------------------------------------------------ ızgara */
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 720px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+}
+@media (min-width: 1180px) {
+  .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* ------------------------------------------------------------ kart */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  scroll-margin-top: calc(var(--app-bar-h, 69px) + 16px);
+  transition: outline-color 0.28s var(--ease-brand), background-color 0.28s var(--ease-brand);
+}
+.card[data-selected] { outline-color: var(--primary); }
+.card:target { background: var(--primary-tint); }
+
+/* Sahneli giriş: kartlar bir kez, sırayla (40 ms aralık, sekiz kartta
+   280 ms bütçe). Hareketi azaltana son kare. */
+@media (prefers-reduced-motion: no-preference) {
+  .card {
+    animation: card-in 0.5s var(--ease-brand) both;
+    animation-delay: calc(var(--i, 0) * 40ms);
+  }
+}
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(10px); }
+}
+
+.head {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 4px 12px;
+  align-items: start;
+  padding: 16px 16px 12px;
+}
+.mono {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  background: var(--primary-wash);
+  color: var(--primary-ink);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.mono[data-size="sm"] { width: 32px; height: 32px; border-radius: 9px; font-size: 12px; }
+.name {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--text-strong);
+  overflow-wrap: anywhere;
+}
+.sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+/* Karşılaştır düğmesi: 44 piksel. Seçiliyken birincil mavi (etkileşim). */
+.pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--surface-elevated);
+  color: var(--text-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s var(--ease-brand), color 0.2s var(--ease-brand);
+}
+.pick:hover { color: var(--text-strong); }
+.pick[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
+.pick[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
+.pick:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+.pick:active:not([aria-disabled="true"]) { transform: scale(0.98); }
+/* Düğme rozet satırının sağ ucunda: kurum adı kartın tüm genişliğini
+   alıyor (adın yanında durunca 390'da "Garanti / BBVA Yatırım" iki satıra
+   kırılıyordu). */
+.pickSlot { margin-left: auto; }
+
+/* Lisans rozeti: nötr, ikonlu. */
+.badgeRow {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin-top: 8px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 10px 0 8px;
+  border-radius: 999px;
+  background: var(--surface-elevated);
+  color: var(--text-strong);
+  font-size: 12px;
+  font-weight: 600;
+}
+.badgeNote {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------ ücret */
+
+.fee {
+  margin: 0 8px;
+  padding: 12px 12px 10px;
+  border-radius: 12px;
+  background: var(--surface-sunken);
+}
+.feeLabel {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.feeLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin-top: 2px;
+}
+.feeValue {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--text-strong);
+}
+.feePct { font-size: 12.5px; color: var(--text-muted); }
+.feeNone { font-size: 20px; font-weight: 700; line-height: 1.25; color: var(--text-muted); }
+.feeReason { margin: 4px 0 0; font-size: 12px; line-height: 1.4; color: var(--text-body); }
+
+/* Küçük ölçek: sıfırdan bu tutardaki en yüksek komisyona. Nokta bu kurum,
+   gri çentikler öteki kurumlar — kartın "nerede durduğu" çizgiden okunur.
+   Yer değiştirme TRANSFORM ile (BrokerCostLine ile aynı gerekçe). */
+/* Kayan raylar kutunun dışına uzanıyor (transform taşması): dış kap
+   kırpıyor, 6 piksellik iç dolgu uçtaki noktanın yarısını kurtarıyor.
+   Kırpılmazsa yan yana görünümün kaydırma kabı taşmayı "devamı var" diye
+   okuyordu (1440'ta 1642/1278 piksel, ölçüldü). */
+.scale { display: block; margin-top: 10px; padding: 0 6px; overflow: hidden; }
+.scaleTrack { position: relative; display: block; height: 16px; }
+.scaleTrack::before {
+  content: "";
+  position: absolute;
+  inset: 7px 0;
+  border-radius: 999px;
+  background: var(--line-soft);
+}
+.tickRail, .dotRail {
+  position: absolute;
+  inset: 0;
+  transform: translateX(calc(var(--x) * 100%));
+  transition: transform 0.42s var(--ease-brand);
+  pointer-events: none;
+}
+.tick {
+  position: absolute;
+  left: 0;
+  top: 3px;
+  width: 2px;
+  height: 10px;
+  translate: -50% 0;
+  border-radius: 1px;
+  background: var(--line-strong);
+}
+.dot {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: var(--text-strong);
+  border: 2px solid var(--premium-surface);
+}
+.scaleEnds {
+  display: flex;
+  padding: 0 6px;
+  justify-content: space-between;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tickRail, .dotRail { transition: none; }
+}
+
+.tariff {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+}
+
+/* ------------------------------------------------------------ satırlar */
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 6px 16px 4px;
+  list-style: none;
+  flex: 1;
+}
+/* [ikon][etiket / değer / not][kaynak numaraları]. Satır en az 44 piksel:
+   numaraların dokunma alanı komşu satıra binmesin. */
+.row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 0 12px;
+  align-items: start;
+  min-height: 44px;
+  padding: 8px 0;
+}
+.row + .row { border-top: 1px solid var(--line-soft); }
+.rowIcon { padding-top: 1px; color: var(--text-muted); }
+.rowLabel { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.rowValue {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 1px;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--text-strong);
+}
+.rowValue svg { flex: none; margin-top: 1px; }
+/* BELİRTİLMEMİŞ: kesik çizgili halka + sönük, kalın olmayan yazı. Bir
+   değer gibi okunmamalı; ✗ gibi de okunmamalı. */
+.rowValue[data-mark="unspecified"] { font-weight: 500; color: var(--text-muted); }
+.rowNote {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-body);
+}
+
+/* ------------------------------------------------------------ kaynak çapası */
+
+/* KAYNAK NUMARASI: görünen 28×24, DOKUNMA ALANI 44×44. Tablodaki 18×18
+   numara (UX denetimi) burada büyüdü. Dikey yığında aralık 20 piksel →
+   numaralar 44 piksel aralıklı; görünmez genişletme (8 dikey, 8 yatay)
+   komşunun alanına girmiyor. Satır en az 44 piksel ve satır sınırları
+   arasında aralık var: bir alt satırın numarasıyla çakışmıyor
+   (390/768/1440'ta elementFromPoint ile ölçüldü, .tmp-kurum.mjs). */
+.refs {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 20px;
+  padding-top: 2px;
+}
+.refsRow { flex-direction: row; align-items: center; gap: 16px; padding-top: 0; }
+.ref {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 7px;
+  background: var(--primary-tint);
+  color: var(--primary-ink);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.2s var(--ease-brand), color 0.2s var(--ease-brand);
+}
+.ref::after { content: ""; position: absolute; inset: -10px -8px; }
+.ref:hover { background: var(--primary-wash); color: var(--primary-hover); }
+.ref:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+
+/* ------------------------------------------------------------ künye */
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 12px;
+  margin-top: auto;
+  padding: 2px 16px 4px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.footLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  font-weight: 600;
+  color: var(--primary-ink);
+  transition: color 0.2s var(--ease-brand);
+}
+.footLink:hover { color: var(--primary-hover); }
+
+/* ------------------------------------------------------------ seçim şeridi */
+
+/* Tek satır, sığmayınca yana kayar (ChipStrip: kenar solması + yön okları). */
+.strip { padding-bottom: 2px; }
+.stripRow { display: flex; flex-wrap: nowrap; gap: 6px; width: max-content; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px 0 6px;
+  border-radius: 999px;
+  background: var(--surface-elevated);
+  color: var(--text-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s var(--ease-brand), color 0.2s var(--ease-brand);
+}
+@media (min-width: 640px) { .chip { min-height: 36px; } }
+.chip:hover { color: var(--text-strong); }
+.chip[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
+.chip[aria-pressed="true"] .mono { background: color-mix(in srgb, var(--on-primary) 22%, transparent); color: var(--on-primary); }
+.chip[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+.chip:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+.chip .mono { width: 26px; height: 26px; border-radius: 999px; font-size: 10.5px; }
+
+/* ------------------------------------------------------------ yan yana */
+
+.compare {
+  scroll-margin-top: calc(var(--app-bar-h, 69px) + 16px);
+}
+.cmpGrid {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(9.5rem, 1fr));
+  column-gap: 12px;
+  min-width: 0;
+  /* Son sütunun kaynak numarasının görünmez dokunma alanı (8 piksel)
+     kabın içinde kalsın; yoksa kap 8 piksellik sahte bir taşma görüyordu. */
+  padding-right: 8px;
+}
+.cmpHead {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: var(--surface);
+}
+.cmpName { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.cmpName h4 { margin: 0; font-size: 15px; font-weight: 800; line-height: 1.2; color: var(--text-strong); overflow-wrap: anywhere; }
+.cmpRemove {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: -8px -8px -8px auto;
+  flex: none;
+  border-radius: 999px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s var(--ease-brand), background-color 0.2s var(--ease-brand);
+}
+.cmpRemove:hover { color: var(--text-strong); background: var(--surface-elevated); }
+.cmpRemove:focus-visible { outline: 2px solid var(--line-focus); outline-offset: -2px; }
+.cmpFee { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; }
+.cmpFee b { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: var(--text-strong); }
+/* Satır etiketi bütün sütunları kaplar; yazısı kayan kapta solda yapışık. */
+.cmpLabel {
+  grid-column: 1 / -1;
+  padding: 12px 0 4px;
+  border-top: 1px solid var(--line-soft);
+}
+.cmpLabel > span {
+  position: sticky;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.cmpCell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+  min-height: 44px;
+  padding: 2px 0 10px;
+}
+
+/* ------------------------------------------------------------ telefon kartı */
+
+/* TELEFONDA KART ÖZETİ (25 Ekim, koordinatör kararı). Uzun kart 390'da
+   sayfayı 7.410'dan 13.755 piksele çıkarıyordu. 640 altında kart katlı
+   açılıyor: kimlik, lisans rozeti, seçilen tutarın komisyonu ve ölçek,
+   kalem başına TEK SATIR (etiket solda, ✓/halka/✗ ve kısa değer sağda,
+   sığmayan değer üç noktayla). Notlar, kaynak numaraları ve dürüstlük
+   notları `data-fold` ile FoldToggle'ın altında; dürüstlük notu olan
+   kartta düğmenin yanında "Not Var". 640 ve üstünde hiçbir şey değişmiyor
+   (FoldToggle `phone`). Seçici FoldToggle'ın gizli onay kutusunu okuyor:
+   kutu `.foldHost`un içindeki tek checkbox. */
+.foldHost { display: contents; }
+.badgeNoteWrap { grid-column: 1 / -1; }
+.valueText { min-width: 0; }
+.rowMain { min-width: 0; }
+.caveat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--surface-elevated);
+  color: var(--text-strong);
+  font-size: 11.5px;
+  font-weight: 650;
+}
+@media (max-width: 639px) {
+  .foldHost input[type="checkbox"]:not(:checked) ~ * .rowMain {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .foldHost input[type="checkbox"]:not(:checked) ~ * .rowMain .rowLabel { flex: none; }
+  .foldHost input[type="checkbox"]:not(:checked) ~ * .rowMain .rowValue {
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    align-items: center;
+    min-width: 0;
+    margin: 0;
+    font-size: 13px;
+  }
+  .foldHost input[type="checkbox"]:not(:checked) ~ * .rowMain .rowValue svg { margin-top: 0; }
+  .foldHost input[type="checkbox"]:not(:checked) ~ * .valueText {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .foldHost input[type="checkbox"]:not(:checked) ~ * .row { min-height: 0; padding: 7px 0; align-items: center; }
+  .foldHost input[type="checkbox"]:not(:checked) ~ * .rowIcon { padding-top: 0; }
+  .foldHost input[type="checkbox"]:not(:checked) ~ * .tariff { margin-top: 8px; padding-top: 8px; }
+  .foldHost input[type="checkbox"]:not(:checked) ~ * .row { padding: 6px 0; }
+  .fee { padding: 10px 10px 8px; }
+  .scale { margin-top: 8px; }
+  /* Künye ile katlama düğmesi aynı hatta: künye solda, düğme sağda. */
+  .foot { min-height: 36px; padding: 0 0 0 14px; border-top: 1px solid var(--line-soft); margin-top: 6px; }
+  .foldHost input[type="checkbox"]:not(:checked) ~ label { position: absolute; right: 0; bottom: -4px; }
+  .head { padding: 14px 14px 10px; }
+  .rows { padding: 2px 14px 0; }
+  .feeValue { font-size: 26px; }
+  /* Başlık tek satır: harf karosu 36, ad, sağda yalnız ikonlu 44 piksellik
+     karşılaştır düğmesi. Rozet satırı `contents` olup başlık ızgarasına
+     dağılıyor; düğme ikinci satırdan birinci satırın sağına çıkıyor (390'da
+     kart başına 44 piksel). */
+  .head { grid-template-columns: 36px minmax(0, 1fr) 44px; align-items: center; }
+  .head > .mono { width: 36px; height: 36px; border-radius: 10px; font-size: 13px; }
+  .badgeRow { display: contents; }
+  .badgeRow > .badge { grid-column: 1 / -1; justify-self: start; margin-top: 8px; }
+  .badgeRow > [data-fold] { grid-column: 1 / -1; justify-self: start; margin-top: 8px; }
+  .pickSlot { grid-column: 3; grid-row: 1; margin-left: 0; }
+  .pick { width: 44px; padding: 0; justify-content: center; }
+  .pickText { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* Katlama düğmesi kartın iç kenarından. */
+  .foldHost label { padding-inline: 14px; }
+}
+/* FoldToggle'ın kökü kartın esnek sütununda büyüyor: künye hep dipte. */
+.foldHost > * { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; }
+.foldHost label { align-self: flex-start; }

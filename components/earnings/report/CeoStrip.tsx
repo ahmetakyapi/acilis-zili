@@ -47,19 +47,26 @@ export function CeoStrip({ row, t }: { row: EarningsAnalysisRow; t: Dictionary }
                      Yuvarlak haplar sag kolonda farkli genislikte kirpinti
                      gibi duruyordu; ayni genislikteki seritler bir liste
                      olarak okunuyor. */
-                  <ul className="flex shrink-0 flex-wrap gap-1.5 lg:w-64 lg:flex-col lg:flex-nowrap lg:gap-2">
+                  /* KÜNYE, DÜĞME DEĞİL (25 Ekim görsel zirve). Rozetler mavi
+                     kenarlı, mavi zeminli kutulardı ve tıklanır düğme gibi
+                     okunuyordu (hiçbir yere gitmiyorlar). Artık nötr tonda,
+                     başlarında ne olduklarını söyleyen etiketle. */
+                  <div className="flex shrink-0 flex-col gap-2 lg:w-64">
+                  <span className={cn(PLATE_LABEL, "text-muted")}>{t.analysisVisuals.ceoTopics}</span>
+                  <ul className="flex flex-wrap gap-1.5 lg:flex-col lg:flex-nowrap lg:gap-1.5">
                     {/* Rozet metni kayıttan geliyor ve yazıldığı gibi
                         basılıyordu ("Aylık fırlatma temposu"); rozet bir
                         etiket, Title Case kapsamında. */}
                     {row.ceoQuote.topics.map((topic) => (
                       <li
                         key={topic}
-                        className="rounded-md border border-primary-faint bg-primary-wash px-3 py-2 text-tiny font-semibold leading-[15px] text-primary-ink lg:text-center"
+                        className="rounded-md bg-surface-sunken px-3 py-2 text-tiny font-semibold leading-[15px] text-strong"
                       >
                         {titleCaseLabel(topic, row.locale)}
                       </li>
                     ))}
                   </ul>
+                  </div>
                 )}
               </div>
             </section>

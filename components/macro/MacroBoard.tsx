@@ -73,14 +73,21 @@ export type BoardSeries = {
   deltaLabel: string | null;
   next: string | null;
   nextShort: string | null;
-  threshold: { value: number; label: string } | null;
+  /** Eşik ya da hedef çizgisi; `alertWhen` hangi yanının uyarı tonunda okunduğu. */
+  threshold: { value: number; label: string; alertWhen: "above" | "below" } | null;
+  /** Çizim: seviye serisi çizgi, aylık değişim serisi sıfır eksenli çubuk (page.tsx → BAR_SERIES). */
+  chart: "line" | "bars";
   status: string | null;
   note: string | null;
   points: BoardPoint[];
   stamp: ReactNode;
 };
 
-export type BoardData = { series: BoardSeries[] };
+export type BoardData = {
+  series: BoardSeries[];
+  /** Tepedeki tek cümle ve altındaki dönem künyesi (page.tsx → leadOf). */
+  lead: { text: string; stamp: string } | null;
+};
 
 export type BoardLabels = {
   groups: Record<MacroGroupKey, string>;
@@ -172,11 +179,17 @@ function MacroStage({ group, series, extra }: { group: MacroGroupKey; series: Bo
       <div key={`okuma:${active.id}`} className={styles.reading} data-enter={play || undefined}>
         <div className={styles.readingMain}>
           <h3 id={headingId} className={styles.inkTight}>{active.title}</h3>
-          <p className="numeral">{active.period}</p>
+          {/* Durum rozeti dönemin satırında (25 Ekim): rakamın satırındayken
+              enflasyonun "Hedefin 1,72 Puan Üstünde" rozeti yarım genişlikte
+              Önceki/Sonraki'yi alt satıra itiyordu ve yandaki bölümle aynı
+              hat bozuluyordu (1440, ölçüldü). Özet kartındaki yeriyle aynı. */}
+          <p className={`${styles.readingMeta} numeral`}>
+            <span>{active.period}</span>
+            {active.status && <span className={styles.status} data-alert={isAlert(active) ? "" : undefined}>{active.status}</span>}
+          </p>
           <div className={styles.figure}>
             <strong className="numeral"><MacroValue value={active.latest} format={active.format} /></strong>
             {active.delta !== null && <Delta series={active} labels={labels} />}
-            {active.status && <span className={styles.status} data-alert={isAlert(active) ? "" : undefined}>{active.status}</span>}
           </div>
         </div>
         <dl className={styles.readingSide}>
@@ -206,8 +219,12 @@ function MacroStage({ group, series, extra }: { group: MacroGroupKey; series: Bo
 }
 
 /**
- * Değişim hapı: ok yalnızca YÖNÜ söyler (yükseliş accent mavi, düşüş
- * kırmızı). Yeşil yok; makroda yükselmek iyi haber demek değil (enflasyon).
+ * Değişim hapı: ok yalnızca YÖNÜ söyler, sitenin yön renkleriyle
+ * (yükseliş `--up`, düşüş `--down`; 25 Ekim son düzeltme, sayfanın her
+ * okunda aynı kural). Önce yükseliş marka mavisiydi: makroda yükselmek
+ * iyi haber demek değil (enflasyon) diye yeşilden kaçılmıştı, ama mavi
+ * etkileşimin rengi ve aynı sayfada tahvil ▲ yeşil, VIX ▲ kırmızıydı.
+ * Renk yön, yargı değil; "iyi/kötü" durum rozetinin metninde.
  */
 function Delta({ series, labels }: { series: BoardSeries; labels: BoardLabels }) {
   const direction = directionOf(series);
@@ -256,9 +273,11 @@ function niceStep(raw: number) {
  * görünürdü ama eşik çizgisi grafiğin DIŞINDA kalırdı; ne kadar uzak
  * olduğu okunmazdı.
  */
-function domainOf(points: BoardPoint[], threshold: number | null): Domain {
+function domainOf(points: BoardPoint[], threshold: number | null, zero = false): Domain {
   const values = points.map((point) => point.value);
   if (threshold !== null) values.push(threshold);
+  /* Çubuk sıfırdan çıkar: sıfır ölçeğin içinde olmak zorunda. */
+  if (zero) values.push(0);
   let lo = Math.min(...values);
   let hi = Math.max(...values);
   if (hi === lo) { lo -= 1; hi += 1; }
@@ -275,26 +294,49 @@ function domainOf(points: BoardPoint[], threshold: number | null): Domain {
 
 const CHART_W = 1000;
 const CHART_H = 240;
+/** Çubuğun adımına oranı: kalan pay çubuklar arasında yüzey boşluğu. */
+const BAR_FILL = 0.62;
+
+/**
+ * Zaman → x. Çizgi uçtan uca; çubukta yarım adım içeriden, yoksa ilk ve
+ * son çubuğun yarısı çizim alanının dışında kalırdı. `invert` imlecin
+ * okuması için aynı eşlemenin tersi.
+ */
+function timeScale(points: BoardPoint[], width: number, bars: boolean) {
+  const t0 = points[0].t;
+  const span = points[points.length - 1].t - t0 || 1;
+  const step = width / points.length;
+  const inset = bars ? step / 2 : 0;
+  const x = (t: number) => inset + ((t - t0) / span) * (width - 2 * inset);
+  const invert = (ratio: number) => t0 + Math.max(0, Math.min(1, (ratio * width - inset) / (width - 2 * inset))) * span;
+  return { x, invert, barWidth: step * BAR_FILL };
+}
+
+/** Çubuğun tonu: sitenin yön renkleri (artış `--up`, azalış `--down`; CSS `.bar`), sıfır ayı soluk. */
+function barTone(value: number) {
+  return value > 0 ? "up" : value < 0 ? "down" : "flat";
+}
+
+/** Sıfıra çok yakın ayın çubuğu yine de görünsün (kıl payı, ölçek birimi). */
+const MIN_BAR = 1;
 
 function HistoryChart({ series, labels, play }: { series: BoardSeries; labels: BoardLabels; play: boolean }) {
   const points = series.points;
   const last = points.length - 1;
   const [index, setIndex] = useState(last);
   const gradient = useId();
+  const bars = series.chart === "bars";
   const geometry = useMemo(() => {
     if (points.length < 2) return null;
-    const domain = domainOf(points, series.threshold?.value ?? null);
-    const t0 = points[0].t;
-    const span = points[last].t - t0 || 1;
-    const x = (t: number) => ((t - t0) / span) * CHART_W;
+    const domain = domainOf(points, series.threshold?.value ?? null, bars);
+    const scale = timeScale(points, CHART_W, bars);
     const y = (value: number) => (1 - (value - domain.lo) / (domain.hi - domain.lo)) * CHART_H;
-    const coords = points.map((point) => ({ x: x(point.t), y: y(point.value) }));
+    const coords = points.map((point) => ({ x: scale.x(point.t), y: y(point.value) }));
     const line = coords.map((point, i) => `${i ? "L" : "M"}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join("");
-    return { domain, x, y, coords, line, t0, span };
-  }, [points, last, series.threshold]);
-
+    return { domain, y, coords, line, scale };
+  }, [points, series.threshold, bars]);
   if (!geometry) return <p className={styles.noHistory}>{labels.historyEmpty}</p>;
-  const { domain, y, coords, line, t0, span } = geometry;
+  const { domain, y, coords, line, scale } = geometry;
   const current = points[index];
   const cursor = coords[index];
   const zeroInside = domain.lo < 0 && domain.hi > 0;
@@ -302,8 +344,7 @@ function HistoryChart({ series, labels, play }: { series: BoardSeries; labels: B
   const pct = (value: number, total: number) => `${(value / total) * 100}%`;
 
   const pick = (clientX: number, bounds: DOMRect) => {
-    const ratio = Math.max(0, Math.min(1, (clientX - bounds.left) / bounds.width));
-    const target = t0 + ratio * span;
+    const target = scale.invert((clientX - bounds.left) / bounds.width);
     let nearest = 0;
     for (let i = 1; i < points.length; i++) {
       if (Math.abs(points[i].t - target) < Math.abs(points[nearest].t - target)) nearest = i;
@@ -352,10 +393,31 @@ function HistoryChart({ series, labels, play }: { series: BoardSeries; labels: B
               <line x1="0" x2={CHART_W} y1={y(series.threshold.value)} y2={y(series.threshold.value)} className={styles.thresholdLine} vectorEffect="non-scaling-stroke" />
             )}
             {/* ÇİZİM KATMANI: seri değişince soldan sağa kırpmayla açılıyor;
-                dolgu da aynı kırpımın içinde. */}
+                dolgu da aynı kırpımın içinde. Çubuklar da aynı kırpımla:
+                aylar soldan sağa sırayla beliriyor. */}
             <g className={styles.draw} data-enter={play || undefined}>
-              <path d={`${line}L${coords[last].x},${CHART_H}L${coords[0].x},${CHART_H}Z`} fill={`url(#${gradient})`} />
-              <path d={line} className={styles.chartLine} vectorEffect="non-scaling-stroke" />
+              {bars ? (
+                coords.map((point, i) => {
+                  const zero = y(0);
+                  return (
+                    <rect
+                      key={points[i].t}
+                      x={point.x - scale.barWidth / 2}
+                      width={scale.barWidth}
+                      y={Math.min(point.y, zero)}
+                      height={Math.max(Math.abs(zero - point.y), MIN_BAR)}
+                      className={styles.bar}
+                      data-tone={barTone(points[i].value)}
+                      data-active={i === index || undefined}
+                    />
+                  );
+                })
+              ) : (
+                <>
+                  <path d={`${line}L${coords[last].x},${CHART_H}L${coords[0].x},${CHART_H}Z`} fill={`url(#${gradient})`} />
+                  <path d={line} className={styles.chartLine} vectorEffect="non-scaling-stroke" />
+                </>
+              )}
             </g>
             <line x1={cursor.x} x2={cursor.x} y1="0" y2={CHART_H} className={styles.cursorLine} vectorEffect="non-scaling-stroke" />
           </svg>
@@ -408,12 +470,11 @@ function Spark({ series }: { series: BoardSeries }) {
   const gradient = useId();
   const points = series.points;
   if (points.length < 2) return <span className={styles.tileSpark} aria-hidden />;
-  const domain = domainOf(points, series.threshold?.value ?? null);
-  const t0 = points[0].t;
-  const span = points[points.length - 1].t - t0 || 1;
-  const x = (t: number) => ((t - t0) / span) * MINI_W;
+  const bars = series.chart === "bars";
+  const domain = domainOf(points, series.threshold?.value ?? null, bars);
+  const scale = timeScale(points, MINI_W, bars);
   const y = (value: number) => (1 - (value - domain.lo) / (domain.hi - domain.lo)) * MINI_H;
-  const line = points.map((point, i) => `${i ? "L" : "M"}${x(point.t).toFixed(1)},${y(point.value).toFixed(1)}`).join("");
+  const line = points.map((point, i) => `${i ? "L" : "M"}${scale.x(point.t).toFixed(1)},${y(point.value).toFixed(1)}`).join("");
   return (
     <svg viewBox={`0 0 ${MINI_W} ${MINI_H}`} preserveAspectRatio="none" aria-hidden className={styles.tileSpark}>
       <defs>
@@ -429,9 +490,24 @@ function Spark({ series }: { series: BoardSeries }) {
         <line x1="0" x2={MINI_W} y1={y(series.threshold.value)} y2={y(series.threshold.value)} className={styles.thresholdLine} vectorEffect="non-scaling-stroke" />
       )}
       {/* `spark-*` sınıfları: görünüme girince MotionExperience çiziyor
-          (çizgi, sonra dolgu), sitenin bütün mini grafikleri gibi. */}
-      <path className="spark-area" d={`${line}L${MINI_W},${MINI_H}L0,${MINI_H}Z`} fill={`url(#${gradient})`} />
-      <path className={`spark-line ${styles.chartLine}`} d={line} vectorEffect="non-scaling-stroke" />
+          (çizgi, sonra dolgu), sitenin bütün mini grafikleri gibi. Çubuk
+          grubu aynı kırpmayla soldan sağa açılıyor. */}
+      {bars ? (
+        <g className="spark-line">
+          {points.map((point) => {
+            const top = y(point.value);
+            const zero = y(0);
+            return (
+              <rect key={point.t} x={scale.x(point.t) - scale.barWidth / 2} width={scale.barWidth} y={Math.min(top, zero)} height={Math.max(Math.abs(zero - top), MIN_BAR / 2)} className={styles.bar} data-tone={barTone(point.value)} />
+            );
+          })}
+        </g>
+      ) : (
+        <>
+          <path className="spark-area" d={`${line}L${MINI_W},${MINI_H}L0,${MINI_H}Z`} fill={`url(#${gradient})`} />
+          <path className={`spark-line ${styles.chartLine}`} d={line} vectorEffect="non-scaling-stroke" />
+        </>
+      )}
     </svg>
   );
 }
@@ -452,9 +528,18 @@ function Spark({ series }: { series: BoardSeries }) {
  */
 export function MacroSummary({ empty }: { empty: ReactNode }) {
   const { board, labels, jump } = useSelection();
-  const { series } = use(board);
+  const { series, lead } = use(board);
   if (series.length === 0) return <>{empty}</>;
   return (
+    <>
+    {/* TEK CÜMLE (25 Ekim): ızgaranın üstünde, veriden kurulmuş özet;
+        dönemler altındaki künyede (page.tsx → leadOf). */}
+    {lead && (
+      <div className={styles.lead}>
+        <p>{lead.text}</p>
+        <p className="numeral">{lead.stamp}</p>
+      </div>
+    )}
     <section className={styles.summary} aria-labelledby="makro-ozet">
       <h2 id="makro-ozet" className={styles.summaryTitle}>{labels.all}</h2>
       <div className={styles.summaryGrid} data-motion-stagger>
@@ -486,6 +571,7 @@ export function MacroSummary({ empty }: { empty: ReactNode }) {
         ))}
       </div>
     </section>
+    </>
   );
 }
 
@@ -520,11 +606,11 @@ export function MacroSections({ fomc }: { fomc: ReactNode }) {
 }
 
 /**
- * Durum rozeti ne zaman uyarı tonunda (pirinç): Sahm eşiği aşıldığında ya
- * da eğri ters döndüğünde. Yeşil/kırmızı değil: rozet bir yön değil bir
+ * Durum rozeti ne zaman uyarı tonunda (pirinç): Sahm eşiği aşıldığında,
+ * eğri ters döndüğünde ya da enflasyon Fed hedefinin üstündeyken. Yeşil/kırmızı değil: rozet bir yön değil bir
  * eşiğe göre konum söylüyor.
  */
 function isAlert(series: BoardSeries) {
   if (!series.threshold) return false;
-  return series.id === "T10Y3M" ? series.latest < series.threshold.value : series.latest >= series.threshold.value;
+  return series.threshold.alertWhen === "below" ? series.latest < series.threshold.value : series.latest >= series.threshold.value;
 }

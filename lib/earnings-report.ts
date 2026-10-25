@@ -166,7 +166,9 @@ function guidanceParts(
  * bir konu başlığı tarih sayılmıyor ve madde düz kalıyor.
  */
 export function splitLeadingDate(point: string): { date: string; text: string } | null {
-  const match = point.match(/^([^:]{2,40}):\s+([\s\S]+)$/);
+  /* Ayraç iki nokta ya da uzun çizgi (25 Ekim): rutin bir kısmını
+     "Ekim sonu — SK Hynix…" kalıbında yazıyor ve tarih ayrılmıyordu. */
+  const match = point.match(/^([^:—–]{2,40})(?::\s+|\s+[—–]\s+)([\s\S]+)$/);
   if (!match) return null;
   const head = match[1].trim();
   const lower = head.toLocaleLowerCase("tr-TR");

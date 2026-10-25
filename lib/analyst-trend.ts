@@ -63,3 +63,24 @@ export function analystTrend(
     buyShare: list.map((r, i) => (totals[i]! > 0 ? ((r.strongBuy + r.buy) / totals[i]!) * 100 : null)),
   };
 }
+
+/**
+ * Panelin tepesindeki TEK CÜMLENİN sayıları (25 Ekim, görsel zirve turu).
+ *
+ * Yüzdeler önce TAM SAYIYA yuvarlanıyor, fark yuvarlanmış iki sayıdan
+ * alınıyor: cümle "%67 → %63, 4 puan" diyorsa grafikteki etiketler de 67
+ * ve 63 yazıyor (veri dürüstlüğü 3 — aynı sayı iki yerde aynı kaynaktan).
+ * Ay sayısı dönemler ARASI: dört aylık fotoğraf üç aylık bir değişim.
+ * İlk ya da son dönemde pay yoksa (toplam sıfır, `analystTrend` o ayı zaten
+ * düşürüyor) cümle yok.
+ */
+export function buyShareShift(
+  trend: Pick<AnalystTrend, "buyShare" | "periods">,
+): { from: number; to: number; delta: number; months: number } | null {
+  const first = trend.buyShare[0];
+  const last = trend.buyShare.at(-1);
+  if (first === null || first === undefined || last === null || last === undefined) return null;
+  const from = Math.round(first);
+  const to = Math.round(last);
+  return { from, to, delta: to - from, months: Math.max(1, trend.periods.length - 1) };
+}

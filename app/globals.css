@@ -421,6 +421,47 @@
    temadan bağımsız; dört yerde `bg-white` / `#fff` olarak tekrar
    ediliyordu ve denetim onu token'sız renk diye işaretledi. */
 :root { --logo-plate: #ffffff; }
+/* KULVAR KALINLIĞI ve YUMUŞAK BÜYÜKLÜK TONU (25 Ekim, site geneli karar).
+   Büyüklük ve konum şeritleri (ScaleBar, RangeTrack, rapor ve profil
+   kulvarları) 3, 4 ve 5 piksel arasında dağılmıştı; aynı ekranda iki
+   kalınlık iki ayrı tür grafik gibi okunuyordu. Tek ölçü 5 px. Kullanım
+   `var(--lane-h, 5px)`: yedek değer, token'dan önce birleşen kodu da doğru
+   çizer.
+
+   `--bar-soft`: büyüklüğün dolgusu (piyasa değeri, ağırlık, konum, sayım).
+   Markanın mavi ailesinden YUMUŞAK ton — ekran canlı kalsın ama doygun
+   etkileşim mavisi (`--primary`: bağlantı, düğme, seçili) veri çiziminde
+   durmasın; yön yeşil/kırmızı, görüş yeşil/pirinç/kırmızı ayrı. Gri
+   `--bar` sütun grafikleri için olduğu gibi kalıyor.
+   Ölçüldü (25 Ekim, tarayıcıda hesaplanan renklerle, panel zemini
+   `--premium-surface`, kulvar `--line-soft`): açık temada dolgu/kulvar
+   1,85, dolgu/panel 2,08; koyu temada 2,16 ve 2,61. Eski dolgu
+   (`--primary` %58) 2,37 / 3,50 ile bağlantı mavisine yakın okunuyordu. */
+:root { --lane-h: 5px; }
+:root,
+:root[data-theme="light"] { --bar-soft: color-mix(in srgb, var(--primary) 50%, transparent); }
+:root[data-theme="dark"] { --bar-soft: color-mix(in srgb, var(--primary) 45%, transparent); }
+/* GÖRÜŞ ÇİZİM TONLARI — tek kaynak (25 Ekim, site geneli renk kararı).
+   AL yeşil, TUT pirinç, SAT kırmızı; halka, şerit, dağılım dilimi, kart üst
+   çizgisi bu üç değişkenden. Yön renginin kendisi değil, kart zeminiyle
+   (opak `--premium-surface`) karışmış hâli: görüş "+%2,1"in doygun
+   yeşiliyle yan yana bir fiyat hareketi gibi okunmasın. Metin ve rozet
+   tonu ayrı (`text-up` / `text-brass-ink` / `text-down`, `verdictTextClass`).
+   TS tarafı aynı değişkenleri okur (`VERDICT_INK`, lib/analysis.ts);
+   analist kovaları da (`BUCKET_INK`). Yüzde elle yazılmaz.
+
+   Oran ölçüldü (25 Ekim, dolgu/panel zemini): AL %74 açık 3,47 · koyu 5,94;
+   SAT %74 açık 4,01 · koyu 3,71; TUT %85 açık 3,28 · koyu 5,68 — pirinç
+   daha açık bir pigment, %74'te açık temada 2,75'e düşüyordu. `-soft`
+   (%42) yalnız analist kovalarının "Al"/"Sat"ı: güçlü uçtan bir basamak
+   açık, adı ve sayısı yanında yazılı (açık 1,92/2,13, koyu 2,77/1,97). */
+:root {
+  --verdict-buy: color-mix(in srgb, var(--up) 74%, var(--premium-surface));
+  --verdict-hold: color-mix(in srgb, var(--brass) 85%, var(--premium-surface));
+  --verdict-sell: color-mix(in srgb, var(--down) 74%, var(--premium-surface));
+  --verdict-buy-soft: color-mix(in srgb, var(--up) 42%, var(--premium-surface));
+  --verdict-sell-soft: color-mix(in srgb, var(--down) 42%, var(--premium-surface));
+}
 :root[data-theme="dark"] {
   --premium-surface: #101a28;
   --premium-highlight: rgb(183 213 245 / .07);

@@ -55,8 +55,9 @@ import {
   canonicalPeriod,
   verdictLabel,
   verdictOf,
-  verdictTextClass,
+  verdictPillClass,
 } from "@/lib/analysis";
+import { reportLede } from "@/lib/analysis-visuals";
 import {
   industryFilterFor,
   sectorGroupLabel,
@@ -499,6 +500,21 @@ export default async function AnalysisDetailPage(
             : []),
         ];
 
+  /* TEPEDE VERİDEN TEK CÜMLE (25 Ekim görsel zirve). Şablon + kaydın üç
+     yapısal alanı (yıllık gelir, HBK sürprizi, ilk tepki); yazılmamış alan
+     cümleye girmez, hiçbiri yoksa cümle yok (`reportLede`, testli). Cümle
+     ARAYÜZ dilinde: sayılar dilden bağımsız alanlardan geliyor. */
+  const lede = reportLede(
+    {
+      revenueYoyPct: row.revenueYoyPct,
+      epsSurprisePct: row.epsSurprisePct,
+      reactionPct: row.reactionPct,
+    },
+    t.analysisVisuals.lede,
+    (value) => formatPercentPlain(value, locale, 1),
+    locale,
+  );
+
   /* Yapışkan çubukta dönem kısa yazılıyor: "3Ç FY2026" → "3Ç FY26". */
   const shortPeriod = row.periodLabel.replace(/FY20(\d{2})/, "FY$1");
 
@@ -712,6 +728,7 @@ export default async function AnalysisDetailPage(
         targetText={targetText}
         closeText={closeText}
         ladderMarks={ladderMarks}
+        lede={lede}
         marketCap={marketCap}
         marketCapNote={marketCapNote}
         peRatio={peRatio}
@@ -743,8 +760,9 @@ export default async function AnalysisDetailPage(
             </span>
             <span
               className={cn(
-                "figure shrink-0 rounded-md bg-surface-elevated px-1.5 py-0.5 text-tiny font-bold",
-                verdictTextClass(verdict),
+                /* Görüş renkli, kapaktaki üçlüyle aynı — gerekçe VerdictStrip. */
+                "figure shrink-0 rounded-md px-1.5 py-0.5 text-tiny font-bold",
+                verdictPillClass(verdict),
               )}
             >
               {verdictLabel(verdict, t)} {row.score}

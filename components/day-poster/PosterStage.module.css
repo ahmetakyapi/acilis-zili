@@ -1,0 +1,453 @@
+/* Posterin sahnesi — gerekçe PosterStage.tsx, yerleşim lib/day-poster-scene.ts.
+   Derinlik tonla; tek gölge ipucunda (açılır katman). Renk yalnız yönden:
+   noktalar `--up`/`--down`, etkileşim `--primary`. Grafik dili ince:
+   ızgara `--line-soft`, sıfır hattı `--line-strong`. */
+
+.stage {
+  --head-w: 11.5rem;
+  --col-gap: 20px;
+  /* Adsız kap: CSS modülleri kap adını da karıştırıyor ve adlı sorgu
+     hiç eşleşmiyordu (ölçüldü: 952 piksellik sahne dar düzende kaldı). */
+  container-type: inline-size;
+  position: relative;
+  min-width: 0;
+}
+
+/* İKİ DÜZEN: kabın eni seçiyor. 720'nin altında sektör adı satırın
+   üstünde (`narrow`), üstünde solda (`wide`). Görünmeyen düzen basılı ama
+   `display: none`: ekran okuyucu ve sekme sırası onu hiç görmüyor. */
+.onlyWide { display: none; }
+@container (min-width: 720px) {
+  .onlyNarrow { display: none; }
+  .onlyWide { display: block; }
+}
+
+/* ------------------------------------------------------------ EKSEN
+   Yapışkan: on bir satır boyunca okur hangi yönün ne olduğunu ve ölçeği
+   kaybetmiyor. Üst çubuğun hemen altında (`--app-bar-h`). Panel bunun için
+   `overflow: clip` (PosterBoard.module.css): `hidden` bir kaydırma kabı
+   açıp yapışmayı paneline hapsediyordu. */
+.axisBar,
+.keyBar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.axisBar {
+  position: sticky;
+  top: var(--app-bar-h);
+  z-index: 3;
+  padding: 10px 0 6px;
+  background: var(--premium-surface);
+  border-bottom: 1px solid var(--line);
+}
+.axisSpacer { display: none; }
+@container (min-width: 720px) {
+  .axisBar,
+  .keyBar {
+    grid-template-columns: var(--head-w) minmax(0, 1fr);
+    column-gap: var(--col-gap);
+  }
+  .axisSpacer { display: block; }
+}
+
+.axis {
+  position: relative;
+  height: 38px;
+  font-variant-numeric: tabular-nums;
+}
+.dirDown,
+.dirUp {
+  position: absolute;
+  top: 0;
+  font-size: var(--text-small);
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.dirDown { padding-right: 8px; color: var(--down); }
+.dirUp { padding-left: 8px; color: var(--up); }
+.tick {
+  position: absolute;
+  bottom: 0;
+  translate: -50% 0;
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+.tick[data-edge="start"] { translate: -3px 0; }
+.tick[data-edge="end"] { translate: calc(-100% + 3px) 0; }
+.tickZero { color: var(--text-strong); font-weight: 750; }
+
+/* ------------------------------------------------------------ SATIRLAR */
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  border-top: 1px solid var(--line-soft);
+  transition: opacity 0.32s var(--ease-brand);
+}
+.row:first-child { border-top: 0; }
+/* Kap kuralı tabandan SONRA: aynı özgüllükte sonra gelen kazanıyor. */
+@container (min-width: 720px) {
+  .row {
+    grid-template-columns: var(--head-w) minmax(0, 1fr);
+    column-gap: var(--col-gap);
+  }
+}
+/* Öne çıkan sektör: ötekiler söner (renk değil, ton). */
+.stage[data-focus] .row:not([data-active]) { opacity: 0.22; }
+
+.rowHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding-top: 10px;
+  min-width: 0;
+}
+@container (min-width: 720px) {
+  .rowHead {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 6px 0;
+  }
+}
+.rowName {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-strong);
+  font: inherit;
+  font-size: var(--text-read);
+  font-weight: 750;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.18s var(--ease-brand);
+}
+/* 44 piksellik dokunma alanı görseli büyütmeden (sitenin `.tap-44`
+   kalıbı; burada genişlikte de pay var, ad kısa olabiliyor). */
+.rowName::after {
+  content: "";
+  position: absolute;
+  inset: 50% -8px auto -8px;
+  height: 44px;
+  translate: 0 -50%;
+}
+.rowName:hover,
+.rowName[aria-pressed="true"] { color: var(--primary); }
+.rowName[aria-pressed="true"] { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.rowName:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: var(--radius-xs); }
+.rowFigures {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+}
+.rowValue {
+  font-size: var(--text-base);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+.rowMeta { color: var(--text-muted); font-size: var(--text-nano); font-weight: 600; }
+
+/* ------------------------------------------------------------ ŞERİT */
+.lane {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  outline: none;
+  touch-action: manipulation;
+}
+.lane:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: var(--radius-sm); }
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.grid { stroke: var(--line-soft); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.zero { stroke: var(--line-strong); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.fund line { stroke: var(--text-body); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.fund path { fill: var(--text-body); }
+
+.up { fill: var(--up); }
+.down { fill: var(--down); }
+.flat { fill: var(--flat); }
+.dots circle { fill-opacity: 0.88; }
+/* Ölçek dışı: kenara konan uç hisse. İlk sürüm onu %30 dolgulu çiziyordu
+   ve sahnenin EN SOLUK noktası oluyordu; oysa günün en büyük hareketi
+   (son inceleme, 25 Ekim). Şimdi tam opak nokta + nötr mürekkep dış halka:
+   halka "ölçeğin dışında" der, yönü yine noktanın rengi söyler. Gerçek
+   değer etiketinde (her halkalı nokta etiketli, lib/day-poster-scene.ts). */
+.dots .clip { fill-opacity: 1; }
+.dots .clipRing {
+  fill: none;
+  fill-opacity: 1;
+  stroke: var(--text-strong);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.ring {
+  fill: none;
+  stroke: var(--text-strong);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+/* Uç hisse etiketleri ve ipucu: noktaya göre konumlu, yön ve hiza
+   özniteliklerden. */
+.note,
+.tip {
+  --tx: -50%;
+  --ty: -100%;
+  position: absolute;
+  translate: var(--tx) var(--ty);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.tip[data-side="below"] { --ty: 3px; }
+.note[data-align="start"],
+.tip[data-align="start"] { --tx: -10px; }
+.note[data-align="end"],
+.tip[data-align="end"] { --tx: calc(-100% + 10px); }
+.note {
+  z-index: 1;
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+  background: var(--premium-surface);
+  color: var(--text-strong);
+  font-size: var(--text-nano);
+  font-weight: 750;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  transition: opacity 0.4s var(--ease-brand) var(--note-delay, 0s);
+}
+.note b { font-weight: 750; }
+
+.tip {
+  --ty: calc(-100% - var(--gap));
+  z-index: 4;
+  display: grid;
+  gap: 2px;
+  min-width: 9rem;
+  max-width: 16rem;
+  padding: 8px 11px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--premium-surface);
+  box-shadow: var(--shadow-overlay);
+  white-space: normal;
+  animation: tip-in 0.16s var(--ease-brand) both;
+}
+.tip[data-side="below"] { --ty: var(--gap); }
+.tipValue { font-size: var(--text-title); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+.tipTitle { color: var(--text-strong); font-size: var(--text-base); font-weight: 650; line-height: 1.3; }
+.tipMeta { color: var(--text-muted); font-size: var(--text-nano); line-height: 1.35; }
+@keyframes tip-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* GİRİŞ ÖNCESİ: satır ekrana girene kadar noktalar ve etiketler görünmez;
+   yalnız betik çalışıyorsa (yoksa son kare) ve yalnız hareketi azaltmayan
+   okuyucuda. Satır `data-in` alınca noktalar sıfır hattından akıyor
+   (Web Animations, PosterStage.tsx), etiketler `--note-delay` sonra. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .row:not([data-in]) .dots,
+  .row:not([data-in]) .note { opacity: 0; }
+}
+
+/* ------------------------------------------------------------ ÖNE ÇIKAN */
+.focusLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  padding: 4px 0 12px;
+}
+@container (min-width: 720px) {
+  .focusLine { grid-column: 2; }
+}
+.focusGroup { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.focusGroup ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.focusLabel { color: var(--text-muted); font-size: var(--text-nano); font-weight: 650; }
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  font-size: var(--text-small);
+  font-weight: 700;
+  transition: background-color 0.18s var(--ease-brand);
+}
+.chip:hover { background: var(--surface-elevated); }
+/* 44 piksellik dokunma alanı görseli büyütmeden (`.rowName::after` ile
+   aynı kalıp). Çipler arası dikey boşluk 6 px: komşu çiplerin alanları
+   6 px üst üste biniyor, ortadan bölünüyor; çipin kendi kutusu tam. */
+.chip::after,
+.focusClear::after {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 44px;
+  translate: 0 -50%;
+}
+.chipSymbol { color: var(--text-strong); font-family: var(--font-mono); font-weight: 600; }
+.focusClear {
+  position: relative;
+  min-height: 32px;
+  margin-left: auto;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------ ANAHTAR */
+.keyBar {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 24px;
+  min-width: 0;
+}
+/* Anahtar şeritle aynı enle basılıyor: daireleri sahnedeki noktayla aynı
+   ölçekte (PosterStage.tsx → SizeKey). */
+.sizeKey { flex: 1 1 100%; min-width: 0; }
+.sizeLabel { display: block; margin-bottom: 4px; color: var(--text-body); font-size: var(--text-small); font-weight: 650; }
+.sizeSvg { display: block; width: 100%; height: auto; overflow: visible; }
+.sizeDot { fill: var(--text-muted); fill-opacity: 0.4; }
+.sizeValue { fill: var(--text-muted); font-weight: 600; }
+.keyList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-body);
+  font-size: var(--text-small);
+}
+.keyList li { display: inline-flex; align-items: center; gap: 8px; }
+.keyMark { position: relative; display: inline-block; flex: none; }
+.keyColor {
+  width: 18px;
+  height: 8px;
+  background:
+    radial-gradient(circle at 4px 50%, var(--down) 3.5px, transparent 4px),
+    radial-gradient(circle at 14px 50%, var(--up) 3.5px, transparent 4px);
+}
+.keyFund { width: 8px; height: 16px; }
+.keyFund::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  bottom: 0;
+  width: 1.5px;
+  translate: -50% 0;
+  background: var(--text-body);
+}
+.keyFund::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 5px;
+  height: 5px;
+  translate: -50% 0;
+  rotate: 45deg;
+  background: var(--text-body);
+}
+/* Lejantın ölçek dışı işareti NÖTR: dolu nötr nokta + mürekkep halka.
+   Kırmızıyken "ölçek dışı = düşüş" diye okunuyordu (son inceleme). */
+.keyClip {
+  width: 8px;
+  height: 8px;
+  margin: 3px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  outline: 1.5px solid var(--text-strong);
+  outline-offset: 1.5px;
+}
+
+/* ------------------------------------------------------------ TAM LİSTE */
+.listWrap { margin-top: 14px; }
+.listToggle {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  font-size: var(--text-base);
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.18s var(--ease-brand), background-color 0.18s var(--ease-brand);
+}
+.listToggle:hover { border-color: var(--line-strong); background: var(--surface); }
+@media (min-width: 640px) {
+  .listToggle { min-height: 36px; }
+}
+.list {
+  display: grid;
+  gap: 18px 28px;
+  margin-top: 14px;
+}
+@container (min-width: 720px) {
+  .list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.listGroup h4 {
+  margin: 0 0 6px;
+  color: var(--text-strong);
+  font-size: var(--text-read);
+  font-weight: 750;
+}
+.listGroup table { width: 100%; border-collapse: collapse; font-size: var(--text-base); }
+.listGroup th,
+.listGroup td { padding: 5px 0; text-align: left; vertical-align: baseline; }
+.listGroup thead th { color: var(--text-muted); font-size: var(--text-nano); font-weight: 650; }
+.listGroup tbody tr { border-top: 1px solid var(--line-soft); }
+.listGroup tbody th { font-weight: 500; color: var(--text-body); }
+.listGroup tbody th a:hover { color: var(--primary); }
+.listGroup td { padding-left: 12px; text-align: right; white-space: nowrap; font-weight: 650; }
+.listGroup thead th:not(:first-child) { padding-left: 12px; text-align: right; }
+.listSymbol { color: var(--text-strong); font-family: var(--font-mono); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .row,
+  .rowName,
+  .note,
+  .chip,
+  .listToggle { transition: none; }
+  .tip { animation: none; }
+}

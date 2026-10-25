@@ -3,10 +3,12 @@ import { Panel, PanelHeader } from "@/components/ui/primitives";
 import type { Dictionary } from "@/lib/i18n";
 import { SCREEN_CATEGORIES, type Check, type CheckStatus, type ScreenCategory } from "@/lib/screening";
 import type { ScreenData } from "@/lib/screening-data";
+import { gaugeOf } from "@/lib/screening-gauge";
 import { checkSentence, formatCheckValue } from "./format";
 import styles from "./Screening.module.css";
 
 type T = Dictionary["screening"];
+type V = Dictionary["stockVisuals"];
 
 /** Kategori puanının çubuk rengi — kontrollerle aynı üç ton. */
 function scoreStatus(score: number | null): CheckStatus {
@@ -67,7 +69,7 @@ export function CategoryPanel({ data, t }: { data: ScreenData; t: T }) {
 }
 
 /** Ölçü ızgarası: her kural, eşiği, ölçüsü ve durumu. */
-export function ChecksPanel({ data, locale, t }: { data: ScreenData; locale: string; t: T }) {
+export function ChecksPanel({ data, locale, t, v }: { data: ScreenData; locale: string; t: T; v: V }) {
   const groups = SCREEN_CATEGORIES.map((category) => ({
     category,
     checks: data.result.checks.filter((check) => check.category === category),
@@ -77,12 +79,15 @@ export function ChecksPanel({ data, locale, t }: { data: ScreenData; locale: str
       <PanelHeader title={t.checksTitle} meta={t.coverage.replace("{n}", String(data.result.coverage))} />
       <div className={styles.colHead} aria-hidden="true">
         <span>{t.colRule}</span>
+        <span>{v.colGauge}</span>
         <span>{t.colValue}</span>
         <span>{t.colStatus}</span>
       </div>
       {groups.map((group) => (
-        <CheckGroup key={group.category} category={group.category} checks={group.checks} data={data} locale={locale} t={t} />
+        <CheckGroup key={group.category} category={group.category} checks={group.checks} data={data} locale={locale} t={t} v={v} />
       ))}
+      {/* Kulvarın okunuşu tek künyede, panelin içinde (ekran düzeni 6). */}
+      <p className={styles.gaugeNote}>{v.gaugeNote}</p>
     </Panel>
   );
 }
@@ -93,12 +98,14 @@ function CheckGroup({
   data,
   locale,
   t,
+  v,
 }: {
   category: ScreenCategory;
   checks: Check[];
   data: ScreenData;
   locale: string;
   t: T;
+  v: V;
 }) {
   const measured = checks.filter((check) => check.status !== "na").length;
   return (
@@ -120,11 +127,65 @@ function CheckGroup({
               <span className={styles.rowStatus}>
                 <span className={styles.status}>{statusLabel(check, data, t)}</span>
               </span>
+              {value !== null && <ThresholdLane check={check} value={value} locale={locale} t={t} v={v} />}
             </li>
           );
         })}
       </ul>
     </section>
+  );
+}
+
+/** Kulvar künyesinin kenarlara yaklaştığı yer — etiket orada uca yaslanır. */
+const LABEL_EDGE = 14;
+
+/**
+ * Eşik kulvarı (25 Ekim) — eşik çentik, değer nokta, aradaki fark çubuk.
+ * Ölçek ve gerekçe lib/screening-gauge.ts. Çubuğun rengi satırın durumu
+ * (rozetle aynı `--st`): geçen farkı yeşil, kalan farkı kırmızı uzanır;
+ * bu ekranda renk zaten kuralın hükmü, yeni bir hüküm değil. Geçme tarafı
+ * kulvarda soluk zeminle işaretli: "en az" kuralında sağ, "en fazla"da sol.
+ */
+function ThresholdLane({ check, value, locale, t, v }: { check: Check; value: string; locale: string; t: T; v: V }) {
+  const gauge = gaugeOf(check);
+  if (!gauge) return null;
+  /* Eşiğin künyesi satırın kendi biçimiyle, ama SADE: eşik bir yön değil
+     ("+%10,0" değil "%10"), yuvarlak sayının ",0"ı da gürültü. */
+  const threshold = (formatCheckValue({ ...check, value: gauge.spec.pass }, locale, t, "cell") ?? "")
+    .replace(/^\+\s?/, "")
+    .replace(/[.,]0(?!\d)/, "");
+  const from = Math.min(gauge.valueAt, gauge.passAt);
+  const width = Math.abs(gauge.valueAt - gauge.passAt);
+  const zone =
+    gauge.spec.side === "min"
+      ? { left: `${gauge.passAt}%`, right: 0 }
+      : { left: 0, right: `${100 - gauge.passAt}%` };
+  const align = gauge.passAt < LABEL_EDGE ? "start" : gauge.passAt > 100 - LABEL_EDGE ? "end" : "center";
+  const aria = v.gaugeAria.replace("{t}", threshold).replace("{v}", value);
+  return (
+    <span className={styles.lane} role="img" aria-label={aria} title={aria}>
+      <span className={styles.laneRail} aria-hidden>
+        <i className={styles.laneZone} style={zone} />
+        {gauge.warnAt !== null && <i className={styles.laneWarn} style={{ left: `${gauge.warnAt}%` }} />}
+        {width > 0.5 && (
+          <i
+            className={styles.laneGap}
+            data-motion-draw="line"
+            style={{
+              left: `${from}%`,
+              width: `${width}%`,
+              /* Fark eşikten büyüyor: değer eşiğin solundaysa sağdan sola. */
+              transformOrigin: gauge.valueAt < gauge.passAt ? "right center" : "left center",
+            }}
+          />
+        )}
+        <i className={styles.lanePass} style={{ left: `${gauge.passAt}%` }} />
+        <i className={styles.laneDot} data-clipped={gauge.clipped !== 0 ? "" : undefined} style={{ left: `${gauge.valueAt}%` }} />
+      </span>
+      <span className={styles.laneLabel} data-align={align} style={{ left: `${gauge.passAt}%` }} aria-hidden>
+        {threshold}
+      </span>
+    </span>
   );
 }
 

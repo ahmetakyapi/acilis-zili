@@ -1,0 +1,76 @@
+/* HİSSE SAYFASININ GÖRSEL KATMANI (25 Ekim, görsel zirve turu).
+   Temel Göstergeler'in sektör kulvarı, analist dağılımının yığılı sütunları
+   ve ünlü yatırımcıların portföy payı. Ayrı dosya: stock.module.css ve
+   depth.module.css başka işlerle de değişiyor, birleştirmede çakışma
+   alanı küçük kalsın. Renk yalnız token; geçişler marka eğrisinde. */
+
+/* ---------- Sektör kulvarı (PeerStrip) ----------
+   Skor kartı şeridinin ölçüleri (depth.module.css → .strip): 5 px kulvar,
+   2 px medyan, 11 px nokta. Kulvar hücrenin altında, değerin hemen altında
+   ve hücre genişliğinde; künye iki uçta, dar hücrede alt alta. */
+.peer { display:flex; flex-direction:column; gap:5px; margin-top:4px; min-width:0; }
+.peerRail { position:relative; display:block; height:15px; margin-inline:5px; container-type:inline-size; }
+.peerRail::before { content:""; position:absolute; inset-inline:-5px; top:50%; height:var(--lane-h,5px); translate:0 -50%; border-radius:999px; background:var(--rail-track,var(--line-soft)); }
+/* Renk kararı (25 Ekim son düzeltme): büyüklük şeridi markanın mavi
+   ailesinin YUMUŞAK tonu, sitenin tek büyüklük token'ı `--bar-soft`
+   (globals.css; önceden burada `--primary-soft` %45 vardı, ScaleBar'dan
+   farklı bir mavi), doygun etkileşim mavisi değil; nokta en koyu mürekkep. */
+.peerGap { position:absolute; top:50%; height:var(--lane-h,5px); translate:0 -50%; background:var(--bar-soft); }
+.peerMedian { position:absolute; top:0; bottom:0; width:2px; margin-left:-1px; border-radius:1px; background:var(--text-muted); }
+.peerDot { position:absolute; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border:2px solid var(--premium-surface,var(--surface-solid)); border-radius:999px; background:var(--text-strong); box-sizing:border-box; }
+/* Ölçeğin dışında: içi boş halka — "kulvarın ötesinde" demek. */
+.peerDot[data-clipped] { background:var(--premium-surface,var(--surface-solid)); box-shadow:inset 0 0 0 2px var(--text-strong); }
+.peerCaption { display:flex; flex-wrap:wrap; justify-content:space-between; gap:0 10px; color:var(--text-muted); font-size:11.5px; line-height:1.35; letter-spacing:0; }
+.peerCaption > span:first-child { color:var(--text-body); }
+
+/* ---------- Analist dağılımı: %100 yığılı sütunlar ----------
+   Hücreler eşit genişlikte ve ARASIZ; sütun hücrenin ortasında. Bu sayede
+   sütun ortaları tam (i + .5) / n — "Al Tarafı" çizgisi aynı koordinatla
+   SVG'de çiziliyor ve sütunların sınırına oturuyor. */
+.stackWrap { position:relative; display:grid; gap:6px; }
+.stackShares { display:grid; grid-template-columns:repeat(var(--n),minmax(0,1fr)); }
+.stackShares > span { text-align:center; color:var(--text-strong); font-size:15px; font-weight:650; letter-spacing:-.02em; }
+.stackPlot { position:relative; display:grid; grid-template-columns:repeat(var(--n),minmax(0,1fr)); height:132px; }
+.stackCol { position:relative; display:flex; justify-content:center; min-width:44px; outline:none; cursor:default; }
+.stackBar { position:relative; display:block; width:min(56%,72px); height:100%; }
+.stackBar > i { display:block; border-radius:2px; }
+/* Kova tonları `analyst-tones.ts`te (tek kaynak, halka ve sütun aynı
+   eşlemeyi okuyor); burada sınıf yok. */
+.stackLine { position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; }
+.stackLine polyline { fill:none; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; }
+.stackLineHalo { stroke:var(--premium-surface,var(--surface-solid)); stroke-width:6; }
+/* AL TARAFI PAYI (25 Ekim son düzeltme): doygun mavi değil, en koyu
+   mürekkep; renkli kovalardan (yeşil, pirinç, kırmızı) ton, kalınlık,
+   kesik ve kart zemini halesiyle ayrışıyor. */
+.stackLineInk { stroke:var(--text-strong); stroke-width:2.5; stroke-dasharray:6 4; }
+.stackPoint { position:absolute; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; border:2px solid var(--premium-surface,var(--surface-solid)); border-radius:999px; background:var(--text-strong); box-sizing:border-box; pointer-events:none; }
+.stackMonths { display:grid; grid-template-columns:repeat(var(--n),minmax(0,1fr)); }
+.stackMonths > span { text-align:center; color:var(--text-muted); font-size:12px; }
+.stackMonths b { color:var(--text-body); font-weight:600; }
+/* Dokunuşta ve odakta ayrıntı: beş kovanın o ayki sayısı. Klavyeyle sütuna
+   gelince de açılıyor (tabIndex). Kart zemini + tek gerçek gölge (açılır
+   katman kuralı). */
+.stackTip { position:absolute; z-index:3; bottom:calc(100% + 8px); left:50%; display:grid; gap:3px; min-width:150px; padding:9px 11px; border:1px solid var(--line); border-radius:12px; background:var(--premium-surface,var(--surface-solid)); box-shadow:var(--shadow-overlay); color:var(--text-body); font-size:12px; line-height:1.4; white-space:nowrap; opacity:0; visibility:hidden; translate:-50% 4px; transition:opacity .16s var(--ease-brand), translate .16s var(--ease-brand), visibility 0s .16s; }
+.stackTip b { color:var(--text-strong); font-weight:650; }
+.stackTip span { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+.stackTip span > em { display:inline-flex; align-items:center; gap:6px; font-style:normal; }
+.stackTip span > em > i { width:8px; height:8px; border-radius:2px; }
+.stackCol:first-child .stackTip { left:0; translate:0 4px; }
+.stackCol:last-child .stackTip { left:auto; right:0; translate:0 4px; }
+.stackCol:hover .stackTip, .stackCol:focus-visible .stackTip { opacity:1; visibility:visible; translate:-50% 0; transition-delay:0s; }
+.stackCol:first-child:hover .stackTip, .stackCol:first-child:focus-visible .stackTip,
+.stackCol:last-child:hover .stackTip, .stackCol:last-child:focus-visible .stackTip { translate:0 0; }
+.stackCol:focus-visible .stackBar { outline:2px solid var(--line-focus); outline-offset:3px; border-radius:3px; }
+.stackLegend { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:4px; color:var(--text-body); font-size:12px; }
+.stackLegend > span { display:inline-flex; align-items:center; gap:6px; }
+.stackLegend i { width:9px; height:9px; border-radius:2px; }
+.stackLegend b { color:var(--text-strong); font-weight:650; }
+.stackLegendLine { width:16px!important; height:0!important; border-radius:0; border-top:2.5px dashed var(--text-strong); background:none!important; }
+.shiftSentence { color:var(--text-strong); font-size:14px; font-weight:550; line-height:1.5; }
+@media (max-width:639px) { .stackPlot { height:116px; } }
+@media (prefers-reduced-motion:reduce) { .stackTip { transition:none; } }
+
+/* ---------- Ünlü yatırımcılar: portföy payı şeridi ---------- */
+.weightBar { width:72px; margin-top:2px; }
+.weightNote { padding:4px 18px 14px; color:var(--text-muted); font-size:12px; line-height:1.55; }
+@media (min-width:640px) { .weightNote { padding-inline:20px; } }

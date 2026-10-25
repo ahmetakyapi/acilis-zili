@@ -131,6 +131,7 @@ export default async function ScreenReportPage(props: PageProps<"/hisse-secimi/[
             names={Object.fromEntries(data.result.checks.map((check) => [check.id, S.checks[check.id].name])) as Record<CheckId, string>}
             statusOf={(id) => statusLabel(data.result.checks.find((check) => check.id === id)!, data, S)}
             t={S}
+            v={t.stockVisuals}
             fold={{ more: t.stockEntry.flagsMore, less: t.stockEntry.flagsLess }}
           />
         }
@@ -171,7 +172,7 @@ export default async function ScreenReportPage(props: PageProps<"/hisse-secimi/[
           görüş onun hemen ardında, kategorilerden önce. */}
       <ClaudeCta symbol={symbol} locale={locale} focus="selection" />
       <CategoryPanel data={data} t={S} />
-      <ChecksPanel data={data} locale={locale} t={S} />
+      <ChecksPanel data={data} locale={locale} t={S} v={t.stockVisuals} />
       {/* KURAL TEZGÂHI (12 Ekim): aynı sonucun açıklayıcı figürü. Ekran düzeni
           kuralı: ikinci görsel ölçü ızgarasının ALTINA. Figür hesaplamaz;
           sayılar yukarıdaki tablonun aynısı (components/figures/rule-bench). */}

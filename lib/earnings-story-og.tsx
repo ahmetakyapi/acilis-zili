@@ -11,7 +11,7 @@ import {
   type StoryFigure,
 } from "@/lib/earnings-story";
 import { WEEK_OG_SIZES } from "@/lib/earnings-week-og";
-import { BrandLock, C, DayRailMark } from "@/lib/og";
+import { BrandLock, C, DayRailMark, VERDICT_OG } from "@/lib/og";
 import { formatEtDateCompact, formatMoneyCompact, formatPercent, formatPercentPlain, formatPrice } from "@/lib/utils";
 
 /**
@@ -367,7 +367,9 @@ function Body({
     );
   }
   const verdict = verdictOf(card.verdict);
-  const tone = verdict === "buy" ? C.up : verdict === "sell" ? C.down : C.primary;
+  /* Görüş üçlüsü (`VERDICT_OG`): halka çizim tonu, kelime metin tonu. TUT
+     burada MAVİ basılıyordu; mavi sitede etkileşim, görüş rengi değil. */
+  const tone = VERDICT_OG[verdict];
   const ring = scale.big * 2.4;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: scale.gap * 1.5 }}>
@@ -380,7 +382,7 @@ function Body({
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          border: `${Math.round(ring / 14)}px solid ${tone}`,
+          border: `${Math.round(ring / 14)}px solid ${tone.ink}`,
           background: C.surface,
         }}
       >
@@ -391,7 +393,7 @@ function Body({
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         <Label scale={scale}>{s.verdict}</Label>
-        <span style={{ fontSize: scale.big * 0.8, fontWeight: 700, color: tone, letterSpacing: "-0.03em" }}>
+        <span style={{ fontSize: scale.big * 0.8, fontWeight: 700, color: tone.fg, letterSpacing: "-0.03em" }}>
           {verdictLabel(verdict, t)}
         </span>
       </div>

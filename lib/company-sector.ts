@@ -2,7 +2,7 @@ import "server-only";
 
 import { indexMemberOf } from "@/db/seed/indices";
 import type { Locale } from "@/lib/i18n/config";
-import { industryLabel, sectorLabel } from "@/lib/sectors";
+import { industryLabel, sectorGroupOf, sectorLabel } from "@/lib/sectors";
 
 /**
  * Bir şirketin ekranda yazılacak sektörü — tercih sırası TEK YERDE.
@@ -25,4 +25,41 @@ export function companySector(
   locale: Locale,
 ): string | null {
   return sectorLabel(indexMemberOf(symbol)?.sector, locale) ?? industryLabel(industry, locale);
+}
+
+/**
+ * Sektör DAĞILIMI için şirketin GICS ANA sektörü (25 Ekim).
+ *
+ * `companySector` tek şirketin künyesi için doğru: GICS ana sektörü yoksa
+ * sağlayıcının alt sektörünü yazar. Bir DAĞILIMDA ise iki sınıflandırma
+ * aynı listeye düşüyordu — profil vitrininde "Bilgi Teknolojileri %97,5"
+ * ile "Teknoloji %2,5" yan yana duruyordu (endekste olmayan hisse
+ * Finnhub'ın "Technology"siyle geldi). Burada alt sektör de ana sektöre
+ * çıkarılır: sektör grubundan (`sectorGroupOf`, lib/sectors.ts) GICS
+ * karşılığına; eşleşmeyen null döner ve çağıran "Diğer"e koyar. Portföy
+ * ekranı ile profil vitrini aynı fonksiyonu okur.
+ */
+const GROUP_TO_GICS: Record<string, string> = {
+  teknoloji: "Information Technology",
+  "yari-iletken": "Information Technology",
+  saglik: "Health Care",
+  finans: "Financials",
+  sanayi: "Industrials",
+  ulastirma: "Industrials",
+  enerji: "Energy",
+  medya: "Communication Services",
+  tuketim: "Consumer Discretionary",
+  "temel-tuketim": "Consumer Staples",
+  "kamu-hizmetleri": "Utilities",
+  hammadde: "Materials",
+  gayrimenkul: "Real Estate",
+};
+
+export function companyMajorSector(
+  symbol: string,
+  industry: string | null | undefined,
+  locale: Locale,
+): string | null {
+  const gics = indexMemberOf(symbol)?.sector ?? GROUP_TO_GICS[sectorGroupOf(industry).key] ?? null;
+  return sectorLabel(gics, locale);
 }

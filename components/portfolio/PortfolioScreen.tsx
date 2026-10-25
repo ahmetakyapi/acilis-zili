@@ -17,6 +17,7 @@ import { PortfolioNote } from "@/components/portfolio/PortfolioNote";
 import { PortfolioTechnical, type TechnicalHolding } from "@/components/portfolio/PortfolioTechnical";
 import { PositionsTable, type PositionRow } from "@/components/portfolio/PositionsTable";
 import { RealizedPanel } from "@/components/portfolio/RealizedPanel";
+import { ReturnTimeline, ReturnTimelineSkeleton } from "@/components/portfolio/ReturnTimeline";
 import { getPortfolioSales, loadRealized } from "@/lib/portfolio-sales-data";
 import { getSymbolNames } from "@/lib/data";
 import {
@@ -29,7 +30,7 @@ import {
   TotalsBand,
 } from "@/components/portfolio/PortfolioVisuals";
 import { ButtonLink, DataStamp, EmptyState, Panel, PanelHeader, PanelLink, PanelSkeleton } from "@/components/ui/primitives";
-import { companySector } from "@/lib/company-sector";
+import { companyMajorSector } from "@/lib/company-sector";
 import { cn, directionOf, directionText, formatPercent, formatPrice } from "@/lib/utils";
 import { formatIsoDate, formatRate, TCMB_MIN_DATE } from "@/lib/fx";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
@@ -123,10 +124,17 @@ export async function PortfolioScreen({ userId, preset = null }: { userId: strin
         </DirectoryHeader>
 
         <Suspense
+          /* İSKELET GERÇEK GÖVDENİN ÖLÇÜSÜNDE (25 Ekim): iki kısa iskelet
+             1440x900'de "Bunu Anlamak için" şeridini ve alt bilgiyi ilk
+             ekrana çekiyordu; gövde inince ikisi aşağı itiliyordu (CLS
+             0,06–0,17, ölçüldü). Getiri paneli (~488), Alıştan Bugüne
+             (kendi iskeleti) ve pozisyonlar ekranın altına taşacak boyda:
+             gövde inerken görünen alanda kayan öğe kalmıyor. */
           fallback={
             <>
-              <PanelSkeleton rows={2} />
-              <PanelSkeleton rows={4} />
+              <PanelSkeleton rows={2} className="min-h-[420px]" />
+              <ReturnTimelineSkeleton title={t.personalVisuals.timeline.title} />
+              <PanelSkeleton rows={4} className="min-h-svh" />
             </>
           }
         >
@@ -261,7 +269,8 @@ async function PortfolioBody({
             : null;
   const weights = sectorWeights(
     views.map((view) => ({
-      sector: companySector(view.symbol, names[view.symbol]?.industry, locale) ?? L.otherSector,
+      /* Dağılımda tek sınıflandırma: GICS ana sektörü (gerekçe companyMajorSector). */
+      sector: companyMajorSector(view.symbol, names[view.symbol]?.industry, locale) ?? L.otherSector,
       valueUsd: view.valueUsd,
     })),
   );
@@ -363,6 +372,14 @@ async function PortfolioBody({
           labels={L}
         />
       </Panel>
+
+      {/* ALIŞTAN BUGÜNE (25 Ekim): Getiri paneli bugünü söylüyor, bu çizgi
+          farkın NE ZAMAN açıldığını — aynı günlerde SPY'a karşı, yalnız
+          yüzde. Ana görsel olarak ölçülerin hemen altında; barlar ayrı
+          istek olduğu için kendi Suspense'inde, iskelet aynı boyda. */}
+      <Suspense fallback={<ReturnTimelineSkeleton title={t.personalVisuals.timeline.title} />}>
+        <ReturnTimeline userId={userId} quoteKey="portfolio" locale={locale} t={t} />
+      </Suspense>
 
       {/* `overflow-clip`, `hidden` DEĞİL: sıra şeridi düzenlemede başlığın
           altına yapışıyor ve `overflow: hidden` paneli bir kaydırma kabına

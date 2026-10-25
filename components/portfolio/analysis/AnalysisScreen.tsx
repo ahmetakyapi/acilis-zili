@@ -1,12 +1,19 @@
-import { Suspense, type CSSProperties } from "react";
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
+import { Suspense, type CSSProperties, type ReactNode } from "react";
+import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { GuideHint } from "@/components/article/GuideHint";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { ScaleBar } from "@/components/markets/CompareScale";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import { AnalysisNote } from "@/components/portfolio/analysis/AnalysisNote";
+import { CorrelationHeat, type HeatCell } from "@/components/portfolio/analysis/CorrelationHeat";
+import {
+  composeAnalysisLead,
+  heaviestSector,
+  pairScale,
+  clamp01,
+  weightStrip,
+} from "@/components/portfolio/analysis/analysis-visuals";
 import {
   ButtonLink,
   DataStamp,
@@ -139,6 +146,7 @@ async function AnalysisBody({
   t: Dictionary;
 }) {
   const A = t.portfolioAnalysis;
+  const V = t.portfolioAnalysisVisuals;
   let analysis: PortfolioAnalysis | null;
   let count: number;
   if ("userId" in source) {
@@ -185,18 +193,42 @@ async function AnalysisBody({
   const sessionLabel = fill(A.session, { date: dateLong(risk.session, locale) });
   const partial = risk.covered < risk.total ? fill(A.partial, { covered: risk.covered, total: risk.total }) : null;
 
+  const lead = composeAnalysisLead(
+    {
+      count: risk.concentration.count,
+      effective: risk.concentration.effectiveCount,
+      largest: risk.concentration.largest,
+      sector: risk.sectors ? heaviestSector(risk.sectors.rows) : null,
+      volatility: risk.risk ? { portfolio: risk.risk.volatility, benchmark: risk.risk.benchmarkVolatility } : null,
+    },
+    V.lead,
+    {
+      percent: (value) => pct(value, locale),
+      measure: (value, digits) => num(value, locale, digits),
+      sector: (key) => sectorLabel(key, locale) ?? key,
+      upper: (text) => text.toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US"),
+    },
+  );
+
   return (
     <>
+      {/* TEPEDEKİ TEK CÜMLE (25 Ekim, görsel tur): ölçülerden kurulur,
+          yorum değil (composeAnalysisLead, testli). Ekran düzeninde
+          başlığın altı, ana görselin üstü. */}
+      <div className={styles.leadBlock} data-motion-reveal>
+        <p className={styles.leadText}>{lead}</p>
+        <p className={styles.leadNote}>{V.lead.note}</p>
+      </div>
       <SectorPanel risk={risk} analysis={analysis} locale={locale} A={A} meta={sessionLabel} partial={partial} />
-      <RiskPanel risk={risk} locale={locale} A={A} partial={partial} />
-      <CorrelationPanel risk={risk} locale={locale} A={A} />
+      <RiskPanel risk={risk} locale={locale} A={A} V={V} partial={partial} />
+      <CorrelationPanel risk={risk} locale={locale} A={A} V={V} />
       <div className={styles.pair}>
         <CurrencyPanel risk={risk} locale={locale} A={A} />
         <DividendPanel risk={risk} locale={locale} A={A} />
       </div>
       <EarningsPanel risk={risk} locale={locale} A={A} />
       <GapsPanel analysis={analysis} locale={locale} A={A} />
-      <ScenarioPanel analysis={analysis} risk={risk} fund={fund} weight={weight} basePath={basePath} locale={locale} A={A} />
+      <ScenarioPanel analysis={analysis} risk={risk} fund={fund} weight={weight} basePath={basePath} locale={locale} A={A} V={V} />
       <AnalysisNote locale={locale} labels={A.note} disclaimer={A.notAdvice} endpoint={noteEndpoint} />
       <DataStamp labels={t.data} source="Alpaca · State Street · TCMB" locale={locale} note={fill(A.stampNote, { date: dateLong(risk.session, locale) })} />
     </>
@@ -204,6 +236,7 @@ async function AnalysisBody({
 }
 
 type Labels = Dictionary["portfolioAnalysis"];
+type VisualLabels = Dictionary["portfolioAnalysisVisuals"];
 
 /* --------------------------------------------------------- ana görsel */
 
@@ -287,23 +320,193 @@ function SectorPanel({
 
 /* ------------------------------------------------------- ölçü ızgarası */
 
-function Metric({ label, value, sub, tone, mono }: { label: string; value: string; sub?: string; tone?: string; mono?: boolean }) {
+function Metric({
+  label,
+  value,
+  sub,
+  tone,
+  mono,
+  visual,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  tone?: string;
+  mono?: boolean;
+  /** Sayının altındaki çizim (kulvar, eş çizgi, halka) — sayının kopyası, aria-hidden. */
+  visual?: ReactNode;
+}) {
   return (
     <div className={styles.metric}>
       <dt className={styles.metricLabel}>{label}</dt>
       {/* Açıklama etiketin altında, değer kutunun dibinde: açıklamaları
-          farklı uzunlukta olsa da yan yana değerler aynı hatta biter. */}
+          farklı uzunlukta olsa da yan yana değerler aynı hatta biter.
+          Çizim değerin ALTINDA ve her kartta aynı yükseklikte (iki
+          kulvarlık yer): değerler yine aynı hatta biter. */}
       <dd className="contents">
         {sub && <span className={styles.metricSub}>{sub}</span>}
         <span className={`numeral ${styles.metricValue} ${mono ? styles.mono : ""}`} data-tone={tone}>
           {value}
         </span>
+        {visual && (
+          <span aria-hidden className={styles.metricVisual}>
+            {visual}
+          </span>
+        )}
       </dd>
     </div>
   );
 }
 
-function RiskPanel({ risk, locale, A, partial }: { risk: PortfolioRisk; locale: Locale; A: Labels; partial: string | null }) {
+/**
+ * Tek kulvar: büyüklük çizgisi (nötr) ya da yönlü çizgi (`tone`). Kulvar
+ * `--line-soft`, şerit `var(--lane-h, 5px)` — sitenin ince grafik dili
+ * (CLAUDE.md "Grafik dili ince"). `tick`: aynı ölçekte bir gösterge çentiği
+ * (betada S&P 500 = 1).
+ */
+function Lane({ ratio, tone, tick, faint }: { ratio: number; tone?: "up" | "down"; tick?: number; faint?: boolean }) {
+  return (
+    <span className={styles.lane} data-motion-track>
+      <span
+        className={styles.laneFill}
+        data-tone={tone}
+        data-faint={faint || undefined}
+        data-motion-draw="line"
+        style={{ width: `${clamp01(ratio) * 100}%`, transformOrigin: "left center" }}
+      />
+      {tick !== undefined && <span className={styles.laneTick} style={{ left: `${clamp01(tick) * 100}%` }} />}
+    </span>
+  );
+}
+
+/**
+ * Portföy ve S&P 500 AYNI ölçekte, alt alta iki kulvar. Sayı kartın büyük
+ * değeri ve alt satırı; çizgi "endeksin kaç katı" sorusunu okutmadan
+ * cevaplıyor. Renk işaretten: düşüş derinliği eksi → `down`; oynaklık ve
+ * beta yönsüz büyüklük → nötr (CompareScale'in kuralı).
+ */
+function PairLanes({
+  portfolio,
+  benchmark,
+  labels,
+  tone,
+  floor = 0,
+  tick,
+}: {
+  portfolio: number;
+  benchmark: number;
+  labels: VisualLabels["compare"];
+  tone?: "down";
+  floor?: number;
+  /** Ölçek üzerinde gösterge değeri (betada 1). */
+  tick?: number;
+}) {
+  const scale = pairScale(portfolio, benchmark, floor);
+  const tickAt = tick !== undefined && scale.max > 0 ? tick / scale.max : undefined;
+  return (
+    <span className={styles.pairLanes}>
+      <span className={styles.pairLane}>
+        <span className={styles.pairLaneLabel}>{labels.portfolio}</span>
+        <Lane ratio={scale.a} tone={tone} tick={tickAt} />
+      </span>
+      <span className={styles.pairLane}>
+        <span className={styles.pairLaneLabel}>{labels.benchmark}</span>
+        <Lane ratio={scale.b} tone={tone} tick={tickAt} faint />
+      </span>
+    </span>
+  );
+}
+
+/** Halkanın tuvali ve yarıçapı (SVG birimi). */
+const RING_BOX = 44;
+const RING_R = 18;
+
+/**
+ * Etkin pozisyon HALKASI: etkin sayı / pozisyon sayısı. Halka tam dolu
+ * = her pozisyon eşit ağırlıkta; ince bir yay = birkaç pozisyon portföyü
+ * taşıyor. Çizim `.ring-fill` ile kendini bir kez çiziyor (globals.css;
+ * hareketi azaltana son kare). Nötr ton: dağınıklık bir yargı değil.
+ */
+function SpreadRing({ effective, count }: { effective: number; count: number }) {
+  const circumference = 2 * Math.PI * RING_R;
+  const share = clamp01(count > 0 ? effective / count : 0);
+  return (
+    <svg className={styles.ring} viewBox={`0 0 ${RING_BOX} ${RING_BOX}`} aria-hidden>
+      <circle cx={RING_BOX / 2} cy={RING_BOX / 2} r={RING_R} className={styles.ringTrack} />
+      <circle
+        className={`ring-fill ${styles.ringFill}`}
+        cx={RING_BOX / 2}
+        cy={RING_BOX / 2}
+        r={RING_R}
+        strokeDasharray={circumference}
+        strokeDashoffset={circumference * (1 - share)}
+        transform={`rotate(-90 ${RING_BOX / 2} ${RING_BOX / 2})`}
+        style={{ "--ring-circumference": circumference } as CSSProperties}
+      />
+    </svg>
+  );
+}
+
+/**
+ * POZİSYONLARIN AĞIRLIĞI — yüzde yüzlük şerit (25 Ekim). "En büyük
+ * pozisyon %43" ve "ilk 5 %100" iki ayrı sayıydı; şerit ikisini bir
+ * bakışta veriyor: portföyün ne kadarını kaç dilim taşıyor. Dilimler
+ * ağırlık sırasında, tonu sıra ilerledikçe açılıyor (renk değil koyuluk —
+ * kimlik etiketle, yön renkleri burada yok). Dar dilimin adı şeridin
+ * altındaki dizinde; dizin her dilimi yazdığı için şerit aria-hidden.
+ */
+function WeightStrip({ risk, locale, V }: { risk: PortfolioRisk; locale: Locale; V: VisualLabels }) {
+  const segments = weightStrip(risk.rows);
+  const nameOf = (segment: (typeof segments)[number]) =>
+    segment.symbol ?? fill(V.strip.restCount, { n: risk.rows.length - (segments.length - 1) });
+  const list = segments.map((segment) => `${segment.symbol ?? V.strip.rest} ${pct(segment.weight, locale)}`).join(", ");
+  return (
+    <div className={styles.strip}>
+      <p className={styles.groupTitle}>{V.strip.title}</p>
+      <div className={styles.stripBar} role="img" aria-label={fill(V.strip.aria, { list })} data-motion-track>
+        {segments.map((segment, index) => (
+          <span
+            key={segment.key}
+            className={styles.stripSeg}
+            data-rest={segment.symbol === null || undefined}
+            data-motion-draw="line"
+            style={{ flexGrow: segment.weight, "--tone": `${Math.max(28, 82 - index * 9)}%`, transformOrigin: "left center" } as CSSProperties}
+          />
+        ))}
+      </div>
+      <ul className={styles.stripKey} aria-hidden>
+        {segments.map((segment, index) => (
+          <li key={segment.key}>
+            <i
+              data-rest={segment.symbol === null || undefined}
+              style={{ "--tone": `${Math.max(28, 82 - index * 9)}%` } as CSSProperties}
+            />
+            <b className={segment.symbol ? styles.mono : undefined}>{segment.symbol ? segment.symbol : V.strip.rest}</b>
+            <span className="numeral">{pct(segment.weight, locale)}</span>
+            {segment.symbol === null && <span className={styles.stripRest}>{nameOf(segment)}</span>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Beta ölçeğinin tabanı: ölçek hiçbir zaman 1,5'in altına inmez, 1 çentiği hep içeride. */
+const BETA_FLOOR = 1.5;
+
+function RiskPanel({
+  risk,
+  locale,
+  A,
+  V,
+  partial,
+}: {
+  risk: PortfolioRisk;
+  locale: Locale;
+  A: Labels;
+  V: VisualLabels;
+  partial: string | null;
+}) {
   const L = A.concentration;
   const c = risk.concentration;
   const r = risk.risk;
@@ -312,16 +515,26 @@ function RiskPanel({ risk, locale, A, partial }: { risk: PortfolioRisk; locale: 
     <Panel id="risk">
       <PanelHeader title={L.title} />
       <div className={styles.body}>
+        <WeightStrip risk={risk} locale={locale} V={V} />
         <dl className={styles.metrics}>
           <Metric
             label={L.largest}
             value={tieFigures(`${c.largest.symbol} ${pct(c.largest.weight, locale)}`)}
+            visual={<Lane ratio={c.largest.weight / 100} />}
           />
-          <Metric label={L.top5} value={pct(c.top5Share, locale)} />
+          <Metric label={L.top5} value={pct(c.top5Share, locale)} visual={<Lane ratio={c.top5Share / 100} />} />
           <Metric
             label={L.effective}
             value={num(c.effectiveCount, locale, 1)}
             sub={fill(L.effectiveHint, { count: c.count, effective: num(c.effectiveCount, locale, 1) })}
+            visual={
+              <span className={styles.ringRow}>
+                <SpreadRing effective={c.effectiveCount} count={c.count} />
+                <span className={`numeral ${styles.ringOf}`}>
+                  {num(c.effectiveCount, locale, 1)} / {c.count}
+                </span>
+              </span>
+            }
           />
           {r && (
             <>
@@ -329,13 +542,27 @@ function RiskPanel({ risk, locale, A, partial }: { risk: PortfolioRisk; locale: 
                 label={L.volatility}
                 value={pct(r.volatility, locale)}
                 sub={fill(L.vsBenchmark, { value: pct(r.benchmarkVolatility, locale) })}
+                visual={<PairLanes portfolio={r.volatility} benchmark={r.benchmarkVolatility} labels={V.compare} />}
               />
-              <Metric label={L.beta} value={num(r.beta, locale)} sub={L.betaHint} />
+              <Metric
+                label={L.beta}
+                value={num(r.beta, locale)}
+                sub={L.betaHint}
+                visual={<PairLanes portfolio={r.beta} benchmark={1} labels={V.compare} floor={BETA_FLOOR} tick={1} />}
+              />
               <Metric
                 label={L.drawdown}
                 value={formatPercent(r.maxDrawdown.depth, locale, 1)}
                 tone={directionOf(r.maxDrawdown.depth)}
                 sub={fill(L.vsBenchmark, { value: formatPercent(r.benchmarkMaxDrawdown, locale, 1) })}
+                visual={
+                  <PairLanes
+                    portfolio={r.maxDrawdown.depth}
+                    benchmark={r.benchmarkMaxDrawdown}
+                    labels={V.compare}
+                    tone={r.maxDrawdown.depth < 0 ? "down" : undefined}
+                  />
+                }
               />
             </>
           )}
@@ -359,9 +586,11 @@ function RiskPanel({ risk, locale, A, partial }: { risk: PortfolioRisk; locale: 
 
 /* --------------------------------------------------------- korelasyon */
 
-function CorrelationPanel({ risk, locale, A }: { risk: PortfolioRisk; locale: Locale; A: Labels }) {
+function CorrelationPanel({ risk, locale, A, V }: { risk: PortfolioRisk; locale: Locale; A: Labels; V: VisualLabels }) {
   const L = A.correlation;
   const c = risk.correlation;
+  /* Liste satırındaki çizgi: korelasyon −1..1, sıfır ortada (işaretli
+     kulvar). Nötr ton — "birlikte hareket" bir yargı değil. */
   const list = (pairs: NonNullable<typeof c>["top"]) => (
     <ul className={styles.pairList}>
       {pairs.map((pair) => (
@@ -370,11 +599,32 @@ function CorrelationPanel({ risk, locale, A }: { risk: PortfolioRisk; locale: Lo
             {pair.a} · {pair.b}
           </span>
           <span className={`numeral ${styles.pairValue}`}>{num(pair.value, locale)}</span>
-          <ScaleBar ratio={pair.value} signed className="max-w-none" />
+          <span aria-hidden className={styles.signedLane} data-motion-track>
+            <span
+              className={styles.laneFill}
+              data-motion-draw="line"
+              style={{
+                left: pair.value < 0 ? `${50 - clamp01(-pair.value) * 50}%` : "50%",
+                width: `${clamp01(Math.abs(pair.value)) * 50}%`,
+                transformOrigin: pair.value < 0 ? "right center" : "left center",
+              }}
+            />
+          </span>
         </li>
       ))}
     </ul>
   );
+  const matrix = c?.matrix;
+  const cells: HeatCell[][] | null =
+    matrix && matrix.symbols.length >= 3
+      ? matrix.symbols.slice(1).map((a, row) =>
+          matrix.symbols.slice(0, row + 1).map((b, col) => {
+            const value = matrix.values[row + 1]![col]!;
+            const text = num(value, locale);
+            return { a, b, value, text, aria: fill(V.matrix.aria, { a, b, value: text }) };
+          }),
+        )
+      : null;
   return (
     <Panel id="korelasyon">
       <PanelHeader
@@ -384,17 +634,26 @@ function CorrelationPanel({ risk, locale, A }: { risk: PortfolioRisk; locale: Lo
       <div className={styles.body}>
         <p className={styles.lead}>{L.hint}</p>
         {c ? (
-          <div className={styles.pairGroups}>
-            <div>
-              <p className={styles.groupTitle}>{L.most}</p>
-              {list(c.top)}
-            </div>
-            {c.low.length > 0 && (
-              <div>
-                <p className={styles.groupTitle}>{L.least}</p>
-                {list(c.low)}
+          <div className={styles.corrLayout} data-has-matrix={cells ? true : undefined}>
+            {cells && matrix && (
+              <div className={styles.corrMatrix}>
+                <p className={styles.groupTitle}>{fill(V.matrix.title, { n: matrix.symbols.length })}</p>
+                <CorrelationHeat symbols={matrix.symbols} cells={cells} idle={V.matrix.idle} caption={V.matrix.caption} />
+                <p className={styles.metricSub}>{V.matrix.hint}</p>
               </div>
             )}
+            <div className={styles.pairGroups}>
+              <div>
+                <p className={styles.groupTitle}>{L.most}</p>
+                {list(c.top)}
+              </div>
+              {c.low.length > 0 && (
+                <div>
+                  <p className={styles.groupTitle}>{L.least}</p>
+                  {list(c.low)}
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <p className={styles.lead}>{L.single}</p>
@@ -512,7 +771,11 @@ function EarningsPanel({ risk, locale, A }: { risk: PortfolioRisk; locale: Local
                       </li>
                     ))}
                   </ul>
-                  <ScaleBar ratio={heaviest > 0 ? week.weight / heaviest : 0} signed={false} className="col-span-full max-w-none" />
+                  {/* Haftanın payı en ağır haftaya göre — nötr büyüklük, mavi değil
+                      (25 Ekim renk kararı: mavi yalnız etkileşim). */}
+                  <span aria-hidden className={styles.weekLane}>
+                    <Lane ratio={heaviest > 0 ? week.weight / heaviest : 0} />
+                  </span>
                 </li>
               ))}
             </ul>
@@ -547,6 +810,14 @@ function GapsPanel({ analysis, locale, A }: { analysis: PortfolioAnalysis; local
                       {tieFigures(fill(L.row, { portfolio: pct(gap.portfolio, locale), benchmark: pct(gap.benchmark, locale) }))}
                     </p>
                   </div>
+                  {/* Portföy payı ve S&P 500 çentiği aynı ölçekte (sektör
+                      panelinin dili): eksiğin boyu bir bakışta. */}
+                  <span aria-hidden className={styles.gapLane}>
+                    <Lane
+                      ratio={pairScale(gap.portfolio, gap.benchmark).a}
+                      tick={pairScale(gap.portfolio, gap.benchmark).b}
+                    />
+                  </span>
                   {gap.fund && (
                     <div>
                       <p className={styles.gapLabel}>{L.fund}</p>
@@ -603,6 +874,7 @@ function ScenarioPanel({
   basePath,
   locale,
   A,
+  V,
 }: {
   analysis: PortfolioAnalysis;
   risk: PortfolioRisk;
@@ -611,6 +883,7 @@ function ScenarioPanel({
   basePath: string;
   locale: Locale;
   A: Labels;
+  V: VisualLabels;
 }) {
   const L = A.scenario;
   /* Seçim adresten (`?fon=XLV&agirlik=10`); yoksa en eksik sektörün fonu. */
@@ -632,7 +905,13 @@ function ScenarioPanel({
      Fark bir BÜYÜKLÜK, yargı değil: oynaklığın düşmesi "iyi" diye
      boyanmaz (CompareScale'in kuralı), renk nötr. Yüzde satırlarında fark
      puan; yuvarlanınca sıfırsa basılmaz. */
-  const measure = (label: string, pick: (side: NonNullable<typeof scenario>["before"]) => number, kind: "pct" | "num" | "num1") => {
+  const measure = (
+    label: string,
+    pick: (side: NonNullable<typeof scenario>["before"]) => number,
+    kind: "pct" | "num" | "num1",
+    /** Kulvarın ölçeği: yüzde payı 0-100, öteki ölçüler iki değerin büyüğü. */
+    floor: number | "share",
+  ) => {
     if (!scenario) return null;
     const before = pick(scenario.before);
     const after = pick(scenario.after);
@@ -640,20 +919,26 @@ function ScenarioPanel({
     const show = (value: number) => (kind === "pct" ? pct(value, locale) : num(value, locale, digits));
     const delta = Number((after - before).toFixed(digits));
     const signedDelta = delta > 0 ? `+${num(delta, locale, digits)}` : num(delta, locale, digits);
+    const lanes =
+      floor === "share"
+        ? { a: clamp01(before / 100), b: clamp01(after / 100) }
+        : pairScale(before, after, floor);
     return {
       label,
       before: show(before),
       after: show(after),
+      beforeAt: lanes.a,
+      afterAt: lanes.b,
       delta: delta === 0 ? null : kind === "pct" ? fill(L.deltaPts, { value: signedDelta }) : signedDelta,
     };
   };
   const rows = scenario
     ? [
-        measure(L.volatility, (side) => side.volatility, "pct"),
-        measure(L.beta, (side) => side.beta, "num"),
-        measure(fill(L.sectorShare, { sector }), (side) => side.sectorShare, "pct"),
-        measure(L.effective, (side) => side.effectiveCount, "num1"),
-        measure(L.largest, (side) => side.largestWeight, "pct"),
+        measure(L.volatility, (side) => side.volatility, "pct", 0),
+        measure(L.beta, (side) => side.beta, "num", BETA_FLOOR),
+        measure(fill(L.sectorShare, { sector }), (side) => side.sectorShare, "pct", "share"),
+        measure(L.effective, (side) => side.effectiveCount, "num1", 0),
+        measure(L.largest, (side) => side.largestWeight, "pct", "share"),
       ].filter((row) => row !== null)
     : [];
   return (
@@ -682,29 +967,54 @@ function ScenarioPanel({
           </div>
         </div>
         {scenario ? (
-          <table className={styles.compare}>
-            <thead>
-              <tr>
-                <td />
-                <th scope="col">{L.before}</th>
-                <th scope="col">{`${L.after} (${chosen.symbol})`}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.label}>
-                  <th scope="row">{row.label}</th>
-                  <td className="numeral">{row.before}</td>
-                  <td className="numeral" data-after>
-                    <span className={styles.afterCell}>
-                      {row.delta && <span className={styles.delta}>{tieFigures(row.delta)}</span>}
-                      <span>{row.after}</span>
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          /* ÖNCE / SONRA KARTLARI (25 Ekim). Beş satırlık tablo iki sütunu
+             yan yana veriyordu; okur farkı ve yönü sayıdan çıkarıyordu.
+             Her ölçü artık bir kart: iki nokta aynı kulvarda (içi boş
+             bugün, dolu fonla), aralarındaki çizgi değişimin kendisi. Renk
+             nötr — oynaklığın düşmesi "iyi" diye boyanmaz (yukarıdaki not).
+             Sayılar tablodakinin aynısı, yalnız biçim değişti. */
+          <div className={styles.scenarioBlock}>
+          <ul className={styles.legend} aria-hidden>
+            <li>
+              <span className={styles.dumbbellKey} data-side="before" />
+              {L.before}
+            </li>
+            <li>
+              <span className={styles.dumbbellKey} data-side="after" />
+              {`${L.after} (${chosen.symbol})`}
+            </li>
+          </ul>
+          <ul className={styles.scenarioCards} aria-label={`${L.before} / ${L.after} (${chosen.symbol})`} data-motion-stagger>
+            {rows.map((row) => (
+              <li
+                key={row.label}
+                className={styles.scenarioCard}
+                aria-label={fill(V.scenario.aria, { label: row.label, before: row.before, after: row.after })}
+              >
+                <p className={styles.metricLabel}>{row.label}</p>
+                <p className={`numeral ${styles.scenarioFigures}`} aria-hidden>
+                  <span className={styles.scenarioBefore}>{row.before}</span>
+                  <ArrowRight size={13} weight="bold" className={styles.scenarioArrow} />
+                  <span className={styles.scenarioAfter}>{row.after}</span>
+                </p>
+                <span aria-hidden className={styles.dumbbell}>
+                  <span
+                    className={styles.dumbbellSpan}
+                    style={{
+                      left: `${Math.min(row.beforeAt, row.afterAt) * 100}%`,
+                      width: `${Math.abs(row.afterAt - row.beforeAt) * 100}%`,
+                    }}
+                  />
+                  <span className={styles.dumbbellDot} data-side="before" style={{ left: `${row.beforeAt * 100}%` }} />
+                  <span className={styles.dumbbellDot} data-side="after" style={{ left: `${row.afterAt * 100}%` }} />
+                </span>
+                <p className={styles.scenarioDelta} aria-hidden>
+                  {row.delta ? tieFigures(row.delta) : V.scenario.same}
+                </p>
+              </li>
+            ))}
+          </ul>
+          </div>
         ) : (
           <p className={styles.lead}>{L.unavailable}</p>
         )}

@@ -237,9 +237,10 @@ export default async function TodayPage() {
                 başlık satırı dolduruyor (3–25 piksel kalıyor). Çipin sağı
                 her dilde ve genişlikte boş; ölçü CSS'te. */}
             <div className={styles.heroTopRow}>
-              {/* KAPANIŞ KÜNYESİ ÇİPİN ALTINDA (24 Ekim): seans bitince zil
-                  günün sonucunu taşıyor — genişlik şeridi ve posterin
-                  bağlantısı; gerekçe DaySeal.tsx. Kendi sınırında akıyor. */}
+              {/* SON SEANS KAROSU ÇİPİN ALTINDA (24 Ekim künye, 25 Ekim
+                  karo): en yeni tamamlanmış seansın posteri, sahnesinin
+                  minyatürü, günün cümlesi ve genişliği; her seansta, tarihi
+                  künyesinde. Gerekçe DaySeal.tsx. Kendi sınırında akıyor. */}
               <div className={sealStyles.lead}>
                 <div className={styles.heroSession} data-state={sessionState}><span aria-hidden="true" />{sessionLabel[status.session]}</div>
                 <Suspense fallback={null}>

@@ -45,30 +45,56 @@ const DAY_MS = 86_400_000;
    --------------------------------------------------------------------------- */
 
 /**
- * İpucu sırası ZORDAN KOLAYA. Siluet tek başına neredeyse hiçbir şey
- * söylemiyor (yüz şirketin grafiği birbirine benzer), baş harf ise son
- * tahminden önce işi bitiriyor. Verisi olmayan ipucu ATLANIR, yerine
- * uydurma bir değer konmaz; sıradaki bir basamak öne gelir.
+ * İpucu BASAMAKLARI, GENELDEN ÖZELE (25 Ekim; ilk sürümde tek sıra, altı
+ * ipucuydu). Başta yalnız siluet; her yanlış tahmin (ya da joker) bir
+ * basamak açar, basamakta iki ipucu. Sıra kuralı: bir basamak havuzu
+ * daraltır ama tek başına cevabı vermez (ölçü `tests/stock-puzzle.test.ts`
+ * → "early steps never pin the answer"): sektör 11 kova, temettü
+ * öder/ödemez iki kova; piyasa değeri yedi bant, oynaklık sürekli bir
+ * sayı; endüstri (GICS alt sektörü) havuzda çoğunlukla 2-10 şirket, o
+ * yüzden dördüncü basamakta; harf kutuları ve baş harf sonda, işi
+ * bitiren ipuçları.
+ *
+ * Verisi olmayan ipucu ATLANIR, yerine uydurma bir değer konmaz; basamak
+ * boş kalırsa bile basamak sayılır (açılma sırası herkes için aynı).
+ * Kaynaklar ve havuzdaki kapsama `lib/stock-puzzle-data.ts` başında.
  */
-export const CLUE_ORDER = [
-  "silhouette",
-  "sector",
-  "capBand",
-  "ipoYear",
-  "revenueGrowth",
-  "initial",
+export const CLUE_STEPS = [
+  ["silhouette"],
+  ["sector", "dividend"],
+  ["capBand", "beta"],
+  ["ipoYear", "revenueGrowth"],
+  ["industry", "netMargin"],
+  ["letters", "initial"],
 ] as const;
 
-export type ClueKind = (typeof CLUE_ORDER)[number];
+export type ClueKind = (typeof CLUE_STEPS)[number][number];
+
+export const CLUE_ORDER: readonly ClueKind[] = CLUE_STEPS.flat();
+
+/** İpucunun basamağı (0 başta açık). */
+export function stepOf(kind: ClueKind): number {
+  return CLUE_STEPS.findIndex((step) => (step as readonly ClueKind[]).includes(kind));
+}
 
 export type Clue =
   | { kind: "silhouette"; points: number[] }
   /** GICS ana sektörü, İngilizce anahtar — ekranda `sectorLabel` ile. */
   | { kind: "sector"; sector: string }
+  /** Yıllık temettü verimi, yüzde; 0 ödemiyor demek. */
+  | { kind: "dividend"; yieldPct: number }
   | { kind: "capBand"; band: number }
+  /** Piyasaya göre oynaklık (beta, 1 = piyasa kadar). */
+  | { kind: "beta"; beta: number }
   | { kind: "ipoYear"; year: number }
   /** Son 12 ayın gelir büyümesi, yüzde (Finnhub `revenueGrowthTTMYoy`). */
   | { kind: "revenueGrowth"; pct: number }
+  /** GICS alt sektörü, İngilizce anahtar — ekranda `industryLabel` ile. */
+  | { kind: "industry"; industry: string }
+  /** Son 12 ayın net kâr marjı, yüzde. */
+  | { kind: "netMargin"; pct: number }
+  /** Sembolün kalıbı: harf yerine "•", noktalama olduğu gibi ("•••.•"). */
+  | { kind: "letters"; shape: string }
   | { kind: "initial"; letter: string };
 
 /** Bulmacanın cevabı hakkında bilinenler — sunucu doldurur. */
@@ -80,6 +106,10 @@ export type PuzzleFacts = {
   ipoYear: number | null;
   revenueGrowth: number | null;
   silhouette: number[] | null;
+  dividendYield?: number | null;
+  beta?: number | null;
+  industry?: string | null;
+  netMargin?: number | null;
 };
 
 /**
@@ -117,7 +147,15 @@ function initialOf(name: string): string | null {
   return match ? match[0].toLocaleUpperCase("en-US") : null;
 }
 
-/** Bilinenlerden ipucu listesi, `CLUE_ORDER` sırasıyla, eksik olan atlanmış. */
+const round1 = (value: number) => Math.round(value * 10) / 10;
+const finite = (value: number | null | undefined): value is number => typeof value === "number" && Number.isFinite(value);
+
+/** Sembolün harf kalıbı — harf ve rakam "•", noktalama korunur. */
+export function symbolShape(symbol: string): string {
+  return symbol.replace(/[A-Z0-9]/g, "•");
+}
+
+/** Bilinenlerden ipucu listesi, basamak sırasıyla, eksik olan atlanmış. */
 export function cluesFor(facts: PuzzleFacts): Clue[] {
   const out: Clue[] = [];
   for (const kind of CLUE_ORDER) {
@@ -128,16 +166,29 @@ export function cluesFor(facts: PuzzleFacts): Clue[] {
       case "sector":
         if (facts.sector) out.push({ kind, sector: facts.sector });
         break;
+      case "dividend":
+        if (finite(facts.dividendYield) && facts.dividendYield >= 0) out.push({ kind, yieldPct: Math.round(facts.dividendYield * 100) / 100 });
+        break;
       case "capBand":
         if (facts.marketCap !== null && facts.marketCap > 0) out.push({ kind, band: capBandOf(facts.marketCap) });
+        break;
+      case "beta":
+        if (finite(facts.beta)) out.push({ kind, beta: Math.round(facts.beta * 100) / 100 });
         break;
       case "ipoYear":
         if (facts.ipoYear !== null && facts.ipoYear >= IPO_YEAR_FLOOR) out.push({ kind, year: facts.ipoYear });
         break;
       case "revenueGrowth":
-        if (facts.revenueGrowth !== null && Number.isFinite(facts.revenueGrowth)) {
-          out.push({ kind, pct: Math.round(facts.revenueGrowth * 10) / 10 });
-        }
+        if (finite(facts.revenueGrowth)) out.push({ kind, pct: round1(facts.revenueGrowth) });
+        break;
+      case "industry":
+        if (facts.industry) out.push({ kind, industry: facts.industry });
+        break;
+      case "netMargin":
+        if (finite(facts.netMargin)) out.push({ kind, pct: round1(facts.netMargin) });
+        break;
+      case "letters":
+        out.push({ kind, shape: symbolShape(facts.symbol) });
         break;
       case "initial": {
         const letter = initialOf(facts.name);
@@ -150,12 +201,15 @@ export function cluesFor(facts: PuzzleFacts): Clue[] {
 }
 
 /**
- * Görünen ipuçları: başta bir, her yanlış tahminde bir fazlası. Bitmiş
- * bulmacada hepsi açılır (sonuç kartı ne bilinmesi gerektiğini gösterir).
+ * Görünen ipuçları: açık basamaklardakiler. Başta bir basamak (siluet),
+ * her yanlış tahmin ve her joker bir fazlası (`opened` = 1 + ıska).
+ * Bitmiş bulmacada hepsi açılır (sonuç kartı ne bilinmesi gerektiğini
+ * gösterir).
  */
-export function visibleClues(clues: readonly Clue[], wrongGuesses: number, finished: boolean): Clue[] {
+export function visibleClues(clues: readonly Clue[], misses: number, finished: boolean): Clue[] {
   if (finished) return [...clues];
-  return clues.slice(0, Math.min(clues.length, 1 + Math.max(0, wrongGuesses)));
+  const opened = 1 + Math.max(0, misses);
+  return clues.filter((clue) => stepOf(clue.kind) < opened);
 }
 
 /* ---------------------------------------------------------------------------
@@ -262,37 +316,176 @@ export function silhouetteOf(closes: readonly number[], points: number = SILHOUE
    Tahmin
    --------------------------------------------------------------------------- */
 
+/** Bir şirket hakkında karşılaştırmaya girenler — tahmin de cevap da. */
 export type CompanyBrief = {
   symbol: string;
   sector: string | null;
   marketCap: number | null;
+  /** Sağlayıcının halka arz yılı; 1980 öncesi güvenilmez (`IPO_YEAR_FLOOR`). */
+  ipoYear: number | null;
+  /** Son 12 ayın gelir büyümesi, yüzde. */
+  revenueGrowth: number | null;
 };
 
 /**
- * Yanlış tahminin geri bildirimi — o da bir ipucu.
+ * KARŞILAŞTIRMA KAROLARI (25 Ekim, Wordle'ın renkli kareleri gibi).
  *
- * `cap`: CEVABIN piyasa değeri tahminden büyükse "up" (ok yukarı: "daha
- * büyüğünü ara"), küçükse "down". Biri bilinmiyorsa null; doğru tahminde
- * "same". Sektör de iki taraf biliniyorsa karşılaştırılır.
+ * İlk sürüm yanlış tahmine yalnız iki çip veriyordu (aynı sektör mü, daha
+ * büyük mü); okur her tahminden bir bit öğreniyordu ve ipucu kartları tek
+ * bilgi kaynağıydı. Şimdi her tahmin dört karo: sektör, piyasa değeri,
+ * halka arz yılı, gelir büyümesi. Her karo TAHMİN EDİLEN şirketin kendi
+ * değerini (cevabın değil) ve cevabın ona göre yerini taşır:
+ *
+ *   `grade` — "match" tutuyor, "near" yakın, "far" uzak; renk bundan
+ *   (yumuşak yeşil / pirinç / nötr). Sitenin görüş üçlüsüyle aynı aile:
+ *   yeşil iyi, pirinç arada.
+ *   `toward` — cevap bu değerin "up" üstünde, "down" altında; eşitse null.
+ *   Ok yön demek, renk değil (fiyat hareketi değil, "daha büyüğünü ara").
+ *
+ * Eşikler aşağıda, adlı sabitler. Karo bir tarafın verisi yoksa null:
+ * bilinmeyen bir şeyi "uzak" diye boyamak uydurma olurdu.
+ *
+ * CEVAP SIZMAZ: karo yalnız sınıf ve yön taşır, cevabın değerini değil.
+ * Karşılaştırma sunucuda (`lib/stock-puzzle-data.ts` → `evaluatePuzzle`).
  */
+export type Grade = "match" | "near" | "far";
+export type Toward = "up" | "down" | null;
+
+export type GuessTile = {
+  /** null: yön biliniyor ama uzaklık bilinmiyor (yalnız 1980 öncesi halka arz). */
+  grade: Grade | null;
+  toward: Toward;
+};
+
+export const TILE_KINDS = ["sector", "cap", "ipo", "growth"] as const;
+export type TileKind = (typeof TILE_KINDS)[number];
+
+/** Halka arzda "yakın": beş yıl içinde. */
+export const IPO_NEAR_YEARS = 5;
+/** Gelir büyümesinde "tutuyor": iki puan içinde; "yakın": on puan içinde. */
+export const GROWTH_MATCH_POINTS = 2;
+export const GROWTH_NEAR_POINTS = 10;
+
+const towardOf = (guess: number, answer: number): Toward => (answer > guess ? "up" : answer < guess ? "down" : null);
+
+/** Piyasa değeri: aynı bant tutuyor, komşu bant yakın (bantlar ipucuyla aynı). */
+export function capTile(guess: number | null, answer: number | null): GuessTile | null {
+  if (guess === null || answer === null || guess <= 0 || answer <= 0) return null;
+  const gap = Math.abs(capBandOf(guess) - capBandOf(answer));
+  return { grade: gap === 0 ? "match" : gap === 1 ? "near" : "far", toward: towardOf(guess, answer) };
+}
+
+/**
+ * Halka arz: aynı yıl tutuyor, beş yıl içi yakın. 1980 öncesi yıl
+ * sağlayıcıda halka arz değil verinin başladığı gün (`IPO_YEAR_FLOOR`);
+ * gerçek yıl o değerden ÖNCE. Bir taraf 1980 öncesiyse yön yine kesin
+ * (öteki 1980 ve sonrası), uzaklık ancak öteki 1980'den beş yıldan
+ * fazla sonraysa kesin; değilse `grade: null`. İkisi de öncesiyse karo yok.
+ */
+export function ipoTile(guess: number | null, answer: number | null): GuessTile | null {
+  if (guess === null || answer === null) return null;
+  const guessOld = guess < IPO_YEAR_FLOOR;
+  const answerOld = answer < IPO_YEAR_FLOOR;
+  if (guessOld && answerOld) return null;
+  if (guessOld || answerOld) {
+    const known = guessOld ? answer : guess;
+    const grade: Grade | null = known - (IPO_YEAR_FLOOR - 1) > IPO_NEAR_YEARS ? "far" : null;
+    return { grade, toward: guessOld ? "up" : "down" };
+  }
+  const gap = Math.abs(guess - answer);
+  return { grade: gap === 0 ? "match" : gap <= IPO_NEAR_YEARS ? "near" : "far", toward: towardOf(guess, answer) };
+}
+
+/** Gelir büyümesi: puan farkıyla; iki puan içinde yön oku basılmaz. */
+export function growthTile(guess: number | null, answer: number | null): GuessTile | null {
+  if (guess === null || answer === null || !Number.isFinite(guess) || !Number.isFinite(answer)) return null;
+  const gap = Math.abs(guess - answer);
+  if (gap <= GROWTH_MATCH_POINTS) return { grade: "match", toward: null };
+  return { grade: gap <= GROWTH_NEAR_POINTS ? "near" : "far", toward: towardOf(guess, answer) };
+}
+
+export function sectorTile(guess: string | null, answer: string | null): GuessTile | null {
+  if (!guess || !answer) return null;
+  return { grade: guess === answer ? "match" : "far", toward: null };
+}
+
 export type GuessFeedback = {
   symbol: string;
   correct: boolean;
-  sameSector: boolean | null;
-  cap: "up" | "down" | "same" | null;
+  tiles: Record<TileKind, GuessTile | null>;
+  /** Tahmin edilen şirketin KENDİ değerleri — karoda yazan sayı. Cevap değil. */
+  values: {
+    sector: string | null;
+    marketCap: number | null;
+    ipoYear: number | null;
+    revenueGrowth: number | null;
+  };
 };
+
+const MATCH_TILE: GuessTile = { grade: "match", toward: null };
 
 export function compareGuess(guess: CompanyBrief, answer: CompanyBrief): GuessFeedback {
   const correct = guess.symbol === answer.symbol;
-  if (correct) return { symbol: guess.symbol, correct, sameSector: true, cap: "same" };
-  const sameSector = guess.sector && answer.sector ? guess.sector === answer.sector : null;
-  const cap =
-    guess.marketCap !== null && answer.marketCap !== null && guess.marketCap > 0 && answer.marketCap > 0
-      ? answer.marketCap >= guess.marketCap
-        ? "up"
-        : "down"
-      : null;
-  return { symbol: guess.symbol, correct, sameSector, cap };
+  const values = {
+    sector: guess.sector,
+    marketCap: guess.marketCap,
+    ipoYear: guess.ipoYear,
+    revenueGrowth: guess.revenueGrowth === null ? null : Math.round(guess.revenueGrowth * 10) / 10,
+  };
+  if (correct) {
+    return { symbol: guess.symbol, correct, values, tiles: { sector: MATCH_TILE, cap: MATCH_TILE, ipo: MATCH_TILE, growth: MATCH_TILE } };
+  }
+  return {
+    symbol: guess.symbol,
+    correct,
+    values,
+    tiles: {
+      sector: sectorTile(guess.sector, answer.sector),
+      cap: capTile(guess.marketCap, answer.marketCap),
+      ipo: ipoTile(guess.ipoYear, answer.ipoYear),
+      growth: growthTile(guess.revenueGrowth, answer.revenueGrowth),
+    },
+  };
+}
+
+/**
+ * JOKER (25 Ekim): okur bir tahmin hakkını harcayıp sıradaki basamağı
+ * erken açar. Listede `JOKER` işaretiyle durur, sunucu onu boş bir satır
+ * olarak değerlendirir (karo yok, ıska sayılır). Son hakta joker yok —
+ * bulmacayı kaybettirmekten başka işi olmazdı; açılacak basamak
+ * kalmadıysa da yok.
+ */
+export const JOKER = "*";
+export const isJoker = (symbol: string) => symbol === JOKER;
+
+export function jokerFeedback(): GuessFeedback {
+  return {
+    symbol: JOKER,
+    correct: false,
+    tiles: { sector: null, cap: null, ipo: null, growth: null },
+    values: { sector: null, marketCap: null, ipoYear: null, revenueGrowth: null },
+  };
+}
+
+export function jokerAllowed(entries: number, stepsLeft: number): boolean {
+  return entries < MAX_GUESSES - 1 && stepsLeft > 0;
+}
+
+/**
+ * "Çok Yakın!" — yanlış ama aynı sektörde ve aynı piyasa değeri bandında.
+ * Havuzda bu ikisini birlikte tutan şirket genellikle birkaç tane; okur
+ * doğru mahallede olduğunu bilsin.
+ */
+export function isClose(feedback: Pick<GuessFeedback, "correct" | "tiles">): boolean {
+  return !feedback.correct && feedback.tiles.sector?.grade === "match" && feedback.tiles.cap?.grade === "match";
+}
+
+/** "Saf Bilgi" rozeti: joker kullanmadan, ilk iki tahminde bildin. */
+export const PURE_MAX_GUESSES = 2;
+
+export function isPureWin(feedback: readonly Pick<GuessFeedback, "correct" | "symbol">[]): boolean {
+  const hit = feedback.findIndex((row) => row.correct);
+  return hit >= 0 && hit < PURE_MAX_GUESSES && !feedback.slice(0, hit).some((row) => isJoker(row.symbol));
 }
 
 export type PuzzleStatus = "playing" | "won" | "lost";
@@ -303,25 +496,69 @@ export function statusOf(feedback: readonly Pick<GuessFeedback, "correct">[]): P
 }
 
 /* ---------------------------------------------------------------------------
+   Siluetin ekseni — oyun ilerledikçe açılır
+   --------------------------------------------------------------------------- */
+
+/**
+ * Siluetin ölçüsü: örneklenmiş kapanışların en düşüğü, en yükseği ve
+ * sonuncusu, ilk ve son barın ET günü. YALNIZ SUNUCUDA, cevabın parçası.
+ */
+export type SilhouetteRange = { low: number; high: number; last: number; from: string; to: string };
+
+/** Kaçıncı yanlış tahminden sonra siluetin yüzde ekseni açılır. */
+export const AXIS_AFTER_MISSES = 3;
+
+/**
+ * Oyun ilerledikçe siluet bilgi açar (25 Ekim). Başta eksensiz şekil; üç
+ * yanlıştan sonra yalnızca YAYILIM (en yüksek / en düşük - 1, yüzde): okur
+ * şekli "başlangıca göre yüzde" eksenine oturtabilir, yılın getirisi
+ * okunur ama fiyat ve tarih yine yok. Fiyat ve tarih yalnız bitmiş
+ * bulmacada (`answer.chart`). Siluet şekli zaten açık olduğundan tek sayı
+ * cevabı vermiyor, havuzu daraltıyor: altıncı ipucunun (baş harf) yerini
+ * almıyor, üçüncüyle dördüncü arasına bir basamak ekliyor.
+ */
+export function axisFor(range: SilhouetteRange | null, misses: number, finished: boolean): { spreadPct: number } | null {
+  if (!range || range.low <= 0 || range.high <= range.low) return null;
+  if (!finished && misses < AXIS_AFTER_MISSES) return null;
+  return { spreadPct: Math.round((range.high / range.low - 1) * 1000) / 10 };
+}
+
+/**
+ * Siluet yüksekliğinin (0-1) başlangıca göre yüzdesi. Nokta y'nin değeri
+ * `low * (1 + y * spread)`; ilk noktanınki aynı formülle. Yalnız oran
+ * gerekiyor, fiyat değil — ekseni istemci bu yüzden fiyatsız çizebiliyor.
+ */
+export function pctFromStart(y: number, first: number, spreadPct: number): number {
+  const spread = spreadPct / 100;
+  return ((1 + y * spread) / (1 + first * spread) - 1) * 100;
+}
+
+/* ---------------------------------------------------------------------------
    Paylaşım
    --------------------------------------------------------------------------- */
 
 /**
- * Izgara kareleri — markanın mavisi yanlış, yeşil doğru, siyah kullanılmayan
- * hak. Sarı yok: sektörü tutan yanlış tahmin de yanlış (sonuçta işaret
- * dili renk anlamı taşımalı, CLAUDE.md "Renk anlam taşır").
+ * Izgara kareleri — her tahmin bir satır, her karo bir kare (25 Ekim).
+ * Yeşil tutuyor, sarı yakın, beyaz uzak, siyah bilinmiyor. Ekrandaki karo
+ * renkleriyle aynı anlam (sarı = pirinç). Doğru tahmin dört yeşil.
  */
-export const SHARE_SQUARES = { miss: "🟦", hit: "🟩", empty: "⬛" } as const;
+export const SHARE_SQUARES = { match: "🟩", near: "🟨", far: "⬜", unknown: "⬛", joker: "🃏" } as const;
 
-export function shareGrid(feedback: readonly Pick<GuessFeedback, "correct">[]): string {
-  const used = feedback.slice(0, MAX_GUESSES).map((item) => (item.correct ? SHARE_SQUARES.hit : SHARE_SQUARES.miss));
-  const empty = Array<string>(Math.max(0, MAX_GUESSES - used.length)).fill(SHARE_SQUARES.empty);
-  return [...used, ...empty].join("");
+export function shareGrid(feedback: readonly Pick<GuessFeedback, "tiles" | "symbol">[]): string {
+  return feedback
+    .slice(0, MAX_GUESSES)
+    .map((row) =>
+      isJoker(row.symbol)
+        ? SHARE_SQUARES.joker
+        : TILE_KINDS.map((kind) => SHARE_SQUARES[row.tiles[kind]?.grade ?? (row.tiles[kind] ? "far" : "unknown")]).join(""),
+    )
+    .join("\n");
 }
 
 /**
  * Paylaşım metni: "Açılış Zili Hisseyi Bil #12 3/6", ızgara, bağlantı.
- * Cevap metne GİRMEZ — paylaşılan sonuç başkasının bulmacasını bozmasın.
+ * Cevap metne GİRMEZ — paylaşılan sonuç başkasının bulmacasını bozmasın;
+ * kareler yalnız tutuyor/yakın/uzak der, değer taşımaz.
  */
 export function shareText({
   title,
@@ -331,7 +568,7 @@ export function shareText({
 }: {
   title: string;
   number: number;
-  feedback: readonly Pick<GuessFeedback, "correct">[];
+  feedback: readonly Pick<GuessFeedback, "correct" | "tiles" | "symbol">[];
   url: string;
 }): string {
   const status = statusOf(feedback);
@@ -354,10 +591,14 @@ export type PuzzleStats = {
   lastWon: number | null;
   /** distribution[i]: i+1 tahminde kazanılan oyun sayısı. */
   distribution: number[];
+  /** Arşivden çözülen bulmacalar — günlük seriye ve dağılıma girmez. */
+  archiveWins: number;
+  /** "Saf Bilgi" kazançları (`isPureWin`), günlük ve arşiv birlikte. */
+  pureWins: number;
 };
 
 export function emptyStats(): PuzzleStats {
-  return { played: 0, wins: 0, streak: 0, best: 0, lastPlayed: null, lastWon: null, distribution: Array(MAX_GUESSES).fill(0) };
+  return { played: 0, wins: 0, streak: 0, best: 0, lastPlayed: null, lastWon: null, distribution: Array(MAX_GUESSES).fill(0), archiveWins: 0, pureWins: 0 };
 }
 
 const nonNegative = (value: unknown): number =>
@@ -378,6 +619,8 @@ export function parseStats(value: unknown): PuzzleStats {
     lastPlayed: dayOrNull(raw.lastPlayed),
     lastWon: dayOrNull(raw.lastWon),
     distribution: Array.from({ length: MAX_GUESSES }, (_, i) => nonNegative(dist[i])),
+    archiveWins: nonNegative(raw.archiveWins),
+    pureWins: nonNegative(raw.pureWins),
   };
 }
 
@@ -386,9 +629,10 @@ export function parseStats(value: unknown): PuzzleStats {
  * yenilenince bitmiş oyun yeniden "bitiyor"). Seri, dünü kazanmışsa bir
  * artar, değilse 1'den başlar; kayıp seriyi sıfırlar.
  */
-export function recordGame(stats: PuzzleStats, day: number, won: boolean, guesses: number): PuzzleStats {
+export function recordGame(stats: PuzzleStats, day: number, won: boolean, guesses: number, pure = false): PuzzleStats {
   if (stats.lastPlayed !== null && stats.lastPlayed >= day) return stats;
   const next: PuzzleStats = { ...stats, distribution: [...stats.distribution], played: stats.played + 1, lastPlayed: day };
+  if (won && pure) next.pureWins += 1;
   if (won) {
     next.wins += 1;
     next.streak = stats.lastWon === day - 1 ? stats.streak + 1 : 1;
@@ -400,6 +644,16 @@ export function recordGame(stats: PuzzleStats, day: number, won: boolean, guesse
     next.streak = 0;
   }
   return next;
+}
+
+/**
+ * Arşivden bitirilen bulmaca (25 Ekim): seriyi BOZMAZ, günlük dağılıma
+ * girmez; yalnız "Arşivden Çözülen" sayacı. Aynı günün iki kez sayılmaması
+ * çağıranın işi (geçmiş kaydında gün zaten bitmişse çağrılmaz).
+ */
+export function recordArchiveGame(stats: PuzzleStats, won: boolean, pure = false): PuzzleStats {
+  if (!won) return stats;
+  return { ...stats, archiveWins: stats.archiveWins + 1, pureWins: stats.pureWins + (pure ? 1 : 0) };
 }
 
 /**
@@ -439,12 +693,16 @@ export type PuzzleState = {
   /** Henüz açılmamış ipuçlarının türleri, sırasıyla. */
   upcoming: ClueKind[];
   guesses: GuessRow[];
+  /** Siluetin yüzde ekseni — üç yanlıştan sonra (`axisFor`); öncesinde null. */
+  axis: { spreadPct: number } | null;
   answer?: {
     symbol: string;
     name: string;
     logoUrl: string | null;
     /** Şirketin tek cümlelik tanıtımı (depodaki iş tanımından); yoksa null. */
     blurb: string | null;
+    /** Siluetin gerçek ölçüsü: fiyat ve tarih ekseni (kapak kartı). */
+    chart: SilhouetteRange | null;
   };
 };
 
@@ -461,6 +719,113 @@ export function parseProgress(value: unknown): PuzzleProgress | null {
   const guesses = raw.guesses.filter((item): item is string => typeof item === "string").slice(0, MAX_GUESSES);
   const status = STATUSES.find((item) => item === raw.status) ?? "playing";
   return { day: raw.day, guesses, status };
+}
+
+/* ---------------------------------------------------------------------------
+   Arşiv — geçmiş günlerin bulmacaları
+   --------------------------------------------------------------------------- */
+
+const DAY_KEY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Gün anahtarının takvimde gerçek bir gün olduğu ("2026-02-31" değil). */
+export function isDayKey(value: string): boolean {
+  if (!DAY_KEY.test(value)) return false;
+  const time = Date.parse(`${value}T00:00:00Z`);
+  return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === value;
+}
+
+/**
+ * Arşivde oynanabilen gün: ilk bulmacadan (`PUZZLE_EPOCH`) bugüne kadar,
+ * bugün HARİÇ (bugün günlük bulmaca) ve gelecek asla.
+ */
+export function isArchiveDay(day: string, today: string): boolean {
+  return isDayKey(day) && day >= PUZZLE_EPOCH && day < today;
+}
+
+/** Arşivin günleri, yeniden eskiye; en çok `limit` gün. */
+export function archiveDays(today: string, limit: number): string[] {
+  const out: string[] = [];
+  let cursor = dayNumberOf(today) - 1;
+  const first = dayNumberOf(PUZZLE_EPOCH);
+  while (cursor >= first && out.length < limit) {
+    out.push(new Date(cursor * DAY_MS).toISOString().slice(0, 10));
+    cursor -= 1;
+  }
+  return out;
+}
+
+/**
+ * Tarayıcıdaki oyun geçmişi — gün başına tahminler, durum ve bitmişse
+ * cevabın sembolüyle logosu (arşiv ızgarası çözülen günde logoyu bu
+ * kayıttan basar; sunucu arşiv sayfasına cevap koymaz).
+ */
+export type HistoryEntry = {
+  guesses: string[];
+  status: PuzzleStatus;
+  answer: { symbol: string; logoUrl: string | null } | null;
+};
+export type PuzzleHistory = Record<string, HistoryEntry>;
+
+/** Geçmişin tavanı — en yeni bu kadar gün tutulur. */
+export const HISTORY_LIMIT = 400;
+
+export function parseHistory(value: unknown): PuzzleHistory {
+  if (!value || typeof value !== "object") return {};
+  const out: PuzzleHistory = {};
+  const entries = Object.entries(value as Record<string, unknown>)
+    .filter(([day]) => isDayKey(day))
+    .sort(([a], [b]) => (a < b ? 1 : -1))
+    .slice(0, HISTORY_LIMIT);
+  for (const [day, raw] of entries) {
+    const progress = parseProgress({ ...(raw as object), day });
+    if (!progress) continue;
+    const answerRaw = (raw as Record<string, unknown>).answer as Record<string, unknown> | null | undefined;
+    const answer =
+      answerRaw && typeof answerRaw.symbol === "string"
+        ? { symbol: answerRaw.symbol, logoUrl: typeof answerRaw.logoUrl === "string" ? answerRaw.logoUrl : null }
+        : null;
+    out[day] = { guesses: progress.guesses, status: progress.status, answer };
+  }
+  return out;
+}
+
+/* ---------------------------------------------------------------------------
+   İlerleme çerezi — sunucu bitmiş/yarım oyunu ilk çizimde bassın
+   --------------------------------------------------------------------------- */
+
+/**
+ * GÜNÜN TAHMİNLERİ ÇEREZDE DE (25 Ekim). İlerleme yalnız tarayıcı
+ * deposundayken sunucu her zaman BOŞ bulmacayı basıyordu; istemci açılınca
+ * depodan geri yükleyip ikinci bir istekle durumu kuruyordu. Arada okur
+ * boş oyunu görüyor, sonra her şey yer değiştiriyordu: 390'da bitmiş
+ * bulmacada CLS 0,59, 1440'ta 0,07 (ölçüldü). Çerezle sunucu ilk çizimde
+ * okurun durumunu basıyor; depo yine asıl kayıt (seri, dağılım).
+ *
+ * Çerez yalnız bugünün tahmin sembollerini taşır, kimlik değil; değer
+ * `gün|SEMBOL|SEMBOL` (virgül çerezde yasak). İki gün yaşar; ertesi gün
+ * gün alanı tutmadığı için zaten yok sayılır. KVKK çerez tablosunda.
+ */
+export const PROGRESS_COOKIE = "az-bulmaca";
+/** Arşiv oyununun çerezi — son oynanan arşiv günü (günlükle karışmasın). */
+export const ARCHIVE_COOKIE = "az-bulmaca-arsiv";
+export const PROGRESS_COOKIE_MAX_AGE = 2 * 24 * 60 * 60;
+
+const SYMBOL_PATTERN = /^[A-Z][A-Z.-]{0,9}$/;
+const DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+export function progressCookieValue(day: string, guesses: readonly string[]): string {
+  return [day, ...guesses.slice(0, MAX_GUESSES)].join("|");
+}
+
+/** Çerezden bugünün tahminleri; başka gün, bozuk değer ya da fazlası boş liste. */
+export function parseProgressCookie(value: string | undefined, today: string): string[] {
+  if (!value) return [];
+  const [day, ...guesses] = value.split("|");
+  if (!DAY_PATTERN.test(day ?? "") || day !== today) return [];
+  if (guesses.length > MAX_GUESSES || !guesses.every((symbol) => isJoker(symbol) || SYMBOL_PATTERN.test(symbol))) return [];
+  const real = guesses.filter((symbol) => !isJoker(symbol));
+  if (new Set(real).size !== real.length) return [];
+  return guesses;
 }
 
 /** Tanımın ilk cümlesi — "1.5" ya da "S&P 500'e." ortasından bölünmez. */

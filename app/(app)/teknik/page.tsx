@@ -5,6 +5,7 @@ import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMot
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import styles from "@/components/technical/Technical.module.css";
 import { NextEditionIn } from "@/components/technical/NextEditionIn";
+import { PlanAtlas } from "@/components/technical/PlanAtlas";
 import { TechnicalBoard } from "@/components/technical/TechnicalBoard";
 import { TechnicalCard } from "@/components/technical/TechnicalCard";
 import { STANCE_GUIDE_SLUG, StanceGuide } from "@/components/technical/StanceGuide";
@@ -25,11 +26,11 @@ import {
   newestEdition,
   nextEdition,
   pendingSymbols,
-  planPosition,
   slotInstant,
   slotLabel,
 } from "@/lib/technical";
 import { getPublishedSymbols, getTechnicalBoard } from "@/lib/technical-data";
+import { atlasSummary } from "@/lib/technical-visuals";
 import { formatEtDateCompact, formatEtDateLong, plural } from "@/lib/utils";
 
 /* Künye ayracı: noktadan ÖNCE bölünmez boşluk. Satır noktadan sonra
@@ -114,20 +115,19 @@ export default async function TechnicalPage() {
      KARTIN ROZETİYLE AYNI KAYNAKTAN: aynı fiyat (canlı, yoksa fotoğraf),
      aynı `planPosition`, "yakın" da rozetin YAZDIĞI yuvarlanmış yüzdeyle
      karar veriyor — rozet "%1,0" derken künye onu "%1'den yakın" saymasın. */
-  const NEAR_ZONE_PCT = 1;
-  const proximity = { inZone: 0, near: 0, belowStop: 0 };
-  for (const { row } of board) {
-    const position = planPosition(
-      quoteMap[row.symbol]?.price ?? row.snapshot.price,
-      row.entryLow,
-      row.entryHigh,
-      row.stop,
-    );
-    if (!position) continue;
-    if (position.kind === "inZone") proximity.inZone += 1;
-    else if (position.kind === "belowStop") proximity.belowStop += 1;
-    else if (Math.round(position.pct * 10) / 10 < NEAR_ZONE_PCT) proximity.near += 1;
-  }
+  /* 25 Ekim: hesap `atlasSummary`e taşındı (lib/technical-visuals.ts) —
+     araç çubuğunun üç sayısı ile plan atlasının cümlesi artık AYNI
+     fonksiyondan, aynı fiyatla; ikisi ayrı döngülerde yaşasaydı bir gün
+     aynı ekranda iki farklı "yakın" sayısı dururdu. */
+  const summary = atlasSummary(
+    board.map(({ row }) => ({
+      price: quoteMap[row.symbol]?.price ?? row.snapshot.price,
+      entryLow: row.entryLow,
+      entryHigh: row.entryHigh,
+      stop: row.stop,
+    })),
+  );
+  const proximity = { inZone: summary.inZone, near: summary.near, belowStop: summary.belowStop };
 
   /* Program cümlesi o günün tarihiyle: New York karşılığı yaz saatiyle
      kayıyor, künye yalnızca sonda bir kez yazılıyor.
@@ -219,6 +219,23 @@ export default async function TechnicalPage() {
           </div>
         )}
       </DirectoryHeader>
+
+      {/* ANA GÖRSEL: on altı plan tek haritada (25 Ekim). Başlığın hemen
+          altında, kartlardan önce — ekran düzeninin üçüncü adımı. Kartlar
+          ayrıntı; harita "hangisine bakmalıyım" sorusunun cevabı. */}
+      {board.length > 0 && latest && (
+        <PlanAtlas
+          items={board.map(({ row }) => ({
+            row,
+            quote: quoteMap[row.symbol] ?? null,
+            company: meta[row.symbol]?.name ?? null,
+            priceLabel: labelFor(row.symbol),
+          }))}
+          summary={summary}
+          locale={locale}
+          t={t}
+        />
+      )}
 
       {board.length === 0 || !latest ? (
         <Panel>

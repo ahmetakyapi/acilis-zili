@@ -9,6 +9,10 @@ import type { Dictionary } from "@/lib/i18n";
 import type { EarningsAnalysisRow } from "@/lib/schema";
 import { cn } from "@/lib/utils";
 import { PanelHead } from "./PanelHead";
+import visuals from "./ReportVisuals.module.css";
+
+/** Dizin bu kadar bölümden itibaren basılır; iki bölümlük metin dizinsiz okunur. */
+const INDEX_MIN_SECTIONS = 3;
 
 /** Okuma bölümü — özet ve detaylı değerlendirme; sayfa dosyasından taşındı. */
 export function ReportReading({
@@ -92,6 +96,25 @@ export function ReportReading({
                   yarışıyordu; ne yaptığını söyleyen hâli ("Claude ile
                   Hazırlandı") alt bilgideki uyarının yanında. */}
               <PanelHead icon={Scales} title={t.analysis.detailed} />
+              {/* BÖLÜM DİZİNİ (25 Ekim görsel zirve). Detaylı değerlendirme
+                  1440'ta 1.100, telefonda 3.000 pikselden uzun ve başlıklar
+                  ancak kaydırınca görünüyordu. Dizin başlıkları tek bakışta
+                  veriyor; her biri kendi bölümüne atlıyor (çapa yapışkan
+                  çubuğun altında kalsın diye `scroll-mt`). */}
+              {row.analysis.length >= INDEX_MIN_SECTIONS && (
+                <nav aria-label={t.analysisVisuals.readingIndex} lang={row.locale}>
+                  <ol className={visuals.readingIndex}>
+                    {row.analysis.map((section, index) => (
+                      <li key={index} className="min-w-0 max-w-full">
+                        <a href={`#report-section-${index + 1}`}>
+                          <span aria-hidden className="numeral">{index + 1}</span>
+                          <span>{section.title.replace(/[.。]$/, "")}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                </nav>
+              )}
               {/* ---- Bölümler: ızgara, sütun AKIŞI değil ----
                   Bir süre çok sütunlu (multicol) dizildi ve okuma sırası
                   sütun sütun aşağı iniyordu: soldaki bölüm 1'i okuyup
@@ -121,7 +144,7 @@ export function ReportReading({
                     satırına çıkınca başlık tam genişlikte, sol kenar
                     hizalı — rehberdeki müfredat şeridiyle aynı dil. */}
                 {row.analysis.map((section, index) => (
-                  <section key={index} data-motion-reveal className={cn(styles.analysisItem, "border-t border-line")}>
+                  <section key={index} id={`report-section-${index + 1}`} data-motion-reveal className={cn(styles.analysisItem, "scroll-mt-32 border-t border-line")}>
                     <span
                       aria-hidden
                       className="numeral mb-1.5 block text-tiny font-bold text-primary"

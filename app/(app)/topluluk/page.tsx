@@ -7,6 +7,7 @@ import { EmptyState, PageHeader, Panel, PanelHeader } from "@/components/ui/prim
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
 import { getPublishedPosts } from "@/lib/user-post-data";
+import { getSymbolNames } from "@/lib/data";
 
 export const generateMetadata = pageMetadata({
   path: "/topluluk",
@@ -41,7 +42,11 @@ export default async function CommunityPage() {
     month: "long",
     year: "numeric",
   });
-  const cardLabels = { readMinutes: t.stories.readMinutes };
+  const cardLabels = { readMinutes: t.stories.readMinutes, symbolsLabel: t.feedVisuals.community.symbolsLabel };
+  /* Rozet logoları (25 Ekim): kartlarda görünen sembollerin tamamı tek sorguda. */
+  const names = posts.length
+    ? await getSymbolNames([...new Set(posts.flatMap((post) => post.symbols.slice(0, 6)))]).catch(() => ({}) as Awaited<ReturnType<typeof getSymbolNames>>)
+    : {};
   const countLabel = posts.length === 1 ? L.mine.countOne : L.mine.count.replace("{n}", String(posts.length));
 
   return (
@@ -86,12 +91,12 @@ export default async function CommunityPage() {
               meta={`${countLabel} · ${L.feed.authors.replace("{n}", String(authors))}`}
             />
             <div className="flex flex-col gap-3 px-4 pb-4 sm:px-5 sm:pb-5">
-              <PostCard post={lead} locale={locale} dateFormat={dateFormat} labels={cardLabels} lead />
+              <PostCard post={lead} locale={locale} dateFormat={dateFormat} labels={cardLabels} names={names} lead />
               {rest.length > 0 && (
                 <ul className="grid gap-3 sm:grid-cols-2">
                   {rest.map((post) => (
                     <li key={post.id} className="min-w-0">
-                      <PostCard post={post} locale={locale} dateFormat={dateFormat} labels={cardLabels} />
+                      <PostCard post={post} locale={locale} dateFormat={dateFormat} labels={cardLabels} names={names} />
                     </li>
                   ))}
                 </ul>

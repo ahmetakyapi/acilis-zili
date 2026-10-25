@@ -9,7 +9,10 @@ import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMot
 import { MiniDial } from "@/components/screening/ScreenVisuals";
 import { SymbolPicker } from "@/components/screening/SymbolPicker";
 import styles from "@/components/screening/Screening.module.css";
-import { LogoTile, Panel, PanelHeader, PanelSkeleton } from "@/components/ui/primitives";
+import { RuleCards, ScoreLane } from "@/components/screening/ScreeningIndex";
+import index from "@/components/screening/ScreeningIndex.module.css";
+import { LogoTile, Panel, PanelHeader, Skeleton } from "@/components/ui/primitives";
+import { cn } from "@/lib/utils";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
 import { pageMetadata } from "@/lib/page-meta";
@@ -82,7 +85,7 @@ export default async function ScreeningPage(props: PageProps<"/hisse-secimi">) {
               {S.scoreLabel}
               <span>{S.rulesMeta.replace("{n}", String(RULE_COUNT))}</span>
             </p>
-            <div className={styles.weights}>
+            <div className={cn(styles.weights, index.weights)}>
               {(Object.keys(CATEGORY_WEIGHTS) as (keyof typeof CATEGORY_WEIGHTS)[]).map((category, index) => (
                 <div key={category} className={styles.weight}>
                   <span>{S.categories[category]}</span>
@@ -108,32 +111,16 @@ export default async function ScreeningPage(props: PageProps<"/hisse-secimi">) {
         </form>
       </DirectoryHeader>
 
-      <Suspense fallback={<PanelSkeleton rows={4} />}>
+      <Suspense fallback={<QuickSkeleton count={TECHNICAL_SYMBOLS.length} />}>
         <QuickLook locale={locale} t={t} />
       </Suspense>
 
       <Panel>
         <PanelHeader title={S.rulesTitle} meta={S.rulesMeta.replace("{n}", String(RULE_COUNT))} />
         <p className={styles.intro}>{S.rulesIntro}</p>
-        <div className={styles.rules}>
-          {SCREEN_CATEGORIES.map((category) => (
-            <section key={category} className={styles.rule}>
-              <div className={styles.ruleHead}>
-                <h3>{S.categories[category]}</h3>
-                {category !== "gate" && <span>{S.weight.replace("{n}", String(CATEGORY_WEIGHTS[category]))}</span>}
-              </div>
-              <p className={styles.ruleWhy}>{S.categoryWhy[category]}</p>
-              <ul className={styles.ruleList}>
-                {RULES[category].map((id) => (
-                  <li key={id}>
-                    <b>{S.checks[id].name}</b>
-                    <span>{S.checks[id].rule}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
-        </div>
+        {/* Kategoriler ikonlu kartlar (25 Ekim görsel turu) — gerekçe
+            ScreeningIndex.tsx. Eleme tam genişlik kapı şeridi. */}
+        <RuleCards categories={SCREEN_CATEGORIES} rules={RULES} S={S} V={t.toolVisuals.screening} />
         <div className={styles.notes}>
           <p>{S.methodNote}</p>
           <p>
@@ -188,6 +175,12 @@ async function QuickLook({ locale, t }: { locale: Locale; t: Dictionary }) {
       {rows.length === 0 ? (
         <p className={styles.intro}>{S.quickUnavailable}</p>
       ) : (
+        <>
+        <ScoreLane
+          rows={rows.map((row) => ({ symbol: row.symbol, score: row.result.score ?? 0, band: row.result.band }))}
+          bands={S.bands}
+          V={t.toolVisuals.screening}
+        />
         <ul className={styles.quick}>
           {rows.map((row) => (
             <li key={row.symbol}>
@@ -207,8 +200,44 @@ async function QuickLook({ locale, t }: { locale: Locale; t: Dictionary }) {
             </li>
           ))}
         </ul>
+        </>
       )}
       <p className={styles.quickNote}>{S.quickNote}</p>
+    </Panel>
+  );
+}
+
+/**
+ * Hızlı bakışın iskeleti GERÇEK panelin biçiminde (25 Ekim): dört satırlık
+ * genel iskelet ~300 piksel tutuyordu, gelen panel (kulvar + 16 kart)
+ * 1440'ta ~650; akış inince altındaki Kurallar paneli aşağı zıplıyordu
+ * (soğuk önbellekte CLS 0,05–0,16 ölçüldü). Kulvar kutusu ve kart ızgarası
+ * aynı sınıflarla basılıyor.
+ */
+function QuickSkeleton({ count }: { count: number }) {
+  return (
+    <Panel>
+      <div className="flex min-h-12 items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
+        <Skeleton className="h-3 w-28" />
+        <Skeleton className="h-2.5 w-40" />
+      </div>
+      <div className={index.laneSkeleton}>
+        <Skeleton className="h-3 w-40" />
+        <Skeleton className="h-2.5 w-72 max-w-full" />
+      </div>
+      <ul className={styles.quick} aria-hidden>
+        {Array.from({ length: count }).map((_, i) => (
+          <li key={i} className={index.cardSkeleton}>
+            <Skeleton className="size-8 rounded-lg" />
+            <span className="grid gap-1.5">
+              <Skeleton className="h-3 w-14" />
+              <Skeleton className="h-2.5 w-24" />
+              <Skeleton className="h-2.5 w-16" />
+            </span>
+            <Skeleton className="size-[46px] rounded-full" />
+          </li>
+        ))}
+      </ul>
     </Panel>
   );
 }

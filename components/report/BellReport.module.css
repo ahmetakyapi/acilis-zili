@@ -1,153 +1,584 @@
-/* ZİL RAPORU (15 Ekim) — kaydırmayla ilerleyen kişisel özet.
+/* ZİL RAPORU — karne düzeni (25 Ekim; ilk sürüm 15 Ekim).
 
-   Her bölüm TEK BÜYÜK SAYI + bir cümle: rapor bir pano değil bir anlatı,
-   okuyucu her durakta bir şey öğrenir. Bölümler ekranın büyük kısmını
-   kaplar (min-height) ve kaydırma-yaslama YOK: yaslama, büyütülmüş yazıda
-   ya da kısa ekranda bölümün altını ekran dışına iter (kaydırma saklanmaz
-   kuralı). Giriş hareketi Reveal'den — azaltılmış harekette son kare.
+   ESKİ DÜZEN: her bölüm TEK büyük sayı + bir cümle ve `min-height:
+   min(72vh, 620px)` — bölüm bir ekran boyundaydı. 390'da sayfa 3993 piksel,
+   ilk ekranda tek gerçek sayı (86) vardı; "9 sembol" için bir ekran
+   kaydırılıyor, bölümler arasında 400–500 piksellik boşlukta bağlam
+   kayboluyordu. Sahibi: "çok fazla boşluk ve okunması, takip etmesi çok
+   zor."
 
-   Derinlik tonla (surface → premium-surface), gölge yok; degrade yalnız
-   açılıştaki display başlıkta (.display-ink). */
+   YENİ DÜZEN: karne. Kapakta ad + iki cümle + küçük zil, altında en
+   önemli dört ölçü AYNI HATTA, sonra konular panel panel iki kolonda.
+   Boşluk esnetilmiyor: hiçbir blokta min-height yok, aralık hep 20
+   piksel (gap-5). Derinlik tonla (premium-surface → surface-sunken);
+   gölge, cam, ışıma yok. Degrade yalnız başlıkta (.display-ink). */
 
-.report {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  max-width: 760px;
-  margin-inline: auto;
-  width: 100%;
-}
+/* ---- Kapak: zil + kimlik ------------------------------------------------ */
 
-.opening {
+.cover {
   display: grid;
-  gap: 18px;
-  justify-items: start;
-  padding: 24px 0 40px;
-  border-bottom: 1px solid var(--line);
-}
-
-.scene {
-  width: min(280px, 70vw);
-  aspect-ratio: 4 / 3;
-}
-
-.chapter {
-  display: grid;
-  align-content: center;
-  gap: 10px;
-  min-height: min(72vh, 620px);
-  padding: 48px 0;
-  border-bottom: 1px solid var(--line-soft);
-}
-
-.chapter:last-child {
-  border-bottom: 0;
-}
-
-.index {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-muted);
-  letter-spacing: 0.04em;
-}
-
-.figure {
-  font-size: clamp(56px, 14vw, 112px);
-  font-weight: 900;
-  line-height: 0.95;
-  letter-spacing: -0.04em;
-  color: var(--text-strong);
-  font-variant-numeric: tabular-nums;
-}
-
-.figureUp {
-  color: var(--up);
-}
-
-.figureDown {
-  color: var(--down);
-}
-
-.unit {
-  font-size: 0.32em;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  margin-left: 0.18em;
-  color: var(--text-muted);
-}
-
-.title {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--text-strong);
-}
-
-.line {
-  max-width: 560px;
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--text-body);
-}
-
-.duo {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-  margin-top: 8px;
-}
-
-.duoCell {
-  display: grid;
-  gap: 6px;
-  align-content: start;
-}
-
-.duoLabel {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.duoValue {
-  font-size: clamp(28px, 7vw, 44px);
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-}
-
-.note {
-  margin-top: 6px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line-soft);
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--text-muted);
-}
-
-.links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  margin-top: 6px;
-}
-
-.links a {
-  display: inline-flex;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  min-height: 44px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--primary);
-  transition: color 0.2s var(--ease-brand);
+  gap: 4px 14px;
 }
 
-.links a:hover {
-  color: var(--primary-hover);
+/* Zil küçük: kahraman sahnesinin kutusu 160 × 150; 390'da 76 piksel
+   genişlik iki satırlık metnin boyuna oturuyor. Sahne bir kez oynar. */
+.mascot {
+  width: 76px;
+  aspect-ratio: 160 / 150;
 }
 
 @media (min-width: 640px) {
-  .links a {
-    min-height: 0;
+  .mascot {
+    width: 92px;
   }
+}
+
+.coverText {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.name {
+  font-size: var(--text-title);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-strong);
+  overflow-wrap: anywhere;
+}
+
+.coverLine {
+  max-width: 68ch;
+  font-size: var(--text-read);
+  line-height: 1.55;
+  color: var(--text-body);
+  text-wrap: pretty;
+}
+
+/* ---- Ölçü ızgarası ------------------------------------------------------ */
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+@media (min-width: 900px) {
+  .figures[data-count="3"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .figures[data-count="4"] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Telefonda üçüncü hücre iki sütunun altında yalnız kalıyordu; tam satır. */
+@media (max-width: 899px) {
+  .figures[data-count="3"] > :nth-child(3) {
+    grid-column: 1 / -1;
+  }
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 14px 14px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--premium-surface);
+}
+
+.figureLabel {
+  margin: 0;
+  font-size: var(--text-small);
+  font-weight: 650;
+  color: var(--text-body);
+}
+
+/* Değer kutunun dibinde: etiketler farklı uzunlukta olsa da sayılar aynı
+   hatta biter (ekran düzeni 4). Alt künye değerin ALTINDA, o da dipte. */
+.figureValue {
+  margin: auto 0 0;
+  font-size: clamp(1.45rem, 6.4vw, 2rem);
+  font-weight: 850;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
+.figureValue[data-dir="up"] {
+  color: var(--up);
+}
+
+.figureValue[data-dir="down"] {
+  color: var(--down);
+}
+
+.figureUnit {
+  font-size: 0.5em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-muted);
+}
+
+/* Künye kesilmez, gerekirse ikinci satıra iner (390'da "Başlangıç 1 Ağu
+   2026" hücreye sığıyor; İngilizce uzun ay adında kırılabilir). */
+.figureSub {
+  font-size: var(--text-tiny);
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+/* ---- Paneller: telefonda tek akış, genişte iki dengeli kolon ------------ */
+
+.panels {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Telefonda kolon kutusu yok sayılıyor ve paneller mantıksal sırayla
+   (`order`) tek akışa diziliyor; dengeleyicinin sol/sağ dağılımı yalnız
+   genişte görünür. */
+.column {
+  display: contents;
+}
+
+@media (min-width: 1024px) {
+  .panels[data-cols="2"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+  }
+
+  /* Plandaki tam genişlik paneli (lib/report-summary.ts → planColumns):
+     iki kolonun altında, ikisini birden kaplar. */
+  .panels[data-cols="2"] .full {
+    grid-column: 1 / -1;
+  }
+}
+
+.full {
+  min-width: 0;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 2px 16px 16px;
+}
+
+@media (min-width: 640px) {
+  .body {
+    padding: 2px 20px 18px;
+  }
+}
+
+.lead {
+  font-size: var(--text-read);
+  line-height: 1.55;
+  color: var(--text-body);
+  text-wrap: pretty;
+}
+
+/* Künye ve uyarılar panelin İÇİNDE, hairline üstünde (ekran düzeni 6). */
+.note {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+  font-size: var(--text-tiny);
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+/* ---- Portföy ------------------------------------------------------------ */
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.pairCell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pairLabel {
+  font-size: var(--text-tiny);
+  font-weight: 650;
+  color: var(--text-muted);
+}
+
+.pairValue {
+  margin-top: auto;
+  font-size: var(--text-heading);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.subhead {
+  font-size: var(--text-tiny);
+  font-weight: 650;
+  color: var(--text-muted);
+}
+
+.extremes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.extreme {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 2px 10px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  transition: background-color 0.2s var(--ease-brand);
+}
+
+.extreme:hover {
+  background: var(--primary-wash);
+}
+
+.extremeLogo {
+  grid-row: 1 / span 2;
+}
+
+/* Etiket kesilmez: "En Çok Kazandıran" 390'da hücreye sığmıyordu. */
+.extremeLabel {
+  font-size: var(--text-tiny);
+  line-height: 1.3;
+  color: var(--text-muted);
+}
+
+.extremeFigures {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--text-read);
+  font-weight: 700;
+  /* Sayı gövde ailesinde, tnum'suz (globals.css "Sayısal okumalar"):
+     Schibsted'in tnum'u virgülü rakam genişliğine çekip "−%0,8"i
+     "− % 0 , 8" diye mono gibi yazıyordu. */
+  letter-spacing: -0.02em;
+}
+
+.extremeSymbol {
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  color: var(--text-strong);
+}
+
+/* ---- Takip şeridi ------------------------------------------------------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px 0 8px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  font-weight: 650;
+  color: var(--text-strong);
+  transition: background-color 0.2s var(--ease-brand), color 0.2s var(--ease-brand);
+}
+
+.chip:hover {
+  background: var(--primary-wash);
+  color: var(--primary-ink);
+}
+
+.chipMore {
+  padding-inline: 12px;
+  font-family: inherit;
+  color: var(--primary);
+}
+
+@media (min-width: 640px) {
+  .chip {
+    min-height: 36px;
+  }
+}
+
+/* ---- Alarmlar ----------------------------------------------------------- */
+
+.ratio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.ratioValue {
+  font-size: var(--text-heading);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
+/* ---- Yazılar ------------------------------------------------------------ */
+
+.posts {
+  display: flex;
+  flex-direction: column;
+}
+
+.posts li + li {
+  border-top: 1px solid var(--line-soft);
+}
+
+.postLink {
+  display: grid;
+  gap: 2px;
+  padding: 10px 0;
+}
+
+.postTitle {
+  font-size: var(--text-read);
+  font-weight: 650;
+  color: var(--text-strong);
+  transition: color 0.2s var(--ease-brand);
+}
+
+.postLink:hover .postTitle {
+  color: var(--primary);
+}
+
+.postDate {
+  font-size: var(--text-tiny);
+  color: var(--text-muted);
+}
+
+/* ---- Sıradaki ----------------------------------------------------------- */
+
+.steps {
+  display: grid;
+  gap: 8px;
+}
+
+@media (min-width: 768px) {
+  .steps[data-wide] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  transition: background-color 0.2s var(--ease-brand);
+}
+
+.step:hover {
+  background: var(--primary-wash);
+}
+
+.stepIcon {
+  color: var(--primary);
+}
+
+.stepText {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.stepTitle {
+  font-size: var(--text-read);
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.stepHint {
+  font-size: var(--text-tiny);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.stepCaret {
+  color: var(--text-muted);
+  transition: translate 0.2s var(--ease-brand), color 0.2s var(--ease-brand);
+}
+
+.step:hover .stepCaret {
+  translate: 2px 0;
+  color: var(--primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .extreme,
+  .chip,
+  .step,
+  .stepCaret,
+  .postTitle {
+    transition: none;
+  }
+
+  .step:hover .stepCaret {
+    translate: none;
+  }
+}
+
+/* ---- Hücre çizimleri (25 Ekim, "sayıları yalnız yazma, çiz") ----------
+   Her hücrede aynı yükseklikte kutu: değerler ve alt künyeler iki hücrede
+   de aynı hatta kalır, çizim olmayan hücre de aynı boşluğu taşır. */
+
+.figureVisual {
+  display: flex;
+  align-items: flex-end;
+  height: 26px;
+  min-width: 0;
+}
+
+.months {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  width: 100%;
+}
+
+.month {
+  display: grid;
+  flex: 1;
+  max-width: 72px;
+  gap: 3px;
+  min-width: 0;
+}
+
+.lane {
+  display: block;
+  height: var(--lane-h, 5px);
+  border-radius: 999px;
+  background: var(--line-soft);
+  overflow: hidden;
+}
+
+.laneFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  /* Büyüklük yumuşak mavide (25 Ekim renk kararı); doygun mavi etkileşimin. */
+  background: var(--bar-soft);
+  transform-origin: left center;
+}
+
+.monthName {
+  font-size: var(--text-nano);
+  line-height: 1;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.weeks {
+  display: block;
+  width: 100%;
+  height: 22px;
+}
+
+.weekLane {
+  fill: var(--line-soft);
+}
+
+.weekFill {
+  fill: var(--bar-soft);
+}
+
+.dots {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.dot,
+.dotOn {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.dot {
+  border: 1.5px solid var(--line-strong);
+}
+
+.dotOn {
+  background: var(--bar-soft);
+}
+
+.mini {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+}
+
+.miniRow {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+}
+
+.miniLabel {
+  font-size: var(--text-nano);
+  line-height: 1;
+  font-weight: 650;
+  color: var(--text-muted);
+}
+
+.stack {
+  display: flex;
+  align-items: center;
+}
+
+/* Üst üste binen karoları ayıran halka zeminin rengi — gölge değil. */
+.stackTile {
+  outline: 2px solid var(--premium-surface);
+}
+
+.stackTile + .stackTile {
+  margin-left: -4px;
 }

@@ -119,15 +119,36 @@
 .rowStatus { grid-column:2; grid-row:2; justify-self:end; }
 .status { display:inline-flex; align-items:center; gap:6px; padding:3px 9px 3px 8px; border-radius:999px; background:var(--st-wash); color:var(--st); font-size:12px; font-weight:650; white-space:nowrap; }
 .status::before { content:""; width:7px; height:7px; border-radius:50%; background:currentColor; }
+/* EŞİK KULVARI (25 Ekim) — gerekçe lib/screening-gauge.ts. Dar ekranda
+   satırın altında tam genişlik; geniş ekranda kural ile ölçü arasındaki
+   boş sütunda (1440'ta ~600 piksellik boşluktu). Kulvar 5 px, skor
+   kartının şeridiyle aynı kalınlık; eşik 2 px çentik, dikkat sınırı
+   yarım boy, değer 11 px nokta. Künye (eşiğin sayısı) çentiğin altında. */
+.lane { grid-column:1 / -1; position:relative; display:block; min-width:0; padding:4px 6px 16px; }
+.laneRail { position:relative; display:block; height:15px; container-type:inline-size; }
+.laneRail::before { content:""; position:absolute; inset-inline:-6px; top:50%; height:5px; margin-top:-2.5px; border-radius:999px; background:var(--rail-track,var(--line-soft)); }
+.laneZone { position:absolute; top:50%; height:5px; margin-top:-2.5px; background:color-mix(in srgb, var(--up) 16%, transparent); }
+.laneGap { position:absolute; top:50%; height:5px; margin-top:-2.5px; background:var(--st); }
+.lanePass { position:absolute; top:0; bottom:0; width:2px; margin-left:-1px; border-radius:1px; background:var(--text-strong); }
+.laneWarn { position:absolute; top:3px; bottom:3px; width:1.5px; margin-left:-.75px; border-radius:1px; background:var(--text-muted); }
+.laneDot { position:absolute; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border:2px solid var(--premium-surface,var(--surface-solid)); border-radius:999px; background:var(--text-strong); box-sizing:border-box; }
+.laneDot[data-clipped] { background:var(--premium-surface,var(--surface-solid)); box-shadow:inset 0 0 0 2px var(--text-strong); }
+.laneLabel { position:absolute; bottom:0; color:var(--text-muted); font-size:11px; line-height:1.2; white-space:nowrap; translate:-50% 0; }
+.laneLabel[data-align="start"] { translate:-6px 0; }
+.laneLabel[data-align="end"] { translate:calc(-100% + 6px) 0; }
+.gaugeNote { margin:4px 20px 0; padding:12px 0 18px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:12.5px; line-height:1.6; }
 @media (min-width:900px) {
-  .colHead { display:grid; grid-template-columns:minmax(0,1fr) 9rem 7.5rem; gap:16px; padding:12px 24px 0; font-size:12px; font-weight:600; color:var(--text-muted); }
+  .colHead { display:grid; grid-template-columns:minmax(0,1fr) minmax(12rem,1.1fr) 9rem 7.5rem; gap:16px 24px; padding:12px 24px 0; font-size:12px; font-weight:600; color:var(--text-muted); }
   .colHead span:not(:first-child) { text-align:right; }
+  .colHead span:nth-child(2) { text-align:center; }
   .groupHead { padding:18px 24px 6px; }
-  .row { grid-template-columns:minmax(0,1fr) 9rem 7.5rem; padding:12px 24px; }
+  .row { grid-template-columns:minmax(0,1fr) minmax(12rem,1.1fr) 9rem 7.5rem; column-gap:24px; padding:12px 24px; }
   .rowName { grid-column:1; grid-row:1; }
   .rowRule { grid-row:2; }
-  .rowValue { grid-column:2; grid-row:1 / span 2; }
-  .rowStatus { grid-column:3; grid-row:1 / span 2; }
+  .rowValue { grid-column:3; grid-row:1 / span 2; }
+  .rowStatus { grid-column:4; grid-row:1 / span 2; }
+  .lane { grid-column:2; grid-row:1 / span 2; align-self:center; padding-block:2px 14px; }
+  .gaugeNote { margin-inline:24px; }
 }
 
 /* ---------- Artılar, eksiler, sıradaki adımlar ---------- */
@@ -205,7 +226,8 @@
 .quickBand { color:var(--band); font-size:12px; font-weight:650; white-space:nowrap; }
 .mini { position:relative; width:46px; aspect-ratio:1; }
 .mini svg { display:block; width:100%; height:100%; transform:rotate(-90deg); }
-.mini .dialTrack,.mini .dialFill { stroke-width:5; }
+.mini .dialTrack,.mini .dialFill,.mini .dialSlice { stroke-width:5; }
+.dialSlice { fill:none; stroke:var(--band); }
 .mini b { position:absolute; inset:0; display:grid; place-items:center; color:var(--text-strong); font-size:14px; font-weight:650; font-variant-numeric:tabular-nums; }
 .quickNote { margin:0 20px; padding:14px 0 18px; border-top:1px solid var(--line); color:var(--text-muted); font-size:13px; line-height:1.6; }
 @media (min-width:900px) { .quickNote { margin:0 24px; } }

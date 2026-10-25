@@ -367,7 +367,9 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 /* FİYAT CETVELİ (24 Eylül) — gerekçe MovingAverages'ta. Simetrik sapma
    izleri ve onların −/0/+ ölçek satırı kalktı; cetvel kartın üstünde,
    kesin değerler altındaki listede. */
-.averagesRail { margin:4px 0 6px; }
+/* Fiyat noktası veri, etkileşim değil (25 Ekim son düzeltme, renk
+   kararı): nötr mürekkep; PriceRail'in `--rail-live` kancası. */
+.averagesRail { --rail-live:var(--text-strong); margin:4px 0 6px; }
 .averageRow { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:4px 10px; padding:6px 0; border-top:1px solid var(--line-soft); }
 .averageRow dt { color:var(--text-strong); font-size:12px; font-weight:600; line-height:1.4; }
 .averageRow dd, .averageRow dd span { line-height:1.4; }

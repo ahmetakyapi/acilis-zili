@@ -24,6 +24,17 @@
    (20/16cqi) değişmedi: tavanın altındaki genişliklerde sonuç aynı. */
 .countdown { display:flex; flex-wrap:nowrap; align-items:baseline; gap:0 .2em; font-size:clamp(48px,20cqi,120px); font-weight:600; line-height:.86; letter-spacing:-.055em; color:var(--text-strong); }
 .countdown[data-days="true"] { font-size:clamp(38px,16cqi,110px); }
+/* GÜNLÜ SAYAÇ DAR KOLONDA TAŞIYORDU (25 Ekim, son inceleme). Dört grup ve
+   TR birimleri ("gün", "sa", "dk", "sn") 16cqi'de kolonun ~%103'ü: 390'da
+   "sn" içerik kutusundan 9, 320'de 18 (38'lik taban devrede), 768'de 8
+   piksel taşıyordu, 1024'te 1 piksel payla sığıyordu; EN birimleri tek
+   harf olduğu için sığıyordu. 600 pikselin altındaki kolonda (telefon,
+   768, 1024) oran 14,6cqi, taban 34. Ölçüm (hafta sonu, günlü sayaç,
+   TR/EN, 320–1440): en dar pay 320'de 1 piksel, 390'da 15; 1440'ta
+   punto aynı (tavan 110). */
+@container hero-copy (max-width:600px) {
+  .countdown[data-days="true"] { font-size:clamp(34px,14.6cqi,110px); }
+}
 .group { display:inline-flex; align-items:baseline; gap:.06em; min-width:0; }
 /* Satır yüksekliği .86 yazı kutusunun altında; pencere duran rakamın
    mürekkebini KIRPMIYOR (`overflow-clip-margin`), yalnızca yuvarlanan
@@ -41,8 +52,25 @@
    Giriş yaylı (hafifçe aşıp oturuyor), çıkış düz: gelen rakam "varıyor",
    giden yalnızca yol veriyor. Gerekçe Countdown.tsx → RollingDigit. */
 .digit { position:relative; display:inline-block; transition:color 300ms var(--ease-brand); }
+/* TAM YOL, AYNI EĞRİ (25 Ekim). Rakamlar kutularının %62'si kadar
+   yürüyordu ve giden 300 ms düz, gelen 420 ms yaylı eğriyle: pencere
+   (.86em kutu + .04em dolgu + .08em kırpma payı = 1,1em) yolun iki ucunu
+   da gösterdiği için geçişin ortasında iki rakam yarı saydam, üst üste
+   duruyordu — sahibinin telefonunda "31" yerine "3" ve yanında soluk
+   "1/0" şeridi (WebKit 26.6'da ara kareye sarılarak yeniden üretildi; kırpma
+   çalışıyordu, yol kısaydı). Şimdi yol %120 (1,03em): giden rakamın kutusu
+   pencerenin kırpma çizgisinin .05em üstüne, gelen .05em altına kadar
+   gidiyor, yani yolun ucunda ikisi de tamamen görünmez. İkisi aynı süre ve
+   eğride, kenetli yürüyor: aralarındaki mesafe hep 1,03em, kutu .86em —
+   hiçbir karede üst üste binmiyorlar. Saydamlık geçişi kalktı; rakamı
+   kırpma gizliyor, soluk rakam görünmüyor. Yay yalnız tek küçük öğenin
+   geri bildiriminde kuralı (CLAUDE.md) burada geçerli: sayaç rakamı. */
 .digitIn { display:inline-block; animation:digit-in 420ms var(--ease-spring-soft) both; }
-.digitOut { position:absolute; left:0; top:0; animation:digit-out 300ms var(--ease-brand) both; }
+.digitOut { position:absolute; left:0; top:0; animation:digit-out 420ms var(--ease-spring-soft) both; }
+/* Giden rakamın glifi CSS'ten: geçiş sürerken de belgenin metni yalnız
+   güncel sayı (ui/RollingFigure'ün 24 Ekim kararı, "GÖRSEL RAKAMLAR DOM
+   METNİ DEĞİL"); `textContent` "443" yerine "43" okuyor. */
+.digitOut::before { content:attr(data-c); }
 /* Tek canlı vurgu saniye: değişen tek grup o. */
 .group:last-child .digit { color:var(--primary); }
 .suffix { font-size:max(12px,.19em); font-weight:600; letter-spacing:0; color:var(--text-muted); }
@@ -61,16 +89,16 @@
 .group:nth-child(4) { --boot-group:390ms; }
 .digit + .digit { --boot-place:45ms; }
 @keyframes digit-boot { from { transform:translateY(55%); } to { transform:none; } }
-@keyframes digit-in { from { opacity:0; transform:translateY(62%); } to { opacity:1; transform:translateY(0); } }
-@keyframes digit-out { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-62%); } }
+@keyframes digit-in { from { transform:translateY(120%); } to { transform:translateY(0); } }
+@keyframes digit-out { from { transform:translateY(0); } to { transform:translateY(-120%); } }
 /* SON ON SANİYE — saniye rakamı her tikte bir kalp gibi atıyor: yaylı
    giriş, bir tık büyüyüp oturma. Sayaç "yaklaşıyor" demeye başlıyor.
    Gerekçe Countdown.tsx → "ZİL ANI". */
 .countdown[data-phase="final"] .group:last-child .digitIn { animation:digit-beat 520ms var(--ease-spring) both; }
 @keyframes digit-beat {
-  from { opacity:0; transform:translateY(62%) scale(1); }
-  55% { opacity:1; transform:translateY(0) scale(1.1); }
-  to { opacity:1; transform:translateY(0) scale(1); }
+  from { transform:translateY(120%) scale(1); }
+  55% { transform:translateY(0) scale(1.1); }
+  to { transform:translateY(0) scale(1); }
 }
 /* SIFIR — rakamlar PİRİNCE döner; çalan şey kahramanın kendi zili
    (HeroBell, BELL_RANG_EVENT — gerekçe Countdown.tsx "ZİL ANI"). Pirinç

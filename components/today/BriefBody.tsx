@@ -1,6 +1,9 @@
+import type { ReactNode } from "react";
 import { briefPhoneCut, briefPreviewCut, headingOf } from "@/lib/brief";
+import { splitLedgerRefs, type LedgerRef } from "@/lib/brief-ledger";
 import { cn } from "@/lib/utils";
 import styles from "./BriefBody.module.css";
+import ledgerStyles from "./BriefLedger.module.css";
 
 /**
  * Günlük bülten gövdesi için mini biçimlendirici — tam markdown değil,
@@ -28,6 +31,11 @@ import styles from "./BriefBody.module.css";
  * maddesi 07 değil 01 olmalı.
  */
 
+/** Bölüm başlığının çapası — dizindeki bağlantı buraya gider. */
+function sectionId(n: number) {
+  return `bolum-${n}`;
+}
+
 /** Son başlıktan bu yana kaç madde var — katlanan kısım oradan devam eder. */
 function bulletsSinceLastHeading(lines: string[]): number {
   let count = 0;
@@ -49,11 +57,28 @@ function bulletsSinceLastHeading(lines: string[]): number {
    italik sayılıyor ("5 * 3" gibi bir çarpma dokunulmadan kalır). */
 const INLINE_MARK = /(\*\*[^*]+\*\*|(?<![\w*])\*(?=\S)[^*]+?(?<=\S)\*(?![\w*]))/g;
 
-function renderInline(text: string, keyPrefix: string) {
+/* KAYIT DEFTERİ BAĞI (25 Ekim). Bant basıldıysa metindeki endeks, ölçü ve
+   hisse geçişleri (ardındaki yüzdeyle) bandın öğesine bağlanıyor: üstüne
+   gelince ya da dokununca bandın özeti açılıyor (`LedgerLinker`). Bağ düz
+   bir `span` — sayfa sunucuda çiziliyor, olaylar kapta yakalanıyor. */
+function linkRefs(text: string, keyPrefix: string, refs?: readonly LedgerRef[]): ReactNode {
+  if (!refs || refs.length === 0) return text;
+  return splitLedgerRefs(text, refs).map((piece, i) =>
+    typeof piece === "string" ? (
+      piece
+    ) : (
+      <span key={`${keyPrefix}-r${i}`} data-ledger-ref={piece.key} className={ledgerStyles.ref}>
+        {piece.text}
+      </span>
+    ),
+  );
+}
+
+function renderInline(text: string, keyPrefix: string, refs?: readonly LedgerRef[]) {
   return text.split(INLINE_MARK).map((part, i) =>
     part.startsWith("*") && !part.startsWith("**") && part.endsWith("*") && part.length > 2 ? (
       <em key={`${keyPrefix}-${i}`} className="italic">
-        {part.slice(1, -1)}
+        {linkRefs(part.slice(1, -1), `${keyPrefix}-${i}`, refs)}
       </em>
     ) : part.startsWith("**") && part.endsWith("**") ? (
       /* ALT BAŞLIK AĞIRLIKLA AYRIŞIYOR, PUNTOYLA DEĞİL. Bülten
@@ -64,10 +89,10 @@ function renderInline(text: string, keyPrefix: string) {
          basamaklı görünürdü. Ayrım bu yüzden 700 ağırlıkla kuruluyor;
          gövde de bir basamak büyüdüğü için ibare zaten daha iri. */
       <strong key={`${keyPrefix}-${i}`} className="font-bold text-strong">
-        {part.slice(2, -2)}
+        {linkRefs(part.slice(2, -2), `${keyPrefix}-${i}`, refs)}
       </strong>
     ) : (
-      <span key={`${keyPrefix}-${i}`}>{part}</span>
+      <span key={`${keyPrefix}-${i}`}>{linkRefs(part, `${keyPrefix}-${i}`, refs)}</span>
     ),
   );
 }
@@ -79,8 +104,11 @@ function BriefLines({
   phoneHideFrom,
   phoneOnlyBefore = 0,
   allowLede = startNumber === 1,
+  refs,
 }: {
   lines: string[];
+  /** Kayıt Defteri bağları — yalnız bülten sayfası. */
+  refs?: readonly LedgerRef[];
   startNumber: number;
   size: BriefSize;
   /** Bu sıradan itibaren satırlar telefonda (≤767) gizli — kesmenin
@@ -98,9 +126,11 @@ function BriefLines({
      Her bölüm başlığında sayaç sıfırlanır: "Bu Hafta"nın ilk maddesi
      "Geçen Hafta"nın devamı değil, kendi listesinin başıdır. */
   const bulletNumberOf = new Map<number, number>();
+  const headingNumberOf = new Map<number, number>();
   let counter = startNumber;
   lines.forEach((line, index) => {
     if (headingOf(line)) {
+      headingNumberOf.set(index, headingNumberOf.size + 1);
       counter = 1;
       return;
     }
@@ -192,14 +222,17 @@ function BriefLines({
           return (
             <h3
               key={index}
+              id={size === "page" ? sectionId(headingNumberOf.get(index) ?? 0) : undefined}
               className={cn(
+                size === "page" && "scroll-mt-24",
                 phoneClass(index),
                 "display-ink display-ink-tight w-fit font-bold tracking-[-0.02em] text-strong",
                 // İlk başlık üstten boşluk almaz; sonrakiler bölümleri ayırır.
                 index > 0 && (size === "page" ? "mt-3" : "mt-1.5"),
-                /* İki yüzeyde de aynı basamak: gövde 14 punto, başlık 16.
-                   Kartta 13'tü ve gövdeyle aynı boya gelmişti. */
-                "text-lead",
+                /* Kartta gövde 14, başlık 16. Sayfada gövde 18 punto ve
+                   16'lık başlık gövdeden KÜÇÜK kalıyordu: ara başlık bir
+                   basamak büyüyor (19/24, 25 Ekim). */
+                size === "page" ? "text-title sm:text-heading" : "text-lead",
               )}
             >
               {heading}
@@ -213,7 +246,7 @@ function BriefLines({
               <span className="numeral shrink-0 font-bold text-primary">
                 {String(bulletNumberOf.get(index) ?? startNumber).padStart(2, "0")}
               </span>
-              <span>{renderInline(trimmed.slice(2), String(index))}</span>
+              <span>{renderInline(trimmed.slice(2), String(index), refs)}</span>
             </p>
           );
         }
@@ -228,13 +261,13 @@ function BriefLines({
                   : "text-[1.0625rem] font-medium leading-[27px] tracking-[-0.01em] text-strong",
               )}
             >
-              {renderInline(trimmed, String(index))}
+              {renderInline(trimmed, String(index), refs)}
             </p>
           );
         }
         return (
           <p key={index} className={cn(phoneClass(index), "text-body", text, size !== "page" && styles.beat)}>
-            {renderInline(trimmed, String(index))}
+            {renderInline(trimmed, String(index), refs)}
           </p>
         );
       })}
@@ -279,6 +312,8 @@ export function BriefBody({
   size = "card",
   openLines = OPEN_LINES,
   phonePreview = false,
+  refs,
+  tocLabel,
 }: {
   markdown: string;
   /** `collapsible` iken katlanmış bölümün açma etiketi. */
@@ -292,11 +327,43 @@ export function BriefBody({
   openLines?: number;
   /** Telefonda (≤767) daha kısa ikinci bir önizleme — ana sayfa kartı. */
   phonePreview?: boolean;
+  /** Kayıt Defteri bağları (`ledgerRefs`) — bant basıldıysa. */
+  refs?: readonly LedgerRef[];
+  /** Verilirse ve sayıda iki ya da daha çok ara başlık varsa bölüm dizini. */
+  tocLabel?: string;
 }) {
   const lines = markdown.split("\n").filter((line) => line.trim());
 
   if (!collapsible) {
-    return <BriefLines lines={lines} startNumber={1} size={size} />;
+    /* BÖLÜM DİZİNİ (25 Ekim). Haftalık sayı iki bölümlü ("Geçen Hafta",
+       "Bu Hafta") ve sayfada ekranlarca uzun; ikinci bölüm kaydırmadan
+       görünmüyordu. Dizin yalnız iki ve daha çok ara başlıkta: tek başlıklı
+       bir dizin kendini tekrar eder. Ara başlık UYDURULMAZ — günlük sayı
+       başlıksız yazılıyorsa dizin yok. */
+    const headings = lines.map(headingOf).filter((heading): heading is string => Boolean(heading));
+    return (
+      <>
+        {tocLabel && headings.length >= 2 && (
+          <nav aria-label={tocLabel} className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 border-y border-primary-faint py-2">
+            <span className="text-tiny font-semibold text-muted">{tocLabel}</span>
+            <ol className="flex flex-wrap gap-x-1 gap-y-1">
+              {headings.map((heading, index) => (
+                <li key={index}>
+                  <a
+                    href={`#${sectionId(index + 1)}`}
+                    className="inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-small font-semibold text-primary transition-colors hover:bg-primary-tint hover:text-primary-hover sm:min-h-8"
+                  >
+                    <span className="numeral text-nano text-muted">{String(index + 1).padStart(2, "0")}</span>
+                    {heading}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )}
+        <BriefLines lines={lines} startNumber={1} size={size} refs={refs} />
+      </>
+    );
   }
 
   /* 7 Eylül: dört dolu satır, iki paragraf + listenin ilk iki maddesi
@@ -330,6 +397,7 @@ export function BriefBody({
         startNumber={1}
         size={size}
         phoneHideFrom={phoneSplit ? phoneCut : undefined}
+        refs={refs}
       />
       {foldFrom < lines.length && (
         /* Katlanan kısmın numarası, açıkta kalan kısmın SON BAŞLIĞINDAN
@@ -356,6 +424,7 @@ export function BriefBody({
             size={size}
             phoneOnlyBefore={cut - foldFrom}
             allowLede={bulletsSinceLastHeading(lines.slice(0, cut)) === 0}
+            refs={refs}
           />
         </details>
       )}

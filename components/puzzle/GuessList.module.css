@@ -1,0 +1,84 @@
+/* Tahmin satırları — gerekçe GuessList.tsx.
+   Renk anlamı (renk kararı, 25 Ekim): tutuyor = `--up` ailesinin yumuşak
+   tonu, yakın = `--brass` ailesi, uzak = nötr ton. Ok yön, renk değil.
+   Geniş panelde (≥ 500) şirket ve dört karo tek satır; darda şirket üstte,
+   karolar altında dört kolon — sütun başlıkları iki düzende de karoların
+   hizasında tek kez. */
+
+.list { container-type:inline-size; min-width:0; }
+
+.head, .row { display:grid; grid-template-columns:minmax(0,1fr); gap:.375rem .5rem; }
+.head { margin-bottom:.375rem; }
+.headCompany { display:none; }
+.head .tiles span { font-size:var(--text-micro); font-weight:600; color:var(--text-muted); text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tiles { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.3125rem; min-width:0; }
+@container (min-width: 500px) {
+  .head, .row { grid-template-columns:minmax(0,1.35fr) minmax(0,3fr); align-items:center; }
+  .headCompany { display:block; }
+}
+
+.rows { display:flex; flex-direction:column; gap:.5rem; margin:0; padding:0; list-style:none; }
+.row { padding:.4375rem; border-radius:var(--radius-md); }
+.correct { background:var(--up-wash); }
+.company { display:flex; align-items:center; gap:.5rem; min-width:0; }
+.names { display:flex; flex-direction:column; min-width:0; line-height:1.2; }
+.symbol { font-family:var(--font-mono); font-size:var(--text-small); font-weight:600; color:var(--text-strong); }
+.name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--text-tiny); color:var(--text-muted); }
+.verdict { margin-left:auto; flex:none; }
+.check { display:grid; place-items:center; width:1.375rem; height:1.375rem; border-radius:999px; background:var(--up); color:var(--premium-surface); }
+
+/* Karo: 44 px yükseklik (dokunulmuyor ama satırın ritmi), değer + ok. */
+.tile { position:relative; display:flex; align-items:center; justify-content:center; gap:.1875rem; min-width:0; min-height:2.75rem; padding:.25rem .3125rem; border-radius:var(--radius-sm); background:var(--surface-sunken); color:var(--text-body); text-align:center; }
+.tile[data-grade="match"] { background:var(--up-wash); color:var(--up); }
+.tile[data-grade="near"] { background:var(--brass-wash); color:var(--brass-ink); }
+.tile[data-grade="none"] { background:transparent; border:1px dashed var(--line); color:var(--text-muted); }
+.tileValue { min-width:0; font-size:var(--text-tiny); font-weight:700; line-height:1.15; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+.tileEmpty { font-weight:500; }
+.arrow { flex:none; }
+
+/* ---- Kalan haklar: tek ince şerit ---- */
+.slots { display:flex; align-items:center; gap:.75rem; margin-top:.75rem; }
+.slotBars { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:4px; flex:1; }
+.slotBar { height:var(--lane-h, 5px); border-radius:999px; background:var(--line-soft); }
+.slotLabel { flex:none; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
+
+/* ---- Lejant ---- */
+.legend { margin-top:1rem; padding-top:.75rem; border-top:1px solid var(--line-soft); }
+.keys { display:flex; flex-wrap:wrap; gap:.375rem 1rem; margin:0; padding:0; list-style:none; font-size:var(--text-tiny); font-weight:600; color:var(--text-body); }
+.keys li { display:inline-flex; align-items:center; gap:.375rem; }
+.swatch { width:.875rem; height:.875rem; border-radius:4px; background:var(--surface-sunken); border:1px solid var(--line); }
+.swatch[data-grade="match"] { background:var(--up-wash); border-color:var(--up); }
+.swatch[data-grade="near"] { background:var(--brass-wash); border-color:var(--brass); }
+.legendNote { margin:.5rem 0 0; font-size:var(--text-tiny); line-height:1.5; color:var(--text-muted); }
+
+/* ---- Giriş: son satırın karoları sırayla çevrilir ---- */
+@media (prefers-reduced-motion: no-preference) {
+  .fresh .company { animation:row-in 360ms var(--ease-brand) both; }
+  .fresh .tile { animation:tile-flip 560ms var(--ease-spring-soft) both; animation-delay:calc(var(--i, 0) * 110ms + 160ms); }
+  .fresh .close { animation:check-in 420ms var(--ease-spring-soft) 700ms both; }
+  .jokerRow.fresh { animation:row-in 360ms var(--ease-brand) both; }
+  .fresh.correct .check { animation:check-in 480ms var(--ease-spring) 620ms both; }
+}
+@keyframes row-in {
+  from { opacity:0; transform:translateY(4px); }
+  to { opacity:1; transform:none; }
+}
+@keyframes tile-flip {
+  from { opacity:0; transform:perspective(400px) rotateX(-90deg); }
+  to { opacity:1; transform:none; }
+}
+@keyframes check-in {
+  from { opacity:0; transform:scale(.4); }
+  to { opacity:1; transform:scale(1); }
+}
+
+/* "Çok Yakın!" — pirinç: yakın demek, karolardaki "yakın"la aynı aile. */
+.close { margin-left:auto; flex:none; padding:.125rem .5rem; border-radius:999px; background:var(--brass-wash); color:var(--brass-ink); font-size:var(--text-micro); font-weight:700; white-space:nowrap; }
+.verdict + .close { margin-left:.375rem; }
+.jokerRow { display:flex; align-items:center; gap:.5rem; min-height:2.75rem; padding:0 .75rem; border-radius:var(--radius-md); border:1px dashed var(--line-strong); font-size:var(--text-small); font-weight:600; color:var(--text-muted); }
+
+/* Dar panelde (telefon) ok değerin altına iner: "+%14,2" ikiye bölünmesin. */
+@container (max-width: 499.98px) {
+  .tile { flex-direction:column; gap:.125rem; padding:.3125rem .25rem; }
+  .tileValue { font-size:var(--text-micro); }
+}

@@ -1,5 +1,5 @@
 import { Rss } from "@phosphor-icons/react/dist/ssr";
-import { LatestRelease, MonthPanel, OlderMonths } from "@/components/changelog/ChangelogParts";
+import { LatestRelease, MonthPanel, ReleaseStrip } from "@/components/changelog/ChangelogParts";
 import { MarkChangelogSeen } from "@/components/changelog/ChangelogBadge";
 import { RevealHashTarget } from "@/components/changelog/RevealHashTarget";
 import styles from "@/components/changelog/Changelog.module.css";
@@ -13,13 +13,12 @@ import {
   changelogEntries,
   filterEntries,
   groupByMonth,
+  monthTicks,
+  releaseTimeline,
   kindCounts,
-  monthAnchor,
   parseKind,
-  splitOpenMonths,
   type ChangeKind,
 } from "@/lib/changelog";
-import { formatIsoMonth } from "@/lib/fx";
 import { getI18n } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
 import { pageMetadata } from "@/lib/page-meta";
@@ -39,9 +38,6 @@ export const generateMetadata = pageMetadata({
   },
 });
 
-/** Açık kalan girişlerin tabanı — en yeni ay buna ulaşmazsa bir önceki ay da açılır. */
-const OPEN_MIN_ENTRIES = 6;
-
 /**
  * /yenilikler — SİTENİN DEĞİŞİKLİK GEÇMİŞİ (25 Ekim, sahibinin isteği:
  * "neler eklendi gibisinden, geçmişi de kapsasın, kullanıcılar yeni
@@ -51,8 +47,11 @@ const OPEN_MIN_ENTRIES = 6;
  * sunucuda, veritabanı ve sağlayıcı çağrısı yok.
  *
  * Ekran düzeni (CLAUDE.md):
- *   başlık (sağda tek denetim: RSS) → en son sürüm (ana görsel; dibinde
- *   kapsam künyesi) → süzgeç + ay dizini → aylar → "Daha Eski" katlaması.
+ *   başlık (sağda tek denetim: RSS) → sürüm şeridi (künye şeridi: her
+ *   sürüm bir nokta, altında üç sayı) → en son sürüm (ana görsel; alanlara
+ *   göre gruplu kompakt karolar, dibinde kapsam künyesi) → süzgeç → aylar
+ *   (her giriş tek satır, katlı). Yeniden düzen 25 Ekim — gerekçe
+ *   ChangelogParts.tsx başı.
  *   DataStamp yok: veri değil, yazılı geçmiş — tarih her girişin kendisinde.
  *   GuideHint yok: rehberde bu sayfanın sorusunu açan yazı yok.
  *
@@ -74,7 +73,10 @@ export default async function ChangelogPage(props: PageProps<"/yenilikler">) {
   const shown = filterEntries(all, kind);
   const latest = shown[0]?.date === all[0].date ? shown[0] : null;
   const months = groupByMonth(latest ? shown.slice(1) : shown);
-  const { open, folded } = splitOpenMonths(months, OPEN_MIN_ENTRIES);
+  /* Şerit süzgeçten bağımsız: sürüm akışının tamamı (süzgeç maddeyi
+     süzer, sürümü değil). */
+  const points = releaseTimeline(all);
+  const totals = { releases: all.length, items: counts.all, updated: all[0].date };
 
   const filterHref = (next: ChangeKind | null) =>
     withLocale(next ? `/yenilikler?tur=${next}` : "/yenilikler", locale);
@@ -85,6 +87,7 @@ export default async function ChangelogPage(props: PageProps<"/yenilikler">) {
       <MarkChangelogSeen latest={LATEST_CHANGE_DATE} />
       <RevealHashTarget />
       <PageHeader
+        className={styles.masthead}
         title={L.title}
         subtitle={L.subtitle}
         action={
@@ -99,6 +102,8 @@ export default async function ChangelogPage(props: PageProps<"/yenilikler">) {
           </a>
         }
       />
+
+      <ReleaseStrip points={points} ticks={monthTicks(points)} totals={totals} locale={locale} L={L} />
 
       {latest && <LatestRelease entry={latest} locale={locale} L={L} />}
 
@@ -119,19 +124,6 @@ export default async function ChangelogPage(props: PageProps<"/yenilikler">) {
             ))}
           </ScrollEdges>
         </div>
-        {months.length > 0 && (
-          <nav className={styles.toolGroup} aria-label={L.monthsLabel}>
-            <ScrollEdges className="no-scrollbar -mx-4 flex max-w-full gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-              {months.map((month) => (
-                /* Düz `<a>`: sayfa içi çapa, gezinme değil. Katlamadaki aya
-                   giden çapayı `RevealHashTarget` açar. */
-                <a key={month.month} href={`#${monthAnchor(month.month)}`} className={styles.monthLink}>
-                  {formatIsoMonth(month.month, locale)}
-                </a>
-              ))}
-            </ScrollEdges>
-          </nav>
-        )}
       </div>
 
       {shown.length === 0 ? (
@@ -148,10 +140,9 @@ export default async function ChangelogPage(props: PageProps<"/yenilikler">) {
         </Panel>
       ) : (
         <>
-          {open.map((month) => (
+          {months.map((month) => (
             <MonthPanel key={month.month} month={month} locale={locale} L={L} />
           ))}
-          <OlderMonths months={folded} locale={locale} L={L} />
         </>
       )}
     </MotionExperience>

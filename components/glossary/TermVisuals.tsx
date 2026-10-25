@@ -2,7 +2,9 @@ import type { CSSProperties } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import type { GlossaryConcept } from "@/content/glossary/visuals";
 import type { GlossaryMotif } from "@/content/glossary/marks";
+import type { GlossaryFormula } from "@/content/glossary/formulas";
 import { TermMark } from "./TermMark";
+import { formulaText, TermDial, type FormulaLabels } from "./TermFormula";
 import styles from "./Glossary.module.css";
 
 /* ==========================================================================
@@ -25,7 +27,28 @@ export type NetworkNode = {
   motif: GlossaryMotif;
   /** Başka kategorideyse onun adı; aynı kategorideyse boş. */
   category: string | null;
+  /** Formül ya da kadran — düğümde formülün tek satırı, kadranlı terimde karo kadran. */
+  formula?: GlossaryFormula;
 };
+
+/** Düğümün ve merkezin karosu: kadranlı terimde kadran, kalanında kavram işareti. */
+function NodeMark({
+  motif,
+  formula,
+  labels,
+  size,
+}: {
+  motif: GlossaryMotif;
+  formula?: GlossaryFormula;
+  labels: FormulaLabels;
+  size: "xs" | "md";
+}) {
+  return formula?.kind === "dial" ? (
+    <TermDial dial={formula} labels={labels} size={size} />
+  ) : (
+    <TermMark motif={motif} size={size} />
+  );
+}
 
 /**
  * İlişkili terimler AĞ olarak: terim ortada, komşuları çevresinde ve her
@@ -41,11 +64,17 @@ export type NetworkNode = {
 export function TermNetwork({
   center,
   motif,
+  formula,
   nodes,
+  lang,
+  labels,
 }: {
   center: string;
   motif: GlossaryMotif;
+  formula?: GlossaryFormula;
   nodes: NetworkNode[];
+  lang: "tr" | "en";
+  labels: FormulaLabels;
 }) {
   const count = nodes.length;
   const start = count === 2 ? 0 : count === 4 ? -45 : -90;
@@ -57,8 +86,12 @@ export function TermNetwork({
   return (
     <div className={styles.network}>
       <div aria-hidden className={styles.networkCenter}>
-        <TermMark motif={motif} size="md" />
+        <NodeMark motif={motif} formula={formula} labels={labels} size="md" />
         <span>{center}</span>
+        {/* Merkezde de formülün tek satırı: komşuların formülleriyle yan
+            yana okununca "bunlar aynı payı paylaşıyor" görülüyor (F/K ile
+            PD/DD'nin payı fiyat ve piyasa değeri). */}
+        {formula?.kind === "formula" && <span className={styles.networkFormula}>{formulaText(formula, lang)}</span>}
       </div>
       <ul className={styles.networkNodes} data-motion-stagger>
         {nodes.map((node, index) => (
@@ -84,9 +117,12 @@ export function TermNetwork({
               <span data-motion-draw="line" style={{ transformOrigin: "right center" }} />
             </span>
             <Link href={`/sozluk/${node.slug}`} prefetch={false} className={styles.networkNode}>
-              <TermMark motif={node.motif} size="xs" />
+              <NodeMark motif={node.motif} formula={node.formula} labels={labels} size="xs" />
               <span className="min-w-0">
                 <span className={styles.networkTerm}>{node.term}</span>
+                {node.formula?.kind === "formula" && (
+                  <span className={styles.networkFormula}>{formulaText(node.formula, lang)}</span>
+                )}
                 {node.category && <span className={styles.networkCategory}>{node.category}</span>}
               </span>
             </Link>

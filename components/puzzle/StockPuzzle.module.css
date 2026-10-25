@@ -1,145 +1,40 @@
-/* "Hisseyi Bil" (24 Ekim). Derinlik tonla: panel → `surface-sunken` karo;
-   gölge, cam, degrade yok (veri paneli). Mavi yalnız etkileşim ve doğru
-   cevap; yön renkleri (up/down) KULLANILMIYOR — piyasa değeri oku fiyat
-   yönü değil, "daha büyüğünü ara" demek. */
+/* "Hisseyi Bil" yerleşimi (24 Ekim; 25 Ekim'de yeniden kuruldu). Parçaların
+   kendi stilleri kendi dosyalarında: PuzzleChart, ClueBoard, GuessList,
+   GuessBox, PuzzleCover, PuzzleRecord. Derinlik tonla; gölge, cam,
+   degrade yok (veri paneli). */
 
 .board { display:grid; gap:1.25rem; align-items:start; min-width:0; }
 @media (min-width: 1024px) {
   .board { grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); }
 }
-.clues { min-width:0; }
 
-/* ---- Siluet: ana görsel ---- */
-.figure { margin:0; padding:.875rem .875rem .75rem; border-radius:var(--radius-lg); background:var(--surface-sunken); }
-.silhouette { display:block; width:100%; height:clamp(140px, 34vw, 220px); margin-block:.625rem .5rem; overflow:visible; }
-.lane { stroke:var(--line-soft); stroke-width:1; }
-/* Siluet bir VERİ çizimi: mavi değil mürekkep (`--text-strong`). Mavi bu
-   ekranda etkileşim ve doğru cevap demek; veri çiziminde mavi çizgi
-   "tıklanır" ya da "doğru" diye okunuyordu (25 Ekim düzeltmesi). */
-.line { fill:none; stroke:var(--text-strong); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
+.note { margin:.75rem 0 0; font-size:var(--text-tiny); line-height:1.5; color:var(--text-muted); }
+.missing { margin:0 0 .875rem; font-size:var(--text-small); line-height:1.5; color:var(--text-muted); }
+.pool { margin:1rem 0 0; padding-top:.75rem; border-top:1px solid var(--line-soft); font-size:var(--text-tiny); line-height:1.5; color:var(--text-muted); }
+.axisLock { display:inline-flex; align-items:center; gap:.3125rem; }
 
-/* ---- İpucu ızgarası ---- */
-.tiles { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.625rem; margin:.75rem 0 0; padding:0; list-style:none; }
-@media (min-width: 640px) {
-  .tiles { grid-template-columns:repeat(3,minmax(0,1fr)); }
-}
-.tile { display:flex; flex-direction:column; gap:.25rem; min-width:0; min-height:5rem; padding:.75rem .875rem; border-radius:var(--radius-lg); background:var(--surface-sunken); }
-.tileLabel { font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
-.tileValue { font-size:var(--text-lead); font-weight:700; line-height:1.25; color:var(--text-strong); overflow-wrap:anywhere; }
-.initial { font-size:var(--text-heading); line-height:1; }
-.tileNote { font-size:var(--text-tiny); color:var(--text-muted); }
-.locked { background:transparent; border:1px dashed var(--line); }
-.lockLine { display:inline-flex; align-items:center; gap:.375rem; font-size:var(--text-small); color:var(--text-muted); }
-
-.note { margin:.5rem 0 0; font-size:var(--text-tiny); line-height:1.5; color:var(--text-muted); }
-.pool { margin-top:.875rem; padding-top:.75rem; border-top:1px solid var(--line-soft); }
-
-/* Yeni açılan ipucu panelin içinde yükselir — `--ease-brand`, yaysız
-   (CLAUDE.md: panel ve metin girişinde yay yok). */
-@media (prefers-reduced-motion: no-preference) {
-  .fresh { animation:clue-in 420ms var(--ease-brand) both; }
-}
-@keyframes clue-in {
-  from { opacity:0; transform:translateY(6px); }
-  to { opacity:1; transform:none; }
-}
-
-/* ---- Tahmin kutusu ---- */
-.form { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.5rem; margin-bottom:.875rem; }
-.combo { position:relative; min-width:0; }
-.input { width:100%; height:2.75rem; padding:0 .875rem; border:1px solid var(--line); border-radius:var(--radius-md); background:var(--surface); color:var(--text-strong); font-size:var(--text-read); transition:border-color 160ms var(--ease-brand); }
-.input::placeholder { color:var(--text-muted); }
-.input:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; border-color:var(--primary); }
-.input:disabled { opacity:.6; }
-.submit { white-space:nowrap; }
-.hint { grid-column:1 / -1; margin:0; font-size:var(--text-tiny); color:var(--text-muted); }
-/* Boş canlı bölge ızgara aralığını yemesin (öğe hep yerinde — StockPuzzle.tsx). */
-.hint:empty { margin-top:-.5rem; }
 /* Tahminler başlığının künyesi: altı nokta ve "2/6 Tahmin". */
 .progress { display:inline-flex; align-items:center; gap:.5rem; }
-
-.listbox { position:absolute; inset-inline:0; top:calc(100% + .375rem); z-index:20; max-height:22rem; margin:0; padding:.375rem; overflow-y:auto; list-style:none; border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--overlay-surface); box-shadow:var(--shadow-overlay); }
-.option { display:flex; align-items:center; gap:.625rem; min-height:44px; padding:.25rem .5rem; border-radius:var(--radius-md); cursor:pointer; }
-.optionActive { background:var(--primary-tint); }
-.optionSymbol { flex:none; font-family:var(--font-mono); font-size:var(--text-base); font-weight:600; color:var(--text-strong); }
-.optionName { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--text-base); color:var(--text-body); }
-
+.box { margin-bottom:1rem; }
 .error { margin:0 0 .75rem; font-size:var(--text-small); color:var(--down); }
 
-/* ---- Tahmin satırları ---- */
-.rows { display:flex; flex-direction:column; gap:.375rem; margin:0; padding:0; list-style:none; }
-.row { display:flex; flex-wrap:wrap; align-items:center; gap:.375rem .625rem; min-height:3rem; padding:.5rem .75rem; border-radius:var(--radius-md); background:var(--surface-sunken); }
-.emptyRow { background:transparent; border:1px dashed var(--line-soft); }
-.slot { font-size:var(--text-small); color:var(--text-muted); }
-.correctRow { background:var(--primary-wash); }
-.rowName { display:flex; align-items:baseline; gap:.5rem; flex:1 1 8rem; min-width:0; }
-.rowSymbol { flex:none; font-family:var(--font-mono); font-size:var(--text-base); font-weight:600; color:var(--text-strong); }
-.rowCompany { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--text-base); color:var(--text-body); }
-.feedback { display:flex; flex-wrap:wrap; gap:.375rem; margin-left:auto; }
-.chip { display:inline-flex; align-items:center; gap:.25rem; padding:.1875rem .5rem; border-radius:999px; border:1px solid var(--line); font-size:var(--text-tiny); font-weight:600; color:var(--text-body); white-space:nowrap; }
-.chipMatch { border-color:var(--primary-faint); color:var(--primary-ink); }
-.verdict { display:inline-flex; align-items:center; gap:.375rem; margin-left:auto; font-size:var(--text-small); font-weight:700; color:var(--primary-ink); }
-.correctMark { display:grid; place-items:center; width:1.375rem; height:1.375rem; border-radius:999px; background:var(--primary); color:var(--on-primary); }
-/* DOĞRU TAHMİN ONAYI — sitedeki tek yaylı hareket türü: tek küçük öğenin
-   geri bildirimi (CLAUDE.md "Eğri"). Hedefini aşıp oturuyor. */
-@media (prefers-reduced-motion: no-preference) {
-  .correctMark { animation:mark-in 520ms var(--ease-spring) both; }
-}
-@keyframes mark-in {
-  from { transform:scale(.4); opacity:0; }
-  to { transform:scale(1); opacity:1; }
-}
-
-/* ---- Sonuç ---- */
-.result { min-width:0; }
-/* Doğru tahminde kahraman zilinin vuruşu (heroTap, kutusu 160×150) —
-   sonuç satırının sağında, metni itmeden; 72 piksel genişlikte zil
-   gövdesi ~40 piksel, başlığın puntosuyla aynı ağırlıkta. */
-.bell { float:right; width:72px; height:68px; margin:-.75rem 0 .25rem .75rem; }
-.resultLine { margin:0 0 .875rem; font-size:var(--text-read); color:var(--text-body); }
-.answer { display:flex; align-items:center; gap:.75rem; }
-.answerName { margin:0; font-size:var(--text-title); font-weight:700; line-height:1.2; color:var(--text-strong); }
-.answerSymbol { margin:.125rem 0 0; font-family:var(--font-mono); font-size:var(--text-base); color:var(--text-muted); }
-.blurb { margin:.875rem 0 0; font-size:var(--text-read); line-height:1.55; color:var(--text-body); }
-.actions { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:1rem; }
-.shareNote { min-height:1.25rem; margin:.5rem 0 0; font-size:var(--text-tiny); color:var(--text-muted); }
-.sharePreview { margin:.25rem 0 0; padding:.625rem .75rem; border-radius:var(--radius-md); background:var(--surface-sunken); font-size:var(--text-base); white-space:pre-wrap; overflow-wrap:anywhere; user-select:all; color:var(--text-strong); }
-.next { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:.25rem 1rem; margin:1rem 0 0; padding-top:.75rem; border-top:1px solid var(--line-soft); font-size:var(--text-small); color:var(--text-muted); }
-.nextTime { font-size:var(--text-lead); font-weight:700; font-variant-numeric:tabular-nums; color:var(--text-strong); }
-
-/* ---- Seri ---- */
-.stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.5rem; margin:0; }
-.stats div { min-width:0; }
-.stats dt { font-size:var(--text-tiny); color:var(--text-muted); }
-.stats dd { margin:.125rem 0 0; font-size:var(--text-title); font-weight:700; color:var(--text-strong); font-variant-numeric:tabular-nums; }
-.distHead { margin:1rem 0 .5rem; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
-.dist { display:flex; flex-direction:column; gap:.375rem; margin:0; padding:0; list-style:none; }
-.dist li { display:grid; grid-template-columns:1rem minmax(0,1fr) 2rem; align-items:center; gap:.5rem; }
-.distKey { font-size:var(--text-tiny); color:var(--text-muted); font-variant-numeric:tabular-nums; }
-/* Kulvar üstünde 5 piksellik şerit (sitenin ince grafik dili). */
-.distLane { position:relative; height:5px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
-/* Şerit nötr (`--line-strong`): sayım bir veri, mavi değil (siluetle aynı
-   gerekçe). */
-.distBar { position:absolute; inset-block:0; left:0; border-radius:999px; background:var(--line-strong); }
-.distValue { text-align:right; font-size:var(--text-tiny); color:var(--text-body); font-variant-numeric:tabular-nums; }
-
-/* ---- Kolonlar ve telefon sırası (gerekçe StockPuzzle.tsx → recordPanel) ---- */
-.main { display:contents; }
-.side { display:contents; }
-/* TELEFON SIRASI (25 Ekim düzeltmesi, 390'da ölçüldü): sonuç, TAHMİNLER,
-   ipuçları, seri. İpuçları öndeyken tahmin kutusu y=1015'te, ilk ekranın
-   (844) dışında kalıyordu; oyunun tek eylemi kaydırmadan görünmüyordu.
-   Kutu artık ilk ekranda; siluet hemen altında. Telefonda boş tahmin
-   satırları basılmıyor (altı nokta kalan hakkı zaten gösteriyor), yoksa
-   altı boş satır ipuçlarını 330 piksel aşağı itiyordu. */
-.result { order:0; }
-.guesses { order:1; }
-.clues { order:2; }
-.record { order:3; }
-@media (max-width: 1023.98px) {
-  .emptyRow { display:none; }
-}
+/* ---- Kolonlar ve telefon sırası ----
+   TELEFON SIRASI (25 Ekim, 390×844'te ölçüldü): ana görsel (siluet ya da
+   kapak), TAHMİNLER, ipuçları, seri. Siluet ve tahmin kutusu ilk ekranda;
+   ipucu yolu kutunun altında. Masaüstünde sol kolon ana görsel + ipuçları,
+   sağ kolon tahminler + seri: bitince kapak kartı siluetin yerine geçtiği
+   için kolonlar oynanırken de bitince de dengede (ölçüm StockPuzzle.tsx
+   başındaki düzende). */
+.main, .side { display:contents; }
+.lead { order:0; min-width:0; }
+.guesses { order:1; min-width:0; }
+.clues { order:2; min-width:0; }
+.record { order:3; min-width:0; }
 @media (min-width: 1024px) {
   .main, .side { display:flex; flex-direction:column; gap:1.25rem; min-width:0; }
-  .result, .clues, .guesses, .record { order:0; }
+  .lead, .clues, .guesses, .record { order:0; }
 }
+
+/* Joker: tahmin kutusunun altında ikincil düğme ve tek satır açıklama. */
+.joker { display:flex; flex-wrap:wrap; align-items:center; gap:.25rem .75rem; margin-top:.625rem; }
+.jokerHint { flex:1 1 12rem; margin:0; font-size:var(--text-tiny); line-height:1.45; color:var(--text-muted); }

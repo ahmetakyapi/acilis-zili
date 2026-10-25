@@ -60,8 +60,21 @@ export type BrokerSource = {
  * yine verilebilir: "W-8BEN belirtilmemiş ama temettüde %20 yazıyor".
  */
 export type BrokerCell =
-  | { kind: "value"; value: Bi; note?: Bi; src: readonly string[] }
-  | { kind: "unspecified"; note?: Bi; src?: readonly string[] };
+  | {
+      kind: "value";
+      value: Bi;
+      note?: Bi;
+      src: readonly string[];
+      /**
+       * Kaynak bu kalemin OLMADIĞINI açıkça yazıyorsa (kartta ✗). Bulunamayan
+       * bilgi bu değil, o `unspecified`. 25 Ekim'de hiçbir hücre bunu
+       * taşımıyor: okunan sayfaların hiçbiri "yok" demiyor, yalnız susuyor.
+       */
+      absent?: true;
+      /** Not bir DÜRÜSTLÜK NOTU: çelişki, belirsiz birim, eksik oran (aşağıda `caveat`). */
+      caveat?: true;
+    }
+  | { kind: "unspecified"; note?: Bi; src?: readonly string[]; caveat?: true };
 
 /**
  * Senaryo hesabına giren komisyon modeli. Yalnızca tarifeden TEK ANLAMLI
@@ -96,6 +109,13 @@ export type Broker = {
   /** Yurt dışında emri yürüten ya da altyapı sağlayan kurum — resmî sayfada yazıyorsa. */
   counterparty?: { value: Bi; src: readonly string[] };
   domestic: boolean;
+  /**
+   * Lisans durumunun rozet için özeti (25 Ekim, kart görünümü). Kaynağı
+   * `cells.license` ile aynı: SPK faaliyet izinleri listesi. "Geniş" ve
+   * "Kısmi" SPK'nın kendi sınıfları; yabancı kurum listede yok. Hücre metni
+   * ile çelişmemesi testte (tests/broker-cards.test.ts).
+   */
+  licence: "full" | "partial" | "foreign";
   cells: Record<BrokerColumn, BrokerCell>;
   commission: CommissionModel;
   sources: Record<string, BrokerSource>;
@@ -119,6 +139,15 @@ const v = (tr: string, en: string, src: readonly string[], note?: Bi): BrokerCel
   ...(note ? { note } : {}),
 });
 
+/**
+ * Notu bir DÜRÜSTLÜK NOTU olan hücre (25 Ekim, telefon kartı): kaynaklar
+ * çelişiyor, tarifenin birimi belirsiz, oran yok ya da hesabın hangi
+ * şirkette açıldığı yazmıyor. Telefonda notlar kartın içinde katlı; bu
+ * işaretli bir not varsa katlama düğmesinin yanında "Not Var" görünüyor —
+ * okur katlının içinde değeri değiştiren bir uyarı olduğunu bilsin.
+ */
+const caveat = (cell: BrokerCell): BrokerCell => ({ ...cell, caveat: true });
+
 const none = (note?: Bi, src?: readonly string[]): BrokerCell => ({
   kind: "unspecified",
   ...(note ? { note } : {}),
@@ -135,6 +164,7 @@ export const BROKERS: readonly Broker[] = [
     name: "Midas",
     legalName: "Midas Menkul Değerler A.Ş.",
     domestic: true,
+    licence: "partial",
     counterparty: {
       value: { tr: "Alpaca Securities LLC", en: "Alpaca Securities LLC" },
       src: ["owner"],
@@ -200,6 +230,7 @@ export const BROKERS: readonly Broker[] = [
     legalName: "İş Yatırım Menkul Değerler A.Ş.",
     channel: { tr: "TradeMaster International", en: "TradeMaster International" },
     domestic: true,
+    licence: "full",
     commission: { kind: "percent", pct: 0.25, minUsd: 1 },
     sources: {
       tariff: {
@@ -248,6 +279,7 @@ export const BROKERS: readonly Broker[] = [
     name: "Garanti BBVA Yatırım",
     legalName: "Garanti Yatırım Menkul Kıymetler A.Ş.",
     domestic: true,
+    licence: "full",
     commission: { kind: "percent", pct: 0.3, minUsd: 0 },
     sources: {
       fees: {
@@ -295,6 +327,7 @@ export const BROKERS: readonly Broker[] = [
     name: "Yapı Kredi Yatırım",
     legalName: "Yapı Kredi Yatırım Menkul Değerler A.Ş.",
     domestic: true,
+    licence: "full",
     commission: {
       kind: "none",
       reason: {
@@ -327,14 +360,14 @@ export const BROKERS: readonly Broker[] = [
       spk: SPK_LIST,
     },
     cells: {
-      commission: v("Kaynaklar çelişiyor", "Sources disagree", ["fees", "bank", "form"], {
+      commission: caveat(v("Kaynaklar çelişiyor", "Sources disagree", ["fees", "bank", "form"], {
         tr: "Binde 5 (ücret sayfası) · %0,25 (banka sayfası, Yapı Kredi Mobil) · %1 ya da adet başına 0,30 $ (örnek ürün formu).",
         en: "0.5% (fee page) · 0.25% (bank page, mobile app) · 1% or $0.30 per share (sample form).",
-      }),
-      minimum: v("Kaynaklar çelişiyor", "Sources disagree", ["fees", "bank", "form"], {
+      })),
+      minimum: caveat(v("Kaynaklar çelişiyor", "Sources disagree", ["fees", "bank", "form"], {
         tr: "12 $ · 0,5 $ · 30 $, aynı sırayla.",
         en: "$12 · $0.50 · $30, same order.",
-      }),
+      })),
       custody: none(
         {
           tr: "Ürün formu: ADR'de yurt dışı kurumun belirlediği saklama masrafı kesilebilir.",
@@ -368,6 +401,7 @@ export const BROKERS: readonly Broker[] = [
     name: "QNB Invest",
     legalName: "QNB Yatırım Menkul Değerler A.Ş.",
     domestic: true,
+    licence: "full",
     commission: { kind: "percent", pct: 0.2, minUsd: 25 },
     sources: {
       faq: {
@@ -407,6 +441,7 @@ export const BROKERS: readonly Broker[] = [
     name: "Gedik Yatırım",
     legalName: "Gedik Yatırım Menkul Değerler A.Ş.",
     domestic: true,
+    licence: "full",
     counterparty: {
       value: { tr: "GTN; altyapıda Saxo Bank", en: "GTN; Saxo Bank infrastructure" },
       src: ["product"],
@@ -436,10 +471,10 @@ export const BROKERS: readonly Broker[] = [
       spk: SPK_LIST,
     },
     cells: {
-      commission: v("Adet başına 0,05 $", "$0.05 per share", ["tariff", "policy"], {
+      commission: caveat(v("Adet başına 0,05 $", "$0.05 per share", ["tariff", "policy"], {
         tr: "Tarife birimi \"0,05 cent\" yazıyor; örnek hesap 0,05 $ ile yapılmış. Üstüne %5 BSMV.",
         en: "The table says \"0.05 cent\"; its worked example uses $0.05. Plus 5% BSMV tax.",
-      }),
+      })),
       minimum: v("1 $", "$1", ["tariff"], {
         tr: "1-20 adet arası işlemde.",
         en: "For 1-20 shares.",
@@ -469,6 +504,7 @@ export const BROKERS: readonly Broker[] = [
     legalName: "İnfo Yatırım Menkul Değerler A.Ş.",
     channel: { tr: "InfoX ve InfoGlobe", en: "InfoX and InfoGlobe" },
     domestic: true,
+    licence: "full",
     commission: {
       kind: "none",
       reason: {
@@ -490,14 +526,14 @@ export const BROKERS: readonly Broker[] = [
       spk: SPK_LIST,
     },
     cells: {
-      commission: v("InfoGlobe: adet başına 0,03 $", "InfoGlobe: $0.03 per share", ["tariff"], {
+      commission: caveat(v("InfoGlobe: adet başına 0,03 $", "InfoGlobe: $0.03 per share", ["tariff"], {
         tr: "InfoX için oran yok, yalnız asgari tutar var.",
         en: "No rate given for InfoX, only a minimum.",
-      }),
-      minimum: v("InfoX 1,5 $ · InfoGlobe 10 $", "InfoX $1.50 · InfoGlobe $10", ["tariff"], {
+      })),
+      minimum: caveat(v("InfoX 1,5 $ · InfoGlobe 10 $", "InfoX $1.50 · InfoGlobe $10", ["tariff"], {
         tr: "Tarife bunları asgari diye veriyor; uygulanan daha yüksek olabilir.",
         en: "Listed as minimums; the applied fee may be higher.",
-      }),
+      })),
       custody: none(
         {
           tr: "Yurt dışı aracının masrafları komisyona dahil değil.",
@@ -523,6 +559,7 @@ export const BROKERS: readonly Broker[] = [
     legalName: "Interactive Brokers",
     channel: { tr: "IBKR Pro", en: "IBKR Pro" },
     domestic: false,
+    licence: "foreign",
     /* Fixed fiyatlama: adet başına 0,005 $, en az 1 $, en çok işlem
        tutarının %1'i. Tiered daha ucuz olabilir ama üstüne borsa ve takas
        ücretleri biniyor ve tutarları aylık hacme bağlı — tek anlamlı hesap
@@ -586,10 +623,10 @@ export const BROKERS: readonly Broker[] = [
         tr: "Asgari 1 $.",
         en: "Minimum $1.",
       }),
-      license: v("SPK listesinde yok", "Not on the CMB register", ["spk", "stocks"], {
+      license: caveat(v("SPK listesinde yok", "Not on the CMB register", ["spk", "stocks"], {
         tr: "ABD'de SEC ve FINRA, İrlanda'da Merkez Bankası denetiminde şirketleri var. Türkiye'deki hesabın hangi şirkette açıldığı belirtilmemiş.",
         en: "Group entities are regulated by the SEC and FINRA (US) and the Central Bank of Ireland. The entity for Türkiye residents is not stated.",
-      }),
+      })),
     },
   },
 ];

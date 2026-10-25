@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { MagnifyingGlass, X } from "@phosphor-icons/react/dist/ssr";
+import { MagnifyingGlass, Rows, SquaresFour, X } from "@phosphor-icons/react/dist/ssr";
 import {
   foldForSearch,
   verdictPillClass,
@@ -10,6 +10,10 @@ import {
   type AnalysisRowView,
   type CellTone,
 } from "@/lib/analysis";
+import { reactionScale } from "@/lib/analysis-visuals";
+import { AnalysisCardGrid } from "./AnalysisCardGrid";
+import cardStyles from "./AnalysisCardGrid.module.css";
+import { setView, subscribeView, viewServerSnapshot, viewSnapshot } from "./analysis-view-store";
 import { LogoTile } from "@/components/ui/primitives";
 import { cn, plural } from "@/lib/utils";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
@@ -59,7 +63,26 @@ export type AnalysisTableLabels = {
   /** "{count}" yer tutucusu taşır. */
   resultCountOne: string;
   resultCountMany: string;
+  /* Kart görünümü (25 Ekim görsel zirve). */
+  verdictLabel: string;
+  viewLabel: string;
+  viewCards: string;
+  viewRows: string;
+  reactionLabel: string;
+  revenueLabel: string;
+  epsLabel: string;
+  noReaction: string;
+  more: string;
+  /** "{n}" yer tutucusu — ortak tepki ölçeği. */
+  scale: string;
+  /** "{shown}" ve "{total}" yer tutucuları. */
+  shown: string;
 };
+
+/* KART SAYFASI. Altmış kart telefonda 15.000 piksel tutuyordu (ölçüldü,
+   390); ilk on sekiz kart ve "Daha Fazla Göster". Aramada sınır yok —
+   aranan her eşleşme görünür. Tablo görünümü eskisi gibi hepsini basar. */
+const CARD_PAGE = 18;
 
 /* DAR EKRANDA İKİ SÜTUN DÜŞÜYOR — ikisi de zaten satırda başka bir yerde
    yazılı olanı tekrarlıyor:
@@ -108,6 +131,17 @@ export function AnalysisTable({
   toolbar?: React.ReactNode;
 }) {
   const [ownQuery, setQuery] = useState("");
+  /* GÖRÜNÜM: KART VARSAYILAN (25 Ekim). Dokuz sütunluk tablo telefonda
+     860 piksel enindeydi ve sayıların çoğu ekran dışındaydı; kart her
+     genişlikte bir satırı tek bakışta okutuyor. Tablo bir düğme ötede ve
+     seçim bu tarayıcıda hatırlanıyor (depolama kapalıysa her açılışta
+     kart). İlk boyama sunucuyla aynı (kart); kayıtlı tercih takıldıktan
+     sonra okunuyor. */
+  const view = useSyncExternalStore(subscribeView, viewSnapshot, viewServerSnapshot);
+  const [limit, setLimit] = useState(CARD_PAGE);
+  /* Ölçek arananlardan değil BÜTÜN listeden: yazdıkça şeritler boy
+     değiştirmesin. */
+  const scale = useMemo(() => reactionScale(rows.map((row) => row.reactionPct)), [rows]);
   /* Okuyucu süzgeci kullandı mı — satırların yerine oturma animasyonu
      yalnızca o andan sonra (globals.css → .filter-settle). İlk tuşta kalan
      satırlar bir kez oturuyor; sonraki tuşlarda yalnızca YENİDEN beliren
@@ -144,7 +178,7 @@ export function AnalysisTable({
 
   return (
     <div className="flex flex-col gap-3">
-      {(!shared || toolbar) && <div className="flex flex-wrap items-center gap-2.5" data-table-toolbar>
+      <div className="flex flex-wrap items-center gap-2.5" data-table-toolbar>
         {!shared && <>
         {/* ARAMA KUTUSU TELEFONDA TAM GENİŞLİK. `flex-1` her genişlikte
             duruyordu ve sıralama segmenti (305 piksel, `shrink-0`) aynı
@@ -205,7 +239,57 @@ export function AnalysisTable({
             kesiliyordu. 360 altında düğme dolgusu 16'dan 12'ye: 281 piksel,
             tek satır, 44 piksel yükseklik korunuyor (ölçüldü). */}
         {toolbar && <div className="ml-auto min-w-0 max-w-full max-[359px]:[&_a]:px-3">{toolbar}</div>}
-      </div>}
+        <div role="group" aria-label={labels.viewLabel} className={cn(cardStyles.toggle, !toolbar && "ml-auto")}>
+          <button type="button" aria-pressed={view === "cards"} onClick={() => setView("cards")}>
+            <SquaresFour size={15} weight="duotone" aria-hidden />
+            {labels.viewCards}
+          </button>
+          <button type="button" aria-pressed={view === "rows"} onClick={() => setView("rows")}>
+            <Rows size={15} weight="duotone" aria-hidden />
+            {labels.viewRows}
+          </button>
+        </div>
+      </div>
+
+      {view === "cards" ? (
+        visible.length === 0 ? (
+          <p className="panel px-4 py-10 text-center text-sm text-body sm:px-5">
+            {labels.searchEmpty.replace("{query}", query.trim())}
+          </p>
+        ) : (
+          <>
+          <p className="text-tiny text-muted">{labels.scale.replace("{n}", String(scale))}</p>
+          <AnalysisCardGrid
+            rows={searching ? visible : visible.slice(0, limit)}
+            labels={{
+              verdictLabel: labels.verdictLabel,
+              reactionLabel: labels.reactionLabel,
+              revenueLabel: labels.revenueLabel,
+              epsLabel: labels.epsLabel,
+              noReaction: labels.noReaction,
+            }}
+            scale={scale}
+            filtered={filtered}
+          />
+          {!searching && visible.length > limit && (
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setLimit((current) => current + CARD_PAGE)}
+                className="inline-flex min-h-11 items-center rounded-md border border-line bg-surface-solid px-4 text-small font-semibold text-strong transition-colors hover:border-line-strong"
+              >
+                {labels.more}
+              </button>
+              <span className="numeral text-tiny text-muted">
+                {labels.shown
+                  .replace("{shown}", String(Math.min(limit, visible.length)))
+                  .replace("{total}", String(visible.length))}
+              </span>
+            </div>
+          )}
+          </>
+        )
+      ) : (
 
       <div className="panel overflow-hidden">
         {/* KAYDIRMA KABI KLAVYEYLE ERİŞİLEBİLİR. Tablo 1180px genişliğinde ve
@@ -395,6 +479,7 @@ export function AnalysisTable({
                   <span role="cell" className={cn(COLS.score, "flex justify-center")}>
                     <span
                       className={cn(
+                        /* Görüş renkli (25 Ekim son düzeltme) — gerekçe `verdictTextClass`. */
                         "numeral rounded-full px-2.5 py-[3.5px] text-small font-bold",
                         verdictPillClass(row.verdict),
                       )}
@@ -427,6 +512,7 @@ export function AnalysisTable({
           </div>
         </ScrollEdges>
       </div>
+      )}
     </div>
   );
 }

@@ -3,10 +3,12 @@ import { ArticleBody } from "@/components/article/ArticleBody";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { glossaryCategoryLabel, glossaryTerm, type GlossaryTerm } from "@/content/glossary";
 import { GLOSSARY_MARKS } from "@/content/glossary/marks";
+import { GLOSSARY_FORMULAS } from "@/content/glossary/formulas";
 import type { AutoLinker } from "@/lib/autolink";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { GLOSSARY_CATEGORY_ICONS } from "./category-icons";
 import { TermMark } from "./TermMark";
+import { splitTerm, TermDial, TermFormula } from "./TermFormula";
 import styles from "./Glossary.module.css";
 
 /**
@@ -37,6 +39,8 @@ export function TermPeek({
 }) {
   const { lede, rest } = splitLede(term.definition);
   const CategoryIcon = GLOSSARY_CATEGORY_ICONS[term.category];
+  const formula = GLOSSARY_FORMULAS[term.slug];
+  const lang = locale === "en" ? "en" : "tr";
   const related = term.related
     .map((slug) => glossaryTerm(slug, locale))
     .filter((entry): entry is GlossaryTerm => entry !== null);
@@ -52,11 +56,21 @@ export function TermPeek({
           <h2 className="display-ink">{term.term}</h2>
         </div>
         <span className={styles.peekMark} aria-hidden>
-          <TermMark motif={GLOSSARY_MARKS[term.slug]} size="plate" draw />
+          {formula?.kind === "dial" ? (
+            <TermDial dial={formula} labels={t.glossaryVisuals} size="md" />
+          ) : (
+            <TermMark motif={GLOSSARY_MARKS[term.slug]} size="plate" draw />
+          )}
         </span>
       </header>
 
       <p className={styles.peekLede}>{lede}</p>
+      {/* Formül şeridi ilk cümlenin altında: cümlenin çizilmiş hâli (25 Ekim). */}
+      {formula?.kind === "formula" && (
+        <span className={styles.cardFormula}>
+          <TermFormula formula={formula} lang={lang} labels={t.glossaryVisuals} abbr={splitTerm(term.term).abbr} size="card" />
+        </span>
+      )}
       {rest && <ArticleBody markdown={rest} locale={locale} autoLink={autoLink} className={styles.peekRest} />}
 
       {term.example && (

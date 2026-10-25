@@ -1,0 +1,140 @@
+/* /tarama görsel katmanı (25 Ekim) — sonuç özeti, sektör şeridi, kart
+   görünümü ve görünüm anahtarı. Gerekçeler app/(app)/tarama/page.tsx'te. */
+
+.summaryBody { display: grid; gap: 22px; padding: 4px 16px 20px; }
+@media (min-width: 640px) { .summaryBody { padding: 4px 20px 22px; } }
+@media (min-width: 1024px) { .summaryBody { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px 36px; padding: 6px 24px 24px; } }
+
+/* Tepe cümlesi — ekranın veriden türeyen tek cümlesi. */
+.lead {
+  grid-column: 1 / -1;
+  max-width: 60ch;
+  color: var(--text-strong);
+  font-size: 17px;
+  line-height: 1.45;
+  font-weight: 560;
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
+}
+@media (min-width: 640px) { .lead { font-size: 19px; } }
+
+.block { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.blockHead { display: grid; gap: 8px; min-width: 0; }
+@media (min-width: 640px) { .blockHead { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; } }
+.blockTitle { justify-self: start; color: var(--text-strong); font-size: 14px; font-weight: 650; }
+.empty { color: var(--text-muted); font-size: 13px; }
+
+/* SEKTÖR ŞERİDİ — her parça bir sektör, genişliği o sektörün sonuçtaki
+   hisse sayısı. Ton markanın yumuşak mavisi (veri), seçili sektör doygun
+   mavi (etkileşim). Parçalar arası 2 piksellik zemin aralığı. */
+.strip { display: flex; gap: 2px; height: 44px; border-radius: 12px; overflow: hidden; }
+.segment {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 6px;
+  flex-basis: 0;
+  padding: 0 8px;
+  overflow: hidden;
+  background: var(--primary-wash);
+  color: var(--text-strong);
+  transition: background-color .2s var(--ease-brand);
+}
+.segment:nth-child(even) { background: var(--primary-faint); }
+.segment:hover { background: color-mix(in srgb, var(--primary-soft) 45%, transparent); }
+.segment:focus-visible { outline: 2px solid var(--line-focus); outline-offset: -2px; }
+.segment[data-active] { background: var(--primary); color: var(--on-primary); }
+.segment { container-type: inline-size; }
+/* Ad yalnız sığdığında: dar parçada sayı kalır, ad künyede. */
+@container (max-width: 150px) { .segmentName { display: none; } }
+@container (max-width: 22px) { .segmentLabel { display: none; } }
+.segmentLabel { display: flex; align-items: baseline; gap: 6px; min-width: 0; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.segmentName { overflow: hidden; text-overflow: ellipsis; }
+.segmentLabel b { font-weight: 700; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--text-body); font-size: 12.5px; }
+.legend li { display: inline-flex; align-items: baseline; gap: 6px; }
+.legendName { color: var(--text-strong); font-weight: 600; }
+.legendRest { color: var(--text-muted); }
+
+/* GÖRÜNÜM ANAHTARI — iki düğmeli segment. Telefonda 44 piksel. */
+.viewSwitch { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-sunken); }
+.viewButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: var(--text-body);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color .2s var(--ease-brand), color .2s var(--ease-brand);
+}
+.viewButton:hover { color: var(--text-strong); }
+.viewButton[aria-current] { background: var(--surface-solid); color: var(--primary-ink); }
+/* Görünmez genişletme: 38 piksellik düğme, 44 piksellik dokunma alanı. */
+.viewButton { position: relative; }
+.viewButton::after { content: ""; position: absolute; inset: -3px 0; }
+@media (min-width: 640px) { .viewButton { min-height: 30px; } }
+/* "auto"da seçili görünen düğme ekrana göre (aria-current yok). */
+.viewSwitch[data-view="auto"] .viewButton[data-key="kart"] { background: var(--surface-solid); color: var(--primary-ink); }
+@media (min-width: 640px) {
+  .viewSwitch[data-view="auto"] .viewButton[data-key="kart"] { background: none; color: var(--text-body); }
+  .viewSwitch[data-view="auto"] .viewButton[data-key="tablo"] { background: var(--surface-solid); color: var(--primary-ink); }
+}
+@media (max-width: 639.98px) { .viewButton { min-width: 44px; justify-content: center; padding: 0 10px; } .viewButton span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }
+
+/* "auto": telefonda kart, genişte tablo. */
+@media (max-width: 639.98px) { .autoTable { display: none !important; } }
+@media (min-width: 640px) { .autoCards { display: none !important; } }
+
+/* KARTLAR — ton farkıyla derinlik (çökük zemin), gölge yok. */
+.cards { display: grid; gap: 10px; padding: 4px 12px 14px; }
+@media (min-width: 640px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 6px 20px 18px; } }
+@media (min-width: 1024px) { .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 6px 24px 20px; } }
+.card {
+  display: grid;
+  gap: 12px;
+  height: 100%;
+  padding: 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  background: var(--surface-sunken);
+  transition: border-color .2s var(--ease-brand), background-color .2s var(--ease-brand);
+}
+.card:hover { border-color: var(--line-focus); background: var(--primary-tint); }
+.card:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+.cardHead { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.cardSymbol { display: block; color: var(--text-strong); font-size: 15px; font-weight: 700; line-height: 18px; }
+.cardName { display: block; overflow: hidden; color: var(--text-muted); font-size: 12px; line-height: 16px; white-space: nowrap; text-overflow: ellipsis; }
+.cardSector { max-width: 9rem; overflow: hidden; color: var(--text-soft); font-size: 11.5px; font-weight: 550; text-align: right; white-space: nowrap; text-overflow: ellipsis; }
+.cardMain { display: grid; grid-template-columns: auto 1fr; align-items: end; gap: 2px 12px; }
+.cardMain .cardLabel { grid-column: 1 / -1; }
+.cardValue { color: var(--text-strong); font-size: 26px; line-height: 1.1; font-weight: 650; letter-spacing: -0.03em; }
+.cardMain .cardLane { --lane-max: none; margin: 0 0 9px; }
+.cardLabel { display: block; color: var(--text-muted); font-size: 11.5px; font-weight: 550; line-height: 1.3; }
+.cardFigures { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.cardFigures { grid-template-rows: auto auto auto; row-gap: 2px; }
+/* Alt ızgara: iki satıra kırılan künye ("Piyasa Değeri") komşularının
+   sayısını aşağı itmesin — sayılar aynı hatta. */
+.cardFigures > span { display: grid; grid-row: span 3; grid-template-rows: subgrid; align-items: end; min-width: 0; }
+.cardFigures > span > .cardLabel { align-self: start; }
+.cardFigures b { color: var(--text-strong); font-size: 14px; font-weight: 650; white-space: nowrap; }
+.cardFigures .cardBar { --lane-max: none; margin: 3px 0 0; }
+/* Büyüme bir değişim: yön rengi (öteki ölçüler seviye, renksiz). */
+.card [data-dir="up"] { color: var(--up); }
+.card [data-dir="down"] { color: var(--down); }
+
+.laneLegend { padding: 10px 16px 0; color: var(--text-muted); font-size: 12.5px; line-height: 1.55; }
+@media (min-width: 640px) { .laneLegend { padding: 10px 20px 0; } }
+@media (min-width: 1024px) { .laneLegend { padding: 10px 24px 0; } }
+
+/* "60 / 514" sayacının çizgisi — büyüklük, yumuşak mavi. */
+.progressFill { background: var(--bar-soft); }
+
+/* Özet iskeleti — gerçek panelin yüksekliğine yakın (telefonda şerit + küme alt alta). */
+/* Ölçüldü (25 Ekim, süzgeçsiz): panel 634 / 568 / 397 piksel, başlık 48. */
+.summarySkeleton { display: grid; align-content: start; gap: 10px; height: 586px; padding: 4px 16px 20px; }
+@media (min-width: 640px) { .summarySkeleton { height: 520px; padding: 4px 20px 22px; } }
+@media (min-width: 1024px) { .summarySkeleton { height: 349px; padding: 6px 24px 24px; } }

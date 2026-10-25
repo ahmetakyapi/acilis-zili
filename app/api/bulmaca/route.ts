@@ -3,7 +3,7 @@ import { getLocale } from "@/lib/i18n";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { readTextCapped } from "@/lib/read-body";
 import { dailySilhouette, evaluatePuzzle } from "@/lib/stock-puzzle-data";
-import { MAX_GUESSES, puzzleDayKey, type PuzzleState } from "@/lib/stock-puzzle";
+import { MAX_GUESSES, isArchiveDay, isJoker, puzzleDayKey, type PuzzleState } from "@/lib/stock-puzzle";
 import { isValidSymbol } from "@/lib/utils";
 
 /**
@@ -16,9 +16,13 @@ import { isValidSymbol } from "@/lib/utils";
  * cevabı açar; bu bilerek kabul edilmiş bir bedel ve neden kabul edildiği
  * aynı yerde ("DURUMSUZ UCUN BEDELİ").
  *
- * GÜN SUNUCUNUN: istemci dünün listesini gönderirse (sekme gece yarısını
- * açık geçti) 409 + bugünün günü; istemci sıfırdan başlar. Eski
- * bulmacaların cevabı bu uçtan sorulamaz.
+ * GÜN: bugün ya da ARŞİV günü (25 Ekim: geçmiş bulmacalar oynanabiliyor,
+ * `isArchiveDay`). Arşivde de cevap ancak bitmiş bulmacada yanıta girer;
+ * ilk bulmacadan önceki ve GELECEK günler 409 + bugünün günü (yarının
+ * bulmacası açılmaz). Sekme gece yarısını açık geçerse dünün listesi
+ * artık arşiv oyunu olarak değerlendirilir; okurun oyunu kaybolmaz.
+ *
+ * Listede `JOKER` ("*") bir tahmin hakkı harcayıp sıradaki basamağı açar.
  *
  * Oran sınırı dakikada 30: bir oyun en çok altı tahmin ve bir geri yükleme;
  * ucun maliyeti önbellekli okumalar (havuz, ölçüler, siluet), sağlayıcıya
@@ -55,16 +59,18 @@ export async function POST(request: Request) {
     typeof day !== "string" ||
     !Array.isArray(guesses) ||
     guesses.length > MAX_GUESSES ||
-    !guesses.every((item): item is string => typeof item === "string" && isValidSymbol(item))
+    !guesses.every((item): item is string => typeof item === "string" && (isJoker(item) || isValidSymbol(item))) ||
+    /* Son hakta joker yok (`jokerAllowed`): kuralı istemci kadar uç da tutar. */
+    guesses.slice(MAX_GUESSES - 1).some((item) => isJoker(item))
   ) {
     return fail("bad-request", 400);
   }
 
   const today = puzzleDayKey();
-  if (day !== today) return fail("day", 409, { day: today });
+  if (day !== today && !isArchiveDay(day, today)) return fail("day", 409, { day: today });
 
   const locale = await getLocale();
-  const result = await evaluatePuzzle(today, guesses, locale);
+  const result = await evaluatePuzzle(day, guesses, locale);
   if (!result.ok) return fail(result.error, result.error === "unavailable" ? 503 : 400);
   return NextResponse.json({ ok: true, state: result.state } satisfies PuzzleResponse, {
     headers: { "Cache-Control": "no-store" },

@@ -3,6 +3,7 @@
 import { Suspense, useEffect } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { usePathname } from "next/navigation";
+import { CONTENT_FRAME } from "./frame";
 import { BellMark, BrandWord } from "@/components/brand/BellMark";
 import type { Locale } from "@/lib/i18n/config";
 import { stripLocale, withLocale } from "@/lib/i18n/routing";
@@ -84,7 +85,8 @@ const SAFE_X_12 =
  * 1024-1920 arasında logo ve hesap düğmesi main'in iç kenarlarıyla 0 piksel
  * farkla hizalı.
  */
-const CONTENT_FRAME = "mx-auto w-full max-w-[1400px]";
+/* Sabitin kendisi ve geniş ekran gerekçesi `./frame.ts`te (25 Ekim):
+   alt şerit de aynı eni okuyor. */
 
 /** İçerik kanalı — 18/24/40px dolgu, çentik daha genişse o kazanır. */
 const CONTENT_GUTTER = [

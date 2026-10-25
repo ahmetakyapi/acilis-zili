@@ -181,9 +181,7 @@ function RollingDigit({ digit }: { digit: string }) {
   return (
     <span className={styles.digit}>
       {previous !== null && (
-        <span key={`out-${turn}`} className={styles.digitOut} aria-hidden="true">
-          {previous}
-        </span>
+        <span key={`out-${turn}`} className={styles.digitOut} data-c={previous} aria-hidden="true" />
       )}
       <span key={`in-${turn}`} className={turn ? styles.digitIn : styles.digitBoot}>
         {current}

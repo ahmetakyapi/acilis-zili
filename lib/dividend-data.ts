@@ -171,7 +171,15 @@ export async function getSymbolDividends(symbol: string): Promise<SymbolDividend
     ok: true,
     past,
     next,
-    nextLastBuy: next ? lastBuyDay(next.exDate, holidays.length > 0 ? holidays : null) : null,
+    /* Son alım günü geçmişse basılmaz (25 Ekim): pazar günü açılan sayfa,
+       pazartesi hak kesimli ödemenin son alım gününü "23 Ekim Cuma" diye
+       gösteriyordu. Takvimdeki "Kaçtı" kuralıyla aynı ölçü
+       (lib/dividend-groups.ts). */
+    nextLastBuy: (() => {
+      if (!next) return null;
+      const day = lastBuyDay(next.exDate, holidays.length > 0 ? holidays : null);
+      return day && day >= today ? day : null;
+    })(),
     frequency,
     yieldPct: latestRegular ? annualYieldPct(latestRegular, frequency, price) : null,
     fetchedAt: result.fetchedAt,

@@ -7,7 +7,7 @@ import { EmptyState, Panel, Segment, SegmentItem } from "@/components/ui/primiti
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import { EarningsActivity } from "@/components/earnings/EarningsActivity";
-import { EarningsRadar } from "@/components/earnings/EarningsRadar";
+import { EarningsHorizon } from "@/components/earnings/horizon/EarningsHorizon";
 import styles from "@/components/motion/DirectoryExperience.module.css";
 import { EarningsCalendar } from "@/components/earnings/EarningsCalendar";
 import { EarningsTabs } from "@/components/earnings/EarningsTabs";
@@ -21,6 +21,8 @@ import {
   getUserSymbols,
 } from "@/lib/data";
 import { getVoteBoard } from "@/lib/earnings-vote-data";
+import { currentWeekStart } from "@/lib/earnings-week";
+import { getEarningsWeek } from "@/lib/earnings-week-data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n } from "@/lib/i18n";
 
@@ -98,13 +100,19 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
      yetiyor (`getVoteBoard`). Yalnız oturum açıkken; kartta oy düğmesi
      üyeye özel. Tablo yoksa `available: false` ve kartlar eski hâliyle. */
   const userId = session?.user?.id ?? null;
-  const [rows, userSymbols, badges, recent, voteBoard, holidays] = await Promise.all([
+  /* UFKUN HAFTASI AYNI TURDA (25 Ekim). Haftalık sekmenin okuması
+     (`getEarningsWeek`: takvim + tatiller, ardından adlar) kendi iki
+     turunu bu dalda koşuyor; sayfanın kritik yolu (takvim → adlar) da iki
+     tur, yani ufuk ilk baytı geciktirmiyor. Karne sağlayıcıdan ve
+     beklenmiyor (`EarningsHorizon` → `loadHorizonKarne`). */
+  const [rows, userSymbols, badges, recent, voteBoard, holidays, week] = await Promise.all([
     getEarningsBetween(today, rangeEnd),
     userId ? getUserSymbols(userId) : Promise.resolve([]),
     getAnalysisBadges(null, locale, { from: today, to: rangeEnd }),
     getAnalyses(locale, { limit: RECENT_ANALYSES }),
     userId ? getVoteBoard(userId, today, rangeEnd) : Promise.resolve(null),
     userId ? getHolidays() : Promise.resolve([]),
+    getEarningsWeek(currentWeekStart(today), locale),
   ]);
 
   const meta = await getSymbolNames([
@@ -158,11 +166,30 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           390'da kapak 199, sekme 836 → 300; 1280'de sekme 462 → 265. */}
       <EarningsTabs active="calendar" t={t} className="-mt-2" />
 
-      {rows.length > 0 && (
-        <div className={styles.earningsOverview}>
-          <EarningsActivity rows={rows} from={today} to={rangeEnd} locale={locale} t={t} />
-          <EarningsRadar rows={rows} meta={meta} locale={locale} t={t} />
-        </div>
+      {/* HAFTANIN BİLANÇO UFKU SEKMENİN ALTINDA (25 Ekim). Burada iki
+          panel vardı: takvim yoğunluğu (gün başına bilanço sayısı) ve
+          "Takvimde Öne Çıkanlar" (en büyük üç şirket). İkisi tek görselde:
+          günler × pencere ızgarası, karo alanı piyasa değeri, gün başlığında
+          günün tüm açıklayanlarının sayısı ve yoğunluk çizgisi (gerekçe
+          `components/earnings/horizon/EarningsHorizon.tsx`). Kart listesi
+          ve oylama ızgaranın altında, değişmeden. Sekme çubuğu yine
+          başlığın hemen altında. */}
+      <EarningsHorizon
+        week={week}
+        today={today}
+        watchSet={new Set(userSymbols)}
+        badges={badges}
+        locale={locale}
+        t={t}
+      />
+
+      {/* AYLIK GÖRÜNÜMDE YOĞUNLUK ŞERİDİ KALIYOR. Ufuk bir iş haftası;
+          "Ay" seçen okuyucunun sorusu dört haftanın hangisinin kalabalık
+          olduğu ve o cevabı yalnız haftalara toplanmış yoğunluk grafiği
+          veriyor. Haftalık görünümde ufkun gün başlıkları aynı sayıyı
+          taşıdığı için orada basılmıyor. */}
+      {range === "ay" && rows.length > 0 && (
+        <EarningsActivity rows={rows} from={today} to={rangeEnd} locale={locale} t={t} />
       )}
 
       {/* HAFTALIK ARTIK KENDİ SEKMESİ (29 Eylül). Burada tek satırlık bir

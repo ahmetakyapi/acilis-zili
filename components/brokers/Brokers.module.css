@@ -10,14 +10,16 @@
 .ref {
   position:relative;
   display:inline-grid; place-items:center;
-  min-width:18px; height:18px; padding:0 4px;
+  min-width:22px; height:22px; padding:0 5px;
   border-radius:5px;
   background:var(--surface);
   color:var(--primary-ink);
-  font-size:11px; font-weight:700; line-height:1;
+  font-size:12px; font-weight:700; line-height:1;
   font-variant-numeric:tabular-nums;
   transition:background-color .2s var(--ease-brand), color .2s var(--ease-brand);
 }
+/* 25 Ekim: görünen 18 → 22 piksel (kart turu; asıl okuma kartlara geçti,
+   matris kaynak katmanı). Dikey genişletme 13 → 11: toplam yine 44. */
 /* DOKUNMA ALANI 44 YÜKSEKLİĞİNDE (25 Ekim). Önceki genişletme (-7/-3)
    hedefi 24×32 yapıyordu (UX denetimi: görünür 18×18). Dikeyde 13 piksel
    taşma 44'e tamamlıyor; satırlar 44'ten yüksek olduğundan alt/üst
@@ -25,9 +27,9 @@
    ölçüldü). Yatayda yan yana numaralar 2 piksel aralıklı: içteki kenarlar
    yalnız 1 piksel (komşunun hedefini kapmasın), dıştaki kenarlar 13
    piksel. Tek numara 44×44, ikili 32 genişliğinde. */
-.ref::after { content:""; position:absolute; inset:-13px -1px; }
-.ref:first-child::after { left:-13px; }
-.ref:last-child::after { right:-13px; }
+.ref::after { content:""; position:absolute; inset:-11px -1px; }
+.ref:first-child::after { left:-11px; }
+.ref:last-child::after { right:-11px; }
 .ref:hover { background:var(--primary-tint); color:var(--primary-hover); }
 
 /* Çapayla gelinen kaynak satırı bir an belirsin: okuyucu yüz satırlık
@@ -58,3 +60,22 @@
   transition:color .2s var(--ease-brand);
 }
 .inlineLink:hover { color:var(--primary-hover); }
+
+/* TÜM TARİFE AYRINTILARI katlaması (25 Ekim). Özet satırı panel başlığının
+   yerinde: solda h2, sağda künye + ok. 44 piksel en az; ok açıkken döner
+   (geçiş marka eğrisinde, hareketi azaltana anında). */
+.fold > summary { list-style:none; }
+.fold > summary::-webkit-details-marker { display:none; }
+.foldSummary {
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between;
+  gap:4px 12px;
+  min-height:44px;
+  padding:16px 16px;
+  cursor:pointer;
+}
+@media (min-width:640px) { .foldSummary { padding:16px 20px; } }
+.foldSummary:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; border-radius:var(--radius-xl); }
+.foldMeta { display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted); white-space:nowrap; }
+.foldCaret { transition:transform .28s var(--ease-brand); }
+.fold[open] .foldCaret { transform:rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { .foldCaret { transition:none; } }

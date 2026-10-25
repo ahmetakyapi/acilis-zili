@@ -2,18 +2,21 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { CHANGELOG_EN, CHANGELOG_TR, TELEGRAM_HREF } from "../content/changelog";
+import { CHANGELOG_EN, CHANGELOG_TR, CHANGE_AREAS, TELEGRAM_HREF } from "../content/changelog";
 import { COMPARE_PAIR_SLUGS } from "../content/compare-pairs";
 import { GUIDE_META } from "../content/guide/meta";
 import {
   changelogEntries,
+  entryAreas,
   entryDateLabel,
   filterEntries,
   groupByMonth,
+  groupByArea,
   kindCounts,
+  monthTicks,
   parseKind,
+  releaseTimeline,
   resolveHref,
-  splitOpenMonths,
 } from "../lib/changelog";
 import { FRESH_DAYS, parseSeen, shouldBadge } from "../lib/changelog-seen";
 
@@ -156,15 +159,9 @@ test("kind filter works per item and drops empty entries", () => {
   assert.equal(parseKind(undefined), null);
 });
 
-test("months keep order; the fold never splits a month and keeps the newest open", () => {
+test("months keep order, newest first", () => {
   const months = groupByMonth(changelogEntries("tr", null));
   assert.deepEqual(months.map((month) => month.month), ["2026-10", "2026-09", "2026-08"]);
-  const { open, folded } = splitOpenMonths(months, 6);
-  assert.deepEqual(open.map((month) => month.month), ["2026-10"]);
-  assert.deepEqual(folded.map((month) => month.month), ["2026-09", "2026-08"]);
-  const thin = splitOpenMonths([{ month: "2026-10", entries: months[0].entries.slice(0, 2) }, ...months.slice(1)], 6);
-  assert.deepEqual(thin.open.map((month) => month.month), ["2026-10", "2026-09"]);
-  assert.deepEqual(splitOpenMonths([], 6), { open: [], folded: [] });
 });
 
 test("badge: seen date compares, empty storage only while the latest is fresh", () => {
@@ -184,4 +181,43 @@ test("date labels: ranges use a hyphen, never an en dash", () => {
   assert.equal(entryDateLabel(changelogEntries("en", null)[0], "en"), "October 24-25, 2026");
   assert.equal(entryDateLabel({ ...latest, from: "2026-09-30" }, "tr"), "30 Eylül 2026 - 25 Ekim 2026");
   assert.equal(entryDateLabel({ ...latest, from: null }, "tr"), "25 Ekim 2026");
+});
+
+/* ---- Yeniden düzen (25 Ekim): alanlar, kısa özet, sürüm şeridi ---- */
+
+/** Kısa özetin tavanı — 1440'ta dört sütunlu karoda tek satır (ölçüldü). */
+const SHORT_MAX = 36;
+
+test("every item has a known area; the latest entry has a one-line short in both languages", () => {
+  for (const entry of CHANGELOG_TR) {
+    for (const item of entry.items) assert.ok((CHANGE_AREAS as readonly string[]).includes(item.area), item.title);
+  }
+  const trTop = CHANGELOG_TR[0].items as readonly { short?: string; title: string }[];
+  const enTop = CHANGELOG_EN[0].items as readonly { short?: string; title: string }[];
+  for (const list of [trTop, enTop]) {
+    for (const item of list) {
+      assert.ok(item.short, `short missing: ${item.title}`);
+      assert.ok(item.short.length <= SHORT_MAX, `short too long (${item.short.length}): ${item.short}`);
+      assert.doesNotMatch(item.short, /[\u2013\u2014]/);
+    }
+  }
+});
+
+test("groupByArea keeps area order and item order, entryAreas lists each area once", () => {
+  const [latest] = changelogEntries("tr", null);
+  const groups = groupByArea(latest.items);
+  assert.deepEqual(groups.map((g) => g.area), CHANGE_AREAS.filter((a) => latest.items.some((i) => i.area === a)));
+  assert.equal(groups.reduce((n, g) => n + g.items.length, 0), latest.items.length);
+  assert.deepEqual(entryAreas(latest), groups.map((g) => g.area));
+});
+
+test("release timeline runs oldest to newest on a 0-1 day scale with month ticks", () => {
+  const points = releaseTimeline(changelogEntries("tr", null));
+  assert.equal(points.length, CHANGELOG_TR.length);
+  assert.equal(points[0].x, 0);
+  assert.equal(points.at(-1)!.x, 1);
+  for (let i = 1; i < points.length; i++) assert.ok(points[i].x > points[i - 1].x);
+  const ticks = monthTicks(points);
+  assert.equal(ticks[0].month, points[0].date.slice(0, 7));
+  assert.ok(ticks.every((t) => t.x >= 0 && t.x <= 1));
 });

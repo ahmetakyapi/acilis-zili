@@ -87,6 +87,11 @@
   line-height: 1.2;
 }
 
+.heroRel[data-missed] {
+  background: var(--surface-sunken);
+  color: var(--text-soft);
+}
+
 .heroRel {
   grid-column: 2;
   grid-row: 1 / span 2;
@@ -424,6 +429,26 @@
   font-weight: 700;
 }
 
+/* Son alım günü geçmiş: mavi etkileşim tonu kalkar, tarih sönük durur ve
+   "Kaçtı" rozeti okunur (25 Ekim). */
+.lastBuy[data-missed] {
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+}
+
+.lastBuy[data-missed] strong {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.missedTag {
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-soft);
+  font-weight: 700;
+}
+
 .rows {
   display: flex;
   flex-direction: column;
@@ -656,4 +681,219 @@
   .stamp {
     padding-inline: 20px;
   }
+}
+
+/* ---- Katlanır günler (25 Ekim) ----
+   Gün gövdesi bir `details`: özet satırı tarih, son alım günü ve bir
+   künye şeridi (ilk beş logo, ödeme sayısı, takipteki sayısı, günün en
+   yüksek getirisi). Seksen ödemelik liste 1440'ta 9.242 piksel tutuyordu;
+   ölçüm sonucu bileşen yorumunda. Açılan gövde bastığın yerde uzar
+   (`ExpandInPlace`). Ok işareti açıkken ters döner (`--ease-brand`). */
+.fold {
+  min-width: 0;
+}
+
+.foldSummary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.6rem;
+  min-height: 44px;
+  padding: 0.2rem 0 0.55rem;
+  list-style: none;
+  cursor: pointer;
+}
+
+.foldSummary::-webkit-details-marker {
+  display: none;
+}
+
+.foldSummary:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+  border-radius: 0.5rem;
+}
+
+.foldBreak {
+  flex-basis: 100%;
+  height: 0;
+}
+
+/* Geniş ekranda son alım günü başlığın satırında: kapalı gün iki satır
+   (başlık + künye şeridi), üç değil. */
+@media (min-width: 768px) {
+  .foldBreak {
+    display: none;
+  }
+}
+
+.foldMeta {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  padding-top: 0.15rem;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  font-weight: 600;
+}
+
+.foldLogos {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Logolar üst üste biniyor; aradaki zemin halkası kartın tonu (gölge değil). */
+.foldLogo {
+  box-shadow: 0 0 0 2px var(--surface-solid);
+}
+
+.foldLogos > * + * {
+  margin-left: -5px;
+}
+
+.foldCount {
+  color: var(--text-strong);
+}
+
+.foldYield {
+  color: var(--text-body);
+}
+
+.watchTag {
+  color: var(--primary-ink);
+}
+
+.foldCaret {
+  margin-left: auto;
+  color: var(--text-muted);
+  transition: rotate 0.28s var(--ease-brand);
+}
+
+.fold[open] > .foldSummary .foldCaret {
+  rotate: 180deg;
+}
+
+@media (hover: hover) {
+  .foldSummary:hover .dayTitle {
+    color: var(--primary);
+  }
+}
+
+/* Açık günün gövdesi özetten bir hairline ile ayrılıyor. */
+.fold[open] > .rows {
+  border-top: 1px solid var(--line-soft);
+}
+
+.star {
+  margin-right: 3px;
+  color: var(--primary);
+  font-size: 0.8em;
+}
+
+/* ---- Öne çıkanlar ----
+   Şeridin altında, listenin üstünde iki kısa liste yan yana (telefonda alt
+   alta). Satır o günün katlamasına çapayla gider. */
+.highlights {
+  display: grid;
+  gap: 0.75rem 1.5rem;
+  padding: 0 16px 16px;
+}
+
+@media (min-width: 640px) {
+  .highlights {
+    padding-inline: 20px;
+  }
+}
+
+@media (min-width: 900px) {
+  .highlights {
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  }
+}
+
+.hlGroup {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem 0.85rem 0.6rem;
+  border-radius: 1rem;
+  background: var(--surface-sunken);
+}
+
+.hlTitle {
+  display: flex;
+  align-items: center;
+  color: var(--text-strong);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+/* Satırlar geniş grupta iki üç kolona diziliyor: tek kolon 1300
+   piksellik panelde getiri çizgisini sembolden bir ekran uzağa atıyordu. */
+.hlList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  column-gap: 1.75rem;
+}
+
+.hlRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(5.5rem, 0.8fr);
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  padding: 0.25rem 0.35rem;
+  margin-inline: -0.35rem;
+  border-radius: 0.6rem;
+  transition: background-color 0.2s var(--ease-brand);
+}
+
+@media (hover: hover) {
+  .hlRow:hover {
+    background: var(--surface-solid);
+  }
+}
+
+.hlWho {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.hlSymbol {
+  color: var(--text-strong);
+  font-size: var(--text-small);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.hlWhen {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hlYield {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  color: var(--text-strong);
+  font-size: var(--text-small);
+}
+
+.hlYield .yieldBar {
+  width: 100%;
+}
+
+.hlHint {
+  margin-top: 0.15rem;
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  line-height: 1.45;
 }

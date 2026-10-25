@@ -1,0 +1,105 @@
+/* Çift çizgi grafiği — renk yalnız token'dan; A mürekkep, B sönük kesik.
+   Gerekçe DuoLineChart.tsx başında. */
+
+.frame {
+  position: relative;
+  /* Ölçek etiketlerine sağda yer: çizgi etiketin altından geçmesin. */
+  padding-right: 0;
+  touch-action: pan-y;
+  border-radius: var(--radius-md);
+  cursor: crosshair;
+}
+.frame:focus-visible {
+  outline: 2px solid var(--line-focus);
+  outline-offset: 4px;
+}
+
+.tick {
+  position: absolute;
+  right: 0;
+  translate: 0 -115%;
+  padding: 0 2px;
+  font-size: 10.5px;
+  line-height: 1;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--premium-surface) 82%, transparent);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.dot {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  translate: -50% -50%;
+  border-radius: 999px;
+  background: var(--page-bg);
+  border: 2px solid var(--text-strong);
+  pointer-events: none;
+}
+.dot[data-series="b"] { border-color: var(--text-muted); }
+
+.card {
+  position: absolute;
+  top: 6px;
+  z-index: 2;
+  min-width: 156px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--overlay-surface);
+  box-shadow: var(--shadow-overlay);
+  pointer-events: none;
+}
+.cardRows {
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: 14px;
+  row-gap: 3px;
+  margin: 0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.cardRows dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.cardRows dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 700;
+}
+
+.swatch,
+.legendLine {
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+.swatch { width: 10px; height: 2px; background: var(--text-strong); }
+.swatch[data-series="b"] {
+  background: repeating-linear-gradient(90deg, var(--text-muted) 0 3px, transparent 3px 5px);
+}
+.legendLine { width: 16px; height: 2.5px; background: var(--text-strong); }
+.legendLine[data-series="b"] {
+  background: repeating-linear-gradient(90deg, var(--text-muted) 0 4px, transparent 4px 7px);
+}
+
+.axis {
+  position: relative;
+  height: 14px;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--text-muted);
+}
+.axis span {
+  position: absolute;
+  top: 0;
+  translate: -50% 0;
+  white-space: nowrap;
+}
+.axis span[data-edge="start"] { translate: 0 0; }
+.axis span[data-edge="end"] { translate: -100% 0; }

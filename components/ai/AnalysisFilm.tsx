@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { ACTS, CURTAIN_S, filmPalette, renderFilm, type FilmData, type FilmPalette, type FilmText } from "@/lib/ink/analysis-film";
+import { ACTS, CURTAIN_S, FILM_HEADLINES, FILM_SESSIONS, filmPalette, filmStory, renderFilm, type FilmData, type FilmPalette, type FilmStory, type FilmText } from "@/lib/ink/analysis-film";
 import type { Point } from "@/lib/ink/engine";
-import { formatPrice } from "@/lib/utils";
+import { formatPercent, formatPrice } from "@/lib/utils";
 import { EASE_BRAND } from "@/lib/motion";
 import styles from "./AnalysisFilm.module.css";
 
@@ -12,9 +12,10 @@ type T = Dictionary["aiAnalysis"];
 
 /** Perde bitince rapor sekmesine geçilir (ClaudeWorkbench). */
 export const CURTAIN_MS = CURTAIN_S * 1000;
-/** Hareketi azaltana her perdenin SON karesi (sn): film değil, o adımın resmi.
- *  III'ün karesi selin içinde, başlıklar yazılmışken; IV'ünkü kefeler dolarken. */
-const STILL_AT = [ACTS[1] - 0.05, ACTS[2] - 1.45, ACTS[3] - 1.3, ACTS[3] + 5];
+/** Hareketi azaltana her perdenin SON karesi (sn): film değil, o adımın resmi. I: çizgi ve
+ *  künyeleri; II: ortalamalar ve kesişme; III: manşet kartları; IV: duruk özet (zaman
+ *  `renderFilm`in içinde okuma turunun sonuna kıstırılır, büyük sayı oraya düşer). */
+const STILL_AT = [ACTS[1] - 0.05, ACTS[2] - 0.6, ACTS[3] - 0.6, ACTS[3] + 60];
 const NUMERALS = ["I", "II", "III", "IV"] as const;
 /** I–III'ün süresi (ms): çizgi gerçek süreyle dolar. IV'ün süresi YOK — Claude
  *  bitene kadar sürer ve ne kadar süreceğini bilmiyoruz. Eskiden 5 sn'de dolup
@@ -28,6 +29,8 @@ const MAX_DPR = 2;
 const VIEW_MARGIN = "120px 0px";
 /** Film masanın boyundan kendi oranına bu sürede büyür (ms). */
 const GROW_MS = 560;
+/** Duruk karede "Geçen" künyesinin yazılma aralığı (ms): kare çizilmiyor, yalnız saniye. */
+const IDLE_TICK_MS = 1000;
 
 function rsi14(closes: number[]) {
   if (closes.length < 15) return null;
@@ -38,27 +41,35 @@ function rsi14(closes: number[]) {
 
 /**
  * CANLI KÜNYE (11 Ekim; anatomy skill'inin "readout" kuralı: kartın köşesinde,
- * çizimin kendisini çizen veriden gerçek sayılar). Perde I'in seans sayısı ve
- * son kapanışı tuvaldeki mumların aynısı; II'nin RSI'ı ve 20 günlük ortalaması
- * tuvaldeki çizgilerin aynısı; III'ün manşet sayısı tuvale düşen başlıkların
- * sayısı (en fazla 5); IV gerçekten geçen süre. Uydurma bir ilerleme yüzdesi
- * yok: Claude'un ne kadar sürdüğünü bilmiyoruz, ne kadar geçtiğini biliyoruz.
+ * çizimin kendisini çizen veriden gerçek sayılar). I tuvaldeki seans sayısı, II
+ * RSI (tuvaldeki mumların kapanışlarından), III tuvale yazılan manşet sayısı, IV
+ * gerçekten geçen süre. Uydurma bir ilerleme yüzdesi yok: Claude'un ne kadar
+ * sürdüğünü bilmiyoruz, ne kadar geçtiğini biliyoruz. 25 Ekim: I'deki son kapanış
+ * ve II'deki 20 günlük künyeden çıktı — ikisi artık tuvalde ve altyazıda yazıyor;
+ * üçüncü kez yazmak gürültüydü.
  */
-function readoutOf(act: number, bars: FilmBar[], headlines: string[], seconds: number, R: T["claude"]["film"]["readout"], F: T["claude"]["film"], locale: Locale) {
+function readoutOf(act: number, story: FilmStory, closes: number[], headlines: string[], seconds: number, R: T["claude"]["film"]["readout"], locale: Locale) {
   const tag = locale === "tr" ? "tr-TR" : "en-US";
-  // Sitenin para biçimi (lib/utils → formatPrice): "124,77 $", birim sayıdan kopmaz.
-  const money = (v: number) => formatPrice(v, locale, { currency: true });
-  const closes = bars.map(b => b.c);
-  const last = closes.at(-1);
-  if (act === 0) return [R.sessions.replace("{n}", String(bars.length)), last !== undefined ? `${F.last} ${money(last)}` : null].filter(Boolean).join(" · ");
+  if (act === 0) return R.sessions.replace("{n}", String(story.n));
   if (act === 1) {
     const rsi = rsi14(closes);
-    const ma = closes.length >= 20 ? closes.slice(-20).reduce((a, b) => a + b, 0) / 20 : null;
-    return [rsi !== null ? `RSI ${rsi.toLocaleString(tag, { maximumFractionDigits: 1, minimumFractionDigits: 1 })}` : null, ma !== null ? `${F.ma20} ${money(ma)}` : null].filter(Boolean).join(" · ");
+    return rsi !== null ? `RSI ${rsi.toLocaleString(tag, { maximumFractionDigits: 1, minimumFractionDigits: 1 })}` : "";
   }
-  if (act === 2) return R.headlines.replace("{n}", String(Math.min(5, headlines.length)));
+  if (act === 2) return R.headlines.replace("{n}", String(Math.min(FILM_HEADLINES, headlines.length)));
   const m = Math.floor(seconds / 60), s = Math.floor(seconds % 60);
   return R.elapsed.replace("{t}", `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
+}
+
+/**
+ * Perdenin altyazısı (25 Ekim, kısa film): I'de öykünün kendisi (nereden nereye), II'de
+ * ortalamaların söylediği. Sayılar `filmStory`den — tuvaldeki künyelerle AYNI kaynak.
+ * Veri yetmezse (ortalama yok) sahnenin sabit cümlesi kalır.
+ */
+function storyLine(act: number, story: FilmStory, F: T["claude"]["film"], fallback: string, locale: Locale) {
+  const money = (v: number) => formatPrice(v, locale, { currency: true });
+  if (act === 0 && story.n >= 2) return F.story.journey.replace("{n}", String(story.n)).replace("{from}", money(story.first)).replace("{to}", money(story.last)).replace("{pct}", formatPercent(story.change, locale));
+  if (act === 1 && story.vs20 && story.vs50) return F.story.trend.replace("{a}", F.story[story.vs20]).replace("{b}", F.story[story.vs50]);
+  return fallback;
 }
 
 /** Palet token'lardan, `filmPalette`in tek okuyucusuyla (analysis-film.ts; tema değişince yeniden okunur). */
@@ -75,7 +86,8 @@ function readPalette(): FilmPalette {
  * sel artık temanın kendi ailesinde bir mavi dalga (açıkta açık, koyuda koyu);
  * eski `data-inverted` hâli açık temada sayfanın içinde koyu bir film açıyordu.
  */
-export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage, done, t, locale, fromHeight, origin }: {
+export function AnalysisFilm({ bars: allBars, headlines, symbol, name, logoUrl, logoImage, done, t, locale, fromHeight, origin }: {
+  /** Son `FILM_SESSIONS` seans çizilir; öncesindeki (en fazla `MA_LEAD`) yalnız ortalamaların gerçek penceresi. */
   bars: FilmBar[]; headlines: string[]; symbol: string; name: string; logoUrl: string | null; done: boolean; t: T; locale: Locale;
   /** Analiz masasının boyu (ClaudeWorkbench): film o boydan KENDİ oranına büyür.
    *  25 Ekim'e kadar film masanın boyunda açılıp oranını kapatıyordu (`minHeight`);
@@ -94,7 +106,12 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
   const [act, setAct] = useState(0);
   /** Geçen tam saniye: IV. perdenin künyesi (saniyede bir yazılır, her karede değil). */
   const [seconds, setSeconds] = useState(0);
+  /** Duruk karede duran döngüyü yeniden başlatır (sonuç gelince); efektin içinde kurulur. */
+  const wakeRef = useRef<(() => void) | null>(null);
   const S = t.claude.scenes;
+  const bars = useMemo(() => allBars.slice(-FILM_SESSIONS), [allBars]);
+  const lead = useMemo(() => allBars.slice(0, -FILM_SESSIONS).map(b => b.c), [allBars]);
+  const story = useMemo(() => filmStory({ closes: bars.map(b => b.c), highs: bars.map(b => b.h), lows: bars.map(b => b.l), lead }), [bars, lead]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -102,11 +119,14 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
     if (!canvas || !ctx) return;
     // Logo tuvale çizilir; inmeden önce yerine harfli karo durur (render her karede `complete`a bakar).
     const logo = logoImage ?? (logoUrl ? Object.assign(new Image(), { decoding: "async", src: logoUrl }) : null);
-    const data: FilmData = { closes: bars.map(b => b.c), highs: bars.map(b => b.h), lows: bars.map(b => b.l), headlines, rsi: rsi14(bars.map(b => b.c)), logo, origin };
+    const data: FilmData = { opens: bars.map(b => b.o), closes: bars.map(b => b.c), highs: bars.map(b => b.h), lows: bars.map(b => b.l), lead, headlines, logo, origin };
     const F = t.claude.film;
+    // Sayılar sitenin biçiminde (lib/utils): "212,21 $", "+%8,80"; ekrandaki künyelerle aynı.
     const text: FilmText = {
-      symbol, name, locale: locale === "tr" ? "tr-TR" : "en-US", ...F,
-      positive: t.claude.positive, negative: t.claude.negative, ready: t.claude.ready,
+      symbol, name, locale: locale === "tr" ? "tr-TR" : "en-US",
+      last: F.last, first: F.first, high: F.high, low: F.low, ma20: F.ma20, ma50: F.ma50, strongest: F.strongest, cross: F.cross,
+      ready: t.claude.ready, noNews: t.noNewsShort,
+      money: v => formatPrice(v, locale, { currency: true }), percent: v => formatPercent(v, locale),
     };
     let pal = readPalette();
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -120,23 +140,45 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
       w = box.width; h = box.height;
       canvas.width = Math.max(1, Math.round(w * dpr)); canvas.height = Math.max(1, Math.round(h * dpr));
     };
+    /** Okuma turu bitince kare duruktur (`idle`): sonuç gelene ya da boyut/tema değişene
+     *  kadar yeniden çizilmez — telefonda CPU boşa yanmasın. */
+    let frozen = false;
     const draw = (time: number) => {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const doneAt = doneRef.current;
-      renderFilm(ctx, { t: time, doneAt: doneAt === null ? null : Math.min(doneAt, time) }, pal, data, text, { w, h });
+      frozen = renderFilm(ctx, { t: time, doneAt: doneAt === null ? null : Math.min(doneAt, time) }, pal, data, text, { w, h }).idle;
     };
     const actOf = (time: number) => doneRef.current !== null ? 4 : ACTS.findLastIndex(start => time >= start);
     /* EKRAN DIŞINDA DURUR (anatomy, motion.md). Film zamana bağlı bir öykü:
        geri gelince kaldığı yerden değil GEÇEN zamandan sürer. Gözlemcinin EN
        YENİ kaydı okunur — ekrandan çıkıp dönen kutu tek çağrıda iki kayıt
        getirir, ilki okunursa film ekrandayken donar. */
-    let visible = true, running = false;
+    let visible = true, running = false, idleTimer = 0, cancelled = false;
+    /* DURUK KAREDE DÖNGÜ DE DURUR (25 Ekim). Tuval duruk karede çizilmiyordu
+       ama rAF her karede dönüp iki `setState` çağırıyordu (perde ve saniye;
+       React aynı değerde vazgeçse de çağrı ve zamanlayıcı her karede). Şimdi
+       okuma turu bitince döngü kapanır; "Geçen" künyesi saniyede bir
+       aralıkla yazılır. Sonuç gelince (`wakeRef`), boyut ya da tema değişince
+       döngü yeniden başlar. Ölçüm (390, NVDA, istek askıda, 55. saniye, 5 sn
+       örnek): önce 60 rAF/sn ve 20,4 ms/sn ana iş parçacığı; sonra 0 rAF/sn ve
+       7–9 ms/sn (geliştirme kipi). Sonuç gelince döngü 60 rAF/sn'ye döndü. */
+    const sleep = () => {
+      raf = 0;
+      if (idleTimer) return;
+      idleTimer = window.setInterval(() => { if (visible) setSeconds(Math.floor(clock())); }, IDLE_TICK_MS);
+    };
+    const wake = () => {
+      if (!running || cancelled || media.matches || !visible || raf) return;
+      clearInterval(idleTimer); idleTimer = 0;
+      raf = requestAnimationFrame(tick);
+    };
     const tick = () => {
       if (!visible) { raf = 0; return; }
       const time = clock();
-      draw(time);
+      if (!frozen || doneRef.current !== null) draw(time);
       setAct(actOf(time));
       setSeconds(Math.floor(time));
+      if (frozen && doneRef.current === null) { sleep(); return; }
       raf = requestAnimationFrame(tick);
     };
     const still = () => {
@@ -146,7 +188,7 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
       setAct(now);
     };
     resize();
-    let stillTimer = 0, cancelled = false;
+    let stillTimer = 0;
     // Logo henüz çözülmediyse film en fazla 450 ms bekler: damga anında logo hazır
     // olsun (harfli karo yalnız logosu gerçekten olmayan hissede). Bekleme açılış
     // düğmesinin büzülmesinin arkasında kalıyor; boş kâğıt kısa bir an.
@@ -161,18 +203,19 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
       // geçen süre doğru kalsın) ama görünmezken tuvale dokunmaz.
       if (media.matches) { still(); stillTimer = window.setInterval(() => { if (!visible) return; still(); setSeconds(Math.floor(clock())); }, 500); } else raf = requestAnimationFrame(tick);
     });
-    const observer = new ResizeObserver(() => { resize(); if (media.matches) still(); });
+    const observer = new ResizeObserver(() => { resize(); frozen = false; if (media.matches) still(); else wake(); });
     observer.observe(canvas);
     const view = new IntersectionObserver((entries) => {
       visible = entries[entries.length - 1].isIntersecting;
       if (!visible || !running || cancelled) return;
-      if (media.matches) { still(); setSeconds(Math.floor(clock())); } else if (!raf) raf = requestAnimationFrame(tick);
+      if (media.matches) { still(); setSeconds(Math.floor(clock())); } else if (!raf && !idleTimer) raf = requestAnimationFrame(tick);
     }, { rootMargin: VIEW_MARGIN });
     view.observe(canvas);
-    const themeWatch = new MutationObserver(() => { pal = readPalette(); });
+    const themeWatch = new MutationObserver(() => { pal = readPalette(); frozen = false; if (media.matches) still(); else wake(); });
     themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => { cancelled = true; cancelAnimationFrame(raf); clearInterval(stillTimer); observer.disconnect(); view.disconnect(); themeWatch.disconnect(); };
-  }, [bars, headlines, symbol, name, logoUrl, logoImage, locale, t.claude, origin]);
+    wakeRef.current = wake;
+    return () => { cancelled = true; wakeRef.current = null; cancelAnimationFrame(raf); clearInterval(stillTimer); clearInterval(idleTimer); observer.disconnect(); view.disconnect(); themeWatch.disconnect(); };
+  }, [bars, lead, headlines, symbol, name, logoUrl, logoImage, locale, t.claude, t.noNewsShort, origin]);
 
   // Büyüme yalnız ilk açılışta, Web Animations ile (CSS değişkeni `element.animate`ta
   // çözülmüyor: eğri lib/motion.ts → EASE_BRAND). Hareketi azaltana anında tam boy.
@@ -188,11 +231,14 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
   }, [fromHeight]);
 
   useEffect(() => {
-    if (done && doneRef.current === null) doneRef.current = (performance.now() - startedRef.current) / 1000;
+    if (done && doneRef.current === null) {
+      doneRef.current = (performance.now() - startedRef.current) / 1000;
+      wakeRef.current?.();
+    }
   }, [done]);
 
-  const caption = act === 4 ? { title: t.claude.ready, line: "" } : S[act];
-  const readout = act < 4 ? readoutOf(act, bars, headlines, seconds, t.claude.film.readout, t.claude.film, locale) : "";
+  const caption = act === 4 ? { title: t.claude.ready, line: "" } : { title: S[act].title, line: storyLine(act, story, t.claude.film, S[act].line, locale) };
+  const readout = act < 4 ? readoutOf(act, story, bars.map(b => b.c), headlines, seconds, t.claude.film.readout, locale) : "";
   return <div className={styles.stage} role="status" aria-live="polite" aria-label={`${t.claude.stage}: ${caption.title}`}
     data-final={act === 4 ? "" : undefined} ref={stageRef}>
     <canvas ref={canvasRef} className={styles.canvas} aria-hidden />

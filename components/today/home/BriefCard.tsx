@@ -1,4 +1,7 @@
 import { BriefBody } from "@/components/today/BriefBody";
+import { BriefLedger, ledgerRefs } from "@/components/today/BriefLedger";
+import { LedgerLinker } from "@/components/today/LedgerLinker";
+import { getBriefLedger } from "@/lib/brief-ledger-data";
 import { BriefSwitch, type BriefView } from "@/components/today/BriefSwitch";
 import { BRIEF_PUBLISH_TR, getLatestBriefResult, getEarningsBetween, weekAnchor } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
@@ -45,6 +48,14 @@ export async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }
   ]);
   const daily = dailyResult.ok ? dailyResult.row : null;
   const weekly = weeklyResult.ok ? weeklyResult.row : null;
+  /* KAYIT DEFTERİ'NİN KÜÇÜK HÂLİ (25 Ekim görsel zirve): kart manşetin
+     altında dört endeksi taşıyor — bülten sayfasındaki bantla aynı kaynak
+     (`getBriefLedger`), ölçü ve hisse yok; kart bir giriş. Önbellekli tek
+     bar isteği; okunamazsa bant kalkar, metin kalır. */
+  const [dailyLedger, weeklyLedger] = await Promise.all([
+    daily ? getBriefLedger(daily.briefDate, "daily", daily.bodyMd, false) : null,
+    weekly ? getBriefLedger(weekly.briefDate, "weekly", weekly.bodyMd, false) : null,
+  ]);
   const acikSatir =
     bugunBilanco.length < KISA_BILANCO_ESIGI
       ? OZET_TABAN_SATIR + OZET_EK_SATIR
@@ -104,28 +115,36 @@ export async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }
          sunucuda kalıyor, istemciye yalnızca çizilmiş ağaç gidiyor. */
       dailyBody={
         daily && (
-          <BriefBody
-            size="card-wide"
-            markdown={daily.bodyMd}
-            moreLabel={t.common.showAll}
-            lessLabel={t.common.less}
-            openLines={acikSatir}
-            /* Telefonda ikinci, kısa kesme — gerekçe ve ölçüm BriefBody. */
-            phonePreview
-          />
+          <LedgerLinker>
+            {dailyLedger && <BriefLedger data={dailyLedger} locale={locale} t={t} variant="card" />}
+            <BriefBody
+              size="card-wide"
+              markdown={daily.bodyMd}
+              moreLabel={t.common.showAll}
+              lessLabel={t.common.less}
+              openLines={acikSatir}
+              /* Telefonda ikinci, kısa kesme — gerekçe ve ölçüm BriefBody. */
+              phonePreview
+              refs={dailyLedger ? ledgerRefs(dailyLedger) : undefined}
+            />
+          </LedgerLinker>
         )
       }
       weeklyBody={
         weekly && (
-          <BriefBody
-            size="card-wide"
-            openLines={acikSatir}
-            /* Telefonda ikinci, kısa kesme — gerekçe ve ölçüm BriefBody. */
-            phonePreview
-            markdown={weekly.bodyMd}
-            moreLabel={t.common.showAll}
-            lessLabel={t.common.less}
-          />
+          <LedgerLinker>
+            {weeklyLedger && <BriefLedger data={weeklyLedger} locale={locale} t={t} variant="card" />}
+            <BriefBody
+              size="card-wide"
+              openLines={acikSatir}
+              /* Telefonda ikinci, kısa kesme — gerekçe ve ölçüm BriefBody. */
+              phonePreview
+              markdown={weekly.bodyMd}
+              moreLabel={t.common.showAll}
+              lessLabel={t.common.less}
+              refs={weeklyLedger ? ledgerRefs(weeklyLedger) : undefined}
+            />
+          </LedgerLinker>
         )
       }
       labels={{

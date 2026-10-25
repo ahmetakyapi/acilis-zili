@@ -1,6 +1,7 @@
 import { Panel, PanelLink } from "@/components/ui/primitives";
 import { formatMacroValue } from "@/components/macro/macro-format";
-import { getMacroSummaryRows } from "@/lib/data";
+import { Sparkline } from "@/components/ui/Sparkline";
+import { getMacroSummaryRows, MACRO_TRAIL } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import {
   cn,
@@ -60,6 +61,8 @@ export async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionar
      "bilinmiyor" bir bilgi, çünkü yanındaki satırda bir sayı var. */
   if (shown.every((row) => row.latestValue === null)) return null;
 
+  const trailLength = Math.min(MACRO_TRAIL, Math.max(0, ...shown.map((row) => row.trail?.length ?? 0)));
+
   return (
     <Panel className="px-4 py-4 sm:px-5">
       <div className="mb-3.5 flex items-baseline justify-between gap-3">
@@ -117,6 +120,19 @@ export async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionar
                   {formatPeriodLabel(row.periodLabel, locale)}
                 </p>
               )}
+              {/* KIVILCIM (25 Ekim): sayı tek başına "yükseliyor mu, tepede
+                  mi" demiyordu. Son iki yılın aylık gözlemi, /makro'nun mini
+                  çizgileriyle aynı dil (marka mavisi, yön rengi yok: makroda
+                  yükselmek iyi haber demek değil). İki noktadan azsa basılmaz. */}
+              {row.trail && row.trail.length > 1 && (
+                <Sparkline
+                  points={row.trail.map((point) => ({ value: point.value }))}
+                  width={120}
+                  height={28}
+                  title={t.macroVisual.sparkTitle.replace("{title}", locale === "tr" ? row.titleTr : row.titleEn).replace("{n}", String(row.trail.length))}
+                  className="mt-1.5 h-7 w-full"
+                />
+              )}
               <p className="numeral text-tiny text-muted">
                 {delta === null ? (
                   t.common.noData
@@ -128,7 +144,8 @@ export async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionar
                       aria-hidden
                       className={cn(
                         "font-semibold",
-                        delta > 0 ? "text-primary" : "text-down",
+                        // Ok yalnız yön: sitenin yön renkleri (25 Ekim, /makro ile aynı kural).
+                        delta > 0 ? "text-up" : "text-down",
                       )}
                     >
                       {delta > 0 ? "▲" : "▼"}
@@ -141,6 +158,12 @@ export async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionar
           );
         })}
       </div>
+      {/* Künyedeki sayı gerçekten basılan en uzun çizgi (tavan MACRO_TRAIL). */}
+      {trailLength > 1 && (
+        <p className="mt-3 border-t border-line-soft pt-2 text-tiny text-muted">
+          {t.macroVisual.sparkNote.replace("{n}", String(trailLength))}
+        </p>
+      )}
     </Panel>
   );
 }

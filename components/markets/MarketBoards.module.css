@@ -146,3 +146,58 @@
    piksel tutuyor ve 390'da yüzde sütunlarından yalnızca biri
    görünüyordu (ölçüldü). İki satıra inince iki sütun görünüyor. */
 @media(max-width:639px) { .labelName { display:block; max-width:128px; } }
+
+/* --------------------------------------------------------------------------
+   Sektör ısı matrisi (25 Ekim; karar kaydı EtfBoards.tsx → HeatCell)
+
+   Karo: ton yön (`--up` / `--down`), koyuluk büyüklük (`--heat`, 0–1;
+   sütunun yuvarlak tavanına göre, tavan lejantta yazılı).
+   Karışım tavanı %38 + %4 taban: en koyu karoda da sayı metin
+   mürekkebiyle okunuyor (en koyu karoda `--text-strong`: açık temada
+   kırmızıda 7,9:1, koyuda yeşilde 5,6:1 — iki temanın en zayıf ikilisi;
+   hesap token renkleri ve `--premium-surface` zemininden).
+   Karolar arasında 2 piksellik yüzey boşluğu (tablo `border-spacing`), satır
+   çizgisi yok: ızgarayı karoların kendisi çiziyor.
+   -------------------------------------------------------------------------- */
+.heatTable { min-width:440px; border-collapse:separate; border-spacing:0 2px; }
+.heatTable tbody tr + tr { border-top:0; }
+.heatTable tbody .labelCell { padding-block:6px; vertical-align:middle; }
+.heatTable td.heatCell { padding:0 0 0 3px; text-align:right; white-space:nowrap; vertical-align:middle; }
+.heatTable tr > td.heatCell:last-child { padding-right:16px; }
+@media(min-width:640px) { .heatTable tr > td.heatCell:last-child { padding-right:20px; } }
+.heat { --heat-color:var(--line-strong); display:flex; align-items:center; justify-content:flex-end; min-height:40px; padding:0 9px; border-radius:8px; background:color-mix(in oklab, var(--heat-color) calc(var(--heat, 0) * 38% + 4%), transparent); font-weight:700; color:var(--text-strong); transition:box-shadow .16s var(--ease-brand); }
+.heat[data-tone="up"] { --heat-color:var(--up); }
+.heat[data-tone="down"] { --heat-color:var(--down); }
+.heat:not([data-tone]) { background:transparent; color:var(--text-muted); }
+.heatCell .basis { margin-top:2px; padding-right:9px; }
+/* Satır cevabı: karolar halka alıyor (gölge değil, iç çizgi); etiket
+   hücresinin opak tint'i yukarıdaki ortak kuraldan. */
+.heatTable tbody tr:focus-within .heat { box-shadow:inset 0 0 0 1.5px var(--line-strong); }
+@media(hover:hover) { .heatTable tbody tr:hover .heat { box-shadow:inset 0 0 0 1.5px var(--line-strong); } }
+
+/* Cümle ve lejant: tablonun üstünde, panelin iç kenarında. */
+.heatHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 20px; padding:2px 16px 12px; }
+@media(min-width:640px) { .heatHead { padding-inline:20px; } }
+.heatLead { flex:1 1 320px; max-width:68ch; font-size:var(--text-base); line-height:1.5; font-weight:550; color:var(--text-strong); text-wrap:pretty; }
+/* Lejant ve YAZILI ölçek (25 Ekim son düzeltme): koyuluk sütun başına,
+   tam tonun hangi yüzde olduğu karoların altında sütun sütun yazıyor. */
+.heatKey { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.heatScale { font-size:var(--text-tiny); line-height:1.35; color:var(--text-muted); white-space:nowrap; }
+.heatScale > span { font-weight:600; }
+@media(max-width:639px) { .heatKey { align-items:flex-start; } .heatScale { white-space:normal; } }
+.heatLegend { display:flex; align-items:center; gap:3px; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
+.heatLegend > span:first-child { margin-right:5px; }
+.heatLegend > span:last-child { margin-left:5px; }
+.heatLegend .heat { display:inline-block; width:16px; min-height:12px; height:12px; padding:0; border-radius:3px; }
+.heatLegend .heat[data-tone="flat"] { box-shadow:inset 0 0 0 1px var(--line); }
+/* Telefonda (390, ölçüldü): beş sütun 352 piksellik panele sığmıyor; etiket
+   sütunu 132'den 100'e, karo dolgusu 9'dan 5'e: kaydırma 125'ten
+   daha az pikselde kalıyor ve ilk ekranda dört dönem okunuyor. Sabit
+   etiket sütunu ve "devamı var" işareti (ScrollEdges) duruyor. */
+@media(max-width:639px) {
+  .heatTable { min-width:0; }
+  .heatTable .labelCell { min-width:100px; }
+  .heatTable .labelName { max-width:100px; }
+  .heat { min-height:38px; padding:0 5px; font-size:12px; letter-spacing:-.01em; }
+}
+@media(prefers-reduced-motion:reduce) { .heat { transition:none; } }

@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   archivePosters,
+  packArchiveCloses,
+  unpackArchiveBars,
   archiveSessions,
   bellEnergy,
   breadthOf,
@@ -16,7 +18,6 @@ import {
   posterSeed,
   type PosterBreadth,
 } from "../lib/day-poster";
-import { posterBoxHeight, posterScene } from "../lib/ink/poster";
 import { makeHeroTap, INK_SCENES } from "../lib/ink/scenes";
 import type { MarketHoliday } from "../lib/market-hours";
 import type { Bar } from "../lib/providers/types";
@@ -101,6 +102,7 @@ test("poster: on bir sektörün hepsi ve SPY şart; sıra güçlüden zayıfa", 
   assert.deepEqual(poster.sectors.map((m) => m.symbol), ["XLB", "XLC", "XLA"]);
   assert.deepEqual(poster.indices.map((m) => m.symbol), ["SPY"], "QQQ verisi yok, düşer");
   assert.equal(poster.breadth?.advancing, 1);
+  assert.deepEqual(poster.stocks, [{ symbol: "M1", change: 10, close: 11 }], "hisse: o günün kapanışı ve değişimi");
   assert.equal(posterScale(poster), 2, "en büyük hareket, taban 1");
 
   const missingSector = buildPoster({ date, prevDate: prev, bars: { ...bars, XLA: [bar(prev, 100)] }, sectorSymbols: sectors, indexSymbols: ["SPY"], memberSymbols: [] });
@@ -140,19 +142,34 @@ test("arşiv: seanslar en yeniden geriye, tatil atlanıyor; kurulamayan gün dü
   assert.equal(posters[0].indices[0].change, 1);
 });
 
+test("arşivin önbellek kaydı: kapanışlardan kurulan poster ham barlardan kurulanla aynı", () => {
+  const sessions = archiveSessions("2026-10-23", HOLIDAYS, 3);
+  const raw = {
+    SPY: [bar("2026-10-19", 99), bar("2026-10-20", 100), bar("2026-10-21", 101), bar("2026-10-22", 100.5), bar("2026-10-23", 102.37)],
+    XLK: [bar("2026-10-20", 50), bar("2026-10-21", 49.5), bar("2026-10-22", 49.75), bar("2026-10-23", 51.13)],
+    AAPL: [bar("2026-10-20", 230.12), bar("2026-10-22", 231.4), bar("2026-10-23", 229.99)],
+    MSFT: [bar("2026-10-01", 400)],
+  };
+  const args = { sectorSymbols: ["XLK"], indexSymbols: ["SPY"], memberSymbols: ["AAPL", "MSFT"] };
+  const pack = packArchiveCloses(sessions, raw);
+  // Yalnız seans günleri; arşive girmeyen bar (19 Ekim, 1 Ekim) taşınmıyor.
+  assert.deepEqual(pack.dates, ["2026-10-20", "2026-10-21", "2026-10-22", "2026-10-23"]);
+  assert.deepEqual(pack.closes.AAPL, [230.12, null, 231.4, 229.99]);
+  assert.equal(pack.closes.MSFT, undefined);
+  assert.deepEqual(
+    archivePosters({ sessions, bars: unpackArchiveBars(pack), ...args }),
+    archivePosters({ sessions, bars: raw, ...args }),
+  );
+});
+
 test("yeni seansın eksiği geçici: beş gün içinde yeniden sorulur, eskisi önbellekte kalır", () => {
   assert.equal(posterRetryable("2026-10-23", "2026-10-25"), true);
   assert.equal(posterRetryable("2026-10-20", "2026-10-25"), true);
   assert.equal(posterRetryable("2026-10-19", "2026-10-25"), false);
 });
 
-test("sahne: deterministik kutu, son kare tanımlı; zil şiddeti yalnız genliği büyütüyor", () => {
-  const data = { seed: posterSeed("2026-10-23"), scale: 2, sectors: Array(11).fill(0.5), indices: Array(4).fill(-0.5), breadth: { advancing: 300, unchanged: 3, declining: 200 } };
+test("tohum tarihten; zil şiddeti yalnız genliği büyütüyor", () => {
   assert.equal(posterSeed("2026-10-23"), posterSeed("2026-10-23"));
   assert.notEqual(posterSeed("2026-10-23"), posterSeed("2026-10-22"));
-  const scene = posterScene(data);
-  assert.equal(scene.box.h, posterBoxHeight(data));
-  assert.ok(scene.end > 1 && scene.end < 4, "sahne kısa ve bir kez");
-  assert.ok(posterBoxHeight({ ...data, breadth: null }) < scene.box.h, "genişlik yoksa bant yer tutmuyor");
   assert.equal(makeHeroTap(0).end, INK_SCENES.heroTap.end);
 });

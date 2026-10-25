@@ -7,7 +7,9 @@ import { AvatarTile } from "@/components/brand/AvatarIcon";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ScaleBar } from "@/components/markets/CompareScale";
 import { SectorStrip } from "@/components/portfolio/PortfolioVisuals";
-import { DataStamp, PageHeader, Panel, PanelHeader } from "@/components/ui/primitives";
+import { DataStamp, PageHeader, Panel, PanelHeader, Skeleton } from "@/components/ui/primitives";
+import { ReturnTimeline } from "@/components/portfolio/ReturnTimeline";
+import { Suspense } from "react";
 import { initialsOf } from "@/lib/avatars";
 import { getUserWatchlists } from "@/lib/data";
 import { formatIsoMonth } from "@/lib/fx";
@@ -24,7 +26,9 @@ import {
 import { pageAlternates } from "@/lib/site";
 import { getPublishedPostsByUser } from "@/lib/user-post-data";
 import { listUserReports } from "@/lib/ai-analysis-reports";
+import { verdictTextClass } from "@/lib/analysis";
 import {
+  cn,
   directionOf,
   directionText,
   formatPercent,
@@ -250,7 +254,7 @@ export default async function ProfilePage(props: PageProps<"/u/[username]">) {
                           {label}
                         </span>
                         <span
-                          className={`text-2xl font-bold tabular-nums tracking-tight ${directionText(directionOf(value))}`}
+                          className={`numeral text-2xl font-bold tracking-tight ${directionText(directionOf(value))}`}
                         >
                           {formatPercent(value, locale, 1)}
                         </span>
@@ -279,6 +283,20 @@ export default async function ProfilePage(props: PageProps<"/u/[username]">) {
                   })()}
                 </div>
 
+                {/* ALIŞTAN BUGÜNE (25 Ekim): iki yalın sayının NE ZAMAN
+                    ayrıştığı. Yalnız bu blokta, yani sahip portföy bloğunu
+                    açtıysa; tarih AY hassasiyetinde, tutar yok (gerekçe
+                    components/portfolio/ReturnTimeline.tsx). Uçları vitrinle
+                    aynı kotasyon paketinden: çizgi tam bu iki sayıda biter. */}
+                <Suspense fallback={<Skeleton className="h-[236px] w-full" />}>
+                  <ReturnTimeline
+                    userId={profile.userId}
+                    quoteKey="showcase"
+                    variant="profile"
+                    locale={locale}
+                    t={t}
+                  />
+                </Suspense>
                 {/* Ağırlıklar: çubuk MUTLAK pay (%50 = yarım kulvar) — görece
                     ölçek en büyük dilimi hep tam basıp payları abartırdı. */}
                 <div className="flex flex-col gap-1.5">
@@ -298,7 +316,7 @@ export default async function ProfilePage(props: PageProps<"/u/[username]">) {
                           {weight.symbol}
                         </Link>
                         <ScaleBar ratio={weight.pct / 100} signed={false} tone="neutral" />
-                        <span className="text-right text-xs font-semibold tabular-nums text-strong">
+                        <span className="numeral text-right text-xs font-semibold text-strong">
                           {formatPercentPlain(weight.pct, locale, 1)}
                         </span>
                       </li>
@@ -356,7 +374,7 @@ export default async function ProfilePage(props: PageProps<"/u/[username]">) {
                       </span>
                       <span className="flex items-center gap-2 text-tiny text-muted">
                         {post.publishedAt && (
-                          <time dateTime={post.publishedAt.toISOString().slice(0, 10)} className="tabular-nums">
+                          <time dateTime={post.publishedAt.toISOString().slice(0, 10)} className="numeral">
                             {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
                               day: "numeric",
                               month: "long",
@@ -393,18 +411,17 @@ export default async function ProfilePage(props: PageProps<"/u/[username]">) {
                         {" · "}
                         {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", { day: "numeric", month: "short", year: "numeric" }).format(new Date(report.generatedAt))}
                       </span>
-                      {/* Görüş bir YÖN: AL yeşil, SAT kırmızı, kalanı nötr. */}
+                      {/* Görüş üçlüsü site genelinde aynı (25 Ekim renk kararı):
+                          tek kaynak `verdictTextClass` (lib/analysis.ts). "Veri
+                          Yetersiz" bir görüş değil: pirince düşüyordu, artık sönük. */}
                       <span
-                        className={
-                          report.verdict === "buy"
-                            ? "text-small font-bold text-up"
-                            : report.verdict === "sell"
-                              ? "text-small font-bold text-down"
-                              : "text-small font-bold text-muted"
-                        }
+                        className={cn(
+                          "text-small font-bold",
+                          report.verdict === "insufficient" ? "text-muted" : verdictTextClass(report.verdict),
+                        )}
                       >
                         {t.aiAnalysis.verdicts[report.verdict]}
-                        {report.score !== null && <span className="ml-1.5 font-semibold text-muted tabular-nums">{report.score}</span>}
+                        {report.score !== null && <span className="numeral ml-1.5 font-semibold text-muted">{report.score}</span>}
                       </span>
                     </Link>
                   </li>
