@@ -1,0 +1,62 @@
+name: Links
+
+# Kırık bağlantı taraması — canlı sitenin okuma sayfalarındaki bütün
+# bağlantıları (iç ve dış) lychee ile haftada bir denetler.
+#
+# NEDEN CANLI SİTE: yazıların gövdesi veritabanında (Mercek, bülten) ve
+# runner'da veritabanı yok; derlenmiş HTML'i ancak canlı site veriyor.
+# Sayfa listesi site haritasından (`/sitemap.xml`) çıkıyor, yani yeni bir
+# yazı ertesi taramada kendiliğinden kapsamda.
+#
+# KAPSAM: yalnız Türkçe okuma sayfaları — Mercek, rehber, sözlük, bülten,
+# Yenilikler ve birkaç sabit sayfa. Hisse ve bilanço sayfaları (600+) aynı
+# şablondan; bağlantıları kodda, duman testi zaten geziyor. EN karşılıkları
+# aynı bağlantıları taşıyor.
+#
+# DAĞITIMI BEKLETMEZ: ayrı iş akışı, uyarı kanalı. Dış sitelerin bot
+# engeli (403/429) kırık sayılmaz; finans sitelerinin çoğu başsız istemciyi
+# geri çeviriyor ve bu bizim hatamız değil.
+
+on:
+  schedule:
+    - cron: "0 5 * * 1" # pazartesi 08:00 TR
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: links
+  cancel-in-progress: true
+
+jobs:
+  links:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Sayfa listesi (site haritası)
+        id: pages
+        run: |
+          curl -fsSL https://aciliszili.com/sitemap.xml \
+            | grep -o '<loc>[^<]*</loc>' | sed 's#<[^>]*>##g' \
+            | grep -E '^https://aciliszili\.com/(mercek|rehber|sozluk|bulten|yenilikler|araci-kurumlar|vergi|hakkinda)(/|$)' \
+            | sort -u > pages.txt
+          echo "Taranacak sayfa: $(wc -l < pages.txt)" >> "$GITHUB_STEP_SUMMARY"
+          echo "args=$(tr '\n' ' ' < pages.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Bağlantıları denetle
+        uses: lycheeverse/lychee-action@v2
+        with:
+          fail: true
+          jobSummary: true
+          args: >-
+            --no-progress
+            --max-concurrency 6
+            --max-retries 2
+            --timeout 30
+            --accept 200..=299,403,429
+            --user-agent "Mozilla/5.0 (compatible; AcilisZiliLinkCheck/1.0; +https://aciliszili.com/hakkinda)"
+            --exclude-mail
+            --exclude "^https://(www\.)?(x|twitter|linkedin|facebook|instagram)\.com"
+            --exclude "^https://aciliszili\.com/(api|_next)/"
+            ${{ steps.pages.outputs.args }}
