@@ -56,7 +56,6 @@ jobs:
             --timeout 30
             --accept 200..=299,403,429
             --user-agent "Mozilla/5.0 (compatible; AcilisZiliLinkCheck/1.0; +https://aciliszili.com/hakkinda)"
-            --exclude-mail
             --exclude "^https://(www\.)?(x|twitter|linkedin|facebook|instagram)\.com"
             --exclude "^https://aciliszili\.com/(api|_next)/"
             ${{ steps.pages.outputs.args }}
