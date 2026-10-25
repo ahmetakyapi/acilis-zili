@@ -45,6 +45,9 @@ const ALLOW_WRITES = process.env.SMOKE_ALLOW_WRITES === "1";
 const DEGRADED_OK = process.env.SMOKE_DEGRADED_OK === "1";
 /** Veritabanısız koşumda kendi veri uçlarımızın "kaynak yok" cevapları. */
 const DEGRADED_STATUSES = new Set([502, 503]);
+/** Claude notu uçlarının bot kapısı — gerekçe `ignorable` üstünde. */
+const BOT_GATE_PREFIX = "/api/ai/";
+const BOT_GATE_STATUS = 403;
 const WIDTHS = [390, 1280];
 const VIEWPORT_HEIGHT = 900;
 const NAV_TIMEOUT_MS = 60_000;
@@ -108,6 +111,15 @@ const NOT_FOUND_ROUTE = "/bu-sayfa-yok-duman-testi";
  *   · `SMOKE_DEGRADED_OK=1` ile kendi `/api/` uçlarımızın 502 ve 503'ü
  *     (yukarıda). Sayfanın kendisi HTTP 200 dönmek ve konsola başka hata
  *     yazmamak zorunda; istisna yalnızca veri ucunun "kaynak yok" cevabı.
+ *   · Claude notu uçlarının BOT KAPISI (25 Ekim). `/api/ai/*` uçları
+ *     (ör. app/api/ai/hisse-notu/route.ts) kullanıcı ajanında
+ *     "HeadlessChrome" görünce bilerek `403 {reason:"bot"}` döner: tarama
+ *     botları her sembol için Claude çağrısı tetiklemesin. Başsız Chrome
+ *     da bot sayıldığı için hisse sayfaları her koşumda dört sahte FAIL
+ *     veriyordu. İzin DAR: aynı kök, yol `/api/ai/` ile başlıyor, kod
+ *     tam 403 VE gövde `reason: "bot"` diyor. Başka bir 403 (köken
+ *     denetimi `reason:"origin"`, yetki `error:"forbidden"`, başka bir
+ *     yol) hata kalmaya devam ediyor (`botGateUrls`).
  *
  * Konsol satırı kaynağın adresini ancak `location().url`de taşıyor; bu
  * ayrım için yanıtın kendisi de izleniyor (`degradedUrls`).
@@ -120,12 +132,13 @@ const NOT_FOUND_ROUTE = "/bu-sayfa-yok-duman-testi";
  * sayfada; aynı sayfa öteki genişlikte geçiyordu). Artık satırlar adresiyle
  * toplanıyor, eleme sayfa oturunca yapılıyor.
  */
-function ignorable(message, url, expectNotFound, degradedUrls) {
+function ignorable(message, url, expectNotFound, degradedUrls, botGateUrls) {
   if (!message.startsWith("Failed to load resource") || !url) return false;
   try {
     const parsed = new URL(url);
     if (expectNotFound && parsed.pathname.endsWith(NOT_FOUND_ROUTE)) return true;
     if (degradedUrls.has(url)) return true;
+    if (botGateUrls.has(url)) return true;
     return parsed.origin !== new URL(BASE_URL).origin;
   } catch {
     return false;
@@ -160,11 +173,24 @@ async function checkPage(browser, path, width) {
   const page = await context.newPage();
   const errors = [];
   const degradedUrls = new Set();
+  const botGateUrls = new Set();
+  /* Gövde okuması zaman uyumsuz: eleme bunlar bitince yapılıyor. */
+  const bodyReads = [];
   const origin = new URL(BASE_URL).origin;
   page.on("response", (response) => {
     const url = new URL(response.url());
     if (DEGRADED_OK && DEGRADED_STATUSES.has(response.status()) && url.origin === origin && url.pathname.startsWith("/api/")) {
       degradedUrls.add(response.url());
+    }
+    if (response.status() === BOT_GATE_STATUS && url.origin === origin && url.pathname.startsWith(BOT_GATE_PREFIX)) {
+      bodyReads.push(
+        response
+          .json()
+          .then((body) => {
+            if (body?.reason === "bot") botGateUrls.add(response.url());
+          })
+          .catch(() => {}),
+      );
     }
   });
   const consoleErrors = [];
@@ -186,10 +212,11 @@ async function checkPage(browser, path, width) {
   } catch (error) {
     result.note = String(error).slice(0, 160);
   } finally {
+    await Promise.all(bodyReads);
     await context.close();
   }
   for (const { text, url } of consoleErrors) {
-    if (!ignorable(text, url, expectNotFound, degradedUrls)) {
+    if (!ignorable(text, url, expectNotFound, degradedUrls, botGateUrls)) {
       /* Adres de yazılıyor: düşen bir koşumun günlüğü hangi kaynağın
          düştüğünü söylemiyordu, teşhis tahmine kalıyordu. */
       errors.push(`${text.slice(0, 160)}${url ? ` · ${url.slice(0, 120)}` : ""}`);

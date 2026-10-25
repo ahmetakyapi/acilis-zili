@@ -257,7 +257,7 @@ export const CHANGELOG_TR = [
     summary: "Hisse için hedef fiyat kurup bildirim alabiliyor, portföyde satış kaydedebiliyor ve unuttuğun şifreyi sıfırlayabiliyorsun. Canlı rakamlar da artık yönüyle değişiyor.",
     items: [
       // a2dab8fb
-      { kind: "yeni", area: "kisisel", title: "Fiyat Alarmları", body: "Hisse sayfasındaki zil düğmesiyle hedef fiyat kuruyorsun; tüm alarmların Favoriler'de, hedefe ne kadar yaklaştığıyla listeleniyor.", href: "/favoriler" },
+      { kind: "yeni", area: "kisisel", title: "Fiyat Alarmları", body: "Hisse sayfasındaki zil butonuyla hedef fiyat kuruyorsun; tüm alarmların Favoriler'de, hedefe ne kadar yaklaştığıyla listeleniyor.", href: "/favoriler" },
       // 5c558d08
       { kind: "yeni", area: "kisisel", title: "Tarayıcı Bildirimleri", body: "Ayarlar'dan açtığın cihazda alarm, site kapalıyken de tarayıcı bildirimi olarak geliyor.", href: "/ayarlar" },
       // 78fa3813
@@ -399,7 +399,7 @@ export const CHANGELOG_TR = [
       // dc890798, c8a0a085
       { kind: "yeni", area: "piyasa", title: "Kapanış Öncesi Yayını", body: "Teknik analiz günde üç kez yayımlanmaya başladı ve sayfa bir sonraki yayının saatini de yazıyor." },
       // 965b55a4, 1ee83dc6
-      { kind: "yeni", area: "piyasa", title: "Paylaş ve Öteki Hisseler", body: "Teknik analiz sayfası paylaş düğmesi aldı; sayfanın sonundaki kartlarla listedeki öteki hisselere tek dokunuşla geçiliyor.", href: "/teknik/NVDA" },
+      { kind: "yeni", area: "piyasa", title: "Paylaş ve Öteki Hisseler", body: "Teknik analiz sayfası paylaş butonu aldı; sayfanın sonundaki kartlarla listedeki öteki hisselere tek dokunuşla geçiliyor.", href: "/teknik/NVDA" },
       // 31e13ab5
       { kind: "iyilestirme", area: "piyasa", title: "Karşılaştırmada Ölçek Çubukları", body: "Karşılaştırma tablosunda her sayının altındaki ince çubuk, hangisinin büyük olduğunu okumadan görmeyi sağlıyor.", href: "/karsilastir/spy-qqq" },
     ],
@@ -407,20 +407,20 @@ export const CHANGELOG_TR = [
   {
     date: "2026-09-18",
     title: "Daha Doğru Fiyat, Daha Rahat Telefon",
-    summary: "Eski verinin bugünkü gibi görünmesine yol açan hatalar kapandı. Telefonda gizli kalan düğmeler, zıplayan sayfalar ve okunması zor yazılar düzeltildi.",
+    summary: "Eski verinin bugünkü gibi görünmesine yol açan hatalar kapandı. Telefonda gizli kalan butonlar, zıplayan sayfalar ve okunması zor yazılar düzeltildi.",
     items: [
       // 95d3234e, ae6b168d, 56a95647
       { kind: "duzeltme", area: "piyasa", title: "Eski Veri Bugünmüş Gibi Görünmüyor", body: "Bir önceki günün fiyatları ve yüzdeleri artık seans içi diye gösterilmiyor; başlıktaki fiyat ile grafiğin son noktası da aynı sayıyı yazıyor." },
       // c9008076
       { kind: "iyilestirme", area: "bilanco", title: "Olaylar Ne Olduklarını Söylüyor", body: "Bugünün Akışı'nda Fed kararları kurumun adıyla, bilançolar şirket adıyla yazılıyor ve her olay türünün yanında tek cümlelik bir açıklama var.", href: "/" },
       // 189bd280, 88d6d9f8
-      { kind: "duzeltme", area: "piyasa", title: "Grafiğin Bütün Aralıkları", body: "Telefonda ekran dışında kalan 1Y ve 5Y düğmeleri artık hisse grafiğinin altında görünüyor.", href: "/hisse/NVDA" },
+      { kind: "duzeltme", area: "piyasa", title: "Grafiğin Bütün Aralıkları", body: "Telefonda ekran dışında kalan 1Y ve 5Y butonları artık hisse grafiğinin altında görünüyor.", href: "/hisse/NVDA" },
       // 988ec56b
       { kind: "iyilestirme", area: "icerik", title: "Kayan Şeritlerde Devamı Var", body: "Yana kayan şeritlerin kenarı soluyor, böylece telefonda da sağda daha fazla içerik olduğu anlaşılıyor." },
       // f62e2e3f
       { kind: "duzeltme", area: "icerik", title: "Sayfa Zıplaması Azaldı", body: "Yazı tipi yüklendiğinde ya da içerik geldiğinde sayfanın aşağı yukarı kayması büyük ölçüde ortadan kalktı." },
       // af8d505d, 4911df72
-      { kind: "duzeltme", area: "icerik", title: "Okunurluk ve Dokunma", body: "Renkli zeminlerdeki soluk yazılar koyulaştı, telefonda parmakla ıskalanan küçük düğmeler büyüdü." },
+      { kind: "duzeltme", area: "icerik", title: "Okunurluk ve Dokunma", body: "Renkli zeminlerdeki soluk yazılar koyulaştı, telefonda parmakla ıskalanan küçük butonlar büyüdü." },
     ],
   },
   {
@@ -493,7 +493,7 @@ export const CHANGELOG_TR = [
       // 2023eb0d
       { kind: "duzeltme", area: "piyasa", title: "Dengeli Ana Sayfa Kolonları", body: "Hangi kolon kısa kalırsa kalsın, boşluk o kolona eklenen satırlarla doluyor.", href: "/" },
       // 7665602b
-      { kind: "iyilestirme", area: "kisisel", title: "Hesap Silme Ayrı Bölümde", body: "Hesabını silme düğmesi çıkış düğmesinin yanından kalktı, sayfanın en altında kendi bölümünde duruyor.", href: "/ayarlar" },
+      { kind: "iyilestirme", area: "kisisel", title: "Hesap Silme Ayrı Bölümde", body: "Hesabını silme butonu çıkış butonunin yanından kalktı, sayfanın en altında kendi bölümünde duruyor.", href: "/ayarlar" },
       // f13e77fe
       { kind: "duzeltme", area: "kisisel", title: "Daha Güvenli Giriş", body: "Giriş yaptıktan sonra yalnızca sitenin kendi sayfalarına yönlendiriliyorsun." },
     ],
@@ -527,7 +527,7 @@ export const CHANGELOG_TR = [
       // c39a8cac, 0e3ec0f2
       { kind: "iyilestirme", area: "icerik", title: "Mercek Sayfanın Başında", body: "En yeni Mercek yazısı günün özetinin hemen ardından, olayın fiyat eğrisiyle birlikte görünüyor.", href: "/mercek" },
       // c39a8cac
-      { kind: "yeni", area: "icerik", title: "Paylaş Düğmesi", body: "Mercek ve rehber yazılarını telefonun kendi paylaşım menüsüyle gönderebiliyorsun.", href: "/rehber/hisse-senedi" },
+      { kind: "yeni", area: "icerik", title: "Paylaş Butonu", body: "Mercek ve rehber yazılarını telefonun kendi paylaşım menüsüyle gönderebiliyorsun.", href: "/rehber/hisse-senedi" },
       // d66cad43
       { kind: "duzeltme", area: "piyasa", title: "Gerçek İşlem Hacmi", body: "Şirketler dizinindeki hacim artık tek bir borsanın değil bütün borsaların toplamı, hacme göre sıralama da doğru çıkıyor.", href: "/sirketler" },
       // 3ec62226
@@ -586,7 +586,7 @@ export const CHANGELOG_TR = [
       // 0a9a4981, ffe29e37
       { kind: "iyilestirme", area: "bilanco", title: "Okunaklı Bilanço Takvimi", body: "Gün başlıkları kaydırırken üstte kalıyor, kartlarda gelir beklentisi büyük puntoyla öne çıkıyor.", href: "/bilancolar" },
       // 0a9a4981
-      { kind: "iyilestirme", area: "kisisel", title: "Sakin Favori Satırları", body: "Fiyatlar aynı hizada duruyor, sıralama ve silme düğmeleri yalnızca satırın üstüne gelince çıkıyor.", href: "/favoriler" },
+      { kind: "iyilestirme", area: "kisisel", title: "Sakin Favori Satırları", body: "Fiyatlar aynı hizada duruyor, sıralama ve silme butonları yalnızca satırın üstüne gelince çıkıyor.", href: "/favoriler" },
     ],
   },
   /* ---- A1 ---- */

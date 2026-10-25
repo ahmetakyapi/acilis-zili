@@ -1,0 +1,372 @@
+/* Günün Grafiği panosu — gerekçe ChartBoard.tsx ve ChartTiles.tsx.
+
+   Derinlik tonla: pano kartları `.panel` (sitenin kartı), içteki küçük
+   kartlar `--surface-sunken`; gölge, cam, ışıma yok. Renk yalnız yön
+   (`--up` / `--down`); nötr çubuk markanın yumuşak mavisi. Her geçiş
+   `--ease-brand`, hareketi azaltana son kare. */
+
+/* ------------------------------------------------------------- IZGARA
+   Dar ekranda tek kolon: künye → grafik → metin. 1200 ve üstünde iki
+   kolon; metin kartı iki satırı birden kaplar ve grafiğin YANINDA okunur.
+   Ölçü (reduced-motion, TR): 1440×900'de künye 240–354, ana kart 370–
+   ~760, metin yanında; ilk ekranın dibi 863 (alttaki piyasa şeridi 37).
+   1280×800'de ana kartın dibi ilk sürümde 784'tü (şeridin altında 21
+   piksel); kart ve künye dolguları birer basamak sıkıldı. */
+.board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "keys" "main" "text";
+  gap: 12px;
+}
+@media (min-width: 768px) { .board { gap: 16px; } }
+@media (min-width: 1200px) {
+  .board {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 25rem);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "keys text" "main text";
+  }
+  .board:not([data-keys]) { grid-template-areas: "main text" "main text"; }
+}
+@media (min-width: 1536px) {
+  .board { grid-template-columns: minmax(0, 1fr) minmax(0, 26rem); }
+}
+
+/* ------------------------------------------------------------- KÜNYE */
+.keys {
+  grid-area: keys;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* Telefonda 2×2; tek kalan kart satırı doldurur (boş hücre yok). */
+.keys > li:last-child:nth-child(odd) { grid-column: 1 / -1; }
+@media (min-width: 768px) {
+  .keys { grid-template-columns: repeat(var(--keys), minmax(0, 1fr)); gap: 16px; }
+  .keys > li:last-child:nth-child(odd) { grid-column: auto; }
+}
+
+.key {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  min-height: 44px;
+  padding: 12px 14px 13px;
+}
+@media (min-width: 768px) { .key { padding: 12px 16px 13px; } }
+a.key:hover { background: var(--primary-tint); border-color: var(--primary-faint); }
+a.key:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+
+.keyHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 18px;
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.keyValue {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: clamp(1.375rem, 1.15rem + 0.6vw, 1.625rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+.keySlash { color: var(--text-muted); font-weight: 500; }
+.keyFoot { display: flex; flex-direction: column; gap: 6px; margin-top: auto; }
+.keyStrip { --line-soft: var(--line); }
+.keyNote {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  margin-top: auto;
+  color: var(--text-body);
+  font-size: var(--text-small);
+  font-weight: 600;
+  line-height: 1.25;
+}
+.keyFoot .keyNote { margin-top: 0; }
+.keyIcon { flex: none; color: var(--text-muted); }
+.keyName { display: -webkit-box; min-width: 0; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.keySymbol { flex: none; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-nano); font-weight: 500; }
+.keyGo {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  color: var(--text-muted);
+  transition: color 200ms var(--ease-brand), translate 200ms var(--ease-brand);
+}
+a.key:hover .keyGo { color: var(--primary); translate: 2px 0; }
+
+/* -------------------------------------------------------- ANA KART */
+/* Metin kolonu ana karttan uzunsa fark kartların İÇİNE dağılır (satırlar
+   eşit büyür), kartın dibinde ölü alan kalmaz (CLAUDE.md "Boşluk esnetilmez,
+   doldurulur": burada doldurulan şey kartların kendisi, aralık değil). */
+.main { grid-area: main; display: flex; flex-direction: column; min-width: 0; }
+.mainHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 14px 16px 12px;
+}
+@media (min-width: 640px) { .mainHead { padding: 14px 20px 10px; } }
+/* Rutinin başlığı orta puntoda (sayfa başlığı değil): 1440'ta tek satır. */
+.mainTitle {
+  max-width: 46ch;
+  color: var(--text-strong);
+  font-size: clamp(1.125rem, 0.95rem + 0.7vw, 1.4375rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.caption { margin-top: 4px; color: var(--text-muted); font-size: var(--text-small); font-weight: 600; line-height: 1.4; }
+.mainBody { display: flex; flex: 1; flex-direction: column; padding: 0 12px 12px; }
+@media (min-width: 640px) { .mainBody { padding: 0 16px 16px; } }
+
+/* -------------------------------------------------------- METİN KARTI */
+.text { grid-area: text; display: flex; flex-direction: column; min-width: 0; }
+.textTitle {
+  padding: 16px 16px 8px;
+  color: var(--text-strong);
+  font-size: var(--text-lead);
+  font-weight: 700;
+  line-height: 1.3;
+}
+@media (min-width: 640px) { .textTitle { padding: 18px 20px 8px; } }
+.textBody { padding: 0 16px 16px; }
+@media (min-width: 640px) { .textBody { padding: 0 20px 18px; } }
+.body { max-width: 68ch; font-size: var(--text-read); line-height: 1.6; color: var(--text-body); }
+/* Makale gövdesinin 28 piksellik satır arası uzun okuma için; burada ~100
+   kelimelik not grafiğin yanında duruyor ve 1280×800'de metin kolonu ana
+   karttan 140 piksel uzundu (ölçüldü). 14/23 hâlâ rahat bir okuma oranı. */
+.body p { line-height: 1.65; }
+
+/* ------------------------------------------------- SEKTÖR KARTLARI
+   Kabın enine göre (container query): 2 sütun telefonda, 3 ≥ 520,
+   4 ≥ 680, 6 ≥ 980. On bir sektör + ölçek kartı: 6×2, 4×3, 3×4, 2×6
+   — her genişlikte boş hücresiz. */
+.tilesWrap { display: flex; flex: 1; flex-direction: column; container-type: inline-size; min-width: 0; }
+.tiles {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@container (min-width: 520px) { .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@container (min-width: 680px) { .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@container (min-width: 980px) { .tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  min-height: 44px;
+  padding: 10px 12px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  transition: background-color 200ms var(--ease-brand), border-color 200ms var(--ease-brand);
+  animation: tile-in 420ms var(--ease-brand) both;
+  animation-delay: calc(60ms + var(--i, 0) * 30ms);
+}
+/* Uçlar vurgulu: yönün yıkama tonu ve ince yön çerçevesi. */
+.tile[data-rank="top"][data-dir="up"],
+.tile[data-rank="bottom"][data-dir="up"] { background: var(--up-wash); border-color: color-mix(in oklab, var(--up) 30%, transparent); }
+.tile[data-rank="top"][data-dir="down"],
+.tile[data-rank="bottom"][data-dir="down"] { background: var(--down-wash); border-color: color-mix(in oklab, var(--down) 30%, transparent); }
+.tile[data-rank][data-dir="flat"] { border-color: var(--line-strong); }
+.tile[data-link]:hover { background: var(--primary-tint); border-color: var(--primary-faint); }
+.tile[data-link]:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+
+.tileHead { display: flex; align-items: flex-start; gap: 7px; min-width: 0; }
+.tileIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-top: -2px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-body);
+}
+.tileName {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  color: var(--text-strong);
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.tileFoot { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin-top: auto; }
+.tileValue {
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+.tileSymbol { color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-nano); font-weight: 500; }
+
+/* Kulvar: 5 piksel (sitenin tek kulvar ölçüsü), sıfır çizgisi tüm
+   kartlarda aynı yerde (`--zero`, ızgarada bir kez). */
+.lane {
+  position: relative;
+  display: block;
+  height: var(--lane-h, 5px);
+  border-radius: 999px;
+  background: var(--line);
+}
+.lane[data-zero]::after {
+  content: "";
+  position: absolute;
+  inset: -3px auto -3px var(--zero);
+  width: 2px;
+  translate: -50% 0;
+  border-radius: 1px;
+  background: var(--line-strong);
+}
+.bar {
+  position: absolute;
+  inset-block: 0;
+  left: var(--start);
+  width: max(2px, var(--size));
+  border-radius: 999px;
+  animation: bar-grow 0.8s var(--ease-brand) both;
+  animation-delay: calc(0.2s + var(--i, 0) * 0.04s);
+}
+.bar[data-dir="up"] { background: var(--up); transform-origin: left center; }
+.bar[data-dir="down"] { background: var(--down); transform-origin: right center; }
+.bar[data-dir="neutral"], .bar[data-dir="flat"] { background: var(--primary-soft); transform-origin: left center; }
+
+/* Ölçek kartı: kenarlıklı, zeminsiz — veri değil, okuma anahtarı. */
+.scaleTile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  padding: 10px 12px 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-lg);
+  animation: tile-in 420ms var(--ease-brand) both;
+  animation-delay: calc(60ms + var(--i, 0) * 30ms);
+}
+.scaleTitle { color: var(--text-strong); font-size: var(--text-base); font-weight: 600; line-height: 1.3; }
+.scaleAxis { display: flex; flex-direction: column; gap: 5px; margin-top: auto; }
+.scaleBar { position: absolute; inset-block: 0; opacity: 0.45; }
+.scaleBar[data-dir="up"] { background: var(--up); border-radius: 0 999px 999px 0; }
+.scaleBar[data-dir="down"] { background: var(--down); border-radius: 999px 0 0 999px; }
+.scaleTicks { position: relative; display: flex; justify-content: space-between; color: var(--text-muted); font-size: var(--text-nano); font-weight: 600; line-height: 1; }
+.scaleZero { position: absolute; left: var(--zero); translate: -50% 0; }
+.scaleTile .lane::after {
+  content: "";
+  position: absolute;
+  inset: -3px auto -3px var(--zero);
+  width: 2px;
+  translate: -50% 0;
+  background: var(--line-strong);
+}
+
+@keyframes tile-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes bar-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* ------------------------------------------------------------- PAY */
+.share { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: center; container-type: inline-size; }
+@media (min-width: 640px) { .share { grid-template-columns: auto minmax(0, 1fr); gap: 24px; } }
+.ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 168px;
+  aspect-ratio: 1;
+  margin-inline: auto;
+  border-radius: 50%;
+  animation: tile-in 420ms var(--ease-brand) both;
+}
+.ringHole {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 64%;
+  aspect-ratio: 1;
+  padding: 8px;
+  border-radius: 50%;
+  background: var(--premium-surface);
+  text-align: center;
+}
+.ringValue { color: var(--text-strong); font-size: 1.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
+.ringName { color: var(--text-muted); font-size: var(--text-tiny); font-weight: 600; line-height: 1.2; }
+.shareTiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+@container (min-width: 620px) { .shareTiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.shareTile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: "swatch name" "value value";
+  align-items: center;
+  gap: 6px 8px;
+  min-width: 0;
+  padding: 10px 12px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  animation: tile-in 420ms var(--ease-brand) both;
+  animation-delay: calc(60ms + var(--i, 0) * 30ms);
+}
+.shareTile > .tileName { grid-area: name; }
+.shareTile > .tileValue { grid-area: value; }
+.swatch { grid-area: swatch; width: 12px; height: 12px; border-radius: 3px; }
+
+/* ----------------------------------------------------------- ÖNCESİ */
+.shift { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-items: stretch; }
+@media (min-width: 640px) { .shift { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 0.8fr); gap: 12px; } }
+.shiftCard,
+.shiftDelta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px 16px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  animation: tile-in 420ms var(--ease-brand) both;
+  animation-delay: calc(60ms + var(--i, 0) * 60ms);
+}
+.shiftDelta[data-dir="up"] { background: var(--up-wash); }
+.shiftDelta[data-dir="down"] { background: var(--down-wash); }
+.shiftLabel { color: var(--text-muted); font-size: var(--text-small); font-weight: 600; line-height: 1.3; }
+.shiftValue { margin-top: auto; color: var(--text-strong); font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem); font-weight: 800; line-height: 1; letter-spacing: -0.035em; }
+.shiftArrow { display: none; align-self: center; color: var(--text-muted); }
+@media (min-width: 640px) { .shiftArrow { display: block; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tile, .scaleTile, .bar, .ring, .shareTile, .shiftCard, .shiftDelta { animation: none; }
+  .tile, .keyGo { transition: none; }
+}

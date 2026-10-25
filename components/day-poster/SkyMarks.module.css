@@ -1,10 +1,58 @@
-/* Çatı etiketleri — gerekçe SkyMarks.tsx. Logonun halkası zeminin tonunda
-   (logo binanın rengine karışmasın), sembol metin mürekkebinde, yüzde yön
-   renginde; bağ çizgisi ince ve sessiz (`--line-strong`). */
+/* Siluetin çizimi — gerekçe SkyMarks.tsx. Renk yalnız token'dan: yön
+   renkleri binada ve yüzdede, mavi aile gökte, suda ve ufukta (sahne
+   dili), logo plakası `--logo-plate`. Gölge yok; derinlik ton ve
+   saydamlıkla. */
+
+/* ------------------------------------------------------------ ŞEHİR */
+.up { fill: var(--up); }
+/* Suya inen bina: aynı kırmızı, bir kademe saydam — su içinden görünüyor. */
+.down { fill: var(--down); fill-opacity: 0.86; }
+.flat { fill: var(--flat); }
+
+/* Pencereler: gündüz ışıklı (açık), gece karanlık kesik; ikisi de binanın
+   kendi renginin üstünde ince bir ritim, okunmayı bozmayacak kadar sönük. */
+.window { fill: color-mix(in oklab, var(--mark-lip) 34%, transparent); }
+:global(:root[data-theme="dark"]) .window { fill: color-mix(in oklab, var(--page-bg) 34%, transparent); }
+
+/* Çatı ışığı: binanın ucunda ince açık şerit — "ışık değen çatı". */
+.roof { fill: color-mix(in oklab, var(--mark-lip) 52%, transparent); }
+:global(:root[data-theme="dark"]) .roof { fill: color-mix(in oklab, var(--mark-lip) 40%, transparent); }
+
+/* Yansıma: yön yeşilinin sönen ikizi. */
+.reflTop { stop-color: var(--up); stop-opacity: 0.26; }
+.reflEnd { stop-color: var(--up); stop-opacity: 0; }
+:global(:root[data-theme="dark"]) .reflTop { stop-opacity: 0.22; }
+
+/* Ufuk: iki ucu sönen ince ışık hattı. */
+.horizon { stroke-width: 1.25px; }
+.hzMid { stop-color: var(--primary-soft); stop-opacity: 0.85; }
+.hzEnd { stop-color: var(--primary-soft); stop-opacity: 0; }
+:global(:root[data-theme="dark"]) .hzMid { stop-color: var(--primary); stop-opacity: 0.75; }
+:global(:root[data-theme="dark"]) .hzEnd { stop-color: var(--primary); }
+
+.ripple {
+  stroke: color-mix(in oklab, var(--primary) 11%, transparent);
+  stroke-width: 1px;
+}
+:global(:root[data-theme="dark"]) .ripple { stroke: color-mix(in oklab, var(--primary) 18%, transparent); }
+
+/* ETKİLEŞİM: bir bina etkinken şehir söner (etkin bina sahnede ayrıca,
+   tam renkte çiziliyor); mahalle adına gelince öteki mahalleler söner. */
+.district,
+.label { transition: opacity 0.2s var(--ease-brand); }
+.city[data-dimmed] .district { opacity: 0.5; }
+.city[data-dimmed] .reflection { opacity: 0.5; }
+.district[data-off] { opacity: 0.16; }
+.city[data-dimmed] .district[data-off] { opacity: 0.16; }
+
+/* ------------------------------------------------------------ ETİKETLER
+   Logo karosu plakada (koyu temada da beyaz: logolar beyaz zemine
+   çizilmiş), sembol metin mürekkebinde, yüzde yön renginde. Bağ çizgisi
+   ince ve sessiz. */
 .labels { pointer-events: none; }
-.ring {
-  fill: var(--premium-surface);
-  stroke: var(--line);
+.tile {
+  fill: var(--logo-plate);
+  stroke: var(--line-strong);
   stroke-width: 1px;
   vector-effect: non-scaling-stroke;
 }
@@ -18,13 +66,47 @@
   letter-spacing: -0.01em;
 }
 .value {
-  font-weight: 700;
+  font-weight: 750;
   letter-spacing: -0.02em;
 }
-.up { fill: var(--up); }
-.down { fill: var(--down); }
-.flat { fill: var(--flat); }
+.value.up { fill: var(--up); }
+.value.down { fill: var(--down); }
+.value.flat { fill: var(--flat); }
 .initials {
   fill: var(--text-muted);
   font-weight: 750;
+}
+.label[data-off] { opacity: 0.2; }
+.label[data-on] .tile { stroke: var(--text-strong); stroke-width: 1.5px; }
+
+/* ------------------------------------------------------------ GİRİŞ
+   Bir kez; zaman çizelgesi lib/day-skyline.ts → RISE_*. Mahalle grubu
+   ufuktan dikey ölçekle yükseliyor (düşen binalar aynı dönüşümle suya
+   iniyor: köken ufuk, `view-box` kutusunda y=0), yansıma ardından suya
+   iniyor, logolar en son küçük bir yumuşak yayla oturuyor (tek küçük öğe
+   geri bildirimi; CLAUDE.md "Eğri"). Gizli başlangıç yalnız JS açık ve
+   hareket serbestken: hareketi azaltana ve JS'siz okuyucuya son kare. */
+.district {
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+.mark {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  :global([data-sky-scene]:not([data-in])) .district { transform: scaleY(0); }
+  :global([data-sky-scene]:not([data-in])) .reflection,
+  :global([data-sky-scene]:not([data-in])) .label { opacity: 0; }
+  :global([data-sky-scene][data-in]) .district { animation: sky-rise 0.5s var(--ease-brand) var(--d, 0s) backwards; }
+  :global([data-sky-scene][data-in]) .reflection { animation: sky-fade 0.45s var(--ease-brand) 0.6s backwards; }
+  :global([data-sky-scene][data-in]) .label { animation: sky-fade 0.2s var(--ease-brand) 0.86s backwards; }
+  :global([data-sky-scene][data-in]) .mark { animation: sky-settle 0.34s var(--ease-spring-soft) 0.86s backwards; }
+}
+@keyframes sky-rise { from { transform: scaleY(0); } }
+@keyframes sky-fade { from { opacity: 0; } }
+@keyframes sky-settle { from { transform: translateY(6px) scale(0.82); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .district, .label { transition: none; }
 }

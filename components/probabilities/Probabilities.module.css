@@ -245,3 +245,22 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 .tag { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: var(--text-tiny); line-height: 1.4; color: var(--text-muted); }
 .tag b { font-weight: 650; color: var(--text-strong); }
 .tag a { font-weight: 600; color: var(--primary-ink); }
+
+/* ---------------------------------------------- 1200–1439: İLK EKRAN PAYI
+   Doğrulama turu (25 Ekim). 1280×800'de üç kartın dibi 777 (ara seçim
+   kartı belirliyor: iki meclis satırı), görünür alan piyasa şeridiyle 763'te
+   bitiyor — kartlar 14 piksel taşıyordu (önceki ölçüm 759, veri değişince
+   aştı). Hedef en az 24 piksel pay. Çizgiler KISALMIYOR (meclis çizgisi 44,
+   dokunma hedefi); yalnız boşluklar bir kademe sıkı: kart gövdesi aralığı
+   10 → 8 ve alt dolgu 18 → 14, meclis satırı aralığı 6 → 4, kart başlığı
+   alt dolgusu 16 → 12, kadranın büyük sayısı 33 → 30, şerit ile kartlar
+   arası 24 → 20. Ölçüldü (TR/EN, açık/koyu): kartların dibi 777 → 725
+   (pay 38; 1440×900 766, görünür alan 863). 1440 ve üstü, telefon değişmedi. */
+@media (min-width: 1200px) and (max-width: 1439px) {
+  .scope { --page-section-gap: 20px; }
+  .tileFigure > b { font-size: 30px; }
+  .card > :first-child { padding-bottom: 12px; }
+  .body { gap: 8px; padding-bottom: 14px; }
+  .chamber { gap: 4px; }
+  .chamber + .chamber { padding-top: 8px; }
+}

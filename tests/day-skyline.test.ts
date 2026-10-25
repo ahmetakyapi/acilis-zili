@@ -4,10 +4,19 @@ import {
   MIN_DISTRICT_SIZE,
   OTHER_DISTRICT,
   SKY_FLOOR,
+  REFLECTION_SCALE,
+  RISE_DURATION,
+  RISE_SPREAD,
+  RISE_START,
   SKY_MODES,
+  WINDOW_MIN_H,
+  WINDOW_MIN_W,
+  buildingPath,
+  cityInk,
   districtMoves,
   districtsOf,
   labelBox,
+  labelPicks,
   partitionRows,
   rowSplits,
   skyDomain,
@@ -217,4 +226,78 @@ test("yerleşim farklı tohumlarda da çakışmasız", () => {
       }
     }
   }
+});
+
+/* ------------------------------------------------------------------
+   "Silüet" turu (25 Ekim): sahne yolları, küresel etiket seçimi, giriş.
+   ------------------------------------------------------------------ */
+
+/** Yoldaki alt yol sayısı (`M` komutları). */
+const subpaths = (d: string) => (d.match(/M/g) ?? []).length;
+
+test("sahne yolları: her bina bir kez, yönüne göre; yansıma yalnız yükselenler", () => {
+  const { sky, districts } = city(7, true);
+  for (const mode of ["stripWide", "wide", "narrow"] as const) {
+    const layout = skylineLayout({ stocks: sky, districts, mode });
+    for (const row of layout.rows) {
+      const ink = cityInk(row, sky);
+      assert.deepEqual(ink.districts.map((d) => d.key), row.districts.map((d) => d.key));
+      const count = (dir: 1 | -1 | 0) =>
+        row.buildings.filter((b) => b.dir === dir).reduce((acc, b) => acc + subpaths(buildingPath(b)), 0);
+      const sum = (key: "up" | "down" | "flat") => ink.districts.reduce((acc, d) => acc + subpaths(d[key]), 0);
+      assert.equal(sum("up"), count(1), `${mode}: yükselenler`);
+      assert.equal(sum("down"), count(-1), `${mode}: düşenler`);
+      assert.equal(sum("flat"), count(0), `${mode}: değişmeyenler`);
+      /* Düşen binanın yansıması YOK: göğe çıkıp "yükseldi" diye okunurdu. */
+      assert.equal(subpaths(ink.reflection), count(1));
+      /* Pencere yalnız büyük binada. */
+      const big = row.buildings.filter((b) => b.dir !== 0 && b.w >= WINDOW_MIN_W && b.h >= WINDOW_MIN_H).length;
+      assert.equal(ink.districts.reduce((acc, d) => acc + subpaths(d.windows), 0), big);
+    }
+  }
+  assert.ok(REFLECTION_SCALE > 0 && REFLECTION_SCALE < 1);
+});
+
+test("kesik bina: yarık yolun içinde (iki alt yol), kesik olmayan tek", () => {
+  const { sky, districts } = city();
+  const layout = skylineLayout({ stocks: sky, districts, mode: "wide" });
+  const all = layout.rows.flatMap((row) => row.buildings);
+  const clipped = all.filter((b) => b.clip);
+  assert.ok(clipped.length > 0);
+  for (const b of clipped) assert.equal(subpaths(buildingPath(b)), 2);
+  for (const b of all.filter((x) => !x.clip)) assert.equal(subpaths(buildingPath(b)), 1);
+});
+
+test("etiketler sahne genelinde seçiliyor: en büyükler ve uçlar, sıra sayısından bağımsız", () => {
+  const { sky, districts } = city(7, true);
+  for (const mode of ["stripNarrow", "narrow", "medium", "stripWide", "xwide"] as const) {
+    const spec = SKY_MODES[mode];
+    const layout = skylineLayout({ stocks: sky, districts, mode });
+    const shown = layout.rows.flatMap((row) => row.labels.map((label) => label.i)).sort((a, b) => a - b);
+    const picks = labelPicks(sky, districts.flatMap((d) => d.members), spec.labelCaps, spec.labelExtremes).sort((a, b) => a - b);
+    assert.deepEqual(shown, picks, `${mode}: etiketli binalar`);
+    assert.ok(shown.length <= spec.labelCaps + spec.labelExtremes * 2);
+  }
+});
+
+test("etiket punto ve karo ölçüsü: masaüstünde karo 28–32, metin okunur", () => {
+  for (const mode of ["wide", "xwide", "stripWide", "stripXwide"] as const) {
+    assert.ok(SKY_MODES[mode].logo >= 28 && SKY_MODES[mode].logo <= 32, mode);
+  }
+  /* Telefonda sahne ~0,85 ölçekte: 13 birim ≈ 11 piksel. */
+  for (const mode of ["narrow", "stripNarrow"] as const) assert.ok(SKY_MODES[mode].font >= 13, mode);
+});
+
+test("giriş mahalle mahalle ve 1,2 saniyenin içinde", () => {
+  const { sky, districts } = city();
+  const layout = skylineLayout({ stocks: sky, districts, mode: "stripWide" });
+  for (const row of layout.rows) {
+    for (const b of row.buildings) {
+      const span = row.districts.find((d) => d.key === sky[b.i].district)!;
+      assert.equal(b.delay, span.delay);
+    }
+  }
+  const last = Math.max(...layout.rows.flatMap((row) => row.districts.map((d) => d.delay)));
+  assert.ok(Math.abs(last - (RISE_START + RISE_SPREAD)) < 1e-9);
+  assert.ok(last + RISE_DURATION <= 1.2);
 });

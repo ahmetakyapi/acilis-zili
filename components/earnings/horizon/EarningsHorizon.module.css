@@ -348,3 +348,28 @@
      listesinin başı ilk ekrana yaklaşsın diye; ölçüm sayfada). */
   .foot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 32px; }
 }
+
+/* ---- Çok geniş ekran (≥1600): takvim listesinin başı ilk ekranda ----
+   Doğrulama turu (25 Ekim). 1920×1080'de ilk ekranın alt sınırı piyasa
+   şeridiyle y=1043; takvimin ilk gün başlığı ("26 Ekim Pazartesi") TR'de
+   1048–1090, EN'de 1066–1108 — yani başlık hiç görünmüyordu. Bu genişlikte
+   okuma satırının dört sütunundan karne en uzunuydu (dört satır alt alta,
+   97 piksel; öteki sütunlar 44): karne iki sütuna yayılıyor (solda etiket
+   ve sayı, sağda çentik ve cümle), olgular sütunu ona yer bırakıyor.
+   Künyenin iki paragrafı da 90ch tavanından kurtuluyor (EN'de üç satırdı).
+   Sayfa tarafı (`app/(app)/bilancolar/page.tsx`): bölüm aralığı 24 → 16 ve
+   analiz şeridinin dikey dolgusu 14 → 8. Ölçüm sonucu sayfadaki yorumda.
+   1440 ve 1280 bu kuraldan etkilenmiyor. */
+@media (min-width: 1600px) {
+  .readout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1.6fr) auto; }
+  .readoutKarne {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    grid-auto-flow: column;
+    align-items: center;
+    gap: 4px 18px;
+  }
+  .readoutKarne > .notches { align-self: end; margin-bottom: 4px; }
+  .foot > p { max-width: none; }
+}

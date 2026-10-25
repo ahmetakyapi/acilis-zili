@@ -4,7 +4,7 @@ import type { DailyChartBlock } from "@/lib/daily-chart";
 /* ==========================================================================
    Günün Grafiği — çizimin saf mantığı (25 Ekim, görsel tur)
 
-   React'siz: sayfadaki çizici (`components/daily-chart/ChartFigure.tsx`),
+   React'siz: sayfadaki kart panosu (`components/daily-chart/ChartTiles.tsx`),
    küçük hâl (`ChartThumb`), paylaşım görseli (`lib/daily-chart-og.tsx`) ve
    testi (`tests/daily-chart-figure.test.ts`) aynı hesabı buradan alıyor.
    Üçü aynı ölçeği kurmazsa sayfadaki −1,92 ile görseldeki −1,92 farklı

@@ -245,26 +245,37 @@ export type SkyMode = {
 
 /**
  * DÜZENLER. Her biri bir kap eni aralığında görünüyor (CSS kap sorgusu,
- * `Skyline.module.css` / `SkylineStrip.module.css`); sunucu ekranın enini
- * bilmediği için hepsi basılı, görünmeyen `display:none`. `width` o
- * aralıkta birim ≈ piksel olacak biçimde: punto 11–14 piksel, logo 18–22.
+ * `SkyScene.module.css`); sunucu ekranın enini bilmediği için hepsi basılı,
+ * görünmeyen `display:none`. `width` o aralıkta birim ≈ piksel olacak
+ * biçimde: punto 11–13 piksel, logo karosu 22–32.
  *
  *   narrow  kap < 560 (telefon) — üç sıra
  *   medium  560–979 (tablet, dar masaüstü) — iki sıra
  *   wide    980–1499 — tek sıra
  *   xwide   ≥ 1500 (1920, 2560) — tek sıra, alanı dolduruyor
- *   strip*  ana sayfanın şeridi: alçak, etiket yalnız logo
+ *   strip*  ana sayfanın şeridi: posterden alçak; dar < 600 (iki sıra),
+ *           orta 600–1079 (tablet: 768'de birim ≈ 0,75 piksel), geniş
+ *           1080–1499, çok geniş ≥ 1500
  *   og*     paylaşım görseli; mini arşiv kartı (etiketsiz)
+ *
+ * LOGOLAR BÜYÜDÜ (25 Ekim, "Silüet" turu). Sahibi: "logolar, şirketler
+ * daha görünür ve anlaşılır olmalı." Şeritte 18 birimlik yuvarlak logo tek
+ * başına duruyordu (sembol ve yüzde yoktu), posterde 20. Şimdi her düzende
+ * karo + sembol + yüzde; masaüstünde karo 28–32 piksel. Etiket sayısı da
+ * SAHNE GENELİNDE (`labelCaps` en büyük şirket, `labelExtremes` iki yönün
+ * uçları): telefonda en büyük altı ve birer uç, 1920'de on dört ve üçer.
  */
 export const SKY_MODES = {
-  narrow: { width: 400, rows: 3, gap: 1.2, districtGap: 10, minW: 1.8, minDistrictW: 92, half: 52, minSide: 0.22, label: "full", labelCaps: 4, labelExtremes: 1, font: 13, logo: 20 },
-  medium: { width: 760, rows: 2, gap: 1.6, districtGap: 14, minW: 2.4, minDistrictW: 112, half: 82, minSide: 0.2, label: "full", labelCaps: 7, labelExtremes: 2, font: 12, logo: 20 },
-  wide: { width: 1200, rows: 1, gap: 2, districtGap: 18, minW: 3, minDistrictW: 120, half: 132, minSide: 0.18, label: "full", labelCaps: 10, labelExtremes: 3, font: 11, logo: 20 },
-  xwide: { width: 1680, rows: 1, gap: 2.4, districtGap: 24, minW: 3.6, minDistrictW: 140, half: 168, minSide: 0.18, label: "full", labelCaps: 12, labelExtremes: 3, font: 12, logo: 22 },
-  stripNarrow: { width: 400, rows: 2, gap: 1.2, districtGap: 10, minW: 1.8, minDistrictW: 86, half: 30, minSide: 0.25, label: "logo", labelCaps: 3, labelExtremes: 0, font: 12, logo: 18 },
-  stripWide: { width: 1200, rows: 1, gap: 2, districtGap: 18, minW: 3, minDistrictW: 120, half: 62, minSide: 0.22, label: "logo", labelCaps: 8, labelExtremes: 0, font: 11, logo: 18 },
+  narrow: { width: 400, rows: 3, gap: 1.2, districtGap: 10, minW: 1.8, minDistrictW: 92, half: 52, minSide: 0.22, label: "full", labelCaps: 8, labelExtremes: 1, font: 13, logo: 26 },
+  medium: { width: 760, rows: 2, gap: 1.6, districtGap: 14, minW: 2.4, minDistrictW: 112, half: 82, minSide: 0.2, label: "full", labelCaps: 10, labelExtremes: 2, font: 12, logo: 26 },
+  wide: { width: 1200, rows: 1, gap: 2, districtGap: 18, minW: 3, minDistrictW: 120, half: 124, minSide: 0.18, label: "full", labelCaps: 12, labelExtremes: 3, font: 12, logo: 30 },
+  xwide: { width: 1680, rows: 1, gap: 2.4, districtGap: 24, minW: 3.6, minDistrictW: 140, half: 160, minSide: 0.18, label: "full", labelCaps: 14, labelExtremes: 3, font: 13, logo: 32 },
+  stripNarrow: { width: 400, rows: 2, gap: 1.2, districtGap: 10, minW: 1.8, minDistrictW: 86, half: 34, minSide: 0.25, label: "full", labelCaps: 6, labelExtremes: 1, font: 13, logo: 26 },
+  stripMedium: { width: 900, rows: 1, gap: 1.6, districtGap: 14, minW: 2.4, minDistrictW: 104, half: 50, minSide: 0.24, label: "full", labelCaps: 10, labelExtremes: 2, font: 15, logo: 32 },
+  stripWide: { width: 1200, rows: 1, gap: 2, districtGap: 18, minW: 3, minDistrictW: 120, half: 58, minSide: 0.24, label: "full", labelCaps: 12, labelExtremes: 3, font: 11, logo: 28 },
+  stripXwide: { width: 1680, rows: 1, gap: 2.4, districtGap: 24, minW: 3.6, minDistrictW: 140, half: 72, minSide: 0.24, label: "full", labelCaps: 14, labelExtremes: 3, font: 13, logo: 32 },
   og: { width: 1080, rows: 1, gap: 2, districtGap: 16, minW: 2.6, minDistrictW: 96, half: 118, minSide: 0.2, label: "full", labelCaps: 6, labelExtremes: 2, font: 15, logo: 26 },
-  ogTall: { width: 960, rows: 2, gap: 2, districtGap: 16, minW: 2.6, minDistrictW: 120, half: 110, minSide: 0.2, label: "full", labelCaps: 6, labelExtremes: 2, font: 19, logo: 32 },
+  ogTall: { width: 960, rows: 2, gap: 2, districtGap: 16, minW: 2.6, minDistrictW: 120, half: 110, minSide: 0.2, label: "full", labelCaps: 10, labelExtremes: 2, font: 19, logo: 32 },
   mini: { width: 320, rows: 1, gap: 0.6, districtGap: 5, minW: 0.9, minDistrictW: 0, half: 52, minSide: 0.2, label: "none", labelCaps: 0, labelExtremes: 0, font: 0, logo: 0 },
 } as const satisfies Record<string, SkyMode>;
 
@@ -297,7 +308,14 @@ export type SkyLabel = {
   leader: { x1: number; y1: number; x2: number; y2: number } | null;
 };
 
-export type SkyDistrictSpan = { key: string; x0: number; x1: number; change: number };
+export type SkyDistrictSpan = {
+  key: string;
+  x0: number;
+  x1: number;
+  change: number;
+  /** Mahallenin yükselmeye başlama anı (saniye) — giriş mahalle mahalle. */
+  delay: number;
+};
 
 export type SkyRow = {
   /** Sıranın görünen kutusu, ufuk y=0'a göre: `top` negatif. */
@@ -326,10 +344,22 @@ const EDGE = 4;
 const MAX_GAP_STRETCH = 2.2;
 /** `k`nin ikiye bölme adımı: 40 adımda hata eni 2⁻⁴⁰ kat — birimin çok altı. */
 const K_BISECT_STEPS = 40;
-/** Girişin yayılımı (saniye): ilk binadan son binaya. Bina 0,42 sn'de
- *  yükseliyor; toplam ~1 saniye. */
-export const RISE_SPREAD = 0.56;
-export const RISE_DURATION = 0.42;
+/**
+ * GİRİŞ MAHALLE MAHALLE (25 Ekim, "Silüet" turu). Yüz binanın her biri
+ * ayrı bir CSS animasyonuydu (SVG dönüşümü ana iş parçacığında çiziliyor);
+ * şimdi mahalle başına TEK grup yükseliyor (yedi animasyon) ve sıra
+ * okumayla aynı: güçlü mahalleden zayıfa. Zaman çizelgesi (saniye):
+ *   0      gök tonu belirmeye başlıyor (0,5 sn)
+ *   0,12   ilk mahalle ufuktan yükseliyor; son mahalle 0,12 + 0,42'de
+ *   +0,5   her mahallenin yükselişi
+ *   0,6    yansıma suya iniyor (0,45 sn)
+ *   0,86   logolar yumuşak yayla oturuyor (0,34 sn) — bitiş 1,2 sn
+ * Değerler `SkyScene.module.css`teki animasyonlarla aynı; değiştirirsen
+ * ikisini birden.
+ */
+export const RISE_START = 0.12;
+export const RISE_SPREAD = 0.42;
+export const RISE_DURATION = 0.5;
 
 /** `n` öğenin sırayı koruyarak `rows` (en çok `n`) boş olmayan parçaya
  *  bütün bölünüşleri. Mahalle sayısı küçük (≤ 8), sıra ≤ 3: en çok 21. */
@@ -408,6 +438,12 @@ export function labelPicks(stocks: readonly SkyStock[], members: readonly number
   return [...new Set([...byCap, ...ups, ...downs])];
 }
 
+/** Yatay arama: etiket çatısından en çok kendi eninin bu katı kadar
+ *  kayabiliyor; kayma maliyeti kalkışın bu kesri (yana kaymak, yukarı
+ *  yığılmaktan ucuz — şerit alçak kalıyor). */
+const LABEL_REACH = 3;
+const LABEL_SHIFT_COST = 0.3;
+
 /**
  * ETİKETLER ÇAKIŞMAZ. Her etiket çatısının üstünde (düşen binada tabanının
  * altında) ortalanmış başlıyor. Altındaki binalardan yüksekse onların
@@ -415,6 +451,14 @@ export function labelPicks(stocks: readonly SkyStock[], members: readonly number
  * kalkıyor; en kısa yolu seçiyor. Çatısından ayrılan etikete ince bir çizgi
  * iniyor. Sonuç testli: hiçbir iki kutu kesişmiyor, hiçbiri bir binaya
  * binmiyor ve kutu sıranın eninde kalıyor (`tests/day-skyline.test.ts`).
+ *
+ * EN UZUN BİNA ÖNCE (25 Ekim, "Silüet" turu). Etiketler seçim sırasıyla
+ * (önce büyük şirketler, sonra uçlar) yerleşiyordu; uçlar en uzun binalar
+ * olduğu için en son gelip ötekilerin ÜSTÜNE yığılıyordu ve şerit üç kat
+ * etiketle yükseliyordu. Şimdi en uzun bina önce: onun etiketi zaten en
+ * yukarıda, kısa binaların etiketleri altında boş kalan yere iniyor.
+ * Yatay arama da genişledi (±3 etiket eni, `LABEL_REACH`): tohumlu
+ * şehirde şeridin sıra yüksekliği ölçüldü, test dosyası.
  */
 export function placeLabels(
   buildings: readonly SkyBuilding[],
@@ -426,13 +470,17 @@ export function placeLabels(
   const byI = new Map(buildings.map((b) => [b.i, b] as const));
   const placed: SkyLabel[] = [];
   const roofOf = (b: SkyBuilding) => (b.dir === -1 ? b.h : -b.h);
-  for (const i of picks) {
-    const b = byI.get(i);
-    if (!b) continue;
+  const steps: number[] = [0];
+  for (let k = 0.5; k <= LABEL_REACH + 1e-9; k += 0.5) steps.push(-k, k);
+  const order = picks
+    .filter((i) => byI.has(i))
+    .sort((a, b) => byI.get(b)!.h - byI.get(a)!.h || picks.indexOf(a) - picks.indexOf(b));
+  for (const i of order) {
+    const b = byI.get(i)!;
     const dir: 1 | -1 = b.dir === -1 ? -1 : 1;
     const { w, h } = labelBox(mode.label, stocks[i].symbol, mode);
     const cx = b.x + b.w / 2;
-    const offsets = [0, -0.5, 0.5, -1, 1, -1.5, 1.5, -2, 2].map((k) => k * w);
+    const offsets = steps.map((k) => k * w);
     let best: { label: SkyLabel; cost: number } | null = null;
     for (const dx of offsets) {
       const x = Math.min(mode.width - EDGE - w, Math.max(EDGE, cx - w / 2 + dx));
@@ -455,7 +503,7 @@ export function placeLabels(
       const roof = roofOf(b);
       const near = dir === 1 ? y + h : y;
       const lift = Math.abs(near - roof) - LABEL_GAP;
-      const cost = lift + Math.abs(dx) * 0.6;
+      const cost = lift + Math.abs(dx) * LABEL_SHIFT_COST;
       const attached = cx >= x && cx <= x + w && lift < 2;
       const label: SkyLabel = {
         i,
@@ -472,7 +520,8 @@ export function placeLabels(
     }
     if (best) placed.push(best.label);
   }
-  return placed;
+  /* Çizim sırası seçim sırası (önce büyük şirketler): okuma ve test aynı. */
+  return placed.sort((a, b) => picks.indexOf(a.i) - picks.indexOf(b.i));
 }
 
 /**
@@ -496,7 +545,6 @@ export function skylineLayout({
   const mode: SkyMode = SKY_MODES[modeName];
   const floor = capFloor(stocks);
   const weight = (i: number) => Math.sqrt(stocks[i].cap ?? floor);
-  const count = districts.reduce((acc, d) => acc + d.members.length, 0);
   const usable = mode.width - EDGE * 2;
   const spanOf = (d: District, k: number) =>
     d.members.reduce((s, i) => s + mode.minW + k * weight(i), 0) + Math.max(0, d.members.length - 1) * mode.gap;
@@ -554,8 +602,15 @@ export function skylineLayout({
   const minSide = mode.half * mode.minSide;
   const upH = Math.max(minSide, scale(domain.maxUp));
   const downH = Math.max(minSide, scale(domain.maxDown));
-  const total = Math.max(1, count - 1);
-  let order = 0;
+  /* Etiketli binalar sahne genelinde seçiliyor (sıra başına değil):
+     telefonda iki sıra "en büyük altı" sözünü iki katına çıkarıyordu. */
+  const picks = labelPicks(
+    stocks,
+    districts.flatMap((d) => d.members),
+    mode.labelCaps,
+    mode.labelExtremes,
+  );
+  const delayOf = (index: number) => RISE_START + (districts.length > 1 ? index / (districts.length - 1) : 0) * RISE_SPREAD;
 
   const rows: SkyRow[] = rowSets.map((set) => {
     const spans = set.map((index) => Math.max(spanOf(districts[index], k), mode.minDistrictW));
@@ -582,22 +637,21 @@ export function skylineLayout({
           h: Math.max(MIN_H, scale(change)),
           dir,
           clip: Math.abs(change) > hi,
-          delay: (order / total) * RISE_SPREAD,
+          delay: delayOf(index),
         });
-        order += 1;
         bx += w + mode.gap;
       }
       x += spans[j];
-      spansOut.push({ key: d.key, x0, x1: x, change: d.change });
+      spansOut.push({ key: d.key, x0, x1: x, change: d.change, delay: delayOf(index) });
       x += gapW;
     });
-    const picks = labelPicks(
+    const inRow = new Set(set.flatMap((index) => districts[index].members));
+    const labels = placeLabels(
+      buildings,
+      picks.filter((i) => inRow.has(i)),
       stocks,
-      set.flatMap((index) => districts[index].members),
-      mode.labelCaps,
-      mode.labelExtremes,
+      mode,
     );
-    const labels = placeLabels(buildings, picks, stocks, mode);
     const top = Math.min(-upH, ...labels.map((label) => label.y)) - 2;
     const bottom = Math.max(downH, ...labels.map((label) => label.y + label.h)) + 2;
     return { top, bottom, upH, downH, buildings, labels, districts: spansOut };
@@ -615,22 +669,26 @@ const fixed = (value: number) => (Math.round(value * 100) / 100).toString();
 /**
  * Binanın yolu: ufka oturan köşeler keskin, uç köşeler yuvarlak (dataviz:
  * veri ucunda 2 birimlik yarıçap, tabanda değil). Kesik bina (`clip`)
- * tavanda bir boşlukla bölünüyor: ölçeğin dışına taştığını gösteren işaret.
+ * tavanda bir YARIKLA bölünüyor: ölçeğin dışına taştığını gösteren işaret.
+ * Yarık yolun kendisinde (iki alt yol): eskiden zemin renginde bir
+ * dikdörtgendi, gök degrade olunca zeminle aynı renk tutmuyordu.
  */
 export function buildingPath(b: SkyBuilding): string {
   const r = Math.min(2, b.w / 2, b.h);
   const x0 = b.x;
   const x1 = b.x + b.w;
-  if (b.dir === -1) {
-    const y1 = b.h;
-    return `M${fixed(x0)} 0V${fixed(y1 - r)}Q${fixed(x0)} ${fixed(y1)} ${fixed(x0 + r)} ${fixed(y1)}H${fixed(x1 - r)}Q${fixed(x1)} ${fixed(y1)} ${fixed(x1)} ${fixed(y1 - r)}V0Z`;
-  }
   if (b.dir === 0) {
     const half = b.h / 2;
     return `M${fixed(x0)} ${fixed(-half)}H${fixed(x1)}V${fixed(half)}H${fixed(x0)}Z`;
   }
-  const y1 = -b.h;
-  return `M${fixed(x0)} 0V${fixed(y1 + r)}Q${fixed(x0)} ${fixed(y1)} ${fixed(x0 + r)} ${fixed(y1)}H${fixed(x1 - r)}Q${fixed(x1)} ${fixed(y1)} ${fixed(x1)} ${fixed(y1 + r)}V0Z`;
+  const s = b.dir === -1 ? 1 : -1;
+  const y1 = s * b.h;
+  const tip = `V${fixed(y1 - s * r)}Q${fixed(x0)} ${fixed(y1)} ${fixed(x0 + r)} ${fixed(y1)}H${fixed(x1 - r)}Q${fixed(x1)} ${fixed(y1)} ${fixed(x1)} ${fixed(y1 - s * r)}`;
+  if (!b.clip) return `M${fixed(x0)} 0${tip}V0Z`;
+  const m = clipMark(b);
+  const near = b.dir === -1 ? m.y : m.y + m.h;
+  const far = b.dir === -1 ? m.y + m.h : m.y;
+  return `M${fixed(x0)} 0V${fixed(near)}H${fixed(x1)}V0ZM${fixed(x0)} ${fixed(far)}${tip}V${fixed(far)}Z`;
 }
 
 /** Kesik binanın tavan işareti: binanın enince, uca yakın ince bir yarık. */
@@ -638,6 +696,76 @@ export function clipMark(b: SkyBuilding): { x: number; y: number; w: number; h: 
   const gap = 1.6;
   const at = b.h - 7;
   return { x: b.x - 0.5, y: b.dir === -1 ? at : -at - gap, w: b.w + 1, h: gap };
+}
+
+/* --------------------------------------------------------------------------
+   Sahnenin yolları (25 Ekim, "Silüet" turu)
+   -------------------------------------------------------------------------- */
+
+/** Pencere ritmi yalnız büyük binada: en az bu en ve boyda (birim). Küçük
+ *  binada pencere gürültü olur; ritim büyük şirketleri işaretliyor. */
+export const WINDOW_MIN_W = 9;
+export const WINDOW_MIN_H = 16;
+/** Pencere alanının bina kenarından içe payı ve çatıdan uzaklığı. */
+const WINDOW_INSET = 2;
+const WINDOW_ROOF = 5;
+/** Çatı ışığının kalınlığı (birim): binanın ucunda ince, açık bir şerit. */
+export const ROOF_LIGHT = 1.2;
+/** Yansımanın boyu binanın kesri: suda kısalmış, sönen bir ikiz. */
+export const REFLECTION_SCALE = 0.42;
+
+export type SkyDistrictInk = {
+  key: string;
+  delay: number;
+  /** Yön başına birleşik bina yolu: mahalle başına en çok üç öğe. */
+  up: string;
+  down: string;
+  flat: string;
+  /** Büyük binaların pencere alanları (desenle doluyor) ve çatı ışıkları. */
+  windows: string;
+  roofs: string;
+};
+
+const rectPath = (x: number, y: number, w: number, h: number) =>
+  `M${fixed(x)} ${fixed(y)}h${fixed(w)}v${fixed(h)}h${fixed(-w)}Z`;
+
+/**
+ * SAHNE YOLLARI. Yüz bina yüz `<path>` değil: mahalle başına yön yönüne
+ * birleşik yollar, pencere alanları ve çatı ışıkları; sıra başına bir
+ * yansıma yolu (yalnız yükselen binalar — düşen bina zaten suda, yansıması
+ * göğe çıkıp "yükseldi" diye okunurdu). Düğüm sayısı ~350'den ~40'a iniyor;
+ * etkileşim yine bina bina (isabet sütunla, `Skyline`/`SkyScene`), etkin
+ * bina ayrıca çiziliyor.
+ */
+export function cityInk(row: SkyRow, stocks: readonly SkyStock[]): { districts: SkyDistrictInk[]; reflection: string } {
+  const byKey = new Map<string, SkyDistrictInk>();
+  for (const span of row.districts) {
+    byKey.set(span.key, { key: span.key, delay: span.delay, up: "", down: "", flat: "", windows: "", roofs: "" });
+  }
+  let reflection = "";
+  for (const b of row.buildings) {
+    const ink = byKey.get(stocks[b.i].district);
+    if (!ink) continue;
+    const path = buildingPath(b);
+    if (b.dir === 1) {
+      ink.up += path;
+      reflection += path;
+    } else if (b.dir === -1) ink.down += path;
+    else ink.flat += path;
+    if (b.dir === 0) continue;
+    /* Çatı ışığı: köşe yuvarlaklığının içinde kalıyor. */
+    const r = Math.min(2, b.w / 2, b.h);
+    const lw = b.w - r * 2;
+    if (lw > 0.4 && b.h > ROOF_LIGHT * 2) {
+      ink.roofs += rectPath(b.x + r, b.dir === 1 ? -b.h : b.h - ROOF_LIGHT, lw, ROOF_LIGHT);
+    }
+    if (b.w >= WINDOW_MIN_W && b.h >= WINDOW_MIN_H) {
+      const ww = b.w - WINDOW_INSET * 2;
+      const wh = b.h - WINDOW_ROOF - WINDOW_INSET;
+      ink.windows += rectPath(b.x + WINDOW_INSET, b.dir === 1 ? -b.h + WINDOW_ROOF : WINDOW_INSET, ww, wh);
+    }
+  }
+  return { districts: [...byKey.values()], reflection };
 }
 
 export type SkyInk = { up: string; down: string; flat: string; horizon: string; water: string };

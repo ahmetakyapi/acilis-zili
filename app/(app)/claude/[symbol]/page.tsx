@@ -118,19 +118,26 @@ export default async function ClaudePage(props: PageProps<"/claude/[symbol]">) {
 
   return <MotionExperience className={polish.page}>
     <ScrollProgress />
-    <PageHeader title={C.title} subtitle={C.subtitle} />
-    <div className={styles.identity}>
-      <LogoTile symbol={symbol} logoUrl={meta?.logoUrl} size="md" />
-      <div className={styles.identityText}>
-        <span className={styles.identitySymbol}>{symbol}</span>
-        <span className={styles.identityName}>{meta?.name ?? ""}</span>
+    {/* KİMLİK BAŞLIK KARTININ İÇİNDE (25 Ekim, sahibinin isteği): şirket
+        ve üç bağlantı kartın altında ayrı bir satırdı; 1440'ta sekmeleri ve
+        filmi ~90 px aşağı itiyordu. Artık başlığın sağında tek blok,
+        telefonda başlığın altına iner. */}
+    <PageHeader title={C.title} subtitle={C.subtitle} action={
+      <div className={styles.identity}>
+        <div className={styles.identityHead}>
+          <LogoTile symbol={symbol} logoUrl={meta?.logoUrl} size="md" />
+          <div className={styles.identityText}>
+            <span className={styles.identitySymbol}>{symbol}</span>
+            <span className={styles.identityName}>{meta?.name ?? ""}</span>
+          </div>
+        </div>
+        <nav className={styles.identityLinks} aria-label={symbol}>
+          <Link href={`/hisse/${encodeURIComponent(symbol)}`}>{t.nav.companies}</Link>
+          <Link href={`/teknik/${symbol.toLowerCase()}`}>{t.nav.technical}</Link>
+          <Link href={`/hisse-secimi/${encodeURIComponent(symbol)}`}>{t.screening.title}</Link>
+        </nav>
       </div>
-      <nav className={styles.identityLinks} aria-label={symbol}>
-        <Link href={`/hisse/${encodeURIComponent(symbol)}`}>{t.nav.companies}</Link>
-        <Link href={`/teknik/${symbol.toLowerCase()}`}>{t.nav.technical}</Link>
-        <Link href={`/hisse-secimi/${encodeURIComponent(symbol)}`}>{t.screening.title}</Link>
-      </nav>
-    </div>
+    } />
 
     {/* Sekmeler kimliğin hemen altında: üç görünüm aynı hissenin, odak her görünümün içinde. */}
     <TabBar label={C.title} className={styles.tabs}>

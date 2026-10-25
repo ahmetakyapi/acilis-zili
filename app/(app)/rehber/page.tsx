@@ -359,7 +359,11 @@ function TopicHeading({
           </Link>
         </span>
       </div>
-      <p className="mb-3.5 max-w-[72ch] text-base leading-[20px] text-soft">
+      {/* Geniş ekranda 96ch (25 Ekim, doğrulama turu): tek cümle; 72ch
+          tavanında EN açıklama iki satıra kırılıp ilk sıra kartları 1280×800'de
+          ilk ekranın dışına itiyordu (ölçüm GuideRoadmap.module.css →
+          "1024–1439"). */}
+      <p className="mb-3.5 max-w-[72ch] text-base leading-[20px] text-soft lg:max-w-[96ch]">
         {guideTopicDesc(topic, locale)}
       </p>
     </>

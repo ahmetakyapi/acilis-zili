@@ -9,7 +9,7 @@ import { logoSrc } from "@/lib/logos";
 import { cn, directionOf, directionText, formatEtDateCompact, formatPercent, formatPercentPlain, tieFigures } from "@/lib/utils";
 import { BreadthStrip } from "./PosterMarks";
 import { Skyline } from "./Skyline";
-import { posterName, posterStoryText } from "./story";
+import { posterName, posterStoryOf, posterStoryText } from "./story";
 import styles from "./PosterBoard.module.css";
 
 /**
@@ -61,6 +61,7 @@ export function PosterBoard({
   const K = t.daySignature.skyline;
   const { stocks, districts, sized } = skyline;
   const story = posterStoryText(poster, districts, locale, t);
+  const tone = posterStoryOf(poster, districts).tone;
   const pct = (value: number) => formatPercent(value, locale, PERCENT_DIGITS);
   const breadth = poster.breadth;
   const anchor = poster.indices.find((move) => move.symbol === POSTER_ANCHOR);
@@ -142,6 +143,7 @@ export function PosterBoard({
             text={K}
             adv={breadth.advancing}
             dec={breadth.declining}
+            tone={tone}
           />
         )}
       </section>

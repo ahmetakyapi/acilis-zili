@@ -20,6 +20,23 @@ import styles from "./PuzzleRecord.module.css";
  * Veri yalnız bu tarayıcıda (`puzzle-storage.ts`); sunucu çiziminde boş
  * istatistikle çizilir, depo okununca dolar. Sütunlar `scaleY` ile:
  * yükseklik değişimi yerleşimi oynatmıyor, kayma yok.
+ *
+ * KÜNYE ŞERİDİ (25 Ekim, doğrulama turu — sahibinin 1440 koyu ekranı):
+ * sayılar `flex-wrap` ile akıyordu; etiket genişlikleri farklı olduğu için
+ * hiçbir sayı ötekinin hizasında değildi, "Saf Bilgi" ikinci satıra
+ * kırılıyordu (TR'de altıncı, EN'de beşinci ve altıncı hücre), dağılım
+ * 5 piksellik sütunlarla ve 2 piksel aralıklı rakamlarla okunmuyordu.
+ * Şimdi iki satır: üstte başlık ve etiketli dağılım (sütun 10 piksel,
+ * rakamlar 18 piksel aralıklı), altta ALTI EŞİT HÜCRE (etiket üstte küçük,
+ * sayı altta; hücreler ince çizgiyle ayrılı). Uzun iki etiket kısa adıyla
+ * basılıyor (`archiveWinsShort`, `pureWinsShort`), tam ad ekran okuyucuda
+ * ve `title`da. Dar kapta (< 420 px, telefon) hücreler 3 × 2.
+ *
+ * YÜKSEKLİK BÜTÇESİ: 1280×800'de kaybetmede sağ kolonun dibi 756, ilk
+ * ekran 763 (StockPuzzle.module.css'teki ölçüm). Şerit 86 pikseldi; yeni
+ * hâli 84 (1280/1440/1920, TR/EN, açık/koyu): kaybetmede sağ kolonun dibi
+ * 754, kazanma 598, üç yanlış 634, başlangıç 544. Hiçbir etiket kesilmiyor,
+ * altı sayı tek hatta (aynı `top`). 390'da 3 × 2, şerit 125 → 126.
  */
 export function PuzzleRecord({
   stats,
@@ -48,8 +65,8 @@ export function PuzzleRecord({
     { key: "rate", label: labels.winRate, text: formatPercentPlain(winRate, locale, 0) },
     { key: "streak", label: labels.streak, text: String(streak) },
     { key: "best", label: labels.best, text: String(value.best) },
-    { key: "archive", label: labels.archiveWins, text: String(value.archiveWins) },
-    { key: "pure", label: labels.pureWins, text: String(value.pureWins) },
+    { key: "archive", label: labels.archiveWins, short: labels.archiveWinsShort, text: String(value.archiveWins) },
+    { key: "pure", label: labels.pureWins, short: labels.pureWinsShort, text: String(value.pureWins) },
   ];
 
   return (
@@ -57,14 +74,23 @@ export function PuzzleRecord({
       <h2 id="bulmaca-seri" className={styles.title}>{labels.statsTitle}</h2>
       <dl className={styles.stats}>
         {figures.map((figure) => (
-          <div key={figure.key} data-extra={figure.key === "archive" || figure.key === "pure" ? "" : undefined}>
-            <dt>{figure.label}</dt>
+          <div key={figure.key} data-extra={figure.short ? "" : undefined}>
+            <dt title={figure.short && figure.short !== figure.label ? figure.label : undefined}>
+              {figure.short && figure.short !== figure.label ? (
+                <>
+                  <span aria-hidden>{figure.short}</span>
+                  <span className="sr-only">{figure.label}</span>
+                </>
+              ) : (
+                figure.label
+              )}
+            </dt>
             <dd className="numeral">{figure.text}</dd>
           </div>
         ))}
       </dl>
       <figure className={styles.dist}>
-        <figcaption className="sr-only">{labels.distribution}</figcaption>
+        <figcaption className={styles.distLabel}>{labels.distribution}</figcaption>
         <ol className={cn(played === 0 && styles.idle)}>
           {Array.from({ length: MAX_GUESSES }, (_, i) => {
             const count = value.distribution[i] ?? 0;

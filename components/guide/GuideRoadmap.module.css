@@ -97,6 +97,24 @@
 @keyframes roadNode { from { opacity:0; scale:.6; } to { opacity:1; scale:1; } }
 @media (prefers-reduced-motion:reduce) { .stop, .laneFill, .ringFill, .strip > i { transition:none; } }
 
+/* ---- 1024–1439: durak kartı bir kademe sıkı ----
+   Doğrulama turu (25 Ekim). 1280×800'de ilk ekranın alt sınırı piyasa
+   şeridiyle y=763; ilk bölümün ilk sıra yazı kartlarının dibi TR'de 772,
+   EN'de 808 idi (kart yarım görünüyordu). Burada ikon 48 → 40, kart
+   dolgusu 12/14 → 10/12, satır aralığı 10 → 8; düğüm ikon merkeziyle aynı
+   dikeyde kalsın diye `--node-x` 38 → 32 (12 + 20). Sayfa tarafı: bölüm
+   açıklaması geniş ekranda tek satır (`app/(app)/rehber/page.tsx`), kapakla
+   bölüm arası 24 → 20, kapağın iç aralığı 16 → 12, bölüm satırı dolgusu
+   10 → 8 (`GuideExperience.module.css` sonu). Ölçüldü (açık/koyu): kart
+   dibi TR 772 → 752, EN 808 → 760 (ilk ekran 763); durak kartı 151 → 136.
+   1440 ve 1920 bu kuraldan etkilenmiyor. */
+@media (min-width:1024px) and (max-width:1439px) {
+  .roadmap { --node-x: 32px; }
+  .stop { gap:8px; padding:10px 12px; }
+  .icon { width:40px; height:40px; }
+  .icon > svg:not(.ring) { width:20px; height:20px; }
+}
+
 /* ---- 1024 altı: 2×2 ızgara ----
    Dört kart 768'de 160 piksele iniyordu ("Makro ve Merkez Bankası" üç
    satır). İki sütunda yol çizgisi bir sonraki durağa bağlanamıyor (alt

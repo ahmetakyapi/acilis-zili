@@ -41,13 +41,16 @@ const tr = {
      BAŞLIKTIR, nokta almaz; `hint` ise cümledir ve nokta alır. */
   nav: {
     taxTool: "Vergi Hesaplayıcı",
+    /* Panel ve /menu satırının adı (25 Ekim): sayfanın başlığı "Aracı Kurum
+       Karşılaştırması" panel sütununda iki satıra kırılıyordu. */
+    brokers: "Aracı Kurumlar",
     themes: "Temalar",
     /* "Daha Fazla" panelinin ve /menu'nün grupları, niyete göre (25 Ekim;
        gerekçe components/layout/nav-items.ts → MORE_GROUPS). */
     moreGroupTools: "Araçlar",
     moreGroupDaily: "Her Gün",
     moreGroupMarket: "Piyasa",
-    moreGroupMine: "Portföy ve Maliyet",
+    moreGroupMine: "Portföy ve Yatırım",
     moreGroupLearn: "Öğren ve Oku",
     tickerPause: "Şeridi Duraklat",
     tickerResume: "Şeridi Sürdür",
@@ -217,7 +220,7 @@ const tr = {
     readAnalysis: "Analizi Oku",
     viewCompany: "Şirkete Git",
     /* Katlı şirket listesinin düğmesi — çok şirketli bilançoda ilk üç satır
-       açık, kalanı bu düğmeyle yerinde açılır (DayFlow → "KATLI LİSTE"). */
+       açık, kalanı bu butonla yerinde açılır (DayFlow → "KATLI LİSTE"). */
     moreMembers: "{count} Şirket Daha",
     calendar: "Takvimde Gör",
     calendarSource: "Ekonomik Takvim",
@@ -1554,7 +1557,7 @@ const tr = {
       "Her seri kendi başlangıç gününe göre yüzdeye çevrilir; hepsi sıfırdan çıkar, fiyat seviyeleri karşılaştırılmaz.",
     howRange: "Tek Aralık",
     howRangeText:
-      "Başlıktaki aralık düğmesi grafiği, şeritteki getiriyi ve tablodaki dönem satırını birlikte değiştirir.",
+      "Başlıktaki aralık butonu grafiği, şeritteki getiriyi ve tablodaki dönem satırını birlikte değiştirir.",
     howGroups: "Dört Grup",
     howGroupsText:
       "Tablo getiri, değerleme, risk ve şirket bilgisi olmak üzere dört grupta okunur.",
@@ -2035,19 +2038,19 @@ const tr = {
     hintScreening: "Bir Hisseyi Kurallarla Sına",
     hintScreener: "Temel Ölçülerle Süz ve Sırala",
     hintTechnical: "Günlük Görüş, Destek ve Direnç",
-    hintGuide: "Kavramları Anlatan Yazılar",
+    hintGuide: "Kavram Anlatan Yazılar",
     hintStories: "Piyasada Yaşananların Uzun Anlatımı",
-    hintCommunity: "Üyelerin Yazdığı Piyasa Yazıları",
+    hintCommunity: "Üyelerin Piyasa Yazıları",
     hintMyPosts: "Taslakların ve Yayındaki Yazıların",
     hintReport: "Yolculuğunun Kişisel Özeti",
     hintNews: "Çevrilmiş Piyasa Haberleri",
-    hintBrief: "Günlük ve Haftalık Bülten Arşivi",
+    hintBrief: "Günlük ve Haftalık Bülten",
     hintWatchlist: "Takip Listelerin",
-    hintPortfolio: "Pozisyonların, Dolar ve Lira Kâr/Zarar",
-    hintInvestors: "Buffett, Pelosi, Burry: Kim Ne Aldı",
+    hintPortfolio: "Pozisyonlar ve Kâr/Zarar",
+    hintInvestors: "Kim Ne Aldı, Ne Sattı",
     hintThemes: "Yapay Zekâ, Yarı İletken, Katılım",
-    hintGlossary: "Piyasa Terimleri, A’dan Z’ye",
-    hintTax: "Hisse Kazancı ve Temettü Vergisi",
+    hintGlossary: "Terimler, A’dan Z’ye",
+    hintTax: "Kazanç ve Temettü Vergisi",
     hintSettings: "Hesap, Tema ve Dil",
     hintPrivacy: "Verilerin ve Haklarının Tamamı",
   },
@@ -4522,7 +4525,7 @@ const tr = {
       heroTitle: "Şifreni Yenile",
       heroLead: "Hesabın için bir sıfırlama isteği aldık. Tek dokunuşla yeni şifreni belirleyebilirsin.",
       greeting: "Merhaba {username},",
-      body: "Aşağıdaki düğme seni şifre belirleme ekranına götürür. Yeni şifreni kaydettiğin anda bağlantı kullanılmış sayılır ve açık oturumların kapanır; girişte artık yeni şifren geçer.",
+      body: "Aşağıdaki buton seni şifre belirleme ekranına götürür. Yeni şifreni kaydettiğin anda bağlantı kullanılmış sayılır ve açık oturumların kapanır; girişte artık yeni şifren geçer.",
       button: "Yeni Şifre Belirle",
       metaRequested: "İstek Zamanı",
       metaValidity: "Geçerlilik",
@@ -4530,7 +4533,7 @@ const tr = {
       metaUse: "Kullanım",
       metaUseValue: "Tek Seferlik",
       zoneName: "İstanbul",
-      fallback: "Düğme açılmazsa bu adresi tarayıcına yapıştır:",
+      fallback: "Buton açılmazsa bu adresi tarayıcına yapıştır:",
       noteTitle: "Bu İsteği Sen Yapmadıysan",
       ignore: "Bu e-postayı yok sayabilirsin; şifren değişmez. Bağlantı yalnızca bu adrese gönderildi ve 30 dakika sonra kendiliğinden geçersiz olur.",
       noReply: "Bu e-posta yanıt almayan bir adresten otomatik gönderildi; lütfen yanıtlama.",
@@ -4653,7 +4656,7 @@ const tr = {
     close: "Kapat",
     existing: "Bu Hissedeki Alarmlar",
     emptyTitle: "Henüz Alarm Yok",
-    empty: "Bir hisse sayfasındaki zil düğmesiyle hedef fiyat kurabilirsin.",
+    empty: "Bir hisse sayfasındaki zil butonuyla hedef fiyat kurabilirsin.",
     note: "Seans boyunca alarmlar beş dakikada bir sunucuda kontrol edilir ve tetiklenince başlıktaki zile düşer; bu sunucuda anlık bildirim kapalı. Tetiklenme saati fiyatın hedefi geçtiği an değil, bunun görüldüğü kontroldür.",
     loginHint: "Fiyat alarmı kurmak için giriş yap",
     created: "Alarm kuruldu.",
@@ -4736,7 +4739,7 @@ const tr = {
     title: "Aracı Kurum Karşılaştırması",
     subtitle:
       "Türkiye'den ABD hissesi alınabilen kurumların ücretleri; her hücre kurumun kendi tarifesinden, kaynağıyla.",
-    menuHint: "ABD Hissesi Ücretleri, Kaynağıyla",
+    menuHint: "ABD Hissesi Ücretleri",
     tableTitle: "Kurum Kurum ABD Tarifesi",
     tableMeta: "{count} Kurum",
     tableLead:

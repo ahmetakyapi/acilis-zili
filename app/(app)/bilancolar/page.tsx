@@ -9,6 +9,7 @@ import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMot
 import { EarningsActivity } from "@/components/earnings/EarningsActivity";
 import { EarningsHorizon } from "@/components/earnings/horizon/EarningsHorizon";
 import styles from "@/components/motion/DirectoryExperience.module.css";
+import { cn } from "@/lib/utils";
 import { EarningsCalendar } from "@/components/earnings/EarningsCalendar";
 import { EarningsTabs } from "@/components/earnings/EarningsTabs";
 import { RecentAnalysesStrip } from "@/components/earnings/RecentAnalysesStrip";
@@ -136,7 +137,9 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
   );
 
   return (
-    <MotionExperience className={styles.page}>
+    /* ≥1600'DE BÖLÜM ARALIĞI 16 (25 Ekim, doğrulama turu): gerekçe ve
+       ölçüm aşağıdaki "SEKME ÇUBUĞU KAPAĞIN İÇİNDE" yorumunda. */
+    <MotionExperience className={cn(styles.page, "min-[100rem]:[--page-section-gap:16px]")}>
       <ScrollProgress />
       {/* BAŞLIK BÖLÜMÜN ADI, SEKME GÖRÜNÜMÜN ADI. Burada "Bilanço Takvimi"
           yazıyordu ve hemen altındaki sekme çubuğunda "Takvim" duruyordu —
@@ -166,6 +169,14 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           1440×900'de 460–1011 → 317–751 (iki pencere beş gün ilk ekranda);
           390'da ızgara 603 → 488. 1920×1080'de takvim listesinin üst kenarı
           y=1034 (ilk ekranın alt sınırı piyasa şeridiyle 1043).
+
+          ≥1600 SIKILAŞTIRMASI (25 Ekim, doğrulama turu). 1920×1080'de ilk
+          gün başlığı ("26 Ekim Pazartesi") TR 1048–1090, EN 1066–1108 —
+          ilk ekranın dışında. Bölüm aralığı 24 → 16, analiz şeridi 74 → 62,
+          okuma satırının karnesi iki sütun ve künye tek tavansız satır
+          (`EarningsHorizon.module.css` sonu). Ölçüldü (TR/EN, açık/koyu):
+          başlık 979–1021, 22 piksel payla ilk ekranda. 1440 ve 1280 aynı
+          (şerit 971 / 966, ufuk tamamı ilk ekranda), 390 değişmedi.
 
           Önceki tur: SEKME ÇUBUĞU BAŞLIĞIN HEMEN ALTINDA. Kapak yoğunluk
           grafiğini ve öne çıkanları da taşıyordu: telefonda 735 piksel ve

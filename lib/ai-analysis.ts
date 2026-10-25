@@ -10,6 +10,8 @@ import { completedBars, computeSnapshot, type TechnicalSnapshot } from "./techni
 import { evaluate } from "./screening";
 import { FOCUS_OF, pricePath, repairNewsCitations, safeSourceUrl, selectNews, snapLevel, type PricePath, type StoredAnalysisResult } from "./ai-analysis-core";
 import { AnalysisOutput } from "./ai-analysis-schema";
+import { isTransient } from "./ai-analysis-errors";
+export { failureKind } from "./ai-analysis-errors";
 
 export type SavedAnalysis = {
   output: StoredAnalysisResult;
@@ -41,6 +43,9 @@ const FALLBACK_MODELS = new Set(["claude-sonnet-5-5", "claude-opus-5-5", "claude
 const MAX_TOKENS = 32_000;
 /** Duvar saati sınırı: rota 180 sn, kilit 4 dk; veri toplamaya ~30 sn bırakır. */
 const MODEL_TIMEOUT_MS = 140_000;
+/** Yeniden deneme yalnız bu süre içinde düşen ilk denemeye (ms). */
+const RETRY_WINDOW_MS = 20_000;
+const RETRY_DELAY_MS = 2_000;
 /** Para kararı ve günde birkaç rapor: kalite token'dan önemli. */
 const EFFORT = "high";
 const NEWS_LIMIT = 12;
@@ -145,7 +150,7 @@ export async function generateAnalysis(symbol: string, horizon: "short" | "mediu
   const fallback = FALLBACK_MODELS.has(model);
   // Ücretli çağrı: SDK yeniden denemez (zaman aşımı da denenir, süre ikiye katlanır); hak zaten iade ediliyor.
   const client = new Anthropic({ apiKey: process.env.CLAUDE_ANALYSIS_API_KEY, maxRetries: 0, timeout: MODEL_TIMEOUT_MS });
-  const response = await client.beta.messages.stream({
+  const request = () => client.beta.messages.stream({
     model,
     max_tokens: MAX_TOKENS,
     thinking: { type: "adaptive" },
@@ -164,6 +169,17 @@ export async function generateAnalysis(symbol: string, horizon: "short" | "mediu
       news: items.map((n, i) => ({ sourceIndex: i, headline: n.headline.slice(0, 500), summary: n.summary?.slice(0, 1200) ?? null, publishedAt: n.publishedAt, source: n.source })),
     }) }],
   }, { signal: AbortSignal.timeout(MODEL_TIMEOUT_MS) }).finalMessage();
+  // TEK HIZLI YENİDEN DENEME (25 Ekim): canlıda BE raporu jetonsuz düştü
+  // (yanıt hiç gelmedi), aynı istek yerelde 31 saniyede tamamlandı — geçici
+  // bir üst katman hatası. Yalnız ÇABUK düşen geçici hatada (bağlantı, 429,
+  // 5xx, 529 aşırı yük) ve ilk deneme 20 saniyeyi geçmediyse bir kez daha
+  // denenir; zaman aşımı denenmez (süre ikiye katlanır, `maxDuration` 180).
+  const started = Date.now();
+  const response = await request().catch(async (error: unknown) => {
+    if (!isTransient(error) || Date.now() - started > RETRY_WINDOW_MS) throw error;
+    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+    return request();
+  });
   // Yedek model yanıtladıysa kayıtta o görünür; ücret hangi modeldeyse orada.
   await onUsage({ inputTokens: response.usage.input_tokens, outputTokens: response.usage.output_tokens, model: response.model });
   if (response.stop_reason !== "end_turn") throw new Error("invalid-output");

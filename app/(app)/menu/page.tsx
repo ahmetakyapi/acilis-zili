@@ -9,7 +9,6 @@ import {
   Gear,
   Heart,
   ShieldCheck,
-  Sparkle,
   SignIn,
   SignOut,
 } from "@phosphor-icons/react/dist/ssr";
@@ -95,8 +94,8 @@ export default async function MenuPage() {
      `menuGroupOf` panel satırının grubunu, şerit sekmesinin `menu`
      alanını okuyor (telefonda şerit yok; Piyasalar "Piyasa"da, Teknik
      "Araçlar"da, Mercek "Öğren ve Oku"da). Grup sırası `MORE_GROUPS`:
-     Araçlar, Her Gün, Piyasa, Portföy ve Maliyet, Öğren ve Oku; sonda
-     Hesap ve Site.
+     Araçlar, Her Gün, Piyasa, Portföy ve Yatırım, Öğren ve Oku (Yenilikler
+     dahil); sonda Hesap.
 
      Araçlar EN ÜSTTE (11 Ekim, sahibinin isteği: Hisse Seçimi "mantıklı,
      güzel bir yere"): Piyasalar ve Bilançolar zaten alt çubukta, menüyü
@@ -112,6 +111,11 @@ export default async function MenuPage() {
         hint: item.hint?.(t) ?? "",
         /* Panelle aynı canlı künye: bugünün bulmaca numarası (saf hesap). */
         live: item.href === "/bulmaca" ? puzzle : undefined,
+        /* YENİLİKLER "Öğren ve Oku"da (25 Ekim, ikinci tur — panelle aynı
+           gruplama; eskiden en altta kendi "Site" bölümündeydi). Alt
+           çubuktaki Menü sekmesinin noktası bu satırın "Yeni" hapına
+           çağırıyor. */
+        changelog: item.href === "/yenilikler" || undefined,
       })),
     })),
     {
@@ -122,17 +126,6 @@ export default async function MenuPage() {
         { href: "/raporum", icon: BellRinging, title: t.bellReport.title, hint: t.menu.hintReport },
         { href: "/ayarlar", icon: Gear, title: t.nav.settings, hint: t.menu.hintSettings },
         { href: "/kvkk", icon: ShieldCheck, title: t.footer.privacy, hint: t.menu.hintPrivacy },
-      ],
-    },
-    {
-      /* YENİLİKLER EN ALTTA, KENDİ BÖLÜMÜNDE (25 Ekim). Masaüstünde panelin
-         dibindeki tam genişlik satırın karşılığı: bir ekran grubu değil,
-         sitenin kendisi hakkında (gerekçe nav-items.ts → "/yenilikler").
-         Telefonda tek karo tam genişlik (`.menuTiles` tek kalan son karo
-         kuralı). Alt çubuktaki Menü sekmesinin noktası buraya çağırıyor. */
-      title: t.changelog.menuGroup,
-      entries: [
-        { href: "/yenilikler", icon: Sparkle, title: t.changelog.title, hint: t.changelog.menuHint, changelog: true },
       ],
     },
   ];

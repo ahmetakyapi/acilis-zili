@@ -282,7 +282,7 @@ export const riskDeskTr = {
   },
   nav: {
     label: "Risk Masası",
-    hint: "Rejim, oynaklık ve portföy maruziyeti",
+    hint: "Rejim ve Maruziyet",
   },
   push: {
     title: "Risk Masası: {label}",
@@ -565,7 +565,7 @@ export const riskDeskEn: typeof riskDeskTr = {
   },
   nav: {
     label: "Risk Desk",
-    hint: "Regime, volatility and portfolio exposure",
+    hint: "Regime and Exposure",
   },
   push: {
     title: "Risk Desk: {label}",

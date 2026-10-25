@@ -115,7 +115,9 @@ function endTexts(rows: LineRow[], keys: readonly string[], locale: Locale): Rec
    112'den indi; Fed ve resesyon tek ana çizgi (kartın kalanını doldurur),
    meclisler iki küçük çizgi. Meclis çizgisi 44'ün altına inmez: kutunun
    tamamı dokunma hedefi. Ölçüm (TR, açık): üç kartın dibi 1280×800'de
-   759, 1440×900'de 766; görünür alan 763 / 863'te bitiyor. */
+   759, 1440×900'de 766; görünür alan 763 / 863'te bitiyor. 25 Ekim:
+   1280'de 777'ye çıkmıştı, boşluklar sıkılaştı → 725 (Probabilities.module.css
+   sonu). */
 const LINE_H = { main: 76, chamber: 44 } as const;
 
 /** Kartların ızgara içindeki çapası (tepe şeridindeki kadranlar buraya iner). */

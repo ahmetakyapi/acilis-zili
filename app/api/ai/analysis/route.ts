@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { analysisAccess } from "@/lib/ai-analysis-access";
 import { reserveAnalysis, releaseAnalysis } from "@/lib/ai-analysis-quota";
-import { analysisModel, generateAnalysis } from "@/lib/ai-analysis";
+import { analysisModel, failureKind, generateAnalysis } from "@/lib/ai-analysis";
 import { AnalysisInput } from "@/lib/ai-analysis-schema";
 import { db } from "@/lib/db";
 import { aiAnalysisRequests } from "@/lib/schema";
@@ -105,6 +105,9 @@ export async function POST(request: Request) {
       try { await db.update(aiAnalysisRequests).set({ status: "failed" }).where(and(eq(aiAnalysisRequests.id, id), eq(aiAnalysisRequests.userId, userId), eq(aiAnalysisRequests.status, "processing"))); }
       catch { /* Gizli upstream hata metni loglanmaz. */ }
     }
+    // Neden düştüğü artık sunucu günlüğünde görünüyor (25 Ekim: BE raporu
+    // izsiz düştü); yalnız sınıf, kod ve tür — üst katman metni yazılmaz.
+    console.error("[claude analiz] düştü", failureKind(error));
     const code = error instanceof Error ? error.message : "unavailable";
     const safe = code === "data-unavailable" || code === "forbidden" ? code : "analysis-failed";
     return respond({ error: safe }, safe === "forbidden" ? 403 : 503);

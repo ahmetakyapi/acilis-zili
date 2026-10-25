@@ -13,7 +13,7 @@ export const probabilitiesTr = {
   subtitle: "Fed kararı, ara seçim ve resesyon için piyasa olasılıkları.",
   metaDescription:
     "Fed'in sıradaki faiz kararı, 2026 ABD ara seçimi ve resesyon için tahmin piyasasında fiyatlanan olasılıklar: kaynağı ve saatiyle.",
-  menuHint: "Fed Kararı ve Ara Seçim Olasılıkları",
+  menuHint: "Fed ve Seçim Olasılıkları",
 
   /* Veriden tek cümle — şablon + veri (lib/probabilities.ts → composeLead); görsel turdan beri tepe şeridinin ekran okuyucu özeti. */
   leadPrefix: "Piyasa fiyatlarına göre ",

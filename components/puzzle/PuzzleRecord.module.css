@@ -1,30 +1,61 @@
 /* Seri şeridi — gerekçe PuzzleRecord.tsx. Zemin `surface-sunken` (ton),
    kutu ve gölge yok. Dağılım sütunları yumuşak mavi, bugünün sütunu yeşil.
-   SAYILARDA `tabular-nums` YOK (virgülü rakam genişliğine çekiyor). */
+   SAYILARDA `tabular-nums` YOK (virgülü rakam genişliğine çekiyor).
 
-.record { container-type:inline-size; display:flex; flex-wrap:wrap; align-items:center; gap:.5rem 1rem; min-width:0; padding:.5rem .875rem; border-radius:var(--radius-panel); background:var(--surface-sunken); }
-.title { flex:none; margin:0; font-size:var(--text-read); font-weight:700; color:var(--text-strong); }
+   KÜNYE ŞERİDİ (25 Ekim, doğrulama turu): iki satırlı ızgara. Üst satır
+   başlık + etiketli dağılım, alt satır altı eşit hücre. Yatay dolgu
+   panellerin başlık hattıyla aynı (16 / 640 üstü 20 — `px-4 sm:px-5`):
+   "Senin Serin" üstteki "Tahminler" başlığıyla aynı dikeyde başlıyor
+   (önceki 14 piksel dolgu iki başlığı 6 piksel kaydırıyordu). */
 
-.stats { display:flex; flex-wrap:wrap; gap:.25rem .875rem; flex:1 1 0; margin:0; min-width:0; }
-.stats div { display:flex; flex-direction:column; min-width:0; }
-.stats dt { font-size:var(--text-tiny); line-height:1.2; color:var(--text-muted); white-space:nowrap; }
+.record {
+  container-type:inline-size;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"title dist" "stats stats";
+  align-items:end;
+  gap:.25rem 1rem;
+  min-width:0;
+  padding:.375rem 1rem .4375rem;
+  border-radius:var(--radius-panel);
+  background:var(--surface-sunken);
+}
+@media (min-width: 640px) { .record { padding-inline:1.25rem; } }
+.title { grid-area:title; align-self:center; margin:0; font-size:var(--text-read); font-weight:700; line-height:1.3; color:var(--text-strong); }
+
+/* Altı eşit hücre: etiket üstte, sayı altta; hücreler arası ince çizgi.
+   Sayılar aynı taban çizgisinde (etiketler tek satır, `nowrap`). */
+.stats { grid-area:stats; display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); margin:0; min-width:0; }
+/* Dolgu yalnız solda (çizginin yanında): 1280'de hücre 75 piksel ve iki
+   yanlı dolguda EN "Best Streak" kesiliyordu (ölçüldü). */
+.stats div { display:flex; flex-direction:column; gap:1px; min-width:0; padding-left:.625rem; border-left:1px solid var(--line-soft); }
+.stats div:first-child { padding-left:0; border-left:0; }
+.stats dt { overflow:hidden; font-size:var(--text-tiny); line-height:1.2; color:var(--text-muted); white-space:nowrap; text-overflow:ellipsis; }
 .stats dd { margin:0; font-size:var(--text-lead); font-weight:700; line-height:1.25; color:var(--text-strong); }
-/* Arşiv ve "Saf Bilgi" sayaçları seriye girmiyor: daha sessiz. */
-.stats div[data-extra] dd { font-size:var(--text-read); color:var(--text-body); }
+/* Arşiv ve "Saf Bilgi" sayaçları seriye girmiyor: aynı hatta, rengi sessiz. */
+.stats div[data-extra] dd { color:var(--text-body); }
 
-/* Minyatür dağılım: altı sütun, 26 piksel. Sayılar `flex-basis: 0` ile
-   kendi içinde kırılıyor, dağılım hep ilk satırın sağında (EN 1280
-   kaybetmede "Solved From Archive" dağılımı ikinci satıra itiyor, şerit
-   görünür alanı 36 piksel taşıyordu). */
-.dist { flex:none; margin:0; }
-.dist ol { display:flex; align-items:flex-end; gap:4px; margin:0; padding:0; list-style:none; }
-.dist li { display:flex; flex-direction:column; align-items:center; gap:2px; }
-.col { position:relative; display:block; width:var(--lane-h, 5px); height:1.625rem; border-radius:999px; background:var(--line-soft); overflow:hidden; }
-.bar { position:absolute; inset:0; border-radius:999px; background:var(--primary-soft); transform-origin:50% 100%; }
+/* Dağılım: altı sütun, 10 piksel genişlik, 18 piksel boy (eski 5 × 26); rakam altında
+   18 piksel aralıkla. Solda künye ("Tahmin Dağılımı"). */
+.dist { grid-area:dist; display:flex; align-items:center; gap:.625rem; margin:0; }
+.distLabel { font-size:var(--text-tiny); line-height:1.2; color:var(--text-muted); white-space:nowrap; }
+.dist ol { display:flex; align-items:flex-end; gap:.5rem; margin:0; padding:0; list-style:none; }
+.dist li { display:flex; flex-direction:column; align-items:center; gap:2px; min-width:10px; }
+.col { position:relative; display:block; width:10px; height:1.125rem; border-radius:3px; background:var(--line-soft); overflow:hidden; }
+.bar { position:absolute; inset:0; border-radius:3px; background:var(--primary-soft); transform-origin:50% 100%; }
 .dist li[data-today] .bar { background:var(--up); }
 .dist li[data-today] .key { color:var(--up); }
-.key { font-size:var(--text-tiny); font-weight:600; line-height:1; color:var(--text-muted); }
+.key { font-size:var(--text-nano); font-weight:600; line-height:1; color:var(--text-muted); }
 .idle .key { opacity:.7; }
+
+/* Dar kap (telefon): hücreler 3 × 2, künye gizli (figcaption ekran
+   okuyucuda kalır). 390'da kap 354 piksel: altı hücre 54 pikselde "En
+   İyi Seri"yi kesiyordu. */
+@container (max-width: 419.98px) {
+  .stats { grid-template-columns:repeat(3, minmax(0,1fr)); row-gap:.375rem; }
+  .stats div:nth-child(4) { padding-left:0; border-left:0; }
+  .distLabel { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+}
 
 @media (prefers-reduced-motion: no-preference) {
   .bar { transition:transform 700ms var(--ease-brand); }

@@ -10,7 +10,16 @@
    kaydırılıyordu. Sonra 1024 piksel genişlik, boy TR 491 / EN 474, iç
    kaydırma yok, panel başlık kabının içinde, yatay taşma 0; 19 bağlantının
    hepsi ≥ 44 piksel; ok tuşları, Home/End ve Escape (odak düğmeye döner)
-   sınandı. */
+   sınandı.
+
+   İKİNCİ TUR (25 Ekim): dört sütun eşit dört satır, ipuçları tek satır,
+   Yenilikler "Öğren ve Oku"da (dipteki tam genişlik satır kalktı), araç
+   karoları 64 → 56 piksel, bulmaca numarası mono değil gövde fontunda
+   künye hapı ("#2"; tam künye `title`da). Ölçüldü (1280/1440/1920, iki
+   tema, misafir): panel 1024 genişlik aynı, boy TR 491 → 347, EN 474 →
+   347; iki satıra kırılan satır TR 7 → 0, EN 6 → 0; sütunlar 4/5/3/3 →
+   4/4/4/4; 19 bağlantı, hepsi ≥ 44 piksel; ArrowDown ilk karoya, End son
+   satıra (Yenilikler), Escape odağı butona döndürüyor; yatay taşma 0. */
 
 /* Genişlik MastheadNav → PANEL_REM ile aynı sayı (64rem). Büyütülmüş
    yazıda pencereye iner; sütunlar o zaman alt satıra sarar ve boy
@@ -62,8 +71,15 @@
   flex-direction: row;
   align-items: center;
   gap: 0.75rem;
-  min-height: 4rem;
-  padding: 0.625rem 2rem 0.625rem 0.75rem;
+  min-height: 3.5rem;
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+}
+
+/* Karonun ipucu tek satır: sığmazsa üç noktayla kısalır, karo uzamaz. */
+.tools .tool .toolHint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tools .tool :global(.masthead-row-arrow) {
@@ -129,24 +145,26 @@
   right: 0.5rem;
 }
 
-/* Canlı künye: bugünün bulmaca numarası, adın yanında mono. */
+/* Canlı künye: bugünün bulmaca numarası, adın yanında küçük hap. Mono
+   puntoda göze batıyordu (sahibinin notu, 25 Ekim); artık gövde fontunda,
+   grubun tonunda soluk zemin. Künye bir sayı + ad kalıbı ("Bulmaca #2"). */
 .live {
   flex: none;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
+  align-self: center;
+  padding: 0 0.375rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--group, var(--primary)) 11%, transparent);
+  color: var(--text-body);
   font-size: var(--text-nano);
   font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
 }
 
-/* ---- Yenilikler: dipte tam genişlik ---- */
-.footer {
-  margin-top: 0.375rem;
-  padding-top: 0.375rem;
-  border-top: 1px solid var(--line-soft);
-}
-
-.footer :global(.masthead-row-icon) {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 10px;
+/* Satırın ipucu tek satır (ipuçları ~26 karaktere kısaldı; büyütülmüş
+   yazıda sığmazsa üç noktayla kısalır, satır uzamaz). */
+.hint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

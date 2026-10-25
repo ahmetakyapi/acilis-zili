@@ -89,6 +89,12 @@ const PUZZLE_HREF = "/bulmaca";
  * grubun ikon karosu kendi tonunda (renkler /yenilikler'in alan renkleriyle
  * aynı anlamda: piyasa `--chart-a`, kişisel `--chart-b`). Ölçüm
  * MastheadMore.module.css başında.
+ *
+ * İKİNCİ TUR (25 Ekim): dört sütun eşit dört satır, dipteki Yenilikler
+ * satırı "Öğren ve Oku"ya taşındı (gerekçe nav-items.ts → MORE_GROUPS);
+ * araç karoları tek satır ipucuyla alçak, bulmaca numarası gövde fontunda
+ * küçük künye hapı. Klavye sırası yine belge sırası: bant, sonra sütunlar
+ * soldan sağa.
  */
 export function MastheadNav({
   locale,
@@ -333,7 +339,7 @@ export function MastheadNav({
                 /* ARAÇLAR BANDI ÜSTTE (11 Ekim; 25 Ekim'den beri üç YATAY
                    karo, ~64 piksel: dikey kartlar 136 piksel boy alıyordu).
                    Klavye sırası belge sırası: önce bant, sonra sütunlar
-                   soldan sağa, en son Yenilikler. */
+                   soldan sağa. */
                 const featured = rows.filter((row) => row.group === "tools");
                 if (featured.length === 0) return null;
                 return (
@@ -355,7 +361,7 @@ export function MastheadNav({
                               {Icon && <span className="masthead-feature-icon" aria-hidden><Icon size={20} weight="duotone" /></span>}
                               <span className="min-w-0 flex-1">
                                 <span className="block text-read font-bold leading-snug text-strong">{row.label}</span>
-                                <span className="mt-0.5 block text-small leading-snug text-muted">{row.hint}</span>
+                                <span className={cn("mt-0.5 block text-small leading-snug text-muted", styles.toolHint)}>{row.hint}</span>
                               </span>
                               <ArrowUpRight className="masthead-row-arrow" size={14} aria-hidden />
                             </Link>
@@ -386,10 +392,8 @@ export function MastheadNav({
                              isteği yok; panel yalnız istemcide açıldığı
                              için sunucu çizimiyle çelişmiyor ve sekme gece
                              yarısını geçse de açılış anının numarası. */
-                          const live =
-                            row.href === PUZZLE_HREF
-                              ? puzzleLabel.replace("{n}", String(puzzleNumber(puzzleDayKey())))
-                              : null;
+                          const puzzleNo = row.href === PUZZLE_HREF ? puzzleNumber(puzzleDayKey()) : null;
+                          const live = puzzleNo !== null ? puzzleLabel.replace("{n}", String(puzzleNo)) : null;
                           return (
                             <li key={row.href} data-divider={lastOverflow || undefined}>
                               <Link
@@ -408,9 +412,24 @@ export function MastheadNav({
                                     <span className={cn("text-base font-semibold leading-snug", current ? "text-primary-ink" : "text-strong")}>
                                       {row.label}
                                     </span>
-                                    {live && <span className={styles.live}>{live}</span>}
+                                    {/* HAPTA YALNIZ "#2" (25 Ekim, ikinci tur): "Puzzle #2"
+                                        sütunda adı ("Guess the Stock") iki satıra
+                                        kırıyordu (1280–1920 EN, ölçüldü). Tam künye
+                                        `title`da ve ekran okuyucuda. */}
+                                    {live && (
+                                      <span className={styles.live} title={live}>
+                                        <span aria-hidden>#{puzzleNo}</span>
+                                        <span className="sr-only">{live}</span>
+                                      </span>
+                                    )}
+                                    {/* Yenilikler artık "Öğren ve Oku"nun satırı; görmediğin
+                                        giriş varsa "Yeni" hapı adın yanında (eskiden panelin
+                                        dibindeki tek satırdaydı). */}
+                                    {row.href === changelog.href && (
+                                      <ChangelogBadge latest={changelog.latest} label={changelog.badge} variant="pill" className="self-center" />
+                                    )}
                                   </span>
-                                  <span className="mt-0.5 block text-tiny leading-snug text-muted">{row.hint}</span>
+                                  <span className={cn("mt-0.5 block text-tiny leading-snug text-muted", styles.hint)}>{row.hint}</span>
                                 </span>
                                 <ArrowUpRight className={cn("masthead-row-arrow", styles.rowArrow)} size={14} aria-hidden />
                               </Link>
@@ -422,39 +441,6 @@ export function MastheadNav({
                   );
                 })}
               </div>
-              {/* YENİLİKLER SATIRI (25 Ekim) — panelin en dibinde, hairline
-                  altında, tam genişlikte tek satır. Bir gruba girmiyor:
-                  gerekçe nav-items.ts → "/yenilikler". Satır kalıbı sütun
-                  satırlarınınki; ipucunun yanında görmediğin giriş varsa
-                  "Yeni" hapı. Klavye sırası belge sırası, son bağlantı. */}
-              {(() => {
-                const current = isActive(pathname, changelog.href);
-                const Icon = NAV_ITEMS.find((item) => item.href === changelog.href)?.icon;
-                return (
-                  <div className={styles.footer}>
-                    <Link
-                      href={withLocale(changelog.href, locale)}
-                      prefetch={false}
-                      aria-current={current ? "page" : undefined}
-                      onClick={() => setOpenedAt(null)}
-                      className={cn(
-                        "masthead-row relative flex items-center gap-2.5 rounded-xl hover:bg-surface focus-visible:bg-surface",
-                        styles.row,
-                      )}
-                    >
-                      {Icon && <span className="masthead-row-icon" aria-hidden><Icon size={18} weight="duotone" /></span>}
-                      <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-3 gap-y-0.5">
-                        <span className={cn("text-base font-semibold", current ? "text-primary-ink" : "text-strong")}>
-                          {changelog.label}
-                        </span>
-                        <span className="text-tiny leading-snug text-muted">{changelog.hint}</span>
-                      </span>
-                      <ChangelogBadge latest={changelog.latest} label={changelog.badge} variant="pill" />
-                      <ArrowUpRight className="masthead-row-arrow" size={14} aria-hidden />
-                    </Link>
-                  </div>
-                );
-              })()}
             </motion.div>
           )}
         </AnimatePresence>

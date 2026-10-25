@@ -3,25 +3,23 @@ import { notFound } from "next/navigation";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { ArrowLeft, ArrowRight, DownloadSimple } from "@phosphor-icons/react/dist/ssr";
-import { ArticleBody } from "@/components/article/ArticleBody";
+import { ArrowLeft, ArrowRight, CaretLeft, CaretRight, DownloadSimple, SquaresFour } from "@phosphor-icons/react/dist/ssr";
 import { GuideHint } from "@/components/article/GuideHint";
 import { ShareButton } from "@/components/article/ShareButton";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import styles from "@/components/daily-chart/DailyChart.module.css";
-import { DataStamp, PageHeader, Panel, PanelHeader, buttonClass } from "@/components/ui/primitives";
+import { DataStamp, PageHeader } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { withLocale } from "@/lib/i18n/routing";
 import { articleOpenGraph, metaDescription, missingMetadata } from "@/lib/page-meta";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
-import { formatEtDateLong, safeExternalUrl, tieFigures } from "@/lib/utils";
-import { DAILY_CHART_STAMP_SOURCE, checkChartBlock, dailyChartHref, dailyChartImageHref, firstSentence } from "@/lib/daily-chart";
+import { cn, formatEtDateCompact, formatEtDateLong, safeExternalUrl } from "@/lib/utils";
+import { DAILY_CHART_STAMP_SOURCE, dailyChartHref, dailyChartImageHref, firstSentence } from "@/lib/daily-chart";
 import { getDailyChart, getDailyChartArchive } from "@/lib/daily-chart-data";
 import { DAILY_CHART_OG_SIZES } from "@/lib/daily-chart-og";
 import { getChartDayContext } from "@/lib/daily-chart-day";
-import { chartSummary, summaryText } from "@/lib/daily-chart-figure";
-import { ChartFigure } from "@/components/daily-chart/ChartFigure";
+import { ChartBoard } from "@/components/daily-chart/ChartBoard";
 import { DayContext } from "@/components/daily-chart/DayContext";
 
 /**
@@ -80,9 +78,7 @@ export default async function DailyChartPage(props: PageProps<"/gunun-grafigi/[t
   const rowLocale = isLocale(row.locale) ? row.locale : locale;
   const path = dailyChartHref(row.chartDate);
   const date = formatEtDateLong(row.chartDate, locale);
-  const check = checkChartBlock(row.chartMd, row.locale);
-  const label = check.ok && check.block.label ? check.block.label : d.chartHeading;
-  const summary = check.ok ? chartSummary(check.block) : null;
+  const dateShort = formatEtDateCompact(row.chartDate, locale);
 
   /* Komşu günler arşivin sırasından (yeniden eskiye). */
   const index = archive.findIndex((entry) => entry.chartDate === row.chartDate);
@@ -110,122 +106,135 @@ export default async function DailyChartPage(props: PageProps<"/gunun-grafigi/[t
         ]}
       />
 
-      {/* Başlık grafiğin söylediği cümle; tarih ALTINDA (üst künye yok). */}
+      {/* KAPAK SAYFANIN KİMLİĞİ (25 Ekim, kart turu). Önceki kapakta rutinin
+          başlığı dev display puntoda iki satırdı (1440'ta 218 piksel; telefonda
+          beş satır) ve ilk ekranın üçte birini yiyordu. Sahibi: "Başlık yok
+          öncelikle." Şimdi kapak sitenin öteki ekranları gibi "Günün Grafiği";
+          rutinin başlığı ana kartın h2'si. Sağdaki tek denetim grubu: günler
+          arası oklar + tarih, iki görsel indirme ve Paylaş (küçük düğmeler);
+          telefonda başlığın altında tek satır. */}
       <PageHeader
-        title={row.title}
-        subtitle={d.sessionLine.replace("{date}", date)}
-        share={
-          <ShareButton
-            url={absoluteUrl(path, locale)}
-            title={row.title}
-            labels={{ ...t.share, title: d.shareTitle }}
-            compactOnMobile
-            align="right"
-          />
+        title={d.title}
+        action={
+          <div className={styles.headTools}>
+            <nav aria-label={d.dayNav} className={styles.dayStep}>
+              {older ? (
+                <Link href={dailyChartHref(older.chartDate)} className={styles.stepBtn} aria-label={d.prevDay} title={d.prevDay}>
+                  <CaretLeft size={16} weight="bold" aria-hidden />
+                </Link>
+              ) : (
+                <span className={styles.stepBtn} data-off="" aria-hidden>
+                  <CaretLeft size={16} weight="bold" />
+                </span>
+              )}
+              <span className={styles.dayLabel}>
+                <span className={styles.dayLong}>{d.sessionLine.replace("{date}", date)}</span>
+                <span className={styles.dayShort}>{dateShort}</span>
+              </span>
+              {newer ? (
+                <Link href={dailyChartHref(newer.chartDate)} className={styles.stepBtn} aria-label={d.nextDay} title={d.nextDay}>
+                  <CaretRight size={16} weight="bold" aria-hidden />
+                </Link>
+              ) : (
+                <span className={styles.stepBtn} data-off="" aria-hidden>
+                  <CaretRight size={16} weight="bold" />
+                </span>
+              )}
+            </nav>
+            <div className={styles.toolGroup}>
+              {(["yatay", "dikey"] as const).map((kind) => (
+                <a
+                  key={kind}
+                  href={withLocale(dailyChartImageHref(row.chartDate, kind), rowLocale)}
+                  download={`aciliszili-gunun-grafigi-${row.chartDate}-${kind}.png`}
+                  className={cn("tap-44", styles.toolBtn)}
+                  aria-label={kind === "yatay" ? d.downloadLandscape : d.downloadPortrait}
+                  title={kind === "yatay" ? d.downloadLandscape : d.downloadPortrait}
+                >
+                  <DownloadSimple size={15} weight="bold" aria-hidden />
+                  <span className={styles.toolWord} aria-hidden>
+                    {kind === "yatay" ? d.board.landscapeShort : d.board.portraitShort}
+                  </span>
+                  <span className={styles.toolShape} data-shape={kind} aria-hidden />
+                </a>
+              ))}
+              <ShareButton
+                url={absoluteUrl(path, locale)}
+                title={row.title}
+                labels={{ ...t.share, title: d.shareTitle }}
+                compact
+                align="right"
+              />
+            </div>
+          </div>
         }
       />
-
-      {/* ---- Seçim şeridi: görseller ve komşu günler ---- */}
-      <div className={styles.dayNav}>
-        <div className={styles.actions}>
-          {(["yatay", "dikey"] as const).map((kind) => (
-            <a
-              key={kind}
-              href={withLocale(dailyChartImageHref(row.chartDate, kind), rowLocale)}
-              download={`aciliszili-gunun-grafigi-${row.chartDate}-${kind}.png`}
-              className={buttonClass({ variant: kind === "yatay" ? "primary" : "ghost", size: "md" })}
-            >
-              <DownloadSimple size={16} weight="bold" aria-hidden />
-              {kind === "yatay" ? d.downloadLandscape : d.downloadPortrait}
-            </a>
-          ))}
-        </div>
-        <nav aria-label={d.dayNav} className={styles.actions}>
-          {older && (
-            <Link href={dailyChartHref(older.chartDate)} className={styles.navLink}>
-              <ArrowLeft size={14} weight="bold" aria-hidden />
-              {d.prevDay}
-            </Link>
-          )}
-          <Link href="/gunun-grafigi" className={styles.navLink}>
-            {d.allCharts}
-          </Link>
-          {newer && (
-            <Link href={dailyChartHref(newer.chartDate)} className={styles.navLink}>
-              {d.nextDay}
-              <ArrowRight size={14} weight="bold" aria-hidden />
-            </Link>
-          )}
-        </nav>
-      </div>
 
       {row.locale !== locale && (
         <p className={styles.fallback}>{d.fallbackNote}</p>
       )}
 
-      {/* ---- Ana görsel → ölçü ızgarası → metin (CLAUDE.md "Ekran düzeni") ----
-          25 Ekim görsel tur: grafik, açıklama ve künye önceden tek paneldeydi.
-          Şimdi grafiğin altına o günün bağlamı (`DayContext`) giriyor; metin
-          ve künyeler kendi panelinde, sıranın sonunda. Künye ve uyarı yine
-          panelin içinde, hairline ile ayrılmış düz paragraf (madde 6). */}
-      <Panel>
-        <PanelHeader title={label} />
-        {summary && (
-          <p className={styles.summary} lang={row.locale}>
-            {tieFigures(summaryText(summary, d.summary))}
-          </p>
-        )}
-        <div className={styles.figure} lang={row.locale}>
-          {/* Etiket başlıkta; blok etiketsiz çizilir ki iki kez basılmasın. */}
-          {check.ok ? (
-            <ChartFigure block={check.block} chartMd={stripLabel(row.chartMd)} locale={row.locale} label={label} />
-          ) : (
-            <ArticleBody markdown={stripLabel(row.chartMd)} locale={row.locale} />
-          )}
-        </div>
-      </Panel>
+      {/* ---- Pano: künye → grafik kartları → metin (ilk ekran) ---- */}
+      <ChartBoard
+        row={row}
+        context={context}
+        locale={locale}
+        labels={d}
+        headingId={`grafik-${row.chartDate}`}
+        footer={
+          <div className={styles.notes}>
+            <p>{d.dataNote}</p>
+            {sources.length > 0 && (
+              <div className="flex flex-col gap-1">
+                <p className="font-semibold text-body">{d.sources}</p>
+                <ul className={styles.sourceList}>
+                  {sources.map((source, i) => {
+                    /* zod `.url()` `javascript:` şemasını geçiriyor; süzgeç burada. */
+                    const href = safeExternalUrl(source.url);
+                    return (
+                      <li key={`${i}-${source.label}`}>
+                        {href ? (
+                          <a href={href} target="_blank" rel="noreferrer noopener">{source.label}</a>
+                        ) : (
+                          source.label
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+            <p className="font-semibold">{d.disclaimer}</p>
+          </div>
+        }
+      />
 
-      <DayContext context={context} locale={locale} labels={d} />
+      {/* Ölçü ızgarası: o günün geri kalanı. Genişlik künyede (Nasdaq 100
+          kartı), burada ikinci kez basılmıyor. */}
+      <DayContext context={context} locale={locale} labels={d} omitBreadth />
 
-      <Panel>
-        <PanelHeader title={d.aboutHeading} />
-        <div className={styles.about} lang={row.locale}>
-          <ArticleBody markdown={row.bodyMd} locale={row.locale} className={styles.body} />
-        </div>
-        <div className={styles.notes}>
-          <p>{d.dataNote}</p>
-          {sources.length > 0 && (
-            <div className="flex flex-col gap-1">
-              <p className="font-semibold text-body">{d.sources}</p>
-              <ul className={styles.sourceList}>
-                {sources.map((source, i) => {
-                  /* zod `.url()` `javascript:` şemasını geçiriyor; süzgeç burada. */
-                  const href = safeExternalUrl(source.url);
-                  return (
-                    <li key={`${i}-${source.label}`}>
-                      {href ? (
-                        <a href={href} target="_blank" rel="noreferrer noopener">{source.label}</a>
-                      ) : (
-                        source.label
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
-          <p className="font-semibold">{d.disclaimer}</p>
-        </div>
-      </Panel>
+      <nav aria-label={d.dayNav} className={styles.dayNav}>
+        {older ? (
+          <Link href={dailyChartHref(older.chartDate)} className={styles.navLink}>
+            <ArrowLeft size={14} weight="bold" aria-hidden />
+            {d.prevDay}
+          </Link>
+        ) : <span />}
+        <Link href="/gunun-grafigi" className={styles.navLink}>
+          <SquaresFour size={14} weight="bold" aria-hidden />
+          {d.allCharts}
+        </Link>
+        {newer ? (
+          <Link href={dailyChartHref(newer.chartDate)} className={styles.navLink}>
+            {d.nextDay}
+            <ArrowRight size={14} weight="bold" aria-hidden />
+          </Link>
+        ) : <span />}
+      </nav>
 
       <DataStamp source={DAILY_CHART_STAMP_SOURCE} at={row.updatedAt} locale={locale} labels={t.data} />
 
       <GuideHint label={t.guide.contextLabel} locale={locale} slugs={["endeks", "sektor-rotasyonu"]} />
     </MotionExperience>
   );
-}
-
-/** `::: bar Etiket` → `::: bar` — etiket panel başlığına taşındı. */
-function stripLabel(chartMd: string): string {
-  return chartMd.replace(/^(\s*:::\s*\S+)[^\n]*/, "$1");
 }

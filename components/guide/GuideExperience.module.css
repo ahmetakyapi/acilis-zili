@@ -84,3 +84,14 @@
 @media (hover:hover) and (pointer:fine) {
   .step.step:hover { border-color:color-mix(in srgb, var(--ch) 55%, transparent); background:color-mix(in srgb, var(--ch) 10%, var(--premium-surface)); }
 }
+
+/* 1024–1439: bölümler arası 20; dosyanın SONUNDA, çünkü aynı özgüllükteki
+   `.hero.hero.hero` ve `.topicRow` kurallarını ezmesi gerekiyor (başta
+   duruyordu ve hiç uygulanmadı — ölçüldü). Bölümler arası 20 (kapağın iç aralığı 16 → 12, bölüm satırı dolgusu
+   10 → 8): ilk sıra yazı kartları 1280×800'de ilk ekrana girsin
+   (gerekçe ve ölçüm GuideRoadmap.module.css → "1024–1439"). */
+@media (min-width:1024px) and (max-width:1439px) {
+  .guide.guide { gap:20px; }
+  .hero.hero.hero { gap:12px; }
+  .topicRow, .topicSticky > .topicRow { padding-block:8px; }
+}

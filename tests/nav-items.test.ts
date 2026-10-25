@@ -19,17 +19,23 @@ test("every more item belongs to a panel group", () => {
   for (const item of more) assert.ok(MORE_GROUPS.includes(item.more!), item.href);
 });
 
-/* 25 Ekim mega paneli: üstte üç araç karosu, altında dört sütun. Panel 900
-   piksellik ekranda taşmasın diye (ölçüm MastheadMore.module.css) en uzun
-   sütun beş satır; araç bandı tek sıra üç karo. Sütunların eşit boyda
-   olması GEREKMİYOR — eski iki sütunlu panelin satır hizası kuralı
-   grupları anlamına göre değil boyuna göre dağıtıyordu. */
-test("tools band is three tiles and no column runs past five rows", () => {
-  const count = (group: string) => more.filter((item) => item.more === group).length;
+/* 25 Ekim mega paneli, ikinci tur: üstte üç araç karosu, altında dört
+   sütun EŞİT DÖRT SATIR (sahibinin isteği: "sağ sol dengesiz uzamasın").
+   Kapılı satır (Risk Masası) yalnız erişimi olana basılır ve sayılmaz;
+   erişimi olana Portföy sütununun beşinci satırı. Yenilikler artık
+   "Öğren ve Oku"nun satırı, dipte ayrı satır yok. */
+test("tools band is three tiles and every column is exactly four ungated rows", () => {
+  const count = (group: string) => more.filter((item) => item.more === group && !item.gate).length;
   assert.equal(count("tools"), 3);
   for (const group of MORE_GROUPS.filter((entry) => entry !== "tools")) {
-    assert.ok(count(group) >= 1 && count(group) <= 5, `${group}: ${count(group)}`);
+    assert.equal(count(group), 4, group);
   }
+  for (const item of more.filter((entry) => entry.gate)) assert.equal(item.more, "mine", item.href);
+});
+
+test("What's New is the last row of Learn and Read", () => {
+  const learn = more.filter((item) => item.more === "learn").map((item) => item.href);
+  assert.equal(learn[learn.length - 1], "/yenilikler");
 });
 
 /* Telefondaki /menu aynı diziden kuruluyor: şerit sekmeleri de bir gruba

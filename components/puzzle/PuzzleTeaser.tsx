@@ -46,6 +46,14 @@ import styles from "./PuzzleTeaser.module.css";
  * Düğme artık tam genişlik değil, kartın sağ alt köşesinde; iki mavi blok
  * üst üste binmiyor. Bitmiş oyunda eylem ikincil (hayalet).
  *
+ * EYLEM HER DURUMDA İKİNCİL (25 Ekim, doğrulama turu). Köşeye çekilmek
+ * yetmedi: 390×844'te "Günü Oynat" (seans zili figürü, `sb-play`, dolu
+ * mavi; günün seanslarını kadranda oynatıyor) y=2077–2129, bu şeridin
+ * "Oyna"sı 2348–2392 — 219 piksel arayla aynı ekranda iki dolu mavi
+ * birincil eylem (TR/EN, açık/koyu ölçüldü). Ekranın birincil eylemi
+ * zilinki; şeridin butonu davette ve devamda da çerçeveli (`ghost`).
+ * Masaüstünde de aynı: durum değişince butonun rengi zıplamıyor.
+ *
  * Siluet girişte bir kez soldan sağa açılır (silme, `clip-path`; çizgi
  * kesiği Chrome'da `non-scaling-stroke` ile bozuk, bkz. PuzzleChart).
  */
@@ -171,7 +179,7 @@ export function PuzzleTeaser({ day, number, labels }: { day: string; number: num
         {finished && <Countdown day={day} labels={labels} />}
       </div>
 
-      <ButtonLink href="/bulmaca" variant={finished ? "ghost" : "primary"} prefetch={false} className={styles.action}>
+      <ButtonLink href="/bulmaca" variant="ghost" prefetch={false} className={styles.action}>
         {action}
         <ArrowRight aria-hidden size={15} weight="bold" />
       </ButtonLink>

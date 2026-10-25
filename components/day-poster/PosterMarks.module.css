@@ -24,7 +24,7 @@
    taklidiyle, animasyon `getAnimations()` ile ölçülür. */
 .fill > .ink {
   animation: strip-fill 0.9s var(--ease-brand) 0.15s both;
-  /* Posterin ilk perdesi kendi anında oynatıyor (`PosterAct`). */
+  /* `--strip-play` ile durdurulabiliyor (posterin perde düzeni, 25 Ekim kaldırıldı). */
   animation-play-state: var(--strip-play, running);
 }
 @keyframes strip-fill {

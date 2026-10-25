@@ -1,58 +1,127 @@
-/* Son seansın silueti — gerekçe SkylineStrip.tsx. Posterin siluetiyle aynı
-   dil (Skyline.module.css): gök panelin zemini, su `--primary-tint`,
-   binalar yön renginde, ufuk `--line-strong`. Kutu yok, gölge yok; panelin
-   tamamı bağlantı, üzerine gelince sitenin tek hover dili (başlık maviye
-   döner, ok ilerler). */
+/* Son seansın silueti — gerekçe SkylineStrip.tsx. Sahne (gök, su,
+   binalar, etiketler, ipucu) posterle ortak: SkyScene.module.css ve
+   SkyMarks.module.css. Burada yalnız başlık, cümle ve yer tutucu.
+   Kutu yok, gölge yok; renk yalnız yön (yüzde, kulvar) ve etkileşim
+   (bağlantı). */
 
-.panel { container-type: inline-size; }
-
-.link {
+.panel {
+  container-type: inline-size;
   display: grid;
-  gap: 14px;
-  padding: 18px 16px 14px;
-  color: inherit;
-  border-radius: inherit;
+  gap: 12px;
+  padding: 16px 16px 14px;
 }
 @media (min-width: 640px) {
-  .link { padding: 22px 28px 18px; }
+  .panel { padding: 20px 24px 18px; }
 }
-.link:focus-visible { outline: 2px solid var(--line-focus); outline-offset: -2px; }
 
-/* BAŞLIK SATIRI. Geniş kapta: ad + künyeler solda, günün cümlesi ortada,
-   "Posteri Aç" sağda; dar kapta alt alta. */
+/* BAŞLIK: solda ad + tarih, sağda endeks yüzdesi, kulvar ve bağlantı.
+   Dar kapta alt alta, ölçüler tek satırda. */
 .head {
   display: grid;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "title open" "figures figures";
+  align-items: start;
+  gap: 10px 16px;
   min-width: 0;
 }
-@container (min-width: 900px) {
+@container (min-width: 700px) {
   .head {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: baseline;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "title figures open";
+    align-items: center;
     column-gap: 28px;
   }
 }
-.titleRow { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; min-width: 0; }
+.titleBlock { grid-area: title; display: grid; gap: 2px; min-width: 0; }
 .title {
   margin: 0;
-  color: var(--text-strong);
   font-size: var(--text-title);
   font-weight: 750;
   letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.titleLink {
+  color: var(--text-strong);
   transition: color 0.2s var(--ease-brand);
 }
-.link:hover .title { color: var(--primary); }
-.meta {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 2px 14px;
+.titleLink:hover { color: var(--primary); }
+.titleLink:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: 4px; }
+.close {
+  margin: 0;
   color: var(--text-muted);
   font-size: var(--text-small);
   font-weight: 600;
 }
-.metaValue { font-weight: 750; }
+
+.figures {
+  grid-area: figures;
+  display: flex;
+  align-items: center;
+  gap: 8px 22px;
+  min-width: 0;
+}
+.figure {
+  display: grid;
+  margin: 0;
+  line-height: 1;
+}
+.figureLabel {
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  font-weight: 650;
+  line-height: 1.3;
+}
+.figureValue {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+/* Yükselen / değişmeyen / düşen oranı: tek kulvar, yön renginde parçalar,
+   aralarında 2 piksellik zemin boşluğu (dataviz). */
+.breadth { display: grid; flex: 1 1 9.5rem; gap: 6px; min-width: 0; max-width: 14rem; }
+.lane {
+  display: flex;
+  gap: 2px;
+  height: var(--lane-h, 5px);
+}
+.lane > span { min-width: 2px; border-radius: 999px; }
+.laneUp { background: var(--up); }
+.laneFlat { background: var(--flat); }
+.laneDown { background: var(--down); }
+.counts {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--text-nano);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.open {
+  grid-area: open;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-top: -10px;
+  color: var(--primary);
+  font-size: var(--text-small);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.open svg { transition: translate 0.2s var(--ease-brand); }
+.open:hover svg { translate: 3px 0; }
+.open:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: 4px; }
+@container (min-width: 700px) {
+  .open { margin-top: 0; }
+}
+
+/* GÜNÜN CÜMLESİ — sahnenin üstünde tek ince satır. */
 .story {
-  display: block;
+  margin: 0;
   min-width: 0;
   color: var(--text-body);
   font-size: var(--text-small);
@@ -60,70 +129,19 @@
 }
 .storyTitle { color: var(--text-strong); font-weight: 750; }
 .storyTitle::after { content: ": "; }
-.open {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--primary);
-  font-size: var(--text-small);
-  font-weight: 700;
-  white-space: nowrap;
-}
-.open svg { transition: translate 0.2s var(--ease-brand); }
-.link:hover .open svg { translate: 3px 0; }
-@container (max-width: 899.98px) {
-  .open { display: none; }
-}
 
-/* SİLUET — iki düzen, kabın enine göre (`stripNarrow` iki sıra, `stripWide`
-   tek sıra; lib/day-skyline.ts → SKY_MODES). */
-.scene { display: block; }
-.mode { display: none; }
-@container (max-width: 699.98px) { .mode[data-mode="stripNarrow"] { display: grid; gap: 12px; } }
-@container (min-width: 700px) { .mode[data-mode="stripWide"] { display: grid; } }
-.row { display: block; min-width: 0; }
-.svg { display: block; width: 100%; height: auto; overflow: visible; }
-.water { fill: var(--primary-tint); }
-.horizon { stroke: var(--line-strong); stroke-width: 1px; vector-effect: non-scaling-stroke; }
-.up { fill: var(--up); }
-.down { fill: var(--down); fill-opacity: 0.84; }
-.flat { fill: var(--flat); }
-.cut { fill: var(--premium-surface); }
-
-.b { transform-box: fill-box; transform-origin: 50% 100%; }
-.b[data-dir="-1"] { transform-origin: 50% 0; }
-.b[data-dir="0"] { transform-origin: 50% 50%; }
-@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
-  .scene:not([data-in]) .b { transform: scaleY(0); }
-  .scene:not([data-in]) .labels { opacity: 0; }
-  .scene[data-in] .b { animation: rise 0.42s var(--ease-brand) var(--d, 0s) backwards; }
-  .scene[data-in] .labels { animation: labels-in 0.36s var(--ease-brand) 0.82s backwards; }
-}
-@keyframes rise { from { transform: scaleY(0); } }
-@keyframes labels-in { from { opacity: 0; } }
-
-/* Mahalle tabelaları — posterinkiyle aynı, bir kademe küçük. */
-.districts { position: relative; display: block; margin-top: 6px; }
-.districts::after {
-  content: "";
-  display: block;
-  height: calc(var(--text-nano, 11px) * 1.25 * 2 + var(--text-nano, 11px) * 1.3 + 6px);
-}
-.district {
-  position: absolute;
-  top: 0;
-  display: grid;
-  justify-items: center;
-  padding-top: 5px;
-  border-top: 1px solid var(--line-strong);
-  text-align: center;
-}
-.districtName { color: var(--text-strong); font-size: var(--text-nano); font-weight: 700; line-height: 1.25; text-wrap: balance; }
-.districtValue { font-size: var(--text-nano); font-weight: 700; line-height: 1.3; }
-
-.skeleton { display: grid; gap: 14px; padding: 22px 28px 18px; }
-.skeletonScene { height: 168px; width: 100%; }
+/* Yer tutucu: başlık + cümle ve sahnenin ölçüsü. Sahnenin yüksekliği
+   veriye bağlı (en uzun bina ve etiket katları); oranlar 23 Ekim verisiyle
+   ölçüldü (kap içi en → sahne): 322 → 392 (iki sıra), 672 → 301, 928 →
+   388, 1152 → 280, 1272 → 303, 1552 → 312. */
+.skeleton { display: grid; gap: 12px; }
+.skeletonHead { height: 129px; width: 100%; }
+.skeletonScene { width: 100%; height: 122cqw; }
+@container (min-width: 600px) { .skeletonScene { height: 44cqw; } }
+@container (min-width: 700px) { .skeletonHead { height: 75px; } }
+@container (min-width: 1080px) { .skeletonScene { height: 24cqw; } }
+@container (min-width: 1500px) { .skeletonScene { height: 20cqw; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .title, .open svg { transition: none; }
+  .titleLink, .open svg { transition: none; }
 }

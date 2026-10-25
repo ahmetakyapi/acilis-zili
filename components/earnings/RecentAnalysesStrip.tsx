@@ -61,8 +61,14 @@ export function RecentAnalysesStrip({
          dolgu 3.5 → 4, köşe yarıçapı panellerinkiyle aynı (`xl`). Şerit
          artık sayfadaki öteki kutularla aynı dilde ve kenarı belirgin.
          Geniş ekranda dikey dolgu 5 → 3.5 (25 Ekim, ilk ekran turu): çipler
-         44 piksel, şerit 84 → 72 ve altındaki takvim listesi yukarı çıkıyor. */
-      className="flex flex-col gap-3 rounded-xl border border-primary-soft/45 bg-(--premium-surface) px-4 py-4.5 sm:flex-row sm:items-center sm:gap-5 sm:px-6 sm:py-3.5"
+         44 piksel, şerit 84 → 72 ve altındaki takvim listesi yukarı çıkıyor.
+         ≥1600'de (`min-[100rem]`; piksel birimli değişken `sm:` ile aynı
+         birimde olmadığı için sıralamada ondan önce düşüyor, dolgu
+         değişmiyordu — ölçüldü) 3.5 → 2 (25 Ekim, doğrulama turu): şerit
+         74 → 62; gerekçe
+         ve ölçüm `components/earnings/horizon/EarningsHorizon.module.css`
+         sonunda. */
+      className="flex flex-col gap-3 rounded-xl border border-primary-soft/45 bg-(--premium-surface) px-4 py-4.5 sm:flex-row sm:items-center sm:gap-5 sm:px-6 sm:py-3.5 min-[100rem]:py-2"
     >
       <div className="flex shrink-0 items-center justify-between gap-3">
         {/* ETİKET YÜZEYİN KENDİ MÜREKKEBİNDE. `plate` künyeyi `--text-muted`

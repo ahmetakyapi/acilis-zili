@@ -70,8 +70,6 @@ export const daySignatureTr = {
   /** Ana sayfanın son seans şeridi (`components/today/home/SkylineStrip.tsx`). */
   strip: {
     title: "Son Seansın Silueti",
-    /** Şeridin ekran okuyucu adı — cümle. */
-    label: "Son seansın silueti, {close}: {sentence}. Günün Posteri'ni açar.",
     open: "Posteri Aç",
   },
   /** GÜNÜN CÜMLESİ — kurallar `lib/day-poster-story.ts`. Başlık ve
@@ -185,7 +183,6 @@ export const daySignatureEn: typeof daySignatureTr = {
   },
   strip: {
     title: "The Last Session's Skyline",
-    label: "The last session's skyline, {close}: {sentence}. Opens the Day's Poster.",
     open: "Open Poster",
   },
   story: {

@@ -84,12 +84,22 @@ const fiscalKey = (fiscal: FiscalQuarter) => `${fiscal.year}:${fiscal.quarter}`;
  * çeyrek sonu olamaz, rapor bilinmiyorsa da sınanamaz.
  */
 export function buildPastQuarters(
-  surprises: readonly SurpriseRow[],
+  surpriseRows: readonly SurpriseRow[],
   calRows: readonly CalendarRow[],
   analyses: readonly AnalysisRowLike[],
   locale: Locale,
   today: string,
 ): PastQuarter[] {
+  /* AYNI DÖNEM İKİ KEZ (25 Ekim, /hisse/NVDA): sağlayıcı bir çeyreği iki
+     satırla, aynı `period` (2026-06-30) ile döndürdü; tablo aynı anahtarla
+     iki satır basıyordu (React "aynı key" uyarısı, duman testinde FAIL).
+     Dönem başına tek satır: gerçekleşeni olan, yoksa ilk gelen. */
+  const unique = new Map<string, SurpriseRow>();
+  for (const row of surpriseRows) {
+    const held = unique.get(row.period);
+    if (!held || (held.epsActual === null && row.epsActual !== null)) unique.set(row.period, row);
+  }
+  const surprises = [...unique.values()];
   const matched = matchReports(surprises, calRows, today);
   const byFiscal = new Map<string, AnalysisRowLike>();
   for (const row of analyses) {

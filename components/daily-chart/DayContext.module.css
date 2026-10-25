@@ -4,6 +4,10 @@
    yan yana kartlar aynı hatta biter (CLAUDE.md ekran düzeni 4). */
 .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 0 16px 16px; }
 @media (min-width: 768px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0 20px 20px; } }
+/* Üç kart (genişlik künyede): 768–1199 arası öne çıkanlar tam satır,
+   1200 ve üstünde endeks | öne çıkanlar | takvim tek sırada. */
+@media (min-width: 768px) and (max-width: 1199px) { .grid[data-three] > :nth-child(2) { grid-column: 1 / -1; grid-row: 2; } }
+@media (min-width: 1200px) { .grid[data-three] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1fr); } }
 
 .card { display: flex; flex-direction: column; gap: 14px; min-width: 0; padding: 16px; border-radius: var(--radius-lg); background: var(--surface-sunken); }
 .cardTitle { font-size: var(--text-base); font-weight: 700; line-height: 1.3; color: var(--text-strong); }
@@ -26,8 +30,11 @@
 
 /* Öne çıkanlar: iki sütun, dar kartta alt alta. Satır bütün bir bağlantı,
    44 piksel. */
+/* Sütun sayısı kartın enine göre (kart turu: kart artık üçte bir genişlikte
+   de durabiliyor; ekran enine bakan eski kural orada iki sütunu sıkıştırırdı). */
+.card { container-type: inline-size; }
 .movers { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
-@media (min-width: 1100px) { .movers { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (min-width: 420px) { .movers { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .moverCol { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .moverTitle { font-size: var(--text-small); font-weight: 600; color: var(--text-muted); }
 .moverList { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }

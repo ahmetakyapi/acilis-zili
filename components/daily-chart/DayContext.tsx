@@ -33,6 +33,9 @@ const FIGURE_STAGGER_MS = 120;
  * `BreadthStrip`, `RollingFigure`), yeni bir dil açılmadı; sayılar da
  * aynı çağrıdan (`getChartDayContext` → `getDayPoster`).
  *
+ * KART PANOSUNDA (25 Ekim, kart turu) genişlik kartı panonun künyesine
+ * taşındı (`omitBreadth`); kalan üç kart 1200 ve üstünde tek sırada.
+ *
  * SEKTÖR KARTI YOK: grafik çoğu gün sektörleri zaten çiziyor; aynı on bir
  * sayıyı ikinci kez basmak ekranı uzatırdı. Okumak isteyen için posterin
  * bağlantısı panelin başında.
@@ -41,16 +44,20 @@ export function DayContext({
   context,
   locale,
   labels,
+  omitBreadth = false,
 }: {
   context: ChartDayContext;
   locale: Locale;
   labels: DailyChartLabels;
+  /** Genişlik panonun künyesinde basılıyorsa (Nasdaq 100 kartı) burada
+      ikinci kez basılmaz; kalan üç kart geniş ekranda tek sırada. */
+  omitBreadth?: boolean;
 }) {
   const L = labels.context;
   const { poster } = context;
   const pct = (value: number) => formatPercent(value, locale, PERCENT_DIGITS);
   const dateShort = formatEtDateCompact(context.date, locale);
-  const breadth = poster?.breadth ?? null;
+  const breadth = omitBreadth ? null : (poster?.breadth ?? null);
   const showCalendar = context.events !== null || context.earnings !== null;
   if (!poster && !showCalendar) return null;
 
@@ -77,7 +84,7 @@ export function DayContext({
           ) : undefined
         }
       />
-      <div className={styles.grid}>
+      <div className={styles.grid} data-three={omitBreadth ? "" : undefined}>
         {poster && poster.indices.length > 0 && (
           <section className={styles.card} aria-labelledby={`${context.date}-indices`}>
             <h3 id={`${context.date}-indices`} className={styles.cardTitle}>{L.indices}</h3>

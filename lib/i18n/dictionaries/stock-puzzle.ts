@@ -44,6 +44,10 @@ export const stockPuzzleTr = {
   pureNote: "Joker kullanmadan, ilk iki tahminde bildin.",
   archiveWins: "Arşivden Çözülen",
   pureWins: "Saf Bilgi",
+  /* Seri şeridinin eşit hücrelerine sığan kısa adlar (25 Ekim, doğrulama
+     turu); tam ad ekran okuyucuda ve `title`da (PuzzleRecord.tsx). */
+  archiveWinsShort: "Arşivden",
+  pureWinsShort: "Saf Bilgi",
   archiveLink: "Arşiv",
   archiveTitle: "Hisseyi Bil Arşivi",
   archiveSubtitle: "Geçmiş günlerin bulmacaları. Arşivden çözdüklerin serini bozmaz, ayrı sayılır.",
@@ -145,7 +149,7 @@ export const stockPuzzleTr = {
   homeClues: "{n}/{total} İpucu Açık",
   homeFirstClue: "İlk İpucu Siluet",
   homeLast: "Son Tahmin",
-  menuHint: "Her Gün Tek Hisse, Altı Tahmin",
+  menuHint: "Tek Hisse, Altı Tahmin",
   howTitle: "Nasıl Oynanır",
 };
 
@@ -188,6 +192,8 @@ export const stockPuzzleEn: typeof stockPuzzleTr = {
   pureNote: "No joker, solved within two guesses.",
   archiveWins: "Solved From Archive",
   pureWins: "Pure Knowledge",
+  archiveWinsShort: "Archive",
+  pureWinsShort: "Pure Wins",
   archiveLink: "Archive",
   archiveTitle: "Guess the Stock Archive",
   archiveSubtitle: "Puzzles from past days. Archive solves never break your streak; they are counted separately.",
@@ -288,7 +294,7 @@ export const stockPuzzleEn: typeof stockPuzzleTr = {
   homeClues: "{n}/{total} Clues Open",
   homeFirstClue: "First Clue: Silhouette",
   homeLast: "Last Guess",
-  menuHint: "One Stock a Day, Six Guesses",
+  menuHint: "One Stock, Six Guesses",
   howTitle: "How to Play",
 };
 

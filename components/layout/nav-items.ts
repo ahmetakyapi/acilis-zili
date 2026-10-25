@@ -43,17 +43,26 @@ export type MoreGroup = "tools" | "daily" | "market" | "mine" | "learn";
  * girmişti; "Her Gün" bandında üçüncü satır tek başına kalıyordu. Panel 736
  * piksel genişlik, ~860 piksel boydu ve 900 piksellik ekranda taşıyordu.
  *
- * Şimdi beş niyet:
+ * İKİNCİ TUR (25 Ekim, sahibinin isteği: "daha kompakt; tekli Yenilikler
+ * başka yere; sağ sol dengesiz uzamasın"). Sütunlar 4/5/3/3 satırdı ve
+ * ipuçları iki satıra kırılıyordu. Şimdi dört sütun EŞİT DÖRT SATIR:
+ * Ünlü Yatırımcılar "Piyasa"dan "Portföy ve Yatırım"a (eski adı "Portföy ve
+ * Maliyet"), Yenilikler dipteki tek satırdan "Öğren ve Oku"ya; bütün
+ * ipuçları tek satır. Risk Masası'nın kapılı satırı erişimi olana Portföy
+ * sütununun beşincisi. Sınama `tests/nav-items.test.ts`.
+ *
+ * Beş niyet:
  * - "tools"  Araçlar — bir hisseyi sına, evreni süz, yan yana koy. Panelin
  *            ÜSTÜNDE üç büyük karo (11 Ekim kararı: Hisse Seçimi "mantıklı,
  *            güzel bir yere").
  * - "daily"  Her Gün — her gün yenilenen parçalar: poster, grafik,
  *            bulmaca, bülten.
  * - "market" Piyasa — veriye bakılan ekranlar: makro, takvim, olasılıklar,
- *            ünlü yatırımcılar, haberler. Şeritten taşan sekmeler buraya,
+ *            haberler. Şeritten taşan sekmeler buraya,
  *            grubun başına iner (yalnız büyütülmüş yazıda).
- * - "mine"   Portföy ve Maliyet — kendi hesabın ve getiriden düşenler.
- * - "learn"  Öğren ve Oku — rehber, sözlük, topluluk.
+ * - "mine"   Portföy ve Yatırım — kendi hesabın, getiriden düşenler ve
+ *            ünlü yatırımcıların portföyleri.
+ * - "learn"  Öğren ve Oku — rehber, sözlük, topluluk, yenilikler.
  *
  * Geniş ekranda araçlar bandının altında dört sütun (MastheadNav); /menu
  * aynı sırayı ve başlıkları kullanır (`menuGroupOf`). Satır sırası grubun
@@ -317,18 +326,6 @@ export const NAV_ITEMS: NavItem[] = [
     hint: (t) => t.probabilities.menuHint,
   },
   {
-    /* 29 Eylül: panelde Karşılaştır'ın ÜSTÜNDE (sahibinin isteği). 28 Eylül:
-       ünlü yatırımcılar "Daha Fazla"da, temaların yanında. Şerit
-       ölçüsü (yukarıda) beş sekmeye göre alındı ve boşluk yok; ekran çeyrekte
-       bir değişen bir başvuru ekranı, günlük değil. */
-    href: "/yatirimcilar",
-    label: (t) => t.investors.eyebrow,
-    icon: UsersThree,
-    inBottomBar: false,
-    more: "market",
-    hint: (t) => t.menu.hintInvestors,
-  },
-  {
     /* 11 Ekim: Daha Fazla'nın üst bandında, ilk kart ("tools", gerekçe
        MORE_GROUPS'ta). 3 Ekim'den beri "Veri ve Araçlar"ın altıncı
        satırıydı. Şeritte değil: şerit ölçüsü (yukarıda) 1280'de 58 piksel
@@ -378,27 +375,15 @@ export const NAV_ITEMS: NavItem[] = [
     hint: (t) => t.menu.hintGlossary,
   },
   {
-    /* ARACI KURUM KARŞILAŞTIRMASI (24 Ekim) — "Portföy ve Maliyet"te,
+    /* ARACI KURUM KARŞILAŞTIRMASI (24 Ekim) — "Portföy ve Yatırım"da,
        Portföy'ün ardında: komisyon da vergi gibi getiriden düşen bir maliyet. */
     href: "/araci-kurumlar",
-    label: (t) => t.brokers.title,
+    /* Panelde kısa ad (25 Ekim): sayfa başlığı sütunda iki satıra kırılıyordu. */
+    label: (t) => t.nav.brokers,
     icon: Bank,
     inBottomBar: false,
     more: "mine",
     hint: (t) => t.brokers.menuHint,
-  },
-  {
-    /* RİSK MASASI (25 Ekim) — KAPILI. Varsayılan kapalı; yönetici ve
-       yöneticinin Üyeler ekranından erişim açtığı hesaplar görür
-       (lib/risk/store.ts). Portföy grubunda: masa okurun kendi
-       pozisyonlarının maruziyetini gösteriyor. */
-    href: "/risk",
-    label: (t) => t.riskDesk.nav.label,
-    icon: Gauge,
-    inBottomBar: false,
-    more: "mine",
-    hint: (t) => t.riskDesk.nav.hint,
-    gate: "risk",
   },
   {
     href: "/vergi",
@@ -410,6 +395,36 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: false,
     more: "mine",
     hint: (t) => t.menu.hintTax,
+  },
+  {
+    /* 25 Ekim (ikinci tur): "Portföy ve Yatırım"da, Vergi'nin ardında —
+       ünlü yatırımcının portföyü okurun kendi portföyüyle aynı soruya
+       bakıyor ve dört sütun eşit dört satır oldu (gerekçe MORE_GROUPS).
+       29 Eylül: panelde Karşılaştır'ın ÜSTÜNDE (sahibinin isteği). 28 Eylül:
+       ünlü yatırımcılar "Daha Fazla"da, temaların yanında. Şerit
+       ölçüsü (yukarıda) beş sekmeye göre alındı ve boşluk yok; ekran çeyrekte
+       bir değişen bir başvuru ekranı, günlük değil. */
+    href: "/yatirimcilar",
+    label: (t) => t.investors.eyebrow,
+    icon: UsersThree,
+    inBottomBar: false,
+    more: "mine",
+    hint: (t) => t.menu.hintInvestors,
+  },
+  {
+    /* RİSK MASASI (25 Ekim) — KAPILI. Varsayılan kapalı; yönetici ve
+       yöneticinin Üyeler ekranından erişim açtığı hesaplar görür
+       (lib/risk/store.ts). Portföy grubunda: masa okurun kendi
+       pozisyonlarının maruziyetini gösteriyor. Erişimi olana sütunun
+       BEŞİNCİ satırı (25 Ekim, ikinci tur): ötekilerin eşit dört satırı
+       ona göre bozulmuyor. */
+    href: "/risk",
+    label: (t) => t.riskDesk.nav.label,
+    icon: Gauge,
+    inBottomBar: false,
+    more: "mine",
+    hint: (t) => t.riskDesk.nav.hint,
+    gate: "risk",
   },
   {
     /* TOPLULUK (15 Ekim) — "Öğren ve Oku"da: üyelerin yazdığı, moderasyondan
@@ -482,7 +497,12 @@ export const NAV_ITEMS: NavItem[] = [
     hint: (t) => t.menu.hintWatchlist,
   },
   {
-    /* YENİLİKLER (25 Ekim) — ŞERİTTE DE PANEL GRUPLARINDA DA DEĞİL.
+    /* YENİLİKLER — "Öğren ve Oku"nun DÖRDÜNCÜ SATIRI (25 Ekim, ikinci tur;
+       sahibinin isteği: "alttaki tekli Yenilikler kısmı başka yere
+       taşınsın"). Panelin dibinde tam genişlik tek satır sağ ile solu
+       dengesiz uzatıyordu; "Yeni" hapı artık satırın içinde, /menu'de de
+       aynı grupta. Eski kayıt:
+       YENİLİKLER (25 Ekim) — ŞERİTTE DE PANEL GRUPLARINDA DA DEĞİL.
        Sitenin kendisi hakkında bir sayfa, bir ekran grubu değil; panelin EN DİBİNDE, hairline altında tam genişlikte tek
        satır (MastheadNav), /menu'de de en altta "Site" bölümünde. Okurun
        görmediği giriş varsa "Daha Fazla" ve Menü sekmesinde nokta,
@@ -491,6 +511,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: (t) => t.changelog.title,
     icon: Sparkle,
     inBottomBar: false,
+    more: "learn",
     hint: (t) => t.changelog.menuHint,
   },
   {

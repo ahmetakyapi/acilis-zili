@@ -1,0 +1,254 @@
+/* Siluetin sahnesi — gerekçe SkyScene.tsx; çizim SkyMarks.module.css,
+   yerleşim lib/day-skyline.ts.
+   Sahne bir PENCERE: yuvarlak köşeli tek bir tablo, üstü gök, altı su.
+   Gök günün tonuyla (`data-tone`) şafaktan alacakaranlığa, iki temada
+   ayrı; hepsi var olan token'ların karışımı (mavi aile + pirinç şafak
+   ışığı), yeni token yok. Tek gölge ipucunda (açılır katman). */
+
+.root {
+  /* Adsız kap: CSS modülleri kap adını da karıştırıyor ve adlı sorgu
+     eşleşmiyordu (PosterStage'de ölçüldü; 25 Ekim). */
+  container-type: inline-size;
+  position: relative;
+  min-width: 0;
+
+  /* GÖK — açık tema. Şafak (yükseliş): ufukta pirinç ışığı, tepede açık
+     mavi. Arası (yatay gün): mavinin yumuşak tonu, ışık sönük. Alacakaranlık
+     (düşüş): tepede lacivert, ufukta soluk mavi, pirinç yok. */
+  --sky-top: color-mix(in oklab, var(--primary) 4%, transparent);
+  --sky-mid: color-mix(in oklab, var(--primary-soft) 11%, transparent);
+  --sky-hz: color-mix(in oklab, var(--primary-soft) 18%, transparent);
+  --sky-glow: color-mix(in oklab, var(--brass-bright) 12%, transparent);
+  --water-hz: color-mix(in oklab, var(--primary) 11%, transparent);
+  --water-deep: color-mix(in oklab, var(--primary) 3%, transparent);
+  /* Penceredeki üst pay ve mahalle tabelalarının yüksekliği: iki satır
+     ad + değer (ad satır atlayabiliyor; kesilmiyor). */
+  --sky-pad: 10px;
+  --dh: calc(var(--text-nano) * 1.25 * 2 + var(--text-nano) * 1.3 + 16px);
+}
+/* Tek sıralı geniş düzenlerde en dar mahalle (120–140 birim) en uzun adı
+   da tek satırda taşıyor (1280–1920'de ölçüldü): tabela bir satır kısa. */
+@container (min-width: 980px) {
+  .root[data-variant="poster"] .scene { --dh: calc(var(--text-nano) * 1.25 + var(--text-nano) * 1.3 + 16px); }
+}
+@container (min-width: 1080px) {
+  .root[data-variant="strip"] .scene { --dh: calc(var(--text-nano) * 1.25 + var(--text-nano) * 1.3 + 16px); }
+}
+.root[data-tone="up"] {
+  --sky-top: color-mix(in oklab, var(--primary) 3%, transparent);
+  --sky-mid: color-mix(in oklab, var(--primary-soft) 9%, transparent);
+  --sky-hz: color-mix(in oklab, var(--brass-bright) 17%, transparent);
+  --sky-glow: color-mix(in oklab, var(--brass-bright) 22%, transparent);
+}
+.root[data-tone="down"] {
+  --sky-top: color-mix(in oklab, var(--display-stop-2) 20%, transparent);
+  --sky-mid: color-mix(in oklab, var(--primary) 12%, transparent);
+  --sky-hz: color-mix(in oklab, var(--primary-soft) 16%, transparent);
+  --sky-glow: color-mix(in oklab, var(--primary-soft) 10%, transparent);
+}
+/* GÖK — koyu tema: gece. Yükselişte ufukta mavi ışık ve pirinç izi,
+   düşüşte koyu lacivert, ışık az. */
+:global(:root[data-theme="dark"]) .root {
+  --sky-top: transparent;
+  --sky-mid: color-mix(in oklab, var(--mark-stop-3) 26%, transparent);
+  --sky-hz: color-mix(in oklab, var(--primary) 17%, transparent);
+  --sky-glow: color-mix(in oklab, var(--primary) 10%, transparent);
+  --water-hz: color-mix(in oklab, var(--primary) 12%, transparent);
+  --water-deep: color-mix(in oklab, var(--mark-stop-3) 14%, transparent);
+}
+:global(:root[data-theme="dark"]) .root[data-tone="up"] {
+  --sky-mid: color-mix(in oklab, var(--mark-stop-3) 24%, transparent);
+  --sky-hz: color-mix(in oklab, var(--primary) 22%, transparent);
+  --sky-glow: color-mix(in oklab, var(--brass) 14%, transparent);
+}
+:global(:root[data-theme="dark"]) .root[data-tone="down"] {
+  --sky-top: color-mix(in oklab, var(--mark-stop-3) 18%, transparent);
+  --sky-mid: color-mix(in oklab, var(--mark-stop-3) 36%, transparent);
+  --sky-hz: color-mix(in oklab, var(--primary) 12%, transparent);
+  --sky-glow: transparent;
+}
+
+.scene {
+  display: block;
+  border-radius: var(--radius-lg);
+  outline: none;
+}
+.scene:focus-visible {
+  box-shadow: 0 0 0 2px var(--line-focus);
+}
+
+/* DÜZENLER, kabın enine göre (`SKY_MODES`, lib/day-skyline.ts). Eşikler
+   orada yazan aralıklarla aynı; değiştirirsen ikisini birden. */
+.mode { display: none; }
+.root[data-variant="poster"] .mode { gap: 14px; }
+@container (max-width: 559.98px) { .mode[data-mode="narrow"] { display: grid; } }
+@container (min-width: 560px) and (max-width: 979.98px) { .mode[data-mode="medium"] { display: grid; } }
+@container (min-width: 980px) and (max-width: 1499.98px) { .mode[data-mode="wide"] { display: grid; } }
+@container (min-width: 1500px) { .mode[data-mode="xwide"] { display: grid; } }
+@container (max-width: 599.98px) { .mode[data-mode="stripNarrow"] { display: grid; gap: 10px; } }
+@container (min-width: 600px) and (max-width: 1079.98px) { .mode[data-mode="stripMedium"] { display: grid; } }
+@container (min-width: 1080px) and (max-width: 1499.98px) { .mode[data-mode="stripWide"] { display: grid; } }
+@container (min-width: 1500px) { .mode[data-mode="stripXwide"] { display: grid; } }
+
+/* ------------------------------------------------------------ PENCERE */
+.row { position: relative; min-width: 0; }
+.stage {
+  position: relative;
+  padding-top: var(--sky-pad);
+}
+.sky,
+.water {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+/* Ufkun yeri: üst pay + svg yüksekliğinin `--hz` kesri. Yüzde, kabın
+   (sahne) dolgu kutusuna göre: pay + svg. */
+.sky {
+  top: 0;
+  height: calc(var(--sky-pad) + var(--hz) * (100% - var(--sky-pad)));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background:
+    radial-gradient(ellipse 58% 70% at 30% 100%, var(--sky-glow), transparent 72%),
+    linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-mid) 58%, var(--sky-hz) 100%);
+}
+.water {
+  top: calc(var(--sky-pad) + var(--hz) * (100% - var(--sky-pad)));
+  bottom: calc(-1 * var(--dh));
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  background: linear-gradient(to bottom, var(--water-hz) 0%, var(--water-deep) 100%);
+}
+.svg {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+.beam { fill: color-mix(in oklab, var(--primary) 9%, transparent); }
+.focus {
+  stroke: var(--text-strong);
+  stroke-width: 1.5px;
+  pointer-events: none;
+}
+.up { fill: var(--up); }
+.down { fill: var(--down); }
+.flat { fill: var(--flat); }
+
+/* Gök ve su girişte bir kez belirir (binalardan önce). */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .root:not([data-in]) :is(.sky, .water) { opacity: 0; }
+  .root[data-in] :is(.sky, .water) { animation: sky-tone 0.5s var(--ease-brand) backwards; }
+}
+@keyframes sky-tone { from { opacity: 0; } }
+
+/* ------------------------------------------------------------ MAHALLELER
+   Suyun içinde ince tabelalar: mahallenin enince ince bir çizgi, altında
+   adı ve değişimi. Konum yerleşimden (yüzde); ad sığmazsa satır atlıyor,
+   kesilmiyor (en dar mahalle `minDistrictW` ile adına göre genişliyor).
+   Üzerine gelince o mahalle öne çıkıyor (SkyMarks.module.css). */
+.districts {
+  position: relative;
+  height: var(--dh);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.district {
+  position: absolute;
+  top: 6px;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 1px;
+  padding: 6px 2px 4px;
+  border-top: 1px solid var(--line-strong);
+  text-align: center;
+  transition: opacity 0.2s var(--ease-brand), border-color 0.2s var(--ease-brand);
+}
+.district[data-on] { border-top-color: var(--text-strong); }
+.district[data-off] { opacity: 0.45; }
+/* METİN 12 PİKSEL (`--text-nano`): 8 piksel künye puntosu metin için
+   okunmuyordu (globals.css, "METİN TABANI 12 PİKSEL"). */
+.districtName {
+  color: var(--text-strong);
+  font-size: var(--text-nano);
+  font-weight: 700;
+  line-height: 1.25;
+  text-wrap: balance;
+  /* "Communication Services" telefonda 86 birimlik mahalleye tek kelime
+     olarak sığmıyor ve komşu tabelaya biniyordu (390 EN ölçüldü): tire. */
+  hyphens: auto;
+  overflow-wrap: break-word;
+  /* Ad kutusu tabelanın eninde (sığdığı kadar değil): tire ancak kutu
+     daralınca devreye giriyor. */
+  justify-self: stretch;
+  min-width: 0;
+}
+.districtValue {
+  font-size: var(--text-nano);
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+/* ------------------------------------------------------------ İPUCU */
+.tip {
+  position: absolute;
+  z-index: 4;
+  display: grid;
+  gap: 4px;
+  min-width: 13rem;
+  max-width: 18rem;
+  padding: 10px 12px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--premium-surface);
+  box-shadow: var(--shadow-overlay);
+  translate: var(--tip-x) calc(-100% - 10px);
+  animation: tip-in 0.16s var(--ease-brand) both;
+}
+.tip[data-dir="down"] { translate: var(--tip-x) 10px; }
+@media (hover: hover) {
+  /* Fareyle binaya tıklamak sayfayı açıyor; ipucu yalnız okunuyor. */
+  .tip { pointer-events: none; }
+  .tipLink { display: none; }
+}
+.tipHead { display: flex; align-items: center; gap: 10px; }
+.tipLogo {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--logo-plate);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.tipId { display: grid; min-width: 0; }
+.tipSymbol { color: var(--text-strong); font-size: var(--text-base); font-weight: 800; line-height: 1.2; }
+.tipName {
+  overflow: hidden;
+  color: var(--text-body);
+  font-size: var(--text-small);
+  font-weight: 600;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tipValue { margin-left: auto; font-size: var(--text-title); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; white-space: nowrap; }
+.tipMeta { color: var(--text-muted); font-size: var(--text-nano); line-height: 1.35; }
+.tipLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--primary);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+@keyframes tip-in { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tip { animation: none; }
+  .district { transition: none; }
+}

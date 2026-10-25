@@ -52,7 +52,7 @@ export const changelogTr = {
 export const changelogEn: typeof changelogTr = {
   title: "What's New",
   subtitle: "What changed on the site, newest first. Try any new feature straight from the link next to it.",
-  menuHint: "Latest Additions to the Site",
+  menuHint: "Latest Additions",
   badge: "New",
   badgeLabel: "There are updates you haven't seen",
   feedLink: "RSS",
