@@ -28,6 +28,9 @@ import {
 } from "@/lib/admin-data";
 import { todayEt } from "@/lib/market-hours";
 import { adminDay, adminDayIn, agoLabel } from "@/lib/admin-format";
+import { listRiskAccess } from "@/lib/risk/store";
+import { RiskAccessForm } from "@/components/admin/RiskAccessForm";
+import { revokeRiskAccess } from "./risk-actions";
 
 /**
  * Üyeler.
@@ -102,6 +105,10 @@ export default async function MembersPage() {
         }
       >
         <RecentMembers />
+      </Suspense>
+
+      <Suspense fallback={<AdminPanelSkeleton rows={2} rowHeight={44} />}>
+        <RiskAccessPanel />
       </Suspense>
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2 lg:items-start">
@@ -485,6 +492,46 @@ async function SignupCurve() {
           )}
         </>
       )}
+    </AdminPanel>
+  );
+}
+
+/**
+ * RİSK MASASI ERİŞİMİ (25 Ekim). Masa kişiye özel ve varsayılan kapalı;
+ * yönetici her zaman erişir, başka hesaplara buradan açılır. Satır silinince
+ * erişim, menü bağlantısıyla birlikte bir sonraki istekte kapanır (sayfa ve
+ * eylemler yetkiyi her istekte veritabanından okur — lib/risk/store.ts).
+ */
+async function RiskAccessPanel() {
+  const result = await listRiskAccess();
+  return (
+    <AdminPanel>
+      <AdminPanelTitle hint="Varsayılan Kapalı · Yönetici Her Zaman Erişir">Risk Masası Erişimi</AdminPanelTitle>
+      <div className="flex flex-col gap-4">
+        <RiskAccessForm />
+        {!result.ok ? (
+          <AdminPanelError>Erişim tablosu okunamadı; migration henüz uygulanmamış olabilir. Bu durumda masa yalnız yöneticiye açık.</AdminPanelError>
+        ) : result.rows.length === 0 ? (
+          <AdminEmpty title="Erişimi Açılmış Üye Yok" hint="Kullanıcı adını yazıp erişimi açabilirsin." />
+        ) : (
+          <ul className="flex flex-col">
+            {result.rows.map((row) => (
+              <li key={row.userId} className="flex flex-wrap items-center justify-between gap-3 border-t border-line py-2 first:border-t-0">
+                <span className="min-w-0">
+                  <span className="font-semibold text-strong">{row.username}</span>
+                  <span className="ml-2 text-small text-muted">{agoLabel(row.grantedAt)}</span>
+                </span>
+                <form action={revokeRiskAccess}>
+                  <input type="hidden" name="userId" value={row.userId} />
+                  <button type="submit" className="inline-flex min-h-11 items-center px-2 text-small font-semibold text-primary transition-colors hover:text-primary-hover">
+                    Erişimi Kapat
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </AdminPanel>
   );
 }

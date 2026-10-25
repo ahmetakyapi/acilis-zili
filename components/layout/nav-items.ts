@@ -13,6 +13,7 @@ import {
   EnvelopeSimple,
   Funnel,
   FunnelSimple,
+  Gauge,
   Heart,
   ListDashes,
   Receipt,
@@ -94,7 +95,18 @@ export type NavItem = {
    * anlamca ait olduğu grupta durur (Piyasalar → Piyasa, Teknik → Araçlar).
    */
   menu?: MoreGroup;
+  /**
+   * Kişiye özel ekran (25 Ekim, Risk Masası): öğe yalnız erişimi olana
+   * basılır. Kabuk ve /menu bu alanı `gatedVisible` ile süzer; erişimi
+   * olmayan için bağlantı hiç yok (ekranın varlığı sızmasın).
+   */
+  gate?: "risk";
 };
+
+/** Kapılı öğe görünür mü — erişim kümesi sunucuda okunur. */
+export function gatedVisible(item: NavItem, access: { risk: boolean }): boolean {
+  return item.gate ? access[item.gate] : true;
+}
 
 /** /menu'de satırın grubu: panel satırıysa paneldeki grup, sekmeyse `menu`. */
 export function menuGroupOf(item: NavItem): MoreGroup | undefined {
@@ -374,6 +386,19 @@ export const NAV_ITEMS: NavItem[] = [
     inBottomBar: false,
     more: "mine",
     hint: (t) => t.brokers.menuHint,
+  },
+  {
+    /* RİSK MASASI (25 Ekim) — KAPILI. Varsayılan kapalı; yönetici ve
+       yöneticinin Üyeler ekranından erişim açtığı hesaplar görür
+       (lib/risk/store.ts). Portföy grubunda: masa okurun kendi
+       pozisyonlarının maruziyetini gösteriyor. */
+    href: "/risk",
+    label: (t) => t.riskDesk.nav.label,
+    icon: Gauge,
+    inBottomBar: false,
+    more: "mine",
+    hint: (t) => t.riskDesk.nav.hint,
+    gate: "risk",
   },
   {
     href: "/vergi",

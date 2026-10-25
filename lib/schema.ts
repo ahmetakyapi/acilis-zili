@@ -19,6 +19,7 @@ import {
 import type { TechnicalCopy, TechnicalSnapshot } from "./technical";
 import type { StoredMetrics } from "./scorecard";
 import type { ProbabilitySnapshot } from "./probabilities";
+import type { Condition as RiskCondition } from "./risk/rules";
 
 /* ==========================================================================
    Kullanıcı ve takip listeleri
@@ -1930,4 +1931,75 @@ export const probabilitySnapshots = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("probability_snapshots_taken_idx").on(t.takenAt)],
+);
+
+/* ---- Risk Masası ---- */
+
+/**
+ * Risk Masası (25 Ekim) — kişiye özel erişim, kullanıcının kuralları ve
+ * tetiklenen uyarılar. Üç tablo da KENDİ tablosu: `users`a sütun eklenmedi
+ * (CLAUDE.md, migration deploy'da uygulanmıyor). Tablo yokken masa
+ * yöneticinin dışında herkese kapalı, kural ve uyarı panelleri "henüz
+ * kurulmadı" der, cron `table-missing` ile döner (lib/risk/store.ts).
+ */
+
+/** Erişim: satır varsa açık. Yönetici satırsız da erişir. */
+export const riskAccess = pgTable("risk_access", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  grantedAt: timestamp("granted_at", { withTimezone: true }).notNull().defaultNow(),
+  /** Erişimi açan yönetici; hesabı silinirse kayıt kalır, alan boşalır. */
+  grantedBy: uuid("granted_by").references(() => users.id, { onDelete: "set null" }),
+});
+
+/**
+ * Kural: kullanıcının etiketi + tonu + en çok üç koşul (lib/risk/rules.ts →
+ * `ConditionSchema`; jsonb okunurken yeniden doğrulanır). `active` son
+ * değerlendirmede tetikli miydi — bildirim yalnız yanlıştan doğruya
+ * dönüşte gider, koşul sürdükçe her gün yeniden gitmez.
+ */
+export const riskRules = pgTable(
+  "risk_rules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    label: text("label").notNull(),
+    /** up | down | buy | hold | sell — etiketin rengi. */
+    tone: text("tone").notNull(),
+    /** Kural bir sembole bağlıysa; null = portföydeki her pozisyon. */
+    symbol: text("symbol"),
+    conditions: jsonb("conditions").$type<RiskCondition[]>().notNull(),
+    enabled: boolean("enabled").notNull().default(true),
+    active: boolean("active").notNull().default(false),
+    lastSession: date("last_session"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("risk_rules_user_idx").on(t.userId)],
+);
+
+/** Tetiklenen kural — seans başına bir satır (tekrar koşan cron ikinci bildirim atmasın). */
+export const riskAlerts = pgTable(
+  "risk_alerts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ruleId: uuid("rule_id")
+      .notNull()
+      .references(() => riskRules.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    session: date("session").notNull(),
+    /** Tetikleme anının metni (etiket + koşullar); kural sonradan değişse de kayıt aynı kalır. */
+    message: text("message").notNull(),
+    symbols: jsonb("symbols").$type<string[]>().notNull(),
+    delivered: integer("delivered").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("risk_alerts_rule_session_key").on(t.ruleId, t.session),
+    index("risk_alerts_user_idx").on(t.userId, t.createdAt),
+  ],
 );

@@ -29,6 +29,11 @@ LINES=(
 	# Olasılıklar (25 Ekim — gerekçe deploy/cron-olasiliklar.sh). Saatte
 	# bir çağrılır, uç günde bir yazar (seçim gecesi ve Fed saatinde sık).
 	"7 * * * * /bin/bash $APP_ROOT/current/deploy/cron-olasiliklar.sh"
+	# Risk Masası kuralları (25 Ekim — gerekçe deploy/cron-risk.sh).
+	# Kapanıştan sonra ve ertesi sabah FRED gelince; ikisi aynı seansı
+	# değerlendirir, uç kural + seans başına tek uyarı yazar.
+	"40 21 * * 1-5 /bin/bash $APP_ROOT/current/deploy/cron-risk.sh"
+	"15 11 * * 2-6 /bin/bash $APP_ROOT/current/deploy/cron-risk.sh"
 	# Ortak veri önbelleğinin budaması (20 Ekim — gerekçe update.sh). Next
 	# diskteki kaydı hiç silmiyor; sürüm dizinleri budanırken önbellek de
 	# gidiyordu, ortak dizinde biriken tarihli adresler (gün başlangıçlı

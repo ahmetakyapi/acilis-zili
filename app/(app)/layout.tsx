@@ -9,13 +9,14 @@ import { SearchCommand } from "@/components/layout/SearchCommand";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { TickerFeed } from "@/components/layout/TickerFeed";
 import { ViewBeacon } from "@/components/layout/ViewBeacon";
-import { NAV_ITEMS } from "@/components/layout/nav-items";
+import { NAV_ITEMS, gatedVisible } from "@/components/layout/nav-items";
 import { getI18n, getTheme } from "@/lib/i18n";
 import { getUserAvatar } from "@/lib/avatar-data";
 import { getUnreadCount } from "@/lib/notifications";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { hasAnalysisAccess } from "@/lib/ai-analysis-access";
 import { LATEST_CHANGE_DATE } from "@/lib/changelog";
+import { hasRiskMenu } from "@/lib/risk/store";
 
 /* --------------------------------------------------------------------------
    BU SEGMENTTE `loading.tsx` YOK — ve bu bilinçli.
@@ -61,19 +62,25 @@ export default async function AppLayout({
   const searchShortcut = /Mac|iPhone|iPad|iPod/.test(ua) ? "⌘K" : "Ctrl K";
   /* Profil ikonu — giriş yapılmışsa tek küçük sorgu, istek içinde
      önbellekli (/menu aynı cevabı okuyor). Düşerse baş harfler. */
-  const [avatar, analyses, unread] = session?.user?.id
+  const [avatar, analyses, unread, risk] = session?.user?.id
     ? await Promise.all([
         getUserAvatar(session.user.id),
         hasAnalysisAccess(session.user.id),
         /* Zilin sayısı: tek COUNT, istek içinde önbellekli; tablo yokken 0. */
         getUnreadCount(session.user.id),
+        /* Risk Masası bağlantısı yalnız erişimi olana (25 Ekim): token
+           "admin" diyorsa sorgusuz, değilse tek birincil anahtar okuması;
+           tablo yokken kapalı. Sayfa yetkiyi ayrıca doğruluyor. */
+        hasRiskMenu(session.user.id, session.user.role),
       ])
-    : [null, false, 0];
+    : [null, false, 0, false];
+  const access = { risk };
 
   const labels: ShellLabels = {
     brandName: t.brand.name,
+    /* Kapılı öğenin adı bile erişimi olmayanın yüküne girmez. */
     nav: Object.fromEntries(
-      NAV_ITEMS.map((item) => [item.href, item.label(t)]),
+      NAV_ITEMS.filter((item) => gatedVisible(item, access)).map((item) => [item.href, item.label(t)]),
     ),
     navShort: Object.fromEntries(
       NAV_ITEMS.filter((item) => item.shortLabel).map((item) => [
@@ -97,7 +104,7 @@ export default async function AppLayout({
         : [],
     ),
     moreItems: NAV_ITEMS.flatMap((item) =>
-      item.more
+      item.more && gatedVisible(item, access)
         ? [{ href: item.href, label: item.label(t), hint: item.hint?.(t) ?? "", group: item.more }]
         : [],
     ),

@@ -1,4 +1,5 @@
 import { aiAnalysisEn } from "./ai-analysis";
+import { riskDeskEn } from "./risk-desk";
 import type tr from "./tr";
 import { emailNotifyEn } from "./email-notify";
 import { portfolioAnalysisEn } from "./portfolio-analysis";
@@ -4339,6 +4340,8 @@ const en: typeof tr = {
   feedVisuals: feedVisualsEn,
   /* Araç ekranlarının görsel turu (25 Ekim) — metin ayrı dosyada. */
   toolVisuals: toolVisualsEn,
+  /* Risk Masası (25 Ekim) — kişiye özel ekran; metin ayrı dosyada. */
+  riskDesk: riskDeskEn,
 };
 
 export default en;

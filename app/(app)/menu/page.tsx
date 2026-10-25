@@ -21,7 +21,8 @@ import { getUserAvatar } from "@/lib/avatar-data";
 import { SignOutForm } from "@/components/auth/SignOutForm";
 import { PageHeader, Panel, ButtonLink } from "@/components/ui/primitives";
 import { getI18n, type Dictionary } from "@/lib/i18n";
-import { MORE_GROUPS, NAV_ITEMS, menuGroupOf, type MoreGroup } from "@/components/layout/nav-items";
+import { MORE_GROUPS, NAV_ITEMS, gatedVisible, menuGroupOf, type MoreGroup } from "@/components/layout/nav-items";
+import { hasRiskMenu } from "@/lib/risk/store";
 import { puzzleDayKey, puzzleNumber } from "@/lib/stock-puzzle";
 import { withLocale } from "@/lib/i18n/routing";
 import { pageMetadata } from "@/lib/page-meta";
@@ -84,6 +85,8 @@ export default async function MenuPage() {
   const session = await auth();
   const username = session?.user?.name ?? null;
   const avatar = session?.user?.id ? await getUserAvatar(session.user.id) : null;
+  /* Kapılı satırlar (Risk Masası) yalnız erişimi olana — kabukla aynı okuma. */
+  const access = { risk: session?.user?.id ? await hasRiskMenu(session.user.id, session.user.role) : false };
 
   /* GRUPLAR MASAÜSTÜNÜN "DAHA FAZLA" PANELİYLE AYNI — ARTIK AYNI KAYNAKTAN
      (25 Ekim). 25 Ekim sabahı başlıklar eşitlenmişti ama liste yine elle
@@ -102,7 +105,7 @@ export default async function MenuPage() {
   const groups: { title: string; entries: Entry[] }[] = [
     ...MORE_GROUPS.map((group) => ({
       title: t.nav[GROUP_TITLE[group]],
-      entries: NAV_ITEMS.filter((item) => menuGroupOf(item) === group).map((item) => ({
+      entries: NAV_ITEMS.filter((item) => menuGroupOf(item) === group && gatedVisible(item, access)).map((item) => ({
         href: item.href,
         icon: item.icon,
         title: item.label(t),

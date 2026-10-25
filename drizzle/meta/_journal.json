@@ -288,6 +288,13 @@
       "when": 1792923700076,
       "tag": "0040_probability_snapshots",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1792934962170,
+      "tag": "0041_risk_desk",
+      "breakpoints": true
     }
   ]
 }

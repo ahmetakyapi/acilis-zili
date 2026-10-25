@@ -1,4 +1,5 @@
 import { aiAnalysisTr } from "./ai-analysis";
+import { riskDeskTr } from "./risk-desk";
 import { emailNotifyTr } from "./email-notify";
 import { portfolioAnalysisTr } from "./portfolio-analysis";
 import { datePickerTr } from "./date-picker";
@@ -4893,6 +4894,8 @@ const tr = {
   feedVisuals: feedVisualsTr,
   /* Araç ekranlarının görsel turu (25 Ekim) — metin ayrı dosyada. */
   toolVisuals: toolVisualsTr,
+  /* Risk Masası (25 Ekim) — kişiye özel ekran; metin ayrı dosyada. */
+  riskDesk: riskDeskTr,
 };
 
 export default tr;
