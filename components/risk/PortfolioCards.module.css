@@ -1,0 +1,405 @@
+/* Risk Masası — portföy kartları (25 Ekim, kart düzeni). Renk anlamı
+   RiskDesk.module.css başındaki notla aynı: ton üçlüsü `data-tone`dan
+   (`--tone`, `--tone-soft`, `--tone-wash`; tanımı `.desk [data-tone]`),
+   nötr büyüklük `--primary-soft`, sayılar metin renginde. Derinlik tonla;
+   gölge, cam, degrade yok. Kulvar ve yay kalınlığı `--lane-h`. */
+
+/* ------------------------------------------------------------ özet kartları */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+/* 900–1099: rejim kartı tam genişlikte üstte, özet dört sütun. 1100 ve
+   üstü: rejimin yanında 2 × 2 — dört sütunda kartlar rejimin boyuna
+   gerilip yarısı boş kalıyordu (1440'ta 390 piksellik kartta 120 piksel
+   içerik, ölçüldü). */
+@media (min-width: 900px) {
+  .summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1100px) {
+  .summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel, var(--radius-xl));
+  background: var(--premium-surface);
+}
+.tileTitle {
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.tileBody {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 52px;
+}
+.tileValue {
+  font-size: var(--text-heading);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+.tileLabel {
+  margin-top: auto;
+  font-size: var(--text-nano);
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+/* Beta kadranı: yarım yay, SPY (1) saç teli işaret. */
+.gauge {
+  width: 104px;
+  height: auto;
+  flex: none;
+  overflow: visible;
+}
+.arcTrack,
+.arcFill {
+  fill: none;
+  stroke-width: var(--lane-h, 5px);
+  stroke-linecap: round;
+}
+.arcTrack {
+  stroke: var(--line-soft);
+}
+.arcFill {
+  stroke: var(--primary-soft);
+  animation: draw 0.8s var(--ease-brand) both;
+}
+.arcTick {
+  stroke: var(--text-strong);
+  stroke-width: 1.5;
+}
+.arcEnd {
+  fill: var(--primary-soft);
+  stroke: var(--premium-surface);
+  stroke-width: 2;
+}
+@keyframes draw {
+  from {
+    stroke-dasharray: 0 100;
+  }
+}
+
+/* Halka: dilim ya da sektör payı. Başlangıç saat 12. */
+.ring {
+  width: 60px;
+  height: 60px;
+  flex: none;
+  transform: rotate(-90deg);
+}
+.ringTrack,
+.ringFill,
+.ringRest {
+  fill: none;
+  stroke-width: 6;
+}
+.ringTrack {
+  stroke: var(--line-soft);
+}
+.ringFill {
+  stroke: var(--primary-soft);
+  animation: draw 0.8s var(--ease-brand) both;
+}
+.ring[data-tone] .ringFill {
+  stroke: var(--tone-soft);
+}
+.ringRest {
+  stroke: var(--line-strong);
+}
+
+.belowBars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 52px;
+  justify-content: center;
+}
+.belowRow {
+  display: grid;
+  grid-template-columns: 3.4rem minmax(0, 1fr) 2.6rem;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-nano);
+  color: var(--text-muted);
+}
+.belowRow b {
+  font-weight: 700;
+  color: var(--text-strong);
+  text-align: right;
+}
+
+/* ---------------------------------------------------------------- kartlar */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (min-width: 640px) {
+  .cards {
+    grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
+    gap: 12px;
+  }
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid color-mix(in srgb, var(--tone, var(--line)) 34%, var(--line));
+  background: color-mix(in srgb, var(--tone-wash, transparent) 70%, var(--surface-sunken));
+}
+@media (min-width: 640px) {
+  .card {
+    padding: 14px;
+  }
+}
+.cardHead {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+.cardId {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.cardSymbol {
+  font-size: var(--text-read);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: var(--text-strong);
+}
+.cardName {
+  font-size: var(--text-nano);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cardWeight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+.cardWeight b {
+  font-size: var(--text-read);
+  font-weight: 800;
+  color: var(--text-strong);
+}
+.weightLane {
+  position: relative;
+  width: 44px;
+  height: var(--lane-h, 5px);
+  border-radius: 999px;
+  background: var(--line-soft);
+  overflow: hidden;
+}
+.weightLane > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--primary-soft);
+}
+
+.cardFigure {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  column-gap: 8px;
+}
+.cardValue {
+  font-size: var(--text-heading);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: var(--text-strong);
+}
+.cardValueLabel {
+  grid-column: 1;
+  font-size: var(--text-nano);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.toneChip {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: var(--text-nano);
+  font-weight: 700;
+  color: var(--text-strong);
+  background: var(--premium-surface);
+  cursor: help;
+}
+.toneChip::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--tone, var(--line-strong));
+}
+
+/* Minyatür: kapanış yumuşak mavi, ortalamalar saç teli (50 düz, 100 kesik,
+   200 noktalı); etiketler sağ uçta, son değerin hizasında. */
+.trail {
+  position: relative;
+  padding-right: 30px;
+}
+.trail svg {
+  display: block;
+  width: 100%;
+  height: 56px;
+  overflow: visible;
+}
+.trailLine {
+  fill: none;
+  stroke: var(--primary-soft);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.trailMa {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  opacity: 0.75;
+}
+.trailLabels {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 26px;
+}
+.trailLabels span {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+  font-size: var(--text-nano);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.cardStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--line-soft);
+}
+.cardStats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.cardStats dt {
+  font-size: var(--text-nano);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cardStats dd {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+.pctile {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pctile > span {
+  flex: 1 1 auto;
+  min-width: 14px;
+  max-width: 40px;
+}
+.toneFill {
+  background: var(--tone-soft, var(--primary-soft));
+}
+
+.cardTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ruleTag {
+  min-height: 28px;
+  font-size: var(--text-nano);
+}
+.flag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: var(--text-nano);
+  font-weight: 600;
+  background: var(--premium-surface);
+  color: var(--text-body);
+}
+
+/* Telefon: iki sütun ~170 px — üç ölçü iki satıra, sayı küçülür. */
+@media (max-width: 639px) {
+  .cardValue {
+    font-size: var(--text-title);
+  }
+  .cardStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cardStats > div:last-child {
+    grid-column: 1 / -1;
+  }
+  /* Ton telefonda yalnız nokta: kart zemini zaten tonu taşıyor, yazı
+     büyük sayının etiketini üç satıra kırıyordu (ölçüldü, 390). Ad
+     ekran okuyucuya `toneText` ile kalır. */
+  .toneChip {
+    min-height: 0;
+    padding: 6px 0 0;
+    background: none;
+  }
+  .toneText {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .cardName {
+    display: none;
+  }
+}

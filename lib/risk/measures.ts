@@ -22,7 +22,17 @@ import {
   type CrossKind,
   type DailyBar,
 } from "./math";
-import { ATR_PERIOD, BETA_WINDOW, MA_WINDOWS, PERCENTILE_WINDOW, VOL_LONG, VOL_SHORT, type MaWindow } from "./thresholds";
+import {
+  ATR_PERIOD,
+  BETA_WINDOW,
+  MA_WINDOWS,
+  PERCENTILE_WINDOW,
+  POSITION_VOL_PCTILE,
+  TRAIL_POINTS,
+  VOL_LONG,
+  VOL_SHORT,
+  type MaWindow,
+} from "./thresholds";
 import type { MaFlags } from "./rules";
 
 const PERCENT = 100;
@@ -91,4 +101,55 @@ export function weightedMean(rows: readonly { weight: number; value: number | nu
     weight += row.weight;
   }
   return weight > 0 ? { value: sum / weight, coveredWeight: weight } : null;
+}
+
+/* --------------------------------------------------------------------------
+   Pozisyon kartı (25 Ekim, kart düzeni)
+   -------------------------------------------------------------------------- */
+
+/** Kart minyatürü: son `points` kapanış ve aynı günlerin 50/100/200 GO'su. */
+export type PriceTrail = { closes: number[]; ma: Record<MaWindow, (number | null)[]> };
+
+/**
+ * Ortalamalar BÜTÜN seriden hesaplanıp sonra kesilir: son üç ayın 200
+ * GO'su, üç aylık pencerenin içinden değil geriye 200 seanstan gelir.
+ * Pencere dolmamış gün null (çizgi orada başlamaz).
+ */
+export function priceTrail(bars: readonly DailyBar[], points = TRAIL_POINTS): PriceTrail {
+  const closes = bars.map((b) => b.close);
+  const ma = Object.fromEntries(MA_WINDOWS.map((w) => [w, sma(closes, w).slice(-points)])) as Record<MaWindow, (number | null)[]>;
+  return { closes: closes.slice(-points), ma };
+}
+
+export type Tone = 0 | 1 | 2;
+
+/** Pozisyonun tonu — eşiklerin gerekçesi thresholds.ts → POSITION_VOL_PCTILE. */
+export function positionTone(m: { below: MaFlags; vol20Pctile: number | null }): Tone {
+  const trend: Tone = m.below[200] === true ? 2 : m.below[100] === true ? 1 : 0;
+  const p = m.vol20Pctile;
+  const vol: Tone = p === null ? 0 : p >= POSITION_VOL_PCTILE.stress ? 2 : p >= POSITION_VOL_PCTILE.tense ? 1 : 0;
+  return Math.max(trend, vol) as Tone;
+}
+
+/**
+ * Ortalamanın altındaki ağırlık — KAPSAMIYLA. Ortalaması hesaplanamayan
+ * (geçmişi pencereden kısa) pozisyon ne "altında" ne "üstünde" sayılır:
+ * payda dışında kalır ve `covered` onu söyler. 25 Ekim'de ekranda "200 GO
+ * Altındaki Ağırlık %0,0" yanında "100 GO %100,0" görüldü; hesap doğruydu
+ * (dört pozisyon 100 GO'nun altında ama 200 GO'nun üstünde, SHAZ'ın 173
+ * seanslık geçmişi 200 GO'ya yetmiyor), eksik olan bu kapsamın söylenmesiydi.
+ */
+export function belowShares(rows: readonly { weight: number; below: MaFlags }[]): Record<MaWindow, { weight: number; covered: number }> {
+  return Object.fromEntries(
+    MA_WINDOWS.map((w) => {
+      let weight = 0;
+      let covered = 0;
+      for (const row of rows) {
+        if (row.below[w] === null) continue;
+        covered += row.weight;
+        if (row.below[w]) weight += row.weight;
+      }
+      return [w, { weight, covered }];
+    }),
+  ) as Record<MaWindow, { weight: number; covered: number }>;
 }

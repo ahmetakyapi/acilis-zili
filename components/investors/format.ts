@@ -1,8 +1,7 @@
 import type { Dictionary } from "@/lib/i18n";
 import type { CongressCard, FundCard } from "@/lib/investor-data";
-import type { Move, TradeDetail } from "@/lib/investor-view";
+import type { Move, PositionView, TradeDetail } from "@/lib/investor-view";
 import { formatCompact, formatEtDateMedium, formatMoneyCompact, formatPercent, formatPrice, withCurrency } from "@/lib/utils";
-import type { MapPosition } from "./InvestorTreemap";
 import type { PositionRowView } from "./PositionRow";
 
 /**
@@ -12,6 +11,9 @@ import type { PositionRowView } from "./PositionRow";
  */
 
 type T = Dictionary["investors"];
+
+/** Detay sayfasının pozisyonu: SEC satırı + sembol, logo ve sitede bilinip bilinmediği. */
+export type MapPosition = PositionView & { ticker: string | null; linkable: boolean; logoUrl: string | null };
 
 /** "2026-06-30" → "2. Çeyrek 2026" / "Q2 2026". */
 export function quarterLabel(period: string, t: T): string {

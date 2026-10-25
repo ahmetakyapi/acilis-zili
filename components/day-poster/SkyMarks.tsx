@@ -139,10 +139,16 @@ export function SkyCity({
 
 /** Sembolün baş harfleri — logo yoksa. */
 const INITIALS = 2;
+/** Bağ çizgisinin çatıdaki noktası (birim). */
+const ANCHOR_R = 2.4;
 
 /**
  * Çatı etiketleri. Yeri ve ölçüsü yerleşimden (`placeLabels`,
- * lib/day-skyline.ts): kutular birbirine ve binalara binmiyor. Burada yalnız
+ * lib/day-skyline.ts): kutular birbirine ve binalara binmiyor, her etiket
+ * binasının ekseninde (en çok `LABEL_MAX_SHIFT` kayık). Etiket çatısına
+ * oturmuyorsa çatıdan etikete dik bağ çizgisi ve çatıda küçük bir nokta:
+ * eskiden `--line-strong` tonunda kıl çizgiydi ve 1440'ta görünmüyordu
+ * (sahibi: "Micron sağda ama grafikte solda kalıyor gibi"). Burada yalnız
  * kutunun içi: köşeleri yumuşak logo KAROSU (depodaki 128 piksellik webp,
  * `public/logos/`, zemini `--logo-plate`: koyu temada da beyaz plaka),
  * altında sembol ve yüzde (yön renginde). Logosu depoda olmayan şirkette
@@ -188,14 +194,17 @@ export function SkyLabels({
             data-on={active === label.i || undefined}
           >
             {label.leader && (
-              <line
-                className={styles.leader}
-                x1={label.leader.x1}
-                y1={label.leader.y1}
-                x2={label.leader.x2}
-                y2={label.leader.y2}
-                vectorEffect="non-scaling-stroke"
-              />
+              <>
+                <line
+                  className={styles.leader}
+                  x1={label.leader.x1}
+                  y1={label.leader.y1}
+                  x2={label.leader.x2}
+                  y2={label.leader.y2}
+                  vectorEffect="non-scaling-stroke"
+                />
+                <circle className={styles.anchor} cx={label.leader.x1} cy={label.leader.y1} r={ANCHOR_R} />
+              </>
             )}
             <g className={styles.mark} data-sky-mark="">
               <rect className={styles.tile} x={cx - size / 2} y={label.y} width={size} height={size} rx={radius} ry={radius} />

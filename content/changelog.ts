@@ -31,7 +31,9 @@
      olunamayan maddede bağlantı yok. `TELEGRAM_HREF` bir yer tutucu: kanal
      adresi (`NEXT_PUBLIC_TELEGRAM_URL`) tanımlı değilse "Dene" basılmaz.
    - Her maddenin bir `area`sı var (Claude, piyasa, bilanço, kişisel,
-     içerik); Yenilikler son sürümü bu alanlara göre gruplar. En üstteki
+     içerik); Yenilikler'de alan süzgeci, kart rengi ve sürüm akışındaki
+     çubuğun rengi (baskın alan) buradan. "Öne Çıkanlar" kartlarını isteğe
+     bağlı `featured: true` seçer; yoksa kural (`splitFeatured`). En üstteki
      girişin her maddesi TR ve EN'de `short` taşır: dört sütunlu karoda tek
      satır, en çok 36 karakter (25 Ekim yeniden düzeni). Yeni sürüm
      eklendiğinde kısa özet yeni üst girişe yazılır; eskisinde kalabilir.
@@ -64,6 +66,12 @@ type SourceItem = {
   readonly title: string;
   readonly body: string;
   readonly href?: string;
+  /**
+   * Yenilikler'in "Öne Çıkanlar" kartlarına elle seçim (isteğe bağlı, 25
+   * Ekim kompakt düzen). Hiçbir maddede yoksa seçim kuraldan gelir:
+   * `lib/changelog.ts` → `splitFeatured`. Bir girişte varsa yalnız bunlar.
+   */
+  readonly featured?: true;
 };
 
 type SourceEntry = {

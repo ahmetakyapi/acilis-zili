@@ -30,13 +30,16 @@ import styles from "./SkylineStrip.module.css";
  * ufkun altında su ve yükselen binaların yansıması, büyük binalarda
  * pencere ritmi, çatılarda 28–32 piksellik logo karosu + sembol + yüzde
  * (en büyük on iki şirket ve günün üçer ucu; telefonda en büyük altı ve
- * birer uç), binaya gelince ipucu, mahalle adına gelince mahalle.
+ * birer uç), etiketli binaya gelince ipucu, mahalle adına gelince mahalle.
+ * Şeritte YALNIZ ETİKETLİ binalar etkileşimli (25 Ekim, "Silüet: etiket"
+ * turu): etiketsiz binanın ayrıntısı posterde, tıklaması posteri açıyor.
  *
  * BAĞLANTI ARTIK PANEL DEĞİL. Panelin tamamı tek bir bağlantıydı; binalar
  * etkileşimli olunca iç içe etkileşim (bağlantı içinde odaklanabilir sahne)
  * erişilebilirliği bozardı. Posterin yolu başlıkta iki kez (ad ve "Posteri
- * Aç", 44 piksel); sahnede binaya tıklamak o şirketi, boşluğa tıklamak
- * posteri açıyor (fare kolaylığı; asıl yol başlıktaki bağlantı).
+ * Aç", 44 piksel); sahnede etiketli binaya tıklamak o şirketi, boşluğa ya
+ * da etiketsiz binaya tıklamak posteri açıyor (fare kolaylığı; asıl yol
+ * başlıktaki bağlantı).
  *
  * BAŞLIK SADELEŞTİ. Tek satırda altı künye vardı (tarih, endeks, yükselen,
  * düşen, cümle, bağlantı). Şimdi solda ad ve tarih; sağda Nasdaq 100'ün

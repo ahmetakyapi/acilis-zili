@@ -137,7 +137,7 @@ export function noteInput(
       ? {
           weightedBeta: num(exposure.beta?.value, locale),
           weightedVolatility20d: pct(exposure.vol20?.value, locale),
-          weightBelow200Day: pct(exposure.below200Weight, locale),
+          weightBelow200Day: pct(exposure.below[200].weight, locale),
           largestSector: exposure.sectors[0]
             ? { sector: sectorLabel(exposure.sectors[0].sector, locale) ?? t.positions.unclassified, weight: pct(exposure.sectors[0].weight, locale) }
             : null,

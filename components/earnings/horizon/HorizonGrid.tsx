@@ -3,8 +3,8 @@
 import { Suspense, use, useState, type CSSProperties } from "react";
 import { ArrowUpRight } from "@phosphor-icons/react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { LogoTile, TimingChip, type LogoTileSize, type TimingTone } from "@/components/ui/primitives";
-import type { KarneMark, TileTier } from "@/lib/earnings-horizon";
+import { buttonClass, LogoTile, TimingChip, type TimingTone } from "@/components/ui/primitives";
+import { karneSlots, type KarneMark, type KarneSlot, type TileTier } from "@/lib/earnings-horizon";
 import type { WeekLane } from "@/lib/earnings-week";
 import { NO_VALUE } from "@/lib/utils";
 import styles from "./EarningsHorizon.module.css";
@@ -21,17 +21,27 @@ import styles from "./EarningsHorizon.module.css";
  * Seçim sayfayı kaydırmıyor (`aria-pressed` değişiyor, odak karoda).
  *
  * Karne bir SÖZ (`use`): sayfa sağlayıcıyı beklemeden basılıyor, her
- * karonun çentik satırı kendi `Suspense`inde aynı yükseklikte bir yedekle
+ * karonun kare satırı kendi `Suspense`inde aynı yükseklikte bir yedekle
  * duruyor ve veri gelince yerine oturuyor.
+ *
+ * KART TURU (25 Ekim, üçüncü tur). Sahibinin sözü: "çok daha görsel ve
+ * daha okunaklı; logolar, kartlar kompakt; bazı yerler çok uzun kalmış".
+ * Ölçülen sorunlar (1440, TR): iki boy karo (56 / 40) hücrede dağınıktı ve
+ * tek büyük karo satırı 155 piksele çıkarıyordu; karo altındaki 2
+ * piksellik çentikler okunmuyordu; okuma satırı telefonda 308 piksel.
+ * Şimdi: her hücre dört sütunlu düzenli bir kart ızgarası, karolar tek boy
+ * (büyük şirket çerçeveyle ve başta), karonun TAMAMI (logo, sembol, dört
+ * kare) tek düğme; karne dört okunur kare (dolu = aşıldı, boş = aşılmadı,
+ * soluk = veri yok). Ölçüm `EarningsHorizon.module.css` başında.
  */
 
 export type HorizonTile = {
   symbol: string;
   name: string;
   logoUrl: string | null;
-  /** Kenar oranı 0…1 — alan piyasa değeriyle orantılı (`tileScale`). */
+  /** Kenar oranı 0…1 (`tileScale`): gün değişince ilk seçilecek karo. */
   scale: number;
-  /** Çizilen boy: büyük 56, taban 40 piksel (`tileTierOf`). */
+  /** Büyük şirket çerçeveli karo (`tileTierOf`); boy herkes için aynı. */
   tier: TileTier;
   capText: string | null;
   revenueText: string | null;
@@ -61,6 +71,8 @@ export type HorizonDay = {
   countText: string;
   /** Günün tüm açıklayanları / haftanın en kalabalık günü. */
   density: number;
+  /** Haftanın en kalabalık günü (`peakDay`): başlıkta "Zirve" rozeti. */
+  peak: boolean;
   lanes: Record<WeekLane, HorizonTile[]>;
   /** Hücreye sığmayan şirket sayısı (`capCell`). */
   more: Record<WeekLane, number>;
@@ -85,6 +97,8 @@ type Labels = {
   reported: string;
   beatRecord: string;
   beatRecordLine: string;
+  peak: string;
+  peakLabel: string;
   beatRecordAll: string;
   beatRecordNone: string;
   beatCount: string;
@@ -101,10 +115,6 @@ type Labels = {
 };
 
 type Karne = Promise<Record<string, KarneMark[]>>;
-
-/* Logo karonun ~%60'ı: büyük karoda 32, tabanda 26 piksel. Karonun alt
-   şeridinde karne çentikleri duruyor, logo onlara binmesin. */
-const LOGO_SIZE: Record<TileTier, LogoTileSize> = { big: "md", base: "sm" };
 
 const READOUT_ID = "bilanco-ufku-ayrinti";
 
@@ -153,6 +163,7 @@ export function HorizonGrid({
             className={styles.pick}
             aria-pressed={activeDay === day.date}
             data-state={day.state}
+            data-peak={day.peak || undefined}
             onClick={() => pickDay(day)}
           >
             <span className={styles.pickName}>{day.short}</span>
@@ -161,6 +172,7 @@ export function HorizonGrid({
             <span className={styles.density} aria-hidden>
               <span style={{ "--ratio": day.density } as CSSProperties} />
             </span>
+            {day.peak && <span className="sr-only">{labels.peakLabel}</span>}
           </button>
         ))}
       </div>
@@ -192,21 +204,31 @@ export function HorizonGrid({
             data-active={activeDay === day.date || undefined}
             aria-labelledby={`ufuk-${day.date}`}
           >
-            {/* GÜN BAŞLIĞI TEK SATIR (25 Ekim, ikinci tur): gün numarası ve
-                adı solda, günün tüm açıklayanları sağda, altında yoğunluk
-                çizgisi. Ay adı panelin künyesinde ("26–30 Ekim 2026"); iki
-                satırlık başlık sütun başına 24 piksel tutuyordu. */}
+            {/* GÜN BAŞLIĞI TEK BLOK (kart turu): üstte numara + ad ve
+                rozet (bugün / zirve), altta yoğunluk çizgisi ve günün tüm
+                açıklayanlarının sayısı. Rozet adın yanında yer bulsun diye
+                sayı çizginin ucuna indi; blok yine iki satır. */}
             <header className={styles.dayHead}>
               <h3 id={`ufuk-${day.date}`} className={styles.dayName}>
                 <span className={`figure ${styles.dayNumber}`}>{day.dayNumber}</span>
                 <span className={styles.dayWeekday}>{day.weekday}</span>
-                {day.state === "today" && <span className={styles.todayTag}>{labels.today}</span>}
               </h3>
-              <p className={`figure ${styles.dayCount}`}>{day.closed ? NO_VALUE : day.countText}</p>
+              {(day.state === "today" || day.peak) && (
+                <span className={styles.dayTags}>
+                  {day.state === "today" && <span className={styles.todayTag}>{labels.today}</span>}
+                  {day.peak && (
+                    <span className={styles.peakTag} title={labels.peakLabel}>
+                      <span aria-hidden>{labels.peak}</span>
+                      <span className="sr-only">{labels.peakLabel}</span>
+                    </span>
+                  )}
+                </span>
+              )}
               {/* Günün yoğunluğu bir UZUNLUK: en kalabalık gün tam. */}
               <span className={styles.density} aria-hidden>
                 <span style={{ "--ratio": day.density } as CSSProperties} />
               </span>
+              <p className={`figure ${styles.dayCount}`}>{day.closed ? NO_VALUE : day.countText}</p>
             </header>
             {day.closed ? (
               <p className={styles.closed}>{labels.marketClosed}</p>
@@ -214,12 +236,15 @@ export function HorizonGrid({
               lanes.map((lane) => {
                 const tiles = day.lanes[lane.key];
                 const more = day.more[lane.key];
+                const moreText = labels.more.replace("{count}", String(more));
+                const moreLabel = day.moreLabel.replace("{count}", String(more));
                 return (
                   <div key={lane.key} className={styles.lane} data-lane={lane.key} data-empty={tiles.length === 0 || undefined}>
                     <p className={styles.laneHead}>
                       <TimingChip tone={lane.tone} size="sm">
                         {lane.title}
                       </TimingChip>
+                      {lane.clock && <span className={`figure ${styles.laneClock}`}>{lane.clock}</span>}
                     </p>
                     {tiles.length > 0 ? (
                       <ul className={styles.tiles}>
@@ -234,14 +259,14 @@ export function HorizonGrid({
                           />
                         ))}
                         {more > 0 && (
-                          <li className={styles.tileItem} data-tier="base" style={{ "--i": order.size } as CSSProperties}>
+                          <li className={styles.tileItem} style={{ "--i": order.size } as CSSProperties}>
                             {day.moreHref.startsWith("#") ? (
-                              <a href={day.moreHref} className={`tap-44 ${styles.more}`} aria-label={day.moreLabel.replace("{count}", String(more))}>
-                                {labels.more.replace("{count}", String(more))}
+                              <a href={day.moreHref} className={`tap-44 ${styles.more}`} aria-label={moreLabel}>
+                                {moreText}
                               </a>
                             ) : (
-                              <Link href={day.moreHref} prefetch={false} className={`tap-44 ${styles.more}`} aria-label={day.moreLabel.replace("{count}", String(more))}>
-                                {labels.more.replace("{count}", String(more))}
+                              <Link href={day.moreHref} prefetch={false} className={`tap-44 ${styles.more}`} aria-label={moreLabel}>
+                                {moreText}
                               </Link>
                             )}
                           </li>
@@ -278,9 +303,11 @@ function Tile({
 }) {
   return (
     <li className={styles.tileItem} data-tier={tile.tier} style={{ "--i": order } as CSSProperties}>
+      {/* KARONUN TAMAMI TEK DÜĞME: logo, sembol ve kareler. Yalnız logo
+          düğmeyken sembole dokunmak boşa gidiyordu. */}
       <button
         type="button"
-        className={`tap-44 ${styles.tile}`}
+        className={styles.tile}
         aria-pressed={pressed}
         aria-label={tile.label}
         aria-controls={READOUT_ID}
@@ -290,67 +317,77 @@ function Tile({
         onFocus={onSelect}
         onClick={onSelect}
       >
-        <LogoTile symbol={tile.symbol} logoUrl={tile.logoUrl} size={LOGO_SIZE[tile.tier]} />
-        {tile.watched && (
-          <span aria-hidden className={styles.star}>
-            ★
-          </span>
-        )}
-        {/* Açıklanmış bilançoda yön glifi (biçim + renk): beklentiye göre. */}
-        {tile.surprise && (
-          <span aria-hidden className={styles.result} data-dir={tile.surprise}>
-            {tile.surprise === "beat" ? "▲" : tile.surprise === "miss" ? "▼" : "="}
-          </span>
-        )}
-        {/* KARNE KARONUN İÇİNDE (25 Ekim, ikinci tur): alt kenarda ince
-            şerit. Karonun altında ayrı satırdı ve her karoya 7 piksel
-            ekliyordu. */}
-        <Suspense fallback={<Notches marks={null} />}>
-          <TileNotches karne={karne} symbol={tile.symbol} />
+        <span className={styles.karo}>
+          <LogoTile symbol={tile.symbol} logoUrl={tile.logoUrl} size={tile.lane === "other" ? "sm" : "md"} className={styles.logo} />
+          {tile.watched && (
+            <span aria-hidden className={styles.star}>
+              ★
+            </span>
+          )}
+          {/* Açıklanmış bilançoda yön glifi (biçim + renk): beklentiye göre. */}
+          {tile.surprise && (
+            <span aria-hidden className={styles.result} data-dir={tile.surprise}>
+              {tile.surprise === "beat" ? "▲" : tile.surprise === "miss" ? "▼" : "="}
+            </span>
+          )}
+        </span>
+        <span aria-hidden className={styles.tileSymbol}>
+          {tile.symbol}
+        </span>
+        <Suspense fallback={<Squares slots={null} />}>
+          <TileSquares karne={karne} symbol={tile.symbol} />
         </Suspense>
       </button>
-      <span aria-hidden className={styles.tileSymbol}>
-        {tile.symbol}
-      </span>
     </li>
   );
 }
 
-function TileNotches({ karne, symbol }: { karne: Karne; symbol: string }) {
-  const marks = use(karne)[symbol] ?? [];
-  return <Notches marks={marks} />;
+function TileSquares({ karne, symbol }: { karne: Karne; symbol: string }) {
+  return <Squares slots={karneSlots(use(karne)[symbol] ?? [])} />;
 }
 
-/** Dört çentik, eskiden yeniye; dolu = beklenti aşıldı. `null` = yükleniyor. */
-function Notches({ marks, large = false }: { marks: KarneMark[] | null; large?: boolean }) {
-  const SLOTS = 4;
+/** Dört kare, eskiden yeniye: dolu = aşıldı, boş = aşılmadı, soluk = veri
+    yok. `null` = yükleniyor (dört soluk yuva, aynı yükseklik). */
+function Squares({ slots, large = false }: { slots: KarneSlot[] | null; large?: boolean }) {
+  const shown = slots ?? karneSlots([]);
   return (
-    <span aria-hidden className={styles.notches} data-large={large || undefined} data-pending={marks === null || undefined}>
-      {marks === null
-        ? Array.from({ length: SLOTS }, (_, index) => <i key={index} />)
-        : marks.map((mark, index) => <i key={index} data-beat={mark === "beat" || undefined} />)}
+    <span aria-hidden className={styles.squares} data-large={large || undefined} data-pending={slots === null || undefined}>
+      {shown.map((mark, index) => (
+        <i key={index} className={styles.square} data-mark={mark} />
+      ))}
     </span>
   );
 }
 
 function ReadoutKarne({ karne, symbol, labels }: { karne: Karne; symbol: string; labels: Labels }) {
   const marks = use(karne)[symbol] ?? [];
-  if (marks.length === 0) return <p className={styles.readoutKarneText}>{labels.noKarne}</p>;
+  if (marks.length === 0) {
+    return (
+      <>
+        <Squares slots={karneSlots([])} large />
+        <span className={styles.readoutKarneNote}>{labels.noKarne}</span>
+      </>
+    );
+  }
   const beat = marks.filter((mark) => mark === "beat").length;
   const sentence = (beat === marks.length ? labels.beatRecordAll : beat === 0 ? labels.beatRecordNone : labels.beatRecordLine)
     .replace("{total}", String(marks.length))
     .replace("{beat}", String(beat));
   return (
     <>
-      <p className={styles.readoutKarneCount}>
+      <Squares slots={karneSlots(marks)} large />
+      <span className={styles.readoutKarneCount} aria-hidden>
         {labels.beatCount.replace("{beat}", String(beat)).replace("{total}", String(marks.length))}
-      </p>
-      <Notches marks={marks} large />
-      <p className={styles.readoutKarneText}>{sentence}</p>
+      </span>
+      <span className="sr-only">{sentence}</span>
     </>
   );
 }
 
+/* OKUMA ŞERİDİ TEK SATIR (kart turu): kim · üç sayı · karne · buton.
+   Karne cümlesi ("Son 4 çeyreğin 2 tanesinde…") görselde "2/4 Çeyrekte
+   Aşıldı" ile aynı şeyi söylüyordu; ekran okuyucuya kalıyor. Telefonda
+   üç kısa satır: kim + buton, sayılar, karne. */
 function Readout({ tile, karne, labels }: { tile: HorizonTile | null; karne: Karne; labels: Labels }) {
   return (
     <div id={READOUT_ID} className={styles.readout} aria-live="polite">
@@ -395,24 +432,26 @@ function Readout({ tile, karne, labels }: { tile: HorizonTile | null; karne: Kar
           </dl>
           <div className={styles.readoutKarne}>
             <p className={styles.readoutKarneLabel}>{labels.beatRecord}</p>
-            <Suspense
-              fallback={
-                <>
-                  <p className={styles.readoutKarneCount}>{labels.karneLoading}</p>
-                  <Notches marks={null} large />
-                </>
-              }
-            >
-              <ReadoutKarne karne={karne} symbol={tile.symbol} labels={labels} />
-            </Suspense>
+            <div className={styles.readoutKarneRow}>
+              <Suspense
+                fallback={
+                  <>
+                    <Squares slots={null} large />
+                    <span className={styles.readoutKarneNote}>{labels.karneLoading}</span>
+                  </>
+                }
+              >
+                <ReadoutKarne karne={karne} symbol={tile.symbol} labels={labels} />
+              </Suspense>
+            </div>
           </div>
           <div className={styles.readoutLinks}>
-            <Link href={tile.href} prefetch={false} className={styles.readoutLink}>
+            <Link href={tile.href} prefetch={false} className={buttonClass({ variant: "ghost", size: "sm", className: styles.readoutButton })}>
               {labels.companyPage}
               <ArrowUpRight size={13} weight="bold" aria-hidden />
             </Link>
             {tile.analysisHref && (
-              <Link href={tile.analysisHref} prefetch={false} className={styles.readoutLink}>
+              <Link href={tile.analysisHref} prefetch={false} className={buttonClass({ variant: "quiet", size: "sm", className: styles.readoutButton })}>
                 {labels.analysis}
                 <ArrowUpRight size={13} weight="bold" aria-hidden />
               </Link>

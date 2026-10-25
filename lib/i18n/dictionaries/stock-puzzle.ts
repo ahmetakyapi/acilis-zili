@@ -91,7 +91,7 @@ export const stockPuzzleTr = {
   legendNear: "Yakın",
   legendFar: "Uzak",
   legendArrow: "Cevabın Yönü",
-  legendNote: "Yakın: komşu piyasa değeri bandı, beş yıl içinde halka arz, on puan içinde büyüme. Ok, cevabın o değere göre nerede olduğunu gösterir.",
+  legendNote: "Yakın: komşu piyasa değeri bandı, beş yıl içinde halka arz, on puan içinde büyüme. Ok, cevabın o değere göre nerede olduğunu gösterir; çizgili ok, farkın büyük olduğunu.",
   correct: "Doğru",
   axisLocked: "{n}. Yanlışta Eksen Açılır",
   axisOpen: "Başlangıca Göre",
@@ -151,6 +151,15 @@ export const stockPuzzleTr = {
   homeLast: "Son Tahmin",
   menuHint: "Tek Hisse, Altı Tahmin",
   howTitle: "Nasıl Oynanır",
+  /* Oyun masası turu (25 Ekim, üçüncü kurulum): çift ok, seri ateşi,
+     kısayollar, dağılımda bugün. */
+  legendFarArrow: "Çok Uzakta",
+  farArrow: "fark büyük",
+  streakChip: "{n} Günlük Seri",
+  jokerKey: "Kısayol: J",
+  shortcutsNote: "Klavyede Enter tahmini gönderir, J joker kullanır.",
+  distToday: "bugünkü sonuç",
+  nextLeft: "kalan süre",
 };
 
 export const stockPuzzleEn: typeof stockPuzzleTr = {
@@ -237,7 +246,7 @@ export const stockPuzzleEn: typeof stockPuzzleTr = {
   legendNear: "Close",
   legendFar: "Far",
   legendArrow: "Where the Answer Is",
-  legendNote: "Close: a neighboring market cap band, an IPO within five years, growth within ten points. The arrow shows where the answer sits relative to that value.",
+  legendNote: "Close: a neighboring market cap band, an IPO within five years, growth within ten points. The arrow shows where the answer sits relative to that value; a lined arrow means the gap is large.",
   correct: "Correct",
   axisLocked: "Axis Opens After Miss {n}",
   axisOpen: "Versus the Start",
@@ -296,6 +305,13 @@ export const stockPuzzleEn: typeof stockPuzzleTr = {
   homeLast: "Last Guess",
   menuHint: "One Stock, Six Guesses",
   howTitle: "How to Play",
+  legendFarArrow: "Far Off",
+  farArrow: "a big gap",
+  streakChip: "{n} Day Streak",
+  jokerKey: "Shortcut: J",
+  shortcutsNote: "On a keyboard, Enter sends the guess and J plays the joker.",
+  distToday: "today's result",
+  nextLeft: "time left",
 };
 
 export type StockPuzzleLabels = typeof stockPuzzleTr;

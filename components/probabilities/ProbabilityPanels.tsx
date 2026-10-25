@@ -1,5 +1,5 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, Bank, CaretDown, Palette, Prohibit } from "@phosphor-icons/react/dist/ssr";
 import { Panel, PanelHeader } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { INTL_LOCALE } from "@/lib/i18n/config";
@@ -28,7 +28,7 @@ import {
 import { readerDayOffset, TR_ZONE, formatInZone, zoneDateKey } from "@/lib/session-clock";
 import { formatEtDateCompact, formatPercentPlain, formatPrice, relativeDayLabel } from "@/lib/utils";
 import { ProbabilityLine, type LineRow, type LineSeries } from "./ProbabilityLine";
-import { ProbabilityStack, RatePath, etOf, pct, shareMap, shareText } from "./ProbabilityParts";
+import { ProbabilityStack, RatePath, RecessionHistory, etOf, pct, shareMap, shareText } from "./ProbabilityParts";
 import styles from "./Probabilities.module.css";
 
 /**
@@ -117,8 +117,10 @@ function endTexts(rows: LineRow[], keys: readonly string[], locale: Locale): Rec
    tamamı dokunma hedefi. Ölçüm (TR, açık): üç kartın dibi 1280×800'de
    759, 1440×900'de 766; görünür alan 763 / 863'te bitiyor. 25 Ekim:
    1280'de 777'ye çıkmıştı, boşluklar sıkılaştı → 725 (Probabilities.module.css
-   sonu). */
-const LINE_H = { main: 76, chamber: 44 } as const;
+   sonu). İkinci tur (25 Ekim): resesyon çizgisi 64; kartın kalanını artık
+   1980'den bu yana resesyonların zaman şeridi dolduruyor (sahibinin notu:
+   "tek düz çizgi + büyük boş alan"). */
+const LINE_H = { main: 76, chamber: 44, recession: 64 } as const;
 
 /** Kartların ızgara içindeki çapası (tepe şeridindeki kadranlar buraya iner). */
 export const CARD_ANCHORS = { fed: "fed-karari", election: "ara-secim", recession: "resesyon" } as const;
@@ -172,8 +174,8 @@ export function FedPanel({
   );
   const sides = fedSides(probs);
   const series: LineSeries[] = FED_SIDES.map((side) => ({ key: side, label: p.fedSides[side], tone: side }));
-  /* Ölçek kısa adla (−25 bp), çubuğun aria'sı tam adla. */
-  const segments = FED_MOVES.map((move) => ({ key: move, label: p.fedScale[move], p: probs[move] ?? 0 }));
+  /* Çip kısa adla (−25), imleçte ve çubuğun aria'sında tam adla. */
+  const segments = FED_MOVES.map((move) => ({ key: move, label: p.fedChip[move], title: p.fedOutcomes[move], p: probs[move] ?? 0 }));
   const shares = shareMap(segments);
   const fullList = FED_MOVES.map((move) => `${p.fedOutcomes[move]} ${shareText(shares[move], locale, probs[move] ?? 0)}`).join(", ");
 
@@ -253,13 +255,26 @@ export function PathPanel({
   const steps = ratePath(upcoming, target);
   if (steps.length < 2) return null;
   const anyThin = steps.some((s) => s.liquidity === "thin");
+  /* Bandın künyesi başlığın sağında (bant çizimde, adı ve sayısı burada). */
+  const range = target ? (
+    <span className={styles.pathKey}>
+      <i aria-hidden />
+      {p.pathRange} <b className="numeral">{`${formatPercentPlain(target.lower, locale, 2)} - ${formatPercentPlain(target.upper, locale, 2)}`}</b>
+    </span>
+  ) : undefined;
+  const foldId = "olasilik-patika";
   return (
     <Panel>
-      <PanelHeader title={p.pathTitle} />
+      <input type="checkbox" id={foldId} className={`sr-only ${styles.foldInput}`} />
+      <PanelHeader
+        title={p.pathTitle}
+        meta={range}
+        action={<FoldLabel id={foldId} more={p.pathHow} less={p.pathHow} />}
+      />
       <div className={styles.body}>
         <RatePath
           steps={steps}
-          current={target ? (target.lower + target.upper) / 2 : null}
+          current={target}
           locale={locale}
           dateOf={(iso) => (iso ? formatEtDateCompact(etOf(iso).date, locale) : "")}
           labels={{
@@ -270,16 +285,34 @@ export function PathPanel({
             thin: p.pathThin,
             bps: p.bps,
             aria: p.pathAria,
+            step: p.pathStepAria,
             sides: p.fedSides,
           }}
         />
-        <p className={styles.note}>
-          {p.pathNote}
-          {!target && ` ${p.pathNoTarget}`}
-          {anyThin && ` ${p.pathThinNote}`}
-        </p>
+        <div className={styles.foldBody}>
+          <p className={styles.note}>
+            {p.pathNote}
+            {!target && ` ${p.pathNoTarget}`}
+            {anyThin && ` ${p.pathThinNote}`}
+          </p>
+        </div>
       </div>
     </Panel>
+  );
+}
+
+/**
+ * Başlıktaki katlama düğmesi (ikinci tur). Gizli onay kutusu panelin ilk
+ * çocuğu, içerik (`foldBody`) ondan sonra; düğme bir `label`, JS'siz
+ * çalışıyor (`FoldToggle` kalıbı) ve `ExpandInPlace`in denetimleri arasında.
+ */
+function FoldLabel({ id, more, less }: { id: string; more: string; less: string }) {
+  return (
+    <label htmlFor={id} className={`${styles.foldToggle} tap-44`}>
+      <span className={styles.foldMore}>{more}</span>
+      <span className={styles.foldLess}>{less}</span>
+      <CaretDown size={12} weight="bold" aria-hidden />
+    </label>
   );
 }
 
@@ -433,12 +466,10 @@ export function RecessionPanel({ snapshot, locale, t }: { snapshot: ProbabilityS
     <Panel id={CARD_ANCHORS.recession} className={styles.card}>
       <PanelHeader title={p.recessionTitle} />
       <div className={styles.body}>
-        <ProbabilityStack
-          segments={segments}
-          lead="yes"
-          locale={locale}
-          ariaLabel={`${p.recessionTitle}: ${p.yes} ${shareText(shares.yes, locale)}`}
-        />
+        {/* İkinci tur: kartın tepesindeki Evet/Hayır çubuğu kalktı; aynı
+            bölünmeyi şeritteki kadran zaten çiziyor (aynı `percentShares`),
+            kartta yer çizgiye ve 1980'den bu yana resesyonların şeridine
+            kaldı. Pay, şeridin 2027 künyesinde ve çizginin ucunda. */}
         {rows.length >= 2 && (
           <ProbabilityLine
             series={[{ key: "yes", label: p.yes, tone: "yes" }]}
@@ -447,14 +478,26 @@ export function RecessionPanel({ snapshot, locale, t }: { snapshot: ProbabilityS
             percent={locale}
             midLabel={p.mid}
             hint={p.lineHint}
-            height={LINE_H.main}
+            height={LINE_H.recession}
             grow
             ariaLabel={`${p.recessionLineLabel}: ${pct(probs.yes, locale)}`}
           />
         )}
+        <RecessionHistory
+          share={shareText(shares.yes, locale)}
+          nowMonth={etOf(snapshot.takenAt).date.slice(0, 7)}
+          locale={locale}
+          labels={{
+            title: p.recessionHistoryTitle,
+            summary: p.recessionHistorySummary,
+            span: p.recessionSpan,
+            aria: p.recessionHistoryAria,
+            next: p.recessionNext,
+          }}
+        />
         <div className={styles.cardFoot}>
           {liquidityOf(shown) === "thin" && <span className={styles.thin}>{p.thin}</span>}
-          <p className={styles.note}>{p.recessionNote}</p>
+          <p className={styles.note}>{p.recessionNote} {p.recessionHistorySource}.</p>
         </div>
       </div>
     </Panel>
@@ -514,20 +557,82 @@ export function CpiPanel({ snapshot, locale, t }: { snapshot: ProbabilitySnapsho
 
 /* ---------------------------------------------------------------- KÜNYE */
 
+/** Renk kartının çipleri: Fed'in üç yanı ve iki parti, sayfadaki tonlarla. */
+const COLOR_KEYS = [...FED_SIDES, ...PARTIES] as const;
+
+/**
+ * "Bu Sayılar Nedir" (ikinci tur, 25 Ekim). Sahibinin notu: "Alan çok
+ * büyük; burayı böyle ele almayalım, daha güzel bir şeye çevirelim." Altı
+ * uzun paragraf (427 piksel) dört küçük karta indi: fiyatın olasılığa
+ * dönüşü (küçük çizimle), kaynak, bahis değil, renkler. Her kartta başlık
+ * ve bir-iki satır; paragrafların tamamı "Ayrıntılar" katlamasında, hiçbiri
+ * silinmedi (kaynak ve bahis kuralının tam metni orada).
+ *
+ * Katlama JS'siz: gizli onay kutusu panelin başında, düğmesi (etiket)
+ * başlığın sağında, içerik kartların altında (`FoldToggle` kalıbı; etiket
+ * `ExpandInPlace`in denetimleri arasında, açılınca sayfa sıçramaz).
+ */
 export function NotesPanel({ t, locale }: { t: Dictionary; locale: Locale }) {
   const p = t.probabilities;
   const clocks = clockPair(ELECTION_DAY_ET, FIRST_POLLS_CLOSE_ET, locale);
+  const foldId = "olasilik-kunye";
+  const colorName = (key: (typeof COLOR_KEYS)[number]) => (key === "dem" || key === "rep" ? p.stripParty[key] : p.fedSides[key]);
   return (
-    <Panel>
-      <PanelHeader title={p.notesTitle} />
-      <div className={styles.notes}>
+    <Panel className={styles.notesPanel}>
+      <input type="checkbox" id={foldId} className={`sr-only ${styles.foldInput}`} />
+      <PanelHeader
+        title={p.notesTitle}
+        action={
+          <span className={styles.headActions}>
+            <span className={`${styles.note} ${styles.disclaimer}`}>{p.disclaimer}</span>
+            <FoldLabel id={foldId} more={p.notesMore} less={p.notesLess} />
+          </span>
+        }
+      />
+      <ul className={styles.explain}>
+        <li>
+          <div className={styles.priceViz} role="img" aria-label={p.notePriceAria}>
+            <b className="numeral">{p.notePriceFrom}</b>
+            <ArrowRight size={12} weight="bold" aria-hidden />
+            <span className={styles.priceLane} aria-hidden>
+              <span />
+            </span>
+            <b className="numeral">{p.notePriceTo}</b>
+          </div>
+          <h3>{p.notePriceTitle}</h3>
+          <p>{p.notePriceBody}</p>
+        </li>
+        <li>
+          <span className={styles.explainIcon} aria-hidden><Bank size={16} weight="bold" /></span>
+          <h3>{p.noteSourceTitle}</h3>
+          <p>{p.noteSourceBody}</p>
+        </li>
+        <li>
+          <span className={styles.explainIcon} aria-hidden><Prohibit size={16} weight="bold" /></span>
+          <h3>{p.noteBetTitle}</h3>
+          <p>{p.noteBetBody}</p>
+        </li>
+        <li>
+          <span className={styles.explainIcon} aria-hidden><Palette size={16} weight="bold" /></span>
+          <h3>{p.noteColorTitle}</h3>
+          <p>{p.noteColorBody}</p>
+          <ul className={styles.colorChips} aria-hidden>
+            {COLOR_KEYS.map((key) => (
+              <li key={key} data-tone={key}>
+                <i />
+                {colorName(key)}
+              </li>
+            ))}
+          </ul>
+        </li>
+      </ul>
+      <div className={styles.foldBody}>
         <p>{p.noteHow}</p>
         <p>{p.noteSource}</p>
         <p>{p.noteNoBetting}</p>
         <p>{p.noteThin} {p.noteDaily}</p>
         <p>{p.partyNote}</p>
         {!pollsClosed() && <p>{p.electionPolls.replace("{primary}", clocks.primary).replace("{secondary}", clocks.secondary)}</p>}
-        <p>{p.disclaimer}</p>
       </div>
     </Panel>
   );

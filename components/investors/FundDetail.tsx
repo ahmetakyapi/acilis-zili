@@ -1,5 +1,5 @@
 import { Suspense, type CSSProperties } from "react";
-import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr";
+import { ArrowSquareOut, CaretDown } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
@@ -12,21 +12,31 @@ import type { HoldingRecord, Move, PositionView, SoldView } from "@/lib/investor
 import type { Investor } from "@/lib/investors";
 import { secFilingUrl } from "@/lib/providers/sec-13f";
 import { cn, formatEtDateMedium, formatMoneyCompact, formatPercent, plural } from "@/lib/utils";
-import { asOfLabel, formatShares, formatWeight, moveLabel, positionRowView, quarterLabel } from "./format";
-import { InvestorTreemap, MAP_MAX, type MapPosition } from "./InvestorTreemap";
+import { asOfLabel, formatShares, formatWeight, moveLabel, moveTone, positionRowView, quarterLabel, type MapPosition } from "./format";
 import { CompanyInner, PositionRow } from "./PositionRow";
 import { PositionsMore } from "./PositionsMore";
 import styles from "./Investors.module.css";
 
 /**
  * 13F yatırımcısının detay gövdesi — kapağın altındaki her şey, ekran
- * düzeni sırasıyla (CLAUDE.md): künye şeridi → ana görsel (harita) →
- * hareketler → tam tablo ve opsiyonlar → geçmiş. Künyeler ve uyarı
- * sayfanın kendisinde.
+ * düzeni sırasıyla (CLAUDE.md): ana görsel (en büyük pozisyonların kart
+ * ızgarası) → hareketler → katlı tam tablo ve opsiyonlar → geçmiş.
+ * Künye satırı kapağın içinde (`FundStrip` → `InvestorHero facts`);
+ * künyeler ve uyarı sayfanın kendisinde.
+ *
+ * 25 EKİM. Ana görsel bir ağaç haritasıydı (1440'ta ~800 piksel; Buffett'ta
+ * AAPL karosu ekranın dörtte biri, küçük pozisyonlar okunmayan karolar) ve
+ * altında 25 satırlık açık bir tablo duruyordu. Sahibinin "daha kartlı,
+ * daha kompakt" isteğiyle harita KART IZGARASINA döndü: en büyük sekiz
+ * pozisyon, her biri logo, ağırlık (büyük sayı + aynı ölçekli çizgi), değer
+ * ve çeyreğin hareketi; kalan tek satır. Tablo katlı (`details`), açınca
+ * tamamı.
  */
 
 /** Hareket sütununda grup başına görünen satır. */
-const GROUP_ROWS = 7;
+const GROUP_ROWS = 5;
+/** Ana görseldeki pozisyon kartı sayısı (1440'ta 4 × 2). */
+const TOP_CARDS = 8;
 /** Tabloda açık gelen satır; kalanı açılır bölümde. */
 const TABLE_ROWS = 25;
 
@@ -120,7 +130,7 @@ export function FundBody({
   const addVisible = (ticker: string | null, linkable: boolean) => {
     if (ticker && linkable) visible.add(ticker);
   };
-  positions.filter((position) => position.value > 0).slice(0, MAP_MAX).forEach((p) => addVisible(p.ticker, p.linkable));
+  positions.slice(0, TOP_CARDS).forEach((p) => addVisible(p.ticker, p.linkable));
   positions.slice(0, TABLE_ROWS).forEach((p) => addVisible(p.ticker, p.linkable));
   (["new", "increased", "decreased"] as const).forEach((move) =>
     moveItems(positions, move).slice(0, GROUP_ROWS).forEach((item) => addVisible(item.ticker, item.linkable)),
@@ -151,16 +161,13 @@ export function FundBody({
 
   return (
     <>
-      <Panel className={styles.mapPanel}>
-        <PanelHeader title={t.mapTitle} action={<MoveLegend t={t} />} />
-        <div className={styles.mapBody}>
-          <p className={styles.mapHint}>
-            {closed ? t.mapHintClosed : t.mapHint}
-            {positions.length > MAP_MAX ? ` ${t.mapTop.replace("{count}", String(MAP_MAX))}` : ""}
-          </p>
-          <InvestorTreemap positions={positions} locale={locale} t={t} />
-        </div>
-      </Panel>
+      <TopPositions
+        positions={positions}
+        compared={detail.diff.compared}
+        period={detail.period}
+        locale={locale}
+        t={t}
+      />
 
       <MovesPanel detail={detail} positions={positions} known={known} closed={closed} locale={locale} t={t} />
 
@@ -179,22 +186,87 @@ export function FundBody({
   );
 }
 
-function MoveLegend({ t }: { t: Labels }) {
-  const steps = [
-    { label: t.moveNew, tone: "up", level: 4 },
-    { label: t.moveIncreased, tone: "up", level: 2 },
-    { label: t.moveUnchanged, tone: "flat", level: 0 },
-    { label: t.moveDecreased, tone: "down", level: 2 },
-  ] as const;
+/* --------------------------------------------------------------------------
+   En büyük pozisyonlar
+   -------------------------------------------------------------------------- */
+
+function TopPositions({
+  positions,
+  compared,
+  period,
+  locale,
+  t,
+}: {
+  positions: MapPosition[];
+  compared: boolean;
+  period: string;
+  locale: string;
+  t: Labels;
+}) {
+  const top = positions.filter((position) => position.value > 0).slice(0, TOP_CARDS);
+  if (top.length === 0) return null;
+  /* Ölçek portföyün en büyük ağırlığı: tam kulvar = en büyük pozisyon.
+     Bütün kartlarda aynı ölçek, yani çizgiler birbirine kıyaslanabilir. */
+  const peak = Math.max(...top.map((position) => position.weight), 0.0001);
+  const rest = positions.slice(TOP_CARDS);
+  const restWeight = rest.reduce((sum, position) => sum + position.weight, 0);
   return (
-    <ul className={styles.legend}>
-      {steps.map((step) => (
-        <li key={step.label}>
-          <i className={styles.legendSwatch} data-tone={step.tone} data-level={step.level} aria-hidden />
-          {step.label}
-        </li>
-      ))}
-    </ul>
+    <Panel>
+      <PanelHeader title={t.topHoldings} meta={quarterLabel(period, t)} />
+      <ol className={styles.topGrid} data-motion-stagger>
+        {top.map((position) => {
+          const tone = moveTone(position.move);
+          const body = (
+            <>
+              <span className={styles.topHead}>
+                {position.ticker ? (
+                  <LogoTile symbol={position.ticker} logoUrl={position.logoUrl} size="md" />
+                ) : (
+                  <span className={styles.noLogo} aria-hidden />
+                )}
+                <span className={styles.topId}>
+                  <b className="numeral">{position.ticker ?? position.issuer}</b>
+                  <small>{position.issuer}</small>
+                </span>
+              </span>
+              <span className={styles.topFigure}>
+                <strong className="numeral">{formatWeight(position.weight, locale)}</strong>
+                <small className="numeral">{formatMoneyCompact(position.value, locale)}</small>
+              </span>
+              <span className={styles.lane} aria-hidden>
+                <i data-motion-draw="line" style={{ width: `${(position.weight / peak) * 100}%` }} />
+              </span>
+              {compared && (
+                <span className={styles.topMove}>
+                  <span className={styles.moveChip} data-tone={tone}>
+                    {moveLabel(position.move, t)}
+                    {(position.move === "increased" || position.move === "decreased") && position.changePct !== null && (
+                      <b className="numeral">{formatPercent(position.changePct, locale, 0)}</b>
+                    )}
+                  </span>
+                </span>
+              )}
+            </>
+          );
+          return (
+            <li key={position.cusip} className="flex min-w-0">
+              {position.linkable && position.ticker ? (
+                <Link href={`/hisse/${position.ticker}`} prefetch={false} className={styles.topCard} data-cc={position.ticker}>
+                  {body}
+                </Link>
+              ) : (
+                <div className={styles.topCard}>{body}</div>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+      {rest.length > 0 && (
+        <p className={cn(styles.topRest, "numeral")}>
+          {t.topRest.replace("{count}", String(rest.length)).replace("{weight}", formatWeight(restWeight, locale))}
+        </p>
+      )}
+    </Panel>
   );
 }
 
@@ -378,9 +450,15 @@ function PositionsTable({
   );
   const first = rows.slice(0, TABLE_ROWS);
   const rest = rows.slice(TABLE_ROWS);
+  /* KATLI (25 Ekim): sayfanın ana görseli pozisyon kartları; tablo onların
+     tamamı, isteyen açar. `summary` bastığın yerde açılıyor
+     (`ExpandInPlace`, CLAUDE.md "Küçük ama kritik"). */
   return (
-    <Panel className={styles.tablePanel}>
-      <PanelHeader title={t.tableTitle} meta={plural(positions.length, t.positionsOne, t.positions).replace("{count}", String(positions.length))} />
+    <details className={cn("panel", styles.tablePanel, styles.tableFold)}>
+      <summary className={styles.tableSummary}>
+        <h2 className="display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.015em]">{t.tableShow.replace("{count}", String(positions.length))}</h2>
+        <CaretDown size={16} weight="bold" className={styles.tableSummaryIcon} aria-hidden />
+      </summary>
       <div className={styles.tableScroll}>
         <table className={cn(styles.table, styles.positions)} data-compared={compared || undefined}>
           {head}
@@ -396,7 +474,7 @@ function PositionsTable({
         label={t.tableRest.replace("{count}", String(rest.length))}
         compared={compared}
       />
-    </Panel>
+    </details>
   );
 }
 

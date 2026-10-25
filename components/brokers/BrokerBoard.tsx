@@ -29,9 +29,13 @@ import styles from "./BrokerBoard.module.css";
  * bölündü ve yan yana duruyor:
  *
  *   a. BU TUTARDA EN UCUZ: kaydırıcı + kürsü. İlk üç kurum logolu, komisyon
- *      ve tutara oranıyla; kalanı küçük liste. Kürsünün basamağı SIRAYA
- *      göre (eşit ücret aynı basamak), büyüklüğe göre değil: büyüklük
- *      b ve c'de çizgi ve çubukla okunuyor.
+ *      ve tutara oranıyla; kalanı küçük liste. Sıra logonun solundaki
+ *      rozette (eşit ücret aynı sıra), büyüklük b ve c'de çizgi ve çubukla
+ *      okunuyor. Kompakt turda (25 Ekim) renkli basamak blokları kalktı:
+ *      sahibi "1., 1., 3." yazan dev blokları garip buldu; yerinde sütunun
+ *      dibinde kurum renginde 3 piksellik taban çizgisi. Basamak yüksekliği
+ *      büyüklük gibi okunuyordu, oysa sıradan geliyordu; sütunlar artık
+ *      okuma sırasıyla soldan sağa 1-2-3.
  *   b. TUTAR BÜYÜDÜKÇE: 100 $ – 50.000 $ boyunca her kurumun eğrisi. İki
  *      eksen de logaritmik: yüzdelik tarife eğik bir doğru, sabit ücret düz
  *      bir çizgi olarak okunuyor; doğrusal eksende 0,30 $ ile 150 $ aynı
@@ -45,7 +49,7 @@ import styles from "./BrokerBoard.module.css";
  * metin kurum renginde değil. En ucuz vurgulanmıyor; sıra bir öneri değil
  * (künye panelin dibinde).
  *
- * HAREKET: girişte eğriler bir kez çiziliyor, çubuklar ve basamaklar bir
+ * HAREKET: girişte eğriler bir kez çiziliyor, çubuklar ve kürsünün taban çizgileri bir
  * kez büyüyor (`--ease-brand`); tutar değişince noktalar ve çubuklar yeni
  * yerine kayıyor. Hareketi azaltan okuyucuda hepsi son karede (modül CSS'i).
  */
@@ -134,9 +138,6 @@ export function BrokerBoard({
 
 /* ------------------------------------------------------------ a. kürsü */
 
-/** Kürsü basamağının yüksekliği sıradan: 1 → 56, 2 → 42, 3 ve sonrası → 30 piksel. */
-const PLINTH_PX = [56, 42, 30] as const;
-
 function Podium({
   line,
   usd,
@@ -152,29 +153,22 @@ function Podium({
 }) {
   const top = line.priced.slice(0, 3);
   const rest = line.priced.slice(3);
-  /* Görsel sıra 2-1-3 (kürsü); okuma sırası (DOM) 1-2-3. */
-  const visual = top.length === 3 ? [1, 0, 2] : top.map((_, i) => i);
   const pct = (value: number) =>
     labels.ofTrade.replace("{pct}", formatPercentPlain(value, locale, pctDigits(value)));
   return (
     <>
       <ol className={styles.podium} aria-label={labels.cheapest.podiumLabel.replace("{amount}", amount)}>
         {top.map((entry, i) => (
-          <li
-            key={i}
-            className={cn(styles.step, styles.brand)}
-            style={{ ...brandVars(entry.id), order: visual.indexOf(i) } as React.CSSProperties}
-          >
-            <BrokerMark id={entry.id} name={entry.name} size="lg" />
+          <li key={i} className={cn(styles.step, styles.brand)} style={brandVars(entry.id) as React.CSSProperties}>
+            <span className={styles.stepMark}>
+              <BrokerMark id={entry.id} name={entry.name} size="lg" />
+              <span className={cn("numeral", styles.medal)}>
+                {labels.cheapest.rank.replace("{rank}", String(entry.rank))}
+              </span>
+            </span>
             <span className={styles.stepName}>{entry.name}</span>
             <span className={cn("numeral", styles.stepFee)}>{usd(entry.fee)}</span>
             <span className={cn("numeral", styles.stepPct)}>{pct(entry.pct)}</span>
-            <span
-              className={styles.plinth}
-              style={{ "--h": `${PLINTH_PX[Math.min(entry.rank, 3) - 1]}px` } as React.CSSProperties}
-            >
-              <span className="numeral">{labels.cheapest.rank.replace("{rank}", String(entry.rank))}</span>
-            </span>
           </li>
         ))}
       </ol>
@@ -204,6 +198,9 @@ const M = { top: 12, right: 40, bottom: 24, left: 46 } as const;
 /** Uç logoları arası en az aralık: 20 piksellik karo + 2 piksel. */
 const LABEL_GAP = 22;
 const X_TICKS = [100, 1_000, 10_000, 50_000] as const;
+/** İki x etiketi arası en az piksel; dar grafikte ("10.000 $" ile "50.000 $",
+    390'da üst üste biniyordu) ara etiket düşüyor, uçlar kalıyor. */
+const X_TICK_GAP = 64;
 const Y_TICK_CANDIDATES = [0.1, 0.25, 0.5, 1, 2.5, 5, 10, 25, 50, 100, 250, 500, 1_000] as const;
 
 function CurveChart({
@@ -253,6 +250,12 @@ function CurveChart({
   const y = useCallback(
     (fee: number) => M.top + (1 - (Math.log(fee) - Math.log(yLo)) / (Math.log(yHi) - Math.log(yLo))) * plotH,
     [yLo, yHi, plotH],
+  );
+  const xTicks = X_TICKS.filter(
+    (tick, i) =>
+      i === 0 ||
+      i === X_TICKS.length - 1 ||
+      (x(tick) - x(X_TICKS[i - 1]) >= X_TICK_GAP && x(X_TICKS[X_TICKS.length - 1]) - x(tick) >= X_TICK_GAP),
   );
   const yTicks = Y_TICK_CANDIDATES.filter((tick) => tick >= yLo && tick <= yHi && [1, 10, 100, 1_000].includes(tick));
 
@@ -326,12 +329,12 @@ function CurveChart({
               </text>
             </g>
           ))}
-          {X_TICKS.map((tick, i) => (
+          {xTicks.map((tick, i) => (
             <text
               key={tick}
               x={x(tick)}
               y={CHART_H - 6}
-              textAnchor={i === 0 ? "start" : i === X_TICKS.length - 1 ? "end" : "middle"}
+              textAnchor={i === 0 ? "start" : i === xTicks.length - 1 ? "end" : "middle"}
               className={styles.tick}
             >
               {usd(tick, 0)}

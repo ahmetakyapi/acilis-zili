@@ -1,0 +1,110 @@
+/* Bu Hafta Neden Hareket Etti, kompakt (WeekMoveCard.tsx). Ton yüzey,
+   gölge yok; renk yalnız yönden (--up/--down) ve açıklama rozetinde
+   pirinç. Mavi sayı yok (CLAUDE.md "Renk anlam taşır"). Kap sorgusu:
+   kart tek panelin yarısında da tam genişlikte de aynı bileşen. */
+
+.card { container-type: inline-size; display: flex; min-width: 0; flex-direction: column; gap: 10px; }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 28px; }
+.title { margin: 0; font-size: var(--text-base); font-weight: 750; letter-spacing: -.01em; color: var(--text-strong); }
+.icon { flex: none; color: var(--brass); }
+.badge {
+  flex: none; padding: 3px 10px; border-radius: 999px; white-space: nowrap;
+  font-size: var(--text-small); font-weight: 700; background: var(--surface-sunken); color: var(--text-muted);
+}
+.badge[data-explained="news"], .badge[data-explained="mixed"] { background: var(--brass-wash); color: var(--brass-ink); }
+.badge[data-explained="market"] { background: var(--primary-tint); color: var(--primary-ink); }
+.window { margin: -8px 0 0; font-size: var(--text-small); font-weight: 600; color: var(--text-muted); }
+
+/* Sayı solda, çizgi sağda (kap ≥ 440); dar kapta alt alta. Zemin tek ton
+   kademe (`--surface-sunken`): figür panelin içinde ayrı bir okuma. */
+.figure { display: grid; gap: 10px 20px; padding: 12px 14px 8px; border-radius: var(--radius-lg); background: var(--surface-sunken); }
+@container (min-width: 440px) { .figure { grid-template-columns: auto minmax(0, 1fr); align-items: center; } }
+.lead { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.caption { margin: 0; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
+.big { margin: 0; font-size: 34px; line-height: 1.05; font-weight: 800; letter-spacing: -.04em; color: var(--text-strong); white-space: nowrap; }
+.big[data-tone="up"] { color: var(--up); }
+.big[data-tone="down"] { color: var(--down); }
+.market { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 4px 0 0; font-size: var(--text-small); color: var(--text-muted); }
+.market b { font-weight: 800; color: var(--text-strong); }
+.market b[data-tone="up"] { color: var(--up); }
+.market b[data-tone="down"] { color: var(--down); }
+.gap { padding: 2px 8px; border-radius: 999px; font-size: var(--text-small); font-weight: 750; background: var(--surface); color: var(--text-body); white-space: nowrap; }
+.gap[data-tone="up"] { background: var(--up-wash); color: var(--up); }
+.gap[data-tone="down"] { background: var(--down-wash); color: var(--down); }
+
+.spark { position: relative; min-width: 0; margin: 0; }
+.plot { position: relative; height: 64px; }
+.svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.zero { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 3 4; }
+.area { fill: color-mix(in oklab, var(--text-muted) 10%, transparent); stroke: none; }
+.area[data-tone="up"] { fill: color-mix(in oklab, var(--up) 12%, transparent); }
+.area[data-tone="down"] { fill: color-mix(in oklab, var(--down) 12%, transparent); }
+.stockLine, .marketLine { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.stockLine { stroke: var(--text-strong); stroke-width: 2; }
+.stockLine[data-tone="up"] { stroke: var(--up); }
+.stockLine[data-tone="down"] { stroke: var(--down); }
+.marketLine { stroke: var(--text-muted); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.endDot { position: absolute; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: var(--text-strong); box-shadow: 0 0 0 3px var(--surface-sunken); }
+.endDot[data-tone="up"] { background: var(--up); }
+.endDot[data-tone="down"] { background: var(--down); }
+
+/* Gün gün: her seans çizgideki noktasının altında, aynı x. */
+.days { position: relative; height: 34px; margin: 4px 0 0; padding: 0; list-style: none; }
+.days > li { position: absolute; top: 0; display: grid; justify-items: center; width: 56px; margin-left: -28px; }
+.dayName { font-size: 11.5px; font-weight: 650; color: var(--text-body); }
+.dayValue { font-size: 11.5px; font-weight: 700; white-space: nowrap; color: var(--text-muted); }
+.dayValue[data-tone="up"] { color: var(--up); }
+.dayValue[data-tone="down"] { color: var(--down); }
+.dayValue[data-loudest] { font-weight: 850; }
+.volume { font-size: 10.5px; font-weight: 750; color: var(--brass-ink); white-space: nowrap; }
+.days > li:has(.volume) { top: -2px; }
+.legend { display: flex; justify-content: flex-end; gap: 12px; margin: 0; padding: 0; list-style: none; font-size: 11.5px; font-weight: 700; color: var(--text-muted); }
+.legend li { display: inline-flex; align-items: center; gap: 5px; }
+.legend li::before { content: ""; width: 14px; border-top: 2px solid var(--text-strong); }
+.legend li[data-tone="up"]::before { border-top-color: var(--up); }
+.legend li[data-tone="down"]::before { border-top-color: var(--down); }
+.legend li[data-series="market"]::before { border-top: 1.5px dashed var(--text-muted); }
+.legend li[data-series="stock"] { font-family: var(--font-mono); color: var(--text-strong); }
+.days:has(.volume) { height: 46px; }
+@container (max-width: 359px) { .days > li { width: 46px; margin-left: -23px; } .dayValue, .dayName { font-size: 10.5px; } }
+
+/* Not: özet her zaman açık, etkenler katlı. Yer, notun ölçülmüş boyunda
+   ayrılıyor (25 Ekim, 45 kelimelik özet + katlı satır + künye): 1024 ve
+   üstünde 170, tablette 155, telefonda 255 piksel. 104'lük ilk ayrım
+   telefonda not gelince alttaki her şeyi 153 piksel itiyordu (CLS 0,05).
+   Not yazılamazsa (`failed`) tek cümle kalır, yer ayrılmaz. */
+.note { display: flex; min-height: 170px; flex-direction: column; gap: 8px; }
+@media (max-width: 1023px) { .note { min-height: 155px; } }
+@media (max-width: 639px) { .note { min-height: 255px; } }
+.note[data-state="failed"] { min-height: 0; }
+.summary { margin: 0; font-size: var(--text-read); line-height: 1.55; color: var(--text-strong); text-wrap: pretty; animation: wm-rise .5s var(--ease-brand) both; }
+.points { border-top: 1px solid var(--line-soft); }
+.points summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 36px; list-style: none; cursor: pointer;
+  font-size: var(--text-small); font-weight: 700; color: var(--text-body);
+}
+.points summary::-webkit-details-marker { display: none; }
+.points summary:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: 6px; }
+.plus { color: var(--primary); font-size: 17px; line-height: 1; transition: transform .2s var(--ease-brand); }
+.points[open] .plus { transform: rotate(45deg); }
+.points ol { display: grid; gap: 10px; margin: 2px 0 6px; padding: 0; list-style: none; }
+.pointTitle { margin: 0; font-size: var(--text-read); font-weight: 750; color: var(--text-strong); }
+.pointDetail { margin: 2px 0 0; font-size: var(--text-read); line-height: 1.5; color: var(--text-body); }
+.source { display: inline-flex; align-items: center; gap: 3px; margin-top: 3px; font-size: var(--text-small); font-weight: 650; color: var(--text-muted); transition: color .2s var(--ease-brand); }
+.source:hover { color: var(--primary); }
+.disclosure { margin: auto 0 0; font-size: var(--text-small); line-height: 1.45; color: var(--text-muted); }
+.failed { margin: 0; font-size: var(--text-small); line-height: 1.5; color: var(--text-muted); }
+.loading { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: var(--text-small); color: var(--text-muted); }
+.loadingIcon { color: var(--brass); animation: wm-glint 1.4s var(--ease-brand) infinite; }
+.line { height: 12px; border-radius: 6px; }
+
+@keyframes wm-rise { from { opacity: 0; translate: 0 6px; } }
+@keyframes wm-glint { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+@keyframes wm-reveal { from { clip-path: inset(-10% 100% -10% 0); } to { clip-path: inset(-10% 0 -10% 0); } }
+@media (prefers-reduced-motion: no-preference) {
+  .svg { animation: wm-reveal 1.1s var(--ease-brand) both; animation-delay: .1s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .summary, .loadingIcon { animation: none !important; }
+  .plus { transition: none; }
+}

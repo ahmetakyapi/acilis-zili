@@ -6,18 +6,20 @@ import {
   GaugePanel,
   HistoryPanel,
   IndexPanel,
-  PositionsPanel,
+  PositionsDetail,
   RegimePanel,
 } from "@/components/risk/DeskPanels";
 import { DeskNote } from "@/components/risk/DeskNote";
+import { PositionCards, SummaryCards, type PositionRule } from "@/components/risk/PortfolioCards";
 import { RulesPanel } from "@/components/risk/RulesPanel";
 import styles from "@/components/risk/RiskDesk.module.css";
-import { DataStamp, PageHeader, Panel, PanelHeader } from "@/components/ui/primitives";
+import { DataStamp, Panel, PanelHeader } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
 import { getMarketDesk } from "@/lib/risk/data";
 import { getExposure } from "@/lib/risk/exposure";
 import { day, fill } from "@/lib/risk/format";
+import { evaluateRule } from "@/lib/risk/rules";
 import { getRiskViewer, listAlerts, listRules } from "@/lib/risk/store";
 
 /**
@@ -34,9 +36,15 @@ import { getRiskViewer, listAlerts, listRules } from "@/lib/risk/store";
  * çıkar demez. Kural etiketleri kullanıcının yazdığı adlardır; pozisyonun
  * yanındaki AL/TUT/SAT sitenin herkese açık genel görüşüdür (künyeli).
  *
- * DÜZEN (CLAUDE.md "Ekran düzeni"): başlık → künye şeridi → ana görsel
- * (rejim, ana göstergeler, maruziyet özeti; 1440×900'de ilk ekranda) →
- * geçmiş ve ölçü tabloları → kurallar ve yorum → künyeler → veri damgası.
+ * DÜZEN — KART DÜZENİ (25 Ekim; sahibinin isteği: "kendi portföyünü görüp
+ * daha iyi anlayabildiği bir sistem, yan yana kartlar, yatayda bu kadar
+ * büyük detaya gerek yok"). Başlık bandı (ad, seans, künye tek satırda;
+ * önceki büyük `PageHeader` kutusu 1440'ta 155 piksel tutuyordu) → rejim
+ * kartı + dört portföy özeti kartı → pozisyon kartları (ekranın merkezi)
+ * → ana göstergeler (altı küçük kart) → rejim geçmişi → geriye dönük test
+ * (sinyal kartları) → endeksler → kurallar ve yorum → künyeler → veri
+ * damgası. Uzun açıklamalar ve tablolar silinmedi, katlamalara indi.
+ * Ölçümler commit gövdesinde ve raporda (1440×900 ilk ekran).
  */
 
 const META = pageMetadata({
@@ -66,27 +74,52 @@ export default async function RiskPage() {
   ]);
   const exp = exposure.ok ? exposure.exposure : null;
 
+  /* Pozisyon kartındaki kural rozeti: yalnız POZİSYON koşulu taşıyan ve
+     şu an o pozisyonda doğru olan kurallar (kural panelindeki "Şu An
+     Tetikli" ile aynı değerlendirme). Yalnız piyasa koşullu kural bir
+     pozisyona ait değildir, kartta basılmaz. */
+  const rulesBySymbol = new Map<string, PositionRule[]>();
+  if (rules.ok && exp) {
+    for (const rule of rules.rules) {
+      if (!rule.enabled) continue;
+      const outcome = evaluateRule(rule, desk.market, exp.facts);
+      for (const symbol of outcome.symbols) {
+        const list = rulesBySymbol.get(symbol) ?? [];
+        list.push({ label: rule.label, tone: rule.tone });
+        rulesBySymbol.set(symbol, list);
+      }
+    }
+  }
+
   return (
     <div className={styles.desk}>
-      <PageHeader title={T.title} subtitle={T.subtitle} />
-      <p className={styles.strip}>
-        <strong>{fill(T.sessionLine, { date: day(desk.session, locale) })}</strong>
-        <span className={styles.advice}>{T.disclaimer}</span>
-        {desk.barsStale && <span>{T.barsStale}</span>}
-      </p>
+      <header className={styles.head}>
+        <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em]">{T.title}</h1>
+        <p className={styles.headMeta}>
+          <strong>{fill(T.sessionLine, { date: day(desk.session, locale) })}</strong>
+          <span className={styles.advice}>{T.disclaimer}</span>
+        </p>
+        <p className={styles.headSub}>{desk.barsStale ? T.barsStale : T.subtitle}</p>
+      </header>
 
-      <div className={styles.hero}>
+      <div className={styles.top}>
         <RegimePanel desk={desk} t={T} locale={locale} />
-        <div className={styles.side}>
-          <GaugePanel desk={desk} t={T} locale={locale} />
+        {exp && exp.positions.length > 0 ? (
+          <SummaryCards exposure={exp} t={T} locale={locale} />
+        ) : (
           <ExposurePanel result={exposure} t={T} locale={locale} />
-        </div>
+        )}
       </div>
 
+      {exp && exp.positions.length > 0 && (
+        <PositionCards exposure={exp} rulesBySymbol={rulesBySymbol} t={T} locale={locale}>
+          <PositionsDetail exposure={exp} regime={desk.today?.regime ?? null} t={T} locale={locale} />
+        </PositionCards>
+      )}
+      <GaugePanel desk={desk} t={T} locale={locale} />
       <HistoryPanel desk={desk} t={T} locale={locale} />
-      <IndexPanel desk={desk} t={T} locale={locale} />
-      {exp && exp.positions.length > 0 && <PositionsPanel exposure={exp} regime={desk.today?.regime ?? null} t={T} locale={locale} />}
       <BacktestPanel desk={desk} t={T} locale={locale} />
+      <IndexPanel desk={desk} t={T} locale={locale} />
 
       <div className={styles.pair}>
         <RulesPanel rules={rules} alerts={alerts} market={desk.market} positions={exp?.facts ?? []} t={T} locale={locale} />

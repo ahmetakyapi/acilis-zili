@@ -239,6 +239,10 @@
 .compactTabs { grid-column:1 / -1; min-width:0; margin:4px -18px 0; }
 .compactTabs :global(nav) { margin:0; }
 .compactTabs :global(nav > div) { border-bottom-color:transparent; }
+/* Sekmesiz kompakt bant (`compact`, Portföy Analizi): alt kenarda çubuk
+   olmadığı için alt dolgu üsttekiyle eş; alt satır saç teliyle ayrılır. */
+.hero.hero.hero.hero[data-compact]:not([data-tabs]) { padding-bottom:16px; }
+.compactFoot { grid-column:1 / -1; min-width:0; margin-top:6px; padding-top:12px; border-top:1px solid var(--line-soft); }
 /* Görselli kapakta (Analizler) başlık ile açıklama alt alta: sağda görsel var. */
 .hero[data-has-visual="true"] .compactTitle { grid-template-columns:auto minmax(0,1fr); grid-template-areas:"title actions" "desc desc"; }
 @media(max-width:1023px) {
@@ -251,6 +255,7 @@
  .hero[data-compact] .compactTitle h1 { font-size:28px; }
  .compactDescription { font-size:13px; }
  .compactTabs { margin:2px 0 0; }
+ .hero.hero.hero.hero[data-compact]:not([data-tabs]) { padding-bottom:14px; }
 }
 /* Telefonda geniş eylem grubu (Haftalık'ın indirme düğmeleri) başlığın
    yanına sığmıyor: kendi satırına iner, başlığı daraltmaz. */

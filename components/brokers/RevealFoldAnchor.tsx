@@ -3,9 +3,12 @@
 import { useEffect } from "react";
 
 /**
- * Hedefi telefonda KATLI bir `FoldToggle`ın içindeyse katlamayı aç; açtıysa
- * hedefi döndür. FoldToggle'ın kökü gizli onay kutusunu DOĞRUDAN çocuk
- * olarak taşıyor: hedeften yukarı yürüyüp o kutuyu taşıyan ilk kabı bul.
+ * Hedef KATLI bir yerdeyse aç; açtıysa hedefi döndür. İki katlama türü var:
+ * `FoldToggle` (kökü gizli onay kutusunu DOĞRUDAN çocuk olarak taşıyor;
+ * hedeften yukarı yürüyüp o kutuyu taşıyan kabı bul) ve kompakt turun katlı
+ * satırları (`BrokerFold`, yerli `<details>`; hedefin kendisi ya da
+ * atalarından biri). Chrome çapa gezinmesinde kapalı `details`i kendisi de
+ * açıyor; her tarayıcı açmadığı için burada da açılıyor.
  */
 function openFoldOf(hash: string): HTMLElement | null {
   if (!hash || hash === "#") return null;
@@ -15,9 +18,14 @@ function openFoldOf(hash: string): HTMLElement | null {
   } catch {
     return null;
   }
-  if (!target || !target.closest("[data-fold]")) return null;
+  if (!target || !target.closest("[data-fold], details")) return null;
   let opened = false;
-  for (let node = target.parentElement; node; node = node.parentElement) {
+  for (let node: HTMLElement | null = target; node; node = node.parentElement) {
+    if (node instanceof HTMLDetailsElement && !node.open) {
+      node.open = true;
+      opened = true;
+    }
+    if (node === target) continue;
     const box = node.querySelector<HTMLInputElement>(':scope > input[type="checkbox"]');
     if (box && !box.checked) {
       box.checked = true;
@@ -47,8 +55,18 @@ export function RevealFoldAnchor() {
       const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href^="#"]') : null;
       if (link) openFoldOf(link.getAttribute("href") ?? "");
     };
+    /* Aynı belgede yalnız çapa değişirse (adres çubuğu, geri tuşu) sayfa
+       yeniden yüklenmiyor; katlama da açılsın. */
+    const onHash = () => {
+      const next = openFoldOf(window.location.hash);
+      if (next) requestAnimationFrame(() => next.scrollIntoView({ block: "start" }));
+    };
     document.addEventListener("click", onClick);
-    return () => document.removeEventListener("click", onClick);
+    window.addEventListener("hashchange", onHash);
+    return () => {
+      document.removeEventListener("click", onClick);
+      window.removeEventListener("hashchange", onHash);
+    };
   }, []);
   return null;
 }

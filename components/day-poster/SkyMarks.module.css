@@ -47,8 +47,7 @@
 
 /* ------------------------------------------------------------ ETİKETLER
    Logo karosu plakada (koyu temada da beyaz: logolar beyaz zemine
-   çizilmiş), sembol metin mürekkebinde, yüzde yön renginde. Bağ çizgisi
-   ince ve sessiz. */
+   çizilmiş), sembol metin mürekkebinde, yüzde yön renginde. */
 .labels { pointer-events: none; }
 .tile {
   fill: var(--logo-plate);
@@ -56,10 +55,21 @@
   stroke-width: 1px;
   vector-effect: non-scaling-stroke;
 }
+/* Bağ: metnin sönük mürekkebinde, kıl çizgiden kalın; çatıda nokta. İkisi
+   de binayla etiketin aynı şirket olduğunu söylüyor (eski `--line-strong`
+   kıl çizgi 1440'ta görünmüyordu). Nokta zemin halkalı: yön renkli çatının
+   üstünde de seçiliyor. */
 .leader {
-  stroke: var(--line-strong);
-  stroke-width: 1px;
+  stroke: var(--text-muted);
+  stroke-width: 1.25px;
 }
+.anchor {
+  fill: var(--text-strong);
+  stroke: var(--page-bg);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+.label[data-on] .leader { stroke: var(--text-strong); }
 .symbol {
   fill: var(--text-strong);
   font-weight: 750;

@@ -1,30 +1,38 @@
 /* ==========================================================================
    Haftanın Bilanço Ufku (EarningsHorizon.tsx, HorizonGrid.tsx).
 
-   Derinlik TONLA: gün sütunu `--surface-sunken`, karo `--surface-solid`,
-   seçili karo mavi halka (etkileşim rengi). Renk veri çiziminde yalnız
-   yön: karne çentiği aşıldıysa `--up`, aşılmadıysa nötr `--line-strong`
-   (hisse sayfasının karnesiyle aynı; kırmızı değil, "kaçırdı" bir yargı
-   gibi okunurdu). Geniş ekranda (≥1180) beş sütun ve solda şerit ekseni,
-   altında gün seçici ve tek gün, şeritler yan yana.
+   Derinlik TONLA: gün sütunu `--surface-sunken`, şirket kartı
+   `--surface-solid`, seçili kart mavi halka (etkileşim rengi). Renk veri
+   çiziminde yalnız yön: karne karesi aşıldıysa `--up` dolu, aşılmadıysa
+   boş (nötr çerçeve; kırmızı değil, "kaçırdı" bir yargı gibi okunurdu),
+   bilinmiyorsa soluk. Geniş ekranda (≥1180) beş sütun ve solda şerit
+   ekseni, altında gün seçici ve tek gün.
 
-   KOMPAKT TUR (25 Ekim, ikinci tur — sahibinin isteği: "yine alt satıra
-   kaymamız gerekiyor, hepsi tek seferde görüntülensin"). Ölçüldü (TR,
-   açık, ızgaranın üst/alt kenarı): 1280×800'de 457–1150 (Kapanış Sonrası
-   satırı ve Saati Belirsiz ilk ekranın dışında), 1440×900'de 460–1011.
-   Değişenler: kapak ile sekme tek bant (`DirectoryHeader` → `tabs`); gün
-   başlığı tek satır; karo iki boy (56 / 40, `tileTierOf`) ve hücre en
-   çok altı yuva, sığmayan "+N" çipiyle günün listesine (`capCell`); karne
-   çentikleri karonun İÇİNDE alt şerit; eksen 112 → 104 piksel ve saat
-   künyesi tek satır; hücre ve okuma satırı boşlukları sıkı. Sonuç
-   sayfanın başındaki ölçüm yorumunda (`app/(app)/bilancolar/page.tsx`).
+   KOMPAKT TUR (25 Ekim, ikinci tur): kapak ile sekme tek bant, gün başlığı
+   tek satır, karo iki boy (56 / 40) ve hücre en çok altı yuva. Ölçüldü:
+   ızgara 1280×800'de 457–1150 → 312–746, 1440×900'de 460–1011 → 317–751.
+
+   KART TURU (25 Ekim, üçüncü tur — sahibinin sözü: "çok daha görsel ve
+   daha okunaklı; logolar, kartlar kompakt; bazı yerler çok uzun kalmış").
+   ÖNCE ölçüldü (TR, açık, panelin üst/alt kenarı): 1280×800'de 231–942,
+   okuma şeridi 756–852 (ilk ekranın alt sınırı piyasa şeridiyle 763, yani
+   şerit yarım görünüyordu); 1440×900'de 236–947; satırlar açılış öncesi
+   155, kapanış sonrası 155, saati belirsiz 68 piksel (Pazartesi ve Cuma
+   açılış öncesinde tek karo, 155 piksellik hücrede); 390'da okuma şeridi
+   308, künye 171 piksel. Değişenler:
+     - Hücre DÖRT SÜTUNLU kart ızgarası, tek boy kart (logo 32, sembol
+       12,5 piksel kalın, altında dört kare); büyük şirket çerçeveyle.
+       Sekiz yuva iki sıra (`CELL_MAX_SLOTS`).
+     - Saati belirsiz satırı tek sıra, logo ve sembol yan yana küçük kart.
+     - Okuma şeridi tek satır (kim · üç sayı · karne · buton).
+     - İki uzun paragraf → tek satır kare lejantı + "Nasıl Okunur".
+   SONRA ölçümü sayfanın yorumunda (`app/(app)/bilancolar/page.tsx`).
    ========================================================================== */
 
 .panel { overflow: clip; }
 .meta { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
 
-/* Tepedeki tek cümle — veriden (`horizonLead`). Gövde puntosunun bir üstü:
-   ekranın ilk okunan satırı bu. */
+/* Tepedeki tek cümle — veriden (`horizonLead`). */
 .lead {
   max-width: 120ch;
   margin: -8px 0 0;
@@ -36,17 +44,8 @@
 }
 @media (max-width: 639px) { .lead { padding-inline: 16px; } }
 
-/* ---- Izgara ----
-   KARO ÖLÇÜSÜ. Kenar = max(taban, √oran × tavan). Tavan geniş ekranda
-   gün sütununa iki büyük karo yan yana sığacak kadar (1440'ta sütun ~220
-   piksel), telefonda iki şeridin yan yana durduğu ~160 piksellik şeride
-   bir büyük + bir taban karo sığacak kadar. Taban 44: dokunma hedefi;
-   bundan küçük karolar orantıyı bozuyor ama künyede adıyla yazılı.
-   Beş sütun 1180'den başlıyor: 1024'te sütun iki taban karoya darlaşıyor
-   ve panel 1.230 piksel uzuyordu (ölçüldü); altında gün seçici. */
+/* ---- Izgara ---- */
 .grid {
-  --tile-big: 56px;
-  --tile-base: 40px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -67,17 +66,18 @@
 }
 .day[data-state="today"] { background: var(--primary-tint); box-shadow: inset 0 0 0 1px var(--primary-faint); }
 
-/* Tek satır: "26 Pazartesi ······ 102 Şirket", altında yoğunluk çizgisi. */
+/* İki satır, tek blok: "26 Pazartesi [Zirve]" ve altında yoğunluk çizgisi
+   ile "102 Şirket". */
 .dayHead {
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
-    "title count"
-    "density density";
+    "title tags"
+    "density count";
   align-items: center;
-  gap: 6px 8px;
-  padding: 7px 9px 8px;
+  gap: 5px 8px;
+  padding: 7px 9px 7px;
 }
 .dayName {
   grid-area: title;
@@ -94,19 +94,21 @@
 }
 .dayWeekday { overflow: hidden; min-width: 0; text-overflow: ellipsis; }
 .day[data-state="past"] :is(.dayName, .dayNumber, .dayCount) { color: var(--text-muted); }
-.todayTag {
-  padding: 1px 8px;
+.dayTags { grid-area: tags; display: flex; gap: 4px; }
+.todayTag,
+.peakTag {
+  padding: 0 7px;
   border-radius: 999px;
-  background: var(--primary);
-  color: var(--on-primary);
   font-size: var(--text-nano);
   font-weight: 650;
   line-height: 18px;
-  align-self: center;
+  white-space: nowrap;
 }
+.todayTag { background: var(--primary); color: var(--on-primary); }
+/* Zirve bir büyüklük: mavi ailenin yumuşak tonu, etkileşim mavisi değil. */
+.peakTag { background: var(--primary-wash); color: var(--primary-ink); }
 .dayNumber { font-size: 1.25rem; font-weight: 650; line-height: 1; letter-spacing: -0.04em; color: var(--text-strong); }
-/* Sayı okunur: gövde rengi ve kalın; "Şirket" künyesi aynı satırda. */
-.dayCount { grid-area: count; margin: 0; font-size: var(--text-tiny); font-weight: 700; white-space: nowrap; color: var(--text-strong); }
+.dayCount { grid-area: count; margin: 0; font-size: var(--text-tiny); font-weight: 700; line-height: 1; white-space: nowrap; color: var(--text-strong); }
 
 .density { grid-area: density; display: block; height: var(--lane-h, 5px); overflow: hidden; border-radius: 999px; background: var(--line-soft); }
 .density > span {
@@ -120,26 +122,28 @@
 
 .closed { grid-column: 1 / -1; margin: 0; padding: 14px 10px 16px; font-size: var(--text-small); color: var(--text-muted); }
 
+/* Telefonda ve tablette pencereler ALT ALTA, tam genişlik (kart turu):
+   yan yana iki şeritte 160 piksele üç kart sığıyor ve altı kart üç sıra
+   oluyordu; tam genişlikte yedi kart tek sıra. */
 .lane {
+  grid-column: 1 / -1;
   display: flex;
   min-width: 0;
   flex-direction: column;
   gap: 6px;
-  padding: 7px 6px 8px;
-  border-top: 1px solid var(--line-soft);
+  padding: 8px 6px 8px;
 }
-.lane[data-lane="other"] { grid-column: 1 / -1; }
-.lane + .lane[data-lane="amc"] { border-left: 1px solid var(--line-soft); }
-.laneHead { display: flex; margin: 0; }
-.laneEmpty { padding: 2px 2px 4px; font-size: var(--text-tiny); color: var(--text-muted); }
+.lane + .lane { border-top: 1px solid var(--line-soft); }
+.laneHead { display: flex; align-items: center; gap: 8px; margin: 0; }
+.laneClock { font-size: var(--text-tiny); font-weight: 700; color: var(--text-muted); }
+/* Boş pencere tek kısa satır: çip ve "Yok" yan yana. */
+.lane[data-empty] { flex-direction: row; align-items: center; gap: 10px; padding-block: 6px; }
+.laneEmpty { font-size: var(--text-tiny); color: var(--text-muted); }
 
-/* ---- Telefon: gün seçici + tek gün ----
-   Seçici haftanın şekli: gün başına sayı ve yoğunluk çizgisi (en kalabalık
-   gün tam). Seçili günün başlığı seçicide okunduğu için gün kartının kendi
-   başlığı görünmez ama ekran okuyucuda duruyor (h3). Saati belirsiz şerit
-   yalnız doluysa. */
+/* ---- Telefon: gün seçici + tek gün ---- */
 .picker { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; padding: 0 16px 10px; }
 .pick {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -157,6 +161,8 @@
 .pickName { font-size: var(--text-nano); font-weight: 650; color: var(--text-muted); }
 .pickNumber { font-size: 1.25rem; font-weight: 650; line-height: 1.1; letter-spacing: -0.04em; color: var(--text-strong); }
 .pickCount { font-size: var(--text-nano); font-weight: 650; color: var(--text-body); }
+/* Zirve günü seçicide kalın sayıyla: rozet bu darlıkta sığmıyor. */
+.pick[data-peak] .pickCount { font-weight: 800; color: var(--text-strong); }
 .pick .density { width: 100%; margin-top: 5px; }
 @media (min-width: 640px) { .picker { padding-inline: 20px; } }
 
@@ -164,31 +170,40 @@
   .day:not([data-active]) { display: none; }
   .day .dayHead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .lane[data-lane="other"][data-empty] { display: none; }
-  .lane { border-top: 0; }
+  .lane:first-of-type { border-top: 0; }
+}
+/* Tablette iki pencere yan yana: her biri ~340 piksel, kartlar yine tek sıra. */
+@media (min-width: 768px) and (max-width: 1179px) {
+  .lane { grid-column: auto; }
+  .lane[data-lane="other"] { grid-column: 1 / -1; }
+  .lane + .lane { border-top: 0; }
+  .lane + .lane[data-lane="amc"] { border-left: 1px solid var(--line-soft); }
+  .lane[data-lane="other"] { border-top: 1px solid var(--line-soft); }
 }
 
-/* ---- Karolar ----
-   Kare kenar `--side`; altta sembol ve dört çentik. Sıra şerit içinde
-   büyükten küçüğe (`buildWeek`), sarma soldan. */
-.tiles { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 6px; margin: 0; padding: 0; list-style: none; }
-.tileItem {
-  --side: var(--tile-base);
+/* ---- Şirket kartları ----
+   Hücre bir kart ızgarası: her kart aynı boy (logo 32 piksel, sembol,
+   dört kare). Dar ekranda sütun sayısı genişlikten (kart en az 50); geniş
+   ekranda dört sabit sütun. Sıra büyükten küçüğe (`buildWeek`). */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tileItem { display: flex; min-width: 0; }
+
+.tile {
   display: flex;
+  width: 100%;
+  min-width: 0;
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  min-width: var(--side);
-}
-.tileItem[data-tier="big"] { --side: var(--tile-big); }
-/* Karo 40 piksel; dokunma alanı `tap-44` ile görünmeden 44. */
-.tile {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: var(--side);
-  height: var(--side);
-  padding-bottom: 4px;
-  border-radius: 10px;
+  padding: 5px 1px 5px;
+  border-radius: var(--radius-lg);
   background: var(--surface-solid);
   cursor: pointer;
   transition: background-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand);
@@ -196,121 +211,180 @@
 @media (hover: hover) {
   .tile:hover { background: var(--premium-surface); }
 }
-.tile[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--primary); }
+/* Büyük şirket (değeri haftanın en büyüğünün dörtte birini geçen): saç
+   teli çerçeve. Boy değil çerçeve: hücre ızgarası bozulmasın. */
+.tileItem[data-tier="big"] .tile { box-shadow: inset 0 0 0 1px var(--line-strong); }
+.tile[aria-pressed="true"],
+.tileItem[data-tier="big"] .tile[aria-pressed="true"] { background: var(--premium-surface); box-shadow: inset 0 0 0 2px var(--primary); }
 .tile:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-.star { position: absolute; top: 3px; left: 5px; font-size: 10px; line-height: 1; color: var(--primary); }
-.result { position: absolute; top: 4px; right: 5px; font-size: 9px; line-height: 1; color: var(--flat); }
+.karo { position: relative; display: grid; place-items: center; }
+.star { position: absolute; top: -4px; left: -6px; font-size: 10px; line-height: 1; color: var(--primary); }
+.result { position: absolute; top: -4px; right: -6px; font-size: 9px; line-height: 1; color: var(--flat); }
 .result[data-dir="beat"] { color: var(--up); }
 .result[data-dir="miss"] { color: var(--down); }
 
-.tileItem[data-tier="big"] .tile { border-radius: 13px; }
+.tileSymbol {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 12.5px;
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--text-strong);
+  text-overflow: clip;
+  white-space: nowrap;
+}
 
-.tileSymbol { font-size: var(--text-nano); font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; color: var(--text-strong); white-space: nowrap; }
+/* Dört kare, eskiden yeniye. Dolu = aşıldı (`--up`), boş = aşılmadı (nötr
+   çerçeve), soluk = veri yok. Kartta 6, okuma şeridinde 11 piksel. */
+.squares { display: flex; gap: 2px; }
+.square { display: block; width: 6px; height: 6px; border-radius: 1.5px; background: var(--line-strong); }
+.square[data-mark="beat"] { background: var(--up); }
+.square[data-mark="miss"] { background: transparent; box-shadow: inset 0 0 0 1.25px var(--text-muted); }
+.squares[data-large] { gap: 4px; }
+.squares[data-large] .square { width: 11px; height: 11px; border-radius: 3px; }
+.squares[data-large] .square[data-mark="miss"] { box-shadow: inset 0 0 0 1.5px var(--text-muted); }
 
-/* "+N": hücreye sığmayanlar. Karo boyunda ama dolu değil, saç teli
+/* "+N": hücreye sığmayanlar. Kart boyunda ama dolu değil, saç teli
    halkalı: veri değil, bir bağlantı. */
 .more {
   display: grid;
+  width: 100%;
+  min-height: 44px;
   place-items: center;
-  width: var(--tile-base);
-  height: var(--tile-base);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   box-shadow: inset 0 0 0 1px var(--line);
-  font-size: var(--text-tiny);
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 750;
   color: var(--text-body);
   transition: background-color .2s var(--ease-brand), color .2s var(--ease-brand);
 }
 @media (hover: hover) { .more:hover { background: var(--surface-solid); color: var(--primary-ink); } }
 .more:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-/* Çentikler: 4 × 8 piksel, 3 piksel boy; dolu = aşıldı. Yükleniyorken dört
-   sönük yuva (aynı yükseklik: veri gelince satır kaymaz). Eşli çeyrek
-   ikiden azsa çentik yok, yükseklik yine ayrılı. */
-.notches { display: flex; gap: 2px; height: 3px; }
-.notches > i { display: block; width: 8px; height: 3px; border-radius: 2px; background: var(--line-strong); }
-/* Karonun içinde: alt kenarda, iki yandan 6 piksel içeride ince şerit. */
-.tile > .notches { position: absolute; right: 6px; bottom: 4px; left: 6px; height: 2px; }
-.tile > .notches > i { flex: 1; width: auto; height: 2px; border-radius: 1px; }
-.notches > i[data-beat] { background: var(--up); }
-.notches[data-pending] > i { background: var(--line-soft); }
-/* Okuma satırının karnesi bir kulvar: site geneli tek kalınlık 5 piksel
-   (`--lane-h`, 25 Ekim). */
-.notches[data-large] { gap: 4px; height: var(--lane-h, 5px); }
-.notches[data-large] > i { flex: 1; width: auto; min-width: 22px; height: var(--lane-h, 5px); border-radius: 999px; }
+/* Saati belirsiz: küçük kart, logo solda, sembol ve kareler sağda. */
+.lane[data-lane="other"] .tiles { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+.lane[data-lane="other"] .tile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: "karo symbol" "karo squares";
+  align-items: center;
+  justify-items: start;
+  gap: 3px 7px;
+  min-height: 44px;
+  padding: 5px 8px 5px 6px;
+}
+.lane[data-lane="other"] .karo { grid-area: karo; }
+.lane[data-lane="other"] .tileSymbol { grid-area: symbol; }
+.lane[data-lane="other"] .squares { grid-area: squares; }
 
-/* Sahneli giriş: karolar okuma sırasıyla (gün gün, şerit şerit) bir kez
+/* Sahneli giriş: kartlar okuma sırasıyla (gün gün, şerit şerit) bir kez
    ölçeklenerek iner; kademe 22 ms, toplam tavan 420 ms. Hareketi azaltana
-   son kare. Çentikler karonun ardından soldan açılır. */
+   son kare. Kareler kartın ardından soldan sırayla. */
 @media (prefers-reduced-motion: no-preference) {
   .tileItem { animation: hz-in 460ms var(--ease-brand) both; animation-delay: min(calc(var(--i) * 22ms), 420ms); }
-  .notches:not([data-pending]) > i { animation: hz-notch 420ms var(--ease-brand) both; transform-origin: left center; }
-  .notches > i:nth-child(2) { animation-delay: 60ms; }
-  .notches > i:nth-child(3) { animation-delay: 120ms; }
-  .notches > i:nth-child(4) { animation-delay: 180ms; }
+  .squares:not([data-pending]) > .square { animation: hz-square 360ms var(--ease-brand) both; }
+  .squares > .square:nth-child(2) { animation-delay: 50ms; }
+  .squares > .square:nth-child(3) { animation-delay: 100ms; }
+  .squares > .square:nth-child(4) { animation-delay: 150ms; }
 }
-@keyframes hz-in { from { opacity: 0; transform: scale(.82); } }
-@keyframes hz-notch { from { transform: scaleX(0); } }
+@keyframes hz-in { from { opacity: 0; transform: scale(.86); } }
+@keyframes hz-square { from { opacity: 0; transform: scale(.4); } }
 
-/* ---- Okuma satırı ----
-   Seçili karonun ayrıntısı. Gün sütununun tonunda bir blok; geniş ekranda
-   tek satır dört bölüm (kim · beklentiler · karne · bağlantılar), telefonda
-   alt alta. Yükseklik sabit tutuluyor: seçim değişince altındaki liste
-   kımıldamasın. */
+/* ---- Okuma şeridi ----
+   Seçili kartın ayrıntısı. Geniş ekranda TEK SATIR (kim · sayılar · karne ·
+   buton); telefonda kim + buton, sayılar, karne. Yükseklik seçimle
+   değişmiyor: altındaki liste kımıldamasın. */
 .readout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-  margin: 10px 20px 0;
-  padding: 10px 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "who who"
+    "facts facts"
+    "karne links";
+  align-items: center;
+  gap: 10px 12px;
+  margin: 8px 20px 0;
+  padding: 10px 12px;
   border-radius: var(--radius-lg);
   background: var(--surface-sunken);
 }
 @media (max-width: 639px) { .readout { margin-inline: 16px; } }
-.readoutWho { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.readoutSymbol { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin: 0; font-size: var(--text-lead); font-weight: 750; letter-spacing: -0.02em; color: var(--text-strong); }
-.readoutName { overflow: hidden; max-width: 100%; font-size: var(--text-small); font-weight: 500; letter-spacing: 0; text-overflow: ellipsis; white-space: nowrap; color: var(--text-body); }
-.readoutWhen { margin: 2px 0 0; font-size: var(--text-tiny); font-weight: 600; color: var(--text-muted); }
+.readoutWho { grid-area: who; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.readoutSymbol { display: flex; min-width: 0; align-items: baseline; gap: 2px 8px; margin: 0; font-size: var(--text-lead); font-weight: 750; letter-spacing: -0.02em; line-height: 1.2; color: var(--text-strong); }
+.readoutName { overflow: hidden; min-width: 0; font-size: var(--text-small); font-weight: 500; letter-spacing: 0; text-overflow: ellipsis; white-space: nowrap; color: var(--text-body); }
+.readoutWhen { margin: 2px 0 0; overflow: hidden; font-size: var(--text-tiny); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted); }
 
-.readoutFacts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; margin: 0; }
+.readoutFacts { grid-area: facts; display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; gap: 10px; margin: 0; }
 .readoutFacts > div { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
-.readoutFacts dt { font-size: var(--text-tiny); font-weight: 600; color: var(--text-muted); white-space: nowrap; }
-.readoutFacts dd { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.25; color: var(--text-strong); white-space: nowrap; }
+.readoutFacts dt { font-size: var(--text-tiny); font-weight: 600; line-height: 1.25; color: var(--text-muted); }
+.readoutFacts dd { margin: 0; font-size: 15px; font-weight: 750; line-height: 1.25; color: var(--text-strong); white-space: nowrap; }
 .readoutFacts dd[data-dir="beat"] { color: var(--up); }
 .readoutFacts dd[data-dir="miss"] { color: var(--down); }
 
-.readoutKarne { display: flex; min-width: 0; flex-direction: column; gap: 6px; }
-.readoutKarneLabel { margin: 0; font-size: var(--text-tiny); font-weight: 600; color: var(--text-muted); }
-.readoutKarneCount { margin: 0; font-size: var(--text-small); font-weight: 700; color: var(--text-strong); }
-.readoutKarneText { margin: 0; font-size: var(--text-tiny); line-height: 1.45; color: var(--text-body); }
+.readoutKarne { grid-area: karne; display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.readoutKarneLabel { margin: 0; font-size: var(--text-tiny); font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+.readoutKarneRow { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.readoutKarneCount { font-size: var(--text-small); font-weight: 750; color: var(--text-strong); white-space: nowrap; }
+.readoutKarneNote { font-size: var(--text-tiny); color: var(--text-muted); }
 
-.readoutLinks { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
-.readoutLink {
-  display: inline-flex;
+.readoutLinks { grid-area: links; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }
+.readoutButton { white-space: nowrap; }
+.readoutHint { grid-column: 1 / -1; margin: 0; font-size: var(--text-small); color: var(--text-muted); }
+
+/* ---- Künye: tek satır lejant + "Nasıl Okunur" ---- */
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 16px;
+  margin-top: 8px;
+  padding: 2px 20px 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+@media (max-width: 639px) { .foot { padding-inline: 16px; } }
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 0; padding-block: 6px; }
+.legendItem { display: inline-flex; align-items: center; gap: 6px; font-weight: 650; color: var(--text-body); }
+.legendNote { color: var(--text-muted); }
+.how { margin-left: auto; }
+.how[open] { flex-basis: 100%; }
+.how > summary {
+  display: flex;
   min-height: 44px;
   align-items: center;
-  gap: 4px;
-  font-size: var(--text-small);
+  justify-content: flex-end;
+  gap: 6px;
+  color: var(--primary-ink);
+  font-size: 12.5px;
   font-weight: 650;
-  color: var(--primary);
+  list-style: none;
+  cursor: pointer;
 }
-@media (hover: hover) { .readoutLink:hover { color: var(--primary-hover); } }
-.readoutHint { margin: 0; font-size: var(--text-small); color: var(--text-muted); }
-
-.foot { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; padding: 10px 20px 12px; border-top: 1px solid var(--line-soft); font-size: 12px; line-height: 1.5; color: var(--text-muted); }
-.foot > p { max-width: 90ch; margin: 0; }
-@media (max-width: 639px) { .foot { padding-inline: 16px; } }
+.how > summary::-webkit-details-marker { display: none; }
+.how > summary::after { width: 6px; height: 6px; margin-top: -3px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); transition: transform .2s var(--ease-brand); content: ""; }
+.how[open] > summary::after { margin-top: 3px; transform: rotate(-135deg); }
+@media (hover: hover) { .how > summary:hover { color: var(--primary-hover); } }
+.how > summary:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: 6px; }
+.how > p { max-width: 90ch; margin: 0 0 6px; }
+.how > p:last-child { margin-bottom: 8px; }
 
 @media (min-width: 768px) {
-  .readout { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr); align-items: center; }
-  .readoutFacts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .readout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) auto;
+    grid-template-areas:
+      "who facts links"
+      "karne karne karne";
+  }
 }
 
 /* ---- Geniş ekran (≥1180): beş sütun, solda eksen ----
    Günler `subgrid` ile aynı satır çizgilerini paylaşıyor: "kapanış sonrası
    kim var" sorusu beş sütunda aynı yükseklikte aranıyor (WeekBoard'un
-   kuralı). */
+   kuralı). Satır yüksekliği o satırın en kalabalık hücresinden, tavanı iki
+   kart sırası (`CELL_MAX_SLOTS`). */
 @media (min-width: 1180px) {
   .grid {
     display: grid;
@@ -321,55 +395,41 @@
   .picker { display: none; }
   .axis { display: grid; grid-row: 1 / -1; grid-template-rows: subgrid; }
   .axisLane { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px 0 0; border-top: 1px solid var(--line-soft); }
-  /* Saat künyesi tek satır: "~15:00 ~08:00 NY". */
   .axisClock { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 5px; font-size: var(--text-tiny); font-weight: 700; line-height: 1.3; color: var(--text-strong); white-space: nowrap; }
   .axisClockAlt { font-size: var(--text-nano); font-weight: 600; color: var(--text-muted); }
 
   .day { grid-row: 1 / -1; grid-template-columns: minmax(0, 1fr); grid-template-rows: subgrid; }
-  .lane, .lane[data-lane="other"] { grid-column: auto; }
-  .lane + .lane[data-lane="amc"] { border-left: 0; }
+  .lane, .lane[data-lane="other"] { grid-column: auto; padding: 6px 5px 6px; border-top: 1px solid var(--line-soft); }
   .laneHead { display: none; }
-  /* Boş hücre geniş ekranda boş kalıyor: satır hizası "yok"u zaten söylüyor. */
+  /* Boş hücre geniş ekranda boş: satır hizası "yok"u zaten söylüyor. */
   .laneEmpty { display: none; }
   .closed { grid-row: 2 / -1; }
-  /* SAATİ BELİRSİZ satırı sıkışık (25 Ekim, görsel inceleme): çoğu hafta
-     beş günün birinde iki şirket taşıyor, öbür dört hücre boş. Satır hiç
-     karo yokken zaten basılmıyor (`EarningsHorizon` → `lanes`); varken
-     üst/alt boşluk ve eksen etiketi daraltılıyor ki boş hücreler sütunu
-     uzatmasın. Karo boyu değişmiyor: alan piyasa değeri demek. */
-  .lane[data-lane="other"] { padding-block: 4px 6px; }
+  .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px 3px; }
+  .lane { padding-block: 5px; }
+  .lane[data-lane="other"] .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lane[data-lane="other"] .tile { padding-inline: 5px 4px; gap: 3px 5px; }
   .axisLane:last-child[data-lane="other"] { padding-top: 6px; }
+  /* Saati belirsiz satırı ince: tek sıra küçük kart, dolgu 2 piksel. */
+  .lane[data-lane="other"] { padding-block: 2px; }
+  .dayHead { gap: 4px 8px; padding: 6px 8px 5px; }
 
   .readout {
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.9fr) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr) auto auto;
+    grid-template-areas: "who facts karne links";
     gap: 20px;
+    margin-top: 6px;
+    padding-block: 6px;
   }
-  /* Künye iki sütun: lejant ve seçim notu yan yana (1920×1080'de takvim
-     listesinin başı ilk ekrana yaklaşsın diye; ölçüm sayfada). */
-  .foot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 32px; }
+  .readoutKarne { flex-direction: column; flex-wrap: nowrap; align-items: flex-start; gap: 4px; }
 }
 
-/* ---- Çok geniş ekran (≥1600): takvim listesinin başı ilk ekranda ----
-   Doğrulama turu (25 Ekim). 1920×1080'de ilk ekranın alt sınırı piyasa
-   şeridiyle y=1043; takvimin ilk gün başlığı ("26 Ekim Pazartesi") TR'de
-   1048–1090, EN'de 1066–1108 — yani başlık hiç görünmüyordu. Bu genişlikte
-   okuma satırının dört sütunundan karne en uzunuydu (dört satır alt alta,
-   97 piksel; öteki sütunlar 44): karne iki sütuna yayılıyor (solda etiket
-   ve sayı, sağda çentik ve cümle), olgular sütunu ona yer bırakıyor.
-   Künyenin iki paragrafı da 90ch tavanından kurtuluyor (EN'de üç satırdı).
-   Sayfa tarafı (`app/(app)/bilancolar/page.tsx`): bölüm aralığı 24 → 16 ve
-   analiz şeridinin dikey dolgusu 14 → 8. Ölçüm sonucu sayfadaki yorumda.
-   1440 ve 1280 bu kuraldan etkilenmiyor. */
-@media (min-width: 1600px) {
-  .readout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1.6fr) auto; }
-  .readoutKarne {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    grid-auto-flow: column;
-    align-items: center;
-    gap: 4px 18px;
-  }
-  .readoutKarne > .notches { align-self: end; margin-bottom: 4px; }
-  .foot > p { max-width: none; }
+/* LOGO BOYU İLK EKRANA GÖRE (kart turu). 1280×800'de iki kart sırası, iki
+   pencere ve okuma şeridi ancak 28 piksellik logoyla sığıyor (ölçüm dosya
+   başında); 1400'den geniş ekranda (900 piksel ve üstü yükseklik) 32.
+   Sütun ~45 piksel: "GOOGL" 12,5 puntoda 43 piksel tutup kırpılıyordu,
+   bu aralıkta sembol 12 ve harf aralığı sıkı. */
+@media (min-width: 1180px) and (max-width: 1399px) {
+  .tiles .logo { width: 28px; height: 28px; }
+  .lane[data-lane="other"] .tiles .logo { width: 24px; height: 24px; }
+  .tileSymbol { font-size: 12px; letter-spacing: -0.035em; }
 }

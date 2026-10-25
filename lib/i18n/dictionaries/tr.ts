@@ -1,11 +1,12 @@
 import { aiAnalysisTr } from "./ai-analysis";
+import { communityVisualsTr } from "./community-visuals";
 import { riskDeskTr } from "./risk-desk";
 import { emailNotifyTr } from "./email-notify";
 import { portfolioAnalysisTr } from "./portfolio-analysis";
 import { datePickerTr } from "./date-picker";
 import { screenQueryTr } from "./screen-query";
 import { stockPuzzleTr } from "./stock-puzzle";
-import { askStockTr, watchlistTodayTr } from "./page-claude";
+import { askStockTr, stockWeekTr, watchlistTodayTr } from "./page-claude";
 import { daySignatureTr } from "./day-signature";
 import { earningsSeasonTr } from "./earnings-season";
 import { dailyChartTr } from "./daily-chart";
@@ -3962,27 +3963,10 @@ const tr = {
     noteValue: "Tutar, dosyadaki kapanış fiyatıyla yaklaşık hesaplanır. Nakit fonu ve sembolü olmayan satırlar gösterilmez.",
   },
   investors: {
-    capitalTitle: "Takip Edilen Sermaye Kimde",
-    capitalAria: "Takip edilen hisse portföylerinin yatırımcılara göre payı",
-    capitalRest: "Diğer {count} Yatırımcı",
     eyebrow: "Ünlü Yatırımcılar",
-    title: "Ünlü Yatırımcılar Ne Tutuyor",
-    subtitle: "Buffett'tan Pelosi'ye ünlü yatırımcıların SEC bildirimlerindeki portföyleri: sermaye kimde toplanıyor, bu çeyrek neyi alıp neyi sattılar.",
-    castTitle: "Takip Edilen Yatırımcılar",
-    castBuyer: "Bu Çeyrek Net Alıcı",
-    castSeller: "Net Satıcı",
-    castAria: "{name}, {firm}",
-    castAriaUp: "{name}, {firm}; bu çeyrek net alıcı",
-    castAriaDown: "{name}, {firm}; bu çeyrek net satıcı",
-    capitalMeta: "{period} · Hisse Portföyü",
-    capitalTop: "En Büyük {ticker} {weight}",
-    capitalFunds: "Takip Edilen Fon",
-    capitalNote: "Karonun alanı fonun çeyrek sonundaki hisse portföyüyle orantılı; opsiyonlar dahil değil. Kapanan fon ve Kongre üyesi toplama girmiyor; payı {share} altında kalan fonlar tek karoda toplanıyor.",
+    title: "Ünlü Yatırımcılar",
+    subtitle: "Buffett'tan Pelosi'ye ünlü yatırımcıların bildirdiği portföyler ve bu çeyrekte neyi alıp sattıkları.",
     lagNote: "13F çeyrek bitiminden 45 gün sonraya kadar verilebilir: buradaki portföyler {date} günündeki durumu anlatıyor, bugünü değil.",
-    trackedValue: "Takip Edilen Hisse Portföyü",
-    investorsCount: "{count} Yatırımcı",
-    investorsCountOne: "{count} Yatırımcı",
-    lastFiled: "Son Bildirim",
     periodLabel: "Dönem",
     quarter: "{q}. Çeyrek {year}",
     asOf: "{date} İtibarıyla",
@@ -3991,34 +3975,18 @@ const tr = {
     moversMeta: "{period} · {count} Yatırımcı",
     moversSellers: "Satanlar",
     moversBuyers: "Alanlar",
-    moversNet: "Net",
     moversOpened: "Yeni Aldı",
     moversAria: "{ticker}: {buy} yatırımcı aldı, {sell} yatırımcı sattı.",
     moversWhoBuy: "Alanlar: {names}.",
     moversWhoSell: "Satanlar: {names}.",
     moversEmpty: "Bu çeyrekte iki ya da daha çok yatırımcının aynı yöne gittiği bir hisse yok.",
-    moversNote: "Her yüz bir yatırımcı: sağda bu çeyrek hisseyi yeni alan ya da artıran, solda azaltan ya da tamamen satan; çizginin koyu parçası yeni alım ve tamamen satış. Satırlar net farka göre sıralı. Yalnızca bu çeyreği bildirmiş yatırımcılar sayılıyor ve listede en az iki yatırımcının aynı yöne gittiği hisseler var; ölçü dolar değil kişi sayısı.",
-    balanceTitle: "Kim Alıyor, Kim Satıyor",
-    balanceMeta: "{period} · Pozisyon Sayısı",
-    balanceBuyers: "Net Alıcı",
-    balanceBuyersOne: "Net Alıcı",
-    balanceSellers: "Net Satıcı",
-    balanceSellersOne: "Net Satıcı",
-    balanceEven: "Dengede",
-    balanceSellSide: "Satış Yönünde",
-    balanceBuySide: "Alım Yönünde",
-    balanceCenter: "Denge",
-    balanceMoves: "{count} Hareket",
-    balanceMovesOne: "{count} Hareket",
-    balanceAria: "{name}: {buy} alım yönünde, {sell} satış yönünde pozisyon hareketi",
-    balanceNote: "Şerit, yatırımcının bu çeyrekteki pozisyon hareketlerini ikiye böler: solda azaltılan ve tamamen satılan, sağda yeni alınan ve artırılan pozisyonlar; koyu ton tamamen satış ve yeni alım. Portre ikisinin sınırında durur. Ölçü dolar değil pozisyon sayısıdır; yalnızca bu çeyreği bildirmiş ve önceki çeyrekle karşılaştırılabilen fonlar listede.",
+    moversNote: "Her yüz bir yatırımcı: yeşil hat bu çeyrek hisseyi yeni alan ya da artıran, kırmızı hat azaltan ya da tamamen satan yatırımcılar; hattın koyu parçası yeni alım ve tamamen satış. Kartlar net farka göre sıralı, çubuklar bütün kartlarda aynı ölçekte. Yalnızca bu çeyreği bildirmiş yatırımcılar sayılıyor ve en az iki yatırımcının aynı yöne gittiği hisseler listede; ölçü dolar değil kişi sayısı.",
     cardsTitle: "Yatırımcılar",
     portfolioValue: "Hisse Portföyü",
     positions: "{count} Pozisyon",
     positionsOne: "{count} Pozisyon",
     positionsLabel: "Pozisyon",
     topHoldings: "En Büyük Pozisyonlar",
-    otherHoldings: "Diğerleri",
     moveNew: "Yeni",
     moveIncreased: "Artırdı",
     moveDecreased: "Azalttı",
@@ -4035,8 +4003,6 @@ const tr = {
     buysOne: "{count} Alış",
     sells: "{count} Satış",
     sellsOne: "{count} Satış",
-    tradesCount: "{count} İşlem",
-    tradesCountOne: "{count} İşlem",
     txBuy: "Alış",
     txSell: "Satış",
     txPartial: "Kısmi Satış",
@@ -4061,17 +4027,7 @@ const tr = {
     stripSource: "Kaynak",
     sourceSec: "SEC Dosyası",
     sourcePdf: "Bildirim PDF",
-    mapTitle: "Portföy Dağılımı",
-    mapHint: "Karonun alanı pozisyonun değeriyle orantılı; rengi bu çeyrekteki hareketi.",
-    mapHintClosed: "Karonun alanı pozisyonun değeriyle orantılı; rengi son bildirimdeki hareketi.",
-    mapTop: "Haritada en büyük {count} pozisyon var; tamamı aşağıdaki tabloda.",
-    mapSmall: "Diğer {count}",
-    mapSmallTitle: "Küçük Pozisyonlar",
-    mapUnlisted: "Sembolü Bilinmeyenler",
     share: "Pay",
-    valueLabel: "Değer",
-    sharesLabel: "Adet",
-    openStock: "Hisseye Git",
     didTitle: "Bu Çeyrek Ne Yaptı",
     didMeta: "{prev} ile {cur} Arası",
     didEmpty: "Bu grupta pozisyon yok.",
@@ -4127,6 +4083,26 @@ const tr = {
     panelAll: "Tümünü Gör",
     emptyTitle: "Henüz Veri Yok",
     emptyHint: "Bildirimler günlük senkronla çekiliyor; ilk senkrondan sonra burada görünecek.",
+    /* Dizin kart ızgarası ve detay kartları (25 Ekim). */
+    leanUp: "Net Alıcı",
+    leanDown: "Net Satıcı",
+    leanFlat: "Dengede",
+    leanAria: "Bu çeyrek {lean}: {buy} alım yönünde, {sell} satış yönünde pozisyon hareketi.",
+    shareLabel: "Sermayedeki Payı",
+    capitalLabel: "Takip Edilen Sermaye",
+    capitalFundsCount: "{count} Fon",
+    capitalOther: "Diğer {count}",
+    capitalStripAria: "Takip edilen sermayenin fonlara göre dağılımı",
+    highlightNew: "Yeni Aldı",
+    highlightUp: "Artırdı {pct}",
+    highlightDown: "Azalttı {pct}",
+    highlightOut: "Tamamen Sattı",
+    highlightLabel: "Çeyreğin Hareketi",
+    periodOld: "{quarter} Bildirimi",
+    lastTrade: "Son İşlem {date}",
+    cardNote: "Pay, en son çeyreği bildirmiş açık fonların hisse portföyü toplamına göre; çubuklar bütün kartlarda aynı ölçekte (%0 ile %100 arası). Kapanan fon, son çeyreği henüz bildirmemiş fon ve Kongre üyesi toplama girmiyor. Rozet bu çeyreğin yönü: yeni alınan ve artırılan pozisyon sayısı, azaltılan ve tamamen satılandan fazlaysa Net Alıcı. Çeyreğin hareketi, el değiştiren hisse adedinin çeyrek sonu değeri en büyük olan hareket.",
+    topRest: "Kalan {count} Pozisyon {weight}",
+    tableShow: "Tüm Pozisyonlar · {count}",
   },
   /* PORTFÖYDE GÜNLÜK DEĞİŞİM — gerekçe lib/portfolio.ts. Seans adları companyCard'dan. */
   portfolioDay: {
@@ -4899,6 +4875,10 @@ const tr = {
   toolVisuals: toolVisualsTr,
   /* Risk Masası (25 Ekim) — kişiye özel ekran; metin ayrı dosyada. */
   riskDesk: riskDeskTr,
+  /* Topluluk ekranlarının görsel turu (25 Ekim) — metin ayrı dosyada. */
+  communityVisuals: communityVisualsTr,
+  /* Bu Hafta Neden Hareket Etti, kompakt kart (25 Ekim) — metin page-claude.ts. */
+  stockWeek: stockWeekTr,
 };
 
 export default tr;

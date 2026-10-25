@@ -4,7 +4,7 @@ import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { ChipStrip } from "@/components/ui/ChipStrip";
 import { LogoTile } from "@/components/ui/primitives";
 import { cardKey } from "@/lib/company-card-key";
-import type { Dictionary, Locale } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
 import { formatMoneyCompact } from "@/lib/utils";
 import styles from "./CompanyLeaders.module.css";
@@ -16,9 +16,8 @@ type Leader = { symbol: string; name: string; logoUrl: string | null; marketCap:
  * required two interactions to open a company. The ranked shelf now links
  * directly to each company. Ranking still comes from the directory's real
  * market caps; equal logo sizes are navigation, not a size comparison. */
-export function CompanyLeaders({ leaders, labels, locale, scrollLabels }: {
+export function CompanyLeaders({ leaders, locale, scrollLabels }: {
   leaders: Leader[];
-  labels: Dictionary["directory"];
   locale: Locale;
   /** Telefon şeridinin yön okları (`ChipStrip`). */
   scrollLabels: { prev: string; next: string };
@@ -29,11 +28,9 @@ export function CompanyLeaders({ leaders, labels, locale, scrollLabels }: {
      tablolardaki piyasa değeri çubuğuyla aynı — büyüklüğü çarpıtmamak). */
   const peak = Math.max(...visible.map((item) => item.marketCap ?? 0), 1);
 
-  return <section className={styles.leaders} aria-label={labels.marketLeaders}>
-    <div className={styles.heading}>
-      <h2>{labels.marketLeaders}</h2>
-      <span>{labels.leadersByCap}</span>
-    </div>
+  /* Başlık ("Piyasanın Devleri" + künye) 25 Ekim'den beri kapak sekmesinde
+     (`CoverTabs`): panelin adı sekmenin kendisi, h2 sekme panelinde. */
+  return <div className={styles.leaders}>
     {/* TELEFONDA TEK SATIR ŞERİT (25 Ekim). İki satırlık 5×2 ızgara 390'da
         256 piksel tutuyordu ve kapağın altındaki dizini (ekranın asıl işi)
         799'a itiyordu. 640'ın altında on karo yana kayan tek satır; sıra,
@@ -66,5 +63,5 @@ export function CompanyLeaders({ leaders, labels, locale, scrollLabels }: {
       </li>)}
     </ol>
     </ChipStrip>
-  </section>;
+  </div>;
 }

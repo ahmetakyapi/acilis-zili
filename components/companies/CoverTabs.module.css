@@ -1,0 +1,56 @@
+/* Kapak sekmeleri — gerekçe CoverTabs.tsx. Başlık satırı eski
+   "Piyasanın Devleri" başlığının ölçüsünde (16 / 700): varsayılan sekmede
+   kart bir piksel bile uzamasın. */
+/* Eşikler ekran değil PANEL genişliğine bağlı (kapsayıcı sorgusu): kapak
+   768–1099 arasında iki sütuna geçiyor ve sağ sütun 275–422 piksele
+   düşüyor; 640–767'de tek sütun ve panel 554–681 (ölçüldü). */
+.cover { min-width: 0; container: cover / inline-size; }
+.head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; }
+.meta { color: var(--text-muted); font-size: 12px; }
+.solo { font-size: var(--text-lead); font-weight: 700; letter-spacing: -.015em; color: var(--text-strong); }
+
+.tabs { display: flex; align-items: baseline; gap: 20px; }
+/* 44 piksellik dokunma kutusu, satır yüksekliğini değiştirmeden: eksi
+   dış boşluk dolguyu emiyor. */
+.tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-block: -11px;
+  color: var(--text-muted);
+  font-size: var(--text-lead);
+  font-weight: 700;
+  letter-spacing: -.015em;
+  line-height: 1.375;
+  cursor: pointer;
+  transition: color .2s var(--ease-brand);
+  -webkit-tap-highlight-color: transparent;
+}
+.tab[aria-selected="true"] { color: var(--text-strong); }
+.tab:focus-visible { outline: 2px solid var(--line-focus); outline-offset: -6px; border-radius: 8px; }
+@media (hover: hover) and (pointer: fine) { .tab:hover { color: var(--text-strong); } }
+.tabText { position: relative; }
+.underline { position: absolute; left: 0; right: 0; bottom: -5px; height: 0; }
+
+/* Dar panelde künye gizli: iki sekme ~290 piksel; künye yanına sığmayıp
+   ikinci satıra inince kart 24 piksel uzuyordu (768–1099'da ve 390'da
+   ölçüldü). Sekmeli başlık bu yüzden eski h2 + künyeden kısa. */
+@container cover (max-width: 459.98px) { .head .meta { display: none; } .tabs { gap: 16px; } }
+
+/* Geniş panelde iki panel üst üste, gizli olan yer tutuyor (yükseklik
+   sabit, sekme değişince CLS 0). Dar panelde sektör sürümü devlerden uzun;
+   üst üste koymak VARSAYILAN sekmede kartı uzatırdı. Orada gizli panel
+   gerçekten gizli ve uzama okuyucunun kendi seçimiyle geliyor. */
+.panel[data-inactive] { display: none; }
+@container cover (min-width: 460px) {
+  .panels { display: grid; }
+  .panel { grid-area: 1 / 1; min-width: 0; }
+  .panel[data-inactive] { display: block; visibility: hidden; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .panel[data-enter] { animation: cover-in 260ms var(--ease-brand); }
+}
+@keyframes cover-in { from { opacity: 0; translate: 0 6px; } }
+@media (prefers-reduced-motion: reduce) { .tab { transition: none; } }

@@ -217,7 +217,7 @@ export async function StockHeader({
           ) : logoFallback}
         </MorphTarget>
         <div className={styles.identityCopy}>
-          {/* SIRA: SEMBOL → AD → KÜNYE.
+          {/* SIRA: SEMBOL → AD → KÜNYE (28 Eylül; 25 Ekim'de AD → SEMBOL · KÜNYE, eylemler sağda).
               Önce künye (borsa · sektör) geliyordu, altında ad ve onun
               yanında sembol ile kalp. Telefonda üçü de sığmıyordu: künye iki
               satıra kırılıyor, 24 puntoluk ad satırı dolduruyor, sembol ve
@@ -228,10 +228,48 @@ export async function StockHeader({
               ayrılmıyorlar), altında tam ad, en altta künye tek satırda
               kırpılıyor. Künye bir etiket, başlık değil — en alta düşmesi
               okuma sırasını da düzeltiyor. */}
+          <h1 data-ink="solid" className={styles.companyName}>
+            {profile?.name || fund?.name || symbol}
+          </h1>
+          {/* KÜNYE: SEMBOL · SEKTÖR TEK SATIRDA (25 Ekim, kompakt kapak).
+              Sembol eylem satırının başındaydı ve adın ÜSTÜNDE ayrı bir 36
+              piksellik satır açıyordu; artık adın altında, sektörle aynı
+              satırda küçük bir rozet. */}
+          <p className={styles.identitySub}>
+            <span className={cn("numeral", styles.symbol)}>{symbol}</span>
+            {kunyeSektor && (
+              /* SEKTÖR AYNI KAYNAKTAN. Burası sağlayıcının serbest metinli
+                 alanını yazıyordu, otuz piksel aşağıdaki profil paneli ise
+                 GICS sınıflandırmasını: /hisse/CSCO'da künye "İletişim",
+                 panel "Bilgi Teknolojileri" diyordu. Tercih sırası
+                 panelinkiyle birebir: GICS varsa o, yoksa sağlayıcının alanı.
+                 BORSA ADI KÜNYEDE YOK: 390 pikselde sektörü kırpıyordu ve
+                 Şirket Profili kartında kendi satırında zaten var. */
+              <span className={styles.sector}>
+                <Stack size={14} weight="duotone" aria-hidden />
+                {kunyeSektor}
+              </span>
+            )}
+          </p>
+          {fund && (
+            <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-tiny leading-tight text-muted">
+              <span className="font-semibold text-soft">
+                {locale === "tr" ? fund.labelTr : fund.labelEn}
+              </span>
+              <span aria-hidden>·</span>
+              <span>{locale === "tr" ? fund.tracksTr : fund.tracksEn}</span>
+            </p>
+          )}
+        </div>
+        {/* EYLEMLER ADIN SAĞINDA (25 Ekim, kompakt kapak; sahibinin isteği:
+            "bazı alanları daha kompakt"). Favori, alarm, portföy ve paylaş
+            adın üstünde kendi satırındaydı; artık kimlik satırının sağ
+            ucunda küçük ikonlu düğmeler, yazıları yalnız 1280 ve üstünde.
+            Telefonda kimliğin altında, Claude ve araştırma şeridiyle AYNI
+            satırda (`identityTools`). Ölçüm stock.module.css → "KOMPAKT
+            KAPAK". */}
+        <div className={styles.identityTools}>
           <div className={styles.identityMeta}>
-            <span className={cn("numeral", styles.symbol)}>
-              {symbol}
-            </span>
             {session?.user ? (
               /* Kalp KENDİ istemci bileşeninde: tıklamanın karşılığını
                  anında vermesi gerekiyor (bkz. FavoriteToggle). */
@@ -325,40 +363,7 @@ export async function StockHeader({
               compact
             />
           </div>
-          <h1 data-ink="solid" className={styles.companyName}>
-            {profile?.name || fund?.name || symbol}
-          </h1>
-          {/* Künye şeridi — borsa · sektör.
-              SEKTÖR AYNI KAYNAKTAN. Burası sağlayıcının serbest metinli
-              alanını yazıyordu, otuz piksel aşağıdaki profil paneli ise
-              GICS sınıflandırmasını: /hisse/CSCO'da künye "İletişim",
-              panel "Bilgi Teknolojileri" diyordu. /hisse/WMT'de künye
-              "Perakende", panel "Temel Tüketim". Tek sayfada iki farklı
-              sektör iddiası, üstelik ikisi de aynı ekranda görünüyor.
-              Tercih sırası panelinkiyle birebir: GICS varsa o, yoksa
-              sağlayıcının alanı. */}
-          {kunyeSektor && (
-            /* BORSA ADI KÜNYEDEN ÇIKTI. Satır "NASDAQ NMS - GLOBAL MARKET ·
-               BİLGİ TEKNOLOJİLERİ" diye kuruluyor ve 390 pikselde 39 piksel
-               kırpılıyordu — kesilen yer de sektördü. İkisi de aşağıdaki
-               Şirket Profili kartında kendi satırlarında zaten var; künye
-               genişliğinin tamamını tekrara harcayıp tekrar olmayan yarısını
-               kesiyordu. Sektör tek başına sığıyor. */
-            <p className={styles.sector}>
-              <Stack size={14} weight="duotone" aria-hidden />
-              {kunyeSektor}
-            </p>
-          )}
           {chip}
-          {fund && (
-            <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-tiny leading-tight text-muted">
-              <span className="font-semibold text-soft">
-                {locale === "tr" ? fund.labelTr : fund.labelEn}
-              </span>
-              <span aria-hidden>·</span>
-              <span>{locale === "tr" ? fund.tracksTr : fund.tracksEn}</span>
-            </p>
-          )}
         </div>
       </div>
 
@@ -400,6 +405,7 @@ export async function StockHeader({
               locale={locale}
               t={t}
               className={styles.headerBand}
+              quoteLabel={false}
             />
           )}
         </div>
@@ -431,18 +437,30 @@ export async function StockHeader({
  * kullanıldığı için iskelet de gerçek başlıkla aynı genişlikte sarıyor ve
  * içerik değiştikçe onunla birlikte kayıyor.
  */
-export function HeaderSkeleton({ sessionRow = false, chip = false }: { sessionRow?: boolean; chip?: boolean }) {
+export function HeaderSkeleton({
+  sessionRow = false,
+  chip = false,
+  band = false,
+}: {
+  sessionRow?: boolean;
+  chip?: boolean;
+  /** 52 hafta kartının yeri (≥1100) — fonda değil, şirkette basılıyor. */
+  band?: boolean;
+}) {
   return (
     <header className={styles.stockHeader}>
       <div className={styles.identity}>
         <Skeleton className={cn(styles.companyLogo, "shrink-0")} />
         <div className={styles.identityCopy}>
-          {/* Üç satır gerçeğin ölçüsünde (28 Eylül): sembol + kalp satırı,
-              ad, künye — sınıflar stock.module.css "YEDEKLER" notunda. */}
-          <Skeleton className={cn("w-20", styles.identityMetaSkeleton)} />
+          {/* Gerçeğin satırları (25 Ekim, kompakt kapak): ad, altında sembol ·
+              sektör; eylemler sağda (telefonda alt satırda, kısa yol
+              şeridiyle). Sınıflar stock.module.css "KOMPAKT KAPAK" notunda. */}
           <Skeleton className={styles.identityNameSkeleton} />
-          <Skeleton className={cn("w-36 max-w-full", styles.sectorSkeleton)} />
-          {chip && <Skeleton className="mt-2 h-7 w-48 max-w-full md:hidden" />}
+          <Skeleton className={cn("w-40 max-w-full", styles.sectorSkeleton)} />
+        </div>
+        <div className={styles.identityTools}>
+          <Skeleton className={styles.identityMetaSkeleton} />
+          {chip && <Skeleton className={cn("h-[30px] min-w-0 flex-1 md:hidden")} />}
         </div>
       </div>
       {/* FİYAT BLOĞU GERÇEĞİN ÖLÇÜLERİYLE (24 Eylül). Yedek 64 + 30 + 28
@@ -452,12 +470,13 @@ export function HeaderSkeleton({ sessionRow = false, chip = false }: { sessionRo
           grafik 31 piksel yukarı kayıyordu (CLS 0,019). Fiyatın yeri artık
           aynı sınıfla (`livePrice`, 1em), hap satırı yalnızca seans
           dışındaysa — sunucu seansı zaten biliyor. */}
-      <div className={styles.priceBlock}>
-        <div className={styles.priceLine}>
+      <div className={cn(styles.priceBlock, band && styles.priceBlockWithBand)}>
+        <div className={cn(styles.priceLine, styles.priceLineSkeleton)}>
           <span className={cn("skeleton block w-52", styles.livePrice, styles.priceSkeleton)} />
         </div>
         {sessionRow && <Skeleton className="mt-2 h-[26px] w-56" />}
-        <Skeleton className="mt-2 h-[19px] w-48" />
+        <Skeleton className={cn("mt-2 w-48", styles.stampSkeleton)} />
+        {band && <Skeleton className={cn(styles.headerBand, styles.bandSkeleton)} />}
       </div>
     </header>
   );

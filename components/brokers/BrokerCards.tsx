@@ -257,10 +257,12 @@ export function BrokerCards({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Denetimler: sıra ve yan yana seçimi. Tek satır, sayfanın seçim
-          şeridi (CLAUDE.md ekran düzeni 2). */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      {/* Denetimler: sıra ve yan yana seçimi; sayfanın seçim şeridi
+          (CLAUDE.md ekran düzeni 2). Kompakt tur (25 Ekim): 1024 ve üstünde
+          ikisi tek hatta, seçim ipucu şeridin başlık satırında (eskiden
+          şeridin altında ayrı satır). */}
+      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[auto_minmax(0,1fr)] lg:items-end lg:gap-x-8">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 lg:pb-px">
           <span className="text-tiny font-semibold text-muted">{labels.sortLabel}</span>
           <span
             className={cn("transition-opacity", navigating && "pointer-events-none opacity-50")}
@@ -293,6 +295,9 @@ export function BrokerCards({
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <h3 className="text-tiny font-semibold text-muted">{labels.compare.stripLabel}</h3>
             <span className="flex items-center gap-3 text-tiny text-muted">
+              {selected.length < 2 && (
+                <span>{selected.length === 1 ? labels.compare.hintOne : labels.compare.hint}</span>
+              )}
               {selected.length > 0 && (
                 <>
                   <span className="numeral">{labels.compare.count.replace("{n}", String(selected.length))}</span>
@@ -334,11 +339,6 @@ export function BrokerCards({
             })}
             </div>
           </ChipStrip>
-          {selected.length < 2 && (
-            <p className="text-tiny text-muted">
-              {selected.length === 1 ? labels.compare.hintOne : labels.compare.hint}
-            </p>
-          )}
         </div>
       </div>
 

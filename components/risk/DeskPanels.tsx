@@ -41,6 +41,12 @@ function componentValue(c: Component, locale: Loc): string {
   }
 }
 
+/**
+ * Rejim — KOMPAKT KART (25 Ekim, kart düzeni). Yedi girdi tek satırlık
+ * çipler (ad, değer, ton noktası); her girdinin eşiği ve rejimin kuralı
+ * "Nasıl Hesaplanır" katlamasında. Önceki uzun listede her girdi iki satır
+ * açıklama taşıyordu ve kart 1440'ta 540 piksel uzuyordu.
+ */
 export function RegimePanel({ desk, t, locale }: Common & { desk: MarketDesk }) {
   const today = desk.today;
   const regime = today?.regime ?? null;
@@ -74,17 +80,12 @@ export function RegimePanel({ desk, t, locale }: Common & { desk: MarketDesk }) 
                 <span key={r}>{t.regime[r]}</span>
               ))}
             </div>
-            <ul className={styles.components}>
+            <ul className={styles.chips}>
               {today.components.map((c) => (
-                <li key={c.key} className={styles.component} data-tone={c.points}>
-                  <span className={styles.componentName}>{t.regime.components[c.key]}</span>
-                  <span className={styles.componentValue}>{componentValue(c, locale)}</span>
-                  <span className={styles.pips} aria-label={t.regime.points[c.points]}>
-                    <i className={styles.pip} data-on={c.points >= 1 ? "" : undefined} />
-                    <i className={styles.pip} data-on={c.points >= 2 ? "" : undefined} />
-                    {t.regime.points[c.points]}
-                  </span>
-                  <span className={styles.componentRule}>{t.regime.rules[c.key]}</span>
+                <li key={c.key} className={styles.chipItem} data-tone={c.points} title={`${t.regime.points[c.points]} · ${t.regime.rules[c.key]}`}>
+                  <span className={styles.chipName}>{t.regime.components[c.key]}</span>
+                  <b>{componentValue(c, locale)}</b>
+                  <span className="sr-only">{t.regime.points[c.points]}</span>
                 </li>
               ))}
             </ul>
@@ -93,9 +94,20 @@ export function RegimePanel({ desk, t, locale }: Common & { desk: MarketDesk }) 
           <p className={styles.explain}>{t.regime.noneHint}</p>
         )}
         {missing.length > 0 && (
-          <p className={styles.explain}>{fill(t.regime.missing, { list: missing.map((key) => t.regime.components[key]).join(", ") })}</p>
+          <p className={styles.foldText}>{fill(t.regime.missing, { list: missing.map((key) => t.regime.components[key]).join(", ") })}</p>
         )}
-        <p className={styles.explain}>{t.regime.explain}</p>
+        <details className={styles.fold}>
+          <summary>{t.cards.howTo}</summary>
+          <dl className={styles.foldList}>
+            {COMPONENT_KEYS.map((key) => (
+              <div key={key}>
+                <dt>{t.regime.components[key]}</dt>
+                <dd>{t.regime.rules[key]}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className={styles.foldText}>{t.regime.explain}</p>
+        </details>
       </div>
     </Panel>
   );
@@ -141,6 +153,12 @@ function gaugeValue(g: Gauge, locale: Loc): string {
   return num(g.value, locale, 2);
 }
 
+/**
+ * Ana göstergeler — ALTI KÜÇÜK KART (25 Ekim, kart düzeni): ad ve gözlem
+ * günü, büyük sayı, değişim, kıvılcım. Uzun tanımlar ("S&P 500, 30 Günlük
+ * Beklenen Oynaklık") "Göstergeler Nasıl Okunur" katlamasında; kartta
+ * yalnız okunacak sayı kalıyor.
+ */
 export function GaugePanel({ desk, t, locale }: Common & { desk: MarketDesk }) {
   const sub: Record<Gauge["key"], string> = {
     vix: t.gauges.vixSub,
@@ -153,44 +171,56 @@ export function GaugePanel({ desk, t, locale }: Common & { desk: MarketDesk }) {
   return (
     <Panel>
       <PanelHeader title={t.gauges.title} meta={day(desk.session, locale)} />
-      <div className={styles.gauges}>
-        {desk.gauges.map((g) => {
-          const rules = GAUGE_RULES[g.key];
-          const delta =
-            g.value === null
-              ? null
-              : g.key === "breadth" && desk.breadth
-                ? fill(t.gauges.advDec, { a: desk.breadth.advancing, d: desk.breadth.declining })
-                : g.key === "credit" && g.change !== null
-                  ? fill(t.gauges.creditChange, { v: signedNum(g.change, locale) })
-                  : g.change !== null
-                    ? fill(t.gauges.dayChange, { v: signedNum(g.change, locale) })
-                    : null;
-          return (
-            <div key={g.key} className={styles.gauge}>
-              <span className={styles.gaugeLabel}>
-                {t.gauges[g.key]}
-                {g.date && <span className={styles.gaugeDate}>{day(g.date, locale)}</span>}
-              </span>
-              {g.value === null ? (
-                <span className={styles.gaugeValue} data-off>
-                  {g.date ? t.gauges.stale : t.gauges.unavailable}
+      <div className={styles.panelBody}>
+        <div className={styles.gauges}>
+          {desk.gauges.map((g) => {
+            const rules = GAUGE_RULES[g.key];
+            const delta =
+              g.value === null
+                ? null
+                : g.key === "breadth" && desk.breadth
+                  ? fill(t.gauges.advDec, { a: desk.breadth.advancing, d: desk.breadth.declining })
+                  : g.key === "credit" && g.change !== null
+                    ? fill(t.gauges.creditChange, { v: signedNum(g.change, locale) })
+                    : g.change !== null
+                      ? fill(t.gauges.dayChange, { v: signedNum(g.change, locale) })
+                      : null;
+            return (
+              <div key={g.key} className={styles.gauge} title={sub[g.key]}>
+                <span className={styles.gaugeLabel}>
+                  {t.gauges[g.key]}
+                  {g.date && <span className={styles.gaugeDate}>{day(g.date, locale)}</span>}
                 </span>
-              ) : (
-                <span className={styles.gaugeValue}>{gaugeValue(g, locale)}</span>
-              )}
-              <span className={styles.gaugeSub}>{sub[g.key]}</span>
-              {delta && <span className={styles.gaugeDelta}>{delta}</span>}
-              {g.value !== null && (
-                <Spark
-                  values={g.spark}
-                  rules={rules}
-                  label={`${t.gauges[g.key]}${rules.length ? ` · ${fill(t.gauges.laneLabel, { list: rules.map((r) => num(r, locale, r % 1 ? 2 : 0)).join(", ") })}` : ""}`}
-                />
-              )}
-            </div>
-          );
-        })}
+                {g.value === null ? (
+                  <span className={styles.gaugeValue} data-off>
+                    {g.date ? t.gauges.stale : t.gauges.unavailable}
+                  </span>
+                ) : (
+                  <span className={styles.gaugeValue}>{gaugeValue(g, locale)}</span>
+                )}
+                {delta && <span className={styles.gaugeDelta}>{delta}</span>}
+                {g.value !== null && (
+                  <Spark
+                    values={g.spark}
+                    rules={rules}
+                    label={`${t.gauges[g.key]}${rules.length ? ` · ${fill(t.gauges.laneLabel, { list: rules.map((r) => num(r, locale, r % 1 ? 2 : 0)).join(", ") })}` : ""}`}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <details className={styles.fold}>
+          <summary>{t.cards.gaugesHow}</summary>
+          <dl className={styles.foldList}>
+            {desk.gauges.map((g) => (
+              <div key={g.key}>
+                <dt>{t.gauges[g.key]}</dt>
+                <dd>{sub[g.key]}</dd>
+              </div>
+            ))}
+          </dl>
+        </details>
       </div>
     </Panel>
   );
@@ -198,59 +228,20 @@ export function GaugePanel({ desk, t, locale }: Common & { desk: MarketDesk }) {
 
 /* --------------------------------------------------------------- maruziyet */
 
-export function ExposurePanel({
-  result,
-  t,
-  locale,
-}: Common & { result: { ok: false } | { ok: true; exposure: Exposure | null } }) {
-  const exposure = result.ok ? result.exposure : null;
-  const top = exposure?.sectors[0];
+/** Portföy okunamıyor ya da boşken özet kartlarının yerinde duran panel. */
+export function ExposurePanel({ result, t }: Common & { result: { ok: false } | { ok: true; exposure: Exposure | null } }) {
   return (
     <Panel>
       <PanelHeader
         title={t.exposure.title}
-        meta={exposure ? fill(t.exposure.positions, { n: exposure.positions.length }) : undefined}
         action={
-          <Link href="/portfoy" className={styles.inlineLink}>
+          <Link href="/portfoy" className={`${styles.inlineLink} tap-44`}>
             {t.exposure.link}
           </Link>
         }
       />
       <div className={styles.panelBody}>
-        {!result.ok ? (
-          <p className={styles.explain}>{t.exposure.unavailable}</p>
-        ) : !exposure || exposure.positions.length === 0 ? (
-          <p className={styles.explain}>{t.exposure.empty}</p>
-        ) : (
-          <>
-            <div className={styles.stats}>
-              <div className={styles.stat}>
-                <span className={styles.statLabel}>{t.exposure.beta}</span>
-                <span className={styles.statValue}>{num(exposure.beta?.value, locale)}</span>
-                {exposure.beta && <span className={styles.statSub}>{fill(t.exposure.covered, { v: pct(exposure.beta.coveredWeight, locale, 0) })}</span>}
-              </div>
-              <div className={styles.stat}>
-                <span className={styles.statLabel}>{t.exposure.vol}</span>
-                <span className={styles.statValue}>{pct(exposure.vol20?.value, locale)}</span>
-                <span className={styles.statSub}>
-                  {t.exposure.atr} {pct(exposure.atrPct?.value, locale, 2)}
-                </span>
-              </div>
-              <div className={styles.stat}>
-                <span className={styles.statLabel}>{t.exposure.below200}</span>
-                <span className={styles.statValue}>{pct(exposure.below200Weight, locale)}</span>
-                <span className={styles.statSub}>
-                  {t.exposure.below100} {pct(exposure.below100Weight, locale)}
-                </span>
-              </div>
-              <div className={styles.stat}>
-                <span className={styles.statLabel}>{t.exposure.topSector}</span>
-                <span className={styles.statValue}>{top ? pct(top.weight, locale) : num(null, locale)}</span>
-                <span className={styles.statSub}>{top ? (sectorLabel(top.sector, locale) ?? t.positions.unclassified) : ""}</span>
-              </div>
-            </div>
-          </>
-        )}
+        <p className={styles.explain}>{!result.ok ? t.exposure.unavailable : t.exposure.empty}</p>
       </div>
     </Panel>
   );
@@ -298,7 +289,7 @@ export function HistoryPanel({ desk, t, locale }: Common & { desk: MarketDesk })
             {runs.map((run) =>
               run.regime ? (
                 <rect key={run.from} data-regime={run.regime} x={run.from} y={0} width={run.to - run.from + 1} height={1}>
-                  <title>{`${t.regime[run.regime]} · ${day(history[run.from]!.date, locale)} – ${day(history[run.to]!.date, locale)}`}</title>
+                  <title>{`${t.regime[run.regime]} · ${fill(t.cards.span, { from: day(history[run.from]!.date, locale), to: day(history[run.to]!.date, locale) })}`}</title>
                 </rect>
               ) : null,
             )}
@@ -545,13 +536,49 @@ function Views({ row, t, locale }: { row: PositionRow; t: T; locale: Loc }) {
   );
 }
 
-export function PositionsPanel({ exposure, regime, t, locale }: Common & { exposure: Exposure; regime: Regime | null }) {
+/**
+ * Pozisyon tablosu — kartların altında "Tablo Görünümü" katlamasında
+ * (veri kaybolmadı: 50/100 GO uzaklığı, oynaklık ve sektör çubukları
+ * kartta yok, burada var). Risk Kapalı sıralaması katlamanın dışında,
+ * kartların hemen altında.
+ */
+export function PositionsDetail({ exposure, regime, t, locale }: Common & { exposure: Exposure; regime: Regime | null }) {
   const byBeta = [...exposure.positions].filter((p) => p.beta !== null).sort((a, b) => b.beta! - a.beta!).slice(0, 5);
   const byVol = [...exposure.positions].filter((p) => p.vol20 !== null).sort((a, b) => b.vol20! - a.vol20!).slice(0, 5);
   return (
-    <Panel>
-      <PanelHeader title={t.positions.title} meta={day(exposure.session, locale)} />
-      <div className={styles.panelBody}>
+    <>
+      {regime === "riskOff" && (
+        <div className={styles.rankLists}>
+          <div className="md:col-span-2">
+            <h3 className={styles.forecastHead}>{t.positions.rankTitle}</h3>
+            <p className={styles.ruleMeta}>{t.positions.rankNote}</p>
+          </div>
+          <div>
+            <p className={styles.ruleMeta}>{t.positions.rankBeta}</p>
+            <ol className={styles.rankList}>
+              {byBeta.map((p) => (
+                <li key={p.symbol}>
+                  <b>{p.symbol}</b>
+                  <span>{num(p.beta, locale)}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div>
+            <p className={styles.ruleMeta}>{t.positions.rankVol}</p>
+            <ol className={styles.rankList}>
+              {byVol.map((p) => (
+                <li key={p.symbol}>
+                  <b>{p.symbol}</b>
+                  <span>{pct(p.vol20, locale)}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      )}
+      <details className={styles.fold}>
+        <summary>{t.cards.tableToggle}</summary>
         <ScrollEdges fixedStart className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
@@ -572,166 +599,162 @@ export function PositionsPanel({ exposure, regime, t, locale }: Common & { expos
               </tr>
             </thead>
             <tbody>
-              {exposure.positions.map((row) => {
-                const flags = crossFlags(row, t);
-                return (
-                  <tr key={row.symbol}>
-                    <td>
-                      {row.symbol}
-                      <MaMarks row={row} t={t} />
-                      {flags.map((f) => (
-                        <span key={f} className={styles.flag}>
-                          {f}
-                        </span>
-                      ))}
-                      <span className={styles.cellSub}>{row.name}</span>
+              {exposure.positions.map((row) => (
+                <tr key={row.symbol}>
+                  <td>
+                    {row.symbol}
+                    <MaMarks row={row} t={t} />
+                    <span className={styles.cellSub}>{row.name}</span>
+                  </td>
+                  <td>{pct(row.weight, locale)}</td>
+                  <td>{num(row.beta, locale)}</td>
+                  <td>{pct(row.atrPct, locale, 2)}</td>
+                  <td>{pct(row.vol20, locale)}</td>
+                  <td>
+                    <Pctile value={row.vol20Pctile} locale={locale} />
+                  </td>
+                  {MA_WINDOWS.map((w) => (
+                    <td key={w}>
+                      <Dir value={row.ma[w].distance} locale={locale} />
                     </td>
-                    <td>{pct(row.weight, locale)}</td>
-                    <td>{num(row.beta, locale)}</td>
-                    <td>{pct(row.atrPct, locale, 2)}</td>
-                    <td>{pct(row.vol20, locale)}</td>
-                    <td>
-                      <Pctile value={row.vol20Pctile} locale={locale} />
-                    </td>
-                    {MA_WINDOWS.map((w) => (
-                      <td key={w}>
-                        <Dir value={row.ma[w].distance} locale={locale} />
-                      </td>
-                    ))}
-                    <td>{sectorLabel(row.sector, locale) ?? t.positions.unclassified}</td>
-                    <td>
-                      <Views row={row} t={t} locale={locale} />
-                    </td>
-                  </tr>
-                );
-              })}
+                  ))}
+                  <td>{sectorLabel(row.sector, locale) ?? t.positions.unclassified}</td>
+                  <td>
+                    <Views row={row} t={t} locale={locale} />
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </ScrollEdges>
-
-        <div className={styles.rankLists}>
-          <div>
-            <h3 className={styles.forecastHead}>{t.positions.sectorsTitle}</h3>
-            <div className="mt-2">
-              {exposure.sectors.map((s) => (
-                <div key={s.sector ?? "none"} className={styles.barRow}>
-                  <span>{sectorLabel(s.sector, locale) ?? t.positions.unclassified}</span>
-                  <span className={styles.lane}>
-                    <span className={styles.laneFill} style={{ width: `${s.weight}%` }} />
-                  </span>
-                  <span className={styles.barValue}>{pct(s.weight, locale)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          {regime === "riskOff" && (
-            <div>
-              <h3 className={styles.forecastHead}>{t.positions.rankTitle}</h3>
-              <p className={styles.ruleMeta}>{t.positions.rankNote}</p>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className={styles.ruleMeta}>{t.positions.rankBeta}</p>
-                  <ol className={styles.rankList}>
-                    {byBeta.map((p) => (
-                      <li key={p.symbol}>
-                        <b>{p.symbol}</b>
-                        <span>{num(p.beta, locale)}</span>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-                <div>
-                  <p className={styles.ruleMeta}>{t.positions.rankVol}</p>
-                  <ol className={styles.rankList}>
-                    {byVol.map((p) => (
-                      <li key={p.symbol}>
-                        <b>{p.symbol}</b>
-                        <span>{pct(p.vol20, locale)}</span>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
+        <div className="mt-3">
+          <h3 className={styles.forecastHead}>{t.positions.sectorsTitle}</h3>
+          <div className="mt-2">
+            {exposure.sectors.map((s) => (
+              <div key={s.sector ?? "none"} className={styles.barRow}>
+                <span>{sectorLabel(s.sector, locale) ?? t.positions.unclassified}</span>
+                <span className={styles.lane}>
+                  <span className={styles.laneFill} style={{ width: `${s.weight}%` }} />
+                </span>
+                <span className={styles.barValue}>{pct(s.weight, locale)}</span>
               </div>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
-        {exposure.missing.length > 0 && <p className={styles.foot}>{fill(t.positions.missing, { list: exposure.missing.join(", ") })}</p>}
-        <p className={styles.foot}>{t.positions.viewNote}</p>
-        <p className={styles.foot}>{t.positions.note}</p>
-      </div>
-    </Panel>
+        <p className={styles.foldText}>{t.indices.note}</p>
+      </details>
+      {exposure.missing.length > 0 && <p className={styles.foot}>{fill(t.positions.missing, { list: exposure.missing.join(", ") })}</p>}
+      <p className={styles.foot}>{t.positions.viewNote}</p>
+      <p className={styles.foot}>{t.positions.note}</p>
+    </>
   );
 }
 
+/** İsabet halkası: payın yayı, bütün günlerin tabanı saç teli. */
+function HitRing({ hit, base, label }: { hit: number | null; base: number | null; label: string }) {
+  const R = 19;
+  const tick = base === null ? null : (base / PERCENT) * 2 * Math.PI;
+  return (
+    <svg className={styles.hitRing} viewBox="0 0 48 48" role="img" aria-label={label}>
+      <circle className={styles.hitTrack} cx={24} cy={24} r={R} pathLength={PERCENT} />
+      {hit !== null && <circle className={styles.hitFill} cx={24} cy={24} r={R} pathLength={PERCENT} strokeDasharray={`${hit} ${PERCENT}`} />}
+      {tick !== null && (
+        <line
+          className={styles.hitBase}
+          x1={24 + (R - 5) * Math.cos(tick)}
+          y1={24 + (R - 5) * Math.sin(tick)}
+          x2={24 + (R + 5) * Math.cos(tick)}
+          y2={24 + (R + 5) * Math.sin(tick)}
+        />
+      )}
+    </svg>
+  );
+}
+
+/**
+ * Geriye dönük test — KÜÇÜK KARTLAR (25 Ekim, kart düzeni): sinyal,
+ * tetiklenme, isabet halkası (taban saç teli), 20 günlük medyan. Taban
+ * satırı panelin künyesine çıktı; ortalamalar ve 5 günlük sütunlar
+ * "Tablo Görünümü"nde.
+ */
 export function BacktestPanel({ desk, t, locale }: Common & { desk: MarketDesk }) {
   const bt = desk.backtest;
   if (!bt) return null;
+  const T = t.cards;
   return (
     <Panel>
       <PanelHeader title={t.backtest.title} meta={fill(t.backtest.range, { from: day(bt.from, locale), to: day(bt.to, locale) })} />
       <div className={styles.panelBody}>
-        <ScrollEdges fixedStart className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th scope="col">{t.backtest.signal}</th>
-                <th scope="col">{t.backtest.triggers}</th>
-                <th scope="col">{t.backtest.short}</th>
-                <th scope="col">{t.backtest.shortMedian}</th>
-                <th scope="col">{t.backtest.long}</th>
-                <th scope="col">{t.backtest.longMedian}</th>
-                <th scope="col">{t.backtest.hit}</th>
-                <th scope="col">{t.backtest.last}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bt.signals.map((s) => (
-                <tr key={s.key}>
-                  <td>
-                    {t.backtest.signals[s.key]}
-                    {s.activeNow && <span className={styles.flag}>{t.backtest.activeNow}</span>}
-                  </td>
-                  <td>
-                    {s.triggers}
-                    {s.pending > 0 && <span className={styles.cellSub}>{fill(t.backtest.pending, { n: s.pending })}</span>}
-                  </td>
-                  <td>
-                    <Dir value={s.shortMean} locale={locale} />
-                  </td>
-                  <td>
-                    <Dir value={s.shortMedian} locale={locale} />
-                  </td>
-                  <td>
-                    <Dir value={s.longMean} locale={locale} />
-                  </td>
-                  <td>
-                    <Dir value={s.longMedian} locale={locale} />
-                  </td>
-                  <td>{pct(s.hitRate, locale, 0)}</td>
-                  <td>{day(s.lastTrigger, locale)}</td>
+        <p className={styles.ruleMeta}>{fill(T.baseMeta, { v: pct(bt.base.hitRate, locale, 0), m: signedPct(bt.base.longMedian, locale) })}</p>
+        <ul className={styles.signals}>
+          {bt.signals.map((s) => (
+            <li key={s.key} className={styles.signal} data-active={s.activeNow ? "" : undefined}>
+              <span className={styles.signalName}>{t.backtest.signals[s.key]}</span>
+              <div className={styles.signalBody}>
+                <HitRing
+                  hit={s.hitRate}
+                  base={bt.base.hitRate}
+                  label={fill(T.hitRing, { v: pct(s.hitRate, locale, 0), b: pct(bt.base.hitRate, locale, 0) })}
+                />
+                <div className={styles.signalFigures}>
+                  <span>
+                    {T.hit} <b>{pct(s.hitRate, locale, 0)}</b>
+                  </span>
+                  <span>
+                    {T.median20} <Dir value={s.longMedian} locale={locale} />
+                  </span>
+                </div>
+              </div>
+              <span className={styles.signalMeta}>
+                {s.triggers > 0 ? fill(T.triggers, { n: s.triggers }) : T.noTrigger}
+                {s.pending > 0 && ` · ${fill(t.backtest.pending, { n: s.pending })}`}
+                {s.lastTrigger && ` · ${fill(T.lastTrigger, { date: day(s.lastTrigger, locale) })}`}
+              </span>
+              {s.activeNow && <span className={styles.flagNow}>{t.backtest.activeNow}</span>}
+            </li>
+          ))}
+        </ul>
+        <details className={styles.fold}>
+          <summary>{T.tableToggle}</summary>
+          <ScrollEdges fixedStart className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th scope="col">{t.backtest.signal}</th>
+                  <th scope="col">{t.backtest.triggers}</th>
+                  <th scope="col">{t.backtest.short}</th>
+                  <th scope="col">{t.backtest.shortMedian}</th>
+                  <th scope="col">{t.backtest.long}</th>
+                  <th scope="col">{t.backtest.longMedian}</th>
+                  <th scope="col">{t.backtest.hit}</th>
+                  <th scope="col">{t.backtest.last}</th>
                 </tr>
-              ))}
-              <tr>
-                <td>{t.backtest.base}</td>
-                <td>{bt.base.scored}</td>
-                <td>
-                  <Dir value={bt.base.shortMean} locale={locale} />
-                </td>
-                <td>
-                  <Dir value={bt.base.shortMedian} locale={locale} />
-                </td>
-                <td>
-                  <Dir value={bt.base.longMean} locale={locale} />
-                </td>
-                <td>
-                  <Dir value={bt.base.longMedian} locale={locale} />
-                </td>
-                <td>{pct(bt.base.hitRate, locale, 0)}</td>
-                <td>{num(null, locale)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </ScrollEdges>
+              </thead>
+              <tbody>
+                {[...bt.signals.map((s) => ({ ...s, name: t.backtest.signals[s.key] })), { ...bt.base, key: "base", name: t.backtest.base, triggers: bt.base.scored, lastTrigger: null }].map((s) => (
+                  <tr key={s.key}>
+                    <td>{s.name}</td>
+                    <td>{s.triggers}</td>
+                    <td>
+                      <Dir value={s.shortMean} locale={locale} />
+                    </td>
+                    <td>
+                      <Dir value={s.shortMedian} locale={locale} />
+                    </td>
+                    <td>
+                      <Dir value={s.longMean} locale={locale} />
+                    </td>
+                    <td>
+                      <Dir value={s.longMedian} locale={locale} />
+                    </td>
+                    <td>{pct(s.hitRate, locale, 0)}</td>
+                    <td>{day(s.lastTrigger, locale)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </ScrollEdges>
+        </details>
         <p className={styles.foot}>{t.backtest.note}</p>
       </div>
     </Panel>

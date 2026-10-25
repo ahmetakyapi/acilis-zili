@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr";
+import { ArrowSquareOut, CaretDown } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
@@ -29,10 +29,6 @@ export function CongressStrip({ detail, locale, t }: { detail: CongressDetailDat
   const latest = detail.filings[0];
   return (
     <dl className={styles.strip}>
-      <div>
-        <dt>{t.stripTrades}</dt>
-        <dd className="numeral">{detail.trades.length}</dd>
-      </div>
       <div>
         <dt>{t.stripBuys}</dt>
         <dd className="numeral text-up">{detail.trades.filter((trade) => isBuy(trade.txType)).length}</dd>
@@ -143,10 +139,17 @@ export function CongressBody({
         </ul>
       </Panel>
 
-      <Panel className={styles.tablePanel}>
-        <PanelHeader title={t.tradesTitle} meta={plural(detail.trades.length, t.tradesCountOne, t.tradesCount).replace("{count}", String(detail.trades.length))} />
+      {/* KATLI (25 Ekim): ana görsel hisse bazındaki satırlar; işlem
+          listesinin tamamı isteyene (13F'in tam tablosuyla aynı karar). */}
+      <details className={cn("panel", styles.tablePanel, styles.tableFold)}>
+        <summary className={styles.tableSummary}>
+          <h2 className="display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.015em]">
+            {t.tradesTitle} · <span className="numeral">{detail.trades.length}</span>
+          </h2>
+          <CaretDown size={16} weight="bold" className={styles.tableSummaryIcon} aria-hidden />
+        </summary>
         <TradeTable trades={detail.trades} known={known} locale={locale} t={t} />
-      </Panel>
+      </details>
 
       {/* Şirket kartı — sembolü tabloda bilinen satırlar; kotasyonu kart
           kendisi soruyor, akışla iniyor. */}

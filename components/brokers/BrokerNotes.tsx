@@ -1,7 +1,6 @@
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { FoldToggle } from "@/components/ui/FoldToggle";
-import { Panel, PanelHeader } from "@/components/ui/primitives";
+import { BrokerFold } from "@/components/brokers/BrokerFold";
 import { formatIsoDate } from "@/lib/fx";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n";
@@ -11,43 +10,41 @@ import styles from "./Brokers.module.css";
 /**
  * Metin ve künye: tabloda olmayan kalemler, tarafsızlık notu.
  *
- * Tarafsızlık notu ve "Yatırım Tavsiyesi Değildir" panelin İÇİNDE,
- * hairline ile ayrılmış düz paragraf — uyarı için yeni kutu açılmıyor
- * (CLAUDE.md ekran düzeni 6).
+ * 25 Ekim kompakt tur: "Tabloda Olmayanlar" artık kendi paneli değil,
+ * "Ayrıntılar" panelinde katlı bir satır (`BrokerFold`); kapalıyken özeti
+ * kalemlerin adları (sözlükten, ayrı metin yazılmadı). Çapa
+ * `#tabloda-olmayanlar` aynı.
+ *
+ * Tarafsızlık notu ve "Yatırım Tavsiyesi Değildir" KATLANMIYOR
+ * (`BrokerNeutrality`): panelin dibinde, hairline ile ayrılmış düz paragraf;
+ * uyarı için yeni kutu açılmıyor (CLAUDE.md ekran düzeni 6).
  */
-/** Telefonda açık kalan "Tabloda Olmayanlar" kalemi sayısı. */
-const NOTES_OPEN = 1;
-
-export function BrokerNotes({ t }: { t: Dictionary }) {
+export function BrokerNotes({ t, locale }: { t: Dictionary; locale: Locale }) {
   const L = t.brokers;
   const links = [
     { href: "/rehber/araci-kurum-secimi", label: L.guideLink },
     { href: "/rehber/bankadan-araci-kuruma-gecis", label: L.transferLink },
     { href: "/vergi", label: L.taxLink },
   ];
+  const terms = new Intl.ListFormat(locale === "en" ? "en" : "tr", { type: "conjunction" }).format(
+    L.outside.map((item) => item.term),
+  );
   return (
-    <Panel id="tabloda-olmayanlar" aria-label={L.outsideTitle}>
-      <PanelHeader title={L.outsideTitle} />
-      {/* Telefonda ilk kalem açık, kalanı katlı (25 Ekim, sayfa boyu). */}
-      <div className="px-4 pb-4 sm:px-5">
-      <FoldToggle
-        id="tabloda-olmayanlar-devam"
-        hiddenCount={Math.max(0, L.outside.length - NOTES_OPEN)}
-        phone
-        more={t.brokerCards.panelFolds.notesMore}
-        less={t.brokerCards.panelFolds.notesLess}
-      >
-      <dl className="flex max-w-3xl flex-col gap-3">
-        {L.outside.map((item, index) => (
-          <div key={item.term} data-fold={index >= NOTES_OPEN || undefined}>
+    <BrokerFold
+      id="tabloda-olmayanlar"
+      title={L.outsideTitle}
+      summary={terms}
+      meta={t.brokerCards.compact.outsideMeta.replace("{n}", String(L.outside.length))}
+    >
+      <dl className="grid gap-x-8 gap-y-3 lg:grid-cols-2">
+        {L.outside.map((item) => (
+          <div key={item.term} className="max-w-3xl">
             <dt className="text-sm font-bold text-strong">{item.term}</dt>
             <dd className="mt-0.5 text-sm leading-relaxed text-body">{item.body}</dd>
           </div>
         ))}
       </dl>
-      </FoldToggle>
-      </div>
-      <ul className="flex flex-wrap gap-x-5 px-4 pb-4 sm:px-5">
+      <ul className="mt-1 flex flex-wrap gap-x-5">
         {links.map((link) => (
           <li key={link.href}>
             <Link href={link.href} className={styles.inlineLink}>
@@ -57,15 +54,20 @@ export function BrokerNotes({ t }: { t: Dictionary }) {
           </li>
         ))}
       </ul>
-      <div className="border-t border-line-soft px-4 py-4 sm:px-5">
-        <div className="flex max-w-3xl flex-col gap-1.5 text-tiny leading-relaxed text-muted">
-          <p>
-            <strong className="font-semibold text-body">{L.neutralityTitle}.</strong> {L.neutrality}
-          </p>
-          <p className="font-semibold text-body">{L.notAdvice}</p>
-        </div>
-      </div>
-    </Panel>
+    </BrokerFold>
+  );
+}
+
+/** Tarafsızlık künyesi — katlanmaz; "Ayrıntılar" panelinin dibinde. */
+export function BrokerNeutrality({ t }: { t: Dictionary }) {
+  const L = t.brokers;
+  return (
+    <div className="flex max-w-4xl flex-col gap-1 px-4 py-3.5 text-tiny leading-relaxed text-muted sm:px-5">
+      <p>
+        <strong className="font-semibold text-body">{L.neutralityTitle}.</strong> {L.neutrality}
+      </p>
+      <p className="font-semibold text-body">{L.notAdvice}</p>
+    </div>
   );
 }
 
@@ -93,26 +95,26 @@ export function BrokerSources({
   const docDate = (raw: string) =>
     /^\d{4}-\d{2}-\d{2}$/.test(raw) ? formatIsoDate(raw, locale, "long") : raw;
 
+  const sourceCount = brokers.reduce((sum, broker) => sum + Object.keys(broker.sources).length, 0);
+
+  /* 25 Ekim kompakt tur: liste her genişlikte katlı (eskiden yalnız
+     telefonda, FoldToggle ile). Kartlardaki kaynak numarası ve "N Kaynak"
+     bağlantısı içerideki çapaya gidiyor; katlamayı `RevealFoldAnchor`
+     açıyor. */
   return (
-    <Panel id="kaynaklar" aria-label={L.sourcesTitle}>
-      <PanelHeader title={L.sourcesTitle} />
-      <p className="max-w-3xl px-4 pb-4 text-sm leading-relaxed text-body sm:px-5">{L.sourcesLead}</p>
-      {/* Telefonda kaynak listesi katlı (25 Ekim, sayfa boyu: 390'da 2.192
-          piksel). Çapayla gelen okur için katlama kendiliğinden açılıyor
-          (`RevealFoldAnchor`); JS'siz düğmeyle açılıyor. */}
-      <div className="px-4 pb-5 sm:px-5">
-      <FoldToggle
-        id="kaynaklar-tumu"
-        hiddenCount={brokers.length}
-        phone
-        more={t.brokerCards.panelFolds.sourcesMore}
-        less={t.brokerCards.panelFolds.sourcesLess}
-      >
+    <BrokerFold
+      id="kaynaklar"
+      title={L.sourcesTitle}
+      summary={t.brokerCards.compact.sourcesSummary}
+      meta={t.brokerCards.compact.sourcesMeta
+        .replace("{count}", String(brokers.length))
+        .replace("{n}", String(sourceCount))}
+    >
+      <p className="mb-4 max-w-3xl text-sm leading-relaxed text-body">{L.sourcesLead}</p>
       <div className="grid gap-x-8 gap-y-5 lg:grid-cols-2">
         {brokers.map((broker) => (
           <section
             key={broker.id}
-            data-fold
             id={`kaynaklar-${broker.id}`}
             aria-label={broker.name}
             className="min-w-0 scroll-mt-28"
@@ -150,8 +152,6 @@ export function BrokerSources({
           </section>
         ))}
       </div>
-      </FoldToggle>
-      </div>
-    </Panel>
+    </BrokerFold>
   );
 }

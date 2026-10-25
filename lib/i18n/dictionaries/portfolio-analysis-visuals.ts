@@ -44,6 +44,20 @@ export const portfolioAnalysisVisualsTr = {
     same: "Değişmiyor",
     aria: "{label}: bugün {before}, fonla {after}",
   },
+  /* Kart panosu (25 Ekim, sahibinin isteği: "yan yana kartlar, kaydırmadan
+     görülsün"). Kompakt bandın tek satırlık açıklaması ve kartların adları. */
+  board: {
+    description: "Sektör, yoğunlaşma ve risk; S&P 500 ile yan yana ölçülür ve karşılaştırılır.",
+    keysTitle: "Temel Ölçüler",
+    heaviest: "En Ağır Sektör",
+    ratio: "{ratio} Kat",
+    effectiveSub: "{count} pozisyonun eşit ağırlıklı karşılığı",
+    notesMore: "Hesap Notunu Göster",
+    notesLess: "Hesap Notunu Gizle",
+    concentrationTitle: "Yoğunlaşma",
+    absent: "Portföyde Olmayan Sektörler",
+    absentAria: "{sector}: portföyde yok, S&P 500'de {bench}",
+  },
 };
 
 export const portfolioAnalysisVisualsEn: typeof portfolioAnalysisVisualsTr = {
@@ -79,5 +93,17 @@ export const portfolioAnalysisVisualsEn: typeof portfolioAnalysisVisualsTr = {
   scenario: {
     same: "Unchanged",
     aria: "{label}: today {before}, with the fund {after}",
+  },
+  board: {
+    description: "Sector mix, concentration and risk, measured side by side with the S&P 500.",
+    keysTitle: "Key Measures",
+    heaviest: "Heaviest Sector",
+    ratio: "{ratio}×",
+    effectiveSub: "Equal-weight equivalent of {count} positions",
+    notesMore: "Show the Method Note",
+    notesLess: "Hide the Method Note",
+    concentrationTitle: "Concentration",
+    absent: "Sectors Not in the Portfolio",
+    absentAria: "{sector}: not in the portfolio, {bench} of the S&P 500",
   },
 };

@@ -8,7 +8,7 @@
 
 export const changelogTr = {
   title: "Yenilikler",
-  subtitle: "Sitede neyin değiştiği, en yenisi üstte. Yeni bir özelliği yanındaki bağlantıdan hemen deneyebilirsin.",
+  subtitle: "Sitede neyin değiştiği, en yenisi üstte; her yeni özelliği tek dokunuşla deneyebilirsin.",
   menuHint: "Siteye Son Eklenenler",
   badge: "Yeni",
   badgeLabel: "Görmediğin yenilikler var",
@@ -47,11 +47,26 @@ export const changelogTr = {
   menuGroup: "Site",
   feedTitle: "Açılış Zili: Yenilikler",
   feedDescription: "Açılış Zili'ne eklenen özellikler, iyileştirmeler ve düzeltmeler.",
+  /* Kompakt düzen (25 Ekim, ikinci tur): öne çıkanlar, alan süzgeci, rozet. */
+  featuredTitle: "Öne Çıkanlar",
+  restTitle: "Bu Sürümde Ayrıca",
+  stripHint: "Boy madde sayısı, renk en çok değişen alan.",
+  statsLabel: "Yenilikler Özeti",
+  areaFilterLabel: "Alan",
+  areaShort: {
+    claude: "Claude",
+    piyasa: "Piyasa",
+    bilanco: "Bilanço",
+    kisisel: "Kişisel",
+    icerik: "İçerik",
+  },
+  unseenLabel: "görmediğin yenilik",
+  latestBadge: "Son Sürüm",
 };
 
 export const changelogEn: typeof changelogTr = {
   title: "What's New",
-  subtitle: "What changed on the site, newest first. Try any new feature straight from the link next to it.",
+  subtitle: "What changed on the site, newest first; try any new feature in one tap.",
   menuHint: "Latest Additions",
   badge: "New",
   badgeLabel: "There are updates you haven't seen",
@@ -89,6 +104,20 @@ export const changelogEn: typeof changelogTr = {
   menuGroup: "Site",
   feedTitle: "Opening Bell: What's New",
   feedDescription: "Features, improvements and fixes added to Opening Bell.",
+  featuredTitle: "Highlights",
+  restTitle: "Also in This Release",
+  stripHint: "Height is the item count, color the busiest area.",
+  statsLabel: "What's New Summary",
+  areaFilterLabel: "Area",
+  areaShort: {
+    claude: "Claude",
+    piyasa: "Markets",
+    bilanco: "Earnings",
+    kisisel: "Personal",
+    icerik: "Content",
+  },
+  unseenLabel: "an update you haven't seen",
+  latestBadge: "Latest",
 };
 
 export type ChangelogLabels = typeof changelogTr;

@@ -8,6 +8,8 @@ import {
   heatOf,
   heaviestSector,
   pairScale,
+  ratioTo,
+  sectorBoard,
   STRIP_MAX,
   weightStrip,
   type LeadFormat,
@@ -104,4 +106,35 @@ test("cümle ve görsel künyeler öneri kipi taşımaz (SPK çizgisi)", () => {
     const strings = JSON.stringify(dict);
     assert.ok(isAdviceFree(strings, locale), `${locale} künyelerinde öneri kalıbı`);
   }
+});
+
+/* Kart panosu (25 Ekim): sektör kartının iki bölümü ve oynaklık oranı. */
+test("sektör panosu: portföyde olanlar satır, olmayanlar ızgara, ölçek ortak", () => {
+  const rows = [
+    { sector: "Financials", portfolio: 0, benchmark: 12.1, diff: -12.1 },
+    { sector: "Information Technology", portfolio: 97.5, benchmark: 37.8, diff: 59.7 },
+    { sector: "Energy", portfolio: 0, benchmark: 3.8, diff: -3.8 },
+    { sector: "Health Care", portfolio: 2.5, benchmark: 9.9, diff: -7.4 },
+    { sector: "Unknown", portfolio: 0, benchmark: 0, diff: 0 },
+  ];
+  const board = sectorBoard(rows);
+  assert.deepEqual(board.held.map((row) => row.sector), ["Information Technology", "Health Care"]);
+  /* Portföyde olmayanlar S&P 500 payı sırasıyla; iki tarafta da sıfır olan düşer. */
+  assert.deepEqual(board.absent.map((row) => row.sector), ["Financials", "Energy"]);
+  assert.equal(board.scale, 97.5);
+  /* Hiçbir sektör kaybolmuyor: payı olan her satır iki bölümden birinde. */
+  assert.equal(board.held.length + board.absent.length, rows.filter((row) => row.portfolio > 0 || row.benchmark > 0).length);
+});
+
+test("sektör panosu: boş girdi tek ölçekle döner", () => {
+  assert.deepEqual(sectorBoard([]), { held: [], absent: [], scale: 1 });
+});
+
+test("oynaklık oranı: cümle ile kart aynı fonksiyon, endeks sıfırsa yok", () => {
+  assert.ok(Math.abs((ratioTo(85.2, 12.7) ?? 0) - 6.709) < 0.001);
+  assert.equal(ratioTo(10, 0), null);
+  assert.equal(ratioTo(10, -1), null);
+  assert.equal(ratioTo(Number.NaN, 5), null);
+  /* Cümledeki "6,7 katı" kartın "6,7 Kat"ıyla aynı oran. */
+  assert.ok(composeAnalysisLead(facts, portfolioAnalysisVisualsTr.lead, trFormat).includes("6,7 katı"));
 });

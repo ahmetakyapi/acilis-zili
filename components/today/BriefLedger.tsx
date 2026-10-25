@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, CaretDown } from "@phosphor-icons/react/dist/ssr";
 import { posterName } from "@/components/day-poster/story";
 import { MiniLane } from "@/components/day-poster/PosterLanes";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -38,10 +38,12 @@ import styles from "./BriefLedger.module.css";
  * KAYIT DEFTERİ — bülten sayısının görsel özeti (25 Ekim görsel zirve).
  *
  * İki boy, aynı veri (`getBriefLedger`, aynı yüzde her yerde):
- *   `page` — bülten sayfasında başlığın altında tam bant: günün cümlesi,
+ *   `page` — bülten sayfasında başlığın altında kompakt bant (25 Ekim):
+ *     başlık, seans ve günün cümlesi tek satır; altında tek sıra kart —
  *     S&P 500'ün ölçekli rakamı, dört endeks ortak sıfır çizgili
- *     kulvarlarda (haftalıkta beş günlük kesintisiz şerit), üç ölçü önce →
- *     sonra kartında, bültende adı geçen hisseler logolu şeritte.
+ *     kulvarlarda (haftalıkta beş günlük kesintisiz şerit), üç ölçü tek
+ *     satırlık önce → sonra karosunda; bültende adı geçen hisseler logolu
+ *     çip satırında, künye tek satır + katlı ayrıntı.
  *   `card` — ana sayfanın bülten kartında yalnız dört endeks; kart bir
  *     giriş, bandın tamamı bülten sayfasında.
  *
@@ -193,43 +195,57 @@ export function BriefLedger({
         ? L.foldMetrics
         : L.foldStocks;
 
+  /* KOMPAKT BANT (25 Ekim, sahibinin sözü: "Burayı da daha kompakt
+     yapabiliriz bence"). Önceki düzen 1440'ta 613 piksel ölçüldü (haftalıkta
+     675): başlık, künye ve cümle üç satır; üç kolonun en uzunu yüksek ölçü
+     kartları; hisse ızgarası ve iki satırlık künye ayrı katlar. Bülten metni
+     900'lük ekranın 910. pikselinde, yani ilk ekranın dışındaydı.
+     Bugün: baş tek bant, altında TEK SIRA kart (manşet | dört endeks | üç
+     ölçü), hisseler tek satır çip, künye tek satır + katlı ayrıntı. Veri
+     aynı (aynı `getBriefLedger`, aynı yüzde); değişen yalnız yerleşim.
+     Ölçümler BriefLedger.module.css başında. */
   return (
     <section className={cn("panel", styles.band)} aria-labelledby="ledger-title" data-weekly={weekly ? "" : undefined}>
       <header className={styles.head}>
-        <h2 id="ledger-title" className="display-ink display-ink-tight w-fit text-title font-bold tracking-[-0.02em] sm:text-heading">
+        <h2 id="ledger-title" className={cn("display-ink display-ink-tight", styles.title)}>
           {weekly ? L.weeklyTitle : L.dailyTitle}
         </h2>
         <p className={styles.session}>{sessionLine}</p>
         {storyText && <p className={styles.story}>{storyText}</p>}
       </header>
 
-      {/* TELEFONDA KATLANAN AYRINTI (25 Ekim son düzeltme). Bant 390'da
-          962–1000 piksel ölçüldü: ilk ekranın tamamı, bültenin ilk cümlesi
-          1.631. pikselde. Telefonda bandın özü (cümle ve dört endeks)
-          açık kalıyor; manşet sayısı düşüyor (aynı yüzde S&P 500
-          satırında), ölçüler, hisseler ve künye JS'siz katlamanın
-          arkasında (FoldToggle, 640 altı). 640 ve üstünde düzen aynı. */}
+      {/* TELEFONDA KATLANAN AYRINTI (25 Ekim son düzeltme, kompakt bantta
+          da korunuyor): 640 altında ölçüler, hisseler ve künye JS'siz
+          katlamanın arkasında; bandın özü (cümle ve dört endeks karosu)
+          açık. 640 ve üstünde katlama yok. Katlanan öğeler düz `div`
+          sarmalayıcıda: FoldToggle geniş ekranda `display: revert` diyor,
+          ızgara/esnek kutunun kendisine konsa düzeni tarayıcı varsayılanına
+          döndürürdü. */}
       <FoldToggle id="ledger-detail" hiddenCount={foldCount} more={foldMore} less={L.foldLess} phone>
         <div className={styles.body}>
           <div className={styles.grid}>
-            {/* MANŞET SAYISI — S&P 500'ün dönemi, ölçekli tipografide. Aynı
-                sayı aşağıdaki kulvarda da duruyor: ikisi aynı kaynaktan. */}
+            {/* MANŞET SAYISI — S&P 500'ün dönemi. Aynı sayı endeks kartındaki
+                satırda da duruyor: ikisi aynı kaynaktan (aynı `move`). */}
             <div
-              className={styles.hero}
+              className={cn(styles.card, styles.hero)}
               data-ledger-key={anchor.symbol}
               data-ledger-summary={summary(name(anchor.symbol), pct(anchor.change))}
             >
-              <span className={styles.heroCaption}>{weekly ? L.heroCaptionWeekly : L.heroCaption}</span>
+              <span className={styles.cardLabel}>{weekly ? L.heroCaptionWeekly : L.heroCaption}</span>
               <RollingFigure value={pct(anchor.change)} className={cn(styles.heroFigure, directionText(anchorDir))} />
               <MiniLane change={anchor.change} scale={scale} className={styles.heroLane} />
             </div>
 
-            {/* ENDEKSLER — ortak sıfır çizgisi, tek ölçek, eksen künyesi. */}
-            <div className={styles.indices}>
-              <p className={styles.blockLabel}>{L.indicesLabel}</p>
-              {weekly ? (
+            {/* ENDEKSLER — ortak sıfır çizgisi, tek ölçek. Eksen künyesi ayrı
+                satır değil, etiketin sağında ("±%1,2"): bir satır kazandırıyor. */}
+            <div className={cn(styles.card, styles.indices)}>
+              <p className={styles.cardHead}>
+                <span className={styles.cardLabel}>{L.indicesLabel}</span>
+                {!weekly && <span className={styles.scale}>{L.scale.replace("{value}", scaleText)}</span>}
+              </p>
+              {weekly && (
                 <div className={styles.weekHead} aria-hidden>
-                  <span className={styles.weekHeadName} />
+                  <span />
                   <span className={styles.weekDays}>
                     {data.window.days.map((day, index) => (
                       <span key={day.date} className={styles.weekDay}>
@@ -238,16 +254,6 @@ export function BriefLedger({
                     ))}
                   </span>
                   <span className={cn(styles.weekDay, styles.weekTotal)}>{L.weekTotal}</span>
-                </div>
-              ) : (
-                <div className={styles.axis} aria-hidden>
-                  <span />
-                  <span className={styles.axisTrack}>
-                    <span>−{scaleText}</span>
-                    <span>0</span>
-                    <span>+{scaleText}</span>
-                  </span>
-                  <span />
                 </div>
               )}
               <ol className={cn(styles.lanes, weekly && styles.weekLanes)}>
@@ -267,16 +273,17 @@ export function BriefLedger({
               </ol>
             </div>
 
+            {/* ÖLÇÜLER — üç küçük karo, her biri tek satır: ad, önce → sonra,
+                rozet. Ayrı başlık yok; liste adı ekran okuyucuya. */}
             {data.metrics.length > 0 && (
-              <div className={styles.metrics} data-fold>
-                <p className={styles.blockLabel}>{L.metricsLabel}</p>
-                <ul className={styles.metricList}>
+              <div className={styles.metricsWrap} data-fold>
+                <ul className={styles.metrics} aria-label={L.metricsLabel}>
                   {data.metrics.map((metric) => {
                     const text = metricText(metric, locale, L);
                     return (
                       <li
                         key={metric.key}
-                        className={styles.metric}
+                        className={cn(styles.card, styles.metric)}
                         data-ledger-key={metric.key}
                         data-ledger-summary={summary(L.metrics[metric.key], `${text.value} (${text.delta})`)}
                       >
@@ -290,7 +297,7 @@ export function BriefLedger({
                         </span>
                         <span className={styles.metricShift}>
                           <span className={styles.metricPrev}>{text.prev}</span>
-                          <ArrowRight size={13} weight="bold" aria-hidden className={styles.metricArrow} />
+                          <ArrowRight size={11} weight="bold" aria-hidden className={styles.metricArrow} />
                           <span className={styles.metricValue}>{text.value}</span>
                         </span>
                         <span className={cn(styles.metricDelta, directionWash(text.dir))}>{text.delta}</span>
@@ -302,38 +309,55 @@ export function BriefLedger({
             )}
           </div>
 
+          {/* HİSSELER — tek satır çip: logo, sembol, yüzde. Şirket adı çipin
+              `title`ında ve ekran okuyucu adında; sekiz hisse 1440'ta tek
+              satıra sığıyor, sığmayan genişlikte şerit kayıyor (ScrollEdges
+              "devamı var" der). */}
           {data.stocks.length > 0 && (
-            <div className={styles.stocks} data-fold>
-              <p className={styles.blockLabel}>{L.stocksLabel}</p>
-              <ScrollEdges as="ul" className={cn("no-scrollbar", styles.stockList)}>
-                {data.stocks.map((stock, index) => {
-                  const value = pct(stock.change);
-                  return (
-                    <li key={stock.symbol} style={{ "--i": index } as CSSProperties}>
-                      <Link
-                        href={`/hisse/${stock.symbol}`}
-                        prefetch={false}
-                        className={styles.stock}
-                        data-ledger-key={stock.symbol}
-                        data-ledger-summary={summary(stock.name, value)}
-                        aria-label={L.stockAria.replace("{name}", stock.name).replace("{symbol}", stock.symbol).replace("{value}", value)}
-                      >
-                        <LogoTile symbol={stock.symbol} logoUrl={stock.logoUrl} size="sm" />
-                        <span className={styles.stockText}>
+            <div data-fold>
+              <div className={styles.stocks}>
+                <p className={styles.stocksLabel}>{L.stocksLabel}</p>
+                <ScrollEdges as="ul" className={cn("no-scrollbar", styles.stockList)}>
+                  {data.stocks.map((stock, index) => {
+                    const value = pct(stock.change);
+                    return (
+                      <li key={stock.symbol} style={{ "--i": index } as CSSProperties}>
+                        <Link
+                          href={`/hisse/${stock.symbol}`}
+                          prefetch={false}
+                          className={styles.stock}
+                          title={stock.name}
+                          data-ledger-key={stock.symbol}
+                          data-ledger-summary={summary(stock.name, value)}
+                          aria-label={L.stockAria.replace("{name}", stock.name).replace("{symbol}", stock.symbol).replace("{value}", value)}
+                        >
+                          <LogoTile symbol={stock.symbol} logoUrl={stock.logoUrl} size="xs" />
                           <span className={styles.stockSymbol}>{stock.symbol}</span>
-                          <span className={styles.stockName}>{stock.name}</span>
-                        </span>
-                        <span className={cn(styles.stockValue, directionText(directionOf(stock.change)))}>{value}</span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ScrollEdges>
+                          <span className={cn(styles.stockValue, directionText(directionOf(stock.change)))}>{value}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ScrollEdges>
+              </div>
             </div>
           )}
 
-          {/* Künye panelin içinde, hairline'la — yeni kutu açılmaz. */}
-          <p className={styles.note} data-fold>{L.dataNote}</p>
+          {/* KÜNYE — panelin içinde, hairline'la; tek satır kaynak listesi,
+              yöntemin tamamı yerli `<details>`te (JS'siz açılıyor; açılış
+              geçişi ve kaydırma çapası globals.css + ExpandInPlace'te). */}
+          <div data-fold>
+            <details className={styles.note}>
+              <summary className={styles.noteSummary}>
+                <span className={styles.noteShort}>{L.dataNoteShort}</span>
+                <span className={styles.noteToggle}>
+                  {L.dataNoteMore}
+                  <CaretDown size={12} weight="bold" aria-hidden className={styles.noteIcon} />
+                </span>
+              </summary>
+              <p className={styles.noteBody}>{L.dataNote}</p>
+            </details>
+          </div>
         </div>
       </FoldToggle>
     </section>

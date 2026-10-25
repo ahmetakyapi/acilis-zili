@@ -14,7 +14,7 @@ import {
   sma,
   type DailyBar,
 } from "../lib/risk/math";
-import { measureSymbol, weightedMean } from "../lib/risk/measures";
+import { belowShares, measureSymbol, positionTone, priceTrail, weightedMean } from "../lib/risk/measures";
 
 function dates(n: number, end = "2026-10-23"): string[] {
   const out: string[] = [];
@@ -122,4 +122,63 @@ test("measureSymbol: GO uzaklığı, bayraklar ve pencere kuralı", () => {
 test("weightedMean bilinmeyeni paydadan çıkarır", () => {
   assert.deepEqual(weightedMean([{ weight: 60, value: 1.5 }, { weight: 40, value: null }]), { value: 1.5, coveredWeight: 60 });
   assert.equal(weightedMean([{ weight: 10, value: null }]), null);
+});
+
+/* ---------------------------------------------------------------- kart düzeni (25 Ekim) */
+
+test("belowShares: ortalaması olmayan pozisyon paydadan çıkar, kapsam söylenir", () => {
+  /* 25 Ekim'deki gerçek tablo: dört pozisyon 100 GO altında, 200 GO üstünde;
+     kısa geçmişli beşincinin 200 GO'su yok. */
+  const rows = [
+    { weight: 43.4, below: { 50: true, 100: true, 200: false } },
+    { weight: 40.9, below: { 50: true, 100: true, 200: false } },
+    { weight: 12.1, below: { 50: true, 100: true, 200: false } },
+    { weight: 1.1, below: { 50: true, 100: true, 200: false } },
+    { weight: 2.5, below: { 50: true, 100: true, 200: null } },
+  ];
+  const s = belowShares(rows);
+  assert.ok(Math.abs(s[100].weight - 100) < 1e-9);
+  assert.ok(Math.abs(s[100].covered - 100) < 1e-9);
+  assert.equal(s[200].weight, 0);
+  assert.ok(Math.abs(s[200].covered - 97.5) < 1e-9);
+});
+
+test("measureSymbol: 100 GO altında ama 200 GO üstünde olabilen seri doğru bayraklanır", () => {
+  /* Uzun düz dönem, 40 günlük tepe (200), sonra 140'a geri çekilme: 100 GO
+     148, 200 GO 124. Fiyat 100'ün altında, 200'ün üstünde. */
+  const closes = [...Array<number>(240).fill(100), ...Array<number>(40).fill(200), ...Array<number>(20).fill(140)];
+  const d = dates(closes.length);
+  const bars: DailyBar[] = closes.map((c, i) => ({ date: d[i]!, open: c, high: c * 1.01, low: c * 0.99, close: c }));
+  const m = measureSymbol("X", bars, null)!;
+  const last = closes[closes.length - 1]!;
+  const avg = (w: number) => closes.slice(-w).reduce((a, b) => a + b, 0) / w;
+  assert.equal(m.below[100], last < avg(100));
+  assert.equal(m.below[200], last < avg(200));
+  assert.equal(m.below[100], true);
+  assert.equal(m.below[200], false);
+});
+
+test("priceTrail: ortalamalar bütün seriden, sonra kesilir", () => {
+  const closes = series(300);
+  const d = dates(closes.length);
+  const bars: DailyBar[] = closes.map((c, i) => ({ date: d[i]!, open: c, high: c, low: c, close: c }));
+  const trail = priceTrail(bars, 63);
+  assert.equal(trail.closes.length, 63);
+  assert.equal(trail.ma[200].length, 63);
+  assert.equal(trail.ma[200][0], sma(closes, 200)[300 - 63]);
+  assert.ok(trail.ma[200].every((v) => v !== null));
+  /* Kısa geçmiş: 200 GO hiç basılmaz. */
+  const short = priceTrail(bars.slice(-150), 63);
+  assert.ok(short.ma[200].every((v) => v === null));
+  assert.ok(short.ma[50].every((v) => v !== null));
+});
+
+test("positionTone: trend ve oynaklık diliminin büyüğü", () => {
+  const flags = (b100: boolean | null, b200: boolean | null) => ({ 50: null, 100: b100, 200: b200 });
+  assert.equal(positionTone({ below: flags(false, false), vol20Pctile: 50 }), 0);
+  assert.equal(positionTone({ below: flags(true, false), vol20Pctile: 50 }), 1);
+  assert.equal(positionTone({ below: flags(true, true), vol20Pctile: 10 }), 2);
+  assert.equal(positionTone({ below: flags(false, false), vol20Pctile: 80 }), 1);
+  assert.equal(positionTone({ below: flags(false, null), vol20Pctile: 95 }), 2);
+  assert.equal(positionTone({ below: flags(null, null), vol20Pctile: null }), 0);
 });

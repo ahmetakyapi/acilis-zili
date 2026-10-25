@@ -3,7 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { shouldBadge } from "@/lib/changelog-seen";
 import { cn } from "@/lib/utils";
-import { markSeen, seenServerSnapshot, seenSnapshot, subscribeSeen } from "./seen-store";
+import { baselineSnapshot, isUnseen, markSeen, seenServerSnapshot, seenSnapshot, subscribeSeen } from "./seen-store";
 import styles from "./Changelog.module.css";
 
 /** Bugünün UTC günü — rozetin "taze mi" kıyası gün hassasiyetinde. */
@@ -54,4 +54,35 @@ export function MarkChangelogSeen({ latest }: { latest: string }) {
     markSeen(latest);
   }, [latest]);
   return null;
+}
+
+/**
+ * Sayfadaki "Yeni" rozeti (25 Ekim kompakt düzen): giriş okurun bu
+ * ziyaretten önce görmediği bir sürümse kartın ve satırın yanında küçük hap.
+ * Kıyas ziyaret başındaki değerle (`baselineSnapshot`): sayfa açılınca
+ * yazılan "görüldü" rozetleri aynı anda söndürmesin. Sunucuda ve hidrasyonda
+ * basılmaz; yer ayrılmadığı için hap satırın SONUNDA durur, öndeki metni
+ * itmez (CLS ölçüldü).
+ */
+export function UnseenPill({
+  date,
+  latest,
+  label,
+  srLabel,
+  className,
+}: {
+  date: string;
+  latest: string;
+  label: string;
+  srLabel: string;
+  className?: string;
+}) {
+  const baseline = useSyncExternalStore(subscribeSeen, baselineSnapshot, seenServerSnapshot);
+  if (baseline === undefined || !isUnseen(date, baseline, latest, todayUtc())) return null;
+  return (
+    <span className={cn(styles.badgePill, className)} title={srLabel}>
+      {label}
+      <span className="sr-only">, {srLabel}</span>
+    </span>
+  );
 }

@@ -1,5 +1,4 @@
-import { CaretDown } from "@phosphor-icons/react/dist/ssr";
-import { Panel } from "@/components/ui/primitives";
+import { BrokerFold } from "@/components/brokers/BrokerFold";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import {
   BROKER_COLUMNS,
@@ -22,6 +21,8 @@ import styles from "./Brokers.module.css";
  * doğrulamak için en doğru biçim hâlâ bu. Yerli `<details>`: JavaScript'siz
  * açılıyor, açılış geçişi globals.css'te (`::details-content`).
  * Satır çapası `#tarife-{id}` — `#kurum-{id}` artık kartın.
+ * 25 Ekim kompakt tur: kendi paneli yerine "Ayrıntılar" panelinde bir
+ * katlı satır (`BrokerFold`); çapa `#tarifeler` aynı.
  *
  * Satır kurum, sütun ücret kalemi. Kurum adı yapışkan: sekiz sütun 1280'de
  * de sığmıyor (taban genişlik aşağıda) ve kayan bir tabloda hangi satırın
@@ -98,21 +99,15 @@ export function BrokerTable({
   );
 
   return (
-    <Panel id="tarifeler" aria-labelledby="tarifeler-h">
-      <details className={styles.fold}>
-      <summary className={styles.foldSummary}>
-        <h2 id="tarifeler-h" className="display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.015em]">
-          {D.title}
-        </h2>
-        <span className={styles.foldMeta}>
-          {D.meta.replace("{count}", String(brokers.length)).replace("{columns}", String(BROKER_COLUMNS.length))}
-          <CaretDown size={14} weight="bold" aria-hidden className={styles.foldCaret} />
-        </span>
-      </summary>
-      <div className="flex max-w-3xl flex-col gap-2 px-4 pb-4 text-sm leading-relaxed text-body sm:px-5">
-        <p>{D.lead}</p>
-        <p>{L.tableLead}</p>
-      </div>
+    <BrokerFold
+      id="tarifeler"
+      headingId="tarifeler-h"
+      title={D.title}
+      summary={D.lead}
+      meta={D.meta.replace("{count}", String(brokers.length)).replace("{columns}", String(BROKER_COLUMNS.length))}
+      bodyClassName={styles.foldBodyFlush}
+    >
+      <p className="max-w-3xl px-4 pb-3 text-sm leading-relaxed text-body sm:px-5">{L.tableLead}</p>
       <ScrollEdges
         className="scroll-x-hint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
         tabIndex={0}
@@ -160,7 +155,6 @@ export function BrokerTable({
           </tbody>
         </table>
       </ScrollEdges>
-      </details>
-    </Panel>
+    </BrokerFold>
   );
 }

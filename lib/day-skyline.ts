@@ -26,7 +26,8 @@ import type { PosterMove, PosterStock } from "./day-poster";
  *     çok düşene. Her mahalle böylece ufku bir yerde kesen bir "tepe":
  *     kesişme noktası yükselenle düşenin oranını gösteriyor.
  *   - En büyük şirketlerin ve günün uç hisselerinin çatısında LOGO, sembol
- *     ve yüzde (`placeLabels`; etiketler birbirine ve binalara binmiyor).
+ *     ve yüzde (`placeLabels`; etiket binasının ekseninde, birbirine ve
+ *     binalara binmiyor).
  *
  * Bu dosya SAF (veritabanı yok, DOM yok): sayfa, ana sayfa şeridi,
  * paylaşım görseli ve arşiv minyatürü AYNI yerleşimi buradan alıyor.
@@ -271,7 +272,7 @@ export const SKY_MODES = {
   wide: { width: 1200, rows: 1, gap: 2, districtGap: 18, minW: 3, minDistrictW: 120, half: 124, minSide: 0.18, label: "full", labelCaps: 12, labelExtremes: 3, font: 12, logo: 30 },
   xwide: { width: 1680, rows: 1, gap: 2.4, districtGap: 24, minW: 3.6, minDistrictW: 140, half: 160, minSide: 0.18, label: "full", labelCaps: 14, labelExtremes: 3, font: 13, logo: 32 },
   stripNarrow: { width: 400, rows: 2, gap: 1.2, districtGap: 10, minW: 1.8, minDistrictW: 86, half: 34, minSide: 0.25, label: "full", labelCaps: 6, labelExtremes: 1, font: 13, logo: 26 },
-  stripMedium: { width: 900, rows: 1, gap: 1.6, districtGap: 14, minW: 2.4, minDistrictW: 104, half: 50, minSide: 0.24, label: "full", labelCaps: 10, labelExtremes: 2, font: 15, logo: 32 },
+  stripMedium: { width: 900, rows: 1, gap: 1.6, districtGap: 14, minW: 2.4, minDistrictW: 96, half: 50, minSide: 0.24, label: "full", labelCaps: 10, labelExtremes: 2, font: 15, logo: 32 },
   stripWide: { width: 1200, rows: 1, gap: 2, districtGap: 18, minW: 3, minDistrictW: 120, half: 58, minSide: 0.24, label: "full", labelCaps: 12, labelExtremes: 3, font: 11, logo: 28 },
   stripXwide: { width: 1680, rows: 1, gap: 2.4, districtGap: 24, minW: 3.6, minDistrictW: 140, half: 72, minSide: 0.24, label: "full", labelCaps: 14, labelExtremes: 3, font: 13, logo: 32 },
   og: { width: 1080, rows: 1, gap: 2, districtGap: 16, minW: 2.6, minDistrictW: 96, half: 118, minSide: 0.2, label: "full", labelCaps: 6, labelExtremes: 2, font: 15, logo: 26 },
@@ -304,7 +305,10 @@ export type SkyLabel = {
   w: number;
   h: number;
   dir: 1 | -1;
-  /** Etiket çatısından uzaklaştıysa çatıya inen ince çizgi. */
+  /** Kat: 0 çatının hemen üstü (düşende altı), 1 yerleşmiş bir etiketin ötesi. */
+  tier: number;
+  /** Etiket çatısına oturmuyorsa çatıdan (x1, y1) etikete (x2, y2) dik bağ
+   *  çizgisi; çizim çatıya küçük bir nokta da koyuyor. Dikey: x1 = x2. */
   leader: { x1: number; y1: number; x2: number; y2: number } | null;
 };
 
@@ -342,6 +346,10 @@ const MIN_H = 1.2;
 const EDGE = 4;
 /** Sokak genişlemesinin tavanı: artan yer sokaklara, kalanı ortalanıyor. */
 const MAX_GAP_STRETCH = 2.2;
+/** Etiket kenar payının denenen kesirleri ve kabul ölçüsü: pay binaların
+ *  ortak ölçeğini (`k`) en çok %15 düşürebilir. */
+const SIDE_SHARES = [1, 0.5] as const;
+const SIDE_KEEP_K = 0.85;
 /** `k`nin ikiye bölme adımı: 40 adımda hata eni 2⁻⁴⁰ kat — birimin çok altı. */
 const K_BISECT_STEPS = 40;
 /**
@@ -405,12 +413,32 @@ export function partitionRows(loads: readonly number[], rows: number): number[][
 const CHAR_EM = 0.62;
 /** Yüzdenin en uzun hâli: "+%10,25" / "+10.25%". */
 const PCT_CHARS = 7;
+/** Yüzdenin sabit karakterleri: işaret, "%" ve ondalık ayıracı + iki hane. */
+const PCT_FIXED_CHARS = 5;
 const LABEL_GAP = 3;
 
-export function labelBox(kind: LabelKind, symbol: string, mode: Pick<SkyMode, "font" | "logo">): { w: number; h: number } {
+/**
+ * Yüzdenin karakter sayısı: işaret + "%" + tam kısmın haneleri + ",dd".
+ * İki dilde aynı ("+%2,31" / "+2.31%"). Kutu bugünün GERÇEK yüzdesine göre
+ * ölçülüyor (eskiden hep en uzun hâline, yedi karaktere): "+%2,31" yedi
+ * karakterlik kutudan ~%14 dar, etiketler binasının üstünde daha sık
+ * sığıyor. Değişim verilmezse en uzun hâli.
+ */
+export function pctChars(change?: number): number {
+  if (change === undefined || !Number.isFinite(change)) return PCT_CHARS;
+  const whole = Math.floor(Math.abs(change) + 0.005);
+  return PCT_FIXED_CHARS + String(whole).length;
+}
+
+export function labelBox(
+  kind: LabelKind,
+  symbol: string,
+  mode: Pick<SkyMode, "font" | "logo">,
+  change?: number,
+): { w: number; h: number } {
   if (kind === "none") return { w: 0, h: 0 };
   if (kind === "logo") return { w: mode.logo, h: mode.logo };
-  const text = Math.max(symbol.length, PCT_CHARS) * mode.font * CHAR_EM;
+  const text = Math.max(symbol.length, pctChars(change)) * mode.font * CHAR_EM;
   return { w: Math.max(mode.logo, text), h: mode.logo + 2 + mode.font * 2.3 };
 }
 
@@ -418,48 +446,103 @@ type Box = { x: number; y: number; w: number; h: number };
 const overlaps = (a: Box, b: Box, pad = 0) =>
   a.x < b.x + b.w + pad && b.x < a.x + a.w + pad && a.y < b.y + b.h + pad && b.y < a.y + a.h + pad;
 
-/** Çatısında etiket olacak binalar, öncelik sırasıyla: önce en büyük
- *  şirketler (siluetin tanınır binaları), sonra günün uçları. */
+/** Önceliğin başı: en büyük bu kadar şirket, sonra günün tek ucu (iki yön). */
+const LABEL_HEAD_CAPS = 3;
+/** Öncelik başının boyu (`labelPicks`in ilk öğeleri): üç şirket + iki uç. */
+export const LABEL_HEAD = LABEL_HEAD_CAPS + 2;
+
+/**
+ * Çatısında etiket olacak binalar, ÖNCELİK SIRASIYLA. Yerleşim etiketleri bu
+ * sırayla koyuyor; yer kalmazsa sondakiler düşüyor (`placeLabels`). Sıra:
+ * en büyük üç şirket, günün en çok yükseleni ve en çok düşeni, kalan büyük
+ * şirketler (büyükten küçüğe), kalan uçlar. Siluetin tanınır binaları ve
+ * günün iki ucu böylece hiçbir düzende düşmüyor.
+ */
 export function labelPicks(stocks: readonly SkyStock[], members: readonly number[], caps: number, extremes: number): number[] {
   const set = new Set(members);
   const pool = [...set];
   const byCap = pool
     .filter((i) => stocks[i].cap !== null)
-    .sort((a, b) => (stocks[b].cap ?? 0) - (stocks[a].cap ?? 0))
+    .sort((a, b) => (stocks[b].cap ?? 0) - (stocks[a].cap ?? 0) || stocks[a].symbol.localeCompare(stocks[b].symbol, "en"))
     .slice(0, caps);
   const ups = pool
     .filter((i) => stocks[i].change > 0)
-    .sort((a, b) => stocks[b].change - stocks[a].change)
+    .sort((a, b) => stocks[b].change - stocks[a].change || stocks[a].symbol.localeCompare(stocks[b].symbol, "en"))
     .slice(0, extremes);
   const downs = pool
     .filter((i) => stocks[i].change < 0)
-    .sort((a, b) => stocks[a].change - stocks[b].change)
+    .sort((a, b) => stocks[a].change - stocks[b].change || stocks[a].symbol.localeCompare(stocks[b].symbol, "en"))
     .slice(0, extremes);
-  return [...new Set([...byCap, ...ups, ...downs])];
+  return [
+    ...new Set([
+      ...byCap.slice(0, LABEL_HEAD_CAPS),
+      ...ups.slice(0, 1),
+      ...downs.slice(0, 1),
+      ...byCap.slice(LABEL_HEAD_CAPS),
+      ...ups.slice(1),
+      ...downs.slice(1),
+    ]),
+  ];
 }
 
-/** Yatay arama: etiket çatısından en çok kendi eninin bu katı kadar
- *  kayabiliyor; kayma maliyeti kalkışın bu kesri (yana kaymak, yukarı
- *  yığılmaktan ucuz — şerit alçak kalıyor). */
-const LABEL_REACH = 3;
-const LABEL_SHIFT_COST = 0.3;
-
 /**
- * ETİKETLER ÇAKIŞMAZ. Her etiket çatısının üstünde (düşen binada tabanının
- * altında) ortalanmış başlıyor. Altındaki binalardan yüksekse onların
- * üstüne kalkıyor; yerleşmiş bir etikete biniyorsa önce yana kayıyor, sonra
- * kalkıyor; en kısa yolu seçiyor. Çatısından ayrılan etikete ince bir çizgi
- * iniyor. Sonuç testli: hiçbir iki kutu kesişmiyor, hiçbiri bir binaya
- * binmiyor ve kutu sıranın eninde kalıyor (`tests/day-skyline.test.ts`).
+ * ETİKET BİNASININ ÜSTÜNDE (25 Ekim, "Silüet: etiket" turu).
  *
- * EN UZUN BİNA ÖNCE (25 Ekim, "Silüet" turu). Etiketler seçim sırasıyla
- * (önce büyük şirketler, sonra uçlar) yerleşiyordu; uçlar en uzun binalar
- * olduğu için en son gelip ötekilerin ÜSTÜNE yığılıyordu ve şerit üç kat
- * etiketle yükseliyordu. Şimdi en uzun bina önce: onun etiketi zaten en
- * yukarıda, kısa binaların etiketleri altında boş kalan yere iniyor.
- * Yatay arama da genişledi (±3 etiket eni, `LABEL_REACH`): tohumlu
- * şehirde şeridin sıra yüksekliği ölçüldü, test dosyası.
+ * SAHİBİNİN İTİRAZI (canlıda 1440): "Micron sağda ama grafikte solda
+ * kalıyor gibi, çok tuhaf." Etiketler çakışmasın diye kendi eninin üç
+ * katına kadar YANA kayıyordu; gerçek 23 Ekim verisinde MU etiketi
+ * binasından 95, META ve TSLA 143, 1920'de 169 birim uzaktaydı (birim ≈
+ * piksel). İnce bağ çizgisi bu mesafede görünmüyordu; üzerine gelince solda
+ * bir bina aydınlanıp etiket sağda kalıyordu.
+ *
+ * YENİ KURAL: etiketin merkezi binasının merkezinden en çok
+ * `LABEL_MAX_SHIFT` (16 birim) uzakta. 16, etiketin yarı eninden (masaüstünde
+ * 26–33) hep küçük: binanın ekseni HER ZAMAN etiketin içinden geçiyor ve
+ * bağ çizgisi dimdik iniyor. Çakışma bu payla çözülmezse etiket İKİNCİ
+ * KATA çıkıyor (`LABEL_TIERS`: yerleşmiş bir etiketin hemen üstü, düşende
+ * altı); orası da doluysa etiket DÜŞÜYOR. Öncelik `labelPicks` sırası,
+ * yani düşen hep sıranın sonundaki (küçük şirket ya da ikinci-üçüncü uç).
+ *
+ * BAĞ GÖRÜNÜR. Etiket çatısına oturmuyorsa (kaydıysa ya da yukarı
+ * kalktıysa) çatıdan etikete dik bir çizgi ve çatıda küçük bir nokta
+ * (`leader`; çizim `SkyMarks`). Bağ çizgisi başka bir etiketin içinden
+ * geçmiyor, etiket de başka bir bağ çizgisinin üstüne oturmuyor.
+ *
+ * Kenardaki bina için ayrıca yer: düzenin kenar payı (`labelSide`) en
+ * geniş etiketin yarısı eksi kayma payı kadar büyüyor, yoksa en soldaki
+ * binanın (en güçlü mahallenin en çok yükseleni: çoğu gün bir uç) etiketi
+ * kabın dışına taşmadan ortalanamazdı.
+ *
+ * Sonuç testli (`tests/day-skyline.test.ts`): gerçek 23 Ekim verisiyle ve
+ * tohumlu kalabalık şehirle her düzende kayma ≤ eşik, kutular kesişmiyor,
+ * binalara ve bağ çizgilerine binmiyor, en büyük üç şirket ve iki uç
+ * etiketli.
  */
+export const LABEL_MAX_SHIFT = 16;
+/** Yatay aday adımı (birim): 0, ±4, ±8, ±12, ±16. */
+const LABEL_SHIFT_STEP = 4;
+/** Kat sayısı: zemin (çatının hemen üstü) ve bir kat yukarısı. */
+export const LABEL_TIERS = 2;
+/** Kat çıkmanın bedeli (birim): kaymaktan ve kalkmaktan hep pahalı. */
+const TIER_COST = 1000;
+/** Kayma bedeli birim başına; kalkış birim başına 1. */
+const LABEL_SHIFT_COST = 0.6;
+/** Bu kadarın altındaki kayma ve kalkış "çatıda oturuyor" sayılıyor. */
+const ATTACH_SHIFT = 0.5;
+const ATTACH_LIFT = 2;
+/** Etiketler arası en küçük boşluk. */
+const LABEL_PAD = 2;
+
+/** Düzenin etiket için ayırdığı ek kenar payı (birim). */
+export function labelSide(mode: Pick<SkyMode, "label" | "font" | "logo">): number {
+  if (mode.label === "none") return 0;
+  return Math.max(0, labelBox(mode.label, "", mode).w / 2 - LABEL_MAX_SHIFT);
+}
+
+type Segment = { x: number; y1: number; y2: number };
+const segmentHits = (s: Segment, box: Box) =>
+  s.x > box.x && s.x < box.x + box.w && Math.max(s.y1, s.y2) > box.y && Math.min(s.y1, s.y2) < box.y + box.h;
+
 export function placeLabels(
   buildings: readonly SkyBuilding[],
   picks: readonly number[],
@@ -470,58 +553,157 @@ export function placeLabels(
   const byI = new Map(buildings.map((b) => [b.i, b] as const));
   const placed: SkyLabel[] = [];
   const roofOf = (b: SkyBuilding) => (b.dir === -1 ? b.h : -b.h);
-  const steps: number[] = [0];
-  for (let k = 0.5; k <= LABEL_REACH + 1e-9; k += 0.5) steps.push(-k, k);
-  const order = picks
-    .filter((i) => byI.has(i))
-    .sort((a, b) => byI.get(b)!.h - byI.get(a)!.h || picks.indexOf(a) - picks.indexOf(b));
-  for (const i of order) {
-    const b = byI.get(i)!;
+  const segmentOf = (label: SkyLabel): Segment | null =>
+    label.leader ? { x: label.leader.x1, y1: label.leader.y1, y2: label.leader.y2 } : null;
+  const shifts: number[] = [0];
+  for (let k = LABEL_SHIFT_STEP; k <= LABEL_MAX_SHIFT + 1e-9; k += LABEL_SHIFT_STEP) shifts.push(-k, k);
+
+  /** `i`nin geçerli yerleri, ucuzdan pahalıya; `maxTier` kata kadar, kutu `[top, bottom]` içinde. */
+  const candidates = (i: number, maxTier: number, top: number, bottom: number) => {
+    const out: { label: SkyLabel; cost: number }[] = [];
+    const b = byI.get(i);
+    if (!b) return out;
     const dir: 1 | -1 = b.dir === -1 ? -1 : 1;
-    const { w, h } = labelBox(mode.label, stocks[i].symbol, mode);
+    const { w, h } = labelBox(mode.label, stocks[i].symbol, mode, stocks[i].change);
     const cx = b.x + b.w / 2;
-    const offsets = steps.map((k) => k * w);
-    let best: { label: SkyLabel; cost: number } | null = null;
-    for (const dx of offsets) {
-      const x = Math.min(mode.width - EDGE - w, Math.max(EDGE, cx - w / 2 + dx));
-      /* Kutunun altında kalan binalar: kutu onların çatısının üstünde. */
-      let edge = roofOf(b);
+    const roof = roofOf(b);
+    for (const dx of shifts) {
+      const x = cx - w / 2 + dx;
+      if (x < EDGE - 1e-6 || x + w > mode.width - EDGE + 1e-6) continue;
+      /* Kutunun altında kalan aynı yöndeki binalar: kutu onların çatısının ötesinde. */
+      let edge = roof;
       for (const other of buildings) {
         if (other.x + other.w <= x - 1 || other.x >= x + w + 1) continue;
-        if (other.dir === 0) continue;
-        const otherDir = other.dir === -1 ? -1 : 1;
-        if (otherDir !== dir) continue;
+        if (other.dir === 0 || (other.dir === -1 ? -1 : 1) !== dir) continue;
         edge = dir === 1 ? Math.min(edge, roofOf(other)) : Math.max(edge, roofOf(other));
       }
       let y = dir === 1 ? edge - LABEL_GAP - h : edge + LABEL_GAP;
-      /* Yerleşmiş etikete biniyorsa onun ötesine kalk. */
-      for (let guard = 0; guard < placed.length + 1; guard++) {
-        const hit = placed.find((p) => overlaps({ x, y, w, h }, p, 2));
+      /* Yerleşmiş etikete biniyorsa onun ötesindeki kata çık; kat bittiyse aday düşer. */
+      let tier = 0;
+      let ok = true;
+      for (let guard = 0; guard <= placed.length; guard++) {
+        const hit = placed.find((p) => overlaps({ x, y, w, h }, p, LABEL_PAD));
         if (!hit) break;
-        y = dir === 1 ? Math.min(y, hit.y - 2 - h - 0.01) : Math.max(y, hit.y + hit.h + 2 + 0.01);
+        tier = Math.max(tier, hit.tier + 1);
+        if (tier > maxTier) {
+          ok = false;
+          break;
+        }
+        y = dir === 1 ? Math.min(y, hit.y - LABEL_PAD - h - 0.01) : Math.max(y, hit.y + hit.h + LABEL_PAD + 0.01);
       }
-      const roof = roofOf(b);
+      if (!ok || y < top - 1e-6 || y + h > bottom + 1e-6) continue;
+      const box = { x, y, w, h };
       const near = dir === 1 ? y + h : y;
       const lift = Math.abs(near - roof) - LABEL_GAP;
-      const cost = lift + Math.abs(dx) * LABEL_SHIFT_COST;
-      const attached = cx >= x && cx <= x + w && lift < 2;
-      const label: SkyLabel = {
-        i,
-        x,
-        y,
-        w,
-        h,
-        dir,
-        leader: attached
-          ? null
-          : { x1: cx, y1: roof + (dir === 1 ? -1 : 1), x2: Math.min(x + w - 2, Math.max(x + 2, cx)), y2: near },
-      };
-      if (!best || cost < best.cost) best = { label, cost };
+      const attached = Math.abs(dx) < ATTACH_SHIFT && lift < ATTACH_LIFT;
+      const segment: Segment | null = attached ? null : { x: cx, y1: roof, y2: near };
+      /* Bağ çizgisi başka etiketin içinden geçmez; etiket başka bağın üstüne oturmaz. */
+      if (segment && placed.some((p) => segmentHits(segment, p))) continue;
+      if (placed.some((p) => {
+        const s = segmentOf(p);
+        return s !== null && segmentHits(s, box);
+      })) continue;
+      out.push({
+        cost: tier * TIER_COST + lift + Math.abs(dx) * LABEL_SHIFT_COST,
+        label: { i, x, y, w, h, dir, tier, leader: segment ? { x1: cx, y1: roof, x2: cx, y2: near } : null },
+      });
     }
-    if (best) placed.push(best.label);
+    /* Kararlı sıralama: eşit bedelde ortadaki aday (dx = 0) önde. */
+    return out.sort((p, q) => p.cost - q.cost);
+  };
+  const tryPlace = (i: number, maxTier: number, top: number, bottom: number) => candidates(i, maxTier, top, bottom)[0] ?? null;
+  const commit = (best: { label: SkyLabel }) => placed.push(best.label);
+  const remove = (label: SkyLabel) => placed.splice(placed.indexOf(label), 1);
+
+  /* Birinci geçiş: herkes ZEMİNDE, öncelik sırasıyla. */
+  const waiting: number[] = [];
+  for (const i of picks) {
+    const best = tryPlace(i, 0, -Infinity, Infinity);
+    if (best) commit(best);
+    else if (byI.has(i)) waiting.push(i);
   }
-  /* Çizim sırası seçim sırası (önce büyük şirketler): okuma ve test aynı. */
-  return placed.sort((a, b) => picks.indexOf(a.i) - picks.indexOf(b.i));
+  /* İkinci geçiş: zeminde yer bulamayan İKİNCİ KATA. Öncelik başı
+     (`LABEL_HEAD`: en büyük üç şirket ve günün iki ucu) kata serbestçe
+     çıkıyor; ötekiler sahne yükselmeden: kat, binaların ve zemindeki
+     etiketlerin zaten kapladığı yükseklikte kalıyor. Sınırsız katta üçüncü
+     uç için şerit 70 birim uzuyordu (gerçek 23 Ekim, 1920 şerit: 277 →
+     352); sınır herkese konunca da günün en çok düşeni (TMUS) 1440 şeritte
+     düşüyordu. */
+  if (LABEL_TIERS > 1 && waiting.length > 0) {
+    const top = Math.min(0, ...buildings.map((b) => (b.dir === 1 ? -b.h : 0)), ...placed.map((l) => l.y));
+    const bottom = Math.max(0, ...buildings.map((b) => (b.dir === -1 ? b.h : 0)), ...placed.map((l) => l.y + l.h));
+    const head = new Set(picks.slice(0, LABEL_HEAD));
+    const options = (i: number) =>
+      head.has(i) ? candidates(i, LABEL_TIERS - 1, -Infinity, Infinity) : candidates(i, LABEL_TIERS - 1, top, bottom);
+    const place = (i: number) => options(i)[0] ?? null;
+    for (const i of waiting) {
+      const best = place(i);
+      if (best) {
+        commit(best);
+        continue;
+      }
+      if (!head.has(i)) continue;
+      /* ONARIM. Öncelik başı hâlâ yersizse yakınındaki (aynı yöndeki)
+         etiketler kaldırılıp yeniden deneniyor: önce bu etiket her yerinde
+         ve ardından kaldırılanlar öncelik sırasıyla, ya da önce kaldırılan
+         en öncelikli etiket her yerinde ve ardından bu. Kaldırılanlardan
+         öncelik başı olan yerini bulamazsa onarım geri alınıyor; başı
+         olmayan düşebilir (zaten sıranın sonu). Gerçek 23 Ekim'de 768
+         şeritte Apple'ın ekseni Nvidia etiketinin içindeydi: Nvidia sağa
+         kayınca ikisi de sığıyor. */
+      const b = byI.get(i)!;
+      const cx = b.x + b.w / 2;
+      const { w } = labelBox(mode.label, stocks[i].symbol, mode, stocks[i].change);
+      const reach = w + LABEL_MAX_SHIFT * 2 + LABEL_PAD;
+      const blockers = placed
+        .filter((p) => p.dir === (b.dir === -1 ? -1 : 1) && p.x < cx + reach && p.x + p.w > cx - reach)
+        .sort((p, q) => picks.indexOf(p.i) - picks.indexOf(q.i));
+      if (blockers.length === 0) continue;
+      for (const blocker of blockers) remove(blocker);
+      /* Sırayla yerleştir; öncelik başından biri yersiz kalırsa başarısız. */
+      const fill = (rest: readonly SkyLabel[]) => {
+        const added: SkyLabel[] = [];
+        for (const r of rest) {
+          const again = place(r.i);
+          if (again) {
+            commit(again);
+            added.push(again.label);
+          } else if (head.has(r.i)) {
+            for (const x of added) remove(x);
+            return null;
+          }
+        }
+        return added;
+      };
+      let done = false;
+      for (const mine of options(i)) {
+        commit(mine);
+        if (fill(blockers)) {
+          done = true;
+          break;
+        }
+        remove(mine.label);
+      }
+      if (!done) {
+        const [first, ...rest] = blockers;
+        outer: for (const lead of options(first.i)) {
+          commit(lead);
+          for (const mine of options(i)) {
+            commit(mine);
+            if (fill(rest)) {
+              done = true;
+              break outer;
+            }
+            remove(mine.label);
+          }
+          remove(lead.label);
+        }
+      }
+      if (!done) for (const blocker of blockers) commit({ label: blocker });
+    }
+  }
+  /* Çizim sırası öncelik sırası: okuma ve test aynı. */
+  return placed.sort((p, q) => picks.indexOf(p.i) - picks.indexOf(q.i));
 }
 
 /**
@@ -545,7 +727,6 @@ export function skylineLayout({
   const mode: SkyMode = SKY_MODES[modeName];
   const floor = capFloor(stocks);
   const weight = (i: number) => Math.sqrt(stocks[i].cap ?? floor);
-  const usable = mode.width - EDGE * 2;
   const spanOf = (d: District, k: number) =>
     d.members.reduce((s, i) => s + mode.minW + k * weight(i), 0) + Math.max(0, d.members.length - 1) * mode.gap;
   const rowFixed = (set: number[]) => Math.max(0, set.length - 1) * mode.districtGap;
@@ -558,7 +739,7 @@ export function skylineLayout({
      medium düzende ikinci sıra 760'lık enin 26 birim dışına taşıyordu.
      k=0'da bile sığmayan sıra NEGATİF puan alıyor (taşma kadar), böylece
      bölme seçiminde her zaman sığan bölme önde. */
-  const rowK = (set: number[]) => {
+  const rowK = (set: number[], usable: number) => {
     const weights = set.reduce((acc, index) => acc + districts[index].members.reduce((s, i) => s + weight(i), 0), 0);
     const atZero = rowWidth(set, 0);
     if (atZero > usable) return usable - atZero;
@@ -581,21 +762,46 @@ export function skylineLayout({
      bölme deneniyor (yedi mahalle, üç sıra: 15 aday) ve EN BÜYÜK ORTAK
      k'yi veren seçiliyor — binalar en geniş, hiçbir sıra taşmıyor. Eşitlikte
      sıra enleri en dengeli olan. */
-  let rowSets: number[][] = [];
-  let k = -Infinity;
-  let bestSpread = Infinity;
-  for (const split of rowSplits(districts.length, mode.rows)) {
-    const score = Math.min(...split.map(rowK));
-    const kk = Number.isFinite(score) ? Math.max(0, score) : 0;
-    const widths = split.map((set) => rowWidth(set, kk));
-    const spread = Math.max(...widths) - Math.min(...widths);
-    if (score > k + 1e-9 || (Math.abs(score - k) <= 1e-9 && spread < bestSpread)) {
-      rowSets = split;
-      k = score;
-      bestSpread = spread;
+  const solve = (usable: number) => {
+    let sets: number[][] = [];
+    let best = -Infinity;
+    let bestSpread = Infinity;
+    for (const split of rowSplits(districts.length, mode.rows)) {
+      const score = Math.min(...split.map((set) => rowK(set, usable)));
+      const kk = Number.isFinite(score) ? Math.max(0, score) : 0;
+      const widths = split.map((set) => rowWidth(set, kk));
+      const spread = Math.max(...widths) - Math.min(...widths);
+      if (score > best + 1e-9 || (Math.abs(score - best) <= 1e-9 && spread < bestSpread)) {
+        sets = split;
+        best = score;
+        bestSpread = spread;
+      }
+    }
+    return { sets, k: Number.isFinite(best) ? Math.max(0, best) : 0 };
+  };
+  /* KENAR PAYI ETİKET PAYIYLA (`labelSide`): kenardaki binanın etiketi de
+     binasının üstünde ortalanabilsin. Pay binaları daraltıyor; şehri
+     belirgin daraltıyorsa (`SIDE_KEEP_K`) yarıya, o da olmazsa sıfıra
+     iniyor: telefon şeridinde (stripNarrow) mahalle tabanları sırayı zaten
+     dolduruyor, tam pay k'yi sıfıra indirip bütün binaları aynı ene
+     çekiyordu (gerçek 23 Ekim: Nvidia 8,8 → 1,8 birim). O düzende en
+     kenardaki binanın etiketi sığmazsa düşüyor. */
+  const base = solve(mode.width - EDGE * 2);
+  let side = EDGE;
+  let rowSets = base.sets;
+  let k = base.k;
+  for (const share of SIDE_SHARES) {
+    const extra = labelSide(mode) * share;
+    if (extra <= 0) break;
+    const trial = solve(mode.width - (EDGE + extra) * 2);
+    if (trial.k >= base.k * SIDE_KEEP_K && trial.k > 0) {
+      side = EDGE + extra;
+      rowSets = trial.sets;
+      k = trial.k;
+      break;
     }
   }
-  k = Number.isFinite(k) ? Math.max(0, k) : 0;
+  const usable = mode.width - side * 2;
 
   const hi = domain.hi;
   const scale = (value: number) => (Math.min(Math.abs(value), hi) / hi) * mode.half;
@@ -618,7 +824,7 @@ export function skylineLayout({
     const spare = Math.max(0, usable - used);
     const stretch = set.length > 1 ? Math.min(spare / (set.length - 1), mode.districtGap * (MAX_GAP_STRETCH - 1)) : 0;
     const gapW = mode.districtGap + stretch;
-    let x = EDGE + (spare - stretch * Math.max(0, set.length - 1)) / 2;
+    let x = side + (spare - stretch * Math.max(0, set.length - 1)) / 2;
     const buildings: SkyBuilding[] = [];
     const spansOut: SkyDistrictSpan[] = [];
     set.forEach((index, j) => {

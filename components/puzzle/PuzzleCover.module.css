@@ -13,7 +13,7 @@
 .symbol { font-family:var(--font-mono); font-size:var(--text-small); color:var(--text-muted); }
 
 .score { position:relative; display:flex; flex-direction:column; align-items:flex-end; text-align:right; }
-.scoreValue { font-size:var(--text-heading); font-weight:800; line-height:1; color:var(--text-strong); }
+.scoreValue { font-size:var(--text-display); font-weight:800; line-height:1; letter-spacing:-.01em; color:var(--text-strong); }
 .score[data-won] .scoreValue { color:var(--up); }
 .scoreLabel { margin-top:.25rem; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); white-space:nowrap; }
 /* Kahraman zilinin vuruşu (heroTap, kutusu 160×150) skorun solunda,
@@ -25,6 +25,11 @@
 /* Tanıtım: iki satır; tamamı `title`da. */
 .blurb { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; margin:0; font-size:var(--text-base); line-height:1.5; color:var(--text-body); }
 
+.logo { display:inline-flex; flex:none; }
+
+/* Seri ateşi: pirinç (sıcak; kazanmanın yeşilinden ayrı bir işaret). */
+.streakBadge { display:inline-flex; align-items:center; gap:.25rem; padding:0 .5rem; border-radius:999px; background:var(--brass-wash); color:var(--brass-ink); font-size:var(--text-tiny); font-weight:700; line-height:1.6; white-space:nowrap; }
+
 /* "Saf Bilgi" rozeti: yeşil, kazanmanın rengi. */
 .pureBadge { display:inline-flex; align-items:center; gap:.25rem; padding:0 .5rem; border-radius:999px; background:var(--up-wash); color:var(--up); font-size:var(--text-tiny); font-weight:700; line-height:1.6; }
 
@@ -33,35 +38,44 @@
 .resultSide { display:flex; flex-direction:column; gap:.5rem; min-width:0; }
 .grid { display:flex; flex-direction:column; gap:3px; flex:none; }
 .gridRow { display:flex; gap:3px; }
-.square { width:10px; height:10px; border-radius:2px; background:var(--surface-sunken); border:1px solid var(--line); }
+.square { width:13px; height:13px; border-radius:3px; background:var(--surface-sunken); border:1px solid var(--line); }
 .square[data-grade="match"] { background:var(--up); border-color:var(--up); }
 .square[data-grade="near"] { background:var(--brass-bright); border-color:var(--brass-bright); }
 .square[data-grade="none"] { background:transparent; border-style:dashed; }
-.jokerSquare { width:49px; height:10px; border-radius:2px; border:1px dashed var(--line-strong); }
+.jokerSquare { width:61px; height:13px; border-radius:3px; border:1px dashed var(--line-strong); }
 .actions { display:flex; flex-wrap:wrap; gap:.5rem; min-width:0; }
 
 .shareNote { min-height:1.125rem; margin:0; font-size:var(--text-tiny); line-height:1.5; color:var(--text-muted); }
 .sharePreview { grid-column:1 / -1; margin:0; padding:.5rem .75rem; border-radius:var(--radius-md); background:var(--surface-sunken); font-size:var(--text-base); white-space:pre-wrap; overflow-wrap:anywhere; user-select:all; color:var(--text-strong); }
 
-.next { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:.625rem; font-size:var(--text-small); color:var(--text-muted); }
-.nextLabel { font-weight:600; white-space:nowrap; }
-.nextTime { min-width:6.5rem; text-align:right; font-size:var(--text-read); font-weight:700; color:var(--text-strong); white-space:nowrap; }
-.nextLane { position:relative; display:block; height:var(--lane-h, 5px); border-radius:999px; background:var(--line-soft); overflow:hidden; }
-.nextFill { position:absolute; inset:0; border-radius:999px; background:var(--primary-soft); transform-origin:0 50%; transition:transform 900ms linear; }
+/* Geri sayım halkası: 36 piksel çember, günün geçen payı yumuşak mavi
+   (büyüklük; etkileşim mavisi değil), ortasında kum saati; yanında ad ve
+   kalan süre iki satır. */
+.next { display:flex; align-items:center; gap:.625rem; min-width:0; font-size:var(--text-small); color:var(--text-muted); }
+.ring { position:relative; display:grid; place-items:center; flex:none; width:2.25rem; height:2.25rem; color:var(--text-muted); }
+.ringSvg { position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
+.ringTrack { fill:none; stroke:var(--line-soft); stroke-width:3.5; }
+.ringFill { fill:none; stroke:var(--primary-soft); stroke-width:3.5; stroke-linecap:round; stroke-dasharray:100; transition:stroke-dashoffset 900ms linear; }
+.ringIcon { position:relative; }
+.nextText { display:flex; flex-direction:column; min-width:0; line-height:1.25; }
+.nextLabel { font-size:var(--text-tiny); font-weight:600; white-space:nowrap; }
+.nextTime { font-size:var(--text-read); font-weight:700; color:var(--text-strong); white-space:nowrap; }
 
-/* ---- Giriş: kimlik belirir, kareler sırayla dolar ---- */
+/* ---- Giriş: kimlik belirir, kareler okuma sırasıyla dolar ----
+   Kare başına 18 ms (24 kare 430 ms'de biter; kademe bütçesi < 500 ms).
+   Kazanınca logo, siluet yeşile dönerken (1,1 sn) yerine oturur. */
 @media (prefers-reduced-motion: no-preference) {
   .identity { animation:cover-in 520ms var(--ease-brand) both; }
-  .square { animation:square-in 320ms var(--ease-brand) both; }
-  .gridRow:nth-child(2) .square { animation-delay:80ms; }
-  .gridRow:nth-child(3) .square { animation-delay:160ms; }
-  .gridRow:nth-child(4) .square { animation-delay:240ms; }
-  .gridRow:nth-child(5) .square { animation-delay:320ms; }
-  .gridRow:nth-child(6) .square { animation-delay:400ms; }
-  .pureBadge { animation:square-in 420ms var(--ease-spring-soft) 300ms both; }
+  .wonIdentity .logo { animation:logo-reveal 560ms var(--ease-spring-soft) 1100ms both; }
+  .square { animation:square-in 320ms var(--ease-brand) both; animation-delay:calc(var(--d, 0) * 18ms); }
+  .pureBadge, .streakBadge { animation:square-in 420ms var(--ease-spring-soft) 300ms both; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .nextFill { transition:none; }
+  .ringFill { transition:none; }
+}
+@keyframes logo-reveal {
+  from { opacity:0; transform:scale(.5) rotate(-12deg); }
+  to { opacity:1; transform:none; }
 }
 @keyframes cover-in {
   from { opacity:0; transform:translateY(8px); }

@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { ArrowLeft, CalendarDots, Cards, ChartBar, ChartLineUp, Database, LockSimpleOpen, Swatches } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, CalendarDots, Cards, ChartBar, ChartLineUp, Database, Keyboard, LockSimpleOpen, Swatches } from "@phosphor-icons/react/dist/ssr";
 import { PageShare } from "@/components/article/PageShare";
 import { GuideHint } from "@/components/article/GuideHint";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -67,6 +67,7 @@ export async function PuzzleScreen({ day, archive }: { day: string; archive: boo
     { key: "joker", icon: Cards, text: L.jokerHint },
     { key: "pool", icon: Database, text: L.poolNote },
     { key: "stats", icon: ChartBar, text: L.statsNote },
+    { key: "keys", icon: Keyboard, text: L.shortcutsNote },
   ];
 
   return (

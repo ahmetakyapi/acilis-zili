@@ -39,8 +39,18 @@ export const calendarVisualsTr = {
     windowBmo: "açılış öncesi",
     windowAmc: "kapanış sonrası",
     windowOther: "(saati belirsiz)",
+    /** Katlı "Nasıl Okunur" ayrıntısı (kart turu, 25 Ekim). */
     caption:
-      "Büyük karo, piyasa değeri haftanın en büyüğünün dörtte birini geçen şirket; ötekiler taban boyda. Karonun alt kenarındaki dört çentik son dört çeyrek: dolu olan çeyrekte EPS beklentisi aşıldı. Hücreye sığmayanlar +N ile o günün listesinde.",
+      "Her hücre o gün o pencerede açıklayan kayda değer şirketler, piyasa değeri büyükten küçüğe. Çerçeveli karo, değeri haftanın en büyüğünün dörtte birini geçen şirket. Karonun altındaki dört kare son dört çeyrek, eskiden yeniye: dolu kare EPS beklentisinin aşıldığı, boş kare aşılmadığı, soluk kare bilinmeyen çeyrek. Hücreye sığmayanlar +N ile o günün listesinde.",
+    howTitle: "Nasıl Okunur",
+    /** Tek satırlık künye: kare lejantı. */
+    legendBeat: "Aşıldı",
+    legendMiss: "Aşılmadı",
+    legendNone: "Veri Yok",
+    legendNote: "Son dört çeyrek, eskiden yeniye",
+    /** En kalabalık günün rozeti ve ekran okuyucu açıklaması. */
+    peak: "Zirve",
+    peakLabel: "Haftanın zirvesi: en çok bilançonun açıklandığı gün",
     countCompanies: "{count} Şirket",
     marketClosed: "Piyasa Kapalı",
     emptyLane: "Yok",
@@ -97,7 +107,14 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     windowAmc: "after the close",
     windowOther: "(time not set)",
     caption:
-      "A large tile is a company worth more than a quarter of the week's largest; the rest are base size. The four notches along a tile's bottom edge are the last four quarters: a filled one means EPS beat the estimate. Companies that don't fit are under +N in that day's list.",
+      "Each cell lists the notable companies reporting in that window that day, largest market cap first. A framed tile is a company worth more than a quarter of the week's largest. The four squares under a tile are the last four quarters, oldest first: a filled square means EPS beat the estimate, an empty one that it did not, a faded one that the quarter is unknown. Companies that don't fit are under +N in that day's list.",
+    howTitle: "How to Read",
+    legendBeat: "Beat",
+    legendMiss: "Missed",
+    legendNone: "No Data",
+    legendNote: "Last four quarters, oldest first",
+    peak: "Peak",
+    peakLabel: "The week's peak: the day with the most reports",
     countCompanies: "{count} Companies",
     marketClosed: "Market Closed",
     emptyLane: "None",

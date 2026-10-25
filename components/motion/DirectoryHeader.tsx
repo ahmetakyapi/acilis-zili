@@ -8,7 +8,7 @@ import styles from "./DirectoryExperience.module.css";
  * takviminin Hafta/Ay anahtarı bir dönem açıklamanın altında kendi
  * satırındaydı ve telefonda başlık kartını 24 + 44 piksel uzatıyordu;
  * ekran düzeni kuralı (CLAUDE.md) denetimi başlığın sağına koyuyor. */
-export function DirectoryHeader({ title, description, children, visual, control, share, shareInTitle = false, lead, byline, tabs, className = "" }: {
+export function DirectoryHeader({ title, description, children, visual, control, share, shareInTitle = false, lead, byline, tabs, compact = false, footer, className = "" }: {
   title: string; description?: string; children?: ReactNode; visual?: ReactNode; control?: ReactNode;
   /** Başlığın SOLUNDA duran kimlik (şirket logosu). Başlığa ait olduğu için
    *  ayrı bir kimlik şeridi açmaz; o şerit kapağı 60+ piksel uzatıyordu. */
@@ -22,6 +22,10 @@ export function DirectoryHeader({ title, description, children, visual, control,
   shareInTitle?: boolean;
   /** Bölümün sekme çubuğu: verilirse kapak KOMPAKT BANT olur (aşağıda). */
   tabs?: ReactNode;
+  /** Sekmesiz kompakt bant (Portföy Analizi, 25 Ekim): `tabs`ın düzeni, sekme çubuğu yok. */
+  compact?: boolean;
+  /** Kompakt bandın alt satırı (sekme yokken): ekranın tepe cümlesi gibi tam genişlik içerik. */
+  footer?: ReactNode;
   className?: string;
 }) {
   /* KOMPAKT BANT (25 Ekim, sahibinin isteği: "hepsi tek seferde
@@ -32,8 +36,8 @@ export function DirectoryHeader({ title, description, children, visual, control,
      Sekmeler artık kapağın içinde, alt kenarına oturan çubuk; başlık daha
      küçük puntoda ve açıklama başlığın yanında tek satır, denetimler sağda.
      Ölçüm `app/(app)/bilancolar/page.tsx` başlığında. */
-  if (tabs) {
-    return <header className={`${styles.hero} page-frame ${className}`} data-compact data-has-visual={!!visual}>
+  if (tabs || compact) {
+    return <header className={`${styles.hero} page-frame ${className}`} data-compact data-tabs={tabs ? "" : undefined} data-has-visual={!!visual}>
       <div className={`${styles.heroCopy} page-heading-copy`}>
         <div className={styles.compactTitle} data-wide-actions={children ? true : undefined}>
           <h1>{title}</h1>
@@ -46,7 +50,7 @@ export function DirectoryHeader({ title, description, children, visual, control,
         </div>
       </div>
       {visual && <div className={styles.compactVisual}>{visual}</div>}
-      <div className={styles.compactTabs}>{tabs}</div>
+      {tabs ? <div className={styles.compactTabs}>{tabs}</div> : footer && <div className={styles.compactFoot}>{footer}</div>}
     </header>;
   }
   return <header className={`${styles.hero} page-frame ${className}`} data-has-visual={!!visual}>

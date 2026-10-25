@@ -1,5 +1,6 @@
 /* İpucu ızgarası — gerekçe ClueBoard.tsx. Derinlik tonla
-   (`surface-sunken`), gölge/cam/degrade yok. Kulvar 5 px (`--lane-h`).
+   (`surface-sunken`), gölge/cam/degrade yok (kart sırtındaki tarama bir
+   doku, renk geçişi değil). Kulvar 5 px (`--lane-h`).
    SAYILARDA `tabular-nums` YOK: Schibsted Grotesk'te virgülü de rakam
    genişliğine çekiyor ("%1 , 23"; gerekçe globals.css → `.numeral`). */
 
@@ -13,12 +14,15 @@
   .tile { grid-row:var(--slot); grid-column:var(--step); }
 }
 
-.tile { position:relative; display:flex; flex-direction:column; gap:.1875rem; min-width:0; min-height:4.375rem; padding:.5rem .625rem .5625rem; border-radius:var(--radius-md); background:var(--surface-sunken); transform-origin:50% 0; }
+.tile { position:relative; display:flex; flex-direction:column; gap:.1875rem; min-width:0; min-height:4.375rem; padding:.5rem .625rem .5625rem; border-radius:var(--radius-md); background:var(--surface-sunken); }
 .head { display:flex; align-items:center; gap:.3125rem; min-width:0; color:var(--text-muted); }
-.icon { flex:none; color:var(--primary-ink); }
+/* Simge rozeti: 16 piksel yuvarlak, mavi ailenin açık tonu (etkileşim
+   değil, karonun türünü söyleyen işaret). */
+.badge { display:grid; place-items:center; flex:none; width:1rem; height:1rem; border-radius:999px; background:var(--primary-tint); color:var(--primary-ink); }
 .label { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--text-tiny); font-weight:600; line-height:1.25; }
 .value { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; font-size:var(--text-read); font-weight:700; line-height:1.2; color:var(--text-strong); overflow-wrap:break-word; }
-.initial { font-size:var(--text-lead); line-height:1.1; }
+/* Baş harf: klavye tuşu. Derinlik tonla: alt kenar bir ton koyu. */
+.keycap { display:inline-grid; place-items:center; align-self:flex-start; min-width:1.75rem; height:1.75rem; padding:0 .375rem; border-radius:var(--radius-sm); background:var(--premium-surface); border:1px solid var(--line); border-bottom-width:3px; border-bottom-color:var(--line-strong); font-size:var(--text-lead); font-weight:800; line-height:1; color:var(--text-strong); }
 .up { color:var(--up); }
 .down { color:var(--down); }
 
@@ -31,13 +35,16 @@
 .centered::after, .marked::after { content:""; position:absolute; top:-3px; bottom:-3px; width:1px; background:var(--line-strong); }
 .centered::after { left:50%; }
 .marked::after { left:var(--mark); }
+/* Halka arz çizgisinin on yıl çentikleri. */
+.tick { position:absolute; top:-2px; bottom:-2px; width:1px; background:var(--line-strong); opacity:.55; }
 .bar { position:absolute; inset-block:0; border-radius:999px; }
 .barUp { background:var(--up); }
 .barDown { background:var(--down); }
 
-/* Piyasa değeri: yedi bant, yanında "6/7". */
-.bands { display:grid; grid-column:1 / 3; grid-template-columns:repeat(7,minmax(0,1fr)); gap:2px; }
-.band { height:var(--lane-h, 5px); border-radius:999px; background:var(--line-soft); }
+/* Piyasa değeri: yükselen yedi basamak (merdiven), yanında "6/7". Boy
+   bandın sırasından: büyük şirket uzun çubuk. */
+.bands { display:grid; grid-column:1 / 3; grid-template-columns:repeat(7,minmax(0,1fr)); align-items:end; gap:2px; height:.75rem; }
+.band { height:calc(var(--lane-h, 5px) + (100% - var(--lane-h, 5px)) * var(--h, 0)); border-radius:2px; background:var(--line-soft); }
 .band[data-below] { background:var(--primary-wash); }
 .band[data-on] { background:var(--primary-soft); }
 
@@ -46,22 +53,29 @@
 .letterBox { width:.75rem; height:.875rem; border-radius:3px; border:1.5px solid var(--line-strong); background:var(--premium-surface); }
 .letterMark { font-size:var(--text-tiny); font-weight:700; line-height:1; color:var(--text-muted); }
 
-/* Kilitli karo: aynı boy, sırtı dönük. Kesik çerçeve, kilit, açılacağı
-   yanlış. Sıradaki basamak mavi kesikle. */
-.locked { background:transparent; outline:1px dashed var(--line); outline-offset:-1px; }
-.locked .icon { color:var(--text-muted); }
-.lockLine { font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
-.lockLane { display:block; height:var(--lane-h, 5px); margin-top:auto; border-radius:999px; background:var(--line-soft); opacity:.6; }
-.next { outline-color:var(--primary-faint); background:var(--primary-tint); }
-.next .icon, .next .lockLine { color:var(--primary-ink); }
+/* Kilitli karo: kart sırtı. Sitenin ince taralı dokusu (135°, 1 piksel
+   çizgi, 7 piksel aralık) zemin tonunun üstünde; kilit, ad ve açılacağı
+   yanlış okunur kalsın diye metin yarı saydam zeminli bir şeritte değil,
+   doğrudan dokunun üstünde ve kalın. Sıradaki basamak mavi tonda. */
+.locked { background:repeating-linear-gradient(135deg, var(--line) 0 1px, transparent 1px 7px), var(--surface-sunken); }
+.locked .badge { background:var(--surface-sunken); color:var(--text-muted); outline:1px solid var(--line); }
+.locked .label { color:var(--text-body); }
+.lockLine { align-self:flex-start; margin-top:auto; padding:0 .375rem; border-radius:999px; background:var(--surface-sunken); font-size:var(--text-tiny); font-weight:700; line-height:1.5; color:var(--text-muted); }
+.next { background:repeating-linear-gradient(135deg, var(--primary-faint) 0 1px, transparent 1px 7px), var(--primary-tint); }
+.next .badge { background:var(--primary-tint); color:var(--primary-ink); outline:1px solid var(--primary-faint); }
+.next .lockLine { background:var(--primary-tint); color:var(--primary-ink); }
 
-/* ---- Giriş: açılan karo yerinde çevrilir ---- */
+/* ---- Giriş: açılan karo kart gibi Y ekseninde döner ----
+   Tek küçük öğe: `--ease-spring-soft` (hedefi az aşıp oturur). İkili
+   basamağın ikinci karosu 90 ms sonra. Rozet döndükten sonra oturur. */
+.tile { transform-origin:50% 50%; }
 @media (prefers-reduced-motion: no-preference) {
-  .fresh { animation:tile-flip 520ms var(--ease-brand) both; }
-  .fresh .icon { animation:icon-pop 420ms var(--ease-spring-soft) 300ms both; }
+  .fresh { animation:tile-flip 620ms var(--ease-spring-soft) both; animation-delay:calc((var(--slot) - 1) * 90ms); }
+  .fresh .badge { animation:icon-pop 420ms var(--ease-spring-soft) both; animation-delay:calc((var(--slot) - 1) * 90ms + 380ms); }
 }
 @keyframes tile-flip {
-  from { opacity:0; transform:rotateX(-80deg); }
+  from { opacity:.2; transform:rotateY(-100deg); }
+  45% { opacity:1; }
   to { opacity:1; transform:none; }
 }
 @keyframes icon-pop {

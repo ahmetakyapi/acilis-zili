@@ -345,7 +345,7 @@ function factsFor(
 
 /** Sektör ve endüstri ipucu ekrana dilin adıyla iner. */
 function localizeClue(clue: Clue, locale: Locale): Clue {
-  if (clue.kind === "sector") return { ...clue, sector: sectorLabel(clue.sector, locale) ?? clue.sector };
+  if (clue.kind === "sector") return { ...clue, sector: sectorLabel(clue.sector, locale) ?? clue.sector, gics: clue.sector };
   if (clue.kind === "industry" && locale === "tr") return { ...clue, industry: SUB_INDUSTRIES[clue.industry]?.tr ?? clue.industry };
   return clue;
 }

@@ -21,8 +21,8 @@ test("every more item belongs to a panel group", () => {
 
 /* 25 Ekim mega paneli, ikinci tur: üstte üç araç karosu, altında dört
    sütun EŞİT DÖRT SATIR (sahibinin isteği: "sağ sol dengesiz uzamasın").
-   Kapılı satır (Risk Masası) yalnız erişimi olana basılır ve sayılmaz;
-   erişimi olana Portföy sütununun beşinci satırı. Yenilikler artık
+   Kapılı öğe (Risk Masası) yalnız erişimi olana basılır ve sayılmaz;
+   erişimi olana araç bandının dördüncü karosu. Yenilikler artık
    "Öğren ve Oku"nun satırı, dipte ayrı satır yok. */
 test("tools band is three tiles and every column is exactly four ungated rows", () => {
   const count = (group: string) => more.filter((item) => item.more === group && !item.gate).length;
@@ -30,7 +30,7 @@ test("tools band is three tiles and every column is exactly four ungated rows", 
   for (const group of MORE_GROUPS.filter((entry) => entry !== "tools")) {
     assert.equal(count(group), 4, group);
   }
-  for (const item of more.filter((entry) => entry.gate)) assert.equal(item.more, "mine", item.href);
+  for (const item of more.filter((entry) => entry.gate)) assert.equal(item.more, "tools", item.href);
 });
 
 test("What's New is the last row of Learn and Read", () => {

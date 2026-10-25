@@ -3,18 +3,29 @@
    Derinlik tonla: bant `.panel` zemininde, kartlar `--surface` ile bir ton
    aşağıda; gölge yalnız açılır ayrıntıda (`.tip`, tek gerçek gölge açılır
    katmanda — CLAUDE.md "Görsel dil"). Renk yalnız işaretten (up/down) ve
-   etkileşimden (mavi aile). */
+   etkileşimden (mavi aile).
+
+   KOMPAKT BANT (25 Ekim). Bant yüksekliği önce → sonra, /bulten (günlük
+   sayı 23 Ekim, haftalık 12–16 Ekim), iki tema, TR/EN, reduced-motion:
+     1280 / 1440 / 1920 günlük:   613 → 313 px
+     1440 / 1920 haftalık:        675 → 347 px (EN 1280'de cümle iki satır: 372)
+     768 günlük / haftalık:       412 / 459–480 px
+     390 günlük / haftalık:       430 / 468 → 346 / 342–363 px (ayrıntı katlı;
+                                  açıkken 755–790)
+   Bülten metninin başı 1440×900'de 910 → 610 (haftalık 972 → 644), arşivin
+   ilk satırı 964 → 665: ikisi de ilk ekranda. Telefonda arşiv şeridi 812 →
+   728 (sekme çubuğunun üstünde). Taşma 0, konsol hatası 0, CLS 0. */
 
 /* ---------------------------------------------------------------- Bant -- */
 
 .band {
   display: grid;
-  gap: 20px;
-  padding: 20px 16px;
+  gap: 12px;
+  padding: 16px;
   animation: ledger-rise 0.5s var(--ease-brand) both;
 }
 @media (min-width: 640px) {
-  .band { padding: 24px 28px; gap: 24px; }
+  .band { padding: 18px 24px 14px; gap: 14px; }
 }
 
 /* Izgara çocukları içeriklerinin en küçük enine kilitlenmesin: kayan
@@ -22,56 +33,102 @@
 .band > * { min-width: 0; }
 /* Katlamanın içi bandın kendi aralığıyla dizilir (FoldToggle bir kap
    ekliyor; aralık ona geçmesin diye burada tekrar). */
-.body { display: grid; gap: 20px; min-width: 0; }
+.body { display: grid; gap: 12px; min-width: 0; }
 .body > * { min-width: 0; }
 @media (min-width: 640px) {
-  .body { gap: 24px; }
+  .body { gap: 14px; }
 }
-/* Katlama düğmesi bandın sol kenarında, son öğenin altında. */
-.band :global(label[for="ledger-detail"]) { margin-top: 4px; }
-.head { display: grid; gap: 6px; }
+/* Katlama düğmesi (yalnız telefonda) bandın sol kenarında. */
+.band :global(label[for="ledger-detail"]) { margin-top: -4px; }
+
+/* BAŞ TEK BANT: başlık, seans künyesi ve veriden kurulan cümle aynı
+   satırda; sığmayan genişlikte cümle alta kırılıyor. Başlık degrade
+   (`.display-ink`) ve 0,12em yukarı açılıyor; yanındaki metin aynı kadar
+   kalkıyor ki taban çizgileri buluşsun (CLAUDE.md "Display başlığın
+   yanındaki metin 0,12em kalkar"). */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 14px;
+}
+.title {
+  width: fit-content;
+  font-size: var(--text-title);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.session,
+.story { translate: 0 calc(var(--text-title) * -0.12); }
 .session {
   color: var(--text-muted);
   font-size: var(--text-small);
   font-weight: 600;
+  white-space: nowrap;
 }
-/* Veriden kurulan tek cümle — bandın asıl sözü, okuma puntosunda. */
 .story {
-  max-width: 68ch;
+  min-width: 0;
   color: var(--text-strong);
-  font-size: var(--text-lead);
+  font-size: var(--text-read);
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.45;
   letter-spacing: -0.01em;
 }
 @media (min-width: 1024px) {
-  .story { font-size: 1.125rem; }
+  .story { font-size: var(--text-lead); }
+}
+/* Telefonda alt alta: üç öğe zaten üç satır, kalkma payı orada boşluk. */
+@media (max-width: 639px) {
+  .head { display: grid; gap: 4px; }
+  .session,
+  .story { translate: none; }
 }
 
-.blockLabel {
-  margin-bottom: 10px;
+/* ----------------------------------------------------------- Kartlar -- */
+
+/* Tek sıra: 1200'de manşet | endeksler | ölçüler. 640–1199 manşet ile
+   endeksler yan yana, ölçüler altta üç sütun. 640 altı tek kolon, endeks
+   ve ölçüler ikişerli karo. Kartlar aynı satırda ızgaranın gerdiği boyda
+   biter (yan yana ölçüler aynı hatta). */
+.grid {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+@media (min-width: 640px) {
+  .grid { grid-template-columns: minmax(170px, 200px) minmax(0, 1fr); }
+  .metricsWrap { grid-column: 1 / -1; }
+}
+@media (min-width: 1200px) {
+  .grid { grid-template-columns: 200px minmax(0, 1fr) minmax(300px, 360px); }
+  .metricsWrap { grid-column: auto; }
+}
+
+.card {
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  transition: background-color 0.2s var(--ease-brand), border-color 0.2s var(--ease-brand);
+}
+.cardHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.cardLabel {
   color: var(--text-muted);
   font-size: var(--text-tiny);
   font-weight: 600;
 }
-
-/* Telefonda alt alta; 768'de manşet sayısı ile endeksler yan yana, ölçüler
-   altında üç sütun; 1200'de üç sütun tek satır. */
-.grid {
-  display: grid;
-  gap: 24px;
-  min-width: 0;
-}
-@media (min-width: 768px) {
-  .grid {
-    grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
-    column-gap: 32px;
-  }
-  .metrics { grid-column: 1 / -1; }
-}
-@media (min-width: 1200px) {
-  .grid { grid-template-columns: 220px minmax(0, 1fr) minmax(250px, 300px); }
-  .metrics { grid-column: auto; }
+.scale {
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 /* ------------------------------------------------------- Manşet sayısı -- */
@@ -79,34 +136,17 @@
 .hero {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-  padding: 4px 8px 8px;
-  margin: -4px -8px -8px;
-  border-radius: var(--radius-lg);
-  transition: background-color 0.2s var(--ease-brand);
-}
-.heroCaption {
-  color: var(--text-muted);
-  font-size: var(--text-tiny);
-  font-weight: 600;
+  justify-content: space-between;
+  gap: 6px;
 }
 .heroFigure {
-  font-size: clamp(2.5rem, 4.2vw + 1rem, 3.5rem);
+  font-size: clamp(1.75rem, 1.2vw + 1rem, 2.25rem);
   font-weight: 800;
   letter-spacing: -0.035em;
   line-height: 1.1;
 }
-.heroLane { margin-top: 6px; }
-/* Telefonda manşet sayısının şeridi düşüyor: aynı şerit hemen altındaki
-   kulvarda duruyor, bant bir ekran boyunu aşmasın. */
-@media (max-width: 767px) {
-  .hero .heroLane { display: none; }
-  .heroFigure { font-size: 2.5rem; }
-}
-/* 640 altında manşet sayısı hiç yok (25 Ekim son düzeltme): aynı yüzde
-   S&P 500 satırında duruyor; bant ilk ekranda cümle + dört endeksten
-   ibaret, bültenin metni hemen altında. */
+/* 640 altında manşet kartı yok: aynı yüzde S&P 500 karosunda duruyor;
+   telefonda bant cümle + karolardan ibaret. */
 @media (max-width: 639px) {
   .hero { display: none; }
 }
@@ -119,36 +159,20 @@
 
 /* ----------------------------------------------------------- Endeksler -- */
 
-.indices {
-  container-type: inline-size;
-  min-width: 0;
-}
-/* Ölçüler çocuklarda: kap kendi sorgusunda stillenemiyor (PosterLanes ile
-   aynı gerekçe). */
-.axis,
+.indices { min-width: 0; }
 .lanes,
 .weekHead {
-  --name-w: min(11rem, 34cqi);
-  --value-w: 4.5rem;
+  --name-w: min(10.5rem, 30%);
+  --value-w: 4.25rem;
   --gap: 12px;
 }
 
-.axis,
 .row,
 .weekHead {
   display: grid;
   grid-template-columns: var(--name-w) minmax(0, 1fr) var(--value-w);
   column-gap: var(--gap);
   align-items: center;
-}
-.axis { margin-bottom: 4px; }
-.axisTrack {
-  display: flex;
-  justify-content: space-between;
-  color: var(--text-muted);
-  font-size: var(--text-nano);
-  font-weight: 600;
-  white-space: nowrap;
 }
 
 .lanes {
@@ -162,8 +186,8 @@
 .lanes:not(.weekLanes)::before {
   content: "";
   position: absolute;
-  top: 6px;
-  bottom: 6px;
+  top: 4px;
+  bottom: 4px;
   left: calc(var(--name-w) + var(--gap) + (100% - var(--name-w) - var(--value-w) - 2 * var(--gap)) / 2);
   width: 1.5px;
   translate: -50% 0;
@@ -172,18 +196,21 @@
 }
 
 .row {
-  min-height: 40px;
-  padding-inline: 8px;
-  margin-inline: -8px;
+  min-height: 24px;
+  padding-inline: 6px;
+  margin-inline: -6px;
   border-radius: var(--radius-sm);
   transition: background-color 0.2s var(--ease-brand);
 }
 .rowName {
+  overflow: hidden;
   min-width: 0;
   color: var(--text-strong);
-  font-size: var(--text-read);
+  font-size: var(--text-base);
   font-weight: 600;
   line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .rowSymbol {
   margin-left: 6px;
@@ -194,28 +221,55 @@
 }
 .row .rowLane::after { content: none; }
 .rowValue {
-  font-size: var(--text-read);
+  font-size: var(--text-base);
   font-weight: 700;
   letter-spacing: -0.02em;
   text-align: right;
   white-space: nowrap;
 }
-
-/* Dar kap: tek satır kalıyor — ad sütunu daralıyor, fon sembolü düşüyor
-   (ad yetiyor). Posterin iki satırlı dar düzeni burada bandı 80 piksel
-   uzatıyordu; dört kısa endeks adı 6,25rem'e sığıyor (ölçüldü, 390). */
-@container (max-width: 420px) {
-  .axis,
-  .lanes,
-  .weekHead { --name-w: 6.25rem; --value-w: 3.9rem; --gap: 8px; }
+/* Dar kart (640–900): fon sembolü düşüyor, ad yetiyor. */
+@media (max-width: 899px) {
   .rowSymbol { display: none; }
-  .rowName,
-  .rowValue { font-size: var(--text-base); }
+}
+
+/* TELEFON: dört endeks ikişerli karo. Ortak sıfır çizgisi her karonun
+   kendi kulvarında (MiniLane'in orta çizgisi), ölçek yine tek. Kartın
+   kendi çerçevesi kalkıyor, karolar çerçeveli: kart içinde kart olmasın. */
+@media (max-width: 639px) {
+  .indices {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .lanes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .lanes:not(.weekLanes)::before { content: none; }
+  /* Karo iki satır: ad üstte (tam genişlik — "Russell 2000" yarım satırda
+     kesiliyordu), altta yüzde ve kulvarı yan yana. */
+  .row {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "name name"
+      "value lane";
+    gap: 4px 10px;
+    min-height: 0;
+    margin: 0;
+    padding: 10px 12px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+  .rowName { grid-area: name; }
+  .rowValue { grid-area: value; text-align: left; font-size: var(--text-read); }
+  .row > :nth-child(2) { grid-area: lane; }
+  .weekHead { display: none; }
 }
 
 /* ----------------------------------------------------- Haftanın şeridi -- */
 
-.weekHead { margin-bottom: 6px; }
+.weekHead { margin-bottom: 2px; }
 .weekDays {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -229,8 +283,8 @@
 }
 .weekTotal { text-align: right; }
 
-.weekLanes { gap: 4px; }
-.weekLanes .row { min-height: 52px; }
+.weekLanes { gap: 2px; }
+.weekLanes .row { min-height: 26px; }
 
 .week {
   display: grid;
@@ -240,7 +294,7 @@
 }
 .cell {
   position: relative;
-  height: 44px;
+  height: 22px;
   background: var(--surface-sunken);
 }
 .cell:first-child { border-radius: var(--radius-xs) 0 0 var(--radius-xs); }
@@ -257,7 +311,7 @@
 .cellBar {
   position: absolute;
   left: 50%;
-  width: min(14px, 36%);
+  width: min(10px, 36%);
   height: max(1.5px, var(--len));
   translate: -50% 0;
   border-radius: 3px;
@@ -278,62 +332,63 @@
   font-weight: 700;
 }
 
-/* Dar kap: ad sütunu daralıyor, fon sembolü düşüyor (ad yetiyor), hücreler
-   alçalıyor — dört satır tek bakışta kalsın (390'da bant 1.212 pikseldi). */
-@container (max-width: 420px) {
-  .weekLanes .row { min-height: 40px; }
-  .weekLanes .cell { height: 34px; }
-}
-
 /* -------------------------------------------------------------- Ölçüler -- */
 
-.metrics { min-width: 0; }
-.metricList {
+/* Üç küçük karo; geniş ekranda alt alta (endeks kartının boyunda), 640–1199
+   yan yana. Telefonda (katlı ayrıntıda) tam genişlikte tek satır: yarım
+   karoda "+4 Baz Puan" rozeti ile "10 Yıllık Faiz" adı birbirini kesiyordu
+   (390'da ölçüldü), tam satır aynı yükseklikte her şeyi okutuyor. */
+.metricsWrap { min-width: 0; }
+.metrics {
   display: grid;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-@media (min-width: 768px) and (max-width: 1199px) {
-  .metricList { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (min-width: 640px) and (max-width: 1199px) {
+  .metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1200px) {
+  .metrics { height: 100%; grid-auto-rows: 1fr; }
 }
 
-/* `oncesi` bloğunun kart dili: tek büyüklüğün iki hâli, arada ok, sağda
-   değişim rozeti (components/article/ArticleBody.tsx → "shift"). */
+/* `oncesi` bloğunun dili tek satırda: ad, önce → sonra, rozet
+   (components/article/ArticleBody.tsx → "shift"). */
 .metric {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas:
-    "name delta"
-    "shift shift";
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: "name shift delta";
   gap: 4px 10px;
   align-items: center;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  transition: background-color 0.2s var(--ease-brand), border-color 0.2s var(--ease-brand);
+  padding: 6px 10px 6px 12px;
 }
-/* Telefonda tek satır: ad ve gün solda, önce → sonra ortada, rozet sağda. */
-@media (max-width: 767px) {
+/* 640–1199 üç sütunda karo dar: rozet adın yanına çıkıyor, önce → sonra
+   altta. */
+@media (min-width: 640px) and (max-width: 1199px) {
   .metric {
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    grid-template-areas: "name shift delta";
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "name delta"
+      "shift shift";
+    padding: 8px 10px 10px 12px;
   }
-  .metricShift { gap: 5px; }
-  .metricPrev { font-size: var(--text-small); }
-  .metricValue { font-size: var(--text-read); }
+}
+@media (max-width: 639px) {
+  .metric { padding: 8px 10px 8px 12px; }
 }
 .metricName {
   grid-area: name;
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
+  overflow: hidden;
   color: var(--text-strong);
   font-size: var(--text-base);
   font-weight: 600;
+  white-space: nowrap;
 }
 .metricDate {
   color: var(--text-muted);
@@ -343,25 +398,25 @@
 .metricShift {
   grid-area: shift;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: baseline;
+  gap: 5px;
   white-space: nowrap;
 }
 .metricPrev {
   color: var(--text-muted);
-  font-size: var(--text-read);
+  font-size: var(--text-small);
   font-weight: 600;
 }
-.metricArrow { color: var(--text-muted); flex-shrink: 0; }
+.metricArrow { align-self: center; color: var(--text-muted); flex-shrink: 0; }
 .metricValue {
   color: var(--text-strong);
-  font-size: var(--text-lead);
+  font-size: var(--text-read);
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 .metricDelta {
   grid-area: delta;
-  padding: 3px 9px;
+  padding: 2px 8px;
   border-radius: 999px;
   font-size: var(--text-nano);
   font-weight: 700;
@@ -370,83 +425,125 @@
 
 /* ------------------------------------------------- Bültende geçen hisseler -- */
 
+/* Tek satır: etiket solda, çipler yanında. Sığmayınca şerit kayıyor
+   (ScrollEdges "devamı var" der); telefonda etiket üstte. */
+.stocks {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.stocksLabel {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  font-weight: 600;
+}
+@media (max-width: 639px) {
+  .stocks { display: grid; gap: 6px; }
+}
+
 .stockList {
   display: flex;
-  gap: 8px;
-  margin: 0 -16px;
-  padding: 0 16px 2px;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
   overflow-x: auto;
   list-style: none;
 }
 .stockList > li { flex: 0 0 auto; }
-@media (min-width: 640px) {
-  .stockList { margin: 0; padding: 0; }
-}
-/* Geniş ekranda şerit kaymıyor, ızgara oluyor: sekiz hisse 4 × 2 (adlar
-   kesilmeden okunuyor; tek satırda sekiz çipte ad iki harfe iniyordu). */
-@media (min-width: 768px) {
-  .stockList {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    overflow: visible;
-  }
-}
-@media (min-width: 1100px) {
-  .stockList { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 639px) {
+  .stockList { margin: 0 -16px; padding: 0 16px; }
 }
 
+/* Çip 44 px dokunma hedefinin görünmez payı: görünen 32, üst-alt 6'şar
+   piksel saydam pay (kenarlık değil, `::before`) — şerit büyümüyor. */
 .stock {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 48px;
-  padding: 8px 12px 8px 8px;
+  gap: 7px;
+  height: 32px;
+  padding: 0 10px 0 5px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
+  border-radius: 999px;
   background: var(--surface);
   color: var(--text-strong);
   transition: background-color 0.2s var(--ease-brand), border-color 0.2s var(--ease-brand);
   animation: ledger-rise 0.45s var(--ease-brand) both;
   animation-delay: calc(0.2s + var(--i, 0) * 0.04s);
 }
+.stock::before {
+  content: "";
+  position: absolute;
+  inset: -6px 0;
+}
 .stock:hover { border-color: var(--primary-faint); background: var(--primary-tint); }
 .stock:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
-.stockText { display: grid; min-width: 0; line-height: 1.2; }
 .stockSymbol {
   font-family: var(--font-mono);
   font-size: var(--text-nano);
   font-weight: 700;
 }
-.stockName {
-  overflow: hidden;
-  color: var(--text-muted);
-  font-size: var(--text-nano);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .stockValue {
-  margin-left: auto;
-  padding-left: 6px;
   font-size: var(--text-base);
   font-weight: 700;
   white-space: nowrap;
 }
 
+/* --------------------------------------------------------------- Künye -- */
+
+/* Tek satır kaynak listesi + katlı yöntem (yerli details). Hairline'la
+   ayrılıyor; yeni kutu açılmıyor. */
 .note {
-  padding-top: 12px;
+  padding-top: 8px;
   border-top: 1px solid var(--line);
   color: var(--text-muted);
   font-size: var(--text-tiny);
-  line-height: 1.6;
+  line-height: 1.55;
+}
+.noteSummary {
+  display: flex;
+  align-items: baseline;
+  gap: 4px 12px;
+  min-height: 24px;
+  cursor: pointer;
+  list-style: none;
+}
+.noteSummary::-webkit-details-marker { display: none; }
+/* Kesilmiyor, sarılıyor: üç noktayla biten künye okunmaz (768'de
+   "gösteri…" diye bitiyordu). 1200 ve üstünde tek satıra sığıyor. */
+.noteShort { min-width: 0; }
+.noteToggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  color: var(--primary-ink);
+  font-weight: 600;
+}
+.noteSummary:hover .noteToggle { text-decoration: underline; text-underline-offset: 3px; }
+.noteSummary:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: var(--radius-xs); }
+.noteIcon { transition: rotate 0.2s var(--ease-brand); }
+.note[open] .noteIcon { rotate: 180deg; }
+/* Açılınca kısa satır tam metne yer bırakıyor: aynı bilgi iki kez yazmasın. */
+.note[open] .noteShort { display: none; }
+.noteBody { max-width: 110ch; padding-top: 4px; }
+/* Telefonda düğme kısa satırın altında. */
+@media (max-width: 639px) {
+  .noteSummary { flex-wrap: wrap; }
+  .noteToggle { margin-left: 0; min-height: 44px; }
 }
 
 /* -------------------------------------------------- Bağ: vurgu ve ayrıntı -- */
 
-.hero[data-ledger-active],
 .row[data-ledger-active],
 .miniItem[data-ledger-active] {
   background: var(--primary-tint);
 }
+.hero[data-ledger-active],
 .metric[data-ledger-active],
 .stock[data-ledger-active] {
   border-color: var(--primary-faint);
@@ -573,10 +670,10 @@
   .stock,
   .cellBar,
   .tip { animation: none; }
-  .hero,
+  .card,
   .row,
-  .metric,
   .stock,
   .ref,
+  .noteIcon,
   .miniItem { transition: none; }
 }

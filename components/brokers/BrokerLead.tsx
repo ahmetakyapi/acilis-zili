@@ -11,6 +11,7 @@ import { useAmountIndex } from "./broker-view-state";
  * hesap `lib/broker-cards.ts` → `brokersLead` (testli). Kaydırıcıyla birlikte
  * değişiyor; ekran okuyucuya kibarca duyuruluyor (eskiden maliyet
  * çizgisinin içindeki cümle bu işi yapıyordu, o cümle buraya taşındı).
+ * Kompakt turdan (25 Ekim) beri kapağın altında değil, panonun başında.
  */
 export function BrokerLead({
   lines,
@@ -18,12 +19,17 @@ export function BrokerLead({
   fractional,
   templates,
   locale,
+  omitUnpriced = false,
+  className,
 }: {
   lines: CostLine[];
   total: number;
   fractional: number;
   templates: BrokersLeadTemplates;
   locale: "tr" | "en";
+  /** Hesaplanamayan kurum sayısını cümleye katma (aynı bilgi yakında ayrıca duruyorsa). */
+  omitUnpriced?: boolean;
+  className?: string;
 }) {
   const line = lines[useAmountIndex()];
   const sentence = brokersLead(
@@ -33,14 +39,14 @@ export function BrokerLead({
       max: line.max,
       total,
       fractional,
-      unpriced: line.unpriced.length,
+      unpriced: omitUnpriced ? 0 : line.unpriced.length,
     },
     templates,
     (value, digits = 2) => formatPrice(value, locale, { currency: true, digits }),
   );
   if (!sentence) return null;
   return (
-    <p className="max-w-3xl text-read leading-relaxed text-strong sm:text-lead" aria-live="polite">
+    <p className={className ?? "max-w-3xl text-read leading-relaxed text-strong sm:text-lead"} aria-live="polite">
       {sentence}
     </p>
   );

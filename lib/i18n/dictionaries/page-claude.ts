@@ -74,10 +74,6 @@ export const askStockTr = {
   session: "{date} Kapanışına Kadar Veri",
   signedOut: "Bu hisse hakkında merak ettiğini sor; Claude yanıtı yalnız bu sayfadaki veriden yazar, al/sat tavsiyesi vermez. Soru sormak için giriş yap.",
   signIn: "Giriş Yap ve Sor",
-  /* Oturumsuz önizleme (24 Ekim düzeltmesi): yanıtın YAPISINI anlatır,
-     uydurma bir yanıt ya da sayı basmaz. */
-  previewTitle: "Yanıt Nasıl Görünür",
-  previewText: "Claude en çok 90 kelimelik düz bir paragraf yazar. Yanıttaki her sayı bu sayfanın verisinde geçmek zorunda; geçmezse yanıt hiç gösterilmez. Altında hangi veriden yararlandığı ve varsa kaynak haberler yazar.",
   previewSources: "Yanıtın Dayanabileceği Veri",
   memberQuota: "Üyelere Günde {limit} Soru",
   errors: {
@@ -123,8 +119,6 @@ export const askStockEn: typeof askStockTr = {
   session: "Data Through the {date} Close",
   signedOut: "Ask what you want to know about this stock; Claude answers only from the data on this page and gives no buy or sell advice. Sign in to ask.",
   signIn: "Sign In and Ask",
-  previewTitle: "What an Answer Looks Like",
-  previewText: "Claude writes one plain paragraph of at most 90 words. Every number in it must appear in this page's data; if one doesn't, the answer isn't shown at all. Below it you see which data it used and any source headlines.",
   previewSources: "Data an Answer Can Draw On",
   memberQuota: "{limit} Questions a Day for Members",
   errors: {
@@ -138,6 +132,19 @@ export const askStockEn: typeof askStockTr = {
   },
   disclosure:
     "Answers are written with Claude only from this page's data and the last completed session's close; every number in an answer must appear in that data. Not investment advice.",
+};
+
+/* Bu Hafta Neden Hareket Etti, kompakt kart (25 Ekim) — components/stock/
+   WeekMoveCard.tsx. Kartın öteki metinleri `stockInsight`te (eski tam
+   genişlik kartla ortak); burada yalnız kompakt karta özgü iki satır. */
+export const stockWeekTr = {
+  points: "Etkenler ({n})",
+  dataOnly: "Claude notu şu an yok; yukarıdaki sayılar son beş tamamlanmış seansın kapanışlarından.",
+};
+
+export const stockWeekEn: typeof stockWeekTr = {
+  points: "Drivers ({n})",
+  dataOnly: "The Claude note isn't available right now; the figures above come from the closes of the last five completed sessions.",
 };
 
 export type WatchlistTodayLabels = typeof watchlistTodayTr;

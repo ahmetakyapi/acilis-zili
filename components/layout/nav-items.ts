@@ -414,15 +414,15 @@ export const NAV_ITEMS: NavItem[] = [
   {
     /* RİSK MASASI (25 Ekim) — KAPILI. Varsayılan kapalı; yönetici ve
        yöneticinin Üyeler ekranından erişim açtığı hesaplar görür
-       (lib/risk/store.ts). Portföy grubunda: masa okurun kendi
-       pozisyonlarının maruziyetini gösteriyor. Erişimi olana sütunun
-       BEŞİNCİ satırı (25 Ekim, ikinci tur): ötekilerin eşit dört satırı
-       ona göre bozulmuyor. */
+       (lib/risk/store.ts). ARAÇLAR BANDINDA DÖRDÜNCÜ KARO (25 Ekim,
+       sahibinin isteği): Portföy sütununun beşinci satırıydı, sütun
+       ötekilerden uzun kalıyordu. Erişimi olanda bant dört karo, olmayanda
+       eski üç karo; sütunlar her iki durumda eşit dört satır. */
     href: "/risk",
     label: (t) => t.riskDesk.nav.label,
     icon: Gauge,
     inBottomBar: false,
-    more: "mine",
+    more: "tools",
     hint: (t) => t.riskDesk.nav.hint,
     gate: "risk",
   },

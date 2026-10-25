@@ -12,6 +12,7 @@ import type { PuzzleResponse } from "@/app/api/bulmaca/route";
 import {
   AXIS_AFTER_MISSES,
   JOKER,
+  currentStreak,
   MAX_GUESSES,
   dayNumberOf,
   isClose,
@@ -80,6 +81,12 @@ import styles from "./StockPuzzle.module.css";
  * döndüğünde artık bir kullanıcı hareketinin içinde değiliz ve tarayıcı
  * yeni bağlam açtırmıyor. Geri yüklenen (önceden kazanılmış) bulmaca
  * çalmaz; zil yalnız o anki doğru tahmine.
+ *
+ * KLAVYE (25 Ekim, üçüncü kurulum): Enter kutuda seçer ve gönderir (kutu
+ * dışındayken kutuya odaklanır); J, yazı alanında değilken jokeri
+ * kullanır. Düğmede `aria-keyshortcuts` ve ince imleçli ekranda küçük bir
+ * "J" tuşu; dokunmatikte tuş gizli. Kısayol bir hakkı harcadığı için
+ * yalnız joker gerçekten kullanılabilirken çalışır (düğmeyle aynı koşul).
  */
 
 type Props = {
@@ -266,6 +273,36 @@ export function StockPuzzle({ initial, options, labels, locale, shareUrl, archiv
   };
 
   const today = dayNumberOf(state.day);
+  const streak = archive || !statsValue ? 0 : currentStreak(statsValue, today);
+  const jokerReady = hydrated && !restoring && !pending && !finished && jokerAllowed(state.guesses.length, state.upcoming.length);
+
+  /* Klavye kısayolları: J joker, Enter kutuya odak. Yazı alanında ya da
+     değiştirici tuşla basılınca dokunulmaz. */
+  const submitRef = useRef(submit);
+  useEffect(() => {
+    submitRef.current = submit;
+  });
+  useEffect(() => {
+    if (finished) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
+      const target = event.target as HTMLElement | null;
+      const typing = target?.closest("input, textarea, select, [contenteditable='true']");
+      if (typing) return;
+      if ((event.key === "j" || event.key === "J") && jokerReady) {
+        event.preventDefault();
+        void submitRef.current(JOKER);
+      } else if (event.key === "Enter" && (target === document.body || target === null)) {
+        const input = document.getElementById("bulmaca-tahmin");
+        if (input instanceof HTMLInputElement && !input.disabled) {
+          event.preventDefault();
+          input.focus();
+        }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [finished, jokerReady]);
   const failureText =
     failure === "rate-limited"
       ? labels.errorRate
@@ -315,7 +352,7 @@ export function StockPuzzle({ initial, options, labels, locale, shareUrl, archiv
       <div className={styles.main}>
         {/* ---- Ana görsel: oynanırken siluet, bitince aynı kutuda cevap ---- */}
         {finished && state.answer ? (
-          <PuzzleCover ref={leadRef} className={styles.lead} state={state} labels={labels} locale={locale} rang={rang} />
+          <PuzzleCover ref={leadRef} className={styles.lead} state={state} labels={labels} locale={locale} rang={rang} streak={streak} />
         ) : silhouette?.kind === "silhouette" ? (
           <Panel ref={leadRef} className={styles.lead}>
             <PanelHeader
@@ -339,6 +376,7 @@ export function StockPuzzle({ initial, options, labels, locale, shareUrl, archiv
                 labels={labels}
                 locale={locale}
                 label={`${labels.clue.silhouette}. ${labels.silhouetteNote}`}
+                live
               />
             </div>
           </Panel>
@@ -422,13 +460,15 @@ export function StockPuzzle({ initial, options, labels, locale, shareUrl, archiv
                       type="button"
                       variant="ghost"
                       size="lg"
-                      title={labels.jokerHint}
+                      title={`${labels.jokerHint} ${labels.jokerKey}`}
                       aria-describedby="bulmaca-joker-not"
-                      disabled={!hydrated || restoring || pending || !jokerAllowed(state.guesses.length, state.upcoming.length)}
+                      aria-keyshortcuts="J"
+                      disabled={!jokerReady}
                       onClick={() => void submit(JOKER)}
                     >
                       <Cards aria-hidden size={16} weight="bold" />
                       <span className={styles.jokerText}>{labels.jokerButton}</span>
+                      <kbd aria-hidden className={styles.kbd}>J</kbd>
                     </Button>
                   }
                 />

@@ -15,7 +15,7 @@ export default async function SectionOgImage() {
       eyebrow: "SEC 13F · Kongre Bildirimleri",
       title: "Ünlü Yatırımcılar Ne Tutuyor",
       dek: `Buffett'tan Pelosi'ye ${INVESTORS.length} ünlü yatırımcının portföyü, bu çeyrek aldıkları ve sattıkları.`,
-      chips: ["Sermaye Haritası", "Alanlar ve Satanlar", "Çeyreklik Bildirim"],
+      chips: ["Yatırımcı Kartları", "Alanlar ve Satanlar", "Çeyreklik Bildirim"],
     }),
     { ...size, fonts: await ogFonts() },
   );

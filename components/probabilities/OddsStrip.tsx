@@ -26,10 +26,18 @@ import styles from "./Probabilities.module.css";
  *
  * Kadran bir bağlantı: dokununca aşağıdaki kartına iner (telefonda kartlar
  * şeridin altında, ilk ekranın dışında).
+ *
+ * İKİNCİ TUR (25 Ekim, sahibinin sözü: "kadranlar küçük ve yarım halka
+ * zayıf"). Halka kalınlaştı (10 → 14 birim) ve büyüdü (92 → 136 piksel);
+ * büyük sayı halkanın İÇİNE, merkezine oturdu: göz sayıyı ve yayı tek
+ * bakışta okuyor, kutunun sağında ayrı bir küçük yay kalmadı. 24 saatlik
+ * değişim düz metinden rozete döndü (ton farkı, işaret okla; yön rengi
+ * yok, bu sayfa fiyat yönü anlatmıyor). Kutu yüksekliği masaüstünde
+ * kadranın boyu kadar (ölçüm Probabilities.module.css → ŞERİT).
  */
 
-/** Yarım daire: merkez (50, 50), yarıçap 40; viewBox 100 × 56. */
-const ARC_PATH = "M 10 50 A 40 40 0 0 1 90 50";
+/** Yarım daire: merkez (50, 52), yarıçap 42; viewBox 100 × 59 (kalın halka payıyla). */
+const ARC_PATH = "M 8 52 A 42 42 0 0 1 92 52";
 
 type P = Dictionary["probabilities"];
 
@@ -39,9 +47,9 @@ function Gauge({ tile, majority }: { tile: HeadlineOdds; majority: boolean }) {
   const parts = arcSegments(tile.segments.map((s) => s.p));
   const mask = `odds-arc-${tile.kind}`;
   return (
-    <svg className={styles.gauge} viewBox="0 0 100 56" aria-hidden>
+    <svg className={styles.gaugeSvg} viewBox="0 0 100 59" aria-hidden>
       <defs>
-        <mask id={mask} className={styles.gaugeMask} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="56">
+        <mask id={mask} className={styles.gaugeMask} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="59">
           <path d={ARC_PATH} pathLength={100} className={styles.gaugeSweep} />
         </mask>
       </defs>
@@ -64,7 +72,7 @@ function Gauge({ tile, majority }: { tile: HeadlineOdds; majority: boolean }) {
           );
         })}
       </g>
-      {majority && <line x1="50" x2="50" y1="2" y2="18" className={styles.gaugeMajority} />}
+      {majority && <line x1="50" x2="50" y1="1" y2="19" className={styles.gaugeMajority} />}
     </svg>
   );
 }
@@ -75,13 +83,13 @@ function wordOf(tile: HeadlineOdds, p: P): string {
   return p.stripParty[tile.key as "dem" | "rep"] ?? tile.key;
 }
 
-function DeltaLine({ delta, p, locale }: { delta: number | null; p: P; locale: Locale }) {
+function DeltaBadge({ delta, p, locale }: { delta: number | null; p: P; locale: Locale }) {
   if (delta === null) return null;
   const Icon = delta > 0 ? ArrowUp : delta < 0 ? ArrowDown : Minus;
   const text = delta === 0 ? p.stripNoChange : p.stripDelta.replace("{n}", p.points.replace("{n}", signedPoints(delta, locale)));
   return (
-    <span className={styles.tileDelta}>
-      <Icon size={12} weight="bold" aria-hidden />
+    <span className={styles.tileDelta} data-flat={delta === 0 || undefined}>
+      <Icon size={11} weight="bold" aria-hidden />
       <span className="numeral">{text}</span>
     </span>
   );
@@ -106,19 +114,19 @@ export function OddsStrip({ tiles, summary, locale, t }: { tiles: StripTile[]; s
                 data-kind={tile.kind}
                 aria-label={`${tile.label}: ${figure} ${after}. ${p.stripJump.replace("{label}", tile.label)}`}
               >
+                <span className={styles.gauge}>
+                  <Gauge tile={tile} majority={tile.kind === "house" || tile.kind === "senate"} />
+                  <b className={`${styles.gaugeFigure} numeral`} data-resolved={tile.resolved || undefined}>{figure}</b>
+                </span>
                 <span className={styles.tileLabel}>{tile.label}</span>
-                <span className={styles.tileFigure} data-resolved={tile.resolved || undefined}>
-                  <b className="numeral">{figure}</b>
-                  <span className={styles.tileWord}>
-                    <i data-tone={tile.key} aria-hidden />
-                    {after}
-                  </span>
+                <span className={styles.tileWord}>
+                  <i data-tone={tile.key} aria-hidden />
+                  {after}
                 </span>
                 <span className={styles.tileMeta}>
-                  <DeltaLine delta={tile.delta} p={p} locale={locale} />
+                  <DeltaBadge delta={tile.delta} p={p} locale={locale} />
                   {tile.thin && <span className={styles.tileThin}>{p.pathThin}</span>}
                 </span>
-                <Gauge tile={tile} majority={tile.kind === "house" || tile.kind === "senate"} />
               </a>
             </li>
           );

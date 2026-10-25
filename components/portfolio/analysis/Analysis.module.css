@@ -12,7 +12,8 @@
    `--primary-faint`. */
 
 .body,
-.leadBlock {
+.leadBlock,
+.keyStrip {
   --pa-ink: var(--primary-soft);
   --pa-ink-soft: var(--primary-faint);
 }
@@ -102,10 +103,14 @@
   list-style: none;
 }
 
+/* Kompakt satır (25 Ekim, kart panosu): ad ve pay üstte, kulvar ortada,
+   S&P 500 payı ve fark altta. Eski satır 1400 piksellik üç sütundu; kart
+   artık panonun 7/12'si, sayılar kulvarın iki ucunda okunuyor. */
 .sectorRow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 6px 12px;
+  grid-template-areas: "name share" "track track" "bench diff";
+  gap: 4px 12px;
   align-items: baseline;
   padding: 10px 0 11px;
   border-top: 1px solid var(--line-soft);
@@ -113,65 +118,51 @@
 
 .sectorRow:first-child {
   border-top: 0;
-}
-
-@media (min-width: 900px) {
-  .sectorRow {
-    grid-template-columns: minmax(150px, 0.8fr) minmax(0, 1.5fr) 300px;
-    align-items: center;
-  }
+  padding-top: 2px;
 }
 
 .sectorName {
+  grid-area: name;
   min-width: 0;
   color: var(--text-strong);
   font-size: var(--text-read);
   font-weight: 650;
 }
 
-.sectorFigures {
-  display: grid;
-  grid-template-columns: 3.6rem 6.6rem 7.2rem;
-  align-items: baseline;
-  justify-content: end;
-  gap: 8px;
-  text-align: right;
+.sectorShare {
+  grid-area: share;
+  color: var(--text-strong);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   white-space: nowrap;
 }
 
-.sectorShare {
-  color: var(--text-strong);
-  font-size: var(--text-read);
-  font-weight: 750;
-}
-
 .sectorBench {
+  grid-area: bench;
   color: var(--text-muted);
   font-size: var(--text-small);
+  font-weight: 600;
 }
 
 .sectorDiff {
+  grid-area: diff;
   color: var(--text-muted);
-  font-size: var(--text-tiny);
+  font-size: var(--text-small);
   font-weight: 650;
+  white-space: nowrap;
 }
 
-/* Kulvar + portföy şeridi + S&P çentiği. Telefonda tam satır. */
+/* Kulvar + portföy şeridi + S&P çentiği. */
 .track {
   position: relative;
-  grid-column: 1 / -1;
+  grid-area: track;
   height: 12px;
+  margin: 2px 0;
 }
 
-@media (min-width: 900px) {
-  .track {
-    grid-column: auto;
-    grid-row: 1;
-    grid-column-start: 2;
-  }
-}
-
-.track::before {
+.track::before,
+.absentLane::before {
   position: absolute;
   inset: 3.5px 0;
   border-radius: 999px;
@@ -198,6 +189,74 @@
   margin-left: -1px;
   border-radius: 1px;
   background: var(--text-strong);
+}
+
+/* Portföyde olmayan sektörler: ad + S&P 500 payı + boş kulvarda çentik.
+   Telefonda tek, 640 ve üstünde iki sütun (390'da kart 326 piksel). */
+.absent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.absent .groupTitle {
+  margin: 0;
+}
+
+.absentGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 28px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 640'tan itibaren iki sütun. Her sektör tek satır: ad, boş kulvarda
+   çentik, S&P 500 payı (üç sütunlu ve kulvarı altta olan ilk sürüm
+   1440'ta 4 satır × 44 piksel tutuyordu; bu 5 × 30). */
+@media (min-width: 640px) {
+  .absentGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.absentItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(2.5rem, 1fr) 3rem;
+  grid-template-areas: "name lane share";
+  gap: 10px;
+  align-items: center;
+  min-height: 30px;
+  padding: 3px 0;
+}
+
+/* Ad KESİLMEZ, satır atlar: İngilizcede "Communication Services" ve
+   "Consumer Discretionary" 1440'ta üç noktayla kesiliyordu (ölçüldü). */
+.absentName {
+  grid-area: name;
+  min-width: 0;
+  color: var(--text-body);
+  font-size: var(--text-small);
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.absentShare {
+  grid-area: share;
+  text-align: right;
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.absentLane {
+  position: relative;
+  display: block;
+  grid-area: lane;
+  height: 12px;
 }
 
 @keyframes pa-grow {
@@ -241,6 +300,86 @@
   }
 }
 
+/* Temel Ölçüler: beş kart. Telefonda 2×2 + tam satır (tek kalan kart
+   boş hücre bırakmaz); 768'de 3 + 2; 1100 ve üstünde tek sırada. Kart
+   sayısı veriye bağlı (sektör ya da risk ölçüsü yoksa düşer), sütun sayısı
+   `data-count`tan. */
+.metrics.keys {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 767px) {
+  .metrics.keys > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 768px) {
+  .metrics.keys {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .metrics.keys > * {
+    grid-column: span 2;
+  }
+
+  .metrics.keys[data-count="5"] > :nth-child(n + 4),
+  .metrics.keys[data-count="4"] > *,
+  .metrics.keys[data-count="2"] > * {
+    grid-column: span 3;
+  }
+}
+
+@media (min-width: 1100px) {
+  .metrics.keys {
+    grid-template-columns: repeat(var(--keys-n, 5), minmax(0, 1fr));
+  }
+
+  .metrics.keys[data-count="4"] {
+    --keys-n: 4;
+  }
+
+  .metrics.keys[data-count="3"] {
+    --keys-n: 3;
+  }
+
+  .metrics.keys[data-count="2"] {
+    --keys-n: 2;
+  }
+
+  .metrics.keys[data-count] > :nth-child(n) {
+    grid-column: auto;
+  }
+}
+
+/* Künye şeridinin kartları sayfa zemininde (`.panel`): gömük ton panel
+   içindeki kartlara ait. Dolgu Günün Grafiği künye kartlarıyla aynı. */
+.keyStrip {
+  min-width: 0;
+}
+
+.metric.keyCard {
+  gap: 0.25rem;
+  background: var(--premium-surface);
+  padding: 12px 14px 13px;
+}
+
+@media (min-width: 768px) {
+  .metric.keyCard {
+    padding: 13px 16px 14px;
+  }
+}
+
+.metrics.keys {
+  gap: 10px;
+}
+
+@media (min-width: 768px) {
+  .metrics.keys {
+    gap: 16px;
+  }
+}
+
 .metric {
   display: flex;
   min-width: 0;
@@ -259,8 +398,23 @@
 }
 
 /* Değer dibe iner: farklı uzunluktaki etiketlere rağmen sayılar aynı hatta. */
-.metricValue {
+.metricValueRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
   margin: auto 0 0;
+}
+
+.metricAside {
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.metricValue {
+  margin: 0;
   color: var(--text-strong);
   font-size: clamp(1.15rem, 4.4vw, 1.6rem);
   font-weight: 750;
@@ -290,29 +444,64 @@
   letter-spacing: 0;
 }
 
-/* İki panel yan yana; aralık gap-5, justify-between yok (CLAUDE.md). */
-.pair {
+/* ---- Kart panosu (25 Ekim) ----
+   Dar ekranda tek kolon, ekran düzeni sırasıyla. 1100 ve üstünde iki
+   kolon (7:5): sektör kartının yanında yoğunlaşma, korelasyonun yanında
+   kur ve temettü; bilanço haftaları, eksik sektörler ve senaryo tam
+   genişlik. Bilanço ilk sürümde yoğunlaşmanın altındaydı: yığın sektör
+   kartından 250 piksel uzun kaldı ve fark sektör kartının içinde boşluk
+   oldu (1440, ölçüldü); haftalar artık yan yana kart. Aralık her yerde gap-5 (1,25rem), justify-between yok.
+   Satırdaki kartlar satır boyunca uzar, künye dipte (`.cell`): kolon
+   farkı kartların İÇİNDE toplanır, kartların arasına dağılmaz. */
+.board {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
 }
 
-@media (min-width: 1024px) {
-  .pair {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (min-width: 1100px) {
+  .board {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-areas:
+      "keys keys"
+      "sector side"
+      "corr money"
+      "earn earn"
+      "gaps gaps"
+      "scenario scenario";
+    align-items: stretch;
   }
 
-  /* Kur ve Temettü aynı satırda: paneller satır boyunca, künye dipte.
-     `align-items: start` iken diplerin farkı 40 pikseldi (1280, ölçüldü);
-     kartlar artık eşit boyda, kalan fark yalnız künye satırı kadar ve o da
-     künyenin üstünde toplanıyor, kutuların içine dağılmıyor. */
-  .pair > * {
-    display: flex;
-    flex-direction: column;
-  }
+  .board > [data-area="keys"] { grid-area: keys; }
+  .board > [data-area="sector"] { grid-area: sector; }
+  .board > [data-area="side"] { grid-area: side; }
+  .board > [data-area="corr"] { grid-area: corr; }
+  .board > [data-area="money"] { grid-area: money; }
+  .board > [data-area="earn"] { grid-area: earn; }
+  .board > [data-area="gaps"] { grid-area: gaps; }
+  .board > [data-area="scenario"] { grid-area: scenario; }
+}
 
-  .pair > * > .notes {
-    margin-top: auto;
-  }
+.stack {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Yığında son kart kalan boyu alır: iki kolonun dibi aynı hatta. */
+.stack > :last-child {
+  flex: 1 0 auto;
+}
+
+.cell {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.cell > .notes {
+  margin-top: auto;
 }
 
 /* ---- Korelasyon ---- */
@@ -374,7 +563,12 @@
 
 /* ---- Bilanço haftaları ---- */
 
+/* Haftalar yan yana kart (kart panosu): her biri hafta, payı, semboller
+   ve en ağır haftaya göre kulvar. Telefonda alt alta. */
 .weeks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.6rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -383,14 +577,16 @@
 .week {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 6px 12px;
+  gap: 8px 12px;
+  align-content: start;
   align-items: baseline;
-  padding: 10px 0;
-  border-top: 1px solid var(--line-soft);
+  padding: 0.8rem 0.9rem 0.9rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
 }
 
-.week:first-child {
-  border-top: 0;
+.week .chip {
+  background: var(--surface);
 }
 
 .weekName {
@@ -461,7 +657,7 @@ a.chip:hover {
 
 @media (min-width: 900px) {
   .gaps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   }
 }
 
@@ -567,18 +763,34 @@ a.chip:hover {
 
 /* ---- Tepedeki cümle (25 Ekim) ---- */
 
+/* Bandın alt satırında (DirectoryHeader `footer`): 1440'ta tek-iki satır. */
 .leadBlock {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-width: 74ch;
+  gap: 4px;
+}
+
+.boardSkeleton {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Bekleme karesinde cümlenin yeri: iki satırlık boy, CLS olmasın. */
+.leadSkeleton {
+  display: block;
+  width: min(100%, 60ch);
+  height: 2.9em;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
 }
 
 .leadText {
   margin: 0;
   color: var(--text-strong);
-  font-size: 17px;
-  font-weight: 550;
+  font-size: 16px;
+  font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.5;
   text-wrap: pretty;
@@ -593,7 +805,7 @@ a.chip:hover {
 
 @media (max-width: 767px) {
   .leadText {
-    font-size: 15.5px;
+    font-size: 15px;
   }
 }
 
@@ -687,12 +899,6 @@ a.chip:hover {
   white-space: nowrap;
 }
 
-.ringRow {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .ring {
   width: 36px;
   height: 36px;
@@ -710,12 +916,6 @@ a.chip:hover {
   stroke: var(--pa-ink);
   stroke-linecap: round;
   stroke-width: 5;
-}
-
-.ringOf {
-  color: var(--text-muted);
-  font-size: var(--text-small);
-  font-weight: 650;
 }
 
 /* ---- Ağırlık şeridi ---- */
@@ -761,6 +961,7 @@ a.chip:hover {
 
 .stripKey li {
   display: inline-flex;
+  min-height: 24px;
   align-items: center;
   gap: 6px;
   color: var(--text-muted);

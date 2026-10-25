@@ -16,7 +16,8 @@ import { SECTOR_ETF } from "@/lib/screening-data";
 import { canonicalSymbol } from "@/lib/symbols";
 import { getTechnicalBoard } from "@/lib/technical-data";
 import { BENCHMARK, toDaily, type MarketDesk } from "./data";
-import { measureSymbol, weightedMean, type SymbolMeasures } from "./measures";
+import { belowShares, measureSymbol, positionTone, priceTrail, weightedMean, type PriceTrail, type SymbolMeasures, type Tone } from "./measures";
+import type { MaWindow } from "./thresholds";
 import type { PositionFacts } from "./rules";
 
 /**
@@ -49,8 +50,14 @@ export type PublicView = {
   href: string;
 };
 
-export type PositionRow = SymbolMeasures & {
+/** Önbellekte duran pozisyon ölçüsü: ölçüler + kart minyatürü. */
+type CachedMeasures = SymbolMeasures & { trail: PriceTrail };
+
+export type PositionRow = CachedMeasures & {
   name: string;
+  logoUrl: string | null;
+  /** Kartın tonu: 0 sakin, 1 gergin, 2 stres (measures.ts → positionTone). */
+  tone: Tone;
   sector: string | null;
   quantity: number;
   value: number;
@@ -68,8 +75,9 @@ export type Exposure = {
   beta: { value: number; coveredWeight: number } | null;
   atrPct: { value: number; coveredWeight: number } | null;
   vol20: { value: number; coveredWeight: number } | null;
-  below200Weight: number;
-  below100Weight: number;
+  volPctile: { value: number; coveredWeight: number } | null;
+  /** Ortalamanın altındaki ağırlık ve ortalaması hesaplanabilen ağırlık. */
+  below: Record<MaWindow, { weight: number; covered: number }>;
   sectors: { sector: string | null; weight: number }[];
   facts: PositionFacts[];
 };
@@ -77,21 +85,22 @@ export type Exposure = {
 type Holding = { symbol: string; quantity: number };
 
 const loadMeasures = unstable_cache(
-  async function loadMeasures(session: string, key: string): Promise<Record<string, SymbolMeasures>> {
+  async function loadMeasures(session: string, key: string): Promise<Record<string, CachedMeasures>> {
     const symbols = key.split(",");
     const result = await getDailyBarsBetween([...symbols, BENCHMARK], addEtDays(session, -LOOKBACK_DAYS), etDateTimeToUtc(session, "20:00"), REVALIDATE);
     if (!result.ok) throw new Error(`pozisyon barları: ${result.message}`);
     const spy = toDaily(result.data[BENCHMARK], session);
-    const out: Record<string, SymbolMeasures> = {};
+    const out: Record<string, CachedMeasures> = {};
     for (const symbol of symbols) {
       const bars = toDaily(result.data[symbol], session);
       if (bars[bars.length - 1]?.date !== session) continue;
       const m = measureSymbol(symbol, bars, spy);
-      if (m) out[symbol] = symbol === BENCHMARK ? { ...m, beta: 1 } : m;
+      if (m) out[symbol] = { ...(symbol === BENCHMARK ? { ...m, beta: 1 } : m), trail: priceTrail(bars) };
     }
     return out;
   },
-  ["risk-exposure-v1"],
+  /* v2: dönen şekle `trail` eklendi (ortak önbellek, CLAUDE.md). */
+  ["risk-exposure-v2"],
   { revalidate: REVALIDATE, tags: ["risk-desk"] },
 );
 
@@ -139,7 +148,7 @@ export const getExposure = cache(async function getExposure(
   const holdings = mergeLots(read.positions).filter((h) => h.quantity > 0);
   if (holdings.length === 0) return { ok: true, exposure: null, fingerprint: "" };
   const symbols = holdings.map((h) => h.symbol);
-  let measures: Record<string, SymbolMeasures> = {};
+  let measures: Record<string, CachedMeasures> = {};
   try {
     measures = await loadMeasures(desk.session, holdingsKey(holdings));
   } catch (error) {
@@ -156,6 +165,8 @@ export const getExposure = cache(async function getExposure(
     .map(({ h, m, value }) => ({
       ...m,
       name: names[h.symbol]?.name ?? h.symbol,
+      logoUrl: names[h.symbol]?.logoUrl ?? null,
+      tone: positionTone(m),
       sector: FUND_SECTOR.get(h.symbol) ?? indexMemberOf(canonicalSymbol(h.symbol))?.sector ?? null,
       quantity: h.quantity,
       value,
@@ -180,8 +191,8 @@ export const getExposure = cache(async function getExposure(
       beta: w((p) => p.beta),
       atrPct: w((p) => p.atrPct),
       vol20: w((p) => p.vol20),
-      below200Weight: positions.filter((p) => p.below[200] === true).reduce((s, p) => s + p.weight, 0),
-      below100Weight: positions.filter((p) => p.below[100] === true).reduce((s, p) => s + p.weight, 0),
+      volPctile: w((p) => p.vol20Pctile),
+      below: belowShares(positions),
       sectors: [...sectorWeights].map(([sector, weight]) => ({ sector, weight })).sort((a, b) => b.weight - a.weight),
       facts: positions.map((p) => ({
         symbol: p.symbol,

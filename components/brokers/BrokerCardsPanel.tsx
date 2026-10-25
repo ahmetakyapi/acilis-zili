@@ -34,7 +34,7 @@ export function BrokerCardsPanel({
     <Panel id="kurumlar" aria-label={L.title} className="scroll-mt-28">
       <PanelHeader title={L.title} meta={L.meta.replace("{count}", String(brokers.length))} />
       <div className="flex flex-col gap-4 px-4 pb-4 sm:px-5">
-        <p className="max-w-3xl text-sm leading-relaxed text-body">{L.intro}</p>
+        <p className="-mt-1 max-w-3xl text-sm leading-relaxed text-body lg:max-w-none">{L.intro}</p>
         <BrokerCards
           cards={cards}
           lines={lines}

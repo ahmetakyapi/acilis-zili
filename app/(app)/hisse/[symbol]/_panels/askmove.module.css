@@ -1,0 +1,22 @@
+/* Sor + Hafta tek panel (AskMovePanel.tsx). Kolonlar ızgara satırının
+   boyunda biter (aynı panel); kısa kolonun farkı kendi künyesinin ÜSTÜNDE
+   kalır (künye `margin-top:auto`). Ara kıl çizgi, gölge yok. */
+.panel { display: grid; grid-template-columns: minmax(0, 1fr); border-radius: 22px; background: var(--premium-surface, var(--surface-solid)); }
+.col { display: flex; min-width: 0; flex-direction: column; padding: 16px 16px 16px; }
+.col > * { flex: 1; }
+.col + .col { border-top: 1px solid var(--line-soft); }
+@media (min-width: 640px) { .col { padding: 18px 20px; } }
+@media (min-width: 1024px) {
+  .panel:not(.single) { grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); }
+  .panel:not(.single) .col + .col { border-top: 0; border-left: 1px solid var(--line-soft); }
+}
+/* Yedek ölçülmüş boyda (25 Ekim; JS kapalı sayfada gerçek panel, not
+   istenmeden önceki hâl; NVDA ve JPM, iki dil): 1920'de 286, 1280–1440
+   354–372,
+   1024'te 415–427, 768'de 649–687, 390'da 882–900. Panel her genişlikte
+   ilk ekranın altında; yedek yine gerçeğin ortasında. */
+.skeleton { width: 100%; height: 362px; border-radius: 22px; }
+@media (min-width: 1600px) { .skeleton { height: 290px; } }
+@media (max-width: 1279px) { .skeleton { height: 420px; } }
+@media (max-width: 1023px) { .skeleton { height: 668px; } }
+@media (max-width: 639px) { .skeleton { height: 890px; } }

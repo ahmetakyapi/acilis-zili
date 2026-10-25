@@ -1,15 +1,15 @@
-/* Sektör dağılımı — gerekçe SectorDistribution.tsx başında. */
-.body { display: grid; gap: 16px; padding: 4px 16px 18px; }
-@media (min-width: 640px) { .body { padding: 4px 20px 20px; } }
-@media (min-width: 1024px) { .body { padding: 6px 24px 22px; } }
+/* Sektör dağılımı, kapak sekmesi — gerekçe SectorDistribution.tsx başında.
+   Bütçe: ≥640'ta devler panelinin boyu (sekme satırının altı ~236 piksel);
+   şerit 84 + ızgara 3×32 + künye. */
+.body { display: grid; gap: 12px; margin-top: 16px; }
+@media (max-width: 767px) { .body { margin-top: 12px; gap: 10px; } }
+@container cover (max-width: 459.98px) { .axis { font-size: 11px; } }
 
-.lead { max-width: 64ch; color: var(--text-strong); font-size: 17px; line-height: 1.45; font-weight: 560; letter-spacing: -0.01em; text-wrap: pretty; }
-@media (min-width: 640px) { .lead { font-size: 19px; } }
-
-.figure { display: grid; gap: 6px; }
-.axisLabel { color: var(--text-muted); font-size: 12px; font-weight: 600; }
-.chart { position: relative; }
-.svg { display: block; width: 100%; height: 98px; overflow: visible; }
+.figure { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: stretch; }
+.axis { display: flex; flex-direction: column; justify-content: space-between; color: var(--text-muted); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.axis > span { display: flex; align-items: center; height: 24px; }
+.chart { position: relative; min-width: 0; }
+.svg { display: block; width: 100%; height: 84px; overflow: visible; }
 
 /* Büyüklük: yumuşak mavi aile; şirket sayısı açık, değer koyu ton. */
 .count { fill: var(--primary-faint); }
@@ -22,41 +22,51 @@
 .group[data-active] .ribbon { fill: var(--primary-faint); }
 .group:focus-visible { outline: none; }
 .group:focus-visible .value { stroke: var(--line-focus); stroke-width: 2px; vector-effect: non-scaling-stroke; }
+/* Kalan dilim bir grup değil: nötr çizgi tonu, etkileşim yok. */
+.rest .count, .rest .value { fill: var(--line); }
+.rest .ribbon { fill: var(--line-soft); }
 
-.pct { position: absolute; display: flex; align-items: center; height: 26px; color: var(--text-strong); font-size: 12px; font-weight: 650; white-space: nowrap; pointer-events: none; }
+.pct { position: absolute; display: flex; align-items: center; height: 24px; color: var(--text-strong); font-size: 12px; font-weight: 650; white-space: nowrap; pointer-events: none; }
 .pctValue[data-active] { color: var(--on-primary); }
+/* Dar panelde (telefon, 768–1099 arası) bu payın altındaki yüzde yazısı
+   komşu parçaya taşar; `@container cover` CoverTabs.module.css'te. */
+@container cover (max-width: 459.98px) { .pctWide { display: none; } }
 
-/* Ölçü ızgarası — grup başına sayı ve iki pay (şirket → değer). */
-.legend { display: grid; gap: 2px 20px; }
-@media (min-width: 640px) { .legend { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1024px) { .legend { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.legendLink {
+/* Ölçü ızgarası — iki sütun, üç satır. */
+.legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+.legendRow {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: baseline;
-  gap: 12px;
-  min-height: 44px;
-  align-content: center;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
   padding: 0 8px;
   margin: 0 -8px;
-  border-radius: 10px;
-  transition: background-color .2s var(--ease-brand);
+  border-radius: 8px;
 }
-@media (min-width: 640px) { .legendLink { min-height: 36px; } }
+/* Dar panelde paylar adın ALTINDA: yan yana iken 390'da ve 768'de
+   "Yarı İletken", "Medya ve İletişim" kesiliyordu (ölçüldü). */
+@container cover (max-width: 459.98px) {
+  .legendRow { grid-template-columns: minmax(0, 1fr); align-content: center; gap: 1px; min-height: 40px; }
+}
+/* Telefonda dokunma hedefi 44 piksel. */
+@media (max-width: 639.98px) { .legendRow { min-height: 44px; } }
+.legendLink { transition: background-color .2s var(--ease-brand); }
 .legendLink:hover { background: var(--primary-tint); }
 .legendLink:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 0; }
+.legendLink[data-active] { background: var(--primary-tint); }
 .legendLink[data-active] .legendName { color: var(--primary-ink); }
-.legendName { overflow: hidden; color: var(--text-strong); font-size: 13.5px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
-.legendCount { color: var(--text-body); font-size: 13px; }
-.legendShares { color: var(--text-muted); font-size: 12.5px; white-space: nowrap; }
+.legendName { overflow: hidden; color: var(--text-strong); font-size: 13px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
+.legendRest .legendName { color: var(--text-muted); }
+.legendShares { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
 .legendShares b { color: var(--text-strong); font-weight: 650; }
-@media (max-width: 639.98px) { .wideOnly { display: none; } }
-.phoneMore { color: var(--text-muted); font-size: 12.5px; }
-@media (min-width: 640px) { .phoneMore { display: none; } }
-.note { padding-top: 12px; border-top: 1px solid var(--line-soft); color: var(--text-muted); font-size: 12.5px; line-height: 1.55; }
+.note { overflow: hidden; color: var(--text-muted); font-size: 12px; line-height: 1.4; white-space: nowrap; text-overflow: ellipsis; }
+@container cover (max-width: 459.98px) { .note { white-space: normal; } }
 
-/* Sahneli giriş: şerit bir kez, soldan sağa açılır. */
+/* Sahneli giriş: sekme AÇILDIĞINDA şerit bir kez soldan açılır
+   (`data-enter`, CoverTabs). Yüklemede sekme gizli, giriş oynamaz. */
 @media (prefers-reduced-motion: no-preference) {
-  .svg { animation: dist-in 700ms var(--ease-brand) 120ms backwards; }
+  :global([data-enter]) .svg { animation: dist-in 520ms var(--ease-brand) 60ms backwards; }
 }
-@keyframes dist-in { from { opacity: 0; clip-path: inset(0 100% 0 0); } }
+@keyframes dist-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+@media (prefers-reduced-motion: reduce) { .group :is(.count, .ribbon, .value), .legendLink { transition: none; } }

@@ -58,6 +58,9 @@ type Format = keyof typeof FORMATS;
 
 /** Satori renkleri — açık tema (`C`), su `--primary-tint` karşılığı. */
 const INK = { up: C.up, down: C.down, flat: C.muted, horizon: "#c9d2dc", water: C.primaryTint };
+/** Bağ çizgisinin çatıdaki noktası (sahne birimi) — sayfadaki gibi
+ *  (`SkyMarks`): etiket binasından kaydıysa bağ ve nokta görünür. */
+const LEADER_DOT = 2.4;
 /** Mahalle tabelasının yüksekliği (piksel, ad + değer). */
 const DISTRICT_ROW = { wide: 40, tall: 54 } as const;
 
@@ -120,9 +123,10 @@ function Scene({
                           y1={label.leader.y1}
                           x2={label.leader.x2}
                           y2={label.leader.y2}
-                          stroke={INK.horizon}
+                          stroke={C.muted}
                           strokeWidth={1.2 / k}
                         />,
+                        <circle key={`d${label.i}`} cx={label.leader.x1} cy={label.leader.y1} r={LEADER_DOT} fill={C.muted} />,
                       ]
                     : [],
                 )}

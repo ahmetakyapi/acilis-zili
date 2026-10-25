@@ -9,10 +9,8 @@ import { insightsConfigured, latestReportedEarnings, upcomingEarnings } from "@/
  * gerçekleşeni düşmüş bir bilanço varsa — boş bir "bilanço notu" paneli
  * basıp sonra kaldırmak sayfayı zıplatırdı.
  */
-export function MoveInsight({ symbol, locale, t }: { symbol: string; locale: Locale; t: Dictionary }) {
-  if (!insightsConfigured()) return null;
-  return <StockInsightCard symbol={symbol} kind="move" locale={locale} labels={t.stockInsight} />;
-}
+/* "Bu Hafta Neden Hareket Etti" buradan AskMovePanel.tsx'e taşındı (25 Ekim):
+   sayılar sunucuda, kart kompakt (components/stock/WeekMoveCard.tsx). */
 
 export async function EarningsInsight({ symbol, locale, t }: { symbol: string; locale: Locale; t: Dictionary }) {
   if (!insightsConfigured()) return null;

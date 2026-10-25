@@ -178,6 +178,15 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           başlık 979–1021, 22 piksel payla ilk ekranda. 1440 ve 1280 aynı
           (şerit 971 / 966, ufuk tamamı ilk ekranda), 390 değişmedi.
 
+          KART TURU (25 Ekim, üçüncü tur; gerekçe
+          `EarningsHorizon.module.css` başında). Ufuk paneli (TR/EN,
+          açık/koyu, üst–alt kenar): 1280×800'de 231–942 → 231–820 ve
+          okuma şeridi 756–852 → 709–761 (ilk ekranın sınırı 763: şerit
+          artık tam görünüyor); 1440×900'de 236–947 → 236–843, künye dahil
+          tamamı ilk ekranda; 768'de 597 → 473; 390'da 976 → 729 (EN 764).
+          Satırlar 155 / 155 / 68 → 143 / 143 / 49 (1280), 152 / 152 / 49
+          (1440); yatay taşma 0, CLS 0.
+
           Önceki tur: SEKME ÇUBUĞU BAŞLIĞIN HEMEN ALTINDA. Kapak yoğunluk
           grafiğini ve öne çıkanları da taşıyordu: telefonda 735 piksel ve
           sekme çubuğu y=836'da, yani dört görünüm arasındaki geçiş ilk

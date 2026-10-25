@@ -38,14 +38,24 @@ export const generateMetadata = pageMetadata({
  * EKRAN SIRASI (CLAUDE.md): başlık → tepe şeridi (dört kadran; veriden
  * cümle ekran okuyucuya) + olasılık ≠ kesinlik ve damga → ölçü ızgarası:
  * Fed, ara seçim, resesyon (yığın çubuk + 30 günlük çizgi) → beklenen faiz
- * patikası → aylık enflasyon → künyeler paneli (ne olduğu, kaynak, bahis
- * bağlantısı yok kuralı, renk anahtarı) → damga → rehber ipucu.
+ * patikası → aylık enflasyon → künyeler paneli (dört kart: fiyat =
+ * olasılık, kaynak, bahis değil, renkler; tam metin katlı) → damga →
+ * rehber ipucu.
  *
  * GÖRSEL TUR (25 Ekim, sahibinin sözü: "üstteki yazı ve alttaki kartlar
  * daha görsel olmalı ve kompakt hissettirmeli"). Hedef: 1440×900 ve
  * 1280×800'de başlık + şerit + üç kartın tamamı kaydırmasız (önce seçim
  * kartının dibi 1307'deydi, görünür alan 863'te bitiyor; ölçüm commit
  * mesajında). Üç satırlık kalın cümle şeride dönüştü.
+ *
+ * İKİNCİ GÖRSEL TUR (25 Ekim, sahibinin sözü: "bu kısımları da daha görsel
+ * ve daha iyi seviyeye getirebiliriz"; künye için "alan çok büyük").
+ * Kadranlar büyüdü, sayı halkanın içinde, 24 saat rozeti; Fed lejantı tek
+ * satır çip; resesyon kartında Evet/Hayır çubuğunun yerine 1980'den bu
+ * yana NBER resesyonlarının şeridi; faiz patikası 346 → 225 piksel (bant +
+ * adım rozetleri); "Bu Sayılar Nedir" 427 → 200 piksel (dört kart, tam
+ * metin katlamada). İlk ekran hedefi korundu: 1440×900'de kartların dibi
+ * 771, 1280×800'de 721 (TR) / 728 (EN).
  *
  * VERİ: `lib/probability-data.ts` (günlük tablo; yoksa altı saatlik
  * önbellekli canlı okuma). Hedef aralık ve FOMC günü makro kartıyla aynı

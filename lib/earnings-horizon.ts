@@ -55,12 +55,13 @@ export function tileScale(marketCap: number | null, weekMax: number): number {
    -------------------------------------------------------------------------- */
 
 /**
- * Karo İKİ BOY: büyük (56 piksel) ve taban (40). Sürekli ölçekte en büyük
+ * BÜYÜK KARO (ilk tur: iki boy, 56 / 40 piksel). Sürekli ölçekte en büyük
  * karo 96 pikseldi ve Çarşamba kapanış sonrası hücresi tek başına 1280×800
  * ekranın yarısını tutuyordu; iki satır beş gün ilk ekrana sığmıyordu.
  * Büyük boy, kenar oranı yarıyı geçenler: alanı haftanın en büyüğünün
- * dörtte birinden fazla olanlar. "En büyükleri nerede" sorusunu bu iki boy
- * da bir bakışta cevaplıyor; kesin değer okuma satırında.
+ * dörtte birinden fazla olanlar. Kart turunda (aşağıda) boy tekleşti:
+ * büyük şirket artık karonun ÇERÇEVESİYLE ve hücrenin başında duruyor
+ * (sıra zaten büyükten küçüğe); kesin değer okuma satırında.
  */
 export const BIG_TILE_SCALE = 0.5;
 
@@ -71,12 +72,57 @@ export function tileTierOf(scale: number): TileTier {
 }
 
 /**
- * Bir hücrede en çok bu kadar YUVA (karo + "+N" çipi). Geniş ekranda gün
- * sütunu ~190 piksel: üç-dört taban karo yan yana, yani altı yuva iki
- * satır. Hücre iki satırı geçmeyince iki pencere beş günde ilk ekrana
- * sığıyor (ölçüm `EarningsHorizon.module.css` başında).
+ * Bir hücrede en çok bu kadar YUVA (karo + "+N" çipi).
+ *
+ * KART TURU (25 Ekim, üçüncü tur — sahibinin isteği: "logolar, kartlar
+ * kompakt; bazı yerler çok uzun kalmış"). Karolar artık TEK BOY (38
+ * piksel) ve hücre dört sütunlu bir ızgara: geniş ekranda gün sütunu
+ * ~190 piksel, dört karo yan yana sığıyor, yani sekiz yuva İKİ SIRA.
+ * Eskiden iki boy karo (56 / 40) satırı dağıtıyordu: altı yuva bazen üç
+ * karoda sarıyor, büyük karonun yanında boşluk kalıyordu. Telefonda
+ * pencereler alt alta ve tam genişlik, sekiz yuva yine en çok iki sıra.
  */
-export const CELL_MAX_SLOTS = 6;
+export const CELL_MAX_SLOTS = 8;
+
+/**
+ * "Saati Belirsiz" satırı TEK SIRA ve küçük karo (logo + sembol yan yana):
+ * çoğu hafta beş günün birinde bir-iki şirket taşıyor; tam yükseklikte bir
+ * satır boş dört hücreyi uzatıyordu (ölçüldü: 68 piksel).
+ */
+export const OTHER_MAX_SLOTS = 2;
+
+/** Pencereye göre yuva tavanı. */
+export function laneSlots(lane: WeekLane): number {
+  return lane === "other" ? OTHER_MAX_SLOTS : CELL_MAX_SLOTS;
+}
+
+/**
+ * Karonun altındaki dört kare, ESKİDEN YENİYE. Eşli çeyrek dörtten azsa
+ * eksik olanlar BAŞTA "veri yok" (en eski çeyrekler bilinmiyor); karne hiç
+ * yoksa dördü de "veri yok". Kare sayısı her karoda aynı ki satır hizası
+ * bozulmasın ve "boş kare = aşılmadı" ile "soluk kare = bilinmiyor" ayrı
+ * okunsun.
+ */
+export type KarneSlot = KarneMark | "none";
+
+export function karneSlots(marks: readonly KarneMark[]): KarneSlot[] {
+  const tail = marks.slice(-KARNE_QUARTERS);
+  return [...Array<KarneSlot>(KARNE_QUARTERS - tail.length).fill("none"), ...tail];
+}
+
+/**
+ * Haftanın zirvesi: TÜM açıklayanların (yalnız karolar değil) en kalabalık
+ * iş günü. Eşitlikte takvimde önce gelen; kapalı ya da boş haftada yok.
+ * Gün başlığındaki "Zirve" rozeti bu güne basılıyor, yoğunluk çizgisi de
+ * o günde tam.
+ */
+export function peakDay(days: readonly { date: string; total: number }[]): string | null {
+  let best: { date: string; total: number } | null = null;
+  for (const day of days) {
+    if (day.total > 0 && (!best || day.total > best.total || (day.total === best.total && day.date < best.date))) best = day;
+  }
+  return best?.date ?? null;
+}
 
 /**
  * Hücreye sığan karolar ve sığmayanların sayısı. Karolar zaten büyükten

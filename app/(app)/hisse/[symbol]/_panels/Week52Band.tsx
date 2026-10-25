@@ -27,12 +27,17 @@ export function Week52Band({
   locale,
   t,
   className,
+  quoteLabel = true,
 }: {
   band: Band;
   price: number | null;
   locale: Locale;
   t: Dictionary;
   className?: string;
+  /** Rayın üstündeki "Son Fiyat" etiketi. Başlıktaki bantta YOK (25 Ekim):
+      aynı fiyat hemen solunda büyük puntoyla yazılı, etiket kartı 20 piksel
+      uzatıp aynı sayıyı ikinci kez basıyordu. Profildeki bantta duruyor. */
+  quoteLabel?: boolean;
 }) {
   /* Dipten ve zirveden uzaklık — yalnız ray çizildiğinde (dolar cinsinden
      fiyat banda aitse); ADR'de fiyat ile uçlar farklı para biriminde. */
@@ -58,9 +63,9 @@ export function Week52Band({
               kind: "point",
               at: price,
               variant: "live",
-              label: t.stock.currentQuote,
-              value: formatPrice(price, locale, { currency: band.para }),
-              side: "above",
+              ...(quoteLabel
+                ? { label: t.stock.currentQuote, value: formatPrice(price, locale, { currency: band.para }), side: "above" as const }
+                : {}),
             },
           ]}
           pad={0}

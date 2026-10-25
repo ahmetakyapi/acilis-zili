@@ -13,8 +13,9 @@ import { getI18n } from "@/lib/i18n";
 import { isLocale } from "@/lib/i18n/config";
 import { articleOpenGraph, metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
-import { getPublishedPost } from "@/lib/user-post-data";
-import { SymbolChips } from "@/components/community/CommunityParts";
+import { getPublishedPost, getPublishedPostsByUser } from "@/lib/user-post-data";
+import { getAuthorProfile } from "@/lib/profile-data";
+import { AuthorCard, SymbolChips } from "@/components/community/CommunityParts";
 import { getSymbolNames } from "@/lib/data";
 
 /**
@@ -29,6 +30,9 @@ import { getSymbolNames } from "@/lib/data";
  * geçmesiyle kapanıyor. Çözümleyiciye kullanıcıya özgü ikinci bir kip
  * eklemek, iki çizim dili demekti.
  */
+
+/** Yazar kartında listelenen öteki yazı sayısı. */
+const AUTHOR_OTHERS = 3;
 
 export async function generateMetadata(props: PageProps<"/topluluk/[slug]">) {
   const { slug } = await props.params;
@@ -56,12 +60,17 @@ export default async function CommunityPostPage(props: PageProps<"/topluluk/[slu
   if (!post) notFound();
 
   const blocks = parseBlocks(post.bodyMd, post.locale);
-  const [autoLink, names] = await Promise.all([
+  const [autoLink, names, author] = await Promise.all([
     articleAutoLinker(post.locale),
     post.symbols.length
       ? getSymbolNames(post.symbols.slice(0, 8)).catch(() => ({}) as Awaited<ReturnType<typeof getSymbolNames>>)
       : Promise.resolve({} as Awaited<ReturnType<typeof getSymbolNames>>),
+    getAuthorProfile(post.author.username),
   ]);
+  /* Yazar kartı (25 Ekim): yazı sayısı ve öteki yazılar yayındakilerden;
+     profil okunamazsa kart yine basılır, yalnız sayı bu yazıyla sınırlı. */
+  const authorPosts = author ? await getPublishedPostsByUser(author.userId) : [];
+  const otherPosts = authorPosts.filter((other) => other.slug !== post.slug).slice(0, AUTHOR_OTHERS);
   const minutes = readingMinutes(post.bodyMd);
   const dateFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
     day: "numeric",
@@ -134,6 +143,19 @@ export default async function CommunityPostPage(props: PageProps<"/topluluk/[slu
                 className={editorial.prose}
                 autoLink={autoLink}
                 ugc
+              />
+            </div>
+
+            <div className="mt-10">
+              <AuthorCard
+                username={post.author.username}
+                avatar={post.author.avatar}
+                locale={locale}
+                joinedAt={author?.joinedAt ?? null}
+                postCount={Math.max(authorPosts.length, 1)}
+                others={otherPosts}
+                dateFormat={dateFormat}
+                labels={t.communityVisuals.author}
               />
             </div>
 

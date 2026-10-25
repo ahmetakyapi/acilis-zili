@@ -1,13 +1,9 @@
 import { Suspense } from "react";
 import { GuideHint } from "@/components/article/GuideHint";
 import { PageShare } from "@/components/article/PageShare";
-import { InvestorBalance } from "@/components/investors/InvestorBalance";
-import { InvestorCard } from "@/components/investors/InvestorCard";
-import { CapitalMap } from "@/components/investors/CapitalMap";
-import { InvestorCast } from "@/components/investors/InvestorCast";
+import { CapitalStrip, InvestorGrid } from "@/components/investors/InvestorGrid";
 import { MoversBoard } from "@/components/investors/MoversBoard";
 import { asOfLabel, filedLabel, quarterLabel } from "@/components/investors/format";
-import styles from "@/components/investors/Investors.module.css";
 import ix from "@/components/investors/InvestorsIndex.module.css";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
@@ -17,9 +13,8 @@ import { DataStamp, EmptyState, PageHeader, Panel, PanelHeader } from "@/compone
 import { getSymbolNames } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { getInvestorOverview } from "@/lib/investor-data";
-import { investorBySlug } from "@/lib/investors";
 import { pageMetadata } from "@/lib/page-meta";
-import { cn, plural } from "@/lib/utils";
+import { cn, formatEtDateMedium } from "@/lib/utils";
 
 export const generateMetadata = pageMetadata({
   path: "/yatirimcilar",
@@ -36,28 +31,22 @@ export const generateMetadata = pageMetadata({
 });
 
 /**
- * Ünlü yatırımcılar dizini (28 Eylül; 18 Ekim yeniden kuruldu).
+ * Ünlü yatırımcılar dizini (28 Eylül; 18 Ekim ve 25 Ekim yeniden kuruldu).
  *
- * 18 EKİM. Sahibi sayfayı "zayıf ve kötü görünüyor" diye buldu: kapakta
- * başlığın yanında havada duran Paylaş, sağ üstte üç künye sayısı, tek
- * fonun %60'ını kapladığı bir sermaye şeridi ve iki sütunlu, tablo gibi
- * okunan bir hareket panosu. Başlık "Kim Ne Tutuyor"du; sahibinin isteğiyle
- * "Ünlü Yatırımcılar Ne Tutuyor" (kimin kim olduğu başlıkta).
+ * 25 EKİM. Sahibi sayfayı "çok saçma ve büyük bazı yerler, ne anlattığından
+ * uzaklaşıyoruz" diye buldu: kapakta iki satırlık başlık ve on altı yüzlük
+ * kadro, altında ekranın yarısını kaplayan sermaye haritası (Buffett'ın
+ * karosunda yalnız portre), sonra hareket grafiği, denge paneli ve en dipte
+ * iki sütunlu büyük kartlar — 1440'ta 8.250 piksel. Şimdi sayfa kartlı:
  *
- * Ekran sırası sitenin kuralı (CLAUDE.md "her ekranda aynı sıra"):
- *   1. Kapak: `PageHeader` — ad, tek cümle, Paylaş başlık satırının sağında
- *      (dizin kapaklarının ortak yeri, `PageShare` yorumu). Dönem ve son
- *      bildirim başlığın ALTINDA; altında kadro (`InvestorCast`): on altı
- *      yüz, her biri sayfasına bağlantı ve bu çeyreğin yönünü taşıyan nokta.
- *   2. Ana görsel: sermaye haritası (`CapitalMap`) — pay ALANLA, karoda
- *      portre; uzun kuyruk tek karo, üyeleri altında adıyla. Ölçü ızgarası
- *      (toplam, fon sayısı, dönem, son bildirim) ve 13F gecikme künyesi
- *      haritanın altında, panelin içinde.
- *   3. Hisse hisse alanlar ve satanlar (`MoversBoard`): tek ayrışan grafik,
- *      her yüz bir yatırımcı.
- *   3b. Kim alıyor, kim satıyor (`InvestorBalance`): aynı çeyrek KİŞİ başına.
- *   4. Kartlar: portre, portföy değeri, en büyük pozisyonlar, hareket sayıları.
- *   5. Künyeler ve uyarı panelin içinde, sonra damga ve rehber.
+ *   1. Kapak: `PageHeader` (kısa ad, tek cümle, Paylaş), altında dönem
+ *      künyesi ve tek satırlık sermaye şeridi (`CapitalStrip`).
+ *   2. Ana görsel: yatırımcı kart ızgarası (`InvestorGrid`) — kişi başına
+ *      pay, yön rozeti, en büyük üç pozisyon ve çeyreğin hamlesi. Kadro,
+ *      sermaye haritası ve denge paneli bu kartlarda eridi.
+ *   3. Hisse kartları (`MoversBoard`): bu çeyrek aynı hisseye kim girdi,
+ *      kim çıktı.
+ *   4. Künyeler ve uyarı panelin içinde, sonra damga ve rehber.
  *
  * VERİ BEKLENİYOR, AKIŞ YOK. Sayfanın tamamı tek bir önbellekli hesaptan
  * (`getInvestorOverview`, `unstable_cache`, günde bir değişiyor); akışa
@@ -73,7 +62,9 @@ export default async function InvestorsPage() {
   const tickers = overview
     ? [
         ...overview.cards.flatMap((card) =>
-          card.kind === "13f" ? card.top.map((top) => top.ticker) : card.trades.map((trade) => trade.ticker),
+          card.kind === "13f"
+            ? [...card.top.map((top) => top.ticker), card.highlight?.ticker ?? null]
+            : card.trades.map((trade) => trade.ticker),
         ),
         ...overview.movers.buys.map((entry) => entry.ticker),
         ...overview.movers.sells.map((entry) => entry.ticker),
@@ -101,39 +92,20 @@ export default async function InvestorsPage() {
             {overview?.latestFiled && <span>{filedLabel(overview.latestFiled, locale, ti)}</span>}
           </p>
         )}
-        <InvestorCast overview={overview} locale={locale} t={ti} />
+        {overview && <CapitalStrip overview={overview} locale={locale} t={ti} />}
       </section>
 
       {overview ? (
         <>
-          <CapitalMap overview={overview} locale={locale} t={ti} />
+          <InvestorGrid overview={overview} known={known} locale={locale} t={ti} />
           <MoversBoard movers={overview.movers} known={known} locale={locale} t={ti} />
-          <InvestorBalance overview={overview} locale={locale} t={ti} />
-          {/* Şirket kartı: mozaik logoları, kongre işlemleri ve hareket
-              satırları. Yalnızca sembolü tabloda bilinenler; kotasyonu kart
+          {/* Şirket kartı: kartlardaki logolar, Kongre işlemleri ve hisse
+              kartları. Yalnızca sembolü tabloda bilinenler; kotasyonu kart
               kendisi soruyor, akışla iniyor (sayfanın geri kalanı fiyat
               göstermiyor, yan yana ikinci bir yüzde yok). */}
           <Suspense fallback={null}>
             <CompanyCards symbols={tickers.filter((ticker) => known[ticker])} names={known} />
           </Suspense>
-
-          <section className={styles.cardsSection} aria-labelledby="investors-cards">
-            <h2 id="investors-cards" className={styles.sectionTitle}>
-              {ti.cardsTitle}
-              <span className="numeral">{plural(overview.cards.length, ti.investorsCountOne, ti.investorsCount).replace("{count}", String(overview.cards.length))}</span>
-            </h2>
-            <ul className={styles.cards} data-motion-stagger>
-              {overview.cards.map((card) => {
-                const investor = investorBySlug(card.slug);
-                if (!investor) return null;
-                return (
-                  <li key={card.slug} className={styles.cardItem} data-kind={card.kind}>
-                    <InvestorCard card={card} investor={investor} known={known} locale={locale} t={ti} />
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
         </>
       ) : (
         <Panel>
@@ -144,7 +116,10 @@ export default async function InvestorsPage() {
       <Panel>
         <PanelHeader title={ti.disclaimerTitle} />
         <p className="border-t border-line px-4 py-4 text-read leading-[27px] text-body sm:px-5">{ti.disclaimer}</p>
-        <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">{ti.note13f}</p>
+        <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
+          {ti.note13f}
+          {period && <> {ti.lagNote.replace("{date}", formatEtDateMedium(period, locale))}</>}
+        </p>
         <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">{ti.noteMoves}</p>
         <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">{ti.congressNote}</p>
       </Panel>

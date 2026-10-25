@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   ArrowCircleUp,
   ArrowRight,
@@ -16,15 +16,19 @@ import {
   TelegramLogo,
   Wrench,
 } from "@phosphor-icons/react/dist/ssr";
+import { UnseenPill } from "@/components/changelog/ChangelogBadge";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
-import { Panel, PanelHeader } from "@/components/ui/primitives";
+import { FilterChip, Panel, PanelHeader } from "@/components/ui/primitives";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import {
+  CHANGE_AREAS,
+  CHANGE_KINDS,
   entryAnchor,
   entryAreas,
   entryDateLabel,
-  groupByArea,
   monthAnchor,
+  splitFeatured,
   type ChangeArea,
   type ChangeEntry,
   type ChangeItem,
@@ -39,17 +43,26 @@ import type { ChangelogLabels } from "@/lib/i18n/dictionaries/changelog";
 import { withLocale } from "@/lib/i18n/routing";
 import styles from "./Changelog.module.css";
 
-/* Sunucu bileşenleri — istemci JS'i yok. Tek istemci parçaları rozet,
+/* Sunucu bileşenleri — istemci JS'i yok. Tek istemci parçaları rozetler,
    okundu işareti ve katlamadaki çapayı açan küçük dinleyici (aynı klasör).
 
-   YENİDEN DÜZEN (25 Ekim, sahibinin isteği: "çok yer kaplamış, alttaki
-   kısım için çok kaydırma lazım; çok daha görsel, premium"). Önceki hâlde
-   son sürümün 16 maddesi 3 sütunda ~170 piksellik kartlardı ve 1440×900'de
-   ilk ekrana 6 madde giriyordu (önce görüntüsü); şimdi maddelerin tamamı
-   giriyor (ölçüldü, alttaki piyasa şeridinin üstüne kadar). Düzen: tepede
-   sürüm şeridi, son
-   sürüm ALANLARA göre gruplanmış kompakt karolar (tek satır özet), eski
-   sürümler tek satırlık katlı girişler. */
+   İLK YENİDEN DÜZEN (25 Ekim, "çok yer kaplamış"): son sürüm alanlara göre
+   gruplu kompakt karolar, eski sürümler tek satır katlı girişler.
+
+   KOMPAKT DÜZEN (25 Ekim, ikinci tur; sahibinin sözü: "yenilikleri daha
+   kolay görsün, daha kolay ulaşsın, daha görsel olsun"). Önceki hâlde 16
+   madde aynı ağırlıkta karolardı: hepsi ilk ekrandaydı ama hiçbiri öne
+   çıkmıyordu, telefonda ilk ekrana iki karo giriyordu (390×844, ölçüldü).
+   Şimdi:
+   - başlık bandı tek sıra: ad, tek cümle, sağda üç sayı ve RSS (istatistik
+     şeritten buraya çıktı, şerit yalnız görsel);
+   - sürüm akışı nokta değil ÇUBUK: boy madde sayısı (doğrusal, yalan
+     söylemeyen ölçek), renk baskın alan; en yeni çubuk dolu ve kalın;
+   - süzgeç şeridi alan + tür: alan çipleri aynı zamanda akışın renk
+     açıklaması (lejant ayrı basılmıyor), seçim akışta eşleşmeyen çubukları
+     soldurur;
+   - son sürüm: en çok dört "Öne Çıkan" büyük kart (ikon, başlık, tek satır,
+     "Dene" butonu), kalanı kompakt ızgara. Seçim kuralı `splitFeatured`. */
 
 /** "{n} Madde" / "1 Item" — İngilizcede tekil ayrı. */
 function countLabel(n: number, many: string, one: string): string {
@@ -58,8 +71,8 @@ function countLabel(n: number, many: string, one: string): string {
 
 const intlLocale = (locale: Locale) => (locale === "tr" ? "tr-TR" : "en-US");
 
-/** "22 Eki" — kısa gün etiketi (şerit ve tek satırlık giriş). */
-function shortDay(date: string, locale: Locale): string {
+/** "22 Eki" — kısa gün etiketi (şerit, künye ve tek satırlık giriş). */
+export function shortDay(date: string, locale: Locale): string {
   return new Intl.DateTimeFormat(intlLocale(locale), { day: "numeric", month: "short", timeZone: "UTC" }).format(
     new Date(`${date}T12:00:00Z`),
   );
@@ -71,9 +84,11 @@ function weekday(date: string, locale: Locale): string {
   );
 }
 
+const isExternal = (href: string) => /^https?:\/\//.test(href);
+
 type Icon = typeof Sparkle;
 
-/** Etiketin ikonu — renk değil biçim ayırır (etiketler ton farkıyla). */
+/** Etiketin ikonu — renk sakin, biçim de ayırır (renk körlüğünde tek ipucu renk olmasın). */
 const KIND_ICON: Record<ChangeKind, Icon> = { yeni: Sparkle, iyilestirme: ArrowCircleUp, duzeltme: Wrench };
 
 /* "DENE" HEDEFİNİN İKONU: bağlantının açacağı ekran gezinmedeki ikonuyla
@@ -105,6 +120,13 @@ const AREA_ICON: Record<ChangeArea, Icon> = {
   icerik: SquaresFour,
 };
 
+
+/**
+ * Tür etiketi — renkli ama sakin (kompakt düzen): yıkanmış zemin, koyu
+ * mürekkep. Yeni yeşil (eklenen), Düzeltme pirinç, İyileştirme nötr (mavi
+ * etkileşim rengi, etiket bağlantı gibi okunurdu); her biri kendi ikonunu
+ * da taşır.
+ */
 function KindTag({ kind, L }: { kind: ChangeKind; L: ChangelogLabels }) {
   const KindIcon = KIND_ICON[kind];
   return (
@@ -121,7 +143,7 @@ function TryLink({ item, label, locale }: { item: ChangeItem; label: string; loc
   const aria = `${label}: ${item.title}`;
   const Target = TARGET_ICON[tryTarget(item.href)] ?? ArrowRight;
   const lead = <Target size={14} weight="duotone" aria-hidden className={styles.tryIcon} />;
-  if (/^https?:\/\//.test(item.href)) {
+  if (isExternal(item.href)) {
     return (
       <a href={item.href} target="_blank" rel="noopener noreferrer" aria-label={aria} className={`tap-44 ${styles.tryLink}`}>
         {lead}
@@ -139,28 +161,67 @@ function TryLink({ item, label, locale }: { item: ChangeItem; label: string; loc
   );
 }
 
-/* ------------------------------------------------------------ Sürüm şeridi */
-
-/** Nokta çapı — en az 7, en çok 26 piksel (telefonda %70); alan madde sayısıyla orantılı (karekök). */
-const DOT_MIN = 7;
-const DOT_RANGE = 19;
+/* ------------------------------------------------------------ Başlık künyesi */
 
 /**
- * SÜRÜM ŞERİDİ — sayfanın tepesinde sürüm akışı: yatay kulvar, her sürüm
- * bir nokta (boyu madde sayısı), konum gün ölçeğinde (sessiz haftalar boşluk
- * olarak görünür). Noktaya basınca o sürüme kayar (sayfa içi çapa; katlı
- * girişi `RevealHashTarget` açar). Altında üç sayı.
+ * Başlık bandının sağı: üç sayı ve RSS tek sırada (`PageHeader` `action`).
+ * Sayılar DENETİM değil künye; RSS sıranın tek denetimi olarak sonda.
+ */
+export function HeaderAside({
+  totals,
+  feedHref,
+  locale,
+  L,
+  feedIcon,
+}: {
+  totals: { releases: number; items: number; updated: string };
+  feedHref: string;
+  locale: Locale;
+  L: ChangelogLabels;
+  feedIcon: ReactNode;
+}) {
+  return (
+    <div className={styles.headAside}>
+      <dl className={styles.stats} aria-label={L.statsLabel}>
+        <div><dt>{L.statReleases}</dt><dd>{totals.releases}</dd></div>
+        <div><dt>{L.statItems}</dt><dd>{totals.items}</dd></div>
+        <div><dt>{L.statUpdated}</dt><dd>{shortDay(totals.updated, locale)}</dd></div>
+      </dl>
+      {/* Besleme bir sayfa değil (XML): ön yükleme yok, düz bağlantı. */}
+      <a
+        href={feedHref}
+        aria-label={L.feedLabel}
+        className="tap-44 inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-small font-semibold text-body transition-colors hover:border-line-strong hover:text-strong"
+      >
+        {feedIcon}
+        {L.feedLink}
+      </a>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------ Sürüm akışı */
+
+/**
+ * SÜRÜM AKIŞI — yatay eksende her sürüm bir çubuk. Konum gün ölçeğinde
+ * (sessiz haftalar boşluk olarak görünür), boy madde sayısı, renk baskın
+ * alan (`dominantArea`). En yeni sürüm dolu ve kalın. Çubuğa basınca o
+ * sürüme kayar (sayfa içi çapa; katlı girişi `RevealHashTarget` açar);
+ * imleç ya da odakta tarih ve başlık balonu. Süzgeç açıkken eşleşmeyen
+ * sürümler solar (`matches`): akış her zaman bütün geçmişi gösterir, süzgeç
+ * neyin kaldığını işaretler.
  */
 export function ReleaseStrip({
   points,
   ticks,
-  totals,
+  matches,
   locale,
   L,
 }: {
   points: readonly ReleasePoint[];
   ticks: readonly { month: string; x: number }[];
-  totals: { releases: number; items: number; updated: string };
+  /** Süzgeçten geçen sürümlerin günleri; süzgeç yoksa `null`. */
+  matches: ReadonlySet<string> | null;
   locale: Locale;
   L: ChangelogLabels;
 }) {
@@ -168,19 +229,17 @@ export function ReleaseStrip({
   const peak = Math.max(1, ...points.map((point) => point.items));
   const monthName = new Intl.DateTimeFormat(intlLocale(locale), { month: "short", timeZone: "UTC" });
   return (
-    <Panel aria-label={L.stripTitle} className={styles.strip}>
+    <Panel aria-labelledby="yenilikler-akis" className={styles.strip}>
       <div className={styles.stripHead}>
-        <h2 className={styles.stripTitle} data-ink="plain">{L.stripTitle}</h2>
-        <dl className={styles.stats}>
-          <div><dt>{L.statReleases}</dt><dd>{totals.releases}</dd></div>
-          <div><dt>{L.statItems}</dt><dd>{totals.items}</dd></div>
-          <div><dt>{L.statUpdated}</dt><dd>{shortDay(totals.updated, locale)}</dd></div>
-        </dl>
+        <h2 id="yenilikler-akis" className={styles.stripTitle} data-ink="plain">{L.stripTitle}</h2>
+        <p className={styles.stripHint}>{L.stripHint}</p>
       </div>
-      <nav aria-label={L.stripTitle} className={styles.laneWrap}>
-        <ol className={styles.lane}>
+      <nav aria-labelledby="yenilikler-akis" className={styles.laneWrap} data-filtered={matches ? "" : undefined}>
+        <ol className={styles.bars}>
           {points.map((point, index) => {
-            const size = DOT_MIN + DOT_RANGE * Math.sqrt(point.items / peak);
+            /* Boy oranı DOĞRUSAL (0-1, en büyük sürüm 1); piksel karşılığı
+               CSS'te (`--bar-min` + oran × `--bar-range`, telefonda kısa). */
+            const ratio = point.items / peak;
             const label = L.pointLabel
               .replace("{date}", shortDay(point.date, locale))
               .replace("{title}", point.title)
@@ -188,14 +247,18 @@ export function ReleaseStrip({
             return (
               <li
                 key={point.date}
-                className={styles.point}
-                style={{ "--x": point.x, "--s": `${size.toFixed(1)}px`, "--i": index } as CSSProperties}
+                className={`${styles.bar} ${styles.tone}`}
+                data-area={point.area}
+                style={{ "--x": point.x, "--r": ratio.toFixed(3), "--i": index } as CSSProperties}
                 data-latest={index === points.length - 1 || undefined}
+                data-side={point.x > 0.5 ? "left" : "right"}
+                data-match={!matches || matches.has(point.date) || undefined}
               >
-                <a href={`#${entryAnchor(point.date)}`} aria-label={label} className={styles.pointLink}>
-                  <span className={styles.dot} aria-hidden />
+                <a href={`#${entryAnchor(point.date)}`} aria-label={label} className={styles.barLink}>
+                  <span className={styles.barFill} aria-hidden />
                   <span className={styles.tip} aria-hidden>
                     <strong>{shortDay(point.date, locale)}</strong> {point.title}
+                    <span className={styles.tipArea}>{L.areaShort[point.area]}, {countLabel(point.items, L.itemCount, L.itemCountOne)}</span>
                   </span>
                 </a>
               </li>
@@ -214,50 +277,166 @@ export function ReleaseStrip({
   );
 }
 
+/* ------------------------------------------------------------ Süzgeç şeridi */
+
+/**
+ * Alan ve tür süzgeci — adreste (`?alan=`, `?tur=`), sunucu basar, çipler
+ * `scroll={false}`. Seçili çipe yeniden basmak o süzgeci kaldırır. Alan
+ * çiplerindeki renk imi akışın lejantı. Sayılar öbür süzgece göre
+ * (tür seçiliyken alan çipleri o türün maddelerini sayar).
+ */
+export function FilterBar({
+  kind,
+  area,
+  total,
+  kindCount,
+  areaCount,
+  hrefFor,
+  L,
+}: {
+  kind: ChangeKind | null;
+  area: ChangeArea | null;
+  total: number;
+  kindCount: Record<ChangeKind, number>;
+  areaCount: Record<ChangeArea, number>;
+  hrefFor: (kind: ChangeKind | null, area: ChangeArea | null) => string;
+  L: ChangelogLabels;
+}) {
+  return (
+    <div className={styles.toolbar}>
+      {/* Dar ekranda çipler kırılmak yerine kayar (analizler kalıbı). */}
+      <ScrollEdges className="no-scrollbar -mx-4 flex max-w-full items-center gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+        <FilterChip href={hrefFor(null, null)} active={!kind && !area}>
+          {L.filterAll} <span className={styles.count}>{total}</span>
+        </FilterChip>
+        <span role="group" aria-label={L.areaFilterLabel} className={styles.chipGroup}>
+          {CHANGE_AREAS.map((value) => (
+            <FilterChip key={value} href={hrefFor(kind, area === value ? null : value)} active={area === value}>
+              <span className={`${styles.chipSwatch} ${styles.tone}`} data-area={value} aria-hidden />
+              {L.areaShort[value]} <span className={styles.count}>{areaCount[value]}</span>
+            </FilterChip>
+          ))}
+        </span>
+        <span className={styles.chipDivider} aria-hidden />
+        <span role="group" aria-label={L.filterLabel} className={styles.chipGroup}>
+          {CHANGE_KINDS.map((value) => (
+            <FilterChip key={value} href={hrefFor(kind === value ? null : value, area)} active={kind === value}>
+              {L.kind[value]} <span className={styles.count}>{kindCount[value]}</span>
+            </FilterChip>
+          ))}
+        </span>
+      </ScrollEdges>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------- Son sürüm */
 
+/** Bağlantının sarmalayıcısı: dış adres yeni sekmede, site içi yol dil önekiyle. */
+function ItemLink({
+  item,
+  locale,
+  className,
+  children,
+  extra,
+}: {
+  item: ChangeItem;
+  locale: Locale;
+  className: string;
+  children: ReactNode;
+  extra: Record<string, unknown>;
+}) {
+  if (!item.href) return <div className={className} {...extra}>{children}</div>;
+  if (isExternal(item.href)) {
+    return <a href={item.href} target="_blank" rel="noopener noreferrer" className={className} {...extra}>{children}</a>;
+  }
+  return <Link href={withLocale(item.href, locale)} prefetch={false} className={className} {...extra}>{children}</Link>;
+}
+
+type Seen = { date: string; latest: string };
+
+/**
+ * ÖNE ÇIKAN KART — alan renginde yıkanmış zemin (gölge yok, ton farkı),
+ * hedef ekranın ikonu, başlık, tek satır özet ve "Dene" butonu. Kartın
+ * tamamı bağlantı: buton görünümlü `span` içeride (iç içe etkileşim yok),
+ * dokunma hedefi kartın kendisi.
+ */
+function FeatureCard({ item, locale, L, index, seen }: { item: ChangeItem; locale: Locale; L: ChangelogLabels; index: number; seen: Seen }) {
+  const Target = (item.href ? TARGET_ICON[tryTarget(item.href)] : null) ?? AREA_ICON[item.area];
+  return (
+    <ItemLink
+      item={item}
+      locale={locale}
+      className={`${styles.feature} ${styles.tone}`}
+      extra={{ "data-area": item.area, "data-cl-featured": "", title: item.body, style: { "--i": index } as CSSProperties }}
+    >
+      <span className={styles.featureTop}>
+        <span className={styles.featureIcon} aria-hidden>
+          <Target size={22} weight="duotone" />
+        </span>
+        <span className={styles.featureArea}>{L.areaShort[item.area]}</span>
+        {item.kind !== "yeni" && <KindTag kind={item.kind} L={L} />}
+        <UnseenPill date={seen.date} latest={seen.latest} label={L.badge} srLabel={L.unseenLabel} className={styles.featurePill} />
+      </span>
+      <span className={styles.featureTitle}>{item.title}</span>
+      <span className={styles.featureShort} aria-hidden>{item.short ?? item.body}</span>
+      <span className="sr-only">{item.body}</span>
+      {item.href && (
+        <span className={styles.featureCta} aria-hidden>
+          {L.try}
+          {isExternal(item.href) ? <ArrowUpRight size={13} weight="bold" /> : <ArrowRight size={13} weight="bold" />}
+        </span>
+      )}
+    </ItemLink>
+  );
+}
+
 /** Kompakt karo: alan renginde ikon karosu + başlık + tek satır özet; karo bağlantının kendisi. */
+/* Görülmemiş rozeti yalnız öne çıkan kartlarda ve eski girişin satırında:
+   son sürümün on altı karosunun hepsinde "Yeni" yazınca rozet bilgi değil
+   desen oluyordu (ölçüldü, 1440'ta 16 hap). Bölümün başlığındaki künye
+   sürümün kendisini zaten işaret ediyor. */
 function Tile({ item, locale, L, index }: { item: ChangeItem; locale: Locale; L: ChangelogLabels; index: number }) {
   const Target = (item.href ? TARGET_ICON[tryTarget(item.href)] : null) ?? AREA_ICON[item.area];
-  const body = (
-    <>
+  return (
+    <ItemLink
+      item={item}
+      locale={locale}
+      className={`${styles.tile} ${styles.tone}`}
+      extra={{ "data-area": item.area, title: item.body, style: { "--i": index } as CSSProperties }}
+    >
       <span className={styles.tileIcon} aria-hidden>
         <Target size={18} weight="duotone" />
       </span>
       <span className={styles.tileCopy}>
         <span className={styles.tileTitle}>
-          {item.title}
-          {item.kind !== "yeni" && <span className={styles.tileKind}>{L.kind[item.kind]}</span>}
+          <span className={styles.tileName}>{item.title}</span>
+          {item.kind !== "yeni" && <KindTag kind={item.kind} L={L} />}
         </span>
         <span className={styles.tileShort} aria-hidden>{item.short ?? item.body}</span>
         <span className="sr-only">{item.body}</span>
       </span>
       {item.href && (
-        /^https?:\/\//.test(item.href)
+        isExternal(item.href)
           ? <ArrowUpRight className={styles.tileArrow} size={14} weight="bold" aria-hidden />
           : <ArrowRight className={styles.tileArrow} size={14} weight="bold" aria-hidden />
       )}
-    </>
+    </ItemLink>
   );
-  const common = { className: styles.tile, "data-area": item.area, title: item.body, style: { "--i": index } as CSSProperties };
-  if (!item.href) return <div {...common}>{body}</div>;
-  if (/^https?:\/\//.test(item.href)) {
-    return <a href={item.href} target="_blank" rel="noopener noreferrer" {...common}>{body}</a>;
-  }
-  return <Link href={withLocale(item.href, locale)} prefetch={false} {...common}>{body}</Link>;
 }
 
 /**
  * EN SON SÜRÜM — sayfanın ana görseli. Başlık izinli tek degrade yer (kısa
- * display başlık). Maddeler ALANA göre gruplu (`groupByArea`), gruplar
- * çok sütunlu akışta (`columns`, grup bölünmez): 1440'ta dört, 768'de iki,
- * telefonda tek sütun sıkı liste. Her maddede "Yeni" rozeti yok — sürüm
- * zaten yeni; yalnız iyileştirme ve düzeltme küçük künyeyle ayrılır.
- * Panelin dibinde künye: bu listenin neyi kapsadığı.
+ * display başlık); künye (tarih, madde sayısı) genişte başlıkla aynı sırada.
+ * Önce "Öne Çıkanlar" (en çok dört büyük kart; 1024 ve üstünde tek sıra,
+ * altında iki sütun), sonra "Bu Sürümde Ayrıca" kompakt ızgara (1/2/3/4
+ * sütun). Özet ve kapsam künyesi en altta (ekran düzeni: görsel, sonra
+ * metin, sonra künye).
  */
-export function LatestRelease({ entry, locale, L }: { entry: ChangeEntry; locale: Locale; L: ChangelogLabels }) {
+export function LatestRelease({ entry, latest, locale, L }: { entry: ChangeEntry; latest: string; locale: Locale; L: ChangelogLabels }) {
   const headingId = "yenilikler-son-surum";
-  let index = 0;
+  const { featured, rest } = splitFeatured(entry.items);
+  const seen = { date: entry.date, latest };
   return (
     <Panel id={entryAnchor(entry.date)} aria-labelledby={headingId} className={styles.latest}>
       <div className={styles.latestHead}>
@@ -266,32 +445,38 @@ export function LatestRelease({ entry, locale, L }: { entry: ChangeEntry; locale
           <span className="ink-line">{entry.title}</span>
         </h2>
         <p className={styles.latestMeta}>
-          <span>{L.latestTitle}</span>
+          <span className={styles.latestBadge}>{L.latestBadge}</span>
           <time dateTime={entry.date}>{entryDateLabel(entry, locale)}</time>
           <span>{countLabel(entry.items.length, L.itemCount, L.itemCountOne)}</span>
         </p>
       </div>
-      <div className={styles.areas}>
-        {groupByArea(entry.items).map((group) => (
-          <section key={group.area} className={styles.area} data-area={group.area} aria-label={L.area[group.area]}>
-            <h3 className={styles.areaHead} data-ink="plain">
-              <span className={styles.areaSwatch} aria-hidden />
-              {L.area[group.area]}
-              <span className={styles.areaCount}>{group.items.length}</span>
-            </h3>
-            <ul className={styles.tiles}>
-              {group.items.map((item) => (
-                <li key={item.title}>
-                  <Tile item={item} locale={locale} L={L} index={index++} />
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
-      {/* Özet karoların ALTINDA (ekran düzeni: görsel, sonra metin). Üstte
-          dururken telefonda dört satırla ilk karoyu ekranın dışına itiyordu
-          (390×844'te ilk ekranda sıfır karo, ölçüldü). */}
+      {featured.length > 0 && (
+        <section aria-labelledby="yenilikler-one-cikan" className={styles.section}>
+          <h3 id="yenilikler-one-cikan" className={styles.sectionHead} data-ink="plain">{L.featuredTitle}</h3>
+          <ul className={styles.featureGrid} style={{ "--n": featured.length } as CSSProperties}>
+            {featured.map((item, index) => (
+              <li key={item.title}>
+                <FeatureCard item={item} locale={locale} L={L} index={index} seen={seen} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {rest.length > 0 && (
+        <section aria-labelledby="yenilikler-ayrica" className={styles.section}>
+          <h3 id="yenilikler-ayrica" className={styles.sectionHead} data-ink="plain">
+            {L.restTitle}
+            <span className={styles.sectionCount}>{rest.length}</span>
+          </h3>
+          <ul className={styles.restGrid}>
+            {rest.map((item, index) => (
+              <li key={item.title}>
+                <Tile item={item} locale={locale} L={L} index={index + featured.length} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <p className={styles.latestSummary}>{entry.summary}</p>
       <p className={styles.note}>{L.footnote}</p>
     </Panel>
@@ -306,9 +491,10 @@ export function LatestRelease({ entry, locale, L }: { entry: ChangeEntry; locale
  * `::details-content` geçişiyle, bastığın yerden aşağı uzar (`ExpandInPlace`
  * kökte bağlı). Kapalıyken de içerik sunucu HTML'inde: sayfa içi arama ve
  * arama motoru maddeleri görüyor. Çapa girişin kendisinde
- * (`RevealHashTarget` kapalıysa açar).
+ * (`RevealHashTarget` kapalıysa açar). Okurun görmediği giriş satırında
+ * "Yeni" rozeti.
  */
-export function MonthPanel({ month, locale, L }: { month: ChangeMonth; locale: Locale; L: ChangelogLabels }) {
+export function MonthPanel({ month, latest, locale, L }: { month: ChangeMonth; latest: string; locale: Locale; L: ChangelogLabels }) {
   const title = formatIsoMonth(month.month, locale);
   return (
     <Panel id={monthAnchor(month.month)} aria-label={title} className={styles.month}>
@@ -321,9 +507,12 @@ export function MonthPanel({ month, locale, L }: { month: ChangeMonth; locale: L
                 <time dateTime={entry.date} className={styles.whenDay}>
                   {entry.from ? entryDateLabel(entry, locale).replace(/,? \d{4}$/, "") : shortDay(entry.date, locale)}
                 </time>
-                <span className={styles.entryTitle}>{entry.title}</span>
+                <span className={styles.entryTitleCell}>
+                  <span className={styles.entryTitle}>{entry.title}</span>
+                  <UnseenPill date={entry.date} latest={latest} label={L.badge} srLabel={L.unseenLabel} />
+                </span>
                 <span className={styles.entryDots} aria-label={entryAreas(entry).map((area) => L.area[area]).join(", ")}>
-                  {entryAreas(entry).map((area) => <span key={area} className={styles.entryDot} data-area={area} />)}
+                  {entryAreas(entry).map((area) => <span key={area} className={`${styles.entryDot} ${styles.tone}`} data-area={area} />)}
                 </span>
                 <span className={styles.entryCount}>{countLabel(entry.items.length, L.itemCount, L.itemCountOne)}</span>
                 <CaretDown className={styles.entryIcon} size={14} weight="bold" aria-hidden />
@@ -334,7 +523,7 @@ export function MonthPanel({ month, locale, L }: { month: ChangeMonth; locale: L
                 </p>
                 <ul className={styles.items}>
                   {entry.items.map((item) => (
-                    <li key={item.title} className={styles.item} data-area={item.area}>
+                    <li key={item.title} className={`${styles.item} ${styles.tone}`} data-area={item.area}>
                       <span className={styles.itemHead}>
                         <KindTag kind={item.kind} L={L} />
                         <span className={styles.itemTitle}>{item.title}</span>

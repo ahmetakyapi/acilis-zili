@@ -23,17 +23,12 @@
 .company { display:flex; align-items:center; gap:.4375rem; min-width:0; }
 .names { display:flex; flex-direction:column; min-width:0; line-height:1.2; }
 .symbolLine { display:flex; align-items:center; gap:.3125rem; min-width:0; }
-.symbol { font-family:var(--font-mono); font-size:var(--text-small); font-weight:600; color:var(--text-strong); }
-/* Ad yalnız yer varsa: dar tabloda sembol yeter. */
-.name { display:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--text-tiny); color:var(--text-muted); }
-@container (min-width: 500px) {
-  .name { display:block; }
-}
+.symbol { font-family:var(--font-mono); font-size:var(--text-base); font-weight:700; color:var(--text-strong); }
 .check { display:grid; place-items:center; flex:none; width:1rem; height:1rem; border-radius:999px; background:var(--up); color:var(--premium-surface); }
 
-/* Karo: 38 px, değer + ok. Değer iki satıra kadar ("Bilgi
+/* Karo: 36 px, değer + ok. Değer iki satıra kadar ("Bilgi
    Teknolojileri"), fazlası `title`da. */
-.tile { position:relative; display:flex; align-items:center; justify-content:center; gap:.1875rem; min-width:0; height:2.375rem; padding:0 .125rem; border-radius:var(--radius-sm); background:var(--surface-sunken); color:var(--text-body); text-align:center; }
+.tile { position:relative; display:flex; align-items:center; justify-content:center; gap:.1875rem; min-width:0; height:2.25rem; padding:0 .125rem; border-radius:var(--radius-sm); background:var(--surface-sunken); backface-visibility:hidden; color:var(--text-body); text-align:center; }
 .tile[data-grade="match"] { background:var(--up-wash); color:var(--up); }
 .tile[data-grade="near"] { background:var(--brass-wash); color:var(--brass-ink); }
 .tile[data-grade="none"] { background:transparent; outline:1px dashed var(--line); outline-offset:-1px; color:var(--text-muted); }
@@ -41,8 +36,14 @@
 .tileEmpty { font-weight:500; }
 .arrow { flex:none; }
 
-/* Kalan hak: ince kesik çizgili yuva. */
-.slot { height:.75rem; border-radius:999px; outline:1px dashed var(--line); outline-offset:-1px; }
+/* Kalan hak: karoların hizasında dört soluk "?" kartı, 20 piksel. */
+.slot { display:grid; grid-template-columns:minmax(0,1fr); gap:.25rem .375rem; padding:0 .125rem; }
+.slot > span:first-child { display:none; }
+@container (min-width: 380px) {
+  .slot { grid-template-columns:minmax(4.5rem,1.05fr) minmax(0,3fr); }
+  .slot > span:first-child { display:block; }
+}
+.slotCard { display:grid; place-items:center; height:1.25rem; border-radius:var(--radius-sm); outline:1px dashed var(--line); outline-offset:-1px; font-size:var(--text-tiny); font-weight:700; line-height:1; color:var(--text-muted); opacity:.55; }
 
 /* ---- Lejant: tek satır ---- */
 .legend { display:flex; flex-wrap:wrap; gap:.25rem .875rem; margin:.625rem 0 0; padding:0; list-style:none; font-size:var(--text-tiny); font-weight:600; color:var(--text-body); }
@@ -51,11 +52,14 @@
 .swatch[data-grade="match"] { background:var(--up-wash); border-color:var(--up); }
 .swatch[data-grade="near"] { background:var(--brass-wash); border-color:var(--brass); }
 
-/* ---- Giriş: son satırın karoları sırayla çevrilir ---- */
+/* ---- Giriş: son satırın karoları sırayla çevrilir (Wordle) ----
+   Karo başına 130 ms; dört karo 550 ms'de biter, rozet ardından. */
 @media (prefers-reduced-motion: no-preference) {
   .fresh .company { animation:row-in 360ms var(--ease-brand) both; }
-  .fresh .tile { animation:tile-flip 560ms var(--ease-spring-soft) both; animation-delay:calc(var(--i, 0) * 110ms + 160ms); }
-  .fresh .close { animation:check-in 420ms var(--ease-spring-soft) 700ms both; }
+  .fresh .tile { animation:tile-flip 560ms var(--ease-spring-soft) both; animation-delay:calc(var(--i, 0) * 130ms + 160ms); }
+  .fresh .close { animation:check-in 420ms var(--ease-spring-soft) 900ms both; }
+  .fresh .closeIcon { animation:spark-turn 520ms var(--ease-spring-soft) 980ms both; }
+  .fresh .sparks span { animation:spark 560ms var(--ease-brand) 1000ms both; }
   .jokerRow.fresh { animation:row-in 360ms var(--ease-brand) both; }
   .fresh.correct .check { animation:check-in 480ms var(--ease-spring) 620ms both; }
 }
@@ -67,11 +71,29 @@
   from { opacity:0; transform:perspective(400px) rotateX(-90deg); }
   to { opacity:1; transform:none; }
 }
+@keyframes spark-turn {
+  from { transform:rotate(-90deg) scale(.3); }
+  to { transform:none; }
+}
+@keyframes spark {
+  0% { opacity:1; transform:translate(0,0) scale(1); }
+  100% { opacity:0; transform:translate(var(--dx), var(--dy)) scale(.4); }
+}
 @keyframes check-in {
   from { opacity:0; transform:scale(.4); }
   to { opacity:1; transform:scale(1); }
 }
 
 /* "Çok Yakın!" — pirinç: yakın demek, karolardaki "yakın"la aynı aile. */
-.close { align-self:flex-start; max-width:100%; overflow:hidden; text-overflow:ellipsis; margin-top:.125rem; padding:0 .3125rem; border-radius:999px; background:var(--brass-wash); color:var(--brass-ink); font-size:var(--text-tiny); font-weight:700; line-height:1.4; white-space:nowrap; }
-.jokerRow { display:flex; align-items:center; gap:.5rem; height:2.375rem; padding:0 .75rem; border-radius:var(--radius-md); outline:1px dashed var(--line-strong); outline-offset:-1px; font-size:var(--text-small); font-weight:600; color:var(--text-muted); }
+.close { position:relative; display:inline-flex; align-items:center; gap:.1875rem; align-self:flex-start; max-width:100%; margin-top:.125rem; padding:0 .3125rem; border-radius:999px; background:var(--brass-wash); color:var(--brass-ink); font-size:var(--text-tiny); font-weight:700; line-height:1.4; white-space:nowrap; }
+.jokerRow { display:flex; align-items:center; gap:.5rem; height:2.5rem; padding:0 .75rem; border-radius:var(--radius-md); outline:1px dashed var(--line-strong); outline-offset:-1px; font-size:var(--text-small); font-weight:600; color:var(--text-muted); }
+
+/* Kıvılcımlar: rozetin dört köşesinden dışa açılıp söner (yalnız az önce
+   gönderilen satırda; durağan hâlde görünmez). */
+.closeIcon { flex:none; }
+.sparks { position:absolute; inset:0; pointer-events:none; }
+.sparks span { position:absolute; width:3px; height:3px; border-radius:999px; background:var(--brass-bright); opacity:0; }
+.sparks span:nth-child(1) { left:-2px; top:-2px; --dx:-5px; --dy:-5px; }
+.sparks span:nth-child(2) { right:-2px; top:-2px; --dx:5px; --dy:-5px; }
+.sparks span:nth-child(3) { left:-2px; bottom:-2px; --dx:-5px; --dy:5px; }
+.sparks span:nth-child(4) { right:-2px; bottom:-2px; --dx:5px; --dy:5px; }

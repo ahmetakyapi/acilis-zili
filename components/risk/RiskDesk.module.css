@@ -13,18 +13,6 @@
 }
 
 /* ---------------------------------------------------------------- künye */
-.strip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 14px;
-  font-size: var(--text-small);
-  color: var(--text-muted);
-}
-.strip strong {
-  color: var(--text-body);
-  font-weight: 600;
-}
 .advice {
   display: inline-flex;
   align-items: center;
@@ -38,24 +26,6 @@
 }
 
 /* ---------------------------------------------------------------- ilk ekran */
-.hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 20px;
-  min-width: 0;
-}
-.side {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-width: 0;
-}
-@media (min-width: 1100px) {
-  .hero {
-    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.55fr);
-    align-items: start;
-  }
-}
 
 /* Rejim tonları — `data-regime` ya da `data-tone` taşıyan her öğe. */
 .desk [data-regime="riskOn"],
@@ -123,7 +93,7 @@
 /* Skor kulvarı: üç bölge (0–25, 25–50, 50–100) ve bugünün işareti. */
 .scale {
   position: relative;
-  margin: 16px 0 6px;
+  margin: 10px 0 4px;
   height: 22px;
 }
 .scaleLane {
@@ -165,55 +135,6 @@
   color: var(--text-muted);
 }
 
-.components {
-  list-style: none;
-  margin: 14px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-}
-.component {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 2px 12px;
-  padding: 7px 0;
-  border-top: 1px solid var(--line-soft);
-}
-.componentName {
-  font-size: var(--text-small);
-  font-weight: 600;
-  color: var(--text-strong);
-}
-.componentRule {
-  grid-column: 1 / -1;
-  font-size: var(--text-nano);
-  color: var(--text-muted);
-  line-height: 1.35;
-}
-.componentValue {
-  font-size: var(--text-small);
-  font-weight: 600;
-  color: var(--text-body);
-  text-align: right;
-}
-.pips {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 92px;
-  font-size: var(--text-nano);
-  color: var(--text-muted);
-}
-.pip {
-  width: 14px;
-  height: var(--lane-h, 5px);
-  border-radius: 999px;
-  background: var(--line-soft);
-}
-.pip[data-on] {
-  background: var(--tone);
-}
 .explain {
   margin: 12px 0 0;
   padding-top: 10px;
@@ -224,14 +145,21 @@
 }
 
 /* ---------------------------------------------------------------- göstergeler */
+/* Altı küçük kart (25 Ekim, kart düzeni): telefonda 2, tablette 3, geniş
+   ekranda 6 sütun; zemin bir ton aşağı (sunken), çerçeve yok. */
 .gauges {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  border-top: 1px solid var(--line-soft);
+  gap: 10px;
 }
 @media (min-width: 720px) {
   .gauges {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1200px) {
+  .gauges {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
 .gauge {
@@ -239,20 +167,22 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  padding: 10px 16px 12px;
-  border-bottom: 1px solid var(--line-soft);
-  border-right: 1px solid var(--line-soft);
+  padding: 10px 12px 10px;
+  border-radius: var(--radius-lg, 12px);
+  background: var(--surface-sunken);
 }
 .gaugeLabel {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 8px;
+  gap: 0 8px;
   font-size: var(--text-small);
   font-weight: 600;
   color: var(--text-muted);
 }
 .gaugeDate {
   font-weight: 400;
+  font-size: var(--text-nano);
   white-space: nowrap;
 }
 .gaugeValue {
@@ -265,11 +195,6 @@
 .gaugeValue[data-off] {
   color: var(--text-muted);
   font-size: var(--text-lead);
-}
-.gaugeSub {
-  font-size: var(--text-nano);
-  color: var(--text-muted);
-  line-height: 1.35;
 }
 .gaugeDelta {
   font-size: var(--text-nano);
@@ -300,45 +225,8 @@
   stroke: var(--line-strong);
   stroke-width: 1;
 }
-.sparkEnd {
-  fill: var(--primary-soft);
-  stroke: var(--premium-surface);
-  stroke-width: 2;
-}
 
 /* ---------------------------------------------------------------- maruziyet */
-.stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 16px;
-}
-@media (min-width: 720px) {
-  .stats {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.statLabel {
-  font-size: var(--text-small);
-  font-weight: 600;
-  color: var(--text-muted);
-}
-.statValue {
-  font-size: var(--text-heading);
-  font-weight: 800;
-  letter-spacing: -0.025em;
-  line-height: 1.1;
-  color: var(--text-strong);
-}
-.statSub {
-  font-size: var(--text-nano);
-  color: var(--text-muted);
-}
 .barRow {
   display: grid;
   grid-template-columns: minmax(0, 9rem) minmax(0, 1fr) auto;
@@ -1064,4 +952,265 @@ a.verdict:hover {
   .laneFill {
     animation: none;
   }
+}
+
+/* ================================================================
+   KART DÜZENİ (25 Ekim) — başlık bandı, ilk sıra, çipler, katlamalar,
+   sinyal kartları. Ölçüler ve gerekçeler app/(app)/risk/page.tsx'te.
+   ================================================================ */
+
+/* Başlık bandı: orta punto ad + seans + künye tek satırda. Display
+   başlığın yanındaki metin 0,12em kalkar (CLAUDE.md, globals.css
+   "ÜSTTEKİ İMLER"); başlık puntosu text-heading. */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  padding-top: 4px;
+}
+.headMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  font-size: var(--text-small);
+  color: var(--text-muted);
+  translate: 0 calc(var(--text-heading) * -0.12);
+}
+.headMeta strong {
+  color: var(--text-body);
+  font-weight: 600;
+}
+.headSub {
+  flex-basis: 100%;
+  margin-top: -2px;
+  font-size: var(--text-small);
+  color: var(--text-muted);
+}
+
+/* İlk sıra: rejim kartı + dört özet kartı. */
+.top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+}
+@media (min-width: 1100px) {
+  .top {
+    /* Rejim geniş tutuldu: çipler üç sütuna sığıp kart kısalır, yanındaki
+       2 × 2 özet kartları boşa gerilmez (1440'ta ölçüldü). */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    align-items: stretch;
+  }
+}
+
+/* Rejim girdileri: tek satırlık çipler, ton noktası rejim üçlüsünden. */
+.chips {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chipItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tone-wash) 80%, var(--surface-sunken));
+  font-size: var(--text-nano);
+  color: var(--text-body);
+  white-space: nowrap;
+  cursor: help;
+}
+.chipItem::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--tone);
+  flex: none;
+}
+.chipName {
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.chipItem b {
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+/* Katlama: "Nasıl Hesaplanır", "Tablo Görünümü". Yerli <details>, JS'siz;
+   açılınca bastığın yerde uzar (components/layout/ExpandInPlace.tsx). */
+.fold {
+  margin-top: 8px;
+  border-top: 1px solid var(--line-soft);
+}
+.fold > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--primary);
+}
+.fold > summary::-webkit-details-marker {
+  display: none;
+}
+.fold > summary::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.25s var(--ease-brand);
+}
+.fold[open] > summary::after {
+  transform: translateY(1px) rotate(-135deg);
+}
+.fold > summary:hover {
+  color: var(--primary-hover);
+}
+.fold > summary:focus-visible {
+  outline: 2px solid var(--line-focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.foldList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px 20px;
+  margin: 0 0 4px;
+}
+@media (min-width: 720px) {
+  .foldList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.foldList dt {
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.foldList dd {
+  margin: 0;
+  font-size: var(--text-small);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+.foldText {
+  margin: 8px 0 0;
+  font-size: var(--text-small);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* Geriye dönük test kartları. */
+.signals {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (min-width: 720px) {
+  .signals {
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  }
+}
+.signal {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-lg, 12px);
+  background: var(--surface-sunken);
+}
+.signal[data-active] {
+  background: var(--brass-wash);
+}
+.signalName {
+  font-size: var(--text-small);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-strong);
+}
+.signalBody {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.signalFigures {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--text-nano);
+  color: var(--text-muted);
+}
+.signalFigures b,
+.signalFigures .dir {
+  font-weight: 700;
+  color: var(--text-strong);
+}
+.signalFigures .dir[data-dir="up"] {
+  color: var(--up);
+}
+.signalFigures .dir[data-dir="down"] {
+  color: var(--down);
+}
+.signalMeta {
+  margin-top: auto;
+  font-size: var(--text-nano);
+  color: var(--text-muted);
+}
+.flagNow {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: var(--text-nano);
+  font-weight: 700;
+  color: var(--text-strong);
+  background: var(--premium-surface);
+}
+.flagNow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--brass);
+}
+.hitRing {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  transform: rotate(-90deg);
+}
+.hitTrack,
+.hitFill {
+  fill: none;
+  stroke-width: 6;
+}
+.hitTrack {
+  stroke: var(--line-soft);
+}
+.hitFill {
+  stroke: var(--primary-soft);
+}
+.hitBase {
+  stroke: var(--text-strong);
+  stroke-width: 1.5;
 }

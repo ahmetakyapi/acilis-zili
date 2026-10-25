@@ -11,6 +11,7 @@ import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import { DirectionLane, SizeBar } from "@/components/screener/Lanes";
 import { SectorDistribution } from "@/components/companies/SectorDistribution";
+import { CoverTabs } from "@/components/companies/CoverTabs";
 import visual from "@/components/screener/ScreenerVisuals.module.css";
 import { RollingFigure } from "@/components/ui/RollingFigure";
 import styles from "@/components/motion/DirectoryExperience.module.css";
@@ -352,15 +353,38 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
       <ScrollProgress />
       <DirectoryHeader shareInTitle share={<PageShare compactOnMobile align="right" path="/sirketler" title={t.companies.title} locale={locale} t={t} />} className={companyStyles.hero} title={t.companies.title} description={t.companies.subtitle}
         visual={
-          <>
-            <CompanyLeaders leaders={leaders} labels={t.directory} locale={locale} scrollLabels={{ prev: t.common.scrollPrev, next: t.common.scrollNext }} />
+          <CoverTabs
+            labels={{
+              group: t.toolVisuals.companies.coverTabs,
+              leaders: t.directory.marketLeaders,
+              leadersMeta: t.directory.leadersByCap,
+              sectors: t.toolVisuals.companies.distTitle,
+              sectorsMeta: t.toolVisuals.companies.distMeta,
+            }}
+            sectors={query ? null : (
+              <SectorDistribution
+                companies={companies}
+                activeKey={activeGroup?.key ?? null}
+                hrefFor={sectorHref}
+                locale={locale}
+                t={t}
+              />
+            )}
+            leaders={<>
+            {/* KAPAĞIN SAĞI İKİ SEKME (25 Ekim, sahibinin isteği): Piyasanın
+                Devleri | Sektör Dağılımı. Dağılım bir süre tablonun altında
+                kendi panelindeydi; artık tek yeri burası (gerekçe
+                `CoverTabs`, `SectorDistribution`). Arama varken sekme yok:
+                bir aramanın sonucu dağılım değil, tek tek şirketler. */}
+            <CompanyLeaders leaders={leaders} locale={locale} scrollLabels={{ prev: t.common.scrollPrev, next: t.common.scrollNext }} />
             {/* Liderlerin şirket kartı ayrı bir anahtarla (`set`): tablo
                 satırı aynı sembolü kendi paketiyle kaydediyor. Kotasyonu
                 kart kendisi soruyor, akışla iniyor. */}
             <Suspense fallback={null}>
               <CompanyCards symbols={leaders.map((item) => item.symbol)} set="leaders" />
             </Suspense>
-          </>
+          </>}
+          />
         }>
 
         {/* KAPSAM VE ARAMA AYNI SATIRDA. İkisi alt alta iki bant halindeydi
@@ -492,21 +516,6 @@ export default async function CompaniesPage(props: PageProps<"/sirketler">) {
         />
       </Suspense>
       </QueryTransition>
-
-      {/* SEKTÖR DAĞILIMI TABLONUN ALTINDA (25 Ekim, sahibinin isteği):
-          başlığın hemen altındaydı ve 1440'ta ilk ekranın tamamını
-          kaplıyordu; "şirketler direkt gözüksün". Sayfanın işi şirket
-          listesi; dağılım listeyi okuduktan sonra bakılan özet. Arama
-          yokken: bir aramanın sonucu "dağılım" değil, tek tek şirketler. */}
-      {!query && (
-        <SectorDistribution
-          companies={companies}
-          activeKey={activeGroup?.key ?? null}
-          hrefFor={sectorHref}
-          locale={locale}
-          t={t}
-        />
-      )}
 
       <GuideHint
         label={t.guide.contextLabel}

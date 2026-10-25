@@ -263,6 +263,54 @@ export function diffPeriods(current: readonly HoldingRecord[], previous: readonl
 }
 
 /* --------------------------------------------------------------------------
+   Çeyreğin öne çıkan hareketi — dizin kartının tek satırı (25 Ekim)
+   -------------------------------------------------------------------------- */
+
+export type HeadlineMove = {
+  cusip: string;
+  issuer: string;
+  move: "new" | "increased" | "decreased" | "soldOut";
+  /** Adet değişimi, yüzde; yeni alımda ve tamamen satışta null. */
+  changePct: number | null;
+};
+
+/**
+ * Çeyreğin EN BÜYÜK hareketi: el değiştiren tahmini dolar en büyük olan
+ * pozisyon. Dolar değişimine bakılmıyor, çünkü o fiyat hareketini de
+ * taşıyor (adedine dokunulmamış Apple'ın değeri de büyüyor); bakılan ADET
+ * farkının çeyrek sonu fiyatıyla karşılığı:
+ *   yeni: bugünkü değerin tamamı; tamamen satış: önceki değerin tamamı;
+ *   artış c: değer × c / (1 + c); azalış d: değer × d / (1 − d)
+ * (c, d oran; değer çeyrek sonu). Tahmin yalnızca SIRALAMAK için; karta
+ * dolar yazılmıyor, yalnızca hareketin kendisi ("Artırdı %40"). Önceki
+ * dönem yoksa (ilk bildirim) hareket de yok. Saf.
+ */
+export function headlineMove(diff: PeriodDiff): HeadlineMove | null {
+  if (!diff.compared) return null;
+  let best: HeadlineMove | null = null;
+  let bestSize = 0;
+  const consider = (candidate: HeadlineMove, size: number) => {
+    if (size > bestSize) {
+      best = candidate;
+      bestSize = size;
+    }
+  };
+  for (const position of diff.positions) {
+    if (position.move === "new") {
+      consider({ cusip: position.cusip, issuer: position.issuer, move: "new", changePct: null }, position.value);
+    } else if ((position.move === "increased" || position.move === "decreased") && position.changePct !== null) {
+      const rate = Math.abs(position.changePct) / 100;
+      const size = position.move === "increased" ? (position.value * rate) / (1 + rate) : rate < 1 ? (position.value * rate) / (1 - rate) : 0;
+      consider({ cusip: position.cusip, issuer: position.issuer, move: position.move, changePct: position.changePct }, size);
+    }
+  }
+  for (const sold of diff.sold) {
+    consider({ cusip: sold.cusip, issuer: sold.issuer, move: "soldOut", changePct: null }, sold.prevValue);
+  }
+  return best;
+}
+
+/* --------------------------------------------------------------------------
    Çeyreğin hareketleri — yatırımcılar arası
    -------------------------------------------------------------------------- */
 

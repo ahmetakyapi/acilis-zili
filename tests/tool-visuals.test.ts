@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 
 import {
   fitSwarm,
+  foldSlices,
+  REST_SLICE,
   labelRows,
   median,
   percentileRank,
@@ -146,6 +148,34 @@ test("pay dilimleri: adet ve değer payı, değere göre sıralı", () => {
 test("etiket satırları: yakın etiketler ayrı satıra", () => {
   assert.deepEqual(labelRows([10, 12, 40, 41, 42], 6), [0, 1, 0, 1, 2]);
   assert.deepEqual(labelRows([10, 30, 50], 6), [0, 0, 0]);
+});
+
+test("katlanan dilimler: kuyruk tek dilimde, seçili grup kuyruktan çıkar", () => {
+  const slices = shareSlices([
+    { key: "a", value: 500 },
+    { key: "b", value: 200 },
+    { key: "c", value: 100 },
+    { key: "d", value: 50 },
+    { key: "e", value: 30 },
+  ]);
+  const folded = foldSlices(slices, 2);
+  assert.deepEqual(folded.slices.map((s) => s.key), ["a", "b", REST_SLICE]);
+  assert.equal(folded.restGroups, 3);
+  const rest = folded.slices[2];
+  assert.equal(rest.count, 3);
+  assert.equal(rest.value, 180);
+  const total = folded.slices.reduce((sum, s) => sum + s.valueShare, 0);
+  assert.ok(Math.abs(total - 1) < 1e-9);
+
+  /* Seçili grup kuyruktaysa son tutulanın yerine geçer. */
+  const pinned = foldSlices(slices, 2, "d");
+  assert.deepEqual(pinned.slices.map((s) => s.key), ["a", "d", REST_SLICE]);
+  assert.equal(pinned.restGroups, 3);
+  /* Zaten tutulan seçili grup sırayı bozmaz. */
+  assert.deepEqual(foldSlices(slices, 2, "a").slices.map((s) => s.key), ["a", "b", REST_SLICE]);
+  /* Katlanacak tek dilim varsa katlanmaz. */
+  assert.deepEqual(foldSlices(slices, 4).slices.map((s) => s.key), ["a", "b", "c", "d", "e"]);
+  assert.equal(foldSlices(slices, 4).restGroups, 0);
 });
 
 test("yığılı şeritler: aralıklı ve toplam genişlik korunur", () => {

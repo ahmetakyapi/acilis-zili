@@ -1,17 +1,15 @@
 import { PageShare } from "@/components/article/PageShare";
 import { GuideHint } from "@/components/article/GuideHint";
-import { BrokerNotes, BrokerSources } from "@/components/brokers/BrokerNotes";
+import { BrokerNeutrality, BrokerNotes, BrokerSources } from "@/components/brokers/BrokerNotes";
 import { BrokerCardsPanel } from "@/components/brokers/BrokerCardsPanel";
-import { BrokerLead } from "@/components/brokers/BrokerLead";
 import { BrokerLinePanel } from "@/components/brokers/BrokerLinePanel";
 import { BrokerTable } from "@/components/brokers/BrokerTable";
 import { RevealFoldAnchor } from "@/components/brokers/RevealFoldAnchor";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
-import { DataStamp, PageHeader } from "@/components/ui/primitives";
+import { DataStamp, PageHeader, Panel } from "@/components/ui/primitives";
+import styles from "@/components/brokers/Brokers.module.css";
 import { BROKERS, BROKERS_CHECKED } from "@/content/brokers";
-import { brokersLeadFacts } from "@/lib/broker-cards";
-import { costLine, LINE_DEFAULT_USD, LINE_STEPS_USD } from "@/lib/broker-line";
 import { formatIsoDate } from "@/lib/fx";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
@@ -40,12 +38,16 @@ export const generateMetadata = pageMetadata({
  * `content/brokers.ts` başında.
  *
  * Ekran düzeni (CLAUDE.md):
- *   başlık → veriden tek cümle (BrokerLead, 25 Ekim görsel turu) →
- *   alımına göre komisyon (ana görsel: kaydırıcı ve tek ölçekli maliyet
- *   çizgisi) → kurum kartları ve yan yana karşılaştırma (BrokerCards) →
- *   katlı "Tüm Tarife Ayrıntıları" matrisi (kaynak katmanı) → tabloda
- *   olmayanlar + tarafsızlık künyesi (metin, panel içinde) → kaynaklar →
- *   DataStamp → GuideHint.
+ *   kompakt başlık → alımına göre komisyon (ana görsel; tepe cümlesi
+ *   panonun başında, künye ve katlı varsayımlar dibinde) → kurum kartları
+ *   ve yan yana karşılaştırma (BrokerCards) → "Ayrıntılar" paneli: üç
+ *   katlı satır (Tüm Tarife Ayrıntıları, Tabloda Olmayanlar, Kaynaklar) +
+ *   katlanmayan tarafsızlık künyesi → DataStamp → GuideHint.
+ *
+ * KOMPAKT TUR (25 Ekim). Sahibi: "Burası da çok yer kaplıyor; daha az yer
+ * kaplatalım, detayları görmek isteyen açarak baksın." Açıklama, varsayım
+ * ve kaynak blokları varsayılan katlı (`BrokerFold`, tek kalıp); kapak
+ * küçüldü; ölçümler `BrokerLinePanel` başında.
  *
  * Sunucuda, ağsız: veri depoda. İstemci JS'i `ScrollEdges`, kaydırıcı,
  * cümle ve kartlar; üçü aynı tutarı paylaşıyor (`broker-view-state.ts`).
@@ -55,36 +57,33 @@ export const generateMetadata = pageMetadata({
 export default async function BrokersPage() {
   const { locale, t } = await getI18n();
   const L = t.brokers;
-  const lines = LINE_STEPS_USD.map((amount) => costLine(BROKERS, amount));
-  const facts = brokersLeadFacts(BROKERS, costLine(BROKERS, LINE_DEFAULT_USD));
 
   return (
     <MotionExperience className={polish.page}>
       <ScrollProgress />
       <RevealFoldAnchor />
       <PageHeader
+        className={styles.masthead}
         title={L.title}
         subtitle={L.subtitle}
         share={<PageShare path="/araci-kurumlar" title={L.title} locale={locale} t={t} />}
-      />
-
-      <BrokerLead
-        lines={lines}
-        total={facts.total}
-        fractional={facts.fractional}
-        templates={t.brokerCards.lead}
-        locale={locale}
       />
 
       <BrokerLinePanel brokers={BROKERS} locale={locale} t={t} />
 
       <BrokerCardsPanel brokers={BROKERS} locale={locale} t={t} />
 
-      <BrokerTable brokers={BROKERS} locale={locale} t={t} />
-
-      <BrokerNotes t={t} />
-
-      <BrokerSources brokers={BROKERS} locale={locale} t={t} />
+      {/* Kaynak katmanı: üç katlı satır tek panelde, aralarında saç teli. */}
+      <Panel id="ayrintilar" className="scroll-mt-28">
+        <div className={styles.stack}>
+          <BrokerTable brokers={BROKERS} locale={locale} t={t} />
+          <BrokerNotes t={t} locale={locale} />
+          <BrokerSources brokers={BROKERS} locale={locale} t={t} />
+        </div>
+        <div className="border-t border-line-soft">
+          <BrokerNeutrality t={t} />
+        </div>
+      </Panel>
 
       <DataStamp
         source={L.stampSource}

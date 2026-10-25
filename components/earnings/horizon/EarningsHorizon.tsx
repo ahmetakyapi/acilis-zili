@@ -2,7 +2,7 @@ import { Panel, PanelHeader } from "@/components/ui/primitives";
 import { analysisHref } from "@/lib/analysis";
 import type { AnalysisBadge } from "@/lib/data";
 import { earningsHref } from "@/lib/earnings-company";
-import { capCell, horizonLead, peakCell, tileScale, tileTierOf } from "@/lib/earnings-horizon";
+import { capCell, horizonLead, laneSlots, peakCell, peakDay, tileScale, tileTierOf } from "@/lib/earnings-horizon";
 import { loadHorizonKarne } from "@/lib/earnings-horizon-data";
 import { dayLabel, epsSurprise, laneOf, WEEK_MAX_NAMES, weekRangeLabel, type ScheduleRow, type WeekLane } from "@/lib/earnings-week";
 import type { EarningsWeek } from "@/lib/earnings-week-data";
@@ -24,8 +24,9 @@ import styles from "./EarningsHorizon.module.css";
  * Ufuk ikisini tek görselde birleştiriyor: sütunlar gün, satırlar pencere
  * (açılış öncesi / kapanış sonrası), her hücrede o pencerede açıklayan
  * kayda değer şirketler (`getEarningsWeek` → haftalık sekmenin seçimi,
- * aynı kaynak). Karo ALANI piyasa değeri (`tileScale`), altındaki dört
- * çentik son dört çeyreğin beklenti karnesi (hisse sayfasındaki "3/4
+ * aynı kaynak). Kartlar büyükten küçüğe, büyük şirket çerçeveli
+ * (`tileTierOf`; kart turunda boy tekleşti), altındaki dört kare son dört
+ * çeyreğin beklenti karnesi (hisse sayfasındaki "3/4
  * Çeyrekte Aşıldı" dili, aynı kaynak — `loadHorizonKarne`). Gün başlığında
  * günün TÜM açıklayanlarının sayısı ve yoğunluk çizgisi: kapaktaki eski
  * grafiğin bilgisi burada. Tepede veriden tek cümle (`horizonLead`).
@@ -104,8 +105,11 @@ export function EarningsHorizon({
     };
   };
 
-  /* Hücre en çok altı yuva (`capCell`): sığmayan küçükler "+N" çipinde. */
-  const cap = (rows: ScheduleRow[]) => capCell(rows).shown.map(tile);
+  /* Hücre en çok sekiz yuva, saati belirsiz satırı iki (`laneSlots`):
+     sığmayan küçükler "+N" çipinde. */
+  const cut = (rows: ScheduleRow[], lane: WeekLane) => capCell(rows, laneSlots(lane));
+  const cap = (rows: ScheduleRow[], lane: WeekLane) => cut(rows, lane).shown.map(tile);
+  const peakDate = peakDay(week.schedule);
   const days: HorizonDay[] = week.days.map((day) => {
     const label = dayLabel(day.date, locale);
     const parts = etDateParts(day.date, locale);
@@ -121,8 +125,9 @@ export function EarningsHorizon({
       closed: day.closed !== null,
       countText: h.countCompanies.replace("{count}", String(total)),
       density: total / peakTotal,
-      lanes: { bmo: cap(day.bmo), amc: cap(day.amc), other: cap(day.other) },
-      more: { bmo: capCell(day.bmo).more, amc: capCell(day.amc).more, other: capCell(day.other).more },
+      peak: day.date === peakDate && day.closed === null,
+      lanes: { bmo: cap(day.bmo, "bmo"), amc: cap(day.amc, "amc"), other: cap(day.other, "other") },
+      more: { bmo: cut(day.bmo, "bmo").more, amc: cut(day.amc, "amc").more, other: cut(day.other, "other").more },
       moreHref: listedDays?.has(day.date) ? `#earnings-day-${day.date}` : `/bilancolar/hafta#week-schedule-${day.date}`,
       moreLabel: h.moreLabel.replace("{day}", label.weekday),
     };
@@ -180,6 +185,8 @@ export function EarningsHorizon({
           reported: t.earnings.epsActual,
           beatRecord: t.earnings.beatRecord,
           beatRecordLine: t.earnings.beatRecordLine,
+          peak: h.peak,
+          peakLabel: h.peakLabel,
           beatRecordAll: t.earnings.beatRecordAll,
           beatRecordNone: t.earnings.beatRecordNone,
           beatCount: t.earnings.epsBeatCount,
@@ -195,9 +202,33 @@ export function EarningsHorizon({
           more: h.more,
         }}
       />
+      {/* KÜNYE TEK SATIR + KATLI AYRINTI (25 Ekim, kart turu). Burada iki
+          uzun paragraf vardı (büyük karo kuralı, seçim kuralı): 1440'ta 77,
+          390'da 171 piksel ve ızgaranın asıl lejantı (kareler) cümlenin
+          ortasında kalıyordu. Şimdi kare lejantı görsel olarak tek satırda;
+          iki paragraf "Nasıl Okunur" katlamasında (`<details>`, JS'siz;
+          açılınca `ExpandInPlace` bastığın yerde uzatıyor). */}
       <div className={styles.foot}>
-        <p>{h.caption}</p>
-        <p>{w.noteSelection.replace("{max}", String(WEEK_MAX_NAMES))}</p>
+        <p className={styles.legend}>
+          <span className={styles.legendItem}>
+            <i aria-hidden className={styles.square} data-mark="beat" />
+            {h.legendBeat}
+          </span>
+          <span className={styles.legendItem}>
+            <i aria-hidden className={styles.square} data-mark="miss" />
+            {h.legendMiss}
+          </span>
+          <span className={styles.legendItem}>
+            <i aria-hidden className={styles.square} data-mark="none" />
+            {h.legendNone}
+          </span>
+          <span className={styles.legendNote}>{h.legendNote}</span>
+        </p>
+        <details className={styles.how}>
+          <summary>{h.howTitle}</summary>
+          <p>{h.caption}</p>
+          <p>{w.noteSelection.replace("{max}", String(WEEK_MAX_NAMES))}</p>
+        </details>
       </div>
     </Panel>
   );

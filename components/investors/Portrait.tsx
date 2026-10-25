@@ -52,9 +52,9 @@ const EMBLEMS: Record<InvestorEmblem, Icon> = {
 };
 /** Simgenin karonun kenarına oranı — harflere ve künyeye yer kalsın. */
 const EMBLEM_SCALE = 0.46;
-export type PortraitSize = "chip" | "sm" | "cast" | "card" | "hero" | "tile";
+export type PortraitSize = "chip" | "sm" | "cast" | "detail";
 
-const PIXELS: Record<PortraitSize, number> = { chip: 24, sm: 36, cast: 48, card: 88, hero: 168, tile: 160 };
+const PIXELS: Record<PortraitSize, number> = { chip: 24, sm: 36, cast: 48, detail: 72 };
 
 export function Portrait({
   investor,
@@ -84,23 +84,19 @@ export function Portrait({
       </span>
     );
   }
-  const large = size === "hero" || size === "tile" || size === "card";
+  const large = size === "detail";
   if (investor.emblem) {
     const Emblem = EMBLEMS[investor.emblem];
     return (
       <span className={cn(styles.portrait, styles.emblem, className)} data-size={size} aria-hidden>
         <Emblem className={styles.emblemIcon} size={Math.round(px * EMBLEM_SCALE)} weight="duotone" />
         {large && <span className={styles.emblemInitials}>{investorInitials(investor.name)}</span>}
-        {(size === "hero" || size === "tile") && <span className={styles.emblemFirm}>{investor.firm}</span>}
       </span>
     );
   }
   return (
     <span className={cn(styles.portrait, styles.initials, className)} data-size={size} aria-hidden>
       <span className={styles.initialsText}>{investorInitials(investor.name)}</span>
-      {(size === "hero" || size === "tile" || size === "card") && (
-        <span className={styles.initialsFirm}>{investor.firm}</span>
-      )}
     </span>
   );
 }

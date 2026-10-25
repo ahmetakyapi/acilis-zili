@@ -97,3 +97,18 @@ export const MA_WINDOWS = [50, 100, 200] as const;
 export type MaWindow = (typeof MA_WINDOWS)[number];
 export const PERCENTILE_WINDOW = 252;
 export const BETA_WINDOW = 252;
+
+/**
+ * POZİSYON KARTININ TONU (25 Ekim, kart düzeni). Rejimle AYNI üçlü (sakin /
+ * gergin / stres) ve aynı mantık: iki parçanın büyüğü.
+ *  - Trend: SPY trend girdisinin basamağı pozisyona uygulanır — yalnız 100
+ *    GO altı 1, 200 GO altı 2. Yeni bir sınır icat edilmedi.
+ *  - Oynaklık: 20 günlük oynaklığın KENDİ son bir yılındaki dilimi; 80 / 95
+ *    VXN / VIX diliminin eşikleri. Düzey değil dilim: yarı iletken hissenin
+ *    %55'lik oynaklığı onun için olağan olabilir, sabit eşik her yarı
+ *    iletkeni kalıcı "stres" gösterirdi.
+ * Ton ölçünün özetidir, işlem önerisi değil; kartın künyesi bunu söyler.
+ */
+export const POSITION_VOL_PCTILE = { tense: 80, stress: 95 } as const;
+/** Kart minyatürünün penceresi: üç ay (63 işlem günü). */
+export const TRAIL_POINTS = 63;

@@ -34,6 +34,8 @@ export type ChangeItem = {
   body: string;
   /** Dilsiz site içi yol ya da dış adres (Telegram); yoksa "Dene" basılmaz. */
   href: string | null;
+  /** İçerikte elle "öne çıkar" işareti (`featured: true`); yoksa `false`. */
+  featured: boolean;
 };
 
 export type ChangeEntry = {
@@ -80,6 +82,7 @@ export function changelogEntries(locale: Locale, telegramUrl: string | null): Ch
         short: items[itemIndex].short ?? null,
         body: items[itemIndex].body,
         href: resolveHref("href" in item ? item.href : undefined, telegramUrl),
+        featured: "featured" in item && item.featured === true,
       })),
     };
   });
@@ -91,17 +94,89 @@ export function parseKind(value: string | string[] | undefined): ChangeKind | nu
   return CHANGE_KINDS.find((kind) => kind === raw) ?? null;
 }
 
+/** Adresteki `?alan=` değeri; tanınmayan değer süzgeçsiz sayılır. */
+export function parseArea(value: string | string[] | undefined): ChangeArea | null {
+  const raw = Array.isArray(value) ? value[0] : value;
+  return CHANGE_AREAS.find((area) => area === raw) ?? null;
+}
+
 /**
  * Etiket süzgeci MADDE düzeyinde: "Düzeltme" seçilince her girişin yalnız
  * düzeltmeleri kalır, hiç düzeltmesi olmayan giriş düşer. Giriş düzeyinde
  * tek etiket seçilseydi en üstteki on beş maddelik sürüm tek bir "Yeni"
  * olurdu ve içindeki düzeltme hiç bulunamazdı.
  */
-export function filterEntries(entries: readonly ChangeEntry[], kind: ChangeKind | null): ChangeEntry[] {
-  if (!kind) return [...entries];
+export function filterEntries(
+  entries: readonly ChangeEntry[],
+  kind: ChangeKind | null,
+  /** Alan süzgeci (25 Ekim kompakt düzen) — aynı kural: madde düzeyinde, boş giriş düşer. */
+  area: ChangeArea | null = null,
+): ChangeEntry[] {
+  if (!kind && !area) return [...entries];
   return entries
-    .map((entry) => ({ ...entry, items: entry.items.filter((item) => item.kind === kind) }))
+    .map((entry) => ({
+      ...entry,
+      items: entry.items.filter((item) => (!kind || item.kind === kind) && (!area || item.area === area)),
+    }))
     .filter((entry) => entry.items.length > 0);
+}
+
+/** Alan başına madde sayısı — alan çiplerinin künyesi. */
+export function areaCounts(entries: readonly ChangeEntry[]): Record<ChangeArea, number> {
+  const counts = Object.fromEntries(CHANGE_AREAS.map((area) => [area, 0])) as Record<ChangeArea, number>;
+  for (const entry of entries) for (const item of entry.items) counts[item.area] += 1;
+  return counts;
+}
+
+/**
+ * Girişin baskın alanı — sürüm akışında çubuğun rengi. En çok maddesi olan
+ * alan; eşitlikte `CHANGE_AREAS` sırasında önce gelen (deterministik, iki
+ * çizim aynı rengi verir).
+ */
+export function dominantArea(entry: ChangeEntry): ChangeArea {
+  const counts = areaCounts([entry]);
+  return CHANGE_AREAS.reduce((best, area) => (counts[area] > counts[best] ? area : best), CHANGE_AREAS[0]);
+}
+
+/** Öne çıkan kart sayısının tavanı — 1440'ta tek sıra, telefonda iki sıra iki sütun. */
+export const FEATURED_MAX = 4;
+
+/**
+ * ÖNE ÇIKANLAR (25 Ekim kompakt düzen): son sürümün en çok üç-dört
+ * maddesi büyük kart, kalanı kompakt ızgara.
+ *
+ * Seçim içerikten: bir maddede `featured: true` varsa yalnız işaretliler
+ * (sırasıyla, tavana kadar). İşaret yoksa KURAL — yazarın sırası önemi
+ * taşıyor (her alanın ilk maddesi o alanın en büyük işi):
+ *   1. her ALANIN ilk "yeni" ve denenebilir (bağlantılı) maddesi,
+ *      `CHANGE_AREAS` sırasıyla — kartlar tek konuya yığılmasın;
+ *   2. tavan dolmadıysa kalan "yeni" ve bağlantılı maddeler, girişteki
+ *      sırayla (alan süzgeci açıkken tek alan kalır).
+ * Kartın işi "Dene" demek: bağlantısız madde kart olmaz. Kalanlar girişteki
+ * sırasını korur.
+ */
+export function splitFeatured(
+  items: readonly ChangeItem[],
+  max: number = FEATURED_MAX,
+): { featured: ChangeItem[]; rest: ChangeItem[] } {
+  let picked: ChangeItem[];
+  if (items.some((item) => item.featured)) {
+    picked = items.filter((item) => item.featured).slice(0, max);
+  } else {
+    const candidates = items.filter((item) => item.kind === "yeni" && item.href);
+    picked = [];
+    for (const area of CHANGE_AREAS) {
+      const first = candidates.find((item) => item.area === area);
+      if (first && picked.length < max) picked.push(first);
+    }
+    for (const item of candidates) {
+      if (picked.length >= max) break;
+      if (!picked.includes(item)) picked.push(item);
+    }
+    /* Kart sırası girişteki sıra: alan turu sırayı bozmasın. */
+    picked.sort((a, b) => items.indexOf(a) - items.indexOf(b));
+  }
+  return { featured: picked, rest: items.filter((item) => !picked.includes(item)) };
 }
 
 /** Etiket başına madde sayısı — süzgeç çiplerinin künyesi. */
@@ -171,12 +246,20 @@ export function entryAreas(entry: ChangeEntry): ChangeArea[] {
 
 const DAY_MS = 86_400_000;
 
-export type ReleasePoint = { date: string; title: string; items: number; x: number };
+export type ReleasePoint = {
+  date: string;
+  title: string;
+  items: number;
+  x: number;
+  /** Baskın alan — çubuğun rengi (25 Ekim kompakt düzen). */
+  area: ChangeArea;
+};
 
 /**
- * SÜRÜM ŞERİDİ (25 Ekim): her giriş bir nokta; `x` ilk ve son giriş
+ * SÜRÜM ŞERİDİ (25 Ekim): her giriş bir çubuk; `x` ilk ve son giriş
  * arasında 0-1 (gün ölçeği, eşit aralık değil: sessiz haftalar boşluk
- * olarak görünsün), noktanın boyu madde sayısından. Eskiden yeniye sıralı.
+ * olarak görünsün), boyu madde sayısından, rengi baskın alandan. Eskiden
+ * yeniye sıralı.
  */
 export function releaseTimeline(entries: readonly ChangeEntry[]): ReleasePoint[] {
   if (entries.length === 0) return [];
@@ -184,7 +267,13 @@ export function releaseTimeline(entries: readonly ChangeEntry[]): ReleasePoint[]
   const sorted = [...entries].sort((a, b) => day(a.date) - day(b.date));
   const first = day(sorted[0].date);
   const span = Math.max(DAY_MS, day(sorted.at(-1)!.date) - first);
-  return sorted.map((entry) => ({ date: entry.date, title: entry.title, items: entry.items.length, x: (day(entry.date) - first) / span }));
+  return sorted.map((entry) => ({
+    date: entry.date,
+    title: entry.title,
+    items: entry.items.length,
+    x: (day(entry.date) - first) / span,
+    area: dominantArea(entry),
+  }));
 }
 
 /** Şeridin ay işaretleri: aralıktaki her ayın 1'i, 0-1 konumuyla. */

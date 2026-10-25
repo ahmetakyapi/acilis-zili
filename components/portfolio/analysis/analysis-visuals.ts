@@ -122,10 +122,8 @@ export function composeAnalysisLead(facts: LeadFacts, templates: LeadTemplates, 
     facts.count <= 1
       ? fill(templates.single, { symbol: facts.largest.symbol })
       : fill(templates.spread, { count: facts.count, effective: format.measure(facts.effective, 1) });
-  const vol =
-    facts.volatility && facts.volatility.benchmark > 0
-      ? fill(templates.volatility, { ratio: format.measure(facts.volatility.portfolio / facts.volatility.benchmark, 1) })
-      : null;
+  const ratio = facts.volatility ? ratioTo(facts.volatility.portfolio, facts.volatility.benchmark) : null;
+  const vol = ratio !== null ? fill(templates.volatility, { ratio: format.measure(ratio, 1) }) : null;
   const rest = vol ? `${spread}${templates.joinRisk}${vol}` : spread;
   const head = facts.sector
     ? fill(templates.sector, {
@@ -146,4 +144,44 @@ export function heaviestSector(
   if (held.length === 0) return null;
   const top = [...held].sort((a, b) => b.portfolio - a.portfolio || b.diff - a.diff)[0]!;
   return { key: top.sector, portfolio: top.portfolio, benchmark: top.benchmark };
+}
+
+/* ------------------------------------------------ kart panosu (25 Ekim) */
+
+export type SectorShare = { sector: string; portfolio: number; benchmark: number; diff: number };
+
+/**
+ * Sektör kartının iki bölümü. Eski panel on bir sektörü tam genişlik
+ * satır olarak basıyordu; tek sektörde yoğunlaşmış portföyde (canlıda
+ * %97,5 Bilgi Teknolojileri) on satır "%0,0" idi. Artık:
+ *
+ *   `held`   portföyde payı olan sektörler, portföy payı sırasıyla (eşitse
+ *            S&P 500 payı büyük olan önde) — her biri satır, kulvar ve çentik;
+ *   `absent` portföyde HİÇ olmayan ama S&P 500'de payı olan sektörler,
+ *            endeksteki payı sırasıyla — kompakt ızgarada yalnız çentik.
+ *
+ * İkisi aynı ölçeği paylaşır (`scale`, iki tarafın en büyük değeri): yokta
+ * duran sektörün çentiği, satırdakilerle doğrudan karşılaştırılır. Hiçbir
+ * satır düşmüyor; yalnız biçimi değişiyor (portföyde payı sıfır olan
+ * sektörün bilgisi S&P 500 payından ibaret).
+ */
+export function sectorBoard(rows: readonly SectorShare[]): { held: SectorShare[]; absent: SectorShare[]; scale: number } {
+  const held = rows
+    .filter((row) => row.portfolio > 0)
+    .sort((a, b) => b.portfolio - a.portfolio || b.benchmark - a.benchmark);
+  const absent = rows
+    .filter((row) => row.portfolio <= 0 && row.benchmark > 0)
+    .sort((a, b) => b.benchmark - a.benchmark);
+  const scale = Math.max(1, ...held.flatMap((row) => [row.portfolio, row.benchmark]), ...absent.map((row) => row.benchmark));
+  return { held, absent, scale };
+}
+
+/**
+ * Portföy ölçüsünün S&P 500'e oranı ("6,7 Kat"). Tepedeki cümle ve
+ * oynaklık kartı AYNI fonksiyonu okur (veri dürüstlüğü 3). Endeksin değeri
+ * sıfır ya da eksiyse oran anlamsız: null, ekranda basılmaz.
+ */
+export function ratioTo(portfolio: number, benchmark: number): number | null {
+  if (!(benchmark > 0) || !Number.isFinite(portfolio)) return null;
+  return portfolio / benchmark;
 }

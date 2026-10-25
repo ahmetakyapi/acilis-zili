@@ -10,6 +10,7 @@ import {
   crowdMoves,
   detectSplit,
   diffPeriods,
+  headlineMove,
   mergeHoldings,
   planFilingIds,
   planPeriods,
@@ -18,6 +19,7 @@ import {
   UNCHANGED_EPSILON,
   type CrowdEntry,
   type FilingRecord,
+  type HeadlineMove,
   type HoldingRecord,
   type Move,
   type PeriodDiff,
@@ -167,6 +169,8 @@ export type FundCard = {
   counts: PeriodDiff["counts"];
   compared: boolean;
   top: TopHolding[];
+  /** Çeyreğin öne çıkan hareketi (`headlineMove`); ilk bildirimde null. */
+  highlight: (HeadlineMove & { ticker: string | null }) | null;
   /** Eskiden yeniye; kartın küçük eğrisi. */
   history: { period: string; longValue: number }[];
 };
@@ -310,6 +314,10 @@ const loadOverview = unstable_cache(
           value: position.value,
           move: position.move,
         })),
+        highlight: (() => {
+          const move = headlineMove(diff);
+          return move ? { ...move, ticker: tickers[move.cusip] ?? null } : null;
+        })(),
         history: plans
           .slice(0, 8)
           .map((plan) => ({ period: plan.period, longValue: planTotals(plan, index).longValue }))
@@ -338,8 +346,10 @@ const loadOverview = unstable_cache(
     };
   },
   /* v3 (1 Ekim): `crowdMoves` aynı yöndeki çift sayımı bırakıyor; eski
-     anahtarın önbelleği yedi kişiyi sekiz diye taşımaya devam ederdi. */
-  ["investors-overview-v3"],
+     anahtarın önbelleği yedi kişiyi sekiz diye taşımaya devam ederdi.
+     v4 (25 Ekim): kart `highlight` taşıyor (dizin kart ızgarası); eski
+     şekil yeni koda `undefined` alanıyla giderdi. */
+  ["investors-overview-v4"],
   { revalidate: REVALIDATE_SECONDS, tags: [INVESTORS_TAG] },
 );
 

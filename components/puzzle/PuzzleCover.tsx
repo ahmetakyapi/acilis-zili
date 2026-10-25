@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState, type Ref } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type Ref } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, CalendarDots, ShareNetwork, Sparkle } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, CalendarDots, Fire, HourglassMedium, ShareNetwork, Sparkle } from "@phosphor-icons/react/dist/ssr";
 import { Button, ButtonLink, LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
 import { InkCanvas } from "@/components/ink/InkCanvas";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ import { MAX_GUESSES, TILE_KINDS, isJoker, isPureWin, nextPuzzleAt, puzzleDayKey
 import type { Locale } from "@/lib/i18n/config";
 import type { StockPuzzleLabels } from "@/lib/i18n/dictionaries/stock-puzzle";
 import { PuzzleChart } from "./PuzzleChart";
+import { fill } from "./puzzle-format";
 import { DAY_MS, countdownText, useNow } from "./puzzle-clock";
 import styles from "./PuzzleCover.module.css";
 
@@ -32,16 +33,31 @@ import styles from "./PuzzleCover.module.css";
  * yanında bir kez çalar (gerekçe StockPuzzle.tsx başında). Konfeti yok.
  * Paylaşım ızgarası ekranda renkli karolarla, panoya emoji karelerle gider
  * (`shareText`); cevap metne girmez.
+ *
+ * OYUN MASASI (25 Ekim, üçüncü kurulum — "daha duygusal ama sade"):
+ *   - Skor büyük (32 piksel): oyunun tek sayısı o.
+ *   - Kazanınca siluet bir kez yeşile döner (PuzzleChart `won`) ve logo,
+ *     çizgi bittiği anda yerine oturur (küçük öğe, `--ease-spring-soft`).
+ *     Bir kez, kısa; kaybedilen oyunda logo kimlikle birlikte sakin girer.
+ *   - Seri ikiyi bulduysa sembolün yanında küçük alev ("3 Günlük Seri"),
+ *     pirinç: kazanmanın yeşilinden ayrı, "sıcak" bir işaret. Arşivde yok
+ *     (arşiv oyunu seriye sayılmaz). Konfeti yok.
+ *   - Sonuç bloğunda paylaşım ızgarası 13 piksellik karelerle (10'du) ve
+ *     geri sayım halka: günün ne kadarının geçtiği çember olarak, kalan
+ *     süre yanında yazıyla.
  */
 export function PuzzleCover({
   state,
   labels,
   locale,
   rang,
+  streak = 0,
   className,
   ref,
 }: {
   ref?: Ref<HTMLElement>;
+  /** Günlük seri (arşivde 0) — ikiyi bulunca alev. */
+  streak?: number;
   state: PuzzleState;
   labels: StockPuzzleLabels;
   locale: Locale;
@@ -58,8 +74,10 @@ export function PuzzleCover({
     <Panel ref={ref} className={cn(styles.cover, className)} data-cevap={answer.symbol}>
       <PanelHeader className="py-2.5" title={won ? labels.wonTitle : labels.lostTitle} meta={labels.chartCaption} />
       <div className={styles.body}>
-        <div className={styles.identity} data-tahta="cevap">
-          <LogoTile symbol={answer.symbol} logoUrl={answer.logoUrl} size="lg" />
+        <div className={cn(styles.identity, won && styles.wonIdentity)} data-tahta="cevap">
+          <span className={styles.logo}>
+            <LogoTile symbol={answer.symbol} logoUrl={answer.logoUrl} size="lg" />
+          </span>
           <div className={styles.names}>
             <p className={styles.name}>{answer.name}</p>
             <p className={styles.symbolLine}>
@@ -68,6 +86,12 @@ export function PuzzleCover({
                 <span className={styles.pureBadge} title={labels.pureNote}>
                   <Sparkle aria-hidden size={12} weight="fill" />
                   {labels.pureBadge}
+                </span>
+              )}
+              {won && streak >= 2 && (
+                <span className={styles.streakBadge}>
+                  <Fire aria-hidden size={12} weight="fill" />
+                  {fill(labels.streakChip, { n: streak })}
                 </span>
               )}
             </p>
@@ -89,6 +113,7 @@ export function PuzzleCover({
             locale={locale}
             label={`${answer.name}. ${labels.chartCaption}`}
             className={styles.chart}
+            won={won}
           />
         )}
 
@@ -145,8 +170,13 @@ export function PuzzleResult({
             {isJoker(row.symbol) ? (
               <span className={styles.jokerSquare} />
             ) : (
-              TILE_KINDS.map((kind) => (
-                <span key={kind} className={styles.square} data-grade={row.tiles[kind] ? (row.tiles[kind]?.grade ?? "far") : "none"} />
+              TILE_KINDS.map((kind, col) => (
+                <span
+                  key={kind}
+                  className={styles.square}
+                  style={{ "--d": index * 4 + col } as CSSProperties}
+                  data-grade={row.tiles[kind] ? (row.tiles[kind]?.grade ?? "far") : "none"}
+                />
               ))
             )}
           </span>
@@ -194,10 +224,12 @@ export function PuzzleResult({
  * uykuda geçip döndüğünde) sayfa bir kez tazelenir; sunucu yeni günü basar
  * ve oyun `key={day}` ile baştan kurulur (`app/(app)/bulmaca/page.tsx`).
  *
- * Kulvar günün ne kadarının geçtiğini gösterir: sayı kalan süreyi, şerit
- * yolun neresinde olunduğunu söylüyor. Sunucu çiziminde boş (saat
- * istemcide), yeri sabit: CLS yok. Tek satır: ad, kulvar, süre.
+ * Halka günün ne kadarının geçtiğini gösterir (25 Ekim, üçüncü kurulum;
+ * önceden düz kulvardı): sayı kalan süreyi, çember yolun neresinde
+ * olunduğunu söylüyor; dolunca yeni bulmaca. Sunucu çiziminde boş (saat
+ * istemcide), yeri sabit: CLS yok.
  */
+const RING_R = 17;
 function NextPuzzle({ labels, day }: { labels: StockPuzzleLabels; day: string }) {
   const router = useRouter();
   const now = useNow();
@@ -212,11 +244,27 @@ function NextPuzzle({ labels, day }: { labels: StockPuzzleLabels; day: string })
   const passed = now === null ? 0 : Math.min(1, Math.max(0, 1 - (target - now) / DAY_MS));
   return (
     <div className={styles.next}>
-      <span className={styles.nextLabel}>{labels.next}</span>
-      <span aria-hidden className={styles.nextLane}>
-        <span className={styles.nextFill} style={{ transform: `scaleX(${passed})` }} />
+      <span aria-hidden className={styles.ring}>
+        <svg viewBox="0 0 40 40" className={styles.ringSvg}>
+          <circle cx="20" cy="20" r={RING_R} className={styles.ringTrack} />
+          <circle
+            cx="20"
+            cy="20"
+            r={RING_R}
+            pathLength={100}
+            className={styles.ringFill}
+            style={{ strokeDashoffset: 100 - passed * 100 }}
+          />
+        </svg>
+        <HourglassMedium size={14} weight="bold" className={styles.ringIcon} />
       </span>
-      <span className={cn(styles.nextTime, "numeral")}>{now === null ? "" : countdownText(target - now, labels)}</span>
+      <span className={styles.nextText}>
+        <span className={styles.nextLabel}>{labels.next}</span>
+        <span className={cn(styles.nextTime, "numeral")}>
+          <span className="sr-only">{labels.nextLeft}: </span>
+          {now === null ? "" : countdownText(target - now, labels)}
+        </span>
+      </span>
     </div>
   );
 }

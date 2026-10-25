@@ -133,13 +133,17 @@
 /* Yer tutucu: başlık + cümle ve sahnenin ölçüsü. Sahnenin yüksekliği
    veriye bağlı (en uzun bina ve etiket katları); oranlar 23 Ekim verisiyle
    ölçüldü (kap içi en → sahne): 322 → 392 (iki sıra), 672 → 301, 928 →
-   388, 1152 → 280, 1272 → 303, 1552 → 312. */
+   388, 1152 → 280, 1272 → 303, 1552 → 312.
+   ETİKET BİNASININ ÜSTÜNDE turundan sonra (25 Ekim, aynı veri; etiket
+   yana kaçmıyor, gerekirse ikinci kata çıkıyor): 320 → 469 (telefonda
+   Apple ve T-Mobile ikinci katta), 670 → 280, 1150 → 296, 1270 → 321,
+   1550 → 312. */
 .skeleton { display: grid; gap: 12px; }
 .skeletonHead { height: 129px; width: 100%; }
-.skeletonScene { width: 100%; height: 122cqw; }
-@container (min-width: 600px) { .skeletonScene { height: 44cqw; } }
+.skeletonScene { width: 100%; height: 146cqw; }
+@container (min-width: 600px) { .skeletonScene { height: 42cqw; } }
 @container (min-width: 700px) { .skeletonHead { height: 75px; } }
-@container (min-width: 1080px) { .skeletonScene { height: 24cqw; } }
+@container (min-width: 1080px) { .skeletonScene { height: 25.5cqw; } }
 @container (min-width: 1500px) { .skeletonScene { height: 20cqw; } }
 
 @media (prefers-reduced-motion: reduce) {

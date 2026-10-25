@@ -27,6 +27,9 @@ export const briefLedgerTr = {
   foldStocks: "Hisseleri Göster",
   foldLess: "Daha Az Göster",
   indicesLabel: "Endeksler, Kapanıştan Kapanışa",
+  /* Endeks kartının ölçek künyesi (kompakt bant, 25 Ekim): eksen satırının
+     yerine etiketin sağında. {value} "%1,2" biçiminde. */
+  scale: "Ölçek ±{value}",
   metricsLabel: "Öne Çıkan Ölçüler",
   stocksLabel: "Bültende Geçen Hisseler",
   heroCaption: "S&P 500, Günlük Değişim",
@@ -50,6 +53,9 @@ export const briefLedgerTr = {
   holidayAria: "{day}: Tatil, seans yok",
   /* Bölüm dizini (yalnız iki ve daha çok ara başlıklı sayıda). */
   tocLabel: "Bu Sayıda",
+  /* Künyenin tek satırı; yöntemin tamamı `dataNote`ta, katlı ayrıntıda. */
+  dataNoteShort: "Kapanıştan kapanışa: Alpaca SIP, U.S. Treasury, Cboe ve TCMB. O seansa ait olmayan ölçü gösterilmez.",
+  dataNoteMore: "Kaynak ve Yöntem",
   dataNote:
     "Endeks ve hisse yüzdeleri kapanıştan kapanışa, günlük işlem barlarından (Alpaca SIP); Günün Posteri ile aynı hesap. 10 yıllık faiz U.S. Treasury, VIX Cboe, dolar/TL TCMB bülteni. Verisi o seansa ait olmayan ölçü gösterilmez. Bülten metnindeki yüzde yazıldığı anın kotasyonundan gelebilir (akşam seansı dahil); bant asıl seansın kapanışını gösterir.",
   /* Veriden kurulan tek cümle — şablonlar. {list} birden çok adı taşır. */
@@ -83,6 +89,7 @@ export const briefLedgerEn: typeof briefLedgerTr = {
   foldStocks: "Show Stocks",
   foldLess: "Show Less",
   indicesLabel: "Indices, Close to Close",
+  scale: "Scale ±{value}",
   metricsLabel: "Key Measures",
   stocksLabel: "Stocks in This Brief",
   heroCaption: "S&P 500, Daily Change",
@@ -102,6 +109,8 @@ export const briefLedgerEn: typeof briefLedgerTr = {
   dayAria: "{day}: {value}",
   holidayAria: "{day}: holiday, no session",
   tocLabel: "In This Issue",
+  dataNoteShort: "Close to close: Alpaca SIP, U.S. Treasury, Cboe and the CBRT. A measure not from that session is not shown.",
+  dataNoteMore: "Sources and Method",
   dataNote:
     "Index and stock percentages are close to close, from daily trade bars (Alpaca SIP), the same calculation as the Day's Poster. 10-year yield from the U.S. Treasury, VIX from Cboe, USD/TRY from the CBRT bulletin. A measure whose data is not from that session is not shown. A percentage in the brief text may come from the quote at the time of writing (including after-hours); the ledger shows the regular-session close.",
   story: {

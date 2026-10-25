@@ -79,8 +79,10 @@ export function stepOf(kind: ClueKind): number {
 
 export type Clue =
   | { kind: "silhouette"; points: number[] }
-  /** GICS ana sektörü, İngilizce anahtar — ekranda `sectorLabel` ile. */
-  | { kind: "sector"; sector: string }
+  /** GICS ana sektörü, İngilizce anahtar — ekranda `sectorLabel` ile.
+      `gics` ekrana inen ipucunda ham adı taşır (karonun sektör simgesi,
+      `components/puzzle/ClueBoard.tsx`); dile çevrilen ad `sector`te. */
+  | { kind: "sector"; sector: string; gics?: string }
   /** Yıllık temettü verimi, yüzde; 0 ödemiyor demek. */
   | { kind: "dividend"; yieldPct: number }
   | { kind: "capBand"; band: number }

@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { GuideHint } from "@/components/article/GuideHint";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
+import { FoldToggle } from "@/components/ui/FoldToggle";
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import { AnalysisNote } from "@/components/portfolio/analysis/AnalysisNote";
@@ -12,6 +13,8 @@ import {
   heaviestSector,
   pairScale,
   clamp01,
+  ratioTo,
+  sectorBoard,
   weightStrip,
 } from "@/components/portfolio/analysis/analysis-visuals";
 import {
@@ -19,6 +22,7 @@ import {
   DataStamp,
   EmptyState,
   FilterChip,
+  LogoTile,
   Panel,
   PanelHeader,
   PanelSkeleton,
@@ -67,10 +71,13 @@ import styles from "./Analysis.module.css";
  * örnekler" olarak SEMBOLÜN ALFABE SIRASIYLA ve puansız listelenir; senaryo yalnız bir
  * HESAPtır. Her panelde "Yatırım Tavsiyesi Değildir" künyesi.
  *
- * Ekran sırası kurala göre: başlık → ana görsel (sektör dağılımı ve S&P
- * 500) → ölçü ızgarası (yoğunlaşma ve risk) → korelasyon, kur ve temettü,
- * bilanço haftaları → eksik sektörler ve senaryo → Claude'un metni →
- * damga → rehber.
+ * KART PANOSU (25 Ekim, sahibinin isteği: "bu kadar yatayda büyük kart
+ * yerine yan yana kartlar ve detaylar; kullanıcı daha çok şeyi kaydırmadan
+ * görüp ulaşabilsin, daha görsel olsun"). Ekran sırası kurala göre: kompakt
+ * başlık bandı (tepe cümlesi içinde) → Temel Ölçüler (künye şeridi gibi
+ * beş kart) → sektör dağılımı (ana görsel) ile yoğunlaşma ve bilanço
+ * haftaları yan yana → korelasyon ile kur ve temettü yan yana → eksik
+ * sektörler → senaryo → Claude'un metni → damga → rehber.
  */
 
 export type AnalysisSource = { userId: string } | { fixture: AnalysisHolding[] };
@@ -89,24 +96,23 @@ export async function AnalysisScreen({
   noteEndpoint?: string;
 }) {
   const { locale, t } = await getI18n();
-  const A = t.portfolioAnalysis;
   return (
     <MotionExperience className={directory.page}>
       <ScrollProgress />
-      <DirectoryHeader title={A.title} description={A.description}>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <ButtonLink href="/portfoy" variant="ghost">
-            <ArrowLeft size={16} weight="bold" aria-hidden />
-            {A.back}
-          </ButtonLink>
-        </div>
-      </DirectoryHeader>
-
+      {/* Bant hem bekleme karesinde hem sonuçta aynı: başlık ilk baytta
+          gelir, tepe cümlesinin yeri iskeletle tutulur (cümle ölçülerden
+          kurulduğu için verinin arkasında). */}
       <Suspense
         fallback={
           <>
-            <PanelSkeleton rows={6} />
-            <PanelSkeleton rows={3} />
+            <AnalysisHeader t={t} footer={<span className={styles.leadSkeleton} aria-hidden />} />
+            {/* İskelet en az bir ekran boyu: kısa kalınca alttaki rehber
+                bloğu 1920×1080'de ilk ekrana giriyor, veri gelince aşağı
+                itiliyordu (CLS 0,07-0,14, ölçüldü). Pano bu boydan uzun. */}
+            <div className={styles.boardSkeleton}>
+              <PanelSkeleton rows={3} />
+              <PanelSkeleton rows={6} />
+            </div>
           </>
         }
       >
@@ -115,6 +121,27 @@ export async function AnalysisScreen({
 
       <GuideHint label={t.guide.contextLabel} locale={locale} slugs={["cesitlendirme", "volatilite", "kur-riski"]} className="pt-1" />
     </MotionExperience>
+  );
+}
+
+/**
+ * KOMPAKT BAŞLIK BANDI (25 Ekim, sahibinin isteği: "bu kadar yatayda büyük
+ * kart yerine yan yana kartlar; kullanıcı daha çok şeyi kaydırmadan
+ * görsün"). Eski kapak 1440'ta 238 piksel yer tutuyordu: dev başlık, iki
+ * satır açıklama, ayrı satırda "Portföye Dön" ve sağda boş dekor yayları;
+ * tepe cümlesi kartın DIŞINDA iki satır daha. Artık tek bant: başlık,
+ * yanında tek satırlık açıklama, sağda küçük buton; tepe cümlesi bandın alt
+ * satırında, saç teliyle ayrılmış (DirectoryHeader `compact` + `footer`).
+ */
+function AnalysisHeader({ t, footer }: { t: Dictionary; footer?: ReactNode }) {
+  const A = t.portfolioAnalysis;
+  return (
+    <DirectoryHeader title={A.title} description={t.portfolioAnalysisVisuals.board.description} compact footer={footer}>
+      <ButtonLink href="/portfoy" variant="ghost" size="sm">
+        <ArrowLeft size={14} weight="bold" aria-hidden />
+        {A.back}
+      </ButtonLink>
+    </DirectoryHeader>
   );
 }
 
@@ -153,9 +180,12 @@ async function AnalysisBody({
     const loaded = await getUserAnalysis(source.userId);
     if (!loaded.ok) {
       return (
-        <Panel>
-          <EmptyState title={A.unavailableTitle} hint={A.unavailableBody} scene="mishap" />
-        </Panel>
+        <>
+          <AnalysisHeader t={t} />
+          <Panel>
+            <EmptyState title={A.unavailableTitle} hint={A.unavailableBody} scene="mishap" />
+          </Panel>
+        </>
       );
     }
     analysis = loaded.analysis;
@@ -167,31 +197,50 @@ async function AnalysisBody({
 
   if (count === 0) {
     return (
-      <Panel>
-        <EmptyState
-          title={A.emptyTitle}
-          hint={A.emptyBody}
-          scene="ledger"
-          action={
-            <ButtonLink href="/portfoy" variant="primary">
-              {A.back}
-            </ButtonLink>
-          }
-        />
-      </Panel>
+      <>
+        <AnalysisHeader t={t} />
+        <Panel>
+          <EmptyState
+            title={A.emptyTitle}
+            hint={A.emptyBody}
+            scene="ledger"
+            action={
+              <ButtonLink href="/portfoy" variant="primary">
+                {A.back}
+              </ButtonLink>
+            }
+          />
+        </Panel>
+      </>
     );
   }
   const risk = analysis?.risk ?? null;
   if (!analysis || !risk) {
     return (
-      <Panel>
-        <EmptyState title={A.noDataTitle} hint={A.noDataBody} scene="mishap" />
-      </Panel>
+      <>
+        <AnalysisHeader t={t} />
+        <Panel>
+          <EmptyState title={A.noDataTitle} hint={A.noDataBody} scene="mishap" />
+        </Panel>
+      </>
     );
   }
 
   const sessionLabel = fill(A.session, { date: dateLong(risk.session, locale) });
   const partial = risk.covered < risk.total ? fill(A.partial, { covered: risk.covered, total: risk.total }) : null;
+  const C = A.concentration;
+  const r = risk.risk;
+  const missing = r ? risk.covered - r.covered : 0;
+  /* Risk ölçülerinin künyesi (pencere, eksik pozisyon) bandın alt satırında,
+     cümlenin hemen altında: cümle de, hemen alttaki ölçü kartları da bu
+     pencereden. Eski "Yoğunlaşma ve Risk" panelinin künyesiydi; kartlar
+     panelsiz şeride geçince künye kartı aynı bilgiyle 1440'ta 100 piksel
+     ayrı yer tutuyordu. */
+  const riskNotes = [
+    r ? fill(C.window, { start: dateLong(r.start, locale), end: dateLong(r.end, locale), sessions: r.sessions }) : C.riskUnavailable,
+    r && missing > 0 ? fill(C.riskPartial, { covered: r.covered, missing }) : null,
+    partial,
+  ].filter((note): note is string => note !== null);
 
   const lead = composeAnalysisLead(
     {
@@ -213,22 +262,46 @@ async function AnalysisBody({
   return (
     <>
       {/* TEPEDEKİ TEK CÜMLE (25 Ekim, görsel tur): ölçülerden kurulur,
-          yorum değil (composeAnalysisLead, testli). Ekran düzeninde
-          başlığın altı, ana görselin üstü. */}
-      <div className={styles.leadBlock} data-motion-reveal>
-        <p className={styles.leadText}>{lead}</p>
-        <p className={styles.leadNote}>{V.lead.note}</p>
+          yorum değil (composeAnalysisLead, testli). Kart panosu turunda
+          bandın alt satırına girdi; kartın dışında iki satır kalın metin
+          olarak 1440'ta 92 piksel ayrı yer tutuyordu. */}
+      <AnalysisHeader
+        t={t}
+        footer={
+          /* Telefonda hesap künyesi katlı (FoldToggle `phone`, JS'siz):
+             390'da altı satırla bandı 398 piksele çıkarıyor, ölçü
+             kartlarının ikinci sırasını katın altına itiyordu. 640 ve
+             üstünde katlama yok, künye cümlenin altında tek paragraf. */
+          <FoldToggle id="analiz-hesap-notu" hiddenCount={riskNotes.length} more={V.board.notesMore} less={V.board.notesLess} phone>
+            <div className={styles.leadBlock}>
+              <p className={styles.leadText}>{lead}</p>
+              <p className={styles.leadNote}>
+                {`${sessionLabel}. ${V.lead.note}`}
+                <span data-fold>{` ${riskNotes.join(" ")}`}</span>
+              </p>
+            </div>
+          </FoldToggle>
+        }
+      />
+      {/* KART PANOSU. Sıra ekran düzeni kuralının sırası: ölçü kartları
+          (künye şeridi gibi en üstte), ana görsel (sektör), yanında
+          yoğunlaşma; sonra korelasyon, kur, bilanço, eksik sektörler ve
+          senaryo. 1100 ve üstünde iki kolon (7:5); bilanço haftaları,
+          eksik sektörler ve senaryo tam genişlik. Dar ekranda tek kolon,
+          aynı sıra. Ölçüm Analysis.module.css → `.board`. */}
+      <div className={styles.board}>
+        <KeyStrip risk={risk} locale={locale} A={A} V={V} />
+        <SectorPanel risk={risk} analysis={analysis} locale={locale} A={A} V={V} partial={partial} />
+        <ConcentrationPanel risk={risk} locale={locale} A={A} V={V} />
+        <CorrelationPanel risk={risk} locale={locale} A={A} V={V} />
+        <div className={styles.stack} data-area="money">
+          <CurrencyPanel risk={risk} locale={locale} A={A} />
+          <DividendPanel risk={risk} locale={locale} A={A} />
+        </div>
+        <EarningsPanel risk={risk} locale={locale} A={A} />
+        <GapsPanel analysis={analysis} locale={locale} A={A} />
+        <ScenarioPanel analysis={analysis} risk={risk} fund={fund} weight={weight} basePath={basePath} locale={locale} A={A} V={V} />
       </div>
-      <SectorPanel risk={risk} analysis={analysis} locale={locale} A={A} meta={sessionLabel} partial={partial} />
-      <RiskPanel risk={risk} locale={locale} A={A} V={V} partial={partial} />
-      <CorrelationPanel risk={risk} locale={locale} A={A} V={V} />
-      <div className={styles.pair}>
-        <CurrencyPanel risk={risk} locale={locale} A={A} />
-        <DividendPanel risk={risk} locale={locale} A={A} />
-      </div>
-      <EarningsPanel risk={risk} locale={locale} A={A} />
-      <GapsPanel analysis={analysis} locale={locale} A={A} />
-      <ScenarioPanel analysis={analysis} risk={risk} fund={fund} weight={weight} basePath={basePath} locale={locale} A={A} V={V} />
       <AnalysisNote locale={locale} labels={A.note} disclaimer={A.notAdvice} endpoint={noteEndpoint} />
       <DataStamp labels={t.data} source="Alpaca · State Street · TCMB" locale={locale} note={fill(A.stampNote, { date: dateLong(risk.session, locale) })} />
     </>
@@ -238,106 +311,32 @@ async function AnalysisBody({
 type Labels = Dictionary["portfolioAnalysis"];
 type VisualLabels = Dictionary["portfolioAnalysisVisuals"];
 
-/* --------------------------------------------------------- ana görsel */
-
-function SectorPanel({
-  risk,
-  analysis,
-  locale,
-  A,
-  meta,
-  partial,
-}: {
-  risk: PortfolioRisk;
-  analysis: PortfolioAnalysis;
-  locale: Locale;
-  A: Labels;
-  meta: string;
-  partial: string | null;
-}) {
-  const L = A.sectors;
-  const sectors = risk.sectors;
-  const rows = sectors ? sectors.rows.filter((row) => row.portfolio > 0 || row.benchmark > 0) : [];
-  const scale = Math.max(1, ...rows.flatMap((row) => [row.portfolio, row.benchmark]));
-  /* Fark yarım puanın altındaysa "yakın": ondalık hassasiyet uydurmuyoruz. */
-  const EVEN_PTS = 0.5;
-  return (
-    <Panel id="sektorler">
-      <PanelHeader title={L.title} meta={meta} />
-      <div className={styles.body}>
-        {sectors ? (
-          <>
-            <ul className={styles.legend}>
-              <li>
-                <span className={styles.swatchBar} aria-hidden />
-                {L.legendPortfolio}
-              </li>
-              <li>
-                <span className={styles.swatchTick} aria-hidden />
-                {L.legendBenchmark}
-              </li>
-            </ul>
-            <ul className={styles.sectorList}>
-              {rows.map((row, index) => {
-                const diff = Math.abs(row.diff);
-                const diffText =
-                  diff < EVEN_PTS
-                    ? L.even
-                    : fill(row.diff > 0 ? L.heavier : L.lighter, { pts: formatPrice(diff, locale, { digits: 1 }) });
-                return (
-                  <li key={row.sector} className={styles.sectorRow}>
-                    <span className={styles.sectorName}>{sectorLabel(row.sector, locale) ?? row.sector}</span>
-                    <span className={styles.track} aria-hidden>
-                      <span
-                        className={styles.trackFill}
-                        style={{ width: `${(row.portfolio / scale) * 100}%`, animationDelay: `${index * 40}ms` } as CSSProperties}
-                      />
-                      <span className={styles.trackTick} style={{ left: `${(row.benchmark / scale) * 100}%` }} />
-                    </span>
-                    <span className={`numeral ${styles.sectorFigures}`}>
-                      <span className={styles.sectorShare}>{pct(row.portfolio, locale)}</span>
-                      <span className={styles.sectorBench}>{tieFigures(`${L.legendBenchmark} ${pct(row.benchmark, locale)}`)}</span>
-                      <span className={styles.sectorDiff}>{diffText}</span>
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </>
-        ) : (
-          <p className={styles.lead}>{L.unavailable}</p>
-        )}
-      </div>
-      <div className={styles.notes}>
-        {sectors && analysis.benchmark && <p>{fill(L.source, { date: dateLong(analysis.benchmark.asOf, locale) })}</p>}
-        {sectors && sectors.unclassified > 0 && <p>{fill(L.unclassified, { share: pct(sectors.unclassified, locale) })}</p>}
-        {partial && <p>{partial}</p>}
-        <p>{A.notAdvice}</p>
-      </div>
-    </Panel>
-  );
-}
-
-/* ------------------------------------------------------- ölçü ızgarası */
+/* ------------------------------------------------------- ölçü kartları */
 
 function Metric({
   label,
   value,
+  aside,
   sub,
   tone,
   mono,
   visual,
+  card,
 }: {
   label: string;
   value: string;
+  /** Değerin yanında küçük künye ("6,7 Kat"): aynı ölçünün başka okunuşu. */
+  aside?: string;
   sub?: string;
   tone?: string;
   mono?: boolean;
   /** Sayının altındaki çizim (kulvar, eş çizgi, halka) — sayının kopyası, aria-hidden. */
   visual?: ReactNode;
+  /** Sayfa zemininde duran kart (künye şeridi): sitenin kartı, gömük ton değil. */
+  card?: boolean;
 }) {
   return (
-    <div className={styles.metric}>
+    <div className={card ? `panel ${styles.metric} ${styles.keyCard}` : styles.metric}>
       <dt className={styles.metricLabel}>{label}</dt>
       {/* Açıklama etiketin altında, değer kutunun dibinde: açıklamaları
           farklı uzunlukta olsa da yan yana değerler aynı hatta biter.
@@ -345,8 +344,11 @@ function Metric({
           kulvarlık yer): değerler yine aynı hatta biter. */}
       <dd className="contents">
         {sub && <span className={styles.metricSub}>{sub}</span>}
-        <span className={`numeral ${styles.metricValue} ${mono ? styles.mono : ""}`} data-tone={tone}>
-          {value}
+        <span className={styles.metricValueRow}>
+          <span className={`numeral ${styles.metricValue} ${mono ? styles.mono : ""}`} data-tone={tone}>
+            {value}
+          </span>
+          {aside && <span className={`numeral ${styles.metricAside}`}>{tieFigures(aside)}</span>}
         </span>
         {visual && (
           <span aria-hidden className={styles.metricVisual}>
@@ -417,6 +419,7 @@ function PairLanes({
   );
 }
 
+
 /** Halkanın tuvali ve yarıçapı (SVG birimi). */
 const RING_BOX = 44;
 const RING_R = 18;
@@ -427,25 +430,226 @@ const RING_R = 18;
  * taşıyor. Çizim `.ring-fill` ile kendini bir kez çiziyor (globals.css;
  * hareketi azaltana son kare). Nötr ton: dağınıklık bir yargı değil.
  */
-function SpreadRing({ effective, count }: { effective: number; count: number }) {
+function ShareRing({ share }: { share: number }) {
   const circumference = 2 * Math.PI * RING_R;
-  const share = clamp01(count > 0 ? effective / count : 0);
+  const center = RING_BOX / 2;
   return (
     <svg className={styles.ring} viewBox={`0 0 ${RING_BOX} ${RING_BOX}`} aria-hidden>
-      <circle cx={RING_BOX / 2} cy={RING_BOX / 2} r={RING_R} className={styles.ringTrack} />
+      <circle cx={center} cy={center} r={RING_R} className={styles.ringTrack} />
       <circle
         className={`ring-fill ${styles.ringFill}`}
-        cx={RING_BOX / 2}
-        cy={RING_BOX / 2}
+        cx={center}
+        cy={center}
         r={RING_R}
         strokeDasharray={circumference}
-        strokeDashoffset={circumference * (1 - share)}
-        transform={`rotate(-90 ${RING_BOX / 2} ${RING_BOX / 2})`}
+        strokeDashoffset={circumference * (1 - clamp01(share))}
+        transform={`rotate(-90 ${center} ${center})`}
         style={{ "--ring-circumference": circumference } as CSSProperties}
       />
     </svg>
   );
 }
+
+/** Beta ölçeğinin tabanı: ölçek hiçbir zaman 1,5'in altına inmez, 1 çentiği hep içeride. */
+const BETA_FLOOR = 1.5;
+
+/**
+ * TEMEL ÖLÇÜLER — panonun künye şeridi (25 Ekim, kart panosu). Eski
+ * düzende bu sayılar "Yoğunlaşma ve Risk" panelinin altı kartıydı ve
+ * 1440'ta sayfanın 1,7 ekran aşağısında başlıyordu; tepede on bir satırlık
+ * sektör paneli duruyordu. Şimdi bandın hemen altında yan yana beş kart
+ * (ekran düzeninde künye şeridinin yeri): en ağır sektör, etkin pozisyon
+ * sayısı (halka), oynaklık, beta ve en büyük düşüş. Etkin pozisyon dışında
+ * her kart portföyü ve S&P 500'ü AYNI ölçekte iki kulvarla gösteriyor;
+ * sayılar eski panelin aynısı, aynı kaynaktan. Kartlar panelsiz (Günün
+ * Grafiği panosunun künye kartları gibi); başlık ekran okuyucu için.
+ * Künyesi (hesap penceresi) bandın alt satırında, cümlenin altında.
+ */
+function KeyStrip({ risk, locale, A, V }: { risk: PortfolioRisk; locale: Locale; A: Labels; V: VisualLabels }) {
+  const L = A.concentration;
+  const c = risk.concentration;
+  const r = risk.risk;
+  const top = risk.sectors ? heaviestSector(risk.sectors.rows) : null;
+  const ratio = r ? ratioTo(r.volatility, r.benchmarkVolatility) : null;
+  const cards = 1 + (top ? 1 : 0) + (r ? 3 : 0);
+  return (
+    <section id="risk" data-area="keys" aria-labelledby="analiz-olculer" className={styles.keyStrip}>
+      <h2 id="analiz-olculer" className="sr-only">
+        {V.board.keysTitle}
+      </h2>
+      <dl className={`${styles.metrics} ${styles.keys}`} data-count={cards} data-motion-stagger>
+        {top && (
+          <Metric
+            card
+            label={V.board.heaviest}
+            value={pct(top.portfolio, locale)}
+            sub={sectorLabel(top.key, locale) ?? top.key}
+            visual={<PairLanes portfolio={top.portfolio} benchmark={top.benchmark} labels={V.compare} />}
+          />
+        )}
+        <Metric
+          card
+          label={L.effective}
+          value={num(c.effectiveCount, locale, 1)}
+          aside={`/ ${c.count}`}
+          sub={fill(V.board.effectiveSub, { count: c.count })}
+          visual={<ShareRing share={c.count > 0 ? c.effectiveCount / c.count : 0} />}
+        />
+        {r && (
+          <>
+            <Metric
+              card
+              label={L.volatility}
+              value={pct(r.volatility, locale)}
+              aside={ratio !== null ? fill(V.board.ratio, { ratio: num(ratio, locale, 1) }) : undefined}
+              sub={fill(L.vsBenchmark, { value: pct(r.benchmarkVolatility, locale) })}
+              visual={<PairLanes portfolio={r.volatility} benchmark={r.benchmarkVolatility} labels={V.compare} />}
+            />
+            <Metric
+              card
+              label={L.beta}
+              value={num(r.beta, locale)}
+              sub={L.betaHint}
+              visual={<PairLanes portfolio={r.beta} benchmark={1} labels={V.compare} floor={BETA_FLOOR} tick={1} />}
+            />
+            <Metric
+              card
+              label={L.drawdown}
+              value={formatPercent(r.maxDrawdown.depth, locale, 1)}
+              tone={directionOf(r.maxDrawdown.depth)}
+              sub={fill(L.vsBenchmark, { value: formatPercent(r.benchmarkMaxDrawdown, locale, 1) })}
+              visual={
+                <PairLanes
+                  portfolio={r.maxDrawdown.depth}
+                  benchmark={r.benchmarkMaxDrawdown}
+                  labels={V.compare}
+                  tone={r.maxDrawdown.depth < 0 ? "down" : undefined}
+                />
+              }
+            />
+          </>
+        )}
+      </dl>
+    </section>
+  );
+}
+
+/* --------------------------------------------------------- ana görsel */
+
+/**
+ * SEKTÖR DAĞILIMI ve S&P 500 — kompakt (25 Ekim, kart panosu). Eski panel
+ * on bir sektörü 1400 piksellik satırlar olarak basıyordu; tek sektörde
+ * yoğunlaşmış portföyde on satır "%0,0 · 12,1 Puan Eksik" idi. Şimdi
+ * portföyde payı olan sektörler satır (kulvar + S&P 500 çentiği + fark),
+ * portföyde hiç olmayanlar altta "Portföyde Olmayan Sektörler" ızgarasında:
+ * ad, S&P 500 payı ve boş kulvarda yalnız çentik. İkisi aynı ölçekte
+ * (`sectorBoard`), hiçbir sektör düşmüyor.
+ */
+function SectorPanel({
+  risk,
+  analysis,
+  locale,
+  A,
+  V,
+  partial,
+}: {
+  risk: PortfolioRisk;
+  analysis: PortfolioAnalysis;
+  locale: Locale;
+  A: Labels;
+  V: VisualLabels;
+  partial: string | null;
+}) {
+  const L = A.sectors;
+  const sectors = risk.sectors;
+  const board = sectors ? sectorBoard(sectors.rows) : null;
+  /* Fark yarım puanın altındaysa "yakın": ondalık hassasiyet uydurmuyoruz. */
+  const EVEN_PTS = 0.5;
+  const at = (value: number) => `${board ? clamp01(value / board.scale) * 100 : 0}%`;
+  /* Lejant başlığın sağında (kart panosu): ayrı satırda 35 piksel tutuyordu. */
+  const legend = sectors ? (
+    <ul className={styles.legend}>
+      <li>
+        <span className={styles.swatchBar} aria-hidden />
+        {L.legendPortfolio}
+      </li>
+      <li>
+        <span className={styles.swatchTick} aria-hidden />
+        {L.legendBenchmark}
+      </li>
+    </ul>
+  ) : undefined;
+  return (
+    <Panel id="sektorler" data-area="sector" className={styles.cell}>
+      <PanelHeader title={L.title} meta={legend} />
+      <div className={styles.body}>
+        {sectors && board ? (
+          <>
+            {board.held.length > 0 && (
+              <ul className={styles.sectorList}>
+                {board.held.map((row, index) => {
+                  const diff = Math.abs(row.diff);
+                  const diffText =
+                    diff < EVEN_PTS
+                      ? L.even
+                      : fill(row.diff > 0 ? L.heavier : L.lighter, { pts: formatPrice(diff, locale, { digits: 1 }) });
+                  return (
+                    <li key={row.sector} className={styles.sectorRow}>
+                      <span className={styles.sectorName}>{sectorLabel(row.sector, locale) ?? row.sector}</span>
+                      <span className={`numeral ${styles.sectorShare}`}>{pct(row.portfolio, locale)}</span>
+                      <span className={styles.track} aria-hidden>
+                        <span
+                          className={styles.trackFill}
+                          style={{ width: at(row.portfolio), animationDelay: `${index * 40}ms` } as CSSProperties}
+                        />
+                        <span className={styles.trackTick} style={{ left: at(row.benchmark) }} />
+                      </span>
+                      <span className={`numeral ${styles.sectorBench}`}>{tieFigures(`${L.legendBenchmark} ${pct(row.benchmark, locale)}`)}</span>
+                      <span className={`numeral ${styles.sectorDiff}`}>{tieFigures(diffText)}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            {board.absent.length > 0 && (
+              <div className={styles.absent}>
+                <p className={styles.groupTitle}>{V.board.absent}</p>
+                <ul className={styles.absentGrid}>
+                  {board.absent.map((row) => {
+                    const name = sectorLabel(row.sector, locale) ?? row.sector;
+                    const bench = pct(row.benchmark, locale);
+                    return (
+                      <li key={row.sector} className={styles.absentItem} aria-label={fill(V.board.absentAria, { sector: name, bench })}>
+                        <span className={styles.absentName} aria-hidden>
+                          {name}
+                        </span>
+                        <span className={`numeral ${styles.absentShare}`} aria-hidden>
+                          {bench}
+                        </span>
+                        <span className={styles.absentLane} aria-hidden>
+                          <span className={styles.trackTick} style={{ left: at(row.benchmark) }} />
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className={styles.lead}>{L.unavailable}</p>
+        )}
+      </div>
+      <div className={styles.notes}>
+        {sectors && analysis.benchmark && <p>{fill(L.source, { date: dateLong(analysis.benchmark.asOf, locale) })}</p>}
+        {sectors && sectors.unclassified > 0 && <p>{fill(L.unclassified, { share: pct(sectors.unclassified, locale) })}</p>}
+        {partial && <p>{partial}</p>}
+      </div>
+    </Panel>
+  );
+}
+
+/* -------------------------------------------------------- yoğunlaşma */
 
 /**
  * POZİSYONLARIN AĞIRLIĞI — yüzde yüzlük şerit (25 Ekim). "En büyük
@@ -453,7 +657,8 @@ function SpreadRing({ effective, count }: { effective: number; count: number }) 
  * bakışta veriyor: portföyün ne kadarını kaç dilim taşıyor. Dilimler
  * ağırlık sırasında, tonu sıra ilerledikçe açılıyor (renk değil koyuluk —
  * kimlik etiketle, yön renkleri burada yok). Dar dilimin adı şeridin
- * altındaki dizinde; dizin her dilimi yazdığı için şerit aria-hidden.
+ * altındaki dizinde, logosuyla (kart panosu turu); şeridin `aria-label`ı
+ * her dilimi yazdığı için dizin aria-hidden.
  */
 function WeightStrip({ risk, locale, V }: { risk: PortfolioRisk; locale: Locale; V: VisualLabels }) {
   const segments = weightStrip(risk.rows);
@@ -481,6 +686,7 @@ function WeightStrip({ risk, locale, V }: { risk: PortfolioRisk; locale: Locale;
               data-rest={segment.symbol === null || undefined}
               style={{ "--tone": `${Math.max(28, 82 - index * 9)}%` } as CSSProperties}
             />
+            {segment.symbol && <LogoTile symbol={segment.symbol} size="xs" />}
             <b className={segment.symbol ? styles.mono : undefined}>{segment.symbol ? segment.symbol : V.strip.rest}</b>
             <span className="numeral">{pct(segment.weight, locale)}</span>
             {segment.symbol === null && <span className={styles.stripRest}>{nameOf(segment)}</span>}
@@ -491,94 +697,29 @@ function WeightStrip({ risk, locale, V }: { risk: PortfolioRisk; locale: Locale;
   );
 }
 
-/** Beta ölçeğinin tabanı: ölçek hiçbir zaman 1,5'in altına inmez, 1 çentiği hep içeride. */
-const BETA_FLOOR = 1.5;
-
-function RiskPanel({
-  risk,
-  locale,
-  A,
-  V,
-  partial,
-}: {
-  risk: PortfolioRisk;
-  locale: Locale;
-  A: Labels;
-  V: VisualLabels;
-  partial: string | null;
-}) {
+function ConcentrationPanel({ risk, locale, A, V }: { risk: PortfolioRisk; locale: Locale; A: Labels; V: VisualLabels }) {
   const L = A.concentration;
   const c = risk.concentration;
-  const r = risk.risk;
-  const missing = r ? risk.covered - r.covered : 0;
   return (
-    <Panel id="risk">
-      <PanelHeader title={L.title} />
+    <Panel id="yogunlasma" data-area="side" className={styles.cell}>
+      <PanelHeader title={V.board.concentrationTitle} />
       <div className={styles.body}>
         <WeightStrip risk={risk} locale={locale} V={V} />
-        <dl className={styles.metrics}>
+        <dl className={styles.metrics} data-cols="2">
           <Metric
             label={L.largest}
             value={tieFigures(`${c.largest.symbol} ${pct(c.largest.weight, locale)}`)}
             visual={<Lane ratio={c.largest.weight / 100} />}
           />
           <Metric label={L.top5} value={pct(c.top5Share, locale)} visual={<Lane ratio={c.top5Share / 100} />} />
-          <Metric
-            label={L.effective}
-            value={num(c.effectiveCount, locale, 1)}
-            sub={fill(L.effectiveHint, { count: c.count, effective: num(c.effectiveCount, locale, 1) })}
-            visual={
-              <span className={styles.ringRow}>
-                <SpreadRing effective={c.effectiveCount} count={c.count} />
-                <span className={`numeral ${styles.ringOf}`}>
-                  {num(c.effectiveCount, locale, 1)} / {c.count}
-                </span>
-              </span>
-            }
-          />
-          {r && (
-            <>
-              <Metric
-                label={L.volatility}
-                value={pct(r.volatility, locale)}
-                sub={fill(L.vsBenchmark, { value: pct(r.benchmarkVolatility, locale) })}
-                visual={<PairLanes portfolio={r.volatility} benchmark={r.benchmarkVolatility} labels={V.compare} />}
-              />
-              <Metric
-                label={L.beta}
-                value={num(r.beta, locale)}
-                sub={L.betaHint}
-                visual={<PairLanes portfolio={r.beta} benchmark={1} labels={V.compare} floor={BETA_FLOOR} tick={1} />}
-              />
-              <Metric
-                label={L.drawdown}
-                value={formatPercent(r.maxDrawdown.depth, locale, 1)}
-                tone={directionOf(r.maxDrawdown.depth)}
-                sub={fill(L.vsBenchmark, { value: formatPercent(r.benchmarkMaxDrawdown, locale, 1) })}
-                visual={
-                  <PairLanes
-                    portfolio={r.maxDrawdown.depth}
-                    benchmark={r.benchmarkMaxDrawdown}
-                    labels={V.compare}
-                    tone={r.maxDrawdown.depth < 0 ? "down" : undefined}
-                  />
-                }
-              />
-            </>
-          )}
         </dl>
       </div>
+      {/* "Yatırım Tavsiyesi Değildir" ilk ekranda bu kartta: sektör kartının
+          yanında satır boyunca uzayan kart, künyeyi boşluğa koyuyor;
+          sektör kartında 55 piksel daha tutup onu katın altına itiyordu. */}
       <div className={styles.notes}>
-        {r ? (
-          <p>
-            {fill(L.window, { start: dateLong(r.start, locale), end: dateLong(r.end, locale), sessions: r.sessions })}
-          </p>
-        ) : (
-          <p>{L.riskUnavailable}</p>
-        )}
-        {r && missing > 0 && <p>{fill(L.riskPartial, { covered: r.covered, missing })}</p>}
         <p>{fill(L.hhi, { hhi: num(c.hhi, locale, 3) })}</p>
-        {partial && <p>{partial}</p>}
+        <p>{A.notAdvice}</p>
       </div>
     </Panel>
   );
@@ -626,7 +767,7 @@ function CorrelationPanel({ risk, locale, A, V }: { risk: PortfolioRisk; locale:
         )
       : null;
   return (
-    <Panel id="korelasyon">
+    <Panel id="korelasyon" data-area="corr" className={styles.cell}>
       <PanelHeader
         title={L.title}
         meta={c ? tieFigures(`${L.average} ${num(c.average, locale)}`) : undefined}
@@ -669,7 +810,7 @@ function CurrencyPanel({ risk, locale, A }: { risk: PortfolioRisk; locale: Local
   const L = A.currency;
   const fx = risk.fx;
   return (
-    <Panel id="kur">
+    <Panel id="kur" className={styles.cell}>
       <PanelHeader title={L.title} />
       <div className={styles.body}>
         {fx ? (
@@ -715,7 +856,7 @@ function DividendPanel({ risk, locale, A }: { risk: PortfolioRisk; locale: Local
   const L = A.dividends;
   const d = risk.dividends;
   return (
-    <Panel id="temettu">
+    <Panel id="temettu" className={styles.cell}>
       <PanelHeader title={L.title} />
       <div className={styles.body}>
         {!d ? (
@@ -749,7 +890,7 @@ function EarningsPanel({ risk, locale, A }: { risk: PortfolioRisk; locale: Local
   const weeks = risk.earnings.weeks;
   const heaviest = Math.max(0, ...weeks.map((week) => week.weight));
   return (
-    <Panel id="bilancolar">
+    <Panel id="bilancolar" data-area="earn" className={styles.cell}>
       <PanelHeader title={L.title} />
       <div className={styles.body}>
         {weeks.length === 0 ? (
@@ -793,7 +934,7 @@ function GapsPanel({ analysis, locale, A }: { analysis: PortfolioAnalysis; local
   const gaps = analysis.gaps;
   if (!analysis.risk?.sectors) return null;
   return (
-    <Panel id="eksik-sektorler">
+    <Panel id="eksik-sektorler" data-area="gaps" className={styles.cell}>
       <PanelHeader title={L.title} />
       <div className={styles.body}>
         {gaps.length === 0 ? (
@@ -942,7 +1083,7 @@ function ScenarioPanel({
       ].filter((row) => row !== null)
     : [];
   return (
-    <Panel id="senaryo">
+    <Panel id="senaryo" data-area="scenario" className={styles.cell}>
       <PanelHeader title={L.title} />
       <div className={styles.body}>
         <p className={styles.lead}>{L.hint}</p>

@@ -21,6 +21,12 @@
 .progress { display:inline-flex; align-items:center; gap:.5rem; }
 .box { margin-bottom:.625rem; }
 .error { margin:0 0 .5rem; font-size:var(--text-small); color:var(--down); }
+/* Joker kısayolu: küçük tuş, yalnız ince imleçli ekranda (dokunmatikte
+   klavye yok). Derinlik tonla, alt kenar bir ton koyu. */
+.kbd { display:none; min-width:1.125rem; padding:0 .25rem; border-radius:4px; border:1px solid var(--line); border-bottom-width:2px; background:var(--surface-sunken); font-family:var(--font-mono); font-size:var(--text-nano); font-weight:700; line-height:1.4; color:var(--text-muted); }
+@media (hover: hover) and (pointer: fine) and (min-width: 640px) {
+  .kbd { display:inline-block; }
+}
 /* Dar satırda joker yalnız simge (adı `title` ve ekran okuyucuda). */
 @media (max-width: 419.98px) {
   .jokerText { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
@@ -69,7 +75,13 @@
      1440×900  başlangıç 774 · üç yanlış 788 · kazanma/kaybetme 807 / 863
      1920×1080 başlangıç 774 · kazanma/kaybetme 844 / 1043
    Önceki hâlde tahta 1280'de 330'da başlıyor, kaybetmede 1987'ye
-   iniyordu. Yatay taşma 0, CLS ≤ 0,001, konsol hatası 0. */
+   iniyordu. Yatay taşma 0, CLS ≤ 0,001, konsol hatası 0.
+   OYUN MASASI (25 Ekim, üçüncü kurulum; aynı ölçü, 4 durum × 2 tema ×
+   TR/EN): 1280×800 başlangıç 684 · üç yanlış 699 (EN 684) · kazanma
+   726 (EN 692) · kaybetme 759 / 763; 1440×900 774 · 789 · 816 · 816 /
+   863; 1920×1080 774 · 774 · 852 · 852 / 1043. Kaybetmede büyüyen
+   sonuç bloğu (13 piksellik ızgara, halka) ve seri grafiği, tahmin
+   karolarının 38 → 36 pikseline sığdı. Hareket açıkken CLS 0,0036. */
 @media (min-width: 1024px) {
   .board { grid-template-columns:minmax(0,1.42fr) minmax(0,1fr); gap:.75rem; }
   .main, .side { display:flex; flex-direction:column; gap:.75rem; min-width:0; }

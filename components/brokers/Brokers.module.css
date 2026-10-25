@@ -59,21 +59,68 @@
 }
 .inlineLink:hover { color:var(--primary-hover); }
 
-/* TÜM TARİFE AYRINTILARI katlaması (25 Ekim). Özet satırı panel başlığının
-   yerinde: solda h2, sağda künye + ok. 44 piksel en az; ok açıkken döner
-   (geçiş marka eğrisinde, hareketi azaltana anında). */
+/* KATLI SATIR (BrokerFold, 25 Ekim kompakt tur; ilk hâli "Tüm Tarife
+   Ayrıntıları" katlamasıydı). Kapalıyken tek satır: solda başlık, ortada
+   tek satırlık özet (sığmayan üç noktayla biter), sağda künye + ok. En az
+   44 piksel. Telefonda (640 altı) özet başlığın altına iner ve iki satıra
+   kadar kırılır. Ok açıkken döner (marka eğrisi; hareketi azaltana anında). */
+.foldRow { scroll-margin-top:calc(var(--app-bar-h, 64px) + 24px); }
 .fold > summary { list-style:none; }
 .fold > summary::-webkit-details-marker { display:none; }
-.foldSummary {
-  display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between;
-  gap:4px 12px;
+.foldLine {
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  grid-template-areas:"title summary meta";
+  align-items:center;
+  gap:4px 14px;
   min-height:44px;
-  padding:16px 16px;
+  padding:12px 16px;
   cursor:pointer;
+  border-radius:var(--radius-xl);
+  transition:background-color .2s var(--ease-brand);
 }
-@media (min-width:640px) { .foldSummary { padding:16px 20px; } }
-.foldSummary:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; border-radius:var(--radius-xl); }
-.foldMeta { display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted); white-space:nowrap; }
-.foldCaret { transition:transform .28s var(--ease-brand); }
+@media (min-width:640px) { .foldLine { padding:12px 20px; } }
+@media (hover:hover) and (pointer:fine) { .foldLine:hover { background:var(--surface); } }
+.fold[data-level="3"] > .foldLine { min-height:44px; padding-block:8px; }
+.foldLine:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+.foldTitle, .foldTitleSm { grid-area:title; margin:0; }
+.foldTitleSm { font-size:13.5px; font-weight:750; line-height:1.3; color:var(--text-strong); white-space:nowrap; }
+.foldSummaryText {
+  grid-area:summary;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:13px;
+  line-height:1.4;
+  color:var(--text-muted);
+}
+.foldMeta { grid-area:meta; display:inline-flex; align-items:center; justify-content:flex-end; gap:8px; font-size:12px; color:var(--text-muted); white-space:nowrap; }
+.foldCaret { flex:none; transition:transform .28s var(--ease-brand); }
 .fold[open] .foldCaret { transform:rotate(180deg); }
-@media (prefers-reduced-motion: reduce) { .foldCaret { transition:none; } }
+.foldBody { padding:4px 16px 16px; }
+@media (min-width:640px) { .foldBody { padding:4px 20px 18px; } }
+/* Kayan tablo panelin kenarından kenarına: yatay dolgu hücrelerde. */
+.foldBodyFlush.foldBodyFlush { padding-inline:0; }
+@media (max-width:639px) {
+  .foldLine { grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"title meta" "summary summary"; }
+  .foldSummaryText { white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+}
+@media (prefers-reduced-motion: reduce) { .foldCaret, .foldLine { transition:none; } }
+
+/* Katlı satırların özetindeki logolu ad dizisi (Hesaplanamayanlar). */
+.markList { display:inline-flex; flex-wrap:wrap; align-items:center; gap:4px 12px; }
+.markItem { display:inline-flex; align-items:center; gap:6px; font-weight:600; color:var(--text-strong); }
+
+/* Ayrıntılar paneli: tarifeler, tabloda olmayanlar ve kaynaklar tek panelde
+   üç katlı satır; aralarında saç teli. */
+.stack > * + * { border-top:1px solid var(--line-soft); }
+
+/* KOMPAKT BAŞLIK (25 Ekim). Sahibi kapağı "çok yer kaplıyor" buldu: 1440'ta
+   180 piksel, ilk ekranın beşte biri. Puntonun sitenin ortak kapağından
+   küçülmesi bu sayfaya özgü: işi kapak değil pano. Özgüllük globals.css'in
+   kapak kurallarını (üçlü sınıf) yenmek için. */
+.masthead.masthead.masthead[data-embedded="false"] { padding:16px 24px; }
+.masthead.masthead.masthead :global(.page-heading-copy) h1 { font-size:clamp(28px, 2.4vw, 36px); }
+.masthead.masthead.masthead :global(.page-heading-copy) > p { margin-top:4px; max-width:none; }
+@media (max-width:767px) { .masthead.masthead.masthead[data-embedded="false"] { padding:14px 18px; } }

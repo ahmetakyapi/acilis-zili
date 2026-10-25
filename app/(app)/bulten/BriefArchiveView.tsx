@@ -432,12 +432,12 @@ function ledgerExpected(briefDate: string | undefined, period: BriefPeriod): boo
 function ArchiveSkeleton({ band }: { band: boolean }) {
   return (
     <div className="grid gap-6">
-      {/* Kayıt Defteri'nin yeri — gerçek bant 390'da 430–468 (telefonda
-          ayrıntı katlı), 1440'ta 669–702 piksel (25 Ekim son düzeltme
-          ölçümü, günlük ve haftalık). Bant gelmeyecekse yer ayrılmıyor:
-          940 piksellik boş blok bandsız sayıda metni ikinci ekrana
-          itiyordu. */}
-      {band && <Skeleton className="h-[440px] w-full rounded-(--radius-xl) sm:h-[640px]" />}
+      {/* Kayıt Defteri'nin yeri — kompakt bant (25 Ekim) 390'da 342–363
+          (telefonda ayrıntı katlı), 768'de 412–480, 1200 ve üstünde
+          313–372 piksel (günlük ve haftalık, TR ve EN ölçümü). Bant
+          gelmeyecekse yer ayrılmıyor: 940 piksellik boş blok bandsız sayıda
+          metni ikinci ekrana itiyordu. */}
+      {band && <Skeleton className="h-[350px] w-full rounded-(--radius-xl) sm:h-[440px] min-[1200px]:h-[330px]" />}
       <div className={`${polish.bulletinGrid} grid gap-6 lg:grid-cols-[minmax(0,42rem)_minmax(300px,1fr)]`}>
         <Skeleton className="h-[80svh] w-full rounded-xl" />
         <Skeleton className="h-[420px] w-full rounded-(--radius-xl) lg:h-[80svh]" />

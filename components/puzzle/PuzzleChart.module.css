@@ -1,5 +1,5 @@
 /* Siluet grafiği — gerekçe PuzzleChart.tsx. Kutu yok, panelin zemini;
-   ızgara `--line-soft`, alan yumuşak mavi (`--primary-wash`), çizgi
+   ızgara `--line-soft`, sahne `--surface-sunken`, alan yumuşak mavi (`--primary-wash`), çizgi
    mürekkep. Yükseklik kaptan: `--chart-h` (tahta, StockPuzzle.module.css
    görünür alana göre verir); verilmezse telefona göre ölçü.
    SAYILARDA `tabular-nums` YOK (virgülü rakam genişliğine çekiyor). */
@@ -7,7 +7,11 @@
 .chart { margin:0; min-width:0; }
 .frame { position:relative; display:grid; grid-template-columns:minmax(0,1fr); }
 .withGutter { grid-template-columns:auto minmax(0,1fr); column-gap:.625rem; }
-.plot { position:relative; min-width:0; height:var(--chart-h, clamp(140px, 38vw, 240px)); }
+.plot { position:relative; isolation:isolate; min-width:0; height:var(--chart-h, clamp(140px, 38vw, 240px)); }
+/* Sahne: çizim alanının arkasında panelden bir ton koyu zemin (derinlik
+   tonla; çerçeve, gölge, degrade yok). Alanın biraz dışına taşar: çizgi
+   uçları ve uç nokta sahnenin kenarına değmesin. */
+.plot::before { content:""; position:absolute; inset:-.375rem -.625rem; z-index:-1; border-radius:var(--radius-md); background:var(--surface-sunken); }
 .svg { display:block; width:100%; height:100%; overflow:visible; }
 .grid { stroke:var(--line-soft); stroke-width:1; }
 .gridV { stroke:var(--line-soft); stroke-width:1; stroke-dasharray:2 4; }
@@ -16,7 +20,14 @@
 .line { fill:none; stroke:var(--text-strong); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
 
 /* Uç nokta: son kapanışın yeri. Halkalı, panel zemininden ayrılsın. */
-.dot { position:absolute; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:999px; background:var(--text-strong); outline:3px solid var(--premium-surface); }
+.dot { position:absolute; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:999px; background:var(--text-strong); outline:3px solid var(--surface-sunken); }
+/* Nabız halkası: yalnız oyun sürerken (`live`), hareket isteyene. */
+.dot::after { content:""; position:absolute; inset:-5px; border-radius:999px; border:1.5px solid var(--text-strong); opacity:0; pointer-events:none; }
+
+/* Bilinen bulmaca: çizgi, alan ve uç yeşil (son kare; giriş aşağıda). */
+.won .line { stroke:var(--up); }
+.won .area { fill:var(--up-wash); }
+.won .dot { background:var(--up); }
 .startLabel { position:absolute; left:.25rem; transform:translateY(-120%); font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
 
 /* Son değerin künyesi: noktanın solunda, üstünde (ya da altında). Zemin
@@ -52,6 +63,28 @@
   .dot { animation:chart-dot 420ms var(--ease-spring-soft) 1150ms both; }
   .gutter > span, .startLabel, .endTag { animation:chart-fade 420ms var(--ease-brand) both; }
   .endTag { animation-delay:1150ms; }
+  /* Nabız çizgi bittikten sonra başlar; 2,4 sn'de bir, yavaş. */
+  .live .dot::after { animation:dot-pulse 2400ms var(--ease-loop) 1600ms infinite; }
+  /* Kazanınca: çizgi önce mürekkeple çizilir, sonra bir kez yeşile döner. */
+  .won .line { animation:line-won 700ms var(--ease-brand) 1100ms both; }
+  .won .area { animation:area-won 700ms var(--ease-brand) 1100ms both; }
+  .won .dot { animation:chart-dot 420ms var(--ease-spring-soft) 1150ms both, dot-won 700ms var(--ease-brand) 1100ms both; }
+}
+@keyframes dot-pulse {
+  0% { opacity:.55; transform:scale(.6); }
+  70%, 100% { opacity:0; transform:scale(2.2); }
+}
+@keyframes line-won {
+  from { stroke:var(--text-strong); }
+  to { stroke:var(--up); }
+}
+@keyframes area-won {
+  from { fill:var(--primary-wash); }
+  to { fill:var(--up-wash); }
+}
+@keyframes dot-won {
+  from { background:var(--text-strong); }
+  to { background:var(--up); }
 }
 @keyframes chart-draw {
   from { clip-path:inset(-10% 100% -10% 0); }

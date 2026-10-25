@@ -1,4 +1,5 @@
 import { aiAnalysisEn } from "./ai-analysis";
+import { communityVisualsEn } from "./community-visuals";
 import { riskDeskEn } from "./risk-desk";
 import type tr from "./tr";
 import { emailNotifyEn } from "./email-notify";
@@ -6,7 +7,7 @@ import { portfolioAnalysisEn } from "./portfolio-analysis";
 import { datePickerEn } from "./date-picker";
 import { screenQueryEn } from "./screen-query";
 import { stockPuzzleEn } from "./stock-puzzle";
-import { askStockEn, watchlistTodayEn } from "./page-claude";
+import { askStockEn, stockWeekEn, watchlistTodayEn } from "./page-claude";
 import { daySignatureEn } from "./day-signature";
 import { earningsSeasonEn } from "./earnings-season";
 import { dailyChartEn } from "./daily-chart";
@@ -3432,27 +3433,10 @@ const en: typeof tr = {
     noteValue: "Amounts are approximated with the closing price in the file. Cash funds and rows without a ticker are not shown.",
   },
   investors: {
-    capitalTitle: "Who Holds the Tracked Capital",
-    capitalAria: "Share of tracked stock portfolios by investor",
-    capitalRest: "{count} Other Investors",
     eyebrow: "Famous Investors",
-    title: "What Famous Investors Hold",
-    subtitle: "From Buffett to Pelosi, famous investors' portfolios from their SEC filings: where the capital sits and what they bought and sold this quarter.",
-    castTitle: "Tracked Investors",
-    castBuyer: "Net Buyer This Quarter",
-    castSeller: "Net Seller",
-    castAria: "{name}, {firm}",
-    castAriaUp: "{name}, {firm}; net buyer this quarter",
-    castAriaDown: "{name}, {firm}; net seller this quarter",
-    capitalMeta: "{period} · Stock Portfolio",
-    capitalTop: "Largest {ticker} {weight}",
-    capitalFunds: "Tracked Funds",
-    capitalNote: "Each tile's area is proportional to the fund's stock portfolio at quarter end; options are excluded. Closed funds and the member of Congress are left out of the total; funds below {share} share one tile.",
+    title: "Famous Investors",
+    subtitle: "From Buffett to Pelosi: the portfolios famous investors have filed and what they bought and sold this quarter.",
     lagNote: "A 13F can be filed up to 45 days after the quarter ends: these portfolios describe {date}, not today.",
-    trackedValue: "Tracked Stock Portfolios",
-    investorsCount: "{count} Investors",
-    investorsCountOne: "{count} Investor",
-    lastFiled: "Latest Filing",
     periodLabel: "Period",
     quarter: "Q{q} {year}",
     asOf: "As of {date}",
@@ -3461,34 +3445,18 @@ const en: typeof tr = {
     moversMeta: "{period} · {count} Investors",
     moversSellers: "Sellers",
     moversBuyers: "Buyers",
-    moversNet: "Net",
     moversOpened: "Opened",
     moversAria: "{ticker}: {buy} investors bought, {sell} sold.",
     moversWhoBuy: "Buyers: {names}.",
     moversWhoSell: "Sellers: {names}.",
     moversEmpty: "No stock this quarter where two or more investors moved the same way.",
-    moversNote: "Each face is one investor: on the right, those who opened or added to the stock this quarter; on the left, those who trimmed or sold out. The darker part of the line is a new buy or a full exit. Rows are sorted by the net difference. Only investors who have filed this quarter are counted, and only stocks where at least two moved the same way are listed; the measure is people, not dollars.",
-    balanceTitle: "Who's Buying, Who's Selling",
-    balanceMeta: "{period} · Position Count",
-    balanceBuyers: "Net Buyers",
-    balanceBuyersOne: "Net Buyer",
-    balanceSellers: "Net Sellers",
-    balanceSellersOne: "Net Seller",
-    balanceEven: "Balanced",
-    balanceSellSide: "Selling",
-    balanceBuySide: "Buying",
-    balanceCenter: "Even",
-    balanceMoves: "{count} Moves",
-    balanceMovesOne: "{count} Move",
-    balanceAria: "{name}: {buy} buy-side and {sell} sell-side position moves",
-    balanceNote: "The bar splits an investor's position moves this quarter in two: trimmed and fully sold positions on the left, new and increased positions on the right; the darker shade is a full exit or a new buy. The portrait sits on the boundary. The measure is a count of positions, not dollars; only funds that have filed this quarter and can be compared with the previous one are listed.",
+    moversNote: "Each face is one investor: the green line counts those who opened or added to the stock this quarter, the red line those who trimmed or sold out; the darker part is a new buy or a full exit. Cards are sorted by the net difference and every bar uses the same scale. Only investors who have filed this quarter are counted, and only stocks where at least two moved the same way are listed; the measure is people, not dollars.",
     cardsTitle: "Investors",
     portfolioValue: "Stock Portfolio",
     positions: "{count} Positions",
     positionsOne: "{count} Position",
     positionsLabel: "Positions",
     topHoldings: "Largest Positions",
-    otherHoldings: "Others",
     moveNew: "New",
     moveIncreased: "Added",
     moveDecreased: "Trimmed",
@@ -3505,8 +3473,6 @@ const en: typeof tr = {
     buysOne: "{count} Buy",
     sells: "{count} Sells",
     sellsOne: "{count} Sell",
-    tradesCount: "{count} Trades",
-    tradesCountOne: "{count} Trade",
     txBuy: "Buy",
     txSell: "Sell",
     txPartial: "Partial Sale",
@@ -3531,17 +3497,7 @@ const en: typeof tr = {
     stripSource: "Source",
     sourceSec: "SEC Filing",
     sourcePdf: "Filing PDF",
-    mapTitle: "Portfolio Map",
-    mapHint: "Tile area is proportional to the position's value; color is this quarter's move.",
-    mapHintClosed: "Tile area is proportional to the position's value; color is the move in the last filing.",
-    mapTop: "The map shows the {count} largest positions; all of them are in the table below.",
-    mapSmall: "Other {count}",
-    mapSmallTitle: "Small Positions",
-    mapUnlisted: "Without a Ticker",
     share: "Weight",
-    valueLabel: "Value",
-    sharesLabel: "Shares",
-    openStock: "Open Stock",
     didTitle: "What They Did This Quarter",
     didMeta: "{prev} to {cur}",
     didEmpty: "No positions in this group.",
@@ -3595,6 +3551,26 @@ const en: typeof tr = {
     panelAll: "See All",
     emptyTitle: "No Data Yet",
     emptyHint: "Filings are pulled by the daily sync; they will appear here after the first run.",
+    /* Index card grid and detail cards (25 Oct). */
+    leanUp: "Net Buyer",
+    leanDown: "Net Seller",
+    leanFlat: "Even",
+    leanAria: "This quarter {lean}: {buy} position moves toward buying, {sell} toward selling.",
+    shareLabel: "Share of Capital",
+    capitalLabel: "Tracked Capital",
+    capitalFundsCount: "{count} Funds",
+    capitalOther: "Other {count}",
+    capitalStripAria: "Tracked capital by fund",
+    highlightNew: "New Buy",
+    highlightUp: "Added {pct}",
+    highlightDown: "Trimmed {pct}",
+    highlightOut: "Sold Out",
+    highlightLabel: "Quarter's Move",
+    periodOld: "{quarter} Filing",
+    lastTrade: "Last Trade {date}",
+    cardNote: "Share is measured against the combined stock portfolios of open funds that have filed the latest quarter; every bar uses the same 0-100% scale. Closed funds, funds that have not yet filed the latest quarter and members of Congress are left out of the total. The badge is this quarter's direction: Net Buyer when new and increased positions outnumber trimmed and sold-out ones. The quarter's move is the one whose change in share count is worth the most at quarter-end prices.",
+    topRest: "Remaining {count} Positions {weight}",
+    tableShow: "All Positions · {count}",
   },
   /* PORTFÖYDE GÜNLÜK DEĞİŞİM — gerekçe lib/portfolio.ts. Seans adları companyCard'dan. */
   portfolioDay: {
@@ -4343,6 +4319,10 @@ const en: typeof tr = {
   toolVisuals: toolVisualsEn,
   /* Risk Masası (25 Ekim) — kişiye özel ekran; metin ayrı dosyada. */
   riskDesk: riskDeskEn,
+  /* Topluluk ekranlarının görsel turu (25 Ekim) — metin ayrı dosyada. */
+  communityVisuals: communityVisualsEn,
+  /* Bu Hafta Neden Hareket Etti, kompakt kart (25 Ekim) — metin page-claude.ts. */
+  stockWeek: stockWeekEn,
 };
 
 export default en;

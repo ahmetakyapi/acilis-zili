@@ -49,7 +49,7 @@
   background: var(--group);
 }
 
-/* ---- Araçlar bandı: üç yatay karo ---- */
+/* ---- Araçlar bandı: üç yatay karo; Risk Masası erişimi olana dört ---- */
 .tools {
   padding-bottom: 0.625rem;
   margin-bottom: 0.375rem;
@@ -58,7 +58,9 @@
 
 .toolList {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+  /* 13rem taban: 1024'lük panelde dört karo tek sırada (4 × 208 + 3 × 8 <
+     iç genişlik); üç karoda `1fr` yine eşit genişler (25 Ekim). */
+  grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
   gap: 0.5rem;
   padding-inline: 0.25rem;
 }

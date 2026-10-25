@@ -200,6 +200,46 @@ export function stackSlices<K extends string>(
   }, []);
 }
 
+/** Katlanan kuyruğun anahtarı — gerçek bir grup anahtarıyla (ör. "diger")
+ *  çakışmasın diye sözcük değil. */
+export const REST_SLICE = "__rest" as const;
+
+/**
+ * İlk `keep` dilimi olduğu gibi bırakır, kalanı tek bir "kalan" dilimine
+ * katlar (en sonda). Kapaktaki kompakt sektör şeridi için: on dört grubun
+ * hepsi 550 piksellik şeritte okunmuyor, kuyruktaki gruplar birkaç piksel.
+ *
+ * `pinned` (seçili süzgeç) ilk `keep`in dışındaysa kuyruktan çıkarılır ve
+ * son tutulan dilimin yerine geçer: okuyucu tabloyu hangi gruba süzdüyse o
+ * grubun payını şeritte görmeli, "kalan"ın içinde kaybolmamalı. Katlanacak
+ * tek dilim varsa katlanmaz (tek grubu "kalan 1 grup" diye yazmak boşuna).
+ */
+export function foldSlices<K extends string>(
+  slices: readonly ShareSlice<K>[],
+  keep: number,
+  pinned: K | null = null,
+): { slices: ShareSlice<K | typeof REST_SLICE>[]; restGroups: number } {
+  if (slices.length <= keep + 1) return { slices: [...slices], restGroups: 0 };
+  let kept = slices.slice(0, keep);
+  const pinnedSlice = pinned === null ? undefined : slices.find((slice) => slice.key === pinned);
+  if (pinnedSlice && !kept.includes(pinnedSlice)) kept = [...kept.slice(0, keep - 1), pinnedSlice];
+  const rest = slices.filter((slice) => !kept.includes(slice));
+  const sum = (pick: (slice: ShareSlice<K>) => number) => rest.reduce((total, slice) => total + pick(slice), 0);
+  return {
+    slices: [
+      ...kept,
+      {
+        key: REST_SLICE,
+        count: sum((slice) => slice.count),
+        value: sum((slice) => slice.value),
+        countShare: sum((slice) => slice.countShare),
+        valueShare: sum((slice) => slice.valueShare),
+      },
+    ],
+    restGroups: rest.length,
+  };
+}
+
 /** Payı yüzde tamsayıya çevirir; sıfırdan büyük ama %1'in altındaysa "<1" yerine 1. */
 export function sharePercent(share: number): number {
   if (share <= 0) return 0;

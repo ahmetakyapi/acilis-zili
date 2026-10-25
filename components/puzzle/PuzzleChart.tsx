@@ -22,6 +22,17 @@ import styles from "./PuzzleChart.module.css";
  * `--ease-brand`; gerekçe CSS'te), alan ardından belirir, uç nokta
  * en son oturur. Hareketi azaltana son kare (kurallar yalnız
  * `no-preference` içinde). Sunucuda da çizilebilir: durum yok.
+ *
+ * OYUN MASASI (25 Ekim, üçüncü kurulum — sahibinin isteği: "daha görsel,
+ * daha sanatsal, oynaması zevkli"). Çizim alanı bir SAHNE: panelden bir
+ * ton koyu zemin (`--surface-sunken`, yuvarlatılmış), çerçeve ve degrade
+ * yok; siluet sahnede duruyor gibi okunuyor. İki kip:
+ *   `live`  — oynanırken uç nokta nabız atar: "şimdi" orası, bilinmeyen
+ *             hisse bugün oraya vardı. Tek küçük öğe, yavaş (2,4 sn,
+ *             `--ease-loop`), yalnız oyun sürerken; hareketi azaltana yok.
+ *   `won`   — bilinen bulmacada çizgi ve alan bir kez yeşile döner
+ *             (yeşil sitede "bildin": skor, tutan karolar). Kaybedilen
+ *             bulmacada çizgi mürekkep kalır.
  */
 
 export type ChartAxis =
@@ -48,6 +59,8 @@ export function PuzzleChart({
   locale,
   label,
   className,
+  live = false,
+  won = false,
 }: {
   points: number[];
   axis: ChartAxis;
@@ -56,6 +69,10 @@ export function PuzzleChart({
   /** Ekran okuyucu için tek cümle. */
   label: string;
   className?: string;
+  /** Oyun sürüyor: uç nokta nabız atar. */
+  live?: boolean;
+  /** Bilinen bulmaca: çizgi bir kez yeşile döner. */
+  won?: boolean;
 }) {
   const coords = points.map((value, i) => [(i / (points.length - 1)) * 100, yOf(value)] as const);
   const line = coords.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`).join(" ");
@@ -102,7 +119,7 @@ export function PuzzleChart({
   const endAbove = yOf(last) > 24;
 
   return (
-    <figure className={cn(styles.chart, className)} data-bulmaca="siluet" data-tahta="siluet">
+    <figure className={cn(styles.chart, live && styles.live, won && styles.won, className)} data-bulmaca="siluet" data-tahta="siluet">
       <div className={cn(styles.frame, gutter && styles.withGutter)}>
         {gutter && (
           <div aria-hidden className={styles.gutter} data-w={top.length >= bottom.length ? top : bottom}>

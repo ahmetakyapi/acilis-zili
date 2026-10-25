@@ -1196,3 +1196,127 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
     translate:0 -50%;
   }
 }
+
+/* ==========================================================================
+   KOMPAKT KAPAK (25 Ekim, sahibinin isteği: "bazı alanları daha kompakt
+   yaparak görsel bir zirveye"). Yukarıdaki kurallar karar kaydı; bu blok
+   onları eziyor.
+
+   Ölçüm (NVDA, 1440×900, önce): kimlik + fiyat başlığı 294 piksel (logo 72,
+   ad 46 punto, adın ÜSTÜNDE ayrı bir eylem satırı, fiyat 64 punto); aralık
+   düğmeleri y=891'de, alttaki piyasa şeridinin (863) ALTINDA. Profil
+   kartı 529, teknik kart 256 piksel; ızgara satırı grafiği sağ kolonun
+   boyuna geriyordu.
+   Şimdi: kimlik TEK SATIR (logo 52, ad en çok 28 punto, altında sembol ·
+   sektör, eylemler sağda), fiyat 46 puntoya kadar. Kazanılan yer çizime
+   gidiyor; sağ kolon da aşağıdaki "PROFİL SIKI" ile kısaldı. Sonrası
+   ölçümüyle commit gövdesinde.
+   ========================================================================== */
+.companyOverview .stockHeader { gap:14px; margin-bottom:12px; }
+.companyOverview .identity {
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  grid-template-areas:"mark copy tools";
+  align-items:center;
+  column-gap:14px;
+  row-gap:10px;
+}
+.companyOverview .identityMark { grid-area:mark; align-self:center; margin:0; }
+.companyOverview .identity > :first-child:global(.skeleton) { grid-area:mark; }
+.companyOverview .identityCopy { grid-area:copy; }
+.identityTools { grid-area:tools; display:flex; min-width:0; align-items:center; gap:10px; }
+.companyOverview .companyLogo { width:52px; height:52px; border-radius:14px; }
+.companyOverview .companyName { font-size:clamp(22px,1.95vw,28px); line-height:1.1; letter-spacing:-.04em; font-weight:750; }
+.identitySub { display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; margin-top:5px; }
+.identitySub .symbol { display:inline-flex; align-items:center; min-height:22px; padding:1px 7px; border-radius:6px; background:var(--primary-wash); color:var(--primary-ink); font-size:12px; font-weight:700; letter-spacing:0; }
+.companyOverview .identitySub .sector { display:inline-flex; margin:0; }
+.companyOverview .identityMeta { margin:0; }
+.companyOverview .identityMeta > :last-child:not(.symbol) { margin-left:0; }
+/* Eylemler HER GENİŞLİKTE yalnız ikon (34'lük daire; telefonda önceki
+   30–36'lık daire ve 44'lük görünmez alan aynen). 17 Ekim'de "yerimiz
+   varken düğmelere ne yaptığını yazalım" denmişti; kompakt kapakta yer
+   yok: yazılı haplar (TR ~430, EN ~470 piksel) 1280'de "NVIDIA Corp"u,
+   1440'ta "JPMorgan Chase & Co"yu iki satıra itiyordu (ölçüldü). Ad
+   `aria-label` ve `title`'da, yazı ekran okuyucuya ve imlece duruyor. */
+@media(min-width:640px) {
+  .companyOverview .identityMeta { gap:6px; }
+  .companyOverview .identityMeta :is(button,a) { width:34px; height:34px; }
+  .companyOverview .identityMeta [data-action-text] { display:none; }
+  .companyOverview .identityMeta :is(button,a)[data-labeled] { width:34px; padding:0; border-radius:50%; justify-content:center; }
+}
+/* Fiyat: 64 → 46 puntoya kadar; üst kıl çizgi ve mavi giriş çizgisi
+   kalıyor, aralığı 20 → 12. */
+.companyOverview .priceBlock { padding-top:12px; }
+.companyOverview .livePrice, .companyOverview .priceChange { font-size:clamp(36px,3.2vw,46px); }
+.companyOverview .priceChange > span:first-child { padding:4px 10px; font-size:14px; }
+@media(min-width:1100px) {
+  .companyOverview .priceBlockWithBand { grid-template-columns:minmax(0,1fr) minmax(240px,320px); }
+  .companyOverview .headerBand { padding:8px 12px; border-radius:14px; }
+  .companyOverview .headerBand .bandEnds { margin-top:0; }
+}
+/* Telefon ve tablet: eylemler kimliğin altında, kısa yol şeridiyle aynı
+   satırda. Önce iki ayrı satırdı (eylemler adın üstünde, şerit sektörün
+   altında). */
+@media(max-width:767px) {
+  .companyOverview .identity { grid-template-columns:auto minmax(0,1fr); grid-template-areas:"mark copy" "tools tools"; column-gap:12px; }
+  .companyOverview .companyLogo { width:48px; height:48px; border-radius:13px; }
+  .companyOverview .companyName { font-size:24px; }
+  .identityTools { justify-content:space-between; }
+  .identityTools > .identityChip { flex:1; min-width:0; margin-top:0; }
+  .identityTools > .identityMeta { flex:none; }
+}
+@media(max-width:479px) {
+  .companyOverview .identityMark { margin-top:0; align-self:center; }
+  .companyOverview .companyLogo { width:44px; height:44px; border-radius:12px; }
+  .companyOverview .companyName { font-size:22px; }
+  .identityTools { gap:12px; }
+}
+@media(max-width:639px) {
+  .companyOverview .livePrice, .companyOverview .priceChange { font-size:38px; }
+}
+@media(max-width:359px) {
+  .companyOverview .companyName { font-size:20px; }
+  .companyOverview .livePrice, .companyOverview .priceChange { font-size:34px; }
+}
+/* Yedekler aynı satırlarda: ad satırı puntosu × 1,1, künye satırı 22. */
+.companyOverview .identityNameSkeleton { width:min(60%,280px); height:calc(clamp(22px,1.95vw,28px) * 1.1); }
+.companyOverview .sectorSkeleton { height:22px; margin-top:5px; }
+.companyOverview .identityMetaSkeleton { width:154px; height:34px; margin:0; border-radius:999px; }
+/* Fiyat satırı yüzde hapı ile mutlak farkın yığını kadar (46; geniş
+   ekranda fiyatın 1,1em'i zaten daha uzun), künye telefonda iki satır.
+   Ölçüldü (JS kapalı yedek / gerçek, 25 Ekim): 390'da 187 / 210, 768'de
+   146 / 151 idi; düzeltmeden sonra eşit. */
+.companyOverview .priceLineSkeleton { min-height:46px; }
+.stampSkeleton { height:18px; }
+@media(max-width:639px) { .companyOverview .stampSkeleton { height:38px; } }
+/* Başlık bandının yeri (≥1100): gerçek kart 111 piksel (ölçüldü, iki
+   sembol × dört genişlik × iki dil, hepsinde aynı). Yedek bandı ayırmazsa
+   akış gelince grafik 60 piksel aşağı kayıyordu (1280, CLS 0,07). */
+.bandSkeleton { display:none; }
+@media(min-width:1100px) {
+  .companyOverview .bandSkeleton { display:block; height:111px; padding:0; border:0; }
+}
+@media(max-width:767px) { .companyOverview .identityNameSkeleton { height:calc(24px * 1.1); } }
+@media(max-width:479px) {
+  .companyOverview .identityNameSkeleton { height:calc(22px * 1.1); }
+  .companyOverview .identityMetaSkeleton { width:162px; height:30px; }
+}
+
+/* ---- PROFİL SIKI (25 Ekim) ----
+   Yalnız iki kolonlu düzende (≥1100): profil 529 → ~470 piksel, kartın
+   hiçbir okuması düşmedi. Üst bandın künye satırı (şirket · en büyük) ile
+   komşular satırı TEK satırda; şirketin sembolü zaten merdivenin altında
+   kalın yazılı, künyedeki kopyası gizli. */
+@media(min-width:1100px) {
+  .companyOverview .profilePanel > div:first-child { padding-top:14px; padding-bottom:6px; }
+  .companyOverview .capHero { gap:8px; padding-block:10px; margin-bottom:10px; }
+  .companyOverview .capBig { font-size:clamp(26px,2.1vw,31px); }
+  .companyOverview .capLadder { height:34px; }
+  .companyOverview .capScale { flex-direction:row; flex-wrap:wrap; align-items:center; column-gap:14px; row-gap:6px; }
+  .companyOverview .capScale > .capLadder, .companyOverview .capScale > .capLadderNames { flex:1 0 100%; }
+  .companyOverview .capEnds .capSelf { display:none; }
+  .companyOverview .capNeighbours { margin-left:auto; padding-top:0; border-top:0; }
+  .companyOverview .about { padding-bottom:8px; font-size:12.5px; line-height:1.6; }
+  .companyOverview .profileBody { padding-bottom:12px; }
+  .companyOverview .factTile { padding:7px 12px 8px; row-gap:2px; }
+}

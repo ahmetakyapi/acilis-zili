@@ -4,7 +4,7 @@ import { useId, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowUpRight, Sparkle } from "@phosphor-icons/react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { Button, ButtonLink, Panel, PanelHeader, Skeleton } from "@/components/ui/primitives";
+import { Button, ButtonLink, Skeleton } from "@/components/ui/primitives";
 import base from "@/components/stock/StockInsightCard.module.css";
 import type { AskStockLabels } from "@/lib/i18n/dictionaries/page-claude";
 import type { Locale } from "@/lib/i18n/config";
@@ -30,11 +30,22 @@ import styles from "./AskStock.module.css";
  * yanıtın YAPISINI anlatan önizleme: uydurma bir yanıt ya da sayı yok, kural
  * ve künye var. Giriş düğmesi sitenin birincil eylemi (dolu mavi, bilanço
  * oylamasının giriş düğmesiyle aynı kalıp).
+ *
+ * KOMPAKT (25 Ekim, sahibinin isteği: "böyle kocaman olmasına gerek var
+ * mı"). Panel 1280'de 284 (oturumsuz 345), 390'da 453 (624) piksel
+ * tutuyordu: iki satırlık metin kutusu, altında tam genişlikte çip satırı,
+ * oturumsuzda da yanıtın yapısını anlatan ayrı bir kutu. Artık kendi
+ * paneli yok, "Bu Hafta Neden Hareket Etti" ile tek panelin sol kolonu
+ * (app/(app)/hisse/[symbol]/_panels/AskMovePanel.tsx): tek satır girdi ve
+ * Sor yan yana, örnekler küçük çipler. Yanıtın yapısını anlatan kutu
+ * kalktı; aynı kural (her sayı veride geçmeli) dipteki künyede zaten
+ * yazılı, oturumsuzda da o künye basılıyor. Uzun soru tek satırda yana
+ * kayar; sınır yine 300 karakter.
  */
 
-/* Oturumsuz önizlemenin künyesinde gösterilen veri blokları — yanıtın
-   gerçekten dayanabildiği bloklardan (lib/stock-question-core.ts →
-   ASK_SOURCES) en tanıdık beşi; sayfa sırasıyla. */
+/* Yanıtın gerçekten dayanabildiği bloklardan (lib/stock-question-core.ts →
+   ASK_SOURCES) en tanıdık beşi, sayfa sırasıyla — henüz yanıt yokken
+   kolonun dibinde künye olarak (25 Ekim; önce oturumsuz önizleme kutusundaydı). */
 const PREVIEW_SOURCES = ["session", "valuation", "analysts", "earnings", "news"] as const;
 /** Dönüş adresindeki örnek soru parametresi. */
 const PREFILL_PARAM = "soru";
@@ -61,6 +72,7 @@ export function AskStock({
   limit: number;
 }) {
   const inputId = useId();
+  const titleId = useId();
   const searchParams = useSearchParams();
   /* Girişten dönüş: adresteki örnek soru kutuya yazılır, GÖNDERİLMEZ. Yalnız
      sözlükteki örnekler kabul edilir — dışarıdan hazırlanmış bir bağlantı
@@ -117,12 +129,14 @@ export function AskStock({
     : null;
 
   return (
-    <Panel id={ANCHOR} className={cn(base.card, styles.panel)} aria-busy={pending !== null}>
-      <PanelHeader
-        title={labels.title}
-        meta={signedIn ? quota : undefined}
-        action={<Sparkle className={base.icon} size={18} weight="duotone" aria-hidden />}
-      />
+    <section id={ANCHOR} className={styles.ask} aria-labelledby={titleId} aria-busy={pending !== null}>
+      <div className={styles.head}>
+        <h2 id={titleId} className={styles.title}>
+          <Sparkle className={base.icon} size={17} weight="duotone" aria-hidden />
+          {labels.title}
+        </h2>
+        {signedIn && <span className={cn("numeral", styles.quota)}>{quota}</span>}
+      </div>
       <p className={styles.intro}>{signedIn ? labels.intro : labels.signedOut}</p>
       {!signedIn ? (
         <>
@@ -135,18 +149,6 @@ export function AskStock({
               </li>
             ))}
           </ul>
-          <div className={styles.preview}>
-            <p className={styles.askedLabel}>{labels.previewTitle}</p>
-            <p className={styles.previewText}>{labels.previewText}</p>
-            <p className={styles.sources}>
-              <span className={styles.sourcesLabel}>{labels.previewSources}</span>
-              {PREVIEW_SOURCES.map((source) => (
-                <span key={source} className={styles.source}>
-                  {labels.sources[source]}
-                </span>
-              ))}
-            </p>
-          </div>
           <div className={styles.signIn}>
             <ButtonLink href={signInHref(symbol)} variant="primary" rel="nofollow">
               {labels.signIn}
@@ -160,24 +162,21 @@ export function AskStock({
             <label htmlFor={inputId} className="sr-only">
               {labels.label}
             </label>
-            <textarea
+            {/* TEK SATIR (25 Ekim): Enter formu gönderir, ayrı tuş işleyicisi
+                gerekmiyor; telefon klavyesinde tuş "Gönder" yazar. */}
+            <input
               id={inputId}
+              type="text"
+              enterKeyHint="send"
+              autoComplete="off"
               className={styles.input}
               value={text}
-              rows={2}
               maxLength={MAX_CHARS}
               placeholder={labels.placeholder}
               disabled={remaining <= 0}
               onChange={(event) => setText(event.target.value)}
-              onKeyDown={(event) => {
-                /* Enter gönderir, Shift+Enter satır açar (sohbet kutularının alışkanlığı). */
-                if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
-                  event.preventDefault();
-                  void ask(text);
-                }
-              }}
             />
-            <Button type="submit" size="lg" className={styles.submit} disabled={pending !== null || remaining <= 0 || text.trim().length < 3}>
+            <Button type="submit" className={styles.submit} disabled={pending !== null || remaining <= 0 || text.trim().length < 3}>
               {labels.submit}
             </Button>
           </form>
@@ -257,10 +256,20 @@ export function AskStock({
               </div>
             ) : null}
           </div>
-          <p className={base.disclosure}>{labels.disclosure}</p>
         </>
       )}
-    </Panel>
+      {!pending && !last && (
+        <p className={cn(styles.sources, styles.hint)}>
+          <span className={styles.sourcesLabel}>{labels.previewSources}</span>
+          {PREVIEW_SOURCES.map((source) => (
+            <span key={source} className={styles.source}>
+              {labels.sources[source]}
+            </span>
+          ))}
+        </p>
+      )}
+      <p className={styles.disclosure}>{labels.disclosure}</p>
+    </section>
   );
 }
 

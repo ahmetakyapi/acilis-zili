@@ -130,11 +130,11 @@ export default async function MyPostsPage() {
           <Panel className="lg:sticky lg:top-[calc(var(--app-bar-h)+20px)]">
             <PanelHeader title={L.feed.howTitle} />
             <WriteGuide
+              withTemplates
               labels={{
-                howTitle: L.feed.howTitle,
+                stepsLabel: t.communityVisuals.stepsLabel,
                 steps: L.feed.steps,
                 templatesTitle: L.feed.templatesTitle,
-                templatesHint: L.feed.templatesHint,
                 templates: L.templates,
                 rules: L.mine.rules,
               }}

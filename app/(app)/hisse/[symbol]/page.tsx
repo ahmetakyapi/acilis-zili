@@ -57,8 +57,8 @@ import { ClaudeCompanyCard, ClaudeCta } from "@/components/ai/ClaudeCta";
 import { InvestorsPanel } from "./_panels/InvestorsPanel";
 import { StockSummary, metaExtras, summaryFacts } from "./_panels/StockSummary";
 import { StockJsonLd } from "./_panels/StockJsonLd";
-import { EarningsInsight, MoveInsight } from "./_panels/StockInsights";
-import { AskStockSlot } from "./_panels/AskStockPanel";
+import { EarningsInsight } from "./_panels/StockInsights";
+import { AskMoveSlot } from "./_panels/AskMovePanel";
 import { AskStockChip, ClaudeEntryChip } from "@/components/stock/ClaudeEntryChip";
 import { ChipStrip } from "@/components/ui/ChipStrip";
 import depth from "./_panels/depth.module.css";
@@ -258,7 +258,7 @@ export default async function StockPage(
                 öbür yanda değil, tam üstünde — dayanak düştüğü için kopya her
                 genişlikte kalktı. Aralığa bağlı YÜZDE grafikte kaldı; o başka
                 bir sayı (seçili aralığın getirisi) ve gerekçesi orada yazılı. */}
-            <Suspense fallback={<HeaderSkeleton sessionRow={fundOffSession} />}>
+            <Suspense fallback={<HeaderSkeleton sessionRow={fundOffSession} band />}>
               <StockHeader symbol={symbol} locale={locale} t={t} />
             </Suspense>
             <Suspense fallback={<Skeleton className={styles.chartSkeleton} />}>
@@ -428,7 +428,7 @@ export default async function StockPage(
             öbür yanda değil, tam üstünde — dayanak düştüğü için kopya her
             genişlikte kalktı. Aralığa bağlı YÜZDE grafikte kaldı; o başka
             bir sayı (seçili aralığın getirisi) ve gerekçesi orada yazılı. */}
-          <Suspense fallback={<HeaderSkeleton sessionRow={offSession} chip />}>
+          <Suspense fallback={<HeaderSkeleton sessionRow={offSession} chip band />}>
             <StockHeader
               symbol={symbol}
               locale={locale}
@@ -527,18 +527,13 @@ export default async function StockPage(
         <StockSummary symbol={symbol} locale={locale} t={t} />
       </Suspense>
 
-      {/* BU HAFTA NEDEN HAREKET ETTİ (17 Ekim, sahibinin isteği): şirketi
-          tanıtan özetin hemen ardında — okur önce "ne iş yapıyor", sonra
-          "bu hafta ne oldu" diye soruyor. Claude notu; gerekçe
-          lib/stock-insights.ts. */}
-      <MoveInsight symbol={symbol} locale={locale} t={t} />
-
-      {/* BU HİSSEYE SOR (24 Ekim, "sayfanın içinde Claude"): genel bakışın
-          metin bölgesinde, haftanın notunun hemen ardında — okur notu
-          okuyup aklına takılanı burada sorar. Yanıt yalnız bu sayfanın
-          verisinden (lib/stock-question.ts). Suspense yedeği oturum
-          durumuna göre, ölçülmüş boylarda (AskStockSlot). */}
-      <AskStockSlot symbol={symbol} locale={locale} t={t} />
+      {/* BU HAFTA NEDEN HAREKET ETTİ (17 Ekim, sahibinin isteği) ve BU
+          HİSSEYE SOR (24 Ekim) şirketi tanıtan özetin hemen ardında: okur önce
+          "ne iş yapıyor", sonra "bu hafta ne oldu", sonra aklına takılanı
+          soruyor. İkisi alt alta iki tam genişlik paneldi (1280'de ~900
+          piksel); 25 Ekim'den beri TEK panelin iki kolonu, haftanın
+          sayıları sunucuda. Gerekçe ve ölçüm _panels/AskMovePanel.tsx. */}
+      <AskMoveSlot symbol={symbol} locale={locale} t={t} />
 
       {/* ÜNLÜ YATIRIMCILAR BURADAN GÜNDEM'E İNDİ (28 Eylül, sahibinin
           isteği: "burası çok üstte olmuş"). Özetin hemen altında 423–851

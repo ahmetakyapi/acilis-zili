@@ -64,22 +64,13 @@ export const brokerCardsTr = {
     less: "Kısalt",
     caveat: "Not Var",
   },
-  /* Telefonda katlanan panel parçaları (25 Ekim, 640 altı). */
-  panelFolds: {
-    sourcesMore: "Kaynakları Göster",
-    sourcesLess: "Kaynakları Gizle",
-    notesMore: "Tümünü Göster",
-    notesLess: "Kısalt",
-    lineMore: "Varsayımlar ve Ölçek",
-    lineLess: "Kısalt",
-  },
   /* Alımına göre komisyon panosu: üç kart (25 Ekim, kurum logoları turu). */
   board: {
     cheapest: {
       title: "Bu Tutarda En Ucuz",
       podiumLabel: "{amount} alımda komisyonu en düşük üç kurum",
       restLabel: "Öteki kurumlar, komisyona göre",
-      rank: "{rank}.",
+      rank: "{rank}",
     },
     curves: {
       title: "Tutar Büyüdükçe",
@@ -94,7 +85,7 @@ export const brokerCardsTr = {
     yearly: {
       title: "Yıllık Maliyet",
       freqLabel: "Ayda Alım",
-      freq: "{n} Alım",
+      freq: "{n}×",
       freqAria: "Ayda {n} alım",
       commission: "Komisyon",
       custody: "Saklama",
@@ -108,8 +99,6 @@ export const brokerCardsTr = {
     },
     unpriced: {
       title: "Hesaplanamayanlar",
-      more: "Nedenleri",
-      less: "Kısalt",
     },
   },
   rank: "{amount} Alımda Sıra {rank}/{total}",
@@ -126,6 +115,15 @@ export const brokerCardsTr = {
     title: "Tüm Tarife Ayrıntıları",
     meta: "{count} Kurum, {columns} Kalem",
     lead: "Kartlardaki her değerin tablo hâli; ekran okuyucuyla gezmek ve hücre hücre doğrulamak için.",
+  },
+  /* Katlı satırlar (25 Ekim, kompakt tur): kapalıyken başlık + tek satır
+     özet + ok. Özetler cümle düzeninde (açıklama satırı). */
+  compact: {
+    assumptionsTitle: "Varsayımlar",
+    assumptionsSummary: "Yalnız işlem komisyonu; kur farkı, saklama, borsa ve SEC ücretleri dahil değil.",
+    sourcesMeta: "{count} Kurum, {n} Kaynak",
+    sourcesSummary: "Kurumların kendi sayfaları ve tarife belgeleri, okunduğu günle.",
+    outsideMeta: "{n} Kalem",
   },
 };
 
@@ -186,20 +184,12 @@ export const brokerCardsEn: typeof brokerCardsTr = {
     less: "Show Less",
     caveat: "Note",
   },
-  panelFolds: {
-    sourcesMore: "Show Sources",
-    sourcesLess: "Hide Sources",
-    notesMore: "Show All",
-    notesLess: "Show Less",
-    lineMore: "Assumptions and Scale",
-    lineLess: "Show Less",
-  },
   board: {
     cheapest: {
       title: "Cheapest at This Size",
       podiumLabel: "The three lowest commissions on {amount}",
       restLabel: "Other brokers, by commission",
-      rank: "#{rank}",
+      rank: "{rank}",
     },
     curves: {
       title: "As the Trade Grows",
@@ -214,7 +204,7 @@ export const brokerCardsEn: typeof brokerCardsTr = {
     yearly: {
       title: "Cost Over a Year",
       freqLabel: "Trades a Month",
-      freq: "{n} Trades",
+      freq: "{n}×",
       freqAria: "{n} trades a month",
       commission: "Commission",
       custody: "Custody",
@@ -224,12 +214,10 @@ export const brokerCardsEn: typeof brokerCardsTr = {
       rowLabel: "{name}: {total} a year; commission {commission}, custody {custody}",
       custodyNone: "not stated",
       assumption:
-        "{n} buys of {amount} every month at a flat price; custody on the month-end balance. FX spread, BSMV tax, ADR and data fees not included.",
+        "{amount} bought {n}× a month at a flat price; custody on the month-end balance. FX spread, BSMV tax, ADR and data fees not included.",
     },
     unpriced: {
       title: "Not Priced",
-      more: "Reasons",
-      less: "Show Less",
     },
   },
   rank: "Rank {rank} of {total} at {amount}",
@@ -246,5 +234,12 @@ export const brokerCardsEn: typeof brokerCardsTr = {
     title: "Full Fee Details",
     meta: "{count} Brokers, {columns} Items",
     lead: "Every value on the cards as a table, for screen readers and for checking cell by cell.",
+  },
+  compact: {
+    assumptionsTitle: "Assumptions",
+    assumptionsSummary: "Trade commission only; FX spread, custody, exchange and SEC fees left out.",
+    sourcesMeta: "{count} Brokers, {n} Sources",
+    sourcesSummary: "The brokers' own pages and fee documents, with the day each was read.",
+    outsideMeta: "{n} Items",
   },
 };

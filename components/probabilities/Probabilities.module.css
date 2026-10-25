@@ -39,55 +39,62 @@
 .topNote > p { margin: 0; }
 
 /* Dört kadran: 720 pikselden geniş ekranda tek sıra, telefonda 2×2. Kutu ton farkıyla
-   (paneller gibi `--premium-surface`), gölge yok. */
+   (paneller gibi `--premium-surface`), gölge yok.
+
+   İKİNCİ TUR (25 Ekim): kadran kutunun solunda büyük, sayı halkanın
+   içinde; sağda ad, sonuç ve 24 saat rozeti. Dar kutuda (900 altı) üstte
+   ad, ortada kadran, altta sonuç ve rozet. */
 .strip { min-width: 0; }
 .stripList { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
 @media (min-width: 720px) { .stripList { grid-template-columns: repeat(var(--tiles, 4), minmax(0, 1fr)); } }
 @media (min-width: 900px) { .stripList { gap: 16px; } }
 .tile {
   position: relative; display: grid; height: 100%;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas: "label label" "figure gauge" "meta meta";
-  align-items: end; gap: 4px 12px; padding: 12px 16px 11px;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "label" "gauge" "word" "meta";
+  justify-items: center; align-content: start; gap: 4px; padding: 12px 10px 12px;
   border: 1px solid var(--line-soft); border-radius: var(--radius-panel, 18px);
-  background: var(--premium-surface); color: inherit; text-decoration: none;
+  background: var(--premium-surface); color: inherit; text-decoration: none; text-align: center;
   transition: border-color 200ms var(--ease-brand), background-color 200ms var(--ease-brand);
 }
 .tile:hover { border-color: var(--primary-faint); background: color-mix(in srgb, var(--premium-surface) 94%, var(--primary)); }
 .tile:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
 .tileLabel { grid-area: label; min-width: 0; font-size: var(--text-small); font-weight: 650; line-height: 1.35; color: var(--text-body); }
-/* Geniş ekranda kadran üç satırı birden kaplar: kutu 126 pikselden
-   ~100'e iner (ölçüldü; üç kartın dibi 1280×800'de görünür alanda). */
+.tileWord { grid-area: word; display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-size: var(--text-read); font-weight: 750; line-height: 1.25; color: var(--text-strong); }
+.tileWord > i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; background: var(--tone); flex: none; }
+.tileMeta { grid-area: meta; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 6px; min-height: 22px; }
+/* 24 saat rozeti: ton farkı (çökük zemin), metin mürekkepte; ok işareti söyler. */
+.tileDelta { display: inline-flex; align-items: center; gap: 4px; min-height: 22px; padding: 2px 8px; border-radius: 999px; background: var(--surface-sunken); font-size: var(--text-tiny); font-weight: 650; line-height: 1.3; color: var(--text-strong); }
+.tileDelta[data-flat] { font-weight: 600; color: var(--text-body); }
+.tileThin { padding: 2px 8px; border-radius: 999px; background: var(--brass-wash); font-size: var(--text-tiny); font-weight: 600; color: var(--brass-ink); }
 @media (min-width: 900px) {
-  .tile { grid-template-areas: "label gauge" "figure gauge" "meta gauge"; row-gap: 2px; }
-  .tile .gauge { align-self: center; }
+  .tile {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "gauge label" "gauge word" "gauge meta";
+    justify-items: start; align-content: center; column-gap: 14px; row-gap: 3px; padding: 12px 14px; text-align: left;
+  }
+  .tileMeta { justify-content: flex-start; }
 }
-.tileFigure { grid-area: figure; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; min-width: 0; }
-.tileFigure > b { font-size: clamp(28px, 2.6vw, 38px); line-height: 1; font-weight: 800; letter-spacing: -.035em; color: var(--text-strong); }
-.tileFigure[data-resolved] > b { font-size: clamp(20px, 2vw, 26px); letter-spacing: -.02em; }
-.tileWord { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-small); font-weight: 700; color: var(--text-strong); white-space: nowrap; }
-.tileWord > i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--tone); flex: none; }
-.tileMeta { grid-area: meta; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; min-height: 18px; font-size: var(--text-tiny); color: var(--text-muted); }
-.tileDelta { display: inline-flex; align-items: center; gap: 4px; }
-.tileThin { padding: 1px 6px; border-radius: 999px; background: var(--brass-wash); font-weight: 600; color: var(--brass-ink); }
 
-/* Yarım daire kadran. Yay `pathLength=100`; dilimler kesik dizisiyle,
-   aralarında zemin (`arcSegments`). Giriş: maske yolu soldan sağa açılır. */
-.gauge { grid-area: gauge; display: block; width: 92px; height: auto; aspect-ratio: 100 / 56; overflow: visible; }
-.gaugeTrack, .gaugeArc { fill: none; stroke-width: 10; stroke-linecap: butt; }
-.gaugeTrack { stroke: var(--line-soft); }
+/* Kadran: yay SVG'de, sayı HTML'de halkanın ortasında (SVG esniyor, yazı
+   içine konmaz). Halka 14 birim; dilimler kesik dizisiyle, aralarında
+   zemin (`arcSegments`). Giriş: maske yolu soldan sağa açılır. */
+.gauge { grid-area: gauge; position: relative; display: block; width: min(100%, 132px); }
+.gaugeSvg { display: block; width: 100%; height: auto; aspect-ratio: 100 / 59; overflow: visible; }
+.gaugeFigure {
+  position: absolute; left: 50%; bottom: -2px; transform: translateX(-50%);
+  font-size: 28px; line-height: 1; font-weight: 800; letter-spacing: -.035em; color: var(--text-strong); white-space: nowrap;
+}
+.gaugeFigure[data-resolved] { bottom: 4px; font-size: var(--text-small); letter-spacing: 0; }
+@media (min-width: 900px) { .gauge { width: 136px; } .gaugeFigure { font-size: 30px; } }
+.gaugeTrack, .gaugeArc { fill: none; stroke-width: 14; stroke-linecap: butt; }
+.gaugeTrack { stroke: var(--surface-sunken); }
 .gaugeArc { stroke: var(--tone); }
 /* Maske alfa kipinde: maske yolunun rengi değil örtüsü sayılır, yani
    sabit bir beyaz yazmaya gerek yok (hardcoded renk yasağı). */
 .gaugeMask { mask-type: alpha; }
-.gaugeSweep { fill: none; stroke: var(--text-strong); stroke-width: 14; stroke-dasharray: 100 100; stroke-dashoffset: 0; }
-.gaugeMajority { stroke: var(--text-strong); stroke-width: 2; stroke-linecap: round; opacity: .7; }
-@media (max-width: 899px) {
-  .tile { padding: 12px 12px 11px; gap: 4px 8px; }
-  .gauge { width: 60px; }
-  .tileFigure > b { font-size: 28px; }
-  .tileWord { font-size: var(--text-tiny); }
-}
+.gaugeSweep { fill: none; stroke: var(--text-strong); stroke-width: 18; stroke-dasharray: 100 100; stroke-dashoffset: 0; }
+.gaugeMajority { stroke: var(--text-strong); stroke-width: 2.5; stroke-linecap: round; opacity: .75; }
 
 /* Giriş: bir kez, ilk boyamadan (yay ve çubuk). Hareketi azaltana son kare. */
 @keyframes odds-sweep { from { stroke-dashoffset: 100; } }
@@ -132,19 +139,19 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 /* Çoğunluk çentiğinin künyesi: çubuktaki dikey çizginin küçük kopyası. */
 .legend li.legendMajority i { width: 2px; height: 12px; border-radius: 1px; background: var(--text-strong); opacity: .6; }
 .legend i,
-.scale i,
 .lineEnds i,
 .lineRead i,
 .chamberShares i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--tone); flex: none; }
 .legend b { font-weight: 650; color: var(--text-strong); }
 
-/* Fed ölçeği: beş eşit sütun, çubuğun sırasıyla. */
-.scale { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
-.scale li { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.scale li > span { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-nano); line-height: 1.3; color: var(--text-muted); white-space: nowrap; }
-.scale li > b { font-size: var(--text-small); font-weight: 650; color: var(--text-body); }
-.scale li[data-lead] > span { color: var(--text-strong); font-weight: 650; }
-.scale li[data-lead] > b { font-size: var(--text-read); font-weight: 800; color: var(--text-strong); }
+/* Fed çipleri: tek satır, çubuğun sırasıyla. Taşarsa satır atlar (kesmez);
+   1440'ta beş çip 390 piksellik gövdeye tek satır sığıyor (ölçüldü). */
+.chips { display: flex; flex-wrap: wrap; gap: 3px; margin: 0; padding: 0; list-style: none; }
+.chips li { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; padding: 2px 7px 2px 6px; border-radius: 999px; background: var(--surface-sunken); font-size: var(--text-tiny); line-height: 1.2; color: var(--text-muted); white-space: nowrap; }
+.chips li > b { font-weight: 650; color: var(--text-body); }
+.chips li[data-lead] { background: color-mix(in srgb, var(--tone) 16%, transparent); color: var(--text-strong); font-weight: 650; }
+.chips li[data-lead] > b { font-weight: 800; color: var(--text-strong); }
+.chips i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--tone); flex: none; }
 
 /* Meclis satırı: ad ve iki pay aynı hatta, altında çubuk ve küçük çizgi. */
 .chamber { display: flex; flex-direction: column; gap: 6px; }
@@ -187,26 +194,51 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 .line[data-grow] .linePlot,
 .line[data-grow] .lineEnds { height: auto; min-height: var(--plot-h); }
 
+/* ----------------------------------------------------- RESESYON GEÇMİŞİ
+   1980 Ocak – 2027 Aralık tek kulvar. Geçmiş bloklar nötr (`--share-rest`,
+   olgu), 2027 kesik çerçeve + olasılık tonu. Bloklar en az 3 piksel: iki
+   aylık 2020 resesyonu 350 piksellik şeritte 1,8 piksele düşüyordu. */
+.history { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.historyHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; }
+.historyHead h3 { margin: 0; font-size: var(--text-small); font-weight: 700; color: var(--text-strong); }
+.historyHead > span { font-size: var(--text-tiny); color: var(--text-muted); }
+.historyTrack { position: relative; height: 18px; margin-top: 16px; border-radius: 4px; background: var(--surface-sunken); }
+.historySpan { position: absolute; top: 0; bottom: 0; min-width: 3px; border-radius: 3px; background: var(--share-rest); }
+.historyNow { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--text-strong); opacity: .55; }
+.historyNext { position: absolute; top: 0; bottom: 0; border: 1.5px dashed var(--tone); border-radius: 4px; background: color-mix(in srgb, var(--tone) 22%, transparent); }
+.historyNextLabel { position: absolute; right: 0; bottom: calc(100% + 3px); font-size: var(--text-tiny); line-height: 1.2; color: var(--text-muted); white-space: nowrap; }
+.historyNextLabel b { font-weight: 750; color: var(--text-strong); }
+.historyAxis { position: relative; height: 16px; font-size: var(--text-nano); color: var(--text-muted); }
+.historyAxis > span { position: absolute; top: 0; transform: translateX(-50%); }
+.historyAxis > span:first-child { transform: none; }
+
 /* --------------------------------------------------------------- PATİKA
-   Sütun başına bir toplantı: üstte beklenen düzeyin noktası (bağlı
-   çizgiyle), altta indirim/sabit/artış yığını, dipte tarih. Ayrıntı imleç
-   ve odakla sütunun künyesinde (CSS; JS yok). */
-.path { --plot-h: 132px; display: flex; flex-direction: column; gap: 12px; }
-.pathWrap { position: relative; }
-.pathGrid { position: relative; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; }
+   İkinci tur (25 Ekim): çizim 96 piksel; bugünkü aralık yatay bant,
+   noktanın üstünde düzey, altında adım rozeti, dipte tarih. Ayrıntı imleç
+   ve odakla sütunun künyesinde (CSS; JS yok). SVG çizim alanının tamamını
+   örter; sütunların noktaları aynı yüzdelerle üstüne oturur. */
+.path { --plot-h: 96px; position: relative; }
 .pathLine { position: absolute; left: 0; right: 0; top: 0; height: var(--plot-h); width: 100%; overflow: visible; pointer-events: none; }
 .pathLine polyline { fill: none; stroke: var(--text-strong); stroke-width: 2; stroke-linejoin: round; }
 .pathLine line { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 3 4; }
-.pathCol { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; padding: 0 2px; border-radius: var(--radius-sm); outline: none; }
+.pathBand { fill: color-mix(in srgb, var(--fed-hold) 16%, transparent); }
+.pathKey { display: inline-flex; align-items: center; gap: 6px; }
+.pathKey > i { display: inline-block; width: 14px; height: 8px; border-radius: 2px; background: color-mix(in srgb, var(--fed-hold) 30%, transparent); }
+.pathKey > b { font-weight: 650; color: var(--text-strong); }
+.pathGrid { position: relative; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; }
+.pathCol { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; padding: 0 2px; border-radius: var(--radius-sm); outline: none; }
 .pathCol:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
-.pathCol[data-thin] .pathStack { opacity: .45; }
+.pathCol[data-thin] .pathStep,
+.pathCol[data-thin] .pathDot { opacity: .5; }
 .pathPlot { position: relative; width: 100%; height: var(--plot-h); }
 .pathDot { position: absolute; left: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--premium-surface); border: 2px solid var(--text-strong); }
 .pathCol[data-today] .pathDot { background: var(--text-strong); }
-.pathValue { position: absolute; left: 50%; transform: translate(-50%, -150%); font-size: var(--text-tiny); font-weight: 650; color: var(--text-strong); white-space: nowrap; }
-.pathStack { display: flex; flex-direction: column-reverse; gap: 2px; width: min(28px, 70%); height: 56px; border-radius: 4px; overflow: hidden; background: var(--surface-sunken); }
-.pathStack > span { display: block; min-height: 2px; background: var(--tone); }
-.pathStack[data-empty] { visibility: hidden; }
+.pathValue { position: absolute; left: 50%; transform: translate(-50%, calc(-100% - 8px)); font-size: var(--text-tiny); line-height: 1.2; font-weight: 700; color: var(--text-strong); white-space: nowrap; }
+.pathStep { display: inline-flex; align-items: center; gap: 3px; min-height: 22px; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--tone) 15%, transparent); font-size: var(--text-tiny); line-height: 1.2; color: var(--text-strong); white-space: nowrap; }
+.pathStep > svg { color: var(--tone); flex: none; }
+.pathStep > b { font-weight: 700; }
+.pathUnit { color: var(--text-muted); }
+.pathStep[data-empty] { visibility: hidden; }
 .pathDate { font-size: var(--text-tiny); color: var(--text-body); white-space: nowrap; }
 .pathCol[data-today] .pathDate { font-weight: 650; color: var(--text-strong); }
 .pathTip { position: absolute; bottom: calc(100% - var(--plot-h) + 8px); z-index: 2; display: none; min-width: 168px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--overlay-surface); box-shadow: var(--shadow-overlay); font-size: var(--text-tiny); color: var(--text-body); }
@@ -218,7 +250,11 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 .pathTip dt { color: var(--text-muted); }
 .pathTip dd { margin: 0; text-align: right; font-weight: 650; color: var(--text-strong); }
 .pathTip p { margin: 0 0 6px; font-weight: 650; color: var(--text-strong); }
-@media (max-width: 479px) { .path { --plot-h: 112px; } .pathValue { font-size: var(--text-nano); } .pathDate { font-size: var(--text-nano); } }
+@media (max-width: 479px) {
+  .pathUnit { display: none; }
+  .pathStep { padding: 2px 5px; }
+  .pathStep > svg { display: none; }
+}
 
 /* ---------------------------------------------------------------- TÜFE */
 /* TÜFE merdiveni: sitenin ince kulvar dili (5 piksel `--line-soft`). */
@@ -235,10 +271,50 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 /* ---------------------------------------------------------------- KÜNYE */
 .note { margin: 0; font-size: var(--text-tiny); line-height: 1.55; color: var(--text-muted); }
 .thin { display: inline-flex; align-self: flex-start; padding: 3px 8px; border-radius: 999px; background: var(--brass-wash); font-size: var(--text-tiny); font-weight: 600; color: var(--brass-ink); }
-.notes { display: flex; flex-direction: column; gap: 10px; padding: 16px 16px 18px; border-top: 1px solid var(--line-soft); }
-@media (min-width: 640px) { .notes { padding: 18px 20px 20px; } }
-.notes p { margin: 0; max-width: 78ch; font-size: var(--text-small); line-height: 1.6; color: var(--text-body); }
-.notes p:last-child { font-weight: 650; color: var(--text-strong); }
+/* Künye kartları (ikinci tur): 1024+ dört yan yana, 640+ iki, telefonda
+   alt alta. Kart ton farkıyla (çökük zemin), gölge yok. 1440'ta panel
+   427 → ~180 piksel (ölçüm commit mesajında). */
+.notesPanel { position: relative; }
+.explain { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 0; padding: 0 16px 14px; list-style: none; }
+@media (min-width: 640px) { .explain { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0 20px 16px; } }
+/* Renk kartı biraz geniş: beş çip 1440'ta tek satıra sığsın (kart 224 → ölçüm commit'te). */
+@media (min-width: 1024px) { .explain { grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.3fr); } }
+.explain > li { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 4px; padding: 12px 14px; border-radius: var(--radius-lg); background: var(--surface-sunken); }
+.explain h3 { margin: 4px 0 0; font-size: var(--text-read); font-weight: 750; line-height: 1.3; color: var(--text-strong); }
+.explain p { margin: 0; font-size: var(--text-tiny); line-height: 1.5; color: var(--text-body); }
+.explainIcon { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 8px; background: var(--primary-wash); color: var(--primary-ink); }
+/* Telefonda (640 altı) kartlar alt alta: ikon başlığın yanına çıkar, her
+   kart bir satır kısalır (künye paneli 625 → ölçüm commit'te). */
+@media (max-width: 639px) {
+  .explain > li { grid-template-columns: 24px minmax(0, 1fr); column-gap: 10px; align-items: center; padding: 10px 12px; }
+  .explain h3 { grid-column: 2; margin: 0; }
+  .explain p, .priceViz, .colorChips { grid-column: 1 / -1; }
+  .priceViz + h3 { grid-column: 1 / -1; margin-top: 2px; }
+}
+/* Fiyat → olasılık: kontrat fiyatı, ok, kulvarda %63 dolu şerit, yüzde. */
+.priceViz { display: flex; align-items: center; gap: 6px; min-height: 26px; font-size: var(--text-small); color: var(--text-muted); }
+.priceViz > b { font-weight: 750; color: var(--text-strong); white-space: nowrap; }
+.priceLane { position: relative; flex: 1; min-width: 40px; height: var(--lane-h, 5px); border-radius: 999px; background: var(--line-soft); overflow: hidden; }
+.priceLane > span { position: absolute; inset-block: 0; left: 0; width: 63%; border-radius: 999px; background: var(--odds-yes); }
+.colorChips { display: flex; flex-wrap: wrap; gap: 3px; margin: 2px 0 0; padding: 0; list-style: none; }
+.colorChips li { display: inline-flex; align-items: center; gap: 4px; padding: 1px 5px 1px 4px; border-radius: 999px; background: var(--premium-surface); font-size: var(--text-nano); line-height: 1.5; color: var(--text-body); }
+.colorChips i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--tone); flex: none; }
+/* Katlama: kutu panelin başında, düğme başlıkta, içerik kartların altında. */
+.foldToggle { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: var(--text-tiny); font-weight: 650; color: var(--primary-ink); cursor: pointer; }
+.foldToggle > svg { transition: transform 220ms var(--ease-brand); }
+.foldInput:checked ~ * .foldToggle > svg { transform: rotate(-180deg); }
+.foldInput:checked ~ * .foldMore,
+.foldInput:not(:checked) ~ * .foldLess { display: none; }
+.foldInput:focus-visible ~ * .foldToggle { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: 6px; }
+.foldInput:not(:checked) ~ .foldBody,
+.foldInput:not(:checked) ~ * .foldBody { display: none; }
+.foldBody { display: flex; flex-direction: column; gap: 10px; margin: 0 16px 14px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
+@media (min-width: 640px) { .foldBody { margin: 0 20px 16px; } }
+.body .foldBody { margin: 0; padding-top: 10px; }
+.foldBody p { margin: 0; max-width: 78ch; font-size: var(--text-small); line-height: 1.6; color: var(--text-body); }
+.disclaimer { font-weight: 650; color: var(--text-strong); }
+.headActions { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0 14px; }
+@media (prefers-reduced-motion: reduce) { .foldToggle > svg { transition: none; } }
 .calLink { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; font-size: var(--text-tiny); font-weight: 600; color: var(--primary-ink); }
 
 /* Makro'nun FOMC kartı ve takvimin FOMC satırı için küçük künye. */
@@ -258,7 +334,9 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
    (pay 38; 1440×900 766, görünür alan 863). 1440 ve üstü, telefon değişmedi. */
 @media (min-width: 1200px) and (max-width: 1439px) {
   .scope { --page-section-gap: 20px; }
-  .tileFigure > b { font-size: 30px; }
+  .gauge { width: 112px; }
+  .gaugeFigure { font-size: 25px; }
+  .tile { column-gap: 10px; padding: 10px 12px; }
   .card > :first-child { padding-bottom: 12px; }
   .body { gap: 8px; padding-bottom: 14px; }
   .chamber { gap: 4px; }

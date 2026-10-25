@@ -40,7 +40,11 @@
 .topicRow, .topicSticky > .topicRow { display:flex; align-items:center; gap:10px; min-width:0; padding:10px 0; border-top:2px solid var(--ch, var(--line-strong)); }
 .topicIcon, .topicSticky > .topicRow > .topicIcon { display:grid; place-items:center; flex-shrink:0; width:30px; height:30px; border-radius:9px; background:color-mix(in srgb, var(--ch) 16%, transparent); color:var(--ch); font-size:inherit; }
 /* Numara iri (25 px kalın = büyük metin): tonda, 3:1 eşiği ölçüldü. */
-.topicNo, .topicSticky > .topicRow > .topicNo { flex-shrink:0; font-size:25px; font-weight:700; line-height:1; letter-spacing:-.03em; color:var(--ch); }
+/* Numara başlıkla AYNI HATTA (25 Ekim, sahibinin isteği): degrade başlık
+   imler kesilmesin diye 0,12em açılıp geri kalkıyor (globals.css "ÜSTTEKİ
+   İMLER"); yanındaki numara bu yüzden birkaç piksel aşağıda duruyordu.
+   Başlıkla aynı punto, aynı kalkış (CLAUDE.md, MarketTexture .bandHead). */
+.topicNo, .topicSticky > .topicRow > .topicNo { flex-shrink:0; font-size:25px; font-weight:800; line-height:1; letter-spacing:-.03em; color:var(--ch); translate:0 calc(1em * -.12); }
 .guide [data-guide-topic] h2 { font-size:25px; }
 .guide [data-guide-topic] { min-width:0; }
 

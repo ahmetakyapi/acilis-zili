@@ -6,7 +6,10 @@ import { CHANGELOG_EN, CHANGELOG_TR, CHANGE_AREAS, TELEGRAM_HREF } from "../cont
 import { COMPARE_PAIR_SLUGS } from "../content/compare-pairs";
 import { GUIDE_META } from "../content/guide/meta";
 import {
+  FEATURED_MAX,
+  areaCounts,
   changelogEntries,
+  dominantArea,
   entryAreas,
   entryDateLabel,
   filterEntries,
@@ -14,10 +17,14 @@ import {
   groupByArea,
   kindCounts,
   monthTicks,
+  parseArea,
   parseKind,
   releaseTimeline,
   resolveHref,
+  splitFeatured,
+  type ChangeItem,
 } from "../lib/changelog";
+import { isUnseen } from "../components/changelog/seen-store";
 import { FRESH_DAYS, parseSeen, shouldBadge } from "../lib/changelog-seen";
 
 /* Yenilikler içeriğinin bütünlüğü (25 Ekim). Kurallar content/changelog.ts
@@ -220,4 +227,69 @@ test("release timeline runs oldest to newest on a 0-1 day scale with month ticks
   const ticks = monthTicks(points);
   assert.equal(ticks[0].month, points[0].date.slice(0, 7));
   assert.ok(ticks.every((t) => t.x >= 0 && t.x <= 1));
+});
+
+/* ---- Kompakt düzen (25 Ekim, ikinci tur): alan süzgeci, baskın alan,
+   öne çıkanlar, sayfadaki "Yeni" rozeti ---- */
+
+test("area filter works per item, combines with kind, counts add up", () => {
+  const all = changelogEntries("tr", null);
+  assert.equal(parseArea("claude"), "claude");
+  assert.equal(parseArea(["bilanco"]), "bilanco");
+  assert.equal(parseArea("bogus"), null);
+  assert.equal(parseArea(undefined), null);
+  const byArea = areaCounts(all);
+  assert.equal(Object.values(byArea).reduce((a, b) => a + b, 0), kindCounts(all).all);
+  const claude = filterEntries(all, null, "claude");
+  assert.ok(claude.length > 0 && claude.every((e) => e.items.every((i) => i.area === "claude")));
+  assert.equal(kindCounts(claude).all, byArea.claude);
+  const both = filterEntries(all, "yeni", "piyasa");
+  assert.ok(both.every((e) => e.items.every((i) => i.kind === "yeni" && i.area === "piyasa")));
+  assert.equal(areaCounts(filterEntries(all, "yeni")).piyasa, kindCounts(both).all);
+  /* Eski iki argümanlı çağrı aynı sonucu verir (akış ve OG görseli). */
+  assert.deepEqual(filterEntries(all, "duzeltme"), filterEntries(all, "duzeltme", null));
+});
+
+test("dominant area is the busiest area, ties go to CHANGE_AREAS order; timeline carries it", () => {
+  const [latest] = changelogEntries("tr", null);
+  const counts = areaCounts([latest]);
+  const top = dominantArea(latest);
+  assert.ok(CHANGE_AREAS.every((a) => counts[a] <= counts[top]));
+  const tie = { ...latest, items: [latest.items.find((i) => i.area === "icerik")!, latest.items.find((i) => i.area === "claude")!] };
+  assert.equal(dominantArea(tie), "claude");
+  const points = releaseTimeline(changelogEntries("tr", null));
+  assert.equal(points.at(-1)!.area, top);
+});
+
+const item = (over: Partial<ChangeItem>): ChangeItem => ({
+  kind: "yeni", area: "piyasa", title: "T", short: null, body: "B", href: "/x", featured: false, ...over,
+});
+
+test("featured: up to four new, linked items, one per area first, rest keeps order", () => {
+  const [latest] = changelogEntries("tr", null);
+  const { featured, rest } = splitFeatured(latest.items);
+  assert.ok(featured.length > 0 && featured.length <= FEATURED_MAX);
+  assert.ok(featured.every((i) => i.kind === "yeni" && i.href));
+  assert.equal(new Set(featured.map((i) => i.area)).size, featured.length, "one card per area");
+  assert.equal(featured.length + rest.length, latest.items.length);
+  const order = (list: ChangeItem[]) => list.map((i) => latest.items.indexOf(i));
+  assert.deepEqual(order(featured), [...order(featured)].sort((a, b) => a - b));
+  assert.deepEqual(order(rest), [...order(rest)].sort((a, b) => a - b));
+  /* Tek alana süzülünce tavan o alanın sıradaki maddeleriyle dolar. */
+  const one = [item({ title: "a" }), item({ title: "b", kind: "duzeltme" }), item({ title: "c" }), item({ title: "d", href: null })];
+  assert.deepEqual(splitFeatured(one).featured.map((i) => i.title), ["a", "c"]);
+  /* İçerikte elle işaret varsa yalnız işaretliler. */
+  const flagged = [item({ title: "a" }), item({ title: "b", kind: "iyilestirme", featured: true })];
+  assert.deepEqual(splitFeatured(flagged).featured.map((i) => i.title), ["b"]);
+  assert.deepEqual(splitFeatured(flagged).rest.map((i) => i.title), ["a"]);
+  assert.equal(splitFeatured([]).featured.length, 0);
+});
+
+test("unseen: compares with the visit baseline; empty storage only marks a fresh latest", () => {
+  assert.equal(isUnseen("2026-10-22", "2026-10-10", "2026-10-25", "2026-10-25"), true);
+  assert.equal(isUnseen("2026-10-04", "2026-10-10", "2026-10-25", "2026-10-25"), false);
+  assert.equal(isUnseen("2026-10-25", "2026-10-25", "2026-10-25", "2026-10-25"), false);
+  assert.equal(isUnseen("2026-10-25", null, "2026-10-25", "2026-10-26"), true);
+  assert.equal(isUnseen("2026-10-22", null, "2026-10-25", "2026-10-26"), false);
+  assert.equal(isUnseen("2026-10-25", null, "2026-10-25", "2026-12-01"), false);
 });

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
+import { ArrowDown, ArrowLeft, ArrowUp, Equals } from "@phosphor-icons/react/dist/ssr";
 import { GuideHint } from "@/components/article/GuideHint";
 import { CongressBody, CongressStrip } from "@/components/investors/CongressDetail";
 import { FundBody, FundStrip } from "@/components/investors/FundDetail";
@@ -16,20 +16,21 @@ import { getSymbolNames } from "@/lib/data";
 import { getArkActivity } from "@/lib/ark-data";
 import { ArkTrades } from "@/components/investors/ArkTrades";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { getInvestorDetail } from "@/lib/investor-data";
+import { getInvestorDetail, type FundDetail } from "@/lib/investor-data";
 import { INVESTOR_SLUGS, investorBySlug, investorFirm, investorPortrait, type Investor } from "@/lib/investors";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
-import { formatMoneyCompact, plural } from "@/lib/utils";
+import { formatMoneyCompact } from "@/lib/utils";
 
 /**
  * Ünlü yatırımcının sayfası (28 Eylül).
  *
- * Sıra sitenin kuralı: kapak (portre, ad, tek cümle, portföy değeri) →
- * künye şeridi (dönem, bildirim, pozisyon, kaynak) → ana görsel (13F'te
- * portföy haritası, Kongre'de hisse bazında işlem çizgileri) → hareketler
- * ve tam tablo → geçmiş → künyeler ve uyarı panelin içinde → damga →
- * rehber. İki tür aynı iskeleti paylaşıyor; gövde türe göre.
+ * Sıra sitenin kuralı: kompakt kimlik kartı (portre, ad, tek cümle,
+ * portföy değeri, yön rozeti; dibinde künye satırı: dönem, bildirim,
+ * pozisyon, kaynak) → ana görsel (13F'te en büyük pozisyonların kart
+ * ızgarası, Kongre'de hisse bazında işlem çizgileri) → hareketler ve katlı
+ * tam tablo → geçmiş → künyeler ve uyarı panelin içinde → damga → rehber.
+ * İki tür aynı iskeleti paylaşıyor; gövde türe göre (25 Ekim kartlı dil).
  *
  * Veri yoksa (tablo yok ya da henüz senkron koşmadı) kapak yine basılıyor,
  * gövdenin yerinde boş durum. Yatırımcı listede yoksa 404.
@@ -126,14 +127,10 @@ export default async function InvestorPage(props: PageProps<"/yatirimcilar/[slug
             share={<PageShare path={`/yatirimcilar/${investor.slug}`} title={`${investor.name} · ${ti.eyebrow}`} locale={locale} t={t} />}
             locale={locale}
             t={ti}
+            facts={<FundStrip detail={detail} locale={locale} t={ti} />}
+            badge={closed ? undefined : <LeanBadge counts={detail.diff.counts} compared={detail.diff.compared} t={ti} />}
             figure={formatMoneyCompact(detail.diff.longValue, locale)}
             figureLabel={ti.portfolioValue}
-            figureMeta={
-              <>
-                <span className="numeral">{quarterLabel(detail.period, ti)}</span>
-                <span className="numeral">{plural(detail.diff.positions.length, ti.positionsOne, ti.positions).replace("{count}", String(detail.diff.positions.length))}</span>
-              </>
-            }
             note={
               closed
                 ? (investor.closedOn ? ti.closedNote : ti.closedNoteUndated)
@@ -152,7 +149,6 @@ export default async function InvestorPage(props: PageProps<"/yatirimcilar/[slug
                 : undefined
             }
           />
-          <FundStrip detail={detail} locale={locale} t={ti} />
           {ark && <ArkTrades activity={ark} locale={locale} t={t} />}
           <FundBody detail={detail} investor={investor} known={known} locale={locale} t={ti} />
           <Notes investor={investor} t={t}>
@@ -180,13 +176,10 @@ export default async function InvestorPage(props: PageProps<"/yatirimcilar/[slug
             share={<PageShare path={`/yatirimcilar/${investor.slug}`} title={`${investor.name} · ${ti.eyebrow}`} locale={locale} t={t} />}
             locale={locale}
             t={ti}
+            facts={<CongressStrip detail={detail} locale={locale} t={ti} />}
             figure={String(detail.trades.length)}
             figureLabel={ti.stripTrades}
-            figureMeta={
-              detail.filings[0] ? <span className="numeral">{filedLabel(detail.filings[0].filedAt, locale, ti)}</span> : undefined
-            }
           />
-          <CongressStrip detail={detail} locale={locale} t={ti} />
           <CongressBody detail={detail} known={known} locale={locale} t={ti} />
           <Notes investor={investor} t={t}>
             <p className={styles.note}>{ti.congressNote}</p>
@@ -212,6 +205,31 @@ export default async function InvestorPage(props: PageProps<"/yatirimcilar/[slug
 
       <GuideHint label={t.guide.contextLabel} locale={locale} slugs={["13f-nedir", "opsiyonlar"]} />
     </MotionExperience>
+  );
+}
+
+/**
+ * Kapaktaki yön rozeti: bu dönemin pozisyon hareketleri alım yönünde mi
+ * satım yönünde mi (dizin kartındaki rozetle aynı tanım, `quarterLean`).
+ * Önceki dönem yoksa ya da hiç hareket yoksa basılmıyor.
+ */
+function LeanBadge({ counts, compared, t }: { counts: FundDetail["diff"]["counts"]; compared: boolean; t: Dictionary["investors"] }) {
+  if (!compared) return null;
+  const buy = counts.new + counts.increased;
+  const sell = counts.decreased + counts.soldOut;
+  if (buy + sell === 0) return null;
+  const tone = buy > sell ? "up" : sell > buy ? "down" : "flat";
+  const Icon = tone === "up" ? ArrowUp : tone === "down" ? ArrowDown : Equals;
+  const label = tone === "up" ? t.leanUp : tone === "down" ? t.leanDown : t.leanFlat;
+  return (
+    <span
+      className={styles.badge}
+      data-tone={tone}
+      title={t.leanAria.replace("{lean}", label).replace("{buy}", String(buy)).replace("{sell}", String(sell))}
+    >
+      <Icon size={12} weight="bold" aria-hidden />
+      {label}
+    </span>
   );
 }
 
