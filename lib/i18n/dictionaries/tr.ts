@@ -2135,7 +2135,7 @@ const tr = {
       "Sitedeki her sayının adı belli bir kaynağı var. Site sayı uydurmuyor; kaynağın verdiğini hesaplıyor, biçimlendiriyor ve damgalıyor.",
     sources: [
       { name: "Alpaca", what: "Hisse ve fon fiyatları, grafik barları. Seans içinde fiyat gerçek zamanlı (IEX); hacim, grafik ve seans dışı konsolide tape (SIP), 15 dakika gecikmeli." },
-      { name: "IEX", what: "Seans içindeki gerçek zamanlı fiyat. Data provided for free by IEX.", href: "https://iextrading.com/api-exhibit-a" },
+      { name: "IEX", what: "Seans içindeki gerçek zamanlı fiyat. Data provided for free by IEX.", href: "https://www.iexexchange.io/" },
       { name: "Finnhub", what: "Şirket profilleri, haberler, bilanço takvimi, analist dağılımı ve halka arzlar." },
       { name: "FRED", what: "ABD makro serileri: enflasyon, istihdam, büyüme ve faiz." },
       { name: "U.S. Treasury ve Cboe", what: "Tahvil getirileri ve VIX için resmî günlük kapanışlar." },

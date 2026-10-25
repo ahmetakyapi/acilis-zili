@@ -1693,7 +1693,7 @@ const en: typeof tr = {
       "Every number on the site has a named source. The site does not invent numbers; it computes, formats and stamps what the source provides.",
     sources: [
       { name: "Alpaca", what: "Stock and fund prices, chart bars. Real-time IEX prices in session; volume, charts and extended hours from the consolidated tape (SIP), 15 minutes delayed." },
-      { name: "IEX", what: "Real-time prices during the session. Data provided for free by IEX.", href: "https://iextrading.com/api-exhibit-a" },
+      { name: "IEX", what: "Real-time prices during the session. Data provided for free by IEX.", href: "https://www.iexexchange.io/" },
       { name: "Finnhub", what: "Company profiles, news, the earnings calendar, analyst ratings and IPOs." },
       { name: "FRED", what: "US macro series: inflation, employment, growth and rates." },
       { name: "U.S. Treasury and Cboe", what: "Official daily closes for Treasury yields and the VIX." },

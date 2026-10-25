@@ -24,6 +24,7 @@ on:
 
 permissions:
   contents: read
+  issues: write # kırık bağlantı raporu tek bir açık issue'da tutulur
 
 concurrency:
   group: links
@@ -45,17 +46,39 @@ jobs:
           echo "args=$(tr '\n' ' ' < pages.txt)" >> "$GITHUB_OUTPUT"
 
       - name: Bağlantıları denetle
+        id: lychee
         uses: lycheeverse/lychee-action@v2
         with:
-          fail: true
+          fail: false
           jobSummary: true
           args: >-
             --no-progress
             --max-concurrency 6
             --max-retries 2
             --timeout 30
-            --accept 200..=299,403,429
+            --accept 200..=299,401,402,403,429
             --user-agent "Mozilla/5.0 (compatible; AcilisZiliLinkCheck/1.0; +https://aciliszili.com/hakkinda)"
             --exclude "^https://(www\.)?(x|twitter|linkedin|facebook|instagram)\.com"
             --exclude "^https://aciliszili\.com/(api|_next)/"
+            --exclude "^https://(www\.)?(npr\.org|usnews\.com|money\.usnews\.com)/"
             ${{ steps.pages.outputs.args }}
+
+      # İŞ KIRMIZIYA DÖNMEZ (25 Ekim): ilk koşu 38 bin bağlantının 94'ünü
+      # hata saydı; çoğu dış sitenin başsız istemciye kapısıydı (Yahoo'nun
+      # HTTP/2 hatası, Reuters/WSJ ödeme duvarı). Her hafta düşen bir iş
+      # bildirim gürültüsü olurdu. Rapor bunun yerine TEK bir açık issue'da
+      # tutulur: hata varsa güncellenir, yoksa kapanır.
+      - name: Rapor issue'su
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          EXIT: ${{ steps.lychee.outputs.exit_code }}
+        run: |
+          title="Kırık Bağlantı Raporu"
+          num=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')
+          if [ "$EXIT" != "0" ]; then
+            if [ -n "$num" ]; then gh issue edit "$num" --body-file lychee/out.md
+            else gh issue create --title "$title" --body-file lychee/out.md; fi
+          elif [ -n "$num" ]; then
+            gh issue close "$num" --comment "Son taramada kırık bağlantı yok."
+          fi

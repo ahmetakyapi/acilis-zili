@@ -590,7 +590,7 @@ export type DataStampLabels = {
 const PROVIDER_LABEL: Record<string, string> = {
   alpaca: "Alpaca · SIP",
   /* "IEX Real-Time Price" IEX'in gösterim koşulundaki atıf metni — fiyatın
-     yanında, çevrilmeden (iextrading.com/api-exhibit-a). */
+     yanında, çevrilmeden (eski adres iextrading.com/api-exhibit-a 404 veriyor; 25 Ekim'den beri iexexchange.io). */
   "alpaca-live": "Alpaca · IEX Real-Time Price",
   "alpaca-mixed": "Alpaca · IEX Real-Time Price",
   finnhub: "Finnhub",

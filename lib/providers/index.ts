@@ -357,7 +357,7 @@ export function packCurrent(
  * atıf ("IEX Real-Time Price") damgada fiyatın yanında.
  *
  * İzin: IEX gerçek zamanlı verinin ücretsiz gösterimine atıfla izin veriyor
- * (iextrading.com/api-exhibit-a); bağlantı Hakkında sayfasında.
+ * (eski adres iextrading.com/api-exhibit-a 404 veriyor; 25 Ekim'den beri iexexchange.io); bağlantı Hakkında sayfasında.
  */
 const REALTIME_MAX_AGE_MS = 3 * 60 * 1000;
 
