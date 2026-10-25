@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type RefObject } from "react";
+import { overflowingTabs } from "./strip-overflow";
 
 /**
  * Masthead şeridinin taşma güvencesi — "priority+" deseni.
@@ -41,13 +42,16 @@ export function usePriorityStrip(
         width: element.getBoundingClientRect().width,
       }));
       const available = nav.clientWidth - more.getBoundingClientRect().width;
-      let total = items.reduce((sum, item) => sum + item.width, 0);
-      const next = new Set<string>();
-      for (const item of [...items].sort((a, b) => b.rank - a.rank)) {
-        if (total <= available) break;
-        next.add(item.href);
-        total -= item.width;
-      }
+      /* SEKME ARALIĞI DA SAYILIYOR (25 Ekim). Toplam yalnız sekme
+         genişliklerinden kuruluyordu; listenin `gap`i (globals.css →
+         `.masthead-nav > ul`, 1280'de 6,4 piksel × 5) dışarıda kalıyordu.
+         Fark 32 pikselden azsa kanca "sığıyor" diyor ama `flex-wrap`li liste
+         son sekmeyi kırpılan ikinci satıra atıyordu: sekme ne şeritte ne
+         panelde, iz bırakmadan kayboluyordu. Gizlenen sekme `absolute`
+         olduğu için kendi aralığını da götürüyor. */
+      const list = nav.querySelector<HTMLElement>("ul");
+      const gap = list ? parseFloat(getComputedStyle(list).columnGap) || 0 : 0;
+      const next = overflowingTabs(items, available, gap);
       setHidden((previous) =>
         previous.size === next.size && [...next].every((href) => previous.has(href)) ? previous : next,
       );

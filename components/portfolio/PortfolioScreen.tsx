@@ -5,6 +5,7 @@ import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import { ExportToTaxButton } from "@/components/portfolio/PortfolioClient";
+import { HeroMoreActions } from "@/components/portfolio/HeroMoreActions";
 import styles from "@/components/portfolio/Portfolio.module.css";
 import {
   AddPositionButton,
@@ -93,21 +94,31 @@ export async function PortfolioScreen({ userId, preset = null }: { userId: strin
             </Suspense>
           }
         >
+          {/* Birincil eylem tek dolu düğme; geri kalanı "Diğer" menüsünde
+              (gerekçe ve ölçüm components/portfolio/HeroMoreActions.tsx).
+              Portföy Analizi geniş ekranda satırda, telefonda menüde: aynı
+              bağlantının iki kopyası, ekranda hep yalnız biri görünür. */}
           <div className={styles.heroActions}>
             <AddPositionButton />
-            <ImportButton />
-            {/* Yedek, aynı düğmenin devre dışı hâli: pozisyonlar inince
-                yerinde etkinleşiyor, satır kaymıyor. Aktarım sözleşmesi
-                (`TAX_HANDOFF_KEY`, sessionStorage) değişmedi. */}
-            <Suspense fallback={<ExportToTaxButton label={L.exportToTax} positions={[]} />}>
-              <HeroExport userId={userId} label={L.exportToTax} />
-            </Suspense>
             {/* Portföy analizi (24 Ekim) — ayrı rota, gerekçe
                 components/portfolio/analysis/AnalysisScreen.tsx. */}
-            <ButtonLink href="/portfoy/analiz" variant="ghost">
+            <ButtonLink href="/portfoy/analiz" variant="ghost" className={styles.inlineOnlyWide}>
               <ChartPieSlice size={16} weight="duotone" aria-hidden />
               {t.portfolioAnalysis.openFromPortfolio}
             </ButtonLink>
+            <HeroMoreActions label={L.moreActions}>
+              <ButtonLink href="/portfoy/analiz" variant="ghost" className={styles.moreOnlyNarrow}>
+                <ChartPieSlice size={16} weight="duotone" aria-hidden />
+                {t.portfolioAnalysis.openFromPortfolio}
+              </ButtonLink>
+              <ImportButton />
+              {/* Yedek, aynı düğmenin devre dışı hâli: pozisyonlar inince
+                  yerinde etkinleşiyor, satır kaymıyor. Aktarım sözleşmesi
+                  (`TAX_HANDOFF_KEY`, sessionStorage) değişmedi. */}
+              <Suspense fallback={<ExportToTaxButton label={L.exportToTax} positions={[]} />}>
+                <HeroExport userId={userId} label={L.exportToTax} />
+              </Suspense>
+            </HeroMoreActions>
           </div>
         </DirectoryHeader>
 

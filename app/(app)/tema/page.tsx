@@ -57,6 +57,14 @@ export const generateMetadata = pageMetadata({
  * değişseydi yedek ile canlı ızgara farklı olur, akışla gelen veri kartları
  * yerinden oynatırdı. Günün öne çıkanı yerini değil KÜNYESİNİ değiştiriyor.
  */
+/* SIRALAMA TELEFONDA DÖRT SATIR (25 Ekim). Kapak 390'da 1.004 piksel
+   ölçüldü ve on satırlık sıralama onun en büyük payıydı: tema galerisi,
+   yani ekranın asıl işi, 1.109'da başlıyordu. Sıralamanın bilgisi uçlarda
+   (en güçlü iki, en zayıf iki); ortası katlı ve "Tümünü Göster" yerinde
+   açıyor (`FoldToggle`, `ExpandInPlace`). Ana sayfanın temalar bandıyla
+   aynı kural. 640 ve üstünde liste tam. */
+const RANK_PHONE_ENDS = 2;
+
 export default async function ThemesIndexPage() {
   const { locale, t } = await getI18n();
 
@@ -77,7 +85,7 @@ export default async function ThemesIndexPage() {
         description={t.themes.subtitle}
         share={<PageShare path="/tema" title={t.themes.title} locale={locale} t={t} />}
         visual={
-          <Suspense fallback={<ThemeRanking cards={placeholders} locale={locale} t={t} />}>
+          <Suspense fallback={<ThemeRanking cards={placeholders} locale={locale} t={t} phoneEnds={RANK_PHONE_ENDS} />}>
             <LiveRanking locale={locale} t={t} />
           </Suspense>
         }
@@ -110,7 +118,7 @@ export default async function ThemesIndexPage() {
 
 async function LiveRanking({ locale, t }: { locale: Locale; t: Dictionary }) {
   const { board, scaleBasis } = await loadThemeBoard();
-  return <ThemeRanking cards={board.cards} basis={scaleBasis} phase={board.phase} locale={locale} t={t} />;
+  return <ThemeRanking cards={board.cards} basis={scaleBasis} phase={board.phase} locale={locale} t={t} phoneEnds={RANK_PHONE_ENDS} />;
 }
 
 /**

@@ -58,6 +58,8 @@ import { StockSummary, metaExtras, summaryFacts } from "./_panels/StockSummary";
 import { StockJsonLd } from "./_panels/StockJsonLd";
 import { EarningsInsight, MoveInsight } from "./_panels/StockInsights";
 import { AskStockSlot } from "./_panels/AskStockPanel";
+import { AskStockChip, ClaudeEntryChip } from "@/components/stock/ClaudeEntryChip";
+import { ChipStrip } from "@/components/ui/ChipStrip";
 import depth from "./_panels/depth.module.css";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { EXPECTED_MOVE_HORIZON_DAYS } from "@/lib/expected-move";
@@ -330,6 +332,7 @@ export default async function StockPage(
     <Link
       prefetch={false}
       className="tap-44"
+      data-research=""
       href={withLocale(analysisHref(latestAnalysis.symbol, latestAnalysis.period), locale)}
     >
       <span>{t.stock.latestAnalysis}</span>
@@ -337,7 +340,7 @@ export default async function StockPage(
       <ArrowUpRight aria-hidden size={15} />
     </Link>
   ) : (
-    <a href="#stock-earnings" className="tap-44">
+    <a href="#stock-earnings" className="tap-44" data-research="">
       {t.stock.earningsShortcut}
       <ArrowDownRight aria-hidden size={14} />
     </a>
@@ -374,7 +377,17 @@ export default async function StockPage(
             birer `nav`dı: ekran okuyucunun bölge listesinde üç tane "Şirket
             sayfası bölümleri" vardı ve ikisi tek bağlantıydı (axe
             "landmark-unique"). Bölgenin adı artık yalnızca gerçek menüde. */}
+        {/* KÜNYE ŞERİDİNDE CLAUDE VE SORU (25 Ekim UX turu): Şirket Analizi
+            paneli 1280'de y=3.468'de, Bu Hisseye Sor 1.854'te duruyordu.
+            İkisinin kısa yolu araştırma bağlantısının SOLUNDA: kap sağa
+            yaslı (`margin-left:auto`), Claude çipi akışla geç geldiğinde
+            araştırma bağlantısı yerinden oynamıyor — yedek `null` bu yüzden
+            güvenli. Gerekçe components/stock/ClaudeEntryChip.tsx. */}
         <div className={styles.researchLinks}>
+          <AskStockChip locale={locale} className={styles.entryAsk} />
+          <Suspense fallback={null}>
+            <ClaudeEntryChip symbol={symbol} locale={locale} className={styles.entryChip} />
+          </Suspense>
           {researchLink}
         </div>
       </StockBreadcrumb>
@@ -417,7 +430,20 @@ export default async function StockPage(
               symbol={symbol}
               locale={locale}
               t={t}
-              chip={<div className={styles.identityChip}>{researchLink}</div>}
+              /* TELEFONDA TEK SATIR ŞERİT (25 Ekim UX turu): Claude çipi,
+                 araştırma bağlantısı ve soru çapası yan yana kayar; şerit
+                 yüksekliği tek çipinki, aralık düğmeleri ilk ekranda kalıyor
+                 (ölçüm stock.module.css → "KISA YOL ŞERİDİ"). Claude başta:
+                 Şirket Analizi paneli telefonda y=6.277'deydi. */
+              chip={
+                <div className={styles.identityChip}>
+                  <ChipStrip activeKey={null} className={cn("scroll-x", styles.entryStrip)}>
+                    <ClaudeEntryChip symbol={symbol} locale={locale} className={styles.entryChip} />
+                    {researchLink}
+                    <AskStockChip locale={locale} className={styles.entryAsk} />
+                  </ChipStrip>
+                </div>
+              }
             />
           </Suspense>
           {/* ÖLÇÜLMÜŞ YÜKSEKLİK. Yedek 300 (mobil) / 430 piksel ayırıyordu

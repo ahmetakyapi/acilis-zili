@@ -18,7 +18,16 @@
   font-variant-numeric:tabular-nums;
   transition:background-color .2s var(--ease-brand), color .2s var(--ease-brand);
 }
-.ref::after { content:""; position:absolute; inset:-7px -3px; }
+/* DOKUNMA ALANI 44 YÜKSEKLİĞİNDE (25 Ekim). Önceki genişletme (-7/-3)
+   hedefi 24×32 yapıyordu (UX denetimi: görünür 18×18). Dikeyde 13 piksel
+   taşma 44'e tamamlıyor; satırlar 44'ten yüksek olduğundan alt/üst
+   satırın numarasına binmiyor (390 ve 1280'de elementFromPoint ile
+   ölçüldü). Yatayda yan yana numaralar 2 piksel aralıklı: içteki kenarlar
+   yalnız 1 piksel (komşunun hedefini kapmasın), dıştaki kenarlar 13
+   piksel. Tek numara 44×44, ikili 32 genişliğinde. */
+.ref::after { content:""; position:absolute; inset:-13px -1px; }
+.ref:first-child::after { left:-13px; }
+.ref:last-child::after { right:-13px; }
 .ref:hover { background:var(--primary-tint); color:var(--primary-hover); }
 
 /* Çapayla gelinen kaynak satırı bir an belirsin: okuyucu yüz satırlık

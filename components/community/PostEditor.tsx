@@ -8,6 +8,7 @@ import {
   CheckCircle,
   Circle,
   FilePlus,
+  FloppyDisk,
   PaperPlaneTilt,
   Trash,
 } from "@phosphor-icons/react";
@@ -35,6 +36,7 @@ import type { Dictionary } from "@/lib/i18n";
 import { POST_TEMPLATES, type PostTemplate, type PostTemplateKey } from "@/lib/post-templates";
 import type { OwnPost } from "@/lib/user-post-data";
 import { cn } from "@/lib/utils";
+import styles from "./PostEditor.module.css";
 
 type Labels = Dictionary["community"]["editor"];
 type TemplateLabels = Dictionary["community"]["templates"];
@@ -73,6 +75,8 @@ const imza = (title: string, dek: string, symbols: string, body: string) =>
  * - Çiplerin ne çizdiği üzerine gelince yazar; denetim listesi gönderme
  *   şartlarını (200 karakter, köşeli parantezler) önceden gösterir — red
  *   gerekçesi sonradan değil.
+ * - Kaydet ve diğer eylemler formun dibine yapışık şeritte, durumu tek
+ *   yuvada söyleyerek (25 Ekim; ölçüler PostEditor.module.css).
  *
  * Form DENETİMLİ: React 19 form eylemi hata döndürünce denetimsiz alanları
  * sıfırlıyor (StoryEditor dersi). Çıkış koruması kirli metinde üç kapı
@@ -154,6 +158,20 @@ export function PostEditor({
     state.status === "error" && state.field === name ? true : undefined;
   const errorText =
     state.status === "error" ? labels.errors[state.error ?? "unavailable"] : null;
+
+  /* Durum yuvasının tek kaynağı. Sıra: süren kayıt > hata > kirli metin >
+     son kayıt > boşta. Kirliyken "Kuyruğa Gönder" basılmıyor (kaydedilmemiş
+     metin gönderilmesin); bunun nedeni de aynı yuvada söyleniyor. */
+  const canSubmit = post !== null && (post.status === "draft" || post.status === "rejected");
+  const durum: { metin: string; ton: "ok" | "warn" | "idle" | "down" } = saving
+    ? { metin: labels.saving, ton: "idle" }
+    : errorText
+      ? { metin: errorText, ton: "down" }
+      : kirli
+        ? { metin: canSubmit ? `${labels.statusUnsaved} · ${labels.saveFirst}` : labels.statusUnsaved, ton: "warn" }
+        : state.status === "ok"
+          ? { metin: post?.status === "published" ? labels.savedRequeued : labels.saved, ton: "ok" }
+          : { metin: post ? labels.statusClean : labels.statusNew, ton: "idle" };
 
   const bodyLength = body.trim().length;
   const symbolList = symbols
@@ -428,73 +446,9 @@ export function PostEditor({
               </ul>
             </div>
 
-            {errorText && (
-              <p role="alert" className="text-small font-medium text-down">
-                {errorText}
-              </p>
-            )}
-            <p role="status" className={state.status === "ok" ? "flex items-start gap-2 text-small leading-relaxed text-body" : "sr-only"}>
-              {state.status === "ok" && (
-                <>
-                  <CheckCircle weight="fill" size={16} className="mt-0.5 shrink-0 text-up" aria-hidden />
-                  {post?.status === "published" ? labels.savedRequeued : labels.saved}
-                </>
-              )}
-            </p>
-
             {post?.status === "published" && (
               <p className="text-tiny leading-relaxed text-muted">{labels.publishedEditNote}</p>
             )}
-            <div className="flex flex-wrap items-center gap-2 border-t border-line-soft pt-4">
-              <Button
-                type="submit"
-                aria-disabled={saving}
-                onClick={(event) => {
-                  if (saving) event.preventDefault();
-                }}
-                className="aria-disabled:opacity-45"
-              >
-                {saving ? labels.saving : labels.save}
-              </Button>
-              {post && (post.status === "draft" || post.status === "rejected") &&
-                (kirli ? (
-                  <span className="text-tiny text-muted">{labels.saveFirst}</span>
-                ) : (
-                  <Button type="submit" variant="ghost" formAction={submitPostAction} formNoValidate>
-                    <PaperPlaneTilt weight="duotone" size={15} />
-                    {labels.submitReview}
-                  </Button>
-                ))}
-              {post && post.status === "pending" && (
-                <Button type="submit" variant="ghost" formAction={withdrawPostAction} formNoValidate>
-                  {labels.withdraw}
-                </Button>
-              )}
-              {post && (
-                <Button
-                  type="submit"
-                  variant="ghost"
-                  formAction={deletePostAction}
-                  formNoValidate
-                  onClick={(event) => {
-                    if (!window.confirm(labels.deleteConfirm)) event.preventDefault();
-                  }}
-                  className="text-down hover:text-down"
-                >
-                  <Trash weight="duotone" size={15} />
-                  {labels.delete}
-                </Button>
-              )}
-              {post?.status === "published" && (
-                <Link
-                  href={`/topluluk/${post.slug}`}
-                  className="ml-auto inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary transition-colors hover:text-primary-hover sm:min-h-0"
-                >
-                  {labels.viewPublished}
-                  <ArrowUpRight size={14} aria-hidden />
-                </Link>
-              )}
-            </div>
           </div>
         </Panel>
 
@@ -502,11 +456,15 @@ export function PostEditor({
             (data-editor-preview, useCikisKorumasi yakalıyor). Stil sınıfı
             içe aktarma AĞAÇTA KALMALI: çizim sunucudan geliyor, CSS'i bu
             bileşen getiriyor (StoryEditor'daki kayıt). Geniş ekranda
-            yapışkan; gövde kendi içinde kayar ve imleci izler. ---- */}
+            yapışkan; gövde kendi içinde kayar ve imleci izler.
+            Boyu eylem şeridine yer bırakır (25 Ekim): üst nefes 20 + şerit
+            payı 128 (piyasa şeridi 37 + 12 + şerit 66 + 12). Önceki hâlde
+            panelin dibi piyasa şeridinin 7 piksel altında kalıyordu
+            (1280×800, ölçüldü: dip 770, şerit 763). ---- */}
         <Panel
           aria-label={labels.previewLabel}
           className={cn(
-            "flex flex-col lg:sticky lg:top-[calc(var(--app-bar-h)+20px)] lg:max-h-[calc(100dvh-var(--app-bar-h)-40px)]",
+            "flex flex-col lg:sticky lg:top-[calc(var(--app-bar-h)+20px)] lg:max-h-[calc(100dvh-var(--app-bar-h)-148px)]",
             view === "write" && "max-lg:hidden",
           )}
         >
@@ -551,6 +509,81 @@ export function PostEditor({
             {labels.previewHint}
           </p>
         </Panel>
+      </div>
+
+      {/* ---- Eylem şeridi — formun son çocuğu, dibine yapışık (gerekçe ve
+          ölçüler PostEditor.module.css). Tek durum yuvası: kaydediliyor,
+          hata, kaydedilmemiş değişiklik, kaydedildi. ---- */}
+      <div
+        role="region"
+        aria-label={labels.actionsLabel}
+        data-post-actions
+        data-many={post ? "" : undefined}
+        className={styles.bar}
+      >
+        <Button
+          type="submit"
+          aria-disabled={saving}
+          onClick={(event) => {
+            if (saving) event.preventDefault();
+          }}
+          className="aria-disabled:opacity-45"
+        >
+          <FloppyDisk weight="duotone" size={16} aria-hidden />
+          {saving ? labels.saving : labels.save}
+        </Button>
+        {post && (post.status === "draft" || post.status === "rejected") && !kirli && (
+          <Button type="submit" variant="ghost" formAction={submitPostAction} formNoValidate>
+            <PaperPlaneTilt weight="duotone" size={15} aria-hidden />
+            {labels.submitReview}
+          </Button>
+        )}
+        {post && post.status === "pending" && (
+          <Button type="submit" variant="ghost" formAction={withdrawPostAction} formNoValidate>
+            {labels.withdraw}
+          </Button>
+        )}
+        {post && (
+          <Button
+            type="submit"
+            variant="ghost"
+            formAction={deletePostAction}
+            formNoValidate
+            onClick={(event) => {
+              if (!window.confirm(labels.deleteConfirm)) event.preventDefault();
+            }}
+            title={labels.delete}
+            className="text-down hover:text-down max-sm:w-11 max-sm:px-0"
+          >
+            <Trash weight="duotone" size={15} aria-hidden />
+            <span className="max-sm:sr-only">{labels.delete}</span>
+          </Button>
+        )}
+        <p
+          role="status"
+          className={cn(
+            styles.status,
+            durum.ton === "down" ? "font-semibold text-down" : durum.ton === "idle" ? "text-muted" : "text-body",
+          )}
+        >
+          {/* Başarının işareti onay işareti ve her kayıtta yeniden yaylanır
+              (`check-pop`, anahtar kaydın anı) — EylemSeridi'yle aynı dil. */}
+          {durum.ton === "ok" ? (
+            <Check key={state.at} weight="bold" size={14} aria-hidden className="check-pop shrink-0 text-up" />
+          ) : (
+            durum.ton !== "down" && <span aria-hidden className={styles.dot} data-tone={durum.ton} />
+          )}
+          <span className="min-w-0">{durum.metin}</span>
+        </p>
+        {post?.status === "published" && (
+          <Link
+            href={`/topluluk/${post.slug}`}
+            className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary transition-colors hover:text-primary-hover sm:min-h-0"
+          >
+            {labels.viewPublished}
+            <ArrowUpRight size={14} aria-hidden />
+          </Link>
+        )}
       </div>
     </form>
   );

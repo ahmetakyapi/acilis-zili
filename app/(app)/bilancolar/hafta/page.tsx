@@ -171,11 +171,6 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
       <DirectoryHeader
         title={t.analysis.title}
         description={t.earningsWeek.description}
-        visual={
-          <Suspense fallback={<WeekPulseSkeleton t={t} />}>
-            <HeroPulse monday={monday} locale={locale} t={t} />
-          </Suspense>
-        }
       >
         {/* EYLEMLER KAHRAMANDA. Görseller sayfanın en altındaydı ve indirme
             bağlantısı ancak iki panel aşağıda bulunuyordu; oysa bu sayfanın
@@ -228,6 +223,20 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
         </nav>
       </div>
 
+      {/* NABIZ KAPAKTAN ÇIKTI (25 Ekim). Kapağın sağ kolonundaydı; telefonda
+          kolon başlığın altına iniyor, kapak 602 piksel ve sekme çubuğu
+          y=703'te kalıyordu (390). Artık hafta şeridinin altında kendi
+          panelinde — seçilen haftanın ana görseli, panonun hemen önünde.
+          Panelin başlığı nabzın kendi `h2`si ("Günlere Göre") ve büyük
+          toplamı; geniş ekranda başlık ve lejant solda, sütunlar sağda
+          (`.pulsePanel`). İndirme eylemleri kapakta kaldı: bu sekmenin işi
+          paylaşılacak çıktı. */}
+      <Panel className={board.pulsePanel}>
+        <Suspense fallback={<WeekPulseSkeleton t={t} />}>
+          <PulsePanelBody monday={monday} locale={locale} t={t} />
+        </Suspense>
+      </Panel>
+
       <Suspense
         fallback={
           <Panel>
@@ -246,7 +255,7 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
   );
 }
 
-async function HeroPulse({ monday, locale, t }: { monday: string; locale: Locale; t: Dictionary }) {
+async function PulsePanelBody({ monday, locale, t }: { monday: string; locale: Locale; t: Dictionary }) {
   const week = await loadWeek(monday, locale);
   return <WeekPulse days={week.days} picked={week.picked} locale={locale} t={t} />;
 }

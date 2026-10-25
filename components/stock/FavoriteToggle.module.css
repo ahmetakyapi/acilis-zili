@@ -50,3 +50,14 @@
   .heart[data-burst] .ring,
   .heart[data-burst] .spark { animation:none; }
 }
+
+/* DOKUNMA ALANI İKİ YÖNDE 44 (25 Ekim UX turu). `tap-44` (globals.css)
+   alanı yalnız DİKEYDE 44'e çıkarıyor; 32'lik kalp yatayda 32 kalıyordu
+   (teknik ve hisse seçimi kapağında ölçüldü: ::after 32×44). Genişletme
+   düğmenin kendi genişliğine göre: (100% − 44px) / 2, yani −6 piksel. Komşu
+   paylaş düğmesiyle aralık bu yüzden 12 (kapaklarda `gap-3`): 32 + 12 = 44,
+   iki alan kesişmiyor. Seçici `tap-44` ile birlikte: genel kuralı ezsin,
+   640 üstünde (genel kural orada alanı kapatıyor) hiçbir şey açmasın. */
+@media (max-width: 639px) {
+  .hit:global(.tap-44)::after { inset-inline: calc((100% - 44px) / 2); }
+}

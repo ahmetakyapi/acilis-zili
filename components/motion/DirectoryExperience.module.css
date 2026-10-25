@@ -149,9 +149,21 @@
 .sectorPreviewLinks b { color:var(--primary-ink); font-weight:600; }
 .sectorPreviewLinks i { position:absolute; left:0; bottom:-3px; height:3px; background:var(--primary); }
 .sectorPreviewLinks > a:is(:hover,:focus-visible) { color:var(--primary-ink); }
-.earningsActivity { margin-top:22px; padding-top:12px; border-top:1px solid var(--line-soft); }
-.earningsActivity figcaption { display:flex; justify-content:space-between; gap:12px; font-size:12px; color:var(--text-muted); }
-.earningsActivity figcaption strong { font-weight:600; color:var(--text-strong); }
+/* BİLANÇO TAKVİMİNİN ÖZETİ — sekme çubuğunun altında iki panel (25 Ekim).
+   Yoğunluk grafiği ve öne çıkanlar kapağın içindeydi; telefonda kapak 735
+   piksel, sekme çubuğu y=836 (ilk ekranın altı). Geniş ekranda iki panel
+   kapağın eski oranıyla yan yana (1,15 : 1), telefonda alt alta.
+   Yoğunluk paneli esnek sütun ve izleri `flex:1`: ızgara satırı iki paneli
+   eşit gerdiğinde boşluk panelin dibinde kalmıyor, çubuklar uzuyor
+   (CLAUDE.md, "boşluk esnetilmez, doldurulur" — burada dolduran grafiğin
+   kendisi). Taban iz yüksekliği 44 piksel, telefonda olduğu gibi. */
+.earningsOverview { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:20px; align-items:stretch; }
+.activityPanel { display:flex; flex-direction:column; }
+.earningsActivity { display:flex; flex:1 1 auto; flex-direction:column; min-height:0; padding:0 16px 16px; }
+.earningsActivity > .activityBars { flex:1 1 auto; }
+.earningsActivity .activityTrack { flex:1 1 auto; min-height:44px; height:auto; }
+@media(min-width:640px) { .earningsActivity { padding:0 20px 20px; } }
+@media(max-width:767px) { .earningsOverview { grid-template-columns:minmax(0,1fr); } }
 /* Çubuk sütunları: üstte sayı, ortada çubuk, altta gün. Sütunlar eşit ve
    aralarında 6 piksel; etiketler çubukla aynı eksende ortalı. */
 .activityBars { display:flex; align-items:stretch; gap:6px; margin-top:10px; }
@@ -174,29 +186,20 @@
 .activityPeak strong { font-weight:600; color:var(--primary-ink); }
 .activityPeak > :last-child { margin-left:auto; color:var(--primary-ink); }
 @media(min-width:768px) {
- .companyHeader.companyHeader:global(.page-frame),.earningsHeader.earningsHeader:global(.page-frame) { align-items:stretch; }
- .companyHeader > :global(.page-heading-copy),.earningsHeader > :global(.page-heading-copy) { display:flex; flex-direction:column; align-self:stretch; }
- .companyHeader .sectorPreview,.earningsHeader .earningsActivity { margin-top:auto; padding-top:14px; }
- /* Otomatik üst pay, sağ kolon kısaysa SIFIRA iniyor: yoğunluk grafiği
-    etiketlenip uzayınca açıklama cümlesiyle grafiğin çizgisi arasında 12
-    piksel kalıyordu (1440, ölçüldü). Önceki kardeşin alt payı tabanı
-    garanti ediyor. */
- .earningsHeader :global(.page-heading-copy) > :has(+ .earningsActivity) { margin-bottom:18px; }
+ .companyHeader.companyHeader:global(.page-frame) { align-items:stretch; }
+ .companyHeader > :global(.page-heading-copy) { display:flex; flex-direction:column; align-self:stretch; }
+ .companyHeader .sectorPreview { margin-top:auto; padding-top:14px; }
  .companyHeader .metrics { margin-bottom:20px; }
- .earningsHeader .calendarControls { margin-bottom:20px; }
 }
 @media(min-width:768px) {
  .companyHeader .metrics { margin-top:18px; margin-bottom:10px; }
  .companyHeader .sectorPreview { padding-top:10px; }
  .companyHeader .sectorPreview > p { margin-bottom:7px; }
  .companyHeader .sectorPreviewLinks > a { padding-bottom:6px; }
- .earningsHeader .calendarControls { margin-bottom:10px; }
- .earningsHeader .earningsActivity { padding-top:12px; }
- .companyHeader > .heroVisual,.earningsHeader > .heroVisual { display:flex; }
+ .companyHeader > .heroVisual { display:flex; }
  .companyHeader > .heroVisual > * { flex:1; display:flex; flex-direction:column; }
  .companyHeader .heroVisual ul { flex:1; }
  .companyHeader .heroVisual li > a { height:100%; }
- .earningsHeader > .heroVisual > * { flex:1; }
 }
 
 /* 22 September: the sticky heading's translucent sunken fill let scrolling

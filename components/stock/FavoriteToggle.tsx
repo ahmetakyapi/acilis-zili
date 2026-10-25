@@ -126,6 +126,7 @@ function HeartButton({ active, label, hint, text }: { active: boolean; label: st
       data-labeled={text ? "" : undefined}
       className={cn(
         "tap-44 inline-flex size-8 items-center justify-center rounded-(--radius-sm) transition-colors",
+        styles.hit,
         active
           ? "text-primary-ink hover:bg-primary-wash"
           : "text-muted hover:bg-surface-elevated hover:text-soft",

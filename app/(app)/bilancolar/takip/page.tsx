@@ -8,6 +8,7 @@ import {
   ButtonLink,
   EmptyState,
   Panel,
+  PanelHeader,
   Segment,
   SegmentItem,
 } from "@/components/ui/primitives";
@@ -82,7 +83,12 @@ export default async function WatchedEarningsPage(
         <ScrollProgress />
         <DirectoryHeader title={t.analysis.title} description={t.directory.analysisDescription} />
         <EarningsTabs active="watchlist" t={t} className="-mt-1" />
+        {/* PANELİN BAŞLIĞI VAR (25 Ekim): her panelin h2'si kuralı. Sayfada
+            tek `h1` ve bu panel vardı; ekran okuyucunun başlık listesinde
+            sekmenin içeriği hiç görünmüyordu. Başlık sekmenin adı, boş
+            durum cümlesi altında. */}
         <Panel>
+          <PanelHeader title={t.earnings.tabWatchlist} />
           <EmptyState
             scene="hello"
             title={t.analysis.signedOut}
@@ -218,6 +224,7 @@ export default async function WatchedEarningsPage(
 
       {userSymbols.length === 0 ? (
         <Panel>
+          <PanelHeader title={t.earnings.tabWatchlist} />
           <EmptyState
             scene="hello"
             title={t.earnings.emptyWatchlist}

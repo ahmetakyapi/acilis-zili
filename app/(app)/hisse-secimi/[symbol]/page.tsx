@@ -13,6 +13,7 @@ import { CategoryPanel, ChecksPanel, NextPanel, SidesPanel, statusLabel } from "
 import { FlagSummary } from "@/components/screening/ScreenVisuals";
 import { RuleBenchFigure } from "@/components/figures/rule-bench/figure";
 import styles from "@/components/screening/Screening.module.css";
+import { ChipStrip } from "@/components/ui/ChipStrip";
 import { DataStamp, EmptyState, LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
 import { analysisHref } from "@/lib/analysis";
 import { compareHref } from "@/lib/compare";
@@ -25,7 +26,7 @@ import { loadScreen } from "@/lib/screening-data";
 import { industryLabel } from "@/lib/sectors";
 import { pageAlternates } from "@/lib/site";
 import { isTechnicalSymbol, technicalHref } from "@/lib/technical";
-import { formatMoneyCompact, formatPrice, isValidSymbol } from "@/lib/utils";
+import { cn, formatMoneyCompact, formatPrice, isValidSymbol } from "@/lib/utils";
 
 /* TANINMAYAN SEMBOLDE SINIR — hisse sayfasındaki gerekçenin aynısı
    (app/(app)/hisse/[symbol]/page.tsx → allowStockRender). Bir rapor on üç
@@ -119,7 +120,7 @@ export default async function ScreenReportPage(props: PageProps<"/hisse-secimi/[
         byline={industry ? `${data.name} · ${industry}` : data.name}
         description={S.reportSubtitle.replace("{name}", data.name)}
         share={
-          <span className="inline-flex items-center gap-2">
+          <span className="inline-flex items-center gap-3">
             <FavoriteSlot symbol={symbol} back={`/hisse-secimi/${symbol}`} t={t} />
             <PageShare path={`/hisse-secimi/${symbol}`} title={S.reportTitle.replace("{symbol}", symbol)} locale={locale} t={t} />
           </span>
@@ -130,6 +131,7 @@ export default async function ScreenReportPage(props: PageProps<"/hisse-secimi/[
             names={Object.fromEntries(data.result.checks.map((check) => [check.id, S.checks[check.id].name])) as Record<CheckId, string>}
             statusOf={(id) => statusLabel(data.result.checks.find((check) => check.id === id)!, data, S)}
             t={S}
+            fold={{ more: t.stockEntry.flagsMore, less: t.stockEntry.flagsLess }}
           />
         }
       >
@@ -148,12 +150,18 @@ export default async function ScreenReportPage(props: PageProps<"/hisse-secimi/[
           )}
         </dl>
         <nav className={styles.links} aria-label={S.linksLabel}>
-          {links.map((link) => (
-            <Link key={link.href} href={link.href} className={styles.link} data-motion-action>
-              {link.label}
-              <ArrowUpRight size={13} weight="bold" aria-hidden="true" />
-            </Link>
-          ))}
+          <ChipStrip
+            activeKey={null}
+            className={cn("scroll-x", styles.linkStrip)}
+            scrollLabels={{ prev: t.common.scrollPrev, next: t.common.scrollNext }}
+          >
+            {links.map((link) => (
+              <Link key={link.href} href={link.href} className={styles.link} data-motion-action>
+                {link.label}
+                <ArrowUpRight size={13} weight="bold" aria-hidden="true" />
+              </Link>
+            ))}
+          </ChipStrip>
         </nav>
       </DirectoryHeader>
 

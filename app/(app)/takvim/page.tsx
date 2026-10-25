@@ -909,6 +909,24 @@ export default async function CalendarPage(
           </Panel>
         </QueryTransition>
 
+        {/* AYIN ÖNEMLİ VERİLERİ TELEFONDA BURADA (25 Ekim). Kapakta kartın
+            altındaydı ve sekme ile önem süzgecini ilk ekranın dışına
+            itiyordu (390: sekme 839, süzgeç 972). Takvimin hemen ardında,
+            kendi panelinde; 768 ve üstünde gizli, orada kapaktaki kopya
+            görünür (gerekçe MonthReleases.tsx). Geçiş maskesinin DIŞINDA:
+            görünüm değişince içeriği değişmiyor. */}
+        {monthItems.length > 0 && (
+          <MonthReleases
+            items={monthItems}
+            monthName={monthName}
+            highCount={monthHigh.length}
+            constrained={false}
+            placement="board"
+            locale={locale}
+            t={t}
+          />
+        )}
+
         {/* ALTI HAFTA, GÖRÜNÜMDEN BAĞIMSIZ. Geçiş maskesinin DIŞINDA:
             Gün/Hafta/Ay değişirken içeriği değişmiyor, örtülmesi yanlış
             bir "yükleniyor" olurdu. Takvimin altında, sayfanın ikinci

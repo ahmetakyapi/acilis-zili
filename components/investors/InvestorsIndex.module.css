@@ -62,7 +62,13 @@
 @media(max-width:639px) {
   .castList { grid-template-columns:repeat(8, minmax(0,1fr)); gap:8px 4px; }
   .castName { display:none; }
-  .castFace { padding:2px 0; }
+  /* DOKUNMA ALANI ARALIĞA YAYILIR (25 Ekim). Yüz 36×40 (UX denetimi);
+     kolon adımı 40 (36 + 4 aralık), satır adımı 48 (40 + 8). Görünmez
+     katman komşuya dokunmadan sığan en büyük alanı alıyor: 40×48. Yatayda
+     44 ancak yüzleri küçültmek ya da kolon sayısını azaltmakla olurdu;
+     ikisi de görseli değiştirir. */
+  .castFace { position:relative; padding:2px 0; }
+  .castFace::before { content:""; position:absolute; inset:-4px -2px; }
   .castPhoto { width:100%; max-width:40px; }
   .castPhoto > span[data-size] { width:100%; border-radius:10px; }
   .castFace[data-lean] .castPhoto::after { width:9px; height:9px; right:-2px; bottom:-2px; outline-width:2px; }

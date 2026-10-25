@@ -41,7 +41,8 @@ export const generateMetadata = pageMetadata({
  *   3. "Ne zaman, nereye, hangi belgeyle?"    → takvim paneli
  * Kapak üçünü de ilk ekranda soruyor.
  *
- * ÖNCE ANLATIM, SONRA HESAP (29 Eylül, sahibinin isteği). Sıra:
+ * ÖNCE ANLATIM, SONRA HESAP (29 Eylül, sahibinin isteği; 25 Ekim'de
+ * değişti, aşağıda). Eski sıra:
  *   kapak → Nasıl Hesaplanır (altı adım, sonunda "Hesaplamaya Başla"
  *   çapası) → hesaplayıcı (ekstre, giriş, sonuç) → takvim ve belgeler
  *   (hesaptan sonra beyan) → tarife merdiveni + üç kart (TaxGuide) → DataStamp →
@@ -51,6 +52,17 @@ export const generateMetadata = pageMetadata({
  * onu özetleyip çapayla bağlanıyor. Kuralları anlatan iki açılır satır
  * (kur/endeksleme, ilk giren ilk çıkar) adımlara taşındı ve SSS'den
  * kaldırıldı — aynı kural iki yerde yazılmıyor.
+ *
+ * ÖNCE HESAP, ANLATIM KATLI ALTINDA (25 Ekim, sahibinin isteği: birincil
+ * eylem kaydırmadan görünsün). Yukarıdaki sırada hesaplayıcının ilk alanı
+ * 390×844'te y=2962, 1280×800'de y=1729'du; arada 1.883 (390) / 954
+ * (1280) piksellik anlatım vardı. Yeni sıra:
+ *   kapak (üç soru) → hesaplayıcı → Nasıl Hesaplanır (ilk iki adım açık,
+ *   kalanı katlı) → takvim ve belgeler → TaxGuide → GuideHint.
+ * Anlatım silinmedi: boş sonuçtaki "Nasıl Hesaplanır" bağlantısı onu
+ * açarak iner (`TaxHowReveal`). Kapağın `#satis`/`#temettu`/`#takvim`
+ * çapaları ve rehberin `/vergi#satis` bağlantısı aynı. Ölçümler
+ * `TaxHow.tsx` başında.
  */
 export default async function TaxPage() {
   const { locale, t } = await getI18n();
@@ -75,9 +87,9 @@ export default async function TaxPage() {
         visual={<TaxPaths labels={L} />}
       />
 
-      <TaxHow labels={L} locale={locale} today={today} years={years} />
-
       <TaxCalculator labels={L} locale={locale} indexAuto={isEvdsConfigured()} today={today} years={years} />
+
+      <TaxHow labels={L} locale={locale} today={today} years={years} />
 
       <TaxFiling labels={L} locale={locale} today={today} years={years} />
 

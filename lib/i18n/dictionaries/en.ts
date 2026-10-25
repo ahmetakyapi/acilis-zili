@@ -10,6 +10,7 @@ import { daySignatureEn } from "./day-signature";
 import { earningsSeasonEn } from "./earnings-season";
 import { dailyChartEn } from "./daily-chart";
 import { changelogEn } from "./changelog";
+import { stockEntryEn } from "./stock-entry";
 
 const en: typeof tr = {
   brand: {
@@ -2942,7 +2943,10 @@ const en: typeof tr = {
         step6Body:
           "{year} income is declared in March {filing} on the Hazır Beyan system; the tax is paid in two instalments on 31 March and 31 July.",
         step6Link: "Timeline and Documents",
-        start: "Start Calculating",
+        start: "Back to the Calculator",
+        more: "Show the Other {n} Steps and the Example",
+        less: "Show Less",
+        readHow: "How It Is Calculated",
         tariffSource: "Source: {source}.",
         exampleTitle: "Example: {qty} Shares of {symbol}",
         exampleTag: "Hypothetical Rates and Index",
@@ -3086,6 +3090,8 @@ const en: typeof tr = {
       fxMissing: "Exchange rate unavailable; the lira columns are empty for now.",
       staleNote: "Prices may be out of date; P/L uses the last price received.",
       exportToTax: "Send to Tax Calculator",
+      /** Kapaktaki ikincil eylemlerin menüsü (25 Ekim, HeroMoreActions). */
+      moreActions: "More",
       exportHint: "Your positions move to the tax calculator as buys; nothing is sent to the server.",
       notAdvice: "Not investment advice.",
       allocationTitle: "Allocation",
@@ -3836,6 +3842,11 @@ const en: typeof tr = {
         unavailable: "Couldn't save right now; please try again shortly.",
         notFound: "The post couldn't be found.",
       },
+      /* Eylem şeridi (25 Ekim, PostEditor): bölge adı ve durum yuvası. */
+      actionsLabel: "Post Actions",
+      statusUnsaved: "Unsaved Changes",
+      statusClean: "No Changes",
+      statusNew: "Not Saved Yet",
     },
   },
   screener: {
@@ -4191,6 +4202,8 @@ const en: typeof tr = {
   portfolioAnalysis: portfolioAnalysisEn,
   /* Yenilikler (25 Ekim) — metin ayrı dosyada; girişler content/changelog.ts. */
   changelog: changelogEn,
+  /* Şirket ekranlarının kısa yolları (25 Ekim UX turu) — metin ayrı dosyada. */
+  stockEntry: stockEntryEn,
 };
 
 export default en;

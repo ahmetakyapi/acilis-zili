@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
+import styles from "./ChipStrip.module.css";
 
 /**
  * Yatay kayan çip şeridi — seçili çipi kendiliğinden görünür alana getirir.
@@ -123,15 +124,16 @@ export function ChipStrip({
       </div>
       {/* Düğmeler HEP BAĞLI, `data-can` sürüyor (14 Ekim): koşullu render
           kenara ulaşınca tek karede yok ediyordu — giriş animasyonluyken
-          çıkış yoktu. Stil globals.css `.chip-strip-arrow`; kapalıyken
+          çıkış yoktu. Stil globals.css `.chip-strip-arrow`, 44 piksellik
+          dokunma alanı ChipStrip.module.css; kapalıyken
           odaktan da düşer (tabIndex -1 + visibility). */}
       {scrollLabels && (
-        <button type="button" className="chip-strip-arrow" data-side="start" data-can={canBack || undefined} tabIndex={canBack ? 0 : -1} aria-label={scrollLabels.prev} onClick={() => page(-1)}>
+        <button type="button" className={`chip-strip-arrow ${styles.arrow}`} data-side="start" data-can={canBack || undefined} tabIndex={canBack ? 0 : -1} aria-label={scrollLabels.prev} onClick={() => page(-1)}>
           <CaretLeft weight="bold" size={14} aria-hidden />
         </button>
       )}
       {scrollLabels && (
-        <button type="button" className="chip-strip-arrow" data-side="end" data-can={canForward || undefined} tabIndex={canForward ? 0 : -1} aria-label={scrollLabels.next} onClick={() => page(1)}>
+        <button type="button" className={`chip-strip-arrow ${styles.arrow}`} data-side="end" data-can={canForward || undefined} tabIndex={canForward ? 0 : -1} aria-label={scrollLabels.next} onClick={() => page(1)}>
           <CaretRight weight="bold" size={14} aria-hidden />
         </button>
       )}

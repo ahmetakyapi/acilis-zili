@@ -184,7 +184,18 @@ export default async function AppLayout({
           </>
         }
         ticker={
-          <Suspense fallback={null}>
+          /* `key` ŞART — yalnız geliştirme uyarısı için ama her sayfada
+             çıkıyordu (25 Ekim): "Each child in a list should have a unique
+             key … Check the render method of `AppShell`. It was passed a
+             child from AppLayout." Bu öğe AppShell'in kök `div`inin sabit
+             (`jsxs`) çocuk listesinde duruyor; React o listeyi doğrulanmış
+             sayıyor, ama RSC yükü büyüyünce (menüye /gun, dalda /bulmaca
+             eklenince) bu Suspense öğesi ayrı bir parçaya çıkıp tembel
+             (lazy) referans olarak geliyor ve çözülen öğenin doğrulama
+             işareti 0 kalıyor. Anahtarsız + işaretsiz öğe uyarıyı
+             tetikliyor (react-dom → `warnForMissingKey`, CDP günlük
+             noktasıyla yakalandı: ana `div`in 8. çocuğu, tipi tembel). */
+          <Suspense key="ticker" fallback={null}>
             <TickerFeed />
           </Suspense>
         }

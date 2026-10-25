@@ -607,8 +607,13 @@ export default async function AnalysisDetailPage(
 
       {/* ---- Künye ----
           PAYLAŞ KIRINTININ SAĞINDA (30 Eylül) — teknik analiz sayfasının
-          kalıbı: kırıntı ve paylaş tek satır, sığmayınca paylaş alta iner. */}
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+          kalıbı: kırıntı ve paylaş tek satır, sığmayınca paylaş alta iner.
+          Telefonda iki satıra iniyor ve iki satırın `.tap-44` alanları
+          üst üste biniyordu: satır adımı 22 piksel, alanlar 44 — kırıntının
+          hedefi 25 piksele düşüyor, alt yarısına dokunan Hikâye Kartları'na
+          gidiyordu (25 Ekim, elementFromPoint ile ölçüldü). `gap-y-7` adımı
+          46'ya çıkarıyor; 640 üstünde `.tap-44` kapalı, aralık eski hâlinde. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-7 sm:gap-y-1">
       <nav
         aria-label={t.common.breadcrumb}
         className="flex flex-wrap items-center gap-2 text-small text-muted"

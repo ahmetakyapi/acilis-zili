@@ -308,7 +308,9 @@ export function GlossaryBrowser({
        kabarcıklanan bir üst işleyiciden ÖNCE çalıştırıp gezinmeyi başlatıyor.
        Yakalamada `preventDefault` önce geliyor; `Link` `defaultPrevented`
        görünce gezinmiyor. */
-    <div className={styles.browser} onClickCapture={onPeekClick} onPointerDown={onPeekPress}>
+    /* `data-query`: telefonda yazarken günün terimi aramayla sonuçların
+       arasından çekiliyor (Glossary.module.css, "Telefonda arama önce"). */
+    <div className={styles.browser} data-query={query !== "" || undefined} onClickCapture={onPeekClick} onPointerDown={onPeekPress}>
       <header className={`${styles.hero} page-frame`}>
         <HeroAccent />
         {hero}

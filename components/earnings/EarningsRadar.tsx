@@ -1,6 +1,6 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowUpRight, CalendarBlank } from "@phosphor-icons/react/dist/ssr";
-import { LogoTile } from "@/components/ui/primitives";
+import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
 import { RollingFigure } from "@/components/ui/RollingFigure";
 import { SpotlightCard } from "@/components/motion/PremiumMotion";
 import { timingOf } from "./EarningsCalendar";
@@ -11,7 +11,12 @@ import { formatEtDateCompact, formatEtDateLong, formatMoneyCompact, formatPrice 
 import styles from "@/components/motion/DirectoryVisuals.module.css";
 
 /** Largest companies in the selected calendar window, with source estimates.
- * The date link opens the actual reporting day; no synthetic urgency/count. */
+ * The date link opens the actual reporting day; no synthetic urgency/count.
+ *
+ * KENDİ PANELİ (25 Ekim). Kapağın sağ kolonundaydı; telefonda kolon
+ * başlığın altına iniyor ve sekme çubuğunu ilk ekranın dışına itiyordu
+ * (390'da y=836). Artık sekmenin altında, `PanelHeader`lı bir panel;
+ * geniş ekranda yoğunluk grafiğinin yanında (`.earningsOverview`). */
 export function EarningsRadar({ rows, meta, locale, t }: { rows: EarningsRow[]; meta: Record<string, SymbolMeta>; locale: Locale; t: Dictionary }) {
   const seen = new Set<string>();
   const featured = [...rows].sort((a, b) => (meta[b.symbol]?.marketCap ?? 0) - (meta[a.symbol]?.marketCap ?? 0) || a.reportDate.localeCompare(b.reportDate)).filter(row => {
@@ -19,13 +24,17 @@ export function EarningsRadar({ rows, meta, locale, t }: { rows: EarningsRow[]; 
     seen.add(row.symbol); return true;
   }).slice(0, 3);
   const lead = featured[0];
-  if (!lead) return <div className={styles.radarEmpty}><CalendarBlank size={36} weight="duotone" /><p>{t.earnings.empty}</p></div>;
+  if (!lead) return <Panel>
+    <PanelHeader title={t.directory.earningsRadar} />
+    <div className={styles.radarEmpty}><CalendarBlank size={36} weight="duotone" /><p>{t.earnings.empty}</p></div>
+  </Panel>;
   const company = meta[lead.symbol];
   const reportDate = new Date(`${lead.reportDate}T12:00:00Z`);
   const month = new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC" }).format(reportDate);
   const weekday = new Intl.DateTimeFormat(locale, { weekday: "long", timeZone: "UTC" }).format(reportDate);
-  return <section className={styles.radar} aria-label={t.directory.earningsRadar}>
-    <div className={styles.visualHeader}><h2>{t.directory.earningsRadar}</h2><CalendarBlank size={17} /></div>
+  return <Panel>
+    <PanelHeader title={t.directory.earningsRadar} />
+    <div className={styles.radar}>
     <SpotlightCard className={styles.radarSpotlight}>
     <Link className={styles.radarLead} href={`#earnings-day-${lead.reportDate}`}>
       <div className={styles.radarTop}>
@@ -50,5 +59,6 @@ export function EarningsRadar({ rows, meta, locale, t }: { rows: EarningsRow[]; 
       <ArrowUpRight size={14} aria-hidden />
       <span className={styles.radarFollowingSession}>{timingOf(row.hour, t).label}</span>
     </Link>)}</div>}
-  </section>;
+    </div>
+  </Panel>;
 }

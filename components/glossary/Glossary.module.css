@@ -436,3 +436,35 @@
 }
 @media(max-width:419px) { .peekMark { width:68px; height:68px; border-radius:15px; } .peekLede { font-size:17px; } }
 @media(prefers-reduced-motion:reduce) { .peekChip, .peekFull, .peekFull > svg { transition:none; } .peekChip:active { scale:none; } .peekFull:hover > svg { translate:none; } }
+
+/* ---- Telefonda arama önce (25 Ekim) ----------------------------------------
+   390'da arama kutusu y=802'deydi, yani ilk ekranın (alt sekme çubuğu 765'te
+   başlıyor) dışında: kapak kartı başlığı, günün terimini ve 123 piksellik
+   levhayı taşıyordu, altında da kategori şeridi vardı. Ekranın asıl işi
+   arama; sıra telefonda şöyle: başlık kartı, arama + harf şeridi, günün
+   terimi, kategoriler, sonuçlar. Hiçbir öğe silinmedi.
+
+   Kapak kartı telefonda `display:contents`: başlık ve günün terimi ayrı
+   kartlar olup tarayıcının sırasına (`order`) giriyor; başlık kartı
+   kapağın çerçevesini (ton, saç teli, yarıçap) kendisi taşıyor. Köşe
+   yayları (`HeroAccent`) kartın dışına düşeceği için telefonda basılmıyor.
+   640 ve üstünde düzen aynen: kapak tek kart, günün terimi sağ yarıda.
+
+   Levha yarıya indi (123 → 66 piksel): çizim kalıyor, kartı doldurmuyor.
+
+   Yazarken (`data-query`) günün terimi telefonda çekiliyor: klavye açıkken
+   aramayla sonuçların arasında 250 piksellik bir kart, ilk sonucu klavyenin
+   altına itiyordu. Kutu boşalınca geri geliyor. */
+@media(max-width:639px) {
+ .browser > .hero { display:contents; }
+ .browser > .hero > [aria-hidden="true"]:first-child { display:none; }
+ .browser > * { order:5; }
+ .browser .hero > .heroCopy { order:0; padding:20px 18px 18px; border:1px solid var(--line); border-radius:20px; background:var(--premium-surface); }
+ .browser > .toolbar { order:1; }
+ .browser .hero > .spotlight { order:2; }
+ .browser > :global(.chip-strip) { order:3; }
+ .browser > .results { order:4; }
+ .browser[data-query] .hero > .spotlight { display:none; }
+ .spotlightPlate { padding:8px; }
+ .spotlightPlate .mark { width:84px; }
+}

@@ -1,0 +1,74 @@
+/* Topluluk editörünün yapışkan eylem şeridi (25 Ekim).
+
+   KAYDET İLK EKRANDA DEĞİLDİ: /yazilarim/yeni'de 390'da y=2271, 1280'de
+   y=1743 (ölçüldü, UX denetimi). Yazan kişi her kayıtta 18 satırlık gövdenin
+   ve denetim listesinin altına iniyordu; telefonda "Önizle" görünümündeyken
+   düğme gizli yazı panelinin içinde kaldığı için HİÇ yoktu. Şerit formun son
+   çocuğu ve dibine yapışık: form ekrandayken hep görünür, formun sonuna
+   gelince yerine oturur. Yönetim editörünün `EylemSeridi` kalıbı
+   (components/admin/editor-parts.tsx): tek durum yuvası düğmenin yanında.
+
+   ZEMİN OPAK `--overlay-surface`: altından metin akıyor, saydam zemin
+   satırları düğmenin arkasında okutuyordu. Cam/blur yok (Açılış Zili kuralı),
+   gölge yok: ayrım kenarlık ve tonla.
+
+   ALT PAY İKİ AYRI KABUK:
+   - 1024 altında sekme çubuğu: güvenli alan (taban 16) + 63 = 79 piksel
+     (MarketTicker ve AppShell aynı sayıyı kullanıyor; 390×844'te ölçüldü,
+     çubuğun üstü 765). Üstüne 8 piksel nefes.
+   - 1024 ve üstünde piyasa şeridi: 37 piksel (1280×800'de üstü 763) + 12. */
+.bar {
+  position: sticky;
+  bottom: calc(max(env(safe-area-inset-bottom), 16px) + 63px + 8px);
+  z-index: 15;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--overlay-surface);
+}
+@media (min-width: 1024px) {
+  .bar {
+    bottom: calc(37px + 12px);
+    padding: 12px 16px;
+  }
+}
+/* Yatay telefonda sekme çubuğu inceliyor (globals.css, `max-height:520px`
+   bloğu): 844×390'da ölçüldü, çubuk 56 piksel (alt dolgu 6 + 50). */
+@media (orientation: landscape) and (max-height: 520px) and (max-width: 1023px) {
+  .bar {
+    bottom: calc(max(env(safe-area-inset-bottom), 6px) + 50px + 6px);
+    padding-block: 6px;
+  }
+}
+
+/* Durum yuvası: telefonda yazı yeniyken düğmenin yanında (tek satır, şerit
+   66 piksel); var olan yazıda birden çok düğme olduğundan kendi satırında. */
+.status {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-small);
+  line-height: 1.35;
+}
+@media (max-width: 639px) {
+  .bar[data-many] .status {
+    order: -1;
+    flex-basis: 100%;
+  }
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+.dot[data-tone="warn"] {
+  background: var(--brass);
+}

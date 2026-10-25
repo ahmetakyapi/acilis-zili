@@ -2,6 +2,10 @@
    A date stamp beside the identity and two parallel follow-up companies
    replace the stacked date/rows. Keep every estimate and session readable. */
 .radar { min-width:0; display:grid; gap:12px; }
+/* Panelin içinde (25 Ekim; gerekçe EarningsRadar.tsx): PanelHeader'ın yatay
+   dolgusu 16/20 — gövde aynı hatta başlıyor. */
+.radar,.radarEmpty { padding:0 16px 16px; }
+@media(min-width:640px) { .radar,.radarEmpty { padding:0 20px 20px; } }
 .visualHeader { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--primary-ink); }
 /* 13 → 16 (9 Ekim): öteki panel başlıklarıyla aynı kademe ("Piyasanın Devleri" ile yan yana iki kapak aynı başlık ölçüsünde). */
 .visualHeader h2 { font-size:var(--text-lead); font-weight:650; letter-spacing:-.015em; }

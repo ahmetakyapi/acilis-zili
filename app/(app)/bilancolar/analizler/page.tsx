@@ -24,6 +24,11 @@ import {
 import { ArrowDown, ArrowUpRight, Star } from "@phosphor-icons/react/dist/ssr";
 import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { AnalysisTable } from "@/components/earnings/AnalysisTable";
+import {
+  AnalysisSearchField,
+  AnalysisSearchProvider,
+  AnalysisSearchScope,
+} from "@/components/earnings/AnalysisSearch";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { EarningsTabs } from "@/components/earnings/EarningsTabs";
 import { FillList } from "@/components/earnings/FillList";
@@ -347,7 +352,16 @@ export default async function AnalysesPage(
           <EmptyState title={t.analysis.empty} hint={t.analysis.emptyHint} scene="chart" />
         </Panel>
       ) : (
-        <div className={analysisStyles.workspace} data-has-week={thisWeek.length > 0} data-has-feature={!!featured}>
+        <AnalysisSearchProvider>
+        {/* ARAMA SEKMENİN HEMEN ALTINDA (25 Ekim). Tablonun üstündeydi ve
+            arada öne çıkan kart ile yan paneller vardı: kutu 390'da y=1048,
+            1280'de 916 — iki genişlikte de ilk ekranın dışında. Aranırken
+            öne çıkanlar katlanıyor ve sonuçlar kutunun altına geliyor
+            (gerekçe `components/earnings/AnalysisSearch.tsx`). Süzgeç
+            çipleri ve sıralama tablonun başında kaldı: onlar sunucuya
+            giden gezinme, kutu ise yazarken süzen istemci araması. */}
+        <AnalysisSearchField labels={analysisTableLabels(t)} />
+        <AnalysisSearchScope className={analysisStyles.workspace} data-has-week={thisWeek.length > 0} data-has-feature={!!featured}>
           <div data-motion-stagger className={analysisStyles.featureGrid} data-has-week={thisWeek.length > 0} data-has-feature={!!featured}>
             {featured && (
               <FeaturedAnalysis
@@ -701,7 +715,8 @@ export default async function AnalysesPage(
               )}
             </div>
           </Panel>
-        </div>
+        </AnalysisSearchScope>
+        </AnalysisSearchProvider>
       )}
 
       <p className="border-t border-line pt-3.5 text-tiny text-muted">

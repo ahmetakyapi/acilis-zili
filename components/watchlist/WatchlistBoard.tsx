@@ -562,7 +562,13 @@ function ListPanel({
             {list.items.length}
           </span>
         </h2>
-        <div className="flex shrink-0 items-center gap-0.5">
+        {/* DOKUNMA HEDEFİ 44 (25 Ekim). Düğmeler 32×32'ydi (UX denetimi,
+            390). Telefonda kutu 44'e büyüyor, ikon ve satır yüksekliği
+            aynı: başlık satırı 56 piksel (py-3 + 32), `-my-1.5` büyüyen 12
+            pikseli satırın kendi dolgusuna yediriyor. `-mr-2` sağdaki
+            ikonu panel kenarından eskisi gibi ~30 piksel uzakta tutuyor
+            (32 → 30). 640 üstünde imleç hassas, kutu 32 kalıyor. */}
+        <div className="flex shrink-0 items-center gap-0.5 max-sm:-mr-2 max-sm:gap-0">
         {/* YIKICI OLMAYAN DÜZELTMENİN YOLU. `renameWatchlist` eylemi ve
             sözlük anahtarı yazılıydı ama onu çağıran hiçbir düğme yoktu:
             liste adını yanlış yazan ya da kapsamı değişen kullanıcının tek
@@ -574,7 +580,7 @@ function ListPanel({
           onClick={() => setRenaming(true)}
           aria-label={`${labels.renameList}: ${list.name}`}
           title={labels.renameList}
-          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted opacity-0 transition hover:bg-primary-wash hover:text-primary-ink group-focus-within/list:opacity-100 group-hover/list:opacity-100 [@media(hover:none)]:opacity-100"
+          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted opacity-0 transition max-sm:-my-1.5 max-sm:size-11 hover:bg-primary-wash hover:text-primary-ink group-focus-within/list:opacity-100 group-hover/list:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <PencilSimple weight="duotone" size={14} />
         </button>
@@ -594,7 +600,7 @@ function ListPanel({
              sıraya bağlıydı: silme düğmesi hep görünürken yanına eklenen
              kalem düğmesi yalnızca imleçle çıkıyordu — aynı yerdeki iki
              düğme farklı davranıyordu. Tek kural: ikisi de imleçle çıkar. */
-          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted opacity-0 transition hover:bg-down-wash hover:text-down group-focus-within/list:opacity-100 group-hover/list:opacity-100 [@media(hover:none)]:opacity-100"
+          className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted opacity-0 transition max-sm:-my-1.5 max-sm:size-11 hover:bg-down-wash hover:text-down group-focus-within/list:opacity-100 group-hover/list:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <Trash weight="duotone" size={14} />
         </button>

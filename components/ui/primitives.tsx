@@ -426,6 +426,7 @@ export function TabItem({
   active,
   children,
   underlineId,
+  scroll,
 }: {
   href: string;
   active: boolean;
@@ -433,12 +434,16 @@ export function TabItem({
   /** Verilirse aktif çizgi sekmeden sekmeye kayar (bkz. TabUnderline).
       Verilmezse eski davranış: statik `border-b-2`. */
   underlineId?: string;
+  /** `false`: sekme aynı ekranın bir görünümü, sayfa başa atlamasın
+      (FilterChip notu; ilk kullanan `/claude/[symbol]`, 25 Ekim). */
+  scroll?: boolean;
 }) {
   const kayan = underlineId !== undefined;
   return (
     <li>
       <Link
         href={href}
+        scroll={scroll}
         aria-current={active ? "page" : undefined}
         className={cn(
           /* -mb-px: alt çizgi çubuğun hairline'ının üstüne otursun, altına

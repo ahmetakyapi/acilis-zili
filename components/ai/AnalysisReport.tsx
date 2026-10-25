@@ -8,6 +8,7 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { formatPercentPlain, formatPrice } from "@/lib/utils";
 import { ChangePill } from "@/components/ui/primitives";
 import { ChapterHeading } from "@/components/ui/ChapterHeading";
+import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import { Reveal } from "@/components/motion/PremiumMotion";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
 import { FOCUS_OF, HORIZON_DAYS, daysSince, scenarioStatus } from "@/lib/ai-analysis-core";
@@ -104,6 +105,15 @@ export function AnalysisReport({ result, t, locale, current, symbol, horizon, ca
     </div>
   </section>;
   const order = focus === "technical" ? [map, measures, scenarios, reading] : [scorecard, reading, scenarios, map, measures];
+  /* BÖLÜM DİZİNİ (25 Ekim): rapor telefonda ~8.000 piksel; kapağın altında
+     bölümlerin adı, raporun kendi sırasıyla (odakla değişiyor), çapa bağlantısı.
+     Başlıklar `scroll-padding-block` sayesinde sabit başlığın altında kalmaz. */
+  const chapterTitles: Record<string, string> = { map: t.priceMap, measures: t.measuresTitle, scorecard: t.scorecard.title, scenarios: t.scenarios, reading: t.evaluation };
+  const chapters: [string, string][] = [
+    ...(o.takeaways?.length ? [["takeaways", t.takeaways] as [string, string]] : []),
+    ...order.flatMap(part => part && part.key && chapterTitles[part.key] ? [[String(part.key), chapterTitles[part.key]] as [string, string]] : []),
+    ["news", t.citedNews],
+  ];
 
   return <article className={styles.report} aria-label={`${symbol} · ${t.saved} · ${analysisDate(result.generatedAt, locale)}`}>
     {/* ===== Kapak ===== */}
@@ -128,6 +138,10 @@ export function AnalysisReport({ result, t, locale, current, symbol, horizon, ca
       </div>
       <p className={styles.lead}>{o.summary}</p>
       <dl className={styles.coverFacts}>
+        {/* Fiyat künyesi ÖNCE (25 Ekim): kapak 1280×800'de ilk ekranın dibinde başlıyor;
+            "Rapordan Bugüne" sondayken ilk ekrana hiç girmiyordu. */}
+        <div><dt>{t.reportPrice}</dt><dd className="figure">{price(reportPrice)}</dd></div>
+        {since !== null && current && <div><dt>{t.sinceReport}</dt><dd className={styles.sinceValue}><span className="figure">{price(current.price)}</span><ChangePill changePct={since} locale={locale} size="sm" /></dd></div>}
         {o.confidence && <div>
           <dt>{t.confidence}</dt>
           <dd className={styles.confidence}>
@@ -139,11 +153,16 @@ export function AnalysisReport({ result, t, locale, current, symbol, horizon, ca
           <dt>{t.status.label}</dt>
           <dd className={styles.status} data-status={status}>{t.status[status]}</dd>
         </div>}
-        <div><dt>{t.reportPrice}</dt><dd className="figure">{price(reportPrice)}</dd></div>
-        {since !== null && current && <div><dt>{t.sinceReport}</dt><dd className={styles.sinceValue}><span className="figure">{price(current.price)}</span><ChangePill changePct={since} locale={locale} size="sm" /></dd></div>}
       </dl>
       {focus === "technical" && age >= TECHNICAL_STALE_DAYS && <p className={styles.staleNote}>{t.age.stale}</p>}
     </header>
+
+    <nav className={styles.index} aria-label={t.claude.desk.index}>
+      <span className="plate">{t.claude.desk.index}</span>
+      <ScrollEdges as="ol" className={styles.indexList}>
+        {chapters.map(([key, title], i) => <li key={key}><a href={`#${id(key)}`}><span aria-hidden>{i + 1}</span>{title}</a></li>)}
+      </ScrollEdges>
+    </nav>
 
     {/* ===== Kısaca ===== */}
     {o.takeaways && o.takeaways.length > 0 && <section aria-labelledby={id("takeaways")} className={styles.takeawaysSection}>

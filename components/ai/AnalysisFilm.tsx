@@ -4,6 +4,7 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { ACTS, CURTAIN_S, filmPalette, renderFilm, type FilmData, type FilmPalette, type FilmText } from "@/lib/ink/analysis-film";
 import type { Point } from "@/lib/ink/engine";
 import { formatPrice } from "@/lib/utils";
+import { EASE_BRAND } from "@/lib/motion";
 import styles from "./AnalysisFilm.module.css";
 
 export type FilmBar = { o: number; h: number; l: number; c: number };
@@ -25,6 +26,8 @@ const OPEN_ACT = ACTS.length - 1;
 const MAX_DPR = 2;
 /** Ekran dışını erken sezmek için kenar payı (anatomy: rootMargin 120px). */
 const VIEW_MARGIN = "120px 0px";
+/** Film masanın boyundan kendi oranına bu sürede büyür (ms). */
+const GROW_MS = 560;
 
 function rsi14(closes: number[]) {
   if (closes.length < 15) return null;
@@ -72,17 +75,19 @@ function readPalette(): FilmPalette {
  * sel artık temanın kendi ailesinde bir mavi dalga (açıkta açık, koyuda koyu);
  * eski `data-inverted` hâli açık temada sayfanın içinde koyu bir film açıyordu.
  */
-export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage, done, t, locale, minHeight, origin }: {
+export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage, done, t, locale, fromHeight, origin }: {
   bars: FilmBar[]; headlines: string[]; symbol: string; name: string; logoUrl: string | null; done: boolean; t: T; locale: Locale;
-  /** Açılış sahnesinin boyu: film aynı kutuda başlasın (ClaudeWorkbench). En-boy oranı o
-   *  zaman kapanır: oran + min-height genişliğe de aktarılıyor, telefonda kutu taşıyordu. */
-  minHeight?: number | null;
+  /** Analiz masasının boyu (ClaudeWorkbench): film o boydan KENDİ oranına büyür.
+   *  25 Ekim'e kadar film masanın boyunda açılıp oranını kapatıyordu (`minHeight`);
+   *  masa artık kısa bir eylem kartı (1280'de ~300 px) ve film o boyda sıkışırdı. */
+  fromHeight?: number | null;
   /** Düğmenin büzüldüğü damlanın sahnedeki yeri: film o damlayla açılır. */
   origin?: Point | null;
   /** Açılış sahnesinin önceden çözdüğü logo (ClaudeWorkbench); yoksa film kendisi indirir. */
   logoImage?: HTMLImageElement | null;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const doneRef = useRef<number | null>(null);
   /** Filmin başladığı an (performance.now); bitiş anı buna göre saniye. */
   const startedRef = useRef(0);
@@ -169,6 +174,19 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
     return () => { cancelled = true; cancelAnimationFrame(raf); clearInterval(stillTimer); observer.disconnect(); view.disconnect(); themeWatch.disconnect(); };
   }, [bars, headlines, symbol, name, logoUrl, logoImage, locale, t.claude, origin]);
 
+  // Büyüme yalnız ilk açılışta, Web Animations ile (CSS değişkeni `element.animate`ta
+  // çözülmüyor: eğri lib/motion.ts → EASE_BRAND). Hareketi azaltana anında tam boy.
+  const grownRef = useRef(false);
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el || grownRef.current || !fromHeight) return;
+    grownRef.current = true;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const to = el.offsetHeight;
+    if (Math.abs(to - fromHeight) < 4) return;
+    el.animate([{ height: `${fromHeight}px` }, { height: `${to}px` }], { duration: GROW_MS, easing: EASE_BRAND });
+  }, [fromHeight]);
+
   useEffect(() => {
     if (done && doneRef.current === null) doneRef.current = (performance.now() - startedRef.current) / 1000;
   }, [done]);
@@ -176,7 +194,7 @@ export function AnalysisFilm({ bars, headlines, symbol, name, logoUrl, logoImage
   const caption = act === 4 ? { title: t.claude.ready, line: "" } : S[act];
   const readout = act < 4 ? readoutOf(act, bars, headlines, seconds, t.claude.film.readout, t.claude.film, locale) : "";
   return <div className={styles.stage} role="status" aria-live="polite" aria-label={`${t.claude.stage}: ${caption.title}`}
-    data-final={act === 4 ? "" : undefined} style={minHeight ? { minHeight, aspectRatio: "auto" } : undefined}>
+    data-final={act === 4 ? "" : undefined} ref={stageRef}>
     <canvas ref={canvasRef} className={styles.canvas} aria-hidden />
     <div className={styles.caption} key={act}>
       {act < 4 && <span className={styles.sceneNo}>{NUMERALS[act]}</span>}

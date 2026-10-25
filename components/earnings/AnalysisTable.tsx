@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { MagnifyingGlass, X } from "@phosphor-icons/react/dist/ssr";
 import {
@@ -13,6 +13,7 @@ import {
 import { LogoTile } from "@/components/ui/primitives";
 import { cn, plural } from "@/lib/utils";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
+import { useAnalysisSearch } from "./AnalysisSearch";
 
 /**
  * Son Analizler tablosu — arama kutusuyla birlikte.
@@ -106,17 +107,24 @@ export function AnalysisTable({
   /** Arama kutusunun yanına giren sunucu tarafı denetimler (sıralama). */
   toolbar?: React.ReactNode;
 }) {
-  const [query, setQuery] = useState("");
+  const [ownQuery, setQuery] = useState("");
   /* Okuyucu süzgeci kullandı mı — satırların yerine oturma animasyonu
      yalnızca o andan sonra (globals.css → .filter-settle). İlk tuşta kalan
      satırlar bir kez oturuyor; sonraki tuşlarda yalnızca YENİDEN beliren
      satırlar (yeniden bağlananlar) oynuyor, ekranda kalanlar titremiyor.
      Yüklemede hiçbir şey kımıldamıyor. */
-  const [filtered, setFiltered] = useState(false);
+  const [ownFiltered, setFiltered] = useState(false);
   const search = (value: string) => {
     setFiltered(true);
     setQuery(value);
   };
+  /* KUTU DIŞARIDA OLABİLİR (25 Ekim). Analizler sekmesinde arama kutusu
+     sekmenin altında (`AnalysisSearch.tsx`, gerekçesi orada); orada durum
+     bağlamdan gelir ve tablo kendi kutusunu basmaz. Bağlam yoksa (takip
+     sekmesi) kutu eskisi gibi tablonun üstünde. */
+  const shared = useAnalysisSearch();
+  const query = shared ? shared.query : ownQuery;
+  const filtered = shared ? shared.filtered : ownFiltered;
 
   const visible = useMemo(() => {
     const needle = foldForSearch(query.trim());
@@ -128,9 +136,16 @@ export function AnalysisTable({
 
   const searching = query.trim().length > 0;
 
+  /* Sonuç künyesi dışarıdaki kutunun yanında; sayıyı tablo bildiriyor. */
+  const setSharedCount = shared?.setCount;
+  useEffect(() => {
+    setSharedCount?.(visible.length);
+  }, [setSharedCount, visible.length]);
+
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2.5">
+      {(!shared || toolbar) && <div className="flex flex-wrap items-center gap-2.5" data-table-toolbar>
+        {!shared && <>
         {/* ARAMA KUTUSU TELEFONDA TAM GENİŞLİK. `flex-1` her genişlikte
             duruyordu ve sıralama segmenti (305 piksel, `shrink-0`) aynı
             satırda yer kapıyordu: kutuya 390 pikselde 39, 360'ta 9 piksel
@@ -183,13 +198,14 @@ export function AnalysisTable({
             ).replace("{count}", String(visible.length))}
           </span>
         )}
+        </>}
 
         {/* 320'de TR üç düğme (Tarihe/Skora/Tepkiye Göre) 305 piksel tutuyordu
             ve 284'lük kaba sığmıyordu; son düğme ekran kenarında 3 piksel
             kesiliyordu. 360 altında düğme dolgusu 16'dan 12'ye: 281 piksel,
             tek satır, 44 piksel yükseklik korunuyor (ölçüldü). */}
         {toolbar && <div className="ml-auto min-w-0 max-w-full max-[359px]:[&_a]:px-3">{toolbar}</div>}
-      </div>
+      </div>}
 
       <div className="panel overflow-hidden">
         {/* KAYDIRMA KABI KLAVYEYLE ERİŞİLEBİLİR. Tablo 1180px genişliğinde ve

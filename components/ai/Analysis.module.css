@@ -12,7 +12,8 @@
 
 /* ================= Rapor ================= */
 /* Dört kademe: rapor bölümleri clamp(2.5rem,5vw,4rem), bölüm içi clamp(1.25rem,2.5vw,2rem), kart 12–16 px. */
-.report { display:grid; gap:clamp(2.5rem,5vw,4rem); padding-top:24px; border-top:1px solid var(--line); overflow-wrap:anywhere; min-width:0; }
+/* Üst çizgi ve 24 px dolgu kalktı (25 Ekim): raporun üstünde künye satırı (Claude.module.css → .reportBar) ayırıcı; kapak 25 px yukarı. */
+.report { display:grid; gap:clamp(2.5rem,5vw,4rem); overflow-wrap:anywhere; min-width:0; }
 .chapter { display:grid; gap:clamp(1.25rem,2.5vw,2rem); min-width:0; }
 .chapter > :global(.chapter-heading) { margin:0; }
 
@@ -66,6 +67,16 @@
 .cover[data-verdict="hold"] .meter > span[data-on] { background:var(--primary); }
 @keyframes grow-x { from { scale:0 1; } to { scale:1 1; } }
 @keyframes fade-up { from { opacity:0; translate:0 10px; } to { opacity:1; translate:0 0; } }
+
+/* ---- Bölüm dizini: kapağın altında, tek satır; sığmayınca kayar ve ucu solar (ScrollEdges) ---- */
+.index { display:flex; align-items:center; gap:8px 14px; min-width:0; margin-top:calc(clamp(2.5rem,5vw,4rem) * -.55); }
+.index > :global(.plate) { flex:none; }
+.indexList { display:flex; gap:6px; min-width:0; margin:0; padding:0; list-style:none; overflow-x:auto; scrollbar-width:none; }
+.indexList a { display:inline-flex; align-items:center; gap:7px; min-height:44px; padding:0 14px; border-radius:999px; border:1px solid var(--line); font-size:13.5px; font-weight:650; color:var(--text-body); white-space:nowrap; transition:border-color 200ms var(--ease-brand), color 200ms var(--ease-brand); }
+.indexList a:hover { border-color:var(--line-strong); color:var(--text-strong); }
+.indexList a:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+.indexList a span { font-family:var(--font-mono); font-size:11.5px; font-weight:700; color:var(--primary-ink); }
+@media(max-width:767px) { .index { flex-direction:column; align-items:stretch; gap:6px; } }
 
 /* ---- Kısaca ---- */
 .takeawaysSection { display:grid; gap:14px; margin-top:calc(clamp(2.5rem,5vw,4rem) * -.5); }

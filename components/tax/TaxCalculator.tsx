@@ -6,6 +6,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import dynamic from "next/dynamic";
 import { motion } from "motion/react";
 import {
+  ArrowDown,
   Calculator,
   ChartLineUp,
   Check,
@@ -1230,7 +1231,7 @@ export function TaxCalculator({
               </h3>
               <div aria-live="polite">
                 {saleVerdict === "wait" ? (
-                  <EmptyLead text={labels.resultEmptySale} />
+                  <EmptyLead text={labels.resultEmptySale} how={labels.how.readHow} />
                 ) : (
                   <>
                     <VerdictBadge verdict={saleVerdict} text={saleVerdict === "yes" ? labels.verdictYes : labels.verdictNo} />
@@ -1505,7 +1506,7 @@ export function TaxCalculator({
               <h3 className="sr-only">{labels.resultLabel}</h3>
               <div aria-live="polite">
                 {dividendVerdict === "wait" ? (
-                  <EmptyLead text={labels.resultEmptyDividend} />
+                  <EmptyLead text={labels.resultEmptyDividend} how={labels.how.readHow} />
                 ) : (
                   <>
                     <VerdictBadge verdict={dividendVerdict} text={dividendVerdict === "yes" ? labels.verdictYes : labels.verdictNo} />
@@ -1685,14 +1686,26 @@ function Basis({ title, items }: { title: string; items: BasisItem[] }) {
 }
 
 /** Sonuç boşken tek cümlelik yönlendirme; ikon formun ne işe yaradığını söylüyor. */
-function EmptyLead({ text }: { text: string }) {
+/**
+ * Boş sonucun tek satırı. Altındaki "Nasıl Hesaplanır" bağlantısı (25 Ekim):
+ * anlatım hesaplayıcının ALTINA indi ve katlı geliyor (`TaxHow.tsx`); önce
+ * kuralı okumak isteyen okuyucunun yolu burası. Düz çapa, katlamayı
+ * `TaxHowReveal` açıyor.
+ */
+function EmptyLead({ text, how }: { text: string; how: string }) {
   return (
-    <p className={styles.emptyLead}>
-      <span className={styles.emptyIcon} aria-hidden>
-        <Calculator size={20} weight="duotone" />
-      </span>
-      {text}
-    </p>
+    <>
+      <p className={styles.emptyLead}>
+        <span className={styles.emptyIcon} aria-hidden>
+          <Calculator size={20} weight="duotone" />
+        </span>
+        {text}
+      </p>
+      <a href="#nasil" className={cn(styles.inlineLink, styles.emptyHow)}>
+        {how}
+        <ArrowDown size={13} weight="bold" aria-hidden />
+      </a>
+    </>
   );
 }
 

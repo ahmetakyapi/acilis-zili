@@ -49,7 +49,7 @@ export function ThemeRanking({
    * katlı (9 Ekim, ana sayfa). Sıralamanın bilgisi uçlarda: en güçlü ve
    * en zayıf temalar. Ana sayfa bandı telefonda 1.217 piksel ölçüldü ve
    * on iki satırın yarısı ortadaki, okuyucunun aramadığı temalardı.
-   * Yalnızca sıralı (`basis` olan) listede; yedekte sıra editoryal.
+   * Yedekte sıra editoryal; orada baştan aynı sayıda satır açık.
    */
   phoneEnds?: number;
 }) {
@@ -66,8 +66,14 @@ export function ThemeRanking({
      dibine dizildiği için uç sayılmıyor — ön seansta "en zayıf üç" yerine
      üç tire görünüyordu (390'da ölçüldü). */
   const ranked = sorted.filter(inScale).length;
+  /* YEDEK DE KATLI (25 Ekim, /tema). Yedek (sırasız, sayısız) on satırın
+     hepsini basıyordu; canlı sıralama akışla inince telefonda altı satır
+     birden katlanıyor ve altındaki galeri yukarı zıplıyordu. Yedek artık
+     aynı sayıda satırı (iki uç kadar, baştan) açık bırakıyor: katlı kutu
+     veri gelmeden de son boyunda. */
   const phoneShown = (index: number) =>
-    !basis || !phoneEnds || index < phoneEnds || (index >= ranked - phoneEnds && index < ranked);
+    !phoneEnds ||
+    (basis ? index < phoneEnds || (index >= ranked - phoneEnds && index < ranked) : index < phoneEnds * 2);
   const phoneHidden = sorted.filter((_, index) => !phoneShown(index)).length;
 
   return (

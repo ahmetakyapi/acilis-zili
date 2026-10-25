@@ -134,20 +134,30 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
       <DirectoryHeader
         shareInTitle
         share={<PageShare compactOnMobile align="right" path="/bilancolar" title={t.analysis.title} locale={locale} t={t} />}
-        className={styles.earningsHeader}
         title={t.analysis.title}
         description={t.earnings.subtitleLong}
-        visual={<EarningsRadar rows={rows} meta={meta} locale={locale} t={t} />}
         /* ANAHTAR BAŞLIĞIN SAĞ ÜSTÜNDE. Açıklamanın altında kendi satırında
            duruyordu; ekranın tek denetimi ve ekran düzeni kuralı onu üst
            künyenin sağına koyuyor. Telefonda başlık kartı 68 piksel
            kısalıyor. */
         control={anahtar}
-      >
-        <EarningsActivity rows={rows} from={today} to={rangeEnd} locale={locale} t={t} />
-      </DirectoryHeader>
+      />
 
+      {/* SEKME ÇUBUĞU BAŞLIĞIN HEMEN ALTINDA (25 Ekim). Kapak yoğunluk
+          grafiğini ve öne çıkanları da taşıyordu: telefonda 735 piksel ve
+          sekme çubuğu y=836'da, yani dört görünüm arasındaki geçiş ilk
+          ekranda hiç görünmüyordu (1280'de 462). İkisi kapaktan çıkıp
+          sekmenin altına, kendi `PanelHeader`lı panellerine indi; kapak
+          yalnız başlık, tek denetim ve açıklama. Ölçüldü (TR, açık/koyu):
+          390'da kapak 199, sekme 836 → 300; 1280'de sekme 462 → 265. */}
       <EarningsTabs active="calendar" t={t} className="-mt-2" />
+
+      {rows.length > 0 && (
+        <div className={styles.earningsOverview}>
+          <EarningsActivity rows={rows} from={today} to={rangeEnd} locale={locale} t={t} />
+          <EarningsRadar rows={rows} meta={meta} locale={locale} t={t} />
+        </div>
+      )}
 
       {/* HAFTALIK ARTIK KENDİ SEKMESİ (29 Eylül). Burada tek satırlık bir
           "Haftalık Takvim Görseli" bağlantısı vardı; haftalık sayfa o zaman

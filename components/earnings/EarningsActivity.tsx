@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { Panel, PanelHeader } from "@/components/ui/primitives";
 import { addEtDays } from "@/lib/market-hours";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { EarningsRow } from "@/lib/schema";
@@ -71,8 +72,15 @@ export function EarningsActivity({ rows, from, to, locale, t }: {
   const dayOfMonth = new Intl.DateTimeFormat(intlLocale, { day: "numeric", timeZone: "UTC" });
   const countLabel = (n: number) => plural(n, t.directory.reportsCountOne, t.directory.reportsCount).replace("{n}", n.toLocaleString(locale));
 
-  return <figure className={styles.earningsActivity}>
-    <figcaption><span>{t.directory.earningsActivity}</span><strong>{countLabel(rows.length)}</strong></figcaption>
+  /* KAPAKTAN KENDİ PANELİNE (25 Ekim). Grafik başlığın içindeydi ve
+     telefonda kapağı 735 piksele çıkarıyordu: sekme çubuğu y=836'da, ilk
+     ekranın altında kalıyordu. Artık sekmenin altında kendi paneli; künye
+     (etiket + toplam) panel başlığı oldu. Panel esnek sütun: yanındaki
+     öne çıkanlar paneli daha uzunsa çubuklar o boya uzuyor, altta boşluk
+     kalmıyor (CSS `.activityPanel`). */
+  return <Panel className={styles.activityPanel}>
+    <PanelHeader title={t.directory.earningsActivity} meta={countLabel(rows.length)} />
+    <figure className={styles.earningsActivity} aria-label={t.directory.earningsActivity}>
     <ol className={styles.activityBars} data-weekly={weekly || undefined}>
       {columns.map((column, index) => {
         const peak = weekly
@@ -103,7 +111,8 @@ export function EarningsActivity({ rows, from, to, locale, t }: {
     <Link href={`#earnings-day-${busiest.date}`} className={styles.activityPeak}>
       <span>{t.directory.earningsBusiest}</span><strong>{formatEtDateCompact(busiest.date, locale)} · {countLabel(busiest.count)}</strong><span aria-hidden>↗</span>
     </Link>
-  </figure>;
+    </figure>
+  </Panel>;
 }
 
 /** Haftanın bilanço açıklanan ilk günü — çubuğun bağlantısı oraya iner. */

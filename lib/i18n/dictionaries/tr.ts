@@ -9,6 +9,7 @@ import { daySignatureTr } from "./day-signature";
 import { earningsSeasonTr } from "./earnings-season";
 import { dailyChartTr } from "./daily-chart";
 import { changelogTr } from "./changelog";
+import { stockEntryTr } from "./stock-entry";
 
 const tr = {
   brand: {
@@ -3444,7 +3445,10 @@ const tr = {
         step6Body:
           "{year} geliri {filing} Mart'ında Hazır Beyan Sistemi'nden beyan edilir; vergi 31 Mart ve 31 Temmuz'da iki taksitte ödenir.",
         step6Link: "Takvim ve Belgeler",
-        start: "Hesaplamaya Başla",
+        start: "Hesaplayıcıya Dön",
+        more: "Kalan {n} Adımı ve Örneği Göster",
+        less: "Daha Az Göster",
+        readHow: "Nasıl Hesaplanır",
         tariffSource: "Kaynak: {source}.",
         exampleTitle: "Örnek: {qty} Adet {symbol}",
         exampleTag: "Varsayımsal Kur ve Endeks",
@@ -3589,6 +3593,8 @@ const tr = {
       fxMissing: "Kur alınamadı; TL sütunları şu an boş.",
       staleNote: "Fiyatlar güncel olmayabilir; kâr/zarar son alınan fiyatla hesaplandı.",
       exportToTax: "Vergi Hesaplayıcıya Aktar",
+      /** Kapaktaki ikincil eylemlerin menüsü (25 Ekim, HeroMoreActions). */
+      moreActions: "Diğer",
       exportHint: "Pozisyonların alış olarak vergi hesaplayıcısına geçer; hiçbir şey sunucuya gönderilmez.",
       notAdvice: "Yatırım tavsiyesi değildir.",
       /* Kahramandaki dağılım halkası ve toplam şeridinin kaynak çubuğu. */
@@ -4373,6 +4379,11 @@ const tr = {
         unavailable: "Şu an kaydedilemedi; biraz sonra tekrar dene.",
         notFound: "Yazı bulunamadı.",
       },
+      /* Eylem şeridi (25 Ekim, PostEditor): bölge adı ve durum yuvası. */
+      actionsLabel: "Yazı Eylemleri",
+      statusUnsaved: "Kaydedilmemiş Değişiklik",
+      statusClean: "Değişiklik Yok",
+      statusNew: "Henüz Kaydedilmedi",
     },
   },
   /* HİSSE TARAYICI (15 Ekim) — /tarama; symbol_metrics üstüne süzgeçli dizin.
@@ -4740,6 +4751,8 @@ const tr = {
   portfolioAnalysis: portfolioAnalysisTr,
   /* Yenilikler (25 Ekim) — metin ayrı dosyada; girişler content/changelog.ts. */
   changelog: changelogTr,
+  /* Şirket ekranlarının kısa yolları (25 Ekim UX turu) — metin ayrı dosyada. */
+  stockEntry: stockEntryTr,
 };
 
 export default tr;

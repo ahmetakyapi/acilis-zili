@@ -174,6 +174,60 @@
   margin-top: 1.1rem;
 }
 
+/* "Diğer" menüsü (HeroMoreActions). Kapak `isolation:isolate` taşıyor ama
+   kırpmıyor; panel kapağın altındaki dağılım halkasının ÜSTÜNE açılır.
+   Sağa yaslı: 390'da tetikleyici ekranın ortasında (x≈185), sola yaslı
+   260 piksellik panel sağ kenardan taşıyordu. Zemin `--overlay-surface`
+   (AccountMenu'deki gerekçe: `--surface` koyu temada saydam); tek gerçek
+   gölge açılır katmanda, kural bu. */
+.more {
+  position: relative;
+}
+.morePanel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  gap: 2px;
+  min-width: 15rem;
+  max-width: calc(100vw - 32px);
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--overlay-surface);
+  box-shadow: var(--shadow-overlay);
+}
+.morePanel[data-align="left"] {
+  right: auto;
+  left: 0;
+}
+/* İçerideki düğmeler kendi `ghost` görünümleriyle geliyor; menüde satır
+   olurlar: tam genişlik, sola yaslı, kenarlıksız. Katmansız kural
+   Tailwind yardımcı sınıflarını ezer (bilinçli). */
+.morePanel > :is(a, button),
+.morePanel > * > :is(a, button) {
+  width: 100%;
+  justify-content: flex-start;
+  border-color: transparent;
+  background: transparent;
+}
+.morePanel > :is(a, button):hover,
+.morePanel > * > :is(a, button):hover {
+  background: var(--primary-tint);
+}
+/* Geniş ekranda Portföy Analizi satırda duruyor; menüdeki kopyası gizli. */
+@media (min-width: 640px) {
+  .moreOnlyNarrow {
+    display: none;
+  }
+}
+@media (max-width: 639px) {
+  .inlineOnlyWide {
+    display: none;
+  }
+}
+
 /* ---- Getiri bölümü (2 Ekim) ----
    Telefonda üç kat alt alta: toplam, iki kart (yan yana, 360 pikselde de
    sığıyor — ölçüldü), çözümleme. 900'den itibaren toplam solda, kartlar

@@ -6,10 +6,10 @@
 }
 .breadcrumb { display:flex; align-items:center; gap:12px; min-height:28px; }
 .breadcrumb:has(.researchLinks) { flex-wrap:wrap; }
-.researchLinks { min-width:0; margin-left:auto; }
-.researchLinks a { display:flex; min-height:44px; align-items:center; gap:10px; padding:0 12px; border:1px solid var(--primary-faint); border-radius:10px; background:var(--primary-tint); color:var(--primary-ink); font-size:12px; transition:background .2s var(--ease-brand); }
-.researchLinks a:hover { background:var(--primary-wash); }
-.researchLinks a:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+.researchLinks { display:flex; min-width:0; align-items:center; gap:8px; margin-left:auto; }
+.researchLinks a[data-research] { display:flex; min-height:44px; align-items:center; gap:10px; padding:0 12px; border:1px solid var(--primary-faint); border-radius:10px; background:var(--primary-tint); color:var(--primary-ink); font-size:12px; transition:background .2s var(--ease-brand); }
+.researchLinks a[data-research]:hover { background:var(--primary-wash); }
+.researchLinks a[data-research]:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 .researchLinks strong { color:var(--text-strong); font-weight:600; }
 .researchLinks svg { flex-shrink:0; }
 /* TELEFONDA KİMLİĞİN İÇİNDE BİR ÇİP (24 Eylül). Bağlantı 768'in altında
@@ -21,11 +21,11 @@
 @media(max-width:767px) {
  .researchLinks { display:none; }
  .identityChip { display:flex; margin-top:6px; }
- .identityChip a { display:inline-flex; min-height:28px; align-items:center; gap:6px; padding:0 10px; border:1px solid var(--primary-faint); border-radius:999px; background:var(--primary-tint); color:var(--primary-ink); font-size:12px; }
+ .identityChip a[data-research] { display:inline-flex; min-height:28px; align-items:center; gap:6px; padding:0 10px; border:1px solid var(--primary-faint); border-radius:999px; background:var(--primary-tint); color:var(--primary-ink); font-size:12px; }
  .identityChip strong { color:var(--text-strong); font-weight:600; }
  .identityChip svg { flex-shrink:0; }
 }
-@media(prefers-reduced-motion:reduce) { .researchLinks a { transition:none; } }
+@media(prefers-reduced-motion:reduce) { .researchLinks a[data-research] { transition:none; } }
 .backLink { display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); font-size:12px; font-weight:600; transition:color 180ms var(--ease-brand); }
 .backLink:hover { color:var(--primary); }
 /* AYRAÇ ÇİZGİ RENGİNDE DEĞİL. `--line-strong` bir KENARLIK tonu; eğik çizgi
@@ -578,9 +578,9 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 /* 320 GENİŞLİKTE ÇİZİM SEKME ÇUBUĞUNUN ÜSTÜNDE BİTSİN (24 Eylül). 320×640'ta
    çizimin dibi 564-613'te, alt sekme çubuğu 560'ta başlıyordu. Çip tek
    satırda kalıyor (iki satıra kırılıyordu), çizim 120 piksele iniyor. */
-.identityChip a { white-space:nowrap; }
+.identityChip a[data-research] { flex:none; white-space:nowrap; }
 @media(max-width:359px) {
- .identityChip a { padding:0 8px; font-size:12px; }
+ .identityChip a[data-research] { padding:0 8px; font-size:12px; }
  .companyOverview .chartPanel { --price-chart-height:120px; padding-top:12px; }
  .companyOverview .stockHeader { gap:8px; }
  /* 19 punto: "Taiwan Semiconductor Manufacturing Co Ltd" 21'de üç satırdı. */
@@ -766,7 +766,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
   .companyOverview .companyName { font-size:25px; }
   .companyOverview .sector { font-size:12px; }
   .companyFallback { font-size:18px; }
-  .identityChip a { white-space:normal; }
+  /* Şeritte araştırma çipi de tek satır: sarması şeridi iki satıra çıkarırdı (25 Ekim). */
 }
 
 /* ==========================================================================
@@ -786,10 +786,10 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .backLink:hover { border-color:var(--primary-faint); color:var(--primary-ink); }
 .backLink:hover > svg { translate:-3px 0; }
 .breadcrumb > .numeral { padding:3px 8px; border-radius:7px; background:var(--surface-sunken); letter-spacing:0; }
-.researchLinks a { min-height:40px; border-radius:999px; padding:0 6px 0 16px; font-size:12px; }
-.researchLinks a > svg { box-sizing:content-box; padding:6px; border-radius:50%; background:var(--primary); color:var(--on-primary); transition:translate .25s var(--ease-brand); }
-.researchLinks a:hover > svg { translate:2px -2px; }
-@media(prefers-reduced-motion:reduce) { .backLink > svg, .researchLinks a > svg { transition:none; } }
+.researchLinks a[data-research] { min-height:40px; border-radius:999px; padding:0 6px 0 16px; font-size:12px; }
+.researchLinks a[data-research] > svg { box-sizing:content-box; padding:6px; border-radius:50%; background:var(--primary); color:var(--on-primary); transition:translate .25s var(--ease-brand); }
+.researchLinks a[data-research]:hover > svg { translate:2px -2px; }
+@media(prefers-reduced-motion:reduce) { .backLink > svg, .researchLinks a[data-research] > svg { transition:none; } }
 
 /* KİMLİK. Logo karosu 88 pikseldi ve logoların çoğu kendi karesinin
    ortasında küçük bir amblem (SNDK'da yazı markası karenin üçte biri):
@@ -1152,3 +1152,45 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    birer ölçü, bağlantı değil — ton nötr, vurgu ağırlıkla. */
 .bandPosition { border:1px solid var(--line-soft); background:var(--premium-surface, var(--surface)); color:var(--text-strong); }
 .capShare { color:var(--text-body); }
+
+/* ==========================================================================
+   KISA YOL ŞERİDİ (25 Ekim UX turu) — Claude, araştırma, soru.
+   Gerekçe components/stock/ClaudeEntryChip.tsx; çipin kendi görünümü
+   ClaudeEntryChip.module.css'te, burada yalnız yerleşim.
+   ========================================================================== */
+/* TELEFON: tek satır, yatay kayar; sağdaki solma "devamı var" der (ChipStrip).
+   Dikey 8 piksel iç boşluk + eksi dış boşluk: şerit `overflow-y:hidden`
+   (globals.css `.scroll-x`) ve çiplerin 44 piksellik dokunma alanı (`tap-44`)
+   kesilmesin, ama satırın yüksekliği tek çipinki kalsın (önce 28, şimdi 30). */
+.entryStrip { display:flex; align-items:center; gap:8px; padding-block:7px; margin-block:-7px; }
+.identityChip :global(.chip-strip) { width:100%; }
+.identityChip .entryChip, .identityChip .entryAsk { min-height:28px; }
+/* GENİŞ EKRAN: künye satırında araştırma bağlantısının solunda; o 40'lık bir
+   hap, kısa yollar 36 — ikincil oldukları boydan da okunuyor. */
+.researchLinks .entryChip, .researchLinks .entryAsk { min-height:36px; }
+/* 1100'ün altında soru çapası künyede yok: ölçüldü, 768'de "NVDA"dan
+   Claude çipine 93 piksel boşluk var, çapa aralığıyla 126 istiyor — satır
+   ikiye bölünürdü. 1100'de ve 1280'de tek satır (künye 40 piksel, önceki
+   boyu). Claude ve araştırma her genişlikte kalıyor. */
+@media(min-width:768px) and (max-width:1099px) { .researchLinks .entryAsk { display:none; } }
+
+/* EYLEM DAİRELERİNİN DOKUNMA ALANI 44×44 (25 Ekim UX turu). Telefonda favori,
+   alarm, portföy ve paylaş 30×30; `tap-44` (globals.css) alanı yalnız DİKEYDE
+   44'e çıkarıyor, yatayda 30 kalıyordu (ölçüldü: ::after 30×44). Genişletme
+   artık iki yönde ve görünmez: `left/right` yüzdesi düğmenin kendi
+   genişliğine göre — (100% − 44px) / 2, 30'luk dairede −7 piksel. Komşu
+   hedefler üst üste binmesin diye aralık 14: 30 + 14 = 44 (önce 10, iki
+   alan 4 piksel kesişirdi). 390'da satır 4 × 30 + 3 × 14 + sembol + paylaş
+   rahat sığıyor, paylaş zaten sağa yaslı. */
+@media(max-width:639px) {
+  .identityMeta { gap:14px; }
+  .identityMeta :is(button,a) { position:relative; }
+  .identityMeta :is(button,a)::after {
+    content:"";
+    position:absolute;
+    inset-inline:calc((100% - 44px) / 2);
+    top:50%;
+    height:44px;
+    translate:0 -50%;
+  }
+}

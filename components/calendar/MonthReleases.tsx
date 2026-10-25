@@ -56,6 +56,7 @@ export function MonthReleases({
   monthName,
   highCount,
   constrained,
+  placement = "hero",
   locale,
   t,
 }: {
@@ -64,6 +65,9 @@ export function MonthReleases({
   highCount: number;
   /** Sağda kart var mı — yoksa kutu gerilmez, içeriği kadar uzar. */
   constrained: boolean;
+  /** `hero`: kapağın sol kolonu (768 ve üstü). `board`: telefonda takvim
+   *  panelinin altındaki kendi paneli. Gerekçe aşağıda. */
+  placement?: "hero" | "board";
   locale: Locale;
   t: Dictionary;
 }) {
@@ -151,16 +155,26 @@ export function MonthReleases({
     );
   };
 
+  /* TELEFONDA KAPAKTAN ÇIKTI (25 Ekim). 767 ve altında kapak tek kolon ve
+     bu liste sıradaki açıklama kartının altına iniyordu: kapak 736 piksel,
+     Ekonomik/Temettü sekmesi y=839, önem süzgeci 972 — ikisi de ilk
+     ekranın dışında. Telefonda liste artık takvim panelinin ALTINDA kendi
+     panelinde; geniş ekranda kapağın sol kolonunda kalıyor (sahibinin
+     "header'ın sol tarafı çok boş" itirazının cevabı, yukarıda).
+     İki kopya, biri her genişlikte `display: none` — bu sayfanın görünüm
+     seçimi ve paylaş düğmesiyle aynı yöntem; erişilebilirlik ağacında tek
+     liste, `id`ler ayrı. Ölçüm sayfadaki kapak yorumunda. */
+  const headingId = placement === "hero" ? "takvim-ay-baslik" : "takvim-ay-baslik-pano";
   return (
     <section
-      className={styles.keyBox}
+      className={cn(styles.keyBox, placement === "hero" ? styles.keyBoxHero : styles.keyBoxBoard)}
       data-month
       data-constrained={constrained ? "true" : undefined}
-      aria-labelledby="takvim-ay-baslik"
+      aria-labelledby={headingId}
     >
       <div className={styles.keyHead}>
         {/* Panel başlığının kalıbı (`PanelHeader`): 16 piksel, sıkı degrade. */}
-        <h2 id="takvim-ay-baslik" className="display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.015em]">
+        <h2 id={headingId} className="display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.015em]">
           {c.title}
         </h2>
         <span className={styles.keyTag}>
@@ -188,7 +202,8 @@ export function MonthReleases({
       <ul className={styles.keyList} data-month-list aria-label={c.listLabel}>
         {items.map(row)}
       </ul>
-      <MonthFill />
+      {/* Ölçücü tek: sayfadaki bütün listeleri o geziyor. */}
+      {placement === "hero" && <MonthFill />}
     </section>
   );
 }

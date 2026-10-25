@@ -62,6 +62,32 @@
 .link { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 13px; border:1px solid var(--line); border-radius:999px; color:var(--text-strong); font-size:13px; font-weight:550; transition:border-color .2s var(--ease-brand), color .2s var(--ease-brand); }
 .link:hover { border-color:var(--line-focus); color:var(--primary-ink); }
 .link:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+/* BAĞLANTILAR TELEFONDA TEK SATIR (25 Ekim UX turu). Dört çip 390'da üç
+   satıra sarıyordu (~130 piksel, 430→540); şerit artık tek satır kayıyor,
+   sağdaki solma ve ok "devamı var" diyor (ChipStrip). Geniş ekranda sarma
+   yerinde: orada dört çip tek satıra zaten sığıyor. Çip `flex:none` — şerit
+   onları sıkıştırıp yazıyı kesmesin. */
+.links .link { flex:none; white-space:nowrap; }
+.linkStrip { display:flex; gap:8px; }
+.links > :global(.chip-strip) { width:100%; }
+@media (min-width:768px) { .linkStrip.linkStrip { flex-wrap:wrap; overflow:visible; } }
+
+/* TELEFONDA SIRA: sayılar → puan → liste (25 Ekim UX turu). Puan satırı
+   kapağın dibindeydi (390'da y=902, beş bayrağın ardında). Sayılar ("1 Kural
+   Kaldı · 4 Dikkat") yine başta — "önce bayraklar" kararı (ScreenVisuals.tsx
+   → FlagSummary) bozulmuyor; puan onların hemen altında araştırma önceliği
+   olarak okunuyor, adıyla bayrak listesi (ilk iki satır açık) en altta.
+   640–767 arasında da aynı sıra: kapak orada da tek sütun. */
+@media (max-width:767px) {
+  .flags .scoreLine { order:1; padding-block:14px; border-block:1px solid var(--line); }
+  .flags .flagFold, .flags .flagEmpty { order:2; }
+}
+/* Katlamanın geniş ekran kuralı `display:revert` yazıyor; `li` için o
+   `list-item` demek, satırın `flex` düzeni bozulurdu. Seçici bilerek ağır. */
+@media (min-width:640px) {
+  .flagFold.flagFold .flagList li[data-fold] { display:flex; }
+}
+.flagFold { min-width:0; }
 
 /* ---------- Kategori çubukları ---------- */
 .cats { display:grid; gap:18px; padding:4px 20px 22px; }

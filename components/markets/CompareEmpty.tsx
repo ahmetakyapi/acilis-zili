@@ -83,6 +83,15 @@ export async function CompareEmpty({
             <Link
               key={preset.labelKey}
               href={compareHref(preset.symbols)}
+              /* ÖN YÜKLEME YOK (25 Ekim). Dört kart görünür görünmez dört
+                 `?semboller=` ön yüklemesi açıyordu ve Next'in istemcisi
+                 yanıtların gövdesini hiç okumuyordu: istekler sunucuda
+                 bitmiş olsa da tarayıcıda açık kalıyor, sayfa 60 saniyede
+                 ağ sessizliğine ulaşmıyordu (ölçüldü, 30 sn sonra dördü de
+                 bekliyor). Karşılaştırma bağlantılarının geri kalanı zaten
+                 böyle (CompareLive, tema sayfası); tıklama sunucuya gider,
+                 bekleme gezinme çubuğunda görünür. */
+              prefetch={false}
               className={`${polish.preset} group flex flex-col gap-4 border border-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)`}
             >
               <div className="flex items-start gap-2.5">

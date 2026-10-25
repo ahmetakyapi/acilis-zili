@@ -4,11 +4,11 @@ import { auth } from "@/auth";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { EmptyState, LogoTile, PageHeader, TabBar, TabItem, ButtonLink } from "@/components/ui/primitives";
+import { EmptyState, LogoTile, PageHeader, Panel, PanelHeader, TabBar, TabItem, ButtonLink } from "@/components/ui/primitives";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
-import { InkCanvas } from "@/components/ink/InkCanvas";
 import { AnalysisReport } from "@/components/ai/AnalysisReport";
 import { ClaudeWorkbench } from "@/components/ai/ClaudeWorkbench";
+import { FocusOptions, type FocusOption } from "@/components/ai/FocusOptions";
 import { editionNote } from "@/components/ai/ClaudeCta";
 import { ReportTimeline, type TimelineItem } from "@/components/ai/ReportTimeline";
 import { initialsOf } from "@/lib/avatars";
@@ -100,28 +100,27 @@ export default async function ClaudePage(props: PageProps<"/claude/[symbol]">) {
   ]);
   const quote = quotes?.ok && !quotes.stale ? quotes.data[symbol] : null;
 
-  const focusCard = (f: AnalysisFocus) => {
+  /* ODAK SEÇENEKLERİ (25 Ekim): sekmelerin üstündeki iki büyük kart kalktı;
+     seçenek kullanıldığı yerde duruyor. Rapor sekmesinde hangi odağın raporu
+     okunuyor (son karar + zaman), Yeni Analiz'de hangi odakta rapor istenecek
+     (vade · ne verdiği). İkisi de adreste (`?odak=`), `scroll={false}`. */
+  const focusOptions = (mode: "rapor" | "yeni"): FocusOption[] => (["technical", "selection"] as const).map(f => {
     const latest = reports.find(r => FOCUS_OF[r.horizon] === f);
-    // Mürekkep çizimi: teknik için grafik, seçim için defter sahnesi (lib/ink/scenes.ts); bir kez oynar.
-    return <Link key={f} href={href({ focus: f, tab: tab === "gecmis" ? "gecmis" : latest ? "rapor" : "yeni" })} scroll={false}
-      className={styles.focusCard} aria-current={f === focus ? "true" : undefined} data-verdict={latest?.verdict}>
-      <span className={styles.focusArt} aria-hidden><InkCanvas scene={f === "technical" ? "chart" : "ledger"} seed={f === "technical" ? 7 : 13} /></span>
-      <span className={styles.focusBody}>
-        <span className={styles.focusName}>{f === "technical" ? A.focus.technical : A.focus.selection}</span>
-        <span className={styles.focusHint}>{f === "technical" ? A.focus.technicalHint : A.focus.selectionHint}</span>
-        {latest ? <span className={styles.focusLatest}>
-          {latest.score !== null && <ScoreRing score={latest.score} verdict={latest.verdict === "insufficient" ? "hold" : latest.verdict} size={34} />}
-          <b>{A.verdicts[latest.verdict]}</b><span>{date(latest.generatedAt)}</span>
-        </span> : <span className={styles.focusLatest}><span>{A.cta.none}</span></span>}
-      </span>
-    </Link>;
-  };
+    const term = f === "technical" ? A.short : A.medium;
+    return {
+      focus: f, current: f === focus,
+      name: f === "technical" ? A.focus.technical : A.focus.selection,
+      href: href({ focus: f, tab: mode === "yeni" ? "yeni" : latest || !access ? "rapor" : "yeni" }),
+      line: mode === "yeni" ? `${term} · ${C.desk.gives[f]}` : `${term} · ${latest ? date(latest.generatedAt) : C.desk.noReport}`,
+      latest: mode === "rapor" && latest ? { verdict: latest.verdict, label: A.verdicts[latest.verdict], score: latest.score } : null,
+    };
+  });
 
   return <MotionExperience className={polish.page}>
     <ScrollProgress />
     <PageHeader title={C.title} subtitle={C.subtitle} />
     <div className={styles.identity}>
-      <LogoTile symbol={symbol} logoUrl={meta?.logoUrl} size="lg" />
+      <LogoTile symbol={symbol} logoUrl={meta?.logoUrl} size="md" />
       <div className={styles.identityText}>
         <span className={styles.identitySymbol}>{symbol}</span>
         <span className={styles.identityName}>{meta?.name ?? ""}</span>
@@ -133,63 +132,91 @@ export default async function ClaudePage(props: PageProps<"/claude/[symbol]">) {
       </nav>
     </div>
 
-    <div className={styles.focusRow} role="group" aria-label={A.focus.label}>{(["technical", "selection"] as const).map(focusCard)}</div>
-
+    {/* Sekmeler kimliğin hemen altında: üç görünüm aynı hissenin, odak her görünümün içinde. */}
     <TabBar label={C.title} className={styles.tabs}>
-      {TABS.map(key => <TabItem key={key} href={href({ tab: key })} active={tab === key} underlineId="claude-tabs">
+      {TABS.map(key => <TabItem key={key} href={href({ tab: key })} active={tab === key} underlineId="claude-tabs" scroll={false}>
         {key === "rapor" ? C.tabs.report : key === "yeni" ? C.tabs.create : `${C.tabs.history}${reports.length ? ` (${reports.length})` : ""}`}
       </TabItem>)}
     </TabBar>
 
-    {tab === "rapor" && (result && selected ? <div className={styles.reportWrap}>
-      <div className={styles.reportBar}>
-        <div className={styles.reportMeta}>
-          <p className={styles.createdAt}>{C.createdAt.replace("{date}", date(result.generatedAt))}{selected.locale !== locale ? ` ${C.otherLocale}` : ""}</p>
-          {selected.author && <p className={styles.byline}>
-            <AvatarTile icon={selected.author.icon} color={selected.author.color} initials={initialsOf(selected.author.name, locale)} className={styles.bylineAvatar} />
-            <span>{C.timeline.author}</span><b>{selected.author.name}</b>{selected.mine && <i>{C.timeline.mine}</i>}
-          </p>}
+    {tab === "rapor" && <div className={styles.reportWrap}>
+      <FocusOptions items={focusOptions("rapor")} label={A.focus.label} />
+      {result && selected ? <>
+        <div className={styles.reportBar}>
+          <div className={styles.reportMeta}>
+            <p className={styles.createdAt}>{C.createdAt.replace("{date}", date(result.generatedAt))}{selected.locale !== locale ? ` ${C.otherLocale}` : ""}</p>
+            {selected.author && <p className={styles.byline}>
+              <AvatarTile icon={selected.author.icon} color={selected.author.color} initials={initialsOf(selected.author.name, locale)} className={styles.bylineAvatar} />
+              <span>{C.timeline.author}</span><b>{selected.author.name}</b>{selected.mine && <i>{C.timeline.mine}</i>}
+            </p>}
+          </div>
+          {/* Rapor varken de yeniden üretilebilir (sabah ve akşam iki rapor gibi): düğme her zaman burada. */}
+          {access && <ButtonLink href={href({ tab: "yeni" })} variant="primary" size="sm" scroll={false} className={styles.regen}>
+            <svg viewBox="0 0 24 24" aria-hidden><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" /></svg>{C.regenerate}
+          </ButtonLink>}
         </div>
-        {/* Rapor varken de yeniden üretilebilir (sabah ve akşam iki rapor gibi): düğme her zaman burada. */}
-        {access && <ButtonLink href={href({ tab: "yeni" })} variant="primary" size="sm" scroll={false} className={styles.regen}>
-          <svg viewBox="0 0 24 24" aria-hidden><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" /></svg>{C.regenerate}
-        </ButtonLink>}
-      </div>
-      {timeline}
-      <AnalysisReport result={result} t={A} locale={locale} symbol={symbol} horizon={selected.horizon} categoryNames={t.screening.categories} fresh={params.yeni === "1"}
-        current={quote ? { price: quote.price, at: quote.tradedAt ? new Date(quote.tradedAt).toISOString() : null, realtime: !!quote.realtime } : null} />
-    </div> : <EmptyState title={C.emptyTitle} hint={access ? C.emptyHint : C.emptyHintGuest} scene="chart"
-      action={access ? <ButtonLink href={href({ tab: "yeni" })} variant="primary">{C.createCta}</ButtonLink> : undefined} />)}
+        <AnalysisReport result={result} t={A} locale={locale} symbol={symbol} horizon={selected.horizon} categoryNames={t.screening.categories} fresh={params.yeni === "1"}
+          current={quote ? { price: quote.price, at: quote.tradedAt ? new Date(quote.tradedAt).toISOString() : null, realtime: !!quote.realtime } : null} />
+        {/* Son raporlar ve sıradaki önerilen an: raporun SONUNDA (25 Ekim). Kapağın üstündeyken
+            1280×800'de raporun kendisini ilk ekranın dışına itiyordu. */}
+        {timeline}
+      </> : <EmptyState title={C.emptyTitle} hint={access ? C.emptyHint : C.emptyHintGuest} scene="chart"
+        action={access ? <ButtonLink href={href({ tab: "yeni" })} variant="primary" scroll={false}>{C.createCta}</ButtonLink> : undefined} />}
+    </div>}
 
-    {tab === "yeni" && <ClaudeWorkbench symbol={symbol} name={meta?.name ?? ""} logoUrl={logoUrl} locale={locale} t={A} focus={focus}
-      canGenerate={!!access} signedIn={!!viewerId} remaining={access?.remaining ?? null} limit={access?.dailyLimit ?? null}
+    {/* Yetkisiz hâller sayfa düzeyi boş durum: mürekkep sahnesi, tek cümle, tek eylem. */}
+    {tab === "yeni" && !viewerId && <EmptyState title={C.desk.guestTitle} hint={C.desk.guestHint} scene="ledger"
+      action={<ButtonLink href={`/giris?devam=${encodeURIComponent(href({ tab: "yeni" }))}`} variant="primary">{C.desk.signIn}</ButtonLink>} />}
+    {tab === "yeni" && viewerId && !access && <EmptyState title={C.desk.closedTitle} hint={C.desk.closedHint} scene="chart"
+      action={reports.length ? <ButtonLink href={href({ tab: "rapor" })} variant="primary" scroll={false}>{C.desk.readReports}</ButtonLink> : undefined} />}
+    {tab === "yeni" && access && <ClaudeWorkbench symbol={symbol} name={meta?.name ?? ""} logoUrl={logoUrl} locale={locale} t={A} focus={focus}
+      options={focusOptions("yeni")} remaining={access.remaining ?? null} limit={access.dailyLimit ?? null}
       latest={ofFocus[0] ? { href: href({ tab: "rapor", id: ofFocus[0].id }), verdict: ofFocus[0].verdict, score: ofFocus[0].score, when: date(ofFocus[0].generatedAt) } : null}
-      inProgress={!!access?.lockId && !!access?.lockUntil && access.lockUntil > new Date()}
+      inProgress={!!access.lockId && !!access.lockUntil && access.lockUntil > new Date()} historyHref={href({ tab: "gecmis" })}
       next={next} nextLabel={next ? stamp(next.at) : null} now={nowAt.toISOString()} edition={edition}
       bars={film.bars} headlines={film.headlines} />}
-    {tab === "yeni" && ofFocus.length > 0 && timeline}
+    {tab === "yeni" && access && ofFocus.length > 0 && timeline}
 
-    {tab === "gecmis" && <HistoryList reports={reports} A={A} locale={locale} date={date} href={(r: ReportSummary) => href({ tab: "rapor", focus: FOCUS_OF[r.horizon], id: r.id })} />}
+    {tab === "gecmis" && <HistoryList reports={reports} A={A} locale={locale} focus={focus} date={date} time={time} href={(r: ReportSummary) => href({ tab: "rapor", focus: FOCUS_OF[r.horizon], id: r.id })} />}
   </MotionExperience>;
 }
 
-function HistoryList({ reports, A, locale, date, href }: { reports: ReportSummary[]; A: Awaited<ReturnType<typeof getI18n>>["t"]["aiAnalysis"]; locale: string; date: (iso: string) => string; href: (r: ReportSummary) => string }) {
-  if (!reports.length) return <EmptyState title={A.claude.historyEmpty} compact />;
-  return <ol className={styles.history} data-motion-stagger>
-    {reports.map(r => <li key={r.id}>
-      <Link href={href(r)} scroll={false} className={styles.historyRow} data-verdict={r.verdict}>
-        {r.score !== null ? <ScoreRing score={r.score} verdict={r.verdict === "insufficient" ? "hold" : r.verdict} size={44} /> : <span />}
-        <span className={styles.historyVerdict}>{A.verdicts[r.verdict]}</span>
-        <span className={styles.historyFocus}>{FOCUS_OF[r.horizon] === "technical" ? A.focus.technical : A.focus.selection}</span>
-        <span className={styles.historyDate}>{date(r.generatedAt)} · TR</span>
-        {r.author ? <span className={styles.historyAuthor}>
-          <AvatarTile icon={r.author.icon} color={r.author.color} initials={initialsOf(r.author.name, locale)} className={styles.tlAvatar} />
-          <span><span className="sr-only">{A.claude.timeline.author}: </span>{r.author.name}</span>
-        </span> : <span className={styles.historyAuthor} />}
-        <span className={styles.historyTags}>{r.locale.toUpperCase()}{r.mine && <b>{A.claude.mine}</b>}</span>
-      </Link>
-    </li>)}
-  </ol>;
+/**
+ * GEÇMİŞ (25 Ekim): odak başına bir panel, seçili odak önce. Tek uzun liste
+ * iki odağı karıştırıyordu ve satırın sütunları (halka, karar, odak, tarih,
+ * oluşturan, dil) satırdan satıra kayıyordu. Şimdi zaman solda ve her
+ * satırda aynı yerde; panel başlığı odağı söylediği için satırda tekrar yok.
+ */
+function HistoryList({ reports, A, locale, focus, date, time, href }: {
+  reports: ReportSummary[]; A: Awaited<ReturnType<typeof getI18n>>["t"]["aiAnalysis"]; locale: string; focus: AnalysisFocus;
+  date: (iso: string) => string; time: (iso: string) => string; href: (r: ReportSummary) => string;
+}) {
+  if (!reports.length) return <EmptyState title={A.claude.historyEmpty} scene="ledger" />;
+  const order: AnalysisFocus[] = focus === "technical" ? ["technical", "selection"] : ["selection", "technical"];
+  const day = (iso: string) => new Date(iso).toLocaleDateString(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: "Europe/Istanbul", dateStyle: "medium" });
+  return <div className={styles.historyGroups}>
+    {order.map(f => {
+      const rows = reports.filter(r => FOCUS_OF[r.horizon] === f);
+      if (!rows.length) return null;
+      return <Panel key={f}>
+        <PanelHeader title={f === "technical" ? A.focus.technical : A.focus.selection} meta={`${A.claude.desk.reports.replace("{n}", String(rows.length))} · ${A.claude.timeline.hours}`} />
+        <ol className={styles.history}>
+          {rows.map(r => <li key={r.id}>
+            <Link href={href(r)} scroll={false} className={styles.historyRow} data-verdict={r.verdict} title={date(r.generatedAt)}>
+              <span className={styles.historyWhen}><b>{day(r.generatedAt)}</b><small className="numeral">{time(r.generatedAt)}</small></span>
+              <span className={styles.historyRing}>{r.score !== null ? <ScoreRing score={r.score} verdict={r.verdict === "insufficient" ? "hold" : r.verdict} size={40} /> : <span className={styles.tlRingEmpty} aria-hidden />}</span>
+              <span className={styles.historyVerdict}>{A.verdicts[r.verdict]}</span>
+              {r.author ? <span className={styles.historyAuthor}>
+                <AvatarTile icon={r.author.icon} color={r.author.color} initials={initialsOf(r.author.name, locale)} className={styles.tlAvatar} />
+                <span><span className="sr-only">{A.claude.timeline.author}: </span>{r.author.name}</span>
+              </span> : <span className={styles.historyAuthor} />}
+              <span className={styles.historyTags}>{r.locale.toUpperCase()}{r.mine && <b>{A.claude.mine}</b>}</span>
+            </Link>
+          </li>)}
+        </ol>
+      </Panel>;
+    })}
+  </div>;
 }
 
 /** Film için O HİSSENİN verisi: son 60 tamamlanmış günlük mum ve son haber başlıkları (Türkçesi varsa). */

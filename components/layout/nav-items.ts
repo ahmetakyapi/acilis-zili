@@ -129,16 +129,28 @@ export type NavItem = {
  * genişliğinde taşma olmuyor; öncelik yalnızca büyütülmüş yazıda devreye
  * giriyor (usePriorityStrip).
  *
- * SIĞMA ÖLÇÜSÜ — tarayıcıda, 16px kök; "Daha Fazla"nın sağ kenarı ile arama
- * kutusunun sol kenarı arası (ızgara aralığı dahil). Kullanıcı adı başlıkta
- * yazılmadığı için misafir ve oturumlu aynı.
+ * SIĞMA ÖLÇÜSÜ (25 Ekim, yeniden alındı) — üretim derlemesi, 16px kök;
+ * şerit hücresinin genişliğinden sekmeler (aralıkları dahil) ve "Daha
+ * Fazla" düşülünce kalan pay. Eski tablo "kullanıcı adı başlıkta yazılmadığı
+ * için misafir ve oturumlu aynı" diyordu; bildirim zili (36 + 8 piksel)
+ * yalnız oturumluya basılıyor ve 1280'de oturumlu TR'de Şirketler
+ * "Daha Fazla"ya iniyordu (pay −37). Çözüm 1280–1439 bandında: arama
+ * kutusu 212 piksel, kısayol kapağı gizli, ızgara aralığı 16 (globals.css →
+ * "OTURUMLU 1280'DE ŞİRKETLER KAYBOLUYORDU").
  *
- *            1024   1100   1279   1280   1366   1440+
- *     TR      114    190    369     58    144    178
- *     EN      112    188    367     58    144    178
+ *                       1024   1100   1279   1280   1366   1440   1536
+ *     misafir    TR       75    147    315     60    144    118    114
+ *     misafir    EN       82    153    322     70    154    128    124
+ *     oturumlu   TR       31    103    271     16    100     74     70
+ *     oturumlu   EN       38    109    278     26    110     84     80
  *
- * 1280'deki düşüş bilinçli: arama orada 36'lık kareden 240'lık alana
- * açılıyor. Eski düzende 1024 EN'de 7 piksel kalıyor, oturumlu 1280/1536
+ * Hiçbir hücrede sekme inmiyor. Pay `usePriorityStrip`in kullandığı ölçü:
+ * kanca 25 Ekim'e kadar sekme aralığını (`gap`) saymıyordu; payı 32
+ * pikselden az eksi olan şerit son sekmeyi kırpılan ikinci satıra atıp
+ * panele de indirmiyordu (gerekçe kancada).
+ *
+ * 1280'deki düşüş bilinçli: arama orada 40'lık kareden 212'lik (1440'tan
+ * itibaren 256'lık) alana açılıyor. Eski düzende 1024 EN'de 7 piksel kalıyor, oturumlu 1280/1536
  * EN'de sekmeler arama kutusunun ALTINA 58/70 piksel biniyordu ve sayfa
  * taşmadığı için hiçbir taşma taraması bunu görmüyordu.
  *

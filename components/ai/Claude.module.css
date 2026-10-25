@@ -1,40 +1,49 @@
-/* Claude Analizi sayfası, Yeni Analiz sekmesi ve hisse sayfalarındaki giriş kartı.
+/* Claude Analizi sayfası, analiz masası ve hisse sayfalarındaki giriş kartı.
    Derinlik tonla; renk yalnız kararda (AL yeşil, SAT kırmızı, TUT mavi mürekkep). */
 
-/* ---- Kimlik şeridi ---- */
-.identity { display:flex; flex-wrap:wrap; align-items:center; gap:14px 18px; }
+/* ---- Kimlik şeridi ----
+   Telefonda iki satır: logo + ad, altında üç bağlantı tek sırada (eskiden
+   satır aralığı 14 px'ti, logo lg; 108 px → 92 px, 25 Ekim ölçümü). */
+.identity { display:flex; flex-wrap:wrap; align-items:center; gap:4px 18px; }
 .identityText { display:grid; gap:2px; min-width:0; }
 .identitySymbol { font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--text-strong); }
 .identityName { font-size:14px; color:var(--text-muted); }
-.identityLinks { display:flex; flex-wrap:wrap; gap:4px 18px; margin-left:auto; font-size:14px; }
+.identityLinks { display:flex; flex-wrap:wrap; gap:0 18px; margin-left:auto; font-size:14px; }
 .identityLinks a { display:inline-flex; align-items:center; min-height:44px; color:var(--text-body); font-weight:600; transition:color 180ms var(--ease-brand); }
 .identityLinks a:hover { color:var(--text-strong); }
+/* Sekme çubuğu sayfa aralığının (24) yarısı kadar yaklaşır: sekme ile içeriği tek blok okunsun. */
+.tabs { margin-bottom:-10px; }
 
-/* ---- Odak kartları: iki rapor türü, seçili olan zeminle ---- */
-.focusRow { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-.focusCard { position:relative; display:grid; grid-template-columns:120px minmax(0,1fr); gap:18px; align-items:center; min-height:150px; padding:18px 22px 18px 14px; border-radius:22px; background:var(--premium-surface); border:1px solid var(--line); overflow:hidden; transition:background-color 260ms var(--ease-brand), border-color 260ms var(--ease-brand), translate 320ms var(--ease-brand); }
-.focusCard::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--primary); scale:0 1; transform-origin:left; transition:scale 520ms var(--ease-brand); }
-.focusCard:hover { border-color:var(--line-strong); translate:0 -2px; }
-.focusCard[aria-current="true"] { background:var(--surface-sunken); border-color:transparent; }
-.focusCard[aria-current="true"]::before { scale:1 1; }
-.focusCard:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
-.focusArt { position:relative; width:120px; height:110px; }
-.focusArt canvas { width:100%; height:100%; }
-.focusBody { display:grid; gap:6px; min-width:0; }
-.focusName { font-size:var(--text-title); font-weight:750; letter-spacing:-.03em; color:var(--text-strong); }
-.focusHint { font-size:13.5px; line-height:1.55; color:var(--text-body); max-width:40em; }
-.focusLatest { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin-top:6px; font-size:13px; color:var(--text-muted); }
-.focusLatest b { font-size:15px; font-weight:800; letter-spacing:-.02em; color:var(--text-strong); }
-[data-verdict="buy"] .focusLatest b { color:var(--up); }
-[data-verdict="sell"] .focusLatest b { color:var(--down); }
-[data-verdict="hold"] .focusLatest b { color:var(--primary-ink); }
-.tabs { margin-bottom:-8px; }
+/* ---- Odak seçenekleri (FocusOptions.tsx) ----
+   İki seçenek, her biri: işaret · ad + tek satır · (Rapor sekmesinde) son
+   kararın halkası. Seçili olan ton farkıyla (zeminden bir ton açık kart +
+   mavi kenar) ve dolu işaretle; renk tek başına anlatmasın diye işaret de
+   değişir. 44 px'in üstünde: en az 64. Odak halkası 2 px. */
+.focusOptions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.focusOption { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:4px 12px; min-height:64px; padding:11px 14px; border-radius:16px; border:1px solid var(--line); background:var(--surface-sunken); color:var(--text-body); transition:background-color 220ms var(--ease-brand), border-color 220ms var(--ease-brand); }
+.focusOption:hover { border-color:var(--line-strong); }
+.focusOption:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.focusOption[aria-current="true"] { background:var(--premium-surface); border-color:var(--primary); }
+.focusMark { position:relative; width:18px; height:18px; border-radius:50%; border:2px solid var(--line-strong); transition:border-color 220ms var(--ease-brand); }
+.focusMark::after { content:""; position:absolute; inset:3px; border-radius:50%; background:var(--primary); scale:0; transition:scale 260ms var(--ease-brand); }
+[aria-current="true"] > .focusMark { border-color:var(--primary); }
+[aria-current="true"] > .focusMark::after { scale:1; }
+.focusText { display:grid; gap:2px; min-width:0; }
+.focusText b { font-size:15.5px; font-weight:750; letter-spacing:-.02em; line-height:1.3; color:var(--text-strong); }
+.focusText span { font-size:13px; line-height:1.45; color:var(--text-muted); }
+.focusVerdict { display:flex; align-items:center; gap:7px; }
+.focusVerdict b { font-size:14px; font-weight:800; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
+[data-verdict="buy"] .focusVerdict b { color:var(--up); }
+[data-verdict="sell"] .focusVerdict b { color:var(--down); }
+[data-verdict="hold"] .focusVerdict b { color:var(--primary-ink); }
 
-.reportWrap { display:grid; gap:14px; min-width:0; }
+/* ---- Rapor sekmesi ---- */
+.reportWrap { display:grid; gap:16px; min-width:0; }
 .reportBar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 16px; }
 .createdAt { font-size:13px; color:var(--text-muted); }
 /* Oluşturan (11 Ekim, sahibinin isteği): kullanıcı adı ve profil karosu; e-posta asla. */
-.reportMeta { display:grid; gap:6px; min-width:0; }
+/* Künye tek satır (25 Ekim): tarih ve oluşturan yan yana; iki satırken kapağı 30 px aşağı itiyordu. */
+.reportMeta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 16px; min-width:0; }
 .byline { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; font-size:13px; color:var(--text-muted); }
 .byline b { font-weight:700; color:var(--text-strong); }
 .byline i { font-style:normal; padding:1px 8px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:11.5px; font-weight:650; }
@@ -42,51 +51,34 @@
 /* Yeniden üret: ok dairesi üzerine gelince bir tur döner (tek küçük öğe — yaylı eğri serbest). */
 .regen svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; transition:rotate 620ms var(--ease-spring-soft); }
 .regen:hover svg { rotate:360deg; }
-@media (prefers-reduced-motion: reduce) { .regen svg { transition:none; } }
 
-/* ---- Yeni Analiz: filmle AYNI KUTU (AnalysisFilm.module.css → .stage) ----
-   Zemin, yarıçap ve en-boy filmle aynı: düğmeye basınca içerik boşalır, kutu
-   yerinde kalır ve film aynı kâğıtta başlar. Giriş bir koreografi: kimlik,
-   dev soru harf harf, açıklama, perdeler sırayla, en son eylem. Çıkış aynı
-   sıranın tersi, düğme bir mürekkep damlasına büzülür. Hepsi `--ease-brand`;
-   taşan eğri yalnız tek küçük öğede (düğmenin oku). */
-.workbench { display:grid; gap:14px; }
-.stage { position:relative; isolation:isolate; display:grid; grid-template-rows:auto 1fr auto auto; gap:clamp(20px,3vw,32px); aspect-ratio:16 / 8; min-height:320px; padding:clamp(20px,3.2vw,36px); border-radius:24px; background:var(--surface-sunken); overflow:hidden; }
+/* ---- Analiz masası (ClaudeWorkbench.tsx) ----
+   Kart eylem sırasıyla: soru · iki odak · durum satırı · düğme + hak.
+   Film AYNI YERDE açılır (AnalysisFilm.module.css → .stage) ve kartın
+   boyundan kendi oranına büyür. `overflow:clip`, hidden DEĞİL: hidden kartı
+   kaydırma kabına çevirir ve telefondaki yapışkan eylem satırı sayfaya
+   değil karta yapışırdı. Giriş kısa bir kademe (soru harf harf, sonra
+   seçenekler, en son eylem); çıkış aynı sıranın tersi, düğme bir mürekkep
+   damlasına büzülür. Hepsi `--ease-brand`; taşan eğri yalnız düğmenin okunda. */
+.workbench { display:grid; gap:20px; min-width:0; }
+.desk { --desk-pad:clamp(18px,2.6vw,28px); position:relative; isolation:isolate; display:grid; gap:18px; padding:var(--desk-pad); border-radius:24px; background:var(--surface-sunken); overflow:clip; }
 /* Silik fiyat çizgisi: kırpmayla açılır (pathLength + non-scaling-stroke kesik ölçüsünü kaydırıyordu, Analysis.module.css → .chartLine). */
-.stageLine { position:absolute; z-index:-1; left:0; right:0; bottom:14%; width:100%; height:48%; overflow:visible; clip-path:inset(0 100% 0 0); animation:line-draw 1600ms var(--ease-brand) 300ms forwards; }
-.stageLine path { fill:none; stroke:var(--text-strong); stroke-width:2.4; stroke-linejoin:round; stroke-linecap:round; opacity:.09; }
+.stageLine { position:absolute; z-index:-1; left:0; right:0; bottom:6%; width:100%; height:46%; overflow:visible; clip-path:inset(0 100% 0 0); animation:line-draw 1600ms var(--ease-brand) 300ms forwards; }
+.stageLine path { fill:none; stroke:var(--text-strong); stroke-width:2.4; stroke-linejoin:round; stroke-linecap:round; opacity:.06; }
 @keyframes line-draw { to { clip-path:inset(0 0 0 0); } }
 
-.stageHead { display:flex; flex-wrap:wrap; align-items:center; gap:12px 16px; animation:stage-in 700ms var(--ease-brand) both; }
-.stageLogo { animation:tile-in 640ms var(--ease-brand) both; }
-@keyframes tile-in { from { opacity:0; scale:.7; } to { opacity:1; scale:1; } }
-.stageId { display:grid; gap:1px; min-width:0; }
-.stageSymbol { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:.02em; color:var(--text-strong); }
-.stageName { font-size:14px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.stageBadge { display:inline-flex; align-items:center; gap:10px; margin-left:auto; padding:7px 14px; border-radius:999px; background:var(--premium-surface); font-size:13px; font-weight:650; color:var(--text-strong); }
-.stageBadge b { padding-left:10px; border-left:1px solid var(--line-strong); font-weight:550; color:var(--text-muted); }
-
-.stageBody { display:grid; align-content:center; gap:12px; min-width:0; }
-.stageTitle { font-size:clamp(2.3rem,6.2vw,4.75rem); line-height:1.02; font-weight:800; letter-spacing:-.055em; color:var(--text-strong); text-wrap:balance; }
-.stageHint { max-width:40em; font-size:15px; line-height:1.6; color:var(--text-body); animation:stage-in-2 520ms var(--ease-brand) 160ms both; }
-
-.program { display:grid; gap:12px; }
-.programTitle { font-size:12px; font-weight:700; color:var(--text-muted); animation:stage-in-2 480ms var(--ease-brand) 280ms both; }
-.program ol { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px 18px; }
-.program li { position:relative; display:grid; grid-template-columns:auto minmax(0,1fr); gap:2px 10px; padding-top:12px; animation:stage-in-2 480ms var(--ease-brand) calc(340ms + var(--i,0) * 60ms) both; }
-/* Perde çizgisi soldan çekilir: filmin ilerleme çizgisinin habercisi. */
-.program li::before { content:""; position:absolute; inset:0 0 auto; height:2px; border-radius:999px; background:var(--line-strong); transform-origin:left; animation:rule-draw 560ms var(--ease-brand) calc(360ms + var(--i,0) * 60ms) both; }
-@keyframes rule-draw { from { scale:0 1; } to { scale:1 1; } }
-.programNo { grid-row:span 2; font-family:var(--font-mono); font-size:12px; font-weight:700; line-height:1.6; color:var(--brass-ink); }
-.programName { font-size:14px; font-weight:700; letter-spacing:-.015em; color:var(--text-strong); }
-.programLine { font-size:12.5px; line-height:1.5; color:var(--text-muted); }
-
-.stageFoot { display:flex; flex-wrap:wrap; align-items:center; gap:14px 22px; animation:stage-in-2 480ms var(--ease-brand) 560ms both; }
-@keyframes stage-in { from { opacity:0; translate:0 14px; } to { opacity:1; translate:0 0; } }
-/* KADEME (12 Ekim; motion-film `sayilar.md` → hiyerarşi). Kahraman başlık
-   14 px yürüyor; geri kalanı ikincil: yolun %60'ı (8 px), sonraki öğe
-   öncekinin ~%40'ı bitince. Sahne 2,9 saniyede değil ~1,1 saniyede
-   kuruluyor; çizgi (ortam) 1,9 saniyede biter. */
+.deskHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 16px; }
+.deskTitle { font-size:clamp(1.7rem,3.4vw,2.5rem); line-height:1.08; font-weight:800; letter-spacing:-.045em; color:var(--text-strong); text-wrap:balance; }
+.deskOptions { animation:stage-in-2 480ms var(--ease-brand) 140ms both; }
+.deskNote { flex-basis:100%; display:flex; flex-wrap:wrap; align-items:center; gap:4px 14px; padding:8px 8px 8px 14px; border-radius:14px; font-size:13.5px; line-height:1.5; animation:stage-in-2 420ms var(--ease-brand) 200ms both; }
+.deskNote > span { flex:1 1 18em; padding-block:4px; }
+.deskNote[data-tone="warn"] { background:var(--brass-wash); color:var(--brass-ink); }
+.deskNote[data-tone="error"] { background:var(--down-wash); color:var(--down); }
+.deskNote[data-tone="info"] { background:var(--primary-wash); color:var(--primary-ink); }
+.noteAction { display:inline-flex; align-items:center; min-height:44px; padding:0 12px; border-radius:999px; font-weight:700; color:inherit; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.noteAction:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.deskAction { display:flex; flex-wrap:wrap; align-items:center; gap:10px 22px; animation:stage-in-2 480ms var(--ease-brand) 240ms both; }
+.deskDuration { flex-basis:100%; font-size:12.5px; line-height:1.5; color:var(--text-muted); }
 @keyframes stage-in-2 { from { opacity:0; translate:0 8px; } to { opacity:1; translate:0 0; } }
 
 /* Birincil eylem: marka degradesi (CLAUDE.md → degrade yalnız birincil eylemde).
@@ -106,46 +98,64 @@
 .quota { display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-muted); }
 .quota b { font-size:15px; color:var(--text-strong); }
 .pips { display:inline-flex; gap:4px; }
-.pips i { width:8px; height:8px; border-radius:50%; background:var(--line-strong); animation:tile-in 320ms var(--ease-brand) calc(620ms + var(--i,0) * 40ms) both; }
+.pips i { width:8px; height:8px; border-radius:50%; background:var(--line-strong); }
 .pips i[data-on] { background:var(--text-strong); }
-.latest { margin-left:auto; gap:8px; }
+.latest { gap:8px; }
 .latest b { font-weight:800; color:var(--text-strong); }
 .latest[data-verdict="buy"] b { color:var(--up); }
 .latest[data-verdict="sell"] b { color:var(--down); }
 .latest[data-verdict="hold"] b { color:var(--primary-ink); }
 .latest small { font-size:11.5px; font-weight:500; color:var(--text-muted); }
 
-.today { padding:10px 14px; border-radius:14px; background:var(--brass-wash); color:var(--brass-ink); font-size:13.5px; line-height:1.55; animation:stage-in-2 480ms var(--ease-brand) 640ms both; }
-.today strong { font-weight:700; }
-.stageNote { font-size:14px; color:var(--text-body); }
-.error { padding:12px 16px; border-radius:14px; background:var(--down-wash); color:var(--down); font-size:14px; }
-
-/* Çıkış: önce kimlik ve yazı yukarı kaçar, sonra perdeler; düğmenin yazısı
-   kapanır, ok dairesi mürekkep damlasına döner ve kâğıda oturur. Filmin ilk
-   karesi boş kâğıt: kesme okunmaz. */
-.stage[data-launching] :is(.stageHead,.stageBody,.program,.quota,.latest,.today,.ctaEdition,.stageLine) { animation:stage-out 240ms var(--ease-brand-in) both; }
-.stage[data-launching] .program { animation-delay:40ms; }
-.stage[data-launching] :is(.quota,.latest) { animation-delay:70ms; }
+/* Çıkış: önce soru ve seçenekler yukarı kaçar, sonra durum ve hak; düğmenin
+   yazısı kapanır, ok dairesi mürekkep damlasına döner ve kâğıda oturur.
+   Filmin ilk karesi boş kâğıt: kesme okunmaz. */
+.desk[data-launching] :is(.deskHead,.deskOptions,.deskNote,.quota,.deskDuration,.stageLine) { animation:stage-out 240ms var(--ease-brand-in) both; }
+.desk[data-launching] :is(.deskNote,.quota,.deskDuration) { animation-delay:60ms; }
 @keyframes stage-out { to { opacity:0; translate:0 -18px; } }
-.stage[data-launching] .go { gap:0; padding:8px; opacity:1; cursor:default; }
-.stage[data-launching] .goLabel { max-width:0; opacity:0; }
-.stage[data-launching] .goIcon { background:var(--text-strong); scale:.32; transition-delay:180ms; }
-.stage[data-launching] .goIcon svg { opacity:0; }
+.desk[data-launching] .go { gap:0; padding:8px; opacity:1; cursor:default; }
+.desk[data-launching] .goLabel { max-width:0; opacity:0; }
+.desk[data-launching] .goIcon { background:var(--text-strong); scale:.32; transition-delay:180ms; }
+.desk[data-launching] .goIcon svg { opacity:0; }
 
-/* ---- Geçmiş ---- */
-.history { display:grid; gap:8px; }
-.historyRow { display:grid; grid-template-columns:44px minmax(70px,auto) minmax(0,1fr) auto minmax(0,auto) auto; gap:16px; align-items:center; min-height:64px; padding:10px 16px; border-radius:16px; background:var(--premium-surface); border:1px solid var(--line); transition:background-color 200ms var(--ease-brand), border-color 200ms var(--ease-brand); }
-.historyRow:hover { border-color:var(--line-strong); background:var(--surface-sunken); }
-.historyVerdict { font-size:17px; font-weight:800; letter-spacing:-.03em; color:var(--text-strong); }
+/* Film ve altındaki not: ne kadar sürdüğü, ayrılınca ne olacağı. */
+.filmWrap { display:grid; gap:10px; scroll-margin-top:calc(var(--app-bar-h, 64px) + 12px); }
+.filmNote { font-size:13px; line-height:1.55; color:var(--text-body); }
+
+/* ---- Raporun Yolu: eylemin altında, sitenin panel dili ---- */
+.aboutBody { display:grid; gap:18px; padding:0 16px 18px; }
+.aboutHint { max-width:46em; font-size:14px; line-height:1.6; color:var(--text-body); }
+.program { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px 18px; }
+.program li { position:relative; display:grid; grid-template-columns:auto minmax(0,1fr); gap:2px 10px; padding-top:12px; }
+/* Perde çizgisi: filmin ilerleme çizgisinin habercisi. */
+.program li::before { content:""; position:absolute; inset:0 0 auto; height:2px; border-radius:999px; background:var(--line-strong); }
+.programNo { grid-row:span 2; font-family:var(--font-mono); font-size:12px; font-weight:700; line-height:1.6; color:var(--brass-ink); }
+.programName { font-size:14px; font-weight:700; letter-spacing:-.015em; color:var(--text-strong); }
+.programLine { font-size:12.5px; line-height:1.5; color:var(--text-muted); }
+.aboutFoot { padding-top:12px; border-top:1px solid var(--line-soft); font-size:13px; line-height:1.55; color:var(--text-muted); }
+
+/* ---- Geçmiş: odak başına bir panel, satırlar hairline ile ----
+   Taranabilirlik için sütunlar her satırda aynı yerde: zaman · halka · karar ·
+   oluşturan · dil/sahip. Telefonda zaman kararın altına iner. */
+.historyGroups { display:grid; gap:20px; }
+.history { margin:0 16px 10px; padding:0; list-style:none; }
+.history > li + li { border-top:1px solid var(--line-soft); }
+.historyRow { display:grid; grid-template-columns:minmax(9em,12em) 40px minmax(0,1fr) minmax(0,auto) auto; gap:4px 16px; align-items:center; min-height:60px; margin:0 -10px; padding:8px 10px; border-radius:12px; transition:background-color 200ms var(--ease-brand); }
+.historyRow:hover { background:var(--surface-sunken); }
+.historyRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+.historyWhen { display:flex; flex-direction:column; min-width:0; }
+.historyWhen b { font-size:15px; font-weight:750; letter-spacing:-.015em; color:var(--text-strong); }
+.historyWhen small { font-size:12px; font-weight:600; color:var(--text-muted); }
+.historyRing { display:grid; place-items:center; }
+.historyVerdict { font-size:16px; font-weight:800; letter-spacing:-.03em; color:var(--text-strong); }
 [data-verdict="buy"] > .historyVerdict { color:var(--up); }
 [data-verdict="sell"] > .historyVerdict { color:var(--down); }
 [data-verdict="hold"] > .historyVerdict { color:var(--primary-ink); }
-.historyFocus { font-size:14px; font-weight:600; color:var(--text-body); }
-.historyDate { font-size:13px; color:var(--text-muted); }
+[data-verdict="insufficient"] > .historyVerdict { color:var(--text-muted); }
 .historyAuthor { display:flex; align-items:center; gap:7px; min-width:0; font-size:13px; font-weight:600; color:var(--text-body); }
 .historyAuthor > span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:12em; }
-.historyTags { display:flex; gap:6px; font-family:var(--font-mono); font-size:11.5px; color:var(--text-muted); }
-.historyTags b { font-family:var(--font-sans); padding:2px 8px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-weight:650; }
+.historyTags { display:flex; justify-content:flex-end; gap:6px; font-family:var(--font-mono); font-size:11.5px; color:var(--text-muted); }
+.historyTags b { font-family:var(--font-sans); padding:2px 8px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-weight:650; white-space:nowrap; }
 
 /* ---- Claude paneli (ClaudeCta.tsx): sayfanın kendi okumasından SONRA ----
    Her odak bir satır: halka · karar, zaman ve oluşturan · eylemler. Panel
@@ -168,7 +178,7 @@
 .ctaActions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
 /* Sıradaki teknik yayın: satırların altında sessiz bir künye satırı (kutu değil). */
 .ctaEdition { display:flex; align-items:flex-start; gap:10px; margin:14px 16px 0; padding:0 4px; font-size:13.5px; line-height:1.55; color:var(--text-body); }
-.ctaEdition[data-stage] { margin:0; padding:0; animation:stage-in-2 480ms var(--ease-brand) 680ms both; }
+.ctaEdition[data-stage] { margin:0; padding:0; }
 .ctaEdition svg { flex:none; width:18px; height:18px; margin-top:1px; fill:none; stroke:var(--primary-ink); stroke-width:2; stroke-linecap:round; }
 .ctaHint { margin:14px 16px 0; padding:12px 4px 16px; border-top:1px solid var(--line); font-size:13px; line-height:1.55; color:var(--text-muted); }
 @container (max-width: 560px) {
@@ -204,27 +214,44 @@
 .ctaActionBlock .ctaActionText { flex:1; }
 @media (prefers-reduced-motion: reduce) { .ctaSpark,.ctaArrow { transition:none; } }
 
-@media(max-width:767px) {
-  .focusRow { grid-template-columns:minmax(0,1fr); }
-  .stage { aspect-ratio:auto; min-height:0; border-radius:20px; }
-  /* Telefonda çizgi perde listesinin altından geçiyor: daha silik. */
-  .stageLine path { opacity:.055; }
-  .program ol { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .stageBadge { margin-left:0; }
-  .go { width:100%; justify-content:space-between; }
-  .latest { margin-left:0; }
-  .identityLinks { margin-left:0; width:100%; }
-  .historyRow { grid-template-columns:44px minmax(0,1fr) auto; gap:4px 12px; }
-  .historyFocus,.historyDate,.historyAuthor { grid-column:2 / -1; }
-  .historyTags { grid-column:3; grid-row:1; }
-  .focusCard { grid-template-columns:84px minmax(0,1fr); padding:14px 16px 14px 8px; }
-  .focusArt { width:84px; height:80px; }
+
+/* Telefon ve tablet (alt sekme çubuğu 1024'ün altında ekranda, AppShell). */
+@media(max-width:1023px) {
+  /* YAPIŞKAN EYLEM: kart ekrana girdiği anda düğme de görünür. Alt değer sekme
+     çubuğunun kendi yüksekliği (içerik 62 + `max(env(safe-area-inset-bottom),16px)`,
+     AppShell; 390×844'te 78 px ölçüldü). Kartın İÇİNDE yapışır: kart bitince
+     yerine oturur, sayfanın başka içeriğinin üstüne binmez. Zemin kartın zemini;
+     yapışmadığında görünmez, yapışınca kartın kendisi gibi durur. */
+  .deskAction { position:sticky; z-index:2; bottom:calc(max(env(safe-area-inset-bottom), 16px) + 62px); margin-inline:calc(var(--desk-pad) * -1); padding:10px var(--desk-pad); background:var(--surface-sunken); }
+  .deskDuration { display:none; }
 }
-@media(max-width:420px) { .program ol { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:767px) {
+  .identityLinks { margin-left:0; width:100%; }
+  .program { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .historyRow { grid-template-columns:40px minmax(0,1fr) auto; gap:2px 12px; }
+  .historyWhen { grid-column:2; grid-row:2; flex-direction:row; flex-wrap:wrap; gap:0 6px; }
+  .historyWhen b { font-size:13px; font-weight:650; color:var(--text-body); }
+  .historyRing { grid-column:1; grid-row:1 / span 3; align-self:start; padding-top:4px; }
+  .historyVerdict { grid-column:2; grid-row:1; }
+  .historyAuthor { grid-column:2 / -1; grid-row:3; }
+  .historyTags { grid-column:3; grid-row:1; }
+}
+@media(max-width:639px) {
+  /* Telefonda seçenekler alt alta: her birinin tek satırı tam genişlikte okunur. */
+  .focusOptions { grid-template-columns:minmax(0,1fr); }
+  .focusOption { min-height:58px; padding:9px 12px; }
+  /* Son rapor kısayolu telefonda başlığın altına ikinci satır açıyordu (44 px); aynı rapor kartın altındaki Son Raporlar'da. */
+  .deskHead .latest { display:none; }
+  .deskAction { gap:10px 12px; }
+  .deskNote { padding:6px 6px 6px 12px; font-size:13px; }
+  .go { flex:1 1 0; min-width:0; min-height:56px; justify-content:space-between; padding-left:22px; font-size:16px; }
+  .quota { flex-direction:column; align-items:flex-end; gap:2px; font-size:12px; text-align:right; }
+}
+@media(max-width:420px) { .program { grid-template-columns:minmax(0,1fr); } }
 @media (prefers-reduced-motion: reduce) {
   .stageLine { animation:none; clip-path:none; }
-  .stageHead,.stageLogo,.stageHint,.programTitle,.program li,.program li::before,.stageFoot,.pips i,.today,.ctaEdition[data-stage] { animation:none; }
-  .goLabel > span,.goIcon svg { transition:none; }
+  .deskOptions,.deskNote,.deskAction,.ctaEdition[data-stage] { animation:none; }
+  .goLabel > span,.goIcon svg,.regen svg,.focusMark::after { transition:none; }
 }
 
 /* ---- Son raporlar (ReportTimeline.tsx) ----

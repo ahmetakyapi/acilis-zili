@@ -1,3 +1,4 @@
+import { FoldToggle } from "@/components/ui/FoldToggle";
 import type { Dictionary } from "@/lib/i18n";
 import type { Band, CheckId, ScreenResult } from "@/lib/screening";
 import styles from "./Screening.module.css";
@@ -7,6 +8,8 @@ type T = Dictionary["screening"];
 const MINI = 2 * Math.PI * 20;
 /** Kapakta adıyla yazılan bayrak sayısı; fazlası "+N Daha". */
 const FLAG_LIMIT = 5;
+/** Telefonda açık gelen bayrak satırı; gerisi katlı (25 Ekim, gerekçe FlagSummary). */
+const PHONE_FLAGS = 2;
 
 /**
  * KAPAK ÖNCE BAYRAKLARI GÖSTERİYOR (3 Ekim). İlk sürümde kapağın sağı
@@ -23,8 +26,11 @@ export function FlagSummary({
   names,
   statusOf,
   t,
+  fold,
 }: {
   result: ScreenResult;
+  /** Telefondaki katlamanın etiketleri ("{n} Bayrak Daha" / "Daha Az Göster"). */
+  fold: { more: string; less: string };
   /** Kontrolün adı (sözlükten) — bileşen sözlüğü bilmeden çizsin. */
   names: Record<CheckId, string>;
   /** Kontrolün durum etiketi ("Baz Etkisi" dahil) — rapordaki tablonun aynısı. */
@@ -49,18 +55,36 @@ export function FlagSummary({
           {t.warnLabel}
         </span>
       </div>
+      {/* TELEFONDA İLK İKİ SATIR AÇIK (25 Ekim UX turu). 390'da beş satırlık
+          liste 589→880 arası 291 piksel tutuyordu ve Uyum Puanı y=902'ye,
+          Şirket Analizi 1.118'e düşüyordu. Sayılar ("1 Kural Kaldı · 4
+          Dikkat") yine en başta — kapağın "önce bayraklar" kararı (yukarıda)
+          korunuyor; adıyla ilk iki bayrak açık, gerisi sitenin JS'siz
+          katlamasıyla (FoldToggle, yalnız 640 altı) bir dokunuşta. Satırlar
+          sunucuda yine çiziliyor, bilgi kaybı yok. Puan satırı telefonda
+          sayıların hemen altına çıkıyor (CSS `order`, Screening.module.css). */}
       {shown.length ? (
-        <ul className={styles.flagList}>
-          {shown.map((check) => (
-            <li key={check.id} data-status={check.status}>
-              <span className={styles.flagName}>{names[check.id]}</span>
-              <span className={styles.flagState}>{statusOf(check.id)}</span>
-            </li>
-          ))}
-          {flags.length > FLAG_LIMIT && (
-            <li className={styles.flagMore}>{t.moreFlags.replace("{n}", String(flags.length - FLAG_LIMIT))}</li>
-          )}
-        </ul>
+        <div className={styles.flagFold}>
+          <FoldToggle
+            id="screen-flags-fold"
+            phone
+            hiddenCount={Math.max(0, shown.length - PHONE_FLAGS)}
+            more={fold.more.replace("{n}", String(Math.max(0, shown.length - PHONE_FLAGS)))}
+            less={fold.less}
+          >
+            <ul className={styles.flagList}>
+              {shown.map((check, index) => (
+                <li key={check.id} data-status={check.status} data-fold={index >= PHONE_FLAGS ? "" : undefined}>
+                  <span className={styles.flagName}>{names[check.id]}</span>
+                  <span className={styles.flagState}>{statusOf(check.id)}</span>
+                </li>
+              ))}
+              {flags.length > FLAG_LIMIT && (
+                <li className={styles.flagMore} data-fold="">{t.moreFlags.replace("{n}", String(flags.length - FLAG_LIMIT))}</li>
+              )}
+            </ul>
+          </FoldToggle>
+        </div>
       ) : (
         <p className={styles.flagEmpty}>{t.noFlags}</p>
       )}

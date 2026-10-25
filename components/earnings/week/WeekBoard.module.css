@@ -712,7 +712,48 @@
   margin-top: 1.1rem;
 }
 
-/* ---- Kahraman: nabız ---- */
+/* ---- Nabız paneli (25 Ekim) ----
+   Nabız kapaktan hafta şeridinin altına, kendi paneline indi (gerekçe
+   sayfada). Telefonda kapaktaki düzen aynen; 768 ve üstünde panel tam
+   genişlik olduğu için beş sütunu 1200 piksele yaymak yerine başlık ve
+   lejant solda üst üste, sütunlar sağda. */
+.pulsePanel {
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .pulsePanel {
+    padding: 1.25rem;
+  }
+
+  .pulsePanel .pulse {
+    display: grid;
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    gap: 0.9rem 2.5rem;
+  }
+
+  .pulsePanel .pulseTop {
+    grid-column: 1;
+    grid-row: 1;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pulsePanel .pulseBars {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  .pulsePanel .pulseLegend {
+    grid-column: 1;
+    grid-row: 2;
+    flex-direction: column;
+    align-self: end;
+  }
+}
+
+/* ---- Nabız ---- */
 .pulse {
   display: flex;
   flex-direction: column;
@@ -727,10 +768,9 @@
   gap: 0.75rem;
 }
 
+/* Başlığın tonu ve puntosu PanelHeader'ın sınıflarından (WeekBoard.tsx). */
 .pulseTitle {
-  color: var(--primary-ink);
-  font-size: 13px;
-  font-weight: 600;
+  min-width: 0;
 }
 
 .pulseTotal {

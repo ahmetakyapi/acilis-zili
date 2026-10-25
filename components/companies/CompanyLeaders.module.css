@@ -68,3 +68,17 @@
 /* Başlık 14 → 16: öteki panel başlıklarıyla aynı kademe (9 Ekim). */
 .heading h2 { font-size:var(--text-lead); letter-spacing:-.015em; }
 @media(prefers-reduced-motion:reduce) { .choices > li, .share { animation:none; } }
+
+/* ---- Telefonda tek satır şerit (25 Ekim) ----
+   Gerekçe CompanyLeaders.tsx. Kap yana kayıyor, dikeyde kırpıyor: giriş
+   animasyonu karoyu 16 piksel aşağıdan getiriyor ve `overflow-x:auto` tek
+   başına dikey kaydırma da açardı. 3 piksellik iç pay odak halkası
+   (`outline-offset:3px`) kırpılmasın diye; eksi pay hizayı korur. Sağdaki
+   40 piksel son karonun yön okunun altında kalmaması için. Karo 76 piksel:
+   390'da dört karo ve beşincinin yarısı görünüyor, devamı okunuyor. */
+@media(max-width:639px) {
+ .strip { overflow-x:auto; overflow-y:hidden; margin:-3px; padding:3px; scrollbar-width:none; overscroll-behavior-x:contain; }
+ .strip::-webkit-scrollbar { display:none; }
+ .choices { display:flex; width:max-content; padding-inline-end:40px; }
+ .choices > li { flex:none; width:76px; }
+}

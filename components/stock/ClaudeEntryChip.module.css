@@ -1,0 +1,46 @@
+/* Künye şeridinin kısa yolları — gerekçe ClaudeEntryChip.tsx.
+   İKİNCİL GÖRÜNÜM: dolgu mavi değil, zeminden bir ton aşağı (`surface-sunken`)
+   ve ince çizgi; ekranın birincil eylemi mavi düğme olarak tam kartta kalıyor.
+   Yükseklik 30: şirket sayfasındaki araştırma çipinin (28) ve 36'lık eylem
+   dairelerinin arası; dokunma alanı `tap-44` ile 44. Yazı 12 piksel, araştırma
+   çipiyle aynı. Görüş yön rengini taşır (renk anlam taşır kuralı): AL `--up`,
+   SAT `--down`, TUT ve yetersiz veri nötr. */
+.chip {
+  display: inline-flex;
+  flex: none;
+  min-height: 30px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--text-body);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 200ms var(--ease-brand), border-color 200ms var(--ease-brand), color 200ms var(--ease-brand);
+}
+.chip:hover { border-color: var(--primary-faint); background: var(--primary-tint); color: var(--primary-ink); }
+.chip:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 3px; }
+.spark { flex: none; color: var(--primary); transition: rotate 520ms var(--ease-brand); }
+.chip:hover .spark { rotate: 45deg; }
+.label { color: var(--text-body); }
+.short { display: none; }
+@media (max-width: 767px) { .long { display: none; } .short { display: inline; } }
+.dot { color: var(--text-muted); }
+.verdict { color: var(--text-strong); font-weight: 750; letter-spacing: .01em; }
+.chip[data-verdict="buy"] .verdict { color: var(--up); }
+.chip[data-verdict="sell"] .verdict { color: var(--down); }
+.go { color: var(--text-strong); }
+.chip:hover .go { color: var(--primary-ink); }
+.arrow { flex: none; color: var(--text-muted); transition: translate 320ms var(--ease-brand); }
+.chip:hover .arrow { translate: 2px 0; color: var(--primary-ink); }
+/* Çapa: aynı sayfada aşağı iner — kıl çizgi bile yok, en sessiz kademe. */
+.quiet { border-color: transparent; background: transparent; padding-inline: 6px; }
+.quiet:hover .arrow { translate: 0 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .chip, .spark, .arrow { transition: none; }
+  .chip:hover .spark { rotate: none; }
+  .chip:hover .arrow { translate: none; }
+}

@@ -192,6 +192,9 @@ export async function generateViewport(): Promise<Viewport> {
  * <html suppressHydrationWarning> — hesap panelindeki tema seçimi
  * (AccountMenu) data-theme'i DOM'a yazar.
  */
+/** Stil kapısı — gerekçe globals.css'in sonunda ("STİL KAPISI"). */
+const STYLE_GATE = "body{visibility:hidden}";
+
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -222,6 +225,9 @@ export default async function RootLayout({
             `next/script` + `beforeInteractive` kararı hidrasyonun hemen
             önüne itiyordu (20 Ekim); gerekçeler `InkSplash.tsx`te. */}
         <InkSplashScript />
+        {/* Stil inmeden boyanan kare görünmesin: yalnız Next'in istemcide
+            kurduğu 404 yolunda iş görüyor (gerekçe globals.css sonu). */}
+        <style>{STYLE_GATE}</style>
         <InkSplash name={t.brand.name} />
         {/* Kuruluş + site künyesi; sayfa bazlı künyeler kendi rotalarında. */}
         <SiteJsonLd locale={locale} />

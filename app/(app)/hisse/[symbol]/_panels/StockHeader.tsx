@@ -7,6 +7,7 @@ import { and, eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { ArrowLeft, Heart, Stack, ChartLineUp, BellSimpleRinging, Briefcase } from "@phosphor-icons/react/dist/ssr";
 import { PageShare } from "@/components/article/PageShare";
+import { preloadClaudeEntry } from "@/components/stock/ClaudeEntryChip";
 import styles from "../stock.module.css";
 import { FavoriteToggle } from "@/components/stock/FavoriteToggle";
 import { PriceAlertButton } from "@/components/alerts/PriceAlertButton";
@@ -105,6 +106,9 @@ export async function StockHeader({
   /** Telefonda sektör satırının altındaki araştırma bağlantısı. */
   chip?: React.ReactNode;
 }) {
+  /* Künye şeridindeki Claude çipinin sorguları kotasyonla aynı anda
+     (gerekçe ClaudeEntryChip.tsx → `preloadClaudeEntry`). */
+  preloadClaudeEntry(symbol);
   const status = await getStatus();
   /* ÜYE OKUMALARI OTURUMA BAĞLI, KOTASYONA DEĞİL (20 Ekim). Favori ve
      alarm sorguları sağlayıcı turunun BİTMESİNİ bekliyordu, sonra kendi

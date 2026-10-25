@@ -32,6 +32,19 @@
 }
 .workspace[data-has-feature="false"] { grid-template-columns: minmax(0, 1fr); }
 .featureGrid { display: contents; }
+/* ARARKEN YALNIZ ARŞİV (25 Ekim). Arama kutusu sekmenin altına çıktı
+   (`AnalysisSearch.tsx`); yazarken öne çıkan kart, haftanın paneli ve
+   yaklaşanlar katlanıyor, sonuç listesi kutunun hemen altına geliyor.
+   Üçü de geniş ekranda ilk satırı paylaşıyor; biri kalırsa (`contain:
+   size` ile) sıfır boylu bir kutu ya da arşivi iten bir satır bırakırdı,
+   o yüzden üçü birlikte. Kutu boşalınca yerlerine döner. */
+.workspace[data-searching] :is(.featureGrid, .upcoming) { display: none; }
+/* Telefonda sıralama satırı da (56 piksel) aranırken katlanıyor: "nvda"
+   yazınca ilk sonuç satırı 791'deydi, ilk ekranın (765) altında. Sıralama
+   bir-iki sonuçlu listede bir şey değiştirmiyor; kutu boşalınca döner. */
+@media (max-width: 639px) {
+  .workspace[data-searching] [data-table-toolbar] { display: none; }
+}
 
 /* ---- Öne çıkan kart ----
    Derinlik TONLA: radyal süs ve gölge kalktı (sitenin kart kuralı). Büyük

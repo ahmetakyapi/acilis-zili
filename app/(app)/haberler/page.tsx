@@ -4,6 +4,8 @@ import { LoadingFallback } from "@/components/ui/LoadingState";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/news/NewsExperience.module.css";
 import { Suspense } from "react";
+import { headers } from "next/headers";
+import { isBot } from "@/lib/analytics";
 import { translateMissingLater } from "@/lib/translate";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { EmptyState, PageHeader } from "@/components/ui/primitives";
@@ -54,7 +56,10 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
   const symbolFilter =
     typeof search.sembol === "string" ? search.sembol.toUpperCase() : null;
 
-  const { t, locale } = await getI18n();
+  const [{ t, locale }, userAgent] = await Promise.all([
+    getI18n(),
+    headers().then((h) => h.get("user-agent") ?? ""),
+  ]);
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
@@ -89,8 +94,17 @@ export default async function NewsPage(props: PageProps<"/haberler">) {
 
       {/* GÜNÜN GÜNDEMİ (17 Ekim): uzun akışın üstünde "bugün ne konuşuluyor"
           özeti; sembol süzgecinde basılmaz (süzülen liste zaten tek konu).
-          Gerekçe lib/news-insights.ts. */}
-      {!symbolFilter && insightsConfigured() && <NewsBriefingCard locale={locale} labels={t.newsInsight} />}
+          Gerekçe lib/news-insights.ts.
+
+          BOTA BASILMAZ (25 Ekim, CLS ölçümü). Kart yüklenirken notun
+          ölçülmüş boyunu ayırıyor (`.loading`, 1280'de 780 piksel) ve uç
+          (`/api/ai/haber-notu`) botu 403 ile geri çeviriyor: bot, başsız
+          Chrome ve Lighthouse kutunun 780'den tek satırlık "alınamadı"ya
+          çöktüğünü, altındaki listenin 759 piksel yukarı sıçradığını
+          görüyordu. Üretimde 1280'de CLS 0,2634 (her üç ölçümde aynı,
+          kaynak liste iskeleti 1180 → 421). Uç zaten vermeyeceği notun
+          kutusunu açmıyoruz; kalıp ucun kendi `isBot` denetimi. */}
+      {!symbolFilter && insightsConfigured() && !isBot(userAgent) && <NewsBriefingCard locale={locale} labels={t.newsInsight} />}
 
       <QueryTransition label={t.common.loading}>
       <Suspense key={symbolFilter ?? "all"} fallback={<LoadingFallback label={t.common.loading}><NewsSkeleton /></LoadingFallback>}>

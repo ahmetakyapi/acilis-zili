@@ -61,6 +61,12 @@
 .heroMain.heroMain > :global(.page-heading-copy) { align-self:stretch; }
 .keyBox { display:flex; min-width:0; flex-direction:column; gap:4px; padding:10px 12px 6px; border:1px solid var(--line-soft); border-radius:var(--radius-xl); background:var(--surface); container-type:inline-size; }
 .keyBox[data-constrained] { flex:1 1 0; min-height:112px; contain:size; }
+/* Telefonda liste kapaktan takvim panelinin altına iniyor (25 Ekim;
+   gerekçe MonthReleases.tsx). Pano kopyası sayfanın öteki panelleriyle
+   aynı malzemede: panel zemini, kenarı ve yarıçapı, PanelHeader'ın
+   16 piksellik yatay dolgusu. */
+.keyBoxBoard { display:none; }
+.keyBoxBoard.keyBoxBoard { padding:14px 12px 8px; border-color:var(--line); border-radius:var(--radius-panel, var(--radius-xl)); background:var(--premium-surface); }
 .keyHead { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; padding-inline:4px; }
 .keyTag { font-size:12px; font-weight:600; line-height:16px; color:var(--text-muted); }
 .keyMore { display:inline-flex; align-items:baseline; gap:8px; margin-left:auto; font-size:12px; font-weight:600; line-height:16px; color:var(--text-muted); white-space:nowrap; }
@@ -402,7 +408,10 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 @media (max-width:767px) {
   .hero { grid-template-columns:minmax(0,1fr); gap:16px; }
   .heroSide { align-items:stretch; gap:12px; }
-  /* TELEFONDA KART ÖNCE, AY LİSTESİ SONRA. Sol kolon `contents` olup
+  /* (25 Ekim: liste telefonda artık kapakta değil, takvim panelinin
+     altında — `.keyBoxBoard`, gerekçe MonthReleases.tsx. Aşağıdaki
+     notun "kart önce" kararı kapakta geçerli.)
+     TELEFONDA KART ÖNCE, AY LİSTESİ SONRA. Sol kolon `contents` olup
      kapağın tek sütunlu ızgarasına açılıyor ve liste kartın altına
      iniyor. Sayfanın asıl cevabı ("sırada ne var, ne kadar kaldı")
      kartta; liste önce gelseydi kart ilk ekranın dibine inerdi (390,
@@ -410,7 +419,8 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
      305 + 18 piksel aşağı, ~560'a inerdi — hesap, ölçüm değil). Liste
      burada gerilmiyor, taban beş satır + "+N". */
   .heroMain { display:contents; }
-  .keyBox { order:2; }
+  .keyBoxHero { display:none; }
+  .keyBoxBoard { display:flex; }
   .keyBox[data-constrained] { flex:none; min-height:0; contain:none; }
   .keyBox { padding:10px 10px 6px; }
   .keyLine { grid-template-columns:34px minmax(0,1fr) auto; gap:10px; }

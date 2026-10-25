@@ -2403,6 +2403,20 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
  .premium-masthead .masthead-search { width:256px; padding:0 6px 0 5px; }
  .premium-masthead .masthead-search-icon { width:30px; height:30px; border-radius:999px; background:var(--primary-tint); }
 }
+/* OTURUMLU 1280'DE ŞİRKETLER KAYBOLUYORDU (25 Ekim). Bildirim zili
+   (36 + 8 piksel) yalnız oturumluya basılıyor ve 1280–1439 bandında
+   şeride 37 piksel eksik kalıyordu: Şirketler "Daha Fazla"ya iniyordu.
+   Bu bantta arama kutusu 256 → 212 ve kısayol kapağı (⌘K) gizli; kısayol
+   çalışmaya devam ediyor (`aria-keyshortcuts`), yer tutucu metin sığıyor
+   (TR 131, EN 142 piksel; kutuda 159). Bu tek başına 7 piksel pay
+   bırakıyordu; masthead ızgarasının iki aralığı da bu bantta 20,5 → 16
+   (`.masthead-frame` aşağıda, özgüllük onu ezmek için iki sınıf). Ölçüm
+   tablosu nav-items.ts'te. */
+@media(min-width:1280px) and (max-width:1439.98px) {
+ .premium-masthead .masthead-search { width:212px; }
+ .premium-masthead .masthead-kbd { display:none; }
+ .premium-masthead .masthead-frame { column-gap:16px; }
+}
 @media(hover:hover) and (pointer:fine) {
  .masthead-brand:hover > span:first-child { transform:translateY(-1.5px); }
  /* SÖNÜMLÜ SALINIM (17 Ekim, sahibinin itirazı: "çok hızlı ve fazla
@@ -2723,3 +2737,24 @@ html.ink-splash-out .ink-splash-layer {
  .share-responsive .share-label { display:none; }
  .share-responsive > button > svg { width:17px; height:17px; }
 }
+
+/* --------------------------------------------------------------------------
+   STİL KAPISI (25 Ekim, 404 CLS ölçümü). Kök düzen `<body>`nin başına satır
+   içi `body{visibility:hidden}` basıyor (app/layout.tsx → `STYLE_GATE`);
+   bu dosya yüklenince aşağıdaki kural onu geri açıyor.
+
+   Neden: sayfa içinden `notFound()` çağrılınca Next 16 sunucuda kabuğu
+   ÇİZMİYOR — yanıt `<html id="__next_error__">` ve boş bir `<head>`, ağaç
+   istemcide kuruluyor (node_modules/next/dist/server/app-render/
+   app-render.js → `getErrorRSCPayload`). Stil bağlantıları React'in
+   eklediği anda daha inmemiş oluyor ve ilk kare stilsiz boyanıyordu:
+   1280'de /sifremi-unuttum, /haberler/999, /rehber/olmayan CLS 0,399
+   (kabuk y=14 → 0, masthead satırı dağınık → yerinde). Kapı stilsiz kareyi
+   görünmez yapıyor; görünmez öğenin kayması sayılmıyor.
+
+   Normal yolda etkisi yok: `<head>`deki stil bağlantıları boyamayı zaten
+   bekletiyor, satır içi kural görünmeden bu kural kazanıyor. KATMANSIZ ve
+   `:root body` (0,1,1) olmak ZORUNDA: katmandaki kural katmansız satır içi
+   kurala her özgüllükte yeniliyor, `body` (0,0,1) ise belgede sonra gelen
+   satır içi kurala. */
+:root body { visibility: visible; }

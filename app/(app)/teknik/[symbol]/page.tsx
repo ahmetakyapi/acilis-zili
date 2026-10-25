@@ -262,7 +262,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             bir sohbet penceresinde okunmuyor. Sorunun cevabı zaten tek
             kelime — sembol, sayfanın adı ve görüş. Gerisini bağlantının
             kendi önizlemesi taşıyor (`opengraph-image`). */}
-        <span className="inline-flex items-center gap-2">
+        <span className="inline-flex items-center gap-3">
         <FavoriteSlot symbol={symbol} back={technicalHref(symbol)} t={t} />
         <ShareButton
           url={absoluteUrl(technicalHref(symbol), locale)}

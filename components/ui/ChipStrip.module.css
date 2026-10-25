@@ -1,0 +1,18 @@
+/* YÖN OKUNUN DOKUNMA ALANI GERÇEKTEN 44 (25 Ekim). Görünen düğme 32 piksel
+   ve globals.css `.chip-strip-arrow::after` onu 44'e çıkarıyor diye
+   yazıyordu; ölçülen alan 42'ydi (`inset:-6px` dolgu kutusundan sayılıyor,
+   1 piksellik kenarlık düşülünce 30 + 12). Üstelik düğme şeridin 4 piksel
+   DIŞINA taşıyor ve genişletme o yönde 10 piksel daha dışarı çıkıyordu:
+   /tarama'da örnek şeridinin kabı (`overflow:hidden`, açılır kapanır satır)
+   ve tablo paneli (`overflow:clip`) o şeridi kırpıyor, dış kenara yakın
+   dokunuş okun yerine alttaki öğeye gidiyordu. Başsız Chrome'da merkezden
+   21 piksel sağdaki nokta beş şeridin beşinde de oka düşmüyordu
+   (`elementFromPoint`; /sirketler, /tarama, /sozluk).
+
+   Genişletme artık 44×44 ve şeridin İÇİNE doğru: dış kenarı şeridin kenarında
+   bitiyor, kırpan bir kap onu kesemiyor. Görünen düğmenin boyu, yeri ve
+   geçişleri aynı (globals.css'te). Özgüllük `.arrow.arrow`: globals'teki
+   tek sınıflı kuralı sıra yarışına girmeden geçiyor. */
+.arrow.arrow::after { top:-7px; bottom:-7px; }
+.arrow.arrow[data-side="end"]::after { left:-17px; right:3px; }
+.arrow.arrow[data-side="start"]::after { left:3px; right:-17px; }

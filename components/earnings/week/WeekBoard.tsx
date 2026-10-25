@@ -474,7 +474,10 @@ export function WeekPulse({
   return (
     <div className={styles.pulse}>
       <div className={styles.pulseTop}>
-        <h2 className={styles.pulseTitle}>{w.pulseTitle}</h2>
+        {/* Panel başlığının kalıbı (`PanelHeader` ile aynı sınıflar, 25 Ekim):
+            nabız kapaktan kendi paneline indi ve başlığı yandaki panellerle
+            aynı kademede. */}
+        <h2 className={`${styles.pulseTitle} display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.015em]`}>{w.pulseTitle}</h2>
         <p className={styles.pulseTotal}>
           <RollingFigure value={String(picked)} className={styles.pulseNumber} />
           <span>{w.statCompanies}</span>
@@ -559,7 +562,7 @@ export function WeekPulseSkeleton({ t }: { t: Dictionary }) {
   return (
     <div className={styles.pulse} aria-hidden>
       <div className={styles.pulseTop}>
-        <p className={styles.pulseTitle}>{w.pulseTitle}</p>
+        <p className={`${styles.pulseTitle} display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.015em]`}>{w.pulseTitle}</p>
         <p className={styles.pulseTotal}>
           <span className={`invisible ${styles.pulseNumber}`}>0</span>
           <span>{w.statCompanies}</span>

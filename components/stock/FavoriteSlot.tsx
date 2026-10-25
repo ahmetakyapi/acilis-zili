@@ -4,6 +4,8 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { FavoriteToggle } from "@/components/stock/FavoriteToggle";
 import { getUserSymbols } from "@/lib/data";
 import type { Dictionary } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
+import styles from "./FavoriteToggle.module.css";
 
 /**
  * Favori kalbi — sembol başına ekranların ortak yuvası.
@@ -25,7 +27,7 @@ export async function FavoriteSlot({ symbol, back, t }: { symbol: string; back: 
         href={`/giris?devam=${encodeURIComponent(back)}`}
         aria-label={t.stock.addToWatchlist}
         title={t.stock.addToWatchlist}
-        className="tap-44 inline-flex size-8 items-center justify-center rounded-sm text-muted transition-colors hover:bg-surface-elevated hover:text-soft"
+        className={cn("tap-44 inline-flex size-8 items-center justify-center rounded-sm text-muted transition-colors hover:bg-surface-elevated hover:text-soft", styles.hit)}
       >
         <Heart weight="duotone" size={17} />
       </Link>

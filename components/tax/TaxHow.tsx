@@ -1,5 +1,6 @@
 import {
   ArrowDown,
+  ArrowUp,
   ArrowsLeftRight,
   CalendarCheck,
   ChartLineUp,
@@ -8,6 +9,7 @@ import {
   Sigma,
   Sparkle,
 } from "@phosphor-icons/react/dist/ssr";
+import { FoldToggle } from "@/components/ui/FoldToggle";
 import { Panel, buttonClass } from "@/components/ui/primitives";
 import { formatLira } from "@/lib/fx";
 import type { Locale } from "@/lib/i18n/config";
@@ -19,11 +21,12 @@ import {
   US_WITHHOLDING,
   type TaxYearRules,
 } from "@/lib/tax";
-import { formatPrice } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 import type { TaxLabels } from "./TaxCalculator";
 import { currentTaxYear } from "./TaxFiling";
 import { PANEL_TITLE, TAX_EXAMPLE } from "./tax-ui";
 import styles from "./Tax.module.css";
+import { TaxHowReveal } from "./TaxHowReveal";
 
 /** Sözlük cümlesindeki `{ad}` yer tutucularını doldurur. */
 function fill(text: string, values: Record<string, string | number>): string {
@@ -32,6 +35,11 @@ function fill(text: string, values: Record<string, string | number>): string {
 
 /** Adımların simgeleri, sırayla: gir, çevir, endeksle, topla, dilim, beyan. */
 const STEP_ICONS = [NotePencil, ArrowsLeftRight, ChartLineUp, Sigma, Percent, CalendarCheck] as const;
+
+/** Katlı gelen anlatımda açık kalan adım sayısı (gir, çevir). */
+const HOW_OPEN_STEPS = 2;
+/** Katlama anahtarının kutusu; `TaxHowReveal` çapayla gelince bunu işaretliyor. */
+export const HOW_FOLD_ID = "vergi-nasil-tamami";
 
 /**
  * "NASIL HESAPLANIR" — hesaplayıcıdan ÖNCE gelen anlatım (29 Eylül).
@@ -60,6 +68,17 @@ const STEP_ICONS = [NotePencil, ArrowsLeftRight, ChartLineUp, Sigma, Percent, Ca
  * `progressiveTax`), yani kural değişirse örnek de değişir. Kur ve endeks
  * varsayımsal; kart bunu başlığının yanında rozetle söylüyor (`TAX_EXAMPLE`).
  * Yerleşim ölçümü `.howGrid` kuralının yanında (Tax.module.css).
+ *
+ * HESAPLAYICININ ALTINDA VE KATLI (25 Ekim, sahibinin isteği: "'Analizi
+ * Başlat' butonu kaydırmadan gözükmüyor; diğer ekranlarda da böyle
+ * sorunlar varsa onları da düzeltelim"). Bu panel hesaplayıcının önündeyken
+ * formun ilk alanı 390×844'te y=2962, 1280×800'de y=1729'du: okuyucu
+ * hesap yapmak için üç ekran anlatım geçiyordu. Şimdi sıra kapak →
+ * hesaplayıcı → bu panel; panel ilk İKİ adımla (gir, çevir) açık geliyor,
+ * kalan dört adım, çalışılmış örnek ve dönüş düğmesi sitenin JS'siz katlama
+ * anahtarının (`FoldToggle`) arkasında. Hiçbir adım silinmedi. Anlatıma
+ * çapayla gelen (`#nasil`, hesaplayıcının boş sonucundaki bağlantı)
+ * katlamayı açık bulur (`TaxHowReveal`).
  */
 export function TaxHow({
   labels,
@@ -107,47 +126,62 @@ export function TaxHow({
   ];
 
   return (
-    <Panel id="nasil" className={styles.calc} aria-labelledby="vergi-nasil">
+    /* `overflow-clip`, Panel'in `overflow-hidden`ı yerine (25 Ekim, ölçüldü):
+       `hidden` paneli kaydırma kabına çeviriyor ve örnek kartın yapışkanlığı
+       hiç çalışmıyordu (1280'de ızgaranın 60 piksel içinde kartın tepesi
+       −60'taydı, 85 olmalıydı). `clip` köşeleri aynı kırpıyor, kap açmıyor. */
+    <Panel id="nasil" className={cn("overflow-clip", styles.calc)} aria-labelledby="vergi-nasil">
+      <TaxHowReveal inputId={HOW_FOLD_ID} />
       <div className={styles.panelHead}>
         <h2 id="vergi-nasil" className={PANEL_TITLE}>
           {H.title}
         </h2>
       </div>
-      <div className="px-4 pb-6 pt-3 sm:px-7 sm:pb-7">
-        <p className="max-w-3xl text-sm leading-relaxed text-body">{fill(H.lead, { year })}</p>
-        <div className={styles.howGrid}>
-          <ol className={styles.how} aria-label={H.label} data-motion-stagger>
-            {steps.map((step, index) => {
-              const Icon = STEP_ICONS[index];
-              return (
-                <li key={step.title} className={styles.howStep}>
-                  <span className={styles.howNode} aria-hidden>
-                    <Icon size={18} weight="duotone" />
-                    <span className={styles.howNum}>{index + 1}</span>
-                  </span>
-                  <h3 className={styles.howTitle}>{step.title}</h3>
-                  <p className={styles.howBody}>{step.body}</p>
-                  {step.link && (
-                    <a href={step.link.href} className={styles.inlineLink}>
-                      {step.link.text}
-                      <ArrowDown size={13} weight="bold" aria-hidden />
-                    </a>
-                  )}
-                </li>
-              );
-            })}
-          </ol>
-          <TaxExample labels={labels} locale={locale} rules={rules} />
-        </div>
-        {/* Anlatımın sonu hesaplayıcının başı: düz çapa, JavaScript
-            yokken de kaydırır. Sekme SEÇMEZ (`data-tax-path` yok) — okuyucu
-            hangi hesabı yapacağını hesaplayıcının kendi anahtarında seçiyor. */}
-        <div className={styles.howFoot}>
-          <a href="#satis" className={buttonClass({ size: "md" })}>
-            {H.start}
-            <ArrowDown size={16} weight="bold" aria-hidden />
-          </a>
-        </div>
+      <div className={styles.howFold}>
+        <FoldToggle
+          id={HOW_FOLD_ID}
+          hiddenCount={steps.length - HOW_OPEN_STEPS}
+          more={fill(H.more, { n: steps.length - HOW_OPEN_STEPS })}
+          less={H.less}
+          narrow={false}
+        >
+          <div className="px-4 pt-3 sm:px-7">
+            <p className="max-w-3xl text-sm leading-relaxed text-body">{fill(H.lead, { year })}</p>
+            <div className={styles.howGrid}>
+              <ol className={styles.how} aria-label={H.label} data-motion-stagger>
+                {steps.map((step, index) => {
+                  const Icon = STEP_ICONS[index];
+                  return (
+                    <li key={step.title} className={styles.howStep} data-fold={index >= HOW_OPEN_STEPS || undefined}>
+                      <span className={styles.howNode} aria-hidden>
+                        <Icon size={18} weight="duotone" />
+                        <span className={styles.howNum}>{index + 1}</span>
+                      </span>
+                      <h3 className={styles.howTitle}>{step.title}</h3>
+                      <p className={styles.howBody}>{step.body}</p>
+                      {step.link && (
+                        <a href={step.link.href} className={styles.inlineLink}>
+                          {step.link.text}
+                          <ArrowDown size={13} weight="bold" aria-hidden />
+                        </a>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+              <TaxExample labels={labels} locale={locale} rules={rules} />
+            </div>
+            {/* Anlatımın sonu hesaplayıcıya dönüş: düz çapa, JavaScript
+                yokken de kaydırır. Hesaplayıcı artık YUKARIDA (25 Ekim), ok
+                o yüzden yukarı. Sekme SEÇMEZ (`data-tax-path` yok). */}
+            <div className={styles.howFoot} data-fold>
+              <a href="#satis" className={buttonClass({ size: "md" })}>
+                {H.start}
+                <ArrowUp size={16} weight="bold" aria-hidden />
+              </a>
+            </div>
+          </div>
+        </FoldToggle>
       </div>
     </Panel>
   );
@@ -248,7 +282,9 @@ function TaxExample({ labels, locale, rules }: { labels: TaxLabels; locale: Loca
   ];
 
   return (
-    <section className={styles.example} aria-labelledby="vergi-ornek">
+    /* `data-fold`: örnek, katlı anlatımın parçası. Sarmalayıcıya değil
+       kartın kendisine — yapışkanlık ızgara hücresinde çalışıyor. */
+    <section className={styles.example} aria-labelledby="vergi-ornek" data-fold>
       <div className={styles.exampleHead}>
         <h3 id="vergi-ornek" className={styles.exampleTitle}>
           {fill(H.exampleTitle, { qty: E.quantity, symbol: H.exampleSymbol })}
