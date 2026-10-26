@@ -375,7 +375,7 @@ function NewListForm({ labels }: { labels: BoardLabels }) {
               <span
                 aria-hidden
                 className={cn(
-                  "block size-6 rounded-full border-2 border-transparent transition-all peer-checked:border-(--text-strong) peer-focus-visible:ring-2 peer-focus-visible:ring-(--line-focus)",
+                  "block size-6 rounded-full border-2 border-transparent transition-[border-color,box-shadow] peer-checked:border-(--text-strong) peer-focus-visible:ring-2 peer-focus-visible:ring-(--line-focus)",
                   cls,
                 )}
               />
