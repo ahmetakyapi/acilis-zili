@@ -337,7 +337,7 @@ export function CompanyCardHost({ labels }: { labels: CompanyCardLabels }) {
     document.addEventListener("focusout", focusOut);
     document.addEventListener("pointerdown", close);
     window.addEventListener("keydown", key);
-    window.addEventListener("scroll", scroll, true);
+    window.addEventListener("scroll", scroll, { capture: true, passive: true });
     window.addEventListener("resize", close);
     window.addEventListener("pagehide", close);
     return () => {

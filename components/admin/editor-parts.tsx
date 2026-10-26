@@ -342,7 +342,7 @@ export function DilAnahtari({
       /* Bağlantı `aria-disabled` ve odak sırasının dışında; sönme ve
          tıklanamazlık çağıranda (SegmentItem'ın sözleşmesi). */
       <span key={kod} className="pointer-events-none inline-flex opacity-55">
-        <SegmentItem href="#" active={false} disabled label={`${ad} kaydı yok`}>
+        <SegmentItem href="#" /* slop-ok: SegmentItem href ister; aria-disabled, odak dışı */ active={false} disabled label={`${ad} kaydı yok`}>
           {kod === "tr" ? "TR Yok" : "EN Yok"}
         </SegmentItem>
       </span>

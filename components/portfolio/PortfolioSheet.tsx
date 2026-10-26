@@ -112,7 +112,7 @@ export function PortfolioSheet({
     };
     sync();
     viewport.addEventListener("resize", sync);
-    viewport.addEventListener("scroll", sync);
+    viewport.addEventListener("scroll", sync, { passive: true });
     return () => {
       viewport.removeEventListener("resize", sync);
       viewport.removeEventListener("scroll", sync);

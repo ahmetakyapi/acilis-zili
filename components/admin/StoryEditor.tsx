@@ -267,7 +267,7 @@ export function StoryEditor({
   const sifirla = () => setAlanlar(alanlarOf(draft));
 
   const geriYukle = (id: string) => {
-    if (kirli && !window.confirm("Kaydedilmemiş değişiklikler silinecek. Bu sürüm geri yüklensin mi?")) {
+    if (kirli && !window.confirm("Kaydedilmemiş değişiklikler silinecek. Bu sürüm geri yüklensin mi?")) { // slop-ok: yalnız yönetim paneli
       return;
     }
     const fd = new FormData();
