@@ -92,6 +92,27 @@
 .label[data-hidden] { opacity: 0; }
 .label[data-on] .tile { stroke: var(--text-strong); stroke-width: 1.5px; }
 
+/* NUMARA ROZETİ (telefon; gerekçe SkyMarks.tsx). Metin mürekkebinde daire,
+   numara zemin renginde: iki temada da en yüksek kontrast, yön rengine
+   karışmıyor (yön ızgaradaki yüzdede). Zemin halkası rozeti binadan ve
+   bağ çizgisinden ayırıyor. Seçili rozet etkileşim mavisinde. */
+.pinDisc {
+  fill: var(--text-strong);
+  stroke: var(--page-bg);
+  stroke-width: 1.5px;
+  transition: fill 0.2s var(--ease-brand);
+}
+.pinNumber {
+  fill: var(--page-bg);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.label[data-on] .pinDisc { fill: var(--primary); }
+.label[data-on] .pinNumber { fill: var(--on-primary); }
+@media (prefers-reduced-motion: reduce) {
+  .pinDisc { transition: none; }
+}
+
 /* ------------------------------------------------------------ GİRİŞ
    Bir kez; zaman çizelgesi lib/day-skyline.ts → RISE_*. Mahalle grubu
    ufuktan dikey ölçekle yükseliyor (düşen binalar aynı dönüşümle suya

@@ -81,6 +81,11 @@ export const daySignatureTr = {
     /** Telefonda sahnenin altındaki okuma satırı. */
     readoutOpen: "Hisseye Git",
     readoutClose: "Kartı kapat",
+    /** TELEFONDA ÖNE ÇIKANLAR (27 Ekim, "Silüet: mobil 2"): sahnenin
+     *  altındaki ızgara; sahnede yalnız numara rozeti. Çipin ekran okuyucu
+     *  adı cümle. */
+    highlights: "Öne Çıkanlar",
+    highlightLabel: "{n}. {symbol}, {name}, {pct}, {district}. Sahnede binasını gösterir.",
   },
   /** Ana sayfanın son seans şeridi (`components/today/home/SkylineStrip.tsx`). */
   strip: {
@@ -203,6 +208,8 @@ export const daySignatureEn: typeof daySignatureTr = {
     },
     readoutOpen: "Go to Stock",
     readoutClose: "Close card",
+    highlights: "Highlights",
+    highlightLabel: "{n}. {symbol}, {name}, {pct}, {district}. Shows its building in the skyline.",
   },
   strip: {
     title: "The Last Session's Skyline",

@@ -15,7 +15,7 @@ import styles from "./Skyline.module.css";
  * ritmi, logo karosu, ipucu, klavye, giriş; gerekçeler orada); bu bileşen
  * sayfanın dört düzenini seçiyor ve altına tablo ikizini koyuyor.
  *
- * DÖRT DÜZEN, HEPSİ BASILI (`SKY_MODES`): telefon (üç sıra), tablet (iki
+ * DÖRT DÜZEN, HEPSİ BASILI (`SKY_MODES`): telefon (iki sıra, sığmazsa üç), tablet (iki
  * sıra), masaüstü ve geniş ekran (tek sıra). Görüneni kabın eni seçiyor
  * (CSS kap sorgusu, SkyScene.module.css); görünmeyen `display:none`.
  *

@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { CHIP_BASELINES, CHIP_GAP, CHIP_LINES, REFLECTION_SCALE, SKY_MODES, cityInk, type SkyLayout, type SkyMode, type SkyRow, type SkyStock } from "@/lib/day-skyline";
+import { REFLECTION_SCALE, SKY_MODES, cityInk, type SkyLayout, type SkyMode, type SkyRow, type SkyStock } from "@/lib/day-skyline";
 import { cn } from "@/lib/utils";
 import styles from "./SkyMarks.module.css";
 
@@ -156,11 +156,12 @@ const FULL_BASELINES = [0.95, 2.1] as const;
  * altında sembol ve yüzde (yön renginde). Logosu depoda olmayan şirkette
  * sembolün iki harfi.
  *
- * TELEFONDA ÇİP (`label: "chip"`, 25 Ekim "Silüet: mobil" turu): karo
- * solda, sembol ve yüzde sağında iki satır. Logo-üstte etiket 58 birim
- * boyundaydı ve telefonun üç sırasında her sıraya iki kat etiket boyu
- * ekliyordu; çip 31 birim, sahne ~%30 alçak. Bedeli en: yan yana iki çip
- * daha geniş aralık istiyor, sığmayan düşüyor (öncelik `labelPicks`).
+ * TELEFONDA NUMARA ROZETİ (`label: "pin"`, 27 Ekim "Silüet: mobil 2"):
+ * sahnede yazı yok, öne çıkan şirketin binasının ucunda numaralı küçük bir
+ * daire; şirketin logosu, sembolü ve yüzdesi sahnenin altındaki ızgarada
+ * aynı numarayla (`SkyScene.tsx` → `Highlights`). Bir önceki turun çip
+ * etiketi (karo + sembol + yüzde, 84 birim) 330 birimlik sahnede binaların
+ * üstüne biniyordu; gerekçe `SKY_MODES`, "TELEFON".
  */
 export function SkyLabels({
   layout,
@@ -190,22 +191,20 @@ export function SkyLabels({
   if (row.labels.length === 0) return null;
   const mode: SkyMode = SKY_MODES[layout.mode];
   const size = mode.logo;
-  const chip = mode.label === "chip";
-  const full = mode.label === "full" || chip;
+  const pin = mode.label === "pin";
+  const full = mode.label === "full";
   const radius = size * TILE_RADIUS;
   return (
     <g className={styles.labels}>
       {row.labels.map((label) => {
         const stock = stocks[label.i];
         const cx = label.x + label.w / 2;
-        /* Karonun sol üstü ve yazının ekseni/taban çizgileri: çipte karo
-           solda dikey ortalı, yazı sağında; tam etikette karo üstte ortalı. */
-        const tx = chip ? label.x : cx - size / 2;
-        const ty = chip ? label.y + (label.h - size) / 2 : label.y;
-        const textX = chip ? label.x + size + CHIP_GAP : cx;
-        const anchor = chip ? "start" : "middle";
-        const top = chip ? label.y + (label.h - mode.font * CHIP_LINES) / 2 : label.y + size + 2;
-        const [line1, line2] = chip ? CHIP_BASELINES : FULL_BASELINES;
+        /* Karonun sol üstü ve yazının ekseni/taban çizgileri: karo üstte
+           ortalı, sembol ve yüzde altında. */
+        const tx = cx - size / 2;
+        const ty = label.y;
+        const top = label.y + size + 2;
+        const [line1, line2] = FULL_BASELINES;
         const logo = logos[stock.symbol];
         const tone = stock.change > 0 ? styles.up : stock.change < 0 ? styles.down : styles.flat;
         return (
@@ -230,6 +229,14 @@ export function SkyLabels({
                 <circle className={styles.anchor} cx={label.leader.x1} cy={label.leader.y1} r={ANCHOR_R} />
               </>
             )}
+            {pin ? (
+              <g className={cn(styles.mark, styles.pin)} data-sky-mark="" data-sky-pin={stock.symbol}>
+                <circle className={styles.pinDisc} cx={cx} cy={label.y + label.h / 2} r={size / 2} vectorEffect="non-scaling-stroke" />
+                <text className={styles.pinNumber} x={cx} y={label.y + label.h / 2} fontSize={mode.font} dy="0.36em" textAnchor="middle">
+                  {layout.picks.indexOf(label.i) + 1}
+                </text>
+              </g>
+            ) : (
             <g className={styles.mark} data-sky-mark="">
               <rect className={styles.tile} x={tx} y={ty} width={size} height={size} rx={radius} ry={radius} />
               {logo ? (
@@ -248,16 +255,17 @@ export function SkyLabels({
                 </text>
               )}
               {full && (
-                <text className={styles.symbol} x={textX} y={top + mode.font * line1} fontSize={mode.font} textAnchor={anchor}>
+                <text className={styles.symbol} x={cx} y={top + mode.font * line1} fontSize={mode.font} textAnchor="middle">
                   {stock.symbol}
                 </text>
               )}
               {full && pct && (
-                <text className={cn(styles.value, tone)} x={textX} y={top + mode.font * line2} fontSize={mode.font} textAnchor={anchor}>
+                <text className={cn(styles.value, tone)} x={cx} y={top + mode.font * line2} fontSize={mode.font} textAnchor="middle">
                   {pct(stock.change)}
                 </text>
               )}
             </g>
+            )}
           </g>
         );
       })}

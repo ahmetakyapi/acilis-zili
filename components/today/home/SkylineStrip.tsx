@@ -65,6 +65,15 @@ import styles from "./SkylineStrip.module.css";
  * Ekim). 360'ta başlığın kulvar sayıları panelin dışına taşıyordu; endeks
  * adı yüzdenin üstüne çıktı.
  *
+ * TELEFON 2 (27 Ekim, "Silüet: mobil 2"; sahibinin 26 Ekim iPhone ekranı:
+ * "iç içe çok kötü duruyor"). Çip etiketler binaların üstüne biniyordu ve
+ * orta sıra 21 piksel boyundaydı. Telefonda sahne artık yalnız silüet (öne
+ * çıkanların binasında numara rozeti), iki sıra, her sıra en az ~85
+ * piksel; şirketler sahnenin altında "Öne Çıkanlar" ızgarasında (8 çip,
+ * gerekçe `SkyScene.tsx`). Panel 390'da 528 → 731 piksel (TR, 26 Ekim):
+ * ızgara ~200 piksel ekliyor, karşılığında sahnede hiçbir yazı üst üste
+ * binmiyor. Masaüstü ve tablet aynen.
+ *
  * HER SEANSTA en yeni TAMAMLANMIŞ seans (`getLatestPosterDate`); künye
  * tarihi söylüyor ("23 Ekim Kapanışı"), seans sürerken bile hangi günü
  * anlattığı belli (CLAUDE.md "Veri dürüstlüğü" 4). Zilin şiddeti yalnız

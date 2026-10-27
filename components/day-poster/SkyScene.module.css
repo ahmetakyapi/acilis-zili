@@ -31,7 +31,7 @@
    mahallenin beşi taşıyordu. Tabelayı genişletmek binaları daraltırdı;
    ad üstte, yüzde altta kaldı, satır yüksekliği ve dolgu kısaldı. */
 .root[data-variant="strip"] { --sky-pad: 6px; }
-/* Telefon şeridinde üç pencere: üst pay 4 piksel (etiket zaten payın
+/* Telefon şeridinde iki pencere: üst pay 4 piksel (rozet zaten payın
    içinde, `row.top`). */
 @container (max-width: 599.98px) { .root[data-variant="strip"] { --sky-pad: 4px; } }
 .root[data-variant="strip"] .district { padding: 4px 2px 2px; }
@@ -401,4 +401,141 @@
 @media (prefers-reduced-motion: reduce) {
   .readout { animation: none; }
   .readoutClose { transition: none; }
+}
+
+/* ------------------------------------------------------------ TABELA KUTUSU
+   Telefonda tabela binalardan ayrı (`span.sign`, lib/day-skyline.ts →
+   `placeSigns`): li tabelanın kutusunda, mahallenin çizgisi `::before` ile
+   mahallenin kendi eninde (li'ye göre kesir; dışına taşabilir). */
+.district[data-sign] {
+  position: relative;
+  border-top-color: transparent;
+}
+.district[data-sign]::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: calc(var(--line-l) * 100%);
+  width: calc(var(--line-w) * 100%);
+  border-top: 1px solid var(--line-strong);
+  transition: border-color 0.2s var(--ease-brand);
+}
+.district[data-sign][data-on]::before { border-top-color: var(--text-strong); }
+
+/* ------------------------------------------------------------ ÖNE ÇIKANLAR
+   Telefonda sahnenin altındaki ızgara (gerekçe SkyScene.tsx). İki sütun
+   (360'ta da), çip 44 piksel dokunma hedefi; kart değil ton: gömük zemin,
+   gölge yok. Seçili çip etkileşim mavisinde halka, numarası sahnedeki
+   rozetle aynı renkte. */
+.highlights { display: grid; gap: 6px; min-width: 0; margin-top: 4px; }
+.highlightsTitle {
+  color: var(--text-strong);
+  font-size: var(--text-base);
+  font-weight: 750;
+  line-height: 1.3;
+}
+.chips {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chips > li { min-width: 0; }
+.chip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "mark symbol"
+    "mark meta";
+  align-items: center;
+  column-gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 7px 8px 6px 9px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  text-align: left;
+  transition: box-shadow 0.2s var(--ease-brand), background-color 0.2s var(--ease-brand);
+}
+.chip[data-on] {
+  background: var(--primary-wash);
+  box-shadow: inset 0 0 0 1.5px var(--primary);
+}
+.chip:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 1px; }
+.chipMark { grid-area: mark; position: relative; display: block; width: 28px; height: 28px; }
+.chipLogo {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--logo-plate);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+/* Numara: sahnedeki rozetin ikizi (metin mürekkebi, zemin renginde rakam). */
+/* Logonun köşesinde, dışa taşarak: logonun yalnız ~10 piksellik köşesini
+   örtüyor (logolar plakada iç boşluklu). */
+.chipNo {
+  position: absolute;
+  top: -7px;
+  left: -7px;
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding-inline: 3px;
+  border-radius: 9px;
+  background: var(--text-strong);
+  box-shadow: 0 0 0 1.5px var(--surface-sunken);
+  color: var(--page-bg);
+  font-size: var(--text-nano);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.chip[data-on] .chipNo { background: var(--primary); color: var(--on-primary); box-shadow: 0 0 0 1.5px var(--primary-wash); }
+.chipSymbol {
+  grid-area: symbol;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-strong);
+  font-size: var(--text-base);
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Mahalle YA TAM YA HİÇ: yüzdenin yanına sığmazsa ikinci satıra kayıp
+   kesiliyor (satır tek satır boyunda, taşan gizli). 360'ta çip 140 piksel:
+   "+%8,19 Tek…" gibi yarım ad yerine yalnız yüzde. Bir çipte bile
+   sığmıyorsa hiçbirinde yok (`data-districts`, SkyScene.tsx →
+   `Highlights`). Mahallenin tam adı okuma satırında. */
+.chipMeta {
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 6px;
+  min-width: 0;
+  height: calc(var(--text-base) * 1.2);
+  overflow: hidden;
+}
+.chipValue {
+  flex: none;
+  font-size: var(--text-base);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.chips[data-districts="off"] .chipDistrict { visibility: hidden; }
+.chipDistrict {
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chip, .district[data-sign]::before { transition: none; }
 }

@@ -1,6 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+} from "react";
 import Image from "next/image";
 import { X } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
@@ -91,6 +101,23 @@ import styles from "./SkyScene.module.css";
  *     etiketi sönmek yerine o an gizleniyor.
  *   - TABELA KISA ADLA TEK SATIR (`signs`, sözlükte `shortDistricts`).
  *
+ * TELEFONDA ETİKET SAHNEDE DEĞİL (27 Ekim, "Silüet: mobil 2"; sahibinin
+ * 26 Ekim iPhone ekranı: "iç içe çok kötü duruyor"). Çip etiketler
+ * binaların üstüne, suya, ufkun altına biniyordu. Şimdi:
+ *   - SAHNE YALNIZ SİLUET: binalar, ufuk, tabelalar; öne çıkan şirketin
+ *     binasının ucunda numara rozeti (`SkyLabels`, `label: "pin"`).
+ *   - "ÖNE ÇIKANLAR" IZGARASI sahnenin hemen altında (`Highlights`): iki
+ *     sütun, her çipte numara, logo, sembol, yüzde (yön renginde) ve
+ *     mahalle. Liste `layout.picks` (`skyHighlights`): günün uçları, sonra
+ *     en büyükler; şeritte 8, posterde 12 çip.
+ *   - İKİ YÖNLÜ: çipe dokununca sahnede bina aydınlanıyor ve okuma satırı
+ *     açılıyor; binaya dokununca çipi (varsa) vurgulanıyor. Okuma satırı
+ *     sahneyle ızgara arasında açıldığı için ızgara aşağı iniyor; dokunulan
+ *     çip parmağın altından kaçmasın diye sayfa o kadar kaydırılıyor
+ *     (`anchorRef`).
+ *   - Okuma satırı telefonda HER binada (şeritte de): sahnede değer etiketi
+ *     yok, ayrıntı tek yerde.
+ *
  * HAREKET (bir kez, ekrana girince): gök tonu belirir, mahalleler ufuktan
  * sırayla yükselir, yansıma ardından suya iner, logolar en son oturur
  * (`SkyMarks.module.css`, zaman çizelgesi `RISE_*`). Hareketi azaltana
@@ -149,21 +176,25 @@ export function SkyScene({
   const liveRef = useRef<HTMLParagraphElement>(null);
   const [active, setActive] = useState<number | null>(null);
   const [district, setDistrict] = useState<string | null>(null);
+  /* Çipe dokununca okuma satırı ızgaranın üstünde açılıyor: çipin ekrandaki
+     yeri önce ve sonra ölçülüp fark kaydırılıyor. */
+  const anchorRef = useRef<{ el: HTMLElement; top: number } | null>(null);
   const pct = useCallback((value: number) => formatPercent(value, locale, PERCENT_DIGITS), [locale]);
 
   const layouts = useMemo(
     () => modes.map((mode) => skylineLayout({ stocks, districts, mode, signs })),
     [modes, stocks, districts, signs],
   );
-  /* Telefonda bilgi kartı sahnenin altında: şeritte yalnız logolu binada
-     (ötekinde değer etiketi), posterde her binada. */
-  const readout = useMemo(() => {
-    if (active === null) return null;
-    const phone = layouts.find((layout) => specOf(layout).compact);
-    if (!phone) return null;
-    if (variant === "poster") return active;
-    return phone.rows.some((row) => row.labels.some((l) => l.i === active)) ? active : null;
-  }, [active, layouts, variant]);
+  /* Telefonda bilgi kartı sahnenin altında, her binada. */
+  const readout = active !== null && layouts.some((layout) => specOf(layout).compact) ? active : null;
+  useLayoutEffect(() => {
+    const anchor = anchorRef.current;
+    anchorRef.current = null;
+    if (!anchor || !anchor.el.isConnected) return;
+    const shift = anchor.el.getBoundingClientRect().top - anchor.top;
+    if (Math.abs(shift) > 1) window.scrollBy({ top: shift, behavior: "instant" });
+  }, [active]);
+
   /* Soldan sağa okuma sırası: bütün düzenlerde aynı (sıralar mahalle
      sırasının bitişik parçaları). */
   const order = useMemo(() => districts.flatMap((d) => d.members), [districts]);
@@ -204,6 +235,16 @@ export function SkyScene({
       liveRef.current.textContent = i === null ? "" : `${stocks[i].symbol}, ${stocks[i].name}, ${pct(stocks[i].change)}`;
     },
     [stocks, pct],
+  );
+
+  const pick = useCallback(
+    (i: number, el: HTMLElement) => {
+      anchorRef.current = { el, top: el.getBoundingClientRect().top };
+      const next = active === i ? null : i;
+      setActive(next);
+      announce(next);
+    },
+    [active, announce],
   );
 
   const openStock = useCallback((i: number) => router.push(href(`/hisse/${stocks[i].symbol}`)), [router, href, stocks]);
@@ -285,6 +326,20 @@ export function SkyScene({
                   setActive(null);
                   announce(null);
                 }}
+              />
+            )}
+            {specOf(layout).compact && layout.picks.length > 0 && (
+              <Highlights
+                picks={layout.picks}
+                stocks={stocks}
+                logos={logos}
+                signs={signs}
+                names={names}
+                active={active}
+                pct={pct}
+                text={text}
+                heading={variant === "strip" ? "h3" : "h4"}
+                onPick={pick}
               />
             )}
           </div>
@@ -376,8 +431,8 @@ function SkyRowView({
   /* Şeritte etiketsiz binanın değer etiketi; altında kalan çatı etiketleri
      o an sönüyor. */
   const tag = useMemo<SkyValueTag | null>(
-    () => (tags && activeB && !activeLabel ? valueTag(activeB, stocks[activeB.i], SKY_MODES[layout.mode]) : null),
-    [tags, activeB, activeLabel, stocks, layout.mode],
+    () => (tags && !compact && activeB && !activeLabel ? valueTag(activeB, stocks[activeB.i], SKY_MODES[layout.mode]) : null),
+    [tags, compact, activeB, activeLabel, stocks, layout.mode],
   );
   const covered = useMemo(() => (tag ? new Set(tagCovers(tag, row.labels)) : null), [tag, row.labels]);
   /* Etkin binanın mahallesi de öne çıkıyor (klavyeyle gezerken nerede
@@ -387,10 +442,22 @@ function SkyRowView({
   const horizon = -row.top / height;
   /* Tabela ızgarası: sokak, mahalle, sokak … (sahne eninin yüzdesi). */
   const pctW = (w: number) => `${((Math.max(0, w) / layout.width) * 100).toFixed(4)}%`;
-  const columns = row.districts
-    .flatMap((span, j) => [pctW(span.x0 - (j === 0 ? 0 : row.districts[j - 1].x1)), pctW(span.x1 - span.x0)])
-    .concat(pctW(layout.width - (row.districts.at(-1)?.x1 ?? 0)))
+  /* Telefonda tabela kendi kutusunda (`span.sign`, yana kaymış olabilir);
+     mahallenin çizgisi yine mahallenin eninde (`--line-*`). */
+  const boxes = row.districts.map((span) => span.sign ?? { x0: span.x0, x1: span.x1 });
+  const columns = boxes
+    .flatMap((box, j) => [pctW(box.x0 - (j === 0 ? 0 : boxes[j - 1].x1)), pctW(box.x1 - box.x0)])
+    .concat(pctW(layout.width - (boxes.at(-1)?.x1 ?? 0)))
     .join(" ");
+  const lineStyle = (j: number): CSSProperties | undefined => {
+    const span = row.districts[j];
+    if (!span.sign) return undefined;
+    const w = span.sign.x1 - span.sign.x0;
+    return {
+      "--line-l": ((span.x0 - span.sign.x0) / w).toFixed(4),
+      "--line-w": ((span.x1 - span.x0) / w).toFixed(4),
+    } as CSSProperties;
+  };
 
   return (
     <div className={styles.row} style={{ "--hz": horizon.toFixed(4) } as CSSProperties}>
@@ -487,7 +554,8 @@ function SkyRowView({
             data-sky-district=""
             data-on={focusDistrict === span.key || undefined}
             data-off={focusDistrict !== null && focusDistrict !== span.key ? "" : undefined}
-            style={{ gridColumn: j * 2 + 2 }}
+            data-sign={span.sign ? "" : undefined}
+            style={{ gridColumn: j * 2 + 2, ...lineStyle(j) }}
             onPointerEnter={(event) => {
               if (event.pointerType === "mouse") onDistrict(span.key);
             }}
@@ -684,6 +752,113 @@ function Readout({
       <Link href={`/hisse/${stock.symbol}`} className={styles.readoutLink}>
         {text.readoutOpen} →
       </Link>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------- ÖNE ÇIKANLAR */
+
+/** Çipteki logo (piksel) — okuma satırınınkinden küçük. */
+const CHIP_LOGO = 28;
+
+/**
+ * Telefonda sahnenin altındaki "Öne Çıkanlar" ızgarası (gerekçe dosyanın
+ * başında, "TELEFONDA ETİKET SAHNEDE DEĞİL"). Sıra ve numara sahnedeki
+ * rozetlerle aynı (`layout.picks`). Çip bir düğme: dokununca binayı seçiyor
+ * (okuma satırı açılıyor), seçiliyse bırakıyor; şirketin sayfası okuma
+ * satırındaki bağlantıda.
+ */
+function Highlights({
+  picks,
+  stocks,
+  logos,
+  signs,
+  names,
+  active,
+  pct,
+  text,
+  heading: Heading,
+  onPick,
+}: {
+  picks: number[];
+  stocks: SkyStock[];
+  logos: Record<string, string>;
+  signs: Record<string, string>;
+  names: Record<string, string>;
+  active: number | null;
+  pct: (value: number) => string;
+  text: SkyText;
+  heading: "h3" | "h4";
+  onPick: (i: number, el: HTMLElement) => void;
+}) {
+  /* MAHALLE ADI YA HER ÇİPTE YA HİÇBİRİNDE. Ad yüzdenin yanına sığmazsa alt
+     satıra kayıp gizleniyor (CSS); 390'da bazı çiplerde görünüp bazılarında
+     görünmemesi ızgarayı dağınık gösteriyordu. Birinde bile sığmıyorsa
+     hepsinde kapalı; ızgaranın eni değişince yeniden ölçülüyor. */
+  const listRef = useRef<HTMLOListElement>(null);
+  const [districts, setDistricts] = useState(true);
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || typeof ResizeObserver === "undefined") return;
+    /* `visibility: hidden` yerleşimi değiştirmiyor: gizliyken de ölçülüyor. */
+    const measure = () =>
+      setDistricts(
+        [...list.querySelectorAll<HTMLElement>("[data-chip-district]")].every(
+          (el) => el.offsetTop === (el.previousElementSibling as HTMLElement | null)?.offsetTop,
+        ),
+      );
+    const observer = new ResizeObserver(measure);
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <div className={styles.highlights}>
+      <Heading className={styles.highlightsTitle}>{text.highlights}</Heading>
+      <ol ref={listRef} className={styles.chips} data-districts={districts ? "" : "off"}>
+        {picks.map((i, n) => {
+          const stock = stocks[i];
+          const logo = logos[stock.symbol];
+          const district = signs[stock.district] ?? names[stock.district] ?? "";
+          return (
+            <li key={stock.symbol}>
+              <button
+                type="button"
+                className={styles.chip}
+                data-sky-chip={stock.symbol}
+                data-on={active === i || undefined}
+                aria-pressed={active === i}
+                aria-label={text.highlightLabel
+                  .replace("{n}", String(n + 1))
+                  .replace("{symbol}", stock.symbol)
+                  .replace("{name}", stock.name)
+                  .replace("{pct}", pct(stock.change))
+                  .replace("{district}", names[stock.district] ?? district)}
+                onClick={(event) => onPick(i, event.currentTarget)}
+              >
+                <span className={styles.chipMark} aria-hidden>
+                  {logo ? (
+                    <Image src={logo} alt="" width={CHIP_LOGO} height={CHIP_LOGO} unoptimized className={styles.chipLogo} />
+                  ) : (
+                    <span className={cn(styles.chipLogo, styles.readoutInitials)}>{stock.symbol.slice(0, READOUT_INITIALS)}</span>
+                  )}
+                  <span className={styles.chipNo}>{n + 1}</span>
+                </span>
+                <span className={styles.chipSymbol} aria-hidden>
+                  {stock.symbol}
+                </span>
+                {/* Yüzde ve mahalle ikinci satırda: 360'ta çip 140 piksel, sembol
+                    ile yüzde yan yana sığmıyordu ("CR…", "GO…"). */}
+                <span className={styles.chipMeta} aria-hidden>
+                  <span className={cn(styles.chipValue, directionText(directionOf(stock.change)))}>{pct(stock.change)}</span>
+                  <span className={styles.chipDistrict} data-chip-district="">
+                    {district}
+                  </span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }
