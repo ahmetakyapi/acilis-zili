@@ -162,8 +162,26 @@ export function EarningsHorizon({
     listFormat: (items) => listFormat.format(items),
     formatCount: (value) => numberFormat.format(value),
   });
-  /* Başlangıçta seçili karo: haftanın en büyüğü (cümlenin ilk adı). */
-  const initial = peak?.symbols[0] ?? picked[0]?.symbol ?? null;
+  /* AÇILIŞTA BUGÜN (27 Ekim, sahibinin isteği: "ilk açılırken o gün
+     hangileri varsa o gözüksün"). Açık gün haftanın zirvesiydi: salı
+     sabahı telefon çarşambayı açıyor, bugün açıklayanlar bir dokunuş
+     uzaktaydı. Sıra: bugün (piyasa açık ve kayda değer şirket varsa) →
+     önümüzdeki ilk dolu gün (hafta sonu bakılan gelecek hafta pazartesiye
+     açılır) → zirve. Seçili karo o günün en büyüğü; geniş ekranda da aynı
+     karo seçili ki okuma şeridi bugünü anlatsın. */
+  const filled = (day: (typeof week.days)[number]) => day.closed === null && day.bmo.length + day.amc.length + day.other.length > 0;
+  const openDay =
+    week.days.find((day) => day.date === today && filled(day)) ??
+    week.days.find((day) => day.date >= today && filled(day)) ??
+    (peak ? week.days.find((day) => day.date === peak.date) : undefined) ??
+    week.days.find(filled) ??
+    null;
+  const openTiles = days.find((day) => day.date === openDay?.date)?.lanes;
+  const initial =
+    (openTiles ? [...openTiles.bmo, ...openTiles.amc, ...openTiles.other].sort((a, b) => b.scale - a.scale)[0]?.symbol : undefined) ??
+    peak?.symbols[0] ??
+    picked[0]?.symbol ??
+    null;
   /* Karne yalnız ÇİZİLEN karolar için: "+N"e düşenler okuma satırına
      gelemiyor ve sağlayıcı kotası (Finnhub) boşa harcanmasın. */
   const karne = loadHorizonKarne(days.flatMap((day) => [...day.lanes.bmo, ...day.lanes.amc, ...day.lanes.other].map((tile) => tile.symbol)));
@@ -177,7 +195,7 @@ export function EarningsHorizon({
         lanes={lanes}
         karne={karne}
         initial={initial}
-        initialDay={peak?.date ?? week.days.find((day) => day.bmo.length + day.amc.length + day.other.length > 0)?.date ?? null}
+        initialDay={openDay?.date ?? null}
         labels={{
           revenueEstimate: t.earnings.revenueEstimate,
           epsEstimate: t.earnings.epsEstimate,
