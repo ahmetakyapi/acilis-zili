@@ -50,6 +50,8 @@ npm run build:email              # posta bant GIF'i (public/email/hero.gif, elle
 - **İş sürerken yeni istek gelirse commit'i ERTELE**; kuyruk boşalınca topla
   (bu uyarı üç kez geldi). Mesele sayı, detay değil: gövdede her değişikliğin
   gerekçesi ayrı paragraf.
+- **`main`e push için onay SORULMAZ** (sahibinin isteği, 28 Ekim 2026: "artık oto
+  alabilirsin"): üç denetim temizse commit'i doğrudan `main`e gönder.
 - Commit öncesi üçü temiz: `typecheck`, `lint`, `build`. Görsel değişiklik
   tarayıcıda ÖLÇÜLMÜŞ olmalı — "sığıyor gibi duruyor" doğrulama değil.
 
