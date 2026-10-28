@@ -412,24 +412,29 @@
   .dashboard [data-home-section="brief"] { order:1; }
   .dashboard [data-home-section="world"] { order:3; }
   .dashboard [data-home-section="movers"] { order:4; }
-  .dashboard [data-home-section="technical"] { order:5; }
-  /* Günün Grafiği teknik görünümün ardında (eşit sıra, belge sırası).
-     Sırası yazılmamıştı ve `order:0` ile günün özetinin ÜSTÜNE çıkıyordu:
-     390'da pano başı 2527 = grafiğin tepesi, özet 2795 (25 Ekim, ölçüldü). */
-  .dashboard [data-home-section="daily-chart"] { order:5; }
-  .dashboard [data-home-section="stories"] { order:6; }
+  /* GEÇMİŞ SEANS BUGÜNÜN ARDINDA (28 Ekim, sahibinin isteği: "teknik
+     analizin üstüne alalım… ana sayfa önce bugünü anlatmalı"). Son
+     Seansın Silueti kahramanın hemen altındaydı ve seans açıkken dünü
+     bugün gibi gösteriyordu; şimdi sıra hareketler → silüet → Günün
+     Grafiği → teknik görünüm. İkisi de "Dünkü Seans" künyesi taşıyor
+     (SessionAgeTag.tsx). Günün Grafiği'nin sırası bir dönem yazılmamıştı
+     ve `order:0` ile özetin ÜSTÜNE çıkıyordu (25 Ekim, ölçüldü). */
+  .dashboard [data-home-section="skyline"] { order:5; }
+  .dashboard [data-home-section="daily-chart"] { order:6; }
+  .dashboard [data-home-section="technical"] { order:7; }
+  .dashboard [data-home-section="stories"] { order:8; }
   /* Portföy ya da Nabız yuvası Mercek'in ardında, masaüstündeki sırayla aynı. */
-  .dashboard [data-home-section="portfolio"] { order:7; }
-  .dashboard [data-home-section="earnings"] { order:8; }
-  .dashboard [data-home-section="analyses"] { order:9; }
+  .dashboard [data-home-section="portfolio"] { order:9; }
+  .dashboard [data-home-section="earnings"] { order:10; }
+  .dashboard [data-home-section="analyses"] { order:11; }
   /* Hisseyi Bil analizlerin ardında (eşit sırada belge sırası: ana kolon
      önce). Telefonda bir oyun daveti sayfanın asıl içeriğinin önüne geçmez. */
-  .dashboard [data-home-section="puzzle"] { order:9; }
-  .dashboard [data-home-section="yields"] { order:10; }
-  .dashboard [data-home-section="macro"] { order:11; }
-  .dashboard [data-home-section="schedule"] { order:12; }
-  .dashboard [data-home-section="week"] { order:13; }
-  .dashboard [data-home-section="watchlist"] { order:14; }
+  .dashboard [data-home-section="puzzle"] { order:11; }
+  .dashboard [data-home-section="yields"] { order:12; }
+  .dashboard [data-home-section="macro"] { order:13; }
+  .dashboard [data-home-section="schedule"] { order:14; }
+  .dashboard [data-home-section="week"] { order:15; }
+  .dashboard [data-home-section="watchlist"] { order:16; }
   /* SEKTÖRLER VE TEMALAR GÜNÜN ÖZETİNİN HEMEN ALTINDA (29 Eylül, sahibinin
      isteği). Bir dönem analizlerin ardındaydı ve 10.725 piksellik sayfanın
      7.210. pikselinde duruyordu (390, ölçüldü); 28 Eylül'de hareketlerin
@@ -437,14 +442,14 @@
      ÜSTÜNDE, telefonda da günün özetinden sonraki ilk blok. Özet günü
      anlatıyor, bant o günün sektör ve tema dağılımını. */
   .dashboard [data-home-section="texture"] { order:2; }
-  .dashboard [data-home-section="news"] { order:16; }
-  .dashboard [data-home-section="sources"] { order:17; }
+  .dashboard [data-home-section="news"] { order:18; }
+  .dashboard [data-home-section="sources"] { order:19; }
   /* GİRİŞ YAPMAMIŞ OKUYUCUNUN FAVORİLERİ BİLANÇOLARIN ARDINDA (24 Eylül).
      Panel onun için bir davet satırı (page.tsx → WatchlistSummary); günün
      bilançolarından ve analizlerden önce durması, sayfanın asıl içeriğine
      varmadan bir girişle karşılaşmak demekti. Giriş yapmış okuyucunun
      sırası değişmiyor — orada liste gerçekten onun listesi. */
-  .dashboard [data-home-section="watchlist"]:has(a[href$="/giris"]) { order:15; }
+  .dashboard [data-home-section="watchlist"]:has(a[href$="/giris"]) { order:17; }
 }
 
 /* TABLETTE İKİ KOLON (768–1023). Tek kolonda kahraman 768'de 683 piksel
@@ -480,10 +485,10 @@
      dibinde. Tam genişlik bölümler satırı yalnız tuttuğu için etkilenmiyor. */
   .dashboard :is([data-home-section="world"],[data-home-section="movers"],[data-home-section="yields"],[data-home-section="macro"],[data-home-section="schedule"],[data-home-section="week"],[data-home-section="technical"],[data-home-section="watchlist"]) { align-self:stretch; display:flex; flex-direction:column; }
   .dashboard :is([data-home-section="world"],[data-home-section="movers"],[data-home-section="yields"],[data-home-section="macro"],[data-home-section="technical"],[data-home-section="watchlist"]) > :last-child { flex:1 0 auto; }
-  .dashboard :is([data-home-section="brief"],[data-home-section="stories"],[data-home-section="portfolio"],[data-home-section="earnings"],[data-home-section="analyses"],[data-home-section="texture"],[data-home-section="news"],[data-home-section="sources"],[data-home-section="puzzle"],[data-home-section="daily-chart"]) { grid-column:1 / -1; }
+  .dashboard :is([data-home-section="brief"],[data-home-section="stories"],[data-home-section="portfolio"],[data-home-section="earnings"],[data-home-section="analyses"],[data-home-section="texture"],[data-home-section="news"],[data-home-section="sources"],[data-home-section="puzzle"],[data-home-section="daily-chart"],[data-home-section="skyline"]) { grid-column:1 / -1; }
   /* Teknik görünüm tablette favorilerle eş: yerleşim sırası öyle kuruluyor
      (yan yana duracak iki panel ardışık olmalı). */
-  .dashboard [data-home-section="technical"] { order:14; }
+  .dashboard [data-home-section="technical"] { order:16; }
   /* Favoriler bir davet satırıysa (giriş yok) sona iniyor ve teknik panel
      eşsiz kalıyor; o hâlde tam genişlikte. */
   .dashboard:has([data-home-section="watchlist"] a[href$="/giris"]) [data-home-section="technical"] { grid-column:1 / -1; }
@@ -495,10 +500,10 @@
      isteği: "alt taraflara çekelim, tahvillerin üstünde dursun"). 21
      Eylül'den beri özetin altındaydı (≤1023 bloğundaki gerekçe); telefonda
      ilk ekranların ABD'nin kendi gündemine (hareketler, teknik, mercek,
-     bilanço) ayrılması istendi. Sıra değeri tahvil ile aynı (10) ve DOM'da
+     bilanço) ayrılması istendi. Sıra değeri tahvil ile aynı (12) ve DOM'da
      tahvilden önce geldiği için hemen üstüne oturuyor. Tablette dokunulmadı:
      orada dünya ile hareketler yan yana bir çift. */
-  .dashboard [data-home-section="world"] { order:10; }
+  .dashboard [data-home-section="world"] { order:12; }
   .page { gap:18px; }
   .hero { padding:18px; overflow:hidden; }
   /* KIRILABİLİR SATIR. 390'da künye ile saat tek satır (13 piksel pay);

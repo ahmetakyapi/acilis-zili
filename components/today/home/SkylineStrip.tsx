@@ -12,11 +12,19 @@ import type { MarketStatus } from "@/lib/market-hours";
 import { cn, directionOf, directionText, formatPercent, tieFigures } from "@/lib/utils";
 import { BellEnergySource } from "../BellEnergySource";
 import { tileFeedsBell } from "../day-tile";
+import { SessionAgeTag, sessionIsLiveElsewhere } from "./SessionAgeTag";
 import styles from "./SkylineStrip.module.css";
 
 /**
- * SON SEANSIN SİLUETİ — ana sayfada kahramanın hemen altında, tam genişlik
- * şerit (25 Ekim).
+ * SON SEANSIN SİLUETİ — ana sayfada tam genişlik şerit (25 Ekim).
+ *
+ * BUGÜNÜN ARDINA İNDİ (28 Ekim; sahibinin iPhone ekranı, seans açıkken
+ * 22:29 TR: "sanki bugünün işlemi gibi anlaşılıyor, ana sayfa önce bugünü
+ * anlatmalı"). Kahramanın hemen altındaydı, yani ilk ekranda dünün seansı
+ * duruyordu. Şimdi telefonda Günün Hareketleri'nin ardında, teknik
+ * görünümün üstünde; masaüstünde iki kolonun altında, haberlerin üstünde
+ * (sıra page.tsx ve TodayExperience.module.css). Başlığın altında göreli
+ * gün künyesi ("Dünkü Seans", `SessionAgeTag`), seans açıkken bir cümle.
  *
  * KAHRAMANDAN ÇIKTI (25 Ekim sabahı): son seans kahramanın içinde gri bir
  * karoydu; sahibi "kötü gözüküyor" dedi, kendi paneline Günün Posteri'nin
@@ -97,7 +105,17 @@ const DAY_MONTH = {
   en: new Intl.DateTimeFormat("en-US", { day: "numeric", month: "long", timeZone: "UTC" }),
 } as const;
 
-export async function SkylineStrip({ status, locale, t }: { status: MarketStatus; locale: Locale; t: Dictionary }) {
+export async function SkylineStrip({
+  status,
+  locale,
+  t,
+  nowMs,
+}: {
+  status: MarketStatus;
+  locale: Locale;
+  t: Dictionary;
+  nowMs: number;
+}) {
   const date = await getLatestPosterDate(status);
   const read = await getDayPoster(date);
   if (read.state !== "ok") return null;
@@ -128,7 +146,7 @@ export async function SkylineStrip({ status, locale, t }: { status: MarketStatus
   const dec = breadth?.declining ?? stocks.filter((stock) => stock.change < 0).length;
 
   return (
-    <section className={cn("panel", styles.panel)} data-home-section="skyline" aria-labelledby="son-seans-silueti">
+    <section className={cn("panel", styles.panel)} aria-labelledby="son-seans-silueti">
       <header className={styles.head}>
         <div className={styles.titleBlock}>
           <h2 id="son-seans-silueti" className={cn("text-read", styles.title)}>
@@ -136,7 +154,11 @@ export async function SkylineStrip({ status, locale, t }: { status: MarketStatus
               {T.title}
             </Link>
           </h2>
-          <p className={styles.close}>{close}</p>
+          <p className={styles.close}>
+            <SessionAgeTag dateEt={poster.date} locale={locale} t={t} nowMs={nowMs} />
+            <span>{close}</span>
+          </p>
+          {sessionIsLiveElsewhere(status, poster.date) && <p className={styles.liveNote}>{t.sessionAge.liveNote}</p>}
           <p className={styles.story}>
             <span className={styles.storyTitle} data-tone={tone}>
               {story.title}

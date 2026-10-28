@@ -318,16 +318,6 @@ export default async function TodayPage() {
           yerinde: bağlantılar ve adres çubuğundaki #çapa çalışmaya devam
           ediyor. */}
 
-      {/* SON SEANSIN SİLUETİ (25 Ekim): kahramanın hemen altında, tam
-          genişlik ince şerit — Günün Posteri'nin Nasdaq 100 siluetinin alçak
-          hâli; panelin tamamı posterin bağlantısı. Kahramanın ızgarasının
-          dışında (seans zili ve bulmaca ile aynı gerekçe: kolon dengesi).
-          Gerekçe ve veri `SkylineStrip.tsx`; kendi sınırında akıyor, yer
-          tutucusu ölçüsünü ayırıyor. */}
-      <Suspense fallback={<SkylineStripSkeleton />}>
-        <SkylineStrip status={status} locale={locale} t={t} />
-      </Suspense>
-
       <section id="gunun-akisi" data-rise-scope className={styles.flowPanel}>
         {/* İSKELET GERÇEK ÖLÇÜYÜ AYIRIYOR. `h-28` yazıyordu, yani 112 piksel,
             ve akış 594–864 piksel geliyordu: yavaş ağda masaüstünde CLS 0,131
@@ -535,6 +525,18 @@ export default async function TodayPage() {
           </Suspense>
         </div>
 
+        {/* ---- Günün Grafiği (24 Ekim) ----
+             Teknik panelin ÜSTÜNDE (28 Ekim, sahibinin isteği; önce
+             altındaydı): ikisi de sitenin yazdığı, ölçü dilinde bir içerik
+             ve grafik önceki seansı anlatıyor — bugünün hareketlerinin
+             ardında, "Dünkü Seans" künyesiyle (`SessionAgeTag`). Kayıt yoksa
+             panel basılmıyor (yedek `null`). */}
+        <div data-home-section="daily-chart">
+          <Suspense fallback={null}>
+            <DailyChartPanel locale={locale} t={t} nowMs={nowMs} />
+          </Suspense>
+        </div>
+
         {/* ---- Teknik görünüm ----
              HAREKET PANELİNİN HEMEN ALTINDA. İkisi aynı sorunun iki yarısı:
              hareket paneli "bugün hangi isim taşıdı" diyor, teknik panel
@@ -557,15 +559,6 @@ export default async function TodayPage() {
         <div data-home-section="technical">
           <Suspense fallback={null}>
             <TechnicalPanel locale={locale} t={t} />
-          </Suspense>
-        </div>
-
-        {/* ---- Günün Grafiği (24 Ekim) ----
-             Teknik panelin altında: ikisi de sitenin yazdığı, ölçü dilinde
-             bir içerik. Kayıt yoksa panel basılmıyor (yedek `null`). */}
-        <div data-home-section="daily-chart">
-          <Suspense fallback={null}>
-            <DailyChartPanel locale={locale} t={t} />
           </Suspense>
         </div>
 
@@ -644,6 +637,22 @@ export default async function TodayPage() {
       </div>
 
 
+      {/* ---- Son Seansın Silueti (25 Ekim; 28 Ekim'de buraya indi) ----
+           Kahramanın hemen altındaydı; sahibi seans açıkken baktı ve dünün
+           siluetini bugünün işlemi sandı: "ana sayfa önce bugünü
+           anlatmalı" (iPhone ekranı, 28 Ekim 22:29 TR). Telefonda Günün
+           Hareketleri'nin ardında, Günün Grafiği ve teknik görünümün
+           üstünde (sıra TodayExperience.module.css); masaüstünde iki
+           kolonun ALTINDA tam genişlik bir satır — şerit genişlik istiyor
+           (sahne düzenleri kap eniyle, `SkyScene.module.css`) ve yan
+           kolona girse iki kolonun dengesini kendi boyu kadar bozardı.
+           Gerekçe ve veri `SkylineStrip.tsx`; yer tutucu ölçüsünü ayırıyor. */}
+      <div data-home-section="skyline" className="min-w-0 lg:col-span-2 lg:row-start-3">
+        <Suspense fallback={<SkylineStripSkeleton />}>
+          <SkylineStrip status={status} locale={locale} t={t} nowMs={nowMs} />
+        </Suspense>
+      </div>
+
       {/* ---- Öne çıkan haberler ----
            TAM GENİŞLİK BANT, KUTU DEĞİL. Haberler bir süre sol kolonda,
            analizlerin altında, altı satırlık düz bir listeydi: sayfanın en
@@ -654,7 +663,7 @@ export default async function TodayPage() {
            tamamını aldı; başlığı da bir panel başlığı değil BÖLÜM başlığı
            oldu — kutu yok, altında hairline var. Sayfa böylece "kutu, kutu,
            kutu" ritminden çıkıp bir bölümle kapanıyor. */}
-      <section data-home-section="news" data-rise-scope id="haber-akisi" className={cn(styles.news, "min-w-0 lg:col-span-2 lg:row-start-3")}>
+      <section data-home-section="news" data-rise-scope id="haber-akisi" className={cn(styles.news, "min-w-0 lg:col-span-2 lg:row-start-4")}>
         <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
           <h2 className={styles.newsHeading}>
             {t.today.topNews}
@@ -691,7 +700,7 @@ export default async function TodayPage() {
       <FillColumn />
 
       {/* ---- Kaynak künyesi ---- */}
-      <footer data-home-section="sources" className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-tiny text-muted lg:col-span-2 lg:row-start-4">
+      <footer data-home-section="sources" className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-tiny text-muted lg:col-span-2 lg:row-start-5">
         <span>{t.today.sourceLine}</span>
         <span>{t.today.sourceNote}</span>
       </footer>

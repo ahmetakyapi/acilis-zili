@@ -6,6 +6,7 @@ import { getLatestDailyChart } from "@/lib/daily-chart-data";
 import { dailyChartHref } from "@/lib/daily-chart";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { formatEtDateLong } from "@/lib/utils";
+import { SessionAgeTag } from "./SessionAgeTag";
 
 /**
  * Günün Grafiği — ana sayfanın yan kolonunda küçük giriş (24 Ekim).
@@ -17,8 +18,11 @@ import { formatEtDateLong } from "@/lib/utils";
  *
  * TARİH HER ZAMAN YAZILI: panel "bugün" demiyor, grafiğin anlattığı seansı
  * söylüyor (CLAUDE.md "Veri dürüstlüğü" — eski veri tarihsiz durmaz).
+ * 28 Ekim'den beri tarihin önünde göreli gün künyesi ("Dünkü Seans",
+ * gerekçe `SessionAgeTag.tsx`): tarih tek başına seans açıkken dünü
+ * bugünden ayırmıyordu.
  */
-export async function DailyChartPanel({ locale, t }: { locale: Locale; t: Dictionary }) {
+export async function DailyChartPanel({ locale, t, nowMs }: { locale: Locale; t: Dictionary; nowMs: number }) {
   const latest = await getLatestDailyChart(locale);
   if (!latest) return null;
   const href = dailyChartHref(latest.chartDate);
@@ -26,7 +30,12 @@ export async function DailyChartPanel({ locale, t }: { locale: Locale; t: Dictio
     <Panel className="min-w-0">
       <PanelHeader
         title={t.dailyChart.title}
-        meta={formatEtDateLong(latest.chartDate, locale)}
+        meta={
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <SessionAgeTag dateEt={latest.chartDate} locale={locale} t={t} nowMs={nowMs} />
+            <span>{formatEtDateLong(latest.chartDate, locale)}</span>
+          </span>
+        }
         action={<PanelLink href="/gunun-grafigi">{t.dailyChart.homeAll}</PanelLink>}
       />
       <div className={styles.homeBody} lang={latest.locale}>

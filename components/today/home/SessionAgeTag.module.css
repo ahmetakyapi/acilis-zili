@@ -1,0 +1,16 @@
+/* "Hangi seans" künyesi — gerekçe SessionAgeTag.tsx. Derinlik tonla
+   (`surface-sunken`), renk yok: yön rengi yüzdeye, mavi bağlantıya ait. */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-strong);
+  font-size: var(--text-small);
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.tag svg { flex: none; color: var(--text-muted); }

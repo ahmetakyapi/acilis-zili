@@ -9,6 +9,7 @@ import { screenQueryEn } from "./screen-query";
 import { stockPuzzleEn } from "./stock-puzzle";
 import { askStockEn, stockWeekEn, watchlistTodayEn } from "./page-claude";
 import { daySignatureEn } from "./day-signature";
+import { sessionAgeEn } from "./session-age";
 import { earningsSeasonEn } from "./earnings-season";
 import { dailyChartEn } from "./daily-chart";
 import { probabilitiesEn } from "./probabilities";
@@ -4323,6 +4324,8 @@ const en: typeof tr = {
   communityVisuals: communityVisualsEn,
   /* Bu Hafta Neden Hareket Etti, kompakt kart (25 Ekim) — metin page-claude.ts. */
   stockWeek: stockWeekEn,
+  /* Geçmiş seansı anlatan ana sayfa panellerinin künyesi (28 Ekim) — metin ayrı dosyada. */
+  sessionAge: sessionAgeEn,
 };
 
 export default en;
