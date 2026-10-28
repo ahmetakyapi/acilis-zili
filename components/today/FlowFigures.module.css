@@ -42,6 +42,17 @@
    sürpriz gerekirse sayının altına iniyor (`.value` zaten `flex-wrap`);
    alt ızgara iki sütunun satırlarını aynı hatta tutmaya devam ediyor. */
 .figures[data-variant="detail"] { grid-auto-columns:minmax(0,1fr); }
+/* DETAYDA AD DEĞERİN SATIRINDA (28 Ekim, kompakt tur; sahibinin isteği:
+   "çok alan kaplıyor"). Üç kat (ad / değer / beklenti) şirket kartını 94
+   piksele çıkarıyordu; ad ile değer yan yana iki kat. Telefonda sütun
+   (~130 piksel) ikisini taşımıyor: orada üç kat kalıyor (aşağıda). */
+@media (min-width:768px) {
+  .figures[data-variant="detail"] { grid-template-rows:auto auto; }
+  .figures[data-variant="detail"] .figure { grid-row:1 / span 2; grid-template-columns:auto minmax(0,1fr); align-items:baseline; column-gap:8px; }
+  .figures[data-variant="detail"] .figure dt { grid-row:1; align-self:baseline; }
+  .figures[data-variant="detail"] .value { grid-row:1; grid-column:2; }
+  .figures[data-variant="detail"] .foot { grid-row:2; grid-column:1 / -1; }
+}
 
 @media (max-width:767px) {
   /* Telefonda ölçüler adın altında, satırın kalan genişliğini ikiye bölüyor
@@ -51,4 +62,9 @@
   .figures { grid-auto-columns:minmax(0,1fr); column-gap:12px; }
   .figure { padding-left:10px; }
   .value b { font-size:16px; }
+  /* Sürpriz sayının yanında kalsın: 130 piksellik sütunda "92,3 Mr $" ile
+     "−%0,2" 16 puntoda sığmıyor, yüzde alt satıra iniyordu (390, ölçüldü). */
+  .figures[data-variant="detail"] .value b { font-size:15px; }
+  .figures[data-variant="detail"] .surprise { font-size:12px; }
+  .figures[data-variant="detail"] .value { gap:0 5px; }
 }

@@ -213,6 +213,10 @@ const tr = {
     offline: "Güncelleme Bekleniyor",
     scheduled: "Planlandı",
     awaiting: "Sonuç Bekleniyor",
+    /* Sayısal sonucu olmayan olay (Fed Başkanı'nın basın toplantısı, 28 Ekim):
+       beklenecek bir sonuç yok — `displayFlowStatus`. */
+    live: "Sürüyor",
+    held: "Gerçekleşti",
     released: "Açıklandı",
     analyzed: "Analiz Hazır",
     partial: "Sonuçlar Geliyor",

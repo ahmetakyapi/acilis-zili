@@ -12,6 +12,8 @@ import { WeekLookahead } from "@/components/calendar/WeekLookahead";
 import { ReleasedData } from "@/components/calendar/ReleasedData";
 import { buildLookahead, valueRatios } from "@/components/calendar/lookahead";
 import { ScaleBar } from "@/components/markets/CompareScale";
+import { FED_WAIT_MS, getFomcRelease } from "@/lib/providers/fed";
+import { fedRange, isFomcFamily, previousRange } from "@/lib/fomc-statement";
 import { GuideHint } from "@/components/article/GuideHint";
 import { IpoCalendar } from "@/components/markets/IpoCalendar";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -44,7 +46,8 @@ import {
   type MarketHoliday,
 } from "@/lib/market-hours";
 import { getI18n, type Locale } from "@/lib/i18n";
-import { hasActual } from "@/lib/day-flow";
+import { eventFamily, hasActual } from "@/lib/day-flow";
+import { withTimeout } from "@/lib/providers/timeout";
 import { getReleasedObservation } from "@/lib/providers/fred";
 import {
   displayZone,
@@ -378,9 +381,27 @@ export default async function CalendarPage(
   const passed = (event: EconomicEventRow) =>
     event.eventDate < today ||
     (event.eventDate === today && event.eventTimeEt !== null && minutesOf(event.eventTimeEt) <= nowMinutes);
+  /* FOMC SONUCU FED'İN BÜLTENİNDEN (28 Ekim) — ana sayfanın akışıyla aynı
+     kaynak ve önbellek (`getFomcRelease`); gerekçe `lib/fomc-statement.ts`.
+     Faiz kararı gerçekleşen aralığı, projeksiyonlar ve basın toplantısı
+     durumu buradan alıyor; bülten yoksa satır eskisi gibi bekler. */
+  const fomcToday = result.ok && result.rows.some((event) => event.eventDate === today && isFomcFamily(eventFamily(event.slug)) && passed(event))
+    ? await withTimeout(getFomcRelease(today), FED_WAIT_MS).catch(() => null)
+    : null;
+  const fomcSettled = (event: EconomicEventRow) => {
+    if (!fomcToday || event.eventDate !== today || !passed(event)) return null;
+    const family = eventFamily(event.slug);
+    if (family === "fomc-presser") return "held" as const;
+    if (family === "fomc-sep" && fomcToday.projections) return "released" as const;
+    return family === "fomc-rate" ? ("released" as const) : null;
+  };
   const all = result.ok
     ? await Promise.all(
         result.rows.filter((event) => event.eventDate >= today).map(async (event) => {
+          const decision = fomcToday?.decision;
+          if (decision && event.eventDate === today && eventFamily(event.slug) === "fomc-rate" && !hasActual(event.actual) && passed(event)) {
+            return { ...event, actual: fedRange(decision, locale), previous: event.previous ?? fedRange(previousRange(decision), locale) };
+          }
           if (event.eventDate !== today || !event.fredSeriesId || hasActual(event.actual) || !passed(event)) {
             return event;
           }
@@ -505,7 +526,7 @@ export default async function CalendarPage(
     ...monthPicked.map((_, index) => index).filter((index) => index < pivot - 1).reverse(),
   ].filter((index, position, list) => index >= 0 && index < monthPicked.length && list.indexOf(index) === position);
   const monthItems: MonthItem[] = monthPicked.map((event, index) => {
-    const state: MonthItem["state"] = hasActual(event.actual)
+    const state: MonthItem["state"] = hasActual(event.actual) || fomcSettled(event)
       ? "released"
       : event.eventDate < today
         ? "passed"
@@ -609,10 +630,12 @@ export default async function CalendarPage(
           <span className={styles.statusLine}>
             {/* Yayın ancak sağlayıcı `actual` verince kanıtlanmış olur;
                 saatin geçmesi açıklandı demek değil. */}
-            <span className={styles.status} data-published={hasActual(event.actual) || undefined}>
+            <span className={styles.status} data-published={hasActual(event.actual) || !!fomcSettled(event) || undefined}>
               {hasActual(event.actual)
                 ? t.calendar.released
-                : passed(event)
+                : fomcSettled(event)
+                  ? fomcSettled(event) === "held" ? t.dayFlow.held : t.calendar.released
+                  : passed(event)
                   ? t.dayFlow.awaiting
                   : t.calendar.scheduled}
             </span>

@@ -31,10 +31,10 @@ const validSnapshot = (value: unknown): value is DayFlowSnapshot => {
   return !!snap && Array.isArray(snap.events) && Number.isFinite(Date.parse(snap.asOf));
 };
 
-function Status({ event, nowMs, labels }: { event: Pick<FlowEvent, "status" | "scheduledAt">; nowMs: number; labels: Props["labels"] }) {
+function Status({ event, nowMs, labels }: { event: Pick<FlowEvent, "status" | "scheduledAt" | "endsAt">; nowMs: number; labels: Props["labels"] }) {
   const status = displayFlowStatus(event, nowMs);
   return <span key={status} className={styles.status} data-status={status}>
-    {status === "released" || status === "analyzed" ? <Check size={12} weight="bold" /> : <span className={styles.statusDot} />}
+    {status === "released" || status === "analyzed" || status === "held" ? <Check size={12} weight="bold" /> : <span className={styles.statusDot} />}
     {labels[status]}
   </span>;
 }
@@ -523,7 +523,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading, otherHea
                       gelir açılan gövdede. Satır kompakt kalsın diye. */}
                   {value && valueLabel ? (
                     <span className={styles.tlValue}><small>{valueLabel}</small><b className="numeral">{value}</b></span>
-                  ) : <span aria-hidden="true" />}
+                  ) : <span className={styles.tlValue} aria-hidden="true" />}
                   <CaretDown size={15} weight="bold" aria-hidden className={styles.tlCaret} />
                 </button>
                 {/* Gövde YERİNDE açılır (`grid-template-rows` 0fr→1fr,
@@ -539,7 +539,9 @@ export function DayFlow({ initial, locale, labels, railLabels, heading, otherHea
                       <MemberList members={event.members} scheduledAt={event.scheduledAt} nowMs={nowMs} labels={labels} openEventId={openId} onEngage={() => setAutoTour(false)} source={event.source} href={event.href} />
                     ) : <>
                       {(event.actual || event.forecast || event.previous) && <dl className={styles.results}>{[[labels.actual, event.actual], [labels.forecast, event.forecast], [labels.previous, event.previous]].map(([label, figure]) => <div key={label}><dt>{label}</dt><dd className="numeral">{figure ?? NO_VALUE}</dd></div>)}</dl>}
-                      {!event.actual && <p className={styles.waiting}>{displayFlowStatus(event, nowMs) === "scheduled" ? labels.scheduledHint : labels.pendingHint}</p>}
+                      {/* Bekleme cümlesi yalnız gerçekten bekleyen olayda: sonucu
+                          olmayan toplantıda ve sayısız "Açıklandı"da yanlıştı. */}
+                      {!event.actual && (displayFlowStatus(event, nowMs) === "scheduled" || displayFlowStatus(event, nowMs) === "awaiting") && <p className={styles.waiting}>{displayFlowStatus(event, nowMs) === "scheduled" ? labels.scheduledHint : labels.pendingHint}</p>}
                       <div className={styles.detailFooter}><span>{labels.source}: {event.source}</span><Link href={event.href}>{labels.calendar}<ArrowUpRight size={14} /></Link></div>
                     </>}
                   </div>

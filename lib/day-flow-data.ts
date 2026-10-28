@@ -15,7 +15,13 @@ import { epsSurprise, revenueSurprise, type Surprise } from "./earnings-week";
 import { isSpotlight } from "./spotlight";
 import { getEarningsCalendar } from "./providers/finnhub";
 import { getReleasedObservation } from "./providers/fred";
+import { FED_WAIT_MS, getFomcRelease } from "./providers/fed";
+import { fedRange, isFomcFamily, previousRange } from "./fomc-statement";
 import { earningsStatus, eventFamily, groupStatus, hasActual, type DayFlowSnapshot, type FlowEvent, type FlowMember, type FlowSurprise } from "./day-flow";
+
+/** Basın toplantısının süresi: Fed takvimi bitişi yazmıyor; toplantılar
+    ~45–60 dakika. Yalnız "Sürüyor"dan "Gerçekleşti"ye geçişin anı. */
+const PRESSER_MINUTES = 60;
 
 /** Sürprizin yazımı haftalık takvimle aynı: bir ondalık (`WeekSchedule`). */
 const SURPRISE_DIGITS = 1;
@@ -88,24 +94,40 @@ export async function loadDayFlow(locale: Locale, userId?: string, requestedDate
   const live = new Map(provider?.ok ? provider.data.filter((row) => row.reportDate === date).map((row) => [row.symbol, row]) : []);
   const eventItems: FlowEvent[] = await Promise.all(events.map(async (event) => {
     const scheduledAt = event.eventTimeEt ? etDateTimeToUtc(date, event.eventTimeEt).toISOString() : null;
-    const fresh = isToday && !hasActual(event.actual) && event.fredSeriesId && scheduledAt && new Date(scheduledAt) <= now
+    const family = eventFamily(event.slug);
+    /* FOMC'NİN SONUCU FED'İN KENDİ BÜLTENİNDEN (28 Ekim). Karar 14:00 ET'de
+       yayımlanıyor ama FRED'in hedef aralık serisi onu ertesi gün yazıyor;
+       akış gece yarısı hâlâ "Sonuç Bekleniyor" diyordu. Gerekçe
+       `lib/fomc-statement.ts`. Bülten yoksa ya da Fed yanıt vermezse olay
+       eskisi gibi bekler. */
+    const fomc = isFomcFamily(family) && !hasActual(event.actual) && scheduledAt && new Date(scheduledAt) <= now
+      ? await withTimeout(getFomcRelease(date), FED_WAIT_MS).catch(() => null) : null;
+    const fresh = !fomc && isToday && !hasActual(event.actual) && event.fredSeriesId && scheduledAt && new Date(scheduledAt) <= now
       ? await getReleasedObservation(event.fredSeriesId, date) : null;
-    const actual = fresh?.actual ?? event.actual;
+    const decision = family === "fomc-rate" ? fomc?.decision ?? null : null;
+    const actual = decision ? fedRange(decision, locale) : fresh?.actual ?? event.actual;
+    /* Projeksiyonlar kendi bülteniyle "Açıklandı"; karar da öyle, aralığı
+       okunamasa bile (sayı yazılmaz). Basın toplantısının sonucu yok: karar
+       yayımlandıysa toplantı yapılıyor, bitişi `endsAt`. */
+    const fomcReleased = family === "fomc-rate" ? !!fomc : family === "fomc-sep" ? !!fomc?.projections : false;
+    const endsAt = family === "fomc-presser" && fomc && scheduledAt
+      ? new Date(new Date(scheduledAt).getTime() + PRESSER_MINUTES * 60_000).toISOString() : undefined;
     return {
       id: event.id, timeEt: event.eventTimeEt, scheduledAt,
       title: locale === "tr" ? event.titleTr : event.titleEn,
       importance: event.importance === "high" || event.importance === "low" ? event.importance : "medium",
-      kind: "event", status: hasActual(actual) ? "released" : "scheduled",
+      kind: "event", status: hasActual(actual) || fomcReleased ? "released" : "scheduled",
       actual: formatEventValue(actual, event.unit, locale) || undefined,
       forecast: formatEventValue(event.forecast, event.unit, locale) || undefined,
-      previous: formatEventValue(fresh?.previous ?? event.previous, event.unit, locale) || undefined,
+      previous: (decision && !hasActual(event.previous) ? fedRange(previousRange(decision), locale) : formatEventValue(fresh?.previous ?? event.previous, event.unit, locale)) || undefined,
+      endsAt,
       href: withLocale("/takvim?g=day", locale),
-      note: notes[eventFamily(event.slug)],
+      note: notes[family],
       /* Ham sağlayıcı anahtarı ekrana basılmaz: panelde "Kaynak:
          federalreserve" yazıyordu. Listede olmayan kaynak olduğu gibi kalır —
          yanlış bir ada çevirmektense ham anahtar dürüsttür. */
       source: fresh ? "FRED" : event.source === "seed" ? t.dayFlow.calendarSource : issuers[event.source] ?? event.source,
-      updatedAt: (fresh?.fetchedAt ?? event.updatedAt).toISOString(),
+      updatedAt: fomc && (decision || fomcReleased || endsAt) ? fomc.statementAt : (fresh?.fetchedAt ?? event.updatedAt).toISOString(),
     };
   }));
   const byWindow = new Map<string, FlowMember[]>();

@@ -66,7 +66,7 @@
 .spinner { animation:flow-spin 1.2s linear infinite; }
 
 /* ---- Çizelge başlığı ---- */
-.agendaHead { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:18px 0 6px; }
+.agendaHead { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:12px 0 2px; }
 .agendaHead h3 { display:flex; align-items:baseline; gap:9px; color:var(--text-strong); font-size:15px; font-weight:650; letter-spacing:-.02em; }
 .agendaHead h3 > span { color:var(--text-muted); font-size:13px; font-weight:600; }
 
@@ -104,10 +104,13 @@
 .tlRow[data-open] .tlMain { background:var(--surface-sunken); }
 
 /* ---- Satır başı ---- */
-.tlHead { display:grid; width:100%; min-width:0; grid-template-columns:76px minmax(0,1fr) auto 18px; align-items:center; gap:8px 14px; min-height:56px; padding:9px 12px; border-radius:16px; text-align:left; color:var(--text-body); cursor:pointer; transition:background-color .2s var(--ease-brand); }
+.tlHead { display:grid; width:100%; min-width:0; grid-template-columns:84px minmax(0,1fr) auto 18px; align-items:center; gap:8px 14px; min-height:46px; padding:6px 12px; border-radius:16px; text-align:left; color:var(--text-body); cursor:pointer; transition:background-color .2s var(--ease-brand); }
 .tlHead:hover { background:var(--primary-tint); }
 .tlRow[data-open] .tlHead:hover { background:transparent; }
-.tlTime { display:flex; flex-direction:column; gap:1px; color:var(--text-strong); }
+/* Saat ve dilim TEK SATIR (28 Ekim, kompakt tur): "21:00" ile "TR" alt
+   alta durunca satır başlıktan değil saatten uzuyordu. Telefonda alt alta
+   (sütun dar, aşağıda). */
+.tlTime { display:flex; align-items:baseline; gap:4px; color:var(--text-strong); }
 .tlTime b { font-size:16px; line-height:1.2; font-weight:650; letter-spacing:-.03em; }
 .tlTime[data-unknown="true"] b { font-size:12px; font-weight:600; line-height:1.35; letter-spacing:0; overflow-wrap:anywhere; }
 .tlTime small { color:var(--text-muted); font-size:12px; font-weight:500; }
@@ -136,14 +139,14 @@
 
 .status { display:inline-flex; align-items:center; gap:5px; color:var(--text-body); font-size:12px; line-height:1.5; font-weight:550; }
 .statusDot { width:5px; height:5px; flex-shrink:0; border-radius:50%; background:currentColor; }
-.status[data-status="released"],.status[data-status="analyzed"] { color:var(--up); animation:result-arrive 800ms var(--ease-brand) both; }
-.status[data-status="partial"],.status[data-status="awaiting"] { color:var(--primary-ink); }
+.status[data-status="released"],.status[data-status="analyzed"],.status[data-status="held"] { color:var(--up); animation:result-arrive 800ms var(--ease-brand) both; }
+.status[data-status="partial"],.status[data-status="awaiting"],.status[data-status="live"] { color:var(--primary-ink); }
 
 /* ---- "Şimdi" işareti ----
    Omurgada marka mavisi bir nokta + saat; sağa doğru incecik bir çizgi.
    BÜYÜK HARFE ÇEVRİLMİYOR: `text-transform:uppercase` Türkçede "i → I"
    üretiyor (CLAUDE.md), ayrım renk ve aralıkta. */
-.nowMark { display:grid; grid-template-columns:var(--rail) minmax(0,1fr); align-items:center; padding:9px 0; }
+.nowMark { display:grid; grid-template-columns:var(--rail) minmax(0,1fr); align-items:center; padding:5px 0; }
 .nowMark::after { content:""; position:absolute; left:calc(var(--rail) / 2 - 4px); top:50%; width:8px; height:8px; translate:0 -50%; border-radius:50%; background:var(--primary); box-shadow:0 0 0 4px var(--primary-wash); }
 .nowMark b { grid-column:2; display:flex; align-items:center; gap:10px; color:var(--primary-ink); font-size:12px; font-weight:700; }
 .nowMark b::after { content:""; flex:1; height:1px; background:var(--primary-faint); }
@@ -156,7 +159,7 @@
 .tlDetail { display:grid; grid-template-rows:0fr; transition:grid-template-rows .28s var(--ease-brand); }
 .tlRow[data-open] .tlDetail { grid-template-rows:1fr; }
 .tlDetailInner { overflow:hidden; min-width:0; min-height:0; padding:0 12px; }
-.tlDetailInner > :last-child { margin-bottom:12px; }
+.tlDetailInner > :last-child { margin-bottom:8px; }
 
 .note { margin:4px 0 0; padding-left:11px; border-left:2px solid var(--primary-faint); color:var(--text-body); font-size:13px; line-height:1.65; text-wrap:pretty; }
 
@@ -164,13 +167,21 @@
    MemberList. Satır ~56 piksel: kimlik | ölçüler | bağlantı; dörtten çoğu
    katlı başlar, "+N Şirket Daha" yerinde açar. Kimlik sütunu sabit ki altı
    satırın ölçüleri AYNI HATTA başlasın (CLAUDE.md "ölçü ızgarası"). */
-.tlMembers { display:grid; gap:6px; margin:4px 0 0; padding:0; list-style:none; }
-.tlMemberRow { display:grid; min-width:0; grid-template-columns:150px minmax(0,1fr) auto; align-items:center; gap:8px 16px; padding:10px 12px; border-radius:12px; background:var(--surface-solid); }
-.memberIdentity { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; min-width:0; }
+.tlMembers { display:grid; gap:4px; margin:2px 0 0; padding:0; list-style:none; }
+/* KART İKİ SATIR (28 Ekim, sahibinin isteği: "çok alan kaplıyor"). Kart
+   üç katlıydı (sembol, durum, SEC; ölçüler ad / değer / beklenti) ve
+   1440'ta 94 piksel tutuyordu; şimdi 66 (390'da 178 → 151). Panel aynı
+   günün verisiyle 1440'ta 779 → 657, 390'da 1182 → 1099 piksel. Kimlik: üstte logo + sembol
+   + durum, altta SEC bildirimi; ölçüler ad ile değer aynı satırda
+   (FlowFigures.module.css, `detail`). Kimlik sütunu sabit ki satırların
+   ölçüleri AYNI HATTA başlasın. */
+.tlMemberRow { display:grid; min-width:0; grid-template-columns:200px minmax(0,1fr) auto; align-items:center; gap:6px 16px; padding:8px 12px; border-radius:12px; background:var(--surface-solid); }
+.memberIdentity { display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px; min-width:0; }
+.memberIdentity .filingLink { flex-basis:100%; white-space:nowrap; }
 .memberIdentity strong { color:var(--text-strong); font-size:14px; font-weight:650; }
 /* Dip şeridi TEK SATIR: solda kaynak, ortada katlama, sağda takvim (15
    Ekim, sahibinin isteği — kaynak/takvim ayrı bir boşluk satırı açmasın). */
-.memberFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 14px; min-height:36px; margin-top:4px; color:var(--text-muted); font-size:12px; }
+.memberFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 14px; min-height:32px; margin-top:2px; color:var(--text-muted); font-size:12px; }
 .memberFoot > a { display:flex; gap:6px; align-items:center; min-height:32px; color:var(--primary-ink); font-weight:600; }
 .moreMembers { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 10px; color:var(--primary-ink); font-size:13px; font-weight:600; cursor:pointer; transition:color .2s var(--ease-brand); }
 .moreMembers:hover { color:var(--primary-hover); }
@@ -236,13 +247,21 @@
   /* Sözcük gizleme kuralları artık her genişlikte (yukarıda, "KÜNYE
      SIKILAŞTI"). */
   .timeline { --rail:32px; --node:26px; --node-top:15px; }
-  .tlHead { grid-template-columns:56px minmax(0,1fr) auto 14px; gap:6px 10px; padding:9px 8px; }
+  .tlHead { grid-template-columns:56px minmax(0,1fr) 14px; gap:0 10px; min-height:52px; padding:8px; }
+  .tlTime { grid-row:1 / span 2; flex-direction:column; align-items:flex-start; gap:1px; }
+  .tlCaret { grid-column:3; grid-row:1 / span 2; }
+  /* DEĞER BAŞLIĞIN ALTINDA (28 Ekim, 390'da ölçüldü): sağ sütunda
+     "Gerçekleşen %3,75–4,00" başlığa ~150 piksel bırakıyordu ve "Fed Faiz
+     Kararı (FOMC)" üç satıra kırılıp satır 62'den 101 piksele çıkıyordu.
+     Telefonda değer özetin altında tek satır, künyesiyle yan yana. */
+  .tlValue { grid-column:2; grid-row:2; flex-direction:row; align-items:baseline; justify-content:flex-start; gap:6px; text-align:left; }
+  .tlValue:not(:empty) { margin-top:4px; }
   .tlMain { margin-left:2px; }
   .tlTime b { font-size:15px; }
   .tlSummary > strong { font-size:14px; }
   .tlValue b { font-size:15px; }
   .tlDetailInner { padding:0 8px; }
-  .tlMemberRow { padding:10px; gap:8px 10px; }
+  .tlMemberRow { padding:10px; gap:6px 10px; }
   /* Şirket satırı telefonda iki katlı: kimlik + bağlantı üstte, ölçüler
      altta tam genişlikte. Bağlantı açıkça ilk satıra: otomatik yerleşim onu
      ölçülerin altına üçüncü bir kat olarak atıyordu (390'da görüldü). */

@@ -43,6 +43,11 @@ export type FlowEvent = {
   href: string;
   source: string;
   updatedAt: string;
+  /** SAYISAL SONUCU OLMAYAN olayın bitişi (Fed Başkanı'nın basın
+      toplantısı; 28 Ekim). Sunucu bunu yalnız toplantının gerçekleştiği
+      doğrulandığında yazar (Fed kararı yayımlandı, `lib/providers/fed.ts`);
+      istemci saatle "Sürüyor" → "Gerçekleşti" der, "Sonuç Bekleniyor" demez. */
+  endsAt?: string;
   members?: FlowMember[];
   /** Olayın NE OLDUĞUNU düz Türkçeyle söyleyen tek cümle; sözlükten gelir. */
   note?: string;
@@ -85,10 +90,14 @@ export function groupStatus(members: Pick<FlowMember, "status">[]): FlowEvent["s
   return "scheduled";
 }
 
-/** Passing the scheduled time is never evidence that results were released. */
-export function displayFlowStatus(event: Pick<FlowEvent, "status" | "scheduledAt">, nowMs: number) {
+/** Passing the scheduled time is never evidence that results were released.
+    Sonucu olmayan olay (`endsAt`) beklemez: başladıysa sürüyor, bittiyse gerçekleşti. */
+export function displayFlowStatus(event: Pick<FlowEvent, "status" | "scheduledAt" | "endsAt">, nowMs: number) {
   if (event.status !== "scheduled") return event.status;
-  return event.scheduledAt && new Date(event.scheduledAt).getTime() <= nowMs ? "awaiting" : "scheduled";
+  const started = !!event.scheduledAt && new Date(event.scheduledAt).getTime() <= nowMs;
+  if (!started) return "scheduled";
+  if (event.endsAt) return new Date(event.endsAt).getTime() <= nowMs ? "held" : "live";
+  return "awaiting";
 }
 
 /** A revision of an older observation must not masquerade as today's release. */
@@ -124,6 +133,13 @@ export function preserveConfirmedResults(previous: DayFlowSnapshot, next: DayFlo
     if (event.kind === "event" && old && !hasActual(event.actual) && hasActual(old.actual)) {
       retained = true;
       return { ...event, actual: old.actual, previous: event.previous ?? old.previous, status: "released" as const, source: old.source, updatedAt: old.updatedAt };
+    }
+    /* Sayısız sonuçlar da geri alınmaz (28 Ekim): Fed bülteniyle "Açıklandı"
+       olan projeksiyonlar ve bitişi yazılmış basın toplantısı, Fed'in bir
+       turda yanıt vermemesiyle "Sonuç Bekleniyor"a dönmesin. */
+    if (event.kind === "event" && old && event.status === "scheduled" && (old.status === "released" || (old.endsAt && !event.endsAt))) {
+      retained = true;
+      return { ...event, status: old.status, endsAt: old.endsAt, source: old.source, updatedAt: old.updatedAt };
     }
     if (!event.members) return event;
     const members = event.members.map((member) => {

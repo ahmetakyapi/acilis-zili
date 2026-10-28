@@ -182,6 +182,8 @@ const en: typeof tr = {
     offline: "Waiting for Update",
     scheduled: "Scheduled",
     awaiting: "Awaiting Results",
+    live: "Underway",
+    held: "Held",
     released: "Released",
     analyzed: "Analysis Ready",
     partial: "Results Arriving",
