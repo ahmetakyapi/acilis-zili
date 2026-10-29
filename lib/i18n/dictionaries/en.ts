@@ -214,6 +214,8 @@ const en: typeof tr = {
     emptyMajorDayHint: "{count} companies report this day; the flow only shows large and followed companies.",
     selectEvent: "Show event details",
     events: "Today's Events",
+    eventsCount: "{n} Events",
+    eventsDone: "{n}/{total} Released",
     next: "Next Events",
     back: "Previous Events",
     source: "Source",
@@ -249,6 +251,7 @@ const en: typeof tr = {
       "bls-rule": "US Bureau of Labor Statistics (BLS)",
       "bls-schedule": "US Bureau of Labor Statistics (BLS)",
       "dol-rule": "US Department of Labor",
+      "fred-release": "FRED (St. Louis Fed)",
     },
   },
 

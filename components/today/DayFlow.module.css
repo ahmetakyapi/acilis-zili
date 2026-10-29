@@ -26,8 +26,29 @@
 .flow { min-width:0; padding-bottom:16px; }
 
 /* ---- Künye şeridi ---- */
-.toolbar { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:10px 24px; padding-bottom:10px; border-bottom:1px solid var(--line-soft); color:var(--text-body); font-size:13px; }
+.toolbar { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:10px 24px; padding-bottom:12px; margin-bottom:6px; border-bottom:1px solid var(--line-soft); color:var(--text-body); font-size:13px; }
 .heading { min-width:0; }
+/* Başlık ve karne hapı (gerekçe DayFlow.tsx → "GÜNÜN KARNESİ"). Hap
+   h2'nin SATIRINDA, açıklama altta tam genişlikte: başlık düğümü sayfadan
+   hazır geliyor (h2 + p), `display:contents` ile ikisi bu ızgaraya iniyor.
+   İlk denemede hap başlık bloğunun ortasında, h2 ile açıklamanın arasında
+   asılı duruyordu (1440, 620-648; h2 599-641). Telefonda hap açıklamanın
+   altına iner (sütun dar). */
+.headingRow { display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; min-width:0; }
+@media (min-width:640px) {
+  .headingRow { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:4px 14px; }
+  .headingRow > .heading, .headingRow > .heading > div { display:contents; }
+  .headingRow h2 { grid-column:1; grid-row:1; }
+  .headingRow p:not(.summary) { grid-column:1 / -1; grid-row:2; }
+  .headingRow > .summary { grid-column:2; grid-row:1; justify-self:start; }
+}
+.summary { display:inline-flex; align-items:center; gap:9px; margin:0; padding:5px 11px; border-radius:999px; background:var(--surface-sunken); color:var(--text-body); font-size:12px; font-weight:600; white-space:nowrap; }
+.summary > span:first-child { color:var(--text-strong); font-weight:700; }
+.summaryBar { display:inline-grid; grid-auto-flow:column; grid-auto-columns:10px; gap:3px; }
+.summaryBar > i { height:6px; border-radius:2px; background:var(--line-strong); opacity:.45; }
+.summaryBar > i[data-state="done"] { background:var(--up); opacity:1; }
+.summaryBar > i[data-state="due"] { background:var(--primary); opacity:1; }
+.summaryBar > i[data-state="partial"] { background:var(--line-strong); box-shadow:inset 5px 0 0 var(--up); opacity:1; }
 .toolbarMeta { display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:8px 16px; }
 /* GÜN SEÇİCİ (21 Ekim, sahibinin isteği: "geçmişe de gidebilsin, sağda
    oklarla"). Tarih iki okun arasında tek bir kapsül; oklar pencerenin

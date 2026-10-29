@@ -11,7 +11,7 @@ import { cn, formatEtDateCompact } from "@/lib/utils";
 
 /* Sol kolonun yedek kapasitesi — gerekçe `LatestAnalyses` içinde. */
 const ANALYSES_BASE = 5;
-const ANALYSES_MAX = 8;
+const ANALYSES_MAX = 16;
 
 /* ==========================================================================
    Son analizler
@@ -39,7 +39,12 @@ export async function LatestAnalyses({
      şey yoktu.
      Sunucu sekiz satırın tamamını basıyor, beşten sonrası `hidden`;
      kaçının açılacağına tarayıcı iki kolonun dibini ölçerek karar veriyor
-     (`FillColumn`). JavaScript kapalıysa beş satır kalıyor. */
+     (`FillColumn`). JavaScript kapalıysa beş satır kalıyor.
+     SEKİZ → ON ALTI (29 Ekim, sahibinin ekranı: "sol taraf çok kısa, sağ
+     taraf çok uzun"). Giriş yapmış okurda favoriler listesi ve Claude'un
+     notu yan kolonu ~400 piksel uzatıyor; sekiz satırın hepsi açılmış ve
+     sol kolon yine ~500 piksel kısa kalmıştı. Satır ~62 piksel; on altı
+     satır o farkı kapatıyor, sığmayan yedek gizli kalıyor. */
   const analyses = await getAnalyses(locale, { limit: ANALYSES_MAX });
 
   if (analyses.length === 0) return null;

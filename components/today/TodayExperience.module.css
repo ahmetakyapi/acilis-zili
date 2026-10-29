@@ -150,6 +150,23 @@
   flex:none; height:var(--bell); aspect-ratio:160 / 150;
   margin-top:calc(var(--bell) * -.2);
 }
+/* ZİL BAŞLIĞIN SAĞINA ASILI (29 Ekim, sahibinin isteği: "üstten daha az
+   boşluk, sol ve sağ aynı hizada"). Zil çipin satırında 104 piksel boyla
+   kendi satırını açıyordu: çip 258'de, sağdaki "Endeksler" 199'da; sol
+   kolonun mürekkebi 580'de, destenin 548'de bitiyordu (1440, TR, canlıda
+   ölçüldü). Şimdi satırın boyu çipin boyu (22): zil tepeye yaslı ve
+   başlığın sağındaki boşluğa sarkıyor. Çip = "Endeksler" = 199, iki kolonun
+   dibi 548 = 548, kahraman 601 → 569 (1280: 593 → 569; 1024'te de hizalı).
+   Zil başlığa değmiyor: 1440'ta zil 714'te başlıyor, başlık 595'te bitiyor
+   (1280: 633 / 575, 1024: 502 / 470).
+   YALNIZ TÜRKÇE VE ≥1024: İngilizce başlık satırı neredeyse dolduruyor
+   (1280'de başlık 691'de, kolon 717'de bitiyor) ve telefonda Türkçe
+   başlık da zilin kenarına değiyor (292 / 289); oralarda zil eskisi gibi
+   kendi satırında. */
+@media (min-width:1024px) {
+  .heroTopRow:lang(tr) { align-items:flex-start; }
+  .heroTopRow:lang(tr) .heroBell { --bell:clamp(64px,12cqi,92px); margin-top:-6px; margin-bottom:calc(28px - var(--bell)); }
+}
 /* Ölçüm (22 Eylül, TR, başsız Chrome, `.tmp-sep22b-home-hero-after.mjs`):
    - 1440 / 1280: kahraman 436 (değişmedi). Rozet 199 = "Endeksler" 199
      (önce 244); künyenin son satırı 508 = veri damgası 508 (önce 462).

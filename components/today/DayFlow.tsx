@@ -39,6 +39,23 @@ function Status({ event, nowMs, labels }: { event: Pick<FlowEvent, "status" | "s
   </span>;
 }
 
+/** Günün karnesi — başlığın yanındaki hap (gerekçe DayFlow → "GÜNÜN KARNESİ"). */
+function DaySummary({ events, nowMs, labels }: { events: FlowEvent[]; nowMs: number; labels: Props["labels"] }) {
+  const states = events.map((event) => displayFlowStatus(event, nowMs));
+  const done = states.filter((state) => state === "released" || state === "analyzed" || state === "held").length;
+  return (
+    <p className={styles.summary}>
+      <span className="numeral">{labels.eventsCount.replace("{n}", String(events.length))}</span>
+      <span aria-hidden className={styles.summaryBar}>
+        {states.map((state, i) => (
+          <i key={i} data-state={state === "released" || state === "analyzed" || state === "held" ? "done" : state === "partial" ? "partial" : state === "scheduled" ? "planned" : "due"} />
+        ))}
+      </span>
+      <span className="numeral">{labels.eventsDone.replace("{n}", String(done)).replace("{total}", String(events.length))}</span>
+    </p>
+  );
+}
+
 /* SAATİ BELİRSİZ OLAYIN KÜNYESİ SEBEBİ SÖYLER (28 Eylül). Künye
    "olayın kendi künyesi varsa o öncelikli" kuralıyla basılıyordu; ama
    bilançonun künyesi saat penceresi yoksa yalnızca "Bilanço"
@@ -435,7 +452,18 @@ export function DayFlow({ initial, locale, labels, railLabels, heading, otherHea
         başlamadan önce 120 piksel. Geniş ekranda ikisi yan yana, başlık
         solda künye sağda; dar ekranda eskisi gibi alt alta. */}
     <div className={styles.toolbar}>
-      {heading && <div className={styles.heading}>{viewingToday || !otherHeadings ? heading : shown.dateEt < shown.today ? otherHeadings.past : otherHeadings.future}</div>}
+      {/* GÜNÜN KARNESİ BAŞLIĞIN YANINDA (29 Ekim, sahibinin isteği: "içerikler
+          mantıklı şekilde başlık yanında olsun"). "Günün Olayları 4" kendi
+          satırıydı (1440'ta 40 piksel) ve yalnız bir sayı taşıyordu; şimdi
+          başlığın yanında tek hap: olay sayısı, kaçının açıklandığı ve
+          olay başına bir kare (açıklanan yeşil, kısmen açıklanan yarı yeşil,
+          saati gelip bekleyen mavi, planlı boş). Renk yalnız durumdan. */}
+      {heading && (
+        <div className={styles.headingRow}>
+          <div className={styles.heading}>{viewingToday || !otherHeadings ? heading : shown.dateEt < shown.today ? otherHeadings.past : otherHeadings.future}</div>
+          {events.length > 0 && <DaySummary events={events} nowMs={nowMs} labels={labels} />}
+        </div>
+      )}
       <div className={styles.toolbarMeta}>
       {/* GÜN SEÇİCİ (21 Ekim): tarih iki okun arasında; ok yoksa (pencerenin
           ucu) düğme pasif kalır, yer değiştirmez. */}
@@ -477,7 +505,8 @@ export function DayFlow({ initial, locale, labels, railLabels, heading, otherHea
         bütünüyle okunuyor. */}
     <div className={styles.dayBody} data-loading={loadingDay || undefined} aria-busy={loadingDay || undefined}>
     {events.length > 0 ? <>
-      <div className={styles.agendaHead}><h3>{labels.events}<span className="numeral">{events.length}</span></h3></div>
+      {/* Listenin başlığı ekran okuyucuda; görünen sayı başlığın yanındaki hapta. */}
+      <h3 className="sr-only">{labels.events}</h3>
       <ol className={styles.timeline}>
         {events.map((event, index) => {
           const open = openId === event.id;

@@ -251,6 +251,9 @@ const tr = {
     emptyMajorDayHint: "Bu gün {count} şirketin bilançosu var; akış yalnızca büyük ve takip edilen şirketleri gösterir.",
     selectEvent: "Olay ayrıntılarını göster",
     events: "Günün Olayları",
+    /* Başlığın yanındaki karne hapı (29 Ekim). */
+    eventsCount: "{n} Olay",
+    eventsDone: "{n}/{total} Açıklandı",
     next: "Sonraki Olaylar",
     back: "Önceki Olaylar",
     source: "Kaynak",
@@ -297,6 +300,8 @@ const tr = {
       "bls-rule": "ABD İstatistik Bürosu (BLS)",
       "bls-schedule": "ABD İstatistik Bürosu (BLS)",
       "dol-rule": "ABD Çalışma Bakanlığı",
+      /* Takvimin FRED yayın takviminden gelen satırları (`lib/calendar-sync.ts`). */
+      "fred-release": "FRED (St. Louis Fed)",
     },
   },
 
