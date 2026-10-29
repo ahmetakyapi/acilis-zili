@@ -2003,3 +2003,65 @@ export const riskAlerts = pgTable(
     index("risk_alerts_user_idx").on(t.userId, t.createdAt),
   ],
 );
+
+/* ---- Hisseyi Bil: günün sıralaması ---- */
+
+/**
+ * Giriş yapmış okurun günlük bulmaca oyunu — liderlik tablosunun kaydı
+ * (29 Ekim, sahibinin isteği: "leaderboard da koyalım, bu sürede bildi bu
+ * kadar ilerledi gibi"). Mantık `lib/puzzle-board.ts`, okuma/yazma
+ * `lib/puzzle-board-data.ts`.
+ *
+ * NEDEN SUNUCUDA SIRALI KAYIT: bulmaca ucu durumsuz ve tek istekte altı
+ * uydurma tahmin cevabı açıyor (`lib/stock-puzzle-data.ts`, "DURUMSUZ
+ * UCUN BEDELİ"); skor yalnız tarayıcıdayken bu kabul edilebilirdi, sıralama
+ * için değil. Kayıt tahminleri TEK TEK ekler: gelen liste kayıttakinin bir
+ * fazlasıysa eklenir, aynıysa (geri yükleme) dokunulmaz, başka bir şeyse
+ * `flagged` olur ve satır sıralamaya girmez.
+ *
+ * SÜRE `started_at` → `finished_at`: başlangıç okurun o günün bulmacasını
+ * ilk açtığı an (istemci açılınca bir kez bildirir), bitiş sunucunun oyunu
+ * bitmiş gördüğü an. Arşiv günleri burada yok — sıralama yalnız günün
+ * bulmacası.
+ *
+ * KENDİ TABLOSU — migration'lar deploy'da uygulanmıyor; tablo yokken
+ * okuma `available: false`, yazma sessizce düşer, oyun etkilenmez.
+ */
+export const puzzleRuns = pgTable(
+  "puzzle_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** Bulmacanın TR günü, "YYYY-MM-DD". */
+    day: date("day").notNull(),
+    /** Sunucunun sırayla gördüğü tahminler (joker "*"). */
+    guesses: jsonb("guesses").$type<string[]>().notNull().default([]),
+    /** "playing" | "won" | "lost" */
+    status: text("status").notNull().default("playing"),
+    /** Tahminler tek tek gelmediyse (toplu liste) sıralamaya girmez. */
+    flagged: boolean("flagged").notNull().default(false),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("puzzle_runs_user_day_key").on(t.userId, t.day),
+    index("puzzle_runs_day_idx").on(t.day, t.status),
+  ],
+);
+
+/**
+ * Sıralamadaki takma ad (29 Ekim). VARSAYILAN ANONİM: satır yoksa ya da
+ * ad boşsa okur tabloda "Oyuncu 3F2A" gibi kimlikten türeyen bir adla
+ * görünür; hesabın kullanıcı adı ya da e-postası ASLA basılmaz. Ad
+ * okurun kendi seçimi (`lib/puzzle-board.ts` → `cleanNickname`).
+ */
+export const puzzlePlayers = pgTable("puzzle_players", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  nickname: text("nickname"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});

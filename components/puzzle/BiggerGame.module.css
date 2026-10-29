@@ -1,0 +1,93 @@
+/* "Hangisi Büyük?" — gerekçe BiggerGame.tsx. Derinlik tonla; gölge, cam,
+   ışıma yok. Renk anlamdan: mavi etkileşim (düğmeler, kulvar dolgusu
+   nötr marka tonu), yeşil/kırmızı YALNIZ sonuç rozetinde. Geçişler
+   `--ease-brand`; doğru cevapta skorun rakamı `--ease-spring-soft` ile
+   bir kez zıplar (tek küçük öğenin geri bildirimi — CLAUDE.md eğri kuralı). */
+.game { display:flex; flex-direction:column; gap:.875rem; min-width:0; }
+
+/* ---- Skor şeridi ---- */
+.scores { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.5rem; margin:0; }
+.score { display:flex; flex-direction:column; gap:.125rem; min-width:0; padding:.75rem 1rem; border-radius:var(--radius-lg); background:var(--surface-sunken); }
+.score dt { display:inline-flex; align-items:center; gap:.3125rem; color:var(--text-muted); font-size:var(--text-tiny); font-weight:650; }
+.score dd { margin:0; color:var(--text-strong); font-size:1.75rem; font-weight:800; line-height:1.1; letter-spacing:-.03em; }
+.score[data-kind="score"] { background:var(--primary-tint); }
+.score[data-kind="score"] dd { color:var(--primary-ink); }
+.trophy { color:var(--brass); }
+.level { font-size:var(--text-lead) !important; padding-top:.3125rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .scoreValue { display:inline-block; animation:score-pop 520ms var(--ease-spring-soft) both; }
+}
+@keyframes score-pop { from { transform:scale(.7); opacity:.4; } to { transform:none; opacity:1; } }
+
+/* ---- Arena: iki kart, ortada VS ---- */
+.arena { position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:stretch; gap:.75rem; }
+.card { display:flex; flex-direction:column; gap:1rem; min-width:0; padding:1.25rem; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); }
+.card[data-side="challenger"] { border-color:var(--primary-faint); }
+@media (prefers-reduced-motion: no-preference) {
+  .card { animation:card-in 360ms var(--ease-brand) both; }
+  .card[data-side="challenger"] { animation-delay:60ms; }
+}
+@keyframes card-in { from { opacity:0; translate:0 8px; } to { opacity:1; translate:none; } }
+
+.identity { display:flex; align-items:center; gap:.875rem; min-width:0; }
+.names { min-width:0; }
+.name { margin:0; color:var(--text-strong); font-size:1.375rem; font-weight:800; line-height:1.2; letter-spacing:-.02em; overflow-wrap:anywhere; }
+.meta { display:flex; flex-wrap:wrap; gap:.125rem .625rem; margin:.25rem 0 0; color:var(--text-muted); font-size:var(--text-small); }
+.symbol { font-family:var(--font-mono); font-weight:600; color:var(--text-body); }
+
+.figure { display:flex; flex-direction:column; gap:.375rem; }
+.figureLabel { color:var(--text-muted); font-size:var(--text-tiny); font-weight:650; }
+.value { color:var(--text-strong); font-size:2.25rem; font-weight:800; line-height:1.05; letter-spacing:-.035em; white-space:nowrap; }
+.hiddenValue { color:var(--text-muted); }
+@media (prefers-reduced-motion: no-preference) {
+  .value:not(.hiddenValue) { animation:value-in 420ms var(--ease-brand) both; }
+}
+@keyframes value-in { from { opacity:0; translate:0 6px; } to { opacity:1; translate:none; } }
+/* Kulvar: 5 piksel şerit, iki kartta aynı ölçek (büyüğe göre). */
+.lane { position:relative; display:block; height:5px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
+.fill { position:absolute; inset-block:0; left:0; border-radius:999px; background:var(--primary-soft); transition:width 520ms var(--ease-brand); }
+
+.vs { align-self:center; display:grid; place-items:center; width:3rem; height:3rem; border-radius:999px; background:var(--surface-elevated); color:var(--text-strong); font-size:var(--text-small); font-weight:800; letter-spacing:.02em; transition:background-color 240ms var(--ease-brand), color 240ms var(--ease-brand); }
+.vs[data-phase="right"] { background:var(--up-wash); color:var(--up); }
+.vs[data-phase="wrong"] { background:var(--down-wash); color:var(--down); }
+
+/* ---- Soru ve sonuç: kartların altında tek yuva (gerekçe BiggerGame.tsx) ----
+   Yuvanın boyu iki hâlde aynı: soru + düğmeler ya da sonuç; cevaptan
+   sonra altındaki künye kaymaz. */
+.answerSlot { display:grid; width:100%; max-width:40rem; min-height:6.75rem; margin-inline:auto; }
+.choices { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; align-content:start; }
+.question { grid-column:1 / -1; margin:0 0 .25rem; color:var(--text-body); font-size:var(--text-small); line-height:1.5; text-align:center; }
+.choice { justify-content:center; gap:.4375rem; min-height:3rem; }
+.choiceAlt { border:1px solid var(--line); }
+.verdict { display:flex; flex-direction:column; justify-content:center; align-items:center; gap:.25rem; margin:0; padding:.75rem .875rem; text-align:center; border-radius:var(--radius-md); font-size:var(--text-read); font-weight:750; }
+.verdict[data-phase="right"] { background:var(--up-wash); color:var(--up); }
+.verdict[data-phase="wrong"] { background:var(--down-wash); color:var(--down); }
+.verdictNote { color:var(--text-body); font-size:var(--text-small); font-weight:500; }
+
+/* ---- Oyun bitti ---- */
+.overBody { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.75rem 1.25rem; padding:0 1rem 1rem; }
+@media (min-width: 640px) { .overBody { padding:0 1.25rem 1.125rem; } }
+.overText { margin:0; color:var(--text-body); font-size:var(--text-read); line-height:1.55; }
+.overActions { display:flex; flex-wrap:wrap; gap:.5rem; }
+
+/* ---- Telefon: kartlar YAN YANA, sıkışık (29 Ekim, 390'da ölçüldü) ----
+   Alt alta kartlarda düğmeler alt gezinmenin altında kalıyordu. Yan yana
+   iki dar kart: logo adın üstünde, değer bir kademe küçük; VS ince bir
+   halka olarak kartların arasında. */
+@media (max-width: 767.98px) {
+  .arena { grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); gap:.375rem; }
+  .vs { width:2rem; height:2rem; margin-inline:-.875rem; z-index:1; border:3px solid var(--page-bg); font-size:var(--text-tiny); }
+  .card { padding:.75rem; gap:.625rem; }
+  .identity { flex-direction:column; align-items:flex-start; gap:.5rem; }
+  .name { font-size:1rem; }
+  .meta { font-size:var(--text-tiny); }
+  .value { font-size:1.5rem; }
+  .scores { gap:.375rem; }
+  .score { padding:.5rem .625rem; }
+  .score dd { font-size:1.25rem; }
+  .level { font-size:var(--text-read) !important; padding-top:.125rem; }
+  .choice { min-height:3.25rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fill, .vs { transition:none; }
+}

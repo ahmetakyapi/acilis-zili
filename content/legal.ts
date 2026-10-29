@@ -87,6 +87,8 @@ Hukuki sebep: meşru menfaat (m. 5/2-f) — ürünün hangi bölümünün kullan
 | E-posta gönderim kaydı (hangi bildirim ya da şifre sıfırlama postasının ne zaman gittiği; adres ve içerik yazılmaz) | Aynı postayı iki kez göndermemek ve günlük gönderim sınırını korumak; 90 gün sonra silinir | Meşru menfaat (m. 5/2-f) |
 | Tema ve dil tercihi | Arayüzü hatırlamak | Meşru menfaat (m. 5/2-f) |
 | Seçtiğin profil ikonu | Hesabını arayüzde göstermek | Meşru menfaat (m. 5/2-f) |
+| Hisseyi Bil günlük oyun kaydın (o günün tahminleri, durumu, bulmacayı açtığın ve bitirdiğin an) — yalnızca giriş yapmışken günün bulmacasını oynarsan | Günün sıralamasında kaçıncı tahminde ve ne kadar sürede bildiğini göstermek | Meşru menfaat (m. 5/2-f) |
+| Sıralamadaki takma adın — yalnızca kendin seçersen | Seni günün sıralamasında bu adla göstermek; seçmezsen kimlikten türeyen anonim bir adla ("Oyuncu 3F2A") görünürsün, kullanıcı adın ve e-postan hiçbir zaman gösterilmez | Açık rıza (m. 5/1) — sıralamadaki "Takma Ad Seç" |
 | Profil tanıtımın ve görünürlük tercihlerin (profil açık mı; takip listelerin ve portföy dağılımın görünsün mü) — yalnızca profil ayarlarına dokunursan | Profilini \`/u/kullanıcı-adın\` adresinde senin seçtiğin kapsamla göstermek | Açık rıza (m. 5/1) — Ayarlar'daki "Profilim Herkese Açık" anahtarı |
 | Son giriş zamanı | Hesabın hâlâ kullanılıp kullanılmadığını görmek | Meşru menfaat (m. 5/2-f) |
 | Oturum çerezi | Girişi açık tutmak | Sözleşmenin ifası (m. 5/2-c) |
@@ -297,6 +299,8 @@ Legal basis: legitimate interest (Art. 5/2-f) — seeing which part of the produ
 | Email delivery log (which notification or password-reset email was sent when; no address or content is stored) | To never send the same email twice and to keep within the daily sending limit; deleted after 90 days | Legitimate interest (Art. 5/2-f) |
 | Theme and language preference | To remember the interface | Legitimate interest (Art. 5/2-f) |
 | The profile icon you picked | To show your account in the interface | Legitimate interest (Art. 5/2-f) |
+| Your Guess the Stock daily game record (that day's guesses, status, when you opened and finished the puzzle) — only if you play the daily puzzle while signed in | To show on the daily leaderboard which guess you solved it on and how long it took | Legitimate interest (Art. 5/2-f) |
+| Your leaderboard nickname — only if you pick one | To show you under that name on the daily leaderboard; without one you appear under an anonymous name derived from your id ("Player 3F2A"), and your username and email are never shown | Explicit consent (Art. 5/1) — "Pick a Nickname" on the leaderboard |
 | Your profile intro and visibility preferences (whether the profile is public; whether your watchlists and portfolio weights are shown) — only if you touch the profile settings | To show your profile at \`/u/your-username\` with the scope you chose | Explicit consent (Art. 5/1) — the "My Profile Is Public" switch in Settings |
 | Last sign-in time | To see whether the account is still in use | Legitimate interest (Art. 5/2-f) |
 | Session cookie | To keep you signed in | Performance of a contract (Art. 5/2-c) |

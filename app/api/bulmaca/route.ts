@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { getLocale } from "@/lib/i18n";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { readTextCapped } from "@/lib/read-body";
 import { dailySilhouette, evaluatePuzzle } from "@/lib/stock-puzzle-data";
+import { recordRun } from "@/lib/puzzle-board-data";
 import { MAX_GUESSES, isArchiveDay, isJoker, puzzleDayKey, type PuzzleState } from "@/lib/stock-puzzle";
 import { isValidSymbol } from "@/lib/utils";
 
@@ -72,6 +74,14 @@ export async function POST(request: Request) {
   const locale = await getLocale();
   const result = await evaluatePuzzle(day, guesses, locale);
   if (!result.ok) return fail(result.error, result.error === "unavailable" ? 503 : 400);
+  /* GÜNÜN SIRALAMASI (29 Ekim): giriş yapmış okurun BUGÜNKÜ oyunu sırayla
+     kayda geçer (`recordRun` → `advanceRun`; toplu liste işaretlenir).
+     Kayıt düşerse oyun etkilenmez. Arşiv günlerinin sıralaması yok. */
+  if (day === today) {
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (userId) await recordRun(userId, day, result.state.guesses.map((row) => row.symbol), result.state.status);
+  }
   return NextResponse.json({ ok: true, state: result.state } satisfies PuzzleResponse, {
     headers: { "Cache-Control": "no-store" },
   });

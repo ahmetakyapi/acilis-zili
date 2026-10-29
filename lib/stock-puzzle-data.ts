@@ -343,10 +343,16 @@ function factsFor(
   };
 }
 
+/** Endüstrinin ekrandaki adı — ipucu ve aday süzgeci aynı adı görsün. */
+function industryLabel(industry: string | null, locale: Locale): string | null {
+  if (!industry) return null;
+  return locale === "tr" ? SUB_INDUSTRIES[industry]?.tr ?? industry : industry;
+}
+
 /** Sektör ve endüstri ipucu ekrana dilin adıyla iner. */
 function localizeClue(clue: Clue, locale: Locale): Clue {
   if (clue.kind === "sector") return { ...clue, sector: sectorLabel(clue.sector, locale) ?? clue.sector, gics: clue.sector };
-  if (clue.kind === "industry" && locale === "tr") return { ...clue, industry: SUB_INDUSTRIES[clue.industry]?.tr ?? clue.industry };
+  if (clue.kind === "industry") return { ...clue, industry: industryLabel(clue.industry, locale) ?? clue.industry };
   return clue;
 }
 
@@ -365,6 +371,11 @@ function poolOptions(pool: readonly PoolEntry[], locale: Locale): PoolOption[] {
       haystack: [entry.symbol, entry.name, entry.legalName, ...(aliases.get(entry.symbol) ?? [])]
         .map((part) => foldForSearch(part, locale))
         .join(" "),
+      /* Aday süzgecinin girdisi (`fitsClues`): her şirketin kendi kamuya
+         açık değeri, ipucuyla aynı biçimde (endüstri dilin adıyla). */
+      sector: entry.sector,
+      marketCap: entry.marketCap,
+      industry: industryLabel(indexMemberOf(entry.symbol)?.sub ?? null, locale),
     }));
 }
 
@@ -451,4 +462,23 @@ export async function evaluatePuzzle(day: string, guesses: readonly string[], lo
   }
 
   return { ok: true, state, options: poolOptions(pool, locale) };
+}
+
+/**
+ * "Hangisi Büyük?" — ikinci oyunun havuzu (29 Ekim; oyun
+ * `components/puzzle/BiggerGame.tsx`, kuralları `lib/bigger-game.ts`).
+ * Hisseyi Bil'in havuzuyla AYNI 200 şirket ve aynı piyasa değeri hesabı
+ * (`loadPool` → `getCompanies`). Bu oyunda gizli bir cevap yok: değerler
+ * herkese açık ölçüler, sayfayla birlikte iner; skor yalnız tarayıcıda.
+ * Havuz okunamazsa boş liste — sayfa boş durum basar, uydurmaz.
+ */
+export type BiggerEntry = { symbol: string; name: string; logoUrl: string | null; sector: string | null; marketCap: number };
+
+export async function biggerPool(locale: Locale): Promise<BiggerEntry[]> {
+  const pool = await loadPool().catch(() => []);
+  return pool.flatMap((entry) =>
+    entry.marketCap && entry.marketCap > 0
+      ? [{ symbol: entry.symbol, name: entry.name, logoUrl: entry.logoUrl, sector: sectorLabel(entry.sector, locale), marketCap: entry.marketCap }]
+      : [],
+  );
 }

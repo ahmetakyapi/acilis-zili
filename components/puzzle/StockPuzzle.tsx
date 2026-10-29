@@ -6,12 +6,14 @@ import { Cards, LockSimple } from "@phosphor-icons/react/dist/ssr";
 import { Button, Panel, PanelHeader } from "@/components/ui/primitives";
 import { playBellSound, primeBellSound } from "@/components/sound/bell-sound";
 import { BELL_RANG_EVENT } from "@/components/today/bell-event";
+import { PUZZLE_UPDATE_EVENT } from "./puzzle-event";
 import type { Locale } from "@/lib/i18n/config";
 import type { StockPuzzleLabels } from "@/lib/i18n/dictionaries/stock-puzzle";
 import type { PuzzleResponse } from "@/app/api/bulmaca/route";
 import {
   AXIS_AFTER_MISSES,
   JOKER,
+  candidatesFor,
   currentStreak,
   MAX_GUESSES,
   dayNumberOf,
@@ -186,12 +188,15 @@ export function StockPuzzle({ initial, options, labels, locale, shareUrl, archiv
   const restoring = hydrated && !restoreDone && needsRestore && state.guesses.length === initial.guesses.length;
   const finished = state.status !== "playing";
   const guessed = useMemo(() => new Set(state.guesses.map((row) => row.symbol)), [state.guesses]);
+  /* İpuçlarına uyan adaylar — yalnız ekranda açık bilgiden (`fitsClues`). */
+  const candidates = useMemo(() => candidatesFor(options, state.clues, state.guesses), [options, state.clues, state.guesses]);
 
   /* Sunucunun döndürdüğü yeni durumu çizer ve ekran okuyucuya ne
      değiştiğini söyler (tahminin sonucu, açılan ipucu). */
   const apply = (next: PuzzleState, previous: PuzzleState) => {
     setState(next);
     persist(next, archive);
+    window.dispatchEvent(new CustomEvent(PUZZLE_UPDATE_EVENT));
     if (next.status === "won" && previous.status === "playing") {
       setRang(true);
       window.dispatchEvent(new CustomEvent(BELL_RANG_EVENT));
@@ -449,6 +454,7 @@ export function StockPuzzle({ initial, options, labels, locale, shareUrl, archiv
               <div className={styles.box} data-tahta="giris">
                 <GuessBox
                   options={options}
+                  candidates={candidates}
                   guessed={guessed}
                   labels={labels}
                   locale={locale}

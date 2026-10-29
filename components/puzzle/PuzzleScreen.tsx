@@ -1,15 +1,16 @@
 import { cookies } from "next/headers";
-import { ArrowLeft, CalendarDots, Cards, CaretDown, ChartBar, ChartLineUp, Database, Keyboard, LockSimpleOpen, Swatches } from "@phosphor-icons/react/dist/ssr";
+import { Cards, CaretDown, ChartBar, ChartLineUp, Database, Keyboard, LockSimpleOpen, Swatches } from "@phosphor-icons/react/dist/ssr";
 import { PageShare } from "@/components/article/PageShare";
 import { GuideHint } from "@/components/article/GuideHint";
-import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { EmptyState, PageHeader, Panel } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
 import { absoluteUrl } from "@/lib/site";
-import { ARCHIVE_COOKIE, PROGRESS_COOKIE, PUZZLE_ZONE, firstSentence, parseProgressCookie, puzzleNumber } from "@/lib/stock-puzzle";
+import { ARCHIVE_COOKIE, PROGRESS_COOKIE, PUZZLE_ZONE, firstSentence, neighborHrefs, parseProgressCookie, puzzleDayKey, puzzleNumber } from "@/lib/stock-puzzle";
 import { evaluatePuzzle } from "@/lib/stock-puzzle-data";
+import { GameNav } from "./GameNav";
+import { PuzzleLeaderboard } from "./PuzzleLeaderboard";
 import { StockPuzzle } from "./StockPuzzle";
 import styles from "./PuzzleScreen.module.css";
 
@@ -28,8 +29,9 @@ import styles from "./PuzzleScreen.module.css";
  * İNCE BAŞLIK (25 Ekim, tek ekranlık tahta): başlık kapağı 1280×800'de
  * görünür alanın 260 pikselini alıyordu (69-330) ve oyun ilk ekranın
  * altında başlıyordu. Şimdi çerçevesiz `PageHeader` (embedded), başlık
- * 30 piksel; numara ve tarih, arşiv bağlantısı ve paylaş başlık
- * satırının sağında. Üst künye yok (CLAUDE.md, `PageHeader`).
+ * 30 piksel, sağda paylaş. Üst künye yok (CLAUDE.md, `PageHeader`).
+ * 29 Ekim'den beri numara, tarih ve arşiv bağlantısı başlığın ALTINDAKİ
+ * oyun şeridinde (`GameNav`): oyun sekmeleri ve önceki/sonraki bulmaca.
  *
  * MOBİL TURU (25 Ekim, sahibinin iPhone ekranları): telefonda başlık
  * bandı üç satırdı (başlık; iki satır açıklama; numara ve tarih). Şimdi
@@ -56,6 +58,7 @@ export async function PuzzleScreen({ day, archive }: { day: string; archive: boo
     timeZone: PUZZLE_ZONE,
   }).format(new Date(`${day}T12:00:00Z`));
   const path = archive ? `/bulmaca/${day}` : "/bulmaca";
+  const neighbors = neighborHrefs(day, puzzleDayKey());
   const title = archive ? `${L.title} #${number}` : L.title;
 
   const shortDate = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "tr-TR", {
@@ -63,20 +66,6 @@ export async function PuzzleScreen({ day, archive }: { day: string; archive: boo
     month: "short",
     timeZone: PUZZLE_ZONE,
   }).format(new Date(`${day}T12:00:00Z`));
-  /* Telefonda kısa künye ("#2 · 25 Eki"): başlıkla aynı satıra sığsın.
-     Tam hâli ekran okuyucuda; geniş ekranda tam hâli görünür. */
-  const stamp = (
-    <>
-      <span className="numeral font-semibold text-strong">
-        <span className={styles.wide}>{L.number.replace("{n}", String(number))}</span>
-        <span aria-hidden className={styles.narrow}>#{number}</span>
-      </span>
-      <time dateTime={day}>
-        <span className={styles.wide}>{dateLabel}</span>
-        <span aria-hidden className={styles.narrow}>{shortDate}</span>
-      </time>
-    </>
-  );
   /* Açıklama iki cümle; telefonda yalnız ilki (tek satır). İkincisi
      "Nasıl Oynanır"ın ilk maddesiyle aynı bilgi. */
   const subtitle = archive ? L.archiveDayNote : L.subtitle;
@@ -102,29 +91,17 @@ export async function PuzzleScreen({ day, archive }: { day: string; archive: boo
         embedded
         className={styles.head}
         title={title}
-        share={
-          <div className={styles.tools}>
-            <p className={styles.stamp}>{stamp}</p>
-            <nav className={styles.links} aria-label={L.archiveLink}>
-              {archive && (
-                <Link href="/bulmaca" className={styles.link}>
-                  <ArrowLeft aria-hidden size={14} weight="bold" />
-                  <span className={styles.linkText}>{L.backToToday}</span>
-                </Link>
-              )}
-              <Link href="/bulmaca/arsiv" className={styles.link}>
-                <CalendarDots aria-hidden size={14} weight="bold" />
-                <span className={styles.linkText}>{L.archiveLink}</span>
-              </Link>
-            </nav>
-            <PageShare compactOnMobile align="right" path={path} title={title} locale={locale} t={t} />
-          </div>
-        }
+        share={<PageShare compactOnMobile align="right" path={path} title={title} locale={locale} t={t} />}
       />
       <p className={styles.subtitle}>
         {subtitleLead}
         {subtitleRest && <span className={styles.subRest}> {subtitleRest}</span>}
       </p>
+      <GameNav
+        active="stock"
+        labels={L}
+        day={{ number, dateLabel: shortDate, dateLong: dateLabel, prevHref: neighbors.prev, nextHref: neighbors.next }}
+      />
 
       {result.ok ? (
         <StockPuzzle
@@ -139,6 +116,10 @@ export async function PuzzleScreen({ day, archive }: { day: string; archive: boo
       ) : (
         <EmptyState title={L.unavailableTitle} hint={L.unavailable} />
       )}
+
+      {/* GÜNÜN SIRALAMASI (29 Ekim) — yalnız günün bulmacasında; arşiv
+          günlerinin sıralaması yok. Gerekçe `PuzzleLeaderboard.tsx`. */}
+      {!archive && result.ok && <PuzzleLeaderboard labels={L} />}
 
       {/* KATLI (25 Ekim, mobil turu): yedi kural telefonda 330 piksellik
           bir liste olarak tahtanın altını dolduruyordu; oynarken bakılmayan

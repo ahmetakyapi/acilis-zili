@@ -24,7 +24,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import type { CSSProperties, ReactNode } from "react";
 import { cn, formatPercent, formatPercentPlain } from "@/lib/utils";
-import { CAP_BANDS, CLUE_STEPS, IPO_YEAR_FLOOR, stepOf, type Clue, type ClueKind, type GuessRow, type PuzzleStatus } from "@/lib/stock-puzzle";
+import { CAP_BANDS, CLUE_STEPS, IPO_YEAR_FLOOR, missesToOpen, stepOf, type Clue, type ClueKind, type GuessRow, type PuzzleStatus } from "@/lib/stock-puzzle";
 import type { Locale } from "@/lib/i18n/config";
 import type { StockPuzzleLabels } from "@/lib/i18n/dictionaries/stock-puzzle";
 import { clueValue, fill } from "./puzzle-format";
@@ -166,8 +166,10 @@ export function ClueBoard({
         );
       })}
       {locked.map((kind) => {
-        const step = stepOf(kind);
-        const next = status === "playing" && step === misses + 1;
+        /* Kaçıncı yanlışta açıldığı `START_STEPS`ten (29 Ekim: başta iki
+           basamak açık); sıradaki basamak bir sonraki yanlışta. */
+        const opensAt = missesToOpen(kind);
+        const next = status === "playing" && opensAt === misses + 1;
         return (
           <li key={kind} className={cn(styles.tile, styles.locked, next && styles.next)} style={place(kind)} data-tahta="ipucu">
             <span className={styles.head}>
@@ -176,7 +178,7 @@ export function ClueBoard({
               </span>
               <span className={styles.label}>{labels.clue[kind]}</span>
             </span>
-            <span className={styles.lockLine}>{fill(labels.lockedAt, { n: step })}</span>
+            <span className={styles.lockLine}>{fill(labels.lockedAt, { n: opensAt })}</span>
           </li>
         );
       })}

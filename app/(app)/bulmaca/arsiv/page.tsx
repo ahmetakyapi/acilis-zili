@@ -2,6 +2,7 @@ import { MotionExperience } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
+import { GameNav } from "@/components/puzzle/GameNav";
 import { PuzzleArchive, type ArchiveItem } from "@/components/puzzle/PuzzleArchive";
 import { EmptyState, PageHeader } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
@@ -53,6 +54,7 @@ export default async function PuzzleArchivePage() {
     <MotionExperience className={polish.page}>
       <BreadcrumbJsonLd locale={locale} items={[{ name: L.title, path: "/bulmaca" }, { name: L.archiveLink, path: "/bulmaca/arsiv" }]} />
       <PageHeader title={L.archiveTitle} subtitle={L.archiveSubtitle} />
+      <GameNav active="archive" labels={L} />
       <PuzzleArchive items={items} labels={L} />
       {items.length === 1 && (
         <EmptyState compact title={L.archiveLink} hint={L.archiveEmpty} action={<Link href="/bulmaca" className="font-semibold text-primary-ink">{L.backToToday}</Link>} />

@@ -43,6 +43,9 @@ import {
   silhouetteOf,
   statusOf,
   visibleClues,
+  missesToOpen,
+  candidatesFor,
+  type PoolOption,
   type CompanyBrief,
   type PuzzleFacts,
 } from "../lib/stock-puzzle";
@@ -86,11 +89,15 @@ test("first letter and rounded growth", () => {
   assert.deepEqual(clues.find((clue) => clue.kind === "revenueGrowth"), { kind: "revenueGrowth", pct: 62.5 });
 });
 
-test("one step at start, one more per miss or joker, all when finished", () => {
+test("two steps at start, one more per miss or joker, all when finished", () => {
   const clues = cluesFor(facts);
-  assert.deepEqual(visibleClues(clues, 0, false).map((clue) => clue.kind), ["silhouette"]);
-  assert.deepEqual(visibleClues(clues, 1, false).map((clue) => clue.kind), ["silhouette", "sector", "dividend"]);
-  assert.equal(visibleClues(clues, 3, false).length, 7);
+  assert.deepEqual(visibleClues(clues, 0, false).map((clue) => clue.kind), ["silhouette", "sector", "dividend"]);
+  assert.deepEqual(visibleClues(clues, 1, false).map((clue) => clue.kind), ["silhouette", "sector", "dividend", "capBand", "beta"]);
+  assert.equal(visibleClues(clues, 2, false).length, 7);
+  /* Dört yanlıştan sonra hepsi açık, iki hak kalıyor. */
+  assert.equal(visibleClues(clues, 4, false).length, clues.length);
+  assert.equal(missesToOpen("sector"), 0);
+  assert.equal(missesToOpen("initial"), 4);
   assert.equal(visibleClues(clues, 9, false).length, clues.length);
   assert.equal(visibleClues(clues, 0, true).length, clues.length);
 });
@@ -381,4 +388,51 @@ test("stored values survive garbage", () => {
 test("first sentence keeps decimals intact", () => {
   assert.equal(firstSentence("Nvidia yonga tasarlar. Merkezi Kaliforniya'da."), "Nvidia yonga tasarlar.");
   assert.equal(firstSentence("Pay 1.5 kat büyüdü. İkinci."), "Pay 1.5 kat büyüdü.");
+});
+
+/* ADAY SÜZGECİ (29 Ekim): yalnız açılmış ipuçları ve karolar daraltır;
+   verisi olmayan şirket elenmez. */
+const opt = (symbol: string, sector: string | null, marketCap: number | null, name = symbol, industry: string | null = null): PoolOption => ({
+  symbol,
+  name,
+  logoUrl: null,
+  haystack: symbol.toLowerCase(),
+  sector,
+  marketCap,
+  industry,
+});
+
+test("candidates follow the opened clues", () => {
+  const pool = [
+    opt("NVDA", "Information Technology", 4.5e12, "Nvidia", "Semiconductors"),
+    opt("AMD", "Information Technology", 3e11, "AMD", "Semiconductors"),
+    opt("MSFT", "Information Technology", 3.8e12, "Microsoft", "Systems Software"),
+    opt("KO", "Consumer Staples", 3e11, "Coca-Cola"),
+    opt("XYZ", null, null, "Unknown"),
+  ];
+  const sector = { kind: "sector", sector: "Bilgi Teknolojileri", gics: "Information Technology" } as const;
+  assert.deepEqual(candidatesFor(pool, [sector], []).map((o) => o.symbol), ["NVDA", "MSFT", "AMD", "XYZ"]);
+  const band = { kind: "capBand", band: 6 } as const;
+  assert.deepEqual(candidatesFor(pool, [sector, band], []).map((o) => o.symbol), ["NVDA", "MSFT", "XYZ"]);
+  const industry = { kind: "industry", industry: "Semiconductors" } as const;
+  assert.deepEqual(candidatesFor(pool, [sector, band, industry], []).map((o) => o.symbol), ["NVDA", "XYZ"]);
+  assert.deepEqual(candidatesFor(pool, [{ kind: "initial", letter: "M" }], []).map((o) => o.symbol), ["MSFT"]);
+  assert.deepEqual(candidatesFor(pool, [{ kind: "letters", shape: "••" }], []).map((o) => o.symbol), ["KO"]);
+});
+
+test("wrong guesses narrow by their tiles, never by hidden values", () => {
+  const pool = [
+    opt("NVDA", "Information Technology", 4.5e12),
+    opt("AMD", "Information Technology", 3e11),
+    opt("MSFT", "Information Technology", 3.8e12),
+    opt("KO", "Consumer Staples", 3e11),
+  ];
+  const answer = brief({ symbol: "NVDA", sector: "Information Technology", marketCap: 4.5e12 });
+  const ko = compareGuess(brief({ symbol: "KO", sector: "Consumer Staples", marketCap: 3e11 }), answer);
+  /* KO yanlış: sektörü uzak, cevap daha büyük → KO'nun sektörü ve küçükler elenir. */
+  assert.deepEqual(candidatesFor(pool, [], [ko]).map((o) => o.symbol), ["NVDA", "MSFT"]);
+  const amd = compareGuess(brief({ symbol: "AMD", sector: "Information Technology", marketCap: 3e11 }), answer);
+  /* AMD'nin sektörü tutuyor: başka sektör elenir; denenmiş sembol de. */
+  assert.deepEqual(candidatesFor(pool, [], [amd]).map((o) => o.symbol), ["NVDA", "MSFT"]);
+  assert.ok(candidatesFor(pool, [], [ko, amd]).some((o) => o.symbol === "NVDA"));
 });

@@ -295,6 +295,13 @@
       "when": 1792934962170,
       "tag": "0041_risk_desk",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1793258051949,
+      "tag": "0042_puzzle_leaderboard",
+      "breakpoints": true
     }
   ]
 }

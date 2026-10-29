@@ -77,6 +77,21 @@ export function stepOf(kind: ClueKind): number {
   return CLUE_STEPS.findIndex((step) => (step as readonly ClueKind[]).includes(kind));
 }
 
+/**
+ * BAŞTA İKİ BASAMAK AÇIK (29 Ekim, sahibinin isteği: "biraz daha fazla
+ * ipucu verelim, kolaylaştıralım"). İlk sürümde oyun yalnız siluetle
+ * başlıyordu; ilk tahmin çoğu zaman kör bir atıştı ve sahibinin 25-29
+ * Ekim arşivinde beş bulmacanın üçü "Bilinemedi". Şimdi siluetin yanında
+ * sektör ve temettü baştan açık; her yanlış yine bir basamak açar, dört
+ * yanlıştan sonra bütün ipuçları ortada ve iki hak kalıyor.
+ */
+export const START_STEPS = 2;
+
+/** İpucunun açılması için gereken yanlış sayısı (0: baştan açık). */
+export function missesToOpen(kind: ClueKind): number {
+  return Math.max(0, stepOf(kind) - (START_STEPS - 1));
+}
+
 export type Clue =
   | { kind: "silhouette"; points: number[] }
   /** GICS ana sektörü, İngilizce anahtar — ekranda `sectorLabel` ile.
@@ -203,14 +218,14 @@ export function cluesFor(facts: PuzzleFacts): Clue[] {
 }
 
 /**
- * Görünen ipuçları: açık basamaklardakiler. Başta bir basamak (siluet),
- * her yanlış tahmin ve her joker bir fazlası (`opened` = 1 + ıska).
+ * Görünen ipuçları: açık basamaklardakiler. Başta `START_STEPS` basamak
+ * (siluet; sektör ve temettü), her yanlış tahmin ve her joker bir fazlası.
  * Bitmiş bulmacada hepsi açılır (sonuç kartı ne bilinmesi gerektiğini
  * gösterir).
  */
 export function visibleClues(clues: readonly Clue[], misses: number, finished: boolean): Clue[] {
   if (finished) return [...clues];
-  const opened = 1 + Math.max(0, misses);
+  const opened = START_STEPS + Math.max(0, misses);
   return clues.filter((clue) => stepOf(clue.kind) < opened);
 }
 
@@ -507,8 +522,9 @@ export function statusOf(feedback: readonly Pick<GuessFeedback, "correct">[]): P
  */
 export type SilhouetteRange = { low: number; high: number; last: number; from: string; to: string };
 
-/** Kaçıncı yanlış tahminden sonra siluetin yüzde ekseni açılır. */
-export const AXIS_AFTER_MISSES = 3;
+/** Kaçıncı yanlış tahminden sonra siluetin yüzde ekseni açılır (29 Ekim:
+    3'ten 2'ye, kolaylaştırma turu — `START_STEPS`). */
+export const AXIS_AFTER_MISSES = 2;
 
 /**
  * Oyun ilerledikçe siluet bilgi açar (25 Ekim). Başta eksensiz şekil; üç
@@ -677,7 +693,88 @@ export type PoolOption = {
   logoUrl: string | null;
   /** Katlanmış arama metni: sembol, iki ad, takma adlar (`foldForSearch`). */
   haystack: string;
+  /* ADAY SÜZGECİNİN GİRDİSİ (29 Ekim) — havuzdaki HER şirketin kamuya açık
+     değerleri, cevabınki değil; cevap bunlardan çıkarılamaz, yalnız açılmış
+     ipuçlarıyla birlikte daraltır (`fitsClues`). */
+  /** GICS sektörü, İngilizce anahtar (ipucunun `gics` alanıyla aynı). */
+  sector?: string | null;
+  marketCap?: number | null;
+  /** GICS alt sektörü, ekrandaki dilin adıyla (ipucunun `industry`siyle aynı). */
+  industry?: string | null;
 };
+
+/**
+ * İPUÇLARINA UYAN ADAYLAR (29 Ekim, kolaylaştırma turu). Okur her
+ * tahminden sonra 200 şirketlik havuzu kafasında süzüyordu; tahmin kutusu
+ * artık açılmış ipuçlarıyla ve yanlış tahminlerin karolarıyla ÇELİŞMEYEN
+ * şirketleri öne alıyor ve kaç tane kaldığını söylüyor. Yalnız ekranda
+ * zaten açık bilgi kullanılır: sektör, piyasa değeri bandı, endüstri,
+ * harf kalıbı, baş harf; yanlış tahminin sektör ve piyasa değeri karosu
+ * (tutuyor / yakın / uzak, yön). Bir şirketin verisi yoksa o ölçüde
+ * elenmez — bilinmeyen "uymuyor" sayılmaz.
+ */
+export function fitsClues(
+  option: PoolOption,
+  clues: readonly Clue[],
+  guesses: readonly Pick<GuessFeedback, "symbol" | "correct" | "tiles" | "values">[],
+  bySymbol: ReadonlyMap<string, PoolOption>,
+): boolean {
+  for (const clue of clues) {
+    switch (clue.kind) {
+      case "sector":
+        if (clue.gics && option.sector && option.sector !== clue.gics) return false;
+        break;
+      case "capBand":
+        if (option.marketCap && option.marketCap > 0 && capBandOf(option.marketCap) !== clue.band) return false;
+        break;
+      case "industry":
+        if (option.industry && option.industry !== clue.industry) return false;
+        break;
+      case "letters":
+        if (symbolShape(option.symbol) !== clue.shape) return false;
+        break;
+      case "initial": {
+        const letter = initialOf(option.name);
+        if (letter && letter !== clue.letter) return false;
+        break;
+      }
+    }
+  }
+  for (const row of guesses) {
+    if (isJoker(row.symbol) || row.correct) continue;
+    if (row.symbol === option.symbol) return false;
+    const guessSector = bySymbol.get(row.symbol)?.sector;
+    const sector = row.tiles.sector;
+    if (sector && guessSector && option.sector) {
+      if (sector.grade === "match" && option.sector !== guessSector) return false;
+      if (sector.grade === "far" && option.sector === guessSector) return false;
+    }
+    const cap = row.tiles.cap;
+    const guessCap = row.values.marketCap;
+    const optionCap = option.marketCap;
+    if (cap && guessCap && guessCap > 0 && optionCap && optionCap > 0) {
+      if (cap.toward === "up" && !(optionCap > guessCap)) return false;
+      if (cap.toward === "down" && !(optionCap < guessCap)) return false;
+      const gap = Math.abs(capBandOf(optionCap) - capBandOf(guessCap));
+      if (cap.grade === "match" && gap !== 0) return false;
+      if (cap.grade === "near" && gap !== 1) return false;
+      if (cap.grade === "far" && gap < 2) return false;
+    }
+  }
+  return true;
+}
+
+/** Uyan adaylar, piyasa değerine göre büyükten küçüğe (bilinen isim önce). */
+export function candidatesFor(
+  options: readonly PoolOption[],
+  clues: readonly Clue[],
+  guesses: readonly Pick<GuessFeedback, "symbol" | "correct" | "tiles" | "values">[],
+): PoolOption[] {
+  const bySymbol = new Map(options.map((option) => [option.symbol, option]));
+  return options
+    .filter((option) => fitsClues(option, clues, guesses, bySymbol))
+    .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0) || a.symbol.localeCompare(b.symbol));
+}
 
 /** Ekrana inen tahmin satırı. */
 export type GuessRow = GuessFeedback & { name: string; logoUrl: string | null };
@@ -742,6 +839,25 @@ export function isDayKey(value: string): boolean {
  */
 export function isArchiveDay(day: string, today: string): boolean {
   return isDayKey(day) && day >= PUZZLE_EPOCH && day < today;
+}
+
+/** Gün anahtarını `n` gün kaydırır ("2026-10-29", -1 → "2026-10-28"). */
+export function shiftDay(day: string, n: number): string {
+  return new Date((dayNumberOf(day) + n) * DAY_MS).toISOString().slice(0, 10);
+}
+
+/**
+ * Önceki ve sonraki bulmacanın adresi (29 Ekim, oyun şeridinin okları —
+ * `components/puzzle/GameNav.tsx`). İlk bulmacadan önce yok; bugünden sonra
+ * yok (yarın açılmaz); bugünün bulmacası `/bulmaca`.
+ */
+export function neighborHrefs(day: string, today: string): { prev: string | null; next: string | null } {
+  const prev = shiftDay(day, -1);
+  const next = shiftDay(day, 1);
+  return {
+    prev: prev >= PUZZLE_EPOCH && prev < today ? `/bulmaca/${prev}` : null,
+    next: day >= today ? null : next === today ? "/bulmaca" : `/bulmaca/${next}`,
+  };
 }
 
 /** Arşivin günleri, yeniden eskiye; en çok `limit` gün. */

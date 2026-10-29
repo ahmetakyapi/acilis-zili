@@ -1,13 +1,16 @@
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Button, LogoTile } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 import { foldForSearch } from "@/lib/search-fold";
 import type { PoolOption } from "@/lib/stock-puzzle";
 import type { Locale } from "@/lib/i18n/config";
 import type { StockPuzzleLabels } from "@/lib/i18n/dictionaries/stock-puzzle";
+import { fill } from "./puzzle-format";
 import styles from "./GuessBox.module.css";
 
-const MAX_OPTIONS = 8;
+/* 8 → 12 (29 Ekim, sahibinin isteği: "orada çıkan şirketlerin sayısı
+   artsın"). Liste 22rem'de kayıyor; 12 satır 44 pikselle ~530 piksel. */
+const MAX_OPTIONS = 12;
 
 /**
  * Tahmin kutusu — ⌘K paletinin arama kuralı (Türkçe katlama
@@ -17,9 +20,20 @@ const MAX_OPTIONS = 8;
  * Et" ya da ikinci Enter gönderir; yanlışlıkla bir hak yanmasın.
  * Joker düğmesi aynı satırda (`extra`): tek ekranlık tahtada ayrı bir
  * satır ve açıklama paragrafı 70 piksel yiyordu (25 Ekim).
+ *
+ * ADAYLAR (29 Ekim, kolaylaştırma turu): kutu boşken odaklanınca liste
+ * açılmış ipuçlarına UYAN şirketleri gösterir (`candidatesFor`, büyükten
+ * küçüğe); yazarken uyanlar önce gelir, uymayanlar soluk ve "Uymuyor"
+ * künyeli ama seçilebilir — süzgeç bir yardım, yasak değil. Kutunun altında
+ * kaç adayın kaldığı yazar.
+ *
+ * KENDİLİĞİNDEN ODAK (29 Ekim, sahibinin isteği): ince imleçli ekranda kutu
+ * açılınca odaklanır, okur doğrudan yazar. Dokunmatikte ODAKLANMAZ: klavye
+ * açılıp siluetin üstünü kapatırdı.
  */
 export function GuessBox({
   options,
+  candidates,
   guessed,
   labels,
   locale,
@@ -29,6 +43,8 @@ export function GuessBox({
   extra,
 }: {
   options: PoolOption[];
+  /** Açılmış ipuçlarına uyan adaylar, sırasıyla (`candidatesFor`). */
+  candidates: PoolOption[];
   guessed: ReadonlySet<string>;
   labels: StockPuzzleLabels;
   locale: Locale;
@@ -45,9 +61,11 @@ export function GuessBox({
   const [hint, setHint] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const fits = useMemo(() => new Set(candidates.map((option) => option.symbol)), [candidates]);
   const matches = useMemo(() => {
     const needle = foldForSearch(query, locale);
-    if (!needle || picked) return [];
+    if (picked) return [];
+    if (!needle) return candidates.filter((option) => !guessed.has(option.symbol)).slice(0, MAX_OPTIONS);
     const scored: { option: PoolOption; score: number }[] = [];
     for (const option of options) {
       if (guessed.has(option.symbol)) continue;
@@ -61,11 +79,14 @@ export function GuessBox({
                 : -1;
       if (score >= 0) scored.push({ option, score });
     }
+    /* Uyan aday önce, sonra eşleşmenin gücü: "ap" yazana AAPL ile APD'den
+       ipuçlarına uyanı üstte. */
+    const fit = (option: PoolOption) => (fits.has(option.symbol) ? 0 : 1);
     return scored
-      .sort((a, b) => a.score - b.score || a.option.symbol.localeCompare(b.option.symbol))
+      .sort((a, b) => fit(a.option) - fit(b.option) || a.score - b.score || a.option.symbol.localeCompare(b.option.symbol))
       .slice(0, MAX_OPTIONS)
       .map((item) => item.option);
-  }, [query, options, guessed, locale, picked]);
+  }, [query, options, candidates, fits, guessed, locale, picked]);
 
   const choose = (option: PoolOption) => {
     setPicked(option);
@@ -99,6 +120,26 @@ export function GuessBox({
     });
   };
 
+  /* Kendiliğinden odak: kutu ilk kez açıldığında (hidratasyon ve geri
+     yükleme bitince `disabled` düşer), yalnız ince imleçte, sayfayı
+     kaydırmadan. Okur başka bir yere odaklandıysa dokunulmaz. */
+  const autoFocused = useRef(false);
+  const silentFocus = useRef(false);
+  useEffect(() => {
+    if (disabled || autoFocused.current) return;
+    autoFocused.current = true;
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    if (document.activeElement && document.activeElement !== document.body) return;
+    /* Liste AÇILMAZ: kendiliğinden odak yalnız imleci koyar; aday listesi
+       tahmin yuvalarının üstünü kapatıyordu (1440'ta ölçüldü). Liste okur
+       yazınca, tıklayınca ya da ↓ ile açılır. */
+    silentFocus.current = true;
+    inputRef.current?.focus({ preventScroll: true });
+    silentFocus.current = false;
+  }, [disabled]);
+
+  const browsing = !foldForSearch(query, locale) && !picked;
+  const remaining = candidates.filter((option) => !guessed.has(option.symbol)).length;
   const listOpen = open && matches.length > 0;
   const activeId = listOpen ? `bulmaca-secenek-${matches[Math.min(active, matches.length - 1)]?.symbol}` : undefined;
 
@@ -135,7 +176,10 @@ export function GuessBox({
             setActive(0);
             setHint(null);
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            if (!silentFocus.current) setOpen(true);
+          }}
+          onClick={() => setOpen(true)}
           onBlur={() => setOpen(false)}
           onKeyDown={(event) => {
             if (event.key === "ArrowDown" && matches.length > 0) {
@@ -154,24 +198,36 @@ export function GuessBox({
             }
           }}
         />
-        <ul id="bulmaca-secenekler" role="listbox" aria-label={labels.inputLabel} hidden={!listOpen} className={styles.listbox}>
-          {matches.map((option, index) => (
-            <li
-              key={option.symbol}
-              id={`bulmaca-secenek-${option.symbol}`}
-              role="option"
-              aria-selected={index === active}
-              className={cn(styles.option, index === active && styles.optionActive)}
-              onMouseDown={(event) => event.preventDefault()}
-              onMouseEnter={() => setActive(index)}
-              onClick={() => choose(option)}
-            >
-              <LogoTile symbol={option.symbol} logoUrl={option.logoUrl} size="sm" />
-              <span className={styles.optionSymbol}>{option.symbol}</span>
-              <span className={styles.optionName}>{option.name}</span>
-            </li>
-          ))}
-        </ul>
+        <div className={styles.popup} hidden={!listOpen}>
+          {browsing && (
+            <p className={styles.popupHead} aria-hidden>
+              {fill(labels.candidatesHead, { n: remaining })}
+            </p>
+          )}
+          <ul id="bulmaca-secenekler" role="listbox" aria-label={browsing ? fill(labels.candidatesHead, { n: remaining }) : labels.inputLabel} className={styles.listbox}>
+            {matches.map((option, index) => {
+              const fit = fits.has(option.symbol);
+              return (
+                <li
+                  key={option.symbol}
+                  id={`bulmaca-secenek-${option.symbol}`}
+                  role="option"
+                  aria-selected={index === active}
+                  className={cn(styles.option, index === active && styles.optionActive)}
+                  data-fit={fit ? undefined : "no"}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onMouseEnter={() => setActive(index)}
+                  onClick={() => choose(option)}
+                >
+                  <LogoTile symbol={option.symbol} logoUrl={option.logoUrl} size="sm" />
+                  <span className={styles.optionSymbol}>{option.symbol}</span>
+                  <span className={styles.optionName}>{option.name}</span>
+                  {!fit && <span className={styles.optionMiss}>{labels.candidateMiss}</span>}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
       <Button type="submit" size="lg" disabled={disabled} className={styles.submit}>
         {pending ? labels.pending : labels.submit}
@@ -180,6 +236,22 @@ export function GuessBox({
       {/* Canlı bölge HEP yerinde: sonradan eklenen bir `aria-live` öğesinin
           ilk içeriği ekran okuyucuda duyurulmuyor. Boşken yer kaplamıyor. */}
       <p aria-live="polite" className={styles.hint}>{hint ?? ""}</p>
+      {/* KALAN ADAY — oyunun ilerlediğini sayıyla gösteren künye; dokununca
+          liste açılır (kutuya odak). Havuzun tamamı uyuyorsa söylenecek
+          bir şey yok, basılmaz. */}
+      {remaining > 0 && remaining < options.length && (
+        <button
+          type="button"
+          className={styles.remaining}
+          onClick={() => {
+            inputRef.current?.focus();
+            setOpen(true);
+          }}
+        >
+          <span className="numeral">{fill(labels.candidatesLeft, { n: remaining })}</span>
+          <span className={styles.remainingLink}>{labels.candidatesShow}</span>
+        </button>
+      )}
     </form>
   );
 }
