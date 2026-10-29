@@ -10,21 +10,27 @@
 > rota eksikti ve okuyan onu güncel sanıyordu. İki yerde tutulan bir liste er geç
 > birbirinden ayrı düşer. Rota tablosu artık yalnızca README'de.
 
-**Son güncelleme:** 2026-10-25
+**Son güncelleme:** 2026-10-29
 **Durum:** 🟢 CANLI — https://aciliszili.com
 
 ---
 
 ## Canlıda ne var
 
+Sayılar 29 Ekim'de kaynaktan sayıldı; yeniden saymak için:
+`find app -name page.tsx | wc -l` · `find app/api -name route.ts | wc -l` ·
+`grep -c "pgTable(" lib/schema.ts` · `ls drizzle/*.sql | wc -l` ·
+`grep -cE "^[A-Z][A-Z0-9_]+=" .env.example`. Üretimdeki migration durumu:
+GitHub Actions → "Migrate DB" iş akışı, `check` modu (salt okunur).
+
 | | |
 |---|---|
-| Sayfa rotası | 61 (50 açık, 11 yönetim; `/en` önekiyle ikinci bir adreste daha) |
-| API ucu | 25 |
-| Veritabanı tablosu | 31 · 35 migration (0000–0034; üretimde hepsi uygulandı, 15 Ekim) |
-| Sağlayıcı | Alpaca · Finnhub · FRED · TCMB · SEC EDGAR · OpenFIGI · House Clerk · TCMB EVDS (isteğe bağlı) |
-| Ortam değişkeni | 16 (`.env.example`) |
-| Cron | `/api/cron/daily` hafta içi 10:30 UTC · `/api/cron/alarmlar` 5 dk'da bir · `/api/cron/bilanco` her gün 16:20 UTC (`deploy/cron-install.sh`) |
+| Sayfa rotası | 86 `page.tsx` (12'si `/admin`; açık sayfalar `/en` önekiyle ikinci bir adreste daha) |
+| API ucu | 54 `route.ts` `app/api` altında (+8 `app/` içinde: paylaşım görselleri ve RSS) |
+| Veritabanı tablosu | 55 · 43 migration (0000–0042; üretimde hepsi uygulandı, 29 Ekim) |
+| Sağlayıcı | Alpaca · Finnhub · FRED · TCMB · TCMB EVDS (isteğe bağlı) · SEC EDGAR (13F, Form 4) · OpenFIGI · House Clerk · Federal Reserve · Kalshi · Cboe · ABD Hazinesi · ARK / Global X ETF dosyaları · GİB (`lib/providers/`) |
+| Ortam değişkeni | 36 (`.env.example`) |
+| Zamanlanmış iş | 8 uç `app/api/cron/*`: günlük senkron, alarmlar, bilanço hatırlatması, haberler + çeviri, pazar özeti postası, Telegram, olasılıklar, risk. Saatleri tek yerde: `deploy/cron-install.sh` |
 | İçerik rutini | 7 adet, claude.ai üzerinde elle kurulu (teknik analiz günde üç koşu; liste `docs/claude-rutinler.md`) |
 
 **Tohumlanan veri:** 23 NYSE tatili (üçü yarım gün) · CPI/FOMC/istihdam yayın
@@ -40,6 +46,10 @@ gerçek değerlerin bulunduğu `docs/rutinler.local.md` gitignore'da.
 
 Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
 
+- [x] **Migration 0040–0042 üretimde uygulandı:** `probability_snapshots`,
+      risk masası tabloları, `puzzle_players` + `puzzle_runs` (0042, 29 Ekim
+      "Migrate DB" iş akışıyla; öncesinde oyun sıralaması canlıda sessizce
+      kapalıydı).
 - [x] **Migration 0037–0039 üretimde uygulandı (24 Ekim):** `telegram_posts`,
       `earnings_votes`, `daily_charts`. Üçü de yalnız yeni tablo; kod tablo
       yokken sessizce düşüyor.

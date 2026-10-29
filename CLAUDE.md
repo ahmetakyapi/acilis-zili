@@ -346,11 +346,19 @@ Rutinlerden ayrı, sunucunun kendi Claude çağrıları. Anahtar
 
 - **Depo herkese açık.** Gerçek sırlar (`BRIEF_SECRET`, `CRON_SECRET`, …)
   asla commit'lenmez; doldurulmuş promptlar `docs/*.local.md` (gitignore'da).
-- **Migration'lar deploy'da UYGULANMAZ**; `npm run db:migrate` ayrıca, üretim
-  `DATABASE_URL`iyle koşulur. Kod migration'dan önce yayına inebilir: yeni
-  özellik mümkünse var olan tabloya (özellikle `users`) sütun eklemez, kendi
-  tablosunu açar ve tablo yokken sessizce düşer (`lib/avatar-data.ts`).
-  Migration'ı uygulamayı unutmak da sessiz hatadır — sahibine söyle.
+- **Migration'lar deploy'da UYGULANMAZ.** Üretim adresi yalnız sunucuda;
+  uygulama yolu GitHub Actions → "Migrate DB" (`migrate.yml`, elle
+  tetiklenir, `deploy/remote-migrate.sh`): önce `check` (salt okunur,
+  bekleyenleri adıyla basar), sonra `apply`. Kod migration'dan önce yayına
+  inebilir: yeni özellik mümkünse var olan tabloya (özellikle `users`) sütun
+  eklemez, kendi tablosunu açar ve tablo yokken sessizce düşer
+  (`lib/avatar-data.ts`). Migration'ı unutmak da sessiz hatadır (0042 bir gün
+  bekledi, 29 Ekim):
+  - **Yalnız ekleyen** migration (`CREATE TABLE/INDEX`, varsayılanlı ya da
+    boş geçilebilir `ADD COLUMN`): push'tan sonra deploy bitince Claude
+    `check` → `apply` koşar ve `docs/ROUTEMAP.md`'deki sayıyı günceller.
+  - **Veri değiştiren/silen** (`DROP`, `RENAME`, tip değişikliği, `NOT NULL`
+    ekleme, `UPDATE`): uygulamadan önce sahibine sor.
 - **`/gomulu/*` çerçevelenebilen TEK yol**; geri kalanı `X-Frame-Options:
   DENY` + `frame-ancestors 'none'` (`next.config.ts`).
 - **Zamanlanmış işler** `deploy/cron-install.sh`'te (`update.sh` her sürümde
