@@ -25,7 +25,7 @@
 | Sağlayıcı | Alpaca · Finnhub · FRED · TCMB · SEC EDGAR · OpenFIGI · House Clerk · TCMB EVDS (isteğe bağlı) |
 | Ortam değişkeni | 16 (`.env.example`) |
 | Cron | `/api/cron/daily` hafta içi 10:30 UTC · `/api/cron/alarmlar` 5 dk'da bir · `/api/cron/bilanco` her gün 16:20 UTC (`deploy/cron-install.sh`) |
-| İçerik rutini | 5 adet, claude.ai üzerinde elle kurulu (teknik analiz günde üç koşu) |
+| İçerik rutini | 7 adet, claude.ai üzerinde elle kurulu (teknik analiz günde üç koşu; liste `docs/claude-rutinler.md`) |
 
 **Tohumlanan veri:** 23 NYSE tatili (üçü yarım gün) · CPI/FOMC/istihdam yayın
 takvimi · 81 temel sembol · 635 endeks üyesi (S&P 500 + Nasdaq 100 + Dow,
@@ -237,7 +237,8 @@ gelsin.
 | `README.md` | Ürünün tamamı: rotalar, mimari, veri modeli, kurulum, sınırlar |
 | `CLAUDE.md` | Kod üzerinde çalışırken bilinmesi gerekenler — kurallar ve tuzaklar |
 | `docs/claude-rutinler.md` | İçerik rutinlerinin prompt'ları ve `:::` blok sözdizimi |
-| `docs/claude-brief-agent.md` | Bülten ajanının ayrıntılı yönergesi |
-| `docs/claude-mercek-ajani.md` | Mercek ajanının kısa yönergesi |
+| `docs/claude-analysis.md` | Kullanıcı isteğiyle Claude analizi: kurulum, kota, prompt, rapor ekranı |
+| `docs/deploy-vps.md` | Sunucu kurulumu, otomatik deploy ve geri dönüş |
+| `docs/claude-brief-agent.md` · `docs/claude-mercek-ajani.md` | Yalnız yönlendirme: tek kaynak `docs/claude-rutinler.md` |
 | `docs/design/` | Tasarım notları |
 | bu dosya | Durum: canlıda ne var, ne bekliyor, ne bilinçli olarak yok |

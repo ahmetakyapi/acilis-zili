@@ -1,8 +1,9 @@
 # Zamanlanmış Görevler — Kopyala Yapıştır
 
 Sitenin bütün yazılı içeriğini **claude.ai zamanlanmış görevleri** üretir.
-Sunucuda model çağrısı yok, API anahtarı yok, ek ücret yok — site yalnızca
-veritabanından okur.
+Bu içerik için sunucuda model çağrısı yok, ek ücret yok — site yalnızca
+veritabanından okur. (Sitenin kendi, okur isteğiyle çalışan Claude notları
+ayrı bir yol: CLAUDE.md → "Site İçi Claude".)
 
 > **Bu görevler claude.ai rutinleridir.** Claude Code'un yerel zamanlayıcısı
 > oturum ömürlüdür ve bu listeye yazmaz. Yedisi de
@@ -2207,7 +2208,6 @@ ayarına bak, siteye değil (aynı oturumda `example.com` da düşüyorsa kesin)
 Site 401 dönüyorsa prompt'a gömülü **secret** eskimiş ya da yer tutucu
 kalmıştır.
 
-Ayrıntılı arka plan ve uçların tam sözleşmesi: `docs/claude-brief-agent.md`
-(bülten) ve `docs/claude-mercek-ajani.md` (mercek). Bilanço analizinin veri
-sözleşmesi `app/api/analiz/route.ts` içindeki şemadır; hatalı gövde 400 ile
-birlikte beklenen alan listesini döndürür.
+Uçların tam sözleşmesi her ucun kendi şemasıdır (`app/api/<uç>/route.ts`;
+yazma yolu `lib/content-write.ts`); hatalı gövde 400 ile birlikte beklenen
+alan listesini döndürür.

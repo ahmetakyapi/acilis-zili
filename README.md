@@ -228,8 +228,12 @@ Rutin sayı üretmez, yorum yazar: teknik analizde göstergeleri (ortalamalar,
 RSI, MACD, hacim, pivotlar) site kendi fiyat verisinden hesaplar ve rutine
 verir; gösterge fotoğrafını yazma ucu kendisi çıkarır.
 
-Koddaki tek model çağrısı isteğe bağlı: haber başlığı çevirisinde önce DeepL
-denenir, anahtarı verilmişse Claude yedek olarak devreye girer.
+Sunucunun kendi model çağrıları içerik üretmez, okurun önündeki ekrana not
+düşer ve hepsi anahtara bağlı, isteğe bağlıdır: haber başlığı çevirisi (önce
+DeepL, Claude yedek), hisse/haber/portföy notları ve Bu Hisseye Sor (ortak
+günlük bütçe `lib/claude-budget.ts`; çıktıdaki her sayı girdide geçmek zorunda,
+`lib/ai-grounding.ts`) ve yetkili hesabın istediği Claude analizi
+(`docs/claude-analysis.md`).
 
 ### İçeriğin Tek Yazma Yolu
 
