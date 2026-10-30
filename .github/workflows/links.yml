@@ -35,6 +35,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          sparse-checkout: .github/scripts
+
       - name: Sayfa listesi (site haritası)
         id: pages
         run: |
@@ -63,22 +67,32 @@ jobs:
             --exclude "^https://(www\.)?(npr\.org|usnews\.com|money\.usnews\.com)/"
             ${{ steps.pages.outputs.args }}
 
+      # Lychee'nin hata saydığı adresler curl'le bir kez daha soruluyor: ilk
+      # raporun 86 hatasının 77'si Yahoo'nun HTTP/2 hatasıydı, adresler
+      # açılıyordu (gerekçe .github/scripts/links-recheck.py).
+      - name: Hataları yeniden dene
+        id: recheck
+        run: |
+          count=$(python3 .github/scripts/links-recheck.py lychee/out.md lychee/report.md)
+          echo "broken=$count" >> "$GITHUB_OUTPUT"
+          echo "Tekrar denemeden sonra kırık: $count" >> "$GITHUB_STEP_SUMMARY"
+
       # İŞ KIRMIZIYA DÖNMEZ (25 Ekim): ilk koşu 38 bin bağlantının 94'ünü
       # hata saydı; çoğu dış sitenin başsız istemciye kapısıydı (Yahoo'nun
       # HTTP/2 hatası, Reuters/WSJ ödeme duvarı). Her hafta düşen bir iş
       # bildirim gürültüsü olurdu. Rapor bunun yerine TEK bir açık issue'da
-      # tutulur: hata varsa güncellenir, yoksa kapanır.
+      # tutulur: kırık varsa güncellenir, yoksa kapanır.
       - name: Rapor issue'su
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          EXIT: ${{ steps.lychee.outputs.exit_code }}
+          BROKEN: ${{ steps.recheck.outputs.broken }}
         run: |
           title="Kırık Bağlantı Raporu"
           num=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')
-          if [ "$EXIT" != "0" ]; then
-            if [ -n "$num" ]; then gh issue edit "$num" --body-file lychee/out.md
-            else gh issue create --title "$title" --body-file lychee/out.md; fi
+          if [ "${BROKEN:-0}" != "0" ]; then
+            if [ -n "$num" ]; then gh issue edit "$num" --body-file lychee/report.md
+            else gh issue create --title "$title" --body-file lychee/report.md; fi
           elif [ -n "$num" ]; then
             gh issue close "$num" --comment "Son taramada kırık bağlantı yok."
           fi
