@@ -155,11 +155,18 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       `docs/claude-rutinler.md` § 4 artık `takeaways`, `segments`,
       `segments_source` ve `kpis` alanlarını istiyor; kurulu rutin eski
       prompt'la koştukça ekler boş kalır.
-- [ ] **Mercek rutini prompt'u claude.ai'ye yeniden yapıştırılmalı.**
-      `docs/claude-rutinler.md` § 3 `sources` kuralı (30 Ekim): URL
-      yayıncının kendi adresi, finance.yahoo.com aktarımı değil; açılmayan
-      adres eklenmez. Kurulu rutin eski prompt'la koştukça kırık bağlantı
-      raporu (`links.yml`) dolmaya devam eder.
+- [ ] **Mercek rutinine kaynak kuralı elle eklenmeli** (30 Ekim). Canlı
+      prompt `docs/claude-rutinler.md` § 3'ten DAHA YENİ (45 bin karakter,
+      ≤1100 kelime kurgusu); belgeyi yapıştırmak onu geriye götürür. Canlı
+      prompt'ta "`sources`'ta EN AZ BİR birincil ya da büyük ajans kaynağı
+      bulunur." cümlesinin ardına: "`sources`'a koyduğun URL yayıncının
+      KENDİ adresi olsun; finance.yahoo.com aktarımı haftalar içinde 404
+      oluyor. Açıp 200 döndüğünü görmediğin adresi ekleme, etiketi URL'siz
+      yaz." Ekim taramasındaki 9 ölü kaynağın 6'sı Yahoo aktarımıydı.
+- [ ] **Rutin belgesi canlı prompt'ların gerisinde.** § 3 (ve § 4'ün kendi
+      notuna göre bilanço) claude.ai'deki hâlinden eski. Canlı prompt'lar
+      sır maskelenerek belgeye geri yazılmalı; o güne dek prompt'un tek
+      güvenilir kaynağı claude.ai'deki rutin.
 - [ ] **`/api/health` bir uptime izleyicisine bağlanmalı** (UptimeRobot,
       Better Stack). İki kural: kod 200 değilse "site düştü", gövde
       `degraded` içeriyorsa "içerik gecikti".

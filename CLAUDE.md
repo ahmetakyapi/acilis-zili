@@ -98,6 +98,9 @@ kuralı buraya yaz, aracın adına değil.
   isteği, 25 Ekim: "sınırlarını zorla, sonra değiştiririz"). Yine SORULACAK:
   veri silen/değiştiren migration, ödeme/hesap/üçüncü taraf hizmet, bu
   dosyadaki kuralı değiştirmek.
+- **Claude izinleri** `.claude/settings.json`'da (paylaşılan): denetim
+  komutları izinli; `drizzle-kit push`, `git push --force`, `git reset
+  --hard` yasak. Kişisel ekler `settings.local.json`'a.
 - **Alt ajan commit ATMAZ, push ETMEZ**; commit ana oturumun işi, ajanlar
   bitince. Paralel ajanlar aynı dosyayı düzenleyecekse ya sıraya koy ya da
   `isolation: worktree`.
