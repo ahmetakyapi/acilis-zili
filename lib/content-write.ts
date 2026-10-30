@@ -30,9 +30,17 @@ import {
  * konuşuyor. Üç taraf tek sözlük.
  */
 
+/* URL'SİZ KAYNAK ÜÇ BİÇİMDE GELEBİLİR (30 Ekim): alan hiç yok, `null` ya
+   da boş dize. Mercek rutinine "açılmayan adresi ekleme, etiketi URL'siz
+   yaz" kuralı girdi; model bunu `"url": ""` ya da `null` diye de yazabilir
+   ve şema yalnız alanın YOKLUĞUNU kabul ediyordu — kuralı uygulayan koşu
+   400 alıp yazıyı hiç kaydetmezdi. Üçü de "adres yok"a iner. */
 const SourceSchema = z.object({
   label: z.string().trim().min(1).max(120),
-  url: z.string().trim().url().max(500).optional(),
+  url: z.preprocess(
+    (value) => (value === null || (typeof value === "string" && value.trim() === "") ? undefined : value),
+    z.string().trim().url().max(500).optional(),
+  ),
 });
 
 /**

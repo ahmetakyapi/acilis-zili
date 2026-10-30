@@ -58,3 +58,11 @@ test("brief version token tracks headline and body", () => {
   /* Ayraç: alanlar arasında kayan metin aynı imi vermez. */
   assert.notEqual(briefSurumu("ab", "c"), briefSurumu("a", "bc"));
 });
+
+test("URL'siz kaynak: alan yok, null ve boş dize aynı sonuca iner", () => {
+  for (const url of [undefined, null, "", "  "]) {
+    const parsed = storyInputSchema.parse({ ...story, sources: [{ label: "Bloomberg", url }] });
+    assert.deepEqual(parsed.sources, [{ label: "Bloomberg", url: undefined }], String(url));
+  }
+  assert.equal(storyInputSchema.safeParse({ ...story, sources: [{ label: "X", url: "adres-degil" }] }).success, false);
+});
