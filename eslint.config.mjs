@@ -30,6 +30,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Claude Code'un geçici çalışma kopyaları (alt ajanlar) — depo kodu değil.
     ".claude/**",
+    // Geçici ölçüm betikleri (.gitignore'da) — yerel lint'i commit'lenmeyen
+    // dosyanın uyarısıyla kirletiyordu, CI'da hiç yoklar.
+    ".tmp-*",
+    "output/**",
   ]),
 ]);
 

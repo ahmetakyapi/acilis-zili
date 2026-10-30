@@ -43,8 +43,9 @@ npm run dev                      # 3000 doluysa 3001'e düşer
 npm run build                    # route tipleri bozulursa önce `rm -rf .next`
 npm run typecheck                # `npx tsc` değil — önce iCloud kopyalarını temizler
 npm run lint
-npx tsx --test tests/*.test.ts   # birim testleri (~1200; CI'da KOŞMAZ, sen koş)
-python3 -m unittest discover -s tests/deploy   # deploy betiklerinin testleri
+npm test                         # birim testleri (tsx --test; tek dosya: npx tsx --test tests/<ad>.test.ts)
+npm run check                    # typecheck + lint + test — commit öncesi tek komut (build'den sonra)
+python3 -m unittest discover -s tests/deploy   # deploy/ ve .github/scripts/ betiklerinin testleri
 npm run smoke                    # başsız Chrome: rota kodu, konsol hatası, yatay taşma
 npm run db:generate              # şema değişti → YENİ migration; eskisini düzenleme
 npm run db:migrate
@@ -54,26 +55,55 @@ npm run build:favicon            # .ico + PWA PNG'leri (elle üretme)
 npm run build:email              # posta bant GIF'i (public/email/hero.gif, elle üretme)
 ```
 
-Testler CI'da koşmadığı için dokunduğun `lib/` modülünün testi
-(`tests/<ad>.test.ts`) commit'ten önce yerelde geçmeli.
+`db:push` YOK (30 Ekim'de kaldırıldı): migration geçmişini atlayıp canlı
+şemayı doğrudan değiştirir. Şema değişikliği yalnız `db:generate` + migration.
 
 ## Commit ve Yayın
 
-- **Yayın:** `main`e push → `deploy.yml` (build + typecheck + lint) → SSH ile
-  VPS'te `deploy/update.sh`. Her push yeni sürümdür, belge değişikliği dahil.
+- **Yayın:** `main`e push → `deploy.yml` (build + typecheck + lint + test)
+  → SSH ile VPS'te `deploy/update.sh`. Test düşerse sürüm çıkmaz. Her push yeni sürümdür, belge değişikliği dahil.
   Duman testi ayrı iş akışı (`smoke.yml`), kapı değil.
 - **`main`e push için onay SORULMAZ** (sahibinin isteği, 28 Ekim 2026: "artık
   oto alabilirsin"): denetimler temizse doğrudan `main`e gönder.
-- Commit öncesi üçü temiz: `typecheck`, `lint`, `build`. Görsel değişiklik
+- Commit öncesi temiz: `build`, sonra `npm run check`. Yeni `lib/` mantığı
+  testsiz girmez (`tests/<ad>.test.ts`). Görsel değişiklik
   tarayıcıda ÖLÇÜLMÜŞ olmalı — "sığıyor gibi duruyor" doğrulama değil.
 - **Oturumda iki-üç commit**, konu başına bir tane. Tek başlıkta
   özetlenebiliyorsa tek commit; "görsel iyileştirme" ve "performans" gibi iki
   alan varsa iki. Her mikro düzeltmeye ya da ekrana ayrı commit YOK.
-- **İş sürerken yeni istek gelirse commit'i ERTELE**; kuyruk boşalınca topla
-  (bu uyarı üç kez geldi). Mesele sayı, detay değil: gövdede her değişikliğin
+- **İş sürerken yeni istek gelirse ya da arka planda ajan çalışıyorsa
+  commit'i ERTELE**; kuyruk boşalınca topla (bu uyarı beş kez geldi). "Konu"
+  ekran değil İŞ ALANI: büyük görsel turda bile 2–4 commit. Mesele sayı, detay değil: gövdede her değişikliğin
   gerekçesi ayrı paragraf.
 - Mesaj Türkçe, başlık ne değiştiğini söyler (`git log` kalıbına bak).
 - **Depo herkese açık:** staged diff'i sırlara karşı tara (§ Altyapı).
+- **Geçici işaretlere de tara:** `git diff --cached | grep -nE
+  '^\+.*(TMP|TODO|console\.log|debugger)'`. Ajanlar çalışırken alınan anlık
+  commit bir denemenin `label="TMPTEST"` satırını canlıya çıkardı (23 Eylül,
+  `32e6d16d`); build/lint/test bunu yakalamaz.
+
+## Ajanlarla Çalışma
+
+Proje ajanlarla, "vibe coding" usulü gelişiyor. Bu dosya `AGENTS.md` olarak
+da okunur (sembolik bağ; Codex, Cursor, Gemini) — Claude'a özgü olmayan
+kuralı buraya yaz, aracın adına değil.
+
+- **Yanıt, ara not, alt ajan brifi ve commit Türkçe.** Okura görünen metinde
+  "düğme" değil "buton"; teknoloji seçimi için "tech stack" ("yığın" değil);
+  İngilizceden kelime kelime çeviri yok ("çıplak sayı" → "birimsiz sayı").
+- **Tasarım/UX ara kararlarını kendin ver**, gerekçesini rapora yaz (sahibinin
+  isteği, 25 Ekim: "sınırlarını zorla, sonra değiştiririz"). Yine SORULACAK:
+  veri silen/değiştiren migration, ödeme/hesap/üçüncü taraf hizmet, bu
+  dosyadaki kuralı değiştirmek.
+- **Alt ajan commit ATMAZ, push ETMEZ**; commit ana oturumun işi, ajanlar
+  bitince. Paralel ajanlar aynı dosyayı düzenleyecekse ya sıraya koy ya da
+  `isolation: worktree`.
+- **Alt ajan brifi bu dosyayı okutur** ve ilgili §'i adıyla verir; ajan
+  kuralı bilmeden "düzeltip" kod içi karar yorumunu silebilir. Karar
+  yorumları silinmez (bu dosyanın sözleşmesi).
+- **Bitti demeden önce kanıt:** değişen davranışın testi ya da ölçümü
+  (`npm run check`, `npm run smoke`, `.tmp-*.mjs` ölçüm betiği). Görsel iş
+  ekran görüntüsüyle değil sayıyla doğrulanır (§ Düzen).
 
 ## Yazım: Title Case
 
@@ -305,6 +335,17 @@ yazın 16:30, kışın 17:30 TR). ET↔UTC aritmetiği yalnız `lib/market-hours
   Panel yeni kayıt ÜRETMEZ, var olanı düzeltir (`/admin/yazilar/...`);
   üzerine yazılan hâl `story_revisions`a düşer (bülten anahtarı
   `bulten:{tarih}:{dönem}`). Panelde **İçerik ÖLÇER, Yazılar DEĞİŞTİRİR**.
+- **Panel dışından toplu düzeltme** (ör. ölü kaynak bağlantıları): geçici
+  `.tmp-*.mts` betiği, satırı okuyup `storyInputSchema.parse` →
+  `saveStory(input, "admin", row.updatedAt.toISOString())`. Doğrudan
+  `UPDATE` yazma: sürüm denetimi ve fotoğraf atlanır. Önce kuru çalıştır,
+  sonra `--apply`. Canlı veritabanıdır (§ Yerelde).
+- **Kırık Bağlantı Raporu** (`links.yml`, pazartesi; tek açık issue):
+  lychee'nin hata saydığı adres `.github/scripts/links-recheck.py` ile
+  yeniden denenir, kalanlar gerçekten kırıktır. Mercek kaynağı
+  (`stories.sources`) ölmüşse sıra: aynı yazının yeni adresi → web.archive.org
+  kopyası → adresi kaldır, etiketi bırak. Uydurma ya da başka yayının
+  bağlantısı konmaz.
 - Rehber depoda (`content/guide/`: meta + tr + en, eksik çeviri derlemeyi
   kırar); mercek veritabanında (`stories`, slug başına iki `locale`; çeviri
   yoksa orijinal "TR" rozetiyle).
@@ -361,6 +402,10 @@ Rutinlerden ayrı, sunucunun kendi Claude çağrıları. Anahtar
     ekleme, `UPDATE`): uygulamadan önce sahibine sor.
 - **`/gomulu/*` çerçevelenebilen TEK yol**; geri kalanı `X-Frame-Options:
   DENY` + `frame-ancestors 'none'` (`next.config.ts`).
+- **GitHub iş akışları:** push'ta `deploy` (kapı) ve `smoke` (kapı değil);
+  zamanlanmış `links`; elle `migrate`, `sync-app-env`, `sync-analysis-key`,
+  `verify-analysis`, `test-mail`. Sunucuya dokunanlar `deploy-vps`
+  sırasında bekler (`deploy.yml`, `concurrency`).
 - **Zamanlanmış işler** `deploy/cron-install.sh`'te (`update.sh` her sürümde
   çalıştırır) — yeni iş oraya; uçları `app/api/cron/*`, `CRON_SECRET` ile.
 - **Bildirim Web Push** (`lib/push.ts`, `public/sw.js`,
@@ -421,6 +466,11 @@ Rutinlerden ayrı, sunucunun kendi Claude çağrıları. Anahtar
   Kalıcı çözüm: iCloud Drive → "Masaüstü ve Belgeler Klasörleri" kapalı.
 
 ## Yerelde
+
+- **`.env.local`'deki `DATABASE_URL` CANLI Neon** — gerçek üyeler ve
+  rutinlerin yazıları. Yerelde koşan `db:seed`, `db:migrate` ve her geçici
+  betik üretime yazar. Seed yeni kod canlıdayken koşar; migration SQL'i
+  koşmadan önce okunur (§ Altyapı).
 
 Boş sağlayıcı anahtarında kartlar "veri alınamadı" der, sayfa çökmez —
 beklenen. Grafik eksikse önce anahtara bak (`/api/debug/providers`).

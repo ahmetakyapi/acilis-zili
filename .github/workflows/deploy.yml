@@ -87,6 +87,11 @@ jobs:
       - run: npm run build
       - run: npm run typecheck
       - run: npm run lint
+      # Birim testleri KAPI (30 Ekim): ~9 sn, ağ ve veritabanı istemiyor.
+      # Önceden yalnız yerelde koşuyordu ve ajanlarla geliştirirken "yerelde
+      # koşmayı unutmak" sessiz bozulmaydı.
+      - run: npm test
+      - run: python3 -m unittest discover -s tests/deploy
 
   deploy:
     needs: verify
