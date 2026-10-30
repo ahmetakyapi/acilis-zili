@@ -1,7 +1,8 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { VerdictPill } from "@/components/ui/VerdictPill";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { LogoTile } from "@/components/ui/primitives";
-import { verdictLabel, verdictPillClass, type VerdictKey } from "@/lib/analysis";
+import { verdictLabel, type VerdictKey } from "@/lib/analysis";
 import type { SymbolMeta } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { MarketStatus } from "@/lib/market-hours";
@@ -78,9 +79,7 @@ export function MoreSymbols({
               </span>
               <span className={styles.moreFoot}>
                 {entry.verdict ? (
-                  <span className={cn(styles.morePill, verdictPillClass(entry.verdict))}>
-                    {verdictLabel(entry.verdict, t)}
-                  </span>
+                  <VerdictPill verdict={entry.verdict} label={verdictLabel(entry.verdict, t)} size="xs" />
                 ) : (
                   <span className={styles.moreSoon}>{t.technical.noEditionYet}</span>
                 )}

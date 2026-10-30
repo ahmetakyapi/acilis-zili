@@ -398,7 +398,7 @@
    eziliyordu; 23 Eylül'de buraya katlandı. Yarıçap tokenlı: `--radius-sm`
    (hap, değişim rozeti, plan rozeti aynı ölçekte). Görüşü kartta taşıyan
    tek işaret yine bu hap — renkli üst kenar reddedildi (bkz. `.card`). */
-.stance { display:inline-flex; align-items:center; padding:6px 10px; border-radius:var(--radius-sm); font-size:14px; font-weight:800; letter-spacing:.06em; line-height:1.15; }
+.stance { display:inline-flex; align-items:center; padding:6px 12px; border-radius:999px; font-size:14px; font-weight:800; letter-spacing:.06em; line-height:1.15; }
 .change { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border:1px solid currentColor; border-radius:var(--radius-sm); font-size:12px; font-weight:700; white-space:nowrap; }
 /* Fiyat satırı: etiket ve plana göre yer aynı satırda, sayı altında büyük. */
 .cardQuote { container:tquote / inline-size; min-width:0; }
@@ -1456,7 +1456,7 @@
 .coverMain { gap:12px; }
 .coverHeadline { font-size:clamp(18px,1.45vw,21px); line-height:1.55; }
 .coverSide { justify-content:flex-start; padding-left:28px; gap:16px; }
-.cover .stancePill { border-radius:9px; font-size:18px; padding:7px 15px; }
+.cover .stancePill { font-size:18px; padding:7px 15px; }
 .coverPlan { grid-column:1/-1; border-top:1px solid var(--line); padding-top:18px; }
 .coverPlan .planCells { background:transparent; }
 /* DETAY SAYFASINDA DA DERİNLİK TONLA (23 Eylül). Liste kartındaki mavi
@@ -1729,7 +1729,7 @@
 .coverThesis { display:flex; flex-direction:column; gap:10px; margin-top:auto; padding:14px 16px; border-radius:12px; background:var(--surface-sunken); }
 .coverThesis .stanceRow { justify-content:space-between; gap:8px; }
 .thesisLabel { font-size:12px; font-weight:650; letter-spacing:.02em; color:var(--text-muted); }
-.coverThesis .stancePill { padding:4px 10px; font-size:14px; border-radius:6px; }
+.coverThesis .stancePill { padding:5px 12px; font-size:14px; }
 .coverThesis .coverHeadline { max-width:none; font-size:16px; line-height:1.65; font-weight:500; letter-spacing:-.01em; }
 .planOverview { display:grid; grid-template-columns:minmax(0,1fr) 240px; gap:24px; align-items:stretch; }
 .planOverview[data-has-risk="false"] { grid-template-columns:minmax(0,1fr); }

@@ -1,10 +1,11 @@
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { VerdictPill } from "@/components/ui/VerdictPill";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { changeToneClass, planPositionLabel } from "@/components/technical/TechnicalCard";
 import { PlanStrip } from "@/components/technical/PlanStrip";
 import technical from "@/components/technical/Technical.module.css";
 import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
-import { verdictLabel, verdictOf, verdictPillClass } from "@/lib/analysis";
+import { verdictLabel, verdictOf, } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { planPosition, slotLabel, stanceChangeLabel, technicalHref } from "@/lib/technical";
 import { getTechnicalBoard } from "@/lib/technical-data";
@@ -97,9 +98,7 @@ export async function PortfolioTechnical({
                   {holding.name && <p className="truncate text-small text-muted">{holding.name}</p>}
                 </div>
                 <div className={styles.techStance}>
-                  <span className={cn(technical.stancePill, verdictPillClass(verdict))}>
-                    {verdictLabel(verdict, t)}
-                  </span>
+                  <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} size="custom" className={technical.stancePill} />
                   {change && <span className={cn(technical.change, changeToneClass(verdict))}>{change}</span>}
                 </div>
               </div>

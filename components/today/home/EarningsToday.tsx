@@ -144,7 +144,17 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
         }
         action={<PanelLink href="/bilancolar">{t.common.showAll}</PanelLink>}
       />
-      <ul>
+      {/* ORTAK SÜTUNLAR, İÇERİKTEN ÖLÇÜLÜ (30 Ekim). Her satır kendi
+          ızgarasıydı ve rozet sütunu sabit 7,5rem'di: "TUT · 63 · Analiz →"
+          oraya sığmıyor, ok hapın kenarına yapışıyordu. Sabit genişlik ya
+          taşırır ya boşluk bırakır. Artık ızgara listede, satırlar
+          `subgrid` ile onun sütunlarını paylaşıyor: rozet sütunu en geniş
+          rozet kadar (`max-content`) ve beş satırda aynı hatta biter.
+          EPS sütunu da `max-content`: subgrid'de satırın yan dolgusu uç
+          sütunlardan düşüyor ve sabit 5,5rem'de "EPS Beklentisi" iki
+          satıra kırılıyordu (ölçüldü, 1280). Sütun aralığı da burada;
+          subgrid onu üstten alıyor. */}
+      <ul className="grid grid-cols-[auto_minmax(0,1fr)_max-content] gap-x-3 sm:grid-cols-[auto_minmax(0,1fr)_max-content_max-content] sm:gap-x-4">
       {shown.map((row) => {
         const badge = badges[`${row.symbol}:${row.reportDate}`];
         return (
@@ -159,7 +169,7 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
              ama yerini tutar. */
           <li
             key={row.id}
-            className="relative grid grid-cols-[auto_minmax(0,1fr)_7.5rem] items-center gap-3 border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:grid-cols-[auto_minmax(0,1fr)_7.5rem_5.5rem] sm:gap-4 sm:px-5"
+            className="relative col-span-full grid grid-cols-subgrid items-center border-t border-line px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
           >
             <Link
               href={`/hisse/${row.symbol}`}
@@ -192,16 +202,16 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
                 saat yoksa aynı sütunda, aynı hizada soluk bir künye.
                 Sütun genişliği değişmiyor, hat korunuyor. */}
             {badge ? (
-              <AnalysisBadge badge={badge} t={t} size="sm" className="w-full justify-center" />
+              <AnalysisBadge badge={badge} t={t} size="sm" className="justify-self-stretch" />
             ) : row.hour && hourLabel[row.hour] ? (
               <TimingChip
-                className="w-full justify-center"
+                className="h-8 justify-center justify-self-stretch sm:h-7"
                 tone={row.hour === "bmo" ? "pre" : row.hour === "amc" ? "post" : "neutral"}
               >
                 {hourLabel[row.hour]}
               </TimingChip>
             ) : (
-              <span className="text-center text-tiny font-semibold text-muted">
+              <span className="text-right text-tiny font-semibold text-muted">
                 {t.earnings.timeUnknown}
               </span>
             )}
@@ -210,7 +220,7 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
                 <span className="numeral block text-base font-semibold leading-tight text-body">
                   {formatPrice(row.epsEstimate, locale, { currency: true })}
                 </span>
-                <span className="block text-tiny leading-tight text-muted">
+                <span className="block whitespace-nowrap text-tiny leading-tight text-muted">
                   {t.earnings.epsEstimate}
                 </span>
               </span>

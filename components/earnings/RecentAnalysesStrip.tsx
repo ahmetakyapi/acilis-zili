@@ -1,14 +1,13 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { VerdictPill } from "@/components/ui/VerdictPill";
 import {
   analysisHref,
   verdictLabel,
   verdictOf,
-  verdictPillClass,
-} from "@/lib/analysis";
+  } from "@/lib/analysis";
 import type { AnalysisIndexRow, SymbolMeta } from "@/lib/data";
 import type { Dictionary } from "@/lib/i18n";
 import { LogoTile } from "@/components/ui/primitives";
-import { cn } from "@/lib/utils";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 
 /**
@@ -126,14 +125,7 @@ export function RecentAnalysesStrip({
                 <span className="text-base font-bold text-strong">
                   {row.symbol}
                 </span>
-                <span
-                  className={cn(
-                    "figure whitespace-nowrap rounded-full px-2 py-0.5 text-tiny font-bold",
-                    verdictPillClass(verdict),
-                  )}
-                >
-                  {verdictLabel(verdict, t)} · {row.score}
-                </span>
+                <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} score={row.score} />
                 {/* Hangi çeyreğin okunduğu yazılı değildi: `periodLabel`
                     sorguda zaten geliyor ve sunumda atılıyordu. */}
                 <span className="figure whitespace-nowrap text-tiny text-muted">

@@ -1,4 +1,5 @@
 import { PageShare } from "@/components/article/PageShare";
+import { VerdictPill } from "@/components/ui/VerdictPill";
 import { Suspense } from "react";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -435,11 +436,7 @@ export default async function AnalysesPage(
                         <span className="min-w-0 flex-1 truncate text-tiny text-body">
                           {row.periodLabel}
                         </span>
-                        <span
-                          className="figure shrink-0 text-tiny font-bold text-strong"
-                        >
-                          {verdictLabel(verdict, t)} · {row.score}
-                        </span>
+                        <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} score={row.score} size="xs" />
                       </Link>
                     );
                   })}

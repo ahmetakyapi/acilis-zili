@@ -1,6 +1,7 @@
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { VerdictPill } from "@/components/ui/VerdictPill";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { verdictLabel, verdictPillClass, type VerdictKey } from "@/lib/analysis";
+import { verdictLabel, type VerdictKey } from "@/lib/analysis";
 import type { Dictionary } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import styles from "./Technical.module.css";
@@ -57,7 +58,7 @@ export function StanceGuide({
         <div className={styles.stanceColumns} data-motion-stagger>
           {ORDER.map((key) => (
             <article key={key} className={styles.stanceColumn} data-tone={TONE[key]}>
-              <span className={cn(styles.stancePill, verdictPillClass(key))}>{verdictLabel(key, t)}</span>
+              <VerdictPill verdict={key} label={verdictLabel(key, t)} size="custom" className={styles.stancePill} />
               <p className={styles.stanceMeaning}>{g[key].meaning}</p>
               {/* TELEFONDA KATLI (29 Eylül). Üç sütun alt alta 390'da 1.893
                   piksel tutuyordu (sayfanın ~%15'i). Etiket ve anlam her
@@ -116,7 +117,7 @@ export function StanceGuide({
           <ul>
             {ORDER.filter((key) => key !== verdict).map((key) => (
               <li key={key}>
-                <span className={cn(styles.stancePill, verdictPillClass(key))}>{verdictLabel(key, t)}</span>
+                <VerdictPill verdict={key} label={verdictLabel(key, t)} size="custom" className={styles.stancePill} />
                 <span>{g[key].short}</span>
               </li>
             ))}

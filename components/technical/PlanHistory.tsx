@@ -1,4 +1,5 @@
-import { verdictLabel, verdictOf, verdictPillClass } from "@/lib/analysis";
+import { verdictLabel, verdictOf, } from "@/lib/analysis";
+import { VerdictPill } from "@/components/ui/VerdictPill";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import {
   formatRange,
@@ -97,9 +98,7 @@ export function PlanHistory({
                     )}
                   </td>
                   <td data-cell="stance">
-                    <span className={cn("inline-flex rounded-full px-2.5 py-[2px] text-tiny font-bold", verdictPillClass(stance))}>
-                      {verdictLabel(stance, t)}
-                    </span>
+                    <VerdictPill verdict={stance} label={verdictLabel(stance, t)} size="xs" />
                     {turned && <span className={cn("ml-2 text-tiny font-bold", changeToneClass(stance))}>{turned}</span>}
                   </td>
                   <td className="numeral" data-cell="entry" data-label={t.technical.entryZone}>

@@ -715,6 +715,9 @@ const tr = {
        kelime artık var olmayan bir PNG'yi işaret ediyordu — bağlantının
        gittiği yer baştan beri analiz sayfasıydı. */
     analysisLink: "Analiz →",
+    /* Rozetin bağlantı kısmı: ok metinde değil ikonda (AnalysisBadge). */
+    analysisOpen: "Analiz",
+    analysisOpenLabel: "{symbol} bilanço analizi: görüş {verdict}, skor {score}",
 
     /* Kayıtta buy/hold/sell duruyor; ekranda okunan bunlar. */
     verdictBuy: "AL",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { ScoreMeter } from "@/components/ui/VerdictPill";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { MagnifyingGlass, Rows, SquaresFour, X } from "@phosphor-icons/react/dist/ssr";
 import {
@@ -479,11 +480,14 @@ export function AnalysisTable({
                   <span role="cell" className={cn(COLS.score, "flex justify-center")}>
                     <span
                       className={cn(
-                        /* Görüş renkli (25 Ekim son düzeltme) — gerekçe `verdictTextClass`. */
-                        "numeral rounded-full px-2.5 py-[3.5px] text-small font-bold",
+                        /* Görüş renkli (25 Ekim son düzeltme) — gerekçe `verdictTextClass`.
+                           Mini halka (30 Ekim): skor bir yayın uzunluğu, görüş
+                           haplarıyla aynı çizim (VerdictPill → ScoreMeter). */
+                        "numeral inline-flex items-center gap-1.5 rounded-full px-2 py-[3.5px] text-small font-bold ring-1 ring-current/20 ring-inset",
                         verdictPillClass(row.verdict),
                       )}
                     >
+                      <ScoreMeter score={row.score} verdict={row.verdict} />
                       {row.score}
                     </span>
                   </span>

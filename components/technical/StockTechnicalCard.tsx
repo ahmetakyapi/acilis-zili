@@ -1,7 +1,8 @@
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { VerdictPill } from "@/components/ui/VerdictPill";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ClaudeAction } from "@/components/ai/ClaudeCta";
-import { verdictLabel, verdictOf, verdictPillClass } from "@/lib/analysis";
+import { verdictLabel, verdictOf, } from "@/lib/analysis";
 import { getHolidays, getStatus } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getQuote } from "@/lib/providers";
@@ -94,9 +95,7 @@ export async function StockTechnicalCard({
             kartın tamamı — liste kartındaki kalıbın aynısı. */}
         <Link href={technicalHref(symbol)} className={styles.stockCardLink}>
           <span className="sr-only">{t.technical.stanceLabel}: </span>
-          <span className={cn(styles.stancePill, verdictPillClass(verdict))}>
-            {verdictLabel(verdict, t)}
-          </span>
+          <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} size="custom" className={styles.stancePill} />
           <span className="sr-only"> · {symbol} {t.technical.title}</span>
         </Link>
         {change && (

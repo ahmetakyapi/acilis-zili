@@ -1,4 +1,5 @@
 import { SpotlightCard } from "@/components/motion/PremiumMotion";
+import { VerdictPill } from "@/components/ui/VerdictPill";
 import styles from "@/components/today/TodayExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
@@ -6,8 +7,8 @@ import { ScoreRing } from "@/components/earnings/ScoreRing";
 import { Panel, PanelHeader, PanelLink, LogoTile } from "@/components/ui/primitives";
 import { getAnalyses, getSymbolNames } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
-import { analysisHref, verdictLabel, verdictOf, verdictPillClass } from "@/lib/analysis";
-import { cn, formatEtDateCompact } from "@/lib/utils";
+import { analysisHref, verdictLabel, verdictOf, } from "@/lib/analysis";
+import { formatEtDateCompact } from "@/lib/utils";
 
 /* Sol kolonun yedek kapasitesi — gerekçe `LatestAnalyses` içinde. */
 const ANALYSES_BASE = 5;
@@ -81,7 +82,7 @@ export async function LatestAnalyses({
                     <p lang={row.locale} className={styles.analysisExcerpt}>{row.headline}</p>
                     <div className={styles.analysisFooter}>
                       <span className={styles.analysisCta}>{t.guide.cardCta}<ArrowUpRight size={16} /></span>
-                      <span className={cn("rounded-md px-2 py-1 text-tiny font-bold", verdictPillClass(verdict))}>{verdictLabel(verdict, t)}</span>
+                      <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} />
                     </div>
                   </SpotlightCard>
                 </Link>
@@ -118,14 +119,7 @@ export async function LatestAnalyses({
                     {formatEtDateCompact(row.reportDate, locale)}
                   </span>
                 </span>
-                <span
-                  className={cn(
-                    "shrink-0 rounded-md px-2 py-[3px] text-tiny font-bold",
-                    verdictPillClass(verdict),
-                  )}
-                >
-                  {verdictLabel(verdict, t)} · {row.score}
-                </span>
+                <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} score={row.score} />
               </Link>
             </li>
           );

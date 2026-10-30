@@ -47,7 +47,7 @@ npm run lint
 npm test                         # birim testleri (tsx --test; tek dosya: npx tsx --test tests/<ad>.test.ts)
 npm run check                    # typecheck + lint + test — commit öncesi tek komut (build'den sonra)
 python3 -m unittest discover -s tests/deploy   # deploy/ ve .github/scripts/ betiklerinin testleri
-npm run smoke                    # başsız Chrome: rota kodu, konsol hatası, yatay taşma
+npm run smoke                    # başsız Chrome: rota kodu, konsol hatası, yatay taşma, sıkışan hap
 npm run db:generate              # şema değişti → YENİ migration; eskisini düzenleme
 npm run db:migrate
 npm run db:seed                  # takvim kapsamı azalınca uyarır; bir `stories` satırını da ezer
@@ -212,6 +212,11 @@ kontrastlar sahibinin makinesindeki `~/dev-starter/knowledge/themes/acilis-zili.
   `components/today/home/MarketTexture.module.css` → `.bandHead`,
   `.partHead`). Başlığa `inline-flex` verme; taban çizgisini içi boş bir
   `::before` imi belirliyor.
+- **Görüş hapı tek bileşen:** AL/TUT/SAT her yerde `VerdictPill`
+  (`components/ui/VerdictPill.tsx`; yön ikonu, skor varsa mini halka),
+  analize giden hap `AnalysisBadge`. Elle `verdictPillClass` hapı yazma.
+  Hap/çip SABİT genişlikli sütuna konmaz: sütun `max-content` (gerekçe
+  `EarningsToday` → subgrid); sıkışan hap duman testinde düşer.
 - **Görselin etrafında çerçeve yok** — görsel kutunun kendisi
   (`overflow-hidden` + yarıçap). Kenarlık yalnız yer tutucularda.
 - **Tema** next-themes değil: `data-theme` + `az-theme` çerezi.

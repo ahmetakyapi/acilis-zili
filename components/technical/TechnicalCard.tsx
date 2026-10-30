@@ -1,7 +1,8 @@
 import { ArrowUpRight, CaretDown, CaretUp } from "@phosphor-icons/react/dist/ssr";
+import { VerdictPill } from "@/components/ui/VerdictPill";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile } from "@/components/ui/primitives";
-import { verdictLabel, verdictOf, verdictPillClass, verdictTextClass, type VerdictKey } from "@/lib/analysis";
+import { verdictLabel, verdictOf, verdictTextClass, type VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { Quote } from "@/lib/providers/types";
 import type { TechnicalAnalysisRow } from "@/lib/schema";
@@ -259,9 +260,7 @@ export function TechnicalCard({
           {company && <span className={styles.cardCompany}>{company}</span>}
         </div>
         <span className={styles.badges}>
-          <span className={cn(styles.stance, verdictPillClass(verdict))}>
-            {verdictLabel(verdict, t)}
-          </span>
+          <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} size="custom" className={styles.stance} />
           {change && (
             <span className={cn(styles.change, changeToneClass(verdict))}>{change}</span>
           )}

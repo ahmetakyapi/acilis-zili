@@ -12,6 +12,12 @@
  *      ekranda hiçbir şey göstermeden burada görünüyor.
  *   3. Yatay taşma var mı — CLAUDE.md "Yatay taşma düzenli kontrol edilir";
  *      `.tmp-*.mjs` geçici betiklerinin kalıcı hâli.
+ *   4. Sıkışan öğe var mı — tek satırlık (`nowrap`) bir hap, rozet ya da
+ *      düğmenin içeriği kendi kutusundan taşıyor mu (30 Ekim). Ana sayfada
+ *      "TUT · 63 · Analiz →" 7,5rem'lik sabit sütuna sığmıyor, ok hapın
+ *      kenarına yapışıyordu; sayfa taşmadığı için 3. kontrol görmedi.
+ *      Kaydırılan kaplar ve üç noktayla kırpılan metin (`truncate`) sayılmaz;
+ *      kenarı kesen gizli taşma sayılır.
  *
  * YAZMA AKIŞI YALNIZCA `SMOKE_ALLOW_WRITES=1` İLE: kayıt → çıkış → giriş →
  * favori ekle/çıkar → hesabı sil. Veritabanına gerçek bir hesap yazıyor ve
@@ -56,6 +62,8 @@ const NAV_TIMEOUT_MS = 60_000;
 const SETTLE_MS = 800;
 /* Alt piksel yuvarlaması taşma sayılmasın. */
 const OVERFLOW_TOLERANCE_PX = 1;
+/* Çıktıda sayfa başına gösterilen sıkışan öğe sayısı. */
+const CRAMPED_SHOWN = 3;
 
 /** Sayfa rotaları — TR ve `/en` önekiyle ikişer kez açılıyor. */
 const ROUTES = [
@@ -201,7 +209,7 @@ async function checkPage(browser, path, width) {
   page.on("pageerror", (error) => errors.push(`pageerror: ${String(error).slice(0, 200)}`));
   await page.setViewport({ width, height: VIEWPORT_HEIGHT });
 
-  const result = { path, width, status: 0, errors, overflow: 0, ok: false, note: "" };
+  const result = { path, width, status: 0, errors, overflow: 0, cramped: [], ok: false, note: "" };
   try {
     const response = await page.goto(BASE_URL + path, { waitUntil: "networkidle2", timeout: NAV_TIMEOUT_MS });
     result.status = response?.status() ?? 0;
@@ -209,6 +217,31 @@ async function checkPage(browser, path, width) {
     result.overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
     );
+    result.cramped = await page.evaluate((tolerance) => {
+      const found = [];
+      for (const el of document.body.querySelectorAll("a, button, span, li, td, th")) {
+        const style = getComputedStyle(el);
+        if (style.whiteSpace !== "nowrap" || style.display === "inline" || style.display === "none") continue;
+        /* Kaydırılan kap bilinçli; üç noktayla kırpılan metin bilinçli.
+           Gizli taşma DAHİL: kenarı yuvarlak hap `overflow-hidden` taşıyor
+           ve sığmayan içerik orada taşmak yerine sessizce KESİLİYOR. */
+        if (style.overflowX === "auto" || style.overflowX === "scroll" || style.textOverflow === "ellipsis") continue;
+        if (el.clientWidth === 0 || el.scrollWidth - el.clientWidth <= tolerance) continue;
+        const text = (el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40);
+        /* YALNIZ GÖRÜNÜR KUTULAR. İlk koşum 100'ü aşkın yanlış alarm verdi:
+           metinsiz süs öğeleri ve kutusuz sayılar (yuvarlanan rakam
+           şeridi, degrade başlığın 0,12em'lik im payı) taşıyor ama ekranda
+           hiçbir kenarı aşmıyor. Kusur ancak içerik bir ZEMİNİN, kenarlığın
+           ya da halkanın (box-shadow) dışına çıkınca görünüyor. */
+        const boxed =
+          !/rgba\(0, 0, 0, 0\)|transparent/.test(style.backgroundColor) ||
+          parseFloat(style.borderLeftWidth) > 0 ||
+          style.boxShadow !== "none";
+        if (!text || !boxed) continue;
+        found.push(`${el.tagName.toLowerCase()} "${text}" +${el.scrollWidth - el.clientWidth}px`);
+      }
+      return found;
+    }, OVERFLOW_TOLERANCE_PX);
   } catch (error) {
     result.note = String(error).slice(0, 160);
   } finally {
@@ -223,7 +256,8 @@ async function checkPage(browser, path, width) {
     }
   }
   const statusOk = expectNotFound ? result.status === 404 : result.status === 200;
-  result.ok = statusOk && errors.length === 0 && result.overflow <= OVERFLOW_TOLERANCE_PX && !result.note;
+  result.ok =
+    statusOk && errors.length === 0 && result.overflow <= OVERFLOW_TOLERANCE_PX && result.cramped.length === 0 && !result.note;
   return result;
 }
 
@@ -240,6 +274,7 @@ async function runPool(tasks, size) {
         `HTTP ${result.status}`,
         result.overflow > OVERFLOW_TOLERANCE_PX ? `taşma ${result.overflow}px` : null,
         result.errors.length ? `${result.errors.length} konsol hatası` : null,
+        result.cramped.length ? `${result.cramped.length} sıkışan öğe` : null,
         result.note || null,
       ]
         .filter(Boolean)
@@ -247,6 +282,7 @@ async function runPool(tasks, size) {
       console.log(`${mark} ${String(result.width).padStart(4)}  ${result.path}  ${detail}`);
       if (result.retried) console.log(`       tekrar: ${result.retried}`);
       for (const line of result.ok ? [] : result.errors) console.log(`       ${line}`);
+      for (const line of result.cramped.slice(0, CRAMPED_SHOWN)) console.log(`       sıkışan: ${line}`);
     }
   }
   await Promise.all(Array.from({ length: size }, worker));

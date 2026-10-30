@@ -1,4 +1,5 @@
 import { ClaudeCta } from "@/components/ai/ClaudeCta";
+import { VerdictPill } from "@/components/ui/VerdictPill";
 import { ArrowUpRight, ChartBar, TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -28,7 +29,7 @@ import {
 import styles from "@/components/technical/Technical.module.css";
 import { DataStamp, EmptyState, LogoTile, Panel } from "@/components/ui/primitives";
 import { MorphTarget } from "@/components/motion/Morph";
-import { verdictLabel, verdictOf, verdictPillClass } from "@/lib/analysis";
+import { verdictLabel, verdictOf, } from "@/lib/analysis";
 import { getHolidays, getStatus, getSymbolNames } from "@/lib/data";
 import { getDictionary, getI18n, type Locale } from "@/lib/i18n";
 import { articleOpenGraph, metaDescription, missingMetadata } from "@/lib/page-meta";
@@ -327,7 +328,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             <div className={styles.stanceRow}>
               {/* Etiket yalnızca ekran okuyucuya: gerekçe `.stancePill` yorumunda. */}
               <span className="sr-only">{t.technical.stanceLabel}</span>
-              <span className={cn(styles.stancePill, verdictPillClass(verdict))}>{verdictLabel(verdict, t)}</span>
+              <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} size="custom" className={styles.stancePill} />
               {change && <span className={cn(styles.change, changeToneClass(verdict))}>{change}</span>}
             </div>
             </div>

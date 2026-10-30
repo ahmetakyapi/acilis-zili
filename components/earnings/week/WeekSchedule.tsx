@@ -296,7 +296,7 @@ function Row({
       </span>
 
       <span className={styles.analysis}>
-        {badge && <AnalysisBadge badge={badge} t={t} size="sm" />}
+        {badge && <AnalysisBadge badge={badge} t={t} size="sm" compact />}
       </span>
     </li>
   );

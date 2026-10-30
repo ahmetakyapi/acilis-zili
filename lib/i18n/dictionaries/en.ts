@@ -526,6 +526,8 @@ const en: typeof tr = {
     upcomingEarnings: "Upcoming Earnings",
     goToCalendar: "Go to Calendar",
     analysisLink: "Analysis →",
+    analysisOpen: "Analysis",
+    analysisOpenLabel: "{symbol} earnings analysis: {verdict}, score {score}",
 
     verdictBuy: "BUY",
     verdictHold: "HOLD",

@@ -1,3 +1,4 @@
+import { Clock, MoonStars, SunHorizon } from "@phosphor-icons/react/dist/ssr";
 import { logoSrc } from "@/lib/logos";
 import { InkCanvas } from "@/components/ink/InkCanvas";
 import type { InkSceneName } from "@/lib/ink/scenes";
@@ -316,12 +317,17 @@ export function ChangePill({
 /* --------------------------------------------------------------------------
    Bilanço zamanlama çipi
 
-   Açılış öncesi `up` tinti, kapanış sonrası accent tinti (hero) ya da nötr
-   `srf2` (mini kart). Zamanlama bir yön değil ama gün içindeki yerini renkle
-   ayırmak listeyi taranabilir kılıyor.
+   GÜNÜN YERİ İKONLA, RENKLE DEĞİL (30 Ekim). Açılış öncesi `up` yeşili,
+   kapanış sonrası mavi tint taşıyordu. Ana sayfada aynı sütunda "AL"
+   görüş hapının yeşiliyle alt alta durunca "Açılış Öncesi" bir yükseliş
+   yargısı gibi okunuyordu — yeşil bu sitede YÖN demek (CLAUDE.md "renk
+   anlam taşır"). Çip artık nötr zeminde; taranabilirliği ikon taşıyor:
+   gün doğumu (açılış öncesi), ay (kapanış sonrası), saat (seans içi).
    -------------------------------------------------------------------------- */
 
 export type TimingTone = "pre" | "post" | "neutral";
+
+const TIMING_ICON = { pre: SunHorizon, post: MoonStars, neutral: Clock } as const;
 
 export function TimingChip({
   tone,
@@ -346,18 +352,17 @@ export function TimingChip({
   wide?: boolean;
   className?: string;
 }) {
+  const TimingIcon = TIMING_ICON[tone];
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center whitespace-nowrap rounded-full font-semibold",
-        size === "sm" ? "px-2 py-[3px] text-nano" : "px-[9px] py-[3px] text-tiny",
+        "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-surface-sunken font-semibold text-body ring-1 ring-line ring-inset",
+        size === "sm" ? "px-2 py-[3px] text-nano" : "px-2.5 py-[3px] text-tiny",
         wide && "min-w-[7rem] justify-center",
-        tone === "pre" && "bg-up-wash text-up",
-        tone === "post" && "bg-primary-wash text-primary-ink",
-        tone === "neutral" && "bg-surface-elevated text-body",
         className,
       )}
     >
+      <TimingIcon aria-hidden weight="bold" className="size-[1.15em] shrink-0 text-muted" />
       {children}
     </span>
   );

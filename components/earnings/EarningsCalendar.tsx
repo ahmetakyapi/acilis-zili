@@ -652,10 +652,14 @@ function DaySection({
                 {/* Rozetsiz kartta da satır duruyor — gerekçesi kartın
                     sınıf listesinde. */}
                 {badge ? (
+                  /* Sıkı kip: mini kart 172–192px; tam hap ("SELL 81
+                     Analysis ›", 164px) iç genişliğe sığmayıp kesiliyordu
+                     (30 Ekim, duman testinin "sıkışan" denetimi). */
                   <AnalysisBadge
                     badge={badge}
                     t={t}
                     size="sm"
+                    compact
                     className="self-start"
                   />
                 ) : (
