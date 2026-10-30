@@ -225,8 +225,15 @@ export type AnalysisRowView = {
   epsSurprisePct: number | null;
   /** "▲ %26" — yalnız yüzde; gelir tutarı kartta yok. */
   revenueYoyText: string | null;
-  /** "−%30" / "+%7,8" — işaretli sürpriz. */
+  /** "▼ %30" / "▲ %7,8" — kartın üç ölçüsü aynı işaret diliyle (30 Ekim). */
   epsSurpriseText: string | null;
+  /**
+   * Çeyreğin tek cümlesi ("30 Saniyede"nin ilk maddesi) — kart görünümü
+   * sayıların NE ANLATTIĞINI söylesin diye. Ek tablosu yoksa `null`.
+   */
+  teaser?: string | null;
+  /** Ek yazıldığı dil; Türkçe kartta İngilizce madde `lang` alır. */
+  teaserLocale?: string;
   /** Aramanın taradığı alan — küçültülmüş sembol + şirket + dönem. */
   search: string;
   /**
@@ -330,7 +337,10 @@ export function toAnalysisRowView(
       row.revenueYoyPct !== null
         ? `${row.revenueYoyPct >= 0 ? "▲" : "▼"} ${formatPercentPlain(row.revenueYoyPct, locale, 0)}`
         : null,
-    epsSurpriseText: row.epsSurprisePct !== null ? formatPercent(row.epsSurprisePct, locale, 1) : null,
+    epsSurpriseText:
+      row.epsSurprisePct !== null
+        ? `${row.epsSurprisePct >= 0 ? "▲" : "▼"} ${formatPercentPlain(row.epsSurprisePct, locale, 1)}`
+        : null,
     search: foldForSearch(
       `${row.symbol} ${row.company} ${row.periodLabel} ${row.sector ?? ""}`,
     ),

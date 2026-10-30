@@ -32,28 +32,70 @@ export type AnalysisCardLabels = {
  * Kartın tamamı tıklanır (bağlantı şirket adında, `::after` yüzeyi
  * kaplıyor) — tablo satırıyla aynı kalıp, aynı erişilebilir ad.
  */
+/** Sıfırı ortada bir ölçü şeridi — tepkinin kalıbı, kartın üç ölçüsünde. */
+function MetricStrip({ value, scale }: { value: number; scale: number }) {
+  const ratio = reactionRatio(value, scale);
+  return (
+    <span aria-hidden className={styles.strip}>
+      <span
+        className={styles.stripFill}
+        data-tone={ratio >= 0 ? "up" : "down"}
+        data-over={Math.abs(value) > scale || undefined}
+        style={{
+          left: ratio >= 0 ? "50%" : `${50 + ratio * 50}%`,
+          width: `${Math.max(Math.abs(ratio) * 50, 1)}%`,
+        }}
+      />
+    </span>
+  );
+}
+
 export function AnalysisCardGrid({
   rows,
   labels,
   scale,
+  revenueScale,
+  epsScale,
   filtered,
 }: {
   rows: AnalysisRowView[];
   labels: AnalysisCardLabels;
   /** Ortak tepki ölçeği, yüzde. */
   scale: number;
+  /** Gelir ve HBK sürprizinin ortak ölçekleri, yüzde. */
+  revenueScale: number;
+  epsScale: number;
   /** Okuyucu süzgeci kullandı mı — kalan kartlar bir kez oturur. */
   filtered: boolean;
 }) {
   return (
     <ol className={styles.grid}>
       {rows.map((row, index) => {
-        const ratio = row.reactionPct === null ? null : reactionRatio(row.reactionPct, scale);
+        /* ÜÇ ÖLÇÜ, TEK DİL (30 Ekim). Tepki gri bir kutuda şeritli, gelir ve
+           HBK altında çıplak iki sayıydı ve işaretleri farklıydı ("▲ %36"
+           ile "+%8,0"); göz neyin önemli olduğunu seçemiyordu. Artık üçü
+           alt alta aynı satır: etiket · sıfırı ortada şerit · işaretli
+           değer. Her ölçünün ölçeği listede ortak (künyede yazılı), yani
+           kartlar arası karşılaştırma da çizgiyle okunuyor. Sıra çeyreğin
+           hikâyesi: ne açıklandı (gelir), beklentiye göre (HBK), piyasa ne
+           dedi (tepki). */
+        const metrics = [
+          row.revenueYoyPct !== null && row.revenueYoyText
+            ? { key: "revenue", label: labels.revenueLabel, value: row.revenueYoyPct, text: row.revenueYoyText, scale: revenueScale }
+            : null,
+          row.epsSurprisePct !== null && row.epsSurpriseText
+            ? { key: "eps", label: labels.epsLabel, value: row.epsSurprisePct, text: row.epsSurpriseText, scale: epsScale }
+            : null,
+          row.reactionPct !== null
+            ? { key: "reaction", label: labels.reactionLabel, value: row.reactionPct, text: row.reaction, scale }
+            : null,
+        ].filter((metric) => metric !== null);
         return (
           <li
             key={row.key}
             className={cn(styles.card, filtered && "filter-settle")}
             style={{ "--i": Math.min(index, 12) } as CSSProperties}
+            data-verdict={row.verdict}
           >
             <div className={styles.head}>
               <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
@@ -82,54 +124,30 @@ export function AnalysisCardGrid({
               </div>
             </div>
 
-            <div className={styles.reaction}>
-              <span className={styles.metricLabel}>{labels.reactionLabel}</span>
-              {ratio === null ? (
-                <span className={styles.muted}>{labels.noReaction}</span>
-              ) : (
-                <>
-                  <span
-                    className={cn(
-                      "numeral",
-                      styles.reactionValue,
-                      row.reactionTone === "up" ? "text-up" : "text-down",
-                    )}
-                  >
-                    {row.reaction}
-                  </span>
-                  <span aria-hidden className={styles.strip}>
-                    <span
-                      className={styles.stripFill}
-                      data-tone={ratio >= 0 ? "up" : "down"}
-                      style={{
-                        left: ratio >= 0 ? "50%" : `${50 + ratio * 50}%`,
-                        width: `${Math.max(Math.abs(ratio) * 50, 1)}%`,
-                      }}
-                    />
-                  </span>
-                </>
-              )}
-            </div>
+            {/* ÇEYREĞİN CÜMLESİ — sayılar ne anlatıyor. Yoksa kart sayılarla
+                başlıyor; boş bir yer tutucu basılmıyor. */}
+            {row.teaser && (
+              <p lang={row.teaserLocale} className={styles.teaser}>
+                {row.teaser}
+              </p>
+            )}
 
-            {(row.revenueYoyText || row.epsSurpriseText) && (
-              <dl className={styles.scorecard}>
-                {row.revenueYoyText && (
-                  <div>
-                    <dt>{labels.revenueLabel}</dt>
-                    <dd className={cn("numeral", row.revenueTone === "up" ? "text-up" : "text-down")}>
-                      {row.revenueYoyText}
+            {metrics.length > 0 ? (
+              <dl className={styles.metrics}>
+                {metrics.map((metric) => (
+                  <div key={metric.key} className={styles.metric}>
+                    <dt>{metric.label}</dt>
+                    <dd>
+                      <MetricStrip value={metric.value} scale={metric.scale} />
+                      <span className={cn("numeral", styles.metricValue, metric.value >= 0 ? "text-up" : "text-down")}>
+                        {metric.text}
+                      </span>
                     </dd>
                   </div>
-                )}
-                {row.epsSurpriseText && (
-                  <div>
-                    <dt>{labels.epsLabel}</dt>
-                    <dd className={cn("numeral", row.epsTone === "up" ? "text-up" : "text-down")}>
-                      {row.epsSurpriseText}
-                    </dd>
-                  </div>
-                )}
+                ))}
               </dl>
+            ) : (
+              <p className={styles.muted}>{labels.noReaction}</p>
             )}
 
             <p className={styles.date}>{row.reported}</p>

@@ -24,6 +24,21 @@
   transition: border-color 160ms, background-color 160ms;
 }
 
+/* GÖRÜŞÜN ÜST ŞERİDİ (30 Ekim) — teknik analiz kartlarının dili: kartın
+   tepesinde görüşün yumuşak tonu (`--verdict-*`). Liste bir bakışta
+   AL/TUT/SAT dağılımı olarak taranıyor; halka ve kelime ayrıntıyı veriyor. */
+.card::before {
+  position: absolute;
+  top: -1px;
+  inset-inline: 22px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--verdict-hold);
+  content: "";
+}
+.card[data-verdict="buy"]::before { background: var(--verdict-buy); }
+.card[data-verdict="sell"]::before { background: var(--verdict-sell); }
+
 .card:hover { border-color: var(--line-strong); }
 .card:focus-within { border-color: var(--line-focus); background: var(--surface-elevated); }
 
@@ -98,38 +113,61 @@
   letter-spacing: -0.02em;
 }
 
-.reaction {
+/* Çeyreğin cümlesi: iki satır, fazlası kesilir — tamamı analizde. */
+.teaser {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--text-small);
+  line-height: 1.5;
+  color: var(--text-body);
+  text-wrap: pretty;
+}
+
+.muted {
+  font-size: var(--text-tiny);
+  color: var(--text-muted);
+}
+
+/* Üç ölçü tek kutuda, satırları aynı ızgarada: etiket · şerit · değer.
+   Değer sütunu en uzun değere göre (max-content) — hiçbir değer şeride
+   binmez, satırların şeritleri aynı başlangıçtan çizilir. */
+.metrics {
   display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: baseline;
-  gap: 6px 10px;
-  padding: 10px 12px;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  gap: 9px 12px;
+  margin: 0;
+  padding: 12px 14px;
   border-radius: var(--radius-md);
   background: var(--surface-sunken);
 }
 
-.metricLabel {
+.metric { display: contents; }
+
+.metric dt {
+  align-self: center;
   font-size: var(--text-tiny);
   font-weight: 600;
   color: var(--text-body);
 }
 
-.reactionValue {
-  justify-self: end;
-  font-size: var(--text-read);
-  font-weight: 700;
+.metric dd {
+  display: contents;
+  margin: 0;
 }
 
-.muted {
+.metricValue {
   justify-self: end;
-  font-size: var(--text-tiny);
-  color: var(--text-muted);
+  font-size: var(--text-small);
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 /* Sıfır ortada; kulvar ince, sıfır çizgisi koyu (sitenin grafik dili). */
 .strip {
   position: relative;
-  grid-column: 1 / -1;
+  align-self: center;
   display: block;
   height: 5px;
   border-radius: 999px;
@@ -154,31 +192,17 @@
 }
 
 .stripFill[data-tone="down"] { background: var(--down); }
+/* Ölçeği aşan değer: şerit uçta durur, ucunda kesik bir çentik "taştı"
+   der (ölçek uç değere dayanıklı — robustScale). */
+.stripFill[data-over] { mask: linear-gradient(90deg, #000 calc(100% - 5px), transparent calc(100% - 5px), transparent calc(100% - 3px), #000 calc(100% - 3px)); }
+.stripFill[data-over][data-tone="down"] { mask: linear-gradient(270deg, #000 calc(100% - 5px), transparent calc(100% - 5px), transparent calc(100% - 3px), #000 calc(100% - 3px)); }
 
-.scorecard {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+@media (prefers-reduced-motion: no-preference) {
+  .stripFill { animation: strip-in 620ms var(--ease-brand) backwards; animation-delay: calc(var(--i) * 28ms + 120ms); transform-origin: left; }
+  .stripFill[data-tone="down"] { transform-origin: right; }
 }
 
-.scorecard > div {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.scorecard dt {
-  font-size: var(--text-nano);
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.scorecard dd {
-  margin: 0;
-  font-size: var(--text-base);
-  font-weight: 700;
-}
+@keyframes strip-in { from { scale: 0 1; } }
 
 .date {
   margin-top: auto;

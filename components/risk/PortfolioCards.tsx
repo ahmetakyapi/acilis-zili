@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Warning, TrendDown, TrendUp, Flag } from "@phosphor-icons/react/dist/ssr";
+import { VerdictPill } from "@/components/ui/VerdictPill";
 import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
 import type { Dictionary } from "@/lib/i18n";
 import type { Exposure, PositionRow } from "@/lib/risk/exposure";
@@ -40,6 +42,8 @@ const ARC_CY = 50;
 const LABEL_GAP = 22;
 
 const VERDICT_TEXT = { tr: { buy: "AL", hold: "TUT", sell: "SAT" }, en: { buy: "BUY", hold: "HOLD", sell: "SELL" } } as const;
+/** Rejim ölçeğinin basamak sayısı: Sakin · Gergin · Stres. */
+const TONE_STEPS = [0, 1, 2] as const;
 
 /** Değerin işaret yönü, gösterilen yuvarlakla (−0,0 renk almaz). */
 function dirOf(value: number | null, digits = 1): "up" | "down" | undefined {
@@ -251,10 +255,10 @@ export type PositionRule = { label: string; tone: RuleTone };
 
 function PositionCard({ row, rules, t, locale }: Common & { row: PositionRow; rules: readonly PositionRule[] }) {
   const T = t.cards;
-  const flags: string[] = [];
-  if (row.cross === "golden") flags.push(t.indices.golden);
-  if (row.cross === "death") flags.push(t.indices.death);
-  for (const w of [100, 200] as const) if (row.crossedBelow[w]) flags.push(fill(t.indices.crossedBelow, { w }));
+  const flags: { label: string; kind: "up" | "down" }[] = [];
+  if (row.cross === "golden") flags.push({ label: t.indices.golden, kind: "up" });
+  if (row.cross === "death") flags.push({ label: t.indices.death, kind: "down" });
+  for (const w of [100, 200] as const) if (row.crossedBelow[w]) flags.push({ label: fill(t.indices.crossedBelow, { w }), kind: "down" });
   const d200 = row.ma[200].distance;
   return (
     <article className={styles.card} data-tone={row.tone} data-position-card={row.symbol}>
@@ -279,7 +283,15 @@ function PositionCard({ row, rules, t, locale }: Common & { row: PositionRow; ru
         <p className={styles.cardValueLabel} title={T.atrSub}>
           {T.atr}
         </p>
+        {/* REJİM ÖLÇEĞİ (30 Ekim): renkli nokta + kelimeydi; artık üç
+            basamaklı küçük bir ölçek, bulunduğu basamak dolu. Kelime
+            yanında: renk tek başına anlam taşımıyor. */}
         <span className={styles.toneChip} title={T.toneNote}>
+          <span className={styles.toneMeter} aria-hidden>
+            {TONE_STEPS.map((step) => (
+              <i key={step} data-on={step <= row.tone || undefined} />
+            ))}
+          </span>
           <span className={styles.toneText}>{t.regime.points[row.tone]}</span>
         </span>
       </div>
@@ -310,41 +322,54 @@ function PositionCard({ row, rules, t, locale }: Common & { row: PositionRow; ru
         </div>
       </dl>
 
-      {(row.technical || row.earnings || rules.length > 0 || flags.length > 0) && (
-        <div className={styles.cardTags}>
+      {/* GÖRÜŞLER ve UYARILAR AYRI (30 Ekim). Hepsi aynı noktalı haptı ve
+          dört-beş hap alt alta yığılınca kartın yarısı etiket oluyordu;
+          görüş ile kural uyarısı aynı ağırlıkta okunuyordu. Görüşler
+          sitenin görüş hapı (VerdictPill, yön ikonlu), uyarılar ikonlu
+          sade satırlar: kural uyarısı ünlem, ortalama kesişi yön oku. */}
+      {(row.technical || row.earnings) && (
+        <div className={styles.cardVerdicts}>
           {row.technical && (
-            <Link
-              href={row.technical.href}
-              className={`${desk.verdict} tap-44`}
-              data-verdict={row.technical.verdict}
-              title={t.positions.viewTitle}
-            >
-              {t.positions.technicalShort} {VERDICT_TEXT[locale][row.technical.verdict]}
+            <Link href={row.technical.href} className={`${styles.verdictLink} tap-44`} title={t.positions.viewTitle}>
+              <VerdictPill
+                verdict={row.technical.verdict}
+                label={`${t.positions.technicalShort} ${VERDICT_TEXT[locale][row.technical.verdict]}`}
+                size="xs"
+              />
               <span className="sr-only"> · {t.positions.viewTitle}</span>
             </Link>
           )}
           {row.earnings && (
             <Link
               href={row.earnings.href}
-              className={`${desk.verdict} tap-44`}
-              data-verdict={row.earnings.verdict}
+              className={`${styles.verdictLink} tap-44`}
               title={`${t.positions.earningsView} · ${row.earnings.period}`}
             >
-              {t.positions.earningsShort} {VERDICT_TEXT[locale][row.earnings.verdict]}
+              <VerdictPill
+                verdict={row.earnings.verdict}
+                label={`${t.positions.earningsShort} ${VERDICT_TEXT[locale][row.earnings.verdict]}`}
+                size="xs"
+              />
               <span className="sr-only"> · {t.positions.earningsView}</span>
             </Link>
           )}
+        </div>
+      )}
+      {(rules.length > 0 || flags.length > 0) && (
+        <ul className={styles.alerts}>
           {rules.map((r) => (
-            <span key={r.label} className={`${desk.tag} ${styles.ruleTag}`} data-tag={r.tone} title={T.ruleTitle}>
+            <li key={r.label} data-tag={r.tone} title={T.ruleTitle}>
+              <Warning aria-hidden weight="fill" />
               {r.label}
-            </span>
+            </li>
           ))}
           {flags.map((f) => (
-            <span key={f} className={styles.flag}>
-              {f}
-            </span>
+            <li key={f.label} data-flag={f.kind}>
+              {f.kind === "up" ? <TrendUp aria-hidden weight="bold" /> : f.kind === "down" ? <TrendDown aria-hidden weight="bold" /> : <Flag aria-hidden weight="fill" />}
+              {f.label}
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </article>
   );

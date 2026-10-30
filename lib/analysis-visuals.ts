@@ -200,6 +200,25 @@ export function reactionScale(values: readonly (number | null | undefined)[]): n
   return Math.max(SCALE_MIN, Math.ceil(max / SCALE_STEP) * SCALE_STEP);
 }
 
+/**
+ * Uç değere dayanıklı ortak ölçek (30 Ekim) — yıllık gelir gibi tek bir
+ * aykırının (%378) bütün listeyi ezdiği ölçüler için. En büyük değer değil,
+ * `%85`'lik dilim kapsanıyor; ölçeği aşan değer şeridin ucunda durur ve
+ * kart onu "taştı" diye işaretler (`ratio` ±1). Değer metni her zaman
+ * kendisi, yani sayı uydurulmuyor, yalnız çizimin boyu kırpılıyor.
+ */
+const ROBUST_QUANTILE = 0.85;
+
+export function robustScale(values: readonly (number | null | undefined)[]): number {
+  const abs = values
+    .filter((v): v is number => typeof v === "number" && Number.isFinite(v))
+    .map(Math.abs)
+    .sort((a, b) => a - b);
+  if (abs.length === 0) return SCALE_MIN;
+  const at = abs[Math.min(abs.length - 1, Math.ceil(abs.length * ROBUST_QUANTILE) - 1)];
+  return reactionScale([at]);
+}
+
 /** Şeridin −1…1 oranı (ölçek dışına taşan tepki uçta durur). */
 export function reactionRatio(value: number, scale: number): number {
   if (!Number.isFinite(value) || scale <= 0) return 0;

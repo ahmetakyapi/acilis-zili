@@ -1,6 +1,6 @@
 import { PageShare } from "@/components/article/PageShare";
 import { VerdictPill } from "@/components/ui/VerdictPill";
-import { Suspense } from "react";
+import { Suspense, type CSSProperties } from "react";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
@@ -22,7 +22,7 @@ import {
   SegmentItem,
   LogoTile,
 } from "@/components/ui/primitives";
-import { ArrowDown, ArrowUpRight, Star } from "@phosphor-icons/react/dist/ssr";
+import { ArrowDown, ArrowUpRight, Clock, MoonStars, Star, SunHorizon } from "@phosphor-icons/react/dist/ssr";
 import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { AnalysisTable } from "@/components/earnings/AnalysisTable";
 import {
@@ -130,6 +130,8 @@ const WEEK_BASE = 5;
 /* Bir haftanın içindeki gün "yakın": dar panelde göreli gün yalnızca bu
    eşiğin içinde kalıyor. */
 const NEAR_DAYS = 7;
+/** En uzak yaprağın yakınlık çizgisi bile görünsün — en kısa pay. */
+const MIN_NEAR = 0.08;
 /* Süzgeçsiz arşiv: en son analizler. */
 const ARCHIVE_LIMIT = 60;
 /* Süzülmüş arşivin tavanı. Süzgeç sorguda çalıştığı için dilim (takip
@@ -252,7 +254,8 @@ export default async function AnalysesPage(
      gereksiz bir Neon turu duruyordu. Zincir üç kademeden ikiye indi. */
   /* İpuçları künyeyle AYNI TURDA. Öne çıkan kart süzülmüş listenin ilk
      satırı ve süzgeç artık sorguda çalıştığı için o satır bu turdan önce
-     belli (20 Ekim): ipucu yalnızca onun için soruluyor. Künye listesi
+     belli (20 Ekim). 30 Ekim'den beri bütün liste için soruluyor: arşiv
+     kartları da çeyreğin cümlesini taşıyor (tek sorgu). Künye listesi
      arşivin sembolleriyle aynı — sektör süzgecinin sorduğu liste, istek
      içinde tek okuma. */
   const [meta, teasers] = await Promise.all([
@@ -261,7 +264,7 @@ export default async function AnalysesPage(
       ...byDate.map((row) => row.symbol),
       ...rows.map((row) => row.symbol),
     ]),
-    getTakeawayTeasers(rows.slice(0, 1)),
+    getTakeawayTeasers(rows),
   ]);
 
   /* Filtre çipleri yalnızca ELDE OLAN sektörleri gösterir: hiçbir analizi
@@ -300,9 +303,15 @@ export default async function AnalysesPage(
     count: rows.filter((row) => verdictOf(row.verdict) === key).length,
   }));
 
-  const tableRows = rows.map((analysis) =>
-    toAnalysisRowView(analysis, meta[analysis.symbol], locale, t),
-  );
+  /* KARTLAR DA ÇEYREĞİN CÜMLESİNİ TAŞIYOR (30 Ekim). İpucu yalnız öne
+     çıkan kartta soruluyordu; arşiv kartları üç sayı ve bir halkadan
+     ibaretti — sahibinin itirazı "daha iyi açıklayan". Tek sorgu, liste
+     boyunca (`getTakeawayTeasers`, sembol × dönem). */
+  const tableRows = rows.map((analysis) => ({
+    ...toAnalysisRowView(analysis, meta[analysis.symbol], locale, t),
+    teaser: teasers.get(teaserKey(analysis)) ?? null,
+    teaserLocale: analysis.locale,
+  }));
 
   const filterHref = (key: string | null) => {
     const params = new URLSearchParams();
@@ -597,7 +606,7 @@ export default async function AnalysesPage(
                   {t.earnings.empty}
                 </p>
               ) : (
-                upcoming.map((row, index) => {
+                upcoming.map((row, index, list) => {
                   /* Taban SEÇİM sırasından (`rank`): görünen beş, en büyük
                      beş (takip listesi önde). Dizideki yerden seçildiğinde
                      tarih sıralaması onu en ERKEN beşe çeviriyordu ve
@@ -616,6 +625,13 @@ export default async function AnalysesPage(
                   const away = readerDayOffset(row.reportDate, null, locale);
                   const session = timingLabel(row.hour, t);
                   const optional = session !== null && away > NEAR_DAYS;
+                  /* YAKINLIK ÇİZGİSİ (30 Ekim): yaprağın dibindeki şerit,
+                     listenin en uzak gününe göre ne kadar yaklaşıldığı.
+                     Bugün dolu, en uzak satır en kısa; göreli gün yazıyla
+                     da duruyor (CLAUDE.md "büyüklük bir de çizgi"). */
+                  const horizon = Math.max(1, ...list.map((item) => readerDayOffset(item.reportDate, null, locale)));
+                  const near = Math.max(MIN_NEAR, Math.min(1, 1 - Math.max(0, away) / (horizon + 1)));
+                  const SessionIcon = row.hour === "bmo" ? SunHorizon : row.hour === "amc" ? MoonStars : Clock;
                   return (
                     /* Satır kutu, içindeki mutlak bağlantı yüzeyi kaplıyor —
                        takvim düğmesi kendi bağlantısını taşıdığı için iç içe
@@ -641,9 +657,17 @@ export default async function AnalysesPage(
                           sıralanınca asıl okunan sütun o oldu: gün sayısı
                           büyük, ay altında. Aynı gün arka arkaya gelirse
                           ikinci karo soluyor — tekrar değil, devam. */}
-                      <span className={analysisStyles.dateTile} aria-hidden={repeat || undefined}>
-                        <b className="numeral">{date.day}</b>
+                      {/* TAKVİM YAPRAĞI (30 Ekim): ay şeridi, gün, dipte
+                          yakınlık çizgisi. Bugün yaprağın şeridi dolu mavi —
+                          listenin tek "şimdi"si. */}
+                      <span
+                        className={analysisStyles.dateTile}
+                        aria-hidden={repeat || undefined}
+                        data-today={away <= 0 || undefined}
+                        style={{ "--near": near } as CSSProperties}
+                      >
                         <span>{date.month}</span>
+                        <b className="numeral">{date.day}</b>
                       </span>
                       <LogoTile
                         symbol={row.symbol}
@@ -698,7 +722,10 @@ export default async function AnalysesPage(
                             <span aria-hidden data-optional={optional || undefined}>
                               {" · "}
                             </span>
-                            <span className="whitespace-nowrap">{session}</span>
+                            <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                              <SessionIcon aria-hidden weight="bold" className="size-3 text-muted" />
+                              {session}
+                            </span>
                           </>
                         )}
                       </span>

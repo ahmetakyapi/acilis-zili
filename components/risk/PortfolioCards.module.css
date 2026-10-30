@@ -158,15 +158,35 @@
     gap: 12px;
   }
 }
+/* KART ZEMİNİ NÖTR, REJİM ÜST ŞERİTTE (30 Ekim). Kartın tamamı rejim
+   tonuna (bej, pembe, yeşil) boyanıyordu; dokuz kart yan yana renkli bir
+   yorgan gibi duruyor, sayılar tonun içinde kayboluyordu — sahibinin
+   itirazı "görsel temaya uygun değil". Zemin sitenin kart zemini; rejim
+   tepedeki 3 piksellik şeritte (bilanço ve teknik kartlarının dili) ve
+   rozetin ölçeğinde. */
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
-  padding: 12px;
+  padding: 14px 12px 12px;
   border-radius: var(--radius-lg, 12px);
-  border: 1px solid color-mix(in srgb, var(--tone, var(--line)) 34%, var(--line));
-  background: color-mix(in srgb, var(--tone-wash, transparent) 70%, var(--surface-sunken));
+  border: 1px solid var(--line);
+  background: var(--surface-solid);
+  transition: border-color var(--default-transition-duration) var(--ease-brand);
+}
+.card::before {
+  position: absolute;
+  top: -1px;
+  inset-inline: 18px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--tone, var(--line-strong));
+  content: "";
+}
+@media (hover: hover) {
+  .card:hover { border-color: var(--line-strong); }
 }
 @media (min-width: 640px) {
   .card {
@@ -258,16 +278,25 @@
   font-size: var(--text-nano);
   font-weight: 700;
   color: var(--text-strong);
-  background: var(--premium-surface);
+  background: var(--surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--line);
   cursor: help;
 }
-.toneChip::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--tone, var(--line-strong));
+.toneMeter {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 10px;
 }
+.toneMeter i {
+  width: 3px;
+  border-radius: 1px;
+  background: var(--line-strong);
+}
+.toneMeter i:nth-child(1) { height: 5px; }
+.toneMeter i:nth-child(2) { height: 7.5px; }
+.toneMeter i:nth-child(3) { height: 10px; }
+.toneMeter i[data-on] { background: var(--tone); }
 
 /* Minyatür: kapanış yumuşak mavi, ortalamalar saç teli (50 düz, 100 kesik,
    200 noktalı); etiketler sağ uçta, son değerin hizasında. */
@@ -351,26 +380,52 @@
   background: var(--tone-soft, var(--primary-soft));
 }
 
-.cardTags {
+.cardVerdicts {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
-.ruleTag {
-  min-height: 28px;
-  font-size: var(--text-nano);
-}
-.flag {
+.verdictLink {
+  position: relative;
   display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0 9px;
   border-radius: 999px;
+  transition: opacity var(--default-transition-duration) var(--ease-brand);
+}
+@media (hover: hover) {
+  .verdictLink:hover > span { box-shadow: inset 0 0 0 1px currentColor; }
+}
+
+/* Uyarılar: hap değil satır — ikon ve metin, tek kutuda. Kural uyarısı
+   kullanıcının seçtiği tonla (ünlem ikonu), ortalama kesişi yön okuyla. */
+.alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  padding: 8px 10px;
+  list-style: none;
+  border-radius: var(--radius-md, 10px);
+  background: var(--surface-sunken);
+}
+.alerts li {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
   font-size: var(--text-nano);
   font-weight: 600;
-  background: var(--premium-surface);
+  line-height: 1.35;
   color: var(--text-body);
 }
+.alerts svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  margin-top: 1px;
+  color: var(--text-muted);
+}
+.alerts li[data-tag="up"] svg, .alerts li[data-tag="buy"] svg, .alerts li[data-flag="up"] svg { color: var(--up); }
+.alerts li[data-tag="down"] svg, .alerts li[data-tag="sell"] svg, .alerts li[data-flag="down"] svg { color: var(--down); }
+.alerts li[data-tag="hold"] svg { color: var(--brass-ink); }
 
 /* Telefon: iki sütun ~170 px — üç ölçü iki satıra, sayı küçülür. */
 @media (max-width: 639px) {
@@ -383,13 +438,14 @@
   .cardStats > div:last-child {
     grid-column: 1 / -1;
   }
-  /* Ton telefonda yalnız nokta: kart zemini zaten tonu taşıyor, yazı
-     büyük sayının etiketini üç satıra kırıyordu (ölçüldü, 390). Ad
+  /* Ton telefonda yalnız ölçek: yazı büyük sayının etiketini üç satıra
+     kırıyordu (ölçüldü, 390); tepe şeridi ve ölçek tonu taşıyor. Ad
      ekran okuyucuya `toneText` ile kalır. */
   .toneChip {
     min-height: 0;
     padding: 6px 0 0;
     background: none;
+    box-shadow: none;
   }
   .toneText {
     position: absolute;

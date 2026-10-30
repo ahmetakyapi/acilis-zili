@@ -5,7 +5,7 @@ import {
   expectedFromNote,
   parseMoneyFigure,
   reactionRatio,
-  reactionScale,
+  reactionScale, robustScale,
   reportLede,
   sourceHost,
   splitPoint,
@@ -120,4 +120,12 @@ test("ortak tepki ölçeği", () => {
   assert.equal(reactionScale([]), 5);
   assert.ok(Math.abs(reactionRatio(-4.2, 5) + 0.84) < 1e-9);
   assert.equal(reactionRatio(30, 15), 1);
+});
+
+test("robustScale: tek aykırı ölçeği ezmiyor, boş liste tabana iner", () => {
+  const values = [7, 10, 12, 14, 17, 21, 33, 36, 378];
+  assert.equal(robustScale(values), 40);
+  assert.equal(reactionScale(values), 380);
+  assert.equal(robustScale([]), 5);
+  assert.equal(robustScale([null, undefined, -3]), 5);
 });

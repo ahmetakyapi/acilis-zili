@@ -182,6 +182,17 @@ değil); küçültürken `toLocaleLowerCase("tr-TR")`.
 
 ## Görsel Dil
 
+**Çıta: her ekran Awwwards ödüllü bir ürünün işçiliğinde** (sahibinin
+isteği, 30 Ekim: "bir şey yaparken, düzeltirken, eklerken hep görsel olarak
+çok iyi şeyler yapmalıyız"). Düzeltme de yeni özellik de "çalışıyor" ile
+bitmez: veri bir çizimle okunur (şerit, halka, ölçek, yaprak), renk anlam
+taşır, hiyerarşi tek bakışta seçilir, iki temada ve 390/1440'ta ekran
+görüntüsüyle bakılır. Yerleşik dil: kart zemini nötr, durum/görüş kartın
+tepesindeki 3 piksellik şeritte (bilanço, teknik ve risk kartları);
+noktalı rozet yerine ikonlu hap (`VerdictPill`); uyarı hap yığını değil
+ikonlu satır. Arayüz işinde `design-taste-frontend` önce çağrılır (pano
+ekranlarında yalnız zanaat kuralları).
+
 Token'lar `app/globals.css` → `@theme inline` (tek kaynak; ölçülmüş
 kontrastlar sahibinin makinesindeki `~/dev-starter/knowledge/themes/acilis-zili.md`te
 — bulut oturumunda yok, token'a bak).

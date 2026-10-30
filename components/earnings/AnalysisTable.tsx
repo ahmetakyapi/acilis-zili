@@ -11,7 +11,7 @@ import {
   type AnalysisRowView,
   type CellTone,
 } from "@/lib/analysis";
-import { reactionScale } from "@/lib/analysis-visuals";
+import { reactionScale, robustScale } from "@/lib/analysis-visuals";
 import { AnalysisCardGrid } from "./AnalysisCardGrid";
 import cardStyles from "./AnalysisCardGrid.module.css";
 import { setView, subscribeView, viewServerSnapshot, viewSnapshot } from "./analysis-view-store";
@@ -143,6 +143,14 @@ export function AnalysisTable({
   /* Ölçek arananlardan değil BÜTÜN listeden: yazdıkça şeritler boy
      değiştirmesin. */
   const scale = useMemo(() => reactionScale(rows.map((row) => row.reactionPct)), [rows]);
+  /* Gelir ve HBK de kendi ortak ölçeğinde (30 Ekim): kartın üç ölçüsü aynı
+     şerit diliyle okunuyor; ölçekler ayrı çünkü büyüklükleri ayrı (yıllık
+     gelir %378'e çıkabiliyor, tepki ±%30'da kalıyor). */
+  /* Gelir ve HBK'de uç değere dayanıklı ölçek: tek bir %378 bütün listenin
+     şeridini nokta boyuna indiriyordu (30 Ekim, ölçüldü). Aşan değer ucta
+     durur ve kart işaretler. */
+  const revenueScale = useMemo(() => robustScale(rows.map((row) => row.revenueYoyPct)), [rows]);
+  const epsScale = useMemo(() => robustScale(rows.map((row) => row.epsSurprisePct)), [rows]);
   /* Okuyucu süzgeci kullandı mı — satırların yerine oturma animasyonu
      yalnızca o andan sonra (globals.css → .filter-settle). İlk tuşta kalan
      satırlar bir kez oturuyor; sonraki tuşlarda yalnızca YENİDEN beliren
@@ -259,7 +267,12 @@ export function AnalysisTable({
           </p>
         ) : (
           <>
-          <p className="text-tiny text-muted">{labels.scale.replace("{n}", String(scale))}</p>
+          <p className="text-tiny text-muted">
+            {labels.scale
+              .replace("{n}", String(scale))
+              .replace("{revenue}", String(revenueScale))
+              .replace("{eps}", String(epsScale))}
+          </p>
           <AnalysisCardGrid
             rows={searching ? visible : visible.slice(0, limit)}
             labels={{
@@ -270,6 +283,8 @@ export function AnalysisTable({
               noReaction: labels.noReaction,
             }}
             scale={scale}
+            revenueScale={revenueScale}
+            epsScale={epsScale}
             filtered={filtered}
           />
           {!searching && visible.length > limit && (
