@@ -686,7 +686,12 @@ Alan kuralları:
   slug        kalıcı kimlik, sonradan değişmez, sadece küçük harf-rakam-tire
   event_date  OLAYIN tarihi (ET), yazının yazıldığı tarih değil
   symbols     en fazla 12, hepsi ABD borsasında işlem gören semboller
-  sources     en az bir kaynak; URL varsa ekle
+  sources     en az bir kaynak; URL varsa ekle. URL yayıncının KENDİ
+              adresi olsun (bloomberg.com, reuters.com, kurumun sitesi);
+              finance.yahoo.com'daki aktarım kopyası haftalar içinde 404
+              oluyor (Ekim taramasında 9 ölü kaynağın 6'sı). Adresi açıp
+              200 döndüğünü gördüysen ekle; göremediysen etiketi yaz, URL'yi
+              boş bırak.
 
 Yanıtta "ok": true gördüğünü doğrula, sonra yazıyı canlıda aç ve görsel
 blokların doğru render edildiğini gözle kontrol et.

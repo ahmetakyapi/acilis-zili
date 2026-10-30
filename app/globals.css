@@ -26,7 +26,8 @@
 
 /* ==========================================================================
    AÇILIŞ ZİLİ — Tasarım Tokenları
-   Kaynak: docs/design/HANDOFF.md §2–§3 + docs/design/acilis-zili-*.dc.html
+   İlk kaynak: docs/arsiv/HANDOFF.md §2–§3 + docs/arsiv/acilis-zili-*.dc.html
+   (Ağustos 2026); o günden beri değerin TEK kaynağı bu dosya.
    Tailwind v4. tailwind.config.ts YOK. Hardcoded renk YASAK.
    Tema geçişi: <html data-theme="light|dark"> — next-themes kullanılmaz.
 

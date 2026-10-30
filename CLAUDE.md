@@ -19,6 +19,7 @@ yazılır. Bir kural değişince satırı güncelle, yanına yenisini ekleme.
 | Rutin promptları (bülten, mercek, analiz, teknik, grafik) | `docs/claude-rutinler.md` |
 | Kullanıcı isteğiyle Claude analizi | `docs/claude-analysis.md` |
 | Sunucu, deploy, geri dönüş | `docs/deploy-vps.md`, `deploy/update.sh` |
+| Eski tasarım devri ve denetim kayıtları (kural DEĞİL) | `docs/arsiv/` |
 
 ## Oturum Başı
 
@@ -77,10 +78,12 @@ npm run build:email              # posta bant GIF'i (public/email/hero.gif, elle
   gerekçesi ayrı paragraf.
 - Mesaj Türkçe, başlık ne değiştiğini söyler (`git log` kalıbına bak).
 - **Depo herkese açık:** staged diff'i sırlara karşı tara (§ Altyapı).
-- **Geçici işaretlere de tara:** `git diff --cached | grep -nE
-  '^\+.*(TMP|TODO|console\.log|debugger)'`. Ajanlar çalışırken alınan anlık
-  commit bir denemenin `label="TMPTEST"` satırını canlıya çıkardı (23 Eylül,
-  `32e6d16d`); build/lint/test bunu yakalamaz.
+- **Commit kancası** (`.githooks/pre-commit`; `npm ci` `prepare` ile kurar):
+  eklenen satırda sır, uygulama kodunda `console.log`/`debugger`/`TMP…`
+  varsa commit'i durdurur. Ajanlar çalışırken alınan anlık commit bir
+  denemenin `label="TMPTEST"` satırını canlıya çıkarmıştı (23 Eylül,
+  `32e6d16d`); build/lint/test bunu yakalamaz. `--no-verify` yalnız
+  bilinçli istisnada. Kanca `TODO`'yu yakalamaz: diff'e yine bak.
 
 ## Ajanlarla Çalışma
 

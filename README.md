@@ -781,7 +781,8 @@ npm run dev            # geliştirme (3000 doluysa 3001)
 npm run build          # üretim derlemesi
 npm run typecheck      # tsc --noEmit
 npm run lint           # eslint
-npx tsx --test tests/*.test.ts   # birim testleri
+npm test               # birim testleri (tsx --test)
+npm run check          # typecheck + lint + test (build'den sonra)
 npm run smoke          # duman testi: çalışan bir kopyayı başsız Chrome'la gezer
 npm run db:generate    # şema değişti → YENİ migration dosyası
 npm run db:migrate     # migration'ları uygula
@@ -794,8 +795,12 @@ npm run build:favicon  # .ico ve PWA ikonlarını marka işaretinden üret
 
 ### Doğrulama
 
-1. **`typecheck` + `lint` + `build`**: üçü de temiz olmadan commit yok.
-2. **Birim testleri**: `tests/` altında 41 dosya. Kotasyon tazeliği ve paket
+1. **`build` + `npm run check`** (typecheck, lint, test): temiz olmadan commit
+   yok; aynı denetimler deploy'un kapısı. Commit kancası
+   (`.githooks/pre-commit`, `npm ci` kurar) eklenen satırda sır ve geçici
+   işaret (`console.log`, `debugger`, `TMP…`) arar.
+2. **Birim testleri** (`tests/*.test.ts`, deploy betikleri için
+   `tests/deploy/`). Kotasyon tazeliği ve paket
    yaşı, önbellek süreleri, rutin ve teknik yayın saatleri, rutin gecikmesi,
    karşılaştırma ölçeği, gün akışı, mali çeyrek hesabı, rota sahneleri,
    vergi ve kur hesabı, portföy, temettü, Piyasa Nabzı, skor kartı ve
@@ -826,7 +831,8 @@ Site kendi sunucusunda yayında: [aciliszili.com](https://aciliszili.com).
 Tam yol `docs/deploy-vps.md`'de, sunucu dosyaları `deploy/` altında.
 
 1. `main`'e her push **GitHub Actions**'ı tetikler
-   (`.github/workflows/deploy.yml`): runner'da typecheck + lint + build.
+   (`.github/workflows/deploy.yml`): runner'da build + typecheck + lint +
+   birim testleri.
 2. Geçerse sunucuda `deploy/update.sh` çalışır: yeni sürüm
    `releases/<zaman>-<sha>` altına derlenir, `current` bağı ancak sağlık
    kontrolü geçince çevrilir. Derleme sürerken canlı sürüm ayakta kalır,
@@ -844,8 +850,9 @@ Tam yol `docs/deploy-vps.md`'de, sunucu dosyaları `deploy/` altında.
    her sürümde yeni sürümün kopyasıyla onu çağırıyor ve eksik satırı
    ekliyor.
 
-Migration'lar deploy'da **uygulanmaz**; şema değişikliği ayrıca
-`npm run db:migrate` ile üretim veritabanına uygulanır.
+Migration'lar deploy'da **uygulanmaz**; şema değişikliği GitHub Actions →
+"Migrate DB" (`migrate.yml`: önce `check`, sonra `apply`) ile üretim
+veritabanına uygulanır.
 
 İkinci bir kopya açılırsa iki kural: **cron tek yerde çalışır** (Finnhub'ın
 dakikalık kotası) ve **ikinci kopya indekslenmez** (`SITE_INDEXABLE=false`).

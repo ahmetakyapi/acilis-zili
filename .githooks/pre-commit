@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Commit öncesi son süzgeç — staged farkın EKLENEN satırları taranır.
+#
+# NEDEN VAR (30 Ekim): iki kural yalnız bellekte ve CLAUDE.md'de yaşıyordu,
+# hangi ajanın commit attığına göre uygulanıp uygulanmıyordu:
+#  - Geçici işaret: 23 Eylül'de ajanlar çalışırken alınan anlık commit bir
+#    denemenin `label="TMPTEST"` satırını canlıya çıkardı (32e6d16d).
+#    build/lint/test bunu yakalamaz.
+#  - Sır: depo herkese açık; anahtar bir kez push'lanınca geri alınamaz.
+# Kanca `npm ci`/`npm install` sırasında `prepare` betiğiyle kurulur
+# (core.hooksPath). Bilinçli istisna: `git commit --no-verify`.
+set -euo pipefail
+
+fail=0
+report() {
+  echo "pre-commit: $1" >&2
+  printf '%s\n' "$2" | sed 's/^/    /' >&2
+  fail=1
+}
+
+# Eklenen satırlar, "dosya:satır" önekiyle. Silinen satırlar taranmaz.
+added() {
+  git diff --cached --unified=0 --no-color --diff-filter=ACMR -- "$@" |
+    awk '/^\+\+\+ b\//{file=substr($0,7); next}
+         /^@@/{split($3,a,","); line=substr(a[1],2); next}
+         /^\+/{print file ":" line ": " substr($0,2); line++}'
+}
+
+# 1. Sırlar — her dosyada (örnek değerler `.env.example`te boş durur).
+secrets=$(added . ':!.env.example' |
+  grep -E 'sk-ant-[A-Za-z0-9_-]{20,}|xkeysib-[A-Za-z0-9-]{20,}|\bre_[A-Za-z0-9]{8,}_[A-Za-z0-9_]{8,}|postgres(ql)?://[^:/ ]+:[^@ ]{8,}@|-----BEGIN [A-Z ]*PRIVATE KEY-----' || true)
+[ -n "$secrets" ] && report "sır gibi görünen değer eklenmiş" "$secrets"
+
+# 2. Geçici işaretler — yalnız uygulama kodunda; betik ve testlerde
+#    console.log meşru.
+markers=$(added app lib components hooks types proxy.ts auth.ts |
+  grep -E 'console\.log\(|\bdebugger\b|\bTMP[A-Z_]+\b' || true)
+[ -n "$markers" ] && report "geçici işaret (console.log / debugger / TMP…) eklenmiş" "$markers"
+
+if [ "$fail" -ne 0 ]; then
+  echo "pre-commit: düzelt ya da bilinçliyse 'git commit --no-verify'." >&2
+  exit 1
+fi

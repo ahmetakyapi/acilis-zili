@@ -155,11 +155,16 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       `docs/claude-rutinler.md` § 4 artık `takeaways`, `segments`,
       `segments_source` ve `kpis` alanlarını istiyor; kurulu rutin eski
       prompt'la koştukça ekler boş kalır.
+- [ ] **Mercek rutini prompt'u claude.ai'ye yeniden yapıştırılmalı.**
+      `docs/claude-rutinler.md` § 3 `sources` kuralı (30 Ekim): URL
+      yayıncının kendi adresi, finance.yahoo.com aktarımı değil; açılmayan
+      adres eklenmez. Kurulu rutin eski prompt'la koştukça kırık bağlantı
+      raporu (`links.yml`) dolmaya devam eder.
 - [ ] **`/api/health` bir uptime izleyicisine bağlanmalı** (UptimeRobot,
       Better Stack). İki kural: kod 200 değilse "site düştü", gövde
       `degraded` içeriyorsa "içerik gecikti".
 - [ ] **Duman testinin yazma akışı hiç koşturulmadı.** Birim testleri
-      (`tests/`, 37 dosya) ve duman testi (`npm run smoke`, GitHub Actions
+      (`tests/`, deploy kapısında) ve duman testi (`npm run smoke`, GitHub Actions
       `smoke.yml`) var (README → Doğrulama). Açık kalan: kayıt → giriş →
       favori → hesap silme akışı `SMOKE_ALLOW_WRITES=1` ile gerçek bir
       veritabanına karşı bir kez bile koşmadı.
@@ -245,10 +250,10 @@ gelsin.
 | Dosya | Ne için |
 |---|---|
 | `README.md` | Ürünün tamamı: rotalar, mimari, veri modeli, kurulum, sınırlar |
-| `CLAUDE.md` | Kod üzerinde çalışırken bilinmesi gerekenler — kurallar ve tuzaklar |
+| `CLAUDE.md` (`AGENTS.md` aynı dosya) | Kod üzerinde çalışırken bilinmesi gerekenler — kurallar ve tuzaklar |
 | `docs/claude-rutinler.md` | İçerik rutinlerinin prompt'ları ve `:::` blok sözdizimi |
 | `docs/claude-analysis.md` | Kullanıcı isteğiyle Claude analizi: kurulum, kota, prompt, rapor ekranı |
 | `docs/deploy-vps.md` | Sunucu kurulumu, otomatik deploy ve geri dönüş |
 | `docs/claude-brief-agent.md` · `docs/claude-mercek-ajani.md` | Yalnız yönlendirme: tek kaynak `docs/claude-rutinler.md` |
-| `docs/design/` | Tasarım notları |
+| `docs/arsiv/` | Tarihî tasarım devri ve denetim kayıtları — kural değil, güncel kural `CLAUDE.md` |
 | bu dosya | Durum: canlıda ne var, ne bekliyor, ne bilinçli olarak yok |
