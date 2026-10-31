@@ -783,6 +783,10 @@ export function onlyLastTradingDay(bars: Bar[]): Bar[] {
  * `fetchBarPages` başında). Devam sayfaları orada izleniyor.
  */
 const MAX_BARS_PER_REQUEST = 10_000;
+/** Takvim gününün işlem günü payı (252/365 ≈ 0,69), sayfaya sığdırma için cömert. */
+const TRADING_DAY_SHARE = 0.72;
+/** Uzun aralıkta bile paket bu kadar sembolden küçülmesin (istek sayısı tavanı). */
+const MIN_SYMBOLS_PER_BATCH = 20;
 
 /**
  * Birden çok sembolün barları — TEK istekte.
@@ -930,8 +934,26 @@ export async function getDailyBarsBetween(
   const latest = Date.now() - (FEED_DELAY_MINUTES + 1) * 60_000;
   const endIso = new Date(Math.min(end.getTime(), latest)).toISOString();
 
+  /* PAKET BOYU ARALIKTAN (31 Ekim). 200 sembollük paket uzun aralıkta tek
+     sayfaya sığmıyordu: risk masasının genişliği 400 günlük seriyi istiyor,
+     200 × ~280 bar = ~56 bin bar, yani paket başına 6 sayfa — sayfalar
+     paketin İÇİNDE sıralı (`fetchBarPages`, sayfa başı ~3 sn). Günün ilk
+     açılışı ~17 sn bekliyordu (ölçüldü). Paket artık bir sayfaya sığacak
+     boyda; paketler paralel. Günün Posteri gibi kısa aralıkta paket yine
+     200 (tavan). İşlem günü takvim gününün ~%72'si; pay için yukarı. */
+  const tradingDays = Math.max(
+    1,
+    Math.ceil(((Date.parse(endIso) - Date.parse(start)) / 86_400_000) * TRADING_DAY_SHARE),
+  );
+  const perBatch = Math.max(
+    MIN_SYMBOLS_PER_BATCH,
+    Math.min(BATCH_SIZE, Math.floor(MAX_BARS_PER_REQUEST / tradingDays)),
+  );
+  const symbolBatches: string[][] = [];
+  for (let i = 0; i < unique.length; i += perBatch) symbolBatches.push(unique.slice(i, i + perBatch));
+
   const results = await Promise.all(
-    batches(unique).map((batch) =>
+    symbolBatches.map((batch) =>
       fetchBarPages(
         {
           symbols: batch.join(","),

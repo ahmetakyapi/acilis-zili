@@ -28,8 +28,13 @@ import type { InkSceneName } from "@/lib/ink/scenes";
 
 /** Hapın çıkması için gereken bekleme — altındaki gezinmeler sessiz geçer. */
 const SLOW_AFTER = 420;
-/** Emniyet freni: hiçbir sinyal gelmezse çubuk sonsuza kadar dönmesin. */
-const MAX_RUN = 10_000;
+/** Emniyet freni: hiçbir sinyal gelmezse çubuk sonsuza kadar dönmesin.
+ *  10 sn'den 30 sn'ye (31 Ekim): risk masasının günün ilk açılışı ~17 sn,
+ *  şirketler tablosu soğukta 5–8 sn sürüyordu (canlıda ölçüldü). Fren
+ *  gezinme BİTMEDEN işareti söndürüyor, eski sayfa "hiçbir şey olmadı"
+ *  gibi duruyor ve okur yeniden tıklıyordu. Fren yalnız gerçekten
+ *  kaybolmuş bir gezinme içindir; yavaş sayfanın ilacı akış (Suspense). */
+const MAX_RUN = 30_000;
 /** Çıkış sönmesinin süresi — CSS'teki geçişten bir tık uzun (globals.css
  *  `.route-loader[data-leaving]`), geçiş bitmeden katman sökülmesin. */
 const EXIT_MS = 170;

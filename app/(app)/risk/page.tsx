@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import {
   BacktestPanel,
   ExposurePanel,
@@ -60,12 +61,49 @@ export async function generateMetadata(): Promise<Metadata> {
   return META();
 }
 
+/* AKIŞ (31 Ekim). Sayfa izleyici denetiminden sonra masanın tamamını
+   bekliyordu: piyasa masası (≈500 sembolün 400 günlük barı, FRED, VIX) ve
+   maruziyet ardışık, günün ilk açılışında ~17 sn. Kabuk boş kalıyor, rota
+   işareti söndükten sonra eski sayfa "hiçbir şey olmadı" gibi duruyor ve
+   okur yeniden tıklıyordu. Artık kritik yolda yalnız izleyici (404 kararı
+   başlıktan önce verilmeli) ve sözlük; masa kendi Suspense'inde akıyor,
+   iskelet son düzenin şeklinde. */
 export default async function RiskPage() {
   const viewer = await getRiskViewer();
   if (!viewer) notFound();
   const { t, locale: rawLocale } = await getI18n();
   const locale = rawLocale === "en" ? "en" : "tr";
   const T = t.riskDesk;
+  return (
+    <div className={styles.desk}>
+      <Suspense fallback={<DeskSkeleton title={T.title} />}>
+        <DeskContent userId={viewer.userId} locale={locale} />
+      </Suspense>
+    </div>
+  );
+}
+
+/** Masa gelene dek: başlık gerçek, gövde son düzenin şeklinde iskelet. */
+function DeskSkeleton({ title }: { title: string }) {
+  return (
+    <>
+      <header className={styles.head}>
+        <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em]">{title}</h1>
+        <span className="skeleton block h-4 w-64" aria-hidden />
+      </header>
+      <div className={styles.top} aria-busy="true">
+        <span className="skeleton block h-[230px] rounded-[var(--radius-lg)]" aria-hidden />
+        <span className="skeleton block h-[230px] rounded-[var(--radius-lg)]" aria-hidden />
+      </div>
+      <span className="skeleton block h-[420px] rounded-[var(--radius-lg)]" aria-hidden />
+    </>
+  );
+}
+
+async function DeskContent({ userId, locale }: { userId: string; locale: "tr" | "en" }) {
+  const { t } = await getI18n();
+  const T = t.riskDesk;
+  const viewer = { userId };
   const desk = await getMarketDesk();
   const [exposure, rules, alerts] = await Promise.all([
     getExposure(viewer.userId, desk),
@@ -92,7 +130,7 @@ export default async function RiskPage() {
   }
 
   return (
-    <div className={styles.desk}>
+    <>
       <header className={styles.head}>
         <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em]">{T.title}</h1>
         <p className={styles.headMeta}>
@@ -139,6 +177,6 @@ export default async function RiskPage() {
         </div>
       </Panel>
       <DataStamp labels={t.data} source="alpaca" at={desk.sources.barsAt} locale={locale} />
-    </div>
+    </>
   );
 }
