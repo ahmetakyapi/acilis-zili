@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { TimeoutError, withTimeout } from "./timeout";
 import { after } from "next/server";
 import { inArray, eq, and, sql } from "drizzle-orm";
 import { db } from "../db";
@@ -607,6 +608,34 @@ export async function getQuotes(
 ): Promise<ProviderResult<Record<string, Quote>>> {
   const unique = [...new Set(symbolList)].sort();
   return quotesForKey(unique.join(","), status);
+}
+
+/**
+ * SÜRE SINIRLI KOTASYON — yalnız EKRAN için (31 Ekim).
+ *
+ * Şirketler tablosu canlıda soğuk açılışta 5–8 sn bekliyordu (ölçüldü):
+ * kotasyon zinciri (önbellek → tazelik denetimi → önbelleksiz tekrar →
+ * gerçek zamanlı katman) ardışık ve yüz sembolün üzerinde. Sınır dolarsa
+ * ekran son bilinen değeri "güncel değil" damgasıyla basar (CLAUDE.md
+ * Veri dürüstlüğü 5: ekran bayat veriyi künyesiyle gösterebilir); canlı
+ * istek ARKADA sürer ve önbelleği doldurur — bir sonraki açılış sıcak.
+ * YAZMA katmanı bunu KULLANMAZ (o `getLiveQuotes`).
+ */
+export async function getQuotesWithin(
+  symbolList: string[],
+  status: MarketStatus,
+  budgetMs: number,
+): Promise<ProviderResult<Record<string, Quote>>> {
+  const live = getQuotes(symbolList, status);
+  try {
+    return await withTimeout(live, budgetMs);
+  } catch (error) {
+    if (!(error instanceof TimeoutError)) throw error;
+  }
+  const cached = await quotesFromCache([...new Set(symbolList)]);
+  /* Önbellek de boşsa canlı isteği beklemekten başka yol yok. */
+  if (Object.keys(cached.quotes).length === 0) return live;
+  return ok(cached.quotes, "cache", { stale: true, fetchedAt: cached.oldest ?? undefined });
 }
 
 /**

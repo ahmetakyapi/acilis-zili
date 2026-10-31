@@ -37,7 +37,7 @@ import {
 } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
-import { getQuotes, getWeeklyChanges } from "@/lib/providers";
+import { getQuotesWithin, getWeeklyChanges } from "@/lib/providers";
 import {
   SECTOR_GROUPS,
   industryLabel,
@@ -124,6 +124,8 @@ const PAGE_STEP = 60;
 
 /** Piyasa değeri sırasında canlı verisi çekilen fazladan satır — gerekçe tabloda. */
 const CAP_CANDIDATE_MARGIN = 40;
+/** Canlı kotasyona tanınan süre; dolarsa son bilinen değer künyesiyle (getQuotesWithin). */
+const QUOTE_BUDGET_MS = 2500;
 
 /** Günlük değişim kulvarının tam kolu (yüzde) — bütün sayfalarda aynı ölçek. */
 const CHANGE_LANE_SPAN = 5;
@@ -592,7 +594,9 @@ async function CompaniesTable({
   const symbols = candidates.map((r) => r.symbol);
 
   const [quotesResult, weekly] = await Promise.all([
-    getQuotes(symbols, status),
+    /* Süre sınırlı (31 Ekim, gerekçe `getQuotesWithin`): sınır dolarsa
+       tablo son bilinen değerle ve künyesiyle hemen gelir. */
+    getQuotesWithin(symbols, status, QUOTE_BUDGET_MS),
     /* Haftalık değişim toplu bir bar isteğiyle geliyor, günlük barlardan
        hesaplanıyor ve uzun TTL ile önbellekli. Günün hareketi tek başına
        gürültü; hafta yönü gösteriyor. */
