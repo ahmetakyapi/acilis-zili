@@ -212,14 +212,31 @@ export function HeaderAside({
 
 /* ------------------------------------------------------------ Sürüm akışı */
 
+/** Ölçek çizgilerinin adımı: tepe 6'ya kadar 2, 30'a kadar 5, üstü 10 madde. */
+function gridStep(peak: number): number {
+  return peak <= 6 ? 2 : peak <= 30 ? 5 : 10;
+}
+
 /**
  * SÜRÜM AKIŞI — yatay eksende her sürüm bir çubuk. Konum gün ölçeğinde
- * (sessiz haftalar boşluk olarak görünür), boy madde sayısı, renk baskın
- * alan (`dominantArea`). En yeni sürüm dolu ve kalın. Çubuğa basınca o
- * sürüme kayar (sayfa içi çapa; katlı girişi `RevealHashTarget` açar);
- * imleç ya da odakta tarih ve başlık balonu. Süzgeç açıkken eşleşmeyen
- * sürümler solar (`matches`): akış her zaman bütün geçmişi gösterir, süzgeç
- * neyin kaldığını işaretler.
+ * (sessiz haftalar boşluk olarak görünür), boy madde sayısı. En yeni sürüm
+ * künyeli. Çubuğa basınca o sürüme kayar (sayfa içi çapa; katlı girişi
+ * `RevealHashTarget` açar); imleç ya da odakta tarih ve başlık balonu.
+ * Süzgeç açıkken eşleşmeyen sürümler solar (`matches`): akış her zaman
+ * bütün geçmişi gösterir, süzgeç neyin kaldığını işaretler.
+ *
+ * OKUNUR AKIŞ (31 Ekim, sahibinin sözü: "ince çubuklar, okunması zor").
+ * Eski çubuk 6 piksel enli, tek renkli (baskın alan) ve ölçeksizdi: boy
+ * bir sayı söylemiyordu, renk sürümün yalnız bir alanını. Şimdi:
+ *   - çubuk ALAN ALAN YIĞIN (`parts`): her dilim o alanın madde sayısı
+ *     kadar; süzgeç çiplerindeki renk imi lejant olmaya devam ediyor;
+ *   - en, gün diliminden (`--days`): 1440'ta ~10, 390'da ~3 piksel; aynı
+ *     günde iki sürüm olmadığı için çubuklar üst üste binmez;
+ *   - ölçek çizgileri (5, 10, 15 madde), en üstteki birimli; sıfır çizgisi
+ *     `--line-strong` (grafik dili);
+ *   - en yeni çubuğun tepesinde "Son · 16" künyesi (eski dolu baş yerine).
+ * Boy DOĞRUSAL ve sıfırdan (oran × çizim yüksekliği): bir maddelik sürüm
+ * kısa görünür, yalan söylemez.
  */
 export function ReleaseStrip({
   points,
@@ -237,6 +254,9 @@ export function ReleaseStrip({
 }) {
   if (points.length === 0) return null;
   const peak = Math.max(1, ...points.map((point) => point.items));
+  const days = (points.at(-1)?.day ?? 0) + 1;
+  const step = gridStep(peak);
+  const grid = Array.from({ length: Math.floor(peak / step) }, (_, i) => (i + 1) * step);
   const monthName = new Intl.DateTimeFormat(intlLocale(locale), { month: "short", timeZone: "UTC" });
   return (
     <Panel aria-labelledby="yenilikler-akis" className={styles.strip}>
@@ -244,37 +264,73 @@ export function ReleaseStrip({
         <h2 id="yenilikler-akis" className={styles.stripTitle} data-ink="plain">{L.stripTitle}</h2>
         <p className={styles.stripHint}>{L.stripHint}</p>
       </div>
-      <nav aria-labelledby="yenilikler-akis" className={styles.laneWrap} data-filtered={matches ? "" : undefined}>
-        <ol className={styles.bars}>
-          {points.map((point, index) => {
-            /* Boy oranı DOĞRUSAL (0-1, en büyük sürüm 1); piksel karşılığı
-               CSS'te (`--bar-min` + oran × `--bar-range`, telefonda kısa). */
-            const ratio = point.items / peak;
-            const label = L.pointLabel
-              .replace("{date}", shortDay(point.date, locale))
-              .replace("{title}", point.title)
-              .replace("{n}", String(point.items));
-            return (
-              <li
-                key={point.date}
-                className={`${styles.bar} ${styles.tone}`}
-                data-area={point.area}
-                style={{ "--x": point.x, "--r": ratio.toFixed(3), "--i": index } as CSSProperties}
-                data-latest={index === points.length - 1 || undefined}
-                data-side={point.x > 0.5 ? "left" : "right"}
-                data-match={!matches || matches.has(point.date) || undefined}
-              >
-                <a href={`#${entryAnchor(point.date)}`} aria-label={label} className={styles.barLink}>
-                  <span className={styles.barFill} aria-hidden />
-                  <span className={styles.tip} aria-hidden>
-                    <strong>{shortDay(point.date, locale)}</strong> {point.title}
-                    <span className={styles.tipArea}>{L.areaShort[point.area]}, {countLabel(point.items, L.itemCount, L.itemCountOne)}</span>
-                  </span>
-                </a>
+      <nav
+        aria-labelledby="yenilikler-akis"
+        className={styles.laneWrap}
+        data-filtered={matches ? "" : undefined}
+        style={{ "--days": days } as CSSProperties}
+      >
+        <div className={styles.plot}>
+          <ol className={styles.grid} aria-hidden>
+            {grid.map((value, i) => (
+              <li key={value} style={{ "--r": (value / peak).toFixed(3) } as CSSProperties}>
+                <span className="numeral">
+                  {value}
+                  {i === grid.length - 1 && <span className={styles.gridUnit}>{L.stripScale.replace("{n}", "")}</span>}
+                </span>
               </li>
-            );
-          })}
-        </ol>
+            ))}
+          </ol>
+          <ol className={styles.bars}>
+            {points.map((point, index) => {
+              const ratio = point.items / peak;
+              const latest = index === points.length - 1;
+              const label = L.pointLabel
+                .replace("{date}", shortDay(point.date, locale))
+                .replace("{title}", point.title)
+                .replace("{n}", String(point.items));
+              return (
+                <li
+                  key={point.date}
+                  className={styles.bar}
+                  style={{ "--x": point.x, "--r": ratio.toFixed(3), "--i": index } as CSSProperties}
+                  data-latest={latest || undefined}
+                  data-side={point.x > 0.5 ? "left" : "right"}
+                  data-match={!matches || matches.has(point.date) || undefined}
+                >
+                  <a href={`#${entryAnchor(point.date)}`} aria-label={label} className={styles.barLink}>
+                    <span className={styles.barFill} aria-hidden>
+                      {point.parts.map((part) => (
+                        <span
+                          key={part.area}
+                          className={`${styles.barPart} ${styles.tone}`}
+                          data-area={part.area}
+                          style={{ flexGrow: part.count }}
+                        />
+                      ))}
+                    </span>
+                    {latest && (
+                      <span className={`numeral ${styles.barLatest}`} aria-hidden>
+                        {L.stripLatest.replace("{n}", String(point.items))}
+                      </span>
+                    )}
+                    <span className={styles.tip} aria-hidden>
+                      <strong>{shortDay(point.date, locale)}</strong> {point.title}
+                      <span className={styles.tipParts}>
+                        {point.parts.map((part) => (
+                          <span key={part.area}>
+                            <i className={`${styles.chipSwatch} ${styles.tone}`} data-area={part.area} />
+                            {L.areaShort[part.area]} {part.count}
+                          </span>
+                        ))}
+                      </span>
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
         <ol className={styles.ticks} aria-hidden>
           {ticks.map((tick) => (
             <li key={tick.month} style={{ "--x": tick.x } as CSSProperties}>
@@ -366,7 +422,8 @@ function ItemLink({
 type Seen = { date: string; latest: string };
 
 /**
- * ÖNE ÇIKAN KART — alan renginde yıkanmış zemin (gölge yok, ton farkı),
+ * ÖNE ÇIKAN KART — nötr zemin, alan rengi 3 piksellik tepe şeridinde (31 Ekim;
+ * eskiden alan renginde yıkanmış zemin, gerekçe modül CSS başı),
  * hedef ekranın ikonu, başlık, tek satır özet ve "Dene" butonu. Kartın
  * tamamı bağlantı: buton görünümlü `span` içeride (iç içe etkileşim yok),
  * dokunma hedefi kartın kendisi.
@@ -537,8 +594,20 @@ export function MonthPanel({ month, latest, locale, L }: { month: ChangeMonth; l
                   <span className={styles.entryTitle}>{entry.title}</span>
                   <UnseenPill date={entry.date} latest={latest} label={L.badge} srLabel={L.unseenLabel} />
                 </span>
-                <span className={styles.entryDots} aria-label={entryAreas(entry).map((area) => L.area[area]).join(", ")}>
-                  {entryAreas(entry).map((area) => <span key={area} className={`${styles.entryDot} ${styles.tone}`} data-area={area} />)}
+                {/* Alan payı (31 Ekim): renk noktaları yerine akıştaki
+                    çubuğun yatay küçüğü; eni madde sayısı, dilimleri alanlar. */}
+                <span
+                  className={styles.entryDots}
+                  role="img"
+                  aria-label={entryAreas(entry).map((area) => L.area[area]).join(", ")}
+                  style={{ "--n": entry.items.length } as CSSProperties}
+                >
+                  {AREA_DISPLAY_ORDER.map((area) => {
+                    const count = entry.items.filter((item) => item.area === area).length;
+                    return count > 0 ? (
+                      <span key={area} className={`${styles.entryDot} ${styles.tone}`} data-area={area} style={{ flexGrow: count }} />
+                    ) : null;
+                  })}
                 </span>
                 <span className={styles.entryCount}>{countLabel(entry.items.length, L.itemCount, L.itemCountOne)}</span>
                 <CaretDown className={styles.entryIcon} size={14} weight="bold" aria-hidden />

@@ -19,7 +19,7 @@ import { LevelBadge } from "@/components/article/LevelBadge";
 import { GlyphTile } from "@/components/article/GlyphTile";
 import { Panel } from "@/components/ui/primitives";
 import { GuideArticleProgress } from "@/components/guide/GuideArticleProgress";
-import { chapterToneStyle } from "@/components/guide/chapter-tone";
+import { ChapterIcon, chapterToneStyle } from "@/components/guide/chapter-tone";
 import guideStyles from "@/components/guide/GuideExperience.module.css";
 import {
   GUIDE_SLUGS,
@@ -170,15 +170,31 @@ export default async function GuideArticlePage(
         </Link>
       </div>
 
-      <SpotlightCard className={detail.coverSurface}>
+      {/* KAPAK BÖLÜMÜN RENGİNDE (31 Ekim). Bölüm tonu dizinde, yazı sonu
+          panelinde ve önceki/sıradaki kartında vardı ama kapakta yoktu:
+          okuyucu yazıya girince hangi bölümde olduğunu yalnız mavi bir
+          künyeden okuyordu (künyedeki mavi metin bağlantı değildi, yani
+          "mavi etkileşim" kuralını da çiğniyordu). Şimdi kartın tepesinde
+          bölüm tonunda 3 piksellik şerit (sitenin kart dili) ve künye
+          bölümün ikonu + adıyla dizindeki bölüme giden bir bağlantı. */}
+      <div className="contents" style={chapterToneStyle(article.topic)}>
+      <SpotlightCard className={`${detail.coverSurface} ${guideStyles.coverTone}`}>
         <header className={detail.cover} data-has-aside={hasToc}>
           <div className={detail.coverCopy} data-motion-intro>
             <div className="flex items-center gap-3.5">
               <GlyphTile glyph={article.glyph} size={48} />
               <div className="min-w-0">
-                <p className="text-tiny font-semibold text-primary">
-                  {guideTopicLabel(article.topic, locale)}
-                </p>
+                <Link
+                  href={`/rehber#konu-${article.topic}`}
+                  className={guideStyles.coverChapter}
+                >
+                  <ChapterIcon chapter={article.topic} size={14} weight="duotone" aria-hidden />
+                  <span>
+                    {t.guideVisuals.chapter.replace("{n}", String(chapterNumber))}
+                    <span aria-hidden className="mx-1">·</span>
+                    {guideTopicLabel(article.topic, locale)}
+                  </span>
+                </Link>
                 {/* Zorluk ile okuma süresi aynı satırda: ikisi de "bu yazıya
                     girmeye hazır mıyım" sorusunun parçası — biri hazırlığı,
                     öteki zamanı ölçüyor. */}
@@ -219,6 +235,7 @@ export default async function GuideArticlePage(
           )}
         </header>
       </SpotlightCard>
+      </div>
 
       <div className={detail.layout}>
       <div className={detail.mainCol}>
@@ -263,7 +280,9 @@ export default async function GuideArticlePage(
           {/* Bağlantılardaki min-w-0: içerideki `truncate` nowrap demek, o da
               ızgara hücresinin min-content genişliğini metnin tamamına
               çıkarıyor ve sayfayı yana taşırıyordu. */}
-          <div className="grid gap-3 sm:grid-cols-2">
+          {/* Tek sayıda kartta son kart satırı boydan kaplıyor: üç ilgili
+              yazıda üçüncü kart yarım satırda yalnız kalıyordu (31 Ekim). */}
+          <div className="grid gap-3 sm:grid-cols-2 sm:[&>:nth-child(odd):last-child]:col-span-2">
             {related.map((entry) => (
               <Link
                 key={entry.slug}

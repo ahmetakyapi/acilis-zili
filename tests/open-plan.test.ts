@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { ladderOf, openPlan, planReading, priceLadderLayout } from "../lib/technical";
+import { ladderOf, openPlan, openRangeLayout, openWhere, planReading, priceLadderLayout } from "../lib/technical";
 
 /**
  * Plansız görüş ve fiyat merdiveni (31 Ekim).
@@ -77,4 +77,44 @@ test("merdiven: ölçek doğrusal, etiketler çakışmıyor ve kutunun içinde",
   /* Yüksekten düşüğe sıra korunuyor. */
   const prices = marks.map((mark) => ("high" in mark && mark.high !== undefined ? mark.high : mark.price));
   assert.deepEqual(prices, [...prices].sort((a, b) => b - a));
+});
+
+test("bölgesiz TUT'un yeri: arasında, seviyede, geçilmiş; seviye yoksa null", () => {
+  assert.equal(openWhere(openPlan("hold", 1150.89, sndk)!), "between");
+  assert.equal(openWhere(openPlan("hold", 1255.26, sndk)!), "atResistance");
+  assert.equal(openWhere(openPlan("hold", 1400, sndk)!), "aboveResistance");
+  assert.equal(openWhere(openPlan("hold", 950, sndk)!), "belowSupport");
+  assert.equal(openWhere(openPlan("hold", 1100, { ...sndk, resistances: [] })!), "aboveSupport");
+  assert.equal(openWhere(openPlan("hold", 1100, { ...sndk, supports: [] })!), "belowResistance");
+  assert.equal(openWhere(openPlan("hold", 1100, { ...sndk, supports: [], resistances: [] })!), null);
+});
+
+test("bölgesiz TUT ekseni: destek ve direnç iki uç, fiyat doğrusal yerinde, şeritler nötr", () => {
+  const layout = openRangeLayout(openPlan("hold", 1150.89, sndk)!, 1150.89);
+  assert.ok(layout);
+  assert.equal(layout.support, 0);
+  assert.equal(layout.resistance, 1);
+  assert.ok(Math.abs(layout.price - (1150.89 - 998.19) / (1255.35 - 998.19)) < 1e-9);
+  assert.deepEqual(layout.segments.map((s) => [s.side, s.tone]), [["buy", "flat"], ["sell", "flat"]]);
+  /* Uzaklık `openPlan`ın yüzdesi: aynı sayı iki yerde aynı kaynaktan. */
+  assert.ok(Math.abs(layout.segments[0]!.pct - ((1150.89 - 998.19) / 1150.89) * 100) < 1e-9);
+  /* Şeritler fiyatta buluşuyor. */
+  assert.equal(layout.segments[0]!.to, layout.price);
+  assert.equal(layout.segments[1]!.from, layout.price);
+});
+
+test("bölgesiz TUT ekseni: geçilmiş seviye yön renginde, fiyat uca yapışmıyor; fiyatsız eksen yok", () => {
+  const below = openRangeLayout(openPlan("hold", 950, sndk)!, 950)!;
+  assert.equal(below.segments.find((s) => s.side === "buy")?.tone, "down");
+  assert.ok(below.price > 0 && below.price < (below.support ?? 0));
+  const above = openRangeLayout(openPlan("hold", 1400, sndk)!, 1400)!;
+  assert.equal(above.segments.find((s) => s.side === "sell")?.tone, "up");
+  assert.ok(above.price < 1 && above.price > (above.resistance ?? 1));
+  /* Dirençte: o tarafa şerit yok (uzaklık "%0,0" çizilmiyor). */
+  const at = openRangeLayout(openPlan("hold", 1255.26, sndk)!, 1255.26)!;
+  assert.equal(at.segments.some((s) => s.side === "sell"), false);
+  assert.equal(openRangeLayout(openPlan("hold", null, sndk)!, null), null);
+  for (const l of [below, above, at]) {
+    for (const v of [l.price, l.support, l.resistance]) if (v !== null) assert.ok(v >= 0 && v <= 1);
+  }
 });

@@ -100,6 +100,27 @@
 @container (max-width:499px) {
   .bandLabel { display:none; }
 }
+/* KAPANIŞTAN AÇILIŞA — gerekçe SessionRail.tsx → WaitLine. Şeridin
+   altında, saat künyesinden bir kıl çizgiyle ayrık; oluk 3 piksel (şeridin
+   8'inin yanında ikincil okuma). Geçen kısım mavinin %55'i — asıl seansın
+   düz mavisiyle yarışmasın; uç noktası şeridin "şimdi"siyle aynı nokta. */
+.wait { margin-top:8px; padding-top:8px; border-top:1px solid var(--line-soft); }
+.waitAxis { position:relative; height:9px; }
+.waitTrack { position:absolute; inset:3px 0 auto; height:3px; overflow:hidden; border-radius:2px; background:var(--surface-sunken); animation:rail-draw 900ms var(--ease-brand) 360ms backwards; }
+.waitFill { position:absolute; inset:0; background:color-mix(in srgb, var(--primary) 55%, transparent); transform-origin:left center; transition:transform 600ms var(--ease-brand); animation:wait-fill 1100ms var(--ease-brand) 520ms backwards; }
+.waitFill[data-still] { transition:none; }
+@keyframes wait-fill { from { transform:scaleX(0); } }
+.waitNow { position:absolute; top:.5px; width:8px; height:8px; border-radius:50%; transform:translateX(-4px); background:var(--primary); box-shadow:0 0 0 2px var(--premium-surface); transition:left 600ms var(--ease-brand); animation:wait-now-in 320ms var(--ease-brand) 1500ms backwards; }
+.waitNow[data-still] { transition:none; }
+@keyframes wait-now-in { from { opacity:0; scale:.4; } }
+.waitLane { display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-top:5px; color:var(--text-muted); font-size:var(--text-tiny); font-weight:500; line-height:1.3; white-space:nowrap; }
+.waitLane [data-target] { color:var(--text-strong); font-weight:600; }
+.waitName { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+/* Ad dar şeritte iki ucun arasına sığmıyor (390'da ~330 piksel); orada uçlar
+   kendini anlatıyor ("Kapanış · Cum 23:00", "Açılış · Pzt 16:30"). */
+@container (max-width:439px) {
+  .waitName { display:none; }
+}
 /* Telefonda rozet yok, çentik var — gerekçe bileşende. */
 @media (max-width:767px) {
   .rail { margin-top:12px; }
@@ -112,4 +133,5 @@
   .marker:active { scale:none; }
   .now::after { animation:none; opacity:0; }
   .track, .now, .mark { animation:none; }
+  .waitTrack, .waitFill, .waitNow { animation:none; transition:none; }
 }

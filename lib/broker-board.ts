@@ -288,3 +288,35 @@ export function dodgeLabels(targets: readonly number[], gap: number, min: number
   });
   return out;
 }
+
+/**
+ * EN DÜŞÜK KOMİSYON ŞERİDİNİN LOGO KÜMELERİ (31 Ekim). Dilimlerin logoları
+ * dilimin ortasına konuyordu; dar dilimde (390'da 20 piksellik İş Yatırım
+ * dilimi) iki küme üst üste biniyor, eşitlik kümesi komşusunu örtüyordu.
+ * `dodgeLabels`ın yatay ve genişlik bilen hâli: her küme kendi eniyle
+ * (`widths`), aralarında en az `gap`, [min, max] içinde. Önce soldan sağa
+ * itilir, sağ sınırı aşan küme geri kaydırılır; sıra korunur. Dönen dizi
+ * kümelerin MERKEZİ, girişin sırasıyla (girişler zaten soldan sağa).
+ */
+export function dodgeSpans(
+  centers: readonly number[],
+  widths: readonly number[],
+  gap: number,
+  min: number,
+  max: number,
+): number[] {
+  const n = centers.length;
+  const out = centers.map((c, i) => Math.min(Math.max(c, min + widths[i] / 2), max - widths[i] / 2));
+  for (let i = 1; i < n; i++) {
+    const floor = out[i - 1] + widths[i - 1] / 2 + gap + widths[i] / 2;
+    if (out[i] < floor) out[i] = floor;
+  }
+  if (n > 0 && out[n - 1] > max - widths[n - 1] / 2) {
+    out[n - 1] = max - widths[n - 1] / 2;
+    for (let i = n - 2; i >= 0; i--) {
+      const ceil = out[i + 1] - widths[i + 1] / 2 - gap - widths[i] / 2;
+      if (out[i] > ceil) out[i] = ceil;
+    }
+  }
+  return out;
+}

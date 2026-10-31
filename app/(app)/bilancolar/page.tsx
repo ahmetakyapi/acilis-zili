@@ -251,7 +251,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           kaldırıldı, liste bir satır yukarı çıktı. */}
       {/* Analizler geçmiş bilançolara ait, takvim ise ileriye bakıyor:
           son yazılanlar sekmeye tıklanmadan burada görünüyor. */}
-      <RecentAnalysesStrip rows={recent} meta={meta} t={t} />
+      <RecentAnalysesStrip rows={recent} meta={meta} t={t} locale={locale} />
 
       <QueryTransition label={t.common.loading}>
       {rows.length === 0 ? (

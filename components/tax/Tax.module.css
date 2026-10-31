@@ -15,21 +15,24 @@
 
 /* ---------- Kapak: üç soru ---------- */
 
-.paths { display:flex; flex-direction:column; margin:0; padding:0; list-style:none; border:1px solid var(--line); border-radius:16px; overflow:hidden; }
-.paths > li + li { border-top:1px solid var(--line-soft); }
+/* KISAYOL KARTLARI (31 Ekim): çerçeveli tek kutu + saç teli ayraç yerine
+   üç ayrı ton karo (derinlik tonla, çerçeve değil); ok kendi dairesinde,
+   üzerine gelince mavi dolar ve kayar. */
+.paths { display:flex; flex-direction:column; gap:8px; margin:0; padding:0; list-style:none; }
 /* Satırlar yalnızca KONUMLA dökülür, ton sayfanın kendi girişinden gelir
    (menü satırlarıyla aynı kalıp, UtilityExperience.module.css). */
 .paths > li { animation:path-in 460ms var(--ease-brand) backwards; animation-delay:calc(var(--i, 0) * 60ms + 80ms); }
 @keyframes path-in { from { transform:translate3d(16px, 0, 0); } }
-.path { display:grid; grid-template-columns:44px minmax(0,1fr) 20px; align-items:center; gap:14px; min-height:72px; padding:14px 18px; color:var(--text-strong); transition:background-color .25s var(--ease-brand); }
+.path { display:grid; grid-template-columns:44px minmax(0,1fr) 32px; align-items:center; gap:14px; min-height:72px; padding:12px 14px 12px 12px; border-radius:16px; background:var(--surface); color:var(--text-strong); transition:background-color .25s var(--ease-brand); }
 .path:active { scale:.99; }
 .pathIcon { display:grid; place-items:center; width:44px; height:44px; border-radius:12px; background:var(--primary-tint); color:var(--primary-ink); }
 .pathTitle { display:block; font-size:16px; font-weight:650; line-height:1.25; letter-spacing:-.01em; }
 .pathHint { display:block; margin-top:3px; font-size:12px; line-height:1.4; color:var(--text-muted); }
-.pathArrow { color:var(--primary-ink); transition:transform .25s var(--ease-brand); }
+.pathArrow { box-sizing:content-box; padding:7px; border-radius:999px; background:var(--surface-elevated); color:var(--primary-ink); transition:transform .25s var(--ease-brand), background-color .25s var(--ease-brand), color .25s var(--ease-brand); }
+.path:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 @media (hover:hover) and (pointer:fine) {
-  .path:hover { background:var(--primary-tint); }
-  .path:hover .pathArrow { transform:translateX(3px); }
+  .path:hover { background:var(--surface-sunken); }
+  .path:hover .pathArrow { transform:translateX(3px); background:var(--primary); color:var(--on-primary); }
 }
 
 /* ---------- Hesaplayıcı ---------- */
@@ -95,9 +98,15 @@
 .steps { display:flex; flex-direction:column; margin:0; padding:0; list-style:none; }
 .step { position:relative; padding:0 0 30px 42px; }
 .step:last-child { padding-bottom:0; }
-.step::before { content:""; position:absolute; left:13px; top:30px; bottom:4px; width:2px; border-radius:2px; background:var(--line); }
-.step:last-child::before { display:none; }
-.step[data-done="true"]::before { background:var(--primary-faint); }
+/* 31 Ekim: ray iki katman (kulvar + mavi dolgu), dolgu adım tamamlanınca
+   yukarıdan aşağı uzar; tamamlanan düğümde rakamın yerine onay işareti.
+   Sonuç panelindeki akış şemasıyla (SaleEmpty) aynı dil. */
+.step::before, .step::after { content:""; position:absolute; left:13px; top:32px; bottom:4px; width:2px; border-radius:2px; }
+.step::before { background:var(--line); }
+.step::after { background:var(--primary); transform-origin:50% 0; scale:1 0; transition:scale .5s var(--ease-brand); }
+.step[data-done="true"]::after { scale:1 1; }
+.step:last-child::before, .step:last-child::after { display:none; }
+.step[data-done="true"] .node svg { animation:need-tick 420ms var(--ease-spring) both; }
 .node { position:absolute; left:0; top:0; display:grid; place-items:center; width:28px; height:28px; border-radius:999px; border:1.5px solid var(--line-strong); background:var(--panel-fixed); color:var(--text-body); font-size:12px; font-weight:700; transition:background-color .3s var(--ease-brand), border-color .3s var(--ease-brand), color .3s var(--ease-brand); }
 .step[data-done="true"] .node { border-color:var(--primary); background:var(--primary); color:var(--on-primary); }
 .stepTitle { margin:2px 0 16px; font-size:17px; font-weight:650; line-height:1.3; letter-spacing:-.01em; color:var(--text-strong); }
@@ -690,22 +699,61 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
   .bracketYours { display:block; width:max-content; margin:4px 0 0; }
 }
 
-/* ---- Boş satış sonucu (SaleEmpty, 18 Ekim) ----
-   Gerekenler listesi, şelalenin soluk taslağı ve "Örnekle Dene". */
-.emptySale { display:flex; flex-direction:column; gap:22px; }
-.needs { display:flex; flex-direction:column; gap:10px; margin:0; padding:0; list-style:none; }
-.needs li { display:flex; align-items:center; gap:10px; font-size:13px; font-weight:500; line-height:1.4; color:var(--text-muted); transition:color .3s var(--ease-brand); }
-.needs li[data-done] { color:var(--text-strong); }
-.needMark { display:grid; place-items:center; flex-shrink:0; width:20px; height:20px; border-radius:999px; box-shadow:inset 0 0 0 1.5px var(--line-strong); color:var(--on-primary); transition:background-color .3s var(--ease-brand), box-shadow .3s var(--ease-brand); }
-.needs li[data-done] .needMark { background:var(--primary); box-shadow:none; }
+/* ---- Boş satış sonucu (SaleEmpty; 18 Ekim, akış şeması 31 Ekim) ----
+   Beş düğümlü dikey ray ve "Örnekle Dene". Gerekçe TaxCalculator.tsx →
+   SaleEmpty. Derinlik tonla: düğüm zemini `--surface`, ray kulvarı
+   `--line`, dolgu `--primary` (mavi = ilerleme, etkileşimin rengi). */
+.emptySale { display:flex; flex-direction:column; gap:20px; }
+/* Akış kartı: sonuç panelinin zemininde bir ton açık karo (derinlik tonla). */
+.flowMap { padding:16px 16px 18px; border-radius:16px; background:var(--surface); }
+.flowMapHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 16px; margin-bottom:16px; }
+.flowMapHead .basisTitle { margin:0; }
+.flowMeter { display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:650; color:var(--text-muted); }
+.flowMeterBars { display:inline-flex; gap:3px; }
+.flowMeterBars i { width:16px; height:5px; border-radius:999px; background:var(--line); transition:background-color .35s var(--ease-brand); }
+.flowMeterBars i[data-on] { background:var(--primary); }
+.flowRail { display:flex; flex-direction:column; margin:0; padding:0; list-style:none; }
+/* Düğüm: 36 piksellik daire | ad + künye | durum. Ray düğümün altından
+   sonrakinin üstüne; kulvar + dolgu iki katman (dolgu yukarıdan aşağı uzar). */
+.flowNode { position:relative; display:grid; grid-template-columns:36px minmax(0,1fr) auto; align-items:center; gap:0 14px; padding-bottom:18px; }
+.flowNode:last-child { padding-bottom:0; }
+.flowNode::before, .flowNode::after { content:""; position:absolute; left:17px; top:38px; bottom:2px; width:2px; border-radius:2px; }
+.flowNode::before { background:var(--line); }
+.flowNode::after { background:var(--primary); transform-origin:50% 0; scale:1 0; transition:scale .5s var(--ease-brand); }
+.flowNode[data-filled]::after { scale:1 1; }
+.flowNode:last-child::before, .flowNode:last-child::after { display:none; }
+/* Sonuç düğümlerine giden ray kesik: girdiler bitmeden sonuç yok. */
+.flowNode[data-kind="input"]:nth-child(3)::before, .flowNode[data-kind="outcome"]::before { background:repeating-linear-gradient(180deg, var(--line) 0 4px, transparent 4px 8px); }
+.flowDot {
+  position:relative; z-index:1; display:grid; place-items:center; width:36px; height:36px; border-radius:999px;
+  background:var(--surface); box-shadow:inset 0 0 0 1.5px var(--line-strong); color:var(--text-muted);
+  transition:background-color .35s var(--ease-brand), box-shadow .35s var(--ease-brand), color .35s var(--ease-brand);
+}
+.flowNode[data-state="active"] .flowDot { box-shadow:inset 0 0 0 2px var(--primary); color:var(--primary-ink); background:var(--primary-tint); }
+.flowNode[data-state="done"] .flowDot { background:var(--primary); box-shadow:none; color:var(--on-primary); }
+.flowNode[data-state="busy"] .flowDot { box-shadow:inset 0 0 0 2px var(--primary-faint); color:var(--primary-ink); animation:chip-wait 1.2s var(--ease-loop) infinite alternate; }
+.flowNode[data-state="outcome"] .flowDot { background:transparent; box-shadow:none; outline:1.5px dashed var(--line-strong); outline-offset:-1.5px; }
 /* Onay işareti tek küçük öğenin geri bildirimi: yay eğrisi yalnız burada. */
-.needs li[data-done] .needMark svg { animation:need-tick 420ms var(--ease-spring) both; }
+.flowNode[data-state="done"] .flowDot svg { animation:need-tick 420ms var(--ease-spring) both; }
 @keyframes need-tick { from { transform:scale(.4); opacity:0; } }
-.needs li[data-busy] .needMark { box-shadow:inset 0 0 0 1.5px var(--primary-faint); animation:chip-wait 1.2s var(--ease-loop) infinite alternate; }
-/* Taslak: dolu sonucun aynı satırları, aynı renkler, soluk ve sayısız. */
-.sketch, .flowBlock { padding-top:18px; border-top:1px solid var(--line-soft); }
-.sketch .bar { opacity:.38; }
-.sketch .flowName { color:var(--text-muted); }
+.flowCopy { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.fmTitle { font-size:14.5px; font-weight:700; line-height:1.3; letter-spacing:-.005em; color:var(--text-strong); }
+.flowHint { font-size:12px; line-height:1.4; color:var(--text-muted); }
+.flowNode[data-state="outcome"] .fmTitle { color:var(--text-body); }
+.flowState { font-size:11.5px; font-weight:650; color:var(--text-muted); white-space:nowrap; }
+.flowNode[data-state="done"] .flowState { color:var(--primary-ink); }
+.flowNode[data-state="active"] .flowState { color:var(--text-body); }
+/* Girdi ile sonucun arasında künye: "Sonuç". Rayın sağında, iki düğüm
+   arasındaki boşlukta (düğümün ızgarası bozulmasın diye mutlak konumlu). */
+.flowNode[data-kind="input"]:nth-child(3) { padding-bottom:38px; }
+.flowDivider { position:absolute; left:50px; right:0; top:-26px; display:flex; align-items:center; gap:10px; font-size:11px; line-height:14px; font-weight:700; letter-spacing:.02em; color:var(--text-muted); }
+.flowDivider::after { content:""; flex:1; height:1px; background:var(--line-soft); }
+/* Giriş: düğümler sırayla bir kez belirir. */
+@media (prefers-reduced-motion:no-preference) {
+  .flowNode { animation:flow-in .5s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 70ms + 80ms); }
+}
+@keyframes flow-in { from { opacity:0; translate:0 6px; } }
+.flowBlock { padding-top:18px; border-top:1px solid var(--line-soft); }
 
 /* ---- Para birimi alanın içinde ($) ---- */
 .affix { position:relative; display:block; min-width:0; }
@@ -717,8 +765,8 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 /* Bu dosyanın sonradan eklenen hareketleri; dosyanın ortasındaki blok
    bunlardan ÖNCE geldiği için onları ezemezdi (aynı özgüllük). */
 @media (prefers-reduced-motion:reduce) {
-  .exampleNote, .needs li[data-done] .needMark svg, .needs li[data-busy] .needMark { animation:none; }
-  .needs li, .needMark { transition:none; }
+  .exampleNote, .flowNode[data-state="done"] .flowDot svg, .flowNode[data-state="busy"] .flowDot, .step[data-done="true"] .node svg { animation:none; }
+  .flowNode::after, .flowDot, .flowMeterBars i, .step::after { transition:none; }
 }
 
 /* ==========================================================================

@@ -142,7 +142,7 @@ export async function LatestAnalyses({
               <Link
                 href={analysisHref(row.symbol, row.period)}
                 prefetch={false}
-                className="flex items-center gap-2.5 px-4 py-3 transition-colors hover:bg-primary-tint sm:px-5"
+                className="flex items-center gap-2.5 px-4 py-3 transition-colors hover:bg-primary-tint sm:gap-5 sm:px-5"
               >
                 <LogoTile symbol={row.symbol} logoUrl={logo} size="md" />
                 <span className="min-w-0 flex-1">
@@ -157,6 +157,22 @@ export async function LatestAnalyses({
                     {formatEtDateCompact(row.reportDate, locale)}
                   </span>
                 </span>
+                {/* İLK TEPKİ SATIRDA DA (31 Ekim, sahibinin isteği: "çok daha
+                    görsel"). Satır yalnız ad ve hap taşıyordu; öne çıkan
+                    kartın ölçüsü aynı ölçekte burada da çizili, dar ekranda
+                    yer açmak için gizli. Haplar eşit genişlikte
+                    (VerdictPill → "EŞİT GENİŞLİK"), sütun hizası bozulmuyor. */}
+                {row.reactionPct !== null && (
+                  <span className="hidden w-28 shrink-0 sm:grid sm:gap-1">
+                    <span className="flex items-baseline justify-between gap-2 text-nano font-semibold whitespace-nowrap text-muted">
+                      {L.reaction}
+                      <b className={cn("numeral text-tiny font-extrabold", row.reactionPct >= 0 ? "text-up" : "text-down")}>
+                        {row.reactionPct >= 0 ? "▲" : "▼"} {formatPercentPlain(row.reactionPct, locale, 1)}
+                      </b>
+                    </span>
+                    <MetricStrip value={row.reactionPct} scale={scales.reaction} />
+                  </span>
+                )}
                 <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} score={row.score} />
               </Link>
             </li>

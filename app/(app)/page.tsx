@@ -124,6 +124,28 @@ export default async function TodayPage() {
      ekseni okuyor — `sessionDomain`, gerekçe index-feed.ts'te. */
   const rail = sessionDomain(status);
   const tags = zoneTag(locale);
+  /* KAPANIŞTAN AÇILIŞA (31 Ekim): piyasa kapalıyken şeridin altında son
+     kapanıştan sıradaki açılışa akan çizgi — gerekçe SessionRail.tsx →
+     WaitLine. Uçlar okuyucunun saatiyle ve gün adıyla ("Cum 23:00"):
+     hafta sonu ve tatilde iki zil arasında günler var. Son kapanış şeridin
+     anlattığı seansın kapanışı (`rail.closeAt`, yarım günde erken). */
+  const weekdayShort = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    timeZone: readerZone, weekday: "short",
+  });
+  const bellAt = (seconds: number) => {
+    const at = new Date(seconds * 1000);
+    return `${weekdayShort.format(at)} ${formatInZone(at, readerZone)}`;
+  };
+  const railWait =
+    status.session === "closed" && rail.closeAt * 1000 <= nowMs
+      ? {
+          from: rail.closeAt,
+          to: Math.round(status.nextOpen.getTime() / 1000),
+          fromLabel: `${t.dayRail.closeShort} · ${bellAt(rail.closeAt)}`,
+          toLabel: `${t.dayRail.openShort} · ${bellAt(Math.round(status.nextOpen.getTime() / 1000))}`,
+          name: t.dayRail.waitName,
+        }
+      : null;
   const flowHeadingOf = (title: string, note: string) => (
     <div className={styles.sectionHeading}>
       <h2>{title}</h2>
@@ -283,6 +305,7 @@ export default async function TodayPage() {
                 target={trading ? "close" : "open"}
                 initialNowMs={nowMs}
                 zone={readerZone}
+                wait={railWait}
                 labels={{
                   name: t.dayRail.marketHours,
                   bands: { pre: t.chart.sessionPre, regular: t.chart.sessionRegular, after: t.chart.sessionAfter },

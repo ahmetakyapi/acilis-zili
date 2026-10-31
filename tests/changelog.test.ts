@@ -225,6 +225,17 @@ test("release timeline runs oldest to newest on a 0-1 day scale with month ticks
   assert.equal(points[0].x, 0);
   assert.equal(points.at(-1)!.x, 1);
   for (let i = 1; i < points.length; i++) assert.ok(points[i].x > points[i - 1].x);
+  /* Yığın dilimleri (31 Ekim): toplam madde sayısı, sıfır dilim yok, gün sırası. */
+  for (const point of points) {
+    assert.equal(point.parts.reduce((sum, part) => sum + part.count, 0), point.items);
+    assert.ok(point.parts.every((part) => part.count > 0));
+    assert.deepEqual(
+      point.parts.map((part) => part.area),
+      AREA_DISPLAY_ORDER.filter((area) => point.parts.some((part) => part.area === area)),
+    );
+  }
+  assert.equal(points[0].day, 0);
+  for (let i = 1; i < points.length; i++) assert.ok(points[i].day > points[i - 1].day);
   const ticks = monthTicks(points);
   assert.equal(ticks[0].month, points[0].date.slice(0, 7));
   assert.ok(ticks.every((t) => t.x >= 0 && t.x <= 1));

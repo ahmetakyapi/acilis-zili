@@ -36,6 +36,15 @@ import styles from "./InvestorsIndex.module.css";
  * koymak uydurma pay olurdu); yerinde portföy değeri ve hangi çeyreğin
  * bildirimi olduğu yazıyor.
  *
+ * 31 EKİM (görsel tur, sahibinin isteği: "daha görsel, kolay anlaşılan").
+ * Kart sitenin kart diline geçti: nötr zemin, yön tepedeki 3 piksellik
+ * şeritte (rozetle aynı yön). Her çizim kendi etiketini taşıyor: pay
+ * kulvarının altında "Sermayedeki Payı", yığılı şeridin üstünde "İlk Üç
+ * Pozisyon" ve toplam payı; rozetin yanında alış/satış sayısı okla ve
+ * yön renginde, altında ikisinin oranı tek çizgi. Büyüklük çizgileri
+ * mavi DEĞİL, sitenin yumuşak büyüklük tonu `--bar-soft` (CompareScale
+ * ile aynı); yön yalnız yeşil/kırmızı.
+ *
  * Kart bir bağlantı; içindeki logolar bağlantı değil (iç içe bağlantı yok).
  */
 
@@ -155,6 +164,11 @@ function InvestorTile({
       className={styles.tile}
       data-investor-card
       data-closed={closed || undefined}
+      /* TEPE ŞERİDİ = ROZETİN YÖNÜ (31 Ekim; sitenin kart dili: nötr zemin,
+         durum tepedeki 3 piksellik şeritte — bilanço, teknik, risk
+         kartları). Net Alıcı yeşil, Net Satıcı kırmızı; dengede, kapanan
+         fon ve Kongre kartında şerit yok (yön yok ya da rozet yok). */
+      data-lean={!closed && card.kind === "13f" && lean && lean !== "flat" ? lean : undefined}
       aria-label={`${investor.name}, ${firm}`}
     >
       <span className={styles.tileHead}>
@@ -209,10 +223,15 @@ function FundTile({
               </strong>
               <small className="numeral">{formatMoneyCompact(card.longValue, locale)}</small>
             </span>
-            {/* Aynı ölçek bütün kartlarda: %0-100 takip edilen sermaye. */}
+            {/* Aynı ölçek bütün kartlarda: %0-100 takip edilen sermaye.
+                Etiket kulvarın altında (31 Ekim): etiketsiz kulvar "neyin
+                çizgisi" sorusunu açık bırakıyordu. */}
             <span className={styles.lane} aria-hidden>
               <i data-motion-draw="line" style={{ width: `${Math.max(share, 0.6)}%` }} />
             </span>
+            <small className={styles.figureCaption} aria-hidden>
+              {t.shareLabel}
+            </small>
           </>
         ) : (
           <span className={styles.tileFigureRow}>
@@ -222,26 +241,56 @@ function FundTile({
         )}
       </span>
 
-      <span className={styles.tileBadges}>
-        {closed ? (
-          <span className={styles.badge} data-tone="closed">{t.fundClosed}</span>
-        ) : lean ? (
-          <span
-            className={styles.badge}
-            data-tone={lean}
-            title={t.leanAria.replace("{lean}", leanLabel).replace("{buy}", number.format(buy)).replace("{sell}", number.format(sell))}
-          >
-            <LeanIcon tone={lean} />
-            {leanLabel}
+      {/* ÇEYREĞİN YÖNÜ (31 Ekim). Rozetin yanında alış ve satış SAYISI yön
+          renginde ve okla, altında ikisinin oranı yeşil-kırmızı tek çizgi
+          (Kongre kartındaki çizginin aynısı). Eskiden yalnız rozet vardı;
+          sayılar rozetin `title`ında saklıydı, dokunmatikte hiç okunmuyordu.
+          Kapanan fonda yön yok: yerinde pozisyon sayısı. */}
+      <span className={styles.quarter}>
+        <span className={styles.tileBadges}>
+          {closed ? (
+            <span className={styles.badge} data-tone="closed">{t.fundClosed}</span>
+          ) : lean ? (
+            <span className={styles.badge} data-tone={lean}>
+              <LeanIcon tone={lean} />
+              {leanLabel}
+            </span>
+          ) : null}
+          {!closed && lean && buy + sell > 0 ? (
+            <small className={cn("numeral", styles.moveCounts)}>
+              <span className="sr-only">
+                {t.leanAria.replace("{lean}", leanLabel).replace("{buy}", number.format(buy)).replace("{sell}", number.format(sell))}
+              </span>
+              <span className="text-up" aria-hidden>
+                <ArrowUp size={10} weight="bold" aria-hidden />
+                {plural(buy, t.buysOne, t.buys).replace("{count}", number.format(buy))}
+              </span>
+              <span className="text-down" aria-hidden>
+                <ArrowDown size={10} weight="bold" aria-hidden />
+                {plural(sell, t.sellsOne, t.sells).replace("{count}", number.format(sell))}
+              </span>
+            </small>
+          ) : (
+            <small className="numeral">{plural(card.positionCount, t.positionsOne, t.positions).replace("{count}", number.format(card.positionCount))}</small>
+          )}
+        </span>
+        {!closed && lean && buy + sell > 0 && (
+          <span className={styles.split} aria-hidden>
+            {buy > 0 && <i data-tone="up" data-motion-draw="line" style={{ flexGrow: buy }} />}
+            {sell > 0 && <i data-tone="down" data-motion-draw="line" style={{ flexGrow: sell }} />}
           </span>
-        ) : null}
-        <small className="numeral">{plural(card.positionCount, t.positionsOne, t.positions).replace("{count}", number.format(card.positionCount))}</small>
+        )}
       </span>
 
       {top.length > 0 && (
         <span className={styles.holdings}>
           {/* Yığılı şerit portföyün BİÇİMİ: Li Lu'da üç parça şeridin çoğu,
-              Dalio'da üç ince parça bir kenarda. Kalan tek açık parça. */}
+              Dalio'da üç ince parça bir kenarda. Kalan tek açık parça.
+              Üstünde etiketi ve üç pozisyonun toplam payı (31 Ekim). */}
+          <span className={styles.holdingsHead} aria-hidden>
+            <span>{t.topThree}</span>
+            <b className="numeral">{formatWeight(topWeight, locale)}</b>
+          </span>
           <span className={styles.stack} aria-hidden data-motion-draw="line">
             {top.map((holding, index) => (
               <i key={holding.cusip} data-seg={index} style={{ width: `${holding.weight * 100}%` }} />

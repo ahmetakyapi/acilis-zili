@@ -45,6 +45,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 8px;
   min-height: 52px;
 }
@@ -61,6 +62,13 @@
   font-size: var(--text-nano);
   line-height: 1.35;
   color: var(--text-muted);
+}
+/* Oynaklık kartında dilim ölçeği değerin yanında; dar kartta (telefon,
+   900–1099 dört sütun) alta iner. */
+.tileScale {
+  flex: 1 1 120px;
+  max-width: 180px;
+  padding: 14px 0 12px;
 }
 
 /* Beta kadranı: yarım yay, SPY (1) saç teli işaret. */
@@ -98,7 +106,8 @@
   }
 }
 
-/* Halka: dilim ya da sektör payı. Başlangıç saat 12. */
+/* Sektör halkası: en büyük sektör yumuşak mavi, kalanlar soluk. Başlangıç
+   saat 12. */
 .ring {
   width: 60px;
   height: 60px;
@@ -118,11 +127,49 @@
   stroke: var(--primary-soft);
   animation: draw 0.8s var(--ease-brand) both;
 }
-.ring[data-tone] .ringFill {
-  stroke: var(--tone-soft);
-}
 .ringRest {
   stroke: var(--line-strong);
+}
+.sectorLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: auto 0 0;
+  padding: 0;
+  list-style: none;
+}
+.sectorLegend li {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--text-nano);
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+.sectorLegend li::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--line-strong);
+  content: "";
+}
+.sectorLegend li[data-lead]::before {
+  background: var(--primary-soft);
+}
+/* Ad tek satır: telefonda (170 piksellik kart) "Sınıflandırılmamış"
+   hecenin ortasından bölünüyordu (ölçüldü, 390). Tam ad `title`da. */
+.sectorLegend li > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sectorLegend li[data-lead] > span {
+  color: var(--text-body);
+}
+.sectorLegend b {
+  font-weight: 700;
+  color: var(--text-strong);
 }
 
 .belowBars {
@@ -146,16 +193,98 @@
   text-align: right;
 }
 
+/* ------------------------------------------- oynaklık dilimi (bölgeli) */
+/* Rejim skor ölçeğinin dili (RiskDesk.module.css → .scale): bölgeler ton
+   üçlüsünde, bulunduğu bölge dolu, işaret metin renginde dikey çizgi. */
+.pScale {
+  position: relative;
+  display: block;
+  height: 13px;
+}
+.pScale[data-ticks] {
+  height: 14px;
+}
+.pZones {
+  position: absolute;
+  inset: 4px 0 auto;
+  display: flex;
+  gap: 2px;
+  height: var(--lane-h, 5px);
+}
+.pZones > i {
+  flex-basis: 0;
+  border-radius: 999px;
+  background: var(--tone-soft);
+  opacity: 0.35;
+}
+.pZones > i[data-on] {
+  opacity: 1;
+}
+.pMark {
+  position: absolute;
+  top: 0;
+  width: 3px;
+  height: 13px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--text-strong);
+}
+.pScale[data-ticks] .pMark {
+  height: 14px;
+}
+.pTicks {
+  position: absolute;
+  inset: 17px 0 auto;
+}
+.pTicks > span {
+  position: absolute;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-muted);
+}
+.pTicks > span:not(:first-child) {
+  transform: translateX(-50%);
+}
+/* Değer işaretin üstünde: dilim, yanındaki büyük oynaklık sayısıyla
+   karışmasın (ölçek dilimi gösteriyor, yüzdeyi değil). */
+.pValue {
+  position: absolute;
+  bottom: calc(100% + 2px);
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
 /* ---------------------------------------------------------------- kartlar */
+/* EN FAZLA DÖRT SÜTUN (31 Ekim; sahibinin isteği: "aynı satırda en fazla
+   4 tane gözüksün, alanı daha iyi değerlendir"). `auto-fill, minmax(228px)`
+   1440'ta beş sütun açıyordu: 246 piksellik kartta şirket adı, ölçü
+   etiketleri ve "Günde Ortalama Oynama" kesiliyordu (ölçüldü, 21 kırpık
+   metin). Sütun sayısı artık sabit basamaklarda: telefon 1, 640+ iki,
+   1024+ üç, 1280+ dört. */
 .cards {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
 }
 @media (min-width: 640px) {
   .cards {
-    grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1280px) {
+  .cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
   }
 }
 /* KART ZEMİNİ NÖTR, REJİM ÜST ŞERİTTE (30 Ekim). Kartın tamamı rejim
@@ -163,14 +292,15 @@
    yorgan gibi duruyor, sayılar tonun içinde kayboluyordu — sahibinin
    itirazı "görsel temaya uygun değil". Zemin sitenin kart zemini; rejim
    tepedeki 3 piksellik şeritte (bilanço ve teknik kartlarının dili) ve
-   rozetin ölçeğinde. */
+   rozetin ölçeğinde. Kart ızgara satırının boyunu alır (`stretch`),
+   içerik üstten akar, görüşler dipte (`.cardVerdicts`). */
 .card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
-  padding: 14px 12px 12px;
+  padding: 16px 14px 14px;
   border-radius: var(--radius-lg, 12px);
   border: 1px solid var(--line);
   background: var(--surface-solid);
@@ -190,18 +320,19 @@
 }
 @media (min-width: 640px) {
   .card {
-    padding: 14px;
+    padding: 18px 16px 16px;
   }
 }
 .cardHead {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
+  align-items: start;
+  gap: 10px;
 }
 .cardId {
   display: flex;
   flex-direction: column;
+  gap: 1px;
   min-width: 0;
 }
 .cardSymbol {
@@ -211,12 +342,18 @@
   line-height: 1.15;
   color: var(--text-strong);
 }
+/* AD KESİLMEZ, İKİ SATIRA SARAR (31 Ekim): tek satır üç noktayla
+   "Micron Technology, In…" oluyordu. İkinci satırdan sonrası kırpılır;
+   tam ad `title`da. */
 .cardName {
-  font-size: var(--text-nano);
-  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: var(--text-nano);
+  line-height: 1.3;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
 }
 .cardWeight {
   display: flex;
@@ -229,22 +366,17 @@
   font-weight: 600;
   line-height: 1;
   color: var(--text-muted);
+  white-space: nowrap;
 }
-.trailTitle {
-  margin-top: 2px;
-  font-size: var(--text-nano);
-  font-weight: 600;
-  color: var(--text-muted);
-}
-.cardStats dt[title] { cursor: help; }
 .cardWeight b {
   font-size: var(--text-read);
   font-weight: 800;
+  line-height: 1.1;
   color: var(--text-strong);
 }
 .weightLane {
   position: relative;
-  width: 44px;
+  width: 52px;
   height: var(--lane-h, 5px);
   border-radius: 999px;
   background: var(--line-soft);
@@ -260,8 +392,10 @@
 .cardFigure {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  column-gap: 8px;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 2px;
+  padding-top: 2px;
 }
 .cardValue {
   font-size: var(--text-heading);
@@ -271,28 +405,24 @@
   color: var(--text-strong);
 }
 .cardValueLabel {
-  grid-column: 1;
+  grid-column: 1 / -1;
   font-size: var(--text-nano);
+  line-height: 1.3;
   color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  cursor: help;
 }
 .toneChip {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: start;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 24px;
-  padding: 0 9px;
+  min-height: 26px;
+  padding: 0 10px;
   border-radius: 999px;
   font-size: var(--text-nano);
   font-weight: 700;
   color: var(--text-strong);
-  background: var(--surface-sunken);
-  box-shadow: inset 0 0 0 1px var(--line);
+  background: var(--tone-wash, var(--surface-sunken));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone, var(--line)) 32%, transparent);
   cursor: help;
 }
 .toneMeter {
@@ -311,16 +441,33 @@
 .toneMeter i:nth-child(3) { height: 10px; }
 .toneMeter i[data-on] { background: var(--tone); }
 
-/* Minyatür: kapanış yumuşak mavi, ortalamalar saç teli (50 düz, 100 kesik,
-   200 noktalı); etiketler sağ uçta, son değerin hizasında. */
+.trailTitle {
+  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+  font-size: var(--text-nano);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Minyatür: kapanış yumuşak mavi ve kalın, ortalamalar saç teli (50 düz,
+   100 kesik, 200 noktalı); etiketler sağ uçta, desenleriyle, çakışmadan
+   (gerekçe PortfolioCards.tsx → Trail). Yükseklik `TRAIL_H` ile aynı. */
 .trail {
   position: relative;
-  padding-right: 30px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  column-gap: 8px;
+  height: 76px;
 }
-.trail svg {
+.trailPlot {
+  position: relative;
+  min-width: 0;
+}
+.trailPlot svg {
   display: block;
   width: 100%;
-  height: 56px;
+  height: 76px;
   overflow: visible;
 }
 .trailLine {
@@ -333,97 +480,127 @@
 .trailMa {
   fill: none;
   stroke: var(--text-muted);
-  stroke-width: 1;
-  opacity: 0.75;
+  stroke-width: 1.25;
+  opacity: 0.8;
 }
-.trailLabels {
-  position: absolute;
-  inset: 0 0 0 auto;
-  width: 26px;
-}
-.trailLabels span {
+.trailDot {
   position: absolute;
   right: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  box-shadow: 0 0 0 2px var(--surface-solid);
+  transform: translate(50%, -50%);
+}
+.trailLabels {
+  position: relative;
+}
+.trailLabels > span {
+  position: absolute;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   transform: translateY(-50%);
-  font-size: var(--text-nano);
+  font-size: 11px;
   font-weight: 700;
   line-height: 1;
   color: var(--text-muted);
+}
+.trailSwatch {
+  width: 12px;
+  height: 4px;
+  flex: none;
+}
+.trailSwatch line {
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
 }
 
 .cardStats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
+  gap: 12px;
   margin: 0;
-  padding-top: 8px;
+  padding-top: 10px;
   border-top: 1px solid var(--line-soft);
 }
 .cardStats > div {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
 }
 .cardStats dt {
   font-size: var(--text-nano);
+  line-height: 1.3;
   color: var(--text-muted);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
+.cardStats dt[title] { cursor: help; }
 .cardStats dd {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin: 0;
   font-size: var(--text-base);
   font-weight: 700;
+  line-height: 1.2;
   color: var(--text-strong);
   white-space: nowrap;
 }
-.pctile {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+
+/* Ölçü şeridi: kulvar, dolgu ve çentik (beta: SPY 1; 200 GO: sıfır). */
+.meter {
+  position: relative;
+  display: block;
+  height: var(--lane-h, 5px);
+  margin-block: 4px;
+  border-radius: 999px;
+  background: var(--line-soft);
 }
-.pctile > span {
-  flex: 1 1 auto;
-  min-width: 14px;
-  max-width: 40px;
+.meterFill {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  border-radius: 999px;
+  background: var(--primary-soft);
+}
+.meterFill[data-dir="up"] {
+  background: var(--up);
+}
+.meterFill[data-dir="down"] {
+  background: var(--down);
+}
+.meterTick {
+  position: absolute;
+  top: -4px;
+  width: 1.5px;
+  height: calc(var(--lane-h, 5px) + 8px);
+  margin-left: -0.75px;
+  border-radius: 1px;
+  background: var(--line-strong);
 }
 .toneFill {
   background: var(--tone-soft, var(--primary-soft));
 }
 
-.cardVerdicts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.verdictLink {
-  position: relative;
-  display: inline-flex;
-  border-radius: 999px;
-  transition: opacity var(--default-transition-duration) var(--ease-brand);
-}
-@media (hover: hover) {
-  .verdictLink:hover > span { box-shadow: inset 0 0 0 1px currentColor; }
-}
-
-/* Uyarılar: hap değil satır — ikon ve metin, tek kutuda. Kural uyarısı
-   kullanıcının seçtiği tonla (ünlem ikonu), ortalama kesişi yön okuyla. */
+/* Uyarılar: kutu değil, saç teliyle ayrılmış ikonlu satırlar (31 Ekim).
+   Kural uyarısı kullanıcının seçtiği tonla, ortalama kesişi yön okuyla. */
 .alerts {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
   margin: 0;
-  padding: 8px 10px;
+  padding: 10px 0 0;
   list-style: none;
-  border-radius: var(--radius-md, 10px);
-  background: var(--surface-sunken);
+  border-top: 1px solid var(--line-soft);
 }
 .alerts li {
   display: flex;
   align-items: flex-start;
-  gap: 7px;
+  gap: 8px;
   font-size: var(--text-nano);
   font-weight: 600;
   line-height: 1.35;
@@ -431,8 +608,8 @@
 }
 .alerts svg {
   flex: none;
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
   margin-top: 1px;
   color: var(--text-muted);
 }
@@ -440,35 +617,30 @@
 .alerts li[data-tag="down"] svg, .alerts li[data-tag="sell"] svg, .alerts li[data-flag="down"] svg { color: var(--down); }
 .alerts li[data-tag="hold"] svg { color: var(--brass-ink); }
 
-/* Telefon: iki sütun ~170 px — üç ölçü iki satıra, sayı küçülür. */
-@media (max-width: 639px) {
-  .cardValue {
-    font-size: var(--text-title);
-  }
-  .cardStats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .cardStats > div:last-child {
-    grid-column: 1 / -1;
-  }
-  /* Ton telefonda yalnız ölçek: yazı büyük sayının etiketini üç satıra
-     kırıyordu (ölçüldü, 390); tepe şeridi ve ölçek tonu taşıyor. Ad
-     ekran okuyucuya `toneText` ile kalır. */
-  .toneChip {
-    min-height: 0;
-    padding: 6px 0 0;
-    background: none;
-    box-shadow: none;
-  }
-  .toneText {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-  .cardName {
-    display: none;
+/* Görüşler kartın dibinde, iki eşit sütun: komşu kartların hapları aynı
+   hatta ve aynı genişlikte (gerekçe PortfolioCards.tsx). */
+.cardVerdicts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+}
+.verdictLink {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  border-radius: 999px;
+  transition: opacity var(--default-transition-duration) var(--ease-brand);
+}
+@media (hover: hover) {
+  .verdictLink:hover > span { box-shadow: inset 0 0 0 1px currentColor; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arcFill,
+  .ringFill {
+    animation: none;
   }
 }

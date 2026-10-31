@@ -6,7 +6,10 @@ import {
   verdictOf,
   } from "@/lib/analysis";
 import type { AnalysisIndexRow, SymbolMeta } from "@/lib/data";
-import type { Dictionary } from "@/lib/i18n";
+import type { Dictionary, Locale } from "@/lib/i18n";
+import { MetricStrip } from "@/components/earnings/MetricStrip";
+import { robustScale } from "@/lib/analysis-visuals";
+import { cn, formatPercentPlain } from "@/lib/utils";
 import { LogoTile } from "@/components/ui/primitives";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import styles from "./RecentAnalysesStrip.module.css";
@@ -34,12 +37,18 @@ export function RecentAnalysesStrip({
   rows,
   meta,
   t,
+  locale,
 }: {
   rows: AnalysisIndexRow[];
   meta: Record<string, SymbolMeta>;
   t: Dictionary;
+  locale: Locale;
 }) {
   if (rows.length === 0) return null;
+  /* Tepki şeritleri şeridin ortak ölçeğinde — ana sayfanın öne çıkan
+     kartındaki ölçülerle aynı dil (LatestAnalyses). */
+  const reactionScale = robustScale(rows.map((row) => row.reactionPct));
+  const L = t.analysisVisuals.list;
 
   return (
     <section
@@ -117,23 +126,40 @@ export function RecentAnalysesStrip({
                    dokunma alanını `.tap-44` ile görünmeden büyütüyordu;
                    şerit "küçük kalmış" bulundu. Hap artık hedefin kendisi
                    kadar: logo 26, sembol 15 punto. */
+                /* MİNİ KART (31 Ekim, sahibinin isteği: "görselliği
+                   artıralım"). Hap biçimli çip yalnız sembol + görüş +
+                   dönem taşıyordu; şirket adı yoktu, analizin ne dediği
+                   ancak tıklayınca okunuyordu. Şimdi tepede görüşün 3
+                   piksellik şeridi (bilanço kartlarının dili), kimlik
+                   satırında şirket adı, dipte görüş hapı ve piyasanın ilk
+                   tepkisi sıfır merkezli şeritte. */
                 className={styles.chip}
+                data-verdict={verdict}
               >
-                {/* Yuvarlak: karo hap biçimli bir çipin içinde. */}
-                <LogoTile
-                  symbol={row.symbol}
-                  logoUrl={logoUrl}
-                  size="sm"
-                  className="rounded-full"
-                />
-                <span className={styles.symbol}>
-                  {row.symbol}
+                <span className={styles.identity}>
+                  <LogoTile symbol={row.symbol} logoUrl={logoUrl} size="sm" />
+                  <span className={styles.names}>
+                    <span className={styles.symbol}>{row.symbol}</span>
+                    <span className={styles.company}>{row.company}</span>
+                  </span>
+                  {/* Hangi çeyreğin okunduğu: `periodLabel` sorguda geliyor. */}
+                  <span className={`figure ${styles.period}`}>{row.periodLabel}</span>
                 </span>
-                <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} score={row.score} />
-                {/* Hangi çeyreğin okunduğu yazılı değildi: `periodLabel`
-                    sorguda zaten geliyor ve sunumda atılıyordu. */}
-                <span className={`figure ${styles.period}`}>
-                  {row.periodLabel}
+                <span className={styles.foot}>
+                  <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} score={row.score} size="xs" />
+                  {row.reactionPct !== null ? (
+                    <span className={styles.reaction}>
+                      <span className={styles.reactionHead}>
+                        <span>{L.reaction}</span>
+                        <b className={cn("numeral", row.reactionPct >= 0 ? "text-up" : "text-down")}>
+                          {row.reactionPct >= 0 ? "▲" : "▼"} {formatPercentPlain(row.reactionPct, locale, 1)}
+                        </b>
+                      </span>
+                      <MetricStrip value={row.reactionPct} scale={reactionScale} />
+                    </span>
+                  ) : (
+                    <span className={styles.noReaction}>{L.noReaction}</span>
+                  )}
                 </span>
               </Link>
             </li>

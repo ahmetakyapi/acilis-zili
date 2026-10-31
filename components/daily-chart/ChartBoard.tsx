@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { ArrowRight, ChartLineUp, Scales, TrendDown, TrendUp, ChartPieSlice } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, ChartLineUp, Scales, TrendDown, TrendUp, ChartPieSlice, Equals } from "@phosphor-icons/react/dist/ssr";
 import { ArticleBody } from "@/components/article/ArticleBody";
 import { BreadthStrip } from "@/components/day-poster/PosterMarks";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -7,6 +7,7 @@ import { checkChartBlock } from "@/lib/daily-chart";
 import { boardKeys, type BoardKey } from "@/lib/daily-chart-board";
 import type { ChartDayContext } from "@/lib/daily-chart-day";
 import { POSTER_ANCHOR } from "@/lib/day-poster";
+import { LogoTile } from "@/components/ui/primitives";
 import type { Locale } from "@/lib/i18n/config";
 import type { DailyChartLabels } from "@/lib/i18n/dictionaries/daily-chart";
 import { cn, formatPercent } from "@/lib/utils";
@@ -28,8 +29,12 @@ type BoardRow = { title: string; chartMd: string; bodyMd: string; locale: string
  * telefonda 2'si; metin ve bağlam üç ekran aşağıda). Şimdi ilk ekran bir
  * pano, üç bölge:
  *
- *   künye  — en güçlü, en zayıf, kaç kalem artıda ve Nasdaq 100 (genişlik
- *            şeridiyle): günün cevabı dört kartta, okumadan önce.
+ *   künye  — grafiğin iki ucu, üçüncü bir ölçü ve Nasdaq 100 (genişlik
+ *            şeridiyle): günün cevabı dört kartta, okumadan önce. Uçların
+ *            adı ve üçüncü ölçü grafiğin YÖNÜNE göre (31 Ekim): karışıkta
+ *            en güçlü / en zayıf / artıda-ekside, düşüş listesinde en çok
+ *            düşen / en az düşen / ortalama düşüş (`boardKeys`, gerekçe
+ *            lib/daily-chart-board.ts → GRAFİĞİN YÖNÜ).
  *   grafik — rutinin başlığı kartın h2'si (sayfa başlığı değil: sayfanın
  *            kimliği "Günün Grafiği"), altında bloğun her satırı bir kart
  *            (`ChartTiles`).
@@ -53,6 +58,7 @@ export function ChartBoard({
   headingId,
   action,
   footer,
+  logos,
 }: {
   row: BoardRow;
   context: ChartDayContext | null;
@@ -64,11 +70,12 @@ export function ChartBoard({
   action?: ReactNode;
   /** Metin kartının sonu: künyeler ya da bağlantı. */
   footer?: ReactNode;
+  /** Sembol → logo adresi (`getChartLogos`): kalem kartları ve künye. */
+  logos?: Record<string, string | null>;
 }) {
   const check = checkChartBlock(row.chartMd, row.locale);
   const label = check.ok && check.block.label ? check.block.label : labels.chartHeading;
-  const keys = check.ok ? boardKeys(check.block) : [];
-  const neutral = check.ok && check.block.kind === "bars" && Boolean(check.block.neutral);
+  const keys = check.ok ? boardKeys(check.block, row.locale) : [];
   const poster = context?.poster ?? null;
   const anchor = poster?.indices.find((move) => move.symbol === POSTER_ANCHOR) ?? null;
   const breadth = poster?.breadth ?? null;
@@ -81,7 +88,7 @@ export function ChartBoard({
         <ul className={styles.keys} aria-label={labels.board.keysLabel} data-m="keys" style={{ "--keys": keyCount } as CSSProperties}>
           {keys.map((key, index) => (
             <li key={index} className="min-w-0">
-              <KeyCard boardKey={key} labels={labels} neutral={neutral} lang={row.locale} />
+              <KeyCard boardKey={key} labels={labels} lang={row.locale} logos={logos} />
             </li>
           ))}
           {showMarket && (
@@ -132,7 +139,7 @@ export function ChartBoard({
         </div>
         <div className={styles.mainBody} lang={row.locale}>
           {check.ok ? (
-            <ChartTiles block={check.block} locale={row.locale} label={label} labels={labels} />
+            <ChartTiles block={check.block} locale={row.locale} label={label} labels={labels} logos={logos} />
           ) : (
             <ArticleBody markdown={row.chartMd} locale={row.locale} />
           )}
@@ -153,13 +160,13 @@ export function ChartBoard({
 function KeyCard({
   boardKey,
   labels,
-  neutral,
   lang,
+  logos,
 }: {
   boardKey: BoardKey;
   labels: DailyChartLabels;
-  neutral: boolean;
   lang: string;
+  logos?: Record<string, string | null>;
 }) {
   const L = labels.board;
   if (boardKey.kind === "count") {
@@ -190,14 +197,45 @@ function KeyCard({
       </div>
     );
   }
+  if (boardKey.kind === "mean") {
+    /* Tek yönlü grafiğin üçüncü ölçüsü (31 Ekim): kalemlerin ortalaması,
+       kartlarla AYNI ölçekte bir çubukla — sıfırdan nereye kadar. */
+    const down = boardKey.trend === "allDown";
+    return (
+      <div className={cn("panel", styles.key)}>
+        <span className={styles.keyHead}>
+          <Equals size={16} weight="bold" aria-hidden />
+          {down ? L.keyMeanDown : L.keyMeanUp}
+        </span>
+        <span className={cn(styles.keyValue, boardKey.dir === "up" ? "text-up" : boardKey.dir === "down" ? "text-down" : "text-strong")}>
+          {boardKey.display}
+        </span>
+        <span className={styles.keyFoot}>
+          {boardKey.bar && (
+            <span className={styles.keyLane} style={{ "--zero": `${boardKey.zero}%` } as CSSProperties} aria-hidden>
+              <span
+                className={styles.keyBar}
+                data-dir={boardKey.dir}
+                style={{ left: `${boardKey.bar.start}%`, width: `${boardKey.bar.size}%` }}
+              />
+            </span>
+          )}
+          <span className={styles.keyNote}>
+            {(down ? L.meanNoteDown : L.meanNoteUp).replace("{total}", String(boardKey.total))}
+          </span>
+        </span>
+      </div>
+    );
+  }
   const Icon = boardKey.fund ? SECTOR_ICONS[boardKey.fund] : undefined;
-  const HeadIcon = boardKey.role === "share" ? ChartPieSlice : boardKey.role === "top" ? TrendUp : TrendDown;
-  const title =
+  const HeadIcon =
     boardKey.role === "share"
-      ? L.keyShare
-      : boardKey.role === "top"
-        ? neutral ? L.keyTopNeutral : L.keyTop
-        : neutral ? L.keyBottomNeutral : L.keyBottom;
+      ? ChartPieSlice
+      : boardKey.dir === "down" || boardKey.role === "smallest"
+        ? TrendDown
+        : TrendUp;
+  const title = boardKey.role === "share" ? L.keyShare : L.roles[boardKey.role];
+  const href = boardKey.fund ?? boardKey.symbol;
   const body = (
     <>
       <span className={styles.keyHead}>
@@ -211,14 +249,18 @@ function KeyCard({
         {boardKey.display}
       </span>
       <span className={styles.keyNote} lang={lang}>
-        {Icon && <Icon size={14} weight="duotone" aria-hidden className={styles.keyIcon} />}
+        {boardKey.symbol ? (
+          <LogoTile symbol={boardKey.symbol} logoUrl={logos?.[boardKey.symbol] ?? null} size="xs" className={styles.keyLogo} />
+        ) : (
+          Icon && <Icon size={14} weight="duotone" aria-hidden className={styles.keyIcon} />
+        )}
         <span className={styles.keyName}>{boardKey.name}</span>
-        {boardKey.fund && <span className={styles.keySymbol}>{boardKey.fund}</span>}
+        {href && <span className={styles.keySymbol}>{href}</span>}
       </span>
     </>
   );
-  return boardKey.fund ? (
-    <Link href={`/hisse/${boardKey.fund}`} prefetch={false} className={cn("panel", styles.key)} data-link="">
+  return href ? (
+    <Link href={`/hisse/${href}`} prefetch={false} className={cn("panel", styles.key)} data-link="">
       {body}
       <ArrowRight size={14} weight="bold" aria-hidden className={styles.keyGo} />
     </Link>

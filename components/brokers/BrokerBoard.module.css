@@ -128,15 +128,18 @@
 .podium {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: start;
-  gap: 10px;
+  align-items: stretch;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-/* Sütun: logo (solunda sıra rozeti), ad, komisyon, oran; dibinde kurum
-   renginde 3 piksellik taban çizgisi. Kurum rengi yalnız çizgide ve
-   logoda; rozet ve metin metin tokenlarında (renk kimlik, yargı değil). */
+/* KÜRSÜ KAROSU (31 Ekim; gerekçe BrokerBoard.tsx "GÖRSEL TUR"). Nötr
+   karo, tepede kurum renginde 3 piksellik şerit (sitenin kart dili); sıra
+   rozeti sol üstte. Kurum rengi yalnız şeritte ve logoda; rozet ve metin
+   metin tokenlarında (renk kimlik, yargı değil). Birinci sıra koyu rozet ve
+   büyük rakamla ayrışıyor. Eski hâl: logonun solunda yüzen gri rozet,
+   sütunun dibinde taban çizgisi; sıra rozeti logodan kopuk okunuyordu. */
 .step {
   position: relative;
   display: flex;
@@ -144,37 +147,38 @@
   align-items: center;
   gap: 1px;
   min-width: 0;
-  padding-bottom: 10px;
+  padding: 14px 6px 10px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
   text-align: center;
+  overflow: hidden;
 }
-.step::after {
+.step::before {
   content: "";
   position: absolute;
-  left: 6px;
-  right: 6px;
-  bottom: 0;
+  inset: 0 0 auto;
   height: 3px;
-  border-radius: 999px;
   background: var(--brand);
-  transform-origin: 50% 50%;
+  transform-origin: 0 50%;
 }
-.stepMark { position: relative; display: inline-flex; margin-bottom: 6px; }
+.stepMark { position: relative; display: inline-flex; margin: 4px 0 7px; }
 .medal {
   position: absolute;
-  top: -2px;
-  right: calc(100% + 4px);
+  top: 8px;
+  left: 8px;
   display: grid;
   place-items: center;
-  min-width: 20px;
+  min-width: 22px;
   height: 20px;
   padding: 0 5px;
-  border-radius: 999px;
-  background: var(--surface-sunken);
-  color: var(--text-strong);
+  border-radius: 6px;
+  background: var(--surface-elevated);
+  color: var(--text-body);
   font-size: 11px;
   font-weight: 800;
   line-height: 1;
 }
+.step[data-first] .medal { background: var(--text-strong); color: var(--premium-surface); }
 .stepName {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -186,7 +190,14 @@
   line-height: 1.25;
   color: var(--text-strong);
 }
-.stepFee { margin-top: 2px; font-size: 17px; font-weight: 800; letter-spacing: -0.01em; color: var(--text-strong); }
+.stepFee { margin-top: 4px; font-size: 16px; font-weight: 800; letter-spacing: -0.01em; color: var(--text-strong); }
+.step[data-first] .stepFee { font-size: 20px; }
+/* Dar karoda (telefon, ~90 piksel) rozet logonun üstüne biniyordu: logo
+   rozetin altına iner (390'da ölçüldü). */
+@media (max-width: 479.98px) {
+  .step { padding-top: 32px; }
+  .stepMark { margin-top: 0; }
+}
 .stepPct { font-size: 11px; color: var(--text-muted); }
 
 .rest {
@@ -235,6 +246,9 @@
 .dotRail { transition: transform 0.42s var(--ease-brand); }
 .dot { fill: var(--brand); stroke: var(--premium-surface); stroke-width: 2; }
 .endMark { position: absolute; display: flex; pointer-events: none; transition: top 0.3s var(--ease-brand); }
+/* Uç bağlantısı: eğrinin rengiyle ince dirsek, uçta küçük nokta. */
+.leader { fill: none; stroke: var(--brand); stroke-width: 1.25; stroke-linejoin: round; opacity: 0.85; }
+.endDot { fill: var(--brand); }
 
 .tip {
   position: absolute;
@@ -259,15 +273,42 @@
 .tipRow > span:last-child { color: var(--text-strong); font-weight: 650; }
 .tipSwatch { width: 8px; height: 8px; border-radius: 2px; background: var(--brand); }
 
-/* En düşük komisyon şeridi: x ekseniyle aynı ölçek, dilim başına kurum
-   rengi; eşitlik nötr tarama (bir kazanan seçilmiyor). */
-.strip { display: flex; flex-direction: column; gap: 4px; }
-.stripTitle { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+/* En düşük komisyon şeridi (31 Ekim; gerekçe BrokerBoard.tsx "GÖRSEL
+   TUR"): x ekseniyle aynı ölçek. Üstte logo kümeleri (itilmiş, sapla dilime
+   bağlı), ortada 6 piksellik dilim bandı ve seçili tutarın işareti, altta
+   dilim sınırlarının tutarı. Dilim kurum renginde; eşitlik nötr tarama
+   (bir kazanan seçilmiyor), anlamı başlığın yanında. */
+.strip { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.stripHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; }
+.stripTitle { font-size: 12.5px; font-weight: 700; color: var(--text-strong); }
+.stripKey { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); }
+.stripKeySwatch {
+  width: 18px;
+  height: 6px;
+  border-radius: 999px;
+  background: repeating-linear-gradient(135deg, var(--line-strong) 0 3px, transparent 3px 6px);
+}
+.stripPlot { position: relative; }
+.stripMarksRow { position: relative; height: 30px; }
+.stripGroup { position: absolute; top: 0; display: flex; }
+.stripGroup { gap: 2px; }
+/* Eşitlik kümesi: logoların altında taralı ince çizgi, bandın dilinde. */
+.stripGroup[data-tie]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 2px;
+  border-radius: 999px;
+  background: repeating-linear-gradient(135deg, var(--line-strong) 0 3px, transparent 3px 6px);
+}
+.stripStem { position: absolute; top: 21px; height: 9px; overflow: visible; }
+.stripStem line { stroke: var(--line-strong); stroke-width: 1; }
 .stripBand {
   position: relative;
-  height: 34px;
-  margin-top: 0;
-  margin-bottom: 0;
+  height: 6px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -275,11 +316,6 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 4px;
   min-width: 0;
 }
 .stripSeg::after {
@@ -287,16 +323,36 @@
   position: absolute;
   left: 1px;
   right: 1px;
+  top: 0;
   bottom: 0;
-  height: var(--lane-h, 5px);
   border-radius: 999px;
   background: var(--brand);
 }
 .stripSeg[data-tie]::after {
   background: repeating-linear-gradient(135deg, var(--line-strong) 0 3px, transparent 3px 6px);
 }
-.stripMarks { display: flex; overflow: hidden; max-width: 100%; }
-.stripMarks > * + * { margin-left: -6px; }
+/* Seçili tutar: grafiğin kesik imleciyle aynı x, bandın üstünden altına. */
+.stripCursor {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: var(--text-strong);
+  transition: left 0.42s var(--ease-brand);
+}
+.stripTicks { position: relative; height: 16px; margin-top: 3px; font-size: 11px; color: var(--text-muted); }
+.stripTicks > span { position: absolute; top: 0; translate: -50% 0; white-space: nowrap; }
+.stripTicks > span::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  width: 1px;
+  height: 4px;
+  background: var(--line-strong);
+}
 
 .sentence { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text-body); }
 .hint { margin: -4px 0 0; font-size: 11.5px; color: var(--text-muted); }
@@ -394,12 +450,14 @@
     stroke-dashoffset: 1;
     animation: draw 1.1s var(--ease-brand) 0.15s forwards;
   }
-  .step::after { animation: grow 0.6s var(--ease-brand) 0.2s both; transform-origin: 0 50%; }
+  .step::before { animation: grow 0.6s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 80ms + 200ms); }
+  .leader, .endDot { animation: fade 0.4s var(--ease-brand) 1.1s both; }
   .barTrack { animation: grow 0.7s var(--ease-brand) both; transform-origin: 0 50%; }
   .stripSeg::after { animation: grow 0.7s var(--ease-brand) 0.5s both; transform-origin: 0 50%; }
 }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 @keyframes grow { from { transform: scaleX(0); } }
+@keyframes fade { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
-  .dotRail, .barA, .barB, .endMark { transition: none; }
+  .dotRail, .barA, .barB, .endMark, .stripCursor { transition: none; }
 }

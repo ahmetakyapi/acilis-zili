@@ -2,16 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   buildYieldCurve,
-  composeMacroLead,
   curveRatio,
   curveShape,
   FLAT_CURVE_SPREAD,
   heatShare,
   heatCeiling,
-  macroLeadFacts,
+  balancedSpans,
+  fillTemplate,
+  TILE_GRID_UNITS,
+  gaugeRatio,
+  macroGaugeFacts,
   sectorLeaders,
-  type MacroLeadText,
-  type LeadFormat,
 } from "../lib/macro-visual";
 
 /** Makro ve piyasa görsellerinin saf mantığı (lib/macro-visual.ts). */
@@ -71,50 +72,70 @@ test("eğri biçimi: sıfırın altı ters, eşiğin altı düz, üstü normal",
   assert.equal(curveShape(0.31), "normal");
 });
 
-const TEXT: MacroLeadText = {
-  inflationAbove: "TÜFE {value} ile Fed'in %2 hedefinin {gap} puan üstünde",
-  inflationBelow: "TÜFE {value} ile Fed'in %2 hedefinin {gap} puan altında",
-  inflationAt: "TÜFE {value} ile Fed'in %2 hedefinde",
-  unemploymentUp: "işsizlik {delta} puan artarak {value} oldu",
-  unemploymentDown: "işsizlik {delta} puan azalarak {value} oldu",
-  unemploymentFlat: "işsizlik {value} ile değişmedi",
-  curve: {
-    normal: "getiri eğrisi normal ({spread} puan)",
-    flat: "getiri eğrisi düz ({spread} puan)",
-    inverted: "getiri eğrisi ters ({spread} puan)",
-  },
-  and: " ve ",
-};
-const fmt = (value: number) => value.toFixed(2).replace(".", ",");
-const FORMAT: LeadFormat = {
-  locale: "tr",
-  percent: (value) => `%${fmt(value)}`,
-  points: fmt,
-  signedPoints: (value) => `${value > 0 ? "+" : value < 0 ? "−" : ""}${fmt(Math.abs(value))}`,
-};
-
-test("cümle: her sayı veriden; hedef farkı, işsizlik yönü, eğri biçimi", () => {
-  const facts = macroLeadFacts([
+test("ölçüler: hedef farkı, işsizlik değişimi ve aralığı, eğri, Sahm; uçlar veriden ve yuvarlak", () => {
+  const facts = macroGaugeFacts([
     { id: "CPIAUCSL", latest: 3.72, prev: 3.35 },
-    { id: "UNRATE", latest: 4.2, prev: 4.1 },
-    { id: "T10Y3M", latest: 0.88, prev: 0.86 },
+    { id: "UNRATE", latest: 4.2, prev: 4.1, points: [4.3, 3.9, 4.0, 4.1, 4.2].map((value) => ({ value })) },
+    { id: "T10Y3M", latest: 0.87, prev: 0.86 },
+    { id: "SAHMREALTIME", latest: 0, prev: 0.07 },
   ]);
   assert.ok(facts);
-  assert.equal(
-    composeMacroLead(facts, TEXT, FORMAT),
-    "TÜFE %3,72 ile Fed'in %2 hedefinin 1,72 puan üstünde, işsizlik 0,10 puan artarak %4,20 oldu ve getiri eğrisi normal (+0,88 puan).",
-  );
+  assert.ok(Math.abs(facts.inflation!.gap - 1.72) < 1e-9);
+  assert.deepEqual(facts.inflation!.domain, { lo: 0, hi: 5 });
+  assert.ok(Math.abs(facts.unemployment!.delta! - 0.1) < 1e-9);
+  assert.deepEqual(facts.unemployment!.domain, { lo: 3.8, hi: 4.4 });
+  assert.equal(facts.curve!.shape, "normal");
+  assert.equal(facts.curve!.span, 1);
+  assert.equal(facts.sahm!.triggered, false);
+  assert.deepEqual(facts.sahm!.domain, { lo: 0, hi: 1 });
 });
 
-test("cümle: eksik seri parçayı düşürür; hiçbiri yoksa cümle yok; büyük harf Türkçe", () => {
-  assert.equal(macroLeadFacts([{ id: "PAYEMS", latest: 29, prev: 133 }]), null);
-  const facts = macroLeadFacts([
-    { id: "UNRATE", latest: 4.2, prev: 4.2 },
-    { id: "T10Y3M", latest: -0.12, prev: 0.1 },
+test("ölçüler: eksik seri düşer; hiçbiri yoksa null; ters eğri ve tetiklenen Sahm ölçeğe sığar", () => {
+  assert.equal(macroGaugeFacts([{ id: "PAYEMS", latest: 29, prev: 133 }]), null);
+  const facts = macroGaugeFacts([
+    { id: "T10Y3M", latest: -1.62, prev: -1.5 },
+    { id: "SAHMREALTIME", latest: 0.93, prev: 0.6 },
   ])!;
-  assert.equal(composeMacroLead(facts, TEXT, FORMAT), "İşsizlik %4,20 ile değişmedi ve getiri eğrisi ters (−0,12 puan).");
-  const below = macroLeadFacts([{ id: "CPIAUCSL", latest: 1.5, prev: null }])!;
-  assert.equal(composeMacroLead(below, TEXT, FORMAT), "TÜFE %1,50 ile Fed'in %2 hedefinin 0,50 puan altında.");
+  assert.equal(facts.inflation, null);
+  assert.equal(facts.unemployment, null);
+  assert.equal(facts.curve!.shape, "inverted");
+  assert.equal(facts.curve!.span, 2);
+  assert.equal(facts.sahm!.triggered, true);
+  assert.ok(facts.sahm!.domain.hi >= 0.93);
+  /* Önceki değer yoksa değişim yok, aralık yalnız son değerden. */
+  const lone = macroGaugeFacts([{ id: "UNRATE", latest: 4.2, prev: null }])!;
+  assert.equal(lone.unemployment!.delta, null);
+  assert.deepEqual(lone.unemployment!.domain, { lo: 4.1, hi: 4.3 });
+});
+
+test("ölçek oranı uçlara kırpılır; şablon yer tutucuyu doldurur, bilinmeyeni bırakır", () => {
+  assert.equal(gaugeRatio(2, { lo: 0, hi: 5 }), 0.4);
+  assert.equal(gaugeRatio(-1, { lo: 0, hi: 5 }), 0);
+  assert.equal(gaugeRatio(9, { lo: 0, hi: 5 }), 1);
+  assert.equal(gaugeRatio(1, { lo: 1, hi: 1 }), 0);
+  assert.equal(fillTemplate("Hedefin {gap} puan üstünde {x}", { gap: "1,72" }), "Hedefin 1,72 puan üstünde {x}");
+});
+
+test("dengeli satırlar: boş hücre ve tek geniş kart yok; her satır tam genişlik", () => {
+  const rowsOf = (spans: number[]) => {
+    const rows: number[][] = [];
+    let sum = 0;
+    for (const span of spans) {
+      if (sum === 0) rows.push([]);
+      rows.at(-1)!.push(span);
+      sum = (sum + span) % TILE_GRID_UNITS;
+    }
+    return rows;
+  };
+  assert.deepEqual(rowsOf(balancedSpans(11, 6)).map((row) => row.length), [6, 5]);
+  assert.deepEqual(rowsOf(balancedSpans(11, 3)).map((row) => row.length), [3, 3, 3, 2]);
+  assert.deepEqual(rowsOf(balancedSpans(11, 2)).map((row) => row.length), [2, 2, 2, 2, 2, 1]);
+  assert.deepEqual(rowsOf(balancedSpans(7, 6)).map((row) => row.length), [4, 3]);
+  for (const spans of [balancedSpans(11, 6), balancedSpans(9, 4), balancedSpans(5, 6)]) {
+    for (const row of rowsOf(spans)) assert.equal(row.reduce((a, b) => a + b, 0), TILE_GRID_UNITS);
+    assert.ok(spans.every(Number.isInteger));
+  }
+  assert.deepEqual(balancedSpans(0, 6), []);
 });
 
 test("ısı: sütun ölçeğine oran, 0–1 arası; boş değer ve sıfır ölçek 0", () => {

@@ -1,7 +1,7 @@
 /**
  * `macroVisual` ad alanı — makro ve piyasa görselleri (25 Ekim görsel turu):
  * getiri eğrisi minyatürü (/makro kapağı ve ana sayfanın tahvil kartı),
- * enflasyonda Fed hedef çizgisi, /makro tepesindeki tek cümle, sektör ısı
+ * enflasyonda Fed hedef çizgisi, /makro kapağının dört ölçüsü, sektör ısı
  * matrisi. Ayrı dosyada: birleştirmede iki büyük sözlükte çakışma alanı
  * küçük kalsın (stock-entry.ts ile aynı gerekçe). Mantık
  * `lib/macro-visual.ts`te.
@@ -34,17 +34,31 @@ export const macroVisualTr = {
   /** Ana sayfa makro özetinin kıvılcımları. */
   sparkNote: "Çizgiler son {n} aylık gözlemi gösterir.",
   sparkTitle: "{title}, son {n} ay",
-  /* ---- /makro cümlesi ---- */
-  leadInflationAbove: "TÜFE {value} ile Fed'in %2 hedefinin {gap} puan üstünde",
-  leadInflationBelow: "TÜFE {value} ile Fed'in %2 hedefinin {gap} puan altında",
-  leadInflationAt: "TÜFE {value} ile Fed'in %2 hedefinde",
-  leadUnemploymentUp: "işsizlik {delta} puan artarak {value} oldu",
-  leadUnemploymentDown: "işsizlik {delta} puan azalarak {value} oldu",
-  leadUnemploymentFlat: "işsizlik {value} ile değişmedi",
-  leadCurveNormal: "getiri eğrisi normal (10 yıl ile 3 ay farkı {spread} puan)",
-  leadCurveFlat: "getiri eğrisi düz (10 yıl ile 3 ay farkı {spread} puan)",
-  leadCurveInverted: "getiri eğrisi ters (10 yıl ile 3 ay farkı {spread} puan)",
-  leadAnd: " ve ",
+  /* ---- /makro kapağının dört ölçüsü (31 Ekim; önce tek cümleydi) ---- */
+  gaugesTitle: "Bir Bakışta",
+  gaugeInflation: "Enflasyon (TÜFE)",
+  gaugeUnemployment: "İşsizlik Oranı",
+  gaugeCurve: "Getiri Eğrisi",
+  gaugeSahm: "Sahm Kuralı",
+  /** Ölçeğin üstündeki işaretler. */
+  gaugeTarget: "Hedef {value}",
+  gaugeThreshold: "Eşik {value}",
+  gaugePrev: "Önceki {value}",
+  gaugeRange: "Son 12 Ay",
+  gaugeShort: "3 Ay",
+  gaugeLong: "10 Yıl",
+  /** Ölçünün altındaki cümle: her sayı veriden. */
+  gaugeInflationAbove: "Fed'in %2 hedefinin {gap} puan üstünde.",
+  gaugeInflationBelow: "Fed'in %2 hedefinin {gap} puan altında.",
+  gaugeInflationAt: "Fed'in %2 hedefinde.",
+  gaugeUnemploymentUp: "Bir ayda {delta} puan arttı.",
+  gaugeUnemploymentDown: "Bir ayda {delta} puan azaldı.",
+  gaugeUnemploymentFlat: "Bir önceki aya göre değişmedi.",
+  gaugeCurveNormal: "10 yıllık faiz 3 aylıktan {spread} puan yüksek; eğri normal.",
+  gaugeCurveFlat: "10 yıllık faiz 3 aylıktan yalnız {spread} puan yüksek; eğri düz.",
+  gaugeCurveInverted: "10 yıllık faiz 3 aylıktan {spread} puan düşük; eğri ters.",
+  gaugeSahmBelow: "{threshold} eşiğinin altında; kural tetiklenmedi.",
+  gaugeSahmAbove: "{threshold} eşiğini aştı; kural tetiklendi.",
   /* ---- Sektör ısı matrisi ---- */
   sectorLead:
     "Son bir ayda öne çıkan {best} {bestValue}, en çok geride kalan {worst} {worstValue}; {total} sektörün {up} tanesi artıda.",
@@ -80,16 +94,28 @@ export const macroVisualEn: typeof macroVisualTr = {
   barsNote: "Each bar is one month's change; above zero is a rise, below is a fall.",
   sparkNote: "Lines show the last {n} monthly readings.",
   sparkTitle: "{title}, last {n} months",
-  leadInflationAbove: "CPI at {value} is {gap} points above the Fed's 2% target",
-  leadInflationBelow: "CPI at {value} is {gap} points below the Fed's 2% target",
-  leadInflationAt: "CPI at {value} is at the Fed's 2% target",
-  leadUnemploymentUp: "unemployment rose {delta} points to {value}",
-  leadUnemploymentDown: "unemployment fell {delta} points to {value}",
-  leadUnemploymentFlat: "unemployment held at {value}",
-  leadCurveNormal: "the yield curve is normal (10-year minus 3-month spread {spread} points)",
-  leadCurveFlat: "the yield curve is flat (10-year minus 3-month spread {spread} points)",
-  leadCurveInverted: "the yield curve is inverted (10-year minus 3-month spread {spread} points)",
-  leadAnd: " and ",
+  gaugesTitle: "At a Glance",
+  gaugeInflation: "Inflation (CPI)",
+  gaugeUnemployment: "Unemployment Rate",
+  gaugeCurve: "Yield Curve",
+  gaugeSahm: "Sahm Rule",
+  gaugeTarget: "Target {value}",
+  gaugeThreshold: "Threshold {value}",
+  gaugePrev: "Previous {value}",
+  gaugeRange: "Last 12 Months",
+  gaugeShort: "3M",
+  gaugeLong: "10Y",
+  gaugeInflationAbove: "{gap} points above the Fed's 2% target.",
+  gaugeInflationBelow: "{gap} points below the Fed's 2% target.",
+  gaugeInflationAt: "At the Fed's 2% target.",
+  gaugeUnemploymentUp: "Up {delta} points in a month.",
+  gaugeUnemploymentDown: "Down {delta} points in a month.",
+  gaugeUnemploymentFlat: "Unchanged from the previous month.",
+  gaugeCurveNormal: "The 10-year yield is {spread} points above the 3-month; the curve is normal.",
+  gaugeCurveFlat: "The 10-year yield is only {spread} points above the 3-month; the curve is flat.",
+  gaugeCurveInverted: "The 10-year yield is {spread} points below the 3-month; the curve is inverted.",
+  gaugeSahmBelow: "Below the {threshold} threshold; the rule has not triggered.",
+  gaugeSahmAbove: "Above the {threshold} threshold; the rule has triggered.",
   sectorLead:
     "Over the past month {best} led at {bestValue} and {worst} lagged most at {worstValue}; {up} of {total} sectors are up.",
   heatNote:

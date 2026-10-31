@@ -1000,6 +1000,94 @@ export function openPlan(
   };
 }
 
+/** Bölgesiz görüşte fiyatın iki tarafa göre yeri — durumun adı ve cümlesi buradan. */
+export type OpenWhere =
+  | "between"
+  | "atSupport"
+  | "belowSupport"
+  | "aboveSupport"
+  | "atResistance"
+  | "aboveResistance"
+  | "belowResistance";
+
+/**
+ * Fiyatın yeri tek anahtar. Öncelik geçilmiş seviyede (fiyat oradan
+ * çıkmışsa "arasında" yanlış olur), sonra seviyede durmakta, sonra iki
+ * tarafın varlığında. Seviye yoksa null — söylenecek bir yer yok.
+ */
+export function openWhere(open: OpenPlan): OpenWhere | null {
+  const { buy, sell } = open;
+  if (sell?.state === "beyond") return "aboveResistance";
+  if (buy?.state === "beyond") return "belowSupport";
+  if (sell?.state === "at") return "atResistance";
+  if (buy?.state === "at") return "atSupport";
+  if (buy && sell) return "between";
+  if (sell) return "belowResistance";
+  if (buy) return "aboveSupport";
+  return null;
+}
+
+export type OpenRangeSegment = {
+  side: "buy" | "sell";
+  /** Eksen üstünde 0–1 arası uçlar (soldan sağa). */
+  from: number;
+  to: number;
+  /** `flat`: seviyeye doğru (bekleme); `down`/`up`: seviye geçilmiş, yön renginde. */
+  tone: "flat" | "up" | "down";
+  pct: number;
+};
+
+export type OpenRangeLayout = {
+  /** 0–1 arası konumlar; taraf yoksa null. */
+  support: number | null;
+  resistance: number | null;
+  price: number;
+  segments: OpenRangeSegment[];
+};
+
+/* Fiyatın tuttuğu ucun payı: eksenin ucu bir SEVİYE değilse (geçilmiş
+   seviye ya da verilmemiş taraf) imleç kenara yapışmasın. Seviyenin tuttuğu
+   uç payısız — destek ve direnç eksenin iki ucu, aralık okununca "fiyat
+   aralığın neresinde" tek bakışta. */
+const OPEN_RANGE_PAD = 0.12;
+
+/**
+ * Bölgesiz TUT'un ekseni (31 Ekim, sahibinin isteği: "SanDisk'te alım kısmı
+ * yok … ne anlama geliyor bilmiyorum"). Destek — fiyat — direnç tek
+ * doğrusal eksende; şeritler fiyattan iki seviyeye. Sayılar yalnız
+ * `openPlan`dan: seviye uydurulmuyor, geçilmiş seviye geçilmiş diye
+ * (şerit seviyeden fiyata, yön renginde) çiziliyor.
+ */
+export function openRangeLayout(open: OpenPlan, price: number | null): OpenRangeLayout | null {
+  if (price === null || !Number.isFinite(price) || price <= 0) return null;
+  const { buy, sell } = open;
+  if (!buy && !sell) return null;
+  const values = [price, buy?.level, sell?.level].filter((v): v is number => typeof v === "number");
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max - min || price * 0.02;
+  const levelAt = (v: number) => (buy && buy.level === v) || (sell && sell.level === v);
+  const lo = min - (levelAt(min) ? 0 : span * OPEN_RANGE_PAD);
+  const hi = max + (levelAt(max) ? 0 : span * OPEN_RANGE_PAD);
+  const pos = (v: number) => (v - lo) / (hi - lo);
+  const p = pos(price);
+  const segments: OpenRangeSegment[] = [];
+  if (buy && buy.state !== "at" && buy.pct !== null) {
+    const s = pos(buy.level);
+    segments.push({ side: "buy", from: Math.min(s, p), to: Math.max(s, p), tone: buy.state === "beyond" ? "down" : "flat", pct: buy.pct });
+  }
+  if (sell && sell.state !== "at" && sell.pct !== null) {
+    const r = pos(sell.level);
+    segments.push({ side: "sell", from: Math.min(r, p), to: Math.max(r, p), tone: sell.state === "beyond" ? "up" : "flat", pct: sell.pct });
+  }
+  return {
+    support: buy ? pos(buy.level) : null,
+    resistance: sell ? pos(sell.level) : null,
+    price: p,
+    segments,
+  };
+}
+
 export type PlanReading =
   | { kind: "inZone"; stop: number | null; hold: boolean }
   | { kind: "above"; pct: number; high: number }
@@ -1124,130 +1212,19 @@ export function indicatorSignals(snapshot: TechnicalSnapshot, price: number | nu
   return { trend, momentum, volume };
 }
 
-/* --------------------------------------------------------------------------
-   Fiyat haritası — seviyelerin dikey eksende yerleşimi.
+/* Eski dikey fiyat haritasının yerleşimi (`priceMapLayout`) 31 Ekim'de
+   bileşeniyle birlikte silindi; yerini PriceLadder aldı (aşağıda). Esneyen
+   ölçek dersi git geçmişinde, d17648d8. */
 
-   Merdiven eşit aralıklı satırlardı ve 2 dolar ile 20 dolar uzaktaki iki
-   seviye aynı mesafede duruyordu; harita her seviyeyi fiyata GÖRE koyuyor,
-   yani "hedef uzak, stop yakın" göze kendiliğinden görünüyor.
-
-   EKSEN ESNİYOR, ETİKET İTİLMİYOR. Ölçek bir dönem düz orantılıydı ve
-   çakışan etiketler aşağı itiliyordu: işaret gerçek yerinde kalıyor, etiket
-   kayıyor, ikisini bir bağ çizgisi birleştiriyordu. Telefonda sonuç bir
-   yumaktı — bağ katmanı 23 piksel geniş, dört-beş çizgi neredeyse dikey ve
-   hangi çentiğin hangi satıra ait olduğu okunmuyordu. Daha kötüsü,
-   BÖLGELER yalan söylüyordu: alım bandı gerçek fiyat yerinde çiziliyor ama
-   "Alım Bölgesi" satırı yukarı itilmiş oluyor, bant komşu satırın
-   ("Destek") çevresine oturuyordu (ekran görüntüsüyle geldi).
-
-   Artık ölçeğin kendisi esniyor: seviyeler ham orantılı yerlerine konuyor,
-   sonra sıra bozulmadan en az `gap` piksel aralık bırakacak şekilde
-   gevşetiliyor ve ölçek bu noktalardan geçen MONOTON parçalı doğru oluyor.
-   Uzak duran seviyeler arasındaki büyük boşluk korunuyor, yalnızca
-   birbirine yapışık olanlar açılıyor. Karşılığında işaret ile etiket AYNI
-   y'de: bağ çizgisine gerek kalmıyor, bant kendi satırını sarıyor, stopun
-   altı gerçekten stopun altındaki satırları kaplıyor.
-   -------------------------------------------------------------------------- */
-
-export type MapRung = (Level | { kind: "price"; price: number }) & {
-  /** İşaretin yeri (piksel, üstten). */
-  markY: number;
-  /** Etiketin yeri — esneyen ölçekte işaretle aynı. */
-  labelY: number;
-};
-
-/**
- * `height` piksellik bir eksende seviyeleri yerleştirir.
- *
- * Eksen en düşük ile en yüksek seviye arasında, %6 pay ile (LevelTrack ile
- * aynı gerekçe). Alım bölgesi işaretini bölgenin ORTASINA koyuyor; bant
- * ayrıca çiziliyor.
- *
- * Üç adım: ham orantılı yer, sıra bozulmadan gevşetme, gevşemiş noktalardan
- * geçen ölçek. Gevşetme iki geçişli — yukarıdan aşağı en az `gap` bırak,
- * taban aşılırsa aşağıdan yukarı geri çek. Dönen `scale` bu noktalardan
- * geçtiği için bant ve stop altı bölgesi satırlarla AYNI eksende kalıyor.
- */
+/** Seviyenin üst ucu (bölgede `high`) — merdivende sıra eşitliğini bozar. */
 const topOf = (rung: Level | { kind: "price"; price: number }) =>
   "high" in rung && rung.high !== undefined ? rung.high : rung.price;
 
+/** Seviyenin çapası: alım bölgesinde bölgenin ORTASI, gerisinde fiyatın kendisi. */
 const anchorOf = (rung: Level | { kind: "price"; price: number }) =>
   "high" in rung && rung.high !== undefined && rung.kind === "entry"
     ? (rung.price + rung.high) / 2
     : rung.price;
-
-export function priceMapLayout(
-  levels: readonly Level[],
-  price: number | null,
-  { height, gap = 44, inset = 22 }: { height: number; gap?: number; inset?: number },
-): {
-  rungs: MapRung[];
-  scale: (value: number) => number;
-  /** Eksenin kapsadığı fiyat aralığı — haritanın iki ucu bunu yazıyor. */
-  lo: number;
-  hi: number;
-} {
-  const points = [
-    price,
-    ...levels.flatMap((level) => [level.price, level.high ?? level.price]),
-  ].filter((value): value is number => typeof value === "number" && Number.isFinite(value));
-  const min = Math.min(...points);
-  const max = Math.max(...points);
-  const pad = (max - min) * 0.06 || max * 0.02;
-  const lo = min - pad;
-  const hi = max + pad;
-  const usable = height - inset * 2;
-  const raw = (value: number) => inset + (1 - (value - lo) / (hi - lo)) * usable;
-
-  const base: (Level | { kind: "price"; price: number })[] = [...levels];
-  if (price !== null) base.push({ kind: "price", price });
-  const rungs: MapRung[] = base
-    .map((rung) => {
-      const y = raw(anchorOf(rung));
-      return { ...rung, markY: y, labelY: y };
-    })
-    .sort((a, b) => a.markY - b.markY || topOf(b) - topOf(a));
-
-  const floor = height - inset;
-  for (let i = 1; i < rungs.length; i++) {
-    rungs[i]!.markY = Math.max(rungs[i]!.markY, rungs[i - 1]!.markY + gap);
-  }
-  for (let i = rungs.length - 1; i >= 0; i--) {
-    const ceiling = i === rungs.length - 1 ? floor : rungs[i + 1]!.markY - gap;
-    rungs[i]!.markY = Math.max(inset, Math.min(rungs[i]!.markY, ceiling));
-  }
-  for (const rung of rungs) rung.labelY = rung.markY;
-
-  /* Ölçek: fiyattan piksele MONOTON parçalı doğru. Kontrol noktaları
-     eksenin iki ucu ve gevşemiş seviye yerleri; aynı fiyata iki nokta
-     düşerse ilki kalıyor ki eğri tersine dönmesin. */
-  const control: { price: number; y: number }[] = [{ price: hi, y: inset }];
-  for (const rung of rungs) {
-    const value = anchorOf(rung);
-    const last = control[control.length - 1]!;
-    if (value < last.price && rung.markY > last.y) control.push({ price: value, y: rung.markY });
-  }
-  const tail = control[control.length - 1]!;
-  if (lo < tail.price && floor > tail.y) control.push({ price: lo, y: floor });
-
-  const scale = (value: number) => {
-    if (!Number.isFinite(value)) return inset;
-    const first = control[0]!;
-    if (value >= first.price) return first.y;
-    for (let i = 1; i < control.length; i++) {
-      const a = control[i - 1]!;
-      const b = control[i]!;
-      if (value >= b.price) {
-        const span = a.price - b.price;
-        const t = span === 0 ? 0 : (a.price - value) / span;
-        return a.y + t * (b.y - a.y);
-      }
-    }
-    return control[control.length - 1]!.y;
-  };
-
-  return { rungs, scale, lo, hi };
-}
 
 /* --------------------------------------------------------------------------
    Fiyat merdiveni (31 Ekim) — detay sayfasının tek görsel ekseni.

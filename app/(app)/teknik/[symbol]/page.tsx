@@ -14,6 +14,7 @@ import { IndicatorPanels } from "@/components/technical/IndicatorPanels";
 import { NextEditionIn } from "@/components/technical/NextEditionIn";
 import { MoreSymbols, type MoreSymbolEntry } from "@/components/technical/MoreSymbols";
 import { PlanHistory } from "@/components/technical/PlanHistory";
+import { OpenRange, openRangeOf } from "@/components/technical/OpenRange";
 import { PlanStrip } from "@/components/technical/PlanStrip";
 import { BalanceNotes } from "@/components/technical/BalanceNotes";
 import { PriceMapNotes } from "@/components/technical/PriceMap";
@@ -219,6 +220,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
   const next = nextEdition(new Date(), holidays);
   const position = planPosition(price, row.entryLow, row.entryHigh, row.stop);
   const reading = planReading(verdict, price, row);
+  const openRange = openRangeOf(verdict, price, row);
   const sectionItems = [
     { id: "technical-levels", label: t.technical.priceMap },
     { id: "technical-reading", label: t.technical.summary },
@@ -442,8 +444,17 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
             geniş şerit yerinde duruyor; kapaktaki bir BAKIŞ, oradaki bir
             ÖLÇÜ. Bu not bir süre yalnızca inişi anlatıyordu ve kodla
             çelişiyordu; iki hâl de burada yazılı olsun. */}
+        {/* BÖLGESİZ TUT'TA İKİ GRİ KUTU YERİNE EKSEN (31 Ekim). "Nereden
+            Alınır — Bölge Yok · Destek" ve "Nerede Satılır — Direnç" iki
+            boş kalıptı; artık durumun adı, büyük destek—fiyat—direnç ekseni
+            ve iki seviye kartı (gerekçe `OpenRange`). Koşul cümlesi hemen
+            üstteki "Planın Okuması"nda. */}
         <div className={styles.coverPlan}>
-          <PlanStrip verdict={verdict} {...levelProps} size="lg" price={price} locale={locale} t={t} />
+          {openRange ? (
+            <OpenRange {...openRange} size="lg" priceLabel={priceLabel} locale={locale} t={t} />
+          ) : (
+            <PlanStrip verdict={verdict} {...levelProps} size="lg" price={price} locale={locale} t={t} />
+          )}
         </div>
       </header>
 

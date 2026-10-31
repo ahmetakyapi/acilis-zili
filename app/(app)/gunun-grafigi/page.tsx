@@ -15,7 +15,7 @@ import { DAILY_CHART_STAMP_SOURCE, dailyChartHref } from "@/lib/daily-chart";
 import { getLatestPosterDate } from "@/lib/day-poster-data";
 import { formatEtDateLong } from "@/lib/utils";
 import { DayContext } from "@/components/daily-chart/DayContext";
-import { getChartDayContext } from "@/lib/daily-chart-day";
+import { getChartDayContext, getChartLogos } from "@/lib/daily-chart-day";
 import { dailyChartTr, dailyChartEn } from "@/lib/i18n/dictionaries/daily-chart";
 
 export const generateMetadata = pageMetadata({
@@ -51,7 +51,9 @@ export default async function DailyChartIndexPage() {
   /* Boş durumun bağlantısı: son tamamlanmış seansın posteri. Okunamazsa
      arşiv sayfası (poster kendi tarihini orada seçtiriyor). */
   const posterHref = latest ? null : await getLatestPosterDate().then((date) => `/gun/${date}`, () => "/gun");
-  const context = latest ? await getChartDayContext(latest.chartDate) : null;
+  const [context, logos] = latest
+    ? await Promise.all([getChartDayContext(latest.chartDate), getChartLogos(latest.chartMd, latest.locale)])
+    : [null, {}];
 
   return (
     <MotionExperience className={polish.page}>
@@ -86,6 +88,7 @@ export default async function DailyChartIndexPage() {
           <ChartBoard
             row={latest}
             context={context}
+            logos={logos}
             locale={locale}
             labels={d}
             headingId={`grafik-${latest.chartDate}`}
@@ -131,7 +134,7 @@ export default async function DailyChartIndexPage() {
                     )}
                   </span>
                   <span className={styles.cardTitle} lang={row.locale}>{row.title}</span>
-                  <ChartMosaic chartMd={row.chartMd} locale={row.locale} />
+                  <ChartMosaic chartMd={row.chartMd} locale={row.locale} roles={d.board.roles} />
                 </Link>
               </li>
             ))}

@@ -191,11 +191,19 @@ export function GlossaryBrowser({
         (category === null || item.category === category) &&
         (needle === "" || item.haystack.includes(needle)),
     );
+    const available = new Map<string, number>();
+    for (const item of base) available.set(item.letter, (available.get(item.letter) ?? 0) + 1);
     return {
-      available: new Set(base.map((item) => item.letter)),
+      available,
       visible: letter === null ? base : base.filter((item) => item.letter === letter),
     };
   }, [items, category, needle, letter]);
+  /* HARF DİZİNİ BİR DAĞILIM (31 Ekim). Harfler yalnız açık/sönük
+     ayrımını taşıyordu; şimdi her harfin altında o harfle başlayan terim
+     sayısının çubuğu var, o anki kategori ve aramaya göre. "S" ile "Z"nin
+     farkı okunuyor, kategori seçilince dağılım kategorinin dağılımına
+     dönüyor. Ölçek görünen en kalabalık harf. */
+  const letterMax = Math.max(1, ...available.values());
 
   const maxCount = Math.max(1, ...groups.map((group) => group.count));
   const filtered = query !== "" || category !== null || letter !== null;
@@ -429,8 +437,11 @@ export function GlossaryBrowser({
                   disabled={!active && !available.has(value)}
                   onClick={() => pickLetter(value)}
                   className={styles.letter}
+                  title={available.has(value) ? countLabel(available.get(value) ?? 0) : undefined}
+                  style={{ "--share": (available.get(value) ?? 0) / letterMax } as CSSProperties}
                 >
                   {value}
+                  <span aria-hidden className={styles.letterBar} />
                 </button>
               );
             })}

@@ -7,6 +7,8 @@ import {
 } from "@/lib/i18n/config";
 import { EMBED_THEME_PARAM, embedThemeFromParam, isEmbedPath } from "@/lib/embed";
 import { LOCALE_HEADER, splitLocale, withLocale } from "@/lib/i18n/routing";
+import { getToken } from "next-auth/jwt";
+import { PREVIEW_PARAM, PREVIEW_THEME_PARAM, isPreviewablePath } from "@/lib/preview";
 
 /**
  * Next.js 16'da `middleware` yerini `proxy` aldı.
@@ -27,6 +29,9 @@ import { LOCALE_HEADER, splitLocale, withLocale } from "@/lib/i18n/routing";
  *    `session` notu) okuyucu 180 gün boyunca o cihazda giriş yapamıyordu:
  *    başlık "Giriş Yap" diyor, /giris ana sayfaya atıyordu. "Zaten girmiş"
  *    yönlendirmesi artık sayfada, gerçek `auth()` ile.
+ *
+ * 3. CİHAZ ÖNİZLEMESİ KAPISI (31 Ekim) — `?onizleme=1` yalnız yöneticide
+ *    geçer; ayrıntı aşağıda `isAdminPreview` ve `lib/preview.ts`.
  */
 
 /** Dil çerezinin ömrü — `components/layout/preference-controls.tsx` →
@@ -53,17 +58,70 @@ function hasSessionCookie(request: NextRequest): boolean {
  * yazabilmeli, yoksa herhangi bir sayfanın teması dışarıdan bir başlıkla
  * değiştirilebilirdi (zararsız ama sözleşme dışı).
  */
-function withEmbedTheme(request: NextRequest, path: string, headers: Headers): Headers {
+function withEmbedTheme(
+  request: NextRequest,
+  path: string,
+  headers: Headers,
+  preview = false,
+): Headers {
   headers.delete(EMBED_THEME_HEADER);
-  if (!isEmbedPath(path)) return headers;
-  const theme = embedThemeFromParam(request.nextUrl.searchParams.get(EMBED_THEME_PARAM));
+  /* Cihaz önizlemesi de temayı adresten alır (31 Ekim): çerçeve yöneticinin
+     çerezini paylaşıyor ve tema seçicisi çerezi yazsaydı yöneticinin kendi
+     teması da değişirdi. Değerler aynı (`?tema=acik|koyu`). */
+  if (!isEmbedPath(path) && !preview) return headers;
+  const param = preview ? PREVIEW_THEME_PARAM : EMBED_THEME_PARAM;
+  const theme = embedThemeFromParam(request.nextUrl.searchParams.get(param));
   if (theme) headers.set(EMBED_THEME_HEADER, theme);
   return headers;
 }
 
-export function proxy(request: NextRequest) {
+/**
+ * CİHAZ ÖNİZLEMESİ KAPISI (31 Ekim) — `?onizleme=1` yalnız yöneticide geçer.
+ *
+ * Parametre next.config.ts'te çerçeve yasağını AYNI KÖKE daraltıyor
+ * (`frame-ancestors 'self'`); tehdit modeli `lib/preview.ts` başında. Bu
+ * kapı derinlik katı: yönetici olmayan isteği parametresiz adrese
+ * yönlendiriyor, o adres DENY ile döner. Yönetim ve API yolları
+ * (`isPreviewablePath`) yönetici için de geçmez.
+ *
+ * YALNIZ ÇEREZİN JWT'Sİ ÇÖZÜLÜYOR, veritabanına gidilmiyor: proxy her
+ * istekte koşuyor ve bu yol yalnız parametreli istekte açılıyor. Token'daki
+ * rol görünüm içindir, yetki değil (auth.ts → `jwt`) — burada açılan şey de
+ * yetki değil, herkese açık bir sayfanın aynı kökte çerçevelenebilmesi.
+ * Yönetim ekranlarının kapısı veritabanına bakan `lib/admin.ts`te kalıyor.
+ */
+async function isAdminPreview(request: NextRequest, path: string): Promise<boolean> {
+  if (!isPreviewablePath(path)) return false;
+  const secure = request.cookies.has("__Secure-authjs.session-token");
+  if (!secure && !request.cookies.has("authjs.session-token")) return false;
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) return false;
+  try {
+    const token = await getToken({ req: request, secret, secureCookie: secure });
+    return token?.role === "admin";
+  } catch {
+    return false;
+  }
+}
+
+export async function proxy(request: NextRequest) {
   const { locale, path } = splitLocale(request.nextUrl.pathname);
   const signedIn = hasSessionCookie(request);
+
+  /* Önizleme isteği önce kapıdan geçer; geçemeyen parametresiz adrese gider
+     ve sitenin olağan DENY'ini alır. Geçen istek dil çerezine DOKUNMAZ
+     (aşağıda): çerçevedeki TR/EN seçimi yöneticinin kendi dil tercihini
+     değiştirmesin, TR çerçevesi de yöneticinin `en` çereziyle `/en`e
+     yönlenmesin. */
+  let preview = false;
+  if (request.nextUrl.searchParams.has(PREVIEW_PARAM)) {
+    preview = await isAdminPreview(request, path);
+    if (!preview) {
+      const url = request.nextUrl.clone();
+      url.searchParams.delete(PREVIEW_PARAM);
+      return NextResponse.redirect(url);
+    }
+  }
 
   /* Yönlendirmeler DİLİ KORUR: `/en/favoriler`den girişe atılan okuyucu
      `/en/giris`e gider, Türkçeye düşmez. */
@@ -116,7 +174,7 @@ export function proxy(request: NextRequest) {
 
        Çerezin rolü artık tek: "geçen sefer İngilizce seçmiştim" demek. */
     const preferred = request.cookies.get(LOCALE_COOKIE)?.value;
-    if (isLocale(preferred) && preferred !== DEFAULT_LOCALE) {
+    if (!preview && isLocale(preferred) && preferred !== DEFAULT_LOCALE) {
       const url = request.nextUrl.clone();
       url.pathname = withLocale(path, preferred);
       return NextResponse.redirect(url);
@@ -124,9 +182,9 @@ export function proxy(request: NextRequest) {
     /* Başlık yalnızca gerektiğinde yeniden yazılıyor: parça yolunda ya da
        istemci başlığı kendisi göndermişse (silmek için). Öteki her istek
        eskisi gibi dokunulmadan geçiyor. */
-    if (isEmbedPath(path) || request.headers.has(EMBED_THEME_HEADER)) {
+    if (preview || isEmbedPath(path) || request.headers.has(EMBED_THEME_HEADER)) {
       return NextResponse.next({
-        request: { headers: withEmbedTheme(request, path, new Headers(request.headers)) },
+        request: { headers: withEmbedTheme(request, path, new Headers(request.headers), preview) },
       });
     }
     return NextResponse.next();
@@ -135,7 +193,7 @@ export function proxy(request: NextRequest) {
   /* Önek varsa sayfa dosyası önekSİZ yolda duruyor: istek oraya yazılıyor ve
      dil başlıkla taşınıyor. Başlık İSTEĞE ekleniyor (yanıta değil): sayfa onu
      `headers()` ile okuyor, tarayıcıya hiç gitmiyor. */
-  const headers = withEmbedTheme(request, path, new Headers(request.headers));
+  const headers = withEmbedTheme(request, path, new Headers(request.headers), preview);
   headers.set(LOCALE_HEADER, locale);
 
   const url = request.nextUrl.clone();
@@ -182,6 +240,7 @@ export function proxy(request: NextRequest) {
      hem yanıtı önbelleklenebilir kılıyor hem de anlamsız bir çerezi
      göndermiyor. */
   if (
+    !preview &&
     path !== "/feed.xml" &&
     request.cookies.get(LOCALE_COOKIE)?.value !== locale
   ) {

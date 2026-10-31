@@ -1,0 +1,110 @@
+/* Yönetim panelinin çizimleri (31 Ekim) — sitenin kart dili: nötr zemin,
+   durum kartın tepesindeki 3 piksellik şeritte (bilanço, teknik ve risk
+   kartlarıyla aynı jest: components/earnings/AnalysisCardGrid.module.css →
+   `.card::before`). Grafik dili ince: kulvar üstünde ince çizgi, dolu ağır
+   blok yok (CLAUDE.md "Görsel Dil"). */
+
+/* --------------------------------------------------------------------------
+   Tepe şeridi
+   -------------------------------------------------------------------------- */
+
+.toned { position: relative; }
+.toned::before {
+  position: absolute;
+  top: -1px;
+  inset-inline: 22px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--bar);
+  content: "";
+  pointer-events: none;
+}
+.toned[data-tone="ok"]::before { background: var(--up); }
+.toned[data-tone="warn"]::before { background: var(--brass); }
+.toned[data-tone="down"]::before { background: var(--down); }
+.toned[data-tone="info"]::before { background: var(--primary); }
+
+/* --------------------------------------------------------------------------
+   Küçük çizgi — son iki pencere
+   -------------------------------------------------------------------------- */
+
+.spark {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 28px;
+}
+.spark svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.sparkTrack { stroke: var(--line-soft); stroke-width: 1; }
+.sparkPrev { fill: none; stroke: var(--bar); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+.sparkCurr { fill: none; stroke: var(--primary); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.sparkArea { fill: color-mix(in srgb, var(--primary) 12%, transparent); stroke: none; }
+.sparkSplit { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 2 3; }
+/* Son nokta HTML'de: `preserveAspectRatio="none"` daireyi elipse çekerdi. */
+.sparkDot {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 0 2px var(--premium-surface);
+}
+
+/* --------------------------------------------------------------------------
+   Pay halkası
+   -------------------------------------------------------------------------- */
+
+.ring { display: block; flex-shrink: 0; rotate: -90deg; }
+.ringTrack { fill: none; stroke: var(--bar); }
+.ringFill { fill: none; stroke: var(--primary); stroke-linecap: round; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .ringFill { animation: ringIn 900ms var(--ease-brand) both; }
+  .sparkCurr { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 900ms var(--ease-brand) 120ms forwards; }
+}
+@keyframes ringIn { from { stroke-dasharray: 0 999; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+/* --------------------------------------------------------------------------
+   Yoklama şeridi — her yoklama bir parça, renk tonu
+   -------------------------------------------------------------------------- */
+
+.pulse {
+  display: flex;
+  gap: 3px;
+  height: 5px;
+}
+.pulse i {
+  flex: 1 1 0;
+  min-width: 4px;
+  border-radius: 999px;
+  background: var(--bar);
+}
+.pulse i[data-tone="ok"] { background: color-mix(in srgb, var(--up) 70%, transparent); }
+.pulse i[data-tone="warn"] { background: var(--brass); }
+.pulse i[data-tone="down"] { background: var(--down); }
+.pulse i[data-tone="info"] { background: color-mix(in srgb, var(--primary) 55%, transparent); }
+
+.pulseLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin-top: 8px;
+  font-size: var(--text-tiny);
+  color: var(--text-muted);
+}
+.pulseLegend span { display: inline-flex; align-items: center; gap: 6px; }
+.pulseLegend b { font-weight: 650; color: var(--text-body); }
+.pulseLegend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bar);
+}
+.pulseLegend i[data-tone="ok"] { background: var(--up); }
+.pulseLegend i[data-tone="warn"] { background: var(--brass); }
+.pulseLegend i[data-tone="down"] { background: var(--down); }
+.pulseLegend i[data-tone="info"] { background: var(--primary); }

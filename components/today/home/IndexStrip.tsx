@@ -6,6 +6,7 @@ import { getStatus } from "@/lib/data";
 import { INDEX_STRIP } from "@/db/seed/symbols";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { getChartBarsMulti } from "@/lib/providers";
+import { weekLine, type WeekLine } from "@/lib/index-week";
 
 /* SAYI ENDEKSİN SEVİYESİ DEĞİL, FONUN FİYATI. Nasdaq 100 endeksi 25 binli
    seviyelerde; karttaki 716 dolar QQQ'nun hisse fiyatı. Ücretsiz
@@ -67,11 +68,32 @@ export async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary 
     points[symbol] = (bars[symbol] ?? []).map((bar) => ({ time: bar.time, value: bar.close }));
   }
 
+  /* YEDEK ÇİZGİ: BEŞ SEANS (31 Ekim). Gün içi çizgi çizilemeyecekse (paket
+     bayat ya da bir kotasyonun dayanağı "Son Kapanış" — kural `IndexLive`)
+     kart grafiksiz kalıyordu. O hâlde günlük barlardan son beş seansın
+     kapanışları gidiyor; aynı-seans denetimi `lib/index-week.ts`te. İstek
+     YALNIZ o hâlde atılıyor: seans içinde ve kapanıştan sonra gün içi
+     çizgi zaten var, fazladan bir sağlayıcı çağrısı gerekmiyor. Hata
+     yedeği düşürür, kartı değil. */
+  const needsWeek = feed.stale || INDEX_STRIP.some((symbol) => feed.quotes[symbol]?.basis === "lastClose");
+  const weeks: Record<string, WeekLine> = {};
+  if (needsWeek) {
+    const daily = await getChartBarsMulti([...INDEX_STRIP], "1M", status).catch(() => null);
+    for (const symbol of INDEX_STRIP) {
+      const line = weekLine(
+        (daily?.[symbol] ?? []).map((bar) => ({ time: bar.time, value: bar.close })),
+        feed.quotes[symbol]?.tradedAt ?? null,
+      );
+      if (line) weeks[symbol] = line;
+    }
+  }
+
   return (
     <IndexLive
       symbols={INDEX_STRIP}
       initial={feed}
       bars={points}
+      weeks={weeks}
       domain={domain}
       openAt={openAt}
       session={status.session}
@@ -81,6 +103,7 @@ export async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary 
         preMarket: t.market.preMarket,
         afterHours: t.market.afterHours,
         lastClose: t.market.lastClose,
+        week: t.today.indexWeek,
         data: t.data,
       }}
     />

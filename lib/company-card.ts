@@ -126,6 +126,22 @@ export function companyCardRecord(
     tone(quote.changePct, shown !== "lastClose" && shown !== "lastPrice");
   }
 
+  /* Gün aralığı çizgisi — kotasyonun kendi gün barından (açılış öncesinde
+     `snapshotToQuote` bu alanları boşaltıyor, yani dünün aralığı bugünün
+     fiyatıyla eşleşmez). Fiyat aralığın dışındaysa (seans dışı işlem)
+     çizgi basılmıyor: imleç kulvarın dışında bir şey söyleyemez. */
+  if (!extra.price && quote && quote.low !== null && quote.high !== null && quote.high > quote.low) {
+    const pos = (quote.price - quote.low) / (quote.high - quote.low);
+    if (pos >= 0 && pos <= 1) {
+      card.range = {
+        pos,
+        low: formatPrice(quote.low, locale),
+        high: formatPrice(quote.high, locale, { currency: true }),
+        label: t.companyCard.dayRange,
+      };
+    }
+  }
+
   if (extra.badge) card.badge = extra.badge;
   if (extra.facts?.length) card.facts = extra.facts;
   if (extra.foot) card.foot = extra.foot;

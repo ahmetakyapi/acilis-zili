@@ -141,7 +141,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * Renkler `app/globals.css` içindeki `--page-bg` değerleri; iki yerde
  * yaşadıkları için değiştirilirse ikisi birlikte değişmeli.
  */
-const PAGE_BG = { light: "#f7f9fb", dark: "#070d16" } as const;
+const PAGE_BG = { light: "#f7f9fb", dark: "#08101a" } as const;
 
 /** iPhone ve eski iPad kimlikleri. iPadOS 13+ kendini `Macintosh` diye
     tanıtıyor ve sunucuda Mac'ten ayrılamıyor; orada koruma globals.css'teki

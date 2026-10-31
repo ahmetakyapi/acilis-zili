@@ -2,7 +2,8 @@ import "server-only";
 
 import { cache } from "react";
 import { getEventsBetweenResult, getSymbolNames } from "@/lib/data";
-import { pickMovers } from "@/lib/daily-chart";
+import { checkChartBlock, pickMovers } from "@/lib/daily-chart";
+import { memberSymbolOf } from "@/lib/daily-chart-figure";
 import { getDayPoster } from "@/lib/day-poster-data";
 import type { DayPoster } from "@/lib/day-poster";
 import { getEarningsWithOverrides } from "@/lib/earnings-overrides";
@@ -68,6 +69,24 @@ async function readEarnings(date: string) {
     console.error(`[gunun-grafigi] ${date} bilanço takvimi okunamadı: ${error instanceof Error ? error.message : String(error)}`);
     return null;
   }
+}
+
+/**
+ * Grafiğin hisse kalemlerinin logoları (31 Ekim): sembol → logo adresi.
+ * Sembol bloğun ADINDAN, yalnız tek anlamlı eşleşmeyle (`memberSymbolOf`);
+ * adres sembol tablosundan (`getSymbolNames`, istek içinde tek sorgu). Logo
+ * satırı yoksa `LogoTile` önce depodaki dosyaya, o da yoksa harflere düşer.
+ * Bozuk blok ya da hissesiz grafik boş harita.
+ */
+export async function getChartLogos(chartMd: string, locale: string): Promise<Record<string, string | null>> {
+  const check = checkChartBlock(chartMd, locale);
+  if (!check.ok || check.block.kind !== "bars") return {};
+  const symbols = check.block.items
+    .map((item) => memberSymbolOf(item.name))
+    .filter((symbol): symbol is string => symbol !== null);
+  if (symbols.length === 0) return {};
+  const meta = await getSymbolNames(symbols);
+  return Object.fromEntries(symbols.map((symbol) => [symbol, meta[symbol]?.logoUrl ?? null]));
 }
 
 export const getChartDayContext = cache(async function getChartDayContext(date: string): Promise<ChartDayContext> {

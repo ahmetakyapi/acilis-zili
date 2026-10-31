@@ -213,7 +213,7 @@ function readPalette(): InkPalette {
   const v = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
   return {
     ink: v("--text-strong", "#101c2b"),
-    spark: v("--brass", "#a4720f"),
+    spark: v("--brass", "#8c7200"),
     paper: v("--page-bg", "#f7f9fb"),
     up: v("--up", "#0c7350"),
     down: v("--down", "#c01a3d"),

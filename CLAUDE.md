@@ -422,8 +422,11 @@ Rutinlerden ayrı, sunucunun kendi Claude çağrıları. Anahtar
     `check` → `apply` koşar ve `docs/ROUTEMAP.md`'deki sayıyı günceller.
   - **Veri değiştiren/silen** (`DROP`, `RENAME`, tip değişikliği, `NOT NULL`
     ekleme, `UPDATE`): uygulamadan önce sahibine sor.
-- **`/gomulu/*` çerçevelenebilen TEK yol**; geri kalanı `X-Frame-Options:
-  DENY` + `frame-ancestors 'none'` (`next.config.ts`).
+- **`/gomulu/*` her yerden çerçevelenebilen TEK yol**; geri kalanı
+  `X-Frame-Options: DENY` + `frame-ancestors 'none'` (`next.config.ts`).
+  Tek dar istisna yönetimin cihaz önizlemesi: `?onizleme=1` yalnız AYNI
+  KÖKE (`'self'`) açılır, yönetici değilse `proxy.ts` parametreyi düşürür,
+  `/admin` ve `/api` hiç gevşemez (tehdit modeli `lib/preview.ts`).
 - **GitHub iş akışları:** push'ta `deploy` (kapı) ve `smoke` (kapı değil);
   zamanlanmış `links`; elle `migrate`, `sync-app-env`, `sync-analysis-key`,
   `verify-analysis`, `test-mail`. Sunucuya dokunanlar `deploy-vps`

@@ -1,3 +1,4 @@
+import { ALL_MEMBERS, primaryOnly } from "@/db/seed/indices";
 import { SECTOR_FUNDS } from "@/db/seed/symbols";
 import type { DailyChartBlock } from "@/lib/daily-chart";
 
@@ -76,6 +77,68 @@ export function sectorFundOf(name: string): string | null {
     }
   }
   return null;
+}
+
+/* --------------------------------------------------------------------------
+   Satırın kimliği: endeks üyesi hisse
+   -------------------------------------------------------------------------- */
+
+/** Şirket adının sonundaki tüzel ekler: "Coherent Corp." → "coherent". */
+const LEGAL_SUFFIX = /\s+(?:corp(?:oration)?|inc(?:orporated)?|ltd|limited|plc|group|holdings?|co|company|n\.?v|s\.?a|se|ag)\.?$/u;
+
+const normalName = (name: string) => {
+  let key = name.trim().toLocaleLowerCase("en-US").replace(/[,]/g, "").replace(/\s+/g, " ");
+  /* "Nebius Group N.V." gibi üst üste ekler: değişmeyene kadar kırp. */
+  for (let previous = ""; previous !== key; ) {
+    previous = key;
+    key = key.replace(LEGAL_SUFFIX, "").replace(/\.$/, "").trim();
+  }
+  return key;
+};
+
+/** Ad → sembol dizinleri; tek anlamlı olmayan anahtar null (eşlenmez). */
+type NameIndex = { exact: Map<string, string | null>; loose: Map<string, string | null>; symbols: Set<string> };
+let nameIndex: NameIndex | null = null;
+
+function memberIndex(): NameIndex {
+  if (nameIndex) return nameIndex;
+  const exact = new Map<string, string | null>();
+  const loose = new Map<string, string | null>();
+  const put = (map: Map<string, string | null>, key: string, symbol: string) => {
+    if (!key) return;
+    const current = map.get(key);
+    map.set(key, current === undefined || current === symbol ? symbol : null);
+  };
+  const members = primaryOnly(ALL_MEMBERS);
+  for (const member of members) {
+    put(exact, member.name.trim().toLocaleLowerCase("en-US"), member.symbol);
+    put(loose, normalName(member.name), member.symbol);
+  }
+  nameIndex = { exact, loose, symbols: new Set(members.map((member) => member.symbol)) };
+  return nameIndex;
+}
+
+/**
+ * Satır adı bir endeks üyesinin adıysa sembolü ("Intel" → INTC, "Coherent"
+ * → COHR) — logo ve hisse bağlantısı için (31 Ekim).
+ *
+ * Rutin satıra AD yazıyor ve adı bağlam paketinden kopyalıyor; paketin
+ * `movers` adları `ALL_MEMBERS`tan (`lib/daily-chart-context.ts`). Eşleme
+ * aynı listeden ve yalnız TEK ANLAMLIYSA: önce adın kendisi (büyük-küçük
+ * harf duyarsız), sonra tüzel ekler kırpılmış hâli ("Coherent Corp." ile
+ * "Coherent", "Oracle Corporation" ile "Oracle"). İki üyeye birden uyan ad
+ * eşlenmez; sektör adı (`sectorFundOf`) ve endeks adları ("Nasdaq 100")
+ * hiçbir üyenin adı değil. Satırda doğrudan sembol yazıyorsa ("NVDA") o.
+ * Tahmin yok: eşleşmeyen satır logosuz ve bağlantısız kalır.
+ */
+export function memberSymbolOf(name: string): string | null {
+  const trimmed = name.trim();
+  if (!trimmed || sectorFundOf(trimmed)) return null;
+  const index = memberIndex();
+  if (index.symbols.has(trimmed)) return trimmed;
+  const exact = index.exact.get(trimmed.toLocaleLowerCase("en-US"));
+  if (exact !== undefined) return exact;
+  return index.loose.get(normalName(trimmed)) ?? null;
 }
 
 /* --------------------------------------------------------------------------

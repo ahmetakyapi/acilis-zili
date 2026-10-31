@@ -41,6 +41,15 @@ export const ADMIN_SECTIONS = {
     title: "Yazılar",
     subtitle: "Yayındaki mercek yazılarını ve bültenleri düzelt; yeni kayıt burada açılmaz.",
   },
+  /* CİHAZ ÖNİZLEMESİ (31 Ekim) Yazılar'ın hemen yanında: editörden
+     "Cihazlarda Gör" ile gelinen yer. Çerçevenin güvenlik kararı
+     `lib/preview.ts` başında. */
+  preview: {
+    href: "/admin/onizleme",
+    tab: "Önizleme",
+    title: "Önizleme",
+    subtitle: "Yayındaki bir sayfanın telefonda ve masaüstünde nasıl göründüğü; kaydedilmemiş taslak burada görünmez.",
+  },
   moderation: {
     href: "/admin/moderasyon",
     tab: "Moderasyon",
@@ -58,13 +67,14 @@ export const ADMIN_SECTIONS = {
 
 export type AdminSectionKey = keyof typeof ADMIN_SECTIONS;
 
-/** Sekme sırası — Özet, Trafik, Üyeler, İçerik, Yazılar, Sistem. */
+/** Sekme sırası — Özet, Trafik, Üyeler, İçerik, Yazılar, Önizleme, Moderasyon, AI, Sistem. */
 export const ADMIN_TAB_ORDER: readonly AdminSectionKey[] = [
   "overview",
   "traffic",
   "members",
   "content",
   "writing",
+  "preview",
   "moderation",
   "ai",
   "system",

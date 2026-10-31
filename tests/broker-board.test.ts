@@ -8,6 +8,7 @@ import {
   CURVE_RANGE,
   crossSentence,
   dodgeLabels,
+  dodgeSpans,
   feeCurves,
   leaderSegments,
   logGrid,
@@ -145,6 +146,18 @@ test("dodgeLabels: en az aralık, sınır içinde, sıra korunur", () => {
   assert.ok(out[0] < out[2] && out[2] < out[1], "eşit olmayan hedeflerde sıra korunur");
   assert.ok(out[4] < out[3]);
   assert.deepEqual(dodgeLabels([], 10, 0, 100), []);
+});
+
+test("dodgeSpans: kümeler kendi enleriyle çakışmaz, sınır içinde, sıra korunur", () => {
+  const widths = [20, 20, 34, 20, 20];
+  const out = dodgeSpans([10, 30, 32, 120, 196], widths, 4, 0, 200);
+  for (let i = 1; i < out.length; i++) {
+    assert.ok(out[i] - widths[i] / 2 - (out[i - 1] + widths[i - 1] / 2) >= 4 - 1e-9, `küme ${i} çakışıyor`);
+  }
+  out.forEach((c, i) => assert.ok(c - widths[i] / 2 >= -1e-9 && c + widths[i] / 2 <= 200 + 1e-9));
+  /* Yer varken kıpırdamaz. */
+  assert.deepEqual(dodgeSpans([50, 150], [20, 20], 4, 0, 200), [50, 150]);
+  assert.deepEqual(dodgeSpans([], [], 4, 0, 100), []);
 });
 
 test("marka kaydı: her kurumun logosu depoda, iki temalı rengi ve kaynağı var", () => {

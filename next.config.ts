@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { PREVIEW_PARAM } from "./lib/preview";
 
 /**
  * Güvenlik başlıkları.
@@ -39,6 +40,30 @@ const SECURITY_HEADERS = [
   { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
   ...BASE_SECURITY_HEADERS,
 ];
+
+/**
+ * CİHAZ ÖNİZLEMESİ (`?onizleme=1`, 31 Ekim) — yönetimin `/admin/onizleme`
+ * ekranı sitenin sayfasını kendi çerçevesinde çiziyor. Yasak KALKMIYOR,
+ * AYNI KÖKE daralıyor: `frame-ancestors 'self'` + `X-Frame-Options:
+ * SAMEORIGIN`. Tıklama hırsızlığının saldırganı başka bir kökende oturur;
+ * parametreyi kendisi eklese de tarayıcı onun çerçevesini reddeder. Yani
+ * parametre bir YETKİ değil, yalnız "bu istek aynı kökten çerçevelenebilir"
+ * işareti. Yönetici olmayan isteği proxy parametresiz adrese yönlendiriyor
+ * (DENY'e geri düşer), `/admin` ve `/api` yolları hiçbir koşulda
+ * gevşemiyor — tehdit modeli ve üç kat `lib/preview.ts` başında.
+ *
+ * İKİ KURAL TEK ANAHTARIN `missing`/`has` ÇİFTİ: her istek tam birini alıyor,
+ * arada başlıksız kalan istek yok. Kurala `sec-fetch-*` gibi ikinci bir koşul
+ * EKLENMEDİ, bilerek: `missing` "hiçbiri yoksa" demek ve iki koşullu bir çift
+ * arada hiç başlık almayan bir istek kümesi bırakırdı (Next `matchHas`:
+ * `has.every && !missing.some`).
+ */
+const PREVIEW_HEADERS = [
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+  ...BASE_SECURITY_HEADERS,
+];
+const PREVIEW_QUERY = [{ type: "query" as const, key: PREVIEW_PARAM }];
 
 /**
  * GÖMÜLÜ PARÇALAR (`/gomulu/*`) — çerçeve yasağının TEK istisnası.
@@ -112,7 +137,8 @@ const nextConfig: NextConfig = {
   compress: false,
   async headers() {
     return [
-      { source: NOT_EMBED_SOURCE, headers: SECURITY_HEADERS },
+      { source: NOT_EMBED_SOURCE, missing: PREVIEW_QUERY, headers: SECURITY_HEADERS },
+      { source: NOT_EMBED_SOURCE, has: PREVIEW_QUERY, headers: PREVIEW_HEADERS },
       ...EMBED_SOURCES.map((source) => ({ source, headers: EMBED_HEADERS })),
       ...NOINDEX_SOURCES.map((source) => ({
         source,

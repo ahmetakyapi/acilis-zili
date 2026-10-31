@@ -9,6 +9,8 @@ import type { Locale } from "@/lib/i18n/config";
 import type { MarketSession } from "@/lib/market-hours";
 import { cn, directionOf, directionText, formatPercent, formatPrice } from "@/lib/utils";
 import { TickingFigure } from "@/components/ui/TickingFigure";
+import { RollingFigure } from "@/components/ui/RollingFigure";
+import type { WeekLine } from "@/lib/index-week";
 import type { IndexFeed, IndexQuote } from "./index-feed";
 import { INDEX_EVENT, type IndexTickerPatch } from "./index-event";
 import styles from "./TodayExperience.module.css";
@@ -35,6 +37,8 @@ export type IndexLiveLabels = {
   preMarket: string;
   afterHours: string;
   lastClose: string;
+  /** Yedek çizginin künyesi — "5 Seans". */
+  week: string;
   data: DataStampLabels;
 };
 
@@ -62,6 +66,7 @@ export function IndexLive({
   symbols,
   initial,
   bars,
+  weeks,
   domain,
   openAt,
   session,
@@ -71,6 +76,8 @@ export function IndexLive({
   symbols: readonly string[];
   initial: Extract<IndexFeed, { ok: true }>;
   bars: Bars;
+  /** Gün içi çizgi çizilemezse son beş seansın kapanışları (IndexStrip). */
+  weeks: Record<string, WeekLine>;
   domain: [number, number];
   openAt: number;
   session: MarketSession;
@@ -184,7 +191,7 @@ export function IndexLive({
   }, [feed, locale, symbols]);
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className={cn("flex flex-col gap-2.5", styles.indexLive)}>
       {/* Önceki yan kolon ölçümünde 1024'te dört sütunlu düzenin
           kartları 84 piksele düşüyor ve başlıklar "N…", "S&…", "Do…" diye
           kırpılıyordu. Kartlar her genişlikte 2×2 kalıyor. */}
@@ -212,6 +219,7 @@ export function IndexLive({
                   (point) => point.time > ((bars[symbol] ?? []).at(-1)?.time ?? 0),
                 ),
               ]}
+              week={weeks[symbol]}
               domain={domain}
               openAt={openAt}
               locale={locale}
@@ -237,6 +245,7 @@ function IndexCard({
   quote,
   stale,
   bars,
+  week,
   domain,
   openAt,
   locale,
@@ -247,6 +256,7 @@ function IndexCard({
   quote: IndexQuote;
   stale: boolean;
   bars: { time: number; value: number }[];
+  week?: WeekLine;
   domain: [number, number];
   openAt: number;
   locale: Locale;
@@ -281,9 +291,25 @@ function IndexCard({
       ? [...bars, { time: tradedSec, value: quote.price }]
       : bars;
   const sparkOk = !stale && !lastClose;
+  /* Gün içi çizgi yoksa beş seansın kapanışları (lib/index-week.ts — son
+     kapanış kartın fiyatıyla aynı işlem günü değilse orada düşüyor). */
+  const showWeek = !(sparkOk && points.length > 1) && !!week;
+  /* YÖN KARTIN TEPESİNDE 3 PİKSELLİK ŞERİTTE (31 Ekim, sahibinin isteği;
+     bilanço, teknik ve risk kartlarının dili — CLAUDE.md "Görsel Dil").
+     Şerit, kartta RENKLİ yazan şeyin yönünü taşır: yüzde bu seansı
+     anlatıyorsa onun; "Son Kapanış"ta yüzde nötr yazıldığı için şerit de
+     nötr, beş seans çizgisi varsa onun yönü (künyesi yanında yazılı). */
+  const stripTone = !lastClose ? tone : week && showWeek ? directionOf(week.changePct) : "flat";
+  const value = formatPrice(quote.price, locale);
+  /* SAYI GİRİŞTE YUVARLANIR (31 Ekim). İlk çizimde fiyat RollingFigure ile
+     yerine oturuyor (sunucu HTML'inde, hidrasyonu beklemeden); ilk canlı
+     değişimden sonra TickingFigure'a geçiliyor ve o, ekranda duran değeri
+     (`entry`) bilerek yalnız değişen basamağı döndürüyor. Geçiş bir kez
+     olur; sonrası eskisi gibi anahtarsız tek öğe. */
+  const [entry] = useState(value);
   const label = INDEX_LABEL[symbol] ?? symbol;
   return (
-    <Link href={`/hisse/${symbol}`} className={styles.indexLink}>
+    <Link href={`/hisse/${symbol}`} className={styles.indexLink} data-tone={stripTone}>
       <SpotlightCard className={styles.indexCard}>
         <div className={styles.indexIdentity}>
           <span className="text-tiny font-semibold text-body">{label}</span>
@@ -300,11 +326,16 @@ function IndexCard({
           >
             {/* Rakamlar yönünde dönüyor (ui/TickingFigure); zemin parlaması
                 yerinde — biri "değişti" diyor, öteki "şu basamak". */}
-            <TickingFigure
-              value={formatPrice(quote.price, locale)}
-              direction={flash?.tone}
-              decimal={locale === "tr" ? "," : "."}
-            />
+            {flash ? (
+              <TickingFigure
+                value={value}
+                initial={entry}
+                direction={flash.tone}
+                decimal={locale === "tr" ? "," : "."}
+              />
+            ) : (
+              <RollingFigure value={value} />
+            )}
           </p>
           <p
             className={cn(
@@ -327,6 +358,21 @@ function IndexCard({
             split={openAt}
             className={styles.indexSpark}
           />
+        )}
+        {week && showWeek && (
+          <div className={styles.indexWeek}>
+            <Sparkline
+              points={week.points}
+              title={`${label} · ${labels.week}`}
+              tone={stripTone}
+              height={40}
+              className={styles.indexSpark}
+            />
+            <p className={styles.indexWeekNote}>
+              <span>{labels.week}</span>
+              <span className={cn("numeral", directionText(stripTone))}>{formatPercent(week.changePct, locale)}</span>
+            </p>
+          </div>
         )}
       </SpotlightCard>
     </Link>

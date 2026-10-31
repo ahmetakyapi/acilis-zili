@@ -50,7 +50,7 @@ export const changelogTr = {
   /* Kompakt düzen (25 Ekim, ikinci tur): öne çıkanlar, alan süzgeci, rozet. */
   featuredTitle: "Öne Çıkanlar",
   restTitle: "Bu Sürümde Ayrıca",
-  stripHint: "Boy madde sayısı, renk en çok değişen alan.",
+  stripHint: "Her çubuk bir sürüm: boy madde sayısı, renkler alanların payı.",
   statsLabel: "Yenilikler Özeti",
   areaFilterLabel: "Alan",
   areaShort: {
@@ -64,6 +64,10 @@ export const changelogTr = {
   latestBadge: "Son Sürüm",
   /* Mobil turu (25 Ekim): son sürümde Claude maddelerinin kendi grubu. */
   claudeTitle: "Claude ile",
+  /* Görsel tur (31 Ekim): akışın ölçek çizgisi ve en yeni çubuğun künyesi. */
+  /* Ölçeğin birimi; telefonda yalnız sayı kalır (`.gridUnit`). */
+  stripScale: "{n} Madde",
+  stripLatest: "Son · {n}",
 };
 
 export const changelogEn: typeof changelogTr = {
@@ -108,7 +112,7 @@ export const changelogEn: typeof changelogTr = {
   feedDescription: "Features, improvements and fixes added to Opening Bell.",
   featuredTitle: "Highlights",
   restTitle: "Also in This Release",
-  stripHint: "Height is the item count, color the busiest area.",
+  stripHint: "Each bar is a release: height is the item count, colors the share of each area.",
   statsLabel: "What's New Summary",
   areaFilterLabel: "Area",
   areaShort: {
@@ -121,6 +125,8 @@ export const changelogEn: typeof changelogTr = {
   unseenLabel: "an update you haven't seen",
   latestBadge: "Latest",
   claudeTitle: "With Claude",
+  stripScale: "{n} Items",
+  stripLatest: "Latest · {n}",
 };
 
 export type ChangelogLabels = typeof changelogTr;

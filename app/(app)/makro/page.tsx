@@ -28,7 +28,8 @@ import {
 } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
-import { composeMacroLead, curveShape, FED_INFLATION_TARGET, macroLeadFacts } from "@/lib/macro-visual";
+import { curveShape, FED_INFLATION_TARGET, fillTemplate, FLAT_DELTA as FLAT_GAUGE_DELTA, gaugeRatio, macroGaugeFacts, SAHM_THRESHOLD } from "@/lib/macro-visual";
+import type { GaugeView } from "@/components/macro/MacroGauges";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
@@ -100,8 +101,9 @@ function formatOf(row: MacroBoardRow, locale: Locale, t: Dictionary): MacroValue
   };
 }
 
-/** Sahm kuralının eşiği — yüzde puanı (Claudia Sahm, 2019). */
-const SAHM_THRESHOLD = 0.5;
+/* Sahm kuralının eşiği (`SAHM_THRESHOLD`, 0,50 yüzde puanı; Claudia Sahm,
+   2019) 31 Ekim'den beri `lib/macro-visual.ts`te: kapağın Sahm ölçüsü de
+   aynı sayıyı okuyor. */
 
 /**
  * Seriye özgü okuma notu — kartın İÇİNDE, saç teliyle ayrılmış düz
@@ -172,35 +174,103 @@ function thresholdOf(row: MacroBoardRow, locale: Locale, t: Dictionary, format: 
 }
 
 /**
- * Sayfanın tepesindeki tek cümle (25 Ekim): TÜFE'nin hedefe uzaklığı,
- * işsizliğin son ayı, eğrinin biçimi. Şablon + veri (`lib/macro-visual.ts`,
- * testli); her serinin dönemi cümlenin altındaki künyede, çünkü üçü aynı
- * günün verisi değil (TÜFE bir ay geriden, faiz farkı günlük).
+ * Kapağın dört ölçüsü (31 Ekim; karar kaydı components/macro/MacroGauges.tsx).
+ * Önceki tek cümle (25 Ekim) TÜFE'nin hedefe uzaklığını, işsizliğin son
+ * ayını ve eğrinin biçimini iki satırlık kalın bir paragrafta söylüyordu;
+ * olgular aynı (`macroGaugeFacts`, testli), her biri artık bir çizim ve
+ * altında kısa bir cümle. Her ölçünün DÖNEMİ kendi başlığının altında,
+ * çünkü dördü aynı günün verisi değil (TÜFE bir ay geriden, faiz farkı
+ * günlük). Biçim kartlarla aynı kuraldan (`formatMacroValue`).
  */
-function leadOf(series: BoardSeries[], locale: Locale, t: Dictionary): BoardData["lead"] {
-  const facts = macroLeadFacts(series);
-  if (!facts) return null;
+function gaugesOf(series: BoardSeries[], locale: Locale, t: Dictionary): GaugeView[] {
+  const facts = macroGaugeFacts(series);
+  if (!facts) return [];
   const v = t.macroVisual;
+  const byId = (id: string) => series.find((item) => item.id === id)!;
   const percent = { locale, percent: true, digits: 2, unit: "" };
+  const pct = (value: number, digits = 2) => formatMacroValue(value, { ...percent, digits });
   const points = (value: number) => formatPrice(value, locale, { digits: 2 });
-  const text = composeMacroLead(facts, {
-    inflationAbove: v.leadInflationAbove,
-    inflationBelow: v.leadInflationBelow,
-    inflationAt: v.leadInflationAt,
-    unemploymentUp: v.leadUnemploymentUp,
-    unemploymentDown: v.leadUnemploymentDown,
-    unemploymentFlat: v.leadUnemploymentFlat,
-    curve: { normal: v.leadCurveNormal, flat: v.leadCurveFlat, inverted: v.leadCurveInverted },
-    and: v.leadAnd,
-  }, {
-    locale,
-    percent: (value) => formatMacroValue(value, percent),
-    points,
-    signedPoints: (value) => `${value > 0 ? "+" : value < 0 ? "−" : ""}${points(Math.abs(value))}`,
-  });
-  const used = [facts.inflation && "CPIAUCSL", facts.unemployment && "UNRATE", facts.curve && "T10Y3M"].filter(Boolean);
-  const stamp = series.filter((item) => used.includes(item.id)).map((item) => `${item.title} ${item.period}`).join(" · ");
-  return { text, stamp };
+  const gauges: GaugeView[] = [];
+
+  if (facts.inflation) {
+    const { value, gap, domain } = facts.inflation;
+    const at = Math.abs(gap) < FLAT_GAUGE_DELTA;
+    gauges.push({
+      key: "inflation",
+      title: v.gaugeInflation,
+      period: byId("CPIAUCSL").period,
+      value: pct(value),
+      text: fillTemplate(at ? v.gaugeInflationAt : gap > 0 ? v.gaugeInflationAbove : v.gaugeInflationBelow, { gap: points(Math.abs(gap)) }),
+      alert: gap > 0 && !at,
+      visual: {
+        kind: "scale",
+        at: gaugeRatio(value, domain),
+        ref: gaugeRatio(FED_INFLATION_TARGET, domain),
+        refLabel: fillTemplate(v.gaugeTarget, { value: pct(FED_INFLATION_TARGET, 0) }),
+        lo: pct(domain.lo, 0),
+        hi: pct(domain.hi, 0),
+      },
+    });
+  }
+
+  if (facts.unemployment) {
+    const { value, prev, delta, domain } = facts.unemployment;
+    const flat = delta === null || Math.abs(delta) < FLAT_GAUGE_DELTA;
+    gauges.push({
+      key: "unemployment",
+      title: v.gaugeUnemployment,
+      period: byId("UNRATE").period,
+      value: pct(value),
+      text: fillTemplate(flat ? v.gaugeUnemploymentFlat : delta! > 0 ? v.gaugeUnemploymentUp : v.gaugeUnemploymentDown, { delta: points(Math.abs(delta ?? 0)) }),
+      alert: false,
+      visual: {
+        kind: "move",
+        from: prev === null || flat ? null : gaugeRatio(prev, domain),
+        to: gaugeRatio(value, domain),
+        fromLabel: prev === null || flat ? null : fillTemplate(v.gaugePrev, { value: pct(prev) }),
+        tone: flat ? "flat" : delta! > 0 ? "up" : "down",
+        lo: pct(domain.lo, 1),
+        hi: pct(domain.hi, 1),
+        range: v.gaugeRange,
+      },
+    });
+  }
+
+  if (facts.curve) {
+    const { spread, shape, span } = facts.curve;
+    const signed = `${spread > 0 ? "+" : spread < 0 ? "−" : ""}${points(Math.abs(spread))} ${t.markets.point}`;
+    gauges.push({
+      key: "curve",
+      title: v.gaugeCurve,
+      period: byId("T10Y3M").period,
+      value: signed,
+      text: fillTemplate({ normal: v.gaugeCurveNormal, flat: v.gaugeCurveFlat, inverted: v.gaugeCurveInverted }[shape], { spread: points(Math.abs(spread)) }),
+      alert: shape === "inverted",
+      visual: { kind: "slope", rise: spread / span, short: v.gaugeShort, long: v.gaugeLong },
+    });
+  }
+
+  if (facts.sahm) {
+    const { value, triggered, domain } = facts.sahm;
+    const threshold = points(SAHM_THRESHOLD);
+    gauges.push({
+      key: "sahm",
+      title: v.gaugeSahm,
+      period: byId("SAHMREALTIME").period,
+      value: `${points(value)} ${t.markets.point}`,
+      text: fillTemplate(triggered ? v.gaugeSahmAbove : v.gaugeSahmBelow, { threshold }),
+      alert: triggered,
+      visual: {
+        kind: "scale",
+        at: gaugeRatio(value, domain),
+        ref: gaugeRatio(SAHM_THRESHOLD, domain),
+        refLabel: fillTemplate(v.gaugeThreshold, { value: threshold }),
+        lo: points(domain.lo),
+        hi: points(domain.hi),
+      },
+    });
+  }
+  return gauges;
 }
 
 /**
@@ -252,7 +322,7 @@ function toBoard(rows: MacroBoardRow[], locale: Locale, t: Dictionary): BoardDat
         stamp: <DataStamp labels={t.data} source="fred" at={row.updatedAt} locale={locale} />,
       };
     });
-  return { series, lead: leadOf(series, locale, t) };
+  return { series, gauges: gaugesOf(series, locale, t) };
 }
 
 /**
@@ -283,6 +353,7 @@ export default async function MacroPage() {
     history: x.history,
     historyEmpty: x.historyEmpty,
     all: x.all,
+    glance: t.macroVisual.gaugesTitle,
   };
 
   return (

@@ -1,6 +1,7 @@
 /**
  * Makro ve piyasa görsellerinin SAF mantığı (25 Ekim görsel turu):
- * getiri eğrisi minyatürü, eğrinin biçimi, /makro tepesindeki tek cümle,
+ * getiri eğrisi minyatürü, eğrinin biçimi, /makro kapağının dört ölçüsü
+ * (31 Ekim'e dek tek cümleydi),
  * sektör ısı matrisinin yoğunluğu ve üstündeki cümle.
  *
  * "use client" DEĞİL ve React'siz: sunucu bileşenleri (MarketPulse,
@@ -106,83 +107,125 @@ export function curveRatio(value: number, curve: Pick<YieldCurve, "lo" | "hi">):
   return (value - curve.lo) / (curve.hi - curve.lo);
 }
 
-/* ------------------------------------------------------- /makro cümlesi */
+/* ------------------------------------------------- /makro ölçüleri */
 
 /** Fed'in uzun dönem enflasyon hedefi (yüzde; FOMC, Ocak 2012 ve sonrası her yıl). */
 export const FED_INFLATION_TARGET = 2;
+/** Sahm kuralının eşiği — yüzde puanı (Claudia Sahm, 2019). */
+export const SAHM_THRESHOLD = 0.5;
 /** Bu farkın altındaki değişim "değişmedi" (FRED en çok iki hane yayımlar). */
-const FLAT_DELTA = 0.001;
+export const FLAT_DELTA = 0.001;
+/** İşsizlik ölçeğinin aralığı: son bu kadar aylık gözlem (önceki ay dahil). */
+export const UNEMPLOYMENT_RANGE_MONTHS = 12;
 
-export type LeadSeries = { id: string; latest: number; prev: number | null };
+export type GaugeSeries = { id: string; latest: number; prev: number | null; points?: readonly { value: number }[] };
 
-export type MacroLeadFacts = {
-  inflation: { value: number; gap: number } | null;
-  unemployment: { value: number; delta: number | null } | null;
-  curve: { spread: number; shape: CurveShape } | null;
+/** Ölçeğin iki ucu; değerin yeri `gaugeRatio` ile. */
+export type GaugeDomain = { lo: number; hi: number };
+
+export type MacroGaugeFacts = {
+  /** TÜFE, hedefe uzaklığı; ölçek sıfırdan, hedef ve değerin üstünde yuvarlak bir tavana. */
+  inflation: { value: number; gap: number; domain: GaugeDomain } | null;
+  /** İşsizlik, önceki ay ve son 12 ayın aralığı (ölçeğin uçları). */
+  unemployment: { value: number; prev: number | null; delta: number | null; domain: GaugeDomain } | null;
+  /** 10 yıl − 3 ay farkı, biçimi ve eğim çiziminin simetrik ölçeği (±span). */
+  curve: { spread: number; shape: CurveShape; span: number } | null;
+  /** Sahm göstergesi; ölçek sıfırdan, eşiğin iki katına (değer aşarsa daha yukarı). */
+  sahm: { value: number; triggered: boolean; domain: GaugeDomain } | null;
 };
 
 /**
- * Cümlenin olguları: TÜFE ve hedefe uzaklığı, işsizlik ve bir önceki aya
- * göre değişimi, 10 yıl − 3 ay farkı ve eğrinin biçimi. Seri yoksa o parça
- * düşer; üçü de yoksa cümle yok.
+ * /makro KAPAĞININ DÖRT ÖLÇÜSÜ (31 Ekim, sahibinin isteği: "üstteki
+ * açıklama yazısı net okunmuyor; daha görsel, daha anlaşılabilir"). Önceki
+ * hâl tek uzun cümleydi (`composeMacroLead`, 25 Ekim): TÜFE'nin hedefe
+ * uzaklığı, işsizliğin son ayı ve eğrinin biçimi iki satırlık kalın bir
+ * paragrafta, dönemleri altında 12 piksellik künyede. Olgular aynı; artık
+ * her biri bir ÇİZİM (hedef ölçeği, önceki aydan bu aya ok, eğim) ve
+ * altında kısa bir cümle. Dördüncü ölçü Sahm göstergesi: büyümenin
+ * yerleşik tek eşikli resesyon sinyali, sayfada zaten seri olarak var.
+ *
+ * Ölçeklerin uçları VERİDEN ve yuvarlak: tavan uydurma bir "normal aralık"
+ * değil, değerin ve hedefin/eşiğin sığdığı en küçük yuvarlak sayı. Seri
+ * yoksa o ölçü düşer; hiçbiri yoksa bant basılmaz.
  */
-export function macroLeadFacts(series: readonly LeadSeries[]): MacroLeadFacts | null {
+export function macroGaugeFacts(series: readonly GaugeSeries[]): MacroGaugeFacts | null {
   const find = (id: string) => series.find((item) => item.id === id);
   const cpi = find("CPIAUCSL");
   const unrate = find("UNRATE");
   const spread = find("T10Y3M");
-  const facts: MacroLeadFacts = {
-    inflation: cpi ? { value: cpi.latest, gap: cpi.latest - FED_INFLATION_TARGET } : null,
-    unemployment: unrate ? { value: unrate.latest, delta: unrate.prev === null ? null : unrate.latest - unrate.prev } : null,
-    curve: spread ? { spread: spread.latest, shape: curveShape(spread.latest) } : null,
+  const sahm = find("SAHMREALTIME");
+  const facts: MacroGaugeFacts = {
+    inflation: cpi ? {
+      value: cpi.latest,
+      gap: cpi.latest - FED_INFLATION_TARGET,
+      domain: { lo: Math.min(0, Math.floor(cpi.latest)), hi: Math.ceil(Math.max(cpi.latest, FED_INFLATION_TARGET) + 0.5) },
+    } : null,
+    unemployment: unrate ? {
+      value: unrate.latest,
+      prev: unrate.prev,
+      delta: unrate.prev === null ? null : unrate.latest - unrate.prev,
+      domain: unemploymentDomain(unrate),
+    } : null,
+    curve: spread ? { spread: spread.latest, shape: curveShape(spread.latest), span: Math.max(1, Math.ceil(Math.abs(spread.latest) * 2) / 2) } : null,
+    sahm: sahm ? {
+      value: sahm.latest,
+      triggered: sahm.latest >= SAHM_THRESHOLD,
+      domain: {
+        lo: Math.min(0, Math.floor(sahm.latest * 4) / 4),
+        hi: Math.max(SAHM_THRESHOLD * 2, Math.ceil((sahm.latest + 0.25) * 4) / 4),
+      },
+    } : null,
   };
-  return facts.inflation || facts.unemployment || facts.curve ? facts : null;
+  return facts.inflation || facts.unemployment || facts.curve || facts.sahm ? facts : null;
 }
 
-export type MacroLeadText = {
-  /** "{value}", "{gap}" yer tutucuları. */
-  inflationAbove: string;
-  inflationBelow: string;
-  inflationAt: string;
-  /** "{value}", "{delta}". */
-  unemploymentUp: string;
-  unemploymentDown: string;
-  unemploymentFlat: string;
-  /** "{spread}". */
-  curve: Record<CurveShape, string>;
-  /** Son parçanın bağlacı (" ve ", " and "): öncekiler virgülle. Fonksiyon
-      değil dize — sözlük istemciye de gidiyor. */
-  and: string;
-};
+/** Son 12 ayın en düşüğü ile en yükseği, onda bire yuvarlanıp birer onda bir açılmış. */
+function unemploymentDomain(series: GaugeSeries): GaugeDomain {
+  const recent = (series.points ?? []).slice(-UNEMPLOYMENT_RANGE_MONTHS).map((point) => point.value);
+  const values = [series.latest, ...(series.prev === null ? [] : [series.prev]), ...recent];
+  const lo = Math.floor(Math.min(...values) * 10) / 10 - 0.1;
+  const hi = Math.ceil(Math.max(...values) * 10) / 10 + 0.1;
+  return { lo: Number(lo.toFixed(1)), hi: Number(hi.toFixed(1)) };
+}
 
-export type LeadFormat = {
-  /** Büyük harf için: `toLocaleUpperCase` dilsiz çağrılırsa "i" → "I" olur, "İ" değil. */
-  locale: string;
-  percent: (value: number) => string;
-  /** İşaretsiz puan ("1,72"). */
-  points: (value: number) => string;
-  /** İşaretli puan ("+0,88" / "−0,12"). */
-  signedPoints: (value: number) => string;
-};
+/** Değerin ölçekteki yeri, 0 (sol) – 1 (sağ); uçların dışı uca kırpılır. */
+export function gaugeRatio(value: number, domain: GaugeDomain): number {
+  if (!(domain.hi > domain.lo)) return 0;
+  return Math.min(1, Math.max(0, (value - domain.lo) / (domain.hi - domain.lo)));
+}
 
-/** Olgulardan tek cümle; büyük harf ve nokta burada. */
-export function composeMacroLead(facts: MacroLeadFacts, text: MacroLeadText, format: LeadFormat): string {
-  const parts: string[] = [];
-  if (facts.inflation) {
-    const { value, gap } = facts.inflation;
-    const template = Math.abs(gap) < FLAT_DELTA ? text.inflationAt : gap > 0 ? text.inflationAbove : text.inflationBelow;
-    parts.push(template.replace("{value}", format.percent(value)).replace("{gap}", format.points(Math.abs(gap))));
+/** Satır içi şablon: "{gap}" gibi yer tutucuları değerlerle doldurur. */
+export function fillTemplate(template: string, values: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (match, key: string) => values[key] ?? match);
+}
+
+/**
+ * Izgaranın kolon birimi: 1–6 kartlık her satırı tam bölen en küçük sayı.
+ * Kart `span` ile bu birimden pay alıyor (`balancedSpans`).
+ */
+export const TILE_GRID_UNITS = 60;
+
+/**
+ * DENGELİ SATIRLAR (31 Ekim). On bir kart altı kolonda 6 + 5 diziliyor ve
+ * son kart boşluğu doldursun diye iki hücre alıyordu: ikinci satırın sonunda
+ * tek geniş kart, "yetim" gibi okunuyordu (sahibinin itirazı). Artık satır
+ * sayısı kolon tavanından, kartlar satırlara olabildiğince eşit bölünüyor
+ * (11 → 6 + 5) ve her satır kendi kartlarını tam genişliğe yayıyor: ikinci
+ * satırın beş kartı ilkinin altı kartından biraz geniş ama hepsi aynı
+ * boyda; boş hücre ve tek geniş kart yok. Fazla kart ÜST satırlara gider.
+ * Dönen dizi kart başına `TILE_GRID_UNITS` içinden pay.
+ */
+export function balancedSpans(count: number, maxPerRow: number): number[] {
+  if (count <= 0 || maxPerRow <= 0) return [];
+  const rows = Math.ceil(count / maxPerRow);
+  const base = Math.floor(count / rows);
+  const extra = count % rows;
+  const spans: number[] = [];
+  for (let row = 0; row < rows; row++) {
+    const inRow = base + (row < extra ? 1 : 0);
+    for (let i = 0; i < inRow; i++) spans.push(TILE_GRID_UNITS / inRow);
   }
-  if (facts.unemployment) {
-    const { value, delta } = facts.unemployment;
-    const template = delta === null || Math.abs(delta) < FLAT_DELTA ? text.unemploymentFlat : delta > 0 ? text.unemploymentUp : text.unemploymentDown;
-    parts.push(template.replace("{value}", format.percent(value)).replace("{delta}", format.points(Math.abs(delta ?? 0))));
-  }
-  if (facts.curve) {
-    parts.push(text.curve[facts.curve.shape].replace("{spread}", format.signedPoints(facts.curve.spread)));
-  }
-  const sentence = parts.length < 2 ? (parts[0] ?? "") : `${parts.slice(0, -1).join(", ")}${text.and}${parts.at(-1)}`;
-  return `${sentence.charAt(0).toLocaleUpperCase(format.locale)}${sentence.slice(1)}.`;
+  return spans;
 }
 
 /* ------------------------------------------------ Sektör ısı matrisi */

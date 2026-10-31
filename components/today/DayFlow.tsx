@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useId, useRef, useState, useTransition, type ReactNode } from "react";
+import { Fragment, useEffect, useId, useRef, useState, useTransition, type CSSProperties, type ReactNode } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowRight, ArrowUpRight, Bell, CalendarBlank, CaretDown, CaretLeft, CaretRight, Check, CircleNotch, Clock, TrendUp } from "@phosphor-icons/react";
 import { LogoTile } from "@/components/ui/primitives";
@@ -22,6 +22,8 @@ type Props = {
   heading?: ReactNode;
   /** Okla açılan geçmiş/gelecek günün başlığı — sunucuda aynı kalıpla çizilir. */
   otherHeadings?: { past: ReactNode; future: ReactNode };
+  /** Bugün boşken önizlenen sıradaki işlem günü (RailSection; yoksa `null`). */
+  preview?: DayFlowSnapshot | null;
 };
 const minutesOf = (time: string) => { const [h, m] = time.split(":").map(Number); return h * 60 + m; };
 /** Okla açılan günlerin oturum içi notu en çok bu kadar gün tutar. */
@@ -143,7 +145,7 @@ function MemberList({ members, scheduledAt, nowMs, labels, openEventId, onEngage
   </>;
 }
 
-export function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings }: Props) {
+export function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, preview }: Props) {
   const [snapshot, setSnapshot] = useState(initial);
   const [nowMs, setNowMs] = useState(() => new Date(initial.asOf).getTime());
   /* `null` = seçim OTOMATİK (sıradaki olay açık); `allClosed` = okuyucu açık
@@ -165,7 +167,9 @@ export function DayFlow({ initial, locale, labels, railLabels, heading, otherHea
      adres güncellemesi uçuştaki gezinmeyi öldürüyor (CLAUDE.md). */
   const [view, setView] = useState<DayFlowSnapshot | null>(null);
   const [dayState, setDayState] = useState<{ phase: "idle" | "loading" | "error"; date: string | null }>({ phase: "idle", date: null });
-  const dayCache = useRef(new Map<string, DayFlowSnapshot>());
+  /* Önizlenen gün nota baştan girer: "Günün Tamamını Gör" aynı görüntüyü
+     ikinci kez istemeden açar (DayPreview). */
+  const dayCache = useRef(new Map<string, DayFlowSnapshot>(preview ? [[preview.dateEt, preview]] : []));
   const dayAbort = useRef<AbortController | null>(null);
   const [, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
@@ -585,11 +589,108 @@ export function DayFlow({ initial, locale, labels, railLabels, heading, otherHea
       /* Akış boş ama gün boş DEĞİL: eşiğin altındaki bilançolar var. "Açıklama
          yok" demek aynı sayfadaki bilanço paneliyle çelişirdi. */
       <div className={styles.empty}><span><CalendarBlank size={32} weight="duotone" /></span><div><h3>{labels.emptyMajorTitle}</h3><p>{(viewingToday ? labels.emptyMajorHint : labels.emptyMajorDayHint).replace("{count}", String(shown.hiddenEarnings))}{" "}<Link href={withLocale("/bilancolar", locale)} prefetch={false} className={styles.emptyLink}>{labels.emptyMajorLink}<ArrowUpRight size={12} weight="bold" aria-hidden /></Link></p></div></div>
+    ) : viewingToday && preview && preview.events.length > 0 ? (
+      <DayPreview preview={preview} locale={locale} labels={labels} onOpen={() => goTo(preview.dateEt)} />
     ) : <div className={styles.empty}><span><CalendarBlank size={32} weight="duotone" /></span><div><h3>{viewingToday ? labels.emptyTitle : labels.emptyDayTitle}</h3><p>{viewingToday ? labels.emptyHint : labels.emptyDayHint}</p></div></div>}
     </div>
     {viewingToday && snapshot.sourceDelayed && <p className={styles.sourceDelay}>{labels.sourceDelayed}</p>}
     <span className="sr-only" role="status" aria-live="polite">{announcement}</span>
   </div>;
+}
+
+/** Önizlemede en çok kaç olay satırı açık — kalanı sayıyla yazılır. */
+const PREVIEW_ROWS = 3;
+/** Önizleme cetvelinin ekseni, ET dakikası: ön seansın başı ve akşam seansının sonu. */
+const RULER_MINUTES: [number, number] = [4 * 60, 20 * 60];
+const REGULAR_OPEN_MINUTES = 9 * 60 + 30;
+
+/* SIRADAKİ GÜNE BAKIŞ (31 Ekim, sahibinin isteği: "burayı da çok daha iyi
+   görselliği artıracak, görsel ve animasyonlu hâle getirelim"). Hafta
+   sonu ve tatilde akış tek satırlık "Bugün Planlanmış Açıklama Yok"
+   diyordu (1440'ta 217 piksellik panelin yarısı boş bir cümle); oysa
+   okuyucunun o gün sorduğu soru "pazartesi ne var". Bugün boşken sunucu
+   sıradaki işlem gününün GERÇEK görüntüsünü de veriyor (`RailSection` →
+   `loadSharedOtherDay`, okların açtığı görüntünün aynısı) ve akış onu
+   önizliyor:
+   - üstte o günün saat cetveli: kahramandaki zil şeridiyle aynı dil (ön
+     seans ve akşam seansı çukur tonda, asıl seans mavi), olaylar saatinde
+     numaralı birer nokta — gün tek bakışta "sabah iki bilanço, akşam altı";
+   - altında en çok üç olay satırı, bilançoda şirket logoları;
+   - künyede eşiğin altındaki bilanço sayısı ve günün tamamını açan buton
+     (oklarla aynı yol, görüntü notta hazır).
+   Uydurma yok: o günün kaydı yoksa eski boş durum basılıyor. Hareket bir
+   kez: cetvel soldan çizilir, noktalar ve satırlar sırayla belirir; hareketi
+   azaltana son kare (DayFlow.module.css → "SIRADAKİ GÜNE BAKIŞ"). */
+function DayPreview({ preview, locale, labels, onOpen }: { preview: DayFlowSnapshot; locale: Locale; labels: Props["labels"]; onOpen: () => void }) {
+  const events = preview.events;
+  const rows = events.slice(0, PREVIEW_ROWS);
+  const primary = (minutes: number) => clockOf(minutes + preview.offsets.primary);
+  const day = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" })
+    .format(new Date(preview.dateEt + "T12:00:00Z"));
+  const span = RULER_MINUTES[1] - RULER_MINUTES[0];
+  const share = (minutes: number) => Math.max(0, Math.min(1, (minutes - RULER_MINUTES[0]) / span));
+  const pct = (value: number) => `${(value * 100).toFixed(2)}%`;
+  const open = share(REGULAR_OPEN_MINUTES);
+  const close = share(preview.closeMinutes);
+  return (
+    <div className={styles.preview}>
+      <div className={styles.previewHead}>
+        <span className={styles.previewIcon} aria-hidden="true"><CalendarBlank size={22} weight="duotone" /></span>
+        <div>
+          <h3>{labels.emptyTitle}</h3>
+          <p>{labels.previewLead.replace("{day}", day).replace("{n}", String(events.length))}</p>
+        </div>
+      </div>
+      {/* Cetvel bir resim; olaylar ekran okuyucuya listeden okunur. */}
+      <div className={styles.ruler} role="img" aria-label={labels.previewRuler}>
+        <span className={styles.rulerTrack}>
+          <span className={styles.rulerRegular} style={{ left: pct(open), width: pct(close - open) }} />
+        </span>
+        {events.map((event, index) => event.timeEt && (
+          <span key={event.id} className={styles.rulerDot} data-kind={event.kind} style={{ left: pct(share(minutesOf(event.timeEt))), "--i": index } as CSSProperties}>
+            <b className="numeral">{String(index + 1).padStart(2, "0")}</b>
+          </span>
+        ))}
+        <span className={`numeral ${styles.rulerEnd}`} data-at="start">{primary(RULER_MINUTES[0])}</span>
+        <span className={`numeral ${styles.rulerEnd}`} data-at="open" style={{ left: pct(open) }}>{primary(REGULAR_OPEN_MINUTES)}</span>
+        <span className={`numeral ${styles.rulerEnd}`} data-at="close" style={{ left: pct(close) }}>{primary(preview.closeMinutes)}</span>
+        <span className={`numeral ${styles.rulerEnd}`} data-at="end">{primary(RULER_MINUTES[1])} {preview.tags.primary}</span>
+      </div>
+      <ol className={styles.previewList}>
+        {rows.map((event, index) => (
+          <li key={event.id} className={styles.previewRow} data-kind={event.kind} style={{ "--i": index } as CSSProperties}>
+            <span className={styles.previewNode} aria-hidden="true"><b className="numeral">{String(index + 1).padStart(2, "0")}</b></span>
+            <span className={styles.previewTime}>
+              <b className="numeral">{event.timeEt ? `${event.approx ? "~" : ""}${primary(minutesOf(event.timeEt))}` : NO_VALUE}</b>
+              <small>{event.timeEt ? preview.tags.primary : labels.timeUnknown}</small>
+            </span>
+            <span className={styles.previewMain}>
+              <strong>{event.title}</strong>
+              <em>{event.detail ?? (event.kind === "earnings" ? labels.earnings : labels.economic)}</em>
+            </span>
+            {event.kind === "earnings" && event.members?.length ? (
+              <span className={styles.previewLogos} aria-hidden="true">
+                {event.members.slice(0, 4).map((member) => (
+                  <LogoTile key={member.symbol} symbol={member.symbol} logoUrl={member.logoUrl} size="xs" className={styles.cardLogo} />
+                ))}
+              </span>
+            ) : (
+              <i className={styles.previewKind} data-kind={event.kind} aria-hidden="true">{event.kind === "earnings" ? <Bell size={14} /> : <TrendUp size={14} />}</i>
+            )}
+          </li>
+        ))}
+      </ol>
+      <div className={styles.previewFoot}>
+        <span>
+          {events.length > PREVIEW_ROWS && <b>{labels.previewMore.replace("{n}", String(events.length - PREVIEW_ROWS))}</b>}
+          {preview.hiddenEarnings > 0 && <span>{labels.previewHidden.replace("{count}", String(preview.hiddenEarnings))}</span>}
+        </span>
+        <button type="button" className={styles.previewOpen} onClick={onOpen}>
+          {labels.previewOpen}<ArrowRight size={13} weight="bold" aria-hidden />
+        </button>
+      </div>
+    </div>
+  );
 }
 
 /** Initial data failures recover too; an empty calendar is never fabricated. */

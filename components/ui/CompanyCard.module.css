@@ -94,6 +94,19 @@
 .move[data-dir="down"] { color:var(--down); }
 .move[data-dir="down"] em { background:var(--down-wash); }
 
+/* Gün aralığı çizgisi: kulvar en düşükten en yükseğe, imleç fiyatın yeri
+   (yön rengi yalnız bu seansı anlatan değişimde, yoksa mürekkep). */
+.range { display:grid; gap:5px; }
+.rangeLabel { font-size:12px; font-weight:600; color:var(--text-muted); }
+.rangeLane { position:relative; height:5px; border-radius:999px; background:var(--line-soft); }
+.rangeLane i {
+  position:absolute; top:50%; width:11px; height:11px; border-radius:999px;
+  translate:-50% -50%; background:var(--text-strong); box-shadow:0 0 0 2px var(--overlay-surface, var(--surface-solid));
+}
+.rangeLane i[data-dir="up"] { background:var(--up); }
+.rangeLane i[data-dir="down"] { background:var(--down); }
+.rangeEnds { display:flex; justify-content:space-between; font-size:12px; font-weight:650; color:var(--text-body); }
+
 /* Künyeler: etiket solda, değer sağda, aynı dikey hatta biter. */
 .facts {
   display:grid; grid-template-columns:auto minmax(0,1fr); align-items:baseline; gap:6px 12px;

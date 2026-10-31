@@ -2,16 +2,21 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
-  composeAnalysisLead,
+  composeAnalysisFacts,
+  effectivePips,
+  fillParts,
   HEAT_MAX,
   HEAT_MIN,
   heatOf,
   heaviestSector,
+  leadText,
   pairScale,
+  PIP_MAX,
   ratioTo,
   sectorBoard,
   STRIP_MAX,
   weightStrip,
+  type LeadFact,
   type LeadFormat,
 } from "../components/portfolio/analysis/analysis-visuals";
 import { portfolioAnalysisVisualsEn, portfolioAnalysisVisualsTr } from "../lib/i18n/dictionaries/portfolio-analysis-visuals";
@@ -21,13 +26,11 @@ const trFormat: LeadFormat = {
   percent: (value) => `%${value.toFixed(1).replace(".", ",")}`,
   measure: (value, digits) => value.toFixed(digits).replace(".", ","),
   sector: (key) => (key === "Information Technology" ? "Bilgi Teknolojileri" : key),
-  upper: (text) => text.toLocaleUpperCase("tr-TR"),
 };
 const enFormat: LeadFormat = {
   percent: (value) => `${value.toFixed(1)}%`,
   measure: (value, digits) => value.toFixed(digits),
   sector: (key) => key,
-  upper: (text) => text.toLocaleUpperCase("en-US"),
 };
 
 const facts = {
@@ -76,33 +79,62 @@ test("en ağır sektör: portföy payı en büyük olan", () => {
   assert.equal(heaviestSector([{ sector: "X", portfolio: 0, benchmark: 5, diff: -5 }]), null);
 });
 
-test("tepedeki cümle: ölçülerden kurulur, iki dilde", () => {
-  assert.equal(
-    composeAnalysisLead(facts, portfolioAnalysisVisualsTr.lead, trFormat),
-    "En ağır sektör Bilgi Teknolojileri: portföyde %97,5, S&P 500'de %37,8; 5 pozisyon eşit ağırlıklı 2,7 pozisyon kadar dağınık, geçen yılki oynaklık S&P 500'ün 6,7 katı.",
-  );
-  assert.equal(
-    composeAnalysisLead(facts, portfolioAnalysisVisualsEn.lead, enFormat),
-    "The heaviest sector is Information Technology: 97.5% of the portfolio against 37.8% of the S&P 500; 5 positions spread like 2.7 equal-weight positions, and last year's volatility was 6.7 times the S&P 500's.",
+const texts = (list: LeadFact[]) => list.map(leadText);
+
+test("kısa okumalar: ölçülerden kurulur, iki dilde, sayı kalın parça", () => {
+  assert.deepEqual(texts(composeAnalysisFacts(facts, portfolioAnalysisVisualsTr.lead, trFormat)), [
+    "Bilgi Teknolojileri: portföyde %97,5, S&P 500'de %37,8.",
+    "5 pozisyon, eşit ağırlıklı 2,7 pozisyon gibi dağılıyor.",
+    "Geçen yılki oynaklık S&P 500'ün 6,7 katı.",
+  ]);
+  assert.deepEqual(texts(composeAnalysisFacts(facts, portfolioAnalysisVisualsEn.lead, enFormat)), [
+    "Information Technology: 97.5% of the portfolio, 37.8% of the S&P 500.",
+    "5 positions spread like 2.7 equal-weight positions.",
+    "Last year's volatility was 6.7 times the S&P 500's.",
+  ]);
+  const sector = composeAnalysisFacts(facts, portfolioAnalysisVisualsTr.lead, trFormat)[0]!;
+  assert.deepEqual(
+    sector.parts.filter((part) => part.strong).map((part) => part.text),
+    ["Bilgi Teknolojileri", "%97,5", "%37,8"],
   );
 });
 
-test("tepedeki cümle: eksik veri o parçayı düşürür, tek pozisyon kendi kalıbında", () => {
+test("kısa okumalar: eksik veri o cümleyi düşürür, tek pozisyon kendi kalıbında", () => {
   const bare = { ...facts, sector: null, volatility: null };
-  assert.equal(composeAnalysisLead(bare, portfolioAnalysisVisualsTr.lead, trFormat), "5 pozisyon eşit ağırlıklı 2,7 pozisyon kadar dağınık.");
+  assert.deepEqual(texts(composeAnalysisFacts(bare, portfolioAnalysisVisualsTr.lead, trFormat)), [
+    "5 pozisyon, eşit ağırlıklı 2,7 pozisyon gibi dağılıyor.",
+  ]);
   const single = { ...bare, count: 1, effective: 1 };
-  assert.equal(composeAnalysisLead(single, portfolioAnalysisVisualsTr.lead, trFormat), "Portföy tek pozisyondan oluşuyor (MU).");
+  assert.deepEqual(texts(composeAnalysisFacts(single, portfolioAnalysisVisualsTr.lead, trFormat)), ["Portföy tek pozisyon: MU."]);
   /* S&P oynaklığı sıfırsa oran basılmaz. */
   const flat = { ...facts, volatility: { portfolio: 10, benchmark: 0 } };
-  assert.ok(!composeAnalysisLead(flat, portfolioAnalysisVisualsTr.lead, trFormat).includes("katı"));
+  assert.ok(!texts(composeAnalysisFacts(flat, portfolioAnalysisVisualsTr.lead, trFormat)).join(" ").includes("katı"));
 });
 
-test("cümle ve görsel künyeler öneri kipi taşımaz (SPK çizgisi)", () => {
+test("şablon parçaları: tanınmayan yer tutucu düz metin kalır", () => {
+  assert.deepEqual(fillParts("{a} ve {b}", { a: "X" }), [
+    { text: "X", strong: true },
+    { text: " ve ", strong: false },
+    { text: "{b}", strong: false },
+  ]);
+});
+
+test("etkin pozisyon kutuları: tam kutular, kesirli son kutu, tavan", () => {
+  assert.deepEqual(effectivePips(5, 2.7)!.map((value) => Number(value.toFixed(2))), [1, 1, 0.7, 0, 0]);
+  assert.deepEqual(effectivePips(3, 3), [1, 1, 1]);
+  /* Etkin sayı pozisyon sayısını aşamaz; eksi ya da sıfır pozisyon boş. */
+  assert.deepEqual(effectivePips(2, 5), [1, 1]);
+  assert.equal(effectivePips(0, 0), null);
+  assert.equal(effectivePips(PIP_MAX + 1, 4), null);
+  assert.equal(effectivePips(PIP_MAX, 4)!.length, PIP_MAX);
+});
+
+test("okumalar ve görsel künyeler öneri kipi taşımaz (SPK çizgisi)", () => {
   for (const [dict, locale, format] of [
     [portfolioAnalysisVisualsTr, "tr", trFormat],
     [portfolioAnalysisVisualsEn, "en", enFormat],
   ] as const) {
-    assert.ok(isAdviceFree(composeAnalysisLead(facts, dict.lead, format), locale));
+    assert.ok(isAdviceFree(texts(composeAnalysisFacts(facts, dict.lead, format)).join(" "), locale));
     const strings = JSON.stringify(dict);
     assert.ok(isAdviceFree(strings, locale), `${locale} künyelerinde öneri kalıbı`);
   }
@@ -135,6 +167,6 @@ test("oynaklık oranı: cümle ile kart aynı fonksiyon, endeks sıfırsa yok", 
   assert.equal(ratioTo(10, 0), null);
   assert.equal(ratioTo(10, -1), null);
   assert.equal(ratioTo(Number.NaN, 5), null);
-  /* Cümledeki "6,7 katı" kartın "6,7 Kat"ıyla aynı oran. */
-  assert.ok(composeAnalysisLead(facts, portfolioAnalysisVisualsTr.lead, trFormat).includes("6,7 katı"));
+  /* Okumadaki "6,7 katı" kartın "6,7 Kat"ıyla aynı oran. */
+  assert.ok(texts(composeAnalysisFacts(facts, portfolioAnalysisVisualsTr.lead, trFormat)).join(" ").includes("6,7 katı"));
 });

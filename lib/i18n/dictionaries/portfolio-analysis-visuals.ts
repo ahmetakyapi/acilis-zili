@@ -10,15 +10,15 @@
  */
 
 export const portfolioAnalysisVisualsTr = {
-  /* Tepedeki tek cümle — şablon + veri (analysis-visuals.ts → composeAnalysisLead). */
+  /* Tepedeki kısa okumalar — şablon + veri (analysis-visuals.ts →
+     composeAnalysisFacts, 31 Ekim). Her biri tek kısa cümle. */
   lead: {
-    sector: "En ağır sektör {sector}: portföyde {share}, S&P 500'de {bench}",
-    spread: "{count} pozisyon eşit ağırlıklı {effective} pozisyon kadar dağınık",
-    single: "portföy tek pozisyondan oluşuyor ({symbol})",
-    volatility: "geçen yılki oynaklık S&P 500'ün {ratio} katı",
-    join: "; ",
-    joinRisk: ", ",
-    note: "Cümle aşağıdaki ölçülerden kurulur; yorum değil, ölçü.",
+    sector: "{sector}: portföyde {share}, S&P 500'de {bench}.",
+    spread: "{count} pozisyon, eşit ağırlıklı {effective} pozisyon gibi dağılıyor.",
+    single: "Portföy tek pozisyon: {symbol}.",
+    volatility: "Geçen yılki oynaklık S&P 500'ün {ratio} katı.",
+    note: "Okumalar aşağıdaki ölçülerden kurulur; yorum değil, ölçü.",
+    label: "Kısa Okuma",
   },
   strip: {
     title: "Pozisyonların Ağırlığı",
@@ -52,9 +52,11 @@ export const portfolioAnalysisVisualsTr = {
     heaviest: "En Ağır Sektör",
     ratio: "{ratio} Kat",
     effectiveSub: "{count} pozisyonun eşit ağırlıklı karşılığı",
-    notesMore: "Hesap Notunu Göster",
+    notesMore: "Nasıl Hesaplanır",
     notesLess: "Hesap Notunu Gizle",
     concentrationTitle: "Yoğunlaşma",
+    positionsTitle: "Pozisyonlar, Ağırlık Sırasıyla",
+    pipsAria: "{count} pozisyonun eşit ağırlıklı karşılığı {effective} pozisyon",
     absent: "Portföyde Olmayan Sektörler",
     absentAria: "{sector}: portföyde yok, S&P 500'de {bench}",
   },
@@ -62,13 +64,12 @@ export const portfolioAnalysisVisualsTr = {
 
 export const portfolioAnalysisVisualsEn: typeof portfolioAnalysisVisualsTr = {
   lead: {
-    sector: "The heaviest sector is {sector}: {share} of the portfolio against {bench} of the S&P 500",
-    spread: "{count} positions spread like {effective} equal-weight positions",
-    single: "the portfolio is a single position ({symbol})",
-    volatility: "last year's volatility was {ratio} times the S&P 500's",
-    join: "; ",
-    joinRisk: ", and ",
-    note: "The sentence is built from the measures below; a measurement, not an opinion.",
+    sector: "{sector}: {share} of the portfolio, {bench} of the S&P 500.",
+    spread: "{count} positions spread like {effective} equal-weight positions.",
+    single: "The portfolio is a single position: {symbol}.",
+    volatility: "Last year's volatility was {ratio} times the S&P 500's.",
+    note: "These readings are built from the measures below; a measurement, not an opinion.",
+    label: "Quick Read",
   },
   strip: {
     title: "Position Weights",
@@ -100,9 +101,11 @@ export const portfolioAnalysisVisualsEn: typeof portfolioAnalysisVisualsTr = {
     heaviest: "Heaviest Sector",
     ratio: "{ratio}×",
     effectiveSub: "Equal-weight equivalent of {count} positions",
-    notesMore: "Show the Method Note",
+    notesMore: "How It Is Calculated",
     notesLess: "Hide the Method Note",
     concentrationTitle: "Concentration",
+    positionsTitle: "Positions by Weight",
+    pipsAria: "{count} positions are equivalent to {effective} equal-weight positions",
     absent: "Sectors Not in the Portfolio",
     absentAria: "{sector}: not in the portfolio, {bench} of the S&P 500",
   },

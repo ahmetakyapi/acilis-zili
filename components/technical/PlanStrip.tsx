@@ -26,6 +26,10 @@ type Cell = { kind: "entry" | "target" | "stop" | "sellLevel" | "support" | "res
  *     ilk durağı rutinin desteği.
  *   · bölgesiz TUT: "Nereden Alınır" → "Bölge Yok · Destek", "Nerede
  *     Satılır" → direnç (31 Ekim; eskiden "En Yakın Destek / Direnç").
+ *     AYNI GÜN: fiyat ve en az bir seviye varken kart ve detay kapağı
+ *     bölgesiz TUT'u bu şeritle değil `OpenRange` ile çiziyor (durum adı,
+ *     destek—fiyat—direnç ekseni, koşul cümlesi). Bu dal yalnız fiyatsız
+ *     ya da seviyesiz bölgesiz TUT'a kaldı.
  *   Plansız iki hâlde altta planın neden olmadığını söyleyen tek cümle.
  *
  * "Bu Yayında Yok" hücresi boş bırakılmıyor: AL'da hedef zorunlu ama TUT'ta

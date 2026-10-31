@@ -21,6 +21,14 @@ import { verdictPillClass, verdictStroke, type VerdictKey } from "@/lib/analysis
  *   · İÇ HALKA: zeminden ayrılan ince kenar (`ring-current/20`) — gölge
  *     değil ton farkı (CLAUDE.md "derinlik tonla").
  *
+ *   · EŞİT GENİŞLİK (31 Ekim, sahibinin itirazı: "aynı hizada olmalılar,
+ *     biri büyük biri küçük olmasın"). Alt alta dizilen listelerde "AL 81"
+ *     hapı "TUT 63"ten dar kalıyor, hapların sol kenarı satırdan satıra
+ *     kayıyordu. Etiket en uzun görüş etiketinin yuvasında (`LABEL_SLOT`,
+ *     em cinsinden, puntoyla büyür), skor iki rakamlık tablo hanesinde:
+ *     aynı boydaki her hap aynı genişlikte. Yuva ölçüldü — Schibsted kalın,
+ *     0,03em aralık: "TUT" 2,1em, "HOLD" 2,85em.
+ *
  * Ölçü `size` ile; bağlamın kendi CSS modülü ölçüyü veriyorsa (teknik kapak,
  * hisse kartı) `size="custom"` + `className` — ikon `em` cinsinden, puntoyla
  * birlikte büyür.
@@ -34,6 +42,10 @@ const SIZE = {
   md: "h-8 gap-1.5 px-3 text-small",
   custom: "gap-[0.4em]",
 } as const;
+
+/** Türkçe etiketler üç harfte kalıyor; İngilizcede "HOLD" dört harf. */
+const TR_LABELS = new Set(["AL", "TUT", "SAT"]);
+const LABEL_SLOT = { tr: "2.2em", en: "2.95em" } as const;
 
 export type VerdictPillSize = keyof typeof SIZE;
 
@@ -82,7 +94,7 @@ export function VerdictPill({
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center whitespace-nowrap rounded-full font-bold leading-none ring-1 ring-current/20 ring-inset",
+        "inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full font-bold leading-none ring-1 ring-current/20 ring-inset",
         SIZE[size],
         verdictPillClass(verdict),
         className,
@@ -93,8 +105,10 @@ export function VerdictPill({
       ) : (
         <Icon aria-hidden weight="bold" className="size-[1.1em] shrink-0" />
       )}
-      <span className="tracking-[0.03em]">{label}</span>
-      {hasScore && <span className="figure font-semibold opacity-75">{score}</span>}
+      <span className="text-center tracking-[0.03em]" style={{ minWidth: LABEL_SLOT[TR_LABELS.has(label) ? "tr" : "en"] }}>
+        {label}
+      </span>
+      {hasScore && <span className="figure min-w-[2ch] text-right font-semibold opacity-75">{score}</span>}
     </span>
   );
 }

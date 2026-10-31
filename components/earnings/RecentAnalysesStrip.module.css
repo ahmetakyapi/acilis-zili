@@ -64,24 +64,37 @@
 }
 .item { display: flex; flex-shrink: 0; min-width: 0; }
 
+/* Mini kart (31 Ekim; gerekçe RecentAnalysesStrip.tsx). Nötr zemin,
+   tepede görüşün 3 piksellik şeridi; kimlik üstte, görüş hapı ve ilk
+   tepki dipte. Telefonda kayan kart 260 piksel. */
 .chip {
-  display: flex;
+  position: relative;
+  display: grid;
+  gap: 10px;
   width: 100%;
   min-width: 0;
-  min-height: 44px;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 14px 6px 6px;
-  border-radius: 999px;
+  padding: 12px 14px 12px;
+  border-radius: var(--radius-lg, 12px);
   border: 1px solid var(--line);
   background: var(--surface-solid);
-  transition: border-color .2s var(--ease-brand);
+  transition: border-color .2s var(--ease-brand), background-color .2s var(--ease-brand);
 }
+.chip::before { content: ""; position: absolute; top: -1px; inset-inline: 14px; height: 3px; border-radius: 0 0 3px 3px; background: var(--verdict-hold); }
+.chip[data-verdict="buy"]::before { background: var(--verdict-buy); }
+.chip[data-verdict="sell"]::before { background: var(--verdict-sell); }
 @media (hover: hover) { .chip:hover { border-color: var(--line-strong); } }
 .chip:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-.symbol { font-size: var(--text-base); font-weight: 700; color: var(--text-strong); white-space: nowrap; }
-/* Dönem sağa yaslı: geniş sütunda çipin ucu boş kalmasın, künye hizalı dursun. */
-.period { margin-left: auto; padding-left: 2px; font-size: var(--text-tiny); color: var(--text-muted); white-space: nowrap; }
+.item { width: 260px; }
+.identity { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.names { display: grid; min-width: 0; line-height: 1.2; }
+.symbol { font-size: var(--text-base); font-weight: 750; color: var(--text-strong); white-space: nowrap; }
+.company { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-tiny); color: var(--text-muted); }
+.period { align-self: flex-start; margin-left: auto; padding-left: 4px; font-size: var(--text-tiny); color: var(--text-muted); white-space: nowrap; }
+.foot { display: flex; align-items: center; gap: 12px; min-width: 0; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.reaction { display: grid; flex: 1; gap: 5px; min-width: 0; }
+.reactionHead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: var(--text-nano); font-weight: 650; color: var(--text-muted); white-space: nowrap; }
+.reactionHead b { font-size: var(--text-tiny); font-weight: 800; }
+.noReaction { flex: 1; text-align: right; font-size: var(--text-nano); color: var(--text-muted); }
 
 @media (min-width: 640px) {
   .list {
@@ -91,7 +104,7 @@
     padding: 0;
     overflow: visible;
   }
-  .item { display: none; }
+  .item { display: none; width: auto; }
   .item:nth-child(-n + 1) { display: flex; }
 }
 @container rail (min-width: 534px) {

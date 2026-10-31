@@ -247,8 +247,10 @@
 
 /* ------------------------------------------------------------ karolar */
 
-/* ALTI KALEM, 3×2 KARO (telefonda 2×3). Karo en az 56 piksel (etiket + değer), değer tek
-   satır: sığmayan üç noktayla, tamamı Ayrıntı'da ve `title`da. */
+/* ALTI KALEM, 3×2 KARO (telefonda 2×3). Karo en az 56 piksel (etiket + değer).
+   Değer İKİ satıra kadar (31 Ekim; eskiden tek satırdı ve 1440'ta altı
+   karonun beşi "ABD borsaları t…", "Var; kontrat …" gibi yarım okunuyordu),
+   sığmayan üç noktayla, tamamı Ayrıntı'da ve `title`da. */
 .tiles {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -281,7 +283,7 @@
 .tileLabel svg { flex: none; }
 .tileValue {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 5px;
   min-width: 0;
   font-size: 13px;
@@ -290,7 +292,7 @@
   color: var(--text-strong);
 }
 .tileValue svg { flex: none; }
-.tileText { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tileText { min-width: 0; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
 .tile[data-mark="unspecified"] .tileValue { font-weight: 500; color: var(--text-muted); }
 /* 480 altında iki sütun: 390'da üç sütunlu karo 104 piksele düşüyor,
    etiket iki satıra kırılıyor ve "Belirtilmemiş" bile üç noktaya

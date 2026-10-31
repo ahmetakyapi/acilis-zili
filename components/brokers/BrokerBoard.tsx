@@ -6,6 +6,7 @@ import {
   CURVE_RANGE,
   crossSentence,
   dodgeLabels,
+  dodgeSpans,
   MONTHS,
   YEARLY_FREQUENCIES,
   type FeeCurve,
@@ -49,9 +50,26 @@ import styles from "./BrokerBoard.module.css";
  * metin kurum renginde değil. En ucuz vurgulanmıyor; sıra bir öneri değil
  * (künye panelin dibinde).
  *
- * HAREKET: girişte eğriler bir kez çiziliyor, çubuklar ve kürsünün taban çizgileri bir
+ * HAREKET: girişte eğriler bir kez çiziliyor, çubuklar ve kürsünün tepe şeritleri bir
  * kez büyüyor (`--ease-brand`); tutar değişince noktalar ve çubuklar yeni
  * yerine kayıyor. Hareketi azaltan okuyucuda hepsi son karede (modül CSS'i).
+ *
+ * GÖRSEL TUR (31 Ekim, sahibinin sözü: "çizgi uçlarındaki logolar
+ * çakışıyor"; podyum hiyerarşisi, "En Düşük Komisyon" şeridi):
+ *   - kürsü: taban çizgili sütunlar sitenin kart diline geçti (nötr karo,
+ *     tepede kurum renginde 3 piksellik şerit); sıra rozeti logonun
+ *     yanında yüzmüyor, karonun sol üstünde. Birinci sıra koyu rozet ve
+ *     büyük rakamla ayrışıyor, renkle değil (renk kimlik, yargı değil).
+ *   - eğri uçları: logolar eğrinin bittiği yerden kurum renginde ince bir
+ *     bağlantı çizgisiyle bağlı, uçta küçük bir nokta; grafik 210 → 248
+ *     piksel (telefonda 224), aralık 22 → 24. Üç kurum 50.000 $'da aynı
+ *     yere çıktığında logolar yine sırayla diziliyor ama hangisinin hangi
+ *     çizgi olduğu artık bağlantıdan okunuyor.
+ *   - şerit: logo kümeleri dilimin ortasına göre itiliyor (`dodgeSpans`,
+ *     dar dilimde üst üste binmiyor), sapan küme diliminin ortasına kısa bir
+ *     sapla bağlı; dilim sınırlarının tutarı şeridin altında; seçili tutar
+ *     şeritte de işaretli (grafiğin kesik çizgisiyle aynı x); taralı dilimin
+ *     anlamı başlığın yanında ("Taralı: Eşit Ücret").
  */
 
 export type BrokerBoardLabels = typeof brokerCardsTr.board & {
@@ -159,12 +177,17 @@ function Podium({
     <>
       <ol className={styles.podium} aria-label={labels.cheapest.podiumLabel.replace("{amount}", amount)}>
         {top.map((entry, i) => (
-          <li key={i} className={cn(styles.step, styles.brand)} style={brandVars(entry.id) as React.CSSProperties}>
+          <li
+            key={i}
+            className={cn(styles.step, styles.brand)}
+            data-first={entry.rank === 1 || undefined}
+            style={{ ...brandVars(entry.id), "--i": i } as React.CSSProperties}
+          >
+            <span className={cn("numeral", styles.medal)}>
+              {labels.cheapest.rank.replace("{rank}", String(entry.rank))}
+            </span>
             <span className={styles.stepMark}>
               <BrokerMark id={entry.id} name={entry.name} size="lg" />
-              <span className={cn("numeral", styles.medal)}>
-                {labels.cheapest.rank.replace("{rank}", String(entry.rank))}
-              </span>
             </span>
             <span className={styles.stepName}>{entry.name}</span>
             <span className={cn("numeral", styles.stepFee)}>{usd(entry.fee)}</span>
@@ -193,10 +216,25 @@ function Podium({
 
 /* ------------------------------------------------------------ b. eğriler */
 
-const CHART_H = 210;
-const M = { top: 12, right: 40, bottom: 24, left: 46 } as const;
-/** Uç logoları arası en az aralık: 20 piksellik karo + 2 piksel. */
-const LABEL_GAP = 22;
+/** Grafik boyu: geniş 248, dar (çizim kutusu < 400 piksel, telefon) 224 —
+    logolar sıkışmasın (31 Ekim). 1440'ta kutu ~480, 390'da ~310 piksel. */
+const CHART_H_WIDE = 248;
+const CHART_H_NARROW = 224;
+const NARROW_W = 400;
+/** Sağ pay: 14 piksellik bağlantı çizgisi + 20 piksellik logo + 6. */
+const M = { top: 12, right: 44, bottom: 24, left: 46 } as const;
+/** Uç logoları arası en az aralık: 20 piksellik karo + 4 piksel. */
+const LABEL_GAP = 24;
+/** Bağlantı çizgisinin dirseği: eğrinin ucundan sağa 6, logoya 14 piksel. */
+const LEADER_BEND = 6;
+const LEADER_END = 14;
+/** Şeritteki logo kümesi: 20 piksellik karo, kümede 2 piksel ara (eski 6
+    piksellik bindirme komşu kümeyle çakışma gibi okunuyordu), kümeler arası 6. */
+const STRIP_MARK = 20;
+const STRIP_INNER = 2;
+const STRIP_GAP = 6;
+/** Şeridin altındaki sınır tutarları arası en az piksel. */
+const STRIP_TICK_GAP = 56;
 const X_TICKS = [100, 1_000, 10_000, 50_000] as const;
 /** İki x etiketi arası en az piksel; dar grafikte ("10.000 $" ile "50.000 $",
     390'da üst üste biniyordu) ara etiket düşüyor, uçlar kalıyor. */
@@ -242,6 +280,7 @@ function CurveChart({
   const yLo = Math.min(...fees) * 0.75;
   const yHi = Math.max(...fees) * 1.3;
   const plotW = Math.max(width - M.left - M.right, 40);
+  const CHART_H = width < NARROW_W ? CHART_H_NARROW : CHART_H_WIDE;
   const plotH = CHART_H - M.top - M.bottom;
   const x = useCallback(
     (amount: number) => M.left + ((Math.log(amount) - Math.log(lo)) / (Math.log(hi) - Math.log(lo))) * plotW,
@@ -310,6 +349,26 @@ function CurveChart({
           .sort((a, b) => a.fee - b.fee)
       : [];
 
+  /* Şerit geometrisi (çizim alanına göre piksel). */
+  const segX = segments.map((segment) => {
+    const left = x(segment.from) - M.left;
+    const right = x(segment.to) - M.left;
+    return { left, width: right - left, mid: (left + right) / 2 };
+  });
+  const groupW = segments.map((segment) => segment.ids.length * STRIP_MARK + (segment.ids.length - 1) * STRIP_INNER);
+  const groupAt = dodgeSpans(segX.map((seg) => seg.mid), groupW, STRIP_GAP, 0, plotW);
+  const hasTie = segments.some((segment) => segment.ids.length > 1);
+  /* İç sınırlar; komşusuna STRIP_TICK_GAP'ten yakın olan düşer, uçlara
+     yakın olan da (uç tutarlar grafiğin ekseninde zaten yazılı). */
+  const stripTicks: { at: number; value: number }[] = [];
+  for (const segment of segments.slice(1)) {
+    const at = x(segment.from) - M.left;
+    const prev = stripTicks.at(-1)?.at ?? -Infinity;
+    if (at - prev >= STRIP_TICK_GAP && at >= STRIP_TICK_GAP / 2 && plotW - at >= STRIP_TICK_GAP / 2) {
+      stripTicks.push({ at, value: segment.from });
+    }
+  }
+
   return (
     <>
       <div
@@ -350,6 +409,20 @@ function CurveChart({
               style={brandVars(curve.id) as React.CSSProperties}
             />
           ))}
+          {/* Uç bağlantıları: eğrinin bittiği nokta → dirsek → logo. */}
+          {curves.map((curve, i) => {
+            const endY = y(curve.points[curve.points.length - 1].fee);
+            const x0 = M.left + plotW;
+            return (
+              <g key={curve.id} className={styles.brand} style={brandVars(curve.id) as React.CSSProperties}>
+                <polyline
+                  points={`${x0},${endY.toFixed(1)} ${x0 + LEADER_BEND},${endY.toFixed(1)} ${x0 + LEADER_END},${ends[i].toFixed(1)}`}
+                  className={styles.leader}
+                />
+                <circle cx={x0} cy={endY} r={2.5} className={styles.endDot} />
+              </g>
+            );
+          })}
           <line x1={x(line.amount)} x2={x(line.amount)} y1={M.top} y2={M.top + plotH} className={styles.cursor} />
           {hoverAmount !== null && (
             <line x1={x(hoverAmount)} x2={x(hoverAmount)} y1={M.top} y2={M.top + plotH} className={styles.hoverLine} />
@@ -374,7 +447,7 @@ function CurveChart({
           })}
         </svg>
         {curves.map((curve, i) => (
-          <span key={curve.id} className={styles.endMark} style={{ top: Math.round(ends[i] - 10), left: Math.round(M.left + plotW + 8) }}>
+          <span key={curve.id} className={styles.endMark} style={{ top: Math.round(ends[i] - 10), left: Math.round(M.left + plotW + LEADER_END + 2) }}>
             <BrokerMark id={curve.id} name={curve.name} size="xs" />
           </span>
         ))}
@@ -397,36 +470,74 @@ function CurveChart({
         )}
       </div>
 
-      {/* En düşük komisyonun şeridi: x ekseniyle aynı ölçekte dilimler. */}
+      {/* En düşük komisyonun şeridi: x ekseniyle aynı ölçekte dilimler.
+          Üstte logo kümeleri (itilmiş, sapla dilime bağlı), ortada dilim
+          bandı ve seçili tutarın işareti, altta dilim sınırlarının tutarı. */}
       <div className={styles.strip}>
-        <span className={styles.stripTitle}>{labels.curves.stripTitle}</span>
-        <ol className={styles.stripBand} style={{ marginLeft: M.left, marginRight: M.right }}>
-          {segments.map((segment) => {
-            const left = ((x(segment.from) - M.left) / plotW) * 100;
-            const span = ((x(segment.to) - x(segment.from)) / plotW) * 100;
-            const single = segment.ids.length === 1;
-            return (
-              <li
-                key={`${segment.from}-${segment.ids.join(",")}`}
-                className={cn(styles.stripSeg, single && styles.brand)}
-                data-tie={single ? undefined : ""}
-                style={{ left: `${left}%`, width: `${span}%`, ...(single ? brandVars(segment.ids[0]) : {}) } as React.CSSProperties}
-              >
-                <span className="sr-only">
-                  {labels.curves.stripLabel
-                    .replace("{from}", usd(Math.round(segment.from), 0))
-                    .replace("{to}", usd(Math.round(segment.to), 0))
-                    .replace("{names}", names(segment.ids))}
+        <div className={styles.stripHead}>
+          <span className={styles.stripTitle}>{labels.curves.stripTitle}</span>
+          {hasTie && (
+            <span className={styles.stripKey}>
+              <i aria-hidden className={styles.stripKeySwatch} />
+              {labels.curves.tieKey}
+            </span>
+          )}
+        </div>
+        <div className={styles.stripPlot} style={{ marginLeft: M.left, marginRight: M.right }}>
+          <div aria-hidden className={styles.stripMarksRow}>
+            {segments.map((segment, i) => {
+              const center = segX[i].mid;
+              const shift = groupAt[i] - center;
+              return (
+                <span key={`${segment.from}-${segment.ids.join(",")}`}>
+                  <span className={styles.stripGroup} data-tie={segment.ids.length > 1 ? "" : undefined} style={{ left: groupAt[i] - groupW[i] / 2 }}>
+                    {segment.ids.map((id) => (
+                      <BrokerMark key={id} id={id} name={nameOf.get(id) ?? id} size="xs" />
+                    ))}
+                  </span>
+                  {Math.abs(shift) > 1 && (
+                    <svg className={styles.stripStem} style={{ left: Math.min(center, groupAt[i]) - 1, width: Math.abs(shift) + 2 }}>
+                      <line
+                        x1={shift > 0 ? 1 : Math.abs(shift) + 1}
+                        y1={8}
+                        x2={shift > 0 ? Math.abs(shift) + 1 : 1}
+                        y2={0}
+                      />
+                    </svg>
+                  )}
                 </span>
-                <span aria-hidden className={styles.stripMarks}>
-                  {segment.ids.map((id) => (
-                    <BrokerMark key={id} id={id} name={nameOf.get(id) ?? id} size="xs" />
-                  ))}
-                </span>
-              </li>
-            );
-          })}
-        </ol>
+              );
+            })}
+          </div>
+          <ol className={styles.stripBand}>
+            {segments.map((segment, i) => {
+              const single = segment.ids.length === 1;
+              return (
+                <li
+                  key={`${segment.from}-${segment.ids.join(",")}`}
+                  className={cn(styles.stripSeg, single && styles.brand)}
+                  data-tie={single ? undefined : ""}
+                  style={{ left: segX[i].left, width: segX[i].width, ...(single ? brandVars(segment.ids[0]) : {}) } as React.CSSProperties}
+                >
+                  <span className="sr-only">
+                    {labels.curves.stripLabel
+                      .replace("{from}", usd(Math.round(segment.from), 0))
+                      .replace("{to}", usd(Math.round(segment.to), 0))
+                      .replace("{names}", names(segment.ids))}
+                  </span>
+                </li>
+              );
+            })}
+            <li aria-hidden className={styles.stripCursor} style={{ left: x(line.amount) - M.left }} />
+          </ol>
+          <div aria-hidden className={cn("numeral", styles.stripTicks)}>
+            {stripTicks.map((tick) => (
+              <span key={tick.at} style={{ left: tick.at }}>
+                {usd(Math.round(tick.value), 0)}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
       {sentence && <p className={styles.sentence}>{sentence}</p>}
       <p className={styles.hint}>{labels.curves.pick}</p>

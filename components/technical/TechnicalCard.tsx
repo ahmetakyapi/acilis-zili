@@ -25,7 +25,8 @@ import {
   formatPercentPlain,
   formatPrice,
 } from "@/lib/utils";
-import { openWhyText } from "./open-plan";
+import { openWatchText, openWhyText } from "./open-plan";
+import { OpenRange, openRangeOf } from "./OpenRange";
 import { PlanRail } from "./PlanRail";
 import { PlanStrip } from "./PlanStrip";
 import styles from "./Technical.module.css";
@@ -78,20 +79,13 @@ export function planReadingText(reading: PlanReading, locale: Locale, t: Diction
          olmadığını söylemiyordu ve listenin ilk elemanını "en yakın"
          sayıyordu — fiyat direnci geçmişken de onu izlenecek seviye diye
          yazıyordu. Artık önce neden (`openWhyText`), sonra alım ve satış
-         tarafının fiyata göre hâli; geçilmiş seviye geçilmiş diye yazılıyor. */
-      const { buy, sell } = reading.open;
-      const parts = [openWhyText(reading.open, t)];
-      const op = t.technical.openPlan;
-      if (buy) {
-        const text = buy.state === "beyond" ? op.buyBroken : buy.state === "at" ? op.buyAt : op.buyWatch;
-        parts.push(text.replace("{level}", money(buy.level)));
-      }
-      if (sell) {
-        const text = sell.state === "beyond" ? op.sellPassed : sell.state === "at" ? op.sellAt : op.sellWatch;
-        parts.push(text.replace("{level}", money(sell.level)));
-      }
-      if (!buy && !sell) parts.push(op.noLevels);
-      return parts.join(" ");
+         tarafının fiyata göre hâli; geçilmiş seviye geçilmiş diye yazılıyor.
+         İKİNCİ CÜMLE KOŞUL, YÖNLENDİRME DEĞİL (31 Ekim, aynı gün). "Alım
+         için izlenecek seviye 998,19 $ desteği. Satış için izlenecek seviye
+         1.255,35 $." okura alım ve satış yeri gösteriyordu ve sahibi "ne
+         anlama geliyor bilmiyorum" dedi. Artık iki seviye ve kırılırlarsa
+         ne olacağı — rutinin kendi kuralından (`openWatchText`). */
+      return [openWhyText(reading.open, t), openWatchText(reading.open, money, t)].join(" ");
     }
     case "sell":
       if (reading.level !== null && reading.support !== null) {
@@ -175,6 +169,7 @@ export function TechnicalCard({
     supports: row.supports,
     resistances: row.resistances,
   };
+  const openRange = openRangeOf(verdict, price, levelProps);
   /* Cümle analiz anında yazıldı, fiyat canlı. Fark anlamlıysa raya bir
      halka ve cümlenin künyesine o anın fiyatı giriyor (bkz. `LevelTrack`). */
   const snapshotPrice =
@@ -305,9 +300,22 @@ export function TechnicalCard({
         </div>
       </div>
 
-      <div className={styles.cardPlan} data-verdict={verdict}>
-        <PlanStrip verdict={verdict} {...levelProps} price={price} showWhy={false} locale={locale} t={t} />
-        <PlanRail verdict={verdict} price={price} snapshotPrice={snapshotPrice} {...levelProps} locale={locale} t={t} />
+      {/* BÖLGESİZ TUT KENDİ ÇİZİMİYLE (31 Ekim). Şerit + ray ("Nereden
+          Alınır — Bölge Yok · Destek", "Nerede Satılır — Direnç") bölgeli
+          kartın kalıbını boş bırakıyordu ve okura ne olduğu söylenmiyordu;
+          SanDisk kartına bakan sahibi "ne anlama geliyor bilmiyorum" dedi.
+          Artık durumun adı, destek—fiyat—direnç ekseni ve tek koşul cümlesi
+          (gerekçe `OpenRange`). Fiyat yoksa ya da seviye hiç verilmediyse
+          eski şerit kalıyor. SAT ve bölgeli kartlar değişmedi. */}
+      <div className={styles.cardPlan} data-verdict={verdict} data-open-range={openRange ? true : undefined}>
+        {openRange ? (
+          <OpenRange {...openRange} locale={locale} t={t} />
+        ) : (
+          <>
+            <PlanStrip verdict={verdict} {...levelProps} price={price} showWhy={false} locale={locale} t={t} />
+            <PlanRail verdict={verdict} price={price} snapshotPrice={snapshotPrice} {...levelProps} locale={locale} t={t} />
+          </>
+        )}
       </div>
 
       {/* CÜMLENİN ANI CÜMLENİN ÜSTÜNDE (23 Eylül). Gerekçe analiz anını

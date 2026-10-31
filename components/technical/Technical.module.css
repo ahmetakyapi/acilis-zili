@@ -2279,3 +2279,86 @@
 /* Rayın künyesi plansız kartta bir cümle: gövde tonu, künyeden bir kademe
    koyu — "Fiyata Uzaklık" bir etiketti, bu bir okuma. */
 .railWhy { font-size:12.5px; line-height:1.45; color:var(--text-body); }
+
+/* ==========================================================================
+   BÖLGESİZ TUT: DURUM, EKSEN, KOŞUL (31 Ekim, sahibinin isteği)
+   Gerekçe components/technical/OpenRange.tsx. Ton nötr: eksen ve şeritler
+   gri mürekkep, durum etiketi pirinç (TUT'un rengi, "bekleme"). Yeşil yok —
+   alım bölgesi yok; mavi yok — mavi etkileşim ve alım bandı. Yön rengi
+   yalnız GEÇİLMİŞ seviyenin şeridinde (destek kırıldı aşağı, direnç
+   geçildi yukarı): bir olgu, bir öneri değil.
+   ========================================================================== */
+
+/* Kartta plan satırını DOLDURUYOR (`align-content:stretch`). Satır komşu
+   bölgeli kartlarla paylaşılıyor (şerit + ray); kutu satırın dibine kadar
+   iniyor ve koşul cümlesi dibe yaslanıyor, yani komşu kartın ray dibiyle
+   aynı hatta bitiyor. */
+.cardPlan[data-open-range] { align-content:stretch; }
+.openRange { --open-ground:linear-gradient(var(--surface-sunken), var(--surface-sunken)), var(--premium-surface); display:flex; min-width:0; flex-direction:column; gap:8px; padding:10px 14px 11px; border-radius:var(--radius-lg); background:var(--surface-sunken); }
+.openHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 10px; }
+.openTag { display:inline-flex; flex:none; align-items:center; gap:5px; padding:0 9px 0 7px; border-radius:999px; background:var(--brass-wash); color:var(--brass-ink); font-size:12.5px; line-height:22px; font-weight:700; white-space:nowrap; }
+.openState { font-size:12.5px; line-height:1.35; font-weight:650; color:var(--text-body); }
+
+/* Eksen: üstte uzaklık, altında 5 piksellik kulvar. Yatay pay 7: uçtaki
+   çentik ve imleç kutunun iç kenarına yapışmasın. */
+.openAxis { position:relative; height:38px; margin:0 7px; }
+.openLane { position:absolute; left:0; right:0; top:24px; height:5px; border-radius:999px; background:color-mix(in srgb, var(--text-muted) 16%, transparent); }
+.openSeg { position:absolute; top:24px; height:5px; border-radius:999px; background:color-mix(in srgb, var(--text-muted) 55%, transparent); }
+.openSeg[data-tone="down"] { background:var(--down); }
+.openSeg[data-tone="up"] { background:var(--up); }
+.openPct { position:absolute; bottom:calc(100% + 5px); left:50%; translate:-50% 0; display:inline-flex; align-items:center; gap:2px; font-size:12px; line-height:14px; font-weight:700; color:var(--text-body); white-space:nowrap; }
+.openSeg[data-tone="down"] .openPct { color:var(--down); }
+.openSeg[data-tone="up"] .openPct { color:var(--up); }
+.openTick { position:absolute; top:17px; width:2px; height:19px; margin-left:-1px; border-radius:1px; background:var(--text-muted); }
+/* İmleç koyu mürekkep, çevresinde zeminin renginde bir halka (kulvar
+   imlecin altında kesiliyor). Zemin yarı saydam (`--surface-sunken`) olduğu
+   için halka gölgeyle değil katmanlı zeminle: aynı bileşim, aynı ton. */
+.openNow { position:absolute; top:26.5px; width:20px; height:20px; margin:-10px 0 0 -10px; border-radius:50%; background:radial-gradient(circle closest-side, var(--text-strong) 70%, transparent 72%), var(--open-ground); }
+.openNow b { position:absolute; bottom:calc(100% + 6px); left:50%; translate:-50% 0; font-size:12.5px; line-height:16px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
+.openNow b .numeral { font-size:15px; font-weight:750; color:var(--text-strong); }
+.openNow[data-align="start"] b { left:-2px; translate:0 0; }
+.openNow[data-align="end"] b { left:auto; right:-2px; translate:0 0; }
+
+.openEnds { display:flex; flex-wrap:wrap; justify-content:space-between; gap:2px 12px; margin:0; }
+.openEnds > div { display:flex; align-items:baseline; gap:6px; min-width:0; }
+.openEnds > div[data-side="sell"] { margin-left:auto; }
+.openEnds dt { font-size:12.5px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
+.openEnds dd { font-size:14.5px; line-height:1.3; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
+.openEndPct { font-size:12px; font-weight:600; letter-spacing:0; color:var(--text-muted); }
+.openWatch { margin-top:auto; padding-top:7px; border-top:1px solid var(--line-soft); font-size:12.5px; line-height:1.45; color:var(--text-body); text-wrap:pretty; }
+
+/* ---- Detay kapağı: büyük eksen + iki seviye kartı ----
+   Kutu yok (kapağın kendi zemini); eksen büyür, fiyat imlecin ÜSTÜNDE
+   adıyla, uzaklıklar şeridin ALTINDA. Seviye kartları eski plan
+   hücrelerinin dili (`.overviewCell`): ton, tepede 5 piksellik şerit,
+   dipte hairline ile uzaklık. Direnç kartı sağa yaslı — eksendeki yeri
+   sağ uç. */
+.openRange[data-size="lg"] { --open-ground:var(--premium-surface); gap:14px; padding:0; border-radius:0; background:none; }
+.openRange[data-size="lg"] .openTag { font-size:13.5px; line-height:26px; padding:0 11px 0 9px; }
+.openRange[data-size="lg"] .openState { font-size:14px; }
+.openRange[data-size="lg"] .openAxis { height:76px; margin:4px 10px 0; }
+.openRange[data-size="lg"] :is(.openLane, .openSeg) { top:36px; height:6px; }
+.openRange[data-size="lg"] .openTick { top:28px; height:22px; background:var(--line-strong); }
+.openRange[data-size="lg"] .openNow { top:39px; width:24px; height:24px; margin:-12px 0 0 -12px; }
+.openRange[data-size="lg"] .openPct { top:calc(100% + 9px); bottom:auto; font-size:13px; }
+.openLevels { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; margin:0; }
+.openLevels > div { position:relative; display:flex; min-width:0; flex-direction:column; gap:6px; padding:18px 16px 14px; border-radius:12px; background:var(--surface-sunken); overflow:hidden; }
+.openLevels > div::before { content:""; position:absolute; inset:0 0 auto; height:5px; background:var(--line-strong); }
+.openLevels > div[data-side="buy"][data-state="beyond"]::before { background:var(--down); }
+.openLevels > div[data-side="sell"][data-state="beyond"]::before { background:var(--up); }
+.openLevels > div[data-state="at"]::before { background:var(--brass); }
+.openLevels > div[data-side="sell"] { align-items:flex-end; text-align:right; }
+.openLevels > div[data-side="sell"]:only-child { grid-column:2; }
+.openLevels dt { font-size:12px; font-weight:600; color:var(--text-muted); }
+.openLevels dd { font-size:clamp(17px,1.4vw,21px); line-height:1.4; font-weight:600; letter-spacing:-.025em; color:var(--text-strong); }
+.openLevels .openAway { align-self:stretch; margin-top:auto; padding-top:10px; border-top:1px solid var(--line-soft); font-size:12px; line-height:1.4; font-weight:600; letter-spacing:0; color:var(--text-muted); }
+.openLevels .openAway b { display:inline-flex; align-items:center; gap:2px; margin-left:2px; font-weight:700; color:var(--text-strong); }
+/* Telefonda künye iki satır, İKİ KARTTA DA: kart 165 piksel ve "Fiyata
+   Uzaklık ▾ %13,3" destek kartında sarıyor, direnç kartında ("%9,1")
+   sığıyordu — iki kartın dibi 30 piksel farklı hatta bitiyordu (390,
+   ölçüldü). Sayı kendi satırında, iki kart aynı hatta. */
+@media (max-width:639px) {
+  .openLevels .openAway { display:grid; justify-items:inherit; }
+  .openLevels > div[data-side="sell"] .openAway { justify-items:end; }
+  .openLevels .openAway b { margin-left:0; }
+}

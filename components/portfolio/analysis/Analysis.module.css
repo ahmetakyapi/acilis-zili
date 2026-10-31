@@ -7,15 +7,20 @@
    ekran canlı kalır, ama doygun etkileşim mavisi (`--primary`) veri
    çiziminde ve sayı metninde yok; sayılar metin ya da yön renginde.
    Gri denendi (aynı gün) ve ekranı renksiz bıraktığı için geri alındı.
-   `--pa-ink` = `--primary-soft` (hesaplandı, grafik öğe eşiği 3:1: açıkta
-   beyaz kartta 3,3:1, koyuda panelde 8,7:1); ikincil eş (S&P 500, bugün)
-   `--primary-faint`. */
+   31 EKİM GÜNCELLEMESİ (sahibinin isteği: "Portföy/S&P 500 çift çubuklar
+   mavi"): `--pa-ink` artık `--primary-soft` değil, sitenin büyüklük tonu
+   `--bar-soft` (globals.css; CompareScale, sermaye şeridi ve tarama
+   kulvarlarıyla aynı). `--primary-soft` opak ve doygundu (#3a93d6 /
+   #6bc9ff), panelde etkileşim mavisine yakın okunuyordu. İkincil eş
+   (S&P 500) mavi ailenin soluğu değil NÖTR mürekkep: "senin portföyün"
+   marka tonunda, "endeks" gri — iki kulvar tonuyla da ayrılıyor, sektör
+   kartındaki S&P çentiği zaten mürekkep rengindeydi. */
 
 .body,
 .leadBlock,
 .keyStrip {
-  --pa-ink: var(--primary-soft);
-  --pa-ink-soft: var(--primary-faint);
+  --pa-ink: var(--bar-soft);
+  --pa-ink-soft: color-mix(in srgb, var(--text-muted) 46%, transparent);
 }
 
 .body {
@@ -119,6 +124,33 @@
 .sectorRow:first-child {
   border-top: 0;
   padding-top: 2px;
+}
+
+/* Çok sektörlü portföy: iki satırlık satır (gerekçe AnalysisScreen.tsx →
+   DENSE_SECTORS). Yalnız geniş kartta; telefonda üç satır kalır. */
+@media (min-width: 640px) {
+  .sectorList[data-dense] .sectorRow {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "name bench share" "track track diff";
+    gap: 2px 14px;
+    padding: 7px 0 8px;
+  }
+
+  .sectorList[data-dense] .sectorRow:first-child {
+    padding-top: 2px;
+  }
+
+  .sectorList[data-dense] .sectorShare {
+    font-size: 1.1rem;
+    min-width: 4.2rem;
+    text-align: right;
+  }
+
+  .sectorList[data-dense] .sectorDiff {
+    align-self: center;
+    min-width: 4.2rem;
+    text-align: right;
+  }
 }
 
 .sectorName {
@@ -761,13 +793,13 @@ a.chip:hover {
   }
 }
 
-/* ---- Tepedeki cümle (25 Ekim) ---- */
+/* ---- Tepedeki kısa okumalar (25 Ekim cümle, 31 Ekim okumalar) ---- */
 
-/* Bandın alt satırında (DirectoryHeader `footer`): 1440'ta tek-iki satır. */
+/* Bandın alt satırında (DirectoryHeader `footer`). */
 .leadBlock {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .boardSkeleton {
@@ -786,27 +818,73 @@ a.chip:hover {
   background: var(--surface-sunken);
 }
 
-.leadText {
+/* KISA OKUMALAR (31 Ekim; gerekçe analysis-visuals.ts → composeAnalysisFacts).
+   Tek kalın uzun cümle yerine en fazla üç kısa cümle: 1100 ve üstünde yan
+   yana, altında alt alta. Her biri gömük tonda ikon karosu + gövde tonunda
+   cümle, sayı ve ad kalın mürekkep. Kutu yok, kart yok: bandın içinde
+   satır; ayrımı ikon ve aralık veriyor (derinlik tonla). */
+.facts {
+  display: grid;
+  gap: 10px;
   margin: 0;
-  color: var(--text-strong);
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.5;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 1100px) {
+  .facts {
+    grid-template-columns: repeat(var(--facts, 3), minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .facts[data-count="1"] { --facts: 1; }
+  .facts[data-count="2"] { --facts: 2; }
+}
+
+.fact {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+}
+
+.fact p {
+  margin: 0;
+  padding-top: 5px;
+  color: var(--text-body);
+  font-size: 15px;
+  line-height: 1.45;
   text-wrap: pretty;
 }
 
-.leadNote {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: var(--text-tiny);
-  line-height: 1.5;
+.fact b {
+  color: var(--text-strong);
+  font-weight: 700;
 }
 
-@media (max-width: 767px) {
-  .leadText {
-    font-size: 15px;
-  }
+.factIcon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  color: var(--text-strong);
+}
+
+/* "Nasıl Hesaplanır" katı: anahtar okumaların altında sola yaslı; açılınca
+   künye tek paragraf, gövde tonunda ve okunur puntoda (eski 12 piksellik
+   gri satır okunmuyordu). */
+.method {
+  max-width: 92ch;
+}
+
+.leadNote {
+  margin: 4px 0 0;
+  color: var(--text-body);
+  font-size: var(--text-small);
+  line-height: 1.6;
+  text-wrap: pretty;
 }
 
 /* ---- Kart içi çizimler: kulvar, eş çizgi, halka ---- */
@@ -899,23 +977,32 @@ a.chip:hover {
   white-space: nowrap;
 }
 
-.ring {
-  width: 36px;
-  height: 36px;
-  flex: none;
+/* Etkin pozisyon kutuları (31 Ekim; gerekçe AnalysisScreen.tsx →
+   EffectivePips). Her pozisyon bir kutu, 14 piksel boy: halkanın 36
+   piksellik yuvasının ortasında, değerler yine aynı hatta biter. Kutu
+   aralığı 3 piksel; 20 kutu 390'daki 127 piksellik çizim alanında 4
+   piksele iner, tavan bu yüzden `PIP_MAX`. */
+.pips {
+  display: flex;
+  width: 100%;
+  gap: 3px;
 }
 
-.ringTrack {
-  fill: none;
-  stroke: var(--line-soft);
-  stroke-width: 5;
+.pip {
+  position: relative;
+  display: block;
+  height: 14px;
+  flex: 1 1 0;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--line-soft);
 }
 
-.ringFill {
-  fill: none;
-  stroke: var(--pa-ink);
-  stroke-linecap: round;
-  stroke-width: 5;
+.pipFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: block;
+  background: var(--pa-ink);
 }
 
 /* ---- Ağırlık şeridi ---- */
@@ -928,7 +1015,8 @@ a.chip:hover {
 
 /* Şerit kulvardan kalın (10 px): yüzde yüzlük bir BİLEŞİM, dilimler
    arasındaki 2 piksellik zemin aralığı 5 piksellik şeritte okunmuyordu.
-   Tek bir pozisyon aynı dilin kulvarı değil, bütünün parçası. */
+   Tek bir pozisyon aynı dilin kulvarı değil, bütünün parçası. Ton
+   `--bar-soft`tan sıraya göre açılıyor (31 Ekim; eskiden `--primary-soft`). */
 .stripBar {
   display: flex;
   gap: 2px;
@@ -942,51 +1030,118 @@ a.chip:hover {
   min-width: 3px;
   flex-basis: 0;
   border-radius: 2px;
-  background: color-mix(in srgb, var(--primary-soft) var(--tone, 60%), transparent);
+  background: color-mix(in oklab, var(--bar-soft) var(--tone, 60%), transparent);
 }
 
 .stripSeg[data-rest] {
   background: repeating-linear-gradient(135deg, var(--pa-ink-soft) 0 3px, transparent 3px 6px);
 }
 
-.stripKey {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  margin: 0;
+/* Pozisyon satırları (31 Ekim; gerekçe AnalysisScreen.tsx → WeightStrip).
+   Satır 34 piksel, aralık yok (PanelFill satır boyunu ölçüyor; `gap`
+   ölçüye girmezdi). Kulvar dilimin tonunda, ölçek en büyük pozisyon. */
+.posList {
+  display: grid;
+  margin: 2px 0 0;
   padding: 0;
   list-style: none;
-  font-size: var(--text-small);
 }
 
-.stripKey li {
-  display: inline-flex;
-  min-height: 24px;
+.posRow {
+  display: grid;
+  grid-template-columns: 10px 22px minmax(0, 1fr) minmax(48px, 30%) 3.6rem;
   align-items: center;
-  gap: 6px;
-  color: var(--text-muted);
+  gap: 8px;
+  min-height: 34px;
+  border-top: 1px solid var(--line-soft);
 }
 
-.stripKey i {
+.posRow:first-child {
+  border-top: 0;
+}
+
+.posRow[hidden] {
+  display: none;
+}
+
+.posSwatch {
   width: 10px;
   height: 10px;
   border-radius: 2px;
-  background: color-mix(in srgb, var(--primary-soft) var(--tone, 60%), transparent);
+  background: color-mix(in oklab, var(--bar-soft) var(--tone, 60%), transparent);
 }
 
-.stripKey i[data-rest] {
+.posSwatch[data-rest] {
   background: repeating-linear-gradient(135deg, var(--pa-ink-soft) 0 2px, transparent 2px 4px);
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
-.stripKey b {
+/* "Diğer" satırında logo yerine boş yuva: sütunlar hizalı kalır. */
+.posRestMark {
+  width: 22px;
+  height: 22px;
+}
+
+/* "Diğer"in içinden açılan satırlar bir kademe içeride okunur. */
+.posRow[data-fill] {
+  padding-left: 14px;
+  grid-template-columns: 10px 22px minmax(0, 1fr) minmax(48px, calc(30% - 14px)) 3.6rem;
+}
+
+.posId {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.posId b {
+  flex: none;
   color: var(--text-strong);
   font-weight: 700;
 }
 
-.stripRest {
+.posId small {
+  overflow: hidden;
   color: var(--text-muted);
   font-size: var(--text-tiny);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.posLane {
+  position: relative;
+  display: block;
+  height: var(--lane-h, 5px);
+  border-radius: 999px;
+  background: var(--line-soft);
+}
+
+.posRow[data-rest] .posLane {
+  background: transparent;
+}
+
+.posLaneFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: block;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--bar-soft) var(--tone, 60%), transparent);
+}
+
+.posShare {
+  color: var(--text-strong);
+  font-size: var(--text-small);
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Telefonda şirket adı düşer: kart 326 piksel, sembol + kulvar + yüzde sığıyor. */
+@media (max-width: 639px) {
+  .posId small {
+    display: none;
+  }
 }
 
 /* ---- Korelasyon: işaretli kulvar + ısı matrisi ---- */

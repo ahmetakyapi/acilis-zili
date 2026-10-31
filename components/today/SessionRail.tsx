@@ -54,6 +54,18 @@ export type SessionRailLabels = {
   bands?: { pre: string; regular: string; after: string };
 };
 
+/** Kapalı piyasada şeridin altındaki bekleme çizgisi — son kapanıştan sıradaki açılışa. */
+export type SessionRailWait = {
+  /** Unix saniye: son kapanış zili ve sıradaki açılış zili. */
+  from: number;
+  to: number;
+  /** Uçların künyesi, okuyucunun saatiyle: "Kapanış · Cum 23:00". */
+  fromLabel: string;
+  toLabel: string;
+  /** Çizginin adı — "Kapanıştan Açılışa". */
+  name: string;
+};
+
 /**
  * ZİL ŞERİDİ — geri sayımın altında, seansın kendisi.
  *
@@ -88,7 +100,10 @@ export function SessionRail({
   initialNowMs,
   zone,
   labels,
+  wait,
 }: {
+  /** Piyasa kapalıyken (gece, hafta sonu, tatil) bekleme çizgisi; açıkken yok. */
+  wait?: SessionRailWait | null;
   domain: [number, number];
   openAt: number;
   closeAt: number;
@@ -300,6 +315,45 @@ export function SessionRail({
           );
         })}
         <span className={`numeral ${styles.end} ${styles.mark}`} style={markAt(1)}>{labels.end}</span>
+      </div>
+      {wait && <WaitLine wait={wait} nowMs={nowMs} reduced={reduced} />}
+    </div>
+  );
+}
+
+/**
+ * KAPANIŞTAN AÇILIŞA (31 Ekim, sahibinin isteği: "geri sayım ve seans
+ * çizgisinde hareket").
+ *
+ * Piyasa kapalıyken şeridin "şimdi"si eksenin dışında kalıyordu: cumartesi
+ * şerit cuma seansını baştan sona dolu gösteriyor, hareket eden tek şey
+ * sayaçtı. Oysa sayacın saydığı aralığın kendisi bir çizgi: son kapanış
+ * zilinden sıradaki açılış ziline. Şeridin altında 3 piksellik ince bir
+ * oluk; geçen kısım mavi, ucunda "şimdi" noktası, iki uçta zillerin günü
+ * ve saati. Sayaçla aynı hedefe (`nextOpen`) akıyor: sayaç "kalan"ı rakamla,
+ * bu çizgi "ne kadarı geçti"yi oranla söylüyor.
+ *
+ * Hareket şeridin kuralıyla aynı: yüklemede soldan çizilir (900 ms, marka
+ * eğrisi), sonra dakikada bir 600 ms'lik `scaleX` adımıyla ilerler; nabız
+ * ya da döngü yok. Hareketi azaltana son kare. Oran istemcide, şeridin
+ * dakikalık saatinden (`nowMs`) — sunucu HTML'i yükleme anının oranını
+ * taşıyor, hidrasyonda aynı damga kullanıldığı için fark yok.
+ */
+function WaitLine({ wait, nowMs, reduced }: { wait: SessionRailWait; nowMs: number; reduced: boolean }) {
+  const span = wait.to - wait.from;
+  const share = span > 0 ? Math.max(0, Math.min(1, (nowMs / 1000 - wait.from) / span)) : 0;
+  return (
+    <div className={styles.wait} role="img" aria-label={`${wait.name}: ${wait.fromLabel} → ${wait.toLabel}`}>
+      <div className={styles.waitAxis} aria-hidden="true">
+        <span className={styles.waitTrack}>
+          <span className={styles.waitFill} data-still={reduced || undefined} style={{ transform: `scaleX(${share.toFixed(4)})` }} />
+        </span>
+        <span className={styles.waitNow} data-still={reduced || undefined} style={{ left: `${(share * 100).toFixed(3)}%` }} />
+      </div>
+      <div className={styles.waitLane} aria-hidden="true">
+        <span className="numeral">{wait.fromLabel}</span>
+        <span className={styles.waitName}>{wait.name}</span>
+        <span className="numeral" data-target>{wait.toLabel}</span>
       </div>
     </div>
   );

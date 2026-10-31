@@ -7,14 +7,19 @@ import dynamic from "next/dynamic";
 import { motion } from "motion/react";
 import {
   ArrowDown,
+  Bank,
   Calculator,
   ChartLineUp,
   Check,
   Coins,
   DownloadSimple,
   FileArrowUp,
+  HandCoins,
   LockSimple,
   Plus,
+  Receipt,
+  Scales,
+  ShoppingCartSimple,
   Sparkle,
   Trash,
   WarningCircle,
@@ -997,7 +1002,7 @@ export function TaxCalculator({
             {simple ? (
               <ol className={styles.steps}>
                 <li className={styles.step} data-done={buyDone}>
-                  <span className={styles.node} aria-hidden>1</span>
+                  <span className={styles.node} aria-hidden>{buyDone ? <Check size={14} weight="bold" /> : 1}</span>
                   <h3 className={styles.stepTitle}>{labels.stepBuy}</h3>
                   <div className={styles.fields}>
                     <Field label={labels.symbol} error={symbolError(buyRow?.symbol ?? "")}>
@@ -1047,7 +1052,7 @@ export function TaxCalculator({
                 </li>
 
                 <li className={styles.step} data-done={sellDone}>
-                  <span className={styles.node} aria-hidden>2</span>
+                  <span className={styles.node} aria-hidden>{sellDone ? <Check size={14} weight="bold" /> : 2}</span>
                   <h3 className={styles.stepTitle}>{labels.stepSell}</h3>
                   <div className={styles.fields}>
                     <Field label={labels.sellDate} error={simpleSellBeforeBuy ? labels.sellBeforeBuy : undefined}>
@@ -1351,12 +1356,10 @@ export function TaxCalculator({
               ) : (
                 <SaleEmpty
                   labels={labels}
-                  visuals={visuals}
                   needs={[
-                    { text: labels.needBuy, done: simple ? buyDone : parsedTrades.some((t) => t.side === "buy") },
-                    { text: labels.needSell, done: simple ? sellDone : parsedTrades.some((t) => t.side === "sell") },
+                    { done: simple ? buyDone : parsedTrades.some((t) => t.side === "buy") },
+                    { done: simple ? sellDone : parsedTrades.some((t) => t.side === "sell") },
                     {
-                      text: labels.needRate,
                       done: simple
                         ? [buyRow?.date, sellRow?.date].every((date) => !!date && dateUsable(date) && !!rates[rateDateOf(date)])
                         : neededDates.length > 0 && neededDates.every((date) => !!rates[date]),
@@ -1724,60 +1727,113 @@ function EmptyLead({ text, how }: { text: string; how: string }) {
 }
 
 /**
- * Boş sonuçtaki şelale taslağının biçimi: sabit bir çizim, sayı değil
- * (maliyet, endeks payı, satış, kazanç, matrah). Okuyucuya kapalı.
- */
-const SKETCH: WaterfallGeometry = waterfallOf({ costTl: 52, indexedCostTl: 66, proceedsTl: 100, gainTl: 34, baseTl: 34 });
-
-/**
  * BOŞ SATIŞ SONUCU (18 Ekim). Eski hâl üç gri bloktu (Net Kazanç, Matrah,
  * Tahmini Vergi): okuyucu neyin eksik olduğunu ve sonucun neye benzeyeceğini
- * göremiyordu. Şimdi üç parça:
- *   1. SONUÇ İÇİN GEREKENLER — alış, satış ve iki günün kuru; her biri
- *      girdi tamamlandıkça işaretleniyor (kur bekleniyorsa nabız atar).
- *   2. Şelalenin TASLAĞI — dolu sonuçtaki "Kazanç Nasıl Oluştu"nun aynı
- *      dört satırı, aynı renklerde ama soluk ve SAYISIZ. Biçim sabit bir
- *      çizim (`SKETCH`), okuyucuya kapalı: sayı uydurulmuyor, yalnızca
- *      sonucun neye benzeyeceği gösteriliyor.
- *   3. "Örnekle Dene" — anlatımdaki örnek işlemi forma yazar.
+ * göremiyordu. 18 Ekim'de gerekenler listesi + şelalenin soluk, sayısız
+ * taslağı + "Örnekle Dene" oldu.
+ *
+ * AKIŞ ŞEMASI (31 Ekim, sahibinin sözü: "boş sonuç panelini anlamlı ve
+ * görsel bir önizlemeye çevir"). Gri liste ve soluk şelale yan yana iki
+ * ayrı dil konuşuyordu; şelale taslağı 1440'ta ~330 piksel yer tutup sayı
+ * göstermediği için "bozuk grafik" gibi okunuyordu. Şimdi tek çizim:
+ * hesabın kendi yolu, beş düğümlü dikey ray —
+ *   Alış → Satış → TCMB Kuru  (girdi: okuyucu doldurdukça işaretlenir)
+ *   → Matrah → Tahmini Vergi  (sonuç: kesik halka, girdiler bitince açılır)
+ * Rayın dolgusu tamamlanan girdiye kadar uzar (`--ease-brand`); sıradaki
+ * girdi mavi halkayla "buradasın" der, kur beklenirken düğüm nabız atar
+ * (eski `chip-wait`). Sayı yok: düğümler yalnızca adım ve künye taşır.
+ * Sağ üstte "1/3 Girdi Hazır" ölçeği aynı durumu üç dilimle söyler.
+ * "Örnekle Dene" en altta kaldı.
  */
 function SaleEmpty({
   labels,
-  visuals,
   needs,
   onExample,
 }: {
   labels: TaxLabels;
-  visuals: TaxVisualLabels;
-  needs: { text: string; done: boolean; busy?: boolean }[];
+  /** Alış, satış, kur — sırası sabit. */
+  needs: { done: boolean; busy?: boolean }[];
   onExample: () => void;
 }) {
+  const F = labels.needFlow;
+  const done = needs.filter((need) => need.done).length;
+  const ready = done === needs.length;
+  const active = needs.findIndex((need) => !need.done);
+  const nodes = [
+    { icon: ShoppingCartSimple, title: F.buy, hint: F.buyHint },
+    { icon: HandCoins, title: F.sell, hint: F.sellHint },
+    { icon: Bank, title: F.rate, hint: F.rateHint },
+    { icon: Scales, title: F.base, hint: F.baseHint },
+    { icon: Receipt, title: F.tax, hint: F.taxHint },
+  ] as const;
   return (
     <div className={styles.emptySale}>
-      <section aria-labelledby="vergi-gerekenler">
-        <h4 id="vergi-gerekenler" className={styles.basisTitle}>
-          {labels.needTitle}
-        </h4>
-        <ul className={styles.needs}>
-          {needs.map((need) => (
-            <li key={need.text} data-done={need.done || undefined} data-busy={(!need.done && need.busy) || undefined}>
-              <span className={styles.needMark} aria-hidden>
-                {need.done && <Check size={12} weight="bold" />}
-              </span>
-              {need.text}
-              {need.done && <span className="sr-only"> · {labels.needDone}</span>}
-            </li>
-          ))}
-        </ul>
+      <section aria-labelledby="vergi-gerekenler" className={styles.flowMap}>
+        <div className={styles.flowMapHead}>
+          <h4 id="vergi-gerekenler" className={styles.basisTitle}>
+            {labels.needTitle}
+          </h4>
+          <span className={styles.flowMeter} role="img" aria-label={F.progressLabel.replace("{done}", String(done))}>
+            <span className={styles.flowMeterBars} aria-hidden>
+              {needs.map((need, i) => (
+                <i key={i} data-on={need.done || undefined} />
+              ))}
+            </span>
+            <span className="numeral" aria-hidden>
+              {F.progress.replace("{done}", String(done))}
+            </span>
+          </span>
+        </div>
+        <ol className={styles.flowRail}>
+          {nodes.map((node, i) => {
+            const input = i < needs.length;
+            const need = input ? needs[i] : null;
+            const state = need
+              ? need.done
+                ? "done"
+                : need.busy
+                  ? "busy"
+                  : i === active
+                    ? "active"
+                    : "todo"
+              : ready
+                ? "active"
+                : "outcome";
+            /* Dolgu: bu düğümden sonrakine giden ray parçası. Girdide düğüm
+               tamamsa, sonuç düğümlerinde üç girdi tamamsa dolu. */
+            const filled = input ? !!need?.done : ready;
+            const Icon = node.icon;
+            return (
+              <li
+                key={node.title}
+                className={styles.flowNode}
+                data-state={state}
+                data-kind={input ? "input" : "outcome"}
+                data-filled={filled || undefined}
+                style={{ "--i": i } as React.CSSProperties}
+              >
+                {i === needs.length && (
+                  <span className={styles.flowDivider} aria-hidden>
+                    {F.result}
+                  </span>
+                )}
+                <span className={styles.flowDot} aria-hidden>
+                  {state === "done" ? <Check size={15} weight="bold" /> : <Icon size={17} weight="duotone" />}
+                </span>
+                <span className={styles.flowCopy}>
+                  <span className={styles.fmTitle}>{node.title}</span>
+                  <span className={styles.flowHint}>{node.hint}</span>
+                </span>
+                {input && (
+                  <span className={styles.flowState}>
+                    {state === "done" ? labels.needDone : state === "busy" ? F.busy : F.waiting}
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ol>
       </section>
-      <div className={styles.sketch} aria-hidden>
-        <Waterfall
-          sketch
-          title={visuals.waterfall.title}
-          geometry={SKETCH}
-          steps={[labels.flowCostTl, visuals.waterfall.indexStep, labels.flowProceeds, labels.flowGain, labels.taxBase].map((name) => ({ name, value: "" }))}
-        />
-      </div>
       <div className={styles.exampleFoot}>
         <button type="button" onClick={onExample} className={buttonClass({ variant: "ghost", size: "sm" })}>
           <Sparkle size={14} weight="duotone" aria-hidden />

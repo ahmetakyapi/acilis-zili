@@ -76,7 +76,7 @@ function readTheme(): Theme {
  */
 const THEME_SPECIMEN = {
   light: { page: "#f7f9fb", card: "#ffffff", ink: "#d7dee6", accent: "#0d74c4" },
-  dark: { page: "#070d16", card: "#141d29", ink: "#2a3542", accent: "#35b8ff" },
+  dark: { page: "#08101a", card: "#161f2c", ink: "#2a3542", accent: "#3cb7fb" },
 } as const;
 
 /** Sürmekte olan tema geçişi — üst üste tıklamada temizliği yalnızca

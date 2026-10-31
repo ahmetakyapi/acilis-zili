@@ -97,6 +97,14 @@ a.key:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px;
 }
 .keyFoot .keyNote { margin-top: 0; }
 .keyIcon { flex: none; color: var(--text-muted); }
+.keyLogo { flex: none; }
+/* Ortalama kartının çubuğu: kalem kartlarıyla aynı ölçek ve 5 piksellik
+   kulvar; sıfır çizgisi aynı yerde. */
+.keyLane { position: relative; display: block; height: 5px; border-radius: 999px; background: var(--line); }
+.keyLane::after { content: ""; position: absolute; inset: -3px auto -3px var(--zero); width: 2px; translate: -50% 0; border-radius: 1px; background: var(--line-strong); }
+.keyBar { position: absolute; inset-block: 0; border-radius: 999px; background: var(--primary-soft); }
+.keyBar[data-dir="up"] { background: var(--up); }
+.keyBar[data-dir="down"] { background: var(--down); }
 .keyName { display: -webkit-box; min-width: 0; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .keySymbol { flex: none; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-nano); font-weight: 500; }
 .keyGo {
@@ -155,22 +163,52 @@ a.key:hover .keyGo { color: var(--primary); translate: 2px 0; }
 .body p { line-height: 1.65; }
 
 /* ------------------------------------------------- SEKTÖR KARTLARI
-   Kabın enine göre (container query): 2 sütun telefonda, 3 ≥ 520,
-   4 ≥ 680, 6 ≥ 980. On bir sektör + ölçek kartı: 6×2, 4×3, 3×4, 2×6
-   — her genişlikte boş hücresiz. */
-.tilesWrap { display: flex; flex: 1; flex-direction: column; container-type: inline-size; min-width: 0; }
+   Kabın enine göre (container query) dört basamak: <520, ≥520, ≥680,
+   ≥980; tavanları 2/3/4/6 sütun. 31 Ekim'den beri her basamağın sütun
+   sayısı ve ölçek künyesinin yeri KALEM SAYISINDAN (`tileTiers`,
+   lib/daily-chart-board.ts): `--cols-N`, künye ızgarada `--in-N`, altta
+   `--out-N`. On bir sektör: 6×2, 4×3, 3×4, 2×6, künye boş hücrede.
+   Sekiz hisse: 4×2 (eskiden 6+2 ve yetim ölçek kartı), künye altta. */
+.tilesWrap { display: flex; flex: 1; flex-direction: column; gap: 10px; container-type: inline-size; min-width: 0; }
+.tiles,
+.scaleRow { --cols: var(--cols-0, 2); --legend-in: var(--in-0, none); --legend-out: var(--out-0, flex); }
+@container (min-width: 520px) { .tiles, .scaleRow { --cols: var(--cols-1, 3); --legend-in: var(--in-1, none); --legend-out: var(--out-1, flex); } }
+@container (min-width: 680px) { .tiles, .scaleRow { --cols: var(--cols-2, 4); --legend-in: var(--in-2, none); --legend-out: var(--out-2, flex); } }
+@container (min-width: 980px) { .tiles, .scaleRow { --cols: var(--cols-3, 6); --legend-in: var(--in-3, none); --legend-out: var(--out-3, flex); } }
 .tiles {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-@container (min-width: 520px) { .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@container (min-width: 680px) { .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-@container (min-width: 980px) { .tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.scaleCell { display: var(--legend-in); }
+
+/* Izgaranın altındaki ince ölçek: kulvar tek kartın kulvarı kadar (sütun
+   genişliği eksi kartın 12'şer piksellik iç boşluğu), metin yanında. */
+.scaleRow {
+  display: var(--legend-out);
+  align-items: center;
+  gap: 8px 14px;
+  padding-inline: 12px;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  line-height: 1.35;
+}
+.scaleKey { flex: none; width: calc((100% - (var(--cols) - 1) * 8px) / var(--cols) - 24px); min-width: 120px; }
+.scaleKey .scaleAxis { margin-top: 0; }
+.scaleKey .lane::after {
+  content: "";
+  position: absolute;
+  inset: -3px auto -3px var(--zero);
+  width: 2px;
+  translate: -50% 0;
+  background: var(--line-strong);
+}
+.scaleText { min-width: 0; }
+.scaleRowTitle { color: var(--text-body); font-weight: 650; }
 
 .tile {
   display: flex;
@@ -186,12 +224,26 @@ a.key:hover .keyGo { color: var(--primary); translate: 2px 0; }
   animation: tile-in 420ms var(--ease-brand) both;
   animation-delay: calc(60ms + var(--i, 0) * 30ms);
 }
-/* Uçlar vurgulu: yönün yıkama tonu ve ince yön çerçevesi. */
-.tile[data-rank="top"][data-dir="up"],
-.tile[data-rank="bottom"][data-dir="up"] { background: var(--up-wash); border-color: color-mix(in oklab, var(--up) 30%, transparent); }
-.tile[data-rank="top"][data-dir="down"],
-.tile[data-rank="bottom"][data-dir="down"] { background: var(--down-wash); border-color: color-mix(in oklab, var(--down) 30%, transparent); }
-.tile[data-rank][data-dir="flat"] { border-color: var(--line-strong); }
+/* Vurgu: yönün yıkama tonu ve ince yön çerçevesi. Karışık grafikte iki uç,
+   tek yönlü grafikte yalnız hikâyenin ucu (`emphasis`, 31 Ekim); öteki uç
+   yalnız etiketini taşır. */
+.tile[data-emph][data-dir="up"] { background: var(--up-wash); border-color: color-mix(in oklab, var(--up) 30%, transparent); }
+.tile[data-emph][data-dir="down"] { background: var(--down-wash); border-color: color-mix(in oklab, var(--down) 30%, transparent); }
+.tile[data-emph][data-dir="flat"] { border-color: var(--line-strong); }
+/* Ucun etiketi: neden vurgulu ("En Çok Düşen"). Yön renginde küçük satır. */
+.tileRole {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: -4px;
+  color: var(--text-muted);
+  font-size: var(--text-nano);
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.tileRole[data-dir="up"] { color: var(--up); }
+.tileRole[data-dir="down"] { color: var(--down); }
 .tile[data-link]:hover { background: var(--primary-tint); border-color: var(--primary-faint); }
 .tile[data-link]:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
 

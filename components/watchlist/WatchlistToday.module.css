@@ -59,8 +59,34 @@
 .fullLoading { display: flex; flex-direction: column; gap: 9px; min-height: 360px; }
 .stripSkeleton { height: 112px; margin-bottom: 6px; border-radius: var(--radius-lg); }
 
+/* ---- Kısa notun çizimi: S&P 500'e karşı (WatchlistToday.tsx → VersusMarket) ----
+   Kulvar --line-soft, sıfır --line-strong, şerit 5 piksel ve işaretin
+   renginde; endeks her satırı kesen kesik çizgi. Şerit sıfırdan büyür. */
+.versus { display: grid; gap: 8px; margin: 12px 0 0; padding-top: 11px; border-top: 1px solid var(--line-soft); }
+.versusRows { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.versusRows li { display: grid; grid-template-columns: 3.6em minmax(0, 1fr) max-content; align-items: center; gap: 10px; }
+.versusSymbol { font-family: var(--font-mono); font-size: var(--text-small); font-weight: 700; color: var(--text-strong); }
+.versusLane { position: relative; height: 15px; }
+.versusLane::before { content: ""; position: absolute; inset: 5px 0; border-radius: 3px; background: var(--line-soft); }
+.versusLane::after { content: ""; position: absolute; left: 50%; top: 2px; bottom: 2px; width: 1px; background: var(--line-strong); }
+.versusBar {
+  position: absolute; top: 5px; height: 5px; border-radius: 3px; background: var(--text-muted);
+  animation: wt-grow .7s var(--ease-brand) both; animation-delay: calc(120ms + var(--i, 0) * 80ms);
+}
+.versusBar[data-tone="up"] { background: var(--up); }
+.versusBar[data-tone="down"] { background: var(--down); }
+.versusBar[data-side="left"] { transform-origin: right center; }
+.versusBar[data-side="right"] { transform-origin: left center; }
+.versusMarket { position: absolute; top: -4px; bottom: -4px; width: 0; border-left: 1.5px dashed var(--text-body); translate: -0.75px 0; z-index: 1; }
+.versusValue { min-width: 5.4em; text-align: right; font-size: var(--text-small); font-weight: 800; color: var(--text-strong); }
+.versusValue[data-tone="up"] { color: var(--up); }
+.versusValue[data-tone="down"] { color: var(--down); }
+.versusKey { display: inline-flex; align-items: center; gap: 7px; font-size: var(--text-tiny); font-weight: 650; color: var(--text-muted); }
+.versusKey i { width: 14px; height: 0; border-top: 1.5px dashed var(--text-body); }
+@keyframes wt-grow { from { transform: scaleX(0); } }
+
 @keyframes wt-rise { from { opacity: 0; translate: 0 6px; } }
 @media (prefers-reduced-motion: reduce) {
-  .compactText, .mover, .lane::after { animation: none !important; }
+  .compactText, .mover, .lane::after, .versusBar { animation: none !important; }
   .compactShell, .compactShell[data-gone] { transition: none; }
 }

@@ -80,8 +80,15 @@ export type CompanyCardRecord = {
   basis?: string;
   /** Başlıktaki hap (teknik görüş gibi); `tone` hazır sınıf adı. */
   badge?: { text: string; tone: string };
-  /** Yüzeye özgü ek satırlar (temadaki pay, hacim, gün aralığı). */
+  /** Yüzeye özgü ek satırlar (temadaki pay, hacim). */
   facts?: [string, string][];
+  /**
+   * Gün aralığı ÇİZGİSİ (31 Ekim, sahibinin isteği: "daha görsel"): en
+   * düşükten en yükseğe kulvar, fiyatın yeri bir imleç (`pos` 0–1). Gün
+   * aralığı bir "a – b" metin satırıydı; fiyatın aralığın neresinde
+   * kapandığı okunmuyordu.
+   */
+  range?: { pos: number; low: string; high: string; label: string };
   /** Alt künye — yayın damgası ya da bir cümle. */
   foot?: string;
 };
@@ -463,6 +470,19 @@ function CompanyCardView({ card, labels }: { card: CompanyCardRecord; labels: Co
               {card.amount !== undefined && <small className="numeral">{card.amount}</small>}
             </span>
           )}
+        </div>
+      )}
+
+      {card.range && (
+        <div className={styles.range}>
+          <span className={styles.rangeLabel}>{card.range.label}</span>
+          <span className={styles.rangeLane} aria-hidden>
+            <i style={{ left: `${Math.min(100, Math.max(0, card.range.pos * 100))}%` }} data-dir={card.dir} />
+          </span>
+          <span className={cn("numeral", styles.rangeEnds)}>
+            <span>{card.range.low}</span>
+            <span>{card.range.high}</span>
+          </span>
         </div>
       )}
 

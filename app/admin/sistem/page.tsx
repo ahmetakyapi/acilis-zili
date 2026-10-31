@@ -123,6 +123,16 @@ function bySeverity(checks: HealthCheck[]): HealthCheck[] {
 
 const needsAttention = (tone: HealthTone) => tone === "warn" || tone === "down";
 
+/**
+ * Panelin tepe şeridi (31 Ekim): grubun en ağır sorunlu tonu, yoksa yeşil.
+ * Grup okunamadıysa (boş) şerit yok — okunamayan grup "sağlıklı" değildir.
+ */
+function panelTone(checks: HealthCheck[]): HealthTone | null {
+  if (checks.length === 0) return null;
+  const worst = bySeverity(checks)[0].tone;
+  return needsAttention(worst) ? worst : "ok";
+}
+
 /** Sağlık kutusunun künyesinde adı yazılan en fazla satır — fazlası sayıyla. */
 const NAMED_PROBLEMS = 3;
 
@@ -337,14 +347,14 @@ async function Checks() {
           biri durduğunda ana sayfa eski metni göstermeye devam ediyor.
           `items-start`: kısa liste uzun olanın boyuna gerilmiyor. */}
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2 lg:items-start">
-        <AdminPanel id="rutinler">
+        <AdminPanel id="rutinler" tone={panelTone(routines)}>
           <AdminPanelTitle hint="İçeriği Yazan claude.ai Görevleri · Saatler TR">
             Rutinler
           </AdminPanelTitle>
           <CheckList items={routines} />
         </AdminPanel>
 
-        <AdminPanel id="veri">
+        <AdminPanel id="veri" tone={panelTone(data)}>
           <AdminPanelTitle hint="Sağlayıcı Verisi ve Takvimlerin Güncelliği">
             Veri Sağlığı
           </AdminPanelTitle>
@@ -358,7 +368,7 @@ async function Checks() {
           44–62 piksel boş kalıyordu (1440 / 1024, ölçüldü). Şimdi tam
           genişlikte tek sıra: nokta, ad, değer. Eksik anahtar kendi
           tonunun zeminine geçiyor ve notu şeridin altında. */}
-      <AdminPanel id="anahtarlar">
+      <AdminPanel id="anahtarlar" tone={panelTone(keys)}>
         <AdminPanelTitle hint="Ortam Değişkeni Tanımlı mı · Değer Hiçbir Yerde Gösterilmez">
           Anahtarlar
         </AdminPanelTitle>

@@ -68,7 +68,7 @@ export function heatOf(value: number): number {
   return HEAT_MIN + (HEAT_MAX - HEAT_MIN) * clamp01(Math.abs(value));
 }
 
-/* ------------------------------------------------------ tepedeki cümle */
+/* ------------------------------------------------- tepedeki kısa okumalar */
 
 export type LeadFacts = {
   count: number;
@@ -81,60 +81,101 @@ export type LeadFacts = {
 };
 
 export type LeadTemplates = {
-  /** "{sector} portföyde {share}, S&P 500'de {bench}" */
+  /** "{sector}: portföyde {share}, S&P 500'de {bench}." */
   sector: string;
-  /** "{count} pozisyon eşit ağırlıklı {effective} pozisyon kadar dağınık" */
+  /** "{count} pozisyon, eşit ağırlıklı {effective} pozisyon gibi dağılıyor." */
   spread: string;
-  /** "tek pozisyon: {symbol}" */
+  /** "Portföy tek pozisyon: {symbol}." */
   single: string;
-  /** "geçen yılki oynaklık S&P 500'ün {ratio} katı" */
+  /** "Oynaklık S&P 500'ün {ratio} katı." */
   volatility: string;
-  /** Sektör kısmıyla gerisinin arası: "; " */
-  join: string;
-  /** Dağılım ile oynaklığın arası: ", " */
-  joinRisk: string;
 };
 
 export type LeadFormat = {
   percent: (value: number) => string;
   measure: (value: number, digits: number) => string;
   sector: (key: string) => string;
-  /** Dile göre büyük harf ("i" → "İ" yalnız Türkçede); `capitalize` kullanılmaz. */
-  upper: (text: string) => string;
 };
 
-function fill(template: string, values: Record<string, string | number>): string {
-  return Object.entries(values).reduce((text, [key, value]) => text.replaceAll(`{${key}}`, String(value)), template);
+/** Okumanın bir parçası: `strong` = şablona giren sayı ya da ad (kalın basılır). */
+export type LeadPart = { text: string; strong: boolean };
+export type LeadFact = { key: "sector" | "spread" | "volatility"; parts: LeadPart[] };
+
+const PLACEHOLDER = /^\{([a-z]+)\}$/i;
+
+/** Şablonu parçalara böler: yer tutucuların değeri `strong`, aradaki metin düz. */
+export function fillParts(template: string, values: Record<string, string | number>): LeadPart[] {
+  return template
+    .split(/(\{[a-z]+\})/i)
+    .filter((piece) => piece !== "")
+    .map((piece) => {
+      const key = PLACEHOLDER.exec(piece)?.[1];
+      return key !== undefined && key in values ? { text: String(values[key]), strong: true } : { text: piece, strong: false };
+    });
 }
 
+/** Okumanın düz metni (ekran okuyucu ve test). */
+export const leadText = (fact: LeadFact) => fact.parts.map((part) => part.text).join("");
+
 /**
- * Ekranın tepesindeki TEK CÜMLE — şablon + veri, uydurma yok.
+ * Ekranın tepesindeki KISA OKUMALAR — şablon + veri, uydurma yok.
  *
- * Cümle yalnız ölçüyü söyler: en ağır sektör ve S&P 500'deki payı, kaç
- * pozisyonun kaç eşit pozisyon gibi davrandığı, oynaklığın endekse oranı.
- * Yargı ve öneri kipi YOK ("fazla", "azalt", "çeşitlendir" yazılmaz) —
- * SPK çizgisi (AnalysisScreen.tsx başındaki not; lib/advice-guard.ts aynı
- * kalıpları Claude'un metninde arıyor, testte bu cümle de ondan geçiyor).
- * Oran S&P oynaklığı sıfırsa basılmaz (bölme anlamsız).
+ * 31 EKİM (sahibinin isteği: tepedeki özet okunmuyordu). Bandın altında
+ * noktalı virgülle bağlanmış tek uzun kalın cümle vardı (1440'ta iki
+ * satır, 160 karakter), altında küçük gri hesap künyesi. Şimdi en fazla
+ * üç kısa cümle, her biri kendi ikonuyla ve sayısı kalın: en ağır sektör
+ * ve S&P 500'deki payı, kaç pozisyonun kaç eşit pozisyon gibi davrandığı,
+ * oynaklığın endekse oranı. Künye "Nasıl Hesaplanır" katında.
+ *
+ * Yalnız ölçüyü söyler. Yargı ve öneri kipi YOK ("fazla", "azalt",
+ * "çeşitlendir" yazılmaz) — SPK çizgisi (AnalysisScreen.tsx başındaki
+ * not; lib/advice-guard.ts aynı kalıpları Claude'un metninde arıyor,
+ * testte bu cümleler de ondan geçiyor). Oran S&P oynaklığı sıfırsa
+ * basılmaz (bölme anlamsız); ölçüsü olmayan cümle düşer.
  */
-export function composeAnalysisLead(facts: LeadFacts, templates: LeadTemplates, format: LeadFormat): string {
-  const spread =
-    facts.count <= 1
-      ? fill(templates.single, { symbol: facts.largest.symbol })
-      : fill(templates.spread, { count: facts.count, effective: format.measure(facts.effective, 1) });
-  const ratio = facts.volatility ? ratioTo(facts.volatility.portfolio, facts.volatility.benchmark) : null;
-  const vol = ratio !== null ? fill(templates.volatility, { ratio: format.measure(ratio, 1) }) : null;
-  const rest = vol ? `${spread}${templates.joinRisk}${vol}` : spread;
-  const head = facts.sector
-    ? fill(templates.sector, {
+export function composeAnalysisFacts(facts: LeadFacts, templates: LeadTemplates, format: LeadFormat): LeadFact[] {
+  const out: LeadFact[] = [];
+  if (facts.sector) {
+    out.push({
+      key: "sector",
+      parts: fillParts(templates.sector, {
         sector: format.sector(facts.sector.key),
         share: format.percent(facts.sector.portfolio),
         bench: format.percent(facts.sector.benchmark),
-      })
-    : null;
-  const sentence = head ? `${head}${templates.join}${rest}` : rest;
-  return `${format.upper(sentence.charAt(0))}${sentence.slice(1)}.`;
+      }),
+    });
+  }
+  out.push({
+    key: "spread",
+    parts:
+      facts.count <= 1
+        ? fillParts(templates.single, { symbol: facts.largest.symbol })
+        : fillParts(templates.spread, { count: facts.count, effective: format.measure(facts.effective, 1) }),
+  });
+  const ratio = facts.volatility ? ratioTo(facts.volatility.portfolio, facts.volatility.benchmark) : null;
+  if (ratio !== null) out.push({ key: "volatility", parts: fillParts(templates.volatility, { ratio: format.measure(ratio, 1) }) });
+  return out;
 }
+
+/* ------------------------------------------------ etkin pozisyon kutuları */
+
+/** Kutu dizisinin tavanı: daha çok pozisyonda kutu 6 pikselin altına iniyor (390'da kart 155 piksel). */
+export const PIP_MAX = 20;
+
+/**
+ * Etkin pozisyon sayısının KUTU DİZİSİ (31 Ekim). Eski halka "etkin /
+ * toplam" oranını çiziyordu; yoğun portföyde (5 pozisyon, 2,7 etkin) ince
+ * bir yay kalıyor, kart boş görünüyordu. Şimdi her pozisyon bir kutu,
+ * etkin sayı kadarı dolu, kesirli kısım son kutuda kısmi dolgu: "5 kutunun
+ * 2,7'si dolu" okumadan görülüyor. Değerler 0-1 arası dolgu; pozisyon
+ * sayısı `PIP_MAX`'ı aşarsa null (ekran tek kulvara düşer).
+ */
+export function effectivePips(count: number, effective: number): number[] | null {
+  if (!(count > 0) || count > PIP_MAX) return null;
+  const filled = Math.min(count, Math.max(0, effective));
+  return Array.from({ length: count }, (_, index) => clamp01(filled - index));
+}
+
 
 /** En ağır sektör: portföy payı en büyük olan; satır yoksa null. */
 export function heaviestSector(

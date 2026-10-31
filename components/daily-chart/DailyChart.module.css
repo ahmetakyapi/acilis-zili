@@ -7,26 +7,50 @@
    Arşiv kartı ve ana sayfa paneli: grafiğin şekli, okunacak sayılar değil.
    Kulvar 5 piksel `--line-soft` üstünde — sitenin ince grafik dili
    (MarketTexture.module.css). */
-.thumb { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
-.thumbRow { display: grid; grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: var(--text-tiny); line-height: 1.2; }
-.thumbName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-body); }
-.thumbValue { font-weight: 600; color: var(--text-strong); }
+/* Satır (31 Ekim): [logo] [ad + sembol] [değer] üstte, kulvar altta ad
+   sütunundan değerin sonuna. Ad kesilmez, gerekirse iki satıra iner. */
+.thumb { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.thumbRow {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  grid-template-areas: "mark name value" ". lane lane";
+  align-items: center;
+  gap: 6px 10px;
+  font-size: var(--text-small);
+  line-height: 1.25;
+  animation: thumb-in 360ms var(--ease-brand) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+.thumbMark { grid-area: mark; display: grid; place-items: center; width: 22px; height: 22px; }
+.thumbIcon { display: grid; place-items: center; width: 22px; height: 22px; border-radius: var(--radius-sm); background: var(--surface-sunken); color: var(--text-body); }
+.thumbName { grid-area: name; min-width: 0; color: var(--text-strong); font-weight: 600; overflow-wrap: anywhere; }
+.thumbCode { margin-left: 6px; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-nano); font-weight: 500; white-space: nowrap; }
+.thumbValue { grid-area: value; font-weight: 750; color: var(--text-strong); white-space: nowrap; }
 .thumbValue[data-tone="up"] { color: var(--up); }
 .thumbValue[data-tone="down"] { color: var(--down); }
+.thumbRow > .lane { grid-area: lane; }
 .lane { position: relative; height: 5px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
-.bar { position: absolute; inset-block: 0; border-radius: 999px; background: var(--up); }
+.bar { position: absolute; inset-block: 0; border-radius: 999px; background: var(--up); transform-origin: left center; animation: thumb-bar 520ms var(--ease-brand) both; animation-delay: calc(80ms + var(--i, 0) * 40ms); }
 .bar[data-tone="down"] { background: var(--down); }
+.bar[data-tone="neutral"] { background: var(--primary-soft); }
+.bar[data-from="right"] { transform-origin: right center; }
 /* İki yönlü küçük hâlde sıfır çizgisi (25 Ekim): kulvar `overflow: hidden`
    olduğu için çizgi kulvarın içinde, çubuğun üstünde. */
 .lane[data-zero]::after { content: ""; position: absolute; inset-block: 0; left: var(--zero); width: 1.5px; translate: -50% 0; background: var(--line-strong); }
 /* Pay şeridi tek yığın; dilimler arasında 2 piksel zemin (ArticleBody `pay`). */
 .shareStrip { display: flex; gap: 2px; height: 10px; border-radius: 999px; overflow: hidden; }
 .shareStrip > span { display: block; height: 100%; }
-/* Aradaki satırların sayısı (31 Ekim): "+6" satır başında yalnız
-   duruyordu ve bir değer gibi okunuyordu. Artık kesik bir ara çizgisinin
-   ortasında küçük bir hap — "burada satırlar katlandı". */
-.more { display: flex; align-items: center; gap: 8px; font-size: var(--text-nano); font-weight: 650; color: var(--text-muted); }
+/* Katlanan satırlar (31 Ekim): "+6" satır başında yalnız duruyordu ve bir
+   değer gibi okunuyordu; sonra kesik çizginin ortasında "+3" oldu, o da
+   neyin üç tane olduğunu söylemiyordu. Artık sözle: "3 Kalem Daha". Karışık
+   grafikte iki ucun arasında (kesim ortadan), tek yönlüde listenin sonunda
+   ve sola yaslı. */
+.more { display: flex; align-items: center; gap: 8px; font-size: var(--text-tiny); font-weight: 650; color: var(--text-muted); }
 .more::before, .more::after { content: ""; flex: 1; border-top: 1px dashed var(--line); }
+.more[data-end] { padding-left: 32px; }
+.more[data-end]::before { display: none; }
+@keyframes thumb-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes thumb-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* ---------------------------------------------------------------- ARŞİV
    Izgara: 390'da tek sütun, 768'de iki, 1280'de üç. Kart tıklanabilir
@@ -49,6 +73,7 @@
 .extremes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .extreme { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .extreme:last-child:not(:first-child) { align-items: flex-end; text-align: right; }
+.extremeRole { font-size: var(--text-nano); font-weight: 650; color: var(--text-muted); line-height: 1.2; }
 .extremeName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-tiny); color: var(--text-muted); font-weight: 600; }
 .extremeValue { font-size: var(--text-lead); font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
 
@@ -104,4 +129,5 @@ a.stepBtn:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 
    eğrisizdi); hareketi azaltan okuyucuda renk değişimi anında. */
 @media (prefers-reduced-motion: reduce) {
   .card, .navLink, .homeTitle, .stepBtn, .toolBtn, .openLink { transition: none; }
+  .thumbRow, .bar { animation: none; }
 }

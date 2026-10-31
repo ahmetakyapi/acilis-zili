@@ -63,6 +63,57 @@
   .cardGrid.cardGrid .card:hover > section { border-color:color-mix(in srgb, var(--ch) 45%, transparent); background:color-mix(in srgb, var(--ch) 5%, var(--premium-surface)); }
 }
 
+/* ---- Son satır: yetim kart yok (31 Ekim) ----
+   On iki izli ızgara; kart sütun sayısına göre 6 / 4 / 3 iz tutuyor. Bandın
+   son satırında kalan kartlar satırı paylaşıyor: tek kart 12, iki kart
+   6+6, üç kart 4+4+4. Seçici "satırın ilk kartı ve sondan k'ıncı" demek;
+   sunucu satır hesabı yapmıyor, kural her genişlikte kendi sütun sayısıyla
+   çalışıyor. Ölçüm (1440, önce → sonra): yedi bantın beşinde boş kalan
+   1–3 sütun → 0. */
+@media (min-width:640px) {
+  .cardGrid.cardGrid { grid-template-columns:repeat(12,minmax(0,1fr)); }
+  .cardGrid > * { grid-column:span 6; }
+}
+@media (min-width:640px) and (max-width:1023px) {
+  .cardGrid > :nth-child(2n+1):last-child { grid-column:1 / -1; }
+}
+@media (min-width:1024px) and (max-width:1279px) {
+  .cardGrid > * { grid-column:span 4; }
+  .cardGrid > :nth-child(3n+1):last-child { grid-column:1 / -1; }
+  .cardGrid > :nth-child(3n+1):nth-last-child(2),
+  .cardGrid > :nth-child(3n+1):nth-last-child(2) + * { grid-column:span 6; }
+}
+@media (min-width:1280px) {
+  .cardGrid > * { grid-column:span 3; }
+  .cardGrid > :nth-child(4n+1):last-child { grid-column:1 / -1; }
+  .cardGrid > :nth-child(4n+1):nth-last-child(2),
+  .cardGrid > :nth-child(4n+1):nth-last-child(2) + * { grid-column:span 6; }
+  .cardGrid > :nth-child(4n+1):nth-last-child(3),
+  .cardGrid > :nth-child(4n+1):nth-last-child(3) ~ * { grid-column:span 4; }
+}
+/* Satırı boydan kaplayan tek kart YATAY: başlık, açıklama ve künye üç
+   sütunda. Dikey kalsaydı 1320 piksellik bir kartta açıklama tek satır,
+   sağ yarı boş olurdu. Alt ızgara burada bırakılıyor (satırda kardeş yok):
+   üç satırlık iskelet tek satıra iniyor, künyenin üst kuralı sol kurala
+   dönüyor. Seçici her genişlikte "boydan kaplayan" kartla aynı. */
+@media (min-width:640px) and (max-width:1023px) {
+  .cardGrid > .card:nth-child(2n+1):last-child { grid-row:auto; display:flex; }
+  .cardGrid > .card:nth-child(2n+1):last-child > section { flex:1; grid-row:auto; grid-template-rows:none; grid-template-columns:minmax(0,1fr) minmax(0,1.25fr); align-items:center; column-gap:24px; }
+  .cardGrid > .card:nth-child(2n+1):last-child .cardFoot { grid-column:1 / -1; }
+}
+@media (min-width:1024px) and (max-width:1279px) {
+  .cardGrid > .card:nth-child(3n+1):last-child { grid-row:auto; display:flex; }
+  .cardGrid > .card:nth-child(3n+1):last-child > section { flex:1; grid-row:auto; grid-template-rows:none; grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) 13rem; align-items:center; column-gap:28px; }
+  .cardGrid > .card:nth-child(3n+1):last-child > section > div:first-child { align-items:center; }
+  .cardGrid > .card:nth-child(3n+1):last-child .cardFoot { align-self:stretch; padding:0 0 0 20px; border-top:0; border-left:1px solid var(--line-soft); }
+}
+@media (min-width:1280px) {
+  .cardGrid > .card:nth-child(4n+1):last-child { grid-row:auto; display:flex; }
+  .cardGrid > .card:nth-child(4n+1):last-child > section { flex:1; grid-row:auto; grid-template-rows:none; grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) 13rem; align-items:center; column-gap:28px; padding-block:18px; }
+  .cardGrid > .card:nth-child(4n+1):last-child > section > div:first-child { align-items:center; }
+  .cardGrid > .card:nth-child(4n+1):last-child .cardFoot { align-self:stretch; padding:0 0 0 20px; border-top:0; border-left:1px solid var(--line-soft); }
+}
+
 /* Seviye noktaları — bölüm tonunda (LevelPips, app/(app)/rehber/page.tsx). */
 .pips { display:inline-flex; align-items:center; gap:2px; }
 .pips > i { width:6px; height:6px; border-radius:50%; background:color-mix(in srgb, var(--ch) 28%, transparent); }
@@ -100,3 +151,15 @@
   .hero.hero.hero { gap:12px; }
   .topicRow, .topicSticky > .topicRow { padding-block:8px; }
 }
+
+/* ---- Yazı sayfası kapağı: bölüm tonu (31 Ekim) ----
+   Şerit kartın üst kenarının kendisi: köşe yarıçapını izleyen 3 piksellik
+   kenar, kırpma gerektirmiyor (kapakta `overflow:hidden` yok; paylaş
+   paneli kapağın içinde açılıyor — StoryDetail.module.css). Künye bölümün
+   ikonu ve adı; metin metin renginde, ikon tonda, üzerine gelince
+   etkileşim mavisi. */
+.coverTone.coverTone { border-top:3px solid var(--ch, var(--primary-soft)); }
+.coverChapter { display:inline-flex; min-height:24px; align-items:center; gap:6px; font-size:12px; font-weight:650; color:var(--text-strong); transition:color .2s var(--ease-brand); }
+.coverChapter > svg { flex-shrink:0; color:var(--ch); }
+.coverChapter:hover { color:var(--primary-ink); }
+.coverChapter:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:4px; }

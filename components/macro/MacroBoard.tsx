@@ -8,11 +8,14 @@ import {
   useId,
   useMemo,
   useState,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 import { useMotionPreference } from "@/components/motion/useMotionPreference";
 import { anchorOf, MACRO_GROUPS, type MacroGroupKey } from "./macro-groups";
 import { formatMacroValue, type MacroValueFormat } from "./macro-format";
+import { MacroGauges, type GaugeView } from "./MacroGauges";
+import { balancedSpans } from "@/lib/macro-visual";
 import styles from "./MacroExperience.module.css";
 
 /* --------------------------------------------------------------------------
@@ -85,8 +88,8 @@ export type BoardSeries = {
 
 export type BoardData = {
   series: BoardSeries[];
-  /** Tepedeki tek cümle ve altındaki dönem künyesi (page.tsx → leadOf). */
-  lead: { text: string; stamp: string } | null;
+  /** Kapağın dört ölçüsü (page.tsx → gaugesOf); 31 Ekim'e dek tek cümleydi. */
+  gauges: GaugeView[];
 };
 
 export type BoardLabels = {
@@ -99,6 +102,8 @@ export type BoardLabels = {
   history: string;
   historyEmpty: string;
   all: string;
+  /** Ölçü bandının başlığı ("Bir Bakışta"). */
+  glance: string;
 };
 
 /** Değişim bu kadarın altındaysa "Değişmedi" (FRED en çok iki hane yayımlar). */
@@ -512,11 +517,15 @@ function Spark({ series }: { series: BoardSeries }) {
   );
 }
 
+/** Izgaranın kolon tavanı: geniş ekran, tablet, telefon (CSS kırılımlarıyla aynı). */
+const TILE_COLUMNS = { wide: 6, mid: 3, narrow: 2 } as const;
+
 /**
  * Özet ızgarası: kapakta, başlığın hemen altında, her gösterge bir kart.
  *
- * AYNI HAT. Kart ızgaranın üç SATIRINI alt ızgara (`subgrid`) olarak
- * kullanıyor: başlık/künye, değer/değişim, mini çizgi. Bir satırdaki
+ * AYNI HAT. Kart ızgaranın dört SATIRINI alt ızgara (`subgrid`) olarak
+ * kullanıyor: başlık/künye, değer/değişim, hedefle ilişki, mini çizgi ve
+ * çizginin etiketi (31 Ekim'e dek üç satırdı; ilişki hapı künyedeydi). Bir satırdaki
  * kartlardan birinin adı iki satıra kırıldığında o satırın bütün kartları
  * aynı başlık yüksekliğini alıyor ve değerler aynı hatta biter (CLAUDE.md
  * "yan yana duran ölçüler aynı hatta biter").
@@ -528,27 +537,35 @@ function Spark({ series }: { series: BoardSeries }) {
  */
 export function MacroSummary({ empty }: { empty: ReactNode }) {
   const { board, labels, jump } = useSelection();
-  const { series, lead } = use(board);
+  const { series, gauges } = use(board);
   if (series.length === 0) return <>{empty}</>;
+  /* Kart başına üç kırılımın payı (`balancedSpans`, karar kaydı
+     lib/macro-visual.ts): yetim kart ve boş hücre yok. */
+  const spans = {
+    wide: balancedSpans(series.length, TILE_COLUMNS.wide),
+    mid: balancedSpans(series.length, TILE_COLUMNS.mid),
+    narrow: balancedSpans(series.length, TILE_COLUMNS.narrow),
+  };
   return (
     <>
-    {/* TEK CÜMLE (25 Ekim): ızgaranın üstünde, veriden kurulmuş özet;
-        dönemler altındaki künyede (page.tsx → leadOf). */}
-    {lead && (
-      <div className={styles.lead}>
-        <p>{lead.text}</p>
-        <p className="numeral">{lead.stamp}</p>
-      </div>
-    )}
+    {/* DÖRT ÖLÇÜ (31 Ekim): ızgaranın üstünde, veriden kurulmuş çizimler
+        ve kısa cümleler (page.tsx → gaugesOf). 25 Ekim'de burada tek bir
+        kalın cümle ve altında dönem künyesi vardı. */}
+    <MacroGauges title={labels.glance} gauges={gauges} />
     <section className={styles.summary} aria-labelledby="makro-ozet">
       <h2 id="makro-ozet" className={styles.summaryTitle}>{labels.all}</h2>
       <div className={styles.summaryGrid} data-motion-stagger>
-        {series.map((item) => (
+        {series.map((item, index) => (
           <a
             key={item.id}
             href={`#${anchorOf(item.group)}`}
             className={styles.tile}
             data-summary-tile={item.id}
+            style={{
+              "--span-wide": spans.wide[index],
+              "--span-mid": spans.mid[index],
+              "--span-narrow": spans.narrow[index],
+            } as CSSProperties}
             onClick={(event) => {
               if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
               event.preventDefault();
@@ -557,16 +574,31 @@ export function MacroSummary({ empty }: { empty: ReactNode }) {
           >
             <span className={styles.tileHead}>
               <span className={styles.tileTitle}>{item.title}</span>
-              <span className={styles.tileMeta}>
-                <span className="numeral">{item.period}</span>
-                {item.status && <span className={styles.status} data-alert={isAlert(item) ? "" : undefined}>{item.status}</span>}
-              </span>
+              <span className={`${styles.tileMeta} numeral`}>{item.period}</span>
             </span>
+            {/* HİYERARŞİ (31 Ekim): değer, yanında değişim; altında AYRI
+                satırda hedefle/eşikle ilişki. Önce durum hapı dönemin
+                satırındaydı ve kartın en üstünde değerden önce okunuyordu. */}
             <span className={styles.tileFigure} data-summary-figure>
               <b className="numeral">{formatMacroValue(item.latest, item.format)}</b>
               {item.delta !== null && <Delta series={item} labels={labels} />}
             </span>
-            <Spark series={item} />
+            <span className={styles.tileStatus}>
+              {item.status && <span className={styles.status} data-alert={isAlert(item) ? "" : undefined}>{item.status}</span>}
+            </span>
+            <span className={styles.tileChart}>
+              <Spark series={item} />
+              {/* Kesikli çizginin ETİKETİ (31 Ekim): mini çizgide hedef ve
+                  eşik çizgisi adsızdı; büyük grafikteki künyenin aynısı,
+                  çizginin örneğiyle, çizimin altında (çizginin üstüne
+                  yazılsa dar kartta seriyle çakışıyordu). */}
+              {item.threshold && (
+                <span className={`${styles.tileKey} numeral`}>
+                  <i aria-hidden />
+                  {item.threshold.label}
+                </span>
+              )}
+            </span>
           </a>
         ))}
       </div>

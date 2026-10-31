@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { DayFlowLoader } from "@/components/today/DayFlow";
-import { loadDayFlow, loadSharedDayFlow } from "@/lib/day-flow-data";
+import { loadDayFlow, loadSharedDayFlow, loadSharedOtherDay } from "@/lib/day-flow-data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 
 /**
@@ -17,5 +17,14 @@ export async function RailSection({ t, locale, heading, otherHeadings }: { t: Di
   const session = await auth();
   const userId = session?.user?.id;
   const initial = await (userId ? loadDayFlow(locale, userId) : loadSharedDayFlow(locale)).catch(() => null);
-  return <DayFlowLoader key={locale} initial={initial} locale={locale} labels={t.dayFlow} railLabels={t.dayRail} heading={heading} otherHeadings={otherHeadings} />;
+  /* BOŞ GÜNDE SIRADAKİ İŞLEM GÜNÜ (31 Ekim; gerekçe DayFlow → DayPreview).
+     Yalnız bugün gerçekten boşken (eşiğin altında bilanço da yoksa) ve
+     okların açtığı oturumsuz görüntünün aynısı — beş dakikalık ortak not,
+     oturumlu okuyucuda takip işaretleri o günü açınca gelir. Hata önizlemeyi
+     düşürür, sayfayı değil. */
+  const preview =
+    initial && initial.events.length === 0 && initial.hiddenEarnings === 0 && initial.nextDate
+      ? await loadSharedOtherDay(locale, initial.nextDate).catch(() => null)
+      : null;
+  return <DayFlowLoader key={locale} initial={initial} preview={preview} locale={locale} labels={t.dayFlow} railLabels={t.dayRail} heading={heading} otherHeadings={otherHeadings} />;
 }

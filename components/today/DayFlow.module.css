@@ -238,6 +238,56 @@
 .empty p { margin-top:5px; max-width:65ch; color:var(--text-body); font-size:13px; line-height:1.65; }
 .emptyLink { display:inline-flex; align-items:center; gap:3px; color:var(--primary-ink); font-weight:600; white-space:nowrap; }
 .emptyLink:hover { color:var(--primary-hover); }
+/* SIRADAKİ GÜNE BAKIŞ (31 Ekim) — gerekçe DayFlow.tsx → DayPreview.
+   Üst kıl çizgi yok: künye şeridinin alt çizgisi 15 piksel yukarıda ve
+   boş durumdaki ikinci çizgi 1440'ta çift hat gibi okunuyordu.
+   Üç kat: başlık + tek cümle, saat cetveli, olay satırları. Cetvel
+   kahramandaki zil şeridinin dili (SessionRail.module.css): çukur oluk,
+   asıl seans mavinin %30'u; burada daha ince (5 piksel, CLAUDE.md "grafik
+   dili ince") çünkü sayfanın ana çizimi o değil. Satırlar çizelgenin
+   (`.tlRow`) numaralı düğümünü taşıyor, kartlar tonla ayrışıyor.
+   HAREKET BİR KEZ: oluk soldan kırpmayla çizilir (700 ms), noktalar
+   saat sırasıyla belirir, satırlar 70 ms arayla 6 piksel yükselir — hepsi
+   `--ease-brand`, opaklık ve dönüşüm; yerleşim oynamaz. */
+.preview { margin-top:4px; padding-top:12px; }
+.previewHead { display:flex; gap:14px; align-items:flex-start; }
+.previewIcon { display:grid; place-items:center; flex:none; width:38px; height:38px; border-radius:12px; background:var(--primary-tint); color:var(--primary); }
+.previewHead h3 { color:var(--text-strong); font-size:16px; line-height:1.4; font-weight:650; }
+.previewHead p { margin-top:3px; color:var(--text-body); font-size:13px; line-height:1.6; }
+.ruler { position:relative; height:46px; margin:16px 0 4px 52px; }
+.rulerTrack { position:absolute; inset:18px 0 auto; height:5px; overflow:hidden; border-radius:3px; background:var(--surface-sunken); animation:preview-draw 700ms var(--ease-brand) 120ms backwards; }
+.rulerRegular { position:absolute; inset-block:0; background:color-mix(in srgb, var(--primary) 30%, transparent); }
+/* Nokta olayın saatinde: 18 piksellik numaralı yuva, oluğun üstünde
+   ortalı. Numara aşağıdaki satırla eşleşiyor; olayın türü satırda yazılı,
+   noktada ikinci bir renk kodu yok. */
+.rulerDot { position:absolute; top:11px; display:grid; place-items:center; width:20px; height:20px; border:1px solid var(--primary); border-radius:50%; background:var(--premium-surface); color:var(--primary-ink); transform:translateX(-50%); animation:preview-dot 360ms var(--ease-brand) calc(420ms + var(--i, 0) * 90ms) backwards; }
+.rulerDot b { font-size:10px; font-weight:700; line-height:1; }
+.rulerEnd { position:absolute; bottom:0; color:var(--text-muted); font-size:var(--text-tiny); font-weight:500; line-height:1.2; white-space:nowrap; }
+.rulerEnd[data-at="start"] { left:0; }
+.rulerEnd[data-at="open"], .rulerEnd[data-at="close"] { transform:translateX(-50%); color:var(--text-body); font-weight:600; }
+.rulerEnd[data-at="end"] { right:0; }
+.previewList { display:grid; gap:6px; margin-top:12px; }
+.previewRow { display:grid; grid-template-columns:38px 74px minmax(0,1fr) auto; align-items:center; gap:0 14px; min-height:52px; padding:7px 14px 7px 0; border-radius:12px; background:var(--surface-sunken); animation:preview-row 420ms var(--ease-brand) calc(260ms + var(--i, 0) * 70ms) backwards; }
+.previewNode { display:grid; place-items:center; justify-self:center; width:26px; height:26px; border:1px solid var(--line-strong); border-radius:50%; background:var(--surface-solid); color:var(--text-body); }
+.previewNode b { font-size:11px; font-weight:700; line-height:1; }
+.previewTime { display:flex; flex-direction:column; gap:1px; }
+.previewTime b { color:var(--text-strong); font-size:16px; font-weight:650; line-height:1.15; }
+.previewTime small { color:var(--text-muted); font-size:12px; font-weight:500; }
+.previewMain { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.previewMain strong { overflow:hidden; color:var(--text-strong); font-size:14px; font-weight:650; line-height:1.35; text-overflow:ellipsis; white-space:nowrap; }
+.previewMain em { color:var(--text-muted); font-size:12px; font-style:normal; font-weight:500; line-height:1.4; }
+.previewLogos { display:flex; align-items:center; }
+.previewLogos > *:not(:first-child) { margin-left:-5px; }
+.previewLogos .cardLogo { width:24px; height:24px; }
+.previewKind { display:grid; place-items:center; width:28px; height:28px; border-radius:50%; background:var(--primary-tint); color:var(--primary); }
+.previewFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; margin-top:12px; color:var(--text-muted); font-size:12px; line-height:1.5; }
+.previewFoot > span { display:flex; flex-wrap:wrap; gap:4px 12px; }
+.previewFoot b { color:var(--text-body); font-weight:650; }
+.previewOpen { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 14px; border-radius:10px; background:var(--primary-tint); color:var(--primary-ink); font-size:13px; font-weight:650; cursor:pointer; transition:background-color .2s var(--ease-brand); }
+.previewOpen:hover { background:var(--primary-wash); }
+@keyframes preview-draw { from { clip-path:inset(0 100% 0 0 round 3px); } to { clip-path:inset(0 0 0 0 round 3px); } }
+@keyframes preview-dot { from { opacity:0; } }
+@keyframes preview-row { from { opacity:0; transform:translateY(6px); } }
 .sourceDelay { margin-top:16px; color:var(--text-muted); font-size:12px; }
 .unavailable { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:15px; padding:36px 16px; color:var(--text-muted); font-size:13px; }
 .unavailable button { display:flex; align-items:center; gap:8px; padding:10px 14px; border:1px solid var(--line); border-radius:10px; color:var(--primary-ink); font-size:13px; cursor:pointer; }
@@ -299,11 +349,22 @@
   .results { gap:8px; }
   .results > div { padding-left:9px; }
   .results dd { font-size:19px; }
+  /* Önizleme telefonda: cetvel tam genişlik, satırda düğüm yok (numara
+     zaten cetvelde ve listede sıra belli), logolar başlığın altına iner. */
+  .ruler { margin-left:0; }
+  .previewRow { grid-template-columns:58px minmax(0,1fr) auto; gap:0 10px; padding:8px 10px 8px 12px; }
+  .previewNode { display:none; }
+  .previewTime b { font-size:15px; }
+  .previewLogos .cardLogo { width:20px; height:20px; }
+  .previewOpen { min-height:44px; }
 }
 
 /* Üç sonuç sütunu 360px altında yan yana sığmıyor: gerçekleşen üstte, beklenti
    ve önceki altında — okunacak sayı zaten ilki. */
 @media (max-width:359px) {
+  /* 320'de cetvelin kapanış ve uç saatleri 2 piksel üst üste (ölçüldü);
+     zillerin saatleri kalır, eksenin iki ucu düşer. */
+  .rulerEnd[data-at="start"], .rulerEnd[data-at="end"] { display:none; }
   .results { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .results > div:first-child { grid-column:1/-1; }
 }

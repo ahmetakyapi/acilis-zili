@@ -121,15 +121,23 @@
 
   /* Destek rengi: yalnızca kullanıcı seçimli liste renkleri ve orta önem
      seviyesi. Arayüz kromunda kullanılmaz — imza rengi değil. */
-  --brass: #a4720f;
-  --brass-bright: #c08b1f;
-  --brass-wash: rgb(164 114 15 / 0.12);
+  /* ALTIN SARISI (31 Ekim, sahibinin seçimi: "turuncu tonunu hiç
+     beğenmiyorum"). Pirinç (#a4720f / koyuda #d3a04a) turuncuya kaçıyordu;
+     dört aday (altın, kum, lavanta, bugünkü) iki temada ana sayfanın
+     Teknik Analiz kartında yan yana denendi, altın seçildi: "bekle / ara
+     durum" anlamını tanıdık sarıyla taşıyor ve yeşille kırmızının arasında
+     en net ayrışan ton. Adı (`--brass`) yüzlerce kullanımda geçtiği için
+     korundu. Ölçüldü: #8c7200 beyazda 4,64; mürekkep #7a6300 beyazda 5,72,
+     kendi washinde ~5,0. */
+  --brass: #8c7200;
+  --brass-bright: #b8960c;
+  --brass-wash: rgb(154 125 0 / 0.12);
   /* METİN İÇİN AYRI TON — `--primary-ink`in pirinçteki karşılığı.
      `--brass` 10 piksellik künye etiketlerinde kendi washinin üstünde 3,64
      kontrast veriyordu (ölçüldü; WCAG AA normal metin için 4,5 istiyor).
      Tonu topluca koyulaştırmak `bg-brass` dolgularını da kaydırırdı, oysa
      sorun yalnızca METİNDE. Bu değer aynı wash üstünde 4,88, beyazda 5,64. */
-  --brass-ink: #8a5f0c;
+  --brass-ink: #7a6300;
 
   /* Grafik serileri — yönetim panelindeki iki seri (görüntüleme, ziyaretçi).
      Arayüz renklerinden AYRI tutuluyor çünkü ölçütleri farklı: bir grafik
@@ -140,7 +148,7 @@
      Yeşil-kırmızı BİLEREK kullanılmadı: bu üründe o ikisi fiyat yönü
      demek ve trafik grafiğinde "yeşil çizgi" iyi haber gibi okunurdu. */
   --chart-a: #0d74c4;
-  --chart-b: #a4720f;
+  --chart-b: #8c7200;
   --chart-a-fill: rgb(13 116 196 / 0.13);
   /* Üçüncü ve dördüncü seri — karşılaştırma ekranı dört sembole kadar
      çıkıyor. Aile aynı: mor ve teal, ikisi de yön renklerinden (yeşil,
@@ -276,7 +284,20 @@
 }
 
 :root[data-theme="dark"] {
-  --page-bg: #070d16;
+  /* GECE MAVİSİ, YUMUŞATILMIŞ (31 Ekim, sahibinin seçimi: "gece mavisi
+     daha hoşuma gidiyor; yumuşak lacivertin iyi taraflarını tutarak, bazı
+     yerler kontrastlı duruyor onları iyileştirelim"). Dört palet ana
+     sayfada yan yana denendi (gece mavisi, yumuşak lacivert, grafit, sıcak
+     gri). Kimlik gece mavisinde kaldı; yalnız parlayan uçlar indi:
+       · zemin #070d16 → #08101a, panel #101a28 → #111b29 (neredeyse aynı
+         derinlik, siyaha yapışık zeminde beyaz metnin ışıması bir tık az);
+       · başlık mürekkebi #eaf1f8 → #e4ecf4: panelde 15,4 → 14,5:1;
+       · mavi #35b8ff → #3cb7fb, yeşil #3ddc97 → #40d699, kırmızı #ff5c7a →
+         #fa6680 — aynı ton, doygunluk bir tık aşağı;
+       · kenar çizgileri 0,11 → 0,10 (kart sınırları daha az "çizgili").
+     Ölçüldü (panel #111b29 / kart bileşkesi): gövde 7,34 / 5,80, muted
+     5,83 / 4,61, kırmızı 6,00 / 4,75, mavi 7,72 / 6,11 — hepsi AA. */
+  --page-bg: #08101a;
   /* YÜZEY RAMPASI AÇILDI. Üç basamak birbirinden 0,01 alfa uzaktaydı ve
      #070d16 zeminde hepsi aynı renge iniyordu: panel #10151e, üstündeki kart
      #121820 — aralarındaki kontrast 1,03:1, yani kart görünmüyordu, yalnızca
@@ -290,34 +311,34 @@
   --surface-elevated: rgb(255 255 255 / 0.12);
   --surface-solid: rgb(255 255 255 / 0.085);
   /* #070d16 zemini üzerine beyaz %8,5'in bileşkesi. */
-  --panel-fixed: #1c222a;
-  --surface-sunken: rgb(0 0 0 / 0.3);
+  --panel-fixed: #1d232c;
+  --surface-sunken: rgb(0 0 0 / 0.26);
 
-  --text-strong: #eaf1f8;
-  --text-body: #94a7ba;
-  --text-soft: #94a7ba;
+  --text-strong: #e4ecf4;
+  --text-body: #98abbd;
+  --text-soft: #98abbd;
   /* 11px'de AA — daha soluk yapma. */
-  --text-muted: #8497a9;
+  --text-muted: #8598aa;
   /* Uzun okuma mürekkebi: gövde tonu (#94a7ba) #070d16 zeminde 7,88:1,
      bu ton 11,19:1 — açık temadaki #2a3a4d'nin (10,99:1) karşılığı. */
-  --text-prose: #b8c6d4;
+  --text-prose: #b9c7d5;
 
-  --primary: #35b8ff;
-  --primary-hover: #7fd2ff;
-  --primary-deep: #7fd2ff;
-  --primary-soft: #6bc9ff;
-  --primary-faint: rgb(53 184 255 / 0.22);
-  --primary-wash: rgb(53 184 255 / 0.14);
-  --primary-tint: rgb(53 184 255 / 0.06);
+  --primary: #3cb7fb;
+  --primary-hover: #80d0fb;
+  --primary-deep: #80d0fb;
+  --primary-soft: #6cc8fb;
+  --primary-faint: rgb(60 183 251 / 0.22);
+  --primary-wash: rgb(60 183 251 / 0.14);
+  --primary-tint: rgb(60 183 251 / 0.06);
   /* Koyu temada wash üzerinde kontrast zaten 6,91:1 — ayrı bir ton gerekmiyor. */
   --primary-ink: var(--primary);
   --on-primary: #06121f;
 
-  --up: #3ddc97;
-  --up-wash: rgb(61 220 151 / 0.14);
-  --down: #ff5c7a;
-  --down-wash: rgb(255 92 122 / 0.13);
-  --flat: #8497a9;
+  --up: #40d699;
+  --up-wash: rgb(64 214 153 / 0.13);
+  --down: #fa6680;
+  --down-wash: rgb(250 102 128 / 0.13);
+  --flat: #8598aa;
 
   /* Kenarlıklar da bir kademe yukarı: yüzeyler açılınca 0,08'lik bir saç
      teli kartın kendi dolgusunun altında kalıyordu, yani kenar çizgisi
@@ -328,18 +349,18 @@
   --rail-track: rgb(0 0 0 / 0.24);
   --rail-link: rgb(255 255 255 / 0.26);
 
-  --line: rgb(255 255 255 / 0.11);
-  --line-soft: rgb(255 255 255 / 0.07);
+  --line: rgb(255 255 255 / 0.10);
+  --line-soft: rgb(255 255 255 / 0.065);
   --line-strong: rgb(255 255 255 / 0.2);
-  --line-focus: #35b8ff;
+  --line-focus: #3cb7fb;
 
   --bar: rgb(255 255 255 / 0.2);
 
-  --brass: #d3a04a;
-  --brass-bright: #e5b768;
-  --brass-wash: rgb(211 160 74 / 0.15);
+  --brass: #dcc057;
+  --brass-bright: #ead27a;
+  --brass-wash: rgb(220 192 87 / 0.14);
   /* Koyu temada yön ters: metin zeminden AÇIK olmalı. */
-  --brass-ink: #e5b768;
+  --brass-ink: #e6cd72;
 
   /* Koyu temanın grafik serileri AYRI SEÇİLDİ, açık temanın çevrilmişi
      değil. Arayüzün koyu tema mavisi (#35b8ff) grafik işareti olarak fazla
@@ -348,7 +369,9 @@
      altı kontrolden koyu zeminle (#0b111c) geçti: protan/tritan ΔE
      22,7 / 20,9, normal görüş 24,0. */
   --chart-a: #2f92d2;
-  --chart-b: #b3822a;
+  /* 31 Ekim: ikinci seri pirinçten altın sarısına geçti (--brass ile aynı
+     karar); ΔE ölçümleri eski #b3822a içindi, yeniden ölçülmeli. */
+  --chart-b: #c4a42f;
   --chart-a-fill: rgb(47 146 210 / 0.18);
   /* Koyu zeminde açıklık bir kademe yukarı — aynı gerekçe, aynı aile. */
   --chart-c: #9b8cf0;
@@ -358,7 +381,7 @@
   --impact-med: #93a3b8;
   --impact-low: #4c5d72;
 
-  --chrome: #070d16;
+  --chrome: #08101a;
   --chrome-border: rgb(255 255 255 / 0.08);
 
   /* Mockup burada beyaz bir scrim çiziyor; koyu temada arka planı diyalogdan
@@ -369,17 +392,17 @@
 
   --page-glow: radial-gradient(
     90% 55% at 18% -8%,
-    #12263c 0%,
-    rgb(18 38 60 / 0) 60%
+    #13263c 0%,
+    rgb(19 38 60 / 0) 60%
   );
 
   /* Karo aynı; koyu köşesi (#0b3f86) zemine yaklaştığı için iç kenar bir
      kademe açık. */
   --mark-edge: rgb(255 255 255 / 0.24);
 
-  --display-stop-1: #f2f7fc;
+  --display-stop-1: #edf3f9;
   --display-stop-2: #b6e2ff;
-  --display-stop-3: #3fbcff;
+  --display-stop-3: #3cb7fb;
   --display-gradient: linear-gradient(
     112deg,
     var(--display-stop-1) 0%,
@@ -390,8 +413,16 @@
 
   --display-gradient-tight: linear-gradient(100deg, #eef5fc 0%, #58c4ff 100%);
 
-  --nav-gradient: linear-gradient(100deg, #d2dce7 0%, #58c4ff 38%, #a9e0ff 50%, #58c4ff 62%, #d2dce7 100%);
-  --nav-gradient-active: linear-gradient(100deg, #f2f7fc 0%, #58c4ff 38%, #a9e0ff 50%, #58c4ff 62%, #f2f7fc 100%);
+  /* KOYU GEZİNME SAKİN MÜREKKEPLE (31 Ekim, sahibinin itirazı: "menü kısmı
+     dark temada hiç hoş durmuyor"). Degrade 14 piksellik etikete
+     260 piksel genişlikte yayıldığı için her sekme farklı yerinden
+     kesiliyordu: "Teknik" beyaz, "Analiz" parlak mavi, "Mercek" bütünüyle
+     mavi — satır yamalı okunuyordu. Koyu temada etiketler artık tek ton
+     (#b9c6d4, muted'dan bir kademe parlak), üzerine gelince açık bir ışık
+     bandı geçiyor; seçili sekme beyaz, altında mavi işaret. Açık temanın
+     lacivert→mavi degradesi (24 Eylül isteği) aynen kalıyor. */
+  --nav-gradient: linear-gradient(100deg, #b9c6d4 0%, #b9c6d4 38%, #eef3f8 50%, #b9c6d4 62%, #b9c6d4 100%);
+  --nav-gradient-active: linear-gradient(100deg, #eef3f8 0%, #eef3f8 38%, #9fd8fc 50%, #eef3f8 62%, #eef3f8 100%);
 
   --mark-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 4px 12px rgb(0 0 0 / 0.35);
 
@@ -500,7 +531,7 @@
   --verdict-sell-soft: color-mix(in srgb, var(--down) 42%, var(--premium-surface));
 }
 :root[data-theme="dark"] {
-  --premium-surface: #101a28;
+  --premium-surface: #111b29;
   --premium-highlight: rgb(183 213 245 / .07);
   --premium-shadow: 0 0 #0000;
   --premium-shadow-hover: 0 0 #0000;

@@ -273,15 +273,25 @@ export type ReleasePoint = {
   title: string;
   items: number;
   x: number;
-  /** Baskın alan — çubuğun rengi (25 Ekim kompakt düzen). */
+  /** Baskın alan — balonun künyesi ve çubuğun ekran okuyucu etiketi. */
   area: ChangeArea;
+  /**
+   * Alan başına madde, `AREA_DISPLAY_ORDER` sırasıyla, sıfırlar düşmüş —
+   * çubuğun YIĞIN dilimleri (31 Ekim). Baskın alanın tek rengi altı Claude
+   * + dört Piyasa maddesini "Claude sürümü" diye okutuyordu; yığın her
+   * alanın payını kendi boyuyla gösteriyor. Toplamı `items`.
+   */
+  parts: { area: ChangeArea; count: number }[];
+  /** İlk girişten bu yana gün (0'dan) — çubuğun eni gün diliminden çıkıyor. */
+  day: number;
 };
 
 /**
  * SÜRÜM ŞERİDİ (25 Ekim): her giriş bir çubuk; `x` ilk ve son giriş
  * arasında 0-1 (gün ölçeği, eşit aralık değil: sessiz haftalar boşluk
  * olarak görünsün), boyu madde sayısından, rengi baskın alandan. Eskiden
- * yeniye sıralı.
+ * yeniye sıralı. 31 Ekim: renk artık tek alan değil, alan alan yığın
+ * (`parts`); baskın alan balonda kalıyor.
  */
 export function releaseTimeline(entries: readonly ChangeEntry[]): ReleasePoint[] {
   if (entries.length === 0) return [];
@@ -295,6 +305,11 @@ export function releaseTimeline(entries: readonly ChangeEntry[]): ReleasePoint[]
     items: entry.items.length,
     x: (day(entry.date) - first) / span,
     area: dominantArea(entry),
+    parts: (() => {
+      const counts = areaCounts([entry]);
+      return AREA_DISPLAY_ORDER.filter((area) => counts[area] > 0).map((area) => ({ area, count: counts[area] }));
+    })(),
+    day: Math.round((day(entry.date) - first) / DAY_MS),
   }));
 }
 

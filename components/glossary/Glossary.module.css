@@ -112,6 +112,14 @@
 .letter:not(:disabled):active { scale:.94; }
 .letter[aria-pressed="true"] { background:var(--primary); color:var(--on-primary); }
 .letter:disabled { color:var(--text-muted); opacity:.38; }
+/* Harfin terim sayısı: altında kulvar üstünde bir çubuk (GlossaryBrowser,
+   "HARF DİZİNİ BİR DAĞILIM"). Çubuk büyüklüktür, mavi değil yumuşak mavi
+   (`--bar-soft`); seçili harfte metinle aynı renk. Süzgeç değişince
+   genişlik markanın eğrisiyle kayıyor. */
+.letter { position:relative; }
+.letterBar { position:absolute; left:50%; bottom:2px; width:16px; height:3px; translate:-50% 0; border-radius:2px; background:var(--bar-soft); transform:scaleX(var(--share, 0)); transition:transform .45s var(--ease-brand); pointer-events:none; }
+.letter[aria-pressed="true"] .letterBar { background:currentColor; }
+@media(prefers-reduced-motion:reduce) { .letterBar { transition:none; } }
 .letter:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
 @media(max-width:767px) { .letter { min-width:36px; height:40px; } }
 
@@ -199,6 +207,51 @@
 @media(min-width:640px) { .cards { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; } }
 @media(min-width:1024px) { .cards { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 @media(min-width:1280px) { .cards { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+/* SON SATIR DOLU (31 Ekim, rehberle aynı kural — GuideExperience.module.css
+   → "Son satır"). Yirmi dokuz terimlik Değerleme'nin son kartı (Temettü
+   Verimi) dört sütunun birinde yalnızdı; 1440'ta sekiz kategorinin beşinde
+   son satır eksikti. On iki izli ızgarada kalan kartlar satırı paylaşıyor:
+   tek kart boydan (yatay düzende), iki kart yarı yarıya, üç kart üçte bir.
+   Telefon şeridi (639 ve altı) tek satır olduğu için kural orada yok. */
+@media(min-width:640px) {
+ .cards { grid-template-columns:repeat(12,minmax(0,1fr)); }
+ .cards > * { grid-column:span 6; }
+}
+@media(min-width:640px) and (max-width:1023px) {
+ .cards > :nth-child(2n+1):last-child { grid-column:1 / -1; }
+}
+@media(min-width:1024px) and (max-width:1279px) {
+ .cards > * { grid-column:span 4; }
+ .cards > :nth-child(3n+1):last-child { grid-column:1 / -1; }
+ .cards > :nth-child(3n+1):nth-last-child(2),
+ .cards > :nth-child(3n+1):nth-last-child(2) + * { grid-column:span 6; }
+}
+@media(min-width:1280px) {
+ .cards > * { grid-column:span 3; }
+ .cards > :nth-child(4n+1):last-child { grid-column:1 / -1; }
+ .cards > :nth-child(4n+1):nth-last-child(2),
+ .cards > :nth-child(4n+1):nth-last-child(2) + * { grid-column:span 6; }
+ .cards > :nth-child(4n+1):nth-last-child(3),
+ .cards > :nth-child(4n+1):nth-last-child(3) ~ * { grid-column:span 4; }
+}
+/* Boydan kaplayan kart yatay: ad, varsa formül, tanım yan yana sütunlarda;
+   ok sağ üst köşeye çıkıyor. Sütun sayısı kartın içeriğinden (formülsüz
+   kartta iki). */
+@media(min-width:640px) and (max-width:1023px) {
+ .cards > .cardItem:nth-child(2n+1):last-child > .card { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); align-items:center; column-gap:24px; padding-right:52px; }
+ .cards > .cardItem:nth-child(2n+1):last-child .cardHead { grid-template-columns:auto minmax(0,1fr); }
+ .cards > .cardItem:nth-child(2n+1):last-child .cardArrow { position:absolute; top:14px; right:14px; }
+}
+@media(min-width:1024px) and (max-width:1279px) {
+ .cards > .cardItem:nth-child(3n+1):last-child > .card { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); align-items:center; column-gap:28px; padding-right:56px; }
+ .cards > .cardItem:nth-child(3n+1):last-child .cardHead { grid-template-columns:auto minmax(0,1fr); }
+ .cards > .cardItem:nth-child(3n+1):last-child .cardArrow { position:absolute; top:14px; right:14px; }
+}
+@media(min-width:1280px) {
+ .cards > .cardItem:nth-child(4n+1):last-child > .card { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); align-items:center; column-gap:32px; padding-right:56px; }
+ .cards > .cardItem:nth-child(4n+1):last-child .cardHead { grid-template-columns:auto minmax(0,1fr); }
+ .cards > .cardItem:nth-child(4n+1):last-child .cardArrow { position:absolute; top:14px; right:14px; }
+}
 .cardItem { display:flex; min-width:0; }
 .card { position:relative; isolation:isolate; display:flex; flex:1; min-width:0; flex-direction:column; gap:11px; padding:14px 14px 16px; overflow:hidden; border:1px solid var(--line); border-radius:18px; background:var(--premium-surface); transition:translate .45s var(--ease-brand),border-color .3s var(--ease-brand),background-color .3s var(--ease-brand); }
 /* Üst kenarda ince bir ışık çizgisi: üzerine gelince soldan sağa doluyor.

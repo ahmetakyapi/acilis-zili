@@ -573,8 +573,16 @@ function ArticleGrid({
           sütunda bir satır ~170 piksel tutuyordu ve ilk bölümün ilk satırı
           ilk ekrana girmiyordu. Şimdi 16 piksel dolgu, 36 piksellik karo,
           iki satırla sınırlı açıklama ve dipte tek künye satırı: sıra
-          numarası, bölüm tonunda seviye noktaları, süre, okundu işareti. */}
-      <div className={`${styles.articleGrid} ${guideStyles.cardGrid} hidden gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`} data-motion-stagger>
+          numarası, bölüm tonunda seviye noktaları, süre, okundu işareti.
+
+          YETİM KART YOK (31 Ekim, rehber ve sözlüğün görsel turu). Bant
+          kendi ızgarası olduğu için dokuz yazılık bir bantta son kart dört
+          sütunun birinde yalnız kalıyor, iki yazılık bantta satırın yarısı
+          boş duruyordu (1440'ta yedi bantın beşinde). Sütunlar artık on iki
+          izli bir ızgara ve son satır her zaman dolu: tek kalan kart satırı
+          boydan kaplayıp yatay düzene geçiyor, iki kalan yarı yarıya, üç
+          kalan üçte bir. Kurallar GuideExperience.module.css → "Son satır". */}
+      <div className={`${styles.articleGrid} ${guideStyles.cardGrid} hidden gap-3 sm:grid`} data-motion-stagger>
       {articles.map((article, index) => (
         <Link
           key={article.slug}

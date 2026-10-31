@@ -3,6 +3,7 @@ import { Panel, PanelHeader, PanelLink } from "@/components/ui/primitives";
 import { ChartThumb } from "@/components/daily-chart/ChartThumb";
 import styles from "@/components/daily-chart/DailyChart.module.css";
 import { getLatestDailyChart } from "@/lib/daily-chart-data";
+import { getChartLogos } from "@/lib/daily-chart-day";
 import { dailyChartHref } from "@/lib/daily-chart";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { formatEtDateLong } from "@/lib/utils";
@@ -26,6 +27,9 @@ import { sessionTitle } from "@/lib/session-age";
 export async function DailyChartPanel({ locale, t, nowMs }: { locale: Locale; t: Dictionary; nowMs: number }) {
   const latest = await getLatestDailyChart(locale);
   if (!latest) return null;
+  /* Hisse kalemlerinin logoları (31 Ekim, sahibinin isteği: "logolar
+     olsun"); eşleme ve yedek düzeni `getChartLogos`ta. */
+  const logos = await getChartLogos(latest.chartMd, latest.locale);
   const href = dailyChartHref(latest.chartDate);
   return (
     <Panel className="min-w-0">
@@ -44,7 +48,13 @@ export async function DailyChartPanel({ locale, t, nowMs }: { locale: Locale; t:
           {latest.title}
         </Link>
         <Link href={href} tabIndex={-1} aria-hidden className="block">
-          <ChartThumb chartMd={latest.chartMd} locale={latest.locale} rows={5} />
+          <ChartThumb
+            chartMd={latest.chartMd}
+            locale={latest.locale}
+            rows={5}
+            logos={logos}
+            moreLabel={t.dailyChart.board.moreRows}
+          />
         </Link>
       </div>
     </Panel>

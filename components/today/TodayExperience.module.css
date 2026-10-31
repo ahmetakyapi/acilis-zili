@@ -226,6 +226,42 @@
    alta alıyor. */
 .indexBasis { flex-basis:100%; color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; line-height:1.3; }
 .indexSpark { margin-top:10px; height:32px; width:100%; }
+/* YÖN ŞERİDİ (31 Ekim) — gerekçe IndexLive.tsx → "YÖN KARTIN TEPESİNDE".
+   Bilanço/teknik kartlarının kalıbı: kenardan 14 piksel içeride, 3 piksel,
+   alt köşeleri yuvarlak. Kart `overflow:hidden` taşıdığı için `top:0`
+   (o kalıptaki −1 piksel kenarlığın üstüne çıkıp kırpılırdı). Yüklemede
+   soldan bir kez çizilir, kartlar 80 ms arayla (`--ease-brand`); hareketi
+   azaltana son kare. Renk yalnız yönden: artı yeşil, eksi kırmızı, nötr
+   çizgi tonu. */
+.indexCard::before { content:""; position:absolute; top:0; inset-inline:14px; height:3px; border-radius:0 0 3px 3px; background:var(--line-strong); transform-origin:left center; animation:index-strip-in 620ms var(--ease-brand) calc(240ms + var(--card, 0) * 80ms) backwards; }
+.indexLink[data-tone="up"] .indexCard::before { background:var(--up); }
+.indexLink[data-tone="down"] .indexCard::before { background:var(--down); }
+.indexLink:nth-child(2) { --card:1; }
+.indexLink:nth-child(3) { --card:2; }
+.indexLink:nth-child(4) { --card:3; }
+@keyframes index-strip-in { from { transform:scaleX(0); } }
+/* DESTE KOLONUN BOYUNU DOLDURUR (31 Ekim). Kahraman iki kolonken kolonlar
+   eşit gerili; kapalı piyasada sayacın altına bekleme çizgisi gelince
+   (SessionRail → WaitLine) sol kolon 1440'ta 50 piksel uzadı ve destenin
+   altında aynı boy boş kaldı — damga ile sol künyenin "aynı hat" kuralı
+   bozuldu (ölçüm bu dosyanın başındaki `.heroCopy` notunda). Boşluk
+   esnetilmiyor, dolduruluyor: kartlar satırı eşit paylaşıyor ve fazlayı
+   kıvılcım çizgisi alıyor (taban 32, tavan 64 piksel). Tavan çünkü EN
+   1440'ta sol kolon daha uzun ve çizgi 84 piksele çıkıp dolgusuyla ağır
+   bir blok oluyordu (CLAUDE.md "grafik dili ince"); tavanı aşan pay
+   kartın dibinde kalıyor. Ölçüm (TR 1440): sol künyenin dibi = damganın
+   dibi = 559, çizgi 55 piksel. Telefonda deste ayrı katta, kural yalnız
+   yan yana düzende. */
+@media (min-width:768px) {
+  .indexDeck { display:flex; flex-direction:column; }
+  .indexLive { flex:1 1 auto; }
+  .indexLive > .indexGrid { flex:1 1 auto; grid-auto-rows:1fr; }
+  .indexCard { display:flex; flex-direction:column; }
+  .indexCard > .indexSpark, .indexWeek, .indexWeek > .indexSpark { flex:1 1 32px; height:auto; min-height:32px; max-height:64px; }
+  .indexWeek { display:flex; flex-direction:column; max-height:none; }
+}
+/* Beş seans yedeği: çizgi ve altında künyesi ("5 Seans −%1,24"). */
+.indexWeekNote { display:flex; justify-content:space-between; gap:8px; margin-top:4px; color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; line-height:1.3; }
 
 /* ---- Gün akışı çerçevesi ----
    21 Eylül: panelin eski ScrollStage dönüşümü dış aralığa ek düşey
@@ -614,6 +650,7 @@
 @media (prefers-reduced-motion:reduce) {
   .headline { animation:none; }
   .indexCard { transition:none; }
+  .indexCard::before { animation:none; }
   .indexValue[data-flash] { animation:none; }
   .storyRow,.storyRowMeta svg,.storyCastTile,.storyRowLogo { transition:none; }
   .storyRow:hover .storyRowLogo,.storyLead:hover .storyCastTile { translate:none; }

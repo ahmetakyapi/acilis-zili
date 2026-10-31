@@ -605,9 +605,7 @@ async function IndexDetail({
     const quote = row.quote;
     const facts: [string, string][] = [];
     if (quote?.volume !== null && quote?.volume !== undefined) facts.push([t.market.volume, formatCompact(quote.volume, locale)]);
-    if (quote && quote.low !== null && quote.high !== null) {
-      facts.push([t.markets.heatDayRange, `${formatPrice(quote.low, locale)} – ${formatPrice(quote.high, locale, { currency: true })}`]);
-    }
+    /* Gün aralığı artık kartın kendi çizgisi (`companyCardRecord` → range). */
     return facts.length > 0 ? { facts } : {};
   };
   const heatSource = [...withChange].sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0)).slice(0, HEAT_MAX);

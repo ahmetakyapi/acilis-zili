@@ -106,12 +106,12 @@ export const C = {
  * - `wash`: rozet zemini — `--up-wash` / `--brass-wash` / `--down-wash`.
  * Önceden bilanço görseli TUT'u gri, hikâye görseli MAVİ, teknik görseli
  * görüş çipini mavi basıyordu. Görüş sabiti yalnız burada.
- * Ölçüldü (beyaz zemin): `fg` AL 4,09, TUT 5,64, SAT 5,36 (≥ 22 piksel
+ * Ölçüldü (beyaz zemin): `fg` AL 4,09, TUT 5,81 (31 Ekim altın sarısı), SAT 5,36 (≥ 22 piksel
  * kalın, büyük metin); `ink` AL 3,47, TUT 3,28, SAT 4,01.
  */
 export const VERDICT_OG: Record<VerdictKey, { fg: string; ink: string; wash: string }> = {
   buy: { fg: C.up, ink: "#4b977e", wash: C.upWash },
-  hold: { fg: "#8a5f0c", ink: "#b28733", wash: "#f4eee2" },
+  hold: { fg: "#7a6300", ink: "#a8890f", wash: "#f4f0dc" },
   sell: { fg: C.down, ink: "#d0566f", wash: C.downWash },
 };
 

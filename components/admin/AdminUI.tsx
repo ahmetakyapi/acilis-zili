@@ -7,6 +7,7 @@ import { TR_ZONE, formatInZone } from "@/lib/session-clock";
 import { EmptyState, Skeleton } from "@/components/ui/primitives";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import { AnchorLanding } from "@/components/admin/AnchorLanding";
+import { TONED } from "@/components/admin/AdminVisuals";
 
 /**
  * Yönetim panelinin kendi parçaları.
@@ -37,16 +38,25 @@ export function AdminPanel({
   children,
   className,
   id,
+  tone,
 }: {
   children: React.ReactNode;
   className?: string;
   /** Sayfa içi çapa — pano satırları doğrudan ilgili panele iniyor. */
   id?: string;
+  /**
+   * Panelin söylediği DURUM — tepede 3 piksellik şerit (31 Ekim). Zemin
+   * nötr kalıyor; sitenin bilanço/teknik/risk kartlarıyla aynı jest.
+   * Durum bildirmeyen panel şerit taşımaz.
+   */
+  tone?: HealthTone | null;
 }) {
   return (
     <section
       id={id}
+      data-tone={tone ?? undefined}
       className={cn(
+        tone && TONED,
         /* SİTENİN PANEL YÜZEYİ (23 Eylül denetimi). Panel `bg-surface` idi:
            %2,7 opak bir mürekkep, yani sayfa zemininden KOYU (ölçüldü:
            panel rgb(240,243,245), zemin rgb(247,249,251)) — sitenin
@@ -286,11 +296,18 @@ export type StatTone = "neutral" | "up" | "down";
  */
 const STAT_BOX = "flex min-w-0 flex-col rounded-(--radius-panel) border px-4 py-4 sm:px-5";
 const STAT_VALUE = "mt-2 text-heading font-bold leading-[1.05] tracking-[-0.03em]";
+/* DURUM ZEMİNDE DEĞİL, ŞERİTTE (31 Ekim). `warn`/`down` kutu bir dönem kendi
+   tonunun zeminine geçiyordu (`bg-brass-wash`, `bg-down-wash`); sitenin kart
+   dili o arada nötr zemin + tepede 3 piksellik şeride oturdu (bilanço,
+   teknik, risk kartları) ve panel ayrı bir dil konuşuyordu. Zemin artık her
+   kutuda aynı; durum şeritte (`TONED`), sözcük künyede. */
 const STAT_SURFACE = {
   neutral: "border-line bg-(--premium-surface)",
-  warn: "border-brass/35 bg-brass-wash",
-  down: "border-down/30 bg-down-wash",
+  warn: "border-line bg-(--premium-surface)",
+  down: "border-line bg-(--premium-surface)",
 } as const;
+/** Çizim satırının yüksekliği — yer tutucu aynı dizeyi kullanıyor. */
+const STAT_VISUAL = "mt-3 h-7";
 
 /**
  * Tek ölçü. Değişim yüzdesi VARSA gösterilir, uydurulmaz: karşılaştırılacak
@@ -320,10 +337,21 @@ export function StatBox({
   delta,
   status,
   state,
+  visual,
+  aside,
 }: {
   label: string;
   value: string;
   sub?: string;
+  /**
+   * Sayının çizimi — künyenin altında, 28 piksellik satırda (31 Ekim):
+   * `Sparkline`. Yer tutucu bu satırı `StatGridSkeleton({ visual })` ile
+   * çiziyor; ızgara satırı kutuları eşit gerdiği için satırın bir kutusunda
+   * olması yeter.
+   */
+  visual?: React.ReactNode;
+  /** Değer satırının sağı — `ShareRing` + yüzde. Satırın boyunu değiştirmez. */
+  aside?: React.ReactNode;
   /** Yalnızca DEĞİŞİM — yüzde ya da adet farkı. Durum sözcüğü buraya yazılmaz. */
   delta?: { text: string; tone: StatTone; srLabel: string } | null;
   /** Kutunun söylediği DURUM — "Sağlıklı", "İlgi Bekliyor". Nokta + sözcük. */
@@ -344,7 +372,10 @@ export function StatBox({
        taşıyordu: ilk ekranda beş özdeş accent yüzey vardı ve bandın kendi
        notu "cesaret bir kez harcanıyor" diyordu. Artık sitenin panel yüzeyi;
        renk yalnızca durum bildiren kutuda. */
-    <div className={cn(STAT_BOX, STAT_SURFACE[surface])}>
+    <div
+      className={cn(STAT_BOX, STAT_SURFACE[surface], surface !== "neutral" && TONED)}
+      data-tone={surface !== "neutral" ? surface : undefined}
+    >
       {/* Künye Title Case, büyük harfe ÇEVRİLMİYOR: `uppercase` Türkçede
           yanlış büyütüyor ve site künyeleri 23 Eylül'de bu dile geçti. */}
       <p className="text-small font-semibold text-muted">{label}</p>
@@ -365,12 +396,26 @@ export function StatBox({
           Şükran Günü") iki satır üst üste yapışıyor, harflerin altı üsttekinin
           içine giriyordu. `leading-[1.05]` tek satırda gözle fark edilmiyor,
           iki satırda nefes açıyor. */}
-      <p
-        data-stat-value
-        className={cn(STAT_VALUE, unavailable ? "text-muted" : "text-strong")}
-      >
-        {unavailable ? "—" : value}
-      </p>
+      {aside && !unavailable ? (
+        <div className="flex items-end justify-between gap-2">
+          <p
+            data-stat-value
+            className={cn(STAT_VALUE, "min-w-0 text-strong")}
+          >
+            {value}
+          </p>
+          {/* Değerin taban çizgisine oturur; yüksekliği değerin satırını
+              aşmaz (22 piksel halka < 25,2 piksel satır). */}
+          <span className="mb-[0.15em] flex shrink-0 items-center gap-1.5">{aside}</span>
+        </div>
+      ) : (
+        <p
+          data-stat-value
+          className={cn(STAT_VALUE, unavailable ? "text-muted" : "text-strong")}
+        >
+          {unavailable ? "—" : value}
+        </p>
+      )}
       {/* KÜNYE KISA TUTULUR, KIRPILMAZ. Bir kutunun künyesi üç satıra
           sarınca ızgara satırı dört kutuyu da o boya geriyor, üçünün dibinde
           55 piksel boş kalıyordu (pano, 1440). Çözüm kırpmak değil (başlık
@@ -413,6 +458,13 @@ export function StatBox({
           ) : (
             sub && <span className="text-muted">{sub}</span>
           )}
+        </div>
+      )}
+      {/* Çizim kutunun DİBİNE iner (`mt-auto` sarmalı): ızgara satırı
+          kutuları eşit gerdiğinde çizgiler aynı hatta biter. */}
+      {visual && !unavailable && (
+        <div className="mt-auto">
+          <div className={STAT_VISUAL}>{visual}</div>
         </div>
       )}
     </div>
@@ -516,6 +568,7 @@ export function StatGridSkeleton({
   cols = 4,
   compact = false,
   wrapOnPhone = [],
+  visual = [],
 }: {
   boxes?: number;
   cols?: 3 | 4 | 5;
@@ -523,6 +576,8 @@ export function StatGridSkeleton({
   compact?: boolean;
   /** Künyesi telefonda iki satıra saran kutuların sırası, sıfırdan. */
   wrapOnPhone?: readonly number[];
+  /** Çizim satırı (`StatBox` → `visual`) taşıyan kutuların sırası. */
+  visual?: readonly number[];
 }) {
   return (
     <StatGrid cols={cols} compact={compact}>
@@ -548,6 +603,13 @@ export function StatGridSkeleton({
               <Skeleton className="h-2.5 w-28" />
             </div>
           </div>
+          {visual.includes(i) && (
+            <div className="mt-auto">
+              <div className={cn(STAT_VISUAL, "flex items-end")}>
+                <Skeleton className="h-2 w-full" />
+              </div>
+            </div>
+          )}
         </div>
       ))}
     </StatGrid>
@@ -1045,8 +1107,11 @@ export function AdminPanelSkeleton({
   rows = 5,
   rowHeight = 50,
   hint = true,
+  pulse = false,
   className,
 }: {
+  /** Başlığın altında yoklama şeridi (`HealthPulse`) var mı — 31 Ekim. */
+  pulse?: boolean;
   rows?: number;
   /**
    * Tek satırın piksel yüksekliği. Ölçülen: RankList 50 (künyeli satır
@@ -1072,6 +1137,16 @@ export function AdminPanelSkeleton({
           </div>
         )}
       </div>
+      {/* Şeridin kendi dizeleri: 5 piksellik çubuk, 8 piksel ara, tek satır
+          künye (AdminVisuals.module.css → `.pulse`, `.pulseLegend`). */}
+      {pulse && (
+        <div className="mb-4">
+          <Skeleton className="h-[5px] w-full" />
+          <div className="mt-2 flex h-[1lh] items-center text-tiny">
+            <Skeleton className="h-2.5 w-48" />
+          </div>
+        </div>
+      )}
       <div className="flex flex-col">
         {Array.from({ length: rows }, (_, i) => (
           <div key={i} className="flex items-center" style={{ height: rowHeight }}>

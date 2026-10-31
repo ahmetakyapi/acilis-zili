@@ -18,7 +18,7 @@ import { cn, formatEtDateCompact, formatEtDateLong, safeExternalUrl } from "@/li
 import { DAILY_CHART_STAMP_SOURCE, dailyChartHref, dailyChartImageHref, firstSentence } from "@/lib/daily-chart";
 import { getDailyChart, getDailyChartArchive } from "@/lib/daily-chart-data";
 import { DAILY_CHART_OG_SIZES } from "@/lib/daily-chart-og";
-import { getChartDayContext } from "@/lib/daily-chart-day";
+import { getChartDayContext, getChartLogos } from "@/lib/daily-chart-day";
 import { ChartBoard } from "@/components/daily-chart/ChartBoard";
 import { DayContext } from "@/components/daily-chart/DayContext";
 
@@ -74,7 +74,7 @@ export default async function DailyChartPage(props: PageProps<"/gunun-grafigi/[t
   const [issue, archive] = await Promise.all([load(tarih, locale), getDailyChartArchive(locale, 400)]);
   if (!issue) notFound();
   const { row } = issue;
-  const context = await getChartDayContext(row.chartDate);
+  const [context, logos] = await Promise.all([getChartDayContext(row.chartDate), getChartLogos(row.chartMd, row.locale)]);
   const rowLocale = isLocale(row.locale) ? row.locale : locale;
   const path = dailyChartHref(row.chartDate);
   const date = formatEtDateLong(row.chartDate, locale);
@@ -178,6 +178,7 @@ export default async function DailyChartPage(props: PageProps<"/gunun-grafigi/[t
       <ChartBoard
         row={row}
         context={context}
+        logos={logos}
         locale={locale}
         labels={d}
         headingId={`grafik-${row.chartDate}`}

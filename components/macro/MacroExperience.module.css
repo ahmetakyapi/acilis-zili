@@ -8,39 +8,70 @@
    -------------------------------------------------------------------------- */
 .hero.hero { grid-template-columns:minmax(0,1fr); }
 
-/* ---- Tek cümle ----
-   Başlığın altında, ızgaranın üstünde: sayfanın ne dediği tek bakışta.
-   Gövde puntosundan büyük ama display değil (degrade yok); dönemler
-   altında soluk künye. */
-.lead { display:flex; flex-direction:column; gap:6px; min-width:0; max-width:72ch; }
-.lead > p:first-child { font-size:17px; line-height:1.5; font-weight:550; letter-spacing:-.01em; color:var(--text-strong); text-wrap:pretty; }
-.lead > p + p { font-size:12px; line-height:1.4; color:var(--text-muted); }
-@media(max-width:767px) { .lead > p:first-child { font-size:15.5px; } }
-.skLead { width:min(640px,100%); height:74px; border-radius:8px; }
-@media(max-width:767px) { .skLead { height:133px; } }
+/* ---- Açıklama cümlesi ----
+   31 Ekim (sahibinin itirazı: "üstteki açıklama yazısı net okunmuyor").
+   Başlığın altında 14 piksellik gri bir künye ("Enflasyon, istihdam, faiz
+   ve büyüme verileri") ve hemen altında iki satırlık kalın bir özet cümle
+   vardı: iki metin aynı yerde yarışıyordu. Özet cümle dört ölçüye dönüştü
+   (MacroGauges.tsx); açıklama artık gerçek bir cümle, okuma puntosunda ve
+   satır uzunluğunda (16 piksel, en çok 62 harf; telefonda 15). */
+.hero.hero :global(.page-heading-copy.page-heading-copy) > p { max-width:62ch; font-size:16px; line-height:1.55; color:var(--text-body); text-wrap:pretty; }
+@media(max-width:767px) { .hero.hero :global(.page-heading-copy.page-heading-copy) > p { font-size:15px; } }
+
+/* ---- Ölçü bandı ----
+   Çizimler ve stiller MacroGauges.module.css'te; burada yalnız yer
+   tutucusu, son hâlin boyunda (31 Ekim, `next start`: 1440'ta 267, 390'da 471 piksel). */
+.skLead { width:100%; height:var(--sk-gauges, 267px); margin-block:10px 6px; border-radius:var(--radius-lg); }
+@media(max-width:767px) { .skLead { --sk-gauges:471px; } }
 
 /* ---- Özet ızgarası ----
    Kart üç satırı alt ızgara olarak paylaşıyor (başlık/künye, değer,
    mini çizgi): aynı satırdaki kartlarda değerler aynı hatta biter.
    Sütun: 1440 ve 1280'de altı (on bir kart iki satır), tablette üç,
    telefonda iki. Son satırda tek kalan kart iki hücre alıyor; boş hücre
-   yok (seçiciler aşağıda, sütun sayısına göre). */
+   yok (seçiciler aşağıda, sütun sayısına göre).
+   31 EKİM: TEK GENİŞ KART KALKTI. İkinci satırın sonundaki iki hücrelik
+   kart "yetim" gibi okunuyordu. Izgara artık 60 birim; her kart kırılımın
+   payını `--span-*` değişkeninden alıyor (`balancedSpans`, lib/macro-
+   visual.ts): 11 kart 6 + 5, ikinci satırın beşi tam genişliğe yayılıyor.
+   Kolon aralığı 0, kartlar arası boşluk kartın yarım payı (60 birimde
+   59 aralık telefonda kolonları eksiye düşürürdü). Satır da dört: başlık,
+   değer + değişim, hedefle ilişki, mini çizgi + etiketi. */
 .summary { display:flex; flex-direction:column; gap:12px; min-width:0; padding-top:18px; border-top:1px solid var(--line); }
 .summaryTitle.summaryTitle { width:fit-content; max-width:100%; font-size:13px; line-height:1.35; font-weight:650; letter-spacing:-.01em; }
-.summaryGrid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:10px; }
-.tile { position:relative; display:grid; grid-row:span 3; grid-template-rows:subgrid; row-gap:8px; min-width:0; padding:12px 12px 10px; border:1px solid var(--line-soft); border-radius:var(--radius-lg); background:var(--surface); color:inherit; text-decoration:none; transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), translate .28s var(--ease-brand); }
+.summaryGrid { --tile-gap:10px; display:grid; grid-template-columns:repeat(60,minmax(0,1fr)); column-gap:0; row-gap:var(--tile-gap); margin-inline:calc(var(--tile-gap) / -2); }
+.tile { position:relative; display:grid; grid-column:span var(--span-wide, 10); grid-row:span 4; grid-template-rows:subgrid; row-gap:8px; min-width:0; margin-inline:calc(var(--tile-gap) / 2); padding:12px 12px 10px; border:1px solid var(--line-soft); border-radius:var(--radius-lg); background:var(--surface); color:inherit; text-decoration:none; transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), translate .28s var(--ease-brand); }
 @media(hover:hover) and (pointer:fine) { .tile:hover { translate:0 -2px; border-color:var(--primary-faint); background:var(--surface-elevated); } }
 .tile:active { translate:0 1px; }
-.tile:last-child:nth-child(6n+5) { grid-column:span 2; }
 .tileHead { display:flex; flex-direction:column; gap:3px; min-width:0; }
 .tileTitle { font-size:12.5px; line-height:1.3; font-weight:650; color:var(--text-strong); }
-.tileMeta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; font-size:12px; line-height:1.3; font-weight:500; color:var(--text-muted); }
-.tileMeta .status { padding:0 7px; font-size:12px; line-height:16px; }
-.tileFigure { display:flex; flex-direction:column; align-items:flex-start; gap:5px; align-self:end; }
-.tileFigure > b { font-size:22px; line-height:1.05; font-weight:700; letter-spacing:-.035em; color:var(--text-strong); white-space:nowrap; }
+.tileMeta { font-size:12px; line-height:1.3; font-weight:500; color:var(--text-muted); }
+/* Değer büyük, değişim hemen yanında (sığmazsa altına kırılır); hedefle
+   ilişki kendi satırında, değerin altında. */
+.tileFigure { display:flex; flex-wrap:wrap; align-items:center; gap:5px 8px; align-self:end; }
+.tileFigure > b { font-size:25px; line-height:1.05; font-weight:700; letter-spacing:-.035em; color:var(--text-strong); white-space:nowrap; }
 .tileFigure .delta { padding:1px 7px; font-size:12px; }
+.tileStatus { display:flex; min-width:0; }
+.tileStatus .status { padding:0 7px; font-size:12px; line-height:18px; }
+.tileChart { display:flex; flex-direction:column; justify-content:flex-end; gap:6px; min-width:0; }
 .tileSpark { display:block; width:100%; height:36px; overflow:visible; }
-.tileSkeleton { min-height:150px; border-radius:var(--radius-lg); }
+/* Kesikli çizginin anahtarı: büyük grafikteki künyeyle aynı ton. */
+.tileKey { display:flex; align-items:center; gap:6px; font-size:12px; line-height:1.3; font-weight:650; color:var(--brass-ink); white-space:nowrap; }
+.tileKey > i { flex:none; width:14px; border-top:1.5px dashed var(--brass); }
+.tileSkeleton { min-height:150px; margin-inline:calc(var(--tile-gap) / 2); border-radius:var(--radius-lg); }
+/* Yer tutucu on bir kartlık (page.tsx → SUMMARY_SKELETON_TILES) ve
+   payları `balancedSpans(11, …)` ile aynı: 6 + 5, tablette 3+3+3+2,
+   telefonda 2×5 + 1. */
+.tileSkeleton { grid-column:span 10; }
+.tileSkeleton:nth-child(n+7) { grid-column:span 12; }
+@media(max-width:1100px) {
+  .tileSkeleton, .tileSkeleton:nth-child(n+7) { grid-column:span 20; }
+  .tileSkeleton:nth-child(n+10) { grid-column:span 30; }
+}
+@media(max-width:767px) {
+  .tileSkeleton, .tileSkeleton:nth-child(n+7), .tileSkeleton:nth-child(n+10) { grid-column:span 30; }
+  .tileSkeleton:nth-child(11) { grid-column:span 60; }
+}
 .skSummaryTitle { width:130px; height:18px; border-radius:6px; }
 
 /* ---- Grup bölümleri ----
@@ -243,19 +274,19 @@
   .readingSide > div:first-child { padding-left:0; border-left:0; }
 }
 @media(max-width:1100px) {
-  .summaryGrid { grid-template-columns:repeat(3,minmax(0,1fr)); }
-  .tile:last-child:nth-child(6n+5) { grid-column:auto; }
-  .tile:last-child:nth-child(3n+2) { grid-column:span 2; }
+  .tile { grid-column:span var(--span-mid, 20); }
 }
 @media(max-width:767px) {
   .stage { gap:14px; }
   .summary { padding-top:14px; }
-  .summaryGrid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
-  .tile:last-child:nth-child(3n+2) { grid-column:auto; }
-  .tile:last-child:nth-child(2n+1) { grid-column:1 / -1; }
-  .tile { padding:11px 11px 9px; row-gap:7px; }
+  .summaryGrid { --tile-gap:8px; }
+  .tile { grid-column:span var(--span-narrow, 30); padding:11px 11px 9px; row-gap:7px; }
   .tileTitle { font-size:12px; }
-  .tileFigure > b { font-size:20px; }
+  .tileFigure > b { font-size:21px; }
+  /* "Hedefin 1,72 Puan Üstünde" 132 piksellik kart içine tek satırda
+     sığmıyor, kartın kenarından 20-26 piksel taşıyordu (390, 31 Ekim
+     ölçüldü): telefonda hap iki satıra kırılır, köşesi yumuşar. */
+  .tileStatus .status { white-space:normal; padding:1px 7px; line-height:16px; border-radius:8px; }
   .tileSpark { height:30px; }
   .tileSkeleton { min-height:140px; }
   .section { gap:14px; }

@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/admin";
 import { ADMIN_SECTIONS, adminDocTitle } from "@/lib/admin-sections";
-import { Suspense } from "react";
+import { Suspense, cache } from "react";
+import { HealthPulse, ShareRing, Sparkline } from "@/components/admin/AdminVisuals";
 import {
   AdminPanel,
   AdminPanelError,
@@ -65,6 +66,18 @@ export const metadata = { title: adminDocTitle(ADMIN_SECTIONS.overview.title) };
  */
 const TOP_ROUTES = 8;
 
+/**
+ * Otuz günlük seri — İSTEK BAŞINA BİR KEZ (31 Ekim). Trafik paneli
+ * grafiğini, sayı kutuları küçük çizgilerini aynı seriden çiziyor; iki ayrı
+ * sorgu iki ayrı anda okunup bir kutunun çizgisiyle grafiğin aynı günü
+ * farklı gösterebilirdi (CLAUDE.md "Veri Dürüstlüğü" 3). `getTrafficSeries`
+ * kendisi `cache()`li değil.
+ */
+const series30 = cache(() => getTrafficSeries(30));
+
+/** Kutuların çizgisi: önceki 7 + son 7 tam gün — kutudaki yüzdenin iki yarısı. */
+const SPARK_DAYS = 14;
+
 export default async function AdminOverviewPage() {
   /* Yetki kapısı SAYFADA da: layout yumuşak gezinmede yeniden koşmuyor. */
   await requireAdmin();
@@ -92,7 +105,7 @@ export default async function AdminOverviewPage() {
             tutucu gerçek ızgarayı gerçek kutunun dizeleriyle çiziyor
             (AdminUI → `StatGridSkeleton`); kutuların künyesi tek satır
             olduğu sürece boy her kırılımda birebir. */}
-        <Suspense fallback={<StatGridSkeleton boxes={4} />}>
+        <Suspense fallback={<StatGridSkeleton boxes={4} visual={[0, 1]} />}>
           <Headline />
         </Suspense>
         {/* TANIM KUTUDA DEĞİL, BURADA. "Son 7 Tam Gün · Aynı Kişi Her Gün
@@ -143,12 +156,35 @@ async function Headline() {
      sayıyor ve iki sayı ayrı tanımlarla ayrı düşmüyor. */
   const last7Window = fullDayWindow(7);
   const previousFrom = addEtDays(last7Window.from, -7);
-  const [last7, prev7, members, range] = await Promise.all([
+  const [last7, prev7, members, range, series] = await Promise.all([
     getTrafficTotals(last7Window.from, last7Window.to),
     getTrafficTotals(previousFrom, addEtDays(last7Window.from, -1)),
     getMemberSummary(),
     getTrackingRange(),
+    series30(),
   ]);
+  /* KÜÇÜK ÇİZGİ KUTUNUN PENCERESİNDE (31 Ekim). Seriden bugün (yarım gün)
+     atılıyor ve son 14 tam gün kalıyor: ilk yedisi kutunun kıyas
+     penceresi, son yedisi kutunun sayısı. Ölçülmemiş gün `null` — çizgi
+     orada kopar, sıfıra inmez. Seri okunamadıysa çizgi hiç çizilmez. */
+  const spark = series.ok
+    ? series.data
+        .filter((p) => !p.isToday)
+        .slice(-SPARK_DAYS)
+    : [];
+  const sparkOf = (pick: (p: (typeof spark)[number]) => number, what: string) =>
+    spark.length === SPARK_DAYS ? (
+      <Sparkline
+        values={spark.map((p) => (p.measured ? pick(p) : null))}
+        split={SPARK_DAYS / 2}
+        label={`Son 14 tam günün günlük ${what} çizgisi; son yedi gün vurgulu.`}
+      />
+    ) : null;
+  const readers = members.ok ? members.data.readers : 0;
+  const activeShare =
+    members.ok && readers > 0
+      ? Math.round((members.data.readersActiveLast30 / readers) * 100)
+      : null;
   /* Kıyas yalnızca iki pencere de okunduysa ve önceki pencere tam
      ölçüldüyse (lib/admin-format.ts → `deltaOf`). */
   const kiyas = {
@@ -167,6 +203,7 @@ async function Headline() {
         delta={
           last7.ok && prev7.ok ? deltaOf(last7.data.views, prev7.data.views, kiyas) : null
         }
+        visual={sparkOf((p) => p.views, "görüntüleme")}
       />
       {/* "Tekil Ziyaretçi" DEĞİL: özet her gün döndüğü için çok günlük
           pencerede sayılan şey kişi değil ziyaretçi-günü (bkz. TrafficTotals).
@@ -181,6 +218,7 @@ async function Headline() {
             ? deltaOf(last7.data.visitorDays, prev7.data.visitorDays, kiyas)
             : null
         }
+        visual={sparkOf((p) => p.visitors, "ziyaretçi-günü")}
       />
       {/* YALIN "0" YOK. Değişim yuvası yeni üye sayısını pencere adı olmadan
           basıyordu ve kutu "0  2 Kişi Liste Kurmuş" diye okunuyordu (23
@@ -219,13 +257,28 @@ async function Headline() {
         value={members.ok ? members.data.readersActiveLast30.toLocaleString("tr-TR") : "—"}
         state={members.ok ? undefined : "unavailable"}
         sub="Son 30 Günde Giriş"
+        /* HALKA OKURLARIN PAYI (31 Ekim): kayıtlı okurun ne kadarı gerçekten
+           geliyor. Payda yöneticisiz `readers` — sayının kendisiyle aynı
+           küme (MemberSummary → "ORANLARIN PAYDASI YÖNETİCİSİZ"). Yüzde
+           metin olarak da yazılıyor; halka tek başına bilgi taşımıyor. */
+        aside={
+          activeShare !== null && members.ok ? (
+            <>
+              <ShareRing value={members.data.readersActiveLast30} total={readers} />
+              <span className="numeral text-small font-semibold text-muted">
+                %{activeShare}
+                <span className="sr-only"> okurların son 30 günde giriş yapan payı</span>
+              </span>
+            </>
+          ) : null
+        }
       />
     </StatGrid>
   );
 }
 
 async function TrafficCard() {
-  const series = await getTrafficSeries(30);
+  const series = await series30();
   return (
     <AdminPanel>
       <AdminPanelTitle
@@ -371,9 +424,12 @@ async function AttentionCard() {
      alt alta ve aralarına aynı saç teli giriyor. */
   const half = Math.ceil(rows.length / 2);
   const columns = rows.length > 1 ? [rows.slice(0, half), rows.slice(half)] : [rows];
+  /* PANELİN DURUMU TEPE ŞERİDİNDE (31 Ekim): en ağır satırın tonu; satır
+     yoksa yeşil. Sitenin kart dili — zemin nötr, durum şeritte. */
+  const panelTone: HealthTone = rows.length === 0 ? "ok" : rows[0].tone;
 
   return (
-    <AdminPanel>
+    <AdminPanel tone={panelTone}>
       {/* Panelin çıkışı VAR ve her SATIRIN da çıkışı var: satır sorunun
           giderildiği panele iniyor, başlıktaki bağlantı bütün yoklamalara.
           Tek çıkış "Sistemi Aç"tı ve içerik eksikleri de oraya
@@ -384,6 +440,12 @@ async function AttentionCard() {
       >
         Dikkat İsteyenler
       </AdminPanelTitle>
+
+      {/* BÜTÜN YOKLAMALAR TEK ŞERİTTE (31 Ekim). Liste yalnız sorunluları
+          sayıyor ve kısalığı "yoklama az" ile "çoğu sağlıklı"yı ayırt
+          etmiyordu. Şerit Sistem'deki yoklamaların tamamı; içerik eksikleri
+          yoklama değil, şeride girmiyor (listede kendi satırlarında). */}
+      <HealthPulse tones={checks.map((c) => c.tone)} className="mb-4" />
 
       {rows.length === 0 ? (
         <HealthList>
@@ -476,8 +538,8 @@ function AttentionSkeleton() {
      satıra sardığı için üç satır 216 piksel (satır başı 72). */
   return (
     <>
-      <AdminPanelSkeleton rows={3} rowHeight={72} className="lg:hidden" />
-      <AdminPanelSkeleton rows={2} rowHeight={59} className="hidden lg:block" />
+      <AdminPanelSkeleton rows={3} rowHeight={72} pulse className="lg:hidden" />
+      <AdminPanelSkeleton rows={2} rowHeight={59} pulse className="hidden lg:block" />
     </>
   );
 }

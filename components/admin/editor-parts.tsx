@@ -21,6 +21,7 @@ import {
   CaretLeft,
   Check,
   ClockCounterClockwise,
+  Devices,
   Eye,
   FloppyDisk,
 } from "@phosphor-icons/react/dist/ssr";
@@ -1402,6 +1403,19 @@ export function EylemSeridi({
         >
           <ArrowSquareOut weight="duotone" size={16} aria-hidden />
           <span className="max-sm:sr-only">Yayındaki Hâli</span>
+        </a>
+        {/* CİHAZ ÖNİZLEMESİ (31 Ekim): aynı yayındaki hâl, telefon ve
+            masaüstü yan yana. Adres kaydın dilini taşıyor (`/en/...`),
+            önizleme dili oradan okuyor (app/admin/onizleme). YENİ SEKMEDE:
+            editördeki kaydedilmemiş taslak gezinmeyle kaybolmasın. */}
+        <a
+          href={`/admin/onizleme?yol=${encodeURIComponent(canliAdres)}`}
+          target="_blank"
+          rel="noopener"
+          className={buttonClass({ variant: "ghost", className: "max-sm:w-11 max-sm:px-0" })}
+        >
+          <Devices weight="duotone" size={16} aria-hidden />
+          <span className="max-sm:sr-only">Cihazlarda Gör</span>
         </a>
         <span className="ml-auto lg:hidden">
           <YazOnizle

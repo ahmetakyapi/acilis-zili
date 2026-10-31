@@ -60,7 +60,7 @@ export function WatchlistToday({ locale, labels, variant }: { locale: Locale; la
     ? new Intl.DateTimeFormat(locale === "en" ? "en-US" : "tr-TR", { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${today.session}T12:00:00Z`))
     : null;
 
-  if (variant === "compact") return <CompactNote shellRef={ref} pending={pending} gone={!pending && !today?.note} today={today} date={date} labels={labels} />;
+  if (variant === "compact") return <CompactNote shellRef={ref} pending={pending} gone={!pending && !today?.note} today={today} date={date} labels={labels} locale={locale} />;
 
   const pct = (value: number) => formatPercentText(value, locale, 2);
   const day = (iso: string) =>
@@ -191,6 +191,7 @@ function CompactNote({
   today,
   date,
   labels,
+  locale,
 }: {
   shellRef: RefObject<(HTMLElement & HTMLDivElement) | null>;
   pending: boolean;
@@ -198,6 +199,7 @@ function CompactNote({
   today: Today | undefined;
   date: string | null;
   labels: WatchlistTodayLabels;
+  locale: Locale;
 }) {
   const innerRef = useRef<HTMLDivElement>(null);
   /* Ölçülen içerik yüksekliği; ilk ölçüme kadar `auto` (ilk karede geçiş yok). */
@@ -229,6 +231,7 @@ function CompactNote({
               {labels.credit.replace("{date}", date)}
             </p>
             <p className={styles.compactText}>{note.summary}</p>
+            {today && <VersusMarket movers={today.movers} market={today.market} labels={labels} locale={locale} />}
           </>
         ) : (
           <div className={styles.compactLoading}>
@@ -241,5 +244,64 @@ function CompactNote({
         )}
       </div>
     </div>
+  );
+}
+
+/** Kısa notun çiziminde kaç hisse — yan kolon dar, üçten fazlası yığın olur. */
+const VERSUS_ROWS = 3;
+
+/**
+ * Notun çizimi (31 Ekim, sahibinin isteği: "Claude yorumları çok daha
+ * görsel olsun"). Not yalnız metindi; "endeksin belirgin altında kaldı"
+ * cümlesi okura bir ölçek vermiyordu. Şimdi en çok hareket eden üç hisse
+ * sıfır merkezli şeritte, S&P 500'ün aynı seanstaki değişimi her satırı
+ * kesen kesik çizgi: hisse çizginin hangi yanında, bir bakışta. Sayılar
+ * notun kendi girdisi (`movers`, `market`) — not neyi anlatıyorsa çizim de
+ * onu; uydurma ölçek yok. Ölçek satırların ve endeksin en büyük mutlak
+ * değeri, şerit rengi yalnız işaretten (CLAUDE.md "renk anlam taşır").
+ */
+function VersusMarket({
+  movers,
+  market,
+  labels,
+  locale,
+}: {
+  movers: Today["movers"];
+  market: number | null;
+  labels: WatchlistTodayLabels;
+  locale: Locale;
+}) {
+  const rows = movers.slice(0, VERSUS_ROWS);
+  if (rows.length === 0) return null;
+  const span = Math.max(...rows.map((row) => Math.abs(row.dayPct)), Math.abs(market ?? 0)) || 1;
+  /* Sıfır ortada; değer kulvarın yarısında tavan yapar. */
+  const at = (value: number) => 50 + (value / span) * 50;
+  const pct = (value: number) => formatPercentText(value, locale, 2);
+  return (
+    <figure className={styles.versus}>
+      <ul className={styles.versusRows}>
+        {rows.map((row, index) => {
+          const tone = directionOf(row.dayPct);
+          const from = Math.min(50, at(row.dayPct));
+          const width = Math.abs(at(row.dayPct) - 50);
+          return (
+            <li key={row.symbol} style={{ "--i": index } as CSSProperties}>
+              <span className={styles.versusSymbol}>{row.symbol}</span>
+              <span className={styles.versusLane} aria-hidden>
+                <i className={styles.versusBar} data-tone={tone} data-side={row.dayPct < 0 ? "left" : "right"} style={{ left: `${from}%`, width: `${width}%` }} />
+                {market !== null && <i className={styles.versusMarket} style={{ left: `${at(market)}%` }} />}
+              </span>
+              <span className={styles.versusValue} data-tone={tone}>{pct(row.dayPct)}</span>
+            </li>
+          );
+        })}
+      </ul>
+      {market !== null && (
+        <figcaption className={styles.versusKey}>
+          <i aria-hidden />
+          {labels.market.replace("{pct}", pct(market))}
+        </figcaption>
+      )}
+    </figure>
   );
 }

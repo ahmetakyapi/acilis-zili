@@ -251,6 +251,13 @@ const tr = {
     dayFailed: "Bu gün yüklenemedi. Yeniden dene ya da bugüne dön.",
     emptyDayTitle: "Bu Gün Planlanmış Açıklama Yok",
     emptyDayHint: "Önceki ya da sonraki günlere oklarla geçebilirsin.",
+    /* SIRADAKİ GÜNE BAKIŞ (31 Ekim): bugün boşken akış sıradaki işlem gününün
+       planlı olaylarını önizler (DayFlow → DayPreview). */
+    previewLead: "Sıradaki işlem günü {day}: akışta {n} olay planlı.",
+    previewRuler: "Sıradaki işlem gününün saat ekseni",
+    previewHidden: "Eşiğin altında {count} bilanço daha var.",
+    previewMore: "+{n} Olay Daha",
+    previewOpen: "Günün Tamamını Gör",
     emptyMajorDayHint: "Bu gün {count} şirketin bilançosu var; akış yalnızca büyük ve takip edilen şirketleri gösterir.",
     selectEvent: "Olay ayrıntılarını göster",
     events: "Günün Olayları",
@@ -324,6 +331,9 @@ const tr = {
        bandın kendisinin ne olduğunu söyleyen bir şey yoktu. */
     marketHours: "Piyasa Saatleri",
     noEvents: "Bugün planlanmış veri açıklaması yok",
+    /* Kapalı piyasada şeridin altındaki bekleme çizgisi (SessionRail →
+       "KAPANIŞTAN AÇILIŞA"). */
+    waitName: "Kapanıştan Açılışa",
   },
 
   today: {
@@ -356,6 +366,8 @@ const tr = {
     experienceReports: "Bilançolar",
     experienceNews: "Haber Akışı",
     experienceIndexNote: "ABD Endekslerini İzleyen Fonlar",
+    /* Endeks kartının yedek çizgisinin künyesi (lib/index-week.ts). */
+    indexWeek: "5 Seans",
     experienceFlowNote: "Veriler, bilançolar ve seansın dönüm noktaları.",
     /* Gün akışında okla başka güne geçilince başlık (21 Ekim): "Bugünün
        Akışı" dünü gösterirken yanlış söylüyordu; tarih kapsülde yazılı. */
@@ -1090,12 +1102,28 @@ const tr = {
         aboveResistance: "direncin üstünde",
         belowResistance: "direncin altında",
       },
-      buyWatch: "Alım için izlenecek seviye {level} desteği.",
-      buyAt: "Fiyat {level} desteğinde.",
-      buyBroken: "Fiyat {level} desteğinin altında; altında yeni destek verilmedi.",
-      sellWatch: "Satış için izlenecek seviye {level}.",
-      sellAt: "Fiyat {level} seviyesinde.",
-      sellPassed: "Fiyat {level} seviyesini geçti; üstünde yeni seviye verilmedi.",
+      /* Bölgesiz TUT'un durum adı, ekseni ve "bundan sonra" cümlesi
+         (31 Ekim; gerekçe components/technical/OpenRange.tsx). Cümleler
+         seviye dilinde, "buradan alınır" yok — koşul rutinin kendi
+         kuralından (`openWatchText`, open-plan.ts). Eski "Alım için
+         izlenecek seviye …" / "Satış için izlenecek seviye …" cümleleri
+         okura alım ve satış yeri gösteriyordu; kalktı. */
+      noZoneTitle: "Alım Bölgesi Yok",
+      state: {
+        between: "Fiyat Destekle Direnç Arasında",
+        atSupport: "Fiyat Destekte",
+        belowSupport: "Fiyat Desteğin Altında",
+        aboveSupport: "Fiyat Desteğin Üstünde",
+        atResistance: "Fiyat Dirençte",
+        aboveResistance: "Fiyat Direncin Üstünde",
+        belowResistance: "Fiyat Direncin Altında",
+      },
+      watchBoth: "{support} desteği kırılırsa ya da {resistance} direnci aşılırsa sonraki yayın seviyeleri ve görüşü yeniden değerlendirir.",
+      watchSupport: "{support} desteği kırılırsa sonraki yayın seviyeleri ve görüşü yeniden değerlendirir.",
+      watchResistance: "{resistance} direnci aşılırsa sonraki yayın seviyeleri ve görüşü yeniden değerlendirir.",
+      brokeSupport: "Fiyat {level} desteğinin altına indi; sonraki yayın seviyeleri ve görüşü yeniden değerlendirir.",
+      clearedResistance: "Fiyat {level} direncinin üstüne çıktı; sonraki yayın seviyeleri ve görüşü yeniden değerlendirir.",
+      rangeLabel: "Destek ile Direnç Arası",
       noLevels: "Seviyeler bir sonraki yayında yenilenir.",
       atLevel: "Fiyat Seviyede",
     },
@@ -1905,7 +1933,7 @@ const tr = {
 
   macro: {
     title: "Makro Göstergeler",
-    subtitle: "Enflasyon, istihdam, faiz ve büyüme verileri",
+    subtitle: "ABD ekonomisinin son açıklanan verileri: enflasyon, iş gücü, faiz ve büyüme, her biri ait olduğu dönemle.",
     previous: "Önceki",
     nextRelease: "Sonraki Açıklama",
     noNextRelease: "Henüz Açıklanmadı",
@@ -3382,11 +3410,26 @@ const tr = {
       basisRate: "TCMB Alış Kuru",
       exampleFilled:
         "Örnek işlem dolduruldu; sonuç gerçek TCMB kurlarıyla hesaplanıyor. Kendi işlemin için alanları değiştir.",
-      needTitle: "Sonuç İçin Gerekenler",
-      needBuy: "Alış: Sembol, Adet, Tarih, Fiyat",
-      needSell: "Satış: Tarih, Fiyat, Adet",
-      needRate: "İki Günün TCMB Kuru",
+      needTitle: "Sonuca Giden Yol",
       needDone: "Tamam",
+      /* Boş sonucun akış şeması (31 Ekim): üç girdi, iki sonuç düğümü. */
+      needFlow: {
+        progress: "{done}/3 Girdi Hazır",
+        progressLabel: "Üç girdinin {done} tanesi hazır",
+        buy: "Alış",
+        buyHint: "Sembol, Adet, Tarih, Fiyat",
+        sell: "Satış",
+        sellHint: "Tarih, Fiyat, Adet",
+        rate: "TCMB Kuru",
+        rateHint: "Alış ve Satış Günlerinin Döviz Alış Kuru",
+        base: "Matrah",
+        baseHint: "TL Kazanç, Gerekirse Yİ-ÜFE ile Endekslenir",
+        tax: "Tahmini Vergi",
+        taxHint: "Gelir Vergisi Dilimlerine Göre Aralık",
+        waiting: "Bekliyor",
+        busy: "Kur Alınıyor",
+        result: "Sonuç",
+      },
       scaleTitle: "Tarifedeki Yerin",
       scaleLabel: "Matrahın tarifedeki yeri: {base}, %{rate} diliminde.",
       nextBracket: "%{rate} Dilimine {amount} Var",
@@ -3988,6 +4031,7 @@ const tr = {
     lastClose: "Son Kapanış",
     portfolioShare: "Portföydeki Pay",
     quarterMove: "Bu Çeyrek",
+    dayRange: "Gün İçi Aralık",
   },
   ark: {
     title: "ARK'ın Son İşlemleri",
@@ -4146,8 +4190,9 @@ const tr = {
     highlightLabel: "Çeyreğin Hareketi",
     periodOld: "{quarter} Bildirimi",
     lastTrade: "Son İşlem {date}",
-    cardNote: "Pay, en son çeyreği bildirmiş açık fonların hisse portföyü toplamına göre; çubuklar bütün kartlarda aynı ölçekte (%0 ile %100 arası). Kapanan fon, son çeyreği henüz bildirmemiş fon ve Kongre üyesi toplama girmiyor. Rozet bu çeyreğin yönü: yeni alınan ve artırılan pozisyon sayısı, azaltılan ve tamamen satılandan fazlaysa Net Alıcı. Çeyreğin hareketi, el değiştiren hisse adedinin çeyrek sonu değeri en büyük olan hareket.",
+    cardNote: "Pay, en son çeyreği bildirmiş açık fonların hisse portföyü toplamına göre; çubuklar bütün kartlarda aynı ölçekte (%0 ile %100 arası). Kapanan fon, son çeyreği henüz bildirmemiş fon ve Kongre üyesi toplama girmiyor. Kartın tepesindeki şerit ve rozet bu çeyreğin yönü: yeni alınan ve artırılan pozisyon sayısı (alış), azaltılan ve tamamen satılandan (satış) fazlaysa Net Alıcı; yeşil-kırmızı çizgi bu iki sayının oranı. Çeyreğin hareketi, el değiştiren hisse adedinin çeyrek sonu değeri en büyük olan hareket.",
     topRest: "Kalan {count} Pozisyon {weight}",
+    topThree: "İlk Üç Pozisyon",
     tableShow: "Tüm Pozisyonlar · {count}",
   },
   /* PORTFÖYDE GÜNLÜK DEĞİŞİM — gerekçe lib/portfolio.ts. Seans adları companyCard'dan. */
