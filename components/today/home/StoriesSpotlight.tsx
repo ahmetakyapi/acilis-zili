@@ -185,11 +185,14 @@ export async function StoriesSpotlight({
               {lead.dek}
             </p>
 
-            <p className="mt-4 inline-flex items-center gap-1.5 border-t border-primary-faint pt-3.5 text-small font-semibold text-primary">
+            {/* Eylem bir hap (31 Ekim): çizginin altında küçük bir "Oku"
+                manşetin ağırlığının yanında kayboluyordu; öne çıkan analiz
+                kartıyla aynı dil — tıklayınca mavi dolar. */}
+            <p className="mt-5 inline-flex min-h-9 items-center gap-1.5 rounded-full bg-primary-wash px-4 text-small font-semibold text-primary-ink transition-colors group-hover:bg-primary group-hover:text-on-primary">
               {t.guide.cardCta}
               <ArrowRight
                 weight="bold"
-                size={12}
+                size={13}
                 className="transition-transform group-hover:translate-x-0.5"
               />
             </p>

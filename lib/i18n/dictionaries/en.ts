@@ -89,6 +89,7 @@ const en: typeof tr = {
     scrollPrev: "Scroll Back",
     scrollNext: "Scroll Forward",
     loading: "Loading",
+    loaderPhases: ["Loading", "Gathering Data", "Drawing the Screen", "Still Working"],
     submitting: "Submitting…",
     error: "Something went wrong",
     retry: "Try Again",

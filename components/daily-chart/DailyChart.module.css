@@ -22,7 +22,11 @@
 /* Pay şeridi tek yığın; dilimler arasında 2 piksel zemin (ArticleBody `pay`). */
 .shareStrip { display: flex; gap: 2px; height: 10px; border-radius: 999px; overflow: hidden; }
 .shareStrip > span { display: block; height: 100%; }
-.more { font-size: var(--text-tiny); color: var(--text-muted); }
+/* Aradaki satırların sayısı (31 Ekim): "+6" satır başında yalnız
+   duruyordu ve bir değer gibi okunuyordu. Artık kesik bir ara çizgisinin
+   ortasında küçük bir hap — "burada satırlar katlandı". */
+.more { display: flex; align-items: center; gap: 8px; font-size: var(--text-nano); font-weight: 650; color: var(--text-muted); }
+.more::before, .more::after { content: ""; flex: 1; border-top: 1px dashed var(--line); }
 
 /* ---------------------------------------------------------------- ARŞİV
    Izgara: 390'da tek sütun, 768'de iki, 1280'de üç. Kart tıklanabilir

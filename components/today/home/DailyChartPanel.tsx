@@ -7,6 +7,7 @@ import { dailyChartHref } from "@/lib/daily-chart";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { formatEtDateLong } from "@/lib/utils";
 import { SessionAgeTag } from "./SessionAgeTag";
+import { sessionTitle } from "@/lib/session-age";
 
 /**
  * Günün Grafiği — ana sayfanın yan kolonunda küçük giriş (24 Ekim).
@@ -29,7 +30,7 @@ export async function DailyChartPanel({ locale, t, nowMs }: { locale: Locale; t:
   return (
     <Panel className="min-w-0">
       <PanelHeader
-        title={t.dailyChart.title}
+        title={sessionTitle(latest.chartDate, locale, t.dailyChart.homeTitles, nowMs)}
         meta={
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <SessionAgeTag dateEt={latest.chartDate} locale={locale} t={t} nowMs={nowMs} />

@@ -43,13 +43,21 @@ async function withFetch<T>(handler: typeof fetch, run: () => Promise<T>) {
  * saatinde bir gün, kış saatinde başka bir gün okunabiliyor; testin ölçtüğü
  * şey DST değil.
  */
+/* TABAN SON HAFTA İÇİ GÜNÜ (31 Ekim): hafta sonu işlemi artık gece seansı
+   sayılıyor ve fiyat olarak kullanılmıyor (`isOvernightTrade`); "bugün"
+   cumartesiyse bu dosyanın senaryoları gece seansına düşüyordu. */
+const DAY_MS = 86_400_000;
+const weekdayBase = (() => {
+  const day = new Date().getUTCDay();
+  return Date.now() - (day === 6 ? 1 : day === 0 ? 2 : 0) * DAY_MS;
+})();
 const etDay = (offsetDays: number) =>
   new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/New_York",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(new Date(Date.now() + offsetDays * 86_400_000));
+  }).format(new Date(weekdayBase + offsetDays * DAY_MS));
 
 const at = (offsetDays: number) => `${etDay(offsetDays)}T14:00:00Z`;
 

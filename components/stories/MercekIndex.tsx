@@ -392,7 +392,8 @@ function ArchiveCard({
         </p>
         {/* h4: sayfa h1 → arşiv h2 → ay h3 → kart. `lang` şart — çevirisi
             olmayan yazı orijinal diliyle sesletilsin. */}
-        <h4 className={styles.cardTitle} data-ink="lines" lang={story.locale}>
+        {/* Kart başlığı düz mürekkep (31 Ekim): degrade manşette ve sayfa başlığında. */}
+        <h4 className={styles.cardTitle} data-ink="plain" lang={story.locale}>
           <span className="ink-line">{story.title}</span>
         </h4>
         <p className={styles.cardDek} lang={story.locale}>

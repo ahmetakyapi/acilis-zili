@@ -85,13 +85,13 @@ export function StoryCard({
           {/* `lang` ŞART: çevirisi olmayan yazı orijinal diliyle gösteriliyor
               ve rozet bunu göze söylüyor. Ekran okuyucu rozeti okumuyor —
               işaretleme olmadan Türkçe manşeti İngilizce sesletiyordu. */}
-          {/* SATIR SATIR DEGRADE (24 Eylül). Manşet iki-üç satır; bir
-              dönem düz mürekkepteydi çünkü blok degradesi ikinci satırı
-              başka tonda başlatıyordu. `data-ink="lines"` her satıra kendi
-              degradesini veriyor (globals.css). */}
+          {/* DÜZ MÜREKKEP (31 Ekim). 24 Eylül'den beri satır satır
+              degradeliydi; görsel denetim degradenin "kısa display başlık"
+              kuralını kart listelerinde delindiğini ölçtü (mercek sayfasında
+              24 degrade başlık). Degrade manşette ve sayfa başlığında kalır. */}
           <h3
             lang={story.locale}
-            data-ink="lines"
+            data-ink="plain"
             className="mt-1.5 text-lead font-bold leading-[1.2] tracking-[-0.025em] text-strong"
           >
             <span className="ink-line">{story.title}</span>

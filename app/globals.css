@@ -1475,8 +1475,23 @@ html.theme-switching::view-transition-new(root) {
 /* Kartın başındaki marka adı — başlıktaki logonun yazısıyla aynı dil. */
 .route-loader-brand { font-size: 17px; line-height: 1; margin-bottom: -4px; }
 
-/* Gezinme kartındaki kısa film — sahne kutusunun oranı (240 × 150). */
+/* Gezinme kartındaki kısa film — sahne kutusunun oranı (240 × 150).
+   İki perde aynı sahnede üst üste (InkLoader): birinci perde söner, ikinci
+   belirir. Yazı her değiştiğinde aşağıdan yükselir; altındaki film şeridi
+   perdeleri sayar. Hareketi azaltana geçiş yok (global kural). */
 .route-loader-canvas { width: 176px; height: 110px; }
+.route-loader-stage { position: relative; display: block; width: 176px; height: 110px; }
+.route-loader-act { position: absolute; inset: 0; display: grid; place-items: center; transition: opacity 0.42s var(--ease-brand), scale 0.42s var(--ease-brand); }
+.route-loader-act[data-out] { opacity: 0; scale: 0.94; }
+.route-loader-act[data-in] { animation: route-loader-act-in 0.5s var(--ease-brand) both; }
+.route-loader-act[data-in] .route-loader-canvas { width: 110px; height: 110px; }
+@keyframes route-loader-act-in { from { opacity: 0; scale: 1.06; } }
+.route-loader-label { animation: route-loader-caption 0.36s var(--ease-brand) both; }
+@keyframes route-loader-caption { from { opacity: 0; translate: 0 6px; } }
+.route-loader-reel { display: flex; gap: 5px; margin-top: -4px; }
+.route-loader-reel i { width: 18px; height: 3px; border-radius: 999px; background: var(--line); transition: background-color 0.3s var(--ease-brand); }
+.route-loader-reel i[data-on] { background: var(--primary-soft); }
+.route-loader-reel i[data-now] { background: var(--primary); }
 
 .route-loader-label {
   font-size: 12.5px;

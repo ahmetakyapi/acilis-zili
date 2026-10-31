@@ -185,7 +185,9 @@ function Side({
         {value}
       </span>
       {label && (
-        <span className="mt-1.5 truncate text-tiny leading-[15px] text-muted">
+        /* İki satır, kesik yok (31 Ekim): "Kioxia'nın Ekim-aralık…" sayının
+           neyi ölçtüğünü yarıda bırakıyordu — etiket sayının anlamı. */
+        <span className="mt-1.5 line-clamp-2 text-tiny leading-[15px] text-muted">
           {label}
         </span>
       )}

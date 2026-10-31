@@ -33,6 +33,14 @@ export const dailyChartTr = {
   readMore: "Grafiğe Git",
   /* Ana sayfa paneli. */
   homeAll: "Arşiv",
+  /* Ana sayfa panelinin başlığı grafiğin gününe göre (31 Ekim, gerekçe
+     `sessionTitle`, lib/session-age.ts). */
+  homeTitles: {
+    today: "Günün Grafiği",
+    yesterday: "Dünün Grafiği",
+    weekday: "{day} Grafiği",
+    earlier: "Son Seansın Grafiği",
+  },
   /* Bülten sayısının altındaki bağlantı. */
   briefLink: "O Günün Grafiği",
   menuHint: "Her Gün Tek Grafik",
@@ -119,6 +127,12 @@ export const dailyChartEn: typeof dailyChartTr = {
   dayNav: "Browse Charts",
   readMore: "Open the Chart",
   homeAll: "Archive",
+  homeTitles: {
+    today: "Chart of the Day",
+    yesterday: "Yesterday's Chart",
+    weekday: "{day}'s Chart",
+    earlier: "Last Session's Chart",
+  },
   briefLink: "That Day's Chart",
   menuHint: "One Chart Every Day",
   landscapeAlt: "{title} · {date} · Chart of the Day",

@@ -113,6 +113,18 @@
 .colSym { flex-shrink:0; color:var(--text-body); font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:.02em; line-height:1.3; }
 .colTrack { grid-area:track; position:relative; align-self:end; height:6px; border-radius:3px; background:color-mix(in oklab, var(--line-soft) 70%, transparent); overflow:hidden; }
 .colTrack::before { content:none; }
+/* Son kapanış grubu (31 Ekim): soluk çubuk, kesik ayraç, tek künye. */
+.col[data-stale] .colBar { opacity:.4; }
+.col[data-stale] .colPct { opacity:.72; }
+.col[data-stale-start] { position:relative; margin-top:14px; }
+.col[data-stale-start]::before {
+  content:attr(data-stale-label); position:absolute; z-index:1; top:-14px; left:0;
+  font-size:10.5px; font-weight:650; letter-spacing:.02em; color:var(--text-muted); white-space:nowrap;
+}
+@media (min-width:1180px) {
+  .col[data-stale-start] { margin-top:0; border-left:1px dashed var(--line-strong); padding-left:10px; }
+  .col[data-stale-start]::before { top:-18px; left:10px; }
+}
 .colBar {
   position:absolute; top:0; bottom:0; left:0; width:var(--mag); min-width:3px;
   border-radius:3px; background:var(--tone);
@@ -225,8 +237,16 @@
    Yarılar çukur zeminde gri ikizdi; artık en güçlü yarı yeşilin, en zayıf
    yarı kırmızının hafif tonunda ve etiket o renkte. Son kapanışta ton
    `flat`: dünün uçları bugünün rengini almıyor. */
-.extreme[data-tone="up"] { background:color-mix(in oklab, var(--up) 9%, transparent); }
-.extreme[data-tone="down"] { background:color-mix(in oklab, var(--down) 8%, transparent); }
+/* NÖTR ZEMİN, TEPEDE YÖN ŞERİDİ (31 Ekim). Yarılar yönün rengine
+   boyanıyordu (pembe/yeşil dolgu); sitenin kart dili artık nötr zemin +
+   tepede 3 piksellik şerit (bilanço, teknik, risk kartları). Renk yine
+   var — şerit, etiket, büyük sayı ve dağılım çizgisi yönü taşıyor —
+   ama zemin değil (görsel denetim, 31 Ekim). */
+.extreme[data-tone="up"], .extreme[data-tone="down"] { background:var(--surface-solid); }
+.extreme[data-tone="up"]::after, .extreme[data-tone="down"]::after {
+  content:""; position:absolute; top:0; left:18px; right:18px; height:3px; border-radius:0 0 3px 3px; background:var(--up);
+}
+.extreme[data-tone="down"]::after { background:var(--down); }
 .extreme[data-tone="up"] .extremeLabel { color:var(--up); }
 .extreme[data-tone="down"] .extremeLabel { color:var(--down); }
 .extreme[data-tone="flat"] { background:var(--surface); }

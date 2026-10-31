@@ -128,8 +128,13 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
      fonları, hepsi son kapanıştaysa hepsi (künye o zaman bunu söylüyor). */
   const counted = rows.filter((row) => row.change !== null && (allLastClose || !row.lastClose));
   const changes = counted.map((row) => row.change!);
-  const up = Math.max(0, ...changes);
-  const down = Math.max(0, ...changes.map((change) => -change));
+  /* Ölçek SON KAPANIŞ grubunu da kapsıyor (31 Ekim): grup artık soluk
+     çubukla çiziliyor ve ölçek dışında kalınca XLK'nın +%2,63'ü sütunun
+     tepesini aşıp sayının üstüne biniyordu (ölçüldü, 1440). Sayım
+     (yükselen/düşen) yine yalnız bu seansın fonları. */
+  const drawn = rows.filter((row) => row.change !== null).map((row) => row.change!);
+  const up = Math.max(0, ...drawn);
+  const down = Math.max(0, ...drawn.map((change) => -change));
   const span = Math.max(up + down, SECTOR_SCALE_FLOOR);
   /* Sıfır çizgisi düşüşün payı kadar yukarıda: hepsi yükselen bir günde
      sütunlar zeminden kalkıyor, alanın yarısı boş bir eksi bölgeye gitmiyor. */
@@ -196,16 +201,26 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
           /* Karışık günde son kapanıştaki fon künyesini kendi taşıyor: nötr
              sütun tek başına "hareket yok" gibi okunurdu. */
           const marked = row.lastClose && !allLastClose;
+          /* SON KAPANIŞ GRUBU (31 Ekim). Karışık günde bu fonlar çubuksuz,
+             yalnız sayıydı ve her birinin altında mono "XLK · Son Kapanış"
+             iki satıra kırılıyordu; sıra da "pozitifler, negatifler, yine
+             pozitif" diye bozuk okunuyordu. Artık grup kesik bir çizgiyle
+             ayrılıyor, başında tek künye var ve çubuklar soluk çiziliyor
+             (aynı ölçek, ama bu seansın değil). */
+          const groupStart = marked && i > 0 && !rows[i - 1]!.lastClose;
           return (
             <li
               key={row.symbol}
               data-fold={phoneShown(i) ? undefined : ""}
+              data-stale={marked || undefined}
+              data-stale-start={groupStart || undefined}
+              data-stale-label={groupStart ? t.market.lastClose : undefined}
               className={styles.col}
               style={
                 {
                   "--start": `${start}%`,
-                  "--size": `${inScale ? size : 0}%`,
-                  "--mag": `${inScale && row.change !== null ? (Math.abs(row.change) / peak) * 100 : 0}%`,
+                  "--size": `${inScale || marked ? size : 0}%`,
+                  "--mag": `${(inScale || marked) && row.change !== null ? (Math.abs(row.change) / peak) * 100 : 0}%`,
                   "--i": i,
                 } as CSSProperties
               }
@@ -222,13 +237,12 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
                   {row.change === null ? NO_VALUE : formatPercent(row.change, locale)}
                 </b>
                 <span aria-hidden className={styles.colTrack}>
-                  {inScale && size > 0 && <i className={styles.colBar} />}
+                  {(inScale || marked) && size > 0 && <i className={styles.colBar} />}
                 </span>
                 <span className={styles.colLabel}>
                   <span className={styles.colName}>{row.name}</span>
                   <span className={styles.colSym}>
                     {row.symbol}
-                    {marked && ` · ${t.market.lastClose}`}
                   </span>
                 </span>
               </Link>

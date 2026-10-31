@@ -1,5 +1,5 @@
 import { canonicalSymbol } from "../symbols";
-import { FEED_DELAY_MINUTES, etParts, todayEt } from "../market-hours";
+import { FEED_DELAY_MINUTES, SESSION_BOUNDS, etDateTimeToUtc, etParts, todayEt } from "../market-hours";
 import {
   fail,
   ok,
@@ -330,8 +330,48 @@ function referenceClose(
     : (snap.prevDailyBar?.c ?? null);
 }
 
+/**
+ * GECE SEANSI İŞLEMİ (31 Ekim, ölçüldü). Alpaca'nın son işlemi artık gece
+ * seansını da (20:00–04:00 ET, hafta sonuna uzanan) içeriyor. Cumartesi
+ * QQQ'nun son işlemi 00:59 ET'deydi: fiyat 702,25, cuma kapanışına göre
+ * +%1,70 — ve site bunu "Son Kapanış +%1,70" diye basıyordu. Cuma'nın
+ * gerçek kapanışı 690,49, değişimi −%3,47; aynı sayfadaki Son Seansın
+ * Silueti −%3,47 diyordu (CLAUDE.md Veri dürüstlüğü 3: aynı sayı iki
+ * yerde). Sitede gece seansı diye bir kavram yok; o işlem fiyat olarak
+ * kullanılmıyor, son gün barının kapanışı ve kendi değişimi basılıyor.
+ */
+export function isOvernightTrade(tradedAt: Date | null): boolean {
+  if (!tradedAt) return false;
+  const et = etParts(tradedAt);
+  const weekend = et.weekday === 0 || et.weekday === 6;
+  return weekend || et.minutes < SESSION_BOUNDS.preMarketOpen || et.minutes >= SESSION_BOUNDS.afterHoursClose;
+}
+
 function snapshotToQuote(symbol: string, snap: AlpacaSnapshot): Quote | null {
-  const tradedAt = snap.latestTrade?.t ? new Date(snap.latestTrade.t) : null;
+  const rawTradedAt = snap.latestTrade?.t ? new Date(snap.latestTrade.t) : null;
+  /* Gece seansı: fiyat gün barının kapanışı, an o seansın kapanış zili,
+     referans bir önceki gün barı — gerekçe `isOvernightTrade`. */
+  const overnight = isOvernightTrade(rawTradedAt) && snap.dailyBar?.c != null && snap.dailyBar.t != null;
+  if (overnight) {
+    const barDay = etParts(new Date(snap.dailyBar!.t)).dateStr;
+    const close = snap.dailyBar!.c;
+    const prev = snap.prevDailyBar?.c ?? null;
+    const change = prev !== null ? close - prev : null;
+    return {
+      symbol,
+      price: close,
+      change,
+      changePct: change !== null && prev ? (change / prev) * 100 : null,
+      open: snap.dailyBar!.o ?? null,
+      high: snap.dailyBar!.h ?? null,
+      low: snap.dailyBar!.l ?? null,
+      prevClose: prev,
+      volume: snap.dailyBar!.v ?? null,
+      /* 15:59: kapanış dakikasının içi — 16:00 `quoteBasis`te "after-hours" sayılırdı. */
+      tradedAt: etDateTimeToUtc(barDay, "15:59"),
+    };
+  }
+  const tradedAt = rawTradedAt;
   const price =
     snap.latestTrade?.p ?? snap.minuteBar?.c ?? snap.dailyBar?.c ?? null;
   const oncekiSeansBari = dailyBarIsPreviousSession(snap, tradedAt);

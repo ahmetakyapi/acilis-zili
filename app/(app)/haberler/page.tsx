@@ -310,7 +310,10 @@ function NewsCard({
               (çeviri cron'da ve sağlayıcı anahtarı yoksa atlanıyor —
               lib/translate.ts). `lang` olmadan ekran okuyucu İngilizce
               cümleyi Türkçe sesletmeye çalışıyordu. */}
-          <Title lang={locale === "tr" && !item.headlineTr ? "en" : undefined} className={styles.title}>
+          {/* DEGRADE YALNIZ MANŞETTE (31 Ekim, görsel denetim: sayfada 70
+              degrade başlık, 54'ü çok satırlı). Kural "kısa display başlık";
+              akışın kart başlıkları düz mürekkep. */}
+          <Title lang={locale === "tr" && !item.headlineTr ? "en" : undefined} className={styles.title} data-ink={lead ? "lines" : "plain"}>
             {locale === "tr" && item.headlineTr ? item.headlineTr : item.headline}
           </Title>
           {/* ÖZET SATIRI HER ZAMAN BASILIYOR — özeti olmayan haberde boş.

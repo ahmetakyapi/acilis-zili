@@ -127,6 +127,7 @@ export default async function AppLayout({
     bottomNav: t.nav.bottomNav,
     skipToContent: t.nav.skipToContent,
     loading: t.common.loading,
+    loaderPhases: t.common.loaderPhases,
   };
 
   /* MotionProvider KABUĞU SARIYOR, yalnızca sayfayı değil. Bir dönem

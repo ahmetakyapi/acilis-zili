@@ -111,6 +111,9 @@ const tr = {
     scrollPrev: "Geri Kaydır",
     scrollNext: "İleri Kaydır",
     loading: "Yükleniyor",
+    /* Gezinme filminin perde yazıları (31 Ekim): süreye göre ilerler, yüzde
+       iddia etmez — kaç saniye geçtiğini söyler, ne kadar kaldığını değil. */
+    loaderPhases: ["Yükleniyor", "Veriler Toplanıyor", "Ekran Çiziliyor", "Hâlâ Çalışıyor"],
     submitting: "Gönderiliyor…",
     error: "Bir sorun oluştu",
     retry: "Tekrar Dene",

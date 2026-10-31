@@ -37,6 +37,7 @@ export type ShellLabels = {
   bottomNav: string;
   skipToContent: string;
   loading: string;
+  loaderPhases?: readonly string[];
 };
 
 type AppShellProps = {
@@ -205,7 +206,7 @@ export function AppShell({
           Suspense şart — yoksa altındaki bütün rotalar statik ön çizimden
           düşerdi. */}
       <Suspense fallback={null}>
-        <RouteProgress label={labels.loading} brand={labels.brandName} />
+        <RouteProgress label={labels.loading} phases={labels.loaderPhases} brand={labels.brandName} />
       </Suspense>
       {/* Kartla sayfa arası uçuşun kaydı — gerekçe components/motion/Morph. */}
       <MorphRecorder />

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { sessionAgeLabel } from "../lib/session-age";
+import { sessionAgeLabel, sessionTitle } from "../lib/session-age";
 import tr from "../lib/i18n/dictionaries/tr";
 import en from "../lib/i18n/dictionaries/en";
 
@@ -29,4 +29,16 @@ test("hafta sonundan sonra hafta günüyle", () => {
 
 test("bir haftadan eskisi 'Önceki Seans'", () => {
   assert.equal(sessionAgeLabel("2026-10-16", "tr", tr, at("2026-10-26T08:00:00Z")), "Önceki Seans");
+});
+
+test("panel başlığı grafiğin gününü söylüyor: bugün, dün, hafta günü (iyelik ekiyle)", () => {
+  const T = tr.dailyChart.homeTitles;
+  // 31 Ekim cumartesi 13:34 TR — cuma grafiği "Günün" değil "Dünün".
+  assert.equal(sessionTitle("2026-10-30", "tr", T, at("2026-10-31T10:34:00Z")), "Dünün Grafiği");
+  // 2 Kasım pazartesi sabahı — cuma grafiği.
+  assert.equal(sessionTitle("2026-10-30", "tr", T, at("2026-11-02T07:00:00Z")), "Cuma'nın Grafiği");
+  assert.equal(sessionTitle("2026-10-29", "tr", T, at("2026-11-02T07:00:00Z")), "Perşembe'nin Grafiği");
+  assert.equal(sessionTitle("2026-10-30", "en", en.dailyChart.homeTitles, at("2026-11-02T12:00:00Z")), "Friday's Chart");
+  assert.equal(sessionTitle("2026-10-30", "tr", T, at("2026-10-30T20:30:00Z")), "Günün Grafiği");
+  assert.equal(sessionTitle("2026-10-01", "tr", T, at("2026-11-02T07:00:00Z")), "Son Seansın Grafiği");
 });
