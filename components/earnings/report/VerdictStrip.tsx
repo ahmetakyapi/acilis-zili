@@ -49,7 +49,7 @@ export function VerdictStrip({
           tutturalım"). Artık sitenin her yerindeki üçlü: halka çizim tonu
           (`--verdict-*`, yön yeşilinden yumuşak), kelime metin tonu
           (`verdictTextClass`). Teknik, Claude ve Analizlerim ile aynı. */}
-      <ScoreRing score={row.score} verdict={verdict} size={80} showDenominator roll />
+      <ScoreRing score={row.score} verdict={verdict} size={80} roll />
       <div className={styles.verdictDecision}>
         {/* Etiket, manşet değil — sayfanın üç başlık düzeyinden en küçüğü
             (`.plate`): bölüm başlığı, panel başlığı, etiket. 11 piksellik

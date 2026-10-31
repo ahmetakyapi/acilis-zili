@@ -270,7 +270,8 @@ function PositionCard({ row, rules, t, locale }: Common & { row: PositionRow; ru
             {row.name}
           </span>
         </div>
-        <span className={styles.cardWeight}>
+        <span className={styles.cardWeight} title={T.weightLabel}>
+          <small>{T.weightLabel}</small>
           <b>{pct(row.weight, locale)}</b>
           <span className={styles.weightLane} aria-hidden>
             <span style={{ width: `${Math.min(PERCENT, row.weight)}%` }} />
@@ -296,21 +297,22 @@ function PositionCard({ row, rules, t, locale }: Common & { row: PositionRow; ru
         </span>
       </div>
 
+      <p className={styles.trailTitle}>{T.chartTitle}</p>
       <Trail row={row} label={fill(T.chartLabel, { s: row.symbol })} />
 
       <dl className={styles.cardStats}>
         <div>
-          <dt>{T.beta}</dt>
+          <dt title={T.betaHint}>{T.beta}</dt>
           <dd>{num(row.beta, locale)}</dd>
         </div>
         <div>
-          <dt>{T.to200}</dt>
+          <dt title={T.to200Hint}>{T.to200}</dt>
           <dd className={desk.dir} data-dir={dirOf(d200)} title={d200 === null ? T.noMa200 : undefined}>
             {signedPct(d200, locale)}
           </dd>
         </div>
         <div>
-          <dt>{T.pctile}</dt>
+          <dt title={T.pctileHint}>{T.pctile}</dt>
           <dd className={styles.pctile}>
             {row.vol20Pctile !== null && (
               <span className={desk.lane} data-tone={toneOfPctile(row.vol20Pctile)}>

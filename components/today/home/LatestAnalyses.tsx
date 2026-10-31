@@ -8,7 +8,9 @@ import { Panel, PanelHeader, PanelLink, LogoTile } from "@/components/ui/primiti
 import { getAnalyses, getSymbolNames } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { analysisHref, verdictLabel, verdictOf, } from "@/lib/analysis";
-import { formatEtDateCompact } from "@/lib/utils";
+import { cn, formatEtDateCompact, formatPercentPlain } from "@/lib/utils";
+import { MetricStrip } from "@/components/earnings/MetricStrip";
+import { robustScale } from "@/lib/analysis-visuals";
 
 /* Sol kolonun yedek kapasitesi — gerekçe `LatestAnalyses` içinde. */
 const ANALYSES_BASE = 5;
@@ -53,6 +55,14 @@ export async function LatestAnalyses({
   const meta = await getSymbolNames([
     ...new Set(analyses.map((row) => row.symbol)),
   ]);
+  /* Öne çıkan kartın üç ölçüsü listenin ortak ölçeğinde — kartın şeridi
+     aşağıdaki satırların büyüklüğüyle aynı dilde okunsun. */
+  const scales = {
+    revenue: robustScale(analyses.map((row) => row.revenueYoyPct)),
+    eps: robustScale(analyses.map((row) => row.epsSurprisePct)),
+    reaction: robustScale(analyses.map((row) => row.reactionPct)),
+  };
+  const L = t.analysisVisuals.list;
 
   return (
     <Panel className="min-w-0">
@@ -70,19 +80,47 @@ export async function LatestAnalyses({
           const verdict = verdictOf(row.verdict);
           const logo = meta[row.symbol]?.logoUrl;
           if (index === 0) {
+            /* ÖNE ÇIKAN KART (31 Ekim). Halka "/ 100" paydası, altta küçük
+               bir "Oku" ve ikinci kez yazılmış bir AL hapı taşıyordu;
+               sahibinin itirazı "anlamsız duruyor". Artık görüş halkanın
+               yanında adıyla, çeyreğin üç ölçüsü şeritle (bilanço karnesinin
+               dili) ve tek, belirgin bir eylem. */
+            const figures = [
+              { key: "revenue", label: L.revenue, value: row.revenueYoyPct, digits: 0, scale: scales.revenue },
+              { key: "eps", label: L.eps, value: row.epsSurprisePct, digits: 1, scale: scales.eps },
+              { key: "reaction", label: L.reaction, value: row.reactionPct, digits: 1, scale: scales.reaction },
+            ].filter((figure): figure is typeof figure & { value: number } => figure.value !== null);
             return (
               <li key={`${row.symbol}-${row.period}`}>
-                <Link href={analysisHref(row.symbol, row.period)} prefetch={false} className={styles.analysisLeadLink}>
+                <Link href={analysisHref(row.symbol, row.period)} prefetch={false} className={styles.analysisLeadLink} data-verdict={verdict}>
                   <SpotlightCard className={styles.analysisLead}>
                     <div className={styles.analysisIdentity}>
                       <LogoTile symbol={row.symbol} logoUrl={logo} size="md" />
                       <div><h3>{row.company}</h3><small>{row.symbol} · {row.periodLabel} · {formatEtDateCompact(row.reportDate, locale)}</small></div>
                     </div>
-                    <ScoreRing score={row.score} verdict={verdict} size={72} showDenominator className={styles.analysisScore} />
+                    <div className={styles.analysisScore}>
+                      <ScoreRing score={row.score} verdict={verdict} size={64} />
+                      <span className={styles.analysisVerdict}>
+                        <span>{t.analysis.verdictLabel}</span>
+                        <b data-verdict={verdict}>{verdictLabel(verdict, t)}</b>
+                      </span>
+                    </div>
                     <p lang={row.locale} className={styles.analysisExcerpt}>{row.headline}</p>
+                    {figures.length > 0 && (
+                      <dl className={styles.analysisFigures}>
+                        {figures.map((figure) => (
+                          <div key={figure.key}>
+                            <dt>{figure.label}</dt>
+                            <dd className={cn("numeral", figure.value >= 0 ? "text-up" : "text-down")}>
+                              {figure.value >= 0 ? "▲" : "▼"} {formatPercentPlain(figure.value, locale, figure.digits)}
+                            </dd>
+                            <MetricStrip value={figure.value} scale={figure.scale} />
+                          </div>
+                        ))}
+                      </dl>
+                    )}
                     <div className={styles.analysisFooter}>
-                      <span className={styles.analysisCta}>{t.guide.cardCta}<ArrowUpRight size={16} /></span>
-                      <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} />
+                      <span className={styles.analysisCta}>{t.dayFlow.readAnalysis}<ArrowUpRight size={15} weight="bold" /></span>
                     </div>
                   </SpotlightCard>
                 </Link>

@@ -104,7 +104,11 @@ export function ScoreRing({
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span
           className="figure font-bold leading-none text-strong"
-          style={{ fontSize: `calc(${box} * 0.27)` }}
+          /* "/ 100" KALKTI (31 Ekim, sahibinin isteği: "81 yazsak da anlamlı").
+             Halkanın kendisi 100 üzerinden dolan bir ölçü; sayının altına
+             paydayı yazmak aynı şeyi ikinci kez söylüyordu. Payda yokken
+             sayı halkanın içini daha çok dolduruyor. */
+          style={{ fontSize: `calc(${box} * ${showDenominator ? 0.27 : 0.34})` }}
         >
           {roll ? <RollingFigure value={String(score)} delayMs={200} /> : score}
         </span>

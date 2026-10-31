@@ -887,7 +887,7 @@ function FeaturedAnalysis({
       </div>
 
       <div className={analysisStyles.featureVerdict}>
-        <ScoreRing score={row.score} verdict={verdict} size={64} showDenominator />
+        <ScoreRing score={row.score} verdict={verdict} size={64} />
         <span className={analysisStyles.featureVerdictText}>
           <span>{t.analysis.verdictLabel}</span>
           <b className={verdictTextClass(verdict)}>{verdictLabel(verdict, t)}</b>

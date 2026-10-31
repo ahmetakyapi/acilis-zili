@@ -1,0 +1,41 @@
+/* Sıfırı ortada ölçü şeridi (30 Ekim) — bilanço karnesinin üç ölçüsü
+   (gelir, HBK sürprizi, tepki) her yerde bu çizimle. Kulvar ince, sıfır
+   çizgisi koyu (sitenin grafik dili); dolgu işaretten renk alır. Ölçeği
+   aşan değer uçta durur, çentikle işaretlenir (`robustScale`). */
+.strip {
+  position: relative;
+  align-self: center;
+  display: block;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line-soft);
+}
+
+.strip::after {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  left: 50%;
+  width: 1px;
+  background: var(--line-strong);
+  content: "";
+}
+
+.fill {
+  position: absolute;
+  inset-block: 0;
+  border-radius: 999px;
+  background: var(--up);
+}
+
+.fill[data-tone="down"] { background: var(--down); }
+
+.fill[data-over] { mask: linear-gradient(90deg, #000 calc(100% - 5px), transparent calc(100% - 5px), transparent calc(100% - 3px), #000 calc(100% - 3px)); }
+.fill[data-over][data-tone="down"] { mask: linear-gradient(270deg, #000 calc(100% - 5px), transparent calc(100% - 5px), transparent calc(100% - 3px), #000 calc(100% - 3px)); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .fill { animation: strip-in 620ms var(--ease-brand) backwards; animation-delay: calc(var(--i, 0) * 28ms + 120ms); transform-origin: left; }
+  .fill[data-tone="down"] { transform-origin: right; }
+}
+
+@keyframes strip-in { from { scale: 0 1; } }

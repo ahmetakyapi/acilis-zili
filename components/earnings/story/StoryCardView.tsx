@@ -346,7 +346,7 @@ function ScoreBody({ card, t }: { card: Extract<StoryCard, { kind: "skor" }>; t:
   const verdict = verdictOf(card.verdict);
   return (
     <div className={styles.score}>
-      <ScoreRing score={card.score} verdict={verdict} size={120} showDenominator />
+      <ScoreRing score={card.score} verdict={verdict} size={120} />
       <p className={styles.verdict}>
         <span className={styles.metricLabel}>{t.earningsSeason.story.verdict}</span>
         <span className={cn(styles.verdictValue, verdictTextClass(verdict))}>{verdictLabel(verdict, t)}</span>

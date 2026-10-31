@@ -315,7 +315,24 @@
 .analyses { scroll-margin-top:150px; }
 .analyses :global(.panel) { border-top:3px solid var(--primary); }
 .analysisLeadLink { display:block; margin:0 18px 16px; }
-.analysisLead { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"identity score" "excerpt score" "footer footer"; align-items:center; gap:14px 20px; padding:20px; border:1px solid var(--primary-faint); border-radius:12px; background:var(--primary-tint); }
+/* Öne çıkan analiz kartı (31 Ekim): kimlik · görüş (halka + adı) ·
+   manşet · üç ölçü şeridi · tek eylem. Tepede görüşün 3 piksellik şeridi
+   (bilanço ve risk kartlarının dili). */
+.analysisLead { position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"identity score" "excerpt excerpt" "figures figures" "footer footer"; align-items:center; gap:14px 20px; padding:20px; border:1px solid var(--primary-faint); border-radius:12px; background:var(--primary-tint); }
+.analysisLead::before { position:absolute; top:-1px; inset-inline:22px; height:3px; border-radius:0 0 3px 3px; background:var(--verdict-hold); content:""; }
+.analysisLeadLink[data-verdict="buy"] .analysisLead::before { background:var(--verdict-buy); }
+.analysisLeadLink[data-verdict="sell"] .analysisLead::before { background:var(--verdict-sell); }
+.analysisVerdict { display:flex; flex-direction:column; line-height:1.15; }
+.analysisVerdict > span { font-size:var(--text-nano); font-weight:600; color:var(--text-muted); }
+.analysisVerdict > b { font-size:var(--text-read); font-weight:750; letter-spacing:-.02em; color:var(--verdict-hold); }
+.analysisVerdict > b[data-verdict="buy"] { color:var(--up); }
+.analysisVerdict > b[data-verdict="sell"] { color:var(--down); }
+.analysisFigures { grid-area:figures; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:0; }
+.analysisFigures > div { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:6px 8px; padding:10px 12px; border-radius:10px; background:var(--surface-solid); }
+.analysisFigures dt { font-size:var(--text-nano); font-weight:600; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.analysisFigures dd { margin:0; font-size:var(--text-small); font-weight:750; white-space:nowrap; }
+.analysisFigures > div > span { grid-column:1 / -1; }
+@media (max-width:519px) { .analysisFigures { grid-template-columns:minmax(0,1fr); } }
 .analysisIdentity { grid-area:identity; display:flex; min-width:0; align-items:center; gap:10px; }
 .analysisIdentity > div { min-width:0; }
 .analysisIdentity h3 { color:var(--text-strong); font-size:var(--text-read); line-height:1.3; font-weight:650; overflow-wrap:anywhere; }
@@ -325,8 +342,11 @@
    Mobilde halka metnin yanında yer kaplamaz; önizleme tüm satırı kullanır. */
 .analysisExcerpt { grid-area:excerpt; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; overflow-wrap:anywhere; min-width:0; max-width:64ch; font-size:15px; letter-spacing:-.015em; line-height:1.55; color:var(--text-body); font-weight:500; }
 .analysisFooter { grid-area:footer; display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:12px; border-top:1px solid var(--line); }
-.analysisCta { display:inline-flex; align-items:center; gap:10px; color:var(--primary-ink); font-size:var(--text-small); font-weight:650; }
-.analysisScore { grid-area:score; justify-self:end; }
+.analysisCta { display:inline-flex; align-items:center; gap:6px; min-height:34px; padding:0 14px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:var(--text-small); font-weight:650; transition:background-color var(--default-transition-duration) var(--ease-brand), color var(--default-transition-duration) var(--ease-brand); }
+.analysisLeadLink:hover .analysisCta { background:var(--primary); color:var(--on-primary); }
+.analysisCta svg { transition:translate var(--default-transition-duration) var(--ease-brand); }
+.analysisLeadLink:hover .analysisCta svg { translate:2px -2px; }
+.analysisScore { grid-area:score; justify-self:end; display:flex; align-items:center; gap:10px; }
 
 /* ---- Haber bandı ---- */
 .texture { scroll-margin-top:150px; }
@@ -557,7 +577,8 @@
   .storyAllLink { display:flex; align-items:center; justify-content:center; gap:6px; min-height:44px; border-top:1px solid var(--line-soft); background:var(--surface-solid); color:var(--primary-ink); font-size:var(--text-small); font-weight:650; }
   .storyAllLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:-3px; }
   .storyRowMeta svg { margin-left:auto; }
-  .analysisLead { grid-template-areas:"identity score" "excerpt excerpt" "footer footer"; padding:16px; gap:12px 14px; }
+  .analysisLead { grid-template-areas:"identity identity" "score score" "excerpt excerpt" "figures figures" "footer footer"; padding:16px; gap:12px 14px; }
+  .analysisScore { justify-self:start; }
   .analysisLeadLink { margin:0 12px 12px; }
   .analysisExcerpt { max-width:none; -webkit-line-clamp:4; font-size:var(--text-read); line-height:1.6; }
   .news > div:first-child { align-items:flex-start; }

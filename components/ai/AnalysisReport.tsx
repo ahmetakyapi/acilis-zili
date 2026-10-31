@@ -119,7 +119,7 @@ export function AnalysisReport({ result, t, locale, current, symbol, horizon, ca
     {/* ===== Kapak ===== */}
     <header className={styles.cover} data-verdict={o.verdict} data-fresh={fresh ? "" : undefined}>
       <div className={styles.coverVerdict}>
-        <ScoreRing score={o.overallScore} verdict={ring} size={112} showDenominator className={styles.coverRing} />
+        <ScoreRing score={o.overallScore} verdict={ring} size={112} className={styles.coverRing} />
         <div className={styles.coverWord}>
           <p className="plate">{t.coverLabel} · {focus === "technical" ? t.focus.technical : t.focus.selection} · {horizon === "short" ? t.short : t.medium}</p>
           {/* Karar harf harf yükselir, altına mürekkep fırçasıyla çizgi çekilir (filmin dili). */}

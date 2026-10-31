@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile } from "@/components/ui/primitives";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
-import { reactionRatio } from "@/lib/analysis-visuals";
+import { MetricStrip } from "@/components/earnings/MetricStrip";
 import { verdictTextClass, type AnalysisRowView } from "@/lib/analysis";
 import { cn } from "@/lib/utils";
 import styles from "./AnalysisCardGrid.module.css";
@@ -32,24 +32,6 @@ export type AnalysisCardLabels = {
  * Kartın tamamı tıklanır (bağlantı şirket adında, `::after` yüzeyi
  * kaplıyor) — tablo satırıyla aynı kalıp, aynı erişilebilir ad.
  */
-/** Sıfırı ortada bir ölçü şeridi — tepkinin kalıbı, kartın üç ölçüsünde. */
-function MetricStrip({ value, scale }: { value: number; scale: number }) {
-  const ratio = reactionRatio(value, scale);
-  return (
-    <span aria-hidden className={styles.strip}>
-      <span
-        className={styles.stripFill}
-        data-tone={ratio >= 0 ? "up" : "down"}
-        data-over={Math.abs(value) > scale || undefined}
-        style={{
-          left: ratio >= 0 ? "50%" : `${50 + ratio * 50}%`,
-          width: `${Math.max(Math.abs(ratio) * 50, 1)}%`,
-        }}
-      />
-    </span>
-  );
-}
-
 export function AnalysisCardGrid({
   rows,
   labels,

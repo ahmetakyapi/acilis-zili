@@ -224,6 +224,19 @@
   align-items: flex-end;
   gap: 3px;
 }
+.cardWeight small {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-muted);
+}
+.trailTitle {
+  margin-top: 2px;
+  font-size: var(--text-nano);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.cardStats dt[title] { cursor: help; }
 .cardWeight b {
   font-size: var(--text-read);
   font-weight: 800;
