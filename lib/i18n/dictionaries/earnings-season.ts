@@ -56,6 +56,14 @@ export const earningsSeasonTr = {
     noneTitle: "Takvimde Tarih Yok",
     analysesTitle: "Okunan Çeyrekler",
     storyLink: "Hikâye Kartları",
+    /* Sıradaki bilanço çizimi (31 Ekim): yaprak + son rapordan bu yana geçen
+       çeyrek çizgisi + beklentinin son çeyrekle yan yana çubuğu. */
+    estimatedDate: "Tahmini Tarih",
+    lastReport: "Son Rapor",
+    reportDay: "Bilanço Günü",
+    cycleAria: "Son rapordan bu yana {elapsed} gün geçti; sıradaki rapora {left} gün var.",
+    lastQuarter: "Son Çeyrek",
+    estimateLabel: "Beklenti",
   },
   vote: {
     title: "Beklentiyi Geçer mi?",
@@ -87,6 +95,15 @@ export const earningsSeasonTr = {
     disclaimerNote:
       "Okurların tahmini; sonuç takvime düşen gerçekleşen EPS ile beklentinin karşılaştırmasıdır. Yarım sentin altındaki fark beklentiye denk sayılır ve puanlanmaz.",
     previousTitle: "Son Rapor",
+    /* Oy kartlarının alt satırı ve karne hücreleri (31 Ekim). */
+    beatHint: "EPS beklentinin üstünde gelir",
+    missHint: "EPS beklentinin altında kalır",
+    signInHint: "Oy vermek için giriş yap; topluluğun dağılımı oy verince açılır.",
+    recordBeat: "Geçti",
+    recordMiss: "Kaçırdı",
+    recordInline: "Denk",
+    recordActual: "Gerçekleşen",
+    recordEstimate: "Beklenti",
     /* Beklenti karnesi — hissenin son çeyreklerde EPS beklentisini kaç
        kez geçtiği (oyun bağlamı; sonuçla aynı eşik). */
     recordTitle: "Beklenti Karnesi",
@@ -190,6 +207,12 @@ export const earningsSeasonEn: typeof earningsSeasonTr = {
     noneTitle: "No Date on the Calendar",
     analysesTitle: "Quarters We Read",
     storyLink: "Story Cards",
+    estimatedDate: "Estimated Date",
+    lastReport: "Last Report",
+    reportDay: "Report Day",
+    cycleAria: "{elapsed} days since the last report; {left} days to the next one.",
+    lastQuarter: "Last Quarter",
+    estimateLabel: "Estimate",
   },
   vote: {
     title: "Will It Beat?",
@@ -220,6 +243,14 @@ export const earningsSeasonEn: typeof earningsSeasonTr = {
     disclaimerNote:
       "A reader poll; the result compares the actual EPS on the calendar with the estimate. A gap under half a cent counts as in line and is not scored.",
     previousTitle: "Last Report",
+    beatHint: "EPS comes in above the estimate",
+    missHint: "EPS comes in below the estimate",
+    signInHint: "Sign in to vote; the community split opens once you do.",
+    recordBeat: "Beat",
+    recordMiss: "Missed",
+    recordInline: "In Line",
+    recordActual: "Actual",
+    recordEstimate: "Estimate",
     recordTitle: "Beat Record",
     recordNote: "Beat the EPS estimate in {beats} of the last {n} quarters.",
     errors: {

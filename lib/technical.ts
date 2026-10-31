@@ -902,12 +902,110 @@ export function riskReward(
   };
 }
 
+/* --------------------------------------------------------------------------
+   Planı olmayan görüş — "nereden alınır, nerede satılır" yine cevaplanır.
+
+   31 EKİM, SAHİBİNİN İSTEĞİ: "SanDisk'te neden 'Nereden Alınır / Nerede
+   Satılır' kısımları yok?" Bölgesiz TUT ve SAT kartı iki soruyu hiç
+   sormuyordu; yalnız "En Yakın Destek / Direnç" diye iki satır vardı ve
+   okuyucu bunun alım ve satış sorusunun cevabı olduğunu kendi çeviriyordu.
+
+   UYDURMA SEVİYE YOK. Rutin bölge yazmadıysa site bölge icat etmiyor: alım
+   sorusunun cevabı "Bölge Yok" ve yanında rutinin VERDİĞİ en yakın destek,
+   satış sorusunun cevabı rutinin verdiği hedef (SAT'ta tepkide satış
+   seviyesi) ya da direnç. Hepsi kayıttaki sayılar.
+
+   FİYAT SEVİYEYİ GEÇTİYSE SÖYLENİYOR. Eski hâl "en yakın direnç"i listenin
+   ilk elemanı sayıyordu: fiyat direncin 0,09 $ altındayken kart "Dirence
+   0,09 $ · %0,0" yazıyordu, üstüne çıktığında o bacak sessizce
+   kayboluyordu. Artık üç hâl var: seviyeye doğru (uzaklığıyla), seviyede
+   (%0,25'ten yakın — `ladderOf`taki "aynı yer" eşiği) ve geçilmiş (bütün
+   seviyeler fiyatın yanlış tarafında; en yakın geçilen seviye ve aradaki
+   yüzde).
+   -------------------------------------------------------------------------- */
+
+/** Fiyat seviyeye bundan yakınsa "seviyede" sayılır (yüzde; `ladderOf`taki `same`). */
+export const LEVEL_AT_PCT = 0.25;
+
+export type OpenSide = {
+  /** `toward`: seviyeye doğru; `at`: seviyede; `beyond`: bütün seviyeler geçilmiş. */
+  state: "toward" | "at" | "beyond";
+  /** Satış tarafında `target` (rutinin hedefi / SAT'ta tepki seviyesi) ya da `resistance`. */
+  kind: "support" | "resistance" | "target";
+  /** Cevabın seviyesi: en yakın olan, geçilmişse en yakın geçilen. */
+  level: number;
+  /** Aynı taraftaki sıradaki seviyeler (yalnız `toward`/`at`; listede sunmak için). */
+  levels: number[];
+  /** Fiyattan seviyeye uzaklık, yüzde, işaretsiz; fiyat yoksa null. */
+  pct: number | null;
+};
+
+export type OpenPlan = {
+  verdict: "hold" | "sell";
+  buy: OpenSide | null;
+  sell: OpenSide | null;
+};
+
+function openSide(
+  values: readonly number[],
+  kind: OpenSide["kind"],
+  side: "below" | "above",
+  price: number | null,
+): OpenSide | null {
+  const clean = values.filter((value) => Number.isFinite(value) && value > 0);
+  if (clean.length === 0) return null;
+  /* Fiyat yoksa (kotasyon da fotoğraf da yok) rutinin sırası geçerli: liste
+     zaten fiyata yakından uzağa yazılıyor (docs/claude-rutinler.md § 5). */
+  if (price === null || price <= 0) {
+    return { state: "toward", kind, level: clean[0]!, levels: clean, pct: null };
+  }
+  const pctTo = (level: number) => (Math.abs(level - price) / price) * 100;
+  const slack = 1 + (side === "above" ? -1 : 1) * (LEVEL_AT_PCT / 100);
+  const ahead = clean
+    .filter((value) => (side === "above" ? value >= price * slack : value <= price * slack))
+    .sort((a, b) => (side === "above" ? a - b : b - a));
+  const first = ahead[0];
+  if (first !== undefined) {
+    const pct = pctTo(first);
+    return { state: pct < LEVEL_AT_PCT ? "at" : "toward", kind, level: first, levels: ahead, pct };
+  }
+  const passed = side === "above" ? Math.max(...clean) : Math.min(...clean);
+  return { state: "beyond", kind, level: passed, levels: [], pct: pctTo(passed) };
+}
+
+/**
+ * Planı olmayan görüşün iki cevabı. Alım bölgesi varsa (AL, bölgeli TUT)
+ * null — orada plan şeridi bölge, hedef ve stopla cevaplıyor.
+ * Satış tarafı: rutin hedef yazdıysa hedefler (SAT'ta "tepkide satılabilecek
+ * direnç"), yazmadıysa dirençler — `PlanStrip`in eski kuralıyla aynı kaynak.
+ */
+export function openPlan(
+  verdict: VerdictKey,
+  price: number | null,
+  row: {
+    entryLow: number | null;
+    entryHigh: number | null;
+    targets: readonly number[];
+    supports: readonly number[];
+    resistances: readonly number[];
+  },
+): OpenPlan | null {
+  if (verdict === "buy") return null;
+  if (verdict === "hold" && row.entryLow !== null && row.entryHigh !== null) return null;
+  const sellValues = row.targets.length ? row.targets : row.resistances;
+  return {
+    verdict,
+    buy: openSide(row.supports, "support", "below", price),
+    sell: openSide(sellValues, row.targets.length ? "target" : "resistance", "above", price),
+  };
+}
+
 export type PlanReading =
   | { kind: "inZone"; stop: number | null; hold: boolean }
   | { kind: "above"; pct: number; high: number }
   | { kind: "below"; pct: number; stop: number | null }
   | { kind: "belowStop"; stop: number }
-  | { kind: "wait"; support: number | null; resistance: number | null }
+  | { kind: "wait"; open: OpenPlan }
   | { kind: "sell"; level: number | null; support: number | null };
 
 /**
@@ -930,12 +1028,18 @@ export function planReading(
     resistances: readonly number[];
   },
 ): PlanReading {
+  /* SAT ve bölgesiz TUT `openPlan`dan okuyor (31 Ekim): "en yakın"
+     listenin ilk elemanı değil, fiyatın doğru tarafındaki en yakın seviye.
+     Geçilmiş bir tepki seviyesi ya da kırılmış bir destek cümleye
+     "izlenecek seviye" diye girmiyor. */
+  const open = openPlan(verdict, price, row);
   if (verdict === "sell") {
-    return { kind: "sell", level: row.targets[0] ?? row.resistances[0] ?? null, support: row.supports[0] ?? null };
+    const live = (side: OpenSide | null) => (side && side.state !== "beyond" ? side.level : null);
+    return { kind: "sell", level: live(open?.sell ?? null), support: live(open?.buy ?? null) };
   }
   const position = planPosition(price, row.entryLow, row.entryHigh, row.stop);
   if (position === null || row.entryHigh === null) {
-    return { kind: "wait", support: row.supports[0] ?? null, resistance: row.resistances[0] ?? null };
+    return { kind: "wait", open: open ?? { verdict: "hold", buy: null, sell: null } };
   }
   switch (position.kind) {
     case "inZone":
@@ -1143,6 +1247,106 @@ export function priceMapLayout(
   };
 
   return { rungs, scale, lo, hi };
+}
+
+/* --------------------------------------------------------------------------
+   Fiyat merdiveni (31 Ekim) — detay sayfasının tek görsel ekseni.
+
+   Sahibinin isteği: "çok daha görsel bir şekilde ele alalım". Detayda
+   seviyeler bir tabloydu (eşit aralıklı satırlar, yanında uzaklık
+   çubukları) ve not "satır aralıkları fiyat mesafesi değildir" diye
+   özür diliyordu. Merdivende iki ayrı y var:
+     · `y` — seviyenin GERÇEK yeri, doğrusal ölçekte. Çizgiler, bant, stop
+       altı ve fiyat imleci buradan; uzaklık göze doğru gelir.
+     · `labelY` — etiketin yeri. Yakın seviyelerin etiketleri çakışmasın diye
+       itiliyor; asıl yer ile etiket arasını ince bir bağ çizgisi tutuyor.
+   Eski haritanın (`priceMapLayout`) yaklaşımı tersiydi: ölçeği esnetip
+   etiketi işaretin hizasında tutuyordu ve yakın seviyeler gerçekte
+   olduklarından uzak görünüyordu. Burada ölçek dürüst, esneyen etiket.
+
+   İtme küme yöntemiyle: çakışan etiketler bir küme olur ve küme kendi
+   hedeflerinin ORTALAMASINA ortalanır — bir seviye ötekileri tek yöne
+   sürüklemiyor. Kutu boyu en az `n × gap` + iki pay, yani itme hiçbir zaman
+   tavana sıkışmıyor.
+   -------------------------------------------------------------------------- */
+
+export type LadderMark = (Level | { kind: "price"; price: number }) & {
+  /** Seviyenin gerçek yeri (piksel, üstten); bölgede bandın ortası. */
+  y: number;
+  /** Etiketin yeri — çakışma itmesinden sonra. */
+  labelY: number;
+};
+
+export function priceLadderLayout(
+  levels: readonly Level[],
+  price: number | null,
+  {
+    gap,
+    inset,
+    minHeight,
+    bottomPad = 0,
+    labelTop = inset / 2,
+    labelBottom = inset / 2,
+  }: {
+    gap: number;
+    inset: number;
+    minHeight: number;
+    /** Eksenin altında ayrılan şerit (stop altı alanı). */
+    bottomPad?: number;
+    /** Etiketin `labelY`si kutunun üstünden / altından en az bu kadar içeride. */
+    labelTop?: number;
+    labelBottom?: number;
+  },
+): { marks: LadderMark[]; height: number; scale: (value: number) => number; lo: number; hi: number } {
+  const base: (Level | { kind: "price"; price: number })[] = [...levels];
+  if (price !== null && Number.isFinite(price)) base.push({ kind: "price", price });
+  const points = base.flatMap((rung) => ("high" in rung && rung.high !== undefined ? [rung.price, rung.high] : [rung.price]));
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const pad = (max - min) * 0.05 || max * 0.02 || 1;
+  const lo = min - pad;
+  const hi = max + pad;
+  const height = Math.max(minHeight, (base.length - 1) * gap + labelTop + labelBottom, base.length * gap + inset * 2 + bottomPad);
+  const usable = height - inset * 2 - bottomPad;
+  const scale = (value: number) => inset + ((hi - value) / (hi - lo)) * usable;
+
+  const marks: LadderMark[] = base
+    .map((rung) => {
+      const y = scale(anchorOf(rung));
+      return { ...rung, y, labelY: y };
+    })
+    .sort((a, b) => a.y - b.y || topOf(b) - topOf(a));
+
+  /* Küme itmesi. Her küme: ilk etiketin yeri ve üye sayısı. Kümenin en iyi
+     yeri, üyelerin hedeflerinden kendi sıra paylarını çıkarıp ortalamak. */
+  const top = labelTop;
+  const floor = height - labelBottom;
+  type Cluster = { from: number; size: number; start: number };
+  const place = (cluster: Cluster) => {
+    let sum = 0;
+    for (let i = 0; i < cluster.size; i++) sum += marks[cluster.from + i]!.y - i * gap;
+    const ideal = sum / cluster.size;
+    cluster.start = Math.min(Math.max(ideal, top), floor - (cluster.size - 1) * gap);
+  };
+  const clusters: Cluster[] = [];
+  marks.forEach((_, index) => {
+    const cluster: Cluster = { from: index, size: 1, start: 0 };
+    place(cluster);
+    clusters.push(cluster);
+    while (clusters.length > 1) {
+      const last = clusters[clusters.length - 1]!;
+      const prev = clusters[clusters.length - 2]!;
+      if (prev.start + prev.size * gap <= last.start) break;
+      prev.size += last.size;
+      clusters.pop();
+      place(prev);
+    }
+  });
+  for (const cluster of clusters) {
+    for (let i = 0; i < cluster.size; i++) marks[cluster.from + i]!.labelY = cluster.start + i * gap;
+  }
+
+  return { marks, height, scale, lo, hi };
 }
 
 /**

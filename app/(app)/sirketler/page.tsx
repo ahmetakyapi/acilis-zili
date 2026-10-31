@@ -52,7 +52,7 @@ import {
   formatMoneyCompact,
   formatPercent,
   formatPrice,
-  formatVolume,
+  formatCompact,
   staleMark,
   NO_VALUE,
 } from "@/lib/utils";
@@ -129,6 +129,8 @@ const QUOTE_BUDGET_MS = 2500;
 
 /** Günlük değişim kulvarının tam kolu (yüzde) — bütün sayfalarda aynı ölçek. */
 const CHANGE_LANE_SPAN = 5;
+/** Haftalık değişimin şerit ölçeği: hafta günden geniş oynar, ±%12. */
+const WEEK_LANE_SPAN = 12;
 
 /** Kategori çipi — etiket + o gruptaki şirket sayısı. */
 function SectorChip({
@@ -924,6 +926,7 @@ async function CompaniesTable({
                       </td>
                       <td className="numeral hidden px-3 py-3 text-right text-read sm:table-cell">
                         {weekly[company.symbol] !== undefined ? (
+                          <>
                           <span
                             className={cn(
                               "font-semibold",
@@ -932,6 +935,11 @@ async function CompaniesTable({
                           >
                             {formatPercent(weekly[company.symbol], locale)}
                           </span>
+                          {/* Hafta da bir çizgi (31 Ekim): günlük sütun şeritli,
+                              haftalık çıplak sayıydı; iki yön yan yana aynı
+                              dilde okunsun. Ölçek ayrı (±%12), hafta geniş oynar. */}
+                          <DirectionLane value={weekly[company.symbol]!} span={WEEK_LANE_SPAN} className="[--lane-max:84px]" />
+                          </>
                         ) : (
                           <span className="text-xs text-muted">{NO_VALUE}</span>
                         )}
@@ -973,7 +981,9 @@ async function CompaniesTable({
                             sayısı — projenin "aynı sayı aynı kaynaktan"
                             kuralının ihlali. Satırın fiyat ve değişim
                             hücreleri zaten "—" gösteriyor; hacim de öyle. */}
-                        {formatVolume(quote?.volume, locale)}
+                        {/* KISALTILMIŞ (31 Ekim): "169.643.020" sekiz basamaklık bir
+                            dizi olarak okunuyordu; "169,6 Mn" bir bakışta. */}
+                        {quote?.volume != null ? formatCompact(quote.volume, locale) : NO_VALUE}
                       </td>
                     </tr>
                   );

@@ -16,7 +16,8 @@ import { MoreSymbols, type MoreSymbolEntry } from "@/components/technical/MoreSy
 import { PlanHistory } from "@/components/technical/PlanHistory";
 import { PlanStrip } from "@/components/technical/PlanStrip";
 import { BalanceNotes } from "@/components/technical/BalanceNotes";
-import { PriceMap, PriceMapNotes } from "@/components/technical/PriceMap";
+import { PriceMapNotes } from "@/components/technical/PriceMap";
+import { PriceLadder } from "@/components/technical/PriceLadder";
 import { ScenarioRail } from "@/components/technical/ScenarioRail";
 import { SignalStrip } from "@/components/technical/SignalStrip";
 import { STANCE_GUIDE_SLUG, StanceGuide } from "@/components/technical/StanceGuide";
@@ -461,8 +462,12 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           <div className={styles.blockHead}>
             <h2 className={styles.sectionTitle}>{t.technical.priceMap}</h2>
           </div>
-          <PriceMap
-            presentation="levels"
+          {/* SEVİYE TABLOSU YERİNE FİYAT MERDİVENİ (31 Ekim, sahibinin
+              isteği: "çok daha görsel"). Tablo (`PriceMap
+              presentation="levels"`) eşit aralıklı satırlardı; merdivende
+              aralık fiyat mesafesinin kendisi, bölge bant, stopun altı alan.
+              Gerekçe `PriceLadder`. */}
+          <PriceLadder
             price={price}
             {...levelProps}
             verdict={verdict}

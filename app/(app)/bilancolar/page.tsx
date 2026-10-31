@@ -200,6 +200,15 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           Satırlar 155 / 155 / 68 → 143 / 143 / 49 (1280), 152 / 152 / 49
           (1440); yatay taşma 0, CLS 0.
 
+          TAŞMA TURU (31 Ekim; gerekçe `HorizonGrid.tsx` başında ve
+          `RecentAnalysesStrip.module.css`). Ölçüldü (TR, açık/koyu, 1440):
+          eksen 104 → 127 piksel (`max-content`), hap taşması 23 → 0;
+          kartlar 50×68 + 104×44 iki biçim → tek biçim 49×71; ufuk paneli
+          468 → 509 (saati belirsiz satırı 52 → 87). Analiz şeridi: kayan
+          1010'luk kap (içerik 1991, SNDK yarım) → 1270'lik ızgarada dört
+          tam çip; 1024'te üç, 390'da kaydırma. 390/1024/1440'ta yatay
+          taşma ve kutudan taşan öğe 0.
+
           Önceki tur: SEKME ÇUBUĞU BAŞLIĞIN HEMEN ALTINDA. Kapak yoğunluk
           grafiğini ve öne çıkanları da taşıyordu: telefonda 735 piksel ve
           sekme çubuğu y=836'da, yani dört görünüm arasındaki geçiş ilk

@@ -117,6 +117,7 @@ export async function PortfolioTechnical({
                 targets={row.targets}
                 supports={row.supports}
                 resistances={row.resistances}
+                price={price}
                 locale={locale}
                 t={t}
               />

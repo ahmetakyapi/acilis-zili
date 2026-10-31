@@ -149,9 +149,14 @@
   --chart-c: #6b4fd8;
   --chart-d: #0f7d78;
 
-  --impact-high: #c01a3d;
-  --impact-med: #a4720f;
-  --impact-low: #586a7c;
+  /* ÖNEM MÜREKKEP KOYULUĞUYLA (31 Ekim, görsel denetim). Yüksek önem
+     kırmızıydı (#c01a3d) — bu üründe kırmızı DÜŞÜŞ demek ve takvimde
+     "kritik veri" bir düşüş işareti gibi okunuyordu. Önem artık tek
+     tonun koyuluğu (lacivert mürekkep → gri); düzeyi ayrıca nokta SAYISI
+     taşıyor (`ImpactDots`), renk tek taşıyıcı değil. */
+  --impact-high: #10213b;
+  --impact-med: #5f7189;
+  --impact-low: #aab6c4;
 
   /* Sticky chrome */
   --chrome: #f7f9fb;
@@ -349,9 +354,9 @@
   --chart-c: #9b8cf0;
   --chart-d: #3faea6;
 
-  --impact-high: #ff5c7a;
-  --impact-med: #d3a04a;
-  --impact-low: #8497a9;
+  --impact-high: #e8eef7;
+  --impact-med: #93a3b8;
+  --impact-low: #4c5d72;
 
   --chrome: #070d16;
   --chrome-border: rgb(255 255 255 / 0.08);
@@ -2358,6 +2363,10 @@ header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { grid-area:
   header.page-masthead[data-has-aside="true"] > [data-masthead-aside] { align-self:stretch; margin-top:4px; }
 }
 .page-heading-copy.page-heading-copy { min-width:0; padding:0; align-self:start; }
+/* KÜNYE ŞERİDİ (`PageHeader strip=`, 31 Ekim): başlık kartının son satırı,
+   tam genişlik, saç teliyle ayrılmış. Kartın iç dolgusuyla aynı hatta
+   başlıyor; kartın dışında yüzen kimlik satırının yerini aldı. */
+.page-masthead-strip { flex-basis:100%; min-width:0; padding-top:16px; border-top:1px solid var(--line-soft); }
 /* ÜST KÜNYE YOK (9 Ekim 2026). Kapak başlığının üstünde `.page-eyebrow`
    künyesi ve künyesiz kapaklarda onun 20 piksellik boş yer tutucusu
    duruyordu. Künye aynı sabah 12'den 14 piksele büyütüldü, akşam sahibi

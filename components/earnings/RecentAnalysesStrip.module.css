@@ -1,0 +1,112 @@
+/* ==========================================================================
+   Son Yazılan Analizler (RecentAnalysesStrip.tsx).
+
+   TAM KARTLAR, KESİK YOK (31 Ekim, sahibinin sözü: "bazı yerler taşmış,
+   böyle kabul edilemez"). Şerit geniş ekranda da yatay kayıyordu: 1440'ta
+   kap 1010 piksel, içerik 1991; dördüncü çipten sonra beşincisi (SNDK)
+   kabın kenarında yarım kalıyor ve solma maskesi onu "Tümünü Gör"ün dibine
+   bastırıyordu. Masaüstünde kaydırma bir işaret değil kusur gibi okundu.
+
+   Şimdi:
+     - Başlık ile "Tümünü Gör" üstte tek satır (`PanelHeader` dili), çipler
+       altında kabın TAM genişliğinde.
+     - ≥640'ta çipler eşit sütunlu bir ızgara; sütun sayısı kabın kendi
+       genişliğinden (kap sorgusu), sığmayan çip `display: none` (odak
+       sırasından da çıkıyor) — kalanı "Tümünü Gör"de. Boşluk esnetilmez,
+       doldurulur: sütunlar `1fr`, son çip kenara kadar.
+     - Telefonda (<640) kaydırma kalıyor: orada yatay kaydırma alışılmış ve
+       `ScrollEdges` sağ kenarı soldurarak "devamı var" diyor.
+
+   Sütun tabanı ölçüldü (1440, en uzun çip): TR 250 ("AMZN SAT 47 3Ç
+   2026"), EN 258 ("ABBV HOLD 63 Q3 2026") → yuva 262, aralık 10. Eşikler
+   n·262 + (n−1)·10: 534 / 806 / 1078 / 1350. Sonuç: 1440'ta dört tam çip
+   (her biri ~311), 1024'te üç, 768'de iki; son çipin sağ kenarı kabın
+   içinde (ölçüm `.tmp-horizon.mjs`, `lastRight ≤ 0`).
+   ========================================================================== */
+
+.strip {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px 16px;
+  border-radius: var(--radius-xl, 1rem);
+  border: 1px solid color-mix(in oklab, var(--primary-soft) 45%, transparent);
+  background: var(--premium-surface);
+}
+@media (min-width: 640px) { .strip { padding: 14px 24px 16px; } }
+
+.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
+.title { margin: 0; font-size: var(--text-read); font-weight: 700; white-space: nowrap; }
+.all {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 4px;
+  margin-block: -8px;
+  font-size: var(--text-tiny);
+  font-weight: 650;
+  white-space: nowrap;
+  color: var(--primary);
+  transition: color .2s var(--ease-brand);
+}
+@media (hover: hover) { .all:hover { color: var(--primary-hover); } }
+
+.rail { container: rail / inline-size; min-width: 0; }
+
+/* Telefon: kayan tek satır. */
+.list {
+  display: flex;
+  gap: 10px;
+  margin: 0 -16px;
+  padding: 0 16px;
+  overflow-x: auto;
+  list-style: none;
+}
+.item { display: flex; flex-shrink: 0; min-width: 0; }
+
+.chip {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px 6px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-solid);
+  transition: border-color .2s var(--ease-brand);
+}
+@media (hover: hover) { .chip:hover { border-color: var(--line-strong); } }
+.chip:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.symbol { font-size: var(--text-base); font-weight: 700; color: var(--text-strong); white-space: nowrap; }
+/* Dönem sağa yaslı: geniş sütunda çipin ucu boş kalmasın, künye hizalı dursun. */
+.period { margin-left: auto; padding-left: 2px; font-size: var(--text-tiny); color: var(--text-muted); white-space: nowrap; }
+
+@media (min-width: 640px) {
+  .list {
+    display: grid;
+    grid-template-columns: repeat(var(--n, 1), minmax(0, 1fr));
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+  .item { display: none; }
+  .item:nth-child(-n + 1) { display: flex; }
+}
+@container rail (min-width: 534px) {
+  .list { --n: 2; }
+  .item:nth-child(-n + 2) { display: flex; }
+}
+@container rail (min-width: 806px) {
+  .list { --n: 3; }
+  .item:nth-child(-n + 3) { display: flex; }
+}
+@container rail (min-width: 1078px) {
+  .list { --n: 4; }
+  .item:nth-child(-n + 4) { display: flex; }
+}
+@container rail (min-width: 1350px) {
+  .list { --n: 5; }
+  .item:nth-child(-n + 5) { display: flex; }
+}

@@ -214,10 +214,13 @@
   min-width: 0;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 5px 1px 5px;
+  gap: 4px;
+  /* Yan dolgu 3: 1440'ta kart 49 piksel ve "QCOM", "AMGN" 6 piksellik
+     dolguda kırpılıyordu; şerit kendi 3 piksellik payıyla içeride. */
+  padding: 6px 3px 7px;
   border-radius: var(--radius-lg);
   background: var(--surface-solid);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
   cursor: pointer;
   transition: background-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand);
 }
@@ -249,15 +252,25 @@
   white-space: nowrap;
 }
 
-/* Dört kare, eskiden yeniye. Dolu = aşıldı (`--up`), boş = aşılmadı (nötr
-   çerçeve), soluk = veri yok. Kartta 6, okuma şeridinde 11 piksel. */
-.squares { display: flex; gap: 2px; }
-.square { display: block; width: 6px; height: 6px; border-radius: 1.5px; background: var(--line-strong); }
+/* KARNE BİR ŞERİT (31 Ekim, sahibinin sözü: "bazı yerler taşmış, böyle
+   kabul edilemez, çok daha iyi hale getirmeliyiz"). Karonun altında 6
+   piksellik dört kare vardı: 1440'ta 6×6, aralarında 2 piksel; "aşılmadı"
+   1,25 piksellik bir çerçeve, "veri yok" gri dolu kare. Uzaktan dört nokta
+   okunuyordu, hangisinin ne olduğu ancak lejantla. Şimdi sitenin grafik
+   dili: kartın genişliğinde dört parçalı ince şerit (kulvar üstünde
+   şerit), eskiden yeniye. Aşıldı `--up` dolu, aşılmadı `--text-muted`
+   dolu (kırmızı değil: "kaçırdı" bir yargı gibi okunurdu), veri yok
+   `--line-soft` kulvar rengi, yani parça "boş". Parça 1440'ta ~9×4 →
+   şerit kart iç genişliği (40 piksel); okuma şeridinde 72×6. Lejant
+   aynı parçaları çiziyor. */
+.squares { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; width: 100%; }
+@media (min-width: 1180px) { .squares:not([data-large]) { width: calc(100% - 6px); } }
+.square { display: block; height: 4px; border-radius: 2px; background: var(--line-soft); }
 .square[data-mark="beat"] { background: var(--up); }
-.square[data-mark="miss"] { background: transparent; box-shadow: inset 0 0 0 1.25px var(--text-muted); }
-.squares[data-large] { gap: 4px; }
-.squares[data-large] .square { width: 11px; height: 11px; border-radius: 3px; }
-.squares[data-large] .square[data-mark="miss"] { box-shadow: inset 0 0 0 1.5px var(--text-muted); }
+.square[data-mark="miss"] { background: var(--text-muted); }
+.squares[data-large] { width: 72px; gap: 3px; }
+.squares[data-large] .square { height: 6px; border-radius: 3px; }
+.legendItem > .square { width: 14px; height: 5px; border-radius: 3px; }
 
 /* "+N": hücreye sığmayanlar. Kart boyunda ama dolu değil, saç teli
    halkalı: veri değil, bir bağlantı. */
@@ -276,21 +289,11 @@
 @media (hover: hover) { .more:hover { background: var(--surface-solid); color: var(--primary-ink); } }
 .more:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-/* Saati belirsiz: küçük kart, logo solda, sembol ve kareler sağda. */
-.lane[data-lane="other"] .tiles { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
-.lane[data-lane="other"] .tile {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-areas: "karo symbol" "karo squares";
-  align-items: center;
-  justify-items: start;
-  gap: 3px 7px;
-  min-height: 44px;
-  padding: 5px 8px 5px 6px;
-}
-.lane[data-lane="other"] .karo { grid-area: karo; }
-.lane[data-lane="other"] .tileSymbol { grid-area: symbol; }
-.lane[data-lane="other"] .squares { grid-area: squares; }
+/* SAATİ BELİRSİZ DE AYNI KART (31 Ekim). Burada yatay küçük kart vardı
+   (logo 24 solda, sembol ve kareler sağda, iki sütun): 1440'ta SHAZ ve ARM
+   üstteki 50×68'lik dikey kartların yanında 104×44'lük başka bir biçimde
+   duruyor, satır "düzensiz" okunuyordu. Tek kart biçimi her satırda;
+   satır 52 → ~80 piksel, bedeli ölçüldü (page.tsx). */
 
 /* Sahneli giriş: kartlar okuma sırasıyla (gün gün, şerit şerit) bir kez
    ölçeklenerek iner; kademe 22 ms, toplam tavan 420 ms. Hareketi azaltana
@@ -367,7 +370,7 @@
 .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 0; padding-block: 6px; }
 .legendItem { display: inline-flex; align-items: center; gap: 6px; font-weight: 650; color: var(--text-body); }
 .legendNote { color: var(--text-muted); }
-.how { margin-left: auto; }
+.how { flex-shrink: 0; margin-left: auto; }
 .how[open] { flex-basis: 100%; }
 .how > summary {
   display: flex;
@@ -378,6 +381,7 @@
   color: var(--primary-ink);
   font-size: 12.5px;
   font-weight: 650;
+  padding-right: 2px;
   list-style: none;
   cursor: pointer;
 }
@@ -406,7 +410,11 @@
 @media (min-width: 1180px) {
   .grid {
     display: grid;
-    grid-template-columns: 104px repeat(5, minmax(0, 1fr));
+    /* EKSEN SÜTUNU İÇERİK KADAR (31 Ekim). 104 piksel sabitti; "Kapanış
+       Sonrası" hapı 123 piksel tutup 1440'ta pazartesi sütununa 23 piksel
+       biniyordu (eksen kutusu 127 > 104, ölçüldü). Hap sabit genişlikli
+       sütuna konmaz (CLAUDE.md, Görsel Dil): `max-content`. */
+    grid-template-columns: max-content repeat(5, minmax(0, 1fr));
     grid-template-rows: auto repeat(var(--lanes), auto);
     gap: 0 8px;
   }
@@ -424,11 +432,6 @@
   .closed { grid-row: 2 / -1; }
   .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px 3px; }
   .lane { padding-block: 5px; }
-  .lane[data-lane="other"] .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .lane[data-lane="other"] .tile { padding-inline: 5px 4px; gap: 3px 5px; }
-  .axisLane:last-child[data-lane="other"] { padding-top: 6px; }
-  /* Saati belirsiz satırı ince: tek sıra küçük kart, dolgu 2 piksel. */
-  .lane[data-lane="other"] { padding-block: 2px; }
   .dayHead { gap: 4px 8px; padding: 6px 8px 5px; }
 
   .readout {
@@ -448,7 +451,6 @@
    bu aralıkta sembol 12 ve harf aralığı sıkı. */
 @media (min-width: 1180px) and (max-width: 1399px) {
   .tiles .logo { width: 28px; height: 28px; }
-  .lane[data-lane="other"] .tiles .logo { width: 24px; height: 24px; }
   .tileSymbol { font-size: 12px; letter-spacing: -0.035em; }
 }
 
@@ -499,7 +501,7 @@
   .tileText { display: flex; min-width: 0; flex-direction: column; gap: 5px; }
   .tileSymbol { font-size: 14px; line-height: 1.1; letter-spacing: -0.02em; }
   .tileFoot { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 6px; }
-  .square { width: 7px; height: 7px; border-radius: 2px; }
+  .square { height: 5px; }
   .squares { gap: 3px; }
   .star { top: -5px; left: -5px; }
   .result { top: -5px; right: -6px; }
@@ -536,7 +538,8 @@
   }
   .tileItem[data-feature] .tileFoot { grid-area: foot; margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
   .tileItem[data-feature] .tileCap { display: inline; font-size: 13px; font-weight: 750; letter-spacing: -0.01em; color: var(--text-strong); white-space: nowrap; }
-  .tileItem[data-feature] .square { width: 9px; height: 9px; border-radius: 2.5px; }
+  .tileItem[data-feature] .squares { width: 64px; flex-shrink: 0; }
+  .tileItem[data-feature] .square { height: 6px; border-radius: 3px; }
 
   /* Tek öne çıkan (ya da tek sayının sonuncusu) tam satır: karne ve değer
      sağda, alt alta. */
@@ -595,7 +598,8 @@
   .readoutKarne { flex-direction: row; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; }
   .readoutLinks { justify-content: stretch; }
   .readoutLinks > .readoutButton { flex: 1 1 0; justify-content: center; min-height: 44px; }
-  .squares[data-large] .square { width: 13px; height: 13px; }
+  .squares[data-large] { width: 88px; }
+  .squares[data-large] .square { height: 7px; }
 }
 @media (max-width: 379px) {
   .readoutFacts > div { padding-inline: 8px; }

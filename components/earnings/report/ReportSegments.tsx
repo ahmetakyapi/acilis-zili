@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { ChartPieSlice } from "@phosphor-icons/react/dist/ssr";
 import { Reveal } from "@/components/motion/PremiumMotion";
 import { Panel } from "@/components/ui/primitives";
@@ -127,7 +128,14 @@ export function ReportSegments({
             {rows.length > 0 && (
               <h3 className={cn("plate text-read text-body", styles.blockTitle)}>{x.kpisHeading}</h3>
             )}
-            <ul className={styles.kpis} data-motion-stagger>
+            {/* Sütun sayısı kart sayısından (31 Ekim, görsel denetim): auto-fill
+                altı kartı 5+1 diziyor, altıncı tek başına kalıyordu. Geniş
+                ekranda satırlar eşit dolar: 6 → 3+3, 8 → 4+4, 5 → 3+2. */}
+            <ul
+              className={styles.kpis}
+              data-motion-stagger
+              style={{ "--kpi-cols": kpis.length <= 4 ? kpis.length : kpis.length % 4 === 0 ? 4 : 3 } as CSSProperties}
+            >
               {kpis.map((kpi) => (
                 <li key={kpi.name} className={styles.kpi}>
                   <p className={styles.kpiLabel} lang={lang}>

@@ -1,8 +1,9 @@
 import { Fragment } from "react";
 import type { VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { distancePct, formatRange, riskReward } from "@/lib/technical";
+import { distancePct, formatRange, openPlan, riskReward, type OpenSide } from "@/lib/technical";
 import { cn, directionOf, directionText, formatPercent, formatPercentPlain, formatPrice } from "@/lib/utils";
+import { openSideLabel, openWhyText } from "./open-plan";
 import styles from "./Technical.module.css";
 
 type Cell = { kind: "entry" | "target" | "stop" | "sellLevel" | "support" | "resistance"; label: string; value: string | null };
@@ -20,9 +21,12 @@ type Cell = { kind: "entry" | "target" | "stop" | "sellLevel" | "support" | "res
  *   · alım planı varsa (AL, bölgeli TUT): alım · satış · vazgeçme. Risk /
  *     getiri oranı liste kartında altındaki rayda (`PlanRail`), detay
  *     kapağında bu bileşenin `lg` dalında.
- *   · SAT: tepkide satış seviyeleri ve en yakın destek — alım hücresi yok,
- *     çünkü plan alım planı değil.
- *   · bölgesiz TUT: en yakın destek ve direnç — izlenecek iki seviye.
+ *   · SAT: önce "Nerede Satılır" (tepkide satış seviyeleri), sonra "Nereden
+ *     Alınır" → "Alım Yok · Destek" — plan alım planı değil, ama düşüşün
+ *     ilk durağı rutinin desteği.
+ *   · bölgesiz TUT: "Nereden Alınır" → "Bölge Yok · Destek", "Nerede
+ *     Satılır" → direnç (31 Ekim; eskiden "En Yakın Destek / Direnç").
+ *   Plansız iki hâlde altta planın neden olmadığını söyleyen tek cümle.
  *
  * "Bu Yayında Yok" hücresi boş bırakılmıyor: AL'da hedef zorunlu ama TUT'ta
  * bölge var hedef olmayabilir; sessiz bir boşluk "unutulmuş" gibi okunur.
@@ -37,6 +41,7 @@ export function PlanStrip({
   resistances,
   size = "sm",
   price = null,
+  showWhy = true,
   locale,
   t,
 }: {
@@ -49,8 +54,13 @@ export function PlanStrip({
   resistances: readonly number[];
   /** `lg`: detail level board and risk comparison; rows stack on phones. */
   size?: "sm" | "lg";
-  /** Yalnız `lg`: hücrenin dibindeki "Fiyata Uzaklık" künyesinin ölçüsü. */
+  /** `lg`: hücrenin dibindeki "Fiyata Uzaklık" künyesinin ölçüsü. İki
+   *  ölçüde de plansız görüşün hâli (seviyeye doğru / seviyede / geçildi)
+   *  buna göre — verilmezse rutinin sırası geçerli (`openPlan`). */
   price?: number | null;
+  /** Plansız görüşte "neden plan yok" cümlesi şeridin dibinde; liste kartı
+   *  onu rayın künyesinde basıyor (`PlanRail`), orada `false`. */
+  showWhy?: boolean;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -103,23 +113,63 @@ export function PlanStrip({
       </Fragment>
     ));
   const hasEntry = entryLow !== null && entryHigh !== null;
+  const open = openPlan(verdict, price, { entryLow, entryHigh, targets, supports, resistances });
 
-  let cells: { kind: Cell["kind"]; label: string; value: React.ReactNode }[];
-  if (verdict === "sell") {
-    cells = [
-      { kind: "sellLevel", label: t.technical.planSellLevels, value: list(targets.length ? targets : resistances) },
-      { kind: "support", label: t.technical.planNearestSupport, value: supports[0] !== undefined ? money(supports[0]) : null },
-      /* SONRAKİ DESTEK — YALNIZCA LİSTE KARTINDA (23 Eylül). SAT kartının
-         iki satırı, komşu AL/TUT kartlarının üç satırlık plan satırında 32
-         piksellik bir cep bırakıyordu (1440, ONDS, ölçüldü). Boşluk
-         esnetilmez, doldurulur: rutinin yazdığı ikinci destek, "destek
-         kırılırsa düşüş nereye" sorusunun cevabı. Yoksa satır hiç basılmaz
-         ("Bu Yayında Yok" demek burada eksik bir plan gibi okunurdu). Detay
-         kapağında fiyat haritası bütün destekleri zaten sıralıyor. */
-      ...(size === "sm" && supports[1] !== undefined
-        ? [{ kind: "support" as const, label: t.technical.planNextSupport, value: money(supports[1]) }]
-        : []),
-    ];
+  type StripCell = {
+    kind: Cell["kind"];
+    label: string;
+    value: React.ReactNode;
+    /** Açık planda sayının önündeki niteleme ("Bölge Yok · Destek"). */
+    qual?: { text: string; tone?: "up" | "down" | "at" };
+    /** Açık planda uzaklığın kaynağı — `distanceFor` yerine. */
+    side?: OpenSide;
+  };
+  let cells: StripCell[];
+  /* PLANSIZ GÖRÜŞ DE İKİ SORUYU SORUYOR (31 Ekim, sahibinin isteği).
+     Bölgesiz TUT "En Yakın Destek / En Yakın Direnç", SAT "Tepkide Satış /
+     En Yakın Destek" diye iki satırdı; SanDisk kartına bakan sahibi "neden
+     'Nereden Alınır / Nerede Satılır' yok?" diye sordu. Sorular artık AL
+     kartıyla aynı adla duruyor ve cevap dürüst: alım tarafında "Bölge Yok"
+     (SAT'ta "Alım Yok") ve rutinin verdiği en yakın destek, satış tarafında
+     rutinin hedefi ya da direnci. Uydurma seviye yok; sayılar kayıttan,
+     hâl fiyatın onlara göre yerinden (`openPlan`). Fiyat seviyeyi geçtiyse
+     niteleme bunu söylüyor ("Direnç Geçildi", "Destek Kırıldı") — eskiden
+     ray "Dirence 0,09 $ · %0,0" yazabiliyordu.
+     SAT'ta satış sorusu önde: görüşün kendisi o. Eski "Sonraki Destek"
+     satırı (23 Eylül, ONDS cebini doldurmak için) yerini planın neden
+     olmadığını söyleyen cümleye bıraktı — boşluk yine doldu, bu kez
+     okuyucunun sorduğu şeyle. */
+  if (open) {
+    const op = t.technical.openPlan;
+    const side = open.verdict;
+    const sellKind: Cell["kind"] = side === "sell" ? "sellLevel" : open.sell?.kind === "target" ? "target" : "resistance";
+    const qualTone = (s: OpenSide, dir: "up" | "down") => (s.state === "beyond" ? dir : s.state === "at" ? "at" : undefined);
+    const buyCell: StripCell = {
+      kind: "support",
+      label: t.technical.planEntry,
+      value: open.buy ? money(open.buy.level) : null,
+      qual: {
+        text: [side === "sell" ? op.noBuy : op.noZone, open.buy ? openSideLabel(open.buy, side, t) : null].filter(Boolean).join(" · "),
+        tone: open.buy ? qualTone(open.buy, "down") : undefined,
+      },
+      side: open.buy ?? undefined,
+    };
+    /* SAT'ta rutin iki-üç tepki seviyesi yazıyor ve hepsi satış yeri: liste
+       olduğu gibi (geçilmemiş olanlar). TUT'ta dirençler dört tane ve
+       satış yeri değil izlenecek tavan: yalnız en yakını. */
+    const sellValue = !open.sell
+      ? null
+      : open.sell.state !== "beyond" && side === "sell"
+        ? list(open.sell.levels)
+        : money(open.sell.level);
+    const sellCell: StripCell = {
+      kind: sellKind,
+      label: t.technical.planTargets,
+      value: sellValue,
+      qual: open.sell ? { text: openSideLabel(open.sell, side, t), tone: qualTone(open.sell, "up") } : undefined,
+      side: open.sell ?? undefined,
+    };
+    cells = side === "sell" ? [sellCell, buyCell] : [buyCell, sellCell];
   } else if (hasEntry) {
     cells = [
       { kind: "entry", label: t.technical.planEntry, value: formatRange(entryLow, entryHigh, locale) },
@@ -127,12 +177,18 @@ export function PlanStrip({
       { kind: "stop", label: t.technical.planStop, value: stop !== null ? money(stop) : null },
     ];
   } else {
+    /* Buraya yalnız fiyatsız bir AL düşer (bölgesiz AL rutinde yok). */
     cells = [
       { kind: "support", label: t.technical.planNearestSupport, value: supports[0] !== undefined ? money(supports[0]) : null },
       { kind: "resistance", label: t.technical.planNearestResistance, value: resistances[0] !== undefined ? money(resistances[0]) : null },
-      ...(targets.length ? [{ kind: "target" as const, label: t.technical.planTargets, value: list(targets) }] : []),
     ];
   }
+  const qualOf = (cell: StripCell) =>
+    cell.qual ? (
+      <span className={styles.planQual} data-tone={cell.qual.tone}>
+        {cell.qual.text}
+      </span>
+    ) : null;
 
   // 22 September: the detail cover gets a compact level board and two
   // common-zero risk bars. 23 September: the list card's risk strip moved
@@ -153,8 +209,16 @@ export function PlanStrip({
        Uzaklık" sütunuyla AYNI (`distancePct(seviye, fiyat)`) — aynı sayı iki
        yerde aynı kaynaktan. Bölgedeyken yüzde değil söz: bölgenin içinde
        "uzaklık" yok. Birden çok hedefte en yakını ölçülüyor. */
-    const distanceFor = (kind: Cell["kind"]): "inZone" | { pct: number } | null => {
+    const distanceFor = (kind: Cell["kind"], side?: OpenSide): "inZone" | "atLevel" | { pct: number } | null => {
       if (price === null) return null;
+      /* Açık planda uzaklık hücrenin KENDİ seviyesine (geçilmişse geçilen
+         seviyeye; işaret yönü söylüyor). Seviyedeyken yüzde değil söz:
+         "%0,0" bir ölçü gibi okunuyor ama söylediği "tam orada". */
+      if (side) {
+        if (side.state === "at") return "atLevel";
+        const pct = distancePct(side.level, price);
+        return pct === null ? null : { pct };
+      }
       let level: number | null | undefined = null;
       if (kind === "entry" && entryLow !== null && entryHigh !== null) {
         if (price >= entryLow && price <= entryHigh) return "inZone";
@@ -170,12 +234,13 @@ export function PlanStrip({
     return <div className={styles.planOverview} data-has-risk={!!rr}>
       <dl className={styles.overviewCells} style={{ "--cells": cells.length } as React.CSSProperties}>
         {cells.map(cell => {
-          const away = cell.value === null ? null : distanceFor(cell.kind);
-          return <div key={cell.kind} className={styles.overviewCell} data-kind={cell.kind}>
-            <dt><i className={styles.legendDot} data-kind={cell.kind} aria-hidden />{labels[cell.kind] ?? cell.label}</dt>
-            <dd className={cn("numeral", cell.value === null && styles.planEmpty)}>{cell.value ?? t.technical.planNone}</dd>
+          const away = cell.value === null ? null : distanceFor(cell.kind, cell.side);
+          return <div key={cell.label} className={styles.overviewCell} data-kind={cell.kind} data-open={cell.qual ? true : undefined}>
+            <dt><i className={styles.legendDot} data-kind={cell.kind} aria-hidden />{cell.qual ? cell.label : labels[cell.kind] ?? cell.label}</dt>
+            {cell.qual && <dd className={styles.overviewQual}>{qualOf(cell)}</dd>}
+            {(cell.value !== null || !cell.qual) && <dd className={cn("numeral", cell.value === null && styles.planEmpty)}>{cell.value ?? t.technical.planNone}</dd>}
             {away && <dd className={styles.overviewAway}>
-              {away === "inZone" ? t.technical.levelInZone : <>
+              {away === "inZone" ? t.technical.levelInZone : away === "atLevel" ? t.technical.openPlan.atLevel : <>
                 {t.technical.levelsNote}{" "}
                 <b className={cn("numeral", directionText(directionOf(away.pct)))}>{formatPercent(away.pct, locale, 1)}</b>
               </>}
@@ -203,21 +268,34 @@ export function PlanStrip({
      çizgisiyle tek bir çizim: `PlanRail`. Kaydı da onunla gitti; oran,
      çapa, ham tutar ve ölçek kararlarının dördü de orada yaşıyor. Burada
      yalnızca üç soru ve üç sayı kalıyor. */
+  /* NEDEN CÜMLESİ KUTUNUN İÇİNDE, KIL ÇİZGİYLE AYRI (31 Ekim). Plansız
+     şeridin iki satırı "Bölge Yok" diyor ama nedenini söylemiyordu; cümle
+     görüşten ve fiyatın seviyelere göre yerinden (`openWhyText`). Yeni bir
+     kutu açmıyor — ekran düzeninin "uyarı panelin içinde düz paragraf"
+     kuralı. LİSTE KARTINDA BURADA DEĞİL, RAYIN KÜNYESİNDE (`showWhy`):
+     kutunun dibinde iki satır tutuyordu ve kart ızgarası satırı komşu
+     kartlarla paylaştığı için NVDA kartının plan satırında 24 piksellik
+     boş bir cep açıyordu (1440, ölçüldü). Rayda "Fiyata Uzaklık"
+     künyesinin yerine geçiyor, yer açmıyor. */
+  const why = showWhy && open ? openWhyText(open, t) : null;
   return (
-    <div className={styles.planStrip}>
+    <div className={styles.planStrip} data-open={why ? true : undefined}>
       <dl className={styles.planCells} style={{ "--cells": cells.length } as React.CSSProperties}>
         {cells.map((cell) => (
-          <div key={cell.label} className={styles.planCell} data-kind={cell.kind}>
+          <div key={cell.label} className={styles.planCell} data-kind={cell.kind} data-open={cell.qual ? true : undefined}>
             <dt>
               <i aria-hidden className={styles.legendDot} data-kind={cell.kind} />
               {cell.label}
             </dt>
-            <dd className={cn("numeral", cell.value === null && styles.planEmpty)}>
-              {cell.value ?? t.technical.planNone}
+            <dd className={cn("numeral", cell.value === null && !cell.qual && styles.planEmpty)}>
+              {qualOf(cell)}
+              {cell.qual && cell.value !== null && " "}
+              {cell.value ?? (cell.qual ? null : t.technical.planNone)}
             </dd>
           </div>
         ))}
       </dl>
+      {why && <p className={styles.planWhy}>{why}</p>}
     </div>
   );
 }

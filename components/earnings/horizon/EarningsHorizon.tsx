@@ -25,8 +25,8 @@ import styles from "./EarningsHorizon.module.css";
  * (açılış öncesi / kapanış sonrası), her hücrede o pencerede açıklayan
  * kayda değer şirketler (`getEarningsWeek` → haftalık sekmenin seçimi,
  * aynı kaynak). Kartlar büyükten küçüğe, büyük şirket çerçeveli
- * (`tileTierOf`; kart turunda boy tekleşti), altındaki dört kare son dört
- * çeyreğin beklenti karnesi (hisse sayfasındaki "3/4
+ * (`tileTierOf`; kart turunda boy tekleşti), altındaki dört parçalı şerit
+ * (31 Ekim'e dek dört kare) son dört çeyreğin beklenti karnesi (hisse sayfasındaki "3/4
  * Çeyrekte Aşıldı" dili, aynı kaynak — `loadHorizonKarne`). Gün başlığında
  * günün TÜM açıklayanlarının sayısı ve yoğunluk çizgisi: kapaktaki eski
  * grafiğin bilgisi burada. Tepede veriden tek cümle (`horizonLead`).

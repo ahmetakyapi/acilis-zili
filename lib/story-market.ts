@@ -1,6 +1,12 @@
 import type { MarketStatus } from "@/lib/market-hours";
 
-export type StoryClose = { price: number; date: string };
+/**
+ * `dayPct`: o kapanışın bir önceki kapanışa göre değişimi (31 Ekim,
+ * sahibinin isteği: "fiyatların yanında günlük düşüşlerini de gösterelim").
+ * Son kapanış satırı yalnız fiyattı ve günün ne getirdiğini söylemiyordu.
+ * Önceki bar yoksa null — uydurma sıfır yok.
+ */
+export type StoryClose = { price: number; date: string; dayPct?: number | null };
 
 /** Daily bars can include today's unfinished candle. Only a completed
  * session can be called a closing price; allow the delayed feed to finish
@@ -12,13 +18,20 @@ export function lastStoryClose(
   if (!bars) return null;
   const todayComplete = status.tradingToday && status.etMinutes >= status.closeMinutes + 15;
   let latest: StoryClose | null = null;
+  let previous: StoryClose | null = null;
   for (const bar of bars) {
     if (!Number.isFinite(bar.time) || !Number.isFinite(bar.close) || bar.close <= 0) continue;
     const date = new Date(bar.time * 1000).toISOString().slice(0, 10);
     if (date > status.etDate || (date === status.etDate && !todayComplete)) continue;
-    if (!latest || date > latest.date) latest = { price: bar.close, date };
+    if (!latest || date > latest.date) {
+      previous = latest;
+      latest = { price: bar.close, date };
+    } else if (date < latest.date && (!previous || date > previous.date)) {
+      previous = { price: bar.close, date };
+    }
   }
-  return latest;
+  if (!latest) return null;
+  return { ...latest, dayPct: previous ? ((latest.price - previous.price) / previous.price) * 100 : null };
 }
 
 /* --------------------------------------------------------------------------

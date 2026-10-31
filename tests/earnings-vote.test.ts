@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  beatQuarters,
   beatRecord,
   boardFor,
   matchVoteRow,
@@ -151,6 +152,22 @@ test("karne: son dört çeyrek, eskiden yeniye; denk paydada, eksik satır yok s
   ]);
   assert.deepEqual(record, { beats: 2, total: 4, marks: ["beat", "miss", "inline", "beat"] });
   assert.equal(beatRecord([{ period: "2026-07-31", epsEstimate: null, epsActual: 1 }]), null);
+});
+
+test("karne hücreleri: beatRecord ile aynı seçim ve sıra, satırın kendisi taşınır", () => {
+  const rows = [
+    { period: "2026-07-31", epsEstimate: 1, epsActual: 1.1, quarter: 2 },
+    { period: "2026-04-30", epsEstimate: 1, epsActual: 0.9, quarter: 1 },
+    { period: "2026-10-31", epsEstimate: 1, epsActual: null, quarter: 3 },
+  ];
+  const cells = beatQuarters(rows);
+  assert.deepEqual(cells.map((cell) => [cell.row.quarter, cell.outcome]), [[1, "miss"], [2, "beat"]]);
+  assert.deepEqual(beatRecord(rows)?.marks, cells.map((cell) => cell.outcome));
+});
+
+test("karne: sağlayıcının çift satırı tek çeyrek sayılır", () => {
+  const row = { period: "2026-06-30", epsEstimate: -0.42, epsActual: -26.16 };
+  assert.deepEqual(beatRecord([row, { ...row }]), { beats: 0, total: 1, marks: ["miss"] });
 });
 
 /* ---- Hikâye tepkisi ---- */

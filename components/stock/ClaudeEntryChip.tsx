@@ -92,7 +92,7 @@ export async function ClaudeEntryChip({
         <span className={cn(styles.label, styles.short)}>{t.claudeShort}</span>
         <span aria-hidden className={styles.dot}>·</span>
         <b className={styles.verdict}>{verdict}</b>
-        <span aria-hidden className={styles.dot}>·</span>
+        <span aria-hidden className={cn(styles.dot, styles.goDot)}>·</span>
         <span className={styles.go}>{t.claudeOpen}</span>
         <ArrowRight className={styles.arrow} size={13} weight="bold" aria-hidden />
       </Link>

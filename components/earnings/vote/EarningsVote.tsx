@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CaretDown, CaretUp, CheckCircle, XCircle } from "@phosphor-icons/react";
-import { ButtonLink } from "@/components/ui/primitives";
+import { ArrowDownRight, ArrowUpRight, CaretDown, CaretUp, Check, CheckCircle, XCircle } from "@phosphor-icons/react";
+import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { castEarningsVote, type VoteActionResult } from "@/app/actions/earnings-vote";
 import type { EarningsVoteLabels } from "@/lib/i18n/dictionaries/earnings-season";
 import {
@@ -109,40 +109,65 @@ export function EarningsVote({
       /* Kart yüzeyini kaplayan bağlantının üstünde (AddToCalendar'ın
          `relative z-10` gerekçesi): katman olmadan dokunuş bağlantıya düşer. */
     >
+      {/* OY KARTLARI (panel, 31 Ekim). İki gri düğme "çok eksik" duruyordu
+          (sahibinin itirazı): her seçenek artık ikonlu bir kart — yön
+          dairesi (↗ geçer `--up`, ↘ kaçırır `--down`; renk tek taşıyıcı
+          değil, ok şekli de söylüyor), etiket, ne demek olduğunu söyleyen
+          alt satır ve sağda seçim halkası. Seçili kart etkileşimin
+          renginde (`--primary`), halka onay işaretiyle dolar. Hedef 64 px.
+          Kart boyu (`card`) eski kompakt düğmede kalıyor. */}
       {phase === "open" && signedIn && (
         <div className={styles.choices} role="group" aria-label={labels.question.replace("{symbol}", view.symbol)}>
-          {(["beat", "miss"] as const).map((choice) => (
-            <button
-              key={choice}
-              type="button"
-              className={styles.choice}
-              data-choice={choice}
-              aria-pressed={mine === choice}
-              aria-disabled={pending}
-              onClick={() => vote(choice)}
-            >
-              {choice === "beat" ? (
-                <CaretUp aria-hidden size={14} weight="bold" className={styles.up} />
-              ) : (
-                <CaretDown aria-hidden size={14} weight="bold" className={styles.down} />
-              )}
-              {choice === "beat" ? labels.beat : labels.miss}
-            </button>
-          ))}
+          {(["beat", "miss"] as const).map((choice) =>
+            card ? (
+              <button
+                key={choice}
+                type="button"
+                className={styles.choice}
+                data-choice={choice}
+                aria-pressed={mine === choice}
+                aria-disabled={pending}
+                onClick={() => vote(choice)}
+              >
+                {choice === "beat" ? (
+                  <CaretUp aria-hidden size={14} weight="bold" className={styles.up} />
+                ) : (
+                  <CaretDown aria-hidden size={14} weight="bold" className={styles.down} />
+                )}
+                {choice === "beat" ? labels.beat : labels.miss}
+              </button>
+            ) : (
+              <button
+                key={choice}
+                type="button"
+                className={styles.option}
+                data-choice={choice}
+                aria-pressed={mine === choice}
+                aria-disabled={pending}
+                onClick={() => vote(choice)}
+              >
+                <OptionBody choice={choice} labels={labels} />
+              </button>
+            ),
+          )}
         </div>
       )}
 
-      {/* GİRİŞ ÇAĞRISI SİTENİN BİRİNCİL DÜĞMESİ — "Bu Hisseye Sor"un
-          giriş düğmesiyle aynı bileşen (`ButtonLink variant="primary"`).
-          Soluk mavi zeminli ayrı bir hap, sitede ikinci bir düğme dili
-          açıyordu (24 Ekim denetimi). */}
+      {/* GİRİŞ YAPMAMIŞ OKUR AYNI KARTLARI GÖRÜR (31 Ekim): kartlar giriş
+          sayfasına bağlantı. Önce yalnız sitenin birincil düğmesi vardı
+          ("Giriş Yap ve Oy Ver", 24 Ekim denetimi: ikinci bir düğme dili
+          açılmasın); okur neye oy vereceğini görmeden giriş istiyordu.
+          Kartlar oy kartlarının kendisi — yeni bir düğme dili değil. */}
       {phase === "open" && !signedIn && !card && (
-        <div>
-          <ButtonLink href={signInHref} variant="primary">
-            {labels.signIn}
-          </ButtonLink>
+        <div className={styles.choices}>
+          {(["beat", "miss"] as const).map((choice) => (
+            <Link key={choice} href={signInHref} className={styles.option} data-choice={choice}>
+              <OptionBody choice={choice} labels={labels} />
+            </Link>
+          ))}
         </div>
       )}
+      {phase === "open" && !signedIn && !card && <p className={styles.meta}>{labels.signInHint}</p>}
 
       {phase !== "open" && (
         <p className={styles.status}>
@@ -205,6 +230,25 @@ export function EarningsVote({
         </p>
       )}
     </div>
+  );
+}
+
+/** Oy kartının içi: yön dairesi, etiket + alt satır, seçim halkası. */
+function OptionBody({ choice, labels }: { choice: VoteChoice; labels: EarningsVoteLabels }) {
+  const Icon = choice === "beat" ? ArrowUpRight : ArrowDownRight;
+  return (
+    <>
+      <span aria-hidden className={styles.optionIcon}>
+        <Icon size={18} weight="bold" />
+      </span>
+      <span className={styles.optionText}>
+        <span className={styles.optionLabel}>{choice === "beat" ? labels.beat : labels.miss}</span>
+        <span className={styles.optionHint}>{choice === "beat" ? labels.beatHint : labels.missHint}</span>
+      </span>
+      <span aria-hidden className={styles.optionCheck}>
+        <Check size={12} weight="bold" />
+      </span>
+    </>
   );
 }
 

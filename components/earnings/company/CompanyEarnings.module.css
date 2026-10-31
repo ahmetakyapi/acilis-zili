@@ -4,22 +4,76 @@
 .page { display:flex; flex-direction:column; min-width:0; gap:var(--page-section-gap, 20px); }
 
 /* Künye şeridi: logo, sembol ve ad; sağda hisse sayfası. Kutu değil, düz
-   satır — kimlik bilgisi, panel değil. */
-.identity { display:flex; align-items:center; gap:12px; min-width:0; }
+   satır — kimlik bilgisi, panel değil. 31 Ekim'den beri başlık kartının
+   son satırı (`PageHeader strip=`); kartın dışında, sayfa zemininde
+   "dışta kalmış" görünüyordu. Sembol mono künye (CLAUDE.md "Tek font"). */
+.identity { display:flex; align-items:center; gap:14px; min-width:0; }
+.identitySymbol { font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:.02em; color:var(--text-strong); }
 .stockLink { margin-left:auto; flex-shrink:0; gap:6px; }
 
 .body { display:flex; flex-direction:column; gap:16px; padding:0 20px 20px; min-width:0; }
 
-.when { display:flex; flex-direction:column; gap:8px; }
-.date { font-size:var(--text-title); font-weight:700; letter-spacing:-.03em; line-height:1.15; color:var(--text-strong); }
-.windowRow { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
+/* ---- Sıradaki bilanço çizimi (NextReport.tsx, 31 Ekim) ----
+   Solda takvim yaprağı, sağda geri sayım + çeyrek çizgisi; altta tam
+   genişlik beklenti ızgarası. Eski düzen (düz tarih + üç gri kutu) gerekçesi
+   NextReport.tsx başında. */
+.next { display:grid; grid-template-columns:auto minmax(0,1fr); grid-template-areas:"leaf count" "expect expect"; gap:20px 28px; align-items:center; }
+.leafCol { grid-area:leaf; display:flex; flex-direction:column; align-items:center; gap:8px; }
+/* YAPRAK — Yaklaşan Bilançolar'ın `.dateTile`ının büyük hâli
+   (AnalysisExperience.module.css): ay şeridi, gün, hafta günü. Kesin tarih
+   dolu mavi şerit; tahmini tarih kesik kenar ve soluk şerit. */
+.leaf { display:flex; flex-direction:column; width:132px; overflow:hidden; border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--surface-solid); text-align:center; line-height:1; }
+.leafBand { padding:7px 6px 6px; background:var(--primary); font-size:12px; font-weight:700; letter-spacing:.03em; color:var(--on-primary); }
+.leafDay { display:block; padding:12px 0 4px; font-size:60px; font-weight:800; letter-spacing:-.04em; color:var(--text-strong); }
+.leafWeekday { padding:0 6px 12px; font-size:12.5px; font-weight:600; color:var(--text-muted); }
+.leaf[data-estimated] { border-style:dashed; border-color:var(--line-strong); }
+.leaf[data-estimated] .leafBand { background:var(--primary-wash); color:var(--primary-ink); }
+.leafNote { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text-muted); }
+.leafNote::before { content:""; width:10px; height:0; border-top:1.5px dashed var(--line-strong); }
 
-/* Ölçü ızgarası — üç ölçü aynı hatta biter (CLAUDE.md "Ölçü ızgarası");
-   ton farkıyla ayrılmış hücreler, kenarlık yok. */
-.figures { display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:8px; }
-.figures > div { display:grid; grid-template-rows:subgrid; grid-row:span 2; row-gap:4px; padding:12px 14px; border-radius:var(--radius-md); background:var(--surface-sunken); }
-.figures dt { font-size:12px; color:var(--text-muted); }
-.figures dd { align-self:end; font-size:var(--text-lead); font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
+.countdown { grid-area:count; display:flex; flex-direction:column; gap:18px; min-width:0; }
+.countHead { display:flex; flex-direction:column; gap:4px; }
+.countLabel { font-size:12px; font-weight:600; color:var(--text-muted); }
+.countValue { font-size:44px; font-weight:800; letter-spacing:-.04em; line-height:1.05; color:var(--text-strong); }
+.windowRow { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin-top:6px; }
+
+/* ÇEYREK ÇİZGİSİ — kulvar `--line-soft`, geçen yol 5 piksel `--primary`
+   (yaprağın yakınlık şeridiyle aynı renk), bugün dolu nokta, bilanço günü
+   halka; tahminiyse halka kesik. Uçlardaki iki tarih altında yazılı. */
+.cycle { display:flex; flex-direction:column; gap:8px; max-width:560px; }
+.cycleLane { position:relative; display:block; height:16px; }
+.cycleLane::before { content:""; position:absolute; left:0; right:0; top:5.5px; height:5px; border-radius:999px; background:var(--line-soft); }
+.cycleFill { position:absolute; left:0; top:5.5px; height:5px; border-radius:999px; background:var(--primary); }
+.cycleStart, .cycleNow, .cycleEnd { position:absolute; top:50%; translate:-50% -50%; border-radius:999px; }
+.cycleStart { left:0; translate:0 -50%; width:3px; height:12px; background:var(--line-strong); }
+.cycleNow { left:calc(var(--at) * 100%); width:14px; height:14px; background:var(--primary); outline:3px solid var(--surface); }
+.cycleEnd { left:auto; right:0; translate:0 -50%; width:16px; height:16px; border:2.5px solid var(--primary); background:var(--surface); }
+.cycleEnd[data-estimated] { border-style:dashed; border-color:var(--text-muted); }
+/* Gün şeridi (son rapor bilinmediğinde): bir çentik bir gün; bugün dolu,
+   bilanço günü halka (tahminiyse kesik). */
+.dayTicks { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); align-items:center; gap:5px; height:16px; }
+.dayTicks > i { display:block; height:5px; border-radius:999px; background:var(--line-soft); }
+.dayTicks > i[data-at="today"] { height:12px; background:var(--primary); }
+.dayTicks > i[data-at="end"] { height:14px; border:2.5px solid var(--primary); background:var(--surface); }
+.dayTicks > i[data-estimated] { border-style:dashed; border-color:var(--text-muted); }
+.cycleEnds { display:flex; justify-content:space-between; gap:12px; font-size:12.5px; font-weight:600; color:var(--text-strong); }
+.cycleEnds > span { display:flex; flex-direction:column; gap:2px; }
+.cycleEnds > span:last-child { text-align:right; }
+.cycleEndLabel { font-size:11.5px; font-weight:500; color:var(--text-muted); }
+
+/* BEKLENTİ IZGARASI — iki ölçü aynı hatta biter (CLAUDE.md "Ölçü
+   ızgarası"); ton farkıyla ayrılmış hücre, kenarlık yok. Altında
+   beklenti ve son çeyrek iki çubuk: ScaleBar (CompareScale dili). */
+.expect { grid-area:expect; display:grid; grid-template-columns:repeat(auto-fit,minmax(15rem,1fr)); gap:10px; }
+.expectCell { display:grid; grid-template-rows:subgrid; grid-row:span 3; row-gap:6px; padding:14px 16px 16px; border-radius:var(--radius-md); background:var(--surface-sunken); }
+.expectCell dt { font-size:12px; font-weight:600; color:var(--text-muted); }
+.expectValue { font-size:26px; font-weight:800; letter-spacing:-.03em; line-height:1.1; color:var(--text-strong); }
+.expectBars { display:flex; flex-direction:column; gap:6px; padding-top:6px; }
+.expectRow { display:grid; grid-template-columns:6.5rem minmax(0,1fr) max-content; align-items:center; gap:10px; font-size:12px; color:var(--text-muted); }
+.expectRow[data-strong] { color:var(--text-body); }
+.expectRowLabel { white-space:nowrap; }
+.expectRowValue { min-width:4.5rem; text-align:right; font-weight:600; color:var(--text-body); }
+.expectRow[data-strong] .expectRowValue { color:var(--text-strong); }
 
 .lead { max-width:68ch; font-size:var(--text-read); line-height:1.65; color:var(--text-body); }
 
@@ -32,21 +86,32 @@
 .previousTitle { font-size:12px; font-weight:600; color:var(--text-muted); }
 .record { font-size:var(--text-small); }
 
-/* Oy + karne. Karne sağda dar bir sütun; aralık `gap-5` karşılığı 20 px
-   (CLAUDE.md "İki kolona justify-between konmaz"). Telefonda alt alta. */
-.voteGrid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,15rem); gap:20px; align-items:start; }
+/* Oy + karne. Karne çeyrek çeyrek hücreye açıldı (31 Ekim), dar sütun
+   (15rem) dört hücreyi taşımıyor: iki eşit sütun. Aralık `gap-5` karşılığı
+   20 px (CLAUDE.md "İki kolona justify-between konmaz"). Dar ekranda alt alta. */
+.voteGrid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; align-items:start; }
 .voteMain { display:flex; flex-direction:column; gap:16px; min-width:0; }
 
 /* Beklenti karnesi — ton farkıyla ayrılmış hücre (ölçü ızgarasının
-   hücresiyle aynı dil), kutu/kenarlık yok. Şeritler kulvar üstünde 5 px:
-   geçti `--up`, kaçırdı `--down`, denk `--line-strong` (yön yok). */
-.karne { display:flex; flex-direction:column; gap:6px; padding:12px 14px; border-radius:var(--radius-md); background:var(--surface-sunken); }
-.karneLabel { font-size:12px; color:var(--text-muted); }
-.karneValue { font-size:var(--text-lead); font-weight:700; letter-spacing:-.02em; line-height:1.15; color:var(--text-strong); }
-.karnePips { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:4px; }
-.karnePip { display:block; height:5px; border-radius:999px; background:var(--line-strong); transform-origin:left center; }
-.karnePip[data-mark="beat"] { background:var(--up); }
-.karnePip[data-mark="miss"] { background:var(--down); }
+   hücresiyle aynı dil), kutu/kenarlık yok. Çeyrek hücreleri nötr zeminde,
+   durum TEPEDEKİ 3 piksellik şeritte (sitenin kart dili): geçti `--up`,
+   kaçırdı `--down`, denk `--line-strong` (yön yok). Gerekçe BeatRecordCard. */
+.karne { display:flex; flex-direction:column; gap:12px; padding:14px 16px 16px; border-radius:var(--radius-md); background:var(--surface-sunken); }
+.karneHead { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.karneLabel { font-size:12px; font-weight:600; color:var(--text-muted); }
+.karneValue { font-size:26px; font-weight:800; letter-spacing:-.03em; line-height:1; color:var(--text-strong); }
+.karneValue > span { font-size:16px; font-weight:700; color:var(--text-muted); }
+.karneQuarters { display:grid; grid-template-columns:repeat(auto-fit,minmax(6.5rem,1fr)); gap:6px; }
+.karneQuarter { position:relative; display:flex; flex-direction:column; gap:3px; min-width:0; padding:12px 10px 10px; overflow:hidden; border-radius:var(--radius-sm); background:var(--surface-solid); }
+.karneQuarter::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--line-strong); }
+.karneQuarter[data-mark="beat"]::before { background:var(--up); }
+.karneQuarter[data-mark="miss"]::before { background:var(--down); }
+.qPeriod { font-size:11.5px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
+.qOutcome { display:inline-flex; align-items:center; gap:4px; font-size:12.5px; font-weight:700; color:var(--text-body); }
+.karneQuarter[data-mark="beat"] .qOutcome { color:var(--up); }
+.karneQuarter[data-mark="miss"] .qOutcome { color:var(--down); }
+.qActual { margin-top:2px; font-size:15px; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); white-space:nowrap; }
+.qEstimate { font-size:11.5px; color:var(--text-muted); white-space:nowrap; }
 .karneNote { font-size:12px; line-height:1.5; color:var(--text-muted); }
 
 /* Hikâye girişi — Bilanço Analizleri panelinin son satırı, listenin
@@ -74,9 +139,25 @@
 
 @media(max-width:639px) {
   .body { padding:0 16px 16px; }
-  .date { font-size:22px; }
-  .figures { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .voteGrid { grid-template-columns:minmax(0,1fr); }
+  .next { grid-template-columns:auto minmax(0,1fr); gap:16px 16px; align-items:start; }
+  .leaf { width:92px; }
+  .leafBand { font-size:11px; padding:5px 4px; }
+  .leafDay { font-size:40px; padding:8px 0 3px; }
+  .leafWeekday { font-size:11.5px; padding-bottom:9px; }
+  .countValue { font-size:32px; }
+  .countdown { gap:14px; }
+  .expectRow { grid-template-columns:5.5rem minmax(0,1fr) max-content; }
+  .karneQuarters { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .storyEntry { padding:14px 16px; }
+}
+/* Oy kartları + dört hücreli karne 1024'ün altında yan yana sığmıyor. */
+@media(max-width:1023px) { .voteGrid { grid-template-columns:minmax(0,1fr); } }
+/* GENİŞ EKRANDA ÜÇ SÜTUN: yaprak · geri sayım · beklentiler. İki satırlık
+   düzende 1440'ta geri sayımın sağı boş kalıyordu (çizgi 560 pikselde
+   bitiyor, panel 1280); beklentiler o boşluğa üst üste girdi. */
+@media(min-width:1100px) {
+  .next { grid-template-columns:auto minmax(0,1fr) minmax(0,30rem); grid-template-areas:"leaf count expect"; gap:20px 32px; }
+  .expect { grid-template-columns:minmax(0,1fr); }
+  .cycle { max-width:none; }
 }
 @media(prefers-reduced-motion:reduce) { .storyEntry { transition:none; } }

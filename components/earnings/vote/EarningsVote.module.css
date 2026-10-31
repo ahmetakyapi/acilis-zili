@@ -7,7 +7,6 @@
 .card { gap:8px; }
 
 .choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
-.panel .choices { max-width:360px; }
 /* Hero kartında satır 1158 piksele kadar uzuyor (1280, ölçüldü); iki düğme
    o genişlikte "evet/hayır" değil bir şerit gibi okunuyordu. */
 .card .choices, .card .distribution { max-width:320px; }
@@ -24,6 +23,32 @@
 .choice[aria-disabled="true"] { cursor:progress; }
 .choice:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 @media(hover:hover) and (pointer:fine) { .choice:hover { border-color:var(--primary-faint); } }
+
+/* OY KARTI (panel, 31 Ekim) — gerekçe EarningsVote.tsx "OY KARTLARI".
+   Nötr zemin, ince kenar; yön yalnız dairede. Seçili: `--primary` kenar,
+   `--primary-wash` zemin, halka dolu + onay. Hedef 64 px (≥ 44). */
+.panel .choices { max-width:580px; }
+.option {
+  display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:12px;
+  min-height:64px; padding:10px 14px 10px 12px; border-radius:var(--radius-lg);
+  border:1px solid var(--line); background:var(--surface-sunken); text-align:left; color:var(--text-strong);
+  transition:background-color .2s var(--ease-brand), border-color .2s var(--ease-brand);
+}
+.option:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+@media(hover:hover) and (pointer:fine) { .option:hover { border-color:var(--primary-faint); background:var(--surface); } }
+.option[aria-pressed="true"] { border-color:var(--primary); background:var(--primary-wash); }
+.option[aria-disabled="true"] { cursor:progress; }
+.optionIcon { display:grid; place-items:center; width:36px; height:36px; border-radius:999px; }
+.option[data-choice="beat"] .optionIcon { background:color-mix(in srgb, var(--up) 14%, transparent); color:var(--up); }
+.option[data-choice="miss"] .optionIcon { background:color-mix(in srgb, var(--down) 14%, transparent); color:var(--down); }
+.optionText { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.optionLabel { font-size:15px; font-weight:700; line-height:1.2; color:var(--text-strong); }
+.optionHint { font-size:12px; line-height:1.35; color:var(--text-muted); }
+.optionCheck { display:grid; place-items:center; width:20px; height:20px; border-radius:999px; border:1.5px solid var(--line-strong); color:transparent; }
+/* Telefonda alt alta: yan yana iki kart 165 pikselde alt satırı üç satıra
+   kırıyor ve halkanın üstüne biniyordu (390, ölçüldü). */
+@media(max-width:639px) { .panel .choices { grid-template-columns:minmax(0,1fr); } }
+.option[aria-pressed="true"] .optionCheck { border-color:var(--primary); background:var(--primary); color:var(--on-primary); }
 
 .up { color:var(--up); }
 .down { color:var(--down); }
@@ -56,4 +81,4 @@
 .meta { font-size:12px; line-height:1.5; color:var(--text-muted); }
 .error { font-size:12px; line-height:1.5; color:var(--down); }
 
-@media(prefers-reduced-motion:reduce) { .choice { transition:none; } }
+@media(prefers-reduced-motion:reduce) { .choice, .option { transition:none; } }

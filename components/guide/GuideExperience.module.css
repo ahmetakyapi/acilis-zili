@@ -20,7 +20,8 @@
 .heroTop, .heroRoad { width:100%; }
 .heroTop { display:grid; grid-template-columns:minmax(0,1fr) 340px; grid-template-areas:"title action" "lead action"; align-items:center; gap:6px 40px; min-width:0; }
 .heroTitle { grid-area:title; justify-content:flex-start; gap:10px; }
-.hero .heroTitle.heroTitle h1 { font-size:clamp(30px, 2.6vw, 40px); line-height:1.1; }
+/* Sayfa başlığı sitenin tek ölçüsünde (31 Ekim, görsel denetim: rehber 37 px, öteki sayfalar 56 px). */
+.hero .heroTitle.heroTitle h1 { font-size:var(--heading-page); line-height:1.1; }
 .heroLead { grid-area:lead; margin:0; max-width:64ch; font-size:14px; line-height:1.6; color:var(--text-body); text-wrap:pretty; }
 .heroAction { grid-area:action; min-width:0; }
 .heroRoad { min-width:0; }

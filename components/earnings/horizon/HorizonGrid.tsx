@@ -43,6 +43,14 @@ import styles from "./EarningsHorizon.module.css";
  * piyasa değeri ve karne; kalanlar üç sütunlu yatay kart (logo, sembol,
  * kareler). Tek sayıda öne çıkanın sonuncusu tam satır, boşluk kalmasın.
  * Masaüstü ızgarası değişmedi (ad ve değer orada `display: none`).
+ *
+ * TAŞMA TURU (31 Ekim, sahibinin sözü: "bazı yerler taşmış, böyle kabul
+ * edilemez"). 1440'ta ölçülenler: eksen sütunu 104 piksel sabitti ve
+ * "Kapanış Sonrası" hapı pazartesiye 23 piksel biniyordu; saati belirsiz
+ * satırında kart başka biçimdeydi (yatay 104×44, öteki satırlar dikey
+ * 50×68); dört 6 piksellik kare uzaktan nokta gibi okunuyordu. Şimdi eksen
+ * `max-content`, her satırda tek kart biçimi (logo hep `md`), karne
+ * kartın genişliğinde dört parçalı ince şerit. Ölçüm CSS'te.
  */
 
 export type HorizonTile = {
@@ -342,7 +350,7 @@ function Tile({
         onClick={onSelect}
       >
         <span className={styles.karo}>
-          <LogoTile symbol={tile.symbol} logoUrl={tile.logoUrl} size={tile.lane === "other" ? "sm" : "md"} className={styles.logo} />
+          <LogoTile symbol={tile.symbol} logoUrl={tile.logoUrl} size="md" className={styles.logo} />
           {tile.watched && (
             <span aria-hidden className={styles.star}>
               ★

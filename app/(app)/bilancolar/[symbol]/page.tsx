@@ -8,6 +8,8 @@ import { GuideHint } from "@/components/article/GuideHint";
 import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { timingOf } from "@/components/earnings/EarningsCalendar";
 import { SymbolAnalyses } from "@/components/earnings/SymbolAnalyses";
+import { BeatRecordCard } from "@/components/earnings/company/BeatRecordCard";
+import { NextReport } from "@/components/earnings/company/NextReport";
 import css from "@/components/earnings/company/CompanyEarnings.module.css";
 import { EarningsVote } from "@/components/earnings/vote/EarningsVote";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -20,7 +22,6 @@ import {
   PageHeader,
   Panel,
   PanelHeader,
-  TimingChip,
 } from "@/components/ui/primitives";
 import { analysisHref } from "@/lib/analysis";
 import {
@@ -34,12 +35,13 @@ import { companyCopy, companyWhen, dayMonth, earningsHref, lockLabel } from "@/l
 import { storyGuaranteed } from "@/lib/earnings-story";
 import {
   accuracyPercent,
-  beatRecord,
+  beatQuarters,
   boardFor,
   buildVoteView,
   tallyTotal,
 } from "@/lib/earnings-vote";
 import { getVoteAccuracy, getVoteBoard } from "@/lib/earnings-vote-data";
+import { fiscalLabel, fiscalOf, fiscalOfSlug, isCalendarAligned } from "@/lib/fiscal";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { daysBetweenEt, todayEt } from "@/lib/market-hours";
 import { missingMetadata } from "@/lib/page-meta";
@@ -68,9 +70,11 @@ import {
  * (lib/admin-data.ts → `ROUTE_READ`: "sayfası olmayan bir şablon uydurmak
  * olurdu"); artık sayfası var ve ölçüm şablonu `lib/analytics.ts`te.
  *
- * Ekran sırası (CLAUDE.md "Ekran düzeni"): başlık → künye şeridi (şirket,
- * hisse bağlantısı) → Sıradaki Bilanço (tarih, ölçüler, metin, künye) →
- * oylama → okunan çeyrekler → `DataStamp` → `GuideHint`.
+ * Ekran sırası (CLAUDE.md "Ekran düzeni"): başlık (künye şeridi — şirket,
+ * hisse bağlantısı — 31 Ekim'den beri başlık kartının İÇİNDE) → Sıradaki
+ * Bilanço (yaprak + geri sayım çizgisi, beklentiler, metin, künye) →
+ * oylama (oy kartları + çeyrek çeyrek karne) → okunan çeyrekler →
+ * `DataStamp` → `GuideHint`.
  *
  * Event/FAQ yapılandırılmış verisi YOK — belgeli karar
  * (`components/seo/JsonLd.tsx` başında). Yalnız kırıntı.
@@ -173,7 +177,36 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
     userId ? getVoteAccuracy(userId, Number(data.today.slice(0, 4))) : Promise.resolve(null),
     getEarningsSurprises(symbol).catch(() => null),
   ]);
-  const karne = surprises?.ok ? beatRecord(surprises.data) : null;
+  /* Karne çeyrek çeyrek (`beatQuarters`; sayım da bu diziden, bkz.
+     BeatRecordCard). Dönem adı hisse sayfasının tablosuyla aynı kural:
+     FY biçimi şirketin kendi analiz kaydından, yoksa `isCalendarAligned`
+     (gerekçe `components/stock/past-quarters.ts`). */
+  const quarters = surprises?.ok ? beatQuarters(surprises.data) : [];
+  const analysisFy = data.analyses.map((row) => fiscalOfSlug(row.period)).find(Boolean)?.fy;
+  const money = data.meta?.currency || true;
+  const karne =
+    quarters.length > 0
+      ? {
+          beats: quarters.filter((item) => item.outcome === "beat").length,
+          cells: quarters.map(({ row, outcome }) => {
+            const fiscal = fiscalOf(row);
+            return {
+              key: row.period,
+              period: fiscal
+                ? fiscalLabel(fiscal, locale, { fy: analysisFy ?? !isCalendarAligned(fiscal, row.period) })
+                : formatEtDateCompact(row.period, locale),
+              outcome,
+              actual: formatPrice(row.epsActual, locale, { currency: money }),
+              estimate: formatPrice(row.epsEstimate, locale, { currency: money }),
+            };
+          }),
+        }
+      : null;
+  /* Son çeyreğin gerçekleşen EPS'i karnenin EN YENİ hücresiyle aynı satır —
+     beklentinin yanındaki çubuk ile karnedeki sayı aynı kaynaktan (CLAUDE.md
+     "Veri Dürüstlüğü" 3). Gelir sürpriz listesinde yok; son raporun takvim
+     satırından. */
+  const lastQuarter = quarters.at(-1)?.row ?? null;
   const now = new Date();
   /* `boardFor`: tarih anahtarı kaymış eski oylar da aynı rapora sayılır
      (gerekçe `lib/earnings-vote.ts`, "TARİH ANAHTARI KAYABİLİR"). */
@@ -233,20 +266,23 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
         title={copy.title}
         subtitle={copy.answer}
         share={<PageShare compactOnMobile align="right" path={href} title={copy.title} locale={locale} t={t} />}
+        /* KÜNYE ŞERİDİ BAŞLIK KARTININ İÇİNDE (31 Ekim). Kartın altında,
+           sayfa zemininde ayrı bir satırdı; kartlarla hizasız duruyor ve
+           "logo dışta kalmış" diye okunuyordu (sahibinin itirazı). */
+        strip={
+          <div className={css.identity}>
+            <LogoTile symbol={symbol} logoUrl={data.meta?.logoUrl} size="lg" />
+            <div className="min-w-0">
+              <p className={css.identitySymbol}>{symbol}</p>
+              <p className="truncate text-small text-muted">{data.name}</p>
+            </div>
+            <ButtonLink href={`/hisse/${symbol}`} size="sm" className={css.stockLink}>
+              {c.stockPage}
+              <ArrowUpRight size={14} weight="bold" aria-hidden />
+            </ButtonLink>
+          </div>
+        }
       />
-
-      {/* ---- Künye şeridi: şirket ve hisse sayfası ---- */}
-      <div className={css.identity}>
-        <LogoTile symbol={symbol} logoUrl={data.meta?.logoUrl} size="lg" />
-        <div className="min-w-0">
-          <p className="text-read font-bold text-strong">{symbol}</p>
-          <p className="truncate text-small text-muted">{data.name}</p>
-        </div>
-        <ButtonLink href={`/hisse/${symbol}`} size="sm" className={css.stockLink}>
-          {c.stockPage}
-          <ArrowUpRight size={14} weight="bold" aria-hidden />
-        </ButtonLink>
-      </div>
 
       {/* ---- Sıradaki bilanço ---- */}
       <Panel>
@@ -255,41 +291,49 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
           meta={when.estimated ? c.estimatedTag : undefined}
         />
         <div className={css.body}>
-          {data.next && (
-            <div className={css.when}>
-              <p className={css.date}>
-                {formatEtDateLong(data.next.reportDate, locale)}
-              </p>
-              <div className={css.windowRow}>
-                {timing && <TimingChip tone={timing.tone}>{timing.label}</TimingChip>}
-                {clockLine && <span className="figure text-small text-body">{clockLine}</span>}
-              </div>
-            </div>
-          )}
-
-          {data.next && (
-            <dl className={css.figures}>
-              {daysLeft !== null && (
-                <div>
-                  <dt>{c.daysLeft}</dt>
-                  <dd className="figure">{daysLeft === 0 ? c.today : c.daysValue.replace("{n}", String(daysLeft))}</dd>
-                </div>
-              )}
-              {data.next.epsEstimate !== null && (
-                <div>
-                  <dt>{c.epsEstimate}</dt>
-                  <dd className="figure">{formatPrice(data.next.epsEstimate, locale, { currency })}</dd>
-                </div>
-              )}
-              {data.next.revenueEstimate !== null && (
-                <div>
-                  <dt>{c.revenueEstimate}</dt>
-                  <dd className="figure">
-                    {formatMoneyCompact(data.next.revenueEstimate, locale, data.meta?.currency)}
-                  </dd>
-                </div>
-              )}
-            </dl>
+          {data.next && daysLeft !== null && (
+            <NextReport
+              date={data.next.reportDate}
+              previousDate={data.previous?.reportDate ?? null}
+              today={data.today}
+              daysLeft={daysLeft}
+              estimated={when.estimated}
+              timing={timing}
+              clockLine={clockLine}
+              eps={
+                data.next.epsEstimate !== null
+                  ? {
+                      estimate: {
+                        text: formatPrice(data.next.epsEstimate, locale, { currency }),
+                        value: data.next.epsEstimate,
+                      },
+                      last:
+                        lastQuarter?.epsActual != null
+                          ? { text: formatPrice(lastQuarter.epsActual, locale, { currency }), value: lastQuarter.epsActual }
+                          : null,
+                    }
+                  : null
+              }
+              revenue={
+                data.next.revenueEstimate !== null
+                  ? {
+                      estimate: {
+                        text: formatMoneyCompact(data.next.revenueEstimate, locale, data.meta?.currency),
+                        value: data.next.revenueEstimate,
+                      },
+                      last:
+                        data.previous?.revenueActual != null
+                          ? {
+                              text: formatMoneyCompact(data.previous.revenueActual, locale, data.meta?.currency),
+                              value: data.previous.revenueActual,
+                            }
+                          : null,
+                    }
+                  : null
+              }
+              locale={locale}
+              labels={c}
+            />
           )}
 
           <p className={css.lead}>{copy.lead}</p>
@@ -354,24 +398,13 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
                 )}
               </div>
               {karne && (
-                <aside className={css.karne} aria-label={v.recordTitle}>
-                  <p className={css.karneLabel}>{v.recordTitle}</p>
-                  <p className={css.karneValue}>
-                    <span className="figure">
-                      {karne.beats}/{karne.total}
-                    </span>
-                  </p>
-                  {/* Çeyrek başına bir şerit, eskiden yeniye: geçti yukarı,
-                      kaçırdı aşağı rengi, denk nötr çizgi. Sayının kopyası. */}
-                  <span aria-hidden className={css.karnePips} data-motion-track>
-                    {karne.marks.map((mark, index) => (
-                      <span key={index} className={css.karnePip} data-mark={mark} data-motion-draw="line" />
-                    ))}
-                  </span>
-                  <p className={css.karneNote}>
-                    {v.recordNote.replace("{n}", String(karne.total)).replace("{beats}", String(karne.beats))}
-                  </p>
-                </aside>
+                <BeatRecordCard
+                  cells={karne.cells}
+                  beats={karne.beats}
+                  title={v.recordTitle}
+                  note={v.recordNote.replace("{n}", String(karne.cells.length)).replace("{beats}", String(karne.beats))}
+                  labels={{ beat: v.recordBeat, miss: v.recordMiss, inline: v.recordInline, estimate: v.recordEstimate }}
+                />
               )}
             </div>
             {accuracy && accuracy.scored > 0 && (

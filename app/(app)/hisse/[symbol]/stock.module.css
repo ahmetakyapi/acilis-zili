@@ -94,8 +94,10 @@
    (mürekkep kıvılcımı, seans zili figürünün kontağı, sayaç sıfırının
    rakamları). İçerideki GERÇEK etkileşim (takvim düğmesi) mavi kalıyor:
    "mavi = tıklanır, pirinç = zil anı" ayrımı tek kartta okunuyor. */
-.upcomingPanel { position:relative; padding:22px; border:1px solid color-mix(in srgb, var(--brass) 28%, transparent); border-radius:22px; background:var(--premium-surface,var(--surface-solid)); }
-.upcomingPanel::after { position:absolute; top:0; bottom:0; left:0; width:3px; background:var(--brass); content:""; }
+/* Olay şeridi TEPEDE (31 Ekim, görsel denetim): sol kenardaki 3 px pirinç
+   çizgi kartların tepe şeridi diline çekildi; kenar nötr. */
+.upcomingPanel { position:relative; padding:22px; border:1px solid var(--line); border-radius:22px; background:var(--premium-surface,var(--surface-solid)); }
+.upcomingPanel::after { position:absolute; top:-1px; left:22px; right:22px; height:3px; border-radius:0 0 3px 3px; background:var(--brass); content:""; }
 .eventKicker { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--brass-ink); }
 .eventKicker h2 { color:var(--brass-ink); }
 .earningsDate { margin-top:14px; font-size:24px; line-height:1.2; font-weight:600; letter-spacing:-.045em; color:var(--text-strong); }

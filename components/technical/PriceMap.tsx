@@ -363,7 +363,7 @@ export function PriceMapNotes({ copy, verdict, lang, t, ...levels }: {
  * geçilmek seviyenin ANLAMINI değiştiriyor: hedef gerçekleşti, stop
  * kırıldı — ikisi de plana dair bir haber.
  */
-function crossedState(
+export function crossedState(
   kind: string,
   distance: number | null,
 ): "passed" | "broken" | null {

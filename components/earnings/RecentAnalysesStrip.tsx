@@ -9,6 +9,7 @@ import type { AnalysisIndexRow, SymbolMeta } from "@/lib/data";
 import type { Dictionary } from "@/lib/i18n";
 import { LogoTile } from "@/components/ui/primitives";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
+import styles from "./RecentAnalysesStrip.module.css";
 
 /**
  * Takvim sekmesinin altındaki "son yazılan analizler" şeridi.
@@ -67,9 +68,13 @@ export function RecentAnalysesStrip({
          74 → 62; gerekçe
          ve ölçüm `components/earnings/horizon/EarningsHorizon.module.css`
          sonunda. */
-      className="flex flex-col gap-3 rounded-xl border border-primary-soft/45 bg-(--premium-surface) px-4 py-4.5 sm:flex-row sm:items-center sm:gap-5 sm:px-6 sm:py-3.5 min-[100rem]:py-2"
+      /* BAŞLIK ÜSTTE, ÇİPLER TAM GENİŞLİKTE (31 Ekim): başlık solda, çipler
+         ortada kayan şerit ve "Tümünü Gör" sağdaydı; son çip yarım kesilip
+         bağlantının dibine yapışıyordu. Gerekçe ve ölçüm
+         `RecentAnalysesStrip.module.css` başında. */
+      className={styles.strip}
     >
-      <div className="flex shrink-0 items-center justify-between gap-3">
+      <div className={styles.head}>
         {/* ETİKET YÜZEYİN KENDİ MÜREKKEBİNDE. `plate` künyeyi `--text-muted`
             ile basıyor ve o gri, sayfanın nötr zemini için ayarlı; accent
             wash'ın üstünde şeridin ne olduğunu söyleyen TEK metin geri plana
@@ -83,28 +88,27 @@ export function RecentAnalysesStrip({
             şerit sayfanın okunacak tek yüzeyi olduğu hâlde en küçük metni
             onun adıydı. Artık panel başlıklarıyla aynı basamakta bir `h2`
             ve öteki başlıklar gibi mavi degradede. */}
-        <h2 className="whitespace-nowrap text-read font-bold">
+        <h2 className={styles.title}>
           {t.analysis.recentStrip}
         </h2>
-        {/* Mobilde "Tümü" etiketle aynı satırda: altına inince şerit üç
-            satıra çıkıyor ve takvimin önüne geçiyordu. */}
-        <Link
-          href="/bilancolar/analizler"
-          className="-my-2 inline-flex min-h-10 items-center whitespace-nowrap py-2 text-tiny font-semibold text-primary hover:text-primary-hover sm:hidden"
-        >
+        {/* "Tümü" etiketle aynı satırda, her genişlikte (31 Ekim'e dek
+            yalnız telefonda; geniş ekranda şeridin sağ ucundaydı). */}
+        <Link href="/bilancolar/analizler" className={styles.all}>
           {t.common.showAll} →
         </Link>
       </div>
 
       {/* Dar ekranda çipler kırılmak yerine kayar — sekiz analiz alt alta
           dizilince şerit bir listeye dönüşüyordu. Şerit yalnızca yatay
-          kayıyor (dikey taşma kesik — globals.css). */}
-      <ScrollEdges as="ul" className="no-scrollbar -mx-4 flex gap-2.5 overflow-x-auto px-4 sm:mx-0 sm:min-w-0 sm:flex-1 sm:px-0">
+          kayıyor (dikey taşma kesik — globals.css). 31 Ekim: kaydırma
+          yalnız telefonda; ≥640'ta kabın genişliğine sığan kadar TAM çip. */}
+      <div className={styles.rail}>
+      <ScrollEdges as="ul" className={`no-scrollbar ${styles.list}`}>
         {rows.map((row) => {
           const verdict = verdictOf(row.verdict);
           const logoUrl = meta[row.symbol]?.logoUrl;
           return (
-            <li key={`${row.symbol}-${row.period}`} className="shrink-0">
+            <li key={`${row.symbol}-${row.period}`} className={styles.item}>
               <Link
                 href={analysisHref(row.symbol, row.period)}
                 prefetch={false}
@@ -113,7 +117,7 @@ export function RecentAnalysesStrip({
                    dokunma alanını `.tap-44` ile görünmeden büyütüyordu;
                    şerit "küçük kalmış" bulundu. Hap artık hedefin kendisi
                    kadar: logo 26, sembol 15 punto. */
-                className="flex min-h-11 items-center gap-2.5 rounded-full border border-line bg-surface-solid py-1.5 pl-1.5 pr-3.5 transition-colors hover:border-line-strong"
+                className={styles.chip}
               >
                 {/* Yuvarlak: karo hap biçimli bir çipin içinde. */}
                 <LogoTile
@@ -122,13 +126,13 @@ export function RecentAnalysesStrip({
                   size="sm"
                   className="rounded-full"
                 />
-                <span className="text-base font-bold text-strong">
+                <span className={styles.symbol}>
                   {row.symbol}
                 </span>
                 <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} score={row.score} />
                 {/* Hangi çeyreğin okunduğu yazılı değildi: `periodLabel`
                     sorguda zaten geliyor ve sunumda atılıyordu. */}
-                <span className="figure whitespace-nowrap text-tiny text-muted">
+                <span className={`figure ${styles.period}`}>
                   {row.periodLabel}
                 </span>
               </Link>
@@ -136,13 +140,7 @@ export function RecentAnalysesStrip({
           );
         })}
       </ScrollEdges>
-
-      <Link
-        href="/bilancolar/analizler"
-        className="hidden shrink-0 whitespace-nowrap text-tiny font-semibold text-primary hover:text-primary-hover sm:inline"
-      >
-        {t.common.showAll} →
-      </Link>
+      </div>
     </section>
   );
 }

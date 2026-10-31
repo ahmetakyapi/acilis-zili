@@ -1,11 +1,13 @@
 import type { VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { riskReward } from "@/lib/technical";
+import { openPlan, riskReward, type OpenSide } from "@/lib/technical";
 import { formatPercentPlain, formatPrice } from "@/lib/utils";
 import { LevelTrack, type TrackSegment } from "./LevelTrack";
+import { openSideKey, openWhyText } from "./open-plan";
 import styles from "./Technical.module.css";
 
-type Leg = { key: string; name: string; tone: TrackSegment["tone"]; abs: number; pct: number; side: "start" | "end" };
+/** `abs`/`pct` null: fiyat seviyede, bacak yalnız adını söylüyor. */
+type Leg = { key: string; name: string; tone: TrackSegment["tone"]; abs: number | null; pct: number | null; side: "start" | "end" };
 
 /**
  * Plan rayı — liste kartında planın TEK çizimi (23 Eylül).
@@ -35,8 +37,9 @@ type Leg = { key: string; name: string; tone: TrackSegment["tone"]; abs: number;
  * ölçüldü). Boşluk esnetilmez, doldurulur: fiyattan en yakın satış
  * seviyesine ("Tepkiye") ve en yakın desteğe ("Desteğe") uzaklık. İkisi de
  * mevcut sayılardan; oran YOK, çünkü bu bir alım planı değil. Seviye fiyatın
- * yanlış tarafına düşmüşse (tepki seviyesi geçilmiş, destek kırılmış) o
- * bacak hiç basılmıyor — ters işaretli bir uzaklık yazmak yerine susmak.
+ * yanlış tarafına düşmüşse (tepki seviyesi geçilmiş, destek kırılmış) bacak
+ * bir dönem hiç basılmıyordu ("susmak"); 31 Ekim'den beri adıyla söylüyor
+ * ("Direncin Üstünde", "Desteğin Altında") — gerekçe aşağıda, dalın içinde.
  */
 export function PlanRail({
   verdict,
@@ -99,36 +102,48 @@ export function PlanRail({
       </>
     );
   } else if (!hasEntry && price !== null && price > 0) {
-    /* Fiyattan seviyeye: yukarıda en yakın satış seviyesi (SAT) ya da
-       direnç (bölgesiz TUT), aşağıda en yakın destek. Hücrelerle aynı
-       kaynak: SAT'ta hedefler yoksa dirençler (`PlanStrip` ile aynı kural),
-       destek `supports[0]`. */
-    const upper = verdict === "sell" ? (targets.length ? targets : resistances) : resistances;
-    const above = [...upper].filter((level) => level > price).sort((a, b) => a - b)[0];
-    const support = supports[0] !== undefined && supports[0] < price ? supports[0] : undefined;
-    if (above !== undefined) {
-      segments.push({ from: price, to: above, tone: verdict === "sell" ? "down" : "flat" });
+    /* Fiyattan seviyeye — hücrelerle AYNI kaynak (`openPlan`): yukarıda
+       satış tarafı (SAT'ta tepki seviyesi, TUT'ta hedef ya da direnç),
+       aşağıda en yakın destek.
+
+       GEÇİLMİŞ SEVİYE SUSMUYOR, SÖYLÜYOR (31 Ekim). Eski kural "seviye
+       fiyatın yanlış tarafına düştüyse bacak basılmaz"dı ve bir tuzağı
+       vardı: direnç fiyatın kuruş üstündeyken bacak "Dirence 0,09 $ ·
+       %0,0" diye basılıyor, kuruş altına inince sessizce kayboluyordu.
+       Artık üç hâl: seviyeye doğru (tutar ve yüzde), seviyede ("Dirençte",
+       sayı yok — %0,0 bir ölçü gibi okunuyordu) ve geçilmiş ("Direncin
+       Üstünde" ve geçilen seviyeden uzaklık, yön renginde; çizgi geçilen
+       seviyeden fiyata). */
+    const open = openPlan(verdict, price, { entryLow, entryHigh, targets, supports, resistances });
+    const mode = verdict === "sell" ? "sell" : "hold";
+    const op = t.technical.openPlan;
+    const legOf = (side: OpenSide | null, key: "above" | "support"): void => {
+      if (!side) return;
+      const sk = openSideKey(side, mode);
+      const towardTone: TrackSegment["tone"] = key === "above" && verdict === "sell" ? "down" : "flat";
+      if (side.state === "at") {
+        legs.push({ key, name: op.at[sk], tone: "flat", abs: null, pct: null, side: key === "above" ? "end" : "start" });
+        return;
+      }
+      const beyond = side.state === "beyond";
+      const tone: TrackSegment["tone"] = beyond ? (key === "above" ? "up" : "down") : towardTone;
+      segments.push({ from: beyond ? side.level : price, to: beyond ? price : side.level, tone });
       legs.push({
-        key: "above",
-        name: verdict === "sell" ? t.technical.planToSellLevel : t.technical.planToResistance,
-        tone: verdict === "sell" ? "down" : "flat",
-        abs: above - price,
-        pct: ((above - price) / price) * 100,
-        side: "end",
+        key,
+        name: beyond ? op.legBeyond[sk] : op.legToward[sk],
+        tone,
+        abs: Math.abs(side.level - price),
+        pct: side.pct,
+        side: key === "above" ? "end" : "start",
       });
-    }
-    if (support !== undefined) {
-      segments.push({ from: price, to: support, tone: "flat" });
-      legs.unshift({
-        key: "support",
-        name: t.technical.planToSupport,
-        tone: "flat",
-        abs: price - support,
-        pct: ((price - support) / price) * 100,
-        side: "start",
-      });
-    }
-    if (legs.length) head = <span>{t.technical.levelsNote}</span>;
+    };
+    legOf(open?.buy ?? null, "support");
+    legOf(open?.sell ?? null, "above");
+    /* KÜNYE NEDEN CÜMLESİ (31 Ekim). "Fiyata Uzaklık" künyesi bacakların
+       adı zaten söylediği şeyi tekrarlıyordu ("Desteğe", "Dirence");
+       yerine planın neden olmadığını söyleyen tek cümle geçti — kartta
+       ayrı bir satır açmadan (gerekçe `PlanStrip` → `showWhy`). */
+    if (open) head = <span className={styles.railWhy}>{openWhyText(open, t)}</span>;
   }
 
   return (
@@ -151,9 +166,9 @@ export function PlanRail({
           {legs.map((leg) => (
             <span key={leg.key} data-leg={leg.key} data-tone={leg.tone} data-side={leg.side}>
               <span className={styles.riskName}>{leg.name}</span>
-              <b className="numeral">{money(leg.abs)}</b>
-              <span className={styles.planSep} aria-hidden>·</span>
-              <span className="numeral">{formatPercentPlain(leg.pct, locale, 1)}</span>
+              {leg.abs !== null && <b className="numeral">{money(leg.abs)}</b>}
+              {leg.abs !== null && leg.pct !== null && <span className={styles.planSep} aria-hidden>·</span>}
+              {leg.pct !== null && <span className="numeral">{formatPercentPlain(leg.pct, locale, 1)}</span>}
             </span>
           ))}
         </p>

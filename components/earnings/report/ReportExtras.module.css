@@ -160,6 +160,9 @@
   grid-auto-rows: auto;
   gap: 0.75rem;
 }
+@media (min-width: 900px) {
+  .kpis { grid-template-columns: repeat(var(--kpi-cols, 3), minmax(0, 1fr)); }
+}
 
 .kpi {
   display: grid;

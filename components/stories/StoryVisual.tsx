@@ -1,4 +1,5 @@
 import { LogoImage } from "@/components/ui/LogoImage";
+import { ChangePill } from "@/components/ui/primitives";
 import { ScaleBar } from "@/components/markets/CompareScale";
 import { scaleRatios } from "@/lib/compare";
 import styles from "./StoryVisual.module.css";
@@ -281,7 +282,13 @@ export function StoryCast({
               >
                 {member.sinceEvent === null && member.lastClose ? (
                   <>{!sharedCloseDate && <small className={styles.readingCaption}>{closeLabel}</small>}
-                    {formatPrice(member.lastClose.price, locale, { currency: true })}
+                    <span className="flex items-baseline justify-end gap-2">
+                      {formatPrice(member.lastClose.price, locale, { currency: true })}
+                      {/* Kapanış gününün değişimi (31 Ekim) — fiyatın yanında yön. */}
+                      {member.lastClose.dayPct != null && (
+                        <ChangePill changePct={member.lastClose.dayPct} locale={locale} size="sm" />
+                      )}
+                    </span>
                     {!sharedCloseDate && <small className={styles.readingDate}>{formatEtDateCompact(member.lastClose.date, locale)}</small>}
                   </>
                 ) : member.sinceEvent === null ? null : formatPercent(member.sinceEvent, locale)}

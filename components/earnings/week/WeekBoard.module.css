@@ -587,7 +587,9 @@
 @media (min-width: 1100px) {
   .board {
     display: grid;
-    grid-template-columns: 7rem repeat(5, minmax(0, 1fr));
+    /* Eksen sütunu içerikten (31 Ekim): 7rem'de "Kapanış Sonrası" çipi
+       sütundan taşıp pazartesi kolonuna biniyordu (1440, ölçüldü). */
+    grid-template-columns: max-content repeat(5, minmax(0, 1fr));
     grid-template-rows: auto repeat(var(--lanes), auto);
     column-gap: 0.35rem;
     row-gap: 0;
@@ -818,11 +820,17 @@
   font-weight: 750;
 }
 
+/* İNCE SÜTUN (31 Ekim, görsel denetim): sütunlar günün tüm genişliğini
+   dolu lacivert bloklarla kaplıyordu; CLAUDE.md'nin "grafik dili ince"
+   kuralına (kulvar üstünde ince şerit) aykırıydı. Artık ortada 16 px'lik
+   bir kulvar, yığın onun içinde; sayı ve gün adı aynı hizada. */
 .pulseColumn {
   display: flex;
   align-items: flex-end;
-  border-radius: 0.6rem;
-  background: var(--surface-sunken);
+  justify-self: center;
+  width: 16px;
+  border-radius: 999px;
+  background: var(--line-soft);
 }
 
 .pulseStack {
@@ -832,7 +840,7 @@
   width: 100%;
   height: calc(var(--h) * 100%);
   overflow: hidden;
-  border-radius: 0.6rem;
+  border-radius: 999px;
   transform-origin: center bottom;
 }
 

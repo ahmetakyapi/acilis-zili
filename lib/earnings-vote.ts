@@ -373,16 +373,40 @@ export function buildVoteView(input: {
  */
 export const BEAT_RECORD_QUARTERS = 4;
 
-export function beatRecord(
-  rows: readonly { period: string; epsEstimate: number | null; epsActual: number | null }[],
+type BeatRow = { period: string; epsEstimate: number | null; epsActual: number | null };
+
+/**
+ * Karnenin ÇEYREK ÇEYREK hâli (31 Ekim): şirket sayfası karnede dört
+ * çeyreği ayrı hücre olarak çiziyor (dönem, gerçekleşen ve beklenti
+ * yazılı). Seçim ve sıra `beatRecord`la AYNI — sayım bu diziden çıkıyor,
+ * yani hücreler ile "0/4" birbirini tutmak zorunda.
+ */
+export function beatQuarters<T extends BeatRow>(
+  rows: readonly T[],
   limit = BEAT_RECORD_QUARTERS,
-): { beats: number; total: number; marks: VoteOutcome[] } | null {
-  const marks = [...rows]
+): { row: T; outcome: VoteOutcome }[] {
+  /* AYNI DÖNEM İKİ KEZ (31 Ekim, /bilancolar/SHAZ): sağlayıcı iki çeyreği
+     ikişer satırla döndürdü ve karne iki çeyreği "0/4" diye sayıyordu.
+     Dönem başına tek satır, gerçekleşeni olan önce — hisse sayfasının
+     tablosuyla aynı kural (`buildPastQuarters`, 25 Ekim). */
+  const unique = new Map<string, T>();
+  for (const row of rows) {
+    const held = unique.get(row.period);
+    if (!held || (held.epsActual === null && row.epsActual !== null)) unique.set(row.period, row);
+  }
+  return [...unique.values()]
     .sort((a, b) => b.period.localeCompare(a.period))
-    .map((row) => voteOutcome(row.epsActual, row.epsEstimate))
-    .filter((outcome): outcome is VoteOutcome => outcome !== null)
+    .map((row) => ({ row, outcome: voteOutcome(row.epsActual, row.epsEstimate) }))
+    .filter((item): item is { row: T; outcome: VoteOutcome } => item.outcome !== null)
     .slice(0, limit)
     .reverse();
+}
+
+export function beatRecord(
+  rows: readonly BeatRow[],
+  limit = BEAT_RECORD_QUARTERS,
+): { beats: number; total: number; marks: VoteOutcome[] } | null {
+  const marks = beatQuarters(rows, limit).map((item) => item.outcome);
   if (marks.length === 0) return null;
   return { beats: marks.filter((mark) => mark === "beat").length, total: marks.length, marks };
 }

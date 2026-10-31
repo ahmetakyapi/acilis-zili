@@ -838,10 +838,15 @@
 .coverHeadline { max-width:54ch; color:var(--text-strong); font-size:clamp(19px, 1.35vw, 25px); line-height:1.5; font-weight:550; letter-spacing:-.022em; text-wrap:pretty; }
 /* Planın okuması — sol şerit tonu okumanın tonu: bölgede yükseliş, stop
    altı ve SAT düşüş, bekleyiş nötr. */
-.reading { display:grid; gap:4px; padding:12px 16px; border-left:3px solid var(--line-strong); border-radius:0 14px 14px 0; background:var(--surface-sunken); }
-.reading[data-tone="up"] { border-left-color:var(--up); background:var(--up-wash); }
-.reading[data-tone="down"] { border-left-color:var(--down); background:var(--down-wash); }
-.reading[data-tone="flat"] { border-left-color:var(--primary); background:var(--primary-tint); }
+/* DURUM VURGUSU TEPEDE (31 Ekim, görsel denetim). Okuma kutusu sol
+   kenarda 3 px renk ve dolu tonlu zemin taşıyordu; sitenin kart dili nötr
+   zemin + tepede 3 piksellik şerit (bilanço, risk, tema kartları). Ton
+   şeritte ve etikette. */
+.reading { position:relative; display:grid; gap:4px; padding:14px 16px 12px; border:1px solid var(--line); border-radius:14px; background:var(--surface-solid); --reading-tone:var(--line-strong); }
+.reading::before { content:""; position:absolute; top:-1px; left:16px; right:16px; height:3px; border-radius:0 0 3px 3px; background:var(--reading-tone); }
+.reading[data-tone="up"] { --reading-tone:var(--up); }
+.reading[data-tone="down"] { --reading-tone:var(--down); }
+.reading[data-tone="flat"] { --reading-tone:var(--primary); }
 .readingLabel { font-size:12px; font-weight:700; letter-spacing:0; color:var(--text-muted); }
 .reading p { color:var(--text-strong); font-size:14px; line-height:1.6; text-wrap:pretty; }
 .coverSide { display:flex; min-width:0; flex-direction:column; justify-content:center; gap:18px; padding-left:32px; border-left:1px solid var(--line); }
@@ -862,10 +867,13 @@
    HER künyede aynı olduğu için alt ızgaranın hizası bozulmuyor; şeridin
    kendi dibindeki fazlalık negatif kenarla geri alınıyor. */
 .signals { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); grid-template-rows:auto auto auto; column-gap:20px; row-gap:5px; margin:0 0 -8px; }
-.signal { display:grid; grid-template-rows:subgrid; grid-row:span 3; min-width:0; margin-bottom:8px; padding-left:14px; border-left:2px solid var(--line); }
-.signal[data-tone="up"] { border-left-color:var(--up); }
-.signal[data-tone="down"] { border-left-color:var(--down); }
-.signal[data-tone="primary"] { border-left-color:var(--primary); }
+.signal { position:relative; display:grid; grid-template-rows:subgrid; grid-row:span 3; min-width:0; margin-bottom:8px; padding-top:10px; --signal-tone:var(--line); }
+/* Gösterge hücresinin tonu tepede kısa bir çizgi (31 Ekim): sol kenar
+   çizgisi kutu vurgusu gibi okunuyordu; şerit kartların diliyle aynı. */
+.signal::before { content:""; position:absolute; top:0; left:0; width:28px; height:3px; border-radius:3px; background:var(--signal-tone); }
+.signal[data-tone="up"] { --signal-tone:var(--up); }
+.signal[data-tone="down"] { --signal-tone:var(--down); }
+.signal[data-tone="primary"] { --signal-tone:var(--primary); }
 .signal dt { font-size:12px; font-weight:700; letter-spacing:0; color:var(--text-muted); }
 .signal dd { margin:0; }
 .signalValue { align-self:start; }
@@ -1065,9 +1073,10 @@
 
 /* ---- Senaryolar ---- */
 .scenarios { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
-.scenario { display:flex; flex-direction:column; gap:8px; padding:14px 16px; border-left:2px solid var(--line); border-radius:12px; }
-.scenario[data-tone="up"] { border-left-color:var(--up); background:var(--up-wash); }
-.scenario[data-tone="down"] { border-left-color:var(--down); background:var(--down-wash); }
+.scenario { position:relative; display:flex; flex-direction:column; gap:8px; padding:16px 16px 14px; border:1px solid var(--line); border-radius:12px; background:var(--surface-solid); --scenario-tone:var(--line-strong); }
+.scenario::before { content:""; position:absolute; top:-1px; left:16px; right:16px; height:3px; border-radius:0 0 3px 3px; background:var(--scenario-tone); }
+.scenario[data-tone="up"] { --scenario-tone:var(--up); }
+.scenario[data-tone="down"] { --scenario-tone:var(--down); }
 .scenario h3 { display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:750; letter-spacing:.01em; }
 .scenario h3 svg { flex:none; }
 .scenario[data-tone="up"] h3 { color:var(--up); }
@@ -2151,3 +2160,122 @@
   .pulseTip { animation:none; }
   .card:has(> .cardFoldInput:checked) :is(.cardThesis, .gaugeBox) { animation:none; }
 }
+
+/* ==========================================================================
+   PLANSIZ GÖRÜŞ VE FİYAT MERDİVENİ (31 Ekim, sahibinin isteği)
+   Gerekçeler: lib/technical.ts → openPlan / priceLadderLayout,
+   components/technical/PriceLadder.tsx.
+   ========================================================================== */
+
+/* Niteleme sayının önünde, küçük ve sönük: cevap yine sayı. "Bölge Yok"
+   bir eksiklik değil bir bilgi; tonu gövde metninin bir kademe altı.
+   Geçilmiş seviye yön renginde (direnç geçildi yukarı, destek kırıldı
+   aşağı), seviyede durmak pirinç — TUT'un kendi rengi, "karar anı". */
+.planQual { font-size:12px; font-weight:600; letter-spacing:0; color:var(--text-muted); white-space:nowrap; }
+.planQual[data-tone="up"] { color:var(--up); }
+.planQual[data-tone="down"] { color:var(--down); }
+.planQual[data-tone="at"] { color:var(--brass-ink); }
+.planCell[data-open] dd { font-size:14.5px; }
+/* Neden cümlesi kutunun içinde: kutu alttan açılıyor, cümle kıl çizgiyle
+   ayrılıp aynı zemini paylaşıyor (yeni kutu açılmıyor). */
+.planStrip[data-open] .planCells { border-end-start-radius:0; border-end-end-radius:0; }
+.planWhy { margin:-8px 0 0; padding:8px 14px 10px; border-top:1px solid var(--line-soft); border-end-start-radius:var(--radius-lg); border-end-end-radius:var(--radius-lg); background:var(--surface-sunken); font-size:12.5px; line-height:1.45; color:var(--text-body); }
+.cardPlan[data-verdict="sell"] .planWhy { background:color-mix(in srgb, var(--down-wash) 45%, var(--surface-sunken)); }
+.overviewQual { font-size:12.5px; line-height:1.3; }
+/* Telefonda açık hücre iki satır: üstte soru ve sayı (öteki hücrelerle
+   aynı hat), altta niteleme. Üçü tek satırdayken 390'da "Nereden Alınır"
+   90 piksellik ad sütununda iki satıra sarıp kesiliyordu (INTC, ölçüldü). */
+@media (max-width:639px) {
+  .overviewCell[data-open] dt { flex:1 0 auto; }
+  .overviewCell[data-open] dd:not(.overviewQual) { flex:0 0 auto; }
+  .overviewCell[data-open] .overviewQual { order:3; flex:1 0 100%; text-align:left; }
+}
+.overviewCell[data-open] { gap:6px; }
+.overviewCell[data-kind="support"]::before, .overviewCell[data-kind="resistance"]::before { background:var(--line-strong); }
+
+/* Alım bölgesi MAVİ (31 Ekim): bölge bir alan, yön değil — yeşil "hedef",
+   kırmızı "stop" yön renkleriyle karışmasın. Lejant, kapak şeridi ve kart
+   rayı aynı dilde. */
+.legendDot[data-kind="entry"] { background:var(--primary-wash); box-shadow:inset 0 0 0 1px var(--primary); }
+.overviewCell[data-kind="entry"]::before { background:var(--primary); }
+
+/* ---- Kart rayı merdivenin dilinde ----
+   Eksen 2 piksellik oluk yerine 5 piksellik KULVAR (`--line-soft` üstünde
+   sitenin grafik dili, MarketTexture); bacaklar aynı kalınlıkta şerit.
+   Bant mavi, fiyat noktası koyu mürekkep (mavi bant içinde mavi nokta
+   kayboluyordu), destek ve direnç çentikleri `--line-strong` — sönük ama
+   soluk değil. */
+.trackLine { top:9.5px; height:5px; border-radius:999px; background:var(--line-soft); }
+.trackVoid { top:9.5px; height:5px; border-radius:999px 0 0 999px; opacity:.22; }
+.trackBand { top:5px; height:14px; border-radius:5px; background:linear-gradient(var(--primary-wash), var(--primary-wash)), var(--premium-surface); box-shadow:inset 0 0 0 1px var(--primary-faint); }
+.trackTick[data-kind="support"], .trackTick[data-kind="resistance"] { background:var(--line-strong); opacity:1; }
+.trackTick[data-kind="sellLevel"] { opacity:.75; }
+.trackPrice { background:var(--text-strong); box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 4px var(--text-strong); }
+
+/* ---- Fiyat merdiveni ----
+   Üç katman, mutlak yerleşim: solda çizim (`.ladderPlot`), ortada bağ
+   çizgileri (SVG, `--link-w`), sağda etiketler. Etiket kolonu içerik kadar
+   değil SABİT bir payla: konumları sunucuda hesaplanıyor ve kolon
+   genişliği satırdan satıra değişirse bağ çizgileri farklı yerlerde biterdi. */
+.ladder { --label-w:clamp(168px, 46%, 248px); position:relative; min-width:0; margin-top:4px; }
+.ladderPlot { position:absolute; inset:0 calc(var(--label-w) + var(--link-w)) 0 0; }
+.ladderLinks { position:absolute; top:0; right:var(--label-w); overflow:visible; }
+.ladderLinks path { fill:none; stroke:var(--line-strong); stroke-width:1; }
+.ladderLinks path[data-kind="price"] { stroke:var(--text-strong); stroke-width:1.5; }
+.ladderLinks path[data-kind="entry"] { stroke:var(--primary); }
+.ladderLinks path:is([data-kind="stop"],[data-kind="sellLevel"]) { stroke:var(--down); }
+.ladderLinks path[data-kind="target"] { stroke:var(--up); }
+
+/* Kulvar ve şeritler: x = 14. */
+.ladderLane { position:absolute; top:0; bottom:0; left:12px; width:5px; border-radius:999px; background:var(--line-soft); }
+.ladderSeg { position:absolute; left:12px; width:5px; border-radius:999px; }
+.ladderSeg[data-tone="up"] { background:var(--up); }
+.ladderSeg[data-tone="down"] { background:var(--down); }
+.ladderSeg[data-tone="flat"] { background:color-mix(in srgb, var(--text-muted) 60%, transparent); }
+
+/* Seviye çizgileri: kulvardan bağ alanına kadar ince. Yapı (destek,
+   direnç) nötr ve kesikli — çizilmiş bir sınır değil bir "bölge tavanı";
+   planın kendi seviyeleri (hedef, stop, tepki) düz ve renkli. */
+.ladderLine { position:absolute; left:6px; right:0; height:0; border-top:1px dashed var(--line-strong); }
+.ladderLine[data-kind="target"] { border-top:1.5px solid var(--up); }
+.ladderLine[data-kind="sellLevel"] { border-top:1.5px solid var(--down); }
+.ladderLine[data-kind="stop"] { border-top:2px solid var(--down); }
+
+/* Alım bölgesi: mavi bant, kulvarın solundan bağ alanına. Kulvardaki
+   karşılığı bandın kendi koyu kenarı. */
+.ladderBand { position:absolute; left:0; right:0; border-radius:6px; background:var(--primary-wash); box-shadow:inset 3px 0 0 var(--primary); }
+
+/* Stopun altı: düz düşüş yıkaması (degrade değil — veri paneli), merdivenin
+   tam genişliğinde; künyesi merdivenin altında (`.ladderNote`). */
+.ladderVoid { position:absolute; left:0; right:0; bottom:0; border-top:1px solid color-mix(in srgb, var(--down) 35%, transparent); border-radius:0 0 8px 8px; background:color-mix(in srgb, var(--down-wash) 50%, transparent); }
+.ladderNote { display:flex; align-items:center; gap:8px; margin-top:10px; font-size:12px; font-weight:600; color:var(--down); }
+.ladderNote i { flex:none; width:14px; height:8px; border-radius:2px; border-top:1.5px solid var(--down); background:color-mix(in srgb, var(--down-wash) 70%, transparent); }
+
+/* Güncel fiyat: koyu mürekkep imleç — çizgi ve kulvarda nokta. */
+.ladderNowLine { position:absolute; left:14px; right:0; height:0; border-top:1.5px solid var(--text-strong); }
+.ladderNow { position:absolute; left:14.5px; width:13px; height:13px; margin:-6.5px 0 0 -6.5px; border-radius:50%; background:var(--text-strong); box-shadow:0 0 0 3px var(--premium-surface); }
+
+/* Etiketler: iki satır — ad (ve rozet), sonra fiyat ile uzaklık. */
+.ladderLabels { position:absolute; inset:0 0 0 auto; width:var(--label-w); margin:0; padding:0; list-style:none; }
+/* Bağ çizgisi FİYAT satırına varıyor (ad satırına değil): blok, fiyat
+   satırının ortası `labelY`de olacak kadar yukarı kalkıyor (19 / 2). */
+.ladderLabel { position:absolute; left:0; right:0; display:grid; gap:1px; padding:0 2px 0 8px; translate:0 calc(-100% + 9.5px); }
+.ladderName { display:flex; align-items:center; gap:6px; min-width:0; font-size:12px; line-height:16px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
+.ladderName .mapCrossed { padding:0 6px; line-height:15px; }
+.ladderName .delayBadge { padding:0 6px; font-size:10.5px; line-height:15px; }
+.ladderValue { display:flex; align-items:baseline; justify-content:space-between; gap:8px; white-space:nowrap; }
+.ladderValue strong { font-size:15px; line-height:19px; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); }
+.ladderAway { font-size:12px; font-weight:600; color:var(--text-muted); }
+.ladderLabel[data-kind="target"] .ladderName { color:var(--up); }
+.ladderLabel:is([data-kind="stop"],[data-kind="sellLevel"]) .ladderName { color:var(--down); }
+.ladderLabel[data-kind="entry"] .ladderName { color:var(--primary-ink); }
+.ladderLabel[data-kind="price"] .ladderName { color:var(--text-strong); font-weight:700; }
+.ladderLabel[data-kind="price"] .ladderValue strong { font-size:16px; font-weight:750; }
+.mapPanel .ladder { max-width:620px; }
+@media (max-width:639px) {
+  .ladder { --label-w:clamp(160px, 56%, 220px); }
+  .ladderValue strong { font-size:14px; }
+}
+/* Rayın künyesi plansız kartta bir cümle: gövde tonu, künyeden bir kademe
+   koyu — "Fiyata Uzaklık" bir etiketti, bu bir okuma. */
+.railWhy { font-size:12.5px; line-height:1.45; color:var(--text-body); }

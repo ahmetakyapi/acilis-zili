@@ -28,6 +28,9 @@
 .label { color: var(--text-body); }
 .short { display: none; }
 @media (max-width: 767px) { .long { display: none; } .short { display: inline; } }
+/* 390'da hap sağdan kesiliyordu (31 Ekim, görsel denetim). Dar ekranda
+   "· Aç" düşer; ok ve erişilebilir ad ("… raporunu aç") eylemi taşıyor. */
+@media (max-width: 479px) { .go, .goDot { display: none; } }
 .dot { color: var(--text-muted); }
 .verdict { color: var(--text-strong); font-weight: 750; letter-spacing: .01em; }
 .chip[data-verdict="buy"] .verdict { color: var(--up); }

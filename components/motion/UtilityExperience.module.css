@@ -15,7 +15,7 @@
 .bulletinGrid { align-items:start; gap:24px; }
 .bulletinArticle { border-radius:var(--radius-feature); background:var(--premium-surface); }
 .bulletinArticle h2 { font-size:clamp(25px,2.5vw,32px); line-height:1.2; text-wrap:pretty; }
-.archive { position:sticky; top:calc(var(--app-bar-h) + 20px); }
+.archive { position:sticky; top:calc(var(--app-bar-h) + 20px); align-self:start; }
 .archive a { transition:background .25s var(--ease-brand),border-color .25s var(--ease-brand); }
 .archive a[aria-current] { box-shadow:inset 2px 0 var(--primary); }
 .compare table tbody tr { transition:background .2s var(--ease-brand); }

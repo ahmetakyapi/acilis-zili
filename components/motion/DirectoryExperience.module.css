@@ -230,7 +230,10 @@
 .hero.hero.hero.hero[data-compact] { grid-template-columns:minmax(0,1fr); gap:6px 28px; padding:16px 24px 0; }
 .hero.hero.hero.hero[data-compact][data-has-visual="true"] { grid-template-columns:minmax(0,1fr) minmax(0,auto); align-items:center; }
 .compactTitle { display:grid; grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:"title desc actions"; align-items:center; gap:4px 20px; min-width:0; }
-.hero[data-compact] .compactTitle h1 { grid-area:title; margin:0; font-size:clamp(28px,2.5vw,36px); line-height:1.12; letter-spacing:-.045em; }
+/* Kompakt bant (sekmeli bölümler) başlığı ölçüye yaklaştı (31 Ekim, görsel denetim: 36 px
+   öteki sayfaların 56'sının yanında başka bir sitenin başlığı gibiydi). Bandın tek satır kuralı
+   için tam ölçü değil, bir kademe aşağısı. */
+.hero[data-compact] .compactTitle h1 { grid-area:title; margin:0; font-size:clamp(30px,3vw,46px); line-height:1.1; letter-spacing:-.045em; }
 .compactDescription { grid-area:desc; min-width:0; max-width:72ch; margin:0; font-size:14px; line-height:1.45; color:var(--text-body); text-wrap:pretty; }
 .compactActions { grid-area:actions; display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:8px; }
 .compactActions.compactActions > :global(*) { margin:0; }

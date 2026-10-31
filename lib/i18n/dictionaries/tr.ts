@@ -1066,6 +1066,39 @@ const tr = {
     /* SAT kartının üçüncü satırı: destek kırılırsa sıradaki seviye. */
     planNextSupport: "Sonraki Destek",
     planNone: "Bu Yayında Yok",
+    /* ---- Planı olmayan görüş (31 Ekim) ----
+       Bölgesiz TUT ve SAT de "nereden alınır / nerede satılır" sorusuna
+       cevap veriyor; sayılar rutinin seviyeleri, hâller fiyatın onlara göre
+       yeri (gerekçe lib/technical.ts → openPlan). */
+    openPlan: {
+      noZone: "Bölge Yok",
+      noBuy: "Alım Yok",
+      toward: { support: "Destek", resistance: "Direnç", target: "Hedef", sellLevel: "Tepkide" },
+      at: { support: "Destekte", resistance: "Dirençte", target: "Hedefte", sellLevel: "Tepki Seviyesinde" },
+      beyond: { support: "Destek Kırıldı", resistance: "Direnç Geçildi", target: "Hedef Geçildi", sellLevel: "Seviye Geçildi" },
+      legToward: { support: "Desteğe", resistance: "Dirence", target: "Hedefe", sellLevel: "Tepkiye" },
+      legBeyond: { support: "Desteğin Altında", resistance: "Direncin Üstünde", target: "Hedefin Üstünde", sellLevel: "Seviyenin Üstünde" },
+      whyHold: "Görüş TUT ve fiyat {where}: bu yayında alım bölgesi yok.",
+      whyHoldPlain: "Görüş TUT: bu yayında alım bölgesi yok.",
+      whySell: "Görüş SAT: alım planı yok, yükselişler satış için izlenir.",
+      where: {
+        between: "destekle direnç arasında",
+        atSupport: "destekte",
+        belowSupport: "desteğin altında",
+        aboveSupport: "desteğin üstünde",
+        atResistance: "dirençte",
+        aboveResistance: "direncin üstünde",
+        belowResistance: "direncin altında",
+      },
+      buyWatch: "Alım için izlenecek seviye {level} desteği.",
+      buyAt: "Fiyat {level} desteğinde.",
+      buyBroken: "Fiyat {level} desteğinin altında; altında yeni destek verilmedi.",
+      sellWatch: "Satış için izlenecek seviye {level}.",
+      sellAt: "Fiyat {level} seviyesinde.",
+      sellPassed: "Fiyat {level} seviyesini geçti; üstünde yeni seviye verilmedi.",
+      noLevels: "Seviyeler bir sonraki yayında yenilenir.",
+      atLevel: "Fiyat Seviyede",
+    },
     riskReward: "Risk / Getiri",
     /* "1 : 2,4" — bir birim riske karşı kaç birim getiri. */
     riskRewardValue: "1 : {n}",
@@ -1086,10 +1119,6 @@ const tr = {
     readingBelow: "Fiyat bölgenin {n} altında ama stopun üstünde; {stop} tutundukça plan geçerli.",
     readingBelowNoStop: "Fiyat bölgenin {n} altında; plan bir sonraki yayında gözden geçirilir.",
     readingBelowStop: "Fiyat stopun ({stop}) altında; plan bozuldu, bir sonraki yayın yeni seviye kurar.",
-    readingWait: "Yeni alım bölgesi yok; en yakın destek {support}, en yakın direnç {resistance}.",
-    readingWaitSupport: "Yeni alım bölgesi yok; izlenecek ilk seviye {support} desteği.",
-    readingWaitResistance: "Yeni alım bölgesi yok; izlenecek ilk seviye {resistance} direnci.",
-    readingWaitPlain: "Yeni alım bölgesi yok; seviyeler bir sonraki yayında yenilenir.",
     readingSell: "Görüş SAT: tepkiler {level} çevresinde satış için izlenir; {support} desteği kırılırsa düşüş sürer.",
     readingSellLevel: "Görüş SAT: tepkiler {level} çevresinde satış için izlenir.",
     readingSellSupport: "Görüş SAT: {support} desteği kırılırsa düşüş sürer.",
@@ -1120,7 +1149,8 @@ const tr = {
     priceMap: "Fiyat Haritası",
     levelColumn: "Seviye",
     thesisLabel: "Görüşün Gerekçesi",
-    priceLevelsNote: "Seviyeler yüksek fiyattan düşüğe sıralıdır. Çubuklar şu anki fiyata uzaklığı ortak ölçekte gösterir; satır aralıkları fiyat mesafesi değildir.",
+    /* 31 Ekim: tablo merdivene döndü; aralıklar artık fiyat mesafesinin kendisi. */
+    priceLevelsNote: "Seviyeler fiyat ekseninde gerçek aralıklarıyla durur. Birbirine yakın etiketler okunsun diye yana itilir, ince çizgi seviyenin asıl yerini gösterir; uzaklıklar şu anki fiyattan ölçülür.",
     priceMapNote: "Seviyeler fiyat sırasına göre dizilir, birbirine yakın olanlar okunabilsin diye ayrılır; uzaklıklar şu anki fiyattan ölçülür.",
     sectionsLabel: "Analiz Bölümleri",
     // Dağılım logosunun bilgi kartı, yayını bekleyen sembolde.

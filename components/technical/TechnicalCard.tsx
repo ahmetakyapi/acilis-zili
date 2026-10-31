@@ -25,6 +25,7 @@ import {
   formatPercentPlain,
   formatPrice,
 } from "@/lib/utils";
+import { openWhyText } from "./open-plan";
 import { PlanRail } from "./PlanRail";
 import { PlanStrip } from "./PlanStrip";
 import styles from "./Technical.module.css";
@@ -71,17 +72,27 @@ export function planReadingText(reading: PlanReading, locale: Locale, t: Diction
         : t.technical.readingBelow.replace("{n}", pct(reading.pct)).replace("{stop}", money(reading.stop));
     case "belowStop":
       return t.technical.readingBelowStop.replace("{stop}", money(reading.stop));
-    case "wait":
-      if (reading.support !== null && reading.resistance !== null) {
-        return t.technical.readingWait
-          .replace("{support}", money(reading.support))
-          .replace("{resistance}", money(reading.resistance));
+    case "wait": {
+      /* BÖLGESİZ TUT: NEDEN + İKİ CEVAP (31 Ekim). Cümle "Yeni alım bölgesi
+         yok; en yakın destek …, en yakın direnç …" idi: neden plan
+         olmadığını söylemiyordu ve listenin ilk elemanını "en yakın"
+         sayıyordu — fiyat direnci geçmişken de onu izlenecek seviye diye
+         yazıyordu. Artık önce neden (`openWhyText`), sonra alım ve satış
+         tarafının fiyata göre hâli; geçilmiş seviye geçilmiş diye yazılıyor. */
+      const { buy, sell } = reading.open;
+      const parts = [openWhyText(reading.open, t)];
+      const op = t.technical.openPlan;
+      if (buy) {
+        const text = buy.state === "beyond" ? op.buyBroken : buy.state === "at" ? op.buyAt : op.buyWatch;
+        parts.push(text.replace("{level}", money(buy.level)));
       }
-      if (reading.support !== null) return t.technical.readingWaitSupport.replace("{support}", money(reading.support));
-      if (reading.resistance !== null) {
-        return t.technical.readingWaitResistance.replace("{resistance}", money(reading.resistance));
+      if (sell) {
+        const text = sell.state === "beyond" ? op.sellPassed : sell.state === "at" ? op.sellAt : op.sellWatch;
+        parts.push(text.replace("{level}", money(sell.level)));
       }
-      return t.technical.readingWaitPlain;
+      if (!buy && !sell) parts.push(op.noLevels);
+      return parts.join(" ");
+    }
     case "sell":
       if (reading.level !== null && reading.support !== null) {
         return t.technical.readingSell.replace("{level}", money(reading.level)).replace("{support}", money(reading.support));
@@ -295,7 +306,7 @@ export function TechnicalCard({
       </div>
 
       <div className={styles.cardPlan} data-verdict={verdict}>
-        <PlanStrip verdict={verdict} {...levelProps} locale={locale} t={t} />
+        <PlanStrip verdict={verdict} {...levelProps} price={price} showWhy={false} locale={locale} t={t} />
         <PlanRail verdict={verdict} price={price} snapshotPrice={snapshotPrice} {...levelProps} locale={locale} t={t} />
       </div>
 

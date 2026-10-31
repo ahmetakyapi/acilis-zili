@@ -743,6 +743,8 @@ export async function getBars(
   // geriye dönük veri çektiğimiz için son günü ayıklıyoruz.
   if (range === "1D") {
     bars = lastTradingDayOnly(bars);
+  } else if (range === "1W") {
+    bars = withoutOvernight(bars);
   }
 
   return ok(bars, "alpaca", { fetchedAt: result.fetchedAt });
@@ -917,6 +919,7 @@ export async function getBarsMulti(
         volume: b.v,
       }));
       if (range === "1D") bars = lastTradingDayOnly(bars);
+      else if (range === "1W") bars = withoutOvernight(bars);
       if (bars.length > 0) out[symbol] = bars;
     }
   }
@@ -934,10 +937,20 @@ export async function getBarsMulti(
  * kapanış sonrası barlar (20:00 ET = 00:00 UTC) ertesi güne kayar.
  */
 function lastTradingDayOnly(bars: Bar[]): Bar[] {
-  if (bars.length === 0) return bars;
+  /* Gece seansı barları önce düşüyor (31 Ekim): cumartesi 1G grafiği
+     00:00–00:50 ET gece barlarını "bugün" diye çiziyordu — eğrinin ucu
+     209, başlıktaki cuma kapanışı 204,64 (Veri dürüstlüğü 3). Son gün de
+     gece barlarına göre değil, seans barlarına göre seçiliyor. */
+  const session = withoutOvernight(bars);
+  if (session.length === 0) return session;
   const dayOf = (bar: Bar) => etParts(new Date(bar.time * 1000)).dateStr;
-  const lastDay = dayOf(bars[bars.length - 1]);
-  return bars.filter((b) => dayOf(b) === lastDay);
+  const lastDay = dayOf(session[session.length - 1]);
+  return session.filter((b) => dayOf(b) === lastDay);
+}
+
+/** Gün içi seriden gece seansı barlarını ayıklar — gerekçe `isOvernightTrade`. */
+export function withoutOvernight(bars: Bar[]): Bar[] {
+  return bars.filter((bar) => !isOvernightTrade(new Date(bar.time * 1000)));
 }
 
 /* --------------------------------------------------------------------------

@@ -171,6 +171,7 @@ export function PageHeader({
   subtitle,
   share,
   action,
+  strip,
   className,
   embedded = false,
 }: {
@@ -179,6 +180,14 @@ export function PageHeader({
   /** Paylaşım başlık satırının sağında durur. */
   share?: React.ReactNode;
   action?: React.ReactNode;
+  /**
+   * Künye şeridi — başlık kartının İÇİNDE, saç teliyle ayrılmış son satır
+   * (31 Ekim). Şirket sayfalarında logo + sembol + ad kartın altında,
+   * sayfa zemininde ayrı bir satırdı ve "dışta kalmış" görünüyordu
+   * (sahibinin itirazı, /bilancolar/SHAZ). Kimlik başlığa ait bilgi;
+   * yeri başlığın kartı (CLAUDE.md "Ekran Düzeni" 2).
+   */
+  strip?: React.ReactNode;
   className?: string;
   embedded?: boolean;
 }) {
@@ -201,6 +210,7 @@ export function PageHeader({
         )}
       </div>
       {action}
+      {strip && <div className="page-masthead-strip">{strip}</div>}
     </header>
   );
 }

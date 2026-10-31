@@ -1206,7 +1206,7 @@ export function PriceChart({
                 orada ayrılık doğru. */}
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
               <span className="text-sm text-soft">
-                {labels.rangeLabels[range]}
+                {range === "1D" ? dayRangeLabel(period.last.time, labels.rangeLabels[range], locale) : labels.rangeLabels[range]}
               </span>
               {/* FİYAT BURADA YOK, HİÇBİR GENİŞLİKTE. Bir dönem yalnızca dar
                   ekranda gizliydi ve gerekçesi şuydu: "geniş ekranda başlıktaki
@@ -1712,4 +1712,18 @@ function revealPlot(container: HTMLElement, chart: IChartApi): Animation | null 
     }
   });
   return animation;
+}
+
+/**
+ * 1G etiketinin GÜNÜ (31 Ekim): seri bugünün değilse "Bugün" yazmıyor.
+ * Cumartesi 1G cumanın seansını çiziyor ve başlığı "Bugün"dü; okur cumanın
+ * aralığını bugünün sanıyordu. Bugün değilse hafta günü ("Cuma Seansı").
+ */
+function dayRangeLabel(lastBarSec: number, todayLabel: string, locale: string): string {
+  const et = (date: Date) =>
+    new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+  const barDate = new Date(lastBarSec * 1000);
+  if (et(barDate) === et(new Date())) return todayLabel;
+  const day = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", { weekday: "long", timeZone: "America/New_York" }).format(barDate);
+  return locale === "tr" ? `${day} Seansı` : `${day}'s Session`;
 }

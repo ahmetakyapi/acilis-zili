@@ -4,7 +4,7 @@ import { cache } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import styles from "./StoryDetail.module.css";
 import { ScaleBar } from "@/components/markets/CompareScale";
-import { LogoTile } from "@/components/ui/primitives";
+import { LogoTile, ChangePill } from "@/components/ui/primitives";
 import { getStatus, getSymbolNames } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getChartBarsMulti } from "@/lib/providers";
@@ -218,6 +218,9 @@ function CompaniesView({
                   {value?.kind === "close" && (
                     <>
                       {formatPrice(value.close.price, locale, { currency: true })}
+                      {value.close.dayPct != null && (
+                        <ChangePill changePct={value.close.dayPct} locale={locale} size="sm" />
+                      )}
                       {!allClose && <small>{labels.lastClose}</small>}
                     </>
                   )}

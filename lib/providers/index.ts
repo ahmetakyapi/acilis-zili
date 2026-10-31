@@ -1000,7 +1000,8 @@ export function spliceRealtimeTail(
   const tail = iex.filter((bar) => bar.time > lastSip && bar.time <= nowSec);
   if (tail.length === 0) return { bars: [...sip], added: 0 };
   const merged = [...sip, ...tail];
-  const bars = range === "1D" ? alpaca.onlyLastTradingDay(merged) : merged;
+  const bars =
+    range === "1D" ? alpaca.onlyLastTradingDay(merged) : range === "1W" ? alpaca.withoutOvernight(merged) : merged;
   return { bars, added: tail.length };
 }
 
