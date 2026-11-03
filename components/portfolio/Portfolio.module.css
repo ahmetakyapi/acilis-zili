@@ -196,7 +196,7 @@
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--overlay-surface);
-  box-shadow: var(--shadow-overlay);
+  box-shadow: var(--shadow-floating);
 }
 .morePanel[data-align="left"] {
   right: auto;

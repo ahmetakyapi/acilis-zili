@@ -251,7 +251,7 @@ export function AccountMenu({
             /* Zemin `--overlay-surface`, `--surface-solid` DEĞİL: ikincisi koyu
                temada saydam (beyazın %4,5'i) çünkü sayfa üstündeki kartlar için
                tasarlandı — panelin arkasından sayfa başlığı okunuyordu. */
-            className="absolute right-0 top-[calc(100%+9px)] z-20 w-[268px] overflow-hidden rounded-xl border border-line bg-overlay-surface shadow-(--shadow-overlay)"
+            className="absolute right-0 top-[calc(100%+9px)] z-20 w-[268px] overflow-hidden rounded-xl border border-line bg-overlay-surface shadow-(--shadow-floating)"
           >
             {/* ===== 1 · Kimlik ===== */}
             <div className="relative flex items-center gap-3 px-4 py-4">

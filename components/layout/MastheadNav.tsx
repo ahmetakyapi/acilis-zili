@@ -331,7 +331,7 @@ export function MastheadNav({
               style={{ left: place?.left ?? 0, transformOrigin: `${place?.origin ?? 0}px 0` }}
               onKeyDown={onPanelKeyDown}
               className={cn(
-                "masthead-dropdown absolute outline-none top-[calc(100%+0.75rem)] z-40 rounded-2xl border border-line bg-overlay-surface shadow-(--shadow-overlay)",
+                "masthead-dropdown absolute outline-none top-[calc(100%+0.75rem)] z-40 rounded-2xl border border-line bg-overlay-surface shadow-(--shadow-floating)",
                 styles.panel,
               )}
             >

@@ -950,12 +950,24 @@ export function ImpactDot({
    hiçbir şey olmuyordu; dokunmatikte hover yok, yani telefonda tek geri
    bildirim sonraki ekrandı. %3'lük bir göçme parmağın altında "tık" diye
    okunuyor ve bırakınca 150 ms'de geri geliyor. Hareketi azaltan okuyucuda
-   yalnızca renk. */
+   yalnızca renk.
+   Ölçek `transform` değil `scale` özelliğiyle ve geçiş listesinde de
+   `scale` yazılı: Tailwind v4 `scale-*`i bağımsız `scale` özelliğine
+   derliyor, listede `transform` olsaydı basış hiç yumuşamazdı. %3 (0,97)
+   bilinçli: dev-starter şablonu 0,98 kullanıyor ama bu sitenin butonları
+   telefonda daha sık basılıyor ve %2 parmağın altında seçilmiyordu.
+   `box-shadow` da listede: birincil butonun gölgesi basınca söner. */
 const BUTTON_BASE =
-  "inline-flex items-center justify-center gap-2 rounded-md font-semibold transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.97] motion-reduce:active:scale-100 disabled:opacity-45 disabled:pointer-events-none";
+  "inline-flex items-center justify-center gap-2 rounded-md font-semibold transition-[color,background-color,border-color,box-shadow,scale] duration-150 active:scale-[0.97] motion-reduce:active:scale-100 disabled:opacity-45 disabled:pointer-events-none";
 
 const BUTTON_VARIANTS = {
-  primary: "bg-primary text-on-primary hover:bg-primary-hover",
+  /* BASILABİLİR DOLGU (3 Kasım, işçilik turu): üstte ışık, altta gölge
+     çizgisi, kıl halka ve dolgunun kendi mavisinde kısa düşüş
+     (`--shadow-button`). Basınca düşüş kalkar, yalnız halka kalır: buton
+     zemine iner. Gölge ışıma değil — kenardan içeri çekilmiş, 8 pikseli
+     geçmiyor. */
+  primary:
+    "bg-primary text-on-primary shadow-(--shadow-button) hover:bg-primary-hover active:shadow-(--shadow-raised)",
   ghost:
     "border border-line bg-surface text-body hover:border-line-strong hover:text-strong",
   quiet: "text-body hover:bg-surface-elevated hover:text-strong",
@@ -1109,7 +1121,10 @@ export function Segment({
     <span
       role={label ? "group" : undefined}
       aria-label={label}
-      className="inline-flex gap-0.5 rounded-full bg-surface-elevated p-[3px] text-small"
+      /* Ray içe OYULUR (`--shadow-well`), seçili hap ondan bir basamak
+         yükselir (`--shadow-raised`): denetim iki derinlikle okunuyor —
+         işçilik turu, 3 Kasım. */
+      className="inline-flex gap-0.5 rounded-full bg-surface-elevated p-[3px] text-small shadow-(--shadow-well)"
     >
       {children}
     </span>
@@ -1198,7 +1213,7 @@ export function SegmentItem({
            segment ve dar ekranda altı düğme yan yana duruyor. */
         "inline-flex min-h-11 items-center justify-center rounded-full px-4 py-[7px] transition-colors sm:min-h-8",
         active
-          ? "bg-primary font-semibold text-on-primary"
+          ? "bg-primary font-semibold text-on-primary shadow-(--shadow-raised)"
           : "text-body hover:text-strong",
       )}
     >

@@ -228,7 +228,7 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--premium-surface);
-  box-shadow: var(--shadow-overlay);
+  box-shadow: var(--shadow-floating);
   translate: var(--tip-x) calc(-100% - 10px);
   animation: tip-in 0.16s var(--ease-brand) both;
 }

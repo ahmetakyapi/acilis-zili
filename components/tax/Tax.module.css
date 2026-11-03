@@ -67,12 +67,12 @@
    W-8BEN, kur günü). Portföy penceresinin segmentiyle aynı aile: çukur ray,
    seçili parça panel zemininde, kenarı ince çizgi. Mavi dolgu yok; mavi bu
    sayfada eylem ("Beyan Etmen Gerekiyor") ve bağlantı. */
-.segment { display:inline-flex; width:fit-content; max-width:100%; gap:2px; padding:3px; border-radius:12px; background:var(--surface-sunken); box-shadow:inset 0 0 0 1px var(--line-soft); }
+.segment { display:inline-flex; width:fit-content; max-width:100%; gap:2px; padding:3px; border-radius:12px; background:var(--surface-sunken); box-shadow:inset 0 0 0 1px var(--line-soft), var(--shadow-well); }
 .segItem { position:relative; display:inline-flex; align-items:center; justify-content:center; min-width:0; min-height:38px; padding:0 14px; border-radius:9px; font-size:13px; font-weight:600; white-space:nowrap; color:var(--text-muted); cursor:pointer; transition:color .2s var(--ease-brand); }
 .segItem[aria-pressed="true"], .segItem[aria-selected="true"] { color:var(--text-strong); }
 .segItem:disabled { opacity:.45; cursor:not-allowed; }
 .segItem:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
-.segThumb { position:absolute; inset:0; border-radius:9px; background:var(--panel-fixed); box-shadow:inset 0 0 0 1px var(--line); }
+.segThumb { position:absolute; inset:0; border-radius:9px; background:var(--panel-fixed); box-shadow:var(--shadow-raised); }
 .segText { position:relative; display:inline-flex; align-items:center; gap:7px; }
 .segItem[aria-selected="true"] svg { color:var(--primary-ink); }
 @media (hover:hover) and (pointer:fine) {
@@ -129,11 +129,11 @@
 .help { font-size:12px; line-height:1.45; color:var(--text-muted); }
 .fieldError { display:flex; align-items:flex-start; gap:5px; font-size:12px; font-weight:500; line-height:1.4; color:var(--down); animation:chip-in 280ms var(--ease-brand) both; }
 .fieldError svg { flex-shrink:0; margin-top:1px; }
-.input { height:46px; width:100%; min-width:0; border:1px solid var(--line-strong); border-radius:var(--radius-md); background:var(--panel-fixed); padding:0 12px; font-size:16px; color:var(--text-strong); outline:none; transition:border-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand); }
+.input { height:46px; width:100%; min-width:0; border:1px solid var(--line-strong); border-radius:var(--radius-md); background:var(--panel-fixed); box-shadow:var(--shadow-well); padding:0 12px; font-size:16px; color:var(--text-strong); outline:none; transition:border-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand); }
 @media (hover:hover) and (pointer:fine) { .input:hover { border-color:var(--text-muted); } }
-.input:focus { border-color:var(--line-focus); box-shadow:0 0 0 3px var(--primary-tint); }
+.input:focus { border-color:var(--line-focus); box-shadow:var(--shadow-well), var(--shadow-focus); }
 .input[aria-invalid="true"] { border-color:var(--down); }
-.input[aria-invalid="true"]:focus { box-shadow:0 0 0 3px var(--down-wash); }
+.input[aria-invalid="true"]:focus { box-shadow:var(--shadow-well), 0 0 0 4px var(--down-wash); }
 .upper { text-transform:uppercase; }
 /* W-8BEN seçimi telefonda iki alanın yarısına sığmıyordu ("Evet · %20"
    üç satıra kırılıyordu, 390'da ölçüldü); kendi satırında tam genişlik. */

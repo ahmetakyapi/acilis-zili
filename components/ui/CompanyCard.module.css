@@ -2,7 +2,7 @@
    Gerekçesi `CompanyCard.tsx` üzerinde.
 
    BİR KATMAN, KART DEĞİL. Yüzey masthead açılır menüsüyle aynı katman
-   tokenlarını kullanıyor (`--overlay-surface` + `--shadow-overlay`):
+   tokenlarını kullanıyor (`--overlay-surface` + `--shadow-floating`):
    sitede gölge taşımasına izin verilen tek yer katmanlar. Köşe tonu, radyal
    süs ve bulanıklık yok — derinlik gölgeden değil, zeminden ayrışan
    yüzeyden geliyor.
@@ -30,7 +30,7 @@
   border:1px solid var(--line);
   border-radius:var(--radius-xl);
   background:var(--overlay-surface);
-  box-shadow:var(--shadow-overlay);
+  box-shadow:var(--shadow-floating);
   color:var(--text-body);
   /* Bir okuma, hedef değil: imleç kartın üstünden geçerken altındaki
      komşu logo çalışmaya devam ediyor. Eski ipucu imleci tutuyordu ve
