@@ -14,7 +14,7 @@
 /* Liste kutudan GENİŞ olabilir (29 Ekim): telefonda kutu düğmelerin
    yanında ~120 piksel kalıyor ve adlar "Bristol ..." diye kesiliyordu
    (390'da ölçüldü). En az 20rem, ekranın iki kenar payı kadar dar. */
-.popup { position:absolute; left:0; min-width:min(20rem, calc(100vw - 2.5rem)); width:100%; top:calc(100% + .375rem); z-index:20; overflow:hidden; border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--overlay-surface); box-shadow:var(--shadow-overlay); }
+.popup { position:absolute; left:0; min-width:min(20rem, calc(100vw - 2.5rem)); width:100%; top:calc(100% + .375rem); z-index:20; overflow:hidden; border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--overlay-surface); box-shadow:var(--shadow-floating); }
 /* Boş kutudaki listenin başlığı: "İpuçlarına Uyan 14 Şirket". */
 .popupHead { margin:0; padding:.5rem .875rem .375rem; border-bottom:1px solid var(--line-soft); color:var(--text-muted); font-size:var(--text-tiny); font-weight:700; }
 .listbox { max-height:22rem; margin:0; padding:.375rem; overflow-y:auto; list-style:none; }

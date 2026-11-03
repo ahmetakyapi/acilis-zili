@@ -198,8 +198,14 @@ kontrastlar sahibinin makinesindeki `~/dev-starter/knowledge/themes/acilis-zili.
 — bulut oturumunda yok, token'a bak).
 
 - **Derinlik tonla**, gölgeyle değil: `surface` → `surface-sunken` →
-  `premium-surface`. Tek gerçek gölge açılır katmanda ve marka karosunda.
-  Cam, blur, ışıma YOK.
+  `premium-surface`. Panel gölge taşımaz; kenarı üstten ışıklı
+  (`--edge-top/side/bottom`, `.edge-lit`). Gölge yalnız merdivende
+  (3 Kasım, sahibinin isteği — gerekçe globals.css "GÖLGE MERDİVENİ"):
+  `--shadow-raised` rayın içindeki hap, `--shadow-floating` açılır menü ve
+  ipucu, `--shadow-overlay` diyalog/⌘K; dolgulu birincil buton
+  `--shadow-button`, alan ve ray `--shadow-well`, metin alanı odağı
+  `--shadow-focus` (odak çizgisinin YANINA). Katmanlı, negatif yayılmalı;
+  tek geniş gölge yazma. Cam, blur, ışıma YOK.
 - **Renk anlam taşır, süs değil:** mavi etkileşim, `up`/`down` yön. Veri
   panelinde mavi sayı ya da yeşil başlık gördüysen hata vardır. Hardcoded
   renk yasak.

@@ -144,7 +144,8 @@
 .sb-seg {
   position: relative; display: grid; align-content: start; gap: 3px; min-width: 0; padding: 11px 12px 26px;
   border: 1px solid transparent; border-radius: 14px; background: var(--surface-sunken); text-align: left; cursor: pointer;
-  transition: background-color 240ms var(--ease-brand), border-color 240ms var(--ease-brand);
+  /* `transform` listede: basış (`:active` → scale .985) yoksa sıçrıyordu. */
+  transition: background-color 240ms var(--ease-brand), border-color 240ms var(--ease-brand), transform 160ms var(--ease-brand);
   -webkit-tap-highlight-color: transparent;
 }
 .sb-seg-name { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 750; color: var(--brass-ink); }
@@ -207,14 +208,17 @@
 .sb-play {
   position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 52px; padding: 0 20px;
   overflow: hidden; isolation: isolate; border: 0; border-radius: 12px; background: var(--primary); color: var(--on-primary);
-  font-size: 15.5px; font-weight: 750; cursor: pointer; transition: background-color 200ms var(--ease-brand), transform 160ms var(--ease-brand);
+  /* Basılabilir dolgu (`--shadow-button`, 3 Kasım işçilik turu); basınca
+     renkli düşüş kalkar, buton zemine iner. */
+  box-shadow: var(--shadow-button);
+  font-size: 15.5px; font-weight: 750; cursor: pointer; transition: background-color 200ms var(--ease-brand), box-shadow 160ms var(--ease-brand), transform 160ms var(--ease-brand);
 }
 .sb-play::before {
   content: ""; position: absolute; inset: 0; z-index: -1; background: var(--primary-deep);
   transform: scaleX(var(--p, 0)); transform-origin: left center;
 }
 .sb-play:hover { background: var(--primary-hover); }
-.sb-play:active { transform: scale(.985); }
+.sb-play:active { transform: scale(.985); box-shadow: var(--shadow-raised); }
 .sb-play svg { width: 17px; height: 17px; fill: currentColor; }
 .sb-play[data-playing] svg { animation: sb-blink 500ms var(--ease-loop) infinite alternate; }
 .sb-seg:focus-visible, .sb-play:focus-visible, .sb-back:focus-visible { outline: 2px solid var(--line-focus, var(--primary)); outline-offset: 2px; }

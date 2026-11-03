@@ -50,7 +50,7 @@
 /* Dokunuşta ve odakta ayrıntı: beş kovanın o ayki sayısı. Klavyeyle sütuna
    gelince de açılıyor (tabIndex). Kart zemini + tek gerçek gölge (açılır
    katman kuralı). */
-.stackTip { position:absolute; z-index:3; bottom:calc(100% + 8px); left:50%; display:grid; gap:3px; min-width:150px; padding:9px 11px; border:1px solid var(--line); border-radius:12px; background:var(--premium-surface,var(--surface-solid)); box-shadow:var(--shadow-overlay); color:var(--text-body); font-size:12px; line-height:1.4; white-space:nowrap; opacity:0; visibility:hidden; translate:-50% 4px; transition:opacity .16s var(--ease-brand), translate .16s var(--ease-brand), visibility 0s .16s; }
+.stackTip { position:absolute; z-index:3; bottom:calc(100% + 8px); left:50%; display:grid; gap:3px; min-width:150px; padding:9px 11px; border:1px solid var(--line); border-radius:12px; background:var(--premium-surface,var(--surface-solid)); box-shadow:var(--shadow-floating); color:var(--text-body); font-size:12px; line-height:1.4; white-space:nowrap; opacity:0; visibility:hidden; translate:-50% 4px; transition:opacity .16s var(--ease-brand), translate .16s var(--ease-brand), visibility 0s .16s; }
 .stackTip b { color:var(--text-strong); font-weight:650; }
 .stackTip span { display:flex; align-items:center; justify-content:space-between; gap:14px; }
 .stackTip span > em { display:inline-flex; align-items:center; gap:6px; font-style:normal; }

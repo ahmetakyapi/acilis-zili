@@ -136,8 +136,9 @@ export function BriefSwitch({
 
          SEKME SÖZLEŞMESİ: ok tuşları, Home ve End sekmeler arasında
          geziyor; sekme sırası GEZİCİ (yalnızca seçili sekme Tab sırasında).
-         Rolü ilan edip davranışını vermemek, hiç ilan etmemekten kötü. */
-      className="inline-flex gap-0.5 rounded-full bg-surface-elevated p-[3px] text-small"
+         Rolü ilan edip davranışını vermemek, hiç ilan etmemekten kötü.
+         Ray kuyu, hap bir basamak yüksek — Segment ile aynı (3 Kasım). */
+      className="inline-flex gap-0.5 rounded-full bg-surface-elevated p-[3px] text-small shadow-(--shadow-well)"
     >
       {(["daily", "weekly"] as const).map((key) => (
         <button
@@ -172,7 +173,7 @@ export function BriefSwitch({
             <motion.span
               aria-hidden="true"
               layoutId={`${pillId}-brief-pill`}
-              className="absolute inset-0 rounded-full bg-primary"
+              className="absolute inset-0 rounded-full bg-primary shadow-(--shadow-raised)"
               transition={SELECTION_TRANSITION}
             />
           )}

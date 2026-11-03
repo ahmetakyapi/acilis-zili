@@ -98,13 +98,13 @@
 .input {
   height: 52px; width: 100%; min-width: 0;
   border: 1px solid var(--line); border-radius: 14px;
-  background: var(--surface-elevated);
+  background: var(--surface-elevated); box-shadow: var(--shadow-well);
   padding: 0 14px; font-size: 16px; color: var(--text-strong); outline: none;
   transition: border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand);
 }
 .input::placeholder { color: var(--text-muted); }
 .input:hover { border-color: var(--line-strong); }
-.input:focus { border-color: var(--line-focus); background: var(--panel-fixed); box-shadow: 0 0 0 3px var(--primary-tint); }
+.input:focus { border-color: var(--line-focus); background: var(--panel-fixed); box-shadow: var(--shadow-well), var(--shadow-focus); }
 .input[aria-invalid="true"] { border-color: var(--down); }
 .fieldError { font-size: var(--text-small); line-height: 1.35; color: var(--down); }
 .fieldHint { font-size: var(--text-small); line-height: 1.35; color: var(--text-muted); }
@@ -113,10 +113,10 @@
 .searchWrap { position: relative; }
 .searchField {
   display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 14px;
-  border: 1px solid var(--line); border-radius: 14px; background: var(--surface-elevated);
+  border: 1px solid var(--line); border-radius: 14px; background: var(--surface-elevated); box-shadow: var(--shadow-well);
   transition: border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand);
 }
-.searchField:focus-within { border-color: var(--line-focus); background: var(--panel-fixed); box-shadow: 0 0 0 3px var(--primary-tint); }
+.searchField:focus-within { border-color: var(--line-focus); background: var(--panel-fixed); box-shadow: var(--shadow-well), var(--shadow-focus); }
 .searchField[data-invalid] { border-color: var(--down); }
 .searchIcon { flex: none; color: var(--primary-ink); }
 .searchInput { flex: 1 1 auto; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px; font-weight: 500; color: var(--text-strong); outline: none; }
@@ -126,7 +126,7 @@
   position: absolute; z-index: 5; top: calc(100% + 6px); left: 0; right: 0;
   display: flex; flex-direction: column; gap: 2px; padding: 6px;
   border: 1px solid var(--line); border-radius: 14px; background: var(--overlay-surface);
-  box-shadow: var(--shadow-overlay); max-height: 320px; overflow-y: auto;
+  box-shadow: var(--shadow-floating); max-height: 320px; overflow-y: auto;
 }
 .result {
   display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 10px;
@@ -151,17 +151,19 @@
 
 /* Fiyat */
 .priceHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
-.segment { display: inline-flex; padding: 3px; border-radius: 11px; background: var(--surface-sunken); }
+.segment { display: inline-flex; padding: 3px; border-radius: 11px; background: var(--surface-sunken); box-shadow: var(--shadow-well); }
 .segmentItem { position: relative; min-height: 34px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: color .2s var(--ease-brand); }
 .segmentItem[aria-checked="true"] { color: var(--text-strong); }
 .segmentItem:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 1px; }
-.segmentThumb { position: absolute; inset: 0; border-radius: 8px; background: var(--panel-fixed); box-shadow: inset 0 0 0 1px var(--line); }
+/* Ray kuyu, seçili karo bir basamak yüksek (3 Kasım, işçilik turu):
+   iç çizgi yerine `--shadow-raised` — kıl halkası kenarı zaten çiziyor. */
+.segmentThumb { position: absolute; inset: 0; border-radius: 8px; background: var(--panel-fixed); box-shadow: var(--shadow-raised); }
 .segmentText { position: relative; }
 .moneyField {
   display: flex; align-items: center; height: 52px; border: 1px solid var(--line); border-radius: 14px;
-  background: var(--surface-elevated); transition: border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand);
+  background: var(--surface-elevated); box-shadow: var(--shadow-well); transition: border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand);
 }
-.moneyField:focus-within { border-color: var(--line-focus); background: var(--panel-fixed); box-shadow: 0 0 0 3px var(--primary-tint); }
+.moneyField:focus-within { border-color: var(--line-focus); background: var(--panel-fixed); box-shadow: var(--shadow-well), var(--shadow-focus); }
 .moneyField[data-invalid] { border-color: var(--down); }
 .moneyPrefix { padding: 0 4px 0 14px; font-size: 18px; font-weight: 600; color: var(--text-muted); }
 .moneyInput::placeholder { color: var(--text-muted); font-weight: 500; }
@@ -251,7 +253,7 @@
 @media (min-width: 1024px) { .toastRegion { bottom: 56px; } }
 .toast {
   display: flex; align-items: center; gap: 6px; max-width: 30rem; min-height: 52px; padding: 6px 6px 6px 16px;
-  border: 1px solid var(--line); border-radius: 14px; background: var(--overlay-surface); box-shadow: var(--shadow-overlay);
+  border: 1px solid var(--line); border-radius: 14px; background: var(--overlay-surface); box-shadow: var(--shadow-floating);
   pointer-events: auto;
 }
 .toastError { border-color: var(--down); }

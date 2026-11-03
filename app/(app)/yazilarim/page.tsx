@@ -75,7 +75,7 @@ export default async function MyPostsPage() {
               action={
                 <Link
                   href="/yazilarim/yeni"
-                  className="inline-flex min-h-11 items-center gap-1.5 rounded-(--radius-md) bg-primary px-4 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-(--radius-md) bg-primary px-4 text-sm font-semibold text-on-primary shadow-(--shadow-button) transition-[color,background-color,box-shadow] hover:bg-primary-hover"
                 >
                   <PencilSimpleLine weight="duotone" size={16} aria-hidden />
                   {L.mine.newPost}

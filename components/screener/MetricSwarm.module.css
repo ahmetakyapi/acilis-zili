@@ -48,7 +48,7 @@
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--surface-solid);
-  box-shadow: var(--shadow-overlay);
+  box-shadow: var(--shadow-floating);
   translate: 14px -50%;
   pointer-events: auto;
 }

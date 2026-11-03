@@ -174,7 +174,42 @@
      okunmaz, o yüzden tek solid yüzey ve tek gölge bu katmanda yaşıyor. */
   --overlay-surface: #ffffff;
   --scrim: rgb(16 32 52 / 0.34);
-  --shadow-overlay: 0 24px 60px rgb(16 32 52 / 0.18);
+  /* GÖLGE MERDİVENİ (3 Kasım, işçilik turu; sahibinin isteği). Derinlik
+     hâlâ TONLA kurulur — panel gölge taşımaz (`--premium-shadow` sıfır).
+     Gölge yalnız üç basamakta: rayın içindeki karo/hap (`raised`), açılır
+     menü ve ipucu (`floating`), diyalog ve ⌘K paleti (`overlay`). Eski
+     tek ve geniş `0 24px 60px` her katmanın altına bulanık bir hale
+     çiziyordu. Şimdi her basamak KATMANLI ve NEGATİF YAYILMALI: önce kenarı
+     keskinleştiren 1 piksellik kıl halka, sonra kenardan içeri çekilmiş
+     (-2/-4/-8/-16 px) yumuşak düşüş — katman zemine basar, havada süzülmez.
+     Renk sitenin mürekkebi (16 32 52), saf siyah değil: gri gölge mavi-gri
+     zeminde kirli duruyor. Dil ui.wensity.com'un ölçülen stillerinden
+     öğrenildi, kod alınmadı (dev-starter `knowledge/decisions.md`). */
+  --shadow-raised: 0 0 0 1px rgb(16 32 52 / 0.035), 0 1px 1px -0.5px rgb(16 32 52 / 0.08), 0 2px 6px -2px rgb(16 32 52 / 0.08);
+  --shadow-floating: 0 0 0 1px rgb(16 32 52 / 0.04), 0 2px 4px -1px rgb(16 32 52 / 0.06), 0 8px 16px -4px rgb(16 32 52 / 0.08), 0 16px 32px -12px rgb(16 32 52 / 0.12);
+  --shadow-overlay: 0 0 0 1px rgb(16 32 52 / 0.05), 0 4px 8px -2px rgb(16 32 52 / 0.06), 0 16px 32px -8px rgb(16 32 52 / 0.12), 0 32px 64px -16px rgb(16 32 52 / 0.2);
+  /* DOLGULU BİRİNCİL BUTON: üstte ışık çizgisi, altta gölge çizgisi (hacim),
+     dışta kıl halka ve dolgunun KENDİ RENGİNDE kısa bir düşüş. Renkli düşüş
+     butonu zemine bağlar; gri gölge mavi dolguyu kirli gösterir. Marka
+     karosunun `--mark-shadow`ıyla aynı aile (mavi tonlu oturma). */
+  --shadow-button:
+    inset 0 1px 0 rgb(255 255 255 / 0.2), inset 0 -1px 0 rgb(6 30 60 / 0.16), 0 0 0 1px rgb(16 32 52 / 0.06),
+    0 1px 2px rgb(16 32 52 / 0.12), 0 6px 14px -6px color-mix(in srgb, var(--primary) 55%, transparent);
+  /* KUYU: giriş alanı ve segment rayı sayfaya OYULUR — buton yükselir,
+     alan çöker. Tek piksellik iç gölge; çerçeve rengi değişmez. */
+  --shadow-well: inset 0 1px 2px rgb(16 32 52 / 0.07);
+  /* ODAK HALESİ: 2 px'lik odak çizgisinin (WCAG 2.4.7) YANINA vurgunun
+     %18'iyle 4 px yumuşak hale. Çizginin yerine geçmez — tek başına 3:1'i
+     tutmaz; yalnız metin alanlarında. */
+  --shadow-focus: 0 0 0 4px color-mix(in srgb, var(--line-focus) 18%, transparent);
+  /* ÜSTTEN IŞIKLI KENAR (`.edge-lit`, `.panel`): ışık yukarıdan düşer.
+     Açıkta üst kenar hairline'dan bir tık soluk, alt kenar bir tık koyu
+     (yüzey zemine basar); yanlar `--line` ile aynı, kenar kalınlaşmaz.
+     Neden kenar başına renk, maskeli `::before` değil: gerekçe aşağıda
+     `.panel` notunda. */
+  --edge-top: rgb(16 32 52 / 0.07);
+  --edge-side: rgb(16 32 52 / 0.1);
+  --edge-bottom: rgb(16 32 52 / 0.16);
 
   /* Sayfa zemini — sol üstten inen çok hafif ışıma. */
   --page-glow: radial-gradient(
@@ -388,7 +423,24 @@
      DAHA parlak yapıyor. Karartma yönü korundu — bilinçli sapma. */
   --overlay-surface: #122236;
   --scrim: rgb(2 6 12 / 0.6);
-  --shadow-overlay: 0 24px 60px rgb(0 0 0 / 0.5);
+  /* Koyuda gölge zor okunur; derinliği her basamağın ÜST KENARINDAKİ ışık
+     çizgisi taşır (ışık yukarıdan düşer) ve %4'lük beyaz halka kenarı gece
+     mavisi zeminde de çizer. Düşüşler açıktakinden derin: koyu zeminde
+     ancak koyu gölge okunur. */
+  --shadow-raised: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 0 0 1px rgb(255 255 255 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.5);
+  --shadow-floating: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 0 0 1px rgb(255 255 255 / 0.04), 0 2px 4px -1px rgb(0 0 0 / 0.4), 0 8px 16px -4px rgb(0 0 0 / 0.45), 0 16px 32px -8px rgb(0 0 0 / 0.6);
+  --shadow-overlay: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 0 0 1px rgb(255 255 255 / 0.04), 0 4px 8px -2px rgb(0 0 0 / 0.4), 0 16px 32px -8px rgb(0 0 0 / 0.55), 0 32px 64px -16px rgb(0 0 0 / 0.75);
+  /* Koyu temada dolgu açık mavi (#3cb7fb), üstündeki mürekkep koyu:
+     dış halka koyu, renkli düşüş %45. */
+  --shadow-button:
+    inset 0 1px 0 rgb(255 255 255 / 0.28), inset 0 -1px 0 rgb(0 0 0 / 0.18), 0 0 0 1px rgb(0 0 0 / 0.5),
+    0 2px 6px rgb(0 0 0 / 0.35), 0 10px 20px -10px color-mix(in srgb, var(--primary) 45%, transparent);
+  --shadow-well: inset 0 1px 2px rgb(0 0 0 / 0.45);
+  /* Koyuda ters: üst kenar parlak, alt kenar söner. Yanlar `--line`
+     (0,10) ile aynı — daha sönük olunca kart kenarsız görünüyordu. */
+  --edge-top: rgb(255 255 255 / 0.17);
+  --edge-side: rgb(255 255 255 / 0.1);
+  --edge-bottom: rgb(255 255 255 / 0.065);
 
   --page-glow: radial-gradient(
     90% 55% at 18% -8%,
@@ -725,6 +777,16 @@
   --text-subdisplay: 1.75rem;  /* 28    — ikinci düzey sayfa başlığı */
   --text-display: 2rem;        /* 32    — sayfa başlığı */
   --text-hero: 2.75rem;        /* 44    — giriş ekranı manşeti */
+  /* HARF ARALIĞI BASAMAKLA (3 Kasım, işçilik turu). Büyük puntoda
+     varsayılan aralık harfleri koparıyor; başlık kelime bloğu yerine harf
+     dizisi okunuyordu — en çok başlık OLMAYAN display öğelerde (fiyat,
+     manşet sayısı), çünkü `-0.03em` yalnız h1–h6 tabanındaydı. Yalnız
+     display basamakları: `title`/`heading`a aralık vermek, o sınıfı taşıyan
+     başlıkları tabandaki -0.03'ten GEVŞETİRDİ. `tracking-*` yazan çağrı
+     yeri yine kazanır. */
+  --text-subdisplay--letter-spacing: -0.03em;
+  --text-display--letter-spacing: -0.03em;
+  --text-hero--letter-spacing: -0.035em;
 
   --radius-xs: 0.375rem;
   --radius-sm: 0.5rem;
@@ -932,6 +994,40 @@
     :focus-visible {
     outline-offset: -2px;
   }
+
+  /* KUYU VE ODAK HALESİ — çerçeveli metin alanları (3 Kasım, işçilik turu).
+     Alan sayfaya oyulur (`--shadow-well`), odakta 2 px'lik çizginin YANINA
+     %18'lik 4 px hale gelir (`--shadow-focus`). Çizgi kalkmaz: alanların
+     bir kısmı `outline-none focus:border-line-focus` ile çerçeve rengine
+     güveniyor, hale onlara ikinci bir işaret veriyor; çizgiyi taşıyanlarda
+     çizgi WCAG'i tutar, hale yalnız yumuşatır.
+     Yalnız ÇERÇEVELİ alan (`border` sınıfı): bileşik bir kutunun içindeki
+     saydam, çerçevesiz giriş (arama paleti, tarih seçici) içe gölge alırsa
+     kutunun ortasında yüzen bir çizgi çıkıyordu. Modül CSS'indeki alanlar
+     aynı iki token'ı kendi kurallarında yazar. `:where` özgüllüğü sıfır:
+     `shadow-*` yazan çağrı yeri kazanır. */
+  :where(
+      input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"], [type="hidden"], [type="submit"], [type="button"], [type="reset"], [type="image"]),
+      textarea,
+      select
+    ):where([class~="border"]) {
+    box-shadow: var(--shadow-well);
+  }
+  :where(
+      input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"], [type="hidden"], [type="submit"], [type="button"], [type="reset"], [type="image"]),
+      textarea,
+      select
+    ):where([class~="border"]):focus-visible {
+    box-shadow: var(--shadow-well), var(--shadow-focus);
+  }
+}
+
+/* ÜSTTEN IŞIKLI KENAR — `.panel` dışındaki büyük nesne yüzeyleri için
+   (kapak çerçevesi, öne çıkan kart). Çerçevesi olan öğede kenarın RENGİNİ
+   yönlü yapar; gerekçe `.panel` notunda. Tekrar eden liste satırına ya da
+   alana verme: her satırda yönlü kenar gürültü olur. */
+@utility edge-lit {
+  border-color: var(--edge-top) var(--edge-side) var(--edge-bottom);
 }
 
 /* Arama paleti girişinin odağını kapsayıcı anlatır — çift çerçeve olmaz. */
@@ -1174,13 +1270,24 @@
   }
 
   /* --------------------------------------------------------------------------
-     Yüzeyler — gölge yok, ayrım saydamlık + tek hairline ile
+     Yüzeyler — gölge yok, ayrım ton + üstten ışıklı hairline ile
      -------------------------------------------------------------------------- */
   /* Shared material, including utility screens. Page-specific fills and
      utility classes still override this component-layer foundation. */
+  /* ÜSTTEN IŞIKLI KENAR (3 Kasım, işçilik turu). Tek renkli hairline her
+     kenarda aynı ağırlıkta, koyu temada cansız duruyordu; kenar artık
+     ışığın yönünü söylüyor (token notu `--edge-top`). Dev-starter'daki
+     maskeli `::before` burada KULLANILMADI, iki nedenle: (1) `Panel`
+     `overflow-hidden` taşıyor ve taşma padding kutusunda kesiliyor —
+     kenarın üstüne oturan sözde öğe kırpılırdı; (2) sözde öğe panele
+     `position: relative` ister ve bu, içerideki mutlak konumlu her öğenin
+     kapsayıcısını sessizce değiştirirdi. Kenar başına renk ne kırpmayı ne
+     kalınlığı değiştiriyor, yalnız rengi. Hover (`.panel-hover`) dört
+     kenarı birden ezer; `.edge-lit` aynı kenarı başka yüzeye verir. */
   .panel {
     background: var(--premium-surface);
     border: 1px solid var(--line);
+    border-color: var(--edge-top) var(--edge-side) var(--edge-bottom);
     border-radius: var(--radius-panel, var(--radius-xl));
     transition: border-color 0.25s var(--ease-brand), background-color 0.25s
       var(--ease-brand);
@@ -2351,6 +2458,9 @@ html.theme-switching::view-transition-new(root) {
   min-width:0;
   padding:var(--page-frame-inset);
   border:1px solid var(--line);
+  /* Kapak sayfanın en büyük nesnesi: kenarı panelle aynı, üstten ışıklı
+     (`.edge-lit`, 3 Kasım). */
+  border-color:var(--edge-top) var(--edge-side) var(--edge-bottom);
   border-radius:var(--radius-feature);
   /* Sağ üst köşedeki `--primary-wash` ışıması ve gölge kalktı (23 Eylül):
      mavi etkileşim demek, bir kapağın köşesi etkileşim değil. Kapak

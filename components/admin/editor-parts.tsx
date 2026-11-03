@@ -1281,7 +1281,7 @@ function YazOnizle({
     <div
       role="tablist"
       aria-label="Gövde Görünümü"
-      className="inline-flex shrink-0 gap-0.5 rounded-full bg-surface-elevated p-[3px] text-small"
+      className="inline-flex shrink-0 gap-0.5 rounded-full bg-surface-elevated p-[3px] text-small shadow-(--shadow-well)"
     >
       {secenekler.map(({ k, ad, hedef }) => (
         <button
@@ -1314,7 +1314,7 @@ function YazOnizle({
             <motion.span
               aria-hidden="true"
               layoutId={`${hapId}-yaz-onizle`}
-              className="absolute inset-0 rounded-full bg-primary"
+              className="absolute inset-0 rounded-full bg-primary shadow-(--shadow-raised)"
               transition={SELECTION_TRANSITION}
             />
           )}

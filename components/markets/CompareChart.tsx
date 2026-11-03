@@ -436,7 +436,7 @@ export function CompareChart({
                  token'ını baypas ediyor ve koyu temada hiç görünmüyordu.
                  Kardeş örtüler (AddToCalendar, SearchCommand, AccountMenu)
                  zaten bu ikiliyi kullanıyor. */
-              className="pointer-events-none absolute top-2 z-10 rounded-(--radius-md) border border-line bg-overlay-surface px-3 py-2 shadow-(--shadow-overlay)"
+              className="pointer-events-none absolute top-2 z-10 rounded-(--radius-md) border border-line bg-overlay-surface px-3 py-2 shadow-(--shadow-floating)"
               style={
                 fraction !== null && fraction > 0.5
                   ? { right: `${(1 - fraction) * 100}%`, marginRight: 10 }

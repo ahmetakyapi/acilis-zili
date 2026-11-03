@@ -208,7 +208,7 @@ export function ShareButton({
           <div
             role="dialog"
             aria-label={labels.title}
-            className={cn(align === "left" ? "left-0" : "right-0", "absolute top-[calc(100%+8px)] z-20 w-[236px] overflow-hidden rounded-xl border border-line bg-overlay-surface shadow-(--shadow-overlay)")}
+            className={cn(align === "left" ? "left-0" : "right-0", "absolute top-[calc(100%+8px)] z-20 w-[236px] overflow-hidden rounded-xl border border-line bg-overlay-surface shadow-(--shadow-floating)")}
           >
             <p className="plate border-b border-line-soft px-4 py-2.5 text-nano">
               {labels.title}

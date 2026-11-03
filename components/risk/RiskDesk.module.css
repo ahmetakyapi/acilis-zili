@@ -858,6 +858,7 @@ a.verdict:hover {
   border-radius: 10px;
   border: 1px solid var(--line);
   background: var(--surface-sunken);
+  box-shadow: var(--shadow-well);
   color: var(--text-strong);
   font-size: var(--text-base);
   font-weight: 500;
@@ -865,6 +866,7 @@ a.verdict:hover {
 .input:focus-visible {
   outline: 2px solid var(--line-focus);
   outline-offset: 1px;
+  box-shadow: var(--shadow-well), var(--shadow-focus);
 }
 .condRow {
   display: grid;

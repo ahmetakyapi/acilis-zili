@@ -1,5 +1,5 @@
 /* Tarih seçici — gerekçe DatePicker.tsx başında. Derinlik tonla ve tek
-   katman gölgeyle (`--shadow-overlay`, açılır pencerelerin ortak gölgesi);
+   katman gölgeyle (`--shadow-floating`, açılır menülerin ortak basamağı);
    ışıma yok. Yarıçap ölçeği: alan `--radius-md`, pencere 16, gün 10. */
 
 .root { position:relative; display:flex; flex-direction:column; gap:6px; min-width:0; width:100%; }
@@ -13,10 +13,10 @@
    `--dp-field-font`): portföy formunun alanları 52 piksel ve 14 yarıçap,
    tarih alanı onların arasında 46'da kalıp sırıtıyordu (30 Eylül).
    Varsayılanlar eski değerler. */
-.field { position:relative; display:flex; align-items:center; min-width:0; height:var(--dp-field-h, 46px); border:1px solid var(--line); border-radius:var(--dp-field-r, var(--radius-md)); background:var(--surface-elevated); transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand); }
+.field { position:relative; display:flex; align-items:center; min-width:0; height:var(--dp-field-h, 46px); border:1px solid var(--line); border-radius:var(--dp-field-r, var(--radius-md)); background:var(--surface-elevated); box-shadow:var(--shadow-well); transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand); }
 .field:hover { border-color:var(--line-strong); }
 .field:focus-within, .field[data-open] { border-color:var(--line-focus); background:var(--panel-fixed); }
-.field[data-open] { box-shadow:0 0 0 3px var(--primary-tint); }
+.field:focus-within, .field[data-open] { box-shadow:var(--shadow-well), var(--shadow-focus); }
 .field[data-invalid] { border-color:var(--down); }
 .root[data-size="cell"] .field { height:36px; border-color:transparent; border-radius:8px; background:var(--surface); }
 .root[data-size="cell"] .field:focus-within, .root[data-size="cell"] .field[data-open] { border-color:var(--line-focus); background:var(--panel-fixed); }
@@ -45,7 +45,7 @@
   position:fixed; inset:auto; top:var(--dp-top, 0); left:var(--dp-left, 0); margin:0;
   width:336px; max-width:calc(100vw - 24px); padding:14px 14px 12px; overflow:visible;
   border:1px solid var(--line); border-radius:16px; background:var(--overlay-surface); color:var(--text-strong);
-  box-shadow:var(--shadow-overlay);
+  box-shadow:var(--shadow-floating);
 }
 .popup::backdrop { background:transparent; }
 .popup[data-fallback] { position:absolute; top:calc(100% + 8px); left:0; z-index:40; }
