@@ -247,3 +247,47 @@
 /* Arşiv başlığı — sayfanın ikinci `h2`si; ay başlıklarından bir basamak büyük. */
 .archiveHeading { font-size:26px; line-height:1.2; font-weight:650; letter-spacing:-.035em; color:var(--text-strong); }
 @media(max-width:767px) { .archiveHeading { font-size:23px; } .archive { gap:28px; } .monthTitle { font-size:20px; } .monthCount { translate:0 calc(20px * -.12); } }
+
+/* SATIRDA YALNIZ KALAN KART SATIRI KAPLAR (5 Kasım 2026). Ay grubu sütun
+   sayısının katı değilse son kart tek başına kalıyor ve satırın üçte
+   ikisi boş duruyordu (1440'ta Kasım 7, Ekim 13 yazı: ikisinde de son
+   satır tek kart; ölçüldü). O kart artık satır boyu ve YATAY: şerit solda
+   kendi kolonunda (imza minyatürü ya da logo yığını + rakam), metin
+   sağda — kart kendi yüksekliğinde kalıyor, satır dolu. Aynı kalıp
+   rehberde (`sm:[&>:nth-child(odd):last-child]:col-span-2`). Şeridi
+   olmayan kart (şirketsiz yazı) dikey kalır: solda boş bir kolon açılmaz.
+   `:has()` kartın kendi çocuğunda, kökte değil (CLAUDE.md "Kökte :has()
+   yok"). */
+@media (min-width:640px) and (max-width:1179px) {
+  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.7fr); grid-template-rows:minmax(0,1fr) auto; }
+  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBand { grid-row:1/-1; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:18px; padding:22px 24px; border-bottom:0; border-right:1px solid var(--line-soft); }
+  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBand[data-signature] { display:flex; justify-content:center; align-items:stretch; }
+  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBand .reading { align-items:flex-start; text-align:left; }
+  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBand .readingValue { font-size:28px; }
+  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBody { padding:22px 28px 0; }
+  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardFoot { margin:18px 28px 0; }
+  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) .cardTitle { font-size:24px; }
+  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) .cardDek { -webkit-line-clamp:2; }
+}
+@media (min-width:1180px) and (max-width:1799px) {
+  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.7fr); grid-template-rows:minmax(0,1fr) auto; }
+  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBand { grid-row:1/-1; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:18px; padding:22px 24px; border-bottom:0; border-right:1px solid var(--line-soft); }
+  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBand[data-signature] { display:flex; justify-content:center; align-items:stretch; }
+  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBand .reading { align-items:flex-start; text-align:left; }
+  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBand .readingValue { font-size:28px; }
+  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBody { padding:22px 28px 0; }
+  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardFoot { margin:18px 28px 0; }
+  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) .cardTitle { font-size:24px; }
+  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) .cardDek { -webkit-line-clamp:2; }
+}
+@media (min-width:1800px) {
+  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.7fr); grid-template-rows:minmax(0,1fr) auto; }
+  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) > .cardBand { grid-row:1/-1; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:18px; padding:22px 24px; border-bottom:0; border-right:1px solid var(--line-soft); }
+  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) > .cardBand[data-signature] { display:flex; justify-content:center; align-items:stretch; }
+  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) > .cardBand .reading { align-items:flex-start; text-align:left; }
+  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) > .cardBand .readingValue { font-size:28px; }
+  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) > .cardBody { padding:22px 28px 0; }
+  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) > .cardFoot { margin:18px 28px 0; }
+  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) .cardTitle { font-size:24px; }
+  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) .cardDek { -webkit-line-clamp:2; }
+}
