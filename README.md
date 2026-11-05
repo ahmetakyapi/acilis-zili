@@ -99,21 +99,22 @@ getiri"yle — görünür.
 
 ## Bir İşlem Günü: Siteyi Nasıl Kullanırsın
 
-Site bir işlem gününün ritmine göre kuruldu. Saatler Türkiye saati; ABD yaz
-saatine göre kayıyorlar (kışın açılış 17:30) ve ekranda her zaman o günün
-tarihiyle hesaplanıyorlar.
+Site bir işlem gününün ritmine göre kuruldu. Saatler Türkiye saati; ABD'ye
+bağlı olanlar ABD yaz saatiyle kayıyor (ilk değer yaz, ikincisi kış:
+Kasım başından Mart ortasına) ve ekranda her zaman o günün tarihiyle
+hesaplanıyor.
 
-| Saat (TR) | Ne oluyor | Nereye bakarsın |
+| Saat (TR, yaz · kış) | Ne oluyor | Nereye bakarsın |
 |---|---|---|
-| **09:00** | Dün açıklanan bilançoların analizleri yayında: skor, görüş, hedef fiyat, güçlü yönler ve riskler. | Bilançolar → Analizler |
-| **11:30** | Günün ilk Mercek yazısı: bir olayın arkasındaki mekanizma, metinden çizilen grafik ve rakam bloklarıyla. | Mercek |
-| **15:45** | Açılış öncesi teknik analiz: on beş hissenin planı güncellendi. | Teknik Analiz |
-| **16:10** | Günün bülteni: bugün neye bakmalı, takvimde ne var. | Ana sayfa → Günün Özeti |
-| **16:30** | 🔔 **Açılış zili.** Geri sayım sıfırlanır ve zil çalar; endeks kartları, hareket paneli ve gün akışı canlıya geçer. | Ana sayfa |
-| **19:45** | Seans içi teknik analiz. | Teknik Analiz |
-| **21:45** | Kapanışa doğru teknik analiz. | Teknik Analiz |
-| **23:00** | Kapanış zili. Kapanış sonrası bilançolar bu pencerede açıklanır. | Bilançolar |
-| **23:30** | Günün ikinci Mercek yazısı. | Mercek |
+| **08:30 · 09:30** | Dün açıklanan bilançoların analizleri yayında: skor, görüş, hedef fiyat, güçlü yönler ve riskler. | Bilançolar → Analizler |
+| **11:30 · 12:30** | Günün ilk Mercek yazısı: bir olayın arkasındaki mekanizma, metinden çizilen grafik ve rakam bloklarıyla. | Mercek |
+| **15:45 · 16:45** | Açılış öncesi teknik analiz: on beş hissenin planı güncellendi. | Teknik Analiz |
+| **16:00 · 17:00** | Günün bülteni: bugün neye bakmalı, takvimde ne var. | Ana sayfa → Günün Özeti |
+| **16:30 · 17:30** | 🔔 **Açılış zili.** Geri sayım sıfırlanır ve zil çalar; endeks kartları, hareket paneli ve gün akışı canlıya geçer. | Ana sayfa |
+| **19:45 · 20:45** | Seans içi teknik analiz. | Teknik Analiz |
+| **21:45 · 22:45** | Kapanışa doğru teknik analiz. | Teknik Analiz |
+| **23:00 · 00:00** | Kapanış zili. Kapanış sonrası bilançolar bu pencerede açıklanır. | Bilançolar |
+| **23:30 · 00:30** | Günün ikinci Mercek yazısı. | Mercek |
 
 Pazartesi sabahı 09:30'da bir de haftalık bülten yayımlanıyor.
 
@@ -447,13 +448,13 @@ FOMC/CPI/istihdam takvimi, sembol listesi ve endeks bileşimleri.
 
 ## İçerik Üretimi
 
-| Rutin | Ne zaman (TR) | Nereye |
+| Rutin | Ne zaman (New York / TR) | Nereye |
 |---|---|---|
-| Günlük bülten | her gün 16:10 | `POST /api/brief` → ana sayfa · Günün Özeti |
-| Haftalık bülten | pazartesi 09:30 | `POST /api/brief` (`period: weekly`) → `/bulten` |
-| Mercek yazısı | her gün 11:30 ve 23:30 | `POST /api/mercek` → `/mercek` |
-| Bilanço analizi | her gün 09:00 | `POST /api/analiz` → `/bilancolar/analizler` |
-| Teknik analiz | işlem günleri 15:45, 19:45, 21:45 | `POST /api/teknik` → `/teknik` |
+| Günlük bülten | her gün 08:55 NY (yazın ~16:00, kışın ~17:00 TR) | `POST /api/brief` → ana sayfa · Günün Özeti |
+| Haftalık bülten | pazartesi 09:30 TR | `POST /api/brief` (`period: weekly`) → `/bulten` |
+| Mercek yazısı | her gün 04:30 ve 16:30 NY | `POST /api/mercek` → `/mercek` |
+| Bilanço analizi | her gün 01:30, 12:30, 16:30, 18:30 NY | `POST /api/analiz` → `/bilancolar/analizler` |
+| Teknik analiz | işlem günleri 08:45, 12:45, 14:45 NY | `POST /api/teknik` → `/teknik` |
 
 Beşi de `BRIEF_SECRET` ile korunuyor ve her uç yazdığını geri okuyabiliyor
 (`?slug=`, `?symbol=&period=`, `?symbol=`). Ayrıca dört `context` ucu rutine

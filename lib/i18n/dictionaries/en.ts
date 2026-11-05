@@ -315,7 +315,7 @@ const en: typeof tr = {
     briefFailed: "The brief can't be read right now; try again shortly.",
     briefPeriod: "Brief Period",
     briefStaleNote:
-      "This is the brief from {date}. The daily brief is published at {time} Istanbul time.",
+      "This is the brief from {date}. The daily brief is published around {time} New York time.",
     briefWeeklyStaleNote:
       "This is the brief for the week of {range}. The weekly brief is published Monday at {time} Istanbul time.",
     indices: "Indices",

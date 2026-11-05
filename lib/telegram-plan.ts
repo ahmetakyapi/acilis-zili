@@ -21,9 +21,9 @@ export type PostKind = "acilis" | "kapanis" | "mercek" | "makro";
 export const PRE_OPEN_LEAD_MINUTES = 15;
 /**
  * Bülten yazılmadıysa en son bu kadar dakika kala bültensiz gider.
- * Günlük bülten 16:10 TR'de yazılıyor (lib/data.ts → BRIEF_PUBLISH_TR);
- * kışın açılışa 80 dakika var, yazın 20 — yani yazın pencere bülteni
- * çoğu gün yakalar, yakalayamazsa takvim yine açılıştan önce kanalda olur.
+ * Günlük bülten 09:00 ET'de yazılıyor (lib/data.ts → BRIEF_PUBLISH);
+ * açılışa yıl boyu ~30 dakika var — pencere bülteni çoğu gün yakalar,
+ * yakalayamazsa takvim yine açılıştan önce kanalda olur.
  */
 export const PRE_OPEN_FINAL_MINUTES = 5;
 /**

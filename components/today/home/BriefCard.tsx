@@ -3,10 +3,11 @@ import { BriefLedger, ledgerRefs } from "@/components/today/BriefLedger";
 import { LedgerLinker } from "@/components/today/LedgerLinker";
 import { getBriefLedger } from "@/lib/brief-ledger-data";
 import { BriefSwitch, type BriefView } from "@/components/today/BriefSwitch";
-import { BRIEF_PUBLISH_TR, getLatestBriefResult, getEarningsBetween, weekAnchor } from "@/lib/data";
+import { briefPublishTime, getLatestBriefResult, getEarningsBetween, weekAnchor } from "@/lib/data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { formatEtDateLong, formatEtDateCompact } from "@/lib/utils";
+import { TR_ZONE, displayZone } from "@/lib/session-clock";
 
 /**
  * Günün özeti — düz beyaz belge ve accent çerçeve (degradesi bir dönem
@@ -87,7 +88,9 @@ export async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }
         ? null
         : t.today.briefStaleNote
             .replace("{date}", formatEtDateLong(daily.briefDate, locale))
-            .replace("{time}", BRIEF_PUBLISH_TR.daily),
+            /* Saat bugünün tarihiyle ET'den çevriliyor (kışın 17:00, yazın
+               16:00 TR) — gerekçe lib/data.ts → BRIEF_PUBLISH. */
+            .replace("{time}", briefPublishTime(today, "daily", displayZone(locale))),
     langNote: daily.locale === locale ? null : t.brief.fallbackNote,
     archiveHref: "/bulten",
   };
@@ -102,7 +105,7 @@ export async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }
         ? null
         : t.today.briefWeeklyStaleNote
             .replace("{range}", weekRange(weekly.briefDate))
-            .replace("{time}", BRIEF_PUBLISH_TR.weekly),
+            .replace("{time}", briefPublishTime(thisWeek, "weekly", TR_ZONE)),
     langNote: weekly.locale === locale ? null : t.brief.fallbackNote,
     archiveHref: "/bulten?tur=haftalik",
   };

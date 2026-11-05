@@ -6,6 +6,7 @@ import {
   TECHNICAL_CRON,
   currentSlot,
   nextEdition,
+  slotInstant,
 } from "../lib/technical";
 
 /**
@@ -16,8 +17,8 @@ import {
  * `midsession` döndürüyordu, yani üçüncü koşu öğlenki yayının ÜSTÜNE
  * yazacaktı ve künyesinde de onun saati ("19:45 TR") görünecekti.
  *
- * Sınır ABD'nin iki saat diliminde de doğru olmak zorunda: cron UTC'ye
- * çakılı, New York karşılığı mevsimle bir saat kayıyor.
+ * Cron artık New York dilimli (5 Kasım 2026); UTC karşılığı mevsimle bir
+ * saat kayıyor ve iki mevsim de burada.
  */
 
 const HOLIDAYS: MarketHoliday[] = [
@@ -34,8 +35,17 @@ const utc = (dateStr: string, hour: number, minute: number) =>
 const slotAt = (dateStr: string, hour: number, minute: number) =>
   currentSlot(getMarketStatus(utc(dateStr, hour, minute), HOLIDAYS));
 
-test("cron üç koşuyu taşıyor", () => {
-  assert.equal(TECHNICAL_CRON, "45 12,16,18 * * 1-5");
+test("cron üç koşuyu New York saatiyle taşıyor", () => {
+  /* 5 Kasım 2026: canlı görev ABD'ye bağlı; UTC cron kışın bir saat
+     şaşıyordu (lib/technical.ts → TECHNICAL_CRON). */
+  assert.equal(TECHNICAL_CRON, "CRON_TZ=America/New_York 45 8,12,14 * * 1-5");
+});
+
+test("nöbet anı mevsimle kayıyor: 08:45 ET yazın 12:45, kışın 13:45 UTC", () => {
+  assert.equal(slotInstant("2026-09-18", "premarket").toISOString(), "2026-09-18T12:45:00.000Z");
+  assert.equal(slotInstant("2026-11-04", "premarket").toISOString(), "2026-11-04T13:45:00.000Z");
+  assert.equal(slotInstant("2026-11-04", "midsession").toISOString(), "2026-11-04T17:45:00.000Z");
+  assert.equal(slotInstant("2026-11-04", "lateday").toISOString(), "2026-11-04T19:45:00.000Z");
 });
 
 test("yaz saatinde üç nöbet üç ayrı slota düşüyor", () => {
@@ -45,12 +55,14 @@ test("yaz saatinde üç nöbet üç ayrı slota düşüyor", () => {
   assert.equal(slotAt("2026-09-18", 18, 45), "lateday");
 });
 
-test("kış saatinde de üç ayrı slot — sınır 13:00 ET bu yüzden", () => {
-  // 4 Aralık 2026 cuma · EST (UTC-5): 07:45 · 11:45 · 13:45 NY
-  assert.equal(slotAt("2026-12-04", 12, 45), "premarket");
+test("kış saatinde de üç ayrı slot", () => {
+  // 4 Aralık 2026 cuma · EST (UTC-5): 08:45 · 12:45 · 14:45 NY = 13:45 · 17:45 · 19:45 UTC
+  assert.equal(slotAt("2026-12-04", 13, 45), "premarket");
+  assert.equal(slotAt("2026-12-04", 17, 45), "midsession");
+  assert.equal(slotAt("2026-12-04", 19, 45), "lateday");
+  /* Eski UTC cron'unun kış anları da (07:45 · 11:45 · 13:45 ET) doğru slota
+     düşüyor — sınır 13:00 ET; geri dönülürse üstüne yazma olmaz. */
   assert.equal(slotAt("2026-12-04", 16, 45), "midsession");
-  /* 13:45 ET — sınır 14:00 seçilseydi burası `midsession` olur ve üstüne
-     yazma sorunu kışın geri gelirdi. */
   assert.equal(slotAt("2026-12-04", 18, 45), "lateday");
 });
 
@@ -102,17 +114,18 @@ test("hafta sonunda sıradaki pazartesi sabahı", () => {
 });
 
 test("yarım günde kapanış öncesi nöbeti atlanıyor", () => {
-  /* 27 Kasım 2026 · 13:00 ET kapanış. Öğlen nöbetinden (16:45 UTC) sonra
-     o günün 18:45'i seans dışına düşüyor; sıradaki 30 Kasım pazartesi. */
-  const a = nextAt("2026-11-27", 16, 46);
+  /* 27 Kasım 2026 · 13:00 ET kapanış. Öğlen nöbetinden (17:45 UTC) sonra
+     o günün 19:45'i (14:45 ET) seans dışına düşüyor; sıradaki 30 Kasım
+     pazartesi, kış saatiyle 13:45 UTC. */
+  const a = nextAt("2026-11-27", 17, 46);
   assert.equal(a?.slot, "premarket");
-  assert.equal(a?.at.toISOString(), "2026-11-30T12:45:00.000Z");
+  assert.equal(a?.at.toISOString(), "2026-11-30T13:45:00.000Z");
 });
 
 test("tam tatil gününün tamamı atlanıyor", () => {
   /* Şükran Günü (26 Kasım, perşembe) tam tatil: 25 Kasım çarşamba akşamı
      sorulduğunda sıradaki yayın 27 Kasım cumanın sabahı. */
-  const a = nextAt("2026-11-25", 18, 46);
+  const a = nextAt("2026-11-25", 19, 46);
   assert.equal(a?.slot, "premarket");
-  assert.equal(a?.at.toISOString(), "2026-11-27T12:45:00.000Z");
+  assert.equal(a?.at.toISOString(), "2026-11-27T13:45:00.000Z");
 });

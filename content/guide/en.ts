@@ -119,13 +119,13 @@ Many commission-free US brokers route orders not to an exchange but to a market 
 
 ## Session Hours
 
-The US market runs in three parts. Istanbul times shift twice a year with US daylight saving; the Istanbul column below is the summer schedule.
+The US market runs in three parts. Türkiye doesn't observe daylight saving and the US does, so Istanbul times shift by an hour twice a year: summer runs from mid-March to early November, winter from early November to mid-March.
 
-| Session | New York | Istanbul (summer) | Character |
-|---|---|---|---|
-| Pre-market | 4:00 – 9:30 | 11:00 – 16:30 | Thin, jumpy, wide spreads |
-| **Regular session** | **9:30 – 16:00** | 16:30 – 23:00 | Nearly all the volume |
-| After-hours | 16:00 – 20:00 | 23:00 – 03:00 | Earnings reactions live here |
+| Session | New York | Istanbul (Summer) | Istanbul (Winter) | Character |
+|---|---|---|---|---|
+| Pre-market | 4:00 – 9:30 | 11:00 – 16:30 | 12:00 – 17:30 | Thin, jumpy, wide spreads |
+| **Regular session** | **9:30 – 16:00** | 16:30 – 23:00 | 17:30 – 00:00 | Nearly all the volume |
+| After-hours | 16:00 – 20:00 | 23:00 – 03:00 | 00:00 – 04:00 | Earnings reactions live here |
 
 The two busiest minutes of the day are the open and the close. In the closing auction, index funds settle the day's inflows and outflows — which is why huge volume prints in the final minute.
 

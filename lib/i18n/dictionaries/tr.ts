@@ -382,14 +382,16 @@ const tr = {
     briefWeeklyEmpty: "Henüz haftalık özet yazılmadı.",
     briefFailed: "Bülten şu an okunamıyor; birazdan yeniden dene.",
     briefPeriod: "Özet Dönemi",
-    /* Günlük özet 16:00'da, haftalık pazartesi 09:30'da yazılıyor; o saate
+    /* Günlük özet 09:00 ET'de (kışın 17:00, yazın 16:00 TR; saat
+       lib/data.ts → BRIEF_PUBLISH'ten o günün tarihiyle), haftalık pazartesi
+       09:30 TR'de yazılıyor; o saate
        kadar en son yazılan metin duruyor ve tarihi burada söyleniyor.
 
        Cümle "bugünün özeti şu saatte gelecek" değil, "bu özet her gün şu
        saatte yazılır" diyor: rutin gecikirse ya da o gün hiç yazılmazsa
        ikincisi hâlâ doğru kalıyor, birincisi yalan oluyordu. */
     briefStaleNote:
-      "Bu, {date} tarihli özet. Günlük özet her gün {time}'da (TR) yayımlanır.",
+      "Bu, {date} tarihli özet. Günlük özet her gün saat {time} (TR) civarında yayımlanır.",
     briefWeeklyStaleNote:
       "Bu, {range} haftasının özeti. Haftalık özet pazartesi {time}'da (TR) yayımlanır.",
     indices: "Endeksler",

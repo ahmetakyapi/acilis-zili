@@ -382,9 +382,9 @@ yazın 16:30, kışın 17:30 TR). ET↔UTC aritmetiği yalnız `lib/market-hours
   `/takip`); sekme çubuğunu her sayfa kendi basar — detay sayfası sekmesiz.
 - Teknik analiz (`technical_analyses`): satır YAYIN başına (metin
   `copy.{tr,en}`). Sembol listesi `lib/technical.ts` → `TECHNICAL_SYMBOLS`;
-  nöbet saati değişirse `TECHNICAL_CRON`, `SLOT_UTC`, `currentSlot` üçü
+  nöbet saati değişirse `TECHNICAL_CRON`, `SLOT_ET`, `currentSlot` üçü
   birden (yoksa yeni koşu var olan nöbetin ÜSTÜNE yazar). Bülten saati
-  `lib/data.ts` → `BRIEF_PUBLISH_TR`.
+  `lib/data.ts` → `BRIEF_PUBLISH` (günlük 09:00 ET, haftalık 09:30 TR).
 
 ## Site İçi Claude
 

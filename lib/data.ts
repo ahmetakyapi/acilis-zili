@@ -30,6 +30,7 @@ import {
   type StoryRow,
 } from "./schema";
 import {
+  ET_ZONE,
   addEtDays,
   etParts,
   getMarketStatus,
@@ -37,6 +38,7 @@ import {
   type MarketHoliday,
   type MarketStatus,
 } from "./market-hours";
+import { TR_ZONE, formatInZone, zoneWallTime } from "./session-clock";
 import type { BriefPeriod } from "./brief";
 import { isIsoDay } from "./date-input";
 
@@ -740,23 +742,42 @@ export async function getNewsForSymbol(
 /* ---- Günlük özet ---- */
 
 /**
- * Bültenlerin yazılma saatleri, Türkiye saatiyle.
+ * Bültenlerin yayın saati — her biri KENDİ saat diliminde.
  *
- * Metinleri claude.ai zamanlanmış görevleri yazıyor (docs/claude-rutinler.md):
- * günlük 16:10'da — Vercel senkronundan sonra, ABD açılışından hemen önce —
- * ve haftalık pazartesi 09:30'da. Sayı burada duruyor çünkü ekranda da
- * söyleniyor: bugünün özeti henüz yoksa kart okuyucuya ne zaman geleceğini
- * yazıyor. Rutinlerin saati değişirse burası da değişmeli.
+ * Metinleri claude.ai zamanlanmış görevleri yazıyor (docs/claude-rutinler.md).
+ * Sayı burada duruyor çünkü ekranda da söyleniyor: bugünün özeti henüz yoksa
+ * kart okuyucuya ne zaman geleceğini yazıyor; panelin "gecikti mi" sorusu da
+ * buradan (lib/routine-schedule.ts).
  *
- * 16:00 → 16:10 (18 Eylül 2026). On dakika iki şey için: 15:30'da açıklanan
- * ABD verisi fiyata yansımış oluyor ve teknik rutinin 15:45 nöbeti — bazen
- * on beş dakika sürüyor — bülten yazılmadan bitiyor. Yazın açılışa 20 dakika
- * kalıyor (16:30 TR), kışın 80 (17:30 TR).
+ * GÜNLÜK NEW YORK SAATİNE BAĞLI (5 Kasım 2026). Canlı görev
+ * `CRON_TZ=America/New_York 55 8 * * *` ve koşu beş dakika kadar sürüyor;
+ * yayın anı 09:00 ET. Burada ise "16:10 TR" sabiti duruyordu: ABD kış
+ * saatine geçince (1 Kasım) bülten 17:00 TR'de çıkmaya başladı ama ana
+ * sayfa "her gün 16:10'da yayımlanır" demeye devam etti (ölçüldü,
+ * `generated_at`: 20–31 Ekim 16:00–16:31 TR, 1–4 Kasım 16:59–17:05 TR).
+ * Saat artık o günün tarihiyle ET'den çevriliyor: yazın 16:00, kışın 17:00
+ * TR — sabit TR saati yazılmaz (CLAUDE.md "Saat: TR Önce").
+ *
+ * HAFTALIK İSTANBUL SAATİNE BAĞLI: `CRON_TZ=Europe/Istanbul 30 9 * * 1`,
+ * yıl boyu pazartesi 09:30 TR.
+ *
+ * Rutinlerin saati değişirse burası da değişmeli.
  */
-export const BRIEF_PUBLISH_TR: Record<BriefPeriod, string> = {
-  daily: "16:10",
-  weekly: "09:30",
+export const BRIEF_PUBLISH: Record<BriefPeriod, { time: string; zone: string }> = {
+  daily: { time: "09:00", zone: ET_ZONE },
+  weekly: { time: "09:30", zone: TR_ZONE },
 };
+
+/** Verilen günün (ET takvim günü; haftalıkta yazıldığı pazartesi) yayın anı. */
+export function briefPublishAt(day: string, period: BriefPeriod): Date {
+  const { time, zone } = BRIEF_PUBLISH[period];
+  return zoneWallTime(day, time, zone);
+}
+
+/** Yayın saati istenen dilimin duvar saatiyle: kışın "17:00" (TR), yazın "16:00". */
+export function briefPublishTime(day: string, period: BriefPeriod, zone: string): string {
+  return formatInZone(briefPublishAt(day, period), zone);
+}
 
 /**
  * Belirli bir günün bülteni. Tablo (tarih, dil) benzersiz olduğu için her gün

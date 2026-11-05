@@ -1,7 +1,12 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import type { PublishDay } from "@/lib/admin-data";
-import { BRIEF_PUBLISH_TR } from "@/lib/data";
+import { briefPublishTime } from "@/lib/data";
+import { todayEt } from "@/lib/market-hours";
+import { TR_ZONE } from "@/lib/session-clock";
+
+/** Bugünün bülten saati, TR — ET'den çevrilir (lib/data.ts → BRIEF_PUBLISH). */
+const gunlukSaat = () => briefPublishTime(todayEt(), "daily", TR_ZONE);
 import { adminDay } from "@/lib/admin-format";
 import { cn } from "@/lib/utils";
 import { AdminEmpty } from "@/components/admin/AdminUI";
@@ -25,7 +30,7 @@ import { Skeleton } from "@/components/ui/primitives";
  *     dönük doldurma promptundaydı; rutin tablosu "her gün 16:10 TR" diyor
  *     ve ölçüldü (23 Eylül): 03 Ağu–23 Eyl arası 52 hücrenin 52'si hafta
  *     sonu dahil yazılmış. Kaçırılan bir cumartesi artık kırmızı; bugünün
- *     16:10'u pay ile geçip kayıt yoksa hücre "Gecikti" (sarı). Beklenti
+ *     yayın anını (09:00 ET) pay ile geçip kayıt yoksa hücre "Gecikti" (sarı). Beklenti
  *     lib/routine-schedule.ts'te, Sistem sayfasıyla aynı yerde. Bülten
  *     şeridinde bu yüzden "hafta sonu" hâli HİÇ YOK.
  *   · MERCEK günde İKİ koşum (11:30 ve 23:30 TR) ama koşullu: anlatmaya
@@ -75,13 +80,13 @@ export const GUNLER = [
 type Serit = "daily" | "stories" | "analyses";
 
 /* Künyede SAAT VAR, EK YOK: "16:10'da" gibi bir ek saatin okunuşuna bağlı
-   ve saat `BRIEF_PUBLISH_TR`den geliyor — sabit bir ek, saat değiştiği gün
+   ve saat `BRIEF_PUBLISH`ten geliyor (ET'ye bağlı, mevsimle kayıyor) — sabit bir ek, saat değiştiği gün
    yanlış olurdu (Trafik ekranının "EK SABİT YAZILAMAZ" kararı). */
 const SERITLER = [
   {
     key: "daily" as const,
     baslik: "Günlük Bülten",
-    not: `Her Gün ${BRIEF_PUBLISH_TR.daily} TR`,
+    get not() { return `Her Gün ${gunlukSaat()} TR`; },
   },
   {
     key: "stories" as const,
@@ -127,7 +132,7 @@ type Hal = "written" | "filled" | "missed" | "late" | "today" | "none" | "off";
  *     sürüyor, hüküm yok.
  *     "Beklenmiyordu" ile aynı çiziliyordu; okur bugünün hangi hücre
  *     olduğunu sütunu sayarak buluyordu.
- *   · `late` — Gecikti, pirinç: bugünün 16:10 TR'si pay ile geçti.
+ *   · `late` — Gecikti, pirinç: bugünün yayın anı (09:00 ET) pay ile geçti.
  */
 const HAL_SINIFI: Record<Hal, string> = {
   written: "bg-primary text-on-primary",
@@ -389,9 +394,9 @@ function hucreMetni(tarih: string, serit: Serit, gun: PublishDay, hal: Hal) {
         : hal === "missed"
           ? "yazılmadı"
           : hal === "late"
-            ? `gecikti, beklenen saat ${BRIEF_PUBLISH_TR.daily} TR`
+            ? `gecikti, beklenen saat ${briefPublishTime(gun.day, "daily", TR_ZONE)} TR`
             : hal === "today"
-              ? `bugün, beklenen saat ${BRIEF_PUBLISH_TR.daily} TR`
+              ? `bugün, beklenen saat ${briefPublishTime(gun.day, "daily", TR_ZONE)} TR`
               : "henüz beklenmiyor";
     return `${tarih} · Günlük bülten: ${durum}${
       gun.weekly

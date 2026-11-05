@@ -1,6 +1,6 @@
-import { BRIEF_PUBLISH_TR, weekAnchor } from "./data";
+import { briefPublishAt, weekAnchor } from "./data";
 import { addEtDays, getMarketStatus, todayEt, type MarketHoliday } from "./market-hours";
-import { TR_ZONE, formatInZone, zoneDateKey, zoneWallTime } from "./session-clock";
+import { TR_ZONE, formatInZone, zoneDateKey } from "./session-clock";
 import { SLOT_RANK, TECHNICAL_SLOTS, currentSlot, slotInstant, type TechnicalSlot } from "./technical";
 
 /**
@@ -18,15 +18,15 @@ import { SLOT_RANK, TECHNICAL_SLOTS, currentSlot, slotInstant, type TechnicalSlo
  *
  * DÜZ MODÜL, `"use client"` DEĞİL ve saf: şimdiki an her fonksiyona
  * parametre olarak geliyor, testler saati kendisi veriyor. Saatlerin
- * kaynağı değişmiyor — bülten saatleri `BRIEF_PUBLISH_TR` (lib/data.ts),
- * teknik nöbetler `SLOT_UTC`/`currentSlot` (lib/technical.ts). Burada
+ * kaynağı değişmiyor — bülten saatleri `BRIEF_PUBLISH` (lib/data.ts),
+ * teknik nöbetler `SLOT_ET`/`currentSlot` (lib/technical.ts). Burada
  * yalnızca "ne zaman gecikmiş sayılır" kuralı var.
  */
 
 /**
  * Rutine tanınan pay. claude.ai görevi dakikasında başlamıyor ve bir
  * koşum on beş dakika sürebiliyor (teknik 15:45 nöbeti, docs/claude-rutinler.md);
- * payı sıfır tutmak her gün 16:10 ile 16:25 arasında yanlış alarm demekti.
+ * payı sıfır tutmak her gün yayın anından sonraki çeyrekte yanlış alarm demekti.
  */
 export const ROUTINE_GRACE_MINUTES = 30;
 
@@ -53,38 +53,40 @@ export function trDateOf(now: Date): string {
 }
 
 /* ---------------------------------------------------------------------------
-   Günlük bülten — her gün 16:10 TR
+   Günlük bülten — her gün 09:00 ET (kışın 17:00, yazın 16:00 TR)
    --------------------------------------------------------------------------- */
 
 /**
  * Şu an VAR OLMASI GEREKEN en yeni günlük bülten.
  *
- * Rutin 16:10 TR'de yazıyor ve kaydın tarihi o anın ET günü
- * (`saveBrief` → `todayEt()`); 16:10 TR yıl boyu 09:10 ya da 08:10 ET,
- * yani TR günüyle AYNI takvim günü. Beklenen gün bu yüzden TR saatinden
- * çıkıyor: 16:10 geçtiyse bugün, geçmediyse dün.
+ * Rutin New York saatine bağlı (`BRIEF_PUBLISH.daily`, lib/data.ts) ve
+ * kaydın tarihi yazıldığı anın ET günü (`saveBrief` → `todayEt()`). Beklenen
+ * gün bu yüzden ET gününden çıkıyor: o günün 09:00 ET'si geçtiyse bugün,
+ * geçmediyse dün.
  *
- * ESKİ HATA: karşılaştırma ET günü ile TR saatini karıştırıyordu. 25 Eylül
- * 01:00 TR'de New York hâlâ 24 Eylül'de; "bugün" 24 sayılıp "01:00 < 16:10"
- * diye kaçırılan 24 Eylül bülteni "bekleniyor" okunuyordu — alarm her gece
- * yedi saat (kışın sekiz) susuyordu.
+ * 5 Kasım 2026'ya kadar beklenti "16:10 TR" sabitiydi; rutin ise ABD saatine
+ * bağlıydı ve kış saatinde 17:00 TR'de yazıyor — panel her gün 16:40'tan
+ * 17:00'ye kadar bülteni "gecikti" gösteriyordu.
+ *
+ * ESKİ HATA (Eylül): karşılaştırma ET günü ile TR saatini karıştırıyordu;
+ * gece yarısından sonra kaçırılan bülten yeniden "bekleniyor" okunuyordu.
+ * Gün de saat de artık aynı dilimden (ET).
  */
 export function expectedDailyBrief(now: Date): string {
-  const trDate = trDateOf(now);
-  const due = zoneWallTime(trDate, BRIEF_PUBLISH_TR.daily, TR_ZONE);
-  return now >= due ? trDate : addEtDays(trDate, -1);
+  const etDay = todayEt(now);
+  return now >= dailyBriefDueAt(etDay) ? etDay : addEtDays(etDay, -1);
 }
 
-/** O günün bülteninin yazılması gereken an — 16:10 TR. */
+/** O günün bülteninin yazılması gereken an — 09:00 ET. */
 export function dailyBriefDueAt(day: string): Date {
-  return zoneWallTime(day, BRIEF_PUBLISH_TR.daily, TR_ZONE);
+  return briefPublishAt(day, "daily");
 }
 
 /**
  * Günlük bültenin durumu.
  *
  * `ok`: beklenen gün (ya da daha yenisi) yazılmış. `waiting`: bugünün
- * 16:10'u geçti ama pay dolmadı, dünkü yerinde. `late`: pay doldu ya da
+ * yayın anı geçti ama pay dolmadı, dünkü yerinde. `late`: pay doldu ya da
  * daha eski bir gün eksik.
  */
 export function dailyBriefState(
@@ -117,7 +119,7 @@ export function dailyBriefState(
  */
 export function expectedWeeklyAnchor(now: Date): string {
   const monday = weekAnchor(trDateOf(now));
-  const due = zoneWallTime(monday, BRIEF_PUBLISH_TR.weekly, TR_ZONE);
+  const due = briefPublishAt(monday, "weekly");
   return addEtDays(monday, now >= due ? -7 : -14);
 }
 
@@ -128,7 +130,7 @@ export function weeklyWriteDay(anchor: string): string {
 
 /** Çapası verilen haftalık kaydın yazılması gereken an — ertesi pazartesi 09:30 TR. */
 export function weeklyBriefDueAt(anchor: string): Date {
-  return zoneWallTime(weeklyWriteDay(anchor), BRIEF_PUBLISH_TR.weekly, TR_ZONE);
+  return briefPublishAt(weeklyWriteDay(anchor), "weekly");
 }
 
 /** Haftalık bültenin durumu — günlükle aynı üç hâl. */

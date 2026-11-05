@@ -294,8 +294,8 @@ export function sessionWindows(
  * İstanbul'da → UTC `Date`.
  *
  * NEDEN VAR: yönetim panelinin rutin beklentileri Türkiye saatiyle
- * yazılı (`BRIEF_PUBLISH_TR`: günlük 16:10, haftalık 09:30) ve "gecikti mi"
- * sorusu bir ANLA cevaplanıyor: şimdi, o gün 16:10 TR'nin otuz dakika
+ * yazılı (`BRIEF_PUBLISH`: günlük 09:00 ET, haftalık 09:30 TR) ve "gecikti mi"
+ * sorusu bir ANLA cevaplanıyor: şimdi, o günün yayın anının otuz dakika
  * ötesinde mi. Karşılaştırma bir dönem saat dizesiyle yapılıyordu
  * (`"01:00" >= "16:10"`) ve gün sınırını hiç görmüyordu — gece yarısını
  * geçince kaçırılan bülten yeniden "bekleniyor"a dönüyordu.

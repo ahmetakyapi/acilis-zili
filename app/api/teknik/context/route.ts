@@ -79,6 +79,8 @@ export async function GET(request: Request) {
     /* Bir sonraki yayının saati — rutin "sıradaki güncelleme" demek
        isterse uydurmasın. */
     schedule: {
+      /* Alan adı rutinin prompt'unda geçebileceği için korunuyor; değer
+         artık New York dilimli cron (lib/technical.ts → TECHNICAL_CRON). */
       cron_utc: TECHNICAL_CRON,
       premarket: {
         tr: formatInZone(slotInstant(sessionDate, "premarket"), TR_ZONE),

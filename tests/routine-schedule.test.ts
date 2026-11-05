@@ -32,22 +32,31 @@ const HOLIDAYS: MarketHoliday[] = [
 
 test("gece yarısından sonra kaçırılan günlük bülten GECİKMİŞ, beklemede değil", () => {
   /* 25 Eylül 01:00 TR — New York hâlâ 24 Eylül 18:00. Eski kod "bugün"ü
-     24 sayıp "01:00 < 16:10" diye bekliyordu. */
+     24 sayıp "01:00 < 16:10" diye bekliyordu. Gün ve saat artık ikisi de ET. */
   const now = new Date("2026-09-24T22:00:00Z");
   assert.equal(expectedDailyBrief(now), "2026-09-24");
   assert.equal(dailyBriefState("2026-09-23", now).state, "late");
 });
 
-test("16:10 TR'den önce dünkü bülten yeterli", () => {
+test("09:00 ET'den (yazın 16:00 TR) önce dünkü bülten yeterli", () => {
   const now = new Date("2026-09-23T09:00:00Z"); // 12:00 TR
   assert.equal(expectedDailyBrief(now), "2026-09-22");
   assert.equal(dailyBriefState("2026-09-22", now).state, "ok");
 });
 
-test("16:10 ile 16:40 TR arası pay: dünkü varken bekleniyor, sonra gecikti", () => {
+test("yazın 16:00 ile 16:30 TR arası pay: dünkü varken bekleniyor, sonra gecikti", () => {
   assert.equal(dailyBriefState("2026-09-22", new Date("2026-09-23T13:20:00Z")).state, "waiting");
   assert.equal(dailyBriefState("2026-09-22", new Date("2026-09-23T13:45:00Z")).state, "late");
   assert.equal(dailyBriefState("2026-09-23", new Date("2026-09-23T13:45:00Z")).state, "ok");
+});
+
+test("kış saatinde bülten 17:00 TR'de bekleniyor, 16:40'ta gecikmiş sayılmaz", () => {
+  /* 5 Kasım 2026: rutin 08:55 NY'de koşuyor; kışın yayın anı 14:00 UTC
+     (17:00 TR). Eski "16:10 TR" sabiti 16:40'tan itibaren gecikti diyordu. */
+  assert.equal(dailyBriefState("2026-11-04", new Date("2026-11-05T13:40:00Z")).state, "ok");
+  assert.equal(dailyBriefState("2026-11-04", new Date("2026-11-05T14:20:00Z")).state, "waiting");
+  assert.equal(dailyBriefState("2026-11-04", new Date("2026-11-05T14:35:00Z")).state, "late");
+  assert.equal(dailyBriefState("2026-11-05", new Date("2026-11-05T14:35:00Z")).state, "ok");
 });
 
 test("hafta sonu da bekleniyor — rutin her gün yazıyor", () => {

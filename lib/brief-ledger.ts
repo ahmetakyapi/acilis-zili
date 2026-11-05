@@ -19,7 +19,7 @@ import type { Bar } from "./providers/types";
  * bülten tarihindeki TAMAMLANMIŞ seansın verisinden, rutin hiçbir şeye
  * dokunmuyor ve cümle şablon + veri.
  *
- * HANGİ SEANS. Günlük bülten 16:10 TR'de, ABD açılışından ÖNCE yazılıyor
+ * HANGİ SEANS. Günlük bülten 09:00 ET'de, ABD açılışından ÖNCE yazılıyor
  * (docs/claude-rutinler.md § 1) ve bir önceki seansı anlatıyor: 24 Ekim
  * Cumartesi sayısı 23 Ekim Cuma'yı, bir salı sayısı pazartesiyi. Bant da o
  * yüzden `briefDate`ten ÖNCEKİ son işlem gününe bakıyor ve bunu künyesinde

@@ -37,7 +37,7 @@ import {
   watchlists,
 } from "./schema";
 import { addEtDays, etDateTimeToUtc, todayEt } from "./market-hours";
-import { BRIEF_PUBLISH_TR, getHolidays, weekAnchor } from "./data";
+import { briefPublishTime, getHolidays, weekAnchor } from "./data";
 import {
   adminDay,
   adminDayIn,
@@ -983,7 +983,7 @@ export async function getRecentBriefs(
         .where(where)
         .groupBy(dailyBriefs.briefDate, dailyBriefs.period)
         .having(dilli ? sql`bool_or(${dilli})` : undefined)
-        /* Aynı yayın gününde (pazartesi) günlük 16:10'da, haftalık 09:30'da
+        /* Aynı yayın gününde (pazartesi) günlük 09:00 ET'de, haftalık 09:30 TR'de
            yazılıyor: son yazılan üstte. */
         .orderBy(desc(yayinGunu), desc(sql`max(${dailyBriefs.generatedAt})`))
         .limit(limit),
@@ -1309,11 +1309,11 @@ export type PublishDay = {
    * Günlük bültenin o günkü hâli — rutin HER GÜN yazıyor, hafta sonu dahil.
    *
    * `written` yazıldı · `missed` geçmiş bir gün, beklenirken yazılmadı ·
-   * `late` bugünün 16:10 TR'si pay ile geçti, kayıt yok · `pending` henüz
+   * `late` bugünün yayın anı (09:00 ET) pay ile geçti, kayıt yok · `pending` henüz
    * beklenmiyor ya da pay içinde.
    *
    * GECİKME BUGÜN GÖRÜNÜYOR (23 Eylül denetimi). Bugünün hücresi ET günü
-   * bitene kadar nötr kalıyordu ("bugün · gün sürüyor"): 16:10 TR'de
+   * bitene kadar nötr kalıyordu ("bugün · gün sürüyor"): yayın saatinde
    * düşen bir koşum ertesi sabah 07:00 TR'ye kadar, on beş saat boyunca
    * hiçbir işaret vermiyordu.
    */
@@ -1357,7 +1357,7 @@ export type PublishDay = {
  *
  * GÜN TANIMI ET. Sitenin her yerinde takvim günü ET; `published_at` ise
  * `timestamptz`. Dönüşüm sorguda yapılıyor, JavaScript tarafında yerel
- * saate düşmesin. BEKLENTİ ise TR saatiyle (16:10) — kural
+ * saate düşmesin. BEKLENTİ de ET'de (09:00, BRIEF_PUBLISH) — kural
  * lib/routine-schedule.ts'te, Sistem sayfasıyla aynı yerden.
  *
  * BÜLTEN HAFTA SONU DA BEKLENİYOR. Bu yorum bir dönem "piyasa kapalıysa o
@@ -1821,7 +1821,7 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
      uydurma alarm olurdu; o satır yalnızca son yazma anını söylüyor.
 
      BEKLENTİ TEK YERDE: lib/routine-schedule.ts. Saatler oradan da
-     `BRIEF_PUBLISH_TR` ve teknik slotlardan geliyor — rutin saatlerini koda
+     `BRIEF_PUBLISH` ve teknik slotlardan geliyor — rutin saatlerini koda
      ikinci kez yazmak docs/claude-rutinler.md ile ayrışan bir sayı
      doğururdu. */
   try {
@@ -1830,7 +1830,8 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
 
     const gunluk = bulten.get("daily");
     const gunlukSon = gunluk?.latest ?? null;
-    const gunlukSaat = BRIEF_PUBLISH_TR.daily;
+    /* Saat beklenen günün tarihiyle ET'den (kışın 17:00, yazın 16:00 TR). */
+    const gunlukSaat = briefPublishTime(dailyBriefState(gunluk?.latest ?? null, now).expected, "daily", TR_ZONE);
     const gunlukDurum = dailyBriefState(gunlukSon, now);
     const bugunYazildi = gunlukSon === trDateOf(now);
     checks.push({
@@ -1859,7 +1860,7 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
 
     const haftalik = bulten.get("weekly");
     const haftalikSon = haftalik?.latest ?? null;
-    const haftalikSaat = BRIEF_PUBLISH_TR.weekly;
+    const haftalikSaat = "09:30";
     const haftalikDurum = weeklyBriefState(haftalikSon, now);
     checks.push({
       label: "Haftalık Bülten",

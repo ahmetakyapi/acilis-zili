@@ -19,19 +19,29 @@ Yapıştırmadan önce prompt içindeki `BURAYA_SECRET` yazan yeri gerçek
 `BRIEF_SECRET` değeriyle değiştir. Değer sunucuda: `/etc/acilis-zili.env` →
 `BRIEF_SECRET` (`sudo cat /etc/acilis-zili.env | grep BRIEF_SECRET`).
 
-| # | Görev | Zamanlama | Cron (UTC) | Nereye yazar |
+| # | Görev | Zamanlama | Cron (canlı, kendi dilimiyle) | Nereye yazar |
 |---|---|---|---|---|
-| 1 | Günlük Bülten | her gün 16:10 TR | `10 13 * * *` | Ana sayfa · Günün Özeti |
-| 2 | Haftalık Bülten | Pazartesi 09:30 TR | `30 6 * * 1` | /bulten → Haftalık |
-| 3 | Mercek Yazısı | her gün 11:30 ve 23:30 TR (ABD kış saatinde 00:30) | `30 8,20 * * *` · kışın `30 8,21 * * *` | /mercek |
-| 4 | Bilanço Analizi | her gün 08:45 ve 23:45 TR (ABD kış saatinde 00:45) | `45 5,20 * * *` · kışın `45 5,21 * * *` | /bilancolar/analizler |
-| 5 | Teknik Analiz | işlem günleri 15:45, 19:45 ve 21:45 TR | `45 12,16,18 * * 1-5` | /teknik |
-| 6 | Yaz Saati Nöbetçisi | Mart ve Kasım'da her Pazar 15:00 TR | `0 12 * 3,11 0` | 3 ve 4'ün akşam cron'u |
-| 7 | Günün Grafiği | Salı–Cumartesi 09:15 TR | `15 6 * * 2-6` | /gunun-grafigi |
+| 1 | Günlük Bülten | her gün 08:55 NY — kışın ~17:00, yazın ~16:00 TR yayında | `CRON_TZ=America/New_York 55 8 * * *` | Ana sayfa · Günün Özeti |
+| 2 | Haftalık Bülten | Pazartesi 09:30 TR | `CRON_TZ=Europe/Istanbul 30 9 * * 1` | /bulten → Haftalık |
+| 3 | Mercek Yazısı | her gün 04:30 ve 16:30 NY (yazın 11:30 / 23:30, kışın 12:30 / 00:30 TR) | `CRON_TZ=America/New_York 30 4,16 * * *` | /mercek |
+| 4 | Bilanço Analizi | her gün 01:30, 12:30, 16:30, 18:30 NY | `CRON_TZ=America/New_York 30 1,12,16,18 * * *` | /bilancolar/analizler |
+| 5 | Teknik Analiz | işlem günleri 08:45, 12:45, 14:45 NY | `CRON_TZ=America/New_York 45 8,12,14 * * 1-5` | /teknik |
+| 6 | Yaz Saati Nöbetçisi | Mart ve Kasım'da her Pazar 15:00 TR | `0 12 * 3,11 0` (UTC) | 3 ve 4'ün akşam cron'u |
+| 7 | Günün Grafiği | Salı–Cumartesi 09:15 TR | `CRON_TZ=Europe/Istanbul 15 9 * * 2-6` | /gunun-grafigi |
+
+> **5 Kasım 2026:** tablo canlı zamanlamaya çekildi. Kaynak "Görev Kontrolü"
+> rutininin her gün karşılaştırdığı beklenen cron listesi ve Günün Grafiği
+> görevinin kendisi. Rutinler artık ABD'ye bağlı olanlar için
+> `CRON_TZ=America/New_York` taşıyor: yaz saati geçişinde kendiliğinden
+> kayıyorlar. Sitenin gösterdiği bülten saati `lib/data.ts` → `BRIEF_PUBLISH`
+> (09:00 ET; ekranda o günün tarihiyle TR'ye çevrilir). Bilanço ve teknik
+> saatleri kod tarafında `lib/technical.ts` ve ilgili uçlarda; bu tabloyla
+> ayrışırsa canlı cron'a bak (`list_triggers`).
 
 > **Bu saatler kodda da yazılı.** Ana sayfadaki özet kartı, günün kaydı henüz
-> yokken en son yazılan metni gösterir ve üstünde "günlük özet her gün 16:10'da
-> yayımlanır" der. Sayı `lib/data.ts` → `BRIEF_PUBLISH_TR` sabitinden geliyor;
+> yokken en son yazılan metni gösterir ve üstünde "günlük özet her gün saat
+> 17:00 (TR) civarında yayımlanır" der (yazın 16:00). Saat `lib/data.ts` →
+> `BRIEF_PUBLISH` sabitinden (09:00 ET) o günün tarihiyle çevriliyor;
 > aşağıdaki zamanlamayı değiştirirsen orayı da değiştir. Teknik analizin
 > nöbetleri de kodda yazılı: `lib/technical.ts` → `TECHNICAL_CRON`,
 > `SLOT_UTC` ve `currentSlot`. Yeni bir nöbet eklerken üçü birden değişir —
@@ -51,6 +61,12 @@ Yapıştırmadan önce prompt içindeki `BURAYA_SECRET` yazan yeri gerçek
 > 15:30'da açıklanan ABD verisi (TÜFE, istihdam) fiyata yansımış oluyor ve
 > teknik analizin 15:45 nöbeti — bazen on beş dakika sürüyor — bülten
 > yazılmadan bitiyor. Açılışa kalan pay yazın 20, kışın 80 dakika.
+>
+> **16:10 TR → 08:55 NY (5 Kasım 2026'da belgelendi).** Rutin artık New York
+> saatine bağlı (`CRON_TZ=America/New_York 55 8`): açılışa yıl boyu ~35
+> dakika kalıyor, teknik nöbet (08:45 NY) yine bültenden önce. Site bunu
+> bilmiyordu ve 1 Kasım'dan beri "16:10'da yayımlanır" diyordu; bülten
+> 17:00 TR civarında çıkıyordu (ölçüldü, `generated_at`).
 
 **Hepsinde ortak iki şart:**
 
@@ -68,8 +84,10 @@ Yapıştırmadan önce prompt içindeki `BURAYA_SECRET` yazan yeri gerçek
 
 # 1 · Günlük Bülten
 
-**Zamanlama:** her gün 16:10 TR (`10 13 * * *` UTC) — açılış zilinden hemen
-önce ve günlük senkrondan (13:30 TR) sonra.
+**Zamanlama:** her gün 08:55 New York (`CRON_TZ=America/New_York 55 8 * * *`)
+— açılış zilinden ~35 dakika önce ve günlük senkrondan (13:30 TR) sonra.
+Koşu birkaç dakika sürer; site yayın anını 09:00 ET sayar (kışın 17:00,
+yazın 16:00 TR — `lib/data.ts` → `BRIEF_PUBLISH`).
 
 ````
 Sen Açılış Zili'nin sabah bülteni editörüsün. Aşağıdaki adımları uygula.

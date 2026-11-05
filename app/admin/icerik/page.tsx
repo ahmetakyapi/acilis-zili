@@ -25,7 +25,8 @@ import {
 } from "@/lib/admin-data";
 import { requireAdmin } from "@/lib/admin";
 import { addEtDays, todayEt } from "@/lib/market-hours";
-import { BRIEF_PUBLISH_TR } from "@/lib/data";
+import { briefPublishTime } from "@/lib/data";
+import { TR_ZONE } from "@/lib/session-clock";
 import {
   adminDay,
   adminDayIn,
@@ -259,7 +260,7 @@ async function Gaps() {
       ? {
           key: "brief-missed",
           label: "Yazılmamış Bülten",
-          note: `Son ${RITIM_HAFTA} hafta. Günlük bülten her gün ${BRIEF_PUBLISH_TR.daily} TR'de, haftalık pazartesi ${BRIEF_PUBLISH_TR.weekly} TR'de yazılır; kaçırılan gün geri yazılmıyor.`,
+          note: `Son ${RITIM_HAFTA} hafta. Günlük bülten her gün 09:00 ET'de (bugün ${briefPublishTime(todayEt(), "daily", TR_ZONE)} TR), haftalık pazartesi 09:30 TR'de yazılır; kaçırılan gün geri yazılmıyor.`,
           items: missedBriefs(rhythm.data.days),
         }
       : { key: "brief-missed", label: "Yazılmamış Bülten", note: "", items: [], unavailable: true },
