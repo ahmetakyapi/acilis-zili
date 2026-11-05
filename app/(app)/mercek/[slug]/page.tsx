@@ -1,5 +1,6 @@
 import { InkCanvas } from "@/components/ink/InkCanvas";
 import { Suspense } from "react";
+import { ReadingRail } from "@/components/stories/ReadingRail";
 import { MotionExperience, ScrollProgress, ScrollStage, SpotlightCard } from "@/components/motion/PremiumMotion";
 import experience from "@/components/motion/EditorialExperience.module.css";
 import editorial from "@/components/article/ArticleEditorial.module.css";
@@ -402,6 +403,16 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
       />
 
       <div className={detail.layout}>
+        {/* Kenar okuma rayı: yalnız ≥1360, düzene dokunmaz — ReadingRail.tsx. */}
+        {hasToc && (
+          <ReadingRail
+            items={toc}
+            label={t.stories.inThisArticle}
+            navLabel={t.stories.tocLabel}
+            lang={story.locale}
+            containerId="story-reading"
+          />
+        )}
         <div className={detail.mainCol}>
           {/* GÖVDE KENDİ DİLİNİ SÖYLÜYOR. Çevirisi olmayan yazı orijinal
               diliyle gösteriliyor (üstteki not bunu yazıyor) ama `lang`

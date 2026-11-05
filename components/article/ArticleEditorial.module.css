@@ -815,3 +815,37 @@
 @media (forced-colors: active) {
   .prose > h2::before { color: CanvasText; -webkit-text-fill-color: CanvasText; }
 }
+
+/* BÖLÜM CETVELİ KAYDIRMAYLA ÇİZİLİR (5 Kasım 2026). Ara başlığın üstündeki
+   tam genişlik cetvel (yukarıda, `.prose > h2`) okuyucu bölüme vardığında
+   soldan sağa açılıyor: bölüm geçişi bir "sayfa çevirme" anı kazanıyor ve
+   kenar rayındaki kulvar (ReadingRail) aynı yönde dolduğu için ikisi tek
+   dil konuşuyor. Cetvel `border-top` değil `::after`: başlığın zemini
+   degradeyi metne kırpıyor (`background-clip:text`), arka plan çizgisi
+   kırpılıp kaybolurdu; `::before` de numaranın.
+
+   Zaman çizelgesi başlığın kendisi (`view()`): `.prose` kaydırma kabı
+   değil, yani en yakın kaydırıcı pencere. Aralık uzunlukla (`entry 0px` →
+   `entry 180px`): başlık ekranın dibinden 180 piksel yükselince cetvel
+   tam. Desteklemeyen tarayıcı ve hareketi azaltan okur cetveli eskisi
+   gibi tam görür (çizgi `@supports` dışında `border` olarak kalıyor). */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .prose > h2 { position: relative; border-top-color: transparent; view-timeline: --rule block; }
+    .prose > h2::after {
+      content: "";
+      position: absolute;
+      inset: -1px 0 auto;
+      height: 1px;
+      background: var(--line);
+      transform-origin: left center;
+      animation: rule-draw linear both;
+      animation-timeline: --rule;
+      animation-range: entry 0px entry 180px;
+    }
+  }
+}
+@keyframes rule-draw {
+  from { transform: scaleX(0); }
+  to { transform: none; }
+}

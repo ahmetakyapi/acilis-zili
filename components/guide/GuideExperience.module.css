@@ -163,3 +163,28 @@
 .coverChapter > svg { flex-shrink:0; color:var(--ch); }
 .coverChapter:hover { color:var(--primary-ink); }
 .coverChapter:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:4px; }
+
+/* KARTIN ŞERİDİ KAYDIRMAYLA ÇİZİLİR (5 Kasım 2026). Üstteki 3 piksellik
+   bölüm tonu kart ekrana girerken soldan sağa açılıyor: kart zaten
+   kademeyle beliriyor (`data-motion-stagger`, PremiumMotion), şerit onun
+   ARDINDAN — önce kutu, sonra kimliği (panel başlığının `heading-rise`
+   sırasıyla aynı). Zaman çizelgesi ADIYLA kartın bağlantısından geliyor:
+   `Panel` `overflow-hidden` taşıdığı için içindeki `view()` panelin
+   kendisine bakar ve ilerleme hiç değişmezdi (globals.css "ZAMAN
+   ÇİZELGESİ PANELİN" notu). Doğrusal değil marka eğrisi; hareketi
+   azaltana ve desteklemeyen tarayıcıya şerit tam. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .cardGrid .card { view-timeline: --card-stripe block; }
+    .cardGrid .card > section::before {
+      transform-origin: left center;
+      animation: stripe-draw var(--ease-brand) both;
+      animation-timeline: --card-stripe;
+      animation-range: entry 40px entry 160px;
+    }
+  }
+}
+@keyframes stripe-draw {
+  from { transform: scaleX(0); }
+  to { transform: none; }
+}

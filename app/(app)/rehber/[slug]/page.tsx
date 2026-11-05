@@ -4,6 +4,7 @@ import { MotionExperience, ScrollProgress, SpotlightCard } from "@/components/mo
 import experience from "@/components/motion/EditorialExperience.module.css";
 import editorial from "@/components/article/ArticleEditorial.module.css";
 import detail from "@/components/stories/StoryDetail.module.css";
+import { ReadingRail } from "@/components/stories/ReadingRail";
 import { notFound } from "next/navigation";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
@@ -238,8 +239,19 @@ export default async function GuideArticlePage(
       </div>
 
       <div className={detail.layout}>
+      {/* Kenar okuma rayı (≥1360): kapaktaki içindekiler kutusu kaydırınca
+          gidiyordu; ray yazı boyunca yerinde kalır — ReadingRail.tsx. */}
+      {hasToc && (
+        <ReadingRail
+          items={sections}
+          label={t.stories.inThisArticle}
+          navLabel={t.stories.tocLabel}
+          lang={locale}
+          containerId="guide-reading"
+        />
+      )}
       <div className={detail.mainCol}>
-      <div data-motion-article>
+      <div id="guide-reading" data-motion-article>
         <ArticleBody
           markdown={article.bodyMd}
           blocks={blocks}

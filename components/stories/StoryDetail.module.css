@@ -73,7 +73,7 @@
    kadar içeride (`--read-inset`: masaüstü 36, telefon 20) aynı sol hattan
    başlar. Satır ölçüsü 1440'ta ~100 harf; ölçüm ArticleEditorial'da.
    -------------------------------------------------------------------------- */
-.layout { width:100%; min-width:0; }
+.layout { position:relative; width:100%; min-width:0; }
 .mainCol { display:flex; flex-direction:column; gap:56px; min-width:0; }
 @media(max-width:767px) { .mainCol { gap:44px; } }
 

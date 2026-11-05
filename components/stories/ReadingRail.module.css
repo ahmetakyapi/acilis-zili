@@ -1,0 +1,81 @@
+/* KENAR OKUMA RAYI — gerekçe ReadingRail.tsx başında.
+
+   `.lane` yazının kabına (`.layout`, position:relative) mutlak konumla
+   asılı ve onun boyunda: içindeki ray `sticky` olduğu için gövde boyunca
+   başlığın altında yapışık kalır, gövde bitince kabıyla birlikte çıkar
+   (şirket kartı ve kaynaklar rayın altında kalmaz). Kartın sol kenarından
+   36 piksel dışarıda, kenarın içinde.
+
+   1360 ALTI YOK: 1360'ta kenar (1360 − 1040) / 2 = 160 piksel, kaydırma
+   çubuğuyla ~152; ray 104 + aralık 36 = 140 sığıyor. Daha darda ray
+   kartın üstüne binerdi. */
+.lane { display:none; }
+
+@media (min-width:1360px) {
+  .lane {
+    display:block; position:absolute; inset-block:0; right:calc(100% + 36px);
+    width:104px; pointer-events:none;
+  }
+  .rail {
+    position:sticky; top:calc(var(--app-bar-h) + 40px);
+    display:flex; flex-direction:column; gap:14px;
+    pointer-events:auto;
+    /* Kapağı okurken ray soluk: henüz bölüme girilmedi, ekranda kapakla
+       yarışmasın. İlk bölüme girince tam tona çıkar. */
+    opacity:.55; transition:opacity .4s var(--ease-brand);
+  }
+  .rail[data-started="true"] { opacity:1; }
+}
+
+.label {
+  font-size:var(--text-nano); line-height:1.2; font-weight:650;
+  color:var(--text-muted);
+}
+.list { display:flex; flex-direction:column; gap:2px; }
+.list a {
+  display:grid; grid-template-columns:22px minmax(0,1fr); align-items:center; gap:10px;
+  min-height:26px; border-radius:6px; color:var(--text-soft);
+  transition:color .2s var(--ease-brand);
+}
+.number {
+  font-family:var(--font-mono); font-size:12px; line-height:1; font-weight:600;
+}
+/* Kulvar ince, dolgu 3 piksel (sitenin grafik dili: kulvar `--line-soft`
+   üstünde şerit). Dolgu `scaleX` ile: genişlik animasyonu yeniden düzen
+   tetikler, transform kompozitörde kalır. */
+.track {
+  position:relative; height:3px; border-radius:3px; background:var(--line-soft); overflow:hidden;
+}
+.fill {
+  position:absolute; inset:0; border-radius:inherit; background:var(--primary);
+  transform-origin:left center; transform:scaleX(var(--read, 0));
+}
+.list li[data-state="read"] .fill { background:var(--primary-faint); }
+.list li[data-state="read"] a { color:var(--text-muted); }
+.list li[data-state="current"] a { color:var(--primary-ink); }
+.list li[data-state="current"] .track { background:var(--primary-wash); }
+/* Okunan bölümün numarası bir adım öne çıkar — tek küçük öğe, yay yok. */
+.list li[data-state="current"] .number { font-weight:750; }
+
+@media (hover:hover) and (pointer:fine) {
+  .list a:hover { color:var(--primary-ink); }
+  .list a:hover .track { background:var(--primary-wash); }
+}
+.list a:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+
+/* Okunan bölümün adı: 13 piksel, en çok dört satır, 104 pikselde
+   (8 piksellik künye puntosu ölçüldü, kenarda okunmuyordu). */
+.current {
+  min-height:1lh; font-size:13px; line-height:1.35; font-weight:650; letter-spacing:-.01em;
+  color:var(--text-strong); text-wrap:balance;
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:4; overflow:hidden;
+  overflow-wrap:anywhere;
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .rail, .list a { transition:none; }
+}
+@media (forced-colors:active) {
+  .fill { background:Highlight; }
+  .track { background:CanvasText; }
+}
