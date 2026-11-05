@@ -46,24 +46,27 @@ export function StoryCard({
       className={cn("block min-w-0 rounded-(--radius-xl)", className)}
     >
       <Panel className="panel-hover flex h-full flex-col overflow-hidden">
-        {cast.length > 0 ? (
-          <StoryBrands
-            cast={cast}
-            labels={t.stories}
-            total={total}
-            locale={locale}
-          />
-        ) : (
-          <span className="block h-1.5 bg-[linear-gradient(90deg,var(--primary-wash),var(--primary-tint))]" />
-        )}
-
         <div className="flex flex-1 flex-col p-5">
+          {/* `lang` ŞART: çevirisi olmayan yazı orijinal diliyle gösteriliyor
+              ve rozet bunu göze söylüyor. Ekran okuyucu rozeti okumuyor —
+              işaretleme olmadan Türkçe manşeti İngilizce sesletiyordu. */}
+          {/* DÜZ MÜREKKEP (31 Ekim). 24 Eylül'den beri satır satır
+              degradeliydi; görsel denetim degradenin "kısa display başlık"
+              kuralını kart listelerinde delindiğini ölçtü (mercek sayfasında
+              24 degrade başlık). Degrade manşette ve sayfa başlığında kalır. */}
+          <h3
+            lang={story.locale}
+            data-ink="plain"
+            className="text-lead font-bold leading-[1.2] tracking-[-0.025em] text-strong"
+          >
+            <span className="ink-line">{story.title}</span>
+          </h3>
           {/* Tarih künyenin en görünür parçası. Üçü de 11,5px ve aynı soluk
               mürekkepteyken satır tek bir gri şerit gibi okunuyordu; oysa bu
               yazılarda tarih başlıktan sonra gelen ikinci bilgi — metin bir
               OLAYI anlatıyor ve olayın ne zaman olduğu hikâyenin parçası.
               Okuma süresi geride kalıyor: o bir künye, tarih değil. */}
-          <p className="numeral flex flex-wrap items-baseline gap-1.5 text-tiny text-muted">
+          <p className="numeral mt-2 flex flex-wrap items-baseline gap-1.5 text-tiny text-muted">
             <span className="text-base font-semibold text-body">
               {formatEtDateLong(story.eventDate, locale)}
             </span>
@@ -81,27 +84,27 @@ export function StoryCard({
               </span>
             )}
           </p>
-
-          {/* `lang` ŞART: çevirisi olmayan yazı orijinal diliyle gösteriliyor
-              ve rozet bunu göze söylüyor. Ekran okuyucu rozeti okumuyor —
-              işaretleme olmadan Türkçe manşeti İngilizce sesletiyordu. */}
-          {/* DÜZ MÜREKKEP (31 Ekim). 24 Eylül'den beri satır satır
-              degradeliydi; görsel denetim degradenin "kısa display başlık"
-              kuralını kart listelerinde delindiğini ölçtü (mercek sayfasında
-              24 degrade başlık). Degrade manşette ve sayfa başlığında kalır. */}
-          <h3
-            lang={story.locale}
-            data-ink="plain"
-            className="mt-1.5 text-lead font-bold leading-[1.2] tracking-[-0.025em] text-strong"
-          >
-            <span className="ink-line">{story.title}</span>
-          </h3>
           <p
             lang={story.locale}
             className="mt-2 line-clamp-3 text-base leading-[20px] text-body"
           >
             {story.dek}
           </p>
+          {/* ÖNCE BAŞLIK (5 Kasım 2026, sahibinin isteği: kartın vurgusu
+              manşet, kadro ve getiri onun altındaki ayrıntı). Sıra Mercek
+              arşivindeki kartla aynı: manşet → tarih → özet → kadro. Kutu
+              kartın dibine itiliyor (`mt-auto`): yan yana kartlarda aynı
+              hatta biter. */}
+          {cast.length > 0 && (
+            <div className="mt-auto pt-4">
+              <StoryBrands
+                cast={cast}
+                labels={t.stories}
+                total={total}
+                locale={locale}
+              />
+            </div>
+          )}
         </div>
       </Panel>
     </Link>

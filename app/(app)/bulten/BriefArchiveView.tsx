@@ -123,7 +123,7 @@ async function ArchiveBoard({
     issue ?? getLatestBrief(locale, period),
   ]);
   /* GÜNÜN GRAFİĞİ BAĞLANTISI (24 Ekim): günlük sayının günü için grafik
-     yazıldıysa metnin altında. Bülten 16:10'da bugünü, grafik ertesi sabah
+     yazıldıysa metnin altında. Bülten 09:00 ET'de bugünü, grafik ertesi sabah
      dünkü kapanışı anlatıyor; bağlantı yalnız AYNI GÜNÜN grafiği varsa. */
   /* KAYIT DEFTERİ (25 Ekim görsel zirve): sayının anlattığı tamamlanmış
      seansın (haftalıkta haftanın) bandı — gerekçe lib/brief-ledger.ts.
@@ -177,7 +177,24 @@ async function ArchiveBoard({
       <article className={`${polish.bulletinArticle} order-2 border border-primary-faint p-5 sm:p-8 lg:order-1`} data-motion-article>
         {brief ? (
           <>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            {/* Haftalık kaydın kurgusu başlıktan önce söylenir: kayıt biten
+                haftanın adına açılıyor ama önümüzdeki haftanın takvimini de
+                taşıyor. Bu satır olmadan okuyucu iki bölümün neden yan yana
+                durduğunu anlamıyordu. */}
+            {period === "weekly" && (
+              <p className="mb-3 text-tiny font-semibold text-primary">
+                {t.brief.weeklyFrame}
+              </p>
+            )}
+            {/* ÖNCE MANŞET (5 Kasım 2026, sahibinin isteği; CLAUDE.md
+                "başlığa ait bilgi başlığın ALTINA iner"). Tarih, hazırlayan
+                ve paylaş satırı manşetin üstündeydi; artık altında, mercek
+                kapağındaki künye satırıyla aynı yerde. Haftalık kaydın
+                kurgu satırı bilerek manşetten önce kalıyor (aşağıdaki not). */}
+            <h2 lang={brief.locale} className="text-title font-bold leading-tight tracking-[-0.03em] text-strong sm:text-heading">
+              {brief.headline}
+            </h2>
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
               {/* Dönem künyesi ("Günlük"/"Haftalık") burada duruyordu; bölüm
                   künyeleri 9 Ekim 2026'da kalktı. Dönem sayfa başlığında ve
                   sekmede yazıyor. */}
@@ -223,15 +240,6 @@ async function ArchiveBoard({
               />
             </div>
 
-            {/* Haftalık kaydın kurgusu başlıktan önce söylenir: kayıt biten
-                haftanın adına açılıyor ama önümüzdeki haftanın takvimini de
-                taşıyor. Bu satır olmadan okuyucu iki bölümün neden yan yana
-                durduğunu anlamıyordu. */}
-            {period === "weekly" && (
-              <p className="mt-3 text-tiny font-semibold text-primary">
-                {t.brief.weeklyFrame}
-              </p>
-            )}
 
             {/* Çeviri henüz yoksa orijinal gösterilir — ama bunu söyleyerek. */}
             {brief.locale !== locale && (
@@ -244,9 +252,6 @@ async function ArchiveBoard({
                 sayfasında; çevirisi olmayan bülten orijinal diliyle
                 gösteriliyor. */}
             <div lang={brief.locale}>
-              <h2 className="mt-4 text-title font-bold leading-tight tracking-[-0.03em] text-strong sm:text-heading">
-                {brief.headline}
-              </h2>
 
               <BriefBody
                 markdown={brief.bodyMd}
@@ -335,9 +340,21 @@ async function ArchiveBoard({
                     active ? "bg-primary-wash" : "hover:bg-primary-tint",
                   )}
                 >
+                  {/* ÖNCE BAŞLIK (5 Kasım 2026): satır manşetle açılıyor, tarih
+                      altında künye — Mercek kartlarıyla aynı sıra. */}
                   <span
                     className={cn(
-                      "flex items-center gap-2 text-tiny",
+                      "line-clamp-2 block text-base leading-snug",
+                      active
+                        ? "font-semibold text-strong"
+                        : "font-medium text-body",
+                    )}
+                  >
+                    {row.headline}
+                  </span>
+                  <span
+                    className={cn(
+                      "mt-1 flex items-center gap-2 text-tiny",
                       /* Seçili satırın zemini `--primary-wash`: `--primary`
                          orada 11 pikselde 4,26'ya iniyor (gereken 4,5).
                          Mürekkep tonu aynı aileden, 5,4. */
@@ -372,16 +389,6 @@ async function ArchiveBoard({
                         {row.locale.toUpperCase()}
                       </span>
                     )}
-                  </span>
-                  <span
-                    className={cn(
-                      "mt-1 line-clamp-2 block text-base leading-snug",
-                      active
-                        ? "font-semibold text-strong"
-                        : "font-medium text-body",
-                    )}
-                  >
-                    {row.headline}
                   </span>
                   {/* İlk cümle yalnızca geniş kolonda: telefonda arşiv
                       yatay bir şerit ve kart iki satırlık başlıkla doluyor. */}

@@ -109,46 +109,19 @@ export async function StoriesSpotlight({
             bakışta okunuyor. */}
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-7">
           <div className="min-w-0 flex-1">
-            {/* KADRO: yazının kahramanı şirketler, logolarıyla. Karolar üst
-                üste biniyor ve blok görünüme girince sırayla iniyor
-                (`data-motion-stagger`); üzerine gelince aralanıyorlar.
-                Tek şirketse yanında adı yazıyor, birden çoksa semboller. */}
-            {leadSymbols.length > 0 && (
-              <div className={styles.storyCast}>
-                {/* Logosu olan yoksa (yalnız fonlar) künyenin başında bir
-                    piyasa ikonu: satır yalnız kalmasın, karo dili sürsün. */}
-                {leadCast.length === 0 && (
-                  <span aria-hidden className={styles.storyCastFund}>
-                    <ChartLineUp size={22} weight="duotone" />
-                  </span>
-                )}
-                {leadCast.length > 0 && <span className={styles.storyCastLogos} data-motion-stagger>
-                  {leadCast.map((symbol) => (
-                    <LogoTile
-                      key={symbol}
-                      symbol={symbol}
-                      logoUrl={castMeta[symbol]?.logoUrl}
-                      size="lg"
-                      className={styles.storyCastTile}
-                    />
-                  ))}
-                  {leadMore > 0 && (
-                    <span className={`numeral ${styles.storyCastMore}`}>+{leadMore}</span>
-                  )}
-                </span>}
-                <span className="min-w-0">
-                  <span className="numeral block truncate text-small font-bold tracking-[0.02em] text-strong">
-                    {leadSymbols.join(" · ")}
-                  </span>
-                  {leadSymbols.length === 1 && castMeta[leadSymbols[0]]?.name && (
-                    <span className="block truncate text-tiny text-muted">
-                      {castMeta[leadSymbols[0]].name}
-                    </span>
-                  )}
-                </span>
-              </div>
-            )}
-            <p className="numeral flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-tiny text-muted">
+            {/* MANŞET SAYFANIN İKİNCİ EN BÜYÜK METNİ. Blok bir süre 19
+                puntoyla yazıldı ve çevresindeki panel başlıklarından
+                ayrışmıyordu: aynı ağırlıkta bir kutu daha gibi duruyordu.
+                Ölçü farkı, bloğun "burada okunacak bir şey var" demesinin en
+                ucuz ve en sessiz yolu.
+                MAVİ DEGRADE, SATIR SATIR (24 Eylül): bir dönem düz
+                mürekkepteydi çünkü degrade kutu boyunca yayılıp ikinci
+                satırı başka tonda başlatıyordu; `data-ink="lines"` her
+                satıra kendi degradesini veriyor (globals.css). */}
+            <h3 data-ink="lines" className="text-heading font-bold leading-[1.14] tracking-[-0.03em] text-strong sm:text-subdisplay">
+              <span className="ink-line">{lead.title}</span>
+            </h3>
+            <p className="numeral mt-2.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-tiny text-muted">
               <span className="text-base font-semibold text-body">
                 {formatEtDateLong(lead.eventDate, locale)}
               </span>
@@ -168,34 +141,67 @@ export async function StoriesSpotlight({
                 </span>
               )}
             </p>
-
-            {/* MANŞET SAYFANIN İKİNCİ EN BÜYÜK METNİ. Blok bir süre 19
-                puntoyla yazıldı ve çevresindeki panel başlıklarından
-                ayrışmıyordu: aynı ağırlıkta bir kutu daha gibi duruyordu.
-                Ölçü farkı, bloğun "burada okunacak bir şey var" demesinin en
-                ucuz ve en sessiz yolu.
-                MAVİ DEGRADE, SATIR SATIR (24 Eylül): bir dönem düz
-                mürekkepteydi çünkü degrade kutu boyunca yayılıp ikinci
-                satırı başka tonda başlatıyordu; `data-ink="lines"` her
-                satıra kendi degradesini veriyor (globals.css). */}
-            <h3 data-ink="lines" className="mt-2.5 text-heading font-bold leading-[1.14] tracking-[-0.03em] text-strong sm:text-subdisplay">
-              <span className="ink-line">{lead.title}</span>
-            </h3>
             <p className="mt-3 line-clamp-3 max-w-[62ch] text-base leading-[21px] text-body sm:text-read sm:leading-[24px]">
               {lead.dek}
             </p>
 
-            {/* Eylem bir hap (31 Ekim): çizginin altında küçük bir "Oku"
-                manşetin ağırlığının yanında kayboluyordu; öne çıkan analiz
-                kartıyla aynı dil — tıklayınca mavi dolar. */}
-            <p className="mt-5 inline-flex min-h-9 items-center gap-1.5 rounded-full bg-primary-wash px-4 text-small font-semibold text-primary-ink transition-colors group-hover:bg-primary group-hover:text-on-primary">
-              {t.guide.cardCta}
-              <ArrowRight
-                weight="bold"
-                size={13}
-                className="transition-transform group-hover:translate-x-0.5"
-              />
-            </p>
+            {/* ÖNCE MANŞET (5 Kasım 2026, sahibinin isteği). Kadro manşetin
+                üstündeydi ve göz başlıktan önce logolara çarpıyordu. Sıra
+                Mercek kartlarıyla aynı: manşet → tarih → özet; kadro ve
+                eylem en altta, aynı satırda (telefonda kadro üstte, hap
+                altta). */}
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+              {/* KADRO: yazının kahramanı şirketler, logolarıyla. Karolar üst
+                  üste biniyor ve blok görünüme girince sırayla iniyor
+                  (`data-motion-stagger`); üzerine gelince aralanıyorlar.
+                  Tek şirketse yanında adı yazıyor, birden çoksa semboller. */}
+              {leadSymbols.length > 0 && (
+                <div className={styles.storyCast}>
+                  {/* Logosu olan yoksa (yalnız fonlar) künyenin başında bir
+                      piyasa ikonu: satır yalnız kalmasın, karo dili sürsün. */}
+                  {leadCast.length === 0 && (
+                    <span aria-hidden className={styles.storyCastFund}>
+                      <ChartLineUp size={22} weight="duotone" />
+                    </span>
+                  )}
+                  {leadCast.length > 0 && <span className={styles.storyCastLogos} data-motion-stagger>
+                    {leadCast.map((symbol) => (
+                      <LogoTile
+                        key={symbol}
+                        symbol={symbol}
+                        logoUrl={castMeta[symbol]?.logoUrl}
+                        size="lg"
+                        className={styles.storyCastTile}
+                      />
+                    ))}
+                    {leadMore > 0 && (
+                      <span className={`numeral ${styles.storyCastMore}`}>+{leadMore}</span>
+                    )}
+                  </span>}
+                  <span className="min-w-0">
+                    <span className="numeral block truncate text-small font-bold tracking-[0.02em] text-strong">
+                      {leadSymbols.join(" · ")}
+                    </span>
+                    {leadSymbols.length === 1 && castMeta[leadSymbols[0]]?.name && (
+                      <span className="block truncate text-tiny text-muted">
+                        {castMeta[leadSymbols[0]].name}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
+              {/* Eylem bir hap (31 Ekim): çizginin altında küçük bir "Oku"
+                  manşetin ağırlığının yanında kayboluyordu; öne çıkan analiz
+                  kartıyla aynı dil — tıklayınca mavi dolar. */}
+              <p className="inline-flex shrink-0 min-h-9 items-center gap-1.5 rounded-full bg-primary-wash px-4 text-small font-semibold text-primary-ink transition-colors group-hover:bg-primary group-hover:text-on-primary">
+                {t.guide.cardCta}
+                <ArrowRight
+                  weight="bold"
+                  size={13}
+                  className="transition-transform group-hover:translate-x-0.5"
+                />
+              </p>
+            </div>
           </div>
 
           {figure && (

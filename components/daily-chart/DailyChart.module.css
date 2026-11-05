@@ -63,6 +63,7 @@
 .card:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
 .cardDate { display: flex; align-items: center; gap: 8px; font-size: var(--text-tiny); color: var(--text-muted); }
 .cardTitle { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: var(--text-base); font-weight: 700; line-height: 1.3; color: var(--text-strong); }
+.cardTitle + .cardDate { margin-top: -6px; }
 .lang { margin-left: auto; }
 /* Minyatür (ChartMosaic): kare başına bir kalem, ton yön, koyuluk büyüklük. */
 .mosaic { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 3px; height: 30px; margin-top: auto; }

@@ -126,6 +126,9 @@ export default async function DailyChartIndexPage() {
             {archive.map((row) => (
               <li key={row.chartDate} className="min-w-0">
                 <Link href={dailyChartHref(row.chartDate)} prefetch={false} className={styles.card}>
+                  {/* Önce başlık, tarih altında (5 Kasım 2026) — Mercek ve bülten
+                      kartlarıyla aynı sıra. */}
+                  <span className={styles.cardTitle} lang={row.locale}>{row.title}</span>
                   <span className={styles.cardDate}>
                     <span>{formatEtDateLong(row.chartDate, locale)}</span>
                     {/* Kayıt okunan dilde değilse dili rozetle söylenir (bülten arşivi kalıbı). */}
@@ -133,7 +136,6 @@ export default async function DailyChartIndexPage() {
                       <span className={`plate text-nano ${styles.lang}`}>{row.locale.toUpperCase()}</span>
                     )}
                   </span>
-                  <span className={styles.cardTitle} lang={row.locale}>{row.title}</span>
                   <ChartMosaic chartMd={row.chartMd} locale={row.locale} roles={d.board.roles} />
                 </Link>
               </li>

@@ -119,7 +119,13 @@ export function StoryBrands({
   const tone = directionOf(lead.sinceEvent);
 
   return (
-    <div className={`${styles.brands} flex items-center gap-3 border-b border-line bg-[linear-gradient(135deg,var(--primary-wash),var(--primary-tint))] px-5 py-3.5`}>
+    /* GÖMÜK KUTU, DEGRADESİZ (5 Kasım 2026). Şerit kartın tepesinde
+       kenardan kenara mavi degradeli bir banttı; kart artık başlıkla
+       açılıyor ve kadro metnin ALTINDA, gövdenin içinde gömük bir kutu
+       (Mercek arşivindeki kartla aynı dil: `MercekIndex.module.css` →
+       `.cardBand`). Degrade de kalktı — veri şeridi degradenin üç yerinden
+       biri değil (CLAUDE.md, görsel dil). */
+    <div className={`${styles.brands} flex items-center gap-3 rounded-(--radius-lg) border border-line-soft bg-surface-sunken px-4 py-3`}>
       <span className="flex min-w-0 flex-1 flex-col gap-2">
         <span className="flex items-center gap-1.5">
           {shown.map((member) => (
