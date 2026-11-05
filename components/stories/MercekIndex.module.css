@@ -159,10 +159,19 @@
    layout/frame.ts`); 1800'de içerik ~1480 piksel ve üç kolonlu kart
    480'e şişiyordu. Dört kolon kartı 1440'taki boyuna (~355–445) geri
    getiriyor; okuma uzunluğu ve kart oranı aynı kalıyor. */
-@media(min-width:1800px) { .grid { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+/* 5 Kasım 2026: dört kolon KALKTI (sahibinin isteği: "4 yerine 3,
+   daha güzel okunur"). 1800+'da dört kolonda kart ~355 piksele iniyor,
+   manşet dört satıra kırılıyordu; üç kolonda kart geniş ekranda büyüyor
+   ve manşet iki-üç satırda kalıyor. Satır ölçüsünü özetin 3 satırlık
+   kırpması tutuyor. */
 
+/* AYNI SATIRDA ŞERİTLER AYNI HATTA (5 Kasım 2026). Kart üç parça
+   (metin, imza şeridi, eylem) ve satırın kartları üç izi ortak kullanıyor
+   (`subgrid`): şerit esnek gövdenin dibine itiliyordu ve eylem satırı iki
+   satırlık künye taşıyan kartta şerit 16 piksel yukarıda başlıyordu
+   (1440, ölçüldü 174/190). Satır aralığı kartın içinde sıfır. */
 .card {
-  display:flex; min-width:0; flex-direction:column;
+  display:grid; grid-row:span 3; grid-template-rows:subgrid; row-gap:0; min-width:0;
   overflow:hidden;
   border:1px solid var(--line);
   border-radius:var(--radius-xl);
@@ -171,8 +180,8 @@
 }
 .cardBand {
   display:flex; align-items:center; justify-content:space-between; gap:12px;
-  min-height:68px; padding:14px 18px;
-  border-bottom:1px solid var(--line-soft);
+  min-height:68px; margin:18px 20px 0; padding:14px 16px;
+  border:1px solid var(--line-soft); border-radius:var(--radius-lg);
   background:var(--surface-sunken);
 }
 .stack { display:flex; align-items:center; min-width:0; padding-left:8px; }
@@ -195,7 +204,7 @@
    tam genişlik; yüksekliği minyatürün sabit kutusundan (StorySignature).
    Logolar ve rakam kartın dibine iniyor (`.footCast`): xs karo, 6 piksel
    bindirme, rakam künyesiyle iki satır. */
-.cardBand[data-signature] { display:block; padding:14px 18px; }
+.cardBand[data-signature] { display:block; padding:14px 16px; }
 .stack[data-size="xs"] { padding-left:6px; }
 .stack[data-size="xs"] .stackItem { margin-left:-6px; border-radius:var(--radius-sm); }
 .stack[data-size="xs"] .stackMore { width:22px; height:22px; font-size:10px; }
@@ -204,9 +213,13 @@
 .footCast .readingCaption { overflow:hidden; max-width:100%; font-size:11px; text-overflow:ellipsis; white-space:nowrap; }
 .footCast .readingValue { font-size:14px; }
 
-.cardBody { display:flex; flex:1; flex-direction:column; padding:18px 20px 0; }
-.cardMeta { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; font-size:12px; color:var(--text-muted); }
-.cardTitle { margin-top:10px; font-size:20px; line-height:1.22; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); text-wrap:balance; }
+/* Şeridi olmayan kartta (şirketsiz yazı) eylem yine üçüncü izde. */
+.card > .cardBody { grid-row:1; }
+.card > .cardBand { grid-row:2; align-self:start; }
+.card > .cardFoot { grid-row:3; align-self:end; }
+.cardBody { display:flex; flex:1; flex-direction:column; padding:22px 20px 0; }
+.cardMeta { display:flex; margin-top:10px; flex-wrap:wrap; align-items:baseline; gap:4px 8px; font-size:12px; color:var(--text-muted); }
+.cardTitle { font-size:21px; line-height:1.22; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); text-wrap:balance; }
 .cardDek { margin-top:10px; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; font-size:14px; line-height:1.62; color:var(--text-body); }
 .cardFoot {
   display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -250,44 +263,29 @@
 
 /* SATIRDA YALNIZ KALAN KART SATIRI KAPLAR (5 Kasım 2026). Ay grubu sütun
    sayısının katı değilse son kart tek başına kalıyor ve satırın üçte
-   ikisi boş duruyordu (1440'ta Kasım 7, Ekim 13 yazı: ikisinde de son
-   satır tek kart; ölçüldü). O kart artık satır boyu ve YATAY: şerit solda
-   kendi kolonunda (imza minyatürü ya da logo yığını + rakam), metin
-   sağda — kart kendi yüksekliğinde kalıyor, satır dolu. Aynı kalıp
-   rehberde (`sm:[&>:nth-child(odd):last-child]:col-span-2`). Şeridi
-   olmayan kart (şirketsiz yazı) dikey kalır: solda boş bir kolon açılmaz.
-   `:has()` kartın kendi çocuğunda, kökte değil (CLAUDE.md "Kökte :has()
-   yok"). */
+   ikisi boş duruyordu (1440'ta Kasım 7, Ekim 16 yazı; ölçüldü). O kart
+   satır boyu ve YATAY: metin solda (başlık önce — kartın sırası), yazının
+   imza verisi sağda kendi kolonunda. Aynı kalıp rehberde
+   (`sm:[&>:nth-child(odd):last-child]:col-span-2`). Şeridi olmayan kart
+   (şirketsiz yazı) dikey kalır. `:has()` kartın kendi çocuğunda, kökte
+   değil (CLAUDE.md "Kökte :has() yok"). */
 @media (min-width:640px) and (max-width:1179px) {
-  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.7fr); grid-template-rows:minmax(0,1fr) auto; }
-  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBand { grid-row:1/-1; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:18px; padding:22px 24px; border-bottom:0; border-right:1px solid var(--line-soft); }
+  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; }
+  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBody { grid-column:1; grid-row:1; padding:24px 28px 0; }
+  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardFoot { grid-column:1; grid-row:2; margin:18px 28px 0; }
+  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBand { grid-column:2; grid-row:1/-1; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:18px; margin:20px 20px 20px 0; padding:20px 22px; }
   .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBand[data-signature] { display:flex; justify-content:center; align-items:stretch; }
   .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBand .reading { align-items:flex-start; text-align:left; }
   .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBand .readingValue { font-size:28px; }
-  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBody { padding:22px 28px 0; }
-  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardFoot { margin:18px 28px 0; }
   .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) .cardTitle { font-size:24px; }
-  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) .cardDek { -webkit-line-clamp:2; }
 }
-@media (min-width:1180px) and (max-width:1799px) {
-  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.7fr); grid-template-rows:minmax(0,1fr) auto; }
-  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBand { grid-row:1/-1; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:18px; padding:22px 24px; border-bottom:0; border-right:1px solid var(--line-soft); }
+@media (min-width:1180px) {
+  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; }
+  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBody { grid-column:1; grid-row:1; padding:24px 28px 0; }
+  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardFoot { grid-column:1; grid-row:2; margin:18px 28px 0; }
+  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBand { grid-column:2; grid-row:1/-1; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:18px; margin:20px 20px 20px 0; padding:20px 22px; }
   .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBand[data-signature] { display:flex; justify-content:center; align-items:stretch; }
   .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBand .reading { align-items:flex-start; text-align:left; }
   .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBand .readingValue { font-size:28px; }
-  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBody { padding:22px 28px 0; }
-  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardFoot { margin:18px 28px 0; }
   .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) .cardTitle { font-size:24px; }
-  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) .cardDek { -webkit-line-clamp:2; }
-}
-@media (min-width:1800px) {
-  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.7fr); grid-template-rows:minmax(0,1fr) auto; }
-  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) > .cardBand { grid-row:1/-1; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:18px; padding:22px 24px; border-bottom:0; border-right:1px solid var(--line-soft); }
-  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) > .cardBand[data-signature] { display:flex; justify-content:center; align-items:stretch; }
-  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) > .cardBand .reading { align-items:flex-start; text-align:left; }
-  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) > .cardBand .readingValue { font-size:28px; }
-  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) > .cardBody { padding:22px 28px 0; }
-  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) > .cardFoot { margin:18px 28px 0; }
-  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) .cardTitle { font-size:24px; }
-  .grid > .card:nth-child(4n+1):last-child:has(> .cardBand) .cardDek { -webkit-line-clamp:2; }
 }

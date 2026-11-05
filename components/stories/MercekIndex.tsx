@@ -360,20 +360,13 @@ function ArchiveCard({
 
   return (
     <Link href={`/mercek/${story.slug}`} prefetch={false} className={styles.card}>
-      {figure ? (
-        <div className={styles.cardBand} data-signature="">
-          {figure}
-        </div>
-      ) : (
-        shown.length > 0 && (
-          <div className={styles.cardBand}>
-            {stack("md")}
-            {reading}
-          </div>
-        )
-      )}
-
       <div className={styles.cardBody}>
+        {/* h4: sayfa h1 → arşiv h2 → ay h3 → kart. `lang` şart — çevirisi
+            olmayan yazı orijinal diliyle sesletilsin. */}
+        {/* Kart başlığı düz mürekkep (31 Ekim): degrade manşette ve sayfa başlığında. */}
+        <h4 className={styles.cardTitle} data-ink="plain" lang={story.locale}>
+          <span className="ink-line">{story.title}</span>
+        </h4>
         <p className={cn("numeral", styles.cardMeta)}>
           <span className={styles.metaStrong}>
             {formatEtDateLong(story.eventDate, locale)}
@@ -390,16 +383,29 @@ function ArchiveCard({
             <span className="plate ml-auto text-nano">{story.locale.toUpperCase()}</span>
           )}
         </p>
-        {/* h4: sayfa h1 → arşiv h2 → ay h3 → kart. `lang` şart — çevirisi
-            olmayan yazı orijinal diliyle sesletilsin. */}
-        {/* Kart başlığı düz mürekkep (31 Ekim): degrade manşette ve sayfa başlığında. */}
-        <h4 className={styles.cardTitle} data-ink="plain" lang={story.locale}>
-          <span className="ink-line">{story.title}</span>
-        </h4>
         <p className={styles.cardDek} lang={story.locale}>
           {story.dek}
         </p>
       </div>
+
+      {/* ÖNCE BAŞLIK (5 Kasım 2026, sahibinin isteği: "önce başlık gelmeli,
+          vurgulu olan o"). Kartın tepesinde veri şeridi duruyordu ve göz
+          manşetten önce bir çubuk grafiğe çarpıyordu. Sıra artık okuma
+          sırası: manşet → künye (tarih, süre) → özet → yazının imza verisi
+          → eylem. Şerit kenardan kenara bant değil, gövdenin içinde gömük
+          bir kutu: başlığın altındaki ayrıntı gibi okunuyor. */}
+      {figure ? (
+        <div className={styles.cardBand} data-signature="">
+          {figure}
+        </div>
+      ) : (
+        shown.length > 0 && (
+          <div className={styles.cardBand}>
+            {stack("md")}
+            {reading}
+          </div>
+        )
+      )}
 
       <div className={styles.cardFoot}>
         {figure && shown.length > 0 ? (
