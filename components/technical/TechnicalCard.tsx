@@ -1,5 +1,6 @@
 import { ArrowUpRight, CaretDown, CaretUp } from "@phosphor-icons/react/dist/ssr";
 import { VerdictPill } from "@/components/ui/VerdictPill";
+import { ArcGauge, StepBars } from "@/components/ui/MiniGauges";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, verdictTextClass, type VerdictKey } from "@/lib/analysis";
@@ -108,9 +109,6 @@ export function planReadingTone(reading: PlanReading): "up" | "down" | "flat" {
    kalırsa ne halka ne künye basılıyor: 0,1'in altında halka noktanın
    altında kalıyor, künye de aynı sayıyı ikinci kez yazıyordu. */
 const SNAPSHOT_MOVE_PCT = 0.1;
-/* Hacim göstergesinin ölçeği: 0 ile ortalamanın üç katı arası. Üç kat
-   "olağandışı yoğun"un üstü; daha uzun bir ölçek 1×'i sol kenara ezerdi. */
-const VOLUME_SCALE_MAX = 3;
 
 /**
  * Liste kartı — bir hissenin son analizi tek bakışta.
@@ -406,10 +404,10 @@ export function TechnicalCard({
                 </span>
                 {rsiZoneText && <span className="sr-only">, {rsiZoneText}</span>}
               </span>
-              {/* `spark-dot`: işaret noktası yerine oturarak girer (14 Ekim). */}
-              <span className={styles.gaugeMeter} data-kind="rsi" data-tone={rsiTone} aria-hidden>
-                <i className="spark-dot" style={{ left: `${Math.min(100, Math.max(0, rsi.rsi))}%` }} />
-              </span>
+              {/* YARIM HALKA (5 Kasım 2026): 30/70 çentikli kıl çizgi yerine
+                  eşik bölgeleri yıkamalı bir halka; değer sıfırdan dolar
+                  (gerekçe components/ui/MiniGauges.tsx). */}
+              <ArcGauge value={rsi.rsi} low={30} high={70} tone={rsiTone} className={styles.gaugeArt} />
             </li>
           )}
           {volume && (
@@ -418,9 +416,14 @@ export function TechnicalCard({
                 <span className={styles.gaugeName}>{t.technical.volume}</span>
                 <span className={cn(styles.gaugeValue, "numeral")}>{formatPrice(volume.ratio, locale, { digits: 1 })}×</span>
               </span>
-              <span className={styles.gaugeMeter} data-kind="volume" data-tone={volume.tone} aria-hidden>
-                <i data-motion-draw="line" style={{ width: `${Math.min(volume.ratio / VOLUME_SCALE_MAX, 1) * 100}%` }} />
-              </span>
+              {/* BASAMAK ÇUBUKLARI (5 Kasım 2026): oran kaç eşiği geçtiyse o
+                  kadar basamak; üçüncü basamak 1× ("olağan"). Yoğun hacim
+                  mavi — yön söylemez (SignalStrip ile aynı eşleme). */}
+              <StepBars
+                value={volume.ratio}
+                tone={volume.tone === "heavy" ? "primary" : volume.tone === "light" ? "muted" : undefined}
+                className={styles.gaugeArt}
+              />
             </li>
           )}
         </ul>

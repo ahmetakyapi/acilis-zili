@@ -1,0 +1,31 @@
+/* KÜÇÜK ÖLÇÜ ÇİZİMLERİ — gerekçe MiniGauges.tsx başında.
+   Ölçüler kart içi künye boyunda: yarım halka 44×25, basamak 30×18. */
+
+.arc { display:block; width:44px; height:25px; overflow:visible; }
+.arc path { fill:none; stroke-width:5; stroke-linecap:round; }
+.arcTrack { stroke:var(--line-soft); }
+/* Eşik bölgeleri kendi yön tonunun YIKAMASINDA: aşırı satım (alt) yükseliş,
+   aşırı alım (üst) düşüş — teknik sayfanın RSI renk eşlemesiyle aynı. */
+.arcZoneLow { stroke:var(--up-wash); }
+.arcZoneHigh { stroke:var(--down-wash); }
+.arcValue { stroke:var(--text-strong); }
+.arcDot { fill:var(--text-strong); stroke:var(--premium-surface); stroke-width:2; }
+.arc[data-tone="up"] .arcValue { stroke:var(--up); }
+.arc[data-tone="up"] .arcDot { fill:var(--up); }
+.arc[data-tone="down"] .arcValue { stroke:var(--down); }
+.arc[data-tone="down"] .arcDot { fill:var(--down); }
+
+.bars { display:block; width:30px; height:18px; }
+.barOff { fill:var(--line-soft); }
+.barOn { fill:var(--text-strong); transform-box:fill-box; transform-origin:50% 100%; animation:bar-rise 420ms var(--ease-brand) backwards; }
+.bars[data-tone="primary"] .barOn { fill:var(--primary); }
+.bars[data-tone="muted"] .barOn { fill:var(--text-muted); }
+/* Basamak tabandan yükselir — çubuk dili (`bar-fill`) dikey; nesne
+   scale(0)'dan gelmez, çizgi/çubuk gelir (guides/04-motion §14). */
+@keyframes bar-rise { from { transform:scaleY(0); } }
+
+@media (prefers-reduced-motion:reduce) { .barOn { animation:none; } }
+@media (forced-colors:active) {
+  .arcValue { stroke:CanvasText; }
+  .arcDot, .barOn { fill:CanvasText; }
+}

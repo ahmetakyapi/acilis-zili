@@ -1,9 +1,20 @@
+import type { ReactNode } from "react";
+import { ArcGauge, StepBars } from "@/components/ui/MiniGauges";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { distancePct, indicatorSignals, type TechnicalSnapshot } from "@/lib/technical";
 import { cn, formatPercentPlain, formatPrice } from "@/lib/utils";
 import styles from "./Technical.module.css";
 
-type Tile = { key: string; label: string; value: string; detail: string | null; tone: "up" | "down" | "flat" | "primary" };
+type Tile = {
+  key: string;
+  label: string;
+  value: string;
+  detail: string | null;
+  tone: "up" | "down" | "flat" | "primary";
+  /** Kelimenin yanındaki küçük çizim (5 Kasım 2026): liste kartıyla aynı
+   *  dil — RSI yarım halka, hacim basamak (components/ui/MiniGauges). */
+  art?: ReactNode;
+};
 
 /**
  * Gösterge özeti — dört kelime: trend, momentum, hacim, 52 haftalık yer.
@@ -74,6 +85,14 @@ export function SignalStrip({
          (yükseliş rengi) — RSI panelindeki renklendirmeyle aynı. */
       tone:
         momentum.tone === "overbought" ? "down" : momentum.tone === "oversold" ? "up" : momentum.tone === "strong" ? "up" : "down",
+      art: (
+        <ArcGauge
+          value={momentum.rsi}
+          low={30}
+          high={70}
+          tone={momentum.tone === "overbought" ? "down" : momentum.tone === "oversold" ? "up" : undefined}
+        />
+      ),
     });
   }
 
@@ -85,6 +104,7 @@ export function SignalStrip({
       detail: t.technical.volumeDetail.replace("{n}", formatPrice(volume.ratio, locale, { digits: 1 })),
       /* Hacim yön söylemez: yoğun hacim düşüşte de yükselişte de olur. */
       tone: volume.tone === "heavy" ? "primary" : "flat",
+      art: <StepBars value={volume.ratio} tone={volume.tone === "heavy" ? "primary" : volume.tone === "light" ? "muted" : undefined} />,
     });
   }
 
@@ -119,7 +139,8 @@ export function SignalStrip({
            satırında. */
         <div key={tile.key} className={styles.signal} data-tone={tile.tone}>
           <dt>{tile.label}</dt>
-          <dd className={styles.signalValue}>
+          <dd className={styles.signalValue} data-art={tile.art ? "" : undefined}>
+            {tile.art}
             <strong className={cn(tile.tone === "up" && "text-up", tile.tone === "down" && "text-down", tile.tone === "primary" && "text-primary-ink")}>
               {tile.value}
             </strong>

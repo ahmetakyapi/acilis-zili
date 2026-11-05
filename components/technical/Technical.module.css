@@ -490,6 +490,7 @@
 .gaugeTags i { display:inline-flex; align-items:center; gap:1px; padding:0; color:var(--text-muted); font-size:12px; font-style:normal; font-weight:600; line-height:1.3; }
 .gaugeTags i[data-dir="up"] svg { color:var(--up); }
 .gaugeTags i[data-dir="down"] svg { color:var(--down); }
+.gaugeArt { align-self:center; }
 .gaugeMeter { position:relative; align-self:center; height:9px; background:linear-gradient(var(--line-strong) 0 0) 0 50% / 100% 1px no-repeat; }
 .gaugeMeter::before, .gaugeMeter::after { content:""; position:absolute; top:1.5px; width:1px; height:6px; background:var(--text-muted); opacity:.6; }
 .gaugeMeter[data-kind="rsi"]::before { left:30%; }
@@ -877,6 +878,8 @@
 .signal dt { font-size:12px; font-weight:700; letter-spacing:0; color:var(--text-muted); }
 .signal dd { margin:0; }
 .signalValue { align-self:start; }
+/* Çizimli değer: kelime solda, çizim sağ uçta, aynı satırda (5 Kasım 2026). */
+.signalValue[data-art] { display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; gap:10px; }
 .signalDetail { align-self:start; text-wrap:pretty; font-size:12px; line-height:1.45; color:var(--text-muted); }
 .signal strong { display:block; font-size:19px; line-height:1.15; font-weight:650; letter-spacing:-.03em; color:var(--text-strong); }
 
