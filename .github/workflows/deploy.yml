@@ -161,6 +161,24 @@ jobs:
           TELEGRAM_CHANNEL_ID_EN: ${{ vars.TELEGRAM_CHANNEL_ID_EN }}
           NEXT_PUBLIC_TELEGRAM_URL: ${{ vars.NEXT_PUBLIC_TELEGRAM_URL }}
         run: bash deploy/sync-app-env.sh
+      # DERLEMEDEN ÖNCE YER AÇ (6 Kasım 2026, run 334 "No space left on
+      # device"). Bekçi BU commit'ten gidiyor (stdin), sunucudaki canlı
+      # sürümün kopyasından değil: aşağıdaki adım `current/deploy/update.sh`ı,
+      # yani bir ÖNCEKİ sürümün betiğini koşturuyor ve update.sh'a yapılan bir
+      # düzeltme ancak bir sonraki deploy'da devreye giriyordu. Yer açılamazsa
+      # iş burada, derlemeye hiç girmeden ve neyin yer kapladığını basarak
+      # düşer. Gerekçe ve kademeler deploy/disk-guard.sh başında.
+      - name: Derleme için diskte yer aç
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST: ${{ vars.VPS_HOST }}
+        run: |
+          set -euo pipefail
+          install -m 600 /dev/null /tmp/deploy_key
+          printf '%s\n' "$SSH_KEY" > /tmp/deploy_key
+          { cat deploy/disk-guard.sh; printf '\nensure_build_space /srv/acilis-zili\n'; } |
+            ssh -i /tmp/deploy_key -o "StrictHostKeyChecking=${strict:-accept-new}" -o ConnectTimeout=15 \
+              "ubuntu@${HOST}" "sudo -u acilis -H bash -s"
       # Sunucu verify'ın geçtiği commit'i derler, dal ucunu değil
       # (`GITHUB_SHA`, gerekçe update.sh başında).
       - name: SSH ile sunucuda update.sh çalıştır

@@ -79,6 +79,17 @@ healthy() {
 	return 1
 }
 
+# DİSK BEKÇİSİ (6 Kasım 2026): deploy iş akışı bunu zaten ayrı adımda,
+# yeni commit'in bekçisiyle koşuyor; burada elle çalıştırmalar
+# (deploy/remote.sh) için. Gerekçe deploy/disk-guard.sh başında.
+guard="$(dirname "${BASH_SOURCE[0]}")/disk-guard.sh"
+if [[ -r "$guard" ]]; then
+	log "disk"
+	# shellcheck source=deploy/disk-guard.sh
+	. "$guard"
+	ensure_build_space "$APP_ROOT" || die "derleme için diskte yer yok (ayrıntı yukarıda)"
+fi
+
 log "kaynak"
 want="${1:-}"
 if [[ -n "$want" ]]; then
@@ -145,6 +156,11 @@ if [[ ( $indexable == false || $indexable == 0 ) && "${NEXT_PUBLIC_SITE_URL%/}" 
 fi
 
 npm run build
+
+# Turbopack derleme önbelleği çalışma anında okunmuyor ve sürüm başına
+# birkaç GB tutuyordu; bir sonraki derlemenin yerini yiyordu (6 Kasım 2026,
+# "No space left on device" — gerekçe deploy/disk-guard.sh).
+rm -rf "$release/.next/cache/turbopack"
 
 # VERİ ÖNBELLEĞİ SÜRÜMLER ARASI ORTAK (20 Ekim). Next, `fetch`in
 # `next.revalidate`li yanıtlarını ve `unstable_cache` girdilerini

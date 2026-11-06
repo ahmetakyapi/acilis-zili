@@ -66,9 +66,27 @@ npm run build:email              # posta bant GIF'i (public/email/hero.gif, elle
   Duman testi ayrı iş akışı (`smoke.yml`), kapı değil.
 - **`main`e push için onay SORULMAZ** (sahibinin isteği, 28 Ekim 2026: "artık
   oto alabilirsin"): denetimler temizse doğrudan `main`e gönder.
-- Commit öncesi temiz: `build`, sonra `npm run check`. Yeni `lib/` mantığı
-  testsiz girmez (`tests/<ad>.test.ts`). Görsel değişiklik
-  tarayıcıda ÖLÇÜLMÜŞ olmalı — "sığıyor gibi duruyor" doğrulama değil.
+- Commit öncesi temiz: `build`, sonra `npm run check`; `deploy/` ya da
+  iş akışı değiştiyse `python3 -m unittest discover -s tests/deploy` de (CI
+  aynısını koşar). Yeni `lib/` mantığı testsiz girmez (`tests/<ad>.test.ts`).
+  Görsel değişiklik tarayıcıda ÖLÇÜLMÜŞ olmalı — "sığıyor gibi duruyor"
+  doğrulama değil.
+- **Kırmızı deploy bırakılmaz** (sahibinin isteği, 6 Kasım 2026: "run failed
+  aldık yine, artık almayalım"). `main`e push eden oturum `Deploy` koşusunu
+  BİTENE dek izler (GitHub Actions, ~10 dk); düşerse önce işin günlüğü
+  okunur, kök neden düzeltilir, aynı oturumda yeniden yayınlanır ve yeşil
+  görülmeden "bitti" denmez. Ayrım: `verify` düştüyse kod (yerelde aynı
+  komutlar geçmeliydi — sırası atlandı demektir); `deploy` adımı düştüyse
+  sunucu (disk, ağ, servis) — kod değiştirmeden önce günlükteki hataya bak.
+- **Disk dolması derleme hatası değildir.** Derlemeden önce
+  `deploy/disk-guard.sh` yer açar (eski sürümlerin Turbopack önbelleği, sonra
+  npm önbelleği) ya da derlemeye girmeden, neyin yer kapladığını basarak durur;
+  o adım düşerse sunucuda yer açılmalı (`docs/deploy-vps.md` → "Disk doluyor").
+  Gerekçe: 6 Kasım'da derleme yarıda "No space left on device" ile düştü.
+- **`update.sh` düzeltmesi bir deploy GECİKMELİ çalışır**: iş akışı sunucudaki
+  CANLI sürümün `current/deploy/update.sh`ını koşturur. Bu deploy'da etkili
+  olması gereken düzeltme, `deploy.yml`'de ayrı adım olarak bu commit'ten
+  (stdin ile) koşturulur — örnek "Derleme için diskte yer aç".
 - **Oturumda iki-üç commit**, konu başına bir tane. Tek başlıkta
   özetlenebiliyorsa tek commit; "görsel iyileştirme" ve "performans" gibi iki
   alan varsa iki. Her mikro düzeltmeye ya da ekrana ayrı commit YOK.
