@@ -144,8 +144,12 @@ test("entries merge language text with TR structure", () => {
   const tr = changelogEntries("tr", null);
   const en = changelogEntries("en", null);
   assert.equal(tr.length, en.length);
-  assert.equal(en[0].from, tr[0].from);
-  assert.ok(en[0].from && en[0].from < en[0].date);
+  /* Aralıklı giriş (`from`) dilden bağımsız geçer; en üstteki giriş tek gün
+     olabilir (6 Kasım), ilk aralıklı girişe bakılır. */
+  const ranged = tr.findIndex((entry) => entry.from);
+  assert.ok(ranged >= 0);
+  assert.equal(en[ranged].from, tr[ranged].from);
+  assert.ok(en[ranged].from! < en[ranged].date);
   assert.deepEqual(
     en[0].items.map((item) => [item.kind, item.href]),
     tr[0].items.map((item) => [item.kind, item.href]),

@@ -135,18 +135,35 @@ type TextItems<Items extends readonly SourceItem[]> = {
 };
 
 export const CHANGELOG_TR = [
-  /* ---- 5-6 Kasım: bu sürüm ---- */
+  /* ---- 6 Kasım: bu sürüm ---- */
   {
     date: "2026-11-06",
-    from: "2026-11-05",
+    title: "Her Ekran Çizimle Okunuyor",
+    summary:
+      "Ana sayfa, takvim, bilançolar, piyasalar, hisse seçimi, yatırımcılar ve vergi ekranları baştan çizildi: sayılar artık bir çizgide, şeritte ya da ölçekte okunuyor, kartlar komşularıyla aynı hatta duruyor. Yeni düşen haberler ilk açılışta Türkçe; Yenilikler de her değişikliği ekranına göre gösteriyor.",
+    items: [
+      // bu sürüm: /yenilikler yeniden düzeni
+      { kind: "yeni", area: "icerik", short: "Her değişiklik kendi ekranında", title: "Ekran Ekran Yenilikler", body: "Bu sayfa son güncellemede neyin geldiğini, neyin iyileştiğini ve neyin düzeltildiğini ayrı ayrı sayıyor; değişiklikleri etkiledikleri ekrana göre süzüp günü gününe okuyabiliyorsun.", href: "/yenilikler" },
+      // 6 Kasım ekran turu
+      { kind: "iyilestirme", area: "piyasa", short: "Ne zaman, ne, ne çıktı", title: "Okunur Bugünün Akışı", body: "Ana sayfadaki günün akışında her satır saatle başlıyor, türü ikonundan okunuyor; açıklanan verinin beklentiyi ne kadar aştığı bir hapla ve açınca beklenti çizgisinde görünüyor, şimdiki an da zaman çizgisinde duruyor.", href: "/" },
+      { kind: "iyilestirme", area: "piyasa", short: "Etki çubukları, beklenti çizgisi", title: "Daha Görsel Ekonomik Takvim", body: "Takvimde verinin önemi boyu yükselen çubuklarla, açıklanan sonuç beklentiye göre tek bir çizgide okunuyor; haftanın yedi günü aynı hizada.", href: "/takvim" },
+      { kind: "iyilestirme", area: "piyasa", short: "Endeksler ve veriler çizimle", title: "Bülten Kartı ve Yan Paneller", body: "Ana sayfadaki bülten kartında dört endeks ortak ölçekli şeritlerde, günün önemli verileri beklenti çizgisinde; Dünya Piyasaları ve Günün Hareketleri de yüzdelerini şeritle gösteriyor.", href: "/" },
+      { kind: "iyilestirme", area: "bilanco", short: "Büyük logolar, okunur karne", title: "Haftanın Bilanço Ufku", body: "Bilanço takviminde logolar büyüdü; son dört çeyreğin karnesinde beklentinin aşılmadığı çeyrek artık kırmızı, böylece 3/4 dört dolu çeyrek gibi görünmüyor.", href: "/bilancolar" },
+      { kind: "iyilestirme", area: "bilanco", short: "Okunur kimlik, dolgun grafikler", title: "Bilanço Analizi Sayfası", body: "Kaydırınca üstte kalan çubukta şirket ve dönem okunur boyda; çeyreklik gelir grafikleri alanı dolduruyor.", href: "/bilancolar/analizler" },
+      { kind: "iyilestirme", area: "piyasa", short: "Hizalı kartlar, pay cetveli", title: "Piyasalar ve Hisse Seçimi", body: "Piyasalar'da en çok artan ve düşen kartları uzun adlarda da aynı hizada; Hisse Seçimi'nde ağırlıklar tek cetvelde, puan kulvarında semboller artık üst üste binmiyor.", href: "/piyasalar" },
+      { kind: "iyilestirme", area: "kisisel", short: "Sermaye panosu, vergi şeridi", title: "Yatırımcılar ve Vergi Hesabı", body: "Ünlü Yatırımcılar'da sermaye dağılımı kapağa çıktı ve kartlar aynı hizada; vergi hesabında sembol önerisi, sürükle bırak ekstre ve sonucu kazançtan vergiye gösteren şerit var.", href: "/vergi" },
+      { kind: "duzeltme", area: "icerik", short: "Yeni haberler Türkçe", title: "Haberler İlk Açılışta Türkçe", body: "Yeni düşen haberler ilk açan okura da Türkçe geliyor; çeviri artık sayfa açılırken yapılıyor.", href: "/haberler" },
+    ],
+  },
+  /* ---- 5 Kasım ---- */
+  {
+    date: "2026-11-05",
     title: "Yazının Haritası, Çizimle Göstergeler",
     summary:
-      "Uzun yazılarda geniş ekranın boş kenarı artık yazının haritası, teknik kartlar göstergeleri çizimle anlatıyor ve yazı kartları her ekranda önce başlıkla açılıyor. ABD kış saatine geçince kayan bülten ve teknik yayın saatleri düzeldi; Yenilikler de her değişikliği ekranına göre gösteriyor. Ana sayfa, takvim, bilançolar, piyasalar, hisse seçimi, yatırımcılar ve vergi ekranları da sayıları çizimle okutan bir görsel turdan geçti.",
+      "Uzun yazılarda geniş ekranın boş kenarı artık yazının haritası, teknik kartlar göstergeleri çizimle anlatıyor ve yazı kartları her ekranda önce başlıkla açılıyor. ABD kış saatine geçince kayan bülten ve teknik yayın saatleri düzeldi.",
     items: [
       // d5836db
       { kind: "yeni", area: "icerik", short: "Geniş ekranda yazının haritası", title: "Okuma Rayı", body: "Mercek ve rehber yazılarında geniş ekranın boş kenarında yazının bölümleri numarasıyla duruyor; okudukça her bölümün çizgisi doluyor, ara başlıkların cetveli de sen vardıkça çiziliyor.", href: "/rehber/borsa-nasil-isler" },
-      // bu sürüm: /yenilikler yeniden düzeni
-      { kind: "yeni", area: "icerik", short: "Her değişiklik kendi ekranında", title: "Ekran Ekran Yenilikler", body: "Bu sayfa son güncellemede neyin geldiğini, neyin iyileştiğini ve neyin düzeltildiğini ayrı ayrı sayıyor; değişiklikleri etkiledikleri ekrana göre süzüp günü gününe okuyabiliyorsun.", href: "/yenilikler" },
       // 73ab2d9
       { kind: "iyilestirme", area: "piyasa", short: "RSI yarım halka, hacim basamak", title: "Çizimle Okunan Göstergeler", body: "Teknik kartlarda RSI eşik bölgeleriyle bir yarım halkada, hacim de olağana göre kaç basamak doldurduğuyla okunuyor; değer yalnız eşik aşılınca renkleniyor.", href: "/teknik" },
       // a3e89d9
@@ -157,15 +174,6 @@ export const CHANGELOG_TR = [
       { kind: "duzeltme", area: "icerik", short: "Kış saatinde doğru yayın saati", title: "Bülten Saati Kış Saatinde", body: "ABD kış saatine geçince günlük özet de bir saat geç çıkmaya başladı; ana sayfa artık o günün saat farkıyla doğru saati yazıyor ve zamanında çıkan bülteni gecikmiş saymıyor.", href: "/bulten" },
       // cf4165b
       { kind: "duzeltme", area: "piyasa", short: "Sıradaki teknik yayın doğru saatte", title: "Teknik Yayın Saatleri", body: "Teknik analiz sayfası sıradaki yayını New York saatine bağlı gerçek saatiyle gösteriyor; kış saatinde bir saat erken görünmüyor.", href: "/teknik" },
-      // 6 Kasım ekran turu (bu sürüm)
-      { kind: "iyilestirme", area: "piyasa", short: "Ne zaman, ne, ne çıktı", title: "Okunur Bugünün Akışı", body: "Ana sayfadaki günün akışında her satır saatle başlıyor, türü ikonundan okunuyor; açıklanan verinin beklentiyi ne kadar aştığı bir hapla ve açınca beklenti çizgisinde görünüyor, şimdiki an da zaman çizgisinde duruyor.", href: "/" },
-      { kind: "iyilestirme", area: "piyasa", short: "Etki çubukları, beklenti çizgisi", title: "Daha Görsel Ekonomik Takvim", body: "Takvimde verinin önemi boyu yükselen çubuklarla, açıklanan sonuç beklentiye göre tek bir çizgide okunuyor; haftanın yedi günü aynı hizada.", href: "/takvim" },
-      { kind: "iyilestirme", area: "piyasa", short: "Endeksler ve veriler çizimle", title: "Bülten Kartı ve Yan Paneller", body: "Ana sayfadaki bülten kartında dört endeks ortak ölçekli şeritlerde, günün önemli verileri beklenti çizgisinde; Dünya Piyasaları ve Günün Hareketleri de yüzdelerini şeritle gösteriyor.", href: "/" },
-      { kind: "iyilestirme", area: "bilanco", short: "Büyük logolar, okunur karne", title: "Haftanın Bilanço Ufku", body: "Bilanço takviminde logolar büyüdü; son dört çeyreğin karnesinde beklentinin aşılmadığı çeyrek artık kırmızı, böylece 3/4 dört dolu çeyrek gibi görünmüyor.", href: "/bilancolar" },
-      { kind: "iyilestirme", area: "bilanco", short: "Okunur kimlik, dolgun grafikler", title: "Bilanço Analizi Sayfası", body: "Kaydırınca üstte kalan çubukta şirket ve dönem okunur boyda; çeyreklik gelir grafikleri alanı dolduruyor.", href: "/bilancolar/analizler" },
-      { kind: "iyilestirme", area: "piyasa", short: "Hizalı kartlar, pay cetveli", title: "Piyasalar ve Hisse Seçimi", body: "Piyasalar'da en çok artan ve düşen kartları uzun adlarda da aynı hizada; Hisse Seçimi'nde ağırlıklar tek cetvelde, puan kulvarında semboller artık üst üste binmiyor.", href: "/piyasalar" },
-      { kind: "iyilestirme", area: "kisisel", short: "Sermaye panosu, vergi şeridi", title: "Yatırımcılar ve Vergi Hesabı", body: "Ünlü Yatırımcılar'da sermaye dağılımı kapağa çıktı ve kartlar aynı hizada; vergi hesabında sembol önerisi, sürükle bırak ekstre ve sonucu kazançtan vergiye gösteren şerit var.", href: "/vergi" },
-      { kind: "duzeltme", area: "icerik", short: "Yeni haberler Türkçe", title: "Haberler İlk Açılışta Türkçe", body: "Yeni düşen haberler ilk açan okura da Türkçe geliyor; çeviri artık sayfa açılırken yapılıyor.", href: "/haberler" },
     ],
   },
   {
@@ -876,20 +884,14 @@ export const CHANGELOG_TR = [
 ] as const satisfies readonly SourceEntry[];
 
 export const CHANGELOG_EN: Translation<typeof CHANGELOG_TR> = [
-  /* ---- 5-6 Kasım ---- */
+  /* ---- 6 Kasım ---- */
   {
     date: "2026-11-06",
-    title: "A Map of the Article, Indicators as Drawings",
+    title: "Every Screen Reads as a Drawing",
     summary:
-      "On wide screens the empty margin of a long article is now its map, technical cards draw their indicators and article cards open with the headline on every screen. Brief and technical publishing times that slipped when the US moved to winter time are fixed, and What's New now shows every change by the screen it touches. The home page, calendar, earnings, markets, stock screening, investors and tax screens also went through a visual pass that makes their numbers read as drawings.",
+      "The home page, calendar, earnings, markets, stock screening, investors and tax screens were redrawn: numbers now read on a line, strip or scale, and cards line up with their neighbours. Fresh news arrives in Turkish on first open, and What's New shows every change by screen.",
     items: [
-      { title: "Reading Rail", short: "A map of the article on wide screens", body: "On wide screens, Close-Up and guide articles list their sections by number in the empty margin; each section's line fills as you read, and the rule above each subheading draws as you reach it." },
       { title: "What's New by Screen", short: "Every change on its own screen", body: "This page now counts what arrived, what improved and what got fixed in the latest update separately, and lets you filter changes by the screen they touch and read them day by day." },
-      { title: "Indicators as Drawings", short: "RSI half ring, volume steps", body: "Technical cards show RSI on a half ring with its threshold zones and volume as the number of steps it fills against normal; the value only takes a color once a threshold is crossed." },
-      { title: "Headline First Cards", short: "Headline first, figures below", body: "Article cards in Close-Up, the brief, Chart of the Day and the stock page now follow reading order: headline, then date and summary, with the article's figures at the bottom." },
-      { title: "A Tidier Close-Up Archive", short: "Three columns at most, even rows", body: "The Close-Up archive keeps to three columns even on wide screens; strips on side-by-side cards start on the same line, and a card left alone at the end of a month spans the whole row." },
-      { title: "Brief Time in Winter", short: "The right time in winter", body: "When the US moved to winter time the daily brief started coming out an hour later; the home page now shows the correct time for that day's offset and no longer marks an on-time brief as late." },
-      { title: "Technical Publishing Times", short: "Next technical update on time", body: "The technical analysis page shows the next update at its real time, tied to New York; in winter it no longer looks an hour early." },
       { title: "A Readable Today's Flow", short: "When, what, what came out", body: "In the home page's flow of the day every row starts with its time and its type reads from the icon; how far a release beat the estimate shows in a pill and, opened, on the estimate line, and the current moment sits on the timeline." },
       { title: "A More Visual Economic Calendar", short: "Impact bars, estimate line", body: "The calendar shows a release's importance with rising bars and the result against the estimate on a single line; the seven days of the week line up." },
       { title: "Brief Card and Side Panels", short: "Indexes and releases as drawings", body: "The home page brief card shows the four indexes on strips with a shared scale and the day's key releases on the estimate line; World Markets and Top Movers draw their percentages too." },
@@ -898,6 +900,21 @@ export const CHANGELOG_EN: Translation<typeof CHANGELOG_TR> = [
       { title: "Markets and Stock Screening", short: "Aligned cards, weight ruler", body: "On Markets the top gainer and loser cards line up even with long names; in Stock Screening the weights sit on one ruler and symbols on the score lane no longer overlap." },
       { title: "Investors and Tax Calculator", short: "Capital board, tax strip", body: "Famous Investors shows the capital split in the header and its cards line up; the tax calculator suggests symbols, accepts a dropped statement and shows the result on a gain-to-tax strip." },
       { title: "News in Turkish on First Open", short: "New stories in Turkish", body: "Freshly arrived news reaches the first reader in Turkish too; translation now happens while the page opens." },
+    ],
+  },
+  /* ---- 5 Kasım ---- */
+  {
+    date: "2026-11-05",
+    title: "A Map of the Article, Indicators as Drawings",
+    summary:
+      "On wide screens the empty margin of a long article is now its map, technical cards draw their indicators and article cards open with the headline on every screen. Brief and technical publishing times that slipped with US winter time were fixed.",
+    items: [
+      { title: "Reading Rail", short: "A map of the article on wide screens", body: "On wide screens, Close-Up and guide articles list their sections by number in the empty margin; each section's line fills as you read, and the rule above each subheading draws as you reach it." },
+      { title: "Indicators as Drawings", short: "RSI half ring, volume steps", body: "Technical cards show RSI on a half ring with its threshold zones and volume as the number of steps it fills against normal; the value only takes a color once a threshold is crossed." },
+      { title: "Headline First Cards", short: "Headline first, figures below", body: "Article cards in Close-Up, the brief, Chart of the Day and the stock page now follow reading order: headline, then date and summary, with the article's figures at the bottom." },
+      { title: "A Tidier Close-Up Archive", short: "Three columns at most, even rows", body: "The Close-Up archive keeps to three columns even on wide screens; strips on side-by-side cards start on the same line, and a card left alone at the end of a month spans the whole row." },
+      { title: "Brief Time in Winter", short: "The right time in winter", body: "When the US moved to winter time the daily brief started coming out an hour later; the home page now shows the correct time for that day's offset and no longer marks an on-time brief as late." },
+      { title: "Technical Publishing Times", short: "Next technical update on time", body: "The technical analysis page shows the next update at its real time, tied to New York; in winter it no longer looks an hour early." },
     ],
   },
   {

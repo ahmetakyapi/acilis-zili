@@ -227,13 +227,31 @@ export function HeaderAside({
 /* ------------------------------------------------------------ Son güncellemede */
 
 /**
- * TÜR PAYI ŞERİDİ — sürümün maddeleri bir çizgide: her dilim bir tür, eni
- * madde sayısı (karşılaştırılan büyüklük bir de çizgi olarak okunur).
- * Girişte dilimler soldan bir kez açılır; hareketi azaltana son kare.
+ * SON GÜNCELLEMEDE — dördüncü düzen (6 Kasım akşamı, sahibinin sözü: "böyle
+ * bir tasarım kabul edilemez, bir designer gibi yaklaş").
+ *
+ * NEDEN: üçüncü düzen maddeleri TÜRE göre üç sütuna bölüyordu (Ne Geldi /
+ * Ne İyileşti / Ne Düzeldi). Sütun uzunluğunu içerik belirliyordu: 6 Kasım
+ * sürümünde 2 / 10 / 3 madde, yani 1440'ta ortadaki sütun ~850 piksel
+ * uzarken iki yanında ~600'er piksellik boş alan kaldı; on satır aynı
+ * gri kutu tekrar ediyordu ve sürümün özeti en dipte, sütunların altında
+ * okunmuyordu.
+ *
+ * Şimdi iki kat:
+ *   1. GİRİŞ (iki kolon, genişte): solda sürümün adı, tarihi ve tek
+ *      paragraf özeti — okur önce ne olduğunu okuyor; sağda tonla ayrılmış
+ *      ölçü kuyusu: üç tür sayısı (ikon + büyük rakam + ad), sayıların pay
+ *      şeridi ve dokunduğu ekranların çipleri.
+ *   2. MADDE IZGARASI: tür sütunu yok, maddeler tek ızgarada eşit kartlar
+ *      (genişte üç, tablette iki, telefonda bir sütun); sıra Yeni →
+ *      İyileştirme → Düzeltme (`latestDigest`in sırası, Claude her türün
+ *      sonunda). Tür kartın tepesindeki 3 piksellik şeritte ve ikonlu
+ *      etikette (sitenin kart dili: durum tepedeki şeritte); ızgara türlerin
+ *      oranından bağımsız olarak hep dolu.
+ * Ölçüm CSS'te ("SON GÜNCELLEMEDE").
  */
 function KindShare({ counts, L }: { counts: Record<ChangeKind | "all", number>; L: ChangelogLabels }) {
   return (
-    <>
     <div className={styles.share} role="img" aria-label={`${L.digestShare.replace("{n}", String(counts.all))}: ${CHANGE_KINDS.map((k) => `${L.kind[k]} ${counts[k]}`).join(", ")}`}>
       {CHANGE_KINDS.filter((kind) => counts[kind] > 0).map((kind, index) => (
         <span
@@ -244,52 +262,53 @@ function KindShare({ counts, L }: { counts: Record<ChangeKind | "all", number>; 
         />
       ))}
     </div>
-    {/* Lejant: sayı + tür adı, şeridin altında (telefonda üç sütun ekranın
-        altında kalıyor; sürümün türleri ilk ekranda bir bakışta okunsun). */}
-    <ul className={styles.shareLegend} aria-hidden>
-      {CHANGE_KINDS.map((kind) => (
-        <li key={kind} className={styles.k} data-kind={kind} data-zero={counts[kind] === 0 || undefined}>
-          <i className={styles.swatch} />
-          <span className="numeral">{counts[kind]}</span> {L.kind[kind]}
-        </li>
-      ))}
-    </ul>
-    </>
   );
 }
 
-/** Son güncellemenin bir maddesi: hedef ekranın ikonu, başlık, tek satır özet; satır bağlantının kendisi. */
-function DigestRow({ item, locale, L, index }: { item: ChangeItem; locale: Locale; L: ChangelogLabels; index: number }) {
+/** Son güncellemenin bir maddesi: tepede türün şeridi, tür hapı ile hedef
+    ekran tek satırda, başlık, iki satıra kadar özet; kartın tamamı bağlantı. */
+function DigestCard({ item, locale, L }: { item: ChangeItem; locale: Locale; L: ChangelogLabels }) {
+  const KindIcon = KIND_ICON[item.kind];
   const Target = (item.href ? TARGET_ICON[tryTarget(item.href)] : undefined) ?? SCREEN_ICON[item.screen];
   return (
-    <ItemLink item={item} locale={locale} className={styles.row} label={item.href ? `${L.try}: ${item.title}` : undefined}>
-      <span className={styles.rowIcon} aria-hidden style={{ "--i": index } as CSSProperties}>
-        <Target size={18} weight="duotone" />
-      </span>
-      <span className={styles.rowCopy}>
-        <span className={styles.rowTitle}>{item.title}</span>
-        <span className={styles.rowShort} title={item.body}>{item.short ?? item.body}</span>
-        <span className={styles.rowScreen}>
+    <ItemLink
+      item={item}
+      locale={locale}
+      className={styles.card}
+      label={item.href ? `${L.kind[item.kind]}: ${item.title}` : undefined}
+    >
+      {/* Türün şeridi ayrı öğe: `ItemLink` sarmalayıcıya `data-kind`
+          geçirmiyor, renk değişkeni (`.k`) bu öğede çözülüyor. */}
+      <span aria-hidden className={`${styles.cardStrip} ${styles.k}`} data-kind={item.kind} />
+      <span className={styles.cardTop}>
+        <span className={`${styles.cardKind} ${styles.k}`} data-kind={item.kind}>
+          <KindIcon size={13} weight="bold" aria-hidden />
+          {L.kind[item.kind]}
+        </span>
+        <span className={styles.cardScreen}>
+          <span className={styles.cardScreenIcon} aria-hidden>
+            <Target size={13} weight="duotone" />
+          </span>
           {L.screen[item.screen]}
           {item.area === "claude" && <span className={styles.rowClaude}> · Claude</span>}
         </span>
       </span>
       {item.href &&
         (isExternal(item.href) ? (
-          <ArrowUpRight className={styles.rowArrow} size={14} weight="bold" aria-hidden />
+          <ArrowUpRight className={styles.cardArrow} size={15} weight="bold" aria-hidden />
         ) : (
-          <ArrowRight className={styles.rowArrow} size={14} weight="bold" aria-hidden />
+          <ArrowRight className={styles.cardArrow} size={15} weight="bold" aria-hidden />
         ))}
+      <span className={styles.cardTitle}>{item.title}</span>
+      <span className={styles.cardShort} title={item.body}>{item.short ?? item.body}</span>
     </ItemLink>
   );
 }
 
 /**
- * SON GÜNCELLEMEDE — sayfanın ana görseli. Gerekçe dosya başı ve
- * `lib/changelog.ts` → `latestDigest`. Sürümün adı kısa display başlık
- * (izinli tek degrade yer); tarih ve madde sayısı başlığın altında (ekran
- * düzeni: başlığa ait bilgi altına iner). Ekran çipleri `?ekran=` süzgecini
- * açar ve günlük akışa iner.
+ * Sürümün adı kısa display başlık (izinli tek degrade yer); tarih ve madde
+ * sayısı başlığın altında (ekran düzeni: başlığa ait bilgi altına iner).
+ * Ekran çipleri `?ekran=` süzgecini açar ve günlük akışa iner.
  */
 export function LatestDigest({
   entry,
@@ -304,87 +323,79 @@ export function LatestDigest({
   L: ChangelogLabels;
   screenHref: (screen: ChangeScreen) => string;
 }) {
-  const columns = latestDigest(entry);
+  const items = latestDigest(entry).flatMap((column) => column.items);
   const counts = kindCounts([entry]);
   const screens = [...new Set(entry.items.map((item) => item.screen))];
-  /* Satırların sırası sütunlar boyunca (girişteki kademeli açılış için). */
-  const offsets = columns.map((_, i) => columns.slice(0, i).reduce((n, c) => n + c.items.length, 0));
   return (
     /* Özetin kendi çapası (6 Kasım, inceleme): `entryAnchor` hem burada hem
        günlük akıştaki aynı günde duruyordu; yinelenen id yüzünden haftalık
        sütundan ve RSS'ten gelen bağlantı akışa değil özete iniyordu. */
     <Panel id="son-guncelleme" aria-labelledby="yenilikler-son" className={styles.digest}>
       <PanelHeader title={L.digestTitle} meta={<UnseenPill date={entry.date} latest={latest} label={L.badge} srLabel={L.unseenLabel} />} />
-      <div className={styles.digestHead}>
-        {/* Çok satırlı manşet: degrade satır satır (`data-ink="lines"`). */}
-        <h3 id="yenilikler-son" data-ink="lines" className={styles.digestTitle}>
-          <span className="ink-line">{entry.title}</span>
-        </h3>
-        <p className={styles.digestMeta}>
-          <span className={styles.latestBadge}>{L.latestBadge}</span>
-          <time dateTime={entry.date}>{entryDateLabel(entry, locale)}</time>
-          <span>{countLabel(entry.items.length, L.itemCount, L.itemCountOne)}</span>
-        </p>
+      <div className={styles.lede}>
+        <div className={styles.ledeText}>
+          {/* Çok satırlı manşet: degrade satır satır (`data-ink="lines"`). */}
+          <h3 id="yenilikler-son" data-ink="lines" className={styles.digestTitle}>
+            <span className="ink-line">{entry.title}</span>
+          </h3>
+          <p className={styles.digestMeta}>
+            <span className={styles.latestBadge}>{L.latestBadge}</span>
+            <time dateTime={entry.date}>{entryDateLabel(entry, locale)}</time>
+            <span>{countLabel(entry.items.length, L.itemCount, L.itemCountOne)}</span>
+          </p>
+          <p className={styles.digestSummary}>{entry.summary}</p>
+        </div>
+        <SeenStage className={styles.ledeFigures}>
+          <dl className={styles.kindStats}>
+            {CHANGE_KINDS.map((kind) => {
+              const KindIcon = KIND_ICON[kind];
+              return (
+                <div key={kind} className={styles.k} data-kind={kind} data-zero={counts[kind] === 0 || undefined}>
+                  <dt>
+                    <span className={styles.kindStatIcon} aria-hidden>
+                      <KindIcon size={14} weight="bold" />
+                    </span>
+                    {L.digestKind[kind]}
+                  </dt>
+                  <dd className="numeral">{counts[kind]}</dd>
+                </div>
+              );
+            })}
+          </dl>
+          <KindShare counts={counts} L={L} />
+          <div className={styles.digestScreens}>
+            <span className={styles.digestScreensLabel}>{L.digestScreens}</span>
+            <ul className={styles.screenChips}>
+              {screens.map((screen) => {
+                const ScreenIcon = SCREEN_ICON[screen];
+                const n = entry.items.filter((item) => item.screen === screen).length;
+                return (
+                  <li key={screen}>
+                    {/* Kaydırma AÇIK (öbür süzgeç bağlantılarının aksine): çip
+                        süzülmüş günlük akışa gider (`#gunluk-akis`), sayfa
+                        oraya iner; yerinde kalsaydı süzgecin sonucu ekranın
+                        çok altında görünmezdi. */}
+                    <Link href={screenHref(screen)} className={styles.screenChip}>
+                      <ScreenIcon size={14} weight="duotone" aria-hidden />
+                      {L.screen[screen]}
+                      <span className={`numeral ${styles.screenChipCount}`}>{n}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </SeenStage>
       </div>
-      <SeenStage className={styles.digestStage}>
-      <KindShare counts={counts} L={L} />
-      <div className={styles.columns}>
-        {columns.map((column, columnIndex) => {
-          const KindIcon = KIND_ICON[column.kind];
-          return (
-            <section
-              key={column.kind}
-              aria-labelledby={`yenilikler-tur-${column.kind}`}
-              className={`${styles.column} ${styles.k}`}
-              data-kind={column.kind}
-              style={{ "--c": columnIndex } as CSSProperties}
-            >
-              <h4 id={`yenilikler-tur-${column.kind}`} className={styles.columnHead} data-ink="plain">
-                <span className={styles.columnIcon} aria-hidden>
-                  <KindIcon size={16} weight="bold" />
-                </span>
-                <span className={styles.columnName}>{L.digestKind[column.kind]}</span>
-                <span className={`numeral ${styles.columnCount}`}>{column.items.length}</span>
-              </h4>
-              {column.items.length === 0 ? (
-                <p className={styles.columnEmpty}>{L.digestEmpty}</p>
-              ) : (
-                <ul className={styles.rows}>
-                  {column.items.map((item, itemIndex) => (
-                    <li key={item.title}>
-                      <DigestRow item={item} locale={locale} L={L} index={offsets[columnIndex] + itemIndex} />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          );
-        })}
-      </div>
-      </SeenStage>
-      <div className={styles.digestScreens}>
-        <span className={styles.digestScreensLabel}>{L.digestScreens}</span>
-        <ul className={styles.screenChips}>
-          {screens.map((screen) => {
-            const ScreenIcon = SCREEN_ICON[screen];
-            const n = entry.items.filter((item) => item.screen === screen).length;
-            return (
-              <li key={screen}>
-                {/* Kaydırma AÇIK (öbür süzgeç bağlantılarının aksine): çip
-                    süzülmüş günlük akışa gider (`#gunluk-akis`), sayfa
-                    oraya iner; yerinde kalsaydı süzgecin sonucu ekranın
-                    çok altında görünmezdi. */}
-                <Link href={screenHref(screen)} className={styles.screenChip}>
-                  <ScreenIcon size={14} weight="duotone" aria-hidden />
-                  {L.screen[screen]}
-                  <span className={`numeral ${styles.screenChipCount}`}>{n}</span>
-                </Link>
-              </li>
-            );
-          })}
+      <SeenStage className={styles.cardsStage}>
+        <ul className={styles.cards}>
+          {items.map((item, index) => (
+            <li key={item.title} style={{ "--n": index } as CSSProperties}>
+              <DigestCard item={item} locale={locale} L={L} />
+            </li>
+          ))}
         </ul>
-      </div>
-      <p className={styles.digestSummary}>{entry.summary}</p>
+      </SeenStage>
       <p className={styles.note}>{L.footnote}</p>
     </Panel>
   );

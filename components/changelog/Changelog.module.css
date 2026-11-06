@@ -58,9 +58,26 @@
   font-size: var(--text-small); line-height: 17px; color: var(--text-muted);
 }
 
-/* ==== 1. SON GÜNCELLEMEDE ================================================ */
-.digestHead { display: grid; gap: 6px; padding: 0 20px 14px; margin-top: -6px; }
-.digestTitle { font-size: clamp(22px, 2.2vw, 30px); line-height: 1.15; font-weight: 800; letter-spacing: -.025em; }
+/* ==== 1. SON GÜNCELLEMEDE ================================================
+   Dördüncü düzen (6 Kasım akşamı — gerekçe ChangelogParts.tsx →
+   "SON GÜNCELLEMEDE"). Önce: tür başına üç sütun; 6 Kasım sürümünde 2 / 10
+   / 3 madde ve 1440'ta orta sütun ~850 piksel, iki yanı ~600'er piksel boş.
+   Şimdi giriş iki kolon (metin | ölçü kuyusu), maddeler tek ızgarada eşit
+   kartlar: genişte üç sütun, 40–64rem arası iki, telefonda bir. Ölçüldü
+   (TR, açık/koyu, 9 maddelik 6 Kasım sürümü): 1440'ta panel 704 piksel,
+   kartlar 3×3 ve hepsi 418×105; 1024'te 740; 390'da 1.770 (kart 99).
+   Yatay taşma 0. */
+.lede {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px;
+  padding: 0 20px 18px; margin-top: -6px;
+}
+@media (min-width: 64rem) {
+  /* Metin solda okunur genişlikte, kuyu sağda; iki kolon üstten hizalı,
+     aralarındaki boşluk sabit (iki kolona `justify-between` konmaz). */
+  .lede { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+}
+.ledeText { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.digestTitle { font-size: clamp(24px, 2.4vw, 34px); line-height: 1.12; font-weight: 800; letter-spacing: -.025em; }
 .digestMeta {
   display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px;
   font-size: var(--text-small); line-height: 18px; color: var(--text-muted);
@@ -69,71 +86,41 @@
   display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: var(--radius-xs);
   background: var(--primary-wash); color: var(--primary-ink); font-size: 11px; font-weight: 700;
 }
+.digestSummary {
+  max-width: 68ch; margin-top: 4px;
+  font-size: var(--text-read); line-height: 1.6; color: var(--text-body); text-wrap: pretty;
+}
+
+/* Ölçü kuyusu: tonla ayrılmış (gölge yok), içinde üç sayı aynı hatta,
+   altında pay şeridi ve ekran çipleri. */
+.ledeFigures {
+  display: grid; gap: 14px; align-content: start; min-width: 0;
+  padding: 16px; border-radius: var(--radius-xl, 1rem); background: var(--surface-sunken);
+}
+.kindStats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.kindStats > div { display: flex; flex-direction: column-reverse; gap: 6px; min-width: 0; }
+.kindStats > div[data-zero] { opacity: .5; }
+.kindStats dt {
+  display: flex; align-items: center; gap: 6px; min-width: 0;
+  font-size: var(--text-small); line-height: 16px; font-weight: 650; color: var(--text-body);
+}
+.kindStats dd { margin: 0; font-size: 34px; line-height: 1; font-weight: 800; letter-spacing: -.03em; color: var(--text-strong); }
+.kindStatIcon {
+  flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 999px;
+  background: var(--kw); color: var(--ki);
+}
 
 /* Tür payı şeridi: kulvar dili (6 piksel, yuvarlak uç), dilimler arası 3
    piksel; eni madde sayısı. Girişte soldan bir kez açılır. */
-.share { display: flex; gap: 3px; height: 6px; margin: 0 20px; }
+.share { display: flex; gap: 3px; height: 6px; }
 .shareSeg { flex-basis: 0; min-width: 6px; border-radius: 999px; background: var(--kc); transform-origin: 0 50%; }
-.shareLegend {
-  display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 8px 20px 0; padding: 0; list-style: none;
-  font-size: var(--text-small); line-height: 16px; color: var(--text-body);
-}
-.shareLegend > li { display: inline-flex; align-items: center; gap: 5px; }
-.shareLegend > li > span { font-weight: 800; color: var(--text-strong); }
-.shareLegend > li[data-zero] { opacity: .55; }
 
-/* Üç sütun: genişte yan yana (saç teliyle ayrılmış), altında alt alta.
-   Her sütunun tepesinde türün 3 piksellik çizgisi (sitenin kart dili). */
-.columns { display: grid; grid-template-columns: minmax(0, 1fr); margin-top: 14px; border-top: 1px solid var(--line-soft); }
-@media (min-width: 64rem) { .columns { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.column { position: relative; min-width: 0; padding: 16px 20px 14px; }
-.column::before {
-  content: ""; position: absolute; top: -1px; left: 20px; width: 36px; height: 3px; border-radius: 0 0 2px 2px;
-  background: var(--kc); transform-origin: 0 50%;
-}
-.column + .column { border-top: 1px solid var(--line-soft); }
-@media (min-width: 64rem) {
-  .column + .column { border-top: 0; border-left: 1px solid var(--line-soft); }
-}
-.columnHead { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
-.columnIcon {
-  flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px;
-  background: var(--kw); color: var(--ki);
-}
-.columnName { font-size: var(--text-read); line-height: 18px; font-weight: 750; color: var(--text-strong); }
-.columnCount { margin-left: auto; font-size: 28px; line-height: 1; font-weight: 800; letter-spacing: -.02em; color: var(--text-strong); }
-.columnEmpty { font-size: var(--text-small); line-height: 18px; color: var(--text-muted); }
-.rows { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
-.rows > li { display: flex; min-width: 0; }
-.row {
-  flex: 1; display: grid; grid-template-columns: 34px minmax(0, 1fr) 14px; align-items: center; gap: 10px;
-  min-width: 0; min-height: 56px; padding: 7px 10px 7px 7px; border-radius: var(--radius-lg);
-  background: var(--surface); border: 1px solid transparent;
-  transition: border-color .2s var(--ease-brand), background-color .2s var(--ease-brand);
-}
-a.row:hover { border-color: var(--line); background: var(--surface-elevated); }
-a.row:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
-.rowIcon {
-  display: grid; place-items: center; width: 34px; height: 34px; border-radius: var(--radius-md);
-  background: var(--surface-sunken); color: var(--text-body);
-}
-.rowCopy { display: grid; gap: 1px; min-width: 0; }
-.rowTitle { min-width: 0; font-size: var(--text-read); line-height: 18px; font-weight: 700; color: var(--text-strong); }
-.rowShort { min-width: 0; font-size: var(--text-small); line-height: 16px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rowScreen { font-size: 11px; line-height: 14px; font-weight: 600; color: var(--text-muted); }
-.rowClaude { font-weight: 600; }
-.rowArrow { color: var(--text-muted); transition: translate .2s var(--ease-brand), color .2s var(--ease-brand); }
-a.row:hover .rowArrow { translate: 2px 0; color: var(--primary-ink); }
-
-.digestScreens {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
-  padding: 12px 20px; border-top: 1px solid var(--line-soft);
-}
+.digestScreens { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
 .digestScreensLabel { font-size: var(--text-small); font-weight: 650; color: var(--text-muted); }
 .screenChips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .screenChip {
   display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border-radius: 999px;
-  background: var(--surface-elevated); color: var(--text-body); font-size: var(--text-small); font-weight: 600;
+  background: var(--surface); color: var(--text-body); font-size: var(--text-small); font-weight: 600;
   transition: color .2s var(--ease-brand), background-color .2s var(--ease-brand);
 }
 .screenChip:hover { color: var(--text-strong); background: var(--primary-tint); }
@@ -141,21 +128,69 @@ a.row:hover .rowArrow { translate: 2px 0; color: var(--primary-ink); }
 /* Telefonda dokunma hedefi 44 (sayfadaki öteki çiplerle aynı). */
 @media (max-width: 39.99rem) { .screenChip { min-height: 44px; } }
 .screenChipCount { color: var(--text-muted); font-weight: 650; }
-.digestSummary {
-  padding: 0 20px 12px; max-width: calc(100ch + 40px);
-  font-size: var(--text-base); line-height: 20px; color: var(--text-body);
+
+/* Madde ızgarası: eşit kartlar; kartın tepesinde türün 3 piksellik şeridi
+   (bilanço ve teknik kartlarının dili), zemin nötr, kenar saç teli. */
+.cardsStage { padding: 0 20px 20px; }
+.cards {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px;
+  margin: 0; padding: 0; list-style: none;
 }
+@media (min-width: 40rem) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 64rem) { .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.cards > li { display: flex; min-width: 0; }
+/* KÜNYE TEPEDE (6 Kasım akşamı, sahibinin isteği: "İyileştirme etiketi
+   Site Geneli / Ana Sayfa yazan yerin yanında olsun, kartlar daha kompakt
+   dursun"). Tür hapı ve hedef ekran tek satırda, ok sağ üstte; altında
+   başlık ve özet. Dipteki ayrı ekran satırı kalktı: 1440'ta kart 145 →
+   105 piksel. Ekran ikonu tür tonunda küçük bir karoda — kartın tek
+   görsel imi, şeritle aynı renk ailesi. */
+.card {
+  position: relative; flex: 1; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 6px;
+  min-width: 0; padding: 14px 16px 15px; overflow: hidden;
+  border: 1px solid var(--line-soft); border-radius: var(--radius-xl, 1rem); background: var(--surface);
+  transition: border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), translate .2s var(--ease-brand);
+}
+.cardStrip { position: absolute; inset: 0 0 auto; height: 3px; background: var(--kc); }
+a.card:hover { border-color: var(--line); background: var(--surface-elevated); }
+a.card:active { translate: 0 1px; }
+a.card:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+.cardTop { display: flex; align-items: center; gap: 8px; min-width: 0; padding-right: 22px; margin-bottom: 2px; }
+.cardKind {
+  flex: none; display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 999px;
+  background: var(--kw); color: var(--ki); font-size: 11.5px; font-weight: 700;
+}
+.cardScreen {
+  display: inline-flex; align-items: center; gap: 6px; min-width: 0;
+  font-size: var(--text-tiny); line-height: 16px; font-weight: 600; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cardScreenIcon {
+  flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 7px;
+  background: var(--surface-sunken); color: var(--text-body);
+}
+.cardArrow { position: absolute; top: 17px; right: 16px; color: var(--text-muted); transition: translate .2s var(--ease-brand), color .2s var(--ease-brand); }
+a.card:hover .cardArrow { translate: 2px 0; color: var(--primary-ink); }
+.cardTitle { font-size: var(--text-lead); line-height: 1.25; font-weight: 750; letter-spacing: -.01em; color: var(--text-strong); }
+/* Özet iki satıra kadar: tek satırda kesilen özet ("…") kartın neyi
+   değiştirdiğini yarıda bırakıyordu. */
+.cardShort {
+  font-size: var(--text-small); line-height: 1.5; color: var(--text-body);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.rowClaude { font-weight: 600; }
+
 .note {
   border-top: 1px solid var(--line-soft);
   padding: 10px 20px 12px;
   font-size: var(--text-tiny); line-height: 18px; color: var(--text-muted);
 }
 @media (max-width: 39.99rem) {
-  .digestHead, .column, .digestScreens, .digestSummary, .note, .panelHint { padding-inline: 16px; }
-  .share { margin-inline: 16px; }
-  .column::before { left: 16px; }
-  .column { padding-block: 14px 12px; }
-  .row { min-height: 52px; }
+  .lede, .cardsStage, .note, .panelHint { padding-inline: 16px; }
+  .ledeFigures { padding: 14px; }
+  .kindStats dd { font-size: 28px; }
+  .card { padding: 12px 14px; }
+  .cardTitle { font-size: 15px; }
 }
 
 /* ==== 2. HAFTALIK AKIŞ ===================================================
@@ -235,8 +270,7 @@ a.weekLink:hover .weekValue { color: var(--text-strong); }
   .flowStage { padding: 2px 16px 12px; }
   .flowPlot { --plot-h: 120px; --top: 20px; --scale-w: 26px; }
   .weekValue { font-size: 11px; letter-spacing: -.02em; }
-  .flowLegend, .shareLegend { padding-inline: 16px; }
-  .shareLegend { margin-inline: 16px; padding-inline: 0; }
+  .flowLegend { padding-inline: 16px; }
   .gridUnit, .weekOf { display: none; }
   .weekNow { display: none; }
   .weekNowDay { display: inline; }
@@ -420,22 +454,19 @@ a.tile:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px
 
 @media (prefers-reduced-motion: no-preference) {
   .shareSeg { animation: cl-draw .7s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 120ms + 80ms); }
-  .column { animation: cl-rise .5s var(--ease-brand) both; animation-delay: calc(var(--c, 0) * 90ms + 120ms); }
-  .column::before { animation: cl-draw .6s var(--ease-brand) both; animation-delay: calc(var(--c, 0) * 90ms + 320ms); }
-  .rowIcon { animation: cl-fade .4s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 45ms + 260ms); }
+  .cards > li { animation: cl-rise .5s var(--ease-brand) both; animation-delay: min(calc(var(--n, 0) * 50ms + 120ms), 700ms); }
   .stack { animation: cl-grow .8s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 38ms + 100ms); }
   .weekValue { animation: cl-fade .4s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 38ms + 520ms); }
 
   /* Ekranın altındaki sahne: ikinci ad animasyonu baştan başlatır, görünene
      dek ilk karede bekler (`SeenStage`). */
-  [data-armed] .shareSeg, [data-armed] .column::before { animation-name: cl-draw-b; }
-  [data-armed] .column { animation-name: cl-rise-b; }
-  [data-armed] .rowIcon, [data-armed] .weekValue { animation-name: cl-fade-b; }
+  [data-armed] .shareSeg { animation-name: cl-draw-b; }
+  [data-armed] .cards > li { animation-name: cl-rise-b; }
+  [data-armed] .weekValue { animation-name: cl-fade-b; }
   [data-armed] .stack { animation-name: cl-grow-b; }
-  [data-armed]:not([data-play]) :is(.shareSeg, .column, .rowIcon, .stack, .weekValue),
-  [data-armed]:not([data-play]) .column::before { animation-play-state: paused; }
+  [data-armed]:not([data-play]) :is(.shareSeg, .cards > li, .stack, .weekValue) { animation-play-state: paused; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .row, .rowArrow, .screenChip, .stack, .tile, .tileIcon, .screenActive, .monthSummary, .monthIcon, .tItem, .tTry, .tTry svg { transition: none; }
+  .card, .cardArrow, .screenChip, .stack, .tile, .tileIcon, .screenActive, .monthSummary, .monthIcon, .tItem, .tTry, .tTry svg { transition: none; }
 }
