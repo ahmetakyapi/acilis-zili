@@ -306,20 +306,92 @@ export function screenerSentence(
  */
 export const SCORE_BAND_FLOORS = { strong: 80, worth: 65, mixed: 50 } as const;
 
+/** Bir kulvar etiketinin yeri: `row` satırı (0 üstte yakın, 1 altta yakın,
+    2 üstte uzak, 3 altta uzak), `shift` noktadan yatay kayma (piksel). */
+export type LaneLabelPlace = { row: number; shift: number };
+
 /**
- * Kulvardaki etiketlerin satırı: yatay konumu (0..100) yakın olan etiketler
- * aynı satıra düşmesin. Açgözlü — her etiket, son etiketi `gap`ten uzak
- * kalan ilk satıra. Dönen dizi girdinin sırasıyla satır numarası.
+ * KULVAR ETİKETLERİ ÇAKIŞMASIZ (6 Kasım). Önceki çözüm (`labelRows`)
+ * yakın etiketi bir üst satıra itiyordu: 1440'ta on altı hissenin
+ * etiketleri üç kata istiflendi, SPCX/SNDK/GOOGL ve META/AMD üst üste
+ * okunuyordu, ince bağlantı çizgileri birbirine karışıyordu. Şimdi her
+ * etiket kendi noktasının hizasında durmaya çalışıyor; sığmayan küme yana
+ * AÇILIYOR — en az toplam kaymayla, sıra korunarak, kulvarın içinde.
+ *
+ * Yöntem tek boyutlu etiket yerleşiminin kesin çözümü: sıralı etiketlerin
+ * arka arkaya en az (w₁+w₂)/2 + gap uzak durması gerekiyor; bu şart
+ * birikimli payı (`o`) çıkarınca "y artmayan olmasın" şartına dönüşüyor ve
+ * en küçük kareler çözümü izotonik regresyon (PAV). Kulvar sınırı ortak bir
+ * kutu olduğu için çözüm kutuya kırpılıyor. Sıra korunduğu için noktadan
+ * etikete giden çizgiler hiç kesişmiyor.
+ *
+ * Satır sayısı en azdan başlıyor: sıralı etiketler satırlara dönüşümlü
+ * dağıtılıyor (komşu iki etiket aynı satırda değil), her satır ayrı
+ * yayılıyor; en büyük kayma `maxShift`i aşmayan ilk satır sayısı seçiliyor.
+ * Hiçbiri tutmazsa sığan seçenekler içinden en az kayanı. Genişlikler
+ * piksel; `track` o kırılımdaki EN DAR kulvar — daha geniş kulvarda
+ * noktalar açılır, kayma aynı kaldığı için etiketler yine çakışmaz
+ * (komşu aralığı (pᵢ₊₁−pᵢ)·(W−W₀) kadar büyür).
  */
-export function labelRows(positions: readonly number[], gap: number, maxRows = 3): number[] {
-  const order = positions.map((p, i) => ({ p, i })).sort((a, b) => a.p - b.p || a.i - b.i);
-  const lastInRow: number[] = [];
-  const rows = new Array<number>(positions.length).fill(0);
-  for (const { p, i } of order) {
-    let row = lastInRow.findIndex((last) => p - last >= gap);
-    if (row === -1) row = lastInRow.length < maxRows ? lastInRow.length : lastInRow.indexOf(Math.min(...lastInRow));
-    lastInRow[row] = p;
-    rows[i] = row;
+export function laneLabelLayout(
+  items: readonly { at: number; width: number }[],
+  opts: { track: number; gap: number; maxRows: number; maxShift: number },
+): LaneLabelPlace[] {
+  const order = items.map((item, i) => ({ ...item, i })).sort((a, b) => a.at - b.at || a.i - b.i);
+  let best: { places: LaneLabelPlace[]; worst: number; fits: boolean } | null = null;
+  for (let rows = 1; rows <= Math.max(1, opts.maxRows); rows++) {
+    const places = new Array<LaneLabelPlace>(items.length);
+    let worst = 0;
+    let fits = true;
+    for (let row = 0; row < rows; row++) {
+      const members = order.filter((_, k) => k % rows === row);
+      const spread = spreadLabels(
+        members.map((m) => (m.at / 100) * opts.track),
+        members.map((m) => m.width),
+        opts.track,
+        opts.gap,
+      );
+      fits &&= spread.fits;
+      members.forEach((m, k) => {
+        const shift = Math.round(spread.shifts[k] * 10) / 10;
+        worst = Math.max(worst, Math.abs(shift));
+        places[m.i] = { row, shift };
+      });
+    }
+    if (fits && worst <= opts.maxShift) return places;
+    const better = !best || (fits && !best.fits) || (fits === best.fits && worst < best.worst);
+    if (better) best = { places, worst, fits };
   }
-  return rows;
+  return best!.places;
+}
+
+/** Tek satırın kesin yayılımı (gerekçe `laneLabelLayout`). */
+function spreadLabels(ideal: number[], widths: number[], track: number, gap: number): { shifts: number[]; fits: boolean } {
+  const n = ideal.length;
+  if (n === 0) return { shifts: [], fits: true };
+  const offset = [0];
+  for (let i = 1; i < n; i++) offset[i] = offset[i - 1] + (widths[i - 1] + widths[i]) / 2 + gap;
+  /* PAV: y = ideal − offset dizisini azalmayan en yakın diziye oturt. */
+  const blocks: { sum: number; count: number }[] = [];
+  for (let i = 0; i < n; i++) {
+    blocks.push({ sum: ideal[i] - offset[i], count: 1 });
+    while (blocks.length > 1) {
+      const last = blocks[blocks.length - 1];
+      const prev = blocks[blocks.length - 2];
+      if (prev.sum / prev.count <= last.sum / last.count) break;
+      prev.sum += last.sum;
+      prev.count += last.count;
+      blocks.pop();
+    }
+  }
+  const lo = widths[0] / 2;
+  const hi = track - widths[n - 1] / 2 - offset[n - 1];
+  const fits = lo <= hi;
+  const y: number[] = [];
+  for (const block of blocks) {
+    const mean = block.sum / block.count;
+    const value = fits ? Math.min(hi, Math.max(lo, mean)) : (lo + hi) / 2;
+    for (let k = 0; k < block.count; k++) y.push(value);
+  }
+  return { shifts: y.map((v, i) => v + offset[i] - ideal[i]), fits };
 }

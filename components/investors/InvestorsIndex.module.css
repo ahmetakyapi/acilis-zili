@@ -14,34 +14,75 @@
    okuyucu son kareyi görüyor.
    ========================================================================== */
 
-/* ---- Kapak -------------------------------------------------------------- */
+/* ---- Kapak -------------------------------------------------------------
+   6 Kasım: iki kolon — solda başlık ve künye, sağda sermaye panosu
+   (gerekçe InvestorsMasthead.tsx ve CapitalBoard.tsx). Önce (1440, sahte
+   veriyle ölçüldü): kapak 316 piksel, sağ kolon Paylaş dışında boş, şerit
+   altında tam genişlikte 82 piksel. Sonra: kapak 237 piksel (−79), pano
+   sağ kolonda 675×151; 390'da kapak 418, pano başlığın altında tam
+   genişlik; iki genişlikte yatay taşma 0. */
 
-.masthead { display:grid; gap:16px; }
+.masthead { display:block; }
+.mastGrid {
+  display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"copy share" "board board";
+  align-items:start; gap:16px 24px;
+}
+.mastCopy { grid-area:copy; display:grid; gap:14px; min-width:0; }
+.mastShare { grid-area:share; justify-self:end; }
+.mastBoard { grid-area:board; min-width:0; }
+/* Geniş ekranda pano sağ kolonda, Paylaş onun üstünde (kapağın sağ üst
+   köşesi). Sol kolon 1fr, pano 1fr: başlık kolonu kısa kalınca açıklama
+   64ch'de duruyor, pano kalan yarıyı dolduruyor. Kolonlar `justify-between`
+   ile değil sabit `gap`le ayrılıyor (CLAUDE.md "Düzen"). */
+@media(min-width:1024px) {
+  .mastGrid[data-board] {
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    grid-template-areas:"copy share" "copy board";
+    grid-template-rows:auto 1fr;
+    gap:12px 40px;
+  }
+  .mastGrid[data-board] .mastBoard { align-self:end; }
+}
 /* Başlığa ait bilgi başlığın ALTINDA (CLAUDE.md: üst künye yok). */
-.kunye { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin-top:-6px; font-size:13px; font-weight:600; color:var(--text-body); }
+.kunye { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; font-size:13px; font-weight:600; color:var(--text-body); }
 .kunye > span + span::before { content:"·"; margin-right:10px; color:var(--text-muted); }
 
-/* ---- Sermaye şeridi (kapakta, tek satır) -------------------------------
-   Gerekçe InvestorGrid.tsx → CapitalStrip. */
-.capital { display:grid; gap:7px; min-width:0; padding-top:14px; border-top:1px solid var(--line); }
-.capitalHead { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; }
-.capitalHead > span { font-size:13px; font-weight:600; color:var(--text-body); }
-.capitalHead > b { font-size:18px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
-.capitalHead > small { font-size:12px; color:var(--text-muted); }
-.capitalBar { display:flex; gap:2px; height:8px; overflow:hidden; border-radius:4px; }
-.capitalBar > i { display:block; min-width:2px; height:100%; background:var(--bar-soft); transform-origin:left center; }
-.capitalBar > i[data-rest] { background:var(--line); }
-.capitalLabels { position:relative; height:18px; }
-.capitalLabels > li {
-  position:absolute; top:0; display:inline-flex; align-items:baseline; gap:5px;
-  font-size:12px; font-weight:600; color:var(--text-body); white-space:nowrap;
+/* ---- Sermaye panosu (kapağın sağ kolonu) --------------------------------
+   Gerekçe CapitalBoard.tsx. Panonun zemini kapaktan bir ton aşağıda
+   (`--surface-sunken`; derinlik tonla, gölge yok). */
+.capital { display:grid; gap:12px; min-width:0; padding:16px 18px; border-radius:16px; background:var(--surface-sunken); }
+.capitalHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; }
+.capitalHead > span:first-child { font-size:13px; font-weight:600; color:var(--text-body); }
+.capitalFigure { display:inline-flex; align-items:baseline; gap:8px; }
+.capitalFigure > b { font-size:24px; font-weight:700; line-height:1.1; letter-spacing:-.03em; color:var(--text-strong); }
+.capitalFigure > small { font-size:12.5px; font-weight:600; color:var(--text-muted); }
+/* Şerit fon başına parça. Ton kademesi rütbeden (`data-rank` 0-3):
+   ilk üçü `--bar-soft`un kendisinden açılan üç kademe, kalan fonlar tek
+   açık ton. */
+.capitalBar { display:flex; gap:2px; height:12px; overflow:hidden; border-radius:4px; }
+.capitalBar > i { display:block; min-width:2px; height:100%; transform-origin:left center; }
+.capitalBar > i[data-rank="0"], .capitalLegend > li[data-rank="0"]::before { background:var(--bar-soft); }
+.capitalBar > i[data-rank="1"], .capitalLegend > li[data-rank="1"]::before { background:color-mix(in oklab, var(--bar-soft) 72%, transparent); }
+.capitalBar > i[data-rank="2"], .capitalLegend > li[data-rank="2"]::before { background:color-mix(in oklab, var(--bar-soft) 50%, transparent); }
+.capitalBar > i[data-rank="3"], .capitalLegend > li[data-rank="3"]::before { background:color-mix(in oklab, var(--bar-soft) 30%, transparent); }
+/* Lejant: 2×2 (dar panoda tek kolon). Satır = ton çizgisi, portre, soyadı,
+   pay (güçlü) ve tutar (sessiz); pay ve tutar sağ uçta aynı hatta. */
+.capitalLegend { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px 20px; }
+.capitalLegend > li {
+  position:relative; display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; align-items:center; gap:8px;
+  min-width:0; padding-left:10px;
 }
-.capitalLabels > li > b { font-weight:700; color:var(--text-strong); }
-.capitalLabels > li[data-end] { right:0; color:var(--text-muted); }
-/* 390'da şerit ~320 piksel: Laffont'un etiketi (%60'ta) ile sağdaki
-   "Diğer" etiketi üst üste biniyordu. Telefonda yalnız ilk dilimin adı. */
-@media(max-width:639px) {
-  .capitalLabels > li:not(:first-child) { display:none; }
+.capitalLegend > li::before { content:""; position:absolute; left:0; top:3px; bottom:3px; width:3px; border-radius:2px; }
+.legendName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:650; color:var(--text-strong); }
+.capitalLegend > li > b { font-size:13.5px; font-weight:700; color:var(--text-strong); }
+.capitalLegend > li > small { min-width:6ch; text-align:right; font-size:12px; color:var(--text-muted); }
+.legendMore {
+  display:grid; place-items:center; width:24px; height:24px; border-radius:8px;
+  font-size:11px; font-weight:700; background:var(--premium-surface); color:var(--text-body);
+}
+@media(max-width:479px) {
+  .capital { padding:14px; }
+  .capitalLegend { grid-template-columns:minmax(0,1fr); gap:8px; }
 }
 
 /* ---- Yatırımcı kartları ------------------------------------------------- */
@@ -60,14 +101,30 @@
 .leanLegend > li[data-lean="down"] > svg { color:var(--down); }
 .leanLegend > li[data-lean="flat"] > svg { color:var(--flat); }
 
-/* 390'da iki, 720'de üç, 1200'de dört kolon (1440'ta 16 kart 4×4). */
-.grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
-@media(min-width:720px) { .grid { grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; } }
+/* 390'da iki, 720'de üç, 1200'de dört kolon (1440'ta 16 kart 4×4).
+
+   SUBGRID (6 Kasım). Kartın beş satırı (kimlik, ölçü, yön, ilk üç,
+   hamle) ızgaranın satırlarıdır: `li` ve kart (`.tile`) beş satırı
+   `subgrid` ile devralıyor, komşu kartların aynı satırları aynı hatta.
+   Kartlar arası dikey boşluk ızgaranın `row-gap`i DEĞİL (o, kart içindeki
+   satırlar arasına da girerdi): kart içi aralık `.tile`ın kendi `row-gap`i,
+   kartlar arası `li`nin alt boşluğu. Subgrid desteklemeyen tarayıcı kartı
+   kendi içinde akıtır (taban: aynı içerik, hizasız).
+
+   KAP (container) KARTTA DEĞİL, YUVALARDA. Kart `container-type` taşıyınca
+   boyut sınırlaması subgrid'i kapatıyor (Chrome 153'te ölçüldü: kartın
+   `grid-template-rows` değeri "none"a düşüyor, `container-type:normal`
+   ile "subgrid"e dönüyor). Dar kart kuralları bu yüzden her yuvanın
+   kendi genişliğine bakıyor: yuva = kart − 30 piksel (iki 14'lük dolgu
+   + kenar), eşik 230'luk kart → 200'lük yuva. */
+.grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); column-gap:10px; row-gap:0; }
+.grid > li { display:grid; grid-row:span 5; grid-template-rows:subgrid; row-gap:0; margin-bottom:10px; }
+@media(min-width:720px) { .grid { column-gap:12px; } .grid > li { margin-bottom:12px; } }
 @media(min-width:1200px) { .grid { grid-template-columns:repeat(4, minmax(0,1fr)); } }
+@media(min-width:720px) and (max-width:1199px) { .grid { grid-template-columns:repeat(3, minmax(0,1fr)); } }
 
 .tile {
-  container-type:inline-size;
-  display:flex; flex:1; flex-direction:column; gap:12px; min-width:0; padding:14px 14px 12px;
+  display:grid; grid-row:1 / -1; grid-template-rows:subgrid; row-gap:12px; min-width:0; padding:14px 14px 12px;
   border:1px solid var(--line); border-radius:18px; background:var(--premium-surface); color:var(--text-body);
   transition:border-color .3s var(--ease-brand), background-color .3s var(--ease-brand), transform .3s var(--ease-brand);
 }
@@ -77,6 +134,7 @@
   .tile:hover img { filter:none; }
 }
 .tile:active { transform:scale(.99); }
+.tile > * { container-type:inline-size; min-width:0; }
 /* Tepe şeridi = çeyreğin yönü (gerekçe InvestorGrid.tsx → InvestorTile).
    Kartın yarıçapı içinde, kenarlardan 18 piksel içeride (piyasa dokusu
    uç kartlarıyla aynı ölçü). */
@@ -93,13 +151,24 @@
 .tileId > b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:15px; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); transition:color .2s var(--ease-brand); }
 .tileId > small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
 
-.tileFigure { display:grid; gap:7px; }
-.tileFigureRow { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 8px; }
-.tileFigureRow > strong { font-size:28px; font-weight:650; line-height:1; letter-spacing:-.045em; color:var(--text-strong); }
-.tileFigureRow > small { font-size:12.5px; font-weight:550; color:var(--text-body); }
-/* Kongre kartı: sayı ve birimi bitişik ("40 İşlem"), iki uca dağılmıyor. */
-.tileFigureRow[data-tight] { justify-content:flex-start; }
-.tile[data-closed] .tileFigureRow > strong { color:var(--text-body); }
+/* Ölçü bloğu: künye ÜSTTE, sayı altında, çizgi en altta (6 Kasım).
+   İki ölçünün sayıları aynı taban çizgisinde (`align-items:end` +
+   tek satır yüksekliği) — "ölçü ızgarası aynı hatta biter". */
+.tileFigure { display:grid; align-content:start; gap:8px; }
+/* İki ölçü tek 2×2 ızgara: künyeler üst satırda, sayılar alt satırda
+   taban çizgisinde (`.measure` `display:contents`). İlk denemede her
+   ölçü kendi sütununda dibe yaslıydı; 28'lik yüzde ile 15'lik tutarın
+   künyeleri farklı yükseklikte kaldı ("Hisse Portföyü" 9 piksel aşağıda,
+   1440 ekran görüntüsü). */
+.measures { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-rows:auto auto; grid-auto-flow:column; align-items:baseline; gap:3px 10px; min-width:0; }
+.measure { display:contents; }
+.measure[data-end] > * { text-align:right; }
+.measure > small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:550; color:var(--text-muted); }
+.measure > strong { font-size:28px; font-weight:650; line-height:1; letter-spacing:-.045em; color:var(--text-strong); white-space:nowrap; }
+.measure > b { font-size:15px; font-weight:700; line-height:1.2; letter-spacing:-.01em; color:var(--text-body); white-space:nowrap; }
+/* "40 İşlem": birim sayıya bitişik, sayının puntosunda değil. */
+.measureUnit { font-size:14px; font-weight:600; letter-spacing:0; color:var(--text-body); }
+.tile[data-closed] .measure > strong { color:var(--text-body); }
 /* Kulvar ve şerit: ölçek bütün kartlarda %0-100. */
 .lane { display:block; height:var(--lane-h, 5px); overflow:hidden; border-radius:999px; background:var(--line-soft); }
 .lane > i { display:block; height:100%; border-radius:999px; background:var(--bar-soft); transform-origin:left center; }
@@ -112,13 +181,12 @@
 .split > i[data-tone="up"] { background:color-mix(in oklab, var(--up) 55%, transparent); }
 .split > i[data-tone="down"] { background:color-mix(in oklab, var(--down) 55%, transparent); }
 
-.figureCaption { margin-top:-2px; font-size:12px; font-weight:550; color:var(--text-muted); }
 /* Çeyreğin yönü: rozet + alış/satış sayısı, altında oran çizgisi. */
-.quarter { display:grid; gap:7px; }
+.quarter { display:grid; align-content:start; gap:7px; }
 .tileBadges { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px; }
 .tileBadges > small { font-size:12px; color:var(--text-muted); }
 .moveCounts { display:inline-flex; flex-wrap:wrap; gap:2px 10px; font-weight:650; }
-.moveCounts > span[aria-hidden] { display:inline-flex; align-items:center; gap:3px; white-space:nowrap; }
+.moveCounts > span:not(.sr-only) { display:inline-flex; align-items:center; gap:3px; white-space:nowrap; }
 .holdingsHead { display:flex; align-items:baseline; justify-content:space-between; gap:8px; font-size:12px; font-weight:550; color:var(--text-muted); }
 .holdingsHead > b { font-size:12.5px; font-weight:700; color:var(--text-strong); }
 .badge, .chip {
@@ -132,7 +200,7 @@
 
 /* En büyük üç pozisyon: yığılı şerit + logolar. Şeridin parçaları ve
    logolar aynı sırada (soldan büyüğe); ton birinciden üçüncüye açılıyor. */
-.holdings { display:grid; gap:8px; }
+.holdings { display:grid; align-content:start; gap:8px; }
 .stack { display:flex; gap:2px; height:6px; overflow:hidden; border-radius:3px; transform-origin:left center; }
 .stack > i { display:block; min-width:2px; height:100%; }
 .stack > i[data-seg="0"] { background:var(--bar-soft); }
@@ -145,25 +213,43 @@
 .holdingText > b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12.5px; font-weight:700; color:var(--text-strong); }
 .holdingText > small { font-size:12px; color:var(--text-muted); white-space:nowrap; }
 .noLogo { display:block; width:22px; height:22px; flex-shrink:0; border-radius:6px; background:var(--surface-sunken); }
-/* Dar kart (telefonda iki kolon, ~170 piksel): logo üstte, yazı altta. */
-@container (max-width:230px) {
+/* Dar kart (telefonda iki kolon, ~170 piksel): logo üstte, yazı altta.
+   Eşik yuvanın genişliği (yukarıda, "KAP KARTTA DEĞİL"). */
+@container (max-width:200px) {
   .holding { flex-direction:column; align-items:flex-start; gap:4px; }
   .holdingText { align-self:stretch; }
-  .tileFigureRow > strong { font-size:24px; }
-  /* Ad kısalmasın ("Warren B…" ölçüldü): portre 40, ad iki satıra kadar. */
-  .tileHead { gap:8px; }
+  .measure > strong { font-size:24px; }
+  /* İki künye yan yana sığmıyor ("Sermayedeki Payı" kesiliyordu, 390):
+     yüzde tek başına, tutar künyesiyle bir alt satırda. */
+  .measures { grid-template-columns:minmax(0,1fr); grid-template-rows:none; grid-auto-flow:row; }
+  .measure[data-end] { display:flex; align-items:baseline; justify-content:space-between; gap:6px; margin-top:2px; }
+  .measure > b { font-size:13px; }
+  /* Ad kısalmasın ("Warren B…" ölçüldü): portre 40, ad iki satıra kadar.
+     (Kimlik yuvasının kendisi kap; aralığı 10'da kalıyor.) */
   .tileHead > span[data-size] { width:40px; border-radius:12px; }
+  /* Hamle satırı: şirket adı düşüyor (sembol + logo tek satır, hap altında;
+     adla üç satıra bölünüyordu, 390). */
+  .highlightId > small { display:none; }
+  .tileId > small { display:-webkit-box; overflow:hidden; white-space:normal; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.3; }
   .tileId > b { display:-webkit-box; overflow:hidden; white-space:normal; -webkit-line-clamp:2; -webkit-box-orient:vertical; font-size:14px; line-height:1.2; }
   /* Pozisyon sayısı dar kartta düşüyor; detay sayfasında ve şeritte var.
      Alış/satış sayısı kalır (yönün kendisi), rozetin altına iner. */
   .tileBadges > small:not(.moveCounts) { display:none; }
 }
 
+/* En büyük hamle: künye üstte, altında logo + sembol (+ ad) + hap. Satır
+   ızgaranın son satırı; ÜSTE yaslı (`align-self:start`): saç teli
+   komşu kartlarınkiyle aynı hatta. Dibe yaslıyken Kongre kartının kısa
+   "Son İşlem" satırı komşusundan 28 piksel aşağıda başlıyordu (1440). */
 .highlight {
-  display:flex; flex-wrap:wrap; align-items:center; gap:5px 6px; margin-top:auto; padding-top:10px;
-  border-top:1px solid var(--line-soft); font-size:12.5px;
+  display:grid; align-self:start; gap:6px; padding-top:10px; border-top:1px solid var(--line-soft); font-size:12.5px;
 }
-.highlight > b { font-size:13px; font-weight:700; color:var(--text-strong); }
+.highlightLabel { font-size:12px; font-weight:550; color:var(--text-muted); }
+.highlightRow { display:flex; flex-wrap:wrap; align-items:center; gap:5px 7px; min-width:0; }
+.highlightId { display:flex; min-width:0; flex:1 1 auto; align-items:baseline; gap:6px; }
+.highlightId > b { font-size:13px; font-weight:700; color:var(--text-strong); }
+.highlightId > small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
+.highlightRow > .chip { margin-left:auto; }
 .highlightMuted { font-size:12px; color:var(--text-muted); }
 
 .gridNote { max-width:110ch; font-size:12.5px; line-height:1.6; color:var(--text-muted); text-wrap:pretty; }

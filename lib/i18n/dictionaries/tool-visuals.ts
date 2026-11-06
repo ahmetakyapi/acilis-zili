@@ -61,7 +61,10 @@ export const toolVisualsTr = {
     gateNote: "Puana girmez; takılan hissenin puanı {cap} ile sınırlanır.",
     weightShare: "Puandaki Ağırlık",
     laneTitle: "Puanlar Tek Kulvarda",
-    laneHint: "Her nokta bir hisse; çentikler bant eşikleri. Puan bir araştırma sırasıdır, alım listesi değil.",
+    laneHint: "Her nokta bir hisse; zemin tonları puan bantları. Puan bir araştırma sırasıdır, alım listesi değil.",
+    zoneFrom: "{n}+",
+    weightsHint: "Puan {n} üzerinden; her kategori cetvelde kendi payı kadar yer tutar.",
+    weightPoints: "{n} Puan",
     ringAria: "{symbol} uyum puanı {score} / 100",
   },
 };
@@ -116,7 +119,10 @@ export const toolVisualsEn: typeof toolVisualsTr = {
     gateNote: "Not scored; a stock that fails is capped at {cap}.",
     weightShare: "Weight in Score",
     laneTitle: "All Scores on One Lane",
-    laneHint: "Each dot is a stock; notches mark the band thresholds. The score is a research order, not a buy list.",
+    laneHint: "Each dot is a stock; the shaded zones are the score bands. The score is a research order, not a buy list.",
+    zoneFrom: "{n}+",
+    weightsHint: "The score is out of {n}; each category takes up its share of the ruler.",
+    weightPoints: "{n} Points",
     ringAria: "{symbol} fit score {score} / 100",
   },
 };

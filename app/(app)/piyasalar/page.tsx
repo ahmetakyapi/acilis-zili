@@ -667,10 +667,6 @@ async function IndexDetail({
       >
         {source && <DataStamp labels={t.data} source={source} at={stampAt} stale={stale} locale={locale}
           note={status.session === "pre-market" || status.session === "after-hours" ? t.data.extendedNote : undefined} />}
-        {/* ÖLÇEK NOTU KÜNYE BANDINDA. İki hareket panelinin üstünde tek
-            başına bir satırdı (sayfada kendi 30 piksellik şeridi); bant
-            hemen altındaki iki panelin künyesi zaten. */}
-        {withQuote.length > 0 && <span className={styles.movementScale}>{t.markets.movementScale}</span>}
       </IndexToolbar>
 
       {withQuote.length > 0 && (
@@ -710,6 +706,14 @@ async function IndexDetail({
                   .replace("{total}", String(withChange.length)) + staleNote
               }
             />
+            {/* ÖLÇEK NOTU İKİ PANELİN DİBİNDE (6 Kasım). İki hareket
+                panelinin üstünde tek başına bir satırdı; sonra ısı haritasının
+                künye bandına taşınmıştı ("bant hemen altındaki iki panelin
+                künyesi"). Orada üç parçalı bandın ortasında kendi panelinden
+                kopuk, haritayı anlatıyormuş gibi duruyordu. Not iki panelin
+                ORTAK ölçeğini söylüyor; yeri ikisinin altında, iki kolonu
+                kaplayan tek satır. */}
+            <p className={styles.movementScale}>{t.markets.movementScale}</p>
           </div>
         </>
       )}
@@ -759,8 +763,13 @@ async function IndexDetail({
 
 function IndexTabs({ tab, aside, identity }: { tab: TabKey; locale: Locale; t: Dictionary; aside?: ReactNode; identity?: ReactNode }) {
   return <Panel className={styles.indexTabs}>
+      {/* TEK ŞERİT, ÜÇ BÖLME (6 Kasım). Çipler kutusuz, medyan çerçevesiz,
+          pay kendi kenarlıklı kutusunda duruyordu: üç ayrı yükseklik
+          (1440: çipler 38, medyan ~46, pay kutusu 90 piksel), üç ayrı dil
+          ve aralarında hizasız boşluklar. Şimdi tek panel; seçim, medyan ve
+          pay aynı yüzeyde üç bölme, aralarında saç çizgisi, üçü de dikeyde
+          ortalı. Pay kutusunun kenarlığı kalktı — panelin kendisi kutu. */}
       <div className={styles.toolbarLayout}>
-        <div className={styles.indexControls}>
         <div className={styles.indexChoices}>
         {/* "Piyasa Genişliği" künyesi çiplerin üstündeydi; 9 Ekim 2026'da
             bütün bölüm künyeleriyle kalktı (`PageHeader` yorumu). Çiplerin
@@ -807,7 +816,6 @@ function IndexTabs({ tab, aside, identity }: { tab: TabKey; locale: Locale; t: D
         </div>
         </div>
         {identity}
-        </div>
         {/* SAĞDA YÜKSELENLERİN PAYI (26 Eylül). Pay genişlik kartının sağ
             yarısını tutuyordu; satırın sağı ise yalnızca liste tarihini
             taşıyordu. Pay buraya çıkınca kartın sağı ısı haritasına kaldı.
@@ -834,11 +842,13 @@ function IndexIdentity({ tab, proxy, median: medianMove, phase, locale, t, loadi
      açılış öncesinde "Günün" değil, piyasa kapalıyken "Son Kapanış". */
   const medianLabel =
     phase === "pre-market" ? t.markets.medianPreMarket : phase === "lastClose" ? t.markets.medianLastClose : t.markets.medianStock;
-  return <div className={styles.toolbarIdentity} aria-label={label}>
-    <div className={styles.selectedIndexLabel}>
-      <span className={styles.proxySymbol}>{proxy}</span>
-      <span>{label}</span>
-    </div>
+  /* FON SEMBOLÜ VE AD KALKTI (6 Kasım). "QQQ Nasdaq 100" satırı, fon
+     fiyatı burada dururken onun künyesiydi; fiyat 18 Ekim'de kalkınca
+     künye yalnız kaldı ve hemen solundaki seçili çipin ADINI tekrar
+     ediyordu (fon sembolü üstteki kartta zaten yazılı). Blok artık tek iş
+     yapıyor: medyan ve onun tek cümlelik açıklaması. Seçili endeksin adı
+     ekran okuyucuya `aria-label` ile gidiyor. */
+  return <div className={styles.toolbarIdentity} aria-label={`${label} · ${proxy}`}>
     {loading ? <Skeleton className="h-7 w-48 max-w-full" /> : medianMove !== null ? (
       <div className={styles.selectedIndexReading}>
         <span className={styles.medianLabel}>{medianLabel}</span>
@@ -1009,7 +1019,7 @@ function MoverPanel({
         </div>
       </div>
       <ul className="divide-y divide-line-soft" data-motion-stagger>
-        {rows.map((row, index) => {
+        {rows.map((row) => {
           const changePct = row.quote?.changePct ?? 0;
           const width = (Math.abs(changePct) / scaleMax) * 100;
           /* RENK SATIRIN KENDİ DEĞERİNDEN, PANELİN ADINDAN DEĞİL.
@@ -1033,7 +1043,10 @@ function MoverPanel({
                 data-cc={row.member.symbol}
               >
                 <div className={styles.moverIdentity}>
-                  <span className={styles.moverRank} aria-hidden>{index + 1}</span>
+                  {/* SIRA NUMARASI KALKTI (6 Kasım). Beşli kartın sağ üstünde
+                      12 piksellik "1…5" logodan kopuk duruyordu ve yeni bilgi
+                      taşımıyordu: sıra kartın yerinden (soldan sağa, telefonda
+                      yukarıdan aşağı) ve çubuğun boyundan zaten okunuyor. */}
                   <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="sm" className={styles.moverLogo} />
                   <span className={styles.moverCompany}>
                     <span className="shrink-0 text-base font-bold text-strong">
@@ -1061,7 +1074,7 @@ function MoverPanel({
                     aria-hidden
                     data-motion-draw="line"
                     className={cn(
-                      "bar-fill h-[3px] rounded-full",
+                      "bar-fill h-[5px] rounded-full",
                       satirTon === "up"
                         ? "bg-up/70"
                         : satirTon === "down"
@@ -1214,6 +1227,8 @@ function MembersTable({
     ...rows.map((row) => Math.abs(row.quote?.changePct ?? 0)),
     0.01,
   );
+  /* Listede eksi bir değişim var mı — çubuğun sıfırı ortada mı (ScaleBar). */
+  const changeSigned = rows.some((row) => (row.quote?.changePct ?? 0) < 0);
   /* PİYASA DEĞERİ BİR DE ÇİZGİ (26 Eylül). "Karşılaştırılan her büyüklük bir
      de çizgi olarak okunur" (CLAUDE.md); sütun yalnızca sayıydı ve "hangisi
      ne kadar büyük" basamak basamak okunuyordu. Ölçek DOĞRUSAL ve listenin
@@ -1388,49 +1403,36 @@ function MembersTable({
                       tek tek okunup kafada sıralanarak cevaplanıyordu.
                       Çubuk sıralamayı göze taşıyor ve üstteki En Çok
                       Artanlar kartıyla aynı ölçeği kullanıyor. */}
+                  {/* 6 Kasım: çubuk sitenin ölçek diline geçti (`ScaleBar`,
+                      CompareScale.tsx). Eskisi sağa yaslı, tek yönlü ve yön
+                      renginde 4 piksellik bir şeritti: artı ile eksi aynı
+                      yöne uzuyor, fark yalnız renkteydi. Şimdi listede eksi
+                      varsa SIFIR ORTADA — artı sağa, eksi sola açılıyor;
+                      renk yalnız işaretten (`signal`), kalınlık ve tavan
+                      piyasa değeri sütunuyla aynı (5 piksel, 96 piksel).
+                      Değişim bilinmiyorsa çubuk yine HİÇ çizilmiyor: sıfır
+                      genişlik "hareket yok" demek olurdu ve o da bir iddia. */}
                   <td className="px-1.5 py-2.5 sm:px-3">
-                    <span className="flex flex-col items-end gap-1">
-                      <span
-                        className={cn(
-                          "numeral text-right font-bold",
-                          tone === "up"
-                            ? "text-up"
-                            : tone === "down"
-                              ? "text-down"
-                              : "text-muted",
-                        )}
-                      >
-                        {quote ? formatPercent(quote.changePct, locale) : NO_VALUE}
-                      </span>
-                      {quote && (
-                        <span
-                          aria-hidden
-                          className="flex h-1 w-12 justify-end overflow-hidden rounded-full bg-surface-elevated sm:w-16"
-                        >
-                          <span
-                            className={cn(
-                              "h-full rounded-full",
-                              tone === "up"
-                                ? "bg-up/70"
-                                : tone === "down"
-                                  ? "bg-down/70"
-                                  : "bg-flat/50",
-                            )}
-                            data-motion-draw="line"
-                            style={{
-                              transformOrigin: "right center",
-                              /* Değişim bilinmiyorsa çubuk çizilmiyor: sıfır
-                                 genişlik "hareket yok" demek olurdu ve o da
-                                 bir iddia. */
-                              width:
-                                quote.changePct === null
-                                  ? 0
-                                  : `${(Math.abs(quote.changePct) / peakChange) * 100}%`,
-                            }}
-                          />
-                        </span>
+                    <span
+                      className={cn(
+                        "numeral block text-right font-bold",
+                        tone === "up"
+                          ? "text-up"
+                          : tone === "down"
+                            ? "text-down"
+                            : "text-muted",
                       )}
+                    >
+                      {quote ? formatPercent(quote.changePct, locale) : NO_VALUE}
                     </span>
+                    {quote && quote.changePct !== null && quote.changePct !== undefined && (
+                      <ScaleBar
+                        ratio={quote.changePct / peakChange}
+                        signed={changeSigned}
+                        tone="signal"
+                        className="max-w-[64px] sm:max-w-[96px]"
+                      />
+                    )}
                   </td>
                   {/* Piyasa değeri telefonda kendi sütununu kaybediyor ama
                       veriyi kaybetmiyor: fiyatın altına küçük punto ikinci
@@ -1454,9 +1456,11 @@ function MembersTable({
                       showContribution ? undefined : "sm:pr-5",
                     )}
                   >
-                    {row.marketCap
-                      ? formatMoneyCompact(row.marketCap, locale)
-                      : NO_VALUE}
+                    <span className="block">
+                      {row.marketCap
+                        ? formatMoneyCompact(row.marketCap, locale)
+                        : NO_VALUE}
+                    </span>
                     {row.marketCap ? <ScaleBar ratio={row.marketCap / peakCap} signed={false} className="max-w-[96px]" /> : null}
                   </td>
                   {showContribution && (
@@ -1561,7 +1565,7 @@ function DetailSkeleton({ rows, contribution }: { rows: number; contribution: bo
                   <Skeleton className="size-6 rounded-md" />
                   <div className={styles.moverSkeletonCompany}><Skeleton className="h-[18px] w-12" /><Skeleton className="h-[14px] w-full" /></div>
                   <Skeleton className={cn(styles.moverSkeletonValue, "h-5 w-16")} />
-                  <Skeleton className={cn(styles.moverSkeletonBar, "h-[3px] w-full")} />
+                  <Skeleton className={cn(styles.moverSkeletonBar, "h-[5px] w-full")} />
                   {contribution && <Skeleton className={cn(styles.moverSkeletonBar, "h-4 w-20")} />}
                 </li>
               ))}

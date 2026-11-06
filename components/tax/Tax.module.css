@@ -118,6 +118,20 @@
    zemini `--surface-elevated` üzerinden okuyor; bileşenin kendi dosyasına
    dokunmadan burada yerel olarak yeniden tanımlanıyor. */
 .fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px 14px; --surface-elevated:var(--panel-fixed); }
+/* KOMPAKT ALAN (6 Kasım, sahibinin sözü: "alanlar boş ve devasa"). Fareyle
+   kullanılan geniş ekranda alan 46 → 40 piksel, adım arası 30 → 22, alan
+   arası 18 → 14: 1440'ta Alış ve Satış adımları birlikte ölçüldü (önce/
+   sonra `.tmp-vergi.mjs`, raporda). Dokunmatikte 46 kalıyor (başparmak
+   hedefi ≥ 44, iOS'ta 16 puntonun altı odakta yakınlaştırıyor). Tarih
+   seçici aynı yüksekliği kendi değişkeninden okuyor (`--dp-field-h`). */
+.fields, .row { --field-h:46px; --dp-field-h:var(--field-h); }
+@media (min-width:640px) and (hover:hover) and (pointer:fine) {
+  .fields, .row { --field-h:40px; --dp-field-font:14.5px; }
+  .fields { gap:14px 12px; }
+  .step { padding-bottom:22px; }
+  .stepTitle { margin-bottom:12px; }
+  .input { font-size:15px; }
+}
 .row { --surface-elevated:var(--panel-fixed); }
 /* Telefonda tek sütun (ölçüldü, 390): adım rayından sonra iki alan 143'er
    piksel kalıyor, tarih seçicinin tabanı ise 176 (11rem). Tarih alanı
@@ -129,12 +143,13 @@
 .help { font-size:12px; line-height:1.45; color:var(--text-muted); }
 .fieldError { display:flex; align-items:flex-start; gap:5px; font-size:12px; font-weight:500; line-height:1.4; color:var(--down); animation:chip-in 280ms var(--ease-brand) both; }
 .fieldError svg { flex-shrink:0; margin-top:1px; }
-.input { height:46px; width:100%; min-width:0; border:1px solid var(--line-strong); border-radius:var(--radius-md); background:var(--panel-fixed); box-shadow:var(--shadow-well); padding:0 12px; font-size:16px; color:var(--text-strong); outline:none; transition:border-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand); }
+.input { height:var(--field-h, 46px); width:100%; min-width:0; border:1px solid var(--line-strong); border-radius:var(--radius-md); background:var(--panel-fixed); box-shadow:var(--shadow-well); padding:0 12px; font-size:16px; color:var(--text-strong); outline:none; transition:border-color .2s var(--ease-brand), box-shadow .2s var(--ease-brand); }
 @media (hover:hover) and (pointer:fine) { .input:hover { border-color:var(--text-muted); } }
 .input:focus { border-color:var(--line-focus); box-shadow:var(--shadow-well), var(--shadow-focus); }
 .input[aria-invalid="true"] { border-color:var(--down); }
 .input[aria-invalid="true"]:focus { box-shadow:var(--shadow-well), 0 0 0 4px var(--down-wash); }
 .upper { text-transform:uppercase; }
+.upper::placeholder { text-transform:none; }
 /* W-8BEN seçimi telefonda iki alanın yarısına sığmıyordu ("Evet · %20"
    üç satıra kırılıyordu, 390'da ölçüldü); kendi satırında tam genişlik. */
 .fieldWide { grid-column:1 / -1; }
@@ -192,13 +207,35 @@
    duruyordu. Şimdi çukur tonda bir şerit; bütün şerit düğme (`::after`).
    Dosya üstüne gelince çerçeve 2 piksel mavi ve zemin mavi tonda: ışıma yok,
    yalnızca ton. */
-.drop { position:relative; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 16px; padding:12px 18px 12px 12px; border-radius:16px; background:var(--surface-sunken); box-shadow:inset 0 0 0 1px var(--line-soft); transition:background-color .25s var(--ease-brand), box-shadow .25s var(--ease-brand); }
-.drop[data-over] { background:var(--primary-tint); box-shadow:inset 0 0 0 2px var(--primary); }
-.dropButton { display:flex; align-items:center; gap:14px; min-width:0; text-align:left; }
-.dropButton::after { content:""; position:absolute; inset:0; border-radius:16px; }
+/* KESİKLİ KENAR GERİ GELDİ (6 Kasım, sahibinin sözü: "dosya bırakma alanı
+   gibi görünmüyor"). Yukarıdaki gerekçe ("sayfada hiçbir kutu kesikli
+   değil") doğruydu ama sonucu yanlıştı: şerit bir bilgi satırı gibi okundu
+   ve okuyucu dosyayı sürükleyebileceğini anlamadı. Kesikli çizgi burada bir
+   süs değil, nesnenin ne olduğu — tek kesikli kutu bu. Zemin hâlâ çukur
+   ton, gölge yok; dosya üstüne gelince çizgi düz ve mavi, zemin mavi ton.
+   Sağdaki "Dosya Seç" aynı düğmenin buton görünümlü ucu (`.dropCta`). */
+.drop { position:relative; display:flex; flex-wrap:wrap; align-items:center; gap:10px 20px; min-height:76px; padding:14px 14px 14px 14px; border:1.5px dashed var(--line-strong); border-radius:16px; background:var(--surface-sunken); transition:background-color .25s var(--ease-brand), border-color .25s var(--ease-brand); }
+.drop[data-over] { border-style:solid; border-color:var(--primary); background:var(--primary-tint); }
+.dropButton { display:flex; flex:0 1 auto; align-items:center; gap:14px; min-width:0; text-align:left; }
+.dropCopy { min-width:0; }
+.dropMeta { position:relative; pointer-events:none; display:flex; flex:1 1 auto; flex-wrap:wrap; align-items:center; gap:8px 16px; min-width:0; }
+.dropFormats { display:flex; flex-wrap:wrap; gap:6px; margin:0; }
+.dropChip { display:inline-flex; align-items:center; height:24px; padding:0 9px; border-radius:999px; background:var(--panel-fixed); box-shadow:inset 0 0 0 1px var(--line-soft); font-size:12px; font-weight:600; white-space:nowrap; color:var(--text-body); }
+.dropCta { position:relative; pointer-events:none; display:inline-flex; align-items:center; height:36px; margin-left:auto; padding:0 14px; border-radius:10px; background:var(--panel-fixed); box-shadow:var(--shadow-raised); font-size:13px; font-weight:650; white-space:nowrap; color:var(--primary-ink); transition:background-color .25s var(--ease-brand), color .25s var(--ease-brand); }
+@media (hover:hover) and (pointer:fine) { .drop:hover .dropCta { background:var(--primary); color:var(--on-primary); } }
+/* Telefonda sürüklemek yok: ipucu ve "Dosya Seç" ucu kalkar, şeridin
+   tamamı zaten düğme. Çipler ve gizlilik ikinci satırda metnin hizasında. */
+.dropHintNarrow { display:none; margin-top:3px; font-size:12px; line-height:1.4; color:var(--text-muted); }
+@media (max-width:639px) {
+  .dropCta, .dropHint, .dropFormats { display:none; }
+  .dropHintNarrow { display:block; }
+  .dropMeta { padding-left:62px; }
+}
+@media (hover:none) { .dropHint { display:none; } }
+.dropButton::after { content:""; position:absolute; inset:-1.5px; border-radius:16px; }
 .dropButton:focus-visible { outline:none; }
 .dropButton:focus-visible::after { outline:2px solid var(--line-focus); outline-offset:2px; }
-.dropIcon { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; border-radius:12px; background:var(--panel-fixed); box-shadow:inset 0 0 0 1px var(--line-soft); color:var(--primary-ink); transition:transform .35s var(--ease-brand), background-color .25s var(--ease-brand); }
+.dropIcon { display:grid; place-items:center; flex-shrink:0; width:48px; height:48px; border-radius:12px; background:var(--panel-fixed); box-shadow:inset 0 0 0 1px var(--line-soft); color:var(--primary-ink); transition:transform .35s var(--ease-brand), background-color .25s var(--ease-brand); }
 .drop[data-over] .dropIcon { transform:translateY(-3px) scale(1.06); background:var(--primary-wash); }
 .dropTitle { display:block; font-size:15px; font-weight:650; line-height:1.25; letter-spacing:-.01em; color:var(--text-strong); }
 .dropHint { display:block; margin-top:3px; font-size:12px; line-height:1.4; color:var(--text-muted); }
@@ -207,9 +244,9 @@
   .drop:hover .dropIcon { transform:translateY(-2px); }
 }
 /* Gizlilik künyesi şeridin üstünde ama tıklamayı düğmeye geçiriyor. Telefonda
-   ikinci satıra iniyor ve metnin sol hattından başlıyor (44 ikon + 14 ara). */
-.privacy { position:relative; pointer-events:none; display:inline-flex; align-items:center; gap:6px; margin:0; padding-left:58px; font-size:12px; font-weight:600; line-height:1.4; color:var(--text-body); }
-@media (min-width:640px) { .privacy { padding-left:0; } }
+   ikinci satıra iniyor ve metnin sol hattından başlıyor (6 Kasım'dan beri
+   çiplerle birlikte `.dropMeta` içinde: 48 ikon + 14 ara). */
+.privacy { position:relative; pointer-events:none; display:inline-flex; align-items:center; gap:6px; margin:0; font-size:12px; font-weight:600; line-height:1.4; color:var(--text-body); }
 
 .import { margin-top:14px; padding:20px 16px; border-radius:18px; background:var(--surface-sunken); animation:chip-in 420ms var(--ease-brand) both; }
 @media (min-width:640px) { .import { padding:24px; } }
@@ -322,12 +359,13 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 /* Boş sonuç: tek cümle ve gelecek sonucun iskeleti. İskelet DURAĞAN: parıltı
    "yükleniyor" demek olurdu, burada beklenen bir şey yok, okuyucunun girdisi
    bekleniyor. Bloklar sayıların gerçek boyunda (büyük sayı 44, orta 24). */
-.emptyLead { display:flex; align-items:center; gap:12px; margin:0; max-width:44ch; font-size:14px; font-weight:500; line-height:1.5; color:var(--text-body); }
+.emptyLead { display:flex; align-items:center; gap:12px; margin:0; max-width:62ch; font-size:14px; font-weight:500; line-height:1.5; color:var(--text-body); }
 .emptyIcon { display:grid; place-items:center; flex-shrink:0; width:40px; height:40px; border-radius:12px; background:var(--panel-fixed); box-shadow:inset 0 0 0 1px var(--line-soft); color:var(--primary-ink); }
 /* Boş sonuçtaki "Nasıl Hesaplanır" çapası metnin hizasında: simge 40 +
    aralık 12. Dokunma alanı 44'e görünmeden genişliyor (`tap-44` kalıbı). */
-.emptyHow { position:relative; margin:4px 0 0 52px; }
-.emptyHow::after { content:""; position:absolute; inset:-6px -4px; }
+.emptyText { margin:0; }
+.emptyHow { position:relative; min-height:0; white-space:nowrap; vertical-align:baseline; }
+.emptyHow::after { content:""; position:absolute; inset:-12px -4px; }
 .ghost { display:flex; flex-direction:column; gap:20px; }
 .ghostRow { display:flex; flex-direction:column; gap:10px; }
 .ghostRow + .ghostRow { padding-top:20px; border-top:1px solid var(--line-soft); }
@@ -705,7 +743,7 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
    `--line`, dolgu `--primary` (mavi = ilerleme, etkileşimin rengi). */
 .emptySale { display:flex; flex-direction:column; gap:20px; }
 /* Akış kartı: sonuç panelinin zemininde bir ton açık karo (derinlik tonla). */
-.flowMap { padding:16px 16px 18px; border-radius:16px; background:var(--surface); }
+.flowMap { padding:14px 14px 16px; border-radius:16px; background:var(--surface); }
 .flowMapHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 16px; margin-bottom:16px; }
 .flowMapHead .basisTitle { margin:0; }
 .flowMeter { display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:650; color:var(--text-muted); }
@@ -758,7 +796,27 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 /* ---- Para birimi alanın içinde ($) ---- */
 .affix { position:relative; display:block; min-width:0; }
 .affixUnit { position:absolute; left:12px; top:0; bottom:0; display:flex; align-items:center; pointer-events:none; font-size:15px; font-weight:600; color:var(--text-muted); }
-.affix > .input { padding-left:28px; }
+.affix[data-unit] > .input { padding-left:28px; }
+/* Sağdaki birim ("Adet"): alanın içinde, rakamla aynı taban çizgisinde. */
+.affixSuffix { position:absolute; right:12px; top:0; bottom:0; display:flex; align-items:center; pointer-events:none; font-size:13px; font-weight:600; color:var(--text-muted); }
+.affix[data-suffix] > .input { padding-right:56px; }
+.input::placeholder { color:var(--text-muted); opacity:.7; }
+
+/* Klavye ipucu yalnız fareli geniş ekranda (dokunmatikte Enter yok). */
+.kbdHint { margin-left:auto; }
+@media (max-width:1023px), (hover:none) { .kbdHint { display:none; } }
+
+/* ---- Sembol önerisi (SymbolField, 6 Kasım) ----
+   Liste alanın altında yüzen katman: gölge merdiveninin `--shadow-floating`
+   basamağı (açılır menü). Seçili satır mavi ton, sembol mono künye. */
+.combo { position:relative; display:block; min-width:0; }
+.comboSpin { position:absolute; right:12px; top:50%; width:14px; height:14px; margin-top:-7px; border-radius:999px; border:2px solid var(--line); border-top-color:var(--primary-soft); animation:combo-spin .8s linear infinite; }
+@keyframes combo-spin { to { transform:rotate(360deg); } }
+.comboList { position:absolute; z-index:30; top:calc(100% + 6px); left:0; width:max(100%, 260px); max-height:288px; overflow-y:auto; margin:0; padding:4px; list-style:none; border:1px solid var(--line-soft); border-radius:12px; background:var(--panel-fixed); box-shadow:var(--shadow-floating); animation:chip-in 220ms var(--ease-brand) both; }
+.comboOption { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:baseline; gap:10px; min-height:40px; padding:9px 10px; border-radius:8px; cursor:pointer; }
+.comboOption[data-active] { background:var(--primary-tint); }
+.comboSymbol { font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--text-strong); }
+.comboName { overflow:hidden; font-size:13px; white-space:nowrap; text-overflow:ellipsis; color:var(--text-muted); }
 
 .ladderNext { font-size:12px; font-weight:600; color:var(--text-body); }
 
@@ -862,4 +920,117 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
 
 @media (prefers-reduced-motion:reduce) {
   .wfBar, .wfTop, .wfLink, .wfRow, .wfNum, .bandFill, .msPassed { transition:none; }
+}
+
+/* ==========================================================================
+   6 Kasım turu: kapak ölçüleri, sonuç şeridi, yatay akış rayı, sonuç
+   önizlemesi ve mobil sonuç özeti. Gerekçeler bileşenlerin başında
+   (TaxCover, TaxRibbon, TaxCalculator → SaleEmpty / mobil özet).
+   ========================================================================== */
+
+/* ---- Kapağın üç ölçüsü ----
+   Sol kolonun dibinde, hairline ile ayrılmış künye ızgarası (kutu değil).
+   Ölçüm `.tmp-vergi.mjs` ile raporda: kapak iki kolonunun son çocuk dipleri. */
+.coverFacts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px 20px; margin:18px 0 0; padding-top:16px; border-top:1px solid var(--line-soft); }
+/* Sayılar AYNI HATTA (CLAUDE.md "Ölçü ızgarası"): 1024'te "2026 Temettü
+   Beyan Sınırı" iki satıra kırılıp sayısını komşularından 18 piksel aşağı
+   itiyordu; künye üstte, sayı hücrenin dibinde. */
+.coverFacts > div { display:flex; min-width:0; flex-direction:column; justify-content:space-between; }
+.coverFacts dt { font-size:12px; font-weight:600; line-height:1.35; color:var(--text-muted); }
+.coverFacts dd { margin:4px 0 0; font-size:20px; font-weight:650; line-height:1.15; letter-spacing:-.02em; white-space:nowrap; color:var(--text-strong); }
+/* Tek kolonlu kapakta (< 768) yok: orada denge sorunu yok ve üç ölçü
+   hesaplayıcının ilk alanını 390'da ~110 piksel aşağı itiyordu (25 Ekim
+   kararı: birincil eylem kaydırmadan görünsün — `app/(app)/vergi/page.tsx`).
+   Aynı üç sayı "Bilmen Gerekenler" ve takvim panelinde duruyor. */
+@media (max-width:767px) { .coverFacts { display:none; } }
+
+/* ---- Kazançtan vergiye şeridi (TaxRibbon) ----
+   Kulvar dili: `--line-soft` üstünde 5 piksel şerit, boy yalnız `transform`.
+   Kazanç/zarar yön renginde, matrah yumuşak mavi (büyüklük), vergi
+   mürekkep, endeksleme pirinç tarama (şelaleyle aynı). İki grup geniş
+   kapta yan yana (≥ 520 piksel kap: 1440'ta sonuç kolonu ~570). */
+.ribbon { padding-top:18px; border-top:1px solid var(--line-soft); container-type:inline-size; }
+.ribbonGrid { display:grid; gap:20px; }
+@container (min-width:520px) { .ribbonGrid { grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:28px; } }
+.ribbonGroup { min-width:0; margin:0; }
+.ribbonTitle { margin:0 0 12px; font-size:14px; font-weight:700; line-height:1.3; color:var(--text-strong); }
+.ribbonLanes { display:flex; flex-direction:column; gap:12px; margin:0; padding:0; list-style:none; }
+.ribbonLane { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:2px 12px; }
+.ribbonName { display:flex; min-width:0; flex-direction:column; font-size:13px; font-weight:600; line-height:1.3; color:var(--text-strong); }
+.ribbonNote { font-size:12px; font-weight:500; line-height:1.35; color:var(--text-muted); }
+.ribbonValue { font-size:14px; font-weight:650; white-space:nowrap; color:var(--text-strong); }
+.ribbonLane[data-tone="tax"] .ribbonValue { font-size:16px; letter-spacing:-.01em; }
+.ribbonTrack { position:relative; grid-column:1 / -1; height:5px; margin-top:5px; overflow:hidden; border-radius:3px; background:var(--line-soft); }
+.ribbonTrack > i { position:absolute; inset:0; border-radius:3px; transform-origin:0 50%; transform:scaleX(var(--span, 0)); transition:transform 700ms var(--ease-brand); transition-delay:calc(var(--i, 0) * 70ms); }
+@starting-style { .ribbonTrack > i { transform:scaleX(0); } }
+.ribbonLane[data-tone="up"] .ribbonTrack > i { background:var(--up); }
+.ribbonLane[data-tone="down"] .ribbonTrack > i { background:var(--down); }
+.ribbonLane[data-tone="base"] .ribbonTrack > i { background:var(--primary-soft); }
+.ribbonLane[data-tone="tax"] .ribbonTrack > i { background:var(--text-body); }
+.ribbonLane[data-tone="index"] .ribbonTrack > i { background:repeating-linear-gradient(135deg, var(--brass) 0 2px, transparent 2px 5px); box-shadow:inset 0 0 0 1px var(--brass); }
+.ribbonFoot { margin:10px 0 0; font-size:12px; line-height:1.5; color:var(--text-body); }
+/* Önizleme: aynı çizim, soluk; çizgisi kartın kendi başlığında. */
+.ribbon[data-sketch] { padding-top:0; border-top:0; }
+.ribbon[data-sketch] .ribbonTrack > i { opacity:.5; }
+.ribbon[data-sketch] .ribbonValue { color:var(--text-body); }
+/* Önizlemede kur payı cümlesi yok: varsayımsal kurun payı okuyucuya bir
+   şey söylemiyor, kolonu 40 piksel uzatıyordu. */
+.ribbon[data-sketch] .ribbonFoot { display:none; }
+.ribbon[data-sketch] .ribbonLanes { gap:10px; }
+/* Dar kapta (telefon) önizleme yalnız "Kazançtan Vergiye": sonuç orada
+   formun altında ve ikinci grup boş kartı 200 piksel uzatıyordu (390). */
+@container (max-width:519px) { .ribbon[data-sketch] .ribbonGroup + .ribbonGroup { display:none; } }
+
+/* ---- Yatay akış rayı (SaleEmpty, data-axis="x") ----
+   Dikey rayın düğümleri ve durumları aynen; bağlayıcı düğümün sağından
+   sonrakinin soluna (dolgu soldan sağa uzar). Künyeler (`.flowHint`) ve
+   "Sonuç" ayıracı kalktı: sonuç düğümlerini kesik halka ve kesik bağlayıcı
+   ayırıyor. Ölçüldü (6 Kasım, 1440, TR): boş akış kartı 300 → 132 piksel. */
+.flowRail[data-axis="x"] { flex-direction:row; align-items:flex-start; }
+.flowRail[data-axis="x"] .flowNode { flex:1 1 0; min-width:0; grid-template-columns:minmax(0,1fr); justify-items:center; gap:6px; padding-bottom:0; text-align:center; }
+.flowRail[data-axis="x"] .flowNode[data-kind="input"]:nth-child(3) { padding-bottom:0; }
+.flowRail[data-axis="x"] .flowNode::before, .flowRail[data-axis="x"] .flowNode::after { top:17px; bottom:auto; left:calc(50% + 22px); right:calc(-50% + 22px); width:auto; height:2px; }
+.flowRail[data-axis="x"] .flowNode::after { transform-origin:0 50%; scale:0 1; }
+.flowRail[data-axis="x"] .flowNode[data-filled]::after { scale:1 1; }
+.flowRail[data-axis="x"] .flowNode[data-kind="input"]:nth-child(3)::before, .flowRail[data-axis="x"] .flowNode[data-kind="outcome"]::before { background:repeating-linear-gradient(90deg, var(--line) 0 4px, transparent 4px 8px); }
+.flowRail[data-axis="x"] .flowHint, .flowRail[data-axis="x"] .flowDivider { display:none; }
+.flowRail[data-axis="x"] .flowCopy { align-items:center; }
+.flowRail[data-axis="x"] .fmTitle { font-size:12.5px; line-height:1.25; text-wrap:balance; }
+.flowRail[data-axis="x"] .flowState { font-size:11px; }
+
+/* ---- Sonuç önizlemesi (boşken) ---- */
+.emptySale { gap:14px; }
+.samplePreview { display:flex; flex-direction:column; gap:12px; padding:16px; border-radius:16px; background:var(--surface); }
+.spHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 12px; }
+.spHead .basisTitle { margin:0; }
+.spLead { margin:-4px 0 0; font-size:12px; line-height:1.5; color:var(--text-muted); }
+.samplePreview .exampleFoot { margin-top:2px; padding-top:12px; }
+
+/* ---- Mobil sonuç özeti ----
+   Alt sekme çubuğunun hemen üstünde yüzen tek satır. Gölge merdiveninin
+   `--shadow-floating` basamağı (yüzen katman). Konumu sekme çubuğunun
+   ölçülen boyuna bağlı (6 Kasım, 390: çubuk 64 + güvenli alan tabanı 16
+   = 80, aradaki 8 piksel). Giriş/çıkış yalnız konum ve ton. */
+.mobileBar {
+  position:fixed; z-index:25; left:max(12px, env(safe-area-inset-left)); right:max(12px, env(safe-area-inset-right));
+  bottom:calc(max(env(safe-area-inset-bottom), 16px) + 64px + 8px);
+  border:1px solid var(--line); border-radius:16px; background:var(--panel-fixed); box-shadow:var(--shadow-floating);
+  opacity:0; translate:0 16px; pointer-events:none;
+  transition:opacity .3s var(--ease-brand), translate .4s var(--ease-brand);
+}
+.mobileBar[data-on] { opacity:1; translate:0 0; pointer-events:auto; }
+@media (min-width:1024px) { .mobileBar { display:none; } }
+.mbButton { display:flex; width:100%; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px 10px 16px; border-radius:15px; text-align:left; }
+.mbButton:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.mbArrow { display:grid; flex-shrink:0; place-items:center; width:40px; height:40px; border-radius:999px; background:var(--primary); color:var(--on-primary); box-shadow:var(--shadow-button); }
+.mbCopy { display:flex; min-width:0; flex-direction:column; gap:2px; }
+.mbLabel { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; font-size:12px; font-weight:600; line-height:1.3; color:var(--text-muted); }
+.mbVerdict { display:inline-flex; align-items:center; height:20px; padding:0 8px; border-radius:999px; background:var(--surface-elevated); font-size:11px; font-weight:700; white-space:nowrap; color:var(--text-strong); }
+.mbVerdict[data-need="yes"] { background:var(--primary-tint); color:var(--primary-ink); }
+.mbCopy b { font-size:19px; font-weight:650; line-height:1.15; letter-spacing:-.02em; white-space:nowrap; color:var(--text-strong); }
+
+@media (prefers-reduced-motion:reduce) {
+  .ribbonTrack > i, .mobileBar, .dropCta, .drop { transition:none; }
+  .comboList { animation:none; }
+  .comboSpin { animation-duration:2.4s; }
 }

@@ -2,15 +2,33 @@
    Gerekçe ScreeningIndex.tsx başında. Görüş renkleri (güncel karar):
    güçlü/değer yeşil, karışık pirinç, zayıf/elenen kırmızı. */
 
-.dot[data-band="strong"], .dot[data-band="worth"] { --band: var(--up); }
-.dot[data-band="mixed"] { --band: var(--brass); }
-.dot[data-band="weak"], .dot[data-band="eliminated"] { --band: var(--down); }
-.dot[data-band="limited"] { --band: var(--text-muted); }
+:is(.dot, .zone, .zoneName, .zoneLegend li, .quickCard, .laneTag)[data-band="strong"] { --band: var(--up); --band-ink: var(--up); --zone-mix: 10%; }
+:is(.dot, .zone, .zoneName, .zoneLegend li, .quickCard, .laneTag)[data-band="worth"] { --band: var(--up); --band-ink: var(--up); --zone-mix: 5%; }
+:is(.dot, .zone, .zoneName, .zoneLegend li, .quickCard, .laneTag)[data-band="mixed"] { --band: var(--brass); --band-ink: var(--brass-ink); --zone-mix: 8%; }
+:is(.dot, .zone, .zoneName, .zoneLegend li, .quickCard, .laneTag):is([data-band="weak"], [data-band="eliminated"]) { --band: var(--down); --band-ink: var(--down); --zone-mix: 6%; }
+:is(.dot, .zone, .zoneName, .zoneLegend li, .quickCard, .laneTag)[data-band="limited"] { --band: var(--text-muted); --band-ink: var(--text-muted); --zone-mix: 4%; }
 
-/* Kapaktaki ağırlık çubukları: büyüklük → yumuşak mavi (pirinç bir görüş
-   rengi; ağırlık bir görüş değil). Screening.module.css'teki kural paylaşılan
-   dosyada, burada daha özgül seçiciyle eziliyor. */
-.weights span[data-total] { background: var(--bar-soft); }
+/* ---- Kapak: 100 puanın paylaşımı (gerekçe ScreeningIndex.tsx → WeightShare) ----
+   Dilim nötr mürekkep: ağırlık bir büyüklük, görüş ya da etkileşim değil
+   (eski çubuklar yumuşak mavideydi). Kulvar `--line-soft`, dilim 5 px —
+   sitenin ince şerit dili. Satır aralığı 1440'ta sol sütunla dengeli:
+   kapak iki sütunu ortalıyor, ölçüm raporda. */
+.share { display: grid; gap: 14px; min-width: 0; }
+.shareHint { margin-top: -10px; color: var(--text-muted); font-size: 12.5px; line-height: 1.5; }
+.shareRows { display: grid; gap: 11px; }
+.shareRow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 6px 12px; min-width: 0; }
+.shareName { min-width: 0; color: var(--text-body); font-size: 13.5px; font-weight: 550; }
+.shareValue { color: var(--text-strong); font-size: 13.5px; font-weight: 650; white-space: nowrap; }
+.shareRail { grid-column: 1 / -1; position: relative; height: 5px; border-radius: 999px; background: var(--line-soft); }
+.shareRail > span { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: color-mix(in srgb, var(--text-strong) 78%, transparent); transform-origin: left center; }
+/* Kapak girişi kardeş kapaklarla aynı kalıpta (9 Ekim deseni, 14 Ekim'de
+   buraya): MotionExperience ilk ekrandaki öğeye dokunmadığı için giriş
+   CSS'te ve yüklemede bir kez — dilimler kendi başlangıcından, 55 ms
+   kademeyle büyür. `backwards` sayesinde JS'siz hâl tam çizili. */
+@media (prefers-reduced-motion: no-preference) {
+  .shareRail > span { animation: share-in 820ms var(--ease-brand) calc(260ms + var(--i, 0) * 55ms) backwards; }
+}
+@keyframes share-in { from { transform: scaleX(0); } }
 
 /* ---- Kural kartları ---- */
 .rules { display: grid; gap: 12px; padding: 4px 16px 18px; }
@@ -54,70 +72,146 @@
 .ring { position: relative; display: grid; place-items: center; width: 44px; height: 44px; }
 .ring svg { position: absolute; inset: 0; width: 100%; height: 100%; rotate: -90deg; }
 .ringTrack { fill: none; stroke: var(--line-soft); stroke-width: 4; }
-.ringFill { fill: none; stroke: var(--bar-soft); stroke-width: 4; stroke-linecap: round; }
+.ringFill { fill: none; stroke: color-mix(in srgb, var(--text-strong) 78%, transparent); stroke-width: 4; stroke-linecap: round; } /* kapaktaki pay cetveliyle aynı nötr mürekkep: ağırlık büyüklük, etkileşim değil (6 Kasım) */
 .ring b { color: var(--text-strong); font-size: 13px; font-weight: 700; }
 
-/* ---- Puan kulvarı ---- */
-.lane { display: grid; gap: 10px; margin: 0 16px 6px; padding: 4px 0 16px; border-bottom: 1px solid var(--line-soft); }
+/* ---- Puan kulvarı (gerekçe ScreeningIndex.tsx → ScoreLane) ----
+   Dikey ölçüler TS'teki ROW_PITCH (18) ve LEAD (22) ile aynı; etiket
+   14 px yükseklikte. Kırılım değişkenleri TS'ten: `-p` telefon, `-m`
+   640–1099, `-w` 1100+. Etiket mono: genişliği harf sayısından hesaplanıyor. */
+.lane { display: grid; gap: 12px; margin: 0 16px 6px; padding: 4px 0 18px; border-bottom: 1px solid var(--line-soft); }
 @media (min-width: 900px) { .lane { margin: 0 24px 8px; } }
 .laneHead { display: grid; gap: 2px; color: var(--text-strong); font-size: 14px; font-weight: 650; }
 .laneHint { color: var(--text-muted); font-size: 12.5px; font-weight: 450; line-height: 1.5; }
-.laneTrack { --rail-top: 78px; position: relative; height: calc(var(--rail-top) + 42px); margin: 0 10px; }
-@media (max-width: 639.98px) { .laneTrack { --rail-top: 96px; } }
-.rail { position: absolute; left: 0; right: 0; top: var(--rail-top); height: var(--lane-h, 5px); border-radius: 999px; background: var(--line-soft); }
-.notch { position: absolute; top: calc(var(--rail-top) - 8px); bottom: 0; width: 0; border-left: 1px dashed var(--line-strong); }
-.notchValue, .notchLabel { position: absolute; left: 0; translate: -50% 0; white-space: nowrap; color: var(--text-muted); font-size: 11.5px; }
-.notchValue { top: 18px; font-weight: 650; }
-.notchLabel { top: 33px; }
-@media (max-width: 639.98px) { .notchLabel { display: none; } }
+.lanePlot, .laneTag, .leader { --rail-y: var(--rail-y-p); --x: var(--x-p); --xa: var(--xa-p); --fx: var(--fx-p); --s: var(--s-p); --lv: var(--lv-p); }
+@media (min-width: 640px) { .lanePlot, .laneTag, .leader { --rail-y: var(--rail-y-m); --x: var(--x-m); --xa: var(--xa-m); --fx: var(--fx-m); --s: var(--s-m); --lv: var(--lv-m); } }
+@media (min-width: 1100px) { .lanePlot, .laneTag, .leader { --rail-y: var(--rail-y-w); --x: var(--x-w); --xa: var(--xa-w); --fx: var(--fx-w); --s: var(--s-w); --lv: var(--lv-w); } }
+.lanePlot { --plot-h: var(--plot-h-p); position: relative; height: var(--plot-h); }
+@media (min-width: 640px) { .lanePlot { --plot-h: var(--plot-h-m); } }
+@media (min-width: 1100px) { .lanePlot { --plot-h: var(--plot-h-w); } }
+/* Bant bölgesi: kulvarın arkasında tam boy yıkama; sınırı kesik eşik çizgisi. */
+.zone { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--band) var(--zone-mix), transparent); }
+.zone:first-child { border-radius: 10px 0 0 10px; }
+.zone:nth-child(4) { border-radius: 0 10px 10px 0; }
+.zone + .zone { border-left: 1px dashed color-mix(in srgb, var(--band) 45%, transparent); }
+.rail { position: absolute; left: 0; right: 0; top: calc(var(--rail-y) - 2.5px); height: 5px; border-radius: 999px; background: var(--line-strong); }
 .dot {
   position: absolute;
-  top: calc(var(--rail-top) + 2.5px);
+  top: var(--rail-y);
   width: 12px;
   height: 12px;
   border-radius: 50%;
   background: var(--band);
-  box-shadow: 0 0 0 2px var(--surface-solid);
+  box-shadow: 0 0 0 2px var(--premium-surface, var(--surface-solid));
   translate: -50% -50%;
 }
-.dotLabel {
+.laneTag {
   position: absolute;
-  left: 50%;
-  bottom: calc(100% + 4px + var(--row-offset, 0px));
+  left: calc(var(--at) * 1% + var(--x) * 1px);
+  top: calc(var(--rail-y) + var(--s) * (22px + var(--lv) * 18px) - (1 - var(--s)) * 7px);
+  height: 14px;
+  padding: 0 2px;
+  border-radius: 3px;
+  /* Zemin = bölge tonunun panel üstündeki karşılığı (yıkama yüzdesi aynı):
+     uzak satırın çizgisi yakın satırdaki etiketin ARKASINDAN geçer, yazının
+     üstünden değil (telefonda üç satır var). Bant noktanınki; sınırdaki
+     etiketin tonu komşu bölgeden %5 ayrılır, gözle seçilmiyor. */
+  background: color-mix(in srgb, var(--band) var(--zone-mix), var(--premium-surface, var(--surface-solid)));
   translate: -50% 0;
   color: var(--text-strong);
-  font-size: 11.5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 650;
+  line-height: 14px;
   white-space: nowrap;
 }
-.dotLabel::after {
-  content: "";
+/* Noktadan etikete çizgi: kutu noktadan etiketin merkezine, çizgi köşeden
+   köşeye (`non-scaling-stroke` — kutu ne kadar yassı olursa olsun 1 px). */
+.leader {
   position: absolute;
-  left: 50%;
-  top: 100%;
-  height: var(--row-offset, 0px);
-  border-left: 1px solid var(--line);
+  left: calc(var(--at) * 1% + min(0px, var(--x) * 1px));
+  top: calc(var(--rail-y) + (var(--s) + 1) * 3.5px - (1 - var(--s)) * (11px + var(--lv) * 9px));
+  width: calc(var(--xa) * 1px);
+  height: calc(15px + var(--lv) * 18px);
+  scale: var(--fx) calc(var(--s) * -1);
 }
-@media (min-width: 640px) {
-  .dot[data-row="1"] { --row-offset: 16px; }
-  .dot[data-row="2"] { --row-offset: 32px; }
-  .dot[data-row="3"] { --row-offset: 48px; }
-}
+.leader svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.leader line { stroke: var(--line-strong); stroke-width: 1; }
+.laneAxis { position: relative; height: 34px; margin-top: -6px; }
+/* 1100+'da 15 puanlık bölge ≥220 px: ad tek satır, eksen tek satır boyu. */
+@media (min-width: 1100px) { .laneAxis { height: 18px; } }
+.tick { position: absolute; top: 0; translate: -50% 0; color: var(--text-muted); font-size: 11.5px; font-weight: 600; }
+.tick[data-edge="start"] { translate: 0 0; }
+.tick[data-edge="end"] { translate: -100% 0; }
+.zoneName { position: absolute; top: 0; padding: 0 22px; color: var(--band-ink); font-size: 12px; font-weight: 650; text-align: center; text-wrap: balance; }
+.zoneLegend { display: none; }
+/* Telefonda bölge adı 60 piksellik bölgeye sığmıyor: eksende yalnız
+   sayılar, adlar aralığıyla iki sütunlu lejantta. */
 @media (max-width: 639.98px) {
-  .dot[data-row-phone="1"] { --row-offset: 15px; }
-  .dot[data-row-phone="2"] { --row-offset: 30px; }
-  .dot[data-row-phone="3"] { --row-offset: 45px; }
-  .dot[data-row-phone="4"] { --row-offset: 60px; }
+  .laneAxis { height: 16px; }
+  .zoneName { display: none; }
+  .zoneLegend { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+  .zoneLegend li { display: flex; align-items: center; gap: 6px; color: var(--band-ink); font-size: 12px; font-weight: 650; white-space: nowrap; }
+  .zoneLegend li :global(.numeral) { color: var(--text-muted); font-weight: 550; }
+  .zoneSwatch { flex: none; width: 10px; height: 10px; border-radius: 3px; background: color-mix(in srgb, var(--band) 22%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--band) 45%, transparent); }
 }
-.laneEnds { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 11.5px; }
 
 @media (prefers-reduced-motion: no-preference) {
   .dot { animation: lane-dot 560ms var(--ease-brand) calc(200ms + var(--i, 0) * 30ms) backwards; }
+  .laneTag, .leader { animation: lane-tag 480ms var(--ease-brand) 520ms backwards; }
 }
 @keyframes lane-dot { from { opacity: 0; scale: .3; } }
+@keyframes lane-tag { from { opacity: 0; } }
+
+/* ---- Hızlı bakış kartları (gerekçe ScreeningIndex.tsx → QuickCards) ---- */
+.quick { list-style: none; margin: 0; padding: 4px 16px 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: 12px; }
+@media (min-width: 900px) { .quick { padding: 4px 24px 24px; } }
+.quickCard {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "logo sym dial" "co co co" "band band band";
+  align-items: center;
+  column-gap: 10px;
+  height: 100%;
+  overflow: hidden;
+  padding: 15px 14px 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  transition: border-color .2s var(--ease-brand), background-color .2s var(--ease-brand);
+}
+/* Durum şeridi: kartın tepesinde 3 px, bandın renginde. */
+.quickCard::before { content: ""; position: absolute; inset: 0 0 auto; height: 3px; background: var(--band); }
+.quickCard:hover { border-color: var(--line-focus); }
+.quickCard:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+.quickCard > :first-child { grid-area: logo; }
+.quickSymbol { grid-area: sym; min-width: 0; color: var(--text-strong); font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+.quickCard > :global(*):nth-child(3) { grid-area: dial; }
+.quickCo { grid-area: co; min-width: 0; margin-top: 4px; overflow: hidden; color: var(--text-muted); font-size: 12.5px; white-space: nowrap; text-overflow: ellipsis; }
+.quickBand { grid-area: band; display: flex; align-items: center; gap: 6px; margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--line-soft); color: var(--band-ink); font-size: 12.5px; font-weight: 650; white-space: nowrap; }
+.quickBand svg { flex: none; }
+/* 1100 ALTINDA kart bir LİSTE SATIRI: tek ya da iki sütunda üç katlı kart
+   (136 px) panelı uzatıyordu — 640–1099'da kartlar 1.192 piksel tuttu
+   (ölçüldü, 6 Kasım). Logo solda, sembol / ad / bant üst üste, halka
+   sağda; bu genişliklerde kart 270+ piksel, ada ~150–200 piksel kalıyor.
+   1100+'da beş sütunlu ızgarada kart 242 piksele iniyor: orada ad kartın
+   tam genişliğinde (üstteki düzen). */
+@media (max-width: 1099.98px) {
+  .quick { gap: 10px; }
+  .quickCard { grid-template-areas: "logo sym dial" "logo co dial" "logo band dial"; column-gap: 12px; padding: 13px 14px 12px; }
+  .quickCard > :first-child { align-self: start; margin-top: -4px; }
+  .quickCo { margin-top: 1px; }
+  .quickBand { margin-top: 5px; padding-top: 0; border-top: 0; }
+}
 
 /* Hızlı bakış iskeleti — gerçek kulvar ve kart ölçüleriyle (gerekçe page.tsx). */
-.laneSkeleton { display: grid; align-content: start; gap: 8px; height: 257px; margin: 0 16px 6px; padding-top: 4px; border-bottom: 1px solid var(--line-soft); }
-@media (min-width: 640px) { .laneSkeleton { height: 220px; } }
+/* Yükseklikler 6 Kasım düzeninde gerçek sayfada ölçüldü (16 hisse): kulvar
+   390'da 282 (üç etiket satırı + lejant), 640–1099'da 209, 1100+'da 169;
+   kart 1100 altında 95, üstünde 136. */
+.laneSkeleton { display: grid; align-content: start; gap: 8px; height: 282px; margin: 0 16px 6px; padding-top: 4px; border-bottom: 1px solid var(--line-soft); }
+@media (min-width: 640px) { .laneSkeleton { height: 209px; } }
 @media (min-width: 900px) { .laneSkeleton { margin: 0 24px 8px; } }
+@media (min-width: 1100px) { .laneSkeleton { height: 169px; } }
 .cardSkeleton { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 95px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; }
+@media (min-width: 1100px) { .cardSkeleton { min-height: 136px; } }

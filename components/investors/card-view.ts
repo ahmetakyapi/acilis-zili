@@ -45,3 +45,25 @@ export function leanTally(leans: readonly (MoveTone | null)[]): Record<MoveTone,
   for (const lean of leans) if (lean) tally[lean] += 1;
   return tally;
 }
+
+/**
+ * Kapaktaki sermaye panosunun lejantı (6 Kasım): payı en büyük `lead` fon
+ * adıyla ve portresiyle, kalanı tek "Diğer N Fon" satırında. Şerit yine
+ * FON BAŞINA parça çiziyor (`slices` olduğu gibi); lejant yalnız okunacak
+ * kadarını adlandırıyor. `rest.share` ile `lead` paylarının toplamı 100.
+ */
+export function capitalLegend(
+  slices: readonly CapitalSlice[],
+  lead: number,
+): { lead: CapitalSlice[]; rest: { count: number; share: number; value: number } } {
+  const named = slices.slice(0, Math.max(0, lead));
+  const others = slices.slice(named.length);
+  return {
+    lead: named,
+    rest: {
+      count: others.length,
+      share: others.reduce((sum, slice) => sum + slice.share, 0),
+      value: others.reduce((sum, slice) => sum + slice.value, 0),
+    },
+  };
+}

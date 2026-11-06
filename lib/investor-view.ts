@@ -282,7 +282,7 @@ export type HeadlineMove = {
  *   yeni: bugünkü değerin tamamı; tamamen satış: önceki değerin tamamı;
  *   artış c: değer × c / (1 + c); azalış d: değer × d / (1 − d)
  * (c, d oran; değer çeyrek sonu). Tahmin yalnızca SIRALAMAK için; karta
- * dolar yazılmıyor, yalnızca hareketin kendisi ("Artırdı %40"). Önceki
+ * dolar yazılmıyor, yalnızca hareketin kendisi ("Adedi %40 Artırdı"). Önceki
  * dönem yoksa (ilk bildirim) hareket de yok. Saf.
  */
 export function headlineMove(diff: PeriodDiff): HeadlineMove | null {

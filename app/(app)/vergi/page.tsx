@@ -8,6 +8,7 @@ import { getTaxYears } from "@/lib/tax-data";
 import { TaxFiling, TaxPaths } from "@/components/tax/TaxFiling";
 import { TaxHow } from "@/components/tax/TaxHow";
 import { TaxGuide } from "@/components/tax/TaxGuide";
+import { TaxCover } from "@/components/tax/TaxCover";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
 import { isEvdsConfigured } from "@/lib/providers/evds";
@@ -85,7 +86,11 @@ export default async function TaxPage() {
         title={L.title}
         description={L.subtitle}
         visual={<TaxPaths labels={L} />}
-      />
+      >
+        {/* Sol kolonun dibinde üç ölçü (6 Kasım): kapak iki kolonda dengeli,
+            boşluk doldurulur. Gerekçe ve ölçüm `components/tax/TaxCover.tsx`. */}
+        <TaxCover labels={L} locale={locale} today={today} years={years} />
+      </DirectoryHeader>
 
       <TaxCalculator labels={L} visuals={t.taxVisuals} locale={locale} indexAuto={isEvdsConfigured()} today={today} years={years} />
 

@@ -5,7 +5,7 @@ import {
   fitSwarm,
   foldSlices,
   REST_SLICE,
-  labelRows,
+  laneLabelLayout,
   median,
   percentileRank,
   quantile,
@@ -145,9 +145,39 @@ test("pay dilimleri: adet ve değer payı, değere göre sıralı", () => {
   assert.equal(sharePercent(0.415), 42);
 });
 
-test("etiket satırları: yakın etiketler ayrı satıra", () => {
-  assert.deepEqual(labelRows([10, 12, 40, 41, 42], 6), [0, 1, 0, 1, 2]);
-  assert.deepEqual(labelRows([10, 30, 50], 6), [0, 0, 0]);
+test("kulvar etiketleri: sığan etiket noktasında kalır", () => {
+  const places = laneLabelLayout(
+    [{ at: 10, width: 30 }, { at: 50, width: 30 }, { at: 90, width: 30 }],
+    { track: 300, gap: 4, maxRows: 2, maxShift: 20 },
+  );
+  assert.deepEqual(places, [{ row: 0, shift: 0 }, { row: 0, shift: 0 }, { row: 0, shift: 0 }]);
+});
+
+test("kulvar etiketleri: küme yana açılır, sıra ve aralık korunur, kulvarda kalır", () => {
+  const items = [40, 41, 42, 43, 97, 98].map((at) => ({ at, width: 30 }));
+  const opts = { track: 300, gap: 4, maxRows: 1, maxShift: 999 };
+  const places = laneLabelLayout(items, opts);
+  const centers = items.map((item, i) => (item.at / 100) * opts.track + places[i].shift);
+  for (let i = 1; i < centers.length; i++) assert.ok(centers[i] - centers[i - 1] >= 34 - 0.2, `aralık ${i}`);
+  assert.ok(centers.at(-1)! <= 300 - 15 + 0.1, "sağ uç kulvarda");
+  /* Simetrik küme ortalanır: 40–43 kümesinin merkezi yerinde kalır. */
+  assert.ok(Math.abs((centers[0] + centers[3]) / 2 - 124.5) < 0.2);
+});
+
+test("kulvar etiketleri: kayma büyükse ikinci satıra dönüşümlü dağıtır", () => {
+  const items = [50, 51, 52, 53].map((at) => ({ at, width: 30 }));
+  const places = laneLabelLayout(items, { track: 300, gap: 4, maxRows: 2, maxShift: 30 });
+  assert.deepEqual(places.map((p) => p.row), [0, 1, 0, 1]);
+  assert.ok(places.every((p) => Math.abs(p.shift) <= 30));
+});
+
+test("kulvar etiketleri: deterministik, eşit konumda girdi sırası", () => {
+  const items = [{ at: 93, width: 24 }, { at: 93, width: 30 }, { at: 91, width: 30 }];
+  const opts = { track: 1000, gap: 6, maxRows: 2, maxShift: 40 };
+  assert.deepEqual(laneLabelLayout(items, opts), laneLabelLayout(items, opts));
+  const places = laneLabelLayout(items, opts);
+  const x = items.map((item, i) => item.at * 10 + places[i].shift);
+  assert.ok(x[2] < x[0] && x[0] < x[1]);
 });
 
 test("katlanan dilimler: kuyruk tek dilimde, seçili grup kuyruktan çıkar", () => {

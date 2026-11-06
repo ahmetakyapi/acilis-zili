@@ -7,10 +7,10 @@
 :is(.cat,.row,.gate,.points li,.flagList li,.flagCounts > span)[data-status="fail"] { --st: var(--down); --st-wash: var(--down-wash); }
 :is(.cat,.row,.gate,.points li,.flagList li,.flagCounts > span)[data-status="na"] { --st: var(--text-muted); --st-wash: var(--surface-sunken); }
 
-:is(.mini,.quickBand,.bandPill)[data-band="strong"],:is(.mini,.quickBand,.bandPill)[data-band="worth"] { --band: var(--up); --band-wash: var(--up-wash); }
-:is(.mini,.quickBand,.bandPill)[data-band="mixed"] { --band: var(--brass); --band-wash: var(--brass-wash); }
-:is(.mini,.quickBand,.bandPill)[data-band="weak"],:is(.mini,.quickBand,.bandPill)[data-band="eliminated"] { --band: var(--down); --band-wash: var(--down-wash); }
-:is(.mini,.quickBand,.bandPill)[data-band="limited"],:is(.mini,.quickBand,.bandPill)[data-band="none"] { --band: var(--text-muted); --band-wash: var(--surface-sunken); }
+:is(.mini,.bandPill)[data-band="strong"],:is(.mini,.bandPill)[data-band="worth"] { --band: var(--up); --band-wash: var(--up-wash); }
+:is(.mini,.bandPill)[data-band="mixed"] { --band: var(--brass); --band-wash: var(--brass-wash); }
+:is(.mini,.bandPill)[data-band="weak"],:is(.mini,.bandPill)[data-band="eliminated"] { --band: var(--down); --band-wash: var(--down-wash); }
+:is(.mini,.bandPill)[data-band="limited"],:is(.mini,.bandPill)[data-band="none"] { --band: var(--text-muted); --band-wash: var(--surface-sunken); }
 
 /* ---------- Kapak: önce bayraklar, altında puan ---------- */
 /* Kapak oranı (10 Ekim): logo başlığın soluna geçince 1440'ta başlığa 545 px
@@ -203,27 +203,6 @@
 .comboEmpty { padding:12px 10px; font-size:13.5px; line-height:1.5; color:var(--text-muted); }
 @media (prefers-reduced-motion: reduce) { .comboList,.comboOption { animation:none; } .comboSpin { animation-duration:1.6s; } }
 
-.weights { display:grid; gap:13px; }
-.weight { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 12px; font-size:13px; color:var(--text-body); }
-.weight b { color:var(--text-strong); font-weight:600; }
-.weight .track { height:6px; }
-/* Kapak girişi kardeş kapaklarla aynı kalıpta (9 Ekim deseni, 14 Ekim'de
-   buraya): MotionExperience ilk ekrandaki öğeye dokunmadığı için giriş
-   CSS'te ve yüklemede bir kez — çubuklar soldan, 55 ms kademeyle büyür.
-   `backwards` sayesinde JS'siz hâl tam çizili. */
-.weight .track > span { background:var(--brass); transform-origin:left center; animation:weight-in 820ms var(--ease-brand) calc(260ms + var(--i, 0) * 55ms) backwards; }
-@keyframes weight-in { from { transform:scaleX(0); } }
-@media (prefers-reduced-motion:reduce) { .weight .track > span { animation:none; } }
-
-.quick { list-style:none; margin:0; padding:4px 20px 20px; display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,15rem),1fr)); gap:12px; }
-@media (min-width:900px) { .quick { padding:4px 24px 24px; } }
-.quickCard { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:12px; height:100%; padding:14px; border:1px solid var(--line); border-radius:16px; background:var(--surface); transition:border-color .2s var(--ease-brand), background .2s var(--ease-brand); }
-.quickCard:hover { border-color:var(--line-focus); }
-.quickCard:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
-.quickName { min-width:0; display:grid; gap:3px; }
-.quickName strong { color:var(--text-strong); font-size:15px; font-weight:650; }
-.quickName span { overflow:hidden; color:var(--text-muted); font-size:12px; white-space:nowrap; text-overflow:ellipsis; }
-.quickBand { color:var(--band); font-size:12px; font-weight:650; white-space:nowrap; }
 .mini { position:relative; width:46px; aspect-ratio:1; }
 .mini svg { display:block; width:100%; height:100%; transform:rotate(-90deg); }
 .mini .dialTrack,.mini .dialFill,.mini .dialSlice { stroke-width:5; }
@@ -255,5 +234,6 @@
 @media (min-width:900px) { .cards { padding:4px 24px 24px; } .cards[data-count="3"] { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 .card { min-width:0; padding:16px; border:1px solid var(--line); border-radius:16px; background:var(--surface); }
 .card h3 { display:flex; align-items:center; gap:10px; color:var(--text-strong); font-size:15px; font-weight:650; }
-.card h3 > span { display:grid; place-items:center; flex:none; width:24px; height:24px; border-radius:50%; background:var(--brass-wash); color:var(--brass-ink); font-size:12px; font-weight:700; }
+/* Adım numarası nötr (6 Kasım): pirinç sitede "karışık" görüşün rengi, sıra numarası bir görüş değil. */
+.card h3 > span { display:grid; place-items:center; flex:none; width:24px; height:24px; border-radius:50%; background:var(--surface-sunken); box-shadow:inset 0 0 0 1px var(--line); color:var(--text-strong); font-size:12px; font-weight:700; }
 .card p { margin-top:8px; color:var(--text-body); font-size:13.5px; line-height:1.65; }

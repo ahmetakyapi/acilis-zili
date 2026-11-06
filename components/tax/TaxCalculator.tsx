@@ -62,6 +62,8 @@ import type { ImportPayload } from "./StatementImport";
 import { PANEL_TITLE, TAX_EXAMPLE, type DividendRow, type TradeRow } from "./tax-ui";
 import styles from "./Tax.module.css";
 import { DatePicker } from "@/components/ui/DatePicker";
+import { SymbolField } from "./SymbolField";
+import { TaxRibbon, type RibbonValues } from "./TaxRibbon";
 import { useMotionPreference } from "@/components/motion/useMotionPreference";
 
 /* EKSTREDEN AKTARIM AYRI BİR PARÇA. Önizleme, ayrıştırıcılar ve (PDF'te)
@@ -576,6 +578,11 @@ export function TaxCalculator({
   const lira = useCallback((value: number) => formatLira(value, locale), [locale]);
   const liraSigned = useCallback((value: number) => formatLira(value, locale, 2, true), [locale]);
   const usd = useCallback((value: number) => formatPrice(value, locale, { currency: true }), [locale]);
+  const liraWhole = useCallback((value: number) => formatLira(Math.round(value), locale, 0), [locale]);
+  const liraWholeSigned = useCallback((value: number) => formatLira(Math.round(value), locale, 0, true), [locale]);
+  /* Para alanlarının yer tutucusu dile göre ondalık ayraçlı (6 Kasım): alan
+     boşken bile "virgülle yaz" der; `readAs` ipucu bu yüzden daha az çıkar. */
+  const moneyPlaceholder = locale === "tr" ? "0,00" : "0.00";
   const quantityText = (value: number) =>
     new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", { maximumFractionDigits: QUANTITY_DIGITS }).format(value);
 
@@ -768,8 +775,66 @@ export function TaxCalculator({
     );
   };
 
+  /* Boş sonucun önizlemesi: "Nasıl Hesaplanır"ın varsayımsal örneği, AYNI
+     kodla (`lotResult`, `progressiveTax`) ve seçili yılın tarifesiyle
+     (`TaxHow` → `TaxExample` ile aynı girdi). Kur ve endeks varsayımsal;
+     kart bunu rozetle söylüyor. */
+  const examplePreview = useMemo<RibbonValues>(() => {
+    const E = TAX_EXAMPLE;
+    const lot = lotResult(
+      {
+        sellId: "ornek-s",
+        buyId: "ornek-b",
+        symbol: labels.how.exampleSymbol,
+        buyDate: E.buyDate,
+        sellDate: E.sellDate,
+        quantity: E.quantity,
+        costUsd: E.quantity * E.buyPrice,
+        proceedsUsd: E.quantity * E.sellPrice,
+      },
+      E.buyRate,
+      E.sellRate,
+      100,
+      100 * E.indexRatio,
+    );
+    const gain = lot.gainTl ?? 0;
+    const base = Math.max(0, gain);
+    return {
+      gainTl: gain,
+      baseTl: base,
+      taxTl: progressiveTax(base, rules.brackets),
+      bracketRate: formatPct(rules.brackets.find((b) => b.upTo === null || base <= b.upTo)?.ratePct ?? 0, locale),
+      source: {
+        priceTl: (lot.proceedsUsd - lot.costUsd) * E.sellRate,
+        fxTl: lot.costUsd * (E.sellRate - E.buyRate),
+        indexTl: -((lot.taxCostTl ?? 0) - (lot.costTl ?? 0)),
+      },
+    };
+  }, [labels.how.exampleSymbol, rules.brackets, locale]);
+
   /* ---- Satış sonucu ---- */
   const saleReady = complete.length > 0;
+  /* Şeridin sayıları (`TaxRibbon`). Kaynak ayrıştırması tamamlanan lotların
+     toplamı — `yearTotals` ile AYNI küme, yani fiyat + kur + endeks tam
+     olarak net kazanca eşit. Yeni bir vergi hesabı değil, özdeşlik. */
+  const ribbon: RibbonValues = {
+    gainTl: totals.gainTl,
+    baseTl: taxable,
+    taxTl: taxLow,
+    bracketRate: formatPct(bracketRate, locale),
+    source: complete.reduce(
+      (sum, lot) => {
+        const buy = lot.buyRate ?? 0;
+        const sell = lot.sellRate ?? 0;
+        return {
+          priceTl: sum.priceTl + (lot.proceedsUsd - lot.costUsd) * sell,
+          fxTl: sum.fxTl + lot.costUsd * (sell - buy),
+          indexTl: sum.indexTl - ((lot.taxCostTl ?? 0) - (lot.costTl ?? 0)),
+        };
+      },
+      { priceTl: 0, fxTl: 0, indexTl: 0 },
+    ),
+  };
   const saleVerdict: Verdict = !saleReady ? "wait" : totals.gainTl > 0 ? "yes" : "no";
   const flow = buildFlow({
     labels,
@@ -845,11 +910,45 @@ export function TaxCalculator({
     </div>
   );
 
+  /* MOBİLDE SONUÇ ÖZETİ ALTTA (6 Kasım, sahibinin sözü). 1024'ün altında
+     sonuç formun ALTINA iniyor; 390'da son alanı dolduran okuyucu sonucu
+     görmek için ~700 piksel kaydırıyordu ve bir değeri değiştirince sonucu
+     yeniden aramak zorundaydı. Hesaplayıcı ekrandayken ve sonuç kartı
+     görünmüyorken alt sekme çubuğunun hemen üstünde tek satır özet duruyor:
+     karar, tahmini vergi (temettüde toplam) ve "Sonuca Git". Geniş ekranda
+     sonuç kolonu zaten yan yana ve yapışkan; özet orada hiç açılmıyor. */
+  const sectionRef = useRef<HTMLElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
+  const [barOn, setBarOn] = useState(false);
+  useEffect(() => {
+    const result = resultRef.current;
+    const section = sectionRef.current;
+    if (!result || !section || typeof IntersectionObserver === "undefined") return;
+    const media = window.matchMedia("(max-width: 1023px)");
+    let resultSeen = true;
+    let sectionSeen = false;
+    const update = () => setBarOn(media.matches && sectionSeen && !resultSeen);
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.target === result) resultSeen = entry.isIntersecting;
+        else sectionSeen = entry.isIntersecting;
+      }
+      update();
+    });
+    observer.observe(result);
+    observer.observe(section);
+    media.addEventListener("change", update);
+    return () => {
+      observer.disconnect();
+      media.removeEventListener("change", update);
+    };
+  }, [tab]);
+
   const buyDone = !!buyRow && dateUsable(buyRow.date) && num(buyRow.quantity) !== null && num(buyRow.price) !== null && isValidSymbol(buyRow.symbol.trim());
   const sellDone = !!sellRow && dateUsable(sellRow.date) && num(sellRow.price) !== null && num(sellRow.quantity) !== null;
 
   return (
-    <section id="satis" className={cn("panel overflow-hidden", styles.calc)} aria-labelledby="vergi-hesap">
+    <section ref={sectionRef} id="satis" className={cn("panel overflow-hidden", styles.calc)} aria-labelledby="vergi-hesap">
       <span id="temettu" className={styles.anchor} aria-hidden />
       {/* BAŞLIK SATIRI: ad, hesap türü, vergi yılı (28 Eylül, ikinci tur).
           Hesap türü bir dönem başlığın altında tam genişlikte, 48 piksel
@@ -970,7 +1069,7 @@ export function TaxCalculator({
           aria-labelledby="vergi-sekme-sale"
           className={styles.body}
         >
-          <div className={styles.form}>
+          <div className={styles.form} onKeyDown={advanceOnEnter}>
             <div className={styles.modeSwitch}>
               <Segmented
                 label={labels.advancedOn}
@@ -981,6 +1080,7 @@ export function TaxCalculator({
                 ]}
                 onChange={(mode) => setAdvanced(mode === "many")}
               />
+              <span className={cn(styles.help, styles.kbdHint)}>{labels.form.keyboardHint}</span>
             </div>
             {imported > 0 && (
               <p role="status" className="mb-4 text-small text-primary-ink">
@@ -1006,21 +1106,22 @@ export function TaxCalculator({
                   <h3 className={styles.stepTitle}>{labels.stepBuy}</h3>
                   <div className={styles.fields}>
                     <Field label={labels.symbol} error={symbolError(buyRow?.symbol ?? "")}>
-                      <input
-                        aria-invalid={!!symbolError(buyRow?.symbol ?? "") || undefined}
+                      <SymbolField
+                        invalid={!!symbolError(buyRow?.symbol ?? "")}
                         value={buyRow?.symbol ?? ""}
-                        maxLength={10}
-                        autoCapitalize="characters"
-                        autoComplete="off"
-                        spellCheck={false}
-                        onChange={(event) => editSimple("buy", { symbol: event.target.value.toUpperCase() })}
-                        className={cn(styles.input, styles.upper)}
+                        onChange={(symbol) => editSimple("buy", { symbol })}
+                        placeholder={labels.form.symbolPlaceholder}
+                        listLabel={labels.form.suggestions}
+                        searchingLabel={labels.form.searching}
+                        className={styles.input}
                       />
                     </Field>
-                    <Field label={labels.quantity} hint={readAs(buyRow?.quantity ?? "")} error={numberError(buyRow?.quantity ?? "", "positive")}>
+                    <Field label={labels.quantity} suffix={labels.form.unitShares} hint={readAs(buyRow?.quantity ?? "")} error={numberError(buyRow?.quantity ?? "", "positive")}>
                       <input
                         aria-invalid={!!numberError(buyRow?.quantity ?? "", "positive") || undefined}
                         inputMode="decimal"
+                        enterKeyHint="next"
+                        placeholder="0"
                         autoComplete="off"
                         value={buyRow?.quantity ?? ""}
                         onChange={(event) => editSimple("buy", { quantity: event.target.value })}
@@ -1041,6 +1142,8 @@ export function TaxCalculator({
                       <input
                         aria-invalid={!!numberError(buyRow?.price ?? "", "nonNegative") || undefined}
                         inputMode="decimal"
+                        enterKeyHint="next"
+                        placeholder={moneyPlaceholder}
                         autoComplete="off"
                         value={buyRow?.price ?? ""}
                         onChange={(event) => editSimple("buy", { price: event.target.value })}
@@ -1070,16 +1173,20 @@ export function TaxCalculator({
                       <input
                         aria-invalid={!!numberError(sellRow?.price ?? "", "nonNegative") || undefined}
                         inputMode="decimal"
+                        enterKeyHint="next"
+                        placeholder={moneyPlaceholder}
                         autoComplete="off"
                         value={sellRow?.price ?? ""}
                         onChange={(event) => editSimple("sell", { price: event.target.value })}
                         className={styles.input}
                       />
                     </Field>
-                    <Field label={labels.sellQuantity} hint={readAs(sellRow?.quantity ?? "")} error={numberError(sellRow?.quantity ?? "", "positive")}>
+                    <Field label={labels.sellQuantity} suffix={labels.form.unitShares} hint={readAs(sellRow?.quantity ?? "")} error={numberError(sellRow?.quantity ?? "", "positive")}>
                       <input
                         aria-invalid={!!numberError(sellRow?.quantity ?? "", "positive") || undefined}
                         inputMode="decimal"
+                        enterKeyHint="next"
+                        placeholder="0"
                         autoComplete="off"
                         value={sellRow?.quantity ?? ""}
                         onChange={(event) => editSimple("sell", { quantity: event.target.value })}
@@ -1098,6 +1205,8 @@ export function TaxCalculator({
                         <input
                           aria-invalid={!!numberError(buyRow?.commission ?? "", "nonNegative") || undefined}
                           inputMode="decimal"
+                          enterKeyHint="next"
+                          placeholder={moneyPlaceholder}
                           autoComplete="off"
                           value={buyRow?.commission ?? ""}
                           onChange={(event) => editSimple("buy", { commission: event.target.value })}
@@ -1108,6 +1217,8 @@ export function TaxCalculator({
                         <input
                           aria-invalid={!!numberError(sellRow?.commission ?? "", "nonNegative") || undefined}
                           inputMode="decimal"
+                          enterKeyHint="next"
+                          placeholder={moneyPlaceholder}
                           autoComplete="off"
                           value={sellRow?.commission ?? ""}
                           onChange={(event) => editSimple("sell", { commission: event.target.value })}
@@ -1155,15 +1266,14 @@ export function TaxCalculator({
                           </button>
                         </div>
                         <Field label={labels.symbol} error={symbolError(row.symbol)}>
-                          <input
-                            aria-invalid={!!symbolError(row.symbol) || undefined}
+                          <SymbolField
+                            invalid={!!symbolError(row.symbol)}
                             value={row.symbol}
-                            maxLength={10}
-                            autoCapitalize="characters"
-                            autoComplete="off"
-                            spellCheck={false}
-                            onChange={(event) => updateTrade(row.id, { symbol: event.target.value.toUpperCase() })}
-                            className={cn(styles.input, styles.upper)}
+                            onChange={(symbol) => updateTrade(row.id, { symbol })}
+                            placeholder={labels.form.symbolPlaceholder}
+                            listLabel={labels.form.suggestions}
+                            searchingLabel={labels.form.searching}
+                            className={styles.input}
                           />
                         </Field>
                         <Field label={labels.date}>
@@ -1179,10 +1289,12 @@ export function TaxCalculator({
                             locale={locale}
                           />
                         </Field>
-                        <Field label={labels.quantity} hint={readAs(row.quantity)} error={numberError(row.quantity, "positive")}>
+                        <Field label={labels.quantity} suffix={labels.form.unitShares} hint={readAs(row.quantity)} error={numberError(row.quantity, "positive")}>
                           <input
                             aria-invalid={!!numberError(row.quantity, "positive") || undefined}
                             inputMode="decimal"
+                            enterKeyHint="next"
+                            placeholder="0"
                             autoComplete="off"
                             value={row.quantity}
                             onChange={(event) => updateTrade(row.id, { quantity: event.target.value })}
@@ -1193,6 +1305,8 @@ export function TaxCalculator({
                           <input
                             aria-invalid={!!numberError(row.price, "nonNegative") || undefined}
                             inputMode="decimal"
+                            enterKeyHint="next"
+                            placeholder={moneyPlaceholder}
                             autoComplete="off"
                             value={row.price}
                             onChange={(event) => updateTrade(row.id, { price: event.target.value })}
@@ -1203,6 +1317,8 @@ export function TaxCalculator({
                           <input
                             aria-invalid={!!numberError(row.commission, "nonNegative") || undefined}
                             inputMode="decimal"
+                            enterKeyHint="next"
+                            placeholder={moneyPlaceholder}
                             autoComplete="off"
                             value={row.commission}
                             onChange={(event) => updateTrade(row.id, { commission: event.target.value })}
@@ -1236,7 +1352,7 @@ export function TaxCalculator({
             <Settings labels={labels} rateDay={rateDay} setRateDay={setRateDay} indexMode={indexMode} />
           </div>
 
-          <div className={styles.result}>
+          <div ref={resultRef} className={styles.result}>
             <div className={styles.resultInner} aria-labelledby="vergi-sonuc-satis">
               <h3 id="vergi-sonuc-satis" className="sr-only">
                 {labels.resultLabel}
@@ -1273,6 +1389,12 @@ export function TaxCalculator({
                       zorundaydı. Sıra artık okuma sırası: kazanç → nasıl
                       oluştu → matrah ve dilim → vergi → tarifedeki yer →
                       dayanak. */}
+                  {/* KAZANÇTAN VERGİYE ŞERİDİ (6 Kasım): büyük sayının hemen
+                      altında, sonucun kendisi bir çizim. Eski Matrah + Dilim
+                      sayı çifti (`.figures`) bu şeridin kulvarlarına indi;
+                      gerekçe `TaxRibbon.tsx` başında. */}
+                  <TaxRibbon values={ribbon} labels={labels.ribbon} money={lira} moneySigned={liraSigned} />
+
                   <div className={styles.flowBlock}>
                     <Waterfall
                       title={visuals.waterfall.title}
@@ -1281,23 +1403,6 @@ export function TaxCalculator({
                       ariaLabel={flow.ariaLabel}
                       scaleNote={visuals.waterfall.scaleNote}
                     />
-                  </div>
-
-                  <div className={styles.figures} data-cols={taxable > 0 ? "2" : undefined}>
-                    <div>
-                      <p className={styles.figureLabel}>{labels.taxBase}</p>
-                      <p className={cn(styles.mid, "mt-1")}>
-                        <Rolling value={taxable} format={lira} />
-                      </p>
-                      <p className={styles.figureHint}>{labels.taxBaseHint}</p>
-                    </div>
-                    {taxable > 0 && (
-                      <div>
-                        <p className={styles.figureLabel}>{labels.bracket}</p>
-                        <p className={cn(styles.mid, "mt-1")}>{percentText(bracketRate, locale)}</p>
-                        <p className={styles.figureHint}>{labels.bracketHint.replace("{year}", String(year))}</p>
-                      </div>
-                    )}
                   </div>
 
                   <div className={styles.taxBlock}>
@@ -1367,6 +1472,14 @@ export function TaxCalculator({
                     },
                   ]}
                   onExample={fillExample}
+                  preview={examplePreview}
+                  previewLead={labels.preview.lead
+                    .replace("{qty}", String(TAX_EXAMPLE.quantity))
+                    .replace("{symbol}", labels.how.exampleSymbol)
+                    .replace("{buy}", formatPrice(TAX_EXAMPLE.buyPrice, locale, { currency: true, digits: 0 }))
+                    .replace("{sell}", formatPrice(TAX_EXAMPLE.sellPrice, locale, { currency: true, digits: 0 }))}
+                  money={liraWhole}
+                  moneySigned={liraWholeSigned}
                 />
               )}
 
@@ -1409,7 +1522,7 @@ export function TaxCalculator({
           aria-labelledby="vergi-sekme-dividend"
           className={styles.body}
         >
-          <div className={styles.form}>
+          <div className={styles.form} onKeyDown={advanceOnEnter}>
             <p className={cn(styles.help, "mb-5")}>{labels.dividendHint}</p>
             {yearNote !== null && (
               <p role="status" className="mb-4 text-small text-primary-ink">
@@ -1437,21 +1550,22 @@ export function TaxCalculator({
                     </div>
                     <div className={styles.fields}>
                       <Field label={labels.symbol} error={symbolError(row.symbol)}>
-                        <input
-                          aria-invalid={!!symbolError(row.symbol) || undefined}
+                        <SymbolField
+                          invalid={!!symbolError(row.symbol)}
                           value={row.symbol}
-                          maxLength={10}
-                          autoCapitalize="characters"
-                          autoComplete="off"
-                          spellCheck={false}
-                          onChange={(event) => updateDividend(row.id, { symbol: event.target.value.toUpperCase() })}
-                          className={cn(styles.input, styles.upper)}
+                          onChange={(symbol) => updateDividend(row.id, { symbol })}
+                          placeholder={labels.form.symbolPlaceholder}
+                          listLabel={labels.form.suggestions}
+                          searchingLabel={labels.form.searching}
+                          className={styles.input}
                         />
                       </Field>
                       <Field unit="$" label={labels.grossUsd} hint={readAs(row.gross)} error={numberError(row.gross, "nonNegative")}>
                         <input
                           aria-invalid={!!numberError(row.gross, "nonNegative") || undefined}
                           inputMode="decimal"
+                          enterKeyHint="next"
+                          placeholder={moneyPlaceholder}
                           autoComplete="off"
                           value={row.gross}
                           onChange={(event) => updateDividend(row.id, { gross: event.target.value })}
@@ -1518,7 +1632,7 @@ export function TaxCalculator({
             </Settings>
           </div>
 
-          <div className={styles.result}>
+          <div ref={resultRef} className={styles.result}>
             <div className={styles.resultInner}>
               <h3 className="sr-only">{labels.resultLabel}</h3>
               <div aria-live="polite">
@@ -1602,6 +1716,39 @@ export function TaxCalculator({
           </div>
         </div>
       )}
+
+      {(tab === "sale" ? saleReady : dividendReady) && (
+        <div
+          role="region"
+          aria-label={labels.mobileBar.label}
+          className={styles.mobileBar}
+          data-on={barOn || undefined}
+          inert={!barOn}
+        >
+          {/* Bütün şerit tek düğme (390'da ölçüldü: ayrı "Sonuca Git"
+              butonu 105 piksel tutup künyeyi iki satıra kırıyordu); ok kendi
+              dairesinde, adı ekran okuyucuya `sr-only`. */}
+          <button
+            type="button"
+            onClick={() => resultRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" })}
+            className={styles.mbButton}
+          >
+            <span className={styles.mbCopy}>
+              <span className={styles.mbLabel}>
+                {tab === "sale" ? labels.estTax : labels.totalGrossTl}
+                <span className={styles.mbVerdict} data-need={tab === "sale" ? saleVerdict : dividendVerdict}>
+                  {(tab === "sale" ? saleVerdict : dividendVerdict) === "yes" ? labels.verdictYes : labels.verdictNo}
+                </span>
+              </span>
+              <b className="numeral">{tab === "sale" ? lira(taxLow) : lira(dividendGrossTl)}</b>
+            </span>
+            <span className="sr-only">{labels.mobileBar.show}</span>
+            <span className={styles.mbArrow} aria-hidden>
+              <ArrowDown size={16} weight="bold" />
+            </span>
+          </button>
+        </div>
+      )}
     </section>
   );
 }
@@ -1652,22 +1799,67 @@ function ImportDrop({
     >
       {/* Düğme bütün alanı kaplıyor (`::after`), gizlilik künyesi onun
           üstünde ama tıklamayı geçiriyor: okuyucu şeridin neresine basarsa
-          bassın dosya seçici açılıyor. */}
+          bassın dosya seçici açılıyor.
+          GERÇEK BIRAKMA ALANI (6 Kasım, sahibinin sözü: "dosya bırakma alanı
+          gibi görünmüyor"). Şerit bir bilgi satırı gibi okunuyordu: ikon,
+          başlık, gri künye. Şimdi bırakma alanının üç işareti birden —
+          kesikli kenar (gerekçesi `.drop` kuralında), "ya da dosyayı bu alana
+          sürükle" ipucu ve sağda buton görünümlü "Dosya Seç" (ayrı bir
+          düğme değil, görsel uç: tıklama alttaki düğmenin `::after`ine
+          geçer, sekme durağı tek). Biçimler
+          künye değil, aracı kurum başına çip. */}
       <button type="button" onClick={onPick} className={styles.dropButton}>
         <span className={styles.dropIcon} aria-hidden>
-          <FileArrowUp size={22} weight="duotone" />
+          <FileArrowUp size={24} weight="duotone" />
         </span>
-        <span className="min-w-0">
+        <span className={styles.dropCopy}>
           <span className={styles.dropTitle}>{over ? L.drop : L.open}</span>
-          <span className={styles.dropHint}>{L.formats}</span>
+          <span className={styles.dropHint}>{L.dragHint}</span>
+          <span className={styles.dropHintNarrow}>{L.formats}</span>
         </span>
       </button>
-      <p className={styles.privacy}>
-        <LockSimple size={14} weight="duotone" aria-hidden />
-        {L.privacy}
-      </p>
+      <div className={styles.dropMeta}>
+        <p className={styles.dropFormats}>
+          <span className="sr-only">{L.formats}</span>
+          {L.formats.split(" · ").map((part) => (
+            <span key={part} className={styles.dropChip} aria-hidden>
+              {part}
+            </span>
+          ))}
+        </p>
+        <p className={styles.privacy}>
+          <LockSimple size={14} weight="duotone" aria-hidden />
+          {L.privacy}
+        </p>
+      </div>
+      <span className={styles.dropCta} aria-hidden>
+        {L.choose}
+      </span>
     </div>
   );
+}
+
+/**
+ * ENTER SONRAKİ ALANA (6 Kasım, sahibinin sözü: "klavye ile akıcı"). Form
+ * bir <form> değil (gönderilecek bir şey yok, sonuç canlı); Enter hiçbir
+ * şey yapmıyordu ve klavyeyle giren okuyucu her alanda Tab'a uzanıyordu.
+ * Şimdi Enter alanı bırakır ve sıradaki GÖRÜNÜR alana geçer — kapalı
+ * "Komisyon Ekle" katının içindekiler atlanır. Alanın kendi Enter'ı önce
+ * çalışır (tarih seçici metni çözer, sembol önerisi seçilir), geçiş bir
+ * kare sonra: öneri listesi kapanmış, tarih yazılmış olur.
+ */
+function advanceOnEnter(event: React.KeyboardEvent<HTMLElement>) {
+  if (event.key !== "Enter" || event.shiftKey || event.altKey || event.metaKey || event.ctrlKey || event.nativeEvent.isComposing) return;
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement) || target.type === "hidden" || target.type === "checkbox") return;
+  const root = event.currentTarget;
+  event.preventDefault();
+  requestAnimationFrame(() => {
+    const inputs = [
+      ...root.querySelectorAll<HTMLInputElement>("input:not([type=hidden]):not([type=checkbox]):not([disabled])"),
+    ].filter((el) => el.getClientRects().length > 0);
+    inputs[inputs.indexOf(target) + 1]?.focus();
+  });
 }
 
 /** "%20" (TR) · "20%" (EN). */
@@ -1709,20 +1901,23 @@ function Basis({ title, items }: { title: string; items: BasisItem[] }) {
  * kuralı okumak isteyen okuyucunun yolu burası. Düz çapa, katlamayı
  * `TaxHowReveal` açıyor.
  */
+/* TEK SATIR (6 Kasım): bağlantı cümlenin ardında, ikonun yanındaki aynı
+   blokta. Ayrı satırken boş sonuç 32 piksel daha uzundu; sonuç kolonu
+   boşken formdan uzun olmasın diye (ölçüm `SaleEmpty` yorumunda). */
 function EmptyLead({ text, how }: { text: string; how: string }) {
   return (
-    <>
-      <p className={styles.emptyLead}>
-        <span className={styles.emptyIcon} aria-hidden>
-          <Calculator size={20} weight="duotone" />
-        </span>
-        {text}
+    <div className={styles.emptyLead}>
+      <span className={styles.emptyIcon} aria-hidden>
+        <Calculator size={20} weight="duotone" />
+      </span>
+      <p className={styles.emptyText}>
+        {text}{" "}
+        <a href="#nasil" className={cn(styles.inlineLink, styles.emptyHow)}>
+          {how}
+          <ArrowDown size={13} weight="bold" aria-hidden />
+        </a>
       </p>
-      <a href="#nasil" className={cn(styles.inlineLink, styles.emptyHow)}>
-        {how}
-        <ArrowDown size={13} weight="bold" aria-hidden />
-      </a>
-    </>
+    </div>
   );
 }
 
@@ -1744,16 +1939,36 @@ function EmptyLead({ text, how }: { text: string; how: string }) {
  * (eski `chip-wait`). Sayı yok: düğümler yalnızca adım ve künye taşır.
  * Sağ üstte "1/3 Girdi Hazır" ölçeği aynı durumu üç dilimle söyler.
  * "Örnekle Dene" en altta kaldı.
+ *
+ * YATAY RAY + SONUÇ ÖNİZLEMESİ (6 Kasım, sahibinin sözü: "boş halde çok
+ * yer kaplıyor, sonuç alanı ilk bakışta değer vermiyor"). Dikey ray
+ * 1440'ta 300 piksel tutuyor ve beş satırın üçü "Bekliyor" diyordu: kolon
+ * okuyucuya hiçbir sayı göstermeden ekranın yarısını alıyordu. Ray aynı
+ * düğümler ve durumlarla YATAY şeride indi (künyeler kalktı; ad + durum
+ * kaldı), altına dolu kartın kendi çizimi (`TaxRibbon`) varsayımsal örnekle
+ * geldi: "Nasıl Hesaplanır"ın örneği (`TAX_EXAMPLE`, aynı kodla hesaplı,
+ * "Varsayımsal Kur ve Endeks" rozetli). Okuyucu boşken sonucun neye
+ * benzeyeceğini SAYIYLA görüyor; "Örnekle Dene" o örneği gerçek kurla
+ * forma dolduruyor. Ölçüm `.flowRail[data-axis]` kuralında.
  */
 function SaleEmpty({
   labels,
   needs,
   onExample,
+  preview,
+  previewLead,
+  money,
+  moneySigned,
 }: {
   labels: TaxLabels;
   /** Alış, satış, kur — sırası sabit. */
   needs: { done: boolean; busy?: boolean }[];
   onExample: () => void;
+  /** Varsayımsal örneğin şerit sayıları (`TAX_EXAMPLE`). */
+  preview: RibbonValues;
+  previewLead: string;
+  money: (value: number) => string;
+  moneySigned: (value: number) => string;
 }) {
   const F = labels.needFlow;
   const done = needs.filter((need) => need.done).length;
@@ -1784,7 +1999,7 @@ function SaleEmpty({
             </span>
           </span>
         </div>
-        <ol className={styles.flowRail}>
+        <ol className={styles.flowRail} data-axis="x">
           {nodes.map((node, i) => {
             const input = i < needs.length;
             const need = input ? needs[i] : null;
@@ -1834,13 +2049,23 @@ function SaleEmpty({
           })}
         </ol>
       </section>
-      <div className={styles.exampleFoot}>
-        <button type="button" onClick={onExample} className={buttonClass({ variant: "ghost", size: "sm" })}>
-          <Sparkle size={14} weight="duotone" aria-hidden />
-          {labels.how.exampleTry}
-        </button>
-        <span className={styles.help}>{labels.how.exampleTryHint}</span>
-      </div>
+      <section aria-labelledby="vergi-onizleme" className={styles.samplePreview}>
+        <div className={styles.spHead}>
+          <h4 id="vergi-onizleme" className={styles.basisTitle}>
+            {labels.preview.title}
+          </h4>
+          <span className={styles.exampleTag}>{labels.how.exampleTag}</span>
+        </div>
+        <p className={styles.spLead}>{previewLead}</p>
+        <TaxRibbon values={preview} labels={labels.ribbon} money={money} moneySigned={moneySigned} sketch />
+        <div className={styles.exampleFoot}>
+          <button type="button" onClick={onExample} className={buttonClass({ variant: "ghost", size: "sm" })}>
+            <Sparkle size={14} weight="duotone" aria-hidden />
+            {labels.how.exampleTry}
+          </button>
+          <span className={styles.help}>{labels.how.exampleTryHint}</span>
+        </div>
+      </section>
     </div>
   );
 }
@@ -1915,6 +2140,7 @@ function Field({
   error,
   hint,
   unit,
+  suffix,
   children,
 }: {
   label: string;
@@ -1924,17 +2150,27 @@ function Field({
   /** Alanın içinde, solda duran birim ("$"). Etiket birimi zaten söylüyor;
    *  bu, yazarken gözün alanın içinde de görmesi için (18 Ekim). */
   unit?: string;
+  /** Alanın içinde, SAĞDA duran birim ("Adet"; 6 Kasım). Sayının ne
+   *  saydığı alanın kendisinde okunuyor; etiket ikinci satıra kırılsa da. */
+  suffix?: string;
   children: React.ReactNode;
 }) {
   return (
     <label className={styles.field}>
       <span className={styles.label}>{label}</span>
-      {unit ? (
-        <span className={styles.affix}>
-          <span className={styles.affixUnit} aria-hidden>
-            {unit}
-          </span>
+      {unit || suffix ? (
+        <span className={styles.affix} data-unit={unit ? "" : undefined} data-suffix={suffix ? "" : undefined}>
+          {unit && (
+            <span className={styles.affixUnit} aria-hidden>
+              {unit}
+            </span>
+          )}
           {children}
+          {suffix && (
+            <span className={styles.affixSuffix} aria-hidden>
+              {suffix}
+            </span>
+          )}
         </span>
       ) : (
         children

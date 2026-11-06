@@ -2,17 +2,14 @@ import { PageShare } from "@/components/article/PageShare";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { GuideHint } from "@/components/article/GuideHint";
-import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
-import { MiniDial } from "@/components/screening/ScreenVisuals";
 import { SymbolPicker } from "@/components/screening/SymbolPicker";
 import styles from "@/components/screening/Screening.module.css";
-import { RuleCards, ScoreLane } from "@/components/screening/ScreeningIndex";
+import { QuickCards, RuleCards, ScoreLane, WeightShare } from "@/components/screening/ScreeningIndex";
 import index from "@/components/screening/ScreeningIndex.module.css";
-import { LogoTile, Panel, PanelHeader, Skeleton } from "@/components/ui/primitives";
-import { cn } from "@/lib/utils";
+import { Panel, PanelHeader, Skeleton } from "@/components/ui/primitives";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
 import { pageMetadata } from "@/lib/page-meta";
@@ -69,8 +66,6 @@ export default async function ScreeningPage(props: PageProps<"/hisse-secimi">) {
   const picked = (Array.isArray(query) ? query[0] : query)?.trim().toUpperCase().replace(/^\$/, "");
   if (picked && isValidSymbol(picked)) redirect(withLocale(`/hisse-secimi/${picked}`, locale));
 
-  const weightTotal = Object.values(CATEGORY_WEIGHTS).reduce((sum, value) => sum + value, 0);
-
   return (
     <MotionExperience className={directory.page}>
       <ScrollProgress />
@@ -85,18 +80,12 @@ export default async function ScreeningPage(props: PageProps<"/hisse-secimi">) {
               {S.scoreLabel}
               <span>{S.rulesMeta.replace("{n}", String(RULE_COUNT))}</span>
             </p>
-            <div className={cn(styles.weights, index.weights)}>
-              {(Object.keys(CATEGORY_WEIGHTS) as (keyof typeof CATEGORY_WEIGHTS)[]).map((category, index) => (
-                <div key={category} className={styles.weight}>
-                  <span>{S.categories[category]}</span>
-                  <b>{S.weight.replace("{n}", String(CATEGORY_WEIGHTS[category]))}</b>
-                  <span className={styles.track} aria-hidden="true">
-                    {/* `--i`: kapak girişinin kademe sırası (CSS weight-in). */}
-                    <span style={{ width: `${(CATEGORY_WEIGHTS[category] / 30) * 100}%`, "--i": index } as React.CSSProperties} data-total={weightTotal} />
-                  </span>
-                </div>
-              ))}
-            </div>
+            {/* Ağırlıklar tek cetvelde pay (6 Kasım) — gerekçe ScreeningIndex.tsx → WeightShare. */}
+            <WeightShare
+              weights={(Object.keys(CATEGORY_WEIGHTS) as (keyof typeof CATEGORY_WEIGHTS)[]).map((key) => ({ key, weight: CATEGORY_WEIGHTS[key] }))}
+              names={S.categories}
+              V={t.toolVisuals.screening}
+            />
           </div>
         }
       >
@@ -181,25 +170,10 @@ async function QuickLook({ locale, t }: { locale: Locale; t: Dictionary }) {
           bands={S.bands}
           V={t.toolVisuals.screening}
         />
-        <ul className={styles.quick}>
-          {rows.map((row) => (
-            <li key={row.symbol}>
-              <Link href={`/hisse-secimi/${row.symbol}`} className={styles.quickCard} data-motion-action>
-                <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
-                <span className={styles.quickName}>
-                  <strong>{row.symbol}</strong>
-                  <span>{row.name}</span>
-                  {row.result.band && (
-                    <span className={styles.quickBand} data-band={row.result.band}>
-                      {S.bands[row.result.band]}
-                    </span>
-                  )}
-                </span>
-                <MiniDial score={row.result.score} band={row.result.band} />
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <QuickCards
+          rows={rows.map((row) => ({ symbol: row.symbol, name: row.name, logoUrl: row.logoUrl, score: row.result.score, band: row.result.band }))}
+          bands={S.bands}
+        />
         </>
       )}
       <p className={styles.quickNote}>{S.quickNote}</p>
@@ -208,7 +182,8 @@ async function QuickLook({ locale, t }: { locale: Locale; t: Dictionary }) {
 }
 
 /**
- * Hızlı bakışın iskeleti GERÇEK panelin biçiminde (25 Ekim): dört satırlık
+ * Hızlı bakışın iskeleti GERÇEK panelin biçiminde (25 Ekim; ölçüler 6 Kasım
+ * düzeninde güncellendi, ScreeningIndex.module.css): dört satırlık
  * genel iskelet ~300 piksel tutuyordu, gelen panel (kulvar + 16 kart)
  * 1440'ta ~650; akış inince altındaki Kurallar paneli aşağı zıplıyordu
  * (soğuk önbellekte CLS 0,05–0,16 ölçüldü). Kulvar kutusu ve kart ızgarası
@@ -225,7 +200,7 @@ function QuickSkeleton({ count }: { count: number }) {
         <Skeleton className="h-3 w-40" />
         <Skeleton className="h-2.5 w-72 max-w-full" />
       </div>
-      <ul className={styles.quick} aria-hidden>
+      <ul className={index.quick} aria-hidden>
         {Array.from({ length: count }).map((_, i) => (
           <li key={i} className={index.cardSkeleton}>
             <Skeleton className="size-8 rounded-lg" />

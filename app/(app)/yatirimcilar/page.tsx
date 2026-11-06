@@ -1,20 +1,20 @@
 import { Suspense } from "react";
 import { GuideHint } from "@/components/article/GuideHint";
 import { PageShare } from "@/components/article/PageShare";
-import { CapitalStrip, InvestorGrid } from "@/components/investors/InvestorGrid";
+import { InvestorGrid } from "@/components/investors/InvestorGrid";
+import { InvestorsMasthead } from "@/components/investors/InvestorsMasthead";
 import { MoversBoard } from "@/components/investors/MoversBoard";
-import { asOfLabel, filedLabel, quarterLabel } from "@/components/investors/format";
-import ix from "@/components/investors/InvestorsIndex.module.css";
+import { asOfLabel, filedLabel } from "@/components/investors/format";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { CompanyCards } from "@/components/ui/CompanyCards";
-import { DataStamp, EmptyState, PageHeader, Panel, PanelHeader } from "@/components/ui/primitives";
+import { DataStamp, EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
 import { getSymbolNames } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { getInvestorOverview } from "@/lib/investor-data";
 import { pageMetadata } from "@/lib/page-meta";
-import { cn, formatEtDateMedium } from "@/lib/utils";
+import { formatEtDateMedium } from "@/lib/utils";
 
 export const generateMetadata = pageMetadata({
   path: "/yatirimcilar",
@@ -39,8 +39,10 @@ export const generateMetadata = pageMetadata({
  * karosunda yalnız portre), sonra hareket grafiği, denge paneli ve en dipte
  * iki sütunlu büyük kartlar — 1440'ta 8.250 piksel. Şimdi sayfa kartlı:
  *
- *   1. Kapak: `PageHeader` (kısa ad, tek cümle, Paylaş), altında dönem
- *      künyesi ve tek satırlık sermaye şeridi (`CapitalStrip`).
+ *   1. Kapak: `PageHeader` (kısa ad, tek cümle), altında dönem künyesi;
+ *      6 Kasım'dan beri sağ kolonda sermaye panosu (`InvestorsMasthead`,
+ *      `CapitalBoard`; önce kapağın altında tam genişlikte tek satırlık
+ *      şerit, `CapitalStrip`, ve sağ yarı boştu).
  *   2. Ana görsel: yatırımcı kart ızgarası (`InvestorGrid`) — kişi başına
  *      pay, yön rozeti, en büyük üç pozisyon ve çeyreğin hamlesi. Kadro,
  *      sermaye haritası ve denge paneli bu kartlarda eridi.
@@ -77,23 +79,12 @@ export default async function InvestorsPage() {
     <MotionExperience className={polish.page}>
       <BreadcrumbJsonLd locale={locale} items={[{ name: ti.eyebrow, path: "/yatirimcilar" }]} />
 
-      <section className={cn("page-frame", ix.masthead)}>
-        <PageHeader
-          embedded
-          title={ti.title}
-          subtitle={ti.subtitle}
-          share={<PageShare compactOnMobile align="right" path="/yatirimcilar" title={ti.title} locale={locale} t={t} />}
-        />
-        {/* Künye başlığın ALTINDA (üst künye yok, 9 Ekim): hangi çeyreğin
-            portföyleri ve en son ne zaman bildirildi. */}
-        {(period || overview?.latestFiled) && (
-          <p className={cn(ix.kunye, "numeral")}>
-            {period && <span>{quarterLabel(period, ti)}</span>}
-            {overview?.latestFiled && <span>{filedLabel(overview.latestFiled, locale, ti)}</span>}
-          </p>
-        )}
-        {overview && <CapitalStrip overview={overview} locale={locale} t={ti} />}
-      </section>
+      <InvestorsMasthead
+        overview={overview}
+        locale={locale}
+        t={ti}
+        share={<PageShare compactOnMobile align="right" path="/yatirimcilar" title={ti.title} locale={locale} t={t} />}
+      />
 
       {overview ? (
         <>

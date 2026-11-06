@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { diffPeriods, headlineMove, type HoldingRecord } from "../lib/investor-view";
-import { capitalShares, leanTally } from "../components/investors/card-view";
+import { capitalLegend, capitalShares, leanTally } from "../components/investors/card-view";
 
 /**
  * Dizin kartlarının saf hesapları (25 Ekim): çeyreğin öne çıkan hareketi,
@@ -59,4 +59,21 @@ test("capital shares: only the current quarter's open funds, summing to 100", ()
 
 test("lean tally: counts buyers, sellers and even funds", () => {
   assert.deepEqual(leanTally(["up", "up", "down", "flat", null]), { up: 2, down: 1, flat: 1 });
+});
+
+test("capital legend: names the leaders, folds the rest into one row", () => {
+  const { slices } = capitalShares([
+    { slug: "a", value: 600, current: true },
+    { slug: "b", value: 200, current: true },
+    { slug: "c", value: 120, current: true },
+    { slug: "d", value: 50, current: true },
+    { slug: "e", value: 30, current: true },
+  ]);
+  const legend = capitalLegend(slices, 3);
+  assert.deepEqual(legend.lead.map((slice) => slice.slug), ["a", "b", "c"]);
+  assert.equal(legend.rest.count, 2);
+  assert.equal(legend.rest.value, 80);
+  assert.ok(Math.abs(legend.rest.share + legend.lead.reduce((sum, slice) => sum + slice.share, 0) - 100) < 1e-9);
+  // Fon sayısı lider sayısından azsa "Diğer" satırı boş kalır.
+  assert.equal(capitalLegend(slices.slice(0, 2), 3).rest.count, 0);
 });

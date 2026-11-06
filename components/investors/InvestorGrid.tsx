@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { ArrowDown, ArrowUp, Equals } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile } from "@/components/ui/primitives";
@@ -27,8 +26,9 @@ import styles from "./InvestorsIndex.module.css";
  * büyük hamlesi ne (tek satır).
  *
  * Harita, kadro ve denge paneli bu kartların içinde eridi: pay kartta,
- * yön rozette, kadro ızgaranın kendisi. Sermayenin dağılımı kapakta tek
- * satırlık yığılı şerit olarak duruyor (`CapitalStrip`).
+ * yön rozette, kadro ızgaranın kendisi. Sermayenin dağılımı kapakta
+ * (25 Ekim tek satırlık şerit `CapitalStrip`; 6 Kasım'dan beri kapağın
+ * sağ kolonundaki pano, `CapitalBoard.tsx`).
  *
  * SIRA PAYA GÖRE: en son çeyreği bildirmiş açık fonlar büyükten küçüğe,
  * sonra Kongre üyesi, sonra eski dönemi taşıyanlar (geç bildiren ya da
@@ -44,6 +44,23 @@ import styles from "./InvestorsIndex.module.css";
  * yön renginde, altında ikisinin oranı tek çizgi. Büyüklük çizgileri
  * mavi DEĞİL, sitenin yumuşak büyüklük tonu `--bar-soft` (CompareScale
  * ile aynı); yön yalnız yeşil/kırmızı.
+ *
+ * 6 KASIM (sahibinin isteği: "içerikleri iyileştirelim").
+ *   - BEŞ SABİT SATIR, SUBGRID. Kart her zaman beş çocuk basıyor (kimlik,
+ *     ölçü, çeyreğin yönü, ilk üç pozisyon, en büyük hamle; Kongre kartı
+ *     aynı beş yuvaya kendi içeriğini koyuyor, eksik olan boş yuva). Izgara
+ *     `grid-template-rows: subgrid` ile komşu kartların aynı satırlarını
+ *     AYNI HATTA tutuyor: önce her kart kendi içinde akıyordu; adı iki
+ *     satıra kırılan (telefonda "Stanley Druckenmiller") ya da rozeti alta
+ *     inen kartta altındaki her şey komşusundan kayıyordu.
+ *   - ÖLÇÜNÜN KÜNYESİ SAYININ ÜSTÜNDE. "Sermayedeki Payı" pay çizgisinin
+ *     ALTINDA, sayıdan kopuk duruyordu; şimdi iki ölçü iki künyesiyle aynı
+ *     satırda: solda "Sermayedeki Payı" / %61, sağda "Hisse Portföyü" /
+ *     299 Mr $, altında çizgi. Künye–sayı–çizgi tek blok.
+ *   - "ÇEYREĞİN EN BÜYÜK HAMLESİ". En alttaki tek hisse + "Artırdı %45"
+ *     hapı ne olduğunu söylemiyordu (sahibinin itirazı). Satırın üstünde
+ *     künyesi, hisse sembolün yanında adıyla, hap neyin değiştiğini
+ *     söylüyor ("Adedi %45 Artırdı": yüzde fiyat değil ADET değişimi).
  *
  * Kart bir bağlantı; içindeki logolar bağlantı değil (iç içe bağlantı yok).
  */
@@ -62,7 +79,10 @@ type Entry = {
   lean: MoveTone | null;
 };
 
-export function gridEntries(overview: Overview): { entries: Entry[]; capital: ReturnType<typeof capitalShares> } {
+export function gridEntries(overview: Overview): {
+  entries: Entry[];
+  capital: ReturnType<typeof capitalShares>;
+} {
   const period = overview.movers.period;
   const cardOf = new Map(overview.cards.map((card) => [card.slug, card]));
   const listed = INVESTORS.flatMap((investor) => {
@@ -72,7 +92,13 @@ export function gridEntries(overview: Overview): { entries: Entry[]; capital: Re
   const capital = capitalShares(
     listed.flatMap(({ investor, card }) =>
       card.kind === "13f"
-        ? [{ slug: investor.slug, value: card.longValue, current: card.period === period && investor.status !== "closed" }]
+        ? [
+            {
+              slug: investor.slug,
+              value: card.longValue,
+              current: card.period === period && investor.status !== "closed",
+            },
+          ]
         : [],
     ),
   );
@@ -128,7 +154,7 @@ export function InvestorGrid({
       </div>
       <ul className={styles.grid} data-motion-stagger>
         {entries.map((entry) => (
-          <li key={entry.investor.slug} className="flex min-w-0">
+          <li key={entry.investor.slug} className="min-w-0">
             <InvestorTile entry={entry} known={known} locale={locale} t={t} />
           </li>
         ))}
@@ -143,17 +169,7 @@ function LeanIcon({ tone }: { tone: MoveTone }) {
   return <Icon size={12} weight="bold" aria-hidden />;
 }
 
-function InvestorTile({
-  entry,
-  known,
-  locale,
-  t,
-}: {
-  entry: Entry;
-  known: Record<string, SymbolMeta>;
-  locale: string;
-  t: Labels;
-}) {
+function InvestorTile({ entry, known, locale, t }: { entry: Entry; known: Record<string, SymbolMeta>; locale: string; t: Labels }) {
   const { investor, card, share, lean } = entry;
   const closed = investor.status === "closed";
   const firm = investorFirm(investor, locale);
@@ -217,26 +233,31 @@ function FundTile({
       <span className={styles.tileFigure}>
         {share !== null ? (
           <>
-            <span className={styles.tileFigureRow}>
-              <strong className="numeral" aria-label={`${t.shareLabel} ${formatPercentPlain(share, locale, 1)}`}>
-                {formatPercentPlain(share, locale, share >= 10 ? 0 : 1)}
-              </strong>
-              <small className="numeral">{formatMoneyCompact(card.longValue, locale)}</small>
+            {/* İki ölçü, ikisi de künyesi ÜSTÜNDE (6 Kasım; 31 Ekim'de
+                künye kulvarın altındaydı ve sayıdan kopuk okunuyordu). */}
+            <span className={styles.measures}>
+              <span className={styles.measure}>
+                <small>{t.shareLabel}</small>
+                <strong className="numeral">{formatPercentPlain(share, locale, share >= 10 ? 0 : 1)}</strong>
+              </span>
+              <span className={styles.measure} data-end>
+                <small>{t.portfolioLabel}</small>
+                <b className="numeral">{formatMoneyCompact(card.longValue, locale)}</b>
+              </span>
             </span>
-            {/* Aynı ölçek bütün kartlarda: %0-100 takip edilen sermaye.
-                Etiket kulvarın altında (31 Ekim): etiketsiz kulvar "neyin
-                çizgisi" sorusunu açık bırakıyordu. */}
+            {/* Aynı ölçek bütün kartlarda: %0-100 takip edilen sermaye. Ton
+                kapaktaki sermaye şeridiyle aynı (`--bar-soft`): Buffett'ın
+                kapaktaki parçası ile kartındaki çizgisi aynı büyüklük. */}
             <span className={styles.lane} aria-hidden>
               <i data-motion-draw="line" style={{ width: `${Math.max(share, 0.6)}%` }} />
             </span>
-            <small className={styles.figureCaption} aria-hidden>
-              {t.shareLabel}
-            </small>
           </>
         ) : (
-          <span className={styles.tileFigureRow}>
-            <strong className="numeral">{formatMoneyCompact(card.longValue, locale)}</strong>
-            <small className="numeral">{t.periodOld.replace("{quarter}", quarterLabel(card.period, t))}</small>
+          <span className={styles.measures}>
+            <span className={styles.measure}>
+              <small>{t.periodOld.replace("{quarter}", quarterLabel(card.period, t))}</small>
+              <strong className="numeral">{formatMoneyCompact(card.longValue, locale)}</strong>
+            </span>
           </span>
         )}
       </span>
@@ -249,7 +270,9 @@ function FundTile({
       <span className={styles.quarter}>
         <span className={styles.tileBadges}>
           {closed ? (
-            <span className={styles.badge} data-tone="closed">{t.fundClosed}</span>
+            <span className={styles.badge} data-tone="closed">
+              {t.fundClosed}
+            </span>
           ) : lean ? (
             <span className={styles.badge} data-tone={lean}>
               <LeanIcon tone={lean} />
@@ -271,7 +294,9 @@ function FundTile({
               </span>
             </small>
           ) : (
-            <small className="numeral">{plural(card.positionCount, t.positionsOne, t.positions).replace("{count}", number.format(card.positionCount))}</small>
+            <small className="numeral">
+              {plural(card.positionCount, t.positionsOne, t.positions).replace("{count}", number.format(card.positionCount))}
+            </small>
           )}
         </span>
         {!closed && lean && buy + sell > 0 && (
@@ -282,7 +307,7 @@ function FundTile({
         )}
       </span>
 
-      {top.length > 0 && (
+      {top.length > 0 ? (
         <span className={styles.holdings}>
           {/* Yığılı şerit portföyün BİÇİMİ: Li Lu'da üç parça şeridin çoğu,
               Dalio'da üç ince parça bir kenarda. Kalan tek açık parça.
@@ -316,53 +341,74 @@ function FundTile({
             })}
           </span>
         </span>
+      ) : (
+        <span aria-hidden />
       )}
 
-      {highlight && (
-        <span className={styles.highlight} title={t.highlightLabel}>
-          <span className="sr-only">{t.highlightLabel}: </span>
-          {highlight.ticker ? (
-            <LogoTile symbol={highlight.ticker} logoUrl={known[highlight.ticker]?.logoUrl} size="xs" />
-          ) : (
-            <span className={styles.noLogo} aria-hidden />
-          )}
-          <b className="numeral">{highlight.ticker ?? highlight.issuer}</b>
-          <span className={styles.chip} data-tone={highlight.move === "new" || highlight.move === "increased" ? "up" : "down"}>
-            {highlight.move === "new"
-              ? t.highlightNew
-              : highlight.move === "soldOut"
-                ? t.highlightOut
-                : (highlight.move === "increased" ? t.highlightUp : t.highlightDown).replace(
-                    "{pct}",
-                    formatPercentPlain(highlight.changePct, locale, 0),
-                  )}
+      {highlight ? (
+        <span className={styles.highlight}>
+          <small className={styles.highlightLabel}>{t.highlightLabel}</small>
+          <span className={styles.highlightRow}>
+            {highlight.ticker ? (
+              <LogoTile symbol={highlight.ticker} logoUrl={known[highlight.ticker]?.logoUrl} size="xs" />
+            ) : (
+              <span className={styles.noLogo} aria-hidden />
+            )}
+            <span className={styles.highlightId}>
+              <b className="numeral">{highlight.ticker ?? highlight.issuer}</b>
+              {/* Ad yalnız sitede biliniyorsa: SEC'in büyük harfli ihraççı
+                  adı ("UNITEDHEALTH GROUP INC") sembolün yanında gürültü. */}
+              {highlight.ticker && known[highlight.ticker]?.name && <small>{known[highlight.ticker].name}</small>}
+            </span>
+            <span className={styles.chip} data-tone={highlight.move === "new" || highlight.move === "increased" ? "up" : "down"}>
+              {highlight.move === "new"
+                ? t.highlightNew
+                : highlight.move === "soldOut"
+                  ? t.highlightOut
+                  : (highlight.move === "increased" ? t.highlightUp : t.highlightDown).replace(
+                      "{pct}",
+                      formatPercentPlain(highlight.changePct, locale, 0),
+                    )}
+            </span>
           </span>
         </span>
+      ) : (
+        <span aria-hidden />
       )}
     </>
   );
 }
 
-function CongressTile({
-  card,
-  known,
-  locale,
-  t,
-}: {
-  card: CongressCard;
-  known: Record<string, SymbolMeta>;
-  locale: string;
-  t: Labels;
-}) {
+function CongressTile({ card, known, locale, t }: { card: CongressCard; known: Record<string, SymbolMeta>; locale: string; t: Labels }) {
   const trades = card.trades.slice(0, CARD_TRADES);
   const counted = card.buys + card.sells;
   const last = card.trades[0];
   return (
     <>
       <span className={styles.tileFigure}>
-        <span className={styles.tileFigureRow} data-tight>
-          <strong className="numeral">{card.total}</strong>
-          <small>{t.stripTrades}</small>
+        <span className={styles.measures}>
+          <span className={styles.measure}>
+            <small>{t.congressBadge}</small>
+            <strong className="numeral">
+              {card.total} <span className={styles.measureUnit}>{t.stripTrades}</span>
+            </strong>
+          </span>
+        </span>
+      </span>
+      {/* Kongre kartının yön yuvası: alış ve satış SAYISI (künye ölçünün
+          üstünde "Kongre Bildirimi"; rozet olarak ikinci kez basılmıyor). */}
+      <span className={styles.quarter}>
+        <span className={styles.tileBadges}>
+          <small className={cn("numeral", styles.moveCounts)}>
+            <span className="text-up">
+              <ArrowUp size={10} weight="bold" aria-hidden />
+              {plural(card.buys, t.buysOne, t.buys).replace("{count}", String(card.buys))}
+            </span>
+            <span className="text-down">
+              <ArrowDown size={10} weight="bold" aria-hidden />
+              {plural(card.sells, t.sellsOne, t.sells).replace("{count}", String(card.sells))}
+            </span>
+          </small>
         </span>
         {/* Alış ve satış SAYISININ payı (tutar aralık olarak bildiriliyor,
             toplanamaz). Renk yalnız yön. */}
@@ -373,109 +419,41 @@ function CongressTile({
           </span>
         )}
       </span>
-      <span className={styles.tileBadges}>
-        <span className={styles.badge} data-tone="congress">{t.congressBadge}</span>
-        <small className="numeral">
-          <span className="text-up">{plural(card.buys, t.buysOne, t.buys).replace("{count}", String(card.buys))}</span>
-          {" · "}
-          <span className="text-down">{plural(card.sells, t.sellsOne, t.sells).replace("{count}", String(card.sells))}</span>
-        </small>
-      </span>
-      {trades.length > 0 && (
-        <span className={styles.holdingList} aria-label={t.recentTrades}>
-          {trades.map((trade) => (
-            <span key={`${trade.docId}-${trade.rowNo}`} className={styles.holding}>
-              {trade.ticker ? (
-                <LogoTile symbol={trade.ticker} logoUrl={trade.ticker ? known[trade.ticker]?.logoUrl : null} size="xs" />
-              ) : (
-                <span className={styles.noLogo} aria-hidden />
-              )}
-              <span className={styles.holdingText}>
-                <b className="numeral">{trade.ticker ?? trade.asset}</b>
-                <small className={cn(txTone(trade.txType) === "up" ? "text-up" : txTone(trade.txType) === "down" ? "text-down" : undefined)}>
-                  {txLabel(trade.txType, t)}
-                </small>
+      {trades.length > 0 ? (
+        <span className={styles.holdings}>
+          <span className={styles.holdingsHead} aria-hidden>
+            <span>{t.recentTrades}</span>
+          </span>
+          <span className={styles.holdingList} aria-label={t.recentTrades}>
+            {trades.map((trade) => (
+              <span key={`${trade.docId}-${trade.rowNo}`} className={styles.holding}>
+                {trade.ticker ? (
+                  <LogoTile symbol={trade.ticker} logoUrl={trade.ticker ? known[trade.ticker]?.logoUrl : null} size="xs" />
+                ) : (
+                  <span className={styles.noLogo} aria-hidden />
+                )}
+                <span className={styles.holdingText}>
+                  <b className="numeral">{trade.ticker ?? trade.asset}</b>
+                  <small
+                    className={cn(txTone(trade.txType) === "up" ? "text-up" : txTone(trade.txType) === "down" ? "text-down" : undefined)}
+                  >
+                    {txLabel(trade.txType, t)}
+                  </small>
+                </span>
               </span>
-            </span>
-          ))}
+            ))}
+          </span>
         </span>
+      ) : (
+        <span aria-hidden />
       )}
-      {last && (
+      {last ? (
         <span className={cn(styles.highlight, styles.highlightMuted)}>
           {t.lastTrade.replace("{date}", formatEtDateMedium(last.txDate, locale))}
         </span>
+      ) : (
+        <span aria-hidden />
       )}
     </>
   );
-}
-
-/**
- * Kapaktaki sermaye şeridi — "Takip Edilen Sermaye Kimde" haritasının
- * yerine TEK SATIR (25 Ekim). Harita 1440'ta ~500 piksel yüksekliğindeydi
- * ve en büyük karo bir portreden ibaretti; şerit aynı payları 8 piksellik
- * yığılı bir çizgide veriyor, payı yüksek iki-üç fonun adı ve yüzdesi
- * altında. Payı `TAIL_SHARE` altındaki fonlar tek "Diğer" dilimi. Dilimler
- * bağlantı değil (8 piksel dokunma hedefi olamaz); kişinin kartı hemen
- * altta. Renk yalnız büyüklük (yumuşak mavi, `--bar-soft`), sıra dilimin
- * yerinden okunuyor.
- */
-const TAIL_SHARE = 2.5;
-/** Bu paydan büyük dilimin altında ad ve yüzde yazılıyor. */
-const LABEL_SHARE = 8;
-
-export function CapitalStrip({ overview, locale, t }: { overview: Overview; locale: string; t: Labels }) {
-  const { capital } = gridEntries(overview);
-  if (capital.total <= 0) return null;
-  const named = capital.slices.filter((slice) => slice.share >= TAIL_SHARE);
-  const tail = capital.slices.filter((slice) => slice.share < TAIL_SHARE);
-  const tailShare = tail.reduce((sum, slice) => sum + slice.share, 0);
-  const nameOf = (slug: string) => INVESTORS.find((investor) => investor.slug === slug)?.name ?? slug;
-  /* Dilimin başladığı yer: kendinden önceki dilimlerin payı toplamı. */
-  const placed = named.map((slice, index) => ({
-    ...slice,
-    at: named.slice(0, index).reduce((sum, before) => sum + before.share, 0),
-  }));
-
-  return (
-    <div className={styles.capital}>
-      <p className={styles.capitalHead}>
-        <span>{t.capitalLabel}</span>
-        <b className="numeral">{formatMoneyCompact(capital.total, locale)}</b>
-        <small className="numeral">{t.capitalFundsCount.replace("{count}", String(capital.slices.length))}</small>
-      </p>
-      <div className={styles.capitalBar} role="img" aria-label={`${t.capitalStripAria}: ${placed
-        .map((slice) => `${nameOf(slice.slug)} ${formatPercentPlain(slice.share, locale, 1)}`)
-        .join(", ")}${tail.length > 0 ? `, ${t.capitalOther.replace("{count}", String(tail.length))} ${formatPercentPlain(tailShare, locale, 1)}` : ""}`}>
-        {placed.map((slice, index) => (
-          <i
-            key={slice.slug}
-            data-motion-draw="line"
-            title={`${nameOf(slice.slug)} ${formatPercentPlain(slice.share, locale, 1)}`}
-            style={{ flexGrow: slice.share, "--rank": Math.min(index, 3) } as CSSProperties}
-          />
-        ))}
-        {tail.length > 0 && <i data-rest style={{ flexGrow: tailShare }} />}
-      </div>
-      <ul className={styles.capitalLabels} aria-hidden>
-        {placed
-          .filter((slice) => slice.share >= LABEL_SHARE)
-          .map((slice) => (
-            <li key={slice.slug} style={{ left: `${slice.at}%` }}>
-              {lastName(nameOf(slice.slug))}
-              <b className="numeral">{formatPercentPlain(slice.share, locale, slice.share >= 10 ? 0 : 1)}</b>
-            </li>
-          ))}
-        {tail.length > 0 && (
-          <li data-end>
-            {t.capitalOther.replace("{count}", String(tail.length))}
-            <b className="numeral">{formatPercentPlain(tailShare, locale, 1)}</b>
-          </li>
-        )}
-      </ul>
-    </div>
-  );
-}
-
-function lastName(name: string): string {
-  return name.split(" ").at(-1) ?? name;
 }

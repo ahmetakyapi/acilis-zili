@@ -82,7 +82,10 @@
 /* Sekme şeridi bir panel primitifi ama kutusuz; `overflow` görünür, çünkü
    dolgu sıfır ve künyenin son glifi ("2026"nın 6'sı) panelin kenarında
    kırpılıyordu (390, ölçüldü). */
-.indexTabs { border:0; background:transparent; box-shadow:none; overflow:visible; }
+/* 6 Kasım: şerit yeniden gerçek bir panel (zemin ve üstten ışıklı kenar
+   `.panel`ten) — gerekçe page.tsx → IndexTabs, "TEK ŞERİT, ÜÇ BÖLME".
+   `overflow` yine görünür; künye kırpılması bugün de geçerli. */
+.indexTabs { box-shadow:none; overflow:visible; }
 .indexTabs > div { padding:0; }
 
 
@@ -120,7 +123,6 @@
 .moverLink { display:block; padding:12px 20px; transition:background 180ms var(--ease-brand); }
 .moverLink:hover { background:var(--primary-tint); }
 .moverIdentity { display:flex; align-items:center; gap:12px; min-width:0; }
-.moverRank { font-size:12px; color:var(--text-muted); }
 .moverCompany { display:flex; flex:1; flex-direction:column; gap:2px; min-width:0; }
 .moverCompany > span:first-child { font-size:13px; line-height:18px; }
 .moverCompany > span:last-child { font-size:12px; line-height:14px; }
@@ -132,8 +134,11 @@
    `--premium-surface`inden ayrışan yabancı bir bant olarak beliriyordu.
    Ray artık ilk satırı kaplayan bir `::before`; dolgu onun üstünde, etiket
    satırının arkasında hiçbir şey yok. */
-.moverTrack { position:relative; display:flex; align-items:center; gap:8px; margin-top:8px; min-height:3px; }
-.moverTrack::before { content:""; position:absolute; left:0; right:0; top:0; height:3px; border-radius:3px; background:var(--rail-track); }
+/* 6 Kasım: ray ve şerit 3 pikselden 5'e — sitenin grafik dili "kulvar
+   üstünde 5 piksellik şerit" (CLAUDE.md, Görsel Dil); bileşen tablosunun
+   ölçek çubuklarıyla da aynı kalınlık. */
+.moverTrack { position:relative; display:flex; align-items:center; gap:8px; margin-top:8px; min-height:5px; }
+.moverTrack::before { content:""; position:absolute; left:0; right:0; top:0; height:5px; border-radius:3px; background:var(--rail-track); }
 .moverTrack > span:first-child { position:relative; flex-shrink:0; }
 .moverTrack:has(> span:nth-child(2)) { flex-wrap:wrap; }
 .moverTrack > span:nth-child(2) { flex-basis:100%; padding-top:3px; }
@@ -269,18 +274,34 @@
 }
 
 /* Beş hareket tek bakışta: geniş ekranda uzun dikey liste yerine
-   beş eşit sütun. Dar ekranda şirket adlarına yer bırakan liste korunur. */
+   beş eşit sütun. Dar ekranda şirket adlarına yer bırakan liste korunur.
+
+   BEŞ KART TEK IZGARA, DÖRT ORTAK SATIR (6 Kasım, sahibinin isteği:
+   "kayan kartlar yan yana dururken asla kabul edilemez"). Her kart kendi
+   akışını diziyordu; "Microchip Technology" iki satıra sarınca MCHP'nin
+   yüzdesi ve çubuğu komşularından 14 piksel AŞAĞIDA bitiyordu (1440,
+   ölçüldü: yüzde dibi 934 / 920, çubuk 944 / 930). Artık liste dört satırlı
+   bir ızgara (logo · ad · yüzde · çubuk) ve her kart `subgrid` ile aynı
+   satırları paylaşıyor: ad satırı EN UZUN adın boyunda, yüzde ve çubuk beş
+   kartta aynı hatta — sonrası ölçüldü, beşinin dibi aynı pikselde
+   (EarningsToday'in hap sütunuyla aynı kalıp). `.moverIdentity` bu
+   genişlikte `display:contents`: logo, ad ve yüzde doğrudan kartın
+   satırlarına oturuyor. Dar ekranda satır düzeni korunur. */
 @media(min-width:1200px) {
-  .mover ul { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); }
-  .mover li { min-width:0; border-bottom:0; }
+  .mover ul { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); grid-template-rows:repeat(4,auto); row-gap:6px; }
+  .mover li { display:grid; grid-row:span 4; grid-template-rows:subgrid; min-width:0; border-bottom:0; }
   .mover li + li { border-left:1px solid var(--line-soft); }
-  .mover li a { height:100%; padding:10px 12px 12px; }
-  .moverIdentity { display:grid; grid-template-columns:auto 1fr; gap:5px 8px; }
-  .moverRank { grid-column:2; grid-row:1; text-align:right; }
-  .moverIdentity > :nth-child(2) { grid-column:1; grid-row:1; }
-  .moverCompany { grid-column:1/-1; }
-  .moverIdentity > span:last-child { grid-column:1/-1; font-size:18px; line-height:1.2; }
-  .moverTrack { margin-top:7px; }
+  .mover li a { display:grid; grid-row:span 4; grid-template-rows:subgrid; grid-template-columns:minmax(0,1fr); min-width:0; padding:12px 14px 14px; }
+  .moverIdentity { display:contents; }
+  /* AD SATIRI İKİ SATIRLIK TABANDA. Subgrid bir panelin beş kartını
+     hizalıyor ama yan yana duran İKİ panel ayrı ızgara: ilk ölçümde
+     artanlarda ad tek satırken düşenlerde MCHP iki satıra sarıyordu ve iki
+     panelin yüzdeleri 14 piksel kopuktu (938 / 952). Taban = sembol 18 +
+     aralık 2 + iki ad satırı 2 × 14 = 48 piksel; ad üç satıra çıkamaz
+     (`line-clamp-2`), yani iki panel her veride aynı hatta biter. */
+  .moverCompany { align-self:start; min-height:48px; }
+  .moverIdentity > span:last-child { align-self:end; margin-top:4px; font-size:18px; line-height:1.15; }
+  .moverTrack { margin-top:2px; }
   .moverTrack > span:nth-child(2) { font-size:12px; }
 }
 
@@ -354,8 +375,13 @@
 .page .masthead > header > p { font-size:14px; line-height:1.6; max-width:32ch; }
 .indexGrid { gap:12px; }
 .indexCard { border-radius:16px; border-color:var(--line-soft); }
-.indexCard::before { position:absolute; content:""; top:0; left:16px; right:16px; height:3px; border-radius:0 0 3px 3px; background:var(--primary); transform:scaleX(0); transform-origin:left; transition:transform 260ms var(--ease-brand); }
-.indexLink[aria-current="true"] .indexCard::before { transform:scaleX(1); }
+/* SEÇİLİ KART YALNIZ TONLA (6 Kasım, sahibinin isteği). Üst kenarda
+   3 piksellik mavi şerit vardı (telefonda solda); üç kart ölçüde aynı
+   hatta olduğu hâlde (1440: üçü de 110–284) şerit seçili kartı bir sekme
+   gibi yukarı kalkmış, "kaymış" gösteriyordu. Seçim artık zemin
+   (`--primary-tint`) ve kenarlık (`--primary-faint`) — 24 Eylül'ün "seçim
+   tonla işaretli" kuralı. Şerit kartın tepesinde DURUM anlatan kartların
+   (bilanço, teknik, risk) dili; seçim bir durum değil. */
 .identity > p:first-child { font-size:14px; font-weight:650; letter-spacing:-.02em; }
 .identity > .indexProxy { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text-body); }
 .indexProxy svg { color:var(--primary-ink); transition:transform 220ms var(--ease-brand); }
@@ -401,8 +427,6 @@
  .page .masthead :global(.page-heading-copy) h1 { font-size:var(--heading-page); }
  .indexGrid { gap:8px; }
  .indexCard { border-radius:12px; }
- .indexCard::before { top:12px; bottom:12px; left:0; right:auto; width:3px; height:auto; transform:scaleY(0); transform-origin:center; }
- .indexLink[aria-current="true"] .indexCard::before { transform:scaleY(1); }
  .identity > p:first-child { font-size:12px; }
  .identity > .indexProxy { font-size:12px; }
  .indexProxy svg { display:none; }
@@ -418,7 +442,7 @@
  .members tbody td:nth-child(3),.members tbody td:nth-child(4) { font-size:13px; }
 }
 @media(max-width:359px) { .price { font-size:22px; } }
-@media(prefers-reduced-motion:reduce) { .indexCard::before,.indexProxy svg { transition:none; } .indexLink:hover .indexProxy svg { transform:none; } }
+@media(prefers-reduced-motion:reduce) { .indexProxy svg { transition:none; } .indexLink:hover .indexProxy svg { transform:none; } }
 
 /* Kapanış fiyatı ile canlı seans birbirine karışmasın; birim ortak künyede. */
 .indexContext { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; }
@@ -453,7 +477,8 @@
    Eğri kabı (`.chart`) kartın kalan boyunu dolduruyor; taban künyesi ve
    seans çizgileri SVG dışında, eğrinin kendi ölçeğiyle yerleşiyor
    (`sparkFrame`). Derinlik tonla: seçili kartın zemini `--primary-tint`,
-   üstte 3 piksellik mavi şerit; gölge yok.
+   kenarı `--primary-faint`; gölge yok (6 Kasım'a dek üstte 3 piksellik
+   mavi şerit vardı — gerekçe yukarıda, "SEÇİLİ KART YALNIZ TONLA").
    ========================================================================== */
 .identity > .indexName { color:var(--text-strong); font-size:14px; font-weight:650; letter-spacing:-.02em; }
 .price { font-size:34px; line-height:1.05; }
@@ -616,3 +641,51 @@
 @media(max-width:1023px) { .heatGrid { grid-template-columns:repeat(10,minmax(0,1fr)); } }
 @media(max-width:639px) { .heatGrid { grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; } }
 @media(prefers-reduced-motion:reduce) { .heatCell { transition:none; } .heatCell:is(:hover,:active) { scale:none; } }
+
+/* ==========================================================================
+   6 Kasım — seçim şeridi tek panel, üç bölme (gerekçe page.tsx → IndexTabs).
+   Önceki katmanların (`.toolbarLayout`, `.toolbarIdentity`, `.shareBox`)
+   üstüne yazar; `.indexControls` sarmalı JSX'ten kalktı.
+   Ölçü: çip 38, medyan iki satır, pay üç satır; bölmeler dikeyde ortalı,
+   aralarında saç çizgisi, panelin iç dolgusu 12/20.
+   ========================================================================== */
+.indexTabs > .toolbarLayout { display:grid; grid-template-columns:auto minmax(0,1fr) minmax(300px,420px); align-items:center; gap:0; padding:12px 8px; }
+.toolbarLayout > * { min-width:0; padding:4px 20px; }
+.toolbarLayout > * + * { border-left:1px solid var(--line-soft); }
+.indexChoices { flex-shrink:0; }
+.toolbarIdentity { flex:none; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:6px; border-top:0; }
+.toolbarLayout > .toolbarIdentity { padding-block:4px; border-left:1px solid var(--line-soft); }
+.selectedIndexReading { gap:4px 10px; }
+.medianHint { max-width:42ch; }
+.tabsAside { width:auto; max-width:none; margin:0; }
+.toolbarLayout .shareBox { padding:0; border:0; border-radius:0; background:transparent; gap:8px; }
+.toolbarLayout .shareBox .breadthRail { height:5px; }
+.toolbarLayout .shareHead strong { font-size:22px; }
+@media(min-width:768px) and (max-width:1199px) {
+ .indexTabs > .toolbarLayout { grid-template-columns:auto minmax(0,1fr); padding:12px 4px; }
+ .toolbarLayout > .tabsAside { grid-column:1 / -1; margin:12px 16px 4px; padding:14px 0 0; border-left:0; border-top:1px solid var(--line-soft); }
+ .toolbarLayout > * { padding-inline:16px; }
+}
+@media(max-width:767px) {
+ .indexTabs > .toolbarLayout { grid-template-columns:minmax(0,1fr); padding:12px; }
+ .toolbarLayout > * { padding:0; }
+ .toolbarLayout > * + *, .toolbarLayout > .toolbarIdentity { margin-top:12px; padding-top:12px; border-left:0; border-top:1px solid var(--line-soft); }
+ .toolbarIdentity { flex-direction:row; align-items:center; justify-content:space-between; }
+ .selectedIndexReading { width:100%; justify-content:space-between; }
+}
+
+/* 6 Kasım — künyeler. Isı haritası bandı iki parça: solda damga, sağda
+   kapsam ve liste tarihi; ölçek notu hareket panellerinin altında iki
+   kolonu kaplıyor (gerekçe page.tsx → "ÖLÇEK NOTU İKİ PANELİN DİBİNDE"). */
+.movers > .movementScale { grid-column:1 / -1; margin-top:-6px; padding-inline:18px; }
+.breadthStamp > .heatCoverage { margin-left:auto; text-align:right; }
+@media(max-width:767px) {
+ .movers > .movementScale { margin-top:-4px; padding-inline:16px; }
+ .breadthStamp > .heatCoverage { margin-left:0; text-align:left; }
+}
+/* BİLEŞEN TABLOSUNDA SAYILAR AYNI HATTA (6 Kasım). Hücreler dikeyde
+   ortalıydı; Değişim ve Piyasa Değeri hücrelerinde sayının altında çubuk
+   olduğu için o iki sayı yukarı, çubuksuz Fiyat aşağı kayıyordu (1440,
+   ölçüldü: aynı satırda üç sayının dibi 1112 / 1116 / 1110). Hücreler
+   tepeye yaslı; sayılar ortak hatta, çubuklar onların altında. */
+.members tbody td { vertical-align:top; }
