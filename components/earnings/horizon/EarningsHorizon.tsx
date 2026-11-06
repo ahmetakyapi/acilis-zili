@@ -105,7 +105,7 @@ export function EarningsHorizon({
     };
   };
 
-  /* Hücre en çok sekiz yuva, saati belirsiz satırı iki (`laneSlots`):
+  /* Hücre en çok altı yuva, saati belirsiz satırı üç (`laneSlots`):
      sığmayan küçükler "+N" çipinde. */
   const cut = (rows: ScheduleRow[], lane: WeekLane) => capCell(rows, laneSlots(lane));
   const cap = (rows: ScheduleRow[], lane: WeekLane) => cut(rows, lane).shown.map(tile);

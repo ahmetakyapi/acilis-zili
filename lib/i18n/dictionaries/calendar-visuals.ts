@@ -41,7 +41,7 @@ export const calendarVisualsTr = {
     windowOther: "(saati belirsiz)",
     /** Katlı "Nasıl Okunur" ayrıntısı (kart turu, 25 Ekim). */
     caption:
-      "Her hücre o gün o pencerede açıklayan kayda değer şirketler, piyasa değeri büyükten küçüğe. Çerçeveli karo, değeri haftanın en büyüğünün dörtte birini geçen şirket. Karonun altındaki dört kare son dört çeyrek, eskiden yeniye: dolu kare EPS beklentisinin aşıldığı, boş kare aşılmadığı, soluk kare bilinmeyen çeyrek. Hücreye sığmayanlar +N ile o günün listesinde.",
+      "Her hücre o gün o pencerede açıklayan kayda değer şirketler, piyasa değeri büyükten küçüğe. Çerçeveli karo, değeri haftanın en büyüğünün dörtte birini geçen şirket. Karonun altındaki dört parçalı şerit son dört çeyrek, eskiden yeniye: yeşil parça EPS beklentisinin aşıldığı, kırmızı parça aşılmadığı, soluk parça bilinmeyen çeyrek. Logonun köşesindeki işaret bu çeyreğin açıklanan sonucu. Hücreye sığmayanlar +N ile o günün listesinde.",
     howTitle: "Nasıl Okunur",
     /** Tek satırlık künye: kare lejantı. */
     legendBeat: "Aşıldı",
@@ -107,7 +107,7 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     windowAmc: "after the close",
     windowOther: "(time not set)",
     caption:
-      "Each cell lists the notable companies reporting in that window that day, largest market cap first. A framed tile is a company worth more than a quarter of the week's largest. The four squares under a tile are the last four quarters, oldest first: a filled square means EPS beat the estimate, an empty one that it did not, a faded one that the quarter is unknown. Companies that don't fit are under +N in that day's list.",
+      "Each cell lists the notable companies reporting in that window that day, largest market cap first. A framed tile is a company worth more than a quarter of the week's largest. The four-part strip under a tile is the last four quarters, oldest first: a green segment means EPS beat the estimate, a red one that it missed, a faded one that the quarter is unknown. The badge on the logo's corner is this quarter's reported result. Companies that don't fit are under +N in that day's list.",
     howTitle: "How to Read",
     legendBeat: "Beat",
     legendMiss: "Missed",

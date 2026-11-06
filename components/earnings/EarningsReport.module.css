@@ -228,7 +228,13 @@
 }
 
 .coverTrendPlot {
-  --trend-track: 90px;
+  /* KAPAK GRAFİĞİ BÜYÜDÜ (6 Kasım, sahibinin sözü: "alanı güzel
+     kullanalım, minnacık kalmasınlar"). 1440'ta kapak hücresi ~560 piksel
+     ve solundaki iki ölçü ~200 piksel boydayken grafik 90 piksellik bir
+     şeritti, beş sütun 18 piksel: hücrenin üstü boş, sütunlar kıl gibi.
+     Kulvar 150 piksel, sütun hücrenin %44'ü (en çok 34), arkasında tam boy
+     soluk kulvar — rakamlar bölümündeki `RevenueColumns` ile aynı dil. */
+  --trend-track: 150px;
   display: flex;
   gap: clamp(0.6rem, 1.1vw, 1.1rem);
   margin-top: 1.75rem;
@@ -241,6 +247,7 @@
 }
 
 .coverTrendTrack {
+  position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -267,11 +274,24 @@
    (18 px, tepe 4 px); taban düz, sıfır çizgisine oturuyor. Ölçüldü: beş
    çubuk 320/390/1280'de 18'er piksel; değer etiketleri arası en dar 12
    piksel (320), etiket çubuktan geniş ama komşusuna binmiyor. */
+.coverTrendTrack::before {
+  position: absolute;
+  inset: 0 auto 0 50%;
+  width: 44%;
+  max-width: 34px;
+  border-radius: 6px 6px 0 0;
+  background: var(--line-soft);
+  opacity: .4;
+  translate: -50% 0;
+  content: "";
+}
+
 .coverTrendBar {
   position: relative;
-  width: 100%;
-  max-width: 18px;
-  border-radius: 4px 4px 0 0;
+  width: 44%;
+  min-width: 12px;
+  max-width: 34px;
+  border-radius: 6px 6px 0 0;
   background: var(--bar);
   transform-origin: center bottom;
 }
@@ -285,7 +305,8 @@
   bottom: calc(100% + 0.3rem);
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
   line-height: 1;
   color: var(--text-body);
   white-space: nowrap;
@@ -301,7 +322,7 @@
   margin-top: 0.45rem;
   /* 0.58rem (9,3px) idi — sütun altındaki çeyrek etiketi metindir, künye
      değil; ölçeğin metin tabanına çekildi. */
-  font-size: var(--text-nano);
+  font-size: var(--text-tiny);
   line-height: 1.35;
   color: var(--text-muted);
 }
@@ -916,6 +937,9 @@
   border-color: var(--line);
   border-radius: 12px;
 }
+/* Yapışınca kimlik bütçesi: sembol + dönem, görüş hapı ve fiyat 240'a
+   sığmıyor, dönem kesiliyordu (gerekçe sayfanın `lead` yorumunda). */
+@media (min-width: 1024px) { .reportNav { --nav-lead-max: 340px; } }
 
 /* Sekmelerin önündeki "01 … 05" sayacı kalktı (23 Eylül): sıra
    bildirmeyen bir süs — /teknik'teki "01" karosuyla aynı karar
@@ -1450,4 +1474,24 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .coverLeadFacts > div, .coverTrendBar { animation: none; }
+}
+
+/* GELİR SÜTUNUNUN KULVARI (6 Kasım — gerekçe `RevenueColumns`). Sütun
+   hücresinin arkasında, etiket şeridinin altından tabana tam boy soluk
+   kulvar; sütunla aynı genişlik ve köşe. Öngörü sütununun kesikli kutusu
+   kulvarın üstünde durur. */
+.revenueCell::before {
+  position: absolute;
+  top: var(--label-band);
+  bottom: 0;
+  left: 50%;
+  width: 46%;
+  min-width: 14px;
+  max-width: 36px;
+  border-radius: 6px 6px 0 0;
+  background: var(--line-soft);
+  opacity: .6;
+  translate: -50% 0;
+  content: "";
+  pointer-events: none;
 }

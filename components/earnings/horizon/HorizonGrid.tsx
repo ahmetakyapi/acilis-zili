@@ -34,6 +34,13 @@ import styles from "./EarningsHorizon.module.css";
  * kare) tek düğme; karne dört okunur kare (dolu = aşıldı, boş = aşılmadı,
  * soluk = veri yok). Ölçüm `EarningsHorizon.module.css` başında.
  *
+ * LOGO TURU (6 Kasım, sahibinin sözü: "beklenti 3 çeyrekte aşılmış ama 4
+ * gibi gözüküyor; logolar daha güzel gözüksün, kolay seçilsin, alanı güzel
+ * kullanalım"). Masaüstünde hücre üç sütun, logo 40 (1440'ta kart 50×71 →
+ * 66×86); aşılmadı parçası kırmızı; logonun köşesindeki sonuç işareti
+ * zeminli rozet. Ölçüm ve gerekçe CSS'te ("AŞILMADI KIRMIZI", `.result`)
+ * ve `CELL_MAX_SLOTS` yorumunda.
+ *
  * TELEFON KARTLARI (27 Ekim, sahibinin isteği: "mobilde kartlar daha
  * okunaklı, daha görsel; en kritik olanlar daha okunaklı ve görsel bir
  * temada"). Masaüstünün 46 piksellik ikon ızgarası telefonda da aynıydı:
@@ -359,7 +366,7 @@ function Tile({
           {/* Açıklanmış bilançoda yön glifi (biçim + renk): beklentiye göre. */}
           {tile.surprise && (
             <span aria-hidden className={styles.result} data-dir={tile.surprise}>
-              {tile.surprise === "beat" ? "▲" : tile.surprise === "miss" ? "▼" : "="}
+              <span>{tile.surprise === "beat" ? "▲" : tile.surprise === "miss" ? "▼" : "="}</span>
             </span>
           )}
         </span>

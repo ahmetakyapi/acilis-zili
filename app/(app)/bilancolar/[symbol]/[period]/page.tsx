@@ -55,8 +55,8 @@ import {
   canonicalPeriod,
   verdictLabel,
   verdictOf,
-  verdictPillClass,
 } from "@/lib/analysis";
+import { VerdictPill } from "@/components/ui/VerdictPill";
 import { reportLede } from "@/lib/analysis-visuals";
 import {
   industryFilterFor,
@@ -64,7 +64,6 @@ import {
   sectorGroupOf,
 } from "@/lib/sectors";
 import {
-  cn,
   formatEtDateCompact,
   formatEtDateLong,
   formatPercent,
@@ -750,25 +749,27 @@ export default async function AnalysisDetailPage(
         className={styles.reportNav}
         label={t.analysis.reportNavigation}
         lead={
+          /* KİMLİK OKUNUR BOYDA (6 Kasım, sahibinin sözü: "üstteki şirket
+             adı kısmı daha belirgin ve güzel durmalı, daha okunabilir").
+             1440'ta tek satırdı: 22 piksellik logo, 13 piksellik
+             "AAOI · 3Ç 20…" (dönem kesiliyordu), elle yazılmış görüş kutusu
+             ve fiyat — 240 piksellik bütçeye sıkışmış. Şimdi iki katlı blok:
+             logo 26, sembol 15 piksel kalın, dönem altında tam; görüş
+             sitenin tek hapı (`VerdictPill`, skor halkalı — CLAUDE.md elle
+             `verdictPillClass` yazmayı yasaklıyor); fiyat ayrı sütunda
+             kalın. Bütçe yalnız bu ekranda 340 (`.reportNav`,
+             `--nav-lead-max`). Telefonda logo ve dönem gizli kalıyor. */
           <>
             <span className="max-md:hidden">
-              <LogoTile symbol={symbol} logoUrl={symbolMeta?.logoUrl} size="xs" />
+              <LogoTile symbol={symbol} logoUrl={symbolMeta?.logoUrl} size="sm" />
             </span>
-            <span className="min-w-0 truncate text-small font-bold text-strong">
-              {symbol}
-              <span className="max-md:hidden"> · {shortPeriod}</span>
+            <span className="flex min-w-0 flex-col leading-[1.15]">
+              <span className="truncate text-read font-extrabold tracking-[-0.01em] text-strong">{symbol}</span>
+              <span className="truncate text-nano font-semibold text-muted max-md:hidden">{shortPeriod}</span>
             </span>
-            <span
-              className={cn(
-                /* Görüş renkli, kapaktaki üçlüyle aynı — gerekçe VerdictStrip. */
-                "figure shrink-0 rounded-md px-1.5 py-0.5 text-tiny font-bold",
-                verdictPillClass(verdict),
-              )}
-            >
-              {verdictLabel(verdict, t)} {row.score}
-            </span>
+            <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} score={row.score} size="xs" />
             {liveText && (
-              <span className="figure shrink-0 text-small font-bold text-strong max-lg:hidden">
+              <span className="figure shrink-0 text-read font-bold text-strong max-lg:hidden">
                 {liveText}
               </span>
             )}

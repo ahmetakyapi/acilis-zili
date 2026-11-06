@@ -81,15 +81,23 @@ export function tileTierOf(scale: number): TileTier {
  * Eskiden iki boy karo (56 / 40) satırı dağıtıyordu: altı yuva bazen üç
  * karoda sarıyor, büyük karonun yanında boşluk kalıyordu. Telefonda
  * pencereler alt alta ve tam genişlik, sekiz yuva yine en çok iki sıra.
+ *
+ * LOGO TURU (6 Kasım, sahibinin sözü: "logolar daha güzel gözüksün, kolay
+ * seçilsin, alanı güzel kullanalım"). 1440'ta dört sütunda kart 50×71 ve
+ * logo 32 pikseldi: kartın yarısı boş zemin, sembol 12,5 puntoda. Hücre üç
+ * sütuna indi (kart ~68 piksel, logo 40); satır yine en çok İKİ SIRA kalsın
+ * diye tavan sekizden altıya. Hücrede en büyük beş şirket + "+N" — kalanı
+ * zaten o günün listesinde.
  */
-export const CELL_MAX_SLOTS = 8;
+export const CELL_MAX_SLOTS = 6;
 
 /**
  * "Saati Belirsiz" satırı TEK SIRA ve küçük karo (logo + sembol yan yana):
  * çoğu hafta beş günün birinde bir-iki şirket taşıyor; tam yükseklikte bir
- * satır boş dört hücreyi uzatıyordu (ölçüldü: 68 piksel).
+ * satır boş dört hücreyi uzatıyordu (ölçüldü: 68 piksel). Üç sütunlu
+ * hücrede (6 Kasım) tek sıra üç yuva.
  */
-export const OTHER_MAX_SLOTS = 2;
+export const OTHER_MAX_SLOTS = 3;
 
 /** Pencereye göre yuva tavanı. */
 export function laneSlots(lane: WeekLane): number {

@@ -3,8 +3,8 @@
 
    Derinlik TONLA: gün sütunu `--surface-sunken`, şirket kartı
    `--surface-solid`, seçili kart mavi halka (etkileşim rengi). Renk veri
-   çiziminde yalnız yön: karne karesi aşıldıysa `--up` dolu, aşılmadıysa
-   boş (nötr çerçeve; kırmızı değil, "kaçırdı" bir yargı gibi okunurdu),
+   çiziminde yalnız yön: karne parçası aşıldıysa `--up`, aşılmadıysa
+   `--down` (6 Kasım'a dek nötrdü — gerekçe aşağıda "AŞILMADI KIRMIZI"),
    bilinmiyorsa soluk. Geniş ekranda (≥1180) beş sütun ve solda şerit
    ekseni, altında gün seçici ve tek gün.
 
@@ -235,10 +235,32 @@
 .tile:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 .karo { position: relative; display: grid; place-items: center; }
-.star { position: absolute; top: -4px; left: -6px; font-size: 10px; line-height: 1; color: var(--primary); }
-.result { position: absolute; top: -4px; right: -6px; font-size: 9px; line-height: 1; color: var(--flat); }
+.star { position: absolute; top: -5px; left: -7px; font-size: 11px; line-height: 1; color: var(--primary); text-shadow: 0 0 2px var(--surface-solid), 0 0 2px var(--surface-solid); }
+/* SONUÇ ROZETİ (6 Kasım). Logonun köşesinde 9 piksellik çıplak üçgen
+   vardı; logonun kendi renkleriyle karışıp (McDonald's kırmızısı, Uber
+   siyahı) kayboluyordu. Şimdi kart zemini halkalı yuvarlak rozet: yön
+   zemini (`--up-wash` / `--down-wash`) ve glif rengi aynı işaretten. */
+.result {
+  position: absolute;
+  top: -5px;
+  right: -7px;
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--surface-solid);
+  box-shadow: 0 0 0 2px var(--surface-solid);
+  font-size: 8px;
+  line-height: 1;
+  color: var(--flat);
+}
+.result::before { position: absolute; inset: 0; border-radius: inherit; background: var(--line-soft); content: ""; }
 .result[data-dir="beat"] { color: var(--up); }
+.result[data-dir="beat"]::before { background: var(--up-wash); }
 .result[data-dir="miss"] { color: var(--down); }
+.result[data-dir="miss"]::before { background: var(--down-wash); }
+.result > span { position: relative; }
 
 .tileSymbol {
   max-width: 100%;
@@ -258,18 +280,26 @@
    1,25 piksellik bir çerçeve, "veri yok" gri dolu kare. Uzaktan dört nokta
    okunuyordu, hangisinin ne olduğu ancak lejantla. Şimdi sitenin grafik
    dili: kartın genişliğinde dört parçalı ince şerit (kulvar üstünde
-   şerit), eskiden yeniye. Aşıldı `--up` dolu, aşılmadı `--text-muted`
-   dolu (kırmızı değil: "kaçırdı" bir yargı gibi okunurdu), veri yok
+   şerit), eskiden yeniye. Aşıldı `--up` dolu, aşılmadı `--down` dolu,
+   veri yok
    `--line-soft` kulvar rengi, yani parça "boş". Parça 1440'ta ~9×4 →
    şerit kart iç genişliği (40 piksel); okuma şeridinde 72×6. Lejant
-   aynı parçaları çiziyor. */
+   aynı parçaları çiziyor.
+
+   AŞILMADI KIRMIZI (6 Kasım, sahibinin sözü: "beklenti 3 çeyrekte aşılmış
+   ama 4 gibi gözüküyor"). Aşılmadı `--text-muted` doluydu: 4 piksellik
+   parçada koyu gri ile koyu yeşil ayırt edilmiyor, BKNG'nin 3/4'ü dört
+   dolu parça gibi okunuyordu. Iskalanan beklenti bir İŞARET (negatif
+   sürpriz), yargı değil — renk işaretten gelir kuralının ta kendisi; okuma
+   şeridindeki "Açıklanan EPS ▼" de aynı `--down`u kullanıyor. Parça
+   kalınlığı da arttı: kartta 4 → 5, okuma şeridinde 6 → 7 piksel. */
 .squares { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; width: 100%; }
 @media (min-width: 1180px) { .squares:not([data-large]) { width: calc(100% - 6px); } }
-.square { display: block; height: 4px; border-radius: 2px; background: var(--line-soft); }
+.square { display: block; height: 5px; border-radius: 3px; background: var(--line-soft); }
 .square[data-mark="beat"] { background: var(--up); }
-.square[data-mark="miss"] { background: var(--text-muted); }
-.squares[data-large] { width: 72px; gap: 3px; }
-.squares[data-large] .square { height: 6px; border-radius: 3px; }
+.square[data-mark="miss"] { background: var(--down); }
+.squares[data-large] { width: 80px; gap: 3px; }
+.squares[data-large] .square { height: 7px; border-radius: 4px; }
 .legendItem > .square { width: 14px; height: 5px; border-radius: 3px; }
 
 /* "+N": hücreye sığmayanlar. Kart boyunda ama dolu değil, saç teli
@@ -430,7 +460,16 @@
   /* Boş hücre geniş ekranda boş: satır hizası "yok"u zaten söylüyor. */
   .laneEmpty { display: none; }
   .closed { grid-row: 2 / -1; }
-  .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px 3px; }
+  /* ÜÇ SÜTUN, LOGO 40 (6 Kasım — gerekçe `CELL_MAX_SLOTS`). Ölçüldü
+     (TR, açık/koyu, 2–6 Kasım örnek haftası, `capCell` uygulanmış):
+     kart 1280'de 46×67 → 61×81, 1440'ta 50×71 → 66×86; ızgara 1440'ta
+     345 → 433 piksel (iki kart sırası daha uzun), sembol kırpılması 0,
+     yatay taşma 0. Bedel bilinçli: 1280×800'de okuma şeridi ilk ekranın
+     altına iniyor (önceden de yarımdı, sayfa yorumu). */
+  .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+  .tiles .logo { width: 40px; height: 40px; border-radius: 10px; }
+  .tile { gap: 5px; padding: 8px 6px 8px; }
+  .tileSymbol { font-size: 13px; }
   .lane { padding-block: 5px; }
   .dayHead { gap: 4px 8px; padding: 6px 8px 5px; }
 
@@ -450,8 +489,8 @@
    Sütun ~45 piksel: "GOOGL" 12,5 puntoda 43 piksel tutup kırpılıyordu,
    bu aralıkta sembol 12 ve harf aralığı sıkı. */
 @media (min-width: 1180px) and (max-width: 1399px) {
-  .tiles .logo { width: 28px; height: 28px; }
-  .tileSymbol { font-size: 12px; letter-spacing: -0.035em; }
+  .tiles .logo { width: 36px; height: 36px; border-radius: 9px; }
+  .tileSymbol { font-size: 12.5px; letter-spacing: -0.03em; }
 }
 
 /* ==========================================================================

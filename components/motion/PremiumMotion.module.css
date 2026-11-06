@@ -85,8 +85,11 @@
 }
 .sectionNav:is([data-stuck], [data-variant="floating"]) .navLead {
   display: flex;
-  max-width: 240px;
-  padding-right: 12px;
+  /* Ekran kendi bütçesini verebilir (`--nav-lead-max`; bilanço analizi
+     340, gerekçe orada). */
+  max-width: var(--nav-lead-max, 240px);
+  gap: 10px;
+  padding-right: 14px;
   border-right: 1px solid var(--line-soft);
   animation: nav-lead-in 200ms var(--ease-brand) both;
 }

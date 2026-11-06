@@ -23,9 +23,9 @@ test("karo boyu: kenar oranı yarıdan büyükse büyük (alan dörtte birden fa
 });
 
 test("hücre sığıyorsa tümü, sığmıyorsa son yuva +N", () => {
-  const eight = ["A", "B", "C", "D", "E", "F", "G", "H"];
-  assert.deepEqual(capCell(eight), { shown: eight, more: 0 });
-  assert.deepEqual(capCell([...eight, "I"]), { shown: ["A", "B", "C", "D", "E", "F", "G"], more: 2 });
+  const six = ["A", "B", "C", "D", "E", "F"];
+  assert.deepEqual(capCell(six), { shown: six, more: 0 });
+  assert.deepEqual(capCell([...six, "G"]), { shown: ["A", "B", "C", "D", "E"], more: 2 });
   assert.deepEqual(capCell([], CELL_MAX_SLOTS), { shown: [], more: 0 });
   assert.deepEqual(capCell(["A", "B", "C"], 2), { shown: ["A"], more: 2 });
   assert.deepEqual(capCell(["A"], 0), { shown: [], more: 1 });
@@ -40,11 +40,11 @@ test("+N çipiyle birlikte hücre yuva tavanını aşmaz", () => {
   }
 });
 
-test("yuva tavanı: iki sıra dört karo, saati belirsiz satırı tek sıra", () => {
+test("yuva tavanı: iki sıra üç karo, saati belirsiz satırı tek sıra", () => {
   assert.equal(laneSlots("bmo"), CELL_MAX_SLOTS);
   assert.equal(laneSlots("amc"), CELL_MAX_SLOTS);
   assert.equal(laneSlots("other"), OTHER_MAX_SLOTS);
-  assert.deepEqual(capCell(["A", "B", "C"], laneSlots("other")), { shown: ["A"], more: 2 });
+  assert.deepEqual(capCell(["A", "B", "C", "D"], laneSlots("other")), { shown: ["A", "B"], more: 2 });
 });
 
 test("karne kareleri her zaman dört; eksikler başta veri yok", () => {

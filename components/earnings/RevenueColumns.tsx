@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { ChartFooter, type FooterStat } from "@/components/earnings/ChartFooter";
 import { consecutiveQuarters, quarterGaps, yearAgoIndex } from "@/components/earnings/quarter-gaps";
 import { cn, formatPercent } from "@/lib/utils";
@@ -88,7 +89,7 @@ const GRID = [1, 0.75, 0.5, 0.25];
  * ekranda hücre bu sınırın altına düştüğünde sınır kendiliğinden devre
  * dışı kalır (`max-width`), sütun hücreyi doldurur.
  */
-const MAX_BAR_WIDTH = 62;
+const MAX_BAR_WIDTH = 78;
 
 /**
  * Sütun ızgarasının biçimi — İKİ ızgarada da birebir aynı olmak zorunda.
@@ -302,8 +303,8 @@ export function RevenueColumns({
                     böylece hizalama iki ızgarada da yapısal olarak garanti —
                     elle verilen bir kaydırmaya bağlı değil. */}
                 <div
-                  className="mx-auto flex h-full w-full flex-col justify-end gap-1.5"
-                  style={{ maxWidth: MAX_BAR_WIDTH }}
+                  className={cn("relative mx-auto flex h-full w-full flex-col justify-end gap-1.5", styles.revenueCell)}
+                  style={{ maxWidth: MAX_BAR_WIDTH, "--label-band": `${LABEL_BAND}px` } as CSSProperties}
                 >
                   {/* Etiket sütundan GENİŞ olabiliyor: öngörü sütununda tek
                       sayı değil bir aralık yazıyor ("18,0–18,2") ve sütun
@@ -338,9 +339,18 @@ export function RevenueColumns({
                     data-motion-draw="bar"
                     /* İnce sütun (17 Ekim, CLAUDE.md "grafik dili ince"): hücre
                        genişliğinde dolu blok "tablo programı" gibi duruyordu;
-                       18 piksele inip hücrenin ortasında duruyor. */
+                       18 piksele inip hücrenin ortasında duruyor.
+
+                       ALANI DOLDUR (6 Kasım, sahibinin sözü: "çizgi grafikleri
+                       alanı iyi kaplasın, minnacık kalmasınlar"). 1440'ta 600
+                       piksellik kartta altı sütun 18 piksel kalınca hücrenin
+                       %80'i boştu; grafik kartın ortasında birkaç kıl gibi
+                       duruyordu. Sütun hücrenin %46'sı, en çok 36 piksel —
+                       tombul blok (62) ile kıl (18) arasında; arkasında tam
+                       boy KULVAR (`.revenueTrack`, `--line-soft`) yüksekliği
+                       ölçekle okutuyor, sitenin "kulvar üstünde şerit" dili. */
                     className={cn(
-                      "mx-auto w-full max-w-[18px] rounded-t-[4px]",
+                      "relative mx-auto w-[46%] min-w-[14px] max-w-[36px] rounded-t-[6px]",
                       styles.revenueBar,
                       bar.projected &&
                         "border border-dashed border-primary bg-primary-tint",
@@ -399,7 +409,7 @@ export function RevenueColumns({
                 gereksiz yere daha da daraltırdı. */}
             <span
               className={cn(
-                "block text-center text-tiny font-semibold leading-[1.25]",
+                "block text-center text-small font-semibold leading-[1.25]",
                 bar.projected ? "text-primary" : "text-muted",
               )}
             >
