@@ -3296,6 +3296,9 @@ const tr = {
         label: "Bu Yılın Ölçüleri",
         withholding: "ABD Stopajı · W-8BEN",
         threshold: "{year} Temettü Beyan Sınırı",
+        /* Sınır önceki yıldan taşındığında künyenin altındaki not (6 Kasım,
+           inceleme): "2025 Sınırı" tek başına güncel yılın sınırı gibi okunuyordu. */
+        thresholdCarriedNote: "{year} Sınırı Henüz Yayımlanmadı",
         filing: "{year} Geliri Beyanı",
         filingValue: "Mart {filing}",
       },
@@ -3313,10 +3316,15 @@ const tr = {
         fxNote: "Maliyet × Kur Artışı",
         index: "Endekslemeyle Düşen",
         fxShare: "TL kazancının %{pct} kadarı kurdaki artıştan geliyor.",
+        /* Endeksleme varken payda endeksleme ÖNCESİ kazanç (fiyat + kur); üstteki
+           Net Kazanç endeksleme sonrası (6 Kasım, inceleme — `TaxRibbon`). */
+        fxShareIndexed: "Endeksleme öncesi TL kazancının %{pct} kadarı kurdaki artıştan geliyor.",
       },
       preview: {
         title: "Sonuç Böyle Görünecek",
-        lead: "{qty} adet {symbol}, {buy} alınıp {sell} satılırsa.",
+        /* Örnek sembol bilerek gerçek değil (`exampleSymbol`, tax-ui.ts); cümlede
+           "10 adet ORNEK" yapay okunuyordu (6 Kasım); sembol cümleden çıktı. */
+        lead: "Varsayımsal bir hisseden {qty} adet, {buy} alınıp {sell} satılırsa.",
       },
       form: {
         symbolPlaceholder: "Örn. AAPL",
@@ -4227,7 +4235,11 @@ const tr = {
     shareLabel: "Sermayedeki Payı",
     capitalLabel: "Takip Edilen Sermaye",
     capitalFundsCount: "{count} Fon",
+    /* Tekil dallar (6 Kasım, inceleme): EN "1 Other Funds" yazıyordu. TR'de
+       sayıdan sonra isim tekil kalır; dal yine ayrı ki iki dil aynı anahtarı okusun. */
+    capitalFundsCountOne: "{count} Fon",
     capitalOther: "Diğer {count} Fon",
+    capitalOtherOne: "Diğer {count} Fon",
     capitalLeadAria: "{name}: takip edilen sermayenin {share} kadarı, {value}.",
     portfolioLabel: "Hisse Portföyü",
     capitalStripAria: "Takip edilen sermayenin fonlara göre dağılımı",

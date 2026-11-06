@@ -1,8 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { headers } from "next/headers";
 import { after } from "next/server";
 import { z } from "zod";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { isBot } from "./analytics";
 import { claudeKey } from "./claude-key";
 import { db } from "./db";
 import { news } from "./schema";
@@ -112,26 +114,43 @@ export async function translateNewsByIds(ids: string[]): Promise<Map<string, str
 /** `translateNewsByIds`in başlık + özet dönen hâli (`withTranslations`). */
 async function translateNewsRowsByIds(ids: string[]): Promise<Map<string, Translated>> {
   const backend = activeTranslateBackend();
-  /* UÇUŞTAKİLER ATLANIR (22 Ekim): /haberler ve hisse sayfası aynı
-     başlıkları aynı saniyede isteyebiliyor; tablo okuması ikisine de "boş"
-     diyor ve aynı haber iki kez ücretleniyordu. Süreç içi küme yeter —
-     sunucu tek süreç (deploy/acilis-zili.service, tek `next start`). */
+  if (!backend || ids.length === 0) return new Map();
+  /* UÇUŞTAKİLER YENİDEN GÖNDERİLMEZ (22 Ekim): /haberler ve hisse sayfası
+     aynı başlıkları aynı saniyede isteyebiliyor; tablo okuması ikisine de
+     "boş" diyor ve aynı haber iki kez ücretleniyordu. Süreç içi kayıt yeter
+     — sunucu tek süreç (deploy/acilis-zili.service, tek `next start`).
+
+     UÇUŞTAKİ BEKLENİR (6 Kasım, inceleme): kayıt bir kümeydi ve ikinci
+     çağıran uçuştaki haberi "yok" sayıp hemen boş dönüyordu; ana sayfa ile
+     /haberler aynı anda açılınca ikincisi bir saniye sonra bitecek çeviriyi
+     beklemeden İngilizce basıyordu. Artık id → uçuştaki iş; ikinci çağıran
+     aynı işi bekler, ücret yine tek. */
+  const waiting = [...new Set(ids.flatMap((id) => inFlight.get(id) ?? []))];
   const fresh = ids.filter((id) => !inFlight.has(id));
-  if (!backend || fresh.length === 0) return new Map();
-  for (const id of fresh) inFlight.add(id);
-  try {
-    const pending: PendingItem[] = await db
-      .select({ id: news.id, headline: news.headline, summary: news.summary })
-      .from(news)
-      .where(and(isNull(news.headlineTr), inArray(news.id, fresh)));
-    if (pending.length === 0) return new Map();
-    return await translateAndStore(backend, pending);
-  } finally {
-    for (const id of fresh) inFlight.delete(id);
+  const jobs = [...waiting];
+  if (fresh.length > 0) {
+    const own = (async () => {
+      const pending: PendingItem[] = await db
+        .select({ id: news.id, headline: news.headline, summary: news.summary })
+        .from(news)
+        .where(and(isNull(news.headlineTr), inArray(news.id, fresh)));
+      return pending.length === 0 ? new Map<string, Translated>() : translateAndStore(backend, pending);
+    })();
+    for (const id of fresh) inFlight.set(id, own);
+    void own
+      .finally(() => {
+        for (const id of fresh) if (inFlight.get(id) === own) inFlight.delete(id);
+      })
+      .catch(() => undefined);
+    jobs.push(own);
   }
+  const wanted = new Set(ids);
+  const out = new Map<string, Translated>();
+  for (const done of await Promise.all(jobs)) for (const [id, item] of done) if (wanted.has(id)) out.set(id, item);
+  return out;
 }
 
-const inFlight = new Set<string>();
+const inFlight = new Map<string, Promise<Map<string, Translated>>>();
 
 /**
  * Ekrandaki çevirisiz haberleri KISA BİR SÜRE BEKLEYİP aynı yanıtta basar
@@ -150,7 +169,8 @@ const inFlight = new Set<string>();
  * okura bir açılış geç kalıyordu. Üstelik altmışlık liste 20'lik üç
  * paketle SIRAYLA gidiyordu.
  *
- * Şimdi liste kendi `Suspense` sınırında (ilk bayt beklemez) eksikleri
+ * Şimdi liste ve ana sayfa kartı kendi `Suspense` sınırında (ilk bayt
+ * beklemez; haber detayı beklemez, gerekçesi orada) eksikleri
  * çeviriye yollar, paketler paralel (`translateWithClaude`, payı olmayan
  * çağrı), en çok `waitMs` bekler; yetişen başlık ve özet bu yanıtta
  * Türkçe. Yetişmeyen iş `after` ile sürer, sonraki açılış Türkçe görür.
@@ -166,10 +186,39 @@ export async function withTranslations<T extends TranslatableRow>(
   if (locale !== "tr" || !isTranslateConfigured()) return [...items];
   const missing = items.filter((item) => !item.headlineTr).map((item) => item.id);
   if (missing.length === 0) return [...items];
-  const job = translateNewsRowsByIds(missing).catch(() => new Map<string, Translated>());
-  after(() => job.then(() => undefined));
-  const done = await Promise.race([job, new Promise<null>((resolve) => setTimeout(() => resolve(null), waitMs))]);
+  /* İLK PAKET BEKLENİR, KALANI ARKADA (6 Kasım, inceleme). Bütün liste
+     tek işte bekleniyordu: ana sayfa 80, /haberler 60 haber yolluyor ve
+     tek yavaş paket hızlı bitenleri de bu yanıttan düşürüyordu. Satırlar
+     tarihe göre sıralı geliyor; ekranın tepesi ilk pakette (en çok
+     `CLAUDE_CHUNK`), yalnız o bekleniyor. Kalanlar ilk paket bitince
+     `after` ile, aynı uçuş kaydıyla. Botlar hiç beklemez: tarayıcı için
+     ilk baytı geciktirmenin karşılığı yok, çeviri yine arkada yapılır. */
+  const head = missing.slice(0, CLAUDE_CHUNK);
+  const rest = missing.slice(CLAUDE_CHUNK);
+  const job = translateNewsRowsByIds(head).catch(() => new Map<string, Translated>());
+  after(async () => {
+    await job;
+    if (rest.length > 0) await translateNewsRowsByIds(rest).catch(() => undefined);
+  });
+  const wait = (await isBotRequest()) ? 0 : waitMs;
+  if (wait <= 0) return [...items];
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const done = await Promise.race([
+    job,
+    new Promise<null>((resolve) => {
+      timer = setTimeout(() => resolve(null), wait);
+    }),
+  ]);
+  clearTimeout(timer);
   return done ? mergeTranslations(items, done) : [...items];
+}
+
+async function isBotRequest(): Promise<boolean> {
+  try {
+    return isBot((await headers()).get("user-agent") ?? "");
+  } catch {
+    return false;
+  }
 }
 
 type Translated = { id: string; headlineTr: string; summaryTr: string | null };

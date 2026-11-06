@@ -4,6 +4,7 @@ import { Fragment, useEffect, useId, useRef, useState, useTransition, type CSSPr
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowDown, ArrowRight, ArrowUp, ArrowUpRight, Bell, Buildings, CalendarBlank, CaretDown, CaretLeft, CaretRight, ChartLineUp, Check, CircleNotch, Clock, Equals, TrendUp } from "@phosphor-icons/react";
 import { DeviationLine } from "@/components/calendar/DeviationLine";
+import { legendMark } from "@/lib/release-deviation";
 import { LogoTile } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { displayFlowStatus, flowResultSignature, preserveConfirmedResults, type DayFlowSnapshot, type FlowEvent, type FlowMember } from "@/lib/day-flow";
@@ -658,12 +659,18 @@ export function DayFlow({ initial, locale, labels, railLabels, heading, otherHea
                     {(event.actual || event.forecast || event.previous) && (
                       <div className={styles.resultsBlock} data-line={deviation && lineLabels ? true : undefined}>
                         <dl className={styles.results}>
-                          {([["actual", labels.actual, event.actual], ["forecast", labels.forecast, event.forecast], ["previous", labels.previous, event.previous]] as const).map(([key, label, figure]) => (
+                          {([["actual", labels.actual, event.actual], ["forecast", labels.forecast, event.forecast], ["previous", labels.previous, event.previous]] as const).map(([key, label, figure]) => {
+                            /* İşaret TABANDAN (6 Kasım, inceleme): taban olan
+                               değer dik çizgi, çentik yalnız çizgide duruyorsa,
+                               düz sayı olmayan beklenti işaretsiz (`legendMark`). */
+                            const mark = deviation && lineLabels && figure ? legendMark(key, deviation) : null;
+                            return (
                             <div key={key} data-kind={key} data-dir={key === "actual" ? deviation?.direction : undefined}>
-                              <dt>{deviation && lineLabels && figure && <i aria-hidden className={styles.key} />}{label}</dt>
+                              <dt>{mark && <i aria-hidden className={styles.key} data-mark={mark} />}{label}</dt>
                               <dd className="numeral" data-empty={!figure || undefined}>{figure ?? NO_VALUE}</dd>
                             </div>
-                          ))}
+                            );
+                          })}
                         </dl>
                         {deviation && lineLabels && (
                           <div className={styles.devBlock}>

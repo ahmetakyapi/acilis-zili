@@ -83,21 +83,21 @@ export function tileTierOf(scale: number): TileTier {
  * pencereler alt alta ve tam genişlik, sekiz yuva yine en çok iki sıra.
  *
  * LOGO TURU (6 Kasım, sahibinin sözü: "logolar daha güzel gözüksün, kolay
- * seçilsin, alanı güzel kullanalım"). 1440'ta dört sütunda kart 50×71 ve
- * logo 32 pikseldi: kartın yarısı boş zemin, sembol 12,5 puntoda. Hücre üç
- * sütuna indi (kart ~68 piksel, logo 40); satır yine en çok İKİ SIRA kalsın
- * diye tavan sekizden altıya. Hücrede en büyük beş şirket + "+N" — kalanı
- * zaten o günün listesinde.
+ * seçilsin, alanı güzel kullanalım"). Önce üç sütun ve altı yuva denendi:
+ * logo 40'a çıktı ama gerçek haftada dört şirketli hücreler ikinci sıraya
+ * tek karo taşıyordu. Dört sütun ve sekiz yuva kaldı; logo kartın iç
+ * boşluğu daraltılarak büyüdü (ölçüm EarningsHorizon.module.css).
  */
-export const CELL_MAX_SLOTS = 6;
+export const CELL_MAX_SLOTS = 8;
 
 /**
  * "Saati Belirsiz" satırı TEK SIRA ve küçük karo (logo + sembol yan yana):
  * çoğu hafta beş günün birinde bir-iki şirket taşıyor; tam yükseklikte bir
- * satır boş dört hücreyi uzatıyordu (ölçüldü: 68 piksel). Üç sütunlu
- * hücrede (6 Kasım) tek sıra üç yuva.
+ * satır boş dört hücreyi uzatıyordu (ölçüldü: 68 piksel). 6 Kasım: kart
+ * her satırda aynı biçimde olduğu için tek sıra DÖRT yuva (bir sıranın
+ * tamamı); iki yuva sıranın yarısını boş bırakıyordu.
  */
-export const OTHER_MAX_SLOTS = 3;
+export const OTHER_MAX_SLOTS = 4;
 
 /** Pencereye göre yuva tavanı. */
 export function laneSlots(lane: WeekLane): number {

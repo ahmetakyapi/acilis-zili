@@ -11,7 +11,7 @@ import { ReleasedData } from "@/components/calendar/ReleasedData";
 import { buildLookahead } from "@/components/calendar/lookahead";
 import { DeviationLine } from "@/components/calendar/DeviationLine";
 import { ImpactTag } from "@/components/calendar/ImpactTag";
-import { deviationSpans, deviationVerdict, releaseDeviation, seriesKey } from "@/lib/release-deviation";
+import { deviationSpans, deviationVerdict, legendMark, releaseDeviation, seriesKey, type LegendMark } from "@/lib/release-deviation";
 import { FED_WAIT_MS, getFomcRelease } from "@/lib/providers/fed";
 import { fedRange, isFomcFamily, previousRange } from "@/lib/fomc-statement";
 import { GuideHint } from "@/components/article/GuideHint";
@@ -64,7 +64,11 @@ import { insightsConfigured } from "@/lib/stock-insights";
    olarak alıyor. Neden: Next sayfa dosyası başka dışa aktarma kabul
    etmiyor ve ekran yalnız canlı veritabanıyla çizilebiliyordu — sahte
    satırla ölçüm (390/1440, iki tema) için aynı bileşen geçici bir
-   önizleme rotasından çağrılabilmeli. Mantık değişmedi, yalnız taşındı. */
+   önizleme rotasından çağrılabilmeli. Taşıma sırasında satırın değer
+   çizimi de değişti (6 Kasım, inceleme ile düzeltildi — eski not "mantık
+   değişmedi, yalnız taşındı" diyordu): üç sayının sıfırdan çubukları
+   (`ScaleBar`) yerine sapma çizgisi (`DeviationLine`) ve künyesi; ayrıntı
+   satırın içindeki yorumda. Veri okuma ve süzgeç mantığı aynı. */
 
 /** Faiz kararı satırlarının slug öneki (lib/macro-data.ts ile aynı). */
 const FOMC_RATE_PREFIX = "fomc-rate-";
@@ -176,7 +180,7 @@ function ValueSlot({
   value,
   unit,
   locale,
-  keyed = false,
+  mark = null,
   direction,
 }: {
   kind: "actual" | "forecast" | "previous";
@@ -184,8 +188,9 @@ function ValueSlot({
   value: string | null;
   unit: string | null;
   locale: Locale;
-  /** Satırda sapma çizgisi var mı — varsa etiketin önünde çizginin işareti. */
-  keyed?: boolean;
+  /** Satırda sapma çizgisi varsa etiketin önündeki işaret — değerin
+      çizgideki ROLÜ (`legendMark`); yoksa işaret yok. */
+  mark?: LegendMark | null;
   direction?: string;
 }) {
   /* BOŞ YUVA BOŞ KALIR, TİRE BASILMAZ. Yuva yine de yerinde duruyor:
@@ -198,8 +203,11 @@ function ValueSlot({
       <span className={styles.valueLabel}>
         {/* ETİKETİN İŞARETİ ÇİZGİNİN LEJANTI (6 Kasım): nokta gerçekleşen,
             dik çizgi beklenti, gri çentik önceki — "Son Açıklanan
-            Veriler" kartıyla aynı sözlük, ayrı lejant kutusu yok. */}
-        {keyed && <i aria-hidden className={styles.valueKey} />}
+            Veriler" kartıyla aynı sözlük, ayrı lejant kutusu yok.
+            İşaret türden değil TABANDAN (6 Kasım, inceleme): beklenti
+            yokken dik çizgi öncekinin, düz sayı olmayan beklenti
+            işaretsiz (`legendMark`, lib/release-deviation.ts). */}
+        {mark && <i aria-hidden className={styles.valueKey} data-mark={mark} />}
         {label}
       </span>
       <span className="numeral">{shown}</span>
@@ -592,9 +600,9 @@ export async function EconomicCalendar({
         {hasValues && (
           <span className={styles.values} data-line={deviation ? "true" : undefined}>
             <span className={styles.valueSlots}>
-              <ValueSlot kind="actual" label={t.calendar.actual} value={event.actual} unit={event.unit} locale={locale} keyed={!!deviation} direction={deviation?.direction} />
-              <ValueSlot kind="forecast" label={t.calendar.forecast} value={event.forecast} unit={event.unit} locale={locale} keyed={!!deviation} />
-              <ValueSlot kind="previous" label={t.calendar.previous} value={event.previous} unit={event.unit} locale={locale} keyed={!!deviation && deviation.previousAt !== null} />
+              <ValueSlot kind="actual" label={t.calendar.actual} value={event.actual} unit={event.unit} locale={locale} mark={legendMark("actual", deviation)} direction={deviation?.direction} />
+              <ValueSlot kind="forecast" label={t.calendar.forecast} value={event.forecast} unit={event.unit} locale={locale} mark={legendMark("forecast", deviation)} />
+              <ValueSlot kind="previous" label={t.calendar.previous} value={event.previous} unit={event.unit} locale={locale} mark={legendMark("previous", deviation)} />
             </span>
             {deviation && (
               <>

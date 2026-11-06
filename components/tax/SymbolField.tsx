@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { SearchHit } from "@/app/api/search/route";
 import { cn } from "@/lib/utils";
 import styles from "./Tax.module.css";
@@ -8,6 +8,14 @@ import styles from "./Tax.module.css";
 /** Tuş vuruşları arasında beklenen süre: her harfe istek gitmesin. */
 const DEBOUNCE_MS = 160;
 const MAX_HITS = 6;
+/** Liste ile alan arası ve ekran kenarı payı (DatePicker ile aynı). */
+const GAP = 6;
+const EDGE = 12;
+const MIN_WIDTH = 260;
+const MAX_HEIGHT = 288;
+
+const supportsPopover = () =>
+  typeof HTMLElement !== "undefined" && typeof HTMLElement.prototype.showPopover === "function";
 
 /**
  * VERGİ HESAPLAYICISININ SEMBOL ALANI (6 Kasım, sahibinin sözü: "sembol
@@ -31,6 +39,8 @@ export function SymbolField({
   listLabel,
   searchingLabel,
   className,
+  labelledBy,
+  describedBy,
 }: {
   value: string;
   onChange: (symbol: string) => void;
@@ -39,6 +49,11 @@ export function SymbolField({
   listLabel: string;
   searchingLabel: string;
   className?: string;
+  /** Alanın adı: dıştaki etiketin kimliği. Liste ve "Aranıyor" durumu
+   *  `<label>`in içinde kaldığı için ad etiketten türetilince onları da
+   *  topluyordu (6 Kasım, inceleme). */
+  labelledBy?: string;
+  describedBy?: string;
 }) {
   const listId = useId();
   const [open, setOpen] = useState(false);
@@ -77,13 +92,65 @@ export function SymbolField({
     setOpen(false);
   };
 
+  /* LİSTE ÜST KATMANDA (6 Kasım, inceleme). Hesaplayıcı paneli
+     `overflow-hidden` (köşe yarıçapı); mutlak konumlu liste son satırdaki
+     alanda panelin dibinde kırpılıyordu. Tarih seçicinin kalıbı
+     (`components/ui/DatePicker.tsx` → `popover="manual"`): liste üst
+     katmana çıkıyor, alanın altına (sığmıyorsa üstüne) sabit konumla
+     yerleşiyor; kaydırmada kare başına bir kez tazeleniyor. Popover'ı
+     bilmeyen tarayıcıda eski mutlak konum kalır. */
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const place = useCallback(() => {
+    const list = listRef.current;
+    const field = inputRef.current;
+    if (!list || !field || !supportsPopover()) return;
+    const anchor = field.getBoundingClientRect();
+    const width = Math.min(Math.max(anchor.width, MIN_WIDTH), window.innerWidth - EDGE * 2);
+    const below = window.innerHeight - anchor.bottom - GAP - EDGE;
+    const above = anchor.top - GAP - EDGE;
+    const up = below < Math.min(list.scrollHeight, 160) && above > below;
+    const height = Math.max(0, Math.min(MAX_HEIGHT, up ? above : below));
+    const top = up ? anchor.top - GAP - Math.min(height, list.scrollHeight) : anchor.bottom + GAP;
+    const left = Math.min(Math.max(EDGE, anchor.left), window.innerWidth - width - EDGE);
+    list.style.setProperty("--cb-top", `${Math.round(top)}px`);
+    list.style.setProperty("--cb-left", `${Math.round(left)}px`);
+    list.style.setProperty("--cb-width", `${Math.round(width)}px`);
+    list.style.setProperty("--cb-max-h", `${Math.round(height)}px`);
+  }, []);
+
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!showList || !list || !supportsPopover()) return;
+    if (!list.matches(":popover-open")) list.showPopover();
+    place();
+    let frame = 0;
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(place);
+    };
+    window.addEventListener("scroll", schedule, { capture: true, passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule, { capture: true });
+      window.removeEventListener("resize", schedule);
+      if (list.matches(":popover-open")) list.hidePopover();
+    };
+  }, [showList, hits.length, place]);
+
   return (
     <span className={styles.combo}>
       <input
+        ref={inputRef}
         type="text"
         role="combobox"
+        aria-labelledby={labelledBy}
+        aria-describedby={describedBy}
         aria-expanded={showList}
-        aria-controls={listId}
+        /* Liste yalnız açıkken DOM'da; kapalıyken olmayan bir kimliğe
+           işaret etmesin (6 Kasım, inceleme). */
+        aria-controls={showList ? listId : undefined}
         aria-autocomplete="list"
         aria-activedescendant={showList && hits[active] ? `${listId}-${active}` : undefined}
         aria-invalid={invalid || undefined}
@@ -103,14 +170,20 @@ export function SymbolField({
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onKeyDown={(event) => {
+          /* Oklar yalnız liste açıkken yakalanır; liste yokken imleç
+             alanın başına/sonuna gidebilsin (6 Kasım, inceleme). Kapalı
+             listeyi ArrowDown yine açar. IME bileşimindeki Enter bileşimi
+             bitirir, öneri seçmez. */
           if (event.key === "ArrowDown") {
-            event.preventDefault();
-            setOpen(true);
-            setActive((i) => Math.min(i + 1, Math.max(0, hits.length - 1)));
+            if (showList) {
+              event.preventDefault();
+              setActive((i) => Math.min(i + 1, Math.max(0, hits.length - 1)));
+            } else setOpen(true);
           } else if (event.key === "ArrowUp") {
+            if (!showList) return;
             event.preventDefault();
             setActive((i) => Math.max(0, i - 1));
-          } else if (event.key === "Enter" && showList && hits[active]) {
+          } else if (event.key === "Enter" && !event.nativeEvent.isComposing && showList && hits[active]) {
             /* Seçer; sonraki alana geçişi formun Enter akışı yapıyor. */
             pick(hits[active].symbol);
           } else if (event.key === "Escape" && showList) {
@@ -122,7 +195,7 @@ export function SymbolField({
       />
       {open && !!term && !fresh && <span className={styles.comboSpin} role="status" aria-label={searchingLabel} />}
       {showList && (
-        <ul id={listId} role="listbox" aria-label={listLabel} className={styles.comboList}>
+        <ul ref={listRef} id={listId} role="listbox" aria-label={listLabel} popover="manual" className={styles.comboList}>
           {hits.map((hit, i) => (
             <li
               key={hit.symbol}

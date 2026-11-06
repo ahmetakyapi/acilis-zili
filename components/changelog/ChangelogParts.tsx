@@ -310,7 +310,10 @@ export function LatestDigest({
   /* Satırların sırası sütunlar boyunca (girişteki kademeli açılış için). */
   const offsets = columns.map((_, i) => columns.slice(0, i).reduce((n, c) => n + c.items.length, 0));
   return (
-    <Panel id={entryAnchor(entry.date)} aria-labelledby="yenilikler-son" className={styles.digest}>
+    /* Özetin kendi çapası (6 Kasım, inceleme): `entryAnchor` hem burada hem
+       günlük akıştaki aynı günde duruyordu; yinelenen id yüzünden haftalık
+       sütundan ve RSS'ten gelen bağlantı akışa değil özete iniyordu. */
+    <Panel id="son-guncelleme" aria-labelledby="yenilikler-son" className={styles.digest}>
       <PanelHeader title={L.digestTitle} meta={<UnseenPill date={entry.date} latest={latest} label={L.badge} srLabel={L.unseenLabel} />} />
       <div className={styles.digestHead}>
         {/* Çok satırlı manşet: degrade satır satır (`data-ink="lines"`). */}
@@ -783,7 +786,7 @@ export function MonthPanel({
         <summary className={styles.monthSummary}>
           <PanelHeader
             title={title}
-            meta={`${countLabel(month.entries.length, L.entryCount, L.entryCountOne)} · ${L.monthItems.replace("{n}", String(items))}`}
+            meta={`${countLabel(month.entries.length, L.entryCount, L.entryCountOne)} · ${countLabel(items, L.itemCount, L.itemCountOne)}`}
             className={styles.monthHeader}
           />
           <CaretDown className={styles.monthIcon} size={14} weight="bold" aria-hidden />

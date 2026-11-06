@@ -631,3 +631,18 @@ export function splitLedgerRefs(text: string, refs: readonly LedgerRef[]): RefPi
   return pieces;
 }
 
+/**
+ * DİPNOT NE ZAMAN (6 Kasım, inceleme). Fon dipnotu ("metindeki endeks
+ * yüzdesi birkaç baz puan ayrışabilir") yalnız metin bir endeksin
+ * YÜZDESİNİ andığında bir şey açıklıyor; haftalık şerit beş günün
+ * zinciri, metnin haftalık yüzdesiyle aynı şeyi ölçmüyor ve dipnot orada
+ * yanlış bir kıyas öneriyordu. Kural: günlük kart ve metinde bir endeks
+ * adından sonra, aynı cümlede (cümle noktası ya da satır sonu gelmeden —
+ * ondalık noktası sayılmaz —, 60 karakter içinde) bir yüzde ("S&P 500 %4,36", "S&P 500 fell 4.36%").
+ * "Dow" "down"ı yakalamasın diye ad sözcük sınırıyla bitiyor.
+ */
+export function mentionsIndexPercent(markdown: string): boolean {
+  const names = Object.values(INDEX_ALIASES).flat().map(escapeRegExp);
+  const pattern = new RegExp(`(?:${names.join("|")})\\b(?:[^.\\n]|\\.(?=\\d)){0,60}?(?:%\\s?[−+-]?\\d|\\d[\\d.,]*\\s?%)`, "u");
+  return pattern.test(markdown.replace(/\*\*?/g, ""));
+}

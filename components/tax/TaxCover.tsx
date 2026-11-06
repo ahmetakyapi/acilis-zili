@@ -17,6 +17,12 @@ import styles from "./Tax.module.css";
  * SAYI UYDURULMAZ: stopaj `US_WITHHOLDING`, sınır ve beyan yılı takvim
  * paneliyle AYNI vergi yılının kaydından (`currentTaxYear`). Sınır önceki
  * yıldan taşınmışsa (`thresholdCarriedFrom`) künye taşınan yılı yazar.
+ *
+ * TAŞINAN SINIR AÇIKÇA (6 Kasım, inceleme): "2025 Temettü Beyan Sınırı"
+ * tek başına, yanındaki "2026 Geliri Beyanı" ile birlikte güncel yılın
+ * sınırı gibi okunuyordu. Künyenin altına bilinen tek gerçek iniyor: o
+ * yılın sınırı henüz yayımlanmadı (`withFetchedTariffs`, lib/tax.ts —
+ * sınır tarifeyle değil aylar sonra rehberde çıkıyor). Tahmin yazılmıyor.
  */
 export function TaxCover({
   labels,
@@ -32,10 +38,11 @@ export function TaxCover({
   const C = labels.cover;
   const rules = years[currentTaxYear(today, years)];
   const pct = (value: number) => (locale === "tr" ? `%${value}` : `${value}%`);
-  const facts = [
+  const facts: { name: string; note?: string; value: string }[] = [
     { name: C.withholding, value: pct(US_WITHHOLDING.w8ben) },
     {
       name: C.threshold.replace("{year}", String(rules.thresholdCarriedFrom ?? rules.year)),
+      note: rules.thresholdCarriedFrom !== undefined ? C.thresholdCarriedNote.replace("{year}", String(rules.year)) : undefined,
       value: formatLira(rules.dividendThreshold, locale, 0),
     },
     { name: C.filing.replace("{year}", String(rules.year)), value: C.filingValue.replace("{filing}", String(rules.filingYear)) },
@@ -44,7 +51,10 @@ export function TaxCover({
     <dl className={styles.coverFacts} aria-label={C.label}>
       {facts.map((fact) => (
         <div key={fact.name}>
-          <dt>{fact.name}</dt>
+          <dt>
+            {fact.name}
+            {fact.note && <span className={styles.coverNote}>{fact.note}</span>}
+          </dt>
           <dd className="numeral">{fact.value}</dd>
         </div>
       ))}

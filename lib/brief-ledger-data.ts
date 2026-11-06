@@ -61,9 +61,16 @@ const SERIES = {
  * Bant için sembollerin dönem hareketi. Önbelleğe yalnız SONUÇ girer;
  * sağlayıcı hatası ve yeni seansın eksiği fırlatılıyor (posterin kuralı,
  * CLAUDE.md "İstekler arası önbellek"). Anahtar sürümlü.
+ *
+ * `anchored`: yeni seansın eksiğini SPY'dan anlayan çağrı (endeksler).
+ * Hisse çağrısında SPY yok; orada bütün semboller boşsa seans bekleniyor,
+ * tek eksik sembol yalnız düşer (6 Kasım, inceleme — endeks ve hisse
+ * barları ayrı istekte, gerekçe `getBriefLedger`). v2: argüman eklendi;
+ * dönen şekil aynı ama anahtar sürümü yine artırıldı (CLAUDE.md
+ * "Önbellek dağıtımlar arası ORTAK").
  */
 const loadMoves = unstable_cache(
-  async function loadMoves(symbolsKey: string, windowJson: string, retryable: boolean) {
+  async function loadMoves(symbolsKey: string, windowJson: string, retryable: boolean, anchored: boolean) {
     const window = JSON.parse(windowJson) as LedgerWindow;
     const holidays = await getHolidays();
     const symbols = symbolsKey.split(",");
@@ -76,14 +83,18 @@ const loadMoves = unstable_cache(
     if (!result.ok) throw new Error(`${result.reason}: ${result.message}`);
     const moves: Record<string, LedgerMove | null> = {};
     for (const symbol of symbols) moves[symbol] = ledgerMove(symbol, result.data[symbol], window, holidays);
-    if (retryable && !moves.SPY) {
+    /* Hisse çağrısında SPY yok: yeni seans henüz gelmediyse bütün
+       hisseler boş döner — o sonuç bir gün önbellekte kalmasın diye o da
+       "bekliyor" sayılıyor. Tek eksik sembol (delist) yalnız düşer. */
+    const pendingSession = anchored ? !moves.SPY : symbols.every((symbol) => !moves[symbol]);
+    if (retryable && pendingSession) {
       const pending = new Error(`${window.session} henüz eksik`);
       pending.name = LEDGER_PENDING;
       throw pending;
     }
     return { moves, fetchedAt: result.fetchedAt.toISOString() };
   },
-  ["brief-ledger-moves-v1"],
+  ["brief-ledger-moves-v2"],
   { revalidate: LEDGER_REVALIDATE_SECONDS },
 );
 
@@ -143,31 +154,55 @@ async function usdTryMetric(window: LedgerWindow): Promise<LedgerMetric | null> 
 }
 
 /**
- * Bir bülten sayısının bandı. `detail: false` (ana sayfa kartı) yalnız
- * endeksleri çeker: kart bandın küçük hâlini taşıyor, ölçü ve hisse yok.
+ * Bir bülten sayısının bandı. `detail` ölçüleri (10 yıllık, VIX, dolar/TL)
+ * çeker; `stocks` (varsayılan `detail`) metinde adı geçen hisseleri.
+ * İki çağıran da `detail: true` (6 Kasım, inceleme — eski not "detail:
+ * false (ana sayfa kartı)" diyordu, kart 6 Kasım'da ölçüleri de aldı):
+ * bülten sayfası (`BriefArchiveView`) her şeyi, ana sayfa kartı
+ * (`BriefCard`) `stocks: false` ile hissesiz — kart hisse basmıyor.
+ *
+ * ENDEKS VE HİSSE BARLARI AYRI İSTEKTE (6 Kasım, inceleme). Tek istekte
+ * metindeki bir sembolün sağlayıcı hatası (tanınmayan, delist) bütün
+ * isteği düşürüyor ve bant endeks şeridiyle birlikte kalkıyordu. Şimdi
+ * endeksler (`INDEX_STRIP`, sayfa ile kartın ortak önbellek anahtarı) ve
+ * hisseler iki ayrı `loadMoves`: hisse isteği düşerse yalnız hisse
+ * çipleri kalkar.
  */
 export const getBriefLedger = cache(async function getBriefLedger(
   briefDate: string,
   period: LedgerPeriod,
   bodyMd: string,
   detail: boolean,
+  stocks: boolean = detail,
 ): Promise<BriefLedgerData | null> {
   try {
     const holidays = await getHolidays();
     const window = ledgerWindow(briefDate, period, holidays);
     if (!window || !ledgerComplete(window, holidays, new Date())) return null;
 
-    const mentions = detail ? findStockMentions(plainText(bodyMd), MEMBERS, INDEX_SET) : [];
-    const symbols = [...new Set([...INDEX_STRIP, ...mentions.map((mention) => mention.symbol)])].sort();
+    const mentions = stocks ? findStockMentions(plainText(bodyMd), MEMBERS, INDEX_SET) : [];
+    const indexSymbols = [...INDEX_STRIP].sort();
+    const stockSymbols = [...new Set(mentions.map((mention) => mention.symbol))]
+      .filter((symbol) => !INDEX_SET.has(symbol))
+      .sort();
     const retryable = posterRetryable(window.session, todayEt());
+    const windowJson = JSON.stringify(window);
 
-    const [loaded, metrics, names] = await Promise.all([
-      loadMoves(symbols.join(","), JSON.stringify(window), retryable).catch((error: unknown) => {
+    const [loaded, loadedStocks, metrics, names] = await Promise.all([
+      loadMoves(indexSymbols.join(","), windowJson, retryable, true).catch((error: unknown) => {
         if (!(error instanceof Error && error.name === LEDGER_PENDING)) {
           console.error(`[ledger] ${briefDate} okunamadı: ${error instanceof Error ? error.message : String(error)}`);
         }
         return null;
       }),
+      stockSymbols.length > 0
+        ? loadMoves(stockSymbols.join(","), windowJson, retryable, false).catch((error: unknown) => {
+            if (!(error instanceof Error && error.name === LEDGER_PENDING)) {
+              console.error(`[ledger] ${briefDate} hisseleri okunamadı: ${error instanceof Error ? error.message : String(error)}`);
+            }
+            return null;
+          })
+        : Promise.resolve(null),
       detail
         ? Promise.all([seriesMetric("us10y", window), seriesMetric("vix", window), usdTryMetric(window)])
         : Promise.resolve([] as (LedgerMetric | null)[]),
@@ -181,8 +216,9 @@ export const getBriefLedger = cache(async function getBriefLedger(
     });
     if (indices.length === 0) return null;
 
-    const stocks = mentions.flatMap((mention): LedgerStock[] => {
-      const move = loaded.moves[mention.symbol];
+    const stockMoves = loadedStocks?.moves ?? {};
+    const stockRows = mentions.flatMap((mention): LedgerStock[] => {
+      const move = stockMoves[mention.symbol];
       if (!move) return [];
       const meta = (names as Record<string, { name: string; logoUrl: string | null }>)[mention.symbol];
       const member = MEMBERS.find((entry) => entry.symbol === mention.symbol);
@@ -200,7 +236,7 @@ export const getBriefLedger = cache(async function getBriefLedger(
       window,
       indices,
       metrics: metrics.filter((metric): metric is LedgerMetric => metric !== null),
-      stocks,
+      stocks: stockRows,
       fetchedAt: loaded.fetchedAt,
     };
   } catch (error) {

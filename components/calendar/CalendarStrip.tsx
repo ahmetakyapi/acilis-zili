@@ -73,6 +73,12 @@ function isWeekend(date: string) {
  * artık bir ÖLÇÜ. Grafik dili sitenin geri kalanıyla aynı: `--line-soft`
  * kulvar üstünde 5 piksellik şerit (CLAUDE.md, görsel dil). Yuva sayısı her
  * günde aynı, yani günler arası yoğunluk çizginin uzunluğundan okunuyor.
+ *
+ * 6 KASIM'DA DEĞİŞTİ (inceleme notu): "boş gün de kulvarını çiziyor" ve
+ * "yuva sayısı her günde aynı" bu şerit için artık geçerli değil — aşağıdaki
+ * "BOŞ YUVA YOK" kararı boş yuvaları ve olaysız günün kulvarını kaldırdı.
+ * Bu paragraf 18 Ekim kararının kaydı olarak duruyor; geçerli kural
+ * aşağıda (altı haftalık görünüm eski kuralı koruyor).
  */
 /*
  * BOŞ YUVA YOK (6 Kasım, sahibinin ekran görüntüsü: "boş günde gri

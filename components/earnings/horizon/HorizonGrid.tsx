@@ -36,8 +36,8 @@ import styles from "./EarningsHorizon.module.css";
  *
  * LOGO TURU (6 Kasım, sahibinin sözü: "beklenti 3 çeyrekte aşılmış ama 4
  * gibi gözüküyor; logolar daha güzel gözüksün, kolay seçilsin, alanı güzel
- * kullanalım"). Masaüstünde hücre üç sütun, logo 40 (1440'ta kart 50×71 →
- * 66×86); aşılmadı parçası kırmızı; logonun köşesindeki sonuç işareti
+ * kullanalım"). Masaüstünde hücre dört sütun kaldı, logo 32 → 40 (kartın
+ * iç boşluğu daraldı); aşılmadı parçası kırmızı; logonun köşesindeki sonuç işareti
  * zeminli rozet. Ölçüm ve gerekçe CSS'te ("AŞILMADI KIRMIZI", `.result`)
  * ve `CELL_MAX_SLOTS` yorumunda.
  *
@@ -392,8 +392,8 @@ function TileSquares({ karne, symbol }: { karne: Karne; symbol: string }) {
   return <Squares slots={karneSlots(use(karne)[symbol] ?? [])} />;
 }
 
-/** Dört kare, eskiden yeniye: dolu = aşıldı, boş = aşılmadı, soluk = veri
-    yok. `null` = yükleniyor (dört soluk yuva, aynı yükseklik). */
+/** Dört parça, eskiden yeniye: yeşil dolu = aşıldı, kırmızı içi boş =
+    aşılmadı, soluk = veri yok. `null` = yükleniyor (dört soluk yuva, aynı yükseklik). */
 function Squares({ slots, large = false }: { slots: KarneSlot[] | null; large?: boolean }) {
   const shown = slots ?? karneSlots([]);
   return (

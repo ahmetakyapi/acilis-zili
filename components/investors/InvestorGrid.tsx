@@ -185,7 +185,10 @@ function InvestorTile({ entry, known, locale, t }: { entry: Entry; known: Record
          kartları). Net Alıcı yeşil, Net Satıcı kırmızı; dengede, kapanan
          fon ve Kongre kartında şerit yok (yön yok ya da rozet yok). */
       data-lean={!closed && card.kind === "13f" && lean && lean !== "flat" ? lean : undefined}
-      aria-label={`${investor.name}, ${firm}`}
+      /* `aria-label` YOK (6 Kasım, inceleme): "Ad, Kurum" etiketi kartın
+         bütün içeriğini (pay, yön rozeti, ilk hisseler) ekran okuyucudan
+         eziyordu. Bağlantının adı artık içeriğin kendisi; okuma sırası ad →
+         kurum → ölçüler, yani ilk duyulan yine kimlik. */
     >
       <span className={styles.tileHead}>
         <Portrait investor={investor} size="cast" />
@@ -322,7 +325,11 @@ function FundTile({
             ))}
             {topWeight < 1 && <i data-rest style={{ width: `${(1 - topWeight) * 100}%` }} />}
           </span>
-          <span className={styles.holdingList} aria-label={t.topHoldings}>
+          {/* Ad içerikten okunuyor (kartın `aria-label`ı kalktı); rolsüz
+              span'in `aria-label`ı bu okumada listeyi ezerdi — künye
+              `sr-only` metin (6 Kasım, inceleme). */}
+          <span className={styles.holdingList}>
+            <span className="sr-only">{t.topHoldings}: </span>
             {top.map((holding, index) => {
               const meta = holding.ticker ? known[holding.ticker] : undefined;
               return (
@@ -424,7 +431,11 @@ function CongressTile({ card, known, locale, t }: { card: CongressCard; known: R
           <span className={styles.holdingsHead} aria-hidden>
             <span>{t.recentTrades}</span>
           </span>
-          <span className={styles.holdingList} aria-label={t.recentTrades}>
+          {/* Ad içerikten okunuyor (kartın `aria-label`ı kalktı); rolsüz
+              span'in `aria-label`ı bu okumada listeyi ezerdi — künye
+              `sr-only` metin (6 Kasım, inceleme). */}
+          <span className={styles.holdingList}>
+            <span className="sr-only">{t.recentTrades}: </span>
             {trades.map((trade) => (
               <span key={`${trade.docId}-${trade.rowNo}`} className={styles.holding}>
                 {trade.ticker ? (

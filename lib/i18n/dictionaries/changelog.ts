@@ -158,7 +158,7 @@ export const changelogEn: typeof changelogTr = {
   digestShare: "Share of {n} items by type",
   flowTitle: "Week by Week",
   flowHint: "Each column is a week: colors show the type of change, the number on top that week's items.",
-  flowWeek: "Week of {date}: {n} items, {r} releases",
+  flowWeek: "Week of {date}: {n} item(s), {r} release(s)",
   flowMatch: "{m} / {n}",
   flowScale: "{n} Items",
   flowNow: "This Week",

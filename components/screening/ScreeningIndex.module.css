@@ -166,6 +166,11 @@
 /* ---- Hızlı bakış kartları (gerekçe ScreeningIndex.tsx → QuickCards) ---- */
 .quick { list-style: none; margin: 0; padding: 4px 16px 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: 12px; }
 @media (min-width: 900px) { .quick { padding: 4px 24px 24px; } }
+/* DÖRT SÜTUN (6 Kasım). auto-fill 1440'ta beş sütun açıyordu ve 16
+   hisselik listede son satırda NBIS tek başına kalıyordu (5+5+5+1). Liste
+   `TECHNICAL_SYMBOLS` ile 16; dört sütun 4×4 tam oturuyor ve kart 243 →
+   ~310 piksel, uzun şirket adı da tek satıra sığıyor. */
+@media (min-width: 1100px) { .quick { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .quickCard {
   position: relative;
   display: grid;

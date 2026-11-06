@@ -375,11 +375,12 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 .value[data-kind="actual"] .valueLabel { color:var(--text-body); }
 /* Lejant işaretleri — çizgidekilerle aynı biçim ve ton (ReleasedData.module.css → `.key`). */
 .valueKey { display:inline-block; flex:none; }
-.value[data-kind="actual"] .valueKey { width:8px; height:8px; border-radius:50%; background:var(--flat); }
-.value[data-kind="actual"][data-dir="above"] .valueKey { background:var(--up); }
-.value[data-kind="actual"][data-dir="below"] .valueKey { background:var(--down); }
-.value[data-kind="forecast"] .valueKey { width:2px; height:12px; border-radius:1px; background:var(--text-strong); }
-.value[data-kind="previous"] .valueKey { width:3px; height:9px; border-radius:2px; background:var(--text-muted); opacity:.7; }
+/* Biçim çizgideki ROLDEN (`data-mark` ← `legendMark`, 6 Kasım, inceleme). */
+.valueKey[data-mark="dot"] { width:8px; height:8px; border-radius:50%; background:var(--flat); }
+.value[data-dir="above"] .valueKey[data-mark="dot"] { background:var(--up); }
+.value[data-dir="below"] .valueKey[data-mark="dot"] { background:var(--down); }
+.valueKey[data-mark="zero"] { width:2px; height:12px; border-radius:1px; background:var(--text-strong); }
+.valueKey[data-mark="notch"] { width:3px; height:9px; border-radius:2px; background:var(--text-muted); opacity:.7; }
 .valueLine { margin-top:0; }
 /* Künye: yön renkli, glifle ve sözle; renk tek taşıyıcı değil. */
 .verdict { display:inline-flex; align-self:flex-start; align-items:baseline; gap:5px; font-size:13px; font-weight:700; line-height:18px; color:var(--text-body); }

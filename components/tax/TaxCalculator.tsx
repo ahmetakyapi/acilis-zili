@@ -803,6 +803,7 @@ export function TaxCalculator({
       gainTl: gain,
       baseTl: base,
       taxTl: progressiveTax(base, rules.brackets),
+      taxHighTl: (base * rules.brackets[rules.brackets.length - 1].ratePct) / 100,
       bracketRate: formatPct(rules.brackets.find((b) => b.upTo === null || base <= b.upTo)?.ratePct ?? 0, locale),
       source: {
         priceTl: (lot.proceedsUsd - lot.costUsd) * E.sellRate,
@@ -821,6 +822,9 @@ export function TaxCalculator({
     gainTl: totals.gainTl,
     baseTl: taxable,
     taxTl: taxLow,
+    /* Üst uç da şeride gidiyor (6 Kasım, inceleme): kart aralık yazarken
+       şerit yalnız alt ucu basıyordu. Gerekçe `TaxRibbon.tsx` başında. */
+    taxHighTl: taxHigh,
     bracketRate: formatPct(bracketRate, locale),
     source: complete.reduce(
       (sum, lot) => {
@@ -916,33 +920,77 @@ export function TaxCalculator({
      yeniden aramak zorundaydı. Hesaplayıcı ekrandayken ve sonuç kartı
      görünmüyorken alt sekme çubuğunun hemen üstünde tek satır özet duruyor:
      karar, tahmini vergi (temettüde toplam) ve "Sonuca Git". Geniş ekranda
-     sonuç kolonu zaten yan yana ve yapışkan; özet orada hiç açılmıyor. */
+     sonuç kolonu zaten yan yana ve yapışkan; özet orada hiç açılmıyor.
+
+     İnceleme düzeltmeleri (6 Kasım):
+     - Gözlemcinin kökü alttan, alt katmanın (sekme çubuğu + özet) boyu kadar
+       DARALTILDI (`rootMargin` negatif). Önceden sonuç kartının ilk pikseli
+       pencerenin dibine değer değmez — yani hâlâ sekme çubuğunun ve özetin
+       ARKASINDAYKEN — özet kayboluyordu. Boy, özetin kendi üst kenarından
+       ölçülüyor (konumu CSS'te güvenli alana bağlı: hesaplanmış `bottom` +
+       kendi boyu); özet basılmamışsa
+       390'daki hesap: 16 + 64 + 8 + ~62 = 150.
+     - Bir form alanı odaktayken özet gizli: telefonda klavye açıkken sabit
+       katman odaktaki alanın üstüne biniyordu.
+     - "Sonuca Git" kaydırınca odak da sonuç başlığına iner (`tabIndex=-1`,
+       `preventScroll`); klavye ve ekran okuyucu okuyucusu formda kalmasın. */
   const sectionRef = useRef<HTMLElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
   const [barOn, setBarOn] = useState(false);
+  const barReady = tab === "sale" ? saleReady : dividendReady;
   useEffect(() => {
     const result = resultRef.current;
     const section = sectionRef.current;
     if (!result || !section || typeof IntersectionObserver === "undefined") return;
     const media = window.matchMedia("(max-width: 1023px)");
+    const bar = barRef.current;
+    /* `bottom` + boy: kapalı özetin `translate` kayması ölçüye girmesin. */
+    const layer = bar ? Math.round((parseFloat(getComputedStyle(bar).bottom) || 0) + bar.offsetHeight) : 150;
     let resultSeen = true;
     let sectionSeen = false;
-    const update = () => setBarOn(media.matches && sectionSeen && !resultSeen);
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.target === result) resultSeen = entry.isIntersecting;
-        else sectionSeen = entry.isIntersecting;
-      }
+    let typing = false;
+    const update = () => setBarOn(media.matches && sectionSeen && !resultSeen && !typing);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.target === result) resultSeen = entry.isIntersecting;
+          else sectionSeen = entry.isIntersecting;
+        }
+        update();
+      },
+      { rootMargin: `0px 0px -${layer}px 0px` },
+    );
+    const isField = (node: EventTarget | null) =>
+      node instanceof HTMLTextAreaElement ||
+      node instanceof HTMLSelectElement ||
+      (node instanceof HTMLInputElement && !["checkbox", "radio", "button", "submit", "file", "hidden"].includes(node.type));
+    const onFocusIn = (event: FocusEvent) => {
+      typing = isField(event.target);
       update();
-    });
+    };
+    const onFocusOut = (event: FocusEvent) => {
+      typing = isField(event.relatedTarget) && section.contains(event.relatedTarget as Node);
+      update();
+    };
     observer.observe(result);
     observer.observe(section);
+    section.addEventListener("focusin", onFocusIn);
+    section.addEventListener("focusout", onFocusOut);
     media.addEventListener("change", update);
     return () => {
       observer.disconnect();
+      section.removeEventListener("focusin", onFocusIn);
+      section.removeEventListener("focusout", onFocusOut);
       media.removeEventListener("change", update);
     };
-  }, [tab]);
+  }, [tab, barReady]);
+  const goToResult = () => {
+    const result = resultRef.current;
+    if (!result) return;
+    result.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    result.querySelector<HTMLElement>("[data-result-heading]")?.focus({ preventScroll: true });
+  };
 
   const buyDone = !!buyRow && dateUsable(buyRow.date) && num(buyRow.quantity) !== null && num(buyRow.price) !== null && isValidSymbol(buyRow.symbol.trim());
   const sellDone = !!sellRow && dateUsable(sellRow.date) && num(sellRow.price) !== null && num(sellRow.quantity) !== null;
@@ -1105,17 +1153,17 @@ export function TaxCalculator({
                   <span className={styles.node} aria-hidden>{buyDone ? <Check size={14} weight="bold" /> : 1}</span>
                   <h3 className={styles.stepTitle}>{labels.stepBuy}</h3>
                   <div className={styles.fields}>
-                    <Field label={labels.symbol} error={symbolError(buyRow?.symbol ?? "")}>
-                      <SymbolField
-                        invalid={!!symbolError(buyRow?.symbol ?? "")}
-                        value={buyRow?.symbol ?? ""}
-                        onChange={(symbol) => editSimple("buy", { symbol })}
-                        placeholder={labels.form.symbolPlaceholder}
-                        listLabel={labels.form.suggestions}
-                        searchingLabel={labels.form.searching}
-                        className={styles.input}
-                      />
-                    </Field>
+                    <SymbolCell
+                      label={labels.symbol}
+                      error={symbolError(buyRow?.symbol ?? "")}
+                      invalid={!!symbolError(buyRow?.symbol ?? "")}
+                      value={buyRow?.symbol ?? ""}
+                      onChange={(symbol) => editSimple("buy", { symbol })}
+                      placeholder={labels.form.symbolPlaceholder}
+                      listLabel={labels.form.suggestions}
+                      searchingLabel={labels.form.searching}
+                      className={styles.input}
+                    />
                     <Field label={labels.quantity} suffix={labels.form.unitShares} hint={readAs(buyRow?.quantity ?? "")} error={numberError(buyRow?.quantity ?? "", "positive")}>
                       <input
                         aria-invalid={!!numberError(buyRow?.quantity ?? "", "positive") || undefined}
@@ -1265,17 +1313,17 @@ export function TaxCalculator({
                             <Trash size={16} weight="duotone" aria-hidden />
                           </button>
                         </div>
-                        <Field label={labels.symbol} error={symbolError(row.symbol)}>
-                          <SymbolField
-                            invalid={!!symbolError(row.symbol)}
-                            value={row.symbol}
-                            onChange={(symbol) => updateTrade(row.id, { symbol })}
-                            placeholder={labels.form.symbolPlaceholder}
-                            listLabel={labels.form.suggestions}
-                            searchingLabel={labels.form.searching}
-                            className={styles.input}
-                          />
-                        </Field>
+                        <SymbolCell
+                          label={labels.symbol}
+                          error={symbolError(row.symbol)}
+                          invalid={!!symbolError(row.symbol)}
+                          value={row.symbol}
+                          onChange={(symbol) => updateTrade(row.id, { symbol })}
+                          placeholder={labels.form.symbolPlaceholder}
+                          listLabel={labels.form.suggestions}
+                          searchingLabel={labels.form.searching}
+                          className={styles.input}
+                        />
                         <Field label={labels.date}>
                           <DatePicker
                             value={row.date}
@@ -1354,7 +1402,7 @@ export function TaxCalculator({
 
           <div ref={resultRef} className={styles.result}>
             <div className={styles.resultInner} aria-labelledby="vergi-sonuc-satis">
-              <h3 id="vergi-sonuc-satis" className="sr-only">
+              <h3 id="vergi-sonuc-satis" className="sr-only" tabIndex={-1} data-result-heading>
                 {labels.resultLabel}
               </h3>
               <div aria-live="polite">
@@ -1549,17 +1597,17 @@ export function TaxCalculator({
                       )}
                     </div>
                     <div className={styles.fields}>
-                      <Field label={labels.symbol} error={symbolError(row.symbol)}>
-                        <SymbolField
-                          invalid={!!symbolError(row.symbol)}
-                          value={row.symbol}
-                          onChange={(symbol) => updateDividend(row.id, { symbol })}
-                          placeholder={labels.form.symbolPlaceholder}
-                          listLabel={labels.form.suggestions}
-                          searchingLabel={labels.form.searching}
-                          className={styles.input}
-                        />
-                      </Field>
+                      <SymbolCell
+                        label={labels.symbol}
+                        error={symbolError(row.symbol)}
+                        invalid={!!symbolError(row.symbol)}
+                        value={row.symbol}
+                        onChange={(symbol) => updateDividend(row.id, { symbol })}
+                        placeholder={labels.form.symbolPlaceholder}
+                        listLabel={labels.form.suggestions}
+                        searchingLabel={labels.form.searching}
+                        className={styles.input}
+                      />
                       <Field unit="$" label={labels.grossUsd} hint={readAs(row.gross)} error={numberError(row.gross, "nonNegative")}>
                         <input
                           aria-invalid={!!numberError(row.gross, "nonNegative") || undefined}
@@ -1634,7 +1682,7 @@ export function TaxCalculator({
 
           <div ref={resultRef} className={styles.result}>
             <div className={styles.resultInner}>
-              <h3 className="sr-only">{labels.resultLabel}</h3>
+              <h3 className="sr-only" tabIndex={-1} data-result-heading>{labels.resultLabel}</h3>
               <div aria-live="polite">
                 {dividendVerdict === "wait" ? (
                   <EmptyLead text={labels.resultEmptyDividend} how={labels.how.readHow} />
@@ -1717,8 +1765,9 @@ export function TaxCalculator({
         </div>
       )}
 
-      {(tab === "sale" ? saleReady : dividendReady) && (
+      {barReady && (
         <div
+          ref={barRef}
           role="region"
           aria-label={labels.mobileBar.label}
           className={styles.mobileBar}
@@ -1730,7 +1779,7 @@ export function TaxCalculator({
               dairesinde, adı ekran okuyucuya `sr-only`. */}
           <button
             type="button"
-            onClick={() => resultRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" })}
+            onClick={goToResult}
             className={styles.mbButton}
           >
             <span className={styles.mbCopy}>
@@ -1740,7 +1789,16 @@ export function TaxCalculator({
                   {(tab === "sale" ? saleVerdict : dividendVerdict) === "yes" ? labels.verdictYes : labels.verdictNo}
                 </span>
               </span>
-              <b className="numeral">{tab === "sale" ? lira(taxLow) : lira(dividendGrossTl)}</b>
+              {/* Aralık burada da (6 Kasım, inceleme): kart "X ile Y" derken
+                  çubuk yalnız alt ucu basıyordu — uydurma kesinlik. Biçim
+                  şeritle aynı (`TaxRibbon` → aralık tiresi). */}
+              {tab === "sale" && taxHigh > taxLow ? (
+                <b className="numeral" data-range>
+                  {`${lira(taxLow)}\u202F–\u2009${lira(taxHigh)}`}
+                </b>
+              ) : (
+                <b className="numeral">{tab === "sale" ? lira(taxLow) : lira(dividendGrossTl)}</b>
+              )}
             </span>
             <span className="sr-only">{labels.mobileBar.show}</span>
             <span className={styles.mbArrow} aria-hidden>
@@ -1847,6 +1905,12 @@ function ImportDrop({
  * "Komisyon Ekle" katının içindekiler atlanır. Alanın kendi Enter'ı önce
  * çalışır (tarih seçici metni çözer, sembol önerisi seçilir), geçiş bir
  * kare sonra: öneri listesi kapanmış, tarih yazılmış olur.
+ *
+ * GEÇERSİZ ALANDA DURUR (6 Kasım, inceleme): tarih seçici metni çözemediyse
+ * (ya da sayı alanı hatalıysa) alan `aria-invalid` taşır; eskiden Enter yine
+ * sonraki alana geçiyor, hata mesajı arkada kalıyordu. Denetim bir kare
+ * sonra — alanın kendi Enter'ı durumu yazmış olur (React ayrık olayı
+ * eşzamanlı işler).
  */
 function advanceOnEnter(event: React.KeyboardEvent<HTMLElement>) {
   if (event.key !== "Enter" || event.shiftKey || event.altKey || event.metaKey || event.ctrlKey || event.nativeEvent.isComposing) return;
@@ -1855,6 +1919,7 @@ function advanceOnEnter(event: React.KeyboardEvent<HTMLElement>) {
   const root = event.currentTarget;
   event.preventDefault();
   requestAnimationFrame(() => {
+    if (target.getAttribute("aria-invalid") === "true") return;
     const inputs = [
       ...root.querySelectorAll<HTMLInputElement>("input:not([type=hidden]):not([type=checkbox]):not([disabled])"),
     ].filter((el) => el.getClientRects().length > 0);
@@ -2141,6 +2206,7 @@ function Field({
   hint,
   unit,
   suffix,
+  ids,
   children,
 }: {
   label: string;
@@ -2153,11 +2219,14 @@ function Field({
   /** Alanın içinde, SAĞDA duran birim ("Adet"; 6 Kasım). Sayının ne
    *  saydığı alanın kendisinde okunuyor; etiket ikinci satıra kırılsa da. */
   suffix?: string;
+  /** Etiket ve hata metninin kimliği: alan adını `aria-labelledby` ile
+   *  etiketten alan denetimler için (`SymbolCell`). */
+  ids?: { label: string; error: string };
   children: React.ReactNode;
 }) {
   return (
     <label className={styles.field}>
-      <span className={styles.label}>{label}</span>
+      <span id={ids?.label} className={styles.label}>{label}</span>
       {unit || suffix ? (
         <span className={styles.affix} data-unit={unit ? "" : undefined} data-suffix={suffix ? "" : undefined}>
           {unit && (
@@ -2176,7 +2245,7 @@ function Field({
         children
       )}
       {error ? (
-        <span className={styles.fieldError}>
+        <span id={ids?.error} className={styles.fieldError}>
           <WarningCircle size={14} weight="fill" aria-hidden />
           {error}
         </span>
@@ -2184,6 +2253,27 @@ function Field({
         hint && <span className={styles.help} role="status">{hint}</span>
       )}
     </label>
+  );
+}
+
+/**
+ * SEMBOL ALANI + ETİKETİ (6 Kasım, inceleme). `SymbolField`in öneri listesi
+ * ve "Aranıyor" durumu `<label>`in içinde duruyor; etiketten türeyen
+ * erişilebilir ad bu yüzden öneri adlarını da topluyordu ("Sembol AAPL
+ * Apple Inc. MSFT …"). Alan adını artık yalnız etiket metninden alıyor
+ * (`aria-labelledby`), hata metni de `aria-describedby` ile bağlı.
+ */
+function SymbolCell({
+  label,
+  error,
+  ...field
+}: { label: string; error?: string } & Omit<React.ComponentProps<typeof SymbolField>, "labelledBy" | "describedBy">) {
+  const id = useId();
+  const ids = { label: `${id}-label`, error: `${id}-error` };
+  return (
+    <Field label={label} error={error} ids={ids}>
+      <SymbolField {...field} labelledBy={ids.label} describedBy={error ? ids.error : undefined} />
+    </Field>
   );
 }
 

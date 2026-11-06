@@ -41,7 +41,7 @@ export const calendarVisualsTr = {
     windowOther: "(saati belirsiz)",
     /** Katlı "Nasıl Okunur" ayrıntısı (kart turu, 25 Ekim). */
     caption:
-      "Her hücre o gün o pencerede açıklayan kayda değer şirketler, piyasa değeri büyükten küçüğe. Çerçeveli karo, değeri haftanın en büyüğünün dörtte birini geçen şirket. Karonun altındaki dört parçalı şerit son dört çeyrek, eskiden yeniye: yeşil parça EPS beklentisinin aşıldığı, kırmızı parça aşılmadığı, soluk parça bilinmeyen çeyrek. Logonun köşesindeki işaret bu çeyreğin açıklanan sonucu. Hücreye sığmayanlar +N ile o günün listesinde.",
+      "Her hücre o gün o pencerede açıklayan kayda değer şirketler, piyasa değeri büyükten küçüğe. Çerçeveli karo, değeri haftanın en büyüğünün dörtte birini geçen şirket. Karonun altındaki dört parçalı şerit son dört çeyrek, eskiden yeniye: dolu yeşil parça EPS beklentisinin aşıldığı, içi boş kırmızı parça aşılmadığı, soluk parça bilinmeyen çeyrek. Logonun köşesindeki işaret bu çeyreğin açıklanan sonucu. Hücreye sığmayanlar +N ile o günün listesinde.",
     howTitle: "Nasıl Okunur",
     /** Tek satırlık künye: kare lejantı. */
     legendBeat: "Aşıldı",
@@ -86,7 +86,9 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
   released: {
     aboveForecast: "{diff} Above Forecast",
     belowForecast: "{diff} Below Forecast",
-    inlineForecast: "In Line With Forecast",
+    /* Title Case'te edat küçük ("Same as Previous" ile aynı kalıp; 6 Kasım,
+       inceleme — "In Line With Forecast" tek büyük edatlı künyeydi). */
+    inlineForecast: "In Line with Forecast",
     abovePrevious: "{diff} Above Previous",
     belowPrevious: "{diff} Below Previous",
     inlinePrevious: "Same as Previous",
@@ -107,7 +109,7 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     windowAmc: "after the close",
     windowOther: "(time not set)",
     caption:
-      "Each cell lists the notable companies reporting in that window that day, largest market cap first. A framed tile is a company worth more than a quarter of the week's largest. The four-part strip under a tile is the last four quarters, oldest first: a green segment means EPS beat the estimate, a red one that it missed, a faded one that the quarter is unknown. The badge on the logo's corner is this quarter's reported result. Companies that don't fit are under +N in that day's list.",
+      "Each cell lists the notable companies reporting in that window that day, largest market cap first. A framed tile is a company worth more than a quarter of the week's largest. The four-part strip under a tile is the last four quarters, oldest first: a solid green segment means EPS beat the estimate, a hollow red one that it missed, a faded one that the quarter is unknown. The badge on the logo's corner is this quarter's reported result. Companies that don't fit are under +N in that day's list.",
     howTitle: "How to Read",
     legendBeat: "Beat",
     legendMiss: "Missed",

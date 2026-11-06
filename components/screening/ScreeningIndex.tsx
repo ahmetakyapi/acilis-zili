@@ -318,14 +318,21 @@ export function ScoreLane({
         ))}
       </div>
       {/* Telefonda bölge adları sığmıyor (15 puanlık bölge ~60 piksel):
-          aynı bilgi aralığıyla bir lejant olarak. */}
+          aynı bilgi aralığıyla bir lejant olarak. Zayıf bant 0'dan başlar;
+          kulvar yakınlaştırıldığı için ilk bölgenin `start`ı eksenin alt ucu
+          (ör. 40) ve lejant "Zayıf 40–49" diyordu. Bant tanımı gereği alt
+          sınırsız: "<50" (6 Kasım, inceleme). */}
       <ul className={styles.zoneLegend}>
         {[...zones].reverse().map((zone) => (
           <li key={zone.band} data-band={zone.band}>
             <span className={styles.zoneSwatch} aria-hidden />
             {bands[zone.band]}
             <span className="numeral">
-              {zone.band === "strong" ? V.zoneFrom.replace("{n}", String(zone.start)) : `${zone.start}–${zone.end - 1}`}
+              {zone.band === "strong"
+                ? V.zoneFrom.replace("{n}", String(zone.start))
+                : zone.band === "weak"
+                  ? `<${zone.end}`
+                  : `${zone.start}–${zone.end - 1}`}
             </span>
           </li>
         ))}

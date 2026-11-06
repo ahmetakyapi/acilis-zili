@@ -117,6 +117,30 @@ export function releaseDeviation(
   };
 }
 
+/** Lejantta değerin önündeki işaret — çizgideki karşılığının biçimi. */
+export type LegendMark = "dot" | "zero" | "notch";
+
+/**
+ * LEJANT İŞARETİ TABANDAN (6 Kasım, inceleme). Etiketlerin işareti sabit
+ * eşlemeydi (beklenti = dik çizgi, önceki = çentik). Beklenti yokken ya da
+ * düz sayı değilken taban ÖNCEKİ oluyor: çizgide dik çizgi önceki değerin
+ * yeri, çentik hiç yok — lejant ise öncekine çentik, beklentiye dik çizgi
+ * basıyordu (çizimde olmayan bir şeyi gösteriyordu). Şimdi: gerçekleşen
+ * nokta; taban olan değer dik çizgi; öteki çentik yalnız çizgide gerçekten
+ * duruyorsa (`previousAt !== null`); taban olmayan beklenti (düz sayı
+ * değil) işaretsiz.
+ */
+export function legendMark(
+  kind: "actual" | "forecast" | "previous",
+  deviation: Pick<Deviation, "base" | "previousAt"> | null | undefined,
+): LegendMark | null {
+  if (!deviation) return null;
+  if (kind === "actual") return "dot";
+  if (kind === deviation.base) return "zero";
+  if (kind === "previous" && deviation.previousAt !== null) return "notch";
+  return null;
+}
+
 /**
  * Olayın SERİ anahtarı: `slug` tekrar başına tarihli ("jobless-claims-
  * 2026-10-22"); sondaki tarih atılınca seri kalır. FRED kimliği anahtar

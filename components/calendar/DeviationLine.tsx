@@ -18,6 +18,13 @@ import styles from "./ReleasedData.module.css";
  * katlı kutuyu "görünür" sanıp hareketi harcardı; orada `false` verilir ve
  * nokta kendi CSS animasyonuyla, satır her açıldığında kayar
  * (`--travel`, DayFlow.module.css → "SAPMA ÇİZGİSİ").
+ *
+ * `compact` (6 Kasım, inceleme): ana sayfanın bülten kartındaki "Günün
+ * Verileri" karosu. Kart kendi elle çizdiği bir mini çizgi taşıyordu —
+ * önceki çentiği yoktu, ayrı bir dil olmuştu. Şimdi aynı bileşen, rayı
+ * 14 piksele inmiş (işaretler orantılı) ve uç adları basılmadan: karoda
+ * taban künyesi ve yön zaten yazılı. Ölçüler ReleasedData.module.css →
+ * "KÜÇÜK HÂL".
  */
 export function DeviationLine({
   deviation,
@@ -25,6 +32,7 @@ export function DeviationLine({
   above,
   baseLabel,
   motion = true,
+  compact = false,
   className,
 }: {
   deviation: Pick<Deviation, "direction" | "actualAt" | "previousAt">;
@@ -32,6 +40,8 @@ export function DeviationLine({
   above: string;
   baseLabel: string;
   motion?: boolean;
+  /** Uç adları basılmaz, ray küçük (bülten kartı). */
+  compact?: boolean;
   className?: string;
 }) {
   const HALF = 50;
@@ -39,7 +49,7 @@ export function DeviationLine({
   const actual = pos(deviation.actualAt);
   const moves = deviation.actualAt !== 0;
   return (
-    <div className={cn(styles.line, className)} aria-hidden data-dir={deviation.direction} data-motion-track={motion || undefined}>
+    <div className={cn(styles.line, className)} aria-hidden data-dir={deviation.direction} data-size={compact ? "compact" : undefined} data-motion-track={motion || undefined}>
       <div className={styles.rail}>
         <span className={styles.axis} />
         {/* Beklentiden gerçekleşene uzanan bacak: sıfırdan açılıyor. */}
@@ -67,11 +77,13 @@ export function DeviationLine({
           data-dot
         />
       </div>
-      <div className={styles.ends}>
-        <span>{below}</span>
-        <span className={styles.endsZero}>{baseLabel}</span>
-        <span>{above}</span>
-      </div>
+      {!compact && (
+        <div className={styles.ends}>
+          <span>{below}</span>
+          <span className={styles.endsZero}>{baseLabel}</span>
+          <span>{above}</span>
+        </div>
+      )}
     </div>
   );
 }

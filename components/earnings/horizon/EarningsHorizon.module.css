@@ -235,7 +235,7 @@
 .tile:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 .karo { position: relative; display: grid; place-items: center; }
-.star { position: absolute; top: -5px; left: -7px; font-size: 11px; line-height: 1; color: var(--primary); text-shadow: 0 0 2px var(--surface-solid), 0 0 2px var(--surface-solid); }
+.star { position: absolute; top: -5px; left: -5px; font-size: 11px; line-height: 1; color: var(--primary); }
 /* SONUÇ ROZETİ (6 Kasım). Logonun köşesinde 9 piksellik çıplak üçgen
    vardı; logonun kendi renkleriyle karışıp (McDonald's kırmızısı, Uber
    siyahı) kayboluyordu. Şimdi kart zemini halkalı yuvarlak rozet: yön
@@ -243,7 +243,7 @@
 .result {
   position: absolute;
   top: -5px;
-  right: -7px;
+  right: -5px;
   display: grid;
   width: 16px;
   height: 16px;
@@ -283,7 +283,7 @@
    şerit), eskiden yeniye. Aşıldı `--up` dolu, aşılmadı `--down` dolu,
    veri yok
    `--line-soft` kulvar rengi, yani parça "boş". Parça 1440'ta ~9×4 →
-   şerit kart iç genişliği (40 piksel); okuma şeridinde 72×6. Lejant
+   şerit kart iç genişliği (40 piksel); okuma şeridinde 72×6 (6 Kasım'dan beri 80×7). Lejant
    aynı parçaları çiziyor.
 
    AŞILMADI KIRMIZI (6 Kasım, sahibinin sözü: "beklenti 3 çeyrekte aşılmış
@@ -297,7 +297,10 @@
 @media (min-width: 1180px) { .squares:not([data-large]) { width: calc(100% - 6px); } }
 .square { display: block; height: 5px; border-radius: 3px; background: var(--line-soft); }
 .square[data-mark="beat"] { background: var(--up); }
-.square[data-mark="miss"] { background: var(--down); }
+/* Biçim de ayırır (6 Kasım, inceleme): `--up` ile `--down`un parlaklığı
+   yakın, 5 piksellik parçada kırmızı-yeşil ayrımı renk körü okura tek
+   başına yetmiyor. Aşılmadı İÇİ BOŞ, kırmızı kenarlı parça; aşıldı dolu. */
+.square[data-mark="miss"] { background: transparent; box-shadow: inset 0 0 0 1.5px var(--down); }
 .squares[data-large] { width: 80px; gap: 3px; }
 .squares[data-large] .square { height: 7px; border-radius: 4px; }
 .legendItem > .square { width: 14px; height: 5px; border-radius: 3px; }
@@ -460,16 +463,20 @@
   /* Boş hücre geniş ekranda boş: satır hizası "yok"u zaten söylüyor. */
   .laneEmpty { display: none; }
   .closed { grid-row: 2 / -1; }
-  /* ÜÇ SÜTUN, LOGO 40 (6 Kasım — gerekçe `CELL_MAX_SLOTS`). Ölçüldü
-     (TR, açık/koyu, 2–6 Kasım örnek haftası, `capCell` uygulanmış):
-     kart 1280'de 46×67 → 61×81, 1440'ta 50×71 → 66×86; ızgara 1440'ta
-     345 → 433 piksel (iki kart sırası daha uzun), sembol kırpılması 0,
-     yatay taşma 0. Bedel bilinçli: 1280×800'de okuma şeridi ilk ekranın
-     altına iniyor (önceden de yarımdı, sayfa yorumu). */
-  .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+  /* DÖRT SÜTUN, LOGO 40 (6 Kasım — gerekçe `CELL_MAX_SLOTS`). İlk tur
+     üç sütundu (kart 66×86): gerçek haftada dört şirketli hücreler (salı,
+     çarşamba, perşembe açılış öncesi) ikinci sıraya TEK karo taşıyor,
+     satır 155 → 250 piksele uzuyor ve hücrelerin yarısı boş kalıyordu.
+     Logoyu büyüten şey sütun sayısı değil kartın iç boşluğuydu: dört
+     sütunda kart 1440'ta ~50 piksel ve 3 piksellik yan dolguyla 40'lık
+     logo sığıyor. Ölçüldü (TR, gerçek 2–6 Kasım haftası): kart 1440'ta
+     50×71 → 49×84, logo 32 → 40, ızgara 345 piksel (değişmedi), sembol
+     kırpılması 0, yatay taşma 0; 1280'de kart 43×78,
+     1180–1399'da logo 28 → 34. */
+  .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px 4px; }
   .tiles .logo { width: 40px; height: 40px; border-radius: 10px; }
-  .tile { gap: 5px; padding: 8px 6px 8px; }
-  .tileSymbol { font-size: 13px; }
+  .tile { gap: 5px; padding: 7px 3px 8px; }
+  .tileSymbol { font-size: 12.5px; }
   .lane { padding-block: 5px; }
   .dayHead { gap: 4px 8px; padding: 6px 8px 5px; }
 
@@ -489,8 +496,8 @@
    Sütun ~45 piksel: "GOOGL" 12,5 puntoda 43 piksel tutup kırpılıyordu,
    bu aralıkta sembol 12 ve harf aralığı sıkı. */
 @media (min-width: 1180px) and (max-width: 1399px) {
-  .tiles .logo { width: 36px; height: 36px; border-radius: 9px; }
-  .tileSymbol { font-size: 12.5px; letter-spacing: -0.03em; }
+  .tiles .logo { width: 34px; height: 34px; border-radius: 9px; }
+  .tileSymbol { font-size: 12px; letter-spacing: -0.035em; }
 }
 
 /* ==========================================================================

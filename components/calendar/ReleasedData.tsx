@@ -3,7 +3,7 @@ import calendar from "@/components/calendar/CalendarExperience.module.css";
 import { ReleaseNote } from "@/components/calendar/ReleaseNote";
 import { ImpactDots, Panel, PanelHeader } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { deviationSpans, deviationVerdict, releaseDeviation, seriesKey } from "@/lib/release-deviation";
+import { deviationSpans, deviationVerdict, legendMark, releaseDeviation, seriesKey } from "@/lib/release-deviation";
 import { DeviationLine } from "./DeviationLine";
 import { compareReleased } from "@/lib/release-notes-core";
 import type { EconomicEventRow } from "@/lib/schema";
@@ -79,11 +79,11 @@ export function ReleasedData({
           const vsPrevious = compareReleased(event.actual, event.previous);
           /* Çizgi yoksa (düz sayı değil) eski rozet: yön sözle, farksız. */
           const fallback = vsForecast ? c.releasedVsForecast[vsForecast] : vsPrevious ? c.releasedVsPrevious[vsPrevious] : null;
-          const rows = [
+          const rows = ([
             { key: "actual", label: c.actual, value: event.actual },
             { key: "forecast", label: c.forecast, value: event.forecast },
             { key: "previous", label: c.previous, value: event.previous },
-          ].filter((row) => row.value !== null && row.value.trim() !== "");
+          ] as const).filter((row) => row.value !== null && row.value.trim() !== "");
           return (
             <li key={event.id} className={styles.card}>
               <div className={styles.cardHead}>
@@ -103,15 +103,19 @@ export function ReleasedData({
                   gerçekleşen, dik çizgi beklenti, gri çentik önceki. Sayı
                   metinde duruyor; çizgi onun konum hâli (`aria-hidden`). */}
               <dl className={styles.figures}>
-                {rows.map((row) => (
-                  <div key={row.key} className={styles.figure} data-kind={row.key} data-dir={row.key === "actual" ? deviation?.direction : undefined}>
-                    <dt className={styles.figureLabel}>
-                      {deviation && <i aria-hidden className={styles.key} />}
-                      {row.label}
-                    </dt>
-                    <dd className={cn(styles.figureValue, "numeral")}>{formatEventValue(row.value, event.unit, locale) ?? row.value}</dd>
-                  </div>
-                ))}
+                {rows.map((row) => {
+                  /* İşaret tabandan (`legendMark`, 6 Kasım, inceleme). */
+                  const mark = legendMark(row.key, deviation);
+                  return (
+                    <div key={row.key} className={styles.figure} data-kind={row.key} data-dir={row.key === "actual" ? deviation?.direction : undefined}>
+                      <dt className={styles.figureLabel}>
+                        {mark && <i aria-hidden className={styles.key} data-mark={mark} />}
+                        {row.label}
+                      </dt>
+                      <dd className={cn(styles.figureValue, "numeral")}>{formatEventValue(row.value, event.unit, locale) ?? row.value}</dd>
+                    </div>
+                  );
+                })}
               </dl>
               {deviation ? (
                 <>

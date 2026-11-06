@@ -9,6 +9,7 @@ import { FoldToggle } from "@/components/ui/FoldToggle";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import {
   INDEX_ALIASES,
+  mentionsIndexPercent,
   LEDGER_ANCHOR,
   METRIC_ALIASES,
   ledgerScale,
@@ -19,7 +20,8 @@ import {
   type LedgerRef,
 } from "@/lib/brief-ledger";
 import type { BriefLedgerData } from "@/lib/brief-ledger-data";
-import { formatDeviation, releaseDeviation } from "@/lib/release-deviation";
+import { DeviationLine } from "@/components/calendar/DeviationLine";
+import { deviationVerdict, releaseDeviation, type Deviation } from "@/lib/release-deviation";
 import type { EconomicEventRow } from "@/lib/schema";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { INTL_LOCALE } from "@/lib/i18n/config";
@@ -126,13 +128,16 @@ type CardFigure = {
   key: string;
   label: string;
   value: string;
-  /** Ölçüde önceki değer (önce → sonra); açıklamada yok. */
-  prev?: string;
-  /** Açıklamanın sıfırı: "Beklenti 55 Bin" (yoksa "Önceki …"). */
+  /** Şeridin satırındaki künye: ölçüde "Önceki …", çizgisiz açıklamada
+      tabanı ("Beklenti 55 Bin"). Çizgili açıklamada boş (çizgi orada). */
+  shift?: string;
+  /** Çizgili açıklamanın tabanı, künye satırında: "Beklenti 55 Bin". */
   base?: string;
   verdict?: string;
   verdictDir: "up" | "down" | "flat";
-  deviation?: { direction: "above" | "below" | "inline"; actualAt: number };
+  /** Açıklamanın sapması; `line` ise çizgiyle çizilir. */
+  deviation?: Deviation;
+  line?: boolean;
   /** Metindeki geçişe bağ (yalnız ölçüler; açıklamaların takma adı yok). */
   ledgerKey?: string;
 };
@@ -143,13 +148,27 @@ type CardFigure = {
  * bandın ölçüleri (10 yıllık, VIX, dolar/TL — bülten sayfasıyla aynı
  * `getBriefLedger`). Açıklamanın çizgisi beklentiyi sıfır alıyor
  * (`releaseDeviation`, takvimdeki sapma çizgisinin kuralı).
+ *
+ * KÜNYE TEK KAYNAKTAN (6 Kasım, inceleme). Sapma künyesi burada elle
+ * kuruluyordu ve sözcükleri `homeDesk`teki birebir kopyadan okuyordu;
+ * şimdi takvimin ve Bugünün Akışı'nın fonksiyonu (`deviationVerdict`) ve
+ * sözcükleri (`calendarVisuals.released`). Aynı veri üç ekranda aynı cümle.
+ *
+ * ÇİZGİ YALNIZ ÖLÇEK ANLAMLIYSA (6 Kasım, inceleme). Ölçek gerçekleşen ve
+ * önceki farkın büyüğü; kart önceki çentiğini çizmiyordu ve önceki yoksa
+ * ölçek tek değerden kuruluyordu — nokta HER ZAMAN rayın ucundaydı
+ * (±`DEVIATION_REACH`), büyüklük okunmuyordu. Çizgi artık takvimin
+ * bileşeni (`DeviationLine`, küçük hâl) ve önceki çentiğiyle; önceki
+ * çizgide yer almıyorsa (`previousAt === null`: beklenti yok ya da önceki
+ * bilinmiyor) çizgi basılmaz, yön oku + künye kalır.
  */
 function cardFigures(
-  data: BriefLedgerData,
+  metrics: readonly LedgerMetric[],
   releases: readonly EconomicEventRow[],
   locale: Locale,
   L: Labels,
   D: Dictionary["homeDesk"],
+  V: Dictionary["calendarVisuals"]["released"],
 ): CardFigure[] {
   const out: CardFigure[] = [];
   for (const row of releases) {
@@ -159,40 +178,27 @@ function cardFigures(
     const baseRaw = deviation?.base === "previous" ? row.previous : (row.forecast ?? row.previous);
     const baseValue = formatEventValue(baseRaw, row.unit, locale);
     const onForecast = deviation ? deviation.base === "forecast" : !!row.forecast;
-    let verdict: string | undefined;
-    if (deviation) {
-      const diff = formatDeviation(deviation.diff, row.unit, deviation.digits, locale, D);
-      verdict =
-        deviation.direction === "inline"
-          ? onForecast
-            ? D.inlineForecast
-            : D.inlinePrevious
-          : (deviation.direction === "above"
-              ? onForecast
-                ? D.aboveForecast
-                : D.abovePrevious
-              : onForecast
-                ? D.belowForecast
-                : D.belowPrevious
-            ).replace("{diff}", diff);
-    }
+    const base = baseValue ? (onForecast ? D.forecast : D.previous).replace("{value}", baseValue) : undefined;
+    const line = !!deviation && deviation.previousAt !== null;
     out.push({
       key: row.id,
       label: locale === "tr" ? row.titleTr : row.titleEn,
       value,
-      base: baseValue ? (onForecast ? D.forecast : D.previous).replace("{value}", baseValue) : undefined,
-      verdict,
+      shift: line ? undefined : base,
+      base: line ? base : undefined,
+      verdict: deviation ? deviationVerdict(deviation, row.unit, locale, V, "base") : undefined,
       verdictDir: deviation?.direction === "above" ? "up" : deviation?.direction === "below" ? "down" : "flat",
-      deviation: deviation ? { direction: deviation.direction, actualAt: deviation.actualAt } : undefined,
+      deviation: deviation ?? undefined,
+      line,
     });
   }
-  for (const metric of data.metrics) {
+  for (const metric of metrics) {
     const text = metricText(metric, locale, L);
     out.push({
       key: metric.key,
       label: L.metrics[metric.key],
       value: text.value,
-      prev: text.prev,
+      shift: D.previous.replace("{value}", text.prev),
       verdict: text.delta,
       verdictDir: text.dir,
       ledgerKey: metric.key,
@@ -201,12 +207,15 @@ function cardFigures(
   return out.slice(0, CARD_FIGURES_MAX);
 }
 
+/* `mentionsIndexPercent` — kural ve gerekçe lib/brief-ledger.ts'te (testli). */
+
 export function BriefLedger({
   data,
   locale,
   t,
   variant = "page",
   releases = [],
+  bodyMd,
 }: {
   data: BriefLedgerData;
   locale: Locale;
@@ -215,6 +224,9 @@ export function BriefLedger({
   /** Kartın "Günün Verileri" sırası — bültenin anlattığı açıklamalar
       (`briefReleases`, lib/home-figures.ts). Yalnız `card`. */
   releases?: readonly EconomicEventRow[];
+  /** Bültenin metni — kartın dipnotu yalnız metin endeks yüzdesi anıyorsa
+      (`mentionsIndexPercent`). Yalnız `card`. */
+  bodyMd?: string;
 }) {
   const L = t.briefLedger;
   const weekly = data.window.period === "weekly";
@@ -253,8 +265,14 @@ export function BriefLedger({
 
   if (variant === "card") {
     const D = t.homeDesk;
-    const figures = cardFigures(data, releases, locale, L, D);
-    const fundNote = D.fundNote.replace("{symbols}", data.indices.map((move) => move.symbol).join(", "));
+    const V = t.calendarVisuals.released;
+    const figures = cardFigures(data.metrics, releases, locale, L, D, V);
+    /* Dipnot yalnız günlükte ve metin endeks yüzdesi andığında (gerekçe
+       `mentionsIndexPercent`; 6 Kasım, inceleme). */
+    const fundNote =
+      !weekly && bodyMd && mentionsIndexPercent(bodyMd)
+        ? D.fundNote.replace("{symbols}", data.indices.map((move) => move.symbol).join(", "))
+        : null;
     return (
       /* KARTIN ÖLÇÜ KATI (6 Kasım görsel tur). Önceki hâl: künye + cümle,
          altında dört küçük karo (ad ve yüzde 13–14 punto, şerit altında);
@@ -265,7 +283,8 @@ export function BriefLedger({
          anlattığı açıklamalar (beklentiye göre sapma çizgisiyle) ve
          10 yıllık faiz / VIX / dolar-TL (önce → sonra). Karolar `subgrid`:
          ad, rakam, şerit ve künye satırları dört karoda AYNI HATTA.
-         Dipnot kuyunun içinde düz paragraf (CLAUDE.md "Ekran düzeni" 6).
+         Dipnot kuyunun içinde düz paragraf (CLAUDE.md "Ekran düzeni" 6);
+         yalnız günlükte ve metin endeks yüzdesi andığında (6 Kasım, inceleme).
          Ölçümler BriefLedger.module.css → "Ana sayfa kartı". */
       <div className={styles.mini} data-weekly={weekly ? "" : undefined}>
         <div className={styles.miniHead}>
@@ -296,52 +315,9 @@ export function BriefLedger({
           ))}
         </ol>
         {figures.length > 0 && (
-          <div className={styles.figs}>
-            <p className={styles.figsLabel}>{D.figuresLabel}</p>
-            <ul className={styles.figGrid} aria-label={D.figuresLabel}>
-              {figures.map((figure) => (
-                <li
-                  key={figure.key}
-                  className={styles.fig}
-                  data-ledger-key={figure.ledgerKey}
-                  data-ledger-summary={figure.ledgerKey ? summary(figure.label, figure.value) : undefined}
-                >
-                  <span className={styles.figLabel}>{figure.label}</span>
-                  <span className={styles.figValue}>{figure.value}</span>
-                  {figure.deviation ? (
-                    <span className={styles.dev} data-dir={figure.deviation.direction} aria-hidden>
-                      <span className={styles.devZero} />
-                      {figure.deviation.actualAt !== 0 && (
-                        <span
-                          className={styles.devLeg}
-                          style={{
-                            left: `${Math.min(50, 50 + figure.deviation.actualAt * 50)}%`,
-                            width: `${Math.abs(figure.deviation.actualAt) * 50}%`,
-                          }}
-                        />
-                      )}
-                      <span className={styles.devDot} style={{ left: `${50 + figure.deviation.actualAt * 50}%` }} />
-                    </span>
-                  ) : (
-                    /* Ölçüde şeridin yerinde önceki değer: "önce" bu satır,
-                       "sonra" üstteki büyük rakam (aynı sayıyı iki kez
-                       yazmamak için ok ve ikinci değer yok). */
-                    <span className={styles.figShift}>
-                      {figure.prev && D.previous.replace("{value}", figure.prev)}
-                    </span>
-                  )}
-                  <span className={styles.figFoot}>
-                    {figure.base && <span>{figure.base}</span>}
-                    {figure.verdict && (
-                      <span className={cn(styles.figVerdict, directionText(figure.verdictDir))}>{figure.verdict}</span>
-                    )}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <FigureList figures={figures} summary={summary} D={D} V={V} />
         )}
-        <p className={styles.miniNote}>{fundNote}</p>
+        {fundNote && <p className={styles.miniNote}>{fundNote}</p>}
       </div>
     );
   }
@@ -522,6 +498,101 @@ export function BriefLedger({
         </div>
       </FoldToggle>
     </section>
+  );
+}
+
+/** "Günün Verileri" karoları — kartın kuyusunda endekslerin altında ya da
+    (bant düştüyse) tek başına. */
+function FigureList({
+  figures,
+  summary,
+  D,
+  V,
+  alone = false,
+}: {
+  figures: CardFigure[];
+  summary?: (label: string, value: string) => string;
+  D: Dictionary["homeDesk"];
+  V: Dictionary["calendarVisuals"]["released"];
+  alone?: boolean;
+}) {
+  return (
+    <div className={styles.figs} data-alone={alone || undefined}>
+      <p className={styles.figsLabel}>{D.figuresLabel}</p>
+      <ul className={styles.figGrid} aria-label={D.figuresLabel}>
+        {figures.map((figure) => (
+          <li
+            key={figure.key}
+            className={styles.fig}
+            data-ledger-key={figure.ledgerKey}
+            data-ledger-summary={figure.ledgerKey && summary ? summary(figure.label, figure.value) : undefined}
+          >
+            <span className={styles.figLabel}>{figure.label}</span>
+            <span className={styles.figValue}>{figure.value}</span>
+            {figure.deviation && figure.line ? (
+              /* Takvimin çizgisi, küçük hâli: orta taban, nokta
+                 gerçekleşen, gri çentik önceki (6 Kasım, inceleme). */
+              <DeviationLine
+                deviation={figure.deviation}
+                below={V.sideBelow}
+                above={V.sideAbove}
+                baseLabel={figure.base ?? ""}
+                motion={false}
+                compact
+                className={styles.dev}
+              />
+            ) : (
+              /* Ölçüde şeridin yerinde önceki değer: "önce" bu satır,
+                 "sonra" üstteki büyük rakam (aynı sayıyı iki kez
+                 yazmamak için ok ve ikinci değer yok). Çizgisiz
+                 açıklamada aynı satır tabanı söylüyor. */
+              <span className={styles.figShift}>{figure.shift}</span>
+            )}
+            <span className={styles.figFoot}>
+              {figure.base && <span>{figure.base}</span>}
+              {figure.verdict && (
+                <span className={cn(styles.figVerdict, directionText(figure.verdictDir))}>
+                  {/* Yön oku (takvim künyesinin glifi): renk tek taşıyıcı
+                      değil; çizgisiz açıklamada yönün tek çizimi. */}
+                  {figure.deviation && figure.deviation.direction !== "inline" && (
+                    <span aria-hidden className={styles.figGlyph}>
+                      {figure.deviation.direction === "above" ? "▲" : "▼"}
+                    </span>
+                  )}
+                  {figure.verdict}
+                </span>
+              )}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * BANT DÜŞÜNCE AÇIKLAMALAR KALIYOR (6 Kasım, inceleme). Takvim satırları
+ * bandın sağlayıcısından (Alpaca) bağımsız; bant okunamadığında kart
+ * bültenin açıkladığı verileri yine de basıyor — aynı kuyu, endekssiz.
+ * Ölçüler (10 yıllık, VIX, dolar/TL) bandın parçası, onlar da yok.
+ */
+export function BriefFigures({
+  releases,
+  locale,
+  t,
+}: {
+  releases: readonly EconomicEventRow[];
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const D = t.homeDesk;
+  const V = t.calendarVisuals.released;
+  const figures = cardFigures([], releases, locale, t.briefLedger, D, V);
+  if (figures.length === 0) return null;
+  return (
+    <div className={styles.mini}>
+      <FigureList figures={figures} D={D} V={V} alone />
+    </div>
   );
 }
 

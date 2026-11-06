@@ -107,6 +107,16 @@ type NameIndex = {
 };
 let nameIndex: NameIndex | null = null;
 
+/** Şirket adının ikinci kelimesi bunlardan biriyse ilk kelime tek başına
+    şirketi anlatır ("Micron Technology", "Lam Research", "Meta Platforms");
+    değilse ilk kelime genel bir sözcük ya da başka bir şirketin adı olabilir
+    ("Marathon Petroleum", "Boston Scientific", "Electronic Arts"). */
+const CORPORATE_TAIL = new Set([
+  "technology", "technologies", "platforms", "holdings", "group", "systems", "labs", "laboratories",
+  "research", "devices", "networks", "solutions", "software", "semiconductor", "semiconductors",
+  "therapeutics", "pharmaceuticals", "biosciences", "communications", "enterprises", "industries",
+]);
+
 function memberIndex(): NameIndex {
   if (nameIndex) return nameIndex;
   const exact = new Map<string, string | null>();
@@ -123,7 +133,12 @@ function memberIndex(): NameIndex {
     const key = normalName(member.name);
     put(loose, key, member.symbol);
     const words = key.split(" ");
-    for (let take = 1; take < words.length; take += 1) put(prefix, words.slice(0, take).join(" "), member.symbol);
+    for (let take = 1; take < words.length; take += 1) {
+      /* Tek kelimelik önek yalnız ardından KURUMSAL KUYRUK geliyorsa
+         (gerekçe `memberSymbolOf`, 6 Kasım inceleme). */
+      if (take === 1 && !CORPORATE_TAIL.has(words[1])) continue;
+      put(prefix, words.slice(0, take).join(" "), member.symbol);
+    }
   }
   nameIndex = { exact, loose, prefix, symbols: new Set(members.map((member) => member.symbol)) };
   return nameIndex;
@@ -150,6 +165,14 @@ function memberIndex(): NameIndex {
  * önek `GENERIC_NAME_WORDS`teyse (lib/utils.ts — haber eşlemesinin aynı
  * listesi: "Western", "Applied", "Texas"…) eşlenmez; harf öneki ("Micro")
  * hiç sayılmaz, kelime bütün olmalı.
+ *
+ * TEK KELİME DARALDI (6 Kasım, inceleme). 514 üyede benzersiz tek kelimelik
+ * önek 275 taneydi ve aralarında genel ya da başka şirketi anlatan sözcükler
+ * vardı: "Marathon" (MARA kastedilir) MPC'ye, "Boston" BSX'e, "Electronic"
+ * EA'ya, "News" NWSA'ya bağlanıyordu — satır artık `/hisse/{kod}` bağlantısı,
+ * yanlış eşleme yanlış sayfa demek. Tek kelime yalnız üyenin ikinci kelimesi
+ * kurumsal kuyruksa (`CORPORATE_TAIL`) sayılıyor; iki ve daha çok kelimelik
+ * önek ("Advanced Micro") eskisi gibi.
  */
 export function memberSymbolOf(name: string): string | null {
   const trimmed = name.trim();

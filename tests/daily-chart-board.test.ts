@@ -192,6 +192,12 @@ test("memberSymbolOf: kısa ad, listedeki adın baştaki tam kelimeleriyse ve te
   assert.equal(memberSymbolOf("Applied"), null);
   assert.equal(memberSymbolOf("Advanced"), null);
   assert.equal(memberSymbolOf("Teknoloji"), null);
+  /* 6 Kasım inceleme: tek kelime yalnız ardından kurumsal kuyruk geliyorsa. */
+  assert.equal(memberSymbolOf("Lam"), "LRCX");
+  assert.equal(memberSymbolOf("Marathon"), null);
+  assert.equal(memberSymbolOf("Boston"), null);
+  assert.equal(memberSymbolOf("Electronic"), null);
+  assert.equal(memberSymbolOf("Interactive"), null);
 });
 
 test("boardTiles: eksi çubuk sıfırın solunda biter, artı sağında başlar", () => {

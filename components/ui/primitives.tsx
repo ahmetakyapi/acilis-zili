@@ -854,8 +854,17 @@ export function DataError({
  * çıkıyordu. Şimdi sinyal göstergesi biçimi: 6 / 9 / 12 piksel yükselen
  * çubuklar, dolu olan kadar önemli — düzey BOYDAN okunuyor (sayılmıyor),
  * renk ikinci taşıyıcı (`--impact-*`, mürekkep koyuluğu; kırmızı düşüş
- * demek, 31 Ekim kararı globals.css'te). Boş çubuk `--line-strong`.
+ * demek, 31 Ekim kararı globals.css'te). Boş çubuk `--line-strong`idi.
  * Ad değişmedi: çağıran ekranlar aynı API ile yeni biçimi alıyor.
+ *
+ * BOŞ ÇUBUK BİR TON SOLDU (6 Kasım, inceleme). Koyu temada `--line-strong`
+ * (beyaz %20, #111b29 üstünde ~#414954) ile `--impact-low` (#4c5d72)
+ * neredeyse aynı tondaydı: "Düşük" tek dolu çubuk değil, üç eş çubuk gibi
+ * okunuyordu. Boş çubuk artık `--line` (beyaz %10, ~#29323e — dolu
+ * çubuktan belirgin koyu). `--line-soft` denendi ama açık temada %6'lık
+ * çubuk kuyu zemininde (`--surface-sunken`) kayboluyor ve üç basamaklı
+ * çerçeve okunmuyordu. Düzey adı her durumda `sr-only` (ve `title`):
+ * çubuklar `aria-hidden`.
  */
 export function ImpactDots({
   importance,
@@ -885,7 +894,7 @@ export function ImpactDots({
           className={cn(
             "w-[3px] rounded-[1px]",
             height,
-            i < filled ? color : "bg-line-strong",
+            i < filled ? color : "bg-line",
           )}
         />
       ))}

@@ -54,7 +54,8 @@ export function CapitalBoard({
   const { lead, rest } = capitalLegend(capital.slices, LEAD);
   const investorOf = (slug: string) => INVESTORS.find((investor) => investor.slug === slug);
   const pct = (share: number) => formatPercentPlain(share, locale, share >= 10 ? 0 : 1);
-  const otherLabel = t.capitalOther.replace("{count}", String(rest.count));
+  /* Tekil/çoğul dal (6 Kasım, inceleme): EN "1 Other Funds" yazıyordu. */
+  const otherLabel = (rest.count === 1 ? t.capitalOtherOne : t.capitalOther).replace("{count}", String(rest.count));
   const aria = [
     ...lead.map((slice) =>
       t.capitalLeadAria
@@ -78,7 +79,7 @@ export function CapitalBoard({
         <span>{t.capitalLabel}</span>
         <span className={styles.capitalFigure}>
           <b className="numeral">{formatMoneyCompact(capital.total, locale)}</b>
-          <small className="numeral">{t.capitalFundsCount.replace("{count}", String(capital.slices.length))}</small>
+          <small className="numeral">{(capital.slices.length === 1 ? t.capitalFundsCountOne : t.capitalFundsCount).replace("{count}", String(capital.slices.length))}</small>
         </span>
       </p>
       <div className={styles.capitalBar} role="img" aria-label={`${t.capitalStripAria}. ${aria}`}>

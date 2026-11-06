@@ -105,22 +105,48 @@ test("a company moving to an unknown window keeps results without restoring a wi
 
 test("the flow row carries the release's deviation from the expectation, worded like the calendar card", async () => {
   const { flowDeviation } = await import("../lib/release-deviation");
+  const { MONEY_GAP } = await import("../lib/utils");
   const words = { aboveForecast: "Beklentinin {diff} Üstünde", belowForecast: "Beklentinin {diff} Altında", inlineForecast: "Beklentiyle Aynı", abovePrevious: "Öncekinin {diff} Üstünde", belowPrevious: "Öncekinin {diff} Altında", inlinePrevious: "Öncekiyle Aynı", unitPoint: "Puan", unitThousand: "Bin" };
   const nfp = flowDeviation("165", "150", "254", "bin", "tr", words)!;
   assert.equal(nfp.direction, "above");
   assert.equal(nfp.base, "forecast");
-  assert.equal(nfp.verdict, "Beklentinin 15 Bin Üstünde".replace(" ", nfp.verdict.includes(" ") ? " " : " "));
-  assert.match(nfp.versus!, /^Öncekinin 89.Bin Altında$/);
+  // Birim sayıdan kopmaz: aradaki boşluk MONEY_GAP (bağlantısız). Beklenen
+  // dizge düz yazılı — önceki hâl beklenenden kendi ürettiği değeri
+  // türetiyordu ve hiçbir şeyi doğrulamıyordu (6 Kasım, inceleme).
+  assert.equal(nfp.verdict, `Beklentinin 15${MONEY_GAP}Bin Üstünde`);
+  assert.equal(nfp.versus, `Öncekinin 89${MONEY_GAP}Bin Altında`);
   // Ölçek iki yana simetrik: önceki (beklentinin 104 üstü) uçta, gerçekleşen (+15) orantılı.
   assert.equal(nfp.previousAt, 0.84);
   assert.equal(nfp.actualAt, Math.round((15 / 104) * 0.84 * 10_000) / 10_000);
   const rate = flowDeviation("4.1", "4.2", null, "%", "tr", words)!;
   assert.equal(rate.direction, "below");
-  assert.match(rate.verdict, /^Beklentinin 0,1.Puan Altında$/);
+  assert.equal(rate.verdict, `Beklentinin 0,1${MONEY_GAP}Puan Altında`);
   assert.equal("versus" in rate, false);
   // Düz sayı olmayan (Fed aralığı) ya da kıyassız sonuçta sapma yok.
   assert.equal(flowDeviation("3.75-4.00", "4.00", null, "%", "tr", words), undefined);
   assert.equal(flowDeviation("4.1", null, null, "%", "tr", words), undefined);
+});
+
+test("legend marks follow the line's base, not the value's kind", async () => {
+  const { legendMark, releaseDeviation } = await import("../lib/release-deviation");
+  // Taban beklenti, önceki biliniyor: nokta, dik çizgi, çentik.
+  const full = releaseDeviation("165", "150", "254")!;
+  assert.deepEqual((["actual", "forecast", "previous"] as const).map((kind) => legendMark(kind, full)), ["dot", "zero", "notch"]);
+  // Beklenti yok: taban önceki — dik çizgi öncekinin, beklentiye işaret yok.
+  const noForecast = releaseDeviation("4.1", null, "4.0")!;
+  assert.equal(noForecast.base, "previous");
+  assert.equal(legendMark("previous", noForecast), "zero");
+  assert.equal(legendMark("forecast", noForecast), null);
+  // Beklenti düz sayı değil (aralık): taban yine önceki, beklenti işaretsiz.
+  const ranged = releaseDeviation("4.1", "4.00-4.25", "4.0")!;
+  assert.equal(ranged.base, "previous");
+  assert.equal(legendMark("forecast", ranged), null);
+  // Taban beklenti, önceki bilinmiyor: çizgide çentik yok, lejantta da yok.
+  const noPrevious = releaseDeviation("4.1", "4.2", null)!;
+  assert.equal(legendMark("previous", noPrevious), null);
+  assert.equal(legendMark("forecast", noPrevious), "zero");
+  // Çizgi yoksa hiç işaret yok.
+  assert.equal(legendMark("actual", null), null);
 });
 
 test("a retained release keeps its deviation with it", () => {

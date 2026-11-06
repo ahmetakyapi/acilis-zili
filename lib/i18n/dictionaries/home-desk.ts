@@ -15,21 +15,23 @@ export const homeDeskTr = {
      (`getBriefLedger`, Alpaca); rutinin metni endeksin kendisini ya da
      yazıldığı anın kotasyonunu anabiliyor (6 Kasım: metinde "S&P 500
      %4,36", şeritte SPY −%4,41). İkisi de doğru, kaynakları farklı —
-     dipnot hangisinin ne olduğunu söylüyor, metne dokunulmuyor. */
+     dipnot hangisinin ne olduğunu söylüyor, metne dokunulmuyor. Yalnız
+     GÜNLÜK kartta ve metin endeks yüzdesi andığında basılır (6 Kasım,
+     inceleme; kural lib/brief-ledger.ts → `mentionsIndexPercent`). */
   fundNote:
     "Şerit, endeksleri izleyen fonların ({symbols}) asıl seans kapanışı; metindeki endeks yüzdesi kaynak ve saat farkıyla birkaç baz puan ayrışabilir.",
-  figuresLabel: "Günün Verileri",
-  /* Açıklanan verinin künyesi: "Beklenti 55 Bin". */
+  /* "Günün Verileri" idi (6 Kasım, ilk tarama): kart bugünün tarihini
+     taşırken altındaki faiz/VIX/kur seansın kapanışıydı ve "günün" sözü
+     bugünü düşündürüyordu; aynı sırada bülten sabahı açıklanan veriler de
+     duruyor (`briefReleases`), "seansın" da tam doğru olmazdı. */
+  figuresLabel: "Öne Çıkan Veriler",
+  /* Açıklanan verinin tabanı: "Beklenti 55 Bin". Sapma künyesi ("Beklentinin
+     6 Bin Altında") burada değil: takvimin sözcükleri
+     (`calendarVisuals.released`, `deviationVerdict`) — 6 Kasım'a kadar
+     buradaki birebir kopyası kullanılıyordu (inceleme: iki kopya er geç
+     ayrı düşer; EN'de "In Line With" zaten ayrı düşmüştü). */
   forecast: "Beklenti {value}",
   previous: "Önceki {value}",
-  aboveForecast: "Beklentinin {diff} Üstünde",
-  belowForecast: "Beklentinin {diff} Altında",
-  inlineForecast: "Beklentiyle Aynı",
-  abovePrevious: "Öncekinin {diff} Üstünde",
-  belowPrevious: "Öncekinin {diff} Altında",
-  inlinePrevious: "Öncekiyle Aynı",
-  unitPoint: "Puan",
-  unitThousand: "Bin",
   /* Ölçeğin künyesi — panel başlığının sağında. */
   scale: "Ortak Ölçek ±{value}",
   /* Ekran okuyucu: "Türkiye, TUR, −%1,24". */
@@ -41,17 +43,9 @@ export const homeDeskEn: typeof homeDeskTr = {
   bylineClaude: "Claude · Published {time}",
   fundNote:
     "The strip shows the regular-session close of the funds tracking the indices ({symbols}); an index figure in the text can differ by a few basis points due to source and timing.",
-  figuresLabel: "Today's Data",
+  figuresLabel: "Key Figures",
   forecast: "Forecast {value}",
   previous: "Previous {value}",
-  aboveForecast: "{diff} Above Forecast",
-  belowForecast: "{diff} Below Forecast",
-  inlineForecast: "In Line With Forecast",
-  abovePrevious: "{diff} Above Previous",
-  belowPrevious: "{diff} Below Previous",
-  inlinePrevious: "Same as Previous",
-  unitPoint: "pp",
-  unitThousand: "K",
   scale: "Shared Scale ±{value}",
   rowAria: "{name}, {symbol}, {value}",
 };

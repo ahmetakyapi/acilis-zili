@@ -704,6 +704,11 @@
   padding-top: 12px;
   border-top: 1px solid var(--line-soft);
 }
+/* Bant düştüyse kuyuda yalnız bu kat: üstte ayıracak bir şey yok. */
+.figs[data-alone] {
+  padding-top: 0;
+  border-top: 0;
+}
 .figsLabel {
   margin: 0;
   color: var(--text-muted);
@@ -785,52 +790,24 @@
 
 /* SAPMA ÇİZGİSİ, KÜÇÜK HÂLİ — takvimdeki çizginin kuralı
    (`components/calendar/DeviationLine.tsx`): orta = beklenti (sıfır,
-   `--line-strong` dik çizgi), nokta = gerçekleşen, bacak sıfırdan noktaya.
-   Kalınlık endeks kulvarlarıyla aynı 5 piksel. Renk yalnız işaretten. */
+   dik çizgi), nokta = gerçekleşen, bacak sıfırdan noktaya. Renk yalnız
+   işaretten.
+   6 KASIM'DA DEĞİŞTİ (inceleme): ilk sürüm burada elle çizilmiş bir mini
+   çizgiydi (5 piksellik kulvar, `--line-strong` sıfır) ve önceki çentiğini
+   çizmiyordu; şimdi takvimin bileşeni `compact` hâliyle (ölçüler
+   ReleasedData.module.css → "KÜÇÜK HÂL"), çentik dahil. Burada yalnız
+   karodaki yeri ve noktanın zemin halkası kalıyor.
+   Halka kuyunun GERÇEK tonunda: kuyu `--surface-sunken` (yarı saydam),
+   kart `--surface-solid` (koyu temada yarı saydam), altında sayfa —
+   katlı gölge bu bileşimi birebir veriyor (`--dev-ring-shadow`). */
 .dev {
-  position: relative;
-  display: block;
-  height: 12px;
+  --dev-ring-shadow: 0 0 0 2px var(--surface-sunken), 0 0 0 2px var(--surface-solid), 0 0 0 2px var(--page-bg);
+  align-self: center;
 }
-.dev::before {
-  content: "";
-  position: absolute;
-  inset: 3.5px 0 auto;
-  height: 5px;
-  border-radius: 999px;
-  background: var(--line-soft);
+.figGlyph {
+  margin-right: 4px;
+  font-size: 0.78em;
 }
-.devZero {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 1.5px;
-  height: 12px;
-  translate: -50% 0;
-  background: var(--line-strong);
-}
-.devLeg {
-  position: absolute;
-  top: 3.5px;
-  height: 5px;
-  border-radius: 999px;
-  background: var(--flat);
-}
-.dev[data-dir="above"] .devLeg { background: var(--up); }
-.dev[data-dir="below"] .devLeg { background: var(--down); }
-.devDot {
-  position: absolute;
-  top: 1px;
-  width: 10px;
-  height: 10px;
-  margin-left: -5px;
-  border-radius: 50%;
-  background: var(--flat);
-  /* Kuyunun tonunda halka: nokta kulvarın üstünde ayrı okunsun. */
-  box-shadow: 0 0 0 2px var(--surface-sunken);
-}
-.dev[data-dir="above"] .devDot { background: var(--up); }
-.dev[data-dir="below"] .devDot { background: var(--down); }
 
 /* Dipnot — kuyunun içinde, hairline ile ayrılmış düz paragraf. */
 .miniNote {

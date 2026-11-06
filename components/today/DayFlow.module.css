@@ -300,22 +300,29 @@
 .results dd { margin-top:5px; color:var(--text-soft); font-size:20px; line-height:1.2; font-weight:600; letter-spacing:-.035em; overflow-wrap:anywhere; }
 .results > div:first-child dd { color:var(--text-strong); font-size:22px; font-weight:700; }
 .results dd[data-empty] { color:var(--text-muted); }
-/* Lejant işaretleri — çizgidekilerle aynı biçim ve ton (ReleasedData.module.css). */
+/* Lejant işaretleri — çizgidekilerle aynı biçim ve ton (ReleasedData.module.css).
+   Biçim değerin türünden değil çizgideki ROLÜNDEN (`data-mark`, 6 Kasım,
+   inceleme): taban önceki olunca dik çizgi öncekinin (`legendMark`). */
 .key { display:inline-block; flex:none; }
-.results [data-kind="actual"] .key { width:8px; height:8px; border-radius:50%; background:var(--flat); }
-.results [data-kind="actual"][data-dir="above"] .key { background:var(--up); }
-.results [data-kind="actual"][data-dir="below"] .key { background:var(--down); }
-.results [data-kind="forecast"] .key { width:2px; height:12px; border-radius:1px; background:var(--text-strong); }
-.results [data-kind="previous"] .key { width:3px; height:9px; border-radius:2px; background:var(--text-muted); opacity:.7; }
+.key[data-mark="dot"] { width:8px; height:8px; border-radius:50%; background:var(--flat); }
+.results [data-dir="above"] .key[data-mark="dot"] { background:var(--up); }
+.results [data-dir="below"] .key[data-mark="dot"] { background:var(--down); }
+.key[data-mark="zero"] { width:2px; height:12px; border-radius:1px; background:var(--text-strong); }
+.key[data-mark="notch"] { width:3px; height:9px; border-radius:2px; background:var(--text-muted); opacity:.7; }
 
 /* SAPMA ÇİZGİSİ — takvim kartının bileşeni (`DeviationLine`), biçimi
-   ReleasedData.module.css'te. Noktanın zemin halkası açık kartın tonunda
-   (`--dev-ring`). Hareket: satır her açıldığında bileşen yeniden kurulur
+   ReleasedData.module.css'te. Noktanın zemin halkası açık SATIRIN tonunda:
+   açık satır `--premium-surface` üstüne `--surface-sunken` (yarı saydam,
+   `.tlRow[data-open]`). İlk sürüm halkayı yalnız `--premium-surface`
+   veriyordu; nokta çentik/sıfırla çakışınca açık satırda bir ton açık bir
+   leke kalıyordu (6 Kasım, inceleme). Halka iki katlı gölge: üstteki kat
+   sunken, alttaki kart zemini — zeminin bileşimiyle birebir
+   (`--dev-ring-shadow`). Hareket: satır her açıldığında bileşen yeniden kurulur
    (`key`) ve nokta beklentiden kendi yerine bir kez kayar, bacak sıfırdan
    açılır — `--ease-brand`, yalnız dönüşüm; hareketi azaltana son kare
    (aşağıdaki `prefers-reduced-motion` kuralı bütün animasyonları kapatır). */
 .devBlock { display:flex; min-width:0; flex-direction:column; gap:8px; }
-.devLine { --dev-ring:var(--premium-surface); }
+.devLine { --dev-ring-shadow:0 0 0 2px var(--surface-sunken), 0 0 0 2px var(--premium-surface); }
 .devLine [data-dot] { animation:dev-travel 700ms var(--ease-brand) 120ms both; }
 .devLine [data-leg] { animation:dev-leg 600ms var(--ease-brand) 120ms both; }
 @keyframes dev-travel { from { translate:var(--travel, 0) 0; } }

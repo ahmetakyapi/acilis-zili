@@ -138,6 +138,8 @@ a.row:hover .rowArrow { translate: 2px 0; color: var(--primary-ink); }
 }
 .screenChip:hover { color: var(--text-strong); background: var(--primary-tint); }
 .screenChip:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+/* Telefonda dokunma hedefi 44 (sayfadaki öteki çiplerle aynı). */
+@media (max-width: 39.99rem) { .screenChip { min-height: 44px; } }
 .screenChipCount { color: var(--text-muted); font-weight: 650; }
 .digestSummary {
   padding: 0 20px 12px; max-width: calc(100ch + 40px);
@@ -199,10 +201,16 @@ a.weekLink:focus-visible { outline: 2px solid var(--line-focus); }
 .weekValue strong { font-weight: 800; color: var(--text-strong); }
 .weekOf { font-weight: 600; color: var(--text-muted); }
 .week[data-latest] .weekValue { font-weight: 800; color: var(--text-strong); }
+/* SÜTUN İNCE (6 Kasım, ilk taramada). Yığın haftanın bütün hücresini
+   kaplıyordu: 1440'ta 72 piksellik dolu, doygun bloklar — CLAUDE.md'nin
+   "dolu ağır bloklar tablo programı gibi duruyor" dediği hâl. Sütun en çok
+   28 piksel ve hücrede ortalı; tıklanır alan yine hücrenin tamamı
+   (`.weekLink`), yalnız çizim inceldi. */
 .stack {
   display: flex; flex-direction: column-reverse; gap: 2px;
+  align-self: center; width: min(100%, 28px);
   height: max(2px, calc(var(--r) * var(--plot-h)));
-  border-radius: 4px 4px 1px 1px; overflow: hidden; transform-origin: 50% 100%;
+  border-radius: 6px 6px 2px 2px; overflow: hidden; transform-origin: 50% 100%;
   transition: filter .18s var(--ease-brand);
 }
 .stack:empty { background: var(--line); border-radius: 1px; }

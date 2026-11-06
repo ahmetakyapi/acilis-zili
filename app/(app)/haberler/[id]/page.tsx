@@ -97,9 +97,14 @@ export default async function NewsDetailPage(
      OKUNAMAYAN haber ise 404 değil: okuma hatası hata sınırına gider
      (20 Ekim). */
   if (!row) notFound();
-  /* Çevirisiz haber kısa beklemeyle bu yanıtta çevrilir — gerekçe
-     `withTranslations` (tek haber, tek paket). */
-  const [item] = await withTranslations([row], locale);
+  /* DETAY BEKLEMEZ (6 Kasım, inceleme). Liste ve ana sayfa kartı kendi
+     Suspense sınırında bekleyebiliyor; detay sayfasının sınırı yok
+     (`app/(app)/layout.tsx` loading.tsx'i bilinçli kaldırdı) ve 3,5 saniye
+     bütün sayfanın ilk baytı olurdu. Üstelik `generateMetadata` çevirisiz
+     satırı okuyor: gövde Türkçe, sekme başlığı ve og:title İngilizce
+     kalırdı. Detay çeviriyi yalnız başlatır (`waitMs` 0, iş `after`'da);
+     okur buraya çoğunlukla listeden geliyor ve liste onu zaten çevirdi. */
+  const [item] = await withTranslations([row], locale, 0);
 
   const useTr = locale === "tr" && item.headlineTr;
   const headline = useTr ? item.headlineTr! : item.headline;

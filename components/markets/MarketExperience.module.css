@@ -23,8 +23,13 @@
 /* Seçili endeks TONLA işaretli (24 Eylül): köşe ışıması ve 16 piksellik
    mavi gölge 23 Eylül taramasından kaçmıştı (gerekçe UtilityExperience.module.css başındaki not). Seçim bir
    etkileşim durumu, o yüzden mavi burada yerinde — ama zemin tonu ve
-   kenarlık olarak, `.panel-hover` diliyle. */
-.indexLink[aria-current="true"] .indexCard { border-color:var(--primary-faint); background:var(--primary-tint); }
+   kenarlık olarak, `.panel-hover` diliyle.
+   6 Kasım, inceleme: kenar `--primary-faint`ti; açık ton + soluk kenar
+   komşu kartlardan 3:1 ayrışmıyordu (WCAG 1.4.11, seçili durum yalnız
+   renkle değil sınırla da okunmalı). Kenar artık doygun `--primary` —
+   seçim etkileşim durumu, mavi burada anlam taşıyor. Ton kararı aynı:
+   gölge, şerit, ışıma yok. */
+.indexLink[aria-current="true"] .indexCard { border-color:var(--primary); background:var(--primary-tint); }
 .identity { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 8px; }
 .identity > p:first-child { color:var(--text-strong); font-size:13px; font-weight:600; }
 .identity > p:last-child { color:var(--text-muted); font-size:12px; }
@@ -650,6 +655,12 @@
    aralarında saç çizgisi, panelin iç dolgusu 12/20.
    ========================================================================== */
 .indexTabs > .toolbarLayout { display:grid; grid-template-columns:auto minmax(0,1fr) minmax(300px,420px); align-items:center; gap:0; padding:12px 8px; }
+/* Pay (`aside`) basılmadığında (veri yok) üçüncü kolon boş kalıp medyanı
+   ortaya sıkıştırıyordu; 1200+'da iki kolona düşer (altında ızgara zaten
+   iki/tek kolon). Öznitelik JSX'ten
+   (`data-aside`, page.tsx → IndexTabs) — kökte `:has()` yok kuralı
+   (6 Kasım, inceleme). */
+@media(min-width:1200px) { .indexTabs > .toolbarLayout:not([data-aside]) { grid-template-columns:auto minmax(0,1fr); } }
 .toolbarLayout > * { min-width:0; padding:4px 20px; }
 .toolbarLayout > * + * { border-left:1px solid var(--line-soft); }
 .indexChoices { flex-shrink:0; }

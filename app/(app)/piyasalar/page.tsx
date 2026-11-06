@@ -769,7 +769,9 @@ function IndexTabs({ tab, aside, identity }: { tab: TabKey; locale: Locale; t: D
           ve aralarında hizasız boşluklar. Şimdi tek panel; seçim, medyan ve
           pay aynı yüzeyde üç bölme, aralarında saç çizgisi, üçü de dikeyde
           ortalı. Pay kutusunun kenarlığı kalktı — panelin kendisi kutu. */}
-      <div className={styles.toolbarLayout}>
+      {/* `data-aside`: pay basılmazsa ızgara iki kolona düşer (6 Kasım,
+          inceleme; MarketExperience.module.css → `.toolbarLayout`). */}
+      <div className={styles.toolbarLayout} data-aside={aside ? "" : undefined}>
         <div className={styles.indexChoices}>
         {/* "Piyasa Genişliği" künyesi çiplerin üstündeydi; 9 Ekim 2026'da
             bütün bölüm künyeleriyle kalktı (`PageHeader` yorumu). Çiplerin
@@ -847,8 +849,10 @@ function IndexIdentity({ tab, proxy, median: medianMove, phase, locale, t, loadi
      künye yalnız kaldı ve hemen solundaki seçili çipin ADINI tekrar
      ediyordu (fon sembolü üstteki kartta zaten yazılı). Blok artık tek iş
      yapıyor: medyan ve onun tek cümlelik açıklaması. Seçili endeksin adı
-     ekran okuyucuya `aria-label` ile gidiyor. */
-  return <div className={styles.toolbarIdentity} aria-label={`${label} · ${proxy}`}>
+     ekran okuyucuya `role="group"` + `aria-label` ile gidiyor (6 Kasım,
+     inceleme: rolsüz div'in `aria-label`ı ekran okuyucularca okunmuyordu;
+     grup rolüyle ad, içindeki medyana girerken duyuluyor). */
+  return <div role="group" className={styles.toolbarIdentity} aria-label={`${label} · ${proxy}`}>
     {loading ? <Skeleton className="h-7 w-48 max-w-full" /> : medianMove !== null ? (
       <div className={styles.selectedIndexReading}>
         <span className={styles.medianLabel}>{medianLabel}</span>
