@@ -181,6 +181,19 @@ test("memberSymbolOf: yalnız tek anlamlı ad eşleşir, sektör ve endeks adı 
   assert.equal(memberSymbolOf("Uydurma Şirket"), null);
 });
 
+test("memberSymbolOf: kısa ad, listedeki adın baştaki tam kelimeleriyse ve tek anlamlıysa eşleşir", () => {
+  /* 5 Kasım: rutin "Micron" yazdı, listede "Micron Technology". */
+  assert.equal(memberSymbolOf("Micron"), "MU");
+  assert.equal(memberSymbolOf("Advanced Micro"), "AMD");
+  /* Kelime bütün olmalı; harf öneki sayılmaz. */
+  assert.equal(memberSymbolOf("Micro"), null);
+  /* Genel sözcük tek başına eşlenmez (lib/utils.ts → GENERIC_NAME_WORDS). */
+  assert.equal(memberSymbolOf("Western"), null);
+  assert.equal(memberSymbolOf("Applied"), null);
+  assert.equal(memberSymbolOf("Advanced"), null);
+  assert.equal(memberSymbolOf("Teknoloji"), null);
+});
+
 test("boardTiles: eksi çubuk sıfırın solunda biter, artı sağında başlar", () => {
   const { tiles, scale } = boardTiles(bars(SECTORS));
   assert.ok(scale);

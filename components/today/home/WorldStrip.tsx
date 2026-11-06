@@ -1,11 +1,14 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { MiniLane } from "@/components/day-poster/PosterLanes";
 import { DataError, DataStamp, Panel, PanelHeader } from "@/components/ui/primitives";
 import { getStatus } from "@/lib/data";
 import { quoteBasis } from "@/lib/market-hours";
 import { getQuotes } from "@/lib/providers";
 import { WORLD_MARKETS } from "@/db/seed/symbols";
 import { type Dictionary, type Locale } from "@/lib/i18n";
-import { cn, directionOf, directionText, formatPercent } from "@/lib/utils";
+import { sharedLaneScale, WORLD_LANE_FLOOR } from "@/lib/home-figures";
+import { cn, directionOf, directionText, formatPercent, formatPercentPlain } from "@/lib/utils";
+import styles from "./HomeLanes.module.css";
 
 /**
  * Dünya piyasaları şeridi — ülke fonları üzerinden.
@@ -64,25 +67,102 @@ export async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary 
   const allLastClose = shown.every((market) => bases[market.symbol] === "lastClose");
 
   return (
+    <WorldStripView
+      locale={locale}
+      t={t}
+      rows={shown.map((market) => ({
+        symbol: market.symbol,
+        flag: market.flag,
+        name: locale === "tr" ? market.nameTr : market.nameEn,
+        tracks: locale === "tr" ? market.tracksTr : market.tracksEn,
+        changePct: result.data[market.symbol].changePct ?? null,
+        lastClose: bases[market.symbol] === "lastClose",
+      }))}
+      allLastClose={allLastClose}
+      source={result.source}
+      fetchedAt={result.fetchedAt}
+      stale={result.stale}
+    />
+  );
+}
+
+export type WorldRow = {
+  symbol: string;
+  flag: string;
+  name: string;
+  tracks: string;
+  changePct: number | null;
+  /** Yüzde bu seansın değil, son kapanışın (`quoteBasis`). */
+  lastClose: boolean;
+};
+
+/**
+ * Panelin çizimi — veriden ayrı, önizleme (geçici `app/tmp*`) ve sunucu
+ * aynı ağacı basıyor.
+ *
+ * YÜZDE BİR DE ÇİZGİ (6 Kasım görsel tur). Satırlar düz listeydi: bayrak,
+ * ad, künye, sağda yüzde; beş ülkenin hangisinin sert, hangisinin sakin
+ * olduğu sayıları tek tek okuyarak çıkıyordu. Her satırın altında artık
+ * 5 piksellik kulvar (`--line-soft`), ortada sıfır (`--line-strong`), yüzde
+ * sıfırdan iki yöne şerit — bülten bandının `MiniLane`i, aynı ölçek mantığı.
+ * Ölçek BÜTÜN satırlarda TEK (`sharedLaneScale`, taban ±%1) ve başlığın
+ * sağında yazılı; renk yalnız işaretten. Son kapanışı gösteren satırın
+ * şeridi yön rengini bırakıyor (yüzdesiyle aynı kural, veri dürüstlüğü 4).
+ * Bayrak kendi sütununda: ad, künye ve şerit aynı sol hatta başlıyor.
+ * Ölçümler HomeLanes.module.css başında.
+ */
+export function WorldStripView({
+  locale,
+  t,
+  rows,
+  allLastClose,
+  source,
+  fetchedAt,
+  stale,
+}: {
+  locale: Locale;
+  t: Dictionary;
+  rows: WorldRow[];
+  allLastClose: boolean;
+  source: string;
+  fetchedAt?: Date | string | null;
+  stale?: boolean;
+}) {
+  const scale = sharedLaneScale(
+    rows.map((row) => row.changePct),
+    WORLD_LANE_FLOOR,
+  );
+  return (
     <Panel>
-      <PanelHeader title={t.today.worldMarkets} tone="title" />
+      <PanelHeader
+        title={t.today.worldMarkets}
+        tone="title"
+        meta={
+          <span className="numeral text-tiny text-muted">
+            {t.homeDesk.scale.replace("{value}", formatPercentPlain(scale, locale, 1))}
+          </span>
+        }
+      />
       <ul>
-        {shown.map((market) => {
-          const quote = result.data[market.symbol];
-          const lastClose = bases[market.symbol] === "lastClose";
-          const tone = directionOf(quote.changePct);
+        {rows.map((market) => {
+          const lastClose = market.lastClose;
+          const tone = directionOf(market.changePct);
+          const value = formatPercent(market.changePct, locale);
           return (
             <li key={market.symbol}>
               <Link
                 href={`/hisse/${market.symbol}`}
-                className="flex items-center gap-3 border-t border-line px-4 py-2.5 transition-colors hover:bg-primary-tint sm:px-5"
+                aria-label={t.homeDesk.rowAria
+                  .replace("{name}", market.name)
+                  .replace("{symbol}", market.symbol)
+                  .replace("{value}", lastClose ? `${value} (${t.market.lastClose})` : value)}
+                className={cn(styles.row, "border-t border-line px-4 py-2 transition-colors hover:bg-primary-tint sm:px-5")}
               >
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-1.5 text-base font-semibold text-strong">
-                    <span aria-hidden>{market.flag}</span>
-                    <span className="truncate">
-                      {locale === "tr" ? market.nameTr : market.nameEn}
-                    </span>
+                <span aria-hidden className={styles.flag}>{market.flag}</span>
+                <span className={styles.main}>
+                  <span className="flex min-w-0 items-baseline gap-1.5">
+                    <span className="truncate text-base font-semibold text-strong">{market.name}</span>
+                    <span className={styles.symbol}>{market.symbol}</span>
                   </span>
                   {/* DAR EKRANDA SARAR, KESİLMEZ. Bu satır fonun neyi
                       izlediğini söylüyor ("MSCI Japonya · Nikkei'yi izleyen
@@ -94,7 +174,7 @@ export async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary 
                       metin düğümünden beşi buydu; 390'da hâlâ iki satıra
                       sığıyor. */}
                   <span className="mt-0.5 line-clamp-2 block text-small leading-tight text-muted sm:truncate">
-                    {locale === "tr" ? market.tracksTr : market.tracksEn}
+                    {market.tracks}
                   </span>
                   {lastClose && (
                     <span className="mt-0.5 block text-tiny font-semibold text-body">
@@ -113,13 +193,20 @@ export async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary 
                     CLAUDE.md → veri dürüstlüğü). Yüzde ise gerçekten
                     anlamlı: fonun o günkü yönü. */}
                 <span
+                  aria-hidden
                   className={cn(
-                    "numeral shrink-0 text-read",
+                    "numeral text-read",
+                    styles.value,
                     lastClose ? "font-semibold text-body" : cn("font-bold", directionText(tone)),
                   )}
                 >
-                  {formatPercent(quote.changePct, locale)}
+                  {value}
                 </span>
+                {market.changePct !== null && (
+                  <span className={styles.lane} data-basis={lastClose ? "lastClose" : undefined}>
+                    <MiniLane change={market.changePct} scale={scale} />
+                  </span>
+                )}
               </Link>
             </li>
           );
@@ -128,15 +215,15 @@ export async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary 
       {/* DAMGA BURADA DA VAR. Künye fonun neyi vekil ettiğini söylüyordu ama
           yüzdelerin yaşını söyleyen hiçbir şey yoktu; panel tam da bayat
           veriyi büyük puntoyla göstermenin yasak olduğu yerdi. */}
-      <div className="border-t border-line px-4 py-3 sm:px-5">
+      <div className="border-t border-line-soft px-4 py-3 sm:px-5">
         <p className="text-tiny leading-relaxed text-muted">
           {allLastClose ? t.today.worldLastCloseHint : t.today.worldMarketsHint}
         </p>
         <DataStamp
           labels={t.data}
-          source={result.source}
-          at={result.fetchedAt}
-          stale={result.stale}
+          source={source}
+          at={fetchedAt}
+          stale={stale}
           locale={locale}
           className="mt-1.5"
         />

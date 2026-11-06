@@ -1,10 +1,10 @@
-import type { CSSProperties } from "react";
 import { Sparkle } from "@phosphor-icons/react/dist/ssr";
 import calendar from "@/components/calendar/CalendarExperience.module.css";
 import { ReleaseNote } from "@/components/calendar/ReleaseNote";
 import { ImpactDots, Panel, PanelHeader } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { deviationSpans, formatDeviation, releaseDeviation, roundedDiff, seriesKey, type Deviation } from "@/lib/release-deviation";
+import { deviationSpans, deviationVerdict, releaseDeviation, seriesKey } from "@/lib/release-deviation";
+import { DeviationLine } from "./DeviationLine";
 import { compareReleased } from "@/lib/release-notes-core";
 import type { EconomicEventRow } from "@/lib/schema";
 import { timePair, zoneTag } from "@/lib/session-clock";
@@ -123,10 +123,10 @@ export function ReleasedData({
                           {deviation.direction === "above" ? "▲" : "▼"}
                         </span>
                       )}
-                      {verdictText(deviation, event.unit, locale, v, "base")}
+                      {deviationVerdict(deviation, event.unit, locale, v, "base")}
                     </span>
                     {deviation.previousDirection && deviation.previousDiff !== null && (
-                      <span className={styles.verdictSecondary}>{verdictText(deviation, event.unit, locale, v, "previous")}</span>
+                      <span className={styles.verdictSecondary}>{deviationVerdict(deviation, event.unit, locale, v, "previous")}</span>
                     )}
                   </p>
                 </>
@@ -154,88 +154,6 @@ export function ReleasedData({
   );
 }
 
-type Words = Dictionary["calendarVisuals"]["released"];
-
-/**
- * Künye metni. `base`: gerçekleşen, sıfıra (beklenti ya da önceki) göre.
- * `previous`: gerçekleşen, önceki değere göre — yalnız sıfır beklentiyken.
- * Önceki değerin farkı gerçekleşenden: (gerçekleşen − beklenti) −
- * (önceki − beklenti), aynı yuvarlamayla.
- */
-function verdictText(
-  deviation: Deviation,
-  unit: string | null,
-  locale: Locale,
-  v: Words,
-  which: "base" | "previous",
-): string {
-  if (which === "previous") {
-    const diff = roundedDiff(deviation.diff, deviation.previousDiff ?? 0, deviation.digits);
-    const dir = deviation.previousDirection;
-    if (dir === "inline" || diff === 0) return v.inlinePrevious;
-    const text = formatDeviation(diff, unit, deviation.digits, locale, v);
-    return (dir === "above" ? v.abovePrevious : v.belowPrevious).replace("{diff}", text);
-  }
-  const onForecast = deviation.base === "forecast";
-  if (deviation.direction === "inline") return onForecast ? v.inlineForecast : v.inlinePrevious;
-  const text = formatDeviation(deviation.diff, unit, deviation.digits, locale, v);
-  const template = onForecast
-    ? deviation.direction === "above" ? v.aboveForecast : v.belowForecast
-    : deviation.direction === "above" ? v.abovePrevious : v.belowPrevious;
-  return template.replace("{diff}", text);
-}
-
-/**
- * Sapma çizgisi. Ray `container-type: inline-size`: noktanın kayması
- * (`travel`) rayın kendi genişliğiyle, `cqw` cinsinden. Yüzde konum:
- * orta = %50, uçlar ±`DEVIATION_REACH`.
- */
-function DeviationLine({
-  deviation,
-  below,
-  above,
-  baseLabel,
-}: {
-  deviation: Deviation;
-  below: string;
-  above: string;
-  baseLabel: string;
-}) {
-  const HALF = 50;
-  const pos = (at: number) => HALF + at * HALF;
-  const actual = pos(deviation.actualAt);
-  return (
-    <div className={styles.line} aria-hidden data-dir={deviation.direction} data-motion-track>
-      <div className={styles.rail}>
-        <span className={styles.axis} />
-        {/* Beklentiden gerçekleşene uzanan bacak: sıfırdan açılıyor. */}
-        {deviation.actualAt !== 0 && (
-          <span
-            className={styles.leg}
-            data-motion-draw="line"
-            style={{
-              left: `${Math.min(HALF, actual)}%`,
-              width: `${Math.abs(actual - HALF)}%`,
-              transformOrigin: actual > HALF ? "left center" : "right center",
-            }}
-          />
-        )}
-        <span className={styles.zero} />
-        {deviation.previousAt !== null && (
-          <span className={styles.previous} style={{ left: `${pos(deviation.previousAt)}%` }} />
-        )}
-        <span
-          className={styles.dot}
-          style={{ left: `${actual}%` } as CSSProperties}
-          data-motion-draw={deviation.actualAt !== 0 ? "travel" : undefined}
-          data-delta={deviation.actualAt !== 0 ? (HALF - actual).toFixed(2) : undefined}
-        />
-      </div>
-      <div className={styles.ends}>
-        <span>{below}</span>
-        <span className={styles.endsZero}>{baseLabel}</span>
-        <span>{above}</span>
-      </div>
-    </div>
-  );
-}
+/* Künye metni (`deviationVerdict`) ve sapma çizgisi (`DeviationLine`) 6
+   Kasım'da ortak modüllere taşındı: ana sayfanın "Bugünün Akışı" da aynı
+   veriye aynı çizgiyi ve cümleyi basıyor. */

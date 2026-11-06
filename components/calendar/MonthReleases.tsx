@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import styles from "@/components/calendar/CalendarExperience.module.css";
 import { MonthFill } from "@/components/calendar/MonthFill";
-import { ImpactDots } from "@/components/ui/primitives";
+import { ImpactTag } from "@/components/calendar/ImpactTag";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { timePair, zoneTag } from "@/lib/session-clock";
 import { cn, formatEventValue, relativeDayLabel } from "@/lib/utils";
@@ -98,7 +98,7 @@ export function MonthReleases({
         <span className={styles.keyBody}>
           <span className={styles.keyTitle}>{title}</span>
           <span className={styles.keyMeta}>
-            <ImpactDots importance={event.importance} label={impact} />
+            <ImpactTag importance={event.importance} label={impact} />
             {times ? (
               <span className="numeral">
                 {times.primary}

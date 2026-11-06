@@ -1,12 +1,11 @@
 /* GÜNÜN ÖZETİ KARTI — düzenin gerekçesi `BriefSwitch` içinde.
 
-   1200'ün altında ray bir satır: künye solda, sekmeler ve arşiv sağda,
-   tarih ve notlar altında tam genişlikte; manşet ve gövde onların altında.
-   1200 ve üstünde iki sütun: solda 62ch'lik metin, sağda 15rem'lik yapışkan
-   ray. */
+   Ray her genişlikte tek satır: sekmeler solda, arşiv sağda. Tarih, rozet
+   ve imza 6 Kasım'dan beri manşetin ALTINDA (`.byline`, üst künye yok).
+   (Eski not: 1200 ve üstünde 15rem'lik yapışkan bir ray vardı — 24 Eylül'de
+   kalktı, gerekçe dosyanın sonunda.) */
 .card { min-width:0; }
 .rail { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; }
-.railMeta { flex:1 1 100%; margin-top:4px; }
 .main { min-width:0; margin-top:14px; }
 /* Sekme geçişi: yeni dönemin metni geldiği yönden kısa bir kaymayla
    yerine oturuyor. 0,35'ten başlıyor, sıfırdan değil — takas karesinde metin
@@ -25,3 +24,9 @@
    sütunluk boşluk varmış gibi duruyordu. Denetimler artık her genişlikte
    metnin ÜSTÜNDE tek satırda (dar ekrandaki sıra), metin kartın tüm
    genişliğini alıyor. Satır ölçüsü gövdenin kendi sınırında (BriefBody). */
+
+/* KÜNYE MANŞETİN ALTINDA (6 Kasım). Tarih, dönem rozeti ve imza tek satır;
+   aralarında 3 piksellik nokta. Satır manşetle 10 piksel, ölçü kuyusuyla
+   kuyunun kendi 18 piksellik aralığı. */
+.byline { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin-top:10px; color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; line-height:20px; }
+.bylineDot { width:3px; height:3px; border-radius:999px; background:var(--line-strong); }

@@ -1,6 +1,7 @@
 import { ALL_MEMBERS, primaryOnly } from "@/db/seed/indices";
 import { SECTOR_FUNDS } from "@/db/seed/symbols";
 import type { DailyChartBlock } from "@/lib/daily-chart";
+import { GENERIC_NAME_WORDS } from "@/lib/utils";
 
 /* ==========================================================================
    Günün Grafiği — çizimin saf mantığı (25 Ekim, görsel tur)
@@ -97,13 +98,20 @@ const normalName = (name: string) => {
 };
 
 /** Ad → sembol dizinleri; tek anlamlı olmayan anahtar null (eşlenmez). */
-type NameIndex = { exact: Map<string, string | null>; loose: Map<string, string | null>; symbols: Set<string> };
+type NameIndex = {
+  exact: Map<string, string | null>;
+  loose: Map<string, string | null>;
+  /** Adın baştaki tam kelimeleri ("micron" ← "Micron Technology"). */
+  prefix: Map<string, string | null>;
+  symbols: Set<string>;
+};
 let nameIndex: NameIndex | null = null;
 
 function memberIndex(): NameIndex {
   if (nameIndex) return nameIndex;
   const exact = new Map<string, string | null>();
   const loose = new Map<string, string | null>();
+  const prefix = new Map<string, string | null>();
   const put = (map: Map<string, string | null>, key: string, symbol: string) => {
     if (!key) return;
     const current = map.get(key);
@@ -112,9 +120,12 @@ function memberIndex(): NameIndex {
   const members = primaryOnly(ALL_MEMBERS);
   for (const member of members) {
     put(exact, member.name.trim().toLocaleLowerCase("en-US"), member.symbol);
-    put(loose, normalName(member.name), member.symbol);
+    const key = normalName(member.name);
+    put(loose, key, member.symbol);
+    const words = key.split(" ");
+    for (let take = 1; take < words.length; take += 1) put(prefix, words.slice(0, take).join(" "), member.symbol);
   }
-  nameIndex = { exact, loose, symbols: new Set(members.map((member) => member.symbol)) };
+  nameIndex = { exact, loose, prefix, symbols: new Set(members.map((member) => member.symbol)) };
   return nameIndex;
 }
 
@@ -130,6 +141,15 @@ function memberIndex(): NameIndex {
  * eşlenmez; sektör adı (`sectorFundOf`) ve endeks adları ("Nasdaq 100")
  * hiçbir üyenin adı değil. Satırda doğrudan sembol yazıyorsa ("NVDA") o.
  * Tahmin yok: eşleşmeyen satır logosuz ve bağlantısız kalır.
+ *
+ * KISA AD (6 Kasım). 5 Kasım'ın grafiğinde rutin "Micron" yazdı, listede ad
+ * "Micron Technology": ana sayfa kartında satır logosuz ve sembolsüz kaldı
+ * (Sandisk eşleşti, çünkü adı listede zaten tek kelime). Üçüncü kademe aynı
+ * listeden: satır adı bir üyenin adının BAŞTAKİ TAM KELİMELERİYSE ve bu
+ * yalnız o üyeye uyuyorsa sembolü ("Micron" → MU, "Lam" → LRCX). Tek kelimelik
+ * önek `GENERIC_NAME_WORDS`teyse (lib/utils.ts — haber eşlemesinin aynı
+ * listesi: "Western", "Applied", "Texas"…) eşlenmez; harf öneki ("Micro")
+ * hiç sayılmaz, kelime bütün olmalı.
  */
 export function memberSymbolOf(name: string): string | null {
   const trimmed = name.trim();
@@ -138,7 +158,11 @@ export function memberSymbolOf(name: string): string | null {
   if (index.symbols.has(trimmed)) return trimmed;
   const exact = index.exact.get(trimmed.toLocaleLowerCase("en-US"));
   if (exact !== undefined) return exact;
-  return index.loose.get(normalName(trimmed)) ?? null;
+  const key = normalName(trimmed);
+  const loose = index.loose.get(key);
+  if (loose !== undefined) return loose;
+  if (!key.includes(" ") && GENERIC_NAME_WORDS.has(key)) return null;
+  return index.prefix.get(key) ?? null;
 }
 
 /* --------------------------------------------------------------------------

@@ -12,6 +12,7 @@ import { withLocale } from "./i18n/routing";
 import { analysisHref } from "./analysis";
 import { formatEventValue, formatMoneyCompact, formatPercent, formatPrice } from "./utils";
 import { epsSurprise, revenueSurprise, type Surprise } from "./earnings-week";
+import { flowDeviation } from "./release-deviation";
 import { isSpotlight } from "./spotlight";
 import { getEarningsCalendar } from "./providers/finnhub";
 import { getReleasedObservation } from "./providers/fred";
@@ -112,6 +113,8 @@ export async function loadDayFlow(locale: Locale, userId?: string, requestedDate
     const fomcReleased = family === "fomc-rate" ? !!fomc : family === "fomc-sep" ? !!fomc?.projections : false;
     const endsAt = family === "fomc-presser" && fomc && scheduledAt
       ? new Date(new Date(scheduledAt).getTime() + PRESSER_MINUTES * 60_000).toISOString() : undefined;
+    const deviation = hasActual(actual)
+      ? flowDeviation(actual, event.forecast, fresh?.previous ?? event.previous, event.unit, locale, t.calendarVisuals.released) : undefined;
     return {
       id: event.id, timeEt: event.eventTimeEt, scheduledAt,
       title: locale === "tr" ? event.titleTr : event.titleEn,
@@ -121,6 +124,9 @@ export async function loadDayFlow(locale: Locale, userId?: string, requestedDate
       forecast: formatEventValue(event.forecast, event.unit, locale) || undefined,
       previous: (decision && !hasActual(event.previous) ? fedRange(previousRange(decision), locale) : formatEventValue(fresh?.previous ?? event.previous, event.unit, locale)) || undefined,
       endsAt,
+      /* Gerçekleşenin beklentiye göre yeri — ham değerlerden, takvim
+         kartının fonksiyonuyla (gerekçe `flowDeviation`). */
+      ...(deviation ? { deviation } : {}),
       href: withLocale("/takvim?g=day", locale),
       note: notes[family],
       /* Ham sağlayıcı anahtarı ekrana basılmaz: panelde "Kaynak:

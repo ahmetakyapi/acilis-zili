@@ -17,6 +17,10 @@ import styles from "./SessionAgeTag.module.css";
  * etkileşim değil). Bugünün seansı açıkken panel bir cümleyle bunu da
  * söylüyor (`sessionIsLiveElsewhere`, aşağıda).
  *
+ * 6 Kasım: Günün Grafiği panelinden kalktı — başlığı 31 Ekim'den beri
+ * göreli günü kendisi söylüyor ("Dünün Grafiği", `sessionTitle`), künye
+ * onu tekrarlıyordu (gerekçe `DailyChartPanel.tsx` → `DailyChartCard`).
+ *
  * Göreli günün hesabı `lib/session-age.ts`te (testi
  * `tests/session-age.test.ts`).
  */

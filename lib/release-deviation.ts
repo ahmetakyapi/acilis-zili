@@ -1,4 +1,5 @@
 import { compareReleased, plainNumber, type Comparison } from "@/lib/release-notes-core";
+import type { FlowDeviation } from "@/lib/day-flow";
 import { formatPrice, MONEY_GAP } from "@/lib/utils";
 
 /**
@@ -171,4 +172,85 @@ export function formatDeviation(
   if (u === "puan") return `${shown}${MONEY_GAP}${locale === "tr" ? words.unitPoint : "pts"}`;
   if (!u) return shown;
   return `${shown}${MONEY_GAP}${u}`;
+}
+
+/** Künyenin sözcükleri — `calendarVisuals.released` ad alanının alt kümesi. */
+export type DeviationWords = {
+  aboveForecast: string;
+  belowForecast: string;
+  inlineForecast: string;
+  abovePrevious: string;
+  belowPrevious: string;
+  inlinePrevious: string;
+  unitPoint: string;
+  unitThousand: string;
+};
+
+/**
+ * Künye metni ("Beklentinin 6 Bin Altında"). `base`: gerçekleşen, sıfıra
+ * (beklenti ya da önceki) göre. `previous`: gerçekleşen, önceki değere göre
+ * — yalnız sıfır beklentiyken. Önceki değerin farkı gerçekleşenden:
+ * (gerçekleşen − beklenti) − (önceki − beklenti), aynı yuvarlamayla.
+ *
+ * ORTAK (6 Kasım): "Son Açıklanan Veriler" kartı (ReleasedData) ile ana
+ * sayfanın "Bugünün Akışı" satırı aynı veriye aynı cümleyi kurar; künye
+ * ReleasedData.tsx'te yerel bir fonksiyondu, akış da ihtiyaç duyunca buraya
+ * taşındı (iki kopya er geç ayrı düşerdi).
+ */
+export function deviationVerdict(
+  deviation: Deviation,
+  unit: string | null | undefined,
+  locale: string,
+  v: DeviationWords,
+  which: "base" | "previous",
+): string {
+  if (which === "previous") {
+    const diff = roundedDiff(deviation.diff, deviation.previousDiff ?? 0, deviation.digits);
+    const dir = deviation.previousDirection;
+    if (dir === "inline" || diff === 0) return v.inlinePrevious;
+    const text = formatDeviation(diff, unit, deviation.digits, locale, v);
+    return (dir === "above" ? v.abovePrevious : v.belowPrevious).replace("{diff}", text);
+  }
+  const onForecast = deviation.base === "forecast";
+  if (deviation.direction === "inline") return onForecast ? v.inlineForecast : v.inlinePrevious;
+  const text = formatDeviation(deviation.diff, unit, deviation.digits, locale, v);
+  const template = onForecast
+    ? deviation.direction === "above" ? v.aboveForecast : v.belowForecast
+    : deviation.direction === "above" ? v.abovePrevious : v.belowPrevious;
+  return template.replace("{diff}", text);
+}
+
+/**
+ * BUGÜNÜN AKIŞI'NIN SAPMASI (6 Kasım, sahibinin isteği: "gerçekleşen
+ * beklentiye göre iyi mi kötü mü, görsel olarak okunmuyor"). Akışın
+ * satırı yalnız BİÇİMLİ dizgeler taşıyor ("165 bin", "%4,1"); istemcide
+ * onlardan sayı geri çözmek dile ve birime bağlı kırılgan bir iş olurdu.
+ * Sapma bu yüzden sunucuda, ham değerlerden, takvim kartının aynı
+ * fonksiyonuyla (`releaseDeviation`) hesaplanır ve satıra serileşebilir bir
+ * özet olarak iner: çizginin konumları ve iki künye cümlesi. Tek olay kendi
+ * ölçeğinde (akışta aynı serinin ikinci kartı yok). Düz sayı değilse (Fed
+ * aralığı) sapma yok, satır eskisi gibi yalnız değeri yazar.
+ */
+export function flowDeviation(
+  actual: string | null | undefined,
+  forecast: string | null | undefined,
+  previous: string | null | undefined,
+  unit: string | null | undefined,
+  locale: string,
+  words: DeviationWords,
+): FlowDeviation | undefined {
+  const deviation = releaseDeviation(actual, forecast, previous);
+  if (!deviation) return undefined;
+  /* Konum dört haneyle: imza ve önbellek aynı sonucu farklı sanmasın. */
+  const at = (value: number) => Math.round(value * 10_000) / 10_000;
+  return {
+    base: deviation.base,
+    direction: deviation.direction,
+    actualAt: at(deviation.actualAt),
+    previousAt: deviation.previousAt === null ? null : at(deviation.previousAt),
+    verdict: deviationVerdict(deviation, unit, locale, words, "base"),
+    ...(deviation.previousDirection && deviation.previousDiff !== null
+      ? { versus: deviationVerdict(deviation, unit, locale, words, "previous") }
+      : {}),
+  };
 }

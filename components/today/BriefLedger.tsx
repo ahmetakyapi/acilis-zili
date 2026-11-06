@@ -19,6 +19,8 @@ import {
   type LedgerRef,
 } from "@/lib/brief-ledger";
 import type { BriefLedgerData } from "@/lib/brief-ledger-data";
+import { formatDeviation, releaseDeviation } from "@/lib/release-deviation";
+import type { EconomicEventRow } from "@/lib/schema";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { INTL_LOCALE } from "@/lib/i18n/config";
 import {
@@ -30,6 +32,7 @@ import {
   formatEtDateCompact,
   formatEtDateLong,
   formatPercent,
+  formatEventValue,
   formatPercentPlain,
 } from "@/lib/utils";
 import styles from "./BriefLedger.module.css";
@@ -44,8 +47,9 @@ import styles from "./BriefLedger.module.css";
  *     kulvarlarda (haftalıkta beş günlük kesintisiz şerit), üç ölçü tek
  *     satırlık önce → sonra karosunda; bültende adı geçen hisseler logolu
  *     çip satırında, künye tek satır + katlı ayrıntı.
- *   `card` — ana sayfanın bülten kartında yalnız dört endeks; kart bir
- *     giriş, bandın tamamı bülten sayfasında.
+ *   `card` — ana sayfanın bülten kartında dört endeks ve (6 Kasım'dan
+ *     beri) "Günün Verileri": bültenin anlattığı açıklamalar ve bandın
+ *     ölçüleri; hisseler ve künyenin tamamı bülten sayfasında.
  *
  * Kurallar ve gerekçeler `lib/brief-ledger.ts`te. Görsel dil sitenin grafik
  * dili: `--line-soft` kulvar, `--line-strong` sıfır çizgisi, renk yalnız
@@ -115,16 +119,102 @@ function metricText(metric: LedgerMetric, locale: Locale, L: Labels) {
   };
 }
 
+/** Kartın ölçü sırasında en çok kaç karo — endeks sırasıyla aynı sütun sayısı. */
+const CARD_FIGURES_MAX = 4;
+
+type CardFigure = {
+  key: string;
+  label: string;
+  value: string;
+  /** Ölçüde önceki değer (önce → sonra); açıklamada yok. */
+  prev?: string;
+  /** Açıklamanın sıfırı: "Beklenti 55 Bin" (yoksa "Önceki …"). */
+  base?: string;
+  verdict?: string;
+  verdictDir: "up" | "down" | "flat";
+  deviation?: { direction: "above" | "below" | "inline"; actualAt: number };
+  /** Metindeki geçişe bağ (yalnız ölçüler; açıklamaların takma adı yok). */
+  ledgerKey?: string;
+};
+
+/**
+ * Kartın "Günün Verileri": önce bültenin anlattığı açıklamalar (takvimden,
+ * Bugünün Akışı ile aynı satır — aynı sayı iki yerde aynı kaynaktan), sonra
+ * bandın ölçüleri (10 yıllık, VIX, dolar/TL — bülten sayfasıyla aynı
+ * `getBriefLedger`). Açıklamanın çizgisi beklentiyi sıfır alıyor
+ * (`releaseDeviation`, takvimdeki sapma çizgisinin kuralı).
+ */
+function cardFigures(
+  data: BriefLedgerData,
+  releases: readonly EconomicEventRow[],
+  locale: Locale,
+  L: Labels,
+  D: Dictionary["homeDesk"],
+): CardFigure[] {
+  const out: CardFigure[] = [];
+  for (const row of releases) {
+    const value = formatEventValue(row.actual, row.unit, locale);
+    if (!value) continue;
+    const deviation = releaseDeviation(row.actual, row.forecast, row.previous);
+    const baseRaw = deviation?.base === "previous" ? row.previous : (row.forecast ?? row.previous);
+    const baseValue = formatEventValue(baseRaw, row.unit, locale);
+    const onForecast = deviation ? deviation.base === "forecast" : !!row.forecast;
+    let verdict: string | undefined;
+    if (deviation) {
+      const diff = formatDeviation(deviation.diff, row.unit, deviation.digits, locale, D);
+      verdict =
+        deviation.direction === "inline"
+          ? onForecast
+            ? D.inlineForecast
+            : D.inlinePrevious
+          : (deviation.direction === "above"
+              ? onForecast
+                ? D.aboveForecast
+                : D.abovePrevious
+              : onForecast
+                ? D.belowForecast
+                : D.belowPrevious
+            ).replace("{diff}", diff);
+    }
+    out.push({
+      key: row.id,
+      label: locale === "tr" ? row.titleTr : row.titleEn,
+      value,
+      base: baseValue ? (onForecast ? D.forecast : D.previous).replace("{value}", baseValue) : undefined,
+      verdict,
+      verdictDir: deviation?.direction === "above" ? "up" : deviation?.direction === "below" ? "down" : "flat",
+      deviation: deviation ? { direction: deviation.direction, actualAt: deviation.actualAt } : undefined,
+    });
+  }
+  for (const metric of data.metrics) {
+    const text = metricText(metric, locale, L);
+    out.push({
+      key: metric.key,
+      label: L.metrics[metric.key],
+      value: text.value,
+      prev: text.prev,
+      verdict: text.delta,
+      verdictDir: text.dir,
+      ledgerKey: metric.key,
+    });
+  }
+  return out.slice(0, CARD_FIGURES_MAX);
+}
+
 export function BriefLedger({
   data,
   locale,
   t,
   variant = "page",
+  releases = [],
 }: {
   data: BriefLedgerData;
   locale: Locale;
   t: Dictionary;
   variant?: "page" | "card";
+  /** Kartın "Günün Verileri" sırası — bültenin anlattığı açıklamalar
+      (`briefReleases`, lib/home-figures.ts). Yalnız `card`. */
+  releases?: readonly EconomicEventRow[];
 }) {
   const L = t.briefLedger;
   const weekly = data.window.period === "weekly";
@@ -155,23 +245,47 @@ export function BriefLedger({
     : null;
   const summary = (label: string, value: string) => `${label} ${value} · ${shortSession}`;
 
+  /* ENDEKSİN ADI VE FONU BİRLİKTE (6 Kasım). Şerit SPY/QQQ/DIA/IWM'in gün
+     barından; metin ise endeksin kendisini ya da yazıldığı anın kotasyonunu
+     anabiliyor (metinde "S&P 500 %4,36", şeritte −%4,41). Metindeki geçişin
+     ayrıntısı ve karo sembolü söylüyor: bu sayı SPY'ın. */
+  const indexLabel = (symbol: string) => `${name(symbol)} · ${symbol}`;
+
   if (variant === "card") {
+    const D = t.homeDesk;
+    const figures = cardFigures(data, releases, locale, L, D);
+    const fundNote = D.fundNote.replace("{symbols}", data.indices.map((move) => move.symbol).join(", "));
     return (
+      /* KARTIN ÖLÇÜ KATI (6 Kasım görsel tur). Önceki hâl: künye + cümle,
+         altında dört küçük karo (ad ve yüzde 13–14 punto, şerit altında);
+         bültenin anahtar sayıları (istihdam, faiz) yalnız metnin içindeydi.
+         Şimdi tek kuyu (`--surface-sunken`, kartın bir ton altı): üstte
+         seans künyesi ve ortak ölçek, endeksler büyük rakamla ortak sıfırlı
+         kulvarlarda; altında hairline ile "Günün Verileri" — bültenin
+         anlattığı açıklamalar (beklentiye göre sapma çizgisiyle) ve
+         10 yıllık faiz / VIX / dolar-TL (önce → sonra). Karolar `subgrid`:
+         ad, rakam, şerit ve künye satırları dört karoda AYNI HATTA.
+         Dipnot kuyunun içinde düz paragraf (CLAUDE.md "Ekran düzeni" 6).
+         Ölçümler BriefLedger.module.css → "Ana sayfa kartı". */
       <div className={styles.mini} data-weekly={weekly ? "" : undefined}>
-        <p className={styles.miniHead}>
-          <span className={styles.miniSession}>{sessionLine}</span>
-          {storyText && <span className={styles.miniStory}>{storyText}</span>}
-        </p>
+        <div className={styles.miniHead}>
+          <p className={styles.miniSession}>{sessionLine}</p>
+          {!weekly && <p className={styles.miniScale}>{L.scale.replace("{value}", scaleText)}</p>}
+        </div>
+        {storyText && <p className={styles.miniStory}>{storyText}</p>}
         <ol className={styles.miniGrid} aria-label={L.indicesLabel}>
           {data.indices.map((move, index) => (
             <li
               key={move.symbol}
               className={styles.miniItem}
               data-ledger-key={move.symbol}
-              data-ledger-summary={summary(name(move.symbol), pct(move.change))}
+              data-ledger-summary={summary(indexLabel(move.symbol), pct(move.change))}
               style={{ "--i": index } as CSSProperties}
             >
-              <span className={styles.miniName}>{name(move.symbol)}</span>
+              <span className={styles.miniName}>
+                <span className={styles.miniNameText}>{name(move.symbol)}</span>
+                <span className={styles.miniSymbol}>{move.symbol}</span>
+              </span>
               <span className={cn(styles.miniValue, directionText(directionOf(move.change)))}>{pct(move.change)}</span>
               {weekly ? (
                 <WeekCells move={move} scale={scale} L={L} pct={pct} compact />
@@ -181,6 +295,53 @@ export function BriefLedger({
             </li>
           ))}
         </ol>
+        {figures.length > 0 && (
+          <div className={styles.figs}>
+            <p className={styles.figsLabel}>{D.figuresLabel}</p>
+            <ul className={styles.figGrid} aria-label={D.figuresLabel}>
+              {figures.map((figure) => (
+                <li
+                  key={figure.key}
+                  className={styles.fig}
+                  data-ledger-key={figure.ledgerKey}
+                  data-ledger-summary={figure.ledgerKey ? summary(figure.label, figure.value) : undefined}
+                >
+                  <span className={styles.figLabel}>{figure.label}</span>
+                  <span className={styles.figValue}>{figure.value}</span>
+                  {figure.deviation ? (
+                    <span className={styles.dev} data-dir={figure.deviation.direction} aria-hidden>
+                      <span className={styles.devZero} />
+                      {figure.deviation.actualAt !== 0 && (
+                        <span
+                          className={styles.devLeg}
+                          style={{
+                            left: `${Math.min(50, 50 + figure.deviation.actualAt * 50)}%`,
+                            width: `${Math.abs(figure.deviation.actualAt) * 50}%`,
+                          }}
+                        />
+                      )}
+                      <span className={styles.devDot} style={{ left: `${50 + figure.deviation.actualAt * 50}%` }} />
+                    </span>
+                  ) : (
+                    /* Ölçüde şeridin yerinde önceki değer: "önce" bu satır,
+                       "sonra" üstteki büyük rakam (aynı sayıyı iki kez
+                       yazmamak için ok ve ikinci değer yok). */
+                    <span className={styles.figShift}>
+                      {figure.prev && D.previous.replace("{value}", figure.prev)}
+                    </span>
+                  )}
+                  <span className={styles.figFoot}>
+                    {figure.base && <span>{figure.base}</span>}
+                    {figure.verdict && (
+                      <span className={cn(styles.figVerdict, directionText(figure.verdictDir))}>{figure.verdict}</span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <p className={styles.miniNote}>{fundNote}</p>
       </div>
     );
   }
@@ -229,7 +390,7 @@ export function BriefLedger({
             <div
               className={cn(styles.card, styles.hero)}
               data-ledger-key={anchor.symbol}
-              data-ledger-summary={summary(name(anchor.symbol), pct(anchor.change))}
+              data-ledger-summary={summary(indexLabel(anchor.symbol), pct(anchor.change))}
             >
               <span className={styles.cardLabel}>{weekly ? L.heroCaptionWeekly : L.heroCaption}</span>
               <RollingFigure value={pct(anchor.change)} className={cn(styles.heroFigure, directionText(anchorDir))} />
@@ -267,7 +428,7 @@ export function BriefLedger({
                     name={name(move.symbol)}
                     pct={pct}
                     L={L}
-                    summary={summary(name(move.symbol), pct(move.change))}
+                    summary={summary(indexLabel(move.symbol), pct(move.change))}
                   />
                 ))}
               </ol>

@@ -27,6 +27,19 @@ export type FlowMember = {
       Etiket sunucuda biçimli: "SEC Bildirimi · 23:02 TR". */
   filing?: { label: string; url: string; acceptedAt: string | null };
 };
+/** Açıklanan verinin beklentiye (yoksa önceki değere) göre yeri — sunucuda
+    ham değerlerden hesaplanır (`flowDeviation`, lib/release-deviation.ts). */
+export type FlowDeviation = {
+  base: "forecast" | "previous";
+  direction: "above" | "below" | "inline";
+  /** Çizgideki yer, −0,84…0,84; 0 = sıfır (rayın ortası). */
+  actualAt: number;
+  previousAt: number | null;
+  /** "Beklentinin 15 Bin Üstünde" — Title Case künye. */
+  verdict: string;
+  /** "Öncekinin 89 Bin Altında" — yalnız sıfır beklentiyken ve önceki biliniyorsa. */
+  versus?: string;
+};
 export type FlowEvent = {
   id: string;
   timeEt: string | null;
@@ -49,6 +62,8 @@ export type FlowEvent = {
       istemci saatle "Sürüyor" → "Gerçekleşti" der, "Sonuç Bekleniyor" demez. */
   endsAt?: string;
   members?: FlowMember[];
+  /** Gerçekleşenin beklentiye göre yeri; düz sayı olmayan sonuçta yok. */
+  deviation?: FlowDeviation;
   /** Olayın NE OLDUĞUNU düz Türkçeyle söyleyen tek cümle; sözlükten gelir. */
   note?: string;
 };
@@ -132,7 +147,9 @@ export function preserveConfirmedResults(previous: DayFlowSnapshot, next: DayFlo
     const old = previous.events.find((item) => item.id === event.id);
     if (event.kind === "event" && old && !hasActual(event.actual) && hasActual(old.actual)) {
       retained = true;
-      return { ...event, actual: old.actual, previous: event.previous ?? old.previous, status: "released" as const, source: old.source, updatedAt: old.updatedAt };
+      /* Sapma korunan sonuçla birlikte gelir: geri getirilen gerçekleşenin
+         yanında sapmasız bir satır aynı sonucu iki hâlde gösterirdi. */
+      return { ...event, actual: old.actual, previous: event.previous ?? old.previous, ...defined({ deviation: old.deviation }), status: "released" as const, source: old.source, updatedAt: old.updatedAt };
     }
     /* Sayısız sonuçlar da geri alınmaz (28 Ekim): Fed bülteniyle "Açıklandı"
        olan projeksiyonlar ve bitişi yazılmış basın toplantısı, Fed'in bir

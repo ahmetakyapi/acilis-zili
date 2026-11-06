@@ -982,7 +982,7 @@ export function relativeDayLabel(
  * Controls / Johnson & Johnson): tek kelime yanlış şirketin logosunu basıyordu.
  * "s&p" bölmeden tek parça çıkar, `&` kaçışsız kalır → "s&p global".
  */
-const GENERIC_NAME_WORDS: ReadonlySet<string> = new Set([
+export const GENERIC_NAME_WORDS: ReadonlySet<string> = new Set([
   "advanced", "air", "american", "applied", "bank", "best", "block",
   "booking", "capital", "carrier", "charles", "constellation", "delta",
   "digital", "dollar", "dow", "equity", "expand", "extra", "fair", "federal",

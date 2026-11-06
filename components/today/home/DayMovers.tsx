@@ -11,7 +11,10 @@ import {
 import { getStatus, getSymbolNames } from "@/lib/data";
 import { SESSION_BOUNDS, etParts, isSessionTrade } from "@/lib/market-hours";
 import { type Dictionary, type Locale } from "@/lib/i18n";
-import { cn, directionOf, directionText, formatPercent } from "@/lib/utils";
+import { MOVERS_LANE_FLOOR, sharedLaneScale } from "@/lib/home-figures";
+import { cn, directionOf, directionText, formatPercent, formatPercentPlain } from "@/lib/utils";
+import { MiniLane } from "@/components/day-poster/PosterLanes";
+import styles from "./HomeLanes.module.css";
 import { indexSnapshot } from "@/components/today/home/index-snapshot";
 
 /**
@@ -152,60 +155,137 @@ export async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }
     ...losers.map((row) => row.symbol),
   ]);
 
+  const asRow = (row: (typeof gainers)[number]): MoverRow => ({
+    symbol: row.symbol,
+    changePct: row.quote.changePct ?? 0,
+    name: meta[row.symbol]?.name ?? "",
+    logoUrl: meta[row.symbol]?.logoUrl ?? null,
+  });
+
+  return (
+    <DayMoversView
+      locale={locale}
+      t={t}
+      title={title}
+      note={note}
+      gainers={gainers.map(asRow)}
+      losers={losers.map(asRow)}
+      source={result.source}
+      fetchedAt={result.fetchedAt}
+      stale={result.stale}
+    />
+  );
+}
+
+export type MoverRow = { symbol: string; changePct: number; name: string; logoUrl: string | null };
+
+/**
+ * Panelin çizimi — veriden ayrı (önizleme ve sunucu aynı ağacı basıyor).
+ *
+ * YÜZDE BİR DE ÇİZGİ (6 Kasım görsel tur). Liste logo, sembol, ad ve
+ * yüzdeydi; GNRC'nin +%20'si ile üçüncü sıradaki +%4 aynı ağırlıkta
+ * duruyordu. Her satırın altında artık ortak sıfırlı kulvar: yükselenler
+ * sıfırdan sağa, düşenler sola — iki blok alt alta tek bir ayrışan grafik
+ * gibi okunuyor. Ölçek iki blokta ve yedek satırlarda (`data-fill`) TEK
+ * (`sharedLaneScale`, taban ±%3), başlığın sağında yazılı. Şerit ad
+ * sütunundan başlıyor, logo sütunu boş: ad, künye ve şerit tek sol hatta
+ * (HomeLanes.module.css).
+ */
+export function DayMoversView({
+  locale,
+  t,
+  title,
+  note,
+  gainers,
+  losers,
+  source,
+  fetchedAt,
+  stale,
+}: {
+  locale: Locale;
+  t: Dictionary;
+  title: string;
+  note: string;
+  gainers: MoverRow[];
+  losers: MoverRow[];
+  source: string;
+  fetchedAt?: Date | string | null;
+  stale?: boolean;
+}) {
+  const scale = sharedLaneScale(
+    [...gainers, ...losers].map((row) => row.changePct),
+    MOVERS_LANE_FLOOR,
+  );
+
   /* DİKEY YIĞIN, İKİ SÜTUN DEĞİL. `SessionMovers` ana kolonda `sm:grid-cols-2`
      ile iki sütun çiziyordu; yan kolon 376 piksel ve sütun 167 pikselden
      düşüyor — satır 26 piksellik logo, sembol, ad ve yüzde istiyor, sığmıyor.
      Ayrım sütunla değil ALT BAŞLIKLA kuruluyor ve bu aynı zamanda doğrusu:
      düşüşle geçen bir günde "yükselenler" listesinin üçü de eksi olabiliyor,
      tek liste + renk o gün "kim yükseldi" sorusunu cevapsız bırakırdı. */
-  const block = (heading: string, rows: typeof gainers, divided: boolean) => (
+  /* ÖLÇEK KÜNYESİ İLK ALT BAŞLIĞIN SAĞINDA, panel başlığında değil:
+     "Son Kapanışın Hareketleri" + künye + "Tümünü Gör" 350 piksellik
+     kolonda iki satıra bölünüyordu (başlık satırı 77 piksel, ölçüldü). */
+  const scaleText = t.homeDesk.scale.replace("{value}", formatPercentPlain(scale, locale, 1));
+  const block = (heading: string, rows: MoverRow[], divided: boolean, withScale = false) => (
     <div className={cn(divided && "border-t border-line")}>
-      <p className="plate px-4 pb-1.5 pt-3.5 text-nano sm:px-5">
-        {heading}
+      <p className="flex items-baseline justify-between gap-3 px-4 pb-1.5 pt-3.5 sm:px-5">
+        <span className="plate text-nano">{heading}</span>
+        {withScale && <span className="numeral text-tiny text-muted">{scaleText}</span>}
       </p>
       <ul>
         {rows.length === 0 ? (
           <li className="px-4 pb-3.5 text-small text-muted sm:px-5">{t.common.noData}</li>
         ) : (
-          rows.map((row, index) => (
-            <li
-              key={row.symbol}
-              data-fill={index >= MOVERS_BASE ? "" : undefined}
-              hidden={index >= MOVERS_BASE}
-              suppressHydrationWarning
-            >
-              <Link
-                href={`/hisse/${row.symbol}`}
-                prefetch={false}
-                className="flex items-center gap-2.5 px-4 py-2 transition-colors hover:bg-primary-tint sm:px-5"
+          rows.map((row, index) => {
+            const value = formatPercent(row.changePct, locale);
+            return (
+              <li
+                key={row.symbol}
+                data-fill={index >= MOVERS_BASE ? "" : undefined}
+                hidden={index >= MOVERS_BASE}
+                suppressHydrationWarning
               >
-                <LogoTile
-                  symbol={row.symbol}
-                  logoUrl={meta[row.symbol]?.logoUrl}
-                  size="sm"
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="numeral block text-base font-bold leading-tight text-strong">
-                    {row.symbol}
-                  </span>
-                  <span className="block truncate text-tiny leading-tight text-muted">
-                    {meta[row.symbol]?.name ?? ""}
-                  </span>
-                </span>
-                {/* Yüzde ÇIPLAK, rozet değil: yan kolonun grameri bu
-                    (dünya şeridi, favoriler, endeksler hepsi böyle). Rozetin
-                    zemini dar sütunda satırın yarısını kaplıyor. */}
-                <span
-                  className={cn(
-                    "numeral shrink-0 text-base font-bold",
-                    directionText(directionOf(row.quote.changePct)),
-                  )}
+                <Link
+                  href={`/hisse/${row.symbol}`}
+                  prefetch={false}
+                  aria-label={t.homeDesk.rowAria
+                    .replace("{name}", row.name || row.symbol)
+                    .replace("{symbol}", row.symbol)
+                    .replace("{value}", value)}
+                  className={cn(styles.row, styles.rowLogo, "px-4 py-2 transition-colors hover:bg-primary-tint sm:px-5")}
                 >
-                  {formatPercent(row.quote.changePct, locale)}
-                </span>
-              </Link>
-            </li>
-          ))
+                  <span className={styles.lead}>
+                    <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
+                  </span>
+                  <span className={styles.main}>
+                    <span className="numeral block text-base font-bold leading-tight text-strong">
+                      {row.symbol}
+                    </span>
+                    <span className="block truncate text-tiny leading-tight text-muted">
+                      {row.name}
+                    </span>
+                  </span>
+                  {/* Yüzde ÇIPLAK, rozet değil: yan kolonun grameri bu
+                      (dünya şeridi, favoriler, endeksler hepsi böyle). Rozetin
+                      zemini dar sütunda satırın yarısını kaplıyor. */}
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "numeral text-base font-bold",
+                      styles.value,
+                      directionText(directionOf(row.changePct)),
+                    )}
+                  >
+                    {value}
+                  </span>
+                  <span className={styles.lane}>
+                    <MiniLane change={row.changePct} scale={scale} />
+                  </span>
+                </Link>
+              </li>
+            );
+          })
         )}
       </ul>
     </div>
@@ -218,7 +298,7 @@ export async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }
         tone="title"
         action={<PanelLink href="/piyasalar">{t.common.showAll}</PanelLink>}
       />
-      {block(t.today.moversUp, gainers, true)}
+      {block(t.today.moversUp, gainers, true, true)}
       {block(t.today.moversDown, losers, true)}
       {/* KÜNYE VE DAMGA BİRLİKTE. Panel uzun süre yalnızca "514 endeks üyesi
           tarandı · seans içi" yazıyordu: kaç sembolün tarandığını söylüyor,
@@ -229,9 +309,9 @@ export async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }
         <p className="text-tiny text-muted">{note}</p>
         <DataStamp
           labels={t.data}
-          source={result.source}
-          at={result.fetchedAt}
-          stale={result.stale}
+          source={source}
+          at={fetchedAt}
+          stale={stale}
           locale={locale}
         />
       </div>

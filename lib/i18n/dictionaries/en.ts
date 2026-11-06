@@ -20,6 +20,7 @@ import { portfolioAnalysisVisualsEn } from "./portfolio-analysis-visuals";
 import { changelogEn } from "./changelog";
 import { stockEntryEn } from "./stock-entry";
 import { briefLedgerEn } from "./brief-ledger";
+import { homeDeskEn } from "./home-desk";
 import { macroVisualEn } from "./macro-visual";
 import { stockVisualsEn } from "./stock-visuals";
 import { calendarVisualsEn } from "./calendar-visuals";
@@ -222,6 +223,7 @@ const en: typeof tr = {
     events: "Today's Events",
     eventsCount: "{n} Events",
     eventsDone: "{n}/{total} Released",
+    beatCount: "{n}/{total} Beat Estimates",
     next: "Next Events",
     back: "Previous Events",
     source: "Source",
@@ -4363,6 +4365,7 @@ const en: typeof tr = {
   },
   /* Bültenin Kayıt Defteri bandı (25 Ekim görsel zirve) — metin ayrı dosyada. */
   briefLedger: briefLedgerEn,
+  homeDesk: homeDeskEn,
   macroVisual: macroVisualEn,
   /* Hisse sayfası ve kural kontrolünün görsel katmanı (25 Ekim) — metin ayrı dosyada. */
   stockVisuals: stockVisualsEn,

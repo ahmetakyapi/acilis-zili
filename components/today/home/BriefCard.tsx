@@ -3,7 +3,15 @@ import { BriefLedger, ledgerRefs } from "@/components/today/BriefLedger";
 import { LedgerLinker } from "@/components/today/LedgerLinker";
 import { getBriefLedger } from "@/lib/brief-ledger-data";
 import { BriefSwitch, type BriefView } from "@/components/today/BriefSwitch";
-import { briefPublishTime, getLatestBriefResult, getEarningsBetween, weekAnchor } from "@/lib/data";
+import {
+  BRIEF_PUBLISH,
+  briefPublishTime,
+  getEarningsBetween,
+  getEventsBetween,
+  getLatestBriefResult,
+  weekAnchor,
+} from "@/lib/data";
+import { briefReleases } from "@/lib/home-figures";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { formatEtDateLong, formatEtDateCompact } from "@/lib/utils";
@@ -51,12 +59,29 @@ export async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }
   const weekly = weeklyResult.ok ? weeklyResult.row : null;
   /* KAYIT DEFTERİ'NİN KÜÇÜK HÂLİ (25 Ekim görsel zirve): kart manşetin
      altında dört endeksi taşıyor — bülten sayfasındaki bantla aynı kaynak
-     (`getBriefLedger`), ölçü ve hisse yok; kart bir giriş. Önbellekli tek
-     bar isteği; okunamazsa bant kalkar, metin kalır. */
+     (`getBriefLedger`). Okunamazsa bant kalkar, metin kalır.
+     ÖLÇÜLER DE GELDİ (6 Kasım, sahibinin sözü: "metin duvarı gibi").
+     Kart artık bandın ölçülerini de (10 yıllık, VIX, dolar/TL) taşıyor:
+     `detail: true` bülten sayfasının çağrısıyla AYNI argümanlar, yani
+     `unstable_cache` anahtarı ortak — sayfa ile kart aynı sonucu okuyor,
+     ek sağlayıcı isteği o önbellek dolu değilse bir kez. Hisseler kartta
+     basılmıyor (bandın tamamı bülten sayfasında). */
   const [dailyLedger, weeklyLedger] = await Promise.all([
-    daily ? getBriefLedger(daily.briefDate, "daily", daily.bodyMd, false) : null,
-    weekly ? getBriefLedger(weekly.briefDate, "weekly", weekly.bodyMd, false) : null,
+    daily ? getBriefLedger(daily.briefDate, "daily", daily.bodyMd, true) : null,
+    weekly ? getBriefLedger(weekly.briefDate, "weekly", weekly.bodyMd, true) : null,
   ]);
+  /* GÜNÜN VERİLERİ: bültenin anlattığı açıklamalar, takvimden — Bugünün
+     Akışı'nın okuduğu aynı satırlar (CLAUDE.md "Veri dürüstlüğü" 3).
+     Pencere seansın günü → bültenin günü, yayın saatine kadar (kural ve
+     testi `lib/home-figures.ts`). Yalnız günlükte: haftalığın onlarca
+     açıklaması kartta iki karoya sığmaz, bülten sayfası anlatıyor. */
+  const dailyReleases = dailyLedger
+    ? briefReleases(await getEventsBetween(dailyLedger.window.session, daily!.briefDate), {
+        from: dailyLedger.window.session,
+        briefDate: daily!.briefDate,
+        publishTimeEt: BRIEF_PUBLISH.daily.time,
+      })
+    : [];
   const acikSatir =
     bugunBilanco.length < KISA_BILANCO_ESIGI
       ? OZET_TABAN_SATIR + OZET_EK_SATIR
@@ -70,7 +95,9 @@ export async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }
       hour: "2-digit",
       minute: "2-digit",
     }).format(new Date(row.generatedAt));
-    return `${row.generatedBy === "claude" ? "Claude · " : ""}${time}`;
+    /* Künye BAŞLIĞIN ALTINDA (BriefSwitch); "Yayımlandı" ile Title Case
+       künye kalıbı ("20:04 Güncellendi"). */
+    return (row.generatedBy === "claude" ? t.homeDesk.bylineClaude : t.homeDesk.byline).replace("{time}", time);
   };
 
   const weekRange = (anchor: string) =>
@@ -119,7 +146,9 @@ export async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }
       dailyBody={
         daily && (
           <LedgerLinker>
-            {dailyLedger && <BriefLedger data={dailyLedger} locale={locale} t={t} variant="card" />}
+            {dailyLedger && (
+              <BriefLedger data={dailyLedger} locale={locale} t={t} variant="card" releases={dailyReleases} />
+            )}
             <BriefBody
               size="card-wide"
               markdown={daily.bodyMd}

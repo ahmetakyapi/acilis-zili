@@ -1,0 +1,72 @@
+/* ANA SAYFANIN YAN KOLON ŞERİTLERİ — Dünya Piyasaları ve Günün Hareketleri
+   (6 Kasım görsel tur; gerekçe WorldStrip.tsx → WorldStripView ve
+   DayMovers.tsx → MoversBlock).
+
+   Satır üç sütun: [işaret (bayrak / logo) | ad ve künye | yüzde]; altında
+   şerit, işaret sütununun SAĞINDAN yüzdenin sağ kenarına kadar — ad, künye
+   ve şerit tek sol hatta, şeridin sağ ucu yüzdenin sağ ucuyla aynı hatta.
+   Şerit bülten bandının `MiniLane`i: `--line-soft` kulvar, ortada
+   `--line-strong` sıfır, 5 piksel; renk yalnız işaretten. Ölçek panel
+   başına TEK (`sharedLaneScale`, lib/home-figures.ts) ve başlığın sağında
+   yazılı.
+
+   ÖLÇÜM (6 Kasım, sahte veriyle önizleme, 350 piksellik yan kolon,
+   reducedMotion; eski satır HEAD işaretlemesinden aynı genişlikte):
+     Dünya Piyasaları satırı 57,5 → 65 px (künyesi iki satıra saran 390
+       satırı 72,5 → 80); beş satırlık panel ~451 → 489 px (1440).
+       Şerit 278 px, sıfır satırın ortasında. Dolgu `py-2.5` → `py-2`
+       şeridin payını kısmen geri aldı (70 → 65).
+     Günün Hareketleri satırı 47 → 58 px; 3 + 3 satırlık panel ~478 → 543.
+       Başlığa ölçek künyesi konunca başlık satırı 57 → 77 px'e (iki satır)
+       çıkıyordu; künye ilk alt başlığın sağına indi, başlık 57.
+     Yatay taşma 0 (1440 / 390, TR / EN, iki tema).
+   Kolon dengesi `FillColumn`da; ölçüm raporu ana oturumda. */
+
+.row {
+  --lead-w: 20px;
+  display: grid;
+  grid-template-columns: var(--lead-w) minmax(0, 1fr) auto;
+  grid-template-areas:
+    "lead main value"
+    ".    lane lane";
+  column-gap: 10px;
+  align-items: center;
+}
+.rowLogo { --lead-w: 26px; }
+
+.flag {
+  grid-area: lead;
+  align-self: start;
+  font-size: 16px;
+  line-height: 20px;
+}
+.lead { grid-area: lead; }
+.main { grid-area: main; min-width: 0; }
+.value {
+  grid-area: value;
+  align-self: start;
+  line-height: 20px;
+  text-align: right;
+  white-space: nowrap;
+}
+/* Fonun / hissenin sembolü — mono künye (CLAUDE.md "Tek font"). */
+.symbol {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.lane {
+  grid-area: lane;
+  display: block;
+  margin-top: 6px;
+}
+/* Son kapanışı gösteren satır: yüzde yön rengini bırakıyor (veri
+   dürüstlüğü 4), şerit de. Boy kalıyor — büyüklük yine doğru, yalnız
+   bu seansa ait değil. */
+.lane[data-basis="lastClose"] > span > span {
+  background: var(--text-muted);
+  opacity: 0.5;
+}

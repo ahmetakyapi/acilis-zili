@@ -843,15 +843,28 @@ export function DataError({
 }
 
 /* --------------------------------------------------------------------------
-   Etki seviyesi göstergesi — üç nokta, dolu olan kadar önemli
+   Etki seviyesi göstergesi — yükselen üç çubuk, dolu olan kadar önemli
    -------------------------------------------------------------------------- */
 
+/**
+ * ÜÇ NOKTADAN YÜKSELEN ÜÇ ÇUBUĞA (6 Kasım, sahibinin ekran görüntüsü:
+ * "etki noktaları siyah ve sıkışık"). Üç eş boy 6 piksellik nokta yan yana
+ * 2 piksel aralıkla duruyordu: yüksek önemde üçü de en koyu mürekkepte ve
+ * göz onu bir "siyah leke" olarak okuyordu; düzey ancak noktalar sayılarak
+ * çıkıyordu. Şimdi sinyal göstergesi biçimi: 6 / 9 / 12 piksel yükselen
+ * çubuklar, dolu olan kadar önemli — düzey BOYDAN okunuyor (sayılmıyor),
+ * renk ikinci taşıyıcı (`--impact-*`, mürekkep koyuluğu; kırmızı düşüş
+ * demek, 31 Ekim kararı globals.css'te). Boş çubuk `--line-strong`.
+ * Ad değişmedi: çağıran ekranlar aynı API ile yeni biçimi alıyor.
+ */
 export function ImpactDots({
   importance,
   label,
+  className,
 }: {
   importance: string;
   label: string;
+  className?: string;
 }) {
   const filled = importance === "high" ? 3 : importance === "medium" ? 2 : 1;
   const color =
@@ -860,16 +873,18 @@ export function ImpactDots({
       : importance === "medium"
         ? "bg-impact-med"
         : "bg-impact-low";
+  const heights = ["h-1.5", "h-[9px]", "h-3"];
 
   return (
-    <span className="inline-flex items-center gap-0.5" title={label}>
+    <span className={cn("inline-flex h-3 flex-none items-end gap-[2px]", className)} title={label}>
       <span className="sr-only">{label}</span>
-      {[0, 1, 2].map((i) => (
+      {heights.map((height, i) => (
         <span
           key={i}
           aria-hidden
           className={cn(
-            "size-1.5 rounded-full",
+            "w-[3px] rounded-[1px]",
+            height,
             i < filled ? color : "bg-line-strong",
           )}
         />
@@ -920,8 +935,8 @@ export function ImpactDot({
           Dış kutu her düzeyde `size-2` kalıyor — küçük noktanın kendi kutusu
           küçülseydi yanındaki başlık satır satır 2 piksel kayardı.
 
-          Kardeşi `ImpactDots` aynı sorunu dolu nokta SAYISIYLA çözüyor ve
-          takvim sayfası onu kullanıyor; bu tekil sürüm dar satırlar için var,
+          Kardeşi `ImpactDots` aynı sorunu dolu çubuk SAYISIYLA (6 Kasım'dan
+          beri yükselen çubuk boyuyla) çözüyor ve takvim sayfası onu kullanıyor; bu tekil sürüm dar satırlar için var,
           o yüzden sayı değil biçim ayrımı. */}
       <span
         aria-hidden

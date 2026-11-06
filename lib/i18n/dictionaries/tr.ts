@@ -19,6 +19,7 @@ import { portfolioAnalysisVisualsTr } from "./portfolio-analysis-visuals";
 import { changelogTr } from "./changelog";
 import { stockEntryTr } from "./stock-entry";
 import { briefLedgerTr } from "./brief-ledger";
+import { homeDeskTr } from "./home-desk";
 import { macroVisualTr } from "./macro-visual";
 import { stockVisualsTr } from "./stock-visuals";
 import { calendarVisualsTr } from "./calendar-visuals";
@@ -264,6 +265,9 @@ const tr = {
     /* Başlığın yanındaki karne hapı (29 Ekim). */
     eventsCount: "{n} Olay",
     eventsDone: "{n}/{total} Açıklandı",
+    /* Bilanço satırının logo rozetlerinin özeti (6 Kasım): hisse başına kârı
+       açıklanan şirketlerden kaçı beklentiyi aştı. */
+    beatCount: "{n}/{total} Beklentiyi Aştı",
     next: "Sonraki Olaylar",
     back: "Önceki Olaylar",
     source: "Kaynak",
@@ -4943,6 +4947,7 @@ const tr = {
   },
   /* Bültenin Kayıt Defteri bandı (25 Ekim görsel zirve) — metin ayrı dosyada. */
   briefLedger: briefLedgerTr,
+  homeDesk: homeDeskTr,
   /* Makro ve piyasa görselleri (25 Ekim görsel turu) — metin ayrı dosyada. */
   macroVisual: macroVisualTr,
   /* Hisse sayfası ve kural kontrolünün görsel katmanı (25 Ekim) — metin ayrı dosyada. */

@@ -84,9 +84,14 @@ export async function StoriesSpotlight({
           başlığın boyu değil, altındaki manşet ve eğri. Cesaret TEK yerde
           harcanıyor.
           Başlık öteki panel başlıkları gibi sıkı degradede (24 Eylül,
-          sahibinin isteği: bütün başlıklar aynı mavi tonda). */}
-      <div className="flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
-        <h2 className="text-read font-bold text-strong">
+          sahibinin isteği: bütün başlıklar aynı mavi tonda).
+          SINIF GERÇEKTEN PanelHeader'IN (6 Kasım): yorum degrade diyordu
+          ama başlık 14 puntoda düz mürekkepteydi — sağ kolondaki "Dünya
+          Piyasaları" 16 puntoda degradeyken bu blok bir basamak sönük
+          kalıyordu. Ölçü ve dolgu artık `PanelHeader` (tone="title") ile
+          birebir: 16 punto, sıkı degrade, `py-4`. */}
+      <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-5">
+        <h2 className="display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.015em]">
           {t.today.latestStories}
         </h2>
         <PanelLink href="/mercek">{t.common.showAll}</PanelLink>

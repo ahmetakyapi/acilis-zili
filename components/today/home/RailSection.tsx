@@ -26,5 +26,5 @@ export async function RailSection({ t, locale, heading, otherHeadings }: { t: Di
     initial && initial.events.length === 0 && initial.hiddenEarnings === 0 && initial.nextDate
       ? await loadSharedOtherDay(locale, initial.nextDate).catch(() => null)
       : null;
-  return <DayFlowLoader key={locale} initial={initial} preview={preview} locale={locale} labels={t.dayFlow} railLabels={t.dayRail} heading={heading} otherHeadings={otherHeadings} />;
+  return <DayFlowLoader key={locale} initial={initial} preview={preview} locale={locale} labels={t.dayFlow} railLabels={t.dayRail} lineLabels={t.calendarVisuals.released} heading={heading} otherHeadings={otherHeadings} />;
 }

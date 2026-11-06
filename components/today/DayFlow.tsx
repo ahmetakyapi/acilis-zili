@@ -2,7 +2,8 @@
 
 import { Fragment, useEffect, useId, useRef, useState, useTransition, type CSSProperties, type ReactNode } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { ArrowRight, ArrowUpRight, Bell, CalendarBlank, CaretDown, CaretLeft, CaretRight, Check, CircleNotch, Clock, TrendUp } from "@phosphor-icons/react";
+import { ArrowDown, ArrowRight, ArrowUp, ArrowUpRight, Bell, Buildings, CalendarBlank, CaretDown, CaretLeft, CaretRight, ChartLineUp, Check, CircleNotch, Clock, Equals, TrendUp } from "@phosphor-icons/react";
+import { DeviationLine } from "@/components/calendar/DeviationLine";
 import { LogoTile } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { displayFlowStatus, flowResultSignature, preserveConfirmedResults, type DayFlowSnapshot, type FlowEvent, type FlowMember } from "@/lib/day-flow";
@@ -24,7 +25,12 @@ type Props = {
   otherHeadings?: { past: ReactNode; future: ReactNode };
   /** Bugün boşken önizlenen sıradaki işlem günü (RailSection; yoksa `null`). */
   preview?: DayFlowSnapshot | null;
+  /** Sapma çizgisinin sözcükleri — takvim kartıyla aynı ad alanı
+      (`calendarVisuals.released`); verilmezse çizgi basılmaz. */
+  lineLabels?: Dictionary["calendarVisuals"]["released"];
 };
+/** Sonucu gelmiş (ya da gerçekleşmiş) olay — satırda durum SÖZÜ basılmaz. */
+const DONE = new Set(["released", "analyzed", "held"]);
 const minutesOf = (time: string) => { const [h, m] = time.split(":").map(Number); return h * 60 + m; };
 /** Okla açılan günlerin oturum içi notu en çok bu kadar gün tutar. */
 const DAY_CACHE_LIMIT = 30;
@@ -33,8 +39,16 @@ const validSnapshot = (value: unknown): value is DayFlowSnapshot => {
   return !!snap && Array.isArray(snap.events) && Number.isFinite(Date.parse(snap.asOf));
 };
 
-function Status({ event, nowMs, labels }: { event: Pick<FlowEvent, "status" | "scheduledAt" | "endsAt">; nowMs: number; labels: Props["labels"] }) {
+/* "AÇIKLANDI" HER SATIRDA TEKRAR ETMİYOR (6 Kasım, sahibinin itirazı).
+   Sonucu gelmiş satırda durum sözü yalnız ekran okuyucuya (`quiet`): sonucun
+   kendisi (değer, sapma hapı, şirket rozetleri) ve düğümdeki onay işareti
+   bunu zaten söylüyor, sayısı da başlığın yanındaki karnede. Söz yalnız
+   okuyucunun bilmesi GEREKEN durumda görünür: bekleniyor, sürüyor, kısmen
+   geldi, analiz hazır. Planlı satırın sözü de sessiz: "şimdi" çizgisinin
+   altında durması onu söylüyor. */
+function Status({ event, nowMs, labels, quiet = false }: { event: Pick<FlowEvent, "status" | "scheduledAt" | "endsAt">; nowMs: number; labels: Props["labels"]; quiet?: boolean }) {
   const status = displayFlowStatus(event, nowMs);
+  if (quiet && (status === "released" || status === "held" || status === "scheduled")) return <span className="sr-only">{labels[status]}</span>;
   return <span key={status} className={styles.status} data-status={status}>
     {status === "released" || status === "analyzed" || status === "held" ? <Check size={12} weight="bold" /> : <span className={styles.statusDot} />}
     {labels[status]}
@@ -65,9 +79,50 @@ function DaySummary({ events, nowMs, labels }: { events: FlowEvent[]; nowMs: num
    satırı "01 / –  · Planlandı Bilanço" okunuyordu, tirenin ne demek
    olduğu ekranın hiçbir yerinde yazmıyordu (yalnızca `aria-label`da). Saat
    yoksa sebep künyenin sonuna ekleniyor: "Bilanço · Saat Belirtilmedi". */
-function FlowNote({ event, labels }: { event: Pick<FlowEvent, "detail" | "timeEt">; labels: Props["labels"] }) {
-  if (!event.detail) return event.timeEt ? null : <em>{labels.timeUnknown}</em>;
-  return <em>{event.timeEt ? event.detail : `${event.detail} · ${labels.timeUnknown}`}</em>;
+/* TÜR HER SATIRDA SÖZLE (6 Kasım, sahibinin itirazı: "satırların türü bir
+   bakışta seçilmiyor"). Künyesi olmayan veri satırı yalnız bir ikon
+   taşıyordu ve türü ekran okuyucuya kalıyordu; şimdi künye yoksa türün adı
+   ("Ekonomik Veri") yazılır, düğümdeki ikon da türü çizer. */
+function FlowNote({ event, labels }: { event: Pick<FlowEvent, "detail" | "timeEt" | "kind">; labels: Props["labels"] }) {
+  const kind = event.detail ?? (event.kind === "earnings" ? labels.earnings : labels.economic);
+  return <em>{event.timeEt ? kind : `${kind} · ${labels.timeUnknown}`}</em>;
+}
+
+/* BİLANÇO SATIRININ RÖZETLİ LOGOLARI (6 Kasım, sahibinin itirazı: "logolar
+   16 piksel ve üst üste"). Logolar artık 26 piksel ve YAN YANA; her biri
+   açıklandıysa hisse başına kârın beklentiye göre yönünü köşesinde küçük bir
+   okla taşır (renk yalnız yön, `--up`/`--down`; eşitse nötr çizgi). Sayı ve
+   sözcük açılan gövdede; burada bir bakışta "kaçı aştı" okunur. Satırın
+   tür işareti eskiden de logoydu, simge değil: zil her bilanço satırında
+   aynıydı ve hiçbir şey ayırt etmiyordu; logo ediyor. Dörtten
+   fazlası "+N" ile. Logolar `aria-hidden`: aynı bilgi sr-only cümlede. */
+const LOGO_LIMIT = 4;
+function MemberMarks({ members, labels }: { members: FlowMember[]; labels: Props["labels"] }) {
+  const shown = members.slice(0, members.length > LOGO_LIMIT ? LOGO_LIMIT - 1 : LOGO_LIMIT);
+  /* Rozetin sözle karşılığı: "2/3 Beklentiyi Aştı" — renk tek taşıyıcı değil. */
+  const reported = members.filter((member) => member.epsSurprise);
+  return (
+    <span className={styles.memberMarks}>
+      <span className={styles.memberLogos} aria-hidden="true">
+        {shown.map((member) => {
+          const dir = member.epsSurprise?.direction;
+          return (
+            <span key={member.symbol} className={styles.memberLogo} data-dir={dir} title={dir ? `${member.symbol} · ${labels.eps}: ${labels[dir]}` : member.symbol}>
+              <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="sm" className={styles.memberTile} />
+              {dir && <i>{dir === "beat" ? <ArrowUp size={9} weight="bold" /> : dir === "miss" ? <ArrowDown size={9} weight="bold" /> : <Equals size={9} weight="bold" />}</i>}
+            </span>
+          );
+        })}
+        {members.length > shown.length && <span className={`numeral ${styles.memberMore}`}>+{members.length - shown.length}</span>}
+      </span>
+      {reported.length > 0 && (
+        <span className={styles.beatCount}>
+          {labels.beatCount.replace("{n}", String(reported.filter((member) => member.epsSurprise!.direction === "beat").length)).replace("{total}", String(reported.length))}
+          <span className="sr-only">: {reported.map((member) => `${member.symbol} ${labels[member.epsSurprise!.direction]}`).join(", ")}</span>
+        </span>
+      )}
+    </span>
+  );
 }
 
 /* SEC BİLDİRİMİ (2 Ekim). Sonuç SEC'e yatırıldığı dakika görünüyor; bağlantı
@@ -119,7 +174,7 @@ function MemberList({ members, scheduledAt, nowMs, labels, openEventId, onEngage
     <ol className={styles.tlMembers}>
       {shown.map((member) => <li key={member.symbol} className={styles.tlMemberRow}>
         <span className={styles.memberIdentity}>
-          <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="xs" />
+          <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="sm" />
           <strong>{member.symbol}</strong>
           <Status event={{ status: member.status, scheduledAt }} nowMs={nowMs} labels={labels} />
           {member.filing && <FilingLink filing={member.filing} />}
@@ -145,7 +200,7 @@ function MemberList({ members, scheduledAt, nowMs, labels, openEventId, onEngage
   </>;
 }
 
-export function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, preview }: Props) {
+export function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, preview, lineLabels }: Props) {
   const [snapshot, setSnapshot] = useState(initial);
   const [nowMs, setNowMs] = useState(() => new Date(initial.asOf).getTime());
   /* `null` = seçim OTOMATİK (sıradaki olay açık); `allClosed` = okuyucu açık
@@ -445,8 +500,14 @@ export function DayFlow({ initial, locale, labels, railLabels, heading, otherHea
     setSelectedId(id);
   }
 
+  /* "Şimdi" işareti saat sütununda saatini, omurgada halkalı noktasını,
+     içerik sütununda ince çizgisini taşır (gerekçe CSS → "ŞİMDİ"). */
   const nowMark = (
-    <li className={styles.nowMark} aria-hidden="true"><b>{nowLabel}</b></li>
+    <li className={styles.nowMark} aria-hidden="true">
+      <span className={styles.nowTime}><small>{railLabels.now}</small><b className="numeral">{primary(now)}</b></span>
+      <span className={styles.nowDot} />
+      <span className={styles.nowLine}><b>{nowLabel}</b></span>
+    </li>
   );
 
   return <div ref={ref} className={styles.flow} data-day-flow>
@@ -519,65 +580,107 @@ export function DayFlow({ initial, locale, labels, railLabels, heading, otherHea
           const value = event.actual ?? member?.eps ?? null;
           const valueLabel = event.actual ? labels.actual : member?.eps ? labels.eps : null;
           const bodyId = `${detailId}-${index}`;
+          const status = displayFlowStatus(event, nowMs);
+          const done = DONE.has(status);
+          const KindIcon = event.kind === "earnings" ? Buildings : ChartLineUp;
+          const deviation = event.kind === "event" && event.actual ? event.deviation : undefined;
           return <Fragment key={event.id}>
             {index === dividerAt && nowMark}
-            <li className={styles.tlRow} data-event-id={event.id} data-open={open || undefined} data-past={past || undefined} data-kind={event.kind}>
-              {/* Düğüm sıra numarasını taşıyor; omurga çizgisi CSS'te
-                  (`.tlRow::before`). Geçmiş düğüm dolu ve sakin, açık düğüm
-                  marka mavisi, gelecek düğüm çerçeveli — durum renk +
-                  dolgunun İKİSİYLE ayrışıyor. */}
-              <span className={styles.tlNode} aria-hidden="true"><b className="numeral">{String(index + 1).padStart(2, "0")}</b></span>
-              <div className={styles.tlMain}>
-                <button type="button" className={styles.tlHead} onClick={() => toggle(event.id)} aria-expanded={open} aria-controls={bodyId}>
-                  <span className={styles.tlTime} data-unknown={!event.timeEt}><b className="numeral" aria-label={event.timeEt ? undefined : labels.timeUnknown}>{event.timeEt ? timeOf(event) : NO_VALUE}</b>{event.timeEt && <small>{shown.tags.primary}</small>}</span>
-                  <span className={styles.tlSummary}>
-                    <strong>{event.title}</strong>
-                    <span className={styles.cardKind}>
-                      {/* Bilanço satırında simge değil ŞİRKETİN LOGOSU: zil
-                          her bilanço satırında aynıydı ve hiçbir şey ayırt
-                          etmiyordu; logo ediyor. Üçten fazlası sığmıyor,
-                          başlık kaçının olduğunu söylüyor. */}
-                      {event.kind === "earnings" && event.members?.length ? (
-                        <span className={styles.cardLogos} aria-hidden="true">
-                          {event.members.slice(0, 3).map((item) => (
-                            <LogoTile key={item.symbol} symbol={item.symbol} logoUrl={item.logoUrl} size="xs" className={styles.cardLogo} />
-                          ))}
-                        </span>
-                      ) : (
-                        <i data-kind={event.kind} aria-hidden="true">{event.kind === "earnings" ? <Bell size={13} /> : <TrendUp size={13} />}</i>
-                      )}
-                      {!event.detail && <span className="sr-only">{event.kind === "earnings" ? labels.earnings : labels.economic}</span>}
-                      <Status event={event} nowMs={nowMs} labels={labels} />
-                      <FlowNote event={event} labels={labels} />
-                    </span>
+            {/* SATIRIN HİYERARŞİSİ (6 Kasım, sahibinin isteği: "kolay okuyup
+                anlasın, kolay seçilsin"). Soldan sağa üç soru: NE ZAMAN
+                (saat sütunu), NE (düğümdeki tür ikonu + başlık + tür adı),
+                NE ÇIKTI (sağda sonuç). Numaralı daireler bilgi taşımıyordu
+                ("01/02/03"); düğüm artık türü çizer ve durumu dolgusuyla
+                söyler: geçmiş sakin dolu + onay işareti, sıradaki çerçeveli,
+                açık olan marka mavisi. Satırın TAMAMI tek buton (saat ve
+                düğüm dahil); açık satır gömülü tonda bir kart. */}
+            <li className={styles.tlRow} data-event-id={event.id} data-open={open || undefined} data-past={past || undefined} data-kind={event.kind} data-status={status}>
+              <button type="button" className={styles.tlHead} onClick={() => toggle(event.id)} aria-expanded={open} aria-controls={bodyId}>
+                <span className={styles.tlTime} data-unknown={!event.timeEt}><b className="numeral" aria-label={event.timeEt ? undefined : labels.timeUnknown}>{event.timeEt ? timeOf(event) : NO_VALUE}</b>{event.timeEt && <small>{shown.tags.primary}</small>}</span>
+                <span className={styles.tlNode} aria-hidden="true">
+                  <KindIcon size={16} weight={open ? "bold" : "regular"} />
+                  {done && <i className={styles.tlTick}><Check size={8} weight="bold" /></i>}
+                </span>
+                <span className={styles.tlSummary}>
+                  <strong>{event.title}</strong>
+                  <span className={styles.cardKind}>
+                    <FlowNote event={event} labels={labels} />
+                    <Status event={event} nowMs={nowMs} labels={labels} quiet />
                   </span>
-                  {/* GERÇEKLEŞENİN YANINDA KIYAS yok — kapalı satır tek sayı
-                      taşır (gerçekleşen, yoksa tek şirketin EPS'i); kıyas ve
-                      gelir açılan gövdede. Satır kompakt kalsın diye. */}
+                </span>
+                {/* SONUÇ SÜTUNU. Veri satırında gerçekleşen ve YANINDA
+                    beklentiye göre yeri (hap: yön oku + "Beklentinin 15 Bin
+                    Üstünde"; renk yalnız yön). Sonuç gelmeden beklenti
+                    sönük yazılır: satır okuyucuya neyi beklediğini söyler.
+                    Bilançoda logolar ve yön rozetleri. Kıyasın çizimi
+                    açılan gövdede (sapma çizgisi). 28 Ekim'deki kompakt
+                    turda kapalı satır kıyassız tek sayı taşıyordu ("satır
+                    kompakt kalsın"); sahibi 6 Kasım'da tam bunun
+                    okunmadığını söyledi — hap tek satıra sığıyor, satır
+                    uzamıyor (ölçüm CSS'te). */}
+                <span className={styles.tlAside}>
+                  {event.kind === "earnings" && event.members?.length ? <MemberMarks members={event.members} labels={labels} /> : null}
+                  {deviation && (
+                    <span className={styles.devPill} data-dir={deviation.direction}>
+                      {deviation.direction === "above" ? <ArrowUp size={12} weight="bold" aria-hidden /> : deviation.direction === "below" ? <ArrowDown size={12} weight="bold" aria-hidden /> : <Equals size={12} weight="bold" aria-hidden />}
+                      {deviation.verdict}
+                    </span>
+                  )}
                   {value && valueLabel ? (
-                    <span className={styles.tlValue}><small>{valueLabel}</small><b className="numeral">{value}</b></span>
-                  ) : <span className={styles.tlValue} aria-hidden="true" />}
-                  <CaretDown size={15} weight="bold" aria-hidden className={styles.tlCaret} />
-                </button>
-                {/* Gövde YERİNDE açılır (`grid-template-rows` 0fr→1fr,
-                    --ease-brand); `inert` kapalı gövdenin bağlantılarını
-                    sekme sırasından düşürür. */}
-                <div id={bodyId} className={styles.tlDetail} inert={!open}>
-                  <div className={styles.tlDetailInner}>
-                    {/* "BU DA NE?" — başlığın altındaki tek cümle. Cümle tür
-                        başına sözlükte (`dayFlow.notes`), karşılığı olmayan
-                        olayda hiç basılmıyor. */}
-                    {event.note && <p className={styles.note}>{event.note}</p>}
-                    {event.members ? (
-                      <MemberList members={event.members} scheduledAt={event.scheduledAt} nowMs={nowMs} labels={labels} openEventId={openId} onEngage={() => setAutoTour(false)} source={event.source} href={event.href} />
-                    ) : <>
-                      {(event.actual || event.forecast || event.previous) && <dl className={styles.results}>{[[labels.actual, event.actual], [labels.forecast, event.forecast], [labels.previous, event.previous]].map(([label, figure]) => <div key={label}><dt>{label}</dt><dd className="numeral">{figure ?? NO_VALUE}</dd></div>)}</dl>}
-                      {/* Bekleme cümlesi yalnız gerçekten bekleyen olayda: sonucu
-                          olmayan toplantıda ve sayısız "Açıklandı"da yanlıştı. */}
-                      {!event.actual && (displayFlowStatus(event, nowMs) === "scheduled" || displayFlowStatus(event, nowMs) === "awaiting") && <p className={styles.waiting}>{displayFlowStatus(event, nowMs) === "scheduled" ? labels.scheduledHint : labels.pendingHint}</p>}
-                      <div className={styles.detailFooter}><span>{labels.source}: {event.source}</span><Link href={event.href}>{labels.calendar}<ArrowUpRight size={14} /></Link></div>
-                    </>}
-                  </div>
+                    <span className={styles.tlValue} data-with-pill={deviation ? true : undefined}><small>{valueLabel}</small><b className="numeral">{value}</b></span>
+                  ) : event.kind === "event" && event.forecast ? (
+                    <span className={styles.tlValue} data-pending><small>{labels.forecast}</small><b className="numeral">{event.forecast}</b></span>
+                  ) : null}
+                </span>
+                <CaretDown size={15} weight="bold" aria-hidden className={styles.tlCaret} />
+              </button>
+              {/* Gövde YERİNDE açılır (`grid-template-rows` 0fr→1fr,
+                  --ease-brand); `inert` kapalı gövdenin bağlantılarını
+                  sekme sırasından düşürür. */}
+              <div id={bodyId} className={styles.tlDetail} inert={!open}>
+                <div className={styles.tlDetailInner}>
+                  {/* "BU DA NE?" — başlığın altındaki tek cümle. Cümle tür
+                      başına sözlükte (`dayFlow.notes`), karşılığı olmayan
+                      olayda hiç basılmıyor. */}
+                  {event.note && <p className={styles.note}>{event.note}</p>}
+                  {event.members ? (
+                    <MemberList members={event.members} scheduledAt={event.scheduledAt} nowMs={nowMs} labels={labels} openEventId={openId} onEngage={() => setAutoTour(false)} source={event.source} href={event.href} />
+                  ) : <>
+                    {/* ÜÇ DEĞER + SAPMA ÇİZGİSİ (6 Kasım). Üç sayı düz yazı
+                        olarak duruyordu; kıyas okunarak yapılıyordu. Şimdi
+                        "Son Açıklanan Veriler" kartının çizgisi: ortası
+                        beklenti, nokta gerçekleşen, gri çentik önceki
+                        (`DeviationLine`). Etiketin önündeki işaret çizgideki
+                        işaretin aynısı — lejant ayrı kutu değil. Çizgi
+                        yalnız düz sayılarda; Fed aralığı gibi değerlerde üç
+                        sayı eskisi gibi. Geniş ekranda sayılar solda, çizgi
+                        sağda aynı hatta; telefonda alt alta. */}
+                    {(event.actual || event.forecast || event.previous) && (
+                      <div className={styles.resultsBlock} data-line={deviation && lineLabels ? true : undefined}>
+                        <dl className={styles.results}>
+                          {([["actual", labels.actual, event.actual], ["forecast", labels.forecast, event.forecast], ["previous", labels.previous, event.previous]] as const).map(([key, label, figure]) => (
+                            <div key={key} data-kind={key} data-dir={key === "actual" ? deviation?.direction : undefined}>
+                              <dt>{deviation && lineLabels && figure && <i aria-hidden className={styles.key} />}{label}</dt>
+                              <dd className="numeral" data-empty={!figure || undefined}>{figure ?? NO_VALUE}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                        {deviation && lineLabels && (
+                          <div className={styles.devBlock}>
+                            <DeviationLine key={open ? "open" : "closed"} deviation={deviation} below={lineLabels.sideBelow} above={lineLabels.sideAbove} baseLabel={deviation.base === "forecast" ? labels.forecast : labels.previous} motion={false} className={styles.devLine} />
+                            <p className={styles.verdictLine}>
+                              <span className={styles.verdict} data-dir={deviation.direction}>{deviation.verdict}</span>
+                              {deviation.versus && <span>{deviation.versus}</span>}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {/* Bekleme cümlesi yalnız gerçekten bekleyen olayda: sonucu
+                        olmayan toplantıda ve sayısız "Açıklandı"da yanlıştı. */}
+                    {!event.actual && (status === "scheduled" || status === "awaiting") && <p className={styles.waiting}>{status === "scheduled" ? labels.scheduledHint : labels.pendingHint}</p>}
+                    <div className={styles.detailFooter}><span>{labels.source}: {event.source}</span><Link href={event.href}>{labels.calendar}<ArrowUpRight size={14} /></Link></div>
+                  </>}
                 </div>
               </div>
             </li>

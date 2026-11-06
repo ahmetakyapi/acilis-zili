@@ -588,67 +588,260 @@
 
 /* ------------------------------------------------- Ana sayfa kartı (mini) -- */
 
+/* KARTIN ÖLÇÜ KUYUSU (6 Kasım görsel tur; gerekçe BriefLedger.tsx → card).
+   Derinlik tonla: kart `--premium-surface`, kuyu bir ton aşağıda
+   (`--surface-sunken`), kenarı yok, gölgesi yok. İçinde iki kat: endeksler
+   (büyük rakam, ortak sıfırlı 5 piksellik kulvar) ve hairline'ın altında
+   "Günün Verileri". Karolar `subgrid` ile satır paylaşıyor: ad, rakam,
+   şerit ve künye dört sütunda aynı hatta (CLAUDE.md "Ekran düzeni" 4).
+
+   ÖLÇÜM (6 Kasım, sahte veriyle önizleme — 4 endeks, 2 açıklama, 3 ölçü):
+     1440: kuyu 347 px (ölçüsüz 197); dört rakamın dibi aynı y, dört
+       şeridin dibi aynı y; dört karonun rakam dibi ve künyenin ilk satırı
+       aynı y (ölçüldü).
+       Eski kart (künye + 13–14 puntoluk dört karo) hesapla ~90 px.
+     390: kuyu 511 px (ölçüsüz 346; iki karo, `.fig:nth-child(n + 3)`).
+     Yatay taşma 0; TR/EN, iki tema, haftalık şerit. */
 .mini {
   display: grid;
-  gap: 10px;
-  margin-top: 14px;
-  padding: 12px 0 2px;
-  border-top: 1px solid var(--primary-faint);
+  gap: 12px;
+  margin-top: 18px;
+  padding: 14px 16px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+}
+@media (min-width: 640px) {
+  .mini { padding: 16px 20px 14px; }
 }
 .miniHead {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 4px 10px;
+  justify-content: space-between;
+  gap: 2px 12px;
 }
-.miniSession {
+.miniSession,
+.miniScale {
+  margin: 0;
   color: var(--text-muted);
   font-size: var(--text-tiny);
   font-weight: 600;
+  line-height: 16px;
 }
+
 .miniStory {
+  margin: -4px 0 0;
   color: var(--text-strong);
-  font-size: var(--text-base);
-  font-weight: 500;
+  font-size: var(--text-read);
+  font-weight: 550;
+  line-height: 1.45;
+  text-wrap: pretty;
 }
+/* Dört endeks: telefonda 2×2, 640 ve üstünde tek sıra. Satırlar subgrid —
+   ad / rakam / şerit üç satır, dört karoda aynı hatta. */
 .miniGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px 16px;
+  gap: 14px 20px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 @media (min-width: 640px) {
-  .miniGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .miniGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 24px; }
 }
 .miniItem {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 6px 8px;
-  align-items: baseline;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  row-gap: 6px;
+  align-items: end;
+  min-width: 0;
   padding: 6px 8px;
   margin: 0 -8px;
   border-radius: var(--radius-sm);
   transition: background-color 0.2s var(--ease-brand);
 }
 .miniName {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+.miniNameText {
   overflow: hidden;
   color: var(--text-body);
   font-size: var(--text-small);
-  font-weight: 600;
+  font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Fonun sembolü — mono künye (CLAUDE.md "Tek font": mono yalnız sembolde). */
+.miniSymbol {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
 .miniValue {
-  font-size: var(--text-base);
-  font-weight: 700;
+  font-size: clamp(1.25rem, 1.6vw, 1.5rem);
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.02em;
   white-space: nowrap;
 }
 .miniLane,
-.weekCompact { grid-column: 1 / -1; }
+.weekCompact { align-self: center; }
 .weekCompact .cell { height: 26px; }
 .weekCompact .cellBar { width: min(8px, 40%); }
+
+/* ---- Günün Verileri ---- */
+.figs {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+}
+.figsLabel {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  font-weight: 650;
+  line-height: 16px;
+}
+.figGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 640px) {
+  .figGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 24px; }
+}
+/* TELEFONDA İKİ KARO. Dört karo 2×2 ızgarada kuyuyu 390'da ~150 piksel
+   uzatıyordu ve bülten metninin başı ikinci ekrana iniyordu; ilk ikisi
+   (açıklamalar önce, sonra 10 yıllık) kalıyor, kalan ölçüler bülten
+   sayfasında ve metindeki bağda. */
+@media (max-width: 639px) {
+  .fig:nth-child(n + 3) { display: none; }
+}
+.fig {
+  display: grid;
+  grid-row: span 4;
+  grid-template-rows: subgrid;
+  row-gap: 5px;
+  align-items: end;
+  min-width: 0;
+  padding: 4px 8px;
+  margin: 0 -8px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s var(--ease-brand);
+}
+.fig[data-ledger-active] { background: var(--primary-tint); }
+.figLabel {
+  overflow: hidden;
+  color: var(--text-body);
+  font-size: var(--text-small);
+  font-weight: 650;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.figValue {
+  color: var(--text-strong);
+  font-size: var(--text-lead);
+  font-weight: 750;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+/* Ölçünün önce → sonra satırı: şeridin yerinde, aynı yükseklikte. */
+.figShift {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 12px;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  line-height: 12px;
+  white-space: nowrap;
+}
+/* Künye satırı ÜSTTEN hizalı: açıklamanın iki satırlık künyesi ("Beklenti
+   55 Bin" / "Beklentinin 110 Bin Üstünde") ile ölçünün tek satırı ("+8 Baz
+   Puan") aynı ilk hatta okunuyor. */
+.figFoot {
+  align-self: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 6px;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  line-height: 16px;
+}
+.figVerdict { font-weight: 650; }
+
+/* SAPMA ÇİZGİSİ, KÜÇÜK HÂLİ — takvimdeki çizginin kuralı
+   (`components/calendar/DeviationLine.tsx`): orta = beklenti (sıfır,
+   `--line-strong` dik çizgi), nokta = gerçekleşen, bacak sıfırdan noktaya.
+   Kalınlık endeks kulvarlarıyla aynı 5 piksel. Renk yalnız işaretten. */
+.dev {
+  position: relative;
+  display: block;
+  height: 12px;
+}
+.dev::before {
+  content: "";
+  position: absolute;
+  inset: 3.5px 0 auto;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line-soft);
+}
+.devZero {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1.5px;
+  height: 12px;
+  translate: -50% 0;
+  background: var(--line-strong);
+}
+.devLeg {
+  position: absolute;
+  top: 3.5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--flat);
+}
+.dev[data-dir="above"] .devLeg { background: var(--up); }
+.dev[data-dir="below"] .devLeg { background: var(--down); }
+.devDot {
+  position: absolute;
+  top: 1px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: var(--flat);
+  /* Kuyunun tonunda halka: nokta kulvarın üstünde ayrı okunsun. */
+  box-shadow: 0 0 0 2px var(--surface-sunken);
+}
+.dev[data-dir="above"] .devDot { background: var(--up); }
+.dev[data-dir="below"] .devDot { background: var(--down); }
+
+/* Dipnot — kuyunun içinde, hairline ile ayrılmış düz paragraf. */
+.miniNote {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
 
 /* ------------------------------------------------------------- Hareket -- */
 
@@ -675,5 +868,6 @@
   .stock,
   .ref,
   .noteIcon,
-  .miniItem { transition: none; }
+  .miniItem,
+  .fig { transition: none; }
 }

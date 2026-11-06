@@ -74,13 +74,25 @@ function isWeekend(date: string) {
  * kulvar üstünde 5 piksellik şerit (CLAUDE.md, görsel dil). Yuva sayısı her
  * günde aynı, yani günler arası yoğunluk çizginin uzunluğundan okunuyor.
  */
+/*
+ * BOŞ YUVA YOK (6 Kasım, sahibinin ekran görüntüsü: "boş günde gri
+ * parçalar anlamsız"). Dört yuvanın boşları `--line-soft` gri parçalardı;
+ * olaysız gün dört gri parça, tek olaylı gün bir dolu + üç gri taşıyordu ve
+ * gri parça "düşük önemli olay" (`--impact-low`, o da gri) ile karışıyordu.
+ * Şeritte artık yalnız DOLU parçalar: her olay sabit 14 piksellik bir
+ * şerit, yoğunluk parçaların SAYISINDAN okunuyor; olaysız gün hiç kulvar
+ * çizmiyor (boşluğu kutunun kesik kenarı söylüyor, CSS `.cell[data-empty]`).
+ * Altı haftalık görünüm boş yuvalı kulvarı koruyor: orada her satır aynı
+ * ızgarada, boşluk satırlar arası bir ölçü (WeekLookahead.tsx).
+ */
 function Lane({ events, order }: { events: EconomicEventRow[]; order: number }) {
   const sorted = byImportance(events);
   const extra = sorted.length - LANE_SLOTS;
+  if (sorted.length === 0) return null;
   return (
     <span className={styles.lane} aria-hidden style={{ "--i": order } as CSSProperties}>
-      {Array.from({ length: LANE_SLOTS }, (_, slot) => (
-        <span key={slot} className={styles.laneSlot} data-impact={sorted[slot]?.importance} />
+      {sorted.slice(0, LANE_SLOTS).map((event, slot) => (
+        <span key={slot} className={styles.laneSlot} data-impact={event.importance} />
       ))}
       {extra > 0 && <span className={styles.laneMore}>+{extra}</span>}
     </span>

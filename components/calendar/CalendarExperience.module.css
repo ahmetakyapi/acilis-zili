@@ -88,6 +88,11 @@
 .keyMeta { display:flex; flex:none; align-items:center; gap:6px; font-size:12px; line-height:16px; color:var(--text-soft); white-space:nowrap; }
 .keyStatus { font-size:12px; font-weight:600; line-height:16px; color:var(--text-soft); text-align:right; white-space:nowrap; }
 .keyStatus strong { font-size:14px; font-weight:650; color:var(--text-strong); }
+/* GELECEK SATIRIN UZAKLIĞI BİR HAP (6 Kasım): "4 Gün Sonra" düz künyeydi
+   ve geçmiş satırın "Geçti"siyle aynı tonda duruyordu; gündemin göreli gün
+   rozetiyle (`.rel`) aynı malzeme, satırın "ne zaman" cevabı seçiliyor. */
+.keyStatus[data-state="ahead"] { padding:2px 8px; border-radius:999px; background:var(--surface-sunken); color:var(--text-body); }
+.keyRow[data-next] .keyStatus[data-state="ahead"] { background:var(--primary-wash); color:var(--primary-ink); }
 @container (min-width:560px) {
   .keyLine { grid-template-columns:52px minmax(0,1fr) auto; padding:7px 4px; }
   .keyDate { flex-direction:row; align-items:baseline; justify-content:flex-start; gap:5px; }
@@ -202,11 +207,26 @@ a.cell { border-color:var(--line); background:var(--surface); }
 .cell[data-weekend] { flex:1 1 0; border-color:transparent; padding-inline:8px; }
 .cell[data-holiday] { border-color:transparent; background:var(--surface-sunken); }
 .cell[data-today] { border-color:var(--primary-faint); }
-/* OLAYSIZ GÜN KUTUSUZ (23 Eylül). Ay ızgarasında 22 iş gününün 14'ü boş
-   ve her biri kenarlıklı bir kutuydu: ızgara boş kutu yığını gibi
-   okunuyor, olaylı günler aralarında seçilmiyordu. Boş gün yalnızca soluk
-   rakam; kutu olaylı günün işareti. Bugün kutusunu korur. */
-.cell[data-empty]:not([data-today]) { border-color:transparent; }
+/* OLAYSIZ GÜN KUTUSUZ (23 Eylül) — YALNIZ AY IZGARASINDA. Ay ızgarasında
+   22 iş gününün 14'ü boş ve her biri kenarlıklı bir kutuydu: ızgara boş
+   kutu yığını gibi okunuyor, olaylı günler aralarında seçilmiyordu. Boş gün
+   yalnızca soluk rakam; kutu olaylı günün işareti. Bugün kutusunu korur.
+   HAFTA ŞERİDİ AYNI HATTA (6 Kasım, sahibinin ekran görüntüsü: "dolu
+   günler kart, hafta sonu ve boş günler çıplak metin, aynı hatta
+   bitmiyor"). Yedi hücrede üç ayrı malzeme vardı; şimdi her hücre bir
+   kutu ve hepsi aynı boyda (esnek satır gerer, ölçüldü 1440: yedisi
+   108 piksel, aynı üst ve alt hat). Malzeme anlamı söylüyor: olaylı gün
+   zeminli kart, olaysız iş günü KESİK kenarlı boş kutu (yer var, açıklama
+   yok), hafta sonu kenarsız gömük ton (piyasa kapalı). Genişlik kararı
+   (iş günü 2, hafta sonu 1 birim) yerinde. */
+.month .cell[data-empty]:not([data-today]) { border-color:transparent; }
+/* Yalnız ≥768: telefonda şerit bilinçli olarak kutusuz (30 Eylül, aşağıda
+   "telefonda sade şerit"); kesik kutu ve gömük hafta sonu orada 42 ve 29
+   piksellik sütunlarda yeniden "kutu yığını" oluyordu (390, ölçüldü). */
+@media (min-width:768px) {
+  .strip:not(.month) .cell[data-empty]:not([data-weekend],[data-holiday]) { border-style:dashed; border-color:var(--line); }
+  .strip:not(.month) .cell[data-weekend] { background:var(--surface-sunken); }
+}
 /* Seçili gün (DayPicker): kutu mavi çerçeve ve ton alıyor. */
 a.cell[aria-current="true"] { border-color:var(--primary); background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--primary); }
 a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
@@ -231,6 +251,10 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
    okunuyordu. Altı haftalık görünüm aynı yuvayı kullanıyor. */
 .lane { display:flex; flex:1 1 auto; align-items:center; gap:2px; width:100%; max-width:76px; }
 .laneSlot { flex:1 1 0; min-width:0; height:5px; border-radius:999px; background:var(--line-soft); }
+/* Şeridin kulvarı yalnız dolu parça taşıyor (gerekçe CalendarStrip.tsx →
+   `Lane`): parça sabit 14 piksel, kulvar içeriği kadar. */
+.lane { flex:none; width:auto; }
+.lane .laneSlot { flex:none; width:14px; }
 .laneSlot[data-impact="high"] { background:var(--impact-high); }
 .laneSlot[data-impact="medium"] { background:var(--impact-med); }
 .laneSlot[data-impact="low"] { background:var(--impact-low); }
@@ -302,18 +326,31 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 .groupCount strong { font-weight:600; color:var(--text-strong); }
 
 .events > li + li { border-top:1px solid var(--line-soft); }
-.event { display:grid; grid-template-columns:76px 20px minmax(0,1fr); align-items:start; gap:14px; padding:16px 20px; }
-.agenda[data-values] .event { grid-template-columns:76px 20px minmax(0,1fr) 264px; }
+.event { display:grid; grid-template-columns:76px minmax(0,1fr); align-items:start; gap:16px; padding:16px 20px; }
+/* Değer sütunu 264 → 300 (6 Kasım): üç sayının altına sapma çizgisi ve
+   künye ("▲ Beklentinin 110 Bin Üstünde") geldi; künye 13 puntoda ~205
+   piksel, çizginin iki uç adı ve orta künyesi 300'de rahat ayrışıyor.
+   Önem sütunu (20 + 14 aralık) kalktı, başlık sütunu net 2 piksel kazandı. */
+.agenda[data-values] .event { grid-template-columns:76px minmax(0,1fr) 300px; }
 .time { display:flex; min-height:52px; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:8px 4px; border-radius:var(--radius-lg); background:var(--surface-elevated); text-align:center; }
 .time[data-high] { background:var(--primary-wash); }
 .time > span:first-child { font-size:18px; font-weight:700; line-height:1.1; color:var(--text-strong); }
 .time[data-high] > span:first-child { color:var(--primary-ink); }
 .time > span:nth-child(2) { font-size:12px; line-height:1.2; color:var(--text-body); white-space:nowrap; }
 .time > .timeUnknown { font-size:12px; font-weight:600; line-height:1.25; color:var(--text-body); }
-.impact { display:flex; height:20px; align-items:center; }
 .body { display:flex; min-width:0; flex-direction:column; }
-.title { font-size:14px; line-height:20px; color:var(--text-body); }
-.title[data-high] { font-weight:600; color:var(--text-strong); }
+/* Ad + önem hapı aynı akışta (gerekçe sayfada, "önem adın yanında"). */
+.titleRow { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; }
+.title { font-size:15px; line-height:21px; color:var(--text-body); }
+.title[data-high] { font-weight:650; letter-spacing:-.01em; color:var(--text-strong); }
+
+/* ÖNEM HAPI (gerekçe ImpactTag.tsx). 22 piksel, çubuklar adın x-yüksekliği
+   değil taban çizgisine oturuyor; yüksek önem tonlu zemin + güçlü ad,
+   orta gövde tonu, düşük soluk. Renk tek taşıyıcı değil: ad yazılı. */
+.impactTag { display:inline-flex; flex:none; align-items:center; gap:6px; height:22px; padding:0 8px 0 7px; border-radius:999px; box-shadow:inset 0 0 0 1px var(--line-soft); font-size:12px; font-weight:600; line-height:1; color:var(--text-soft); white-space:nowrap; }
+.impactBars { display:inline-flex; }
+.impactTag[data-impact="high"] { background:var(--surface-sunken); box-shadow:none; color:var(--text-strong); }
+.impactTag[data-impact="low"] { color:var(--text-muted); }
 .explainer { max-width:68ch; margin-top:4px; font-size:12px; line-height:1.6; color:var(--text-muted); }
 .statusLine { display:flex; flex-wrap:wrap; align-items:center; gap:4px 16px; margin-top:8px; }
 .status { display:inline-flex; align-items:center; gap:6px; font-size:12px; line-height:16px; color:var(--text-muted); }
@@ -321,15 +358,34 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 .status[data-published] { color:var(--primary-ink); }
 .addCal { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; line-height:16px; color:var(--primary-ink); text-decoration:none; }
 
-/* Değerler: üç sabit yuva, sabit sıra, satırdan satıra aynı hat. */
-.values { display:grid; grid-template-columns:repeat(3,84px); align-self:center; }
-.value { display:flex; flex-direction:column; align-items:flex-end; gap:3px; padding-left:12px; border-left:1px solid var(--line-soft); }
-/* Boş yuva kıl çizgisini de taşımıyor: değeri olmayan satırda üç boş kutu
-   ve yalnız dikey çizgiler kalıyordu. Yuva yerini tutuyor, çizgi yok. */
-.value[data-empty] { border-left-color:transparent; }
-.value > span:first-child { font-size:12px; font-weight:600; line-height:14px; color:var(--text-muted); white-space:nowrap; }
-.value > span:last-child { font-size:15px; line-height:1.2; color:var(--text-soft); }
-.value[data-strong] > span:last-child { font-weight:700; color:var(--text-strong); }
+/* Değerler: üç sabit yuva, sabit sıra, satırdan satıra aynı hat.
+   6 KASIM: yuvalar sola yaslı ve aralarında kıl çizgi yok — altlarındaki
+   sapma çizgisi üçünü tek ölçekte birleştiriyor; dikey çizgiler çizgiyi
+   üç kutuya bölüyordu. Yuva 100 piksel (300 / 3); "Gerçekleşen" işaretiyle
+   12 puntoda ~86. Sayı 17 punto (gerçekleşen 750), birim sayıdan kopmaz
+   (`formatEventValue` → MONEY_GAP). */
+.values { display:flex; min-width:0; flex-direction:column; gap:8px; align-self:center; }
+/* İlk yuva geniş: "Gerçekleşen" işaretiyle ~86 piksel; eşit üç sütunda
+   390'da 82'ye düşüp "Beklenti"ye değiyordu (ölçüldü). */
+.valueSlots { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr); gap:10px; }
+.value { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:3px; }
+.valueLabel { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; line-height:14px; color:var(--text-muted); white-space:nowrap; }
+.value > span:last-child { font-size:16px; line-height:20px; color:var(--text-soft); text-wrap:balance; }
+.value[data-kind="actual"] > span:last-child { font-size:17px; font-weight:750; letter-spacing:-.01em; color:var(--text-strong); }
+.value[data-kind="actual"] .valueLabel { color:var(--text-body); }
+/* Lejant işaretleri — çizgidekilerle aynı biçim ve ton (ReleasedData.module.css → `.key`). */
+.valueKey { display:inline-block; flex:none; }
+.value[data-kind="actual"] .valueKey { width:8px; height:8px; border-radius:50%; background:var(--flat); }
+.value[data-kind="actual"][data-dir="above"] .valueKey { background:var(--up); }
+.value[data-kind="actual"][data-dir="below"] .valueKey { background:var(--down); }
+.value[data-kind="forecast"] .valueKey { width:2px; height:12px; border-radius:1px; background:var(--text-strong); }
+.value[data-kind="previous"] .valueKey { width:3px; height:9px; border-radius:2px; background:var(--text-muted); opacity:.7; }
+.valueLine { margin-top:0; }
+/* Künye: yön renkli, glifle ve sözle; renk tek taşıyıcı değil. */
+.verdict { display:inline-flex; align-self:flex-start; align-items:baseline; gap:5px; font-size:13px; font-weight:700; line-height:18px; color:var(--text-body); }
+.verdict[data-dir="above"] { color:var(--up); }
+.verdict[data-dir="below"] { color:var(--down); }
+.verdictGlyph { font-size:.78em; }
 
 /* Sessiz satır: ardışık boş iş günleri tek satır, 44 piksel. */
 .quiet { display:flex; min-height:44px; flex-wrap:wrap; align-items:center; gap:4px 6px; margin:0; padding:12px 20px; font-size:12px; line-height:1.5; color:var(--text-muted); }
@@ -467,6 +523,8 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
   .cellFoot { justify-content:center; }
   .cellCount, .cellNote, .cellLead { display:none; }
   .lane { max-width:none; }
+  /* 390'da iş günü hücresi ~42 piksel: dört parça 4×8 + 3×2 = 38. */
+  .lane .laneSlot { width:8px; }
 
   /* TELEFONDA SADE ŞERİT (30 Eylül, iki tur). İlk tur şeridi soluk bir
      raya oturtup olaylı günleri rayın üstünde kart yapmıştı; sahibinin
@@ -504,13 +562,13 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
   .month .cell[data-weekend] .cellNum strong { font-size:13px; }
 
   .groupHead { min-height:44px; padding:10px 16px; }
-  .event, .agenda[data-values] .event { grid-template-columns:58px 18px minmax(0,1fr); gap:10px; padding:14px 16px; }
+  .event, .agenda[data-values] .event { grid-template-columns:58px minmax(0,1fr); gap:12px; padding:14px 16px; }
   .time { min-height:48px; }
   .time > span:first-child { font-size:16px; }
-  /* Değerler metnin sol hattında (önem noktalarının altında değil). */
-  .values { grid-column:3 / -1; display:flex; flex-wrap:wrap; gap:8px 20px; margin-top:10px; }
-  .value { align-items:flex-start; padding-left:0; border-left:0; }
-  .value[data-empty] { display:none; }
+  /* Değerler metnin sol hattında, tam genişlik (çizgi dar sütunda
+     okunmuyordu). Boş yuva da yerini tutuyor: üç sütun satırdan satıra
+     aynı hatta. */
+  .values { grid-column:2 / -1; margin-top:2px; }
   .quiet, .foot { padding-inline:16px; }
 
   /* Altı hafta: aralık solda, beş gün sağda dar sütunlarda, adlar alt

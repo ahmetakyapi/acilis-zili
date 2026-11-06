@@ -65,7 +65,9 @@
   position: absolute; top: 6px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%;
   background: var(--flat);
   /* Zemin halkası: kartın tonu (`--surface-sunken` sayfa zemininin üstünde). */
-  box-shadow: 0 0 0 2px var(--page-bg);
+  /* `--dev-ring`: çizgiyi başka zeminde basan yüzey (Bugünün Akışı) kendi
+     tonunu verir; yoksa sayfa zemini. */
+  box-shadow: 0 0 0 2px var(--dev-ring, var(--page-bg));
 }
 .line[data-dir="above"] .dot { background: var(--up); }
 .line[data-dir="below"] .dot { background: var(--down); }

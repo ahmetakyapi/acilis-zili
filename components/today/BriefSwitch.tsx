@@ -32,7 +32,8 @@ import styles from "./BriefSwitch.module.css";
 
 export type BriefView = {
   headline: string;
-  /** "Claude · 16:12" — sağ üstteki künye. */
+  /** "Claude · 16:12 Yayımlandı" — manşetin altındaki künye (6 Kasım'a
+      kadar sağ üstteydi; üst künye yok). */
   stamp: string;
   /** Kaydın kendi tarihi: "1 Ağustos Cumartesi" ya da "28.07 – 01.08". */
   dateLabel: string;
@@ -195,20 +196,13 @@ export function BriefSwitch({
        kaydırıldıkça ray kayıyor ve metnin sağında hep bir sütunluk boşluk
        varmış gibi duruyordu. Gerekçe BriefSwitch.module.css'te. */
     <section aria-label={labels.titles[period]} className={cn("rounded-xl border border-primary-faint bg-surface-solid p-5", styles.card)}>
+      {/* ÜST SATIRDA YALNIZ DENETİM (6 Kasım). "Claude · 17:00" künyesi
+          burada, sekmelerin solunda duruyordu; üst künye/kicker 9 Ekim'de
+          kalktı (`PageHeader` yorumu) ve başlığa ait bilgi başlığın ALTINA
+          iner. Tarih, "Bugün" rozeti ve imza artık manşetin altında tek
+          künye satırı; ray yalnız sekmeler ve arşiv bağlantısı. */}
       <div className={styles.rail}>
-        <div className={cn("flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1", styles.railKicker)}>
-          {/* "Günün Özeti" / "Haftanın Özeti" künyesi burada duruyordu; bölüm
-              künyeleri 9 Ekim 2026'da kalktı (`PageHeader` yorumu). Dönem
-              sekmede, bölümün adı `aria-label`da. */}
-          {brief && (
-            <span className="numeral text-tiny text-muted">{brief.stamp}</span>
-          )}
-        </div>
-        {/* ARŞİV BAĞLANTISI DAR EKRANDA SAĞ UÇTA. Denetim grubu kendi
-            satırına indiğinde sekmeler ve bağlantı sola toplanıyor, sağında
-            yarım satır boşluk kalıyordu; grup o satırın tamamını alıyor ve
-            iki uç birbirinden ayrılıyor. */}
-        <div className={cn("flex w-full shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:w-auto sm:justify-start", styles.railControls)}>
+        <div className={cn("flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-2", styles.railControls)}>
           {tabs}
           {brief && (
             <Link
@@ -223,32 +217,6 @@ export function BriefSwitch({
             </Link>
           )}
         </div>
-        {brief && (
-          <div className={styles.railMeta}>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="numeral text-tiny text-body">{brief.dateLabel}</span>
-              {brief.current && (
-                <span className="rounded-full bg-primary px-2 py-0.5 text-tiny font-bold text-on-primary">
-                  {labels.currentBadge[period]}
-                </span>
-              )}
-            </div>
-            {/* Uyarı metnin ÜSTÜNDE (geniş ekranda yanında): aşağıdaki
-                cümleleri hangi günün gözüyle okuyacağını önce söylemek
-                gerekiyor. */}
-            {brief.staleNote && (
-              <p className="mt-2.5 rounded-md border border-line bg-surface-elevated px-3 py-2 text-small leading-[18px] text-body">
-                {brief.staleNote}
-              </p>
-            )}
-            {/* Dil notu da aynı gerekçeyle metnin önünde. */}
-            {brief.langNote && (
-              <p className="mt-2.5 w-fit rounded-full border border-line bg-surface-elevated px-3 py-1.5 text-tiny text-muted">
-                {brief.langNote}
-              </p>
-            )}
-          </div>
-        )}
       </div>
 
       <div
@@ -276,6 +244,30 @@ export function BriefSwitch({
             <h2 data-ink="lines" className="max-w-[34ch] text-balance text-heading font-bold leading-[1.16] tracking-[-0.03em] text-strong sm:text-subdisplay">
               <span className="ink-line">{brief.headline}</span>
             </h2>
+            {/* KÜNYE MANŞETİN ALTINDA: kaydın günü, dönem rozeti, imza. */}
+            <p className={styles.byline}>
+              <span className="numeral text-body">{brief.dateLabel}</span>
+              {brief.current && (
+                <span className="rounded-full bg-primary px-2 py-0.5 text-tiny font-bold text-on-primary">
+                  {labels.currentBadge[period]}
+                </span>
+              )}
+              <span aria-hidden className={styles.bylineDot} />
+              <span className="numeral">{brief.stamp}</span>
+            </p>
+            {/* Uyarı metnin ÜSTÜNDE: aşağıdaki cümleleri hangi günün
+                gözüyle okuyacağını önce söylemek gerekiyor. */}
+            {brief.staleNote && (
+              <p className="mt-3 rounded-md border border-line bg-surface-elevated px-3 py-2 text-small leading-[18px] text-body">
+                {brief.staleNote}
+              </p>
+            )}
+            {/* Dil notu da aynı gerekçeyle metnin önünde. */}
+            {brief.langNote && (
+              <p className="mt-3 w-fit rounded-full border border-line bg-surface-elevated px-3 py-1.5 text-tiny text-muted">
+                {brief.langNote}
+              </p>
+            )}
             {body}
           </>
         ) : (

@@ -102,3 +102,35 @@ test("a company moving to an unknown window keeps results without restoring a wi
   const otherCompany = earningsSnapshot({ symbol: "MSFT", status: "scheduled", eps: undefined, revenue: undefined }, "earnings-unknown");
   assert.deepEqual(preserveConfirmedResults(previous, otherCompany), otherCompany);
 });
+
+test("the flow row carries the release's deviation from the expectation, worded like the calendar card", async () => {
+  const { flowDeviation } = await import("../lib/release-deviation");
+  const words = { aboveForecast: "Beklentinin {diff} Üstünde", belowForecast: "Beklentinin {diff} Altında", inlineForecast: "Beklentiyle Aynı", abovePrevious: "Öncekinin {diff} Üstünde", belowPrevious: "Öncekinin {diff} Altında", inlinePrevious: "Öncekiyle Aynı", unitPoint: "Puan", unitThousand: "Bin" };
+  const nfp = flowDeviation("165", "150", "254", "bin", "tr", words)!;
+  assert.equal(nfp.direction, "above");
+  assert.equal(nfp.base, "forecast");
+  assert.equal(nfp.verdict, "Beklentinin 15 Bin Üstünde".replace(" ", nfp.verdict.includes(" ") ? " " : " "));
+  assert.match(nfp.versus!, /^Öncekinin 89.Bin Altında$/);
+  // Ölçek iki yana simetrik: önceki (beklentinin 104 üstü) uçta, gerçekleşen (+15) orantılı.
+  assert.equal(nfp.previousAt, 0.84);
+  assert.equal(nfp.actualAt, Math.round((15 / 104) * 0.84 * 10_000) / 10_000);
+  const rate = flowDeviation("4.1", "4.2", null, "%", "tr", words)!;
+  assert.equal(rate.direction, "below");
+  assert.match(rate.verdict, /^Beklentinin 0,1.Puan Altında$/);
+  assert.equal("versus" in rate, false);
+  // Düz sayı olmayan (Fed aralığı) ya da kıyassız sonuçta sapma yok.
+  assert.equal(flowDeviation("3.75-4.00", "4.00", null, "%", "tr", words), undefined);
+  assert.equal(flowDeviation("4.1", null, null, "%", "tr", words), undefined);
+});
+
+test("a retained release keeps its deviation with it", () => {
+  const base: DayFlowSnapshot = { dateEt: "2026-11-06", asOf: "2026-11-06T17:00:00Z", events: [], initialNowMinutes: 780, tradingDay: true, closeMinutes: 960, offsets: { primary: 480, secondary: 0 }, tags: { primary: "TR", secondary: "NY" }, pollAfterMs: 30000, sourceDelayed: false, hiddenEarnings: 0, today: "2026-11-06", prevDate: null, nextDate: null };
+  const deviation = { base: "forecast" as const, direction: "above" as const, actualAt: 0.12, previousAt: -0.84, verdict: "Beklentinin 15 Bin Üstünde" };
+  const released: FlowEvent = { id: "nfp", timeEt: "08:30", scheduledAt: null, title: "NFP", kind: "event", importance: "high", status: "released", actual: "165 bin", forecast: "150 bin", deviation, href: "/takvim", source: "FRED", updatedAt: "a" };
+  const gap: FlowEvent = { ...released, status: "scheduled", actual: undefined, deviation: undefined };
+  delete gap.deviation;
+  const result = preserveConfirmedResults({ ...base, events: [released] }, { ...base, events: [gap] });
+  assert.deepEqual(result.events[0].deviation, deviation);
+  const without = preserveConfirmedResults({ ...base, events: [{ ...released, deviation: undefined }] }, { ...base, events: [gap] });
+  assert.equal("deviation" in without.events[0], false);
+});
