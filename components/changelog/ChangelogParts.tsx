@@ -8,15 +8,17 @@ import {
   CaretDown,
   ChartLine,
   GearSix,
+  Globe,
   Notebook,
   ShieldCheck,
   SignIn,
   Sparkle,
-  SquaresFour,
   TelegramLogo,
   Wrench,
+  X,
 } from "@phosphor-icons/react/dist/ssr";
 import { UnseenPill } from "@/components/changelog/ChangelogBadge";
+import { SeenStage } from "@/components/changelog/SeenStage";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { FilterChip, Panel, PanelHeader } from "@/components/ui/primitives";
@@ -25,16 +27,19 @@ import {
   AREA_DISPLAY_ORDER,
   CHANGE_KINDS,
   entryAnchor,
-  entryAreas,
   entryDateLabel,
+  kindCounts,
+  latestDigest,
   monthAnchor,
-  splitLatest,
   type ChangeArea,
   type ChangeEntry,
+  type ChangeFilter,
   type ChangeItem,
   type ChangeKind,
   type ChangeMonth,
-  type ReleasePoint,
+  type ChangeScreen,
+  type FlowWeek,
+  type ScreenSummary,
 } from "@/lib/changelog";
 import { tryTarget } from "@/lib/feed-visuals";
 import { formatIsoMonth } from "@/lib/fx";
@@ -46,33 +51,39 @@ import styles from "./Changelog.module.css";
 /* Sunucu bileşenleri — istemci JS'i yok. Tek istemci parçaları rozetler,
    okundu işareti ve katlamadaki çapayı açan küçük dinleyici (aynı klasör).
 
-   İLK YENİDEN DÜZEN (25 Ekim, "çok yer kaplamış"): son sürüm alanlara göre
-   gruplu kompakt karolar, eski sürümler tek satır katlı girişler.
+   ÜÇÜNCÜ DÜZEN (6 Kasım; sahibinin sözü: "son güncellemeyle ne geldi, neler
+   iyileşti, neler değişti hem onlar görünsün hem yeni featurelar/yeni
+   düzenlemeler EKRAN ve KATEGORİ bazlı görünebilsin; günlük akış daha kolay
+   anlaşılabilsin; çok daha görsel, animasyonlu ve benzersiz").
 
-   KOMPAKT DÜZEN (25 Ekim, ikinci tur; sahibinin sözü: "yenilikleri daha
-   kolay görsün, daha kolay ulaşsın, daha görsel olsun"). Önceki hâlde 16
-   madde aynı ağırlıkta karolardı: hepsi ilk ekrandaydı ama hiçbiri öne
-   çıkmıyordu, telefonda ilk ekrana iki karo giriyordu (390×844, ölçüldü).
-   Şimdi:
-   - başlık bandı tek sıra: ad, tek cümle, sağda üç sayı ve RSS (istatistik
-     şeritten buraya çıktı, şerit yalnız görsel);
-   - sürüm akışı nokta değil ÇUBUK: boy madde sayısı (doğrusal, yalan
-     söylemeyen ölçek), renk baskın alan; en yeni çubuk dolu ve kalın;
-   - süzgeç şeridi alan + tür: alan çipleri aynı zamanda akışın renk
-     açıklaması (lejant ayrı basılmıyor), seçim akışta eşleşmeyen çubukları
-     soldurur;
-   - son sürüm: en çok dört "Öne Çıkan" büyük kart (ikon, başlık, tek satır,
-     "Dene" butonu), kalanı kompakt ızgara. Seçim kuralı `splitLatest`.
+   Önceki düzenler ve neden değişti:
+   - 25 Ekim (ilk ve kompakt düzen): son sürüm alan alan karolar, en çok dört
+     "Öne Çıkan" kart (her alandan bir, Claude kart değil kendi grubunda);
+     eski sürümler ay panelinde tek satır katlı `<details>`. Sorun: sürümün
+     ne GETİRDİĞİ ile neyi ONARDIĞI kartın köşesindeki küçük etiketten
+     okunuyordu; eski sürümün içeriği ancak satır açılınca görünüyordu.
+   - 31 Ekim (görsel tur): sürüm akışı alan alan yığın çubuk. Sorun: gün
+     ölçeğinde çubuk 1440'ta ~10, 390'da ~3 piksel ve tek büyük sürüm (16)
+     ölçeği belirlediği için ötekiler aynı kısa boyda.
 
-   ALAN ÇEŞİTLİLİĞİ (25 Ekim, mobil turu; sahibinin sözü: "Claude çok yer
-   kaplıyor, ilk giren kullanıcı sadece Claude ile karşılaşmasın"). Son
-   sürümün ilk üç maddesi Claude'du; öne çıkan ilk kart, sürüm başlığı ve
-   telefonda ilk ekran yalnız Claude'u gösteriyordu. Şimdi kartlar her
-   alandan bir tane (Piyasa, Bilanço, Kişisel, İçerik), Claude maddeleri
-   kartların altında kendi küçük grubunda ("Claude ile"), süzgeç
-   çiplerinde Claude sonda ve ötekilerle aynı ağırlıkta. Telefonda kartlar
-   tek sütun yatay satır (ikon, başlık, tek satır, "Dene"): 390×844'te ilk
-   ekranda dört alan. Ölçüm Changelog.module.css → "Öne çıkanlar". */
+   Şimdi, ekran düzeni sırasıyla (CLAUDE.md):
+   1. Başlık bandı: ad, tek cümle; sağda üç sayı ve tek denetim RSS.
+   2. SON GÜNCELLEMEDE (ana görsel): tür payı şeridi (bir çizgi: "15 maddenin
+      kaçı yeni"), altında Ne Geldi / Ne İyileşti / Ne Düzeldi üç sütun,
+      sayısıyla; dibinde dokunduğu ekranlar ve özet.
+   3. HAFTALIK AKIŞ: her hafta bir sütun, türe göre yığın (`weeklyFlow`).
+   4. EKRANLARA GÖRE: ekran haritası; karo hem ölçü (madde sayısı, tür payı,
+      son değişiklik) hem süzgeç (`?ekran=`).
+   5. Süzgeç şeridi: tür + alan (+ seçili ekranın kaldırma çipi).
+   6. GÜNLÜK AKIŞ: ay ay zaman çizgisi; her gün bir düğüm, maddeleri tür
+      ikonlu satırlar hâlinde AÇIK (eskiden satır başına katlıydı).
+
+   RENK: tür renk taşır (Yeni `--up`, İyileştirme `--chart-c`, Düzeltme
+   `--brass`) ve her yerde aynıdır: pay şeridi, sütun başı, akışın yığını,
+   ekran karosunun çizgisi, günlük akıştaki ikon. Alanın rengi KALKTI (25-31
+   Ekim'de `--chart-a..d` alan renkleriydi): aynı sayfada iki ayrı renk
+   sözlüğü (alan + tür) lejantsız okunmuyordu; alan artık yalnız çip ve
+   künye. Ekranı İKON söyler (gezinmedeki ikonuyla). */
 
 /** "{n} Madde" / "1 Item" — İngilizcede tekil ayrı. */
 function countLabel(n: number, many: string, one: string): string {
@@ -81,11 +92,15 @@ function countLabel(n: number, many: string, one: string): string {
 
 const intlLocale = (locale: Locale) => (locale === "tr" ? "tr-TR" : "en-US");
 
-/** "22 Eki" — kısa gün etiketi (şerit, künye ve tek satırlık giriş). */
+/** "22 Eki" — kısa gün etiketi (künye, ekran karosu, akış). */
 export function shortDay(date: string, locale: Locale): string {
   return new Intl.DateTimeFormat(intlLocale(locale), { day: "numeric", month: "short", timeZone: "UTC" }).format(
     new Date(`${date}T12:00:00Z`),
   );
+}
+
+function monthShort(date: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(intlLocale(locale), { month: "short", timeZone: "UTC" }).format(new Date(`${date}T12:00:00Z`));
 }
 
 function weekday(date: string, locale: Locale): string {
@@ -98,7 +113,7 @@ const isExternal = (href: string) => /^https?:\/\//.test(href);
 
 type Icon = typeof Sparkle;
 
-/** Etiketin ikonu — renk sakin, biçim de ayırır (renk körlüğünde tek ipucu renk olmasın). */
+/** Türün ikonu — renk sakin, biçim de ayırır (renk körlüğünde tek ipucu renk olmasın). */
 const KIND_ICON: Record<ChangeKind, Icon> = { yeni: Sparkle, iyilestirme: ArrowCircleUp, duzeltme: Wrench };
 
 /* "DENE" HEDEFİNİN İKONU: bağlantının açacağı ekran gezinmedeki ikonuyla
@@ -121,52 +136,51 @@ const TARGET_ICON: Record<string, Icon> = {
   ...Object.fromEntries(NAV_ITEMS.map((item) => [item.href, item.icon])),
   ...EXTRA_ICON,
 };
-/** Bağlantısız maddede alanın kendi ikonu. */
-const AREA_ICON: Record<ChangeArea, Icon> = {
-  claude: Brain,
-  piyasa: ChartLine,
-  bilanco: TARGET_ICON["/bilancolar"] ?? ChartLine,
-  kisisel: TARGET_ICON["/favoriler"] ?? Notebook,
-  icerik: SquaresFour,
+
+/** Ekranın ikonu — ekranın gezinmedeki ana rotasının ikonu. */
+const SCREEN_ROUTE: Record<ChangeScreen, string> = {
+  anasayfa: "/",
+  piyasalar: "/piyasalar",
+  hisse: "/hisse",
+  teknik: "/teknik",
+  bilancolar: "/bilancolar",
+  takvim: "/takvim",
+  mercek: "/mercek",
+  gunluk: "/gun",
+  portfoy: "/portfoy",
+  rehber: "/rehber",
+  hesap: "/ayarlar",
+  site: "",
 };
+const SCREEN_ICON = Object.fromEntries(
+  (Object.keys(SCREEN_ROUTE) as ChangeScreen[]).map((screen) => [screen, TARGET_ICON[SCREEN_ROUTE[screen]] ?? Globe]),
+) as Record<ChangeScreen, Icon>;
 
-
-/**
- * Tür etiketi — renkli ama sakin (kompakt düzen): yıkanmış zemin, koyu
- * mürekkep. Yeni yeşil (eklenen), Düzeltme pirinç, İyileştirme nötr (mavi
- * etkileşim rengi, etiket bağlantı gibi okunurdu); her biri kendi ikonunu
- * da taşır.
- */
-function KindTag({ kind, L }: { kind: ChangeKind; L: ChangelogLabels }) {
-  const KindIcon = KIND_ICON[kind];
-  return (
-    <span className={styles.kind} data-kind={kind}>
-      <KindIcon size={12} weight="bold" aria-hidden />
-      {L.kind[kind]}
-    </span>
-  );
-}
-
-/** Maddenin "Dene" bağlantısı (eski sürümlerin açılan gövdesinde). */
-function TryLink({ item, label, locale }: { item: ChangeItem; label: string; locale: Locale }) {
-  if (!item.href) return null;
-  const aria = `${label}: ${item.title}`;
-  const Target = TARGET_ICON[tryTarget(item.href)] ?? ArrowRight;
-  const lead = <Target size={14} weight="duotone" aria-hidden className={styles.tryIcon} />;
+/** Bağlantının sarmalayıcısı: dış adres yeni sekmede, site içi yol dil önekiyle. */
+function ItemLink({
+  item,
+  locale,
+  className,
+  children,
+  label,
+}: {
+  item: ChangeItem;
+  locale: Locale;
+  className: string;
+  children: ReactNode;
+  label?: string;
+}) {
+  if (!item.href) return <div className={className}>{children}</div>;
   if (isExternal(item.href)) {
     return (
-      <a href={item.href} target="_blank" rel="noopener noreferrer" aria-label={aria} className={`tap-44 ${styles.tryLink}`}>
-        {lead}
-        {label}
-        <ArrowUpRight weight="bold" size={12} aria-hidden />
+      <a href={item.href} target="_blank" rel="noopener noreferrer" className={className} aria-label={label}>
+        {children}
       </a>
     );
   }
   return (
-    <Link href={withLocale(item.href, locale)} prefetch={false} aria-label={aria} className={`tap-44 ${styles.tryLink}`}>
-      {lead}
-      {label}
-      <ArrowRight weight="bold" size={12} aria-hidden />
+    <Link href={withLocale(item.href, locale)} prefetch={false} className={className} aria-label={label}>
+      {children}
     </Link>
   );
 }
@@ -193,8 +207,8 @@ export function HeaderAside({
   return (
     <div className={styles.headAside}>
       <dl className={styles.stats} aria-label={L.statsLabel}>
-        <div><dt>{L.statReleases}</dt><dd>{totals.releases}</dd></div>
-        <div><dt>{L.statItems}</dt><dd>{totals.items}</dd></div>
+        <div><dt>{L.statReleases}</dt><dd className="numeral">{totals.releases}</dd></div>
+        <div><dt>{L.statItems}</dt><dd className="numeral">{totals.items}</dd></div>
         <div><dt>{L.statUpdated}</dt><dd>{shortDay(totals.updated, locale)}</dd></div>
       </dl>
       {/* Besleme bir sayfa değil (XML): ön yükleme yok, düz bağlantı. */}
@@ -210,135 +224,377 @@ export function HeaderAside({
   );
 }
 
-/* ------------------------------------------------------------ Sürüm akışı */
+/* ------------------------------------------------------------ Son güncellemede */
 
-/** Ölçek çizgilerinin adımı: tepe 6'ya kadar 2, 30'a kadar 5, üstü 10 madde. */
-function gridStep(peak: number): number {
-  return peak <= 6 ? 2 : peak <= 30 ? 5 : 10;
+/**
+ * TÜR PAYI ŞERİDİ — sürümün maddeleri bir çizgide: her dilim bir tür, eni
+ * madde sayısı (karşılaştırılan büyüklük bir de çizgi olarak okunur).
+ * Girişte dilimler soldan bir kez açılır; hareketi azaltana son kare.
+ */
+function KindShare({ counts, L }: { counts: Record<ChangeKind | "all", number>; L: ChangelogLabels }) {
+  return (
+    <>
+    <div className={styles.share} role="img" aria-label={`${L.digestShare.replace("{n}", String(counts.all))}: ${CHANGE_KINDS.map((k) => `${L.kind[k]} ${counts[k]}`).join(", ")}`}>
+      {CHANGE_KINDS.filter((kind) => counts[kind] > 0).map((kind, index) => (
+        <span
+          key={kind}
+          className={`${styles.shareSeg} ${styles.k}`}
+          data-kind={kind}
+          style={{ flexGrow: counts[kind], "--i": index } as CSSProperties}
+        />
+      ))}
+    </div>
+    {/* Lejant: sayı + tür adı, şeridin altında (telefonda üç sütun ekranın
+        altında kalıyor; sürümün türleri ilk ekranda bir bakışta okunsun). */}
+    <ul className={styles.shareLegend} aria-hidden>
+      {CHANGE_KINDS.map((kind) => (
+        <li key={kind} className={styles.k} data-kind={kind} data-zero={counts[kind] === 0 || undefined}>
+          <i className={styles.swatch} />
+          <span className="numeral">{counts[kind]}</span> {L.kind[kind]}
+        </li>
+      ))}
+    </ul>
+    </>
+  );
+}
+
+/** Son güncellemenin bir maddesi: hedef ekranın ikonu, başlık, tek satır özet; satır bağlantının kendisi. */
+function DigestRow({ item, locale, L, index }: { item: ChangeItem; locale: Locale; L: ChangelogLabels; index: number }) {
+  const Target = (item.href ? TARGET_ICON[tryTarget(item.href)] : undefined) ?? SCREEN_ICON[item.screen];
+  return (
+    <ItemLink item={item} locale={locale} className={styles.row} label={item.href ? `${L.try}: ${item.title}` : undefined}>
+      <span className={styles.rowIcon} aria-hidden style={{ "--i": index } as CSSProperties}>
+        <Target size={18} weight="duotone" />
+      </span>
+      <span className={styles.rowCopy}>
+        <span className={styles.rowTitle}>{item.title}</span>
+        <span className={styles.rowShort} title={item.body}>{item.short ?? item.body}</span>
+        <span className={styles.rowScreen}>
+          {L.screen[item.screen]}
+          {item.area === "claude" && <span className={styles.rowClaude}> · Claude</span>}
+        </span>
+      </span>
+      {item.href &&
+        (isExternal(item.href) ? (
+          <ArrowUpRight className={styles.rowArrow} size={14} weight="bold" aria-hidden />
+        ) : (
+          <ArrowRight className={styles.rowArrow} size={14} weight="bold" aria-hidden />
+        ))}
+    </ItemLink>
+  );
 }
 
 /**
- * SÜRÜM AKIŞI — yatay eksende her sürüm bir çubuk. Konum gün ölçeğinde
- * (sessiz haftalar boşluk olarak görünür), boy madde sayısı. En yeni sürüm
- * künyeli. Çubuğa basınca o sürüme kayar (sayfa içi çapa; katlı girişi
- * `RevealHashTarget` açar); imleç ya da odakta tarih ve başlık balonu.
- * Süzgeç açıkken eşleşmeyen sürümler solar (`matches`): akış her zaman
- * bütün geçmişi gösterir, süzgeç neyin kaldığını işaretler.
- *
- * OKUNUR AKIŞ (31 Ekim, sahibinin sözü: "ince çubuklar, okunması zor").
- * Eski çubuk 6 piksel enli, tek renkli (baskın alan) ve ölçeksizdi: boy
- * bir sayı söylemiyordu, renk sürümün yalnız bir alanını. Şimdi:
- *   - çubuk ALAN ALAN YIĞIN (`parts`): her dilim o alanın madde sayısı
- *     kadar; süzgeç çiplerindeki renk imi lejant olmaya devam ediyor;
- *   - en, gün diliminden (`--days`): 1440'ta ~10, 390'da ~3 piksel; aynı
- *     günde iki sürüm olmadığı için çubuklar üst üste binmez;
- *   - ölçek çizgileri (5, 10, 15 madde), en üstteki birimli; sıfır çizgisi
- *     `--line-strong` (grafik dili);
- *   - en yeni çubuğun tepesinde "Son · 16" künyesi (eski dolu baş yerine).
- * Boy DOĞRUSAL ve sıfırdan (oran × çizim yüksekliği): bir maddelik sürüm
- * kısa görünür, yalan söylemez.
+ * SON GÜNCELLEMEDE — sayfanın ana görseli. Gerekçe dosya başı ve
+ * `lib/changelog.ts` → `latestDigest`. Sürümün adı kısa display başlık
+ * (izinli tek degrade yer); tarih ve madde sayısı başlığın altında (ekran
+ * düzeni: başlığa ait bilgi altına iner). Ekran çipleri `?ekran=` süzgecini
+ * açar ve günlük akışa iner.
  */
-export function ReleaseStrip({
-  points,
-  ticks,
-  matches,
+export function LatestDigest({
+  entry,
+  latest,
+  locale,
+  L,
+  screenHref,
+}: {
+  entry: ChangeEntry;
+  latest: string;
+  locale: Locale;
+  L: ChangelogLabels;
+  screenHref: (screen: ChangeScreen) => string;
+}) {
+  const columns = latestDigest(entry);
+  const counts = kindCounts([entry]);
+  const screens = [...new Set(entry.items.map((item) => item.screen))];
+  /* Satırların sırası sütunlar boyunca (girişteki kademeli açılış için). */
+  const offsets = columns.map((_, i) => columns.slice(0, i).reduce((n, c) => n + c.items.length, 0));
+  return (
+    <Panel id={entryAnchor(entry.date)} aria-labelledby="yenilikler-son" className={styles.digest}>
+      <PanelHeader title={L.digestTitle} meta={<UnseenPill date={entry.date} latest={latest} label={L.badge} srLabel={L.unseenLabel} />} />
+      <div className={styles.digestHead}>
+        {/* Çok satırlı manşet: degrade satır satır (`data-ink="lines"`). */}
+        <h3 id="yenilikler-son" data-ink="lines" className={styles.digestTitle}>
+          <span className="ink-line">{entry.title}</span>
+        </h3>
+        <p className={styles.digestMeta}>
+          <span className={styles.latestBadge}>{L.latestBadge}</span>
+          <time dateTime={entry.date}>{entryDateLabel(entry, locale)}</time>
+          <span>{countLabel(entry.items.length, L.itemCount, L.itemCountOne)}</span>
+        </p>
+      </div>
+      <SeenStage className={styles.digestStage}>
+      <KindShare counts={counts} L={L} />
+      <div className={styles.columns}>
+        {columns.map((column, columnIndex) => {
+          const KindIcon = KIND_ICON[column.kind];
+          return (
+            <section
+              key={column.kind}
+              aria-labelledby={`yenilikler-tur-${column.kind}`}
+              className={`${styles.column} ${styles.k}`}
+              data-kind={column.kind}
+              style={{ "--c": columnIndex } as CSSProperties}
+            >
+              <h4 id={`yenilikler-tur-${column.kind}`} className={styles.columnHead} data-ink="plain">
+                <span className={styles.columnIcon} aria-hidden>
+                  <KindIcon size={16} weight="bold" />
+                </span>
+                <span className={styles.columnName}>{L.digestKind[column.kind]}</span>
+                <span className={`numeral ${styles.columnCount}`}>{column.items.length}</span>
+              </h4>
+              {column.items.length === 0 ? (
+                <p className={styles.columnEmpty}>{L.digestEmpty}</p>
+              ) : (
+                <ul className={styles.rows}>
+                  {column.items.map((item, itemIndex) => (
+                    <li key={item.title}>
+                      <DigestRow item={item} locale={locale} L={L} index={offsets[columnIndex] + itemIndex} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          );
+        })}
+      </div>
+      </SeenStage>
+      <div className={styles.digestScreens}>
+        <span className={styles.digestScreensLabel}>{L.digestScreens}</span>
+        <ul className={styles.screenChips}>
+          {screens.map((screen) => {
+            const ScreenIcon = SCREEN_ICON[screen];
+            const n = entry.items.filter((item) => item.screen === screen).length;
+            return (
+              <li key={screen}>
+                {/* Kaydırma AÇIK (öbür süzgeç bağlantılarının aksine): çip
+                    süzülmüş günlük akışa gider (`#gunluk-akis`), sayfa
+                    oraya iner; yerinde kalsaydı süzgecin sonucu ekranın
+                    çok altında görünmezdi. */}
+                <Link href={screenHref(screen)} className={styles.screenChip}>
+                  <ScreenIcon size={14} weight="duotone" aria-hidden />
+                  {L.screen[screen]}
+                  <span className={`numeral ${styles.screenChipCount}`}>{n}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      <p className={styles.digestSummary}>{entry.summary}</p>
+      <p className={styles.note}>{L.footnote}</p>
+    </Panel>
+  );
+}
+
+/* ------------------------------------------------------------ Haftalık akış */
+
+/** Ölçek çizgilerinin adımı: tepe 12'ye kadar 4, 30'a kadar 10, üstü 20 madde. */
+function gridStep(peak: number): number {
+  return peak <= 12 ? 4 : peak <= 30 ? 10 : 20;
+}
+
+/**
+ * HAFTALIK AKIŞ — gerekçe `lib/changelog.ts` → `weeklyFlow`. Sütunlar
+ * ızgarada alanı eşit böler; boy DOĞRUSAL ve sıfırdan (madde / tepe hafta).
+ * Yığın türe göre, alttan Yeni, İyileştirme, Düzeltme. Süzgeç açıkken her
+ * türün eşleşmeyen payı aynı yerde soluk kalır (ölçek ve sütun boyu
+ * değişmez, okur süzgecin neyi bıraktığını bütünün içinde görür); tepedeki
+ * sayı o zaman "eşleşen / toplam". Sütuna basınca o haftanın en yeni
+ * (süzgeçten geçen) gününe iner; eşleşmesi olmayan hafta bağlantı değil.
+ * Ay adı ayın ilk haftasının altında, gün numarası her sütunda.
+ */
+export function WeeklyFlow({
+  weeks,
+  filtered,
   locale,
   L,
 }: {
-  points: readonly ReleasePoint[];
-  ticks: readonly { month: string; x: number }[];
-  /** Süzgeçten geçen sürümlerin günleri; süzgeç yoksa `null`. */
-  matches: ReadonlySet<string> | null;
+  weeks: readonly FlowWeek[];
+  filtered: boolean;
   locale: Locale;
   L: ChangelogLabels;
 }) {
-  if (points.length === 0) return null;
-  const peak = Math.max(1, ...points.map((point) => point.items));
-  const days = (points.at(-1)?.day ?? 0) + 1;
+  if (weeks.length === 0) return null;
+  const peak = Math.max(1, ...weeks.map((week) => week.total));
   const step = gridStep(peak);
   const grid = Array.from({ length: Math.floor(peak / step) }, (_, i) => (i + 1) * step);
   const monthName = new Intl.DateTimeFormat(intlLocale(locale), { month: "short", timeZone: "UTC" });
   return (
-    <Panel aria-labelledby="yenilikler-akis" className={styles.strip}>
-      <div className={styles.stripHead}>
-        <h2 id="yenilikler-akis" className={styles.stripTitle} data-ink="plain">{L.stripTitle}</h2>
-        <p className={styles.stripHint}>{L.stripHint}</p>
-      </div>
-      <nav
-        aria-labelledby="yenilikler-akis"
-        className={styles.laneWrap}
-        data-filtered={matches ? "" : undefined}
-        style={{ "--days": days } as CSSProperties}
-      >
-        <div className={styles.plot}>
-          <ol className={styles.grid} aria-hidden>
-            {grid.map((value, i) => (
-              <li key={value} style={{ "--r": (value / peak).toFixed(3) } as CSSProperties}>
-                <span className="numeral">
-                  {value}
-                  {i === grid.length - 1 && <span className={styles.gridUnit}>{L.stripScale.replace("{n}", "")}</span>}
-                </span>
-              </li>
-            ))}
-          </ol>
-          <ol className={styles.bars}>
-            {points.map((point, index) => {
-              const ratio = point.items / peak;
-              const latest = index === points.length - 1;
-              const label = L.pointLabel
-                .replace("{date}", shortDay(point.date, locale))
-                .replace("{title}", point.title)
-                .replace("{n}", String(point.items));
-              return (
-                <li
-                  key={point.date}
-                  className={styles.bar}
-                  style={{ "--x": point.x, "--r": ratio.toFixed(3), "--i": index } as CSSProperties}
-                  data-latest={latest || undefined}
-                  data-side={point.x > 0.5 ? "left" : "right"}
-                  data-match={!matches || matches.has(point.date) || undefined}
-                >
-                  <a href={`#${entryAnchor(point.date)}`} aria-label={label} className={styles.barLink}>
-                    <span className={styles.barFill} aria-hidden>
-                      {point.parts.map((part) => (
-                        <span
-                          key={part.area}
-                          className={`${styles.barPart} ${styles.tone}`}
-                          data-area={part.area}
-                          style={{ flexGrow: part.count }}
-                        />
-                      ))}
-                    </span>
-                    {latest && (
-                      <span className={`numeral ${styles.barLatest}`} aria-hidden>
-                        {L.stripLatest.replace("{n}", String(point.items))}
-                      </span>
-                    )}
-                    <span className={styles.tip} aria-hidden>
-                      <strong>{shortDay(point.date, locale)}</strong> {point.title}
-                      <span className={styles.tipParts}>
-                        {point.parts.map((part) => (
-                          <span key={part.area}>
-                            <i className={`${styles.chipSwatch} ${styles.tone}`} data-area={part.area} />
-                            {L.areaShort[part.area]} {part.count}
-                          </span>
-                        ))}
-                      </span>
-                    </span>
-                  </a>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-        <ol className={styles.ticks} aria-hidden>
-          {ticks.map((tick) => (
-            <li key={tick.month} style={{ "--x": tick.x } as CSSProperties}>
-              {monthName.format(new Date(`${tick.month}-01T12:00:00Z`))}
+    <Panel aria-label={L.flowTitle} className={styles.flow}>
+      <PanelHeader title={L.flowTitle} />
+      <p className={styles.panelHint}>{L.flowHint}</p>
+      <SeenStage className={styles.flowStage}>
+      <div className={styles.flowPlot} style={{ "--n": weeks.length } as CSSProperties} data-filtered={filtered || undefined}>
+        <ol className={styles.flowGrid} aria-hidden>
+          {grid.map((value, i) => (
+            <li key={value} style={{ "--r": (value / peak).toFixed(3) } as CSSProperties}>
+              <span className="numeral">
+                {value}
+                {/* Birim yalnız en üst çizgide; telefonda düşer (sağ pay dar). */}
+                {i === grid.length - 1 && <span className={styles.gridUnit}> {L.flowScale.replace("{n}", "").trim()}</span>}
+              </span>
             </li>
           ))}
         </ol>
-      </nav>
+        <ol className={styles.weeks}>
+          {weeks.map((week, index) => {
+            const prev = weeks[index - 1];
+            /* Ay adı ayın ilk haftasında; ilk sütun yalnız ertesi hafta aynı
+               aydaysa (27 Tem haftasının "Tem"i 3 Ağu'nun "Ağu"suna biniyordu,
+               390'da ölçüldü). */
+            const next = weeks[index + 1];
+            const newMonth = prev
+              ? prev.start.slice(0, 7) !== week.start.slice(0, 7)
+              : !next || next.start.slice(0, 7) === week.start.slice(0, 7);
+            const latest = index === weeks.length - 1;
+            const label = L.flowWeek
+              .replace("{date}", shortDay(week.start, locale))
+              .replace("{n}", filtered ? L.flowMatch.replace("{m}", String(week.matchedTotal)).replace("{n}", String(week.total)) : String(week.total))
+              .replace("{r}", String(week.releases));
+            const body = (
+              <>
+                <span className={`numeral ${styles.weekValue}`} aria-hidden data-zero={week.total === 0 || undefined}>
+                  {week.total === 0 ? "" : filtered ? (
+                    <><strong>{week.matchedTotal}</strong><span className={styles.weekOf}>/{week.total}</span></>
+                  ) : week.total}
+                </span>
+                <span className={styles.stack} aria-hidden style={{ "--r": (week.total / peak).toFixed(3) } as CSSProperties}>
+                  {CHANGE_KINDS.filter((kind) => week.counts[kind] > 0).map((kind) => (
+                    <span key={kind} className={styles.stackKind} style={{ flexGrow: week.counts[kind] }}>
+                      {week.matched[kind] > 0 && (
+                        <span className={`${styles.seg} ${styles.k}`} data-kind={kind} style={{ flexGrow: week.matched[kind] }} />
+                      )}
+                      {week.counts[kind] - week.matched[kind] > 0 && (
+                        <span className={`${styles.seg} ${styles.k}`} data-kind={kind} data-ghost style={{ flexGrow: week.counts[kind] - week.matched[kind] }} />
+                      )}
+                    </span>
+                  ))}
+                </span>
+              </>
+            );
+            return (
+              <li
+                key={week.start}
+                className={styles.week}
+                style={{ "--i": index } as CSSProperties}
+                data-latest={latest || undefined}
+              >
+                {week.anchor ? (
+                  <a href={`#${entryAnchor(week.anchor)}`} aria-label={label} className={styles.weekLink}>{body}</a>
+                ) : (
+                  <span className={styles.weekLink} role="img" aria-label={label}>{body}</span>
+                )}
+                <span className={styles.weekDay} aria-hidden>
+                  {latest ? (
+                    <>
+                      <span className={styles.weekNow}>{L.flowNow}</span>
+                      <span className={styles.weekNowDay}>{Number(week.start.slice(8))}</span>
+                    </>
+                  ) : (
+                    Number(week.start.slice(8))
+                  )}
+                </span>
+                {newMonth && (
+                  <span className={styles.weekMonth} aria-hidden>
+                    {monthName.format(new Date(`${week.start}T12:00:00Z`))}
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+      </SeenStage>
+      <p className={styles.flowLegend} aria-hidden>
+        {CHANGE_KINDS.map((kind) => (
+          <span key={kind} className={styles.k} data-kind={kind}>
+            <i className={styles.swatch} />
+            {L.kind[kind]}
+          </span>
+        ))}
+      </p>
+    </Panel>
+  );
+}
+
+/* ------------------------------------------------------------ Ekran haritası */
+
+/**
+ * EKRANLARA GÖRE — her ekran bir karo: gezinmedeki ikonu, adı, madde sayısı,
+ * tür payıyla dolan çizgi (eni en kalabalık ekrana göre: karolar arası
+ * karşılaştırma) ve son değiştiği gün. Karo süzgeçtir (`?ekran=`,
+ * `scroll={false}`); seçili karoya yeniden basmak süzgeci kaldırır. Sayılar
+ * öbür süzgeçlere göre (tür seçiliyse yalnız o tür sayılır); sayısı sıfıra
+ * düşen karo soluk ve bağlantısız ama yerinde (ızgara zıplamaz).
+ */
+export function ScreenMap({
+  summary,
+  active,
+  hrefFor,
+  locale,
+  L,
+}: {
+  summary: readonly ScreenSummary[];
+  active: ChangeScreen | null;
+  hrefFor: (screen: ChangeScreen | null) => string;
+  locale: Locale;
+  L: ChangelogLabels;
+}) {
+  const max = Math.max(1, ...summary.map((row) => row.counts.all));
+  return (
+    <Panel aria-label={L.screensTitle} className={styles.screens}>
+      <PanelHeader title={L.screensTitle} />
+      <p className={styles.panelHint}>{L.screensHint}</p>
+      <ul className={styles.screenGrid} data-motion-stagger>
+        {summary.map((row) => {
+          const ScreenIcon = SCREEN_ICON[row.screen];
+          const selected = active === row.screen;
+          const inner = (
+            <>
+              <span className={styles.tileTop}>
+                <span className={styles.tileIcon} aria-hidden>
+                  <ScreenIcon size={18} weight="duotone" />
+                </span>
+                <span className={styles.tileLast}>
+                  {row.last ? L.screenLast.replace("{date}", shortDay(row.last, locale)) : L.screenNone}
+                </span>
+                <span className={`numeral ${styles.tileCount}`}>{row.counts.all}</span>
+              </span>
+              <span className={styles.tileName}>{L.screen[row.screen]}</span>
+              <span className={styles.tileTrack} aria-hidden>
+                <span
+                  className={styles.tileFill}
+                  data-motion-draw="line"
+                  style={{ "--w": (row.counts.all / max).toFixed(3), transformOrigin: "left center" } as CSSProperties}
+                >
+                  {CHANGE_KINDS.map((kind) =>
+                    row.counts[kind] > 0 ? (
+                      <span key={kind} className={`${styles.seg} ${styles.k}`} data-kind={kind} style={{ flexGrow: row.counts[kind] }} />
+                    ) : null,
+                  )}
+                </span>
+              </span>
+            </>
+          );
+          return (
+            <li key={row.screen}>
+              {row.counts.all === 0 && !selected ? (
+                <span className={styles.tile} data-empty>{inner}</span>
+              ) : (
+                <Link
+                  href={hrefFor(selected ? null : row.screen)}
+                  scroll={false}
+                  aria-current={selected ? "true" : undefined}
+                  className={styles.tile}
+                >
+                  {inner}
+                </Link>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </Panel>
   );
 }
@@ -346,293 +602,198 @@ export function ReleaseStrip({
 /* ------------------------------------------------------------ Süzgeç şeridi */
 
 /**
- * Alan ve tür süzgeci — adreste (`?alan=`, `?tur=`), sunucu basar, çipler
- * `scroll={false}`. Seçili çipe yeniden basmak o süzgeci kaldırır. Alan
- * çiplerindeki renk imi akışın lejantı. Sayılar öbür süzgece göre
- * (tür seçiliyken alan çipleri o türün maddelerini sayar).
+ * Tür ve alan süzgeci — adreste (`?tur=`, `?alan=`; ekran `?ekran=` ekran
+ * haritasında), sunucu basar, çipler `scroll={false}`. Seçili çipe yeniden
+ * basmak o süzgeci kaldırır. Tür çiplerindeki renk imi akışın ve pay
+ * şeridinin lejantı. Sayılar öbür süzgeçlere göre. Ekran seçiliyse şeridin
+ * sonunda adıyla bir kaldırma çipi: süzgecin nerede açıldığını okur ekran
+ * haritasına geri kaydırmadan görür.
  */
 export function FilterBar({
-  kind,
-  area,
+  filter,
   total,
   kindCount,
   areaCount,
   hrefFor,
   L,
 }: {
-  kind: ChangeKind | null;
-  area: ChangeArea | null;
+  filter: ChangeFilter;
   total: number;
   kindCount: Record<ChangeKind, number>;
   areaCount: Record<ChangeArea, number>;
-  hrefFor: (kind: ChangeKind | null, area: ChangeArea | null) => string;
+  hrefFor: (next: Partial<ChangeFilter>) => string;
   L: ChangelogLabels;
 }) {
+  const { kind, area, screen } = filter;
+  const ScreenIcon = screen ? SCREEN_ICON[screen] : null;
   return (
     <div className={styles.toolbar}>
       {/* Dar ekranda çipler kırılmak yerine kayar (analizler kalıbı). */}
       <ScrollEdges className="no-scrollbar -mx-4 flex max-w-full items-center gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
-        <FilterChip href={hrefFor(null, null)} active={!kind && !area}>
+        <FilterChip href={hrefFor({ kind: null, area: null, screen: null })} active={!kind && !area && !screen}>
           {L.filterAll} <span className={styles.count}>{total}</span>
         </FilterChip>
-        <span role="group" aria-label={L.areaFilterLabel} className={styles.chipGroup}>
-          {AREA_DISPLAY_ORDER.map((value) => (
-            <FilterChip key={value} href={hrefFor(kind, area === value ? null : value)} active={area === value}>
-              <span className={`${styles.chipSwatch} ${styles.tone}`} data-area={value} aria-hidden />
-              {L.areaShort[value]} <span className={styles.count}>{areaCount[value]}</span>
-            </FilterChip>
-          ))}
-        </span>
-        <span className={styles.chipDivider} aria-hidden />
         <span role="group" aria-label={L.filterLabel} className={styles.chipGroup}>
           {CHANGE_KINDS.map((value) => (
-            <FilterChip key={value} href={hrefFor(kind === value ? null : value, area)} active={kind === value}>
+            <FilterChip key={value} href={hrefFor({ kind: kind === value ? null : value })} active={kind === value}>
+              <span className={`${styles.swatch} ${styles.k}`} data-kind={value} aria-hidden />
               {L.kind[value]} <span className={styles.count}>{kindCount[value]}</span>
             </FilterChip>
           ))}
         </span>
+        <span className={styles.chipDivider} aria-hidden />
+        <span role="group" aria-label={L.areaFilterLabel} className={styles.chipGroup}>
+          {AREA_DISPLAY_ORDER.map((value) => (
+            <FilterChip key={value} href={hrefFor({ area: area === value ? null : value })} active={area === value}>
+              {L.areaShort[value]} <span className={styles.count}>{areaCount[value]}</span>
+            </FilterChip>
+          ))}
+        </span>
+        {screen && ScreenIcon && (
+          <>
+            <span className={styles.chipDivider} aria-hidden />
+            <Link href={hrefFor({ screen: null })} scroll={false} aria-label={`${L.screenClear}: ${L.screen[screen]}`} className={styles.screenActive}>
+              <ScreenIcon size={14} weight="duotone" aria-hidden />
+              <span className={styles.screenActiveLabel}>{L.screenFilterLabel}:</span> {L.screen[screen]}
+              <X size={12} weight="bold" aria-hidden />
+            </Link>
+          </>
+        )}
       </ScrollEdges>
     </div>
   );
 }
 
-/* ------------------------------------------------------------- Son sürüm */
+/* ------------------------------------------------------------ Günlük akış */
 
-/** Bağlantının sarmalayıcısı: dış adres yeni sekmede, site içi yol dil önekiyle. */
-function ItemLink({
-  item,
-  locale,
-  className,
-  children,
-  extra,
-}: {
-  item: ChangeItem;
-  locale: Locale;
-  className: string;
-  children: ReactNode;
-  extra: Record<string, unknown>;
-}) {
-  if (!item.href) return <div className={className} {...extra}>{children}</div>;
-  if (isExternal(item.href)) {
-    return <a href={item.href} target="_blank" rel="noopener noreferrer" className={className} {...extra}>{children}</a>;
-  }
-  return <Link href={withLocale(item.href, locale)} prefetch={false} className={className} {...extra}>{children}</Link>;
-}
-
-type Seen = { date: string; latest: string };
-
-/**
- * ÖNE ÇIKAN KART — nötr zemin, alan rengi 3 piksellik tepe şeridinde (31 Ekim;
- * eskiden alan renginde yıkanmış zemin, gerekçe modül CSS başı),
- * hedef ekranın ikonu, başlık, tek satır özet ve "Dene" butonu. Kartın
- * tamamı bağlantı: buton görünümlü `span` içeride (iç içe etkileşim yok),
- * dokunma hedefi kartın kendisi.
- */
-function FeatureCard({ item, locale, L, index, seen }: { item: ChangeItem; locale: Locale; L: ChangelogLabels; index: number; seen: Seen }) {
-  const Target = (item.href ? TARGET_ICON[tryTarget(item.href)] : null) ?? AREA_ICON[item.area];
+/** Günlük akışta bir madde: tür ikonu, başlık ve gövde, ekran künyesi ve "Dene". */
+function TimelineItem({ item, locale, L }: { item: ChangeItem; locale: Locale; L: ChangelogLabels }) {
+  const KindIcon = KIND_ICON[item.kind];
+  const ScreenIcon = SCREEN_ICON[item.screen];
   return (
-    <ItemLink
-      item={item}
-      locale={locale}
-      className={`${styles.feature} ${styles.tone}`}
-      extra={{ "data-area": item.area, "data-cl-featured": "", title: item.body, style: { "--i": index } as CSSProperties }}
-    >
-      <span className={styles.featureTop}>
-        <span className={styles.featureIcon} aria-hidden>
-          <Target size={22} weight="duotone" />
-        </span>
-        <span className={styles.featureArea}>{L.areaShort[item.area]}</span>
-        {item.kind !== "yeni" && <KindTag kind={item.kind} L={L} />}
-        <UnseenPill date={seen.date} latest={seen.latest} label={L.badge} srLabel={L.unseenLabel} className={styles.featurePill} />
+    <li className={`${styles.tItem} ${styles.k}`} data-kind={item.kind}>
+      <span className={styles.tKind} aria-hidden>
+        <KindIcon size={13} weight="bold" />
       </span>
-      <span className={styles.featureTitle}>{item.title}</span>
-      <span className={styles.featureShort} aria-hidden>{item.short ?? item.body}</span>
-      <span className="sr-only">{item.body}</span>
-      {item.href && (
-        <span className={styles.featureCta} aria-hidden>
-          {L.try}
-          {isExternal(item.href) ? <ArrowUpRight size={13} weight="bold" /> : <ArrowRight size={13} weight="bold" />}
-        </span>
-      )}
-    </ItemLink>
-  );
-}
-
-/** Kompakt karo: alan renginde ikon karosu + başlık + tek satır özet; karo bağlantının kendisi. */
-/* Görülmemiş rozeti yalnız öne çıkan kartlarda ve eski girişin satırında:
-   son sürümün on altı karosunun hepsinde "Yeni" yazınca rozet bilgi değil
-   desen oluyordu (ölçüldü, 1440'ta 16 hap). Bölümün başlığındaki künye
-   sürümün kendisini zaten işaret ediyor. */
-function Tile({ item, locale, L, index }: { item: ChangeItem; locale: Locale; L: ChangelogLabels; index: number }) {
-  const Target = (item.href ? TARGET_ICON[tryTarget(item.href)] : null) ?? AREA_ICON[item.area];
-  return (
-    <ItemLink
-      item={item}
-      locale={locale}
-      className={`${styles.tile} ${styles.tone}`}
-      extra={{ "data-area": item.area, title: item.body, style: { "--i": index } as CSSProperties }}
-    >
-      <span className={styles.tileIcon} aria-hidden>
-        <Target size={18} weight="duotone" />
-      </span>
-      <span className={styles.tileCopy}>
-        <span className={styles.tileTitle}>
-          <span className={styles.tileName}>{item.title}</span>
-          {item.kind !== "yeni" && <KindTag kind={item.kind} L={L} />}
-        </span>
-        <span className={styles.tileShort} aria-hidden>{item.short ?? item.body}</span>
-        <span className="sr-only">{item.body}</span>
-      </span>
-      {item.href && (
-        isExternal(item.href)
-          ? <ArrowUpRight className={styles.tileArrow} size={14} weight="bold" aria-hidden />
-          : <ArrowRight className={styles.tileArrow} size={14} weight="bold" aria-hidden />
-      )}
-    </ItemLink>
-  );
-}
-
-/**
- * EN SON SÜRÜM — sayfanın ana görseli. Başlık izinli tek degrade yer (kısa
- * display başlık); künye (tarih, madde sayısı) genişte başlıkla aynı sırada.
- * Önce "Öne Çıkanlar" (en çok dört büyük kart; 1024 ve üstünde tek sıra,
- * altında iki sütun), sonra "Bu Sürümde Ayrıca" kompakt ızgara (1/2/3/4
- * sütun). Özet ve kapsam künyesi en altta (ekran düzeni: görsel, sonra
- * metin, sonra künye).
- */
-export function LatestRelease({ entry, latest, locale, L }: { entry: ChangeEntry; latest: string; locale: Locale; L: ChangelogLabels }) {
-  const headingId = "yenilikler-son-surum";
-  const { featured, claude, rest } = splitLatest(entry.items);
-  const seen = { date: entry.date, latest };
-  return (
-    <Panel id={entryAnchor(entry.date)} aria-labelledby={headingId} className={styles.latest}>
-      <div className={styles.latestHead}>
-        {/* Çok satırlı manşet: degrade satır satır (`data-ink="lines"`). */}
-        <h2 id={headingId} data-ink="lines" className="text-lead font-bold tracking-[-0.02em] sm:text-heading">
-          <span className="ink-line">{entry.title}</span>
-        </h2>
-        <p className={styles.latestMeta}>
-          <span className={styles.latestBadge}>{L.latestBadge}</span>
-          <time dateTime={entry.date}>{entryDateLabel(entry, locale)}</time>
-          <span>{countLabel(entry.items.length, L.itemCount, L.itemCountOne)}</span>
+      <div className={styles.tCopy}>
+        <p className={styles.tHead}>
+          <span className="sr-only">{L.kind[item.kind]}: </span>
+          <span className={styles.tTitle}>{item.title}</span>
+        </p>
+        <p className={styles.tBody}>{item.body}</p>
+        <p className={styles.tMeta}>
+          <span className={styles.tScreen}>
+            <ScreenIcon size={13} weight="duotone" aria-hidden />
+            {L.screen[item.screen]}
+          </span>
+          {item.href &&
+            (isExternal(item.href) ? (
+              <a href={item.href} target="_blank" rel="noopener noreferrer" aria-label={`${L.try}: ${item.title}`} className={`tap-44 ${styles.tTry}`}>
+                {L.try}
+                <ArrowUpRight weight="bold" size={12} aria-hidden />
+              </a>
+            ) : (
+              <Link href={withLocale(item.href, locale)} prefetch={false} aria-label={`${L.try}: ${item.title}`} className={`tap-44 ${styles.tTry}`}>
+                {L.try}
+                <ArrowRight weight="bold" size={12} aria-hidden />
+              </Link>
+            ))}
         </p>
       </div>
-      {featured.length > 0 && (
-        <section aria-labelledby="yenilikler-one-cikan" className={styles.section}>
-          <h3 id="yenilikler-one-cikan" className={styles.sectionHead} data-ink="plain">{L.featuredTitle}</h3>
-          <ul className={styles.featureGrid} style={{ "--n": featured.length } as CSSProperties}>
-            {featured.map((item, index) => (
-              <li key={item.title}>
-                <FeatureCard item={item} locale={locale} L={L} index={index} seen={seen} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      {claude.length > 0 && (
-        <section aria-labelledby="yenilikler-claude" className={styles.section}>
-          <h3 id="yenilikler-claude" className={styles.sectionHead} data-ink="plain">
-            <span className={`${styles.chipSwatch} ${styles.tone}`} data-area="claude" aria-hidden />
-            {L.claudeTitle}
-            <span className={styles.sectionCount}>{claude.length}</span>
-          </h3>
-          <ul className={styles.restGrid} data-group="claude">
-            {claude.map((item, index) => (
-              <li key={item.title}>
-                <Tile item={item} locale={locale} L={L} index={index + featured.length} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      {rest.length > 0 && (
-        <section aria-labelledby="yenilikler-ayrica" className={styles.section}>
-          <h3 id="yenilikler-ayrica" className={styles.sectionHead} data-ink="plain">
-            {L.restTitle}
-            <span className={styles.sectionCount}>{rest.length}</span>
-          </h3>
-          <ul className={styles.restGrid}>
-            {rest.map((item, index) => (
-              <li key={item.title}>
-                <Tile item={item} locale={locale} L={L} index={index + featured.length + claude.length} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      <p className={styles.latestSummary}>{entry.summary}</p>
-      <p className={styles.note}>{L.footnote}</p>
-    </Panel>
+    </li>
   );
 }
 
-/* --------------------------------------------------------- Eski sürümler */
+/** Bir gün (giriş): tarih sütunu, çizgideki düğüm, başlık, tür sayıları, özet ve maddeler. */
+function TimelineDay({ entry, latest, locale, L }: { entry: ChangeEntry; latest: string; locale: Locale; L: ChangelogLabels }) {
+  const counts = kindCounts([entry]);
+  const day = entry.from ? `${Number(entry.from.slice(8))}-${Number(entry.date.slice(8))}` : String(Number(entry.date.slice(8)));
+  const headingId = `baslik-${entry.date}`;
+  return (
+    <li id={entryAnchor(entry.date)} className={styles.day} data-motion-reveal>
+      <div className={styles.dayWhen}>
+        <time dateTime={entry.date} className={`numeral ${styles.dayNum}`} data-range={entry.from ? "" : undefined}>
+          <span className="sr-only">{entryDateLabel(entry, locale)}</span>
+          <span aria-hidden>{day}</span>
+        </time>
+        <span className={styles.dayWeek} aria-hidden>
+          <span className={styles.dayMonth}>{monthShort(entry.date, locale)}</span>
+          <span className={styles.dayWeekday}>{weekday(entry.date, locale)}</span>
+        </span>
+      </div>
+      {/* Çizginin bu günün payı: görünüme girince yukarıdan aşağı bir kez
+          çizilir (`data-motion-draw="bar"`, kök tepe); hareketi azaltana tam. */}
+      <span className={styles.dayRail} data-motion-draw="bar" style={{ transformOrigin: "center top" }} aria-hidden />
+      <span className={styles.dayNode} aria-hidden />
+      <div className={styles.dayBody}>
+        <div className={styles.dayHead}>
+          <h3 id={headingId} className={styles.dayTitle} data-ink="plain">{entry.title}</h3>
+          <UnseenPill date={entry.date} latest={latest} label={L.badge} srLabel={L.unseenLabel} />
+          <span className={styles.dayKinds} role="img" aria-label={CHANGE_KINDS.filter((k) => counts[k] > 0).map((k) => `${L.kind[k]} ${counts[k]}`).join(", ")}>
+            {CHANGE_KINDS.filter((kind) => counts[kind] > 0).map((kind) => {
+              const KindIcon = KIND_ICON[kind];
+              return (
+                <span key={kind} className={`${styles.dayKind} ${styles.k}`} data-kind={kind}>
+                  <KindIcon size={12} weight="bold" aria-hidden />
+                  <span className="numeral">{counts[kind]}</span>
+                </span>
+              );
+            })}
+          </span>
+        </div>
+        <p className={styles.daySummary}>{entry.summary}</p>
+        <ul className={styles.tItems}>
+          {entry.items.map((item) => (
+            <TimelineItem key={item.title} item={item} locale={locale} L={L} />
+          ))}
+        </ul>
+      </div>
+    </li>
+  );
+}
 
 /**
- * Bir ay — panel, `h2` ay adı, her giriş TEK SATIR katlı `<details>`
- * (gün, başlık, alan noktaları, madde sayısı). JS'siz; açılış globals.css
- * `::details-content` geçişiyle, bastığın yerden aşağı uzar (`ExpandInPlace`
- * kökte bağlı). Kapalıyken de içerik sunucu HTML'inde: sayfa içi arama ve
- * arama motoru maddeleri görüyor. Çapa girişin kendisinde
- * (`RevealHashTarget` kapalıysa açar). Okurun görmediği giriş satırında
- * "Yeni" rozeti.
+ * Bir ay — panel, `h2` ay adı ve künyesi, içinde zaman çizgisi. Ay
+ * katlanabilir (`<details>`): son iki ay ve süzgeç açıkken hepsi açık; daha
+ * eskisi kapalı ama sunucu HTML'inde (sayfa içi arama ve arama motoru
+ * maddeleri görüyor). Açılış globals.css `::details-content` geçişiyle,
+ * bastığın yerden aşağı uzar (`ExpandInPlace` kökte bağlı). Çapa günün
+ * kendisinde; kapalı ayın içindeki güne giden çapayı `RevealHashTarget`
+ * açar. Zaman çizgisinin dolgusu okudukça iner (CSS `view()`; gerekçe
+ * modül CSS'i).
  */
-export function MonthPanel({ month, latest, locale, L }: { month: ChangeMonth; latest: string; locale: Locale; L: ChangelogLabels }) {
+export function MonthPanel({
+  month,
+  open,
+  latest,
+  locale,
+  L,
+}: {
+  month: ChangeMonth;
+  open: boolean;
+  latest: string;
+  locale: Locale;
+  L: ChangelogLabels;
+}) {
   const title = formatIsoMonth(month.month, locale);
+  const items = month.entries.reduce((n, entry) => n + entry.items.length, 0);
   return (
     <Panel id={monthAnchor(month.month)} aria-label={title} className={styles.month}>
-      <PanelHeader title={title} meta={countLabel(month.entries.length, L.entryCount, L.entryCountOne)} />
-      <ol className={styles.entries}>
-        {month.entries.map((entry) => (
-          <li key={entry.date}>
-            <details id={entryAnchor(entry.date)} className={styles.entry}>
-              <summary className={styles.entryRow}>
-                <time dateTime={entry.date} className={styles.whenDay}>
-                  {entry.from ? entryDateLabel(entry, locale).replace(/,? \d{4}$/, "") : shortDay(entry.date, locale)}
-                </time>
-                <span className={styles.entryTitleCell}>
-                  <span className={styles.entryTitle}>{entry.title}</span>
-                  <UnseenPill date={entry.date} latest={latest} label={L.badge} srLabel={L.unseenLabel} />
-                </span>
-                {/* Alan payı (31 Ekim): renk noktaları yerine akıştaki
-                    çubuğun yatay küçüğü; eni madde sayısı, dilimleri alanlar. */}
-                <span
-                  className={styles.entryDots}
-                  role="img"
-                  aria-label={entryAreas(entry).map((area) => L.area[area]).join(", ")}
-                  style={{ "--n": entry.items.length } as CSSProperties}
-                >
-                  {AREA_DISPLAY_ORDER.map((area) => {
-                    const count = entry.items.filter((item) => item.area === area).length;
-                    return count > 0 ? (
-                      <span key={area} className={`${styles.entryDot} ${styles.tone}`} data-area={area} style={{ flexGrow: count }} />
-                    ) : null;
-                  })}
-                </span>
-                <span className={styles.entryCount}>{countLabel(entry.items.length, L.itemCount, L.itemCountOne)}</span>
-                <CaretDown className={styles.entryIcon} size={14} weight="bold" aria-hidden />
-              </summary>
-              <div className={styles.entryBody}>
-                <p className={styles.entrySummary}>
-                  <span className={styles.whenWeek}>{weekday(entry.date, locale)}</span> {entry.summary}
-                </p>
-                <ul className={styles.items}>
-                  {entry.items.map((item) => (
-                    <li key={item.title} className={`${styles.item} ${styles.tone}`} data-area={item.area}>
-                      <span className={styles.itemHead}>
-                        <KindTag kind={item.kind} L={L} />
-                        <span className={styles.itemTitle}>{item.title}</span>
-                      </span>
-                      <span className={styles.itemBody}>{item.body}</span>
-                      <TryLink item={item} label={L.try} locale={locale} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </details>
-          </li>
-        ))}
-      </ol>
+      <details className={styles.monthFold} open={open}>
+        <summary className={styles.monthSummary}>
+          <PanelHeader
+            title={title}
+            meta={`${countLabel(month.entries.length, L.entryCount, L.entryCountOne)} · ${L.monthItems.replace("{n}", String(items))}`}
+            className={styles.monthHeader}
+          />
+          <CaretDown className={styles.monthIcon} size={14} weight="bold" aria-hidden />
+        </summary>
+        <ol className={styles.days}>
+          {month.entries.map((entry) => (
+            <TimelineDay key={entry.date} entry={entry} latest={latest} locale={locale} L={L} />
+          ))}
+        </ol>
+      </details>
     </Panel>
   );
 }

@@ -3,9 +3,11 @@ import {
   CHANGELOG_TR,
   CHANGE_AREAS,
   CHANGE_KINDS,
+  CHANGE_SCREENS,
   TELEGRAM_HREF,
   type ChangeArea,
   type ChangeKind,
+  type ChangeScreen,
 } from "@/content/changelog";
 import { formatIsoDate } from "@/lib/fx";
 import type { Locale } from "@/lib/i18n/config";
@@ -14,28 +16,29 @@ import type { Locale } from "@/lib/i18n/config";
  * Yenilikler — içerikten sayfaya giden saf katman (25 Ekim).
  *
  * İçerik (`content/changelog.ts`) iki dilli kaynak demeti; burada dile göre
- * düz girişlere çevriliyor, adresteki etiket süzgeci uygulanıyor, aylara
- * bölünüyor. Sayfa, RSS akışı, paylaşım görseli ve testler aynı
- * fonksiyonları okuyor: akıştaki giriş ile sayfadaki giriş ayrı düşemez.
+ * düz girişlere çevriliyor, adresteki süzgeçler (tür, alan, ekran)
+ * uygulanıyor, aylara ve haftalara bölünüyor. Sayfa, RSS akışı, paylaşım
+ * görseli ve testler aynı fonksiyonları okuyor: akıştaki giriş ile
+ * sayfadaki giriş ayrı düşemez.
  *
  * Düz modül (`server-only` değil): test `node --test` ile çağırıyor. İstemci
  * bileşenleri bunu İÇE AKTARMAZ — içerik demeti istemci paketine girerdi;
  * rozet yalnız en son günü prop olarak alır (`LATEST_CHANGE_DATE`).
  */
 
-export { CHANGE_AREAS, CHANGE_KINDS, type ChangeArea, type ChangeKind };
+export { CHANGE_AREAS, CHANGE_KINDS, CHANGE_SCREENS, type ChangeArea, type ChangeKind, type ChangeScreen };
 
 export type ChangeItem = {
   kind: ChangeKind;
   area: ChangeArea;
+  /** Etkilenen ekran — içerikte yazılıysa o, yoksa bağlantının rotasından (`screenOf`). */
+  screen: ChangeScreen;
   title: string;
   /** Tek satırlık özet; yalnız en üstteki girişte zorunlu, öteki girişlerde `null`. */
   short: string | null;
   body: string;
   /** Dilsiz site içi yol ya da dış adres (Telegram); yoksa "Dene" basılmaz. */
   href: string | null;
-  /** İçerikte elle "öne çıkar" işareti (`featured: true`); yoksa `false`. */
-  featured: boolean;
 };
 
 export type ChangeEntry = {
@@ -65,6 +68,59 @@ export function resolveHref(href: string | undefined, telegramUrl: string | null
   return href;
 }
 
+/**
+ * ROTA → EKRAN (6 Kasım). Bağlantının ilk segmenti ekranı söyler; ekranlar
+ * okurun zihnindeki bölümler, rota başına bir ekran DEĞİL: Şirketler, Makro,
+ * Temalar, Olasılıklar, Tarama ve Karşılaştır "Piyasalar"da; Günün Posteri,
+ * Günün Grafiği ve oyunlar "Günün Parçaları"nda; haberler ve bülten Mercek'in
+ * yanında. On iki ekrandan fazlası süzgeç şeridini kalabalıklaştırıyordu
+ * (rotalar 30'u aşıyor). Listede olmayan rota ve dış adres "Site Geneli".
+ */
+const SCREEN_OF_ROUTE: Readonly<Record<string, ChangeScreen>> = {
+  "": "anasayfa",
+  piyasalar: "piyasalar",
+  sirketler: "piyasalar",
+  makro: "piyasalar",
+  tema: "piyasalar",
+  olasiliklar: "piyasalar",
+  tarama: "piyasalar",
+  karsilastir: "piyasalar",
+  hisse: "hisse",
+  claude: "hisse",
+  "hisse-secimi": "hisse",
+  teknik: "teknik",
+  bilancolar: "bilancolar",
+  takvim: "takvim",
+  mercek: "mercek",
+  bulten: "mercek",
+  haberler: "mercek",
+  topluluk: "mercek",
+  gun: "gunluk",
+  "gunun-grafigi": "gunluk",
+  bulmaca: "gunluk",
+  favoriler: "portfoy",
+  portfoy: "portfoy",
+  raporum: "portfoy",
+  analizlerim: "portfoy",
+  rehber: "rehber",
+  sozluk: "rehber",
+  vergi: "rehber",
+  "araci-kurumlar": "rehber",
+  yatirimcilar: "rehber",
+  ayarlar: "hesap",
+  bildirimler: "hesap",
+  giris: "hesap",
+  kvkk: "hesap",
+};
+
+/** Maddenin ekranı: içerikte yazılı olan, yoksa bağlantının rotası, yoksa "Site Geneli". */
+export function screenOf(explicit: ChangeScreen | undefined, href: string | undefined): ChangeScreen {
+  if (explicit) return explicit;
+  if (!href || !href.startsWith("/")) return "site";
+  const first = href.split(/[?#]/)[0].split("/").filter(Boolean)[0] ?? "";
+  return SCREEN_OF_ROUTE[first] ?? "site";
+}
+
 /** Dile göre girişler, en yeni üstte. */
 export function changelogEntries(locale: Locale, telegramUrl: string | null): ChangeEntry[] {
   return CHANGELOG_TR.map((source, index) => {
@@ -75,15 +131,18 @@ export function changelogEntries(locale: Locale, telegramUrl: string | null): Ch
       from: "from" in source ? source.from : null,
       title: text.title,
       summary: text.summary,
-      items: source.items.map((item, itemIndex) => ({
-        kind: item.kind,
-        area: item.area,
-        title: items[itemIndex].title,
-        short: items[itemIndex].short ?? null,
-        body: items[itemIndex].body,
-        href: resolveHref("href" in item ? item.href : undefined, telegramUrl),
-        featured: "featured" in item && item.featured === true,
-      })),
+      items: source.items.map((item, itemIndex) => {
+        const rawHref = "href" in item ? item.href : undefined;
+        return {
+          kind: item.kind,
+          area: item.area,
+          screen: screenOf("screen" in item ? item.screen : undefined, rawHref),
+          title: items[itemIndex].title,
+          short: items[itemIndex].short ?? null,
+          body: items[itemIndex].body,
+          href: resolveHref(rawHref, telegramUrl),
+        };
+      }),
     };
   });
 }
@@ -100,6 +159,14 @@ export function parseArea(value: string | string[] | undefined): ChangeArea | nu
   return CHANGE_AREAS.find((area) => area === raw) ?? null;
 }
 
+/** Adresteki `?ekran=` değeri; tanınmayan değer süzgeçsiz sayılır. */
+export function parseScreen(value: string | string[] | undefined): ChangeScreen | null {
+  const raw = Array.isArray(value) ? value[0] : value;
+  return CHANGE_SCREENS.find((screen) => screen === raw) ?? null;
+}
+
+export type ChangeFilter = { kind: ChangeKind | null; area: ChangeArea | null; screen: ChangeScreen | null };
+
 /**
  * Etiket süzgeci MADDE düzeyinde: "Düzeltme" seçilince her girişin yalnız
  * düzeltmeleri kalır, hiç düzeltmesi olmayan giriş düşer. Giriş düzeyinde
@@ -111,12 +178,16 @@ export function filterEntries(
   kind: ChangeKind | null,
   /** Alan süzgeci (25 Ekim kompakt düzen) — aynı kural: madde düzeyinde, boş giriş düşer. */
   area: ChangeArea | null = null,
+  /** Ekran süzgeci (6 Kasım) — aynı kural. */
+  screen: ChangeScreen | null = null,
 ): ChangeEntry[] {
-  if (!kind && !area) return [...entries];
+  if (!kind && !area && !screen) return [...entries];
   return entries
     .map((entry) => ({
       ...entry,
-      items: entry.items.filter((item) => (!kind || item.kind === kind) && (!area || item.area === area)),
+      items: entry.items.filter(
+        (item) => (!kind || item.kind === kind) && (!area || item.area === area) && (!screen || item.screen === screen),
+      ),
     }))
     .filter((entry) => entry.items.length > 0);
 }
@@ -129,77 +200,11 @@ export function areaCounts(entries: readonly ChangeEntry[]): Record<ChangeArea, 
 }
 
 /**
- * Girişin baskın alanı — sürüm akışında çubuğun rengi. En çok maddesi olan
- * alan; eşitlikte `CHANGE_AREAS` sırasında önce gelen (deterministik, iki
- * çizim aynı rengi verir).
- */
-export function dominantArea(entry: ChangeEntry): ChangeArea {
-  const counts = areaCounts([entry]);
-  return CHANGE_AREAS.reduce((best, area) => (counts[area] > counts[best] ? area : best), CHANGE_AREAS[0]);
-}
-
-/** Öne çıkan kart sayısının tavanı — 1440'ta tek sıra, telefonda dört satır. */
-export const FEATURED_MAX = 4;
-
-/**
- * Alanların GÖSTERİM sırası (25 Ekim, mobil turu): süzgeç çipleri ve öne
- * çıkan kartlar bu sırayla. Claude sonda: sahibinin sözü, "ilk giren
- * kullanıcı sadece Claude ile karşılaşmasın". İçerikteki `CHANGE_AREAS`
- * sırası (baskın alanın eşitlik kuralı) değişmedi.
+ * Alanların GÖSTERİM sırası (25 Ekim, mobil turu): süzgeç çipleri bu
+ * sırayla. Claude sonda: sahibinin sözü, "ilk giren kullanıcı sadece Claude
+ * ile karşılaşmasın". İçerikteki `CHANGE_AREAS` sırası değişmedi.
  */
 export const AREA_DISPLAY_ORDER: readonly ChangeArea[] = ["piyasa", "bilanco", "kisisel", "icerik", "claude"];
-
-/** Claude maddelerinin kendi küçük grubu ("Claude ile") — bu alan öne çıkan karta girmez. */
-export const CLAUDE_AREA: ChangeArea = "claude";
-
-export type LatestSplit = {
-  /** Büyük kartlar: her alandan en çok BİR, `AREA_DISPLAY_ORDER` sırasıyla. */
-  featured: ChangeItem[];
-  /** "Claude ile" grubu: öne çıkan kart başka alanlardan seçildiyse Claude maddeleri. */
-  claude: ChangeItem[];
-  /** "Bu Sürümde Ayrıca": kalanlar, girişteki sırasıyla. */
-  rest: ChangeItem[];
-};
-
-/**
- * ÖNE ÇIKANLAR — ALAN ÇEŞİTLİLİĞİ (25 Ekim, mobil turu). Önceki kural
- * alan turunu `CHANGE_AREAS` sırasıyla yapıp kartları girişteki sıraya
- * diziyordu; son sürümün ilk üç maddesi Claude olduğu için ilk kart hep
- * Claude'du ve telefonda ilk ekran yalnız Claude gösteriyordu.
- *
- * Seçim içerikten: bir maddede `featured: true` varsa yalnız işaretliler
- * (sırasıyla, tavana kadar). İşaret yoksa KURAL:
- *   1. her alanın ilk "yeni" ve denenebilir (bağlantılı) maddesi, alan
- *      başına EN ÇOK BİR, `AREA_DISPLAY_ORDER` sırasıyla (Piyasa,
- *      Bilanço, Kişisel, İçerik); kart sırası da bu;
- *   2. Claude kart olmaz, kendi grubunda toplanır — TEK İSTİSNA başka
- *      alandan aday yoksa (süzgeç `?alan=claude`): o zaman Claude'un ilk
- *      maddesi kart, grup açılmaz.
- * Kartın işi "Dene" demek: bağlantısız madde kart olmaz. Grup ve kalanlar
- * girişteki sırasını korur.
- */
-export function splitLatest(items: readonly ChangeItem[], max: number = FEATURED_MAX): LatestSplit {
-  let featured: ChangeItem[];
-  if (items.some((item) => item.featured)) {
-    featured = items.filter((item) => item.featured).slice(0, max);
-  } else {
-    const candidates = items.filter((item) => item.kind === "yeni" && item.href);
-    const others = candidates.filter((item) => item.area !== CLAUDE_AREA);
-    const pool = others.length > 0 ? others : candidates;
-    featured = [];
-    for (const area of AREA_DISPLAY_ORDER) {
-      const first = pool.find((item) => item.area === area);
-      if (first && featured.length < max) featured.push(first);
-    }
-  }
-  const groupClaude = featured.some((item) => item.area !== CLAUDE_AREA);
-  const left = items.filter((item) => !featured.includes(item));
-  return {
-    featured,
-    claude: groupClaude ? left.filter((item) => item.area === CLAUDE_AREA) : [],
-    rest: groupClaude ? left.filter((item) => item.area !== CLAUDE_AREA) : left,
-  };
-}
 
 /** Etiket başına madde sayısı — süzgeç çiplerinin künyesi. */
 export function kindCounts(entries: readonly ChangeEntry[]): Record<ChangeKind | "all", number> {
@@ -211,6 +216,59 @@ export function kindCounts(entries: readonly ChangeEntry[]): Record<ChangeKind |
     }
   }
   return counts;
+}
+
+export type DigestColumn = { kind: ChangeKind; items: ChangeItem[] };
+
+/**
+ * SON GÜNCELLEMEDE (6 Kasım; sahibinin sözü: "son güncellemeyle ne geldi,
+ * neler iyileşti, neler değişti hem onlar görünsün"). Son sürüm TÜR TÜR üç
+ * sütun: Yeni, İyileştirme, Düzeltme — boş tür de sütun olarak döner (sayfa
+ * "0" yazar; sütunun yokluğu "düzeltme yok"u söylemezdi).
+ *
+ * Önceki düzen (25 Ekim): en çok dört "Öne Çıkan" kart her alandan bir,
+ * Claude maddeleri ayrı "Claude ile" grubunda, kalanı "Bu Sürümde Ayrıca"
+ * (`splitLatest`). Okur sürümde neyin YENİ, neyin onarım olduğunu kartın
+ * köşesindeki etiketten çıkarıyordu; tür artık sütunun kendisi.
+ *
+ * Alan çeşitliliği kararı korunuyor (25 Ekim, mobil turu; "ilk giren
+ * kullanıcı sadece Claude ile karşılaşmasın"): her sütunda Claude maddeleri
+ * sona iner, öteki maddeler girişteki sırasını korur.
+ */
+export function latestDigest(entry: ChangeEntry): DigestColumn[] {
+  return CHANGE_KINDS.map((kind) => {
+    const items = entry.items.filter((item) => item.kind === kind);
+    return { kind, items: [...items.filter((i) => i.area !== "claude"), ...items.filter((i) => i.area === "claude")] };
+  });
+}
+
+export type ScreenSummary = {
+  screen: ChangeScreen;
+  counts: Record<ChangeKind | "all", number>;
+  /** O ekrana dokunan en yeni girişin günü; hiç madde yoksa `null`. */
+  last: string | null;
+};
+
+/**
+ * EKRAN HARİTASI (6 Kasım): ekran başına madde sayısı, türlere bölünmüş, ve
+ * ekranın son değiştiği gün. `CHANGE_SCREENS` sırasıyla; hiç maddesi
+ * olmayan ekran da döner (sayfa onu soldurur, süzgeçle boşalan ekran yerinde
+ * kalır, ızgara zıplamaz). Girişler en yeni üstte geldiği için ilk görülen
+ * gün en yenisidir.
+ */
+export function screenSummary(entries: readonly ChangeEntry[]): ScreenSummary[] {
+  const map = new Map<ChangeScreen, ScreenSummary>(
+    CHANGE_SCREENS.map((screen) => [screen, { screen, counts: { all: 0, yeni: 0, iyilestirme: 0, duzeltme: 0 }, last: null }]),
+  );
+  for (const entry of entries) {
+    for (const item of entry.items) {
+      const row = map.get(item.screen)!;
+      row.counts.all += 1;
+      row.counts[item.kind] += 1;
+      if (!row.last || entry.date > row.last) row.last = entry.date;
+    }
+  }
+  return [...map.values()];
 }
 
 export type ChangeMonth = { month: string; entries: ChangeEntry[] };
@@ -251,80 +309,72 @@ export function entryDateLabel(entry: ChangeEntry, locale: Locale): string {
   return `${formatIsoDate(entry.from, locale, "long")} - ${end}`;
 }
 
-/**
- * Son sürümün maddeleri ALANA göre (25 Ekim): sıra `CHANGE_AREAS`, madde
- * sırası girişteki sıra; boş alan dönmez.
- */
-export function groupByArea(items: readonly ChangeItem[]): { area: ChangeArea; items: ChangeItem[] }[] {
-  return CHANGE_AREAS.map((area) => ({ area, items: items.filter((item) => item.area === area) })).filter(
-    (group) => group.items.length > 0,
-  );
-}
-
-/** Bir girişte geçen alanlar, `CHANGE_AREAS` sırasıyla — tek satırdaki renk noktaları. */
-export function entryAreas(entry: ChangeEntry): ChangeArea[] {
-  return CHANGE_AREAS.filter((area) => entry.items.some((item) => item.area === area));
-}
-
 const DAY_MS = 86_400_000;
 
-export type ReleasePoint = {
-  date: string;
-  title: string;
-  items: number;
-  x: number;
-  /** Baskın alan — balonun künyesi ve çubuğun ekran okuyucu etiketi. */
-  area: ChangeArea;
-  /**
-   * Alan başına madde, `AREA_DISPLAY_ORDER` sırasıyla, sıfırlar düşmüş —
-   * çubuğun YIĞIN dilimleri (31 Ekim). Baskın alanın tek rengi altı Claude
-   * + dört Piyasa maddesini "Claude sürümü" diye okutuyordu; yığın her
-   * alanın payını kendi boyuyla gösteriyor. Toplamı `items`.
-   */
-  parts: { area: ChangeArea; count: number }[];
-  /** İlk girişten bu yana gün (0'dan) — çubuğun eni gün diliminden çıkıyor. */
-  day: number;
+const dayMs = (iso: string) => Date.parse(`${iso}T12:00:00Z`);
+const isoOf = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+
+/** Günün haftasının pazartesisi (ISO gün). Hafta pazartesi başlar (TR takvimi). */
+export function weekStart(iso: string): string {
+  const ms = dayMs(iso);
+  const weekday = (new Date(ms).getUTCDay() + 6) % 7; // pazartesi 0
+  return isoOf(ms - weekday * DAY_MS);
+}
+
+export type FlowWeek = {
+  /** Haftanın pazartesisi. */
+  start: string;
+  /** Bütün geçmişte o haftanın maddeleri, türe göre. */
+  counts: Record<ChangeKind, number>;
+  total: number;
+  /** Süzgeçten geçen maddeler (süzgeç yoksa `counts` ile aynı). */
+  matched: Record<ChangeKind, number>;
+  matchedTotal: number;
+  /** Haftadaki sürüm sayısı (bütün geçmiş). */
+  releases: number;
+  /** Sütuna basınca gidilecek giriş: haftanın süzgeçten geçen en yeni girişi; yoksa `null`. */
+  anchor: string | null;
 };
 
 /**
- * SÜRÜM ŞERİDİ (25 Ekim): her giriş bir çubuk; `x` ilk ve son giriş
- * arasında 0-1 (gün ölçeği, eşit aralık değil: sessiz haftalar boşluk
- * olarak görünsün), boyu madde sayısından, rengi baskın alandan. Eskiden
- * yeniye sıralı. 31 Ekim: renk artık tek alan değil, alan alan yığın
- * (`parts`); baskın alan balonda kalıyor.
+ * HAFTALIK AKIŞ (6 Kasım; sahibinin sözü: "çubuklar ince ve küçük, son sürüm
+ * dışında hepsi aynı boyda gibi"). 31 Ekim'in "Sürüm Akışı" her SÜRÜMÜ gün
+ * ölçeğinde bir çubuk yapıyordu: 98 günlük eksende çubuk 1440'ta ~10, 390'da
+ * ~3 piksel; sürümlerin çoğu 5-6 maddeydi ve tek istisna (16) ölçeği
+ * belirlediği için ötekiler aynı kısa boyda okunuyordu. Şimdi her HAFTA bir
+ * sütun (ilk girişin haftasından son girişin haftasına, boş hafta da sütun —
+ * sessizlik görünür kalır): sütunlar alanı eşit böler (1440'ta ~80 piksel),
+ * yığın TÜRE göre (alan değil: sayfanın sorusu "ne geldi, ne düzeldi") ve
+ * süzgeç açıkken eşleşmeyen pay soluk kulvarda kalır, ölçek değişmez.
+ * Eskiden yeniye sıralı.
  */
-export function releaseTimeline(entries: readonly ChangeEntry[]): ReleasePoint[] {
-  if (entries.length === 0) return [];
-  const day = (iso: string) => Date.parse(`${iso}T12:00:00Z`);
-  const sorted = [...entries].sort((a, b) => day(a.date) - day(b.date));
-  const first = day(sorted[0].date);
-  const span = Math.max(DAY_MS, day(sorted.at(-1)!.date) - first);
-  return sorted.map((entry) => ({
-    date: entry.date,
-    title: entry.title,
-    items: entry.items.length,
-    x: (day(entry.date) - first) / span,
-    area: dominantArea(entry),
-    parts: (() => {
-      const counts = areaCounts([entry]);
-      return AREA_DISPLAY_ORDER.filter((area) => counts[area] > 0).map((area) => ({ area, count: counts[area] }));
-    })(),
-    day: Math.round((day(entry.date) - first) / DAY_MS),
-  }));
-}
-
-/** Şeridin ay işaretleri: aralıktaki her ayın 1'i, 0-1 konumuyla. */
-export function monthTicks(points: readonly ReleasePoint[]): { month: string; x: number }[] {
-  if (points.length < 2) return [];
-  const day = (iso: string) => Date.parse(`${iso}T12:00:00Z`);
-  const first = day(points[0].date);
-  const span = Math.max(DAY_MS, day(points.at(-1)!.date) - first);
-  const ticks: { month: string; x: number }[] = [];
-  const cursor = new Date(`${points[0].date.slice(0, 7)}-01T12:00:00Z`);
-  while (cursor.getTime() <= first + span) {
-    const x = (cursor.getTime() - first) / span;
-    if (x >= 0) ticks.push({ month: cursor.toISOString().slice(0, 7), x });
-    cursor.setUTCMonth(cursor.getUTCMonth() + 1);
+export function weeklyFlow(all: readonly ChangeEntry[], shown: readonly ChangeEntry[] = all): FlowWeek[] {
+  if (all.length === 0) return [];
+  const zero = (): Record<ChangeKind, number> => ({ yeni: 0, iyilestirme: 0, duzeltme: 0 });
+  const dates = all.map((entry) => entry.date).sort();
+  const first = dayMs(weekStart(dates[0]));
+  const last = dayMs(weekStart(dates.at(-1)!));
+  const weeks = new Map<string, FlowWeek>();
+  for (let ms = first; ms <= last; ms += 7 * DAY_MS) {
+    const start = isoOf(ms);
+    weeks.set(start, { start, counts: zero(), total: 0, matched: zero(), matchedTotal: 0, releases: 0, anchor: null });
   }
-  return ticks;
+  for (const entry of all) {
+    const week = weeks.get(weekStart(entry.date))!;
+    week.releases += 1;
+    for (const item of entry.items) {
+      week.counts[item.kind] += 1;
+      week.total += 1;
+    }
+  }
+  for (const entry of shown) {
+    const week = weeks.get(weekStart(entry.date));
+    if (!week) continue;
+    if (!week.anchor || entry.date > week.anchor) week.anchor = entry.date;
+    for (const item of entry.items) {
+      week.matched[item.kind] += 1;
+      week.matchedTotal += 1;
+    }
+  }
+  return [...weeks.values()];
 }

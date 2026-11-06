@@ -13,6 +13,10 @@
    ayrıntısı (okura etkisi varsa tek genel cümle) ve sonradan geri alınmış
    işler (1 Ağustos'un gazete teması aynı gün kalktı, katılım taraması
    sonradan silindi — "yeni" diye sunulmaz).
+   6 Kasım: 26 Ekim - 5 Kasım arası 30 commit aynı kuralla okundu (yedi giriş
+   eklendi). Ayrıca alınmayanlar: belge, ajan ve CLAUDE.md işleri, bağlantı
+   taraması, migration ve davet usulü kapalı ekranlar (Risk Masası yalnız
+   erişimi açılana görünüyor; varlığını burada duyurmak o kararı delerdi).
 
    YAPI. `CHANGELOG_TR` dilden bağımsız alanları (gün, etiket, bağlantı) da
    taşıyan kaynak; `CHANGELOG_EN` yalnız metin taşır ve tipi TR'den
@@ -23,18 +27,19 @@
    KURALLAR (tests/changelog.test.ts sınar):
    - `date` girişin son günü; `from` varsa giriş bir aralığı anlatır.
      Girişler kesin azalan sırada, gün tekil (sayfada çapa olarak kullanılır).
-   - Her girişte 2-6 madde. TEK İSTİSNA en üstteki giriş: bu sürümün kendisi
-     ve sayfada öne çıkarılan blok; on beş maddesi altıya sığdırılınca ya
-     özellik düşüyordu ya da maddeler birbirine karışıyordu.
+   - Her girişte 2-6 madde. İSTİSNA "büyük sürüm": her maddesi `short`
+     taşıyan giriş en çok 16 madde alabilir (en üstteki giriş her zaman
+     böyle; 24-25 Ekim'in on beş maddesi altıya sığdırılınca ya özellik
+     düşüyordu ya da maddeler birbirine karışıyordu). 6 Kasım: o giriş
+     üstten inince kuralı yalnız "en üstteki" diye yazmak onu bozuyordu.
    - `href` bugün VAR OLAN bir rota (dinamik olanda gerçek bir değer:
      `/hisse/NVDA`, `content/guide/meta.ts`te olan bir rehber yazısı…). Emin
      olunamayan maddede bağlantı yok. `TELEGRAM_HREF` bir yer tutucu: kanal
      adresi (`NEXT_PUBLIC_TELEGRAM_URL`) tanımlı değilse "Dene" basılmaz.
-   - Her maddenin bir `area`sı var (Claude, piyasa, bilanço, kişisel,
-     içerik); Yenilikler'de alan süzgeci, kart rengi ve sürüm akışındaki
-     çubuğun rengi (baskın alan) buradan. "Öne Çıkanlar" kartlarını isteğe
-     bağlı `featured: true` seçer; yoksa kural (`splitFeatured`). En üstteki
-     girişin her maddesi TR ve EN'de `short` taşır: dört sütunlu karoda tek
+   - Her maddenin bir `area`sı (Claude, piyasa, bilanço, kişisel, içerik:
+     Yenilikler'deki alan süzgeci) ve bir EKRANI var (`screen`, çoğunlukla
+     bağlantıdan çıkar; bkz. `CHANGE_SCREENS`). En üstteki girişin her
+     maddesi TR ve EN'de `short` taşır: "Son Güncellemede" sütunlarında tek
      satır, en çok 36 karakter (25 Ekim yeniden düzeni). Yeni sürüm
      eklendiğinde kısa özet yeni üst girişe yazılır; eskisinde kalabilir.
    - Başlıklar Title Case, gövde tek cümle; arayüz metninde em dash yok.
@@ -58,6 +63,32 @@ type IsoDay = `${number}-${number}-${number}`;
 export const CHANGE_AREAS = ["claude", "piyasa", "bilanco", "kisisel", "icerik"] as const;
 export type ChangeArea = (typeof CHANGE_AREAS)[number];
 
+/**
+ * Maddenin etkilediği EKRAN (6 Kasım, sahibinin sözü: "yeni featurelar/yeni
+ * düzenlemeler EKRAN ve KATEGORİ bazlı görünebilsin"). Alan (`area`) konuyu
+ * söyler (piyasa, bilanço…), ekran okurun nereye bakacağını. Çoğu madde
+ * ekranını yazmaz: `lib/changelog.ts` → `screenOf` onu "Dene" bağlantısının
+ * rotasından çıkarır (`/hisse/NVDA` → Hisse Sayfası). Bağlantısız ya da
+ * bağlantısı ekranını söylemeyen maddede `screen` elle yazılır; ikisi de
+ * yoksa madde "Site Geneli"dir. Sıra Yenilikler'deki ekran haritasının ve
+ * çiplerin sırası; adlar sözlükte (`changelog.screen`).
+ */
+export const CHANGE_SCREENS = [
+  "anasayfa",
+  "piyasalar",
+  "hisse",
+  "teknik",
+  "bilancolar",
+  "takvim",
+  "mercek",
+  "gunluk",
+  "portfoy",
+  "rehber",
+  "hesap",
+  "site",
+] as const;
+export type ChangeScreen = (typeof CHANGE_SCREENS)[number];
+
 type SourceItem = {
   readonly kind: ChangeKind;
   readonly area: ChangeArea;
@@ -67,11 +98,11 @@ type SourceItem = {
   readonly body: string;
   readonly href?: string;
   /**
-   * Yenilikler'in "Öne Çıkanlar" kartlarına elle seçim (isteğe bağlı, 25
-   * Ekim kompakt düzen). Hiçbir maddede yoksa seçim kuraldan gelir:
-   * `lib/changelog.ts` → `splitFeatured`. Bir girişte varsa yalnız bunlar.
+   * Etkilenen ekran — yalnız bağlantıdan çıkmıyorsa (bkz. `CHANGE_SCREENS`).
+   * 6 Kasım: eski `featured` işareti kalktı; "Öne Çıkanlar" kartları yerine
+   * son sürüm tür tür üç sütunda (`lib/changelog.ts` → `latestDigest`).
    */
-  readonly featured?: true;
+  readonly screen?: ChangeScreen;
 };
 
 type SourceEntry = {
@@ -104,7 +135,134 @@ type TextItems<Items extends readonly SourceItem[]> = {
 };
 
 export const CHANGELOG_TR = [
-  /* ---- 24-25 Ekim: bu sürüm (main..HEAD) ---- */
+  /* ---- 5-6 Kasım: bu sürüm ---- */
+  {
+    date: "2026-11-06",
+    from: "2026-11-05",
+    title: "Yazının Haritası, Çizimle Göstergeler",
+    summary:
+      "Uzun yazılarda geniş ekranın boş kenarı artık yazının haritası, teknik kartlar göstergeleri çizimle anlatıyor ve yazı kartları her ekranda önce başlıkla açılıyor. ABD kış saatine geçince kayan bülten ve teknik yayın saatleri düzeldi; Yenilikler de her değişikliği ekranına göre gösteriyor. Ana sayfa, takvim, bilançolar, piyasalar, hisse seçimi, yatırımcılar ve vergi ekranları da sayıları çizimle okutan bir görsel turdan geçti.",
+    items: [
+      // d5836db
+      { kind: "yeni", area: "icerik", short: "Geniş ekranda yazının haritası", title: "Okuma Rayı", body: "Mercek ve rehber yazılarında geniş ekranın boş kenarında yazının bölümleri numarasıyla duruyor; okudukça her bölümün çizgisi doluyor, ara başlıkların cetveli de sen vardıkça çiziliyor.", href: "/rehber/borsa-nasil-isler" },
+      // bu sürüm: /yenilikler yeniden düzeni
+      { kind: "yeni", area: "icerik", short: "Her değişiklik kendi ekranında", title: "Ekran Ekran Yenilikler", body: "Bu sayfa son güncellemede neyin geldiğini, neyin iyileştiğini ve neyin düzeltildiğini ayrı ayrı sayıyor; değişiklikleri etkiledikleri ekrana göre süzüp günü gününe okuyabiliyorsun.", href: "/yenilikler" },
+      // 73ab2d9
+      { kind: "iyilestirme", area: "piyasa", short: "RSI yarım halka, hacim basamak", title: "Çizimle Okunan Göstergeler", body: "Teknik kartlarda RSI eşik bölgeleriyle bir yarım halkada, hacim de olağana göre kaç basamak doldurduğuyla okunuyor; değer yalnız eşik aşılınca renkleniyor.", href: "/teknik" },
+      // a3e89d9
+      { kind: "iyilestirme", area: "icerik", short: "Önce manşet, rakamlar altta", title: "Önce Başlık Gelen Kartlar", body: "Mercek, bülten, Günün Grafiği ve hisse sayfasındaki yazı kartlarında sıra artık okuma sırası: önce manşet, sonra tarih ve özet, en altta yazının rakamları.", href: "/bulten" },
+      // c1b250c, fdf948c
+      { kind: "iyilestirme", area: "icerik", short: "En çok üç sütun, düzenli satırlar", title: "Düzenli Mercek Arşivi", body: "Mercek arşivi geniş ekranda da en çok üç sütun; yan yana kartların şeritleri aynı hatta başlıyor, ayın sonunda tek kalan kart da satırı boydan boya kaplıyor.", href: "/mercek" },
+      // cf4165b
+      { kind: "duzeltme", area: "icerik", short: "Kış saatinde doğru yayın saati", title: "Bülten Saati Kış Saatinde", body: "ABD kış saatine geçince günlük özet de bir saat geç çıkmaya başladı; ana sayfa artık o günün saat farkıyla doğru saati yazıyor ve zamanında çıkan bülteni gecikmiş saymıyor.", href: "/bulten" },
+      // cf4165b
+      { kind: "duzeltme", area: "piyasa", short: "Sıradaki teknik yayın doğru saatte", title: "Teknik Yayın Saatleri", body: "Teknik analiz sayfası sıradaki yayını New York saatine bağlı gerçek saatiyle gösteriyor; kış saatinde bir saat erken görünmüyor.", href: "/teknik" },
+      // 6 Kasım ekran turu (bu sürüm)
+      { kind: "iyilestirme", area: "piyasa", short: "Ne zaman, ne, ne çıktı", title: "Okunur Bugünün Akışı", body: "Ana sayfadaki günün akışında her satır saatle başlıyor, türü ikonundan okunuyor; açıklanan verinin beklentiyi ne kadar aştığı bir hapla ve açınca beklenti çizgisinde görünüyor, şimdiki an da zaman çizgisinde duruyor.", href: "/" },
+      { kind: "iyilestirme", area: "piyasa", short: "Etki çubukları, beklenti çizgisi", title: "Daha Görsel Ekonomik Takvim", body: "Takvimde verinin önemi boyu yükselen çubuklarla, açıklanan sonuç beklentiye göre tek bir çizgide okunuyor; haftanın yedi günü aynı hizada.", href: "/takvim" },
+      { kind: "iyilestirme", area: "piyasa", short: "Endeksler ve veriler çizimle", title: "Bülten Kartı ve Yan Paneller", body: "Ana sayfadaki bülten kartında dört endeks ortak ölçekli şeritlerde, günün önemli verileri beklenti çizgisinde; Dünya Piyasaları ve Günün Hareketleri de yüzdelerini şeritle gösteriyor.", href: "/" },
+      { kind: "iyilestirme", area: "bilanco", short: "Büyük logolar, okunur karne", title: "Haftanın Bilanço Ufku", body: "Bilanço takviminde logolar büyüdü; son dört çeyreğin karnesinde beklentinin aşılmadığı çeyrek artık kırmızı, böylece 3/4 dört dolu çeyrek gibi görünmüyor.", href: "/bilancolar" },
+      { kind: "iyilestirme", area: "bilanco", short: "Okunur kimlik, dolgun grafikler", title: "Bilanço Analizi Sayfası", body: "Kaydırınca üstte kalan çubukta şirket ve dönem okunur boyda; çeyreklik gelir grafikleri alanı dolduruyor.", href: "/bilancolar/analizler" },
+      { kind: "iyilestirme", area: "piyasa", short: "Hizalı kartlar, pay cetveli", title: "Piyasalar ve Hisse Seçimi", body: "Piyasalar'da en çok artan ve düşen kartları uzun adlarda da aynı hizada; Hisse Seçimi'nde ağırlıklar tek cetvelde, puan kulvarında semboller artık üst üste binmiyor.", href: "/piyasalar" },
+      { kind: "iyilestirme", area: "kisisel", short: "Sermaye panosu, vergi şeridi", title: "Yatırımcılar ve Vergi Hesabı", body: "Ünlü Yatırımcılar'da sermaye dağılımı kapağa çıktı ve kartlar aynı hizada; vergi hesabında sembol önerisi, sürükle bırak ekstre ve sonucu kazançtan vergiye gösteren şerit var.", href: "/vergi" },
+      { kind: "duzeltme", area: "icerik", short: "Yeni haberler Türkçe", title: "Haberler İlk Açılışta Türkçe", body: "Yeni düşen haberler ilk açan okura da Türkçe geliyor; çeviri artık sayfa açılırken yapılıyor.", href: "/haberler" },
+    ],
+  },
+  {
+    date: "2026-11-03",
+    title: "Daha Derin, Daha Sakin Yüzeyler",
+    summary: "Sitenin derinliği yeniden işlendi: paneller üstten ışık alıyor, açılır menüler zeminden ince bir gölgeyle ayrışıyor ve butonlar basılabilir görünüyor. Palet ve renkler aynı kaldı.",
+    items: [
+      // bb9781e
+      { kind: "iyilestirme", area: "icerik", title: "Işık Alan Panel Kenarları", body: "Panellerin kenarı üstten ışık alıyor, açılır menüler, ipuçları ve pencereler üç basamaklı ince bir gölgeyle zeminden ayrışıyor." },
+      // bb9781e
+      { kind: "iyilestirme", area: "icerik", screen: "site", title: "Basılabilir Butonlar ve Odak Halesi", body: "Birincil butonlar basılınca içeri çöküyor, arama ve form alanları odaklanınca çizginin yanında yumuşak bir hale alıyor.", href: "/tarama" },
+    ],
+  },
+  {
+    date: "2026-10-31",
+    title: "Her Fiyat Kendi Seansında",
+    summary: "Gece seansındaki işlemler artık son kapanış gibi gösterilmiyor ve her grafik hangi günü anlattığını söylüyor. Teknik analiz bir fiyat merdiveni, şirketin bilanço sayfası takvim yaprağı aldı; koyu tema dinlendi.",
+    items: [
+      // ea9fbd5, d17648d
+      { kind: "duzeltme", area: "piyasa", title: "Gece Seansı Kapanış Sayılmıyor", body: "Hafta sonu ve gece seansında yapılan işlemler artık son kapanış diye basılmıyor; endeksler, sektörler ve ısı haritası aynı tamamlanmış seansı anlatıyor.", href: "/piyasalar" },
+      // ea9fbd5, d17648d
+      { kind: "duzeltme", area: "piyasa", title: "Grafiğin Günü Başlıkta", body: "Günün Grafiği bugüne ait değilse başlığı da “Dünün Grafiği” ya da “Cuma'nın Grafiği” oluyor; hisse grafiğinin günlük görünümü de gece barlarını bugün diye çizmiyor.", href: "/gunun-grafigi" },
+      // d17648d
+      { kind: "iyilestirme", area: "piyasa", title: "Fiyat Merdiveni", body: "Teknik analiz detayında seviye tablosunun yerinde gerçek fiyat aralıklarıyla çizilen bir merdiven var: alım bölgesi, stop, hedef, destek ve direnç fiyatın imleciyle aynı eksende.", href: "/teknik/NVDA" },
+      // d17648d
+      { kind: "iyilestirme", area: "bilanco", title: "Bilançosu Ne Zaman? Sayfası", body: "Şirketin bilanço sayfasında takvim yaprağı ve kalan gün, beklenti ile son çeyreğin çubukları ve çeyrek çeyrek karne var; aynı çeyreğin iki kez sayılması da düzeldi.", href: "/bilancolar/NVDA" },
+      // f68b4d2
+      { kind: "iyilestirme", area: "icerik", title: "Dinlenmiş Koyu Tema", body: "Koyu tema gece mavisinde kaldı ama parlaması azaldı; turuncu vurgular altın sarısına geçti ve bütün metinler okunurluk ölçüsünden geçiyor." },
+      // baf543e, ea9fbd5
+      { kind: "iyilestirme", area: "piyasa", title: "Beklemeyen Şirketler Tablosu", body: "Canlı fiyat gecikirse Şirketler tablosu birkaç saniye içinde son bilinen değeri güncel olmadığını belirterek basıyor; uzun bekleyişte yükleme kartı da donmak yerine ilerliyor.", href: "/sirketler" },
+    ],
+  },
+  {
+    date: "2026-10-30",
+    title: "Görüş Hapları ve Bilanço Kartları Tek Dilde",
+    summary: "AL, TUT ve SAT her ekranda aynı hapla, yön ikonu ve küçük skor halkasıyla okunuyor. Bilanço analizi kartları çeyreğin üç ölçüsünü şeritle, yaklaşan bilançolar takvim yaprağıyla gösteriyor.",
+    items: [
+      // f2871aa
+      { kind: "iyilestirme", area: "bilanco", screen: "site", title: "Tek Tip Görüş Hapı", body: "AL, TUT ve SAT her ekranda aynı genişlikte bir hap: yön ikonu ve varsa küçük bir skor halkası; alt alta listelerde sütun kaymıyor, haplar sıkışmıyor.", href: "/bilancolar/analizler" },
+      // 2526144, 61dc2dc
+      { kind: "iyilestirme", area: "bilanco", title: "Üç Ölçülü Analiz Kartları", body: "Bilanço analizi kartında gelir, beklentiye göre hisse başı kâr ve piyasanın ilk tepkisi aynı ölçekte şeritle duruyor; kart çeyreğin tek cümlesini de taşıyor.", href: "/bilancolar/analizler" },
+      // 2526144
+      { kind: "iyilestirme", area: "bilanco", title: "Takvim Yapraklı Yaklaşan Bilançolar", body: "Ana sayfadaki yaklaşan bilançolarda tarih bir takvim yaprağı, açıklama saati de gün doğumu, ay ya da saat ikonuyla gösteriliyor.", href: "/" },
+      // f2871aa
+      { kind: "duzeltme", area: "bilanco", title: "Açılış Öncesi Yeşil Değil", body: "Açılış öncesi ve kapanış sonrası etiketleri nötr zeminde ikonla gösteriliyor; bu sitede yeşil yükseliş demek ve AL hapının yanında yanlış okunuyordu.", href: "/takvim" },
+      // 8f4822c
+      { kind: "duzeltme", area: "icerik", title: "Mercek Kaynakları Onarıldı", body: "Mercek yazılarındaki açılmayan kaynak bağlantıları arşiv kopyasına ya da yayıncının doğru adresine taşındı, kopyası olmayanda kaynağın adı kaldı.", href: "/mercek" },
+    ],
+  },
+  {
+    date: "2026-10-29",
+    title: "Hisseyi Bil Kolaylaştı, Yeni Oyun Geldi",
+    summary: "Bulmacaya ikinci bir oyun ve günün sıralaması eklendi; Hisseyi Bil daha kolay başlıyor ve tahmin kutusu ipuçlarına uyan şirketleri öne alıyor. Bugünün Akışı'nın karnesi de başlığa taşındı.",
+    items: [
+      // 7a52091
+      { kind: "yeni", area: "piyasa", title: "Hangisi Büyük?", body: "Soldaki şirketin piyasa değeri açık; sağdakinin daha büyük mü küçük mü olduğunu bil, bildikçe eşleşmeler zorlaşıyor.", href: "/bulmaca/hangisi-buyuk" },
+      // 7a52091
+      { kind: "yeni", area: "kisisel", title: "Günün Sıralaması", body: "Giriş yaptıysan bugünün bulmacası az tahmin ve kısa süreyle sıralanıyor; adın varsayılan olarak gizli, istersen bir takma ad seçebiliyorsun.", href: "/bulmaca" },
+      // 7a52091
+      { kind: "iyilestirme", area: "piyasa", title: "Daha Kolay Hisseyi Bil", body: "Sektör ve temettü baştan açık, dört yanlıştan sonra bütün ipuçları ortada; tahmin kutusu ipuçlarına uyan şirketleri öne alıp kaç aday kaldığını söylüyor.", href: "/bulmaca" },
+      // 7a52091
+      { kind: "iyilestirme", area: "piyasa", title: "Oyun Arşivi ve Karne", body: "Arşivde çözdüğün, bilemediğin ve bekleyen bulmacalar karneyle sayılıyor; her kart altı tahmin yuvasını ve kaldığın yerden devam etmeyi gösteriyor.", href: "/bulmaca/arsiv" },
+      // af787c3
+      { kind: "iyilestirme", area: "bilanco", title: "Akışın Karnesi Başlıkta", body: "Bugünün Akışı'nın başlığındaki tek hap günün olaylarını karelerle sayıyor: açıklananlar dolu, saati gelip bekleyenler mavi, planlananlar boş.", href: "/" },
+      // af787c3
+      { kind: "duzeltme", area: "bilanco", title: "Okunur Kaynak Adı", body: "Akıştaki ekonomik verilerin kaynağı ham bir anahtar yerine “FRED (St. Louis Fed)” diye yazıyor.", href: "/" },
+    ],
+  },
+  {
+    date: "2026-10-28",
+    title: "Ana Sayfa Önce Bugünü Anlatıyor",
+    summary: "Ana sayfada bugünün hareketleri öne geçti, önceki seansı anlatan paneller de hangi günü anlattığını söylüyor. Fed kararı açıklanır açıklanmaz akışa düşüyor.",
+    items: [
+      // fb44024
+      { kind: "iyilestirme", area: "piyasa", title: "Bugün Önce", body: "Telefonda sıra artık günün hareketleri, son seansın silueti ve Günün Grafiği; masaüstünde silüet iki kolonun altında tam genişlikte duruyor.", href: "/" },
+      // fb44024
+      { kind: "iyilestirme", area: "piyasa", title: "Dünkü Seans Künyesi", body: "Önceki seansı gösteren panellerin başlığının altında “Dünkü Seans”, hafta sonunda “Cuma Seansı” yazıyor; seans açıkken silüet önceki kapanışı anlattığını söylüyor.", href: "/" },
+      // fba725d
+      { kind: "duzeltme", area: "bilanco", title: "Fed Kararı Anında", body: "Fed faiz kararı artık Fed'in kendi bülteninden okunuyor; karar açıklandıktan saatler sonra “Sonuç Bekleniyor” yazmıyor, basın toplantısı da bitince “Gerçekleşti” oluyor.", href: "/takvim" },
+      // fba725d
+      { kind: "iyilestirme", area: "bilanco", title: "Daha Kompakt Akış", body: "Bugünün Akışı'nda saat ile dilim tek satırda, şirket kartları iki satır; aynı günün verisiyle panel masaüstünde yaklaşık altıda bir kısaldı.", href: "/" },
+    ],
+  },
+  {
+    date: "2026-10-27",
+    title: "Telefonda Okunur Silüet ve Bilanço Ufku",
+    summary: "Silüetin etiketleri telefonda binaların üstünden kalktı; bilanço ufku açılışta bugünü gösteriyor ve telefonda büyük, okunur kartlar taşıyor.",
+    items: [
+      // 8d314a9
+      { kind: "iyilestirme", area: "piyasa", title: "Silüette Öne Çıkanlar", body: "Telefonda sahne yalnız binalar ve numara rozetleri; şirketler altta iki sütunlu Öne Çıkanlar listesinde, çipe dokununca binası aydınlanıyor.", href: "/gun" },
+      // 375737d
+      { kind: "iyilestirme", area: "bilanco", title: "Bilanço Ufku Bugünden Açılıyor", body: "Bilanço takvimi açılışta haftanın en kalabalık gününü değil bugünü, bugün boşsa önümüzdeki ilk dolu günü gösteriyor.", href: "/bilancolar" },
+      // 375737d
+      { kind: "iyilestirme", area: "bilanco", title: "Telefonda Bilanço Kartları", body: "Telefonda günün en büyük şirketleri logolu ve karneli büyük kartlarda, kalanlar satırda üç küçük kartta; okuma şeridi tam genişlik bir vitrin.", href: "/bilancolar" },
+    ],
+  },
+  /* ---- 24-25 Ekim: Her Güne Yeni Bir Parça ---- */
   {
     date: "2026-10-25",
     from: "2026-10-24",
@@ -194,7 +352,7 @@ export const CHANGELOG_TR = [
       // 401765b0, 309a3acd
       { kind: "yeni", area: "claude", title: "Bu Hafta Neden Hareket Etti", body: "Hisse sayfasında son beş seansın hareketi S&P 500 ve şirketin o haftaki haberleriyle açıklanıyor; haberler bir sebep göstermiyorsa not bunu açıkça söylüyor.", href: "/hisse/NVDA" },
       // 401765b0
-      { kind: "yeni", area: "claude", title: "Bilanço Notu", body: "Son on günde bilanço açıklayan şirketin sayfasında beklenti ile gerçekleşenin çubukları, ilk seans tepkisi ve kısa bir not çıkıyor." },
+      { kind: "yeni", area: "claude", screen: "hisse", title: "Bilanço Notu", body: "Son on günde bilanço açıklayan şirketin sayfasında beklenti ile gerçekleşenin çubukları, ilk seans tepkisi ve kısa bir not çıkıyor." },
       // 309a3acd, 4ab32e51, f3636cd6
       { kind: "yeni", area: "claude", title: "Günün Gündemi ve Haber Notları", body: "Haberler sayfası günün ve haftanın önemli haberlerini başlıklar altında topluyor, haber detayında da haberin ne anlattığı sade dille açılıyor.", href: "/haberler" },
       // 9fc914ab, a3f6ed4e, 583dee62
@@ -221,7 +379,7 @@ export const CHANGELOG_TR = [
       // 5bdfc0d0, 0047546e
       { kind: "yeni", area: "kisisel", title: "Bildirim Kutusu ve Yüzde Alarmı", body: "Fiyat alarmının yanında günlük yüzde değişim alarmı ve “bilanço yarın” hatırlatması geldi; hepsi başlıktaki zilin açtığı tek kutuda toplanıyor.", href: "/bildirimler" },
       // 19ea7330
-      { kind: "duzeltme", area: "kisisel", title: "Şifre Değişince Oturumlar Kapanıyor", body: "Şifreni değiştirdiğinde ya da sıfırladığında öteki cihazlardaki açık oturumlar artık kapanıyor." },
+      { kind: "duzeltme", area: "kisisel", screen: "hesap", title: "Şifre Değişince Oturumlar Kapanıyor", body: "Şifreni değiştirdiğinde ya da sıfırladığında öteki cihazlardaki açık oturumlar artık kapanıyor." },
     ],
   },
   {
@@ -238,7 +396,7 @@ export const CHANGELOG_TR = [
       // 196c893b
       { kind: "iyilestirme", area: "icerik", title: "Sekmede Kalan Süre", body: "Siteyi arka plandaki bir sekmede açık bıraktığında sekme başlığı açılışa ya da kapanışa kalan süreyi gösteriyor." },
       // 196c893b
-      { kind: "duzeltme", area: "bilanco", title: "Okunamayan Takvim Boş Sayılmıyor", body: "Veri alınamadığında ana sayfa artık “bugün bilanço yok” demek yerine verinin okunamadığını söylüyor." },
+      { kind: "duzeltme", area: "bilanco", screen: "anasayfa", title: "Okunamayan Takvim Boş Sayılmıyor", body: "Veri alınamadığında ana sayfa artık “bugün bilanço yok” demek yerine verinin okunamadığını söylüyor." },
       // 8c9f21f0, 8848d92e
       { kind: "iyilestirme", area: "kisisel", title: "Daha Erişilebilir Ekranlar", body: "Liste silme onayı listenin kendi başlığında açılıyor; kontrast ve dokunma hedefleri ekran okuyucu ve küçük ekran için düzeltildi.", href: "/favoriler" },
     ],
@@ -274,7 +432,7 @@ export const CHANGELOG_TR = [
       // 78fa3813
       { kind: "yeni", area: "kisisel", title: "Portföyde Satış", body: "Satışlar en eski alıştan başlayarak düşülüyor ve gerçekleşen kâr ya da zarar dolar ve lira olarak yıl yıl görünüyor.", href: "/portfoy" },
       // a68fae47, 78fa3813
-      { kind: "yeni", area: "kisisel", title: "Şifre Değiştirme ve Sıfırlama", body: "Şifreni Ayarlar'dan değiştirebiliyor, unuttuysan e-postana gelen tek kullanımlık bağlantıyla sıfırlayabiliyorsun." },
+      { kind: "yeni", area: "kisisel", screen: "hesap", title: "Şifre Değiştirme ve Sıfırlama", body: "Şifreni Ayarlar'dan değiştirebiliyor, unuttuysan e-postana gelen tek kullanımlık bağlantıyla sıfırlayabiliyorsun." },
       // 4d754929, aa119144
       { kind: "iyilestirme", area: "piyasa", title: "Yönüyle Dönen Rakamlar", body: "Seans içinde güncellenen fiyatlarda yalnız değişen rakamlar dönüyor; yükselişte yukarı, düşüşte aşağı." },
       // 41a38c19
@@ -408,7 +566,7 @@ export const CHANGELOG_TR = [
       // de5b1fcf
       { kind: "yeni", area: "piyasa", title: "Şirket Sayfasında Teknik Kart", body: "Teknik analizi olan hissenin sayfasında görüş, fiyatın plana göre yeri ve gerekçenin ilk cümlesi en üstte duruyor.", href: "/hisse/NVDA" },
       // dc890798, c8a0a085
-      { kind: "yeni", area: "piyasa", title: "Kapanış Öncesi Yayını", body: "Teknik analiz günde üç kez yayımlanmaya başladı ve sayfa bir sonraki yayının saatini de yazıyor." },
+      { kind: "yeni", area: "piyasa", screen: "teknik", title: "Kapanış Öncesi Yayını", body: "Teknik analiz günde üç kez yayımlanmaya başladı ve sayfa bir sonraki yayının saatini de yazıyor." },
       // 965b55a4, 1ee83dc6
       { kind: "yeni", area: "piyasa", title: "Paylaş ve Öteki Hisseler", body: "Teknik analiz sayfası paylaş butonu aldı; sayfanın sonundaki kartlarla listedeki öteki hisselere tek dokunuşla geçiliyor.", href: "/teknik/NVDA" },
       // 31e13ab5
@@ -480,9 +638,9 @@ export const CHANGELOG_TR = [
       // 30e562e1, bcbb8afa
       { kind: "yeni", area: "piyasa", title: "İleri F/K, Net Kâr Marjı, Borç / Özsermaye", body: "Anahtar metrikler şirketin ne kadar kazandığını ve bilançosunun ne kadar borçlu olduğunu da söylüyor.", href: "/hisse/AAPL" },
       // 30e562e1
-      { kind: "duzeltme", area: "piyasa", title: "BRK.B'nin Ölçüleri", body: "B sınıfı hissede A sınıfına ait F/K, hisse başına kâr ve 52 hafta bandı gösteriliyordu; bu ölçüler artık gizleniyor ve kart nedenini yazıyor." },
+      { kind: "duzeltme", area: "piyasa", screen: "hisse", title: "BRK.B'nin Ölçüleri", body: "B sınıfı hissede A sınıfına ait F/K, hisse başına kâr ve 52 hafta bandı gösteriliyordu; bu ölçüler artık gizleniyor ve kart nedenini yazıyor." },
       // f0a8a0c9, b5261b0d
-      { kind: "duzeltme", area: "piyasa", title: "Katılım Taraması Daha Dürüst", body: "Bir ölçüt hesaplanamadığında kart artık geçti demiyor, İnceleme Gerekir yazıp eksiğin ne olduğunu söylüyor." },
+      { kind: "duzeltme", area: "piyasa", screen: "hisse", title: "Katılım Taraması Daha Dürüst", body: "Bir ölçüt hesaplanamadığında kart artık geçti demiyor, İnceleme Gerekir yazıp eksiğin ne olduğunu söylüyor." },
       // a9155584
       { kind: "duzeltme", area: "piyasa", title: "Grafikte Tek Fiyat", body: "Hisse grafiğinin kenarında başlıktaki fiyatla çelişen ikinci bir fiyat görünmüyor.", href: "/hisse/NVDA" },
       // f0a8a0c9
@@ -498,7 +656,7 @@ export const CHANGELOG_TR = [
       // 3072294a
       { kind: "iyilestirme", area: "bilanco", title: "Mini Kartlarda Piyasa Değeri", body: "Bilanço takvimindeki her kartın dibinde şirketin piyasa değeri sabit bir satırda yazıyor, kartlar da aynı boyda kalıyor.", href: "/bilancolar" },
       // 4bb1c481, 9241fc5d
-      { kind: "iyilestirme", area: "bilanco", title: "Okunur Öngörü Kartı", body: "Şirketin verdiği aralık, piyasanın beklentisi ve orta nokta artık üç ayrı işaretle çiziliyor, hangisinin ne olduğu karışmıyor." },
+      { kind: "iyilestirme", area: "bilanco", screen: "bilancolar", title: "Okunur Öngörü Kartı", body: "Şirketin verdiği aralık, piyasanın beklentisi ve orta nokta artık üç ayrı işaretle çiziliyor, hangisinin ne olduğu karışmıyor." },
       // d1cff005
       { kind: "duzeltme", area: "bilanco", title: "Takvim Dosyasında Türkçe Harfler", body: "Takvimine eklediğin bilanço ve veri açıklamalarında ç, ğ, ş gibi harfler içeren satırlar artık bozulmuyor.", href: "/takvim" },
       // 2023eb0d
@@ -506,7 +664,7 @@ export const CHANGELOG_TR = [
       // 7665602b
       { kind: "iyilestirme", area: "kisisel", title: "Hesap Silme Ayrı Bölümde", body: "Hesabını silme butonu çıkış butonunin yanından kalktı, sayfanın en altında kendi bölümünde duruyor.", href: "/ayarlar" },
       // f13e77fe
-      { kind: "duzeltme", area: "kisisel", title: "Daha Güvenli Giriş", body: "Giriş yaptıktan sonra yalnızca sitenin kendi sayfalarına yönlendiriliyorsun." },
+      { kind: "duzeltme", area: "kisisel", screen: "hesap", title: "Daha Güvenli Giriş", body: "Giriş yaptıktan sonra yalnızca sitenin kendi sayfalarına yönlendiriliyorsun." },
     ],
   },
   {
@@ -613,11 +771,11 @@ export const CHANGELOG_TR = [
       // 63a03d91, 37d7f1ad, ef2c7702
       { kind: "yeni", area: "bilanco", title: "Takvime Ekle", body: "Ekonomik veri ve bilanço tarihlerini tek dokunuşla telefonunun ya da bilgisayarının takvimine ekleyebiliyorsun; saat kendi saat diliminde görünüyor.", href: "/takvim" },
       // 63a03d91
-      { kind: "yeni", area: "icerik", title: "Arama Yazıları da Buluyor", body: "Arama kutusu artık yalnız hisseleri değil, rehber ve Mercek yazılarını da buluyor." },
+      { kind: "yeni", area: "icerik", screen: "site", title: "Arama Yazıları da Buluyor", body: "Arama kutusu artık yalnız hisseleri değil, rehber ve Mercek yazılarını da buluyor." },
       // 63a03d91
-      { kind: "yeni", area: "icerik", title: "RSS Akışı", body: "Yeni yazıları bir RSS okuyucusuyla takip edebilmen için sitenin akışı açıldı." },
+      { kind: "yeni", area: "icerik", screen: "mercek", title: "RSS Akışı", body: "Yeni yazıları bir RSS okuyucusuyla takip edebilmen için sitenin akışı açıldı." },
       // 604ae04e, cc6209c2
-      { kind: "yeni", area: "bilanco", title: "Analizde Değerleme Künyesi", body: "Bilanço analizlerinde F/K, hisse başı kâr ve net kâr marjı gösteriliyor; oran her gün güncel fiyattan yeniden hesaplanıyor." },
+      { kind: "yeni", area: "bilanco", screen: "bilancolar", title: "Analizde Değerleme Künyesi", body: "Bilanço analizlerinde F/K, hisse başı kâr ve net kâr marjı gösteriliyor; oran her gün güncel fiyattan yeniden hesaplanıyor." },
     ],
   },
   {
@@ -649,9 +807,9 @@ export const CHANGELOG_TR = [
       // 58c69607
       { kind: "yeni", area: "bilanco", title: "Takvimde Analiz Rozeti", body: "Analizi yazılmış bir bilanço, takvim satırında ve Bugün ekranında görüş ve skor rozetiyle işaretleniyor.", href: "/bilancolar" },
       // f26f039a
-      { kind: "yeni", area: "bilanco", title: "Hisse Sayfasında Analizler", body: "Analizi olan şirketin sayfasında, geçmiş bilançolar tablosunun hemen üstünde o şirketin analizleri listeleniyor." },
+      { kind: "yeni", area: "bilanco", screen: "hisse", title: "Hisse Sayfasında Analizler", body: "Analizi olan şirketin sayfasında, geçmiş bilançolar tablosunun hemen üstünde o şirketin analizleri listeleniyor." },
       // 6e4db02b
-      { kind: "iyilestirme", area: "bilanco", title: "Önce Rakamlar", body: "Analiz sayfası paragraflarla değil, metrik kartları, çeyreklik gelir grafiği ve öngörü aralıklarıyla açılıyor." },
+      { kind: "iyilestirme", area: "bilanco", screen: "bilancolar", title: "Önce Rakamlar", body: "Analiz sayfası paragraflarla değil, metrik kartları, çeyreklik gelir grafiği ve öngörü aralıklarıyla açılıyor." },
       // 58c69607
       { kind: "duzeltme", area: "bilanco", title: "Büyük Bilanço Üstte", body: "Bugün ekranındaki bilanço listesi piyasa değerine göre sıralanıyor; günün en büyük bilançosu artık aşağıda kalmıyor.", href: "/" },
       // 62d32397
@@ -718,6 +876,98 @@ export const CHANGELOG_TR = [
 ] as const satisfies readonly SourceEntry[];
 
 export const CHANGELOG_EN: Translation<typeof CHANGELOG_TR> = [
+  /* ---- 5-6 Kasım ---- */
+  {
+    date: "2026-11-06",
+    title: "A Map of the Article, Indicators as Drawings",
+    summary:
+      "On wide screens the empty margin of a long article is now its map, technical cards draw their indicators and article cards open with the headline on every screen. Brief and technical publishing times that slipped when the US moved to winter time are fixed, and What's New now shows every change by the screen it touches. The home page, calendar, earnings, markets, stock screening, investors and tax screens also went through a visual pass that makes their numbers read as drawings.",
+    items: [
+      { title: "Reading Rail", short: "A map of the article on wide screens", body: "On wide screens, Close-Up and guide articles list their sections by number in the empty margin; each section's line fills as you read, and the rule above each subheading draws as you reach it." },
+      { title: "What's New by Screen", short: "Every change on its own screen", body: "This page now counts what arrived, what improved and what got fixed in the latest update separately, and lets you filter changes by the screen they touch and read them day by day." },
+      { title: "Indicators as Drawings", short: "RSI half ring, volume steps", body: "Technical cards show RSI on a half ring with its threshold zones and volume as the number of steps it fills against normal; the value only takes a color once a threshold is crossed." },
+      { title: "Headline First Cards", short: "Headline first, figures below", body: "Article cards in Close-Up, the brief, Chart of the Day and the stock page now follow reading order: headline, then date and summary, with the article's figures at the bottom." },
+      { title: "A Tidier Close-Up Archive", short: "Three columns at most, even rows", body: "The Close-Up archive keeps to three columns even on wide screens; strips on side-by-side cards start on the same line, and a card left alone at the end of a month spans the whole row." },
+      { title: "Brief Time in Winter", short: "The right time in winter", body: "When the US moved to winter time the daily brief started coming out an hour later; the home page now shows the correct time for that day's offset and no longer marks an on-time brief as late." },
+      { title: "Technical Publishing Times", short: "Next technical update on time", body: "The technical analysis page shows the next update at its real time, tied to New York; in winter it no longer looks an hour early." },
+      { title: "A Readable Today's Flow", short: "When, what, what came out", body: "In the home page's flow of the day every row starts with its time and its type reads from the icon; how far a release beat the estimate shows in a pill and, opened, on the estimate line, and the current moment sits on the timeline." },
+      { title: "A More Visual Economic Calendar", short: "Impact bars, estimate line", body: "The calendar shows a release's importance with rising bars and the result against the estimate on a single line; the seven days of the week line up." },
+      { title: "Brief Card and Side Panels", short: "Indexes and releases as drawings", body: "The home page brief card shows the four indexes on strips with a shared scale and the day's key releases on the estimate line; World Markets and Top Movers draw their percentages too." },
+      { title: "This Week's Earnings Horizon", short: "Bigger logos, readable record", body: "Logos in the earnings calendar got bigger; in the last four quarters' record a missed estimate is now red, so 3/4 no longer looks like four full quarters." },
+      { title: "Earnings Analysis Page", short: "Readable identity, fuller charts", body: "The bar that stays on top while scrolling shows the company and period at a readable size; the quarterly revenue charts fill their space." },
+      { title: "Markets and Stock Screening", short: "Aligned cards, weight ruler", body: "On Markets the top gainer and loser cards line up even with long names; in Stock Screening the weights sit on one ruler and symbols on the score lane no longer overlap." },
+      { title: "Investors and Tax Calculator", short: "Capital board, tax strip", body: "Famous Investors shows the capital split in the header and its cards line up; the tax calculator suggests symbols, accepts a dropped statement and shows the result on a gain-to-tax strip." },
+      { title: "News in Turkish on First Open", short: "New stories in Turkish", body: "Freshly arrived news reaches the first reader in Turkish too; translation now happens while the page opens." },
+    ],
+  },
+  {
+    date: "2026-11-03",
+    title: "Deeper, Calmer Surfaces",
+    summary: "The site's sense of depth was reworked: panels catch light from above, menus lift off the page with a fine shadow and buttons look pressable. The palette and colors stayed the same.",
+    items: [
+      { title: "Panel Edges That Catch the Light", body: "Panel edges catch light from above, and menus, tooltips and dialogs lift off the page with a fine three-step shadow." },
+      { title: "Pressable Buttons and a Focus Halo", body: "Primary buttons sink when pressed, and search and form fields gain a soft halo next to their focus line." },
+    ],
+  },
+  {
+    date: "2026-10-31",
+    title: "Every Price in Its Own Session",
+    summary: "Overnight trades no longer show up as the last close, and every chart says which day it describes. Technical analysis gained a price ladder, the company earnings page a calendar leaf, and the dark theme calmed down.",
+    items: [
+      { title: "Overnight Trades Are Not the Close", body: "Trades from the weekend and overnight session no longer appear as the last close; indices, sectors and the heat map all describe the same completed session." },
+      { title: "The Chart's Day in the Title", body: "When Chart of the Day is not from today its title says “Yesterday's Chart” or “Friday's Chart”, and the stock chart's one-day view no longer draws overnight bars as today." },
+      { title: "Price Ladder", body: "The technical analysis detail replaces its level table with a ladder drawn on real price gaps: entry zone, stop, target, support and resistance on one axis with the price marker." },
+      { title: "When Are Earnings? Page", body: "The company earnings page has a calendar leaf with days left, bars for the estimate and the last quarter and a quarter-by-quarter record; a quarter counted twice is fixed too." },
+      { title: "A Calmer Dark Theme", body: "The dark theme stays midnight blue but glows less; orange accents moved to gold and every text passes the readability check." },
+      { title: "A Companies Table That Doesn't Wait", body: "If live prices are slow, the Companies table shows the last known values within a few seconds and marks them as not current; on long waits the loading card moves on instead of freezing." },
+    ],
+  },
+  {
+    date: "2026-10-30",
+    title: "Rating Pills and Earnings Cards in One Language",
+    summary: "BUY, HOLD and SELL read the same on every screen, with a direction icon and a small score ring. Earnings analysis cards show the quarter's three measures as strips, and upcoming earnings come with a calendar leaf.",
+    items: [
+      { title: "One Rating Pill", body: "BUY, HOLD and SELL are the same fixed-width pill everywhere, with a direction icon and a small score ring when there is a score; columns no longer shift in stacked lists and pills never get squeezed." },
+      { title: "Three-Measure Analysis Cards", body: "Earnings analysis cards show revenue, EPS against the estimate and the market's first reaction as strips on one scale, plus the quarter's one-line takeaway." },
+      { title: "Upcoming Earnings With a Calendar Leaf", body: "Upcoming earnings on the home page show the date as a calendar leaf and the report time with a sunrise, moon or clock icon." },
+      { title: "Pre-Market Is Not Green", body: "Pre-market and after-hours labels sit on a neutral background with an icon; on this site green means up and it was misread next to a BUY pill." },
+      { title: "Close-Up Sources Repaired", body: "Broken source links in Close-Up articles moved to an archived copy or the publisher's correct address, and where no copy exists the source's name stays." },
+    ],
+  },
+  {
+    date: "2026-10-29",
+    title: "Guess the Stock Got Easier, a New Game Arrived",
+    summary: "The puzzle gained a second game and a daily leaderboard; Guess the Stock starts easier and the guess box puts companies that fit the clues first. Today's Flow moved its scorecard into the heading.",
+    items: [
+      { title: "Which Is Bigger?", body: "The company on the left shows its market value; guess whether the one on the right is bigger or smaller, and the pairs get harder as you go." },
+      { title: "Daily Leaderboard", body: "If you are signed in, today's puzzle is ranked by fewest guesses and shortest time; your name is hidden by default and you can pick a nickname." },
+      { title: "An Easier Guess the Stock", body: "Sector and dividend are open from the start and every clue shows after four misses; the guess box puts companies that fit the clues first and says how many candidates are left." },
+      { title: "Game Archive and Scorecard", body: "The archive counts solved, missed and pending puzzles in a scorecard, and every card shows its six guess slots and lets you continue where you left off." },
+      { title: "The Flow's Scorecard in the Heading", body: "A single pill in Today's Flow heading counts the day's events as squares: released ones filled, ones due and waiting blue, scheduled ones empty." },
+      { title: "A Readable Source Name", body: "Economic data in the flow now credits “FRED (St. Louis Fed)” instead of a raw key." },
+    ],
+  },
+  {
+    date: "2026-10-28",
+    title: "The Home Page Starts With Today",
+    summary: "Today's moves now lead the home page, and panels about the previous session say which day they describe. The Fed decision reaches the flow as soon as it is out.",
+    items: [
+      { title: "Today First", body: "On phones the order is now the day's moves, the last session's skyline and Chart of the Day; on desktop the skyline runs full width below both columns." },
+      { title: "A Previous Session Label", body: "Panels about the previous session say “Yesterday's Session” under their heading, or “Friday's Session” after a weekend; while the session is open the skyline says it shows the previous close." },
+      { title: "The Fed Decision Right Away", body: "The Fed rate decision is now read from the Fed's own statement; it no longer says “Awaiting Result” hours after the decision, and the press conference turns to “Done” when it ends." },
+      { title: "A More Compact Flow", body: "In Today's Flow the time and window share one line and company cards take two; with the same day's data the panel is about a sixth shorter on desktop." },
+    ],
+  },
+  {
+    date: "2026-10-27",
+    title: "A Readable Skyline and Earnings Horizon on Phones",
+    summary: "Skyline labels no longer sit on top of the buildings on phones; the earnings horizon opens on today and shows large, readable cards on phones.",
+    items: [
+      { title: "Skyline Highlights", body: "On phones the scene shows only buildings and number badges; companies sit below in a two-column Highlights list, and tapping a chip lights up its building." },
+      { title: "The Earnings Horizon Opens on Today", body: "The earnings calendar now opens on today rather than the week's busiest day, or on the next day with reports if today is empty." },
+      { title: "Earnings Cards on Phones", body: "On phones the day's largest companies get big cards with logo and record, the rest three small cards to a row; the reading strip is a full-width showcase." },
+    ],
+  },
   /* ---- 24-25 Ekim ---- */
   {
     date: "2026-10-25",

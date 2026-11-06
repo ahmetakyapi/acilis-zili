@@ -46,8 +46,10 @@ export async function GET() {
   const entries = changelogEntries(locale, TELEGRAM_URL).slice(0, FEED_LIMIT);
   const items = entries.map((entry) => {
     /* Gövde düz metin: her madde bir satır, etiketiyle. HTML yok — bazı
-       okuyucular CDATA'daki biçimi yarım çiziyor. */
-    const lines = entry.items.map((item) => `${L.kind[item.kind]}: ${item.title}. ${item.body}`);
+       okuyucular CDATA'daki biçimi yarım çiziyor. 6 Kasım: satır maddenin
+       ekranını da söylüyor ("Düzeltme: Bülten Saati (Mercek ve Haberler)"),
+       sayfadaki ekran süzgeciyle aynı ad. */
+    const lines = entry.items.map((item) => `${L.kind[item.kind]}: ${item.title} (${L.screen[item.screen]}). ${item.body}`);
     return `    <item>
       <title>${escapeXml(entry.title)}</title>
       <link>${escapeXml(`${adres("/yenilikler")}#${entryAnchor(entry.date)}`)}</link>

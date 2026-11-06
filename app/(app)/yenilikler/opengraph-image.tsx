@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { changelogEntries, entryDateLabel } from "@/lib/changelog";
+import { changelogEntries, entryDateLabel, type ChangeKind } from "@/lib/changelog";
 import { DEFAULT_LOCALE } from "@/lib/i18n/config";
 import { OG_CONTENT_TYPE, OG_SIZE, clip, ogFonts, sectionOg } from "@/lib/og";
 
@@ -10,7 +10,7 @@ export const alt = "Yenilikler · Açılış Zili";
 /**
  * Paylaşım kartı — EN SON GİRİŞ (25 Ekim). Bölüm kartı şablonu
  * (`sectionOg`): başlık en son girişin adı, açıklama günü ve özeti, çipler
- * madde sayısı. İçerik depoda ve yalnız dağıtımla değişiyor; kart derlemede
+ * tür tür madde sayısı. İçerik depoda ve yalnız dağıtımla değişiyor; kart derlemede
  * çiziliyor ve bir sonraki dağıtıma kadar doğru kalıyor. Dil sabit TR —
  * gerekçe `lib/og.tsx` başı ("kart rotaları dili istekten okumuyor").
  * Telegram adresi kartta kullanılmıyor, `null` yeterli.
@@ -18,13 +18,20 @@ export const alt = "Yenilikler · Açılış Zili";
 export default async function ChangelogOgImage() {
   const [latest] = changelogEntries(DEFAULT_LOCALE, null);
   const date = entryDateLabel(latest, DEFAULT_LOCALE);
-  const fresh = latest.items.filter((item) => item.kind === "yeni").length;
+  /* Çipler türler (6 Kasım): sayfanın "Son Güncellemede" sütunlarıyla aynı
+     üç sayı; sıfır olan tür çip olmaz. */
+  const count = (kind: ChangeKind) => latest.items.filter((item) => item.kind === kind).length;
+  const chips = [
+    count("yeni") > 0 ? `${count("yeni")} Yeni` : null,
+    count("iyilestirme") > 0 ? `${count("iyilestirme")} İyileştirme` : null,
+    count("duzeltme") > 0 ? `${count("duzeltme")} Düzeltme` : null,
+  ].filter((chip): chip is string => chip !== null);
   return new ImageResponse(
     sectionOg({
       eyebrow: "Yenilikler",
       title: clip(latest.title, 44),
       dek: clip(`${date}. ${latest.summary}`, 120),
-      chips: [`${latest.items.length} Madde`, ...(fresh > 0 ? [`${fresh} Yeni Özellik`] : [])],
+      chips,
     }),
     { ...size, fonts: await ogFonts() },
   );
