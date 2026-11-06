@@ -67,8 +67,8 @@ async function run(): Promise<NextResponse> {
        paket başına kuruşlar) ve SÜRE PAYI eklendi: süre yetmeyen paket
        gönderilmez, sonraki koşuya kalır — betiğin 290 saniyelik curl payı
        ve ardından gelen adımlar korunuyor (günlük nöbetteki `TranslateBudget`
-       kalıbı). Ekranda görünüp hâlâ çevrilmemiş olanı okuma yolu yanıttan
-       sonra çeviriyor (`translateMissingLater`). */
+       kalıbı). Ekranda görünüp hâlâ çevrilmemiş olanı okuma yolu kısa
+       beklemeyle aynı yanıtta çeviriyor (`withTranslations`, 6 Kasım). */
     report.translate = isTranslateConfigured()
       ? await translatePendingNews(80, { deadline: Date.now() + 120_000 })
       : "atlandı: çeviri anahtarı yok";

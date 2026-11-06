@@ -6,7 +6,7 @@ import styles from "@/components/news/NewsExperience.module.css";
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import { isBot } from "@/lib/analytics";
-import { translateMissingLater } from "@/lib/translate";
+import { withTranslations } from "@/lib/translate";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { EmptyState, PageHeader } from "@/components/ui/primitives";
 import { InkCanvas } from "@/components/ink/InkCanvas";
@@ -185,12 +185,13 @@ async function NewsList({ symbolFilter, briefing }: { symbolFilter: string | nul
      süzülüyordu ve sembol o pencerede geçmiyorsa sayfa "haber yok" diyordu —
      tabloda dünden kalan haberler dururken. Gerekçenin tamamı
      `getNewsForSymbol` yorumunda. */
-  const items = symbolFilter
+  const fetched = symbolFilter
     ? await getNewsForSymbol(symbolFilter, 60)
     : await getLatestNews(60);
 
-  /* Çevirisiz manşet yanıttan sonra çevrilir — gerekçe `translateMissingLater`. */
-  translateMissingLater(items, locale);
+  /* Çevirisiz manşet KISA BEKLEMEYLE bu yanıtta çevrilir; liste kendi
+     Suspense sınırında, ilk bayt beklemez — gerekçe `withTranslations`. */
+  const items = await withTranslations(fetched, locale);
 
   /* Kaynak logoları elenir; kalan makale görselleri küçük resim olarak durur.
      Görseli olmayan habere şirketin logosu konuyor — künye kutusunda sembol

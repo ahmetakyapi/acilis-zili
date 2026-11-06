@@ -70,7 +70,7 @@ export async function translatePendingNews(limit = 40, budget: TranslateBudget =
   return (await translateAndStore(backend, pending, budget)).size;
 }
 
-async function translateAndStore(backend: TranslateBackend, pending: PendingItem[], budget: TranslateBudget = {}): Promise<Map<string, string>> {
+async function translateAndStore(backend: TranslateBackend, pending: PendingItem[], budget: TranslateBudget = {}): Promise<Map<string, Translated>> {
   const results =
     backend === "deepl"
       ? await translateWithDeepL(pending)
@@ -83,19 +83,18 @@ async function translateAndStore(backend: TranslateBackend, pending: PendingItem
      İngilizce kalıyor. Her güncelleme kendi satırına dokunuyor, sıra
      önemsiz. Nöbetin 40'lık partisi de bu yoldan geçiyor; neon-http'de
      her güncelleme ayrı bir HTTP isteği, havuz tutan bağlantı yok. */
-  const written = results.filter((item) => item.headlineTr.trim());
+  const written = results
+    .filter((item) => item.headlineTr.trim())
+    .map((item) => ({ id: item.id, headlineTr: item.headlineTr.trim(), summaryTr: item.summaryTr?.trim() || null }));
   await Promise.all(
     written.map((item) =>
       db
         .update(news)
-        .set({
-          headlineTr: item.headlineTr.trim(),
-          summaryTr: item.summaryTr?.trim() || null,
-        })
+        .set({ headlineTr: item.headlineTr, summaryTr: item.summaryTr })
         .where(eq(news.id, item.id)),
     ),
   );
-  return new Map(written.map((item) => [item.id, item.headlineTr.trim()]));
+  return new Map(written.map((item) => [item.id, item]));
 }
 
 /**
@@ -106,6 +105,12 @@ async function translateAndStore(backend: TranslateBackend, pending: PendingItem
  * olanlar gider; aynı haber ikinci kez ücretlenmez. Dönüş: id → Türkçe başlık.
  */
 export async function translateNewsByIds(ids: string[]): Promise<Map<string, string>> {
+  const done = await translateNewsRowsByIds(ids);
+  return new Map([...done].map(([id, item]) => [id, item.headlineTr]));
+}
+
+/** `translateNewsByIds`in başlık + özet dönen hâli (`withTranslations`). */
+async function translateNewsRowsByIds(ids: string[]): Promise<Map<string, Translated>> {
   const backend = activeTranslateBackend();
   /* UÇUŞTAKİLER ATLANIR (22 Ekim): /haberler ve hisse sayfası aynı
      başlıkları aynı saniyede isteyebiliyor; tablo okuması ikisine de "boş"
@@ -129,27 +134,59 @@ export async function translateNewsByIds(ids: string[]): Promise<Map<string, str
 const inFlight = new Set<string>();
 
 /**
- * Ekrandaki çevirisiz manşetleri YANITTAN SONRA çevirir (22 Ekim).
+ * Ekrandaki çevirisiz haberleri KISA BİR SÜRE BEKLEYİP aynı yanıtta basar
+ * (6 Kasım, sahibinin sözü: "buralar neden İngilizce kalmış").
  *
- * /haberler'de, ana sayfanın haber panelinde ve haber detayında İngilizce
- * kalan başlıklar vardı: hisse sayfaları şirket haberlerini tabloya yazıp
- * yalnız ekranda göreni çeviriyor, gerisi nöbetin en yeni 40'lık kuyruğuna
- * kalıyor ve kuyruk taştığında aradaki satır sonraki koşularda da geride
- * kalıyordu. Okuyucu beklemez (`after`, ilk bayt değişmez); bir sonraki
- * açılış Türkçe görür. Hisse sayfası bunu kendi 4 saniyelik yarışıyla
- * yapıyor (CompanyNews) — orada liste kısa ve şirket sayfası yavaş zaten.
+ * ÖNCESİ (22 Ekim): `translateMissingLater` vardı — /haberler, ana sayfa
+ * haber paneli ve haber detayı çevirisiz manşeti `after` ile yanıttan
+ * SONRA çeviriyordu, çünkü hisse sayfaları şirket haberlerini tabloya yazıp
+ * yalnız ekranda göreni çeviriyor, gerisi nöbetin kuyruğunda geride
+ * kalıyordu. Okuyucu beklemiyordu, ama bedeli şuydu:
+ *
+ * NEDEN: çeviri yalnız YANITTAN SONRA başladığı için yeni düşen haberi (Yahoo akışı, hisse sayfasının tabloya
+ * yazdığı şirket haberleri) ilk açan okur onu HER ZAMAN İngilizce
+ * görüyordu. /haberler'de 17:18–17:49 arası üç NIKE haberi ve öne çıkan
+ * manşet İngilizce durdu, 16:49'dakiler Türkçeydi: çeviri çalışıyor ama
+ * okura bir açılış geç kalıyordu. Üstelik altmışlık liste 20'lik üç
+ * paketle SIRAYLA gidiyordu.
+ *
+ * Şimdi liste kendi `Suspense` sınırında (ilk bayt beklemez) eksikleri
+ * çeviriye yollar, paketler paralel (`translateWithClaude`, payı olmayan
+ * çağrı), en çok `waitMs` bekler; yetişen başlık ve özet bu yanıtta
+ * Türkçe. Yetişmeyen iş `after` ile sürer, sonraki açılış Türkçe görür.
+ * Aynı haber iki kez ücretlenmez (`inFlight`, boş çeviri sorgusu).
  */
-export function translateMissingLater(
-  items: readonly { id: string; headlineTr: string | null }[],
+export const TRANSLATE_WAIT_MS = 3500;
+
+export async function withTranslations<T extends TranslatableRow>(
+  items: readonly T[],
   locale: string,
-): void {
-  if (locale !== "tr" || !isTranslateConfigured()) return;
+  waitMs: number = TRANSLATE_WAIT_MS,
+): Promise<T[]> {
+  if (locale !== "tr" || !isTranslateConfigured()) return [...items];
   const missing = items.filter((item) => !item.headlineTr).map((item) => item.id);
-  if (missing.length === 0) return;
-  after(() => translateNewsByIds(missing).catch(() => undefined));
+  if (missing.length === 0) return [...items];
+  const job = translateNewsRowsByIds(missing).catch(() => new Map<string, Translated>());
+  after(() => job.then(() => undefined));
+  const done = await Promise.race([job, new Promise<null>((resolve) => setTimeout(() => resolve(null), waitMs))]);
+  return done ? mergeTranslations(items, done) : [...items];
 }
 
 type Translated = { id: string; headlineTr: string; summaryTr: string | null };
+
+export type TranslatableRow = { id: string; headlineTr: string | null; summaryTr: string | null };
+
+/** Gelen çevirileri satırlara işler; çevirisi olan satıra dokunmaz, özet
+    çevirisi boş gelirse eldeki özet çevirisi kalır. Saf (test edilir). */
+export function mergeTranslations<T extends TranslatableRow>(
+  items: readonly T[],
+  done: ReadonlyMap<string, { headlineTr: string; summaryTr: string | null }>,
+): T[] {
+  return items.map((item) => {
+    const tr = item.headlineTr ? undefined : done.get(item.id);
+    return tr ? { ...item, headlineTr: tr.headlineTr, summaryTr: tr.summaryTr ?? item.summaryTr } : item;
+  });
+}
 
 /* --------------------------------------------------------------------------
    DeepL — ücretsiz katman (api-free.deepl.com)
@@ -267,6 +304,14 @@ const CHUNK_TIMEOUT_MS = 45_000;
 const MIN_CHUNK_MS = 10_000;
 
 async function translateWithClaude(items: PendingItem[], budget: TranslateBudget): Promise<Translated[]> {
+  /* PAYSIZ ÇAĞRIDA PAKETLER PARALEL (6 Kasım — gerekçe `withTranslations`).
+     Okur bekliyor; altmış haber üç sıralı çağrı yerine tek tur. Nöbetler
+     pay veriyor ve sıralı kalıyor: süre yetmeyen paket hiç gönderilmesin. */
+  if (budget.deadline === undefined) {
+    const chunks: PendingItem[][] = [];
+    for (let i = 0; i < items.length; i += CLAUDE_CHUNK) chunks.push(items.slice(i, i + CLAUDE_CHUNK));
+    return (await Promise.all(chunks.map((chunk) => translateChunkWithClaude(chunk, budget)))).flat();
+  }
   const out: Translated[] = [];
   for (let i = 0; i < items.length; i += CLAUDE_CHUNK) {
     if (budget.deadline !== undefined && budget.deadline - Date.now() < MIN_CHUNK_MS) {

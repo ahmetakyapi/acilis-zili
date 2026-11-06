@@ -20,7 +20,7 @@ import {
   isGenericNewsImage,
 } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { translateMissingLater } from "@/lib/translate";
+import { withTranslations } from "@/lib/translate";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
 import { displayZone, zoneTag } from "@/lib/session-clock";
@@ -91,14 +91,15 @@ export default async function NewsDetailPage(
 ) {
   const { id } = await props.params;
   const { locale, t } = await getI18n();
-  const item = await getNewsById(id, { throwOnError: true });
+  const row = await getNewsById(id, { throwOnError: true });
 
   /* Olmayan haber 404 DÖNER, 200 değil — ekran `not-found.tsx` dosyasında.
      OKUNAMAYAN haber ise 404 değil: okuma hatası hata sınırına gider
      (20 Ekim). */
-  if (!item) notFound();
-  // Çevirisiz manşet yanıttan sonra çevrilir — gerekçe `translateMissingLater`.
-  translateMissingLater([item], locale);
+  if (!row) notFound();
+  /* Çevirisiz haber kısa beklemeyle bu yanıtta çevrilir — gerekçe
+     `withTranslations` (tek haber, tek paket). */
+  const [item] = await withTranslations([row], locale);
 
   const useTr = locale === "tr" && item.headlineTr;
   const headline = useTr ? item.headlineTr! : item.headline;

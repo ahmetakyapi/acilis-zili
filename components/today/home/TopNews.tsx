@@ -7,7 +7,7 @@ import { getGenericImageUrls, getLatestNews, getSymbolNames } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { displayZone, formatInZone, zoneDateKey, zoneTag } from "@/lib/session-clock";
 import { cn, headlineMentions, timeAgo, titleCaseLabel } from "@/lib/utils";
-import { translateMissingLater } from "@/lib/translate";
+import { withTranslations } from "@/lib/translate";
 
 /** Kartta gösterilen haber sayısı ve seçkinin tarandığı havuz. */
 const TOP_NEWS_COUNT = 6;
@@ -43,10 +43,11 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
   // habere aynı yer tutucu logoyu iliştiriyor; kendi görseli olan haberler
   // (şirket beslemesinden gelenler) öne alınıyor. Sıralama yine tarihe göre,
   // yalnızca hangi altı haberin seçildiği değişiyor.
-  const wide = await getLatestNews(TOP_NEWS_FILL_POOL);
+  /* Çevirisiz manşet kısa beklemeyle bu yanıtta çevrilir (kart kendi
+     Suspense sınırında) — gerekçe `withTranslations`. Ana sayfa daha sabırsız:
+     iki saniye; yetişmeyen arka planda biter. */
+  const wide = await withTranslations(await getLatestNews(TOP_NEWS_FILL_POOL), locale, 2000);
   const pool = wide.slice(0, TOP_NEWS_POOL);
-  // Çevirisiz manşet yanıttan sonra çevrilir — gerekçe `translateMissingLater`.
-  translateMissingLater(wide, locale);
 
   if (pool.length === 0) {
     return <EmptyState title={t.news.empty} />;
