@@ -79,10 +79,13 @@ npm run build:email              # posta bant GIF'i (public/email/hero.gif, elle
   komutlar geçmeliydi — sırası atlandı demektir); `deploy` adımı düştüyse
   sunucu (disk, ağ, servis) — kod değiştirmeden önce günlükteki hataya bak.
 - **Disk dolması derleme hatası değildir.** Derlemeden önce
-  `deploy/disk-guard.sh` yer açar (eski sürümlerin Turbopack önbelleği, sonra
-  npm önbelleği) ya da derlemeye girmeden, neyin yer kapladığını basarak durur;
-  o adım düşerse sunucuda yer açılmalı (`docs/deploy-vps.md` → "Disk doluyor").
-  Gerekçe: 6 Kasım'da derleme yarıda "No space left on device" ile düştü.
+  `deploy/disk-guard.sh` yer açar (Turbopack önbellekleri → ortak
+  `fetch-cache`in BÜYÜK kayıtları → npm önbelleği → üç günden eski önbellek)
+  ya da derlemeye girmeden, neyin yer kapladığını basarak durur; o adım
+  düşerse sunucuda yer açılmalı (`docs/deploy-vps.md` → "Disk doluyor").
+  Gerekçe: 6 Kasım'da derleme "No space left on device" ile düştü; yükün
+  34 GB'ı `shared/fetch-cache`ti. Önbellek budaması boyuta göre (Claude
+  notları küçük ve ücretli, kalır), gece işi büyük kayıtları iki günde siler.
 - **`update.sh` düzeltmesi bir deploy GECİKMELİ çalışır**: iş akışı sunucudaki
   CANLI sürümün `current/deploy/update.sh`ını koşturur. Bu deploy'da etkili
   olması gereken düzeltme, `deploy.yml`'de ayrı adım olarak bu commit'ten

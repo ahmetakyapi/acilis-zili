@@ -42,6 +42,11 @@ LINES=(
 	# `revalidate`in (30 gün: haber ve veri notu, TCMB arşivi) ötesi — daha
 	# kısası taze notu silip fazladan Claude çağrısı yaptırır.
 	"50 4 * * * /usr/bin/find $APP_ROOT/shared/fetch-cache -type f -mtime +31 -delete"
+	# BÜYÜK KAYITLAR İKİ GÜNDE (6 Kasım — gerekçe deploy/disk-guard.sh): 31
+	# günlük budama dizini 34 GB'a büyüttü ve derleme diski doldurdu. Yeri
+	# dolduran büyük sağlayıcı yanıtları (100 KB üstü); Claude notları küçük
+	# ve yukarıdaki 31 günlük kuralla kalıyor.
+	"55 4 * * * /usr/bin/find $APP_ROOT/shared/fetch-cache -type f -size +100k -mtime +1 -delete"
 )
 # EMEKLİ SATIRLAR — saati değişen iş eski satırıyla kalmasın. Ekleme
 # yalnız eksik satırı yazıyordu; pazartesi özeti pazara taşınınca (17 Ekim)
