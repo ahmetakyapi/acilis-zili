@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   UserCheck,
 } from "@phosphor-icons/react/dist/ssr";
+import { BrandFilm } from "@/components/about/BrandFilm";
 import { FlowReveal } from "@/components/about/FlowReveal";
 import styles from "@/components/about/About.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -169,6 +170,7 @@ export default async function AboutPage() {
 
   const sections = [
     { id: "kim", label: a.whoTitle },
+    { id: "film", label: t.brandFilm.title },
     { id: "acik-kaynak", label: a.freeTitle },
     { id: "veri", label: a.dataTitle },
     { id: "yazilar", label: a.contentTitle },
@@ -264,6 +266,11 @@ export default async function AboutPage() {
           </div>
         </div>
       </Panel>
+
+      {/* ---- Tanıtım filmi: kimliğin hemen ardından, sitenin tek anı on beş
+          saniyede. Bugünkü açılış saati İstanbul saatiyle verilir (film kış
+          saatini gösteriyor): TR'de birincil, EN'de ikincil saat. */}
+      <BrandFilm t={t} openIstanbul={locale === "tr" ? open.primary : open.secondary} />
 
       {/* ---- İlkeler (çapa tarihten: #acik-kaynak) ----
           Dört söz iri puntoyla, ızgarada; kutu değil, hairline. Kaynak kodu

@@ -132,6 +132,29 @@
 /* ---- Sitene ekle: canlı önizlemenin sahnesi --------------------------------- */
 .preview { display:flex; min-width:0; justify-content:center; padding:14px; border-radius:16px; background:var(--surface-sunken); }
 
+/* ---- Tanıtım Filmi --------------------------------------------------------------
+   9:16 film beside its words. The video is the box itself (overflow + radius, no frame
+   around it: CLAUDE.md "Görselin etrafında çerçeve yok"); the sunken tone shows only
+   before the poster loads. Width capped so a phone-tall film does not fill a phone:
+   240 px on a 390 screen is 427 px tall, the copy follows under it. */
+.film { display:grid; gap:20px; padding:0 16px 20px; }
+.filmVideo { display:block; width:100%; max-width:240px; height:auto; aspect-ratio:9/16; justify-self:center;
+  border-radius:18px; overflow:hidden; background:var(--surface-sunken); object-fit:cover; }
+.filmCopy { display:flex; min-width:0; flex-direction:column; gap:14px; }
+.filmCopy > p { max-width:68ch; font-size:1rem; line-height:1.65; color:var(--text-body); text-wrap:pretty; }
+.filmCopy > p:first-child { color:var(--text-strong); font-weight:500; }
+.filmNote { font-size:var(--text-read) !important; }
+.filmCredits { margin-top:4px; padding-top:14px; border-top:1px solid var(--line-soft); }
+.filmCredits h3 { font-size:var(--text-read); font-weight:700; color:var(--text-strong); }
+.filmCredits ul { display:flex; flex-direction:column; gap:6px; margin-top:8px; font-size:13px; line-height:1.5; color:var(--text-muted); }
+.filmCredits a { color:inherit; text-decoration:underline; text-decoration-color:var(--line-soft); text-underline-offset:3px; }
+.filmCredits a:hover { color:var(--primary); text-decoration-color:currentColor; }
+.filmRole { font-weight:650; color:var(--text-body); }
+@media(min-width:640px) {
+ .film { grid-template-columns:240px minmax(0,1fr); align-items:start; gap:28px; padding:0 20px 24px; }
+ .filmVideo { justify-self:start; }
+}
+
 @media(max-width:767px) {
  .hero { gap:18px; padding:22px 20px 20px; border-radius:20px; }
  .clock { padding:14px 16px; }

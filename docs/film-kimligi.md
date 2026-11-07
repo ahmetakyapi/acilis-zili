@@ -109,6 +109,11 @@ CLAUDE.md § Veri Dürüstlüğü ve § Site İçi Claude'un videodaki karşıl�
   dosya ve kapak karesi projeye gelir; kendiliğinden SESLİ oynamaz.
 - Künye (müzik, ses, font lisansları) cinecode'un yazdığı
   `<başlık>-credits.txt`ten videonun açıklamasına girer, filmin üstüne değil.
+  Sitede oynayan filmin künyesi panelin içinde, hairline altında düz satır.
+- Sitedeki film: "Zil Çalıyor", `/hakkinda#film` (`components/about/BrandFilm.tsx`,
+  dosyalar `public/film/`: 720 × 1280 H.264, `faststart`, kapak 9,8. saniye).
+  Kendiliğinden oynamaz, `preload="none"`. Film kış saatini gösteriyor; altındaki
+  not o dönemin açılış saatini oturumdan hesaplar.
 
 ## 8. Başlangıç Fikirleri
 

@@ -20,6 +20,7 @@ import { portfolioAnalysisVisualsEn } from "./portfolio-analysis-visuals";
 import { changelogEn } from "./changelog";
 import { stockEntryEn } from "./stock-entry";
 import { briefLedgerEn } from "./brief-ledger";
+import { brandFilmEn } from "./brand-film";
 import { homeDeskEn } from "./home-desk";
 import { macroVisualEn } from "./macro-visual";
 import { stockVisualsEn } from "./stock-visuals";
@@ -4410,6 +4411,8 @@ const en: typeof tr = {
   /* Bültenin Kayıt Defteri bandı (25 Ekim görsel zirve) — metin ayrı dosyada. */
   briefLedger: briefLedgerEn,
   homeDesk: homeDeskEn,
+  /* Tanıtım filmi, Hakkında sayfası (8 Kasım) — metin ayrı dosyada. */
+  brandFilm: brandFilmEn,
   macroVisual: macroVisualEn,
   /* Hisse sayfası ve kural kontrolünün görsel katmanı (25 Ekim) — metin ayrı dosyada. */
   stockVisuals: stockVisualsEn,
