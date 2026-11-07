@@ -19,6 +19,7 @@ yazılır. Bir kural değişince satırı güncelle, yanına yenisini ekleme.
 | Rutin promptları (bülten, mercek, analiz, teknik, grafik) | `docs/claude-rutinler.md` |
 | Kullanıcı isteğiyle Claude analizi | `docs/claude-analysis.md` |
 | Sunucu, deploy, geri dönüş | `docs/deploy-vps.md`, `deploy/update.sh` |
+| Video/kısa film (MP4: tanıtım, reklam, sosyal medya) — `cinecode` skill'i | `docs/film-kimligi.md` |
 | Eski tasarım devri ve denetim kayıtları (kural DEĞİL) | `docs/arsiv/` |
 
 ## Oturum Başı
