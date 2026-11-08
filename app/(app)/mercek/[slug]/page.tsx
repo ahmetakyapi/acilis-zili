@@ -30,6 +30,7 @@ import { LogoTile } from "@/components/ui/primitives";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import {
   getStoryBySlug,
+  getStoryEditedAt,
   getStoryLocales,
   getSymbolNames,
 } from "@/lib/data";
@@ -42,6 +43,7 @@ import {
 } from "@/lib/page-meta";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
 import { formatEtDateLong, safeExternalUrl } from "@/lib/utils";
+import { etParts } from "@/lib/market-hours";
 
 /**
  * Mercek yazısı — okuma sayfası.
@@ -275,6 +277,12 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
 
   const minutes = story.readMinutes ?? readingMinutes(story.bodyMd);
   const minutesLabel = `${minutes} ${t.stories.readMinutes}`;
+  /* Son gerçek düzeltme (sürüm fotoğrafından, `getStoryEditedAt`);
+     yayından sonraki bir güne düşüyorsa künyede görünür. */
+  const editedAt = await getStoryEditedAt(story.slug, story.locale);
+  const publishedDay = story.publishedAt ? etParts(story.publishedAt).dateStr : story.eventDate;
+  const editedDay = editedAt ? etParts(editedAt).dateStr : null;
+  const updatedDay = editedAt && editedDay && editedDay > publishedDay ? editedDay : null;
   const sources = story.sources ?? [];
   const symbols = story.symbols ?? [];
 
@@ -349,6 +357,19 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
             </span>
             <span aria-hidden>·</span>
             <span className="numeral">{minutesLabel}</span>
+            {/* GÖRÜNÜR GÜNCELLEME TARİHİ (8 Kasım; kaynak sayiyla.com § 8:
+                görünür güncelleme tarihi olan sayfa yapay zekâ cevaplarında
+                daha sık alıntılanıyor). Yalnız metin yayından SONRAKİ bir
+                günde düzeltildiyse: tarihi oynatıp güncel göstermek Google'ın
+                kaçınılacaklar listesinde; damga gerçek `updatedAt`. */}
+            {updatedDay && (
+              <>
+                <span aria-hidden>·</span>
+                <time className="numeral" dateTime={editedAt!.toISOString()}>
+                  {t.stories.updatedOn.replace("{date}", formatEtDateLong(updatedDay, locale))}
+                </time>
+              </>
+            )}
           </p>
           <ShareButton
             url={absoluteUrl(`/mercek/${story.slug}`, locale)}
@@ -392,7 +413,8 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
         path={`/mercek/${story.slug}`}
         locale={story.locale as Locale}
         published={story.publishedAt}
-        modified={story.updatedAt}
+        /* Gerçek düzeltme anı (`getStoryEditedAt`); yoksa ilk yayın. */
+        modified={editedAt ?? story.publishedAt}
       />
       <BreadcrumbJsonLd
         locale={story.locale as Locale}
@@ -522,6 +544,18 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
               </>
             )}
             <p className={detail.disclaimer}>{t.stories.disclaimer}</p>
+            {/* NASIL YAZILDI, YAZININ İÇİNDE (8 Kasım, sahibinin isteği —
+                kaynak sayiyla.com "Google ve yapay zekâda nasıl çıkılır"
+                § 9: "kim yazdı ve nasıl yazıldı, okur görebiliyor mu").
+                Üretim yolu yalnız /hakkinda'da anlatılıyordu; yazıyı okuyan
+                onu görmüyordu. Kişi adı yok (künyedeki gerekçe:
+                components/seo/JsonLd.tsx → ArticleJsonLd). */}
+            <p className={detail.disclaimer}>
+              {t.stories.provenance}{" "}
+              <Link href="/hakkinda#yazilar" className="font-semibold text-primary-ink underline-offset-2 hover:underline">
+                {t.stories.provenanceLink}
+              </Link>
+            </p>
           </footer>
 
           <MoreStories story={story} locale={locale} t={t} />

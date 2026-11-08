@@ -59,6 +59,21 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       `docs/claude-rutinler.md` § 7. İlk koşu 27 Ekim Salı 09:15 TR.
 - [x] **Görev Kontrolü (eski adıyla Koşu Bekçisi, 25 Ekim'de yeniden
       adlandırıldı) Günün Grafiği'ni de izliyor** (düşerse yeniden çalıştırır).
+- [ ] **Mercek rutininin prompt'u yeniden yapıştırılmalı — sahibi claude.ai'de
+      (8 Kasım).** `docs/claude-rutinler.md` § 3, adım 4'e "Aramada ve Yapay
+      Zekâ Cevaplarında Bulunmak" kuralları ve adım 6'ya üç kontrol maddesi
+      eklendi (başlığın başı aranan ad, ilk iki cümlede tarihli cevap, alt
+      sorular aynı yazıda).
+- [ ] **Bing Webmaster Tools'a site eklenmeli — sahibi (8 Kasım).** IndexNow
+      bildirimleri canlı (`lib/indexnow.ts`); Bing'in "AI Performance"
+      raporu Copilot atıflarını yalnız doğrulanmış sitede gösteriyor.
+      Search Console'dan içe aktarma en kısa yol.
+- [ ] **Gösterim almayan şablon sayfaları — karar sahibinde (8 Kasım).**
+      Site haritası her şirketi iki dilde basıyor (`app/sitemap.ts`);
+      kaynak yazı çok sayıda gösterimsiz şablon sayfasını risk sayıyor.
+      Search Console → Sayfalar/Performans verisiyle 3 ayda hiç gösterim
+      almayan hisse sayfaları belirlenip haritadan çıkarılması ya da
+      `noindex` değerlendirilecek; veri olmadan dokunulmadı.
 - [ ] **Günün Grafiği kapanıştan sonraya alınmalı — sahibi claude.ai'de
       (8 Kasım).** Uç artık günü kapanış + 20 dk'da (16:20 NY) tamamlanmış
       sayıyor. Üç değişiklik: (1) "Açılış Zili · Günün Grafiği" cron'u

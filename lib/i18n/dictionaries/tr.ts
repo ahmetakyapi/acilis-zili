@@ -1941,6 +1941,15 @@ const tr = {
       "Bu yazı henüz Türkçeye çevrilmedi; orijinal diliyle gösteriliyor.",
     disclaimer:
       "Bu yazı yayımlandığı tarihteki kamuya açık haber kaynaklarına dayanır. Yatırım Tavsiyesi Değildir.",
+    /** Yazının nasıl yazıldığı (8 Kasım): okur kimin, nasıl yazdığını
+        yazının içinde görsün — kaynak sayiyla.com § 9, Google'ın "kim, nasıl,
+        neden" soruları. Bağlantı metni ayrı: cümle sonunda Hakkında'ya. */
+    provenance:
+      "Bu yazıyı, Anthropic'in Claude modeliyle çalışan zamanlanmış rutinimiz yukarıdaki kaynaklardan yazdı; yayımlanan metin panelden düzeltilir ve önceki hâli saklanır.",
+    provenanceLink: "Nasıl Yazıyoruz",
+    /** Görünür güncelleme künyesi; yalnız metin yayından sonraki bir günde
+        düzeltildiyse. */
+    updatedOn: "{date} Güncellendi",
     // Okuma rayı ve mobil içindekiler.
     inThisArticle: "Bu Yazıda",
     sectionCountOne: "{count} Bölüm",

@@ -1817,6 +1817,30 @@ export async function getStoryBySlug(
 }
 
 /**
+ * Mercek yazısının metninin SON GERÇEK düzeltme anı (8 Kasım).
+ *
+ * `stories.updated_at` rutinin aynı metni yeniden göndermesinde de
+ * ilerliyordu (8 Kasım'dan önce); "Güncellendi" künyesi ona bakarsa
+ * değişmemiş yazıyı güncel gösterirdi. Sürüm fotoğrafı ise yalnız metin
+ * DEĞİŞİNCE alınıyor (`lib/content-write.ts` → `fotografAl`): en yeni
+ * fotoğrafın anı, eski metnin yerini yenisinin aldığı an. Bültenin
+ * `modifiedAt`i aynı kuralla (`getBriefArchive`). Hata künyeyi düşürür,
+ * sayfayı değil.
+ */
+export const getStoryEditedAt = cache(async (slug: string, locale: string): Promise<Date | null> => {
+  try {
+    const [row] = await db
+      .select({ at: sql<Date | null>`max(${storyRevisions.replacedAt})`.mapWith(storyRevisions.replacedAt) })
+      .from(storyRevisions)
+      .where(and(eq(storyRevisions.slug, slug), eq(storyRevisions.locale, locale)));
+    return row?.at ?? null;
+  } catch (error) {
+    yutuldu("getStoryEditedAt", error);
+    return null;
+  }
+});
+
+/**
  * Bir mercek yazısının GERÇEKTEN yazıldığı diller.
  *
  * `hreflang` için. Künye koşulsuz iki dili ilan ediyordu ve çevirisi

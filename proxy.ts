@@ -282,7 +282,10 @@ export const config = {
        `email/` (16 Ekim): postanın GIF'i ve fontu. Uzantı listesinde `.gif`
        ve `.woff2` yok; `az-locale=en` çerezli bir istemcide görsel önce
        `/en/email/...`e yönleniyordu (fazladan tur, posta görseli için hiç
-       anlamı olmayan bir dil kararı). */
-    "/((?!api/|robots\\.txt|sitemap\\.xml|sw\\.js|manifest\\.webmanifest|_next/static|_next/image|favicon.ico|icon.svg|apple-icon|logos/|email/|.*\\.(?:png|jpg|jpeg|webp|svg|ico)$).*)",
+       anlamı olmayan bir dil kararı).
+       IndexNow anahtar dosyası (8 Kasım, `lib/indexnow.ts`): kökte 32 hex
+       karakterlik `.txt`; Bing onu doğrularken dil yönlendirmesine
+       düşmesin. */
+    "/((?!api/|robots\\.txt|[0-9a-f]+\\.txt$|sitemap\\.xml|sw\\.js|manifest\\.webmanifest|_next/static|_next/image|favicon.ico|icon.svg|apple-icon|logos/|email/|.*\\.(?:png|jpg|jpeg|webp|svg|ico)$).*)",
   ],
 };

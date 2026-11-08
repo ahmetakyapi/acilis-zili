@@ -419,6 +419,31 @@ Olayın kahramanının adı geçsin ve başlık sonucu değil YAYI taşısın.
   Kötü:  "Bir AI Fonunun Çöküşü"
   İyi:   "Leopold Aschenbrenner'ın 96 Saati: %439 Kazandı, Dört Günde Bitti"
 
+ARAMADA VE YAPAY ZEKÂ CEVAPLARINDA BULUNMAK (8 Kasım)
+Okur yazıya çoğunlukla Google'dan ya da bir yapay zekâ cevabındaki
+kaynaktan geliyor. Bunlar kurgu kurallarının ÜSTÜNE eklenir:
+  - BAŞLIĞIN BAŞI ARANAN AD: şirket ya da olayın kendisi başta, yay sonda;
+    başlık 70 karakteri geçmesin, aynı kelimeyi iki kez kullanma.
+      Kötü:  "Dört Günde Biten Fon: Leopold Aschenbrenner'ın 96 Saati"
+      İyi:   "Leopold Aschenbrenner'ın Fonu: %439 Kazandı, Dört Günde Bitti"
+  - CEVAP İLK PARAGRAFTA: açılışın ilk iki cümlesi "ne oldu, ne kadar,
+    ne zaman" sorusunu TARİHLİ sayıyla cevaplar ("6 Kasım'da %22 düştü").
+    Gerilim kurmak için cevabı geciktirme; çarpıcı gerçek zaten cevabın
+    kendisi.
+  - SAYI TARİHİYLE: "son günlerde", "yakında", "rekor seviyede" yerine
+    tutar ve tarih. Sayı yoksa sıfat da yok.
+  - ALT SORULAR AYNI YAZIDA: okurun arayacağı yan soruları ("neden düştü",
+    "bilanço ne zaman", "ne demek") yazının içinde birer ## başlıkla
+    cevapla. Her alt soru için ayrı yazı AÇMA — ince sayfa çoğaltmak
+    Google'ın spam politikasına giriyor.
+  - KARŞILAŞTIRMA TABLOYLA: iki ya da daha çok şeyi ölçüyorsan başlık
+    satırlı markdown tablosu kullan (adım 5'teki tablo biçimi).
+  - TARİH OYNATMA YOK: eski yazıyı yalnız bilgi gerçekten değiştiyse
+    güncelle; aynı metni "taze" görünsün diye yeniden gönderme. Site
+    "Güncellendi" künyesini yalnız metin değişince basıyor.
+Kaynak ve gerekçe: sayiyla.com "Google ve yapay zekâda nasıl çıkılır"
+(7 Kasım 2026) ve Google'ın yardımcı içerik rehberi.
+
 BÖLÜM BAŞLIKLARI
 Title Case ve vurgulu. Tek kelimelik nötr başlıklar kullanma.
   Kötü:  "Tez" · "Temmuz" · "Ders"
@@ -665,6 +690,10 @@ BİÇİM KURALLARI
 --- 6. GÖNDERMEDEN ÖNCE KONTROL ET ---
 
   [ ] Başlıkta kahramanın adı ve olayın yayı var mı?
+  [ ] Başlık aranan adla başlıyor ve 70 karakteri geçmiyor mu?
+  [ ] İlk iki cümle "ne oldu, ne kadar, ne zaman"ı tarihli sayıyla
+      cevaplıyor mu?
+  [ ] Okurun yan soruları kendi ## başlığıyla bu yazıda cevaplandı mı?
   [ ] Bütün ## başlıkları Title Case ve vurgulu mu?
   [ ] 1200+ kelime mi?
   [ ] En az üç görsel blok var mı (sayilar / bar / pay / akis / oncesi /

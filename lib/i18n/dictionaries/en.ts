@@ -1514,6 +1514,10 @@ const en: typeof tr = {
       "This piece hasn't been translated to English yet. You're reading the Turkish original.",
     disclaimer:
       "This piece is based on public reporting available at the time of publication. Not Investment Advice.",
+    provenance:
+      "This piece was written by our scheduled routine running on Anthropic's Claude model, from the sources above; the published text is corrected from our panel and earlier versions are kept.",
+    provenanceLink: "How We Write",
+    updatedOn: "Updated {date}",
     inThisArticle: "In This Piece",
     sectionCountOne: "{count} Section",
     sectionCountMany: "{count} Sections",

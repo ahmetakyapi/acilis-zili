@@ -5,8 +5,11 @@ import { and, desc, eq, lt } from "drizzle-orm";
 import { dailyBriefs, dailyCharts, stories, storyRevisions } from "@/lib/schema";
 import { todayEt } from "@/lib/market-hours";
 import { weekAnchor } from "@/lib/data";
-import { LOCALES } from "@/lib/i18n/config";
+import { LOCALES, type Locale } from "@/lib/i18n/config";
 import { isIsoDay } from "@/lib/date-input";
+import { indexNowUrls, notifyIndexNow } from "@/lib/indexnow";
+import { briefHref } from "@/lib/brief";
+import { dailyChartHref } from "@/lib/daily-chart";
 import {
   bodyProblem,
   checkChartBlock,
@@ -293,8 +296,17 @@ export async function saveStory(
       target: [stories.slug, stories.locale],
       /* `generatedBy` ve `publishedAt` BİLEREK dışarıda: ilki künye (yukarıda),
          ikincisi ilk yayın anı — düzeltme onu geri almaz. */
-      set: { ...values, updatedAt: new Date() },
+      /* `updatedAt` YALNIZ METİN DEĞİŞİNCE (8 Kasım). Rutin aynı metni sık
+         yeniden gönderiyor ve damga her seferinde ilerliyordu: site
+         haritasının `lastModified`i ve yazıdaki "Güncellendi" künyesi
+         değişmemiş metni yeni gösterirdi — tarih oynatmak Google'ın
+         kaçınılacaklar listesinde. */
+      set: { ...values, ...(degisti ? { updatedAt: new Date() } : {}) },
     });
+
+  /* Yeni ya da metni değişen yazı Bing'e bildirilir (`lib/indexnow.ts`);
+     rutinin aynı metni yeniden göndermesi bildirim üretmez. */
+  if (!mevcut || degisti) notifyIndexNow(indexNowUrls([`/mercek/${values.slug}`], [locale as Locale]));
 
   return { slug: values.slug, locale, eventDate: values.eventDate };
 }
@@ -445,6 +457,10 @@ export async function saveBrief(
       },
     });
 
+  if (!mevcut || mevcut.headline !== input.headline || mevcut.bodyMd !== input.body_md) {
+    notifyIndexNow(indexNowUrls([briefHref(briefDate, period)], [locale as Locale]));
+  }
+
   return { date: briefDate, locale, period };
 }
 
@@ -544,12 +560,12 @@ export async function saveDailyChart(
     sources: input.sources ?? null,
   };
 
-  if (
-    mevcut &&
+  const chartChanged =
+    !!mevcut &&
     (mevcut.title !== values.title ||
       mevcut.chartMd !== values.chartMd ||
-      mevcut.bodyMd !== values.bodyMd)
-  ) {
+      mevcut.bodyMd !== values.bodyMd);
+  if (mevcut && chartChanged) {
     await fotografAl(dailyChartRevisionKey(input.date), locale, mevcut, source);
   }
 
@@ -567,8 +583,13 @@ export async function saveDailyChart(
     .values({ ...values, generatedBy: source })
     .onConflictDoUpdate({
       target: [dailyCharts.chartDate, dailyCharts.locale],
-      set: { ...values, ...takeover, updatedAt: new Date() },
+      /* `updatedAt` yalnız içerik değişince (mercekteki gerekçe). */
+      set: { ...values, ...takeover, ...(chartChanged || takeover.generatedBy ? { updatedAt: new Date() } : {}) },
     });
+
+  if (!mevcut || chartChanged) {
+    notifyIndexNow(indexNowUrls([dailyChartHref(input.date)], [locale as Locale]));
+  }
 
   return { date: input.date, locale };
 }
