@@ -178,8 +178,10 @@ export async function getWatchlistToday(userId: string, locale: Locale): Promise
   try {
     const note = await unstable_cache(
       () => writeNote(base, names, locale, memberClient(userId)),
-      /* v3 (24 Ekim): tavsiye denetimi — denetimsiz önbellek yeni koda gitmesin. */
-      ["watchlist-today-v3", userId, session, watchlistFingerprint(symbols), locale],
+      /* v3 (24 Ekim): tavsiye denetimi — denetimsiz önbellek yeni koda gitmesin.
+         v4 (8 Kasım): tamamlanmış seans = kapanış + 20 dk (settledSessionOf);
+         eski kuralla 16:00–16:20 ET arasında yarım bardan yazılan kayıt kalmasın. */
+      ["watchlist-today-v4", userId, session, watchlistFingerprint(symbols), locale],
       { revalidate: 24 * 3600, tags: ["watchlist-today"] },
     )();
     return { ...base, note };

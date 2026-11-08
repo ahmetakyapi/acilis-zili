@@ -2,7 +2,7 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { getHolidays, getStatus } from "./data";
-import { etParts, prevTradingDay } from "./market-hours";
+import { etParts, settledSessionOf } from "./market-hours";
 import { getLiveQuotes, getChartBarsMulti } from "./providers";
 import { getCompanyNews } from "./providers/finnhub";
 import { loadScreen } from "./screening-data";
@@ -11,6 +11,7 @@ import { evaluate } from "./screening";
 import { FOCUS_OF, pricePath, repairNewsCitations, safeSourceUrl, selectNews, snapLevel, type PricePath, type StoredAnalysisResult } from "./ai-analysis-core";
 import { AnalysisOutput } from "./ai-analysis-schema";
 import { isTransient } from "./ai-analysis-errors";
+import { DATA_BUDGET_MS, MIN_MODEL_MS, MODEL_TIMEOUT_MS, RETRY_DELAY_MS, RETRY_WINDOW_MS, budgetLeft, withinBudget } from "./ai-analysis-lock";
 export { failureKind } from "./ai-analysis-errors";
 
 export type SavedAnalysis = {
@@ -41,11 +42,10 @@ export const analysisModel = () => process.env.CLAUDE_ANALYSIS_MODEL || DEFAULT_
 const FALLBACK_MODELS = new Set(["claude-sonnet-5-5", "claude-opus-5-5", "claude-opus-5", "claude-fable-5-1"]);
 /** Düşünme max_tokens'tan yer; 4000'de uzun Türkçe raporlar kesiliyordu. Akışlı istekte HTTP zaman aşımı yok. */
 const MAX_TOKENS = 32_000;
-/** Duvar saati sınırı: rota 180 sn, kilit 4 dk; veri toplamaya ~30 sn bırakır. */
-const MODEL_TIMEOUT_MS = 140_000;
-/** Yeniden deneme yalnız bu süre içinde düşen ilk denemeye (ms). */
-const RETRY_WINDOW_MS = 20_000;
-const RETRY_DELAY_MS = 2_000;
+/* Duvar saati sınırı: rota 180 sn, kilit 4 dk; veri toplamaya ~30 sn bırakır.
+   Model süresi, yeniden deneme penceresi ve veri turunun payı 8 Kasım'dan beri
+   kilit süresinden türüyor: `lib/ai-analysis-lock.ts` (MODEL_TIMEOUT_MS,
+   RETRY_WINDOW_MS, RETRY_DELAY_MS, DATA_BUDGET_MS). */
 /** Para kararı ve günde birkaç rapor: kalite token'dan önemli. */
 const EFFORT = "high";
 const NEWS_LIMIT = 12;
@@ -108,18 +108,26 @@ buy, hold or sell is a view for the selected horizon. Decide it from the evidenc
 - No position sizing, no guaranteed returns, no instructions addressed to the reader.
 </writing>`;
 
-export async function generateAnalysis(symbol: string, horizon: "short" | "medium", locale: "tr" | "en", onUsage: (usage: { inputTokens: number; outputTokens: number; model: string }) => Promise<void>) {
-  const [status, holidays] = await Promise.all([getStatus(), getHolidays()]);
+/**
+ * `deadline`: işin son anı (epoch ms, rota rezervasyondan `JOB_BUDGET_MS`
+ * sonrasını verir). Veri turu en çok `DATA_BUDGET_MS` sürer; sağlayıcılar
+ * sinyal almadığı için süreyle kesilir (`withinBudget`) ve "data-timeout"
+ * ile düşer. Model çağrısı kalan bütçeyi aşamaz. Böylece iş kilit dolmadan
+ * ya biter ya kendisi düşer; kurtarmanın ücretli raporu atması yolu kapalı.
+ */
+export async function generateAnalysis(symbol: string, horizon: "short" | "medium", locale: "tr" | "en", deadline: number, onUsage: (usage: { inputTokens: number; outputTokens: number; model: string }) => Promise<void>) {
+  const dataBy = Math.min(deadline, Date.now() + DATA_BUDGET_MS);
+  const [status, holidays] = await withinBudget(Promise.all([getStatus(), getHolidays()]), budgetLeft(dataBy), "data-timeout");
   const end = status.etDate;
   const start = new Date(`${end}T12:00:00Z`);
   start.setUTCDate(start.getUTCDate() - 7);
   // Fiyat ÖNBELLEKSİZ ve o an: rapor kalıcı bir belge, fiyat metne geçiyor (getLiveQuotes).
-  const [quotes, bars, screen, news] = await Promise.all([
+  const [quotes, bars, screen, news] = await withinBudget(Promise.all([
     getLiveQuotes([symbol], status),
     getChartBarsMulti([symbol], "1Y", status, { allowCache: false, fresh: true }),
     loadScreen(symbol, locale),
     getCompanyNews(symbol, start.toISOString().slice(0, 10), end, { fresh: true }),
-  ]);
+  ]), budgetLeft(dataBy), "data-timeout");
   const quote = quotes.ok && !quotes.stale ? quotes.data[symbol] : null;
   if (!quote?.tradedAt || !bars[symbol]?.length || !screen) throw new Error("data-unavailable");
   const quoteAge = Date.now() - new Date(quote.tradedAt).getTime();
@@ -129,8 +137,8 @@ export async function generateAnalysis(symbol: string, horizon: "short" | "mediu
   const live = status.session === "regular" && !!quote.realtime;
   const snapshot = computeSnapshot(bars[symbol], quote, status, new Date());
   if (!snapshot || snapshot.sessions < 35) throw new Error("data-unavailable");
-  const expectedSession = status.tradingToday && (status.session === "pre-market" || status.session === "regular")
-    ? prevTradingDay(status.etDate, holidays) : status.sessionDate;
+  // Son kesinleşmiş seans — tanım tek yerde (lib/market-hours.ts → settledSessionOf; 16:00–16:20 ET yarım bar).
+  const expectedSession = settledSessionOf(status, holidays);
   if (snapshot.lastSession !== expectedSession || etParts(new Date(quote.tradedAt)).dateStr < expectedSession || new Date(quote.tradedAt).getTime() > Date.now() + 60_000) throw new Error("data-unavailable");
   // Seçim motorunu da raporun kotasyonuyla çalıştır: iki fiyat iki farklı puan üretmesin.
   const fundamentals = { ...screen.input, price: quote.price };
@@ -150,7 +158,11 @@ export async function generateAnalysis(symbol: string, horizon: "short" | "mediu
   const fallback = FALLBACK_MODELS.has(model);
   // Ücretli çağrı: SDK yeniden denemez (zaman aşımı da denenir, süre ikiye katlanır); hak zaten iade ediliyor.
   const client = new Anthropic({ apiKey: process.env.CLAUDE_ANALYSIS_API_KEY, maxRetries: 0, timeout: MODEL_TIMEOUT_MS });
-  const request = () => client.beta.messages.stream({
+  const request = async () => {
+    // Kalan bütçe tam model süresinden azsa çağrı ona göre kısalır; çok azsa hiç başlamaz.
+    const ms = Math.min(MODEL_TIMEOUT_MS, budgetLeft(deadline));
+    if (ms < MIN_MODEL_MS) throw new Error("budget-exhausted");
+    return client.beta.messages.stream({
     model,
     max_tokens: MAX_TOKENS,
     thinking: { type: "adaptive" },
@@ -168,7 +180,8 @@ export async function generateAnalysis(symbol: string, horizon: "short" | "mediu
       newsAvailable: news.ok,
       news: items.map((n, i) => ({ sourceIndex: i, headline: n.headline.slice(0, 500), summary: n.summary?.slice(0, 1200) ?? null, publishedAt: n.publishedAt, source: n.source })),
     }) }],
-  }, { signal: AbortSignal.timeout(MODEL_TIMEOUT_MS) }).finalMessage();
+  }, { signal: AbortSignal.timeout(ms), timeout: ms }).finalMessage();
+  };
   // TEK HIZLI YENİDEN DENEME (25 Ekim): canlıda BE raporu jetonsuz düştü
   // (yanıt hiç gelmedi), aynı istek yerelde 31 saniyede tamamlandı — geçici
   // bir üst katman hatası. Yalnız ÇABUK düşen geçici hatada (bağlantı, 429,

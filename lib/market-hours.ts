@@ -318,6 +318,20 @@ export function nextTradingDay(dateStr: string, holidays: MarketHoliday[]): stri
   return cursor;
 }
 
+/**
+ * Bir seans gününün verisinin TAMAMEN bittiği an: o günün akşam seansı sonu
+ * (yarım günde kendi kapanışından, `AFTER_HOURS_MINUTES`) + besleme
+ * gecikmesi. `MarketStatus.sessionEnd` bunun anlatılan seansa uygulanmışı;
+ * gerekçe orada. Dışarı verildi (8 Kasım): risk masası bar isteğinin son
+ * anını sabit "20:00" ile yazıyordu (lib/risk/data.ts).
+ */
+export function sessionEndOf(dateStr: string, holidays: MarketHoliday[]): Date {
+  return new Date(
+    etDateWithMinutes(dateStr, closeMinutesFor(dateStr, holidays) + AFTER_HOURS_MINUTES).getTime() +
+      FEED_DELAY_MINUTES * 60_000,
+  );
+}
+
 export function getMarketStatus(
   now: Date = new Date(),
   holidays: MarketHoliday[] = [],
@@ -410,10 +424,7 @@ export function getMarketStatus(
   const geceYarisi = etDateWithMinutes(addEtDays(dateStr, 1), 0);
   if (geceYarisi < nextTransition) nextTransition = geceYarisi;
 
-  const sessionEnd = new Date(
-    etDateWithMinutes(sessionDate, closeMinutesFor(sessionDate, holidays) + AFTER_HOURS_MINUTES).getTime() +
-      FEED_DELAY_MINUTES * 60_000,
-  );
+  const sessionEnd = sessionEndOf(sessionDate, holidays);
 
   return {
     session,
@@ -461,6 +472,89 @@ export const FEED_DELAY_MINUTES = 15;
 /** Beslemenin ŞU AN verebileceği en yeni an. */
 export function feedCutoff(now: Date = new Date()): Date {
   return new Date(now.getTime() - FEED_DELAY_MINUTES * 60_000);
+}
+
+/* --------------------------------------------------------------------------
+   Tamamlanmış seans — "bu günün barı artık kesin mi"
+
+   TEK KAYNAK (8 Kasım, örtük durum makinesi denetimi 1. bulgu). "Son
+   tamamlanmış seans" dört yerde dört tanımla hesaplanıyordu:
+   `lib/technical.ts` → `completedBars` ve `lib/stock-insights.ts` →
+   `expectedLastSession` 16:00 ET'de bugünü TAMAM sayıyordu; Günün Grafiği
+   (`lib/day-poster.ts` → `posterReadyAt`) 16:20'yi bekliyordu;
+   `lib/ai-analysis.ts` kendi kopyasını taşıyordu. Aradaki yirmi dakika
+   ("settling") ilk ikisinin hiç bilmediği bir hâldi: besleme 15 dakika
+   geriden geliyor (`FEED_DELAY_MINUTES`), 16:05'te çekilen gün barı en
+   fazla 15:50'ye kadarki işlemleri taşıyor ve yaşı taze göründüğü için
+   `barsCurrent` onu güncel sayıyor. Hisse notu o yarım barın kapanışını
+   36 saat "seansın kapanışı" diye sunabiliyordu; aynı sayfadaki çizim ise
+   sonradan tam barı gösterirdi (CLAUDE.md "Veri dürüstlüğü" 3 ve 5).
+
+   Kural Günün Posteri'ninki, çünkü ölçülmüş olan o: asıl seansın kapanışı
+   (yarım günde 13:00) + besleme gecikmesi + pay. Akşam seansı beklenmiyor —
+   gün barı akşam işlemlerini içermiyor (`lib/providers/alpaca.ts` →
+   `getDailyBarsBetween`; gerekçe `lib/daily-chart.ts` →
+   `lastCompletedSession`). Bu bir FİYAT TAZELİĞİ ölçüsü değil:
+   kotasyon/bar paketinin seansın sonunu kaçırıp kaçırmadığı `sessionEnd`le
+   (akşam seansı sonu + gecikme) ölçülüyor ve o ayrı soru.
+   -------------------------------------------------------------------------- */
+
+/**
+ * Kapanıştan sonra beklenen PAY (dakika), gecikmenin üstüne. Kapanış
+ * müzayedesinin baskısı 16:00'yı birkaç saniye geçiyor ve günlük bar onu
+ * 16:00 dakikasında topluyor (ölçüm: SPY 23 Ekim, 20:00Z dakikası 759,99,
+ * 20:01Z 759,97 = gün barının kapanışı). Beş dakika bu kuyruğu rahat kapsıyor.
+ *
+ * (Günün Posteri'nden taşındı, 8 Kasım; `POSTER_SETTLE_MINUTES` bunun adı.)
+ */
+export const SETTLE_MARGIN_MINUTES = 5;
+
+/**
+ * Seansın veri açısından evresi:
+ *
+ *   `closed`      bugün seans yok (hafta sonu, tam tatil) ya da gün henüz
+ *                 başlamadı (gece yarısı → 04:00)
+ *   `pre-market`  açılış öncesi
+ *   `regular`     ana seans — günün barı yarım ve her dakika değişiyor
+ *   `settling`    kapanış zili çaldı ama besleme henüz yetişmedi: gün barı
+ *                 hâlâ YARIM (kapanış → kapanış + gecikme + pay)
+ *   `settled`     günün barı kesin; akşam seansı sürse de gün barına girmez
+ */
+export type SessionPhase = "closed" | "pre-market" | "regular" | "settling" | "settled";
+
+/** Bir işlem gününün barının kesinleştiği an: kendi kapanışı (yarım gün
+ *  dahil) + besleme gecikmesi + pay. */
+export function settledAt(dateStr: string, holidays: MarketHoliday[]): Date {
+  return etDateWithMinutes(
+    dateStr,
+    closeMinutesFor(dateStr, holidays) + FEED_DELAY_MINUTES + SETTLE_MARGIN_MINUTES,
+  );
+}
+
+/** Bugünün evresi — `MarketStatus`ten, tatil listesine yeniden sormadan
+ *  (`tradingToday` ve `closeMinutes` zaten o listeden hesaplanmış). */
+export function sessionPhase(status: MarketStatus): SessionPhase {
+  if (!status.tradingToday) return "closed";
+  const m = status.etMinutes;
+  if (m < SESSION_BOUNDS.preMarketOpen) return "closed";
+  if (m < SESSION_BOUNDS.regularOpen) return "pre-market";
+  if (m < status.closeMinutes) return "regular";
+  if (m < status.closeMinutes + FEED_DELAY_MINUTES + SETTLE_MARGIN_MINUTES) return "settling";
+  return "settled";
+}
+
+/**
+ * Son TAMAMLANMIŞ (barı kesinleşmiş) seansın ET günü. Bugün kesinleştiyse
+ * bugün, değilse geriye doğru ilk işlem günü — yarım gün ve tatil dahil.
+ * Cumartesi → cuma, salı 16:05 ET → pazartesi, salı 16:25 ET → salı.
+ */
+export function settledSessionOf(status: MarketStatus, holidays: MarketHoliday[]): string {
+  return sessionPhase(status) === "settled" ? status.etDate : prevTradingDay(status.etDate, holidays);
+}
+
+/** `settledSessionOf`un andan okunan biçimi. */
+export function lastSettledSession(now: Date, holidays: MarketHoliday[]): string {
+  return settledSessionOf(getMarketStatus(now, holidays), holidays);
 }
 
 /**

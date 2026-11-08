@@ -6,6 +6,7 @@ import { db } from "./db";
 import { aiAnalysisAccess } from "./schema";
 import { remainingAnalyses } from "./ai-analysis-core";
 import { recoverExpiredAnalysis } from "./ai-analysis-quota";
+import { accessPhase, cooldownUntil } from "./ai-analysis-lock";
 
 export async function analysisAccess() {
   const session = await auth();
@@ -26,7 +27,11 @@ export async function analysisAccess() {
     [row] = await read();
   }
   if (!row?.enabled) return null;
-  return { ...row, remaining: remainingAnalyses(row.dailyLimit, row.usedCount, row.usedDay) };
+  /* Kurtarma kararı yukarıda veritabanı saatiyle verildi; `phase` yalnız
+     okumadır (masa ve GET), kilit/kota kararı SQL'de kalır. */
+  const now = new Date();
+  return { ...row, remaining: remainingAnalyses(row.dailyLimit, row.usedCount, row.usedDay),
+    phase: accessPhase(row, now), cooldownUntil: cooldownUntil(row, now) };
 }
 
 /** Yalnız menüdeki bağlantı için: kilit kurtarma yok, tek birincil anahtar okuması; tablo yoksa kapalı. */

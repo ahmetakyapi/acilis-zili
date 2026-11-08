@@ -75,7 +75,11 @@ async function sendConfirm(userId: string, token: string): Promise<void> {
       copy: getDictionary(locale).emailNotify,
     }),
   );
-  if (!sent) {
+  /* Belirsiz sonuç (zaman aşımı, 5xx) da "gitmedi" sayılır (8 Kasım,
+     lib/email.ts → EmailResult): onayda iki gelen posta zararsız, "onay
+     bekleniyor" deyip 48 saat yeni bağlantı üretmeyen ekran zararlı.
+     Bağlantı geçersizleşir; ulaşan posta varsa okuyucu yenisini ister. */
+  if (!sent.ok) {
     await releaseSend(dedupeKey);
     await abandonConfirm(userId, hash);
   }

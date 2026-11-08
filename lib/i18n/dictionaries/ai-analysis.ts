@@ -138,6 +138,11 @@ export const aiAnalysisTr = {
       closed: "Piyasa kapalı ve fiyat son rapordan beri değişmedi; önerilen an açılış zili ({time}).",
       quotaOut: "Bugünkü hakların bitti; İstanbul saatiyle 00:00’da yenilenir.",
       refresh: "Durumu Yenile", retry: "Tekrar Dene", checkHistory: "Geçmiş Raporlara Bak",
+      /* Soğuma (8 Kasım): başarısız işten sonraki kısa beklemede düğme kilitli ve kalan
+         saniyeyi gösterir; birim geri sayım eki olarak küçük (Title Case istisnası). "Tekrar Dene
+         · 60 sn" 390 genişlikte düğme etiketine 15 piksel sığmadı (ölçüm 8 Kasım), kısa biçim bu. */
+      cooldown: "Son deneme tamamlanamadı ve hakkın iade edildi. Kısa bekleme bitince yeniden deneyebilirsin.",
+      waitFor: "Bekle · {s} sn",
       openLatest: "Son Raporu Aç",
       filmNote: "Genellikle 20⁠–⁠40 saniye sürer. Sayfadan ayrılsan da rapor kaydedilir; Geçmiş Raporlar sekmesinde bulursun.",
       guestTitle: "Rapor Oluşturmak İçin Giriş Yap",
@@ -180,6 +185,7 @@ export const aiAnalysisTr = {
   errors: {
     quota: "Bugünün analiz haklarını kullandın. İstanbul saatiyle 00:00’dan sonra yeni rapor üretebilirsin.",
     busy: "Başka bir analiz sürüyor veya kısa bekleme süresi var. Biraz sonra tekrar dene.",
+    cooldown: "Son deneme başarısız olduğu için kısa bir bekleme var. Süre dolunca yeniden deneyebilirsin.",
     data: "Güncel fiyat veya mum verisi eksik. Rapor oluşturulmadı ve analiz hakkın iade edildi.",
     failed: "Analiz tamamlanamadı; hakkın iade edildi. Bir dakika sonra tekrar deneyebilirsin.",
     unavailable: "Analiz servisine ulaşılamıyor. Sayfayı yenileyip tekrar dene.",
@@ -318,6 +324,8 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
       closed: "The market is closed and the price has not moved since the last report; the suggested time is the opening bell ({time}).",
       quotaOut: "You have used today’s credits; they reset at midnight Istanbul time.",
       refresh: "Refresh Status", retry: "Try Again", checkHistory: "Check Past Reports",
+      cooldown: "The last attempt did not finish and your credit was refunded. You can try again once the short cooldown ends.",
+      waitFor: "Wait · {s} s",
       openLatest: "Open the Latest Report",
       filmNote: "This usually takes 20⁠–⁠40 seconds. The report is saved even if you leave the page; you will find it under Past Reports.",
       guestTitle: "Sign In to Generate a Report",
@@ -360,6 +368,7 @@ export const aiAnalysisEn: typeof aiAnalysisTr = {
   errors: {
     quota: "Today's analysis credits are used up. New credits become available at midnight Istanbul time.",
     busy: "Another analysis is running or a short cooldown applies. Try again shortly.",
+    cooldown: "The last attempt failed, so a short cooldown applies. You can try again when it ends.",
     data: "Current quotes or candles are missing. No report was generated and your credit was refunded.",
     failed: "The analysis failed and your credit was refunded. You can try again in one minute.",
     unavailable: "The analysis service is unavailable. Refresh the page and try again.",

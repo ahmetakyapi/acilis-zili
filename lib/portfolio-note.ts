@@ -86,7 +86,9 @@ export async function getPortfolioNote(userId: string, locale: Locale): Promise<
   try {
     return await unstable_cache(
       () => buildNote([...holdings], session, locale, memberClient(userId)),
-      ["portfolio-note-v2", userId, session, fingerprint, locale],
+      /* v3 (8 Kasım): tamamlanmış seans = kapanış + 20 dk (settledSessionOf);
+         eski kuralla 16:00–16:20 ET arasında yarım bardan yazılan kayıt kalmasın. */
+      ["portfolio-note-v3", userId, session, fingerprint, locale],
       { revalidate: 24 * 3600, tags: ["portfolio-note"] },
     )();
   } catch (error) {

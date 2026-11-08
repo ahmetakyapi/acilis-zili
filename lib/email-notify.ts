@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { cache } from "react";
 import { and, count, eq, gte, isNotNull, lt, ne, notInArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { emailConfigured, emailProvider, sendEmail, type Email } from "@/lib/email";
+import { emailConfigured, emailIdempotent, emailProvider, sendEmail, type Email, type EmailResult } from "@/lib/email";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { emailLog, emailPrefs, users } from "@/lib/schema";
 import { SITE_URL } from "@/lib/site";
@@ -481,8 +481,38 @@ export function oneClickUrl(recipient: Pick<Recipient, "unsubToken">, scope: Uns
   return `${SITE_URL}/api/e-posta/ayril?anahtar=${recipient.unsubToken}&kapsam=${scope}`;
 }
 
+export type SendStep = "sent" | "retry" | "release" | "keep";
+
 /**
- * Bildirim postasını gönderir: sahiplen → gönder → düşerse geri al.
+ * Bir gönderim denemesinden sonra ne yapılacağı — saf karar (8 Kasım;
+ * testi tests/email-send.test.ts). Gerekçe lib/email.ts → EmailResult:
+ *   - gitti → "sent";
+ *   - KESİN ret (`rejected`): alarmda ilk denemeden sonra bir kez daha
+ *     ("retry"; 429 gibi geçici retler), sonra "release" — satır geri
+ *     alınır, haftalık posta sonraki saatlik koşuda tamamlanır;
+ *   - BELİRSİZ (zaman aşımı, ağ, 5xx, 409): satır sahiplenilmiş kalır
+ *     ("keep") ve posta bir daha gönderilmez — iki kez gelen posta hiç
+ *     gelmeyenden kötü (Telegram'daki "tekrardan sessizlik iyidir" ilkesi,
+ *     app/api/cron/telegram/route.ts → deliver). TEK İSTİSNA: servis
+ *     tekrarsızlık anahtarını tanıyorsa (`idempotent`, Resend) alarm aynı
+ *     anahtar ve aynı gövdeyle bir kez yeniden denenir; ilk istek
+ *     ulaşmışsa Resend ikinciyi göndermeden ilkinin yanıtını döner.
+ */
+export function sendStep(
+  result: EmailResult,
+  attempt: number,
+  kind: "alert" | "weekly",
+  idempotent: boolean,
+): SendStep {
+  if (result.ok) return "sent";
+  const canRetry = kind === "alert" && attempt < 2;
+  if (result.rejected) return canRetry ? "retry" : "release";
+  return canRetry && idempotent ? "retry" : "keep";
+}
+
+/**
+ * Bildirim postasını gönderir: sahiplen → gönder → kesin düştüyse geri al;
+ * sonuç belirsizse satır kalır ("unknown" — gerekçe `sendStep`).
  * `build` alıcıyı alır ve postayı kurar (dil, çıkış bağlantısı alıcıya bağlı).
  */
 export async function sendNotificationEmail(
@@ -490,7 +520,7 @@ export async function sendNotificationEmail(
   kind: "alert" | "weekly",
   dedupeKey: string,
   build: (recipient: Recipient) => Email,
-): Promise<ClaimResult | "sent" | "failed"> {
+): Promise<ClaimResult | "sent" | "failed" | "unknown"> {
   /* Posta SAHİPLENMEDEN ÖNCE kurulur (17 Ekim denetimi): şablon beklenmedik
      veride fırlatınca defter satırı kalıyor, alıcı o haftanın bütün tekrar
      koşularında "duplicate" sayılıp postasız kalıyordu. */
@@ -505,20 +535,29 @@ export async function sendNotificationEmail(
       "List-Unsubscribe": `<${oneClickUrl(recipient, scope)}>`,
       "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
     },
+    idempotencyKey: dedupeKey,
   };
   /* Alarm yeniden tetiklenmez: geçici bir servis hatası (5xx, zaman aşımı)
      o postayı sonsuza kadar kaybettirirdi. Bir kez, kısa bir aradan sonra
-     yeniden denenir; haftalık posta zaten sonraki saatlik koşuda tamamlanıyor. */
-  let ok = await sendEmail(message);
-  if (!ok && kind === "alert") {
+     yeniden denenir; haftalık posta zaten sonraki saatlik koşuda tamamlanıyor.
+     8 Kasım: yeniden deneme yalnız KESİN retten sonra ya da servis
+     tekrarsızlık anahtarını tanıyorsa — belirsiz sonuçta kör tekrar aynı
+     postayı iki kez teslim ettiriyordu (karar `sendStep`te). */
+  const idempotent = emailIdempotent();
+  for (let attempt = 1; ; attempt += 1) {
+    const step = sendStep(await sendEmail(message), attempt, kind, idempotent);
+    if (step === "sent") return "sent";
+    if (step === "release") {
+      await releaseSend(dedupeKey);
+      return "failed";
+    }
+    if (step === "keep") {
+      /* Alıcı yazılmaz (kişisel veri); anahtar defterdeki izi gösterir. */
+      console.error(`[e-posta] ${kind} postasının sonucu belirsiz, yeniden gönderilmeyecek: ${dedupeKey.split(":")[0]}`);
+      return "unknown";
+    }
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    ok = await sendEmail(message);
   }
-  if (!ok) {
-    await releaseSend(dedupeKey);
-    return "failed";
-  }
-  return "sent";
 }
 
 /** Veri dışa aktarımı (KVKK) — tercih satırı; yoksa ya da tablo yoksa null. */

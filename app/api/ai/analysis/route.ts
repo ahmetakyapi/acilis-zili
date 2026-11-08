@@ -4,6 +4,7 @@ import { analysisAccess } from "@/lib/ai-analysis-access";
 import { reserveAnalysis, releaseAnalysis } from "@/lib/ai-analysis-quota";
 import { analysisModel, failureKind, generateAnalysis } from "@/lib/ai-analysis";
 import { AnalysisInput } from "@/lib/ai-analysis-schema";
+import { JOB_BUDGET_MS } from "@/lib/ai-analysis-lock";
 import { db } from "@/lib/db";
 import { aiAnalysisRequests } from "@/lib/schema";
 import { getStatus, isKnownSymbol } from "@/lib/data";
@@ -24,6 +25,13 @@ export async function GET(request: Request) {
     const access = await analysisAccess();
     if (!access || !configured()) return respond({ error: "forbidden" }, 403);
     const params = new URL(request.url).searchParams;
+    /* Hesabın kilit hâli (8 Kasım): `inProgress` artık `phase`ten türer;
+       `cooldown`da `cooldownUntil` masanın "Tekrar Dene" geri sayımını
+       besler. `?state=1` yalnız bu alanları döndürür — masa başarısız
+       denemeden sonra soğumayı buradan öğrenir, rapor geçmişini okumaz. */
+    const state = { phase: access.phase, cooldownUntil: access.cooldownUntil,
+      inProgress: access.phase === "running", remaining: access.remaining, dailyLimit: access.dailyLimit };
+    if (params.get("state") === "1") return respond(state);
     const symbol = params.get("symbol")?.toUpperCase();
     const locale = params.get("locale");
     // Analizlerim'den gelen bağlantı: rapor başka dilde üretilmiş olabilir, dil süzgeci uygulanmaz.
@@ -36,8 +44,7 @@ export async function GET(request: Request) {
       !id.success && symbol ? eq(aiAnalysisRequests.symbol, symbol) : undefined,
       !id.success && locale ? eq(aiAnalysisRequests.locale, locale) : undefined,
     )).orderBy(desc(aiAnalysisRequests.createdAt)).limit(HISTORY_LIMIT);
-    return respond({ remaining: access.remaining, dailyLimit: access.dailyLimit,
-      inProgress: !!access.lockId && !!access.lockUntil && access.lockUntil > new Date(), history,
+    return respond({ ...state, history,
       current: symbol && !id.success ? await currentQuote(symbol) : null });
   } catch { return respond({ error: "unavailable" }, 503); }
 }
@@ -81,6 +88,11 @@ export async function POST(request: Request) {
       if (previous.status === "completed" && previous.result) return respond({ id: requestId, result: previous.result, reused: true });
       return respond({ error: previous.status === "processing" ? "busy" : "analysis-failed" }, previous.status === "processing" ? 429 : 503);
     }
+    /* Son an rezervasyondan sayılır (isteği göndermeden önce alınır: veritabanının
+       `now()`ından erken düşer, pay güvenli yanda kalır). Kilit `LOCK_MS`, iş
+       `JOB_BUDGET_MS` (kilitten türer, lib/ai-analysis-lock.ts). İş bu ana kadar
+       bitmezse kendisi düşer ve hakkı iade eder; kilidi aşıp kurtarmayla yarışmaz. */
+    const deadline = Date.now() + JOB_BUDGET_MS;
     if (!(await reserveAnalysis(access.userId, requestId))) {
       const current = await analysisAccess();
       return respond({ error: current?.remaining === 0 ? "quota" : "busy" }, 429);
@@ -88,7 +100,7 @@ export async function POST(request: Request) {
     id = requestId; userId = access.userId;
     await db.insert(aiAnalysisRequests).values({ id, userId, symbol, horizon, locale,
       status: "processing", model: analysisModel() });
-    const result = await generateAnalysis(symbol, horizon, locale, async ({ inputTokens, outputTokens, model }) => {
+    const result = await generateAnalysis(symbol, horizon, locale, deadline, async ({ inputTokens, outputTokens, model }) => {
       await db.update(aiAnalysisRequests).set({ inputTokens, outputTokens, model }).where(and(eq(aiAnalysisRequests.id, requestId), eq(aiAnalysisRequests.userId, access.userId)));
     });
     if (!configured()) throw new Error("forbidden");
@@ -109,7 +121,8 @@ export async function POST(request: Request) {
     // izsiz düştü); yalnız sınıf, kod ve tür — üst katman metni yazılmaz.
     console.error("[claude analiz] düştü", failureKind(error));
     const code = error instanceof Error ? error.message : "unavailable";
-    const safe = code === "data-unavailable" || code === "forbidden" ? code : "analysis-failed";
+    // Veri turu bütçeyi aştıysa ("data-timeout", günlükte ayrı görünür) okura veri hatası olarak gider.
+    const safe = code === "data-unavailable" || code === "data-timeout" ? "data-unavailable" : code === "forbidden" ? code : "analysis-failed";
     return respond({ error: safe }, safe === "forbidden" ? 403 : 503);
   } finally {
     if (id && userId) {

@@ -2,7 +2,8 @@ import "server-only";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { SPX_MEMBERS, primaryOnly } from "@/db/seed/indices";
-import { addEtDays, etDateTimeToUtc } from "@/lib/market-hours";
+import { getHolidays } from "@/lib/data";
+import { addEtDays, sessionEndOf } from "@/lib/market-hours";
 import { barDate } from "@/lib/period-returns";
 import { getDailyBarsBetween } from "@/lib/providers/alpaca";
 import { getDailyMarketSeries } from "@/lib/providers/daily-markets";
@@ -44,7 +45,7 @@ import { FORWARD_LONG, MAX_OBSERVATION_LAG_DAYS, PERCENTILE_WINDOW, VOL_LONG } f
  *  - Genişlik: S&P 500 üyelerinin gün barları (tohum listesi,
  *    db/seed/indices.ts), ~400 takvim günü.
  *
- * TAMAMLANMIŞ SEANS. Masa `expectedLastSession()`ı (seans sürerken dün)
+ * TAMAMLANMIŞ SEANS. Masa `expectedLastSession()`ı (kapanış + 20 dk dolana dek dün)
  * anlatır; barlar o günün kapanışına kadar istenir. Son bar o güne ait
  * değilse bar ölçüleri BAYAT sayılır ve ekran onları büyük puntoyla basmaz.
  *
@@ -77,8 +78,11 @@ export function toDaily(bars: readonly Bar[] | undefined, session: string): Dail
     .filter((b) => b.date <= session && b.close > 0);
 }
 
-/** Barların istendiği son an: seans gününün akşamı (sağlayıcı kendi gecikmesiyle kırpar). */
-const sessionEnd = (session: string) => etDateTimeToUtc(session, "20:00");
+/** Barların istendiği son an: seans gününün akşamı (sağlayıcı kendi gecikmesiyle kırpar).
+ *  Sabit "20:00" yerine ortak tanım (8 Kasım, `sessionEndOf`): akşam seansı
+ *  sonu + gecikme, yarım günde erken. Gün barı akşam işlemlerini taşımadığı
+ *  için seçilen bar aynı; ölçünün tek yerde yaşaması için. */
+const sessionEnd = async (session: string) => sessionEndOf(session, await getHolidays());
 
 /* --------------------------------------------------------------------------
    Genişlik
@@ -138,7 +142,7 @@ const BREADTH_SYMBOLS = primaryOnly(SPX_MEMBERS).map((m) => m.symbol);
 
 const loadBreadth = unstable_cache(
   async function loadBreadth(session: string): Promise<Breadth | null> {
-    const result = await getDailyBarsBetween(BREADTH_SYMBOLS, addEtDays(session, -BREADTH_LOOKBACK_DAYS), sessionEnd(session), REVALIDATE);
+    const result = await getDailyBarsBetween(BREADTH_SYMBOLS, addEtDays(session, -BREADTH_LOOKBACK_DAYS), await sessionEnd(session), REVALIDATE);
     if (!result.ok) throw new Error(`genişlik: ${result.message}`);
     const bars: Record<string, DailyBar[]> = {};
     for (const symbol of BREADTH_SYMBOLS) bars[symbol] = toDaily(result.data[symbol], session);
@@ -147,7 +151,9 @@ const loadBreadth = unstable_cache(
     if (!breadth) throw new Error("genişlik: kapsam yetersiz");
     return breadth;
   },
-  ["risk-breadth-v1"],
+  /* v2 (8 Kasım): tamamlanmış seans = kapanış + 20 dk (settledSessionOf);
+     eski kuralla 16:00–16:20 ET arasında yarım bardan yazılan kayıt kalmasın. */
+  ["risk-breadth-v2"],
   { revalidate: REVALIDATE, tags: ["risk-desk"] },
 );
 
@@ -249,12 +255,13 @@ type Sources = {
 };
 
 async function loadSources(session: string): Promise<Sources> {
+  const end = await sessionEnd(session);
   const [vix, vxn, vix3m, hy, bars, breadth] = await Promise.all([
     getDailyMarketSeries(VIX_SERIES, FRED_LIMIT),
     getSeries(VXN, FRED_LIMIT),
     getSeries(VIX3M, FRED_LIMIT),
     getSeries(HY, FRED_LIMIT),
-    getDailyBarsBetween([...INDEX_SYMBOLS], addEtDays(session, -SIX_YEARS_DAYS), sessionEnd(session), REVALIDATE),
+    getDailyBarsBetween([...INDEX_SYMBOLS], addEtDays(session, -SIX_YEARS_DAYS), end, REVALIDATE),
     breadthFor(session),
   ]);
   const daily: Record<string, DailyBar[]> = {};
@@ -405,7 +412,9 @@ const loadDesk = unstable_cache(
     if (!src.complete) throw new IncompleteDesk(desk);
     return desk;
   },
-  ["risk-desk-v3"],
+  /* v4 (8 Kasım): tamamlanmış seans = kapanış + 20 dk (settledSessionOf);
+     eski kuralla 16:00–16:20 ET arasında yarım bardan yazılan kayıt kalmasın. */
+  ["risk-desk-v4"],
   { revalidate: REVALIDATE, tags: ["risk-desk"] },
 );
 

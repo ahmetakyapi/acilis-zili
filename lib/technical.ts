@@ -1,12 +1,14 @@
 import type { VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import {
+  ET_ZONE,
   SESSION_BOUNDS,
   addEtDays,
   etDateTimeToUtc,
   etParts,
   getMarketStatus,
   isSessionTrade,
+  sessionPhase,
   todayEt,
   type MarketHoliday,
   type MarketStatus,
@@ -157,13 +159,33 @@ export const SLOT_RANK: Record<TechnicalSlot, number> = {
  * slotla yazıyor ve ÖĞLENKİ yayının üstüne biniyordu. Üçüncü yayının kendi
  * slotu var.
  */
-export const TECHNICAL_CRON = "CRON_TZ=America/New_York 45 8,12,14 * * 1-5";
-
 export const SLOT_ET: Record<TechnicalSlot, string> = {
   premarket: "08:45",
   midsession: "12:45",
   lateday: "14:45",
 };
+
+/**
+ * Slot saatlerinden claude.ai görevinin cron satırı.
+ *
+ * TÜRETİLİYOR, KOPYALANMIYOR (8 Kasım, örtük durum makinesi denetimi 12.
+ * bulgu). Cron dizesi `SLOT_ET`in elle kopyasıydı ve test yalnız dizenin
+ * değişmediğini sabitliyordu; biri değişip öteki unutulursa yeni koşu var
+ * olan nöbetin üstüne yazardı (yukarıdaki 18 Eylül olayı). Tek görev tek
+ * dakika ister: slotların dakikası farklıysa bu satır kurulamaz ve fonksiyon
+ * FIRLATIR — iki görev kurmak bilinçli bir karar olmalı, sessiz kayma değil.
+ */
+export function technicalCron(slots: Record<TechnicalSlot, string>): string {
+  const times = TECHNICAL_SLOTS.map((slot) => slots[slot].split(":").map(Number) as [number, number]);
+  const minutes = new Set(times.map(([, minute]) => minute));
+  if (minutes.size !== 1) throw new Error("Teknik nöbetler aynı dakikada değil — tek cron satırı kurulamaz");
+  const hours = [...new Set(times.map(([hour]) => hour))].sort((a, b) => a - b);
+  return `CRON_TZ=${ET_ZONE} ${[...minutes][0]} ${hours.join(",")} * * 1-5`;
+}
+
+/** claude.ai'de kurulu görevin satırı — bugün `45 8,12,14`; değişirse görev
+ *  elle yeniden kurulur (docs/claude-rutinler.md § 5). */
+export const TECHNICAL_CRON = technicalCron(SLOT_ET);
 
 /**
  * Seans içindeki iki yayının sınırı — ET 13:00.
@@ -174,7 +196,7 @@ export const SLOT_ET: Record<TechnicalSlot, string> = {
  * kayıyordu; 13:00 o dört değerin de doğru tarafındaydı ve bugünkü iki
  * değerin de doğru tarafında. Geri dönülürse (UTC cron) sınır yine tutar.
  */
-const LATEDAY_FROM_ET = 13 * 60;
+export const LATEDAY_FROM_ET = 13 * 60;
 
 /** O işlem gününde rutinin koştuğu an. */
 export function slotInstant(sessionDate: string, slot: TechnicalSlot): Date {
@@ -313,15 +335,19 @@ function barDate(bar: Bar): string {
  *
  * Günün barı ana seans kapanana kadar YARIM: sağlayıcı onu gün içinde
  * güncelliyor. Açılış öncesinde ve seans içinde son bar bugüne aitse
- * atılıyor; kapanıştan sonra o bar artık tam bir seans.
+ * atılıyor.
+ *
+ * KAPANIŞTAN HEMEN SONRA DA YARIM (8 Kasım). Kural "kapanıştan sonra o bar
+ * artık tam bir seans" diyordu; besleme 15 dakika geriden geldiği için
+ * 16:00–16:20 ET arasında çekilen gün barı seansın son dakikalarını henüz
+ * taşımıyor ve Claude analizi o yarım barı kalıcı rapora yazabiliyordu. Bugünün
+ * barı artık ancak `sessionPhase` "settled" olunca giriyor — tek tanım
+ * `lib/market-hours.ts`te (kapanış + gecikme + pay; yarım gün dahil).
  */
 export function completedBars(bars: readonly Bar[], status: MarketStatus): Bar[] {
   const last = bars.at(-1);
   if (!last) return [];
-  const sessionRunning =
-    status.tradingToday &&
-    (status.session === "pre-market" || status.session === "regular");
-  if (sessionRunning && barDate(last) === status.etDate) return bars.slice(0, -1);
+  if (barDate(last) === status.etDate && sessionPhase(status) !== "settled") return bars.slice(0, -1);
   return [...bars];
 }
 

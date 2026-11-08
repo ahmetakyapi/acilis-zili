@@ -17,6 +17,7 @@ import { LocaleLink } from "@/components/layout/LocaleLink";
 import { PortfolioSheet } from "@/components/portfolio/PortfolioSheet";
 import sheet from "@/components/portfolio/Workbench.module.css";
 import { buttonClass } from "@/components/ui/primitives";
+import { alertPhase } from "@/lib/alert-phase";
 import type { Dictionary, Locale } from "@/lib/i18n";
 /* ÇEKİRDEKTEN, okuma modülünden DEĞİL (20 Ekim): lib/price-alerts.ts ve
    lib/percent-alerts.ts `db`yi içe aktarıyor ve onu bu paketle tarayıcıya
@@ -469,10 +470,11 @@ export function AlertRow({
   labels: Labels;
   showSymbol?: boolean;
 }) {
-  const hit = Boolean(alert.triggeredAt);
   const zone = displayZone(locale);
   /* "Bugün mü" sorusunun anı ilk çizimde sabit (render saf kalsın). */
   const [nowMs] = useState(() => Date.now());
+  /* Evre tek kaynaktan (lib/alert-phase.ts) — tarama da aynısını okur. */
+  const hit = alertPhase(alert, nowMs) === "triggered";
   const progress = !hit && price != null ? alertProgress(alert, price) : hit ? 1 : 0;
   const dateFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
     timeZone: zone,
@@ -558,7 +560,6 @@ export function PercentAlertRow({
   labels: Labels;
   showSymbol?: boolean;
 }) {
-  const hit = Boolean(alert.triggeredAt);
   const zone = displayZone(locale);
   const dateFormat = new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
     timeZone: zone,
@@ -568,8 +569,12 @@ export function PercentAlertRow({
   const thresholdText = pctNumber(alert.thresholdPct, locale);
   const [nowMs] = useState(() => Date.now());
   /* Aynı seansta yeniden kurulan alarm ertesi seansta devreye girer
-     (app/actions/alerts.ts → rearmPercentAlert): `createdAt` ileride. */
-  const armsLater = !hit && new Date(alert.createdAt).getTime() > nowMs;
+     (app/actions/alerts.ts → rearmPercentAlert): `createdAt` ileride.
+     "Uykuda" evresi taramayla AYNI fonksiyondan (lib/alert-phase.ts, 8 Kasım);
+     saat istemcinin — sınırda birkaç saniyelik fark yalnız künyeyi etkiler. */
+  const phase = alertPhase(alert, nowMs);
+  const hit = phase === "triggered";
+  const armsLater = phase === "sleeping";
 
   return (
     <li className={styles.row} data-hit={hit || undefined}>

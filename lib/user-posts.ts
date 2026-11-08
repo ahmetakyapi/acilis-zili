@@ -18,6 +18,40 @@ export function isPostStatus(value: unknown): value is PostStatus {
   return typeof value === "string" && (POST_STATUSES as readonly string[]).includes(value);
 }
 
+/**
+ * GEÇİŞ TABLOSU (8 Kasım, durum makinesi denetimi § 9). Makine şemada
+ * belgeliydi (lib/schema.ts → userPosts) ama geçişler dört eyleme dağılmıştı
+ * ve kaydet sonraki durumu JS'te üç dallı bir koşulla hesaplayıp DURUM
+ * KOŞULSUZ yazıyordu: moderatör okuma ile yazma arasında reddederse
+ * `pending + reviewNote` gibi hiçbir eylemin üretmediği bir hâl doğuyordu.
+ * Şimdi tek tablo; eylemler buradan sorar ve okudukları durumu koşul
+ * yaparak yazar (karşılaştır-ve-değiştir).
+ *
+ * - save: draft → draft, pending → pending (sıra kaybolmaz), published →
+ *   pending (onaysız fark yayında duramaz), rejected → draft (düzeltilen
+ *   yazı yeniden gönderilmeden kuyruğa girmez);
+ * - submit: draft | rejected → pending; withdraw: pending → draft;
+ * - approve / reject: pending → published / rejected (app/actions/moderation.ts).
+ */
+export type PostEvent = "save" | "submit" | "withdraw" | "approve" | "reject";
+
+export const POST_TRANSITIONS: Readonly<Record<PostStatus, Readonly<Partial<Record<PostEvent, PostStatus>>>>> = {
+  draft: { save: "draft", submit: "pending" },
+  pending: { save: "pending", withdraw: "draft", approve: "published", reject: "rejected" },
+  published: { save: "pending" },
+  rejected: { save: "draft", submit: "pending" },
+};
+
+/** Olayın bu durumdan götürdüğü durum; geçiş yoksa null. */
+export function transition(status: PostStatus, event: PostEvent): PostStatus | null {
+  return POST_TRANSITIONS[status]?.[event] ?? null;
+}
+
+/** Olayı kabul eden durumlar — koşullu yazmanın `status in (...)` kümesi. */
+export function statusesAccepting(event: PostEvent): PostStatus[] {
+  return POST_STATUSES.filter((status) => transition(status, event) !== null);
+}
+
 /** Hesap başına yazı tavanı — döngüyle tabloyu şişirmeye karşı. */
 export const MAX_USER_POSTS = 50;
 

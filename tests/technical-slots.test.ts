@@ -2,11 +2,15 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { getMarketStatus, type MarketHoliday } from "../lib/market-hours";
 import {
+  LATEDAY_FROM_ET,
+  SLOT_ET,
   SLOT_RANK,
   TECHNICAL_CRON,
+  TECHNICAL_SLOTS,
   currentSlot,
   nextEdition,
   slotInstant,
+  technicalCron,
 } from "../lib/technical";
 
 /**
@@ -35,10 +39,42 @@ const utc = (dateStr: string, hour: number, minute: number) =>
 const slotAt = (dateStr: string, hour: number, minute: number) =>
   currentSlot(getMarketStatus(utc(dateStr, hour, minute), HOLIDAYS));
 
-test("cron üç koşuyu New York saatiyle taşıyor", () => {
+test("cron üç koşuyu New York saatiyle taşıyor ve SLOT_ET'ten türüyor", () => {
   /* 5 Kasım 2026: canlı görev ABD'ye bağlı; UTC cron kışın bir saat
-     şaşıyordu (lib/technical.ts → TECHNICAL_CRON). */
+     şaşıyordu (lib/technical.ts → TECHNICAL_CRON). Görev claude.ai'de bu
+     satırla kurulu: türetilen dize harfi harfine aynı kalmalı. */
   assert.equal(TECHNICAL_CRON, "CRON_TZ=America/New_York 45 8,12,14 * * 1-5");
+  /* 8 Kasım: dize artık elle kopya değil, slotlardan türüyor (denetim 12. bulgu). */
+  assert.equal(TECHNICAL_CRON, technicalCron(SLOT_ET));
+});
+
+const minutesOf = (hhmm: string) => {
+  const [hour, minute] = hhmm.split(":").map(Number);
+  return hour! * 60 + minute!;
+};
+
+test("her slot saati kendi slotuna düşüyor — iki mevsimde", () => {
+  /* Üç sabit (cron, SLOT_ET, LATEDAY_FROM_ET) birbirinden kopmasın: rutinin
+     koştuğu an `currentSlot`a sorulunca aynı slotu vermeli; vermezse yeni
+     koşu var olan nöbetin üstüne yazar (18 Eylül olayı). */
+  for (const date of ["2026-09-18", "2026-12-04"]) {
+    for (const slot of TECHNICAL_SLOTS) {
+      assert.equal(currentSlot(getMarketStatus(slotInstant(date, slot), HOLIDAYS)), slot, `${date} ${slot}`);
+    }
+  }
+});
+
+test("LATEDAY_FROM_ET öğlen ile kapanış öncesi nöbetinin arasında", () => {
+  assert.ok(minutesOf(SLOT_ET.midsession) < LATEDAY_FROM_ET);
+  assert.ok(LATEDAY_FROM_ET <= minutesOf(SLOT_ET.lateday));
+});
+
+test("technicalCron: saatler sıralı, farklı dakika tek satıra sığmaz", () => {
+  assert.equal(
+    technicalCron({ premarket: "08:30", midsession: "12:30", lateday: "15:30" }),
+    "CRON_TZ=America/New_York 30 8,12,15 * * 1-5",
+  );
+  assert.throws(() => technicalCron({ premarket: "08:45", midsession: "12:30", lateday: "14:45" }));
 });
 
 test("nöbet anı mevsimle kayıyor: 08:45 ET yazın 12:45, kışın 13:45 UTC", () => {

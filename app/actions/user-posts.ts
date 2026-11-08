@@ -3,7 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
@@ -11,8 +11,10 @@ import { userPosts } from "@/lib/schema";
 import {
   MAX_USER_POSTS,
   postInputSchema,
+  isPostStatus,
   postSlug,
-  type PostStatus,
+  statusesAccepting,
+  transition,
 } from "@/lib/user-posts";
 import { getLocale } from "@/lib/i18n";
 import { isValidSymbol } from "@/lib/utils";
@@ -30,11 +32,16 @@ import { isValidSymbol } from "@/lib/utils";
  *
  * Kimlik HEP oturumdan; her yazma `userId` koşuluyla — başkasının yazısına
  * verilen id sessizce 0 satır günceller.
+ *
+ * Geçişler tek tablodan (lib/user-posts.ts → POST_TRANSITIONS, 8 Kasım);
+ * durum değiştiren her yazma okuduğu durumu koşul yapar.
  */
 
 export type PostActionState = {
   status: "idle" | "ok" | "error";
-  error?: "auth" | "input" | "limit" | "unavailable" | "notFound";
+  /** `conflict`: okuma ile yazma arasında durum değişti (ör. moderatör
+      karar verdi) — yazılmadı, sayfa tazelenir ve okur yeniden kaydeder. */
+  error?: "auth" | "input" | "limit" | "unavailable" | "notFound" | "conflict";
   /** Alan bazlı hata — kutuyu işaretlemek için. */
   field?: "title" | "dek" | "body" | "symbols";
   at: number;
@@ -148,14 +155,15 @@ export async function savePostAction(
       return { status: "ok", at };
     }
 
-    const nextStatus: PostStatus =
-      current.status === "published"
-        ? "pending"
-        : current.status === "rejected"
-          ? "draft"
-          : (current.status as PostStatus);
+    const nextStatus = isPostStatus(current.status) ? transition(current.status, "save") : null;
+    if (!nextStatus) return { status: "error", error: "unavailable", at };
 
-    await db
+    /* KOŞULLU YAZMA (8 Kasım, durum makinesi denetimi § 9). Yalnız kimlik ve
+       sahip aranıyordu: moderatör okuma ile yazma arasında reddederse kaydet
+       `pending`i geri yazıp red notunu bırakıyor (`pending + reviewNote`),
+       onaylarsa yazıyı `submittedAt`i tazelemeden kuyruğa geri çekiyordu.
+       Artık okunan durum da koşul; 0 satır = çakışma, hiçbir şey yazılmaz. */
+    const written = await db
       .update(userPosts)
       .set({
         title: input.title,
@@ -169,8 +177,18 @@ export async function savePostAction(
         reviewNote: current.status === "rejected" ? null : undefined,
         updatedAt: now,
       })
-      .where(and(eq(userPosts.id, id), eq(userPosts.userId, userId)));
+      .where(
+        and(
+          eq(userPosts.id, id),
+          eq(userPosts.userId, userId),
+          eq(userPosts.status, current.status),
+        ),
+      )
+      .returning({ id: userPosts.id });
+    /* Çakışmada da tazelenir: editör denetimli (metin istemcide kalır),
+       durum yuvası ve eylemler yeni durumu görür; ikinci kayıt onunla geçer. */
     revalidatePost(current.slug);
+    if (written.length === 0) return { status: "error", error: "conflict", at };
     return { status: "ok", at };
   } catch (error) {
     /* redirect() fırlatışı hata değil — Next'e geri verilmeli. */
@@ -195,7 +213,7 @@ export async function submitPostAction(formData: FormData) {
         and(
           eq(userPosts.id, id),
           eq(userPosts.userId, userId),
-          sql`${userPosts.status} in ('draft', 'rejected')`,
+          inArray(userPosts.status, statusesAccepting("submit")),
         ),
       );
   } catch {
@@ -217,7 +235,7 @@ export async function withdrawPostAction(formData: FormData) {
     await db
       .update(userPosts)
       .set({ status: "draft", updatedAt: new Date() })
-      .where(and(eq(userPosts.id, id), eq(userPosts.userId, userId), eq(userPosts.status, "pending")));
+      .where(and(eq(userPosts.id, id), eq(userPosts.userId, userId), inArray(userPosts.status, statusesAccepting("withdraw"))));
   } catch {
     return;
   }

@@ -179,7 +179,7 @@ export default async function ClaudePage(props: PageProps<"/claude/[symbol]">) {
     {tab === "yeni" && access && <ClaudeWorkbench symbol={symbol} name={meta?.name ?? ""} logoUrl={logoUrl} locale={locale} t={A} focus={focus}
       options={focusOptions("yeni")} remaining={access.remaining ?? null} limit={access.dailyLimit ?? null}
       latest={ofFocus[0] ? { href: href({ tab: "rapor", id: ofFocus[0].id }), verdict: ofFocus[0].verdict, score: ofFocus[0].score, when: date(ofFocus[0].generatedAt) } : null}
-      inProgress={!!access.lockId && !!access.lockUntil && access.lockUntil > new Date()} historyHref={href({ tab: "gecmis" })}
+      inProgress={access.phase === "running"} cooldownUntil={access.cooldownUntil} historyHref={href({ tab: "gecmis" })}
       next={next} nextLabel={next ? stamp(next.at) : null} now={nowAt.toISOString()} edition={edition}
       bars={film.bars} headlines={film.headlines} />}
     {tab === "yeni" && access && ofFocus.length > 0 && timeline}

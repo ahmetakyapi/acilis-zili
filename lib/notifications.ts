@@ -52,6 +52,21 @@ async function accountLocale(userId: string): Promise<Locale> {
   }
 }
 
+const INBOX_RETRY_MS = 500;
+
+/**
+ * `notifyUser`ın fırlattığı hatanın günlüğü — tarama ve sayfadaki
+ * değerlendirme `.catch(() => 0)` ile hatayı yutuyordu (8 Kasım): tetik
+ * yazılmış, bildirim gitmemişti ve hiçbir iz kalmıyordu. Yeniden deneme
+ * BURADA yapılmaz: hata yük kurucudan (deterministik) gelir ya da gelen
+ * kutusu yazıldıktan sonra fırlar; bütün bildirimi tekrarlamak aynı satırı
+ * ve push'u ikinci kez gönderirdi. Kanal başına tekrar kanalın içinde.
+ */
+export function logNotifyFailure(error: unknown): number {
+  console.error("[alarm] bildirim gönderilemedi", error);
+  return 0;
+}
+
 /**
  * Gelen kutusuna yazar (hesabın diliyle), push gönderir (cihazın diliyle)
  * ve `email` verildiyse alarm postasını dener (16 Ekim; tercih ve onay
@@ -66,16 +81,29 @@ export async function notifyUser(
 ): Promise<number> {
   const locale = await accountLocale(userId);
   const inbox = text(locale);
-  try {
-    await db.insert(notifications).values({
-      userId,
-      kind,
-      title: inbox.title.slice(0, 200),
-      body: inbox.body.slice(0, 500),
-      url: inbox.path,
-    });
-  } catch {
-    /* tablo yok (migration 0035) — push yine gider */
+  const row = {
+    userId,
+    kind,
+    title: inbox.title.slice(0, 200),
+    body: inbox.body.slice(0, 500),
+    url: inbox.path,
+  };
+  /* GELEN KUTUSU BİR KEZ YENİDEN DENENİR (8 Kasım). Yazma sessizce
+     düşüyordu; alarm `triggeredAt` ile kapandığı için sonraki tarama onu
+     bir daha okumaz ve push'u açmamış okuyucu tetiği hiç görmezdi. Satır
+     yazılamadıysa (Neon kesintisi) kısa bir aradan sonra bir kez daha;
+     yazılıp yanıtı kaybolan nadir durumda kutuda iki satır olur — eksik
+     satırdan iyi. Push ve posta bu tekrara girmez (kendi kuralları:
+     lib/push.ts → sendToUser, lib/email-notify.ts → sendStep). */
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      await db.insert(notifications).values(row);
+      break;
+    } catch (error) {
+      /* tablo yok (migration 0035) — push yine gider */
+      if (attempt === 2) console.error(`[bildirim] gelen kutusuna yazılamadı (${kind})`, error);
+      else await new Promise((resolve) => setTimeout(resolve, INBOX_RETRY_MS));
+    }
   }
   const delivered = await sendToUser(userId, (deviceLocale) => {
     const push = text(deviceLocale);

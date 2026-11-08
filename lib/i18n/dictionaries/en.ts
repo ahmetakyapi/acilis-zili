@@ -4016,6 +4016,7 @@ const en: typeof tr = {
         limit: "You can have up to 50 posts; delete an older one first.",
         unavailable: "Couldn't save right now; please try again shortly.",
         notFound: "The post couldn't be found.",
+        conflict: "The post's status changed in the meantime (a moderator may have decided); check its current status and save again.",
       },
       /* Eylem şeridi (25 Ekim, PostEditor): bölge adı ve durum yuvası. */
       actionsLabel: "Post Actions",

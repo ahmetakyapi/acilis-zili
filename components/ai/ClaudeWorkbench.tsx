@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useReducer, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
@@ -7,7 +7,7 @@ import { ButtonLink, Panel, PanelHeader } from "@/components/ui/primitives";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
 import { useMotionPreference } from "@/components/motion/useMotionPreference";
 import { HORIZON_OF, formatSpan, type AnalysisFocus, type NextReport } from "@/lib/ai-analysis-core";
-import { deskState } from "@/lib/ai-analysis-desk";
+import { RETRYABLE, deskFilming, deskReducer, deskState } from "@/lib/ai-analysis-desk";
 import { AnalysisFilm, CURTAIN_MS, type FilmBar } from "./AnalysisFilm";
 import { FILM_SESSIONS } from "@/lib/ink/analysis-film";
 import { FocusOptions, type FocusOption } from "./FocusOptions";
@@ -21,6 +21,27 @@ const LAUNCH_MS = 560;
 /** Hak sayısı bu kadar ya da azsa nokta dizisiyle, fazlaysa sayıyla. */
 const MAX_PIPS = 12;
 const NUMERALS = ["I", "II", "III", "IV"] as const;
+
+/**
+ * Soğumanın kalan süresi (ms). Saniyelik tik YALNIZ soğuma sürerken: masanın öbür
+ * geri sayımları dakika çözünürlüğünde (`useNow`, 30 sn). İlk çizim sunucunun
+ * "şimdi"siyle (hidrasyon uyuşmazlığı yok), sonra istemci saati.
+ */
+function useCooldownLeft(until: number | null, serverNow: string) {
+  const [now, setNow] = useState(() => new Date(serverNow).getTime());
+  useEffect(() => {
+    if (until === null) return;
+    const tick = () => setNow(Date.now());
+    tick();
+    if (Date.now() >= until) return;
+    const id = window.setInterval(() => {
+      tick();
+      if (Date.now() >= until) window.clearInterval(id);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [until]);
+  return until === null ? 0 : Math.max(0, until - now);
+}
 
 export type LatestReport = { href: string; verdict: "buy" | "hold" | "sell" | "insufficient"; score: number | null; when: string };
 
@@ -55,21 +76,29 @@ function sparkPath(bars: FilmBar[]) {
  * sekmesine gidilir (hareketi azaltana beklemeden). Adrese `yeni=1`
  * eklenir: kapak filmin selinden açılır.
  */
-export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, options, remaining, limit, inProgress, next, nextLabel, now: serverNow, edition, latest, historyHref, bars, headlines }: {
+export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, options, remaining, limit, inProgress, cooldownUntil, next, nextLabel, now: serverNow, edition, latest, historyHref, bars, headlines }: {
   symbol: string; name: string; logoUrl: string | null; locale: Locale; t: Dictionary["aiAnalysis"]; focus: AnalysisFocus;
   /** İki odak seçeneği; adresler sunucuda kurulur (`?odak=`). */
   options: FocusOption[];
   remaining: number | null; limit: number | null; inProgress: boolean;
+  /** Hesap soğumadaysa bitiş anı (ISO, `analysisAccess().cooldownUntil`); verilmezse masa soğumayı ilk başarısız denemede öğrenir. */
+  cooldownUntil?: string | null;
   next: NextReport | null; nextLabel: string | null; now: string;
   /** Sitenin teknik analizinin sıradaki yayını ("15:45 TR"); yalnız teknik odakta ve kapsamdaki hissede. */
   edition: string | null; latest: LatestReport | null; historyHref: string; bars: FilmBar[]; headlines: string[];
 }) {
   const router = useRouter();
   const reduced = useMotionPreference();
-  const [launching, setLaunching] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState(false);
-  const [error, setError] = useState<{ code: string; text: string } | null>(null);
+  /* Tek durum (8 Kasım; geçiş tablosu lib/ai-analysis-desk.ts → `deskReducer`):
+     idle → launching → filming → done | error, artı sunucunun soğuma bitişi. */
+  const [desk, dispatch] = useReducer(deskReducer, cooldownUntil, (until) => ({
+    run: "idle" as const, error: null, cooldownUntil: until ? new Date(until).getTime() : null,
+  }));
+  const launching = desk.run === "launching";
+  const busy = deskFilming(desk.run);
+  const done = desk.run === "done";
+  const error = desk.error;
+  const cooldownLeft = useCooldownLeft(desk.cooldownUntil, serverNow);
   const requestId = useRef<string | null>(null);
   const launchTimer = useRef(0);
   const stageRef = useRef<HTMLElement>(null);
@@ -123,7 +152,7 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, optio
 
   async function generate() {
     if (busy || launching) return;
-    setLaunching(true); setDone(false); setError(null); setFilmLogo(logoImage);
+    dispatch({ type: "launch" }); setFilmLogo(logoImage);
     // Ölçü iki kez: tıklamada (sonuç çok hızlı gelirse) ve büzülme bitince — damla
     // o zaman düğmenin sol ucuna kaymış olur; film tam oradan açılır.
     const measure = () => {
@@ -132,7 +161,7 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, optio
       setOrigin(!reduced && stageBox && iconBox ? { x: iconBox.left + iconBox.width / 2 - stageBox.left, y: iconBox.top + iconBox.height / 2 - stageBox.top } : null);
     };
     measure();
-    launchTimer.current = window.setTimeout(() => { measure(); setBusy(true); }, reduced ? 0 : LAUNCH_MS);
+    launchTimer.current = window.setTimeout(() => { measure(); dispatch({ type: "film" }); }, reduced ? 0 : LAUNCH_MS);
     requestId.current ??= crypto.randomUUID();
     try {
       const response = await fetch("/api/ai/analysis", {
@@ -143,8 +172,7 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, optio
       if (!alive.current) return;
       if (!response.ok) { requestId.current = null; throw new Error(typeof body.error === "string" ? body.error : ""); }
       requestId.current = null;
-      setBusy(true);
-      setDone(true);
+      dispatch({ type: "succeed" });
       const target = withLocale(`/claude/${encodeURIComponent(symbol)}?odak=${focus === "technical" ? "teknik" : "secim"}&sekme=rapor&rapor=${body.id}&yeni=1`, locale);
       // Hareketi azaltana perde yok: "Rapor Hazır" karesi çizilir, rapora hemen geçilir.
       curtainTimer.current = window.setTimeout(() => router.push(target, { scroll: true }), reduced ? 0 : CURTAIN_MS);
@@ -152,9 +180,21 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, optio
       if (!alive.current) return;
       clearTimeout(launchTimer.current);
       const code = e instanceof Error ? e.message : "";
-      setError({ code, text: code === "quota" ? t.errors.quota : code === "busy" ? t.errors.busy : code === "data-unavailable" ? t.errors.data : code === "analysis-failed" ? t.errors.failed : t.errors.connection });
-      setBusy(false); setLaunching(false);
+      dispatch({ type: "fail", error: { code, text: code === "quota" ? t.errors.quota : code === "busy" ? t.errors.busy : code === "data-unavailable" ? t.errors.data : code === "analysis-failed" ? t.errors.failed : t.errors.connection } });
+      // Başarısız iş hesabı bir dakika soğumaya alır (releaseAnalysis); "Tekrar Dene" o bitene dek kilitli.
+      if (RETRYABLE.has(code)) void readCooldown();
     }
+  }
+
+  /** Hesabın kilit hâlini sorar (`?state=1`: rapor geçmişi okunmaz); soğumadaysa bitişini masaya yazar. */
+  async function readCooldown() {
+    try {
+      const response = await fetch("/api/ai/analysis?state=1", { cache: "no-store" });
+      const body = await response.json().catch(() => ({}));
+      if (!alive.current || !response.ok) return;
+      const until = body.phase === "cooldown" && typeof body.cooldownUntil === "string" ? new Date(body.cooldownUntil).getTime() : NaN;
+      if (Number.isFinite(until)) dispatch({ type: "cooldown", until });
+    } catch { /* Bilinmiyorsa eskisi gibi: düğme açık, basılırsa 429 hata satırı. */ }
   }
 
   if (busy) return <div className={styles.workbench}>
@@ -171,18 +211,21 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, optio
   const sparkFirst = sparkBars[0]?.c ?? null, sparkLast = sparkBars.at(-1)?.c ?? null;
   const sparkChange = sparkFirst && sparkLast !== null ? ((sparkLast - sparkFirst) / sparkFirst) * 100 : null;
   const money = (v: number) => formatPrice(v, locale, { currency: true });
-  const { note: noteKind, label: labelKind, disabled, retry } = deskState({ errorCode: error?.code ?? null, inProgress, remaining, early });
+  const { note: noteKind, label: labelKind, disabled, retry, cooldown } = deskState({ errorCode: error?.code ?? null, inProgress, remaining, early, cooldownMs: cooldownLeft });
   const pips = remaining !== null && limit !== null && limit > 0 && limit <= MAX_PIPS;
 
   /* DURUM SATIRI: en fazla bir tane, öncelik sırasıyla; her biri tek cümle + tek eylem.
-     Hata > sürüyor > hak bitti > önerilen bekleme. Beklemenin eylemi düğmenin kendisi ("Yine de Başlat"). */
+     Hata > sürüyor > hak bitti > soğuma > önerilen bekleme. Beklemenin eylemi düğmenin kendisi ("Yine de Başlat"),
+     soğumanınki de: kilitli düğme kalan saniyeyi sayar. */
   let note: { tone: "error" | "info" | "warn"; text: string; action?: ReactNode; role: "alert" | "status" | "note" } | null = null;
   if (noteKind === "error" && error) note = {
-    tone: "error", text: error.text, role: "alert",
+    // 429 "busy" soğumadan geldiyse ekranda süren bir analiz yok: metin bunu söyler.
+    tone: "error", text: error.code === "busy" && desk.cooldownUntil !== null ? t.errors.cooldown : error.text, role: "alert",
     action: error.code === "quota" ? (latest ? <ButtonLink href={latest.href} variant="ghost" size="sm" scroll={false}>{D.openLatest}</ButtonLink> : undefined)
       : retry ? undefined : <ButtonLink href={historyHref} variant="ghost" size="sm" scroll={false}>{D.checkHistory}</ButtonLink>,
   };
   else if (noteKind === "running") note = { tone: "info", text: t.pending, role: "status", action: <button type="button" className={styles.noteAction} onClick={() => router.refresh()}>{D.refresh}</button> };
+  else if (noteKind === "cooldown") note = { tone: "warn", text: D.cooldown, role: "status" };
   else if (noteKind === "quota") note = { tone: "warn", text: D.quotaOut, role: "status", action: latest ? <ButtonLink href={latest.href} variant="ghost" size="sm" scroll={false}>{D.openLatest}</ButtonLink> : undefined };
   else if (noteKind === "early" && next) note = {
     tone: "warn", role: "note",
@@ -191,7 +234,9 @@ export function ClaudeWorkbench({ symbol, name, logoUrl, locale, t, focus, optio
       : D.early.replace("{ago}", span(now - new Date(next.lastAt).getTime())).replace("{left}", span(new Date(next.at).getTime() - now)),
   };
 
-  const label = labelKind === "retry" ? D.retry : labelKind === "startAnyway" ? L.startAnyway : L.start;
+  // Soğumada düğme kilitli ve kalan saniyeyi söyler ("Bekle · 42 sn"); bitince "Tekrar Dene".
+  const label = cooldown ? D.waitFor.replace("{s}", String(Math.ceil(cooldownLeft / 1000)))
+    : labelKind === "retry" ? D.retry : labelKind === "startAnyway" ? L.startAnyway : L.start;
 
   return <div className={styles.workbench}>
     <section ref={stageRef} className={styles.desk} data-launching={launching ? "" : undefined} aria-labelledby="claude-launch-title" aria-busy={launching || undefined}>

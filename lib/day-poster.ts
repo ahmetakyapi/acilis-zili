@@ -1,16 +1,14 @@
 import {
-  FEED_DELAY_MINUTES,
+  SETTLE_MARGIN_MINUTES,
   addEtDays,
-  closeMinutesFor,
-  etDateTimeToUtc,
   isTradingDay,
   prevTradingDay,
+  settledAt,
   type MarketHoliday,
 } from "./market-hours";
 import { barDate, pctChange } from "./period-returns";
 import type { Bar } from "./providers/types";
 import { MIN_BREADTH_COVERAGE } from "./sentiment";
-import { clockOf } from "./session-clock";
 
 /**
  * GÜNÜN POSTERİ — tamamlanmış bir seansın tek görsellik özeti (24 Ekim).
@@ -51,8 +49,12 @@ import { clockOf } from "./session-clock";
  * müzayedesinin baskısı 16:00'yı birkaç saniye geçiyor ve günlük bar onu
  * 16:00 dakikasında topluyor (ölçüm: SPY 23 Ekim, 20:00Z dakikası 759,99,
  * 20:01Z 759,97 = gün barının kapanışı). Beş dakika bu kuyruğu rahat kapsıyor.
+ *
+ * TEK KAYNAK ARTIK `lib/market-hours.ts` (8 Kasım): posterin kuralı bütün
+ * yazma katmanının "tamamlanmış seans" tanımı oldu (`settledAt`,
+ * `sessionPhase`, `lastSettledSession`). Ad geriye uyum için duruyor.
  */
-export const POSTER_SETTLE_MINUTES = 5;
+export const POSTER_SETTLE_MINUTES = SETTLE_MARGIN_MINUTES;
 
 /** Kabul edilen en eski gün: bir yıl. Açılış Kartı'nın penceresiyle aynı
  *  gerekçe (`lib/day-card.ts`): sınırsız tarih, sınırsız ayrı istek demek. */
@@ -76,10 +78,9 @@ export function parsePosterDate(raw: string, today: string): string | null {
 }
 
 /** Seansın posterinin basılabildiği an: o günün kendi kapanışı (yarım gün
- *  dahil) + besleme gecikmesi + pay. */
+ *  dahil) + besleme gecikmesi + pay — `settledAt` (lib/market-hours.ts). */
 export function posterReadyAt(date: string, holidays: MarketHoliday[]): Date {
-  const minutes = closeMinutesFor(date, holidays) + FEED_DELAY_MINUTES + POSTER_SETTLE_MINUTES;
-  return etDateTimeToUtc(date, clockOf(minutes));
+  return settledAt(date, holidays);
 }
 
 /** O gün bir seans mıydı ve verisi tamamlandı mı? */

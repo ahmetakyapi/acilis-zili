@@ -4605,6 +4605,7 @@ const tr = {
         limit: "En fazla 50 yazın olabilir; eskilerden birini sil.",
         unavailable: "Şu an kaydedilemedi; biraz sonra tekrar dene.",
         notFound: "Yazı bulunamadı.",
+        conflict: "Yazının durumu bu arada değişti (moderasyon karar vermiş olabilir); güncel durumu kontrol edip yeniden kaydet.",
       },
       /* Eylem şeridi (25 Ekim, PostEditor): bölge adı ve durum yuvası. */
       actionsLabel: "Yazı Eylemleri",
