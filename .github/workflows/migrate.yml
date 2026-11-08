@@ -9,11 +9,16 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "check: yalnız durum · apply: bekleyenleri uygula"
+        description: "check: yalnız durum · diagnose: şemayı depoyla karşılaştır (salt okunur) · apply: bekleyenleri uygula"
         required: true
         default: check
         type: choice
-        options: [check, apply]
+        options: [check, diagnose, apply]
+      accept_stray:
+        description: "Yalnız apply: kayıtta depoda olmayan TEK satırın içerik özeti (check/diagnose çıktısındaki 12+ hex). Boş = durdurma geçilmez."
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -38,9 +43,11 @@ jobs:
           HOST: ${{ vars.VPS_HOST }}
           VPS_HOST_KEY: ${{ vars.VPS_HOST_KEY }}
           MODE: ${{ inputs.mode }}
+          ACCEPT: ${{ inputs.accept_stray }}
         run: |
           set -euo pipefail
-          [[ "$MODE" == check || "$MODE" == apply ]] || { echo "geçersiz mod"; exit 1; }
+          [[ "$MODE" == check || "$MODE" == diagnose || "$MODE" == apply ]] || { echo "geçersiz mod"; exit 1; }
+          [[ -z "$ACCEPT" || ( "$MODE" == apply && "$ACCEPT" =~ ^[0-9a-f]{12,64}$ ) ]] || { echo "accept_stray yalnız apply ile ve 12-64 hex"; exit 1; }
           [[ "$HOST" =~ ^[a-zA-Z0-9.-]+$ ]] || { echo "geçersiz host"; exit 1; }
           strict=accept-new
           mkdir -p ~/.ssh
@@ -55,7 +62,7 @@ jobs:
           set +e
           ssh -i "$key" -o BatchMode=yes -o "StrictHostKeyChecking=$strict" -o ConnectTimeout=15 \
             -o ServerAliveInterval=30 -o ServerAliveCountMax=4 "ubuntu@${HOST}" \
-            "sudo -n -u acilis -H bash -s -- $MODE" < deploy/remote-migrate.sh | tee "$out"
+            "sudo -n -u acilis -H bash -s -- $MODE $ACCEPT" < deploy/remote-migrate.sh | tee "$out"
           code=${PIPESTATUS[0]}
           set -e
           { echo "### Migrate DB · $MODE"; echo '```'; cat "$out"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
@@ -66,7 +73,7 @@ jobs:
           # Bulgu uyarı + özet olarak görünür, koşu yeşil biter. `apply`
           # reddedilirse kırmızı kalır: istenen iş yapılmadı. SSH/ağ hataları
           # (255 vb.) her iki modda kırmızı.
-          if [[ "$MODE" == check && ( $code -eq 2 || $code -eq 3 ) ]]; then
+          if [[ "$MODE" != apply && ( $code -eq 2 || $code -eq 3 ) ]]; then
             echo "::warning title=Migrate DB::Güvenlik durdurması (kod $code) — apply uygulanamaz; ayrıntı koşu özetinde."
             exit 0
           fi
