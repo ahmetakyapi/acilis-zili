@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BELL_RANG_EVENT } from "./bell-event";
+import { BELL_RANG_EVENT, bellTransition } from "./bell-event";
 import styles from "./Countdown.module.css";
 
 /** Son kaç saniye "geri sayım" gibi atıyor. */
@@ -100,18 +100,26 @@ export function Countdown({
      tıklamayla aynı `heroTap` sahnesi). Gömülü sayfada `ring` verilmiyor,
      orada olay da yok. */
   const [rangAt, setRangAt] = useState<number | null>(null);
-  if (remaining === 0 && rangAt === null && nowMs !== initialNowMs) {
-    setRangAt(nowMs);
+  /* GEÇİŞ, DURUM DEĞİL (8 Kasım). Tetik "kalan 0, zil kurulu ve ilk kare
+     değil"di; gizli sekmeden ya da BFCache'ten hedef çoktan geçmişken
+     dönüldüğünde ilk tik 0 görüp zili geç çalıyordu. Şimdi önceki tikin
+     anı "önceki prop" kalıbıyla saklanıyor ve zil yalnız sınır bu iki tik
+     arasında, az önce geçildiyse çalıyor (`bellTransition`, bell-event.ts).
+     İlk önceki tik sunucu damgası: hedefi geçmiş önbellekli HTML susar. */
+  const [prevNowMs, setPrevNowMs] = useState(initialNowMs);
+  if (nowMs !== prevNowMs) {
+    setPrevNowMs(nowMs);
+    if (bellTransition(prevNowMs, nowMs, targetMs)) setRangAt(nowMs);
   }
   useEffect(() => {
     if (!ring || rangAt === null) return;
     window.dispatchEvent(new CustomEvent(BELL_RANG_EVENT));
   }, [ring, rangAt]);
   const ringing = rangAt !== null && nowMs - rangAt < RING_MS;
-  // Zil sustu ve yeni hedef uzakta: bir sonraki sıfır için yeniden kur.
-  if (rangAt !== null && !ringing && remaining > FINAL_SECONDS) {
-    setRangAt(null);
-  }
+  /* Eskiden burada "zil sustu ve yeni hedef uzakta: bir sonraki sıfır için
+     yeniden kur" adımı vardı (`rangAt`i null'a çeken). Geçiş modelinde
+     kurmaya gerek yok: her geçiş yeni bir `rangAt` (o tikin anı) yazar,
+     olay efekti de o değişimle bir kez yayınlanır. */
   const phase = ringing
     ? "rang"
     : remaining > 0 && remaining <= FINAL_SECONDS

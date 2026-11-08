@@ -5,6 +5,13 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { InkLoader } from "@/components/ink/InkLoader";
 import { sceneForPath } from "@/lib/ink/route-scenes";
 import type { InkSceneName } from "@/lib/ink/scenes";
+import {
+  ROUTE_PROGRESS_IDLE,
+  isPagePath,
+  reduceRouteProgress,
+  type RouteProgressEvent,
+  type RouteProgressState,
+} from "./route-progress-state";
 
 /* --------------------------------------------------------------------------
    Gezinme göstergesi — üstte ince çubuk, gecikirse "Yükleniyor" hapı.
@@ -47,46 +54,48 @@ const EXIT_MS = 170;
    bir gezinme. Bayrak olsaydı "hap çıktı mı" durumunu ayrı bir state'te
    tutmak ve gezinme bitince effect içinde sıfırlamak gerekirdi; numarayla
    `slow` doğrudan türetiliyor — yeni koşu başladığında eski hap kendiliğinden
-   düşüyor, sıfırlayacak effect kalmıyor. */
-let runId = 0;
-let counter = 0;
-let localQuery = false;
-let inlineFeedback = false;
-/** Beklemede oynayacak sahne — hedef adres biliniyorsa ona göre. Geri tuşu
- *  ve dil değişimi hedef vermiyor; onlar açılış sahnesini alıyor. */
-let targetScene: InkSceneName = "intro";
+   düşüyor, sıfırlayacak effect kalmıyor.
+
+   TEK ANLIK GÖRÜNTÜ (8 Kasım): numara, sorgu işareti, satır içi geri
+   bildirim ve sahne artık dört ayrı modül değişkeni değil, tek nesne ve
+   saf `reduceRouteProgress` (route-progress-state.ts; gerekçe orada).
+   Durdurma hepsini sıfırlıyor. Beklemede oynayan sahne hedef adres
+   biliniyorsa ona göre; geri tuşu ve dil değişimi hedef vermiyor, onlar
+   açılış sahnesini alıyor. */
+let state: RouteProgressState = ROUTE_PROGRESS_IDLE;
 const listeners = new Set<() => void>();
 
-function emit() {
+function dispatch(event: RouteProgressEvent) {
+  const next = reduceRouteProgress(state, event);
+  if (next === state) return;
+  state = next;
   for (const listener of listeners) listener();
 }
 
 export function startRouteProgress(href?: string) {
-  if (runId !== 0 && !href) return;
+  if (state.run !== 0 && !href) return;
   const target = href ? new URL(href, window.location.href) : null;
+  if (!target) {
+    dispatch({ type: "start", target: null });
+    return;
+  }
   const regions = [...document.querySelectorAll("[data-query-transition]")];
-  const nextLocal = Boolean(target && target.pathname === window.location.pathname && regions.length);
+  const query = target.pathname === window.location.pathname && regions.length > 0;
   // A result below the fold cannot acknowledge a tap on a header control.
   // In that case the existing global mark remains visible as well.
-  const nextInline = nextLocal && regions.some((region) => {
+  const inline = query && regions.some((region) => {
     const rect = region.getBoundingClientRect();
     return rect.top < window.innerHeight - 160 && rect.bottom > 180;
   });
-  // Consecutive filters share the visible wait. Resetting its delay briefly
-  // revealed the old result between clicks (measured at ~140ms).
-  if (runId !== 0 && localQuery && nextLocal && inlineFeedback === nextInline) return;
-  localQuery = nextLocal;
-  inlineFeedback = nextInline;
-  targetScene = sceneForPath(target ? target.pathname : null);
-  runId = ++counter;
-  emit();
+  dispatch({ type: "start", target: { query, inline, scene: sceneForPath(target.pathname) } });
 }
 
 export function stopRouteProgress() {
-  if (runId === 0) return;
-  runId = 0;
-  emit();
+  dispatch({ type: "stop" });
 }
+
+const getState = () => state;
+const getServerState = () => ROUTE_PROGRESS_IDLE;
 
 function subscribe(callback: () => void) {
   listeners.add(callback);
@@ -99,7 +108,7 @@ function subscribe(callback: () => void) {
  * retains the global mark. Consecutive filters share the same active wait
  * so the previous result does not flash between rapid selections. */
 export function useQueryNavigationRun(): number {
-  return useSyncExternalStore(subscribe, () => localQuery ? runId : 0, () => 0);
+  return useSyncExternalStore(subscribe, () => state.query ? state.run : 0, () => 0);
 }
 
 /**
@@ -116,7 +125,7 @@ export function useRouteNavigating(): boolean {
   return (
     useSyncExternalStore(
       subscribe,
-      () => runId,
+      () => state.run,
       () => 0,
     ) !== 0
   );
@@ -129,16 +138,8 @@ export function useRouteNavigating(): boolean {
 export function RouteProgress({ label, phases, brand }: { label: string; phases?: readonly string[]; brand: string }) {
   const pathname = usePathname();
   const search = useSearchParams().toString();
-  const run = useSyncExternalStore(
-    subscribe,
-    () => runId,
-    () => 0,
-  );
-  const scene = useSyncExternalStore(
-    subscribe,
-    () => targetScene,
-    () => "intro" as const,
-  );
+  const snap = useSyncExternalStore(subscribe, getState, getServerState);
+  const { run } = snap;
   const running = run !== 0;
   const [slowRun, setSlowRun] = useState(0);
   // Hap yalnızca ŞU ANKİ koşu için çıkar; sonraki gezinmede eşleşme bozulur.
@@ -157,6 +158,11 @@ export function RouteProgress({ label, phases, brand }: { label: string; phases?
       const target = event.target as Element | null;
       const anchor = target?.closest?.("a");
       if (!anchor || anchor.hasAttribute("download")) return;
+      /* AÇIK MUAFİYET (8 Kasım). Gezinme olmayan bağlantı (dosya indiren uç,
+         aynı adrese dönen akış) `data-no-progress` taşıyabilir; gösterge
+         yalnız adres değişince söndüğü için böyle bir tık 30 sn frene kadar
+         "yükleniyor" bırakıyordu. */
+      if (anchor.hasAttribute("data-no-progress")) return;
       /* SIĞ BAĞLANTI GEZİNME DEĞİL. Karşılaştırma ekranının aralık denetimi
          gerçek bir adres taşıyor (JavaScript kapalıyken çalışsın diye) ama
          tıklamayı kendisi karşılayıp `history.replaceState` ile yalnızca
@@ -177,6 +183,8 @@ export function RouteProgress({ label, phases, brand }: { label: string; phases?
         return;
       }
       if (url.origin !== window.location.origin) return;
+      // API ucu sayfa değil: adres değişmez, gösterge sönmezdi (isPagePath).
+      if (!isPagePath(url.pathname)) return;
       // Aynı adrese basmak gezinme değil: çubuk yanar ve hiç sönmezdi.
       if (
         url.pathname === window.location.pathname &&
@@ -231,14 +239,15 @@ export function RouteProgress({ label, phases, brand }: { label: string; phases?
      Sayfa içi sorgu (filtre, sıralama) gezinme değil: kendi bölgesinin
      beklemesi var (`data-query-transition`), sayfanın tamamı sönmüyor.
      Süre ve gecikme globals.css → "geri çekilme". */
+  const query = snap.query;
   useEffect(() => {
-    if (!running || localQuery) return;
+    if (!running || query) return;
     const leaving = [...document.querySelectorAll<HTMLElement>(".page-enter")];
     for (const el of leaving) el.dataset.leaving = "";
     return () => {
       for (const el of leaving) delete el.dataset.leaving;
     };
-  }, [running]);
+  }, [running, query]);
 
   useEffect(() => {
     if (run === 0) return;
@@ -262,14 +271,19 @@ export function RouteProgress({ label, phases, brand }: { label: string; phases?
      Koşunun düşüşü RENDER SIRASINDA yakalanıyor (RollingDigit'in "önceki
      prop" kalıbı): efekt yalnızca süre dolunca katmanı söküyor. Kartın
      çıkışta da görünmesi gerektiği o anki `slowRun`dan okunuyor — koşu
-     bittiğinde `slow` çoktan false, ama numarası duruyor. */
-  const [exit, setExit] = useState<{ run: number; card: boolean } | null>(null);
-  const [lastRun, setLastRun] = useState(0);
-  if (run !== lastRun) {
-    setLastRun(run);
-    if (run === 0) setExit({ run: lastRun, card: slowRun === lastRun && !inlineFeedback });
+     bittiğinde `slow` çoktan false, ama numarası duruyor.
+
+     Durdurma artık anlık görüntünün tamamını sıfırladığı için (8 Kasım)
+     biten koşunun satır içi işareti ve sahnesi ÖNCEKİ görüntüden okunuyor:
+     sönen kart son kareye kadar kendi sahnesini oynar, "intro"ya atlamaz. */
+  const [exit, setExit] = useState<{ run: number; card: boolean; scene: InkSceneName } | null>(null);
+  const [last, setLast] = useState(snap);
+  if (snap.run !== last.run) {
+    setLast(snap);
+    if (snap.run === 0) setExit({ run: last.run, card: slowRun === last.run && !last.inline, scene: last.scene });
     else if (exit) setExit(null);
   }
+  const scene = running ? snap.scene : (exit?.scene ?? snap.scene);
   useEffect(() => {
     if (!exit) return;
     const timer = window.setTimeout(() => setExit(null), EXIT_MS);
@@ -293,7 +307,7 @@ export function RouteProgress({ label, phases, brand }: { label: string; phases?
           (harita `lib/ink/route-scenes.ts`). Sayfa içi yükleme işaretleri
           (filtre, grafik) küçük zil olarak kaldı: dar bir panelin içinde
           sahne, bekleyişin kendisinden büyük bir olay olurdu. */}
-      {(running ? slow && !inlineFeedback : exit?.card) && (
+      {(running ? slow && !snap.inline : exit?.card) && (
         <div className="route-loader" data-leaving={leaving}><InkLoader scene={scene} label={label} phases={phases} brand={brand} /></div>
       )}
     </>

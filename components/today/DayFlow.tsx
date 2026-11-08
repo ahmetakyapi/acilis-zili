@@ -201,15 +201,27 @@ function MemberList({ members, scheduledAt, nowMs, labels, openEventId, onEngage
   </>;
 }
 
+/** Açık satırın kipi — gerekçe DayFlow içindeki `selection`. */
+type DaySelection =
+  | { kind: "auto"; tour: boolean }
+  | { kind: "picked"; id: string; tour: boolean }
+  | { kind: "closed" };
+
 export function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, preview, lineLabels }: Props) {
   const [snapshot, setSnapshot] = useState(initial);
   const [nowMs, setNowMs] = useState(() => new Date(initial.asOf).getTime());
-  /* `null` = seçim OTOMATİK (sıradaki olay açık); `allClosed` = okuyucu açık
-     satırı kendisi kapattı — otomatik seçim onu yeniden açmasın. */
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [allClosed, setAllClosed] = useState(false);
-  /* Olaylar arası otomatik tur — elle ilk seçimde kapanır (aşağıda). */
-  const [autoTour, setAutoTour] = useState(true);
+  /* `auto` = seçim OTOMATİK (sıradaki olay açık); `closed` = okuyucu açık
+     satırı kendisi kapattı — otomatik seçim onu yeniden açmasın. `tour`:
+     olaylar arası otomatik tur — elle ilk seçimde kapanır (aşağıda).
+     TEK BİRLEŞİM (8 Kasım, durum makinesi denetimi § 13): üç ayrı durumdu
+     (`selectedId`, `allClosed`, `autoTour`) ve "seçili ama hepsi kapalı"
+     gibi anlamsız birleşimler her yolda ayrı ayrı sıfırlanarak
+     önleniyordu. Kapalı kipte tur yok; okuyan adlar aşağıda türetiliyor. */
+  const [selection, setSelection] = useState<DaySelection>({ kind: "auto", tour: true });
+  const selectedId = selection.kind === "picked" ? selection.id : null;
+  const allClosed = selection.kind === "closed";
+  const autoTour = selection.kind !== "closed" && selection.tour;
+  const stopTour = () => setSelection((current) => (current.kind === "closed" || !current.tour ? current : { ...current, tour: false }));
   const [connection, setConnection] = useState<"ready" | "checking" | "error">("ready");
   const [announcement, setAnnouncement] = useState("");
   /* GÜN GEZİNMESİ (21 Ekim, sahibinin isteği: "geçmişe de gidebilsin,
@@ -254,9 +266,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading, otherHea
     dayAbort.current?.abort();
     setView(null);
     setDayState({ phase: "idle", date: null });
-    setAllClosed(false);
-    setAutoTour(false);
-    setSelectedId(id);
+    setSelection({ kind: "picked", id, tour: false });
     /* Kahramandaki şeritten gelen seçim: satır görünüme gelsin ki açılan
        gövde ekran dışında kalmasın. */
     window.requestAnimationFrame(() =>
@@ -412,9 +422,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading, otherHea
   function goTo(date: string | null) {
     dayAbort.current?.abort();
     dayAbort.current = null;
-    setAutoTour(false);
-    setSelectedId(null);
-    setAllClosed(false);
+    setSelection({ kind: "auto", tour: false });
     if (!date || date === snapshot.today) {
       setView(null);
       setDayState({ phase: "idle", date: null });
@@ -486,7 +494,8 @@ export function DayFlow({ initial, locale, labels, railLabels, heading, otherHea
       if (document.hidden || !visible) return;
       if (el && ((canHover && el.matches(":hover")) || el.contains(document.activeElement))) return;
       const at = events.findIndex((event) => event.id === openId);
-      setSelectedId(events[(at + 1) % events.length]!.id);
+      const next = events[(at + 1) % events.length]!.id;
+      setSelection((current) => (current.kind === "closed" || !current.tour ? current : { kind: "picked", id: next, tour: true }));
     }, 8_000);
     return () => {
       window.clearInterval(timer);
@@ -495,10 +504,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading, otherHea
   }, [autoTour, viewingToday, allClosed, events, openId]);
 
   function toggle(id: string) {
-    setAutoTour(false);
-    if (openId === id) { setAllClosed(true); setSelectedId(null); return; }
-    setAllClosed(false);
-    setSelectedId(id);
+    setSelection(openId === id ? { kind: "closed" } : { kind: "picked", id, tour: false });
   }
 
   /* "Şimdi" işareti saat sütununda saatini, omurgada halkalı noktasını,
@@ -645,7 +651,7 @@ export function DayFlow({ initial, locale, labels, railLabels, heading, otherHea
                       olayda hiç basılmıyor. */}
                   {event.note && <p className={styles.note}>{event.note}</p>}
                   {event.members ? (
-                    <MemberList members={event.members} scheduledAt={event.scheduledAt} nowMs={nowMs} labels={labels} openEventId={openId} onEngage={() => setAutoTour(false)} source={event.source} href={event.href} />
+                    <MemberList members={event.members} scheduledAt={event.scheduledAt} nowMs={nowMs} labels={labels} openEventId={openId} onEngage={stopTour} source={event.source} href={event.href} />
                   ) : <>
                     {/* ÜÇ DEĞER + SAPMA ÇİZGİSİ (6 Kasım). Üç sayı düz yazı
                         olarak duruyordu; kıyas okunarak yapılıyordu. Şimdi

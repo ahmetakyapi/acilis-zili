@@ -2,7 +2,7 @@
 
 import { EASE_BRAND_POINTS } from "@/lib/motion";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "motion/react";
 import {
@@ -60,6 +60,7 @@ import { BracketTable, DividendMeter, ResultPreview, Rolling, TaxRange, VerdictB
 import { waterfallOf, type Waterfall as WaterfallGeometry } from "@/lib/tax-waterfall";
 import type { ImportPayload } from "./StatementImport";
 import { PANEL_TITLE, TAX_EXAMPLE, type DividendRow, type TradeRow } from "./tax-ui";
+import { RATE_LOAD_IDLE, rateLoadReducer, ratesFailedOf } from "./rate-load";
 import styles from "./Tax.module.css";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { SymbolField } from "./SymbolField";
@@ -185,8 +186,9 @@ export function TaxCalculator({
   const [sellQtyLinked, setSellQtyLinked] = useState(true);
   const [dividends, setDividends] = useState<DividendRow[]>(() => [emptyDividend("d0")]);
   const [rates, setRates] = useState<RateState>({});
-  const [ratesFailed, setRatesFailed] = useState(false);
-  const [pendingRates, setPendingRates] = useState(false);
+  /* Kur yüklemesinin uçuşu ve düşen günleri tek durumda (rate-load.ts,
+     8 Kasım): üç bayrak takılan "yükleniyor" ile hatayı gizliyordu. */
+  const [rateLoad, dispatchRateLoad] = useReducer(rateLoadReducer, RATE_LOAD_IDLE);
   const [imported, setImported] = useState(0);
   /* Form örnek işlemle mi dolu: künye bunu söylüyor, ilk düzenlemede kalkıyor. */
   const [exampleOn, setExampleOn] = useState(false);
@@ -437,40 +439,43 @@ export function TaxCalculator({
     for (const row of dividends) if (dateUsable(row.date)) set.add(rateDateOf(row.date));
     return [...set].filter((date) => date >= TCMB_MIN_DATE).sort();
   }, [trades, dividends, rateDateOf, dateUsable]);
-  const missingKey = neededDates.filter((date) => !(date in rates)).join(",");
-  const [retryTick, setRetryTick] = useState(0);
+  /* İsteği düşen gün de "eksik" sayılmaz: yoksa düşen parti aynı anahtarla
+     takılır ve arkasındaki parti hiç sorulmazdı. "Tekrar Dene" kümeyi
+     boşaltınca anahtar değişir, efekt yeniden koşar. */
+  const missingKey = neededDates.filter((date) => !(date in rates) && !rateLoad.failed.has(date)).join(",");
+  const ratesFailed = ratesFailedOf(rateLoad, neededDates, rates);
 
   useEffect(() => {
     if (!missingKey) return;
     const missing = missingKey.split(",").slice(0, RATE_BATCH);
     let cancelled = false;
     const timer = window.setTimeout(() => {
-      setPendingRates(true);
+      dispatchRateLoad({ type: "start" });
       fetch(`/api/kur?tarihler=${missing.join(",")}`)
         .then((res) => res.json() as Promise<KurResponse>)
         .then((data) => {
           if (cancelled) return;
           if (!data.ok) {
-            setRatesFailed(true);
+            dispatchRateLoad({ type: "settle", dates: missing, ok: false });
             return;
           }
-          setRatesFailed(Object.values(data.rates).some((rate) => rate === null));
           /* Bulunamayan gün de yazılıyor (null): aynı gün her tuşta yeniden
              sorulmasın. "Tekrar Dene" onları siliyor. */
           setRates((prev) => ({ ...prev, ...data.rates }));
+          dispatchRateLoad({ type: "settle", dates: missing, ok: true });
         })
         .catch(() => {
-          if (!cancelled) setRatesFailed(true);
-        })
-        .finally(() => {
-          if (!cancelled) setPendingRates(false);
+          if (!cancelled) dispatchRateLoad({ type: "settle", dates: missing, ok: false });
         });
     }, RATE_DEBOUNCE_MS);
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
+      /* Temizlik uçuşu HER DURUMDA bitirir: eski `.finally` `cancelled`
+         yüzünden atlanıyor, yeni anahtar boşsa "yükleniyor" takılı kalıyordu. */
+      dispatchRateLoad({ type: "cancel" });
     };
-  }, [missingKey, retryTick]);
+  }, [missingKey]);
 
   const retryRates = () => {
     setRates((prev) => {
@@ -478,8 +483,7 @@ export function TaxCalculator({
       for (const [date, rate] of Object.entries(prev)) if (rate) next[date] = rate;
       return next;
     });
-    setRatesFailed(false);
-    setRetryTick((tick) => tick + 1);
+    dispatchRateLoad({ type: "retry" });
   };
 
   /* ---- Yİ-ÜFE ---- */
@@ -750,14 +754,15 @@ export function TaxCalculator({
     if (!dateUsable(date)) return null;
     const key = rateDateOf(date);
     const rate = rates[key];
-    if (rate === undefined) {
+    /* İsteği düşen gün "getiriliyor"da takılmaz; yok olarak okunur. */
+    if (rate === undefined && !rateLoad.failed.has(key)) {
       return (
         <p key={`${key}:wait`} className={styles.chip} data-state="loading">
           {labels.rateLoading}
         </p>
       );
     }
-    if (rate === null) {
+    if (!rate) {
       return (
         <p key={`${key}:none`} className={styles.chip} data-state="missing">
           {labels.rateMissing} · {formatIsoDate(date, locale)}
@@ -1516,7 +1521,7 @@ export function TaxCalculator({
                       done: simple
                         ? [buyRow?.date, sellRow?.date].every((date) => !!date && dateUsable(date) && !!rates[rateDateOf(date)])
                         : neededDates.length > 0 && neededDates.every((date) => !!rates[date]),
-                      busy: neededDates.some((date) => rates[date] === undefined) && neededDates.length > 0,
+                      busy: neededDates.some((date) => rates[date] === undefined && !rateLoad.failed.has(date)) && neededDates.length > 0,
                     },
                   ]}
                   onExample={fillExample}
@@ -1555,7 +1560,7 @@ export function TaxCalculator({
                   !totals.complete ? { text: labels.incomplete, warn: true } : null,
                   results.some((r) => r.indexed) ? { text: labels.indexNote } : null,
                 ]}
-                ratesFailed={ratesFailed && !pendingRates}
+                ratesFailed={ratesFailed}
                 onRetry={retryRates}
                 onCsv={downloadCsv}
                 csvDisabled={csvDisabled}
@@ -1755,7 +1760,7 @@ export function TaxCalculator({
               <Notes
                 labels={labels}
                 items={[{ text: labels.thresholdHint }]}
-                ratesFailed={ratesFailed && !pendingRates}
+                ratesFailed={ratesFailed}
                 onRetry={retryRates}
                 onCsv={downloadCsv}
                 csvDisabled={csvDisabled}

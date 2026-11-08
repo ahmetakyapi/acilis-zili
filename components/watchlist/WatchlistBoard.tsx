@@ -517,14 +517,18 @@ function ListPanel({
   locale: Locale;
   labels: BoardLabels;
 }) {
-  const [renaming, setRenaming] = useState(false);
-  const [confirming, setConfirming] = useState(false);
+  /* TEK KİP (8 Kasım, durum makinesi denetimi § 13). `renaming`,
+     `confirming` ve `editing` üç ayrı bayraktı ve birbirini dışlamaları
+     yalnız render önceliğine bağlıydı. Yeniden adlandırma ve silme onayı
+     düzenle kipinin İÇİNDEN açılır ve kapanınca ona döner; satırlar bu
+     iki alt kipte de düzenleme düğmelerini gösterir (`editing`). */
+  const [mode, setMode] = useState<"view" | "edit" | "rename" | "confirmDelete">("view");
+  const editing = mode !== "view";
   /* DÜZENLE KİPİ (25 Ekim). Sıralama okları, not, çıkarma ve listenin
      adını değiştirme/silme her satırda duruyordu: 390'da düğmeler satırın
      ~%45'ini alıp şirket adını "S…"ye düşürüyordu (ölçüldü). Okuma kipinde
      satır yalnız kimlik, çizgi ve fiyat; düzenleme düğmeleri kipe girince
      açılıyor ve orada hep görünür (imleç beklemiyor, 44 piksel). */
-  const [editing, setEditing] = useState(false);
   const renameTriggerRef = useRef<HTMLButtonElement>(null);
   const deleteTriggerRef = useRef<HTMLButtonElement>(null);
 
@@ -534,12 +538,12 @@ function ListPanel({
        satırlardaki kadar gürültülü değildi ama yıkıcı bir eylemin sürekli
        ekranda durması için de bir sebep yok. */
     <section id={`liste-${list.id}`} className="panel group/list">
-      {confirming ? (
+      {mode === "confirmDelete" ? (
         <DeleteListConfirm
           list={list}
           labels={labels}
           onCancel={() => {
-            setConfirming(false);
+            setMode("edit");
             /* Vazgeçen okuyucu açtığı düğmeye döner (yeniden adlandırma
                formuyla aynı kural). */
             requestAnimationFrame(() => deleteTriggerRef.current?.focus());
@@ -554,12 +558,12 @@ function ListPanel({
                güncel ağacı zaten getirdi — gerekçe RenameListForm. */
           }}
         />
-      ) : renaming ? (
+      ) : mode === "rename" ? (
         <RenameListForm
           list={list}
           labels={labels}
           onDone={() => {
-            setRenaming(false);
+            setMode("edit");
             // Like symbol search, closing an inline editor returns to its
             // opener. The authenticated audit found focus falling to body.
             requestAnimationFrame(() => renameTriggerRef.current?.focus());
@@ -602,7 +606,7 @@ function ListPanel({
         <button
           ref={renameTriggerRef}
           type="button"
-          onClick={() => setRenaming(true)}
+          onClick={() => setMode("rename")}
           aria-label={`${labels.renameList}: ${list.name}`}
           title={labels.renameList}
           className="inline-flex size-8 items-center justify-center rounded-(--radius-sm) text-muted transition max-sm:-my-1.5 max-sm:size-11 hover:bg-primary-wash hover:text-primary-ink [@media(hover:none)]:size-11"
@@ -617,7 +621,7 @@ function ListPanel({
              "Tamam / İptal", hangi listenin silineceğini söylemiyordu ve
              telefonda sayfanın üstünü kapatıyordu. Onay artık listenin
              kendi başlığında açılıyor (`DeleteListConfirm`). */
-          onClick={() => setConfirming(true)}
+          onClick={() => setMode("confirmDelete")}
           aria-label={`${labels.deleteList}: ${list.name}`}
           title={labels.deleteList}
           /* `opacity-100` ile `opacity-0` aynı sınıf dizesinde duruyordu ve
@@ -634,7 +638,7 @@ function ListPanel({
         {list.items.length > 0 || editing ? (
           <button
             type="button"
-            onClick={() => setEditing((current) => !current)}
+            onClick={() => setMode((current) => (current === "view" ? "edit" : "view"))}
             aria-pressed={editing}
             title={labels.editLabel.replace("{name}", list.name)}
             className={cn(
