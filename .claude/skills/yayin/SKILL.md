@@ -59,7 +59,9 @@ denmez.
 
 ## 4. Sonra
 
-- Yalnız ekleyen migration varsa "Migrate DB" iş akışı: `check` → `apply`,
+- Yalnız ekleyen migration varsa "Migrate DB" iş akışı: önce `check`; koşu
+  yeşil biter ama özetinde "DUR" ya da uyarı varsa `apply` TETİKLENMEZ
+  (kayıtta depoda olmayan migration var: sahibine sor). Temizse `apply`,
   `docs/ROUTEMAP.md`'deki sayıyı güncelle. Veri değiştiren migration sorulur.
 - Rutin promptu değiştiyse sahibine "claude.ai'de yeniden yapıştır" de ve
   ROUTEMAP'e açık iş yaz. Yazım kuralı değiştiyse `content/kurallar/*.md`
