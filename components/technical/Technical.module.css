@@ -17,23 +17,12 @@
 /* ---- Yayın künyesi (başlığın içinde) ----
    Ayrı bir şerit kutusu olarak duruyordu: başlık kutusu, şerit kutusu ve
    kartlar üç ayrı çerçeve olunca sayfa üst üste yığılmış paneller gibi
-   okunuyordu. Künye artık başlığın metin sütununda, açıklamanın altında. */
-.edition { display:flex; flex-wrap:wrap; gap:8px 22px; margin-top:18px; padding-top:14px; border-top:1px solid var(--line-soft); }
-.editionItem { display:flex; flex-direction:column; gap:3px; min-width:0; }
-.editionLabel { font-size:12px; font-weight:600; letter-spacing:0; color:var(--text-muted); }
-.editionValue { font-size:14px; font-weight:600; color:var(--text-strong); }
-/* Tarih ve saat bölünmez. 320'de İngilizce künye "Late Session · Sep" /
-   "22 · 14:45 NY" ve "Pre-Market · 08:45" / "NY", 1024'te "Tuesday,
-   September" / "22 · 14:45 NY" diye kırılıyordu: ay gününden, saat
-   diliminden kopuyordu. Satır yalnızca ayraçtan sonra kırılıyor
-   (`KUNYE_SEP`, page.tsx). Telefonda satır sayısı aynı; 768'de İngilizce
-   künye üç satıra çıkıyor ama başlığın boyu değişmiyor (dağılım kolonu
-   uzun, ilk kart 533'te kalıyor; ölçüldü). Kurallar ayrı ayrı yazılı:
-   `:global()` taşıyan seçici bir listede yazılınca derleyici onu
-   sessizce düşürüyordu (sunulan CSS'te yoktu, ölçüldü). */
-.editionDateLong { white-space:nowrap; }
-.editionDateShort { display:none; white-space:nowrap; }
-.editionValue > :global(.numeral) { white-space:nowrap; }
+   okunuyordu. Künye başlığın metin sütununda, açıklamanın altında.
+   8 Kasım: düz künye satırları (`.edition*`) yerini çizili bir şeride
+   bıraktı (`EditionTrack`, kendi modülü); tarih/saatin bölünmezliği ve
+   telefonda programın dipnotta olması dahil kayıtları orada ve page.tsx'te.
+   Bu sınıf yalnız şeridin kapaktaki yeri: hairline ile açıklamadan ayrı. */
+.editionTrack { margin-top:18px; padding-top:16px; border-top:1px solid var(--line-soft); }
 
 /* ---- Görüş dağılımı (başlığın görseli) ----
    Oran çubuğu bütünü, satırlar kimin nerede olduğunu gösteriyor. Çubukta
@@ -1191,9 +1180,10 @@
    yaklaşım kapak manşetinde de var (`.coverHeadline`, 58ch). 78 burada
    biraz cömert ama metin 12 piksel ve yasal nitelikte: okunacak değil,
    bakılacak bir blok. */
-/* Program cümlesinin telefondaki yeri; geniş ekranda başlıktaki künyede. */
-.footSchedule { display:none; }
-@media (max-width: 767px) { .footSchedule { display:block; } }
+/* Program cümlesi dipnotta. 8 Kasım'a dek yalnız telefonda buradaydı
+   (geniş ekranda başlığın künyesindeydi); künye şeride dönünce üç saat
+   şeridin kendisinde çizili, cümle her genişlikte burada. */
+.footSchedule { display:block; }
 .footNote { display:flex; flex-direction:column; gap:6px; max-width:78ch; padding-top:14px; border-top:1px solid var(--line); font-size:12px; line-height:1.6; color:var(--text-muted); }
 /* Bekleyen semboller künyesi — ızgaranın altında, hairline ile ayrı.
    Yeni kutu açmıyor: deponun eksik veri künyesi kalıbı. */
@@ -1421,12 +1411,6 @@
    was 316/608px and MU's detail cover 503/1045px at 1440/390. Keep the
    established subgrid and readable type; move the indicator summary to its
    section and give the plan its own full-width band instead of shrinking text. */
-.edition { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 20px; }
-.editionItem:last-child { grid-column:1/-1; }
-.editionItem:last-child .editionLabel { display:none; }
-.editionValue { font-size:13px; line-height:1.55; font-weight:550; }
-.editionItem:nth-child(2) .editionLabel { color:var(--primary-ink); }
-.editionItem:nth-child(2) .editionLabel::before { content:""; display:inline-block; width:5px; height:5px; margin-right:6px; border-radius:50%; background:var(--primary); }
 .pulse[data-variant="directory"] { position:relative; grid-template-columns:128px minmax(0,1fr); column-gap:18px; row-gap:12px; align-items:center; }
 .pulse[data-variant="directory"] > div:first-child { grid-column:1/-1; }
 .pulseDial { position:relative; width:128px; grid-column:1; grid-row:2; }
@@ -1441,7 +1425,7 @@
 .pulseDial strong { font-size:32px; font-weight:550; line-height:1; letter-spacing:-.055em; color:var(--text-strong); }
 .pulseDial small { font-size:12px; color:var(--text-muted); }
 .pulse[data-variant="directory"] > .pulseBar { display:none; }
-.pulse[data-variant="directory"] > .pulseRows { grid-column:2; grid-row:2; }
+.pulse[data-variant="directory"] > :is(.pulseRows, .distLegend) { grid-column:2; grid-row:2; }
 .pulse[data-variant="directory"] > .pulseChanges { grid-column:1/-1; }
 .pulse[data-variant="directory"] .pulseRow { padding:7px 0; border-radius:0; border-bottom:1px solid var(--line-soft); }
 .pulse[data-variant="directory"] .pulseRow:last-child { border-bottom:0; }
@@ -1458,7 +1442,7 @@
  .pulse[data-variant="directory"] { grid-template-columns:minmax(0,1fr); }
  .pulse[data-variant="directory"] > .pulseDial { display:none; }
  .pulse[data-variant="directory"] > .pulseBar { display:flex; }
- .pulse[data-variant="directory"] > .pulseRows { grid-column:1; grid-row:auto; }
+ .pulse[data-variant="directory"] > :is(.pulseRows, .distLegend) { grid-column:1; grid-row:auto; }
 }
 /* Hisse Planları araç çubuğu, süzgeç, kart, plan kutusu, görüş hapı ve
    çip kuralları 22 Eylül'de burada ikinci bir blokta kayıtsız eziliyordu
@@ -1469,7 +1453,8 @@
 .coverHeadline { font-size:clamp(18px,1.45vw,21px); line-height:1.55; }
 .coverSide { justify-content:flex-start; padding-left:28px; gap:16px; }
 .cover .stancePill { font-size:18px; padding:7px 15px; }
-.coverPlan { grid-column:1/-1; border-top:1px solid var(--line); padding-top:18px; }
+.coverPlan { display:grid; gap:18px; grid-column:1/-1; border-top:1px solid var(--line); padding-top:18px; }
+/* 8 Kasım: bandın tepesinde yatay fiyat ölçeği (`LevelScale`), altında kartlar. */
 .coverPlan .planCells { background:transparent; }
 /* DETAY SAYFASINDA DA DERİNLİK TONLA (23 Eylül). Liste kartındaki mavi
    parıltının (bkz. `.card`) aynıları burada da vardı: gösterge özeti,
@@ -1497,12 +1482,7 @@
  .coverSide { padding-left:0; padding-top:14px; }
 }
 @media(max-width:767px) {
- .edition { gap:10px 16px; margin-top:14px; padding-top:12px; }
- .editionValue { font-size:12px; }
- /* Program cümlesi telefonda dipnotta, tarih kısa (gerekçeler page.tsx'te). */
- .editionItem[data-item="schedule"] { display:none; }
- .editionDateLong { display:none; }
- .editionDateShort { display:inline; }
+ .editionTrack { margin-top:14px; padding-top:12px; }
  .cover { padding:18px; gap:16px; }
  .coverSide { padding:14px 0 0; gap:12px; }
  .coverMain { gap:10px; }
@@ -1619,6 +1599,15 @@
 .signalsCompact .signal dt { letter-spacing:.02em; }
 .signalsCompact .signal strong { font-size:15px; line-height:1.3; }
 .signalsCompact .signalDetail { font-size:12px; line-height:1.5; }
+/* ÖLÇEK SATIRI (8 Kasım): kelimenin üstünde kendi çizimi (`SignalGauges`).
+   Dört satırlık alt ızgara — etiket, çizim, kelime, künye — ve çizim
+   hücresi dibe yaslı: yay (≈48 piksel) ile iki şerit (32) farklı boyda
+   ama üç kelime aynı hatta başlıyor. */
+.signalsCompact { grid-template-rows:auto auto auto auto; }
+.signalsCompact .signal { grid-row:span 4; }
+.signalsCompact .signalVisual { display:flex; align-items:flex-end; min-width:0; min-height:50px; margin:4px 0 2px; padding-right:4px; }
+.signalsCompact .signalVisual > * { flex:1; }
+.signalsCompact .signalVisual > svg { flex:none; }
 @media(max-width:639px) {
  .signalsCompact { gap:4px 9px; }
  .signalsCompact .signal { padding-left:7px; }
@@ -1672,8 +1661,19 @@
     (kapak görüş rozeti, harita künyesi) ve gerekçe hep aynı: fark yok
     olmuyor, YER DEĞİŞTİRİYOR — okunacak iki şeyin arasına düştüğünde
     zarar veriyor, kolonun dibinde kaldığında görünmüyor bile. */
- .directoryHeader > :global(.page-heading-copy) > .edition { padding-top:14px; }
  .directoryHeader > :global(.page-heading-copy) > p:last-of-type { margin-bottom:18px; }
+ /* BAŞLIK İLE AÇIKLAMA ARASI (8 Kasım, sahibinin ekranı: "başlık ile
+    açıklama arasında büyük boş alan"). Display başlığın kutusu 73 piksel
+    (imler için üstten/alttan açılıyor, globals.css "ÜSTTEKİ İMLER") ve
+    altına satırın 13 + açıklamanın 10 pikseli ekleniyordu: 1440'ta
+    görünür boşluk ~40 piksel. Burada 4 + 0: açıklama başlığın hemen
+    altında (ölçüm rapor: açıklamanın üstü 214 → 195). */
+ .directoryHeader > :global(.page-heading-copy) > [data-title-share] { margin-bottom:4px; }
+ .directoryHeader > :global(.page-heading-copy) > [data-title-share] + p { margin-top:0; }
+ /* Açıklamanın 18 piksellik alt payı (yukarıda) şeridin üst payıyla
+    toplanıp hairline'ın üstünde 36 piksel bırakıyordu; şerit kendi payını
+    almıyor. */
+ .directoryHeader > :global(.page-heading-copy) > .editionTrack { margin-top:0; }
  .directoryHeader > :last-child { display:flex; }
  .directoryHeader .pulse[data-variant="directory"] { flex:1; align-content:stretch; }
  .directoryHeader .pulse[data-variant="directory"] > .pulseRows { align-self:stretch; }
@@ -1710,7 +1710,8 @@
 @media (max-width: 767px) {
   .directoryHeader .pulse[data-variant="directory"] > .pulseRows { display:none; }
   .directoryHeader .pulse[data-variant="directory"] > .pulseKey { display:flex; }
-  .pulsePendingCount { display:inline; }
+  /* 8 Kasım: bekleyen sayısı telefonda da görüş satırlarında ("Bekliyor n"),
+     başlık künyesine inmiyor. */
   .directoryHeader.directoryHeader:global(.page-frame) { gap:16px; }
   .directoryHeader > :last-child { padding-top:14px; }
   .directoryHeader .pulse[data-variant="directory"] { row-gap:10px; }
@@ -1903,21 +1904,33 @@
 /* 22 Eylül birleştirmesi: açıklamanın ALTINDAKİ sıkı aralık korunuyor,
    artan yükseklik yayın satırları arasına dağıtılıyor. EN 768'de son yayın
    satırı dağılımın dibinden 20 piksel yukarıda kalıyordu. */
-@media(min-width:768px) {
- .directoryHeader > :global(.page-heading-copy) > .edition { flex:1; align-content:space-between; }
-}
+/* 8 Kasım: künye şeride dönünce (`.editionTrack`) bu esnetme kuralı
+   (`.edition { flex:1; align-content:space-between }`) kalktı — şerit bir
+   çizim, satırları arasına boşluk yığılmaz. */
 
-/* ---- Kapak künyesi ve fiyatın adı (24 Eylül) ----
-   Künye iki satırlık bir tanım listesi: solda ad, sağda dilim · saat ·
-   (bugün değilse) tarih. `subgrid` iki satırın parçalarını AYNI sütunlara
-   diziyor — "Seans İçi" ile "Kapanış Öncesi", "19:45 TR" ile "21:45 TR"
-   alt alta. Gerekçe sayfada (`coverStamps`). */
-.coverStamps { align-self:stretch; display:grid; grid-template-columns:max-content max-content max-content minmax(0,1fr); gap:5px 14px; margin-top:14px; font-size:12.5px; line-height:1.35; }
-.coverStamps dt { grid-column:1; color:var(--text-muted); font-weight:500; }
-.coverStamps dd { grid-column:2 / -1; display:grid; grid-template-columns:subgrid; color:var(--text-body); font-weight:600; }
-.coverStamps dd > span:nth-child(2) { color:var(--text-strong); }
-.coverStamps dd > span:nth-child(3) { color:var(--text-muted); font-weight:500; }
-@media(max-width:379px) { .coverStamps { column-gap:10px; font-size:12px; } }
+/* ---- Kapak künyesi (24 Eylül → 8 Kasım) ----
+   İki satırlık tanım listesiydi (`.coverStamps`, subgrid: dilim ve saatler
+   alt alta). 8 Kasım'da /teknik kapağıyla aynı şeride döndü
+   (`EditionTrack`); gerekçe TechnicalCover'da. Burada yalnız yeri:
+   kimliğin altında, hairline ile ayrı, bloğun tam genişliği. */
+.coverTrack { align-self:stretch; margin-top:18px; padding-top:16px; border-top:1px solid var(--line-soft); }
+
+/* ---- Kimlik bloğu (8 Kasım) ----
+   Gerekçe TechnicalCover → "KİMLİK TEK HİZALI BLOK". Logo 72 piksel ve
+   metin bloğu onun boyuna gerilip iki ucuna yaslanıyor: sembolün üst
+   kenarı logonun üst, adın alt kenarı logonun alt kenarıyla aynı hatta
+   (ölçüm .tmp-teknik.mjs; rapor). Sembol `line-height:1` — display
+   puntosu 1,02 satırla bloğu ~4 piksel uzatıyordu. */
+.coverNameLink { gap:16px; }
+.coverNameText { display:flex; min-width:0; min-height:72px; flex-direction:column; justify-content:space-between; gap:4px; }
+.coverIdentity .coverNameText h1 { display:block; font-size:clamp(36px, 3.4vw, 48px); line-height:.94; letter-spacing:-.05em; }
+.coverNameText .coverCompany { margin-top:0; }
+.coverCompany .coverGo { display:inline-block; width:.85em; height:.85em; margin-left:.3em; vertical-align:-.08em; }
+@media(max-width:639px) {
+ .coverNameLink :global([data-morph]) { width:56px; height:56px; }
+ .coverNameText { min-height:56px; }
+ .coverIdentity .coverNameText h1 { font-size:34px; }
+}
 
 /* Fiyatın adı ve gecikme rozeti. Rozet bir UYARI değil bir künye: kutu
    yok, ton var — ince kenarlı, soluk bir kapsül. Haritadaki güncel fiyat
@@ -2364,4 +2377,51 @@
   .openLevels .openAway { display:grid; justify-items:inherit; }
   .openLevels > div[data-side="sell"] .openAway { justify-items:end; }
   .openLevels .openAway b { margin-left:0; }
+}
+
+/* ---- Görüş dağılımının satırları (8 Kasım) ----
+   Gerekçe `TechnicalPulse` → "GÖRÜŞ SATIRLARI". Satır: hap + sayı + pay,
+   sağında kulvar üstünde 5 piksellik oran şeridi; altında dengeli logo
+   ızgarası. Hap sütunu `max-content` (hap sabit genişlikli sütuna konmaz,
+   CLAUDE.md) ve satırlar alt ızgarayı paylaşıyor: üç satırın şeritleri
+   aynı x'te başlıyor. */
+.distLegend { display:grid; grid-template-columns:max-content minmax(0,1fr); align-content:start; gap:14px 14px; min-width:0; margin:0; padding:0; list-style:none; }
+.distRow { display:grid; grid-column:1 / -1; grid-template-columns:subgrid; align-items:center; row-gap:9px; min-width:0; }
+.distHead { display:inline-flex; align-items:center; gap:8px; min-width:0; }
+label.distHead { cursor:pointer; }
+.distCount { min-width:1.4ch; font-size:19px; font-weight:650; line-height:1; letter-spacing:-.035em; color:var(--text-strong); }
+.distShare { font-size:12px; font-weight:600; color:var(--text-muted); }
+.distPending { display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:999px; background:var(--surface-sunken); font-size:12px; font-weight:700; color:var(--text-muted); }
+.distTrack { position:relative; height:5px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
+.distTrack i { position:absolute; inset:0 auto 0 0; border-radius:inherit; background:var(--verdict-hold); transform-origin:left center; }
+.distRow[data-verdict="buy"] .distTrack i { background:var(--verdict-buy); }
+.distRow[data-verdict="sell"] .distTrack i { background:var(--verdict-sell); }
+.distRow[data-verdict="pending"] .distTrack i { background:var(--line-strong); }
+/* Boş görüş soluk ama okunur: hap ve sayı yerinde, şeridin yerinde cümle. */
+.distRow[data-empty] .distHead { opacity:.5; }
+.distNone { margin:0; font-size:12.5px; line-height:1.35; color:var(--text-muted); }
+/* Hücre en çok 44 piksel, karo hücreye göre küçülüyor (sütun sayısı
+   `balancedColumns`). Dokunmatikteki dolgu/negatif pay hilesi (yukarıda,
+   `.pulseLogo`) burada gerekmiyor: karo zaten 40 pikselden büyük. */
+.distLogos { display:grid; grid-column:1 / -1; grid-template-columns:repeat(var(--cols, 8), minmax(0, 44px)); gap:8px; }
+.distLogos .distLogo { display:block; width:100%; padding:0; margin:0; border-radius:12px; }
+.distLogos .distLogo > :global(*) { width:100%; height:auto; aspect-ratio:1 / 1; border-radius:11px; }
+/* `.pulseLogo`un ölçü kuralları (32 piksel kutu, dokunmatik payı) burada
+   istenmediği için sınıf ayrı; hover/odak/açık balon dili aynı: ton. */
+.distLogos .distLogo { transition:outline-color 180ms var(--ease-brand); outline:2px solid transparent; outline-offset:2px; }
+.distLogos .distLogo:hover { outline-color:var(--primary-faint); }
+.distLogos .distLogo:focus-visible { outline-color:var(--line-focus); }
+.distLogos .distLogo[data-card-open] { outline-color:var(--primary); }
+/* Şerit soldan kendi payına uzar, bir kez; hareketi azaltana son kare. */
+.distTrack i { animation:dist-grow 800ms var(--ease-brand) both; }
+.distRow:nth-child(2) .distTrack i { animation-delay:90ms; }
+.distRow:nth-child(3) .distTrack i { animation-delay:180ms; }
+.distRow:nth-child(4) .distTrack i { animation-delay:270ms; }
+@keyframes dist-grow { from { transform:scaleX(0); } }
+@media (prefers-reduced-motion: reduce) { .distTrack i { animation:none; } }
+/* Telefonda logolar yok (gerekçe "TELEFONDA LOGO SATIRLARI YOK", yukarıda);
+   satırlar — hap, sayı, pay, şerit — kalıyor, eski renk anahtarının yerine. */
+@media (max-width: 767px) {
+  .distLegend { row-gap:10px; }
+  .distLogos { display:none; }
 }

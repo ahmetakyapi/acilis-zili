@@ -4,7 +4,7 @@ import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import styles from "@/components/technical/Technical.module.css";
-import { NextEditionIn } from "@/components/technical/NextEditionIn";
+import { EditionTrack } from "@/components/technical/EditionTrack";
 import { PlanAtlas } from "@/components/technical/PlanAtlas";
 import { TechnicalBoard } from "@/components/technical/TechnicalBoard";
 import { TechnicalCard } from "@/components/technical/TechnicalCard";
@@ -16,26 +16,20 @@ import { getHolidays, getStatus, getSymbolNames } from "@/lib/data";
 import { getI18n } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
 import { getQuotes } from "@/lib/providers";
-import { todayEt } from "@/lib/market-hours";
 import { displayZone, formatInZone } from "@/lib/session-clock";
 import {
   TECHNICAL_SYMBOLS,
-  editionClock,
   editionTime,
   livePriceLabel,
   newestEdition,
   nextEdition,
   pendingSymbols,
   slotInstant,
-  slotLabel,
 } from "@/lib/technical";
 import { getPublishedSymbols, getTechnicalBoard } from "@/lib/technical-data";
 import { atlasSummary } from "@/lib/technical-visuals";
-import { formatEtDateCompact, formatEtDateLong, plural } from "@/lib/utils";
+import { plural } from "@/lib/utils";
 
-/* Künye ayracı: noktadan ÖNCE bölünmez boşluk. Satır noktadan sonra
-   kırılır, hiçbir satır noktayla başlamaz (gerekçe künyenin yanında). */
-const KUNYE_SEP = "\u00A0· ";
 
 export const generateMetadata = pageMetadata({
   path: "/teknik",
@@ -168,54 +162,18 @@ export default async function TechnicalPage() {
           ) : undefined
         }
       >
+        {/* YAYIN KÜNYESİ BİR ŞERİT (8 Kasım, sahibinin isteği: "daha görsel,
+            alanı daha iyi kullanacak şekilde"). Burada üç düz künye vardı:
+            "Son Yayın", "Sıradaki Yayın" (kalan süreyle) ve program cümlesi.
+            Kayıtlı dersleri şeride taşındı: tarih ve saat bölünmez
+            (`white-space:nowrap`; eskiden `KUNYE_SEP` ayracı ve telefonda kısa
+            tarih bunu çözüyordu — şeritte ayraç yok, saat kendi satırında),
+            kalan süre kendi yerinde (başlık satırının sağı). Program cümlesi
+            dipnotta, artık her genişlikte (`.footSchedule`): üç saat şeridin
+            kendisinde çizili. Gerekçe ve ölçüm `EditionTrack`te. */}
         {latest && (
-          <div className={styles.edition}>
-            <div className={styles.editionItem}>
-              <span className={styles.editionLabel}>{t.technical.latestEdition}</span>
-              {/* TELEFONDA KISA TARİH. İngilizce uzun tarih ("Tuesday,
-                  September 22") 320'de yarım sütunda dört satıra sarıyor ve
-                  ilk kartı 37 piksel aşağı itiyordu (ölçüldü: ilk kart 597,
-                  sekme çubuğu 560). Kısa tarih ("Sep 22") iki satır; geniş
-                  ekranda gün adıyla uzun hâl kalıyor. İkisi de DOM'da, biri
-                  `display:none` — ekran okuyucu yalnızca görüneni okuyor.
-                  AYRAÇ ÖNCEKİ PARÇAYA YAPIŞIK (`KUNYE_SEP`, 23 Eylül): 1024'te
-                  İngilizce künye "Tuesday, September 22" ardından kırılıyor
-                  ve ikinci satır "· 14:45 NY" diye noktayla başlıyordu. */}
-              <span className={styles.editionValue}>
-                {slotLabel(latest.slot, t)}
-                {KUNYE_SEP}
-                <span className={styles.editionDateLong}>{formatEtDateLong(latest.sessionDate, locale)}</span>
-                <span className={styles.editionDateShort}>{formatEtDateCompact(latest.sessionDate, locale)}</span>
-                {KUNYE_SEP}
-                <span className="numeral">{editionTime(latest.sessionDate, latest.slot, locale)}</span>
-              </span>
-            </div>
-            {next && (
-              <div className={styles.editionItem}>
-                <span className={styles.editionLabel}>{t.technical.nextEdition}</span>
-                <span className={styles.editionValue}>
-                  {slotLabel(next.slot, t)}
-                  {KUNYE_SEP}
-                  <span className="numeral">{editionClock(next.at, locale)}</span>
-                  {todayEt(next.at) !== status.etDate && (
-                    /* Tarih KIRILMAZ: 390'da "1 / Eki" diye ikiye bölünüyordu
-                       (30 Eylül, telefonda görüldü). Saatle aynı `nowrap`. */
-                    <>{KUNYE_SEP}<span className="whitespace-nowrap">{formatEtDateCompact(todayEt(next.at), locale)}</span></>
-                  )}
-                  {/* Kalan süre — gerekçe NextEditionIn. */}
-                  <NextEditionIn atIso={next.at.toISOString()} template={t.technical.nextEditionIn} units={t.sessionBell.units} sep={KUNYE_SEP} />
-                </span>
-              </div>
-            )}
-            {/* TELEFONDA PROGRAM BURADA DEĞİL, DİPNOTTA (23 Eylül). 320×640'ta
-                başlık kartı ilk kartı ekranın dışına itiyordu ve bu satır
-                (29 piksel) ilk ekranda hiçbir karara yaramıyor: okuyucunun
-                o an sorduğu "sıradaki ne zaman" hemen solunda. Cümle
-                dipnota iniyor (`.footSchedule`), kaybolmuyor. */}
-            <div className={styles.editionItem} data-item="schedule">
-              <span className={styles.editionLabel}>{t.technical.scheduleLabel}</span>
-              <span className={styles.editionValue}>{scheduleText}</span>
-            </div>
+          <div className={styles.editionTrack}>
+            <EditionTrack edition={latest} next={next} variant="latest" locale={locale} t={t} />
           </div>
         )}
       </DirectoryHeader>

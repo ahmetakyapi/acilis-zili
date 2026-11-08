@@ -1,0 +1,44 @@
+/* Kapaktaki gösterge çizimleri — gerekçe `SignalGauges.tsx` başında.
+   Grafik dili sitenin dili: kulvar `--line-soft` üstünde 5 piksellik şerit,
+   çentik `--line-strong`, fiyat/değer koyu mürekkep nokta. Renk yalnız
+   yönden (`--up`/`--down`); hacim yön söylemez, yoğunsa birincil ton.
+   Üç çizim aynı yüksekliğe yaslı (dipte, 32 piksellik şerit kutusu; yay
+   56): tile'ların kelimeleri aynı hatta başlıyor. */
+.linear { position:relative; height:32px; min-width:0; }
+.lane { position:absolute; right:0; bottom:6px; left:0; height:5px; border-radius:999px; background:var(--line-soft); }
+.fill { position:absolute; bottom:6px; height:5px; border-radius:999px; background:var(--line-strong); transform-origin:left center; }
+.fill[data-from="end"] { transform-origin:right center; }
+.fill[data-tone="up"] { background:var(--up); }
+.fill[data-tone="down"] { background:var(--down); }
+.fill[data-tone="primary"] { background:var(--primary); }
+.tick { position:absolute; bottom:2px; width:2px; height:13px; margin-left:-1px; border-radius:1px; background:var(--line-strong); }
+.tick small { position:absolute; bottom:calc(100% + 3px); left:50%; font-size:10.5px; font-weight:650; line-height:1; color:var(--text-muted); white-space:nowrap; translate:-50% 0; }
+.tick[data-align="end"] small { translate:-100% 0; left:100%; }
+.tick[data-align="start"] small { translate:0 0; left:0; }
+.dot { position:absolute; bottom:3px; width:11px; height:11px; margin-left:-5.5px; border:2px solid var(--surface-solid); border-radius:50%; background:var(--text-strong); }
+
+.volume { display:flex; align-items:flex-end; gap:8px; min-width:0; }
+.volume .linear { flex:1; }
+.volume b { padding-bottom:3px; font-size:13px; font-weight:700; line-height:1; color:var(--text-strong); white-space:nowrap; }
+
+.rsi { display:block; width:84px; height:auto; overflow:visible; }
+.rsiLane, .rsiZone, .rsiValue { fill:none; stroke-width:6; }
+.rsiLane { stroke:var(--line-soft); stroke-linecap:round; }
+.rsiZone[data-zone="oversold"] { stroke:color-mix(in srgb, var(--up) 28%, transparent); }
+.rsiZone[data-zone="overbought"] { stroke:color-mix(in srgb, var(--down) 28%, transparent); }
+.rsiValue { stroke:var(--line-strong); stroke-linecap:round; stroke-dasharray:1; }
+.rsiValue[data-tone="up"] { stroke:var(--up); }
+.rsiValue[data-tone="down"] { stroke:var(--down); }
+.rsiDot { fill:var(--text-strong); stroke:var(--surface-solid); stroke-width:2; }
+.rsiText { font-size:17px; font-weight:700; letter-spacing:-.02em; fill:var(--text-strong); }
+
+/* Giriş — bir kez; şerit/yay önce, nokta en son. */
+.fill { animation:gauge-grow 800ms var(--ease-brand) 120ms both; }
+.rsiValue { animation:gauge-arc 900ms var(--ease-brand) 120ms both; }
+.dot, .rsiDot { animation:gauge-dot 320ms var(--ease-brand) 760ms both; }
+@keyframes gauge-grow { from { transform:scaleX(0); } }
+@keyframes gauge-arc { from { stroke-dashoffset:1; } }
+@keyframes gauge-dot { from { opacity:0; } }
+@media (prefers-reduced-motion: reduce) {
+  .fill, .rsiValue, .dot, .rsiDot { animation:none; }
+}

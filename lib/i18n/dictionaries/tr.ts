@@ -913,6 +913,26 @@ const tr = {
     nextEditionIn: "{d} Sonra",
     scheduleLabel: "Yayın Saatleri",
     schedule: "Her işlem günü {pre}, {mid} ve {late}",
+    /* GÜNÜN YAYINLARI ŞERİDİ (8 Kasım) — `EditionTrack`. Düğüm etiketleri
+       kısa: 390'da düğüm sütunu ~80 piksel ve etiket hap içinde tek satır. */
+    editionTrack: {
+      label: "Günün Yayınları",
+      latest: "Son Yayın",
+      current: "Bu Yayın",
+      next: "Sıradaki",
+      nextIn: "Sıradaki Yayına {d}",
+    },
+    /* Görüş dağılımında boş görüş satırı (8 Kasım): "AL 0" grubunun logo
+       alanı boş kalmasın, nedenini söylesin. */
+    distributionEmpty: "Bu yayında {stance} görüşü yok.",
+    /* Kapaktaki gösterge çizimlerinin künyeleri (`SignalGauges`). */
+    gauges: {
+      avg50: "50G",
+      avg200: "200G",
+      average: "Ort.",
+    },
+    /* Kapaktaki yatay fiyat ölçeği (`LevelScale`). */
+    levelScale: "Fiyat Ölçeği",
     changedToBuy: "Ala Döndü",
     changedToHold: "Tuta Döndü",
     changedToSell: "Sata Döndü",

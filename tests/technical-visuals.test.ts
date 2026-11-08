@@ -1,6 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  arcPoint,
+  balancedColumns,
+  rsiFraction,
+  spreadLabels,
+  trendScale,
+  volumeScale,
   ATLAS_DOMAIN,
   atlasGeometry,
   atlasSentence,
@@ -138,4 +144,67 @@ test("senaryo yolu: tetik metnin ilk bilinen seviyesi, uydurma sayı girmez", ()
     source: "nearest",
     path: [],
   });
+});
+
+/* ---- Kapak çizimlerinin geometrisi (8 Kasım) ---- */
+
+test("balancedColumns: satırlar eşit dolar, tek logo sarkmaz", () => {
+  assert.equal(balancedColumns(5), 5);
+  assert.equal(balancedColumns(8), 8);
+  assert.equal(balancedColumns(11), 6); // 6 + 5 — eskiden 10 + 1
+  assert.equal(balancedColumns(16), 8);
+  assert.equal(balancedColumns(17), 6); // 6 + 6 + 5
+  assert.equal(balancedColumns(0), 1);
+  for (let n = 2; n <= 40; n++) {
+    const cols = balancedColumns(n);
+    const rows = Math.ceil(n / cols);
+    const last = n - (rows - 1) * cols;
+    assert.ok(cols <= 8, `n=${n} sütun ${cols}`);
+    // Son satır en çok (satır sayısı − 1) eksik: dengeli, tek logo sarkmıyor.
+    assert.ok(cols - last < rows, `n=${n} son satır ${last}/${cols}`);
+    if (rows > 1) assert.ok(last >= 2, `n=${n} son satırda tek logo`);
+  }
+});
+
+test("rsiFraction ve arcPoint: 0 sol uç, 50 tepe, 100 sağ uç", () => {
+  assert.equal(rsiFraction(27.6), 0.276);
+  assert.equal(rsiFraction(140), 1);
+  const left = arcPoint(0, 50, 50, 40);
+  const top = arcPoint(0.5, 50, 50, 40);
+  const right = arcPoint(1, 50, 50, 40);
+  assert.ok(Math.abs(left.x - 10) < 1e-9 && Math.abs(left.y - 50) < 1e-9);
+  assert.ok(Math.abs(top.x - 50) < 1e-9 && Math.abs(top.y - 10) < 1e-9);
+  assert.ok(Math.abs(right.x - 90) < 1e-9 && Math.abs(right.y - 50) < 1e-9);
+});
+
+test("volumeScale: en az 3×, büyük oranda bir üst tam sayı", () => {
+  assert.deepEqual(volumeScale(2.7), { max: 3, fill: 0.9, average: 1 / 3 });
+  const big = volumeScale(4.2);
+  assert.equal(big.max, 5);
+  assert.ok(Math.abs(big.fill - 0.84) < 1e-9);
+  assert.equal(volumeScale(0).fill, 0);
+});
+
+test("trendScale: fiyat ve iki ortalama aynı eksende, eksik ortalama çizilmez", () => {
+  const s = trendScale(694.79, 731.9, 755.26)!;
+  assert.equal(s.price, 0.1);
+  assert.ok(Math.abs(s.sma200! - 0.9) < 1e-9);
+  assert.ok(s.sma50! > s.price && s.sma50! < s.sma200!);
+  const ipo = trendScale(10, 12, null)!;
+  assert.equal(ipo.sma200, null);
+  assert.equal(trendScale(10, null, null), null);
+  assert.equal(trendScale(null, 1, 2), null);
+});
+
+test("spreadLabels: çakışan etiketler aralanır, uzaktakiler yerinde kalır", () => {
+  const out = spreadLabels([0.5, 0.52, 0.9], 0.1, 0.05, 0.95);
+  assert.ok(Math.abs(out[1]! - out[0]! - 0.1) < 1e-9);
+  assert.ok(Math.abs((out[0]! + out[1]!) / 2 - 0.51) < 1e-9); // küme hedeflerinin ortasında
+  assert.equal(out[2], 0.9);
+  // Sıra korunur, kenara taşmaz.
+  const edge = spreadLabels([0.01, 0.02, 0.03], 0.1, 0.05, 0.95);
+  assert.deepEqual(edge.map((v) => Math.round(v * 100) / 100), [0.05, 0.15, 0.25]);
+  const unsorted = spreadLabels([0.9, 0.1, 0.11], 0.1, 0, 1);
+  assert.equal(unsorted[0], 0.9);
+  assert.ok(unsorted[2]! - unsorted[1]! >= 0.1 - 1e-9);
 });

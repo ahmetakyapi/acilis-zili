@@ -1,0 +1,42 @@
+/* Kapaktaki yatay fiyat ölçeği — gerekçe `LevelScale.tsx` başında.
+   Dikey düzen (eksen kutusu 100 piksel): fiyatın adı ve sayısı üstte
+   (0–30), kulvar 40'ta, seviyelerin adı ve fiyatı altta (56–). Fiyat üstte,
+   seviyeler altta: en yakın seviye birkaç yüzde içinde olduğunda iki
+   etiket aynı hatta çakışmıyor. */
+.scale { display:grid; gap:6px; min-width:0; }
+.caption { font-size:12px; font-weight:700; line-height:1.3; color:var(--text-muted); }
+.axis { position:relative; height:96px; container-type:inline-size; }
+.lane { position:absolute; top:40px; right:0; left:0; height:5px; border-radius:999px; background:var(--line-soft); }
+.band { position:absolute; top:36px; height:13px; border-radius:4px; background:var(--primary-faint); }
+/* Fiyattan en yakın iki seviyeye şerit: kulvarın üstünde, yön renginde. */
+.leg { position:absolute; top:40px; height:5px; border-radius:999px; background:var(--up); transform-origin:left center; animation:scale-leg 700ms var(--ease-brand) 600ms both; }
+.leg[data-tone="down"] { background:var(--down); }
+.leg[data-from="end"] { transform-origin:right center; }
+@keyframes scale-leg { from { transform:scaleX(0); } }
+.mark { position:absolute; top:0; bottom:0; width:0; }
+.tick { position:absolute; top:35px; left:-1px; width:2px; height:15px; border-radius:1px; background:var(--line-strong); }
+.mark[data-kind="target"] .tick { background:var(--up); }
+.mark[data-kind="sellLevel"] .tick, .mark[data-kind="stop"] .tick { background:var(--down); }
+.mark[data-kind="entry"] .tick { background:var(--primary); }
+.label { position:absolute; top:57px; left:0; display:grid; justify-items:center; gap:2px; text-align:center; white-space:nowrap; translate:calc(-50% + var(--shift, 0cqw)) 0; }
+.label small { font-size:11px; font-weight:650; line-height:1.2; color:var(--text-muted); }
+.label b { font-size:13.5px; font-weight:700; line-height:1.2; letter-spacing:-.01em; color:var(--text-strong); }
+.mark[data-kind="target"] .label small { color:var(--up); }
+.mark[data-kind="sellLevel"] .label small, .mark[data-kind="stop"] .label small { color:var(--down); }
+
+/* Fiyat: koyu mürekkep imleç (merdiven ve kart rayıyla aynı), etiketi üstte. */
+.mark[data-kind="price"] { z-index:1; }
+.mark[data-kind="price"] .tick { top:26px; left:-1.5px; width:3px; height:28px; border-radius:2px; background:var(--text-strong); }
+.mark[data-kind="price"] .label { top:0; display:flex; align-items:baseline; gap:6px; translate:-50% 0; }
+.mark[data-kind="price"] .label b { font-size:15px; }
+.mark[data-kind="price"][data-align="start"] .label { translate:-12px 0; }
+.mark[data-kind="price"][data-align="end"] .label { translate:calc(-100% + 12px) 0; }
+
+/* Giriş: imleç eksenin solundan fiyata kayar — bir kez. */
+.mark[data-kind="price"] { animation:scale-cursor 900ms var(--ease-brand) 150ms both; }
+@keyframes scale-cursor { from { left:0; opacity:0; } }
+@media (prefers-reduced-motion: reduce) { .mark[data-kind="price"], .leg { animation:none; } }
+
+/* Telefonda yok: 330 piksellik eksende beş etiket sığmıyor; aynı plan
+   aşağıdaki fiyat merdiveninde dikey eksende, etiketleriyle duruyor. */
+@media (max-width: 767px) { .scale { display:none; } }

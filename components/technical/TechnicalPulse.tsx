@@ -4,6 +4,7 @@ import visuals from "@/components/motion/DirectoryVisuals.module.css";
 import { cardKey } from "@/lib/company-card-key";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { LogoTile } from "@/components/ui/primitives";
+import { VerdictPill } from "@/components/ui/VerdictPill";
 import { verdictLabel, verdictOf, verdictPillClass, verdictTextClass, type VerdictKey } from "@/lib/analysis";
 import type { CompanyCardExtra } from "@/lib/company-card";
 import type { SymbolMeta } from "@/lib/data";
@@ -13,6 +14,7 @@ import type { ProviderResult, Quote } from "@/lib/providers/types";
 import { editionTime, livePriceLabel, slotLabel, stanceChangeLabel, technicalHref } from "@/lib/technical";
 import type { TechnicalBoardEntry } from "@/lib/technical-data";
 import { cn, formatEtDateCompact, plural } from "@/lib/utils";
+import { balancedColumns } from "@/lib/technical-visuals";
 import { changeToneClass } from "./TechnicalCard";
 import { PulseBar } from "./PulseBar";
 import styles from "./Technical.module.css";
@@ -172,7 +174,10 @@ export function TechnicalPulse({
             {plural(total, t.technical.stockCountOne, t.technical.stockCount).replace("{n}", String(total))}
             {/* Telefonda logo satırları gizli (CSS, `.pulseRows`); bekleyen
                 sayısı o satırda yazıyordu ve kaybolmasın diye buraya iniyor.
-                Masaüstünde satır duruyor, künye tekrar etmiyor. */}
+                Masaüstünde satır duruyor, künye tekrar etmiyor.
+                8 Kasım: görüş satırları ("Bekliyor n" dahil) telefonda da
+                görünüyor; künye her genişlikte gizli (CSS), işaret yerinde
+                kalıyor ki satırlar bir gün yine gizlenirse geri açılsın. */}
             {pending.length > 0 && (
               <span className={styles.pulsePendingCount}>
                 · {t.technical.pendingCount.replace("{n}", String(pending.length))}
@@ -234,36 +239,106 @@ export function TechnicalPulse({
         </ul>
       )}
       {/* ÇUBUK OKUNUYOR (30 Eylül): dilime gelince/dokununca görüş, sayı
-          ve pay balonda. Gerekçe `PulseBar`. */}
-      <PulseBar
-        className={styles.pulseBar}
-        slices={[
-          ...groups.map((group) => ({ key: group.verdict, label: verdictLabel(group.verdict, t), count: group.rows.length })),
-          { key: "pending", label: t.technical.pendingLabel, count: pending.length },
-        ].map((slice) => ({
-          ...slice,
-          countLabel: plural(slice.count, t.technical.stockCountOne, t.technical.stockCount).replace("{n}", String(slice.count)),
-          share: total > 0 ? sharePercent.format(slice.count / total) : "",
-        }))}
-      />
+          ve pay balonda. Gerekçe `PulseBar`.
+          8 Kasım: YALNIZ PANELDE. Dizinde her görüş satırı kendi oran
+          çubuğunu taşıyor (aşağıda, `distLegend`); tek çubuk ile satırlar
+          aynı payı iki kez çiziyordu. */}
+      {!filterable && (
+        <PulseBar
+          className={styles.pulseBar}
+          slices={[
+            ...groups.map((group) => ({ key: group.verdict, label: verdictLabel(group.verdict, t), count: group.rows.length })),
+            { key: "pending", label: t.technical.pendingLabel, count: pending.length },
+          ].map((slice) => ({
+            ...slice,
+            countLabel: plural(slice.count, t.technical.stockCountOne, t.technical.stockCount).replace("{n}", String(slice.count)),
+            share: total > 0 ? sharePercent.format(slice.count / total) : "",
+          }))}
+        />
+      )}
 
-      {/* ÇUBUĞUN ANAHTARI (25 Ekim). Telefonda satırlar gizli ve çubuğun hangi
-          diliminin hangi görüş olduğunu yalnız renk ve dokunma balonu söylüyordu;
-          renk tek başına anlam taşımaz (renk körlüğü, TUT'un rengi bu turda
-          değişti). Anahtar dilimlerin sırasıyla ve aynı tonla; yalnız satırların
-          gizli olduğu yerde görünür (CSS). */}
+      {/* ÇUBUĞUN ANAHTARI (25 Ekim) — dizinde telefonda satırlar gizliyken
+          çubuğun dilimlerini adlandırıyordu; renk tek başına anlam taşımaz.
+          8 Kasım: anahtar kalktı, çünkü görüş satırları (hap + sayı + pay +
+          çubuk) artık TELEFONDA DA görünüyor; yalnız logoları gizli. Aynı
+          ilke, daha doğrudan: her çubuğun adı kendi hapında. */}
+
+      {/* GÖRÜŞ SATIRLARI (8 Kasım, sahibinin isteği: "daha görsel, alanı daha
+          iyi kullanacak şekilde"). Eski satırlarda etiket düz renkli metindi
+          ("TUT 5"), logolar 32 piksel ve serbest sarıyordu: 1440'ta 11 logoluk
+          SAT satırı 10 + 1 diye kırılıp ONDAS'ı tek başına alt satıra
+          bırakıyordu (sahibinin ekranı; önizlemede 8 + 3). Şimdi:
+            · ETİKET `VerdictPill` — sitenin tek görüş hapı (CLAUDE.md).
+            · SAYI + PAY + ORAN ÇUBUĞU: kulvar üstünde 5 piksellik şerit,
+              renk görüşün kendi tonu. Pay takip listesinin tamamına göre
+              (bekleyenler dahil), halkayla aynı payda.
+            · LOGO IZGARASI DENGELİ: sütun sayısı sunucuda, satırlar eşit
+              dolacak biçimde (`balancedColumns`: 11 → 6 + 5, 16 → 8 + 8);
+              hücre en çok 44 piksel ve karo hücreye göre küçülüyor, yani
+              hiçbir genişlikte tek logo sarkmıyor. Ölçüm .tmp-teknik.mjs,
+              rapor: 1440'ta logo 44 piksel (eskiden 32).
+            · BOŞ GÖRÜŞ DE BİR SATIR. "AL 0" eskiden hiç basılmıyordu ve
+              okuyucu AL'ın yokluğunu ancak saymayı bilirse görüyordu; şimdi
+              hap soluk ve şeridin yerinde bir cümle.
+          Görüş hapı aşağıdaki süzgecin radyosuna bağlı bir `<label>` (boş
+          görüşün radyosu yok, orada düz metin). */}
       {filterable && total > 0 && (
-        <ul className={styles.pulseKey} aria-hidden="true">
-          {groups
-            .filter((group) => group.rows.length > 0)
-            .map((group) => (
-              <li key={group.verdict} data-verdict={group.verdict}>
-                {verdictLabel(group.verdict, t)} <b className="numeral">{group.rows.length}</b>
+        <ul className={styles.distLegend} data-motion-stagger>
+          {[
+            ...groups.map((group) => ({ key: group.verdict, rows: group.rows.map(({ row }) => row.symbol) })),
+            ...(pending.length > 0 ? [{ key: "pending" as const, rows: [...pending] }] : []),
+          ].map((group) => {
+            const count = group.rows.length;
+            const label = group.key === "pending" ? t.technical.pendingLabel : verdictLabel(group.key, t);
+            const head = (
+              <>
+                {group.key === "pending" ? (
+                  <span className={styles.distPending}>{label}</span>
+                ) : (
+                  <VerdictPill verdict={group.key} label={label} size="sm" />
+                )}
+                <b className={cn(styles.distCount, "numeral")}>{count}</b>
+                <small className={cn(styles.distShare, "numeral")}>{sharePercent.format(count / total)}</small>
+              </>
+            );
+            return (
+              <li key={group.key} className={styles.distRow} data-verdict={group.key} data-empty={count === 0 || undefined}>
+                {group.key !== "pending" && count > 0 ? (
+                  <label htmlFor={stanceFilterId(group.key)} className={styles.distHead}>{head}</label>
+                ) : (
+                  <span className={styles.distHead}>{head}</span>
+                )}
+                {/* Boş görüşte şeridin yerinde cümle: boş bir kulvar "veri
+                    gelmedi" gibi okunuyordu, cümle "bu yayında yok" diyor. */}
+                {count > 0 ? (
+                  <span className={styles.distTrack} aria-hidden="true">
+                    <i style={{ width: `${(count / total) * 100}%` }} />
+                  </span>
+                ) : (
+                  <p className={styles.distNone}>{t.technical.distributionEmpty.replace("{stance}", label)}</p>
+                )}
+                {count > 0 && (
+                  <div className={styles.distLogos} style={{ "--cols": balancedColumns(count) } as React.CSSProperties}>
+                    {group.rows.map((symbol) => (
+                      <Link
+                        key={symbol}
+                        href={technicalHref(symbol)}
+                        prefetch={false}
+                        className={cn(styles.distLogo, group.key === "pending" && styles.pulseLogoPending)}
+                        aria-label={`${symbol} · ${meta[symbol]?.name ?? symbol} · ${label}`}
+                        data-cc={cardKey(symbol, CARD_SET)}
+                      >
+                        <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl ?? null} size="lg" />
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </li>
-            ))}
+            );
+          })}
         </ul>
       )}
-      <div className={styles.pulseRows} data-motion-stagger>
+      {!filterable && <div className={styles.pulseRows} data-motion-stagger>
         {groups
           .filter((group) => group.rows.length > 0)
           .map((group) => (
@@ -336,7 +411,7 @@ export function TechnicalPulse({
             </div>
           </div>
         )}
-      </div>
+      </div>}
 
       {changes.length > 0 && (
         <div className={styles.pulseChanges}>

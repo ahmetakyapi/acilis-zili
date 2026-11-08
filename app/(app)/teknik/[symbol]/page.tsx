@@ -1,6 +1,5 @@
 import { ClaudeCta } from "@/components/ai/ClaudeCta";
-import { VerdictPill } from "@/components/ui/VerdictPill";
-import { ArrowUpRight, ChartBar, TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
+import { ChartBar, TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { GuideHint } from "@/components/article/GuideHint";
@@ -11,26 +10,17 @@ import { MotionExperience, Reveal, ScrollProgress, SectionNav } from "@/componen
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { IndicatorPanels } from "@/components/technical/IndicatorPanels";
-import { NextEditionIn } from "@/components/technical/NextEditionIn";
 import { MoreSymbols, type MoreSymbolEntry } from "@/components/technical/MoreSymbols";
 import { PlanHistory } from "@/components/technical/PlanHistory";
-import { OpenRange, openRangeOf } from "@/components/technical/OpenRange";
-import { PlanStrip } from "@/components/technical/PlanStrip";
 import { BalanceNotes } from "@/components/technical/BalanceNotes";
 import { PriceMapNotes } from "@/components/technical/PriceMap";
 import { PriceLadder } from "@/components/technical/PriceLadder";
 import { ScenarioRail } from "@/components/technical/ScenarioRail";
 import { SignalStrip } from "@/components/technical/SignalStrip";
+import { TechnicalCover } from "@/components/technical/TechnicalCover";
 import { STANCE_GUIDE_SLUG, StanceGuide } from "@/components/technical/StanceGuide";
-import {
-  changeToneClass,
-  planPositionLabel,
-  planReadingText,
-  planReadingTone,
-} from "@/components/technical/TechnicalCard";
 import styles from "@/components/technical/Technical.module.css";
-import { DataStamp, EmptyState, LogoTile, Panel } from "@/components/ui/primitives";
-import { MorphTarget } from "@/components/motion/Morph";
+import { DataStamp, EmptyState, Panel } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, } from "@/lib/analysis";
 import { getHolidays, getStatus, getSymbolNames } from "@/lib/data";
 import { getDictionary, getI18n, type Locale } from "@/lib/i18n";
@@ -39,25 +29,15 @@ import { getQuotes } from "@/lib/providers";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
 import {
   TECHNICAL_SYMBOLS,
-  editionClock,
-  editionTime,
   isTechnicalSymbol,
   nextEdition,
-  planPosition,
-  planReading,
-  slotLabel,
-  stanceChangeLabel,
   technicalHref,
 } from "@/lib/technical";
 import { getTechnicalBoard, getTechnicalDetail } from "@/lib/technical-data";
-import { isSessionTrade, todayEt } from "@/lib/market-hours";
+import { isSessionTrade } from "@/lib/market-hours";
 import {
   cn,
-  directionOf,
-  directionText,
   formatEtDateCompact,
-  formatPercent,
-  formatPrice,
   proseParagraphs,
   tieFigures,
 } from "@/lib/utils";
@@ -188,7 +168,6 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
 
   const { row, previousStance, history } = detail;
   const verdict = verdictOf(row.stance);
-  const change = stanceChangeLabel(verdict, previousStance, t);
   const hasEnglish = row.copy.en !== null && row.copy.en !== undefined;
   const copy = locale === "en" ? (row.copy.en ?? row.copy.tr) : row.copy.tr;
   const copyLang = locale === "en" && !hasEnglish ? "tr" : locale;
@@ -218,9 +197,6 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
       : t.market.lastPrice;
   const priceBadge = live ? (quote?.realtime ? t.technical.nowRealtime : t.technical.now) : null;
   const next = nextEdition(new Date(), holidays);
-  const position = planPosition(price, row.entryLow, row.entryHigh, row.stop);
-  const reading = planReading(verdict, price, row);
-  const openRange = openRangeOf(verdict, price, row);
   const sectionItems = [
     { id: "technical-levels", label: t.technical.priceMap },
     { id: "technical-reading", label: t.technical.summary },
@@ -281,182 +257,20 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
         </span>
       </div>
 
-      {/* ---- Kapak ---- */}
-      <header className={styles.cover} data-verdict={verdict}>
-        <div className={styles.coverMain} data-motion-intro>
-          {/* KİMLİK BLOĞU HİSSE SAYFASINA GİDİYOR.
-              Logo ile ad sayfanın en büyük öğesiydi ve hiçbir yere
-              gitmiyordu: teknik görüşü okuyan okuyucunun bir sonraki isteği
-              şirketin grafiğine bakmak ama künye çubuğu /teknik LİSTESİNE
-              çıkıyor, hisseye değil. Bağlantı logo + sembol + adı BİRLİKTE
-              sarıyor; üçü aynı şeyi söylüyor, üç ayrı sekme durağı olmaları
-              gerekmiyor. Künye satırları (bu yayının saati, sıradaki yayın)
-              bağlantının DIŞINDA: onlar şirketin kimliği değil yayının
-              damgası — ekran okuyucuya bağlantının adı olarak okunmaları da
-              yanlış olurdu. */}
-          <div className={styles.coverIdentity}>
-            {/* GÖRÜŞ ADIN SAĞINDA, AYNI SATIRDA. Rozet bir dönem künyenin
-                altında kendi satırındaydı; telefonda kapak logo, ad, iki
-                künye satırı, rozet, başlık cümlesi diye altı kat üst üste
-                biniyordu ve okuyucunun ilk sorusu ("bu hissede ne
-                görünüyor") dördüncü katta cevaplanıyordu. Ad ile görüş
-                artık aynı satırı paylaşıyor: sol uçta kimlik, sağ uçta
-                tek kelime. Künye satırları o satırın altında kalıyor. */}
-            <div className={styles.coverHead}>
-            <Link href={`/hisse/${symbol}`} className={styles.coverNameLink} data-morph-stage>
-              {/* Teknik kartından gelindiyse logo kartın yerinden buraya uçuyor. */}
-              <MorphTarget morphKey={`logo:${symbol}`}>
-                <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl} size="xl" />
-              </MorphTarget>
-              <div className="min-w-0">
-                <h1>
-                  {symbol}
-                  {/* Dokunmatikte `:hover` yok: bağlantı olduğunu söyleyen
-                      tek şey bu ok. Ölçüsü `em` — sembolün puntosu
-                      genişlikle değiştiği için okun da onunla değişmesi
-                      gerekiyor. */}
-                  <ArrowUpRight className={styles.coverGo} weight="bold" aria-hidden />
-                </h1>
-                {/* ŞİRKET ADI KENDİ SATIRINDA. Dört parça tek künyeye dizilince
-                    ("Micron Technology Inc · Seans İçi · 16 Eylül Çarşamba ·
-                    19:45 TR") telefonda sarıp son parçayı tek başına alta
-                    atıyordu — "TR" bir satır kaplıyordu. Adın uzunluğu şirkete
-                    göre değiştiği için sarmanın nereden olacağı da her sayfada
-                    farklıydı. Ad artık kendi satırında ve künyede yalnızca
-                    YAYIN bilgisi kalıyor; liste kartı da sembol ile adı ayrı
-                    satırda basıyor, kapak onunla aynı dile geldi. */}
-                {company && <p className={styles.coverCompany}>{company}</p>}
-              </div>
-            </Link>
-            <div className={styles.stanceRow}>
-              {/* Etiket yalnızca ekran okuyucuya: gerekçe `.stancePill` yorumunda. */}
-              <span className="sr-only">{t.technical.stanceLabel}</span>
-              <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} size="custom" className={styles.stancePill} />
-              {change && <span className={cn(styles.change, changeToneClass(verdict))}>{change}</span>}
-            </div>
-            </div>
-            {/* İKİ KÜNYE AYNI IZGARADA (24 Eylül). "Seans İçi · 24 Eylül
-                Perşembe · 19:45 TR" ile "Sıradaki Yayın · Kapanış Öncesi ·
-                21:45 TR" iki düz satırdı: ilkinin adı yoktu, parçaların
-                sırası farklıydı ve saatler alt alta gelmiyordu. Artık bir
-                tanım listesi — solda ad, sağda dilim ve saat AYNI SÜTUNLARDA
-                (`subgrid`). Tarih yalnızca BUGÜN değilse yazılıyor; iki satır
-                aynı kuralla (sıradaki yayının kuralı zaten buydu). */}
-            <dl className={styles.coverStamps}>
-              <dt>{t.technical.thisEdition}</dt>
-              <dd>
-                <span>{slotLabel(row.slot, t)}</span>
-                <span className="numeral">{editionTime(row.sessionDate, row.slot, locale)}</span>
-                {row.sessionDate !== status.etDate && (
-                  <span>{formatEtDateCompact(row.sessionDate, locale)}</span>
-                )}
-              </dd>
-              {/* SIRADAKİ YAYIN — okuyucunun ikinci sorusu: elindeki görüş
-                  NE KADAR SÜRE geçerli. Cuma akşamı açılan bir sayfada
-                  "pazartesi sabaha kadar böyle" bilgisi tek başına sayfanın
-                  yarısı kadar iş görüyor. */}
-              {next && (
-                <>
-                  <dt>{t.technical.nextEdition}</dt>
-                  <dd>
-                    <span>{slotLabel(next.slot, t)}</span>
-                    <span className="numeral">{editionClock(next.at, locale)}</span>
-                    {todayEt(next.at) !== status.etDate && (
-                      <span>{formatEtDateCompact(todayEt(next.at), locale)}</span>
-                    )}
-                    {/* Kalan süre — gerekçe NextEditionIn. */}
-                    <NextEditionIn atIso={next.at.toISOString()} template={t.technical.nextEditionIn} units={t.sessionBell.units} />
-                  </dd>
-                </>
-              )}
-            </dl>
-          </div>
-          <div className={styles.coverThesis}>
-            <span className={styles.thesisLabel}>{t.technical.thesisLabel}</span>
-            <p className={styles.coverHeadline} lang={copyLang}>{tieFigures(copy.headline)}</p>
-          </div>
-
-          {locale === "en" && !hasEnglish && (
-            <p className="text-small text-muted">{t.technical.langNote}</p>
-          )}
-        </div>
-
-        <div className={styles.coverSide}>
-          <div className={styles.coverQuote}>
-            <div className={styles.priceHead}>
-              <span className={styles.priceLabel}>{priceLabel}</span>
-              {priceBadge && <span className={styles.delayBadge}>{priceBadge}</span>}
-            </div>
-            <div className={styles.priceRow}>
-              <span className={cn(styles.priceNow, "numeral")}>
-                {formatPrice(price, locale, { currency: true })}
-              </span>
-              {changePct !== null && (
-                <span className={cn("numeral text-lead font-semibold", directionText(directionOf(changePct)))}>
-                  {formatPercent(changePct, locale)}
-                </span>
-              )}
-            </div>
-            {/* Analiz anındaki fiyat ancak FARKLIYSA yazılıyor: aynı sayının
-                iki etiketle yan yana durması bilgi değil. */}
-            <div className={styles.priceContext}>
-              {position && (
-                <span className={styles.plan} data-kind={position.kind}>
-                  {planPositionLabel(position, locale, t)}
-                </span>
-              )}
-              {row.snapshot.price !== null && price !== null && Math.abs(row.snapshot.price - price) >= 0.005 && (
-                <span className={styles.priceNote}>
-                  {t.technical.atAnalysis}: {formatPrice(row.snapshot.price, locale, { currency: true })}
-                </span>
-              )}
-            </div>
-          </div>
-          {/* SEVİYE ÇİZGİSİ BURADAN KALKTI — aynı plan sayfada ÜÇ KEZ
-              çiziliyordu: plan şeridi sayılarla, çizgi yatay eksende, fiyat
-              haritası dikey eksende. Üçünün de kaynağı aynı beş sayı.
-              Çizgi `aria-hidden` ve etiketsiz: ekranda soluk bir ray,
-              yeşil bir kapsül, mavi bir nokta ve iki çentik duruyordu —
-              okuyucunun gördüğü şey bir ölçü değil, bozuk bir sürgü
-              denetimi. Aynı bilgiyi harita adlarıyla, fiyatlarıyla ve
-              uzaklıklarıyla zaten veriyor.
-              Liste kartında DURUYOR: orada harita yok, çizgi planın tek
-              geometrisi (`TechnicalCard`). */}
-          <div className={styles.reading} data-tone={planReadingTone(reading)}>
-            <span className={styles.readingLabel}>{t.technical.readingLabel}</span>
-            <p>{planReadingText(reading, locale, t)}</p>
-            {/* Plan cümlesi görüşü varsayıyor; anlamını soran okuyucu
-                bir tık aşağıda, aynı sayfada cevabı buluyor. */}
-            <a href="#technical-stance" className={cn("tap-44", styles.stanceGuideLink)}>
-              {t.technical.stanceGuide.detailTitle.replace("{stance}", verdictLabel(verdict, t))}
-            </a>
-          </div>
-          <SignalStrip snapshot={row.snapshot} price={price} locale={locale} t={t} compact />
-        </div>
-
-        {/* 21 Eylül: mobil kapak 1045px'ti. Plan tam genişlikte kendi
-            bandında; gösterge özeti ayrıntılarını anlattığı bölüme indi.
-            Böylece ilk ekran kimliği, görüşü ve planı birlikte okutur.
-
-            ÖZET SONRA KAPAĞA GERİ GELDİ — ama aynı biçimde değil. 9e1c3b6
-            kapağa `compact` dalı ekledi: üç sütun, tek satırlık okuma,
-            kapak sütununun dibine hizalı (`.signalsCompact`). Bölümdeki
-            geniş şerit yerinde duruyor; kapaktaki bir BAKIŞ, oradaki bir
-            ÖLÇÜ. Bu not bir süre yalnızca inişi anlatıyordu ve kodla
-            çelişiyordu; iki hâl de burada yazılı olsun. */}
-        {/* BÖLGESİZ TUT'TA İKİ GRİ KUTU YERİNE EKSEN (31 Ekim). "Nereden
-            Alınır — Bölge Yok · Destek" ve "Nerede Satılır — Direnç" iki
-            boş kalıptı; artık durumun adı, büyük destek—fiyat—direnç ekseni
-            ve iki seviye kartı (gerekçe `OpenRange`). Koşul cümlesi hemen
-            üstteki "Planın Okuması"nda. */}
-        <div className={styles.coverPlan}>
-          {openRange ? (
-            <OpenRange {...openRange} size="lg" priceLabel={priceLabel} locale={locale} t={t} />
-          ) : (
-            <PlanStrip verdict={verdict} {...levelProps} size="lg" price={price} locale={locale} t={t} />
-          )}
-        </div>
-      </header>
+      <TechnicalCover
+        symbol={symbol}
+        company={company}
+        logoUrl={meta[symbol]?.logoUrl}
+        row={row}
+        previousStance={previousStance}
+        price={price}
+        changePct={changePct}
+        priceLabel={priceLabel}
+        priceBadge={priceBadge}
+        next={next}
+        locale={locale}
+        t={t}
+      />
 
       {/* ---- Şirket Analizi (Claude) KAPAĞIN HEMEN ALTINDA ----
           11 Ekim'de önce sayfanın en tepesinden (kırıntının üstü) okumanın

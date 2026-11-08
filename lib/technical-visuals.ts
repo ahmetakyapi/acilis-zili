@@ -300,3 +300,106 @@ export function scenarioPath(
   const nearest = fallback.filter(onSide).sort(away)[0];
   return nearest === undefined ? null : { trigger: nearest, source: "nearest", path: [] };
 }
+
+/* --------------------------------------------------------------------------
+   Kapak çizimlerinin geometrisi (8 Kasım) — /teknik görüş dağılımının logo
+   ızgarası ve detay kapağının gösterge çizimleri (`SignalGauges`). Saf
+   aritmetik; hiçbiri yeni bir sayı üretmiyor, kayıttaki sayının yeri.
+   -------------------------------------------------------------------------- */
+
+/** Dağılımda satır başına en çok logo: 1440'ta satır ~410 piksel, 44
+    piksellik karo + 8 aralık. */
+export const LOGOS_PER_ROW = 8;
+
+/**
+ * Logo ızgarasının sütun sayısı — satırlar EŞİT dolsun: 11 → 6 (6 + 5),
+ * 16 → 8 (8 + 8), 5 → 5. Serbest sarmada son satıra tek logo düşüyordu
+ * (1440'ta 11 logoluk SAT satırı 10 + 1; gerekçe `TechnicalPulse`).
+ */
+export function balancedColumns(count: number, max = LOGOS_PER_ROW): number {
+  if (!Number.isFinite(count) || count <= 1) return 1;
+  if (count <= max) return Math.floor(count);
+  return Math.ceil(count / Math.ceil(count / max));
+}
+
+/** RSI'nin 0–100 yay üstündeki payı; eşikler göstergenin kendi tanımından. */
+export const RSI_ZONES = { oversold: 30, overbought: 70 } as const;
+
+export function rsiFraction(rsi: number): number {
+  return clamp01(rsi / 100);
+}
+
+/**
+ * Yarım daire üstünde bir payın noktası — sol uç 0, sağ uç 1, tepe 0,5.
+ * Merkez (cx, cy), yarıçap r; SVG ekseni (y aşağı).
+ */
+export function arcPoint(fraction: number, cx: number, cy: number, r: number): { x: number; y: number } {
+  const angle = Math.PI * (1 - clamp01(fraction));
+  return { x: cx + r * Math.cos(angle), y: cy - r * Math.sin(angle) };
+}
+
+/**
+ * Hacim ölçeği — son seans hacminin 20 günlük ortalamaya oranı. Ölçek
+ * 0'dan en az 3×'e (oran büyükse bir üst tam sayıya) uzanıyor; ortalama
+ * (1×) ölçeğin üstünde bir çentik. `fill` şeridin payı.
+ */
+export function volumeScale(ratio: number): { max: number; fill: number; average: number } {
+  const max = Math.max(3, Math.ceil(ratio));
+  return { max, fill: clamp01(ratio / max), average: 1 / max };
+}
+
+/**
+ * Trend ölçeği — fiyat ile 50 ve 200 günlük ortalamaların AYNI eksendeki
+ * yeri. Eksen üç sayının en küçüğünden en büyüğüne, iki uçta %10 pay; eksik
+ * ortalama (yeni halka arz) çizilmez. İkiden az sayı varsa null.
+ */
+export function trendScale(
+  price: number | null,
+  sma50: number | null,
+  sma200: number | null,
+): { price: number; sma50: number | null; sma200: number | null } | null {
+  const values = [price, sma50, sma200].filter((value): value is number => value !== null && Number.isFinite(value));
+  if (price === null || values.length < 2) return null;
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  const span = hi - lo || hi * 0.02 || 1;
+  const at = (value: number | null) => (value === null ? null : 0.1 + ((value - lo) / span) * 0.8);
+  return { price: at(price)!, sma50: at(sma50), sma200: at(sma200) };
+}
+
+/**
+ * Yatay etiket itmesi — kapaktaki fiyat ölçeğinin (`LevelScale`) etiketleri
+ * çakışmasın. Girdi sıralı olmak zorunda değil; çıktı girdinin sırasıyla.
+ * Çakışan etiketler bir küme olur ve küme kendi hedeflerinin ortalamasına
+ * ortalanır (`priceLadderLayout`un yatay karşılığı); [min, max] dışına
+ * taşmaz. `gap` etiketler arası en az pay (0–1).
+ */
+export function spreadLabels(xs: readonly number[], gap: number, min = 0, max = 1): number[] {
+  const order = xs.map((x, index) => ({ x, index })).sort((a, b) => a.x - b.x || a.index - b.index);
+  type Cluster = { from: number; size: number; start: number };
+  const place = (cluster: Cluster) => {
+    let sum = 0;
+    for (let i = 0; i < cluster.size; i++) sum += order[cluster.from + i]!.x - i * gap;
+    const ideal = sum / cluster.size;
+    cluster.start = Math.min(Math.max(ideal, min), max - (cluster.size - 1) * gap);
+  };
+  const clusters: Cluster[] = [];
+  order.forEach((_, index) => {
+    const cluster: Cluster = { from: index, size: 1, start: 0 };
+    place(cluster);
+    clusters.push(cluster);
+    while (clusters.length > 1) {
+      const last = clusters[clusters.length - 1]!;
+      const prev = clusters[clusters.length - 2]!;
+      if (prev.start + prev.size * gap <= last.start + 1e-9) break;
+      prev.size += last.size;
+      clusters.pop();
+      place(prev);
+    }
+  });
+  const out = new Array<number>(xs.length);
+  for (const cluster of clusters) {
+    for (let i = 0; i < cluster.size; i++) out[order[cluster.from + i]!.index] = cluster.start + i * gap;
+  }
+  return out;
+}

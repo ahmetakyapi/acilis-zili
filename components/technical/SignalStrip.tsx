@@ -3,6 +3,7 @@ import { ArcGauge, StepBars } from "@/components/ui/MiniGauges";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { distancePct, indicatorSignals, type TechnicalSnapshot } from "@/lib/technical";
 import { cn, formatPercentPlain, formatPrice } from "@/lib/utils";
+import { RsiGauge, TrendGauge, VolumeGauge } from "./SignalGauges";
 import styles from "./Technical.module.css";
 
 type Tile = {
@@ -14,6 +15,9 @@ type Tile = {
   /** Kelimenin yanındaki küçük çizim (5 Kasım 2026): liste kartıyla aynı
    *  dil — RSI yarım halka, hacim basamak (components/ui/MiniGauges). */
   art?: ReactNode;
+  /** Kapakta (`compact`) kelimenin üstündeki geniş ölçek (8 Kasım,
+   *  `SignalGauges`); bölüm şeridi `art`ı kullanmaya devam ediyor. */
+  visual?: ReactNode;
 };
 
 /**
@@ -59,6 +63,7 @@ export function SignalStrip({
       value: trend.tone === "up" ? t.technical.trendUp : trend.tone === "down" ? t.technical.trendDown : t.technical.trendMixed,
       detail,
       tone: trend.tone === "up" ? "up" : trend.tone === "down" ? "down" : "flat",
+      visual: <TrendGauge price={price} sma50={snapshot.sma50} sma200={snapshot.sma200} labels={t.technical.gauges} />,
     });
   }
 
@@ -93,6 +98,15 @@ export function SignalStrip({
           tone={momentum.tone === "overbought" ? "down" : momentum.tone === "oversold" ? "up" : undefined}
         />
       ),
+      /* Yayın değer şeridi bölgenin yön tonunda; 30–70 arası nötr — rengi
+         değil KONUMU okunsun (aşırı bölgeler zaten soluk tonlu). */
+      visual: (
+        <RsiGauge
+          rsi={momentum.rsi}
+          tone={momentum.tone === "overbought" ? "down" : momentum.tone === "oversold" ? "up" : "flat"}
+          locale={locale}
+        />
+      ),
     });
   }
 
@@ -105,6 +119,7 @@ export function SignalStrip({
       /* Hacim yön söylemez: yoğun hacim düşüşte de yükselişte de olur. */
       tone: volume.tone === "heavy" ? "primary" : "flat",
       art: <StepBars value={volume.ratio} tone={volume.tone === "heavy" ? "primary" : volume.tone === "light" ? "muted" : undefined} />,
+      visual: <VolumeGauge ratio={volume.ratio} heavy={volume.tone === "heavy"} label={t.technical.gauges.average} locale={locale} />,
     });
   }
 
@@ -139,8 +154,9 @@ export function SignalStrip({
            satırında. */
         <div key={tile.key} className={styles.signal} data-tone={tile.tone}>
           <dt>{tile.label}</dt>
-          <dd className={styles.signalValue} data-art={tile.art ? "" : undefined}>
-            {tile.art}
+          {compact && tile.visual && <dd className={styles.signalVisual}>{tile.visual}</dd>}
+          <dd className={styles.signalValue} data-art={!compact && tile.art ? "" : undefined}>
+            {!compact && tile.art}
             <strong className={cn(tile.tone === "up" && "text-up", tile.tone === "down" && "text-down", tile.tone === "primary" && "text-primary-ink")}>
               {tile.value}
             </strong>
