@@ -152,7 +152,7 @@ async function fotografAl(
   key: string,
   locale: string,
   snapshot: unknown,
-  source: WriteSource,
+  source: WriteSource | "auto",
 ) {
   try {
     await db
@@ -494,6 +494,15 @@ export const DAILY_CHART_INPUT_SHAPE = {
 } as const;
 
 /**
+ * Günün grafiğinin yazarı: rutin, panel ya da sitenin YEDEĞİ (8 Kasım,
+ * `lib/daily-chart-fallback.ts`). "auto" yalnız boş güne yazar ve rutin
+ * geldiğinde devrilir; rutinin bağlamı onu "yazılmış" saymaz
+ * (`/api/grafik/context` → `existing_locales`).
+ */
+export const DAILY_CHART_AUTO = "auto";
+export type DailyChartSource = WriteSource | typeof DAILY_CHART_AUTO;
+
+/**
  * Günün grafiğini yazar ya da üstüne yazar. `date` burada ZORUNLU: hangi
  * günün son tamamlanmış seans olduğuna uç karar veriyor (tatil takvimi ve
  * saat orada), yazma yolu takvim bilmiyor.
@@ -504,15 +513,20 @@ export const DAILY_CHART_INPUT_SHAPE = {
  */
 export async function saveDailyChart(
   input: DailyChartInput & { date: string },
-  source: WriteSource,
+  source: DailyChartSource,
   beklenen?: string,
-) {
+): Promise<{ date: string; locale: string; skipped?: "exists" }> {
   const locale = input.locale ?? "tr";
   const [mevcut] = await db
     .select()
     .from(dailyCharts)
     .where(and(eq(dailyCharts.chartDate, input.date), eq(dailyCharts.locale, locale)))
     .limit(1);
+
+  /* YEDEK HİÇBİR KAYDIN ÜSTÜNE YAZMAZ (8 Kasım): yalnız boş güne. Kontrol
+     yazma yolunda, çağıranda değil — cron'un okuması ile yazması arasında
+     rutin yazmış olabilir. */
+  if (source === DAILY_CHART_AUTO && mevcut) return { date: input.date, locale, skipped: "exists" };
 
   if (
     beklenen !== undefined &&
@@ -539,12 +553,21 @@ export async function saveDailyChart(
     await fotografAl(dailyChartRevisionKey(input.date), locale, mevcut, source);
   }
 
+  /* Yedeğin üstüne gerçek kayıt gelince künye de değişir: `generatedBy`
+     "yalnız ilk yazımda" kuralının tek istisnası, çünkü "auto" bir yazar
+     değil yer tutucu — rutin yazınca kayıt artık rutinin. `publishedAt`
+     da o an: okurun gördüğü metin o an yayımlandı. */
+  const takeover =
+    mevcut?.generatedBy === DAILY_CHART_AUTO && source !== DAILY_CHART_AUTO
+      ? { generatedBy: source, publishedAt: new Date() }
+      : {};
+
   await db
     .insert(dailyCharts)
-    .values({ ...values, generatedBy: source === "admin" ? "admin" : "claude" })
+    .values({ ...values, generatedBy: source })
     .onConflictDoUpdate({
       target: [dailyCharts.chartDate, dailyCharts.locale],
-      set: { ...values, updatedAt: new Date() },
+      set: { ...values, ...takeover, updatedAt: new Date() },
     });
 
   return { date: input.date, locale };

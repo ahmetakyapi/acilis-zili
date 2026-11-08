@@ -30,7 +30,7 @@ GitHub Actions → "Migrate DB" iş akışı, `check` modu (salt okunur).
 | Veritabanı tablosu | 55 · 43 migration (0000–0042; üretimde hepsi uygulandı, 29 Ekim) |
 | Sağlayıcı | Alpaca · Finnhub · FRED · TCMB · TCMB EVDS (isteğe bağlı) · SEC EDGAR (13F, Form 4) · OpenFIGI · House Clerk · Federal Reserve · Kalshi · Cboe · ABD Hazinesi · ARK / Global X ETF dosyaları · GİB (`lib/providers/`) |
 | Ortam değişkeni | 36 (`.env.example`) |
-| Zamanlanmış iş | 8 uç `app/api/cron/*`: günlük senkron, alarmlar, bilanço hatırlatması, haberler + çeviri, pazar özeti postası, Telegram, olasılıklar, risk. Saatleri tek yerde: `deploy/cron-install.sh` |
+| Zamanlanmış iş | 9 uç `app/api/cron/*`: günlük senkron, alarmlar, bilanço hatırlatması, haberler + çeviri, pazar özeti postası, Telegram, olasılıklar, risk, Günün Grafiği yedeği. Saatleri tek yerde: `deploy/cron-install.sh` |
 | İçerik rutini | 7 adet, claude.ai üzerinde elle kurulu (teknik analiz günde üç koşu; liste `docs/claude-rutinler.md`) |
 
 **Tohumlanan veri:** 23 NYSE tatili (üçü yarım gün) · CPI/FOMC/istihdam yayın
@@ -59,6 +59,19 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       `docs/claude-rutinler.md` § 7. İlk koşu 27 Ekim Salı 09:15 TR.
 - [x] **Görev Kontrolü (eski adıyla Koşu Bekçisi, 25 Ekim'de yeniden
       adlandırıldı) Günün Grafiği'ni de izliyor** (düşerse yeniden çalıştırır).
+- [ ] **Günün Grafiği kapanıştan sonraya alınmalı — sahibi claude.ai'de
+      (8 Kasım).** Uç artık günü kapanış + 20 dk'da (16:20 NY) tamamlanmış
+      sayıyor. Üç değişiklik: (1) "Açılış Zili · Günün Grafiği" cron'u
+      `CRON_TZ=America/New_York 25 16 * * 1-5`; (2) aynı rutinin prompt'u
+      `docs/claude-rutinler.md` § 7'den yeniden yapıştırılır (adım 1'e
+      `auto_locales` satırı); (3) Görev Kontrolü prompt'unda Günün
+      Grafiği'nin beklenen cron'u (1)'deki olur ve kullanım limitindeki tek
+      yeniden çalıştırma öncelik listesine Bilanço'dan hemen sonra girer.
+      Kök neden: 7 Kasım cumartesi koşusu kullanım limitiyle düştü, bekçi
+      yalnız Bilanço'yu yeniden çalıştırdı, cumanın grafiği yazılmadı.
+      Sitenin yedeği (`/api/cron/grafik`) ilk dağıtımdan sonraki 11:45 UTC
+      koşusunda 6 Kasım'ı şablonla doldurur; yorumlu hâli için rutini
+      `date: 2026-11-06` ile bir kez elle çalıştırmak yeter.
 - [ ] **Telegram kanalı kurulmadı.** BotFather'da bot aç, kanala yönetici
       yap; `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHANNEL_ID` (isteğe bağlı
       `TELEGRAM_CHANNEL_ID_EN`) ve `NEXT_PUBLIC_TELEGRAM_URL` GitHub

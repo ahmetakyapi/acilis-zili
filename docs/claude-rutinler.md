@@ -27,7 +27,7 @@ Yapıştırmadan önce prompt içindeki `BURAYA_SECRET` yazan yeri gerçek
 | 4 | Bilanço Analizi | her gün 01:30, 12:30, 16:30, 18:30 NY | `CRON_TZ=America/New_York 30 1,12,16,18 * * *` | /bilancolar/analizler |
 | 5 | Teknik Analiz | işlem günleri 08:45, 12:45, 14:45 NY | `CRON_TZ=America/New_York 45 8,12,14 * * 1-5` | /teknik |
 | 6 | Yaz Saati Nöbetçisi | Mart ve Kasım'da her Pazar 15:00 TR | `0 12 * 3,11 0` (UTC) | 3 ve 4'ün akşam cron'u |
-| 7 | Günün Grafiği | Salı–Cumartesi 09:15 TR | `CRON_TZ=Europe/Istanbul 15 9 * * 2-6` | /gunun-grafigi |
+| 7 | Günün Grafiği | işlem günleri 16:25 NY — kapanıştan 25 dk sonra (kışın 00:25, yazın 23:25 TR) | `CRON_TZ=America/New_York 25 16 * * 1-5` (8 Kasım'a dek `CRON_TZ=Europe/Istanbul 15 9 * * 2-6`) | /gunun-grafigi |
 
 > **5 Kasım 2026:** tablo canlı zamanlamaya çekildi. Kaynak "Görev Kontrolü"
 > rutininin her gün karşılaştırdığı beklenen cron listesi ve Günün Grafiği
@@ -1776,21 +1776,47 @@ Hiçbir şey değişmediyse ve sorun yoksa bildirim GÖNDERME. Son mesajına tek
 
 # 7 · Günün Grafiği
 
-**Zamanlama:** Salı–Cumartesi 09:15 TR — cron `15 6 * * 2-6` (UTC).
+**Zamanlama:** işlem günleri 16:25 New York — cron
+`CRON_TZ=America/New_York 25 16 * * 1-5`. Kışın 00:25, yazın 23:25 TR.
+
+> **8 Kasım 2026 — sahibi claude.ai'de değiştirmeli.** Canlı cron hâlâ
+> `CRON_TZ=Europe/Istanbul 15 9 * * 2-6` (ertesi sabah). Yeni cron'u gir ve
+> prompt'u yeniden yapıştır (adım 1'e `auto_locales` satırı eklendi). Görev
+> Kontrolü'nün prompt'unda da iki satır değişir: Günün Grafiği'nin beklenen
+> cron'u yukarıdaki olur, ve kullanım limitinde "yalnız bir görevi yeniden
+> çalıştır" öncelik listesine Günün Grafiği Bilanço'nun hemen ardından
+> girer (Bilanço → Günün Grafiği → Mercek → Haftalık → Denetim). Durum
+> `docs/ROUTEMAP.md` → Açık işler.
 
 Her işlem günü TEK grafik ve ~100 kelimelik açıklama (Chartr / Bloomberg
 "Points of Return" kalıbı). Mercekten kısa, bültenden görsel; paylaşılmak
 için yapılıyor ve arşivde kalıyor: `/gunun-grafigi/<gün>`, paylaşım görseli
 `/gunun-grafigi/<gün>/gorsel?boyut=yatay|dikey`.
 
-**Neden ertesi sabah.** Grafik KAPANMIŞ bir seansı anlatır. Uç bunu
-kendisi denetliyor (`lib/daily-chart.ts` → `lastCompletedSession`): bir gün
-ancak akşam seansı da bitince (20:00 NY + 15 dakika besleme gecikmesi)
-tamamlanmış sayılır. 09:15 TR yıl boyu New York'ta gece 02:15 ya da 01:15;
-yaz saati kayması burada hiçbir şeyi bozmuyor, nöbetçiye (§ 6) iş yok.
-Salı sabahı pazartesiyi, cumartesi sabahı cumayı yazar. Tatil ertesi sabah
-`date` boş bırakılırsa uç son tamamlanmış seansı seçer — tatilin önceki günü
-zaten yazılmışsa görev pas geçer (aşağıda, adım 1).
+**Neden kapanıştan hemen sonra (8 Kasım).** Grafik KAPANMIŞ bir seansı
+anlatır; uç bunu kendisi denetliyor (`lib/daily-chart.ts` →
+`lastCompletedSession`): bir gün kapanış + 15 dakika besleme gecikmesi +
+5 dakika pay geçince, yani 16:20 NY'de tamamlanmış sayılır (yarım günde
+13:20). Eskiden akşam seansının bitmesi (20:15 NY) bekleniyordu ve rutin
+ertesi sabah koşuyordu; ölçüm gün barının akşam işlemlerini İÇERMEDİĞİNİ
+gösterdi (`lib/providers/alpaca.ts` → `getDailyBarsBetween`), bekleme
+gereksizdi. `CRON_TZ=America/New_York` yaz saati geçişinde kendiliğinden
+kayar; nöbetçiye (§ 6) iş yok. Cuma koşusu cumayı yazar, hafta sonu ve
+pazartesi seansı bitene dek sayfada cuma durur. Tatil günü de koşar: uç
+son tamamlanmış seansı verir, o gün zaten yazılmışsa `existing_locales`
+["tr","en"] gelir ve görev pas geçer. Yarım günde (13:00 kapanış) 16:25
+koşusu o günü yazar.
+
+**Rutin düşerse sitenin yedeği yazar.** 7 Kasım cumartesi koşusu kullanım
+limitine takılıp üç saniyede düştü; Görev Kontrolü o gün yalnız Bilanço'yu
+yeniden çalıştırdı ve 6 Kasım cumasının grafiği hiç yazılmadı — hafta sonu
+boyunca ana sayfada "Perşembe'nin Grafiği" kaldı. Artık sunucunun kendi
+cron'u (`/api/cron/grafik`, hafta içi 22:30 UTC ve her sabah 11:45 UTC)
+son seansın HİÇ kaydı yoksa bağlam paketinden şablonla iki dilde yazar
+(`lib/daily-chart-fallback.ts`; model yok, yorum yok, metin otomatik
+olduğunu söyler). Yedek `generatedBy: "auto"` taşır, context'te
+`existing_locales`e girmez (`auto_locales`ta görünür); rutin aynı günü
+yazınca üstüne yazar.
 
 **Sayılar uçta denetleniyor.** POST, başlıktaki, grafikteki ve açıklamadaki
 HER sayıyı o günün bağlam paketinde arıyor (`lib/ai-grounding.ts`, site içi
@@ -1839,6 +1865,10 @@ Yanıtta:
   complete          → false ise endeks barları gelmedi: YAZMA, PAS ("veri eksik").
   existing_locales  → o gün yazılmış diller. ["tr","en"] ise PAS. ["tr"] ise
                       yalnız İngilizceyi yaz (adım 5).
+  auto_locales      → sitenin otomatik yedeğinin yazdığı diller (şablon,
+                      yorumsuz). Bunlar existing_locales'ta YOK: o günü
+                      yazılmamış say, iki dili de normal yaz; POST yedeğin
+                      üstüne yazar. Raporda "yedeğin üstüne yazıldı" de.
   indices / sectors / commodities / crypto
                     → her satırda d1 (o gün), d5 (5 seans), d21 (21 seans):
                       pct.tr / pct.en (işaretli yüzde), close, base, base_date.

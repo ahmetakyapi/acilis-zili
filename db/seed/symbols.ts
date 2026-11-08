@@ -169,6 +169,14 @@ export type WorldMarket = {
   /** Vekil ettiği yerel endeks — kart altında künye olarak görünür. */
   tracksTr: string;
   tracksEn: string;
+  /** Yerel endeksin KISA adı ("BIST", "Nikkei") — ana sayfanın Dünya
+   *  Piyasaları satırında adın yanındaki künye (8 Kasım). Uzun `tracks*`
+   *  cümlesi orada 390'da iki satıra sarıyor, 768'de beş satırın beşi,
+   *  1440'ta üçü kesiliyordu (ölçüldü); "ABD fonu" sözü beş satırda aynıydı
+   *  ve panelin dipnotu zaten söylüyor. `tracks*` fon sayfasının künyesinde
+   *  olduğu gibi kalıyor. */
+  indexTr: string;
+  indexEn: string;
   flag: string;
 };
 
@@ -182,6 +190,8 @@ export const WORLD_MARKETS: WorldMarket[] = [
     nameEn: "Türkiye",
     tracksTr: "MSCI Türkiye · BIST'i izleyen ABD fonu",
     tracksEn: "MSCI Türkiye · US-listed fund tracking the BIST",
+    indexTr: "BIST",
+    indexEn: "BIST",
     flag: "🇹🇷",
   },
   {
@@ -191,6 +201,8 @@ export const WORLD_MARKETS: WorldMarket[] = [
     nameEn: "Japan",
     tracksTr: "MSCI Japonya · Nikkei'yi izleyen ABD fonu",
     tracksEn: "MSCI Japan · US-listed fund tracking the Nikkei",
+    indexTr: "Nikkei",
+    indexEn: "Nikkei",
     flag: "🇯🇵",
   },
   {
@@ -200,6 +212,8 @@ export const WORLD_MARKETS: WorldMarket[] = [
     nameEn: "South Korea",
     tracksTr: "MSCI Güney Kore · KOSPI'yi izleyen ABD fonu",
     tracksEn: "MSCI South Korea · US-listed fund tracking the KOSPI",
+    indexTr: "KOSPI",
+    indexEn: "KOSPI",
     flag: "🇰🇷",
   },
   {
@@ -209,6 +223,8 @@ export const WORLD_MARKETS: WorldMarket[] = [
     nameEn: "China",
     tracksTr: "MSCI Çin · Şanghay ve Hong Kong'u izleyen ABD fonu",
     tracksEn: "MSCI China · US-listed fund, Shanghai and Hong Kong",
+    indexTr: "Şanghay, Hong Kong",
+    indexEn: "Shanghai, Hong Kong",
     flag: "🇨🇳",
   },
   {
@@ -218,6 +234,8 @@ export const WORLD_MARKETS: WorldMarket[] = [
     nameEn: "Germany",
     tracksTr: "MSCI Almanya · DAX'ı izleyen ABD fonu",
     tracksEn: "MSCI Germany · US-listed fund tracking the DAX",
+    indexTr: "DAX",
+    indexEn: "DAX",
     flag: "🇩🇪",
   },
 ];

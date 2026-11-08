@@ -700,7 +700,8 @@ ve yazma uçları ayrıca oturum, admin tarafından atanmış erişim ve günlü
 | `/api/ai/tarama-cumlesi` · `/api/ai/takip-notu` · `/api/ai/hisse-sor` · `/api/ai/portfoy-analizi` | Sayfanın içindeki Claude: düz cümleyle tarama (köken denetimi, 2 KB gövde tavanı), Takip Listem Bugün, Bu Hisseye Sor, portföy risk okuması. Botlara kapalı, oran ve günlük sınırlı, ortak Claude bütçesinden düşer |
 | `/api/bulmaca` | Hisseyi Bil: GET günün siluetini, POST tahmini değerlendirip açılan ipucunu döndürür; cevap yalnız oyun bitince |
 | `/api/bulmaca/siralama` | Hisseyi Bil günün sıralaması: GET tablo ve okurun sırası; POST saati başlatır (`start`) ya da takma adı yazar (`nickname`); oturum ister |
-| `/api/grafik` (+ `/context`) | Günün Grafiği'nin yazma ve geri okuma ucu (`BRIEF_SECRET`); POST yalnız tamamlanmış seansı ve bağlamda geçen sayıları kabul eder |
+| `/api/grafik` (+ `/context`) | Günün Grafiği'nin yazma ve geri okuma ucu (`BRIEF_SECRET`); POST yalnız tamamlanmış seansı (kapanış + 20 dk) ve bağlamda geçen sayıları kabul eder |
+| `/api/cron/grafik` | Günün Grafiği yedeği: hafta içi 22:30 UTC ve her sabah 11:45 UTC (`deploy/cron-grafik.sh`); son tamamlanmış seansın hiç kaydı yoksa bağlam paketinden şablonla iki dilde yazar (`generatedBy: "auto"`, model yok — `lib/daily-chart-fallback.ts`), rutin gelince üstüne yazılır (`CRON_SECRET`) |
 | `/api/cron/telegram` | Telegram kanalı: beş dakikada bir; açılış öncesi bülten ve takvim, kapanış özeti, yeni Mercek, büyük makro veri. Tekrarı `telegram_posts` defteri önler; `TELEGRAM_BOT_TOKEN` ve `TELEGRAM_CHANNEL_ID` yoksa uyur (`CRON_SECRET`) |
 | `/api/e-posta/ayril` | Tek tıkla çıkış (RFC 8058, `List-Unsubscribe-Post`): yalnız POST, girişsiz, IP başına sınırlı |
 | `/api/cron/bilanco` | "Bilanço yarın" hatırlatması: günde bir, tercihi açan hesaplara takip listelerindeki yarınki bilançoları tek bildirimde gönderir (`CRON_SECRET`) |

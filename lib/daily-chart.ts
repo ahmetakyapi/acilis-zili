@@ -1,14 +1,7 @@
 import { parseBlocks, type Block } from "@/components/article/parse-blocks";
 import { barDay } from "@/lib/brief-indices";
-import {
-  AFTER_HOURS_MINUTES,
-  FEED_DELAY_MINUTES,
-  closeMinutesFor,
-  etParts,
-  isTradingDay,
-  prevTradingDay,
-  type MarketHoliday,
-} from "@/lib/market-hours";
+import { latestPosterDate } from "@/lib/day-poster";
+import { etParts, prevTradingDay, type MarketHoliday } from "@/lib/market-hours";
 import type { Bar } from "@/lib/providers/types";
 
 /* ==========================================================================
@@ -160,19 +153,28 @@ export function firstSentence(bodyMd: string, max = 220): string {
  * Grafiğin anlattığı gün kapanmış olmalı: seans açıkken günün barı yarım ve
  * yüzde her dakika değişiyor, yazıya geçen sayı ise kalıcı (CLAUDE.md "Veri
  * dürüstlüğü" 4 — yazma katmanı bayat ya da yarım veriyi kullanmaz).
- * Bugün işlem günüyse ve AKŞAM SEANSI + besleme gecikmesi bittiyse bugün;
- * değilse bir önceki işlem günü. Kapanış zili yetmiyor: günlük bar akşam
- * seansında hâlâ güncelleniyor olabilir ve "kapanmış" denen gün yazıdan
- * sonra bir kez daha oynardı. Bekleme ucuz — rutin zaten ertesi sabah
- * koşuyor. Yarım günde kapanış 13:00, akşam seansı yine dört saat
- * (`closeMinutesFor`, `AFTER_HOURS_MINUTES`).
+ *
+ * KAPANIŞ + GECİKME + PAY (8 Kasım; Günün Posteri'nin kuralı,
+ * `lib/day-poster.ts` → `posterReadyAt`): 16:00 kapanışı → 16:20 ET; kışın
+ * 00:20, yazın 23:20 TR. Yarım günde 13:20 (`closeMinutesFor`).
+ *
+ * ESKİ KURAL KALKTI: "akşam seansı da bitsin" (20:00 ET + 15 dk). Gerekçesi
+ * "günlük bar akşam seansında hâlâ güncelleniyor olabilir"di; depo bunu
+ * 24 Ekim'de ÖLÇTÜ ve yanlış çıktı — gün barının kapanışı asıl seansın
+ * kapanışı, akşam işlemleri girmiyor (`lib/providers/alpaca.ts` →
+ * `getDailyBarsBetween`, SPY 23 Ekim: gün barı 759,97 = 16:00 dakika barı;
+ * akşamın son işlemi 761,11). Bekleme ucuz da değildi: grafik kapanıştan
+ * dört saat sonra ancak "hazır" sayılıyor, rutin ertesi sabah koşuyordu ve
+ * cumartesi koşusu düşünce (7 Kasım, kullanım limiti) hafta sonu boyunca
+ * perşembe görünüyordu. Sahibinin ölçüsü (8 Kasım): "gün bittikten sonra
+ * o günkü verilerle çizelim … hafta sonu da cuma kapanışı gözükmeli."
+ *
+ * Kapanmış günün barlarını sağlayıcının TAZE yanıtından ister: paylaşımlı
+ * önbellekte kapanıştan önce çekilmiş (yarım barlı) yanıt durabilir —
+ * `lib/daily-chart-context.ts` barları `fresh: true` ile çekiyor.
  */
 export function lastCompletedSession(now: Date, holidays: MarketHoliday[]): string {
-  const { dateStr, minutes } = etParts(now);
-  if (isTradingDay(dateStr, holidays) && minutes >= closeMinutesFor(dateStr, holidays) + AFTER_HOURS_MINUTES + FEED_DELAY_MINUTES) {
-    return dateStr;
-  }
-  return prevTradingDay(dateStr, holidays);
+  return latestPosterDate(etParts(now).dateStr, holidays, now);
 }
 
 /* --------------------------------------------------------------------------

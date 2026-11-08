@@ -86,21 +86,34 @@ test("ilk cümle biçim işaretlerini atar ve uzunsa kelimede keser", () => {
   assert.ok(long.endsWith("…") && long.length <= 51);
 });
 
-test("son tamamlanmış seans: akşam seansı ve gecikme bitmeden bugün değil", () => {
-  // Cuma 16:00 ET (EDT) — kapanış zili çaldı ama gün henüz kapanmadı.
+test("son tamamlanmış seans: kapanış + 15 dk gecikme + 5 dk pay (akşam seansı beklenmez)", () => {
+  // Cuma 16:00 ET (EDT) — kapanış zili çaldı, gün barı henüz kesinleşmedi.
   assert.equal(lastCompletedSession(new Date("2026-10-23T20:00:00Z"), []), "2026-10-22");
-  // Cuma 20:20 ET — akşam seansı + 15 dakika geçti.
-  assert.equal(lastCompletedSession(new Date("2026-10-24T00:20:00Z"), []), "2026-10-23");
+  assert.equal(lastCompletedSession(new Date("2026-10-23T20:19:00Z"), []), "2026-10-22");
+  // 16:20 ET — o günün grafiği yazılabilir (yazın 23:20 TR).
+  assert.equal(lastCompletedSession(new Date("2026-10-23T20:20:00Z"), []), "2026-10-23");
   // Cumartesi ve pazartesi sabahı cumayı anlatır.
   assert.equal(lastCompletedSession(new Date("2026-10-24T15:00:00Z"), []), "2026-10-23");
   assert.equal(lastCompletedSession(new Date("2026-10-26T10:00:00Z"), []), "2026-10-23");
 });
 
-test("son tamamlanmış seans: yarım gün 17:15'te kapanır, tatil atlanır", () => {
-  // 27 Kasım yarım gün (13:00 EST kapanış): 13:00'te hâlâ açık sayılır → tatilden önceki gün.
-  assert.equal(lastCompletedSession(new Date("2026-11-27T18:00:00Z"), HOLIDAYS), "2026-11-25");
-  // 17:30 EST: 13:00 + dört saat + 15 dakika geçti.
-  assert.equal(lastCompletedSession(new Date("2026-11-27T22:30:00Z"), HOLIDAYS), "2026-11-27");
+test("son tamamlanmış seans: kış saatinde aynı kural, TR'de 00:20 (8 Kasım vakası)", () => {
+  // Cuma 6 Kasım 16:19 EST = 21:19Z = 00:19 TR cumartesi — henüz perşembe.
+  assert.equal(lastCompletedSession(new Date("2026-11-06T21:19:00Z"), []), "2026-11-05");
+  // 16:20 EST = 00:20 TR — cuma yazılabilir.
+  assert.equal(lastCompletedSession(new Date("2026-11-06T21:20:00Z"), []), "2026-11-06");
+  // Hafta sonunun tamamı cuma: cumartesi 09:15 TR ve pazar.
+  assert.equal(lastCompletedSession(new Date("2026-11-07T06:15:00Z"), []), "2026-11-06");
+  assert.equal(lastCompletedSession(new Date("2026-11-08T12:00:00Z"), []), "2026-11-06");
+  // Pazartesi seansı sürerken hâlâ cuma.
+  assert.equal(lastCompletedSession(new Date("2026-11-09T18:00:00Z"), []), "2026-11-06");
+});
+
+test("son tamamlanmış seans: yarım gün 13:20'de kapanır, tatil atlanır", () => {
+  // 27 Kasım yarım gün (13:00 EST kapanış): 13:19'da henüz değil → tatilden önceki gün.
+  assert.equal(lastCompletedSession(new Date("2026-11-27T18:19:00Z"), HOLIDAYS), "2026-11-25");
+  // 13:20 EST: kapanış + 15 dk gecikme + 5 dk pay geçti.
+  assert.equal(lastCompletedSession(new Date("2026-11-27T18:20:00Z"), HOLIDAYS), "2026-11-27");
   // Tam tatilde bir önceki işlem günü.
   assert.equal(lastCompletedSession(new Date("2026-11-26T23:00:00Z"), HOLIDAYS), "2026-11-25");
 });

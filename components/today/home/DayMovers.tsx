@@ -12,8 +12,9 @@ import { getStatus, getSymbolNames } from "@/lib/data";
 import { SESSION_BOUNDS, etParts, isSessionTrade } from "@/lib/market-hours";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { MOVERS_LANE_FLOOR, sharedLaneScale } from "@/lib/home-figures";
-import { cn, directionOf, directionText, formatPercent, formatPercentPlain } from "@/lib/utils";
-import { MiniLane } from "@/components/day-poster/PosterLanes";
+import { TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
+import { cn, directionOf, directionText, directionWash, formatPercent, formatPercentPlain } from "@/lib/utils";
+import { HomeLane, LaneAxis } from "@/components/today/home/HomeLane";
 import styles from "./HomeLanes.module.css";
 import { indexSnapshot } from "@/components/today/home/index-snapshot";
 
@@ -170,6 +171,8 @@ export async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }
       note={note}
       gainers={gainers.map(asRow)}
       losers={losers.map(asRow)}
+      gainersTotal={ranked.filter((row) => (row.quote.changePct ?? 0) > 0).length}
+      losersTotal={ranked.filter((row) => (row.quote.changePct ?? 0) < 0).length}
       source={result.source}
       fetchedAt={result.fetchedAt}
       stale={result.stale}
@@ -187,9 +190,21 @@ export type MoverRow = { symbol: string; changePct: number; name: string; logoUr
  * duruyordu. Her satırın altında artık ortak sıfırlı kulvar: yükselenler
  * sıfırdan sağa, düşenler sola — iki blok alt alta tek bir ayrışan grafik
  * gibi okunuyor. Ölçek iki blokta ve yedek satırlarda (`data-fill`) TEK
- * (`sharedLaneScale`, taban ±%3), başlığın sağında yazılı. Şerit ad
- * sütunundan başlıyor, logo sütunu boş: ad, künye ve şerit tek sol hatta
- * (HomeLanes.module.css).
+ * (`sharedLaneScale`, taban ±%3). Şerit ad sütunundan başlıyor, logo
+ * sütunu boş: ad, künye ve şerit tek sol hatta (HomeLanes.module.css).
+ *
+ * İKİNCİ TUR (8 Kasım, sahibinin isteği — Dünya Piyasaları ile aynı dil):
+ * - Ölçek künyesi ("Ortak Ölçek ±%17,2", ilk alt başlığın sağında) iki
+ *   bloğun ÜSTÜNDE tek eksen oldu (`LaneAxis`): −%17,2 · 0 · +%17,2,
+ *   şeritlerle aynı hatta. İki blok tek grafiğin iki yarısı; eksen bunu
+ *   bir kez söylüyor.
+ * - Satır üç kattan ikiye: sembol ve ad tek satırda (ad kesilebilir, tam
+ *   adı `aria-label`da), altında şerit. Logo 26 → 32 (Dünya'nın bayrak
+ *   karosuyla aynı sütun genişliği; iki panel alt alta aynı sol hatta).
+ * - Grup başlığı yön ikonlu ve SAYILI: "Yükselenler · 312 Hisse" — liste
+ *   ilk üç–beşi gösteriyor, sayaç o yöne gidenlerin tamamını (yalnız bu
+ *   seansta işlem görenler, sıralamanın süzgeciyle aynı küme).
+ * - Yüzde hap (up/down wash), şeridin ucunda değer noktası (`HomeLane`).
  */
 export function DayMoversView({
   locale,
@@ -198,6 +213,8 @@ export function DayMoversView({
   note,
   gainers,
   losers,
+  gainersTotal,
+  losersTotal,
   source,
   fetchedAt,
   stale,
@@ -208,6 +225,9 @@ export function DayMoversView({
   note: string;
   gainers: MoverRow[];
   losers: MoverRow[];
+  /** O yöne giden sıralanabilir sembollerin tamamı (listede ilk beşi var). */
+  gainersTotal?: number;
+  losersTotal?: number;
   source: string;
   fetchedAt?: Date | string | null;
   stale?: boolean;
@@ -223,15 +243,38 @@ export function DayMoversView({
      Ayrım sütunla değil ALT BAŞLIKLA kuruluyor ve bu aynı zamanda doğrusu:
      düşüşle geçen bir günde "yükselenler" listesinin üçü de eksi olabiliyor,
      tek liste + renk o gün "kim yükseldi" sorusunu cevapsız bırakırdı. */
-  /* ÖLÇEK KÜNYESİ İLK ALT BAŞLIĞIN SAĞINDA, panel başlığında değil:
-     "Son Kapanışın Hareketleri" + künye + "Tümünü Gör" 350 piksellik
-     kolonda iki satıra bölünüyordu (başlık satırı 77 piksel, ölçüldü). */
-  const scaleText = t.homeDesk.scale.replace("{value}", formatPercentPlain(scale, locale, 1));
-  const block = (heading: string, rows: MoverRow[], divided: boolean, withScale = false) => (
-    <div className={cn(divided && "border-t border-line")}>
-      <p className="flex items-baseline justify-between gap-3 px-4 pb-1.5 pt-3.5 sm:px-5">
-        <span className="plate text-nano">{heading}</span>
-        {withScale && <span className="numeral text-tiny text-muted">{scaleText}</span>}
+  /* ÖLÇEK PANEL BAŞLIĞINDA DEĞİL: "Son Kapanışın Hareketleri" + künye +
+     "Tümünü Gör" 350 piksellik kolonda iki satıra bölünüyordu (başlık
+     satırı 77 piksel, ölçüldü). 6 Kasım'da ilk alt başlığın sağına inmişti;
+     8 Kasım'dan beri iki bloğun üstünde eksen. */
+  const countText = (n: number) =>
+    (n === 1 ? t.homeDesk.moversCountOne : t.homeDesk.moversCount).replace(
+      "{n}",
+      /* Evren 514 sembol: binlik ayırıcı hiç gerekmiyor. */
+      String(n),
+    );
+  const block = (
+    heading: string,
+    rows: MoverRow[],
+    dir: "up" | "down",
+    total: number | undefined,
+    offset: number,
+  ) => (
+    <div className="border-t border-line">
+      {/* GRUP BAŞLIĞI satırla aynı ızgarada: ikon işaret sütununda (logo
+          karolarının ortasında), ad sembollerle aynı sol hatta, sayaç
+          hapların sağ hattında. İkon karesi yok (AI-slop yasakları); yön
+          ikonu yönün rengi — renk anlam taşıyor. */}
+      <p className={cn(styles.row, styles.groupHead, "px-4 pb-1.5 pt-3 sm:px-5")}>
+        <span aria-hidden className={cn(styles.lead, styles.groupIcon, directionText(dir))}>
+          {dir === "up" ? <TrendUp weight="bold" /> : <TrendDown weight="bold" />}
+        </span>
+        <span className={cn(styles.groupLabel, "plate text-nano text-strong")}>{heading}</span>
+        {total !== undefined && total > 0 && (
+          <span className={cn(styles.groupCount, "numeral text-tiny text-muted")}>
+            {countText(total)}
+          </span>
+        )}
       </p>
       <ul>
         {rows.length === 0 ? (
@@ -253,34 +296,34 @@ export function DayMoversView({
                     .replace("{name}", row.name || row.symbol)
                     .replace("{symbol}", row.symbol)
                     .replace("{value}", value)}
-                  className={cn(styles.row, styles.rowLogo, "px-4 py-2 transition-colors hover:bg-primary-tint sm:px-5")}
+                  className={cn(styles.row, "px-4 py-2 transition-colors hover:bg-primary-tint sm:px-5")}
                 >
                   <span className={styles.lead}>
-                    <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
+                    <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="md" />
                   </span>
                   <span className={styles.main}>
-                    <span className="numeral block text-base font-bold leading-tight text-strong">
-                      {row.symbol}
-                    </span>
-                    <span className="block truncate text-tiny leading-tight text-muted">
-                      {row.name}
+                    <span className={styles.identTight}>
+                      <span className="numeral shrink-0 text-read font-bold text-strong">
+                        {row.symbol}
+                      </span>
+                      <span className="min-w-0 truncate text-tiny text-muted">{row.name}</span>
                     </span>
                   </span>
-                  {/* Yüzde ÇIPLAK, rozet değil: yan kolonun grameri bu
-                      (dünya şeridi, favoriler, endeksler hepsi böyle). Rozetin
-                      zemini dar sütunda satırın yarısını kaplıyor. */}
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "numeral text-base font-bold",
-                      styles.value,
-                      directionText(directionOf(row.changePct)),
-                    )}
-                  >
-                    {value}
+                  {/* YÜZDE HAP (8 Kasım). Burada "yüzde ÇIPLAK, rozet değil"
+                      kararı vardı: rozetin zemini 167 piksellik sütunda
+                      satırın yarısını kaplıyordu. Panel artık tek sütun ve
+                      hap 390'da 62 piksel (satırın beşte biri, ölçüldü);
+                      yön zemini şeridin rengini sayıya da taşıyor. */}
+                  <span aria-hidden className={styles.value}>
+                    <span
+                      data-pill=""
+                      className={cn("numeral", styles.pill, directionWash(directionOf(row.changePct)))}
+                    >
+                      {value}
+                    </span>
                   </span>
-                  <span className={styles.lane}>
-                    <MiniLane change={row.changePct} scale={scale} />
+                  <span className={styles.laneCell}>
+                    <HomeLane change={row.changePct} scale={scale} index={offset + index} />
                   </span>
                 </Link>
               </li>
@@ -298,8 +341,16 @@ export function DayMoversView({
         tone="title"
         action={<PanelLink href="/piyasalar">{t.common.showAll}</PanelLink>}
       />
-      {block(t.today.moversUp, gainers, true, true)}
-      {block(t.today.moversDown, losers, true)}
+      <div className={styles.desk}>
+        <LaneAxis
+          scale={scale}
+          locale={locale}
+          label={t.homeDesk.scale.replace("{value}", formatPercentPlain(scale, locale, 1))}
+          className="px-4 sm:px-5"
+        />
+        {block(t.today.moversUp, gainers, "up", gainersTotal, 0)}
+        {block(t.today.moversDown, losers, "down", losersTotal, gainers.length)}
+      </div>
       {/* KÜNYE VE DAMGA BİRLİKTE. Panel uzun süre yalnızca "514 endeks üyesi
           tarandı · seans içi" yazıyordu: kaç sembolün tarandığını söylüyor,
           sayıların NE ZAMAN alındığını söylemiyordu. Yan kolondaki

@@ -34,6 +34,11 @@ LINES=(
 	# değerlendirir, uç kural + seans başına tek uyarı yazar.
 	"40 21 * * 1-5 /bin/bash $APP_ROOT/current/deploy/cron-risk.sh"
 	"15 11 * * 2-6 /bin/bash $APP_ROOT/current/deploy/cron-risk.sh"
+	# Günün Grafiği yedeği (8 Kasım — gerekçe deploy/cron-grafik.sh). Rutin
+	# düşerse ya da geç kalırsa son seansın grafiğini şablonla yazar; kayıt
+	# varsa dokunmaz. Akşam kapanıştan sonra, sabah hafta sonu dahil telafi.
+	"30 22 * * 1-5 /bin/bash $APP_ROOT/current/deploy/cron-grafik.sh"
+	"45 11 * * * /bin/bash $APP_ROOT/current/deploy/cron-grafik.sh"
 	# Ortak veri önbelleğinin budaması (20 Ekim — gerekçe update.sh). Next
 	# diskteki kaydı hiç silmiyor; sürüm dizinleri budanırken önbellek de
 	# gidiyordu, ortak dizinde biriken tarihli adresler (gün başlangıçlı

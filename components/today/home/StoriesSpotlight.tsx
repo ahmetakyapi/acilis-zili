@@ -8,7 +8,7 @@ import { getStories, getStoryBySlug, getSymbolNames } from "@/lib/data";
 import { logoSrc } from "@/lib/logos";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { formatEtDateLong, formatEtDateCompact } from "@/lib/utils";
-import { StoryFigure, storyFigureOf } from "@/components/stories/StoryFigure";
+import { StoryFigure, storyFigureOf, type StoryFigureBlock } from "@/components/stories/StoryFigure";
 
 /* ==========================================================================
    Mercek — ana sayfanın okuma girişi
@@ -62,14 +62,56 @@ export async function StoriesSpotlight({
      Manşetin kadrosu en çok dört logo, satırlar ilk iki sembolün logosunu
      taşıyor. Adlar ve adresler tek sorguda: manşet ve satırların
      sembolleri birleşik bir listeyle soruluyor. */
-  /* Tek artan sembol "+1" çipi değil, kendisi: çip bir karo kadar yer
-     kaplıyor (44 piksel), beşinci karo kadroyu büyütmüyor (28 Eylül). */
-  const leadCount = lead.symbols?.length ?? 0;
-  const leadSymbols = (lead.symbols ?? []).slice(0, leadCount === STORY_CAST_MAX + 1 ? leadCount : STORY_CAST_MAX);
   const castMeta = await getSymbolNames([
-    ...leadSymbols,
+    ...leadCastSymbols(lead),
     ...rest.flatMap((story) => (story.symbols ?? []).slice(0, 2)),
   ]);
+
+  return (
+    <StoriesSpotlightView
+      stories={stories}
+      figure={figure}
+      figureLocale={full?.locale ?? locale}
+      castMeta={castMeta}
+      locale={locale}
+      t={t}
+    />
+  );
+}
+
+type SpotlightStory = Awaited<ReturnType<typeof getStories>>[number];
+type SpotlightCastMeta = Awaited<ReturnType<typeof getSymbolNames>>;
+
+/* Tek artan sembol "+1" çipi değil, kendisi: çip bir karo kadar yer
+   kaplıyor (44 piksel), beşinci karo kadroyu büyütmüyor (28 Eylül). */
+function leadCastSymbols(lead: SpotlightStory): string[] {
+  const leadCount = lead.symbols?.length ?? 0;
+  return (lead.symbols ?? []).slice(0, leadCount === STORY_CAST_MAX + 1 ? leadCount : STORY_CAST_MAX);
+}
+
+/**
+ * Bloğun görünümü — veri yükleyiciden ayrı, saf (8 Kasım). Yükleyici
+ * yazıları, manşetin gövde bloğunu ve sembol künyelerini soruyor; bu
+ * bileşen yalnız çiziyor. Ayrım, bloğun veritabanı olmadan sahte veriyle
+ * ölçülebilmesi için (yerleşim kararları ölçümle verilir — CLAUDE.md).
+ */
+export function StoriesSpotlightView({
+  stories,
+  figure,
+  figureLocale,
+  castMeta,
+  locale,
+  t,
+}: {
+  stories: SpotlightStory[];
+  figure: StoryFigureBlock | null;
+  figureLocale: string;
+  castMeta: SpotlightCastMeta;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const [lead, ...rest] = stories;
+  const leadSymbols = leadCastSymbols(lead);
   /* KAROYU YALNIZCA LOGOSU OLAN ALIR (26 Eylül). Yazının kahramanı çoğu
      zaman bir fon (SPY, USO) ve fonların logosu yok: karo sembolün ilk iki
      harfine düşüyordu ("SP", "US") ve manşetin en görünür yeri iki soluk
@@ -155,7 +197,14 @@ export async function StoriesSpotlight({
                 Mercek kartlarıyla aynı: manşet → tarih → özet; kadro ve
                 eylem en altta, aynı satırda (telefonda kadro üstte, hap
                 altta). */}
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+            {/* KADRO VE EYLEM AYNI DİPTE (8 Kasım). Eylem 31 Ekim'den beri
+                açık mavi bir haptı; sahibi: "çok saçma ve kötü durmuş" —
+                kapsül kadronun karşısında, metnin altındaki boşlukta hiçbir
+                şeye bağlı olmadan yüzüyordu. Bütün kart zaten bağlantı; ayrı
+                buton yalnız "buradan okunur" demek için vardı. Şimdi kadro
+                ve dolgusuz mavi "Yazıyı Oku" hairline'la ayrılmış tek dipte,
+                aynı hatta; karta gelince ok ilerliyor. */}
+            <div className={styles.storyLeadFoot}>
               {/* KADRO: yazının kahramanı şirketler, logolarıyla. Karolar üst
                   üste biniyor ve blok görünüme girince sırayla iniyor
                   (`data-motion-stagger`); üzerine gelince aralanıyorlar.
@@ -195,28 +244,22 @@ export async function StoriesSpotlight({
                   </span>
                 </div>
               )}
-              {/* Eylem bir hap (31 Ekim): çizginin altında küçük bir "Oku"
-                  manşetin ağırlığının yanında kayboluyordu; öne çıkan analiz
-                  kartıyla aynı dil — tıklayınca mavi dolar. */}
-              <p className="inline-flex shrink-0 min-h-9 items-center gap-1.5 rounded-full bg-primary-wash px-4 text-small font-semibold text-primary-ink transition-colors group-hover:bg-primary group-hover:text-on-primary">
-                {t.guide.cardCta}
-                <ArrowRight
-                  weight="bold"
-                  size={13}
-                  className="transition-transform group-hover:translate-x-0.5"
-                />
-              </p>
+              <span className={styles.storyLeadAction}>
+                {t.stories.readStory}
+                <ArrowRight weight="bold" size={13} aria-hidden />
+              </span>
             </div>
           </div>
 
           {figure && (
             <StoryFigure
               block={figure}
-              locale={full?.locale ?? locale}
+              locale={figureLocale}
               className={`${styles.storyFigure} lg:w-[292px] lg:shrink-0`}
             />
           )}
         </div>
+
       </Link>
 
       {rest.length > 0 && (
@@ -238,27 +281,35 @@ export async function StoriesSpotlight({
                 prefetch={false}
                 className={styles.storyRow}
               >
-                {/* Numara yerine yazının şirketi: ilk sembolün logosu,
-                    ikinci sembol varsa köşesine binen küçük karo. Sembolü
-                    olmayan yazı (makro, politika) sıra numarasını korur. */}
+                {/* Numara yerine yazının şirketi. Sembolü olmayan yazı
+                    (makro, politika) sıra numarasını korur.
+                    İKİ LOGO ALT ALTA, EŞİT BOYDA (8 Kasım). İkinci sembol
+                    ilkinin köşesine binen 22 piksellik bir karoydu ve
+                    birincinin üçte birini örtüyordu (ölçüldü: 40'lık ORCL
+                    karosunun köşesine MSFT 14×15 piksel biniyordu) — sahibi:
+                    "çok fazla iç içe girmesine gerek yok". Yan yana dizmek
+                    sütunu iki karo genişliğine çıkarıp tek logolu ve
+                    numaralı satırların başlığını sağa itiyordu; alt alta
+                    dizince sütun her satırda tek karo genişliğinde kalıyor
+                    ve bütün başlıklar aynı x'te başlıyor. Numara da aynı
+                    ölçüde, gömük zeminli bir karo: logosuz satırın işareti
+                    logolu satırınkiyle aynı kutuya oturuyor. */}
                 {story.symbols && story.symbols.length > 0 && logoSrc(story.symbols[0], castMeta[story.symbols[0]]?.logoUrl) ? (
                   <span className={styles.storyRowLogo} aria-hidden>
-                    <LogoTile
-                      symbol={story.symbols[0]}
-                      logoUrl={castMeta[story.symbols[0]]?.logoUrl}
-                      size="md"
-                    />
-                    {story.symbols[1] && logoSrc(story.symbols[1], castMeta[story.symbols[1]]?.logoUrl) && (
-                      <LogoTile
-                        symbol={story.symbols[1]}
-                        logoUrl={castMeta[story.symbols[1]]?.logoUrl}
-                        size="xs"
-                        className={styles.storyRowLogoSecond}
-                      />
-                    )}
+                    {story.symbols.slice(0, 2)
+                      .filter((symbol, at) => at === 0 || logoSrc(symbol, castMeta[symbol]?.logoUrl))
+                      .map((symbol) => (
+                        <LogoTile
+                          key={symbol}
+                          symbol={symbol}
+                          logoUrl={castMeta[symbol]?.logoUrl}
+                          size="lg"
+                          className={styles.storyRowTile}
+                        />
+                      ))}
                   </span>
                 ) : (
-                  <span className={styles.storyNumber} aria-hidden>{String(index + 2).padStart(2, "0")}</span>
+                  <span className={`numeral ${styles.storyNumber}`} aria-hidden>{String(index + 2).padStart(2, "0")}</span>
                 )}
                 <div className={styles.storyRowCopy}>
                   <h4 lang={story.locale}>{story.title}</h4>
@@ -342,15 +393,19 @@ export function SpotlightSkeleton() {
       <div className="border-t border-primary-faint px-4 py-5 sm:px-5">
         <div className="flex flex-col-reverse gap-5 lg:flex-row lg:items-start lg:gap-7">
           <div className="min-w-0 flex-1">
-            <Skeleton className="h-3 w-32" />
-            <Skeleton className="mt-2.5 h-7 w-full" />
+            <Skeleton className="h-7 w-full" />
             <Skeleton className="mt-2 h-7 w-4/5" />
             <Skeleton className="mt-3 h-3.5 w-full" />
             <Skeleton className="mt-2 h-3.5 w-11/12" />
             <Skeleton className="mt-2 h-3.5 w-2/3" />
-            <Skeleton className="mt-4 h-3 w-28" />
           </div>
-          <Skeleton className="h-[168px] w-full rounded-lg lg:w-[292px] lg:shrink-0" />
+          <Skeleton className="h-[208px] w-full rounded-lg lg:w-[292px] lg:shrink-0" />
+        </div>
+        {/* Künye ve eylem dibi — gerçek bloktaki gibi metnin ve rakamların
+            altında (8 Kasım). */}
+        <div className="mt-5 flex items-center justify-between gap-4 border-t border-line-soft pt-4">
+          <Skeleton className="h-3 w-32" />
+          <Skeleton className="h-3 w-20" />
         </div>
       </div>
       <div className="border-t border-primary-faint bg-surface-solid">
