@@ -14,7 +14,13 @@ export type PercentAlert = {
   symbol: string;
   direction: PercentDirection;
   thresholdPct: number;
+  /** Kuruluş — liste sırası ve "{date}'den beri" künyesi. */
   createdAt: string;
+  /**
+   * Devreye giriş (8 Kasım, migration 0043); `null` = `createdAt` geçerli.
+   * Evre buradan: lib/alert-phase.ts.
+   */
+  armedAt: string | null;
   triggeredAt: string | null;
   triggeredPct: number | null;
 };

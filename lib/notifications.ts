@@ -68,17 +68,30 @@ export function logNotifyFailure(error: unknown): number {
 }
 
 /**
+ * Kanal başına teslim sonucu — alarm durumunun "bildirildi" kaydı bundan
+ * türer (lib/alert-state.ts → deliveredAny). `push` teslim edilen cihaz
+ * sayısı; `email` yalnız postanın KESİN gittiği an (`"sent"`) doğru:
+ * belirsiz sonuç ("unknown") teslim sayılmaz, ama defter satırı kaldığı
+ * için yeniden deneme o postayı ikinci kez göndermez (dedupeKey).
+ */
+export type NotifyReport = { inbox: boolean; push: number; email: boolean };
+
+/**
  * Gelen kutusuna yazar (hesabın diliyle), push gönderir (cihazın diliyle)
  * ve `email` verildiyse alarm postasını dener (16 Ekim; tercih ve onay
  * lib/email-notify.ts'te — kapalıysa sessizce gitmez).
+ *
+ * 8 Kasım: kanal sonuçları ayrı ayrı döner (`notifyUserReport`); alarm
+ * taraması "en az bir kanal teslim etti mi" diye bakıp tetiği bildirildi
+ * diye işaretliyor. `notifyUser` eski sözleşmeyi (push sayısı) koruyor.
  */
-export async function notifyUser(
+export async function notifyUserReport(
   userId: string,
   kind: NotificationKind,
   text: (locale: Locale) => NotificationText,
   withLocalePath: (path: string, locale: Locale) => string,
   email?: AlertEmailInput & { alertId: string },
-): Promise<number> {
+): Promise<NotifyReport> {
   const locale = await accountLocale(userId);
   const inbox = text(locale);
   const row = {
@@ -95,9 +108,11 @@ export async function notifyUser(
      yazılıp yanıtı kaybolan nadir durumda kutuda iki satır olur — eksik
      satırdan iyi. Push ve posta bu tekrara girmez (kendi kuralları:
      lib/push.ts → sendToUser, lib/email-notify.ts → sendStep). */
+  let inboxWritten = false;
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     try {
       await db.insert(notifications).values(row);
+      inboxWritten = true;
       break;
     } catch (error) {
       /* tablo yok (migration 0035) — push yine gider */
@@ -114,8 +129,18 @@ export async function notifyUser(
       tag: push.tag ?? `${kind}-${Date.now()}`,
     };
   });
-  if (email) await sendAlertEmail(userId, email).catch(() => undefined);
-  return delivered;
+  const mailed = email ? (await sendAlertEmail(userId, email).catch(() => undefined)) === "sent" : false;
+  return { inbox: inboxWritten, push: delivered, email: mailed };
+}
+
+export async function notifyUser(
+  userId: string,
+  kind: NotificationKind,
+  text: (locale: Locale) => NotificationText,
+  withLocalePath: (path: string, locale: Locale) => string,
+  email?: AlertEmailInput & { alertId: string },
+): Promise<number> {
+  return (await notifyUserReport(userId, kind, text, withLocalePath, email)).push;
 }
 
 /** Okunmamış sayısı — başlıktaki zil her sayfada sorar; istek içinde tek sorgu. */

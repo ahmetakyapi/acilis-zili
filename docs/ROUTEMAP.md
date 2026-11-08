@@ -27,7 +27,7 @@ GitHub Actions → "Migrate DB" iş akışı, `check` modu (salt okunur).
 |---|---|
 | Sayfa rotası | 87 `page.tsx` (13'ü `/admin`; açık sayfalar `/en` önekiyle ikinci bir adreste daha) |
 | API ucu | 55 `route.ts` `app/api` altında (+8 `app/` içinde: paylaşım görselleri ve RSS) |
-| Veritabanı tablosu | 55 · 43 migration (0000–0042; üretimde hepsi uygulandı, 29 Ekim) |
+| Veritabanı tablosu | 57 · 44 migration (0000–0043; üretimde 0000–0042 uygulandı, 29 Ekim — 0043 bekliyor, Açık İşler) |
 | Sağlayıcı | Alpaca · Finnhub · FRED · TCMB · TCMB EVDS (isteğe bağlı) · SEC EDGAR (13F, Form 4) · OpenFIGI · House Clerk · Federal Reserve · Kalshi · Cboe · ABD Hazinesi · ARK / Global X ETF dosyaları · GİB (`lib/providers/`) |
 | Ortam değişkeni | 38 (`.env.example`) |
 | Zamanlanmış iş | 9 uç `app/api/cron/*`: günlük senkron, alarmlar, bilanço hatırlatması, haberler + çeviri, pazar özeti postası, Telegram, olasılıklar, risk, Günün Grafiği yedeği. Saatleri tek yerde: `deploy/cron-install.sh` |
@@ -47,6 +47,13 @@ gerçek değerlerin bulunduğu `docs/rutinler.local.md` gitignore'da.
 
 Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
 
+- [ ] **Migration 0043 (`0043_alert_state.sql`) — deploy sonrası "Migrate DB"
+      `check` → `apply`.** Yalnız ekleyen: `price_alert_state` +
+      `percent_alert_state` (alarm başına `armed_at`, `notified_at`,
+      `notify_attempts`; FK `ON DELETE CASCADE`). Uygulanana dek kod eski
+      davranışta (devreye giriş = `created_at`, bildirim tekrarı yok —
+      `lib/alert-state.ts`). Uygulandıktan sonra tablo sayısındaki "0043
+      bekliyor" notunu kaldır.
 - [x] **Migration 0040–0042 üretimde uygulandı:** `probability_snapshots`,
       risk masası tabloları, `puzzle_players` + `puzzle_runs` (0042, 29 Ekim
       "Migrate DB" iş akışıyla; öncesinde oyun sıralaması canlıda sessizce

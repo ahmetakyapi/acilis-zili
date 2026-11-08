@@ -317,6 +317,54 @@ export const percentAlerts = pgTable(
 );
 
 /**
+ * ALARM DURUMU (8 Kasım) — "devreye giriş" ve "bildirildi", alarm başına
+ * bir satır. Denetimin 8. bulgusu: tetik ile bildirim tek durumdaydı
+ * (`triggered_at`), bildirim düşünce alarm "tetiklendi" görünüyor ama okura
+ * hiçbir şey ulaşmıyor ve tarama onu bir daha okumuyordu; yüzde alarmında
+ * `created_at` hem kuruluş tarihi hem devreye giriş anıydı (yeniden kurma
+ * onu seans sonuna ileri çekiyordu, liste sırası ve "{date}'den beri"
+ * künyesi kayıyordu).
+ *
+ * KENDİ TABLOSU, alarm tablosuna sütun DEĞİL: migration'lar deploy'da
+ * uygulanmıyor ve `getUserAlerts`/`getUserPercentAlerts` tam satır
+ * `select()` yapıyor — eklenen sütun migration inene kadar alarmların HER
+ * okumasını kırardı. Okuma/yazma tek modülde (lib/alert-state.ts): tablo
+ * yokken eski davranış (devreye giriş = `created_at`, bildirim durumu
+ * bilinmez, yeniden deneme yok).
+ *
+ * İKİ TABLO, çünkü iki alarm tablosu var ve tek FK iki tabloya bağlanamaz;
+ * sütunlar bilerek aynı (tek yardımcı ikisini de okur). Fiyat alarmında
+ * `armed_at` bugün yazılmıyor — yeniden kurma orada kuruluşu da yeniliyor
+ * (refPrice, yön), ayrım gerekmiyor. Alarm silinince satır da gider.
+ *
+ * - `armed_at`: boşsa `created_at` geçerli (lib/alert-phase.ts).
+ * - `notified_at`: en az bir kanal (gelen kutusu, push, posta) teslim etti.
+ * - `notify_attempts`: bu tetik için bildirim denemesi; tarama 2'den
+ *   azsa ve tetik 15 dk'dan yeniyse bir kez daha dener
+ *   (lib/alert-state.ts → pickNotifyRetries).
+ */
+const alertStateColumns = {
+  armedAt: timestamp("armed_at", { withTimezone: true }),
+  notifiedAt: timestamp("notified_at", { withTimezone: true }),
+  notifyAttempts: integer("notify_attempts").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+};
+
+export const priceAlertState = pgTable("price_alert_state", {
+  alertId: uuid("alert_id")
+    .primaryKey()
+    .references(() => priceAlerts.id, { onDelete: "cascade" }),
+  ...alertStateColumns,
+});
+
+export const percentAlertState = pgTable("percent_alert_state", {
+  alertId: uuid("alert_id")
+    .primaryKey()
+    .references(() => percentAlerts.id, { onDelete: "cascade" }),
+  ...alertStateColumns,
+});
+
+/**
  * BİLDİRİM TERCİHLERİ (15 Ekim) — hesap genelinde anahtarlar.
  *
  * İlk anahtar bilanço hatırlatması: "takip ettiklerimden birinin bilançosu

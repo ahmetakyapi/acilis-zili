@@ -386,6 +386,7 @@ ritmine bağlı.
 | `user_avatars` | Seçilen profil ikonu ve rengi (anahtar olarak) | Kullanıcı eylemi (Ayarlar) |
 | `user_profiles` | Herkese açık profil: tanıtım + görünürlük anahtarları (varsayılan gizli) | Kullanıcı eylemi (Ayarlar) |
 | `percent_alerts` | Günlük yüzde değişim alarmları (eşik + yön, tek seferlik) | Kullanıcı eylemi (hisse sayfası) |
+| `price_alert_state` · `percent_alert_state` | Alarm başına devreye giriş anı ve bildirim durumu (bildirildi, deneme sayısı); tablo yokken eski davranış | `lib/alert-state.ts` (yeniden kurma eylemi + alarm taraması) |
 | `notification_prefs` | Hesap genelinde bildirim anahtarları (bilanço hatırlatması) | Kullanıcı eylemi (Ayarlar) |
 | `user_posts` | Topluluk yazıları: taslak → kuyruk → yayın/red durum makinesi | Kullanıcı eylemi (editör) + moderasyon |
 | `notifications` | Bildirim kutusu: alarm, bilanço ve moderasyon bildirimlerinin kalıcı kaydı (90 gün) | `lib/notifications.ts` → `notifyUser` (cron + moderasyon) |

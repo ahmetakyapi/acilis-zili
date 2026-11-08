@@ -6,7 +6,8 @@ import { getDictionary } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
 import type { MarketStatus } from "@/lib/market-hours";
 import { alertPhase } from "@/lib/alert-phase";
-import { logNotifyFailure, notifyUser } from "@/lib/notifications";
+import { recordFirstNotify } from "@/lib/alert-state";
+import { logNotifyFailure, notifyUserReport } from "@/lib/notifications";
 import { alertCrossed, sessionReadings, type PriceAlert, type SessionQuote } from "@/lib/price-alerts";
 import { priceAlerts } from "@/lib/schema";
 
@@ -31,6 +32,10 @@ import { priceAlerts } from "@/lib/schema";
  * (CLAUDE.md "Veri dürüstlüğü" 4). Paket güncel olsa da SEMBOL kendi seansını
  * kanıtlamalı (`sessionReadings`). Yazma düşerse liste yine işaretli döner;
  * bir sonraki kontrol (ya da tarama) yazmayı ve bildirimi yeniden dener.
+ *
+ * BİLDİRİM SONUCU KAYDA GEÇER (8 Kasım, lib/alert-state.ts): hiçbir kanal
+ * teslim etmediyse tarama 15 dk içinde bir kez daha dener — sayfa yolunda
+ * sahiplenilen tetik de dahil.
  */
 export async function settleAlerts(
   userId: string,
@@ -72,7 +77,7 @@ export async function settleAlerts(
     after(async () => {
       for (const alert of claimed) {
         const price = prices[alert.symbol]!;
-        await notifyUser(
+        const report = await notifyUserReport(
           userId,
           "alert",
           (locale) => {
@@ -81,7 +86,11 @@ export async function settleAlerts(
           },
           withLocale,
           { alertId: alert.id, kind: "price", symbol: alert.symbol, direction: alert.direction, target: alert.target, price, firedAt: now },
-        ).catch(logNotifyFailure);
+        ).catch((error) => {
+          logNotifyFailure(error);
+          return null;
+        });
+        await recordFirstNotify("price", alert.id, report);
       }
     });
   }
