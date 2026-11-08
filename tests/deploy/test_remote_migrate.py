@@ -140,9 +140,8 @@ class RemoteMigrateStatusTest(unittest.TestCase):
     def test_cleanup_yalniz_kaliba_uyan_yabanci_tablolari_ve_satiri_siler(self):
         res = self.run_status(self.clean_rows(), "cleanup", "abababababab", tables=self.FOREIGN, app_state_max="2026-11-01T11:29:34.700Z")
         self.assertEqual(res.returncode, 0, res.stderr)
-        for t in ["app_state", "app_state_history", "memleket_scores", "oyz_rooms"]:
-            self.assertIn(f'SQL drop table "{t}"', res.stdout)
-        self.assertNotIn('drop table "a"', res.stdout)
+        self.assertIn('SQL drop table "app_state", "app_state_history", "memleket_scores", "oyz_rooms" []', res.stdout)
+        self.assertNotIn('"a"', res.stdout)
         self.assertNotIn("users_extra", res.stdout.replace("silinecek", ""))
         self.assertIn('SQL delete from drizzle.__drizzle_migrations where hash = $1 ["' + "ab" * 32 + '"]', res.stdout)
         self.assertIn("TEMİZLENDİ: 4 tablo, 1 kayıt satırı", res.stdout)

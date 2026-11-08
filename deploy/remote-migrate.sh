@@ -108,7 +108,10 @@ if (mode === "cleanup") {
     const [c] = await sql.query(`select count(*)::int as n from "${name}"`);
     console.log(`silinecek tablo: ${name} (${c.n} satır)`);
   }
-  const queries = targets.map((name) => sql.query(`drop table "${name}"`));
+  /* Tek ifade: listedeki tablolar arası yabancı anahtarları Postgres kendi
+     çözer (ayrı ayrı drop, `memleket_scores → memleket_players` yüzünden
+     düştü). CASCADE YOK: listenin dışındaki bir nesne bağlıysa durur. */
+  const queries = targets.length ? [sql.query(`drop table ${targets.map((name) => `"${name}"`).join(", ")}`)] : [];
   if (foreignRows.length) queries.push(sql.query("delete from drizzle.__drizzle_migrations where hash = $1", [foreignRows[0].hash]));
   if (!queries.length) { console.log("temizlenecek bir şey yok"); process.exit(0); }
   await sql.transaction(queries);
