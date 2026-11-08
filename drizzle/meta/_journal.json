@@ -302,6 +302,13 @@
       "when": 1793258051949,
       "tag": "0042_puzzle_leaderboard",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1794145761993,
+      "tag": "0043_alert_state",
+      "breakpoints": true
     }
   ]
 }

@@ -569,7 +569,9 @@ export function PercentAlertRow({
   const thresholdText = pctNumber(alert.thresholdPct, locale);
   const [nowMs] = useState(() => Date.now());
   /* Aynı seansta yeniden kurulan alarm ertesi seansta devreye girer
-     (app/actions/alerts.ts → rearmPercentAlert): `createdAt` ileride.
+     (app/actions/alerts.ts → rearmPercentAlert): devreye giriş ileride —
+     8 Kasım'dan beri `armedAt` (migration 0043; tablo yoksa eskisi gibi
+     `createdAt`). "{date}'den beri" künyesi kuruluş tarihinden, `createdAt`.
      "Uykuda" evresi taramayla AYNI fonksiyondan (lib/alert-phase.ts, 8 Kasım);
      saat istemcinin — sınırda birkaç saniyelik fark yalnız künyeyi etkiler. */
   const phase = alertPhase(alert, nowMs);

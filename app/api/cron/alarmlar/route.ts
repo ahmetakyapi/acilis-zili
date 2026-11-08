@@ -19,7 +19,15 @@ import {
 } from "@/lib/alert-sweep";
 import { getDictionary } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
-import { logNotifyFailure, notifyUser } from "@/lib/notifications";
+import {
+  deliveredAny,
+  loadNotifyRetries,
+  recordFirstNotify,
+  retryNotify,
+  type PercentRetry,
+  type PriceRetry,
+} from "@/lib/alert-state";
+import { logNotifyFailure, notifyUserReport, type NotifyReport } from "@/lib/notifications";
 
 /**
  * Alarm taraması — `deploy/cron-alerts.sh` seans boyunca beş dakikada bir
@@ -54,6 +62,14 @@ import { logNotifyFailure, notifyUser } from "@/lib/notifications";
  *   8 Kasım: bu kural SQL'de (`lte`) değil `alertPhase`te (lib/alert-phase.ts)
  *   — alarm düğmesinin "Sonraki Seansta Devreye Girer" künyesi aynı
  *   fonksiyondan okuyor, iki hesap ayrışamaz.
+ *
+ * 8 Kasım (migration 0043, lib/alert-state.ts): TETİKLENDİ ≠ BİLDİRİLDİ.
+ * Her tetiğin ilk bildirim denemesi kanal kanal kayda geçer; hiçbir kanal
+ * teslim etmediyse tur sonunda, tetik 2–15 dk yaşındaysa, bildirim BİR KEZ
+ * daha denenir (`retried`, `recovered`). Sayfada sahiplenilen fiyat tetiği
+ * de buradan denenir. Tur, piyasa kapalıyken ve bekleyen alarm yokken de
+ * koşar: tekrarın fiyatla işi yok, tetik anının kayıtlı değerlerini
+ * gönderir. Durum tablosu yoksa tur boş geçer (eski davranış).
  */
 
 export const dynamic = "force-dynamic";
@@ -77,9 +93,16 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
-  const status = await getStatus();
-  if (status.session === "closed") return NextResponse.json({ skipped: "closed" });
   const now = new Date();
+  /* Her çıkış (veritabanı hatası hariç) bildirim tekrarı turundan geçer —
+     gerekçe başlıkta. Tavan yeni tetiklerle ORTAK: tur en sonda koşar,
+     süre dolduysa kalan tekrarlar sonraki taramaya (pencere 15 dk, tarama
+     5 dk) kalır; yeni tetik her zaman önce. */
+  const finish = async (body: Record<string, unknown>) =>
+    NextResponse.json({ ...body, ...(await retryNotifications(now)) });
+
+  const status = await getStatus();
+  if (status.session === "closed") return finish({ skipped: "closed" });
 
   let pending: PendingAlert[];
   try {
@@ -139,7 +162,7 @@ export async function GET(request: Request) {
     pendingPct = [];
   }
 
-  if (pending.length === 0 && pendingPct.length === 0) return NextResponse.json({ pending: 0 });
+  if (pending.length === 0 && pendingPct.length === 0) return finish({ pending: 0 });
 
   const symbols = [
     ...new Set([...pending.map((alert) => alert.symbol), ...pendingPct.map((alert) => alert.symbol)]),
@@ -169,7 +192,7 @@ export async function GET(request: Request) {
     Object.assign(data, pack.data);
   }
   if (usable === 0) {
-    return NextResponse.json({ pending: pending.length + pendingPct.length, skipped: "stale" });
+    return finish({ pending: pending.length + pendingPct.length, skipped: "stale" });
   }
 
   /* Paket güncel olsa da her sembol KENDİ seansını kanıtlar — gerekçe
@@ -227,17 +250,11 @@ export async function GET(request: Request) {
        gerekçe lib/push.ts → deliverPush. Önce bekle, SONRA topla (20 Ekim):
        `delivered += await …` sol yanı bekleme ÖNCESİ okur; altı işçi
        eşzamanlıyken üst üste binen iki tetikten biri sayaçtan düşüyordu. */
-    const sent = await notifyUser(
-      hit.userId,
-      "alert",
-      (locale) => {
-        const p = alertPayload(hit, locale, getDictionary(locale).notifications);
-        return { title: p.title, body: p.body, path: `/hisse/${hit.symbol}`, tag: p.tag };
-      },
-      withLocale,
-      { alertId: hit.id, kind: "price", symbol: hit.symbol, direction: hit.direction, target: hit.target, price: hit.price, firedAt: now },
-    ).catch(logNotifyFailure);
-    delivered += sent;
+    const report = await sendPriceNotice(hit, now);
+    delivered += report?.push ?? 0;
+    /* Sonuç kayda (lib/alert-state.ts): hiçbir kanal teslim etmediyse
+       sonraki tarama bir kez daha dener. */
+    await recordFirstNotify("price", hit.id, report);
   });
   for (const hit of pctHits) enqueue(hit.userId, async () => {
     const claimed = await db
@@ -252,17 +269,9 @@ export async function GET(request: Request) {
     if (claimed.length === 0) return;
     triggered += 1;
     /* Önce bekle, sonra topla — gerekçe fiyat tetiğinde. */
-    const sent = await notifyUser(
-      hit.userId,
-      "percent",
-      (locale) => {
-        const p = percentPayload(hit, locale, getDictionary(locale).notifications);
-        return { title: p.title, body: p.body, path: `/hisse/${hit.symbol}`, tag: p.tag };
-      },
-      withLocale,
-      { alertId: hit.id, kind: "percent", symbol: hit.symbol, direction: hit.direction, thresholdPct: hit.thresholdPct, changePct: hit.changePct, firedAt: now },
-    ).catch(logNotifyFailure);
-    delivered += sent;
+    const report = await sendPercentNotice(hit, now);
+    delivered += report?.push ?? 0;
+    await recordFirstNotify("percent", hit.id, report);
   });
 
   const accounts = [...byUser.values()];
@@ -280,7 +289,7 @@ export async function GET(request: Request) {
     }),
   );
 
-  return NextResponse.json({
+  return finish({
     pending: pending.length,
     pendingPercent: pendingPct.length,
     symbols: symbols.length,
@@ -288,4 +297,103 @@ export async function GET(request: Request) {
     delivered,
     deferred,
   });
+}
+
+type PriceNotice = PendingAlert & { price: number };
+type PercentNotice = PendingPercentAlert & { changePct: number };
+
+/**
+ * Bildirimi gönderir, kanal sonuçlarını döndürür; fırlarsa `null` (tek
+ * hesabın hatası taramayı durdurmaz — gerekçe yukarıda, 20 Ekim). İlk
+ * deneme ve tekrar AYNI yükü kurar: push etiketi alarm başına, posta
+ * anahtarı `alert:<id>:<tetik anı>` — `firedAt` tetik anının kendisi
+ * olmalı, yoksa tekrar postası yeni bir posta sayılırdı.
+ */
+async function sendPriceNotice(hit: PriceNotice, firedAt: Date): Promise<NotifyReport | null> {
+  return notifyUserReport(
+    hit.userId,
+    "alert",
+    (locale) => {
+      const p = alertPayload(hit, locale, getDictionary(locale).notifications);
+      return { title: p.title, body: p.body, path: `/hisse/${hit.symbol}`, tag: p.tag };
+    },
+    withLocale,
+    { alertId: hit.id, kind: "price", symbol: hit.symbol, direction: hit.direction, target: hit.target, price: hit.price, firedAt },
+  ).catch((error) => {
+    logNotifyFailure(error);
+    return null;
+  });
+}
+
+async function sendPercentNotice(hit: PercentNotice, firedAt: Date): Promise<NotifyReport | null> {
+  return notifyUserReport(
+    hit.userId,
+    "percent",
+    (locale) => {
+      const p = percentPayload(hit, locale, getDictionary(locale).notifications);
+      return { title: p.title, body: p.body, path: `/hisse/${hit.symbol}`, tag: p.tag };
+    },
+    withLocale,
+    { alertId: hit.id, kind: "percent", symbol: hit.symbol, direction: hit.direction, thresholdPct: hit.thresholdPct, changePct: hit.changePct, firedAt },
+  ).catch((error) => {
+    logNotifyFailure(error);
+    return null;
+  });
+}
+
+/** Kayıtlı tetik değerlerinden bildirimi yeniden kurar; okunamayan satır atlanır (sahiplenmeden). */
+function retrySender(row: PriceRetry | PercentRetry): (() => Promise<NotifyReport | null>) | null {
+  if (row.kind === "price") {
+    const target = Number(row.target);
+    const price = Number(row.triggeredPrice);
+    if (!isDirection(row.direction) || !Number.isFinite(target) || row.triggeredPrice == null || !(price > 0)) return null;
+    const hit = { id: row.id, userId: row.userId, symbol: row.symbol, direction: row.direction, target, price };
+    return () => sendPriceNotice(hit, row.triggeredAt);
+  }
+  const thresholdPct = Number(row.thresholdPct);
+  const changePct = Number(row.triggeredPct);
+  if (!isPercentDirection(row.direction) || !Number.isFinite(thresholdPct) || row.triggeredPct == null || !Number.isFinite(changePct)) {
+    return null;
+  }
+  const hit = { id: row.id, userId: row.userId, symbol: row.symbol, direction: row.direction, thresholdPct, changePct };
+  return () => sendPercentNotice(hit, row.triggeredAt);
+}
+
+/**
+ * Bildirimi düşen tetiklerin tekrar turu — gerekçe başlıkta ve
+ * lib/alert-state.ts. Aynı işçi sayısı ve süre tavanı (`now`dan ölçülür,
+ * yeni tetiklerle ortak). Hesap başına sıralama yok: tekrar seyrek ve
+ * posta tekrarsızlığı defterde; günlük bütçenin say-sonra-yaz payı yukarıda
+ * kabul edildiği gibi.
+ */
+async function retryNotifications(now: Date): Promise<{ retried: number; recovered: number; retryDeferred: number }> {
+  const queue = (await loadNotifyRetries(now)).flatMap((row) => {
+    const send = retrySender(row);
+    return send ? [{ row, send }] : [];
+  });
+  let retried = 0;
+  let recovered = 0;
+  let retryDeferred = 0;
+  await Promise.all(
+    Array.from({ length: SWEEP_WORKERS }, async () => {
+      for (let job = queue.shift(); job; job = queue.shift()) {
+        if (Date.now() - now.getTime() > SWEEP_BUDGET_MS) {
+          retryDeferred += 1;
+          continue;
+        }
+        let claimed = false;
+        const { send } = job;
+        const report = await retryNotify(job.row, () => {
+          claimed = true;
+          return send();
+        }).catch((error) => {
+          console.error("[alarm] bildirim tekrarı işlenemedi", error);
+          return null;
+        });
+        if (claimed) retried += 1;
+        if (deliveredAny(report)) recovered += 1;
+      }
+    }),
+  );
+  return { retried, recovered, retryDeferred };
 }

@@ -2,7 +2,9 @@
 
 import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { auth } from "@/auth";
+import { resetAlertState } from "@/lib/alert-state";
 import { getStatus, isKnownSymbol } from "@/lib/data";
 import { db } from "@/lib/db";
 import { isSessionTrade } from "@/lib/market-hours";
@@ -254,6 +256,13 @@ export async function deletePercentAlert(formData: FormData) {
 }
 
 /**
+ * Yeniden kurmanın kimliği — uuid biçimi denetlenir (8 Kasım): bu eylemler
+ * artık durum tablosuna da yazıyor (lib/alert-state.ts); biçimsiz kimlik
+ * veritabanına hiç gitmesin. `guid`: Postgres uuid'inin sürüm bitine bakmaz.
+ */
+const alertIdSchema = z.guid();
+
+/**
  * Tetiklenmiş yüzde alarmını yeniden kurar: eşik ve yön aynı kalır, tetik
  * temizlenir.
  *
@@ -269,13 +278,22 @@ export async function deletePercentAlert(formData: FormData) {
  *
  * O "uykuda" evresinin tek tanımı lib/alert-phase.ts → alertPhase (8 Kasım):
  * tarama, sayfadaki değerlendirme ve satırın künyesi aynı fonksiyonu okur.
+ *
+ * `createdAt` ARTIK KAYMIYOR (8 Kasım, migration 0043): ertelenmiş an
+ * `percent_alert_state.armed_at`a yazılıyor (lib/alert-state.ts), kuruluş
+ * tarihi liste sırasını ve "{date}'den beri" künyesini taşımaya devam
+ * ediyor. Durum önce yazılır; tablo yoksa (`missing`) ya da yazma
+ * düştüyse eski yol — `createdAt` ileri çekilir — çünkü ertelemesiz
+ * yeniden kurma aynı hareket için ikinci bildirimi gönderirdi. Aynı
+ * yazma önceki tetiğin bildirim izini de sıfırlar.
  */
 export async function rearmPercentAlert(formData: FormData) {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return;
-  const id = String(formData.get("id") ?? "");
-  if (!id) return;
+  const parsed = alertIdSchema.safeParse(formData.get("id"));
+  if (!parsed.success) return;
+  const id = parsed.data;
   if (!rateLimit(`alerts:${userId}`, 30, 60_000).allowed) return;
   try {
     const [current] = await db
@@ -290,9 +308,14 @@ export async function rearmPercentAlert(formData: FormData) {
       current.triggeredAt && isSessionTrade(current.triggeredAt, status) && status.sessionEnd > now
         ? status.sessionEnd
         : now;
+    const state = await resetAlertState("percent", id, armAt);
     const [row] = await db
       .update(percentAlerts)
-      .set({ createdAt: armAt, triggeredAt: null, triggeredPct: null })
+      .set(
+        state === "ok"
+          ? { triggeredAt: null, triggeredPct: null }
+          : { createdAt: armAt, triggeredAt: null, triggeredPct: null },
+      )
       .where(and(eq(percentAlerts.id, id), eq(percentAlerts.userId, userId)))
       .returning({ id: percentAlerts.id });
     if (row) revalidate();
@@ -314,8 +337,9 @@ export async function rearmPriceAlert(formData: FormData) {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return;
-  const id = String(formData.get("id") ?? "");
-  if (!id) return;
+  const parsed = alertIdSchema.safeParse(formData.get("id"));
+  if (!parsed.success) return;
+  const id = parsed.data;
   /* Aynı kova: sembol kullanıcının kendi satırından gelse de yol aynı
      getQuote'u koşuyor. */
   if (!rateLimit(`alerts:${userId}`, 30, 60_000).allowed) return;
@@ -333,6 +357,13 @@ export async function rearmPriceAlert(formData: FormData) {
     const side = quote.ok ? quote.data.price : row.triggeredPrice != null ? Number(row.triggeredPrice) : null;
     const direction =
       side == null || !Number.isFinite(side) ? row.direction : target > side ? "above" : "below";
+    /* Önceki tetiğin bildirim izi sıfırlanır (lib/alert-state.ts): yeni
+       tetik eski "denendi, bildirilmedi" kaydını devralmasın. Fiyat
+       alarmında devreye giriş = kuruluş (`createdAt` aşağıda yenileniyor),
+       `armed_at` boş kalır. Satırın sahibi yukarıda doğrulandı. Tablo
+       yoksa ya da yazma düşerse yeniden kurma yine sürer: durum satırı
+       olmayan tetik yeniden denenmez, çift bildirim olmaz. */
+    await resetAlertState("price", id, null);
     await db
       .update(priceAlerts)
       .set({
