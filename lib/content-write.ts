@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { and, desc, eq, lt } from "drizzle-orm";
+import { and, desc, eq, lt, sql, type AnyColumn, type SQL } from "drizzle-orm";
 import { dailyBriefs, dailyCharts, stories, storyRevisions } from "@/lib/schema";
 import { todayEt } from "@/lib/market-hours";
 import { weekAnchor } from "@/lib/data";
@@ -229,16 +229,107 @@ export class SurumCakismasi extends Error {
 }
 
 /**
+ * Panelin `seen` damgasını yazma koşuluna çevirir.
+ *
+ * NEDEN VAR (8 Kasım, durum taraması): sürüm denetimi okumadan SONRA
+ * JS'te yapılıyordu; aynı kaydı iki sekmeden aynı anda kaydedenlerin ikisi
+ * de denetimden geçip birbirini eziyordu. Denetim artık yazmanın kendisinde:
+ * `UPDATE … WHERE damga = beklenen RETURNING`, satır dönmezse çakışma.
+ * Sözleşme DEĞİŞMEDİ: belirteç yine `updatedAt`in ISO dizesi (editörler ve
+ * CLAUDE.md'deki toplu düzeltme kalıbı buna dayanıyor).
+ *
+ * "" = editör kayıt YOKKEN açıldı (yalnız boş satıra yazılır). Dizenin
+ * kendisi değilse (`Date`in kanonik ISO'su değil) karşılaştırma zaten
+ * tutmaz: `null` döner, çağıran çakışma sayar — bozuk değer SQL'e
+ * `::timestamptz` diye gidip veritabanı hatasına dönüşmesin.
+ */
+export function damgaBeklentisi(
+  beklenen: string,
+): { yeni: true } | { yeni: false; iso: string } | null {
+  if (beklenen === "") return { yeni: true };
+  const at = new Date(beklenen);
+  if (Number.isNaN(at.getTime()) || at.toISOString() !== beklenen) return null;
+  return { yeni: false, iso: beklenen };
+}
+
+/**
+ * Damga sütunu ISO dizesine EŞİT mi — SQL tarafı.
+ *
+ * MİLİSANİYEYE KIRPILARAK. Sütun `timestamptz` (mikrosaniye); ilk yazımın
+ * damgası `defaultNow()`dan mikrosaniyeyle geliyor. Okuma yolunda Drizzle
+ * (neon-http) damgayı dize alıp `new Date()`e veriyor ve V8 kesir hanesini
+ * üçüncü basamakta KESİYOR (yuvarlamıyor: `.123999` → `.123`, denendi).
+ * `date_trunc('milliseconds', …)` da keser; iki taraf aynı değeri görür.
+ * Düz `updated_at = $1` mikrosaniyeli satırda hiç tutmazdı.
+ */
+export function damgaEsit(column: AnyColumn, iso: string): SQL {
+  return sql`date_trunc('milliseconds', ${column}) = ${iso}::timestamptz`;
+}
+
+/** Künyesi (`generatedBy`) olan içerik türleri — `nextAuthor`un ilk argümanı. */
+export type ContentType = "mercek" | "bulten" | "grafik";
+
+/**
+ * Yazmadan sonra satırın künyesi (`generatedBy`) ne olur — üç içerik türünün
+ * devir kuralı TEK YERDE (8 Kasım, durum taraması; önceden üç fonksiyona
+ * dağılmış üç ayrı kuraldı). `current`: kayıtlı künye, `null` = satır yok.
+ *
+ * - **mercek**: yalnız ilk yazımda konur, hiç devrilmez — panel düzeltmesi
+ *   yazıyı "insan yazdı" yapmaz; yazıyı yine rutin yazdı.
+ * - **bülten**: her rutin (`claude`) yazımı devralır; panel (`admin`) hiç —
+ *   "kural tabanlı" bir bülteni panel "rutin yazdı" diye etiketleyemez.
+ * - **grafik**: yalnız sitenin yedeği (`auto`) devrilir ve onu yalnız RUTİN
+ *   devralır. Panel bir yedeği düzeltince künye `auto` KALIR (ürün kararı,
+ *   8 Kasım): yedek yedek olarak kalır, rutinin bağlamı o dili hâlâ
+ *   "yazılmamış" görür (`/api/grafik/context` → `auto_locales`) ve rutin o
+ *   gün yine yazıp devralır. Önceden panel düzeltmesi künyeyi `admin`
+ *   yapıyordu; bağlam o dili yazılmış sayıyor, rutin PAS diyordu ve günün
+ *   gerçek yorumu hiç yazılmıyordu.
+ *
+ * Çağıran, künye değiştiyse (`devraldi`) grafikte `publishedAt`i de o ana
+ * çeker; künye değişmediyse dokunmaz (düzeltme yayın anını oynatmaz).
+ */
+export function nextAuthor(
+  contentType: ContentType,
+  current: string | null,
+  source: DailyChartSource,
+): string {
+  if (current === null) {
+    /* İLK YAZIM: grafikte yazan kim ise o (yedek dahil); mercek ve bültende
+       yedek yok, panel dışındaki her yazım rutindir. */
+    if (contentType === "grafik") return source;
+    return source === "admin" ? "admin" : "claude";
+  }
+  if (contentType === "bulten") return source === "claude" ? "claude" : current;
+  if (contentType === "grafik") {
+    return current === DAILY_CHART_AUTO && source === "claude" ? "claude" : current;
+  }
+  return current;
+}
+
+/**
+ * `onConflictDoUpdate`/`update`in `set`ine girecek künye: yalnız DEĞİŞTİYSE.
+ * Satır okunmamışsa (yeni kayıt) `set`e girmez — araya giren bir yazımın
+ * künyesini bu yazım ezmesin; ilk yazımın künyesi `values`ta.
+ */
+function kunyeSeti(current: string | null, next: string): { generatedBy?: string } {
+  return current !== null && current !== next ? { generatedBy: next } : {};
+}
+
+/**
  * Mercek yazısını yazar ya da üstüne yazar.
  *
  * `generatedBy` YALNIZCA İLK YAZIMDA konuyor: panelden yapılan bir düzeltme
  * künyeyi değiştirmemeli — yazıyı yine rutin yazdı, insan yalnızca elden
- * geçirdi. Upsert'ün `set` bloğunda o alan yok.
+ * geçirdi. Kural `nextAuthor`da (üç içerik türü tek tabloda).
  *
  * `beklenen`: editörün açtığı hâlin `updatedAt`i (ISO) — gerekçe
- * `SurumCakismasi`nda. KARŞILAŞTIRMA JS'TE: ilk yazımın damgası
+ * `SurumCakismasi`nda. İki aşamalı: önce JS'te (okunan satırla; çakışma
+ * fotoğraf ve yazma denemesinden önce yakalanır), sonra YAZMANIN KOŞULU
+ * olarak SQL'de (`damgaBeklentisi`, `damgaEsit` — eşzamanlı iki kaydet).
+ * Mikrosaniye/milisaniye farkı `damgaEsit`te: ilk yazımın damgası
  * `defaultNow()`dan mikrosaniyeyle geliyor, Drizzle milisaniyeye kırpıyor;
- * SQL'de `updated_at = $1` hiç tutmazdı.
+ * düz `updated_at = $1` hiç tutmazdı.
  */
 export async function saveStory(
   input: StoryInput,
@@ -247,11 +338,18 @@ export async function saveStory(
 ) {
   const locale = input.locale ?? "tr";
 
-  /* ÜZERİNE YAZMADAN ÖNCE FOTOĞRAF. Upsert gövdeyi geçmişsiz eziyordu ve
+  /* ÜZERİNE YAZILAN HÂLİN FOTOĞRAFI. Upsert gövdeyi geçmişsiz eziyordu ve
      panelden düzenleme açıldığı anda bu bir kayıp riski oldu. Fotoğraf
      BURADA alınıyor, yani iki giriş de (rutin ve panel) kapsanıyor —
      yalnızca panel tarafına koymak, rutinin üzerine yazdığı metni
      kurtarılamaz bırakırdı.
+
+     FOTOĞRAF YAZMA TUTUNCA KAYDEDİLİR (8 Kasım): içeriği yazmadan önceki
+     okumadan (`mevcut`), ama tabloya koşullu yazma başarılı olduktan
+     SONRA düşüyor. Sürüm çakışmasıyla reddedilen bir panel kaydı önceden
+     de fotoğraf bırakırdı; "Güncellendi" künyesi fotoğrafların
+     `replacedAt`inden okunduğu için (`getStoryEditedAt`) olmamış bir
+     düzeltme yazıda görünürdü.
 
      İÇERİK DEĞİŞMEDİYSE FOTOĞRAF YOK: rutin aynı metni yeniden gönderdiğinde
      (sık oluyor) geçmiş birbirinin aynı on satırla dolar ve gerçek bir
@@ -307,24 +405,60 @@ export async function saveStory(
      yalnız metin değişince), yani künye yine dürüst. */
   const alanDegisti = !!mevcut && alanlarDegisti(mevcut, values, ["title", "dek", "bodyMd", "eventDate", "symbols", "sources"]);
 
+  const mevcutYazar = mevcut?.generatedBy ?? null;
+  const yazar = nextAuthor("mercek", mevcutYazar, source);
+  /* `publishedAt` BİLEREK dışarıda: ilk yayın anı — düzeltme onu geri
+     almaz. Künye yalnız değiştiyse (`kunyeSeti`; mercekte hiç). */
+  /* `updatedAt` YALNIZ İÇERİK DEĞİŞİNCE (8 Kasım; hangi alanlar,
+     yukarıda `alanDegisti`). Rutin aynı metni sık yeniden gönderiyor ve
+     damga her seferinde ilerliyordu: site haritasının `lastModified`i ve
+     yazıdaki "Güncellendi" künyesi değişmemiş metni yeni gösterirdi —
+     tarih oynatmak Google'ın kaçınılacaklar listesinde. */
+  const set = {
+    ...values,
+    ...kunyeSeti(mevcutYazar, yazar),
+    ...(alanDegisti ? { updatedAt: new Date() } : {}),
+  };
+
+  const beklenti = beklenen === undefined ? undefined : damgaBeklentisi(beklenen);
+  if (beklenti === null) throw new SurumCakismasi();
+
+  if (beklenti === undefined) {
+    /* Rutin ve panel dışı yollar: sözleşme "aynı slug üzerine yazar". */
+    await db
+      .insert(stories)
+      .values({ ...values, generatedBy: yazar })
+      .onConflictDoUpdate({ target: [stories.slug, stories.locale], set });
+  } else if (beklenti.yeni) {
+    /* Editör kayıt yokken açıldı: yalnız boş satıra. Araya biri yazdıysa
+       çakışma — onun yazısı ezilmez. */
+    const eklenen = await db
+      .insert(stories)
+      .values({ ...values, generatedBy: yazar })
+      .onConflictDoNothing({ target: [stories.slug, stories.locale] })
+      .returning({ id: stories.id });
+    if (eklenen.length === 0) throw new SurumCakismasi();
+  } else {
+    /* KOŞULLU YAZMA: damga hâlâ editörün açtığı damga ise. JS denetimi ile
+       bu satır arasında başka bir kaydet yazdıysa damga ilerlemiştir (her
+       alan değişiminde ilerliyor, yukarıda) ve satır dönmez. */
+    const yazilan = await db
+      .update(stories)
+      .set(set)
+      .where(
+        and(
+          eq(stories.slug, values.slug),
+          eq(stories.locale, locale),
+          damgaEsit(stories.updatedAt, beklenti.iso),
+        ),
+      )
+      .returning({ id: stories.id });
+    if (yazilan.length === 0) throw new SurumCakismasi();
+  }
+
   if (mevcut && degisti) {
     await fotografAl(values.slug, locale, mevcut, source);
   }
-
-  await db
-    .insert(stories)
-    .values({ ...values, generatedBy: source === "admin" ? "admin" : "claude" })
-    .onConflictDoUpdate({
-      target: [stories.slug, stories.locale],
-      /* `generatedBy` ve `publishedAt` BİLEREK dışarıda: ilki künye (yukarıda),
-         ikincisi ilk yayın anı — düzeltme onu geri almaz. */
-      /* `updatedAt` YALNIZ METİN DEĞİŞİNCE (8 Kasım). Rutin aynı metni sık
-         yeniden gönderiyor ve damga her seferinde ilerliyordu: site
-         haritasının `lastModified`i ve yazıdaki "Güncellendi" künyesi
-         değişmemiş metni yeni gösterirdi — tarih oynatmak Google'ın
-         kaçınılacaklar listesinde. */
-      set: { ...values, ...(alanDegisti ? { updatedAt: new Date() } : {}) },
-    });
 
   /* Yeni ya da metni değişen yazı Bing'e bildirilir (`lib/indexnow.ts`);
      rutinin aynı metni yeniden göndermesi bildirim üretmez. */
@@ -410,7 +544,10 @@ export function briefSurumu(headline: string, bodyMd: string): string {
  * isterdi; aynı bilgi zaten o tabloda.
  *
  * `beklenen`: editörün açtığı hâlin `briefSurumu` özeti — gerekçe
- * `SurumCakismasi`nda.
+ * `SurumCakismasi`nda. Mercekteki gibi yazmanın KOŞULU da (8 Kasım):
+ * özet SQL'de hesaplanmıyor (Postgres metni `\0` ayıracını kabul etmez),
+ * onun yerine okunan manşet ve gövde `WHERE`e giriyor — özeti tutan satırın
+ * kendisi. Araya giren yazım satırı değiştirdiyse güncelleme boş döner.
  */
 export async function saveBrief(
   input: BriefInput,
@@ -443,9 +580,52 @@ export async function saveBrief(
     throw new SurumCakismasi();
   }
 
+  const mevcutYazar = mevcut?.generatedBy ?? null;
+  const yazar = nextAuthor("bulten", mevcutYazar, source);
+  const set = {
+    headline: input.headline,
+    bodyMd: input.body_md,
+    ...kunyeSeti(mevcutYazar, yazar),
+    ...(source === "claude" ? { generatedAt: new Date() } : {}),
+  };
+  const satir = {
+    briefDate,
+    locale,
+    period,
+    headline: input.headline,
+    bodyMd: input.body_md,
+    generatedBy: yazar,
+  };
+  const hedef = [dailyBriefs.briefDate, dailyBriefs.locale, dailyBriefs.period];
+
+  if (beklenen === undefined) {
+    await db.insert(dailyBriefs).values(satir).onConflictDoUpdate({ target: hedef, set });
+  } else if (!mevcut) {
+    /* Editör kayıt yokken açıldı (`beklenen` ""; JS denetimi geçti). */
+    const eklenen = await db
+      .insert(dailyBriefs)
+      .values(satir)
+      .onConflictDoNothing({ target: hedef })
+      .returning({ id: dailyBriefs.id });
+    if (eklenen.length === 0) throw new SurumCakismasi();
+  } else {
+    const yazilan = await db
+      .update(dailyBriefs)
+      .set(set)
+      .where(
+        and(
+          eq(dailyBriefs.id, mevcut.id),
+          eq(dailyBriefs.headline, mevcut.headline),
+          eq(dailyBriefs.bodyMd, mevcut.bodyMd),
+        ),
+      )
+      .returning({ id: dailyBriefs.id });
+    if (yazilan.length === 0) throw new SurumCakismasi();
+  }
+
   /* İÇERİK DEĞİŞMEDİYSE FOTOĞRAF YOK: rutin aynı metni yeniden gönderdiğinde
      geçmiş birbirinin aynı on satırla dolar ve gerçek bir önceki sürüm
-     listeden düşerdi. */
+     listeden düşerdi. Fotoğraf yazma tutunca (mercekteki gerekçe). */
   if (
     mevcut &&
     (mevcut.headline !== input.headline || mevcut.bodyMd !== input.body_md)
@@ -457,27 +637,6 @@ export async function saveBrief(
       source,
     );
   }
-
-  await db
-    .insert(dailyBriefs)
-    .values({
-      briefDate,
-      locale,
-      period,
-      headline: input.headline,
-      bodyMd: input.body_md,
-      generatedBy: source === "admin" ? "admin" : "claude",
-    })
-    .onConflictDoUpdate({
-      target: [dailyBriefs.briefDate, dailyBriefs.locale, dailyBriefs.period],
-      set: {
-        headline: input.headline,
-        bodyMd: input.body_md,
-        ...(source === "claude"
-          ? { generatedBy: "claude" as const, generatedAt: new Date() }
-          : {}),
-      },
-    });
 
   if (!mevcut || mevcut.headline !== input.headline || mevcut.bodyMd !== input.body_md) {
     notifyIndexNow(indexNowUrls([briefHref(briefDate, period)], [locale as Locale]));
@@ -545,9 +704,10 @@ export type DailyChartSource = WriteSource | typeof DAILY_CHART_AUTO;
  * günün son tamamlanmış seans olduğuna uç karar veriyor (tatil takvimi ve
  * saat orada), yazma yolu takvim bilmiyor.
  *
- * Mercekle aynı üç kural: içerik değiştiyse önce fotoğraf
- * (`story_revisions`, anahtar `grafik:{gün}`), `generatedBy` ve
- * `publishedAt` yalnız ilk yazımda, `beklenen` verilirse sürüm denetimi.
+ * Mercekle aynı üç kural: içerik değiştiyse fotoğraf (`story_revisions`,
+ * anahtar `grafik:{gün}`; yazma tutunca), `generatedBy` ve `publishedAt`
+ * yalnız ilk yazımda (yedeğin devri hariç — `nextAuthor`), `beklenen`
+ * verilirse sürüm denetimi yazmanın koşulu (`damgaEsit`).
  */
 export async function saveDailyChart(
   input: DailyChartInput & { date: string },
@@ -587,20 +747,19 @@ export async function saveDailyChart(
     (mevcut.title !== values.title ||
       mevcut.chartMd !== values.chartMd ||
       mevcut.bodyMd !== values.bodyMd);
-  if (mevcut && chartChanged) {
-    await fotografAl(dailyChartRevisionKey(input.date), locale, mevcut, source);
-  }
   /* Sürüm damgası kaynak değişiminde de ilerler (mercekteki gerekçe). */
   const alanDegisti = !!mevcut && alanlarDegisti(mevcut, values, ["title", "chartMd", "bodyMd", "sources"]);
 
-  /* Yedeğin üstüne gerçek kayıt gelince künye de değişir: `generatedBy`
+  /* Yedeğin üstüne RUTİN yazınca künye de değişir: `generatedBy`
      "yalnız ilk yazımda" kuralının tek istisnası, çünkü "auto" bir yazar
      değil yer tutucu — rutin yazınca kayıt artık rutinin. `publishedAt`
-     da o an: okurun gördüğü metin o an yayımlandı. */
-  const takeover =
-    mevcut?.generatedBy === DAILY_CHART_AUTO && source !== DAILY_CHART_AUTO
-      ? { generatedBy: source, publishedAt: new Date() }
-      : {};
+     da o an: okurun gördüğü metin o an yayımlandı. Panel düzeltmesi
+     yedeği devralmaz (8 Kasım ürün kararı; tablo ve gerekçe `nextAuthor`):
+     künye `auto`, `publishedAt` yerinde kalır. */
+  const mevcutYazar = mevcut?.generatedBy ?? null;
+  const yazar = nextAuthor("grafik", mevcutYazar, source);
+  const devraldi = mevcutYazar !== null && yazar !== mevcutYazar;
+  const takeover = devraldi ? { ...kunyeSeti(mevcutYazar, yazar), publishedAt: new Date() } : {};
 
   /* YEDEK YARIŞI KAPATIR (8 Kasım, durum taraması). Yukarıdaki "kayıt var
      mı" okuması ile bu yazma arasında rutin yazabilir; yedek
@@ -609,7 +768,7 @@ export async function saveDailyChart(
   if (source === DAILY_CHART_AUTO) {
     const eklenen = await db
       .insert(dailyCharts)
-      .values({ ...values, generatedBy: source })
+      .values({ ...values, generatedBy: yazar })
       .onConflictDoNothing({ target: [dailyCharts.chartDate, dailyCharts.locale] })
       .returning({ date: dailyCharts.chartDate });
     if (eklenen.length === 0) return { date: input.date, locale, skipped: "exists" };
@@ -617,14 +776,43 @@ export async function saveDailyChart(
     return { date: input.date, locale };
   }
 
-  await db
-    .insert(dailyCharts)
-    .values({ ...values, generatedBy: source })
-    .onConflictDoUpdate({
-      target: [dailyCharts.chartDate, dailyCharts.locale],
-      /* `updatedAt` yalnız içerik değişince (mercekteki gerekçe). */
-      set: { ...values, ...takeover, ...(alanDegisti || takeover.generatedBy ? { updatedAt: new Date() } : {}) },
-    });
+  /* `updatedAt` yalnız içerik değişince ya da devirde (mercekteki gerekçe). */
+  const set = { ...values, ...takeover, ...(alanDegisti || devraldi ? { updatedAt: new Date() } : {}) };
+  const hedef = [dailyCharts.chartDate, dailyCharts.locale];
+  const beklenti = beklenen === undefined ? undefined : damgaBeklentisi(beklenen);
+  if (beklenti === null) throw new SurumCakismasi();
+
+  if (beklenti === undefined) {
+    await db
+      .insert(dailyCharts)
+      .values({ ...values, generatedBy: yazar })
+      .onConflictDoUpdate({ target: hedef, set });
+  } else if (beklenti.yeni) {
+    const eklenen = await db
+      .insert(dailyCharts)
+      .values({ ...values, generatedBy: yazar })
+      .onConflictDoNothing({ target: hedef })
+      .returning({ id: dailyCharts.id });
+    if (eklenen.length === 0) throw new SurumCakismasi();
+  } else {
+    /* Koşullu yazma — gerekçe `damgaBeklentisi`, `saveStory`. */
+    const yazilan = await db
+      .update(dailyCharts)
+      .set(set)
+      .where(
+        and(
+          eq(dailyCharts.chartDate, input.date),
+          eq(dailyCharts.locale, locale),
+          damgaEsit(dailyCharts.updatedAt, beklenti.iso),
+        ),
+      )
+      .returning({ id: dailyCharts.id });
+    if (yazilan.length === 0) throw new SurumCakismasi();
+  }
+
+  if (mevcut && chartChanged) {
+    await fotografAl(dailyChartRevisionKey(input.date), locale, mevcut, source);
+  }
 
   if (!mevcut || chartChanged) {
     notifyIndexNow(indexNowUrls([dailyChartHref(input.date)], [locale as Locale]));

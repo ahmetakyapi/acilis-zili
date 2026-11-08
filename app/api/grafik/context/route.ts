@@ -21,6 +21,9 @@ import { loadDailyChartContext } from "@/lib/daily-chart-context";
  * `lib/daily-chart-fallback.ts`). Yedek `existing_locales`e girseydi rutin
  * ["tr","en"] görüp PAS derdi ve günün yorumu hiç yazılmazdı; o diller
  * `auto_locales`ta ayrıca listeleniyor, rutin onların üstüne yazar.
+ * Panelden düzeltilen yedek de `auto` kalır ve burada `auto_locales`ta
+ * görünmeye devam eder (devir tablosu `lib/content-write.ts` →
+ * `nextAuthor`): düzeltme rutini o gün için susturmaz.
  */
 
 function authorized(request: Request): AuthOutcome {
