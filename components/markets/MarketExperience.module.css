@@ -170,7 +170,7 @@
 /* `.heatGrid` / `.heatCell` / `.heatLogo` / `.heatSymbol` / `.heatPct` SİLİNDİ
    (18 Ekim): eşit karolu ızgaranın dört kuşağı (26 Eylül 18 piksel kare,
    yoğunluk kademeleri, 10 sütun, 15 × 2) ağaç haritasına geçti — gerekçe
-   components/markets/IndexTreemap.tsx. Kararların özü yeni kurallarda
+   components/markets/HeatScale.tsx (eski ağaç düzeni silindi). Kararların özü yeni kurallarda
    yaşıyor: büyüteç yerine halka (12 Ekim: "kimliği halka veriyor, büyüme
    komşuları örtüyordu"), basışta kısa çöküş (BUTTON_BASE lehçesi). */
 @media(max-width:639px) { .heat { padding:14px 16px 16px; } }
@@ -341,7 +341,7 @@
    genişlikte 6×5 ile bir satır kazanılıyor; en dar karonun eni ≥47px.
    320–374px telefonlar okunabilir beş sütunlu düzeni korur.
    (18 Ekim: ızgara ağaç haritasına geçti; telefon yerleşimi artık
-   IndexTreemap → LAYOUTS "narrow", oran 0,8.) */
+   silinen ağaç düzeninin dar oranı 0,8.) */
 
 /* 27 Eylül, piyasa ekranı görsel bütünü: Archivo + marka mavisi korunur.
    Yön renkleri yalnız veriyi anlatır. Açılış, harita ve liste aynı 16px
@@ -518,76 +518,24 @@
 .medianHint { flex-basis:100%; max-width:34ch; color:var(--text-muted); font-size:12px; line-height:1.45; white-space:normal; }
 @media(max-width:767px) { .medianHint { display:none; } }
 
-/* ==========================================================================
-   18 Ekim — ısı haritası, ağaç düzeni (components/markets/IndexTreemap.tsx)
-   Karonun iç kademeleri (logo / ad / büyük yüzde / dip satırı) ve giriş
-   koreografisi tema haritasının (Themes.module.css → `.tile*`); burada
-   yalnız kabın oranı, yerleşimlerin görünürlüğü, vurgu ve çipler.
-   ========================================================================== */
-.heatStage { margin-top:14px; }
-.heatLayout { display:none; }
-@media(min-width:1024px) { .heatLayout[data-layout="wide"] { display:block; } }
-@media(min-width:640px) and (max-width:1023px) { .heatLayout[data-layout="mid"] { display:block; } }
-@media(max-width:639px) { .heatLayout[data-layout="narrow"] { display:block; } }
-/* Oran TS'ten (`--aspect`, LAYOUTS ile tek sayı). Karonun 2 piksellik
-   dolgusu karolar arasında 4 piksellik oluk bırakıyor; kap iki yana 2
-   piksel taşıyor ki dış karolar panelin içerik kenarına otursun. */
-.heatMap { position:relative; width:calc(100% + 4px); margin:-2px; aspect-ratio:var(--aspect); }
-.heatTile:focus-visible { z-index:3; }
-@media(hover:hover) and (pointer:fine) {
- /* Üzerine gelinen karo öne çıkıyor, ötekiler bir ton geri çekiliyor —
-    tema haritasının dili. `:has()` kökte değil, 30 karoluk kapta. */
- .heatMap:has(.heatTile:hover) .heatFace { opacity:.55; }
- .heatTile:hover { z-index:3; }
- .heatTile:hover .heatFace { opacity:1; transform:scale(1.015); box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); }
-}
-.heatTile:active .heatFace { transform:scale(.985); }
+/* 18 Ekim'in ağaç düzenli ısı haritası (IndexTreemap) SİLİNDİ (8 Kasım):
+   sayfa kart panolarına geçince (8558b52) hiç çizilmez olmuştu. Kabın
+   oranı, yerleşimler, karo vurgusu ve küçük karoların çipleri onunla
+   gitti; lejant `components/markets/HeatScale.tsx`te. */
 
 /* Lejant: dokuz kademe, aralarında 2 piksel; üzerine gelinen kademe
-   haritada vurgulanıyor (gerekçe IndexTreemap → HeatScale). */
+   büyüyor (gerekçe components/markets/HeatScale.tsx). */
 .heatSwatches { overflow:visible; }
 .heatSwatches > i { height:100%; border-radius:2px; transition:transform .2s var(--ease-brand); }
 .heatSwatches > i:first-child { border-radius:3px 2px 2px 3px; }
 .heatSwatches > i:last-child { border-radius:2px 3px 3px 2px; }
 @media(hover:hover) and (pointer:fine) {
  .heatSwatches > i:hover { transform:scaleY(1.7); }
- .heat:has(.heatSwatches > i:hover) :is(.heatFace, .heatChip) { opacity:.18; }
- .heat:has(.heatSwatches > [data-heat-key="down-4"]:hover) [data-heat-key="down-4"],
- .heat:has(.heatSwatches > [data-heat-key="down-3"]:hover) [data-heat-key="down-3"],
- .heat:has(.heatSwatches > [data-heat-key="down-2"]:hover) [data-heat-key="down-2"],
- .heat:has(.heatSwatches > [data-heat-key="down-1"]:hover) [data-heat-key="down-1"],
- .heat:has(.heatSwatches > [data-heat-key="flat-0"]:hover) [data-heat-key="flat-0"],
- .heat:has(.heatSwatches > [data-heat-key="up-1"]:hover) [data-heat-key="up-1"],
- .heat:has(.heatSwatches > [data-heat-key="up-2"]:hover) [data-heat-key="up-2"],
- .heat:has(.heatSwatches > [data-heat-key="up-3"]:hover) [data-heat-key="up-3"],
- .heat:has(.heatSwatches > [data-heat-key="up-4"]:hover) [data-heat-key="up-4"] { opacity:1; }
 }
 
-/* Küçük kalanlar — çip. Tema haritasının satır listesi (44 piksel, ad
-   ile) Dow'da 14 satır tutuyordu; burada sembol + yüzde, akan sıra. */
-.heatRoster { margin-top:12px; padding-top:10px; border-top:1px solid var(--line-soft); }
-.heatRosterTitle { display:flex; align-items:baseline; gap:6px; margin-bottom:8px; color:var(--text-strong); font-size:12.5px; font-weight:650; }
-.heatRosterTitle span { color:var(--text-muted); font-weight:600; }
-.heatChips { display:flex; flex-wrap:wrap; gap:6px; }
-.heatChip { display:inline-flex; align-items:center; gap:7px; min-height:34px; padding:4px 10px; border-radius:9px; font-size:12px; line-height:1.2; transition:box-shadow .2s var(--ease-brand), opacity .2s var(--ease-brand); }
-.heatChip b { font-weight:750; letter-spacing:.01em; }
-.heatChip > span { font-weight:600; }
-@media(hover:hover) and (pointer:fine) { .heatChip:hover { box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); } }
-.heatChip:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
-/* Telefonda üç eşit sütun: akan sıra 390'da sağ kenarı dişli bırakıyordu
-   (ölçüldü, 18 Ekim; 21 çip 7 satır). */
-@media(max-width:639px) {
- .heatChips { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
- .heatChip { justify-content:space-between; min-height:44px; padding-inline:8px; gap:4px; }
-}
-/* 320'de üç sütunda "CRWD −%7,65" 12 puntoda çipe sığmıyor, komşuya
-   biniyordu (ölçüldü). İki sütun 21 çipte 11 satır (≈540 piksel) tuttu;
-   375'in altında üç sütun kalıyor, punto 11 ve iç boşluk 5 piksel. */
-@media(max-width:374px) { .heatChips { gap:4px; } .heatChip { padding-inline:5px; font-size:11px; } }
 @media(prefers-reduced-motion:reduce) {
  .indexLink, .rangeFill, .rangeDot { animation:none; }
- .heatSwatches > i, .heatChip { transition:none; }
- .heatTile:is(:hover, :active) .heatFace { transform:none; }
+ .heatSwatches > i { transition:none; }
 }
 
 /* ISI HARİTASI EŞİT KAROLAR (18 Ekim'de geri döndü — ağaç düzeni bir gün

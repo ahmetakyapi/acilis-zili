@@ -12,7 +12,7 @@ import { SentimentPulse } from "@/components/markets/SentimentPulse";
 import boardStyles from "@/components/markets/MarketBoards.module.css";
 import { ScaleBar } from "@/components/markets/CompareScale";
 import { IndexCard } from "@/components/markets/IndexCard";
-import { HeatScale } from "@/components/markets/IndexTreemap";
+import { HeatScale } from "@/components/markets/HeatScale";
 import { median, sameSessionMoves, themePhase, type MoveSet, type ThemePhase } from "@/lib/theme-stats";
 import { themeRow, type ThemeRow } from "@/lib/themes-data";
 import { GuideHint } from "@/components/article/GuideHint";
@@ -611,7 +611,7 @@ async function IndexDetail({
   const heatSource = [...withChange].sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0)).slice(0, HEAT_MAX);
   /* Harita tema haritasının satır tipini okuyor (`themeRow`: seans
      temeli ve işlem günüyle); renk yalnız aynı seansı anlatan kümede
-     (`sameSessionMoves`, gerekçe IndexTreemap). */
+     (`sameSessionMoves`, gerekçe components/markets/HeatScale.tsx). */
   const heatRows = heatSource.map((row) => themeRow(row.member.symbol, quotes, meta, status));
   const heatMoves = sameSessionMoves(heatRows);
   /* MEDYAN HİSSE (18 Ekim). Seçim şeridi seçili fonun fiyatını ve
@@ -868,7 +868,7 @@ function IndexToolbar({ total, memberCount, heat, moves, locale, t, children }: 
   locale: Locale; t: Dictionary; children?: ReactNode;
 }) {
   /* Künye haritanın hangi günü boyadığını söylüyor: renk yalnız bu
-     seansın kümesinde (gerekçe IndexTreemap). */
+     seansın kümesinde (gerekçe components/markets/HeatScale.tsx). */
   const hint = moves === null ? t.markets.heatMixed : moves.basis === "lastClose" ? t.markets.heatLastClose : t.markets.heatmapHint;
   return (
     <Panel id="market-reading" className={styles.breadth}>
