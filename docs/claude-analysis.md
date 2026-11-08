@@ -16,17 +16,18 @@ CLAUDE_ANALYSIS_API_KEY="console-uzerinden-olusturulan-anahtar"
 CLAUDE_ANALYSIS_DISABLED="0"
 ```
 
-`ANTHROPIC_API_KEY` çeviri işlemlerinin anahtarıdır; analiz onu kullanmaz.
+Analiz yalnız `CLAUDE_ANALYSIS_API_KEY`i kullanır (`lib/ai-analysis.ts`). `ANTHROPIC_API_KEY`
+site içi notların ve çevirinin anahtarıdır; o yoksa notlar analiz anahtarına düşer
+(`lib/claude-key.ts`).
 Model satırını yazma; koddaki varsayılan geçer. Her deploy'daki anahtar eşitlemesi
 (`deploy/set-analysis-key.py`) eski örnekten kalan `claude-sonnet-4-6` sabitini siler.
 Dosya root:acilis 0640 olmalıdır. Değişiklikten sonra `sudo systemctl restart acilis-zili`.
 
-Yeni migration: `drizzle/0030_high_dakota_north.sql`. Deploy migration çalıştırmaz.
-Bu SQL'i veritabanına, mevcut migration sürecine uygun olarak uygulayın. Yalnız
-üç yeni tablo oluşturur ve sahibin mevcut admin hesabına erişim atar. Var olan
-`users` tablosuna sütun eklemez. Tablo yoksa ücretsiz sayfalar çalışır, AI kapalıdır.
-Normal Drizzle migration akışında `npm run db:migrate`; elle SQL uygulanan
-veritabanında bütün geçmiş migration'ları körlemesine tekrar çalıştırmayın.
+Tablolar `drizzle/0030_high_dakota_north.sql` ile geldi (üretimde uygulandı; 29 Ekim
+itibarıyla 0000–0042 hepsi). Üç yeni tablo oluşturur ve sahibin mevcut admin
+hesabına erişim atar; var olan `users` tablosuna sütun eklemez. Tablo yoksa ücretsiz
+sayfalar çalışır, AI kapalıdır. Deploy migration çalıştırmaz; yeni bir ortamda
+GitHub Actions → "Migrate DB" (`migrate.yml`, önce `check`, sonra `apply`).
 
 ## Veri ve bütçe davranışı
 
@@ -117,9 +118,10 @@ Haber seçimi `selectNews`: ilgisiz ve yakın kopya başlıklar elenir, başlı�
 şirket geçen haber önce gelir, günler sırayla dolaşılır, yalnız özette geçen haber
 en çok üç.
 
-`/analizlerim` kullanıcının bütün kayıtlı raporları (hisse, görüş, puan, vade,
-Rapordan Bugüne). Satır `/hisse-secimi/SYM?rapor=<id>` açar; panel kimliği adresten
-okur, başka dilde üretilmiş raporu `GET ?id=` ile ister. Menü satırı yalnız erişimi
+`/analizlerim` kullanıcının kendi topluluk yazıları ve bütün kayıtlı Claude raporları
+(rapor kartı: hisse, görüş, puan, vade, Rapordan Bugüne;
+`components/analyses/AnalysesCards.tsx`). Kart `/claude/SYM?sekme=rapor&rapor=<id>`
+açar; sayfa kimliği adresten okur, başka dilde üretilmiş raporu `GET ?id=` ile ister. Menü satırı yalnız erişimi
 açık hesapta (`hasAnalysisAccess`, tek birincil anahtar okuması).
 
 ## Claude Sayfası ve İki Odak

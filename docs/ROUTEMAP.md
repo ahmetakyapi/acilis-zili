@@ -10,14 +10,14 @@
 > rota eksikti ve okuyan onu güncel sanıyordu. İki yerde tutulan bir liste er geç
 > birbirinden ayrı düşer. Rota tablosu artık yalnızca README'de.
 
-**Son güncelleme:** 2026-10-29
+**Son güncelleme:** 2026-11-08
 **Durum:** 🟢 CANLI — https://aciliszili.com
 
 ---
 
 ## Canlıda ne var
 
-Sayılar 29 Ekim'de kaynaktan sayıldı; yeniden saymak için:
+Sayılar 8 Kasım'da kaynaktan sayıldı; yeniden saymak için:
 `find app -name page.tsx | wc -l` · `find app/api -name route.ts | wc -l` ·
 `grep -c "pgTable(" lib/schema.ts` · `ls drizzle/*.sql | wc -l` ·
 `grep -cE "^[A-Z][A-Z0-9_]+=" .env.example`. Üretimdeki migration durumu:
@@ -25,13 +25,14 @@ GitHub Actions → "Migrate DB" iş akışı, `check` modu (salt okunur).
 
 | | |
 |---|---|
-| Sayfa rotası | 86 `page.tsx` (12'si `/admin`; açık sayfalar `/en` önekiyle ikinci bir adreste daha) |
-| API ucu | 54 `route.ts` `app/api` altında (+8 `app/` içinde: paylaşım görselleri ve RSS) |
+| Sayfa rotası | 87 `page.tsx` (13'ü `/admin`; açık sayfalar `/en` önekiyle ikinci bir adreste daha) |
+| API ucu | 55 `route.ts` `app/api` altında (+8 `app/` içinde: paylaşım görselleri ve RSS) |
 | Veritabanı tablosu | 55 · 43 migration (0000–0042; üretimde hepsi uygulandı, 29 Ekim) |
 | Sağlayıcı | Alpaca · Finnhub · FRED · TCMB · TCMB EVDS (isteğe bağlı) · SEC EDGAR (13F, Form 4) · OpenFIGI · House Clerk · Federal Reserve · Kalshi · Cboe · ABD Hazinesi · ARK / Global X ETF dosyaları · GİB (`lib/providers/`) |
-| Ortam değişkeni | 36 (`.env.example`) |
+| Ortam değişkeni | 38 (`.env.example`) |
 | Zamanlanmış iş | 9 uç `app/api/cron/*`: günlük senkron, alarmlar, bilanço hatırlatması, haberler + çeviri, pazar özeti postası, Telegram, olasılıklar, risk, Günün Grafiği yedeği. Saatleri tek yerde: `deploy/cron-install.sh` |
-| İçerik rutini | 7 adet, claude.ai üzerinde elle kurulu (teknik analiz günde üç koşu; liste `docs/claude-rutinler.md`) |
+| claude.ai rutini | 8 adet, elle kurulu: 6 içerik (günlük, haftalık, Mercek, bilanço, teknik, Günün Grafiği) + Görev Kontrolü + Haftalık Kalite Denetimi. Canlı kopya, cron ve model `docs/claude-rutinler.md`te; sayım `list_triggers` (`recurring: true`) |
+| Rutin kuralları | `content/kurallar/{ortak,mercek,bilanco,gunluk,haftalik}.md`, `/api/kurallar` ile her koşuda okunur — değişiklik yeniden yapıştırma istemez |
 
 **Tohumlanan veri:** 23 NYSE tatili (üçü yarım gün) · CPI/FOMC/istihdam yayın
 takvimi · 81 temel sembol · 635 endeks üyesi (S&P 500 + Nasdaq 100 + Dow,
@@ -63,9 +64,12 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       `content/kurallar/mercek.md` → "Aramada ve Yapay Zekâ Cevaplarında
       Bulunmak". Rutin kuralları her koşuda `/api/kurallar` ile okuyor;
       claude.ai'de yapıştırma gerekmedi.
-- [ ] **`docs/claude-rutinler.md` § 3 canlı Mercek talimatından geride.**
-      Canlı talimat (Genel Özet kutusu, ≤1100 kelime, kurallar ucu) depoya
-      anahtarsız olarak taşınmalı.
+- [x] **`docs/claude-rutinler.md` canlıyla eşitlendi (8 Kasım).** Sekiz
+      rutinin prompt'u `list_triggers`ten anahtarı `BURAYA_SECRET` yer
+      tutucusuyla değiştirilerek taşındı; § 3 (Mercek) ve § 4 (Bilanço)
+      artık canlının kopyası, Görev Kontrolü (§ 8) ve Haftalık Kalite
+      Denetimi (§ 9) ilk kez belgede. Yaz Saati Nöbetçisi canlıda yok
+      (`CRON_TZ` taşıyan cron'larla gereksizleşti), § 6 emekli.
 - [ ] **Bing Webmaster Tools'a site eklenmeli — sahibi (8 Kasım).** IndexNow
       bildirimleri canlı (`lib/indexnow.ts`); Bing'in "AI Performance"
       raporu Copilot atıflarını yalnız doğrulanmış sitede gösteriyor.
@@ -78,10 +82,12 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       `noindex` değerlendirilecek; veri olmadan dokunulmadı.
 - [ ] **Günün Grafiği kapanıştan sonraya alınmalı — sahibi claude.ai'de
       (8 Kasım).** Uç artık günü kapanış + 20 dk'da (16:20 NY) tamamlanmış
-      sayıyor. Üç değişiklik: (1) "Açılış Zili · Günün Grafiği" cron'u
-      `CRON_TZ=America/New_York 25 16 * * 1-5`; (2) aynı rutinin prompt'u
-      `docs/claude-rutinler.md` § 7'den yeniden yapıştırılır (adım 1'e
-      `auto_locales` satırı); (3) Görev Kontrolü prompt'unda Günün
+      sayıyor. Canlı cron hâlâ `CRON_TZ=Europe/Istanbul 15 9 * * 2-6`
+      (8 Kasım `list_triggers`); hedef `CRON_TZ=America/New_York 25 16 * * 1-5`.
+      Üç değişiklik: (1) "Açılış Zili · Günün Grafiği" cron'u hedefe;
+      (2) aynı rutinin prompt'una `docs/claude-rutinler.md` § 7'deki
+      `auto_locales` satırı eklenir (bölümdeki blok canlının kopyası,
+      eklenecek satır üstteki açık iş notunda); (3) Görev Kontrolü prompt'unda Günün
       Grafiği'nin beklenen cron'u (1)'deki olur ve kullanım limitindeki tek
       yeniden çalıştırma öncelik listesine Bilanço'dan hemen sonra girer.
       Kök neden: 7 Kasım cumartesi koşusu kullanım limitiyle düştü, bekçi
@@ -126,14 +132,10 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       (`lib/profile-data.ts`, `app/actions/profile.ts`). Üretim
       `DATABASE_URL`iyle `npm run db:migrate`.
 
-- [ ] **Ünlü yatırımcılar (migration 0021).** Beş tablo: `investor_filings`,
+- [x] **Ünlü yatırımcılar (migration 0021).** Beş tablo: `investor_filings`,
       `investor_holdings`, `cusip_tickers`, `congress_filings`,
-      `congress_trades`. 28 Eylül'de `.env.local`in veritabanına uygulandı ve
-      `npx tsx scripts/sync-investors.ts` ile ilk doldurma yapıldı (15 yatırımcı
-      × 8 çeyrek, Pelosi'nin 2025-2026 PTR'leri). Üretim veritabanı farklıysa
-      orada da `npm run db:migrate` ve betik koşmalı; tablo yokken ekran "Henüz
-      Veri Yok" der, hisse paneli basılmaz, cron adımı raporda "hata" yazar
-      ve devam eder.
+      `congress_trades`. Üretimde uygulandı (29 Ekim itibarıyla 0000–0042
+      hepsi); doldurma günlük cron'da.
 - [ ] **`OPENFIGI_API_KEY` isteğe bağlı.** Anahtarsız cron koşum başına 40
       CUSIP çözüyor; 13F sezonunda Bridgewater'ın yüzlerce yeni pozisyonunun
       logosu birkaç günde geliyor (o arada ad yazılıyor). Anahtar bunu tek
@@ -144,21 +146,17 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       (`lib/ark-view.ts`). Kayıt 28 Eylül'de başladı; ilk karşılaştırma bir
       sonraki işlem gününün dosyasıyla geliyor.
 
-- [ ] **Migration 0028 (`push_subscriptions`) + VAPID anahtarları.** Web Push
-      bildirimleri. Tablo yokken Ayarlar'daki Bildirimler paneli basılmıyor;
-      anahtar yokken basılıyor ama "bu sunucuda kapalı" diyor. Sunucuda bir
-      kez: `npx web-push generate-vapid-keys` → `VAPID_PUBLIC_KEY` ve
-      `VAPID_PRIVATE_KEY` tırnaklı olarak `/etc/acilis-zili.env`e, sonra
-      `sudo systemctl restart acilis-zili`. Tarama crontab satırı
-      (`*/5 * * * *` → `deploy/cron-alerts.sh`) `update.sh` tarafından
-      `deploy/cron-install.sh` ile ekleniyor — bu satırı taşıyan sürümün
-      update.sh'ı İKİNCİ dağıtımda koşuyor (ilk dağıtım eski kopyayla).
-- [ ] **Migration 0029 (`password_resets`) + Resend anahtarı.** "Şifremi
-      Unuttum" kodda hazır ama uykuda: `RESEND_API_KEY` ve `EMAIL_FROM`
-      `/etc/acilis-zili.env`e girene kadar bağlantı görünmüyor ve
-      `/sifremi-unuttum` 404. Resend'de alan adını doğrula (DNS'e üç
-      kayıt), anahtarı üret, iki değeri tırnaklı yaz, servisi yeniden
-      başlat. Alarm e-postası bilinçli olarak yok: bildirim Web Push'ta.
+- [x] **Migration 0028 (`push_subscriptions`)** üretimde (29 Ekim itibarıyla
+      0000–0042 hepsi). VAPID anahtarı yoksa Ayarlar'daki Bildirimler paneli
+      basılır ama "bu sunucuda kapalı" der; anahtarlar GitHub Secrets'tan
+      "Sync App Env" ile `/etc/acilis-zili.env`e aktarılabilir
+      (`deploy/sync-app-env.sh`). Tarama satırı `deploy/cron-install.sh`te.
+- [x] **Migration 0029 (`password_resets`)** üretimde (29 Ekim itibarıyla
+      0000–0042 hepsi). E-posta anahtarı (`RESEND_API_KEY` + `EMAIL_FROM`,
+      ya da `BREVO_API_KEY`) yokken "Şifremi Unuttum" basılmaz, bildirim
+      postası gitmez; anahtar "Sync App Env" ile aktarılır. Bildirim postası
+      (alarm, pazar özeti) tek kapıdan: `lib/email-notify.ts`. Gönderimi
+      denemek için Actions → "Deneme Postası" (`test-mail.yml`).
 - [x] **Migration 0027 (`portfolio_sales`)** — portföy satışları ve gerçekleşen
       kâr/zarar. Tablo yokken Sat düğmeleri ve Gerçekleşen paneli basılmıyor
       (`lib/portfolio-sales-data.ts` → `available`).
@@ -167,12 +165,9 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       düğmesi ve favorilerdeki alarm paneli HİÇ basılmıyor (kurulamayacak
       bir düğme göstermemek için — `lib/price-alerts.ts` → `available`).
       Üretim `DATABASE_URL`iyle `npm run db:migrate`.
-- [ ] **Migration 0020 üretimde uygulanmadı.** Dört yeni tablo:
-      `symbol_metrics`, `portfolio_positions`, `earnings_analysis_extras`,
-      `app_errors`. Kod tablo yokken sessizce düşüyor, yani uygulanana kadar
-      skor kartı "Hazırlanıyor" der, portföy açılmaz, bilanço ekleri
-      (30 Saniyede, segment, KPI) yazılamaz ve hata kaydı hiçbir şey tutmaz.
-      Üretim `DATABASE_URL`iyle `npm run db:migrate`.
+- [x] **Migration 0020** (`symbol_metrics`, `portfolio_positions`,
+      `earnings_analysis_extras`, `app_errors`) üretimde (29 Ekim itibarıyla
+      0000–0042 hepsi).
 - [ ] **`npm run db:seed` canlı deploy'dan SONRA koşturulmalı.** Beş yeni
       makro serisi (`ICSA`, `RSAFS`, `M2SL`, `SAHMREALTIME`, `T10Y3M`)
       `macro_series`e tohumla giriyor; değerleri sonra cron dolduruyor.
@@ -181,22 +176,15 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       (`lib/providers/evds.ts`). Kodlar belgelerden doğrulandı ama gerçek
       bir anahtarla hiç çağrılmadı. Anahtar yokken Reel TL kapalı, vergi
       hesaplayıcısı Yİ-ÜFE'yi okuyucudan istiyor.
-- [ ] **Bilanço rutini prompt'u claude.ai'ye yapıştırılmalı.**
-      `docs/claude-rutinler.md` § 4 artık `takeaways`, `segments`,
-      `segments_source` ve `kpis` alanlarını istiyor; kurulu rutin eski
-      prompt'la koştukça ekler boş kalır.
-- [ ] **Mercek rutinine kaynak kuralı elle eklenmeli** (30 Ekim). Canlı
-      prompt `docs/claude-rutinler.md` § 3'ten DAHA YENİ (45 bin karakter,
-      ≤1100 kelime kurgusu); belgeyi yapıştırmak onu geriye götürür. Canlı
-      prompt'ta "`sources`'ta EN AZ BİR birincil ya da büyük ajans kaynağı
-      bulunur." cümlesinin ardına: "`sources`'a koyduğun URL yayıncının
-      KENDİ adresi olsun; finance.yahoo.com aktarımı haftalar içinde 404
-      oluyor. Açıp 200 döndüğünü görmediğin adresi ekleme, etiketi URL'siz
-      yaz." Ekim taramasındaki 9 ölü kaynağın 6'sı Yahoo aktarımıydı.
-- [ ] **Rutin belgesi canlı prompt'ların gerisinde.** § 3 (ve § 4'ün kendi
-      notuna göre bilanço) claude.ai'deki hâlinden eski. Canlı prompt'lar
-      sır maskelenerek belgeye geri yazılmalı; o güne dek prompt'un tek
-      güvenilir kaynağı claude.ai'deki rutin.
+- [x] **Bilanço rutini `takeaways`, `segments`, `segments_source` ve `kpis`
+      alanlarını gönderiyor** — canlı prompt'ta var (8 Kasım eşitlemesi,
+      `docs/claude-rutinler.md` § 4).
+- [x] **Mercek rutininde kaynak kuralı var** (yayıncının kendi adresi,
+      açılıp 200 görülmeyen adres eklenmez) — canlı prompt'un 4. adımında, 8 Kasım
+      eşitlemesinde görüldü.
+- [x] **Rutin belgesi canlı prompt'larla eşit** (8 Kasım). Yeniden eşitleme
+      yolu ve anahtar denetimi `docs/claude-rutinler.md` → "Bu Dosya Canlının
+      Kopyasıdır".
 - [ ] **`/api/health` bir uptime izleyicisine bağlanmalı** (UptimeRobot,
       Better Stack). İki kural: kod 200 değilse "site düştü", gövde
       `degraded` içeriyorsa "içerik gecikti".
@@ -232,11 +220,13 @@ gelsin.
   kartı bu yüzden kaldırıldı). Piyasalar'daki Emtia paneli borsada işlem
   gören fonları (GLD, SLV, USO, UNG, CPER, DBA, IBIT, ETHA) fon fiyatı
   olarak gösteriyor ve künyesinde spottan ayrışabileceğini yazıyor.
-- **Tek tek analist notları ve hedef fiyat yok.** Finnhub'ın
-  `/stock/upgrade-downgrade` ve `/stock/price-target` uçları ücretsiz
-  katmanda 403. Elimizde yalnızca aylık dağılım var; Analist Dağılımı
-  Değişimi onun farkını gösteriyor ve hangi kurumun ne yaptığını
-  söylemiyor. Olmayan bir kaynaktan not uydurulmuyor (`lib/analyst-trend.ts`).
+- **Tek tek analist notları yok.** Finnhub'ın `/stock/upgrade-downgrade`
+  ve `/stock/price-target` uçları ücretsiz katmanda 403. Elimizde aylık
+  dağılım var; Analist Dağılımı Değişimi onun farkını gösteriyor ve hangi
+  kurumun ne yaptığını söylemiyor. Olmayan bir kaynaktan not uydurulmuyor
+  (`lib/analyst-trend.ts`). Ortalama hedef fiyat sağlayıcıdan değil, günlük
+  bülten rutininin kaynağıyla yazdığı kayıttan (`/api/hedef`,
+  `lib/analyst-targets.ts`).
 - **`/sektor/*` sayfaları yok.** İçerik `/sirketler?sektor=` ile birebir
   aynı olurdu; ikinci bir adres aynı listeyi iki kez dizinletmekten başka
   bir şey eklemiyor.
@@ -256,13 +246,12 @@ gelsin.
 - **Bilanço analizi panelden düzenlenmiyor.** Analiz serbest metin değil, on
   beş alanlı yapılandırılmış bir kayıt; bir metin kutusuna indirmek
   düzenlemek değil bozmak olurdu. Eksikleri İçerik ekranı listeliyor.
-- **Masthead tek şerit: beş sekme ve "Daha Fazla".** Piyasalar, Teknik
-  Analiz, Şirketler, Bilançolar ve Mercek şeritte (21 Eylül sadeleşmesi;
-  önceki yedi sekmeli ölçüm `components/layout/nav-items.ts` içinde karar
-  kaydı olarak duruyor). Makro, Takvim, Karşılaştır, Temalar, Rehber,
-  Sözlük, Vergi Hesaplayıcı, Haberler ve Bülten Arşivi "Daha Fazla"da;
-  Favoriler ve Portföy hesap panelinde. Büyütülmüş yazıda sekmeler öncelik
-  sırasıyla o panele iniyor.
+- **Masthead tek şerit ve "Daha Fazla".** Şeritte duran sekmeler ve taşma
+  öncelikleri `components/layout/nav-items.ts` → `NAV_ITEMS` (`strip.rank`;
+  8 Kasım'da Piyasalar, Bilançolar, Mercek, Teknik Analiz, Temalar,
+  Şirketler); geri kalanı "Daha Fazla" panelinde (`more`). Ölçümler ve
+  21 Eylül sadeleşmesinin gerekçesi aynı dosyada karar kaydı. Büyütülmüş
+  yazıda sekmeler öncelik sırasıyla panele iniyor.
 
 ---
 
@@ -278,7 +267,7 @@ gelsin.
 | Vergi eşikleri | her yıl başında | `lib/tax.ts` → `TAX_YEARS`: gelir vergisi tarifesi ve temettü beyan sınırı (2026: 22.000 TL), yeni yılın satırı GİB rehberi ve tarife tebliğinden, kaynağıyla |
 | Skor kartı metrikleri | kendiliğinden | cron koşum başına 15 sembol + sayfa isteği (`lib/symbol-metrics.ts`) |
 | Hata kaydı | kendiliğinden | 30 günden eskisini günlük cron siler |
-| İçerik rutinleri | değişince | `docs/claude-rutinler.md`, claude.ai arayüzünden |
+| İçerik rutinleri | değişince | prompt claude.ai arayüzünden, kopyası `docs/claude-rutinler.md`te (anahtarsız); ortak yazım kuralları `content/kurallar/*.md`, yapıştırma gerekmez |
 
 ---
 
@@ -288,9 +277,11 @@ gelsin.
 |---|---|
 | `README.md` | Ürünün tamamı: rotalar, mimari, veri modeli, kurulum, sınırlar |
 | `CLAUDE.md` (`AGENTS.md` aynı dosya) | Kod üzerinde çalışırken bilinmesi gerekenler — kurallar ve tuzaklar |
-| `docs/claude-rutinler.md` | İçerik rutinlerinin prompt'ları ve `:::` blok sözdizimi |
+| `docs/claude-rutinler.md` | claude.ai rutinlerinin canlı prompt kopyası (anahtarsız), cron ve modelleri |
+| `content/kurallar/*.md` | Rutinlerin ortak ve göreve özgü yazım kuralları (`/api/kurallar`) |
 | `docs/claude-analysis.md` | Kullanıcı isteğiyle Claude analizi: kurulum, kota, prompt, rapor ekranı |
-| `docs/deploy-vps.md` | Sunucu kurulumu, otomatik deploy ve geri dönüş |
+| `docs/deploy-vps.md` | Sunucu kurulumu, otomatik deploy, disk koruması ve geri dönüş |
+| `docs/film-kimligi.md` | Video ve kısa filmlerin kimliği (`cinecode`) |
 | `docs/claude-brief-agent.md` · `docs/claude-mercek-ajani.md` | Yalnız yönlendirme: tek kaynak `docs/claude-rutinler.md` |
 | `docs/arsiv/` | Tarihî tasarım devri ve denetim kayıtları — kural değil, güncel kural `CLAUDE.md` |
 | bu dosya | Durum: canlıda ne var, ne bekliyor, ne bilinçli olarak yok |

@@ -11,7 +11,7 @@ import { claudeKey } from "@/lib/claude-key";
 import { getHolidays, getStatus, getSymbolNames, guncelBilanco } from "@/lib/data";
 import { db } from "@/lib/db";
 import { epsSurprise, revenueSurprise } from "@/lib/earnings-week";
-import { addEtDays, prevTradingDay, todayEt } from "@/lib/market-hours";
+import { addEtDays, settledSessionOf, todayEt } from "@/lib/market-hours";
 import { barDate } from "@/lib/period-returns";
 import { getChartBars } from "@/lib/providers";
 import { getCompanyNews, getEarningsSurprises } from "@/lib/providers/finnhub";
@@ -166,12 +166,17 @@ const money2 = (value: number | null, currency: string | null) =>
 const compact2 = (value: number | null, currency: string | null) =>
   value === null ? null : { tr: formatMoneyCompact(value, "tr", currency), en: formatMoneyCompact(value, "en", currency) };
 
-/** Son TAMAMLANMIŞ seansın ET günü: seans sürerken dün, değilse ekranın seans günü.
-    Karşılaştırma notu da buradan okur (lib/compare-note.ts). */
+/** Son TAMAMLANMIŞ seansın ET günü. Karşılaştırma notu da buradan okur
+    (lib/compare-note.ts).
+
+    KAPANIŞ ZİLİ YETMİYOR (8 Kasım). Kural "seans sürerken dün, değilse
+    ekranın seans günü"ydü: 16:00 ET'de bugün tamam sayılıyordu, oysa
+    besleme 15 dakika geriden geliyor ve 16:05'te yazılan not yarım barın
+    kapanışını 36 saat "seansın kapanışı" diye sunabiliyordu. Tanım artık tek
+    yerde: kapanış + gecikme + pay (`settledSessionOf`, lib/market-hours.ts). */
 export async function expectedLastSession(): Promise<string> {
   const [status, holidays] = await Promise.all([getStatus(), getHolidays()]);
-  const running = status.tradingToday && (status.session === "pre-market" || status.session === "regular");
-  return running ? prevTradingDay(status.etDate, holidays) : status.sessionDate;
+  return settledSessionOf(status, holidays);
 }
 
 export async function completedDailyBars(symbol: string): Promise<Bar[] | null> {
@@ -406,7 +411,9 @@ async function getMoveInsightOnce(symbol: string, client?: string): Promise<Move
       if (!grounded(text, built.grounding)) throw new Error("ungrounded");
       return { ...built.meta, explained: out.explained, text, generatedAt: new Date().toISOString() };
     },
-    ["stock-move-v3", built.key],
+    /* v4 (8 Kasım): tamamlanmış seans = kapanış + 20 dk (settledSessionOf);
+       eski kuralla 16:00–16:20 ET arasında yarım bardan yazılan kayıt kalmasın. */
+    ["stock-move-v4", built.key],
     { revalidate: 36 * 3600, tags: ["stock-insight"] },
   )();
   return { ...cached, ...built.meta };
@@ -503,8 +510,10 @@ async function getEarningsInsightOnce(symbol: string, client?: string): Promise<
       };
     },
     /* Tepki seansı kapanınca not bir kez daha yazılır (anahtar değişir).
-       v4 (20 Ekim): ADR notları dolar simgesiyle yazılmıştı. */
-    ["stock-earnings-v4", symbol, row.reportDate, reactionDate ?? "pending"],
+       v4 (20 Ekim): ADR notları dolar simgesiyle yazılmıştı.
+       v5 (8 Kasım): tamamlanmış seans = kapanış + 20 dk (settledSessionOf);
+       eski kuralla 16:00–16:20 ET arasında yarım bardan yazılan kayıt kalmasın. */
+    ["stock-earnings-v5", symbol, row.reportDate, reactionDate ?? "pending"],
     { revalidate: 36 * 3600, tags: ["stock-insight"] },
   )();
 }
@@ -647,8 +656,10 @@ async function getPreviewInsightOnce(symbol: string, client?: string): Promise<P
         generatedAt: new Date().toISOString(),
       };
     },
-    /* v3 (20 Ekim): ADR önizlemeleri dolar simgesiyle yazılmıştı. */
-    ["stock-preview-v3", symbol, row.reportDate, todayEt()],
+    /* v3 (20 Ekim): ADR önizlemeleri dolar simgesiyle yazılmıştı.
+       v4 (8 Kasım): tamamlanmış seans = kapanış + 20 dk (settledSessionOf);
+       eski kuralla 16:00–16:20 ET arasında yarım bardan yazılan kayıt kalmasın. */
+    ["stock-preview-v4", symbol, row.reportDate, todayEt()],
     { revalidate: 24 * 3600, tags: ["stock-insight"] },
   )();
 }

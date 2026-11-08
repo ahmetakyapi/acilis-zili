@@ -373,7 +373,8 @@ yazın 16:30, kışın 17:30 TR). ET↔UTC aritmetiği yalnız `lib/market-hours
 
 - Yazılı içeriği claude.ai rutinleri üretir; promptlar `docs/claude-rutinler.md`
   (§ 1 günlük bülten, § 2 haftalık, § 3 mercek, § 4 bilanço analizi, § 5
-  teknik, § 6 yaz saati nöbetçisi, § 7 günün grafiği). Rutinler koddan
+  teknik, § 6 emekli, § 7 günün grafiği, § 8 görev kontrolü, § 9 haftalık
+  kalite denetimi; dosya canlı rutinlerin anahtarsız kopyası). Rutinler koddan
   kurulmaz, claude.ai'de elle; prompt değişince sahibine "yeniden yapıştır"
   de ve `docs/ROUTEMAP.md`'ye açık iş olarak yaz.
 - Rutin uçları `/api/{brief,mercek,analiz,teknik,hedef,grafik}` (+
@@ -408,8 +409,9 @@ yazın 16:30, kışın 17:30 TR). ET↔UTC aritmetiği yalnız `lib/market-hours
   `/takip`); sekme çubuğunu her sayfa kendi basar — detay sayfası sekmesiz.
 - Teknik analiz (`technical_analyses`): satır YAYIN başına (metin
   `copy.{tr,en}`). Sembol listesi `lib/technical.ts` → `TECHNICAL_SYMBOLS`;
-  nöbet saati değişirse `TECHNICAL_CRON`, `SLOT_ET`, `currentSlot` üçü
-  birden (yoksa yeni koşu var olan nöbetin ÜSTÜNE yazar). Bülten saati
+  nöbet saati değişirse `SLOT_ET` ile `currentSlot`/`LATEDAY_FROM_ET`
+  birlikte (yoksa yeni koşu var olan nöbetin ÜSTÜNE yazar); `TECHNICAL_CRON`
+  `SLOT_ET`ten türer, claude.ai'deki görev elle yeniden kurulur. Bülten saati
   `lib/data.ts` → `BRIEF_PUBLISH` (günlük 09:00 ET, haftalık 09:30 TR).
 
 ## Site İçi Claude

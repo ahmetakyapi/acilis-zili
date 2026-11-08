@@ -8,8 +8,8 @@ fonksiyon süresi sınırı var ne çağrı kotası — günlük cron'un 100 san
 bütçesi de ilk kez olduğu gibi çalışabiliyor.
 
 `main`'e her push GitHub Actions üzerinden buraya dağıtılıyor
-(`.github/workflows/deploy.yml`); aşağıdaki elle koşum yolu hem ilk kurulum
-hem de acil durum için duruyor.
+(`.github/workflows/deploy.yml`, § Otomatik Dağıtım); aşağıdaki elle koşum
+yolu hem ilk kurulum hem de acil durum için duruyor.
 
 Kurulumun TAMAMI tek komutla yapılıyor: `deploy/remote.sh`, yerel makineden
 sunucuya `deploy/` dizinini ve ortam dosyasını yükleyip `deploy/bootstrap.sh`'ı
@@ -23,9 +23,9 @@ adımın gerekçesini kendi içinde taşıyor.
 
 **Cron İKİ YERDE BİRDEN ÇALIŞMAMALI.** `/api/cron/daily` Finnhub'a ~84 istek
 atıyor ve ücretsiz katman dakikada 60 kabul ediyor. Aynı dakikada iki koşum
-168 istek demek — ikisi de 429 yiyip yarım kalır. `bootstrap.sh` sunucuda
-crontab'ı kendisi kuruyor; bunu doğruladıktan sonra `vercel.json` içindeki
-`crons` bloğu kaldırılmalı (ya da tersi). Hangisi kalacaksa kalsın, **tek**.
+168 istek demek — ikisi de 429 yiyip yarım kalır. Cron yalnız bu sunucunun
+crontab'ında (`deploy/cron-install.sh`); `vercel.json` boş (`{}`), Vercel
+tarafında cron yok. İkinci bir kopya açılırsa orada crontab kurulmaz.
 
 **İNDEKSLENEBİLİRLİK DERLEME ZAMANINDA PİŞİYOR.** `SITE_INDEXABLE`
 `robots.ts`'e statik olarak giriyor: `/etc/acilis-zili.env` içindeki değeri
@@ -48,7 +48,10 @@ klasöre klonlayıp orada derliyor, ancak sağlık kontrolü geçince bağı çe
 — derleme dakikalarca sürerken canlı sunucu asla yarım bir sürümün üstünde
 durmuyor. Sağlık geçmezse bağ öncekine döner. Next'in veri önbelleği
 (`.next/cache/fetch-cache`) ise sürümler arasında ORTAK: `shared/fetch-cache`e
-bağ, 31 günden eski kayıtları gece cron budar (gerekçe `update.sh`, 20 Ekim).
+bağ. Gece cron iki kez budar: 31 günden eski kayıtları ve 100 KB'ı geçen
+kayıtları iki günde (`deploy/cron-install.sh`; gerekçe `update.sh` ve
+`deploy/disk-guard.sh`). Derlemeden önce ayrıca `disk-guard.sh` yer açar
+(§ Otomatik Dağıtım).
 
 ---
 
@@ -119,8 +122,9 @@ yayına çıkmak için. Betik sırayla:
 
 1. `deploy/` dizinini ve ortam dosyasını sunucuya yükler (izinler daraltılmış
    olarak — sır dünya-okunur hiçbir noktada durmaz).
-2. `bootstrap.sh`'ı root olarak çalıştırır: takas alanı, iptables, paketler
-   (Node 22, Caddy), kullanıcı, systemd birimi, TLS, crontab, ilk sürüm.
+2. `bootstrap.sh`'ı root olarak çalıştırır: takas alanı, iptables, saat
+   dilimi (UTC), paketler (Node 24 — 22 değil, gerekçe `bootstrap.sh`;
+   Caddy), kullanıcı, systemd birimi, TLS, crontab, ilk sürüm.
 3. Siteyi **dışarıdan** (senin makinenden) yoklar. Sunucunun kendi içinden
    yapılan bir kontrol Security List'in kapalı olduğunu göremez; bu adım
    görür ve HTTP durumunu basar.
@@ -129,13 +133,18 @@ Betik **yeniden çalıştırılabilir** — ortam dosyası zaten sunucudaysa
 tekrar göndermez (elle yapılmış değişiklikleri, örn. `SITE_INDEXABLE=true`,
 korur); yeniden göndermek istersen `ENV_FORCE=1` ver.
 
-Şema henüz uygulanmadıysa bir kez (lokalden `DATABASE_URL` ile):
-`npm run db:migrate && npm run db:seed`
+Şema henüz uygulanmadıysa: GitHub Actions → "Migrate DB" (`migrate.yml`,
+önce `check`, sonra `apply`; üretim adresi yalnız sunucuda), ardından bir
+kez `npm run db:seed`. Migration'lar deploy'da uygulanmaz.
 
-## 5. Cron'u tekile indir
+## 5. Cron'u sına
 
-`bootstrap.sh` crontab'ı kendisi yazdı (`CRON_TZ=UTC`, hafta içi 10:30 UTC).
-Bir kez elle sına:
+`bootstrap.sh` crontab'ı kendisi yazdı; satırların tamamı
+`deploy/cron-install.sh`te (günlük senkron hafta içi 10:30 UTC, alarm
+taraması beş dakikada bir, haberler, Günün Grafiği yedeği, risk, budama…) ve
+`update.sh` her sürümde eksik satırı ekler, emekli satırı siler. Saatler
+UTC'dir çünkü sunucunun saat dilimi UTC: Ubuntu'nun cron'u `CRON_TZ`yi yok
+sayar. Bir kez elle sına:
 
 ```bash
 ssh -i ~/.ssh/acilis-zili ubuntu@<SUNUCU_IP> \
@@ -143,9 +152,6 @@ ssh -i ~/.ssh/acilis-zili ubuntu@<SUNUCU_IP> \
 ssh -i ~/.ssh/acilis-zili ubuntu@<SUNUCU_IP> \
   'journalctl -t acilis-cron -n 20 --no-pager'
 ```
-
-Başarılıysa **Vercel tarafındaki cron'u kapat** (§ 0) — iki koşum Finnhub
-kotasını aşar.
 
 ## 6. Sonraki dağıtımlar
 
@@ -163,6 +169,35 @@ sudo -u acilis -H bash /srv/acilis-zili/current/deploy/update.sh
 ```
 
 ---
+
+## Otomatik Dağıtım (GitHub Actions)
+
+`main`e her push `deploy.yml`ı tetikler:
+
+1. **verify** (runner): `npm ci` → `build` → `typecheck` → `lint` → `npm
+   test` → `python3 -m unittest discover -s tests/deploy`. Biri düşerse
+   sürüm çıkmaz.
+2. **deploy** (iş akışı `concurrency: deploy-vps` grubunda; sunucuya
+   dokunan öteki iş akışları da bu sırada bekler): host anahtarı sabitlenir; Claude analiz anahtarı
+   ve izinli uygulama değişkenleri GitHub Secrets'ta tanımlıysa sunucuya
+   aktarılır (`deploy/sync-app-env.sh`; tanımsız olan sunucudaki değerini
+   korur); **"Derleme için diskte yer aç"** adımı bu commit'in
+   `deploy/disk-guard.sh`ını stdin ile sunucuda koşturur; son olarak SSH ile
+   sunucudaki CANLI sürümün `current/deploy/update.sh`ı çalışır.
+
+**`update.sh` düzeltmesi bir deploy gecikmeli etkili olur:** iş akışı
+sunucudaki canlı sürümün kopyasını koşturur. Bu deploy'da geçerli olması
+gereken düzeltme, disk adımı gibi `deploy.yml`'de ayrı adım olarak bu
+commit'ten koşturulur.
+
+**Düşen koşu:** `verify` düştüyse kod (yerelde aynı komutlar geçmeliydi);
+`deploy` adımı düştüyse sunucu (disk, ağ, servis) — kod değiştirmeden önce
+işin günlüğüne bak.
+
+Öteki elle tetiklenen iş akışları: "Migrate DB" (`migrate.yml`), "Sync App
+Env" (`sync-app-env.yml`, deploy beklemeden ortam aktarımı), "Sync Claude
+Analysis Key", "Verify Claude Analysis", "Deneme Postası" (`test-mail.yml`).
+Duman testi (`smoke.yml`) ayrı iş akışıdır, dağıtım kapısı değil.
 
 ## Claude Analiz Anahtarını GitHub Üzerinden Aktarma
 
@@ -191,7 +226,7 @@ Bu aktarım analiz özelliğini veya veritabanı migration'ını yayınlamaz.
 | Cron 503 | `CRON_SECRET` tanımsız (`lib/api-auth.ts` üretimde açık kapı bırakmıyor) |
 | Cron "Permission denied" | betik çalıştırılabilir değil — `deploy/*.sh` depoda `100755` olmalı (`git ls-files -s deploy/`) |
 | Cron 401 her gün | ortam dosyasında `$` veya `` ` `` içeren bir sır var ve iki tüketici (systemd, bash `source`) farklı okuyor — `bootstrap.sh`'taki `normalize_env` bunu artık kaçışlıyor; eski bir sürümdeyse güncelle |
-| Cron 3 saat erken/geç | crontab'da `CRON_TZ=UTC` yok |
+| Cron 3 saat erken/geç | sunucunun saat dilimi UTC değil (Ubuntu cron'u `CRON_TZ`yi yok sayar; `update.sh` her sürümde uyarı basar) — `sudo timedatectl set-timezone Etc/UTC && sudo systemctl restart cron` |
 | Sayfalar yavaş | Neon bölgesi uzak (§ 0) — `journalctl` değil, sorgu turunu ölç |
 | `update.sh` "AYAĞA KALKMADI" diyip geri alıyor | `journalctl -u acilis-zili -n 40` çıktısı zaten basılıyor, oradan devam et |
 | Disk doluyor / deploy "YER YETMİYOR" ya da "No space left on device" | Derlemeden önce `deploy/disk-guard.sh` Turbopack önbelleklerini, ortak `fetch-cache`in 100 KB üstü kayıtlarını, npm önbelleğini ve son çare üç günden eski önbellek kayıtlarını siler (6 Kasım 2026; o gün `fetch-cache` 34 GB'tı); yine de yer yoksa iş derlemeye girmeden en büyük dizinleri basar. `du -sh /srv/acilis-zili/releases/* /srv/acilis-zili/shared/*` — yalnızca canlıya çıkmış son 2 sürüm kalmalı; kalmıyorsa `update.sh`'ın budama adımını kontrol et. Ortak önbellek büyüyorsa crontab'da `fetch-cache` budama satırı var mı bak (`deploy/cron-install.sh`). Sürümler dışında büyüyen yer için `sudo du -xh / --max-depth=2 \| sort -rh \| head` (günlükler: `journalctl --vacuum-size=200M`) |

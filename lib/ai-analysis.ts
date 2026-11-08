@@ -2,7 +2,7 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { getHolidays, getStatus } from "./data";
-import { etParts, prevTradingDay } from "./market-hours";
+import { etParts, settledSessionOf } from "./market-hours";
 import { getLiveQuotes, getChartBarsMulti } from "./providers";
 import { getCompanyNews } from "./providers/finnhub";
 import { loadScreen } from "./screening-data";
@@ -129,8 +129,8 @@ export async function generateAnalysis(symbol: string, horizon: "short" | "mediu
   const live = status.session === "regular" && !!quote.realtime;
   const snapshot = computeSnapshot(bars[symbol], quote, status, new Date());
   if (!snapshot || snapshot.sessions < 35) throw new Error("data-unavailable");
-  const expectedSession = status.tradingToday && (status.session === "pre-market" || status.session === "regular")
-    ? prevTradingDay(status.etDate, holidays) : status.sessionDate;
+  // Son kesinleşmiş seans — tanım tek yerde (lib/market-hours.ts → settledSessionOf; 16:00–16:20 ET yarım bar).
+  const expectedSession = settledSessionOf(status, holidays);
   if (snapshot.lastSession !== expectedSession || etParts(new Date(quote.tradedAt)).dateStr < expectedSession || new Date(quote.tradedAt).getTime() > Date.now() + 60_000) throw new Error("data-unavailable");
   // Seçim motorunu da raporun kotasyonuyla çalıştır: iki fiyat iki farklı puan üretmesin.
   const fundamentals = { ...screen.input, price: quote.price };

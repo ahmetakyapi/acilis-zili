@@ -12,5 +12,10 @@ eklenince geride kalmıştı.)
 İki dosya tutulmuyor çünkü ikisi ayrı ayrı güncellendiğinde birbirinden
 kayıyordu; rutine yapıştırılan metnin tek bir kaynağı olması gerekiyor.
 
-Referans yazı — ölçü budur:
+Yazım kurallarının ortak kısmı `content/kurallar/ortak.md` ve
+`mercek.md`de; rutin onları her koşuda `/api/kurallar?gorev=mercek` ile
+okur, kural değişikliği yeniden yapıştırma istemez.
+
+Referans yazılar — üslup ve derinlik ölçüsü:
+https://aciliszili.com/mercek/astra-bellek-talebi-kospi-4-61 ·
 https://aciliszili.com/mercek/leopold-aschenbrenner-96-saat

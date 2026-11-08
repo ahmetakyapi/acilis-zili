@@ -212,7 +212,9 @@ export async function getCompareNote(symbols: string[], range: CompareRange, cli
         if (!numbersGroundedAcrossLocales(all, b.input)) throw new UngroundedError(ungroundedNumbers(all, b.input));
         return { ...b.meta, text, generatedAt: new Date().toISOString() };
       },
-      ["compare-note-v2", b.key],
+      /* v3 (8 Kasım): tamamlanmış seans = kapanış + 20 dk (settledSessionOf);
+         eski kuralla 16:00–16:20 ET arasında yarım bardan yazılan kayıt kalmasın. */
+      ["compare-note-v3", b.key],
       { revalidate: 36 * 3600, tags: ["stock-insight"] },
     )();
     /* Figürün sayıları her istekte aynı seans barlarından (hisse notuyla aynı). */

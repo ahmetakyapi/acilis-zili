@@ -1,7 +1,6 @@
 import { parseBlocks, type Block } from "@/components/article/parse-blocks";
 import { barDay } from "@/lib/brief-indices";
-import { latestPosterDate } from "@/lib/day-poster";
-import { etParts, prevTradingDay, type MarketHoliday } from "@/lib/market-hours";
+import { lastSettledSession, prevTradingDay, type MarketHoliday } from "@/lib/market-hours";
 import type { Bar } from "@/lib/providers/types";
 
 /* ==========================================================================
@@ -172,9 +171,12 @@ export function firstSentence(bodyMd: string, max = 220): string {
  * Kapanmış günün barlarını sağlayıcının TAZE yanıtından ister: paylaşımlı
  * önbellekte kapanıştan önce çekilmiş (yarım barlı) yanıt durabilir —
  * `lib/daily-chart-context.ts` barları `fresh: true` ile çekiyor.
+ *
+ * KURAL ARTIK `lib/market-hours.ts` → `lastSettledSession` (8 Kasım): hisse
+ * notu, teknik fotoğraf, Claude analizi ve risk masası da aynı tanımı okuyor.
  */
 export function lastCompletedSession(now: Date, holidays: MarketHoliday[]): string {
-  return latestPosterDate(etParts(now).dateStr, holidays, now);
+  return lastSettledSession(now, holidays);
 }
 
 /* --------------------------------------------------------------------------
