@@ -1,5 +1,7 @@
+import { ArrowDownRight, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { parseBlocks, type Block } from "@/components/article/ArticleBody";
-import { cn, titleCaseLabel } from "@/lib/utils";
+import { figureTone } from "@/components/stories/figure-tone";
+import { cn, tieFigures, titleCaseLabel } from "@/lib/utils";
 
 /* --------------------------------------------------------------------------
    Mercek kartının görseli — YAZININ KENDİ BLOĞU.
@@ -80,11 +82,18 @@ export function StoryFigure({
 }) {
   return (
     <figure
+      data-kind={block.kind}
       className={cn(
-        /* Kendi yüzeyi var, gölgesi yok: derinlik ton farkıyla kuruluyor
-           (CLAUDE.md). Üstünde durduğu degrade panelden bir kademe öne
-           çıkıyor. */
-        "flex min-w-0 flex-col gap-3 rounded-xl border border-primary-faint bg-surface-solid p-4",
+        "flex min-w-0 flex-col",
+        block.kind === "stats"
+          ? /* RAKAM KAROLARININ KABI YÜZEYSİZ (8 Kasım). Yüzeyi her karo
+               kendisi taşıyor; kabın da bir kutusu olunca kutu içinde
+               kutu oluyordu. Künye ile karolar arası 10 piksel. */
+            "gap-2.5"
+          : /* Kendi yüzeyi var, gölgesi yok: derinlik ton farkıyla
+               kuruluyor (CLAUDE.md). Üstünde durduğu degrade panelden bir
+               kademe öne çıkıyor. */
+            "gap-3 rounded-xl border border-primary-faint bg-surface-solid p-4",
         className,
       )}
     >
@@ -100,39 +109,130 @@ export function StoryFigure({
   );
 }
 
-/** Rakam şeridi — yazının en çarpıcı sayıları, kart ölçüsünde. */
+/**
+ * Rakam karoları — yazının en çarpıcı sayıları, kart ölçüsünde.
+ *
+ * KARO DİLİ (8 Kasım, sahibinin isteği: "sağ taraftaki sayıları ve
+ * bilgileri daha iyi ve görsel sunalım"). Önce sol kenarda ince bir dikey
+ * çizgi ve düz bir sayı/künye yığınıydı; dört rakam birbirinden ayrışmıyor,
+ * hangisinin düşüş hangisinin büyüklük olduğu ancak eksi işaretini
+ * okuyunca anlaşılıyordu. Şimdi her rakam bir karo: zemin bir ton gömük
+ * (`surface-sunken` — derinlik tonla, gölge yok), tepede 3 piksellik
+ * durum şeridi (bilanço ve teknik kartlarının dili), işaretliyse rakamın
+ * sağında yön ikonu.
+ *
+ * DİZİN NUMARASI DENENDİ, KALKTI. Karonun ilk sürümünde sol üstte "01"
+ * gibi mono bir dizin ve ikon için ayrı bir satır vardı: 1440'ta kapak
+ * şekli 197 → 296 piksele uzadı ve manşet kolonunu geçip kapağı
+ * büyütüyordu — kapak dolgusu 1440×900'de Genel Özet ilk ekranda bitsin
+ * diye ayarlı (StoryDetail.module.css). Dizin bilgi taşımıyordu; ikon
+ * rakamın satırına alındı (ölçüm StoryDetail.module.css → "KAPAK
+ * RAKAMLARI KARO").
+ *
+ * YÖN YALNIZ YAZARIN İŞARETİNDEN (`figureTone`). "−%42,9" kırmızı şerit,
+ * kırmızı rakam ve aşağı ok taşıyor; "9,6 Mr $" işaretsiz bir büyüklük —
+ * şeridi nötr çizgi, rakamı mürekkep, ikonu yok. Uydurma görsel yok:
+ * karoda çizilen her şey değerin ve künyenin kendisinden.
+ *
+ * AYNI HATTA BİTİŞ. Karolar ızgaranın satırlarını paylaşıyor (`subgrid`:
+ * rakam / künye iki satır); rakam satırın DİBİNE yaslı. Bir rakam
+ * iki satıra kırılırsa komşusunun rakamı da aynı taban çizgisine iniyor,
+ * künyeler aynı hatta başlıyor ve karolar eşit boyda bitiyor.
+ */
 function Stats({ block, locale }: { block: Extract<Block, { kind: "stats" }>; locale: string }) {
   const items = block.items.slice(0, MAX_ITEMS);
   return (
     <div
+      data-part="grid"
       className={cn(
-        "grid gap-x-4 gap-y-3.5",
+        "@container grid gap-2",
         /* Tek ya da üç rakam tek sütunda dizilirse kutu uzuyor; ikişerli
            ızgara hem kısa hem hizalı. Tek rakam varsa bölünecek bir şey
            yok. */
         items.length === 1 ? "grid-cols-1" : "grid-cols-2",
       )}
     >
-      {items.map((item, index) => (
-        <div key={index} className="min-w-0">
-          <p className="tote text-lead leading-none tracking-[-0.02em] text-strong">
-            {titleCaseLabel(item.value, locale)}
-          </p>
-          {item.note && (
-            /* KÜNYE 11 PİKSEL (`text-tiny`). Önce `text-micro` (8px) idi, sonra 10
-               piksele çıktı; o da kapak görselinin altında okunmuyordu (24 Eylül
-               kapısı: künye ve başlık 11 piksele eşitlendi). 8px döneminde
-               sistemdeki tek 8 piksellik CÜMLE oydu; o basamak iki kelimelik
-               plakalar için var (gün şeridinin ekseni gibi), tam cümle için
-               değil. İki satırda kesiliyor: yazar bazen uzun bir cümle
-               yazıyor ve üç satıra çıkan tek bir hücre ızgaranın hizasını
-               bozuyor. Cümlenin tamamı yazının içinde zaten duruyor. */
-            <p className="mt-1.5 line-clamp-2 text-tiny leading-[15px] text-muted">
-              {titleCaseLabel(item.note, locale)}
-            </p>
-          )}
-        </div>
-      ))}
+      {items.map((item, index) => {
+        const tone = figureTone(item.value);
+        return (
+          <div
+            key={index}
+            data-part="cell"
+            data-tone={tone}
+            className="relative row-span-2 grid min-w-0 grid-rows-subgrid gap-y-0 overflow-hidden rounded-lg bg-surface-sunken px-3 pt-3.5 pb-3"
+          >
+            <span
+              aria-hidden
+              className={cn(
+                "absolute inset-x-0 top-0 h-[3px]",
+                tone === "up" ? "bg-up" : tone === "down" ? "bg-down" : "bg-line-strong",
+              )}
+            />
+            {/* Punto ve satır yüksekliği bu satırda: ikon kutusu bir satır
+                boyunda (`1lh`), rakam iki satıra kırılsa da ilk satırın
+                ortasında duruyor.
+                PUNTO IZGARANIN GENİŞLİĞİNE BAĞLI (`cqi`). İkon rakamın
+                yanına gelince dar karoda "+%12,53" rakamın ortasından
+                kırılıyordu ("+%12,5" / "3" — 1024'te kapak sütunu 107
+                piksellik karo bırakıyor, 360'ta da). Punto tavanı aynı
+                (`text-title`), ızgara daraldıkça iniyor; kırılma yalnız
+                aralık tiresinde kalıyor. Kapsayıcı KARO DEĞİL IZGARA:
+                `container-type` yerleşim sınırlaması getiriyor ve karoya
+                verilince `subgrid` sessizce kapanıyordu (ölçüldü: satır
+                şablonu `none`, komşu rakam dipleri 9 piksel kaydı). */}
+            <div
+              data-part="head"
+              className="flex min-w-0 items-start gap-2 self-end text-[length:min(var(--text-title),6.5cqi)] leading-[1.15]"
+            >
+              {/* BİRİM SAYIDAN KOPMUYOR (`tieFigures`): "9,6 Mr $" dar
+                  karoda "9,6 Mr" / "$" diye kırılmıyor. Aralıkta tireden
+                  sonra kırılabiliyor (`spaceRanges`). */}
+              <p
+                data-part="value"
+                className={cn(
+                  "tote min-w-0 flex-1 [overflow-wrap:anywhere]",
+                  tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-strong",
+                )}
+              >
+                {tieFigures(titleCaseLabel(item.value, locale))}
+              </p>
+              {tone !== "flat" && (
+                <span aria-hidden className="flex h-[1lh] shrink-0 items-center">
+                  <span
+                    className={cn(
+                      "grid size-5 place-items-center rounded-full",
+                      tone === "up" ? "bg-up-wash text-up" : "bg-down-wash text-down",
+                    )}
+                  >
+                    {tone === "up" ? (
+                      <ArrowUpRight size={11} weight="bold" />
+                    ) : (
+                      <ArrowDownRight size={11} weight="bold" />
+                    )}
+                  </span>
+                </span>
+              )}
+            </div>
+            {item.note ? (
+              /* KÜNYE 12 PİKSEL (`text-tiny`). Önce `text-micro` (8px) idi,
+                 sonra 10 piksele çıktı; o da kapak görselinin altında
+                 okunmuyordu (24 Eylül kapısı: künye ve başlık 11 piksele
+                 eşitlendi; 9 Ekim'den beri metin tabanı 12). 8px döneminde
+                 sistemdeki tek 8 piksellik CÜMLE oydu; o basamak iki
+                 kelimelik plakalar için var (gün şeridinin ekseni gibi),
+                 tam cümle için değil. İki satırda kesiliyor: yazar bazen
+                 uzun bir cümle yazıyor ve üç satıra çıkan tek bir hücre
+                 ızgaranın hizasını bozuyor. Cümlenin tamamı yazının içinde
+                 zaten duruyor. (Yazı kapağı kesmiyor — StoryDetail.) */
+              <p data-part="note" className="mt-1.5 line-clamp-2 text-tiny leading-[16px] text-muted">
+                {titleCaseLabel(item.note, locale)}
+              </p>
+            ) : (
+              <span aria-hidden />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

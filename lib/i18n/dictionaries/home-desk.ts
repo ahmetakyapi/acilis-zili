@@ -32,10 +32,16 @@ export const homeDeskTr = {
      ayrı düşer; EN'de "In Line With" zaten ayrı düşmüştü). */
   forecast: "Beklenti {value}",
   previous: "Önceki {value}",
-  /* Ölçeğin künyesi — panel başlığının sağında. */
+  /* Ölçeğin künyesi. 8 Kasım'dan beri ekranda yazı olarak değil EKSEN
+     olarak duruyor (−%4,1 · 0 · +%4,1, şeritlerin üstünde, aynı hatta —
+     HomeLane.tsx → `LaneAxis`); bu cümle eksenin ekran okuyucu adı. */
   scale: "Ortak Ölçek ±{value}",
   /* Ekran okuyucu: "Türkiye, TUR, −%1,24". */
   rowAria: "{name}, {symbol}, {value}",
+  /* Yükselenler / Düşenler grup başlığının sayacı: bu seansta işlem görüp
+     o yöne gidenlerin TAMAMI (listede yalnız ilk üç–beşi var). */
+  moversCount: "{n} Hisse",
+  moversCountOne: "{n} Hisse",
 };
 
 export const homeDeskEn: typeof homeDeskTr = {
@@ -48,4 +54,6 @@ export const homeDeskEn: typeof homeDeskTr = {
   previous: "Previous {value}",
   scale: "Shared Scale ±{value}",
   rowAria: "{name}, {symbol}, {value}",
+  moversCount: "{n} Stocks",
+  moversCountOne: "{n} Stock",
 };

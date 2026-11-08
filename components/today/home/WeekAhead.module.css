@@ -1,0 +1,102 @@
+/* Haftaya Bakış — zaman çizelgesi (Schedule.tsx → WeekAheadList; kararın
+   gerekçesi orada). Derinlik tonla: karo çukur zeminde, yakın gün dolu
+   tonda; gölge yok. Renk yalnız önem çubuğunda ve o da mürekkep tonu
+   (`--impact-*`), mavi değil — veri paneli.
+
+   Ölçüm (8 Kasım, başsız Chrome, sahte veri, 390/768/900/1024/1280/1440,
+   iki tema): yatay taşma 0, hiçbir hücre satırın iç kenarını aşmıyor, olay
+   adı ile önem çubuğu arasında her genişlikte 12 piksel.
+   - Yan kolonda (≥1024, 350) olay adına ~153 piksel kalıyor: "Ekim TÜFE
+     Verisi" tek satır, "Haftalık İşsizlik Başvuruları" iki satır.
+   - 390'da ada ~165: "Haftalık İşsizlik Başvuruları" tek satır. Eski
+     düzende tarih sütunu "12 Kasım Perşembe"yi üç satıra kırıyordu.
+   - Gün açan satır 71 piksel (karo 46 + dolgu), aynı günün ardındaki satır
+     tek satırlık adla 35, iki satırlıkla 54. */
+
+/* SUBGRID TUZAĞI (ölçüldü): aralık satırda (`subgrid` öğesinde) ve yatay
+   dolgu satırda dururken izler üst ızgaradan geliyordu; fark kenardaki
+   öğeden düşüyor ve 44 piksellik karo 27'ye iniyordu. Aralık üst ızgarada,
+   satırın yan dolgusu da ilk izin genişliğine katılı (`--pad`); son iz
+   `max-content` olduğu için dolguyu kendiliğinden kapsıyor. */
+.list {
+  --pad: 16px;
+  display: grid;
+  grid-template-columns: calc(44px + var(--pad)) max-content minmax(0, 1fr) max-content;
+  column-gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 640px) { .list { --pad: 20px; } }
+
+.row {
+  position: relative;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: start;
+  padding: 12px var(--pad);
+  border-top: 1px solid var(--line);
+}
+/* Aynı günün ardındaki olay: gün çizgisi yok, ray devam ediyor. Önceki
+   kardeş gizliyse (yedek satır kapalı) satır kendi gününü açar. */
+.row[data-continues] { border-top: 0; padding-top: 2px; }
+.row[hidden] + .row[data-continues] { border-top: 1px solid var(--line); padding-top: 12px; }
+
+/* ---- Gün karosu ---- */
+.day { position: relative; align-self: stretch; display: flex; justify-content: center; }
+.tile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  width: 44px; height: 46px; border-radius: var(--radius-md);
+  background: var(--surface-sunken); color: var(--text-body);
+}
+.tileWeekday { font-size: var(--text-tiny); font-weight: 650; line-height: 1.1; color: var(--text-muted); white-space: nowrap; }
+.tileNumber { font-size: var(--text-title); font-weight: 750; line-height: 1; color: var(--text-strong); }
+/* Yakın gün (Bugün / Yarın): karo dolu tonda, künye güçlü mürekkeple. */
+.tile[data-near] { background: var(--premium-surface); outline: 1px solid var(--line); outline-offset: -1px; }
+.tile[data-near] .tileWeekday { color: var(--text-strong); }
+
+.row[data-continues] .tile { display: none; }
+.row[hidden] + .row[data-continues] .tile { display: flex; }
+
+/* RAY: gün açan satırın karosundan aşağı, ardındaki satırların karo
+   sütunundan geçen 1 piksellik çizgi (`--line-soft`, grafiklerin kulvarı)
+   ve her olayın saat satırında bir düğüm. `:has()` satıra kapsamlı —
+   kökte değil (CLAUDE.md → Düzen). */
+.row:has(+ .row[data-continues]:not([hidden])) .day::after,
+.row[data-continues] .day::after {
+  content: ""; position: absolute; left: 50%; width: 1px; translate: -.5px 0;
+  background: var(--line-strong); opacity: .55;
+}
+.row:has(+ .row[data-continues]:not([hidden])) .day::after { top: 50px; bottom: -12px; }
+.row[data-continues] .day::after { top: -2px; bottom: -12px; }
+/* Son satırın rayı panelin dibine sarkmasın. */
+.row[data-continues]:not(:has(+ .row[data-continues]:not([hidden]))) .day::after { bottom: auto; height: 12px; }
+.row[data-continues] .day::before {
+  content: ""; position: absolute; top: 7px; left: 50%; z-index: 1; width: 7px; height: 7px; translate: -50% 0;
+  box-sizing: border-box; border: 1.5px solid var(--line-strong); border-radius: 50%; background: var(--surface-solid);
+}
+.row[hidden] + .row[data-continues] .day::before,
+.row[hidden] + .row[data-continues] .day::after { display: none; }
+
+/* ---- Saat ---- */
+.time {
+  display: inline-flex; align-items: baseline; gap: 3px;
+  font-size: var(--text-read); font-weight: 650; line-height: 20px; color: var(--text-strong);
+  white-space: nowrap;
+}
+.zone { font-size: var(--text-tiny); font-weight: 600; color: var(--text-muted); }
+.noTime { color: var(--text-muted); }
+
+/* ---- Olay ---- */
+.title { min-width: 0; font-size: var(--text-base); line-height: 20px; color: var(--text-body); text-wrap: pretty; }
+.row[data-high] .title { font-weight: 650; color: var(--text-strong); }
+
+/* ---- Önem çubuğu: üç basamak, yüksek üçü / orta ikisi dolu ---- */
+.impact { display: inline-flex; align-items: flex-end; gap: 2px; height: 20px; padding-bottom: 5px; }
+.impact i { display: block; width: 3px; border-radius: 1px; background: var(--line-soft); }
+.impact i:nth-child(1) { height: 5px; }
+.impact i:nth-child(2) { height: 8px; }
+.impact i:nth-child(3) { height: 11px; }
+.impact[data-level="medium"] i:nth-child(-n+2) { background: var(--impact-med); }
+.impact[data-level="high"] i { background: var(--impact-high); }

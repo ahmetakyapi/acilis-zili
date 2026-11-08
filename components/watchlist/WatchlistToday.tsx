@@ -278,7 +278,7 @@ function VersusMarket({
   const at = (value: number) => 50 + (value / span) * 50;
   const pct = (value: number) => formatPercentText(value, locale, 2);
   return (
-    <figure className={styles.versus}>
+    <figure className={styles.versusChart}>
       <ul className={styles.versusRows}>
         {rows.map((row, index) => {
           const tone = directionOf(row.dayPct);

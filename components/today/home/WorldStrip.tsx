@@ -1,5 +1,5 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { MiniLane } from "@/components/day-poster/PosterLanes";
+import { HomeLane, LaneAxis } from "@/components/today/home/HomeLane";
 import { DataError, DataStamp, Panel, PanelHeader } from "@/components/ui/primitives";
 import { getStatus } from "@/lib/data";
 import { quoteBasis } from "@/lib/market-hours";
@@ -7,7 +7,7 @@ import { getQuotes } from "@/lib/providers";
 import { WORLD_MARKETS } from "@/db/seed/symbols";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { sharedLaneScale, WORLD_LANE_FLOOR } from "@/lib/home-figures";
-import { cn, directionOf, directionText, formatPercent, formatPercentPlain } from "@/lib/utils";
+import { cn, directionOf, directionWash, formatPercent, formatPercentPlain } from "@/lib/utils";
 import styles from "./HomeLanes.module.css";
 
 /**
@@ -75,6 +75,7 @@ export async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary 
         flag: market.flag,
         name: locale === "tr" ? market.nameTr : market.nameEn,
         tracks: locale === "tr" ? market.tracksTr : market.tracksEn,
+        index: locale === "tr" ? market.indexTr : market.indexEn,
         changePct: result.data[market.symbol].changePct ?? null,
         lastClose: bases[market.symbol] === "lastClose",
       }))}
@@ -90,7 +91,10 @@ export type WorldRow = {
   symbol: string;
   flag: string;
   name: string;
+  /** Uzun künye cümlesi — artık yalnız ekran okuyucuya (`aria-label`). */
   tracks: string;
+  /** Yerel endeksin kısa adı — satırda adın yanında künye. */
+  index: string;
   changePct: number | null;
   /** Yüzde bu seansın değil, son kapanışın (`quoteBasis`). */
   lastClose: boolean;
@@ -105,10 +109,23 @@ export type WorldRow = {
  * olduğu sayıları tek tek okuyarak çıkıyordu. Her satırın altında artık
  * 5 piksellik kulvar (`--line-soft`), ortada sıfır (`--line-strong`), yüzde
  * sıfırdan iki yöne şerit — bülten bandının `MiniLane`i, aynı ölçek mantığı.
- * Ölçek BÜTÜN satırlarda TEK (`sharedLaneScale`, taban ±%1) ve başlığın
- * sağında yazılı; renk yalnız işaretten. Son kapanışı gösteren satırın
- * şeridi yön rengini bırakıyor (yüzdesiyle aynı kural, veri dürüstlüğü 4).
- * Bayrak kendi sütununda: ad, künye ve şerit aynı sol hatta başlıyor.
+ * Ölçek BÜTÜN satırlarda TEK (`sharedLaneScale`, taban ±%1); renk yalnız
+ * işaretten. Son kapanışı gösteren satırın şeridi yön rengini bırakıyor
+ * (yüzdesiyle aynı kural, veri dürüstlüğü 4). Bayrak kendi sütununda: ad,
+ * künye ve şerit aynı sol hatta başlıyor.
+ *
+ * İKİNCİ TUR (8 Kasım, sahibinin isteği — 390'da "çok daha görsel"):
+ * - Ölçek künyesi ("Ortak Ölçek ±%4,1", başlığın sağında) EKSENE döndü:
+ *   şeritlerin üstünde −%4,1 · 0 · +%4,1, şeritlerle aynı hatta
+ *   (`LaneAxis`). Ortaklık artık okunarak değil, tek eksenin bütün
+ *   satırların üstünde durmasından anlaşılıyor.
+ * - Satır üç kattan ikiye: künye cümlesi ("MSCI Türkiye · BIST'i izleyen
+ *   ABD fonu") yerine adın yanında yerel endeksin KISA adı. "ABD fonu"
+ *   beş satırda aynıydı ve dipnot zaten söylüyor (fonların dolar bazlı
+ *   MSCI ülke fonu olduğu, yönün güvenilir, yüzdenin ayrışabilir olduğu);
+ *   uzun cümle ekran okuyucuya kaldı (`aria-label`).
+ * - Bayrak 32 piksellik karo, kimlik + şerit bloğunun boyunda.
+ * - Yüzde hap (up/down wash), şeridin ucunda değer noktası (`HomeLane`).
  * Ölçümler HomeLanes.module.css başında.
  */
 export function WorldStripView({
@@ -134,17 +151,16 @@ export function WorldStripView({
   );
   return (
     <Panel>
-      <PanelHeader
-        title={t.today.worldMarkets}
-        tone="title"
-        meta={
-          <span className="numeral text-tiny text-muted">
-            {t.homeDesk.scale.replace("{value}", formatPercentPlain(scale, locale, 1))}
-          </span>
-        }
-      />
-      <ul>
-        {rows.map((market) => {
+      <PanelHeader title={t.today.worldMarkets} tone="title" />
+      <div className={styles.desk}>
+        <LaneAxis
+          scale={scale}
+          locale={locale}
+          label={t.homeDesk.scale.replace("{value}", formatPercentPlain(scale, locale, 1))}
+          className="px-4 sm:px-5"
+        />
+        <ul>
+        {rows.map((market, index) => {
           const lastClose = market.lastClose;
           const tone = directionOf(market.changePct);
           const value = formatPercent(market.changePct, locale);
@@ -152,35 +168,35 @@ export function WorldStripView({
             <li key={market.symbol}>
               <Link
                 href={`/hisse/${market.symbol}`}
-                aria-label={t.homeDesk.rowAria
+                aria-label={`${t.homeDesk.rowAria
                   .replace("{name}", market.name)
                   .replace("{symbol}", market.symbol)
-                  .replace("{value}", lastClose ? `${value} (${t.market.lastClose})` : value)}
-                className={cn(styles.row, "border-t border-line px-4 py-2 transition-colors hover:bg-primary-tint sm:px-5")}
+                  .replace("{value}", lastClose ? `${value} (${t.market.lastClose})` : value)}. ${market.tracks}`}
+                className={cn(styles.row, "border-t border-line-soft px-4 py-2.5 transition-colors hover:bg-primary-tint sm:px-5")}
               >
-                <span aria-hidden className={styles.flag}>{market.flag}</span>
+                <span aria-hidden className={styles.lead}>
+                  <span className={styles.flag}>{market.flag}</span>
+                </span>
                 <span className={styles.main}>
-                  <span className="flex min-w-0 items-baseline gap-1.5">
-                    <span className="truncate text-base font-semibold text-strong">{market.name}</span>
+                  {/* KÜNYE KISA VE ADIN YANINDA (8 Kasım). Burada iki satıra
+                      saran uzun cümle vardı ("MSCI Japonya · Nikkei'yi
+                      izleyen ABD fonu"; kararı: dar ekranda sarar, kesilmez,
+                      12 punto). 390'da satırı 80 piksele çıkarıyordu ve
+                      Çin'inki yine de kesiliyordu; 768'de beşi, 1440'ta
+                      üçü kesikti. Vekil olduğu bilgisi kaybolmuyor: dipnot
+                      söylüyor, uzun cümle `aria-label`da. Künye ÖBEK
+                      olarak sarar (HomeLanes `.ident`), kesilmez; 12 punto
+                      tabanı korunuyor. */}
+                  <span className={styles.ident}>
+                    <span className="text-read font-semibold text-strong">{market.name}</span>
                     <span className={styles.symbol}>{market.symbol}</span>
+                    <span className={styles.identMeta}>{market.index}</span>
+                    {lastClose && (
+                      <span className={cn(styles.identMeta, "font-semibold text-body")}>
+                        {t.market.lastClose}
+                      </span>
+                    )}
                   </span>
-                  {/* DAR EKRANDA SARAR, KESİLMEZ. Bu satır fonun neyi
-                      izlediğini söylüyor ("MSCI Japonya · Nikkei'yi izleyen
-                      ABD fonu") ve kesildiğinde cümlenin taşıdığı tek bilgi
-                      — vekil olduğu — kayboluyordu; 320 ve 360 piksellik
-                      ekranlarda beş satırın üçü böyleydi. İki satıra kadar
-                      sarıyor, ondan sonrası kesiliyor.
-                      12 PUNTO (23 Eylül): 10 puntoda sayfanın 54 okunmayan
-                      metin düğümünden beşi buydu; 390'da hâlâ iki satıra
-                      sığıyor. */}
-                  <span className="mt-0.5 line-clamp-2 block text-small leading-tight text-muted sm:truncate">
-                    {market.tracks}
-                  </span>
-                  {lastClose && (
-                    <span className="mt-0.5 block text-tiny font-semibold text-body">
-                      {t.market.lastClose}
-                    </span>
-                  )}
                 </span>
                 {/* Satırın değeri YALNIZCA yüzde.
                     Burada bir süre fonun dolar fiyatı da (38,70 gibi)
@@ -191,27 +207,32 @@ export function WorldStripView({
                     binlerde. Alttaki açıklama bunu kurtarmıyordu; aynı
                     gerekçeyle Brent metriği de kaldırılmıştı (bkz.
                     CLAUDE.md → veri dürüstlüğü). Yüzde ise gerçekten
-                    anlamlı: fonun o günkü yönü. */}
-                <span
-                  aria-hidden
-                  className={cn(
-                    "numeral text-read",
-                    styles.value,
-                    lastClose ? "font-semibold text-body" : cn("font-bold", directionText(tone)),
-                  )}
-                >
-                  {value}
+                    anlamlı: fonun o günkü yönü.
+                    HAP (8 Kasım): yön zemini wash'ta; son kapanış ve %0,00
+                    nötr zeminde — bu seansın yönü değil (veri dürüstlüğü 4). */}
+                <span aria-hidden className={styles.value}>
+                  <span
+                    data-pill=""
+                    className={cn(
+                      "numeral",
+                      styles.pill,
+                      lastClose ? "bg-surface-sunken font-semibold text-body" : directionWash(tone),
+                    )}
+                  >
+                    {value}
+                  </span>
                 </span>
                 {market.changePct !== null && (
-                  <span className={styles.lane} data-basis={lastClose ? "lastClose" : undefined}>
-                    <MiniLane change={market.changePct} scale={scale} />
+                  <span className={styles.laneCell}>
+                    <HomeLane change={market.changePct} scale={scale} index={index} muted={lastClose} />
                   </span>
                 )}
               </Link>
             </li>
           );
         })}
-      </ul>
+        </ul>
+      </div>
       {/* DAMGA BURADA DA VAR. Künye fonun neyi vekil ettiğini söylüyordu ama
           yüzdelerin yaşını söyleyen hiçbir şey yoktu; panel tam da bayat
           veriyi büyük puntoyla göstermenin yasak olduğu yerdi. */}

@@ -61,24 +61,36 @@
 
 /* ---- Kısa notun çizimi: S&P 500'e karşı (WatchlistToday.tsx → VersusMarket) ----
    Kulvar --line-soft, sıfır --line-strong, şerit 5 piksel ve işaretin
-   renginde; endeks her satırı kesen kesik çizgi. Şerit sıfırdan büyür. */
-.versus { display: grid; gap: 8px; margin: 12px 0 0; padding-top: 11px; border-top: 1px solid var(--line-soft); }
-.versusRows { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
-.versusRows li { display: grid; grid-template-columns: 3.6em minmax(0, 1fr) max-content; align-items: center; gap: 10px; }
+   renginde; endeks her satırı kesen kesik çizgi. Şerit sıfırdan büyür.
+   8 KASIM (sahibinin isteği: kıyas çubuğu sitenin grafik diliyle tutarlı
+   olsun):
+   - Sınıf adı `.versusChart`. `.versus` tam paneldeki "endekse göre"
+     künyesinin de adıydı; iki kural aynı sınıfa düşüyor, figür künyenin
+     soluk 12'lik puntosunu, kalınlığını ve rengini miras alıyordu.
+   - Kulvar tam yuvarlak (`CompareScale` ile aynı); şerit SIFIR TARAFINDA
+     düz — iki ucu yuvarlak şerit sıfır çizgisinden kopmuş görünüyordu.
+   - Üç sütun `subgrid`: sembol ve yüzde sütunu `max-content`, kulvarlar
+     bütün satırlarda aynı genişlikte ve aynı hatta. Sembol 3,6em, yüzde
+     5,4em SABİTTİ; beş harfli sembolde kulvar o satırda kısalıyordu.
+   - Mono yalnız sembolde; yüzde orantılı rakamla (tablo rakamı virgülü
+     rakam genişliğine açıyordu). */
+.versusChart { display: grid; gap: 8px; margin: 12px 0 0; padding-top: 11px; border-top: 1px solid var(--line-soft); }
+.versusRows { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 7px 10px; margin: 0; padding: 0; list-style: none; }
+.versusRows li { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center; }
 .versusSymbol { font-family: var(--font-mono); font-size: var(--text-small); font-weight: 700; color: var(--text-strong); }
 .versusLane { position: relative; height: 15px; }
-.versusLane::before { content: ""; position: absolute; inset: 5px 0; border-radius: 3px; background: var(--line-soft); }
-.versusLane::after { content: ""; position: absolute; left: 50%; top: 2px; bottom: 2px; width: 1px; background: var(--line-strong); }
+.versusLane::before { content: ""; position: absolute; inset: 5px 0; border-radius: 999px; background: var(--line-soft); }
+.versusLane::after { content: ""; position: absolute; left: 50%; top: 1px; bottom: 1px; width: 1px; translate: -.5px 0; background: var(--line-strong); }
 .versusBar {
-  position: absolute; top: 5px; height: 5px; border-radius: 3px; background: var(--text-muted);
+  position: absolute; top: 5px; height: 5px; border-radius: 999px; background: var(--text-muted);
   animation: wt-grow .7s var(--ease-brand) both; animation-delay: calc(120ms + var(--i, 0) * 80ms);
 }
 .versusBar[data-tone="up"] { background: var(--up); }
 .versusBar[data-tone="down"] { background: var(--down); }
-.versusBar[data-side="left"] { transform-origin: right center; }
-.versusBar[data-side="right"] { transform-origin: left center; }
+.versusBar[data-side="left"] { transform-origin: right center; border-start-end-radius: 0; border-end-end-radius: 0; }
+.versusBar[data-side="right"] { transform-origin: left center; border-start-start-radius: 0; border-end-start-radius: 0; }
 .versusMarket { position: absolute; top: -4px; bottom: -4px; width: 0; border-left: 1.5px dashed var(--text-body); translate: -0.75px 0; z-index: 1; }
-.versusValue { min-width: 5.4em; text-align: right; font-size: var(--text-small); font-weight: 800; color: var(--text-strong); }
+.versusValue { text-align: right; font-size: var(--text-small); font-weight: 750; white-space: nowrap; color: var(--text-strong); }
 .versusValue[data-tone="up"] { color: var(--up); }
 .versusValue[data-tone="down"] { color: var(--down); }
 .versusKey { display: inline-flex; align-items: center; gap: 7px; font-size: var(--text-tiny); font-weight: 650; color: var(--text-muted); }

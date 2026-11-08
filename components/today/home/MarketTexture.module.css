@@ -256,6 +256,20 @@
    1024'te ölçüldü). 184'tü ve sağ sütun sıralamadan 58 piksel uzun
    bitiyordu. */
 .extremeSkeleton { height:155px; border-radius:16px; }
+/* 155'E SIĞMA (8 Kasım, ölçüldü 1024 ve 1280). Kartın içi bu boya zaten
+   sığmıyordu: dağılım şeridinin ölçek künyesi ("−%12 · 0 · +%12",
+   `SpreadStrip` → ikinci çocuk) 32'lik logolarla alt dolgunun 15 piksel
+   altına iniyor, alttaki kartın altında yarısı kesik duruyordu; 40'lık
+   logolar bunu 23'e çıkardı. Künye kartta kalktı — ölçek /tema'nın
+   kartlarında ve şeridin `aria-label`ında; burada şerit sıfır çizgisi ve
+   medyanla okunuyor — ve iki aralık daraldı (kart 6 → 4, metin sütunu
+   8 → 6). İçerik artık alt dolgunun 2 piksel üstünde bitiyor; 155 ve
+   soldaki sıralamayla denge değişmedi. Telefon kendi kuralında (≤767). */
+@media (min-width:768px) {
+  .extreme { gap:4px; }
+  .extreme .extremeText { gap:6px; }
+  .extreme > div:last-child > :not(:first-child) { display:none; }
+}
 .extremeTop { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .extremeLabel { color:var(--text-muted); font-size:12.5px; font-weight:650; }
 .extremeArrow { flex-shrink:0; color:var(--primary); transition:transform .35s var(--ease-brand); }
@@ -269,18 +283,39 @@
 .extremeLogos { display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden; }
 .extremeLogo { display:inline-flex; flex-shrink:0; transition:transform .4s var(--ease-brand); transition-delay:calc(var(--i) * 22ms); }
 @media (hover:hover) { .extreme:hover .extremeLogo { transform:translateY(-2px); } }
-.extremeRest[data-at="narrow"] { display:none; }
-/* Çip logo karosuyla aynı boyda ve köşede (`md`: 32, `rounded-md`);
-   ölçüm ve logo sayıları MarketTexture.tsx → `EXTREME_LOGOS`. */
+.extremeRest[data-at="narrow"], .extremeRest[data-at="mid"] { display:none; }
+/* KARO 40, TELEFONDA 32 (8 Kasım). Karo `lg` (44, `rounded-lg`) olarak
+   basılıyor; boyu ve köşesi burada. Seçici `> span` ki Tailwind'in tek
+   sınıflık `size-11`/`rounded-lg`ını özgüllükle yensin (harf karosu da
+   görsel kutusu da span). Çip karoyla aynı boyda ve köşede; ölçüm ve
+   logo sayıları MarketTexture.tsx → `EXTREME_LOGOS`. */
+.extremeLogo > span { width:40px; height:40px; border-radius:var(--radius-md); }
 .extremeRest {
   display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
-  height:32px; min-width:32px; padding:0 6px; border-radius:var(--radius-md);
-  background:var(--premium-surface); color:var(--text-body); font-size:var(--text-tiny); font-weight:700;
+  height:40px; min-width:40px; padding:0 7px; border-radius:var(--radius-md);
+  background:var(--premium-surface); color:var(--text-body); font-size:var(--text-small); font-weight:700;
+}
+/* 1024–1279: dört logo ve orta rozet. */
+@media (min-width:1024px) and (max-width:1279px) {
+  .extremeLogo:nth-child(n+5), .extremeRest[data-at="wide"] { display:none; }
+  .extremeRest[data-at="mid"] { display:inline-flex; }
 }
 /* 1024'ün altında üç logo ve dar rozet (tablet ve telefon). */
 @media (max-width:1023px) {
   .extremeLogo:nth-child(n+4), .extremeRest[data-at="wide"] { display:none; }
   .extremeRest[data-at="narrow"] { display:inline-flex; }
+}
+/* 768–1023: üç 40'lık karo + çip 160 istiyor, 768'de yer 154 (ölçüldü);
+   karolar 4 piksel bindiriyor, kart tonunda 2 piksellik halkayla ayrı
+   okunuyor (telefondaki yığının dili). */
+@media (min-width:768px) and (max-width:1023px) {
+  .extremeLogos { gap:0; }
+  .extremeLogo, .extremeRest { position:relative; border-radius:var(--radius-md); box-shadow:0 0 0 2px var(--surface-solid); }
+  .extremeLogo + .extremeLogo, .extremeLogo + .extremeRest, .extremeRest + .extremeRest { margin-left:-4px; }
+}
+@media (max-width:767px) {
+  .extremeLogo > span { width:32px; height:32px; }
+  .extremeRest { height:32px; min-width:32px; padding:0 6px; font-size:var(--text-tiny); }
 }
 
 @media (max-width:767px) {

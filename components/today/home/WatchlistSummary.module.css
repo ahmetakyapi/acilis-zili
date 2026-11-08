@@ -1,0 +1,69 @@
+/* Favorilerin satırları (WatchlistSummary.tsx → WatchlistRows; kararların
+   gerekçesi orada). Dört sütun tek ızgarada, satırlar `subgrid` ile aynı
+   izleri paylaşıyor: fiyat sütunu en geniş satırın boyunda ve hepsinde aynı
+   hatta biter.
+
+   Ölçüm (8 Kasım, başsız Chrome, sahte veri, 390/768/900/1024/1280/1440,
+   iki tema): yatay taşma 0; fiyat sütununun sağ kenarı beş satırda da aynı
+   pikselde ve panelin iç kenarının 1 piksel içinde. Fiyat sütunu en geniş
+   satırda ("1.234,56" / "▲ +%12,34") 76 piksel; ad sütununa yan kolonda
+   (≥1024) ~100, 390'da ~112 piksel kalıyor ve uzun ad tek satırda
+   kırpılıyor. Satır 61–62 piksel (eski satır ~51). */
+
+.list {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 64px max-content;
+  /* Aralık ÜST ızgarada: `subgrid` satırına verilen aralık kenar öğeden
+     düşüyor (WeekAhead.module.css → "SUBGRID TUZAĞI"). */
+  column-gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+
+/* VURGU PANEL KENARINA KADAR. Eski satır `-mx-4 px-4` ile dolguya
+   açılıyordu; `subgrid` öğesinde negatif kenar kenardaki izleri büyütüp
+   sütunları kaydırdığı için vurgu artık satırın arkasındaki bir katman
+   (`::before`), satırın kendisi sütunlara dokunmuyor. Panel dolgusu 16 /
+   ≥640'ta 20 (WatchlistSummary → Panel `px-4 sm:px-5`). */
+.link {
+  position: relative; isolation: isolate;
+  display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center;
+  padding-block: 10px; color: inherit;
+}
+.link::before {
+  content: ""; position: absolute; inset: 0 -16px; z-index: -1; background: transparent;
+  transition: background-color .2s var(--ease-brand);
+}
+@media (min-width: 640px) { .link::before { inset-inline: -20px; } }
+@media (hover: hover) { .link:hover::before { background: var(--primary-tint); } }
+.link:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+/* Logosuz sembolün karosu: sembolün kendisi, mono, nötr çukur zeminde;
+   kenarlık yer tutucu işareti. Üç harf 12 puntoda karonun 30 piksellik
+   iç genişliğini tam dolduruyor (ölçüldü: SPY/QQQ/DIA `scrollWidth` 30);
+   dördüncü harf sığmayacağı için dört harfli sembolde punto küçülür. */
+.tickerTile {
+  display: flex; align-items: center; justify-content: center; box-sizing: border-box;
+  width: 32px; height: 32px; border: 1px solid var(--line); border-radius: var(--radius-md);
+  background: var(--surface-sunken); color: var(--text-strong);
+  font-family: var(--font-mono); font-size: var(--text-tiny); font-weight: 700; letter-spacing: -.04em; line-height: 1;
+}
+/* METİN OLMAYAN İŞARET: dört harfli sembol karoda bir künye değil karonun
+   kendisi; okunacak sembol yanında 13 puntoyla duruyor. `micro`nun
+   tanımındaki istisna (globals.css "METİN TABANI 12 PİKSEL"). */
+.tickerTile[data-len="4"] { font-size: calc(var(--text-micro) * 1.25); letter-spacing: -.05em; }
+
+.ident { display: flex; flex-direction: column; min-width: 0; }
+.symbol { font-family: var(--font-mono); font-size: var(--text-base); font-weight: 700; line-height: 1.3; color: var(--text-strong); }
+.name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-tiny); line-height: 1.35; color: var(--text-muted); }
+
+.spark { display: block; width: 64px; height: 28px; }
+.sparkSvg { display: block; width: 64px; height: 28px; overflow: visible; }
+
+.figures { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.price { font-size: var(--text-read); font-weight: 700; line-height: 1.15; color: var(--text-strong); white-space: nowrap; }
+.noData { justify-self: end; font-size: var(--text-tiny); color: var(--text-muted); }

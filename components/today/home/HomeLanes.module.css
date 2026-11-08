@@ -1,54 +1,128 @@
 /* ANA SAYFANIN YAN KOLON ŞERİTLERİ — Dünya Piyasaları ve Günün Hareketleri
-   (6 Kasım görsel tur; gerekçe WorldStrip.tsx → WorldStripView ve
-   DayMovers.tsx → MoversBlock).
+   (6 Kasım görsel tur, 8 Kasım ikinci tur; gerekçe WorldStrip.tsx →
+   WorldStripView, DayMovers.tsx → DayMoversView, HomeLane.tsx).
 
-   Satır üç sütun: [işaret (bayrak / logo) | ad ve künye | yüzde]; altında
-   şerit, işaret sütununun SAĞINDAN yüzdenin sağ kenarına kadar — ad, künye
-   ve şerit tek sol hatta, şeridin sağ ucu yüzdenin sağ ucuyla aynı hatta.
-   Şerit bülten bandının `MiniLane`i: `--line-soft` kulvar, ortada
-   `--line-strong` sıfır, 5 piksel; renk yalnız işaretten. Ölçek panel
-   başına TEK (`sharedLaneScale`, lib/home-figures.ts) ve başlığın sağında
-   yazılı.
+   8 KASIM — SATIR ÜÇ KATTAN İKİYE (sahibinin isteği, 390'daki ekran
+   görüntüsü: "çok daha iyi ve çok daha görsel"). Dünya satırı ad / künye
+   cümlesi / şerit diye üç kattı, 16 piksellik bayrak metin bloğundan kopuk
+   duruyordu, künye Çin'de kesiliyordu. Şimdi:
+     [işaret 32 | ad · sembol · kısa künye        | yüzde hapı]
+     [          | ——— şerit ————————————●————————————————]
+   İşaret (bayrak karosu / logo karosu) iki katın TOPLAM boyunda (20 + 7 +
+   5 = 32) ve ortalı: kimlik bloğuyla tek kütle. Ad, künye, şerit ve eksen
+   tek sol hatta; şeridin ve eksenin sağ ucu hapın sağ ucuyla aynı hatta.
+   Yüzde hap: up/down wash zemini (`ChangePill`in renkleri), %0,00 ve son
+   kapanış nötr. Hap sabit genişlikli sütuna konmaz (CLAUDE.md): dar
+   düzende sütun `auto`, geniş düzende `minmax(5.5rem, max-content)`.
 
-   ÖLÇÜM (6 Kasım, sahte veriyle önizleme, 350 piksellik yan kolon,
-   reducedMotion; eski satır HEAD işaretlemesinden aynı genişlikte):
-     Dünya Piyasaları satırı 57,5 → 65 px (künyesi iki satıra saran 390
-       satırı 72,5 → 80); beş satırlık panel ~451 → 489 px (1440).
-       Şerit 278 px, sıfır satırın ortasında. Dolgu `py-2.5` → `py-2`
-       şeridin payını kısmen geri aldı (70 → 65).
-     Günün Hareketleri satırı 47 → 58 px; 3 + 3 satırlık panel ~478 → 543.
-       Başlığa ölçek künyesi konunca başlık satırı 57 → 77 px'e (iki satır)
-       çıkıyordu; künye ilk alt başlığın sağına indi, başlık 57.
-     Yatay taşma 0 (1440 / 390, TR / EN, iki tema).
-   Kolon dengesi `FillColumn`da; ölçüm raporu ana oturumda. */
+   GENİŞ KAP (≥ 540 px; 768 altı tek sütunda telefon yatay / küçük tablet):
+   satır tek kat — [işaret | ad 13.5rem | şerit | hap]. Dar düzende ad ile
+   hap arasında 600 piksel boşluk kalıyordu. Şeridin iki ucu her satırda
+   aynı olsun diye hap sütunu sabit tabanlı (yukarıda).
+
+   ÖLÇÜM (8 Kasım, sahte veriyle önizleme, reducedMotion; .tmp-olc-dunya.mjs):
+     Dünya satırı      390: 79,8 → 55 px · 1024/1440: 64,8 → 55
+       (künyesi alta saran Çin satırı 75; 390'da TR ve EN, 1024+ EN;
+       son kapanış künyesi de eklenirse 95 — seyrek hâl, kesilmiyor)
+       beş satırlık panel (eksen dahil) TR 390: 585 → 503,5 ·
+       1024/1440: 490 → 463,5
+       kesilen künye 768: 5 → 0 · 1024/1440: 3 → 0
+       bayrak 16 px glif / 20 px kutu → 32 px karo (glif 20)
+     Hareketler satırı 58,3 → 50 px; 3 + 3 satırlık panel
+       390: 563,5 → 532 · 1024/1440: 543,5 → 512 (eksen ve sayaç dahil)
+     Geniş kap (700, panel 604): Dünya satırı 53, Hareketler 48.
+     Sıfır çizgisi her panelde TEK x — beş satır ve eksenin "0"ı aynı
+     pikselde (390: 217, 1440: 1203); uç noktası kulvardan taşmıyor;
+     hap sıkışması 0; yatay taşma 0; kutudan taşan öğe 0
+     (390/700/768/1024/1440, TR/EN, iki tema).
+   Kolon dengesi `FillColumn`da. */
+
+.desk { container-type: inline-size; }
 
 .row {
-  --lead-w: 20px;
+  --lead-w: 32px;
   display: grid;
   grid-template-columns: var(--lead-w) minmax(0, 1fr) auto;
-  grid-template-areas:
-    "lead main value"
-    ".    lane lane";
-  column-gap: 10px;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 7px;
   align-items: center;
 }
-.rowLogo { --lead-w: 26px; }
 
+/* İşaret sütunu iki kat boyunca, ortalı. */
+.lead {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.main { grid-column: 2; grid-row: 1; min-width: 0; }
+.value { grid-column: 3; grid-row: 1; align-self: start; justify-self: end; display: flex; }
+/* Hap kimliğin İLK satırına hizalı: künye alta sardığında (390, Çin)
+   bloğun ortasında yüzmüyor. */
+.laneCell { grid-column: 2 / -1; grid-row: 2; }
+
+/* BAYRAK KAROSU — logo karosu (`LogoTile md`, 32 px, rounded-md) boyunda.
+   Görselin etrafında çerçeve yok: karo zemini tonla (`surface-sunken`),
+   bayrak glifi içinde 20 punto. Glifi karoyu dolduracak kadar büyütüp
+   kırpmak denendi: platformların bayrak çizimleri farklı oranlı (Apple
+   dikdörtgen, Noto dalgalı), kırpma birinde boşluk bırakıyordu. */
 .flag {
-  grid-area: lead;
-  align-self: start;
-  font-size: 16px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* Kimlik satırı — ad, sembol, künye; sığmazsa künye ÖBEK olarak alta iner,
+   kelime ortasından kesilmez.
+   SATIR BAŞINDA AYIRICI YOK: 390'da Çin'in künyesi ("Şanghay, Hong Kong")
+   alta iniyor ve "· Şanghay…" diye öksüz noktayla başlıyordu. Her öğe
+   aralığını kendi sol dolgusunda taşıyor, kap 12 piksel sola kayık ve
+   yatayda kırpık: satırın İLK öğesinin dolgusu (ve içindeki nokta)
+   kırpılan şeride düşüyor. */
+.ident {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  min-width: 0;
+  margin-left: -12px;
+  /* overflow-x: clip DEĞİL: o kabın kendi kutusunu kırpar, kayık şerit
+     de kutunun içinde. Kırpma yalnız soldaki 12 piksel; üst, alt ve sağ
+     4 piksel açık (Ü/Ç imleri, g/ş kuyrukları). */
+  clip-path: inset(-4px -4px -4px 12px);
   line-height: 20px;
 }
-.lead { grid-area: lead; }
-.main { grid-area: main; min-width: 0; }
-.value {
-  grid-area: value;
-  align-self: start;
-  line-height: 20px;
-  text-align: right;
+.ident > :first-child { padding-left: 12px; }
+.ident > .symbol { padding-left: 6px; }
+.identMeta {
+  position: relative;
+  padding-left: 12px;
   white-space: nowrap;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
 }
+.identMeta::before {
+  content: "·";
+  position: absolute;
+  left: 4px;
+}
+
+/* Hareketler: sembol + ad tek satırda, ad kesilebilir (tam adı satırın
+   `aria-label`ında) — şirket adları 40 harfi bulabiliyor. */
+.identTight {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  line-height: 20px;
+}
+
 /* Fonun / hissenin sembolü — mono künye (CLAUDE.md "Tek font"). */
 .symbol {
   flex-shrink: 0;
@@ -58,15 +132,130 @@
   font-weight: 600;
   letter-spacing: 0.02em;
 }
-.lane {
-  grid-area: lane;
-  display: block;
-  margin-top: 6px;
+
+/* Yüzde hapı. Renk sınıfı çağıranda (`directionWash`). */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--text-small);
+  font-weight: 700;
+  line-height: 18px;
+  white-space: nowrap;
 }
-/* Son kapanışı gösteren satır: yüzde yön rengini bırakıyor (veri
-   dürüstlüğü 4), şerit de. Boy kalıyor — büyüklük yine doğru, yalnız
-   bu seansa ait değil. */
-.lane[data-basis="lastClose"] > span > span {
-  background: var(--text-muted);
-  opacity: 0.5;
+
+/* ---- Şerit ---- */
+.track {
+  position: relative;
+  display: block;
+  height: var(--lane-h, 5px);
+  border-radius: 999px;
+  background: var(--line-soft);
+  --lane-c: var(--flat);
+}
+.track[data-dir="up"] { --lane-c: var(--up); }
+.track[data-dir="down"] { --lane-c: var(--down); }
+.track[data-muted] { --lane-c: var(--flat); }
+/* Sıfır çizgisi kulvarın üstüne ve altına 3 piksel taşar. */
+.track::after {
+  content: "";
+  position: absolute;
+  inset: -3px auto -3px 50%;
+  width: 1.5px;
+  translate: -50% 0;
+  background: var(--line-strong);
+}
+.fill {
+  position: absolute;
+  inset-block: 0;
+  width: max(1.5px, var(--len));
+  border-radius: 999px;
+  background: var(--lane-c);
+  animation: lane-grow 0.7s var(--ease-brand) both;
+  animation-delay: calc(0.12s + var(--i, 0) * 0.045s);
+}
+.track[data-dir="up"] .fill { left: 50%; transform-origin: left center; }
+.track[data-dir="down"] .fill { right: 50%; transform-origin: right center; }
+/* Uç noktası: değerin bittiği yer. Çubuk büyüdükten sonra 0,85'ten gelir
+   (nesne yoktan var olmaz — design-tokens AI-slop yasakları). */
+.dot {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--lane-c);
+  translate: -50% -50%;
+  animation: lane-dot 0.3s var(--ease-brand) both;
+  animation-delay: calc(0.62s + var(--i, 0) * 0.045s);
+}
+/* Nokta kulvarın İÇİNDE kalır: en büyük değerde merkezi kulvarın ucuna
+   otursaydı 4,5 piksel hapların sağ hattını aşıyordu (ölçüldü). */
+.track[data-dir="up"] .dot { left: clamp(4.5px, calc(50% + var(--len)), calc(100% - 4.5px)); }
+.track[data-dir="down"] .dot { left: clamp(4.5px, calc(50% - var(--len)), calc(100% - 4.5px)); }
+.track[data-muted] .fill,
+.track[data-muted] .dot { opacity: 0.6; }
+
+@keyframes lane-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes lane-dot {
+  from { opacity: 0; scale: 0.85; }
+  to { opacity: 1; scale: 1; }
+}
+
+/* ---- Eksen ---- */
+.axisRow { grid-template-rows: auto; }
+.axis {
+  grid-column: 2 / -1;
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 6px;
+  color: var(--text-muted);
+  font-size: var(--text-tiny);
+  /* tabular-nums YOK: eşit genişlikli virgül "−%4 , 1" diye açılıyordu. */
+  line-height: 16px;
+}
+.axisZero {
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+}
+/* Sıfıra inen çentik — satırlardaki sıfır çizgisiyle aynı x. */
+.axis::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 1.5px;
+  height: 4px;
+  translate: -50% 0;
+  background: var(--line-strong);
+}
+
+/* ---- Grup başlığı (Yükselenler / Düşenler) ---- */
+.groupHead { grid-template-rows: auto; }
+.groupIcon { grid-row: 1; font-size: 16px; }
+.groupLabel { grid-column: 2; }
+.groupCount { grid-column: -2 / -1; justify-self: end; }
+
+/* ---- Geniş kap: tek kat ---- */
+@container (min-width: 540px) {
+  .row {
+    grid-template-columns: var(--lead-w) minmax(0, 13.5rem) minmax(0, 1fr) minmax(5.5rem, max-content);
+    grid-template-rows: auto;
+  }
+  .lead { grid-row: 1; }
+  .laneCell { grid-column: 3; grid-row: 1; }
+  .value { grid-column: 4; align-self: center; }
+  .axis { grid-column: 3; }
+  .groupLabel { grid-column: 2 / 4; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill,
+  .dot { animation: none; }
 }

@@ -1,6 +1,7 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { auth } from "@/auth";
 import {
+  ChangePill,
   DataError,
   DataStamp,
   EmptyState,
@@ -10,12 +11,16 @@ import {
   LogoTile,
   ButtonLink,
 } from "@/components/ui/primitives";
-import { getStatus, getSymbolNames, getUserSymbols } from "@/lib/data";
+import { getStatus, getSymbolNames, getUserSymbols, type SymbolMeta } from "@/lib/data";
 import { getQuotes } from "@/lib/providers";
+import type { Bar, Quote } from "@/lib/providers/types";
 import { type Dictionary, type Locale } from "@/lib/i18n";
-import { cn, directionOf, directionText, formatPercent, formatPrice } from "@/lib/utils";
+import { logoSrc } from "@/lib/logos";
+import { cn, directionOf, formatPrice } from "@/lib/utils";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { getChartBarsMulti } from "@/lib/providers";
+import { sessionDomain } from "@/components/today/index-feed";
+import styles from "./WatchlistSummary.module.css";
 import { getUserAlerts, type PriceAlert } from "@/lib/price-alerts";
 import { settleAlerts } from "@/lib/alert-settle";
 import { BellSimpleRinging, ArrowRight } from "@phosphor-icons/react/dist/ssr";
@@ -143,76 +148,16 @@ export async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dicti
       <AlertHits alerts={alerts} t={t} />
       {result.ok ? (
         <>
-          <ul>
-            {shown.map((symbol, index) => {
-              const quote = result.data[symbol];
-              const points = (bars[symbol] ?? []).map((bar) => ({
-                value: bar.close,
-              }));
-              const tone = directionOf(quote?.changePct);
-              return (
-                <li
-                  key={symbol}
-                  /* `data-fill`: açılabilir yedek satır. Boyu `FillColumn`
-                     satırı açıp ölçerek buluyor, ayrı bir örnek satır
-                     işaretlemeye gerek yok. */
-                  data-fill={index >= WATCHLIST_BASE ? "" : undefined}
-                  hidden={index >= WATCHLIST_BASE}
-                  suppressHydrationWarning
-                  className="border-t border-line first:border-t-0"
-                >
-                  {/* Hover sitenin tek diliyle (`--primary-tint`,
-                      globals.css "SİTENİN TEK HOVER DİLİ"); `opacity-80`
-                      içeriği soldurup "devre dışı" gibi okutuyordu ve
-                      `transition-colors` opaklığı geçişlemiyordu. Satır
-                      panelin dolgusuna negatif kenarla açılıyor ki vurgu
-                      kutunun kenarına kadar sürsün (DayMovers ile aynı). */}
-                  <Link
-                    href={`/hisse/${symbol}`}
-                    className="-mx-4 flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-primary-tint sm:-mx-5 sm:px-5"
-                  >
-                    <LogoTile symbol={symbol} logoUrl={names[symbol]?.logoUrl} size="sm" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-base font-bold text-strong">
-                        {symbol}
-                      </span>
-                      {names[symbol]?.name && (
-                        <span className="block truncate text-tiny text-muted">{names[symbol]!.name}</span>
-                      )}
-                    </span>
-                    {sparkOk && points.length > 1 && (
-                      <Sparkline
-                        points={points}
-                        title={`${symbol} · 1D`}
-                        tone={tone}
-                        width={56}
-                        height={24}
-                        showArea={false}
-                        className="h-6 w-14 shrink-0"
-                      />
-                    )}
-                    {quote ? (
-                      <span className="w-[74px] shrink-0 text-right">
-                        <span className="numeral block text-base font-bold text-strong">
-                          {formatPrice(quote.price, locale)}
-                        </span>
-                        <span
-                          className={cn(
-                            "numeral block text-tiny",
-                            directionText(tone),
-                          )}
-                        >
-                          {formatPercent(quote.changePct, locale)}
-                        </span>
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted">{t.common.noData}</span>
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          <WatchlistRows
+            symbols={shown}
+            quotes={result.data}
+            bars={bars}
+            names={names}
+            sparkOk={sparkOk}
+            session={sessionDomain(status)}
+            locale={locale}
+            t={t}
+          />
           {/* TAKİP LİSTEM BUGÜN (24 Ekim): listenin son seans okuması, liste
               ile damga arasında — ekran düzeninde ölçüden sonra metin. Not
               istemciden istenir, yazılamazsa blok hiç kalmaz (gerekçe
@@ -234,5 +179,118 @@ export async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dicti
         <DataError message={t.data.failed} hint={t.data.failedHint} />
       )}
     </Panel>
+  );
+}
+
+/**
+ * Favorilerin satırları — veriden bağımsız çizim (8 Kasım, sahibinin
+ * isteği: "çok daha görsel, çok daha iyi"). Öncekine göre:
+ *  - DÖRT SÜTUN TEK IZGARADA: karo, ad, kıvılcım, fiyat. Fiyat sütunu
+ *    74 piksel SABİTTİ; "1.234,56" ile "−%12,34" sığmadığında sayı satırın
+ *    sağına taşıyordu. Artık `subgrid` + `max-content`: sütun en geniş
+ *    satırın boyunda, bütün satırlarda aynı hatta biter (CLAUDE.md "hap
+ *    sabit genişlikli sütuna konmaz").
+ *  - YÜZDE HAP: `ChangePill` (yön zemini `up`/`down` wash'ı + ▲/▼), sitenin
+ *    öteki değişim rozetleriyle aynı bileşen. Düz renkli küçük yazıydı.
+ *  - KIVILCIM SEANS EKSENİNDE: barlar 04:00–uzatılmış kapanış eksenine
+ *    zamanlarıyla, önceki kapanış kesik taban çizgisi (`--line-strong`),
+ *    açılış zilinden önceki çizgi yarı tonda — kahramanın endeks
+ *    kartlarıyla aynı dil (`sessionDomain`, Sparkline başındaki gerekçe).
+ *    Sıra eksenindeyken ön seansın üç barı kıvılcımın tamamını kaplıyor ve
+ *    çizgi, sayının işaretiyle çelişebiliyordu. Eksen dışındaki (başka
+ *    güne ait) barlar düşüyor; şekil yine yalnız `sparkOk` iken.
+ *  - LOGOSUZ SEMBOL İÇİN SEMBOL KAROSU: iki harf (DI, QQ, SP) bozuk bir
+ *    logo gibi okunuyordu ve mavi `primary-wash` zemini veri panelinde
+ *    etkileşim rengiydi. Logo yoksa karo sembolün kendisini (dört harfe
+ *    kadar) mono ve nötr çukur zeminde yazıyor; kenarlık yer tutucunun
+ *    işareti (CLAUDE.md "kenarlık yalnız yer tutucularda"). Logo adresi
+ *    varken görsel düşerse `LogoTile`ın kendi yedeği devrede kalıyor.
+ * Ölçüm `WatchlistSummary.module.css` başında.
+ */
+export function WatchlistRows({
+  symbols,
+  quotes,
+  bars,
+  names,
+  sparkOk,
+  session,
+  locale,
+  t,
+}: {
+  symbols: readonly string[];
+  quotes: Record<string, Quote | undefined>;
+  bars: Record<string, readonly Pick<Bar, "time" | "close">[] | undefined>;
+  names: Record<string, Pick<SymbolMeta, "name" | "logoUrl"> | undefined>;
+  sparkOk: boolean;
+  session: { domain: [number, number]; openAt: number };
+  locale: Locale;
+  t: Dictionary;
+}) {
+  return (
+    <ul className={styles.list}>
+      {symbols.map((symbol, index) => {
+        const quote = quotes[symbol];
+        const points = (bars[symbol] ?? []).map((bar) => ({ time: bar.time, value: bar.close }));
+        const tone = directionOf(quote?.changePct);
+        const logo = names[symbol]?.logoUrl ?? logoSrc(symbol, null);
+        return (
+          <li
+            key={symbol}
+            /* `data-fill`: açılabilir yedek satır. Boyu `FillColumn`
+               satırı açıp ölçerek buluyor, ayrı bir örnek satır
+               işaretlemeye gerek yok. */
+            data-fill={index >= WATCHLIST_BASE ? "" : undefined}
+            hidden={index >= WATCHLIST_BASE}
+            suppressHydrationWarning
+            className={styles.row}
+          >
+            {/* Hover sitenin tek diliyle (`--primary-tint`,
+                globals.css "SİTENİN TEK HOVER DİLİ"); `opacity-80`
+                içeriği soldurup "devre dışı" gibi okutuyordu ve
+                `transition-colors` opaklığı geçişlemiyordu. Vurgu panelin
+                dolgusuna taşıyor ki kutunun kenarına kadar sürsün (DayMovers
+                ile aynı); negatif kenar `subgrid` izlerini kaydırdığı için
+                artık satırın `::before` katmanında (CSS notu). */}
+            <Link href={`/hisse/${symbol}`} className={styles.link}>
+              {logo ? (
+                <LogoTile symbol={symbol} logoUrl={names[symbol]?.logoUrl} size="md" />
+              ) : (
+                <span aria-hidden className={styles.tickerTile} data-len={Math.min(symbol.length, 4)}>
+                  {symbol.slice(0, 4)}
+                </span>
+              )}
+              <span className={styles.ident}>
+                <span className={styles.symbol}>{symbol}</span>
+                {names[symbol]?.name && <span className={styles.name}>{names[symbol]!.name}</span>}
+              </span>
+              <span className={styles.spark}>
+                {sparkOk && points.length > 1 && (
+                  <Sparkline
+                    points={points}
+                    title={`${symbol} · 1D`}
+                    tone={tone}
+                    width={64}
+                    height={28}
+                    strokeWidth={1.75}
+                    baseline={quote?.prevClose ?? null}
+                    domain={session.domain}
+                    split={session.openAt}
+                    className={styles.sparkSvg}
+                  />
+                )}
+              </span>
+              {quote ? (
+                <span className={styles.figures}>
+                  <span className={cn("numeral", styles.price)}>{formatPrice(quote.price, locale)}</span>
+                  <ChangePill changePct={quote.changePct} locale={locale} size="sm" />
+                </span>
+              ) : (
+                <span className={styles.noData}>{t.common.noData}</span>
+              )}
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

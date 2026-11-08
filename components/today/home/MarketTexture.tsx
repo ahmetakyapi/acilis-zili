@@ -313,8 +313,27 @@ export function SectorRibbonSkeleton({ t }: { t: Dictionary }) {
    Ölçüm aynı zamanda eski bir hatayı gösterdi: 26 piksellik sekiz logo
    640–900 arasında 14–147 piksel TAŞIYOR ve "+N" çipi `overflow:hidden`
    altında görünmüyordu. */
-/** Geniş ekranda (≥1024) uç kartındaki logo sayısı. */
+/* BİR KADEME DAHA: 32 → 40 (8 Kasım, sahibinin isteği: "logolar bir tık
+   daha büyük olmalı"). Karo `lg` (44) olarak isteniyor, CSS 40'a indiriyor
+   (görsel 44'lük kaynaktan, büyütülmüş değil); köşe `--radius-md`. Logo
+   başına 44 piksel (karo + 4 boşluk), "+N" çipi 40. Yer YENİDEN ölçüldü
+   (başsız Chrome, sahte veri, zayıf tema kartı "−%10,25" — bağlayıcı olan
+   o; "yer" = rakamın solu eksi satırın solu eksi 14'lük aralık):
+   - 1440: 348 → altı logo + çip = 304. Yedi + çip 348 eder, sıfır pay.
+   - 1280: 311 → altı logo + çip = 304 (7 pay).
+   - 1024: 237 → dört logo + çip = 216. Beş + çip 260, taşar.
+   - 768: 154 → üç logo + çip 160 isterdi; karolar −4 piksel bindirmeyle
+     yığılıyor (telefondaki portre yığınının dili) ve 148'e iniyor.
+   - ≤767 (telefon): karo 32'de KALDI. Kart 153 piksel genişlikte ve 40'lık
+     üç karo + çip 390'da −11, 320'de −22 piksel bindirme isterdi: logolar
+     yarı yarıya örtülürdü. Telefon bindirme ölçüleri CSS notunda.
+   Eski ölçümün gizli hatası: 1024'te 32'lik altı logo + çip satırı
+   rakamın 3 piksel soluna kadar uzanıyordu; 14'lük aralığın 11 pikseli
+   `overflow:hidden` altında kesiliyor, "+N" çipi kırpılıyordu. */
+/** ≥1280 uç kartındaki logo sayısı. */
 const EXTREME_LOGOS = 6;
+/** 1024–1279 arası logo sayısı (MarketTexture.module.css). */
+const EXTREME_LOGOS_MID = 4;
 /** 1024'ün altında kalan logo sayısı (MarketTexture.module.css). */
 const EXTREME_LOGOS_NARROW = 3;
 
@@ -468,8 +487,8 @@ function ExtremeCard({
     );
   }
   /* TEK ARTAN ÜYE ÇİP DEĞİL LOGO (28 Eylül): "+1" çipi bir logo kadar yer
-     (32 piksel) kaplıyor; yedinci logo satırı büyütmüyor, çip yerine
-     üyenin kendisi görünüyor. */
+     (32 piksel; 8 Kasım'dan beri 40) kaplıyor; yedinci logo satırı
+     büyütmüyor, çip yerine üyenin kendisi görünüyor. */
   const members = card.members.slice(
     0,
     card.members.length === EXTREME_LOGOS + 1 ? EXTREME_LOGOS + 1 : EXTREME_LOGOS,
@@ -495,12 +514,19 @@ function ExtremeCard({
           <span aria-hidden className={styles.extremeLogos} data-motion-stagger>
             {members.map((member, i) => (
               <span key={member.symbol} className={styles.extremeLogo} style={{ "--i": i } as CSSProperties}>
-                <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="md" card />
+                {/* `lg` (44) kaynak, CSS 40'a (telefonda 32'ye) indiriyor —
+                    ölçüm `EXTREME_LOGOS` üstünde. */}
+                <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="lg" card />
               </span>
             ))}
-            {/* "+N" ekranda GÖRÜNMEYEN üye sayısı: 1024'ün altında üç logo
-                kalıyor ve orada aynı sayı yanlış olurdu, iki rozet var. */}
+            {/* "+N" ekranda GÖRÜNMEYEN üye sayısı: logo sayısı genişliğe göre
+                üç kademe (6 / 4 / 3) ve her kademede sayı başka, üç rozet var. */}
             {rest > 0 && <span className={styles.extremeRest} data-at="wide">+{rest}</span>}
+            {card.members.length > EXTREME_LOGOS_MID && (
+              <span className={styles.extremeRest} data-at="mid">
+                +{card.members.length - EXTREME_LOGOS_MID}
+              </span>
+            )}
             {card.members.length > EXTREME_LOGOS_NARROW && (
               <span className={styles.extremeRest} data-at="narrow">
                 +{card.members.length - EXTREME_LOGOS_NARROW}
