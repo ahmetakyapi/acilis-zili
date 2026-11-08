@@ -1,5 +1,4 @@
 import {
-  SETTLE_MARGIN_MINUTES,
   addEtDays,
   isTradingDay,
   prevTradingDay,
@@ -44,27 +43,15 @@ import { MIN_BREADTH_COVERAGE } from "./sentiment";
    Tarih ve tamamlanma
    -------------------------------------------------------------------------- */
 
-/**
- * Kapanıştan sonra beklenen PAY (dakika), gecikmenin üstüne. Kapanış
- * müzayedesinin baskısı 16:00'yı birkaç saniye geçiyor ve günlük bar onu
- * 16:00 dakikasında topluyor (ölçüm: SPY 23 Ekim, 20:00Z dakikası 759,99,
- * 20:01Z 759,97 = gün barının kapanışı). Beş dakika bu kuyruğu rahat kapsıyor.
- *
- * TEK KAYNAK ARTIK `lib/market-hours.ts` (8 Kasım): posterin kuralı bütün
- * yazma katmanının "tamamlanmış seans" tanımı oldu (`settledAt`,
- * `sessionPhase`, `lastSettledSession`). Ad geriye uyum için duruyor.
- */
-export const POSTER_SETTLE_MINUTES = SETTLE_MARGIN_MINUTES;
-
 /** Kabul edilen en eski gün: bir yıl. Açılış Kartı'nın penceresiyle aynı
  *  gerekçe (`lib/day-card.ts`): sınırsız tarih, sınırsız ayrı istek demek. */
-export const POSTER_PAST_DAYS = 365;
+const POSTER_PAST_DAYS = 365;
 
 /** Paylaşım görselinin ölçüsü — sosyal ağ kartı (`/gun/[tarih]/gorsel`). */
 export const POSTER_OG_SIZE = { width: 1200, height: 630 } as const;
 
 /** Arşiv listesinde kaç seans — altı haftaya yakın. */
-export const POSTER_ARCHIVE_SESSIONS = 30;
+const POSTER_ARCHIVE_SESSIONS = 30;
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -243,7 +230,7 @@ export function buildPoster({
  * bir günün şeridiyle aynı boyda durmasın. Şekil sakinliği kendisi söylüyor.
  * Bülten künyesinin kulvarları da bu tabanı kullanıyor (lib/brief-ledger.ts).
  */
-export const POSTER_SCALE_FLOOR = 1;
+const POSTER_SCALE_FLOOR = 1;
 
 /** Endeks kulvarlarının ortak ölçeği: günün en büyük mutlak hareketi, tabanlı. */
 export function posterScale(moves: readonly PosterMove[]): number {
@@ -408,7 +395,7 @@ export function unpackArchiveBars(pack: ArchiveCloses): Record<string, Bar[]> {
  * sürüm onu 86.400 sn tutuyordu ve o akşam künye, poster ve görsel 24 saat
  * 404 veriyordu. Beş takvim günü bir uzun hafta sonunu da kapsıyor.
  */
-export const POSTER_RETRY_DAYS = 5;
+const POSTER_RETRY_DAYS = 5;
 
 export function posterRetryable(date: string, today: string): boolean {
   return date >= addEtDays(today, -POSTER_RETRY_DAYS);

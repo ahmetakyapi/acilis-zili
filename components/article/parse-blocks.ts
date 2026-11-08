@@ -227,7 +227,7 @@ export function legacyHeadingIds(
  *   note     — sondaki tamamen eğik paragrafların hepsi: kaynak notu ve
  *              varsa ardından gelen düzeltme satırı
  */
-export type BlockRole = "summary" | "lede" | "takeaway" | "note";
+type BlockRole = "summary" | "lede" | "takeaway" | "note";
 
 const ALL_ITALIC = /^\*(?!\*)[^*]+\*$/;
 
@@ -388,7 +388,7 @@ export function isTableDivider(line: string): boolean {
  * etiketlerinden hiçbiri `ad` ile başlamıyor — eski içerik etkilenmiyor.
  * Sözdizimi çevrilmez: İngilizce yazıda da `adim`.
  */
-export const STEP_FLAG = "adim";
+const STEP_FLAG = "adim";
 
 /** Başlık sözcüklerinin başındaki adım bayrağını ayıklar. */
 function takeStepFlag(words: string[]): { stepped: boolean; label: string } {
@@ -409,7 +409,7 @@ function takeStepFlag(words: string[]): { stepped: boolean; label: string } {
  * Title Case etiketi bayrak sanmıyor. Canlı arşivde (324 satır, 25 Ekim)
  * `notr` ile başlayan `bar` etiketi yok — eski içerik etkilenmiyor.
  */
-export const NEUTRAL_FLAG = "notr";
+const NEUTRAL_FLAG = "notr";
 
 /** "2.190" → 2190 (tr), "2,190" → 2190 (en); gruplama bozuksa null. */
 function localeNumber(text: string, locale: string): number | null {

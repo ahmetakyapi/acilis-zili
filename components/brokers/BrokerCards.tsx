@@ -100,7 +100,7 @@ const FEATURE_ICON: Record<BrokerColumn, IconComponent> = {
   license: ShieldCheck,
 };
 
-export type BrokerCardsLabels = typeof brokerCardsTr & {
+type BrokerCardsLabels = typeof brokerCardsTr & {
   columns: Record<BrokerColumn, string>;
   unspecified: string;
   counterparty: string;

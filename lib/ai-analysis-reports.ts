@@ -86,7 +86,7 @@ export async function getSymbolReport(symbol: string, id: string): Promise<Saved
   } catch { return null; }
 }
 
-export type UserReportSummary = {
+type UserReportSummary = {
   id: string;
   symbol: string;
   horizon: "short" | "medium";

@@ -65,7 +65,7 @@ export const ADMIN_SECTIONS = {
   },
 } as const;
 
-export type AdminSectionKey = keyof typeof ADMIN_SECTIONS;
+type AdminSectionKey = keyof typeof ADMIN_SECTIONS;
 
 /** Sekme sırası — Özet, Trafik, Üyeler, İçerik, Yazılar, Önizleme, Moderasyon, AI, Sistem. */
 export const ADMIN_TAB_ORDER: readonly AdminSectionKey[] = [

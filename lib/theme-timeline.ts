@@ -28,7 +28,7 @@ export function isThemeTimelineRange(value: unknown): value is ThemeTimelineRang
   return typeof value === "string" && (THEME_TIMELINE_RANGES as readonly string[]).includes(value);
 }
 
-export type ThemeMove = { symbol: string; pct: number };
+type ThemeMove = { symbol: string; pct: number };
 
 export type ThemeTimelinePoint = {
   day: string;

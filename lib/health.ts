@@ -39,10 +39,10 @@ import { getErrorCountSince } from "./error-log";
 /** Veritabanı yoklamasının süre sınırı — izleyicinin kendi zaman aşımının altında. */
 const DB_TIMEOUT_MS = 3000;
 
-export type DbProbe = { ok: true; latencyMs: number } | { ok: false; reason: "not-configured" | "timeout" | "error" };
+type DbProbe = { ok: true; latencyMs: number } | { ok: false; reason: "not-configured" | "timeout" | "error" };
 
 /** `select 1` — süre sınırlı, fırlatmaz. */
-export async function probeDatabase(): Promise<DbProbe> {
+async function probeDatabase(): Promise<DbProbe> {
   if (!process.env.DATABASE_URL) return { ok: false, reason: "not-configured" };
   const started = performance.now();
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -69,7 +69,7 @@ function toDate(value: string | Date | null | undefined): Date | null {
   return Number.isFinite(d.getTime()) ? d : null;
 }
 
-export type HealthReport = {
+type HealthReport = {
   status: "ok" | "degraded" | "down";
   checkedAt: string;
   database: DbProbe;

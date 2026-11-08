@@ -22,7 +22,7 @@ import type { GuideSlug } from "./meta";
    yazı ekrandaki başlık ve dek ile kalır. Sayfadaki h1 değişmez.
    ========================================================================== */
 
-export type GuideSearchCopy = { title?: string; description?: string };
+type GuideSearchCopy = { title?: string; description?: string };
 
 export const GUIDE_SEARCH: Partial<
   Record<GuideSlug, { tr?: GuideSearchCopy; en?: GuideSearchCopy }>

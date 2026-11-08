@@ -13,7 +13,7 @@ import { PLATE_LABEL } from "./shared";
  * "ileriye dönük 3 yıl". Bir sayının ne zamana ait olduğu ya da neye
  * bölündüğü bu sayfada asla tahmine bırakılmıyor.
  */
-export type Fact = {
+type Fact = {
   label: string;
   value: string;
   note?: string | null;

@@ -130,11 +130,11 @@ async function publicViews(symbols: string[]): Promise<{ technical: Map<string, 
   return { technical, earnings };
 }
 
-export function holdingsKey(holdings: readonly Holding[]): string {
+function holdingsKey(holdings: readonly Holding[]): string {
   return holdings.map((h) => h.symbol).sort().join(",");
 }
 
-export function fingerprint(holdings: readonly Holding[]): string {
+function fingerprint(holdings: readonly Holding[]): string {
   return createHash("sha256").update(holdings.map((h) => `${h.symbol}:${h.quantity}`).join("|")).digest("hex").slice(0, 16);
 }
 

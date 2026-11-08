@@ -6,7 +6,7 @@
  */
 
 /** Rapordaki tek pozisyon satırı — vitrinin `ShowcaseMove`u ile aynı şekil. */
-export type ReportMove = { symbol: string; returnPct: number };
+type ReportMove = { symbol: string; returnPct: number };
 
 /**
  * UÇLARIN ETİKETİ VERİDEN (25 Ekim, sahibinin bildirimi). Rapor en üstteki
@@ -23,7 +23,7 @@ export type ExtremeKind = "mostGain" | "leastGain" | "leastLoss" | "mostLoss" | 
  * (`formatPercent(…, 1)`); 0,05'in altı "%0,0" görünür ve ona "Kazandıran"
  * ya da "Düşen" demek, okurun göremediği bir farkı ilan etmek olur.
  */
-export const FLAT_RETURN_PCT = 0.05;
+const FLAT_RETURN_PCT = 0.05;
 
 export type Extreme = { symbol: string; returnPct: number; kind: ExtremeKind };
 
@@ -52,7 +52,7 @@ export function positionExtremes(moves: readonly ReportMove[]): { top: Extreme |
  * (−%16,0 ile +%0,7 arası 16,7 puan); "yüzde 16,7 geride" demek farkı
  * oranmış gibi okuturdu.
  */
-export type SpyGap = { points: number; side: "ahead" | "behind" | "level" };
+type SpyGap = { points: number; side: "ahead" | "behind" | "level" };
 
 export function spyGap(returnPct: number, spyReturnPct: number | null): SpyGap | null {
   if (spyReturnPct === null || !Number.isFinite(spyReturnPct) || !Number.isFinite(returnPct)) return null;
@@ -70,16 +70,16 @@ export function spyGap(returnPct: number, spyReturnPct: number | null): SpyGap |
  *   - biri: uyanık, bekliyor (`heroWait`)
  *   - hiçbiri: uyukluyor (`heroSleep`) — yeni hesap
  */
-export type ReportMood = "heroRing" | "heroWait" | "heroSleep";
+type ReportMood = "heroRing" | "heroWait" | "heroSleep";
 
-export type ActivityInput = {
+type ActivityInput = {
   listSymbols: number;
   alertsTotal: number;
   posts: number;
   hasShowcase: boolean;
 };
 
-export function reportActivity(input: ActivityInput): number {
+function reportActivity(input: ActivityInput): number {
   return [input.listSymbols > 0, input.alertsTotal > 0, input.hasShowcase, input.posts > 0].filter(Boolean).length;
 }
 
@@ -102,7 +102,7 @@ export function reportMood(input: ActivityInput): ReportMood {
  * boy (birim ≈ 62 piksel, ölçüm BellReport.tsx'te), `gap` kolon içi
  * aralığın aynı birimdeki karşılığı.
  */
-export type ColumnPlan<T> = { left: T[]; right: T[]; full: T[] };
+type ColumnPlan<T> = { left: T[]; right: T[]; full: T[] };
 
 export function planColumns<T>(
   items: readonly { item: T; weight: number; wide?: boolean }[],
@@ -154,7 +154,7 @@ export function planColumns<T>(
 export type SessionWeek = { sessions: number; span: number };
 
 /** Şeridin tavanı: bir yıl. Daha eskisi sayıya girer, şeride girmez. */
-export const SESSION_WEEKS_MAX = 52;
+const SESSION_WEEKS_MAX = 52;
 
 function shiftDay(day: string, by: number): string {
   const [y, m, d] = day.split("-").map(Number);
@@ -202,7 +202,7 @@ export function sessionWeeks(
  */
 export type MemberMonth = { month: string; share: number };
 
-export const MEMBER_MONTHS_MAX = 12;
+const MEMBER_MONTHS_MAX = 12;
 
 function daysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();

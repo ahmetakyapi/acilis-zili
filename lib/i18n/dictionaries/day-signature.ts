@@ -264,5 +264,3 @@ export const daySignatureEn: typeof daySignatureTr = {
     posterLink: "This Session's Poster",
   },
 };
-
-export type DaySignatureLabels = typeof daySignatureTr;

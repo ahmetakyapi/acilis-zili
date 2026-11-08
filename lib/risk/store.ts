@@ -22,7 +22,7 @@ import { ConditionSchema, RULE_TONES, type Condition, type RuleTone } from "./ru
  * yazma eylemi `unavailable` döner.
  */
 
-export type RiskViewer = { userId: string; admin: boolean };
+type RiskViewer = { userId: string; admin: boolean };
 
 /** Oturumdaki kullanıcının erişimi — yoksa null. İstek içinde bir kez. */
 export const getRiskViewer = cache(async function getRiskViewer(): Promise<RiskViewer | null> {
@@ -71,7 +71,7 @@ export const hasRiskMenu = cache(async function hasRiskMenu(userId: string, toke
    Erişim yönetimi (yönetici)
    -------------------------------------------------------------------------- */
 
-export type AccessRow = { userId: string; username: string; grantedAt: Date };
+type AccessRow = { userId: string; username: string; grantedAt: Date };
 
 export async function listRiskAccess(): Promise<{ ok: true; rows: AccessRow[] } | { ok: false }> {
   try {
@@ -105,7 +105,7 @@ const StoredConditions = z.array(ConditionSchema).min(1);
 const toneOf = (raw: string): RuleTone => ((RULE_TONES as readonly string[]).includes(raw) ? (raw as RuleTone) : "hold");
 
 /** Satırı doğrular; jsonb bozuksa kural atlanır (yanlış koşulla alarm üretmektense). */
-export function parseRuleRow(row: typeof riskRules.$inferSelect): StoredRule | null {
+function parseRuleRow(row: typeof riskRules.$inferSelect): StoredRule | null {
   const conditions = StoredConditions.safeParse(row.conditions);
   if (!conditions.success) return null;
   return {

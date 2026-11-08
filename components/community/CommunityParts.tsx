@@ -265,7 +265,7 @@ const STEP_ICONS: readonly Icon[] = [SquaresFour, PencilSimpleLine, SealCheck];
  * (editörün kendi adım şeridi aynı üç adımı uzun hâliyle gösteriyor).
  * Adımlar arası çizgi sırayı söyler; numara gerekmez.
  */
-export function StepStrip({ steps, label }: { steps: readonly Step[]; label: string }) {
+function StepStrip({ steps, label }: { steps: readonly Step[]; label: string }) {
   return (
     <ol aria-label={label} className="grid grid-cols-3 gap-2 px-4 pb-5 pt-1 sm:px-5">
       {steps.map((step, index) => {
@@ -377,7 +377,7 @@ export function WriteGuide({ labels, withTemplates }: { labels: GuideLabels; wit
   );
 }
 
-export type BandFigure = { label: string; value: string };
+type BandFigure = { label: string; value: string };
 
 /**
  * Başlık bandının sağ yarısı: akışın sayıları ve en çok geçen sembollerin
@@ -447,7 +447,7 @@ type AuthorCardLabels = {
   more: string;
 };
 
-export type AuthorOtherPost = { slug: string; title: string; publishedAt: Date | null };
+type AuthorOtherPost = { slug: string; title: string; publishedAt: Date | null };
 
 /**
  * Yazı sayfasının yazar kimlik kartı (25 Ekim görsel turu). Gövdenin

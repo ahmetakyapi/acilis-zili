@@ -239,7 +239,7 @@ export const SENTIMENT_BANDS = [
   { max: Infinity, key: "extremeGreed", tone: "up" },
 ] as const;
 
-export type SentimentBand = (typeof SENTIMENT_BANDS)[number];
+type SentimentBand = (typeof SENTIMENT_BANDS)[number];
 
 export function sentimentBand(score: number): SentimentBand {
   return SENTIMENT_BANDS.find((band) => score < band.max) ?? SENTIMENT_BANDS[SENTIMENT_BANDS.length - 1];

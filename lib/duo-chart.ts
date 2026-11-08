@@ -10,9 +10,9 @@
  */
 
 /** Grafiğin bir noktası — `b` yoksa (seri o gün yok) fark alanı orada kesilir. */
-export type DuoValue = { a: number; b: number | null };
+type DuoValue = { a: number; b: number | null };
 
-export type GapBand = {
+type GapBand = {
   /** `up`: A ≥ B; `down`: A < B. */
   sign: "up" | "down";
   /** Kapalı çokgenin köşeleri, veri biriminde: [x (indis, kesirli), y (yüzde)]. */

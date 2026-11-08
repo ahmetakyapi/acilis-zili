@@ -73,7 +73,7 @@ const CALENDAR_RELEASES = [
 /** Takvim bu kadar gün ileriye doldurulur. */
 const HORIZON_DAYS = 365;
 
-export type CalendarSyncReport = {
+type CalendarSyncReport = {
   /** FRED'den eklenen yeni olay sayısı. */
   inserted: number;
   /** Yuvarlanan kurallı seriden eklenen olay sayısı. */
@@ -303,7 +303,7 @@ export async function calendarRunwayDays(
    -------------------------------------------------------------------------- */
 
 /** Açıklama saatinden bu kadar sonra FRED'e sorulur — yayın anında yansımıyor. */
-export const RELEASE_GRACE_MINUTES = 30;
+const RELEASE_GRACE_MINUTES = 30;
 
 type EventRow = typeof economicEvents.$inferSelect;
 

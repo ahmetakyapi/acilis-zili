@@ -108,7 +108,7 @@ import { BELL_BODY_PATH, BELL_CLAPPER, BELL_HANGER, BELL_LIP } from "@/component
 
 type Ctx = CanvasRenderingContext2D;
 /** CSS degradesinin bir durağı: konum 0–1, renk CSS dizesi (token'dan). */
-export type Stop = { at: number; color: string };
+type Stop = { at: number; color: string };
 /** CSS `linear-gradient` katmanı: açı (CSS derecesi: 0 yukarı, 90 sağ) ve duraklar. */
 export type Gradient = { angle: number; stops: Stop[] };
 /**
@@ -179,7 +179,7 @@ export const ACTS = [0, 12, 18, 28] as const;
 /** Kalemin 60 seansı çizdiği süre (sn): ~11 seans/sn; göz ucu izleyebiliyor. Eski film 1,75 sn. */
 export const PEN_S = 5.5;
 /** Ortalamaların kalemi (sn): fiyattan biraz hızlı, çünkü pürüzsüz bir eğri. */
-export const MA_PEN_S = 2.5;
+const MA_PEN_S = 2.5;
 /** Grafiğin III'te üst şeride katlandığı süre (perdeye göre başlangıç ve bitiş). */
 const FOLD = [0.1, 1.4] as const;
 /** III'te ilk manşetin başladığı an (perdeye göre): katlanma bitince. */
@@ -198,8 +198,8 @@ export const holdFor = (text: string) => text.replace(/\s+/g, "").length / 15 + 
 /** IV'te okuma halkasının ilk gerçeğe vardığı an (perdeye göre): grafik açıldıktan sonra. */
 export const READ_FROM = 1.8;
 /** Halkanın bir gerçekten ötekine geçişi ve orada durması (sn). */
-export const READ_MOVE = 0.7;
-export const READ_STEP = 1.8;
+const READ_MOVE = 0.7;
+const READ_STEP = 1.8;
 /** Perde (V) süresi: durgunluk, sel, zil, dev yazı ve mühür. */
 export const CURTAIN_S = 3.3;
 /** Sonuç gelince sel hemen gelmez: kamera usulca yaklaşır (ink-wash: "stillness before action"). */
@@ -289,7 +289,7 @@ export function filmStory(data: { opens?: number[]; closes: number[]; highs: num
 }
 
 /** IV'te okuma halkasının dolaştığı gerçekler (sıra soldan sağa değil, öykünün sırası). */
-export type FactKind = "first" | "high" | "low" | "strongest" | "cross" | "last";
+type FactKind = "first" | "high" | "low" | "strongest" | "cross" | "last";
 export function readingOrder(story: FilmStory, narrow: boolean): FactKind[] {
   const out: FactKind[] = ["first"];
   // Telefonda zirve ve dip künyesi yok (grafik 318 px; künyeler birbirine biniyordu): halka onlara uğramaz.
@@ -399,7 +399,7 @@ export function filmPalette(read: (name: string) => string, font: string): FilmP
 }
 
 /** `r g b` + alfa: degrade durağı yarı saydam token'dan türetilirken (alan dolgusu, söndürme). */
-export function withAlpha(css: string, alpha: number) {
+function withAlpha(css: string, alpha: number) {
   const c = parseColor(css);
   return c ? `rgb(${c[0]} ${c[1]} ${c[2]} / ${+(c[3] * alpha).toFixed(3)})` : css;
 }
@@ -462,7 +462,7 @@ export function parseGradients(css: string): Gradient[] {
  * CSS açısıyla kutuya serilen tuval degradesi (CSS'in kuralı: degrade çizgisi kutunun
  * köşelerine değecek uzunlukta). Koordinatlar o anki dönüşümde (dünya ya da ekran).
  */
-export function linear(ctx: Ctx, g: Gradient, x: number, y: number, w: number, h: number, alpha = 1) {
+function linear(ctx: Ctx, g: Gradient, x: number, y: number, w: number, h: number, alpha = 1) {
   const a = (g.angle * Math.PI) / 180, dx = Math.sin(a), dy = -Math.cos(a);
   const len = Math.abs(w * dx) + Math.abs(h * dy), cx = x + w / 2, cy = y + h / 2;
   const grad = ctx.createLinearGradient(cx - (dx * len) / 2, cy - (dy * len) / 2, cx + (dx * len) / 2, cy + (dy * len) / 2);
@@ -891,7 +891,7 @@ export function openingTimes(symbolLength: number, hasOrigin: boolean) {
   return { O, SLIDE_A, SLIDE_B, SYM_IN, DOT_AT, SYM_OUT, PEN_A, PEN_B };
 }
 
-export type FilmFrame = { t: number; doneAt: number | null };
+type FilmFrame = { t: number; doneAt: number | null };
 type Size = { w: number; h: number };
 
 const narrowOf = (size: Size) => size.w < 560;
@@ -913,7 +913,7 @@ function layout(size: Size) {
  * koordinatı) yayılır. Sel temanın kendi tonunda (21 Ekim): altyazı rengini
  * çevirmez. 25 Ekim'e dek III'te de bir sel vardı; III artık katlanma.
  */
-export function floodOf(frame: FilmFrame, size: Size, from: Point) {
+function floodOf(frame: FilmFrame, size: Size, from: Point) {
   const { t, doneAt } = frame;
   if (doneAt === null || t - doneAt <= HUSH + 0.05) return null;
   const { w, h } = size;
@@ -926,7 +926,7 @@ export function floodOf(frame: FilmFrame, size: Size, from: Point) {
 const STORIES = new WeakMap<FilmData, FilmStory>();
 const storyOf = (data: FilmData) => { let s = STORIES.get(data); if (!s) { s = filmStory(data); STORIES.set(data, s); } return s; };
 
-export type FilmResult = {
+type FilmResult = {
   /** Selin ekranın ne kadarını kapladığı (0–1). */
   flood: number;
   /** Kare DURUK: okuma turu bitti, sonuç bekleniyor. Oynatıcı yeniden çizmeyi bırakabilir. */

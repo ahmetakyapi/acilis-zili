@@ -175,7 +175,7 @@ const cachedAnswer = unstable_cache(
   { revalidate: ARCHIVE_CACHE_SECONDS },
 );
 
-export async function dailyAnswer(day: string): Promise<string | null> {
+async function dailyAnswer(day: string): Promise<string | null> {
   try {
     return await cachedAnswer(day);
   } catch {
@@ -379,9 +379,9 @@ function poolOptions(pool: readonly PoolEntry[], locale: Locale): PoolOption[] {
     }));
 }
 
-export type PuzzleError = "unavailable" | "unknown-symbol" | "duplicate" | "too-many";
+type PuzzleError = "unavailable" | "unknown-symbol" | "duplicate" | "too-many";
 
-export type PuzzleResult =
+type PuzzleResult =
   | { ok: true; state: PuzzleState; options: PoolOption[] }
   | { ok: false; error: PuzzleError };
 
@@ -472,7 +472,7 @@ export async function evaluatePuzzle(day: string, guesses: readonly string[], lo
  * herkese açık ölçüler, sayfayla birlikte iner; skor yalnız tarayıcıda.
  * Havuz okunamazsa boş liste — sayfa boş durum basar, uydurmaz.
  */
-export type BiggerEntry = { symbol: string; name: string; logoUrl: string | null; sector: string | null; marketCap: number };
+type BiggerEntry = { symbol: string; name: string; logoUrl: string | null; sector: string | null; marketCap: number };
 
 export async function biggerPool(locale: Locale): Promise<BiggerEntry[]> {
   const pool = await loadPool().catch(() => []);

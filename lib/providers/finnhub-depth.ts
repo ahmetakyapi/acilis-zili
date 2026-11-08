@@ -57,7 +57,7 @@ export async function getInsiderTransactions(
   return ok(rows, "finnhub", { fetchedAt: result.fetchedAt });
 }
 
-export type InsiderSentimentRow = {
+type InsiderSentimentRow = {
   year: number;
   month: number;
   change: number | null;
@@ -103,7 +103,7 @@ export async function getRawMetrics(
   return ok(metric, "finnhub", { fetchedAt: result.fetchedAt });
 }
 
-export type MetricSeries = {
+type MetricSeries = {
   annual: Record<string, { period: string; v: number }[]>;
   quarterly: Record<string, { period: string; v: number }[]>;
 };

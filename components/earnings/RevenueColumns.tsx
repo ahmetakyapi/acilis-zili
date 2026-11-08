@@ -37,7 +37,7 @@ import styles from "@/components/earnings/EarningsReport.module.css";
  * sayının HTML olmasıyla aynı gerekçe).
  */
 
-export type RevenueBar = {
+type RevenueBar = {
   label: string;
   value: number;
   projected?: boolean | null;
@@ -113,7 +113,7 @@ const GAP_TRACK = "12px";
 const GROWTH_DIGITS = 1;
 
 /** Metinler okuyucunun dilinde gelir. */
-export type RevenueColumnLabels = {
+type RevenueColumnLabels = {
   /** "Çeyreklik" — okuma satırındaki çeyrekten çeyreğe değişim. */
   qoq: string;
   /** "Yıllık" — bir yıl önceki aynı çeyreğe göre. */

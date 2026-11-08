@@ -36,7 +36,7 @@ export type SavedAnalysis = {
 };
 
 /** Güncel Sonnet: Sonnet 4.6'dan ucuz ($2 / $10), sıcaklık parametresi almıyor. */
-export const DEFAULT_ANALYSIS_MODEL = "claude-sonnet-5-5";
+const DEFAULT_ANALYSIS_MODEL = "claude-sonnet-5-5";
 export const analysisModel = () => process.env.CLAUDE_ANALYSIS_MODEL || DEFAULT_ANALYSIS_MODEL;
 /** Bu modellerde güvenlik reddi aynı çağrı içinde yedek modelle sürer; yoksa hak iade edilen boş deneme olur. */
 const FALLBACK_MODELS = new Set(["claude-sonnet-5-5", "claude-opus-5-5", "claude-opus-5", "claude-fable-5-1"]);

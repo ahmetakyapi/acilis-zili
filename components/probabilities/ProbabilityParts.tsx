@@ -38,7 +38,7 @@ export function etOf(iso: string): { date: string; time: string } {
   return { date: parts.dateStr, time: `${String(parts.hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}` };
 }
 
-export type StackSegment = { key: string; label: string; p: number; /** Çipin tam adı (imleçte). */ title?: string };
+type StackSegment = { key: string; label: string; p: number; /** Çipin tam adı (imleçte). */ title?: string };
 
 /**
  * Bir yığının dilim yüzdeleri, toplamı 100 (`percentShares`). Büyük sayı
@@ -134,7 +134,7 @@ export function ProbabilityStack({
 
 const SIDES: readonly FedSide[] = ["cut", "hold", "hike"];
 
-export type PathLabels = {
+type PathLabels = {
   today: string;
   expected: string;
   move: string;
@@ -293,7 +293,7 @@ function monthYear(ym: string, locale: Locale): string {
   return format.format(new Date(`${ym}-15T12:00:00Z`));
 }
 
-export type HistoryLabels = { title: string; summary: string; span: string; aria: string; next: string };
+type HistoryLabels = { title: string; summary: string; span: string; aria: string; next: string };
 
 /**
  * Resesyon kartının zaman şeridi (25 Ekim, ikinci tur): 1980'den 2027

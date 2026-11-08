@@ -53,8 +53,8 @@ export const ConditionSchema = z.discriminatedUnion("kind", [
 export type Condition = z.infer<typeof ConditionSchema>;
 export type ConditionKind = Condition["kind"];
 
-export const POSITION_KINDS = new Set<ConditionKind>(["betaAbove", "atrPctAbove", "volPctileAbove", "belowMa", "crossBelowMa", "positionCross"]);
-export const isPositionCondition = (c: Condition) => POSITION_KINDS.has(c.kind);
+const POSITION_KINDS = new Set<ConditionKind>(["betaAbove", "atrPctAbove", "volPctileAbove", "belowMa", "crossBelowMa", "positionCross"]);
+const isPositionCondition = (c: Condition) => POSITION_KINDS.has(c.kind);
 
 export const RuleInputSchema = z.object({
   label: z.string().trim().min(1).max(LABEL_MAX),
@@ -67,7 +67,7 @@ export const RuleInputSchema = z.object({
     .nullable(),
   conditions: z.array(ConditionSchema).min(1).max(MAX_CONDITIONS),
 });
-export type RuleInput = z.infer<typeof RuleInputSchema>;
+type RuleInput = z.infer<typeof RuleInputSchema>;
 
 export type MaFlags = { 50: boolean | null; 100: boolean | null; 200: boolean | null };
 
@@ -140,7 +140,7 @@ function positionHolds(c: Condition, p: PositionFacts): boolean {
   }
 }
 
-export type RuleOutcome = {
+type RuleOutcome = {
   triggered: boolean;
   /** Pozisyon koşullarını sağlayan semboller (pozisyon koşulu yoksa boş). */
   symbols: string[];
@@ -168,7 +168,7 @@ export type ConditionLabels = Record<ConditionKind, string> & {
   death: string;
 };
 
-export function formatRuleNumber(n: number, locale: "tr" | "en"): string {
+function formatRuleNumber(n: number, locale: "tr" | "en"): string {
   return new Intl.NumberFormat(locale === "en" ? "en-US" : "tr-TR", { maximumFractionDigits: 2 }).format(n);
 }
 

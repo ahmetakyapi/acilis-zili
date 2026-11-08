@@ -55,7 +55,7 @@ export type DividendCalendarDay = {
   rows: DividendCalendarRow[];
 };
 
-export type DividendCalendarResult =
+type DividendCalendarResult =
   | { ok: true; days: DividendCalendarDay[]; fetchedAt: Date; count: number; priced: boolean }
   | { ok: false };
 
@@ -132,7 +132,7 @@ export async function getDividendCalendar(): Promise<DividendCalendarResult> {
   };
 }
 
-export type SymbolDividends =
+type SymbolDividends =
   | {
       ok: true;
       past: CashDividend[];

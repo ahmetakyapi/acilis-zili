@@ -63,5 +63,5 @@ export async function getI18n(): Promise<{ locale: Locale; t: Dictionary }> {
   return { locale, t: getDictionary(locale) };
 }
 
-export { INTL_LOCALE, DEFAULT_LOCALE, DEFAULT_THEME };
-export type { Locale, Theme };
+export { INTL_LOCALE, DEFAULT_LOCALE };
+export type { Locale };

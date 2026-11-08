@@ -29,11 +29,11 @@ import { getEarningsWithOverrides } from "@/lib/earnings-overrides";
    ========================================================================== */
 
 /** Öne çıkanlar: her yönde üç hisse — kartta logo, sembol ve yüzde sığıyor. */
-export const CONTEXT_MOVERS = 3;
+const CONTEXT_MOVERS = 3;
 /** Takvim kartında en çok kaç veri satırı. */
-export const CONTEXT_EVENTS = 4;
+const CONTEXT_EVENTS = 4;
 /** Bilanço açıklayanlardan kaçının logosu (piyasa değerine göre). */
-export const CONTEXT_EARNINGS_LOGOS = 5;
+const CONTEXT_EARNINGS_LOGOS = 5;
 
 export type ContextMover = { symbol: string; change: number; name: string | null; logoUrl: string | null };
 

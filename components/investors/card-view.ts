@@ -6,7 +6,7 @@ import type { MoveTone } from "./format";
  * Testi `tests/investor-cards.test.ts`.
  */
 
-export type CapitalInput = {
+type CapitalInput = {
   slug: string;
   /** Çeyrek sonu hisse portföyü, dolar. */
   value: number;
@@ -14,7 +14,7 @@ export type CapitalInput = {
   current: boolean;
 };
 
-export type CapitalSlice = { slug: string; value: number; share: number };
+type CapitalSlice = { slug: string; value: number; share: number };
 
 /**
  * Takip edilen sermayede kimin ne payı var. Küme sayfanın kapağındaki

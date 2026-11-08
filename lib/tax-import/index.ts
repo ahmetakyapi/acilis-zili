@@ -15,9 +15,6 @@ import { looksLikeMidas, parseMidasText } from "./midas";
 import { looksLikeOwnCsv, parseOwnCsv } from "./own";
 
 export * from "./core";
-export { parseIbkrCsv, parseIbkrText } from "./ibkr";
-export { parseMidasText } from "./midas";
-export { parseOwnCsv } from "./own";
 
 /**
  * Ekstre metni → önerilen satırlar. Kurum biçimden tanınıyor; tanınmazsa

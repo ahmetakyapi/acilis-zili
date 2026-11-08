@@ -103,7 +103,7 @@ export const damped = (t: number, freq: number, decay: number) =>
 /* ----------------------------------------------------------------------- */
 
 /** Kübik Bézier'i `n` noktaya örnekler. */
-export function cubic(
+function cubic(
   p0: Point,
   p1: Point,
   p2: Point,
@@ -160,7 +160,7 @@ export function transform(
 /* Fırça                                                                     */
 /* ----------------------------------------------------------------------- */
 
-export type BrushOptions = {
+type BrushOptions = {
   width: number;
   /** Çizginin ne kadarı çizildi (0…1) — "yazılıyor" etkisi. */
   progress?: number;
@@ -376,26 +376,4 @@ export function splatter(
       alpha: life,
     });
   }
-}
-
-/** Kâğıt: sayfa zeminine tohumlu, çok hafif bir lif dokusu. */
-export function paperGrain(
-  ctx: CanvasRenderingContext2D,
-  w: number,
-  h: number,
-  o: { seed: number; color: string; alpha: number },
-) {
-  const r = rng(o.seed);
-  ctx.save();
-  ctx.fillStyle = o.color;
-  const n = Math.round((w * h) / 900);
-  for (let i = 0; i < n; i++) {
-    ctx.globalAlpha = o.alpha * (0.3 + r() * 0.7);
-    const x = r() * w;
-    const y = r() * h;
-    const l = 2 + r() * 7;
-    const a = r() * Math.PI;
-    ctx.fillRect(x, y, Math.cos(a) * l || 0.8, 0.8);
-  }
-  ctx.restore();
 }

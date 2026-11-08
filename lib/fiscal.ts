@@ -36,7 +36,7 @@ import type { Locale } from "./i18n/config";
 export type FiscalQuarter = { year: number; quarter: number };
 
 /** Sağlayıcının sürpriz kaydı — `EarningsSurprise` ile aynı alanlar. */
-export type SurpriseLike = {
+type SurpriseLike = {
   /** Sağlayıcının dönem tarihi, "YYYY-MM-DD" (çeyrek sonu OLMAYABİLİR). */
   period: string;
   epsActual: number | null;
@@ -45,7 +45,7 @@ export type SurpriseLike = {
 };
 
 /** Takvim satırı — `earnings_calendar` ya da sağlayıcı takvimi. */
-export type ReportRowLike = {
+type ReportRowLike = {
   /** Açıklama günü, ET "YYYY-MM-DD". */
   reportDate: string;
   epsActual: number | null;
@@ -114,22 +114,6 @@ export function matchReports<S extends SurpriseLike, R extends ReportRowLike>(
     return best;
   });
   return result;
-}
-
-/**
- * Tek bir kayıt için aynı üç adım — `used` çağıranın kümesi, eşleşen satır
- * ona eklenir. Birden çok çeyrek eşleştiriliyorsa `matchReports` kullanın:
- * adımları bütün çeyreklere sırayla uygular.
- */
-export function matchReport<R extends ReportRowLike>(
-  surprise: SurpriseLike,
-  calRows: readonly R[],
-  used: Set<R>,
-  today?: string,
-): R | null {
-  const [hit] = matchReports([surprise], calRows.filter((row) => !used.has(row)), today);
-  if (hit) used.add(hit);
-  return hit;
 }
 
 /* --------------------------------------------------------------------------

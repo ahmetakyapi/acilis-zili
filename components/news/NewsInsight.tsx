@@ -65,7 +65,7 @@ function useInsight<T extends HTMLElement = HTMLElement>(url: string) {
    Kutunun boyu notun ölçülmüş boyunda kalır: filmin altında notun
    iskeleti (.loading min-height, NewsInsight.module.css). Önizleme
    rotası da bunu çizdiği için dışa açık. */
-export function NewsInsightLoading({ text, kind, labels }: { text: string; kind: "briefing" | "explainer"; labels: Labels }) {
+function NewsInsightLoading({ text, kind, labels }: { text: string; kind: "briefing" | "explainer"; labels: Labels }) {
   return (
     <div className={styles.loading} data-kind={kind}>
       <p className="sr-only">{text}</p>

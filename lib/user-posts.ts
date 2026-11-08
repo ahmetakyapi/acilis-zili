@@ -66,8 +66,6 @@ export const postInputSchema = z.object({
   symbols: z.array(z.string().trim().toUpperCase().min(1).max(12)).max(12).optional(),
 });
 
-export type PostInput = z.infer<typeof postInputSchema>;
-
 /**
  * Başlıktan adres parçası. Türkçe harfler çevrilir (İ/ı dahil — düz
  * toLowerCase yasak, toLocaleLowerCase("tr-TR") + eşleme), kalan her şey

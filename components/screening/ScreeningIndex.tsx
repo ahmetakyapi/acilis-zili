@@ -354,7 +354,7 @@ const BAND_ICONS: Record<Band, Icon> = {
   limited: Question,
 };
 
-export type QuickRow = { symbol: string; name: string; logoUrl: string | null; score: number | null; band: Band | null };
+type QuickRow = { symbol: string; name: string; logoUrl: string | null; score: number | null; band: Band | null };
 
 /**
  * HIZLI BAKIŞ KARTI (6 Kasım). Bant kartın tepesindeki 3 piksellik şeritte

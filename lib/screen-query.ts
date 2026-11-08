@@ -52,7 +52,7 @@ export function sectorSlug(sector: string): string {
 }
 
 /** Alt sektör grupları — "Diğer" bir süzgeç değil, sözlükte olmayanların kovası. */
-export const INDUSTRY_GROUP_KEYS = SECTOR_GROUPS.map((group) => group.key).filter((key) => key !== "diger") as [
+const INDUSTRY_GROUP_KEYS = SECTOR_GROUPS.map((group) => group.key).filter((key) => key !== "diger") as [
   string,
   ...string[],
 ];
@@ -64,7 +64,7 @@ export const INDUSTRY_GROUP_KEYS = SECTOR_GROUPS.map((group) => group.key).filte
  * evren yedi haftada bir dönerdi; o istekler desteklenmeyen parça olarak
  * okura söylenir.
  */
-export const SCREEN_FIELDS = [
+const SCREEN_FIELDS = [
   "pe",
   "revenueGrowth",
   "epsGrowth",
@@ -78,7 +78,7 @@ export type ScreenField = (typeof SCREEN_FIELDS)[number];
 export type ScreenOp = "min" | "max";
 
 /** Adres anahtarı: `fkmax`, `buyumemin`… (Türkçe, /tarama'nın öteki parametreleri gibi). */
-export const FIELD_PARAM: Record<ScreenField, string> = {
+const FIELD_PARAM: Record<ScreenField, string> = {
   pe: "fk",
   revenueGrowth: "buyume",
   epsGrowth: "karbuyume",
@@ -94,7 +94,7 @@ export const FIELD_PARAM: Record<ScreenField, string> = {
  * de) düşer. Yüzdeler yüzde puanı, borç ve cari oran kat, piyasa değeri
  * MİLYAR DOLAR.
  */
-export const FIELD_RANGE: Record<ScreenField, { min: number; max: number }> = {
+const FIELD_RANGE: Record<ScreenField, { min: number; max: number }> = {
   pe: { min: 0, max: 500 },
   revenueGrowth: { min: -100, max: 1000 },
   epsGrowth: { min: -100, max: 1000 },
@@ -142,7 +142,7 @@ export const EMPTY_FILTERS: ScreenFilters = { sector: null, group: null, profita
    Cümle
    --------------------------------------------------------------------------- */
 
-export const QUERY_MIN = 3;
+const QUERY_MIN = 3;
 export const QUERY_MAX = 200;
 
 /**
@@ -203,8 +203,6 @@ export const ModelOutputSchema = z.object({
   direction: z.enum(["asc", "desc"]).nullable(),
   unsupported: z.array(z.string()),
 });
-export type ModelOutput = z.infer<typeof ModelOutputSchema>;
-
 export type Translation = {
   filters: ScreenFilters;
   sort: ScreenSort | null;
@@ -381,7 +379,7 @@ export type ScreenSubject = {
 };
 
 /** Alanın satırdaki değeri — bilinmiyorsa null (ve null hiçbir eşikten GEÇMEZ). */
-export function fieldValue(field: ScreenField, row: ScreenSubject): number | null {
+function fieldValue(field: ScreenField, row: ScreenSubject): number | null {
   const m = row.metrics;
   switch (field) {
     case "pe":

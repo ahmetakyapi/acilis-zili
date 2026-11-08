@@ -20,7 +20,7 @@ import styles from "@/components/earnings/EarningsReport.module.css";
  * buluşamaz — ama oranda buluşur. Ayrıntı ve neden değiştiği aşağıda.
  */
 
-export type GuidanceRow = {
+type GuidanceRow = {
   label: string;
   low: number;
   high: number;
@@ -94,7 +94,7 @@ function relativeSpread(row: GuidanceRow): {
 }
 
 /** Renkli yargının metinleri — okuyucunun dilinde gelir. */
-export type GuidanceVerdictLabels = {
+type GuidanceVerdictLabels = {
   /** Piyasa beklentisi şirketin bandının ÜSTÜNDE: şirket az öngördü. */
   above: string;
   /** Beklenti bandın ALTINDA: şirket beklentiden fazlasını öngördü. */

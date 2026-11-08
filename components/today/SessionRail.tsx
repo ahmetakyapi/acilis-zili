@@ -40,7 +40,7 @@ function spread(points: number[], width: number, gap: number): number[] {
   return out;
 }
 
-export type SessionRailLabels = {
+type SessionRailLabels = {
   /** Şeridin adı — "Piyasa Saatleri". */
   name: string;
   selectEvent: string;
@@ -55,7 +55,7 @@ export type SessionRailLabels = {
 };
 
 /** Kapalı piyasada şeridin altındaki bekleme çizgisi — son kapanıştan sıradaki açılışa. */
-export type SessionRailWait = {
+type SessionRailWait = {
   /** Unix saniye: son kapanış zili ve sıradaki açılış zili. */
   from: number;
   to: number;

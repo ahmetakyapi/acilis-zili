@@ -26,7 +26,7 @@ import styles from "./YieldCurve.module.css";
  * azaltana son kare.
  */
 
-export type CurveColumn = {
+type CurveColumn = {
   key: string;
   /** Vadenin adı ("2 Yıllık"). */
   label: string;
@@ -130,8 +130,8 @@ export function YieldCurve({
 }
 
 /** Eğrinin biçimini veren iki vade: 2 ve 10 yıllık (sitenin her yerinde "10 − 2"). */
-export const CURVE_SHORT_KEY = "yield-2y";
-export const CURVE_LONG_KEY = "yield-10y";
+const CURVE_SHORT_KEY = "yield-2y";
+const CURVE_LONG_KEY = "yield-10y";
 
 /**
  * Minyatürün künyeleri — iki çağıran (MarketPulse, YieldCard) aynı

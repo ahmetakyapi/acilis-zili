@@ -802,15 +802,6 @@ export async function getIexBarsSince(
   return ok(bars, "alpaca", { fetchedAt: result.fetchedAt });
 }
 
-/** Aralığın bar süresi, saniye — tazelik eşiği için. */
-export function barSeconds(range: ChartRange): number {
-  const tf = RANGE_SPECS[range].timeframe;
-  if (tf === "5Min") return 300;
-  if (tf === "30Min") return 1800;
-  if (tf === "1Day") return 86_400;
-  return 7 * 86_400;
-}
-
 /** Gün içi aralıkta son işlem günü — `getChartBars` kuyruğu ekledikten sonra yeniden süzüyor. */
 export function onlyLastTradingDay(bars: Bar[]): Bar[] {
   return lastTradingDayOnly(bars);

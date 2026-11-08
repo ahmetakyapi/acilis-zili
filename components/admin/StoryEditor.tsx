@@ -85,7 +85,7 @@ import { BLOKLAR as PAYLASILAN_BLOKLAR } from "@/lib/article-blocks";
  * karşılaştırma (`taban`) aynı işi durumu silmeden yapıyor.
  */
 
-export type StoryDraft = {
+type StoryDraft = {
   slug: string;
   locale: string;
   title: string;

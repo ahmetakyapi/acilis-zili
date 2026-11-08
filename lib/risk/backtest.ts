@@ -38,7 +38,7 @@ import { drawdownWithin, forwardReturn, quantile, type DeskDay, type RegimeDay }
 
 const PERCENT = 100;
 
-export const SIGNAL_KEYS = [
+const SIGNAL_KEYS = [
   "regimeRiskOff",
   "vixAbove",
   "vixSpike",
@@ -50,7 +50,7 @@ export const SIGNAL_KEYS = [
   "goldenCross",
   "volPctile",
 ] as const;
-export type SignalKey = (typeof SIGNAL_KEYS)[number];
+type SignalKey = (typeof SIGNAL_KEYS)[number];
 
 export type SignalContext = {
   days: readonly DeskDay[];

@@ -44,7 +44,7 @@ import {
 export const INVESTORS_TAG = "investors";
 const REVALIDATE_SECONDS = 3_600;
 /** Kartta ve kahramanda gösterilen en büyük pozisyon sayısı. */
-export const CARD_TOP = 6;
+const CARD_TOP = 6;
 /** Çeyreğin hareketleri şeridinde taraf başına satır. */
 const MOVERS_LIMIT = 6;
 

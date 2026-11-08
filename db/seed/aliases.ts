@@ -93,7 +93,7 @@ export const SYMBOL_ALIASES: Record<string, string[]> = {
 };
 
 /** Sorguyu takma ad anahtarlarıyla aynı biçime indirger. */
-export function normalizeAlias(value: string): string {
+function normalizeAlias(value: string): string {
   return value
     .toLocaleLowerCase("tr-TR")
     .replace(/[^\p{L}\p{N}]/gu, "")

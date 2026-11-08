@@ -22,7 +22,7 @@ import { isFresh, isSnapshot, type ProbabilitySnapshot } from "./probabilities";
  * saklanmaz), yakalama aşağıda.
  */
 
-export type ProbabilityBoard = {
+type ProbabilityBoard = {
   snapshot: ProbabilitySnapshot;
   /** "table": cron'un yazdığı kayıt; "live": önbellekli canlı yedek. */
   origin: "table" | "live";

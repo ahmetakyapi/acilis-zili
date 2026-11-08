@@ -32,7 +32,7 @@ const MAX_BACKOFF_MS = 300_000;
 
 type Bars = Record<string, { time: number; value: number }[]>;
 
-export type IndexLiveLabels = {
+type IndexLiveLabels = {
   noData: string;
   preMarket: string;
   afterHours: string;

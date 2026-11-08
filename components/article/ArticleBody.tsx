@@ -27,14 +27,8 @@ import {
 
 /* Ayrıştırıcı saf bir modülde (gerekçe `parse-blocks.ts` başında);
    çağıranlar bu adları buradan almayı sürdürüyor. */
-export {
-  blockRoles,
-  headingIds,
-  legacyHeadingIds,
-  parseBlocks,
-  sectionIndex,
-} from "./parse-blocks";
-export type { Block, BlockRole, Magnitude, SectionItem } from "./parse-blocks";
+export { parseBlocks, sectionIndex } from "./parse-blocks";
+export type { Block, SectionItem } from "./parse-blocks";
 
 /* ==========================================================================
    Uzun metin gövdesi — rehber yazıları ve mercek yazıları

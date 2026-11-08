@@ -7,7 +7,7 @@ import { boxCorners, fitProjection, iso, type Plan, type Point3 } from "@/compon
 
 export const WIDTH = 640;
 export const HEIGHT = 330;
-export const AZIMUTH = 55;
+const AZIMUTH = 55;
 
 export const PLINTH: Plan = { x: -132, y: -62, w: 252, d: 124, r: 10 };
 export const PLINTH_H = 10;
@@ -28,9 +28,9 @@ export const CONTACT_R = 1.9;
 export const CONTACT_H = 1.4;
 export const HUB_R = 3.6;
 export const HUB_H = 2.4;
-export const NEEDLE_R = 41;
-export const NEEDLE_TAIL = 6;
-export const NEEDLE_Z = DIAL_TOP + HUB_H - 0.4;
+const NEEDLE_R = 41;
+const NEEDLE_TAIL = 6;
+const NEEDLE_Z = DIAL_TOP + HUB_H - 0.4;
 
 /** Çan boyunduruğu: önde ve arkada iki direk, üstte travers, çan ortada asılı. */
 export const BELL_X = 52;

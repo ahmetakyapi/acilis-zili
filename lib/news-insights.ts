@@ -36,7 +36,7 @@ import { isSpotlight } from "@/lib/spotlight";
  * tavanı paylaşır (`INSIGHT_DAILY_CAP`, lib/stock-insights.ts → callClaude).
  */
 
-export type BriefingItem = { id: string; headline: string; headlineTr: string | null; source: string | null; symbols: string[] };
+type BriefingItem = { id: string; headline: string; headlineTr: string | null; source: string | null; symbols: string[] };
 export type BriefingTheme = { title: { tr: string; en: string }; summary: { tr: string; en: string }; items: BriefingItem[] };
 export type NewsBriefing = {
   kind: "briefing";
@@ -88,13 +88,13 @@ const BriefingSchema = z.object({
 });
 
 /** Gündemin kapsamı (18 Ekim): son 24 saat ya da son 7 gün — kart iki sekme. */
-export type BriefingScope = "day" | "week";
+type BriefingScope = "day" | "week";
 
 /** Haber nöbetiyle aynı dönemler (deploy/cron-news.sh: 05:35, 11:35, 17:35 UTC). */
 const SLOT_HOURS_UTC = [5, 11, 17];
 
 /** İçinde bulunulan dönemin başlangıcı — aynı dönemdeki her okur aynı girdiyi görür. */
-export function briefingSlot(now: Date): Date {
+function briefingSlot(now: Date): Date {
   for (let back = 0; back < 2; back += 1) {
     const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - back));
     for (const hour of [...SLOT_HOURS_UTC].reverse()) {

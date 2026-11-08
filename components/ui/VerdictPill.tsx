@@ -47,7 +47,7 @@ const SIZE = {
 const TR_LABELS = new Set(["AL", "TUT", "SAT"]);
 const LABEL_SLOT = { tr: "2.2em", en: "2.95em" } as const;
 
-export type VerdictPillSize = keyof typeof SIZE;
+type VerdictPillSize = keyof typeof SIZE;
 
 /** Mini skor halkası — 0–100 skor yayın uzunluğu. Sayı yanında yazılı. */
 const METER_RADIUS = 7;

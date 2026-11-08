@@ -33,10 +33,10 @@ import type { StoryIndexRow } from "./data";
  * yeni komşu var; pencereli seçim tüm tabloyla seçimle aynı, yanlış dilde
  * satır 0.
  */
-export const NEIGHBOR_COUNT = 3;
+const NEIGHBOR_COUNT = 3;
 
 /** Aday penceresi: komşu sayısının kaç katı satır çekilir (iki dil, kayan anlar). */
-export const WINDOW_FACTOR = 4;
+const WINDOW_FACTOR = 4;
 
 /** Yeni taraftan kaç tane; kalan eski taraftan. Bir taraf eksikse öteki doldurur. */
 const NEWER_SHARE = 1;

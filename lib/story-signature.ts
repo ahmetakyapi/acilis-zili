@@ -27,7 +27,7 @@ export type SignatureKind = (typeof SIGNATURE_PRIORITY)[number];
 export type SignatureBlock = Extract<Block, { kind: SignatureKind }>;
 
 /** Bloğun gövdedeki SÖZDİZİMİ adı — veritabanı süzgeci bunu arıyor. */
-export const SIGNATURE_WORD: Record<SignatureKind, string> = {
+const SIGNATURE_WORD: Record<SignatureKind, string> = {
   flow: "akis",
   shift: "oncesi",
   bars: "bar",

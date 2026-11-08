@@ -166,7 +166,7 @@ const DRAWINGS: Record<AvatarKey, ReactNode> = {
 };
 
 /** Yalnızca çizim — karosuz; karo `AvatarTile`de. */
-export function AvatarGlyph({ icon, className }: { icon: AvatarKey; className?: string }) {
+function AvatarGlyph({ icon, className }: { icon: AvatarKey; className?: string }) {
   return (
     <svg
       viewBox="0 0 40 40"

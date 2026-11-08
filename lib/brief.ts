@@ -98,7 +98,7 @@ export function briefPreviewCut(lines: string[], minimumLines = 4): number {
  *  400'de önizleme giriş + iki notta kesiliyordu ve kart günün özeti için
  *  kısa kalıyordu; 600 tipik bültende bir not daha açıyor. Masaüstü
  *  kesmesini (en az 900) hâlâ geçmiyor, telefon kesmesi anlamını koruyor. */
-export const BRIEF_PHONE_PREVIEW_CHARS = 600;
+const BRIEF_PHONE_PREVIEW_CHARS = 600;
 
 /**
  * Telefonun ikinci kesme noktası (28 Eylül). Masaüstü önizlemesi en az 900

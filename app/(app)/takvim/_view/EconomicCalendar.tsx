@@ -220,7 +220,7 @@ export const CALENDAR_IMPACTS = IMPACTS;
 export type CalendarView = View;
 export type CalendarImpact = Impact;
 
-export type EventsLoad = (from: string, to: string) => Promise<[EventsResult, MarketHoliday[]]>;
+type EventsLoad = (from: string, to: string) => Promise<[EventsResult, MarketHoliday[]]>;
 
 export async function EconomicCalendar({
   view,

@@ -54,7 +54,7 @@ export type ArkDay = {
 };
 
 /** Pozisyonun bu oranından küçük sapma işlem sayılmıyor. */
-export const ARK_NOISE_SHARE = 0.002;
+const ARK_NOISE_SHARE = 0.002;
 /** Akış çarpanı için gereken en az ortak pozisyon; azsa çarpan 1. */
 const MIN_COMMON = 5;
 

@@ -64,7 +64,7 @@ export function spreadPosition(value: number, scale: number): number {
    bilmesi gerekmiyor, yalnızca ORANINI (`aspect` = genişlik / yükseklik).
    -------------------------------------------------------------------------- */
 
-export type TreemapRect = {
+type TreemapRect = {
   index: number;
   /** Kabın yüzdesi olarak. */
   x: number;

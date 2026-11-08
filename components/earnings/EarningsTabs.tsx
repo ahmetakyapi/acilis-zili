@@ -22,7 +22,7 @@ import styles from "@/components/motion/DirectoryExperience.module.css";
  * `/bilancolar/[symbol]/[period]` de aynı segmentin altında ve orada sekme
  * istemiyoruz — detay sayfası listenin bir görünümü değil, ayrı bir yer.
  */
-export type EarningsTab = "calendar" | "week" | "analyses" | "watchlist";
+type EarningsTab = "calendar" | "week" | "analyses" | "watchlist";
 
 export function EarningsTabs({
   active,

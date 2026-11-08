@@ -7,7 +7,7 @@ import { verdictTextClass, type AnalysisRowView } from "@/lib/analysis";
 import { cn } from "@/lib/utils";
 import styles from "./AnalysisCardGrid.module.css";
 
-export type AnalysisCardLabels = {
+type AnalysisCardLabels = {
   verdictLabel: string;
   reactionLabel: string;
   revenueLabel: string;

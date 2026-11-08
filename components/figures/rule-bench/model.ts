@@ -29,7 +29,7 @@ export type BenchData = {
   eliminated: boolean;
 };
 
-export type BenchText = {
+type BenchText = {
   passed: string; // "Geçen {n}"
   warned: string;
   failed: string;
@@ -57,9 +57,9 @@ export const TRAVEL = 0.6;
 export const DWELL = 0.9;
 export const DIP_IN = 0.2;
 export const LAMP_GAP = 0.09;
-export const DIP_OUT = 0.25;
+const DIP_OUT = 0.25;
 export const HOLD = 4;
-export const RESET = 0.8;
+const RESET = 0.8;
 
 /** Kızağın başladığı yer: rayın sol ucu, kapının hemen solu (dizin cinsinden;
  *  sol durdurucuya değmeden). */

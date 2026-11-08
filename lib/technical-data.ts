@@ -41,7 +41,7 @@ function yutuldu(kaynak: string, error: unknown): void {
    Fotoğraf
    -------------------------------------------------------------------------- */
 
-export type SnapshotBatch = {
+type SnapshotBatch = {
   bySymbol: Record<string, TechnicalSnapshot | null>;
   /** Kotasyonun kaynağı ve tazeliği — bağlam ucu rutine söylüyor. */
   quote: { source: string; stale: boolean; fetchedAt: string | null } | null;
@@ -245,9 +245,9 @@ const CORRECTION_WINDOW_DAYS = 7;
  */
 const LEVEL_BAND = { low: 0.5, high: 2 } as const;
 
-export type ItemError = { index: number; symbol: string | null; issues: unknown };
+type ItemError = { index: number; symbol: string | null; issues: unknown };
 
-export type BatchOutcome =
+type BatchOutcome =
   | { ok: false; status: 400; error: string; detail?: unknown }
   | {
       ok: true;
@@ -649,7 +649,7 @@ export const getPublishedSymbols = cache(async function getPublishedSymbols(): P
   }
 });
 
-export type TechnicalHistoryRow = {
+type TechnicalHistoryRow = {
   sessionDate: string;
   slot: string;
   stance: string;
@@ -658,7 +658,7 @@ export type TechnicalHistoryRow = {
   stop: number | null;
 };
 
-export type TechnicalDetail = {
+type TechnicalDetail = {
   row: TechnicalAnalysisRow;
   previousStance: VerdictKey | null;
   /** Son analizler, yeniden eskiye — ilk satır `row`un kendisi. */

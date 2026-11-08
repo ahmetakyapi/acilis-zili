@@ -68,7 +68,7 @@ export const HOLDINGS_SOURCES: Record<string, { source: HoldingsSource; cik?: st
 };
 
 /** Panelde en fazla bu kadar satır; önbelleğe de yalnızca bu kadarı girer. */
-export const HOLDINGS_KEEP = 25;
+const HOLDINGS_KEEP = 25;
 
 export type EtfHoldings = {
   source: HoldingsSource;

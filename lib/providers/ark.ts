@@ -27,7 +27,7 @@ export const ARK_FUNDS = [
   { fund: "ARKX", file: "ARK_SPACE_%26_DEFENSE_INNOVATION_ETF_ARKX_HOLDINGS.csv" },
 ] as const;
 
-export type ArkRow = {
+type ArkRow = {
   /** YYYY-MM-DD */
   asOf: string;
   fund: string;

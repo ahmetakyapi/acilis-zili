@@ -16,7 +16,7 @@ import { ARK_FUNDS, getArkHoldings } from "./providers/ark";
  */
 
 /** Tabloda tutulan takvim günü. Ekran en fazla son beş işlem gününü okuyor. */
-export const ARK_KEEP_DAYS = 21;
+const ARK_KEEP_DAYS = 21;
 const INSERT_BATCH = 500;
 
 /**

@@ -98,7 +98,7 @@ import trDictionary from "./i18n/dictionaries/tr";
  */
 
 /** Okumanın sonucu: veri ya da "okunamadı". Boş liste başarılı bir okumadır. */
-export type AdminResult<T> = { ok: true; data: T } | { ok: false };
+type AdminResult<T> = { ok: true; data: T } | { ok: false };
 
 /**
  * Yutulan hata — SESSİZ DEĞİL, İZLİ. Gerekçe `lib/data.ts` → `yutuldu`:
@@ -174,7 +174,7 @@ function etWeekday(day: string): number {
  * `METRIC`). Ölçüyü düzeltmek mümkün değilken adını düzeltmemek, sayının
  * yalan söylemesi demekti.
  */
-export type TrafficTotals = {
+type TrafficTotals = {
   views: number;
   /** Ziyaretçi-günü — aynı kişi her gün yeniden sayılır. */
   visitorDays: number;
@@ -277,7 +277,7 @@ export async function getTrafficTotals(
   });
 }
 
-export type Breakdown = { key: string; views: number; visitors: number };
+type Breakdown = { key: string; views: number; visitors: number };
 
 /**
  * Bir sütuna göre kırılım — rota, yol, yönlendiren, cihaz, dil.
@@ -365,8 +365,6 @@ end`;
 
 export const getTopRoutes = (days: number, limit = 12) =>
   breakdownBy("getTopRoutes", ROUTE_READ, days, limit);
-export const getTopPaths = (days: number, limit = 15) =>
-  breakdownBy("getTopPaths", PATH_READ, days, limit);
 /**
  * Yalnızca DİNAMİK ŞABLONLARIN altındaki tek sayfalar — hangi hisse, hangi
  * mercek yazısı, hangi analiz.
@@ -405,7 +403,7 @@ export const getDeviceSplit = (days: number) =>
 export const getLocaleSplit = (days: number) =>
   breakdownBy("getLocaleSplit", pageViews.locale, days, 5);
 
-export type SignedInShare = {
+type SignedInShare = {
   /** Görüntüleme — girişli ve anonim. */
   views: { signedIn: number; anonymous: number };
   /** Ziyaretçi-günü — aynı ikili, kişi-gün olarak. */
@@ -482,7 +480,7 @@ export const getTrackingRange = cache(async function getTrackingRange(): Promise
    Üyeler
    -------------------------------------------------------------------------- */
 
-export type MemberSummary = {
+type MemberSummary = {
   /** Bütün hesaplar — yöneticiler dahil. */
   total: number;
   /** Son 7 ET takvim günü (bugün dahil) açılan hesap. */
@@ -576,7 +574,7 @@ export async function getMemberSummary(): Promise<AdminResult<MemberSummary>> {
   });
 }
 
-export type SignupPoint = { day: string; signups: number };
+type SignupPoint = { day: string; signups: number };
 
 /** Kayıt eğrisi — gün gün, boş günler sıfırla dolu. Pencere `memberWindowStart`. */
 export async function getSignupSeries(
@@ -603,7 +601,7 @@ export async function getSignupSeries(
   });
 }
 
-export type MemberRow = {
+type MemberRow = {
   /** Son başarılı giriş — hiç giriş yapmamışsa null. */
   lastSeenAt: Date | null;
   id: string;
@@ -726,12 +724,12 @@ export async function getMostWatchedSymbols(
 export type AnalysisRef = { symbol: string; period: string; label: string };
 
 /** Bir bülten — (gün, dönem). Dil bu anahtarda yok: iki dil aynı bülten. */
-export type BriefRef = { date: string; period: string };
+type BriefRef = { date: string; period: string };
 
 /** Bir mercek yazısı — adres ve okunacak başlık (Türkçe kayıttan). */
-export type StoryRef = { slug: string; title: string };
+type StoryRef = { slug: string; title: string };
 
-export type ContentSummary = {
+type ContentSummary = {
   /**
    * FARKLI bülten sayısı — (gün, dönem) çifti, iki dil TEK sayılır.
    *
@@ -1036,7 +1034,7 @@ export async function getBriefDateRange(): Promise<
    Düzenlenebilir içerik
    -------------------------------------------------------------------------- */
 
-export type EditableStory = {
+type EditableStory = {
   slug: string;
   title: string;
   eventDate: string;
@@ -1219,7 +1217,7 @@ export const getWritingCounts = cache(
   },
 );
 
-export type EditableBrief = {
+type EditableBrief = {
   briefDate: string;
   locale: string;
   period: string;
@@ -1374,7 +1372,7 @@ export type PublishDay = {
  * aday geçmişi tutulmuyor — boş bir gün "yazılmadı" değil, "aday yoktu"
  * olabilir. Bu yüzden analiz şeridinde boş hücre nötr.
  */
-export type PublishRhythm = {
+type PublishRhythm = {
   days: PublishDay[];
   /**
    * Arşivdeki EN ESKİ GÜNLÜK bülten — tarih seçicinin alt sınırı.
@@ -2113,7 +2111,7 @@ const newsPulse = cache(async function newsPulse(): Promise<{
   };
 });
 
-export type CronPulse = {
+type CronPulse = {
   /** Senkronun kendi yazdığı en yeni damga — hiç yoksa null. */
   lastRun: Date | null;
   /** `ran` bugün koştu · `waiting` saati gelmedi · `missed` kaçtı · `notScheduled` hafta sonu. */

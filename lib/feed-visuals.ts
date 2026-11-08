@@ -15,7 +15,7 @@ import { formatInZone, zoneDateKey } from "./session-clock";
 
 /* ---------------------------------------------------------------- Haberler */
 
-export type PulseInput = { publishedAt: Date; mentions: readonly string[] };
+type PulseInput = { publishedAt: Date; mentions: readonly string[] };
 export type PulseCompany = { symbol: string; count: number };
 export type NewsPulse = {
   total: number;
@@ -25,9 +25,9 @@ export type NewsPulse = {
 };
 
 /** Şeritte kaç şirket — 1440'ta tek satır, telefonda kayan şerit. */
-export const PULSE_TOP = 6;
+const PULSE_TOP = 6;
 /** Tek haberde geçen şirket "konuşulan" sayılmaz: şerit en az iki haber ister. */
-export const PULSE_MIN_COUNT = 2;
+const PULSE_MIN_COUNT = 2;
 const HOUR_MS = 3_600_000;
 
 /**
@@ -57,7 +57,7 @@ export function newsPulse(items: readonly PulseInput[], top = PULSE_TOP): NewsPu
   return { total: items.length, spanHours, top: ranked };
 }
 
-export type PulseLabels = {
+type PulseLabels = {
   /** "{n}" haber, "{span}" süre parçası. */
   lead: string;
   leadOne: string;
@@ -92,7 +92,7 @@ export function pulseSentence(pulse: NewsPulse, L: PulseLabels): string | null {
   return named.length ? `${lead} ${L.most.replace("{list}", joinList(named, L.and))}` : lead;
 }
 
-export type HourGroup<T> = {
+type HourGroup<T> = {
   /** "2026-10-25T14" — gün + en yeni saat, sayfada anahtar. */
   key: string;
   /** En eski saat dilimi "09:00" (tek dilimde tek saat). */
@@ -109,7 +109,7 @@ export type HourGroup<T> = {
     ızgarada yarım satır boş bırakıyordu (ilk denemenin 1440 görüntüsünde
     sabah saatlerinin dördü üst üste tek haberdi). Seyrek saatler komşusuyla
     birleşir. */
-export const HOUR_GROUP_MIN = 2;
+const HOUR_GROUP_MIN = 2;
 
 const pad = (hour: number) => `${String(hour % 24).padStart(2, "0")}:00`;
 
@@ -149,8 +149,8 @@ export function groupByHour<T extends { publishedAt: Date }>(
 
 /* ------------------------------------------------------------- Analizlerim */
 
-export const VERDICT_ORDER = ["buy", "hold", "sell", "insufficient"] as const;
-export type VerdictKey = (typeof VERDICT_ORDER)[number];
+const VERDICT_ORDER = ["buy", "hold", "sell", "insufficient"] as const;
+type VerdictKey = (typeof VERDICT_ORDER)[number];
 
 /** Görüş dağılımı — sıra sabit (Al → Tut → Sat → Yetersiz), sıfırlar dahil. */
 export function verdictMix(verdicts: readonly (string | null)[]): { key: VerdictKey; count: number; share: number }[] {
@@ -203,7 +203,7 @@ export function sinceSplit(values: readonly number[]): { up: number; down: numbe
 
 /* ------------------------------------------------------------- Bildirimler */
 
-export type DayGroup<T> = { day: string; dayOffset: number; items: T[] };
+type DayGroup<T> = { day: string; dayOffset: number; items: T[] };
 
 /** Gelen kutusu gün başlıkları — okurun diliminde; en yeni üstte. */
 export function groupByDay<T extends { createdAt: Date }>(

@@ -71,7 +71,7 @@ import styles from "./ClueBoard.module.css";
  * klavye tuşu.
  */
 
-export const CLUE_ICONS: Record<ClueKind, Icon> = {
+const CLUE_ICONS: Record<ClueKind, Icon> = {
   silhouette: ChartLineUp,
   sector: Buildings,
   capBand: Coins,

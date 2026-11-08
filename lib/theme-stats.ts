@@ -45,9 +45,9 @@ import type { MarketSession, QuoteBasis } from "@/lib/market-hours";
     üyenin medyanı bir ortalama; üç, bir sepetin ortasını göstermeye başlar. */
 export const MIN_SESSION_ROWS = 3;
 /** Bu seansı anlatan üyelerin, yüzdesi bilinen üyelere en az oranı. */
-export const MIN_SESSION_SHARE = 0.5;
+const MIN_SESSION_SHARE = 0.5;
 
-export type MoveRow = {
+type MoveRow = {
   changePct: number | null;
   basis: QuoteBasis | null;
   /** Son işlemin ET günü ("YYYY-MM-DD") — son kapanış kümesini tek güne indirir. */

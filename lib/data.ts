@@ -71,7 +71,7 @@ import { isIsoDay } from "./date-input";
    koştuktan sonra liste en geç bir gün içinde yerine oturur. Anında
    gerekirse etiket hazır; bir uçtan `revalidateTag(HOLIDAYS_TAG)` yeter.
    Dıştaki `cache()` duruyor — aynı istekte tekrar sorulmasını o engelliyor. */
-export const HOLIDAYS_TAG = "holidays";
+const HOLIDAYS_TAG = "holidays";
 
 /* HATA ÖNBELLEĞE GİRMEZ. İçerideki fonksiyon hatayı YUTMUYOR, fırlatıyor:
    `unstable_cache` yalnızca başarılı sonucu saklıyor. Yutulsaydı, Neon'un
@@ -219,21 +219,6 @@ export async function getTodayEvents(): Promise<EconomicEventRow[]> {
   return getEventsBetween(today, today);
 }
 
-/** Bugün olay yoksa ileriye bakan ilk N olay. */
-export async function getUpcomingEvents(limit = 6): Promise<EconomicEventRow[]> {
-  try {
-    return await db
-      .select()
-      .from(economicEvents)
-      .where(gte(economicEvents.eventDate, todayEt()))
-      .orderBy(asc(economicEvents.eventDate), asc(economicEvents.eventTimeEt))
-      .limit(limit);
-  } catch (error) {
-    yutuldu("getUpcomingEvents", error);
-    return [];
-  }
-}
-
 /* ---- Bilanço takvimi ---- */
 
 /**
@@ -273,7 +258,7 @@ export const guncelBilanco = sql`(
  * takvimin `getEventsBetweenResult` ile çözdüğü sorunun aynısı. Çağıran
  * `ok: false`ta hiçbir boşluk iddiası basmaz, yalnızca hata der.
  */
-export type EarningsResult = { ok: true; rows: EarningsRow[] } | { ok: false };
+type EarningsResult = { ok: true; rows: EarningsRow[] } | { ok: false };
 
 export const getEarningsBetweenResult = cache(async function getEarningsBetweenResult(
   from: string,
@@ -345,7 +330,7 @@ const SESSION_UNKNOWN = 3;
  * ve aynı pencerede açıklayan iki şirketin (13 Eki · JPM ve JNJ, ikisinin de
  * saati boş) her çizimde aynı sırada durması için.
  */
-export function byReportTime(
+function byReportTime(
   a: Pick<UpcomingRow, "reportDate" | "hour" | "marketCap" | "symbol">,
   b: Pick<UpcomingRow, "reportDate" | "hour" | "marketCap" | "symbol">,
 ): number {
@@ -840,7 +825,7 @@ export async function getBriefIssue(
   }
 }
 
-export type BriefIndexRow = {
+type BriefIndexRow = {
   briefDate: string;
   headline: string;
   generatedBy: string;
@@ -868,7 +853,7 @@ export type BriefIndexRow = {
  * Ekim'de, bülten yayındayken ölçüldü). Takvim okumalarının
  * (`getEventsBetweenResult`) ayrımının aynısı. Sorgu TEK YERDE, burada.
  */
-export type BriefResult = { ok: true; row: DailyBriefRow | null } | { ok: false };
+type BriefResult = { ok: true; row: DailyBriefRow | null } | { ok: false };
 
 /**
  * Dönemin en yeni kaydı.
@@ -983,7 +968,7 @@ export async function getMacroRows(): Promise<MacroSeriesRow[]> {
   }
 }
 
-export type MacroSummaryRow = Pick<
+type MacroSummaryRow = Pick<
   MacroSeriesRow,
   "seriesId" | "slug" | "titleTr" | "titleEn" | "latestValue" | "prevValue" | "unit" | "periodLabel"
 > & {
@@ -1041,7 +1026,7 @@ export async function getMacroSummaryRows(
 
 /* ---- Kullanıcı listeleri ---- */
 
-export type WatchlistWithItems = {
+type WatchlistWithItems = {
   id: string;
   name: string;
   color: string;
@@ -1583,11 +1568,6 @@ export async function getStalestSymbols(limit: number): Promise<string[]> {
   }
 }
 
-/** Takvim görünümü için hafta aralığı ("YYYY-MM-DD"). */
-export function weekRange(anchor: string): { from: string; to: string } {
-  return { from: anchor, to: addEtDays(anchor, 6) };
-}
-
 /* --------------------------------------------------------------------------
    Mercek yazıları
 
@@ -2069,7 +2049,7 @@ export async function getAnalysis(
  * "Q2 FY2027"): en yeni rapor tarihinin satırlarından okuyucunun dilindeki
  * seçiliyor, yoksa öteki. `period` analiz sayfasının adresi için.
  */
-export type LatestTarget = {
+type LatestTarget = {
   targetPrice: number;
   analystCount: number | null;
   reportDate: string;

@@ -230,7 +230,7 @@ async function build(day: string) {
   return { context, complete, coverage: { members: universe.length, known: universeKnown } };
 }
 
-export type DailyChartContext = Awaited<ReturnType<typeof build>>["context"];
+type DailyChartContext = Awaited<ReturnType<typeof build>>["context"];
 
 type Coverage = Awaited<ReturnType<typeof build>>["coverage"];
 

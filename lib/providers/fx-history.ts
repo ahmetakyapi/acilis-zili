@@ -28,7 +28,7 @@ import {
  */
 
 /** OECD'nin FRED'deki aylık ortalama USD/TRY serisi. */
-export const FRED_MONTHLY_USDTRY = {
+const FRED_MONTHLY_USDTRY = {
   seriesId: "CCUSMA02TRM618N",
   slug: "usdtry-monthly",
   units: "lin",

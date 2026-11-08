@@ -13,7 +13,7 @@ import { displayZone, formatInZone } from "@/lib/session-clock";
  */
 
 /** Bağlantının ömrü — e-postayı açıp şifreyi yazmaya yetecek kadar. */
-export const RESET_TTL_MS = 30 * 60_000;
+const RESET_TTL_MS = 30 * 60_000;
 
 /** 32 rastgele bayt, adres için base64url (43 karakter). */
 export function newResetToken(): string {

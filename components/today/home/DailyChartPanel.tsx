@@ -51,7 +51,7 @@ export async function DailyChartPanel({ locale, t, nowMs }: { locale: Locale; t:
  * Düşenleri, Günlük Değişim %"): satırların neyi ölçtüğünü söyleyen tek
  * yer (sayfada `caption`).
  */
-export function DailyChartCard({
+function DailyChartCard({
   chart,
   logos,
   locale,

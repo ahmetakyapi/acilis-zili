@@ -61,7 +61,7 @@ const POSTER_REVALIDATE_SECONDS = 86_400;
  *  sağlayıcıya giden isteğin ömrü. */
 const POSTER_RETRY_SECONDS = 900;
 
-export type PosterRead =
+type PosterRead =
   | { state: "ok"; poster: DayPoster; fetchedAt: string }
   | { state: "missing" }
   | { state: "error" };
@@ -178,7 +178,7 @@ function buildArchive(sessions: readonly { date: string; prevDate: string }[], c
   });
 }
 
-export type PosterArchiveRead =
+type PosterArchiveRead =
   | { state: "ok"; latest: string; posters: DayPoster[]; fetchedAt: string }
   | { state: "error" };
 

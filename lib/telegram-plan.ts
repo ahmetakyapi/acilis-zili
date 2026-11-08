@@ -18,14 +18,14 @@ import type { Locale } from "./i18n/config";
 export type PostKind = "acilis" | "kapanis" | "mercek" | "makro";
 
 /** Açılıştan kaç dakika önce denemeye başlanır. */
-export const PRE_OPEN_LEAD_MINUTES = 15;
+const PRE_OPEN_LEAD_MINUTES = 15;
 /**
  * Bülten yazılmadıysa en son bu kadar dakika kala bültensiz gider.
  * Günlük bülten 09:00 ET'de yazılıyor (lib/data.ts → BRIEF_PUBLISH);
  * açılışa yıl boyu ~30 dakika var — pencere bülteni çoğu gün yakalar,
  * yakalayamazsa takvim yine açılıştan önce kanalda olur.
  */
-export const PRE_OPEN_FINAL_MINUTES = 5;
+const PRE_OPEN_FINAL_MINUTES = 5;
 /**
  * Kapanıştan kaç dakika sonra denenir: beslemenin gecikmesi
  * (`FEED_DELAY_MINUTES`, 15) + kapanış müzayedesinin tape'e düşme payı

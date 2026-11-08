@@ -319,8 +319,3 @@ export function StoryCast({
     </div>
   );
 }
-
-/* Olaydan bugüne getirinin hesabı `lib/story-market.ts`te (liste, yazı
-   sayfası ve şirket sayfası aynı kuralı okusun diye); eski içe aktarmalar
-   buradan çalışmaya devam ediyor. */
-export { sinceEventReturn } from "@/lib/story-market";

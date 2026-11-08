@@ -48,7 +48,7 @@ export function sharedLaneScale(values: readonly (number | null | undefined)[], 
    -------------------------------------------------------------------------- */
 
 /** Kartta en çok kaç açıklama (endeks şeridinin altındaki ölçü sırası). */
-export const BRIEF_RELEASES_MAX = 2;
+const BRIEF_RELEASES_MAX = 2;
 
 /**
  * Bültenin anlattığı açıklamalar: anlatılan seansın günü ile bültenin

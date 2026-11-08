@@ -77,12 +77,6 @@ function write(key: string, value: unknown): void {
   emit();
 }
 
-/** Bugünün ilerlemesi; başka günün kaydı yok sayılır. */
-export function readProgress(day: string): PuzzleProgress | null {
-  const progress = parseProgress(parseJson(readRaw(PROGRESS_KEY)));
-  return progress && progress.day === day ? progress : null;
-}
-
 function writeCookie(name: string, day: string, guesses: readonly string[]): void {
   try {
     const secure = window.location.protocol === "https:" ? "; secure" : "";

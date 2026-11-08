@@ -205,7 +205,7 @@ export function timePair(
 }
 
 /** O gün Türkiye saatinin New York saatinden farkı (dakika): yazın 420. */
-export function trOffsetMinutes(dateEt: string): number {
+function trOffsetMinutes(dateEt: string): number {
   // Gün ortası referans alınır: DST sınırının hangi tarafına düşerse düşsün
   // seans saatleri o günün farkıyla yazılır.
   const noonUtc = etDateTimeToUtc(dateEt, "12:00");

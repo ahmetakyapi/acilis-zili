@@ -41,7 +41,7 @@ export function LevelBadge({
  * seviyeyi gösteriyor; orada etiket zaten yanında yazılı olduğu için
  * rozetin kenarlığı fazladan bir kutu oluyordu.
  */
-export function LevelDots({
+function LevelDots({
   level,
   className,
 }: {

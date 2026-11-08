@@ -16,7 +16,7 @@ import { advanceRun, displayName, rankRuns, type BoardEntry, type BoardRow, type
  */
 
 /** Tabloda gösterilen satır sayısı. */
-export const BOARD_TOP = 20;
+const BOARD_TOP = 20;
 /** Bir günün sıralamasında okunan en çok kazanan — bunun ötesi sayılır ama sıralanmaz. */
 const BOARD_SCAN = 5000;
 

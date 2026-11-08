@@ -70,7 +70,7 @@ import { cn } from "@/lib/utils";
 
    -------------------------------------------------------------------------- */
 
-export type AccountMenuLabels = {
+type AccountMenuLabels = {
   account: string;
   settings: string;
   portfolio: string;

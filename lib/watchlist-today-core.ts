@@ -13,7 +13,7 @@
 /** Okunacak en çok sembol — her biri bir bar isteği; liste bundan uzunsa ilk 25'i. */
 export const WATCH_TODAY_MAX_SYMBOLS = 25;
 /** Notun ve şeridin gösterdiği en çok hareket eden. */
-export const WATCH_TODAY_MOVERS = 5;
+const WATCH_TODAY_MOVERS = 5;
 /** Hareketinin nedeni (haber, var olan Claude notu) aranan ilk kaç hareket eden. */
 export const WATCH_TODAY_REASONS = 3;
 /** Not için en az okunabilen sembol: tek hisse "listenin bugünü" değil, o hissenin notu. */

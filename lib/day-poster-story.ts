@@ -51,11 +51,11 @@ export const STORY_BROAD_SHARE = 0.7;
  * dönemi) 247 hisse yükseldi, 246 düştü ve endeks %1,11 düştü: bire bir eşitliğe
  * "hisselerin çoğu yükseldi" demek uydurma kesinlik olurdu.
  */
-export const STORY_MAJORITY_SHARE = 0.55;
+const STORY_MAJORITY_SHARE = 0.55;
 
 /** Sektör cümlesinde "Yalnız A, B ve C" için en fazla ad; fazlası
  *  önde/geride kalıbına döner (dört adlı liste başlığı uzatıyor). */
-export const STORY_MAX_EXCEPTIONS = 3;
+const STORY_MAX_EXCEPTIONS = 3;
 
 /**
  * "YALNIZ" AZINLIK İÇİN (25 Ekim, Nasdaq 100 kurulumu). On bir sektörde üç
@@ -64,7 +64,7 @@ export const STORY_MAX_EXCEPTIONS = 3;
  * Yükseldi" dört mahalle düşmüşken abartı). İstisnalar mahallelerin en
  * fazla üçte biri olabilir: yedide iki, on birde üç (eski davranış aynı).
  */
-export const STORY_MAX_EXCEPTION_SHARE = 1 / 3;
+const STORY_MAX_EXCEPTION_SHARE = 1 / 3;
 
 export type StoryKind =
   | "broadRally"

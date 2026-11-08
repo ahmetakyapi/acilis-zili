@@ -1,7 +1,7 @@
 import { todayEt } from "@/lib/market-hours";
 
 /** Kartın yedek çizgisi kaç seansın hareketini anlatıyor. */
-export const WEEK_SESSIONS = 5;
+const WEEK_SESSIONS = 5;
 
 export type WeekLine = {
   /** Kapanışlar, eskiden yeniye — `WEEK_SESSIONS + 1` nokta (beş hareket). */

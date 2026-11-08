@@ -12,8 +12,7 @@ export const EASE_BRAND_POINTS = [0.22, 1, 0.36, 1] as const;
 export const EASE_BRAND = `cubic-bezier(${EASE_BRAND_POINTS.join(", ")})`;
 
 /** Çıkış eğrisi (ease-in-quint), CSS `--ease-brand-in` ile aynı. */
-export const EASE_BRAND_IN_POINTS = [0.64, 0, 0.78, 0] as const;
-export const EASE_BRAND_IN = `cubic-bezier(${EASE_BRAND_IN_POINTS.join(", ")})`;
+const EASE_BRAND_IN_POINTS = [0.64, 0, 0.78, 0] as const;
 
 /**
  * Çıkış girişten kısa (12 Ekim; motion-film `sayilar.md`: Material 3 400 ms

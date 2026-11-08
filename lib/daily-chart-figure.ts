@@ -199,7 +199,7 @@ type Named = { name: string; display: string };
  * ise YALNIZ bloğun kendisinden kuruluyor: kaç satır artıda, en uçta kim.
  * Sayı uydurulmuyor, bloktaki yazılış (`display`) olduğu gibi taşınıyor.
  */
-export type ChartSummary =
+type ChartSummary =
   | { kind: "signed"; total: number; up: number; down: number; top: Named; bottom: Named }
   | { kind: "ranked"; total: number; top: Named; bottom: Named }
   | { kind: "share"; total: number; top: Named }

@@ -50,7 +50,7 @@ export function seriesChangePct(series: readonly number[]): number | null {
   return ((series[series.length - 1] - series[0]) / Math.abs(series[0])) * 100;
 }
 
-export type OgBasisLabels = {
+type OgBasisLabels = {
   session: string;
   sessionClose: string;
   preMarket: string;

@@ -93,7 +93,7 @@ function countLabel(n: number, many: string, one: string): string {
 const intlLocale = (locale: Locale) => (locale === "tr" ? "tr-TR" : "en-US");
 
 /** "22 Eki" — kısa gün etiketi (künye, ekran karosu, akış). */
-export function shortDay(date: string, locale: Locale): string {
+function shortDay(date: string, locale: Locale): string {
   return new Intl.DateTimeFormat(intlLocale(locale), { day: "numeric", month: "short", timeZone: "UTC" }).format(
     new Date(`${date}T12:00:00Z`),
   );

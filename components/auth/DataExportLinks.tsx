@@ -1,6 +1,6 @@
 import { DownloadSimple } from "@phosphor-icons/react/dist/ssr";
 
-export type DataExportLabels = {
+type DataExportLabels = {
   title: string;
   hint: string;
   json: string;

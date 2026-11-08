@@ -73,9 +73,9 @@ const dots = (points: Point3[]): Flat[] => pointsAt(points, P);
 const blockPlan = (index: number): Plan => ({ x: stationX(index) - BLOCK_W / 2, y: BLOCK_Y, w: BLOCK_W, d: BLOCK_D, r: 2 });
 
 /** i. istasyonun j. lambasının merkezi (x); lambalar bloğun ortasına dizilir. */
-export const lampX = (index: number, lamp: number, count: number) => stationX(index) + (lamp - (count - 1) / 2) * LAMP_GAP;
+const lampX = (index: number, lamp: number, count: number) => stationX(index) + (lamp - (count - 1) / 2) * LAMP_GAP;
 
-export type StationArt = {
+type StationArt = {
   block: SolidPaths;
   seam: string;
   screws: Flat[];
@@ -89,7 +89,7 @@ export type StationArt = {
   rod: SolidPaths;
 };
 
-export type BenchArt = {
+type BenchArt = {
   base: {
     halo: string;
     feet: SolidPaths[];

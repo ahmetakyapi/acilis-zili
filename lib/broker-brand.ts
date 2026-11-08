@@ -32,7 +32,7 @@
  * Bu dosya "use client" DEĞİL: sunucu ve istemci aynı kaydı okuyor.
  */
 
-export type BrokerBrand = {
+type BrokerBrand = {
   /** `public/` altındaki dosya. */
   logo: string;
   source: {

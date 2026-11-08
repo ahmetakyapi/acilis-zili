@@ -34,7 +34,7 @@ import {
  * Kazanç çağrısı bilerek YOK: çağrıda söylenen bir sayı yazılı bir
  * belgede değil ve doğrulanamıyor.
  */
-export const KPI_SOURCES = [
+const KPI_SOURCES = [
   "press-release",
   "shareholder-letter",
   "10-Q",
@@ -43,12 +43,12 @@ export const KPI_SOURCES = [
 ] as const;
 export type KpiSource = (typeof KPI_SOURCES)[number];
 
-export function isKpiSource(value: string | null | undefined): value is KpiSource {
+function isKpiSource(value: string | null | undefined): value is KpiSource {
   return (KPI_SOURCES as readonly string[]).includes(value ?? "");
 }
 
 /** "30 Saniyede" — tam üç madde. İki madde bir özet değil, dört madde bir liste. */
-export const TAKEAWAY_COUNT = 3;
+const TAKEAWAY_COUNT = 3;
 const TAKEAWAY_MIN = 20;
 const TAKEAWAY_MAX = 220;
 /** Pay görseli tek segmentte anlamsız (yüzde yüz); sekizden fazlası okunmuyor. */
@@ -90,7 +90,7 @@ export const EXTRAS_INPUT_SHAPE = {
   kpis: z.array(KpiSchema).min(1).max(KPIS_MAX).nullish(),
 };
 
-export type ExtrasInput = {
+type ExtrasInput = {
   takeaways?: string[] | null;
   segments?: z.infer<typeof SegmentSchema>[] | null;
   segments_source?: KpiSource | null;
@@ -132,7 +132,7 @@ const EMPTY: AnalysisExtras = {
   kpis: null,
 };
 
-export function hasAnyExtras(extras: AnalysisExtras): boolean {
+function hasAnyExtras(extras: AnalysisExtras): boolean {
   return (
     (extras.takeaways?.length ?? 0) > 0 ||
     (extras.segments?.length ?? 0) > 0 ||

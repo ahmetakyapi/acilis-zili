@@ -27,7 +27,7 @@ import { BACKGROUND_TIMEOUT_MS, withTimeout } from "./timeout";
 const LIST_URL = "https://gib.gov.tr/api/gibportal/menuPageContent/findBySlug?slug=1375_gelir_vergisi_tarifeleri";
 const USER_AGENT = "Mozilla/5.0 (compatible; AcilisZili/1.0)";
 
-export type GibTariffLink = { year: number; title: string; url: string };
+type GibTariffLink = { year: number; title: string; url: string };
 
 /** "190.000" → 190000 */
 function amount(raw: string): number {
@@ -48,7 +48,7 @@ export function normalizeTariffText(text: string): string {
   return s.replace(/\u2016/g, " ").replace(/\s+/g, " ");
 }
 
-export type TariffParse = { ok: true; brackets: TaxBracket[] } | { ok: false; reason: string };
+type TariffParse = { ok: true; brackets: TaxBracket[] } | { ok: false; reason: string };
 
 /**
  * PDF metninden ücret dışı tarife + sağlama. Sonuç artan eşikli, son dilimi

@@ -16,7 +16,7 @@ import { addEtDays, todayEt } from "./market-hours";
  * TABLO YOKSA NULL. Migration deploy'da uygulanmıyor (CLAUDE.md); tablo
  * gelene kadar sorgu düşüyor ve ekran eskisi gibi çalışıyor.
  */
-export type ConsensusTarget = {
+type ConsensusTarget = {
   mean: number;
   median: number | null;
   high: number | null;

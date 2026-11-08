@@ -26,7 +26,7 @@ import { DEFAULT_LOCALE, LOCALES, isLocale, type Locale } from "./config";
  */
 
 /** Adreste önek taşıyan diller — varsayılan dil önek almaz. */
-export const PREFIXED_LOCALES = LOCALES.filter(
+const PREFIXED_LOCALES = LOCALES.filter(
   (locale) => locale !== DEFAULT_LOCALE,
 );
 

@@ -68,7 +68,7 @@ const EXPIRY_WINDOW_DAYS = 14;
 /** Geçmiş hareket için kaç gün geri — sekiz çeyrek + pay. */
 export const HISTORY_LOOKBACK_DAYS = 800;
 
-export type ExpectedMoveData = {
+type ExpectedMoveData = {
   next: { date: string; timing: ReportTiming };
   history: HistoricalMove[];
   average: { avg: number; count: number } | null;

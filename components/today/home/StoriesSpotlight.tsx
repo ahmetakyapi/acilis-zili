@@ -95,7 +95,7 @@ function leadCastSymbols(lead: SpotlightStory): string[] {
  * bileşen yalnız çiziyor. Ayrım, bloğun veritabanı olmadan sahte veriyle
  * ölçülebilmesi için (yerleşim kararları ölçümle verilir — CLAUDE.md).
  */
-export function StoriesSpotlightView({
+function StoriesSpotlightView({
   stories,
   figure,
   figureLocale,

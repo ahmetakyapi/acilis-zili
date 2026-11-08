@@ -95,7 +95,7 @@ export type GlossaryBrowserItem = {
   formula?: GlossaryFormula;
 };
 
-export type GlossaryBrowserGroup = {
+type GlossaryBrowserGroup = {
   key: GlossaryCategoryKey;
   label: string;
   count: number;

@@ -20,11 +20,11 @@ import { laneOf, type WeekLane } from "@/lib/earnings-week";
  */
 
 /** Karnede en çok bu kadar çeyrek — hisse sayfasının kartıyla aynı. */
-export const KARNE_QUARTERS = 4;
+const KARNE_QUARTERS = 4;
 /** Bundan az eşli çeyrekte karne basılmaz (hisse sayfasının kuralı). */
-export const KARNE_MIN = 2;
+const KARNE_MIN = 2;
 /** Cümlede adı geçen en fazla şirket. */
-export const LEAD_SYMBOLS = 3;
+const LEAD_SYMBOLS = 3;
 
 export type KarneMark = "beat" | "miss";
 
@@ -144,7 +144,7 @@ export function capCell<T>(tiles: readonly T[], max: number = CELL_MAX_SLOTS): {
   return { shown: tiles.slice(0, keep), more: tiles.length - keep };
 }
 
-export type PeakCell = { date: string; lane: WeekLane; symbols: string[] };
+type PeakCell = { date: string; lane: WeekLane; symbols: string[] };
 
 /**
  * Piyasa değeri toplamı en yüksek gün × pencere hücresi ve oradaki en
@@ -180,7 +180,7 @@ export function peakCell(
   };
 }
 
-export type LeadWords = {
+type LeadWords = {
   leadThis: string;
   leadNext: string;
   leadPast: string;
@@ -193,7 +193,7 @@ export type LeadWords = {
   windowOther: string;
 };
 
-export type HorizonWhen = "this" | "next" | "past" | "earlier" | "later";
+type HorizonWhen = "this" | "next" | "past" | "earlier" | "later";
 
 /** Haftanın bugüne göre yeri. `thisMonday` ufkun varsayılan haftası
     (`currentWeekStart`: iş günü içinde bu hafta, hafta sonu gelecek hafta).

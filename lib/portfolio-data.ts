@@ -22,7 +22,7 @@ import { portfolioOrder, portfolioPositions } from "@/lib/schema";
  *  dışa aktarabiliyor ve sayfa bu sayıyı hata metnine yazıyor. */
 export const MAX_POSITIONS = 200;
 
-export type PortfolioPosition = {
+type PortfolioPosition = {
   id: string;
   symbol: string;
   quantity: number;
@@ -33,7 +33,7 @@ export type PortfolioPosition = {
   note: string | null;
 };
 
-export type PortfolioResult =
+type PortfolioResult =
   | { ok: true; positions: PortfolioPosition[] }
   | { ok: false };
 

@@ -32,7 +32,7 @@ import css from "./CompanyEarnings.module.css";
 /** Gün şeridinin üst sınırı — üç hafta (gerekçe `ticks`). */
 const MAX_TICK_DAYS = 21;
 
-export type NextReportLabels = {
+type NextReportLabels = {
   daysLeft: string;
   today: string;
   daysValue: string;

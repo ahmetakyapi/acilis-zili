@@ -59,7 +59,7 @@ const EXPLAINERS: Record<string, Explainer> = {
 };
 
 /** Slug'ın tarih ekinden arındırılmış hâli: "cpi-2026-08-12" → "cpi". */
-export function eventKind(slug: string): string {
+function eventKind(slug: string): string {
   return slug.replace(/-\d{4}-\d{2}-\d{2}$/, "");
 }
 

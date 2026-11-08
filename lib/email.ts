@@ -26,7 +26,7 @@ import { createHash } from "node:crypto";
  * Gönderen adres Brevo'da da doğrulanmış olmalı. Günlük bütçenin varsayılanı
  * servise göre (lib/email-notify.ts → dailyBudget).
  */
-export type EmailProvider = "resend" | "brevo";
+type EmailProvider = "resend" | "brevo";
 
 export function emailProvider(): EmailProvider | null {
   const resend = Boolean(process.env.RESEND_API_KEY?.trim());

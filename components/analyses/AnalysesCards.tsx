@@ -15,7 +15,7 @@ import styles from "./AnalysesCards.module.css";
 
 type Names = Record<string, { logoUrl?: string | null; name?: string | null } | undefined>;
 
-export type OwnNote = { id: string; title: string; dek: string; status: PostStatus; updatedAt: Date; symbols: string[] };
+type OwnNote = { id: string; title: string; dek: string; status: PostStatus; updatedAt: Date; symbols: string[] };
 
 export function OwnNotes({ posts, names, statusLabels, locale }: { posts: OwnNote[]; names: Names; statusLabels: Record<PostStatus, string>; locale: Locale }) {
   const day = (value: Date) => value.toLocaleDateString(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: "Europe/Istanbul", day: "numeric", month: "short", year: "numeric" });

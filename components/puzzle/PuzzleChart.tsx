@@ -35,7 +35,7 @@ import styles from "./PuzzleChart.module.css";
  *             bulmacada çizgi mürekkep kalır.
  */
 
-export type ChartAxis =
+type ChartAxis =
   | { kind: "shape" }
   | { kind: "pct"; spreadPct: number }
   | { kind: "price"; range: SilhouetteRange };

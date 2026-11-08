@@ -114,7 +114,7 @@ export function pushPublicKey(): string | null {
   return pushConfigured() ? process.env.VAPID_PUBLIC_KEY ?? null : null;
 }
 
-export type DeviceSubscription = {
+type DeviceSubscription = {
   id: string;
   device: string | null;
   locale: string;

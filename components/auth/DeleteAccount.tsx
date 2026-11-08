@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/primitives";
  * bildirim veriyor.
  */
 
-export type DeleteAccountLabels = {
+type DeleteAccountLabels = {
   hint: string;
   open: string;
   confirmLabel: string;

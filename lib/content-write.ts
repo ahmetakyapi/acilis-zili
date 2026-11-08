@@ -102,7 +102,7 @@ export const storyInputSchema = z.object({
   sources: z.array(SourceSchema).max(20).optional(),
 });
 
-export type StoryInput = z.infer<typeof storyInputSchema>;
+type StoryInput = z.infer<typeof storyInputSchema>;
 
 /**
  * Kayıtlı satır ile yazılacak değerler verilen alanlarda farklı mı —
@@ -142,7 +142,7 @@ export const STORY_INPUT_SHAPE = {
  * Bilinçli kabul: bundan sonra kaydedilen her yazının `read_minutes` alanı
  * bir tık büyüyecek.
  */
-export function readingMinutes(markdown: string): number {
+function readingMinutes(markdown: string): number {
   return Math.max(1, Math.round(markdown.trim().split(/\s+/).length / 160));
 }
 
@@ -493,8 +493,8 @@ export const briefInputSchema = z.object({
   period: z.enum(["daily", "weekly"]).optional(),
 });
 
-export type BriefInput = z.infer<typeof briefInputSchema>;
-export type BriefPeriodInput = "daily" | "weekly";
+type BriefInput = z.infer<typeof briefInputSchema>;
+type BriefPeriodInput = "daily" | "weekly";
 
 /** Girdinin beklenen şekli — uç hata yanıtında bunu basıyor. */
 export const BRIEF_INPUT_SHAPE = {
@@ -678,7 +678,7 @@ export const dailyChartInputSchema = z
     if (body) ctx.addIssue({ code: "custom", path: ["body_md"], message: body });
   });
 
-export type DailyChartInput = z.infer<typeof dailyChartInputSchema>;
+type DailyChartInput = z.infer<typeof dailyChartInputSchema>;
 
 /** Girdinin beklenen şekli — uç hata yanıtında bunu basıyor. */
 export const DAILY_CHART_INPUT_SHAPE = {

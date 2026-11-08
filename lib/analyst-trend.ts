@@ -18,9 +18,9 @@ export const ANALYST_BUCKETS = ["strongBuy", "buy", "hold", "sell", "strongSell"
 export type AnalystBucket = (typeof ANALYST_BUCKETS)[number];
 
 /** Kaç aylık fotoğraf — sağlayıcı dört veriyor. */
-export const ANALYST_TREND_MONTHS = 4;
+const ANALYST_TREND_MONTHS = 4;
 
-export type AnalystTrend = {
+type AnalystTrend = {
   /** Eskiden yeniye dönemler ("2026-06-01"). */
   periods: string[];
   rows: {

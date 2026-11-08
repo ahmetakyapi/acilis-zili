@@ -66,7 +66,7 @@ const PUBLIC_SHARE = 0.8;
 const MEMBER_SHARE = 0.9;
 const DAY_MS = 24 * 3600_000;
 
-export const dailyCap = () => {
+const dailyCap = () => {
   const raw = Number(process.env.INSIGHT_DAILY_CAP);
   return Number.isFinite(raw) && raw >= 0 ? Math.floor(raw) : 150;
 };

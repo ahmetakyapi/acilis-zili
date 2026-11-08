@@ -37,5 +37,3 @@ export const datePickerEn: typeof datePickerTr = {
   selected: "Selected",
   keyboardHint: "Arrows move by day, PageUp and PageDown by month, add Shift for a year; month and year can also be picked from the lists above.",
 };
-
-export type DatePickerLabels = typeof datePickerTr;

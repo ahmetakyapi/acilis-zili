@@ -10,7 +10,7 @@ type T = Dictionary["aiAnalysis"];
 /** Puan bandının sınırları: 0–19, 20–39, 40–59, 60–79, 80–100 (promptla aynı ölçü). */
 const BAND_WIDTH = 20;
 const BAND_COUNT = 5;
-export const bandOf = (score: number) => Math.min(BAND_COUNT - 1, Math.floor(score / BAND_WIDTH));
+const bandOf = (score: number) => Math.min(BAND_COUNT - 1, Math.floor(score / BAND_WIDTH));
 /** RSI bölgeleri: klasik 30 / 70 eşikleri. */
 const RSI_LOW = 30;
 const RSI_HIGH = 70;

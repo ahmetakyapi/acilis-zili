@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./Technical.module.css";
 
-export type PulseSlice = {
+type PulseSlice = {
   key: string;
   /** "AL", "TUT", "SAT", "Bekliyor". */
   label: string;

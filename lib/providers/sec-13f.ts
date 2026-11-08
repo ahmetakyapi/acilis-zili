@@ -116,7 +116,7 @@ export type RawHolding = {
   putCall: "call" | "put" | null;
 };
 
-export type Holding = {
+type Holding = {
   cusip: string;
   position: "long" | "call" | "put";
   issuer: string;
@@ -127,14 +127,14 @@ export type Holding = {
   value: number;
 };
 
-export type FilingCover = {
+type FilingCover = {
   period: string | null;
   amendment: "restatement" | "new-holdings" | null;
   valueTotal: number | null;
   entryTotal: number | null;
 };
 
-export type ParsedFiling = {
+type ParsedFiling = {
   cover: FilingCover;
   holdings: Holding[];
   valueTotal: number;
@@ -217,7 +217,7 @@ export function parseCover(xml: string): FilingCover {
  * Yalnızca HİSSE satırları (SH) sayılıyor: tahvil (PRN) satırında adet
  * yerine anapara duruyor ve oran fiyat değil.
  */
-export const VALUE_SCALE_THRESHOLD = 2;
+const VALUE_SCALE_THRESHOLD = 2;
 
 export function detectValueScale(rows: readonly RawHolding[]): 1 | 1000 {
   const ratios = rows

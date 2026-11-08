@@ -10,7 +10,7 @@
  * geçiyor, girdide olmayan bir yargı (iyi/kötü, "güçlü", "zayıf") yok.
  */
 
-export type Observation = { date: string; value: number };
+type Observation = { date: string; value: number };
 
 /* ------------------------------------------------------------ Eğri */
 
@@ -23,7 +23,7 @@ export type Observation = { date: string; value: number };
 export const FLAT_CURVE_SPREAD = 0.25;
 
 /** Hayalet eğri bu kadar takvim günü öncesinin son ortak gözlemi. */
-export const CURVE_LOOKBACK_DAYS = 30;
+const CURVE_LOOKBACK_DAYS = 30;
 
 /** Vade başına istenen gözlem: 30 işlem günü ≈ altı hafta; bir ay geriye
     bakışa tatil ve eksik gün payı bırakıyor. */
@@ -37,7 +37,7 @@ export function curveShape(spread: number): CurveShape {
   return "normal";
 }
 
-export type CurveInput = { key: string; observations: readonly Observation[] };
+type CurveInput = { key: string; observations: readonly Observation[] };
 
 export type CurvePoint = {
   key: string;
@@ -116,14 +116,14 @@ export const SAHM_THRESHOLD = 0.5;
 /** Bu farkın altındaki değişim "değişmedi" (FRED en çok iki hane yayımlar). */
 export const FLAT_DELTA = 0.001;
 /** İşsizlik ölçeğinin aralığı: son bu kadar aylık gözlem (önceki ay dahil). */
-export const UNEMPLOYMENT_RANGE_MONTHS = 12;
+const UNEMPLOYMENT_RANGE_MONTHS = 12;
 
-export type GaugeSeries = { id: string; latest: number; prev: number | null; points?: readonly { value: number }[] };
+type GaugeSeries = { id: string; latest: number; prev: number | null; points?: readonly { value: number }[] };
 
 /** Ölçeğin iki ucu; değerin yeri `gaugeRatio` ile. */
-export type GaugeDomain = { lo: number; hi: number };
+type GaugeDomain = { lo: number; hi: number };
 
-export type MacroGaugeFacts = {
+type MacroGaugeFacts = {
   /** TÜFE, hedefe uzaklığı; ölçek sıfırdan, hedef ve değerin üstünde yuvarlak bir tavana. */
   inflation: { value: number; gap: number; domain: GaugeDomain } | null;
   /** İşsizlik, önceki ay ve son 12 ayın aralığı (ölçeğin uçları). */
@@ -270,7 +270,7 @@ export function heatCeiling(peak: number): number {
   return 10 * power;
 }
 
-export type SectorLeaders<T> = { best: T; worst: T; up: number; total: number };
+type SectorLeaders<T> = { best: T; worst: T; up: number; total: number };
 
 /**
  * Matrisin üstündeki cümlenin olguları: dönemin en iyisi, en kötüsü ve

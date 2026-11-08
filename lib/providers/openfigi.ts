@@ -21,7 +21,7 @@ import { BACKGROUND_TIMEOUT_MS, withTimeout } from "./timeout";
 
 const ENDPOINT = "https://api.openfigi.com/v3/mapping";
 
-export function openFigiKey(): string | null {
+function openFigiKey(): string | null {
   return process.env.OPENFIGI_API_KEY || null;
 }
 
@@ -30,7 +30,7 @@ export function openFigiLimits(): { batch: number; gapMs: number } {
   return openFigiKey() ? { batch: 100, gapMs: 250 } : { batch: 10, gapMs: 2_500 };
 }
 
-export type FigiMatch = {
+type FigiMatch = {
   cusip: string;
   ticker: string | null;
   figi: string | null;

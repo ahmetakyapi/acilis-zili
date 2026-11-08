@@ -10,7 +10,7 @@ import type { Theme } from "./i18n/config";
  */
 
 /** Parçaların yol öneki — dil öneksiz. */
-export const EMBED_PREFIX = "/gomulu";
+const EMBED_PREFIX = "/gomulu";
 
 /** Parça adresleri — "Sitene Ekle" bölümü ve sitemap dışlaması bunu okur. */
 export const EMBED_ROUTES = {

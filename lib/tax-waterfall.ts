@@ -10,8 +10,8 @@
    Şelale
    -------------------------------------------------------------------------- */
 
-export type WaterfallKey = "cost" | "index" | "proceeds" | "gain" | "base";
-export type WaterfallTone = "cost" | "index" | "proceeds" | "up" | "down" | "base";
+type WaterfallKey = "cost" | "index" | "proceeds" | "gain" | "base";
+type WaterfallTone = "cost" | "index" | "proceeds" | "up" | "down" | "base";
 
 export type WaterfallColumn = {
   key: WaterfallKey;
@@ -82,9 +82,9 @@ export function waterfallOf({
    Dilim bandı
    -------------------------------------------------------------------------- */
 
-export type Bracket = { upTo: number | null; ratePct: number };
+type Bracket = { upTo: number | null; ratePct: number };
 
-export type BandSlice = {
+type BandSlice = {
   index: number;
   ratePct: number;
   lower: number;
@@ -101,7 +101,7 @@ export type BandSlice = {
   labeled: boolean;
 };
 
-export type Band = {
+type Band = {
   slices: BandSlice[];
   /** Etiketi sığmayan geçilmiş dilimlerin tek, birleşik etiketi (varsa). */
   merged: { width: number; fromRate: number; toRate: number; tax: number } | null;
@@ -115,7 +115,7 @@ export type Band = {
 /** Etiketin sığdığı en dar dilim, bandın oranı olarak. */
 export const BAND_LABEL_MIN = 0.14;
 /** Açık uçlu son dilimde bandın matrahın ne kadar ötesine uzandığı. */
-export const BAND_TOP_HEADROOM = 1.15;
+const BAND_TOP_HEADROOM = 1.15;
 
 /**
  * Matrah dilim dilim: geçilen dilimler tam dolu, içinde bulunulan dilim

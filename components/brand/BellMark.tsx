@@ -55,7 +55,7 @@ export const BELL_CLAPPER = { cx: 128, cy: 206, r: 13 };
 export const BELL_VIEWBOX = "-11.13 -15.13 278.26 278.26";
 
 /** Zilin dört parçası — dolgu renkleri çağırandan. */
-export function BellShape({ ink, lip }: { ink: string; lip: string }) {
+function BellShape({ ink, lip }: { ink: string; lip: string }) {
   return (
     <g fill={ink}>
       <rect {...BELL_HANGER} />

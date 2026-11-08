@@ -60,12 +60,12 @@ export function previousRange(decision: FomcDecision): { lower: number; upper: n
 }
 
 /** Bülten adresindeki gün: ".../monetary20261028a.htm" → "2026-10-28". */
-export function statementDate(link: string): string | null {
+function statementDate(link: string): string | null {
   const match = /monetary(\d{4})(\d{2})(\d{2})[a-z]\.htm/i.exec(link);
   return match ? `${match[1]}-${match[2]}-${match[3]}` : null;
 }
 
-export type FedFeedItem = { title: string; link: string; publishedAt: string | null };
+type FedFeedItem = { title: string; link: string; publishedAt: string | null };
 
 /** Fed RSS'inin öğeleri — CDATA'lı ya da düz alanlar. */
 export function parseFedFeed(xml: string): FedFeedItem[] {

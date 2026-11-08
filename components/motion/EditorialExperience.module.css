@@ -18,14 +18,6 @@
 .curriculum h2 { font-size:24px; font-weight:600; letter-spacing:-.035em; }
 .curriculum > p { font-size:14px; line-height:1.65; margin-top:0; }
 .curriculum > div > span { font-size:12px; }
-.curriculumGrid { margin-top:9px; border-radius:16px; box-shadow:none; }
-.curriculumGrid > a[href^="#"] { position:relative; gap:10px; padding:20px 18px; }
-.curriculumGrid > a[href^="#"] > span:first-child { display:grid; place-items:center; width:32px; height:32px; border:1px solid var(--primary-faint); border-radius:50%; font-size:13px; font-weight:600; }
-.curriculumGrid > a[href^="#"] > span:nth-child(2) { font-size:18px; line-height:1.3; text-wrap:balance; }
-.curriculumGrid > a[href^="#"] > span:last-child { font-size:12px; }
-.curriculumGrid > a[href^="/rehber/"] { padding:15px 18px; }
-.curriculumGrid > a[href^="/rehber/"] > span > span:first-child { font-size:16px; }
-.curriculumGrid > a[href^="/rehber/"] > span > span:last-child { font-size:12px; margin-top:4px; white-space:normal; }
 .topicHeading > div { padding-block:16px; border-top:1px solid var(--line-strong); }
 .topicHeading h2 { font-size:29px; line-height:1.2; letter-spacing:-.035em; }
 .topicHeading > div > span { font-size:29px; font-weight:500; }
@@ -33,7 +25,6 @@
 .guideCard > div { padding:24px; gap:17px; border-radius:19px; transition:border-color .3s var(--ease-brand),background-color .3s var(--ease-brand); }
 .guideCard h3 { font-size:20px; line-height:1.3; }
 .guideCard > div > p { font-size:14px; line-height:1.65; }
-.guideMinutes { white-space:nowrap; font-size:12px; font-weight:500; color:var(--text-muted); }
 .articleGrid > a:first-child > div { border-color:var(--primary-faint); background:var(--premium-surface); }
 .guideMobile { border-radius:18px; }
 .guideMobile > a { padding:18px 16px; gap:14px; }
@@ -41,10 +32,6 @@
 .guideMobile > a > span:last-child > span:nth-child(2) { font-size:13px; line-height:1.6; }
 .guideMobile > a > span:last-child > span:last-child { margin-top:8px; font-size:12px; }
 .article { min-width:0; }
-.articleHeader { padding:25px 0 6px; }
-.articleHeader h1 { font-size:clamp(28px,3vw,40px); line-height:1.12; letter-spacing:-.04em; text-wrap:balance; color:var(--text-strong); }
-.articleHeader > p { font-size:17px; line-height:1.7; }
-.articleHeader > p:first-child { font-size:12px; }
 .article :global(.oku-blok) { border-radius:18px; }
 .page :is(a,button):focus-visible,.guidePage :is(a,button):focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 @media(hover:hover) and (pointer:fine) {
@@ -56,13 +43,5 @@
  .masthead h1 { font-size:var(--heading-page); } .mastheadDescription { font-size:14px; line-height:1.65; }
  .curriculum { padding:20px 18px; } .curriculum h2 { font-size:22px; } .curriculum > p { font-size:13px; }
  .topicHeading h2 { font-size:22px; } .topicHeading > div > span { font-size:23px; }
- .articleHeader { padding-top:16px; } .articleHeader > p { font-size:16px; }
-}
-@media(max-width:639px) {
- .curriculumGrid > a[href^="#"] { display:grid; grid-template-columns:28px minmax(0,1fr); padding:12px; gap:3px 10px; }
- .curriculumGrid > a[href^="#"] > span:first-child { grid-row:1/3; align-self:center; width:28px; height:28px; }
- .curriculumGrid > a[href^="#"] > span:nth-child(2) { font-size:15px; text-wrap:pretty; }
- .curriculumGrid > a[href^="#"] > span:last-child { grid-column:2; min-width:0; padding:0; }
- .curriculumGrid > a[href^="#"] > span:last-child > span { display:inline; white-space:normal; }
 }
 @media(prefers-reduced-motion:reduce) { .guideCard > div { transition:none; } }

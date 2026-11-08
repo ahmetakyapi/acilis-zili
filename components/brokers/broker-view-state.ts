@@ -20,7 +20,7 @@ import { LINE_DEFAULT_USD, LINE_STEPS_USD } from "@/lib/broker-line";
  * dışa aktardığı her şey fonksiyon (CLAUDE.md istemci/sunucu sınırı).
  */
 
-export const DEFAULT_AMOUNT_INDEX = Math.max(0, (LINE_STEPS_USD as readonly number[]).indexOf(LINE_DEFAULT_USD));
+const DEFAULT_AMOUNT_INDEX = Math.max(0, (LINE_STEPS_USD as readonly number[]).indexOf(LINE_DEFAULT_USD));
 
 let amountIndex = DEFAULT_AMOUNT_INDEX;
 const amountListeners = new Set<() => void>();

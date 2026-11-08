@@ -55,7 +55,7 @@ import { FORWARD_LONG, MAX_OBSERVATION_LAG_DAYS, PERCENTILE_WINDOW, VOL_LONG } f
  * yarım masası altı saat önbellekte kalmasın.
  */
 
-export const INDEX_SYMBOLS = ["SPY", "QQQ", "IWM", "DIA"] as const;
+const INDEX_SYMBOLS = ["SPY", "QQQ", "IWM", "DIA"] as const;
 export const BENCHMARK = "SPY";
 const SIX_YEARS_DAYS = 6 * 365 + 40;
 const BREADTH_LOOKBACK_DAYS = 400;
@@ -101,7 +101,7 @@ export type Breadth = {
   history: { date: string; value: number }[];
 };
 
-export function breadthFrom(barsBySymbol: Record<string, DailyBar[]>, symbols: readonly string[], session: string): Breadth | null {
+function breadthFrom(barsBySymbol: Record<string, DailyBar[]>, symbols: readonly string[], session: string): Breadth | null {
   const total = symbols.length;
   const aboveByDate = new Map<string, { above: number; n: number }>();
   let advancing = 0;
@@ -282,7 +282,7 @@ async function loadSources(session: string): Promise<Sources> {
 }
 
 /** Saf birleştirme: kaynaklardan masa. Sınanabilir olsun diye ayrı. */
-export function assembleDesk(session: string, src: Omit<Sources, "complete">): MarketDesk {
+function assembleDesk(session: string, src: Omit<Sources, "complete">): MarketDesk {
   const spy = src.bars[BENCHMARK] ?? [];
   const barsStale = spy.length === 0 || spy[spy.length - 1]!.date !== session;
   const dates = spy.map((b) => b.date);

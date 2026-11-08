@@ -29,7 +29,7 @@ import { getMemberPtrs, getPtrTrades } from "./providers/house-ptr";
  * büyük pozisyon önce — okuyucunun ilk gördüğü satırların logosu olsun.
  */
 
-export type SyncOptions = {
+type SyncOptions = {
   /** `Date.now()` bu ana ulaşınca yeni iş başlatılmaz. */
   deadline?: number;
   /** Tek koşumda en fazla kaç 13F dosyası işlenir. */

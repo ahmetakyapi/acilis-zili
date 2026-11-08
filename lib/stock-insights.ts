@@ -91,7 +91,7 @@ export type EarningsInsight = {
 
 export type EarningsFigure = { actual: number; estimate: number; direction: "beat" | "miss" | "inline"; ratio: number | null };
 
-export const insightModel = () => process.env.CLAUDE_INSIGHT_MODEL?.trim() || "claude-sonnet-5-5";
+const insightModel = () => process.env.CLAUDE_INSIGHT_MODEL?.trim() || "claude-sonnet-5-5";
 /* Reddetmede sunucu tarafı yedek model yalnız bu modellerde var. */
 const FALLBACK_MODELS = new Set(["claude-sonnet-5-5", "claude-opus-5-5", "claude-opus-5", "claude-fable-5-1"]);
 

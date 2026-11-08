@@ -56,13 +56,13 @@ export const TARGET_INPUT_SHAPE = {
   ],
 };
 
-export const MAX_TARGET_AGE_DAYS = 7;
+const MAX_TARGET_AGE_DAYS = 7;
 const PRICE_RATIO_MIN = 1 / 3;
 const PRICE_RATIO_MAX = 3;
 const JUMP_LIMIT = 0.2;
 const JUMP_WINDOW_DAYS = 14;
 
-export type TargetRejection =
+type TargetRejection =
   | "future-date"
   | "too-old"
   | "range-order"

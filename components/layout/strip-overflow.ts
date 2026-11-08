@@ -5,7 +5,7 @@
  * `gap` listenin sekme aralığı: toplam N sekme için N − 1 aralık taşıyor ve
  * gizlenen sekme kendi aralığını da götürüyor (gerekçe kancada).
  */
-export type StripMeasure = { href: string; rank: number; width: number };
+type StripMeasure = { href: string; rank: number; width: number };
 
 export function overflowingTabs(items: readonly StripMeasure[], available: number, gap: number): Set<string> {
   let total = items.reduce((sum, item) => sum + item.width, 0) + gap * Math.max(items.length - 1, 0);

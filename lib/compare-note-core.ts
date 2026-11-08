@@ -28,7 +28,7 @@ export function compareNoteKey(symbols: readonly string[], range: CompareRange, 
   return `${[...new Set(symbols)].sort().join(",")}:${range}:${lastSession}`;
 }
 
-export type ClosePoint = { date: string; close: number };
+type ClosePoint = { date: string; close: number };
 
 /** Tarihin haftasının pazartesisi (YYYY-AA-GG, takvim aritmetiği UTC'de). */
 export function mondayOf(date: string): string {

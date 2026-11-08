@@ -71,13 +71,13 @@ export type MoreGroup = "tools" | "daily" | "market" | "mine" | "learn";
 export const MORE_GROUPS: readonly MoreGroup[] = ["tools", "daily", "market", "mine", "learn"];
 
 /** Masthead şeridinde taşma önceliği — 1 en son taşar. */
-export type StripRank = 1 | 2 | 3 | 4 | 5 | 6;
+type StripRank = 1 | 2 | 3 | 4 | 5 | 6;
 
 /**
  * Phosphor, duotone ağırlık — `/dist/ssr` girişi context kullanmaz, o yüzden
  * Server Component'lerde de çalışır. `fill` daima currentColor.
  */
-export type NavItem = {
+type NavItem = {
   href: string;
   label: (t: Dictionary) => string;
   icon: typeof Bell;

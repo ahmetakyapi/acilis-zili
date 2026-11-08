@@ -207,7 +207,7 @@ type DaySelection =
   | { kind: "picked"; id: string; tour: boolean }
   | { kind: "closed" };
 
-export function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, preview, lineLabels }: Props) {
+function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, preview, lineLabels }: Props) {
   const [snapshot, setSnapshot] = useState(initial);
   const [nowMs, setNowMs] = useState(() => new Date(initial.asOf).getTime());
   /* `auto` = seçim OTOMATİK (sıradaki olay açık); `closed` = okuyucu açık

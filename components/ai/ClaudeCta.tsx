@@ -33,7 +33,7 @@ async function claudeState(symbol: string) {
 }
 
 /** Yayın notu: saat ("15:45 TR") satır sonunda bölünmez ve kalın (390'da "15:45" / "TR" diye bölünüyordu). */
-export function EditionText({ text, time }: { text: string; time: string }) {
+function EditionText({ text, time }: { text: string; time: string }) {
   const [before, after = ""] = text.split("{time}");
   return <span>{before}<b className="whitespace-nowrap font-semibold text-strong">{time}</b>{after}</span>;
 }

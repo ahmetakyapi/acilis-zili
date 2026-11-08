@@ -41,8 +41,8 @@ const SEC_FILING_WAIT_MS = 3_000;
    ayrıntısı; geçmiş günün sonucu zaten günlük senkronla tabloya yazılmış,
    gelecek günün henüz sonucu yok. Yani gün değiştirmek sağlayıcı kotası
    harcamaz. */
-export const DAY_FLOW_BACK_DAYS = 60;
-export const DAY_FLOW_AHEAD_DAYS = 14;
+const DAY_FLOW_BACK_DAYS = 60;
+const DAY_FLOW_AHEAD_DAYS = 14;
 
 /** Tarih gezinme penceresinde mi — uç ve yükleyici aynı sınırı okur. */
 export function dayFlowDateAllowed(date: string, today: string): boolean {

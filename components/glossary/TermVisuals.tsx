@@ -21,7 +21,7 @@ const NETWORK_RY = 37;
 /** Tam tur, derece. */
 const TURN = 360;
 
-export type NetworkNode = {
+type NetworkNode = {
   slug: string;
   term: string;
   motif: GlossaryMotif;

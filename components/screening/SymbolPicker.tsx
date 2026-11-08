@@ -9,7 +9,7 @@ import styles from "./Screening.module.css";
 const DEBOUNCE_MS = 160;
 const MAX_HITS = 7;
 
-export type SymbolPickerLabels = {
+type SymbolPickerLabels = {
   placeholder: string; listLabel: string; searching: string; noResults: string; error: string; useTyped: string;
 };
 

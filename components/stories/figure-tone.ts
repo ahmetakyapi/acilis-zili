@@ -18,7 +18,7 @@
    (CLAUDE.md → "use client" modülden dışa aktarılan değer).
    -------------------------------------------------------------------------- */
 
-export type FigureTone = "up" | "down" | "flat";
+type FigureTone = "up" | "down" | "flat";
 
 const LEAD = /^[\s~≈]*(?:[%$€₺]\s*)?/;
 

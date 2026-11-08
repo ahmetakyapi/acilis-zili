@@ -81,7 +81,7 @@ export type ProbabilitySnapshot = {
  * orta fiyat bir okuma değil, iki tarafın pazarlığıdır; son işlem fiyatı
  * (varsa) gerçekleşmiş tek sayıdır.
  */
-export const MAX_MID_SPREAD = 0.1;
+const MAX_MID_SPREAD = 0.1;
 
 /** Tek kontratın fiyatından okunan ham olasılık (0–1) ya da null. */
 export function priceOf(bid: number | null, ask: number | null, last: number | null): number | null {
@@ -92,11 +92,11 @@ export function priceOf(bid: number | null, ask: number | null, last: number | n
   return null;
 }
 
-export function currentPrice(o: ProbOutcome): number | null {
+function currentPrice(o: ProbOutcome): number | null {
   return priceOf(o.bid, o.ask, o.last);
 }
 
-export function previousPrice(o: ProbOutcome): number | null {
+function previousPrice(o: ProbOutcome): number | null {
   return priceOf(o.prevBid, o.prevAsk, o.prevLast);
 }
 
@@ -132,9 +132,9 @@ export function eventProbabilities(event: ProbEvent, which: "now" | "prev" = "no
 /* ---- Likidite ---- */
 
 /** Bu kadar açık pozisyonun altındaki olay HİÇ gösterilmez — fiyat birkaç kişinin pazarlığı. */
-export const HIDE_BELOW_OPEN_INTEREST = 2_000;
+const HIDE_BELOW_OPEN_INTEREST = 2_000;
 /** Bu kadarın altı gösterilir ama "Az İşlem" künyesiyle. */
-export const THIN_BELOW_OPEN_INTEREST = 20_000;
+const THIN_BELOW_OPEN_INTEREST = 20_000;
 
 export type Liquidity = "liquid" | "thin" | "hidden";
 
@@ -194,7 +194,7 @@ export function resolvedOutcome(event: ProbEvent): string | null {
 export const FED_MOVES = ["cut50", "cut25", "hold", "hike25", "hike50"] as const;
 export type FedMove = (typeof FED_MOVES)[number];
 
-export const FED_MOVE_BPS: Record<FedMove, number> = {
+const FED_MOVE_BPS: Record<FedMove, number> = {
   cut50: -50,
   cut25: -25,
   hold: 0,
@@ -285,7 +285,7 @@ export function ratePath(
   return steps;
 }
 
-export function sortByStrike(events: ProbEvent[]): ProbEvent[] {
+function sortByStrike(events: ProbEvent[]): ProbEvent[] {
   return [...events].sort((a, b) => (a.strikeAt ?? "").localeCompare(b.strikeAt ?? ""));
 }
 
@@ -303,7 +303,7 @@ const SETTLE_GRACE_MS = 3 * 60 * 60 * 1000;
 
 /* ---- 30 günlük çizgi ---- */
 
-export type LinePoint = { t: number; p: number };
+type LinePoint = { t: number; p: number };
 
 /**
  * Bir sonucun (ya da sonuç kümesinin) günlük çizgisi, normalize edilmiş.
@@ -326,7 +326,7 @@ export function historyLine(event: ProbEvent, keys: readonly string[]): LinePoin
 
 /* ---- TÜFE merdiveni ---- */
 
-export type LadderStep = { threshold: number; above: number; openInterest: number };
+type LadderStep = { threshold: number; above: number; openInterest: number };
 
 /**
  * "Aylık TÜFE %X'in üstünde mi" kontratları bir merdiven. Her basamak
@@ -367,7 +367,7 @@ export function ladderMedian(steps: LadderStep[]): number | null {
 /* ---- Tepedeki cümle ---- */
 
 /** `p` burada TAM SAYI yüzde (`percentShares`): panelin büyük sayısıyla aynı. */
-export type LeadFacts = {
+type LeadFacts = {
   fed: { move: FedMove; p: number; strikeAt: string | null } | null;
   house: { party: string; p: number } | null;
   senate: { party: string; p: number } | null;
@@ -405,7 +405,7 @@ export function leadFacts(snapshot: ProbabilitySnapshot, now: Date = new Date())
   };
 }
 
-export type LeadTemplates = {
+type LeadTemplates = {
   /** Yer tutucular: {date} {move} {p} */
   fed: string;
   /** İki meclis aynı partide önde: {party} {house} {senate} */
@@ -616,7 +616,7 @@ export function headlineOdds(snapshot: ProbabilitySnapshot, now: Date = new Date
 }
 
 /** Kadranda görünmeyecek kadar küçük dilim (yığın çubuktaki eşikle aynı). */
-export const ARC_MIN_SHARE = 0.005;
+const ARC_MIN_SHARE = 0.005;
 
 /**
  * Yarım daire kadranın dilimleri, 0–1 arası yay kesirleri (saf, testli).
@@ -647,9 +647,9 @@ export function arcSegments(values: readonly number[], gap = 0.012): { start: nu
 /* ---- Tazeleme kararı (cron) ---- */
 
 /** Günde bir: bir önceki kayıt bu kadar eskiyse yenisi alınır. */
-export const DAILY_REFRESH_MS = 20 * 60 * 60 * 1000;
+const DAILY_REFRESH_MS = 20 * 60 * 60 * 1000;
 /** Özel pencerede (seçim gecesi, Fed karar saati) saatte bir. */
-export const WATCH_REFRESH_MS = 50 * 60 * 1000;
+const WATCH_REFRESH_MS = 50 * 60 * 1000;
 
 /**
  * Seçim gecesi penceresi: ilk sandıkların kapandığı 3 Kasım 18:00 ET
@@ -690,7 +690,7 @@ export function fedWatchWindow(strikeAt: string | null): { from: string; to: str
 /* ---- Bir anlık görüntünün kabul edilebilirliği ---- */
 
 /** Ekranda gösterilecek en eski kayıt: bundan eskisi "bayat" (CLAUDE.md veri dürüstlüğü 2). */
-export const SNAPSHOT_MAX_AGE_MS = 36 * 60 * 60 * 1000;
+const SNAPSHOT_MAX_AGE_MS = 36 * 60 * 60 * 1000;
 
 export function isSnapshot(value: unknown): value is ProbabilitySnapshot {
   if (!value || typeof value !== "object") return false;

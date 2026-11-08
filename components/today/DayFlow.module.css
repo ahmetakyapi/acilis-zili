@@ -91,11 +91,6 @@
 .connection[data-state="error"] .connectionDot { background:var(--text-muted); box-shadow:none; }
 .spinner { animation:flow-spin 1.2s linear infinite; }
 
-/* ---- Çizelge başlığı ---- */
-.agendaHead { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:12px 0 2px; }
-.agendaHead h3 { display:flex; align-items:baseline; gap:9px; color:var(--text-strong); font-size:15px; font-weight:650; letter-spacing:-.02em; }
-.agendaHead h3 > span { color:var(--text-muted); font-size:13px; font-weight:600; }
-
 /* ---- Omurga ----
    Çizgi her satırın arkasında, düğüm sütununun ortasında; ilk satırda
    düğümden başlar, son satırda düğümde biter. Ölçüler değişkende ki telefon

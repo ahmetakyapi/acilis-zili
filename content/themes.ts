@@ -254,7 +254,7 @@ export const THEMES = [
   },
 ] as const satisfies readonly ThemeEntry[];
 
-export type ThemeSlug = (typeof THEMES)[number]["slug"];
+type ThemeSlug = (typeof THEMES)[number]["slug"];
 
 export const THEME_SLUGS: readonly ThemeSlug[] = THEMES.map((theme) => theme.slug);
 

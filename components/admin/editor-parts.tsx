@@ -363,7 +363,7 @@ export function DilAnahtari({
 /** Yazmayı bırakınca çizime kadar beklenen süre. */
 const ONIZLEME_BEKLEME_MS = 700;
 
-export type OnizlemeDurumu = "guncel" | "degisti" | "ciziliyor" | "hata";
+type OnizlemeDurumu = "guncel" | "degisti" | "ciziliyor" | "hata";
 
 /**
  * Önizleme durumu — çizim SUNUCUDA yapılıyor, bu kanca yalnızca ne zaman

@@ -50,7 +50,7 @@ async function calendarRowOn(symbol: string, reportDate: string) {
 const PROVIDER_PAST_DAYS = 400;
 const PROVIDER_AHEAD_DAYS = 120;
 
-export type Story = {
+type Story = {
   row: EarningsAnalysisRow;
   cards: StoryCard[];
 };

@@ -66,7 +66,7 @@ async function get(url: string, init: RequestInit = {}): Promise<Response> {
    ========================================================================== */
 
 /** Tırnaklı alanları doğru bölen tek satırlık CSV ayrıştırıcı. */
-export function splitCsvLine(line: string): string[] {
+function splitCsvLine(line: string): string[] {
   const cells: string[] = [];
   let cell = "";
   let quoted = false;
@@ -104,7 +104,7 @@ function decodeXml(text: string): string {
  * lazım (paylaşılan dizeler ve ilk sayfa). Sıkıştırma yöntemi 8 (deflate)
  * ya da 0 (yok).
  */
-export function readZipEntry(zip: Buffer, name: string): string | null {
+function readZipEntry(zip: Buffer, name: string): string | null {
   let end = -1;
   for (let i = zip.length - 22; i >= Math.max(0, zip.length - 66_000); i -= 1) {
     if (zip.readUInt32LE(i) === 0x06054b50) {
@@ -137,7 +137,7 @@ export function readZipEntry(zip: Buffer, name: string): string | null {
 }
 
 /** İlk sayfanın hücreleri, satır satır, sütun harfine göre. */
-export function readXlsxRows(zip: Buffer): Record<string, string>[] | null {
+function readXlsxRows(zip: Buffer): Record<string, string>[] | null {
   const sheet = readZipEntry(zip, "xl/worksheets/sheet1.xml");
   if (!sheet) return null;
   const shared = readZipEntry(zip, "xl/sharedStrings.xml") ?? "";
@@ -173,7 +173,7 @@ export function readXlsxRows(zip: Buffer): Record<string, string>[] | null {
  * Ağırlık sütunu sayı olmayan ilk satırda pozisyonlar bitiyor; altında
  * yasal metinler var. "US DOLLAR" (ticker "-") nakit kalemi atlanıyor.
  */
-export function parseSsgaRows(rows: Record<string, string>[]): HoldingsFile | null {
+function parseSsgaRows(rows: Record<string, string>[]): HoldingsFile | null {
   const asOfCell = rows.find((row) => row.A?.startsWith("Holdings"))?.B ?? "";
   const date = /(\d{1,2})-([A-Za-z]{3})-(\d{4})/.exec(asOfCell);
   const month = date ? MONTHS[date[2].toLowerCase()] : undefined;
@@ -226,7 +226,7 @@ export async function getSsgaHoldings(symbol: string): Promise<ProviderResult<Ho
  * ağırlıklarının toplamı %100'ü geçebiliyor (swap kaldıraç gibi çalışıyor);
  * panel künyesi bunu yazıyor.
  */
-export function parseRoundhillCsv(text: string, fund: string): HoldingsFile | null {
+function parseRoundhillCsv(text: string, fund: string): HoldingsFile | null {
   const lines = text.split(/\r?\n/);
   const header = splitCsvLine(lines[0] ?? "");
   const col = (name: string) => header.indexOf(name);
@@ -328,7 +328,7 @@ export async function getTidalHoldings(fund: string, url: string): Promise<Provi
  * taşıyor (YYYYAAGG) ve hafta sonu dosya yok (404). Sembolü boş satırlar
  * döviz bakiyesi ve alacak/borç kalemleri: atlanıyor.
  */
-export function parseGlobalXCsv(text: string): HoldingsFile | null {
+function parseGlobalXCsv(text: string): HoldingsFile | null {
   const lines = text.split(/\r?\n/);
   const date = /as of (\d{2})\/(\d{2})\/(\d{4})/i.exec(lines[1] ?? "");
   const headerAt = lines.findIndex((line) => line.startsWith("% of Net Assets"));
@@ -371,7 +371,7 @@ export async function getGlobalXHoldings(fund: string, today: Date = new Date())
  * pozisyon; "Cash Bal" ve "Cash" satırları atlanıyor. Sütunlar başlığın
  * adından bulunuyor, harfinden değil.
  */
-export function parseVanEckRows(rows: Record<string, string>[]): HoldingsFile | null {
+function parseVanEckRows(rows: Record<string, string>[]): HoldingsFile | null {
   const date = /(\d{2})\/(\d{2})\/(\d{4})/.exec(rows[0]?.A ?? "");
   const headerAt = rows.findIndex((row) => Object.values(row).includes("Holding Name"));
   if (!date || headerAt < 0) return null;
@@ -432,7 +432,7 @@ export async function getVanEckHoldings(page: string): Promise<ProviderResult<Ho
  * sector. "SPACEX SPV" bir sembol değil, SpaceX'e özel amaçlı araç
  * üzerinden tutulan pay; yurt dışı kodlar ("3491 TT") sembol sayılmıyor.
  */
-export function parseTemaCsv(text: string): HoldingsFile | null {
+function parseTemaCsv(text: string): HoldingsFile | null {
   const lines = text.split(/\r?\n/);
   const header = splitCsvLine(lines[0] ?? "");
   const col = (name: string) => header.indexOf(name);
@@ -486,7 +486,7 @@ export async function getTemaHoldings(fund: string): Promise<ProviderResult<Hold
  * TAŞIMIYOR, yalnızca ad ve CUSIP: sembol veri katmanında kalıcı CUSIP
  * tablosundan (13F için kurulan `cusip_tickers`) eşleniyor.
  */
-export function parseNport(xml: string): HoldingsFile | null {
+function parseNport(xml: string): HoldingsFile | null {
   const asOf = /<repPdDate>(\d{4}-\d{2}-\d{2})<\/repPdDate>/.exec(xml)?.[1];
   if (!asOf) return null;
   const rows: HoldingRow[] = [];

@@ -18,7 +18,7 @@ import { responseDate } from "./types";
  * damgalanıyor ki eski bir sayı güncel sanılmasın.
  */
 
-export type UsageProvider = "finnhub" | "alpaca" | "fred";
+type UsageProvider = "finnhub" | "alpaca" | "fred";
 
 type Track = {
   lastOkAt: Date | null;
@@ -62,7 +62,7 @@ export function noteProviderResponse(provider: UsageProvider, res: Response, now
   }
 }
 
-export type ProviderUsage = {
+type ProviderUsage = {
   lastOkAt: string | null;
   lastRateLimitedAt: string | null;
   rateLimitedLastHour: number;

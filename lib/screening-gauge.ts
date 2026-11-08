@@ -26,9 +26,9 @@ import { THRESHOLDS as T, type Check, type CheckId } from "@/lib/screening";
  *  - Değeri olmayan satır (Veri Yok, banka sağlık kuralları).
  */
 
-export type GaugeScale = "linear" | "log";
+type GaugeScale = "linear" | "log";
 
-export type GaugeSpec = {
+type GaugeSpec = {
   /** Geçme eşiği. `min`: değer ≥ eşik geçer; `max`: değer ≤ eşik geçer. */
   pass: number;
   side: "min" | "max";
@@ -40,7 +40,7 @@ export type GaugeSpec = {
 };
 
 /** Kural → kulvar. Eşikler `THRESHOLDS`ten; yalnız uçlar burada. */
-export const GAUGES: Partial<Record<CheckId, GaugeSpec>> = {
+const GAUGES: Partial<Record<CheckId, GaugeSpec>> = {
   marketCap: { pass: T.minMarketCap, side: "min", lo: 1e8, hi: 1e13, scale: "log" },
   price: { pass: T.minPrice, side: "min", lo: 1, hi: 1e3, scale: "log" },
   liquidity: { pass: T.minAvgVolume, side: "min", lo: 1e5, hi: 1e8, scale: "log" },
@@ -66,7 +66,7 @@ export const GAUGES: Partial<Record<CheckId, GaugeSpec>> = {
   earningsQuality: { pass: T.minAnalysisScore, side: "min", warn: 40, lo: 0, hi: 100, scale: "linear" },
 };
 
-export type Gauge = {
+type Gauge = {
   spec: GaugeSpec;
   /** 0–100: kulvardaki yerler. */
   valueAt: number;

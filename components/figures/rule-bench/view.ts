@@ -7,7 +7,7 @@ import { boxCorners, fitProjection, iso, type Plan, type Point3 } from "@/compon
 
 export const WIDTH = 640;
 export const HEIGHT = 250;
-export const AZIMUTH = 60;
+const AZIMUTH = 60;
 
 export const STATIONS = 7;
 export const PITCH = 46;

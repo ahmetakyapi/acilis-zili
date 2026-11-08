@@ -83,7 +83,7 @@ import styles from "./Analysis.module.css";
  * sektörler → senaryo → Claude'un metni → damga → rehber.
  */
 
-export type AnalysisSource = { userId: string } | { fixture: AnalysisHolding[] };
+type AnalysisSource = { userId: string } | { fixture: AnalysisHolding[] };
 
 export async function AnalysisScreen({
   source,

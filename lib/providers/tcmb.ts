@@ -166,7 +166,7 @@ export async function getUsdTry(): Promise<ProviderResult<UsdTryRate>> {
 const ARCHIVE_BASE = "https://www.tcmb.gov.tr/kurlar/";
 
 /** En uzun tatil (Kurban Bayramı + hafta sonu) dokuz gün; bir gün pay. */
-export const MAX_BULLETIN_LOOKBACK_DAYS = 10;
+const MAX_BULLETIN_LOOKBACK_DAYS = 10;
 
 /** Değişmeyen geçmiş: otuz gün. */
 const ARCHIVE_REVALIDATE_SECONDS = 30 * 24 * 3600;

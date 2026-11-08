@@ -12,7 +12,7 @@
    Gövde `components/article/ArticleBody.tsx` sözdizimini kullanır.
    ========================================================================== */
 
-export type StorySeed = {
+type StorySeed = {
   slug: string;
   locale: string;
   title: string;

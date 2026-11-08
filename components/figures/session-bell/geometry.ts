@@ -81,7 +81,7 @@ const BELL_PROFILE: [number, number, number?][] = [
   [38.6, 3.6, 1],
   [39, 0],
 ];
-export const BELL_HEIGHT = 39;
+const BELL_HEIGHT = 39;
 /** Dövücünün vurduğu yükseklikte (s = 5) çanın yarıçapı. */
 const R_AT_STRIKE = 20.9;
 
@@ -202,7 +202,7 @@ function build(day: BellDay) {
   };
 }
 
-export type BellArt = ReturnType<typeof build>;
+type BellArt = ReturnType<typeof build>;
 
 const cache = new Map<string, BellArt>();
 export function bellArt(day: BellDay): BellArt {

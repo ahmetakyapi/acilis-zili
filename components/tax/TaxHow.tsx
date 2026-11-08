@@ -39,7 +39,7 @@ const STEP_ICONS = [NotePencil, ArrowsLeftRight, ChartLineUp, Sigma, Percent, Ca
 /** Katlı gelen anlatımda açık kalan adım sayısı (gir, çevir). */
 const HOW_OPEN_STEPS = 2;
 /** Katlama anahtarının kutusu; `TaxHowReveal` çapayla gelince bunu işaretliyor. */
-export const HOW_FOLD_ID = "vergi-nasil-tamami";
+const HOW_FOLD_ID = "vergi-nasil-tamami";
 
 /**
  * "NASIL HESAPLANIR" — hesaplayıcıdan ÖNCE gelen anlatım (29 Eylül).

@@ -8,7 +8,7 @@ import { fitSwarm, swarmDomain, swarmPosition, type SwarmScale } from "@/lib/too
 import { formatMoneyCompact, formatPercent, NO_VALUE } from "@/lib/utils";
 import styles from "./MetricSwarm.module.css";
 
-export type SwarmPoint = { s: string; n: string; v: number };
+type SwarmPoint = { s: string; n: string; v: number };
 export type SwarmKind = "ratio" | "percent" | "money";
 
 type Labels = {

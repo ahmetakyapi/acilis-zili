@@ -117,7 +117,7 @@ type Submissions = {
   };
 };
 
-export type EarningsFiling = {
+type EarningsFiling = {
   /** Kabul anı, ISO (UTC) — başlık okunamadıysa null. */
   acceptedAt: string | null;
   /** Bildirimin EDGAR dizin sayfası — basın bülteni (Ex-99.1) orada. */

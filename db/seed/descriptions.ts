@@ -24,7 +24,7 @@ export async function describeSymbol(
   return null;
 }
 
-export const SYMBOL_DESCRIPTIONS: Record<string, SymbolDescription> = {
+const SYMBOL_DESCRIPTIONS: Record<string, SymbolDescription> = {
   // ---- Endeks fonları ----
   QQQ: {
     tr: "Nasdaq 100 endeksini izleyen borsa yatırım fonu — Nasdaq'ta işlem gören, finans dışı en büyük 100 şirketi (ağırlıklı teknoloji) tek üründe toplar.",

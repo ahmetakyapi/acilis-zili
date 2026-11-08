@@ -17,14 +17,14 @@ import styles from "./Portfolio.module.css";
  */
 
 /** Halkada ayrı dilim alan en büyük pozisyon sayısı; kalanı "Diğer". */
-export const RING_SLICES = 4;
+const RING_SLICES = 4;
 const SHARE_TOKENS = ["var(--share-1)", "var(--share-2)", "var(--share-3)", "var(--share-4)"] as const;
 const REST_TOKEN = "var(--share-rest)";
 /** Dilimler arasındaki boşluk, çevrenin yüzdesi. */
 const SLICE_GAP = 0.9;
 const RING_RADIUS = 46;
 
-export type AllocationSlice = {
+type AllocationSlice = {
   key: string;
   label: string;
   symbol: string | null;
@@ -202,7 +202,7 @@ export function AllocationRingSkeleton({ title }: { title: string }) {
    Toplam şeridi
    --------------------------------------------------------------------------- */
 
-export type TotalsLabels = Pick<
+type TotalsLabels = Pick<
   Dictionary["lira"]["portfolio"],
   | "totalValue"
   | "usdBasis"

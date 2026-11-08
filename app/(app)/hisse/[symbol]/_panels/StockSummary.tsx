@@ -42,7 +42,7 @@ const INDEX_NAMES = [
   { name: "Dow Jones", members: DOW_MEMBERS },
 ] as const;
 
-export function indexListOf(symbol: string): string[] {
+function indexListOf(symbol: string): string[] {
   return INDEX_NAMES.filter((index) => index.members.some((member) => member.symbol === symbol)).map(
     (index) => index.name,
   );
@@ -53,7 +53,7 @@ function joinList(items: readonly string[], t: Dictionary): string {
   return `${items.slice(0, -1).join(", ")}${t.stockDepth.listJoin}${items.at(-1)}`;
 }
 
-export type SummaryFacts = {
+type SummaryFacts = {
   name: string;
   indices: string[];
   sector: string | null;

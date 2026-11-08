@@ -31,7 +31,7 @@ export type CompanyCardExtra = {
   foot?: string;
 };
 
-export type CompanyCardContext = {
+type CompanyCardContext = {
   names: Record<string, SymbolMeta>;
   /** Sayfanın KENDİ kotasyon paketi; null ise kartta fiyat yok. */
   quotes: Record<string, Quote> | null;

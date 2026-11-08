@@ -11,7 +11,7 @@
 
 export type RunStatus = "playing" | "won" | "lost";
 
-export type StoredRun = { guesses: string[]; status: RunStatus; flagged: boolean };
+type StoredRun = { guesses: string[]; status: RunStatus; flagged: boolean };
 
 /**
  * Gelen tahmin listesiyle kaydın yeni hâli. Sunucu kimin hangi tahmini
@@ -60,7 +60,7 @@ export function displayName(entry: Pick<BoardEntry, "userId" | "nickname">, anon
   return entry.nickname?.trim() || `${anonymousPrefix} ${anonymousTag(entry.userId)}`;
 }
 
-export const NICKNAME_MIN = 2;
+const NICKNAME_MIN = 2;
 export const NICKNAME_MAX = 20;
 
 /**

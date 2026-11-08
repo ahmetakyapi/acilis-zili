@@ -216,7 +216,7 @@ function monthLabel(key: string, locale: Locale): string {
  * yarım kalan ay da kendi başlığının altında büyüyor.
  */
 /** Kartın imza minyatürü ve (yalnız `grafik` imzası için) kapanış serisi. */
-export type ArchiveSignature = { block: SignatureBlock; series?: readonly number[] | null };
+type ArchiveSignature = { block: SignatureBlock; series?: readonly number[] | null };
 
 export function ArchiveMonths({
   rows,

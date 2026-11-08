@@ -17,11 +17,11 @@
  */
 
 /** Form 4 işlem kodları — SEC'in kendi tablosundan, kısaltmasıyla. */
-export const INSIDER_CODES = [
+const INSIDER_CODES = [
   "P", "S", "A", "D", "F", "M", "X", "C", "G", "J", "K", "I", "W", "V", "E", "H", "O", "U", "L", "Z",
 ] as const;
 
-export type InsiderCode = (typeof INSIDER_CODES)[number];
+type InsiderCode = (typeof INSIDER_CODES)[number];
 
 export function isInsiderCode(value: string): value is InsiderCode {
   return (INSIDER_CODES as readonly string[]).includes(value);
@@ -152,7 +152,7 @@ export function groupInsiderRows(rows: readonly RawInsiderRow[]): InsiderTrade[]
  * "1,51 Mn $ alım" uydurma bir tutardı. Doksan günlük pencerede bir hisse
  * üç kat oynamaz; oynadıysa da tutarı göstermemek yanlış göstermekten iyi.
  */
-export const PRICE_SANITY_FACTOR = 3;
+const PRICE_SANITY_FACTOR = 3;
 
 /**
  * Hisse fiyatıyla tutmayan işlem fiyatını düşürür (fiyat ve tutar null).
@@ -168,7 +168,7 @@ export function sanitizeTradePrices(trades: readonly InsiderTrade[], reference: 
   );
 }
 
-export type OpenMarketSummary = {
+type OpenMarketSummary = {
   buyValue: number;
   sellValue: number;
   buyShares: number;
@@ -227,7 +227,7 @@ export function openMarketSummary(trades: readonly InsiderTrade[]): OpenMarketSu
   return out;
 }
 
-export type SentimentMonth = {
+type SentimentMonth = {
   /** "2026-09" */
   month: string;
   /** Monthly Share Purchase Ratio, −100 ile 100 arası. */

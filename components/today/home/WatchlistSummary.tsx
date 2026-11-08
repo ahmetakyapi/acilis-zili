@@ -207,7 +207,7 @@ export async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dicti
  *    varken görsel düşerse `LogoTile`ın kendi yedeği devrede kalıyor.
  * Ölçüm `WatchlistSummary.module.css` başında.
  */
-export function WatchlistRows({
+function WatchlistRows({
   symbols,
   quotes,
   bars,
